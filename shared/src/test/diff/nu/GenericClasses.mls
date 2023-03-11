@@ -5,7 +5,7 @@ class C<A>
 //│ class C[A]()
 
 fun f(x) = if x is C then x
-//│ fun f: C['A] -> C['A]
+//│ fun f: forall 'A. C['A] -> C['A]
 
 // * TODO parse class tags?
 // f(C : #C)
@@ -16,7 +16,7 @@ class C<A>(a: A)
 //│ class C[A](a: A)
 
 fun f(x) = if x is C(a) then a
-//│ fun f: C['a] -> 'a
+//│ fun f: forall 'a. C['a] -> 'a
 
 let c = C(1)
 //│ let c: C[1]
@@ -37,8 +37,8 @@ class Some<A>(value: A) {
 }
 //│ class Some[A](value: A) {
 //│   fun get: A
-//│   fun map: (A -> 'A) -> Some['A]
-//│   fun map_A: (A -> 'A0) -> Some['A0]
+//│   fun map: forall 'A. (A -> 'A) -> Some['A]
+//│   fun map_A: forall 'A0. (A -> 'A0) -> Some['A0]
 //│   fun toArray: (A,)
 //│ }
 
@@ -66,7 +66,7 @@ s.toArray
 
 
 s.map
-//│ (1 -> 'A) -> Some['A]
+//│ forall 'A. (1 -> 'A) -> Some['A]
 //│ res
 //│     = [Function: map]
 
@@ -77,7 +77,7 @@ s.map(succ)
 
 
 s.map_A
-//│ (1 -> 'A) -> Some['A]
+//│ forall 'A. (1 -> 'A) -> Some['A]
 //│ res
 //│     = [Function: map_A]
 
@@ -155,7 +155,7 @@ if opt is Some(v) then v else 0
 fun map(x, f) = if x is
   None then None
   Some(v) then Some(f(v))
-//│ fun map: (None | Some['value], 'value -> 'A,) -> (None | Some['A])
+//│ fun map: forall 'value 'A. (None | Some['value], 'value -> 'A,) -> (None | Some['A])
 
 let mo = map(opt, succ)
 //│ let mo: None | Some[int]
@@ -230,7 +230,7 @@ class Test<A>(n: A) {
 //│ class Test[A](n: A) {
 //│   fun foo: A
 //│   fun foo1: (x: A,) -> A
-//│   fun id: 'a -> 'a
+//│   fun id: forall 'a. 'a -> 'a
 //│ }
 
 Test(1)
@@ -266,7 +266,7 @@ t : Test<'a>
 //│     = Test2 {}
 
 t.id
-//│ 'a -> 'a
+//│ forall 'a. 'a -> 'a
 //│ res
 //│     = [Function: id]
 

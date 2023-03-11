@@ -33,7 +33,7 @@ class C0 extends M0(true)
 //│ class C0()
 
 
-// TODO catch this at typing
+// TODO catch this at typing (lack of `this`)
 class Foo {
   fun foo = 0
   fun bar = foo
@@ -57,5 +57,33 @@ class Foo {
 //│ Code generation encountered an error:
 //│   unresolved symbol foo
 
+
+module Bar {
+  fun hello = 0
+  type I = int
+}
+//│ module Bar() {
+//│   type I = int
+//│   fun hello: 0
+//│ }
+
+:e
+:ge
+hello
+//│ ╔══[ERROR] identifier not found: hello
+//│ ║  l.72: 	hello
+//│ ╙──      	^^^^^
+//│ error
+//│ Code generation encountered an error:
+//│   unresolved symbol hello
+
+:e
+1 : I
+//│ ╔══[ERROR] type identifier not found: I
+//│ ║  l.81: 	1 : I
+//│ ╙──      	    ^
+//│ error
+//│ res
+//│     = 1
 
 

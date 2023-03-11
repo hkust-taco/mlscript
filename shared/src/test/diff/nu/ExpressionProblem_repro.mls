@@ -2,6 +2,15 @@
 :NoJS
 
 
+class Add0<E>(lhs: E)
+//│ class Add0[E](lhs: E)
+
+fun eval(e) = if e is Add0(l) then eval(l)
+//│ fun eval: forall 'a. 'a -> nothing
+//│   where
+//│     'a <: Add0['a]
+
+
 class Add<E>(lhs: E, rhs: E)
 class Lit(value: int)
 //│ class Add[E](lhs: E, rhs: E)
@@ -14,7 +23,7 @@ fun eval(e) =
   if e is
     Lit(n) then n: int
     Add(l, r) then eval(l) + eval(r)
-//│ fun eval: 'a -> int
+//│ fun eval: forall 'a. 'a -> int
 //│   where
 //│     'a <: Add['a] | Lit
 

@@ -1,0 +1,117 @@
+:NewDefs
+
+
+class Foo
+//│ class Foo()
+
+fun foo(x) = if x is Foo then 0
+//│ fun foo: Foo -> 0
+
+
+module Bar {
+  class Foo0
+}
+//│ module Bar() {
+//│   class Foo0()
+//│ }
+
+fun foo(x) = if x is Bar then 0
+//│ fun foo: Bar -> 0
+
+:e
+:ge
+fun foo(x) = if x is Foo0 then 0
+//│ ╔══[ERROR] Cannot find constructor `Foo0` in scope
+//│ ║  l.23: 	fun foo(x) = if x is Foo0 then 0
+//│ ╙──      	                     ^^^^
+//│ fun foo: anything -> error
+//│ Code generation encountered an error:
+//│   if expression was not desugared
+
+
+type F = Foo
+//│ type F = Foo
+
+:e
+:ge
+fun foo(x) = if x is F then 0
+//│ ╔══[ERROR] Cannot find constructor `F` in scope
+//│ ║  l.37: 	fun foo(x) = if x is F then 0
+//│ ╙──      	                     ^
+//│ fun foo: anything -> error
+//│ Code generation encountered an error:
+//│   if expression was not desugared
+
+:e
+:ge
+fun foo(x) = if x is F() then 0
+//│ ╔══[ERROR] Illegal pattern `F`
+//│ ║  l.47: 	fun foo(x) = if x is F() then 0
+//│ ╙──      	                     ^
+//│ fun foo: anything -> error
+//│ Code generation encountered an error:
+//│   if expression was not desugared
+
+
+mixin M
+//│ mixin M()
+
+:e
+:ge
+fun foo(x) = if x is M then 0
+//│ ╔══[ERROR] Cannot find constructor `M` in scope
+//│ ║  l.61: 	fun foo(x) = if x is M then 0
+//│ ╙──      	                     ^
+//│ fun foo: anything -> error
+//│ Code generation encountered an error:
+//│   if expression was not desugared
+
+:e
+:ge
+fun foo(x) = if x is M() then 0
+//│ ╔══[ERROR] Illegal pattern `M`
+//│ ║  l.71: 	fun foo(x) = if x is M() then 0
+//│ ╙──      	                     ^
+//│ fun foo: anything -> error
+//│ Code generation encountered an error:
+//│   if expression was not desugared
+
+
+:e
+:ge
+fun foo0(x, y) = if x is y then 0
+//│ ╔══[ERROR] Cannot find constructor `y` in scope
+//│ ║  l.82: 	fun foo0(x, y) = if x is y then 0
+//│ ╙──      	                         ^
+//│ fun foo0: (anything, anything,) -> error
+//│ Code generation encountered an error:
+//│   if expression was not desugared
+
+
+fun foo = 0
+//│ fun foo: 0
+
+:e
+:ge
+fun foo0(x) = if x is foo() then 0
+//│ ╔══[ERROR] Illegal pattern `foo`
+//│ ║  l.96: 	fun foo0(x) = if x is foo() then 0
+//│ ╙──      	                      ^^^
+//│ fun foo0: anything -> error
+//│ Code generation encountered an error:
+//│   if expression was not desugared
+
+:e
+:ge
+fun foo(x) = if x is foo() then 0
+//│ ╔══[ERROR] Unhandled cyclic definition
+//│ ║  l.106: 	fun foo(x) = if x is foo() then 0
+//│ ╙──       	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Illegal pattern `foo`
+//│ ║  l.106: 	fun foo(x) = if x is foo() then 0
+//│ ╙──       	                     ^^^
+//│ fun foo: anything -> error
+//│ Code generation encountered an error:
+//│   if expression was not desugared
+
+

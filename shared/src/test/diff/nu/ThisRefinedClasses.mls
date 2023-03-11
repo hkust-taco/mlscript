@@ -54,10 +54,10 @@ class Foo {
 class Test { this: { x: int}; fun test = this.x }
 //│ ╔══[ERROR] unsupported indirectly recursive member access
 //│ ║  l.54: 	class Test { this: { x: int}; fun test = this.x }
-//│ ╙──      	                     ^
+//│ ╙──      	                                             ^^
 //│ ╔══[ERROR] unsupported indirectly recursive member access
 //│ ║  l.54: 	class Test { this: { x: int}; fun test = this.x }
-//│ ╙──      	                                             ^^
+//│ ╙──      	                     ^
 //│ class Test() {
 //│   fun test: error
 //│ }

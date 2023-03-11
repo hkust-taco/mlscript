@@ -373,10 +373,10 @@ fun mk(n) = if n is
   1 then Neg(mk(n))
   _ then Add(mk(n), mk(n))
 TestLang.eval(mk(0))
-//│ fun mk: number -> (Lit | 'a)
+//│ fun mk: forall 'E. number -> 'E
 //│ int
 //│ where
-//│   'a :> Neg[Lit | 'a] | Add[Lit | 'a]
+//│   'E :> Add['E] | Lit | Neg['E]
 //│ // Prelude
 //│ let typing_unit6 = { cache: {} };
 //│ // Query 1

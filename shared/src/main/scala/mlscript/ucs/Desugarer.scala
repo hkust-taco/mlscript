@@ -5,6 +5,7 @@ import scala.collection.mutable.Buffer
 
 import mlscript._, utils._, shorthands._
 import helpers._
+import Message.MessageContext
 
 /**
   * This class contains main desugaring methods.
@@ -160,32 +161,31 @@ class Desugarer extends TypeDefs { self: Typer =>
       // This case handles simple class tests.
       // x is A
       case classNameVar @ Var(className) =>
-        ctx.tyDefs.get(className).orElse(ctx.tyDefs2.get(className)) match {
-          case N => throw new DesugaringException({
-            import Message.MessageContext
+        ctx.tyDefs.get(className).orElse(ctx.get(className)) match {
+          case S(ti: LazyTypeInfo) if (ti.kind is Cls) || (ti.kind is Nms) =>
+          case S(_: TypeDef) =>
+          case _ => throw new DesugaringException({
             msg"Cannot find constructor `$className` in scope"
           }, classNameVar.toLoc)
-          case S(_) => 
-            printlnUCS(s"Build a Clause.MatchClass from $scrutinee where pattern is $classNameVar")
-            Clause.MatchClass(scrutinee, classNameVar, Nil)(collectLocations(scrutinee.term)) :: Nil
         }
+        printlnUCS(s"Build a Clause.MatchClass from $scrutinee where pattern is $classNameVar")
+        Clause.MatchClass(scrutinee, classNameVar, Nil)(collectLocations(scrutinee.term)) :: Nil
       // This case handles classes with destruction.
       // x is A(r, s, t)
       case app @ App(classNameVar @ Var(className), Tup(args)) =>
         ctx.tyDefs.get(className).map(td => (td.kind, td.positionals))
-            .orElse(ctx.tyDefs2.get(className).map(td =>
-                (td.decl.asInstanceOf[NuTypeDef].kind,
-                  td.complete().asInstanceOf[TypedNuCls].params.map(_._1.name))))
-              match {
-          // ctx2.tyDefs.get(className) match {
-            case N =>
-              throw new DesugaringException({
-                import Message.MessageContext
-                msg"Cannot find class `$className` in scope"
-              }, classNameVar.toLoc)
-          //   case S(td) =>
-          // }
-          // case S(td) =>
+            .orElse(ctx.get(className) match {
+              case S(ti: LazyTypeInfo) => ti.complete() match {
+                case td: TypedNuCls =>
+                  S((td.decl.kind, td.params.map(_._1.name)))
+                case _ => throw new DesugaringException(msg"Illegal pattern `$className`", classNameVar.toLoc)
+              }
+              case _ => throw new DesugaringException(msg"Illegal pattern `$className`", classNameVar.toLoc)
+            }) match {
+          case N =>
+            throw new DesugaringException({
+              msg"Cannot find class `$className` in scope"
+            }, classNameVar.toLoc)
           case S((kind, positionals)) =>
             if (args.length === positionals.length) {
               val (subPatterns, bindings) = desugarPositionals(
@@ -200,7 +200,6 @@ class Desugarer extends TypeDefs { self: Typer =>
               clause :: destructSubPatterns(scrutinee, subPatterns)
             } else {
               throw new DesugaringException({
-                import Message.MessageContext
                 val expected = positionals.length
                 val actual = args.length
                 msg"${kind.str} $className expects ${expected.toString} ${
@@ -223,7 +222,6 @@ class Desugarer extends TypeDefs { self: Typer =>
         ctx.tyDefs.get(op) match {
           case N =>
             throw new DesugaringException({
-              import Message.MessageContext
               msg"Cannot find operator `$op` in the context"
             }, opVar.toLoc)
           case S(td) if td.positionals.length === 2 =>
@@ -238,7 +236,6 @@ class Desugarer extends TypeDefs { self: Typer =>
           case S(td) =>
             val num = td.positionals.length
             throw new DesugaringException({
-              import Message.MessageContext
               val expected = td.positionals.length
               msg"${td.kind.str} `$op` expects ${expected.toString} ${
                 "parameter".pluralize(expected)
@@ -252,7 +249,7 @@ class Desugarer extends TypeDefs { self: Typer =>
       // x is Cons((x, y), Nil)
       case tuple: Tup => desugarTuplePattern(tuple)
       // What else?
-      case _ => throw new Exception(s"illegal pattern: ${mlscript.codegen.Helpers.inspect(pattern)}")
+      case _ => throw new DesugaringException(msg"illegal pattern", pattern.toLoc)
     }
   }("[Desugarer.destructPattern] result: " + Clause.showClauses(_))
 
@@ -418,7 +415,6 @@ class Desugarer extends TypeDefs { self: Typer =>
           interleavedLets += ((isRec, nameVar, term))
         // Other statements are considered to be ill-formed.
         case R(statement) => throw new DesugaringException({
-          import Message.MessageContext
           msg"Illegal interleaved statement ${statement.toString}"
         }, statement.toLoc)
       }
@@ -538,7 +534,6 @@ class Desugarer extends TypeDefs { self: Typer =>
     try t match {
       case _: Consequent => ()
       case MissingCase =>
-        import Message.MessageContext
         parentOpt match {
           case S(IfThenElse(test, whenTrue, whenFalse)) =>
             if (whenFalse === t)
@@ -570,7 +565,6 @@ class Desugarer extends TypeDefs { self: Typer =>
             printlnUCS(s"Number of missing cases: ${missingCases.size}")
             if (!missingCases.isEmpty) {
               throw new DesugaringException({
-                import Message.MessageContext
                 val numMissingCases = missingCases.size
                 (msg"The match is not exhaustive." -> scrutinee.matchRootLoc) ::
                   (msg"The scrutinee at this position misses ${numMissingCases.toString} ${

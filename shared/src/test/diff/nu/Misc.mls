@@ -33,10 +33,10 @@ x => x + 1
 //│     = [Function: res]
 
 fun f({ y }) = y
-//│ fun f: {y: 'a} -> 'a
+//│ fun f: forall 'a. {y: 'a} -> 'a
 
 fun f of { y } = y
-//│ fun f: {y: 'a} -> 'a
+//│ fun f: forall 'a. {y: 'a} -> 'a
 
 f({y: 1})
 //│ 1

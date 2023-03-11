@@ -9,9 +9,9 @@ class Union<Region>(a: Region, b: Region)
 // | | | | Desugared term: case x of { Union => let x = (x).a in let y = (x).b in x }
 fun hmm(x) =
   if x is Union(x, y) then x
-//│ fun hmm: Union[{b: anything} & 'a] -> 'a
+//│ fun hmm: forall 'a. Union[{b: anything} & 'a] -> 'a
 
 fun hmm(x) =
   if x is Union(z, y) then x
-//│ fun hmm: Union['Region] -> Union['Region]
+//│ fun hmm: forall 'Region. Union['Region] -> Union['Region]
 

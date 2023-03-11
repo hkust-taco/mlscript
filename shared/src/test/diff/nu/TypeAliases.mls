@@ -14,15 +14,13 @@ type AI1 = Array[int]
 type AI2 = Array<int>
 //│ type AI2 = Array[int]
 
-// TODO fail gracefully
-// :e
+:e
 type AI3(n) = Array[int]
 //│ ╔══[ERROR] type alias definitions cannot have value parameters
-//│ ║  l.19: 	type AI3(n) = Array[int]
+//│ ║  l.18: 	type AI3(n) = Array[int]
 //│ ╙──      	        ^^^
 //│ type AI3 = Array[int]
 
-// TODO fail gracefully
 // :e
 type AI3[A] = Array<A>
 //│ type AI3[A] = Array[A]

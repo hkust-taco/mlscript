@@ -26,7 +26,7 @@ fun f(x: A | 'b) = if x is A then x.n else 0
 
 
 fun f(x) = x.n
-//│ fun f: {n: 'n} -> 'n
+//│ fun f: forall 'n. {n: 'n} -> 'n
 
 f(a)
 //│ int
@@ -56,8 +56,8 @@ class C {
   fun const(x) = id
 }
 //│ class C() {
-//│   fun const: anything -> 'a -> 'a
-//│   fun id: 'a -> 'a
+//│   fun const: forall 'a. anything -> 'a -> 'a
+//│   fun id: forall 'a. 'a -> 'a
 //│ }
 
 

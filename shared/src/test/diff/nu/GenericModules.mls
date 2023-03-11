@@ -85,7 +85,7 @@ Test:  Test<'a>
 
 
 fun test(x) = if x is Test then x.foo
-//│ fun test: Test['A] -> 'A -> 'A
+//│ fun test: forall 'A. Test['A] -> 'A -> 'A
 
 :e
 test(Test)

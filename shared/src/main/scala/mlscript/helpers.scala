@@ -461,6 +461,7 @@ trait DeclImpl extends Located { self: Decl =>
 
 trait NuDeclImpl extends Located { self: NuDecl =>
   val body: Located
+  def kind: DeclKind
   // val name: Str = self match {
   //   case td: NuTypeDef => td.nme.name
   //   case fd: NuFunDef => fd.nme.name

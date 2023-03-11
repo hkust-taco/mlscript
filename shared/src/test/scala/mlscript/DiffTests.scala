@@ -495,33 +495,15 @@ class DiffTests
             
             val (typeDefs, stmts, newDefsResults) = if (newDefs) {
               
-              // /* 
               val vars: Map[Str, typer.SimpleType] = Map.empty
-              val tpd = typer.typeTypingUnit(TypingUnit(p.tops), allowPure = true)(ctx.nest, raise, vars)
-              
-              val comp = tpd.force()(raise)
-              
-              tpd.entities.foreach { e =>
-                e.complete()(raise) match {
-              // comp.entities.foreach {
-                  case tf: typer.TypedNuFun =>
-                    val sign = typer.PolymorphicType.mk(ctx.lvl, tf.ty)
-                    ctx += tf.fd.nme.name -> typer.VarSymbol(sign, tf.fd.nme)
-                  case tt: typer.TypedNuTypeDef =>
-                    ctx += e.decl.name -> e
-                    // ctx += e.decl.name ->
-                    //   typer.VarSymbol(e.typeSignature(raise), e.decl.nameVar)
-                  // case tt: typer.TypedNuMxn =>
-                }
-              }
-              
-              // output(exp.toString)
-              
-              // val sctx = ShowCtx.mk(tpd)
+              val tpd = typer.typeTypingUnit(TypingUnit(p.tops), allowPure = true)(ctx, raise, vars)
               
               def showTTU(ttu: typer.TypedTypingUnit, ind: Int): Unit = {
                 val indStr = "  " * ind
-                ttu.entities.map(_.complete()(raise)).foreach {
+                // ttu.entities.map(_.complete()(raise)).foreach {
+                ttu.entities.foreach {
+                  case p: typer.NuParam =>
+                    output(s"${indStr}${p.name}: ${p.ty}")
                   case tc: typer.TypedNuAls =>
                     output(s"${indStr}type ${tc.name} = ${tc.body}")
                   case tc: typer.TypedNuCls =>
@@ -543,7 +525,7 @@ class DiffTests
                       case S(false) => "let"
                       case S(true) => "let rec"
                       case N => "fun"
-                    }} ${tf.name}: ${tf.ty} where ${tf.ty.showBounds
+                    }} ${tf.name}: ${tf.typeSignature} where ${tf.typeSignature.showBounds
                       .indentNewLines(indStr+"|")}")
                 }
               }
@@ -557,13 +539,13 @@ class DiffTests
               }
               
               val oldDbg = typer.dbg
-              val sim = if (mode.noSimplification) comp else try {
+              val sim = if (mode.noSimplification) tpd else try {
                 typer.dbg = mode.dbgSimplif
                 object SimplifyPipeline extends typer.SimplifyPipeline {
                   def debugOutput(msg: => Str): Unit =
                     if (mode.dbgSimplif) output(msg)
                 }
-                SimplifyPipeline(comp, all = false)(ctx)
+                SimplifyPipeline(tpd, all = false)(ctx)
               } finally typer.dbg = oldDbg
               
               val exp = typer.expandType(sim)(ctx)
@@ -759,7 +741,7 @@ class DiffTests
                   
                   ctx += nme.name -> typer.VarSymbol(ty_sch, nme)
                   declared += nme.name -> ty_sch
-                  val exp = getType(ty_sch).asInstanceOf[Type]
+                  val exp = getType(ty_sch)
                   if (mode.generateTsDeclarations) tsTypegenCodeBuilder.addTypeGenTermDefinition(exp, Some(nme.name))
                   S(nme.name -> (s"$nme: ${exp.show}" :: Nil))
                   

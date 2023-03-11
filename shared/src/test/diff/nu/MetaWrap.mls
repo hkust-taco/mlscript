@@ -9,8 +9,8 @@ mixin Base {
   fun rewrap(x, f) = f(x)
 }
 //│ mixin Base() {
-//│   fun rewrap: ('a, 'a -> 'b,) -> 'b
-//│   fun unwrap: 'c -> 'c
+//│   fun rewrap: forall 'a 'b. ('a, 'a -> 'b,) -> 'b
+//│   fun unwrap: forall 'c. 'c -> 'c
 //│ }
 
 

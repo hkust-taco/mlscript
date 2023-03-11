@@ -26,7 +26,7 @@ fun list_assoc(s, l) =
       if s === h._1 then Success(h._2)
       else list_assoc(s, t)
     Nil then NotFound()
-//│ fun list_assoc: (Eql['a], Cons[{_1: 'a, _2: 'A}] | Nil,) -> (NotFound | Success['A])
+//│ fun list_assoc: forall 'a 'A. (Eql['a], Cons[{_1: 'a, _2: 'A}] | Nil,) -> (NotFound | Success['A])
 
 // fun list_assoc(s: string, l: Cons[{ _1: string, _2: 'b }] | Nil): NotFound | Success['b]
 
@@ -41,7 +41,7 @@ mixin EvalVar {
         Success(r) then r
 }
 //│ mixin EvalVar() {
-//│   fun eval: (Cons[{_1: string, _2: 'result}] | Nil, Var,) -> (Var | 'result)
+//│   fun eval: forall 'result. (Cons[{_1: string, _2: 'result}] | Nil, Var,) -> (Var | 'result)
 //│ }
 
 class Abs[A](x: string, t: A)
@@ -73,8 +73,8 @@ mixin EvalLambda {
 }
 //│ mixin EvalLambda() {
 //│   super: {eval: ('a, 'b,) -> 'c}
-//│   this: {eval: (Cons[(string, 'd,)], 't,) -> 'c & ('a, 't0,) -> ('d & 'e) & (Cons[(string, Var,) | 'A], 't1,) -> 'f}
-//│   fun eval: ('a & (Cons['A] | Nil), Abs['t1] | App['t0 & (Abs['t] | ~#Abs)] | 'b & ~#Abs & ~#App,) -> (Abs['f] | App['d | 'e] | 'c)
+//│   this: {eval: ('a, 's,) -> ('d & 'e) & (Cons[(string, 'e,)], 't,) -> 'c & (Cons[(string, Var,) | 'A], 't0,) -> 'f}
+//│   fun eval: ('a & (Cons['A] | Nil), Abs['t0] | App['s & (Abs['t] | ~#Abs)] | 'b & ~#Abs & ~#App,) -> (Abs['f] | App['d | 'e] | 'c)
 //│ }
 
 module Test1 extends EvalVar, EvalLambda
@@ -95,7 +95,7 @@ Test1.eval(Nil, Var("a"))
 Test1.eval(Nil, Abs("b", Var("a")))
 //│ 'a
 //│   where
-//│     'a :> Abs['a] | Var | App['a]
+//│     'a :> Var | App['a] | Abs['a]
 //│ res
 //│     = Abs {}
 
@@ -126,7 +126,7 @@ fun map_expr(f, v) =
     Num then v
     Add(l, r) then Add(f(l), f(r))
     Mul(l, r) then Mul(f(l), f(r))
-//│ fun map_expr: ('l -> 'A & 'l0 -> 'A0, Add['l] | Mul['l0] | Num | Var,) -> (Add['A] | Mul['A0] | Num | Var)
+//│ fun map_expr: forall 'l 'A 'l0 'A0. ('l -> 'A & 'l0 -> 'A0, Add['l] | Mul['l0] | Num | Var,) -> (Add['A] | Mul['A0] | Num | Var)
 
 mixin EvalExpr {
   fun eval(sub, v) =
@@ -141,7 +141,7 @@ mixin EvalExpr {
 //│ mixin EvalExpr() {
 //│   super: {eval: ('a, Var,) -> 'b}
 //│   this: {eval: ('a, 'c,) -> anything}
-//│   fun eval: ('a, 'd & (Add['c] | Mul['c] | Num | Var),) -> (Num | 'd | 'b)
+//│   fun eval: forall 'd. ('a, 'd & (Add['c] | Mul['c] | Num | Var),) -> (Num | 'd | 'b)
 //│ }
 
 module Test2 extends EvalVar, EvalExpr
@@ -197,7 +197,7 @@ module Test3 extends EvalVar, EvalExpr, EvalLambda
 //│   fun eval: (Cons[{_1: string, _2: 'result}] | Nil, 'a,) -> 'result
 //│ }
 //│ where
-//│   'result :> App['result] | Abs['result] | Num | Var | 'b
+//│   'result :> Num | Var | 'b | App['result] | Abs['result]
 //│   'b <: Add['c] | Mul['c] | Num | Var
 //│   'c <: 'a
 //│   'a <: Abs['a] | App['a & (Abs['a] | ~#Abs)] | 'b & ~#Abs & ~#App

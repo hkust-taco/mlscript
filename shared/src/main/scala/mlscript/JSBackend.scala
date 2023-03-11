@@ -300,6 +300,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
           case S(ModuleSymbol(_, runtimeName, _, _, _)) => JSInstanceOf(scrut, JSMember(JSIdent(runtimeName), JSIdent(JSLit.makeStringLiteral("class"))))
           case S(TraitSymbol(_, runtimeName, _, _, _)) => JSIdent(runtimeName)("is")(scrut)
           case S(_: TypeAliasSymbol) => throw new CodeGenError(s"cannot match type alias $name")
+          case S(_: MixinSymbol) => throw new CodeGenError(s"cannot match mixin $name")
           case N => throw new CodeGenError(s"unknown match case: $name")
         }
         case lit: Lit =>

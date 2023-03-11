@@ -50,11 +50,11 @@ x === x
 
 fun test1(x) =
   x === x
-//│ fun test1: (Eql['a] & 'a) -> bool
+//│ fun test1: forall 'a. (Eql['a] & 'a) -> bool
 
 fun test2(x, y) =
   x === y
-//│ fun test2: (Eql['a], 'a,) -> bool
+//│ fun test2: forall 'a. (Eql['a], 'a,) -> bool
 
 
 1 : Eql['a]

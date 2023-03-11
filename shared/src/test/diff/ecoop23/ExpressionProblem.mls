@@ -18,7 +18,7 @@ fun eval(e) =
   if e is
     Lit(n) then n
     Add(l, r) then eval(l) + eval(r)
-//│ fun eval: 'a -> int
+//│ fun eval: forall 'a. 'a -> int
 //│   where
 //│     'a <: Add['a] | Lit
 
@@ -201,7 +201,7 @@ fun mk(n) = if n is
   0 then Lit(0)
   1 then Neg(mk(n))
   _ then Add(mk(n), mk(n))
-//│ fun mk: number -> 'E
+//│ fun mk: forall 'E. number -> 'E
 //│   where
 //│     'E :> Add['E] | Lit | Neg['E]
 

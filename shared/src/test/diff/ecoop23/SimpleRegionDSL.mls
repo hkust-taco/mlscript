@@ -45,7 +45,7 @@ fun go(x, offset) =
   else
     let shared = go(x - 1, round(offset / 2))
     Union(Translate(Vector(0 - offset, 0), shared), Translate(Vector(offset, 0), shared))
-//│ fun go: (int, int,) -> 'Region
+//│ fun go: forall 'Region. (int, int,) -> 'Region
 //│   where
 //│     'Region :> Circle | Union[Translate['Region]]
 
@@ -313,7 +313,7 @@ mixin Eliminate {
 }
 //│ mixin Eliminate() {
 //│   this: {eliminate: 'a -> 'b & 'a0 -> 'c & 'a1 -> 'd & 'a2 -> 'e & 'a3 -> 'f & 'a4 -> 'g}
-//│   fun eliminate: (Intersect['a2] | Outside['a0 & (Outside['a] | ~#Outside)] | Scale['a4] | Translate['a3] | Union['a1] | 'h & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union) -> (Intersect['e] | Outside['c] | Scale['g] | Translate['f] | Union['d] | 'b | 'h)
+//│   fun eliminate: forall 'h. (Intersect['a2] | Outside['a0 & (Outside['a] | ~#Outside)] | Scale['a4] | Translate['a3] | Union['a1] | 'h & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union) -> (Intersect['e] | Outside['c] | Scale['g] | Translate['f] | Union['d] | 'b | 'h)
 //│ }
 
 module TestElim extends Eliminate
@@ -322,19 +322,19 @@ module TestElim extends Eliminate
 //│ }
 //│ where
 //│   'a <: Intersect['a] | Outside['a & (Outside['a] | ~#Outside)] | Scale['a] | Translate['a] | Union['a] | 'b & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union
-//│   'b :> Outside['b] | Union['b] | Intersect['b] | Translate['b] | Scale['b]
+//│   'b :> Intersect['b] | Translate['b] | Scale['b] | Outside['b] | Union['b]
 
 TestElim.eliminate(Outside(Outside(Univ())))
 //│ 'a
 //│   where
-//│     'a :> Scale['a] | Univ | Outside['a] | Union['a] | Intersect['a] | Translate['a]
+//│     'a :> Outside['a] | Union['a] | Intersect['a] | Translate['a] | Scale['a] | Univ
 //│ res
 //│     = Univ {}
 
 TestElim.eliminate(circles)
 //│ 'a
 //│   where
-//│     'a :> Outside['a] | Union['a] | Intersect['a] | Translate['a] | Scale['a] | Circle
+//│     'a :> Translate['a] | Scale['a] | Circle | Outside['a] | Union['a] | Intersect['a]
 //│ res
 //│     = Union {}
 
@@ -344,7 +344,7 @@ fun mk(n) = if n is
   3 then Intersect(mk(n), mk(n))
   4 then Translate(Vector(0, 0), mk(n))
   _ then Scale(Vector(0, 0), mk(n))
-//│ fun mk: number -> 'Region
+//│ fun mk: forall 'Region. number -> 'Region
 //│   where
 //│     'Region :> Intersect['Region] | Outside['Region] | Scale['Region] | Translate['Region] | Union['Region]
 

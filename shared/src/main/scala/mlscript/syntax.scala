@@ -45,7 +45,9 @@ final case class MethodDef[RHS <: Term \/ Type](
 
 sealed trait NameRef extends Located { val name: Str }
 
-sealed abstract class TypeDefKind(val str: Str)
+sealed abstract class DeclKind(val str: Str)
+case object Val extends DeclKind("value")
+sealed abstract class TypeDefKind(str: Str) extends DeclKind(str)
 sealed trait ObjDefKind
 case object Cls extends TypeDefKind("class") with ObjDefKind
 case object Trt extends TypeDefKind("trait") with ObjDefKind
@@ -192,6 +194,7 @@ final case class NuFunDef(
   rhs: Term \/ Type,
 ) extends NuDecl with DesugaredStatement {
   val body: Located = rhs.fold(identity, identity)
+  def kind: DeclKind = Val
 }
 
 

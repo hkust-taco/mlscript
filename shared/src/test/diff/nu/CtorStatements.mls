@@ -1,0 +1,23 @@
+:NewDefs
+
+
+log("Hello!")
+//│ unit
+//│ res
+//│     = undefined
+//│ // Output
+//│ Hello!
+
+
+module Test0 {
+  log("Hello!")
+}
+//│ module Test0()
+
+// TODO should print
+Test0
+//│ Test0
+//│ res
+//│     = Test0 { class: [class Test0] }
+
+

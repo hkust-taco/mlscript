@@ -70,6 +70,6 @@ fun filtermap(f, xs) = if xs is
     True then filtermap(f, ys)
     False then Cons(y, filtermap(f, ys))
     Pair(True, z) then Cons(z, filtermap(f, ys))
-//│ fun filtermap: ('head -> (False | Pair[anything, 'A] | True), Cons['head & 'A] | Nil,) -> (Cons['A] | Nil)
+//│ fun filtermap: forall 'head 'A. ('head -> (False | Pair[anything, 'A] | True), Cons['head & 'A] | Nil,) -> (Cons['A] | Nil)
 
 

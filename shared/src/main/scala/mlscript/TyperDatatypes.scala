@@ -36,8 +36,21 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
   case class VarSymbol(ty: ST, definingVar: Var) extends TypeInfo
   
   
-  class LazyTypeInfo(val decl: NuDecl, val outerVars: Map[Str, SimpleType])
-          (implicit val ctx: Ctx, val raise: Raise) extends TypeInfo with LazyTypeInfoImpl 
+  /** Some type information which may not yet be available. */
+  sealed abstract class LazyTypeInfo extends TypeInfo {
+    def complete()(implicit raise: Raise): NuMember
+    def kind: DeclKind
+  }
+  
+  /** A LazyTypeInfo whose typing has been completed. */
+  case class CompletedTypeInfo(member: NuMember) extends LazyTypeInfo {
+    def complete()(implicit raise: Raise): NuMember = member
+    def kind: DeclKind = member.kind
+  }
+  
+  /** Initialized lazy type information, to be computed soon. */
+  class DelayedTypeInfo(val decl: NuDecl, val outerVars: Map[Str, SimpleType])
+          (implicit val ctx: Ctx, val raise: Raise) extends LazyTypeInfo with DelayedTypeInfoImpl 
   
   
   /** A type with universally quantified type variables
@@ -123,12 +136,12 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
   }
   type TL = TypeLike
   
-  abstract class OtherTypeLike extends TypeLike { this: CompletedTypingUnit =>
-    def self: CompletedTypingUnit = this
+  abstract class OtherTypeLike extends TypeLike { this: TypedTypingUnit =>
+    def self: TypedTypingUnit = this
     def unwrapProvs: TypeLike = this
   }
   object OtherTypeLike {
-    def unapply(ot: OtherTypeLike): S[CompletedTypingUnit] = S(ot.self)
+    def unapply(ot: OtherTypeLike): S[TypedTypingUnit] = S(ot.self)
   }
   
   /** A general type form (TODO: rename to AnyType). */

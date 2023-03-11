@@ -44,7 +44,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case cls: TypedNuCls =>
         val raw = cls.members.get(fld.name) match {
           case S(d: TypedNuFun) =>
-            d.ty.toUpper(provTODO)
+            d.typeSignature.toUpper(provTODO)
           case S(p: NuParam) =>
             p.ty
           case S(_) =>
@@ -636,7 +636,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       // println(s"Looking up $fld in ${cls.td.nme}")
       val res = cls.members.get(fld.name) match {
         case S(d: TypedNuFun) =>
-          d.ty.toUpper(provTODO)
+          d.typeSignature.toUpper(provTODO)
         case S(p: NuParam) =>
           p.ty
         case N =>
