@@ -567,7 +567,8 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       rest: Opt[Str] = N
   )(implicit scope: Scope): JSClassGetter = {
     val getterScope = scope.derive(s"${classSymbol.lexicalName} getter")
-    val classBody = translateNewClassExpression(classSymbol, superFields, rest)(getterScope)
+    val cacheSymbol = getterScope.declareValue("cache", Some(false), false)
+    val classBody = translateNewClassExpression(classSymbol, superFields, rest, cacheSymbol.runtimeName)(getterScope)
     val constructor = classBody match {
       case JSClassNewDecl(_, fields, _, _, _, _, _) => fields.map(JSNamePattern(_))
     }
@@ -576,6 +577,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     }
 
     JSClassGetter(classSymbol.runtimeName, R(Ls(
+      JSConstDecl(cacheSymbol.runtimeName, JSField(JSIdent("this"), "cache")),
       JSIfStmt(JSBinary("===", JSField(JSField(JSIdent("this"), "cache"), classSymbol.runtimeName), JSIdent("undefined")), Ls(
         JSExprStmt(JSClassExpr(classBody)),
         JSExprStmt(JSAssignExpr(JSField(JSField(JSIdent("this"), "cache"), classSymbol.runtimeName),
@@ -589,7 +591,8 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
   protected def translateNewClassExpression(
       classSymbol: NewClassSymbol,
       superFields: Ls[Term] = Nil,
-      rest: Opt[Str] = N
+      rest: Opt[Str] = N,
+      cacheName: Str
   )(implicit scope: Scope): JSClassNewDecl = {
     // Translate class methods and getters.
     val classScope = scope.derive(s"class ${classSymbol.lexicalName}")
@@ -597,7 +600,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     val fields = classSymbol.body.collectFields ++
       classSymbol.body.collectTypeNames.flatMap(resolveTraitFields)
     val members = classSymbol.methods.map {
-      translateNewClassMember(_, fields)(classScope)
+      translateNewClassMember(_, fields, S(JSConstDecl(classSymbol.runtimeName, JSField(JSIdent(cacheName), classSymbol.runtimeName))))(classScope)
     }
 
     val constructorScope = classScope.derive(s"${classSymbol.lexicalName} constructor")
@@ -668,7 +671,8 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
 
   private def translateNewClassMember(
       method: MethodDef[Left[Term, Type]],
-      props: Ls[Str] = Nil
+      props: Ls[Str] = Nil,
+      selfClass: Opt[JSConstDecl] = N
   )(implicit scope: Scope): JSClassMemberDecl = {
     val name = method.nme.name
     // Create the method/getter scope.
@@ -696,9 +700,15 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     val bodyStmts = if (visitedSymbols(selfSymbol)) {
       val thisDecl = JSConstDecl(selfSymbol.runtimeName, JSIdent("this"))
       visitedSymbols -= selfSymbol
-      R(preDecs ::: (thisDecl :: bodyResult :: Nil))
+      selfClass match {
+        case Some(selfClass) => R((selfClass :: preDecs) ::: (thisDecl :: bodyResult :: Nil))
+        case _ => R(preDecs ::: (thisDecl :: bodyResult :: Nil))
+      }
     } else {
-      R(preDecs ::: (bodyResult :: Nil))
+      selfClass match {
+        case Some(selfClass) => R((selfClass :: preDecs) ::: (bodyResult :: Nil))
+        case _ => R(preDecs ::: (bodyResult :: Nil))
+      }
     }
     // Returns members depending on what it is.
     memberParams match {

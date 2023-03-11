@@ -12,6 +12,7 @@ class Lit(n: int)
 //│ let typing_unit = {
 //│   cache: {},
 //│   get Add() {
+//│     const cache = this.cache;
 //│     if (this.cache.Add === undefined) {
 //│       class Add {
 //│         #lhs;
@@ -29,6 +30,7 @@ class Lit(n: int)
 //│     return this.cache.Add;
 //│   },
 //│   get Lit() {
+//│     const cache = this.cache;
 //│     if (this.cache.Lit === undefined) {
 //│       class Lit {
 //│         #n;
@@ -53,6 +55,7 @@ class Lit(n: int)
 //│ │ │   let typing_unit = {
 //│ │ │     cache: {},
 //│ │ │     get Add() {
+//│ │ │       const cache = this.cache;
 //│ │ │       if (this.cache.Add === undefined) {
 //│ │ │         class Add {
 //│ │ │           #lhs;
@@ -70,6 +73,7 @@ class Lit(n: int)
 //│ │ │       return this.cache.Add;
 //│ │ │     },
 //│ │ │     get Lit() {
+//│ │ │       const cache = this.cache;
 //│ │ │       if (this.cache.Lit === undefined) {
 //│ │ │         class Lit {
 //│ │ │           #n;
@@ -124,7 +128,7 @@ mixin EvalBase {
 //│ };
 //│ globalThis.EvalBase = typing_unit1.EvalBase;
 //│ // End of generated code
-//│ ┌ Block at Mixin.mls:95
+//│ ┌ Block at Mixin.mls:99
 //│ ├─┬ Prelude
 //│ │ ├── Code
 //│ │ │   let typing_unit1 = {
@@ -159,6 +163,7 @@ class Neg<A>(expr: A)
 //│ let typing_unit2 = {
 //│   cache: {},
 //│   get Neg() {
+//│     const cache = this.cache;
 //│     if (this.cache.Neg === undefined) {
 //│       class Neg {
 //│         #expr;
@@ -175,12 +180,13 @@ class Neg<A>(expr: A)
 //│ };
 //│ globalThis.Neg = typing_unit2.Neg;
 //│ // End of generated code
-//│ ┌ Block at Mixin.mls:156
+//│ ┌ Block at Mixin.mls:160
 //│ ├─┬ Prelude
 //│ │ ├── Code
 //│ │ │   let typing_unit2 = {
 //│ │ │     cache: {},
 //│ │ │     get Neg() {
+//│ │ │       const cache = this.cache;
 //│ │ │       if (this.cache.Neg === undefined) {
 //│ │ │         class Neg {
 //│ │ │           #expr;
@@ -231,7 +237,7 @@ mixin EvalNeg {
 //│ };
 //│ globalThis.EvalNeg = typing_unit3.EvalNeg;
 //│ // End of generated code
-//│ ┌ Block at Mixin.mls:205
+//│ ┌ Block at Mixin.mls:211
 //│ ├─┬ Prelude
 //│ │ ├── Code
 //│ │ │   let typing_unit3 = {
@@ -286,7 +292,7 @@ mixin EvalNegNeg {
 //│ };
 //│ globalThis.EvalNegNeg = typing_unit4.EvalNegNeg;
 //│ // End of generated code
-//│ ┌ Block at Mixin.mls:260
+//│ ┌ Block at Mixin.mls:266
 //│ ├─┬ Prelude
 //│ │ ├── Code
 //│ │ │   let typing_unit4 = {
@@ -337,7 +343,7 @@ module TestLang extends EvalBase, EvalNeg, EvalNegNeg
 //│ };
 //│ globalThis.TestLang = typing_unit5.TestLang;
 //│ // End of generated code
-//│ ┌ Block at Mixin.mls:315
+//│ ┌ Block at Mixin.mls:321
 //│ ├─┬ Prelude
 //│ │ ├── Code
 //│ │ │   let typing_unit5 = {
@@ -380,7 +386,7 @@ TestLang.eval(mk(0))
 //│ // Query 2
 //│ res = TestLang.eval(mk(0));
 //│ // End of generated code
-//│ ┌ Block at Mixin.mls:365
+//│ ┌ Block at Mixin.mls:371
 //│ ├─┬ Prelude
 //│ │ ├── Code
 //│ │ │   let typing_unit6 = { cache: {} };
@@ -411,7 +417,7 @@ class Foo(x: int)
 :e
 class Bar(x: int, y: int) extends Foo(x + y)
 //│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
-//│ ║  l.412: 	class Bar(x: int, y: int) extends Foo(x + y)
+//│ ║  l.418: 	class Bar(x: int, y: int) extends Foo(x + y)
 //│ ╙──       	                                  ^^^^^^^^^^
 //│ class Bar(x: int, y: int)
 
@@ -511,7 +517,7 @@ mixin Base {
   fun x = y
 }
 //│ ╔══[ERROR] identifier not found: y
-//│ ║  l.511: 	  fun x = y
+//│ ║  l.517: 	  fun x = y
 //│ ╙──       	          ^
 //│ mixin Base() {
 //│   fun x: error
@@ -528,6 +534,51 @@ module Test extends Base
 //│ Runtime error:
 //│   ReferenceError: Base is not defined
 
+:js
+class Test(n: int) {
+  fun inc = Test(n + 1)
+}
+//│ class Test(n: int) {
+//│   fun inc: Test
+//│ }
+//│ // Prelude
+//│ let typing_unit21 = {
+//│   cache: {},
+//│   get Test1() {
+//│     const cache = this.cache;
+//│     if (this.cache.Test1 === undefined) {
+//│       class Test1 {
+//│         #n;
+//│         get n() { return this.#n; }
+//│         constructor(n) {
+//│           this.#n = n;
+//│         }
+//│         get inc() {
+//│           const Test1 = cache.Test1;
+//│           const n = this.#n;
+//│           return Test1(n + 1);
+//│         }
+//│       };
+//│       this.cache.Test1 = ((n) => new Test1(n));
+//│       this.cache.Test1["class"] = Test1;
+//│     }
+//│     return this.cache.Test1;
+//│   }
+//│ };
+//│ globalThis.Test1 = typing_unit21.Test1;
+//│ // End of generated code
+
+:js
+Test(0).inc.n
+//│ int
+//│ // Prelude
+//│ let typing_unit22 = { cache: {} };
+//│ // Query 1
+//│ res = Test1(0).inc.n;
+//│ // End of generated code
+//│ res
+//│     = 1
+
 mixin MA(a: int)
 mixin MB(b1: int, b2: int)
 mixin MC(c: int)
@@ -539,7 +590,7 @@ mixin MC(c: int)
 module MM extends MA(1), MB(2, 3), MC(4)
 //│ module MM()
 //│ // Prelude
-//│ let typing_unit22 = {
+//│ let typing_unit24 = {
 //│   cache: {},
 //│   get MM() {
 //│     if (this.cache.MM === undefined) {
@@ -554,7 +605,7 @@ module MM extends MA(1), MB(2, 3), MC(4)
 //│     return this.cache.MM;
 //│   }
 //│ };
-//│ globalThis.MM = typing_unit22.MM;
+//│ globalThis.MM = typing_unit24.MM;
 //│ // End of generated code
 
 MM.a
@@ -570,3 +621,4 @@ MM.c
 //│     = 3
 //│ res
 //│     = 4
+
