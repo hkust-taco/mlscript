@@ -26,7 +26,7 @@ mixin EvalNeg {
   fun eval(override Neg(d)) = 0 - this.eval(d)
 }
 
-module TestLang: EvalAddLit, EvalNeg
+module TestLang extends EvalAddLit, EvalNeg
 
 let res = TestLang.eval(add2negadd11)
 </textarea>
@@ -47,7 +47,7 @@ mixin EvalNegNeg {<br/>
 &nbsp;&nbsp;fun eval(override Neg(Neg(d))) = this.eval(d)<br/>
 }<br/>
 <br/>
-module TestLang2: EvalAddLit, EvalNeg, EvalMul, EvalNegNeg<br/>
+module TestLang2 extends EvalAddLit, EvalNeg, EvalMul, EvalNegNeg<br/>
 <br/>
 let res2 = TestLang2.eval(add2negadd11)
   </div>
