@@ -139,7 +139,7 @@ final case class Bounds(lb: Type, ub: Type)              extends Type
 final case class WithExtension(base: Type, rcd: Record)  extends Type
 final case class Splice(fields: Ls[Either[Type, Field]]) extends Type
 final case class Constrained(base: TypeLike, tvBounds: Ls[TypeVar -> Bounds], where: Ls[Bounds]) extends Type
-final case class FirstClassDefn(defn: NuTypeDef)         extends Type
+// final case class FirstClassDefn(defn: NuTypeDef)         extends Type // TODO
 
 final case class Field(in: Opt[Type], out: Type)         extends FieldImpl
 
@@ -189,7 +189,6 @@ final case class NuFunDef(
   isLetRec: Opt[Bool], // None means it's a `fun`, which is always recursive; Some means it's a `let`
   nme: Var,
   tparams: Ls[TypeName],
-  // rhs: Term \/ PolyType,
   rhs: Term \/ Type,
 ) extends NuDecl with DesugaredStatement {
   val body: Located = rhs.fold(identity, identity)

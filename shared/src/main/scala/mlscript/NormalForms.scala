@@ -701,7 +701,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       case ProxyType(underlying) => mk(polymLvl, cons, underlying, pol)
       case tr @ TypeRef(defn, targs) =>
         // * TODO later: when proper TypeRef-based simplif. is implemented, can remove this special case
-        if (preserveTypeRefs && !primitiveTypes.contains(defn.name)) {
+        if (preserveTypeRefs && !primitiveTypes.contains(defn.name) || !tr.canExpand) {
           of(polymLvl, cons, LhsRefined(tr.mkTag, ssEmp, RecordType.empty, SortedMap(defn -> tr)))
         } else mk(polymLvl, cons, tr.expand, pol)
       case TypeBounds(lb, ub) => mk(polymLvl, cons, if (pol) ub else lb, pol)

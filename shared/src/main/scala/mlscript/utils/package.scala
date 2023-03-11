@@ -203,6 +203,7 @@ package object utils {
   def TODO(msg: String): Nothing = throw new NotImplementedError(msg)
   def die: Nothing = lastWords("Program reached and unexpected state.")
   def lastWords(msg: String): Nothing = throw new Exception(s"Internal Error: $msg")
+  def wat(msg: String, wat: Any): Nothing = lastWords(s"$msg ($wat)")
   
   /** To make Scala unexhaustivity warnings believed to be spurious go away,
    * while clearly indicating the intent. */
