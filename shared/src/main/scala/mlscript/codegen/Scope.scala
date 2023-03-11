@@ -38,6 +38,8 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
       "div",
       "gt",
       "not",
+      "ne",
+      "eq",
       "toString",
       "negate"
     ) foreach { name =>

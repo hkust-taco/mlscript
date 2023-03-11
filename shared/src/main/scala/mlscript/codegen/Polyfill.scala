@@ -162,6 +162,8 @@ object Polyfill {
     buffer += BuiltinFunc("gt", makeBinaryFunc(">"))
     buffer += BuiltinFunc("not", makeUnaryFunc("!"))
     buffer += BuiltinFunc("negate", makeUnaryFunc("-"))
+    buffer += BuiltinFunc("eq", makeBinaryFunc("==="))
+    buffer += BuiltinFunc("ne", makeBinaryFunc("!=="))
     buffer.toList
   }
 
