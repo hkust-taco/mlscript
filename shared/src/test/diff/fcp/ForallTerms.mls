@@ -73,7 +73,7 @@ f = forall 'A. fun (x: 'A) -> x + 1
 //│ ╟── but it flows into reference with expected type `int`
 //│ ║  l.66: 	f = forall 'A. fun (x: 'A) -> x + 1
 //│ ╙──      	                              ^
-//│ f: 'A -> (error | int)
+//│ f: anything -> (error | int)
 //│  = [Function: f1]
 
 

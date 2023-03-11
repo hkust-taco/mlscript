@@ -10,9 +10,10 @@ mixin BaseTest<A> {
 //│ ╙──     	              ^
 //│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: A29'
 
-// TODO support
 mixin BaseTest<A>(x: A) {
   fun test = x
 }
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: A34_41'
+//│ mixin BaseTest[A](x: A) {
+//│   fun test: A
+//│ }
 

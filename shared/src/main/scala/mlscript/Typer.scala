@@ -345,7 +345,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         (implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType],
         newDefsInfo: Map[Str, (TypeDefKind, Int)]): (SimpleType, Iterable[TypeVariable]) = // TODO rm _2 result?
       // trace(s"$lvl. Typing type $ty") {
-      trace(s"Typing type ${ty.show}") {
+      trace(s"Typing type ${ty.showDbg}") {
     println(s"vars=$vars newDefsInfo=$newDefsInfo")
     val typeType2 = ()
     // val outerCtxLvl = MinLevel + 1
@@ -369,7 +369,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     val localVars = mutable.Map.empty[TypeVar, TypeVariable]
     def tyTp(loco: Opt[Loc], desc: Str, originName: Opt[Str] = N) =
       TypeProvenance(loco, desc, originName, isType = true)
-    def rec(ty: Type)(implicit ctx: Ctx, recVars: Map[TypeVar, TypeVariable]): SimpleType = trace(s"$lvl. type ${ty.show}") { ty match {
+    def rec(ty: Type)(implicit ctx: Ctx, recVars: Map[TypeVar, TypeVariable]): SimpleType = trace(s"$lvl. type ${ty.showDbg}") { ty match {
       case Top => ExtrType(false)(tyTp(ty.toLoc, "top type"))
       case Bot => ExtrType(true)(tyTp(ty.toLoc, "bottom type"))
       case Bounds(Bot, Top) =>
@@ -1277,7 +1277,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     
     val seenVars = mutable.Set.empty[TV]
     
-    def field(ft: FieldType): Field = ft match {
+    def field(ft: FieldType)(implicit ectx: ExpCtx): Field = ft match {
       case FieldType(S(l: TV), u: TV) if l === u =>
         val res = go(u)
         Field(S(res), res) // TODO improve Field
@@ -1285,7 +1285,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         Field(f.lb.map(go), go(f.ub))
     }
     
-    def mkTypingUnit(thisTy: ST, members: Map[Str, NuMember]): TypingUnit = {
+    class ExpCtx(val tps: Map[TV, TN]) {
+      def apply(tparams: Ls[(TN, TV, Opt[VarianceInfo])]): ExpCtx =
+        new ExpCtx(tps ++ tparams.iterator.map{case (tn, tv, vi) => tv -> tn})
+    }
+    
+    def mkTypingUnit(thisTy: ST, members: Map[Str, NuMember])(implicit ectx: ExpCtx): TypingUnit = {
       val sorted = members.toList.sortBy(_._1)
     // def mkTypingUnit(members: Ls[Str -> NuMember]): TypingUnit = {
       TypingUnit(
@@ -1298,37 +1303,45 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         // case _ => die
       })
     }
-    def goDecl(d: TypedNuDecl): NuDecl = d match {
+    def goDecl(d: TypedNuDecl)(implicit ectx: ExpCtx): NuDecl = d match {
       case TypedNuAls(level, td, tparams, body) =>
-        NuTypeDef(td.kind, td.nme, td.tparams, Tup(Nil), S(go(body)), Nil, N, N, TypingUnit(Nil))
+        ectx(tparams) |> { implicit ectx =>
+          NuTypeDef(td.kind, td.nme, td.tparams, Tup(Nil), S(go(body)), Nil, N, N, TypingUnit(Nil))
+        }
       case TypedNuMxn(td, thisTy, superTy, tparams, params, members, ttu) =>
-        NuTypeDef(td.kind, td.nme, td.tparams,
-          Tup(params.map(p => N -> Fld(false, false, Asc(p._1, go(p._2.ub))))),
-          N,
-          Nil,//TODO
-          // S(go(superTy)),
-          // S(go(thisTy)),
-          Option.when(!(TopType <:< superTy))(go(superTy)),
-          Option.when(!(TopType <:< thisTy))(go(thisTy)),
-          // mkTypingUnit(thisTy, 
-          //   // members
-          //   Map.empty
-          // )
-          mkTypingUnit(thisTy, members))
+        ectx(tparams) |> { implicit ectx =>
+          NuTypeDef(td.kind, td.nme, td.tparams,
+            Tup(params.map(p => N -> Fld(false, false, Asc(p._1, go(p._2.ub))))),
+            N,
+            Nil,//TODO
+            // S(go(superTy)),
+            // S(go(thisTy)),
+            Option.when(!(TopType <:< superTy))(go(superTy)),
+            Option.when(!(TopType <:< thisTy))(go(thisTy)),
+            // mkTypingUnit(thisTy, 
+            //   // members
+            //   Map.empty
+            // )
+            mkTypingUnit(thisTy, members))
+        }
       case TypedNuCls(level, td, ttu, tparams, params, members, thisTy) =>
-        NuTypeDef(td.kind, td.nme, td.tparams,
-          // Tup(params.map(p => S(p._1) -> Fld(p._2.ub))))
-          Tup(params.map(p => N -> Fld(false, false, Asc(p._1, go(p._2.ub))))),
-          N,//TODO
-          Nil,//TODO
-          N,//TODO
-          Option.when(!(TopType <:< thisTy))(go(thisTy)),
-          mkTypingUnit(thisTy, members))
-          // mkTypingUnit(() :: members.toList.sortBy(_._1)))
+        // new ExpCtx(ectx.tps ++ tparams.iterator.map{case (tn, tv, vi) => tv -> tn}) |> { implicit ectx =>
+        ectx(tparams) |> { implicit ectx =>
+          NuTypeDef(td.kind, td.nme, td.tparams,
+          // NuTypeDef(td.kind, td.nme, tparams.map{case (tn, tv, vi) => },
+            // Tup(params.map(p => S(p._1) -> Fld(p._2.ub))))
+            Tup(params.map(p => N -> Fld(false, false, Asc(p._1, go(p._2.ub))))),
+            N,//TODO
+            Nil,//TODO
+            N,//TODO
+            Option.when(!(TopType <:< thisTy))(go(thisTy)),
+            mkTypingUnit(thisTy, members))
+            // mkTypingUnit(() :: members.toList.sortBy(_._1)))
+          }
       case TypedNuFun(level, fd, ty) =>
         NuFunDef(fd.isLetRec, fd.nme, Nil, R(go(ty)))
     }
-    def goLike(ty: TypeLike): mlscript.TypeLike = ty match {
+    def goLike(ty: TypeLike)(implicit ectx: ExpCtx): mlscript.TypeLike = ty match {
       case ty: SimpleType =>
         val res = go(ty)
         // if (bounds.isEmpty) res
@@ -1354,11 +1367,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       //   Signature(mems, ttu.result.map(go))
     }
     
-    def go(st: SimpleType): Type =
+    def go(st: SimpleType)(implicit ectx: ExpCtx): Type =
             // trace(s"expand $st") {
           st.unwrapProvs match {
         case tv: TypeVariable if stopAtTyVars => tv.asTypeVar
-        case tv: TypeVariable =>
+        case tv: TypeVariable => ectx.tps.getOrElse(tv, {
           val nv = tv.asTypeVar
           if (!seenVars(tv)) {
             seenVars += tv
@@ -1374,6 +1387,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             }
           }
           nv
+        })
         case FunctionType(l, r) => Function(go(l), go(r))
         case ComposedType(true, l, r) => Union(go(l), go(r))
         case ComposedType(false, l, r) => Inter(go(l), go(r))
@@ -1433,7 +1447,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     }
     // }(r => s"~> $r")
     
-    val res = goLike(st)
+    val res = goLike(st)(new ExpCtx(Map.empty))
     if (bounds.isEmpty) res
     else Constrained(res, bounds, Nil)
     

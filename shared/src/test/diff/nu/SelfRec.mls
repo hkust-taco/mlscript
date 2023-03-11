@@ -25,19 +25,17 @@ class Foo2[A](x: A) {
 //│ }
 
 
-// * FIXME 'A 'A0 A
 class Foo3[A](x: A) {
   fun test = Foo3(1)
   fun foo = Foo3
 }
 //│ class Foo3[A](x: A) {
-//│   fun foo: forall 'A 'A0. (x: A,) -> Foo3['A]
+//│   fun foo: forall 'A. (x: A,) -> Foo3[A]
 //│   fun test: Foo3[1]
 //│ }
 
-// * FIXME `nothing`
 Foo3
-//│ forall 'A. (x: A,) -> Foo3[nothing]
+//│ forall 'A. (x: 'A,) -> Foo3['A]
 //│ res
 //│     = [Function (anonymous)] { class: [class Foo3] }
 
@@ -52,7 +50,7 @@ Foo3(1).x
 //│     = 1
 
 Foo3(1).foo
-//│ forall 'A. (x: A,) -> Foo3[nothing]
+//│ forall 'A. (x: 'A,) -> Foo3['A]
 //│ res
 //│     = [Function (anonymous)] { class: [class Foo3] }
 

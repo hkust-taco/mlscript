@@ -863,6 +863,8 @@ abstract class TyperHelpers { Typer: Typer =>
         val ents = tu.entities.flatMap {
           case tf: TypedNuFun =>
             tf.ty :: Nil
+          case als: TypedNuAls =>
+            als.tparams.iterator.map(_._2) ++ S(als.body)
           case mxn: TypedNuMxn =>
             mxn.members.valuesIterator.flatMap(childrenMem) ++
               S(mxn.superTV) ++

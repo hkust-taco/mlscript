@@ -17,6 +17,8 @@ trait SignatureImpl extends Located { self: Signature =>
 
 trait TypeLikeImpl extends Located { self: TypeLike =>
   
+  def showDbg2: Str = show // TODO more lightweight debug printing routine
+  
   def show: Str = showIn(ShowCtx.mk(this :: Nil), 0)
   
   private def parensIf(str: Str, cnd: Boolean): Str = if (cnd) "(" + str + ")" else str
@@ -177,7 +179,7 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
       // TODO improve this mess
       tparams.map(_._2) ::: params.fields.collect {
         case (_, Fld(_, _, Asc(_, ty))) => ty
-      } ::: sup.toList ::: ths.toList ::: Signature(body.entities.collect {
+      } ::: sig.toList ::: sup.toList ::: ths.toList ::: Signature(body.entities.collect {
         case d: NuDecl => d
       }, N) :: Nil // TODO parents?
   }
@@ -438,14 +440,14 @@ object OpApp {
 trait DeclImpl extends Located { self: Decl =>
   val body: Located
   def showBody: Str = this match {
-    case Def(_, _, rhs, isByname) => rhs.fold(_.toString, _.show)
-    case td: TypeDef => td.body.show
+    case Def(_, _, rhs, isByname) => rhs.fold(_.toString, _.showDbg2)
+    case td: TypeDef => td.body.showDbg2
   }
   def describe: Str = this match {
     case _: Def => "definition"
     case _: TypeDef => "type declaration"
   }
-  def show: Str = showHead + (this match {
+  def showDbg: Str = showHead + (this match {
     case TypeDef(Als, _, _, _, _, _, _) => " = "; case _ => ": " }) + showBody
   def showHead: Str = this match {
     case Def(true, n, b, isByname) => s"rec def $n"
@@ -469,8 +471,8 @@ trait NuDeclImpl extends Located { self: NuDecl =>
   }
   def name: Str = nameVar.name
   def showBody: Str = this match {
-    case NuFunDef(_, _, _, rhs) => rhs.fold(_.toString, _.show)
-    case td: NuTypeDef => td.body.show
+    case NuFunDef(_, _, _, rhs) => rhs.fold(_.toString, _.showDbg2)
+    case td: NuTypeDef => td.body.showDbg
   }
   def describe: Str = this match {
     case _: NuFunDef => "definition"
@@ -488,12 +490,12 @@ trait NuDeclImpl extends Located { self: NuDecl =>
     case NuTypeDef(k, n, tps, sps, sig, parents, sup, ths, bod) =>
       s"${k.str} ${n.name}${if (tps.isEmpty) "" else tps.map(_._2.name).mkString("‹", ", ", "›")}(${
         // sps.mkString("(",",",")")
-        sps})${sig.fold("")(": " + _.show)}${
+        sps})${sig.fold("")(": " + _.showDbg2)}${
           if (parents.isEmpty) "" else if (k === Als) " = " else ": "}${parents.mkString(", ")}"
   }
 }
 trait TypingUnitImpl extends Located { self: TypingUnit =>
-  def show: Str = entities.map {
+  def showDbg: Str = entities.map {
     case t: Term => t.toString
     case d: NuDecl => d.showDbg
     case _ => die
@@ -583,7 +585,7 @@ trait TermImpl extends StatementImpl { self: Term =>
     case StrLit(value) => '"'.toString + value + '"'
     case UnitLit(value) => if (value) "undefined" else "null"
     case v @ Var(name) => name + v.uid.fold("")("::"+_.toString)
-    case Asc(trm, ty) => s"$trm : ${ty.show}"  |> bra
+    case Asc(trm, ty) => s"$trm : ${ty.showDbg2}"  |> bra
     case Lam(pat, rhs) => s"($pat) => $rhs" |> bra
     case App(lhs, rhs) => s"${lhs.print(!lhs.isInstanceOf[App])} ${rhs.print(true)}" |> bra
     case Rcd(fields) =>
@@ -608,10 +610,10 @@ trait TermImpl extends StatementImpl { self: Term =>
       s"case $s of { ${c.print(true)} }" |> bra
     case Subs(a, i) => s"($a)[$i]"
     case Assign(lhs, rhs) => s" $lhs <- $rhs" |> bra
-    case New(S((at, ar)), bod) => s"new ${at.show}($ar) ${bod.show}" |> bra
-    case New(N, bod) => s"new ${bod.show}" |> bra
+    case New(S((at, ar)), bod) => s"new ${at.showDbg2}($ar) ${bod.showDbg}" |> bra
+    case New(N, bod) => s"new ${bod.showDbg}" |> bra
     case If(body, els) => s"if $body" + els.fold("")(" else " + _) |> bra
-    case TyApp(lhs, targs) => s"$lhs‹${targs.map(_.show).mkString(", ")}›"
+    case TyApp(lhs, targs) => s"$lhs‹${targs.map(_.showDbg2).mkString(", ")}›"
     case Where(bod, wh) => s"${bod} where {${wh.mkString("; ")}}"
     case Forall(ps, bod) => s"forall ${ps.mkString(", ")}. ${bod}"
     case Inst(bod) => s"${bod.print(true)}!"
@@ -626,7 +628,7 @@ trait TermImpl extends StatementImpl { self: Term =>
     try R(toType_!.withLocOf(this)) catch {
       case e: NotAType =>
         import Message._
-        L(ErrorReport(msg"not a recognized type: ${e.trm.toString}"->e.trm.toLoc::Nil)) }
+        L(ErrorReport(msg"not a recognized type" -> e.trm.toLoc::Nil)) }
   protected def toType_! : Type = (this match {
     case Var(name) if name.startsWith("`") => TypeVar(R(name.tail), N)
     case Var(name) if name.startsWith("'") => TypeVar(R(name), N)
@@ -952,7 +954,7 @@ trait StatementImpl extends Located { self: Statement =>
     case DatatypeDefn(head, body) => s"data type $head of $body"
     case DataDefn(head) => s"data $head"
     case _: Term => super.toString
-    case d: Decl => d.show
+    case d: Decl => d.showDbg
     case d: NuDecl => d.showDbg
   }
 }

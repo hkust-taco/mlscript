@@ -54,6 +54,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     private implicit val prov: TP =
       TypeProvenance(decl.toLoc, decl.describe)
     
+    println(s"${ctx.lvl}. Created lazy type info $decl")
     
     lazy val tparams: Ls[(TN, TV, Opt[VarianceInfo])] = ctx.nest.nextLevel { implicit ctx =>
       decl match {

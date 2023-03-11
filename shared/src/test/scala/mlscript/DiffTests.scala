@@ -410,7 +410,7 @@ class DiffTests
             val res = p.parseAll(p.typingUnit)
             
             if (parseOnly)
-              output("Parsed: " + res.show)
+              output("Parsed: " + res.showDbg)
             
             postProcess(mode, basePath, testName, res).foreach(output)
             
@@ -545,11 +545,6 @@ class DiffTests
                       case N => "fun"
                     }} ${tf.name}: ${tf.ty} where ${tf.ty.showBounds
                       .indentNewLines(indStr+"|")}")
-                    output(s"${indStr}[pretty-printed] ${tf.name}: ${
-                      // exp.show
-                      typer.expandType(tf.ty)(ctx).show
-                      // typer.expandType(tf.ty)(ctx).showIn(sctx)
-                        .indentNewLines(indStr+"|")}")
                 }
               }
               if (mode.dbg || mode.explainErrors) {
