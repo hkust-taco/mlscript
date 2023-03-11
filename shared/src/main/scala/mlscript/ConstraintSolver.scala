@@ -533,8 +533,41 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               rec(f0, f1, true)
             case (LhsRefined(S(f: FunctionType), ts, r, trs), RhsBases(pts, _, _)) =>
               annoying(Nil, LhsRefined(N, ts, r, trs), Nil, done_rs)
-            case (LhsRefined(S(ClassTag(Var(nme), _)), ts, r, trs0), RhsBases(ots, S(R(RhsField(fldNme, fldTy))), trs))
-            if nme.isCapitalized =>
+              
+            // * These deal with the implicit Eql type member in primitive types.
+            // * (Originally I added this to all such types,
+            // *  but it requires not expanding primitive type refs
+            // *  which causes regressions in simplification
+            // *  because we don't yet simplify unexpanded type refs...)
+            case (LhsRefined(S(ct @ ClassTag(Var(nme @ ("int" | "number" | "string" | "bool")), _)), ts, r, trs0),
+                  RhsBases(ots, S(R(RhsField(Var("Eql#A"), fldTy))), trs)) =>
+              nme match {
+                case "int" | "number" => rec(fldTy.lb.getOrElse(TopType), DecType, false)
+                case "string" => rec(fldTy.lb.getOrElse(TopType), StrType, false)
+                case "bool" => rec(fldTy.lb.getOrElse(TopType), BoolType, false)
+                case _ => die
+              }
+            case (LhsRefined(S(ct @ ClassTag(lit: Lit, _)), ts, r, trs0),
+                  RhsBases(ots, S(R(RhsField(Var("Eql#A"), fldTy))), trs)) =>
+              lit match {
+                case _: IntLit |  _: DecLit => rec(fldTy.lb.getOrElse(TopType), DecType, false)
+                case _: StrLit => rec(fldTy.lb.getOrElse(TopType), StrType, false)
+                case _: UnitLit => reportError()
+              }
+              
+            // * This deals with the implicit Eql type member for user-defined classes.
+            case (LhsRefined(S(ClassTag(Var(nme), _)), ts, r, trs0),
+                  RhsBases(ots, S(R(RhsField(fldNme, fldTy))), trs))
+            if ctx.tyDefs2.contains(nme) => if (newDefs && fldNme.name === "Eql#A") {
+              val info = ctx.tyDefs2(nme)
+              info.typedParams.foreach { p =>
+                val fty = lookupMember(nme, r.fields.toMap.get, p._1)
+                rec(fldTy.lb.get, RecordType(p._1 -> TypeRef(TypeName("Eql"),
+                    fty.ub // FIXME check mutable?
+                    :: Nil
+                  )(provTODO).toUpper(provTODO) :: Nil)(provTODO), false)
+              }
+            } else {
               // val lti = ctx.tyDefs2(nme)
               // if (lti.isComputing)
               //   annoying(Nil, LhsRefined(N, ts, r, trs0), Nil, done_rs) // TODO maybe pick a parent class here instead?
@@ -544,6 +577,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                 rec(fty.ub, fldTy.ub, false)
                 recLb(fldTy, fty)
               // }
+            }
             case (LhsRefined(S(pt: ClassTag), ts, r, trs), RhsBases(pts, bf, trs2)) =>
               if (pts.contains(pt) || pts.exists(p => pt.parentsST.contains(p.id)))
                 println(s"OK  $pt  <:  ${pts.mkString(" | ")}")
@@ -763,15 +797,15 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (_: TypeTag, _: TypeTag) if lhs === rhs => ()
           case (NegType(lhs), NegType(rhs)) => rec(rhs, lhs, true)
           
-          case (ClassTag(Var(nme), _), rt: RecordType) if nme.isCapitalized =>
+          case (ClassTag(Var(nme), _), rt: RecordType) if newDefs && nme.isCapitalized =>
             val lti = ctx.tyDefs2(nme)
-            // if (lti.isComputing) reportError()
-            // else 
-            rt.fields.foreach { case (fldNme, fldTy) =>
-              // val fty = lookupNuTypeDefField(lookupNuTypeDef(nme, _ => N), fldNme)
-              val fty = lookupMember(nme, _ => N, fldNme)
-              rec(fty.ub, fldTy.ub, false)
-              recLb(fldTy, fty)
+            rt.fields.foreach {
+              case (fldNme @ Var("Eql#A"), fldTy) =>
+                goToWork(lhs, RecordType(fldNme -> fldTy :: Nil)(noProv))
+              case (fldNme, fldTy) =>
+                val fty = lookupMember(nme, _ => N, fldNme)
+                rec(fty.ub, fldTy.ub, false)
+                recLb(fldTy, fty)
             }
           
           // * Note: at this point, it could be that a polymorphic type could be distribbed
@@ -885,10 +919,13 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             rec(tup.toRecord, rhs, true) // Q: really support this? means we'd put names into tuple reprs at runtime
           case (err @ ClassTag(ErrTypeId, _), RecordType(fs1)) =>
             fs1.foreach(f => rec(err, f._2.ub, false))
+          case (_, RecordType(fs1)) =>
+            goToWork(lhs, rhs)
           case (RecordType(fs1), err @ ClassTag(ErrTypeId, _)) =>
             fs1.foreach(f => rec(f._2.ub, err, false))
             
-          case (tr1: TypeRef, tr2: TypeRef) if tr1.defn.name =/= "Array" =>
+          case (tr1: TypeRef, tr2: TypeRef)
+          if tr1.defn.name =/= "Array" && tr2.defn.name =/= "Eql" =>
             if (tr1.defn === tr2.defn) {
               assert(tr1.targs.sizeCompare(tr2.targs) === 0)
               ctx.tyDefs.get(tr1.defn.name) match {

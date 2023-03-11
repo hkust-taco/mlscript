@@ -206,3 +206,14 @@ Test2_1.d
 Test2_1.n
 //│ 456
 
+
+// FIXME where does the throw come from?
+// :s
+class Test2(n: int) {
+  fun inc = Test3.inc(this)
+}
+module Test3 {
+  fun inc(t: Test2) = Test2(t.n + 1)
+}
+//│ /!!!\ Uncaught error: mlscript.ErrorReport: Unhandled cyclic definition
+

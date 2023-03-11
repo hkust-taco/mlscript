@@ -437,15 +437,15 @@ let rec x = (let y = (x x); (z => z))
 (f => (x => f (v => (x x) v)) (x => f (v => (x x) v)))
 //│ res: ((forall 'a 'b. 'a -> 'b
 //│   where
-//│     forall 'c 'd. 'c -> 'd
+//│     forall 'c 'd. 'd -> 'c
 //│       where
 //│         'e <: (forall 'f 'g. 'f -> 'g
 //│           where
-//│             'c <: 'c -> 'f -> 'g) -> 'd <: (forall 'c 'd. 'c -> 'd
+//│             'd <: 'd -> 'f -> 'g) -> 'c <: (forall 'c 'd. 'd -> 'c
 //│       where
 //│         'e <: (forall 'f 'g. 'f -> 'g
 //│           where
-//│             'c <: 'c -> 'f -> 'g) -> 'd) -> 'a -> 'b) -> 'h & 'e) -> 'h
+//│             'd <: 'd -> 'f -> 'g) -> 'c) -> 'a -> 'b) -> 'h & 'e) -> 'h
 
 // * Function that takes arbitrarily many arguments:
 // :e // Works thanks to inconsistent constrained types...

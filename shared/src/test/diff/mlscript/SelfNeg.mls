@@ -56,11 +56,11 @@ def foo: ('a -> (~'a -> anything) -> anything) -> MutArray['a]
 
 :ns
 r = foo (fun a -> fun f -> f a)
-//│ r: forall 'b 'c 'a. 'c
+//│ r: forall 'b 'a 'c. 'b
 //│   where
-//│     'c :> MutArray['a]
-//│     'a <: 'b
-//│     'b <: ~'a
+//│     'b :> MutArray['a]
+//│     'a <: 'c
+//│     'c <: ~'a
 //│  = <no result>
 //│    foo is not implemented
 

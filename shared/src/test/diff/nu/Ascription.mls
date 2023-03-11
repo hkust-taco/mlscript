@@ -1,35 +1,38 @@
-:NewParser
+:NewDefs
 
 1: int
-//│ res: int
-//│    = 1
+//│ int
+//│ res
+//│     = 1
 
 1 : int
-//│ res: int
-//│    = 1
+//│ int
+//│ res
+//│     = 1
 
 // TODO?
 :e
 1 : int : int
 //│ ╔══[ERROR] not a recognized type: int : int
-//│ ║  l.13: 	1 : int : int
+//│ ║  l.15: 	1 : int : int
 //│ ╙──      	    ^^^
-//│ res: anything
-//│    = 1
+//│ anything
+//│ res
+//│     = 1
 
 fun foo(x: int) = x + 1
-//│ foo: (x: int,) -> int
-//│    = [Function: foo]
+//│ fun foo: (x: int,) -> int
 
 fun foo(x : int) = x + 1
-//│ foo: int -> int
-//│    = [Function: foo1]
+//│ fun foo: int -> int
 
 foo(123 : int) : int
-//│ res: int
-//│    = 124
+//│ int
+//│ res
+//│     = 124
 
 foo(123:int):int
-//│ res: int
-//│    = 124
+//│ int
+//│ res
+//│     = 124
 

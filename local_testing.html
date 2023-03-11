@@ -51,6 +51,53 @@ module TestLang2: EvalAddLit, EvalNeg, EvalMul, EvalNegNeg<br/>
 <br/>
 let res2 = TestLang2.eval(add2negadd11)
   </div>
+<br/>
+  <div class="panel">
+class Some[A](value: A)<br/>
+<br/>
+mixin Foo { fun foo: int = 1 }<br/>
+mixin Bar { fun foo = Some(super.foo) }<br/>
+module ClsFoo extends Foo, Bar, Bar<br/>
+<br/>
+ClsFoo.foo<br/>
+  </div>
+<br/>
+  <div class="panel">
+class Some[A](value: A)<br/>
+module None<br/>
+<br/>
+mixin ComparePoint {<br/>
+&nbsp;&nbsp;fun compare(lhs, rhs) = (lhs.x == rhs.x) && (lhs.y == rhs.y)<br/>
+}<br/>
+mixin CompareColored {<br/>
+&nbsp;&nbsp;fun compare(lhs, rhs) =<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;super.compare(lhs, rhs) && eq(lhs.color)(rhs.color)<br/>
+}<br/>
+mixin CompareNested {<br/>
+&nbsp;&nbsp;fun compare(lhs, rhs) =<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;super.compare(lhs, rhs) &&<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if lhs.parent is Some(p)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;then rhs.parent is Some(q) and this.compare(p, q)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;else rhs.parent is None<br/>
+}<br/>
+<br/>
+class MyPoint(x: int, y: int, color: string, parent: Some[MyPoint] | None)<br/>
+<br/>
+module CompareMyPoint extends ComparePoint, CompareColored, CompareNested<br/>
+<br/>
+let Red = "red"<br/>
+let p0 = MyPoint(0, 0, Red, None)<br/>
+let p1 = MyPoint(0, 1, Red, None)<br/>
+let p2 = MyPoint(0, 1, Red, None)<br/>
+let p3 = MyPoint(0, 1, Red, Some(p1))<br/>
+let p4 = MyPoint(0, 1, Red, Some(p2))<br/>
+let p5 = MyPoint(0, 1, Red, Some(p3))<br/>
+<br/>
+CompareMyPoint.compare(p0, p1)<br/>
+CompareMyPoint.compare(p1, p2)<br/>
+CompareMyPoint.compare(p3, p4)<br/>
+CompareMyPoint.compare(p3, p5)<br/>
+  </div>
 
 
 </html>

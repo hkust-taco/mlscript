@@ -22,7 +22,7 @@ trait TypeSimplifier { self: Typer =>
     val _ctx = ctx
     
     val allVarPols = ty.getVarsPol(PolMap(pol))
-    println("!!"+ty.childrenPol(PolMap(pol)))
+    // println("!!"+ty.childrenPol(PolMap(pol)))
     println(s"allVarPols: ${printPols(allVarPols)}")
     
     val renewed = MutMap.empty[TypeVariable, TypeVariable]
@@ -211,7 +211,7 @@ trait TypeSimplifier { self: Typer =>
               case S(cls @ ClassTag(Var(tagNme), ps))
                 if !primitiveTypes.contains(tagNme)
                 && ctx.tyDefs.contains(tagNme.capitalize)
-                && !tagNme.isCapitalized // currently capitalization characterizes nudefs
+                && !newDefs
               =>
                 val clsNme = tagNme.capitalize // TODO rm capitalize
                 val clsTyNme = TypeName(clsNme)

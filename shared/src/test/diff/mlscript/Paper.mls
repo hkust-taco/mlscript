@@ -53,7 +53,7 @@ class SomeAnd[A, P]: Some[A] & { payload: P }
 
 let arg = if true then SomeAnd{value = 42; payload = 23} else None{}
   in mapSome (fun x -> x.value + x.payload) arg
-//│ res: int | None
+//│ res: None | int
 //│    = 65
 
 

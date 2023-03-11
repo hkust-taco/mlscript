@@ -149,7 +149,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
             members.mapValuesIter(_.freshenAbove(lim, rigidify)).toMap,
             ttu.freshenAbove(lim, rigidify))
         case cls @ TypedNuCls(level, td, ttu, tparams, params, members, thisTy) =>
-          println(">>",level,ctx.lvl)
+          // println(">>",level,ctx.lvl)
           // TypedNuCls(level, td, ttu.freshenAbove(level, rigidify),
           //   params.mapValues(_.freshenAbove(level, rigidify)),
           //   members.mapValuesIter(_.freshenAbove(level, rigidify)).toMap)
@@ -427,7 +427,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
             // go(dss ::: stmts)
             S(typeTerms(dss, false, Nil)(ctx, raise, TypeProvenance(s.toLoc, s match {
               case trm: Term => trm.describe
-              case s => ???
+              case s => "statement"
             }), Map.empty, genLambdas = false))
         }
         stmts match {

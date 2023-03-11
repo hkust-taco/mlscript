@@ -688,9 +688,9 @@ private class NotAType(val trm: Statement) extends Throwable
 
 trait LitImpl { self: Lit =>
   def baseClasses: Set[TypeName] = this match {
-    case _: IntLit => Set.single(TypeName("int")) + TypeName("number")
-    case _: StrLit => Set.single(TypeName("string"))
-    case _: DecLit => Set.single(TypeName("number"))
+    case _: IntLit => Set.single(TypeName("int")) + TypeName("number") + TypeName("Eql")
+    case _: StrLit => Set.single(TypeName("string")) + TypeName("Eql")
+    case _: DecLit => Set.single(TypeName("number")) + TypeName("Eql")
     case _: UnitLit => Set.empty
   }
 }

@@ -550,9 +550,9 @@ t = Dup { x = 42 }
 :stats
 t : Dup[bool, int]
 //│ res: Dup[?, int]
-//│ constrain calls  : 27
-//│ annoying  calls  : 19
-//│ subtyping calls  : 81
+//│ constrain calls  : 25
+//│ annoying  calls  : 21
+//│ subtyping calls  : 70
 
 :stats
 t : Dup[int, bool]
@@ -566,23 +566,23 @@ t : Dup[int, bool]
 //│ ║  l.558: 	t : Dup[int, bool]
 //│ ╙──       	             ^^^^
 //│ res: Dup[?, bool]
-//│ constrain calls  : 41
-//│ annoying  calls  : 22
-//│ subtyping calls  : 120
+//│ constrain calls  : 39
+//│ annoying  calls  : 24
+//│ subtyping calls  : 109
 
 :stats
 t.MthDup (fun x -> mul 2 x)
 //│ res: int
-//│ constrain calls  : 74
-//│ annoying  calls  : 19
-//│ subtyping calls  : 227
+//│ constrain calls  : 72
+//│ annoying  calls  : 21
+//│ subtyping calls  : 216
 
 :stats
 t.MthDup id
 //│ res: 42
-//│ constrain calls  : 71
-//│ annoying  calls  : 18
-//│ subtyping calls  : 231
+//│ constrain calls  : 69
+//│ annoying  calls  : 20
+//│ subtyping calls  : 220
 
 
 // We don't currently analyze forward method declarations

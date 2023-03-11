@@ -20,7 +20,7 @@ Undefined2 { x = "I am here to make a type mismatch." }
 //│ ╟── Note: constraint arises from literal type:
 //│ ║  l.1: 	class Undefined2: { x: undefined }
 //│ ╙──     	                       ^^^^^^^^^
-//│ res: error | (Undefined2 with {x: "I am here to make a type mismatch."})
+//│ res: (Undefined2 with {x: "I am here to make a type mismatch."}) | error
 //│    = Undefined2 { x: 'I am here to make a type mismatch.' }
 
 :e

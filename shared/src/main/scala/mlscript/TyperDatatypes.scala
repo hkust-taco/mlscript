@@ -11,6 +11,7 @@ import mlscript.Message._
 abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   
   type TN = TypeName
+  val TN: TypeName.type = TypeName
   
   
   // The data types used for type inference:
@@ -491,19 +492,25 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
             case _ => die
           }
         case td: NuTypeDef if td.kind is Nms =>
-          ClassTag(Var(td.nme.name), Set.empty)(provTODO)
+          ClassTag(Var(td.nme.name),
+              // TODO base classes
+              // Set.empty
+              Set.single(TN("Eql"))
+            )(provTODO)
         case td: NuTypeDef if td.kind is Cls =>
           PolymorphicType.mk(level,
             FunctionType(
               TupleType(typedParams.mapKeys(some))(provTODO),
-              ClassTag(Var(td.nme.name), Set.empty)(provTODO) & RecordType.mk(
+              ClassTag(Var(td.nme.name),
+                // TODO base classes
+                // Set.empty
+                Set.single(TypeName("Eql"))
+              )(provTODO) & RecordType.mk(
                 tparams.map { case (tn, tv, vi) => // TODO use vi
                   Var(td.nme.name + "#" + tn.name).withLocOf(tn) -> FieldType(S(tv), tv)(provTODO) }
               )(provTODO)
             )(provTODO)
           )
-        // case td: NuTypeDef =>
-        //   ??? // TODO
       }
     
     def force()(implicit raise: Raise): TypedNuDecl = {
@@ -600,7 +607,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   object PolymorphicType {
     def mk(polymLevel: Level, body: SimpleType): SimpleType = {
       require(polymLevel <= MaxLevel)
-      println(polymLevel, body.level)
+      // println(polymLevel, body.level)
       if (polymLevel === MaxLevel || body.level <= polymLevel) body
       else body.unwrapProvs match { // Q: unwrap other proxies?
         case PolymorphicType(lvl, bod) => PolymorphicType(polymLevel min lvl, bod)
@@ -918,9 +925,8 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
             }.toMap)
           case td: TypedNuCls =>
             assert(td.tparams.size === targs.size)
-            ClassTag(Var(td.nme.name).withLocOf(td.nme),
-              Set.empty//TODO
-              )(provTODO) & RecordType(td.tparams.lazyZip(targs).map {
+            clsNameToNomTag(td.td)(provTODO, ctx) &
+              RecordType(td.tparams.lazyZip(targs).map {
                 case ((tn, tv, vi), ta) => // TODO use vi
                   val fldNme = td.td.nme.name + "#" + tn.name
                   Var(fldNme).withLocOf(tn) -> FieldType(S(ta), ta)(provTODO)

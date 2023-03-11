@@ -1,0 +1,61 @@
+:NewDefs
+
+:js
+class Test(n: int) {
+  fun inc = Test(n + 1)
+}
+//│ class Test(n: int) {
+//│   fun inc: Test
+//│ }
+//│ // Prelude
+//│ let res;
+//│ let typing_unit = {
+//│   cache: {},
+//│   get Test() {
+//│     const cache = this.cache;
+//│     if (this.cache.Test === undefined) {
+//│       class Test {
+//│         #n;
+//│         get n() { return this.#n; }
+//│         constructor(n) {
+//│           this.#n = n;
+//│         }
+//│         get inc() {
+//│           const Test = cache.Test;
+//│           const n = this.#n;
+//│           return Test(n + 1);
+//│         }
+//│       };
+//│       this.cache.Test = ((n) => new Test(n));
+//│       this.cache.Test["class"] = Test;
+//│     }
+//│     return this.cache.Test;
+//│   }
+//│ };
+//│ globalThis.Test = typing_unit.Test;
+//│ // End of generated code
+
+Test(0).inc.n
+//│ int
+//│ res
+//│     = 1
+
+class Test2(n: int) {
+  fun inc = Test3.inc(n)
+}
+module Test3 {
+  fun inc(n) = Test2(n + 1)
+}
+//│ class Test2(n: int) {
+//│   fun inc: Test2
+//│ }
+//│ module Test3() {
+//│   fun inc: int -> Test2
+//│ }
+
+Test2(0).inc.n
+//│ int
+//│ res
+//│     = 1
+
+

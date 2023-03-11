@@ -272,18 +272,33 @@ class Bool
 //│ Defined class String
 //│ Defined class Bool
 
+:e
 "1" : String
 true : Bool
-//│ res: string
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.276: 	"1" : String
+//│ ║         	^^^
+//│ ╟── string literal of type `"1"` is not an instance of type `String`
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.276: 	"1" : String
+//│ ╙──       	      ^^^^^^
+//│ res: String
 //│    = '1'
-//│ res: bool
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.277: 	true : Bool
+//│ ║         	^^^^
+//│ ╟── reference of type `true` is not an instance of type `Bool`
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.277: 	true : Bool
+//│ ╙──       	       ^^^^
+//│ res: Bool
 //│    = true
 
 
 :e
 class Weird: {} | {}
 //│ ╔══[ERROR] cannot inherit from a type union
-//│ ║  l.284: 	class Weird: {} | {}
+//│ ║  l.299: 	class Weird: {} | {}
 //│ ╙──       	      ^^^^^^^^^^^^^^
 
 
@@ -293,7 +308,7 @@ class A
 type Id[T] = T
 class B: Id[A]
 //│ ╔══[ERROR] cannot inherit from a type alias
-//│ ║  l.294: 	class B: Id[A]
+//│ ║  l.309: 	class B: Id[A]
 //│ ╙──       	      ^^^^^^^^
 //│ Defined class A
 //│ Defined type alias Id[+T]
@@ -305,7 +320,7 @@ class B: Id[A]
 class Class3A
 class Class3B: Class3A & 'a
 //│ ╔══[ERROR] cannot inherit from a polymorphic type
-//│ ║  l.306: 	class Class3B: Class3A & 'a
+//│ ║  l.321: 	class Class3B: Class3A & 'a
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^
 //│ Defined class Class3A
 

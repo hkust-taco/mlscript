@@ -79,7 +79,7 @@ mixin EvalLambda {
 //│ mixin EvalLambda() {
 //│   super: {eval: ('a, 'b,) -> 'c}
 //│   this: {eval: (Cons[(string, 'd,)], 't,) -> 'c & ('a, 't0,) -> ('d & 'e) & (Cons[(string, Var,) | 'A], 't1,) -> 'f}
-//│   fun eval: ('a & (Cons['A] | Nil), Abs['t1] | App['t0 & (Abs['t] | ~Abs)] | 'b & ~Abs & ~App,) -> (Abs['f] | App['d | 'e] | 'c)
+//│   fun eval: ('a & (Cons['A] | Nil), Abs['t1] | App['t0 & (Abs['t] | ~#Abs)] | 'b & ~#Abs & ~#App,) -> (Abs['f] | App['d | 'e] | 'c)
 //│ }
 
 module Test1 extends EvalVar, EvalLambda
@@ -87,8 +87,8 @@ module Test1 extends EvalVar, EvalLambda
 //│   fun eval: (Cons[{_1: string, _2: 'result}] | Nil, 'a,) -> 'result
 //│ }
 //│ where
-//│   'a <: Abs['a] | App['a & (Abs['a] | ~Abs)] | Var
-//│   'result :> Var | App['result] | Abs['result]
+//│   'a <: Abs['a] | App['a & (Abs['a] | ~#Abs)] | Var
+//│   'result :> Var | Abs['result] | App['result]
 
 Test1.eval(Nil, Var("a"))
 //│ 'a
@@ -114,7 +114,7 @@ Test1.eval(Cons(("c", Var("d")), Nil), App(Abs("b", Var("b")), Var("c")))
 Test1.eval(Cons(("c", Abs("d", Var("d"))), Nil), App(Abs("b", Var("b")), Var("c")))
 //│ 'a
 //│   where
-//│     'a :> Abs[Var] | Var | App['a] | Abs['a]
+//│     'a :> Abs['a] | Abs[Var] | Var | App['a]
 //│ res
 //│     = Var {}
 
@@ -204,7 +204,7 @@ module Test3 extends EvalVar, EvalExpr, EvalLambda
 //│   'result :> App['result] | Abs['result] | Num | Var | 'b
 //│   'b <: Add['c] | Mul['c] | Num | Var
 //│   'c <: 'a
-//│   'a <: Abs['a] | App['a & (Abs['a] | ~Abs)] | 'b & ~Abs & ~App
+//│   'a <: Abs['a] | App['a & (Abs['a] | ~#Abs)] | 'b & ~#Abs & ~#App
 
 Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ 'a

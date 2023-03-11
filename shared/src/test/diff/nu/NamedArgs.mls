@@ -1,41 +1,48 @@
-:NewParser
+:NewDefs
 
 
 class Foo(x: int)
-//│ Defined class Foo
-//│ Foo: (x: int,) -> Foo
-//│    = [Function: Foo1]
+//│ class Foo(x: int)
 
 Foo(1)
-//│ res: Foo
-//│    = Foo { x: 1 }
+//│ Foo
+//│ res
+//│     = Foo {}
 
 Foo(x: 1)
-//│ res: Foo
-//│    = Foo { x: 1 }
+//│ Foo
+//│ res
+//│     = Foo {}
 
-// :e // TODO check parameter name matches
 Foo(y: 1)
-//│ res: Foo
-//│    = Foo { x: 1 }
+//│ Foo
+//│ res
+//│     = Foo {}
 
 
-// TODO: Here `x` is not currently treated as a field name
+:e // TODO: Here `x` is not currently treated as a field name
 class Bar(x)
-//│ Defined class Bar
-//│ Bar: 'x -> (Bar & {x: 'x})
-//│    = [Function: Bar1]
+//│ ╔══[ERROR] Class parameters currently need type annotations
+//│ ║  l.24: 	class Bar(x)
+//│ ╙──      	          ^
+//│ class Bar(x: error)
 
 Bar(1)
-//│ res: Bar & {x: 1}
-//│    = Bar { x: 1 }
+//│ Bar
+//│ res
+//│     = Bar {}
 
 Bar(x: 1)
-//│ res: Bar & {x: 1}
-//│    = Bar { x: 1 }
+//│ Bar
+//│ res
+//│     = Bar {}
 
-// :e
+:e
 Bar(y: 1)
-//│ res: Bar & {x: 1}
-//│    = Bar { x: 1 }
+//│ ╔══[ERROR] Wrong tuple field name: found 'y' instead of 'x'
+//│ ║  l.41: 	Bar(y: 1)
+//│ ╙──      	   ^^^^^^
+//│ Bar | error
+//│ res
+//│     = Bar {}
 

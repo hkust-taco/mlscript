@@ -13,11 +13,11 @@ def f e = case e of
 
 :ns
 f
-//│ res: forall 'a 'z 'b 'y 'c 'd. 'c -> ('y | 'z | 'd)
+//│ res: forall 'y 'z 'a 'b 'c 'd. 'a -> ('y | 'z | 'b)
 //│   where
-//│     'c <: #Foo & 'a | (#Foo & 'b | 'd & ~#Foo) & ~#Foo
-//│     'b <: {z: 'z}
-//│     'a <: {y: 'y}
+//│     'a <: #Foo & 'c | (#Foo & 'd | 'b & ~#Foo) & ~#Foo
+//│     'd <: {z: 'z}
+//│     'c <: {y: 'y}
 //│    = [Function: f]
 
 class Foo2: Foo[int] & { y: int }

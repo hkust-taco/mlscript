@@ -216,7 +216,7 @@ mixin EvalNeg {
 //│ mixin EvalNeg() {
 //│   super: {eval: 'a -> 'b}
 //│   this: {eval: 'expr -> int}
-//│   fun eval: (Neg['expr] | 'a & ~Neg) -> (int | 'b)
+//│   fun eval: (Neg['expr] | 'a & ~#Neg) -> (int | 'b)
 //│ }
 //│ // Prelude
 //│ let typing_unit3 = {
@@ -271,7 +271,7 @@ mixin EvalNegNeg {
 //│ mixin EvalNegNeg() {
 //│   super: {eval: (Neg['A] | 'a) -> 'b}
 //│   this: {eval: 'expr -> 'b}
-//│   fun eval: (Neg['A & (~Neg | Neg['expr])] | 'a & ~Neg) -> 'b
+//│   fun eval: (Neg['A & (~#Neg | Neg['expr])] | 'a & ~#Neg) -> 'b
 //│ }
 //│ // Prelude
 //│ let typing_unit4 = {
@@ -323,7 +323,7 @@ module TestLang extends EvalBase, EvalNeg, EvalNegNeg
 //│   fun eval: 'a -> int
 //│ }
 //│ where
-//│   'a <: Add['a] | Lit | Neg['A & (~Neg | Neg['a])]
+//│   'a <: Add['a] | Lit | Neg['A & (~#Neg | Neg['a])]
 //│   'A <: 'a
 //│ // Prelude
 //│ let typing_unit5 = {
@@ -440,8 +440,11 @@ class E(x: int) extends BB, AA(x)
 //│ class E(x: int)
 
 :js
-mixin Fooo(x: int)
-//│ mixin Fooo(x: int)
+mixin Fooo(x: int) { fun f = [x, this.x] }
+//│ mixin Fooo(x: int) {
+//│   this: {x: 'x}
+//│   fun f: (int, 'x,)
+//│ }
 //│ // Prelude
 //│ let typing_unit14 = {
 //│   cache: {},
@@ -452,6 +455,14 @@ mixin Fooo(x: int)
 //│       constructor(x, ...rest) {
 //│         super(...rest);
 //│         this.#x = x;
+//│       }
+//│       get f() {
+//│         const x = this.#x;
+//│         const self = this;
+//│         return ([
+//│           x,
+//│           self.x
+//│         ]);
 //│       }
 //│     });
 //│   }
@@ -481,7 +492,9 @@ mixin Bazz(y: int)
 
 :js
 module Barr extends Fooo(0), Bazz(1)
-//│ module Barr()
+//│ module Barr() {
+//│   fun f: (int, 0,)
+//│ }
 //│ // Prelude
 //│ let typing_unit16 = {
 //│   cache: {},
@@ -517,7 +530,7 @@ mixin Base {
   fun x = y
 }
 //│ ╔══[ERROR] identifier not found: y
-//│ ║  l.517: 	  fun x = y
+//│ ║  l.530: 	  fun x = y
 //│ ╙──       	          ^
 //│ mixin Base() {
 //│   fun x: error
@@ -534,50 +547,6 @@ module Test extends Base
 //│ Runtime error:
 //│   ReferenceError: Base is not defined
 
-:js
-class Test(n: int) {
-  fun inc = Test(n + 1)
-}
-//│ class Test(n: int) {
-//│   fun inc: Test
-//│ }
-//│ // Prelude
-//│ let typing_unit21 = {
-//│   cache: {},
-//│   get Test1() {
-//│     const cache = this.cache;
-//│     if (this.cache.Test1 === undefined) {
-//│       class Test1 {
-//│         #n;
-//│         get n() { return this.#n; }
-//│         constructor(n) {
-//│           this.#n = n;
-//│         }
-//│         get inc() {
-//│           const Test1 = cache.Test1;
-//│           const n = this.#n;
-//│           return Test1(n + 1);
-//│         }
-//│       };
-//│       this.cache.Test1 = ((n) => new Test1(n));
-//│       this.cache.Test1["class"] = Test1;
-//│     }
-//│     return this.cache.Test1;
-//│   }
-//│ };
-//│ globalThis.Test1 = typing_unit21.Test1;
-//│ // End of generated code
-
-:js
-Test(0).inc.n
-//│ int
-//│ // Prelude
-//│ let typing_unit22 = { cache: {} };
-//│ // Query 1
-//│ res = Test1(0).inc.n;
-//│ // End of generated code
-//│ res
-//│     = 1
 
 mixin MA(a: int)
 mixin MB(b1: int, b2: int)
@@ -590,7 +559,7 @@ mixin MC(c: int)
 module MM extends MA(1), MB(2, 3), MC(4)
 //│ module MM()
 //│ // Prelude
-//│ let typing_unit24 = {
+//│ let typing_unit22 = {
 //│   cache: {},
 //│   get MM() {
 //│     if (this.cache.MM === undefined) {
@@ -605,7 +574,7 @@ module MM extends MA(1), MB(2, 3), MC(4)
 //│     return this.cache.MM;
 //│   }
 //│ };
-//│ globalThis.MM = typing_unit24.MM;
+//│ globalThis.MM = typing_unit22.MM;
 //│ // End of generated code
 
 MM.a

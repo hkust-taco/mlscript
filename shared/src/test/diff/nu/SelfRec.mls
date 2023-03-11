@@ -1,0 +1,59 @@
+:NewDefs
+
+
+
+// TODO use available type signatures!
+class Foo1(x: int) {
+  fun test = Foo1(1).x
+}
+//│ ╔══[ERROR] unsupported indirectly recursive member access
+//│ ║  l.7: 	  fun test = Foo1(1).x
+//│ ╙──     	                    ^^
+//│ class Foo1(x: int) {
+//│   fun test: error
+//│ }
+
+// TODO
+class Foo2[A](x: A) {
+  fun test = Foo2(1).x
+}
+//│ ╔══[ERROR] unsupported indirectly recursive member access
+//│ ║  l.18: 	  fun test = Foo2(1).x
+//│ ╙──      	                    ^^
+//│ class Foo2[A](x: A) {
+//│   fun test: error
+//│ }
+
+
+// * FIXME 'A 'A0 A
+class Foo3[A](x: A) {
+  fun test = Foo3(1)
+  fun foo = Foo3
+}
+//│ class Foo3[A](x: A) {
+//│   fun foo: forall 'A 'A0. (x: A,) -> Foo3['A]
+//│   fun test: Foo3[1]
+//│ }
+
+// * FIXME `nothing`
+Foo3
+//│ forall 'A. (x: A,) -> Foo3[nothing]
+//│ res
+//│     = [Function (anonymous)] { class: [class Foo3] }
+
+Foo3(1)
+//│ Foo3[1]
+//│ res
+//│     = Foo3 {}
+
+Foo3(1).x
+//│ 1
+//│ res
+//│     = 1
+
+Foo3(1).foo
+//│ forall 'A. (x: A,) -> Foo3[nothing]
+//│ res
+//│     = [Function (anonymous)] { class: [class Foo3] }
+
+

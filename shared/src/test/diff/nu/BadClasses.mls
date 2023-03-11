@@ -1,4 +1,3 @@
-:NewParser
 :NewDefs
 
 
@@ -9,27 +8,27 @@ mixin M0(x: int)
 :e
 class C0 extends M0
 //│ ╔══[ERROR] mixin M0 expects 1 parameters; got 0
-//│ ║  l.10: 	class C0 extends M0
-//│ ╙──      	                 ^^
+//│ ║  l.9: 	class C0 extends M0
+//│ ╙──     	                 ^^
 //│ class C0()
 
 :e
 class C0 extends M0(1, 2)
 //│ ╔══[ERROR] mixin M0 expects 1 parameters; got 2
-//│ ║  l.17: 	class C0 extends M0(1, 2)
+//│ ║  l.16: 	class C0 extends M0(1, 2)
 //│ ╙──      	                 ^^^^^^^
 //│ class C0()
 
 :e
 class C0 extends M0(true)
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.24: 	class C0 extends M0(true)
+//│ ║  l.23: 	class C0 extends M0(true)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── reference of type `true` is not an instance of type `int`
-//│ ║  l.24: 	class C0 extends M0(true)
+//│ ║  l.23: 	class C0 extends M0(true)
 //│ ║        	                    ^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.6: 	mixin M0(x: int)
+//│ ║  l.5: 	mixin M0(x: int)
 //│ ╙──     	            ^^^
 //│ class C0()
 

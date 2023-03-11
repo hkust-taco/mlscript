@@ -1,6 +1,6 @@
 :NewParser
 :NewDefs
-:NoJS
+:NoJS // TODO
 
 
 class C<A>
@@ -30,11 +30,13 @@ f(c)
 class Some<A>(value: A) {
   fun get = value
   fun toArray = [value]
-  // fun mapBad(f) = Some(f(value)) // TODO cyclic
-  // fun map(f : A => 'b) = Some(f(value)) // TODO cyclic
+  fun map(f) = Some(f(value))
+  fun map_A(f : A => 'b) = Some(f(value))
 }
 //│ class Some[A](value: A) {
 //│   fun get: A
+//│   fun map: (A -> 'A) -> Some['A]
+//│   fun map_A: (A -> 'A0) -> Some['A0]
 //│   fun toArray: (A,)
 //│ }
 
@@ -53,26 +55,31 @@ s.toArray
 //│ (1,)
 
 
-// TODO
+s.map
+//│ (1 -> 'A) -> Some['A]
 
-// s.mapBad
+s.map(succ)
+//│ Some[int]
 
-// s.mapBad(succ)
 
+s.map_A
+//│ (1 -> 'A) -> Some['A]
 
-// s.map
-
-// s.map(succ)
+s.map_A(succ)
+//│ Some[int]
 
 
 
 module None {
   fun get = error
   fun toArray = []
-  // fun mapBad(f) = None // TODO
+  fun map(f) = None
+  fun map_A(f: nothing -> anything) = None
 }
 //│ module None() {
 //│   fun get: nothing
+//│   fun map: anything -> None
+//│   fun map_A: (f: nothing -> anything,) -> None
 //│   fun toArray: ()
 //│ }
 
@@ -93,11 +100,14 @@ opt.toArray
 //│ Array[123]
 
 
-// TODO
+opt.map(succ)
+//│ None | Some[int]
 
-// opt.mapBad(succ)
+opt.map_A(succ)
+//│ None | Some[int]
 
-// opt.map(succ)
+opt.map(x => x > 0)
+//│ None | Some[bool]
 
 
 
@@ -127,7 +137,7 @@ class Test(n) {
   fun bar = n
 }
 //│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.125: 	class Test(n) {
+//│ ║  l.135: 	class Test(n) {
 //│ ╙──       	           ^
 //│ class Test(n: error) {
 //│   fun bar: error
@@ -147,13 +157,13 @@ class Test<A>(n: A) {
   fun foo = n + 1
 }
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.147: 	  fun foo = n + 1
+//│ ║  l.157: 	  fun foo = n + 1
 //│ ║         	            ^^^
 //│ ╟── reference of type `A` is not an instance of type `int`
-//│ ║  l.147: 	  fun foo = n + 1
+//│ ║  l.157: 	  fun foo = n + 1
 //│ ║         	            ^
 //│ ╟── Note: type parameter A is defined at:
-//│ ║  l.146: 	class Test<A>(n: A) {
+//│ ║  l.156: 	class Test<A>(n: A) {
 //│ ╙──       	           ^
 //│ class Test[A](n: A) {
 //│   fun foo: error | int
@@ -210,13 +220,13 @@ class TestBad<A> {
   fun foo2(x: A) = x + 1
 }
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.210: 	  fun foo2(x: A) = x + 1
+//│ ║  l.220: 	  fun foo2(x: A) = x + 1
 //│ ║         	                   ^^^
 //│ ╟── reference of type `A` is not an instance of type `int`
-//│ ║  l.210: 	  fun foo2(x: A) = x + 1
+//│ ║  l.220: 	  fun foo2(x: A) = x + 1
 //│ ║         	                   ^
 //│ ╟── Note: type parameter A is defined at:
-//│ ║  l.208: 	class TestBad<A> {
+//│ ║  l.218: 	class TestBad<A> {
 //│ ╙──       	              ^
 //│ class TestBad[A]() {
 //│   fun foo1: (x: A,) -> A

@@ -213,7 +213,7 @@ class DiffTests
           case "AllowRuntimeErrors" => allowRuntimeErrors = true; mode
           case "ShowRelativeLineNums" => showRelativeLineNums = true; mode
           case "NewParser" => newParser = true; mode
-          case "NewDefs" => newDefs = true; mode
+          case "NewDefs" => newParser = true; newDefs = true; mode
           case "NoJS" => noJavaScript = true; mode
           case "NoProvs" => noProvs = true; mode
           case "GeneralizeCurriedFunctions" => generalizeCurriedFunctions = true; mode

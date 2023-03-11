@@ -3,6 +3,7 @@ package mlscript
 import scala.collection.mutable
 import scala.collection.mutable.{Map => MutMap, Set => MutSet}
 import scala.collection.immutable.{SortedSet, SortedMap}
+import Set.{empty => semp}
 import scala.util.chaining._
 import scala.annotation.tailrec
 import mlscript.utils._, shorthands._
@@ -179,15 +180,23 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   def provTODO: TypeProvenance = noProv
   def noTyProv: TypeProvenance = TypeProvenance(N, "type", isType = true)
   
+  private def sing[A](x: A): Set[A] = Set.single(x)
+  
   val TopType: ExtrType = ExtrType(false)(noTyProv)
   val BotType: ExtrType = ExtrType(true)(noTyProv)
-  val UnitType: ClassTag = ClassTag(Var("unit"), Set.empty)(noTyProv)
-  val BoolType: ClassTag = ClassTag(Var("bool"), Set.empty)(noTyProv)
-  val TrueType: ClassTag = ClassTag(Var("true"), Set.single(TypeName("bool")))(noTyProv)
-  val FalseType: ClassTag = ClassTag(Var("false"), Set.single(TypeName("bool")))(noTyProv)
-  val IntType: ClassTag = ClassTag(Var("int"), Set.single(TypeName("number")))(noTyProv)
-  val DecType: ClassTag = ClassTag(Var("number"), Set.empty)(noTyProv)
-  val StrType: ClassTag = ClassTag(Var("string"), Set.empty)(noTyProv)
+  
+  val UnitType: ClassTag = ClassTag(Var("unit"), semp)(noTyProv)
+  
+  val BoolType: ClassTag = ClassTag(Var("bool"), sing(TN("Eql")))(noTyProv)
+  val TrueType: ClassTag = ClassTag(Var("true"), sing(TN("bool")) + TN("Eql"))(noTyProv)
+  val FalseType: ClassTag = ClassTag(Var("false"), sing(TN("bool")) + TN("Eql"))(noTyProv)
+  
+  val IntType: ClassTag = ClassTag(Var("int"), sing(TN("number")) + TN("Eql"))(noTyProv)
+  val DecType: ClassTag = ClassTag(Var("number"), sing(TN("Eql")))(noTyProv)
+  val StrType: ClassTag = ClassTag(Var("string"), sing(TN("Eql")))(noTyProv)
+  // val IntType: ST = TypeRef(TN("int"), Nil)(noTyProv)
+  // val DecType: ST = TypeRef(TN("number"), Nil)(noTyProv)
+  // val StrType: ST = TypeRef(TN("string"), Nil)(noTyProv)
   
   val ErrTypeId: SimpleTerm = Var("error")
   
@@ -197,22 +206,22 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       "anything" -> TopType, "nothing" -> BotType)
   
   val builtinTypes: Ls[TypeDef] =
-    TypeDef(Cls, TypeName("int"), Nil, TopType, Nil, Nil, Set.single(TypeName("number")), N, Nil) ::
-    TypeDef(Cls, TypeName("number"), Nil, TopType, Nil, Nil, Set.empty, N, Nil) ::
-    TypeDef(Cls, TypeName("bool"), Nil, TopType, Nil, Nil, Set.empty, N, Nil) ::
-    TypeDef(Cls, TypeName("true"), Nil, TopType, Nil, Nil, Set.single(TypeName("bool")), N, Nil) ::
-    TypeDef(Cls, TypeName("false"), Nil, TopType, Nil, Nil, Set.single(TypeName("bool")), N, Nil) ::
-    TypeDef(Cls, TypeName("string"), Nil, TopType, Nil, Nil, Set.empty, N, Nil) ::
-    TypeDef(Als, TypeName("undefined"), Nil, ClassTag(UnitLit(true), Set.empty)(noProv), Nil, Nil, Set.empty, N, Nil) ::
-    TypeDef(Als, TypeName("null"), Nil, ClassTag(UnitLit(false), Set.empty)(noProv), Nil, Nil, Set.empty, N, Nil) ::
-    TypeDef(Als, TypeName("anything"), Nil, TopType, Nil, Nil, Set.empty, N, Nil) ::
-    TypeDef(Als, TypeName("nothing"), Nil, BotType, Nil, Nil, Set.empty, N, Nil) ::
-    TypeDef(Cls, TypeName("error"), Nil, TopType, Nil, Nil, Set.empty, N, Nil) ::
-    TypeDef(Cls, TypeName("unit"), Nil, TopType, Nil, Nil, Set.empty, N, Nil) ::
+    TypeDef(Cls, TN("int"), Nil, TopType, Nil, Nil, sing(TN("number")) + TN("Eql"), N, Nil) ::
+    TypeDef(Cls, TN("number"), Nil, TopType, Nil, Nil, sing(TN("Eql")), N, Nil) ::
+    TypeDef(Cls, TN("bool"), Nil, TopType, Nil, Nil, sing(TN("Eql")), N, Nil) ::
+    TypeDef(Cls, TN("true"), Nil, TopType, Nil, Nil, sing(TN("bool")) + TN("Eql"), N, Nil) ::
+    TypeDef(Cls, TN("false"), Nil, TopType, Nil, Nil, sing(TN("bool")) + TN("Eql"), N, Nil) ::
+    TypeDef(Cls, TN("string"), Nil, TopType, Nil, Nil, sing(TN("Eql")), N, Nil) ::
+    TypeDef(Als, TN("undefined"), Nil, ClassTag(UnitLit(true), semp)(noProv), Nil, Nil, semp, N, Nil) ::
+    TypeDef(Als, TN("null"), Nil, ClassTag(UnitLit(false), semp)(noProv), Nil, Nil, semp, N, Nil) ::
+    TypeDef(Als, TN("anything"), Nil, TopType, Nil, Nil, semp, N, Nil) ::
+    TypeDef(Als, TN("nothing"), Nil, BotType, Nil, Nil, semp, N, Nil) ::
+    TypeDef(Cls, TN("error"), Nil, TopType, Nil, Nil, semp, N, Nil) ::
+    TypeDef(Cls, TN("unit"), Nil, TopType, Nil, Nil, semp, N, Nil) ::
     {
       val tv = freshVar(noTyProv, N)(1)
-      val tyDef = TypeDef(Als, TypeName("Array"), List(TypeName("A") -> tv),
-        ArrayType(FieldType(None, tv)(noTyProv))(noTyProv), Nil, Nil, Set.empty, N, Nil)
+      val tyDef = TypeDef(Als, TN("Array"), List(TN("A") -> tv),
+        ArrayType(FieldType(None, tv)(noTyProv))(noTyProv), Nil, Nil, semp, N, Nil)
         // * ^ Note that the `noTyProv` here is kind of a problem
         // *    since we currently expand primitive types eagerly in DNFs.
         // *  For instance, see `inn2 v1` in test `Yicong.mls`.
@@ -224,14 +233,21 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     } ::
     {
       val tv = freshVar(noTyProv, N)(1)
-      val tyDef = TypeDef(Als, TypeName("MutArray"), List(TypeName("A") -> tv),
-        ArrayType(FieldType(Some(tv), tv)(noTyProv))(noTyProv), Nil, Nil, Set.empty, N, Nil)
+      val tyDef = TypeDef(Als, TN("MutArray"), List(TN("A") -> tv),
+        ArrayType(FieldType(Some(tv), tv)(noTyProv))(noTyProv), Nil, Nil, semp, N, Nil)
       tyDef.tvarVariances = S(MutMap(tv -> VarianceInfo.in))
+      tyDef
+    } ::
+    {
+      val tv = freshVar(noTyProv, N)(1)
+      val tyDef = TypeDef(Cls, TN("Eql"), List(TN("A") -> tv),
+        TopType, Nil, Nil, semp, N, Nil)
+      tyDef.tvarVariances = S(MutMap(tv -> VarianceInfo.contra))
       tyDef
     } ::
     Nil
   val primitiveTypes: Set[Str] =
-    builtinTypes.iterator.map(_.nme.name).flatMap(n => n.decapitalize :: n.capitalize :: Nil).toSet
+    builtinTypes.iterator.map(_.nme.name).flatMap(n => n.decapitalize :: n.capitalize :: Nil).toSet - "Eql"
   def singleTup(ty: ST): ST =
     if (funkyTuples) ty else TupleType((N, ty.toUpper(ty.prov) ) :: Nil)(noProv)
   val builtinBindings: Bindings = {
@@ -283,6 +299,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       "<=" -> numberBinPred,
       ">=" -> numberBinPred,
       "==" -> numberBinPred,
+      "===" -> {
+        val v = freshVar(noProv, N)(1)
+        val eq = TypeRef(TypeName("Eql"), v :: Nil)(noProv)
+        PolymorphicType(MinLevel, fun(singleTup(eq), fun(singleTup(v), BoolType)(noProv))(noProv))
+      },
       "&&" -> fun(singleTup(BoolType), fun(singleTup(BoolType), BoolType)(noProv))(noProv),
       "||" -> fun(singleTup(BoolType), fun(singleTup(BoolType), BoolType)(noProv))(noProv),
       "id" -> {
@@ -403,13 +424,15 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             r.fields.map { case (n, f) => n -> FieldType(f.in.map(rec), rec(f.out))(
               tyTp(App(n, Var("").withLocOf(f)).toCoveringLoc, "extension field")) }
           )(tyTp(r.toLoc, "extension record")))(tyTp(ty.toLoc, "extension type"))
-      case Literal(lit) => ClassTag(lit, lit.baseClasses)(tyTp(ty.toLoc, "literal type"))
+      case Literal(lit) =>
+        ClassTag(lit, lit.baseClasses)(tyTp(ty.toLoc, "literal type"))
       case TypeName("this") =>
         ctx.env.getOrElse("this", err(msg"undeclared this" -> ty.toLoc :: Nil)) match {
           case AbstractConstructor(_, _) => die
           case VarSymbol(t: SimpleType, _) => t
         }
-      case tn @ TypeTag(name) => rec(TypeName(name.decapitalize))
+      case tn @ TypeTag(name) => rec(TypeName(name.decapitalize)) // TODO rm this hack
+      // case tn @ TypeTag(name) => rec(TypeName(name))
       case tn @ TypeName(name) =>
         val tyLoc = ty.toLoc
         val tpr = tyTp(tyLoc, "type reference")
@@ -1250,8 +1273,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   def expandType(st: TypeLike, stopAtTyVars: Bool = false)(implicit ctx: Ctx): mlscript.TypeLike = {
     val expandType = ()
     
-    import Set.{empty => semp}
-    
     var bounds: Ls[TypeVar -> Bounds] = Nil
     
     val seenVars = mutable.Set.empty[TV]
@@ -1374,7 +1395,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         case obj: ObjectTag => obj.id match {
           case Var(n) =>
             if (primitiveTypes.contains(n) // primitives like `int` are internally maintained as class tags
-              || n.isCapitalized // rigid type params like A in class Foo[A]
               || n === "this" // `this` type
             ) TypeName(n)
             else TypeTag(n.capitalize)
