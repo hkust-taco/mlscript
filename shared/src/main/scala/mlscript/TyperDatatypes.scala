@@ -391,7 +391,12 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
     override def toString = showProvOver(false)(id.idStr+s"<${parents.map(_.name).mkString(",")}>")
   }
   
-  sealed trait TypeVarOrRigidVar extends SimpleType
+  sealed trait TypeVarOrRigidVar extends SimpleType {
+    def assertTV: TV = this match {
+      case tv: TV => tv
+      case _ => lastWords(s"$this was not a type variable")
+    }
+  }
   
   sealed trait ObjectTag extends TypeTag {
     val id: SimpleTerm
