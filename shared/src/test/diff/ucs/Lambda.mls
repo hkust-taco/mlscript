@@ -1,0 +1,247 @@
+:NewParser
+
+class Option
+class Some(value): Option
+class None(): Option
+//│ Defined class Option
+//│ Defined class Some
+//│ Defined class None
+//│ Option: () -> Option
+//│       = [Function: Option1]
+//│ Some: 'value -> (Some with {value: 'value})
+//│     = [Function: Some1]
+//│ None: () -> None
+//│     = [Function: None1]
+
+class Term
+class Var(name): Term
+class Abs(lhs, rhs): Term
+class App(lhs, rhs): Term
+//│ Defined class Term
+//│ Defined class Var
+//│ Defined class Abs
+//│ Defined class App
+//│ Term: () -> Term
+//│     = [Function: Term1]
+//│ Var: 'name -> (Var with {name: 'name})
+//│    = [Function: Var1]
+//│ Abs: ('lhs, 'rhs,) -> (Abs with {lhs: 'lhs, rhs: 'rhs})
+//│    = [Function: Abs1]
+//│ App: ('lhs, 'rhs,) -> (App with {lhs: 'lhs, rhs: 'rhs})
+//│    = [Function: App1]
+
+fun concat2(a, b) = concat(a)(b)
+fun concat3(a, b, c) = concat2(a, concat2(b, c))
+fun concat4(a, b, c, d) = concat2(a, concat3(b, c, d))
+fun concat5(a, b, c, d, e) = concat2(a, concat4(b, c, d, e))
+fun concat6(a, b, c, d, e, f) = concat2(a, concat5(b, c, d, e, f))
+fun concat7(a, b, c, d, e, f, g) = concat2(a, concat6(b, c, d, e, f, g))
+fun concat8(a, b, c, d, e, f, g, h) = concat2(a, concat7(b, c, d, e, f, g, h))
+fun par(a) = concat3("(", a, ")")
+//│ concat2: (string, string,) -> string
+//│        = [Function: concat2]
+//│ concat3: (string, string, string,) -> string
+//│        = [Function: concat3]
+//│ concat4: (string, string, string, string,) -> string
+//│        = [Function: concat4]
+//│ concat5: (string, string, string, string, string,) -> string
+//│        = [Function: concat5]
+//│ concat6: (string, string, string, string, string, string,) -> string
+//│        = [Function: concat6]
+//│ concat7: (string, string, string, string, string, string, string,) -> string
+//│        = [Function: concat7]
+//│ concat8: (string, string, string, string, string, string, string, string,) -> string
+//│        = [Function: concat8]
+//│ par: string -> string
+//│    = [Function: par]
+
+fun showTerm(t) =
+  if t is
+    Var(name) then toString(name)
+    Abs(lhs, rhs) then concat4("&", showTerm(lhs), ". ", showTerm(rhs))
+    App(Abs(lhs0, lhs1), rhs) then
+      concat8("((", "&", showTerm(lhs0), ". ", showTerm(lhs1), ") ", showTerm(rhs), ")")
+    App(lhs, rhs) then par(concat3(showTerm(lhs), " ", showTerm(rhs)))
+//│ showTerm: 'a -> string
+//│   where
+//│     'a <: Abs & {lhs: 'a, rhs: 'a} | App & {lhs: 'a & (Abs & {lhs: 'a, rhs: 'a} | ~#Abs), rhs: 'a} | Var
+//│         = [Function: showTerm]
+
+showTerm(Var("x"))
+showTerm(Abs(Var("x"), Var("y")))
+showTerm(App(Var("x"), Var("y")))
+showTerm(App(Abs(Var("x"), Var("y")), Var("z")))
+//│ res: string
+//│    = 'x'
+//│ res: string
+//│    = '&x. y'
+//│ res: string
+//│    = '(x y)'
+//│ res: string
+//│    = '((&x. y) z)'
+
+fun isValue(t) =
+  if t is
+    Var then true
+    Abs then true
+    App then false
+//│ isValue: (Abs | App | Var) -> bool
+//│        = [Function: isValue]
+
+isValue(Var("x"))
+isValue(Abs(Var("x"), Var("y")))
+isValue(App(Var("x"), Var("y")))
+//│ res: bool
+//│    = true
+//│ res: bool
+//│    = true
+//│ res: bool
+//│    = false
+
+fun hasFree(t, n) =
+  if t is
+    Var(na) then eq(n)(na)
+    Abs(Var(name), body) and eq(name, n) then false
+    Abs(Var(name), body) then hasFree(body, n)
+    App(lhs, rhs) then hasFree(lhs, n) || hasFree(rhs, n)
+    _ then false
+//│ ╔══[WARNING] Found a duplicated else branch
+//│ ║  l.107: 	    _ then false
+//│ ║         	           ^^^^^
+//│ ╟── The first else branch was declared here.
+//│ ║  l.105: 	    Abs(Var(name), body) then hasFree(body, n)
+//│ ╙──       	                              ^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.104: 	    Abs(Var(name), body) and eq(name, n) then false
+//│ ║         	                             ^^^^^^^^^^^
+//│ ╟── tuple literal of type `(?name, ?a,)` does not match type `(?b,)`
+//│ ║  l.104: 	    Abs(Var(name), body) and eq(name, n) then false
+//│ ╙──       	                               ^^^^^^^^^
+//│ hasFree: ('a, anything,) -> bool
+//│   where
+//│     'a <: Abs & {rhs: 'a} | App & {lhs: 'a, rhs: 'a} | Var | ~Abs & ~App & ~Var
+//│        = [Function: hasFree]
+
+fun showHasFree(t, n) =
+  concat4(showTerm(t), if hasFree(t, n) then " has " else " DOES NOT have ", "free variable ", n)
+//│ showHasFree: ('a & 'b, string,) -> string
+//│   where
+//│     'b <: Abs & {lhs: 'b, rhs: 'b} | App & {lhs: 'b & (Abs & {lhs: 'b, rhs: 'b} | ~#Abs), rhs: 'b} | Var
+//│     'a <: Abs & {rhs: 'a} | App & {lhs: 'a, rhs: 'a} | Var | ~Abs & ~App & ~Var
+//│            = [Function: showHasFree]
+
+showHasFree(Var("x"), "x")
+showHasFree(Var("x"), "y")
+showHasFree(Abs(Var("x"), Var("x")), "x")
+showHasFree(Abs(Var("x"), Var("x")), "y")
+showHasFree(Abs(Var("x"), Var("y")), "x")
+showHasFree(Abs(Var("x"), Var("y")), "y")
+showHasFree(App(Var("x"), Var("y")), "x")
+showHasFree(App(Var("x"), Var("y")), "y")
+//│ res: string
+//│    = 'x has free variable x'
+//│ res: string
+//│    = 'x DOES NOT have free variable y'
+//│ res: string
+//│    = '&x. x DOES NOT have free variable x'
+//│ res: string
+//│    = '&x. x DOES NOT have free variable y'
+//│ res: string
+//│    = '&x. y DOES NOT have free variable x'
+//│ res: string
+//│    = '&x. y has free variable y'
+//│ res: string
+//│    = '(x y) has free variable x'
+//│ res: string
+//│    = '(x y) has free variable y'
+
+fun subst(t, n, v) =
+  if t is
+    Var(name) and eq(name)(n) then v
+    Abs(Var(name), body) and
+      ne(name)(n) then Abs(Var(name), subst(body, n, v))
+      hasFree(body, n) and freshName(name) is newName then
+        subst(Abs(Var(newName), subst(body, name, Var(newName))), n, v)
+    App(lhs, rhs) then App(subst(lhs, n, v), subst(rhs, n, v))
+    _ then t
+//│ ╔══[ERROR] Cannot find the constructor `newName` in the context
+//│ ║  l.163: 	      hasFree(body, n) and freshName(name) is newName then
+//│ ╙──       	                                              ^^^^^^^
+//│ subst: (anything, anything, anything,) -> error
+//│ Code generation encountered an error:
+//│   if expression has not been desugared
+
+fun showSubst(t, n, v) =
+  concat8(showTerm(t), " [", n, " / ", showTerm(v), "]", " => ", showTerm(subst(t, n, v)))
+//│ showSubst: ('a, string, 'a,) -> string
+//│   where
+//│     'a <: Abs & {lhs: 'a, rhs: 'a} | App & {lhs: 'a & (Abs & {lhs: 'a, rhs: 'a} | ~#Abs), rhs: 'a} | Var
+//│          = [Function: showSubst]
+
+showSubst(Var("x"), "x", Var("y"))
+showSubst(Abs(Var("x"), Var("x")), "x", Var("z"))
+showSubst(App(Var("x"), Var("y")), "x", Abs(Var("x"), Var("x")))
+//│ res: string
+//│ Runtime error:
+//│   ReferenceError: subst is not defined
+//│ res: string
+//│ Runtime error:
+//│   ReferenceError: subst is not defined
+//│ res: string
+//│ Runtime error:
+//│   ReferenceError: subst is not defined
+
+fun stepByValue(t) =
+  if t is
+    Var then None()
+    Abs then None()
+    App(lhs, rhs) and stepByValue(lhs) is
+      Some(lhs) then Some(App(lhs, rhs))
+      None and stepByValue(rhs) is
+        Some(rhs) then Some(App(lhs, rhs))
+        None and lhs is
+          Abs(Var(name), body) then Some(subst(body, name, rhs))
+          _ then None()
+//│ stepByValue: 'a -> (None | (Some with {value: 'rhs}))
+//│   where
+//│     'rhs :> error | (App with {lhs: 'rhs, rhs: 'rhs0}) | (App with {lhs: 'lhs, rhs: 'rhs})
+//│     'a <: Abs | App & {lhs: 'a & 'lhs & (Abs | ~#Abs), rhs: 'a & 'rhs0} | Var
+//│            = [Function: stepByValue]
+
+fun showStepByValue(t) =
+  concat3(showTerm(t), " => ", if stepByValue(t) is
+    Some(t) then showTerm(t)
+    None then "stuck"
+  )
+//│ showStepByValue: ('a & 'b) -> string
+//│   where
+//│     'b <: Abs & {lhs: 'b, rhs: 'b} | App & {lhs: 'b & (Abs & {lhs: 'b, rhs: 'b} | ~#Abs), rhs: 'b} | Var
+//│     'a <: Abs | App & {lhs: 'a & 'lhs & (Abs | ~#Abs), rhs: 'a & 'c} | Var
+//│     'lhs <: (Abs & {lhs: 'c, rhs: 'c} | ~Abs) & 'c
+//│     'c <: Abs & {lhs: 'c, rhs: 'c} | App & {lhs: 'lhs, rhs: 'c} | Var
+//│                = [Function: showStepByValue]
+
+showStepByValue(Var("x"))
+showStepByValue(Abs(Var("x"), Var("y")))
+showStepByValue(App(Var("x"), Var("y")))
+showStepByValue(App(Abs(Var("x"), Var("x")), Var("y")))
+//│ res: string
+//│    = 'x => stuck'
+//│ res: string
+//│    = '&x. y => stuck'
+//│ res: string
+//│    = '(x y) => stuck'
+//│ res: string
+//│ Runtime error:
+//│   ReferenceError: subst is not defined
+
+fun equalTerm(a, b) =
+  if a is
+    Var(na) and b is Var(nb) then eq(na)(nb)
+    Abs(la, ra) and b is Abs(lb, rb) then equalTerm(la, lb) && equalTerm(ra, rb)
+    App(la, ra) and b is App(lb, rb) then equalTerm(la, lb) && equalTerm(ra, rb)
+    _ then false
+//│ equalTerm: ('a, 'a,) -> bool
+//│   where
+//│     'a <: Abs & {lhs: 'a, rhs: 'a} | App & {lhs: 'a, rhs: 'a} | Var | ~Abs & ~App & ~Var
+//│          = [Function: equalTerm]
