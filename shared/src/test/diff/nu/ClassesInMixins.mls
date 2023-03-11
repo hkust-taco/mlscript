@@ -31,7 +31,7 @@ M.Foo
 //│ ╙──      	 ^^^^
 //│ error
 
-:e // TODO
+:e // TODO support
 fun foo(x) = if x is M.Foo then 1
 //│ ╔══[ERROR] illegal pattern
 //│ ║  l.35: 	fun foo(x) = if x is M.Foo then 1
@@ -58,7 +58,7 @@ mixin Test3 { fun f(x) = if x is Foo then 1 }
 
 
 
-:e // TODO
+:e // TODO support
 mixin Test {
   class Lit(n: int)
   class Add<A>(lhs: A, rhs: A) {

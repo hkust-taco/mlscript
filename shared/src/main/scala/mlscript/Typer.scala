@@ -1278,18 +1278,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     
     def mkTypingUnit(thisTy: ST, members: Map[Str, NuMember])(implicit ectx: ExpCtx): TypingUnit = {
       val sorted = members.toList.sortBy(_._1)
-    // def mkTypingUnit(members: Ls[Str -> NuMember]): TypingUnit = {
-      TypingUnit(
-          // Asc(Var("this"), go(thisTy)) :: 
-          // NuFunDef(S(false), Var("this"), Nil, R(go(thisTy))) :: 
-            sorted.collect {
+      TypingUnit(sorted.collect {
         case (_, td: TypedNuDecl) => goDecl(td)
         // case (_, td: TypedNuFun) => ???
         // case (_, p: NuParam) => ???
         // case _ => die
       })
     }
-    // def goDecl(d: TypedNuDecl)(implicit ectx: ExpCtx): NuDecl = d match {
     def goDecl(d: NuMember)(implicit ectx: ExpCtx): NuDecl = d match {
       case TypedNuAls(level, td, tparams, body) =>
         ectx(tparams) |> { implicit ectx =>
@@ -1301,32 +1296,24 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             Tup(params.map(p => N -> Fld(false, false, Asc(p._1, go(p._2.ub))))),
             N,
             Nil,//TODO
-            // S(go(superTy)),
-            // S(go(thisTy)),
             Option.when(!(TopType <:< superTy))(go(superTy)),
             Option.when(!(TopType <:< thisTy))(go(thisTy)),
-            // mkTypingUnit(thisTy, 
-            //   // members
-            //   Map.empty
-            // )
             mkTypingUnit(thisTy, members))
         }
       case TypedNuCls(level, td, ttu, tparams, params, members, thisTy) =>
-        // new ExpCtx(ectx.tps ++ tparams.iterator.map{case (tn, tv, vi) => tv -> tn}) |> { implicit ectx =>
         ectx(tparams) |> { implicit ectx =>
           NuTypeDef(td.kind, td.nme, td.tparams,
-          // NuTypeDef(td.kind, td.nme, tparams.map{case (tn, tv, vi) => },
-            // Tup(params.map(p => S(p._1) -> Fld(p._2.ub))))
             Tup(params.map(p => N -> Fld(false, false, Asc(p._1, go(p._2.ub))))),
             N,//TODO
             Nil,//TODO
             N,//TODO
             Option.when(!(TopType <:< thisTy))(go(thisTy)),
             mkTypingUnit(thisTy, members))
-            // mkTypingUnit(() :: members.toList.sortBy(_._1)))
           }
       case tf @ TypedNuFun(level, fd, bodyTy) =>
         NuFunDef(fd.isLetRec, fd.nme, Nil, R(go(tf.typeSignature)))
+      case p: NuParam =>
+        ??? // TODO
     }
     def goLike(ty: TypeLike)(implicit ectx: ExpCtx): mlscript.TypeLike = ty match {
       case ty: SimpleType =>
@@ -1337,21 +1324,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case OtherTypeLike(tu) =>
         val mems = tu.entities.map(goDecl)
         Signature(mems, tu.result.map(go))
-      // case OtherTypeLike(ttu) =>
-      //   val mems = ttu.entities.map { lti =>
-      //     lti.result match {
-      //       // // case S(td: TypedNuTermDef) => ???
-      //       // case S(TypedNuCls(level, td, ttu, tparams, params, members)) =>
-      //       //   NuTypeDef(td.kind, td.nme, td.tparams,
-      //       //     // Tup(params.map(p => S(p._1) -> Fld(p._2.ub))))
-      //       //     Tup(params.map(p => N -> Fld(false, false, Asc(p._1, go(p._2.ub))))),
-      //       //     Nil,//TODO
-      //       //     members)
-      //       case S(d) => goDecl(d)
-      //       case N => lastWords("Cannot expand uncomputed type info.")
-      //     }
-      //   }
-      //   Signature(mems, ttu.result.map(go))
     }
     
     def go(st: SimpleType)(implicit ectx: ExpCtx): Type =
@@ -1418,10 +1390,21 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         case Without(base, names) => Rem(go(base), names.toList)
         case Overload(as) => as.map(go).reduce(Inter)
         case PolymorphicType(lvl, bod) =>
+          val boundsSize = bounds.size
           val b = go(bod)
+          
+          // This is not completely correct: if we've already traversed TVs as part of a previous sibling PolymorphicType,
+          // the bounds of these TVs won't be registered again...
+          // FIXME in principle we'd want to compute a transitive closure...
+          val newBounds = bounds.reverseIterator.drop(boundsSize).toBuffer
+          
           val qvars = bod.varsBetween(lvl, MaxLevel).iterator
-          if (qvars.isEmpty) b else
-            PolyType(qvars.map(_.asTypeVar pipe (R(_))).toList, b)
+          val ftvs = b.freeTypeVariables ++
+            newBounds.iterator.map(_._1) ++
+            newBounds.iterator.flatMap(_._2.freeTypeVariables)
+          val fvars = qvars.filter(tv => ftvs.contains(tv.asTypeVar))
+          if (fvars.isEmpty) b else
+            PolyType(fvars.map(_.asTypeVar pipe (R(_))).toList, b)
         case ConstrainedType(cs, bod) =>
           val (ubs, others1) = cs.groupMap(_._1)(_._2).toList.partition(_._2.sizeIs > 1)
           val lbs = others1.mapValues(_.head).groupMap(_._2)(_._1).toList

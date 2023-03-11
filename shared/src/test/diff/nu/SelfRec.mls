@@ -30,7 +30,7 @@ class Foo3[A](x: A) {
   fun foo = Foo3
 }
 //│ class Foo3[A](x: A) {
-//│   fun foo: forall 'A. (x: A,) -> Foo3[A]
+//│   fun foo: (x: A,) -> Foo3[A]
 //│   fun test: Foo3[1]
 //│ }
 
