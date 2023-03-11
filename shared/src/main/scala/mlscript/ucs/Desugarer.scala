@@ -547,6 +547,8 @@ class Desugarer extends TypeDefs { self: Typer =>
       case Match(scrutinee, branches, default) =>
         scrutineePatternMap.get(getScurtineeKey(scrutinee)) match {
           case N => lastWords(s"unreachable case: unknown scrutinee ${scrutinee.term}")
+          case S(_) if default.isDefined =>
+            printlnUCS("The match has a default branch. So, it is always safe.")
           case S(patternMap) =>
             printlnUCS(s"The exhaustiveness map is ${scrutineePatternMap}")
             printlnUCS(s"The scrutinee key is ${getScurtineeKey(scrutinee)}")
