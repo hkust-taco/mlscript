@@ -1,4 +1,3 @@
-:NewParser
 :NewDefs
 :NoJS
 
@@ -20,14 +19,14 @@ let x: List<int>
 // FIXME
 x: List<anything>
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.21: 	x: List<anything>
+//│ ║  l.20: 	x: List<anything>
 //│ ║        	^
 //│ ╟── expression of type `anything` is not an instance of type `int`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.17: 	let x: List<int>
+//│ ║  l.16: 	let x: List<int>
 //│ ║        	            ^^^
 //│ ╟── Note: type parameter A is defined at:
-//│ ║  l.6: 	class List<A> {
+//│ ║  l.5: 	class List<A> {
 //│ ╙──     	           ^
 //│ List[anything]
 

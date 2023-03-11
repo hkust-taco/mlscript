@@ -1,6 +1,5 @@
-:NewParser
 :NewDefs
-:NoJS
+:NoJS // TODO
 
 
 
@@ -17,10 +16,10 @@ fun fooo(x) =
   class C(y, z)
   C(0, x)
 //│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.17: 	  class C(y, z)
+//│ ║  l.16: 	  class C(y, z)
 //│ ╙──      	          ^
 //│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.17: 	  class C(y, z)
+//│ ║  l.16: 	  class C(y, z)
 //│ ╙──      	             ^
 //│ fun fooo: error -> C
 
@@ -135,7 +134,7 @@ module Test1_2 {
   fun b = Test1_1.a
 }
 //│ ╔══[ERROR] unsupported indirectly recursive member access
-//│ ║  l.135: 	  fun b = Test1_1.a
+//│ ║  l.134: 	  fun b = Test1_1.a
 //│ ╙──       	                 ^^
 //│ module Test1_1() {
 //│   fun a: error
@@ -156,7 +155,7 @@ class Test1_2 {
   fun b = Test1_1().a
 }
 //│ ╔══[ERROR] unsupported indirectly recursive member access
-//│ ║  l.156: 	  fun b = Test1_1().a
+//│ ║  l.155: 	  fun b = Test1_1().a
 //│ ╙──       	                   ^^
 //│ class Test1_1() {
 //│   fun a: error
@@ -179,7 +178,7 @@ module Test2_2 {
   fun e = Test2_1.n
 }
 //│ ╔══[ERROR] unsupported indirectly recursive member access
-//│ ║  l.178: 	  fun c = Test2_1.a
+//│ ║  l.177: 	  fun c = Test2_1.a
 //│ ╙──       	                 ^^
 //│ module Test2_1() {
 //│   fun a: 123 | error

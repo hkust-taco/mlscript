@@ -1,4 +1,3 @@
-:NewParser
 :NewDefs
 
 
@@ -30,25 +29,25 @@ fun filtermap(f, xs) = if xs is
     true then Cons(y, filtermap(f, ys))
     [true, z] then Cons(y, filtermap(f, ys))
 //│ ╔══[ERROR] identifier not found: ys
-//│ ║  l.28: 	  Cons(y, ys) and f(ys) is
+//│ ║  l.27: 	  Cons(y, ys) and f(ys) is
 //│ ╙──      	                    ^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.28: 	  Cons(y, ys) and f(ys) is
+//│ ║  l.27: 	  Cons(y, ys) and f(ys) is
 //│ ║        	                  ^^^^^^^^
-//│ ║  l.29: 	    false then filtermap(f, ys)
+//│ ║  l.28: 	    false then filtermap(f, ys)
 //│ ║        	^^^^^^^^^
 //│ ╟── reference of type `false` is not an instance of type `number`
-//│ ║  l.29: 	    false then filtermap(f, ys)
+//│ ║  l.28: 	    false then filtermap(f, ys)
 //│ ╙──      	    ^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.28: 	  Cons(y, ys) and f(ys) is
+//│ ║  l.27: 	  Cons(y, ys) and f(ys) is
 //│ ║        	                  ^^^^^^^^
-//│ ║  l.29: 	    false then filtermap(f, ys)
+//│ ║  l.28: 	    false then filtermap(f, ys)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.30: 	    true then Cons(y, filtermap(f, ys))
+//│ ║  l.29: 	    true then Cons(y, filtermap(f, ys))
 //│ ║        	^^^^^^^^
 //│ ╟── reference of type `true` is not an instance of type `number`
-//│ ║  l.30: 	    true then Cons(y, filtermap(f, ys))
+//│ ║  l.29: 	    true then Cons(y, filtermap(f, ys))
 //│ ╙──      	    ^^^^
 //│ ╔══[ERROR] type identifier not found: Tuple#2
 //│ ╙──

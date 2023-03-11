@@ -1,4 +1,3 @@
-:NewParser
 :NewDefs
 
 
@@ -21,7 +20,7 @@
 :pe
 {x: 1} with 123
 //│ ╔══[PARSE ERROR] record literal expected here; found integer literal
-//│ ║  l.22: 	{x: 1} with 123
+//│ ║  l.21: 	{x: 1} with 123
 //│ ╙──      	            ^^^
 //│ {x: 1}
 //│ res

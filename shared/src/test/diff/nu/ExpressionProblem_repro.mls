@@ -1,4 +1,3 @@
-:NewParser
 :NewDefs
 :NoJS
 
@@ -151,11 +150,9 @@ TestLang.eval(Neg(Neg(add11)))
 //│ int
 
 
-// :e
 TestLang.eval(add2negadd11)
 //│ int
 
-// :e
 TestLang.eval(Add(Lit(2), Neg(add11)))
 //│ int
 

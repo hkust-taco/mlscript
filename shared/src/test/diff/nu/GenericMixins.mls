@@ -1,6 +1,4 @@
-:NewParser
 :NewDefs
-:NoJS
 
 
 // TODO support
@@ -8,7 +6,7 @@ mixin BaseTest<A> {
   fun test(x: A) = x
 }
 //│ ╔══[ERROR] type identifier not found: A
-//│ ║  l.8: 	  fun test(x: A) = x
+//│ ║  l.6: 	  fun test(x: A) = x
 //│ ╙──     	              ^
 //│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: A29'
 

@@ -374,7 +374,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
                       val fv = freshVar
                       (Tup(N -> Fld(false, false, fv) :: Nil) :: Nil, S(
                         (body: Term) => If(IfOpApp(fv, Var("is"), IfThen(pat, body)), S(
-                          App(Sel(Var("super").withLoc(S(ovLoc)), v), Tup(N -> Fld(false, false, fv) :: Nil))
+                          App(Sel(Super().withLoc(S(ovLoc)), v), Tup(N -> Fld(false, false, fv) :: Nil))
                         ))
                       ))
                     case r =>

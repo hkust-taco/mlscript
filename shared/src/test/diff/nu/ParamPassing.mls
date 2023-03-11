@@ -1,4 +1,3 @@
-:NewParser
 :NewDefs
 
 
@@ -9,8 +8,8 @@ class Foo(x: int)
 :e
 class Bar(x: int, y: int) extends Foo(x + y)
 //│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
-//│ ║  l.10: 	class Bar(x: int, y: int) extends Foo(x + y)
-//│ ╙──      	                                  ^^^^^^^^^^
+//│ ║  l.9: 	class Bar(x: int, y: int) extends Foo(x + y)
+//│ ╙──     	                                  ^^^^^^^^^^
 //│ class Bar(x: int, y: int)
 
 

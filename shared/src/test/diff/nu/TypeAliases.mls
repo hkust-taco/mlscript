@@ -1,4 +1,3 @@
-:NewParser
 :NewDefs
 
 
@@ -19,7 +18,7 @@ type AI2 = Array<int>
 // :e
 type AI3(n) = Array[int]
 //│ ╔══[ERROR] type alias definitions cannot have value parameters
-//│ ║  l.20: 	type AI3(n) = Array[int]
+//│ ║  l.19: 	type AI3(n) = Array[int]
 //│ ╙──      	        ^^^
 //│ type AI3 = Array[int]
 

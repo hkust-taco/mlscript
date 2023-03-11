@@ -1,6 +1,5 @@
-:NewParser
 :NewDefs
-:NoJS
+:NoJS // TODO
 
 
 
@@ -28,14 +27,14 @@ M.f.n
 :e
 M.Foo
 //│ ╔══[ERROR] access to module member not yet supported
-//│ ║  l.29: 	M.Foo
+//│ ║  l.28: 	M.Foo
 //│ ╙──      	 ^^^^
 //│ error
 
 :e
 mixin Test2 { let f = Foo(1) }
 //│ ╔══[ERROR] identifier not found: Foo
-//│ ║  l.36: 	mixin Test2 { let f = Foo(1) }
+//│ ║  l.35: 	mixin Test2 { let f = Foo(1) }
 //│ ╙──      	                      ^^^
 //│ mixin Test2() {
 //│   let f: error
@@ -60,11 +59,11 @@ mixin Test {
     Add(l, r) then this.size(l) + this.size(r)
 }
 //│ ╔══[ERROR] Unhandled cyclic definition
-//│ ║  l.55: 	  class Add<A>(lhs: A, rhs: A) {
+//│ ║  l.54: 	  class Add<A>(lhs: A, rhs: A) {
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.56: 	    let cached = size(this)
+//│ ║  l.55: 	    let cached = size(this)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.57: 	  }
+//│ ║  l.56: 	  }
 //│ ╙──      	^^^
 //│ mixin Test() {
 //│   this: {size: 'lhs -> int}

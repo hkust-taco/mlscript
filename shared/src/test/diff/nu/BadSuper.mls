@@ -1,4 +1,3 @@
-:NewParser
 :NewDefs
 
 
@@ -14,7 +13,7 @@ mixin M1 {
   fun g = super
 }
 //│ ╔══[ERROR] Illegal use of `super`
-//│ ║  l.14: 	  fun g = super
+//│ ║  l.13: 	  fun g = super
 //│ ╙──      	          ^^^^^
 //│ mixin M1() {
 //│   super: 'super
@@ -41,7 +40,7 @@ class Foo {
   fun f = super
 }
 //│ ╔══[ERROR] Illegal use of `super`
-//│ ║  l.41: 	  fun f = super
+//│ ║  l.40: 	  fun f = super
 //│ ╙──      	          ^^^^^
 //│ class Foo() {
 //│   fun f: Foo

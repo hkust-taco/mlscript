@@ -1,4 +1,3 @@
-:NewParser
 :NewDefs
 
 
@@ -17,7 +16,7 @@ let c = C0()
 :e
 c.NC0
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.18: 	c.NC0
+//│ ║  l.17: 	c.NC0
 //│ ╙──      	 ^^^^
 //│ error
 //│ res
@@ -34,7 +33,7 @@ module M0 {
 :e
 M0.NC0
 //│ ╔══[ERROR] access to module member not yet supported
-//│ ║  l.35: 	M0.NC0
+//│ ║  l.34: 	M0.NC0
 //│ ╙──      	  ^^^^
 //│ error
 //│ res
@@ -51,7 +50,7 @@ module M1 {
 :e
 M1.NM1
 //│ ╔══[ERROR] access to module member not yet supported
-//│ ║  l.52: 	M1.NM1
+//│ ║  l.51: 	M1.NM1
 //│ ╙──      	  ^^^^
 //│ error
 //│ res

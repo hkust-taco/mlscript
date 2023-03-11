@@ -1,4 +1,3 @@
-:NewParser
 :NewDefs
 :NoJS
 
@@ -15,7 +14,7 @@ mixin BaseTest(x) {
   fun test = x
 }
 //│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.14: 	mixin BaseTest(x) {
+//│ ║  l.13: 	mixin BaseTest(x) {
 //│ ╙──      	               ^
 //│ mixin BaseTest(x: error) {
 //│   fun test: error

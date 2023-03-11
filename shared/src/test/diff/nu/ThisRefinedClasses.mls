@@ -1,6 +1,4 @@
-:NewParser
 :NewDefs
-:NoJS
 
 
 
@@ -12,7 +10,7 @@
 :e
 class Foo { fun test = this.x }
 //│ ╔══[ERROR] unsupported indirectly recursive member access
-//│ ║  l.13: 	class Foo { fun test = this.x }
+//│ ║  l.11: 	class Foo { fun test = this.x }
 //│ ╙──      	                           ^^
 //│ class Foo() {
 //│   fun test: error
@@ -22,7 +20,7 @@ class Foo { fun test = this.x }
 :e
 class Foo(n: int) { fun test = this.x }
 //│ ╔══[ERROR] unsupported indirectly recursive member access
-//│ ║  l.23: 	class Foo(n: int) { fun test = this.x }
+//│ ║  l.21: 	class Foo(n: int) { fun test = this.x }
 //│ ╙──      	                                   ^^
 //│ class Foo(n: int) {
 //│   fun test: error
@@ -32,7 +30,7 @@ class Foo(n: int) { fun test = this.x }
 :e
 class Foo<A>(n: A) { fun test = this.x }
 //│ ╔══[ERROR] unsupported indirectly recursive member access
-//│ ║  l.33: 	class Foo<A>(n: A) { fun test = this.x }
+//│ ║  l.31: 	class Foo<A>(n: A) { fun test = this.x }
 //│ ╙──      	                                    ^^
 //│ class Foo[A](n: A) {
 //│   fun test: error
@@ -46,7 +44,7 @@ class Foo {
   // fun test = this.x
 }
 //│ ╔══[ERROR] unsupported indirectly recursive member access
-//│ ║  l.45: 	  this: { x: 'a }
+//│ ║  l.43: 	  this: { x: 'a }
 //│ ╙──      	          ^
 //│ class Foo()
 
@@ -55,10 +53,10 @@ class Foo {
 // * All on one line:
 class Test { this: { x: int}; fun test = this.x }
 //│ ╔══[ERROR] unsupported indirectly recursive member access
-//│ ║  l.56: 	class Test { this: { x: int}; fun test = this.x }
+//│ ║  l.54: 	class Test { this: { x: int}; fun test = this.x }
 //│ ╙──      	                     ^
 //│ ╔══[ERROR] unsupported indirectly recursive member access
-//│ ║  l.56: 	class Test { this: { x: int}; fun test = this.x }
+//│ ║  l.54: 	class Test { this: { x: int}; fun test = this.x }
 //│ ╙──      	                                             ^^
 //│ class Test() {
 //│   fun test: error

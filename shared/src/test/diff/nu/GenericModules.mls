@@ -1,4 +1,3 @@
-:NewParser
 :NewDefs
 
 
@@ -18,10 +17,10 @@ Test.foo
 :e
 Test.foo(1)
 //│ ╔══[ERROR] Type error in application
-//│ ║  l.19: 	Test.foo(1)
+//│ ║  l.18: 	Test.foo(1)
 //│ ║        	^^^^^^^^^^^
 //│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.19: 	Test.foo(1)
+//│ ║  l.18: 	Test.foo(1)
 //│ ╙──      	         ^
 //│ error | ??A
 //│ res
@@ -31,10 +30,10 @@ Test.foo(1)
 :e
 Test.foo(error) + 1
 //│ ╔══[ERROR] Type error in operator application
-//│ ║  l.32: 	Test.foo(error) + 1
+//│ ║  l.31: 	Test.foo(error) + 1
 //│ ║        	^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.32: 	Test.foo(error) + 1
+//│ ║  l.31: 	Test.foo(error) + 1
 //│ ║        	^^^^^^^^^^^^^^^
 //│ ╙── into type `int`
 //│ error | int
@@ -45,7 +44,7 @@ Test.foo(error) + 1
 :e
 Test<int> .foo
 //│ ╔══[ERROR] Type application syntax is not yet supported
-//│ ║  l.46: 	Test<int> .foo
+//│ ║  l.45: 	Test<int> .foo
 //│ ╙──      	^^^^^^^^^
 //│ error
 //│ res
@@ -54,7 +53,7 @@ Test<int> .foo
 :e
 (Test<int>).foo
 //│ ╔══[ERROR] Type application syntax is not yet supported
-//│ ║  l.55: 	(Test<int>).foo
+//│ ║  l.54: 	(Test<int>).foo
 //│ ╙──      	 ^^^^^^^^^
 //│ error
 //│ res
@@ -69,13 +68,13 @@ Test
 :e
 Test:  Test<'a>
 //│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.70: 	Test:  Test<'a>
+//│ ║  l.69: 	Test:  Test<'a>
 //│ ║        	^^^^
 //│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.70: 	Test:  Test<'a>
+//│ ║  l.69: 	Test:  Test<'a>
 //│ ║        	            ^^
 //│ ╟── back into type variable `A`
-//│ ║  l.6: 	module Test<A> {
+//│ ║  l.5: 	module Test<A> {
 //│ ╙──     	            ^
 //│ Test['a]
 //│   where
@@ -91,10 +90,10 @@ fun test(x) = if x is Test then x.foo
 :e
 test(Test)
 //│ ╔══[ERROR] Type error in application
-//│ ║  l.92: 	test(Test)
+//│ ║  l.91: 	test(Test)
 //│ ║        	^^^^^^^^^^
 //│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.6: 	module Test<A> {
+//│ ║  l.5: 	module Test<A> {
 //│ ╙──     	            ^
 //│ (??A & 'A) -> ('A | ??A0) | error
 //│ res

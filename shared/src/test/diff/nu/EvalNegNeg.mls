@@ -1,5 +1,5 @@
-:NewParser
 :NewDefs
+
 
 class Add<E>(lhs: E, rhs: E)
 class Lit(n: int)
