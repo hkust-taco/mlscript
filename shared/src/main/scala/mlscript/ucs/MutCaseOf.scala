@@ -148,7 +148,7 @@ object MutCaseOf {
     }
   }
 
-  import Clause.{MatchClass, MatchTuple, BooleanTest}
+  import Clause.{MatchClass, MatchTuple, BooleanTest, Binding}
 
   // A short-hand for pattern matchings with only true and false branches.
   final case class IfThenElse(condition: Term, var whenTrue: MutCaseOf, var whenFalse: MutCaseOf) extends MutCaseOf {
@@ -345,6 +345,8 @@ object MutCaseOf {
                 .withLocations(head.locations)
             )
             Match(scrutinee, branches, N)
+          case Binding(name, term) =>
+            rec(realTail).withBindings((false, name, term) :: Nil)
         }).withBindings(head.bindings)
       case Conjunction(Nil, trailingBindings) =>
         Consequent(term).withBindings(trailingBindings)

@@ -157,6 +157,10 @@ class Desugarer extends TypeDefs { self: Typer =>
         clause.bindings = scrutinee.asBinding.toList
         printlnUCS(s"Add bindings to the clause: ${scrutinee.asBinding}")
         clause :: Nil
+      // This case handles name binding.
+      // x is a
+      case bindingVar @ Var(bindingName) if bindingName.headOption.exists(_.isLower) =>
+        Clause.Binding(bindingVar, scrutinee.term)(scrutinee.term.toLoc.toList ::: bindingVar.toLoc.toList) :: Nil
       // This case handles simple class tests.
       // x is A
       case classNameVar @ Var(className) =>

@@ -38,6 +38,8 @@ object Clause {
 
   final case class BooleanTest(test: Term)(override val locations: Ls[Loc]) extends Clause
 
+  final case class Binding(name: Var, term: Term)(override val locations: Ls[Loc]) extends Clause
+
   def showBindings(bindings: Ls[(Bool, Var, Term)]): Str =
     bindings match {
       case Nil => ""
@@ -55,6 +57,8 @@ object Clause {
           s"«$scrutinee is $className»"
         case Clause.MatchTuple(scrutinee, arity, fields) =>
           s"«$scrutinee is Tuple#$arity»"
+        case Clause.Binding(Var(name), term) =>
+          s"«$name = $term»"
       }) + (if (clause.bindings.isEmpty) "" else " with " + showBindings(clause.bindings))
     }.mkString("", " and ", "")
   }
