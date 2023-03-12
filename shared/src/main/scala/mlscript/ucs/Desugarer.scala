@@ -43,7 +43,7 @@ class Desugarer extends TypeDefs { self: Typer =>
     * @param positionals the corresponding field names of each parameter
     * @param aliasMap a map used to cache each the alias of each field
     * @param matchRootLoc the location to the root of the match
-    * @return a mapping from each field to their var
+    * @return two mappings: one is (variable -> sub-pattern), the other is (positional name -> variable)
     */
   private def desugarPositionals
     (scrutinee: Scrutinee, params: IterableOnce[Term], positionals: Ls[Str])
@@ -53,7 +53,7 @@ class Desugarer extends TypeDefs { self: Typer =>
       // `x is A(_)`: ignore this binding
       case (Var("_"), _) => N
       // `x is A(value)`: generate bindings directly
-      case (name: Var, fieldName) => S(fieldName -> name)
+      case (nameVar: Var, fieldName) => S(fieldName -> nameVar)
       // `x is B(A(x))`: generate a temporary name
       // use the name in the binding, and destruct sub-patterns
       case (pattern: Term, fieldName) =>
@@ -65,7 +65,7 @@ class Desugarer extends TypeDefs { self: Typer =>
         subPatterns += ((alias, pattern))
         S(fieldName -> alias)
     }.toList
-    subPatterns.toList -> bindings
+    (subPatterns.toList, bindings)
   }
 
   /**
@@ -99,17 +99,25 @@ class Desugarer extends TypeDefs { self: Typer =>
     traceUCS(s"Making a scrutinee for `$term`") {
       term match {
         case _: SimpleTerm => Scrutinee(N, term)(matchRootLoc)
-        case _ =>
-          val localName = if (localizedScrutineeMap.containsKey(term)) {
-            localizedScrutineeMap.get(term)
-          } else {
-            val v = Var(freshName).desugaredFrom(term)
-            localizedScrutineeMap.put(term, v)
-            v
-          }
-          Scrutinee(S(localName), term)(matchRootLoc)
+        case _ => Scrutinee(S(makeLocalizedName(term)), term)(matchRootLoc)
       }
     }()
+
+  /**
+    * Create a fresh name for scrutinee to be localized.
+    *
+    * @param scrutinee the term of the scrutinee
+    * @param ctx the context
+    * @return the fresh name, as `Var`
+    */
+  private def makeLocalizedName(scrutinee: Term)(implicit ctx: Ctx): Var = 
+    if (localizedScrutineeMap.containsKey(scrutinee)) {
+      localizedScrutineeMap.get(scrutinee)
+    } else {
+      val v = Var(freshName).desugaredFrom(scrutinee)
+      localizedScrutineeMap.put(scrutinee, v)
+      v
+    }
 
   /**
     * Destruct nested patterns to a list of simple condition with bindings.
@@ -621,5 +629,81 @@ class Desugarer extends TypeDefs { self: Typer =>
       printlnUCS(s"- $scrutinee => " + patterns.keys.mkString(", "))
     }
     Map.from(m.iterator.map { case (key, patternMap) => key -> Map.from(patternMap) })
+  }
+
+  protected def constructTerm(m: MutCaseOf)(implicit ctx: Ctx): Term = {
+    def rec(m: MutCaseOf)(implicit defs: Set[Var]): Term = m match {
+      case Consequent(term) => term
+      case Match(scrutinee, branches, wildcard) =>
+        def rec2(xs: Ls[MutCase]): CaseBranches =
+          xs match {
+            case MutCase(className -> fields, cases) :: next =>
+              // TODO: expand bindings here
+              val consequent = rec(cases)(defs ++ fields.iterator.map(_._2))
+              Case(className, mkLetFromFields(scrutinee, fields.toList, consequent), rec2(next))
+            case Nil =>
+              wildcard.fold[CaseBranches](NoCases) { rec(_) |> Wildcard }
+          }
+        val cases = rec2(branches.toList)
+        val resultTerm = scrutinee.local match {
+          case N => CaseOf(scrutinee.term, cases)
+          case S(aliasVar) => Let(false, aliasVar, scrutinee.term, CaseOf(aliasVar, cases))
+        }
+        // Collect let bindings from case branches.
+        val bindings = branches.iterator.flatMap(_.consequent.getBindings).toList
+        mkBindings(bindings, resultTerm, defs)
+      case MissingCase =>
+        import Message.MessageContext
+        throw new DesugaringException(msg"missing a default branch", N)
+      case IfThenElse(condition, whenTrue, whenFalse) =>
+        val falseBody = mkBindings(whenFalse.getBindings.toList, rec(whenFalse)(defs ++ whenFalse.getBindings.iterator.map(_._2)), defs)
+        val trueBody = mkBindings(whenTrue.getBindings.toList, rec(whenTrue)(defs ++ whenTrue.getBindings.iterator.map(_._2)), defs)
+        val falseBranch = Wildcard(falseBody)
+        val trueBranch = Case(Var("true"), trueBody, falseBranch)
+        CaseOf(condition, trueBranch)
+    }
+    val term = rec(m)(Set.from(m.getBindings.iterator.map(_._2)))
+    mkBindings(m.getBindings.toList, term, Set.empty)
+  }
+
+  /**
+    * Generate a chain of field selection to the given scrutinee.
+    *
+    * @param scrutinee the pattern matching scrutinee
+    * @param fields a list of pairs from field names to binding names
+    * @param body the final body
+    */
+  private def mkLetFromFields(scrutinee: Scrutinee, fields: Ls[Str -> Var], body: Term)(implicit ctx: Ctx): Term = {
+    def rec(scrutineeReference: SimpleTerm, fields: Ls[Str -> Var]): Term =
+      fields match {
+        case Nil => body
+        case (field -> (aliasVar @ Var(alias))) :: tail =>
+          scrutinee.term match {
+            // Check if the scrutinee is a `Var` and its name conflicts with
+            // one of the positionals. If so, we create an alias and extract
+            // fields by selecting the alias.
+            case Var(scrutineeName) if alias == scrutineeName =>
+              val scrutineeAlias = Var(freshName)
+              Let(
+                false,
+                scrutineeAlias,
+                scrutinee.reference,
+                Let(
+                  false,
+                  aliasVar,
+                  Sel(scrutineeAlias, Var(field)).desugaredFrom(scrutinee.term),
+                  rec(scrutineeAlias, tail)
+                )
+              )
+            case _ =>
+              Let(
+                false,
+                aliasVar,
+                Sel(scrutineeReference, Var(field)).desugaredFrom(scrutinee.term),
+                rec(scrutineeReference, tail)
+              )
+          }
+      }
+    rec(scrutinee.reference, fields)
   }
 }

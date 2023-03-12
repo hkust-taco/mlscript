@@ -97,21 +97,4 @@ object helpers {
       }
     rec(bindings, defs)
   }
-
-  /**
-    * Generate a chain of field selection to the given scrutinee.
-    *
-    * @param scrutinee the pattern matching scrutinee
-    * @param fields a list of pairs from field names to binding names
-    * @param body the final body
-    */
-  def mkLetFromFields(scrutinee: Scrutinee, fields: Ls[Str -> Var], body: Term): Term = {
-    def rec(fields: Ls[Str -> Var]): Term =
-      fields match {
-        case Nil => body
-        case (field -> (aliasVar @ Var(alias))) :: tail =>
-          Let(false, aliasVar, Sel(scrutinee.reference, Var(field)).desugaredFrom(scrutinee.term), rec(tail))
-      }
-    rec(fields)
-  }
 }
