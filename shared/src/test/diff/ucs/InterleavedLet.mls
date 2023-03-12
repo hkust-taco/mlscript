@@ -272,12 +272,11 @@ fun mapPartition(f, xs) =
     Cons(x, xs) and mapPartition(f, xs) is tmp0 and res.fst is l and res.snd is r and f(x) is
       Left(v)  then Pair(Cons(v, l), r)
       Right(v) then Pair(l, Cons(v, r))
-//│ ╔══[ERROR] Cannot find the constructor `tmp0` in the context
-//│ ║  l.272: 	    Cons(x, xs) and mapPartition(f, xs) is tmp0 and res.fst is l and res.snd is r and f(x) is
-//│ ╙──       	                                           ^^^^
-//│ mapPartition: (anything, anything,) -> error
-//│ Code generation encountered an error:
-//│   if expression has not been desugared
+//│ mapPartition: ('head -> ((Left with {leftValue: 'head0}) | (Right with {rightValue: 'head1})), 'a,) -> (Pair with {fst: (Cons with {head: 'head0, tail: 'tail}) | 'tail, snd: (Cons with {head: 'head1, tail: 'tail}) | 'tail})
+//│   where
+//│     'tail :> (Cons with {head: 0 | 1 | 2 | 3, tail: 'tail}) | Nil
+//│     'a <: (Cons with {head: 'head, tail: 'a}) | Nil
+//│             = [Function: mapPartition1]
 
 // FIXME `b` should be bound here!
 fun mn(a) =
@@ -288,7 +287,7 @@ fun mn(a) =
       Right(b) then "right-defined"
     None       then "undefined"
 //│ ╔══[ERROR] identifier not found: b
-//│ ║  l.287: 	      let y = b + 1
+//│ ║  l.286: 	      let y = b + 1
 //│ ╙──       	              ^
 //│ mn: (None | Some & {value: Left | Right}) -> ("left-defined" | "right-defined" | "undefined")
 //│ Code generation encountered an error:

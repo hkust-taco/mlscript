@@ -61,18 +61,13 @@ fun f(x, y) =
 
 // FIXME
 if 42 is n then n + 1
-//│ ╔══[ERROR] Cannot find the constructor `n` in the context
-//│ ║  l.63: 	if 42 is n then n + 1
-//│ ╙──      	         ^
-//│ res: error
+//│ res: int
 
 // FIXME
-:e
 if 42 is n then n + 1 else 0
-//│ ╔══[ERROR] Cannot find the constructor `n` in the context
-//│ ║  l.71: 	if 42 is n then n + 1 else 0
-//│ ╙──      	         ^
-//│ res: error
+//│ ╔══[WARNING] duplicated branch
+//│ ╙──
+//│ res: int
 
 
 if Some(42) is Some(n) then n + 1
