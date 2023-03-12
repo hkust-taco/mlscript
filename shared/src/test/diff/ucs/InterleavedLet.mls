@@ -279,6 +279,8 @@ fun mapPartition(f, xs) =
 //│             = [Function: mapPartition1]
 
 // FIXME `b` should be bound here!
+// The example is actually wrong. `b` belongs to the consequent of `Left(b)`.
+// `let y = ...` has no access to `b` because it is not in scope.
 fun mn(a) =
   if a is
     Some(x) and x is
@@ -287,7 +289,7 @@ fun mn(a) =
       Right(b) then "right-defined"
     None       then "undefined"
 //│ ╔══[ERROR] identifier not found: b
-//│ ║  l.286: 	      let y = b + 1
+//│ ║  l.288: 	      let y = b + 1
 //│ ╙──       	              ^
 //│ mn: (None | Some & {value: Left | Right}) -> ("left-defined" | "right-defined" | "undefined")
 //│ Code generation encountered an error:

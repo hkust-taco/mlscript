@@ -1,0 +1,26 @@
+:NewParser
+
+class A(a)
+//│ Defined class A
+//│ A: 'a -> (A with {a: 'a})
+//│  = [Function: A1]
+
+fun f(x) = x
+fun g(x, y) = x
+fun h(x, y, z) = x
+//│ f: 'a -> 'a
+//│  = [Function: f]
+//│ g: ('a, anything,) -> 'a
+//│  = [Function: g]
+//│ h: ('a, anything, anything,) -> 'a
+//│  = [Function: h]
+
+fun findFreshName(x, y) =
+  if
+    f(x) == 1 and
+      let u = g(x, 0)
+      h(u, u + 1, y) is
+        A(a) then a
+    _ then h(x, 0, y)
+//│ findFreshName: (int & 'a, anything,) -> 'a
+//│              = [Function: findFreshName]

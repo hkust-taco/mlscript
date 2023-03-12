@@ -455,11 +455,12 @@ class Desugarer extends TypeDefs { self: Typer =>
             case S(alias) => acc
             case N        => acc
           }
-          // Create a buffer for interleaved let bindings.
-          val interleavedLets = Buffer.empty[(Bool, Var, Term)]
+          // We need to make a snapshot because the sub-branches mutate the buffer.
+          // But these changes should not affect sibling branches.
+          val interleavedLetsSnapshot = interleavedLets.clone()
           // Iterate each match case.
           lines.foreach {
-            desugarMatchBranch(scrutinee, _, PartialTerm.Empty, conjunction)(interleavedLets)
+            desugarMatchBranch(scrutinee, _, PartialTerm.Empty, conjunction)(interleavedLetsSnapshot)
           }
         // For example: "if x == 0 and y is \n ..."
         case IfOpApp(testPart, Var("and"), consequent) =>
@@ -479,6 +480,7 @@ class Desugarer extends TypeDefs { self: Typer =>
           lines.foreach {
             case L(subBody) => desugarIfBody(subBody, expr, acc)
             case R(NuFunDef(S(isRec), nameVar, _, L(term))) =>
+              printlnUCS(s"Found interleaved binding ${nameVar.name}")
               interleavedLets += ((isRec, nameVar, term))
             case R(_) =>
               throw new Error("unexpected statements at desugarIfBody")

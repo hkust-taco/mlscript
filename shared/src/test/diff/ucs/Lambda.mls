@@ -368,18 +368,12 @@ fun tryAppendDigits(name, index, freeNames) =
 //│                = [Function: tryAppendDigits]
 
 // Note: some weird behavior here... Just try the commented code.
-// fun findFreshName(name, freeNames) =
-//   if
-//     stringLength(name) == 1 and
-//       let charCode = stringCharCodeAt(name, 0)
-//       tryNextAlphabet(charCode, charCode + 1, freeNames) is
-//         Some(newName) then newName
-//     _ then tryAppendDigits(name, 0, freeNames)
 fun findFreshName(name, freeNames) =
   if
     stringLength(name) == 1 and
       let charCode = stringCharCodeAt(name, 0)
-      tryNextAlphabet(charCode, charCode + 1, freeNames) is Some(newName) then newName
+      tryNextAlphabet(charCode, charCode + 1, freeNames) is
+        Some(newName) then newName
     _ then tryAppendDigits(name, 0, freeNames)
 //│ findFreshName: (string, 'a,) -> string
 //│   where
@@ -405,10 +399,10 @@ fun subst(t, n, v) =
     App(lhs, rhs) then App(subst(lhs, n, v), subst(rhs, n, v))
     _ then t
 //│ ╔══[WARNING] Found a duplicated else branch
-//│ ║  l.406: 	    _ then t
+//│ ║  l.400: 	    _ then t
 //│ ║         	           ^
 //│ ╟── The first else branch was declared here.
-//│ ║  l.404: 	      _ then Abs(Var(name), subst(body, n, v))
+//│ ║  l.398: 	      _ then Abs(Var(name), subst(body, n, v))
 //│ ╙──       	             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ subst: ('a, anything, 'a & 'b & 'rhs & 'c,) -> 'rhs
 //│   where
