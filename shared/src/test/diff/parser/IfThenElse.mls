@@ -263,7 +263,7 @@ if lol else 2
 :pe
 x = if true then false else maybe
 //│ |x| |#=| |#if| |true| |#then| |false| |#else| |maybe|
-//│ ╔══[PARSE ERROR] Expected end of input; found '=' keyword instead
+//│ ╔══[PARSE ERROR] Expected end of input; found '=' instead
 //│ ║  l.264: 	x = if true then false else maybe
 //│ ╙──       	  ^
 //│ Parsed: {x}
@@ -273,7 +273,7 @@ x =
   if true then
 y = 1
 //│ |x| |#=|→|#if| |true| |#then|←|↵|y| |#=| |1|
-//│ ╔══[PARSE ERROR] Expected end of input; found '=' keyword instead
+//│ ╔══[PARSE ERROR] Expected end of input; found '=' instead
 //│ ║  l.272: 	x =
 //│ ╙──       	  ^
 //│ Parsed: {x}
@@ -400,10 +400,10 @@ if a is
 :pe
 if let Some(x) = v then 123
 //│ |#if| |#let| |Some|(|x|)| |#=| |v| |#then| |123|
-//│ ╔══[PARSE ERROR] Expected '=' keyword; found parenthesis section instead
+//│ ╔══[PARSE ERROR] Expected '='; found parenthesis section instead
 //│ ║  l.401: 	if let Some(x) = v then 123
 //│ ╙──       	           ^^^
-//│ ╔══[PARSE ERROR] Unexpected '=' keyword in expression position
+//│ ╔══[PARSE ERROR] Unexpected '=' in expression position
 //│ ║  l.401: 	if let Some(x) = v then 123
 //│ ╙──       	               ^
 //│ ╔══[PARSE ERROR] Expected an expression; found a 'then'/'else' clause instead
@@ -421,10 +421,10 @@ if let Some(x) = v then 123
 :pe
 if let Some(x) = v and cond then 123
 //│ |#if| |#let| |Some|(|x|)| |#=| |v| |and| |cond| |#then| |123|
-//│ ╔══[PARSE ERROR] Expected '=' keyword; found parenthesis section instead
+//│ ╔══[PARSE ERROR] Expected '='; found parenthesis section instead
 //│ ║  l.422: 	if let Some(x) = v and cond then 123
 //│ ╙──       	           ^^^
-//│ ╔══[PARSE ERROR] Unexpected '=' keyword in expression position
+//│ ╔══[PARSE ERROR] Unexpected '=' in expression position
 //│ ║  l.422: 	if let Some(x) = v and cond then 123
 //│ ╙──       	               ^
 //│ ╔══[PARSE ERROR] Expected an expression; found a 'then'/'else' clause instead
@@ -446,7 +446,7 @@ if v is Some(x) and x is Left(y) then 123
 // ML:
 let Some(x) = v
 //│ |#let| |Some|(|x|)| |#=| |v|
-//│ Parsed: {let Some = x, => v}
+//│ Parsed: {let Some = (x,) => v}
 
 v as Some(x)
 //│ |v| |as| |Some|(|x|)|
@@ -541,7 +541,7 @@ if true
 //│ ╟── Note: 'if' expression started here:
 //│ ║  l.536: 	(if true)
 //│ ╙──       	 ^^
-//│ Parsed: {'(' if (true) then undefined, ')'}
+//│ Parsed: {'(' if (true) then undefined ')'}
 
 :pe
 (if true then)
@@ -549,15 +549,23 @@ if true
 //│ ╔══[PARSE ERROR] Unexpected end of parenthesis section; an expression was expected here
 //│ ║  l.547: 	(if true then)
 //│ ╙──       	             ^
-//│ Parsed: {'(' if (true) then undefined, ')'}
+//│ Parsed: {'(' if (true) then undefined ')'}
 
-:pe
 if true then;
 //│ |#if| |true| |#then|#;|
-//│ ╔══[PARSE ERROR] Expected end of input; found ';' keyword instead
-//│ ║  l.555: 	if true then;
-//│ ╙──       	            ^
 //│ Parsed: {if (true) then undefined}
+
+:pe
+if true then; else;
+//│ |#if| |true| |#then|#;| |#else|#;|
+//│ ╔══[PARSE ERROR] Unexpected 'then'/'else' clause
+//│ ║  l.559: 	if true then; else;
+//│ ╙──       	              ^^^^
+//│ Parsed: {if (true) then undefined; undefined}
+
+if true then () else;
+//│ |#if| |true| |#then| |(||)| |#else|#;|
+//│ Parsed: {if (true) then '('  ')' else undefined}
 
 
 

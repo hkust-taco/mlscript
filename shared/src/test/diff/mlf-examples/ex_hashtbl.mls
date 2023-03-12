@@ -1,0 +1,430 @@
+:NoRecursiveTypes
+:DistributeForalls
+
+// ============ Dummy classes to represent the types in the examples ============
+
+class List[a]
+  method Head: a
+  method Tail: List[a]
+//│ Defined class List[+a]
+//│ Declared List.Head: List['a] -> 'a
+//│ Declared List.Tail: List['a] -> List['a]
+
+class Cons[a]: List[a] & { head: a; tail: List[a] }
+  method Head = this.head
+  method Tail = this.tail
+def cons[a]: a -> List[a] -> List[a]
+def cons head tail = Cons { head; tail }
+//│ Defined class Cons[+a]
+//│ Defined Cons.Head: Cons['a] -> 'a
+//│ Defined Cons.Tail: Cons['a] -> List['a]
+//│ cons: 'a -> List['a] -> List['a]
+//│     = <missing implementation>
+//│ ('head & 'a) -> (List['a] & 'tail) -> (Cons['a] with {head: 'head, tail: 'tail})
+//│   <:  cons:
+//│ 'a -> List['a] -> List['a]
+//│     = [Function: cons]
+
+class Nil[a]: List[a]
+  method Head = error
+  method Tail = this
+def nil: List['a]
+nil = Nil {}
+//│ Defined class Nil[+a]
+//│ Defined Nil.Head: Nil[?] -> nothing
+//│ Defined Nil.Tail: (Nil['a] & 'this) -> (Nil['a] & 'this)
+//│ nil: List[nothing]
+//│    = <missing implementation>
+//│ Nil[nothing]
+//│   <:  nil:
+//│ List[nothing]
+//│    = Nil {}
+
+// ============ Type signatures for functions used in the examples ============
+
+def head: forall 'a. List['a] -> 'a
+def head l = l.Head
+//│ head: List['a] -> 'a
+//│     = <missing implementation>
+//│ List['a] -> 'a
+//│   <:  head:
+//│ List['a] -> 'a
+//│     = [Function: head]
+
+def tail: forall 'a. List['a] -> List['a]
+def tail l = l.Tail
+//│ tail: List['a] -> List['a]
+//│     = <missing implementation>
+//│ List['a] -> List['a]
+//│   <:  tail:
+//│ List['a] -> List['a]
+//│     = [Function: tail]
+
+def is_empty: forall 'a. List['a] -> bool
+def is_empty l = eq l nil
+//│ is_empty: List[?] -> bool
+//│         = <missing implementation>
+//│ anything -> bool
+//│   <:  is_empty:
+//│ List[?] -> bool
+//│         = [Function: is_empty]
+
+
+
+// (* Use the value restriction ! *)
+
+// type option ('a) = None | Some of 'a
+class None
+class Some[a]: { val: a }
+type Option[a] = None | Some[a]
+def None = None {}
+def Some val = Some { val }
+//│ Defined class None
+//│ Defined class Some[+a]
+//│ Defined type alias Option[+a]
+//│ None: None
+//│     = [Function: None1]
+//│ Some: 'val -> Some['val]
+//│     = [Function: Some1]
+
+// let create_hashtbl () = []
+def create_hashtbl _ = nil
+//│ create_hashtbl: anything -> List[nothing]
+//│               = [Function: create_hashtbl]
+
+// let hashtbl_add table key element = (key, element) :: table
+def hashtbl_add table key element = cons ((key, element)) table
+//│ hashtbl_add: List['a] -> 'b -> 'c -> List[('b, 'c,) | 'a]
+//│            = [Function: hashtbl_add]
+
+// let rec find table key = 
+//   if nil table then None
+//   else if fst (car table) = key then Some (snd (car table))
+//   else find (cdr table) key
+
+:RecursiveTypes // needed for this recursive def
+rec def find table key =
+  if is_empty table then None
+  else if eq (head table)._1 key then Some (head table)._2
+  else find (tail table) key
+//│ find: List[{_1: anything, _2: 'val}] -> anything -> (None | Some['val])
+//│     = [Function: find]
+rec def find table key =
+  if is_empty table then None
+  else let ht = head table in if eq ht._1 key then Some ht._2
+  else find (tail table) key
+//│ find: List[{_1: anything, _2: 'val}] -> anything -> (None | Some['val])
+//│     = [Function: find1]
+:NoRecursiveTypes
+
+:ns
+find
+//│ res: forall 'a 'a0 'b 'c 'val 'd 'e 'a1 'f 'find 'g 'h 'i 'j 'k 'l 'a2. 'find
+//│   where
+//│     'find := 'b -> 'h -> 'g
+//│     'g :> (forall 'm. 'm) | (forall 'n. 'n)
+//│        <: 'd
+//│     'd :> (forall 'm. 'm) | (forall 'n. 'n)
+//│        <: 'k
+//│     'k :> (forall 'm. 'm) | (forall 'n. 'n)
+//│        <: 'e
+//│     'e :> (forall 'm. 'm) | (forall 'n. 'n)
+//│        <: 'i
+//│     'i :> (forall 'm. 'm) | (forall 'n. 'n)
+//│        <: 'g
+//│     'n :> #None
+//│     'm :> #Some & {val: 'val, Some#a = 'a0}
+//│     'h <: 'c
+//│     'b :> List['a]
+//│        <: List['a] & List['a2] & List['a1]
+//│     'a <: 'a1 & 'a2
+//│     'a2 <: {_2: 'f} & {_1: 'j}
+//│     'j <: 'c
+//│     'f <: 'l
+//│     'l <: 'val
+//│     'val <: 'a0
+//│    = [Function: find1]
+
+:ng
+find(error:List[(int, string)])(unit)
+//│ res: None | Some[string]
+
+def find_A: forall 'a 'b. List[('a, 'b)] -> 'a -> (None | Some['b])
+//│ find_A: List[(anything, 'b,)] -> anything -> (None | Some['b])
+//│       = <missing implementation>
+
+def find_A table key =
+  if is_empty table then None
+  else if eq (head table)._1 key then Some (head table)._2
+  else find_A (tail table) key
+//│ List[(anything, 'val,)] -> anything -> (None | Some['val])
+//│   <:  find_A:
+//│ List[(anything, 'b,)] -> anything -> (None | Some['b])
+//│       = <no result>
+//│         find_A is not implemented
+
+// let nfind table key =
+//   begin match find table key with
+//   | None -> fun f x -> x
+//   | Some n -> n
+//   end
+def nfind table key =
+  let opt = find table key in
+  case opt of
+  { None -> fun f -> fun x -> x
+  | Some -> opt.val
+  }
+//│ nfind: List[{_1: anything, _2: 'val}] -> anything -> (anything -> 'a -> 'a | 'val)
+//│      = [Function: nfind]
+
+// type Int = ['a] ('a -> 'a) -> ('a -> 'a)
+type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ Defined type alias ChurchInt
+
+// let succ (n:Int) = fun f x -> f (n f x)
+def succ (n: ChurchInt) = fun f -> fun x -> f (n f x)
+def succ_ n = fun f -> fun x -> f (n f x)
+//│ succ: ChurchInt -> ('a -> ('a & 'b)) -> 'a -> 'b
+//│     = [Function: succ]
+//│ succ_: ('a -> 'b -> 'c) -> ('c -> 'd & 'a) -> 'b -> 'd
+//│      = [Function: succ_]
+
+// let add (n:Int) (m:Int) = n succ m
+
+//:e // due to tapping
+def add (n: ChurchInt) (m: ChurchInt) = n succ m
+//│ add: ChurchInt -> ChurchInt -> (('a -> ('a & 'b)) -> 'a -> 'b | ChurchInt)
+//│    = [Function: add]
+
+def add_ n m = n succ_ m
+//│ add_: ((forall 'a 'b 'c 'd. ('a -> 'b -> 'c) -> ('c -> 'd & 'a) -> 'b -> 'd) -> 'e -> 'f) -> 'e -> 'f
+//│     = [Function: add_]
+
+// let printInt (n:Int) = print (n (fun x -> x+1) 0)
+def printInt (n: ChurchInt) = toString (n (fun x -> x + 1) 0)
+def printInt_ n = toString (n (fun x -> x + 1) 0)
+//│ printInt: ChurchInt -> string
+//│         = [Function: printInt]
+//│ printInt_: ((int -> int) -> 0 -> anything) -> string
+//│          = [Function: printInt_]
+
+// let table = create_hashtbl ()
+// let table = hashtbl_add table "one" (fun f x -> f x)
+// let table = hashtbl_add table "two" (fun f x -> f (f x))
+table = create_hashtbl null
+table = hashtbl_add table "one" (fun f -> fun x -> f x)
+table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
+//│ table: List[nothing]
+//│      = Nil {}
+//│ table: List[("one", forall 'a 'b. ('a -> 'b) -> 'a -> 'b,)]
+//│      = Cons { head: [ 'one', [Function (anonymous)] ], tail: Nil {} }
+//│ table: List[("one" | "two", forall 'a 'b 'c. ('a -> 'b & 'b -> 'c & 'a -> 'c) -> 'a -> 'c,)]
+//│      = Cons {
+//│          head: [ 'two', [Function (anonymous)] ],
+//│          tail: Cons { head: [ 'one', [Function (anonymous)] ], tail: Nil {} }
+//│        }
+
+// let zog =
+//   printInt (add (nfind table "one") (nfind table "two"))
+
+// :e // FIXME? failed with genLamBodies but works with quantif extrus
+// * Note: this one requires `:DistributeForalls`
+// :e // due to tapping
+:e // * Since "sound extrusion"
+zog = printInt (add (nfind table "one") (nfind table "two"))
+//│ ╔══[ERROR] Type error in application
+//│ ║  l.234: 	zog = printInt (add (nfind table "one") (nfind table "two"))
+//│ ║         	                ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type variable `'a` leaks out of its scope
+//│ ║  l.181: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║         	                                   ^^
+//│ ╟── back into type variable `'a`
+//│ ║  l.181: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║         	                             ^^
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this field selection:
+//│ ║  l.175: 	  | Some -> opt.val
+//│ ║         	            ^^^^^^^
+//│ ╟── • this application:
+//│ ║  l.234: 	zog = printInt (add (nfind table "one") (nfind table "two"))
+//│ ║         	                     ^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.216: 	table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
+//│ ╙──       	                                                      ^^^
+//│ zog: string
+//│    = '0'
+
+// Repro:
+
+// :e // FIXME? failed with genLamBodies but works with quantif extrus
+//:e // due to tapping
+// :e // FIXME? refreshing-extr
+:e // * Since "sound extrusion"
+a = add (nfind table "one")
+//│ ╔══[ERROR] Type error in application
+//│ ║  l.263: 	a = add (nfind table "one")
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type variable `'a` leaks out of its scope
+//│ ║  l.181: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║         	                                   ^^
+//│ ╟── back into type variable `'a`
+//│ ║  l.181: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║         	                             ^^
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this field selection:
+//│ ║  l.175: 	  | Some -> opt.val
+//│ ║         	            ^^^^^^^
+//│ ╟── • this application:
+//│ ║  l.263: 	a = add (nfind table "one")
+//│ ║         	         ^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.216: 	table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
+//│ ╙──       	                                                      ^^^
+//│ a: error
+//│  = [Function (anonymous)]
+
+b = (nfind table "two")
+//│ b: ('a -> 'b & 'a -> 'c & 'c -> 'b & 'a -> 'd & 'd -> 'b & 'a -> 'e & 'e -> 'b & 'a -> 'f & 'f -> 'b) -> ('b & 'a) -> 'b
+//│  = [Function (anonymous)]
+
+b (fun x -> x)
+//│ res: 'a -> 'a
+//│    = [Function (anonymous)]
+
+b (fun x -> x (not x))
+//│ res: nothing -> nothing
+//│    = [Function (anonymous)]
+
+b (fun x -> 0)
+//│ res: 'a -> (0 | 'a)
+//│    = [Function (anonymous)]
+
+b = (find table "two")
+//│ b: None | Some[forall 'a 'b 'c. ('a -> 'b & 'a -> 'c & 'c -> 'b) -> 'a -> 'b]
+//│  = None {}
+
+// * Note: this one required `:DistributeForalls`
+a b
+//│ res: error
+//│    = None {}
+
+zog_ = printInt_ (add_ (nfind table "one") (nfind table "two"))
+//│ zog_: string
+//│     = '0'
+
+
+
+// * === ADDED VARIATIONS === *
+
+
+def nfind table key =
+  (fun opt -> case opt of
+  { None -> fun f -> fun x -> x
+  | Some -> opt.val
+  }) (find table key)
+//│ nfind: List[{_1: anything, _2: 'val}] -> anything -> (anything -> 'a -> 'a | 'val)
+//│      = [Function: nfind1]
+
+def match_opt: forall 'a 'r. (() -> 'r, 'a -> 'r) -> Option['a] -> 'r
+//│ match_opt: (() -> 'r, 'a -> 'r,) -> Option['a] -> 'r
+//│          = <missing implementation>
+
+match_opt (n, s) opt = case opt of
+  None -> n(),
+  Some -> s(opt.val)
+//│ (() -> 'a, 'val -> 'a,) -> (None | Some[?] & {val: 'val}) -> 'a
+//│   <:  match_opt:
+//│ (() -> 'r, 'a -> 'r,) -> Option['a] -> 'r
+//│          = [Function: match_opt]
+
+def nfind table key =
+  match_opt (
+    fun () -> fun f -> fun x -> x,
+    fun v -> v
+  ) (find table key)
+//│ nfind: List[{_1: anything, _2: 'a}] -> anything -> (anything -> 'b -> 'b | 'a)
+//│      = [Function: nfind2]
+
+
+match_opt (
+    fun () -> fun f -> fun x -> x,
+    fun v -> v
+  ) b
+//│ res: ('a -> 'b & 'a -> 'c & 'c -> 'b) -> ('a & 'd) -> ('d | 'b)
+//│    = [Function (anonymous)]
+
+match_opt (
+    fun () -> fun f -> fun x -> x,
+    fun v -> v
+  ) (find table "two")
+//│ res: ('a -> 'b & 'a -> 'c & 'c -> 'b) -> ('a & 'd) -> ('d | 'b)
+//│    = [Function (anonymous)]
+
+def foo key = match_opt (
+    fun () -> fun f -> id,
+    fun v -> v
+  ) (find table key)
+//│ foo: anything -> ('a -> 'b & 'a -> 'c & 'c -> 'b & 'a -> 'd & 'd -> 'b & 'a -> 'e & 'e -> 'b & 'a -> 'f & 'f -> 'b & 'a -> 'g & 'g -> 'b & 'a -> 'h & 'h -> 'b & 'a -> 'i & 'i -> 'b & 'a -> 'j & 'j -> 'b) -> 'a -> ('a | 'b)
+//│    = [Function: foo]
+
+foo 1
+//│ res: ('a -> 'b & 'a -> 'c & 'c -> 'b & 'a -> 'd & 'd -> 'b & 'a -> 'e & 'e -> 'b & 'a -> 'f & 'f -> 'b & 'a -> 'g & 'g -> 'b & 'a -> 'h & 'h -> 'b & 'a -> 'i & 'i -> 'b & 'a -> 'j & 'j -> 'b) -> 'a -> ('a | 'b)
+//│    = [Function (anonymous)]
+
+:e
+foo 1 2
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.375: 	foo 1 2
+//│ ║         	^^^^^^^
+//│ ╟── integer literal of type `2` is not a function
+//│ ║  l.375: 	foo 1 2
+//│ ║         	      ^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.216: 	table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
+//│ ║         	                                                   ^^^^^^^
+//│ ╟── from reference:
+//│ ║  l.216: 	table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
+//│ ╙──       	                                                   ^
+//│ res: 'a -> 'a | error
+//│    = [Function: id]
+
+:re
+foo 1 error
+//│ res: 'a -> 'a
+//│ Runtime error:
+//│   Error: unexpected runtime error
+
+:re
+foo 1 error 2
+//│ res: 2
+//│ Runtime error:
+//│   Error: unexpected runtime error
+
+(fun key -> match_opt (
+    fun () -> fun f -> fun x -> x,
+    fun v -> v
+  ) (find table key)) "two"
+//│ res: ('a -> 'b & 'b -> 'c & 'a -> 'c) -> ('d & 'a) -> ('d | 'c)
+//│    = [Function (anonymous)]
+
+res id
+//│ res: 'a -> 'a
+//│    = [Function (anonymous)]
+
+case b of
+  None -> fun f -> fun x -> x,
+  Some -> b.val
+//│ res: ('a -> 'b & 'b -> 'c & 'a -> 'c) -> ('d & 'a) -> ('d | 'c)
+//│    = [Function (anonymous)]
+
+res id
+//│ res: 'a -> 'a
+//│    = [Function (anonymous)]
+
+(fun opt -> case b of
+  None -> fun f -> fun x -> x,
+  Some -> b.val) (find table "two")
+//│ res: ('a -> 'b & 'b -> 'c & 'a -> 'c) -> ('d & 'a) -> ('d | 'c)
+//│    = [Function (anonymous)]
+
+

@@ -10,7 +10,7 @@ type Option[A] = Some[A] | None
 def flatMap f opt = case opt of
   Some -> f opt.value,
   None -> None{}
-//│ flatMap: ('value -> 'a) -> (None | (Some[?] with {value: 'value})) -> (None | 'a)
+//│ flatMap: ('value -> 'a) -> (None | Some[?] & {value: 'value}) -> (None | 'a)
 //│        = [Function: flatMap]
 
 res = flatMap (fun x -> x) (Some{value = 42})
@@ -27,7 +27,7 @@ flatMap (fun x -> None{}) (Some{value = 42})
 
 
 def flatMap2 f opt = case opt of Some -> f opt.value, _ -> opt
-//│ flatMap2: ('value -> 'a) -> ((Some[?] with {value: 'value}) | 'a & ~#Some) -> 'a
+//│ flatMap2: ('value -> 'a) -> (Some[?] & {value: 'value} | 'a & ~#Some) -> 'a
 //│         = [Function: flatMap2]
 
 flatMap2 (fun x -> Some{value = x}) (Some{value = 12})
@@ -53,7 +53,7 @@ class SomeAnd[A, P]: Some[A] & { payload: P }
 
 let arg = if true then SomeAnd{value = 42; payload = 23} else None{}
   in mapSome (fun x -> x.value + x.payload) arg
-//│ res: int | None
+//│ res: None | int
 //│    = 65
 
 

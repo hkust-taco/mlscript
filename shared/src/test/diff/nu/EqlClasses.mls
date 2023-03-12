@@ -1,0 +1,161 @@
+:NewDefs
+
+
+
+module Mod
+//│ module Mod()
+
+Mod === Mod
+//│ bool
+//│ res
+//│     = true
+
+
+class Cls1()
+//│ class Cls1()
+
+Cls1() === Cls1()
+//│ bool
+//│ res
+//│     = false
+
+
+class Cls2(x: int)
+//│ class Cls2(x: int)
+
+Cls2(0) === Cls2(1)
+//│ bool
+//│ res
+//│     = false
+
+
+
+class Pair[A](fst: A, snd: A)
+//  extends (A <: Eql[A]) => Eql[Pair[A]]
+//│ class Pair[A](fst: A, snd: A)
+
+let p = Pair(1, 2)
+//│ let p: Pair[1 | 2]
+//│ p
+//│   = Pair {}
+
+p === p
+//│ bool
+//│ res
+//│     = true
+
+
+x => p === x
+//│ {fst: Eql[1 | 2], snd: Eql[1 | 2]} -> bool
+//│ res
+//│     = [Function: res]
+
+x => x === p
+//│ Eql[Pair[1 | 2]] -> bool
+//│ res
+//│     = [Function: res]
+
+p === { fst: 1, snd: 2 }
+//│ bool
+//│ res
+//│     = false
+
+:e
+{ fst: 1, snd: 2 } === p
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.64: 	{ fst: 1, snd: 2 } === p
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── record literal of type `{fst: 1, snd: 2}` is not an instance of type `Eql`
+//│ ║  l.64: 	{ fst: 1, snd: 2 } === p
+//│ ╙──      	       ^^^^^^^^^
+//│ bool | error
+//│ res
+//│     = false
+
+let r = {x: 42, y: y => y}
+//│ let r: {x: 42, y: forall 'a. 'a -> 'a}
+//│ r
+//│   = { x: 42, y: [Function: y] }
+
+r : {x: int}
+//│ {x: int}
+//│ res
+//│     = { x: 42, y: [Function: y] }
+
+
+:e
+x => { a: 0 } === x
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.87: 	x => { a: 0 } === x
+//│ ║        	     ^^^^^^^^^^^^
+//│ ╟── record literal of type `{a: 0}` is not an instance of type `Eql`
+//│ ║  l.87: 	x => { a: 0 } === x
+//│ ╙──      	          ^
+//│ anything -> (bool | error)
+//│ res
+//│ Syntax error:
+//│   Unexpected token '==='
+
+x => x === { a: 0 }
+//│ Eql[{a: 0}] -> bool
+//│ res
+//│     = [Function: res]
+
+
+
+let q = Pair(1, "oops")
+//│ let q: Pair["oops" | 1]
+//│ q
+//│   = Pair {}
+
+:e
+q === q
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.112: 	q === q
+//│ ║         	^^^^^^^
+//│ ╟── integer literal of type `1` is not an instance of type `string`
+//│ ║  l.106: 	let q = Pair(1, "oops")
+//│ ╙──       	             ^
+//│ bool | error
+//│ res
+//│     = true
+
+
+class Pair2[A, B](fst: A, snd: B)
+//│ class Pair2[A, B](fst: A, snd: B)
+
+let q = Pair2(1, "oops")
+//│ let q: Pair2[1, "oops"]
+//│ q
+//│   = Pair2 {}
+
+q === q
+//│ bool
+//│ res
+//│     = true
+
+
+
+
+// *** NOTES ***
+
+// * Intended type for comparing Cons:
+// Eql[Cons & { head: Eql['h], tail: Eql['t] } | ~Cons & List]
+
+
+// * Original code
+// x: Int
+// y: Int
+// x == y
+
+// * Refactored code (we want an error)
+// x: Option[Int]
+// y: Int
+// x == y
+// -->
+// x.exists(_ == y)
+
+// * Should not be equatable:
+// Int | Option[Int]
+
+

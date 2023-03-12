@@ -1,0 +1,156 @@
+
+:NoJS
+
+
+type IISS = int -> int & string -> string
+type BBNN = bool -> bool & number -> number
+type ZZII = 0 -> 0 & int -> int
+//│ Defined type alias IISS
+//│ Defined type alias BBNN
+//│ Defined type alias ZZII
+
+def IISS: int -> int & string -> string
+def BBNN: bool -> bool & number -> number
+def ZZII: 0 -> 0 & int -> int
+//│ IISS: int -> int & string -> string
+//│ BBNN: bool -> bool & number -> number
+//│ ZZII: 0 -> 0 & int -> int
+
+
+IISS : IISS
+//│ res: IISS
+
+IISS : int -> int & string -> string
+//│ res: int -> int & string -> string
+
+IISS : IISS | BBNN
+//│ res: BBNN | IISS
+
+:e
+IISS : ZZII
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.30: 	IISS : ZZII
+//│ ║        	^^^^
+//│ ╟── type `0` is not an instance of type `string`
+//│ ║  l.7: 	type ZZII = 0 -> 0 & int -> int
+//│ ║       	            ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.12: 	def IISS: int -> int & string -> string
+//│ ╙──      	                       ^^^^^^
+//│ res: ZZII
+
+:e
+IISS : BBNN
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.43: 	IISS : BBNN
+//│ ║        	^^^^
+//│ ╟── type `bool` is not an instance of type `int`
+//│ ║  l.6: 	type BBNN = bool -> bool & number -> number
+//│ ║       	            ^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.12: 	def IISS: int -> int & string -> string
+//│ ╙──      	          ^^^
+//│ res: BBNN
+
+
+// * These tests show that we currently throw away information when constraining LHS overloading sets:
+
+IISS : int -> int
+//│ res: int -> int
+
+IISS : (0 | 1) -> number
+//│ res: (0 | 1) -> number
+
+:e
+IISS : 'a -> 'a
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.65: 	IISS : 'a -> 'a
+//│ ║        	^^^^
+//│ ╟── type `int` is not an instance of type `string`
+//│ ║  l.12: 	def IISS: int -> int & string -> string
+//│ ║        	                 ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.12: 	def IISS: int -> int & string -> string
+//│ ║        	                       ^^^^^^
+//│ ╟── from type variable:
+//│ ║  l.65: 	IISS : 'a -> 'a
+//│ ╙──      	             ^^
+//│ res: nothing -> (error | int | string)
+
+:e
+IISS 0
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.81: 	IISS 0
+//│ ║        	^^^^^^
+//│ ╟── integer literal of type `0` is not an instance of type `string`
+//│ ║  l.81: 	IISS 0
+//│ ║        	     ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.12: 	def IISS: int -> int & string -> string
+//│ ╙──      	                       ^^^^^^
+//│ res: error | int | string
+
+(IISS : int -> int) 0
+//│ res: int
+
+:e
+(if true then IISS else BBNN) 0
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.97: 	(if true then IISS else BBNN) 0
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── integer literal of type `0` is not an instance of type `string`
+//│ ║  l.97: 	(if true then IISS else BBNN) 0
+//│ ║        	                              ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.12: 	def IISS: int -> int & string -> string
+//│ ╙──      	                       ^^^^^^
+//│ res: bool | error | number | string
+
+fun x -> (if true then IISS else BBNN) x
+//│ res: nothing -> (bool | number | string)
+
+if true then IISS else BBNN
+//│ res: bool -> bool & number -> number | int -> int & string -> string
+
+(if true then IISS else ZZII) : int -> int
+//│ res: int -> int
+
+(if true then IISS else BBNN) : (0 | 1) -> number
+//│ res: (0 | 1) -> number
+
+:e
+(if true then IISS else BBNN) : (0 | 1 | true) -> number
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.122: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `0` is not an instance of type `string`
+//│ ║  l.122: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
+//│ ║         	                                 ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.12: 	def IISS: int -> int & string -> string
+//│ ╙──      	                       ^^^^^^
+//│ res: (0 | 1 | true) -> number
+
+
+// * Note that type normalization is currently very aggressive at approximating negative non-tag types, to simplify the result:
+
+def test: ~(int -> int)
+//│ test: nothing
+
+// :ds
+def test: ~(int -> int) & ~bool
+//│ test: nothing
+
+def test: ~(int -> int) & bool
+//│ test: nothing
+
+def test: ~(int -> int) & ~(bool -> bool)
+//│ test: nothing
+
+def test: ~(int -> int | bool -> bool)
+//│ test: nothing
+
+def test: ~(int -> int & string -> string) & ~(bool -> bool & number -> number)
+//│ test: nothing
+
+

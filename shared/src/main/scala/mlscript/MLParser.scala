@@ -13,7 +13,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   val keywords = Set(
     "def", "class", "trait", "type", "method", "mut",
     "let", "rec", "in", "fun", "with", "undefined", "null",
-    "if", "then", "else", "match", "case", "of")
+    "if", "then", "else", "match", "case", "of", "forall")
   def kw[p: P](s: String) = s ~~ !(letter | digit | "_" | "'")
   
   // NOTE: due to bug in fastparse, the parameter should be by-name!
@@ -21,9 +21,12 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     case (i0, n, i1) => n.withLoc(i0, i1, origin)
   }
   
+  def toParam(t: Term): Tup =
+    Tup((N, Fld(false, false, t)) :: Nil)
+  
   def toParams(t: Term): Tup = t match {
     case t: Tup => t
-    case _ => Tup((N, Fld(false, false, t)) :: Nil)
+    case _ => toParam(t)
   }
   def toParamsTy(t: Type): Tuple = t match {
     case t: Tuple => t
@@ -43,8 +46,12 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     case (pat, S(bod)) => LetS(false, pat, bod)
   }
 
-  def term[p: P]: P[Term] = P(let | fun | ite | withsAsc | _match)
-
+  def term[p: P]: P[Term] = P(let | fun | ite | forall | withsAsc | _match)
+  
+  def forall[p: P]: P[Term] = P( (kw("forall") ~/ tyVar.rep ~ "." ~ term).map {
+    case (vars, ty) => Forall(vars.toList, ty)
+  } )
+  
   def lit[p: P]: P[Lit] =
     locate(number.map(x => IntLit(BigInt(x))) | Lexer.stringliteral.map(StrLit(_))
     | P(kw("undefined")).map(x => UnitLit(true)) | P(kw("null")).map(x => UnitLit(false)))
@@ -81,12 +88,14 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     // Array subscripts:
     ("[" ~ term ~/ "]" ~~ Index).map {Right(_)}
     // Assignment:
-    ).rep ~ ("<-" ~ term).?).map {
-      case (i0, st, sels, a) =>
-        val base = sels.foldLeft(st)((acc, t) => t match {
+    ).rep ~ "!".!.? ~ ("<-" ~ term).?).map {
+      case (i0, st, sels, bang, a) =>
+        val base0 = sels.foldLeft(st)((acc, t) => t match {
           case Left(se) => Sel(acc, se)
           case Right((su, i1)) => Subs(acc, su).withLoc(i0, i1, origin)
         })
+        val base = if (bang.isEmpty) base0 else
+          Inst(base0)
         a.fold(base)(Assign(base, _))
     }
 
@@ -105,7 +114,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     })
   
   def ite[p: P]: P[Term] = P( kw("if") ~/ term ~ kw("then") ~ term ~ kw("else") ~ term ).map(ite =>
-    App(App(App(Var("if"), ite._1), ite._2), ite._3))
+    App(App(App(Var("if"), toParam(ite._1)), toParam(ite._2)), toParam(ite._3)))
   
   def withsAsc[p: P]: P[Term] = P( withs ~ (":" ~/ ty).rep ).map {
     case (withs, ascs) => ascs.foldLeft(withs)(Asc)
@@ -187,7 +196,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   
   def defDecl[p: P]: P[Def] =
     locate(P((kw("def") ~ variable ~ tyParams ~ ":" ~/ ty map {
-      case (id, tps, t) => Def(true, id, R(PolyType(tps, t)), true)
+      case (id, tps, t) => Def(true, id, R(PolyType(tps.map(L(_)), t)), true)
     }) | (kw("rec").!.?.map(_.isDefined) ~ kw("def") ~/ variable ~ subterm.rep ~ "=" ~ term map {
       case (rec, id, ps, bod) => Def(rec, id, L(ps.foldRight(bod)((i, acc) => Lam(toParams(i), acc))), true)
     })))
@@ -225,8 +234,11 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def tyNoRange[p: P]: P[Type] = P( tyNoAs ~ ("as" ~ tyVar).rep ).map {
     case (ty, ass) => ass.foldLeft(ty)((a, b) => Recursive(b, a))
   }
-  def tyNoAs[p: P]: P[Type] = P( tyNoUnion.rep(1, "|") ).map(_.reduce(Union))
-  def tyNoUnion[p: P]: P[Type] = P( tyNoInter.rep(1, "&") ).map(_.reduce(Inter))
+  def tyNoAs[p: P]: P[Type] = P( (kw("forall") ~/ tyVar.rep ~ "." ~ tyNoAs).map {
+    case (vars, ty) => PolyType(vars.map(R(_)).toList, ty)
+  } | tyNoForall )
+  def tyNoForall[p: P]: P[Type] = P( tyNoUnion.rep(1, "|") ).map(_.reduce(Union) )
+  def tyNoUnion[p: P]: P[Type] = P( tyNoInter.rep(1, "&") ).map(_.reduce(Inter) )
   def tyNoInter[p: P]: P[Type] = P( tyNoFun ~ ("->" ~/ tyNoInter).? ).map {
     case (l, S(r)) => Function(toParamsTy(l), r)
     case (l, N) => l

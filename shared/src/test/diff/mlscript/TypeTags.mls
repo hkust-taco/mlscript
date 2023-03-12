@@ -26,7 +26,7 @@ test1 foo
 //│    = Foo { x: 1, y: 2 }
 
 def test2 f = case f of { Foo -> f.x }
-//│ test2: (Foo[?]\y with {x: 'x}) -> 'x
+//│ test2: (Foo[?] & {x: 'x}) -> 'x
 //│      = [Function: test2]
 
 test2 foo12
@@ -61,12 +61,18 @@ foo = Foo
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.57: 	foo = Foo
 //│ ║        	^^^^^^^^^
-//│ ╟── reference of type `{x: ?x, y: ?y} -> (Foo[?A] with {Foo#A = ?A, x: ?x, y: ?y})` is not an instance of type `Foo`
+//│ ╟── reference of type `{x: ?x, y: ?y} -> (Foo[?A] & {Foo#A = ?A, x: ?x, y: ?y})` is not an instance of type `Foo`
 //│ ║  l.57: 	foo = Foo
 //│ ║        	      ^^^
 //│ ╟── Note: class constructor Foo is defined at:
 //│ ║  l.3: 	class Foo[A]: { x: A; y: A }
 //│ ╙──     	      ^^^
 //│    = [Function: foo1]
+
+
+
+1 : #Eql
+//│ res: Eql[?]
+//│    = 1
 
 

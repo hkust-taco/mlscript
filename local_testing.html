@@ -9,67 +9,95 @@
   <h1>MLscript demonstration</h1>
   <div id="content">
     <textarea id="mlscript-input" class="panel" spellcheck="false">
-class Left[A]: { value: A }
-def Left value = Left{ value }
+class Add[E](lhs: E, rhs: E)
+class Lit(n: int)
+class Neg[E](expr: E)
 
-class Right[A]: { value: A }
-def Right value = Right{ value }
+let add11 = Add(Lit(1), Lit(2))
+let add2negadd11 = Add(Lit(2), Neg(add11))
 
-def testVal = if true then Left 1 else Right 2
-def res = case testVal of
-  { Left -> testVal.value
-  | Right -> 1
-  }
+mixin EvalAddLit {
+  fun eval(e) =
+    if e is
+      Lit(n) then n
+      Add(l, r) then this.eval(l) + this.eval(r)
+}
+mixin EvalNeg {
+  fun eval(override Neg(d)) = 0 - this.eval(d)
+}
 
-def zero = 0
-def bruh = "Bruh"
-def two = add 1 zero
-def lambda = fun x -> x
-def simpleLet = let i = 0 in add i 1
+module TestLang extends EvalAddLit, EvalNeg
 
-def f: (int & 'a) -> (int & 'a) -> 'a
-def f a b = if gt a b then a else b
-
-f 1 2
-
-def test x = case x of
-  { Left -> x.value
-  | Right -> "nope"
-  }
-
-def tmp = test (if true then Left 1 else Right 2)
-
-case tmp of { int -> tmp | string -> 0 }
-
-def test2 x = case x of
-  { int -> x
-  | bool -> x
-  | string -> x
-  }
-test2 1
-test2 true
-test2 "a"
-
-def test3 x = case x of
-  { 1 -> true
-  | true -> true
-  | "a" -> true
-  | _ -> false
-  }
-test3 1
-test3 true
-test3 "a"
-test3 2
-test3 false
-test3 "oops"
-test3 {}
+let res = TestLang.eval(add2negadd11)
 </textarea>
-<!-- let rec recursive_monster = fun x ->
-  { thing = x;
-    self = recursive_monster x } -->
     <div id="mlscript-output" class="panel"></div>
   </div>
   <script type="text/javascript" src="js/target/scala-2.13/mlscript-fastopt/main.js"></script>
   <br/>
-  <p>The code is available <a href="https://github.com/LPTK/mlscript">on github</a>.</p>
+  <!-- <p>The code is available TODO.</p> -->
+  <br/>
+
+  <h3>Tip: additional definitions from the paper – copy and paste to try them out:</h3>
+  <div class="panel">
+class Mul[E](lhs: E, rhs: E)<br/>
+mixin EvalMul {<br/>
+&nbsp;&nbsp;fun eval(override Mul(l, r)) = this.eval(l) * this.eval(r)<br/>
+}<br/>
+mixin EvalNegNeg {<br/>
+&nbsp;&nbsp;fun eval(override Neg(Neg(d))) = this.eval(d)<br/>
+}<br/>
+<br/>
+module TestLang2 extends EvalAddLit, EvalNeg, EvalMul, EvalNegNeg<br/>
+<br/>
+let res2 = TestLang2.eval(add2negadd11)
+  </div>
+<br/>
+  <div class="panel">
+class Some[A](value: A)<br/>
+<br/>
+mixin Foo { fun foo: int = 1 }<br/>
+mixin Bar { fun foo = Some(super.foo) }<br/>
+module ClsFoo extends Foo, Bar, Bar<br/>
+<br/>
+ClsFoo.foo<br/>
+  </div>
+<br/>
+  <div class="panel">
+class Some[A](value: A)<br/>
+module None<br/>
+<br/>
+mixin ComparePoint {<br/>
+&nbsp;&nbsp;fun compare(lhs, rhs) = (lhs.x == rhs.x) && (lhs.y == rhs.y)<br/>
+}<br/>
+mixin CompareColored {<br/>
+&nbsp;&nbsp;fun compare(lhs, rhs) =<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;super.compare(lhs, rhs) && eq(lhs.color)(rhs.color)<br/>
+}<br/>
+mixin CompareNested {<br/>
+&nbsp;&nbsp;fun compare(lhs, rhs) =<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;super.compare(lhs, rhs) &&<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if lhs.parent is Some(p)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;then rhs.parent is Some(q) and this.compare(p, q)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;else rhs.parent is None<br/>
+}<br/>
+<br/>
+class MyPoint(x: int, y: int, color: string, parent: Some[MyPoint] | None)<br/>
+<br/>
+module CompareMyPoint extends ComparePoint, CompareColored, CompareNested<br/>
+<br/>
+let Red = "red"<br/>
+let p0 = MyPoint(0, 0, Red, None)<br/>
+let p1 = MyPoint(0, 1, Red, None)<br/>
+let p2 = MyPoint(0, 1, Red, None)<br/>
+let p3 = MyPoint(0, 1, Red, Some(p1))<br/>
+let p4 = MyPoint(0, 1, Red, Some(p2))<br/>
+let p5 = MyPoint(0, 1, Red, Some(p3))<br/>
+<br/>
+CompareMyPoint.compare(p0, p1)<br/>
+CompareMyPoint.compare(p1, p2)<br/>
+CompareMyPoint.compare(p3, p4)<br/>
+CompareMyPoint.compare(p3, p5)<br/>
+  </div>
+
+
 </html>

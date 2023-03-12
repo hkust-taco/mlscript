@@ -1,46 +1,31 @@
 
 let twice f x = f / f x
-//│ twice: ('a -> ('a & 'b)) -> 'a -> 'b
+//│ twice: ('a -> 'b & 'b -> 'c) -> 'a -> 'c
+// Note: the pretty-printed type of `twice` *used to be* simplified to ('a -> ('a & 'b)) -> 'a -> 'b
+//    (another equivalent simplification is ('a | 'b -> 'a) -> 'b -> 'a);
+//    this simplification lost some information in the context of first-class polymorphism
+//    because function types effectively become non-mergeable without losing precsion...
+// (Also see this HN thread: https://news.ycombinator.com/item?id=13783237)
 
 twice(x => x + 1)
 //│ res: int -> int
 
 twice twice
-//│ res: ('a -> ('a & 'b)) -> 'a -> 'b
+//│ res: ('a -> 'b & 'b -> ('a & 'c)) -> 'a -> 'c
 
 let f = x => 1, x
 //│ f: 'a -> (1, 'a,)
 
-// Note: once we instantiate during constraint solving instead of on variable reference,
-//  the following should get the more useful type: 'a -> (1, (1 'a,),)
-// Note: but then the pretty-printed type of `twice` should not be simplified to ('a | 'b -> 'a) -> 'b -> 'a
-//  because function types would effectively become non-mergeable without losing precsion...
-// (I found this example while reading the HN thread: https://news.ycombinator.com/item?id=13783237)
+// Note: now that we instantiate during constraint solving instead of on variable reference,
+//    we get the more useful type: 'a -> (1, (1, 'a,),).
+//    Previously, we were getting: 'a -> ((1, 'c | 'b | 'a,) as 'b)
 twice f
-//│ res: 'a -> 'b
-//│   where
-//│     'a :> 'b
-//│     'b :> (1, 'a,)
+//│ res: 'a -> (1, (1, 'a,),)
 
-// TODO simplify more
-// :ds
 twice / x => x, x
-//│ res: 'a -> 'b
-//│   where
-//│     'a :> 'b
-//│     'b :> ('a, 'a,)
+//│ res: 'a -> (('a, 'a,), ('a, 'a,),)
 
-:e
 let one = twice (o => o.x) { x: { x: 1 } }
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.34: 	let one = twice (o => o.x) { x: { x: 1 } }
-//│ ║        	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── integer literal of type `1` does not have field 'x'
-//│ ║  l.34: 	let one = twice (o => o.x) { x: { x: 1 } }
-//│ ║        	                                     ^
-//│ ╟── Note: constraint arises from field selection:
-//│ ║  l.34: 	let one = twice (o => o.x) { x: { x: 1 } }
-//│ ╙──      	                       ^^
-//│ one: 1 | error | {x: 1}
+//│ one: 1
 
 

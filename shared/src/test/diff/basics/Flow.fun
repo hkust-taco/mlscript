@@ -5,10 +5,10 @@ data R x
 //│ Parsed: data L x; data R x;
 //│ Desugared: class L[x]: {x: x}
 //│ Desugared: class R[x]: {x: x}
-//│ Desugared: def L: [x] -> x -> L[x]
-//│ AST: Def(false, L, PolyType(List(TypeName(x)),Function(TypeName(x),AppliedType(TypeName(L),List(TypeName(x))))), true)
-//│ Desugared: def R: [x] -> x -> R[x]
-//│ AST: Def(false, R, PolyType(List(TypeName(x)),Function(TypeName(x),AppliedType(TypeName(R),List(TypeName(x))))), true)
+//│ Desugared: def L: forall x. x -> L[x]
+//│ AST: Def(false, L, PolyType(List(Left(TypeName(x))),Function(TypeName(x),AppliedType(TypeName(L),List(TypeName(x))))), true)
+//│ Desugared: def R: forall x. x -> R[x]
+//│ AST: Def(false, R, PolyType(List(Left(TypeName(x))),Function(TypeName(x),AppliedType(TypeName(R),List(TypeName(x))))), true)
 //│ Defined class L[+x]
 //│ Defined class R[+x]
 //│ L: 'a -> L['a]

@@ -33,7 +33,7 @@ B0 = A0
 //│ {x: T, y: S} | D & {x: T} | C & {y: S}
 //│ constrain calls  : 2
 //│ annoying  calls  : 32
-//│ subtyping calls  : 313
+//│ subtyping calls  : 282
 
 
 def A1: C & {x : T} | D & {y : U}
@@ -48,7 +48,7 @@ A1 = B1
 //│ C & {x: T} | D & {y: U}
 //│ constrain calls  : 2
 //│ annoying  calls  : 13
-//│ subtyping calls  : 247
+//│ subtyping calls  : 251
 
 :stats
 B1 = A1

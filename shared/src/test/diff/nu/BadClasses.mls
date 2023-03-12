@@ -1,0 +1,89 @@
+:NewDefs
+
+
+
+mixin M0(x: int)
+//│ mixin M0(x: int)
+
+:e
+class C0 extends M0
+//│ ╔══[ERROR] mixin M0 expects 1 parameters; got 0
+//│ ║  l.9: 	class C0 extends M0
+//│ ╙──     	                 ^^
+//│ class C0()
+
+:e
+class C0 extends M0(1, 2)
+//│ ╔══[ERROR] mixin M0 expects 1 parameters; got 2
+//│ ║  l.16: 	class C0 extends M0(1, 2)
+//│ ╙──      	                 ^^^^^^^
+//│ class C0()
+
+:e
+class C0 extends M0(true)
+//│ ╔══[ERROR] Type mismatch in type declaration:
+//│ ║  l.23: 	class C0 extends M0(true)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── reference of type `true` is not an instance of type `int`
+//│ ║  l.23: 	class C0 extends M0(true)
+//│ ║        	                    ^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.5: 	mixin M0(x: int)
+//│ ╙──     	            ^^^
+//│ class C0()
+
+
+// TODO catch this at typing (lack of `this`)
+class Foo {
+  fun foo = 0
+  fun bar = foo
+}
+//│ class Foo() {
+//│   fun bar: 0
+//│   fun foo: 0
+//│ }
+//│ Code generation encountered an error:
+//│   unresolved symbol foo
+
+// FIXME
+class Foo {
+  let foo = 0
+  fun bar = foo
+}
+//│ class Foo() {
+//│   fun bar: 0
+//│   let foo: 0
+//│ }
+//│ Code generation encountered an error:
+//│   unresolved symbol foo
+
+
+module Bar {
+  fun hello = 0
+  type I = int
+}
+//│ module Bar() {
+//│   type I = int
+//│   fun hello: 0
+//│ }
+
+:e
+:ge
+hello
+//│ ╔══[ERROR] identifier not found: hello
+//│ ║  l.72: 	hello
+//│ ╙──      	^^^^^
+//│ error
+//│ Code generation encountered an error:
+//│   unresolved symbol hello
+
+:e
+1 : I
+//│ ╔══[ERROR] type identifier not found: I
+//│ ║  l.81: 	1 : I
+//│ ╙──      	    ^
+//│ error
+//│ res
+//│     = 1
+
+

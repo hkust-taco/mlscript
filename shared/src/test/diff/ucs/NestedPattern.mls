@@ -8,7 +8,7 @@ class None: Option
 //│ Defined class Some
 //│ Defined class None
 //│ Option: () -> Option
-//│ Some: 'value -> (Some with {value: 'value})
+//│ Some: 'value -> (Some & {value: 'value})
 //│ None: () -> None
 
 class Either
@@ -18,8 +18,8 @@ class Right(rightValue): Either
 //│ Defined class Left
 //│ Defined class Right
 //│ Either: () -> Either
-//│ Left: 'leftValue -> (Left with {leftValue: 'leftValue})
-//│ Right: 'rightValue -> (Right with {rightValue: 'rightValue})
+//│ Left: 'leftValue -> (Left & {leftValue: 'leftValue})
+//│ Right: 'rightValue -> (Right & {rightValue: 'rightValue})
 
 fun compute(v) =
   if v is
@@ -66,7 +66,7 @@ fun f(p) =
     None()       then 0
 //│ ╔══[ERROR] type identifier not found: Tuple#2
 //│ ╙──
-//│ f: (None | Some & {value: error}) -> (0 | error)
+//│ f: (None | Some) -> (0 | error)
 
 class Union(a, b)
 //│ Defined class Union

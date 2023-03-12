@@ -3,7 +3,7 @@
 
 class Foo(x)
 //│ Defined class Foo
-//│ Foo: 'x -> (Foo with {x: 'x})
+//│ Foo: 'x -> (Foo & {x: 'x})
 //│    = [Function: Foo1]
 
 if 1 is 1 then 1 else 0
@@ -21,24 +21,24 @@ fun testF(x) = if x is
   Foo(a) then a
 //│ ╔══[WARNING] duplicated branch
 //│ ╙──
-//│ testF: (Foo with {x: 'x}) -> 'x
+//│ testF: (Foo & {x: 'x}) -> 'x
 //│      = [Function: testF]
 
 class Bar(y, z)
 //│ Defined class Bar
-//│ Bar: ('y, 'z,) -> (Bar with {y: 'y, z: 'z})
+//│ Bar: ('y, 'z,) -> (Bar & {y: 'y, z: 'z})
 //│    = [Function: Bar1]
 
 fun test(f) = if f is
   Foo(a) then a
   Bar(b, c) then b + c
-//│ test: (Bar & {y: int, z: int} | (Foo with {x: 'x})) -> (int | 'x)
+//│ test: (Bar & {y: int, z: int} | Foo & {x: 'x}) -> (int | 'x)
 //│     = [Function: test1]
 
 
 class Pair(fst, snd)
 //│ Defined class Pair
-//│ Pair: ('fst, 'snd,) -> (Pair with {fst: 'fst, snd: 'snd})
+//│ Pair: ('fst, 'snd,) -> (Pair & {fst: 'fst, snd: 'snd})
 //│     = [Function: Pair1]
 
 fun f(x) =
@@ -77,7 +77,7 @@ fun foo(x) = if x is
 //│ ╙──      	            ^^^
 //│ foo: anything -> error
 //│ Code generation encountered an error:
-//│   if expression has not been desugared
+//│   if expression was not desugared
 
 // Change `Pair` to a real pair.
 :e
@@ -97,7 +97,7 @@ fun foo(x) = if x is
 //│ ╙──      	        ^^^
 //│ foo: anything -> error
 //│ Code generation encountered an error:
-//│   if expression has not been desugared
+//│   if expression was not desugared
 
 fun foo(x) = if x is
   Pair(a, b) then if a is
@@ -131,7 +131,7 @@ fun foo(x) = if x is
 
 class S(pred)
 //│ Defined class S
-//│ S: 'pred -> (S with {pred: 'pred})
+//│ S: 'pred -> (S & {pred: 'pred})
 //│  = [Function: S1]
 
 // TODO: Cannot check exhaustiveness of nested UCS yet.
@@ -143,7 +143,7 @@ fun foo(x) = if x is
     O() then if b is
       O() then "zeros"
       else "???"
-//│ foo: (Pair & {fst: O | Z, snd: (S with {pred: 'pred}) | ~S}) -> ("???" | "zeros" | 'pred)
+//│ foo: (Pair & {fst: O | Z, snd: S & {pred: 'pred} | ~S}) -> ("???" | "zeros" | 'pred)
 //│    = [Function: foo5]
 
 :re
@@ -170,7 +170,7 @@ fun foo(x) = if x is
 //│ ╙──       	            ^^^
 //│ foo: anything -> error
 //│ Code generation encountered an error:
-//│   if expression has not been desugared
+//│   if expression was not desugared
 
 fun foo(x, y) = if x is Z() and y is O() then 0 else 1
 //│ foo: (anything, anything,) -> (0 | 1)

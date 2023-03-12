@@ -1,0 +1,21 @@
+:NoJS
+:NoRecursiveTypes
+:NoConstrainedTypes
+
+
+I x = x
+K x y = x
+auto x = x x
+monster = (fun y -> (let tmp = y I in y K)) auto
+//│ I: 'a -> 'a
+//│ K: 'a -> anything -> 'a
+//│ auto: ('a -> 'b & 'a) -> 'b
+//│ monster: anything -> 'a -> anything -> 'a
+
+monster{}
+//│ res: 'a -> anything -> 'a
+
+fun y -> (let tmp = y I in y K)
+//│ res: ((forall 'a. 'a -> 'a) -> anything & (forall 'b. 'b -> anything -> 'b) -> 'c) -> 'c
+
+

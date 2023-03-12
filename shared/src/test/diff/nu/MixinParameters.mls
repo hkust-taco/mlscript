@@ -1,0 +1,23 @@
+:NewDefs
+:NoJS
+
+
+mixin BaseTest(x: int) {
+  fun test = x
+}
+//│ mixin BaseTest(x: int) {
+//│   fun test: int
+//│ }
+
+// TODO
+mixin BaseTest(x) {
+  fun test = x
+}
+//│ ╔══[ERROR] Class parameters currently need type annotations
+//│ ║  l.13: 	mixin BaseTest(x) {
+//│ ╙──      	               ^
+//│ mixin BaseTest(x: error) {
+//│   fun test: error
+//│ }
+
+

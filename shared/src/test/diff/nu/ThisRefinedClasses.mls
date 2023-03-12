@@ -1,0 +1,65 @@
+:NewDefs
+
+
+
+// * I don't think it's a good idea to generate `this` refinements for classes,
+// * as this could easily lead to typos and delayed error reporting.
+// * Instead, we should require explicit `this` annotations by users when needed.
+
+
+:e
+class Foo { fun test = this.x }
+//│ ╔══[ERROR] unsupported indirectly recursive member access
+//│ ║  l.11: 	class Foo { fun test = this.x }
+//│ ╙──      	                           ^^
+//│ class Foo() {
+//│   fun test: error
+//│ }
+
+
+:e
+class Foo(n: int) { fun test = this.x }
+//│ ╔══[ERROR] unsupported indirectly recursive member access
+//│ ║  l.21: 	class Foo(n: int) { fun test = this.x }
+//│ ╙──      	                                   ^^
+//│ class Foo(n: int) {
+//│   fun test: error
+//│ }
+
+
+:e
+class Foo<A>(n: A) { fun test = this.x }
+//│ ╔══[ERROR] unsupported indirectly recursive member access
+//│ ║  l.31: 	class Foo<A>(n: A) { fun test = this.x }
+//│ ╙──      	                                    ^^
+//│ class Foo[A](n: A) {
+//│   fun test: error
+//│ }
+
+
+
+// TODO support: (treat `this` annot not like a term ascription)
+class Foo {
+  this: { x: 'a }
+  // fun test = this.x
+}
+//│ ╔══[ERROR] unsupported indirectly recursive member access
+//│ ║  l.43: 	  this: { x: 'a }
+//│ ╙──      	          ^
+//│ class Foo()
+
+
+// TODO
+// * All on one line:
+class Test { this: { x: int}; fun test = this.x }
+//│ ╔══[ERROR] unsupported indirectly recursive member access
+//│ ║  l.54: 	class Test { this: { x: int}; fun test = this.x }
+//│ ╙──      	                                             ^^
+//│ ╔══[ERROR] unsupported indirectly recursive member access
+//│ ║  l.54: 	class Test { this: { x: int}; fun test = this.x }
+//│ ╙──      	                     ^
+//│ class Test() {
+//│   fun test: error
+//│ }
+
+

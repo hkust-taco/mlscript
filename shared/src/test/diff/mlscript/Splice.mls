@@ -25,7 +25,7 @@ def t4 : (int, ...int, bool)
 def f1 : ('a, ...Array[int]) -> 'a
 //│ f1: ('a, ...Array[int]) -> 'a
 
-// FIXME
+// TODO
 def f1 (x, ...y) = x
 //│ ('a, ...Array[anything]) -> 'a
 //│   <:  f1:
@@ -90,6 +90,6 @@ a2 = (1,2, ...a1, 4,5)
 //│ a1: (1, 2, 3, 4, 5,)
 //│ a2: (1, 2, ...(1, 2, 3, 4, 5,), 4, 5)
 
-// FIXME
+// TODO
 a2 : Array[int]
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing

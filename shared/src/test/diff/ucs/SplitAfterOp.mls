@@ -10,7 +10,7 @@ fun f(x, b) =
 //│ ╙──     	          ^
 //│ f: (anything, anything,) -> error
 //│ Code generation encountered an error:
-//│   if expression has not been desugared
+//│   if expression was not desugared
 
 :e
 :ge
@@ -26,7 +26,7 @@ if x == y +
 //│ ╙──      	^^^^
 //│ res: error
 //│ Code generation encountered an error:
-//│   if expression has not been desugared
+//│   if expression was not desugared
 
 :e
 :ge
@@ -42,7 +42,7 @@ if x == y *
 //│ ╙──      	^^^^^^^
 //│ res: error
 //│ Code generation encountered an error:
-//│   if expression has not been desugared
+//│   if expression was not desugared
 
 :e
 :ge
@@ -61,7 +61,7 @@ if x ==
 //│ ╙──      	^^^^^
 //│ res: error
 //│ Code generation encountered an error:
-//│   if expression has not been desugared
+//│   if expression was not desugared
 
 :e
 :ge
@@ -72,7 +72,7 @@ if x ==
 //│ ╙──      	        ^
 //│ res: error
 //│ Code generation encountered an error:
-//│   if expression has not been desugared
+//│   if expression was not desugared
 
 
 :e
@@ -90,7 +90,7 @@ fun toEnglish(x) =
 //│ ╙──      	^^^^^^
 //│ toEnglish: anything -> error
 //│ Code generation encountered an error:
-//│   if expression has not been desugared
+//│   if expression was not desugared
 
 :e
 :ge
@@ -107,7 +107,7 @@ fun toEnglish(x) =
 //│ ╙──       	^^^^^^^^
 //│ toEnglish: anything -> error
 //│ Code generation encountered an error:
-//│   if expression has not been desugared
+//│   if expression was not desugared
 
 :e
 :ge
@@ -124,7 +124,7 @@ fun toEnglish(x) =
 //│ ╙──       	^^^^^^
 //│ toEnglish: anything -> error
 //│ Code generation encountered an error:
-//│   if expression has not been desugared
+//│   if expression was not desugared
 
 fun toEnglish(x) =
   if x ==
@@ -160,5 +160,5 @@ fun toEnglish(x) =
 //│ ╙──       	^^^^
 //│ toEnglish: anything -> error
 //│ Code generation encountered an error:
-//│   if expression has not been desugared
+//│   if expression was not desugared
 

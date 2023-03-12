@@ -24,15 +24,15 @@ class Pair(fst, snd)
 //│ Defined class Pair
 //│ Option: () -> Option
 //│       = [Function: Option1]
-//│ Some: 'value -> (Some with {value: 'value})
+//│ Some: 'value -> (Some & {value: 'value})
 //│     = [Function: Some1]
 //│ None: () -> None
 //│     = [Function: None1]
 //│ Either: () -> Either
 //│       = [Function: Either1]
-//│ Left: 'leftValue -> (Left with {leftValue: 'leftValue})
+//│ Left: 'leftValue -> (Left & {leftValue: 'leftValue})
 //│     = [Function: Left1]
-//│ Right: 'rightValue -> (Right with {rightValue: 'rightValue})
+//│ Right: 'rightValue -> (Right & {rightValue: 'rightValue})
 //│      = [Function: Right1]
 //│ List: () -> List
 //│     = [Function: List1]
@@ -40,9 +40,9 @@ class Pair(fst, snd)
 //│    = [Function: Nil1]
 //│ Nil: Nil
 //│    = Nil {}
-//│ Cons: ('head, 'tail,) -> (Cons with {head: 'head, tail: 'tail})
+//│ Cons: ('head, 'tail,) -> (Cons & {head: 'head, tail: 'tail})
 //│     = [Function: Cons1]
-//│ Pair: ('fst, 'snd,) -> (Pair with {fst: 'fst, snd: 'snd})
+//│ Pair: ('fst, 'snd,) -> (Pair & {fst: 'fst, snd: 'snd})
 //│     = [Function: Pair1]
 
 
@@ -53,7 +53,7 @@ fun optionApply(x, y, f) =
       Some(yv) then Some(f(xv, yv))
       None() then None()
     None() then None()
-//│ optionApply: (None | (Some with {value: 'value}), None | (Some with {value: 'value0}), ('value, 'value0,) -> 'value1,) -> (None | (Some with {value: 'value1}))
+//│ optionApply: (None | Some & {value: 'value}, None | Some & {value: 'value0}, ('value, 'value0,) -> 'value1,) -> (None | Some & {value: 'value1})
 //│            = [Function: optionApply]
 
 let zeroToThree = Cons(0, Cons(1, Cons(2, Cons(3, Nil))))
@@ -64,70 +64,100 @@ let zeroToThree = Cons(0, Cons(1, Cons(2, Cons(3, Nil))))
 //│              }
 
 fun f(x) = if x % 2 == 0 then Left(x) else Right(x)
-//│ f: (int & 'rightValue) -> ((Left with {leftValue: 'rightValue}) | (Right with {rightValue: 'rightValue}))
+//│ f: (int & 'leftValue) -> (Left & {leftValue: 'leftValue} | Right & {rightValue: 'leftValue})
 //│  = [Function: f]
 
 
 fun mapPartition(f, xs) = if xs is
-  Nil then Pair(Nil, Nil)
+  Nil then Pair(Nil(), Nil())
   Cons(x, xs) and mapPartition(f, xs) is Pair(l, r) and f(x) is
     Left(v)  then Pair(Cons(v, l), r)
     Right(v) then Pair(l, Cons(v, r))
-//│ mapPartition: ('head -> ((Left with {leftValue: 'head0}) | (Right with {rightValue: 'head1})), 'a,) -> (Pair with {fst: 'fst, snd: 'tail})
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.72: 	  Nil then Pair(Nil(), Nil())
+//│ ║        	                ^^^^^
+//│ ╟── application of type `Nil` is not a function
+//│ ║  l.11: 	class Nil: List
+//│ ║        	      ^^^
+//│ ╟── but it flows into reference with expected type `() -> ?a`
+//│ ║  l.72: 	  Nil then Pair(Nil(), Nil())
+//│ ╙──      	                ^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.72: 	  Nil then Pair(Nil(), Nil())
+//│ ║        	                       ^^^^^
+//│ ╟── application of type `Nil` is not a function
+//│ ║  l.11: 	class Nil: List
+//│ ║        	      ^^^
+//│ ╟── but it flows into reference with expected type `() -> ?a`
+//│ ║  l.72: 	  Nil then Pair(Nil(), Nil())
+//│ ╙──      	                       ^^^
+//│ mapPartition: ('head -> (Left & {leftValue: 'leftValue} | Right & {rightValue: 'rightValue}), 'tail,) -> (Pair & {fst: 'fst, snd: 'tail0})
 //│   where
-//│     'tail :> (Cons with {head: 'head1, tail: 'tail}) | Nil
-//│     'fst :> Nil | (Cons with {head: 'head0, tail: 'fst})
-//│     'a <: (Cons with {head: 'head, tail: 'a}) | Nil
+//│     'tail0 :> Cons & {head: 'rightValue, tail: 'tail0} | error
+//│     'fst :> error | Cons & {head: 'leftValue, tail: 'fst}
+//│     'tail <: Cons & {head: 'head, tail: 'tail} | Nil
 //│             = [Function: mapPartition]
 
 mapPartition(x => Left(x + 1), zeroToThree)
-//│ res: Pair with {fst: 'fst, snd: 'tail}
+//│ res: Pair & {fst: 'fst, snd: 'snd}
 //│   where
-//│     'tail :> (Cons with {head: nothing, tail: 'tail}) | Nil
-//│     'fst :> Nil | (Cons with {head: int, tail: 'fst})
-//│    = Pair {
-//│        fst: Cons { head: 1, tail: Cons { head: 2, tail: [Cons] } },
-//│        snd: Nil {}
-//│      }
+//│     'snd :> Cons & {head: nothing, tail: 'snd} | error
+//│     'fst :> error | Cons & {head: int, tail: 'fst}
+//│ Runtime error:
+//│   TypeError: Nil2 is not a function
 
 mapPartition(f, zeroToThree)
-//│ res: Pair with {fst: 'fst, snd: 'tail}
+//│ res: Pair & {fst: 'fst, snd: 'snd}
 //│   where
-//│     'tail :> (Cons with {head: 0 | 1 | 2 | 3, tail: 'tail}) | Nil
-//│     'fst :> Nil | (Cons with {head: 0 | 1 | 2 | 3, tail: 'fst})
-//│    = Pair {
-//│        fst: Cons { head: 0, tail: Cons { head: 2, tail: Nil {} } },
-//│        snd: Cons { head: 1, tail: Cons { head: 3, tail: Nil {} } }
-//│      }
+//│     'snd :> Cons & {head: 0 | 1 | 2 | 3, tail: 'snd} | error
+//│     'fst :> error | Cons & {head: 0 | 1 | 2 | 3, tail: 'fst}
+//│ Runtime error:
+//│   TypeError: Nil2 is not a function
 
 
 fun mapPartition(f, xs) = if xs is
-  Nil then Pair(Nil, Nil)
+  Nil then Pair(Nil(), Nil())
   Cons(x, xs) and
     mapPartition(f, xs) is Pair(l, r) and f(x) is
       Left(v)  then Pair(Cons(v, l), r)
       Right(v) then Pair(l, Cons(v, r))
-//│ mapPartition: ('head -> ((Left with {leftValue: 'head0}) | (Right with {rightValue: 'head1})), 'a,) -> (Pair with {fst: 'fst, snd: 'tail})
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.119: 	  Nil then Pair(Nil(), Nil())
+//│ ║         	                ^^^^^
+//│ ╟── application of type `Nil` is not a function
+//│ ║  l.11: 	class Nil: List
+//│ ║        	      ^^^
+//│ ╟── but it flows into reference with expected type `() -> ?a`
+//│ ║  l.119: 	  Nil then Pair(Nil(), Nil())
+//│ ╙──       	                ^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.119: 	  Nil then Pair(Nil(), Nil())
+//│ ║         	                       ^^^^^
+//│ ╟── application of type `Nil` is not a function
+//│ ║  l.11: 	class Nil: List
+//│ ║        	      ^^^
+//│ ╟── but it flows into reference with expected type `() -> ?a`
+//│ ║  l.119: 	  Nil then Pair(Nil(), Nil())
+//│ ╙──       	                       ^^^
+//│ mapPartition: ('head -> (Left & {leftValue: 'leftValue} | Right & {rightValue: 'rightValue}), 'tail,) -> (Pair & {fst: 'fst, snd: 'tail0})
 //│   where
-//│     'tail :> (Cons with {head: 'head1, tail: 'tail}) | Nil
-//│     'fst :> Nil | (Cons with {head: 'head0, tail: 'fst})
-//│     'a <: (Cons with {head: 'head, tail: 'a}) | Nil
+//│     'tail0 :> Cons & {head: 'rightValue, tail: 'tail0} | error
+//│     'fst :> error | Cons & {head: 'leftValue, tail: 'fst}
+//│     'tail <: Cons & {head: 'head, tail: 'tail} | Nil
 //│             = [Function: mapPartition1]
 
 mapPartition(f, zeroToThree)
-//│ res: Pair with {fst: 'fst, snd: 'tail}
+//│ res: Pair & {fst: 'fst, snd: 'snd}
 //│   where
-//│     'tail :> (Cons with {head: 0 | 1 | 2 | 3, tail: 'tail}) | Nil
-//│     'fst :> Nil | (Cons with {head: 0 | 1 | 2 | 3, tail: 'fst})
-//│    = Pair {
-//│        fst: Cons { head: 0, tail: Cons { head: 2, tail: Nil {} } },
-//│        snd: Cons { head: 1, tail: Cons { head: 3, tail: Nil {} } }
-//│      }
+//│     'snd :> Cons & {head: 0 | 1 | 2 | 3, tail: 'snd} | error
+//│     'fst :> error | Cons & {head: 0 | 1 | 2 | 3, tail: 'fst}
+//│ Runtime error:
+//│   TypeError: Nil2 is not a function
 
 
 fun mapPartition(f, xs) = if xs is
   Nil then
-    Pair(Nil, Nil)
+    Pair(Nil(), Nil())
   Cons(x, xs) and
     mapPartition(f, xs) is
       Pair(l, r) and
@@ -136,36 +166,52 @@ fun mapPartition(f, xs) = if xs is
             Pair(Cons(v, l), r)
           Right(v) then
             Pair(l, Cons(v, r))
-//│ mapPartition: ('head -> ((Left with {leftValue: 'head0}) | (Right with {rightValue: 'head1})), 'a,) -> (Pair with {fst: 'fst, snd: 'tail})
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.160: 	    Pair(Nil(), Nil())
+//│ ║         	         ^^^^^
+//│ ╟── application of type `Nil` is not a function
+//│ ║  l.11: 	class Nil: List
+//│ ║        	      ^^^
+//│ ╟── but it flows into reference with expected type `() -> ?a`
+//│ ║  l.160: 	    Pair(Nil(), Nil())
+//│ ╙──       	         ^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.160: 	    Pair(Nil(), Nil())
+//│ ║         	                ^^^^^
+//│ ╟── application of type `Nil` is not a function
+//│ ║  l.11: 	class Nil: List
+//│ ║        	      ^^^
+//│ ╟── but it flows into reference with expected type `() -> ?a`
+//│ ║  l.160: 	    Pair(Nil(), Nil())
+//│ ╙──       	                ^^^
+//│ mapPartition: ('head -> (Left & {leftValue: 'leftValue} | Right & {rightValue: 'rightValue}), 'tail,) -> (Pair & {fst: 'fst, snd: 'tail0})
 //│   where
-//│     'tail :> (Cons with {head: 'head1, tail: 'tail}) | Nil
-//│     'fst :> Nil | (Cons with {head: 'head0, tail: 'fst})
-//│     'a <: (Cons with {head: 'head, tail: 'a}) | Nil
+//│     'tail0 :> Cons & {head: 'rightValue, tail: 'tail0} | error
+//│     'fst :> error | Cons & {head: 'leftValue, tail: 'fst}
+//│     'tail <: Cons & {head: 'head, tail: 'tail} | Nil
 //│             = [Function: mapPartition2]
 
 mapPartition(f, zeroToThree)
-//│ res: Pair with {fst: 'fst, snd: 'tail}
+//│ res: Pair & {fst: 'fst, snd: 'snd}
 //│   where
-//│     'tail :> (Cons with {head: 0 | 1 | 2 | 3, tail: 'tail}) | Nil
-//│     'fst :> Nil | (Cons with {head: 0 | 1 | 2 | 3, tail: 'fst})
-//│    = Pair {
-//│        fst: Cons { head: 0, tail: Cons { head: 2, tail: Nil {} } },
-//│        snd: Cons { head: 1, tail: Cons { head: 3, tail: Nil {} } }
-//│      }
+//│     'snd :> Cons & {head: 0 | 1 | 2 | 3, tail: 'snd} | error
+//│     'fst :> error | Cons & {head: 0 | 1 | 2 | 3, tail: 'fst}
+//│ Runtime error:
+//│   TypeError: Nil2 is not a function
 
 
 // TODO make this one work (needs tuple support)
 fun mapPartition(f, xs) = if xs is
-  Nil then (Nil, Nil)
+  Nil then (Nil(), Nil())
   Cons(x, xs) and mapPartition(f, xs) is (l, r) and f(x) is
     Left(v)  then (Cons(v, l), r)
     Right(v) then (l, Cons(v, r))
 //│ ╔══[ERROR] The case when this is false is not handled: is (mapPartition (f, xs,),) (l, r,)
-//│ ║  l.160: 	  Cons(x, xs) and mapPartition(f, xs) is (l, r) and f(x) is
+//│ ║  l.206: 	  Cons(x, xs) and mapPartition(f, xs) is (l, r) and f(x) is
 //│ ╙──       	                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ mapPartition: (anything, anything,) -> error
 //│ Code generation encountered an error:
-//│   if expression has not been desugared
+//│   if expression was not desugared
 
 // TODO
 mapPartition(f, zeroToThree)
@@ -180,23 +226,41 @@ mapPartition(f, zeroToThree)
 :e
 :ge
 fun mapPartition(f, xs) = if xs is
-  Nil then (Nil, Nil)
+  Nil then (Nil(), Nil())
   Cons(x, xs) and mapPartition(f, xs) is (l, r)
           and f(x) is Left(v)  then (Cons(v, l), r)
                       Right(v) then (l, Cons(v, r))
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
-//│ ║  l.186: 	                      Right(v) then (l, Cons(v, r))
+//│ ║  l.232: 	                      Right(v) then (l, Cons(v, r))
 //│ ╙──       	                               ^^^^
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.185: 	          and f(x) is Left(v)  then (Cons(v, l), r)
+//│ ║  l.231: 	          and f(x) is Left(v)  then (Cons(v, l), r)
 //│ ║         	                                    ^^^^^^^^^^^^^^^
-//│ ║  l.186: 	                      Right(v) then (l, Cons(v, r))
+//│ ║  l.232: 	                      Right(v) then (l, Cons(v, r))
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.229: 	  Nil then (Nil(), Nil())
+//│ ║         	            ^^^^^
+//│ ╟── application of type `Nil` is not a function
+//│ ║  l.11: 	class Nil: List
+//│ ║        	      ^^^
+//│ ╟── but it flows into reference with expected type `() -> ?a`
+//│ ║  l.229: 	  Nil then (Nil(), Nil())
+//│ ╙──       	            ^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.229: 	  Nil then (Nil(), Nil())
+//│ ║         	                   ^^^^^
+//│ ╟── application of type `Nil` is not a function
+//│ ║  l.11: 	class Nil: List
+//│ ║        	      ^^^
+//│ ╟── but it flows into reference with expected type `() -> ?a`
+//│ ║  l.229: 	  Nil then (Nil(), Nil())
+//│ ╙──       	                   ^^^
 //│ ╔══[ERROR] type identifier not found: Tuple#2
 //│ ╙──
-//│ mapPartition: (anything, 'a,) -> ((Nil, Nil,) | error)
+//│ mapPartition: (anything, 'tail,) -> ((error, error,) | error)
 //│   where
-//│     'a <: Cons & {tail: 'a} | Nil
+//│     'tail <: Cons & {tail: 'tail} | Nil
 //│ Code generation encountered an error:
 //│   unknown match case: Tuple#2
 

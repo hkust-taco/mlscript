@@ -1,6 +1,7 @@
 package mlscript
 
 import mlscript.utils._
+import mlscript.utils.shorthands._
 
 class CodeGenTestHelpers(file: os.Path, output: String => Unit) {
   def showGeneratedCode(testCode: JSTestBackend.TestCode): Unit = {
@@ -51,14 +52,14 @@ class CodeGenTestHelpers(file: os.Path, output: String => Unit) {
   }
   def showReplContent(
     queries: List[JSTestBackend.Query],
-    replies: List[ReplHost.Reply],
+    replies: List[(ReplHost.Reply, Str)],
   ): Unit = {
     if (queries.isEmpty) {
       output(s"└── No queries")
     } else {
       val length = queries.length // We assume that queries.length === replies.length
       queries.iterator.zip(replies).zipWithIndex.foreach {
-        case ((JSTestBackend.CodeQuery(preludeLines, codeLines, res), reply), i) =>
+        case ((JSTestBackend.CodeQuery(preludeLines, codeLines, res), (reply, log)), i) =>
           val p0 = if (i + 1 === length) "  " else "│ "
           val p1 = if (i + 1 === length) "└─" else "├─"
           output(s"$p1┬ Query ${i + 1}/${queries.length}")

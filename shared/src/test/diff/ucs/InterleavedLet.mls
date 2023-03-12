@@ -22,15 +22,15 @@ class Right(rightValue): Either
 //│ Defined class Right
 //│ Option: () -> Option
 //│       = [Function: Option1]
-//│ Some: 'value -> (Some with {value: 'value})
+//│ Some: 'value -> (Some & {value: 'value})
 //│     = [Function: Some1]
 //│ None: () -> None
 //│     = [Function: None1]
 //│ Either: () -> Either
 //│       = [Function: Either1]
-//│ Left: 'leftValue -> (Left with {leftValue: 'leftValue})
+//│ Left: 'leftValue -> (Left & {leftValue: 'leftValue})
 //│     = [Function: Left1]
-//│ Right: 'rightValue -> (Right with {rightValue: 'rightValue})
+//│ Right: 'rightValue -> (Right & {rightValue: 'rightValue})
 //│      = [Function: Right1]
 
 fun q(x) =
@@ -92,7 +92,7 @@ fun q(a) =
 //│ ║        	            ^^^^^
 //│ ║  l.89: 	    then y
 //│ ╙──      	^^^^^^^^^^
-//│ q: (Left with {leftValue: 'leftValue}) -> 'leftValue
+//│ q: (Left & {leftValue: 'leftValue}) -> 'leftValue
 //│  = [Function: q1]
 
 class A()
@@ -176,7 +176,7 @@ fun tr(x) =
     Some(v) then v
     let tmp = 1
     None then tmp
-//│ tr: (None | (Some with {value: 'value})) -> (1 | 'value)
+//│ tr: (None | Some & {value: 'value}) -> (1 | 'value)
 //│   = [Function: tr]
 
 class Pair(fst, snd)
@@ -187,13 +187,13 @@ class Cons(head, tail): List
 //│ Defined class List
 //│ Defined class Nil
 //│ Defined class Cons
-//│ Pair: ('fst, 'snd,) -> (Pair with {fst: 'fst, snd: 'snd})
+//│ Pair: ('fst, 'snd,) -> (Pair & {fst: 'fst, snd: 'snd})
 //│     = [Function: Pair1]
 //│ List: () -> List
 //│     = [Function: List1]
 //│ Nil: () -> Nil
 //│    = [Function: Nil1]
-//│ Cons: ('head, 'tail,) -> (Cons with {head: 'head, tail: 'tail})
+//│ Cons: ('head, 'tail,) -> (Cons & {head: 'head, tail: 'tail})
 //│     = [Function: Cons1]
 
 fun cat2(s, t) = concat(s)(t)
@@ -223,9 +223,9 @@ fun showList(xs) =
 //│   })());
 //│ };
 //│ // End of generated code
-//│ showList: 'a -> string
+//│ showList: 'tail -> string
 //│   where
-//│     'a <: Cons & {tail: 'a} | Nil
+//│     'tail <: Cons & {tail: 'tail} | Nil
 //│         = [Function: showList]
 
 let zeroToThree = Cons(0, Cons(1, Cons(2, Cons(3, Nil()))))
@@ -249,19 +249,19 @@ fun mapPartition(f, xs) =
       let r = res.snd
       Left(v)  then Pair(Cons(v, l), r)
       Right(v) then Pair(l, Cons(v, r))
-//│ mapPartition: ('head -> ((Left with {leftValue: 'head0}) | (Right with {rightValue: 'head1})), 'a,) -> (Pair with {fst: 'fst, snd: 'tail})
+//│ mapPartition: ('head -> (Left & {leftValue: 'leftValue} | Right & {rightValue: 'rightValue}), 'tail,) -> (Pair & {fst: 'fst, snd: 'tail0})
 //│   where
-//│     'tail :> (Cons with {head: 'head1, tail: 'tail}) | Nil
-//│     'fst :> Nil | (Cons with {head: 'head0, tail: 'fst})
-//│     'a <: (Cons with {head: 'head, tail: 'a}) | Nil
+//│     'tail0 :> Cons & {head: 'rightValue, tail: 'tail0} | Nil
+//│     'fst :> Nil | Cons & {head: 'leftValue, tail: 'fst}
+//│     'tail <: Cons & {head: 'head, tail: 'tail} | Nil
 //│             = [Function: mapPartition]
 
 // FIXME: Something wrong with code generation.
 mapPartition(x => if x % 2 == 0 then Left(x) else Right(x), zeroToThree)
-//│ res: Pair with {fst: 'fst, snd: 'tail}
+//│ res: Pair & {fst: 'fst, snd: 'snd}
 //│   where
-//│     'tail :> (Cons with {head: 0 | 1 | 2 | 3, tail: 'tail}) | Nil
-//│     'fst :> Nil | (Cons with {head: 0 | 1 | 2 | 3, tail: 'fst})
+//│     'snd :> Cons & {head: 0 | 1 | 2 | 3, tail: 'snd} | Nil
+//│     'fst :> Nil | Cons & {head: 0 | 1 | 2 | 3, tail: 'fst}
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded
 

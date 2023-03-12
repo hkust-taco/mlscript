@@ -1,0 +1,33 @@
+:NewDefs
+:NoJS
+
+
+fun f(x, y) = x + y
+//│ fun f: (int, int,) -> int
+
+// FIXME array pattern...?!
+fun f1([x, y]) = x + y
+fun f2([x, y],) = x + y
+fun f3([(x, y,),],) = x + y
+//│ fun f1: (int, int,) -> int
+//│ fun f2: (int, int,) -> int
+//│ fun f3: (int, int,) -> int
+
+
+class Pair(lhs: int, rhs: int)
+//│ class Pair(lhs: int, rhs: int)
+
+// TODO
+fun f(Pair(x, y)) = x + y
+//│ ╔══[ERROR] Unsupported pattern shape:
+//│ ║  l.21: 	fun f(Pair(x, y)) = x + y
+//│ ╙──      	      ^^^^^^^^^^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.21: 	fun f(Pair(x, y)) = x + y
+//│ ╙──      	                    ^
+//│ ╔══[ERROR] identifier not found: y
+//│ ║  l.21: 	fun f(Pair(x, y)) = x + y
+//│ ╙──      	                        ^
+//│ fun f: error -> int
+
+

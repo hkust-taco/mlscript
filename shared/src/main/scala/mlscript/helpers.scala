@@ -11,23 +11,13 @@ import mlscript.utils._, shorthands._
 
 // Auxiliary definitions for types
 
-abstract class TypeImpl extends Located { self: Type =>
-  
-  lazy val typeVarsList: List[TypeVar] = this match {
-    case uv: TypeVar => uv :: Nil
-    case Recursive(n, b) => n :: b.typeVarsList
-    case _ => children.flatMap(_.typeVarsList)
-  }
+trait SignatureImpl extends Located { self: Signature =>
+  def children: List[Located] = members
+}
 
-  /**
-    * @return
-    *  set of free type variables in type
-    */
-  lazy val freeTypeVariables: Set[TypeVar] = this match {
-    case Recursive(uv, body) => body.freeTypeVariables - uv
-    case t: TypeVar => Set.single(t)
-    case _ => this.children.foldRight(Set.empty[TypeVar])((ty, acc) => ty.freeTypeVariables ++ acc)
-  }
+trait TypeLikeImpl extends Located { self: TypeLike =>
+  
+  def showDbg2: Str = show // TODO more lightweight debug printing routine
   
   def show: Str = showIn(ShowCtx.mk(this :: Nil), 0)
   
@@ -75,8 +65,8 @@ abstract class TypeImpl extends Located { self: Type =>
       val prec = if (c.pol) 20 else 25
       val opStr = if (c.pol) " | " else " & "
       c.distinctComponents match {
-        case Nil => (if (c.pol) Bot else Top).showIn(ctx, prec)
-        case x :: Nil => x.showIn(ctx, prec)
+        case Nil => (if (c.pol) Bot else Top).showIn(ctx, outerPrec)
+        case x :: Nil => x.showIn(ctx, outerPrec)
         case _ =>
           parensIf(c.distinctComponents.iterator
             .map(_.showIn(ctx, prec))
@@ -89,27 +79,85 @@ abstract class TypeImpl extends Located { self: Type =>
     case Bounds(lb, Top) => s"in ${lb.showIn(ctx, 0)}"
     case Bounds(lb, ub) => s"in ${lb.showIn(ctx, 0)} out ${ub.showIn(ctx, 0)}"
     // 
-    case AppliedType(n, args) => s"${n.name}[${args.map(_.showIn(ctx, 0)).mkString(", ")}]"
+    case AppliedType(n, args) =>
+      s"${n.name}${args.map(_.showIn(ctx, 0)).mkString(ctx.<, ", ", ctx.>)}"
     case Rem(b, ns) => s"${b.showIn(ctx, 90)}${ns.map("\\"+_).mkString}"
     case Literal(IntLit(n)) => n.toString
     case Literal(DecLit(n)) => n.toString
     case Literal(StrLit(s)) => "\"" + s + "\""
-    case Constrained(b, ws) => parensIf(s"${b.showIn(ctx, 0)}\n  where${ws.map {
-      case (uv, Bounds(Bot, ub)) =>
-        s"\n    ${ctx.vs(uv)} <: ${ub.showIn(ctx, 0)}"
-      case (uv, Bounds(lb, Top)) =>
-        s"\n    ${ctx.vs(uv)} :> ${lb.showIn(ctx, 0)}"
-      case (uv, Bounds(lb, ub)) if lb === ub =>
-        s"\n    ${ctx.vs(uv)} := ${lb.showIn(ctx, 0)}"
-      case (uv, Bounds(lb, ub)) =>
-        val vstr = ctx.vs(uv)
-        s"\n    ${vstr             } :> ${lb.showIn(ctx, 0)}" +
-        s"\n    ${" " * vstr.length} <: ${ub.showIn(ctx, 0)}"
-    }.mkString}", outerPrec > 0)
     case Literal(UnitLit(b)) => if (b) "undefined" else "null"
+    case PolyType(Nil, body) => body.showIn(ctx, outerPrec)
+    case PolyType(targs, body) => parensIf(
+        s"${targs.iterator.map(_.fold(_.name, _.showIn(ctx, 0)))
+          .mkString("forall ", " ", ".")} ${body.showIn(ctx, 0)}",
+        outerPrec > 1 // or 0?
+      )
+    case Constrained(b, bs, ws) =>
+      val oldCtx = ctx
+      val bStr = b.showIn(ctx, 0).stripSuffix("\n")
+      val multiline = bStr.contains('\n')
+      parensIf({
+        val ctx = if (multiline) oldCtx.indent else oldCtx.indent.indent
+        s"${
+          bStr
+        }\n${oldCtx.indStr}${if (multiline) "" else "  "}where${
+              bs.map {
+          case (uv, Bounds(Bot, ub)) =>
+            s"\n${ctx.indStr}${ctx.vs(uv)} <: ${ub.showIn(ctx, 0)}"
+          case (uv, Bounds(lb, Top)) =>
+            s"\n${ctx.indStr}${ctx.vs(uv)} :> ${lb.showIn(ctx, 0)}"
+          case (uv, Bounds(lb, ub)) if lb === ub =>
+            s"\n${ctx.indStr}${ctx.vs(uv)} := ${lb.showIn(ctx, 0)}"
+          case (uv, Bounds(lb, ub)) =>
+            val vstr = ctx.vs(uv)
+            s"\n${ctx.indStr}${vstr             } :> ${lb.showIn(ctx, 0)}" +
+            s"\n${ctx.indStr}${" " * vstr.length} <: ${ub.showIn(ctx, 0)}"
+        }.mkString
+      }${ws.map{
+          case Bounds(lo, hi) => s"\n${ctx.indStr}${lo.showIn(ctx, 0)} <: ${hi.showIn(ctx, 0)}" // TODO print differently from bs?
+        }.mkString}"
+      }, outerPrec > 0)
+    case NuFunDef(isLetRec, nme, targs, rhs) =>
+      s"${isLetRec match {
+        case S(false) => "let"
+        case S(true) => "let rec"
+        case N => "fun"
+      }} ${nme.name}${targs.map(_.showIn(ctx, 0)).mkStringOr(", ", "[", "]")}${rhs match {
+        case L(trm) => " = ..."
+        case R(ty) => ": " + ty.showIn(ctx, 0)
+      }}"
+    case Signature(decls, res) =>
+      // decls.map(ctx.indStr + (if (ctx.indentLevel === 0) "" else "\n") + _.showIn(ctx, 0)).mkString +
+      (decls.map(ctx.indStr + _.showIn(ctx, 0) + "\n") ::: (res match {
+        case S(ty) => ctx.indStr + ty.showIn(ctx, 0) + "\n" :: Nil
+        case N => Nil
+      // })).mkString(if (ctx.indentLevel === 0) "" else "\n", "\n", "")
+      // })).mkString("\n")
+      // })).mkString("", "\n", "\n")
+      })).mkString
+    case NuTypeDef(kind @ Als, nme, tparams, params, sig, parents, sup, ths, body) =>
+      s"type ${nme.name}${tparams.map(_._2.showIn(ctx, 0)).mkStringOr(", ", "[", "]")} = ${
+        sig.getOrElse(die).showIn(ctx, 0)}"
+    case NuTypeDef(kind, nme, tparams, params, sig, parents, sup, ths, body) =>
+      val bodyCtx = ctx.indent
+      s"${kind.str} ${nme.name}${tparams.map(_._2.showIn(ctx, 0)).mkStringOr(", ", "[", "]")}(${
+        params.fields.map {
+          case (N, Fld(_, _, Asc(v: Var, ty))) => v.name + ": " + ty.showIn(ctx, 0)
+          case (N, _) => "???"
+          case (S(nme), rhs) => nme.name
+        }.mkString(", ")
+      })${parents match {
+        case Nil => ""
+        case ps => ps.mkString(", ") // TODO pp
+      }}${if (body.entities.isEmpty && sup.isEmpty && ths.isEmpty) "" else
+        " {\n" + sup.fold("")(s"${bodyCtx.indStr}super: " + _.showIn(bodyCtx, 0) + "\n") +
+        ths.fold("")(s"${bodyCtx.indStr}this: " + _.showIn(bodyCtx, 0) + "\n") +
+          Signature(body.entities.collect { case d: NuDecl => d }, N).showIn(bodyCtx, 0) +
+            ctx.indStr + "}"
+      }"
   }
   
-  def children: List[Type] = this match {
+  def childrenTypes: List[TypeLike] = this match {
     case _: NullaryType => Nil
     case Function(l, r) => l :: r :: Nil
     case Bounds(l, r) => l :: r :: Nil
@@ -122,10 +170,42 @@ abstract class TypeImpl extends Located { self: Type =>
     case AppliedType(n, ts) => ts
     case Rem(b, _) => b :: Nil
     case WithExtension(b, r) => b :: r :: Nil
+    case PolyType(targs, body) => targs.map(_.fold(identity, identity)) :+ body
     case Splice(fs) => fs.flatMap{ case L(l) => l :: Nil case R(r) => r.in.toList ++ (r.out :: Nil) }
-    case Constrained(b, ws) => b :: ws.flatMap(c => c._1 :: c._2 :: Nil)
+    case Constrained(b, bs, ws) => b :: bs.flatMap(c => c._1 :: c._2 :: Nil) ::: ws.flatMap(c => c.lb :: c.ub :: Nil)
+    case Signature(xs, res) => xs ::: res.toList
+    case NuFunDef(isLetRec, nme, targs, rhs) => targs ::: rhs.toOption.toList
+    case NuTypeDef(kind, nme, tparams, params, sig, parents, sup, ths, body) =>
+      // TODO improve this mess
+      tparams.map(_._2) ::: params.fields.collect {
+        case (_, Fld(_, _, Asc(_, ty))) => ty
+      } ::: sig.toList ::: sup.toList ::: ths.toList ::: Signature(body.entities.collect {
+        case d: NuDecl => d
+      }, N) :: Nil // TODO parents?
   }
+  
+  lazy val typeVarsList: List[TypeVar] = this match {
+    case uv: TypeVar => uv :: Nil
+    case Recursive(n, b) => n :: b.typeVarsList
+    case _ => childrenTypes.flatMap(_.typeVarsList)
+  }
+  
+  /**
+    * @return
+    *  set of free type variables in type
+    */
+  lazy val freeTypeVariables: Set[TypeVar] = this match {
+    case Recursive(uv, body) => body.freeTypeVariables - uv
+    case t: TypeVar => Set.single(t)
+    case _ => childrenTypes.foldRight(Set.empty[TypeVar])((ty, acc) => ty.freeTypeVariables ++ acc)
+  }
+  
+}
 
+trait TypeImpl extends Located { self: Type =>
+  
+  def children: List[Located] = childrenTypes
+  
   /**
     * Collect fields recursively during code generation.
     * Note that the type checker will reject illegal cases.
@@ -136,7 +216,7 @@ abstract class TypeImpl extends Located { self: Type =>
     case _: Union | _: Function | _: Tuple | _: Recursive
         | _: Neg | _: Rem | _: Bounds | _: WithExtension | Top | Bot
         | _: Literal | _: TypeVar | _: AppliedType | _: TypeName 
-        | _: Constrained | _ : Splice | _: TypeTag =>
+        | _: Constrained | _ : Splice | _: TypeTag | _: PolyType =>
       Nil
   }
 
@@ -149,7 +229,7 @@ abstract class TypeImpl extends Located { self: Type =>
     case AppliedType(TypeName(name), _) => name :: Nil
     case Inter(lhs, rhs) => lhs.collectTypeNames ++ rhs.collectTypeNames
     case _: Union | _: Function | _: Record | _: Tuple | _: Recursive
-        | _: Neg | _: Rem | _: Bounds | _: WithExtension | Top | Bot
+        | _: Neg | _: Rem | _: Bounds | _: WithExtension | Top | Bot | _: PolyType
         | _: Literal | _: TypeVar | _: Constrained | _ : Splice | _: TypeTag =>
       Nil
   }
@@ -162,14 +242,26 @@ abstract class TypeImpl extends Located { self: Type =>
     case Record(fields) => fields.map(field => (field._1, field._2.out))
     case Inter(ty1, ty2) => ty1.collectBodyFieldsAndTypes ++ ty2.collectBodyFieldsAndTypes
     case _: Union | _: Function | _: Tuple | _: Recursive
-        | _: Neg | _: Rem | _: Bounds | _: WithExtension | Top | Bot
+        | _: Neg | _: Rem | _: Bounds | _: WithExtension | Top | Bot | _: PolyType
         | _: Literal | _: TypeVar | _: AppliedType | _: TypeName | _: Constrained | _ : Splice | _: TypeTag =>
       Nil
   }
 }
 
 
-final case class ShowCtx(vs: Map[TypeVar, Str], debug: Bool) // TODO make use of `debug` or rm
+final case class ShowCtx(
+    vs: Map[TypeVar, Str],
+    debug: Bool, // TODO make use of `debug` or rm
+    indentLevel: Int,
+    newDefs: Bool,
+  )
+{
+  lazy val indStr: Str = "  " * indentLevel
+  def lnIndStr: Str = "\n" + indStr
+  def indent: ShowCtx = copy(indentLevel = indentLevel + 1)
+  def < : Str = if (newDefs) "<" else "["
+  def > : Str = if (newDefs) ">" else "]"
+}
 object ShowCtx {
   /**
     * Create a context from a list of types. For named variables and
@@ -177,7 +269,7 @@ object ShowCtx {
     * completely new names. If same name exists increment counter suffix
     * in the name.
     */
-  def mk(tys: IterableOnce[Type], pre: Str = "'", debug: Bool = false): ShowCtx = {
+  def mk(tys: IterableOnce[TypeLike], _pre: Str = "'", debug: Bool = false): ShowCtx = {
     val (otherVars, namedVars) = tys.iterator.toList.flatMap(_.typeVarsList).distinct.partitionMap { tv =>
       tv.identifier match { case L(_) => L(tv.nameHint -> tv); case R(nh) => R(nh -> tv) }
     }
@@ -186,7 +278,8 @@ object ShowCtx {
       case (N, tv) => R(tv)
     }
     val usedNames = MutMap.empty[Str, Int]
-    def assignName(n: Str): Str =
+    def assignName(n: Str): Str = {
+      val pre = if (n.startsWith("'") || n.startsWith(ExtrusionPrefix)) "" else _pre
       usedNames.get(n) match {
         case S(cnt) =>
           usedNames(n) = cnt + 1
@@ -197,9 +290,10 @@ object ShowCtx {
           pre + 
           n
       }
+    }
     val namedMap = (namedVars ++ hintedVars).map { case (nh, tv) =>
-      tv -> assignName(nh.dropWhile(_ === '\''))
-      // tv -> assignName(nh.stripPrefix(pre))
+      // tv -> assignName(nh.dropWhile(_ === '\''))
+      tv -> assignName(nh.stripPrefix(_pre))
     }.toMap
     val used = usedNames.keySet
     
@@ -210,9 +304,11 @@ object ShowCtx {
       S(('a' + idx % numLetters).toChar.toString + (if (postfix === 0) "" else postfix.toString), idx + 1)
     }.filterNot(used).map(assignName)
     
-    ShowCtx(namedMap ++ unnamedVars.zip(names), debug)
+    ShowCtx(namedMap ++ unnamedVars.zip(names), debug, indentLevel = 0, newDefs = false)
   }
 }
+
+trait PolyTypeImpl  { self: PolyType => }
 
 trait ComposedImpl { self: Composed =>
   val lhs: Type
@@ -228,12 +324,8 @@ trait ComposedImpl { self: Composed =>
     components.filterNot(c => if (pol) c === Bot else c === Top).distinct
 }
 
-abstract class PolyTypeImpl extends Located { self: PolyType =>
-  def children: List[Located] =  targs :+ body
-  def show: Str = s"${targs.iterator.map(_.name).mkString("[", ", ", "] ->")} ${body.show}"
-}
-
 trait TypeVarImpl extends Ordered[TypeVar] { self: TypeVar =>
+  def name: Opt[Str] = identifier.toOption.orElse(nameHint)
   def compare(that: TypeVar): Int = {
     (this.identifier.fold((_, ""), (0, _))) compare (that.identifier.fold((_, ""), (0, _)))
   }
@@ -256,7 +348,84 @@ trait PgrmImpl { self: Pgrm =>
    }
     diags.toList -> res
   }
+  lazy val newDesugared: (Ls[Diagnostic] -> (Ls[NuTypeDef], Ls[Terms])) = {
+    val diags = Buffer.empty[Diagnostic]
+    val res = tops.flatMap { s => s match {
+      case nd: NuTypeDef => {
+        diags ++= tryDesugaredNewDec(nd)
+        Ls(nd)
+      }
+      case _ => {
+        val (ds, d) = s.desugared
+        diags ++= ds
+        d
+      }
+    }
+    }.partitionMap {
+      case ot: Terms => R(ot)
+      case nd: NuTypeDef => L(nd)
+      case NuFunDef(isLetRec, nme, tys, rhs) =>
+        R(Def(isLetRec.getOrElse(true), nme, rhs, isLetRec.isEmpty))
+   }
+    diags.toList -> res
+  }
   override def toString = tops.map("" + _ + ";").mkString(" ")
+
+  // TODO remove this senseless method
+  private def tryDesugaredNewDec(nd: NuTypeDef): Ls[Diagnostic] = nd match {
+    case NuTypeDef(Mxn, TypeName(mxName), tps, tup @ Tup(fs), sig, pars, sup, ths, unit) =>
+      val bases = pars.foldLeft(Var("base"): Term)((res, p) => p match {
+          case Var(pname) => App(Var(pname), Tup(Ls(None -> Fld(false, false, res))))
+          case _ => Var("anything") // ?? FIXME
+        })
+      tryDesugaredNewDec(NuTypeDef(Cls, TypeName(mxName), tps, tup, sig, Ls(bases), sup, ths, unit))
+    case NuTypeDef(Nms, nme, tps, tup @ Tup(fs), sig, pars, sup, ths, unit) =>
+      if (pars.length > 0) {
+        val bases = pars.drop(1).foldLeft(App(pars.head, Tup(Ls())): Term)((res, p) => p match {
+          case Var(pname) => App(Var(pname), Tup(Ls(None -> Fld(false, false, res))))
+          case App(pname, _) => App(pname, Tup(Ls(None -> Fld(false, false, res))))
+          case _ => Var("anything") // ?? FIXME
+        })
+        tryDesugaredNewDec(NuTypeDef(Cls, nme, tps, tup, sig, Ls(bases), sup, ths, unit))
+      }
+      else {
+        tryDesugaredNewDec(NuTypeDef(Cls, nme, tps, tup, sig, Ls(), sup, ths, unit))
+      }
+    case NuTypeDef(k @ Als, nme, tps, tup @ Tup(fs), sig, pars, sup, ths, unit) =>
+      // TODO properly check:
+      // require(fs.isEmpty, fs)
+      // require(sig.isDefined)
+      // require(pars.size === 0, pars)
+      require(ths.isEmpty, ths)
+      require(unit.entities.isEmpty, unit)
+      // val (diags, rhs) = sig.get match {
+      //   case L(ds) => (ds :: Nil) -> Top
+      //   case R(ty) => Nil -> ty
+      // }
+      Nil
+    case NuTypeDef(k @ (Cls | Trt), nme, tps, tup @ Tup(fs), sig, pars, sup, ths, unit) =>
+      val diags = Buffer.empty[Diagnostic]
+      def tt(trm: Term): Type = trm.toType match {
+        case L(ds) => diags += ds; Top
+        case R(ty) => ty
+      }
+      val params = fs.map {
+        case (S(nme), Fld(mut, spec, trm)) =>
+          val ty = tt(trm)
+          nme -> Field(if (mut) S(ty) else N, ty)
+        case (N, Fld(mut, spec, nme: Var)) => nme -> Field(if (mut) S(Bot) else N, Top)
+        case _ => die
+      }
+      val pos = params.unzip._1
+      val bod = pars.map(tt).foldRight(Record(params): Type)(Inter)
+      val termName = Var(nme.name).withLocOf(nme)
+      val mthDefs = unit.children.foldLeft(List[MethodDef[Left[Term, Type]]]())((lst, loc) => loc match {
+        case NuFunDef(isLetRec, mnme, tys, Left(rhs)) => lst :+ MethodDef(isLetRec.getOrElse(false), nme, mnme, tys, Left(rhs))
+        case _ => lst
+      })
+      // TODO: mthDecls
+      diags.toList
+  }
 }
 
 object OpApp {
@@ -271,14 +440,14 @@ object OpApp {
 trait DeclImpl extends Located { self: Decl =>
   val body: Located
   def showBody: Str = this match {
-    case Def(_, _, rhs, isByname) => rhs.fold(_.toString, _.show)
-    case td: TypeDef => td.body.show
+    case Def(_, _, rhs, isByname) => rhs.fold(_.toString, _.showDbg2)
+    case td: TypeDef => td.body.showDbg2
   }
   def describe: Str = this match {
     case _: Def => "definition"
     case _: TypeDef => "type declaration"
   }
-  def show: Str = showHead + (this match {
+  def showDbg: Str = showHead + (this match {
     case TypeDef(Als, _, _, _, _, _, _) => " = "; case _ => ": " }) + showBody
   def showHead: Str = this match {
     case Def(true, n, b, isByname) => s"rec def $n"
@@ -292,33 +461,44 @@ trait DeclImpl extends Located { self: Decl =>
 
 trait NuDeclImpl extends Located { self: NuDecl =>
   val body: Located
+  def kind: DeclKind
+  // val name: Str = self match {
+  //   case td: NuTypeDef => td.nme.name
+  //   case fd: NuFunDef => fd.nme.name
+  // }
+  val nameVar: Var = self match {
+    case td: NuTypeDef => td.nme.toVar
+    case fd: NuFunDef => fd.nme
+  }
+  def name: Str = nameVar.name
   def showBody: Str = this match {
-    case NuFunDef(_, _, _, rhs) => rhs.fold(_.toString, _.show)
-    case td: NuTypeDef => td.body.show
+    case NuFunDef(_, _, _, rhs) => rhs.fold(_.toString, _.showDbg2)
+    case td: NuTypeDef => td.body.showDbg
   }
   def describe: Str = this match {
     case _: NuFunDef => "definition"
     case _: NuTypeDef => "type declaration"
   }
-  def show: Str = showHead + (this match {
+  def showDbg: Str = showHead + (this match {
     case NuFunDef(_, _, _, L(_)) => " = "
     case NuFunDef(_, _, _, R(_)) => ": "
-    case NuTypeDef(_, _, _, _, _, _) => " "
+    case _: NuTypeDef => " "
   }) + showBody
   def showHead: Str = this match {
     case NuFunDef(N, n, _, b) => s"fun $n"
     case NuFunDef(S(false), n, _, b) => s"let $n"
     case NuFunDef(S(true), n, _, b) => s"let rec $n"
-    case NuTypeDef(k, n, tps, sps, parents, bod) =>
-      s"${k.str} ${n.name}${if (tps.isEmpty) "" else tps.map(_.name).mkString("‹", ", ", "›")}(${
+    case NuTypeDef(k, n, tps, sps, sig, parents, sup, ths, bod) =>
+      s"${k.str} ${n.name}${if (tps.isEmpty) "" else tps.map(_._2.name).mkString("‹", ", ", "›")}(${
         // sps.mkString("(",",",")")
-        sps})${if (parents.isEmpty) "" else if (k === Als) " = " else ": "}${parents.mkString(", ")}"
+        sps})${sig.fold("")(": " + _.showDbg2)}${
+          if (parents.isEmpty) "" else if (k === Als) " = " else ": "}${parents.mkString(", ")}"
   }
 }
 trait TypingUnitImpl extends Located { self: TypingUnit =>
-  def show: Str = entities.map {
+  def showDbg: Str = entities.map {
     case t: Term => t.toString
-    case d: NuDecl => d.show
+    case d: NuDecl => d.showDbg
     case _ => die
   }.mkString("{", "; ", "}")
   lazy val children: List[Located] = entities
@@ -327,6 +507,15 @@ trait TypingUnitImpl extends Located { self: TypingUnit =>
 trait TypeNameImpl extends Ordered[TypeName] { self: TypeName =>
   val base: TypeName = this
   def compare(that: TypeName): Int = this.name compare that.name
+  lazy val toVar: Var = Var(name).withLocOf(this)
+}
+
+trait FldImpl extends Located { self: Fld =>
+  def children: Ls[Located] = self.value :: Nil
+  def describe: Str =
+    (if (self.spec) "specialized " else "") +
+    (if (self.mut) "mutable " else "") +
+    self.value.describe
 }
 
 trait TermImpl extends StatementImpl { self: Term =>
@@ -377,6 +566,10 @@ trait TermImpl extends StatementImpl { self: Term =>
       case New(h, b) => "object instantiation"
       case If(_, _) => "if-else block"
       case TyApp(_, _) => "type application"
+      case Where(_, _) => s"constraint clause"
+      case Forall(_, _) => s"forall clause"
+      case Inst(bod) => "explicit instantiation"
+      case Super() => "super"
     }
   }
   
@@ -392,9 +585,9 @@ trait TermImpl extends StatementImpl { self: Term =>
     case DecLit(value) => value.toString
     case StrLit(value) => '"'.toString + value + '"'
     case UnitLit(value) => if (value) "undefined" else "null"
-    case Var(name) => name
-    case Asc(trm, ty) => s"$trm : $ty"  |> bra
-    case Lam(name, rhs) => s"$name => $rhs" |> bra
+    case v @ Var(name) => name + v.uid.fold("")("::"+_.toString)
+    case Asc(trm, ty) => s"$trm : ${ty.showDbg2}"  |> bra
+    case Lam(pat, rhs) => s"($pat) => $rhs" |> bra
     case App(lhs, rhs) => s"${lhs.print(!lhs.isInstanceOf[App])} ${rhs.print(true)}" |> bra
     case Rcd(fields) =>
       fields.iterator.map(nv =>
@@ -418,21 +611,33 @@ trait TermImpl extends StatementImpl { self: Term =>
       s"case $s of { ${c.print(true)} }" |> bra
     case Subs(a, i) => s"($a)[$i]"
     case Assign(lhs, rhs) => s" $lhs <- $rhs" |> bra
-    case New(S((at, ar)), bod) => s"new ${at.show}($ar) ${bod.show}" |> bra
-    case New(N, bod) => s"new ${bod.show}" |> bra
+    case New(S((at, ar)), bod) => s"new ${at.showDbg2}($ar) ${bod.showDbg}" |> bra
+    case New(N, bod) => s"new ${bod.showDbg}" |> bra
     case If(body, els) => s"if $body" + els.fold("")(" else " + _) |> bra
-    case TyApp(lhs, targs) => s"$lhs‹${targs.map(_.show).mkString(", ")}›"
+    case TyApp(lhs, targs) => s"$lhs‹${targs.map(_.showDbg2).mkString(", ")}›"
+    case Where(bod, wh) => s"${bod} where {${wh.mkString("; ")}}"
+    case Forall(ps, bod) => s"forall ${ps.mkString(", ")}. ${bod}"
+    case Inst(bod) => s"${bod.print(true)}!"
+    case Super() => "super"
   }}
   
+  def toTypeRaise(implicit raise: Raise): Type = toType match {
+    case L(d) => raise(d); Bot
+    case R(ty) => ty
+  }
   def toType: Diagnostic \/ Type =
     try R(toType_!.withLocOf(this)) catch {
       case e: NotAType =>
         import Message._
-        L(ErrorReport(msg"not a recognized type: ${e.trm.toString}"->e.trm.toLoc::Nil)) }
+        L(ErrorReport(msg"not a recognized type" -> e.trm.toLoc::Nil)) }
   protected def toType_! : Type = (this match {
     case Var(name) if name.startsWith("`") => TypeVar(R(name.tail), N)
+    case Var(name) if name.startsWith("'") => TypeVar(R(name), N)
     case Var(name) => TypeName(name)
     case lit: Lit => Literal(lit)
+    case App(App(Var("|"), Tup(N -> Fld(false, false, lhs) :: Nil)), Tup(N -> Fld(false, false, rhs) :: Nil)) => Union(lhs.toType_!, rhs.toType_!)
+    case App(App(Var("&"), Tup(N -> Fld(false, false, lhs) :: Nil)), Tup(N -> Fld(false, false, rhs) :: Nil)) => Inter(lhs.toType_!, rhs.toType_!)
+    case App(App(Var("->"), lhs), Tup(N -> Fld(false, false, rhs) :: Nil)) => Function(lhs.toType_!, rhs.toType_!)
     case App(App(Var("|"), lhs), rhs) => Union(lhs.toType_!, rhs.toType_!)
     case App(App(Var("&"), lhs), rhs) => Inter(lhs.toType_!, rhs.toType_!)
     case Lam(lhs, rhs) => Function(lhs.toType_!, rhs.toType_!)
@@ -455,6 +660,14 @@ trait TermImpl extends StatementImpl { self: Term =>
     case Rcd(fields) => Record(fields.map(fld => (fld._1, fld._2 match {
       case Fld(m, s, v) => val ty = v.toType_!; Field(Option.when(m)(ty), ty)
     })))
+    case Where(body, where) =>
+      Constrained(body.toType_!, Nil, where.map {
+        case Asc(l, r) => Bounds(l.toType_!, r)
+        case s => throw new NotAType(s)
+      })
+    case Forall(ps, bod) =>
+      PolyType(ps.map(R(_)), bod.toType_!)
+    // 
     case Sel(receiver, fieldName) => receiver match {
       case Var(name) if !name.startsWith("`") => TypeName(s"$name.$fieldName")
       case _ => throw new NotAType(this)
@@ -474,20 +687,20 @@ trait TermImpl extends StatementImpl { self: Term =>
   }).withLocOf(this)
   
 }
-private class NotAType(val trm: Term) extends Throwable
+private class NotAType(val trm: Statement) extends Throwable
 
 trait LitImpl { self: Lit =>
   def baseClasses: Set[TypeName] = this match {
-    case _: IntLit => Set.single(TypeName("int")) + TypeName("number")
-    case _: StrLit => Set.single(TypeName("string"))
-    case _: DecLit => Set.single(TypeName("number"))
+    case _: IntLit => Set.single(TypeName("int")) + TypeName("number") + TypeName("Eql")
+    case _: StrLit => Set.single(TypeName("string")) + TypeName("Eql")
+    case _: DecLit => Set.single(TypeName("number")) + TypeName("Eql")
     case _: UnitLit => Set.empty
   }
 }
 
 trait VarImpl { self: Var =>
   def isPatVar: Bool =
-    name.head.isLetter && name.head.isLower && name =/= "true" && name =/= "false"
+    (name.head.isLetter && name.head.isLower || name.head === '_' || name.head === '$') && name =/= "true" && name =/= "false"
   var uid: Opt[Int] = N
 }
 
@@ -508,6 +721,11 @@ trait FieldImpl extends Located { self: Field =>
 
 trait Located {
   def children: List[Located]
+  
+  lazy val freeVars: Set[Var] = this match {
+    case v: Var => Set.single(v)
+    case _ => children.iterator.flatMap(_.freeVars.iterator).toSet
+  }
   
   private var spanStart: Int = -1
   private var spanEnd: Int = -1
@@ -534,7 +752,7 @@ trait Located {
   def withLocOf(that: Located): this.type = withLoc(that.toLoc)
   def hasLoc: Bool = origin.isDefined
   lazy val toLoc: Opt[Loc] = getLoc
-  private def getLoc: Opt[Loc] = {
+  private[mlscript] def getLoc: Opt[Loc] = {
     def subLocs = children.iterator.flatMap(_.toLoc.iterator)
     if (spanStart < 0) spanStart =
       subLocs.map(_.spanStart).minOption.getOrElse(return N)
@@ -583,40 +801,38 @@ trait StatementImpl extends Located { self: Statement =>
       (diags ::: diags2 ::: diags3) -> (TypeDef(Als, TypeName(v.name).withLocOf(v), targs,
           dataDefs.map(td => AppliedType(td.nme, td.tparams)).reduceOption(Union).getOrElse(Bot), Nil, Nil, Nil
         ).withLocOf(hd) :: cs)
-      case NuTypeDef(Nms, nme, tps, tup @ Tup(fs), pars, unit) =>
-        ??? // TODO
-      case NuTypeDef(k @ Als, nme, tps, tup @ Tup(fs), pars, unit) =>
-        // TODO properly check:
-        require(fs.isEmpty, fs)
-        require(pars.size === 1, pars)
-        require(unit.entities.isEmpty, unit)
-        val (diags, rhs) = pars.head.toType match {
-          case L(ds) => (ds :: Nil) -> Top
-          case R(ty) => Nil -> ty
-        }
-        diags -> (TypeDef(k, nme, tps, rhs, Nil, Nil, Nil) :: Nil)
-      case NuTypeDef(k @ (Cls | Trt), nme, tps, tup @ Tup(fs), pars, unit) =>
-        val diags = Buffer.empty[Diagnostic]
-        def tt(trm: Term): Type = trm.toType match {
-          case L(ds) => diags += ds; Top
-          case R(ty) => ty
-        }
-        val params = fs.map {
-          case (S(nme), Fld(mut, spec, trm)) =>
-            val ty = tt(trm)
-            nme -> Field(if (mut) S(ty) else N, ty)
-          case (N, Fld(mut, spec, nme: Var)) => nme -> Field(if (mut) S(Bot) else N, Top)
-          case _ => die
-        }
-        val pos = params.unzip._1
-        val bod = pars.map(tt).foldRight(Record(params): Type)(Inter)
-        val termName = Var(nme.name).withLocOf(nme)
-        val ctor = Def(false, termName, L(Lam(tup, App(termName, Tup(N -> Fld(false, false, Rcd(fs.map {
-          case (S(nme), fld) => nme -> fld
-          case (N, fld @ Fld(mut, spec, nme: Var)) => nme -> fld
-          case _ => die
-        })) :: Nil)))), true)
-        diags.toList -> (TypeDef(k, nme, tps, bod, Nil, Nil, pos) :: ctor :: Nil)
+    case NuTypeDef(Nms, nme, tps, tup @ Tup(fs), sig, pars, sup, ths, unit) =>
+      ??? // TODO
+    case NuTypeDef(k @ Als, nme, tps, tup @ Tup(fs), sig, pars, sup, ths, unit) =>
+      // TODO properly check:
+      require(fs.isEmpty, fs)
+      require(pars.size === 0, pars)
+      require(sig.isDefined)
+      require(ths.isEmpty, ths)
+      require(unit.entities.isEmpty, unit)
+      Nil -> (TypeDef(k, nme, tps.map(_._2), sig.get, Nil, Nil, Nil) :: Nil)
+    case NuTypeDef(k @ (Cls | Trt), nme, tps, tup @ Tup(fs), sig, pars, sup, ths, unit) =>
+      val diags = Buffer.empty[Diagnostic]
+      def tt(trm: Term): Type = trm.toType match {
+        case L(ds) => diags += ds; Top
+        case R(ty) => ty
+      }
+      val params = fs.map {
+        case (S(nme), Fld(mut, spec, trm)) =>
+          val ty = tt(trm)
+          nme -> Field(if (mut) S(ty) else N, ty)
+        case (N, Fld(mut, spec, nme: Var)) => nme -> Field(if (mut) S(Bot) else N, Top)
+        case _ => die
+      }
+      val pos = params.unzip._1
+      val bod = pars.map(tt).foldRight(Record(params): Type)(Inter)
+      val termName = Var(nme.name).withLocOf(nme)
+      val ctor = Def(false, termName, L(Lam(tup, App(termName, Tup(N -> Fld(false, false, Rcd(fs.map {
+        case (S(nme), fld) => nme -> Fld(false, false, nme)
+        case (N, fld @ Fld(mut, spec, nme: Var)) => nme -> fld
+        case _ => die
+      })) :: Nil)))), true)
+      diags.toList -> (TypeDef(k, nme, tps.map(_._2), bod, Nil, Nil, pos) :: ctor :: Nil)
     case d: DesugaredStatement => Nil -> (d :: Nil)
   }
   import Message._
@@ -686,7 +902,7 @@ trait StatementImpl extends Located { self: Statement =>
           val params = args.flatMap(getFields)
           val clsNme = TypeName(v.name).withLocOf(v)
           val tps = tparams.toList
-          val ctor = Def(false, v, R(PolyType(tps,
+          val ctor = Def(false, v, R(PolyType(tps.map(L(_)),
             params.foldRight(AppliedType(clsNme, tps):Type)(Function(_, _)))), true).withLocOf(stmt)
           val td = TypeDef(Cls, clsNme, tps, Record(fields.toList.mapValues(Field(None, _))), Nil, Nil, Nil).withLocOf(stmt)
           td :: ctor :: cs
@@ -725,7 +941,12 @@ trait StatementImpl extends Located { self: Statement =>
     case d @ NuFunDef(_, v, ts, rhs) => v :: ts ::: d.body :: Nil
     case TyApp(lhs, targs) => lhs :: targs
     case New(base, bod) => base.toList.flatMap(ab => ab._1 :: ab._2 :: Nil) ::: bod :: Nil
-    case NuTypeDef(_, _, _, _, _, _) => ???
+    case Where(bod, wh) => bod :: wh
+    case Forall(ps, bod) => ps ::: bod :: Nil
+    case Inst(bod) => bod :: Nil
+    case Super() => Nil
+    case NuTypeDef(k, nme, tps, ps, sig, pars, sup, ths, bod) =>
+      nme :: tps.map(_._2) ::: ps :: pars ::: ths.toList ::: bod :: Nil
   }
   
   
@@ -734,8 +955,8 @@ trait StatementImpl extends Located { self: Statement =>
     case DatatypeDefn(head, body) => s"data type $head of $body"
     case DataDefn(head) => s"data $head"
     case _: Term => super.toString
-    case d: Decl => d.show
-    case d: NuDecl => d.show
+    case d: Decl => d.showDbg
+    case d: NuDecl => d.showDbg
   }
 }
 

@@ -30,6 +30,10 @@ package object utils {
     def mapLines(f: String => String): String = splitSane('\n') map f mkString "\n"
     def indent(pre: String): String = mapLines(pre + _)
     def indent: String = indent("\t")
+    def indentNewLines(pre: String = "\t"): String = splitSane('\n').toList match {
+      case head :: (rest @ _ :: _)  => head + "\n" + rest.map(pre + _).mkString("\n")
+      case _ => self
+    }
     def truncate(maxChars: Int, replace: String): String = {
       val newStr = self.take(maxChars)
       if (newStr.length < self.length) newStr + replace
@@ -48,8 +52,10 @@ package object utils {
   implicit class IterableOps[A](private val self: IterableOnce[A]) extends AnyVal {
     def mkStringOr(
       sep: String = "", start: String = "", end: String = "", els: String = ""
-    ): String =
-      if (self.iterator.nonEmpty) self.iterator.mkString(start, sep, end) else els
+    ): String = {
+      val ite = self.iterator
+      if (ite.nonEmpty) ite.mkString(start, sep, end) else els
+    }
     def collectLast[B](f: Paf[A, B]): Opt[B] = self.iterator.collect(f).foldLeft[Opt[B]](N)((_, a) => S(a))
     def toSortedSet(implicit ord: Ordering[A]): SortedSet[A] =
       SortedSet.from(self)
@@ -58,8 +64,14 @@ package object utils {
     def firstSome: Opt[A] = self.iterator.collectFirst { case Some(v) => v }
   }
   implicit class PairIterableOps[A, B](private val self: IterableOnce[A -> B]) extends AnyVal {
+    def mapKeys[C](f: A => C): List[C -> B] = mapKeysIter(f).toList
     def mapValues[C](f: B => C): List[A -> C] = mapValuesIter(f).toList
+    def mapKeysIter[C](f: A => C): Iterator[C -> B] = self.iterator.map(p => f(p._1) -> p._2)
     def mapValuesIter[C](f: B => C): Iterator[A -> C] = self.iterator.map(p => p._1 -> f(p._2))
+    def keys: Iterator[A] = self.iterator.map(_._1)
+    def values: Iterator[B] = self.iterator.map(_._2)
+    def toSortedMap(implicit ord: Ordering[A]): SortedMap[A, B] =
+      SortedMap.from(self)
   }
   
   implicit class MapOps[A, B](private val self: Map[A, B]) extends AnyVal {
@@ -115,6 +127,9 @@ package object utils {
     /** A lesser precedence one! */
     @inline def /> [B] (rhs: A => B): B = rhs(self)
     
+    @inline def matches(pf: PartialFunction[A, Bool]): Bool =
+      pf.lift(self).contains(true)
+    
     /** 
      * A helper to write left-associative applications, mainly used to get rid of paren hell
      * Example:
@@ -138,7 +153,7 @@ package object utils {
   }
   
   implicit final class ListHelpers[A](ls: Ls[A]) {
-    def filterOutConsecutive(f: (A, A) => Bool): Ls[A] =
+    def filterOutConsecutive(f: (A, A) => Bool = _ === _): Ls[A] =
       ls.foldRight[List[A]](Nil) { case (x, xs) => if (xs.isEmpty || !f(xs.head, x)) x :: xs else xs }
     def tailOption: Opt[Ls[A]] = if (ls.isEmpty) N else S(ls.tail)
     def headOr(els: => A): A = if (ls.isEmpty) els else ls.head
@@ -168,6 +183,10 @@ package object utils {
     }
   }
   
+  implicit class MutSetObjectHelpers(self: mutable.Set.type) {
+    def single[A](a: A): mutable.Set[A] = mutable.Set.empty[A] += a
+  }
+  
   implicit class SetObjectHelpers(self: Set.type) {
     def single[A](a: A): Set[A] = (Set.newBuilder[A] += a).result()
   }
@@ -184,6 +203,7 @@ package object utils {
   def TODO(msg: String): Nothing = throw new NotImplementedError(msg)
   def die: Nothing = lastWords("Program reached and unexpected state.")
   def lastWords(msg: String): Nothing = throw new Exception(s"Internal Error: $msg")
+  def wat(msg: String, wat: Any): Nothing = lastWords(s"$msg ($wat)")
   
   /** To make Scala unexhaustivity warnings believed to be spurious go away,
    * while clearly indicating the intent. */

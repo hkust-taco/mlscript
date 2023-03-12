@@ -38,8 +38,8 @@ class C
 
 :p
 def n: C{}
-//│ Parsed: rec def n: [] -> C; {};
-//│ Desugared: rec def n: [] -> C
+//│ Parsed: rec def n: C; {};
+//│ Desugared: rec def n: C
 //│ AST: Def(true, n, PolyType(List(),TypeName(C)), true)
 //│ Desugared: {}
 //│ AST: Rcd()

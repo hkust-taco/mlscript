@@ -1,0 +1,224 @@
+:NewDefs
+
+
+class A(n: int)
+//│ class A(n: int)
+
+A
+//│ (n: int,) -> A
+//│ res
+//│     = [Function (anonymous)] { class: [class A] }
+
+let a = A(42)
+//│ let a: A
+//│ a
+//│   = A {}
+
+
+fun f(x: A) = x.n
+//│ fun f: (x: A,) -> int
+
+fun f(x: A) = if x is A then x.n
+//│ fun f: (x: A,) -> int
+
+fun f(x: A | 'b) = if x is A then x.n else 0
+//│ fun f: (x: anything,) -> int
+
+
+fun f(x) = x.n
+//│ fun f: forall 'n. {n: 'n} -> 'n
+
+f(a)
+//│ int
+//│ res
+//│     = 42
+
+fun f(x) = if x is A then x.n
+//│ fun f: A -> int
+
+f(a)
+//│ int
+//│ res
+//│     = 42
+
+fun f(x) = if x is A then x.n else 0
+//│ fun f: anything -> int
+
+f(a)
+//│ int
+//│ res
+//│     = 42
+
+
+
+class C {
+  fun id(x) = x
+  fun const(x) = id
+}
+//│ class C() {
+//│   fun const: forall 'a. anything -> 'a -> 'a
+//│   fun id: forall 'a. 'a -> 'a
+//│ }
+
+
+// TODO
+class Base0(n) {
+  fun me = this
+  fun my = this.n
+  fun mine = my
+  fun oops = this.my
+}
+//│ ╔══[ERROR] Class parameters currently need type annotations
+//│ ║  l.65: 	class Base0(n) {
+//│ ╙──      	            ^
+//│ ╔══[ERROR] unsupported indirectly recursive member access
+//│ ║  l.69: 	  fun oops = this.my
+//│ ╙──      	                 ^^^
+//│ class Base0(n: error) {
+//│   fun me: Base0 & {n: error}
+//│   fun mine: error
+//│   fun my: error
+//│   fun oops: error
+//│ }
+//│ Code generation encountered an error:
+//│   unresolved symbol my
+
+// :d
+// Base0
+
+:re
+let b1 = Base0(42)
+//│ let b1: Base0
+//│ b1
+//│ Runtime error:
+//│   ReferenceError: Base0 is not defined
+
+:re
+let n1 = b1.n
+//│ let n1: error
+//│ n1
+//│ Runtime error:
+//│   ReferenceError: b1 is not defined
+
+// TODO
+n1 + 1
+//│ int
+//│ res
+//│ Runtime error:
+//│   ReferenceError: n1 is not defined
+
+
+:re
+let b2 = Base0("hi")
+let n2 = b2.n
+//│ let b2: Base0
+//│ let n2: error
+//│ b2
+//│ Runtime error:
+//│   ReferenceError: Base0 is not defined
+//│ n2
+//│ Runtime error:
+//│   ReferenceError: b2 is not defined
+
+
+
+class Base1(base: int) {
+  fun getBase1 = base
+  fun getBase2 = this.base
+  fun foo(x) = this.base + x
+}
+//│ class Base1(base: int) {
+//│   fun foo: int -> int
+//│   fun getBase1: int
+//│   fun getBase2: int
+//│ }
+
+class Base1(base: int) {
+  fun getBase1 = base
+  fun me = this
+  fun foo(x) = base + x
+}
+//│ class Base1(base: int) {
+//│   fun foo: int -> int
+//│   fun getBase1: int
+//│   fun me: Base1 & {base: int}
+//│ }
+
+Base1
+//│ (base: int,) -> Base1
+//│ res
+//│     = [Function (anonymous)] { class: [class Base11] }
+
+let b = Base1(1)
+//│ let b: Base1
+//│ b
+//│   = Base11 {}
+
+b.base
+//│ int
+//│ res
+//│     = 1
+
+b.getBase1
+//│ int
+//│ res
+//│     = 1
+
+// :d
+b.me
+//│ Base1 & {base: int}
+//│ res
+//│     = Base11 {}
+
+:e
+b.getBaseTypo
+//│ ╔══[ERROR] class `Base1` does not contain member `getBaseTypo`
+//│ ║  l.174: 	b.getBaseTypo
+//│ ╙──       	 ^^^^^^^^^^^^
+//│ error
+//│ res
+//│     = undefined
+
+
+b : Base1
+//│ Base1
+//│ res
+//│     = Base11 {}
+
+
+class Rec(n: int) {
+  fun go = Rec(n + 1)
+}
+//│ class Rec(n: int) {
+//│   fun go: Rec
+//│ }
+
+let r = Rec(0)
+r.n
+//│ let r: Rec
+//│ int
+//│ r
+//│   = Rec {}
+//│ res
+//│     = 0
+
+r.go.n
+//│ int
+//│ res
+//│     = 1
+
+
+
+
+// TODO treat `a: int` as a signature
+class Annots(base: 0 | 1) {
+  a: int
+  fun a = base
+}
+//│ class Annots(base: 0 | 1) {
+//│   fun a: 0 | 1
+//│ }
+
+
+
+

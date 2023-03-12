@@ -1,0 +1,19 @@
+:NewDefs
+
+
+// TODO support
+mixin BaseTest<A> {
+  fun test(x: A) = x
+}
+//│ ╔══[ERROR] type identifier not found: A
+//│ ║  l.6: 	  fun test(x: A) = x
+//│ ╙──     	              ^
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: A29'
+
+mixin BaseTest<A>(x: A) {
+  fun test = x
+}
+//│ mixin BaseTest[A](x: A) {
+//│   fun test: A
+//│ }
+

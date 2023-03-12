@@ -1,0 +1,33 @@
+:NewDefs
+
+
+class Foo(x: int)
+//│ class Foo(x: int)
+
+
+:e
+class Bar(x: int, y: int) extends Foo(x + y)
+//│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
+//│ ║  l.9: 	class Bar(x: int, y: int) extends Foo(x + y)
+//│ ╙──     	                                  ^^^^^^^^^^
+//│ class Bar(x: int, y: int)
+
+
+mixin AA(a: int) {
+}
+//│ mixin AA(a: int)
+
+mixin BB {}
+//│ mixin BB()
+
+
+class C(x: int) extends BB
+//│ class C(x: int)
+
+class D(x: int) extends AA(x)
+//│ class D(x: int)
+
+class E(x: int) extends BB, AA(x)
+//│ class E(x: int)
+
+

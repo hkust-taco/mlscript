@@ -1,0 +1,109 @@
+:NewDefs
+
+
+// TODO check cyclicity
+// :e
+type A = A
+//│ type A = A
+
+// TODO check cyclicity
+// :e
+type A = A | int
+//│ type A = int | A
+
+// TODO check regularity
+// :e
+type Foo[A] = { x: A, y: Foo[(A, A)] }
+//│ type Foo[A] = {x: A, y: Foo[(A, A,)]}
+
+
+// TODO support abstract types
+:e
+type Test
+//│ ╔══[ERROR] type alias definition requires a right-hand side
+//│ ║  l.22: 	type Test
+//│ ╙──      	^^^^^^^^^
+//│ type Test = error
+
+:e
+type Test(n: int) = n
+//│ ╔══[ERROR] type alias definitions cannot have value parameters
+//│ ║  l.29: 	type Test(n: int) = n
+//│ ╙──      	         ^^^^^^^^
+//│ ╔══[ERROR] type identifier not found: n
+//│ ║  l.29: 	type Test(n: int) = n
+//│ ╙──      	                    ^
+//│ type Test = error
+
+class Base
+//│ class Base()
+
+:pe
+:e
+type Test: Base
+//│ ╔══[PARSE ERROR] Expected end of input; found ':' instead
+//│ ║  l.43: 	type Test: Base
+//│ ╙──      	         ^
+//│ ╔══[ERROR] type alias definition requires a right-hand side
+//│ ║  l.43: 	type Test: Base
+//│ ╙──      	^^^^^^^^^
+//│ type Test = error
+
+:pe
+:e
+type Test: Base = int
+//│ ╔══[PARSE ERROR] Expected end of input; found ':' instead
+//│ ║  l.54: 	type Test: Base = int
+//│ ╙──      	         ^
+//│ ╔══[ERROR] type alias definition requires a right-hand side
+//│ ║  l.54: 	type Test: Base = int
+//│ ╙──      	^^^^^^^^^
+//│ type Test = error
+
+:e
+type Test extends Base
+//│ ╔══[ERROR] type alias definitions cannot extend parents
+//│ ║  l.64: 	type Test extends Base
+//│ ╙──      	                  ^^^^
+//│ ╔══[ERROR] type alias definition requires a right-hand side
+//│ ║  l.64: 	type Test extends Base
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^
+//│ type Test = error
+
+:pe
+:e
+type Test extends Base = int
+//│ ╔══[PARSE ERROR] Expected end of input; found '=' instead
+//│ ║  l.75: 	type Test extends Base = int
+//│ ╙──      	                       ^
+//│ ╔══[ERROR] type alias definitions cannot extend parents
+//│ ║  l.75: 	type Test extends Base = int
+//│ ╙──      	                  ^^^^
+//│ ╔══[ERROR] type alias definition requires a right-hand side
+//│ ║  l.75: 	type Test extends Base = int
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^
+//│ type Test = error
+
+:e
+type Test = int extends Base
+//│ ╔══[ERROR] type alias definitions cannot extend parents
+//│ ║  l.88: 	type Test = int extends Base
+//│ ╙──      	                        ^^^^
+//│ type Test = int
+
+
+:pe
+type Poly[mut A] = A
+//│ ╔══[PARSE ERROR] Unexpected 'mut' keyword here
+//│ ║  l.96: 	type Poly[mut A] = A
+//│ ╙──      	          ^^^
+//│ type Poly = A
+
+:pe
+type Poly[#A] = A
+//│ ╔══[PARSE ERROR] Unexpected '#' here
+//│ ║  l.103: 	type Poly[#A] = A
+//│ ╙──       	          ^
+//│ type Poly = A
+
+

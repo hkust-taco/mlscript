@@ -1,0 +1,221 @@
+:NewParser
+:NewDefs
+
+
+// * Motivating paper example, demonstrating the expression problem solution
+
+
+class Add<E>(lhs: E, rhs: E)
+class Lit(n: int)
+//│ class Add[E](lhs: E, rhs: E)
+//│ class Lit(n: int)
+
+fun add11 = Add(Lit(1), Lit(2))
+//│ fun add11: Add[Lit]
+
+
+fun eval(e) =
+  if e is
+    Lit(n) then n
+    Add(l, r) then eval(l) + eval(r)
+//│ fun eval: forall 'a. 'a -> int
+//│   where
+//│     'a <: Add['a] | Lit
+
+
+mixin EvalBase {
+  fun eval(e) =
+    if e is
+      Lit(n) then n: int
+      Add(l, r) then this.eval(l) + this.eval(r)
+}
+//│ mixin EvalBase() {
+//│   this: {eval: 'lhs -> int}
+//│   fun eval: (Add['lhs] | Lit) -> int
+//│ }
+
+
+module TestLang extends EvalBase
+//│ module TestLang() {
+//│   fun eval: 'a -> int
+//│ }
+//│ where
+//│   'a <: Add['a] | Lit
+
+TestLang.eval
+//│ 'a -> int
+//│   where
+//│     'a <: Add['a] | Lit
+//│ res
+//│     = [Function: eval]
+
+TestLang.eval(add11)
+//│ int
+//│ res
+//│     = 3
+
+
+mixin EvalNothing {
+  fun eval(e) = e : nothing
+}
+mixin EvalAddLit {
+  fun eval(e) =
+    if e is
+      Lit(n) then n: int
+      Add(l, r) then this.eval(l) + this.eval(r)
+    else super.eval(e)
+}
+module TestLang extends EvalNothing, EvalAddLit
+//│ mixin EvalNothing() {
+//│   fun eval: nothing -> nothing
+//│ }
+//│ mixin EvalAddLit() {
+//│   super: {eval: 'a -> 'b}
+//│   this: {eval: 'lhs -> int}
+//│   fun eval: (Add['lhs] | Lit | 'a & ~#Add & ~#Lit) -> (int | 'b)
+//│ }
+//│ module TestLang() {
+//│   fun eval: 'c -> int
+//│ }
+//│ where
+//│   'c <: Add['c] | Lit
+
+TestLang.eval
+//│ 'a -> int
+//│   where
+//│     'a <: Add['a] | Lit
+//│ res
+//│     = [Function: eval]
+
+TestLang.eval(add11)
+//│ int
+//│ res
+//│     = 3
+
+
+class Neg<A>(expr: A)
+//│ class Neg[A](expr: A)
+
+let add2negadd11 = Add(Lit(2), Neg(add11))
+//│ let add2negadd11: Add[Lit | Neg[Add[Lit]]]
+//│ add2negadd11
+//│              = Add {}
+
+
+mixin EvalNeg {
+  fun eval(e) =
+    if e is Neg(d) then 0 - this.eval(d)
+    else super.eval(e)
+}
+//│ mixin EvalNeg() {
+//│   super: {eval: 'a -> 'b}
+//│   this: {eval: 'expr -> int}
+//│   fun eval: (Neg['expr] | 'a & ~#Neg) -> (int | 'b)
+//│ }
+
+
+module TestLang extends EvalBase, EvalNeg
+//│ module TestLang() {
+//│   fun eval: 'a -> int
+//│ }
+//│ where
+//│   'a <: Add['a] | Lit | Neg['a]
+
+TestLang.eval
+//│ 'a -> int
+//│   where
+//│     'a <: Add['a] | Lit | Neg['a]
+//│ res
+//│     = [Function: eval]
+
+
+TestLang.eval(add11)
+//│ int
+//│ res
+//│     = 3
+
+TestLang.eval(Neg(add11))
+//│ int
+//│ res
+//│     = -3
+
+TestLang.eval(Add(Lit(2), Neg(Lit(1))))
+//│ int
+//│ res
+//│     = 1
+
+TestLang.eval(Neg(Neg(add11)))
+//│ int
+//│ res
+//│     = 3
+
+
+TestLang.eval(add2negadd11)
+//│ int
+//│ res
+//│     = -1
+
+// add11
+
+TestLang.eval(Add(Lit(2), Neg(add11)))
+//│ int
+//│ res
+//│     = -1
+
+
+mixin EvalNegNeg_0 {
+  fun eval(e) =
+    if e is Neg(Neg(d)) then this.eval(d)
+    else super.eval(e)
+    // * Note: the above is equivalent to:
+    // if e is Neg(f) then
+    //   if f is Neg(d) then this.eval(d)
+    //   else super.eval(e)
+    // else super.eval(e)
+}
+//│ mixin EvalNegNeg_0() {
+//│   super: {eval: (Neg['A] | 'a) -> 'b}
+//│   this: {eval: 'expr -> 'b}
+//│   fun eval: (Neg['A & (~#Neg | Neg['expr])] | 'a & ~#Neg) -> 'b
+//│ }
+
+// * Concise alternative, usign syntax sugar:
+mixin EvalNegNeg {
+  fun eval(override Neg(Neg(d))) = this.eval(d)
+}
+//│ mixin EvalNegNeg() {
+//│   super: {eval: (Neg['A] | 'a) -> 'b}
+//│   this: {eval: 'expr -> 'b}
+//│   fun eval: (Neg['A & (~#Neg | Neg['expr])] | 'a & ~#Neg) -> 'b
+//│ }
+
+module TestLang extends EvalBase, EvalNeg, EvalNegNeg
+//│ module TestLang() {
+//│   fun eval: 'a -> int
+//│ }
+//│ where
+//│   'a <: Add['a] | Lit | Neg['A & (~#Neg | Neg['a])]
+//│   'A <: 'a
+
+fun mk(n) = if n is
+  0 then Lit(0)
+  1 then Neg(mk(n))
+  _ then Add(mk(n), mk(n))
+//│ fun mk: forall 'E. number -> 'E
+//│   where
+//│     'E :> Add['E] | Lit | Neg['E]
+
+TestLang.eval
+//│ 'a -> int
+//│   where
+//│     'a <: Add['a] | Lit | Neg['A & (~#Neg | Neg['a])]
+//│     'A <: 'a
+//│ res
+//│     = [Function: eval]
+
+TestLang.eval(mk(0))
+//│ int
+//│ res
+//│     = 0
+
+

@@ -1,0 +1,168 @@
+:NewDefs
+:NoJS
+
+
+class Add0<E>(lhs: E)
+//│ class Add0[E](lhs: E)
+
+fun eval(e) = if e is Add0(l) then eval(l)
+//│ fun eval: forall 'a. 'a -> nothing
+//│   where
+//│     'a <: Add0['a]
+
+
+class Add<E>(lhs: E, rhs: E)
+class Lit(value: int)
+//│ class Add[E](lhs: E, rhs: E)
+//│ class Lit(value: int)
+
+let add11 = Add(Lit(1), Lit(2))
+//│ let add11: Add[Lit]
+
+fun eval(e) =
+  if e is
+    Lit(n) then n: int
+    Add(l, r) then eval(l) + eval(r)
+//│ fun eval: forall 'a. 'a -> int
+//│   where
+//│     'a <: Add['a] | Lit
+
+
+mixin EvalLit {
+  fun eval(e) =
+    if e is
+      Lit(n) then n
+}
+//│ mixin EvalLit() {
+//│   fun eval: Lit -> int
+//│ }
+
+mixin EvalLit {
+  fun eval(e: Lit) = e.value
+}
+//│ mixin EvalLit() {
+//│   fun eval: (e: Lit,) -> int
+//│ }
+
+
+mixin EvalAdd {
+  fun eval(e) =
+    if e is
+      Add(l, r) then this.eval(l)
+}
+//│ mixin EvalAdd() {
+//│   this: {eval: 'lhs -> 'a}
+//│   fun eval: Add['lhs] -> 'a
+//│ }
+
+// FIXME type vars are wrongly refreshed when tying the knot
+
+module TestLang extends EvalAdd
+//│ module TestLang() {
+//│   fun eval: 'a -> nothing
+//│ }
+//│ where
+//│   'a <: Add['a]
+
+TestLang.eval
+//│ 'a -> nothing
+//│   where
+//│     'a <: Add['a]
+
+
+
+mixin EvalBase {
+  fun eval(e) =
+    if e is
+      Lit(n) then n: int
+      Add(l, r) then this.eval(l) + this.eval(r)
+}
+//│ mixin EvalBase() {
+//│   this: {eval: 'lhs -> int}
+//│   fun eval: (Add['lhs] | Lit) -> int
+//│ }
+
+
+module TestLang extends EvalBase
+//│ module TestLang() {
+//│   fun eval: 'a -> int
+//│ }
+//│ where
+//│   'a <: Add['a] | Lit
+
+TestLang.eval
+//│ 'a -> int
+//│   where
+//│     'a <: Add['a] | Lit
+
+
+
+add11
+//│ Add[Lit]
+
+TestLang.eval(add11)
+//│ int
+
+add11
+//│ Add[Lit]
+
+TestLang.eval(add11)
+//│ int
+
+add11
+//│ Add[Lit]
+
+
+
+class Neg<A>(expr: A)
+//│ class Neg[A](expr: A)
+
+let add2negadd11 = Add(Lit(2), Neg(add11))
+//│ let add2negadd11: Add[Lit | Neg[Add[Lit]]]
+
+
+mixin EvalNeg {
+  fun eval(e) =
+    if e is Neg(d) then 0 - this.eval(d)
+    else super.eval(e)
+}
+//│ mixin EvalNeg() {
+//│   super: {eval: 'a -> 'b}
+//│   this: {eval: 'expr -> int}
+//│   fun eval: (Neg['expr] | 'a & ~#Neg) -> (int | 'b)
+//│ }
+
+
+module TestLang extends EvalBase, EvalNeg
+//│ module TestLang() {
+//│   fun eval: 'a -> int
+//│ }
+//│ where
+//│   'a <: Add['a] | Lit | Neg['a]
+
+TestLang.eval
+//│ 'a -> int
+//│   where
+//│     'a <: Add['a] | Lit | Neg['a]
+
+
+TestLang.eval(add11)
+//│ int
+
+TestLang.eval(Neg(add11))
+//│ int
+
+TestLang.eval(Add(Lit(2), Neg(Lit(1))))
+//│ int
+
+TestLang.eval(Neg(Neg(add11)))
+//│ int
+
+
+TestLang.eval(add2negadd11)
+//│ int
+
+TestLang.eval(Add(Lit(2), Neg(add11)))
+//│ int
+
+

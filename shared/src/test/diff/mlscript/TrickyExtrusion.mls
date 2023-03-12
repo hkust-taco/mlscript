@@ -16,13 +16,19 @@ test f =
 //│     = <no result>
 //│       inc is not implemented
 
-// Here, notice the imprecise `(0 | true) -> 'a` type.
-// In a system with inferred first-class constraints, this could be avoided.
+// * Precise type:
+test f = (f 0, f True)
+//│ test: (0 -> 'a & true -> 'b) -> ('a, 'b,)
+//│     = [Function: test]
+
+// * Imprecise type (notice the `(0 | true)`):
+// * Note: With inferred first-class constrained types and generalized curried functions,
+// *  this approximation be avoided (see below).
 test f =
   let r x = f x
   in (r 0, r True)
 //│ test: ((0 | true) -> 'a) -> ('a, 'a,)
-//│     = [Function: test]
+//│     = [Function: test1]
 
 // Same example, a little elaborated
 test f =
@@ -31,4 +37,123 @@ test f =
 //│ test: ((0 | true) -> 'a) -> ((int, 'a,), (bool, 'a,),)
 //│     = <no result>
 //│       inc is not implemented
+
+
+
+
+:GeneralizeCurriedFunctions
+
+
+
+// * Note the still approximative type due to extrusion
+test f =
+  let r x = f x
+  in (r 0, r True)
+//│ test: ((0 | true) -> 'a) -> ('a, 'a,)
+//│     = [Function: test2]
+
+:e // * Due to lack of precision
+(test id)._1 + 1
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.56: 	(test id)._1 + 1
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── reference of type `true` is not an instance of type `int`
+//│ ║  l.4: 	True = true
+//│ ║       	       ^^^^
+//│ ╟── but it flows into field selection with expected type `int`
+//│ ║  l.56: 	(test id)._1 + 1
+//│ ╙──      	^^^^^^^^^^^^
+//│ res: error | int
+//│    = NaN
+
+:e // * Due to lack of precision
+not (test id)._2
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.70: 	not (test id)._2
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ╟── integer literal of type `0` is not an instance of type `bool`
+//│ ║  l.51: 	  in (r 0, r True)
+//│ ║        	        ^
+//│ ╟── but it flows into field selection with expected type `bool`
+//│ ║  l.70: 	not (test id)._2
+//│ ╙──      	    ^^^^^^^^^^^^
+//│ res: bool | error
+//│    = true
+
+:e // * Legit
+not (test id)._1
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.84: 	not (test id)._1
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ╟── integer literal of type `0` is not an instance of type `bool`
+//│ ║  l.51: 	  in (r 0, r True)
+//│ ║        	        ^
+//│ ╟── but it flows into field selection with expected type `bool`
+//│ ║  l.84: 	not (test id)._1
+//│ ╙──      	    ^^^^^^^^^^^^
+//│ res: bool | error
+//│    = true
+
+
+
+
+
+// * === With Constrained Types ===
+
+:DontDistributeForalls
+:ConstrainedTypes
+
+
+
+// * Note the precise type now
+:ns
+test f =
+  let r x = f x
+  in (r 0, r True)
+//│ test: forall 'a 'b 'c 'd 'e 'f 'g. 'c -> ('f, 'g,)
+//│   where
+//│     'c <: 'a -> 'b & 'd -> 'e
+//│     'e <: 'f
+//│     'd :> 0
+//│     'b <: 'g
+//│     'a :> true
+//│     = [Function: test3]
+
+// * Q: why does this type *appear* approximated after simplification?
+test
+//│ res: (0 -> 'a & true -> 'b) -> ('a, 'b,)
+//│    = [Function: test3]
+
+// * We can tell the type is still precise enough because these work:
+
+(test id)._1 + 1
+//│ res: int
+//│    = NaN
+
+not (test id)._2
+//│ res: bool
+//│    = true
+
+:e // * Legit
+not (test id)._1
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.138: 	not (test id)._1
+//│ ║         	^^^^^^^^^^^^^^^^
+//│ ╟── integer literal of type `0` is not an instance of type `bool`
+//│ ║  l.112: 	  in (r 0, r True)
+//│ ║         	        ^
+//│ ╟── but it flows into field selection with expected type `bool`
+//│ ║  l.138: 	not (test id)._1
+//│ ╙──       	    ^^^^^^^^^^^^
+//│ res: bool | error
+//│    = true
+
+
+// * Note: works with dummy recursive definition (we used to have some hacks for rec defns)
+rec def test f =
+  let r x = f x
+  in (r 0, r True)
+//│ test: (0 -> 'a & true -> 'b) -> ('a, 'b,)
+//│     = [Function: test4]
+
 

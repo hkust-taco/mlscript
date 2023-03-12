@@ -29,6 +29,7 @@ class StackedRectangleBoxes[T, N]: RectangleBox[T] & { size: N }
 //│ // end ts
 
 
+// FIXME
 :ts
 class Lock[T]: { pins: T }
   method Map: (T -> 'a) -> Lock['a]
@@ -56,7 +57,7 @@ let lockA = Lock 20 in let lockB = Lock 30 in (Bank lockA 2000).Better(Bank lock
 //│ export declare class Lock<T> {
 //│     pins: T
 //│     constructor(fields: {pins: T})
-//│     Map<a>(arg: (arg1: T) => a): Lock<a>
+//│     Map<'a>(arg: (arg1: T) => 'a): Lock<'a>
 //│ }
 //│ export declare class Bank {
 //│     lock: Lock<int>
@@ -71,6 +72,7 @@ let lockA = Lock 20 in let lockB = Lock 30 in (Bank lockA 2000).Better(Bank lock
 //│ // end ts
 
 
+// FIXME
 :ts
 class None: {}
 class Some[T]: { value: T }
@@ -189,18 +191,18 @@ class Arg[T]: (T, T)
 class Prog[T]
   method Run: Arg[T] -> number
 //│ ╔══[ERROR] cannot inherit from a tuple type
-//│ ║  l.188: 	class Arg[T]: (T, T)
+//│ ║  l.190: 	class Arg[T]: (T, T)
 //│ ╙──       	      ^^^^^^^^^^^^^^
 //│ ╔══[ERROR] type identifier not found: Arg
-//│ ║  l.190: 	  method Run: Arg[T] -> number
+//│ ║  l.192: 	  method Run: Arg[T] -> number
 //│ ╙──       	              ^^^^^^
 //│ Defined class Prog[±T]
 //│ Declared Prog.Run: Prog[?] -> error -> number
 //│ ╔══[WARNING] Type definition Prog has bivariant type parameters:
-//│ ║  l.189: 	class Prog[T]
+//│ ║  l.191: 	class Prog[T]
 //│ ║         	      ^^^^
 //│ ╟── T is irrelevant and may be removed
-//│ ║  l.189: 	class Prog[T]
+//│ ║  l.191: 	class Prog[T]
 //│ ╙──       	           ^
 //│ // start ts
 //│ export declare class Prog<T> {

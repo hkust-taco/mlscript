@@ -404,11 +404,11 @@ final class TsTypegenCodeBuilder {
         )
       case Record(fields) =>
         // ts can only handle fields that have only out type or the same in out types
-        if (fields.iterator
-          .map(field => field._2.in.map(in => in === field._2.out).getOrElse(true))
-          .exists(!_))
-            throw CodeGenError("Cannot convert mutable record field with different in out types to typescript")
-
+        fields.iterator.foreach { field =>
+          if (field._2.in.exists(in => in =/= field._2.out)) throw CodeGenError(
+            s"Cannot convert mutable record field with different in out types to typescript (${
+              field})")
+        }
         SourceCode.recordWithEntries(
           fields.map(entry => 
             if (entry._2.in.isDefined)
@@ -418,11 +418,11 @@ final class TsTypegenCodeBuilder {
         ))
       case Tuple(fields) =>
         // ts can only handle fields that have only out type or the same in out types
-        if (fields.iterator
-          .map(field => field._2.in.map(in => in === field._2.out).getOrElse(true))
-          .exists(!_))
-            throw CodeGenError("Cannot convert mutable tuple field with different in out types to typescript")
-
+        fields.iterator.foreach { field =>
+          if (field._2.in.exists(in => in =/= field._2.out)) throw CodeGenError(
+            s"Cannot convert mutable tuple field with different in out types to typescript (${
+              field})")
+        }
         // tuple that is a function argument becomes
         // multi-parameter argument list
         // ! Note: No equivalent to readonly fields for tuples
@@ -549,14 +549,15 @@ final class TsTypegenCodeBuilder {
           SourceCode.openAngleBracket ++ toTsType(base) ++ SourceCode.commaSpace ++
           SourceCode.sepBy(names.map(name => SourceCode(s"\"${name.name}\"")), SourceCode.separator) ++
           SourceCode.closeAngleBracket
+      case Bounds(lb, ub) if lb === ub => toTsType(lb)
       case Bounds(lb, ub) =>
         pol match {
           // positive polarity takes upper bound
           case Some(true) => toTsType(ub)
           // negative polarity takes lower bound
           case Some(false) => toTsType(lb)
-          // TODO: Yet to handle invariant types
           case None =>
+            // TODO: Yet to handle invariant types
             throw CodeGenError(s"Cannot generate type for invariant type $mlType")
         }
       case WithExtension(base, rcd) =>
@@ -570,10 +571,10 @@ final class TsTypegenCodeBuilder {
         typeScope.getTypeAliasSymbol(tvarName).map { taliasInfo =>
           SourceCode(taliasInfo.lexicalName) ++ SourceCode.paramList(taliasInfo.params.map(SourceCode(_)))
         }.getOrElse(SourceCode(tvarName))
-      case Constrained(base, where) =>
-        throw CodeGenError(s"Cannot generate type for `where` clause $where")
-      case _: Splice | _: TypeTag =>
-        throw CodeGenError(s"Cannot yet generate type for splices")
+      case Constrained(base, tvbs, where) =>
+        throw CodeGenError(s"Cannot generate type for `where` clause $tvbs $where")
+      case _: Splice | _: TypeTag | _: PolyType =>
+        throw CodeGenError(s"Cannot yet generate type for: $mlType")
     }
   }
 

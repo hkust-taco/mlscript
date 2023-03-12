@@ -477,7 +477,7 @@ f arg2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+3: 	f arg1
 //│ ║        	^^^^^^
-//│ ╟── record of type `{fld: ?a}` does not have field 'prop'
+//│ ╟── record of type `forall ?a. {fld: ?a}` does not have field 'prop'
 //│ ║  l.+1: 	let arg1 = {fld: not true}
 //│ ║        	           ^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{prop: ?prop}`
@@ -493,7 +493,7 @@ f arg2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+4: 	f arg2
 //│ ║        	^^^^^^
-//│ ╟── record of type `{fld: {prop: ?a}}` does not have field 'prop'
+//│ ╟── record of type `{fld: forall ?a. {prop: ?a}}` does not have field 'prop'
 //│ ║  l.+2: 	let arg2 = {fld: arg}
 //│ ║        	           ^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{prop: ?prop}`
@@ -521,7 +521,7 @@ x => h / succ x
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	h arg2
 //│ ║        	^^^^^^
-//│ ╟── record of type `{fld: {prop: ?a}}` does not have field 'prop'
+//│ ╟── record of type `{fld: forall ?a. {prop: ?a}}` does not have field 'prop'
 //│ ║  l.472: 	let arg2 = {fld: arg}
 //│ ║         	           ^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{prop: ?prop}`
@@ -612,7 +612,7 @@ i arg
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+2: 	i arg
 //│ ║        	^^^^^
-//│ ╟── record of type `{prop: ?a}` does not have field 'fld'
+//│ ╟── record of type `forall ?a. {prop: ?a}` does not have field 'fld'
 //│ ║  l.402: 	let arg = {prop: not true}
 //│ ║         	          ^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{fld: ?fld}`

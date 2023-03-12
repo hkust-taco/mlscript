@@ -1,0 +1,41 @@
+:NewDefs
+
+
+
+type List[out A] = Cons[A] | Nil
+class Cons[out A](head: A, tail: List[A])
+module Nil
+//│ type List[A] = Cons[A] | Nil
+//│ class Cons[A](head: A, tail: List[A])
+//│ module Nil()
+
+
+
+// TODO should better simplify these types (reduce the List refinement)
+
+:ng
+let test0: Cons[int] & List[number]
+let test1: Nil & List[int]
+//│ let test0: Cons[int] & List[number]
+//│ let test1: List[int] & Nil
+
+
+
+fun list_assoc(s, l) =
+  if l is
+    Cons(h, t) then
+      if eq(s)(h._1) then Cons(h._2, Nil)
+      else list_assoc(s, t)
+    Nil then Nil
+//│ fun list_assoc: forall 'A. (anything, Cons[{_1: anything, _2: 'A}] | Nil,) -> (Cons['A] | Nil)
+
+fun test(x, l) = list_assoc(42, Cons(x, l))
+//│ fun test: forall 'A. ({_1: anything, _2: 'A}, List[{_1: anything, _2: 'A}],) -> (Cons['A] | Nil)
+
+fun test(x, l) = if l is
+  Nil then list_assoc(42, Cons(x, l))
+  Cons(h, t) then list_assoc(42, Cons(h, t))
+//│ fun test: forall 'A. ({_1: anything, _2: 'A}, Cons[{_1: anything, _2: 'A}] | Nil,) -> (Cons['A] | Nil)
+
+
+

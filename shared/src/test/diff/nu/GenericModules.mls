@@ -1,0 +1,103 @@
+:NewDefs
+
+
+// TODO complain abstract
+module Test<A> {
+  fun foo: A => A
+}
+//│ module Test[A]() {
+//│   fun foo: A -> A
+//│ }
+
+Test.foo
+//│ (??A & 'A) -> ('A | ??A0)
+//│ res
+//│     = undefined
+
+:e
+Test.foo(1)
+//│ ╔══[ERROR] Type error in application
+//│ ║  l.18: 	Test.foo(1)
+//│ ║        	^^^^^^^^^^^
+//│ ╟── type variable `A` leaks out of its scope
+//│ ║  l.18: 	Test.foo(1)
+//│ ╙──      	         ^
+//│ error | ??A
+//│ res
+//│ Runtime error:
+//│   TypeError: Test.foo is not a function
+
+:e
+Test.foo(error) + 1
+//│ ╔══[ERROR] Type error in operator application
+//│ ║  l.31: 	Test.foo(error) + 1
+//│ ║        	^^^^^^^^^^^^^^^^^
+//│ ╟── type variable `A` leaks out of its scope
+//│ ║  l.31: 	Test.foo(error) + 1
+//│ ║        	^^^^^^^^^^^^^^^
+//│ ╙── into type `int`
+//│ error | int
+//│ res
+//│ Runtime error:
+//│   Error: unexpected runtime error
+
+:e
+Test<int> .foo
+//│ ╔══[ERROR] Type application syntax is not yet supported
+//│ ║  l.45: 	Test<int> .foo
+//│ ╙──      	^^^^^^^^^
+//│ error
+//│ res
+//│     = undefined
+
+:e
+(Test<int>).foo
+//│ ╔══[ERROR] Type application syntax is not yet supported
+//│ ║  l.54: 	(Test<int>).foo
+//│ ╙──      	 ^^^^^^^^^
+//│ error
+//│ res
+//│     = undefined
+
+
+Test
+//│ Test[?]
+//│ res
+//│     = Test { class: [class Test] }
+
+:e
+Test:  Test<'a>
+//│ ╔══[ERROR] Type error in type ascription
+//│ ║  l.69: 	Test:  Test<'a>
+//│ ║        	^^^^
+//│ ╟── type variable `A` leaks out of its scope
+//│ ║  l.69: 	Test:  Test<'a>
+//│ ║        	            ^^
+//│ ╟── back into type variable `A`
+//│ ║  l.5: 	module Test<A> {
+//│ ╙──     	            ^
+//│ Test['a]
+//│   where
+//│     'a :> error | ??A
+//│        <: ??A0
+//│ res
+//│     = Test { class: [class Test] }
+
+
+fun test(x) = if x is Test then x.foo
+//│ fun test: forall 'A. Test['A] -> 'A -> 'A
+
+:e
+test(Test)
+//│ ╔══[ERROR] Type error in application
+//│ ║  l.91: 	test(Test)
+//│ ║        	^^^^^^^^^^
+//│ ╟── type variable `A` leaks out of its scope
+//│ ║  l.5: 	module Test<A> {
+//│ ╙──     	            ^
+//│ (??A & 'A) -> ('A | ??A0) | error
+//│ res
+//│     = undefined
+
+
+

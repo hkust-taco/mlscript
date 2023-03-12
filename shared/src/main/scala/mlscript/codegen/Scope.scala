@@ -31,6 +31,7 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
       "emptyArray",
       "succ",
       "error",
+      "length",
       "concat",
       "add",
       "sub",
@@ -44,8 +45,12 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
       "slt",
       "sge",
       "sle",
+      "typeof",
       "toString",
-      "negate"
+      "negate",
+      "eq",
+      "unit",
+      "log",
     ) foreach { name =>
       register(BuiltinSymbol(name, name))
     }
@@ -219,6 +224,42 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
   ): ClassSymbol = {
     val runtimeName = allocateRuntimeName(lexicalName)
     val symbol = ClassSymbol(lexicalName, runtimeName, params.sorted, base, methods)
+    register(symbol)
+    symbol
+  }
+
+  def declareNewClass(
+      lexicalName: Str,
+      params: Ls[Str],
+      base: Type,
+      methods: Ls[MethodDef[Left[Term, Type]]]
+  ): NewClassSymbol = {
+    val runtimeName = allocateRuntimeName(lexicalName)
+    val symbol = NewClassSymbol(lexicalName, runtimeName, params.sorted, base, methods)
+    register(symbol)
+    symbol
+  }
+
+  def declareMixin(
+      lexicalName: Str,
+      params: Ls[Str],
+      base: Type,
+      methods: Ls[MethodDef[Left[Term, Type]]]
+  ): MixinSymbol = {
+    val runtimeName = allocateRuntimeName(lexicalName)
+    val symbol = MixinSymbol(lexicalName, runtimeName, params.sorted, base, methods)
+    register(symbol)
+    symbol
+  }
+
+  def declareModule(
+      lexicalName: Str,
+      params: Ls[Str],
+      base: Type,
+      methods: Ls[MethodDef[Left[Term, Type]]]
+  ): ModuleSymbol = {
+    val runtimeName = allocateRuntimeName(lexicalName)
+    val symbol = ModuleSymbol(lexicalName, runtimeName, params.sorted, base, methods)
     register(symbol)
     symbol
   }

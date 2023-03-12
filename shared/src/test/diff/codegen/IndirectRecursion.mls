@@ -4,12 +4,24 @@ def z: (('a -> 'b) -> (('a -> 'b) & 'c)) -> 'c
 //│ z: (('a -> 'b) -> ('a -> 'b & 'c)) -> 'c
 //│  = <missing implementation>
 
+:e
 def z =
   (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
-//│ (('a -> 'b) -> ('a -> 'b & 'c)) -> 'c
+//│ (('a -> 'b) -> 'c & ('d -> 'e) -> ('d -> 'e & 'a -> 'b)) -> (error | 'c)
 //│   <:  z:
 //│ (('a -> 'b) -> ('a -> 'b & 'c)) -> 'c
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
+//│ ║  l.9: 	  (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
+//│ ║       	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│  = [Function: z]
+
+def z =
+  (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v))!)
+//│ (('a -> 'b) -> 'c & ('d -> 'e) -> ('d -> 'e & 'a -> 'b)) -> 'c
+//│   <:  z:
+//│ (('a -> 'b) -> ('a -> 'b & 'c)) -> 'c
+//│  = [Function: z1]
 
 
 def pow1 = z (fun pow0 -> fun n -> fun x ->
@@ -22,6 +34,63 @@ def pow1 = z (fun pow0 -> fun n -> fun x ->
 pow1 3 4
 //│ res: int
 //│    = 64
+
+
+:e
+z (fun self -> 1)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.40: 	z (fun self -> 1)
+//│ ║        	^^^^^^^^^^^^^^^^^
+//│ ╟── integer literal of type `1` is not a function
+//│ ║  l.40: 	z (fun self -> 1)
+//│ ║        	               ^
+//│ ╟── Note: constraint arises from function type:
+//│ ║  l.3: 	def z: (('a -> 'b) -> (('a -> 'b) & 'c)) -> 'c
+//│ ║       	                       ^^^^^^^^^^
+//│ ╟── from intersection type:
+//│ ║  l.3: 	def z: (('a -> 'b) -> (('a -> 'b) & 'c)) -> 'c
+//│ ╙──     	                      ^^^^^^^^^^^^^^^^^
+//│ res: 1 | error
+//│    = 1
+
+
+zid = z (fun self -> id)
+//│ zid: 'a -> 'a
+//│    = [Function: id]
+
+zid 1
+//│ res: 1
+//│    = 1
+
+
+zargs = z (fun self -> fun x -> self)
+//│ zargs: 'b
+//│   where
+//│     'b :> anything -> 'b
+//│      = [Function (anonymous)]
+
+zargs 1
+//│ res: 'b
+//│   where
+//│     'b :> anything -> 'b
+//│    = [Function (anonymous)]
+
+zargs 1 2 3 4
+//│ res: 'b
+//│   where
+//│     'b :> anything -> 'b
+//│    = [Function (anonymous)]
+
+
+loop = z (fun self -> self)
+//│ loop: anything -> nothing
+//│     = [Function (anonymous)]
+
+:re
+loop 1
+//│ res: nothing
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded
 
 
 def pow pow n x =
@@ -47,4 +116,49 @@ oops 1
 //│ res: nothing
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded
+
+
+
+:NoRecursiveTypes
+
+:e
+def z =
+  (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
+//│ (('a -> 'b) -> 'c & ('d -> 'e) -> ('d -> 'e & 'a -> 'b)) -> (error | 'c)
+//│   <:  z:
+//│ (('a -> 'b) -> ('a -> 'b & 'c)) -> 'c
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
+//│ ║  l.126: 	  (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
+//│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Note: use flag `:ex` to see internal error info.
+//│  = [Function: z2]
+
+def z =
+  (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v))!)
+//│ (('a -> 'b) -> 'c & ('d -> 'e) -> ('d -> 'e & 'a -> 'b)) -> 'c
+//│   <:  z:
+//│ (('a -> 'b) -> ('a -> 'b & 'c)) -> 'c
+//│  = [Function: z3]
+
+:NoCycleCheck
+
+// Exceeds recursion depth limit:
+:e
+def z =
+  (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
+//│ ((anything -> nothing) -> anything) -> error
+//│   <:  z:
+//│ (('a -> 'b) -> ('a -> 'b & 'c)) -> 'c
+//│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: (forall ?c ?d. ?d -> ?c) -> ?e` exceeded recursion depth limit (250)
+//│ ║  l.148: 	  (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
+//│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Note: use flag `:ex` to see internal error info.
+//│  = [Function: z4]
+
+def z =
+  (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v))!)
+//│ (('a -> 'b) -> 'c & ('d -> 'e) -> ('d -> 'e & 'a -> 'b)) -> 'c
+//│   <:  z:
+//│ (('a -> 'b) -> ('a -> 'b & 'c)) -> 'c
+//│  = [Function: z5]
 

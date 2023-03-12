@@ -3,7 +3,7 @@
 
 class Foo(x)
 //│ Defined class Foo
-//│ Foo: 'x -> (Foo with {x: 'x})
+//│ Foo: 'x -> (Foo & {x: 'x})
 //│    = [Function: Foo1]
 
 let f = Foo(1)
@@ -33,7 +33,7 @@ if f is Foo(a) then a else 0
 
 
 fun test(x) = if x is Foo(a) then a
-//│ test: (Foo with {x: 'x}) -> 'x
+//│ test: (Foo & {x: 'x}) -> 'x
 //│     = [Function: test]
 
 test(f)
@@ -42,7 +42,7 @@ test(f)
 
 class Point(x, y)
 //│ Defined class Point
-//│ Point: ('x, 'y,) -> (Point with {x: 'x, y: 'y})
+//│ Point: ('x, 'y,) -> (Point & {x: 'x, y: 'y})
 //│      = [Function: Point1]
 
 let origin = new Point(0, 0)

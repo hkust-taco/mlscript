@@ -8,7 +8,7 @@ final case class Message(bits: Ls[Message.Bit]) {
     val ctx = ShowCtx.mk(typeBits)
     showIn(ctx)
   }
-  def typeBits: Ls[Type] = bits.collect{ case Message.Code(t) => t }
+  def typeBits: Ls[TypeLike] = bits.collect{ case Message.Code(t) => t }
   def showIn(ctx: ShowCtx): Str = {
     bits.map {
       case Message.Code(ty) => ty.showIn(ctx, 0)
@@ -32,8 +32,8 @@ object Message {
   
   sealed abstract class Bit
   final case class Text(str: Str) extends Bit
-  final case class Code(ty: Type) extends Bit
-  implicit def fromType(ty: Type): Message = Message(Code(ty)::Nil)
+  final case class Code(ty: TypeLike) extends Bit
+  implicit def fromType(ty: TypeLike): Message = Message(Code(ty)::Nil)
   implicit def fromStr(str: Str): Message = Message(Text(str)::Nil)
   
   implicit class MessageContext(private val ctx: StringContext) {

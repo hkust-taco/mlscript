@@ -5,10 +5,10 @@ import mlscript.utils._, shorthands._
 
 // Terms
 
-final case class Pgrm(tops: Ls[Statement]) extends PgrmOrTypingUnit with PgrmImpl
+final case class Pgrm(tops: Ls[Statement]) extends PgrmImpl
 
 sealed abstract class Decl extends DesugaredStatement with DeclImpl
-final case class Def(rec: Bool, nme: Var, rhs: Term \/ PolyType, isByname: Bool) extends Decl with Terms {
+final case class Def(rec: Bool, nme: Var, rhs: Term \/ Type, isByname: Bool) extends Decl with Terms {
   val body: Located = rhs.fold(identity, identity)
 }
 final case class TypeDef(
@@ -43,16 +43,21 @@ final case class MethodDef[RHS <: Term \/ Type](
   val children: Ls[Located] = nme :: body :: Nil
 }
 
-sealed abstract class TypeDefKind(val str: Str)
+sealed trait NameRef extends Located { val name: Str }
+
+sealed abstract class DeclKind(val str: Str)
+case object Val extends DeclKind("value")
+sealed abstract class TypeDefKind(str: Str) extends DeclKind(str)
 sealed trait ObjDefKind
 case object Cls extends TypeDefKind("class") with ObjDefKind
 case object Trt extends TypeDefKind("trait") with ObjDefKind
+case object Mxn extends TypeDefKind("mixin")
 case object Als extends TypeDefKind("type alias")
-case object Nms extends TypeDefKind("namespace")
+case object Nms extends TypeDefKind("module")
 
 sealed abstract class Term                                           extends Terms with TermImpl
 sealed abstract class Lit                                            extends SimpleTerm with LitImpl
-final case class Var(name: Str)                                      extends SimpleTerm with VarImpl
+final case class Var(name: Str)                                      extends SimpleTerm with VarImpl with NameRef
 final case class Lam(lhs: Term, rhs: Term)                           extends Term
 final case class App(lhs: Term, rhs: Term)                           extends Term
 final case class Tup(fields: Ls[Opt[Var] -> Fld])                    extends Term
@@ -72,6 +77,10 @@ final case class Splc(fields: Ls[Either[Term, Fld]])                 extends Ter
 final case class New(head: Opt[(NamedType, Term)], body: TypingUnit) extends Term // `new C(...)` or `new C(){...}` or `new{...}`
 final case class If(body: IfBody, els: Opt[Term])                    extends Term
 final case class TyApp(lhs: Term, targs: Ls[Type])                   extends Term
+final case class Where(body: Term, where: Ls[Statement])             extends Term
+final case class Forall(params: Ls[TypeVar], body: Term)             extends Term
+final case class Inst(body: Term)                                    extends Term
+final case class Super()                                             extends Term
 
 sealed abstract class IfBody extends IfBodyImpl
 // final case class IfTerm(expr: Term) extends IfBody // rm?
@@ -83,7 +92,7 @@ final case class IfOpsApp(lhs: Term, opsRhss: Ls[Var -> IfBody]) extends IfBody
 final case class IfBlock(lines: Ls[IfBody \/ Statement]) extends IfBody
 // final case class IfApp(fun: Term, opsRhss: Ls[Var -> IfBody]) extends IfBody
 
-final case class Fld(mut: Bool, spec: Bool, value: Term)
+final case class Fld(mut: Bool, spec: Bool, value: Term) extends FldImpl
 
 sealed abstract class CaseBranches extends CaseBranchesImpl
 final case class Case(pat: SimpleTerm, body: Term, rest: CaseBranches) extends CaseBranches
@@ -95,7 +104,9 @@ final case class DecLit(value: BigDecimal)        extends Lit
 final case class StrLit(value: Str)               extends Lit
 final case class UnitLit(undefinedOrNull: Bool)   extends Lit
 
-sealed abstract class SimpleTerm extends Term with SimpleTermImpl
+trait IdentifiedTerm
+
+sealed abstract class SimpleTerm extends Term with IdentifiedTerm with SimpleTermImpl
 
 sealed trait Statement extends StatementImpl
 final case class LetS(isRec: Bool, pat: Term, rhs: Term)  extends Statement
@@ -109,7 +120,9 @@ sealed trait Terms extends DesugaredStatement
 
 // Types
 
-sealed abstract class Type extends TypeImpl
+sealed abstract class TypeLike extends TypeLikeImpl
+
+sealed abstract class Type extends TypeLike with TypeImpl
 
 sealed trait NamedType extends Type { val base: TypeName }
 
@@ -127,7 +140,8 @@ final case class Rem(base: Type, names: Ls[Var])         extends Type
 final case class Bounds(lb: Type, ub: Type)              extends Type
 final case class WithExtension(base: Type, rcd: Record)  extends Type
 final case class Splice(fields: Ls[Either[Type, Field]]) extends Type
-final case class Constrained(base: Type, where: Ls[TypeVar -> Bounds]) extends Type
+final case class Constrained(base: TypeLike, tvBounds: Ls[TypeVar -> Bounds], where: Ls[Bounds]) extends Type
+// final case class FirstClassDefn(defn: NuTypeDef)         extends Type // TODO
 
 final case class Field(in: Opt[Type], out: Type)         extends FieldImpl
 
@@ -140,7 +154,7 @@ case object Bot                                          extends NullaryType
 final case class Literal(lit: Lit)                       extends NullaryType
 
 /** Reference to an existing type with the given name. */
-final case class TypeName(name: Str)                     extends NullaryType with NamedType with TypeNameImpl
+final case class TypeName(name: Str)                     extends NullaryType with NamedType with TypeNameImpl with NameRef
 final case class TypeTag (name: Str)                     extends NullaryType
 
 final case class TypeVar(val identifier: Int \/ Str, nameHint: Opt[Str]) extends NullaryType with TypeVarImpl {
@@ -149,32 +163,67 @@ final case class TypeVar(val identifier: Int \/ Str, nameHint: Opt[Str]) extends
   override def toString: Str = identifier.fold("α" + _, identity)
 }
 
-final case class PolyType(targs: Ls[TypeName], body: Type) extends PolyTypeImpl
+final case class PolyType(targs: Ls[TypeName \/ TypeVar], body: Type) extends Type with PolyTypeImpl
 
 
 // New Definitions AST
 
-final case class TypingUnit(entities: Ls[Statement]) extends PgrmOrTypingUnit with TypingUnitImpl
+final case class TypingUnit(entities: Ls[Statement]) extends TypingUnitImpl
+// final case class TypingUnit(entities: Ls[Statement]) extends TypeLike with PgrmOrTypingUnit with TypingUnitImpl
 
-sealed abstract class NuDecl extends Statement with NuDeclImpl
+final case class Signature(members: Ls[NuDecl], result: Opt[Type]) extends TypeLike with SignatureImpl
+
+sealed abstract class NuDecl extends TypeLike with Statement with NuDeclImpl
 
 final case class NuTypeDef(
   kind: TypeDefKind,
   nme: TypeName,
-  tparams: Ls[TypeName],
+  tparams: Ls[(Opt[VarianceInfo], TypeName)],
   params: Tup, // the specialized parameters for that type
+  sig: Opt[Type],
   parents: Ls[Term],
+  superAnnot: Opt[Type],
+  thisAnnot: Opt[Type],
   body: TypingUnit
 ) extends NuDecl with Statement
 
 final case class NuFunDef(
   isLetRec: Opt[Bool], // None means it's a `fun`, which is always recursive; Some means it's a `let`
   nme: Var,
-  targs: Ls[TypeName],
-  rhs: Term \/ PolyType,
+  tparams: Ls[TypeName],
+  rhs: Term \/ Type,
 ) extends NuDecl with DesugaredStatement {
   val body: Located = rhs.fold(identity, identity)
+  def kind: DeclKind = Val
 }
 
 
-sealed abstract class PgrmOrTypingUnit
+
+final case class VarianceInfo(isCovariant: Bool, isContravariant: Bool) {
+  
+  /** Combine two pieces of variance information together
+   */
+  def &&(that: VarianceInfo): VarianceInfo =
+    VarianceInfo(isCovariant && that.isCovariant, isContravariant && that.isContravariant)
+  
+  /*  Flip the current variance if it encounters a contravariant position
+    */
+  def flip: VarianceInfo = VarianceInfo(isContravariant, isCovariant)
+  
+  override def toString: Str = show
+  
+  def show: Str = this match {
+    case (VarianceInfo(true, true)) => "±"
+    case (VarianceInfo(false, true)) => "-"
+    case (VarianceInfo(true, false)) => "+"
+    case (VarianceInfo(false, false)) => "="
+  }
+}
+
+object VarianceInfo {
+  val bi: VarianceInfo = VarianceInfo(true, true)
+  val co: VarianceInfo = VarianceInfo(true, false)
+  val contra: VarianceInfo = VarianceInfo(false, true)
+  val in: VarianceInfo = VarianceInfo(false, false)
+}
+

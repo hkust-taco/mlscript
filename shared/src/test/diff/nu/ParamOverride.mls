@@ -1,0 +1,113 @@
+:NewDefs
+
+
+class Base0(n: number)
+//│ class Base0(n: number)
+
+// TODO
+class Derived0(n: int) extends Base
+//│ ╔══[ERROR] Could not find definition `Base`
+//│ ║  l.8: 	class Derived0(n: int) extends Base
+//│ ╙──     	                               ^^^^
+//│ class Derived0(n: int)
+//│ Code generation encountered an error:
+//│   unresolved symbol Base
+
+
+mixin Base1(n: number) {
+  fun original = n
+}
+//│ mixin Base1(n: number) {
+//│   fun original: number
+//│ }
+
+:e
+mixin DerivedBad(n: int) extends Base
+//│ ╔══[ERROR] mixin definitions cannot yet extend parents
+//│ ║  l.25: 	mixin DerivedBad(n: int) extends Base
+//│ ╙──      	                                 ^^^^
+//│ mixin DerivedBad(n: int)
+
+mixin Derived1(n: int) {
+  fun foo = [n, this.n, super.n]
+}
+//│ mixin Derived1(n: int) {
+//│   super: {n: 'n}
+//│   this: {n: 'n0}
+//│   fun foo: (int, 'n0, 'n,)
+//│ }
+
+
+class Test0 extends Base1(1/2), Derived1(1)
+//│ class Test0() {
+//│   fun foo: (int, 1, number,)
+//│   fun original: number
+//│ }
+
+let t = Test0()
+//│ let t: Test0
+//│ t
+//│   = Test0 {}
+
+t.n
+//│ 1
+//│ res
+//│     = 1
+
+t.original
+//│ number
+//│ res
+//│     = 0.5
+
+t.foo
+//│ (int, 1, number,)
+//│ res
+//│     = [ 1, 1, 0.5 ]
+
+
+module Test1 extends Base1(1/2), Derived1(1) {
+  fun n = this.n
+}
+//│ module Test1() {
+//│   fun foo: (int, 1, number,)
+//│   fun n: 1
+//│   fun original: number
+//│ }
+
+:re
+Test1.n
+//│ 1
+//│ res
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded
+
+
+class Test2(n: string) extends Base1(1/2), Derived1(1) {
+  fun bar = [this.foo, n, this.n, this.original]
+}
+//│ class Test2(n: string) {
+//│   fun bar: ((int, string, number,), string, string, number,)
+//│   fun foo: (int, string, number,)
+//│   fun original: number
+//│ }
+
+Test2("test").bar
+//│ ((int, string, number,), string, string, number,)
+//│ res
+//│     = [ [ 1, 'test', 0.5 ], 'test', 'test', 0.5 ]
+
+
+class Test3(n: string) extends Base1(1/2), Derived1(length(n)) {
+  fun foo = [super.foo, n, this.original]
+}
+//│ class Test3(n: string) {
+//│   fun foo: ((int, string, number,), string, number,)
+//│   fun original: number
+//│ }
+
+Test3("test").foo
+//│ ((int, string, number,), string, number,)
+//│ res
+//│     = [ [ 4, 'test', 0.5 ], 'test', 0.5 ]
+
+

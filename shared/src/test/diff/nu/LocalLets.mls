@@ -9,7 +9,16 @@ let f =
 //│ ║  l.6: 	  let tmp = "ok"
 //│ ╙──     	      ^^^^^^^^^^
 //│ f: 123
-//│ Code generation encountered an error:
-//│   unsupported definitions in blocks
+//│  = 123
 
+
+// TODO allow
+let x : int | string
+let x = 1
+//│ x: int | string
+//│  = <missing implementation>
+//│ 1
+//│   <:  x:
+//│ int | string
+//│  = 1
 

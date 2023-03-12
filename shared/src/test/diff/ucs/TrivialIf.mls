@@ -11,14 +11,14 @@ class None: Option
 //│ Defined class Some
 //│ Defined class None
 //│ Option: () -> Option
-//│ Some: 'value -> (Some with {value: 'value})
+//│ Some: 'value -> (Some & {value: 'value})
 //│ None: () -> None
 
 fun getOrElse(opt, default) =
   if opt is
     Some(value) then value
     None then default
-//│ getOrElse: (None | (Some with {value: 'value}), 'value,) -> 'value
+//│ getOrElse: (None | Some & {value: 'value}, 'value,) -> 'value
 
 getOrElse(None(), 0)
 //│ res: 0
@@ -30,7 +30,7 @@ fun map(v, f) =
   if v is
     Some(x) then Some(f(x))
     None then None()
-//│ map: (None | (Some with {value: 'value}), 'value -> 'value0,) -> (None | (Some with {value: 'value0}))
+//│ map: (None | Some & {value: 'value}, 'value -> 'value0,) -> (None | Some & {value: 'value0})
 
 fun inc(x) = x + 5
 //│ inc: int -> int

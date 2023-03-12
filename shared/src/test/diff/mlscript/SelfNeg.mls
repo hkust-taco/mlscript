@@ -10,18 +10,18 @@ def foo: ('a -> (~'a -> 'a) -> 'a) -> 'a -> 'a
 
 :ns
 foo
-//│ res: ('a -> (~'a -> 'a) -> 'a) -> 'a -> 'a
+//│ res: forall 'a. ('a -> (~'a -> 'a) -> 'a) -> 'a -> 'a
 //│    = <no result>
 //│      foo is not implemented
 
 :ns
 r = foo (fun a -> fun f -> f a)
-//│ r: 'b
+//│ r: forall 'b 'a 'c 'd. 'b
 //│   where
 //│     'b :> 'a -> 'a
-//│     'a <: 'c & 'd
-//│     'd <: ~'a
-//│     'c <: 'a
+//│     'a <: 'd & 'c
+//│     'c <: ~'a
+//│     'd <: 'a
 //│  = <no result>
 //│    foo is not implemented
 
@@ -56,7 +56,7 @@ def foo: ('a -> (~'a -> anything) -> anything) -> MutArray['a]
 
 :ns
 r = foo (fun a -> fun f -> f a)
-//│ r: 'b
+//│ r: forall 'b 'a 'c. 'b
 //│   where
 //│     'b :> MutArray['a]
 //│     'a <: 'c
@@ -95,7 +95,7 @@ r[0] + 1
 
 :ns
 def bar: (('a & ~'a) -> 'b) -> 'b
-//│ bar: (nothing -> 'b) -> 'b
+//│ bar: forall 'b. (nothing -> 'b) -> 'b
 //│    = <missing implementation>
 
 def bar: (('a & int & ~'a) -> 'b) -> 'b
@@ -109,14 +109,14 @@ r = bar (fun x -> (x, x + 1, not x, x x))
 
 :ns
 r
-//│ res: 'b
+//│ res: forall 'b 'a 'c 'd. 'b
 //│   where
-//│     'b :> ('c, 'd, 'e, 'f,)
-//│     'e :> bool
-//│     'd :> int
+//│     'b :> forall 'e 'f. ('c, 'e, 'f, 'd,)
+//│     'f :> bool
+//│     'e :> int
 //│     'c :> 'a & int & ~'a
-//│        <: 'c -> 'f & bool & int
-//│     'a <: (bool | ~(int & ~'a)) & ('c -> 'f | ~(int & ~'a))
+//│        <: 'c -> 'd & bool & int
+//│     'a <: (bool | ~(int & ~'a)) & ('c -> 'd | ~(int & ~'a))
 //│    = <no result>
 //│      r and bar are not implemented
 

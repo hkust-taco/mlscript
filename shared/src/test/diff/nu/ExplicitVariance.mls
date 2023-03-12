@@ -1,0 +1,53 @@
+:NewDefs
+
+
+
+class Foo[out A](x: A)
+//│ class Foo[A](x: A)
+
+fun foo(x: Foo[int]): Foo[number] = x
+//│ fun foo: (x: Foo[int],) -> Foo[number]
+
+:e
+fun foo(x: Foo[number]): Foo[int] = x
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.12: 	fun foo(x: Foo[number]): Foo[int] = x
+//│ ║        	                                    ^
+//│ ╟── type `number` is not an instance of `int`
+//│ ║  l.12: 	fun foo(x: Foo[number]): Foo[int] = x
+//│ ║        	               ^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.12: 	fun foo(x: Foo[number]): Foo[int] = x
+//│ ╙──      	                             ^^^
+//│ fun foo: (x: Foo[number],) -> Foo[int]
+
+
+class Foo[in A](x: A -> int)
+//│ class Foo[A](x: A -> int)
+
+fun foo(x: Foo[number]): Foo[int] = x
+//│ fun foo: (x: Foo[number],) -> Foo[int]
+
+:e
+fun foo(x: Foo[int]): Foo[number] = x
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.32: 	fun foo(x: Foo[int]): Foo[number] = x
+//│ ║        	                                    ^
+//│ ╟── type `number` is not an instance of `int`
+//│ ║  l.32: 	fun foo(x: Foo[int]): Foo[number] = x
+//│ ║        	                          ^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.32: 	fun foo(x: Foo[int]): Foo[number] = x
+//│ ╙──      	               ^^^
+//│ fun foo: (x: Foo[int],) -> Foo[number]
+
+
+// :e // TODO check variance annotations!
+class Oops0[in A](x: A)
+//│ class Oops0[A](x: A)
+
+// :e // TODO check variance annotations!
+class Oops0[out A](x: A -> int)
+//│ class Oops0[A](x: A -> int)
+
+

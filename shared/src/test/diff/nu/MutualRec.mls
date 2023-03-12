@@ -1,0 +1,230 @@
+:NewDefs
+:NoJS // TODO
+
+
+
+class Foo()
+123
+//│ class Foo()
+//│ 123
+
+Foo
+//│ () -> Foo
+
+// TODO
+fun fooo(x) =
+  class C(y, z)
+  C(0, x)
+//│ ╔══[ERROR] Class parameters currently need type annotations
+//│ ║  l.16: 	  class C(y, z)
+//│ ╙──      	          ^
+//│ ╔══[ERROR] Class parameters currently need type annotations
+//│ ║  l.16: 	  class C(y, z)
+//│ ╙──      	             ^
+//│ fun fooo: error -> C
+
+
+
+fun foo = bar
+fun bar = foo
+//│ fun foo: nothing
+//│ fun bar: nothing
+
+foo(bar)
+//│ nothing
+
+
+fun foo = {x: foo}
+//│ fun foo: forall 'foo. 'foo
+//│   where
+//│     'foo :> {x: 'foo}
+
+
+fun foo = {x: bar}
+fun bar = {y: foo}
+//│ fun foo: forall 'foo. 'foo
+//│ fun bar: forall 'foo. {y: 'foo}
+//│ where
+//│   'foo :> {x: {y: 'foo}}
+
+// FIXME pretty-printing?
+foo
+//│ forall 'foo. 'foo
+//│   where
+//│     'foo :> {x: {y: 'foo}}
+
+:ns
+foo
+//│ forall 'foo. {x: {y: 'foo}}
+//│   where
+//│     'foo :> {x: {y: 'foo}}
+
+foo.x
+//│ 'x
+//│   where
+//│     'x :> {y: {x: 'x}}
+
+foo.x.y
+//│ 'foo
+//│   where
+//│     'foo :> {x: {y: 'foo}}
+
+
+fun foo(a) = {h: a, t: bar(a)}
+fun bar(b) = foo(b)
+//│ fun foo: forall 'a 'b. 'a -> 'b
+//│ fun bar: forall 'a 'b. 'a -> 'b
+//│ where
+//│   'b :> {h: 'a, t: 'b}
+
+:ns
+foo
+//│ forall 'a 'b 'c. 'a -> {h: 'a, t: 'c}
+//│   where
+//│     'c :> {h: 'a, t: 'c}
+//│     'a <: 'b
+//│     'b <: 'a
+
+
+fun foo(a) = {h1: a, t1: bar(a)}
+fun bar(b) = {h2: b, t2: foo(b)}
+//│ fun foo: forall 'a 'b 'c. 'a -> 'b
+//│ fun bar: forall 'a 'c. 'a -> 'c
+//│ where
+//│   'b :> {h1: 'a, t1: 'c}
+//│   'c :> {h2: 'a, t2: 'b}
+
+
+
+module Test0_1 {
+  fun a = Test0_2.b
+}
+module Test0_2 {
+  fun b = 123
+}
+//│ module Test0_1() {
+//│   fun a: 123
+//│ }
+//│ module Test0_2() {
+//│   fun b: 123
+//│ }
+
+Test0_1.a
+//│ 123
+
+class Test0_1 {
+  fun a = Test0_2().b
+}
+class Test0_2() {
+  fun b = 123
+}
+//│ class Test0_1() {
+//│   fun a: 123
+//│ }
+//│ class Test0_2() {
+//│   fun b: 123
+//│ }
+
+
+:e
+module Test1_1 {
+  fun a = Test1_2.b
+}
+module Test1_2 {
+  fun b = Test1_1.a
+}
+//│ ╔══[ERROR] unsupported indirectly recursive member access
+//│ ║  l.134: 	  fun b = Test1_1.a
+//│ ╙──       	                 ^^
+//│ module Test1_1() {
+//│   fun a: error
+//│ }
+//│ module Test1_2() {
+//│   fun b: error
+//│ }
+
+Test1_1.a
+//│ error
+
+
+:e
+class Test1_1 {
+  fun a = Test1_2().b
+}
+class Test1_2 {
+  fun b = Test1_1().a
+}
+//│ ╔══[ERROR] unsupported indirectly recursive member access
+//│ ║  l.155: 	  fun b = Test1_1().a
+//│ ╙──       	                   ^^
+//│ class Test1_1() {
+//│   fun a: error
+//│ }
+//│ class Test1_2() {
+//│   fun b: error
+//│ }
+
+
+// TODO check TV hygiene
+module Test2_1 {
+  fun t2 = Test2_2
+  fun a = Test2_2.b
+  fun d = Test2_2.e
+  fun n = 456
+}
+module Test2_2 {
+  fun b = 123
+  fun c = Test2_1.a
+  fun e = Test2_1.n
+}
+//│ ╔══[ERROR] unsupported indirectly recursive member access
+//│ ║  l.177: 	  fun c = Test2_1.a
+//│ ╙──       	                 ^^
+//│ module Test2_1() {
+//│   fun a: 123 | error
+//│   fun d: error
+//│   fun n: 456
+//│   fun t2: Test2_2
+//│ }
+//│ module Test2_2() {
+//│   fun b: 123
+//│   fun c: error
+//│   fun e: error
+//│ }
+
+Test2_1.t2.b
+//│ 123
+
+Test2_1.a
+//│ 123 | error
+
+// FIXME
+Test2_1.d
+//│ error
+
+Test2_1.n
+//│ 456
+
+// TODO leverage type annotation to find type
+class Test2(n: int) {
+  fun inc = Test3.inc(this)
+}
+module Test3 {
+  fun inc(t: Test2) = Test2(t.n + 1)
+}
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.213: 	  fun inc(t: Test2) = Test2(t.n + 1)
+//│ ║         	                            ^^^
+//│ ╟── type `Test2` does not have field 'n'
+//│ ║  l.213: 	  fun inc(t: Test2) = Test2(t.n + 1)
+//│ ║         	             ^^^^^
+//│ ╟── but it flows into reference with expected type `{n: ?n}`
+//│ ║  l.213: 	  fun inc(t: Test2) = Test2(t.n + 1)
+//│ ╙──       	                            ^
+//│ class Test2(n: int) {
+//│   fun inc: Test2 | error
+//│ }
+//│ module Test3() {
+//│   fun inc: (t: Test2,) -> Test2
+//│ }
+

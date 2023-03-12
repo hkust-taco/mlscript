@@ -16,12 +16,12 @@ def ty0: ('a & 'b & A | 'b & 'c & B | 'c & 'd & C | 'd & 'e & D | 'e & 'f & E) -
 
 :stats
 ty0 = ty0
-//│ (E & 'e & 'f | 'd & (C & 'c | D & 'e) | 'b & (A & 'a | B & 'c)) -> ('a, 'b, 'c, 'd, 'e, 'f,)
+//│ (C & 'c & 'd | 'b & (A & 'a | B & 'c) | 'e & (D & 'd | E & 'f)) -> ('a, 'b, 'c, 'd, 'e, 'f,)
 //│   <:  ty0:
-//│ (E & 'e & 'f | 'd & (C & 'c | D & 'e) | 'b & (A & 'a | B & 'c)) -> ('a, 'b, 'c, 'd, 'e, 'f,)
-//│ constrain calls  : 51
-//│ annoying  calls  : 35
-//│ subtyping calls  : 1617
+//│ (A & 'a & 'b | 'e & (D & 'd | E & 'f) | 'c & (B & 'b | C & 'd)) -> ('a, 'b, 'c, 'd, 'e, 'f,)
+//│ constrain calls  : 1
+//│ annoying  calls  : 0
+//│ subtyping calls  : 181
 
 def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
 //│ ty1: (A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, nothing,)
@@ -31,9 +31,9 @@ ty0 = ty1
 //│ (A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, nothing,)
 //│   <:  ty0:
 //│ (E & 'e & 'f | 'd & (C & 'c | D & 'e) | 'b & (A & 'a | B & 'c)) -> ('a, 'b, 'c, 'd, 'e, 'f,)
-//│ constrain calls  : 41
+//│ constrain calls  : 45
 //│ annoying  calls  : 25
-//│ subtyping calls  : 1183
+//│ subtyping calls  : 1120
 
 :stats
 :e
@@ -44,50 +44,14 @@ ty1 = ty0
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.40: 	ty1 = ty0
 //│ ║        	^^^^^^^^^
-//│ ╟── type `A & 'a` is not an instance of type `'b`
+//│ ╟── type `A & 'a` does not match type `'b`
 //│ ║  l.26: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
 //│ ║        	          ^^^^^^
 //│ ╟── Note: constraint arises from type variable:
 //│ ║  l.26: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
 //│ ╙──      	                                                              ^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.40: 	ty1 = ty0
-//│ ║        	^^^^^^^^^
-//│ ╟── type `B & 'b` is not an instance of type `'c`
-//│ ║  l.26: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
-//│ ║        	                   ^^^^^^
-//│ ╟── Note: constraint arises from type variable:
-//│ ║  l.26: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
-//│ ╙──      	                                                                  ^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.40: 	ty1 = ty0
-//│ ║        	^^^^^^^^^
-//│ ╟── type `C & 'c` is not an instance of type `'d`
-//│ ║  l.26: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
-//│ ║        	                            ^^^^^^
-//│ ╟── Note: constraint arises from type variable:
-//│ ║  l.26: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
-//│ ╙──      	                                                                      ^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.40: 	ty1 = ty0
-//│ ║        	^^^^^^^^^
-//│ ╟── type `D & 'd` is not an instance of type `'e`
-//│ ║  l.26: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
-//│ ║        	                                     ^^^^^^
-//│ ╟── Note: constraint arises from type variable:
-//│ ║  l.26: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
-//│ ╙──      	                                                                          ^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.40: 	ty1 = ty0
-//│ ║        	^^^^^^^^^
-//│ ╟── type `E & 'e` is not an instance of type `'f`
-//│ ║  l.26: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
-//│ ║        	                                              ^^^^^^
-//│ ╟── Note: constraint arises from type variable:
-//│ ║  l.26: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
-//│ ╙──      	                                                                              ^^
-//│ constrain calls  : 75
-//│ annoying  calls  : 55
-//│ subtyping calls  : 1336
+//│ constrain calls  : 70
+//│ annoying  calls  : 51
+//│ subtyping calls  : 1255
 
 

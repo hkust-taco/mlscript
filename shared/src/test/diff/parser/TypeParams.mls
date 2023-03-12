@@ -13,7 +13,7 @@ class Foo‹A›
 
 (1)
 //│ |(|1|)|
-//│ Parsed: {'(' 1, ')'}
+//│ Parsed: {'(' 1 ')'}
 
 
 foo<1,2,3>
@@ -107,13 +107,10 @@ foo<Str, Int>(2 + 3) & Bar<MyClass>("ok")
 //│ |foo|‹|Str|,| |Int|›|(|2| |+| |3|)| |&| |Bar|‹|MyClass|›|(|"ok"|)|
 //│ Parsed: {& (foo‹Str, Int› (+ (2,) (3,),),) (Bar‹MyClass› ("ok",),)}
 
-:pe
+// :pe
 foo[S, T](1, 2, 3) & Bar[U]("ok")
 //│ |foo|[|S|,| |T|]|(|1|,| |2|,| |3|)| |&| |Bar|[|U|]|(|"ok"|)|
-//│ ╔══[PARSE ERROR] Unexpected comma here
-//│ ║  l.111: 	foo[S, T](1, 2, 3) & Bar[U]("ok")
-//│ ╙──       	     ^
-//│ Parsed: {& ((foo)[S] (1, 2, 3,),) ((Bar)[U] ("ok",),)}
+//│ Parsed: {& (foo‹S, T› (1, 2, 3,),) (Bar‹U› ("ok",),)}
 
 class Foo<T> {}
 //│ |#class| |Foo|‹|T|›| |{||}|
@@ -121,7 +118,7 @@ class Foo<T> {}
 
 fun foo<T>(x: T): string = "rua"
 //│ |#fun| |foo|‹|T|›|(|x|#:| |T|)|#:| |string| |#=| |"rua"|
-//│ Parsed: {fun foo = x: T, => "rua" : TypeName(string)}
+//│ Parsed: {fun foo = (x: T,) => "rua" : string}
 
 foo<int>(42)
 //│ |foo|‹|int|›|(|42|)|

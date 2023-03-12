@@ -472,7 +472,10 @@ xpp a1
 //│ // End of generated code
 //│ xpp: ({mut x: int} & 'a) -> 'a
 //│    = [Function: xpp]
-//│ res: M
+//│ res: M with {mut x: 'x}
+//│   where
+//│     'x :> 233
+//│        <: int
 //│    = M { x: 667 }
 
 :js
