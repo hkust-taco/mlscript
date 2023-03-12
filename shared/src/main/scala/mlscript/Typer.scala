@@ -156,6 +156,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     val intBinOpTy = fun(singleTup(IntType), fun(singleTup(IntType), IntType)(noProv))(noProv)
     val numberBinOpTy = fun(singleTup(DecType), fun(singleTup(DecType), DecType)(noProv))(noProv)
     val numberBinPred = fun(singleTup(DecType), fun(singleTup(DecType), BoolType)(noProv))(noProv)
+    val stringBinPred = fun(singleTup(StrType), fun(singleTup(StrType), BoolType)(noProv))(noProv)
     Map(
       "true" -> TrueType,
       "false" -> FalseType,
@@ -176,6 +177,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       "le" -> numberBinPred,
       "gt" -> numberBinPred,
       "ge" -> numberBinPred,
+      "slt" -> stringBinPred,
+      "sle" -> stringBinPred,
+      "sgt" -> stringBinPred,
+      "sge" -> stringBinPred,
       "concat" -> fun(singleTup(StrType), fun(singleTup(StrType), StrType)(noProv))(noProv),
       "eq" -> {
         val v = freshVar(noProv)(1)

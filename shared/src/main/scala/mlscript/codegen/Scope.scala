@@ -40,6 +40,10 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
       "not",
       "ne",
       "eq",
+      "sgt",
+      "slt",
+      "sge",
+      "sle",
       "toString",
       "negate"
     ) foreach { name =>
