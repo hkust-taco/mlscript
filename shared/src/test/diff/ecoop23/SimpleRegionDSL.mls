@@ -186,16 +186,16 @@ mixin Text {
 
 :e
 module SizeText extends Text
-//│ ╔══[ERROR] unsupported indirectly recursive member access
+//│ ╔══[ERROR] Indirectly-recursive member should have type annotoation
 //│ ║  l.180: 	      Translate then concat("a translated region of size ", toString(this.size(e)))
 //│ ╙──       	                                                                         ^^^^^
-//│ ╔══[ERROR] unsupported indirectly recursive member access
+//│ ╔══[ERROR] Indirectly-recursive member should have type annotoation
 //│ ║  l.179: 	      Intersect then concat("the intersection of two regions of size ", toString(this.size(e)))
 //│ ╙──       	                                                                                     ^^^^^
-//│ ╔══[ERROR] unsupported indirectly recursive member access
+//│ ╔══[ERROR] Indirectly-recursive member should have type annotoation
 //│ ║  l.178: 	      Union then concat("the union of two regions of size ", toString(this.size(e)))
 //│ ╙──       	                                                                          ^^^^^
-//│ ╔══[ERROR] unsupported indirectly recursive member access
+//│ ╔══[ERROR] Indirectly-recursive member should have type annotoation
 //│ ║  l.177: 	      Outside(a) then concat("outside a region of size ", toString(this.size(a)))
 //│ ╙──       	                                                                       ^^^^^
 //│ module SizeText() {

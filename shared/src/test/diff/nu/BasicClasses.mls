@@ -71,7 +71,7 @@ class Base0(n) {
 //│ ╔══[ERROR] Class parameters currently need type annotations
 //│ ║  l.65: 	class Base0(n) {
 //│ ╙──      	            ^
-//│ ╔══[ERROR] unsupported indirectly recursive member access
+//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
 //│ ║  l.69: 	  fun oops = this.my
 //│ ╙──      	                 ^^^
 //│ class Base0(n: error) {

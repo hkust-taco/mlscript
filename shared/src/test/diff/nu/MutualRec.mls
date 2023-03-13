@@ -133,7 +133,7 @@ module Test1_1 {
 module Test1_2 {
   fun b = Test1_1.a
 }
-//│ ╔══[ERROR] unsupported indirectly recursive member access
+//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
 //│ ║  l.134: 	  fun b = Test1_1.a
 //│ ╙──       	                 ^^
 //│ module Test1_1() {
@@ -154,7 +154,7 @@ class Test1_1 {
 class Test1_2 {
   fun b = Test1_1().a
 }
-//│ ╔══[ERROR] unsupported indirectly recursive member access
+//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
 //│ ║  l.155: 	  fun b = Test1_1().a
 //│ ╙──       	                   ^^
 //│ class Test1_1() {
@@ -177,7 +177,7 @@ module Test2_2 {
   fun c = Test2_1.a
   fun e = Test2_1.n
 }
-//│ ╔══[ERROR] unsupported indirectly recursive member access
+//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
 //│ ║  l.177: 	  fun c = Test2_1.a
 //│ ╙──       	                 ^^
 //│ module Test2_1() {
@@ -212,11 +212,8 @@ class Test2(n: int) {
 module Test3 {
   fun inc(t: Test2) = Test2(t.n + 1)
 }
-//│ ╔══[ERROR] unsupported indirectly recursive member access
-//│ ║  l.213: 	  fun inc(t: Test2) = Test2(t.n + 1)
-//│ ╙──       	                             ^^
 //│ class Test2(n: int) {
-//│   fun inc: Test2 | error
+//│   fun inc: Test2
 //│ }
 //│ module Test3() {
 //│   fun inc: (t: Test2,) -> Test2

@@ -30,14 +30,20 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     val info = ctx.tyDefs2(clsNme)
     // require(!info.isComputing)
     
+    // TODO intersect with found signature!
+    val fromRft = rfnt(fld)
+    
     if (info.isComputing) {
       
-      rfnt(fld) match {
-        case S(fty) =>
-          fty
+      info.typedFields.get(fld) match {
+        case S(fty) => fty
         case N =>
-          // TODO allow when annotated
-          err(msg"unsupported indirectly recursive member access", fld.toLoc).toUpper(noProv)
+          fromRft match {
+            case S(fty) =>
+              fty
+            case N =>
+              err(msg"Indirectly-recursive member should have type annotation", fld.toLoc).toUpper(noProv)
+          }
       }
       
     } else info.complete() match {
@@ -427,6 +433,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       annoyingImpl(ls, done_ls, rs, done_rs)
     }
     
+    // TODO improve by moving things to the right side *before* branching out in the search!
     def annoyingImpl(ls: Ls[SimpleType], done_ls: LhsNf, rs: Ls[SimpleType], done_rs: RhsNf)
           (implicit cctx: ConCtx, prevCctxs: Ls[ConCtx], ctx: Ctx, shadows: Shadows, dbgHelp: Str = "Case")
           : Unit =

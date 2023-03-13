@@ -1009,7 +1009,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       //   typeTerm(Blk(stmts))(newCtx, lvl, raise)
       case Blk(stmts) =>
         if (newDefs) {
-          val ttu = typeTypingUnit(TypingUnit(stmts), allowPure = false)
+          val ttu = typeTypingUnit(TypingUnit(stmts), topLevel = false)
           // TODO check unused defs
           ttu.result.getOrElse(UnitType)
         } else typeTerms(stmts, false, Nil)(ctx.nest, raise, prov, vars, genLambdas)

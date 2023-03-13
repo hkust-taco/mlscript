@@ -1,42 +1,32 @@
 :NewDefs
 
 
-// TODO complain abstract
+:e
 module Test<A> {
   fun foo: A => A
 }
+//│ ╔══[ERROR] Member foo is declared but not defined
+//│ ║  l.6: 	  fun foo: A => A
+//│ ╙──     	      ^^^
 //│ module Test[A]() {
 //│   fun foo: A -> A
 //│ }
 
 Test.foo
-//│ (??A & 'A) -> ('A | ??A0)
+//│ forall 'A. 'A -> 'A
 //│ res
 //│     = undefined
 
-:e
+:re
 Test.foo(1)
-//│ ╔══[ERROR] Type error in application
-//│ ║  l.18: 	Test.foo(1)
-//│ ║        	^^^^^^^^^^^
-//│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.18: 	Test.foo(1)
-//│ ╙──      	         ^
-//│ error | ??A
+//│ 1
 //│ res
 //│ Runtime error:
 //│   TypeError: Test.foo is not a function
 
-:e
+:re
 Test.foo(error) + 1
-//│ ╔══[ERROR] Type error in operator application
-//│ ║  l.31: 	Test.foo(error) + 1
-//│ ║        	^^^^^^^^^^^^^^^^^
-//│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.31: 	Test.foo(error) + 1
-//│ ║        	^^^^^^^^^^^^^^^
-//│ ╙── into type `int`
-//│ error | int
+//│ int
 //│ res
 //│ Runtime error:
 //│   Error: unexpected runtime error
@@ -44,7 +34,7 @@ Test.foo(error) + 1
 :e
 Test<int> .foo
 //│ ╔══[ERROR] Type application syntax is not yet supported
-//│ ║  l.45: 	Test<int> .foo
+//│ ║  l.35: 	Test<int> .foo
 //│ ╙──      	^^^^^^^^^
 //│ error
 //│ res
@@ -53,7 +43,7 @@ Test<int> .foo
 :e
 (Test<int>).foo
 //│ ╔══[ERROR] Type application syntax is not yet supported
-//│ ║  l.54: 	(Test<int>).foo
+//│ ║  l.44: 	(Test<int>).foo
 //│ ╙──      	 ^^^^^^^^^
 //│ error
 //│ res
@@ -68,10 +58,10 @@ Test
 :e
 Test:  Test<'a>
 //│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.69: 	Test:  Test<'a>
+//│ ║  l.59: 	Test:  Test<'a>
 //│ ║        	^^^^
 //│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.69: 	Test:  Test<'a>
+//│ ║  l.59: 	Test:  Test<'a>
 //│ ║        	            ^^
 //│ ╟── back into type variable `A`
 //│ ║  l.5: 	module Test<A> {
@@ -85,19 +75,46 @@ Test:  Test<'a>
 
 
 fun test(x) = if x is Test then x.foo
-//│ fun test: forall 'A. Test['A] -> 'A -> 'A
+//│ fun test: forall 'A. Test['A] -> (forall 'A0. 'A0 -> 'A0)
 
 :e
 test(Test)
 //│ ╔══[ERROR] Type error in application
-//│ ║  l.91: 	test(Test)
+//│ ║  l.81: 	test(Test)
 //│ ║        	^^^^^^^^^^
 //│ ╟── type variable `A` leaks out of its scope
 //│ ║  l.5: 	module Test<A> {
 //│ ╙──     	            ^
-//│ (??A & 'A) -> ('A | ??A0) | error
+//│ forall 'A. 'A -> 'A | error
 //│ res
 //│     = undefined
+
+
+module Test<A> {
+  fun foo = id
+}
+//│ module Test[A]() {
+//│   fun foo: forall 'a. 'a -> 'a
+//│ }
+
+Test.foo
+//│ forall 'a. 'a -> 'a
+//│ res
+//│     = [Function: id]
+
+
+module Test<A> {
+  fun foo: A => A
+  fun foo = id
+}
+//│ module Test[A]() {
+//│   fun foo: A -> A
+//│ }
+
+Test.foo
+//│ forall 'A. 'A -> 'A
+//│ res
+//│     = [Function: id]
 
 
 

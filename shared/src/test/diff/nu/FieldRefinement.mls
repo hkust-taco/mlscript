@@ -1,0 +1,23 @@
+:NewDefs
+
+
+class Foo(x: int) {
+  fun bar = x
+}
+//│ class Foo(x: int) {
+//│   fun bar: int
+//│ }
+
+let foo: Foo & { x: 0 | 1 }
+//│ let foo: Foo & {x: 0 | 1}
+//│ foo
+//│     = <missing implementation>
+
+// TODO refine
+foo.x
+//│ int
+//│ res
+//│     = <no result>
+//│       foo is not implemented
+
+

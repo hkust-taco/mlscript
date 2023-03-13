@@ -13,6 +13,7 @@
 
 class List<A> {
   fun match: forall 'res; (ifNil: () => 'res, ifCons: (A, List[A]) => 'res) => 'res
+  fun match = error
 }
 let Nil: () => List<'a>
 let Cons: (head: 'a, tail: List<'a>) => List<'a>
@@ -118,7 +119,7 @@ Test1.eval(Nil(), Var("a"))
 Test1.eval(Nil(), Abs("b", Var("a")))
 //│ 'a
 //│   where
-//│     'a :> App['a] | Abs['a] | Var
+//│     'a :> Var | App['a] | Abs['a]
 
 Test1.eval(Cons(("c", Var("d")), Nil()), App(Abs("b", Var("b")), Var("c")))
 //│ 'a
@@ -143,7 +144,7 @@ fun map_expr(f, v) =
     Num then v
     Add(l, r) then Add(f(l), f(r))
     Mul(l, r) then Mul(f(l), f(r))
-//│ fun map_expr: forall 'l 'A 'l0 'A0. ('l -> 'A & 'l0 -> 'A0, Add['l] | Mul['l0] | Num | Var,) -> (Add['A] | Mul['A0] | Num | Var)
+//│ fun map_expr: forall 'A 'l 'A0 'l0. ('l -> 'A0 & 'l0 -> 'A, Add['l] | Mul['l0] | Num | Var,) -> (Add['A0] | Mul['A] | Num | Var)
 
 mixin EvalExpr {
   fun eval(sub, v) =
