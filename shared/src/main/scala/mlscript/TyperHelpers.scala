@@ -963,13 +963,18 @@ abstract class TyperHelpers { Typer: Typer =>
   trait TypeRefImpl { self: TypeRef =>
     
     def canExpand(implicit ctx: Ctx): Bool =
-      ctx.tyDefs2.get(defn.name).forall(_.result.isDefined)
+      ctx.tyDefs2.get(defn.name).forall(info =>
+        // * Object types do not need to be completed in order to be expanded
+        info.kind.isInstanceOf[ObjDefKind]
+        || info.result.isDefined)
     def expand(implicit ctx: Ctx, raise: Raise): SimpleType = {
       ctx.tyDefs2.get(defn.name) match {
-        case S(lti) =>
-          lti.complete()
-          if (lti.result.isEmpty) // * This can only happen if completion yielded an error
-            return errType
+        case S(info) =>
+          if (!info.kind.isInstanceOf[ObjDefKind]) {
+            info.complete()
+            if (info.result.isEmpty) // * This can only happen if completion yielded an error
+              return errType
+          }
         case N =>
       }
       expandWith(paramTags = true)
@@ -986,16 +991,22 @@ abstract class TyperHelpers { Typer: Typer =>
             substSyntax(td.body)(td.tparams.lazyZip(targs).map {
               case (tp, ta) => SkolemTag(tp._2.level, tp._2)(noProv) -> ta
             }.toMap)
-          case S(td: TypedNuCls) =>
-            assert(td.tparams.size === targs.size)
-            clsNameToNomTag(td.td)(provTODO, ctx) &
-              RecordType(td.tparams.lazyZip(targs).map {
-                case ((tn, tv, vi), ta) => // TODO use vi
-                  val fldNme = td.td.nme.name + "#" + tn.name
-                  Var(fldNme).withLocOf(tn) -> FieldType(S(ta), ta)(provTODO)
-              })(provTODO)
-          case S(d) => wat("unexpected declaration in type reference", d)
-          case N => lastWords("cannot expand unforced type reference") // Definition was not forced yet, which indicates an error (hopefully)
+          case _ =>
+            info.decl match {
+              case td: NuTypeDef if td.kind.isInstanceOf[ObjDefKind] =>
+                assert(td.tparams.size === targs.size)
+                clsNameToNomTag(td)(provTODO, ctx) &
+                  RecordType(info.tparams.lazyZip(targs).map {
+                    case ((tn, tv, vi), ta) => // TODO use vi
+                      val fldNme = td.nme.name + "#" + tn.name
+                      Var(fldNme).withLocOf(tn) -> FieldType(S(ta), ta)(provTODO)
+                  })(provTODO)
+              case td: NuTypeDef if td.kind is Als =>
+                // * Definition was not forced yet, which indicates an error (hopefully)
+                lastWords("cannot expand unforced type alias")
+              case d =>
+                wat("unexpected declaration in type reference", d)
+            }
         }
     }.getOrElse {
       val td = ctx.tyDefs(defn.name)

@@ -112,8 +112,8 @@ trait TypeSimplifier { self: Typer =>
         case N =>
           // v -> default :: Nil
           ctx.tyDefs2.get(prefix) match {
-            case S(td) =>
-              td.result match {
+            case S(info) =>
+              info.result match {
                 case S(cls: TypedNuCls) =>
                   cls.varianceOf(cls.tparams.find(_._1.name === postfix).getOrElse(die)._2) match {
                     case VarianceInfo(true, true) => Nil
@@ -122,7 +122,8 @@ trait TypeSimplifier { self: Typer =>
                       else if (contra) v -> FieldType(fty.lb.map(process(_, N)), TopType)(fty.prov) :: Nil
                       else  v -> default :: Nil
                   }
-                case _ => die
+                case N =>
+                  ??? // TODO use info.explicitVariances
               }
             case N => die
           }

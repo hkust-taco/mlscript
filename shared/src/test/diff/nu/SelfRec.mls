@@ -100,66 +100,44 @@ class Foo6[A](x: A) {
 //│   fun test3: (error,)
 //│ }
 
+module N
+//│ module N()
+
 :e
-class Foo7[A](head: A, tail: Foo7[A] | 0) {
+class Foo7[A](head: A, tail: Foo7[A] | N) {
   fun test1 = if tail is
-    0 then head
+    N then head
     _ then tail.test1
 }
-//│ ╔══[ERROR] Unhandled cyclic definition
-//│ ║  l.104: 	class Foo7[A](head: A, tail: Foo7[A] | 0) {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.105: 	  fun test1 = if tail is
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.106: 	    0 then head
-//│ ║         	^^^^^^^^^^^^^^^
-//│ ║  l.107: 	    _ then tail.test1
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.108: 	}
-//│ ╙──       	^
 //│ ╔══[ERROR] unsupported indirectly recursive member access
-//│ ║  l.107: 	    _ then tail.test1
+//│ ║  l.110: 	    _ then tail.test1
 //│ ╙──       	               ^^^^^^
-//│ class Foo7[A](head: A, tail: 0 | Foo7[A]) {
+//│ class Foo7[A](head: A, tail: Foo7[A] | N) {
 //│   fun test1: A | error
 //│ }
 
 // TODO support
-class Foo7_A[A](head: A, tail: Foo7_A[A] | 0) {
+class Foo7_A[A](head: A, tail: Foo7_A[A] | N) {
   fun test1: A = if tail is
-    0 then head
+    N then head
     _ then tail.test1
 }
-//│ ╔══[ERROR] Unhandled cyclic definition
-//│ ║  l.128: 	class Foo7_A[A](head: A, tail: Foo7_A[A] | 0) {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.129: 	  fun test1: A = if tail is
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.130: 	    0 then head
-//│ ║         	^^^^^^^^^^^^^^^
-//│ ║  l.131: 	    _ then tail.test1
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.132: 	}
-//│ ╙──       	^
 //│ ╔══[ERROR] unsupported indirectly recursive member access
-//│ ║  l.131: 	    _ then tail.test1
+//│ ║  l.123: 	    _ then tail.test1
 //│ ╙──       	               ^^^^^^
-//│ class Foo7_A[A](head: A, tail: 0 | Foo7_A[A]) {
+//│ class Foo7_A[A](head: A, tail: Foo7_A[A] | N) {
 //│   fun test1: A
 //│ }
 
 :e
 class Foo8[A](x: A) {
   fun test1[B](y: B): A =
-    let tmp = Foo6(y).test1(x)
+    let tmp = Foo8(y).test1(x)
     x
 }
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.154: 	    let tmp = Foo6(y).test1(x)
-//│ ║         	              ^^^^^^^^^^^^^^^^
-//│ ╟── field selection of type `(?test,)` is not a function
-//│ ║  l.154: 	    let tmp = Foo6(y).test1(x)
-//│ ╙──       	              ^^^^^^^^^^^^^
+//│ ╔══[ERROR] unsupported indirectly recursive member access
+//│ ║  l.135: 	    let tmp = Foo8(y).test1(x)
+//│ ╙──       	                     ^^^^^^
 //│ class Foo8[A](x: A) {
 //│   fun test1: (y: anything,) -> A
 //│ }
