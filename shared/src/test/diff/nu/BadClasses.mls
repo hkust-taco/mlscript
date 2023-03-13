@@ -99,9 +99,9 @@ class Foo[A] { 42: A }
 //│ class Foo[A]()
 
 
-:e // TODO better error
+:e
 class C1 { fun oops = this.x }
-//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ╔══[ERROR] Class `C1` does not contain member `x`
 //│ ║  l.103: 	class C1 { fun oops = this.x }
 //│ ╙──       	                          ^^
 //│ class C1() {

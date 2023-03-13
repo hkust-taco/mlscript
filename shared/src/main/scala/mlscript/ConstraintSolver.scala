@@ -33,6 +33,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     // TODO intersect with found signature!
     val fromRft = rfnt(fld)
     
+    def nope =
+      err(msg"${info.decl.kind.str.capitalize} `${info.decl.name}` does not contain member `${fld.name}`",
+        fld.toLoc).toUpper(noProv)
+    
     if (info.isComputing) {
       
       info.typedFields.get(fld) match {
@@ -42,7 +46,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             case S(fty) =>
               fty
             case N =>
-              err(msg"Indirectly-recursive member should have type annotation", fld.toLoc).toUpper(noProv)
+              if (info.allFields.contains(fld))
+                err(msg"Indirectly-recursive member should have type annotation", fld.toLoc).toUpper(noProv)
+              else
+                nope
           }
       }
       
@@ -57,8 +64,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             err(msg"access to ${cls.td.kind.str} member not yet supported",
               fld.toLoc).toUpper(noProv)
           case N =>
-            err(msg"${cls.td.kind.str} `${cls.td.nme.name}` does not contain member `${fld.name}`",
-              fld.toLoc).toUpper(noProv)
+            nope
         }
         println(s"Lookup ${cls.td.nme.name}.${fld.name} : $raw where ${raw.ub.showBounds}")
         

@@ -510,6 +510,15 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
         fd.nme.name -> TypedNuFun(level, fd, ty)
       }.toList
     
+    lazy val allFields: Set[Var] = decl match {
+      case td: NuTypeDef =>
+        // TODO also get fields from parents!
+        (td.params.fields.iterator.flatMap(_._1) ++ td.body.entities.iterator.collect {
+          case fd: NuFunDef => fd.nme
+        }).toSet
+      case _: NuFunDef => Set.empty
+    }
+    
     lazy val typedFields: Map[Var, FieldType] =
       typedParams.toMap ++ typedSignatures.iterator.map(fd_ty => fd_ty._1.nme -> fd_ty._2.toUpper(noProv))
     

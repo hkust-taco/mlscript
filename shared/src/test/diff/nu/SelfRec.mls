@@ -75,19 +75,19 @@ class Foo5(x: int) {
 
 :e
 class Foo6[A](x: A) {
-  fun test1 = [Foo6(x).test]
-  fun test2 = [Foo6(123).test]
-  fun test3 = [Foo6([x]).test]
+  fun test1 = [Foo6(x).test1]
+  fun test2 = [Foo6(123).test2]
+  fun test3 = [Foo6([x]).test3]
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.78: 	  fun test1 = [Foo6(x).test]
-//│ ╙──      	                      ^^^^^
+//│ ║  l.78: 	  fun test1 = [Foo6(x).test1]
+//│ ╙──      	                      ^^^^^^
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.79: 	  fun test2 = [Foo6(123).test]
-//│ ╙──      	                        ^^^^^
+//│ ║  l.79: 	  fun test2 = [Foo6(123).test2]
+//│ ╙──      	                        ^^^^^^
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.80: 	  fun test3 = [Foo6([x]).test]
-//│ ╙──      	                        ^^^^^
+//│ ║  l.80: 	  fun test3 = [Foo6([x]).test3]
+//│ ╙──      	                        ^^^^^^
 //│ class Foo6[A](x: A) {
 //│   fun test1: (error,)
 //│   fun test2: (error,)
