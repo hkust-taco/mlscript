@@ -52,26 +52,40 @@ fun foo(x) = if x is Pair(a, b) then a > b else false
 fun foo(x) = x is
   Pair
   Int
-//│ /!!!\ Uncaught error: java.lang.Exception: illegal pattern: Blk(...)
+//│ ╔══[ERROR] illegal pattern
+//│ ║  l.53: 	  Pair
+//│ ║        	  ^^^^
+//│ ║  l.54: 	  Int
+//│ ╙──      	^^^^^
+//│ foo: anything -> error
+//│ Code generation encountered an error:
+//│   if expression was not desugared
 
 // TODO proper error
 fun foo(x) = x is
   Pair(a, b) and a > b
   Int
-//│ /!!!\ Uncaught error: java.lang.Exception: illegal pattern: Blk(...)
+//│ ╔══[ERROR] illegal pattern
+//│ ║  l.66: 	  Pair(a, b) and a > b
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.67: 	  Int
+//│ ╙──      	^^^^^
+//│ foo: anything -> error
+//│ Code generation encountered an error:
+//│   if expression was not desugared
 
 // TODO support `|`
 fun foo(x) = x is Pair(a, b) | Int
 fun foo(x) = x is (Pair(a, b) and a > b) | Int
 //│ ╔══[ERROR] Cannot find operator `|` in the context
-//│ ║  l.64: 	fun foo(x) = x is Pair(a, b) | Int
+//│ ║  l.78: 	fun foo(x) = x is Pair(a, b) | Int
 //│ ╙──      	                             ^
 //│ foo: anything -> error
 //│ ╔══[ERROR] Cannot find operator `|` in the context
-//│ ║  l.65: 	fun foo(x) = x is (Pair(a, b) and a > b) | Int
+//│ ║  l.79: 	fun foo(x) = x is (Pair(a, b) and a > b) | Int
 //│ ╙──      	                                         ^
 //│ foo: anything -> error
 //│ Code generation encountered an error:
-//│   if expression has not been desugared
+//│   if expression was not desugared
 
 

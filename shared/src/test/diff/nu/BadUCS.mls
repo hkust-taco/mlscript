@@ -77,15 +77,8 @@ fun foo(x) = if x is M() then 0
 //│   if expression was not desugared
 
 
-:e
-:ge
 fun foo0(x, y) = if x is y then 0
-//│ ╔══[ERROR] Cannot find constructor `y` in scope
-//│ ║  l.82: 	fun foo0(x, y) = if x is y then 0
-//│ ╙──      	                         ^
-//│ fun foo0: (anything, anything,) -> error
-//│ Code generation encountered an error:
-//│   if expression was not desugared
+//│ fun foo0: (anything, anything,) -> 0
 
 
 fun foo = 0
@@ -95,7 +88,7 @@ fun foo = 0
 :ge
 fun foo0(x) = if x is foo() then 0
 //│ ╔══[ERROR] Illegal pattern `foo`
-//│ ║  l.96: 	fun foo0(x) = if x is foo() then 0
+//│ ║  l.89: 	fun foo0(x) = if x is foo() then 0
 //│ ╙──      	                      ^^^
 //│ fun foo0: anything -> error
 //│ Code generation encountered an error:
@@ -105,11 +98,11 @@ fun foo0(x) = if x is foo() then 0
 :ge
 fun foo(x) = if x is foo() then 0
 //│ ╔══[ERROR] Unhandled cyclic definition
-//│ ║  l.106: 	fun foo(x) = if x is foo() then 0
-//│ ╙──       	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.99: 	fun foo(x) = if x is foo() then 0
+//│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Illegal pattern `foo`
-//│ ║  l.106: 	fun foo(x) = if x is foo() then 0
-//│ ╙──       	                     ^^^
+//│ ║  l.99: 	fun foo(x) = if x is foo() then 0
+//│ ╙──      	                     ^^^
 //│ fun foo: anything -> error
 //│ Code generation encountered an error:
 //│   if expression was not desugared

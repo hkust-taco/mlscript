@@ -77,16 +77,7 @@ fun f(x, y) = if x is
   else if y is
     True then true
     False then false
-//│ ╔══[ERROR] The match is not exhaustive.
-//│ ║  l.75: 	    True and y is True then true
-//│ ║        	             ^^^^^^^^^
-//│ ╟── The scrutinee at this position misses 1 case.
-//│ ║  l.75: 	    True and y is True then true
-//│ ║        	             ^
-//│ ╙── [Missing Case 1/1] `False`
-//│ fun f: (anything, anything,) -> error
-//│ Code generation encountered an error:
-//│   if expression was not desugared
+//│ fun f: (anything, False | True,) -> bool
 
 // TODO support `else if`
 fun f(x, y) = if x is
@@ -96,13 +87,27 @@ fun f(x, y) = if x is
     True and x is False then true
     False and x is True then false
 //│ ╔══[ERROR] The match is not exhaustive.
-//│ ║  l.93: 	    True and y is True then true
-//│ ║        	             ^^^^^^^^^
+//│ ║  l.87: 	    True and x is False then true
+//│ ║        	             ^^^^^^^^^^
 //│ ╟── The scrutinee at this position misses 1 case.
-//│ ║  l.93: 	    True and y is True then true
+//│ ║  l.87: 	    True and x is False then true
 //│ ║        	             ^
-//│ ╙── [Missing Case 1/1] `False`
-//│ fun f: (anything, anything,) -> error
+//│ ╙── [Missing Case 1/1] `True`
+//│ ╔══[ERROR] The match is not exhaustive.
+//│ ║  l.87: 	    True and x is False then true
+//│ ║        	             ^^^^^^^^^^
+//│ ╟── The scrutinee at this position misses 1 case.
+//│ ║  l.87: 	    True and x is False then true
+//│ ║        	             ^
+//│ ╙── [Missing Case 1/1] `True`
+//│ ╔══[ERROR] The match is not exhaustive.
+//│ ║  l.87: 	    True and x is False then true
+//│ ║        	             ^^^^^^^^^^
+//│ ╟── The scrutinee at this position misses 1 case.
+//│ ║  l.87: 	    True and x is False then true
+//│ ║        	             ^
+//│ ╙── [Missing Case 1/1] `True`
+//│ fun f: (anything, anything,) -> (error | false | true)
 //│ Code generation encountered an error:
 //│   if expression was not desugared
 

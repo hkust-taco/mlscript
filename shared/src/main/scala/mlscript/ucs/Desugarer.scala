@@ -614,7 +614,7 @@ class Desugarer extends TypeDefs { self: Typer =>
         case IfThenElse(_, whenTrue, whenFalse) =>
           rec(whenTrue)
           rec(whenFalse)
-        case Match(scrutinee, branches, _) =>
+        case Match(scrutinee, branches, default) =>
           val key = getScurtineeKey(scrutinee)
           branches.foreach { mutCase =>
             val patternMap = m.getOrElseUpdate( key, MutMap.empty)
@@ -623,6 +623,7 @@ class Desugarer extends TypeDefs { self: Typer =>
             }
             rec(mutCase.consequent)
           }
+          default.foreach(rec)
       } finally indent -= 1
     }
     rec(t)
