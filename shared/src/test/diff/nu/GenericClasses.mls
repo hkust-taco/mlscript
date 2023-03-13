@@ -109,7 +109,7 @@ None.toArray
 
 
 type Option<A> = Some<A> | None
-//│ type Option[A] = None | Some[A]
+//│ type Option[A] = Some[A] | None
 
 
 

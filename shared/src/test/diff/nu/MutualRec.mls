@@ -212,15 +212,9 @@ class Test2(n: int) {
 module Test3 {
   fun inc(t: Test2) = Test2(t.n + 1)
 }
-//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ╔══[ERROR] unsupported indirectly recursive member access
 //│ ║  l.213: 	  fun inc(t: Test2) = Test2(t.n + 1)
-//│ ║         	                            ^^^
-//│ ╟── type `Test2` does not have field 'n'
-//│ ║  l.213: 	  fun inc(t: Test2) = Test2(t.n + 1)
-//│ ║         	             ^^^^^
-//│ ╟── but it flows into reference with expected type `{n: ?n}`
-//│ ║  l.213: 	  fun inc(t: Test2) = Test2(t.n + 1)
-//│ ╙──       	                            ^
+//│ ╙──       	                             ^^
 //│ class Test2(n: int) {
 //│   fun inc: Test2 | error
 //│ }

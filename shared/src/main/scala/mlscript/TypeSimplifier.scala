@@ -90,7 +90,8 @@ trait TypeSimplifier { self: Typer =>
         ProvType(process(ty, parent, canDistribForall = canDistribForall))(ty.prov)
       case ProvType(ty) => process(ty, parent, canDistribForall = canDistribForall)
       
-      case tr @ TypeRef(defn, targs) if builtinTypes.contains(defn) => process(tr.expand, parent)
+      case tr @ TypeRef(defn, targs) if builtinTypes.contains(defn) && tr.canExpand =>
+        process(tr.expandOrCrash, parent)
       
       case RecordType(fields) => RecordType.mk(fields.flatMap { case (v @ Var(fnme), fty) =>
         // * We make a pass to transform the LB and UB of variant type parameter fields into their exterma

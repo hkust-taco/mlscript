@@ -54,4 +54,114 @@ Foo3(1).foo
 //│ res
 //│     = [Function (anonymous)] { class: [class Foo3] }
 
+:e
+class Foo4 {
+  fun test = [Foo4.test]
+}
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.59: 	  fun test = [Foo4.test]
+//│ ║        	              ^^^^^^^^^
+//│ ╟── reference of type `() -> #Foo4` does not have field 'test'
+//│ ║  l.59: 	  fun test = [Foo4.test]
+//│ ╙──      	              ^^^^
+//│ class Foo4() {
+//│   fun test: (error,)
+//│ }
+
+:e
+class Foo5(x: int) {
+  fun test = [Foo5(5).test]
+}
+//│ ╔══[ERROR] unsupported indirectly recursive member access
+//│ ║  l.73: 	  fun test = [Foo5(5).test]
+//│ ╙──      	                     ^^^^^
+//│ class Foo5(x: int) {
+//│   fun test: (error,)
+//│ }
+
+:e
+class Foo6[A](x: A) {
+  fun test1 = [Foo6(x).test]
+  fun test2 = [Foo6(123).test]
+  fun test3 = [Foo6([x]).test]
+}
+//│ ╔══[ERROR] unsupported indirectly recursive member access
+//│ ║  l.84: 	  fun test1 = [Foo6(x).test]
+//│ ╙──      	                      ^^^^^
+//│ ╔══[ERROR] unsupported indirectly recursive member access
+//│ ║  l.85: 	  fun test2 = [Foo6(123).test]
+//│ ╙──      	                        ^^^^^
+//│ ╔══[ERROR] unsupported indirectly recursive member access
+//│ ║  l.86: 	  fun test3 = [Foo6([x]).test]
+//│ ╙──      	                        ^^^^^
+//│ class Foo6[A](x: A) {
+//│   fun test1: (error,)
+//│   fun test2: (error,)
+//│   fun test3: (error,)
+//│ }
+
+:e
+class Foo7[A](head: A, tail: Foo7[A] | 0) {
+  fun test1 = if tail is
+    0 then head
+    _ then tail.test1
+}
+//│ ╔══[ERROR] Unhandled cyclic definition
+//│ ║  l.104: 	class Foo7[A](head: A, tail: Foo7[A] | 0) {
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.105: 	  fun test1 = if tail is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.106: 	    0 then head
+//│ ║         	^^^^^^^^^^^^^^^
+//│ ║  l.107: 	    _ then tail.test1
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.108: 	}
+//│ ╙──       	^
+//│ ╔══[ERROR] unsupported indirectly recursive member access
+//│ ║  l.107: 	    _ then tail.test1
+//│ ╙──       	               ^^^^^^
+//│ class Foo7[A](head: A, tail: 0 | Foo7[A]) {
+//│   fun test1: A | error
+//│ }
+
+// TODO support
+class Foo7_A[A](head: A, tail: Foo7_A[A] | 0) {
+  fun test1: A = if tail is
+    0 then head
+    _ then tail.test1
+}
+//│ ╔══[ERROR] Unhandled cyclic definition
+//│ ║  l.128: 	class Foo7_A[A](head: A, tail: Foo7_A[A] | 0) {
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.129: 	  fun test1: A = if tail is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.130: 	    0 then head
+//│ ║         	^^^^^^^^^^^^^^^
+//│ ║  l.131: 	    _ then tail.test1
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.132: 	}
+//│ ╙──       	^
+//│ ╔══[ERROR] unsupported indirectly recursive member access
+//│ ║  l.131: 	    _ then tail.test1
+//│ ╙──       	               ^^^^^^
+//│ class Foo7_A[A](head: A, tail: 0 | Foo7_A[A]) {
+//│   fun test1: A
+//│ }
+
+:e
+class Foo8[A](x: A) {
+  fun test1[B](y: B): A =
+    let tmp = Foo6(y).test1(x)
+    x
+}
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.154: 	    let tmp = Foo6(y).test1(x)
+//│ ║         	              ^^^^^^^^^^^^^^^^
+//│ ╟── field selection of type `(?test,)` is not a function
+//│ ║  l.154: 	    let tmp = Foo6(y).test1(x)
+//│ ╙──       	              ^^^^^^^^^^^^^
+//│ class Foo8[A](x: A) {
+//│   fun test1: (y: anything,) -> A
+//│ }
+
 
