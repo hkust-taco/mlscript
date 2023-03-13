@@ -2,6 +2,8 @@
 :NewDefs
 
 
+// * Examples from paper intro
+
 
 class Some<A>(value: A)
 module None
