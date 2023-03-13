@@ -32,7 +32,7 @@ mixin SizeBase {
 }
 //│ mixin SizeBase() {
 //│   this: {size: ('a | 'a0 | 'a1 | 'a2) -> int}
-//│   fun size: (Circle | Intersect['a2] | Outside['a0] | Translate['a] | Union['a1]) -> int
+//│   fun size: (Circle | Intersect['a1] | Outside['a] | Translate['a2] | Union['a0]) -> int
 //│ }
 
 // ******************* Linguistic Reuse and Meta-Language Optimizations *******************
@@ -322,19 +322,19 @@ module TestElim extends Eliminate
 //│ }
 //│ where
 //│   'a <: Intersect['a] | Outside['a & (Outside['a] | ~#Outside)] | Scale['a] | Translate['a] | Union['a] | 'b & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union
-//│   'b :> Intersect['b] | Translate['b] | Scale['b] | Outside['b] | Union['b]
+//│   'b :> Outside['b] | Union['b] | Intersect['b] | Translate['b] | Scale['b]
 
 TestElim.eliminate(Outside(Outside(Univ())))
 //│ 'a
 //│   where
-//│     'a :> Outside['a] | Union['a] | Intersect['a] | Translate['a] | Scale['a] | Univ
+//│     'a :> Univ | Outside['a] | Union['a] | Intersect['a] | Translate['a] | Scale['a]
 //│ res
 //│     = Univ {}
 
 TestElim.eliminate(circles)
 //│ 'a
 //│   where
-//│     'a :> Translate['a] | Scale['a] | Circle | Outside['a] | Union['a] | Intersect['a]
+//│     'a :> Outside['a] | Union['a] | Intersect['a] | Translate['a] | Scale['a] | Circle
 //│ res
 //│     = Union {}
 
@@ -376,7 +376,7 @@ module Lang extends SizeBase, SizeExt, Contains, Text, IsUniv, IsEmpty, Eliminat
 //│   'd <: Intersect['d] | Outside['e] | Scale['d] | Translate['d] | Union['d] | Univ | ~Intersect[anything] & ~Outside[anything] & ~Scale[anything] & ~Translate[anything] & ~Union[anything] & ~Univ
 //│   'e <: Intersect['e] | Outside['d] | Scale['e] | Translate['e] | Union['e] | Univ | ~Intersect[anything] & ~Outside[anything] & ~Scale[anything] & ~Translate[anything] & ~Union[anything] & ~Univ
 //│   'b <: Intersect['b] | Outside['b & (Outside['b] | ~#Outside)] | Scale['b] | Translate['b] | Union['b] | 'c & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union
-//│   'c :> Outside['c] | Union['c] | Intersect['c] | Translate['c] | Scale['c]
+//│   'c :> Translate['c] | Scale['c] | Outside['c] | Union['c] | Intersect['c]
 //│   'a <: Circle | Intersect['a] | Outside['a] | Translate['a] | Union['a]
 
 // TODO investigate

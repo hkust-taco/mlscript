@@ -118,14 +118,24 @@ class Foo7[A](head: A, tail: Foo7[A] | N) {
 
 // TODO support
 class Foo7_A[A](head: A, tail: Foo7_A[A] | N) {
-  fun test1: A = if tail is
+  test1: A
+  fun test1 = if tail is
     N then head
     _ then tail.test1
 }
 //│ ╔══[ERROR] unsupported indirectly recursive member access
-//│ ║  l.123: 	    _ then tail.test1
+//│ ║  l.124: 	    _ then tail.test1
 //│ ╙──       	               ^^^^^^
 //│ class Foo7_A[A](head: A, tail: Foo7_A[A] | N) {
+//│   fun test1: A | error
+//│ }
+
+class Foo7_A2[A](head: A, tail: Foo7_A[A] | N) {
+  fun test1: A = if tail is
+    N then head
+    _ then tail.test1
+}
+//│ class Foo7_A2[A](head: A, tail: Foo7_A[A] | N) {
 //│   fun test1: A
 //│ }
 
@@ -136,7 +146,7 @@ class Foo8[A](x: A) {
     x
 }
 //│ ╔══[ERROR] unsupported indirectly recursive member access
-//│ ║  l.135: 	    let tmp = Foo8(y).test1(x)
+//│ ║  l.145: 	    let tmp = Foo8(y).test1(x)
 //│ ╙──       	                     ^^^^^^
 //│ class Foo8[A](x: A) {
 //│   fun test1: (y: anything,) -> A

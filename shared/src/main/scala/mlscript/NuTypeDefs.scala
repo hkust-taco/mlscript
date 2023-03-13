@@ -334,6 +334,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
         (implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType]): TypedTypingUnit =
       trace(s"${ctx.lvl}. Typing $tu")
   {
+    // println(s"vars ${vars}")
+    
     val named = mutable.Map.empty[Str, LazyTypeInfo]
     
     val infos = tu.entities.collect {
@@ -365,7 +367,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     ctx ++= completedInfos
     
     // * Type the block statements
-    def go(stmts: Ls[Statement])(implicit ctx: Ctx): Opt[ST] = stmts match {
+    def go(stmts: Ls[Statement]): Opt[ST] = stmts match {
       case s :: stmts =>
         val res_ty = s match {
           case decl: NuDecl => N
@@ -375,7 +377,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
             S(typeTerms(dss, false, Nil)(ctx, raise, TypeProvenance(s.toLoc, s match {
               case trm: Term => trm.describe
               case s => "statement"
-            }), Map.empty, genLambdas = false))
+            }), vars, genLambdas = false))
         }
         stmts match {
           case Nil => res_ty
@@ -457,7 +459,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
       }
     }
     
-    val tv: TV = freshVar(
+    lazy val mutRecTV: TV = freshVar(
       TypeProvenance(decl.toLoc, decl.describe, S(decl.name), decl.isInstanceOf[NuTypeDef]),
       N,
       S(decl.name))(level + 1)
@@ -510,7 +512,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       // * to avoid cyclic-looking constraints due to the polymorphic recursion limitation,
                       // * as these functions are allowed to be mutually-recursive.
                       // * In the future, we should type each mutual-recursion-component independently
-                      // * and polymorphically wrt to non-recursive users of them.
+                      // * and polymorphically wrt to external uses of them.
                       implicit val gl: GenLambdas = false
                       val body_ty = ctx.nextLevel { implicit ctx: Ctx =>
                         // * Note: can't use `ctx.poly` instead of `ctx.nextLevel` because all the methods
@@ -526,7 +528,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       TypedNuFun(ctx.lvl, fd, body_ty)
                   }
               }
-              ctx.nextLevel { implicit ctx: Ctx => constrain(res_ty.bodyType, tv) }
+              ctx.nextLevel { implicit ctx: Ctx => constrain(res_ty.bodyType, mutRecTV) }
               res_ty
               
               
@@ -732,8 +734,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
       decl match {
         case _: NuFunDef =>
           if (isComputing) {
-            println(s"Already computing! Using TV: $tv")
-            tv // TODO make sure this is never misused (ie not accessed from difft scope/level)
+            println(s"Already computing! Using TV: $mutRecTV")
+            mutRecTV // TODO make sure this is never misused (ie not accessed from difft scope/level)
           } else complete() match {
             case TypedNuFun(_, fd, ty) =>
               ty
