@@ -1,0 +1,534 @@
+:NewParser
+
+:escape
+// You can push debug messages to this magic array.
+let Array: { from: anything => { push: anything => anything, join: string => string } }
+let _Array = Array
+let logs: { push: anything => anything, join: string => string } = _Array.from([])
+let debug: anything => anything = x => logs.push(x)
+fun showDebug = logs.join("\n")
+//│ Array: {from: anything -> {join: string -> string, push: anything -> anything}}
+//│      = <missing implementation>
+//│ _Array: {from: anything -> {join: string -> string, push: anything -> anything}}
+//│       = [Function: Array]
+//│ logs: {join: string -> string, push: anything -> anything}
+//│     = []
+//│ debug: anything -> anything
+//│      = [Function: debug]
+//│ showDebug: string
+//│          = [Function: showDebug]
+
+fun concat2(a, b) = concat(a)(b)
+fun concat3(a, b, c) = concat2(a, concat2(b, c))
+fun concat4(a, b, c, d) = concat2(a, concat3(b, c, d))
+fun concat5(a, b, c, d, e) = concat2(a, concat4(b, c, d, e))
+fun concat6(a, b, c, d, e, f) = concat2(a, concat5(b, c, d, e, f))
+fun concat7(a, b, c, d, e, f, g) = concat2(a, concat6(b, c, d, e, f, g))
+fun concat8(a, b, c, d, e, f, g, h) = concat2(a, concat7(b, c, d, e, f, g, h))
+fun par(a) = concat3("(", a, ")")
+//│ concat2: (string, string,) -> string
+//│        = [Function: concat2]
+//│ concat3: (string, string, string,) -> string
+//│        = [Function: concat3]
+//│ concat4: (string, string, string, string,) -> string
+//│        = [Function: concat4]
+//│ concat5: (string, string, string, string, string,) -> string
+//│        = [Function: concat5]
+//│ concat6: (string, string, string, string, string, string,) -> string
+//│        = [Function: concat6]
+//│ concat7: (string, string, string, string, string, string, string,) -> string
+//│        = [Function: concat7]
+//│ concat8: (string, string, string, string, string, string, string, string,) -> string
+//│        = [Function: concat8]
+//│ par: string -> string
+//│    = [Function: par]
+
+:escape
+let String: nothing
+let makeString: anything => { length: int, charCodeAt: int => int } = String
+let StringInstance: { fromCharCode: int => string } = String
+//│ String: nothing
+//│       = <missing implementation>
+//│ makeString: anything -> {charCodeAt: int -> int, length: int}
+//│           = [Function: String]
+//│ StringInstance: {fromCharCode: int -> string}
+//│               = [Function: String]
+
+fun fromCharCode(n) = StringInstance.fromCharCode(n)
+fun stringCharCodeAt(s, i) = makeString(s).charCodeAt(i)
+fun stringLength(s) = makeString(s).length
+//│ fromCharCode: int -> string
+//│             = [Function: fromCharCode]
+//│ stringCharCodeAt: (anything, int,) -> int
+//│                 = [Function: stringCharCodeAt]
+//│ stringLength: anything -> int
+//│             = [Function: stringLength]
+
+class Option
+class Some(value): Option
+class None(): Option
+//│ Defined class Option
+//│ Defined class Some
+//│ Defined class None
+//│ Option: () -> Option
+//│       = [Function: Option1]
+//│ Some: 'value -> (Some & {value: 'value})
+//│     = [Function: Some1]
+//│ None: () -> None
+//│     = [Function: None1]
+
+class List
+class Cons(head, tail): List
+class Nil(): List
+//│ Defined class List
+//│ Defined class Cons
+//│ Defined class Nil
+//│ List: () -> List
+//│     = [Function: List1]
+//│ Cons: ('head, 'tail,) -> (Cons & {head: 'head, tail: 'tail})
+//│     = [Function: Cons1]
+//│ Nil: () -> Nil
+//│    = [Function: Nil1]
+
+fun list1(x) = Cons(x, Nil())
+fun list2(x, y) = Cons(x, list1(y))
+fun list3(x, y, z) = Cons(x, list2(y, z))
+fun list4(x, y, z, w) = Cons(x, list3(y, z, w))
+fun list5(x, y, z, w, v) = Cons(x, list4(y, z, w, v))
+fun list6(x, y, z, w, v, u) = Cons(x, list5(y, z, w, v, u))
+fun list7(x, y, z, w, v, u, t) = Cons(x, list6(y, z, w, v, u, t))
+fun list8(x, y, z, w, v, u, t, s) = Cons(x, list7(y, z, w, v, u, t, s))
+//│ list1: 'head -> (Cons & {head: 'head, tail: Nil})
+//│      = [Function: list1]
+//│ list2: ('head, 'head0,) -> (Cons & {head: 'head, tail: Cons & {head: 'head0, tail: Nil}})
+//│      = [Function: list2]
+//│ list3: ('head, 'head0, 'head1,) -> (Cons & {head: 'head, tail: Cons & {head: 'head0, tail: Cons & {head: 'head1, tail: Nil}}})
+//│      = [Function: list3]
+//│ list4: ('head, 'head0, 'head1, 'head2,) -> (Cons & {head: 'head, tail: Cons & {head: 'head0, tail: Cons & {head: 'head1, tail: Cons & {head: 'head2, tail: Nil}}}})
+//│      = [Function: list4]
+//│ list5: ('head, 'head0, 'head1, 'head2, 'head3,) -> (Cons & {head: 'head, tail: Cons & {head: 'head0, tail: Cons & {head: 'head1, tail: Cons & {head: 'head2, tail: Cons & {head: 'head3, tail: Nil}}}}})
+//│      = [Function: list5]
+//│ list6: ('head, 'head0, 'head1, 'head2, 'head3, 'head4,) -> (Cons & {head: 'head, tail: Cons & {head: 'head0, tail: Cons & {head: 'head1, tail: Cons & {head: 'head2, tail: Cons & {head: 'head3, tail: Cons & {head: 'head4, tail: Nil}}}}}})
+//│      = [Function: list6]
+//│ list7: ('head, 'head0, 'head1, 'head2, 'head3, 'head4, 'head5,) -> (Cons & {head: 'head, tail: Cons & {head: 'head0, tail: Cons & {head: 'head1, tail: Cons & {head: 'head2, tail: Cons & {head: 'head3, tail: Cons & {head: 'head4, tail: Cons & {head: 'head5, tail: Nil}}}}}}})
+//│      = [Function: list7]
+//│ list8: ('head, 'head0, 'head1, 'head2, 'head3, 'head4, 'head5, 'head6,) -> (Cons & {head: 'head, tail: Cons & {head: 'head0, tail: Cons & {head: 'head1, tail: Cons & {head: 'head2, tail: Cons & {head: 'head3, tail: Cons & {head: 'head4, tail: Cons & {head: 'head5, tail: Cons & {head: 'head6, tail: Nil}}}}}}}})
+//│      = [Function: list8]
+
+fun listConcat(xs, ys) =
+  if xs is
+    Nil() then ys
+    Cons(x, xs') then Cons(x, listConcat(xs', ys))
+//│ listConcat: ('tail, 'tail0,) -> 'tail0
+//│   where
+//│     'tail0 :> Cons & {head: 'head, tail: 'tail0}
+//│     'tail <: Cons & {head: 'head, tail: 'tail} | Nil
+//│           = [Function: listConcat]
+
+fun listContains(xs, x) =
+  if xs is
+    Nil() then false
+    Cons(x', xs') and
+      eq(x)(x') then true
+      _ then listContains(xs', x)
+//│ listContains: ('tail, anything,) -> bool
+//│   where
+//│     'tail <: Cons & {tail: 'tail} | Nil
+//│             = [Function: listContains]
+
+// Remove all occurrences of x from xs.
+fun listWithout(xs, x) =
+  if xs is
+    Nil() then Nil()
+    Cons(x', xs') and
+      eq(x)(x') then listWithout(xs', x)
+      _ then Cons(x', listWithout(xs', x))
+//│ listWithout: ('tail, anything,) -> 'tail0
+//│   where
+//│     'tail0 :> Nil | Cons & {head: 'head, tail: 'tail0}
+//│     'tail <: Cons & {head: 'head, tail: 'tail} | Nil
+//│            = [Function: listWithout]
+
+fun listJoin(xs, sep) =
+  if xs is
+    Nil() then ""
+    Cons(x, Nil()) then toString(x)
+    Cons(x, xs') then concat3(toString(x), sep, listJoin(xs', sep))
+//│ listJoin: ('tail, string,) -> string
+//│   where
+//│     'tail <: Cons & {tail: 'tail} | Nil
+//│         = [Function: listJoin]
+
+listJoin(list3("x", "y", "z"), ", ")
+//│ res: string
+//│    = 'x, y, z'
+
+class Term
+class Var(name): Term
+class Abs(lhs, rhs): Term
+class App(lhs, rhs): Term
+//│ Defined class Term
+//│ Defined class Var
+//│ Defined class Abs
+//│ Defined class App
+//│ Term: () -> Term
+//│     = [Function: Term1]
+//│ Var: 'name -> (Var & {name: 'name})
+//│    = [Function: Var1]
+//│ Abs: ('lhs, 'rhs,) -> (Abs & {lhs: 'lhs, rhs: 'rhs})
+//│    = [Function: Abs1]
+//│ App: ('lhs, 'rhs,) -> (App & {lhs: 'lhs, rhs: 'rhs})
+//│    = [Function: App1]
+
+fun showTerm(t) =
+  if t is
+    Var(name) then toString(name)
+    Abs(lhs, rhs) then concat4("&", showTerm(lhs), ". ", showTerm(rhs))
+    App(Abs(lhs0, lhs1), rhs) then
+      concat8("((", "&", showTerm(lhs0), ". ", showTerm(lhs1), ") ", showTerm(rhs), ")")
+    App(lhs, rhs) then par(concat3(showTerm(lhs), " ", showTerm(rhs)))
+//│ showTerm: 'rhs -> string
+//│   where
+//│     'rhs <: Abs & {lhs: 'rhs, rhs: 'rhs} | App & {lhs: 'rhs & (Abs & {lhs: 'rhs, rhs: 'rhs} | ~#Abs), rhs: 'rhs} | Var
+//│         = [Function: showTerm]
+
+showTerm(Var("x"))
+showTerm(Abs(Var("x"), Var("y")))
+showTerm(App(Var("x"), Var("y")))
+showTerm(App(Abs(Var("x"), Var("y")), Var("z")))
+//│ res: string
+//│    = 'x'
+//│ res: string
+//│    = '&x. y'
+//│ res: string
+//│    = '(x y)'
+//│ res: string
+//│    = '((&x. y) z)'
+
+fun isValue(t) =
+  if t is
+    Var then true
+    Abs then true
+    App then false
+//│ isValue: (Abs | App | Var) -> bool
+//│        = [Function: isValue]
+
+isValue(Var("x"))
+isValue(Abs(Var("x"), Var("y")))
+isValue(App(Var("x"), Var("y")))
+//│ res: bool
+//│    = true
+//│ res: bool
+//│    = true
+//│ res: bool
+//│    = false
+
+:w
+fun hasFree(t, n) =
+  if t is
+    // let __ = debug(concat3(showTerm(t), ", ", n))
+    Var(na) then eq(n)(na)
+    Abs(Var(name), body) and eq(name)(n) then false
+    Abs(Var(name), body) then hasFree(body, n)
+    App(lhs, rhs) then hasFree(lhs, n) || hasFree(rhs, n)
+    _ then false
+//│ ╔══[WARNING] Found a duplicated else branch
+//│ ║  l.234: 	    _ then false
+//│ ║         	           ^^^^^
+//│ ╟── The first else branch was declared here.
+//│ ║  l.232: 	    Abs(Var(name), body) then hasFree(body, n)
+//│ ╙──       	                              ^^^^^^^^^^^^^^^^
+//│ hasFree: ('rhs, anything,) -> bool
+//│   where
+//│     'rhs <: Abs & {rhs: 'rhs} | App & {lhs: 'rhs, rhs: 'rhs} | Var | ~Abs & ~App & ~Var
+//│        = [Function: hasFree]
+
+fun showHasFree(t, n) =
+  concat4(showTerm(t), if hasFree(t, n) then " has " else " DOES NOT have ", "free variable ", n)
+//│ showHasFree: ('rhs & 'rhs0, string,) -> string
+//│   where
+//│     'rhs0 <: Abs & {rhs: 'rhs0} | App & {lhs: 'rhs0, rhs: 'rhs0} | Var | ~Abs & ~App & ~Var
+//│     'rhs <: Abs & {lhs: 'rhs, rhs: 'rhs} | App & {lhs: 'rhs & (Abs & {lhs: 'rhs, rhs: 'rhs} | ~#Abs), rhs: 'rhs} | Var
+//│            = [Function: showHasFree]
+
+showHasFree(Var("x"), "x")
+showHasFree(Var("x"), "y")
+showHasFree(Abs(Var("x"), Var("x")), "x")
+showHasFree(Abs(Var("x"), Var("x")), "y")
+showHasFree(Abs(Var("x"), Var("y")), "x")
+showHasFree(Abs(Var("x"), Var("y")), "y")
+showHasFree(App(Var("x"), Var("y")), "x")
+showHasFree(App(Var("x"), Var("y")), "y")
+showHasFree(App(Abs(Var("x"), Var("x")), Var("x")), "x")
+showHasFree(App(Abs(Var("x"), Var("x")), Var("x")), "y")
+showHasFree(App(Abs(Var("x"), Var("x")), Var("y")), "y")
+showHasFree(App(Abs(Var("x"), Var("x")), Var("x")), "y")
+//│ res: string
+//│    = 'x has free variable x'
+//│ res: string
+//│    = 'x DOES NOT have free variable y'
+//│ res: string
+//│    = '&x. x DOES NOT have free variable x'
+//│ res: string
+//│    = '&x. x DOES NOT have free variable y'
+//│ res: string
+//│    = '&x. y DOES NOT have free variable x'
+//│ res: string
+//│    = '&x. y has free variable y'
+//│ res: string
+//│    = '(x y) has free variable x'
+//│ res: string
+//│    = '(x y) has free variable y'
+//│ res: string
+//│    = '((&x. x) x) has free variable x'
+//│ res: string
+//│    = '((&x. x) x) DOES NOT have free variable y'
+//│ res: string
+//│    = '((&x. x) y) has free variable y'
+//│ res: string
+//│    = '((&x. x) x) DOES NOT have free variable y'
+
+fun fv(t) =
+  if t is
+    Var(name) then list1(name)
+    Abs(Var(name), body) then listWithout(fv(body), name)
+    App(lhs, rhs) then listConcat(fv(lhs), fv(rhs))
+//│ fv: 'rhs -> 'a
+//│   where
+//│     'a :> forall 'tail 'tail0. Cons & {head: 'name, tail: Nil} | 'tail | 'tail0
+//│     'tail0 :> Cons & {head: 'head, tail: 'tail0} | 'a
+//│     'tail :> Nil | Cons & {head: 'head, tail: 'tail}
+//│     'head :> 'name
+//│     'rhs <: Abs & {lhs: Var, rhs: 'rhs} | App & {lhs: 'rhs, rhs: 'rhs} | Var & {name: 'name}
+//│   = [Function: fv]
+
+fun showFv(t) =
+  concat2(showTerm(t), if fv(t) is
+    Nil then " DOES NOT have free variables"
+    _ then concat2(" has free variables: ", listJoin(fv(t), ", "))
+  )
+//│ showFv: ('rhs & 'rhs0) -> string
+//│   where
+//│     'rhs0 <: Abs & {lhs: Var, rhs: 'rhs0} | App & {lhs: 'rhs0, rhs: 'rhs0} | Var
+//│     'rhs <: Abs & {lhs: 'rhs, rhs: 'rhs} | App & {lhs: 'rhs & (Abs & {lhs: 'rhs, rhs: 'rhs} | ~#Abs), rhs: 'rhs} | Var
+//│       = [Function: showFv]
+
+showFv(Var("x"))
+showFv(Abs(Var("x"), Var("x")))
+showFv(Abs(Var("x"), Var("y")))
+showFv(App(Var("x"), Var("y")))
+showFv(App(Abs(Var("x"), Var("x")), Var("x")))
+//│ res: string
+//│    = 'x has free variables: x'
+//│ res: string
+//│    = '&x. x DOES NOT have free variables'
+//│ res: string
+//│    = '&x. y has free variables: y'
+//│ res: string
+//│    = '(x y) has free variables: x, y'
+//│ res: string
+//│    = '((&x. x) x) has free variables: x'
+
+fun tryNextAlphabet(initialCode, currentCode, freeNames) =
+  if
+    currentCode
+      > 122 then tryNextAlphabet(initialCode, 97, freeNames)
+      == initialCode then None()
+    let name = fromCharCode(currentCode)
+    listContains(freeNames, name) then tryNextAlphabet(initialCode, currentCode + 1, freeNames)
+    _ then Some(name)
+//│ tryNextAlphabet: (number, int, 'tail,) -> (None | Some & {value: string})
+//│   where
+//│     'tail <: Cons & {tail: 'tail} | Nil
+//│                = [Function: tryNextAlphabet]
+
+tryNextAlphabet(97, 97, list1("a"))
+tryNextAlphabet(97, 98, list1("a"))
+tryNextAlphabet(97, 98, list2("a", "b"))
+tryNextAlphabet(121, 122, list1("y"))
+tryNextAlphabet(121, 122, list2("y", "z"))
+//│ res: None | Some & {value: string}
+//│    = None {}
+//│ res: None | Some & {value: string}
+//│    = Some { value: 'b' }
+//│ res: None | Some & {value: string}
+//│    = Some { value: 'c' }
+//│ res: None | Some & {value: string}
+//│    = Some { value: 'z' }
+//│ res: None | Some & {value: string}
+//│    = Some { value: 'a' }
+
+fun tryAppendDigits(name, index, freeNames) =
+  if
+    let currentName = concat2(name, toString(index))
+    listContains(freeNames, currentName) then
+      tryAppendDigits(name, index + 1, freeNames)
+    _ then currentName
+//│ tryAppendDigits: (string, int, 'tail,) -> string
+//│   where
+//│     'tail <: Cons & {tail: 'tail} | Nil
+//│                = [Function: tryAppendDigits]
+
+// Note: some weird behavior here... Just try the commented code.
+fun findFreshName(name, freeNames) =
+  if
+    stringLength(name) == 1 and
+      let charCode = stringCharCodeAt(name, 0)
+      tryNextAlphabet(charCode, charCode + 1, freeNames) is
+        Some(newName) then newName
+    _ then tryAppendDigits(name, 0, freeNames)
+//│ findFreshName: (string, 'tail,) -> string
+//│   where
+//│     'tail <: Cons & {tail: 'tail} | Nil
+//│              = [Function: findFreshName]
+
+// Find a fresh name to replace `name` that does not conflict with any bound
+// variables in the `body`.
+fun freshName(name, body) = findFreshName(name, fv(body))
+//│ freshName: (string, 'rhs,) -> string
+//│   where
+//│     'rhs <: Abs & {lhs: Var, rhs: 'rhs} | App & {lhs: 'rhs, rhs: 'rhs} | Var
+//│          = [Function: freshName]
+
+:w
+fun subst(t, n, v) =
+  if t is
+    Var(name) and eq(name)(n) then v
+    Abs(Var(name), body) and ne(name)(n) and
+      hasFree(v, name) and freshName(name, body) is newName then
+        subst(Abs(Var(newName), subst(body, name, Var(newName))), n, v)
+      _ then Abs(Var(name), subst(body, n, v))
+    App(lhs, rhs) then App(subst(lhs, n, v), subst(rhs, n, v))
+    _ then t
+//│ ╔══[WARNING] Found a duplicated else branch
+//│ ║  l.402: 	    _ then t
+//│ ║         	           ^
+//│ ╟── The first else branch was declared here.
+//│ ║  l.400: 	      _ then Abs(Var(name), subst(body, n, v))
+//│ ╙──       	             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ subst: ('rhs, anything, 'rhs & 'rhs0 & 'rhs1 & 'rhs2,) -> 'rhs0
+//│   where
+//│     'rhs2 <: Abs & {rhs: 'rhs2} | App & {lhs: 'rhs2, rhs: 'rhs2} | Var | ~Abs & ~App & ~Var
+//│     'rhs <: Abs & 'a | App & 'b | Var & 'c | 'd & ~#Abs & ~#App & ~#Var
+//│     'a :> Abs & {lhs: Var & {name: string}, rhs: 'rhs0} | 'e
+//│        <: 'rhs1 & (Abs & {lhs: Var & {name: 'name} | ~Var, rhs: 'rhs & 'rhs1} | App & {lhs: Var & {name: 'name} | ~Var, rhs: 'rhs & 'rhs1} & 'b | Var & {lhs: Var & {name: 'name} | ~Var, rhs: 'rhs & 'rhs1} & 'c | {lhs: Var & {name: 'name} | ~Var, rhs: 'rhs & 'rhs1} & 'd & ~#Abs & ~#App & ~#Var)
+//│     'rhs0 :> Var & {name: string} | 'c | 'a | 'd | (forall 'e. 'e) | App & {lhs: 'rhs0, rhs: 'rhs0}
+//│     'e :> Abs & {lhs: Var & {name: 'name}, rhs: 'rhs0}
+//│     'name := string
+//│     'c :> Var & {name: string}
+//│        <: 'rhs1 & (Abs & {name: anything} & 'a | App & {name: anything} & 'b | Var | {name: anything} & 'd & ~#Abs & ~#App & ~#Var)
+//│     'd <: 'rhs1 & (Abs & 'a | App & 'b | Var & 'c | ~#Abs & ~#App & ~#Var)
+//│     'b <: {lhs: 'rhs, rhs: 'rhs}
+//│     'rhs1 <: Abs & {lhs: Var, rhs: 'rhs1} | App & {lhs: 'rhs1, rhs: 'rhs1} | Var
+//│      = [Function: subst]
+
+fun showSubst(t, n, v) =
+  concat8(showTerm(t), " [", n, " / ", showTerm(v), "]", " => ", showTerm(subst(t, n, v)))
+//│ showSubst: ('rhs & 'rhs0, string, 'rhs0 & 'rhs1 & 'lhs & 'rhs2 & 'rhs & 'rhs3,) -> string
+//│   where
+//│     'rhs3 <: Abs & {rhs: 'rhs3} | App & {lhs: 'rhs3, rhs: 'rhs3} | Var | ~Abs & ~App & ~Var
+//│     'rhs0 <: Abs & 'a | App & 'b | Var & 'c | 'd & ~#Abs & ~#App & ~#Var
+//│     'a <: 'rhs1 & 'lhs & 'rhs2 & (Abs & {lhs: Var & {name: string} | ~Var, rhs: 'rhs0 & 'rhs1} | App & {lhs: Var & {name: string} | ~Var, rhs: 'rhs0 & 'rhs1} & 'b | Var & {lhs: Var & {name: string} | ~Var, rhs: 'rhs0 & 'rhs1} & 'c | {lhs: Var & {name: string} | ~Var, rhs: 'rhs0 & 'rhs1} & 'd & ~#Abs & ~#App & ~#Var)
+//│     'c <: 'rhs1 & 'lhs & 'rhs2 & (Abs & {name: anything} & 'a | App & {name: anything} & 'b | Var | {name: anything} & 'd & ~#Abs & ~#App & ~#Var)
+//│     'd <: 'rhs1 & 'lhs & 'rhs2 & (Abs & 'a | App & 'b | Var & 'c | ~#Abs & ~#App & ~#Var)
+//│     'b <: {lhs: 'rhs0, rhs: 'rhs0}
+//│     'lhs <: Abs & {lhs: 'rhs2, rhs: 'rhs2} | ~Abs
+//│     'rhs2 <: Abs & {lhs: 'rhs2, rhs: 'rhs2} | App & {lhs: 'lhs & 'rhs2, rhs: 'rhs2} | Var
+//│     'rhs1 <: Abs & {lhs: Var, rhs: 'rhs1} | App & {lhs: 'rhs1, rhs: 'rhs1} | Var
+//│     'rhs <: Abs & {lhs: 'rhs, rhs: 'rhs} | App & {lhs: 'rhs & (Abs & {lhs: 'rhs, rhs: 'rhs} | ~#Abs), rhs: 'rhs} | Var
+//│          = [Function: showSubst]
+
+showSubst(Var("x"), "x", Var("y"))
+showSubst(Abs(Var("x"), Var("x")), "x", Var("z"))
+showSubst(App(Var("x"), Var("y")), "x", Abs(Var("x"), Var("x")))
+showSubst(App(Abs(Var("x"), Var("x")), Var("x")), "x", Abs(Var("y"), Var("y")))
+showSubst(Abs(Var("x"), App(Var("x"), Var("y"))), "y", Var("x"))
+//│ res: string
+//│    = 'x [x / y] => y'
+//│ res: string
+//│    = '&x. x [x / z] => &x. x'
+//│ res: string
+//│    = '(x y) [x / &x. x] => ((&x. x) y)'
+//│ res: string
+//│    = '((&x. x) x) [x / &y. y] => ((&x. x) &y. y)'
+//│ res: string
+//│    = '&x. (x y) [y / x] => &z. (z x)'
+
+fun stepByValue(t) =
+  if t is
+    Var then None()
+    Abs then None()
+    App(lhs, rhs) and stepByValue(lhs) is
+      Some(lhs) then Some(App(lhs, rhs))
+      None and stepByValue(rhs) is
+        Some(rhs) then Some(App(lhs, rhs))
+        None and lhs is
+          Abs(Var(name), body) then Some(subst(body, name, rhs))
+          _ then None()
+//│ stepByValue: 'a -> (None | Some & {value: 'value})
+//│   where
+//│     'value :> 'value0 | App & {lhs: 'value, rhs: 'rhs} | App & {lhs: 'lhs, rhs: 'value}
+//│     'a <: Abs | App & {lhs: 'lhs, rhs: 'rhs} | Var
+//│     'lhs <: 'a & (Abs & {rhs: 'rhs0} | ~#Abs)
+//│     'rhs0 <: Abs & 'b | App & 'c | Var & 'd | 'e & ~#Abs & ~#App & ~#Var
+//│     'b :> Abs & {lhs: Var & {name: string}, rhs: 'value0} | 'f
+//│        <: 'rhs1 & (Abs & {lhs: Var & {name: 'name} | ~Var, rhs: 'rhs2} | App & {lhs: Var & {name: 'name} | ~Var, rhs: 'rhs2} & 'c | Var & {lhs: Var & {name: 'name} | ~Var, rhs: 'rhs2} & 'd | {lhs: Var & {name: 'name} | ~Var, rhs: 'rhs2} & 'e & ~#Abs & ~#App & ~#Var)
+//│     'value0 :> Var & {name: string} | 'rhs | 'd | 'b | 'e | (forall 'f. 'f) | App & {lhs: 'value0, rhs: 'value0}
+//│     'f :> Abs & {lhs: Var & {name: 'name}, rhs: 'value0}
+//│     'name := string
+//│     'd :> Var & {name: string}
+//│        <: 'rhs1 & (Abs & {name: anything} & 'b | App & {name: anything} & 'c | Var | {name: anything} & 'e & ~#Abs & ~#App & ~#Var)
+//│     'e <: 'rhs1 & (Abs & 'b | App & 'c | Var & 'd | ~#Abs & ~#App & ~#Var)
+//│     'c <: {lhs: 'rhs0, rhs: 'rhs0}
+//│     'rhs <: 'a & 'rhs2 & 'rhs3
+//│     'rhs3 <: Abs & {rhs: 'rhs3} | App & {lhs: 'rhs3, rhs: 'rhs3} | Var | ~Abs & ~App & ~Var
+//│     'rhs2 <: 'rhs0 & 'rhs1
+//│     'rhs1 <: Abs & {lhs: Var, rhs: 'rhs1} | App & {lhs: 'rhs1, rhs: 'rhs1} | Var
+//│            = [Function: stepByValue]
+
+fun showStepByValue(t) =
+  concat3(showTerm(t), " => ", if stepByValue(t) is
+    Some(t) then showTerm(t)
+    None then "stuck"
+  )
+//│ showStepByValue: ('rhs & (Abs | App & 'a | Var)) -> string
+//│   where
+//│     'a <: {lhs: 'lhs & 'rhs0 & (Abs & {rhs: 'rhs1} | Abs & ~#Abs | App & 'a | Var), rhs: 'rhs2 & 'lhs & 'rhs0 & 'rhs3 & (Abs | App & 'a | Var)}
+//│     'rhs3 <: Abs & {rhs: 'rhs3} | App & {lhs: 'rhs3, rhs: 'rhs3} | Var | ~Abs & ~App & ~Var
+//│     'rhs1 <: Abs & 'b | App & 'c | Var & 'd | 'e & ~#Abs & ~#App & ~#Var
+//│     'b <: 'rhs4 & 'lhs & 'rhs0 & (Abs & {lhs: Var & {name: string} | ~Var, rhs: 'rhs2} | App & {lhs: Var & {name: string} | ~Var, rhs: 'rhs2} & 'c | Var & {lhs: Var & {name: string} | ~Var, rhs: 'rhs2} & 'd | {lhs: Var & {name: string} | ~Var, rhs: 'rhs2} & 'e & ~#Abs & ~#App & ~#Var)
+//│     'd <: 'rhs4 & 'lhs & 'rhs0 & (Abs & {name: anything} & 'b | App & {name: anything} & 'c | Var | {name: anything} & 'e & ~#Abs & ~#App & ~#Var)
+//│     'e <: 'rhs4 & 'lhs & 'rhs0 & (Abs & 'b | App & 'c | Var & 'd | ~#Abs & ~#App & ~#Var)
+//│     'c <: {lhs: 'rhs1, rhs: 'rhs1}
+//│     'rhs2 <: 'rhs1 & 'rhs4
+//│     'rhs4 <: Abs & {lhs: Var, rhs: 'rhs4} | App & {lhs: 'rhs4, rhs: 'rhs4} | Var
+//│     'lhs <: Abs & {lhs: 'rhs0, rhs: 'rhs0} | ~Abs
+//│     'rhs0 <: Abs & {lhs: 'rhs0, rhs: 'rhs0} | App & {lhs: 'lhs & 'rhs0, rhs: 'rhs0} | Var
+//│     'rhs <: Abs & {lhs: 'rhs, rhs: 'rhs} | App & {lhs: 'rhs & (Abs & {lhs: 'rhs, rhs: 'rhs} | ~#Abs), rhs: 'rhs} | Var
+//│                = [Function: showStepByValue]
+
+showStepByValue(Var("x"))
+showStepByValue(Abs(Var("x"), Var("y")))
+showStepByValue(App(Var("x"), Var("y")))
+showStepByValue(App(Abs(Var("x"), Var("x")), Var("y")))
+//│ res: string
+//│    = 'x => stuck'
+//│ res: string
+//│    = '&x. y => stuck'
+//│ res: string
+//│    = '(x y) => stuck'
+//│ res: string
+//│    = '((&x. x) y) => y'
+
+fun equalTerm(a, b) =
+  if a is
+    Var(na) and b is Var(nb) then eq(na)(nb)
+    Abs(la, ra) and b is Abs(lb, rb) then equalTerm(la, lb) && equalTerm(ra, rb)
+    App(la, ra) and b is App(lb, rb) then equalTerm(la, lb) && equalTerm(ra, rb)
+    _ then false
+//│ equalTerm: ('rhs, 'rhs0,) -> bool
+//│   where
+//│     'rhs0 <: Abs & 'a | App & 'a | Var | ~Abs & ~App & ~Var
+//│     'a <: {lhs: 'rhs0, rhs: 'rhs0}
+//│     'rhs <: Abs & {lhs: 'rhs, rhs: 'rhs} | App & {lhs: 'rhs, rhs: 'rhs} | Var | ~Abs & ~App & ~Var
+//│          = [Function: equalTerm]
