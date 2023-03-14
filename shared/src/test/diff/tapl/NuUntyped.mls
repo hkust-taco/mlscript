@@ -72,7 +72,7 @@ class Some[A](value: A) {
 module None {
   fun toString() = "None"
 }
-//│ type Option[A] = None | Some[A]
+//│ type Option[A] = Some[A] | None
 //│ class Some[A](value: A) {
 //│   fun toString: () -> string
 //│ }
@@ -108,9 +108,9 @@ fun listConcat(xs, ys) =
   if xs is
     Nil then ys
     Cons(x, xs') then Cons(x, listConcat(xs', ys))
-//│ fun listConcat: forall 'A 'A0 'a. (Cons['A] | Nil, List['A0] & 'a,) -> (Cons['A0] | 'a)
+//│ fun listConcat: forall 'A 'a 'A0. (Cons['A0] | Nil, List['A] & 'a,) -> (Cons['A] | 'a)
 //│   where
-//│     'A <: 'A0
+//│     'A0 <: 'A
 
 fun listContains(xs, x) =
   if xs is
