@@ -22,6 +22,7 @@ fun showDebug = logs.join("\n")
 //│ debug
 //│       = [Function: debug]
 
+let str = toString
 fun concat2(a, b) = concat(a)(b)
 fun concat3(a, b, c) = concat2(a, concat2(b, c))
 fun concat4(a, b, c, d) = concat2(a, concat3(b, c, d))
@@ -30,6 +31,7 @@ fun concat6(a, b, c, d, e, f) = concat2(a, concat5(b, c, d, e, f))
 fun concat7(a, b, c, d, e, f, g) = concat2(a, concat6(b, c, d, e, f, g))
 fun concat8(a, b, c, d, e, f, g, h) = concat2(a, concat7(b, c, d, e, f, g, h))
 fun par(a) = concat3("(", a, ")")
+//│ let str: anything -> string
 //│ fun concat2: (string, string,) -> string
 //│ fun concat3: (string, string, string,) -> string
 //│ fun concat4: (string, string, string, string,) -> string
@@ -38,6 +40,8 @@ fun par(a) = concat3("(", a, ")")
 //│ fun concat7: (string, string, string, string, string, string, string,) -> string
 //│ fun concat8: (string, string, string, string, string, string, string, string,) -> string
 //│ fun par: string -> string
+//│ str
+//│     = [Function: toString]
 
 type Option[A] = Some[A] | None
 class Some[A](value: A)
@@ -54,11 +58,11 @@ class Err[A](message: A)
 //│ class Err[A](message: A)
 
 type Type = FunctionType | PrimitiveType
-class FunctionType(lhs: Type, rhs: Type)
 class PrimitiveType(name: string)
+class FunctionType(lhs: Type, rhs: Type)
 //│ type Type = FunctionType | PrimitiveType
-//│ class FunctionType(lhs: Type, rhs: Type)
 //│ class PrimitiveType(name: string)
+//│ class FunctionType(lhs: Type, rhs: Type)
 
 // Helpers.
 fun _f(lhs, rhs) = FunctionType(lhs, rhs)
@@ -78,14 +82,11 @@ class App(lhs: Term, rhs: Term)
 //│ class Abs(lhs: Var, lty: Type, rhs: Term)
 //│ class App(lhs: Term, rhs: Term)
 
-class Assumption(name: string, ty: Type)
-//│ class Assumption(name: string, ty: Type)
-
-type Tree[A] = Node[A] | Empty
-class Node[A](key: string, value: A, left: Tree[A], right: Tree[A])
+type TreeMap[A] = Node[A] | Empty
+class Node[A](key: string, value: A, left: TreeMap[A], right: TreeMap[A])
 module Empty
-//│ type Tree[A] = Empty | Node[A]
-//│ class Node[A](key: string, value: A, left: Tree[A], right: Tree[A])
+//│ type TreeMap[A] = Empty | Node[A]
+//│ class Node[A](key: string, value: A, left: TreeMap[A], right: TreeMap[A])
 //│ module Empty()
 
 fun insert(t, k, v) =
@@ -159,7 +160,7 @@ showTerm(App(Abs(Var("x"), _t("int"), Var("y")), Var("z")))
 //│     = '((&x: int => z) z)'
 
 // Removing the return type annotation causes stack overflow.
-fun typeTerm(t, ctx): Result[Type, string] =
+fun typeTerm(t: Term, ctx: TreeMap[Type]): Result[Type, string] =
   if t is
     Lit(_, ty) then Ok(ty)
     Var(name) and find(ctx, name) is
@@ -176,17 +177,13 @@ fun typeTerm(t, ctx): Result[Type, string] =
         Err(message) then Err(message)
       Ok(PrimitiveType(name)) then Err(concat3("cannot apply primitive type `", name, "`"))
       Err(message) then Err(message)
-//│ fun typeTerm: forall 'A. (Abs | App | Lit | Var, Empty | Node['A],) -> Result[Type, string]
-//│   where
-//│     'A := Type
+//│ fun typeTerm: (t: Term, ctx: TreeMap[Type],) -> Result[Type, string]
 
 fun showTypeTerm(t, ctx) =
   if typeTerm(t, ctx) is
     Ok(ty) then concat3(showTerm(t), " : ", showType(ty))
     Err(message) then concat2("Type error: ", message)
-//│ fun showTypeTerm: forall 'A. (Abs | App | Lit | Var, Empty | Node['A],) -> string
-//│   where
-//│     'A := Type
+//│ fun showTypeTerm: (Term, TreeMap[Type],) -> string
 
 showTypeTerm(Var("x"), Empty)
 showTypeTerm(Abs(Var("x"), _t("int"), Var("x")), Empty)
