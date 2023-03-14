@@ -496,7 +496,7 @@ class DiffTests
             val (typeDefs, stmts, newDefsResults) = if (newDefs) {
               
               val vars: Map[Str, typer.SimpleType] = Map.empty
-              val tpd = typer.typeTypingUnit(TypingUnit(p.tops), allowPure = true)(ctx, raise, vars)
+              val tpd = typer.typeTypingUnit(TypingUnit(p.tops), topLevel = true)(ctx, raise, vars)
               
               def showTTU(ttu: typer.TypedTypingUnit, ind: Int): Unit = {
                 val indStr = "  " * ind

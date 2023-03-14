@@ -20,7 +20,7 @@ foo1[int](42)
 
 
 fun foo2<A>(x: A) = x
-//│ fun foo2: forall 'a. (x: 'a,) -> 'a
+//│ fun foo2: forall 'A. (x: 'A,) -> 'A
 
 foo2(42)
 //│ 42
@@ -38,7 +38,7 @@ foo2<int>(42)
 
 
 fun foo3[A](x: A) = x
-//│ fun foo3: forall 'a. (x: 'a,) -> 'a
+//│ fun foo3: forall 'A. (x: 'A,) -> 'A
 
 foo3(42)
 //│ 42
@@ -97,22 +97,29 @@ fun bar<A>: A => A
 //│   term App(App(Var(>:), Tup(_: Var(A))), Tup(_: Var(A))) is not a valid pattern
 
 
+:e
 module Test {
   fun foo: 'A => 'A
   fun bar: 'A
   fun test<A>(x: A) = x
 }
+//│ ╔══[ERROR] Member foo is declared but not defined
+//│ ║  l.102: 	  fun foo: 'A => 'A
+//│ ╙──       	      ^^^
+//│ ╔══[ERROR] Member bar is declared but not defined
+//│ ║  l.103: 	  fun bar: 'A
+//│ ╙──       	      ^^^
 //│ module Test() {
 //│   fun bar: nothing
 //│   fun foo: forall 'A. 'A -> 'A
-//│   fun test: forall 'a. (x: 'a,) -> 'a
+//│   fun test: forall 'A0. (x: 'A0,) -> 'A0
 //│ }
 
 class Test<A>(n: A) {
   fun test<A>(x: A) = [x, n]
 }
 //│ class Test[A](n: A) {
-//│   fun test: forall 'a. (x: 'a,) -> ('a, A,)
+//│   fun test: forall 'A. (x: 'A,) -> ('A, A,)
 //│ }
 
 

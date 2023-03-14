@@ -1,0 +1,38 @@
+:NewDefs
+
+
+module A
+//│ module A()
+
+// FIXME
+fun test(x: 0 | A) = if x is
+  0 then 0
+  A then A
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.8: 	fun test(x: 0 | A) = if x is
+//│ ║       	                        ^
+//│ ╟── type `A` is not an instance of type `number`
+//│ ║  l.8: 	fun test(x: 0 | A) = if x is
+//│ ║       	                ^
+//│ ╟── but it flows into reference with expected type `number`
+//│ ║  l.8: 	fun test(x: 0 | A) = if x is
+//│ ╙──     	                        ^
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.8: 	fun test(x: 0 | A) = if x is
+//│ ║       	                        ^^^^
+//│ ║  l.9: 	  0 then 0
+//│ ║       	^^^^^^^^^^
+//│ ║  l.10: 	  A then A
+//│ ║        	^^^^^^^^^^
+//│ ╟── type `0` is not an instance of type `A`
+//│ ║  l.8: 	fun test(x: 0 | A) = if x is
+//│ ║       	            ^
+//│ ╟── but it flows into reference with expected type `A`
+//│ ║  l.8: 	fun test(x: 0 | A) = if x is
+//│ ║       	                        ^
+//│ ╟── Note: constraint arises from class pattern:
+//│ ║  l.10: 	  A then A
+//│ ╙──      	  ^
+//│ fun test: (x: 0 | A,) -> (0 | A)
+
+

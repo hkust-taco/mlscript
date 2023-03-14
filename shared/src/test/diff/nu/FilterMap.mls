@@ -51,7 +51,7 @@ fun filtermap(f, xs) = if xs is
 //│ ╙──      	    ^^^^
 //│ ╔══[ERROR] type identifier not found: Tuple#2
 //│ ╙──
-//│ fun filtermap: ((error | Cons[nothing] | Nil) -> number & (Cons[nothing] | Nil) -> error, Cons[anything] | Nil,) -> (Cons[nothing] | Nil | error)
+//│ fun filtermap: ((Cons[nothing] | error | Nil) -> number & (Cons[nothing] | Nil) -> error, Cons[anything] | Nil,) -> (Cons[nothing] | Nil | error)
 //│ Code generation encountered an error:
 //│   unknown match case: Tuple#2
 

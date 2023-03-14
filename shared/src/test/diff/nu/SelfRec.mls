@@ -6,22 +6,16 @@
 class Foo1(x: int) {
   fun test = Foo1(1).x
 }
-//│ ╔══[ERROR] unsupported indirectly recursive member access
-//│ ║  l.7: 	  fun test = Foo1(1).x
-//│ ╙──     	                    ^^
 //│ class Foo1(x: int) {
-//│   fun test: error
+//│   fun test: int
 //│ }
 
 // TODO
 class Foo2[A](x: A) {
   fun test = Foo2(1).x
 }
-//│ ╔══[ERROR] unsupported indirectly recursive member access
-//│ ║  l.18: 	  fun test = Foo2(1).x
-//│ ╙──      	                    ^^
 //│ class Foo2[A](x: A) {
-//│   fun test: error
+//│   fun test: A
 //│ }
 
 
@@ -53,5 +47,108 @@ Foo3(1).foo
 //│ forall 'A. (x: 'A,) -> Foo3['A]
 //│ res
 //│     = [Function (anonymous)] { class: [class Foo3] }
+
+:e
+class Foo4 {
+  fun test = [Foo4.test]
+}
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.53: 	  fun test = [Foo4.test]
+//│ ║        	              ^^^^^^^^^
+//│ ╟── reference of type `() -> #Foo4` does not have field 'test'
+//│ ║  l.53: 	  fun test = [Foo4.test]
+//│ ╙──      	              ^^^^
+//│ class Foo4() {
+//│   fun test: (error,)
+//│ }
+
+:e
+class Foo5(x: int) {
+  fun test = [Foo5(5).test]
+}
+//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ║  l.67: 	  fun test = [Foo5(5).test]
+//│ ╙──      	                     ^^^^^
+//│ class Foo5(x: int) {
+//│   fun test: (error,)
+//│ }
+
+:e
+class Foo6[A](x: A) {
+  fun test1 = [Foo6(x).test1]
+  fun test2 = [Foo6(123).test2]
+  fun test3 = [Foo6([x]).test3]
+}
+//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ║  l.78: 	  fun test1 = [Foo6(x).test1]
+//│ ╙──      	                      ^^^^^^
+//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ║  l.79: 	  fun test2 = [Foo6(123).test2]
+//│ ╙──      	                        ^^^^^^
+//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ║  l.80: 	  fun test3 = [Foo6([x]).test3]
+//│ ╙──      	                        ^^^^^^
+//│ class Foo6[A](x: A) {
+//│   fun test1: (error,)
+//│   fun test2: (error,)
+//│   fun test3: (error,)
+//│ }
+
+module N
+//│ module N()
+
+:e
+class Foo7[A](head: A, tail: Foo7[A] | N) {
+  fun test1 = if tail is
+    N then head
+    _ then tail.test1
+}
+//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ║  l.104: 	    _ then tail.test1
+//│ ╙──       	               ^^^^^^
+//│ class Foo7[A](head: A, tail: Foo7[A] | N) {
+//│   fun test1: A | error
+//│ }
+
+class Foo7_A[A](head: A, tail: Foo7_A[A] | N) {
+  fun test1: A
+  fun test1 = if tail is
+    N then head
+    _ then tail.test1
+}
+//│ class Foo7_A[A](head: A, tail: Foo7_A[A] | N) {
+//│   fun test1: A
+//│ }
+
+class Foo7_A2[A](head: A, tail: Foo7_A[A] | N) {
+  fun test1: A = if tail is
+    N then head
+    _ then tail.test1
+}
+//│ class Foo7_A2[A](head: A, tail: Foo7_A[A] | N) {
+//│   fun test1: A
+//│ }
+
+class Foo7_2_A[A](head: A, tail: Foo7_A[int] | N) {
+  fun test1: int | A = if tail is
+    N then head
+    _ then tail.test1
+}
+//│ class Foo7_2_A[A](head: A, tail: Foo7_A[int] | N) {
+//│   fun test1: A | int
+//│ }
+
+:e
+class Foo8[A](x: A) {
+  fun test1[B](y: B): A =
+    let tmp = Foo8(y).test1(x)
+    x
+}
+//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ║  l.144: 	    let tmp = Foo8(y).test1(x)
+//│ ╙──       	                     ^^^^^^
+//│ class Foo8[A](x: A) {
+//│   fun test1: (y: anything,) -> A
+//│ }
 
 

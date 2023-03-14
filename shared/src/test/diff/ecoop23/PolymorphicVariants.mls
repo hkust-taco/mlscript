@@ -95,7 +95,7 @@ Test1.eval(Nil, Var("a"))
 Test1.eval(Nil, Abs("b", Var("a")))
 //│ 'a
 //│   where
-//│     'a :> Var | App['a] | Abs['a]
+//│     'a :> App['a] | Abs['a] | Var
 //│ res
 //│     = Abs {}
 
@@ -109,7 +109,7 @@ Test1.eval(Cons(("c", Var("d")), Nil), App(Abs("b", Var("b")), Var("c")))
 Test1.eval(Cons(("c", Abs("d", Var("d"))), Nil), App(Abs("b", Var("b")), Var("c")))
 //│ 'a
 //│   where
-//│     'a :> App['a] | Abs['a] | Abs[Var] | Var
+//│     'a :> Abs[Var] | Var | App['a] | Abs['a]
 //│ res
 //│     = Var {}
 
@@ -197,7 +197,7 @@ module Test3 extends EvalVar, EvalExpr, EvalLambda
 //│   fun eval: (Cons[{_1: string, _2: 'result}] | Nil, 'a,) -> 'result
 //│ }
 //│ where
-//│   'result :> Num | Var | 'b | App['result] | Abs['result]
+//│   'result :> App['result] | Abs['result] | Num | Var | 'b
 //│   'b <: Add['c] | Mul['c] | Num | Var
 //│   'c <: 'a
 //│   'a <: Abs['a] | App['a & (Abs['a] | ~#Abs)] | 'b & ~#Abs & ~#App

@@ -30,14 +30,27 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     val info = ctx.tyDefs2(clsNme)
     // require(!info.isComputing)
     
+    // TODO intersect with found signature!
+    val fromRft = rfnt(fld)
+    
+    def nope =
+      err(msg"${info.decl.kind.str.capitalize} `${info.decl.name}` does not contain member `${fld.name}`",
+        fld.toLoc).toUpper(noProv)
+    
     if (info.isComputing) {
       
-      rfnt(fld) match {
-        case S(fty) =>
-          fty
+      info.typedFields.get(fld) match {
+        case S(fty) => fty
         case N =>
-          // TODO allow when annotated
-          err(msg"unsupported indirectly recursive member access", fld.toLoc).toUpper(noProv)
+          fromRft match {
+            case S(fty) =>
+              fty
+            case N =>
+              if (info.allFields.contains(fld))
+                err(msg"Indirectly-recursive member should have type annotation", fld.toLoc).toUpper(noProv)
+              else
+                nope
+          }
       }
       
     } else info.complete() match {
@@ -51,8 +64,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             err(msg"access to ${cls.td.kind.str} member not yet supported",
               fld.toLoc).toUpper(noProv)
           case N =>
-            err(msg"${cls.td.kind.str} `${cls.td.nme.name}` does not contain member `${fld.name}`",
-              fld.toLoc).toUpper(noProv)
+            nope
         }
         println(s"Lookup ${cls.td.nme.name}.${fld.name} : $raw where ${raw.ub.showBounds}")
         
@@ -427,6 +439,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       annoyingImpl(ls, done_ls, rs, done_rs)
     }
     
+    // TODO improve by moving things to the right side *before* branching out in the search!
     def annoyingImpl(ls: Ls[SimpleType], done_ls: LhsNf, rs: Ls[SimpleType], done_rs: RhsNf)
           (implicit cctx: ConCtx, prevCctxs: Ls[ConCtx], ctx: Ctx, shadows: Shadows, dbgHelp: Str = "Case")
           : Unit =

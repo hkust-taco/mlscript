@@ -330,13 +330,28 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   
   /** Type checks a typing unit, which is a sequence of possibly-nutually-recursive type and function definitions
    *  interleaved with plain statements. */
-  def typeTypingUnit(tu: TypingUnit, allowPure: Bool)
+  def typeTypingUnit(tu: TypingUnit, topLevel: Bool)
         (implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType]): TypedTypingUnit =
       trace(s"${ctx.lvl}. Typing $tu")
   {
+    // println(s"vars ${vars}")
+    
     val named = mutable.Map.empty[Str, LazyTypeInfo]
     
-    val infos = tu.entities.collect {
+    // * Not sure we should support declaring signature with the `ident: type` syntax
+    // val (signatures, otherEntities) = tu.entities.partitionMap {
+    //   case Asc(v: Var, ty) => L(v -> ty)
+    //   case s => R(s)
+    // }
+    val (decls, statements) = tu.entities.partitionMap {
+      case decl: NuDecl => L(decl)
+      case s => R(s)
+    }
+    val implems = if (topLevel) decls else decls.filter {
+      case NuFunDef(N, nme, tparams, R(rhs)) => false // There will already be typed in DelayedTypeInfo
+      case _ => true
+    }
+    val infos = implems.map {
       case decl: NuDecl =>
         val lti = new DelayedTypeInfo(decl, implicitly)
         decl match {
@@ -365,7 +380,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     ctx ++= completedInfos
     
     // * Type the block statements
-    def go(stmts: Ls[Statement])(implicit ctx: Ctx): Opt[ST] = stmts match {
+    def go(stmts: Ls[Statement]): Opt[ST] = stmts match {
       case s :: stmts =>
         val res_ty = s match {
           case decl: NuDecl => N
@@ -375,7 +390,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
             S(typeTerms(dss, false, Nil)(ctx, raise, TypeProvenance(s.toLoc, s match {
               case trm: Term => trm.describe
               case s => "statement"
-            }), Map.empty, genLambdas = false))
+            }), vars, genLambdas = false))
         }
         stmts match {
           case Nil => res_ty
@@ -385,9 +400,9 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
         }
       case Nil => N
     }
-    val res_ty = trace("Typing unit statements") { go(tu.entities) } (r => s": $r")
+    val res_ty = trace("Typing unit statements") { go(statements) } (r => s": $r")
     
-    TypedTypingUnit(completedInfos.map(_._2.member).toList, res_ty)
+    TypedTypingUnit(completedInfos.map(_._2.member), res_ty)
     
   }()
   
@@ -407,7 +422,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     private implicit val prov: TP =
       TypeProvenance(decl.toLoc, decl.describe)
     
-    println(s"${ctx.lvl}. Created lazy type info $decl")
+    println(s"${ctx.lvl}. Created lazy type info for $decl")
     
     lazy val tparams: TyParams = ctx.nest.nextLevel { implicit ctx =>
       decl match {
@@ -457,7 +472,57 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
       }
     }
     
-    val tv: TV = freshVar(
+    lazy val paramSymbols = typedParams.map(p => p._1.name -> VarSymbol(p._2.ub, p._1))
+    
+    // TODO also import signatures from base classes and mixins!
+    lazy val typedSignatures: Ls[(NuFunDef, ST)] = decl match {
+      case td: NuTypeDef => ctx.nest.nextLevel { implicit ctx =>
+        val (signatures, rest) = td.body.entities.partitionMap {
+          case fd @ NuFunDef(N, nme, tparams, R(rhs)) =>
+            L((fd, rhs))
+          // TODO also pick up signature off implems with typed params/results
+          case s => R(s)
+        }
+        // TODO use `rest`
+        
+        ctx ++= paramSymbols
+        
+        signatures.map { case (fd, rhs) =>
+          (fd, ctx.poly { implicit ctx: Ctx =>
+            vars ++ fd.tparams.map { tn =>
+              tn.name -> freshVar(TypeProvenance(tn.toLoc, "method type parameter",
+                originName = S(tn.name),
+                isType = true), N, S(tn.name))
+            } |> { implicit vars =>
+              
+              typeType(rhs).withProv(
+                TypeProvenance(Loc(rhs :: fd.nme :: fd.tparams), s"signature of member ${fd.nme.name}")
+              )
+              
+            }
+          })
+        }
+      }
+      case _: NuFunDef => Nil
+    }
+    lazy val typedSignatureMembers: Ls[Str -> TypedNuFun] =
+      typedSignatures.iterator.map { case (fd, ty) =>
+        fd.nme.name -> TypedNuFun(level, fd, ty)
+      }.toList
+    
+    lazy val allFields: Set[Var] = decl match {
+      case td: NuTypeDef =>
+        // TODO also get fields from parents!
+        (td.params.fields.iterator.flatMap(_._1) ++ td.body.entities.iterator.collect {
+          case fd: NuFunDef => fd.nme
+        }).toSet
+      case _: NuFunDef => Set.empty
+    }
+    
+    lazy val typedFields: Map[Var, FieldType] =
+      typedParams.toMap ++ typedSignatures.iterator.map(fd_ty => fd_ty._1.nme -> fd_ty._2.toUpper(noProv))
+    
+    lazy val mutRecTV: TV = freshVar(
       TypeProvenance(decl.toLoc, decl.describe, S(decl.name), decl.isInstanceOf[NuTypeDef]),
       N,
       S(decl.name))(level + 1)
@@ -510,7 +575,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       // * to avoid cyclic-looking constraints due to the polymorphic recursion limitation,
                       // * as these functions are allowed to be mutually-recursive.
                       // * In the future, we should type each mutual-recursion-component independently
-                      // * and polymorphically wrt to non-recursive users of them.
+                      // * and polymorphically wrt to external uses of them.
                       implicit val gl: GenLambdas = false
                       val body_ty = ctx.nextLevel { implicit ctx: Ctx =>
                         // * Note: can't use `ctx.poly` instead of `ctx.nextLevel` because all the methods
@@ -518,21 +583,24 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                         vars ++ fd.tparams.map { tn =>
                           tn.name -> freshVar(TypeProvenance(tn.toLoc, "method type parameter",
                             originName = S(tn.name),
-                            isType = true), N)
+                            isType = true), N, S(tn.name))
                         } |> { implicit vars =>
                           typeTerm(body)
                         }
-                      }
+                      }.withProv(TypeProvenance(fd.toLoc, s"definition of method ${fd.nme.name}"))
                       TypedNuFun(ctx.lvl, fd, body_ty)
                   }
               }
-              ctx.nextLevel { implicit ctx: Ctx => constrain(res_ty.bodyType, tv) }
+              ctx.nextLevel { implicit ctx: Ctx => constrain(res_ty.bodyType, mutRecTV) }
               res_ty
               
               
             case td: NuTypeDef =>
               
-              td.kind match {
+              val signatures = typedSignatures
+              ctx ++= signatures.map(nt => nt._1.name -> VarSymbol(nt._2, nt._1.nme))
+              
+              val (res, funMembers) = td.kind match {
                 
                 case Trt =>
                   err(msg"traits are not yet supported" -> td.toLoc :: Nil)
@@ -552,7 +620,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       err(msg"type alias definition requires a right-hand side", td.toLoc)
                   }
                   
-                  TypedNuAls(outerCtx.lvl, td, tparams, body_ty)
+                  TypedNuAls(outerCtx.lvl, td, tparams, body_ty) -> Nil
                   
                 case Cls | Nms =>
                   
@@ -563,7 +631,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       err(msg"${td.kind.str} parameters are not supported",
                         Loc(typedParams.iterator.map(_._1)))
                     
-                    ctx ++= typedParams.map(p => p._1.name -> VarSymbol(p._2.ub, p._1))
+                    ctx ++= paramSymbols
                     
                     ctx += "this" -> VarSymbol(thisTV, Var("this"))
                     
@@ -689,24 +757,26 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     
                     ctx += "super" -> VarSymbol(thisType, Var("super"))
                     
-                    val ttu = typeTypingUnit(td.body, allowPure = false)
+                    val ttu = typeTypingUnit(td.body, topLevel = false)
                     
+                    // TODO report non-unit result/statements?
                     // TODO check overriding
                     val clsMems = ttu.entities
                     
-                    val mems = baseMems ++ clsMems
+                    val impltdMems = baseMems ++ clsMems
+                    val mems = impltdMems.map(d => d.name -> d).toMap ++ typedSignatureMembers
                     
                     TypedNuCls(outerCtx.lvl, td, ttu,
-                      tparams, typedParams, mems.map(d => d.name -> d).toMap,
+                      tparams, typedParams, mems,
                       // if (td.kind is Nms) TopType else thisTV
                       TopType
-                    )(thisType)
+                    )(thisType) -> impltdMems
                   }
                 case Mxn =>
                   if (td.parents.nonEmpty)
                     err(msg"mixin definitions cannot yet extend parents" -> Loc(td.parents) :: Nil)
                   ctx.nest.nextLevel { implicit ctx =>
-                    ctx ++= typedParams.map(p => p._1.name -> VarSymbol(p._2.ub, p._1))
+                    ctx ++= paramSymbols
                     val paramMems = typedParams.map(f => NuParam(f._1, f._2, isType = false))
                     implicit val vars: Map[Str, SimpleType] =
                       outerVars ++ Map.empty // TODO type params
@@ -714,11 +784,34 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     val superTV = freshVar(provTODO, N, S("super"))
                     ctx += "this" -> VarSymbol(thisTV, Var("this"))
                     ctx += "super" -> VarSymbol(superTV, Var("super"))
-                    val ttu = typeTypingUnit(td.body, allowPure = false)
-                    val mems = paramMems ++ttu.entities
-                    TypedNuMxn(td, thisTV, superTV, tparams, typedParams, mems.map(m => m.name -> m).toMap, ttu)
+                    val ttu = typeTypingUnit(td.body, topLevel = false)
+                    val impltdMems = paramMems ++ ttu.entities
+                    val mems = impltdMems.map(m => m.name -> m).toMap ++ typedSignatureMembers
+                    TypedNuMxn(td, thisTV, superTV, tparams, typedParams, mems, ttu) -> impltdMems
                   }
               }
+              
+              // TODO check member duplication? in mems or before?
+              
+              // * Check signatures
+              // val isAbstract = // TODO
+              ctx.nextLevel { implicit ctx: Ctx => 
+                typedSignatures.foreach { case (fd, sign) =>
+                  implicit val prov: TP = sign.prov
+                  funMembers.find(m => m.name === fd.nme.name) match {
+                    case S(mem: TypedNuTermDef) =>
+                      val memSign = mem.typeSignature
+                      implicit val prov: TP = memSign.prov
+                      constrain(memSign, sign)
+                    case S(mem: NuParam) =>
+                    case S(_) => ??? // TODO
+                    case N =>
+                      err(msg"Member ${fd.nme.name} is declared but not defined", fd.nme.toLoc)
+                  }
+                }
+              }
+              
+              res
           }
           
         } finally { isComputing = false }
@@ -732,8 +825,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
       decl match {
         case _: NuFunDef =>
           if (isComputing) {
-            println(s"Already computing! Using TV: $tv")
-            tv // TODO make sure this is never misused (ie not accessed from difft scope/level)
+            println(s"Already computing! Using TV: $mutRecTV")
+            mutRecTV // TODO make sure this is never misused (ie not accessed from difft scope/level)
           } else complete() match {
             case TypedNuFun(_, fd, ty) =>
               ty

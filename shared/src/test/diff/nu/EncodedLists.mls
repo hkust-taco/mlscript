@@ -4,6 +4,7 @@
 
 class List<A> {
   fun match: forall 'res; (ifNil: () => 'res, ifCons: ('res, List[A]) => 'res) => 'res
+  fun match = error // TODO use self-type...
 }
 let Nil: List<nothing>
 let Cons: (head: 'a, tail: List<'a>) => List<'a>
@@ -19,11 +20,11 @@ let x: List<int>
 // FIXME
 x: List<anything>
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.20: 	x: List<anything>
+//│ ║  l.21: 	x: List<anything>
 //│ ║        	^
 //│ ╟── expression of type `anything` is not an instance of type `int`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.16: 	let x: List<int>
+//│ ║  l.17: 	let x: List<int>
 //│ ║        	            ^^^
 //│ ╟── Note: type parameter A is defined at:
 //│ ║  l.5: 	class List<A> {

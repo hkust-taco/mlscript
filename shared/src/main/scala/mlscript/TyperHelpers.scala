@@ -513,9 +513,9 @@ abstract class TyperHelpers { Typer: Typer =>
         case (_, NegType(und)) => (this & und) <:< BotType
         case (NegType(und), _) => TopType <:< (that | und)
         case (tr: TypeRef, _)
-          if (primitiveTypes contains tr.defn.name) => tr.expand <:< that
+          if (primitiveTypes contains tr.defn.name) && tr.canExpand => tr.expandOrCrash <:< that
         case (_, tr: TypeRef)
-          if (primitiveTypes contains tr.defn.name) => this <:< tr.expand
+          if (primitiveTypes contains tr.defn.name) && tr.canExpand => this <:< tr.expandOrCrash
         case (tr1: TypeRef, _) => ctx.tyDefs.get(tr1.defn.name) match {
             case S(td1) =>
           that match {
@@ -604,7 +604,7 @@ abstract class TyperHelpers { Typer: Typer =>
       case ct: ConstrainedType => ct
     }
     def unwrapAll(implicit ctx: Ctx): SimpleType = unwrapProxies match {
-      case tr: TypeRef => tr.expand.unwrapAll
+      case tr: TypeRef if tr.canExpand => tr.expandOrCrash.unwrapAll
       case u => u
     }
     def negNormPos(f: SimpleType => SimpleType, p: TypeProvenance)
@@ -613,7 +613,7 @@ abstract class TyperHelpers { Typer: Typer =>
       case ComposedType(true, l, r) => l.negNormPos(f, p) & r.negNormPos(f, p)
       case ComposedType(false, l, r) => l.negNormPos(f, p) | r.negNormPos(f, p)
       case NegType(n) => f(n).withProv(p)
-      case tr: TypeRef if !preserveTypeRefs => tr.expand.negNormPos(f, p)
+      case tr: TypeRef if !preserveTypeRefs && tr.canExpand => tr.expandOrCrash.negNormPos(f, p)
       case _: RecordType | _: FunctionType => BotType // Only valid in positive positions!
         // Because Top<:{x:S}|{y:T}, any record type negation neg{x:S}<:{y:T} for any y=/=x,
         // meaning negated records are basically bottoms.
@@ -962,8 +962,27 @@ abstract class TyperHelpers { Typer: Typer =>
   
   trait TypeRefImpl { self: TypeRef =>
     
-    def canExpand(implicit ctx: Ctx): Bool = ctx.tyDefs2.get(defn.name).forall(_.result.isDefined)
-    def expand(implicit ctx: Ctx): SimpleType = expandWith(paramTags = true)
+    def canExpand(implicit ctx: Ctx): Bool =
+      ctx.tyDefs2.get(defn.name).forall(info =>
+        // * Object types do not need to be completed in order to be expanded
+        info.kind.isInstanceOf[ObjDefKind]
+        || info.result.isDefined)
+    def expand(implicit ctx: Ctx, raise: Raise): SimpleType = {
+      ctx.tyDefs2.get(defn.name) match {
+        case S(info) =>
+          if (!info.kind.isInstanceOf[ObjDefKind]) {
+            info.complete()
+            if (info.result.isEmpty) // * This can only happen if completion yielded an error
+              return errType
+          }
+        case N =>
+      }
+      expandWith(paramTags = true)
+    }
+    def expandOrCrash(implicit ctx: Ctx): SimpleType = {
+      require(canExpand)
+      expandWith(paramTags = true)
+    }
     def expandWith(paramTags: Bool)(implicit ctx: Ctx): SimpleType = //if (defn.name.isCapitalized) {
       ctx.tyDefs2.get(defn.name).map { info =>
         info.result match {
@@ -972,16 +991,22 @@ abstract class TyperHelpers { Typer: Typer =>
             substSyntax(td.body)(td.tparams.lazyZip(targs).map {
               case (tp, ta) => SkolemTag(tp._2.level, tp._2)(noProv) -> ta
             }.toMap)
-          case S(td: TypedNuCls) =>
-            assert(td.tparams.size === targs.size)
-            clsNameToNomTag(td.td)(provTODO, ctx) &
-              RecordType(td.tparams.lazyZip(targs).map {
-                case ((tn, tv, vi), ta) => // TODO use vi
-                  val fldNme = td.td.nme.name + "#" + tn.name
-                  Var(fldNme).withLocOf(tn) -> FieldType(S(ta), ta)(provTODO)
-              })(provTODO)
-          case S(d) => wat("unexpected declaration in type reference", d)
-          case N => lastWords("cannot expand unforced type reference") // Definition was not forced yet, which indicates an error (hopefully)
+          case _ =>
+            info.decl match {
+              case td: NuTypeDef if td.kind.isInstanceOf[ObjDefKind] =>
+                assert(td.tparams.size === targs.size)
+                clsNameToNomTag(td)(provTODO, ctx) &
+                  RecordType(info.tparams.lazyZip(targs).map {
+                    case ((tn, tv, vi), ta) => // TODO use vi
+                      val fldNme = td.nme.name + "#" + tn.name
+                      Var(fldNme).withLocOf(tn) -> FieldType(S(ta), ta)(provTODO)
+                  })(provTODO)
+              case td: NuTypeDef if td.kind is Als =>
+                // * Definition was not forced yet, which indicates an error (hopefully)
+                lastWords("cannot expand unforced type alias")
+              case d =>
+                wat("unexpected declaration in type reference", d)
+            }
         }
     }.getOrElse {
       val td = ctx.tyDefs(defn.name)
@@ -1007,7 +1032,13 @@ abstract class TyperHelpers { Typer: Typer =>
     def mkTag(implicit ctx: Ctx): Opt[ClassTag] = tag.getOrElse {
       val res = ctx.tyDefs.get(defn.name) match {
         case S(td: TypeDef) if td.kind is Cls => S(clsNameToNomTag(td)(noProv, ctx))
-        case _ => N
+        case _ => ctx.tyDefs2.get(defn.name) match {
+          case S(lti) => lti.decl match {
+            case td: NuTypeDef if td.kind is Cls => S(clsNameToNomTag(td)(noProv, ctx))
+            case _ => N
+          }
+          case _ => N
+        }
       }
       tag = S(res)
       res
@@ -1203,7 +1234,7 @@ abstract class TyperHelpers { Typer: Typer =>
   object AliasOf {
     def unapply(ty: ST)(implicit ctx: Ctx): S[ST] = {
       def go(ty: ST, traversedVars: Set[TV]): S[ST] = ty match {
-        case tr: TypeRef => go(tr.expand, traversedVars)
+        case tr: TypeRef if tr.canExpand => go(tr.expandOrCrash, traversedVars)
         case proxy: ProxyType => go(proxy.underlying, traversedVars)
         case tv @ AssignedVariable(ty) if !traversedVars.contains(tv) =>
           go(ty, traversedVars + tv)

@@ -9,7 +9,7 @@
 
 :e
 class Foo { fun test = this.x }
-//│ ╔══[ERROR] unsupported indirectly recursive member access
+//│ ╔══[ERROR] Class `Foo` does not contain member `x`
 //│ ║  l.11: 	class Foo { fun test = this.x }
 //│ ╙──      	                           ^^
 //│ class Foo() {
@@ -19,7 +19,7 @@ class Foo { fun test = this.x }
 
 :e
 class Foo(n: int) { fun test = this.x }
-//│ ╔══[ERROR] unsupported indirectly recursive member access
+//│ ╔══[ERROR] Class `Foo` does not contain member `x`
 //│ ║  l.21: 	class Foo(n: int) { fun test = this.x }
 //│ ╙──      	                                   ^^
 //│ class Foo(n: int) {
@@ -29,7 +29,7 @@ class Foo(n: int) { fun test = this.x }
 
 :e
 class Foo<A>(n: A) { fun test = this.x }
-//│ ╔══[ERROR] unsupported indirectly recursive member access
+//│ ╔══[ERROR] Class `Foo` does not contain member `x`
 //│ ║  l.31: 	class Foo<A>(n: A) { fun test = this.x }
 //│ ╙──      	                                    ^^
 //│ class Foo[A](n: A) {
@@ -43,7 +43,7 @@ class Foo {
   this: { x: 'a }
   // fun test = this.x
 }
-//│ ╔══[ERROR] unsupported indirectly recursive member access
+//│ ╔══[ERROR] Class `Foo` does not contain member `x`
 //│ ║  l.43: 	  this: { x: 'a }
 //│ ╙──      	          ^
 //│ class Foo()
@@ -52,10 +52,10 @@ class Foo {
 // TODO
 // * All on one line:
 class Test { this: { x: int}; fun test = this.x }
-//│ ╔══[ERROR] unsupported indirectly recursive member access
+//│ ╔══[ERROR] Class `Test` does not contain member `x`
 //│ ║  l.54: 	class Test { this: { x: int}; fun test = this.x }
 //│ ╙──      	                                             ^^
-//│ ╔══[ERROR] unsupported indirectly recursive member access
+//│ ╔══[ERROR] Class `Test` does not contain member `x`
 //│ ║  l.54: 	class Test { this: { x: int}; fun test = this.x }
 //│ ╙──      	                     ^
 //│ class Test() {
