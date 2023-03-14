@@ -200,7 +200,6 @@ isValue(App(Var("x"), Var("y")))
 //│ res
 //│     = false
 
-:w
 fun hasFree(t, n) =
   if t is
     // let __ = debug(concat3(showTerm(t), ", ", n))
@@ -209,12 +208,6 @@ fun hasFree(t, n) =
     Abs(Var(name), body) then hasFree(body, n)
     App(lhs, rhs) then hasFree(lhs, n) || hasFree(rhs, n)
     _ then false
-//│ ╔══[WARNING] Found a duplicated else branch
-//│ ║  l.211: 	    _ then false
-//│ ║         	           ^^^^^
-//│ ╟── The first else branch was declared here.
-//│ ║  l.209: 	    Abs(Var(name), body) then hasFree(body, n)
-//│ ╙──       	                              ^^^^^^^^^^^^^^^^
 //│ fun hasFree: (anything, anything,) -> bool
 
 fun showHasFree(t, n) =
@@ -342,7 +335,6 @@ fun findFreshName(name, freeNames) =
 fun freshName(name, body) = findFreshName(name, fv(body))
 //│ fun freshName: (string, Abs | App | Var,) -> string
 
-:w
 fun subst(t, n, v) =
   if t is
     Var(name) and eq(name)(n) then v
@@ -352,12 +344,6 @@ fun subst(t, n, v) =
       _ then Abs(Var(name), subst(body, n, v))
     App(lhs, rhs) then App(subst(lhs, n, v), subst(rhs, n, v))
     _ then t
-//│ ╔══[WARNING] Found a duplicated else branch
-//│ ║  l.354: 	    _ then t
-//│ ║         	           ^
-//│ ╟── The first else branch was declared here.
-//│ ║  l.352: 	      _ then Abs(Var(name), subst(body, n, v))
-//│ ╙──       	             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ fun subst: forall 'a. (Abs | App | Var | Term & 'a & ~#Abs & ~#App & ~#Var, anything, Term & 'a,) -> (Abs | App | Var | 'a)
 
 fun showSubst(t, n, v) =

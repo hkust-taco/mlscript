@@ -48,7 +48,7 @@ sealed abstract class MutCaseOf extends WithBindings {
     (implicit raise: Diagnostic => Unit): Unit
   def mergeDefault
     (bindings: Ls[(Bool, Var, Term)], default: Term)
-    (implicit raise: Diagnostic => Unit): Unit
+    (implicit raise: Diagnostic => Unit): Int
 
   // TODO: Make it immutable.
   var locations: Ls[Loc] = Nil
@@ -153,7 +153,12 @@ object MutCaseOf {
       branch match {
         // The CC is a wildcard. So, we call `mergeDefault`.
         case Conjunction(Nil, trailingBindings) -> term =>
-          this.mergeDefault(trailingBindings, term)
+          if (mergeDefault(trailingBindings, term) == 0) {
+            import Message.MessageContext
+            raise(WarningReport(
+              msg"Found a redundant else branch" -> term.toLoc :: Nil
+            ))
+          }
         // The CC is an if-then-else. We create a pattern match of true/false.
         case Conjunction((head @ BooleanTest(test)) :: tail, trailingBindings) -> term =>
           // If the test is the same. So, we merge.
@@ -181,18 +186,15 @@ object MutCaseOf {
           }
       }
 
-    def mergeDefault(bindings: Ls[(Bool, Var, Term)], default: Term)(implicit raise: Diagnostic => Unit): Unit = {
-      whenTrue.mergeDefault(bindings, default)
-      whenFalse match {
-        case Consequent(term) =>
-          import Message.MessageContext
-          raise(WarningReport(
-            msg"Found a duplicated else branch" -> default.toLoc ::
-            (msg"The first else branch was declared here." -> term.toLoc) ::
-              Nil))
-        case MissingCase =>
-          whenFalse = Consequent(default).withBindings(bindings)
-        case _: IfThenElse | _: Match => whenFalse.mergeDefault(bindings, default)
+    def mergeDefault(bindings: Ls[(Bool, Var, Term)], default: Term)(implicit raise: Diagnostic => Unit): Int = {
+      whenTrue.mergeDefault(bindings, default) + {
+        whenFalse match {
+          case Consequent(term) => 0
+          case MissingCase =>
+            whenFalse = Consequent(default).withBindings(bindings)
+            1
+          case _: IfThenElse | _: Match => whenFalse.mergeDefault(bindings, default)
+        }
       }
     }
   }
@@ -259,13 +261,16 @@ object MutCaseOf {
       }
     }
 
-    def mergeDefault(bindings: Ls[(Bool, Var, Term)], default: Term)(implicit raise: Diagnostic => Unit): Unit = {
-      branches.foreach {
+    def mergeDefault(bindings: Ls[(Bool, Var, Term)], default: Term)(implicit raise: Diagnostic => Unit): Int = {
+      branches.iterator.map {
         case MutCase(_, consequent) => consequent.mergeDefault(bindings, default)
-      }
-      wildcard match {
-        case N => wildcard = S(Consequent(default).withBindings(bindings))
-        case S(consequent) => consequent.mergeDefault(bindings, default)
+      }.sum + {
+        wildcard match {
+          case N =>
+            wildcard = S(Consequent(default).withBindings(bindings))
+            1
+          case S(consequent) => consequent.mergeDefault(bindings, default)
+        }
       }
     }
   }
@@ -275,7 +280,7 @@ object MutCaseOf {
     def merge(branch: Conjunction -> Term)(implicit raise: Diagnostic => Unit): Unit =
       raise(WarningReport(Message.fromStr("duplicated branch") -> N :: Nil))
 
-    def mergeDefault(bindings: Ls[(Bool, Var, Term)], default: Term)(implicit raise: Diagnostic => Unit): Unit = ()
+    def mergeDefault(bindings: Ls[(Bool, Var, Term)], default: Term)(implicit raise: Diagnostic => Unit): Int = 0
   }
   final case object MissingCase extends MutCaseOf {
     def describe: Str = "MissingCase"
@@ -283,7 +288,7 @@ object MutCaseOf {
     def merge(branch: Conjunction -> Term)(implicit raise: Diagnostic => Unit): Unit =
       lastWords("`MissingCase` is a placeholder and cannot be merged")
 
-    def mergeDefault(bindings: Ls[(Bool, Var, Term)], default: Term)(implicit raise: Diagnostic => Unit): Unit = ()
+    def mergeDefault(bindings: Ls[(Bool, Var, Term)], default: Term)(implicit raise: Diagnostic => Unit): Int = 0
   }
 
   private def buildFirst(conjunction: Conjunction, term: Term): MutCaseOf = {
