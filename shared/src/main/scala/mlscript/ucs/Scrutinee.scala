@@ -18,7 +18,9 @@ final case class Scrutinee(var local: Opt[Var], term: Term)(val matchRootLoc: Op
     *
     * @return `Some` if the scrutinee is localized, otherwise, `None`.
     */
-  def asBinding: Opt[(Bool, Var, Term)] = local.map((false, _, term))
+  def asBinding: Opt[LetBinding] = local.map {
+    LetBinding(LetBinding.Kind.ScrutineeAlias, false, _, term)
+  }
 
   override def toString: String =
     (local match {

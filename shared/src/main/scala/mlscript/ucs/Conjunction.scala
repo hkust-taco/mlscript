@@ -8,7 +8,7 @@ import scala.annotation.tailrec
 /**
   * A `Conjunction` represents a list of `Clause`s.
   */
-final case class Conjunction(clauses: Ls[Clause], trailingBindings: Ls[(Bool, Var, Term)]) {
+final case class Conjunction(clauses: Ls[Clause], trailingBindings: Ls[LetBinding]) {
   /**
     * Concatenate two `Conjunction` together.
     * 
@@ -51,7 +51,7 @@ final case class Conjunction(clauses: Ls[Clause], trailingBindings: Ls[(Bool, Va
     * @param suffix the list of clauses to append to this conjunction
     * @return a new conjunction with clauses from `this` and `suffix`
     */
-  def +(lastBinding: (Bool, Var, Term)): Conjunction =
+  def +(lastBinding: LetBinding): Conjunction =
     Conjunction(clauses, trailingBindings :+ lastBinding)
 
   def separate(expectedScrutinee: Scrutinee): Opt[(MatchClass \/ MatchLiteral, Conjunction)] = {
@@ -87,7 +87,7 @@ final case class Conjunction(clauses: Ls[Clause], trailingBindings: Ls[(Bool, Va
     * @param interleavedLets the buffer of let bindings in the current context
     * @return idential to `conditions`
     */
-  def withBindings(implicit interleavedLets: Buffer[(Bool, Var, Term)]): Conjunction = {
+  def withBindings(implicit interleavedLets: Buffer[LetBinding]): Conjunction = {
     clauses match {
       case Nil => Conjunction(Nil, interleavedLets.toList ::: trailingBindings)
       case head :: _ =>

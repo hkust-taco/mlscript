@@ -107,4 +107,17 @@ fun foo(x) = if x is foo() then 0
 //│ Code generation encountered an error:
 //│   if expression was not desugared
 
+module Nil
+class Cons[out A](head: A, tail: Cons[A] | Nil)
+//│ module Nil()
+//│ class Cons[A](head: A, tail: Cons[A] | Nil)
 
+:w
+fun join(xs) =
+  if xs is
+    Nil then ""
+    Cons(x, Nil) then toString(x)
+    Cons(x, xs') then concat(toString(x))(concat(", ")(join(xs')))
+//│ ╔══[WARNING] duplicated branch
+//│ ╙──
+//│ fun join: (Cons[anything] | Nil) -> string

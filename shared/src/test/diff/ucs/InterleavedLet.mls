@@ -272,13 +272,21 @@ fun mapPartition(f, xs) =
     Cons(x, xs) and mapPartition(f, xs) is tmp0 and res.fst is l and res.snd is r and f(x) is
       Left(v)  then Pair(Cons(v, l), r)
       Right(v) then Pair(l, Cons(v, r))
-//│ mapPartition: ('head -> (Left & {leftValue: 'leftValue} | Right & {rightValue: 'rightValue}), 'tail,) -> (Pair & {fst: forall 'a. Cons & {head: 'leftValue, tail: forall 'a. 'fst | 'a} | 'fst | 'a, snd: forall 'b. Cons & {head: 'rightValue, tail: forall 'b. 'fst | 'b} | 'fst | 'b})
-//│   where
-//│     'b :> Cons & {head: 0 | 1 | 2 | 3, tail: forall 'b. Nil | 'b}
-//│     'a :> Cons & {head: 0 | 1 | 2 | 3, tail: forall 'a. Nil | 'a}
-//│     'fst :> Cons & {head: 0 | 1 | 2 | 3, tail: 'fst} | Nil
-//│     'tail <: Cons & {head: 'head, tail: 'tail} | Nil
-//│             = [Function: mapPartition1]
+//│ ╔══[ERROR] identifier not found: l
+//│ ║  l.273: 	      Left(v)  then Pair(Cons(v, l), r)
+//│ ╙──       	                                 ^
+//│ ╔══[ERROR] identifier not found: r
+//│ ║  l.273: 	      Left(v)  then Pair(Cons(v, l), r)
+//│ ╙──       	                                     ^
+//│ ╔══[ERROR] identifier not found: l
+//│ ║  l.274: 	      Right(v) then Pair(l, Cons(v, r))
+//│ ╙──       	                         ^
+//│ ╔══[ERROR] identifier not found: r
+//│ ║  l.274: 	      Right(v) then Pair(l, Cons(v, r))
+//│ ╙──       	                                    ^
+//│ mapPartition: ('head -> (Left & {leftValue: 'leftValue} | Right & {rightValue: 'rightValue}), Cons & {head: 'head} | Nil,) -> (Pair & {fst: Cons & {head: 'leftValue, tail: error} | Nil | error, snd: Cons & {head: 'rightValue, tail: error} | Nil | error})
+//│ Code generation encountered an error:
+//│   unresolved symbol l
 
 // FIXME `b` should be bound here!
 // The example is actually wrong. `b` belongs to the consequent of `Left(b)`.
@@ -291,7 +299,7 @@ fun mn(a) =
       Right(b) then "right-defined"
     None       then "undefined"
 //│ ╔══[ERROR] identifier not found: b
-//│ ║  l.290: 	      let y = b + 1
+//│ ║  l.298: 	      let y = b + 1
 //│ ╙──       	              ^
 //│ mn: (None | Some & {value: Left | Right}) -> ("left-defined" | "right-defined" | "undefined")
 //│ Code generation encountered an error:

@@ -9,27 +9,6 @@ import scala.collection.mutable.{Map => MutMap, Set => MutSet, Buffer}
 import helpers._
 import mlscript.ucs.MutCaseOf.Consequent
 
-trait WithBindings { this: MutCaseOf =>
-  private val bindingsSet: MutSet[(Bool, Var, Term)] = MutSet.empty
-  private val bindings: Buffer[(Bool, Var, Term)] = Buffer.empty
-
-  def addBindings(newBindings: IterableOnce[(Bool, Var, Term)]): Unit = {
-    newBindings.iterator.foreach {
-      case binding if bindingsSet.contains(binding) => ()
-      case binding =>
-        bindingsSet += binding
-        bindings += binding
-    }
-  }
-
-  def getBindings: Iterable[(Bool, Var, Term)] = bindings
-
-  def withBindings(newBindings: IterableOnce[(Bool, Var, Term)]): MutCaseOf = {
-    addBindings(newBindings)
-    this
-  }
-}
-
 sealed abstract class MutCaseOf extends WithBindings {
   def kind: Str = {
     import MutCaseOf._
@@ -47,7 +26,7 @@ sealed abstract class MutCaseOf extends WithBindings {
     (branch: Conjunction -> Term)
     (implicit raise: Diagnostic => Unit): Unit
   def mergeDefault
-    (bindings: Ls[(Bool, Var, Term)], default: Term)
+    (bindings: Ls[LetBinding], default: Term)
     (implicit raise: Diagnostic => Unit): Int
 
   // TODO: Make it immutable.
@@ -67,7 +46,7 @@ object MutCaseOf {
       val baseIndent = "  " * indent
       val bindingNames = t.getBindings match {
         case Nil => ""
-        case bindings => bindings.iterator.map(_._2.name).mkString("[", ", ", "] ")
+        case bindings => bindings.iterator.map(_.name.name).mkString("[", ", ", "] ")
       }
       t match {
         case IfThenElse(condition, whenTrue, whenFalse) =>
@@ -213,7 +192,7 @@ object MutCaseOf {
           }
       }
 
-    def mergeDefault(bindings: Ls[(Bool, Var, Term)], default: Term)(implicit raise: Diagnostic => Unit): Int = {
+    def mergeDefault(bindings: Ls[LetBinding], default: Term)(implicit raise: Diagnostic => Unit): Int = {
       whenTrue.mergeDefault(bindings, default) + {
         whenFalse match {
           case Consequent(term) => 0
@@ -305,7 +284,7 @@ object MutCaseOf {
       }
     }
 
-    def mergeDefault(bindings: Ls[(Bool, Var, Term)], default: Term)(implicit raise: Diagnostic => Unit): Int = {
+    def mergeDefault(bindings: Ls[LetBinding], default: Term)(implicit raise: Diagnostic => Unit): Int = {
       branches.iterator.map {
         case MutCase.Constructor(_, consequent) => consequent.mergeDefault(bindings, default)
         case MutCase.Literal(_, consequent) => consequent.mergeDefault(bindings, default)
@@ -325,7 +304,7 @@ object MutCaseOf {
     def merge(branch: Conjunction -> Term)(implicit raise: Diagnostic => Unit): Unit =
       raise(WarningReport(Message.fromStr("duplicated branch") -> N :: Nil))
 
-    def mergeDefault(bindings: Ls[(Bool, Var, Term)], default: Term)(implicit raise: Diagnostic => Unit): Int = 0
+    def mergeDefault(bindings: Ls[LetBinding], default: Term)(implicit raise: Diagnostic => Unit): Int = 0
   }
   final case object MissingCase extends MutCaseOf {
     def describe: Str = "MissingCase"
@@ -333,7 +312,7 @@ object MutCaseOf {
     def merge(branch: Conjunction -> Term)(implicit raise: Diagnostic => Unit): Unit =
       lastWords("`MissingCase` is a placeholder and cannot be merged")
 
-    def mergeDefault(bindings: Ls[(Bool, Var, Term)], default: Term)(implicit raise: Diagnostic => Unit): Int = 0
+    def mergeDefault(bindings: Ls[LetBinding], default: Term)(implicit raise: Diagnostic => Unit): Int = 0
   }
 
   private def buildFirst(conjunction: Conjunction, term: Term): MutCaseOf = {
@@ -359,8 +338,12 @@ object MutCaseOf {
                 .withLocations(head.locations)
             )
             Match(scrutinee, branches, N)
-          case Binding(name, term) =>
-            rec(realTail).withBindings((false, name, term) :: Nil)
+          case Binding(name, term, isField) =>
+            val kind = if (isField)
+              LetBinding.Kind.FieldExtraction
+            else
+              LetBinding.Kind.ScrutineeAlias
+            rec(realTail).withBindings(LetBinding(kind, false, name, term) :: Nil)
         }).withBindings(head.bindings)
       case Conjunction(Nil, trailingBindings) =>
         Consequent(term).withBindings(trailingBindings)

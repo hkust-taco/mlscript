@@ -13,7 +13,7 @@ abstract class Clause {
   /**
     * Local interleaved let bindings declared before this condition.
     */
-  var bindings: Ls[(Bool, Var, Term)] = Nil
+  var bindings: Ls[LetBinding] = Nil
 
   /**
     * Locations of terms that build this `Clause`.
@@ -56,18 +56,19 @@ object Clause {
     override def toString(): String = s"«$test»" + bindingsToString
   }
 
-  final case class Binding(name: Var, term: Term)(
+  /**
+    * @param isField whether this binding is extracting a class field
+    */
+  final case class Binding(name: Var, term: Term, isField: Bool)(
     override val locations: Ls[Loc]
   ) extends Clause {
     override def toString(): String = s"«$name = $term»" + bindingsToString
   }
 
-  def showBindings(bindings: Ls[(Bool, Var, Term)]): Str =
+  def showBindings(bindings: Ls[LetBinding]): Str =
     bindings match {
       case Nil => ""
-      case bindings => bindings.map {
-        case (_, Var(name), _) => name
-      }.mkString("(", ", ", ")")
+      case bindings => bindings.map(_.name.name).mkString("(", ", ", ")")
     }
 
   def showClauses(clauses: Iterable[Clause]): Str = clauses.mkString("", " and ", "")

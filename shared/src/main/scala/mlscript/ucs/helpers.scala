@@ -84,15 +84,15 @@ object helpers {
     * @param bindings a list of bindings, 
     * @param body the final body
     */
-  def mkBindings(bindings: Ls[(Bool, Var, Term)], body: Term, defs: Set[Var]): Term = {
-    def rec(bindings: Ls[(Bool, Var, Term)], defs: Set[Var]): Term =
+  def mkBindings(bindings: Ls[LetBinding], body: Term, defs: Set[Var]): Term = {
+    def rec(bindings: Ls[LetBinding], defs: Set[Var]): Term =
       bindings match {
         case Nil => body
-        case (head @ (isRec, nameVar, value)) :: tail =>
-          if (defs.contains(head._2)) {
+        case LetBinding(_, isRec, nameVar, value) :: tail =>
+          if (defs.contains(nameVar)) {
             rec(tail, defs)
           } else {
-            Let(isRec, nameVar, value, rec(tail, defs + head._2))
+            Let(isRec, nameVar, value, rec(tail, defs + nameVar))
           }
       }
     rec(bindings, defs)
