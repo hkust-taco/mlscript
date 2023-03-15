@@ -43,44 +43,50 @@ object MutCaseOf {
 
   def show(t: MutCaseOf): Ls[Str] = {
     val lines = Buffer.empty[String]
-    def rec(t: MutCaseOf, indent: Int, leading: String): Unit = {
+    def rec(t: MutCaseOf, indent: Int): Unit = {
       val baseIndent = "  " * indent
-      val bindingNames = t.getBindings match {
-        case Nil => ""
-        case bindings => bindings.iterator.map(_.name.name).mkString("[", ", ", "] ")
-      }
+      lazy val bindingLines = t.getBindings.iterator.map {
+        case LetBinding(_, recursive, name, term) =>
+          // Show bindings
+          s"[binding $name = $term]"
+      }.toList
       t match {
         case IfThenElse(condition, whenTrue, whenFalse) =>
           // Output the `whenTrue` with the prefix "if".
-          lines += baseIndent + leading + bindingNames + s"if «$condition»"
-          rec(whenTrue, indent + 1, "")
+          bindingLines.foreach { lines += baseIndent + _ }
+          lines += baseIndent + s"if «$condition»"
+          rec(whenTrue, indent + 1)
           // Output the `whenFalse` case with the prefix "else".
-          lines += s"$baseIndent${leading}else"
-          rec(whenFalse, indent + 1, "")
+          lines += s"${baseIndent}else"
+          rec(whenFalse, indent + 1)
         case Match(scrutinee, branches, default) =>
-          lines += baseIndent + leading + bindingNames + showScrutinee(scrutinee) + " match"
+          bindingLines.foreach { lines += baseIndent + _ }
+          lines += baseIndent + showScrutinee(scrutinee) + " match"
           branches.foreach {
             case MutCase.Literal(literal, consequent) =>
               lines += s"$baseIndent  case $literal =>"
-              rec(consequent, indent + 1, "")
+              rec(consequent, indent + 1)
             case MutCase.Constructor(Var(className) -> fields, consequent) =>
               lines += s"$baseIndent  case $className =>"
               fields.foreach { case (field, Var(alias)) =>
-                lines += s"$baseIndent    let $alias = .$field"
+                // Show pattern bindings.
+                lines += s"$baseIndent    [pattern $alias = ${scrutinee.reference}.$field]"
               }
-              rec(consequent, indent + 2, "")
+              rec(consequent, indent + 2)
           }
           default.foreach { consequent =>
             lines += s"$baseIndent  default"
-            rec(consequent, indent + 2, "")
+            rec(consequent, indent + 2)
           }
         case Consequent(term) =>
-          lines += s"$baseIndent$leading$bindingNames«$term»"
+          bindingLines.foreach { lines += baseIndent + _ }
+          lines += s"$baseIndent«$term»"
         case MissingCase =>
-          lines += s"$baseIndent$leading$bindingNames<missing case>"
+          bindingLines.foreach { lines += baseIndent + _ }
+          lines += s"$baseIndent<missing case>"
       }
     }
-    rec(t, 0, "")
+    rec(t, 0)
     lines.toList
   }
 
