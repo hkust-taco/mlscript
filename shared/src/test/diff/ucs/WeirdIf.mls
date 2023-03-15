@@ -79,20 +79,17 @@ fun f(x) =
 //│ f: anything -> "bruh"
 //│  = [Function: f3]
 
-:e
-:ge
 // Hmmmmmm, this one is valid but how to get it work?
 fun boolToStr(x) =
   if x is
     true then "yah"
     false then "nah"
-//│ ╔══[ERROR] The case when this is false is not handled: == (x,) (false,)
-//│ ║  l.86: 	  if x is
-//│ ║        	     ^^^^
-//│ ║  l.87: 	    true then "yah"
-//│ ║        	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.88: 	    false then "nah"
-//│ ╙──      	^^^^^^^^^
-//│ boolToStr: anything -> error
-//│ Code generation encountered an error:
-//│   if expression was not desugared
+//│ boolToStr: bool -> ("nah" | "yah")
+//│          = [Function: boolToStr]
+
+boolToStr of true
+boolToStr of false
+//│ res: "nah" | "yah"
+//│    = 'yah'
+//│ res: "nah" | "yah"
+//│    = 'nah'

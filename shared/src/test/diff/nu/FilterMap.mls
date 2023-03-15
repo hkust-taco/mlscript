@@ -31,27 +31,9 @@ fun filtermap(f, xs) = if xs is
 //│ ╔══[ERROR] identifier not found: ys
 //│ ║  l.27: 	  Cons(y, ys) and f(ys) is
 //│ ╙──      	                    ^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.27: 	  Cons(y, ys) and f(ys) is
-//│ ║        	                  ^^^^^^^^
-//│ ║  l.28: 	    false then filtermap(f, ys)
-//│ ║        	^^^^^^^^^
-//│ ╟── reference of type `false` is not an instance of type `number`
-//│ ║  l.28: 	    false then filtermap(f, ys)
-//│ ╙──      	    ^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.27: 	  Cons(y, ys) and f(ys) is
-//│ ║        	                  ^^^^^^^^
-//│ ║  l.28: 	    false then filtermap(f, ys)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.29: 	    true then Cons(y, filtermap(f, ys))
-//│ ║        	^^^^^^^^
-//│ ╟── reference of type `true` is not an instance of type `number`
-//│ ║  l.29: 	    true then Cons(y, filtermap(f, ys))
-//│ ╙──      	    ^^^^
 //│ ╔══[ERROR] type identifier not found: Tuple#2
 //│ ╙──
-//│ fun filtermap: ((Cons[nothing] | error | Nil) -> number & (Cons[nothing] | Nil) -> error, Cons[anything] | Nil,) -> (Cons[nothing] | Nil | error)
+//│ fun filtermap: ((Cons[nothing] | error | Nil) -> anything & (Cons[nothing] | Nil) -> (error | false | true), Cons[anything] | Nil,) -> (Cons[nothing] | Nil | error)
 //│ Code generation encountered an error:
 //│   unknown match case: Tuple#2
 
@@ -70,6 +52,6 @@ fun filtermap(f, xs) = if xs is
     True then filtermap(f, ys)
     False then Cons(y, filtermap(f, ys))
     Pair(True, z) then Cons(z, filtermap(f, ys))
-//│ fun filtermap: forall 'head 'A. ('head -> (False | Pair[anything, 'A] | True), Cons['head & 'A] | Nil,) -> (Cons['A] | Nil)
+//│ fun filtermap: forall 'A 'head. ('head -> (False | Pair[anything, 'A] | True), Cons['head & 'A] | Nil,) -> (Cons['A] | Nil)
 
 

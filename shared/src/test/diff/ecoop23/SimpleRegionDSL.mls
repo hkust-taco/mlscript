@@ -45,7 +45,7 @@ fun go(x, offset) =
   else
     let shared = go(x - 1, round(offset / 2))
     Union(Translate(Vector(0 - offset, 0), shared), Translate(Vector(offset, 0), shared))
-//│ fun go: forall 'Region. (int, int,) -> 'Region
+//│ fun go: forall 'Region. (0 | int & ~0, int,) -> 'Region
 //│   where
 //│     'Region :> Circle | Union[Translate['Region]]
 
@@ -116,7 +116,7 @@ TestSize.size(Scale(Vector(1, 1), circles))
 fun pow(x, a) =
   if a is 0 then 1
   else x * pow(x, a - 1)
-//│ fun pow: (int, int,) -> int
+//│ fun pow: (int, 0 | int & ~0,) -> int
 
 mixin Contains {
   fun contains(a, p) =
@@ -327,7 +327,7 @@ module TestElim extends Eliminate
 TestElim.eliminate(Outside(Outside(Univ())))
 //│ 'a
 //│   where
-//│     'a :> Univ | Outside['a] | Union['a] | Intersect['a] | Translate['a] | Scale['a]
+//│     'a :> Scale['a] | Univ | Outside['a] | Union['a] | Intersect['a] | Translate['a]
 //│ res
 //│     = Univ {}
 
@@ -344,7 +344,7 @@ fun mk(n) = if n is
   3 then Intersect(mk(n), mk(n))
   4 then Translate(Vector(0, 0), mk(n))
   _ then Scale(Vector(0, 0), mk(n))
-//│ fun mk: forall 'Region. number -> 'Region
+//│ fun mk: forall 'Region. anything -> 'Region
 //│   where
 //│     'Region :> Intersect['Region] | Outside['Region] | Scale['Region] | Translate['Region] | Union['Region]
 
@@ -376,7 +376,7 @@ module Lang extends SizeBase, SizeExt, Contains, Text, IsUniv, IsEmpty, Eliminat
 //│   'd <: Intersect['d] | Outside['e] | Scale['d] | Translate['d] | Union['d] | Univ | ~Intersect[anything] & ~Outside[anything] & ~Scale[anything] & ~Translate[anything] & ~Union[anything] & ~Univ
 //│   'e <: Intersect['e] | Outside['d] | Scale['e] | Translate['e] | Union['e] | Univ | ~Intersect[anything] & ~Outside[anything] & ~Scale[anything] & ~Translate[anything] & ~Union[anything] & ~Univ
 //│   'b <: Intersect['b] | Outside['b & (Outside['b] | ~#Outside)] | Scale['b] | Translate['b] | Union['b] | 'c & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union
-//│   'c :> Translate['c] | Scale['c] | Outside['c] | Union['c] | Intersect['c]
+//│   'c :> Outside['c] | Union['c] | Intersect['c] | Translate['c] | Scale['c]
 //│   'a <: Circle | Intersect['a] | Outside['a] | Translate['a] | Union['a]
 
 // TODO investigate

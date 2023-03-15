@@ -3,6 +3,7 @@ package mlscript.ucs
 import mlscript._, utils._, shorthands._
 import Clause._, helpers._
 import scala.collection.mutable.Buffer
+import scala.annotation.tailrec
 
 /**
   * A `Conjunction` represents a list of `Clause`s.
@@ -53,13 +54,20 @@ final case class Conjunction(clauses: Ls[Clause], trailingBindings: Ls[(Bool, Va
   def +(lastBinding: (Bool, Var, Term)): Conjunction =
     Conjunction(clauses, trailingBindings :+ lastBinding)
 
-  def separate(expectedScrutinee: Scrutinee): Opt[(MatchClass, Conjunction)] = {
-    def rec(past: Ls[Clause], upcoming: Ls[Clause]): Opt[(Ls[Clause], MatchClass, Ls[Clause])] = {
+  def separate(expectedScrutinee: Scrutinee): Opt[(MatchClass \/ MatchLiteral, Conjunction)] = {
+    @tailrec
+    def rec(past: Ls[Clause], upcoming: Ls[Clause]): Opt[(Ls[Clause], MatchClass \/ MatchLiteral, Ls[Clause])] = {
       upcoming match {
         case Nil => N
+        case (head @ MatchLiteral(scrutinee, _)) :: tail =>
+          if (scrutinee === expectedScrutinee) {
+            S((past, R(head), tail))
+          } else {
+            rec(past :+ head, tail)
+          }
         case (head @ MatchClass(scrutinee, _, _)) :: tail =>
           if (scrutinee === expectedScrutinee) {
-            S((past, head, tail))
+            S((past, L(head), tail))
           } else {
             rec(past :+ head, tail)
           }

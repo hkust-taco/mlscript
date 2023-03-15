@@ -11,7 +11,7 @@ if 1 is 1 then 1 else 0
 //│    = 1
 
 fun test(x) = if x is 1 then 0 else 1
-//│ test: number -> (0 | 1)
+//│ test: anything -> (0 | 1)
 //│     = [Function: test]
 
 // It should report duplicated branches.
@@ -47,7 +47,7 @@ fun f(x) =
     Pair(1, 1) then "ones"
     Pair(y, 1) then x
     _          then "nah"
-//│ f: (Pair & {fst: number, snd: number} & 'a | ~Pair) -> ("nah" | "ones" | "zeros" | 'a)
+//│ f: (Pair & 'a | ~Pair) -> ("nah" | "ones" | "zeros" | 'a)
 //│  = [Function: f]
 
 class Z()

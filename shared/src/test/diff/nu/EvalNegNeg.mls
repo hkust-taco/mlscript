@@ -61,7 +61,7 @@ fun mk(n) = if n is
   1 then Neg(mk(n))
   _ then Add(mk(n), mk(n))
 TestLang.eval(mk(0))
-//│ fun mk: forall 'E. number -> 'E
+//│ fun mk: forall 'E. anything -> 'E
 //│ int
 //│ where
 //│   'E :> Add['E] | Lit | Neg['E]

@@ -373,7 +373,7 @@ fun mk(n) = if n is
   1 then Neg(mk(n))
   _ then Add(mk(n), mk(n))
 TestLang.eval(mk(0))
-//│ fun mk: forall 'E. number -> 'E
+//│ fun mk: forall 'E. anything -> 'E
 //│ int
 //│ where
 //│   'E :> Add['E] | Lit | Neg['E]
@@ -381,7 +381,8 @@ TestLang.eval(mk(0))
 //│ let typing_unit6 = { cache: {} };
 //│ // Query 1
 //│ globalThis.mk = function mk(n) {
-//│   return n == 0 === true ? Lit(0) : n == 1 === true ? Neg(mk(n)) : Add(mk(n), mk(n));
+//│   let a;
+//│   return a = n, a === 0 ? Lit(0) : a === 1 ? Neg(mk(n)) : Add(mk(n), mk(n));
 //│ };
 //│ // Query 2
 //│ res = TestLang.eval(mk(0));
@@ -396,7 +397,8 @@ TestLang.eval(mk(0))
 //│ │ ├── Prelude: <empty>
 //│ │ ├── Code:
 //│ │ ├──   globalThis.mk = function mk(n) {
-//│ │ ├──     return n == 0 === true ? Lit(0) : n == 1 === true ? Neg(mk(n)) : Add(mk(n), mk(n));
+//│ │ ├──     let a;
+//│ │ ├──     return a = n, a === 0 ? Lit(0) : a === 1 ? Neg(mk(n)) : Add(mk(n), mk(n));
 //│ │ ├──   };
 //│ │ ├── Intermediate: [Function: mk]
 //│ │ └── Reply: [success] [Function: mk]
@@ -417,7 +419,7 @@ class Foo(x: int)
 :e
 class Bar(x: int, y: int) extends Foo(x + y)
 //│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
-//│ ║  l.418: 	class Bar(x: int, y: int) extends Foo(x + y)
+//│ ║  l.420: 	class Bar(x: int, y: int) extends Foo(x + y)
 //│ ╙──       	                                  ^^^^^^^^^^
 //│ class Bar(x: int, y: int)
 
@@ -530,7 +532,7 @@ mixin Base {
   fun x = y
 }
 //│ ╔══[ERROR] identifier not found: y
-//│ ║  l.530: 	  fun x = y
+//│ ║  l.532: 	  fun x = y
 //│ ╙──       	          ^
 //│ mixin Base() {
 //│   fun x: error
