@@ -59,14 +59,18 @@ fun f(x, y) =
 
 
 
-// FIXME
 if 42 is n then n + 1
 //│ res: int
 
 // FIXME
 if 42 is n then n + 1 else 0
-//│ ╔══[WARNING] duplicated branch
-//│ ╙──
+//│ ╔══[WARNING] Found duplicated branch
+//│ ╟── This decision path tries to fit
+//│ ║  l.66: 	if 42 is n then n + 1 else 0
+//│ ║        	                           ^
+//│ ╟── But there is already a consequent term
+//│ ║  l.66: 	if 42 is n then n + 1 else 0
+//│ ╙──      	                ^^^^^
 //│ res: int
 
 

@@ -118,6 +118,11 @@ fun join(xs) =
     Nil then ""
     Cons(x, Nil) then toString(x)
     Cons(x, xs') then concat(toString(x))(concat(", ")(join(xs')))
-//│ ╔══[WARNING] duplicated branch
-//│ ╙──
+//│ ╔══[WARNING] Found duplicated branch
+//│ ╟── This decision path tries to fit
+//│ ║  l.120: 	    Cons(x, xs') then concat(toString(x))(concat(", ")(join(xs')))
+//│ ║         	                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── But there is already a consequent term
+//│ ║  l.119: 	    Cons(x, Nil) then toString(x)
+//│ ╙──       	                      ^^^^^^^^^^^
 //│ fun join: (Cons[anything] | Nil) -> string

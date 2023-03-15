@@ -8,6 +8,7 @@ import scala.collection.mutable.{Map => MutMap, Set => MutSet, Buffer}
 
 import helpers._
 import mlscript.ucs.MutCaseOf.Consequent
+import scala.collection.immutable
 
 sealed abstract class MutCaseOf extends WithBindings {
   def kind: Str = {
@@ -302,7 +303,22 @@ object MutCaseOf {
     def describe: Str = s"Consequent($term)"
 
     def merge(branch: Conjunction -> Term)(implicit raise: Diagnostic => Unit): Unit =
-      raise(WarningReport(Message.fromStr("duplicated branch") -> N :: Nil))
+      raise {
+        import scala.collection.mutable.ListBuffer
+        val buffer = ListBuffer.empty[Message -> Opt[Loc]]
+        buffer += Message.fromStr("Found duplicated branch") -> N
+        buffer += Message.fromStr("This decision path tries to fit") -> {
+          val (Conjunction(clauses, _) -> consequent) = branch
+          consequent.toLoc
+          // TODO: Make a complete location. 
+          // clauses match {
+          //   case head :: _ => head.
+          //   case Nil => consequent.toLoc
+          // }
+        }
+        buffer += Message.fromStr("But there is already a consequent term") -> term.toLoc
+        WarningReport(buffer.toList)
+      }
 
     def mergeDefault(bindings: Ls[LetBinding], default: Term)(implicit raise: Diagnostic => Unit): Int = 0
   }

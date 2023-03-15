@@ -46,8 +46,13 @@ fun p(x, y) =
     x is Some and y is None then 0
     y is Some and x is Some then 1
     x is Some and y is Some then 0
-//│ ╔══[WARNING] duplicated branch
-//│ ╙──
+//│ ╔══[WARNING] Found duplicated branch
+//│ ╟── This decision path tries to fit
+//│ ║  l.48: 	    x is Some and y is Some then 0
+//│ ║        	                                 ^
+//│ ╟── But there is already a consequent term
+//│ ║  l.47: 	    y is Some and x is Some then 1
+//│ ╙──      	                                 ^
 //│ p: (Some, None | Some,) -> (0 | 1)
 //│  = [Function: p]
 
@@ -88,9 +93,9 @@ fun q(a) =
     let y = a + 1
     then y
 //│ ╔══[PARSE ERROR] Expected an expression; found a 'then'/'else' clause instead
-//│ ║  l.88: 	    let y = a + 1
+//│ ║  l.93: 	    let y = a + 1
 //│ ║        	            ^^^^^
-//│ ║  l.89: 	    then y
+//│ ║  l.94: 	    then y
 //│ ╙──      	^^^^^^^^^^
 //│ q: (Left & {leftValue: 'leftValue}) -> 'leftValue
 //│  = [Function: q1]
@@ -273,16 +278,16 @@ fun mapPartition(f, xs) =
       Left(v)  then Pair(Cons(v, l), r)
       Right(v) then Pair(l, Cons(v, r))
 //│ ╔══[ERROR] identifier not found: l
-//│ ║  l.273: 	      Left(v)  then Pair(Cons(v, l), r)
+//│ ║  l.278: 	      Left(v)  then Pair(Cons(v, l), r)
 //│ ╙──       	                                 ^
 //│ ╔══[ERROR] identifier not found: r
-//│ ║  l.273: 	      Left(v)  then Pair(Cons(v, l), r)
+//│ ║  l.278: 	      Left(v)  then Pair(Cons(v, l), r)
 //│ ╙──       	                                     ^
 //│ ╔══[ERROR] identifier not found: l
-//│ ║  l.274: 	      Right(v) then Pair(l, Cons(v, r))
+//│ ║  l.279: 	      Right(v) then Pair(l, Cons(v, r))
 //│ ╙──       	                         ^
 //│ ╔══[ERROR] identifier not found: r
-//│ ║  l.274: 	      Right(v) then Pair(l, Cons(v, r))
+//│ ║  l.279: 	      Right(v) then Pair(l, Cons(v, r))
 //│ ╙──       	                                    ^
 //│ mapPartition: ('head -> (Left & {leftValue: 'leftValue} | Right & {rightValue: 'rightValue}), Cons & {head: 'head} | Nil,) -> (Pair & {fst: Cons & {head: 'leftValue, tail: error} | Nil | error, snd: Cons & {head: 'rightValue, tail: error} | Nil | error})
 //│ Code generation encountered an error:
@@ -299,7 +304,7 @@ fun mn(a) =
       Right(b) then "right-defined"
     None       then "undefined"
 //│ ╔══[ERROR] identifier not found: b
-//│ ║  l.298: 	      let y = b + 1
+//│ ║  l.303: 	      let y = b + 1
 //│ ╙──       	              ^
 //│ mn: (None | Some & {value: Left | Right}) -> ("left-defined" | "right-defined" | "undefined")
 //│ Code generation encountered an error:
