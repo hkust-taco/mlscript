@@ -55,7 +55,7 @@ fun f(x, y) =
 //│ ╔══[ERROR] The case when this is false is not handled: == (x,) (+ (y,) (7,),)
 //│ ║  l.54: 	  else if x == y + 7 then 0
 //│ ╙──      	          ^^^^^^^^^^
-//│ f: (number, int,) -> (0 | error)
+//│ f: (anything, anything,) -> error
 
 
 

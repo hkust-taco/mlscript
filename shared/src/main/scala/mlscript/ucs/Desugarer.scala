@@ -315,6 +315,20 @@ class Desugarer extends TypeDefs { self: Typer =>
     locations.toList
   }
 
+  private def unfoldNestedIf(elf: If, acc: Ls[IfBody] = Nil): (IfBody, Opt[Term]) =
+    traceUCS("[unfoldNestedIf]") {
+      elf.els match {
+        case S(innerElf: If) => unfoldNestedIf(innerElf, elf.body :: acc)
+        case default if acc.isEmpty => (elf.body, default)
+        case default =>
+          val lines = (elf.body :: acc).reverseIterator.flatMap {
+            case IfBlock(subLines) => subLines
+            case other => Iterable.single(L(other))
+          }.toList
+          (IfBlock(lines), default)
+      }
+    }(r => s"[unfoldNestedIf] (${r._1.getClass().getSimpleName()}, ${r._2})")
+
   /**
     * The entry point of UCS desugarer.
     *
@@ -324,9 +338,10 @@ class Desugarer extends TypeDefs { self: Typer =>
     * @return the desugared term
     */
   def desugarIf(elf: If)(implicit ctx: Ctx, raise: Raise): Term = traceUCS("[desugarIf]") {
+    val (body, els) = unfoldNestedIf(elf)
     val exhaustivenessMap: MutExhaustivenessMap = MutMap.empty
     printlnUCS("### Desugar the UCS to decision paths ###")
-    val paths = desugarIf(elf.body, elf.els)(ctx, raise, exhaustivenessMap)
+    val paths = desugarIf(body, els)(ctx, raise, exhaustivenessMap)
     printlnUCS("Exhaustiveness map")
     if (exhaustivenessMap.isEmpty)
       printlnUCS("  * <No entries>")
