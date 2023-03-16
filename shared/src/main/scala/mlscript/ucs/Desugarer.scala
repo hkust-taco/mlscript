@@ -273,7 +273,7 @@ class Desugarer extends TypeDefs { self: Typer =>
       // What else?
       case _ => throw new DesugaringException(msg"illegal pattern", pattern.toLoc)
     }
-  }("[Desugarer.destructPattern] result: " + Clause.showClauses(_))
+  }("[Desugarer.destructPattern] Result: " + _.mkString(", "))
 
   /**
     * Collect `Loc`s from a synthetic term.
@@ -363,7 +363,7 @@ class Desugarer extends TypeDefs { self: Typer =>
           val (patternPart, extraTestOpt) = separatePattern(patTest)
           val clauses = destructPattern(scrutinee, partialPattern.addTerm(patternPart).term, true)
           val conditions = collectedConditions + Conjunction(clauses, Nil).withBindings
-          printlnUCS(s"result conditions: " + Clause.showClauses(conditions.clauses))
+          printlnUCS(s"Result: " + conditions.clauses.mkString(", "))
           extraTestOpt match {
             // Case 1. Just a pattern. Easy!
             case N => 
@@ -517,9 +517,19 @@ class Desugarer extends TypeDefs { self: Typer =>
     desugarIfBody(body, PartialTerm.Empty, Conjunction.empty)(interleavedLets)
     // Add the fallback case to conjunctions if there is any.
     fallback.foreach { branches += Conjunction.empty -> _ }
-    Clause.print(printlnUCS, branches)
+    printlnUCS("Decision paths:")
+    branches.foreach { case Conjunction(clauses, trailingBindings) -> term =>
+      printlnUCS("+ " + clauses.mkString("", " and ", "") + {
+        (if (trailingBindings.isEmpty) "" else " ") +
+          (trailingBindings match {
+            case Nil => ""
+            case bindings => bindings.map(_.name.name).mkString("(", ", ", ")")
+          }) +
+          s" => $term"
+      })
+    }
     branches.toList
-  }(r => s"[desugarIf] produces ${r.size} branch(es)")
+  }(r => s"[desugarIf] produces ${r.size} ${"path".pluralize(r.size)}")
 
   import MutCaseOf.{MutCase, IfThenElse, Match, MissingCase, Consequent}
 
@@ -718,6 +728,28 @@ class Desugarer extends TypeDefs { self: Typer =>
       m match {
         case Consequent(term) => term
         case Match(scrutinee, branches, wildcard) =>
+          printlnUCS("• Owned let bindings")
+          val ownedBindings = m.getBindings.iterator.filterNot {
+            _.kind === LetBinding.Kind.InterleavedLet
+          }.toList
+          if (ownedBindings.isEmpty)
+            printlnUCS("  * <No bindings>")
+          else
+            ownedBindings.foreach { case LetBinding(kind, _, name, value) =>
+              printlnUCS(s"  * ($kind) $name = $value")
+            }
+          // Collect interleaved let bindings from case branches.
+          // Because they should be declared before 
+          val interleavedBindings = branches.iterator.map(_.consequent).concat(wildcard).flatMap(_.getBindings).filter {
+            _.kind === LetBinding.Kind.InterleavedLet
+          }.toList
+          printlnUCS("• Collect interleaved let bindings from case branches")
+          if (interleavedBindings.isEmpty)
+            printlnUCS("  * <No interleaved bindings>")
+          else
+            interleavedBindings.foreach { case LetBinding(_, _, name, value) =>
+              printlnUCS(s"  * $name = $value")
+            }
           val cases = traceUCS("• For each case branch"){
             rec2(branches.toList)(defs, scrutinee, wildcard)
           }(_ => "• End for each")
@@ -725,15 +757,7 @@ class Desugarer extends TypeDefs { self: Typer =>
             case N => CaseOf(scrutinee.term, cases)
             case S(aliasVar) => Let(false, aliasVar, scrutinee.term, CaseOf(aliasVar, cases))
           }
-          // Collect interleaved let bindings from case branches.
-          val bindings = branches.iterator.flatMap(_.consequent.getBindings).filter {
-            _.kind === LetBinding.Kind.InterleavedLet
-          }.toList
-          printlnUCS("• Collect interleaved let bindings from case branches")
-          bindings.foreach { case LetBinding(_, _, name, value) =>
-            printlnUCS(s"  - $name = $value")
-          }
-          mkBindings(bindings, resultTerm, defs)
+          mkBindings(ownedBindings, mkBindings(interleavedBindings, resultTerm, defs), defs)
         case MissingCase =>
           import Message.MessageContext
           throw new DesugaringException(msg"missing a default branch", N)
@@ -790,4 +814,25 @@ class Desugarer extends TypeDefs { self: Typer =>
       }
     rec(scrutinee.reference, fields)
   }
+
+  protected def buildCaseTree
+    (paths: Ls[Conjunction -> Term])
+    (implicit raise: Diagnostic => Unit)
+  : MutCaseOf = traceUCS("[buildCaseTree]") {
+    paths match {
+      case Nil => MissingCase
+      case (conditions -> term) :: remaining =>
+        val root = MutCaseOf.buildFirst(conditions, term)
+        traceUCS("*** Initial tree ***") {
+          MutCaseOf.show(root).foreach(printlnUCS(_))
+        }()
+        remaining.foreach { path =>
+          root.merge(path)
+          traceUCS("*** Updated tree ***") {
+            MutCaseOf.show(root).foreach(printlnUCS(_))
+          }()
+        }
+        root
+    }
+  }(_ => "[buildCaseTree]")
 }

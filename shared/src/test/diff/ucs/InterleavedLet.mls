@@ -244,7 +244,6 @@ showList(zeroToThree)
 //│ res: string
 //│    = '0, 1, 2, 3'
 
-// FIXME: This needs lifting functions.
 fun mapPartition(f, xs) =
   if xs is
     Nil then Pair(Nil(), Nil())
@@ -261,60 +260,38 @@ fun mapPartition(f, xs) =
 //│     'tail <: Cons & {head: 'head, tail: 'tail} | Nil
 //│             = [Function: mapPartition]
 
-// FIXME: Something wrong with code generation.
 mapPartition(x => if x % 2 == 0 then Left(x) else Right(x), zeroToThree)
 //│ res: Pair & {fst: 'fst, snd: 'snd}
 //│   where
 //│     'snd :> Cons & {head: 0 | 1 | 2 | 3, tail: 'snd} | Nil
 //│     'fst :> Nil | Cons & {head: 0 | 1 | 2 | 3, tail: 'fst}
-//│ Runtime error:
-//│   RangeError: Maximum call stack size exceeded
+//│    = Pair {
+//│        fst: Cons { head: 0, tail: Cons { head: 2, tail: Nil {} } },
+//│        snd: Cons { head: 1, tail: Cons { head: 3, tail: Nil {} } }
+//│      }
 
-// TODO this should be the desugaring of the above:
-fun mapPartition(f, xs) =
+// This should be the desugaring of the above:
+fun mapPartition2(f, xs) =
   if xs is
     Nil then Pair(Nil(), Nil())
-    Cons(x, xs) and mapPartition(f, xs) is tmp0 and res.fst is l and res.snd is r and f(x) is
+    Cons(x, xs) and mapPartition(f, xs) is res and res.fst is l and res.snd is r and f(x) is
       Left(v)  then Pair(Cons(v, l), r)
       Right(v) then Pair(l, Cons(v, r))
-//│ ╔══[ERROR] identifier not found: l
-//│ ║  l.278: 	      Left(v)  then Pair(Cons(v, l), r)
-//│ ╙──       	                                 ^
-//│ ╔══[ERROR] identifier not found: r
-//│ ║  l.278: 	      Left(v)  then Pair(Cons(v, l), r)
-//│ ╙──       	                                     ^
-//│ ╔══[ERROR] identifier not found: l
-//│ ║  l.279: 	      Right(v) then Pair(l, Cons(v, r))
-//│ ╙──       	                         ^
-//│ ╔══[ERROR] identifier not found: r
-//│ ║  l.279: 	      Right(v) then Pair(l, Cons(v, r))
-//│ ╙──       	                                    ^
-//│ mapPartition: ('head -> (Left & {leftValue: 'leftValue} | Right & {rightValue: 'rightValue}), Cons & {head: 'head} | Nil,) -> (Pair & {fst: Cons & {head: 'leftValue, tail: error} | Nil | error, snd: Cons & {head: 'rightValue, tail: error} | Nil | error})
-//│ Code generation encountered an error:
-//│   unresolved symbol l
+//│ mapPartition2: ('head -> (Left | Right) & 'head0 -> (Left & {leftValue: 'leftValue} | Right & {rightValue: 'rightValue}), Cons & {head: 'head0, tail: 'tail} | Nil,) -> (Pair & {fst: forall 'a. Cons & {head: 'leftValue, tail: forall 'a. 'fst | 'a} | 'fst | 'a, snd: forall 'b. Cons & {head: 'rightValue, tail: forall 'b. 'fst | 'b} | 'fst | 'b})
+//│   where
+//│     'b :> Cons & {head: 0 | 1 | 2 | 3, tail: forall 'b. Nil | 'b}
+//│     'a :> Cons & {head: 0 | 1 | 2 | 3, tail: forall 'a. Nil | 'a}
+//│     'fst :> Cons & {head: 0 | 1 | 2 | 3, tail: 'fst} | Nil
+//│     'tail <: Cons & {head: 'head, tail: 'tail} | Nil
+//│              = [Function: mapPartition2]
 
-// FIXME `b` should be bound here!
-// The example is actually wrong. `b` belongs to the consequent of `Left(b)`.
-// `let y = ...` has no access to `b` because it is not in scope.
-fun mn(a) =
-  if a is
-    Some(x) and x is
-      Left(b)  then "left-defined"
-      let y = b + 1
-      Right(b) then "right-defined"
-    None       then "undefined"
-//│ ╔══[ERROR] identifier not found: b
-//│ ║  l.303: 	      let y = b + 1
-//│ ╙──       	              ^
-//│ mn: (None | Some & {value: Left | Right}) -> ("left-defined" | "right-defined" | "undefined")
-//│ Code generation encountered an error:
-//│   unresolved symbol b
-
-:ng
-mn(Some(Left(0)))
-mn(Some(Right(0)))
-mn(None())
-//│ res: "left-defined" | "right-defined" | "undefined"
-//│ res: "left-defined" | "right-defined" | "undefined"
-//│ res: "left-defined" | "right-defined" | "undefined"
-
+mapPartition2(x => if x % 2 == 0 then Left(x) else Right(x), zeroToThree)
+//│ res: Pair & {fst: forall 'a. Cons & {head: 0, tail: forall 'a. 'fst | 'a} | 'fst | 'a, snd: forall 'b. Cons & {head: 0, tail: forall 'b. 'fst | 'b} | 'fst | 'b}
+//│   where
+//│     'b :> Cons & {head: 0 | 1 | 2 | 3, tail: forall 'b. Nil | 'b}
+//│     'a :> Cons & {head: 0 | 1 | 2 | 3, tail: forall 'a. Nil | 'a}
+//│     'fst :> Cons & {head: 0 | 1 | 2 | 3, tail: 'fst} | Nil
+//│    = Pair {
+//│        fst: Cons { head: 0, tail: Cons { head: 0, tail: [Cons] } },
+//│        snd: Cons { head: 1, tail: Cons { head: 3, tail: Nil {} } }
+//│      }

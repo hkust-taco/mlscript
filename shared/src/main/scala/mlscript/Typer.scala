@@ -1047,9 +1047,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case iff @ If(body, fallback) =>
         import mlscript.ucs._
         try {
-          val caseTree = MutCaseOf.build(desugarIf(body, fallback))
-          println("The mutable CaseOf tree")
-          MutCaseOf.show(caseTree).foreach(println(_))
+          val caseTree = buildCaseTree(desugarIf(body, fallback))
           checkExhaustive(caseTree, N)(summarizePatterns(caseTree), ctx, raise)
           val desugared = constructTerm(caseTree)
           println(s"Desugared term: ${desugared.print(false)}")

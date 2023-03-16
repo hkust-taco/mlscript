@@ -23,7 +23,10 @@ abstract class Clause {
   val locations: Ls[Loc]
 
   protected final def bindingsToString: String =
-    (if (bindings.isEmpty) "" else " with " + Clause.showBindings(bindings))
+    if (bindings.isEmpty) "" else " with " + (bindings match {
+      case Nil => ""
+      case bindings => bindings.map(_.name.name).mkString("(", ", ", ")")
+    })
 }
 
 object Clause {
@@ -63,24 +66,5 @@ object Clause {
     override val locations: Ls[Loc]
   ) extends Clause {
     override def toString(): String = s"«$name = $term»" + bindingsToString
-  }
-
-  def showBindings(bindings: Ls[LetBinding]): Str =
-    bindings match {
-      case Nil => ""
-      case bindings => bindings.map(_.name.name).mkString("(", ", ", ")")
-    }
-
-  def showClauses(clauses: Iterable[Clause]): Str = clauses.mkString("", " and ", "")
-
-  def print(println: (=> Any) => Unit, conjunctions: Iterable[Conjunction -> Term]): Unit = {
-    println("Flattened conjunctions")
-    conjunctions.foreach { case Conjunction(clauses, trailingBindings) -> term =>
-      println("+ " + showClauses(clauses) + {
-        (if (trailingBindings.isEmpty) "" else " ") +
-          showBindings(trailingBindings) +
-          s" => $term"
-      })
-    }
   }
 }

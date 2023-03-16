@@ -12,9 +12,15 @@ object LetBinding {
   sealed abstract class Kind
 
   object Kind {
-    case object ScrutineeAlias extends Kind
-    case object FieldExtraction extends Kind
-    case object InterleavedLet extends Kind
+    case object ScrutineeAlias extends Kind {
+      override def toString(): String = "scrutinee alias"
+    }
+    case object FieldExtraction extends Kind {
+      override def toString(): String = "pattern destruction"
+    }
+    case object InterleavedLet extends Kind {
+      override def toString(): String = "interleaved let"
+    }
   }
 }
 

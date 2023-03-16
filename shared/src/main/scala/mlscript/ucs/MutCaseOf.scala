@@ -223,7 +223,16 @@ object MutCaseOf {
       })"
     }
 
-    def merge(branch: Conjunction -> Term)(implicit raise: Diagnostic => Unit): Unit = {
+    def merge(originalBranch: Conjunction -> Term)(implicit raise: Diagnostic => Unit): Unit = {
+      // Remove let bindings that already has been declared.
+      val branch = originalBranch._1.copy(clauses = originalBranch._1.clauses.filter {
+        case Binding(name, value, false) if (getBindings.exists {
+          case LetBinding(LetBinding.Kind.ScrutineeAlias, _, n, v) =>
+            n === name && v === value
+          case _ => false
+        }) => false
+        case _ => true
+      }) -> originalBranch._2
       branch._1.separate(scrutinee) match {
         // No conditions against the same scrutinee.
         case N =>
@@ -337,53 +346,51 @@ object MutCaseOf {
     def mergeDefault(bindings: Ls[LetBinding], default: Term)(implicit raise: Diagnostic => Unit): Int = 0
   }
 
-  private def buildFirst(conjunction: Conjunction, term: Term): MutCaseOf = {
+  def buildFirst(conjunction: Conjunction, term: Term): MutCaseOf = {
     def rec(conjunction: Conjunction): MutCaseOf = conjunction match {
       case Conjunction(head :: tail, trailingBindings) =>
-        val realTail = Conjunction(tail, trailingBindings)
+        lazy val (beforeHeadBindings, afterHeadBindings) = head.bindings.partition {
+          case LetBinding(LetBinding.Kind.InterleavedLet, _, _, _) => false
+          case LetBinding(_, _, _, _) => true
+        }
+        val consequentTree = rec(Conjunction(tail, trailingBindings))
         (head match {
           case MatchLiteral(scrutinee, literal) =>
             val branches = Buffer(
-              MutCase.Literal(literal, rec(realTail)).withLocation(literal.toLoc)
+              MutCase.Literal(literal, consequentTree.withBindings(afterHeadBindings)).withLocation(literal.toLoc)
             )
             Match(scrutinee, branches, N)
-          case BooleanTest(test) => IfThenElse(test, rec(realTail), MissingCase)
+              .withBindings(beforeHeadBindings)
+          case BooleanTest(test) =>
+            IfThenElse(test, consequentTree, MissingCase)
+              .withBindings(beforeHeadBindings)
+              .withBindings(afterHeadBindings)
           case MatchClass(scrutinee, className, fields) =>
             val branches = Buffer(
-              MutCase.Constructor(className -> Buffer.from(fields), rec(realTail))
+              MutCase.Constructor(className -> Buffer.from(fields), consequentTree.withBindings(afterHeadBindings))
                 .withLocations(head.locations)
             )
-            Match(scrutinee, branches, N)
+            Match(scrutinee, branches, N).withBindings(beforeHeadBindings)
           case MatchTuple(scrutinee, arity, fields) =>
             val branches = Buffer(
-              MutCase.Constructor(Var(s"Tuple#$arity") -> Buffer.from(fields), rec(realTail))
+              MutCase.Constructor(Var(s"Tuple#$arity") -> Buffer.from(fields), consequentTree.withBindings(afterHeadBindings))
                 .withLocations(head.locations)
             )
-            Match(scrutinee, branches, N)
+            Match(scrutinee, branches, N).withBindings(beforeHeadBindings)
           case Binding(name, term, isField) =>
             val kind = if (isField)
               LetBinding.Kind.FieldExtraction
             else
               LetBinding.Kind.ScrutineeAlias
-            rec(realTail).withBindings(LetBinding(kind, false, name, term) :: Nil)
-        }).withBindings(head.bindings)
+            consequentTree
+              .withBindings(beforeHeadBindings)
+              .withBindings(LetBinding(kind, false, name, term) :: Nil)
+              .withBindings(afterHeadBindings)
+        })
       case Conjunction(Nil, trailingBindings) =>
         Consequent(term).withBindings(trailingBindings)
     }
 
     rec(conjunction)
-  }
-
-  def build
-    (cnf: Ls[Conjunction -> Term])
-    (implicit raise: Diagnostic => Unit)
-  : MutCaseOf = {
-    cnf match {
-      case Nil => MissingCase
-      case (conditions -> term) :: next =>
-        val root = MutCaseOf.buildFirst(conditions, term)
-        next.foreach(root.merge(_))
-        root
-    }
   }
 }
