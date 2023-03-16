@@ -10,21 +10,6 @@ import scala.collection.mutable.{Map => MutMap}
 class Driver(options: DriverOptions) {
   import Driver._
 
-  lazy val timeStampCache =
-    readFile(s"${options.outputDir}/.temp/.tsc.temp") match {
-      case Some(content) => content.split("\n").foldLeft(MutMap[String, String]())((mp, rc) => {
-        val data = rc.split(",")
-        if (data.length < 2) mp
-        else mp += (data(0) -> data(1))
-      })
-      case _ => MutMap[String, String]()
-    }
-
-  def flush(): Unit = {
-    val res = timeStampCache.foldLeft("")((s, r) => s"$s${r._1},${r._2}\n")
-    writeFile(s"${options.outputDir}/.temp", ".tsc.temp", res)
-  }
-
   def execute: Unit =
     try {
       compile(options.filename)
@@ -38,8 +23,13 @@ class Driver(options: DriverOptions) {
     } 
   
   private def compile(filename: String): Unit = {
+    val beginIndex = filename.lastIndexOf("/") + 1
+    val endIndex = filename.lastIndexOf(".")
+    val prefixName = filename.substring(beginIndex, endIndex)
+
     val mtime = getModificationTime(filename)
-    if (timeStampCache.getOrElse(filename, () => "") =/= mtime) {
+    val imtime = getModificationTime(s"${options.outputDir}/.temp/$prefixName.mlsi")
+    if (imtime.isEmpty || mtime.compareTo(imtime) >= 0) {
       readFile(filename) match {
         case Some(content) => {
           import fastparse._
@@ -57,9 +47,6 @@ class Driver(options: DriverOptions) {
 
             parser.parseAll(parser.typingUnit) match {
               case tu => {
-                val beginIndex = filename.lastIndexOf("/") + 1
-                val endIndex = filename.lastIndexOf(".")
-                val prefixName = filename.substring(beginIndex, endIndex)
                 typeCheck(tu, prefixName)
                 generate(Pgrm(tu.entities), prefixName)
               }
@@ -67,8 +54,6 @@ class Driver(options: DriverOptions) {
         }
         case _ => report(s"can not open file $filename")
       }
-
-      timeStampCache += (filename -> mtime)
     }
   }
 
@@ -128,7 +113,7 @@ object Driver {
     if (!fs.existsSync(filename)) ""
     else {
       val state = fs.statSync(filename)
-      state.mtime.toString
+      state.mtimeMs.toString
     }
 
   private def report(msg: String): Unit =
