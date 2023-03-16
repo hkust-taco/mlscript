@@ -40,7 +40,10 @@ fun f(x, y) = if x is
 //│ ╟── The scrutinee at this position misses 1 case.
 //│ ║  l.35: 	    True and y is True then true
 //│ ║        	             ^
-//│ ╙── [Missing Case 1/1] `False`
+//│ ╟── [Missing Case 1/1] `False`
+//│ ╟── It first appears here.
+//│ ║  l.36: 	    False and y is False then false
+//│ ╙──      	                   ^^^^^
 //│ fun f: (anything, anything,) -> error
 //│ Code generation encountered an error:
 //│   if expression was not desugared
@@ -60,12 +63,18 @@ fun f(x, y) = if x is
       True then true
       False then false
 //│ ╔══[ERROR] The match is not exhaustive.
-//│ ║  l.57: 	    True and y is True then true
+//│ ║  l.60: 	    True and y is True then true
 //│ ║        	             ^^^^^^^^^
 //│ ╟── The scrutinee at this position misses 1 case.
-//│ ║  l.57: 	    True and y is True then true
+//│ ║  l.60: 	    True and y is True then true
 //│ ║        	             ^
-//│ ╙── [Missing Case 1/1] `False`
+//│ ╟── [Missing Case 1/1] `False`
+//│ ╟── It first appears here.
+//│ ║  l.61: 	    False and y is False then false
+//│ ║        	                   ^^^^^
+//│ ╟── And here.
+//│ ║  l.64: 	      False then false
+//│ ╙──      	      ^^^^^
 //│ fun f: (anything, anything,) -> error
 //│ Code generation encountered an error:
 //│   if expression was not desugared
@@ -87,26 +96,35 @@ fun f(x, y) = if x is
     True and x is False then true
     False and x is True then false
 //│ ╔══[ERROR] The match is not exhaustive.
-//│ ║  l.87: 	    True and x is False then true
+//│ ║  l.96: 	    True and x is False then true
 //│ ║        	             ^^^^^^^^^^
 //│ ╟── The scrutinee at this position misses 1 case.
-//│ ║  l.87: 	    True and x is False then true
+//│ ║  l.96: 	    True and x is False then true
 //│ ║        	             ^
-//│ ╙── [Missing Case 1/1] `True`
+//│ ╟── [Missing Case 1/1] `True`
+//│ ╟── It first appears here.
+//│ ║  l.97: 	    False and x is True then false
+//│ ╙──      	                   ^^^^
 //│ ╔══[ERROR] The match is not exhaustive.
-//│ ║  l.87: 	    True and x is False then true
+//│ ║  l.96: 	    True and x is False then true
 //│ ║        	             ^^^^^^^^^^
 //│ ╟── The scrutinee at this position misses 1 case.
-//│ ║  l.87: 	    True and x is False then true
+//│ ║  l.96: 	    True and x is False then true
 //│ ║        	             ^
-//│ ╙── [Missing Case 1/1] `True`
+//│ ╟── [Missing Case 1/1] `True`
+//│ ╟── It first appears here.
+//│ ║  l.97: 	    False and x is True then false
+//│ ╙──      	                   ^^^^
 //│ ╔══[ERROR] The match is not exhaustive.
-//│ ║  l.87: 	    True and x is False then true
+//│ ║  l.96: 	    True and x is False then true
 //│ ║        	             ^^^^^^^^^^
 //│ ╟── The scrutinee at this position misses 1 case.
-//│ ║  l.87: 	    True and x is False then true
+//│ ║  l.96: 	    True and x is False then true
 //│ ║        	             ^
-//│ ╙── [Missing Case 1/1] `True`
+//│ ╟── [Missing Case 1/1] `True`
+//│ ╟── It first appears here.
+//│ ║  l.97: 	    False and x is True then false
+//│ ╙──      	                   ^^^^
 //│ fun f: (anything, anything,) -> (error | false | true)
 //│ Code generation encountered an error:
 //│   if expression was not desugared

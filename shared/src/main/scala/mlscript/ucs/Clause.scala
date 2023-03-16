@@ -37,6 +37,13 @@ object Clause {
     override def toString(): String = s"«$scrutinee is $literal" + bindingsToString
   }
 
+  final case class MatchNot(
+    scrutinee: Scrutinee,
+    classNames: List[Var]
+  )(override val locations: Ls[Loc]) extends Clause {
+    override def toString(): String = s"«$scrutinee ∉ ${classNames.mkString("{", ", ", "}")}»" + bindingsToString
+  }
+
   final case class MatchClass(
     scrutinee: Scrutinee,
     className: Var,

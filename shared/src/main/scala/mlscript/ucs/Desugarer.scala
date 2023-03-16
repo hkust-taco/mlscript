@@ -37,6 +37,24 @@ class Desugarer extends TypeDefs { self: Typer =>
   }
 
   /**
+    * A map from each scrutinee term to all its cases and the first `MutCase`.
+    */
+  private type ExhaustivenessMap = Map[Str \/ Int, Map[Either[Int, SimpleTerm], Buffer[Loc]]]
+
+  private type MutExhaustivenessMap = MutMap[Str \/ Int, MutMap[Either[Int, SimpleTerm], Buffer[Loc]]]
+
+  private def addToExhaustivenessMap(scrutinee: Scrutinee, tupleArity: Int, loc: Iterable[Loc])
+      (implicit ctx: Ctx, raise: Raise, map: MutExhaustivenessMap) = {
+    map.getOrElseUpdate(getScurtineeKey(scrutinee), MutMap.empty)
+      .getOrElseUpdate(L(tupleArity), Buffer.empty) ++= loc
+  }
+  private def addToExhaustivenessMap(scrutinee: Scrutinee, litOrCls: SimpleTerm, loc: Iterable[Loc])
+      (implicit ctx: Ctx, raise: Raise, map: MutExhaustivenessMap) = {
+    map.getOrElseUpdate(getScurtineeKey(scrutinee), MutMap.empty)
+      .getOrElseUpdate(R(litOrCls), Buffer.empty) ++= loc
+  }
+
+  /**
     * 
     *
     * @param scrutinee the scrutinee of the pattern matching
@@ -78,7 +96,7 @@ class Desugarer extends TypeDefs { self: Typer =>
     * @return desugared conditions representing the sub-patterns
     */
   private def destructSubPatterns(scrutinee: Scrutinee, subPatterns: Iterable[Var -> Term])
-      (implicit ctx: Ctx, raise: Raise, aliasMap: FieldAliasMap): Ls[Clause] = {
+      (implicit ctx: Ctx, raise: Raise, exhaustivenessMap: MutExhaustivenessMap, aliasMap: FieldAliasMap): Ls[Clause] = {
     subPatterns.iterator.flatMap[Clause] { case (subScrutinee, subPattern) =>
       destructPattern(makeScrutinee(subScrutinee, scrutinee.matchRootLoc), subPattern, false)
     }.toList
@@ -96,7 +114,7 @@ class Desugarer extends TypeDefs { self: Typer =>
     * @param matchRootLoc the caller is expect to be in a match environment,
     * this parameter indicates the location of the match root
     */
-  def makeScrutinee(term: Term, matchRootLoc: Opt[Loc])(implicit ctx: Ctx): Scrutinee =
+  private def makeScrutinee(term: Term, matchRootLoc: Opt[Loc])(implicit ctx: Ctx): Scrutinee =
     traceUCS(s"Making a scrutinee for `$term`") {
       term match {
         case _: Var =>
@@ -144,6 +162,7 @@ class Desugarer extends TypeDefs { self: Typer =>
       (scrutinee: Scrutinee, pattern: Term, isTopLevel: Bool)
       (implicit ctx: Ctx,
                 raise: Raise,
+                exhaustivenessMap: MutExhaustivenessMap,
                 aliasMap: FieldAliasMap,
                 fragments: Ls[Term] = Nil): Ls[Clause] =
   trace(s"[Desugarer.destructPattern] scrutinee = ${scrutinee.term}; pattern = $pattern") {
@@ -154,6 +173,7 @@ class Desugarer extends TypeDefs { self: Typer =>
         tuple.fields.iterator.map(_._2.value),
         1.to(tuple.fields.length).map("_" + _).toList
       )
+      addToExhaustivenessMap(scrutinee, tuple.fields.length, tuple.toLoc)
       Clause.MatchTuple(
         scrutinee,
         tuple.fields.length,
@@ -167,11 +187,13 @@ class Desugarer extends TypeDefs { self: Typer =>
       // This case handles literals.
       // x is true | x is false | x is 0 | x is "text" | ...
       case literal: Var if literal.name === "true" || literal.name === "false" =>
+        addToExhaustivenessMap(scrutinee, literal, literal.toLoc)
         val clause = Clause.MatchLiteral(scrutinee, literal)(scrutinee.term.toLoc.toList ::: literal.toLoc.toList)
         clause.bindings = scrutinee.asBinding.toList
         printlnUCS(s"Add bindings to the clause: ${scrutinee.asBinding}")
         clause :: Nil
       case literal: Lit =>
+        addToExhaustivenessMap(scrutinee, literal, literal.toLoc)
         val clause = Clause.MatchLiteral(scrutinee, literal)(scrutinee.term.toLoc.toList ::: literal.toLoc.toList)
         clause.bindings = scrutinee.asBinding.toList
         printlnUCS(s"Add bindings to the clause: ${scrutinee.asBinding}")
@@ -191,6 +213,7 @@ class Desugarer extends TypeDefs { self: Typer =>
           }, classNameVar.toLoc)
         }
         printlnUCS(s"Build a Clause.MatchClass from $scrutinee where pattern is $classNameVar")
+        addToExhaustivenessMap(scrutinee, classNameVar, classNameVar.toLoc)
         Clause.MatchClass(scrutinee, classNameVar, Nil)(collectLocations(scrutinee.term)) :: Nil
       // This case handles classes with destruction.
       // x is A(r, s, t)
@@ -215,6 +238,7 @@ class Desugarer extends TypeDefs { self: Typer =>
                 args.iterator.map(_._2.value),
                 positionals
               )
+              addToExhaustivenessMap(scrutinee, classNameVar, app.toLoc)
               val clause = Clause.MatchClass(scrutinee, classNameVar, bindings)(pattern.toLoc.toList ::: collectLocations(scrutinee.term))
               printlnUCS(s"Build a Clause.MatchClass from $scrutinee where pattern is $pattern")
               printlnUCS(s"Fragments: $fragments")
@@ -252,6 +276,7 @@ class Desugarer extends TypeDefs { self: Typer =>
               lhs :: rhs :: Nil,
               td.positionals
             )
+            addToExhaustivenessMap(scrutinee, opVar, app.toLoc)
             val clause = Clause.MatchClass(scrutinee, opVar, fields)(collectLocations(scrutinee.term))
             printlnUCS(s"Build a Clause.MatchClass from $scrutinee where operator is $opVar")
             clause :: destructSubPatterns(scrutinee, subPatterns)
@@ -282,7 +307,7 @@ class Desugarer extends TypeDefs { self: Typer =>
     * @param fragments the fragment terms
     * @return all original locations
     */
-  def collectLocations(term: Term)(implicit fragments: Ls[Term]): Ls[Loc] = {
+  private def collectLocations(term: Term)(implicit fragments: Ls[Term]): Ls[Loc] = {
     val locations = Buffer.empty[Loc]
     def rec(term: Term): Unit = term.children.foreach { located =>
       if (fragments.contains(located)) locations ++= located.toLoc
@@ -290,10 +315,53 @@ class Desugarer extends TypeDefs { self: Typer =>
     locations.toList
   }
 
+  /**
+    * The entry point of UCS desugarer.
+    *
+    * @param elf the root `If` term
+    * @param ctx the typing context
+    * @param raise the function to raise errors
+    * @return the desugared term
+    */
+  def desugarIf(elf: If)(implicit ctx: Ctx, raise: Raise): Term = traceUCS("[desugarIf]") {
+    val exhaustivenessMap: MutExhaustivenessMap = MutMap.empty
+    printlnUCS("### Desugar the UCS to decision paths ###")
+    val paths = desugarIf(elf.body, elf.els)(ctx, raise, exhaustivenessMap)
+    printlnUCS("Exhaustiveness map")
+    if (exhaustivenessMap.isEmpty)
+      printlnUCS("  * <No entries>")
+    else
+      exhaustivenessMap.foreach { case (symbol, patternMap) =>
+        printlnUCS(s"  * Patterns of $symbol")
+        if (patternMap.isEmpty)
+          printlnUCS(s"    + <No patterns>")
+        else
+          patternMap.foreach { case (pattern, locations) =>
+            val first = pattern match {
+              case Left(tupleArity) => s"()^$tupleArity"
+              case Right(litOrCls) => litOrCls.toString()
+            }
+            val second = locations.mkString("[", ", ", "]")
+            printlnUCS(s"    + $first -> $second")
+          }
+      }
+    printlnUCS("### Build a case tree from decision paths ###")
+    val caseTree = buildCaseTree(paths)
+    printlnUCS("### Checking exhaustiveness of the case tree ###")
+    checkExhaustive(caseTree, N)({
+      Map.from(exhaustivenessMap.iterator.map { case (k, m) => k -> Map.from(m) })
+    }, ctx, raise)
+    printlnUCS("### Construct a term from the case tree ###")
+    val desugared = constructTerm(caseTree)
+    println(s"Desugared term: ${desugared.print(false)}")
+    elf.desugaredTerm = S(desugared)
+    desugared
+  }()
 
-  def desugarIf
+
+  private def desugarIf
       (body: IfBody, fallback: Opt[Term])
-      (implicit ctx: Ctx, raise: Raise)
+      (implicit ctx: Ctx, raise: Raise, exhaustivenessMap: MutExhaustivenessMap)
   : Ls[Conjunction -> Term] = traceUCS(s"[desugarIf] with fallback $fallback") {
     // We allocate temporary variable names for nested patterns.
     // This prevents aliasing problems.
@@ -318,7 +386,7 @@ class Desugarer extends TypeDefs { self: Typer =>
           // This is an inline `x is Class` match test.
           val inlineMatchLoc = isApp.toLoc
           val inlineScrutinee = makeScrutinee(scrutinee, inlineMatchLoc)
-          destructPattern(inlineScrutinee, pattern, true)(ctx, raise, scrutineeFieldAliasMap)
+          destructPattern(inlineScrutinee, pattern, true)(ctx, raise, exhaustivenessMap, scrutineeFieldAliasMap)
         case test =>
           val clause = Clause.BooleanTest(test)(collectLocations(test))
           Iterable.single(clause)
@@ -534,11 +602,6 @@ class Desugarer extends TypeDefs { self: Typer =>
   import MutCaseOf.{MutCase, IfThenElse, Match, MissingCase, Consequent}
 
   /**
-    * A map from each scrutinee term to all its cases and the first `MutCase`.
-    */
-  type ExhaustivenessMap = Map[Str \/ Int, Map[Var, MutCase]]
-
-  /**
     * This method obtains a proper key of the given scrutinee
     * for memorizing patterns belongs to the scrutinee.
     *
@@ -547,7 +610,7 @@ class Desugarer extends TypeDefs { self: Typer =>
     * @param raise we need this to raise errors.
     * @return the variable name or the variable ID
     */
-  def getScurtineeKey(scrutinee: Scrutinee)(implicit ctx: Ctx, raise: Raise): Str \/ Int =
+  private def getScurtineeKey(scrutinee: Scrutinee)(implicit ctx: Ctx, raise: Raise): Str \/ Int =
     traceUCS(s"[getScrutineeKey] $scrutinee") {
       scrutinee.term match {
         // The original scrutinee is an reference.
@@ -574,7 +637,7 @@ class Desugarer extends TypeDefs { self: Typer =>
     * @param parentOpt the parent `MutCaseOf`
     * @param scrutineePatternMap the exhaustiveness map
     */
-  def checkExhaustive
+  private def checkExhaustive
     (t: MutCaseOf, parentOpt: Opt[MutCaseOf])
     (implicit scrutineePatternMap: ExhaustivenessMap, ctx: Ctx, raise: Raise)
   : Unit = traceUCS(s"[checkExhaustive] ${t.describe}") {
@@ -611,10 +674,17 @@ class Desugarer extends TypeDefs { self: Typer =>
             else
               patternMap.foreach { case (key, mutCase) => printlnUCS(s"- $key => $mutCase")}
             // Filter out missing cases in `branches`.
-            val missingCases = patternMap.removedAll(branches.iterator.flatMap {
-              case MutCase.Literal(tof @ Var(n), _) if n === "true" || n === "false" => Some(tof)
-              case MutCase.Literal(_, _) => None
-              case MutCase.Constructor(classNameVar -> _, _) => Some(classNameVar)
+            val missingCases = patternMap.removedAll(branches.iterator.map {
+              case MutCase.Literal(lit, _) => R(lit)
+              case MutCase.Constructor(classNameVar -> _, _) =>
+                classNameVar.name.split('#').toList match {
+                  case "Tuple" :: ns :: Nil =>
+                    ns.toIntOption match {
+                      case N => R(classNameVar)
+                      case S(arity) => L(arity)
+                    }
+                  case _ => R(classNameVar)
+                }
             })
             printlnUCS("Missing cases")
             missingCases.foreach { case (key, m) =>
@@ -627,11 +697,15 @@ class Desugarer extends TypeDefs { self: Typer =>
                   (msg"The scrutinee at this position misses ${numMissingCases.toString} ${
                     "case".pluralize(numMissingCases)
                   }." -> scrutinee.term.toLoc) ::
-                  missingCases.iterator.zipWithIndex.flatMap { case ((classNameVar, firstMutCase), index) =>
+                  missingCases.iterator.zipWithIndex.flatMap { case ((pattern, locations), index) =>
+                    val patternName = pattern match {
+                      case L(tupleArity) => s"$tupleArity-ary tuple"
+                      case R(litOrCls) => litOrCls.toString()
+                    }
                     val progress = s"[Missing Case ${index + 1}/$numMissingCases]"
-                    (msg"$progress `${classNameVar.name}`" -> N) ::
-                      firstMutCase.locations.iterator.zipWithIndex.map { case (loc, index) =>
-                        (if (index === 0) msg"It first appears here." else msg"continued at") -> S(loc)
+                    (msg"$progress `$patternName`" -> N) ::
+                      locations.iterator.zipWithIndex.map { case (loc, index) =>
+                        (if (index === 0) msg"It first appears here." else msg"And here.") -> S(loc)
                       }.toList
                   }.toList
               })
@@ -644,47 +718,47 @@ class Desugarer extends TypeDefs { self: Typer =>
     }
   }(_ => s"[checkExhaustive] ${t.describe}")
 
-  def summarizePatterns(t: MutCaseOf)(implicit ctx: Ctx, raise: Raise): ExhaustivenessMap = traceUCS("[summarizePatterns]") {
-    val m = MutMap.empty[Str \/ Int, MutMap[Var, MutCase]]
-    def rec(t: MutCaseOf): Unit = traceUCS(s"[rec] ${t.describe}") {
-      t match {
-        case Consequent(term) => ()
-        case MissingCase => ()
-        case IfThenElse(_, whenTrue, whenFalse) =>
-          rec(whenTrue)
-          rec(whenFalse)
-        case Match(scrutinee, branches, default) =>
-          val key = getScurtineeKey(scrutinee)
-          val patternMap = m.getOrElseUpdate(key, MutMap.empty)
-          branches.foreach {
-            case mutCase @ MutCase.Literal(literal, consequent) =>
-              literal match {
-                case tof @ Var(n) if n === "true" || n === "false" =>
-                  if (!patternMap.contains(tof)) {
-                    patternMap += ((tof, mutCase))
-                  }
-                case _ => () // TODO: Summarize literals.
-              }
-              rec(consequent)
-            case mutCase @ MutCase.Constructor((className, _), consequent) =>
-              if (!patternMap.contains(className)) {
-                patternMap += ((className, mutCase))
-              }
-              rec(consequent)
-          }
-          default.foreach(rec)
-      }
-    }()
-    rec(t)
-    printlnUCS("Summarized patterns")
-    if (m.isEmpty)
-      printlnUCS("<Empty>")
-    else
-      m.foreach { case (scrutinee, patterns) =>
-        printlnUCS(s"- $scrutinee => " + patterns.keysIterator.mkString(", "))
-      }
-    Map.from(m.iterator.map { case (key, patternMap) => key -> Map.from(patternMap) })
-  }(_ => "[summarizePatterns]")
+  // private def summarizePatterns(t: MutCaseOf)(implicit ctx: Ctx, raise: Raise): ExhaustivenessMap = traceUCS("[summarizePatterns]") {
+  //   val m = MutMap.empty[Str \/ Int, MutMap[Var, MutCase]]
+  //   def rec(t: MutCaseOf): Unit = traceUCS(s"[rec] ${t.describe}") {
+  //     t match {
+  //       case Consequent(term) => ()
+  //       case MissingCase => ()
+  //       case IfThenElse(_, whenTrue, whenFalse) =>
+  //         rec(whenTrue)
+  //         rec(whenFalse)
+  //       case Match(scrutinee, branches, default) =>
+  //         val key = getScurtineeKey(scrutinee)
+  //         val patternMap = m.getOrElseUpdate(key, MutMap.empty)
+  //         branches.foreach {
+  //           case mutCase @ MutCase.Literal(literal, consequent) =>
+  //             literal match {
+  //               case tof @ Var(n) if n === "true" || n === "false" =>
+  //                 if (!patternMap.contains(tof)) {
+  //                   patternMap += ((tof, mutCase))
+  //                 }
+  //               case _ => () // TODO: Summarize literals.
+  //             }
+  //             rec(consequent)
+  //           case mutCase @ MutCase.Constructor((className, _), consequent) =>
+  //             if (!patternMap.contains(className)) {
+  //               patternMap += ((className, mutCase))
+  //             }
+  //             rec(consequent)
+  //         }
+  //         default.foreach(rec)
+  //     }
+  //   }()
+  //   rec(t)
+  //   printlnUCS("Summarized patterns")
+  //   if (m.isEmpty)
+  //     printlnUCS("  <Empty>")
+  //   else
+  //     m.foreach { case (scrutinee, patterns) =>
+  //       printlnUCS(s"  * $scrutinee => " + patterns.keysIterator.mkString(", "))
+  //     }
+  //   Map.from(m.iterator.map { case (key, patternMap) => key -> Map.from(patternMap) })
+  // }(_ => "[summarizePatterns]")
 
   /**
     * Make a term from a mutable case tree.
@@ -694,7 +768,7 @@ class Desugarer extends TypeDefs { self: Typer =>
     * @param ctx the context
     * @return the case expression
     */
-  protected def constructTerm(m: MutCaseOf)(implicit ctx: Ctx): Term = traceUCS("[constructTerm]") {
+  private def constructTerm(m: MutCaseOf)(implicit ctx: Ctx): Term = traceUCS("[constructTerm]") {
     /**
      * Reconstruct case branches.
      */
@@ -815,7 +889,7 @@ class Desugarer extends TypeDefs { self: Typer =>
     rec(scrutinee.reference, fields)
   }
 
-  protected def buildCaseTree
+  private def buildCaseTree
     (paths: Ls[Conjunction -> Term])
     (implicit raise: Diagnostic => Unit)
   : MutCaseOf = traceUCS("[buildCaseTree]") {

@@ -29,5 +29,11 @@ fun f(x, y) =
 //│ ║  l.23: 	      x is
 //│ ║        	      ^
 //│ ╟── [Missing Case 1/2] `B`
-//│ ╙── [Missing Case 2/2] `C`
+//│ ╟── It first appears here.
+//│ ║  l.20: 	        B then 1
+//│ ║        	        ^
+//│ ╟── [Missing Case 2/2] `C`
+//│ ╟── It first appears here.
+//│ ║  l.21: 	        C then 2
+//│ ╙──      	        ^
 //│ f: (anything, anything,) -> error

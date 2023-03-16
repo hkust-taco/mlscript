@@ -1044,17 +1044,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           case ((a_ty, tv), req) => a_ty & tv | req & a_ty.neg()
         }
         con(s_ty, req, cs_ty)
-      case iff @ If(body, fallback) =>
-        import mlscript.ucs._
-        try {
-          val caseTree = buildCaseTree(desugarIf(body, fallback))
-          checkExhaustive(caseTree, N)(summarizePatterns(caseTree), ctx, raise)
-          val desugared = constructTerm(caseTree)
-          println(s"Desugared term: ${desugared.print(false)}")
-          iff.desugaredTerm = S(desugared)
-          typeTerm(desugared)
-        } catch {
-          case e: DesugaringException => err(e.messages)
+      case elf: If =>
+        try typeTerm(desugarIf(elf)) catch {
+          case e: ucs.DesugaringException => err(e.messages)
         }
       case New(S((nmedTy, trm)), TypingUnit(Nil)) =>
         typeMonomorphicTerm(App(Var(nmedTy.base.name).withLocOf(nmedTy), trm))
