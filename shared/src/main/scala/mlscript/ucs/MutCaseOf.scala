@@ -201,7 +201,7 @@ object MutCaseOf {
       branch match {
         // The CC is a wildcard. So, we call `mergeDefault`.
         case Conjunction(Nil, trailingBindings) -> term =>
-          if (mergeDefault(trailingBindings, term) == 0) {
+          if (mergeDefault(trailingBindings, term) === 0) {
             import Message.MessageContext
             raise(WarningReport(
               msg"Found a redundant else branch" -> term.toLoc :: Nil
@@ -287,7 +287,7 @@ object MutCaseOf {
               val tupleClassName = Var(s"Tuple#$arity") // TODO: Find a name known by Typer.
               branches.find(_.matches(tupleClassName)) match {
                 // No such pattern. We should create a new one.
-                case N =>
+                case N | S(MutCase.Literal(_, _)) =>
                   val newBranch = buildFirst(Conjunction(tail, trailingBindings), term)
                   newBranch.addBindings(head.bindings)
                   branches += MutCase.Constructor(tupleClassName -> Buffer.from(fields), newBranch)
@@ -300,7 +300,12 @@ object MutCaseOf {
               }
             // A wild card case. We should propagate wildcard to every default positions.
             case Conjunction(Nil, trailingBindings) -> term =>
-              mergeDefault(trailingBindings, term) // TODO: Handle the int result here.
+              if (mergeDefault(trailingBindings, term) === 0) {
+                import Message.MessageContext
+                raise(WarningReport(
+                  msg"Found a redundant else branch" -> term.toLoc :: Nil
+                ))
+              }
             // The conditions to be inserted does not overlap with me.
             case conjunction -> term =>
               branches.foreach {
@@ -317,7 +322,7 @@ object MutCaseOf {
         case S((head @ MatchClass(_, className, fields)) -> remainingConditions) =>
           branches.find(_.matches(className)) match {
             // No such pattern. We should create a new one.
-            case N =>
+            case N | S(MutCase.Literal(_, _)) =>
               wildcard match {
                 case S(default) if !default.isComplete =>
                   val subTree = default.duplicate()
@@ -344,7 +349,7 @@ object MutCaseOf {
             case l: Lit => branch.matches(l)
           }) match {
             // No such pattern. We should create a new one.
-            case N =>
+            case N | S(MutCase.Constructor(_, _)) =>
               val newConsequent = buildFirst(remainingConditions, branch._2)
               newConsequent.addBindings(head.bindings)
               branches += MutCase.Literal(literal, newConsequent)
