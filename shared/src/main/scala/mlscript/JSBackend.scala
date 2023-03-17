@@ -887,7 +887,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
 }
 
 class JSCompilerBackend extends JSBackend(allowUnresolvedSymbols = true) {
-  private def generateNewDef(pgrm: Pgrm): Ls[Str] = {
+  private def generateNewDef(pgrm: Pgrm, exported: Bool): Ls[Str] = {
     val mlsModule = topLevelScope.declareValue("typing_unit", Some(false), false)
     val (diags, (typeDefs, otherStmts)) = pgrm.newDesugared
 
@@ -908,6 +908,14 @@ class JSCompilerBackend extends JSBackend(allowUnresolvedSymbols = true) {
           case _ => translateNewClassDeclaration(sym, Nil, N, false)(topLevelScope)
         }
       }.toList
+
+    val exports =
+      if (exported)
+        JSExport(traitSymbols.map { _.runtimeName } ++
+        mixinSymbols.map { _.runtimeName } ++
+        moduleSymbols.map{_.runtimeName} ++
+        classSymbols.map { _.runtimeName }.toList) :: Nil
+      else Nil
 
     val stmts: Ls[JSStmt] =
         defs
@@ -932,11 +940,11 @@ class JSCompilerBackend extends JSBackend(allowUnresolvedSymbols = true) {
           // `exprs.push(<expr>)`.
           case term: Term =>
             translateTerm(term)(topLevelScope).stmt :: Nil
-        })
+        }) ::: exports
     SourceCode.fromStmts(polyfill.emit() ::: stmts).toLines
   }
 
-  def apply(pgrm: Pgrm): Ls[Str] = generateNewDef(pgrm)
+  def apply(pgrm: Pgrm, exported: Bool): Ls[Str] = generateNewDef(pgrm, exported)
 }
 
 class JSWebBackend extends JSBackend(allowUnresolvedSymbols = true) {

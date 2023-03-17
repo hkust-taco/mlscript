@@ -1,3 +1,4 @@
+import * as Opened from "./Opened.js"
 function B(base) {
   return (class B extends base {
     constructor(...rest) {

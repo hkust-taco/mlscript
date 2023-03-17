@@ -5,7 +5,8 @@ import js.JSConverters._
 import mlscript.utils._
 import mlscript._
 import mlscript.utils.shorthands._
-import scala.collection.mutable.{Map => MutMap}
+import scala.collection.mutable.{ListBuffer,Map => MutMap}
+import mlscript.codegen._
 
 class Driver(options: DriverOptions) {
   import Driver._
@@ -22,40 +23,57 @@ class Driver(options: DriverOptions) {
         js.Dynamic.global.process.exit(-1)
     } 
   
-  private def compile(filename: String): Unit = {
-    val beginIndex = filename.lastIndexOf("/") + 1
+  private def compile(filename: String): Boolean = {
+    val beginIndex = filename.lastIndexOf("/")
     val endIndex = filename.lastIndexOf(".")
-    val prefixName = filename.substring(beginIndex, endIndex)
+    val prefixName = filename.substring(beginIndex + 1, endIndex)
+    val path = filename.substring(0, beginIndex + 1)
 
-    val mtime = getModificationTime(filename)
-    val imtime = getModificationTime(s"${options.outputDir}/.temp/$prefixName.mlsi")
-    if (options.force || imtime.isEmpty || mtime.compareTo(imtime) >= 0) {
-      readFile(filename) match {
-        case Some(content) => {
-          import fastparse._
-          import fastparse.Parsed.{Success, Failure}
-          import mlscript.{NewLexer, NewParser, ErrorReport, Origin}
+    System.out.println(s"compiling $filename...")
+    readFile(filename) match {
+      case Some(content) => {
+        import fastparse._
+        import fastparse.Parsed.{Success, Failure}
+        import mlscript.{NewLexer, NewParser, ErrorReport, Origin}
 
-          val lines = content.splitSane('\n').toIndexedSeq
-            val fph = new mlscript.FastParseHelpers(content, lines)
-            val origin = Origin("<input>", 1, fph)
-            val lexer = new NewLexer(origin, throw _, dbg = false)
-            val tokens = lexer.bracketedTokens
-            val parser = new NewParser(origin, tokens, throw _, dbg = false, None) {
-              def doPrintDbg(msg: => String): Unit = if (dbg) println(msg)
+        val dependencies = ListBuffer[String]()
+        val lines = content.splitSane('\n').toIndexedSeq.filter((line) =>
+          if (line.startsWith("open ")) { dependencies += line.substring(5); false }
+          else true
+        )
+
+        val depList = dependencies.toList
+        val needRecomp = depList.foldLeft(false)((nr, dp) => nr || compile(s"$path$dp.mls"))
+        val imports = depList.map(JSImport(_))
+        // val moduleTypes = depList.map(dp => importModule(s"${options.outputDir}/.temp/$dp.mlsi"))
+
+        val mtime = getModificationTime(filename)
+        val imtime = getModificationTime(s"${options.outputDir}/.temp/$prefixName.mlsi")
+        if (options.force || needRecomp || imtime.isEmpty || mtime.compareTo(imtime) >= 0) {
+          val fph = new mlscript.FastParseHelpers(lines.reduceLeft((r, s) => s"$r\n$s"), lines)
+          val origin = Origin("<input>", 1, fph)
+          val lexer = new NewLexer(origin, throw _, dbg = false)
+          val tokens = lexer.bracketedTokens
+
+          val parser = new NewParser(origin, tokens, throw _, dbg = false, None) {
+            def doPrintDbg(msg: => String): Unit = if (dbg) println(msg)
+          }
+          parser.parseAll(parser.typingUnit) match {
+            case tu => {
+              typeCheck(tu, prefixName)
+              generate(Pgrm(tu.entities), prefixName, false, imports)
+              true
             }
-
-            parser.parseAll(parser.typingUnit) match {
-              case tu => {
-                typeCheck(tu, prefixName)
-                generate(Pgrm(tu.entities), prefixName)
-              }
-            }
+          }
         }
-        case _ => report(s"can not open file $filename")
+        else false
       }
+      case _ => report(s"can not open file $filename"); true
     }
   }
+
+  private def importModule(filename: String): Unit = {
+  } // TODO:
 
   private def typeCheck(tu: TypingUnit, filename: String): Unit = {
     val typer = new mlscript.Typer(
@@ -87,10 +105,14 @@ class Driver(options: DriverOptions) {
     writeFile(s"${options.outputDir}/.temp", s"$filename.mlsi", expStr)
   }
 
-  private def generate(program: Pgrm, filename: String): Unit = {
+  private def generate(program: Pgrm, filename: String, exported: Boolean, imports: Ls[JSImport]): Unit = {
     val backend = new JSCompilerBackend()
-    val lines = backend(program)
-    val code = lines.mkString("", "\n", "\n")
+    val lines = backend(program, exported)
+    val code =
+      if (imports.isEmpty)
+        lines.mkString("", "\n", "\n")
+      else
+        imports.map(_.toSourceCode).reduceLeft(_ + _).lines.map(_.toString).reduceLeft(_ + _) + lines.mkString("", "\n", "\n")
     writeFile(options.outputDir, s"$filename.js", code)
   }
 }

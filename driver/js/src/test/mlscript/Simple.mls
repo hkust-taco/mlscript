@@ -1,3 +1,4 @@
+open Opened
 
 mixin B { fun foo = this.n }
 
@@ -10,3 +11,5 @@ console.log(a.foo + 1)
 
 module C {
 }
+
+// Opened.SubModule.hello(a.n)

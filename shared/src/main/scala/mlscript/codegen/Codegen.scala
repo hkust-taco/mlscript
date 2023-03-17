@@ -889,6 +889,16 @@ final case class JSClassNewDecl(
   private val fieldsSet = collection.immutable.HashSet.from(fields)
 }
 
+final case class JSExport(items: Ls[Str]) extends JSStmt {
+  def toSourceCode: SourceCode =
+    SourceCode(s"export {${items.reduceLeft((r, s) => r + ", " + s)}}")
+}
+
+final case class JSImport(name: Str) extends JSStmt {
+  def toSourceCode: SourceCode =
+    SourceCode(s"import * as $name from \"./$name.js\"\n") // TODO: submodule?
+}
+
 final case class JSComment(text: Str) extends JSStmt {
   def toSourceCode: SourceCode = SourceCode(s"// $text")
 }
