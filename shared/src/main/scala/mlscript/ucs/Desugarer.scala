@@ -421,7 +421,7 @@ class Desugarer extends TypeDefs { self: Typer =>
       body: IfBody \/ Statement,
       partialPattern: PartialTerm,
       collectedConditions: Conjunction,
-    )(implicit interleavedLets: Buffer[LetBinding]): Unit = traceUCS("[desugarMatchBranch]") {
+    )(implicit interleavedLets: Buffer[LetBinding]): Unit = traceUCS[Unit]("[desugarMatchBranch]") {
       body match {
         // This case handles default branches. For example,
         // if x is
@@ -528,7 +528,7 @@ class Desugarer extends TypeDefs { self: Typer =>
     def desugarIfBody
       (body: IfBody, expr: PartialTerm, acc: Conjunction)
       (implicit interleavedLets: Buffer[LetBinding])
-    : Unit = traceUCS("[desugarIfBody]") {
+    : Unit = traceUCS[Unit]("[desugarIfBody]") {
       body match {
         case IfOpsApp(exprPart, opsRhss) =>
           val exprStart = expr.addTerm(exprPart)
