@@ -10,7 +10,7 @@ fun test(x: 0 | A) = if x is
   A then A
 //│ fun test: (x: 0 | A,) -> (0 | A)
 
-// FIXME
+:e
 // case === (x,) (0,) of { true => 0; _ => case x of { A => A } }
 fun test(x: 0 | A) =
   if
@@ -36,7 +36,7 @@ fun test2(x) =
     x is A then A
 //│ fun test2: (A & Eql[0]) -> (0 | A)
 
-// FIXME
+:e
 test2(0)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.40: 	test2(0)

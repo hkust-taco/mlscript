@@ -39,7 +39,6 @@ fun q(x) =
 //│ q: Some -> 0
 //│  = [Function: q]
 
-// FIXME
 :w
 fun p(x, y) =
   if
@@ -48,10 +47,10 @@ fun p(x, y) =
     x is Some and y is Some then 0
 //│ ╔══[WARNING] Found a duplicated branch
 //│ ╟── This branch
-//│ ║  l.48: 	    x is Some and y is Some then 0
+//│ ║  l.47: 	    x is Some and y is Some then 0
 //│ ║        	                                 ^
 //│ ╟── is subsumed by the branch here.
-//│ ║  l.47: 	    y is Some and x is Some then 1
+//│ ║  l.46: 	    y is Some and x is Some then 1
 //│ ╙──      	                                 ^
 //│ p: (Some, None | Some,) -> (0 | 1)
 //│  = [Function: p]
@@ -93,9 +92,9 @@ fun q(a) =
     let y = a + 1
     then y
 //│ ╔══[PARSE ERROR] Expected an expression; found a 'then'/'else' clause instead
-//│ ║  l.93: 	    let y = a + 1
+//│ ║  l.92: 	    let y = a + 1
 //│ ║        	            ^^^^^
-//│ ║  l.94: 	    then y
+//│ ║  l.93: 	    then y
 //│ ╙──      	^^^^^^^^^^
 //│ q: (Left & {leftValue: 'leftValue}) -> 'leftValue
 //│  = [Function: q1]
