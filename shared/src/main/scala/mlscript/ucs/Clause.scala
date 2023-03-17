@@ -9,7 +9,7 @@ import scala.collection.mutable.Buffer
   * A `Clause` represents a minimal unit of logical predicate in the UCS.
   * There are three kinds of clauses: boolean test, class match, and tuple match.
   */
-abstract class Clause {
+sealed abstract class Clause {
   /**
     * Local interleaved let bindings declared before this condition.
     */
@@ -29,26 +29,27 @@ abstract class Clause {
     })
 }
 
+sealed abstract class MatchClause extends Clause {
+  val scrutinee: Scrutinee
+}
+
 object Clause {
   final case class MatchLiteral(
-    scrutinee: Scrutinee,
+    override val scrutinee: Scrutinee,
     literal: SimpleTerm
-  )(override val locations: Ls[Loc]) extends Clause {
+  )(override val locations: Ls[Loc]) extends MatchClause {
     override def toString(): String = s"«$scrutinee is $literal" + bindingsToString
   }
 
-  final case class MatchNot(
-    scrutinee: Scrutinee,
-    classNames: List[Var]
-  )(override val locations: Ls[Loc]) extends Clause {
-    override def toString(): String = s"«$scrutinee ∉ ${classNames.mkString("{", ", ", "}")}»" + bindingsToString
-  }
+  // final case class MatchNot(override val scrutinee: Scrutinee)(override val locations: Ls[Loc]) extends MatchClause {
+  //   override def toString(): String = s"otherwise of «$scrutinee»" + bindingsToString
+  // }
 
   final case class MatchClass(
-    scrutinee: Scrutinee,
+    override val scrutinee: Scrutinee,
     className: Var,
     fields: Ls[Str -> Var]
-  )(override val locations: Ls[Loc]) extends Clause {
+  )(override val locations: Ls[Loc]) extends MatchClause {
     override def toString(): String = s"«$scrutinee is $className»" + bindingsToString
   }
 

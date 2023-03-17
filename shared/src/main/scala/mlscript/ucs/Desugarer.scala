@@ -16,6 +16,7 @@ class Desugarer extends TypeDefs { self: Typer =>
   private def traceUCS[T](pre: => String)(thunk: => T)(post: T => String = noPostTrace) =
     if (dbgUCS) trace(pre)(thunk)(post) else thunk
 
+  import Desugarer.ExhaustivenessMap
   import Clause.{MatchClass, MatchTuple, BooleanTest}
 
   type FieldAliasMap = MutMap[SimpleTerm, MutMap[Str, Var]]
@@ -35,11 +36,6 @@ class Desugarer extends TypeDefs { self: Typer =>
     }
     res
   }
-
-  /**
-    * A map from each scrutinee term to all its cases and the first `MutCase`.
-    */
-  private type ExhaustivenessMap = Map[Str \/ Int, Map[Either[Int, SimpleTerm], Buffer[Loc]]]
 
   private type MutExhaustivenessMap = MutMap[Str \/ Int, MutMap[Either[Int, SimpleTerm], Buffer[Loc]]]
 
@@ -183,6 +179,8 @@ class Desugarer extends TypeDefs { self: Typer =>
     pattern match {
       // This case handles top-level wildcard `Var`.
       // We don't make any conditions in this level.
+      // case wildcard @ Var("_") if isTopLevel =>
+      //   Clause.MatchNot(scrutinee)(wildcard.toLoc.toList) :: Nil
       case Var("_") => Nil
       // This case handles literals.
       // x is true | x is false | x is 0 | x is "text" | ...
@@ -361,11 +359,10 @@ class Desugarer extends TypeDefs { self: Typer =>
           }
       }
     printlnUCS("### Build a case tree from decision paths ###")
-    val caseTree = buildCaseTree(paths)
+    val imExhaustivenessMap = Map.from(exhaustivenessMap.iterator.map { case (k, m) => k -> Map.from(m) })
+    val caseTree = buildCaseTree(paths)(raise, getScurtineeKey, imExhaustivenessMap)
     printlnUCS("### Checking exhaustiveness of the case tree ###")
-    checkExhaustive(caseTree, N)({
-      Map.from(exhaustivenessMap.iterator.map { case (k, m) => k -> Map.from(m) })
-    }, ctx, raise)
+    checkExhaustive(caseTree, N)(imExhaustivenessMap, ctx, raise)
     printlnUCS("### Construct a term from the case tree ###")
     val desugared = constructTerm(caseTree)
     println(s"Desugared term: ${desugared.print(false)}")
@@ -429,15 +426,17 @@ class Desugarer extends TypeDefs { self: Typer =>
         // if x is
         //   A(...) then ...
         //   else ...
-        case L(IfElse(consequent)) =>
+        case L(els @ IfElse(consequent)) =>
           // Because this pattern matching is incomplete, it's not included in
           // `acc`. This means that we discard this incomplete pattern matching.
+          // branches += (collectedConditions + Clause.MatchNot(scrutinee)(els.toLoc.toList) -> consequent)
           branches += (collectedConditions -> consequent)
         // This case handles default branches indicated by wildcards.
         // if x is
         //   A(...) then ...
         //   _      then ...
-        case L(IfThen(Var("_"), consequent)) =>
+        case L(IfThen(wildcard @ Var("_"), consequent)) =>
+          // branches += (collectedConditions + Clause.MatchNot(scrutinee)(wildcard.toLoc.toList) -> consequent)
           branches += (collectedConditions -> consequent)
         // if x is
         //   A(...) then ...         // Case 1: no conjunctions
@@ -906,7 +905,9 @@ class Desugarer extends TypeDefs { self: Typer =>
 
   private def buildCaseTree
     (paths: Ls[Conjunction -> Term])
-    (implicit raise: Diagnostic => Unit)
+    (implicit raise: Diagnostic => Unit,
+              getScrutineeKey: Scrutinee => Str \/ Int,
+              exhaustivenessMap: ExhaustivenessMap)
   : MutCaseOf = traceUCS("[buildCaseTree]") {
     paths match {
       case Nil => MissingCase
@@ -924,4 +925,11 @@ class Desugarer extends TypeDefs { self: Typer =>
         root
     }
   }(_ => "[buildCaseTree]")
+}
+
+object Desugarer {
+  /**
+    * A map from each scrutinee term to all its cases and the first `MutCase`.
+    */
+  type ExhaustivenessMap = Map[Str \/ Int, Map[Either[Int, SimpleTerm], Buffer[Loc]]]
 }

@@ -46,6 +46,17 @@ final case class Conjunction(clauses: Ls[Clause], trailingBindings: Ls[LetBindin
   }
 
   /**
+    * This is a shorthand if you only have one clause.
+    *
+    * @param last the list of clauses to append to this conjunction
+    * @return a new conjunction with clauses from `this` and `last`
+    */
+  def +(last: Clause): Conjunction = {
+    last.bindings = trailingBindings ::: last.bindings
+    Conjunction(clauses :+ last, Nil)
+  }
+
+  /**
     * This is a shorthand if you only have the last binding.
     *
     * @param suffix the list of clauses to append to this conjunction
@@ -54,23 +65,29 @@ final case class Conjunction(clauses: Ls[Clause], trailingBindings: Ls[LetBindin
   def +(lastBinding: LetBinding): Conjunction =
     Conjunction(clauses, trailingBindings :+ lastBinding)
 
-  def separate(expectedScrutinee: Scrutinee): Opt[(MatchClass \/ MatchLiteral, Conjunction)] = {
+  def separate(expectedScrutinee: Scrutinee): Opt[(MatchClause, Conjunction)] = {
     @tailrec
-    def rec(past: Ls[Clause], upcoming: Ls[Clause]): Opt[(Ls[Clause], MatchClass \/ MatchLiteral, Ls[Clause])] = {
+    def rec(past: Ls[Clause], upcoming: Ls[Clause]): Opt[(Ls[Clause], MatchClause, Ls[Clause])] = {
       upcoming match {
         case Nil => N
         case (head @ MatchLiteral(scrutinee, _)) :: tail =>
           if (scrutinee === expectedScrutinee) {
-            S((past, R(head), tail))
+            S((past, head, tail))
           } else {
             rec(past :+ head, tail)
           }
         case (head @ MatchClass(scrutinee, _, _)) :: tail =>
           if (scrutinee === expectedScrutinee) {
-            S((past, L(head), tail))
+            S((past, head, tail))
           } else {
             rec(past :+ head, tail)
           }
+        // case (head @ MatchNot(scrutinee)) :: tail =>
+        //   if (scrutinee === expectedScrutinee) {
+        //     S((past, head, tail))
+        //   } else {
+        //     rec(past :+ head, tail)
+        //   }
         case head :: tail =>
           rec(past :+ head, tail)
       }

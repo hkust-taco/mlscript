@@ -9,6 +9,7 @@ import scala.collection.mutable.{Map => MutMap, Set => MutSet, Buffer}
 import helpers._
 import mlscript.ucs.MutCaseOf.Consequent
 import scala.collection.immutable
+import Desugarer.ExhaustivenessMap
 
 sealed abstract class MutCaseOf extends WithBindings {
   def kind: Str = {
@@ -23,12 +24,16 @@ sealed abstract class MutCaseOf extends WithBindings {
 
   def describe: Str
 
+  def tryMerge
+      (branch: Conjunction -> Term)
+      (implicit raise: Diagnostic => Unit, getScrutineeKey: Scrutinee => Str \/ Int, exhaustivenessMap: ExhaustivenessMap): Unit =
+    merge(branch)(_ => (), getScrutineeKey, exhaustivenessMap)
   def merge
     (branch: Conjunction -> Term)
-    (implicit raise: Diagnostic => Unit): Unit
+    (implicit raise: Diagnostic => Unit, getScrutineeKey: Scrutinee => Str \/ Int, exhaustivenessMap: ExhaustivenessMap): Unit
   def mergeDefault
     (bindings: Ls[LetBinding], default: Term)
-    (implicit raise: Diagnostic => Unit): Int
+    (implicit raise: Diagnostic => Unit, getScrutineeKey: Scrutinee => Str \/ Int, exhaustivenessMap: ExhaustivenessMap): Int
 
   // TODO: Make it immutable.
   var locations: Ls[Loc] = Nil
@@ -155,14 +160,17 @@ object MutCaseOf {
     }
   }
 
-  import Clause.{MatchLiteral, MatchClass, MatchTuple, BooleanTest, Binding}
+  import Clause.{MatchLiteral /*, MatchNot */, MatchClass, MatchTuple, BooleanTest, Binding}
 
   // A short-hand for pattern matchings with only true and false branches.
   final case class IfThenElse(condition: Term, var whenTrue: MutCaseOf, var whenFalse: MutCaseOf) extends MutCaseOf {
     def describe: Str =
       s"IfThenElse($condition, whenTrue = ${whenTrue.kind}, whenFalse = ${whenFalse.kind})"
 
-    def merge(branch: Conjunction -> Term)(implicit raise: Diagnostic => Unit): Unit =
+    def merge(branch: Conjunction -> Term)
+        (implicit raise: Diagnostic => Unit,
+                  getScrutineeKey: Scrutinee => Str \/ Int,
+                  exhaustivenessMap: ExhaustivenessMap): Unit =
       branch match {
         // The CC is a wildcard. So, we call `mergeDefault`.
         case Conjunction(Nil, trailingBindings) -> term =>
@@ -173,22 +181,13 @@ object MutCaseOf {
             ))
           }
         // The CC is an if-then-else. We create a pattern match of true/false.
-        case Conjunction((head @ BooleanTest(test)) :: tail, trailingBindings) -> term =>
-          // If the test is the same. So, we merge.
-          if (test === condition) {
-            whenTrue.addBindings(head.bindings)
-            whenTrue.merge(Conjunction(tail, trailingBindings) -> term)
-          } else {
-            whenFalse match {
-              case Consequent(_) =>
-                raise(WarningReport(Message.fromStr("duplicated else in the if-then-else") -> N :: Nil))
-              case MissingCase =>
-                whenFalse = buildFirst(branch._1, branch._2)
-                whenFalse.addBindings(head.bindings)
-              case _ => whenFalse.merge(branch)
-            }
-          }
+        case Conjunction((head @ BooleanTest(test)) :: tail, trailingBindings) -> term if test === condition =>
+          // If the test is the same. So, we can insert the path to the true branch.
+          whenTrue.addBindings(head.bindings)
+          whenTrue.merge(Conjunction(tail, trailingBindings) -> term)
+        // Otherwise, we try to insert to the true branch.
         case Conjunction(head :: _, _) -> _ =>
+          whenTrue.tryMerge(branch)
           whenFalse match {
             case Consequent(_) =>
               raise(WarningReport(Message.fromStr("duplicated else in the if-then-else") -> N :: Nil))
@@ -199,7 +198,10 @@ object MutCaseOf {
           }
       }
 
-    def mergeDefault(bindings: Ls[LetBinding], default: Term)(implicit raise: Diagnostic => Unit): Int = {
+    def mergeDefault(bindings: Ls[LetBinding], default: Term)
+        (implicit raise: Diagnostic => Unit,
+                  getScrutineeKey: Scrutinee => Str \/ Int,
+                  exhaustivenessMap: ExhaustivenessMap): Int = {
       whenTrue.mergeDefault(bindings, default) + {
         whenFalse match {
           case Consequent(term) => 0
@@ -223,7 +225,10 @@ object MutCaseOf {
       })"
     }
 
-    def merge(originalBranch: Conjunction -> Term)(implicit raise: Diagnostic => Unit): Unit = {
+    def merge(originalBranch: Conjunction -> Term)
+        (implicit raise: Diagnostic => Unit,
+                  getScrutineeKey: Scrutinee => Str \/ Int,
+                  exhaustivenessMap: ExhaustivenessMap): Unit = {
       // Remove let bindings that already has been declared.
       val branch = originalBranch._1.copy(clauses = originalBranch._1.clauses.filter {
         case Binding(name, value, false) if (getBindings.exists {
@@ -233,6 +238,7 @@ object MutCaseOf {
         }) => false
         case _ => true
       }) -> originalBranch._2
+      // Promote the match against the same scrutinee.
       branch._1.separate(scrutinee) match {
         // No conditions against the same scrutinee.
         case N =>
@@ -258,6 +264,9 @@ object MutCaseOf {
               mergeDefault(trailingBindings, term) // TODO: Handle the int result here.
             // The conditions to be inserted does not overlap with me.
             case conjunction -> term =>
+              branches.foreach {
+                _.consequent.tryMerge(conjunction -> term)
+              }
               wildcard match {
                 // No wildcard. We will create a new one.
                 case N => wildcard = S(buildFirst(conjunction, term))
@@ -266,7 +275,7 @@ object MutCaseOf {
               }
           }
         // Found a match condition against the same scrutinee
-        case S(L(head @ MatchClass(_, className, fields)) -> remainingConditions) =>
+        case S((head @ MatchClass(_, className, fields)) -> remainingConditions) =>
           branches.find(_.matches(className)) match {
             // No such pattern. We should create a new one.
             case N =>
@@ -281,7 +290,7 @@ object MutCaseOf {
               matchCase.addFields(fields)
               matchCase.consequent.merge(remainingConditions -> branch._2)
           }
-        case S(R(head @ MatchLiteral(_, literal)) -> remainingConditions) =>
+        case S((head @ MatchLiteral(_, literal)) -> remainingConditions) =>
           branches.find(branch => literal match {
             case v: Var => branch.matches(v)
             case l: Lit => branch.matches(l)
@@ -297,10 +306,20 @@ object MutCaseOf {
               matchCase.consequent.addBindings(head.bindings)
               matchCase.consequent.merge(remainingConditions -> branch._2)
           }
+        // case S((head @ MatchNot(_)) -> remainingConditions) =>
+        //   wildcard match {
+        //     // No wildcard. We will create a new one.
+        //     case N => wildcard = S(buildFirst(remainingConditions, branch._2))
+        //     // There is a wildcard case. Just merge!
+        //     case S(consequent) => consequent.merge(remainingConditions -> branch._2)
+        //   }
       }
     }
 
-    def mergeDefault(bindings: Ls[LetBinding], default: Term)(implicit raise: Diagnostic => Unit): Int = {
+    def mergeDefault(bindings: Ls[LetBinding], default: Term)
+        (implicit raise: Diagnostic => Unit,
+                  getScrutineeKey: Scrutinee => Str \/ Int,
+                  exhaustivenessMap: ExhaustivenessMap): Int = {
       branches.iterator.map {
         case MutCase.Constructor(_, consequent) => consequent.mergeDefault(bindings, default)
         case MutCase.Literal(_, consequent) => consequent.mergeDefault(bindings, default)
@@ -317,7 +336,10 @@ object MutCaseOf {
   final case class Consequent(term: Term) extends MutCaseOf {
     def describe: Str = s"Consequent($term)"
 
-    def merge(branch: Conjunction -> Term)(implicit raise: Diagnostic => Unit): Unit =
+    def merge(branch: Conjunction -> Term)
+        (implicit raise: Diagnostic => Unit,
+                  getScrutineeKey: Scrutinee => Str \/ Int,
+                  exhaustivenessMap: ExhaustivenessMap): Unit =
       raise {
         import scala.collection.mutable.ListBuffer
         val buffer = ListBuffer.empty[Message -> Opt[Loc]]
@@ -335,18 +357,29 @@ object MutCaseOf {
         WarningReport(buffer.toList)
       }
 
-    def mergeDefault(bindings: Ls[LetBinding], default: Term)(implicit raise: Diagnostic => Unit): Int = 0
+    def mergeDefault(bindings: Ls[LetBinding], default: Term)
+       (implicit raise: Diagnostic => Unit,
+                  getScrutineeKey: Scrutinee => Str \/ Int,
+                  exhaustivenessMap: ExhaustivenessMap): Int = 0
   }
   final case object MissingCase extends MutCaseOf {
     def describe: Str = "MissingCase"
 
-    def merge(branch: Conjunction -> Term)(implicit raise: Diagnostic => Unit): Unit =
+    def merge(branch: Conjunction -> Term)
+      (implicit raise: Diagnostic => Unit,
+                getScrutineeKey: Scrutinee => Str \/ Int,
+                exhaustivenessMap: ExhaustivenessMap): Unit =
       lastWords("`MissingCase` is a placeholder and cannot be merged")
 
-    def mergeDefault(bindings: Ls[LetBinding], default: Term)(implicit raise: Diagnostic => Unit): Int = 0
+    def mergeDefault(bindings: Ls[LetBinding], default: Term)
+      (implicit raise: Diagnostic => Unit,
+                getScrutineeKey: Scrutinee => Str \/ Int,
+                exhaustivenessMap: ExhaustivenessMap): Int = 0
   }
 
-  def buildFirst(conjunction: Conjunction, term: Term): MutCaseOf = {
+  def buildFirst(conjunction: Conjunction, term: Term)
+      (implicit getScrutineeKey: Scrutinee => Str \/ Int,
+                exhaustivenessMap: ExhaustivenessMap): MutCaseOf = {
     def rec(conjunction: Conjunction): MutCaseOf = conjunction match {
       case Conjunction(head :: tail, trailingBindings) =>
         lazy val (beforeHeadBindings, afterHeadBindings) = head.bindings.partition {
