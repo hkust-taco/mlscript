@@ -15,32 +15,30 @@ class Right[B](rightValue: B)
 //│ class Left[A](leftValue: A)
 //│ class Right[B](rightValue: B)
 
-// FIXME
 fun w1(x, e_0, e_1) =
   if x is
-    Left(None) then 1
-    Right(None) then 2
+    Left(None) then "Left of None"
+    Right(None) then "Right of None"
     _ and e_0 is y_0 and x is
-      Left(Some(lv)) then 3
+      Left(Some(lv)) then concat("Left of Some of ")(toString(lv))
       _ and e_1 is y_1 and x is
-        Right(Some(rv)) then 4
-//│ ╔══[WARNING] Found duplicated branch
-//│ ╟── This decision path tries to fit
-//│ ║  l.24: 	      Left(Some(lv)) then 3
-//│ ║        	                          ^
-//│ ╟── But there is already a consequent term
-//│ ║  l.21: 	    Left(None) then 1
-//│ ╙──      	                    ^
-//│ ╔══[WARNING] Found duplicated branch
-//│ ╟── This decision path tries to fit
-//│ ║  l.26: 	        Right(Some(rv)) then 4
-//│ ║        	                             ^
-//│ ╟── But there is already a consequent term
-//│ ║  l.22: 	    Right(None) then 2
-//│ ╙──      	                     ^
-//│ fun w1: (Left[anything] | Right[anything], anything, anything,) -> (1 | 2)
+        Right(Some(rv)) then concat("Right of Some of ")(toString(rv))
+//│ fun w1: (Left[None | Some[anything]] | Right[None | Some[anything]], anything, anything,) -> string
 
-// FIXME
+w1(Left(None), "a", "b")
+w1(Right(None), "a", "b")
+w1(Left(Some(0)), "a", "b")
+w1(Right(Some(0)), "a", "b")
+//│ string
+//│ res
+//│     = 'Left of None'
+//│ res
+//│     = 'Right of None'
+//│ res
+//│     = 'Left of Some of 0'
+//│ res
+//│     = 'Right of Some of 0'
+
 fun w2(x, p) =
   if x is
     Some then 1
@@ -48,3 +46,17 @@ fun w2(x, p) =
     None then 3
     _ then 4
 //│ fun w2: forall 'a. (None | Some[anything] | 'a & ~#None & ~#Some, (None | 'a) -> anything,) -> (1 | 2 | 3 | 4)
+
+w2(Some(0), x => true)
+w2(None, x => true)
+w2(None, x => false)
+w2(0, x => false)
+//│ 1 | 2 | 3 | 4
+//│ res
+//│     = 1
+//│ res
+//│     = 2
+//│ res
+//│     = 3
+//│ res
+//│     = 4

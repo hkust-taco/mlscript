@@ -68,7 +68,8 @@ class Desugarer extends TypeDefs { self: Typer =>
       // `x is A(_)`: ignore this binding
       case (Var("_"), _) => N
       // `x is A(value)`: generate bindings directly
-      case (nameVar: Var, fieldName) => S(fieldName -> nameVar)
+      case (nameVar @ Var(n), fieldName) if (n.headOption.exists(_.isLower)) =>
+        S(fieldName -> nameVar)
       // `x is B(A(x))`: generate a temporary name
       // use the name in the binding, and destruct sub-patterns
       case (pattern: Term, fieldName) =>

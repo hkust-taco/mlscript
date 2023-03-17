@@ -112,17 +112,9 @@ class Cons[out A](head: A, tail: Cons[A] | Nil)
 //│ module Nil()
 //│ class Cons[A](head: A, tail: Cons[A] | Nil)
 
-:w
 fun join(xs) =
   if xs is
     Nil then ""
     Cons(x, Nil) then toString(x)
     Cons(x, xs') then concat(toString(x))(concat(", ")(join(xs')))
-//│ ╔══[WARNING] Found duplicated branch
-//│ ╟── This decision path tries to fit
-//│ ║  l.120: 	    Cons(x, xs') then concat(toString(x))(concat(", ")(join(xs')))
-//│ ║         	                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── But there is already a consequent term
-//│ ║  l.119: 	    Cons(x, Nil) then toString(x)
-//│ ╙──       	                      ^^^^^^^^^^^
 //│ fun join: (Cons[anything] | Nil) -> string
