@@ -295,3 +295,48 @@ mapPartition2(x => if x % 2 == 0 then Left(x) else Right(x), zeroToThree)
 //│        fst: Cons { head: 0, tail: Cons { head: 0, tail: [Cons] } },
 //│        snd: Cons { head: 1, tail: Cons { head: 3, tail: Nil {} } }
 //│      }
+
+fun log(x) = ()
+//│ log: anything -> ()
+//│    = [Function: log]
+
+// FIXME: Code generation problem...
+:js
+fun mn(a) =
+  if a is
+    Some(x) and x is
+      Left(b) and b is
+        0 then "b is 1"
+        let _ = log(b)
+        1 then "b is 2"
+        2 then "b is 3"
+      Right(b) then "right-defined"
+    None       then "undefined"
+mn(None())
+//│ // Query 1
+//│ globalThis.mn = function mn(a) {
+//│   return ((() => {
+//│     let a;
+//│     return (a = a, a instanceof Some ? ((x) => {
+//│       let a;
+//│       return (a = x, a instanceof Left ? ((b) => ((_) => {
+//│         let a;
+//│         return (a = b, a === 0 ? "b is 1" : a === 1 ? "b is 2" : a === 2 ? "b is 3" : (() => {
+//│           throw new Error("non-exhaustive case expression");
+//│         })());
+//│       })(log(b)))(x.leftValue) : a instanceof Right ? ((b) => "right-defined")(x.rightValue) : (() => {
+//│         throw new Error("non-exhaustive case expression");
+//│       })());
+//│     })(a.value) : a instanceof None ? "undefined" : (() => {
+//│       throw new Error("non-exhaustive case expression");
+//│     })());
+//│   })());
+//│ };
+//│ // Query 2
+//│ res = mn(None1());
+//│ // End of generated code
+//│ mn: (None | Some & {value: Left & {leftValue: 0 | 1 | 2} | Right}) -> ("b is 1" | "b is 2" | "b is 3" | "right-defined" | "undefined")
+//│   = [Function: mn]
+//│ res: "b is 1" | "b is 2" | "b is 3" | "right-defined" | "undefined"
+//│ Runtime error:
+//│   Error: non-exhaustive case expression
