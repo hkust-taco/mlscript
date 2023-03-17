@@ -7,3 +7,4 @@ metals.sbt
 project/Dependencies.scala
 project/metals.sbt
 **.worksheet.sc
+.DS_Store
