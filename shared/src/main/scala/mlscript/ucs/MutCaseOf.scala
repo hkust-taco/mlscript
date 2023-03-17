@@ -397,8 +397,8 @@ object MutCaseOf {
       raise {
         import scala.collection.mutable.ListBuffer
         val buffer = ListBuffer.empty[Message -> Opt[Loc]]
-        buffer += Message.fromStr("Found duplicated branch") -> N
-        buffer += Message.fromStr("This decision path tries to fit") -> {
+        buffer += Message.fromStr("Found a duplicated branch") -> N
+        buffer += Message.fromStr("This branch") -> {
           val (Conjunction(clauses, _) -> consequent) = branch
           consequent.toLoc
           // TODO: Make a complete location. 
@@ -407,7 +407,7 @@ object MutCaseOf {
           //   case Nil => consequent.toLoc
           // }
         }
-        buffer += Message.fromStr("But there is already a consequent term") -> term.toLoc
+        buffer += Message.fromStr("is subsumed by the branch here.") -> term.toLoc
         WarningReport(buffer.toList)
       }
 

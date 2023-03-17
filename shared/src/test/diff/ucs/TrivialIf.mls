@@ -64,11 +64,11 @@ if 42 is n then n + 1
 
 // FIXME
 if 42 is n then n + 1 else 0
-//│ ╔══[WARNING] Found duplicated branch
-//│ ╟── This decision path tries to fit
+//│ ╔══[WARNING] Found a duplicated branch
+//│ ╟── This branch
 //│ ║  l.66: 	if 42 is n then n + 1 else 0
 //│ ║        	                           ^
-//│ ╟── But there is already a consequent term
+//│ ╟── is subsumed by the branch here.
 //│ ║  l.66: 	if 42 is n then n + 1 else 0
 //│ ╙──      	                ^^^^^
 //│ res: int

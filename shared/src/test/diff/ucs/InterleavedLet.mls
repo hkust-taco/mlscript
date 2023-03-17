@@ -46,11 +46,11 @@ fun p(x, y) =
     x is Some and y is None then 0
     y is Some and x is Some then 1
     x is Some and y is Some then 0
-//│ ╔══[WARNING] Found duplicated branch
-//│ ╟── This decision path tries to fit
+//│ ╔══[WARNING] Found a duplicated branch
+//│ ╟── This branch
 //│ ║  l.48: 	    x is Some and y is Some then 0
 //│ ║        	                                 ^
-//│ ╟── But there is already a consequent term
+//│ ╟── is subsumed by the branch here.
 //│ ║  l.47: 	    y is Some and x is Some then 1
 //│ ╙──      	                                 ^
 //│ p: (Some, None | Some,) -> (0 | 1)

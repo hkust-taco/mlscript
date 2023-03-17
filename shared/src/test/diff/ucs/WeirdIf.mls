@@ -6,18 +6,18 @@ if
   _ then 0
   else 0
 else 1
-//│ ╔══[WARNING] Found duplicated branch
-//│ ╟── This decision path tries to fit
+//│ ╔══[WARNING] Found a duplicated branch
+//│ ╟── This branch
 //│ ║  l.7: 	  else 0
 //│ ║       	       ^
-//│ ╟── But there is already a consequent term
+//│ ╟── is subsumed by the branch here.
 //│ ║  l.6: 	  _ then 0
 //│ ╙──     	         ^
-//│ ╔══[WARNING] Found duplicated branch
-//│ ╟── This decision path tries to fit
+//│ ╔══[WARNING] Found a duplicated branch
+//│ ╟── This branch
 //│ ║  l.8: 	else 1
 //│ ║       	     ^
-//│ ╟── But there is already a consequent term
+//│ ╟── is subsumed by the branch here.
 //│ ║  l.6: 	  _ then 0
 //│ ╙──     	         ^
 //│ res: 0
@@ -25,11 +25,11 @@ else 1
 
 :w
 if else 0 else 1
-//│ ╔══[WARNING] Found duplicated branch
-//│ ╟── This decision path tries to fit
+//│ ╔══[WARNING] Found a duplicated branch
+//│ ╟── This branch
 //│ ║  l.27: 	if else 0 else 1
 //│ ║        	               ^
-//│ ╟── But there is already a consequent term
+//│ ╟── is subsumed by the branch here.
 //│ ║  l.27: 	if else 0 else 1
 //│ ╙──      	        ^
 //│ res: 0
@@ -37,11 +37,11 @@ if else 0 else 1
 
 :w
 fun f(x) = if x is else 0 else 1
-//│ ╔══[WARNING] Found duplicated branch
-//│ ╟── This decision path tries to fit
+//│ ╔══[WARNING] Found a duplicated branch
+//│ ╟── This branch
 //│ ║  l.39: 	fun f(x) = if x is else 0 else 1
 //│ ║        	                               ^
-//│ ╟── But there is already a consequent term
+//│ ╟── is subsumed by the branch here.
 //│ ║  l.39: 	fun f(x) = if x is else 0 else 1
 //│ ╙──      	                        ^
 //│ f: anything -> 0

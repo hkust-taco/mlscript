@@ -19,11 +19,11 @@ fun test(x) = if x is 1 then 0 else 1
 fun testF(x) = if x is
   Foo(a) then a
   Foo(a) then a
-//│ ╔══[WARNING] Found duplicated branch
-//│ ╟── This decision path tries to fit
+//│ ╔══[WARNING] Found a duplicated branch
+//│ ╟── This branch
 //│ ║  l.21: 	  Foo(a) then a
 //│ ║        	              ^
-//│ ╟── But there is already a consequent term
+//│ ╟── is subsumed by the branch here.
 //│ ║  l.20: 	  Foo(a) then a
 //│ ╙──      	              ^
 //│ testF: (Foo & {x: 'x}) -> 'x
