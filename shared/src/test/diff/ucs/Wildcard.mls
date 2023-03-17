@@ -1,0 +1,54 @@
+:NewParser
+:NewDefs
+
+type Option[T] = None | Some[T]
+module None
+class Some[T](value: T)
+//│ type Option[T] = Some[T] | None
+//│ module None()
+//│ class Some[T](value: T)
+
+type Either[A, B] = Left[A] | Right[B]
+class Left[A](leftValue: A)
+class Right[B](rightValue: B)
+//│ type Either[A, B] = Left[A] | Right[B]
+//│ class Left[A](leftValue: A)
+//│ class Right[B](rightValue: B)
+
+// FIXME
+fun w1(x, e_0, e_1) =
+  if x is
+    Left(None) then 1
+    Right(None) then 2
+    _ and e_0 is y_0 and x is
+      Left(Some(lv)) then 3
+      _ and e_1 is y_1 and x is
+        Right(Some(rv)) then 4
+//│ ╔══[WARNING] Found duplicated branch
+//│ ╟── This decision path tries to fit
+//│ ║  l.24: 	      Left(Some(lv)) then 3
+//│ ║        	                          ^
+//│ ╟── But there is already a consequent term
+//│ ║  l.21: 	    Left(None) then 1
+//│ ╙──      	                    ^
+//│ ╔══[WARNING] Found duplicated branch
+//│ ╟── This decision path tries to fit
+//│ ║  l.26: 	        Right(Some(rv)) then 4
+//│ ║        	                             ^
+//│ ╟── But there is already a consequent term
+//│ ║  l.22: 	    Right(None) then 2
+//│ ╙──      	                     ^
+//│ fun w1: (Left[anything] | Right[anything], anything, anything,) -> (1 | 2)
+
+// FIXME
+fun w2(x, p) =
+  if x is
+    Some then 1
+    _ and p(x) then 2
+    None then 3
+//│ ╔══[ERROR] The case when this is false is not handled: p (x,)
+//│ ║  l.47: 	    _ and p(x) then 2
+//│ ╙──      	          ^^^^
+//│ fun w2: (anything, anything,) -> error
+//│ Code generation encountered an error:
+//│   if expression was not desugared
