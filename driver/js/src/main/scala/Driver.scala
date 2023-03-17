@@ -29,7 +29,7 @@ class Driver(options: DriverOptions) {
 
     val mtime = getModificationTime(filename)
     val imtime = getModificationTime(s"${options.outputDir}/.temp/$prefixName.mlsi")
-    if (imtime.isEmpty || mtime.compareTo(imtime) >= 0) {
+    if (options.force || imtime.isEmpty || mtime.compareTo(imtime) >= 0) {
       readFile(filename) match {
         case Some(content) => {
           import fastparse._
