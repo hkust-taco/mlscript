@@ -46,9 +46,5 @@ fun w2(x, p) =
     Some then 1
     _ and p(x) then 2
     None then 3
-//│ ╔══[ERROR] The case when this is false is not handled: p (x,)
-//│ ║  l.47: 	    _ and p(x) then 2
-//│ ╙──      	          ^^^^
-//│ fun w2: (anything, anything,) -> error
-//│ Code generation encountered an error:
-//│   if expression was not desugared
+    _ then 4
+//│ fun w2: forall 'a. (None | Some[anything] | 'a & ~#None & ~#Some, (None | 'a) -> anything,) -> (1 | 2 | 3 | 4)

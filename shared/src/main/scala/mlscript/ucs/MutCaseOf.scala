@@ -22,7 +22,13 @@ sealed abstract class MutCaseOf extends WithBindings {
     }
   }
 
+  def duplicate(): MutCaseOf
+
+  def fill(subTree: MutCaseOf): Unit
+
   def describe: Str
+
+  def isComplete: Bool
 
   def tryMerge
       (branch: Conjunction -> Term)
@@ -98,6 +104,8 @@ object MutCaseOf {
   sealed abstract class MutCase {
     var consequent: MutCaseOf
 
+    def duplicate(): MutCase
+
     def matches(expected: Var): Bool
     def matches(expected: Str): Bool
     def matches(expected: Lit): Bool
@@ -123,7 +131,7 @@ object MutCaseOf {
       locations ++= locOpt
       this
     }
-    def withLocations(locs: Ls[Loc]): MutCase = {
+    def withLocations(locs: IterableOnce[Loc]): MutCase = {
       locations ++= locs
       this
     }
@@ -134,6 +142,8 @@ object MutCaseOf {
       val literal: SimpleTerm,
       var consequent: MutCaseOf,
     ) extends MutCase {
+      override def duplicate(): MutCase =
+        Literal(literal, consequent.duplicate()).withLocations(locations)
       override def matches(expected: Var): Bool = literal match {
         case tof @ Var(n) if n === "true" || n === "false" => expected === tof
         case _ => false
@@ -152,6 +162,9 @@ object MutCaseOf {
       val patternFields: Var -> Buffer[Str -> Var],
       var consequent: MutCaseOf,
     ) extends MutCase {
+      override def duplicate(): MutCase =
+        Constructor(patternFields.copy(_2 = patternFields._2.clone()), consequent.duplicate())
+          .withLocations(locations)
       override def matches(expected: Var): Bool = matches(expected.name)
       override def matches(expected: Str): Bool = patternFields._1.name === expected
       override def matches(expected: Lit): Bool = false
@@ -166,6 +179,20 @@ object MutCaseOf {
   final case class IfThenElse(condition: Term, var whenTrue: MutCaseOf, var whenFalse: MutCaseOf) extends MutCaseOf {
     def describe: Str =
       s"IfThenElse($condition, whenTrue = ${whenTrue.kind}, whenFalse = ${whenFalse.kind})"
+
+    def duplicate(): MutCaseOf =
+      IfThenElse(condition, whenTrue.duplicate(), whenFalse.duplicate())
+        .withBindings(getBindings)
+
+    override def fill(subTree: MutCaseOf): Unit = {
+      whenTrue.fill(subTree)
+      if (whenFalse === MissingCase)
+        whenFalse = subTree
+      else
+        whenFalse.fill(subTree)
+    }
+
+    def isComplete: Bool = whenTrue.isComplete && whenFalse.isComplete
 
     def merge(branch: Conjunction -> Term)
         (implicit raise: Diagnostic => Unit,
@@ -225,6 +252,18 @@ object MutCaseOf {
       })"
     }
 
+    def duplicate(): MutCaseOf =
+      Match(scrutinee, branches.map(_.duplicate()), wildcard.map(_.duplicate()))
+        .withBindings(getBindings)
+
+    override def fill(subTree: MutCaseOf): Unit = {
+      branches.foreach(_.consequent.fill(subTree))
+      wildcard.foreach(_.fill(subTree))
+    }
+
+    def isComplete: Bool =
+      branches.forall(_.consequent.isComplete) && wildcard.forall(_.isComplete)
+
     def merge(originalBranch: Conjunction -> Term)
         (implicit raise: Diagnostic => Unit,
                   getScrutineeKey: Scrutinee => Str \/ Int,
@@ -279,10 +318,19 @@ object MutCaseOf {
           branches.find(_.matches(className)) match {
             // No such pattern. We should create a new one.
             case N =>
-              val newBranch = buildFirst(remainingConditions, branch._2)
-              newBranch.addBindings(head.bindings)
-              branches += MutCase.Constructor(className -> Buffer.from(fields), newBranch)
-                .withLocations(head.locations)
+              wildcard match {
+                case S(default) if !default.isComplete =>
+                  val subTree = default.duplicate()
+                  subTree.fill(buildFirst(remainingConditions, branch._2))
+                  subTree.addBindings(head.bindings)
+                  branches += MutCase.Constructor(className -> Buffer.from(fields), subTree)
+                    .withLocations(head.locations)
+                case S | N =>
+                  val newBranch = buildFirst(remainingConditions, branch._2)
+                  newBranch.addBindings(head.bindings)
+                  branches += MutCase.Constructor(className -> Buffer.from(fields), newBranch)
+                    .withLocations(head.locations)
+              }
             // Found existing pattern.
             case S(matchCase: MutCase.Constructor) =>
               // Merge interleaved bindings.
@@ -336,6 +384,12 @@ object MutCaseOf {
   final case class Consequent(term: Term) extends MutCaseOf {
     def describe: Str = s"Consequent($term)"
 
+    override def fill(subTree: MutCaseOf): Unit = ()
+
+    override def duplicate(): MutCaseOf = Consequent(term).withBindings(getBindings)
+
+    def isComplete: Bool = true
+
     def merge(branch: Conjunction -> Term)
         (implicit raise: Diagnostic => Unit,
                   getScrutineeKey: Scrutinee => Str \/ Int,
@@ -365,6 +419,12 @@ object MutCaseOf {
   final case object MissingCase extends MutCaseOf {
     def describe: Str = "MissingCase"
 
+    override def duplicate() = MissingCase
+
+    override def fill(subTree: MutCaseOf): Unit = ()
+
+    def isComplete: Bool = false
+
     def merge(branch: Conjunction -> Term)
       (implicit raise: Diagnostic => Unit,
                 getScrutineeKey: Scrutinee => Str \/ Int,
@@ -389,7 +449,7 @@ object MutCaseOf {
         val consequentTree = rec(Conjunction(tail, trailingBindings))
         (head match {
           case MatchLiteral(scrutinee, literal) =>
-            val branches = Buffer(
+            val branches = Buffer[MutCase](
               MutCase.Literal(literal, consequentTree.withBindings(afterHeadBindings)).withLocation(literal.toLoc)
             )
             Match(scrutinee, branches, N)
@@ -399,13 +459,13 @@ object MutCaseOf {
               .withBindings(beforeHeadBindings)
               .withBindings(afterHeadBindings)
           case MatchClass(scrutinee, className, fields) =>
-            val branches = Buffer(
+            val branches = Buffer[MutCase](
               MutCase.Constructor(className -> Buffer.from(fields), consequentTree.withBindings(afterHeadBindings))
                 .withLocations(head.locations)
             )
             Match(scrutinee, branches, N).withBindings(beforeHeadBindings)
           case MatchTuple(scrutinee, arity, fields) =>
-            val branches = Buffer(
+            val branches = Buffer[MutCase](
               MutCase.Constructor(Var(s"Tuple#$arity") -> Buffer.from(fields), consequentTree.withBindings(afterHeadBindings))
                 .withLocations(head.locations)
             )
