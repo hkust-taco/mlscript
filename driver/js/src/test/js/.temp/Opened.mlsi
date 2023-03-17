@@ -1,4 +1,2 @@
 let console: nothing
-module SubModule() {
-  fun hello: (x: int,) -> nothing
-}
+fun hello: (x: int,) -> nothing

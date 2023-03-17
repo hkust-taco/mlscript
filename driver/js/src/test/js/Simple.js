@@ -12,7 +12,13 @@ function B(base) {
 }
 (() => {
   if (globalThis.C === undefined) {
-    class C {}
+    class C {
+      constructor() {
+      }
+      get b() {
+        return 1;
+      }
+    }
     globalThis.C = new C();
     globalThis.C["class"] = C;
   }
@@ -33,5 +39,8 @@ function B(base) {
   }
   return globalThis.A;
 })();
+const C = globalThis.C;
+const A = globalThis.A;
 const a = A(42);
-console.log(a.foo + 1);
+console.log(a.foo);
+Opened.hello(a.n);

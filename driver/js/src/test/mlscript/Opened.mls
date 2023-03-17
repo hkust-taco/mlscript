@@ -1,5 +1,2 @@
 let console: nothing
-
-module SubModule {
-  fun hello(x: int) = console.log(("hello!", x))
-}
+fun hello(x: int) = console.log(("hello!", x))

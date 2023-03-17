@@ -1,6 +1,10 @@
 object Main {
   def main(args: Array[String]): Unit = DriverOptions.parse match {
-    case Some(options) => Driver(options).execute
+    case Some(options) => {
+      val driver = Driver(options)
+      driver.execute
+      driver.genPackageJson()
+    }
     case _ => System.out.println("Usage: mlsc filename.mls [outputDir]")
   }
 }

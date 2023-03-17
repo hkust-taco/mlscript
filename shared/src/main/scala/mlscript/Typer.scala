@@ -66,12 +66,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       inPattern: Bool,
       tyDefs: Map[Str, TypeDef],
       // tyDefs2: MutMap[Str, NuTypeDef],
-      tyDefs2: MutMap[Str, LazyTypeInfo],
+      val tyDefs2: MutMap[Str, LazyTypeInfo],
       inRecursiveDef: Opt[Var], // TODO rm
       extrCtx: ExtrCtx,
   ) {
     def +=(b: Str -> TypeInfo): Unit = env += b
     def ++=(bs: IterableOnce[Str -> TypeInfo]): Unit = bs.iterator.foreach(+=)
+    def /=(dep: Str -> LazyTypeInfo): Unit = tyDefs2 += dep
     def get(name: Str): Opt[TypeInfo] = env.get(name) orElse parent.dlof(_.get(name))(N)
     def contains(name: Str): Bool = env.contains(name) || parent.exists(_.contains(name))
     def addMth(parent: Opt[Str], nme: Str, ty: MethodType): Unit = mthEnv += R(parent, nme) -> ty

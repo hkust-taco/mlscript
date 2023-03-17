@@ -21,9 +21,14 @@ class Driver(options: DriverOptions) {
       case err: Diagnostic =>
         report(err)
         js.Dynamic.global.process.exit(-1)
-    } 
+    }
   
-  private def compile(filename: String): Boolean = {
+  def genPackageJson(): Unit = {
+    val content = """{ "type": "module" }""" // TODO: more settings?
+    writeFile(options.outputDir, "package.json", content)
+  }
+
+  private def compile(filename: String, exported: Boolean = false): Boolean = {
     val beginIndex = filename.lastIndexOf("/")
     val endIndex = filename.lastIndexOf(".")
     val prefixName = filename.substring(beginIndex + 1, endIndex)
@@ -43,9 +48,8 @@ class Driver(options: DriverOptions) {
         )
 
         val depList = dependencies.toList
-        val needRecomp = depList.foldLeft(false)((nr, dp) => nr || compile(s"$path$dp.mls"))
+        val needRecomp = depList.foldLeft(false)((nr, dp) => nr || compile(s"$path$dp.mls", true))
         val imports = depList.map(JSImport(_))
-        // val moduleTypes = depList.map(dp => importModule(s"${options.outputDir}/.temp/$dp.mlsi"))
 
         val mtime = getModificationTime(filename)
         val imtime = getModificationTime(s"${options.outputDir}/.temp/$prefixName.mlsi")
@@ -60,8 +64,8 @@ class Driver(options: DriverOptions) {
           }
           parser.parseAll(parser.typingUnit) match {
             case tu => {
-              typeCheck(tu, prefixName)
-              generate(Pgrm(tu.entities), prefixName, false, imports)
+              typeCheck(tu, prefixName, depList)
+              generate(Pgrm(tu.entities), prefixName, exported, imports)
               true
             }
           }
@@ -72,10 +76,7 @@ class Driver(options: DriverOptions) {
     }
   }
 
-  private def importModule(filename: String): Unit = {
-  } // TODO:
-
-  private def typeCheck(tu: TypingUnit, filename: String): Unit = {
+  private def typeCheck(tu: TypingUnit, filename: String, depList: List[String]): Unit = {
     val typer = new mlscript.Typer(
         dbg = false,
         verbose = false,
@@ -86,12 +87,41 @@ class Driver(options: DriverOptions) {
 
     import typer._
 
-    implicit val raise: Raise = report
+    def importModule(moduleName: String, pgm: TypingUnit): TypingUnit = {
+      val filename = s"${options.outputDir}/.temp/$moduleName.mlsi"
+      readFile(filename) match {
+        case Some(content) => {
+          val wrapped = s"module $moduleName() {\n" +
+            content.splitSane('\n').toIndexedSeq.map(line => s"  $line").reduceLeft(_ + "\n" + _) + "\n}"
+          val lines = wrapped.splitSane('\n').toIndexedSeq
+          val fph = new mlscript.FastParseHelpers(wrapped, lines)
+          val origin = Origin("<input>", 1, fph)
+          val lexer = new NewLexer(origin, throw _, dbg = false)
+          val tokens = lexer.bracketedTokens
+
+          val parser = new NewParser(origin, tokens, throw _, dbg = false, None) {
+            def doPrintDbg(msg: => String): Unit = if (dbg) println(msg)
+          }
+
+          parser.parseAll(parser.typingUnit) match {
+            case TypingUnit(entities1) => {
+              pgm match {
+                case TypingUnit(entities2) => TypingUnit(entities1 ::: entities2)
+              }
+            }
+          }
+        }
+        case _ => report(s"can not open file $filename"); pgm
+      }
+    }
+
+    val packedTU = depList.foldRight(tu)((p, u) => importModule(p, u))
     implicit var ctx: Ctx = Ctx.init
+    implicit val raise: Raise = report
     implicit val extrCtx: Opt[typer.ExtrCtx] = N
 
     val vars: Map[Str, typer.SimpleType] = Map.empty
-    val tpd = typer.typeTypingUnit(tu, allowPure = true)(ctx.nest, raise, vars)
+    val tpd = typer.typeTypingUnit(packedTU, allowPure = true)(ctx.nest, raise, vars)
     val comp = tpd.force()(raise)
     
     object SimplifyPipeline extends typer.SimplifyPipeline {

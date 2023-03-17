@@ -7,9 +7,10 @@ let a = A(42)
 
 let console: nothing
 
-console.log(a.foo + 1)
+console.log(a.foo)
 
 module C {
+  let b = 1
 }
 
-// Opened.SubModule.hello(a.n)
+Opened.hello(a.n)

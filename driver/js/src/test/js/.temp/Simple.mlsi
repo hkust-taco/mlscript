@@ -1,3 +1,7 @@
+module Opened() {
+  let console: nothing
+  fun hello: (x: int,) -> nothing
+}
 mixin B() {
   this: {n: 'n}
   fun foo: 'n
@@ -7,4 +11,7 @@ class A(n: int) {
 }
 let a: A
 let console: nothing
-module C()
+module C() {
+  let b: 1
+}
+nothing

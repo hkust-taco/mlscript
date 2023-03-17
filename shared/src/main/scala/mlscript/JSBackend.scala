@@ -888,9 +888,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
 
 class JSCompilerBackend extends JSBackend(allowUnresolvedSymbols = true) {
   private def generateNewDef(pgrm: Pgrm, exported: Bool): Ls[Str] = {
-    val mlsModule = topLevelScope.declareValue("typing_unit", Some(false), false)
     val (diags, (typeDefs, otherStmts)) = pgrm.newDesugared
-
     val (traitSymbols, classSymbols, mixinSymbols, moduleSymbols, superParameters) = declareNewTypeDefs(typeDefs)
 
     val defs =
@@ -909,18 +907,18 @@ class JSCompilerBackend extends JSBackend(allowUnresolvedSymbols = true) {
         }
       }.toList
 
-    val exports =
-      if (exported)
-        JSExport(traitSymbols.map { _.runtimeName } ++
-        mixinSymbols.map { _.runtimeName } ++
-        moduleSymbols.map{_.runtimeName} ++
-        classSymbols.map { _.runtimeName }.toList) :: Nil
-      else Nil
+    def include(typeName: Str) =
+      JSConstDecl(typeName, JSField(JSIdent("globalThis"), typeName))
+    val includes =
+      moduleSymbols.map((sym) => include(sym.runtimeName)) ++
+      classSymbols.map((sym) => include(sym.runtimeName)).toList
 
+    val otherDecs = ListBuffer[Str]()
     val stmts: Ls[JSStmt] =
-        defs
+        defs ::: includes
         .concat(otherStmts.flatMap {
           case Def(recursive, Var(name), L(body), isByname) =>
+            otherDecs += name
             val (originalExpr, sym) = if (recursive) {
               val isByvalueRecIn = if (isByname) None else Some(true)
               val sym = topLevelScope.declareValue(name, isByvalueRecIn, body.isInstanceOf[Lam])
@@ -940,8 +938,18 @@ class JSCompilerBackend extends JSBackend(allowUnresolvedSymbols = true) {
           // `exprs.push(<expr>)`.
           case term: Term =>
             translateTerm(term)(topLevelScope).stmt :: Nil
-        }) ::: exports
-    SourceCode.fromStmts(polyfill.emit() ::: stmts).toLines
+        })
+
+    val exportedNuTypes =
+      if (exported)
+        JSExport(traitSymbols.map { _.runtimeName } ++
+        mixinSymbols.map { _.runtimeName } ++
+        moduleSymbols.map{_.runtimeName} ++
+        classSymbols.map { _.runtimeName } ++
+        otherDecs.toList) :: Nil
+      else Nil
+
+    SourceCode.fromStmts(polyfill.emit() ::: stmts ::: exportedNuTypes).toLines
   }
 
   def apply(pgrm: Pgrm, exported: Bool): Ls[Str] = generateNewDef(pgrm, exported)
