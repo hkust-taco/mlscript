@@ -43,9 +43,9 @@ map(None(), inc)
 
 :e
 fun f(a, b) = if a and b then 0
-//│ ╔══[ERROR] The case when this is false is not handled: b
+//│ ╔══[ERROR] The case when this is false is not handled: a
 //│ ║  l.45: 	fun f(a, b) = if a and b then 0
-//│ ╙──      	                       ^
+//│ ╙──      	                 ^
 //│ f: (anything, anything,) -> error
 
 :e

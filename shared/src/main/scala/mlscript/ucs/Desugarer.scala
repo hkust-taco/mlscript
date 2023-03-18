@@ -670,8 +670,8 @@ class Desugarer extends TypeDefs { self: Typer =>
           case S(Consequent(_)) | S(MissingCase) | N => die // unreachable
         }
       case IfThenElse(condition, whenTrue, whenFalse) =>
-        checkExhaustive(whenTrue, S(t))
         checkExhaustive(whenFalse, S(t))
+        checkExhaustive(whenTrue, S(t))
       case Match(scrutinee, branches, default) =>
         scrutineePatternMap.get(getScurtineeKey(scrutinee)) match {
           case N => lastWords(s"unreachable case: unknown scrutinee ${scrutinee.term}")
