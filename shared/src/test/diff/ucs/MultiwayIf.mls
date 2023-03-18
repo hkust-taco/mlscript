@@ -10,7 +10,6 @@ fun f(x) =
 //│  = [Function: f]
 
 
-// FIXME
 fun f(x) =
   if
     x > 0  and
@@ -21,7 +20,22 @@ fun f(x) =
 //│ f: int -> bool
 //│  = [Function: f1]
 
-// FIXME
+f(0)
+f(2)
+f(3)
+f(0 - 1)
+f(0 - 2)
+//│ res: bool
+//│    = true
+//│ res: bool
+//│    = true
+//│ res: bool
+//│    = false
+//│ res: bool
+//│    = false
+//│ res: bool
+//│    = false
+
 fun f(x) =
   if
     x > 0  and
@@ -32,4 +46,15 @@ fun f(x) =
 //│ f: int -> bool
 //│  = [Function: f2]
 
-
+f(0)
+f(2)
+f(1)
+f(0 - 1)
+//│ res: bool
+//│    = true
+//│ res: bool
+//│    = true
+//│ res: bool
+//│    = false
+//│ res: bool
+//│    = false
