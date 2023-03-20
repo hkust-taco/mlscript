@@ -24,7 +24,7 @@ foo (fun x -> 1) "2"
 //│    = 1
 
 foo id
-//│ res: 'T -> ??T
+//│ res: anything -> ??T
 //│    = [Function (anonymous)]
 
 r = foo id true

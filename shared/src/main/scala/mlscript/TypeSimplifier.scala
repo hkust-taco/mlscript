@@ -35,6 +35,8 @@ trait TypeSimplifier { self: Typer =>
         // trace(s"process($ty) $canDistribForall") {
         ty match {
       
+      case SkolemTag(tv: TypeVariable) => process(tv, parent)
+      
       case tv: TypeVariable =>
         parent.filter(_._2 === tv).foreach(p => return ExtrType(p._1)(noProv))
         
@@ -54,7 +56,7 @@ trait TypeSimplifier { self: Typer =>
             case S(false) =>
               nv.upperBounds =
                 (process(ty, S(false -> tv)) :: Nil).filterNot(_.isTop)
-            case N => 
+            case N =>
               nv.assignedTo = S(process(ty, N))
           }
         case N =>
@@ -798,6 +800,7 @@ trait TypeSimplifier { self: Typer =>
           transform(r, pol, semp, canDistribForall))(st.prov)
       case ot @ Overload(as) =>
         ot.mapAltsPol(pol)((p, t) => transform(t, p, parents, canDistribForall))
+      case SkolemTag(id) => transform(id, pol, parents)
       case _: TypeTag | ExtrType(_) => st
       case tv: TypeVariable if parents.exists(_ === tv) =>
         if (pol(tv).getOrElse(lastWords(s"parent in invariant position $tv $parents"))) BotType else TopType
