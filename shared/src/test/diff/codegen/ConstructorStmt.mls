@@ -1,0 +1,345 @@
+:NewParser
+:NewDefs
+
+:js
+module Test0 {
+  log("Hello!")
+}
+//│ module Test0()
+//│ // Prelude
+//│ function log(x) {
+//│   return console.info(x);
+//│ }
+//│ let res;
+//│ let typing_unit = {
+//│   cache: {},
+//│   get Test0() {
+//│     if (this.cache.Test0 === undefined) {
+//│       class Test0 {
+//│         constructor() {
+//│           log("Hello!");
+//│         }
+//│       }
+//│       this.cache.Test0 = new Test0();
+//│       this.cache.Test0["class"] = Test0;
+//│     }
+//│     return this.cache.Test0;
+//│   }
+//│ };
+//│ globalThis.Test0 = typing_unit.Test0;
+//│ // End of generated code
+
+:js
+Test0
+//│ Test0
+//│ // Prelude
+//│ let typing_unit1 = { cache: {} };
+//│ // Query 1
+//│ res = Test0;
+//│ // End of generated code
+//│ res
+//│     = Test0 { class: [class Test0] }
+//│ // Output
+//│ Hello!
+
+:js
+Test0
+//│ Test0
+//│ // Prelude
+//│ let typing_unit2 = { cache: {} };
+//│ // Query 1
+//│ res = Test0;
+//│ // End of generated code
+//│ res
+//│     = Test0 { class: [class Test0] }
+
+:js
+class A(a: int) {
+  log(a)
+}
+//│ class A(a: int)
+//│ // Prelude
+//│ let typing_unit3 = {
+//│   cache: {},
+//│   get A() {
+//│     const cache = this.cache;
+//│     if (this.cache.A === undefined) {
+//│       class A {
+//│         #a;
+//│         get a() { return this.#a; }
+//│         constructor(a) {
+//│           this.#a = a;
+//│           log(a);
+//│         }
+//│       };
+//│       this.cache.A = ((a) => new A(a));
+//│       this.cache.A["class"] = A;
+//│     }
+//│     return this.cache.A;
+//│   }
+//│ };
+//│ globalThis.A = typing_unit3.A;
+//│ // End of generated code
+
+:js
+let aa = A(42)
+//│ let aa: A
+//│ // Prelude
+//│ let typing_unit4 = { cache: {} };
+//│ // Query 1
+//│ globalThis.aa = A(42);
+//│ // End of generated code
+//│ aa
+//│    = A {}
+//│ // Output
+//│ 42
+
+:js
+aa
+//│ A
+//│ // Prelude
+//│ let typing_unit5 = { cache: {} };
+//│ // Query 1
+//│ res = aa;
+//│ // End of generated code
+//│ res
+//│     = A {}
+
+:js
+let ab = A(0)
+//│ let ab: A
+//│ // Prelude
+//│ let typing_unit6 = { cache: {} };
+//│ // Query 1
+//│ globalThis.ab = A(0);
+//│ // End of generated code
+//│ ab
+//│    = A {}
+//│ // Output
+//│ 0
+
+:e
+:js
+class Foo {
+  this: { x: int }
+}
+//│ ╔══[ERROR] Class `Foo` does not contain member `x`
+//│ ║  l.124: 	  this: { x: int }
+//│ ╙──       	          ^
+//│ class Foo()
+//│ // Prelude
+//│ let typing_unit7 = {
+//│   cache: {},
+//│   get Foo() {
+//│     const cache = this.cache;
+//│     if (this.cache.Foo === undefined) {
+//│       class Foo {};
+//│       this.cache.Foo = (() => new Foo());
+//│       this.cache.Foo["class"] = Foo;
+//│     }
+//│     return this.cache.Foo;
+//│   }
+//│ };
+//│ globalThis.Foo = typing_unit7.Foo;
+//│ // End of generated code
+
+:e
+:js
+class Bar {
+  super: { x: int }
+}
+//│ ╔══[ERROR] Illegal use of `super`
+//│ ║  l.149: 	  super: { x: int }
+//│ ╙──       	  ^^^^^
+//│ ╔══[ERROR] Class `Bar` does not contain member `x`
+//│ ║  l.149: 	  super: { x: int }
+//│ ╙──       	           ^
+//│ class Bar()
+//│ // Prelude
+//│ let typing_unit8 = {
+//│   cache: {},
+//│   get Bar() {
+//│     const cache = this.cache;
+//│     if (this.cache.Bar === undefined) {
+//│       class Bar {};
+//│       this.cache.Bar = (() => new Bar());
+//│       this.cache.Bar["class"] = Bar;
+//│     }
+//│     return this.cache.Bar;
+//│   }
+//│ };
+//│ globalThis.Bar = typing_unit8.Bar;
+//│ // End of generated code
+
+:js
+class Baz {
+  let x = 123
+  log((1, x))
+  let y =
+    log((2, x))
+    x + 1
+  log((3, y))
+}
+//│ class Baz() {
+//│   let x: 123
+//│   let y: int
+//│ }
+//│ // Prelude
+//│ let typing_unit9 = {
+//│   cache: {},
+//│   get Baz() {
+//│     const cache = this.cache;
+//│     if (this.cache.Baz === undefined) {
+//│       class Baz {
+//│         #x;
+//│         #y;
+//│         get x() { return this.#x; }
+//│         get y() { return this.#y; }
+//│         constructor() {
+//│           this.#x = 123;
+//│           const x = this.#x;
+//│           log([
+//│             1,
+//│             x
+//│           ]);
+//│           this.#y = (() => {
+//│             log([
+//│               2,
+//│               x
+//│             ]);
+//│             return x + 1;
+//│           })();
+//│           const y = this.#y;
+//│           log([
+//│             3,
+//│             y
+//│           ]);
+//│         }
+//│       };
+//│       this.cache.Baz = (() => new Baz());
+//│       this.cache.Baz["class"] = Baz;
+//│     }
+//│     return this.cache.Baz;
+//│   }
+//│ };
+//│ globalThis.Baz = typing_unit9.Baz;
+//│ // End of generated code
+
+let baz = Baz()
+log((baz.x, baz.y))
+//│ let baz: Baz
+//│ unit
+//│ baz
+//│     = Baz {}
+//│ // Output
+//│ [ 1, 123 ]
+//│ [ 2, 123 ]
+//│ [ 3, 124 ]
+//│ res
+//│     = undefined
+//│ // Output
+//│ [ 123, 124 ]
+
+:js
+class Q() {
+  let q = 42
+  fun qq =
+    let f = (x: int) => {q: x + q}; f(1)
+}
+//│ class Q() {
+//│   let q: 42
+//│   fun qq: {q: int}
+//│ }
+//│ // Prelude
+//│ let typing_unit11 = {
+//│   cache: {},
+//│   get Q() {
+//│     const cache = this.cache;
+//│     if (this.cache.Q === undefined) {
+//│       class Q {
+//│         #q;
+//│         get q() { return this.#q; }
+//│         constructor() {
+//│           this.#q = 42;
+//│           const q = this.#q;
+//│         }
+//│         get qq() {
+//│           const Q = cache.Q;
+//│           const self = this;
+//│           return ((() => {
+//│             let f = (x) => ({ q: x + self.q });
+//│             return f(1);
+//│           })());
+//│         }
+//│       };
+//│       this.cache.Q = (() => new Q());
+//│       this.cache.Q["class"] = Q;
+//│     }
+//│     return this.cache.Q;
+//│   }
+//│ };
+//│ globalThis.Q = typing_unit11.Q;
+//│ // End of generated code
+
+let q = Q()
+q.qq.q
+//│ let q: Q
+//│ int
+//│ q
+//│   = Q {}
+//│ res
+//│     = 43
+
+:js
+class W() {
+  let x = 42
+  fun add(self: int) = x + self
+}
+//│ class W() {
+//│   fun add: (self: int,) -> int
+//│   let x: 42
+//│ }
+//│ // Prelude
+//│ let typing_unit13 = {
+//│   cache: {},
+//│   get W() {
+//│     const cache = this.cache;
+//│     if (this.cache.W === undefined) {
+//│       class W {
+//│         #x;
+//│         get x() { return this.#x; }
+//│         constructor() {
+//│           this.#x = 42;
+//│           const x = this.#x;
+//│         }
+//│         add(self1) {
+//│           const W = cache.W;
+//│           const self = this;
+//│           return self.x + self1;
+//│         }
+//│       };
+//│       this.cache.W = (() => new W());
+//│       this.cache.W["class"] = W;
+//│     }
+//│     return this.cache.W;
+//│   }
+//│ };
+//│ globalThis.W = typing_unit13.W;
+//│ // End of generated code
+
+:js
+let www = W()
+www.add(42)
+//│ let www: W
+//│ int
+//│ // Prelude
+//│ let typing_unit14 = { cache: {} };
+//│ // Query 1
+//│ globalThis.www = W();
+//│ // Query 2
+//│ res = www.add(42);
+//│ // End of generated code
+//│ www
+//│     = W {}
+//│ res
+//│     = 84

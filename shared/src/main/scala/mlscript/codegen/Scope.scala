@@ -6,7 +6,7 @@ import mlscript.Type
 import scala.reflect.ClassTag
 import mlscript.{TypeName, Top, Bot, TypeDef, Als, Trt, Cls, Nms}
 import mlscript.MethodDef
-import mlscript.Term
+import mlscript.{Term, Statement}
 import mlscript.utils.{AnyOps, lastWords}
 import mlscript.JSField
 
@@ -226,10 +226,11 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
       lexicalName: Str,
       params: Ls[Str],
       base: Type,
-      methods: Ls[MethodDef[Left[Term, Type]]]
+      methods: Ls[MethodDef[Left[Term, Type]]],
+      ctor: Ls[Statement],
+      superParameters: Ls[Term]
   ): NewClassSymbol = {
-    val runtimeName = allocateRuntimeName(lexicalName)
-    val symbol = NewClassSymbol(lexicalName, runtimeName, params.sorted, base, methods)
+    val symbol = NewClassSymbol(lexicalName, params.sorted, base, methods, ctor, superParameters)
     register(symbol)
     symbol
   }
@@ -238,10 +239,10 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
       lexicalName: Str,
       params: Ls[Str],
       base: Type,
-      methods: Ls[MethodDef[Left[Term, Type]]]
+      methods: Ls[MethodDef[Left[Term, Type]]],
+      ctor: Ls[Statement]
   ): MixinSymbol = {
-    val runtimeName = allocateRuntimeName(lexicalName)
-    val symbol = MixinSymbol(lexicalName, runtimeName, params.sorted, base, methods)
+    val symbol = MixinSymbol(lexicalName, params.sorted, base, methods, ctor)
     register(symbol)
     symbol
   }
@@ -250,10 +251,11 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
       lexicalName: Str,
       params: Ls[Str],
       base: Type,
-      methods: Ls[MethodDef[Left[Term, Type]]]
+      methods: Ls[MethodDef[Left[Term, Type]]],
+      ctor: Ls[Statement],
+      superParameters: Ls[Term]
   ): ModuleSymbol = {
-    val runtimeName = allocateRuntimeName(lexicalName)
-    val symbol = ModuleSymbol(lexicalName, runtimeName, params.sorted, base, methods)
+    val symbol = ModuleSymbol(lexicalName, params.sorted, base, methods, ctor, superParameters)
     register(symbol)
     symbol
   }
@@ -292,6 +294,12 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
       case _                                         => allocateRuntimeName(lexicalName)
     }
     val symbol = ValueSymbol(lexicalName, runtimeName, isByvalueRec, isLam)
+    register(symbol)
+    symbol
+  }
+
+  def declareNewClassMember(name: Str, isByvalueRec: Option[Boolean], isLam: Boolean): NewClassMemberSymbol = {
+    val symbol = NewClassMemberSymbol(name, isByvalueRec, isLam)
     register(symbol)
     symbol
   }
