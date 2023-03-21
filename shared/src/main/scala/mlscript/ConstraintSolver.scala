@@ -58,7 +58,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     type ConCtx = Ls[SimpleType] -> Ls[SimpleType]
     
     
-    val ret = () => return
+    val abort = () => return
     
     def abbreviate(msgs: Ls[Message -> Opt[Loc]]) = {
       val treshold = 15
@@ -82,7 +82,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               msg"while constraining:  ${s"${c._1}  <!<  ${c._2}"}" -> N))
           )
         )
-        ret()
+        abort()
       } else
       if (fuel <= 0) {
         err(
@@ -92,7 +92,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           else cctx._1.map(c => msg" + ${s"$c"}" -> c.prov.loco)
             ::: cctx._2.map(c => msg" - ${s"$c"}" -> c.prov.loco))
         )
-        ret()
+        abort()
       } else fuel -= 1
     }
     
@@ -117,7 +117,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         }}
         ec.clear()
       }()
-    } //  ensuring ctx.extrCtx.isEmpty
+    } // ensuring ctx.extrCtx.isEmpty
     
     /* To solve constraints that are more tricky. */
     def goToWork(lhs: ST, rhs: ST)(implicit cctx: ConCtx, prevCctxs: Ls[ConCtx], ctx: Ctx, shadows: Shadows): Unit = {
@@ -325,9 +325,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           (return println(s"OK  $done_rs | $f  =:=  ${TopType}")))
         case (ls, (r @ RecordType(fs)) :: rs) => annoying(ls, done_ls, r.toInter :: rs, done_rs)
           
-        // TODO prevent these cases by refining `annoyingImpl`'s parameter types
-        case (_, (_: PolymorphicType) :: _) | ((_: PolymorphicType) :: _, _) => ???
-        case (_, (_: ConstrainedType) :: _) | ((_: ConstrainedType) :: _, _) => ???
+        // TODO statically prevent these cases by refining `annoyingImpl`'s parameter types
+        case (_, (_: PolymorphicType) :: _) | ((_: PolymorphicType) :: _, _) => die
+        case (_, (_: ConstrainedType) :: _) | ((_: ConstrainedType) :: _, _) => die
           
         case (Nil, Nil) =>
           // TODO improve:
@@ -422,8 +422,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         }
       }
     
-    /** Extrudes and also checks that avoided type variables (which are widened to top/bot)
-      * do not introduce bad bounds. To do this, we constrain the bounds.
+    /** Extrudes and also checks type variable avoidance (which widens skolems to top/bot)
+      * did not introduce bad bounds. To do this, we reconstrain the bounds of all new variables.
       * This is a bit of a sledgehammer approach that could be improved – it will duplicate TV bounds!
       * For instance, it would be better to accumulate new TVs' future bounds first
       * and add them by constraining later. */
@@ -608,7 +608,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               println(s"EXTR RHS  ~>  $rhs2  to ${lhs.level}")
               println(s" where ${rhs2.showBounds}")
               // println(s"   and ${rhs.showBounds}")
-                rec(lhs, rhs2, true)
+              rec(lhs, rhs2, true)
             }
             
           case (lhs, rhs: TypeVariable) =>
@@ -626,8 +626,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               println(s"EXTR LHS  ~>  $lhs2  to ${rhs.level}")
               println(s" where ${lhs2.showBounds}")
               // println(s"   and ${lhs.showBounds}")
-              // rec(lhs2, rhs, true)
-                rec(lhs2, rhs, true)
+              rec(lhs2, rhs, true)
             }
             
             
@@ -993,6 +992,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   }}
   
   
+  
   def subsume(ty_sch: ST, sign: ST)
       (implicit ctx: Ctx, raise: Raise, prov: TypeProvenance): Unit = {
     println(s"CHECKING SUBSUMPTION...")
@@ -1007,6 +1007,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       else if (showAllErrors || errCnt === 1) raise(err)
     }, prov, ctx, Shadows.empty)
   }
+  
   
   
   /** Copies a type up to its type variables of wrong level (and their extruded bounds),
@@ -1172,8 +1173,6 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       rec(lhs, rhs, false)
     }()
   }
-  
-  
   
   
   

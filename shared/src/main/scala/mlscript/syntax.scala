@@ -73,7 +73,7 @@ final case class New(head: Opt[(NamedType, Term)], body: TypingUnit) extends Ter
 final case class If(body: IfBody, els: Opt[Term])                    extends Term
 final case class TyApp(lhs: Term, targs: Ls[Type])                   extends Term
 final case class Where(body: Term, where: Ls[Statement])             extends Term
-final case class Forall(params: Ls[TypeVar], body: Term)                 extends Term
+final case class Forall(params: Ls[TypeVar], body: Term)             extends Term
 final case class Inst(body: Term)                                    extends Term
 
 sealed abstract class IfBody extends IfBodyImpl

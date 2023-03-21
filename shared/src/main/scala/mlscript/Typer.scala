@@ -285,7 +285,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       },
       "if" -> {
         val v = freshVar(noProv, N)(1)
-        // PolymorphicType(MinLevel, fun(singleTup(BoolType), fun(singleTup(v), fun(singleTup(v), v)(noProv))(noProv))(noProv))
         PolymorphicType(MinLevel, fun(singleTup(BoolType), fun(singleTup(v), fun(singleTup(v), v)(noProv))(noProv))(noProv))
       },
       "emptyArray" -> {

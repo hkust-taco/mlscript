@@ -232,10 +232,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
     case _ => Tuple((N, Field(None, t)) :: Nil)
   }
   def typ(prec: Int = 0)(implicit fe: FoundErr, l: Line): Type =
-    expr(prec).toType match {
-      case L(d) => raise(d); Top // TODO better
-      case R(ty) => ty
-    }
+    mkType(expr(prec))
   
   def block(implicit et: ExpectThen, fe: FoundErr): Ls[IfBody \/ Statement] =
     cur match {
@@ -331,8 +328,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
               val asc = yeetSpaces match {
                 case (KEYWORD(":"), _) :: _ =>
                   consume
-                  S(typ(0))
                   // S(typ(2))
+                  S(typ(0))
                 case _ => N
               }
               yeetSpaces match {
@@ -441,7 +438,6 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
         skip(KEYWORD(";"))
         val e = expr(0)
         R(Forall(as.flatMap {
-          // case S(Var(nme)) -> Fld(false, false, trm) =>
           case N -> Fld(false, false, v: Var) =>
             TypeVar(R(v.name), N).withLocOf(v) :: Nil
           case v -> f =>
@@ -577,11 +573,10 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
         }
       case (KEYWORD(":"), l0) :: _ =>
         consume
-        R(Asc(acc, mkType(expr(0))))
+        R(Asc(acc, typ(0)))
       // case (KEYWORD(":"), _) :: _ if prec <= 1 =>
       //   consume
-      //   val ty = typ(1)
-      //   R(Asc(acc, ty))
+      //   R(Asc(acc, typ(1)))
       case (KEYWORD("where"), l0) :: _ if prec <= 1 =>
         consume
         val tu = typingUnitMaybeIndented
