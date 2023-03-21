@@ -314,7 +314,7 @@ let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
 (x => (let y = (x x); 0))
 //│ res: ('a -> anything & 'a) -> 0
 
-
+// TODO simplify more?
 (let rec x = (y => (y (x x))); x)
 //│ res: 'a -> 'b
 //│   where
