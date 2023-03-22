@@ -179,18 +179,9 @@ fun foo(x, y) = if x is Z() and y is O() then 0 else 1
 //│ foo: (anything, anything,) -> (0 | 1)
 //│    = [Function: foo7]
 
-:pe
-fun foo(x, y) = if x is
-  Z() and y is O() then 0 else 1
-//│ ╔══[PARSE ERROR] Unexpected 'else' keyword here
-//│ ║  l.184: 	  Z() and y is O() then 0 else 1
-//│ ╙──       	                          ^^^^
-//│ foo: (Z, O,) -> 0
-//│    = [Function: foo8]
-
 fun foo(x, y) =
   if x is
     Z() and y is O() then 0
     else 1
 //│ foo: (anything, anything,) -> (0 | 1)
-//│    = [Function: foo9]
+//│    = [Function: foo8]

@@ -104,13 +104,21 @@ fun list8(x, y, z, w, v, u, t, s) = Cons(x, list7(y, z, w, v, u, t, s))
 //│ fun list7: forall 'A. ('A, 'A, 'A, 'A, 'A, 'A, 'A,) -> Cons['A]
 //│ fun list8: forall 'A. ('A, 'A, 'A, 'A, 'A, 'A, 'A, 'A,) -> Cons['A]
 
+fun findFirst(list, p) =
+  if list is
+    Nil then None
+    Cons(x, xs) and
+      p(x) then Some(x)
+      else findFirst(xs, p)
+//│ fun findFirst: forall 'A. (Cons['A] | Nil, 'A -> anything,) -> (None | Some['A])
+
 fun listConcat(xs, ys) =
   if xs is
     Nil then ys
     Cons(x, xs') then Cons(x, listConcat(xs', ys))
-//│ fun listConcat: forall 'A 'a 'A0. (Cons['A0] | Nil, List['A] & 'a,) -> (Cons['A] | 'a)
+//│ fun listConcat: forall 'A 'A0 'a. (Cons['A] | Nil, List['A0] & 'a,) -> (Cons['A0] | 'a)
 //│   where
-//│     'A0 <: 'A
+//│     'A <: 'A0
 
 fun listContains(xs, x) =
   if xs is

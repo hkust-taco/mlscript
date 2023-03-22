@@ -99,7 +99,6 @@ fun f(x) =
 //│ f: anything -> "bruh"
 //│  = [Function: f3]
 
-// Hmmmmmm, this one is valid but how to get it work?
 fun boolToStr(x) =
   if x is
     true then "yah"
