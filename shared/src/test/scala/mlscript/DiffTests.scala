@@ -177,7 +177,11 @@ class DiffTests
     var noRecursiveTypes = false
     var constrainedTypes = false
     var irregularTypes = false
+    
+    // * This option makes some test cases pass which assume generalization should happen in arbitrary arguments
+    // * but it's way too aggressive to be ON by default, as it leads to more extrusion, cycle errors, etc.
     var generalizeArguments = false
+    
     var newParser = basePath.headOption.contains("parser") || basePath.headOption.contains("compiler")
     
     val backend = new JSTestBackend()

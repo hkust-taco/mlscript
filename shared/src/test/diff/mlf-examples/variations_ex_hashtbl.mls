@@ -96,9 +96,9 @@ def nfind: List[{_1: anything; _2: 'val}] -> anything -> (anything -> 'a -> 'a |
 //   }) (find table key)
 
 
-// * Current limitation – this works:
+// * Note that this works:
 
-x = nfind table "one"
+def x = nfind table "one"
 //│ x: ('b -> 'a) -> ('a & 'b) -> 'a
 
 // def x: ('b -> 'a) -> ('a & 'b) -> 'a
@@ -106,7 +106,7 @@ x = nfind table "one"
 add x
 //│ res: ChurchInt -> (('a -> ('a & 'b)) -> 'a -> 'b | ChurchInt)
 
-// * But this doesn't, because distrib fails to apply across a dummy TV:
+// * But this doesn't, because `nfind table "one"` is no longer generalized:
 
 :stats
 :e
@@ -132,7 +132,7 @@ add (nfind table "one")
 //│ annoying  calls  : 5
 //│ subtyping calls  : 366
 
-// * Similarly:
+// * On the other hand, in this variation, distributivity saves the day:
 
 tmp = nfind table
 //│ tmp: anything -> ('b -> 'a) -> ('a & 'b) -> 'a
@@ -140,28 +140,10 @@ tmp = nfind table
 tmp "one"
 //│ res: ('b -> 'a) -> ('a & 'b) -> 'a
 
-:e
-printInt (tmp "one")
-//│ ╔══[ERROR] Type error in application
-//│ ║  l.144: 	printInt (tmp "one")
-//│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type variable `'a` leaks out of its scope
-//│ ║  l.47: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║        	                                           ^^
-//│ ╟── back into type variable `'a`
-//│ ║  l.47: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║        	                             ^^
-//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
-//│ ╟── • this application:
-//│ ║  l.144: 	printInt (tmp "one")
-//│ ║         	          ^^^^^^^^^
-//│ ╟── Note: constraint arises from reference:
-//│ ║  l.63: 	table = hashtbl_add table "one" (fun f -> fun x -> f x)
-//│ ╙──      	                                                     ^
-//│ res: error | string
+add (tmp "one")
+//│ res: ChurchInt -> (('a -> ('a & 'b)) -> 'a -> 'b | ChurchInt)
 
-// * But it works with arg-gen:
-
+// * But it all works with argument-generalization:
 // ==========================================================================================
 :GeneralizeArguments
 
@@ -219,10 +201,10 @@ foo 1
 :e
 foo 1 2
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.220: 	foo 1 2
+//│ ║  l.202: 	foo 1 2
 //│ ║         	^^^^^^^
 //│ ╟── integer literal of type `2` is not a function
-//│ ║  l.220: 	foo 1 2
+//│ ║  l.202: 	foo 1 2
 //│ ║         	      ^
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.63: 	table = hashtbl_add table "one" (fun f -> fun x -> f x)

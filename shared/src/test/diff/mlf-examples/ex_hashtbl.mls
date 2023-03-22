@@ -194,9 +194,9 @@ b (fun x -> 0)
 :stats
 a b
 //│ res: ('a -> ('a & 'b)) -> 'a -> 'b | ChurchInt
-//│ constrain calls  : 1016
+//│ constrain calls  : 1012
 //│ annoying  calls  : 0
-//│ subtyping calls  : 10485
+//│ subtyping calls  : 10478
 
 
 // !! Note the stats here for this fully-annotation-free version

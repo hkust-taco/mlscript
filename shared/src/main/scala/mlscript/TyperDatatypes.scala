@@ -61,27 +61,39 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
           freshened, shadows)
       ) //(prov)
     }
-    /** Tries to split a polymorphic function type
+    /** Tries to split a positive polymorphic function type
       * by distributing the quantification of *some* of its type vars into the function result. */
-    def splitFunction(implicit ctx: Ctx, raise: Raise, shadows: Shadows): Opt[ST] = body match {
-      case AliasOf(ft @ FunctionType(par, bod)) =>
-        val couldBeDistribbed = bod.varsBetween(polymLevel, MaxLevel)
-        println(s"could be distribbed: $couldBeDistribbed")
-        if (couldBeDistribbed.isEmpty) return N
-        val cannotBeDistribbed = par.varsBetween(polymLevel, MaxLevel)
-        println(s"cannot be distribbed: $cannotBeDistribbed")
-        val canBeDistribbed = couldBeDistribbed -- cannotBeDistribbed
-        if (canBeDistribbed.isEmpty) return N // TODO
-        val newInnerLevel =
-          (polymLevel + 1) max cannotBeDistribbed.maxByOption(_.level).fold(MinLevel)(_.level)
-        val innerPoly = PolymorphicType(polymLevel, bod)
-        println(s"inner: ${innerPoly}")
-        val res = FunctionType(par, innerPoly.raiseLevelTo(newInnerLevel, cannotBeDistribbed))(ft.prov)
-        println(s"raised: ${res}")
-        println(s"  where: ${res.showBounds}")
-        if (cannotBeDistribbed.isEmpty) S(res)
-        else S(PolymorphicType(polymLevel, res))
-      case _ => N
+    def splitFunction(implicit ctx: Ctx, raise: Raise, shadows: Shadows): Opt[ST] = {
+      def go(ty: ST, traversed: Set[AnyRef], polymLevel: Level): Opt[ST] = ty match {
+        case ft @ FunctionType(par, bod) =>
+          val couldBeDistribbed = bod.varsBetween(polymLevel, MaxLevel)
+          println(s"could be distribbed: $couldBeDistribbed")
+          if (couldBeDistribbed.isEmpty) return N
+          val cannotBeDistribbed = par.varsBetween(polymLevel, MaxLevel)
+          println(s"cannot be distribbed: $cannotBeDistribbed")
+          val canBeDistribbed = couldBeDistribbed -- cannotBeDistribbed
+          if (canBeDistribbed.isEmpty) return N // TODO
+          val newInnerLevel =
+            (polymLevel + 1) max cannotBeDistribbed.maxByOption(_.level).fold(MinLevel)(_.level)
+          val innerPoly = PolymorphicType(polymLevel, bod)
+          println(s"inner: ${innerPoly}")
+          val res = FunctionType(par, innerPoly.raiseLevelTo(newInnerLevel, cannotBeDistribbed))(ft.prov)
+          println(s"raised: ${res}")
+          println(s"  where: ${res.showBounds}")
+          if (cannotBeDistribbed.isEmpty) S(res)
+          else S(PolymorphicType(polymLevel, res))
+        case tr: TypeRef if !traversed.contains(tr.defn) => go(tr.expand, traversed + tr.defn, polymLevel)
+        case proxy: ProxyType => go(proxy.underlying, traversed, polymLevel)
+        case tv @ AssignedVariable(ty) if !traversed.contains(tv) =>
+          go(ty, traversed + tv, polymLevel)
+        case tv: TV if tv.level > polymLevel && !traversed.contains(tv) =>
+          // * A quantified variable in positive position can always be replaced by its LBs
+          go(tv.lowerBounds.foldLeft(BotType: ST)(_ | _), traversed + tv, polymLevel)
+        case PolymorphicType(plvl, bod) =>
+          go(bod, traversed, polymLevel min plvl)
+        case _ => N
+      }
+      go(body, Set.empty, polymLevel)
     }
     override def toString = s"‹∀ $polymLevel. $body›"
   }
