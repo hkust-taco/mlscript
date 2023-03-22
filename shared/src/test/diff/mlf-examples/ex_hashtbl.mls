@@ -199,7 +199,7 @@ a b
 //│ subtyping calls  : 10478
 
 
-// !! Note the stats here for this fully-annotation-free version
+// * [FCP:patho] !! Note the stats here for this fully annotation-free version
 :stats
 // ==========================================================================================
 :Fuel 20000

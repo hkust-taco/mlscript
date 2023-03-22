@@ -18,11 +18,12 @@ type Bot = forall 'a. 'a
 def imp (z: Bot) =
   (fun (x: forall 'a. ('a -> 'u) -> 'v) -> x x)
   (fun (y: 'a -> Bot) -> y z y)
+//│ imp: Bot -> nothing
+//│    = [Function: imp]
+
 def imp' z =
   (fun x -> x x)
   (fun y -> y z y)
-//│ imp: Bot -> nothing
-//│    = [Function: imp]
 //│ imp': ('a -> 'a -> (forall 'b 'c. ('a -> 'b -> 'c & 'b) -> 'c) -> 'd & 'a) -> 'd
 //│     = [Function: imp$]
 
@@ -149,20 +150,20 @@ def three = fun f -> fun x -> f (f (f x))
 //│      = [Function: three]
 
 
-:e // * Note: this works when generalizing the LHS of ascriptions
+:e // * Note: this test case of ours works when generalizing the LHS of ascriptions
 (app id): Sid
 //│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.153: 	(app id): Sid
+//│ ║  l.154: 	(app id): Sid
 //│ ║         	^^^^^^^^
 //│ ╟── type variable `'a` leaks out of its scope
-//│ ║  l.33: 	type Sid = forall 'a. 'a -> 'a
+//│ ║  l.34: 	type Sid = forall 'a. 'a -> 'a
 //│ ║        	                      ^^
 //│ ╟── back into type variable `'a`
-//│ ║  l.33: 	type Sid = forall 'a. 'a -> 'a
+//│ ║  l.34: 	type Sid = forall 'a. 'a -> 'a
 //│ ║        	                            ^^
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this application:
-//│ ║  l.137: 	def app = fun f -> fun x -> f x
+//│ ║  l.138: 	def app = fun f -> fun x -> f x
 //│ ╙──       	                            ^^^
 //│ res: Sid
 //│    = [Function (anonymous)]
@@ -191,11 +192,11 @@ t id succ 0
 //│ res: int
 //│    = 2
 
-// * Same as above but WITHOUT the type annotation
+// * Same as above but WITHOUT the type annotation (unlike MLF)
 :e
 def t_ y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) two
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.196: 	def t_ y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) two
+//│ ║  l.197: 	def t_ y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) two
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ t_: (nothing -> anything) -> error
@@ -264,6 +265,8 @@ def t y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun (n: ChurchInt) -> n (f
 //│ t: ('b -> 'a -> 'a) -> ('c -> 'd & 'a -> 'a & 'b) -> ('a & 'c) -> ('a | 'd)
 //│  = [Function: t4]
 
+// * Same as above but WITHOUT the type annotation (unlike MLF)
+// * Interestingly this one does NOT require CT
 :Fuel 6000
 def t_ y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) three
 //│ t_: ('a -> ('b -> 'c & 'd & 'e)) -> ('a & 'f) -> ((forall 'g. anything -> 'g -> 'g) -> ((forall 'h 'i 'j 'k 'l 'm. ((forall 'g. anything -> 'g -> 'g) -> ('h -> 'j -> 'l & 'm)) -> ('m -> (forall 'n. ('l -> 'n & 'h) -> 'j -> 'n) -> 'i) -> ('k -> 'k | 'i) | 'o | 'd) -> (forall 'p 'q. ((forall 'g. anything -> 'g -> 'g) -> (forall 'g. anything -> 'g -> 'g) -> 'p & 'q) -> (anything -> 'q | 'p) | 'r | 's | 't | 'c | 'u) -> 'b & 'v) & 't) -> ('c | 'u)
@@ -292,10 +295,10 @@ t id succ 0
 :e // * Strange
 t_ id succ 0
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.293: 	t_ id succ 0
+//│ ║  l.296: 	t_ id succ 0
 //│ ║         	^^^^^^^^^^
 //│ ╟── function of type `?a -> ?b` is not an instance of type `int`
-//│ ║  l.268: 	def t_ y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) three
+//│ ║  l.271: 	def t_ y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) three
 //│ ╙──       	                                                                                                                                                                                ^^^^^^^^^^^^^^^^
 //│ res: error
 //│    = 6
@@ -320,7 +323,7 @@ def t (z: nothing) = let x = fun (y: forall 't. 'a -> 't) -> y z in x x
 //     * Rank 3, untypable in System F?
 //       (fun x -> z (x (fun f -> fun u -> f u)) (x (fun v -> fun g -> g v))) (fun y -> y y y)
 
-// * Note: `z` is free... TODO: Ask the MLF authors what they meant
+// * Note: `z` is free in the MLF commented example... TODO: Ask the MLF authors what they meant
 
 
 //     * Untypable at any rank
@@ -330,7 +333,7 @@ def t (z: nothing) = let x = fun (y: forall 't. 'a -> 't) -> y z in x x
 :e
 (fun x -> x x) (fun x -> x x)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.331: 	(fun x -> x x) (fun x -> x x)
+//│ ║  l.334: 	(fun x -> x x) (fun x -> x x)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: error
@@ -428,11 +431,11 @@ def t (z: nothing) = let x = fun (y: forall 't. 'a -> 't) -> y z in x x
 :re
 (fun h -> (fun x -> h (x x)) (fun x -> h (x x))) (fun f -> fun n -> n (fun v -> fun x -> fun y -> y) k (fun f -> fun x -> f x)(fun g -> fun x -> n (f (n (fun p -> fun s -> s (p (fun x -> fun y -> y)) (fun f -> fun x -> f (p (fun x -> fun y -> y) f x))) (fun s -> s (fun f -> fun x -> x) (fun f -> fun x -> x)) k) g) x)) (fun f -> fun x -> f (f x))
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.429: 	(fun h -> (fun x -> h (x x)) (fun x -> h (x x))) (fun f -> fun n -> n (fun v -> fun x -> fun y -> y) k (fun f -> fun x -> f x)(fun g -> fun x -> n (f (n (fun p -> fun s -> s (p (fun x -> fun y -> y)) (fun f -> fun x -> f (p (fun x -> fun y -> y) f x))) (fun s -> s (fun f -> fun x -> x) (fun f -> fun x -> x)) k) g) x)) (fun f -> fun x -> f (f x))
+//│ ║  l.432: 	(fun h -> (fun x -> h (x x)) (fun x -> h (x x))) (fun f -> fun n -> n (fun v -> fun x -> fun y -> y) k (fun f -> fun x -> f x)(fun g -> fun x -> n (f (n (fun p -> fun s -> s (p (fun x -> fun y -> y)) (fun f -> fun x -> f (p (fun x -> fun y -> y) f x))) (fun s -> s (fun f -> fun x -> x) (fun f -> fun x -> x)) k) g) x)) (fun f -> fun x -> f (f x))
 //│ ║         	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.429: 	(fun h -> (fun x -> h (x x)) (fun x -> h (x x))) (fun f -> fun n -> n (fun v -> fun x -> fun y -> y) k (fun f -> fun x -> f x)(fun g -> fun x -> n (f (n (fun p -> fun s -> s (p (fun x -> fun y -> y)) (fun f -> fun x -> f (p (fun x -> fun y -> y) f x))) (fun s -> s (fun f -> fun x -> x) (fun f -> fun x -> x)) k) g) x)) (fun f -> fun x -> f (f x))
+//│ ║  l.432: 	(fun h -> (fun x -> h (x x)) (fun x -> h (x x))) (fun f -> fun n -> n (fun v -> fun x -> fun y -> y) k (fun f -> fun x -> f x)(fun g -> fun x -> n (f (n (fun p -> fun s -> s (p (fun x -> fun y -> y)) (fun f -> fun x -> f (p (fun x -> fun y -> y) f x))) (fun s -> s (fun f -> fun x -> x) (fun f -> fun x -> x)) k) g) x)) (fun f -> fun x -> f (f x))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: error

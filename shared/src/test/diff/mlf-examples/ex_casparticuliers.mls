@@ -1,6 +1,7 @@
 :NoRecursiveTypes
 :DistributeForalls
 
+
 // (*** L'annotation est n�cessaire sur z, mais z n'est utilis� qu'une seule fois. ***)
 // type sid = ['a] 'a -> 'a
 type Sid = forall 'a. 'a -> 'a
@@ -52,7 +53,7 @@ def succ' n = fun f -> fun x -> f (n f x)
 //│ succ': ('a -> 'b -> 'c) -> ('c -> 'd & 'a) -> 'b -> 'd
 //│      = [Function: succ$]
 
-// * Note: without constrained types we don't get the principal type of succ' (at least assuming no distrib)
+// * Note: without constrained types we don't get the principal type of succ' (at least assuming no distrib.)
 
 succ_ty = succ
 //│ ChurchInt -> ('a -> ('a & 'b)) -> 'a -> 'b
@@ -75,16 +76,16 @@ succ'
 :e
 succ' {}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.76: 	succ' {}
+//│ ║  l.77: 	succ' {}
 //│ ║        	^^^^^^^^
 //│ ╟── record literal of type `anything` is not a function
-//│ ║  l.76: 	succ' {}
+//│ ║  l.77: 	succ' {}
 //│ ║        	      ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.47: 	def succ' n = fun f -> fun x -> f (n f x)
+//│ ║  l.48: 	def succ' n = fun f -> fun x -> f (n f x)
 //│ ║        	                                   ^^^
 //│ ╟── from reference:
-//│ ║  l.47: 	def succ' n = fun f -> fun x -> f (n f x)
+//│ ║  l.48: 	def succ' n = fun f -> fun x -> f (n f x)
 //│ ╙──      	                                   ^
 //│ res: (nothing -> 'a) -> anything -> 'a | error
 //│    = [Function (anonymous)]
@@ -92,28 +93,28 @@ succ' {}
 :e
 succ' {} {}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.93: 	succ' {} {}
+//│ ║  l.94: 	succ' {} {}
 //│ ║        	^^^^^^^^
 //│ ╟── record literal of type `anything` is not a function
-//│ ║  l.93: 	succ' {} {}
+//│ ║  l.94: 	succ' {} {}
 //│ ║        	      ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.47: 	def succ' n = fun f -> fun x -> f (n f x)
+//│ ║  l.48: 	def succ' n = fun f -> fun x -> f (n f x)
 //│ ║        	                                   ^^^
 //│ ╟── from reference:
-//│ ║  l.47: 	def succ' n = fun f -> fun x -> f (n f x)
+//│ ║  l.48: 	def succ' n = fun f -> fun x -> f (n f x)
 //│ ╙──      	                                   ^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.93: 	succ' {} {}
+//│ ║  l.94: 	succ' {} {}
 //│ ║        	^^^^^^^^^^^
 //│ ╟── record literal of type `anything` is not a function
-//│ ║  l.93: 	succ' {} {}
+//│ ║  l.94: 	succ' {} {}
 //│ ║        	         ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.47: 	def succ' n = fun f -> fun x -> f (n f x)
+//│ ║  l.48: 	def succ' n = fun f -> fun x -> f (n f x)
 //│ ║        	                                ^^^^^^^^^
 //│ ╟── from reference:
-//│ ║  l.47: 	def succ' n = fun f -> fun x -> f (n f x)
+//│ ║  l.48: 	def succ' n = fun f -> fun x -> f (n f x)
 //│ ╙──      	                                ^
 //│ res: anything -> nothing | error
 //│    = [Function (anonymous)]
@@ -121,28 +122,28 @@ succ' {} {}
 :e
 succ' {} {} {}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.122: 	succ' {} {} {}
+//│ ║  l.123: 	succ' {} {} {}
 //│ ║         	^^^^^^^^
 //│ ╟── record literal of type `anything` is not a function
-//│ ║  l.122: 	succ' {} {} {}
+//│ ║  l.123: 	succ' {} {} {}
 //│ ║         	      ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.47: 	def succ' n = fun f -> fun x -> f (n f x)
+//│ ║  l.48: 	def succ' n = fun f -> fun x -> f (n f x)
 //│ ║        	                                   ^^^
 //│ ╟── from reference:
-//│ ║  l.47: 	def succ' n = fun f -> fun x -> f (n f x)
+//│ ║  l.48: 	def succ' n = fun f -> fun x -> f (n f x)
 //│ ╙──      	                                   ^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.122: 	succ' {} {} {}
+//│ ║  l.123: 	succ' {} {} {}
 //│ ║         	^^^^^^^^^^^
 //│ ╟── record literal of type `anything` is not a function
-//│ ║  l.122: 	succ' {} {} {}
+//│ ║  l.123: 	succ' {} {} {}
 //│ ║         	         ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.47: 	def succ' n = fun f -> fun x -> f (n f x)
+//│ ║  l.48: 	def succ' n = fun f -> fun x -> f (n f x)
 //│ ║        	                                ^^^^^^^^^
 //│ ╟── from reference:
-//│ ║  l.47: 	def succ' n = fun f -> fun x -> f (n f x)
+//│ ║  l.48: 	def succ' n = fun f -> fun x -> f (n f x)
 //│ ╙──      	                                ^
 //│ res: error
 //│ Runtime error:
@@ -157,6 +158,8 @@ fun x -> succ' x x x x x x x x x
 //   if n = 0 then zero
 //   else succ (to_church (n-1))
 // ;;
+
+// * Note: we exercise many variations of `to_church` with/without various annotations
 
 def to_church_ty: int -> ChurchInt
 //│ to_church_ty: int -> ChurchInt
@@ -183,7 +186,10 @@ rec def to_church_1_tt n =
 
 // def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
 
-:ng // rec non-fun not supported in JS
+
+// * === Digression: our own little weird meaningless tests ===
+
+:ng // * (recursive non-function not supported in JS)
 rec def wat =
   succ wat
 //│ wat: ('a -> ('a & 'b)) -> 'a -> 'b
@@ -197,81 +203,82 @@ rec def wat n =
 rec def wat n =
   succ wat n
 //│ ╔══[ERROR] Type error in binding of lambda expression
-//│ ║  l.197: 	rec def wat n =
+//│ ║  l.203: 	rec def wat n =
 //│ ║         	            ^^^
-//│ ║  l.198: 	  succ wat n
+//│ ║  l.204: 	  succ wat n
 //│ ║         	^^^^^^^^^^^^^
 //│ ╟── type variable `'a` leaks out of its scope
-//│ ║  l.29: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║        	                                   ^^
 //│ ╟── back into type variable `'a`
-//│ ║  l.29: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ╙──      	                             ^^
 //│ ╔══[ERROR] Type error in binding of lambda expression
-//│ ║  l.197: 	rec def wat n =
+//│ ║  l.203: 	rec def wat n =
 //│ ║         	            ^^^
-//│ ║  l.198: 	  succ wat n
+//│ ║  l.204: 	  succ wat n
 //│ ║         	^^^^^^^^^^^^^
 //│ ╟── type variable `'a` leaks out of its scope
-//│ ║  l.29: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║        	                                   ^^
 //│ ╟── back into type variable `'a`
-//│ ║  l.29: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ╙──      	                             ^^
 //│ ╔══[ERROR] Type error in binding of lambda expression
-//│ ║  l.197: 	rec def wat n =
+//│ ║  l.203: 	rec def wat n =
 //│ ║         	            ^^^
-//│ ║  l.198: 	  succ wat n
+//│ ║  l.204: 	  succ wat n
 //│ ║         	^^^^^^^^^^^^^
 //│ ╟── type variable `'a` leaks out of its scope
-//│ ║  l.29: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║        	                                           ^^
 //│ ╟── back into type variable `'a`
-//│ ║  l.29: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║        	                             ^^
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this application:
-//│ ║  l.198: 	  succ wat n
+//│ ║  l.204: 	  succ wat n
 //│ ║         	  ^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.46: 	def succ (n: ChurchInt) = fun f -> fun x -> f (n f x)
+//│ ║  l.47: 	def succ (n: ChurchInt) = fun f -> fun x -> f (n f x)
 //│ ╙──      	                                                   ^
 //│ ╔══[ERROR] Type error in binding of lambda expression
-//│ ║  l.197: 	rec def wat n =
+//│ ║  l.203: 	rec def wat n =
 //│ ║         	            ^^^
-//│ ║  l.198: 	  succ wat n
+//│ ║  l.204: 	  succ wat n
 //│ ║         	^^^^^^^^^^^^^
 //│ ╟── type variable `'a` leaks out of its scope
-//│ ║  l.29: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║        	                                           ^^
 //│ ╟── back into type variable `'a`
-//│ ║  l.29: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║        	                             ^^
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this application:
-//│ ║  l.198: 	  succ wat n
+//│ ║  l.204: 	  succ wat n
 //│ ║         	  ^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.46: 	def succ (n: ChurchInt) = fun f -> fun x -> f (n f x)
+//│ ║  l.47: 	def succ (n: ChurchInt) = fun f -> fun x -> f (n f x)
 //│ ╙──      	                                                   ^
 //│ ╔══[ERROR] Type error in binding of lambda expression
-//│ ║  l.197: 	rec def wat n =
+//│ ║  l.203: 	rec def wat n =
 //│ ║         	            ^^^
-//│ ║  l.198: 	  succ wat n
+//│ ║  l.204: 	  succ wat n
 //│ ║         	^^^^^^^^^^^^^
 //│ ╟── type variable `'a` leaks out of its scope
-//│ ║  l.29: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║        	                                   ^^
 //│ ╟── back into type variable `'a`
-//│ ║  l.29: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║        	                                                 ^^
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this application:
-//│ ║  l.198: 	  succ wat n
+//│ ║  l.204: 	  succ wat n
 //│ ╙──       	  ^^^^^^^^^^
 //│ wat: ((??a | 'a) -> (??a0 & 'a & 'b)) -> (??a0 & 'a) -> (??a | 'b)
 //│    = [Function: wat1]
 
+// * Works with this option!
 :precise-rec-typing
 rec def wat n =
   succ wat n
@@ -294,6 +301,7 @@ def to_church_1_repro n =
 //│                  = <no result>
 //│                    to_church_ty is not implemented
 
+// * === /Digression ===
 
 
 rec def to_church_1_st n =
@@ -331,6 +339,7 @@ rec def to_church_3 n =
 //   if n = 0 then fun f x -> x
 //   else (fun f x -> f ((to_church (n-1)) f x) : Int)
 // ;;
+// * Type checks for us, but not a subtype of to_church_ty (see below)
 rec def to_church_4 n =
   if n == 0 then fun f -> fun x -> x
   else fun f -> fun x -> f ((to_church_4 (n - 1)) f x) : ChurchInt
@@ -349,6 +358,9 @@ rec def to_church_5 n =
   else fun f -> fun x -> f ((to_church_5 (n - 1)) f x)
 //│ to_church_5: int -> ('a -> 'b & 'a -> 'a) -> ('a & 'b) -> 'b
 //│            = [Function: to_church_5]
+
+
+// * Now checking whether the inferred types conform to the expected signature:
 
 to_church_ty = to_church_1
 //│ int -> ('a -> ('a & 'b)) -> ('a & 'b) -> 'b
@@ -375,12 +387,11 @@ to_church_ty = to_church_1_st
 //│ int -> ChurchInt
 //│             = [Function: to_church_1_st]
 
-:ng
-// :e // due to tapping
 to_church_ty = to_church_2
 //│ int -> ('a -> ('a & 'b)) -> ('a & 'b) -> 'b
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
+//│             = [Function: to_church_2]
 
 to_church_ty = to_church_3
 //│ int -> ('a -> ('a & 'b)) -> ('a & 'b) -> 'b
@@ -394,17 +405,16 @@ to_church_ty = to_church_4
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.392: 	to_church_ty = to_church_4
+//│ ║  l.403: 	to_church_ty = to_church_4
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `('a -> 'a) -> 'a -> 'a` does not match type `'a0`
-//│ ║  l.29: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║        	                            ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.29: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ╙──      	                             ^^
 //│             = [Function: to_church_4]
 
-// :e
 to_church_ty = to_church_5
 //│ int -> ('a -> 'b & 'a -> 'a) -> ('a & 'b) -> 'b
 //│   <:  to_church_ty:
@@ -421,24 +431,22 @@ to_church_ty = to_church_5
 // ;;
 
 
-// // * It seems this one may need polymorphic recursion...?
-// // *  ...but it's just a version with succ inlined!?
 rec def to_church_ty n =
   if n == 0 then fun f -> fun x -> x
   else fun f -> fun x -> f ((to_church_ty (n - 1)) f x)
 //│ int -> ('a -> 'b & 'a -> 'a) -> ('a & 'b) -> 'b
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
-//│             = [Function: to_church_ty7]
+//│             = [Function: to_church_ty8]
 
-// * ... since we can fix it by using the annotation for rec calls:
+// * Note: same but without `rec`, picking up the to_church_ty annotation for rec calls
 def to_church_ty n =
   if n == 0 then fun f -> fun x -> x
   else fun f -> fun x -> f ((to_church_ty (n - 1)) f x)
 //│ int -> ('a -> ('a & 'b)) -> ('a & 'b) -> 'b
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
-//│             = [Function: to_church_ty8]
+//│             = [Function: to_church_ty9]
 
 
 // (* �a coince. *)
@@ -452,21 +460,14 @@ def tc n = to_church_ty n : ChurchInt
 //│ tc: int -> ChurchInt
 //│   = [Function: tc1]
 
-def tc n = to_church_2 n : ChurchInt // Requires :RecursiveTypes
+def tc n = to_church_2 n : ChurchInt
 //│ tc: int -> ChurchInt
 //│   = [Function: tc2]
 
-// Notice the top/bot extruded skolem in the results
 def tc n = to_church_3 n
 //│ tc: int -> ('a -> ('a & 'b)) -> ('a & 'b) -> 'b
 //│   = [Function: tc3]
 
-// * This test is "flaky" (unreliable) because its success depends on
-// *  which order the previous FAILING test performs its constraining,
-// *  which is notably dependent on variable names.
-// *  This happens because we now stop at the first constraint failure
-// *  (otherwise some failing test cases like in NestedDataTypes take too long).
-// :e
 tc 1 id
 //│ res: 'a -> 'a
 //│    = [Function (anonymous)]
@@ -478,6 +479,7 @@ tc: int -> ChurchInt
 def tc n = to_church_3 n : ChurchInt
 //│ tc: int -> ChurchInt
 //│   = [Function: tc4]
+
 
 // (* Duplicate with to_church1 ("Marche") above *)
 // (* Avec la value restriction : �a passe. *)
@@ -494,7 +496,6 @@ type Z = forall 'a 'b. ('a -> 'b) -> ('a -> 'b)
 
 // let f x = (x:sid), ((x:sid):z)
 
-// :e // due to tapping
 def f x = ((x : Sid), ((x : Sid) : Z))
 //│ f: Sid -> (Sid, Z,)
 //│  = [Function: f]
@@ -510,6 +511,7 @@ fun x -> ((x : Sid), (x : Z))
 
 
 // * === With Constrained Types ===
+
 
 :DontDistributeForalls
 :ConstrainedTypes
@@ -533,7 +535,7 @@ def succ' n = fun f -> fun x -> f (n f x)
 //│     'a <: 'b -> 'c -> 'd)))
 //│      = [Function: succ$1]
 
-// * Note: without constrained types we wouldn't get the principal type of succ'
+// * Note: without constrained types (and distrib.) we wouldn't get the principal type of succ'
 
 succ_ty = succ
 //│ ChurchInt -> (forall 'b. 'b -> (forall 'a 'c. ('a -> 'c
@@ -553,20 +555,20 @@ succ_ty = succ'
 //│   <:  succ_ty:
 //│ ChurchInt -> ChurchInt
 //│ ╔══[ERROR] Type error in def definition
-//│ ║  l.548: 	succ_ty = succ'
+//│ ║  l.550: 	succ_ty = succ'
 //│ ║         	^^^^^^^^^^^^^^^
 //│ ╟── type variable `'a` leaks out of its scope
-//│ ║  l.29: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║        	                                   ^^
 //│ ╟── back into type variable `'a`
-//│ ║  l.29: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║        	                             ^^
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this function:
-//│ ║  l.523: 	def succ' n = fun f -> fun x -> f (n f x)
+//│ ║  l.525: 	def succ' n = fun f -> fun x -> f (n f x)
 //│ ║         	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── • this reference:
-//│ ║  l.548: 	succ_ty = succ'
+//│ ║  l.550: 	succ_ty = succ'
 //│ ╙──       	          ^^^^^
 //│        = [Function: succ$1]
 :DistributeForalls
@@ -605,13 +607,13 @@ succ' {} {}
 :e
 succ' {} {} {}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.606: 	succ' {} {} {}
+//│ ║  l.608: 	succ' {} {} {}
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╟── record literal of type `anything` is not a function
-//│ ║  l.606: 	succ' {} {} {}
+//│ ║  l.608: 	succ' {} {} {}
 //│ ║         	      ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.523: 	def succ' n = fun f -> fun x -> f (n f x)
+//│ ║  l.525: 	def succ' n = fun f -> fun x -> f (n f x)
 //│ ╙──       	                                   ^^^
 //│ res: error
 //│ Runtime error:

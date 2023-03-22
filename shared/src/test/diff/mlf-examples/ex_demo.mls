@@ -1,5 +1,5 @@
 :NoRecursiveTypes
-:DontDistributeForalls // * Distributing here causes problems; TODO investigate
+
 
 // ============ Dummy classes to represent the types in the examples ============
 
@@ -27,7 +27,7 @@ def cons head tail = Cons { head; tail }
 //│ Defined Cons.Tail: Cons['a] -> List['a]
 //│ cons: 'a -> List['a] -> List['a]
 //│     = <missing implementation>
-//│ 'b -> (forall 'a 'tail. (List['a] & 'tail) -> (Cons['a | 'b] with {head: 'b, tail: 'tail}))
+//│ ('head & 'a) -> (List['a] & 'tail) -> (Cons['a] with {head: 'head, tail: 'tail})
 //│   <:  cons:
 //│ 'a -> List['a] -> List['a]
 //│     = [Function: cons]
@@ -119,7 +119,7 @@ def delta_ = fun x -> x x
 
 // let choose x y = if true then x else y
 def choose x y = if true then x else y
-//│ choose: 'a -> (forall 'b. 'b -> ('a | 'b))
+//│ choose: 'a -> 'a -> 'a
 //│       = [Function: choose]
 
 // let succ n = n + 1
@@ -211,16 +211,11 @@ def ignore x = null
 //│       = [Function: ignore]
 
 
-def listiterA: ('a -> unit) -> List['a] -> unit
-//│ listiterA: ('a -> unit) -> List['a] -> unit
-//│          = <missing implementation>
-
 // let rec listiter f ll =
 //   if ll = [] then ()
 //   else begin ignore (f (car ll)) ; listiter f (cdr ll) end
 // ;;
 
-:RecursiveTypes // needed for this recursive def
 rec def listiter f ll =
   if eq ll nil then unit
   else
@@ -228,7 +223,10 @@ rec def listiter f ll =
     listiter f (tail ll)
 //│ listiter: ('a -> anything) -> List['a] -> unit
 //│         = [Function: listiter]
-:NoRecursiveTypes
+
+def listiterA: ('a -> unit) -> List['a] -> unit
+//│ listiterA: ('a -> unit) -> List['a] -> unit
+//│          = <missing implementation>
 
 listiterA = listiter
 //│ ('a -> anything) -> List['a] -> unit
@@ -239,8 +237,28 @@ listiterA = listiter
 
 
 // (* Polymorphic recursion. *)
-// untype let rec id x = if true then x else id id x in id
 
+// untype let rec id x = if true then x else id id x in id
+:e
+rec def id1 x = if true then x else id1 id1 x
+//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
+//│ ║  l.243: 	rec def id1 x = if true then x else id1 id1 x
+//│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Note: use flag `:ex` to see internal error info.
+//│ id1: 'id1
+//│   where
+//│     'id1 :> 'a -> 'b
+//│     'a :> 'id1
+//│        <: 'b
+//│     'b :> 'id1
+//│        <: 'a -> 'b
+//│    = [Function: id1]
+
+
+
+// * === \ Below, some of our own variations ===
+
+// * With annotated recursive calls
 def idy_ty: forall 'a. 'a -> 'a
 def id1 x = if true then x else idy_ty idy_ty x
 //│ idy_ty: 'a -> 'a
@@ -249,83 +267,8 @@ def id1 x = if true then x else idy_ty idy_ty x
 //│    = <no result>
 //│      idy_ty is not implemented
 
-:e
-rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
-//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.253: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
-//│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `'a` is not a function
-//│ ║  l.253: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
-//│ ║         	                           ^^
-//│ ╟── but it flows into quantified type variable with expected type `'a0 -> 'a0`
-//│ ║  l.253: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
-//│ ║         	                       ^^
-//│ ╟── Note: constraint arises from function type:
-//│ ║  l.253: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
-//│ ╙──       	                           ^^^^^^^^
-//│ ╔══[ERROR] Type error in binding of lambda expression
-//│ ║  l.253: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
-//│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type variable `'a` leaks out of its scope
-//│ ║  l.253: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
-//│ ║         	                           ^^^^^^^^
-//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
-//│ ╟── • this application:
-//│ ║  l.253: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
-//│ ╙──       	                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
-//│ ║  l.253: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
-//│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── Note: use flag `:ex` to see internal error info.
-//│ ╔══[ERROR] Type error in binding of lambda expression
-//│ ║  l.253: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
-//│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type variable `'a` leaks out of its scope
-//│ ║  l.253: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
-//│ ║         	                           ^^^^^^^^
-//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
-//│ ╟── • this application:
-//│ ║  l.253: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
-//│ ║         	                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.253: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
-//│ ╙──       	                                                           ^^^^^^^^^
-//│ id1: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
-//│    = [Function: id1]
-
-:e // * Since "sound extrusion"
-rec def id1 x = if true then x else id1 id1 x
-//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
-//│ ║  l.297: 	rec def id1 x = if true then x else id1 id1 x
-//│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── Note: use flag `:ex` to see internal error info.
-//│ id1: 'id1
-//│   where
-//│     'id1 :> 'a -> 'b
-//│     'a :> 'id1
-//│        <: 'b
-//│     'b :> 'id1
-//│        <: 'a -> 'b
-//│    = [Function: id11]
-
-:e // * Since "sound extrusion"
-rec def id1 x = if true then x else id1 id1 x
-//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
-//│ ║  l.312: 	rec def id1 x = if true then x else id1 id1 x
-//│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── Note: use flag `:ex` to see internal error info.
-//│ id1: 'id1
-//│   where
-//│     'id1 :> 'a -> 'b
-//│     'a :> 'id1
-//│        <: 'b
-//│     'b :> 'id1
-//│        <: 'a -> 'b
-//│    = [Function: id12]
-
-// * This does not actually seem to require general polymorphic recursion,
-// *  but it does need recursive types:
-// * (Note that it can't be applied when typed with :precise-rec-typing.)
+// * This definition does not actually seem to require general polymorphic recursion,
+// *  but it does need at least recursive types:
 :RecursiveTypes
 rec def id1 x = if true then x else id1 id1 x
 //│ id1: 'id1
@@ -335,8 +278,7 @@ rec def id1 x = if true then x else id1 id1 x
 //│        <: 'b
 //│     'b :> 'id1
 //│        <: 'a -> 'b
-//│    = [Function: id13]
-// * But we still can't apply it:
+//│    = [Function: id11]
 id1 id
 //│ res: ('a & 'b) -> 'b | 'c
 //│   where
@@ -348,56 +290,126 @@ id1 id
 id1 id1
 //│ res: 'a -> 'b | 'id1
 //│   where
-//│     'a :> forall 'id1 'c 'd. 'a -> 'b | 'id1
+//│     'a :> forall 'c 'd 'id1. 'a -> 'b | 'id1
 //│        <: 'b
-//│     'b :> forall 'id1 'c 'd. 'id1
+//│     'b :> forall 'c 'd 'id1. 'id1
 //│        <: 'a -> 'b
 //│     'id1 :> 'c -> 'd
 //│     'c :> 'id1
 //│        <: 'd
 //│     'd :> 'id1
 //│        <: 'c -> 'd
-//│    = [Function: id13]
+//│    = [Function: id11]
+// * Note that it can't be applied when typed with :precise-rec-typing AND :DontDistributeForalls
+:DontDistributeForalls
+:precise-rec-typing
+rec def id1_p x = if true then x else id1_p id1_p x
+//│ id1_p: 'id1_p
+//│   where
+//│     'id1_p :> forall 'a. ('a & 'b) -> 'a
+//│     'a :> 'c
+//│     'c :> 'id1_p
+//│        <: 'b -> 'c
+//│     'b :> 'id1_p
+//│        <: 'c
+//│      = [Function: id1_p]
+// * Can't apply it:
+:e
+id1_p id
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
+//│ ║  l.318: 	id1_p id
+//│ ║         	^^^^^^^^
+//│ ╙── Note: use flag `:ex` to see internal error info.
+//│ res: ('a & 'b) -> 'a | error | 'c
+//│   where
+//│     'a :> 'd
+//│     'd :> forall 'a 'b. ('a & 'b) -> 'a
+//│        <: 'e -> 'd & 'c
+//│     'b <: 'a & 'e
+//│     'e :> forall 'a 'b. ('a & 'b) -> 'a
+//│        <: 'd
+//│    = [Function: id]
+:DistributeForalls
 :NoRecursiveTypes
 
 // * TODO type pp – inline id1?
-:ns
 id1
-//│ res: forall 'a 'b 'c 'id1 'd 'e. 'id1
+//│ res: 'id1
 //│   where
-//│     'id1 := 'e -> 'b
-//│     'e :> 'e -> 'b
-//│        <: 'c
-//│     'b :> 'e -> 'b
-//│        <: 'a & 'd
-//│     'd :> 'e -> 'b
-//│        <: 'e -> 'a
-//│     'a :> 'e -> 'b
-//│        <: 'c
-//│     'c :> 'e -> 'b
+//│     'id1 :> 'a -> 'b
+//│     'a :> 'id1
 //│        <: 'b
-//│    = [Function: id13]
+//│     'b :> 'id1
+//│        <: 'a -> 'b
+//│    = [Function: id11]
 
 :e
 id1: nothing
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.382: 	id1: nothing
+//│ ║  l.347: 	id1: nothing
 //│ ║         	^^^
 //│ ╟── function of type `?a -> ?b` does not match type `nothing`
-//│ ║  l.330: 	rec def id1 x = if true then x else id1 id1 x
+//│ ║  l.273: 	rec def id1 x = if true then x else id1 id1 x
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `nothing`
-//│ ║  l.382: 	id1: nothing
+//│ ║  l.347: 	id1: nothing
 //│ ║         	^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.382: 	id1: nothing
+//│ ║  l.347: 	id1: nothing
 //│ ╙──       	     ^^^^^^^
 //│ res: nothing
-//│    = [Function: id13]
+//│    = [Function: id11]
 
 rec def id1_ x = id1_ id1_ x
 //│ id1_: anything -> nothing
 //│     = [Function: id1_]
+
+:e // * Incorrect annotation
+rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
+//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
+//│ ║  l.368: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
+//│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `'a` is not a function
+//│ ║  l.368: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
+//│ ║         	                           ^^
+//│ ╟── but it flows into quantified type variable with expected type `'a0 -> 'a0`
+//│ ║  l.368: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
+//│ ║         	                       ^^
+//│ ╟── Note: constraint arises from function type:
+//│ ║  l.368: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
+//│ ╙──       	                           ^^^^^^^^
+//│ ╔══[ERROR] Type error in binding of lambda expression
+//│ ║  l.368: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
+//│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type variable `'a` leaks out of its scope
+//│ ║  l.368: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
+//│ ║         	                           ^^^^^^^^
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this application:
+//│ ║  l.368: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
+//│ ╙──       	                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
+//│ ║  l.368: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
+//│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Note: use flag `:ex` to see internal error info.
+//│ ╔══[ERROR] Type error in binding of lambda expression
+//│ ║  l.368: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
+//│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type variable `'a` leaks out of its scope
+//│ ║  l.368: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
+//│ ║         	                           ^^^^^^^^
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this application:
+//│ ║  l.368: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
+//│ ║         	                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.368: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
+//│ ╙──       	                                                           ^^^^^^^^^
+//│ id1: (forall 'a. 'a -> 'a) -> 'a0 -> 'a0
+//│    = [Function: id12]
+
+// * === / ===
+
 
 
 // let rec (id:sid) x = if true then x else id id x
@@ -425,7 +437,7 @@ def id2 x = if true then x else id2 id2 x
 
 // let make_ex1 x (f:['a] ('a * ('a -> 'c)) -> 'b) = f x
 def make_ex1 x (f: forall 'a. (('a, 'a -> 'c),) -> 'b) = f x
-//│ make_ex1: ('a, 'a -> 'c,) -> (forall 'b. (forall 'a0. ('a0, 'a0 -> 'c,) -> 'b) -> 'b)
+//│ make_ex1: ('a, 'a -> 'c,) -> (forall 'a0. ('a0, 'a0 -> 'c,) -> 'b) -> 'b
 //│         = [Function: make_ex1]
 
 ex1_1 = make_ex1 (("A String", print_string))
@@ -450,7 +462,7 @@ ex1_2 (fun ((x, f)) -> f x)
 // let make_ex2 x (f:['a] ('a * 'a * ('a -> 'a -> 'c)) -> 'b) = f x
 // ;;
 def make_ex2 x (f: forall 'a. (('a, 'a, 'a -> 'a -> 'c),) -> 'b) = f x
-//│ make_ex2: ('a, 'a, 'a -> 'a -> 'c,) -> (forall 'b. (forall 'a0. ('a0, 'a0, 'a0 -> 'a0 -> 'c,) -> 'b) -> 'b)
+//│ make_ex2: ('a, 'a, 'a -> 'a -> 'c,) -> (forall 'a0. ('a0, 'a0, 'a0 -> 'a0 -> 'c,) -> 'b) -> 'b
 //│         = [Function: make_ex2]
 
 // let ex_list1 = [ make_ex1 ("A String", print_string) ; 
@@ -476,7 +488,7 @@ ex_list1 = cons (make_ex1 (("A String", print_string)))
 ex_list2 = cons (make_ex2 (("String", "String", eqstring)))
   (cons (make_ex2 ((1250, 4890, eqint)))
   (cons (make_ex2 ((true, false, eqbool))) nil))
-//│ ex_list2: List[forall 'b. (forall 'a 'a0 'a1. ('a0, 'a0, 'a0 -> 'a0 -> bool,) -> 'b & ('a1, 'a1, 'a1 -> 'a1 -> (bool | false),) -> 'b & ('a, 'a, 'a -> 'a -> bool,) -> 'b) -> 'b]
+//│ ex_list2: List[forall 'b. (forall 'a 'c 'a0 'a1. ('a, 'a, 'a -> 'a -> (forall 'c. bool | 'c),) -> 'b & ('a0, 'a0, 'a0 -> 'a0 -> (bool | false | 'c),) -> 'b & ('a1, 'a1, 'a1 -> 'a1 -> (forall 'c. bool | 'c),) -> 'b) -> 'b]
 //│         = Cons {
 //│             head: [Function (anonymous)],
 //│             tail: Cons {
@@ -536,8 +548,12 @@ process h
 //│ // Output
 //│ A String
 
-// * Also fails:
-// listiter process ex_list1
+listiter process ex_list1
+//│ = [Function: unit]
+//│ // Output
+//│ A String
+//│ 8250
+//│ true
 
 
 // let test2 = listiter (fun ex -> ex (fun t -> 
@@ -569,20 +585,25 @@ test2_ = listiter (fun ex -> ex (fun ((t1, t2, t3)) ->
 //│ test2_: List[(forall 'a 'b. ('a, 'b, 'a -> 'b -> bool,) -> unit) -> anything] -> unit
 //│       = [Function (anonymous)]
 
-// * Also fails:
-// test2_ ex_list2
+test2_ ex_list2
+//│ = [Function: unit]
+//│ // Output
+//│ true
+//│ false
+//│ false
+
 
 
 // * ============ Annotated+untupled versions: ============
 
 def make_ex1: ('x, 'x -> 'c) -> (forall 'b. (forall 'a. ('a, 'a -> 'c) -> 'b) -> 'b)
-//│ make_ex1: ('x, 'x -> 'c,) -> (forall 'b. (forall 'a. ('a, 'a -> 'c,) -> 'b) -> 'b)
+//│ make_ex1: ('x, 'x -> 'c,) -> (forall 'a. ('a, 'a -> 'c,) -> 'b) -> 'b
 //│         = <missing implementation>
 
 make_ex1 (x, f) k = k (x, f)
-//│ ('a, 'b,) -> (forall 'c. (('a, 'b,) -> 'c) -> 'c)
+//│ ('a, 'b,) -> (('a, 'b,) -> 'c) -> 'c
 //│   <:  make_ex1:
-//│ ('x, 'x -> 'c,) -> (forall 'b. (forall 'a. ('a, 'a -> 'c,) -> 'b) -> 'b)
+//│ ('x, 'x -> 'c,) -> (forall 'a. ('a, 'a -> 'c,) -> 'b) -> 'b
 //│         = [Function: make_ex11]
 
 ex1_1 = make_ex1 ("A String", print_string)
@@ -607,13 +628,13 @@ ex1_2 (fun (x, f) -> f x)
 // let make_ex2 x (f:['a] ('a * 'a * ('a -> 'a -> 'c)) -> 'b) = f x
 // ;;
 def make_ex2: ('x, 'x, 'x -> 'c) -> (forall 'b. (forall 'a. ('a, 'a, 'a -> 'c) -> 'b) -> 'b)
-//│ make_ex2: ('x, 'x, 'x -> 'c,) -> (forall 'b. (forall 'a. ('a, 'a, 'a -> 'c,) -> 'b) -> 'b)
+//│ make_ex2: ('x, 'x, 'x -> 'c,) -> (forall 'a. ('a, 'a, 'a -> 'c,) -> 'b) -> 'b
 //│         = <missing implementation>
 
 make_ex2 (x, y, f) k = k (x, y, f)
-//│ ('a, 'b, 'c,) -> (forall 'd. (('a, 'b, 'c,) -> 'd) -> 'd)
+//│ ('a, 'b, 'c,) -> (('a, 'b, 'c,) -> 'd) -> 'd
 //│   <:  make_ex2:
-//│ ('x, 'x, 'x -> 'c,) -> (forall 'b. (forall 'a. ('a, 'a, 'a -> 'c,) -> 'b) -> 'b)
+//│ ('x, 'x, 'x -> 'c,) -> (forall 'a. ('a, 'a, 'a -> 'c,) -> 'b) -> 'b
 //│         = [Function: make_ex21]
 
 // let ex_list1 = [ make_ex1 ("A String", print_string) ; 
@@ -674,7 +695,6 @@ test1_ ex_list1
 
 
 
-
 // (* Some examples for MLF inspired by standard encoding in System F. *)
 
 // type Void   = ['x] 'x
@@ -715,13 +735,13 @@ def c_true = fun a -> fun b -> a c_unit
 
 // let c_false = fun a b -> b c_unit
 def c_false = fun a -> fun b -> b c_unit
-//│ c_false: anything -> (forall 'a. ((forall 'b. 'b -> 'b) -> 'a) -> 'a)
+//│ c_false: anything -> ((forall 'a. 'a -> 'a) -> 'b) -> 'b
 //│        = [Function: c_false]
 
 // let c_if (cond:Bool) c_then c_else = cond c_then c_else 
 def c_if (cond: Fbool) c_then c_else = cond c_then c_else
 def c_if_ cond c_then c_else = cond c_then c_else
-//│ c_if: Fbool -> (forall 'a. (Funit -> 'a) -> (forall 'b. (Funit -> 'b) -> ('a | 'b)))
+//│ c_if: Fbool -> (Funit -> 'a) -> (Funit -> 'a) -> 'a
 //│     = [Function: c_if]
 //│ c_if_: ('a -> 'b -> 'c) -> 'a -> 'b -> 'c
 //│      = [Function: c_if_]
@@ -729,25 +749,25 @@ def c_if_ cond c_then c_else = cond c_then c_else
 // let c_and (a:Bool) (b:Bool) = c_if a (fun z -> b) (fun z -> c_false)
 def c_and (a: Fbool) (b: Fbool) = c_if a (fun z -> b) (fun z -> c_false)
 def c_and_ a b = c_if a (fun z -> b) (fun z -> c_false)
-//│ c_and: Fbool -> Fbool -> (anything -> (forall 'a. ((forall 'b. 'b -> 'b) -> 'a) -> 'a) | Fbool)
+//│ c_and: Fbool -> Fbool -> (anything -> ((forall 'a. 'a -> 'a) -> 'b) -> 'b | Fbool)
 //│      = [Function: c_and]
-//│ c_and_: Fbool -> (forall 'a. 'a -> (anything -> (forall 'b. ((forall 'c. 'c -> 'c) -> 'b) -> 'b) | 'a))
+//│ c_and_: Fbool -> 'a -> (anything -> ((forall 'b. 'b -> 'b) -> 'c) -> 'c | 'a)
 //│       = [Function: c_and_]
 
 // let c_or  (a:Bool) (b:Bool) = c_if a (fun z -> c_true) (fun z -> b)
 def c_or (a: Fbool) (b: Fbool) = c_if a (fun z -> c_true) (fun z -> b)
 def c_or_ a b = c_if a (fun z -> c_true) (fun z -> b)
-//│ c_or: Fbool -> Fbool -> (forall 'a. ((forall 'b. 'b -> 'b) -> 'a) -> anything -> 'a | Fbool)
+//│ c_or: Fbool -> Fbool -> (((forall 'a. 'a -> 'a) -> 'b) -> anything -> 'b | Fbool)
 //│     = [Function: c_or]
-//│ c_or_: Fbool -> (forall 'a. 'a -> (forall 'b. ((forall 'c. 'c -> 'c) -> 'b) -> anything -> 'b | 'a))
+//│ c_or_: Fbool -> 'a -> (((forall 'b. 'b -> 'b) -> 'c) -> anything -> 'c | 'a)
 //│      = [Function: c_or_]
 
 // let c_not (a:Bool) = c_if a (fun z -> c_false) (fun z -> c_true)
 def c_not (a: Fbool) = c_if a (fun z -> c_false) (fun z -> c_true)
 def c_not_ a = c_if a (fun z -> c_false) (fun z -> c_true)
-//│ c_not: Fbool -> (forall 'a. ((forall 'b. 'b -> 'b) -> 'a) -> (forall 'c. ((forall 'b. 'b -> 'b) -> 'c) -> ('a | 'c)))
+//│ c_not: Fbool -> ((forall 'a. 'a -> 'a) -> 'b) -> ((forall 'a. 'a -> 'a) -> 'b) -> 'b
 //│      = [Function: c_not]
-//│ c_not_: Fbool -> (forall 'a. ((forall 'b. 'b -> 'b) -> 'a) -> (forall 'c. ((forall 'b. 'b -> 'b) -> 'c) -> ('a | 'c)))
+//│ c_not_: Fbool -> ((forall 'a. 'a -> 'a) -> 'b) -> ((forall 'a. 'a -> 'a) -> 'b) -> 'b
 //│       = [Function: c_not_]
 
 // let c_or = (c_or : Bool -> Bool -> Bool)
@@ -764,12 +784,12 @@ def c_or2_ = c_or_ : Fbool -> Fbool -> Fbool
 // (* CONSTRUCTORS FOR PAIRS ET TRIPLES. *)
 // let c_pair x y   = fun f -> f x y
 def c_pair x y = fun f -> f x y
-//│ c_pair: 'a -> (forall 'b. 'b -> (forall 'c. ('a -> 'b -> 'c) -> 'c))
+//│ c_pair: 'a -> 'b -> ('a -> 'b -> 'c) -> 'c
 //│       = [Function: c_pair]
 
 // let c_trip x y z = fun f -> f x y z
 def c_trip x y z = fun f -> f x y z
-//│ c_trip: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> (forall 'd. ('a -> 'b -> 'c -> 'd) -> 'd)))
+//│ c_trip: 'a -> 'b -> 'c -> ('a -> 'b -> 'c -> 'd) -> 'd
 //│       = [Function: c_trip]
 
 
@@ -787,7 +807,7 @@ def c_2_2 (p: Pair) = p (fun x -> fun y -> y)
 def c_2_2_ p = p (fun x -> fun y -> y)
 //│ c_2_2: Pair -> Fint
 //│      = [Function: c_2_2]
-//│ c_2_2_: ((anything -> (forall 'a. 'a -> 'a)) -> 'b) -> 'b
+//│ c_2_2_: ((forall 'a. anything -> 'a -> 'a) -> 'b) -> 'b
 //│       = [Function: c_2_2_]
 
 // let c_1_3 (t:Triple) = t (fun x y z -> x)
@@ -803,7 +823,7 @@ def c_2_3 (t: Triple) = t (fun x -> fun y -> fun z -> y)
 def c_2_3_ t = t (fun x -> fun y -> fun z -> y)
 //│ c_2_3: Triple -> Fint
 //│      = [Function: c_2_3]
-//│ c_2_3_: ((anything -> (forall 'a. 'a -> anything -> 'a)) -> 'b) -> 'b
+//│ c_2_3_: ((forall 'a. anything -> 'a -> anything -> 'a) -> 'b) -> 'b
 //│       = [Function: c_2_3_]
 
 // let c_3_3 (t:Triple) = t (fun x y z -> z) 
@@ -811,19 +831,19 @@ def c_3_3 (t: Triple) = t (fun x -> fun y -> fun z -> z)
 def c_3_3_ t = t (fun x -> fun y -> fun z -> z)
 //│ c_3_3: Triple -> Fint
 //│      = [Function: c_3_3]
-//│ c_3_3_: ((anything -> anything -> (forall 'a. 'a -> 'a)) -> 'b) -> 'b
+//│ c_3_3_: ((forall 'a. anything -> anything -> 'a -> 'a) -> 'b) -> 'b
 //│       = [Function: c_3_3_]
 
 
 // (* CONSTRUCTOR FOR A BINARY SUM. *)
 // let c_sumg = fun x fg fd -> fg x
 def c_sumg = fun x -> fun fg -> fun fd -> fg x
-//│ c_sumg: 'a -> (forall 'b. ('a -> 'b) -> anything -> 'b)
+//│ c_sumg: 'a -> ('a -> 'b) -> anything -> 'b
 //│       = [Function: c_sumg]
 
 // let c_sumd = fun x fg fd -> fd x
 def c_sumd = fun x -> fun fg -> fun fd -> fd x
-//│ c_sumd: 'a -> anything -> (forall 'b. ('a -> 'b) -> 'b)
+//│ c_sumd: 'a -> anything -> ('a -> 'b) -> 'b
 //│       = [Function: c_sumd]
 
 
@@ -831,7 +851,7 @@ def c_sumd = fun x -> fun fg -> fun fd -> fd x
 // let c_case (s:Sum) g d = s g d
 def c_case (s: Sum) g d = s g d
 def c_case_ s g d = s g d
-//│ c_case: Sum -> (forall 'a. (Fint -> 'a) -> (forall 'b. (Fint -> 'b) -> ('a | 'b)))
+//│ c_case: Sum -> (Fint -> 'a) -> (Fint -> 'a) -> 'a
 //│       = [Function: c_case]
 //│ c_case_: ('a -> 'b -> 'c) -> 'a -> 'b -> 'c
 //│        = [Function: c_case_]
@@ -840,7 +860,7 @@ def c_case_ s g d = s g d
 // (* Integers. *)
 // let c_i0 = fun f x ->   x
 def c_i0 = fun f -> fun x -> x
-//│ c_i0: anything -> (forall 'a. 'a -> 'a)
+//│ c_i0: anything -> 'a -> 'a
 //│     = [Function: c_i0]
 
 // let c_i1 = fun f x -> f x
@@ -856,49 +876,47 @@ def c_i2 = fun f -> fun x -> f (f x)
 // let c_succ (n:Int) = fun f x -> n f (f x)
 def c_succ (n: Fint) = fun f -> fun x -> n f (f x)
 def c_succ_ n = fun f -> fun x -> n f (f x)
-//│ c_succ: Fint -> (forall 'a 'a0. ('a -> ('a & 'a0)) -> 'a -> 'a0)
+//│ c_succ: Fint -> (('a | 'b) -> 'a) -> 'b -> 'a
 //│       = [Function: c_succ]
-//│ c_succ_: ('a -> 'b -> 'c) -> (forall 'd. ('d -> 'b & 'a) -> 'd -> 'c)
+//│ c_succ_: ('a -> 'b -> 'c) -> ('d -> 'b & 'a) -> 'd -> 'c
 //│        = [Function: c_succ_]
 
 // let c_iszero (n:Int) = n (fun x -> c_false) c_true
 def c_iszero (n: Fint) = n (fun x -> c_false) c_true
 def c_iszero_ n = n (fun x -> c_false) c_true
-//│ c_iszero: Fint -> (forall 'a. ((forall 'b. 'b -> 'b) -> 'a) -> (forall 'c. ((forall 'b. 'b -> 'b) -> 'c) -> ('a | 'c)))
+//│ c_iszero: Fint -> ((forall 'a. 'a -> 'a) -> 'b) -> ((forall 'a. 'a -> 'a) -> 'b) -> 'b
 //│         = [Function: c_iszero]
-//│ c_iszero_: ((anything -> anything -> (forall 'a. ((forall 'b. 'b -> 'b) -> 'a) -> 'a)) -> (forall 'c. ((forall 'b. 'b -> 'b) -> 'c) -> anything -> 'c) -> 'd) -> 'd
+//│ c_iszero_: ((forall 'a. anything -> anything -> ((forall 'b. 'b -> 'b) -> 'a) -> 'a) -> (forall 'c. ((forall 'b. 'b -> 'b) -> 'c) -> anything -> 'c) -> 'd) -> 'd
 //│          = [Function: c_iszero_]
 
 // let c_add n (m:Int) = m c_succ n
 
 def c_add n (m: Fint) = m c_succ n
-//│ c_add: (Fint & 'b) -> Fint -> (forall 'a 'a0. ('a -> ('a & 'a0)) -> 'a -> 'a0 | 'b)
+//│ c_add: (Fint & 'b) -> Fint -> ((('a | 'c) -> 'a) -> 'c -> 'a | 'b)
 //│      = [Function: c_add]
 
 def c_add_ n m = m c_succ_ n
-//│ c_add_: 'a -> (forall 'b. ((forall 'c 'd 'e. ('c -> 'd -> 'e) -> (forall 'f. ('f -> 'd & 'c) -> 'f -> 'e)) -> 'a -> 'b) -> 'b)
+//│ c_add_: 'a -> ((forall 'b 'c 'd 'e. ('b -> 'c -> 'd) -> ('e -> 'c & 'b) -> 'e -> 'd) -> 'a -> 'f) -> 'f
 //│       = [Function: c_add_]
 
 // let c_mul n (m:Int) = m (c_add n) c_i0
 
-//:e // due to tapping
 def c_mul m (n: Fint) = m (c_add n) c_i0
-//│ c_mul: ((Fint -> (forall 'a 'a0. ('a -> ('a & 'a0)) -> 'a -> 'a0 | Fint)) -> (anything -> (forall 'b. 'b -> 'b)) -> 'c) -> Fint -> 'c
+//│ c_mul: ((Fint -> (forall 'a 'b. (('a | 'b) -> 'a) -> 'b -> 'a | Fint)) -> (forall 'c. anything -> 'c -> 'c) -> 'd) -> Fint -> 'd
 //│      = [Function: c_mul]
 
 def c_mul_ m n = m (c_add_ n) c_i0
-//│ c_mul_: ((forall 'a. ((forall 'b 'c 'd. ('b -> 'c -> 'd) -> (forall 'e. ('e -> 'c & 'b) -> 'e -> 'd)) -> 'f -> 'a) -> 'a) -> (anything -> (forall 'g. 'g -> 'g)) -> 'h) -> 'f -> 'h
+//│ c_mul_: ((forall 'a. ((forall 'b 'c 'd 'e. ('d -> 'e -> 'b) -> ('c -> 'e & 'd) -> 'c -> 'b) -> 'f -> 'a) -> 'a) -> (forall 'g. anything -> 'g -> 'g) -> 'h) -> 'f -> 'h
 //│       = [Function: c_mul_]
 
 // let c_pow n (m:Int) = m (c_mul n) c_i1
 
-// :e // due to tapping
 def c_pow m (n: Fint) = m (c_mul n) c_i1
-//│ c_pow: ((Fint -> (forall 'a 'a0. ('a0 -> ('a0 & 'a)) -> (forall 'b. ('a0 & 'b) -> ('a | 'b)) | Fint)) -> (forall 'c 'd. ('c -> 'd) -> 'c -> 'd) -> 'e) -> Fint -> 'e
+//│ c_pow: ((Fint -> (forall 'b 'a. (('a | 'b) -> 'a) -> 'b -> ('a | 'b) | Fint)) -> (forall 'c 'd. ('c -> 'd) -> 'c -> 'd) -> 'e) -> Fint -> 'e
 //│      = [Function: c_pow]
 
 def c_pow_ m n = m (c_mul_ n) c_i1
-//│ c_pow_: (('a -> 'b) -> (forall 'c 'd. ('c -> 'd) -> 'c -> 'd) -> 'e) -> ((forall 'f. ((forall 'g 'h 'i. ('g -> 'h -> 'i) -> (forall 'j. ('j -> 'h & 'g) -> 'j -> 'i)) -> 'a -> 'f) -> 'f) -> (anything -> (forall 'k. 'k -> 'k)) -> 'b) -> 'e
+//│ c_pow_: (('a -> 'b) -> (forall 'c 'd. ('c -> 'd) -> 'c -> 'd) -> 'e) -> ((forall 'f. ((forall 'g 'h 'i 'j. ('g -> 'h -> 'i) -> ('j -> 'h & 'g) -> 'j -> 'i) -> 'a -> 'f) -> 'f) -> (forall 'k. anything -> 'k -> 'k) -> 'b) -> 'e
 //│       = [Function: c_pow_]
 
 
@@ -918,7 +936,7 @@ def c_pred_ n =
   let s = fun p -> c_pair (c_2_2_ p) (c_succ_ (c_2_2_ p)) in
   let z = c_pair c_i0 c_i0 in
   c_1_2_ (n s z)
-//│ c_pred_: ((forall 'a 'b 'c 'd. ((anything -> (forall 'e. 'e -> 'e)) -> ('a -> 'b -> 'c & 'd)) -> (forall 'f. ('d -> (forall 'g. ('g -> 'b & 'a) -> 'g -> 'c) -> 'f) -> 'f)) -> (forall 'h. ((anything -> (forall 'i. 'i -> 'i)) -> (anything -> (forall 'i. 'i -> 'i)) -> 'h) -> 'h) -> (forall 'j. 'j -> anything -> 'j) -> 'k) -> 'k
+//│ c_pred_: ((forall 'a 'b 'c 'd 'e 'f. ((forall 'g. anything -> 'g -> 'g) -> ('f -> 'd -> 'a & 'b)) -> ('b -> (('c -> 'd & 'f) -> 'c -> 'a) -> 'e) -> 'e) -> (forall 'h. ((forall 'i. anything -> 'i -> 'i) -> (forall 'i. anything -> 'i -> 'i) -> 'h) -> 'h) -> (forall 'j. 'j -> anything -> 'j) -> 'k) -> 'k
 //│        = [Function: c_pred_]
 
 
@@ -944,26 +962,27 @@ def c_printint2_ n = toString (n (fun x -> x + 1) 0)
 // let c_i2 = c_succ c_i1
 def c_i2 = c_succ c_i1
 def c_i2_ = c_succ_ c_i1
-//│ c_i2: ('a -> ('a & 'a0)) -> 'a -> 'a0
+//│ c_i2: (('a | 'b) -> 'a) -> 'b -> 'a
 //│     = [Function: c_i21]
-//│ c_i2_: ('a -> 'b & 'c -> 'a) -> 'c -> 'b
+//│ c_i2_: ('a -> 'b & 'b -> 'c) -> 'a -> 'c
 //│      = [Function: c_i2_]
 
 // let c_i3 = c_succ c_i2
 def c_i3 = c_succ c_i2
 def c_i3_ = c_succ_ c_i2
-//│ c_i3: ('a -> ('a & 'a0)) -> 'a -> 'a0
+//│ c_i3: (('a | 'b) -> 'a) -> 'b -> 'a
 //│     = [Function: c_i3]
-//│ c_i3_: (('a | 'b) -> 'a & 'c -> 'b) -> 'c -> 'a
+//│ c_i3_: ('b -> 'c & ('a | 'c) -> 'a) -> 'b -> 'a
 //│      = [Function: c_i3_]
 
 // let c_i4 = c_succ c_i3
 def c_i4 = c_succ c_i3
 def c_i4_ = c_succ_ c_i3
-//│ c_i4: ('a -> ('a & 'a0)) -> 'a -> 'a0
+//│ c_i4: (('a | 'b) -> 'a) -> 'b -> 'a
 //│     = [Function: c_i4]
-//│ c_i4_: (('a | 'b) -> 'a & 'c -> 'b) -> 'c -> 'a
+//│ c_i4_: ('b -> 'c & ('a | 'c) -> 'a) -> 'b -> 'a
 //│      = [Function: c_i4_]
+
 
 
 // (* Fails with value restriction. *)
@@ -971,23 +990,16 @@ def c_i4_ = c_succ_ c_i3
 // let rec (to_church:int -> Int) n =
 //   if n = 0 then fun f x -> x
 //   else fun f x -> f ((to_church (n-1)) f x)
+
 def to_church: int -> Fint
 //│ to_church: int -> Fint
 //│          = <missing implementation>
-
-
-
-// * The following tests don't benefit from `:RecursiveTypes`
-// *  (except `print_fact_` and `print_fact2_`),
-// *  but they produce LOTS of spammy error messages unless we enable it:
-:RecursiveTypes
-
 
 // * See to_church_3 in `ex_casparticuliers.mls`
 rec def to_church n =
   if n == 0 then fun f -> fun x -> x
   else fun f -> fun x -> f ((to_church (n - 1) : Fint) f x)
-//│ int -> (forall 'a 'a0 'b. ('a -> ('a & 'a0) & 'a0 -> 'b) -> (forall 'c. ('a & 'a0 & 'c) -> ('c | 'b)))
+//│ int -> ('a -> ('a & 'b)) -> ('a & 'b) -> 'b
 //│   <:  to_church:
 //│ int -> Fint
 //│          = [Function: to_church]
@@ -997,12 +1009,10 @@ rec def to_church n =
 //   if n = 0 then fun f x -> x
 //   else fun f x -> f ((to_church (n-1)) f x)
 
-// * Makes the test take several seconds:
-// rec def to_church_ n =
-//   if n == 0 then fun f -> fun x -> x
-//   else fun f -> fun x -> f ((to_church_ (n - 1)) f x)
-def to_church_ = to_church
-//│ to_church_: int -> Fint
+rec def to_church_ n =
+  if n == 0 then fun f -> fun x -> x
+  else fun f -> fun x -> f ((to_church_ (n - 1)) f x)
+//│ to_church_: int -> ('a -> 'b & 'a -> 'a) -> ('a & 'b) -> 'b
 //│           = [Function: to_church_]
 
 
@@ -1013,7 +1023,7 @@ def to_church_ = to_church
 rec def c_fact (n: Fint) =
   c_if (c_iszero n) (fun (u: Funit) -> c_i1)
     (fun (u: Funit) -> c_mul n (c_fact (c_pred n)))
-//│ c_fact: Fint -> (forall 'a 'a0 'b 'c. ('a -> ('a & 'a0) & 'b -> 'c) -> (forall 'd. ('a & 'b & 'd) -> ('a0 | 'd | 'c)) | Fint)
+//│ c_fact: Fint -> ((('a | 'b) -> 'a & 'b -> 'c) -> 'b -> ('a | 'b | 'c) | Fint)
 //│       = [Function: c_fact]
 
 // def c_fact: Fint -> (forall 'a 'b. ('a & 'b) -> (forall 'c 'd 'e 'f 'g 'h. (('c & 'h) -> ('d | 'g | 'c))))
@@ -1024,20 +1034,34 @@ def c_fact_A: Fint -> Fint
 def c_fact_A n =
   c_if (c_iszero n) (fun u -> c_i1)
     (fun u -> c_mul n (c_fact_A (c_pred n)))
-//│ (Fint & (Fint -> (forall 'a 'a0. ('a -> ('a & 'a0)) -> 'a -> 'a0 | Fint)) -> (anything -> (forall 'b. 'b -> 'b)) -> 'c) -> (forall 'd 'e. ('d -> 'e) -> 'd -> 'e | 'c)
+//│ (Fint & (Fint -> (forall 'a 'b. (('a | 'b) -> 'a) -> 'b -> 'a | Fint)) -> (forall 'c. anything -> 'c -> 'c) -> 'd) -> (('e -> 'f) -> 'e -> 'f | 'd)
 //│   <:  c_fact_A:
 //│ Fint -> Fint
 //│         = <no result>
 //│           c_fact_A is not implemented
 
+// * This one MLF probably can't type
 // * TODO: better type simplif...?
 rec def c_fact_ n =
   c_if_ (c_iszero_ n) (fun _ -> c_i1)
     (fun _ -> c_mul_ n (c_fact_ (c_pred_ n)))
 //│ c_fact_: 'a -> 'b
 //│   where
-//│     'a <: (anything -> anything -> (forall 'c. ((forall 'd. 'd -> 'd) -> 'c) -> 'c)) -> (forall 'e. ((forall 'd. 'd -> 'd) -> 'e) -> anything -> 'e) -> (anything -> (forall 'f 'g. ('f -> 'g) -> 'f -> 'g)) -> (anything -> 'h) -> 'b & (forall 'i. ((forall 'j 'k 'l. ('j -> 'k -> 'l) -> (forall 'm. ('m -> 'k & 'j) -> 'm -> 'l)) -> 'b -> 'i) -> 'i) -> (anything -> (forall 'n. 'n -> 'n)) -> 'h & (forall 'o 'p 'q 'r. ((anything -> (forall 's. 's -> 's)) -> ('o -> 'p -> 'q & 'r)) -> (forall 't. ('r -> (forall 'u. ('u -> 'p & 'o) -> 'u -> 'q) -> 't) -> 't)) -> (forall 'v. ((anything -> (forall 'n. 'n -> 'n)) -> (anything -> (forall 'n. 'n -> 'n)) -> 'v) -> 'v) -> (forall 'w. 'w -> anything -> 'w) -> 'a
+//│     'a <: (forall 'c. anything -> anything -> ((forall 'd. 'd -> 'd) -> 'c) -> 'c) -> (forall 'e. ((forall 'd. 'd -> 'd) -> 'e) -> anything -> 'e) -> (forall 'f 'g. anything -> ('f -> 'g) -> 'f -> 'g) -> (anything -> 'h) -> 'b & (forall 'i. ((forall 'j 'k 'l 'm. ('k -> 'l -> 'm) -> ('j -> 'l & 'k) -> 'j -> 'm) -> 'b -> 'i) -> 'i) -> (forall 'n. anything -> 'n -> 'n) -> 'h & (forall 'o 'p 'q 'r 's 't. ((forall 'u. anything -> 'u -> 'u) -> ('q -> 'r -> 't & 'o)) -> ('o -> (('p -> 'r & 'q) -> 'p -> 't) -> 's) -> 's) -> (forall 'v. ((forall 'n. anything -> 'n -> 'n) -> (forall 'n. anything -> 'n -> 'n) -> 'v) -> 'v) -> (forall 'w. 'w -> anything -> 'w) -> 'a
 //│        = [Function: c_fact_]
+
+:e // * The type we infer without any annotations can't be checked against the desired signature
+c_fact_A = c_fact_
+//│ 'a -> 'b
+//│   where
+//│     'a <: (forall 'c. anything -> anything -> ((forall 'd. 'd -> 'd) -> 'c) -> 'c) -> (forall 'e. ((forall 'd. 'd -> 'd) -> 'e) -> anything -> 'e) -> (forall 'f 'g. anything -> ('f -> 'g) -> 'f -> 'g) -> (anything -> 'h) -> 'b & (forall 'i. ((forall 'j 'k 'l 'm. ('j -> 'k -> 'l) -> ('m -> 'k & 'j) -> 'm -> 'l) -> 'b -> 'i) -> 'i) -> (forall 'n. anything -> 'n -> 'n) -> 'h & (forall 'o 'p 'q 'r 's 't. ((forall 'u. anything -> 'u -> 'u) -> ('p -> 'r -> 't & 'o)) -> ('o -> (('q -> 'r & 'p) -> 'q -> 't) -> 's) -> 's) -> (forall 'v. ((forall 'n. anything -> 'n -> 'n) -> (forall 'n. anything -> 'n -> 'n) -> 'v) -> 'v) -> (forall 'w. 'w -> anything -> 'w) -> 'a
+//│   <:  c_fact_A:
+//│ Fint -> Fint
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
+//│ ║  l.1054: 	c_fact_A = c_fact_
+//│ ║          	^^^^^^^^^^^^^^^^^^
+//│ ╙── Note: use flag `:ex` to see internal error info.
+//│         = [Function: c_fact_]
 
 
 // let print_fact n =
@@ -1056,7 +1080,7 @@ def print_fact n =
 //│ print_fact: int -> unit
 //│           = [Function: print_fact]
 
-:e // * We get a cycle error because recursive `c_fact_` has zero annotations
+:e // * We get a cycle error because recursive `c_fact_` has NO annotations whatsoever
 def print_fact_ n =
   let _ = print_string "Factorial " in
   let _ = print_int n in
@@ -1064,7 +1088,7 @@ def print_fact_ n =
   let _ = c_printint_ (c_fact_ (to_church_ n)) in
           print_string "\n"
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.1064: 	  let _ = c_printint_ (c_fact_ (to_church_ n)) in
+//│ ║  l.1088: 	  let _ = c_printint_ (c_fact_ (to_church_ n)) in
 //│ ║          	                       ^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ print_fact_: int -> unit
@@ -1087,14 +1111,14 @@ def print_fact2 n =
 //│ print_fact2: int -> string
 //│            = [Function: print_fact2]
 
-:e // * Similar as above
+:e // * Similar as above (bad `c_fact_`)
 def print_fact2_ n =
   concat "Factorial_ " (
   concat (toString n) (
   concat " = "
          (c_printint2_ (c_fact_ (to_church_ n))) ))
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.1095: 	         (c_printint2_ (c_fact_ (to_church_ n))) ))
+//│ ║  l.1119: 	         (c_printint2_ (c_fact_ (to_church_ n))) ))
 //│ ║          	                        ^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ print_fact2_: int -> string
@@ -1129,10 +1153,7 @@ this_should_be_98 =
 //│ this_should_be_98: string
 //│                  = '98'
 
-// * [FCP:patho]
-// * Note that as of this commit, if we increase the depth/fuel to eg 2500/500000,
-// * this ends up terminating with additional cycle error (instead of depth/fuel crash)
-// * after around 6 sec...
+// * [FCP:patho] This version without any type annotations doesn't work (probably also doesn't in MLF)
 :stats // * Note: subtyping takes too many steps when replacing both `c_mul_` by `c_mul`
 :e // * Not sure what's a minimal change to make this one work
 this_should_be_98_ =
@@ -1143,91 +1164,93 @@ this_should_be_98_ =
   let c_98_ = c_pred_ c_99_ in
   c_printint2_ c_98_
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.1140: 	  let c_i10_ = c_mul_ c_i5_ c_i2_ in
+//│ ║  l.1161: 	  let c_i10_ = c_mul_ c_i5_ c_i2_ in
 //│ ║          	               ^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?b ?c ?d ?e ?f. ?c -> ?e <: (forall ?g ?h ?i ?j ?k ?l ?m ?n ?o ?p ?q ?r ?s ?t ?u ?v ?w ?x ?y ?z ?a1 ?b1 ?c1 ?d1 ?e1 ?f1 ?g1 ?h1 ?i1 ?j1 ?k1 ?l1 ?m1 ?n1 ?o1 ?p1 ?q1 ?r1 ?s1 ?t1 ?u1 ?v1 ?w1 ?x1 ?y1 ?z1 ?a2 ?b2 ?c2 ?d2 ?e2 ?f2 ?g2 'a ?h2 ?i2 ?j2 ?k2 ?l2 ?m2 ?n2 ?o2 ?p2 ?q2 ?r2 ?s2 ?t2 ?u2 ?v2 ?w2 ?x2 ?y2 ?z2 ?a3 ?b3 ?c3 ?d3 ?e3 ?f3 ?g3 ?h3 ?i3 ?j3 ?k3 ?l3 ?m3 ?n3 ?o3 ?p3 ?q3 ?r3 ?s3 ?t3 ?u3 ?v3 ?w3 ?x3 ?y3 ?z3 ?a4 ?b4 ?c4 ?d4 ?e4 ?f4 ?g4 ?h4 ?i4 ?j4 ?k4 ?l4 ?m4 ?n4 ?o4 ?p4 ?q4 ?r4 ?s4 ?t4 ?u4 ?v4 ?w4 ?x4 ?y4 ?z4 ?a5 ?b5 ?c5 ?d5 ?e5 ?f5 ?g5 ?h5 ?i5 ?j5 ?k5 ?l5 ?m5 ?n5 ?o5 ?p5 ?q5 ?r5 ?s5 ?t5 ?u5 ?v5 ?w5 ?x5 ?y5 ?z5 ?a6 ?b6 ?c6 ?d6 ?e6 ?f6 ?g6 ?h6 ?i6 ?j6 ?k6 ?l6 ?m6 ?n6 ?o6 ?p6 ?q6 ?r6 ?s6 ?t6 ?u6 ?v6 ?w6 ?x6 ?y6 ?z6 ?a7 ?b7 ?c7 ?d7 ?e7 ?f7 ?g7 ?h7 ?i7 ?j7 ?k7 ?l7 ?m7 ?n7 ?o7 ?p7 ?q7 ?r7 ?s7 ?t7 ?u7 ?v7 ?w7 ?x7 ?y7 ?z7 ?a8 ?b8 ?c8 ?d8 ?e8 ?f8 ?g8 ?h8 ?i8 ?j8 ?k8 ?l8 ?m8 ?n8 ?o8 ?p8 ?q8 ?r8 ?s8 ?t8 ?u8 ?v8 ?w8 ?x8 ?y8 ?z8 ?a9 ?b9 ?c9 ?d9 ?e9 ?f9 ?g9 ?h9 ?i9 ?j9 ?k9 ?l9 ?m9 ?n9 ?o9 ?p9 ?q9 ?r9 ?s9 ?t9 ?u9 ?v9 ?w9 ?x9 ?y9 ?z9 'a0 ?a10 ?b10 ?c10 ?d10 ?e10 ?f10 ?g10 ?h10 ?i10 ?j10 ?k10 ?l10 ?m10. ?p7) -> ?n10` exceeded recursion depth limit (250)
-//│ ║  l.1141: 	  let c_i9_ = c_pred_ c_i10_ in
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
+//│ ║  l.1162: 	  let c_i9_ = c_pred_ c_i10_ in
 //│ ║          	              ^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ this_should_be_98_: string
 //│                   = '98'
-//│ constrain calls  : 6765
+//│ constrain calls  : 2942
 //│ annoying  calls  : 0
-//│ subtyping calls  : 51825
+//│ subtyping calls  : 13012
 
 // * Decomposing...
 
 :stats
 c_i5_ = c_add_ c_i3_ c_i2_
-//│ c_i5_: (('a | 'b) -> 'a & 'c -> 'b & 'd -> 'c & 'e -> 'd) -> 'e -> 'a
+//│ c_i5_: ('b -> 'c & 'c -> 'd & 'd -> 'e & ('a | 'e) -> 'a) -> 'b -> 'a
 //│      = [Function (anonymous)]
-//│ constrain calls  : 175
+//│ constrain calls  : 143
 //│ annoying  calls  : 0
-//│ subtyping calls  : 662
+//│ subtyping calls  : 639
 
 :stats
 :e
 c_i10_ = c_mul_ c_i5_ c_i2_
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.1171: 	c_i10_ = c_mul_ c_i5_ c_i2_
+//│ ║  l.1192: 	c_i10_ = c_mul_ c_i5_ c_i2_
 //│ ║          	         ^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
-//│ c_i10_: ('a -> ('b & 'c & 'd & 'e & 'f & 'g & 'h & 'i) & 'j -> 'a & 'k -> 'j & 'l -> 'k & 'm -> 'l & 'n -> 'm & 'o -> 'n & 'p -> 'o & 'q -> 'p & 'r -> 'q & (forall 's. ('a -> ('b & 'c & 'd & 'e & 'f & 'g & 'h & 'i) & 'j -> 'a & 'k -> 'j & 'l -> 'k & 'm -> 'l & 'n -> 'm & 'o -> 'n & 'p -> 'o & 's -> 'p & 't & 'u & 'v & 'w & 'x & 'y) -> 's -> 'h | 'z) -> ('a1 & 'b1) & (forall 'c1. ('a -> ('b & 'c & 'd & 'e & 'f & 'g & 'h & 'i) & 'j -> 'a & 'k -> 'j & 'l -> 'k & 'm -> 'l & 'n -> 'm & 'o -> 'n & 'c1 -> 'o & 'u & 'v & 'w & 'x & 'y) -> 'c1 -> 'g | 'd1) -> ('e1 -> 'q -> 'i & 'z) & (forall 'f1. ('a -> ('b & 'c & 'd & 'e & 'f & 'g & 'h & 'i) & 'j -> 'a & 'k -> 'j & 'l -> 'k & 'm -> 'l & 'n -> 'm & 'f1 -> 'n & 'v & 'w & 'x & 'y) -> 'f1 -> 'f | 'g1) -> ('t -> 'p -> ('h & 'i) & 'd1) & (forall 'h1. ('a -> ('b & 'c & 'd & 'e & 'f & 'g & 'h & 'i) & 'j -> 'a & 'k -> 'j & 'l -> 'k & 'm -> 'l & 'h1 -> 'm & 'w & 'x & 'y) -> 'h1 -> 'e | 'i1) -> ('u -> 'o -> ('g & 'h & 'i) & 'g1) & (forall 'j1. ('a -> ('b & 'c & 'd & 'e & 'f & 'g & 'h & 'i) & 'j -> 'a & 'k -> 'j & 'l -> 'k & 'j1 -> 'l & 'x & 'y) -> 'j1 -> 'd | 'k1) -> ('v -> 'n -> ('f & 'g & 'h & 'i) & 'i1) & (forall 'l1. ('a -> ('b & 'c & 'd & 'e & 'f & 'g & 'h & 'i) & 'j -> 'a & 'k -> 'j & 'l1 -> 'k & 'y) -> 'l1 -> 'c | 'm1) -> ('w -> 'm -> ('e & 'f & 'g & 'h & 'i) & 'k1) & (forall 'n1. ('a -> ('b & 'c & 'd & 'e & 'f & 'g & 'h & 'i) & 'j -> 'a & 'n1 -> 'j) -> 'n1 -> 'b | 'o1) -> ('x -> 'l -> ('d & 'e & 'f & 'g & 'h & 'i) & 'm1) & 'p1 -> ('y -> 'k -> ('c & 'd & 'e & 'f & 'g & 'h & 'i) & 'o1) & 'e1 & 't & 'u & 'v & 'w & 'x & 'y) -> ('r & 'p1) -> (forall 'r. ('a -> ('b & 'c & 'd & 'e & 'f & 'g & 'h & 'i) & 'j -> 'a & 'k -> 'j & 'l -> 'k & 'm -> 'l & 'n -> 'm & 'o -> 'n & 'p -> 'o & 'q -> 'p & 'r -> 'q & 'e1 & 't & 'u & 'v & 'w & 'x & 'y) -> 'r -> 'i | 'i | 'a1) | error
+//│ c_i10_: ((forall 'a 'b 'c. ('a -> 'b & 'b -> 'c) -> 'a -> 'c | 'd) -> ('e -> 'f -> ('g & 'h & 'i & 'j & 'k & 'l & 'm) & 'n) & (('o -> 'p & 'p -> 'q & 'q -> ('g & 'h & 'i & 'j & 'k & 'l & 'm & 'r) & 's) -> 'o -> 'r | 'n) -> ('t -> 'u -> ('h & 'i & 'j & 'k & 'l & 'm) & 'v) & (('w -> ('f & 'o) & 'o -> 'p & 'p -> 'q & 'q -> ('g & 'h & 'i & 'j & 'k & 'l & 'm & 'r) & 'e & 's) -> 'w -> 'g | 'v) -> ('x -> 'y -> ('i & 'j & 'k & 'l & 'm) & 'z) & (('a1 -> ('u & 'w) & 'w -> ('f & 'o) & 'o -> 'p & 'p -> 'q & 'q -> ('g & 'h & 'i & 'j & 'k & 'l & 'm & 'r) & 'e & 's & 't) -> 'a1 -> 'h | 'z) -> ('b1 -> 'c1 -> ('j & 'k & 'l & 'm) & 'd1) & (('e1 -> ('y & 'a1) & 'a1 -> ('u & 'w) & 'w -> ('f & 'o) & 'o -> 'p & 'p -> 'q & 'q -> ('g & 'h & 'i & 'j & 'k & 'l & 'm & 'r) & 'e & 's & 't & 'x) -> 'e1 -> 'i | 'd1) -> ('f1 -> 'g1 -> ('k & 'l & 'm) & 'h1) & (('i1 -> ('c1 & 'e1) & 'e1 -> ('y & 'a1) & 'a1 -> ('u & 'w) & 'w -> ('f & 'o) & 'o -> 'p & 'p -> 'q & 'q -> ('g & 'h & 'i & 'j & 'k & 'l & 'm & 'r) & 'e & 's & 't & 'x & 'b1) -> 'i1 -> 'j | 'h1) -> ('j1 -> 'k1 -> ('l & 'm) & 'l1) & (('m1 -> ('g1 & 'i1) & 'i1 -> ('c1 & 'e1) & 'e1 -> ('y & 'a1) & 'a1 -> ('u & 'w) & 'w -> ('f & 'o) & 'o -> 'p & 'p -> 'q & 'q -> ('g & 'h & 'i & 'j & 'k & 'l & 'm & 'r) & 'e & 's & 't & 'x & 'b1 & 'f1) -> 'm1 -> 'k | 'l1) -> ('n1 -> 'o1 -> 'm & 'p1) & (('q1 -> ('k1 & 'm1) & 'm1 -> ('g1 & 'i1) & 'i1 -> ('c1 & 'e1) & 'e1 -> ('y & 'a1) & 'a1 -> ('u & 'w) & 'w -> ('f & 'o) & 'o -> 'p & 'p -> 'q & 'q -> ('g & 'h & 'i & 'j & 'k & 'l & 'm & 'r) & 'e & 's & 't & 'x & 'b1 & 'f1 & 'j1) -> 'q1 -> 'l | 'p1) -> ('r1 & 's1)) -> ('s -> 'p -> ('g & 'h & 'i & 'j & 'k & 'l & 'm & 'r) & 'd) -> (('t1 -> ('o1 & 'q1) & 'q1 -> ('k1 & 'm1) & 'm1 -> ('g1 & 'i1) & 'i1 -> ('c1 & 'e1) & 'e1 -> ('y & 'a1) & 'a1 -> ('u & 'w) & 'w -> ('f & 'o) & 'o -> 'p & 'p -> 'q & 'q -> ('g & 'h & 'i & 'j & 'k & 'l & 'm & 'r) & 'e & 's & 't & 'x & 'b1 & 'f1 & 'j1 & 'n1) -> 't1 -> 'm | 'r1) | error | 's1
 //│   where
-//│     'b1 <: (forall 'q1 'r1 's1. ('q1 -> 'r1 -> 's1) -> (forall 't1. ('t1 -> 'r1 & 'q1) -> 't1 -> 's1)) -> (forall 'u1 'v1 'w1. ('u1 -> 'v1 & 'w1 -> 'u1) -> 'w1 -> 'v1) -> 'b1
+//│     's1 <: (forall 'u1 'v1 'w1 'x1. ('v1 -> 'w1 -> 'x1) -> ('u1 -> 'w1 & 'v1) -> 'u1 -> 'x1) -> (forall 'y1 'z1 'a2. ('y1 -> 'z1 & 'z1 -> 'a2) -> 'y1 -> 'a2) -> 's1
 //│       = [Function (anonymous)]
-//│ constrain calls  : 1756
+//│ constrain calls  : 1274
 //│ annoying  calls  : 0
-//│ subtyping calls  : 15854
+//│ subtyping calls  : 35196
 :stats
 // * This one works:
 c_i10_ = c_mul c_i5_ c_i2_
-//│ c_i10_: ('a -> ('a & 'a0)) -> 'a -> 'a0 | Fint
+//│ c_i10_: (('a | 'b) -> 'a & ('a0 | 'b) -> 'a0) -> 'b -> ('a | 'a0) | Fint
 //│       = [Function (anonymous)]
-//│ constrain calls  : 706
+//│ constrain calls  : 902
 //│ annoying  calls  : 0
-//│ subtyping calls  : 5071
+//│ subtyping calls  : 6616
 
 // * Ouchie (cf stats)
 :stats
 c_i9_ = c_pred_ c_i10_
-//│ c_i9_: ('a -> 'b & 'a -> 'c & 'a -> 'd & 'c -> ('b & 'c) & 'd -> 'd) -> (forall 'e. ('a & 'e) -> ('e | 'd | 'b))
+//│ c_i9_: ('a -> ('a & 'b) & 'c -> 'b & 'c -> 'c & 'd -> ('d & 'b) & 'e -> 'b & 'e -> 'e) -> ('a & 'b & 'c & 'd & 'e) -> 'b
 //│      = [Function (anonymous)]
-//│ constrain calls  : 1903
+//│ constrain calls  : 3909
 //│ annoying  calls  : 0
-//│ subtyping calls  : 15736
+//│ subtyping calls  : 31949
 
 :stats
 :e
 c_99_ = c_add_ (c_mul_ c_i9_ c_i10_) c_i9_
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.1203: 	c_99_ = c_add_ (c_mul_ c_i9_ c_i10_) c_i9_
+//│ ║  l.1224: 	c_99_ = c_add_ (c_mul_ c_i9_ c_i10_) c_i9_
 //│ ║          	                ^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
-//│ c_99_: ('a -> anything & 'b -> 'c & 'a -> 'b & 'a -> 'd & 'c -> 'c & 'd -> 'd) -> 'a -> error | error
+//│ c_99_: ('a -> 'a & 'b -> 'b & 'c -> 'c & 'd -> 'd) -> ('a & 'b & 'c & 'd) -> error | error
 //│      = [Function (anonymous)]
-//│ constrain calls  : 3427
+//│ constrain calls  : 4612
 //│ annoying  calls  : 0
-//│ subtyping calls  : 27283
+//│ subtyping calls  : 39998
 :stats
-// * Works again:
+// * Note: works with `c_mul` AND recursive types...
+:RecursiveTypes
 c_99_ = c_add_ (c_mul c_i9_ c_i10_) c_i9_
-//│ c_99_: ('a -> ('a & 'b) & 'a0 -> ('b & 'a0) & 'c -> ('b & 'a & 'a0) & 'd -> ('b & 'a1 & 'a2 & 'e) & 'a1 -> ('a1 & 'b) & 'a2 -> ('b & 'a2) & 'c -> 'd & 'a3 -> ('a3 & 'b) & 'a4 -> ('b & 'a4) & 'c -> ('b & 'a3 & 'a4) & 'c -> 'f & ('a5 | 'c) -> 'a5 & 'e -> ('b & 'a1 & 'a2 & 'e) & 'f -> ('b & 'a3 & 'a4 & 'f)) -> (forall 'g. ('c & 'g) -> ('a5 | 'g | 'b)) | Fint
+//│ c_99_: ('b -> ('b & 'c & 'a & 'a0) & 'a -> ('c & 'a) & 'a0 -> ('c & 'a0) & 'd -> ('e & 'c & 'a1 & 'a2) & 'e -> ('e & 'c & 'a3 & 'a4) & 'a3 -> ('c & 'a3) & 'a4 -> ('c & 'a4) & 'a1 -> ('c & 'a1) & 'a2 -> ('c & 'a2) & 'f -> ('f & 'c & 'a5 & 'a6) & 'a5 -> ('c & 'a5) & 'a6 -> ('c & 'a6) & ('a7 | 'd) -> 'a7 & 'd -> ('g & 'c & 'a8 & 'a9) & 'g -> ('g & 'c & 'a10 & 'a11) & 'a10 -> ('c & 'a10) & 'a11 -> ('c & 'a11) & 'a8 -> ('c & 'a8) & 'a9 -> ('c & 'a9)) -> ('b & 'd & 'f & 'c) -> ('a7 | 'c) | Fint
 //│      = [Function (anonymous)]
-//│ constrain calls  : 2732
+//│ constrain calls  : 3728
 //│ annoying  calls  : 0
-//│ subtyping calls  : 29552
+//│ subtyping calls  : 61435
+:NoRecursiveTypes
 
 // * Ouchie++
 :stats
 :Fuel 20000
 c_98_ = c_pred_ c_99_
-//│ c_98_: ('a -> 'b & ('a | 'c) -> 'd & 'a -> 'c & 'a -> 'e & ('a | 'f | 'g) -> 'd & 'a -> 'h & 'a -> 'f & 'i -> ('g & 'j) & 'a -> 'i & 'k -> ('f & 'i) & 'a -> 'k & 'a -> 'l & 'a -> 'j & 'a -> 'g & 'a -> 'd & 'a -> 'm & 'a -> 'n & 'o -> ('m & 'd) & 'a -> 'o & 'p -> ('d & 'o) & 'a -> 'p & 'a -> 'q & 'a -> 'r & 'a -> 's & 'b -> ('b & 'd) & 'c -> 'd & 'e -> ('c & 'e) & ('f | 'g) -> 'd & 'h -> ('f & 'h & 'i) & 'g -> 'd & 'j -> ('g & 'j) & 'l -> ('k & 'l) & 'm -> ('m & 'd) & 'n -> ('d & 'o & 'n) & 'q -> ('p & 'q) & 'r -> ('d & 'r) & 's -> 's) -> (forall 't. ('a & 't) -> ('t | 's | 'd))
+//│ c_98_: ('a -> ('a & 'b) & 'c -> 'a & 'c -> 'c & 'd -> ('a & 'd) & 'e -> 'b & 'f -> 'e & 'f -> 'f & 'g -> ('e & 'g) & 'h -> ('e & 'h) & 'i -> 'h & 'i -> 'i & 'j -> ('h & 'j) & 'k -> ('k & 'b) & 'l -> 'k & 'l -> 'l & 'm -> ('k & 'm) & 'n -> ('n & 'b) & 'o -> 'b & 'o -> 'o & 'p -> 'b & 'q -> 'p & 'q -> 'q & 'r -> ('p & 'r) & 's -> ('p & 's) & 't -> 's & 't -> 't & 'u -> ('s & 'u)) -> ('a & 'c & 'd & 'b & 'e & 'f & 'g & 'h & 'i & 'j & 'k & 'l & 'm & 'n & 'o & 'p & 'q & 'r & 's & 't & 'u) -> 'b
 //│      = [Function (anonymous)]
-//│ constrain calls  : 13601
+//│ constrain calls  : 18323
 //│ annoying  calls  : 0
-//│ subtyping calls  : 132287
+//│ subtyping calls  : 178585
 :ResetFuel
 
 
@@ -1286,11 +1309,12 @@ print_fact2_ 6
 
 
 
-// * === With Constrained Types ===
 
-// :DontDistributeForalls
+// * === Variation: With Constrained Types ===
+
+
+:DontDistributeForalls
 :ConstrainedTypes
-:NoRecursiveTypes
 
 
 def c_succ (n: Fint) = fun f -> fun x -> n f (f x)
@@ -1301,15 +1325,15 @@ def c_succ_ n = fun f -> fun x -> n f (f x)
 //│       = [Function: c_succ1]
 //│ c_succ_: 'a -> (forall 'b. 'b -> (forall 'c 'd 'e. ('e -> 'd
 //│   where
-//│     'a <: 'b -> 'c -> 'd
-//│     'b <: 'e -> 'c)))
+//│     'b <: 'e -> 'c
+//│     'a <: 'b -> 'c -> 'd)))
 //│        = [Function: c_succ_1]
 
 def c_add_ n m = m c_succ_ n
 //│ c_add_: 'a -> (forall 'b. ((forall 'c. 'c -> (forall 'd. 'd -> (forall 'e 'f 'g. ('g -> 'f
 //│   where
-//│     'd <: 'g -> 'e
-//│     'c <: 'd -> 'e -> 'f)))) -> 'a -> 'b) -> 'b)
+//│     'c <: 'd -> 'e -> 'f
+//│     'd <: 'g -> 'e)))) -> 'a -> 'b) -> 'b)
 //│       = [Function: c_add_1]
 
 // let c_i1 = fun f x -> f x
@@ -1328,10 +1352,10 @@ def c_i2_ = c_succ_ c_i1
 //│     = [Function: c_i22]
 //│ c_i2_: 'a -> (forall 'b 'c 'd. ('d -> 'c
 //│   where
+//│     'a <: 'd -> 'b
 //│     forall 'e. 'e -> (forall 'f 'g. ('f -> 'g
 //│   where
-//│     'e <: 'f -> 'g)) <: 'a -> 'b -> 'c
-//│     'a <: 'd -> 'b))
+//│     'e <: 'f -> 'g)) <: 'a -> 'b -> 'c))
 //│      = [Function: c_i2_1]
 
 // let c_i3 = c_succ c_i2
@@ -1343,27 +1367,42 @@ def c_i3_ = c_succ_ c_i2
 //│     = [Function: c_i31]
 //│ c_i3_: 'b -> (forall 'c 'd 'e. ('e -> 'd
 //│   where
-//│     'b <: 'e -> 'c
-//│     forall 'f. 'f -> (forall 'g 'a. ('g -> 'a
+//│     forall 'f. 'f -> (forall 'a 'g. ('g -> 'a
 //│   where
-//│     'f <: 'a -> 'a & 'g -> 'a)) <: 'b -> 'c -> 'd))
+//│     'f <: 'a -> 'a & 'g -> 'a)) <: 'b -> 'c -> 'd
+//│     'b <: 'e -> 'c))
 //│      = [Function: c_i3_1]
 
-
-// * This annot-mixed expression used to cause problems with the old recursive definition hacks
+:stats
 c_i5_ = c_add_ c_i3_ c_i2
 //│ c_i5_: 'b
 //│   where
-//│     'b :> forall 'c. 'c -> (forall 'd 'e 'f 'g. ('e -> 'd
+//│     'b :> forall 'c. 'c -> (forall 'd 'e 'f 'g. ('g -> 'f
 //│   where
-//│     'c <: 'e -> 'g & 'e -> 'f
-//│     'b <: 'c -> 'g -> 'd
+//│     'c <: 'g -> 'e & 'g -> 'd
 //│     forall 'h. 'h -> (forall 'i 'j 'k. ('k -> 'j
 //│   where
-//│     forall 'l. 'l -> (forall 'a 'm. ('m -> 'a
+//│     'h <: 'k -> 'i
+//│     forall 'l. 'l -> (forall 'm 'a. ('m -> 'a
 //│   where
-//│     'l <: 'a -> 'a & 'm -> 'a)) <: 'h -> 'i -> 'j
-//│     'h <: 'k -> 'i)) <: 'c -> 'f -> 'd))
+//│     'l <: 'a -> 'a & 'm -> 'a)) <: 'h -> 'i -> 'j)) <: 'c -> 'd -> 'f
+//│     'b <: 'c -> 'e -> 'f))
 //│      = [Function (anonymous)]
+//│ constrain calls  : 140
+//│ annoying  calls  : 0
+//│ subtyping calls  : 573
+
+:stats
+:e
+c_i10_ = c_mul_ c_i5_ c_i2_
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?b ?c ?d ?e ?f. ?e -> ?a -> ?c <: (forall ?g ?h ?i. ?h) -> ?j` exceeded recursion depth limit (250)
+//│ ║  l.1397: 	c_i10_ = c_mul_ c_i5_ c_i2_
+//│ ║          	         ^^^^^^^^^^^^
+//│ ╙── Note: use flag `:ex` to see internal error info.
+//│ c_i10_: error
+//│       = [Function (anonymous)]
+//│ constrain calls  : 2761
+//│ annoying  calls  : 0
+//│ subtyping calls  : 26953
 
 

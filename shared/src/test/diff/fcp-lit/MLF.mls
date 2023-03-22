@@ -77,7 +77,7 @@ choose id succ
 choose id auto
 //│ res: (forall 'a. 'a -> 'a & 'b) -> ('a0 -> 'a0 | 'b)
 
-// nope, along with anything with it as a subterm
+// Not typeable in MLF, along with anything with it as a subterm
 // i.e. unannotated auto
 omega = fun x -> x x
 //│ omega: ('a -> 'b & 'a) -> 'b
@@ -228,7 +228,7 @@ fun (x: forall 'b 'a. 'a -> 'b -> 'a) -> x
 // ------------ Sec 2 ------------
 
 // * FreezeML B1
-// nope
+// Not typeable in MLF
 poly = fun f -> (f 1, f true)
 //│ poly: (1 -> 'a & true -> 'b) -> ('a, 'b,)
 
