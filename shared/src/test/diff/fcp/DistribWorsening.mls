@@ -1,0 +1,53 @@
+:NoRecursiveTypes
+:DistributeForalls
+:NoJS
+
+
+// * Test that exposes worseining of type inference due to eager distributivity
+// * (compared to no distributivity at all)
+
+
+
+type BTB = forall 'b. 'b -> 'b
+//│ Defined type alias BTB
+
+
+// * Notice the extruded skolem in `??b -> ??b0` whichb results from distributing 'b out of BTB
+def test f =
+  let a = f id in
+  a : nothing -> BTB
+//│ test: ((forall 'a. 'a -> 'a) -> nothing -> ??b -> ??b0) -> nothing -> BTB
+
+:e
+test (fun g -> fun n -> id)
+//│ ╔══[ERROR] Type error in application
+//│ ║  l.22: 	test (fun g -> fun n -> id)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type variable `'b` leaks out of its scope
+//│ ║  l.11: 	type BTB = forall 'b. 'b -> 'b
+//│ ║        	                      ^^
+//│ ╟── back into type variable `'b`
+//│ ║  l.11: 	type BTB = forall 'b. 'b -> 'b
+//│ ║        	                            ^^
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this application:
+//│ ║  l.17: 	  let a = f id in
+//│ ║        	          ^^^^
+//│ ╟── • this reference:
+//│ ║  l.18: 	  a : nothing -> BTB
+//│ ╙──      	  ^
+//│ res: nothing -> BTB | error
+
+
+:DontDistributeForalls
+
+// * There is no longer an extruded skolem
+def test f =
+  let a = f id in
+  a : nothing -> BTB
+//│ test: ((forall 'a. 'a -> 'a) -> nothing -> BTB) -> nothing -> BTB
+
+test (fun g -> fun n -> id)
+//│ res: nothing -> BTB
+
+

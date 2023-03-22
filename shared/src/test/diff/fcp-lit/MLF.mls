@@ -1,6 +1,5 @@
-:NoJS
-
 :NoRecursiveTypes
+:NoJS
 
 
 // ------------ Dummy classes to represent the types in the examples ------------
@@ -103,21 +102,21 @@ app auto id
 
 // ------------ Sec 5.2 ------------
 
-// Error in the paper (confirmed by Rémy via email).
+// * Mistake in the paper (confirmed by Rémy via email).
 :e
 let f = choose id in (f auto) (f succ)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.108: 	let f = choose id in (f auto) (f succ)
+//│ ║  l.107: 	let f = choose id in (f auto) (f succ)
 //│ ║         	                     ^^^^^^^^^^^^^^^^^
 //│ ╟── type `'a` is not an instance of type `int`
-//│ ║  l.29: 	def auto (x: forall 'a. 'a -> 'a) = x x
+//│ ║  l.28: 	def auto (x: forall 'a. 'a -> 'a) = x x
 //│ ║        	                        ^^
 //│ ╟── Note: quantified type variable 'a is defined at:
-//│ ║  l.29: 	def auto (x: forall 'a. 'a -> 'a) = x x
+//│ ║  l.28: 	def auto (x: forall 'a. 'a -> 'a) = x x
 //│ ╙──      	                    ^^
 //│ res: int -> int | error
 
-// Reproduced with an unnanotated auto:
+// * Reproduced with an unnanotated auto:
 
 def auto2 x = x x
 //│ auto2: ('a -> 'b & 'a) -> 'b
@@ -125,20 +124,20 @@ def auto2 x = x x
 choose id auto2
 //│ res: ('a -> 'b & 'a) -> ('b | 'a)
 
-:e // This is a legit error
+:e // * This is a legit error
 res (choose id succ)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.129: 	res (choose id succ)
+//│ ║  l.128: 	res (choose id succ)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── reference of type `int -> int` is not an instance of type `int`
-//│ ║  l.129: 	res (choose id succ)
+//│ ║  l.128: 	res (choose id succ)
 //│ ║         	               ^^^^
 //│ ╟── but it flows into application with expected type `int`
-//│ ║  l.129: 	res (choose id succ)
+//│ ║  l.128: 	res (choose id succ)
 //│ ╙──       	     ^^^^^^^^^^^^^^
 //│ res: int -> int | error | int
 
-// Didier Le Botlan suggested this fix by email:
+// * Didier Le Botlan suggested this fix by email:
 
 let f = choose id in (f auto, f succ)
 //│ res: (forall 'b 'a. (forall 'a0. 'a0 -> 'a0 & 'b) -> ('a -> 'a | 'b), forall 'b. (int & 'b) -> (int | 'b),)
@@ -163,7 +162,7 @@ K x y = x
 (fun y -> let tmp = y I in y K) (fun x -> x x)
 //│ res: anything -> 'a -> anything -> 'a
 
-// Note: reduces to
+// * Note: reduces to
 let tmp = (fun x -> x x) I in (fun x -> x x) K
 //│ res: anything -> 'a -> anything -> 'a
 
@@ -185,13 +184,13 @@ let tmp = I I in K K
 
 // ------------ Sec 2.3.1 ------------
 
-// i.e. id auto (FreezeML A5)
+// * i.e. id auto (FreezeML A5)
 (fun z -> z) omegad
 (fun z -> z) omega
 //│ res: (forall 'a. 'a -> 'a) -> 'a0 -> 'a0
 //│ res: ('a -> 'b & 'a) -> 'b
 
-// i.e. auto id (FreezeML F5)
+// * i.e. auto id (FreezeML F5)
 (fun x -> x x) id
 //│ res: 'a -> 'a
 
@@ -228,12 +227,12 @@ fun (x: forall 'b 'a. 'a -> 'b -> 'a) -> x
 
 // ------------ Sec 2 ------------
 
-// FreezeML B1
+// * FreezeML B1
 // nope
 poly = fun f -> (f 1, f true)
 //│ poly: (1 -> 'a & true -> 'b) -> ('a, 'b,)
 
-// FreezeML B2
+// * FreezeML B2
 polyL = fun xs -> poly (head xs)
 //│ polyL: List[1 -> 'a & true -> 'b] -> ('a, 'b,)
 
@@ -242,15 +241,15 @@ let ids = single id in (polyL ids, append ids (single inc))
 
 // ------------ Sec 5 ------------
 
-// FreezeML C5
+// * FreezeML C5
 ids = single id
 //│ ids: List[forall 'a. 'a -> 'a]
 
-// Let-bound version of FreezeML A3
+// * Let-bound version of FreezeML A3
 let f = choose nil in f ids
 //│ res: List[forall 'a. 'a -> 'a]
 
-// FreezeML A3
+// * FreezeML A3
 choose nil ids
 //│ res: List[forall 'a. 'a -> 'a]
 
@@ -263,12 +262,12 @@ g (fun x -> id)
 let f = fun x -> id in g f
 //│ res: int
 
-// FreezeML D4
+// * FreezeML D4
 app runST argST
 //│ res: int
 
 
-// ============ Variations ported from supertype tests ============
+// ============ Variations ported from old Supertype prototype tests ============
 
 killer_app = (fun x -> x id) auto
 //│ killer_app: 'a -> 'a

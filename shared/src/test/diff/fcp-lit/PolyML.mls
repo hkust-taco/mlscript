@@ -1,8 +1,9 @@
 :NoRecursiveTypes
 
+
 // ============ Sec 1.1 ============
 
-// i.e. auto
+// * i.e. auto
 g = fun (f: forall 'a. 'a -> 'a) -> f f
 g' = fun f -> f f
 //│ g: (forall 'a. 'a -> 'a) -> 'a0 -> 'a0
@@ -10,7 +11,7 @@ g' = fun f -> f f
 //│ g': ('a -> 'b & 'a) -> 'b
 //│   = [Function: g$]
 
-// i.e. auto id (FreezeML F5)
+// * i.e. auto id (FreezeML F5)
 (fun (f: forall 'a. 'a -> 'a) -> f f) (fun x -> x)
 (fun f -> f f) (fun x -> x)
 //│ res: 'a -> 'a
@@ -18,7 +19,7 @@ g' = fun f -> f f
 //│ res: 'a -> 'a
 //│    = [Function (anonymous)]
 
-// i.e. (fun auto -> auto id) auto
+// * i.e. (fun auto -> auto id) auto
 (fun g -> g (fun x -> x)) (fun f -> f f)
 (fun g -> g (fun x -> x)) (fun (f: forall 'a. 'a -> 'a) -> f f)
 //│ res: 'a -> 'a
@@ -43,12 +44,13 @@ let f = fun x -> x in
 //│ res: 'a -> 'a
 //│    = [Function (anonymous)]
 
+
 :NoJS
 
+
 // ============ Sec 4.2 ============
-// using FCP to solve method typing issues,
-// which is overkill since it can be solved with subtyping and two levels of polymorphism...
-// all of the following are typable in the main branch
+// * Using FCP to solve method typing issues,
+// * which is overkill since it can be solved with subtyping and two levels of polymorphism...
 
 // ------------ Dummy classes to represent the types in the examples ------------
 
@@ -69,18 +71,14 @@ def match_list: forall 'a 'b. List['a] -> 'b -> ('a -> List['a] -> 'b) -> 'b
 //│ match_list: List['a] -> 'b -> ('a -> List['a] -> 'b) -> 'b
 
 // ------------ Type signatures for functions used in the examples ------------
-// (I guess)
 
 def mem[a]: a -> List[a] -> bool
 //│ mem: anything -> List[?] -> bool
 
-:RecursiveTypes // needed for this recursive def
 rec def mem x l = match_list l false (fun head -> fun tail -> if eq head x then true else mem x tail)
-//│ anything -> List[?] -> bool
+//│ anything -> List[?] -> (false | true)
 //│   <:  mem:
 //│ anything -> List[?] -> bool
-:NoRecursiveTypes
-
 
 
 
@@ -94,20 +92,21 @@ rec def fl f x l = match_list l x (fun head -> fun tail -> fl f (f x head) tail)
 rec def fl2 f x l = match_list l x (fun head -> fun tail -> fold_left f (f x head) tail)
 //│ fl2: ('a -> 'b -> ('a & 'a0)) -> ('a & 'a0) -> List['b] -> 'a0
 
-:RecursiveTypes // needed for this recursive def
 def fold_left = fl
 //│ ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
 //│   <:  fold_left:
 //│ ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
-:NoRecursiveTypes
 
 def fold_left = fl2
 //│ ('a -> 'b -> ('a & 'a0)) -> ('a & 'a0) -> List['b] -> 'a0
 //│   <:  fold_left:
 //│ ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
 
-// :d
-// rec def fold_left f x l = match_list l x (fun head -> fun tail -> fold_left f (f x head) tail)
+rec def fold_left f x l = match_list l x (fun head -> fun tail -> fold_left f (f x head) tail)
+//│ ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
+//│   <:  fold_left:
+//│ ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
+
 
 // ------------ polymorphic methods ------------
 
@@ -152,3 +151,5 @@ c.Distance cp
 //│ c: Circle
 //│ cp: ColorPoint
 //│ res: Float
+
+

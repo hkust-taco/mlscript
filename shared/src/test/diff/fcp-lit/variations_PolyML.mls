@@ -1,8 +1,9 @@
-:NoJS
 :NoRecursiveTypes
+:NoJS
+
 
 // ============ Sec 4.2 ============
-// alternative: separate `Cons` and `Nil` types with definition of `mem` and `fold_left`
+// * alternative: separate `Cons` and `Nil` types with definition of `mem` and `fold_left`
 
 // ------------ Dummy classes to represent the types in the examples ------------
 
@@ -20,7 +21,6 @@ def Cons head tail = Cons { head; tail }
 //│ Cons: ('head & 'a) -> (List['a] & 'tail) -> (Cons['a] with {head: 'head, tail: 'tail})
 
 // ------------ Type signatures for functions used in the examples ------------
-// (I guess)
 
 rec def mem x l = case l of
   { Nil -> false
@@ -40,7 +40,7 @@ rec def fold_left f x l = case l of
 
 // ------------ polymorphic methods ------------
 
-:RecursiveTypes // needed for these recursive defs uses
+:RecursiveTypes // * Now needed due to the structural typing of Cons and Nil
 
 class Collection[a]: { l: List[a] }
   method Mem x = mem x this.l
@@ -52,7 +52,7 @@ class Collection[a]: { l: List[a] }
 def coll_mem c x = c.Mem x
 //│ coll_mem: Collection[?] -> anything -> bool
 
-// typo in the paper? it was `fun x -> fun y -> ...`
+// * Typo in the paper? it was `fun x -> fun y -> ...`
 def simple_and_double c =
   let l1 = c.Fold (fun y -> fun x -> Cons x y) Nil in
   let l2 = c.Fold (fun y -> fun x -> Cons ((x, x),) y) Nil in
@@ -61,3 +61,5 @@ def simple_and_double c =
 //│   where
 //│     'tail0 :> (Cons[('a, 'a,)] with {tail: 'tail0}) | Nil
 //│     'tail :> (Cons['a] with {tail: 'tail}) | Nil
+
+
