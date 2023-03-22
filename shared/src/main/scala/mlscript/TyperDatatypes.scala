@@ -61,7 +61,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
           freshened, shadows)
       ) //(prov)
     }
-    /** Tries to split a positive polymorphic function type
+    /** Tries to split a polymorphic function type
       * by distributing the quantification of *some* of its type vars into the function result. */
     def splitFunction(implicit ctx: Ctx, raise: Raise, shadows: Shadows): Opt[ST] = {
       def go(ty: ST, traversed: Set[AnyRef], polymLevel: Level): Opt[ST] = ty match {
@@ -102,7 +102,14 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       require(polymLevel <= MaxLevel)
       if (polymLevel === MaxLevel || body.level <= polymLevel) body
       else body.unwrapProvs match { // Q: unwrap other proxies?
-        case PolymorphicType(lvl, bod) => PolymorphicType(polymLevel min lvl, bod)
+        case PolymorphicType(lvl, bod) => PolymorphicType.mk(polymLevel min lvl, bod)
+        
+        // * Not very helpful (also seems to result in breaking some recursive types... not sure why):
+        // case tv @ AssignedVariable(ty) =>
+        //   PolymorphicType(polymLevel, ty)
+        // case tv: TV if tv.level > polymLevel && tv.assignedTo.isEmpty =>
+        //   PolymorphicType(polymLevel, tv.lowerBounds.foldLeft(BotType: ST)(_ | _))
+        
         case _ => PolymorphicType(polymLevel, body)
       }
     }
