@@ -74,35 +74,35 @@ final case class Conjunction(clauses: Ls[Clause], trailingBindings: Ls[LetBindin
   def +(lastBinding: LetBinding): Conjunction =
     Conjunction(clauses, trailingBindings :+ lastBinding)
 
-  def separate(expectedScrutinee: Scrutinee): Opt[(MatchClause, Conjunction)] = {
+  def findClauseMatches(expectedScrutinee: Scrutinee): Opt[(MatchClause, Conjunction)] = {
     @tailrec
-    def rec(past: Ls[Clause], upcoming: Ls[Clause]): Opt[(Ls[Clause], MatchClause, Ls[Clause])] = {
+    def rec(past: Ls[Clause], upcoming: Ls[Clause], firstAny: Opt[(Ls[Clause], MatchAny, Ls[Clause])]): Opt[(Ls[Clause], MatchClause, Ls[Clause])] = {
       upcoming match {
-        case Nil => N
+        case Nil => firstAny
         case (head @ MatchLiteral(scrutinee, _)) :: tail =>
           if (scrutinee === expectedScrutinee) {
             S((past, head, tail))
           } else {
-            rec(past :+ head, tail)
+            rec(past :+ head, tail, firstAny)
           }
         case (head @ MatchClass(scrutinee, _, _)) :: tail =>
           if (scrutinee === expectedScrutinee) {
             S((past, head, tail))
           } else {
-            rec(past :+ head, tail)
+            rec(past :+ head, tail, firstAny)
           }
         case (head @ MatchAny(scrutinee)) :: tail =>
           if (scrutinee === expectedScrutinee) {
-            rec(past, tail) // Hmmmm, does it always work?
+            rec(past, tail, firstAny.orElse(S((past, head, tail))))
           } else {
-            rec(past :+ head, tail)
+            rec(past :+ head, tail, firstAny)
           }
         case head :: tail =>
-          rec(past :+ head, tail)
+          rec(past :+ head, tail, firstAny)
       }
     }
 
-    rec(Nil, clauses).map { case (past, wanted, remaining) =>
+    rec(Nil, clauses, None).map { case (past, wanted, remaining) =>
       (wanted, Conjunction(past ::: remaining, trailingBindings))
     }
   }

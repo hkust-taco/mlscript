@@ -31,6 +31,9 @@ sealed abstract class MutCaseOf extends WithBindings {
 
   def isComplete: Bool
 
+  def isExhaustive(implicit getScrutineeKey: Scrutinee => Str \/ Int,
+                            exhaustivenessMap: ExhaustivenessMap): Bool
+
   def tryMerge
       (branch: Conjunction -> Term)
       (implicit raise: Diagnostic => Unit,
@@ -115,6 +118,9 @@ object MutCaseOf {
 
   sealed abstract class MutCase {
     var consequent: MutCaseOf
+
+    @inline
+    def isComplete: Bool = consequent.isComplete
 
     def duplicate(): MutCase
 
@@ -220,6 +226,10 @@ object MutCaseOf {
 
     def isComplete: Bool = whenTrue.isComplete && whenFalse.isComplete
 
+    def isExhaustive(implicit getScrutineeKey: Scrutinee => Str \/ Int,
+                              exhaustivenessMap: ExhaustivenessMap): Bool =
+      whenTrue.isExhaustive && whenFalse.isExhaustive
+
     def merge(branch: Conjunction -> Term)
         (implicit raise: Diagnostic => Unit,
                   getScrutineeKey: Scrutinee => Str \/ Int,
@@ -292,6 +302,26 @@ object MutCaseOf {
     def isComplete: Bool =
       branches.forall(_.consequent.isComplete) && wildcard.forall(_.isComplete)
 
+    def isExhaustive(implicit getScrutineeKey: Scrutinee => Str \/ Int,
+                              exhaustivenessMap: ExhaustivenessMap): Bool = {
+      exhaustivenessMap.get(getScrutineeKey(scrutinee)) match {
+        case None => ??? // TODO: Raise.
+        case Some(patternLocationsMap) =>
+          // Find patterns that are not included in `branches`.
+          patternLocationsMap.keysIterator.filterNot {
+            case L(tupleArity) => branches.iterator.exists {
+              case MutCase.Literal(_, _) => false
+              case MutCase.Constructor(Var(className) -> _, _) =>
+                className === s"Tuple#$tupleArity"
+            }
+            case R(litOrCls) => branches.iterator.exists {
+              case MutCase.Literal(lit, _) => litOrCls === lit
+              case MutCase.Constructor(cls -> _, _) => litOrCls === cls
+            }
+          }.isEmpty
+      }
+    }
+
     def merge(originalBranch: Conjunction -> Term)
         (implicit raise: Diagnostic => Unit,
                   getScrutineeKey: Scrutinee => Str \/ Int,
@@ -307,7 +337,7 @@ object MutCaseOf {
         case _ => true
       }) -> originalBranch._2
       // Promote the match against the same scrutinee.
-      branch._1.separate(scrutinee) match {
+      branch._1.findClauseMatches(scrutinee) match {
         // No conditions against the same scrutinee.
         case N =>
           branch match {
@@ -354,6 +384,8 @@ object MutCaseOf {
           if (inclusiveBranches.isEmpty) {
             // No such pattern. We should create a new one.
             wildcard match {
+              // If the wildcard branch is incomplete, there might be some
+              // preemptive branches in front of this branch.
               case Some(default) if !default.isComplete =>
                 val subTree = default.duplicate()
                 subTree.fill(buildFirst(remainingConditions, branch._2))
@@ -403,6 +435,12 @@ object MutCaseOf {
               matchCase.consequent.merge(remainingConditions -> branch._2)
           }
         case S((head @ MatchAny(_)) -> remainingConditions) =>
+          // Existing branches may be complete but not exhaustive.
+          // Find inexhaustiveness branches and try to merge.
+          branches.iterator.filterNot(_.consequent.isExhaustive).foreach { 
+            _.consequent.tryMerge(remainingConditions -> branch._2)
+          }
+          // Then, let's consider the wildcard branch.
           wildcard match {
             // No wildcard. We will create a new one.
             case N => wildcard = S(buildFirst(remainingConditions, branch._2))
@@ -438,6 +476,9 @@ object MutCaseOf {
     override def duplicate(): MutCaseOf = Consequent(term).withBindings(getBindings)
 
     def isComplete: Bool = true
+
+    def isExhaustive(implicit getScrutineeKey: Scrutinee => Str \/ Int,
+                              exhaustivenessMap: ExhaustivenessMap): Bool = true
 
     def merge(branch: Conjunction -> Term)
         (implicit raise: Diagnostic => Unit,
@@ -475,6 +516,9 @@ object MutCaseOf {
     override def fill(subTree: MutCaseOf): Unit = ()
 
     def isComplete: Bool = false
+
+    def isExhaustive(implicit getScrutineeKey: Scrutinee => Str \/ Int,
+                              exhaustivenessMap: ExhaustivenessMap): Bool = false
 
     def merge(branch: Conjunction -> Term)
       (implicit raise: Diagnostic => Unit,

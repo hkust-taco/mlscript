@@ -216,3 +216,22 @@ w5(Delta())
 //│     = 'gamma'
 //│ res
 //│     = 'delta'
+
+fun w6(x, y) =
+  if x is
+    _ and y is
+      Some(z) then z
+      None then 0
+    else x
+//│ fun w6: forall 'value. ('value, Some['value] | ~Some[anything],) -> (0 | 'value)
+
+w6("42", Some(42))
+w6("42", None)
+w6("42", "42")
+//│ "42" | 0
+//│ res
+//│     = 42
+//│ res
+//│     = 0
+//│ res
+//│     = '42'
