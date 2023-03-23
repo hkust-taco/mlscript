@@ -9,6 +9,15 @@ import scala.annotation.tailrec
   * A `Conjunction` represents a list of `Clause`s.
   */
 final case class Conjunction(clauses: Ls[Clause], trailingBindings: Ls[LetBinding]) {
+  override def toString(): String =
+    clauses.mkString("", " and ", "") + {
+      (if (trailingBindings.isEmpty) "" else " ") +
+        (trailingBindings match {
+          case Nil => ""
+          case bindings => bindings.map(_.name.name).mkString("(", ", ", ")")
+        })
+    }
+
   /**
     * Concatenate two `Conjunction` together.
     * 
@@ -82,12 +91,12 @@ final case class Conjunction(clauses: Ls[Clause], trailingBindings: Ls[LetBindin
           } else {
             rec(past :+ head, tail)
           }
-        // case (head @ MatchNot(scrutinee)) :: tail =>
-        //   if (scrutinee === expectedScrutinee) {
-        //     S((past, head, tail))
-        //   } else {
-        //     rec(past :+ head, tail)
-        //   }
+        case (head @ MatchAny(scrutinee)) :: tail =>
+          if (scrutinee === expectedScrutinee) {
+            rec(past, tail) // Hmmmm, does it always work?
+          } else {
+            rec(past :+ head, tail)
+          }
         case head :: tail =>
           rec(past :+ head, tail)
       }

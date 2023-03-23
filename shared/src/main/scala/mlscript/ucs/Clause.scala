@@ -41,9 +41,9 @@ object Clause {
     override def toString(): String = s"«$scrutinee is $literal" + bindingsToString
   }
 
-  // final case class MatchNot(override val scrutinee: Scrutinee)(override val locations: Ls[Loc]) extends MatchClause {
-  //   override def toString(): String = s"otherwise of «$scrutinee»" + bindingsToString
-  // }
+  final case class MatchAny(override val scrutinee: Scrutinee)(override val locations: Ls[Loc]) extends MatchClause {
+    override def toString(): String = s"«$scrutinee is any" + bindingsToString
+  }
 
   final case class MatchClass(
     override val scrutinee: Scrutinee,

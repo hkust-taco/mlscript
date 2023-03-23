@@ -62,15 +62,11 @@ fun f(x, y) =
 if 42 is n then n + 1
 //│ res: int
 
-// FIXME
+:w
 if 42 is n then n + 1 else 0
-//│ ╔══[WARNING] Found a duplicated branch
-//│ ╟── This branch
+//│ ╔══[WARNING] Found a redundant else branch
 //│ ║  l.66: 	if 42 is n then n + 1 else 0
-//│ ║        	                           ^
-//│ ╟── is subsumed by the branch here.
-//│ ║  l.66: 	if 42 is n then n + 1 else 0
-//│ ╙──      	                ^^^^^
+//│ ╙──      	                           ^
 //│ res: int
 
 

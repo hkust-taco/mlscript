@@ -9,7 +9,8 @@ import scala.collection.mutable.{Map => MutMap, Set => MutSet, Buffer}
 import helpers._
 import mlscript.ucs.MutCaseOf.Consequent
 import scala.collection.immutable
-import Desugarer.ExhaustivenessMap
+import Desugarer.{ExhaustivenessMap, SuperClassMap}
+import mlscript.ucs.Clause.MatchAny
 
 sealed abstract class MutCaseOf extends WithBindings {
   def kind: Str = {
@@ -32,14 +33,25 @@ sealed abstract class MutCaseOf extends WithBindings {
 
   def tryMerge
       (branch: Conjunction -> Term)
-      (implicit raise: Diagnostic => Unit, getScrutineeKey: Scrutinee => Str \/ Int, exhaustivenessMap: ExhaustivenessMap): Unit =
-    merge(branch)(_ => (), getScrutineeKey, exhaustivenessMap)
+      (implicit raise: Diagnostic => Unit,
+                getScrutineeKey: Scrutinee => Str \/ Int,
+                exhaustivenessMap: ExhaustivenessMap,
+                superClassMap: SuperClassMap): Unit =
+    merge(branch)(_ => (), getScrutineeKey, exhaustivenessMap, superClassMap)
+
   def merge
     (branch: Conjunction -> Term)
-    (implicit raise: Diagnostic => Unit, getScrutineeKey: Scrutinee => Str \/ Int, exhaustivenessMap: ExhaustivenessMap): Unit
+    (implicit raise: Diagnostic => Unit,
+              getScrutineeKey: Scrutinee => Str \/ Int,
+              exhaustivenessMap: ExhaustivenessMap,
+              superClassMap: SuperClassMap): Unit
+
   def mergeDefault
     (bindings: Ls[LetBinding], default: Term)
-    (implicit raise: Diagnostic => Unit, getScrutineeKey: Scrutinee => Str \/ Int, exhaustivenessMap: ExhaustivenessMap): Int
+    (implicit raise: Diagnostic => Unit,
+              getScrutineeKey: Scrutinee => Str \/ Int,
+              exhaustivenessMap: ExhaustivenessMap,
+              superClassMap: SuperClassMap): Int
 
   // TODO: Make it immutable.
   var locations: Ls[Loc] = Nil
@@ -106,9 +118,14 @@ object MutCaseOf {
 
     def duplicate(): MutCase
 
-    def matches(expected: Var): Bool
-    def matches(expected: Str): Bool
-    def matches(expected: Lit): Bool
+    /**
+      * Check whether this case can cover the expected class or literal.
+      *
+      * @param expected the expected class name or literal
+      * @param superClassMap a map from each class to its super classes
+      * @return whether the given pattern can be covered by this case
+      */
+    def covers(expected: SimpleTerm)(implicit superClassMap: SuperClassMap): Bool
 
     // Note 1
     // ======
@@ -144,12 +161,11 @@ object MutCaseOf {
     ) extends MutCase {
       override def duplicate(): MutCase =
         Literal(literal, consequent.duplicate()).withLocations(locations)
-      override def matches(expected: Var): Bool = literal match {
-        case tof @ Var(n) if n === "true" || n === "false" => expected === tof
-        case _ => false
-      }
-      override def matches(expected: Str): Bool = false
-      override def matches(expected: Lit): Bool = literal === expected
+      override def covers(expected: SimpleTerm)(implicit superClassMap: SuperClassMap): Bool =
+        expected match {
+          case _: Lit | Var("true") | Var("false") => expected === literal
+          case Var(_) => false
+        }
     }
 
     /**
@@ -165,15 +181,25 @@ object MutCaseOf {
       override def duplicate(): MutCase =
         Constructor(patternFields.copy(_2 = patternFields._2.clone()), consequent.duplicate())
           .withLocations(locations)
-      override def matches(expected: Var): Bool = matches(expected.name)
-      override def matches(expected: Str): Bool = patternFields._1.name === expected
-      override def matches(expected: Lit): Bool = false
+      override def covers(expected: SimpleTerm)(implicit superClassMap: SuperClassMap): Bool =
+        expected match {
+          case lit: Lit => false
+          case Var(tof) if tof === "true" || tof === "false" => false
+          case Var(expectedClassName) if expectedClassName === patternFields._1.name => true
+          case Var(expectedClassName) => 
+            (superClassMap.get(expectedClassName) match {
+              case Some(superClasses) => superClasses.contains(patternFields._1.name)
+              case None =>
+                // Should we raise?
+                false
+            })
+        }
       def addFields(fields: Iterable[Str -> Var]): Unit =
         patternFields._2 ++= fields.iterator.filter(!patternFields._2.contains(_))
     }
   }
 
-  import Clause.{MatchLiteral /*, MatchNot */, MatchClass, MatchTuple, BooleanTest, Binding}
+  import Clause.{MatchLiteral, MatchAny, MatchClass, MatchTuple, BooleanTest, Binding}
 
   // A short-hand for pattern matchings with only true and false branches.
   final case class IfThenElse(condition: Term, var whenTrue: MutCaseOf, var whenFalse: MutCaseOf) extends MutCaseOf {
@@ -197,7 +223,8 @@ object MutCaseOf {
     def merge(branch: Conjunction -> Term)
         (implicit raise: Diagnostic => Unit,
                   getScrutineeKey: Scrutinee => Str \/ Int,
-                  exhaustivenessMap: ExhaustivenessMap): Unit =
+                  exhaustivenessMap: ExhaustivenessMap,
+                  superClassMap: SuperClassMap): Unit =
       branch match {
         // The CC is a wildcard. So, we call `mergeDefault`.
         case Conjunction(Nil, trailingBindings) -> term =>
@@ -228,7 +255,8 @@ object MutCaseOf {
     def mergeDefault(bindings: Ls[LetBinding], default: Term)
         (implicit raise: Diagnostic => Unit,
                   getScrutineeKey: Scrutinee => Str \/ Int,
-                  exhaustivenessMap: ExhaustivenessMap): Int = {
+                  exhaustivenessMap: ExhaustivenessMap,
+                  superClassMap: SuperClassMap): Int = {
       whenTrue.mergeDefault(bindings, default) + {
         whenFalse match {
           case Consequent(term) => 0
@@ -267,7 +295,8 @@ object MutCaseOf {
     def merge(originalBranch: Conjunction -> Term)
         (implicit raise: Diagnostic => Unit,
                   getScrutineeKey: Scrutinee => Str \/ Int,
-                  exhaustivenessMap: ExhaustivenessMap): Unit = {
+                  exhaustivenessMap: ExhaustivenessMap,
+                  superClassMap: SuperClassMap): Unit = {
       // Remove let bindings that already has been declared.
       val branch = originalBranch._1.copy(clauses = originalBranch._1.clauses.filter {
         case Binding(name, value, false) if (getBindings.exists {
@@ -285,7 +314,7 @@ object MutCaseOf {
             case Conjunction((head @ MatchTuple(scrutinee2, arity, fields)) :: tail, trailingBindings) -> term
                 if scrutinee2 === scrutinee => // Same scrutinee!
               val tupleClassName = Var(s"Tuple#$arity") // TODO: Find a name known by Typer.
-              branches.find(_.matches(tupleClassName)) match {
+              branches.find(_.covers(tupleClassName)) match {
                 // No such pattern. We should create a new one.
                 case N | S(MutCase.Literal(_, _)) =>
                   val newBranch = buildFirst(Conjunction(tail, trailingBindings), term)
@@ -320,34 +349,48 @@ object MutCaseOf {
           }
         // Found a match condition against the same scrutinee
         case S((head @ MatchClass(_, className, fields)) -> remainingConditions) =>
-          branches.find(_.matches(className)) match {
+          // Find all branches which can cover the `className`.
+          val inclusiveBranches = branches.iterator.filter(_.covers(className))
+          if (inclusiveBranches.isEmpty) {
             // No such pattern. We should create a new one.
-            case N | S(MutCase.Literal(_, _)) =>
-              wildcard match {
-                case S(default) if !default.isComplete =>
-                  val subTree = default.duplicate()
-                  subTree.fill(buildFirst(remainingConditions, branch._2))
-                  subTree.addBindings(head.bindings)
-                  branches += MutCase.Constructor(className -> Buffer.from(fields), subTree)
-                    .withLocations(head.locations)
-                case S | N =>
-                  val newBranch = buildFirst(remainingConditions, branch._2)
-                  newBranch.addBindings(head.bindings)
-                  branches += MutCase.Constructor(className -> Buffer.from(fields), newBranch)
-                    .withLocations(head.locations)
-              }
-            // Found existing pattern.
-            case S(matchCase: MutCase.Constructor) =>
-              // Merge interleaved bindings.
-              matchCase.consequent.addBindings(head.bindings)
-              matchCase.addFields(fields)
-              matchCase.consequent.merge(remainingConditions -> branch._2)
+            wildcard match {
+              case Some(default) if !default.isComplete =>
+                val subTree = default.duplicate()
+                subTree.fill(buildFirst(remainingConditions, branch._2))
+                subTree.addBindings(head.bindings)
+                branches += MutCase.Constructor(className -> Buffer.from(fields), subTree)
+                  .withLocations(head.locations)
+              case Some(_) | None =>
+                val newBranch = buildFirst(remainingConditions, branch._2)
+                newBranch.addBindings(head.bindings)
+                branches += MutCase.Constructor(className -> Buffer.from(fields), newBranch)
+                  .withLocations(head.locations)
+            }
+          } else {
+            // Found some branches that can cover the `className`.
+            inclusiveBranches.foreach {
+              case MutCase.Literal(_, _) => () // This shouldn't happen.
+              case matchedCase @ MutCase.Constructor(Var(branchClassName) -> _, _) =>
+                if (branchClassName === className.name) {
+                  // This branch exactly matches the given class name.
+                  // So, we just do a simple merge.
+                  // Merge interleaved bindings.
+                  matchedCase.consequent.addBindings(head.bindings)
+                  matchedCase.addFields(fields)
+                  matchedCase.consequent.merge(remainingConditions -> branch._2)
+                } else {
+                  // This branch matches the super classes of the given class name.
+                  // There will be refinement matches inside the consequent.
+                  // Therefore, we should not merge with `remainingConditions`.
+                  // Instead, we should use the original conjunction.
+                  matchedCase.consequent.addBindings(head.bindings)
+                  matchedCase.addFields(fields)
+                  matchedCase.consequent.merge(branch)
+                }
+            }
           }
         case S((head @ MatchLiteral(_, literal)) -> remainingConditions) =>
-          branches.find(branch => literal match {
-            case v: Var => branch.matches(v)
-            case l: Lit => branch.matches(l)
-          }) match {
+          branches.find(_.covers(literal)) match {
             // No such pattern. We should create a new one.
             case N | S(MutCase.Constructor(_, _)) =>
               val newConsequent = buildFirst(remainingConditions, branch._2)
@@ -359,20 +402,21 @@ object MutCaseOf {
               matchCase.consequent.addBindings(head.bindings)
               matchCase.consequent.merge(remainingConditions -> branch._2)
           }
-        // case S((head @ MatchNot(_)) -> remainingConditions) =>
-        //   wildcard match {
-        //     // No wildcard. We will create a new one.
-        //     case N => wildcard = S(buildFirst(remainingConditions, branch._2))
-        //     // There is a wildcard case. Just merge!
-        //     case S(consequent) => consequent.merge(remainingConditions -> branch._2)
-        //   }
+        case S((head @ MatchAny(_)) -> remainingConditions) =>
+          wildcard match {
+            // No wildcard. We will create a new one.
+            case N => wildcard = S(buildFirst(remainingConditions, branch._2))
+            // There is a wildcard case. Just merge!
+            case S(consequent) => consequent.merge(remainingConditions -> branch._2)
+          }
       }
     }
 
     def mergeDefault(bindings: Ls[LetBinding], default: Term)
         (implicit raise: Diagnostic => Unit,
                   getScrutineeKey: Scrutinee => Str \/ Int,
-                  exhaustivenessMap: ExhaustivenessMap): Int = {
+                  exhaustivenessMap: ExhaustivenessMap,
+                  superClassMap: SuperClassMap): Int = {
       branches.iterator.map {
         case MutCase.Constructor(_, consequent) => consequent.mergeDefault(bindings, default)
         case MutCase.Literal(_, consequent) => consequent.mergeDefault(bindings, default)
@@ -398,7 +442,8 @@ object MutCaseOf {
     def merge(branch: Conjunction -> Term)
         (implicit raise: Diagnostic => Unit,
                   getScrutineeKey: Scrutinee => Str \/ Int,
-                  exhaustivenessMap: ExhaustivenessMap): Unit =
+                  exhaustivenessMap: ExhaustivenessMap,
+                  superClassMap: SuperClassMap): Unit =
       raise {
         import scala.collection.mutable.ListBuffer
         val buffer = ListBuffer.empty[Message -> Opt[Loc]]
@@ -419,7 +464,8 @@ object MutCaseOf {
     def mergeDefault(bindings: Ls[LetBinding], default: Term)
        (implicit raise: Diagnostic => Unit,
                   getScrutineeKey: Scrutinee => Str \/ Int,
-                  exhaustivenessMap: ExhaustivenessMap): Int = 0
+                  exhaustivenessMap: ExhaustivenessMap,
+                  superClassMap: SuperClassMap): Int = 0
   }
   final case object MissingCase extends MutCaseOf {
     def describe: Str = "MissingCase"
@@ -433,18 +479,21 @@ object MutCaseOf {
     def merge(branch: Conjunction -> Term)
       (implicit raise: Diagnostic => Unit,
                 getScrutineeKey: Scrutinee => Str \/ Int,
-                exhaustivenessMap: ExhaustivenessMap): Unit =
+                exhaustivenessMap: ExhaustivenessMap,
+                superClassMap: SuperClassMap): Unit =
       lastWords("`MissingCase` is a placeholder and cannot be merged")
 
     def mergeDefault(bindings: Ls[LetBinding], default: Term)
       (implicit raise: Diagnostic => Unit,
                 getScrutineeKey: Scrutinee => Str \/ Int,
-                exhaustivenessMap: ExhaustivenessMap): Int = 0
+                exhaustivenessMap: ExhaustivenessMap,
+                superClassMap: SuperClassMap): Int = 0
   }
 
   def buildFirst(conjunction: Conjunction, term: Term)
       (implicit getScrutineeKey: Scrutinee => Str \/ Int,
-                exhaustivenessMap: ExhaustivenessMap): MutCaseOf = {
+                exhaustivenessMap: ExhaustivenessMap,
+                superClassMap: SuperClassMap): MutCaseOf = {
     def rec(conjunction: Conjunction): MutCaseOf = conjunction match {
       case Conjunction(head :: tail, trailingBindings) =>
         lazy val (beforeHeadBindings, afterHeadBindings) = head.bindings.partition {
@@ -459,10 +508,9 @@ object MutCaseOf {
             )
             Match(scrutinee, branches, N)
               .withBindings(beforeHeadBindings)
-          case BooleanTest(test) =>
-            IfThenElse(test, consequentTree, MissingCase)
+          case MatchAny(scrutinee) =>
+            Match(scrutinee, Buffer.empty, S(consequentTree.withBindings(afterHeadBindings)))
               .withBindings(beforeHeadBindings)
-              .withBindings(afterHeadBindings)
           case MatchClass(scrutinee, className, fields) =>
             val branches = Buffer[MutCase](
               MutCase.Constructor(className -> Buffer.from(fields), consequentTree.withBindings(afterHeadBindings))
@@ -475,6 +523,10 @@ object MutCaseOf {
                 .withLocations(head.locations)
             )
             Match(scrutinee, branches, N).withBindings(beforeHeadBindings)
+          case BooleanTest(test) =>
+            IfThenElse(test, consequentTree, MissingCase)
+              .withBindings(beforeHeadBindings)
+              .withBindings(afterHeadBindings)
           case Binding(name, term, isField) =>
             val kind = if (isField)
               LetBinding.Kind.FieldExtraction
