@@ -1,0 +1,21 @@
+:NewDefs
+
+
+class Some[T](value: T)
+//│ class Some[T](value: T)
+
+
+// TODO support `or` in UCS
+fun f(a, b) = if a is
+  Some(v)
+    and b is Some(v') then v + v'
+    or  b is Some(v)  then v
+  else 0
+//│ ╔══[ERROR] Cannot find operator `and` in the context
+//│ ║  l.11: 	    and b is Some(v') then v + v'
+//│ ╙──      	    ^^^
+//│ fun f: (anything, anything,) -> error
+//│ Code generation encountered an error:
+//│   if expression was not desugared
+
+
