@@ -6,13 +6,15 @@ let code_test = code"let x_0 = 1; let x_1 = 10; let x_2 = 100; x_0 + x_1 + x_2"
 //│ code_test: code & {Code#C = anything, Code#T <: int}
 //│          = [
 //│              'Let',
+//│              'x_0',
 //│              Symbol(x_0),
-//│              [ 1 ],
+//│              [ '_', 1 ],
 //│              [
 //│                'Let',
+//│                'x_1',
 //│                Symbol(x_1),
-//│                [ 10 ],
-//│                [ 'Let', Symbol(x_2), [Array], [Array] ]
+//│                [ '_', 10 ],
+//│                [ 'Let', 'x_2', Symbol(x_2), [Array], [Array] ]
 //│              ]
 //│            ]
 
@@ -21,34 +23,37 @@ run(code_test)
 //│    = 111
 
 // Test 2:
+:e // context-tracking
 fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, code"${cde} + x")}" else cde
 //│ ╔══[ERROR] Type mismatch. Required: Code, found: α42'
-//│ ║  l.24: 	fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, code"${cde} + x")}" else cde
+//│ ║  l.27: 	fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, code"${cde} + x")}" else cde
 //│ ╙──      	                                                ^^^^^^^^
 //│ ╔══[ERROR] Type mismatch. Required: Code, found: [α39']
-//│ ║  l.24: 	fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, code"${cde} + x")}" else cde
+//│ ║  l.27: 	fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, code"${cde} + x")}" else cde
 //│ ╙──      	                                                                                ^^^
 //│ ╔══[ERROR] Type mismatch. Required: Code, found: α49'
-//│ ║  l.24: 	fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, code"${cde} + x")}" else cde
+//│ ║  l.27: 	fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, code"${cde} + x")}" else cde
 //│ ╙──      	                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ test: (int, 'a,) -> (code & {Code#C = anything, Code#T <: error | int} | 'a)
 //│     = [Function: test]
 
-run(test(2, code"0"))
+run(test(5, code"0"))
 //│ res: error | int
-//│    = 3
+//│    = 15
 
-// Test 3: 
-fun power(n, x) = if n > 0 then code"${power(n-1, x)} * ${x}" else code"1"
-//│ ╔══[ERROR] Type mismatch. Required: Code, found: α77'
-//│ ║  l.42: 	fun power(n, x) = if n > 0 then code"${power(n-1, x)} * ${x}" else code"1"
-//│ ╙──      	                                       ^^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch. Required: Code, found: [α72']
-//│ ║  l.42: 	fun power(n, x) = if n > 0 then code"${power(n-1, x)} * ${x}" else code"1"
-//│ ╙──      	                                                          ^
-//│ power: (int, anything,) -> (code & {Code#C = anything, Code#T <: int})
-//│      = [Function: power]
 
-run(power(3, code"3"))
-//│ res: int
-//│    = 27
+// Test 3: TODO: should we support this?
+
+let cde_template = code"${cde} + x"
+fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, cde_template)}" else cde
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$6(Typer.scala:588)
+//│ 	at: scala.Option.fold(Option.scala:263)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:593)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:882)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:872)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:882)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$15(Typer.scala:640)

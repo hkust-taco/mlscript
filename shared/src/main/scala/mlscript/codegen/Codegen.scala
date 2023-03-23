@@ -842,107 +842,67 @@ object JSCodeHelpers {
 final case class JSQuasiquoteRunFunctionBody() extends JSStmt {
   def toSourceCode: SourceCode = SourceCode(
     """
-    function _runExpression(s_expr, outer_symval_map = new Map(), outer_symname_map = new Map()){
-      const outer_symbol_value_map = outer_symval_map;
-      const outer_symbol_name_map = outer_symname_map;
+    const symbol_value = new Map();
+    const name_value = new Map();
 
-      const symbol_value_map = new Map();
-      const symbol_name_map = new Map(); 
-
-      function _getVariableValue(s_expr) {
-        // s_expr should be of the form ['Var', ...]
-        if (s_expr[0] != 'Var') {
-          return -1;
-        }
-        if (s_expr[1][0] == 'FreeVar') {
-          const var_name = s_expr[1][1];
-          if (symbol_name_map.has(var_name)) {
-            return symbol_value_map.get(symbol_name_map.get(var_name));
-          } else if (outer_symbol_name_map.has(var_name)) {
-            return outer_symbol_value_map.get(outer_symbol_name_map.get(var_name));
-          } else {
-            throw Error("free variable not defined");
-          }
-        }
-        // bound variables - ['Var', Symbol()]
-        const var_symbol = s_expr[1];
-        if (symbol_value_map.has(var_symbol)) {
-          return symbol_value_map.get(var_symbol);
-        } else if (outer_symbol_value_map.has(var_symbol)) {
-					return outer_symbol_value_map.get(var_symbol);
-				}	else {
-					throw Error("cannot find definition of variable");
-				}
-      }
-      
-      function _run(s_expr) { 
-        switch(s_expr[0]) {
-          case "Var":
-            return _getVariableValue(s_expr);
-          case "App":
-            return eval(_run(s_expr[2]) + s_expr[1] + _run(s_expr[3]));
-          
-          case "Fun": 
-            if (s_expr[1] instanceof Function ) {
-              return s_expr[1](..._run(s_expr[2]));
-            }
-            try {
-              let stored_function = _run(s_expr[1]);
-              return stored_function(..._run(s_expr[2]));
-            }
-            catch (error) {
-              return globalThis[s_expr[1][1][1]](..._run(s_expr[2]));
-            }
-          case "If":
-            if (_run(s_expr[1])) { return _run(s_expr[2]) } else { return _run(s_expr[3]) };
-          case "Lam":
-            return s_expr[1];
-
-          case "Tup":
-            return s_expr[1].map(elem => _run(elem));
-
-          case "Sel": 
-            return _run(s_expr[1])[s_expr[2]];
-
-          case "Let":
-            symbol_value_map.set(s_expr[2], _run(s_expr[3]));
-            symbol_name_map.set(s_expr[1], s_expr[2]);
-            return _run(s_expr[4]);
-
-          case "Subs": 
-            return _run(s_expr[1])[_run(s_expr[2])];
-
-          case "StrLit":
-            return `'${s_expr[1]}'`;
-
-          // TODO: remove when confirm not needed
-          case "Unquoted": 
-            //return _run(s_expr[1]);
-            return _runExpression(s_expr[1], 
-                                new Map([...outer_symbol_value_map, ...symbol_value_map]),
-                                new Map([...outer_symbol_name_map, ...symbol_name_map])
-                                );
-            //return _runExpression(s_expr[1], new Map(symbol_value_map), new Map(symbol_name_map));
-          case "Quoted": 
-            return s_expr[1];
-
-          default:
-            return s_expr[0];
-        }
-      } 
-      let result = _run(s_expr);
-      if (Array.isArray(result) && result[0] == 'Var') {
-        try {
-          return _getVariableValue(result);
-        } catch (error) {
-          return result;
-        }
-      }
-      else {
-        return result;
-      }
-
+    if (context != null) {
+      context.forEach(context_pair => name_value.set(context_pair[0], context_pair[1]));
     }    
-    return _runExpression(s_expr);    """
+    function _run(s_expr) {
+      switch(s_expr[0]) {
+        // data
+        case "_": 
+          return s_expr[1];
+          
+        // expressions
+        case "Rcd": // ['Rcd', {key -> translateQuoted(value)}]
+          let rcd = {};
+          for ([key, value] of Object.entries(s_expr[1])) {
+            rcd[key] = _run(value);
+          }
+          return rcd;
+        case "Sel": // ['Sel', translateQuoted(receiver), 'name']
+          return _run(s_expr[1])[s_expr[2]];
+        case "Var": // ['Var', ['FreeVar', 'name']] OR ['Var', Symbol(name)]
+          if (Array.isArray(s_expr[1]) && s_expr[1][0] == "FreeVar") {
+            // if a binder for the variable cannot be found, return the string name first
+            if (name_value.has(s_expr[1][1])) {
+              return name_value.get(s_expr[1][1]);
+            }
+            else {
+              return s_expr[1][1];
+            }
+          }
+          return symbol_value.get(s_expr[1]);
+        case "App": // ['App', 'binary_operator', translateQuoted(lhs), translateQuoted(rhs)]
+          return eval(_run(s_expr[2]) + s_expr[1] + _run(s_expr[3]));
+        case "Fun": // ['Fun', translateQuoted(callee), translateQuoted(params)]
+          // test for type of _run(callee) if it is a string, then test for globalThis, otherwise it is an error
+          let callee = _run(s_expr[1]);
+          if (typeof callee == "string") {
+            return globalThis[callee](..._run(s_expr[2]));
+          } else {
+            return callee(..._run(s_expr[2]));
+          }
+        case "Let": // ['Let', 'name_str', Symbol(name), translateQuoted(value), translateQuoted(body)]
+          name_value.set(s_expr[1], _run(s_expr[3]));
+          symbol_value.set(s_expr[2], _run(s_expr[3]));
+          return _run(s_expr[4]);
+        case "Bra": // ['Bra', translateQuoted(trm)]
+          return _run(s_expr[1]);
+        case "Tup": // ['Tup', [translateQuoted(...)...]
+          return s_expr[1].map(elem => _run(elem));
+        case "Subs": // ['Subs', translateQuoted(arr), translateQuoted(idx)]
+          return _run(s_expr[1])[_run(s_expr[2])];
+        case "Unquoted": // ['Unquoted', translateTerm(body)]
+          return _run(s_expr[1]);
+        case "If": // ['If', translateQuoted(condition), translateQuoted(branch1), translateQuoted(branch2)]
+          if (_run(s_expr[1])) { return _run(s_expr[2]); } else { return _run(s_expr[3]); }
+        default:
+          throw Error("Encountered s-expression that is not handled");
+      }
+    }
+    return _run(s_expr);
+    """
   )
 }

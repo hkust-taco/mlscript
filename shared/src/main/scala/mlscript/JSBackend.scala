@@ -248,11 +248,12 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     case New(_, TypingUnit(_)) =>
       throw CodeGenError("custom class body is not supported yet")
     case Quoted(body) =>
-      translateQuoted(body, inUnquote)
+      translateQuoted(body)
     case Unquoted(body) =>
-      val callee = translateVar("run", true)
-      callee(translateTerm(body))
-
+      // this case only happens without lexical/parse error when it is in a lambda in a quasiquote
+      val callee = translateVar("run", true) 
+      val context = scope.getAllLexicalNames().map( name => JSArray(JSExpr(name) :: JSIdent(name) :: Nil))
+      callee(translateTerm(body), JSArray(context))
     case _: Bind | _: Test | If(_, _) | TyApp(_, _) | _: Splc =>
       throw CodeGenError(s"cannot generate code for term ${inspect(term)}")
   }
@@ -465,105 +466,156 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     }
   }
 
-  protected class QTracker(var used: MutSet[Str] = MutSet() , var defined: MutSet[Str] = MutSet()) {
-    def addUsedVar(name: Str) : Unit = {
-      used add name
-    }
-    def addDefinedVar(name: Str) : Unit = {
-      defined add name 
-    }
-    def getUndefinedVar() : Opt[Ls[Str]] = {
-      val freeVariables = used diff defined 
-      if (freeVariables.isEmpty) 
+  protected class FreeVarTracker(var used: MutSet[Str] = MutSet(), var defined: MutSet[Str] = MutSet()) {
+    def addUsedVar(name: Str) : Bool = used add name
+    def addDefinedVar(name: Str) : Bool = defined add name
+    def getFreeVar() : Opt[Ls[Str]] = {
+      val freeVars = used diff defined 
+      if (freeVars.isEmpty)
         N 
-      else 
-        S(freeVariables.toList)     
+      else {
+        S(freeVars.toList)
+      }
     }
   }
 
-  /**
-   * Translate body of quasiquotes (Quoted) to S-expression in JSArray
-   */
-  private def translateQuoted(body: Term, inUnquote: Bool = false)(implicit scope: Scope) : JSExpr = {
-    val variableTracker  = new QTracker
-    val sExpr = _translateQuoted(body)(scope, variableTracker)
-    
+  protected def translateQuoted(body: Term)(implicit scope : Scope, inUnquote: Bool = false) : JSExpr = {
+    val tracker = new FreeVarTracker
+    val sExpr = translateQuotedTerm(body)(scope, tracker)
+    val freeVarList = tracker.getFreeVar()
     if (inUnquote) {
       sExpr
     } else {
-      val freeVar = variableTracker.getUndefinedVar
-      freeVar match {
-        case S(freeVarList : Ls[Str]) => 
-          freeVarList.foldLeft(sExpr)(
-          (sExpr, name) => JSImmEvalFn(None, Ls(JSNamePattern(name)), L(sExpr), Ls(JSArray(Ls(JSExpr("FreeVar"), JSExpr(name)))))
+      freeVarList match {
+        case S(nameList : Ls[Str]) =>
+          nameList.foldLeft(sExpr)(
+            (sExpr, name) => JSImmEvalFn(None, Ls(JSNamePattern(name)), L(sExpr), Ls(JSArray(Ls(JSExpr("FreeVar"), JSExpr(name)))))
           )
         case N => sExpr
       }
     }
   }
 
-  private def _translateQuoted(body: Term)(implicit scope: Scope, variableTracker: QTracker) : JSExpr = body match {
-    // simple cases
-    case StrLit(value) =>
-      JSArray(Ls(JSExpr("StrLit"), JSExpr(value)))
-    case DecLit(value) =>
-      JSArray(Ls(JSLit(value.toString)))
-    case UnitLit(value) => 
-      JSArray(Ls(JSLit(if (value) "undefined" else "null")))
-    case IntLit(value) => 
-      JSArray(Ls(JSLit(value.toString)))
-    case Lam(_,_) | Rcd(_) => 
-      JSArray(Ls(translateTerm(body)))
-    case Tup(terms) =>
-      JSArray(Ls(JSExpr("Tup"), JSArray(terms map { case (_, Fld(_, _, term)) => _translateQuoted(term) })))
-    case If(IfThen(condition, branch1), S(branch2)) => // error if no ELSE branch in normal code
-      JSArray(Ls(JSExpr("If"), _translateQuoted(condition), _translateQuoted(branch1), _translateQuoted(branch2)))
-    case App(App(Var(op), Tup((N -> Fld(_, _, lhs)) :: Nil)), Tup((N -> Fld(_, _, rhs)) :: Nil))
-      if JSBinary.operators contains op =>
-        JSArray(Ls(JSExpr("App"), JSExpr(op), _translateQuoted(lhs), _translateQuoted(rhs)))
-    case App(trm, parameters @ Tup(args)) =>
-      JSArray(Ls(JSExpr("Fun"), _translateQuoted(trm), _translateQuoted(parameters)))
-    case Var(name) =>
+  protected def translateQuotedTerm(body: Term)(implicit scope: Scope, tracker: FreeVarTracker) : JSExpr = body match {
+    case Var(name) => // TODO: did not handle StubValueSymbol, ClassSymbol, TraitSymbol
       scope.resolveValue(name) match {
-        case S(sym: BuiltinSymbol) =>
+        case S(sym: BuiltinSymbol) => 
           sym.accessed = true
           if (!polyfill.used(sym.feature))
             polyfill.use(sym.feature, sym.runtimeName)
           val ident = JSIdent(sym.runtimeName)
-          if (sym.feature === "error") ident() else ident
-        case _ =>
-          variableTracker.addUsedVar(name)
-          JSArray(Ls(JSExpr("Var"), JSIdent(name)))
+          if (sym.feature === "error") ident() else JSArray(Ls(JSExpr("_"), ident)) 
+        case _ => // to handle ValueSymbol, ignores cases in translateVar final branch (case N)
+          tracker.addUsedVar(name)
+          JSArray(Ls(
+            JSExpr("Var"),
+            JSIdent(name)
+          ))   
       }
-    case Let(isRec, Var(name), rhs, body) => 
-      variableTracker.addDefinedVar(name)
-      JSImmEvalFn(None, Ls(JSNamePattern(name)), L(JSArray(Ls(JSExpr("Let"), JSExpr(name), JSIdent(name), _translateQuoted(rhs), _translateQuoted(body)))), Ls(JSLit(s"Symbol('${name}')")))
-    case Unquoted(unquoted_body) => 
-      JSArray(Ls(JSExpr("Unquoted"), translateTerm(unquoted_body)(scope, true)))
-      //translateUnquoted(unquoted_body)
-      //_translateQuoted(unquotedQuasiquote) // problem cannot resolve the global variables
-      //translateQuoted(unquoted_body)
-    case Bra(rcd, trm) => 
-      _translateQuoted(trm)
-    case Sel(receiver, Var(fieldName)) => 
-      JSArray(Ls(JSExpr("Sel"), _translateQuoted(receiver), JSExpr(fieldName)))
+    case Lam(params, body) =>
+      val lamScope = scope.derive("Lam")
+      val patterns = translateParams(params)(lamScope)
+      val lambdaTerm = JSArrowFn(patterns, lamScope.tempVars `with` translateTerm(body)(lamScope))
+      JSArray(Ls(
+        JSExpr("_"),
+        lambdaTerm
+      ))
+    // expand translateApp - except for case App(App(App(Var("if"), tst), con), alt) because could not generate example (?)
+    case App(App(Var(op), Tup((N -> Fld(_, _, lhs)) :: Nil)), Tup((N -> Fld(_, _, rhs)) :: Nil))
+      if JSBinary.operators contains op => 
+      JSArray(Ls(
+        JSExpr("App"), 
+        JSExpr(op), 
+        translateQuotedTerm(lhs), 
+        translateQuotedTerm(rhs)
+      ))
+    case App(trm, params @ Tup(_)) =>
+      JSArray(Ls(
+        JSExpr("Fun"),
+        translateQuotedTerm(trm),
+        translateQuotedTerm(params)
+      ))
+    case Rcd(fields) => 
+      JSArray(Ls(
+        JSExpr("Rcd"), 
+        JSRecord(fields map { case (key, Fld(_, _, value)) => 
+          key.name -> translateQuotedTerm(value)
+        })
+      ))
+    case Sel(receiver, fieldName) => // TODO: no support for selecting class properties
+      JSArray(Ls(
+        JSExpr("Sel"),
+        translateQuotedTerm(receiver),
+        JSExpr(fieldName.name)
+      ))
+    case Let(true, Var(name), Lam(args, body), expr) => throw CodeGenError("Let with Function") // TODO: cannot generate example yet
+    case Let(true, Var(name), _, _) => 
+      throw new CodeGenError(s"recursive non-function definition $name is not supported")
+    case Let(_, Var(name), value, body) => 
+      tracker.addDefinedVar(name)
+      val s_expr = JSArray(Ls(
+        JSExpr("Let"),
+        JSExpr(name),
+        JSIdent(name),
+        translateQuotedTerm(value),
+        translateQuotedTerm(body)
+      ))
+      JSImmEvalFn(None, Ls(JSNamePattern(name)), L(s_expr), Ls(JSLit(s"Symbol('${name}')")))
+    case Blk(stmts) => throw CodeGenError("Blk") // flatten, then JSImmEvalFn also 
+    case IntLit(value) => 
+      JSArray(Ls(JSExpr("_"), JSLit(value.toString + (if (JSBackend isSafeInteger value) "" else "n")))) 
+    case DecLit(value) => 
+      JSArray(Ls(JSExpr("_"), JSLit(value.toString))) 
+    case StrLit(value) => 
+      JSArray(Ls(JSExpr("_"), JSExpr(value))) 
+    case UnitLit(value) => 
+      JSArray(Ls(JSExpr("_"), JSLit(if (value) "undefined" else "null"))) 
+    case Bra(_, trm) =>
+      JSArray(Ls(
+        JSExpr("Bra"),
+        translateQuotedTerm(trm)
+      ))
+    case Tup(terms) => 
+      val js_array = JSArray(terms map { case (_, Fld(_, _, term)) => translateQuotedTerm(term) })
+      JSArray(Ls(
+        JSExpr("Tup"),
+        js_array
+      ))
     case Subs(arr, idx) => 
-      JSArray(Ls(JSExpr("Subs"), _translateQuoted(arr), _translateQuoted(idx)))
+      JSArray(Ls(
+        JSExpr("Subs"),
+        translateQuotedTerm(arr),
+        translateQuotedTerm(idx)
+      ))
+    case New(N, TypingUnit(Nil)) => throw CodeGenError("New #1") //JSRecord(Nil)
+    case New(S(TypeName(className) -> Tup(args)), TypingUnit(Nil)) => throw CodeGenError("New #2") // create a class 
     case Quoted(body) => 
-      JSArray(Ls(JSExpr("Quoted"), translateQuoted(body)))
-    case Blk(stmts) => throw CodeGenError("Blk not supported in quasiquotes... yet")
-    case New(S(head), body) => throw CodeGenError(s"New HEAD ${head} BODY ${body}\n\tNew not supported in quasiquotes... yet")
+      JSArray(Ls(
+        JSExpr("_"),
+        translateQuotedTerm(body)
+      ))
+    case Unquoted(body) => // TODO: can this handle different levels of unquotes?
+      JSArray(Ls(
+        JSExpr("Unquoted"),
+        translateTerm(body)(scope, true)
+      ))
+    case If(IfThen(condition, branch1), S(branch2)) => // error if no ELSE branch in normal code
+      JSArray(Ls(
+        JSExpr("If"), 
+        translateQuotedTerm(condition), 
+        translateQuotedTerm(branch1), 
+        translateQuotedTerm(branch2)
+      ))
+    case New(_, TypingUnit(_)) =>
+      throw CodeGenError("custom class body is not supported yet")
     case Assign(_,_) | Asc(_,_) | Bind(_,_) | Test(_,_) | With(_,_) | CaseOf(_,_) | TyApp(_,_) | Splc(_) => 
       throw CodeGenError(s"${inspect(body)} not supported in quasiquotes")
-    
+    case iff: If =>
+      throw CodeGenError(s"if expression has not been desugared")
     case _ => throw CodeGenError(s"missing implementation: ${inspect(body)}")
   }
-  private def translateUnquoted(body: Term)(implicit scope: Scope, variableTracker: QTracker) : JSExpr = body match {
-    case Quoted(body) => 
-      _translateQuoted(body)
-    case _ => 
-      translateTerm(body)
-  }
+
+  
   /**
     * Declare symbols for types, traits and classes.
     * Call this before the code generation.

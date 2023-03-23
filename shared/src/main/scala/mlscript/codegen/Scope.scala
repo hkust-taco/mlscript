@@ -326,6 +326,8 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
   def refreshRes(): Unit = {
     lexicalValueSymbols("res") = ValueSymbol("res", "res", Some(false), false)
   }
+  
+  def getAllLexicalNames(): Ls[Str] = lexicalValueSymbols.keySet.toList
 }
 
 object Scope {
