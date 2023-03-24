@@ -1,2 +1,1 @@
-let console: nothing
-fun hello: (x: int,) -> nothing
+fun hello: (x: int,) -> unit

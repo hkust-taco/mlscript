@@ -1,4 +1,7 @@
-const hello = (x) => console.log([
+function log(x) {
+  return console.info(x);
+}
+const hello = (x) => log([
   "hello!",
   x
 ]);

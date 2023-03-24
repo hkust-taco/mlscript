@@ -1,2 +1,1 @@
-let console: nothing
-fun hello(x: int) = console.log(("hello!", x))
+fun hello(x: int) = log(("hello!", x))

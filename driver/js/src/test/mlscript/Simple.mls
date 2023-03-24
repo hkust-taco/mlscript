@@ -5,9 +5,7 @@ mixin B { fun foo = this.n }
 class A(n: int) extends B
 let a = A(42)
 
-let console: nothing
-
-console.log(a.foo)
+log(a.foo)
 
 module C {
   let b = 1

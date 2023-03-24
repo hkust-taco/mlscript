@@ -1,4 +1,8 @@
 import * as Opened from "./Opened.js"
+
+function log(x) {
+  return console.info(x);
+}
 function B(base) {
   return (class B extends base {
     constructor(...rest) {
@@ -43,5 +47,5 @@ function B(base) {
 const C = globalThis.C;
 const A = globalThis.A;
 const a = A(42);
-console.log(a.foo);
+log(a.foo);
 Opened.hello(a.n);
