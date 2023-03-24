@@ -1,6 +1,5 @@
-:NewParser
 :NewDefs
-:NoJS
+:NoJS // TODO
 
 
 
@@ -17,10 +16,10 @@ fun fooo(x) =
   class C(y, z)
   C(0, x)
 //│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.17: 	  class C(y, z)
+//│ ║  l.16: 	  class C(y, z)
 //│ ╙──      	          ^
 //│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.17: 	  class C(y, z)
+//│ ║  l.16: 	  class C(y, z)
 //│ ╙──      	             ^
 //│ fun fooo: error -> C
 
@@ -36,15 +35,15 @@ foo(bar)
 
 
 fun foo = {x: foo}
-//│ fun foo: 'foo
+//│ fun foo: forall 'foo. 'foo
 //│   where
 //│     'foo :> {x: 'foo}
 
 
 fun foo = {x: bar}
 fun bar = {y: foo}
-//│ fun foo: 'foo
-//│ fun bar: {y: 'foo}
+//│ fun foo: forall 'foo. 'foo
+//│ fun bar: forall 'foo. {y: 'foo}
 //│ where
 //│   'foo :> {x: {y: 'foo}}
 
@@ -73,8 +72,8 @@ foo.x.y
 
 fun foo(a) = {h: a, t: bar(a)}
 fun bar(b) = foo(b)
-//│ fun foo: 'a -> 'b
-//│ fun bar: 'a -> 'b
+//│ fun foo: forall 'a 'b. 'a -> 'b
+//│ fun bar: forall 'a 'b. 'a -> 'b
 //│ where
 //│   'b :> {h: 'a, t: 'b}
 
@@ -89,8 +88,8 @@ foo
 
 fun foo(a) = {h1: a, t1: bar(a)}
 fun bar(b) = {h2: b, t2: foo(b)}
-//│ fun foo: 'a -> 'b
-//│ fun bar: 'a -> 'c
+//│ fun foo: forall 'a 'b 'c. 'a -> 'b
+//│ fun bar: forall 'a 'c. 'a -> 'c
 //│ where
 //│   'b :> {h1: 'a, t1: 'c}
 //│   'c :> {h2: 'a, t2: 'b}
@@ -127,15 +126,15 @@ class Test0_2() {
 //│ }
 
 
-:e // TODO
+:e
 module Test1_1 {
   fun a = Test1_2.b
 }
 module Test1_2 {
   fun b = Test1_1.a
 }
-//│ ╔══[ERROR] unsupported indirectly recursive member access
-//│ ║  l.135: 	  fun b = Test1_1.a
+//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ║  l.134: 	  fun b = Test1_1.a
 //│ ╙──       	                 ^^
 //│ module Test1_1() {
 //│   fun a: error
@@ -148,15 +147,15 @@ Test1_1.a
 //│ error
 
 
-:e // TODO
+:e
 class Test1_1 {
   fun a = Test1_2().b
 }
 class Test1_2 {
   fun b = Test1_1().a
 }
-//│ ╔══[ERROR] unsupported indirectly recursive member access
-//│ ║  l.156: 	  fun b = Test1_1().a
+//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ║  l.155: 	  fun b = Test1_1().a
 //│ ╙──       	                   ^^
 //│ class Test1_1() {
 //│   fun a: error
@@ -178,8 +177,8 @@ module Test2_2 {
   fun c = Test2_1.a
   fun e = Test2_1.n
 }
-//│ ╔══[ERROR] unsupported indirectly recursive member access
-//│ ║  l.178: 	  fun c = Test2_1.a
+//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ║  l.177: 	  fun c = Test2_1.a
 //│ ╙──       	                 ^^
 //│ module Test2_1() {
 //│   fun a: 123 | error
@@ -205,4 +204,18 @@ Test2_1.d
 
 Test2_1.n
 //│ 456
+
+// TODO leverage type annotation to find type
+class Test2(n: int) {
+  fun inc = Test3.inc(this)
+}
+module Test3 {
+  fun inc(t: Test2) = Test2(t.n + 1)
+}
+//│ class Test2(n: int) {
+//│   fun inc: Test2
+//│ }
+//│ module Test3() {
+//│   fun inc: (t: Test2,) -> Test2
+//│ }
 

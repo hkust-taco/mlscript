@@ -40,9 +40,9 @@ ty2B = ty2A
 //│ MyArray['a]
 //│   <:  ty2B:
 //│ MyArray[MyArray['a]]
-//│ constrain calls  : 30
+//│ constrain calls  : 26
 //│ annoying  calls  : 23
-//│ subtyping calls  : 99
+//│ subtyping calls  : 75
 
 
 
@@ -78,9 +78,9 @@ ty3B = ty3A
 //│ 'a
 //│   where
 //│     'a := MyArray[MyArray['a]]
-//│ constrain calls  : 84
-//│ annoying  calls  : 23
-//│ subtyping calls  : 253
+//│ constrain calls  : 82
+//│ annoying  calls  : 25
+//│ subtyping calls  : 215
 
 :stats
 ty3A = ty3B
@@ -91,9 +91,9 @@ ty3A = ty3B
 //│ 'a
 //│   where
 //│     'a := MyArray['a]
-//│ constrain calls  : 84
-//│ annoying  calls  : 23
-//│ subtyping calls  : 253
+//│ constrain calls  : 82
+//│ annoying  calls  : 25
+//│ subtyping calls  : 215
 
 def ty4B: MyArray[MyArray[MyArray['a]]] as 'a
 //│ ty4B: 'a
@@ -172,8 +172,8 @@ ty2A = ty2B
 //│ ╟── Note: constraint arises from applied type reference:
 //│ ║  l.35: 	def ty2B: MyArray[MyArray['a]]
 //│ ╙──      	                  ^^^^^^^^^^^
-//│ constrain calls  : 27
-//│ annoying  calls  : 22
-//│ subtyping calls  : 140
+//│ constrain calls  : 18
+//│ annoying  calls  : 29
+//│ subtyping calls  : 57
 
 

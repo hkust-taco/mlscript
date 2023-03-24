@@ -489,7 +489,7 @@ foo: { get: int }
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.488: 	foo: { get: int }
 //│ ║         	^^^
-//│ ╟── type `number` is not an instance of `int`
+//│ ╟── type `number` is not an instance of type `int`
 //│ ║  l.388: 	def foo: R[int..number]
 //│ ║         	                ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -503,7 +503,7 @@ foo: { set: number -> () }
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.502: 	foo: { set: number -> () }
 //│ ║         	^^^
-//│ ╟── type `number` is not an instance of `int`
+//│ ╟── type `number` is not an instance of type `int`
 //│ ║  l.502: 	foo: { set: number -> () }
 //│ ║         	            ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -524,7 +524,7 @@ foo2: S['a]
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.523: 	foo2: S['a]
 //│ ║         	^^^^
-//│ ╟── type `number` is not an instance of `int`
+//│ ╟── type `number` is not an instance of type `int`
 //│ ║  l.388: 	def foo: R[int..number]
 //│ ║         	                ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -544,7 +544,7 @@ foo2: S['a..'b]
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.543: 	foo2: S['a..'b]
 //│ ║         	^^^^
-//│ ╟── type `number` is not an instance of `int`
+//│ ╟── type `number` is not an instance of type `int`
 //│ ║  l.388: 	def foo: R[int..number]
 //│ ║         	                ^^^^^^
 //│ ╟── Note: constraint arises from type reference:

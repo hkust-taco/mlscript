@@ -133,15 +133,14 @@ object Main {
           implicit val extrCtx: Opt[typer.ExtrCtx] = N
 
           val vars: Map[Str, typer.SimpleType] = Map.empty
-          val tpd = typer.typeTypingUnit(tu, allowPure = true)(ctx.nest, raise, vars)
-          val comp = tpd.force()(raise)
+          val tpd = typer.typeTypingUnit(tu, topLevel = true)(ctx.nest, raise, vars)
           
           object SimplifyPipeline extends typer.SimplifyPipeline {
             def debugOutput(msg: => Str): Unit =
               // if (mode.dbgSimplif) output(msg)
               println(msg)
           }
-          val sim = SimplifyPipeline(comp, all = false)(ctx)
+          val sim = SimplifyPipeline(tpd, all = false)(ctx)
           
           val exp = typer.expandType(sim)(ctx)
           

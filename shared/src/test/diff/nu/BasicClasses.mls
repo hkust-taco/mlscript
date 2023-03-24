@@ -1,6 +1,4 @@
-:NewParser
 :NewDefs
-:NoJS
 
 
 class A(n: int)
@@ -8,9 +6,13 @@ class A(n: int)
 
 A
 //│ (n: int,) -> A
+//│ res
+//│     = [Function (anonymous)] { class: [class A] }
 
 let a = A(42)
 //│ let a: A
+//│ a
+//│   = A {}
 
 
 fun f(x: A) = x.n
@@ -24,22 +26,28 @@ fun f(x: A | 'b) = if x is A then x.n else 0
 
 
 fun f(x) = x.n
-//│ fun f: {n: 'n} -> 'n
+//│ fun f: forall 'n. {n: 'n} -> 'n
 
 f(a)
 //│ int
+//│ res
+//│     = 42
 
 fun f(x) = if x is A then x.n
 //│ fun f: A -> int
 
 f(a)
 //│ int
+//│ res
+//│     = 42
 
 fun f(x) = if x is A then x.n else 0
 //│ fun f: anything -> int
 
 f(a)
 //│ int
+//│ res
+//│     = 42
 
 
 
@@ -48,8 +56,8 @@ class C {
   fun const(x) = id
 }
 //│ class C() {
-//│   fun const: anything -> 'a -> 'a
-//│   fun id: 'a -> 'a
+//│   fun const: forall 'a. anything -> 'a -> 'a
+//│   fun id: forall 'a. 'a -> 'a
 //│ }
 
 
@@ -61,10 +69,10 @@ class Base0(n) {
   fun oops = this.my
 }
 //│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.57: 	class Base0(n) {
+//│ ║  l.65: 	class Base0(n) {
 //│ ╙──      	            ^
-//│ ╔══[ERROR] unsupported indirectly recursive member access
-//│ ║  l.61: 	  fun oops = this.my
+//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ║  l.69: 	  fun oops = this.my
 //│ ╙──      	                 ^^^
 //│ class Base0(n: error) {
 //│   fun me: Base0 & {n: error}
@@ -75,24 +83,32 @@ class Base0(n) {
 
 // :d
 // Base0
-// Base0
 
 let b1 = Base0(42)
 //│ let b1: Base0
+//│ b1
+//│    = Base0 {}
 
-// :d
 let n1 = b1.n
 //│ let n1: error
+//│ n1
+//│    = 42
 
 // TODO
 n1 + 1
 //│ int
+//│ res
+//│     = 43
 
 
 let b2 = Base0("hi")
 let n2 = b2.n
 //│ let b2: Base0
 //│ let n2: error
+//│ b2
+//│    = Base0 {}
+//│ n2
+//│    = 'hi'
 
 
 
@@ -120,30 +136,44 @@ class Base1(base: int) {
 
 Base1
 //│ (base: int,) -> Base1
+//│ res
+//│     = [Function (anonymous)] { class: [class Base1] }
 
 let b = Base1(1)
 //│ let b: Base1
+//│ b
+//│   = Base1 {}
 
 b.base
 //│ int
+//│ res
+//│     = 1
 
 b.getBase1
 //│ int
+//│ res
+//│     = 1
 
 // :d
 b.me
 //│ Base1 & {base: int}
+//│ res
+//│     = Base1 {}
 
 :e
 b.getBaseTypo
-//│ ╔══[ERROR] class `Base1` does not contain member `getBaseTypo`
-//│ ║  l.138: 	b.getBaseTypo
+//│ ╔══[ERROR] Class `Base1` does not contain member `getBaseTypo`
+//│ ║  l.164: 	b.getBaseTypo
 //│ ╙──       	 ^^^^^^^^^^^^
 //│ error
+//│ res
+//│     = undefined
 
 
 b : Base1
 //│ Base1
+//│ res
+//│     = Base1 {}
 
 
 class Rec(n: int) {
@@ -157,9 +187,15 @@ let r = Rec(0)
 r.n
 //│ let r: Rec
 //│ int
+//│ r
+//│   = Rec {}
+//│ res
+//│     = 0
 
 r.go.n
 //│ int
+//│ res
+//│     = 1
 
 
 
@@ -172,6 +208,8 @@ class Annots(base: 0 | 1) {
 //│ class Annots(base: 0 | 1) {
 //│   fun a: 0 | 1
 //│ }
+//│ Code generation encountered an error:
+//│   unexpected new class member a
 
 
 

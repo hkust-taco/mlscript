@@ -22,7 +22,7 @@ trait TypeSimplifier { self: Typer =>
     val _ctx = ctx
     
     val allVarPols = ty.getVarsPol(PolMap(pol))
-    println("!!"+ty.childrenPol(PolMap(pol)))
+    // println("!!"+ty.childrenPol(PolMap(pol)))
     println(s"allVarPols: ${printPols(allVarPols)}")
     
     val renewed = MutMap.empty[TypeVariable, TypeVariable]
@@ -40,6 +40,8 @@ trait TypeSimplifier { self: Typer =>
     def process(ty: ST, parent: Opt[Bool -> TV], canDistribForall: Opt[Level] = N): ST =
         // trace(s"process($ty) $canDistribForall") {
         ty match {
+      
+      case SkolemTag(l, tv: TypeVariable) => process(tv, parent)
       
       case tv: TypeVariable =>
         parent.filter(_._2 === tv).foreach(p => return ExtrType(p._1)(noProv))
@@ -60,7 +62,7 @@ trait TypeSimplifier { self: Typer =>
             case S(false) =>
               nv.upperBounds =
                 (process(ty, S(false -> tv)) :: Nil).filterNot(_.isTop)
-            case N => 
+            case N =>
               nv.assignedTo = S(process(ty, N))
           }
         case N =>
@@ -88,7 +90,8 @@ trait TypeSimplifier { self: Typer =>
         ProvType(process(ty, parent, canDistribForall = canDistribForall))(ty.prov)
       case ProvType(ty) => process(ty, parent, canDistribForall = canDistribForall)
       
-      case tr @ TypeRef(defn, targs) if builtinTypes.contains(defn) => process(tr.expand, parent)
+      case tr @ TypeRef(defn, targs) if builtinTypes.contains(defn) && tr.canExpand =>
+        process(tr.expandOrCrash, parent)
       
       case RecordType(fields) => RecordType.mk(fields.flatMap { case (v @ Var(fnme), fty) =>
         // * We make a pass to transform the LB and UB of variant type parameter fields into their exterma
@@ -109,8 +112,8 @@ trait TypeSimplifier { self: Typer =>
         case N =>
           // v -> default :: Nil
           ctx.tyDefs2.get(prefix) match {
-            case S(td) =>
-              td.result match {
+            case S(info) =>
+              info.result match {
                 case S(cls: TypedNuCls) =>
                   cls.varianceOf(cls.tparams.find(_._1.name === postfix).getOrElse(die)._2) match {
                     case VarianceInfo(true, true) => Nil
@@ -119,7 +122,8 @@ trait TypeSimplifier { self: Typer =>
                       else if (contra) v -> FieldType(fty.lb.map(process(_, N)), TopType)(fty.prov) :: Nil
                       else  v -> default :: Nil
                   }
-                case _ => die
+                case N =>
+                  ??? // TODO use info.explicitVariances
               }
             case N => die
           }
@@ -211,7 +215,7 @@ trait TypeSimplifier { self: Typer =>
               case S(cls @ ClassTag(Var(tagNme), ps))
                 if !primitiveTypes.contains(tagNme)
                 && ctx.tyDefs.contains(tagNme.capitalize)
-                && !tagNme.isCapitalized // currently capitalization characterizes nudefs
+                && !newDefs
               =>
                 val clsNme = tagNme.capitalize // TODO rm capitalize
                 val clsTyNme = TypeName(clsNme)
@@ -918,7 +922,8 @@ trait TypeSimplifier { self: Typer =>
           transform(r, pol, semp, canDistribForall))(st.prov)
       case ot @ Overload(as) =>
         ot.mapAltsPol(pol)((p, t) => transform(t, p, parents, canDistribForall))
-      case _: TypeTag | ExtrType(_) => st
+      case SkolemTag(lvl, id) => transform(id, pol, parents)
+      case _: ObjectTag | _: Extruded | ExtrType(_) => st
       case tv: TypeVariable if parents.exists(_ === tv) =>
         if (pol(tv).getOrElse(lastWords(s"parent in invariant position $tv $parents"))) BotType else TopType
       case tv: TypeVariable =>

@@ -110,13 +110,13 @@ not (test id)._1
 test f =
   let r x = f x
   in (r 0, r True)
-//│ test: forall 'a 'b 'c 'd 'e 'f 'g. 'b -> ('d, 'g,)
+//│ test: forall 'a 'b 'c 'd 'e 'f 'g. 'c -> ('f, 'g,)
 //│   where
-//│     'b <: 'e -> 'f & 'c -> 'a
-//│     'a <: 'd
-//│     'c :> 0
-//│     'f <: 'g
-//│     'e :> true
+//│     'c <: 'a -> 'b & 'd -> 'e
+//│     'e <: 'f
+//│     'd :> 0
+//│     'b <: 'g
+//│     'a :> true
 //│     = [Function: test3]
 
 // * Q: why does this type *appear* approximated after simplification?

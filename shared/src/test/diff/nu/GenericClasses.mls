@@ -1,13 +1,11 @@
-:NewParser
 :NewDefs
-:NoJS
 
 
 class C<A>
 //│ class C[A]()
 
 fun f(x) = if x is C then x
-//│ fun f: C['A] -> C['A]
+//│ fun f: forall 'A. C['A] -> C['A]
 
 // * TODO parse class tags?
 // f(C : #C)
@@ -18,106 +16,156 @@ class C<A>(a: A)
 //│ class C[A](a: A)
 
 fun f(x) = if x is C(a) then a
-//│ fun f: C['a] -> 'a
+//│ fun f: forall 'a. C['a] -> 'a
 
 let c = C(1)
 //│ let c: C[1]
+//│ c
+//│   = C {}
 
 f(c)
 //│ 1
+//│ res
+//│     = 1
 
 
 class Some<A>(value: A) {
   fun get = value
   fun toArray = [value]
-  // fun mapBad(f) = Some(f(value)) // TODO cyclic
-  // fun map(f : A => 'b) = Some(f(value)) // TODO cyclic
+  fun map(f) = Some(f(value))
+  fun map_A(f : A => 'b) = Some(f(value))
 }
 //│ class Some[A](value: A) {
 //│   fun get: A
+//│   fun map: forall 'A. (A -> 'A) -> Some['A]
+//│   fun map_A: forall 'A0. (A -> 'A0) -> Some['A0]
 //│   fun toArray: (A,)
 //│ }
 
 
 let s = Some(1)
 //│ let s: Some[1]
+//│ s
+//│   = Some {}
 
 
 s.value
 //│ 1
+//│ res
+//│     = 1
 
 s.get
 //│ 1
+//│ res
+//│     = 1
 
 s.toArray
 //│ (1,)
+//│ res
+//│     = [ 1 ]
 
 
-// TODO
+s.map
+//│ forall 'A. (1 -> 'A) -> Some['A]
+//│ res
+//│     = [Function: map]
 
-// s.mapBad
+s.map(succ)
+//│ Some[int]
+//│ res
+//│     = Some {}
 
-// s.mapBad(succ)
 
+s.map_A
+//│ forall 'A. (1 -> 'A) -> Some['A]
+//│ res
+//│     = [Function: map_A]
 
-// s.map
-
-// s.map(succ)
+s.map_A(succ)
+//│ Some[int]
+//│ res
+//│     = Some {}
 
 
 
 module None {
   fun get = error
   fun toArray = []
-  // fun mapBad(f) = None // TODO
+  fun map(f) = None
+  fun map_A(f: nothing -> anything) = None
 }
 //│ module None() {
 //│   fun get: nothing
+//│   fun map: anything -> None
+//│   fun map_A: (f: nothing -> anything,) -> None
 //│   fun toArray: ()
 //│ }
 
 
 None.toArray
 //│ ()
+//│ res
+//│     = []
 
 
 type Option<A> = Some<A> | None
-//│ type Option[A] = None | Some[A]
+//│ type Option[A] = Some[A] | None
 
 
 
 let opt = if true then Some(123) else None
 //│ let opt: None | Some[123]
+//│ opt
+//│     = Some {}
 
 opt.toArray
 //│ Array[123]
+//│ res
+//│     = [ 123 ]
 
 
-// TODO
+opt.map(succ)
+//│ None | Some[int]
+//│ res
+//│     = Some {}
 
-// opt.mapBad(succ)
+opt.map_A(succ)
+//│ None | Some[int]
+//│ res
+//│     = Some {}
 
-// opt.map(succ)
+opt.map(x => x > 0)
+//│ None | Some[bool]
+//│ res
+//│     = Some {}
 
 
 
 if opt is Some then opt.value else 0
 //│ 0 | 123
+//│ res
+//│     = 123
 
 if opt is Some(v) then v else 0
 //│ 0 | 123
+//│ res
+//│     = 123
 
 
 fun map(x, f) = if x is
   None then None
   Some(v) then Some(f(v))
-//│ fun map: (None | Some['value], 'value -> 'A,) -> (None | Some['A])
+//│ fun map: forall 'value 'A. (None | Some['value], 'value -> 'A,) -> (None | Some['A])
 
 let mo = map(opt, succ)
 //│ let mo: None | Some[int]
+//│ mo
+//│    = Some {}
 
 mo.toArray
 //│ Array[int]
+//│ res
+//│     = [ 124 ]
 
 
 
@@ -127,7 +175,7 @@ class Test(n) {
   fun bar = n
 }
 //│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.125: 	class Test(n) {
+//│ ║  l.173: 	class Test(n) {
 //│ ╙──       	           ^
 //│ class Test(n: error) {
 //│   fun bar: error
@@ -136,10 +184,14 @@ class Test(n) {
 
 Test(1)
 //│ Test
+//│ res
+//│     = Test {}
 
 // :e
 Test(true)
 //│ Test
+//│ res
+//│     = Test {}
 
 
 :e
@@ -147,13 +199,13 @@ class Test<A>(n: A) {
   fun foo = n + 1
 }
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.147: 	  fun foo = n + 1
+//│ ║  l.199: 	  fun foo = n + 1
 //│ ║         	            ^^^
 //│ ╟── reference of type `A` is not an instance of type `int`
-//│ ║  l.147: 	  fun foo = n + 1
+//│ ║  l.199: 	  fun foo = n + 1
 //│ ║         	            ^
 //│ ╟── Note: type parameter A is defined at:
-//│ ║  l.146: 	class Test<A>(n: A) {
+//│ ║  l.198: 	class Test<A>(n: A) {
 //│ ╙──       	           ^
 //│ class Test[A](n: A) {
 //│   fun foo: error | int
@@ -161,9 +213,13 @@ class Test<A>(n: A) {
 
 Test(1)
 //│ Test[1]
+//│ res
+//│     = Test {}
 
 Test(true)
 //│ Test[true]
+//│ res
+//│     = Test {}
 
 
 class Test<A>(n: A) {
@@ -174,34 +230,50 @@ class Test<A>(n: A) {
 //│ class Test[A](n: A) {
 //│   fun foo: A
 //│   fun foo1: (x: A,) -> A
-//│   fun id: 'a -> 'a
+//│   fun id: forall 'a. 'a -> 'a
 //│ }
 
 Test(1)
 //│ Test[1]
+//│ res
+//│     = Test {}
 
 Test(1).foo
 //│ 1
+//│ res
+//│     = 1
 
 Test("ok").foo
 //│ "ok"
+//│ res
+//│     = 'ok'
 
 let t = Test(1)
 //│ let t: Test[1]
+//│ t
+//│   = Test {}
 
 t.foo1(true)
 //│ 1 | true
+//│ res
+//│     = true
 
 t : Test<'a>
 //│ Test['a]
 //│   where
 //│     'a :> 1 | true
+//│ res
+//│     = Test {}
 
 t.id
-//│ 'a -> 'a
+//│ forall 'a. 'a -> 'a
+//│ res
+//│     = [Function: id]
 
 [t.id(1), t.id(true)]
 //│ (1, true,)
+//│ res
+//│     = [ 1, true ]
 
 
 :e
@@ -210,13 +282,13 @@ class TestBad<A> {
   fun foo2(x: A) = x + 1
 }
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.210: 	  fun foo2(x: A) = x + 1
+//│ ║  l.282: 	  fun foo2(x: A) = x + 1
 //│ ║         	                   ^^^
 //│ ╟── reference of type `A` is not an instance of type `int`
-//│ ║  l.210: 	  fun foo2(x: A) = x + 1
+//│ ║  l.282: 	  fun foo2(x: A) = x + 1
 //│ ║         	                   ^
 //│ ╟── Note: type parameter A is defined at:
-//│ ║  l.208: 	class TestBad<A> {
+//│ ║  l.280: 	class TestBad<A> {
 //│ ╙──       	              ^
 //│ class TestBad[A]() {
 //│   fun foo1: (x: A,) -> A
@@ -225,28 +297,44 @@ class TestBad<A> {
 
 TestBad().foo1
 //│ (x: 'A,) -> 'A
+//│ res
+//│     = [Function: foo1]
 
 TestBad().foo1(1)
 //│ 1
+//│ res
+//│     = 1
 
 x => TestBad().foo1(x)
 //│ 'a -> 'a
+//│ res
+//│     = [Function: res]
 
 // :d
 let t = TestBad()
 //│ let t: forall 'A. TestBad['A]
+//│ t
+//│   = TestBad {}
 
 t.foo1
 //│ (x: 'A,) -> 'A
+//│ res
+//│     = [Function: foo1]
 
 [t.foo1(0), t.foo1(true)]
 //│ (0, true,)
+//│ res
+//│     = [ 0, true ]
 
 t.foo1(0)
 //│ 0
+//│ res
+//│     = 0
 
 t
 //│ forall 'A. TestBad['A]
+//│ res
+//│     = TestBad {}
 
 
 fun foo(x: TestBad<int>) = x.foo1
@@ -254,13 +342,19 @@ fun foo(x: TestBad<int>) = x.foo1
 
 foo(t)
 //│ (x: int,) -> int
+//│ res
+//│     = [Function: foo1]
 
 foo(t)(1)
 //│ int
+//│ res
+//│     = 1
 
 
 TestBad().foo2
 //│ (x: anything,) -> (error | int)
+//│ res
+//│     = [Function: foo2]
 
 
 
@@ -269,12 +363,18 @@ class Weird(x: C<'a>)
 
 let w = Weird(c)
 //│ let w: Weird
+//│ w
+//│   = Weird {}
 
 w.x
 //│ C['a]
+//│ res
+//│     = C {}
 
 // FIXME
 not(w.x.a)
 //│ bool
+//│ res
+//│     = false
 
 

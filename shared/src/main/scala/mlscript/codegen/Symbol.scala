@@ -4,7 +4,7 @@ import mlscript.utils.shorthands._
 import mlscript.Type
 import mlscript.JSClassDecl
 import mlscript.MethodDef
-import mlscript.Term
+import mlscript.{Term, Statement}
 import mlscript.TypeName
 
 sealed trait LexicalSymbol {
@@ -85,12 +85,29 @@ final case class ClassSymbol(
   override def toString: Str = s"class $lexicalName ($runtimeName)"
 }
 
+sealed class NewClassMemberSymbol(
+  val lexicalName: Str,
+  val isByvalueRec: Option[Boolean],
+  val isLam: Boolean
+) extends RuntimeSymbol {
+  override def toString: Str = s"new class member $lexicalName"
+
+  // Class members should have fixed names determined by users
+  override def runtimeName: Str = lexicalName
+}
+
+object NewClassMemberSymbol {
+  def apply(lexicalName: Str, isByvalueRec: Option[Boolean], isLam: Boolean): NewClassMemberSymbol =
+    new NewClassMemberSymbol(lexicalName, isByvalueRec, isLam)
+}
+
 final case class NewClassSymbol(
     lexicalName: Str,
-    runtimeName: Str,
     params: Ls[Str],
     body: Type,
     methods: Ls[MethodDef[Left[Term, Type]]],
+    ctor: Ls[Statement],
+    superParameters: Ls[Term]
 ) extends TypeSymbol
     with RuntimeSymbol with Ordered[NewClassSymbol] {
 
@@ -99,14 +116,17 @@ final case class NewClassSymbol(
   override def compare(that: NewClassSymbol): Int = lexicalName.compare(that.lexicalName)
 
   override def toString: Str = s"new class $lexicalName ($runtimeName)"
+
+  // Classes should have fixed names determined by users
+  override def runtimeName: Str = lexicalName
 }
 
 final case class MixinSymbol(
     lexicalName: Str,
-    runtimeName: Str,
     params: Ls[Str],
     body: Type,
     methods: Ls[MethodDef[Left[Term, Type]]],
+    ctor: Ls[Statement]
 ) extends TypeSymbol
     with RuntimeSymbol with Ordered[MixinSymbol] {
 
@@ -115,14 +135,18 @@ final case class MixinSymbol(
   override def compare(that: MixinSymbol): Int = lexicalName.compare(that.lexicalName)
 
   override def toString: Str = s"mixin $lexicalName ($runtimeName)"
+
+  // Mixins should have fixed names determined by users
+  override def runtimeName: Str = lexicalName
 }
 
 final case class ModuleSymbol(
     lexicalName: Str,
-    runtimeName: Str,
     params: Ls[Str],
     body: Type,
     methods: Ls[MethodDef[Left[Term, Type]]],
+    ctor: Ls[Statement],
+    superParameters: Ls[Term]
 ) extends TypeSymbol
     with RuntimeSymbol with Ordered[ModuleSymbol] {
 
@@ -131,6 +155,9 @@ final case class ModuleSymbol(
   override def compare(that: ModuleSymbol): Int = lexicalName.compare(that.lexicalName)
 
   override def toString: Str = s"module $lexicalName ($runtimeName)"
+
+  // Modules should have fixed names determined by users
+  override def runtimeName: Str = lexicalName
 }
 
 final case class TraitSymbol(

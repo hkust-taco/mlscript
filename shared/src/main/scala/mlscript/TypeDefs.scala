@@ -44,7 +44,7 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
     positionals: Ls[Str],
   ) {
     def allBaseClasses(ctx: Ctx)(implicit traversed: Set[TypeName]): Set[TypeName] =
-      baseClasses.map(v => TypeName(v.name.decapitalize)) ++
+      baseClasses.map(v => TypeName(v.name)) ++
         baseClasses.iterator.filterNot(traversed).flatMap(v =>
           ctx.tyDefs.get(v.name).fold(Set.empty[TypeName])(_.allBaseClasses(ctx)(traversed + v)))
     val (tparams: List[TypeName], targs: List[TypeVariable]) = tparamsargs.unzip
@@ -112,15 +112,22 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
   
   def clsNameToNomTag(td: NuTypeDef)(prov: TypeProvenance, ctx: Ctx): ClassTag = {
     require((td.kind is Cls) || (td.kind is Nms), td.kind)
-    ClassTag(Var(td.nme.name), ctx.allBaseClassesOf(td.nme.name))(prov)
+    ClassTag(Var(td.nme.name),
+        // ctx.allBaseClassesOf(td.nme.name)
+        Set.single(TypeName("Eql")) // TODO superclasses
+      )(prov)
   }
   def clsNameToNomTag(td: TypeDef)(prov: TypeProvenance, ctx: Ctx): ClassTag = {
     require(td.kind is Cls)
-    ClassTag(Var(td.nme.name.decapitalize), ctx.allBaseClassesOf(td.nme.name))(prov)
+    if (newDefs && td.kind.str.isCapitalized) ClassTag(Var(td.nme.name),
+      // ctx.allBaseClassesOf(td.nme.name))(prov)
+      Set.single(TypeName("Eql")) // TODO superclasses
+      )(prov)
+    else ClassTag(Var(td.nme.name), ctx.allBaseClassesOf(td.nme.name))(prov)
   }
   def trtNameToNomTag(td: TypeDef)(prov: TypeProvenance, ctx: Ctx): TraitTag = {
     require(td.kind is Trt)
-    TraitTag(Var(td.nme.name.decapitalize))(prov)
+    TraitTag(Var(td.nme.name))(prov)
   }
   
   def baseClassesOf(tyd: mlscript.TypeDef): Set[TypeName] =
@@ -414,7 +421,7 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
           // This is because implicit method calls always default to the parent methods.
           case S(MethodType(_, _, parents, _)) if {
             val bcs = ctx.allBaseClassesOf(tn.name)
-            parents.forall(prt => bcs(TypeName(prt.name.decapitalize)))
+            parents.forall(prt => bcs(TypeName(prt.name)))
           } =>
           // If this class is one of the base classes of the parent(s) of the currently registered method,
           // then we need to register the new method. Only happens when the class definitions are "out-of-order",
@@ -427,7 +434,7 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
             // class A
             //   method F: int
           case S(MethodType(_, _, parents, _)) if {
-            val v = TypeName(tn.name.decapitalize)
+            val v = TypeName(tn.name)
             parents.forall(prt => ctx.allBaseClassesOf(prt.name).contains(v)) 
           } => ctx.addMth(N, mn, mthTy)
           // If this class is unrelated to the parent(s) of the currently registered method,

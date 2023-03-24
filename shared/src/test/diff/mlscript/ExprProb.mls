@@ -50,13 +50,13 @@ rec def eval1_stub e = case e of {
   | Add -> eval1_stub e.lhs
   | _ -> 0
   }
-//│ eval1_stub: forall 'a 'b 'c 'd 'lhs 'eval1_stub 'e. 'eval1_stub
+//│ eval1_stub: forall 'a 'b 'c 'eval1_stub 'd 'e 'lhs. 'eval1_stub
 //│   where
-//│     'eval1_stub := 'b -> (1 | 'e | 0)
-//│     'e :> 1 | 'e | 0
-//│     'b <: #Lit & 'c | (#Add & 'd | 'a & ~#Add) & ~#Lit
-//│     'd <: {lhs: 'lhs}
-//│     'lhs <: 'b
+//│     'eval1_stub := 'e -> (1 | 'd | 0)
+//│     'd :> 1 | 'd | 0
+//│     'e <: #Lit & 'a | (#Add & 'b | 'c & ~#Add) & ~#Lit
+//│     'b <: {lhs: 'lhs}
+//│     'lhs <: 'e
 //│           = [Function: eval1_stub2]
 
 eval1_stub
@@ -82,18 +82,18 @@ rec def eval1 k e = case e of {
 
 :ns
 eval1
-//│ res: forall 'lhs 'rhs 'a 'b 'val 'c 'd 'e 'eval1 'f 'g. 'eval1
+//│ res: forall 'val 'a 'b 'lhs 'eval1 'c 'rhs 'd 'e 'f 'g. 'eval1
 //│   where
-//│     'eval1 := 'f -> 'g -> ('val | 'b | 'd)
-//│     'b := int
-//│     'g <: #Lit & 'a | (#Add & 'e | 'c & ~#Add) & ~#Lit
-//│     'e <: {rhs: 'rhs} & {lhs: 'lhs}
-//│     'lhs <: 'g
-//│     'rhs <: 'g
-//│     'a <: {val: 'val}
+//│     'eval1 := 'c -> 'e -> ('val | 'a | 'g)
+//│     'a := int
+//│     'e <: #Lit & 'b | (#Add & 'd | 'f & ~#Add) & ~#Lit
+//│     'd <: {rhs: 'rhs} & {lhs: 'lhs}
+//│     'lhs <: 'e
+//│     'rhs <: 'e
+//│     'b <: {val: 'val}
 //│     'val <: int
-//│     'f <: 'c -> 'd
-//│     'd <: int
+//│     'c <: 'f -> 'g
+//│     'g <: int
 //│    = [Function: eval1]
 
 :re
@@ -158,7 +158,7 @@ def eval1_ty_ugly = eval1
 
 :ns
 def eval1_ty: ('a -> int) -> (Lit | Add['b] | 'a & ~lit & ~add as 'b) -> int
-//│ eval1_ty: forall 'b 'a. ('a -> int) -> 'b -> int
+//│ eval1_ty: forall 'a 'b. ('a -> int) -> 'b -> int
 //│   where
 //│     'b := Lit | Add['b] | 'a & ~#Lit & ~#Add
 //│         = <missing implementation>

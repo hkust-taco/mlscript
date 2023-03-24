@@ -33,9 +33,9 @@ res.value
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.32: 	res.value
 //│ ║        	^^^^^^^^^
-//│ ╟── type `None` does not have field 'value'
-//│ ║  l.21: 	type Option[A] = Some[A] | None
-//│ ║        	                           ^^^^
+//│ ╟── type `Option[int]` does not have field 'value'
+//│ ║  l.25: 	Some 42 : Option[int]
+//│ ║        	          ^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{value: ?value}`
 //│ ║  l.32: 	res.value
 //│ ╙──      	^^^

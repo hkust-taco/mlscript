@@ -1,4 +1,3 @@
-:NewParser
 :NewDefs
 
 
@@ -29,10 +28,10 @@ typeof(f)
 :e
 let cls = Foo.class
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.30: 	let cls = Foo.class
+//│ ║  l.29: 	let cls = Foo.class
 //│ ║        	          ^^^^^^^^^
 //│ ╟── reference of type `(x: int,) -> Foo` does not have field 'class'
-//│ ║  l.30: 	let cls = Foo.class
+//│ ║  l.29: 	let cls = Foo.class
 //│ ╙──      	          ^^^
 //│ let cls: error
 //│ cls
@@ -60,10 +59,10 @@ Derived
 :e
 let cls = Derived.class
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.61: 	let cls = Derived.class
+//│ ║  l.60: 	let cls = Derived.class
 //│ ║        	          ^^^^^^^^^^^^^
 //│ ╟── reference of type `() -> Derived` does not have field 'class'
-//│ ║  l.61: 	let cls = Derived.class
+//│ ║  l.60: 	let cls = Derived.class
 //│ ╙──      	          ^^^^^^^
 //│ let cls: error
 //│ cls

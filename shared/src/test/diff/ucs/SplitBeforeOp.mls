@@ -1,4 +1,4 @@
-:NewParser
+:NewDefs
 
 :e
 :ge
@@ -9,7 +9,7 @@ if x
 //│ ║       	   ^
 //│ ║  l.6: 	  == 0 then 0
 //│ ╙──     	^^^^^^
-//│ res: error
+//│ error
 //│ Code generation encountered an error:
 //│   if expression was not desugared
 
@@ -21,7 +21,20 @@ if x
 //│ ╔══[ERROR] Cannot find constructor `A` in scope
 //│ ║  l.19: 	  is A and
 //│ ╙──      	     ^
-//│ res: error
+//│ error
+//│ Code generation encountered an error:
+//│   if expression was not desugared
+
+:e
+:ge
+if x
+  is A and
+    y then 0
+else 1
+//│ ╔══[ERROR] Cannot find constructor `A` in scope
+//│ ║  l.31: 	  is A and
+//│ ╙──      	     ^
+//│ error
 //│ Code generation encountered an error:
 //│   if expression was not desugared
 
@@ -32,9 +45,9 @@ if x
   is
     A() then "A"
     B() then "B"
-//│ ╔══[ERROR] Cannot find class `A` in scope
-//│ ║  l.33: 	    A() then "A"
+//│ ╔══[ERROR] Illegal pattern `A`
+//│ ║  l.46: 	    A() then "A"
 //│ ╙──      	    ^
-//│ res: error
+//│ error
 //│ Code generation encountered an error:
 //│   if expression was not desugared

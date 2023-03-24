@@ -1,4 +1,3 @@
-:NewParser
 :NewDefs
 
 
@@ -8,7 +7,7 @@ class Base0(n: number)
 // TODO
 class Derived0(n: int) extends Base
 //│ ╔══[ERROR] Could not find definition `Base`
-//│ ║  l.9: 	class Derived0(n: int) extends Base
+//│ ║  l.8: 	class Derived0(n: int) extends Base
 //│ ╙──     	                               ^^^^
 //│ class Derived0(n: int)
 //│ Code generation encountered an error:
@@ -25,7 +24,7 @@ mixin Base1(n: number) {
 :e
 mixin DerivedBad(n: int) extends Base
 //│ ╔══[ERROR] mixin definitions cannot yet extend parents
-//│ ║  l.26: 	mixin DerivedBad(n: int) extends Base
+//│ ║  l.25: 	mixin DerivedBad(n: int) extends Base
 //│ ╙──      	                                 ^^^^
 //│ mixin DerivedBad(n: int)
 

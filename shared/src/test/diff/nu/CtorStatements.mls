@@ -1,0 +1,24 @@
+:NewDefs
+
+
+log("Hello!")
+//│ unit
+//│ res
+//│     = undefined
+//│ // Output
+//│ Hello!
+
+
+module Test0 {
+  log("Hello!")
+}
+//│ module Test0()
+
+Test0
+//│ Test0
+//│ res
+//│     = Test0 { class: [class Test0] }
+//│ // Output
+//│ Hello!
+
+

@@ -1,0 +1,42 @@
+:NewDefs
+
+
+:e
+:ge
+mixin Foo(x: int)
+x
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.7: 	x
+//│ ╙──     	^
+//│ mixin Foo(x: int)
+//│ error
+//│ Code generation encountered an error:
+//│   unresolved symbol x
+
+
+:e
+:ge
+class Foo(x: int)
+x
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.20: 	x
+//│ ╙──      	^
+//│ class Foo(x: int)
+//│ error
+//│ Code generation encountered an error:
+//│   unresolved symbol x
+
+
+:e
+:ge
+class Foo(x: int)
+class Bar { x }
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.33: 	class Bar { x }
+//│ ╙──      	            ^
+//│ class Foo(x: int)
+//│ class Bar()
+//│ Code generation encountered an error:
+//│   unresolved symbol x
+
+

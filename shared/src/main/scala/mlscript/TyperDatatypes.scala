@@ -8,12 +8,14 @@ import scala.annotation.tailrec
 import mlscript.utils._, shorthands._
 import mlscript.Message._
 
-abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
+abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
   
   type TN = TypeName
+  val TN: TypeName.type = TypeName
   
   
   // The data types used for type inference:
+  
   
   case class TypeProvenance(loco: Opt[Loc], desc: Str, originName: Opt[Str] = N, isType: Bool = false) {
     val isOrigin: Bool = originName.isDefined
@@ -22,585 +24,49 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   }
   type TP = TypeProvenance
   
+  
   sealed abstract class TypeInfo
+  
   
   /** A type for abstract classes that is used to check and throw
    * errors if the abstract class is being instantiated */
   case class AbstractConstructor(absMths: Set[Var], isTraitWithMethods: Bool) extends TypeInfo
   
+  
   case class VarSymbol(ty: ST, definingVar: Var) extends TypeInfo
   
-  // case class DeclType(level: Level, info: LazyTypeInfo) extends SimpleType {
-  //   // def level: Level = info.complete().level
-  //   def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level = ???
-  //   val prov: TP = TypeProvenance(info.decl.toLoc, info.decl.describe, isType = true)
-  // }
-  // case class DeclType() extends SimpleType {
   
-  protected abstract class TypedNuTypeDefBase
-  // protected abstract class TypedNuTypeDefBase extends SimpleType
-  
-  // TODO rm level? already in ctx
-  // class LazyTypeInfo(val level: Int, val decl: NuDecl)(implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType]) extends TypeInfo {
-  class LazyTypeInfo(val decl: NuDecl, outerVars: Map[Str, SimpleType])
-          (implicit ctx: Ctx, raise: Raise) extends TypeInfo {
-  // class LazyTypeInfo[A](level: Int, decl: NuDecl) extends TypeInfo {
-    private def outerCtx = ctx
-    // private def outerVars = vars
-    
-    val level: Level = ctx.lvl
-    
-    private implicit val prov: TP =
-      TypeProvenance(decl.toLoc, decl.describe)
-    
-    
-    lazy val tparams: Ls[(TN, TV, Opt[VarianceInfo])] = ctx.nest.nextLevel { implicit ctx =>
-      decl match {
-        case td: NuTypeDef =>
-          td.tparams.map(tp =>
-            (tp._2, freshVar(TypeProvenance(
-              tp._2.toLoc,
-              "type parameter",
-              S(tp._2.name),
-              true), N, S(tp._2.name)), tp._1))
-        case fd: NuFunDef => Nil // TODO
-      }
-    }
-    
-    lazy val explicitVariances: VarianceStore =
-      MutMap.from(tparams.iterator.map(tp => tp._2 -> tp._3.getOrElse(VarianceInfo.in)))
-    
-    def varianceOf(tv: TV)(implicit ctx: Ctx): VarianceInfo =
-      // TODO make use of inferred vce if result is completed
-      explicitVariances.get(tv).getOrElse(VarianceInfo.in)
-    
-    // println(s"Type params ${tparams.mkString(" ")}")
-    
-    lazy private implicit val vars: Map[Str, SimpleType] =
-      // outerVars ++ tparams.iterator.mapKeys(_.name).toMap
-      outerVars ++ tparams.iterator.map {
-        case (tp, tv, vi) => (tp.name, SkolemTag(tv.level, tv)(tv.prov))
-      }
-    
-    lazy val typedParams: Ls[Var -> FieldType] = ctx.nest.nextLevel { implicit ctx =>
-      decl match {
-        case td: NuTypeDef =>
-          td.params.fields.map {
-            case (S(nme), Fld(mut, spec, value)) =>
-              assert(!mut && !spec, "TODO") // TODO
-              value.toType match {
-                case R(tpe) =>
-                  implicit val newDefsInfo: Map[Str, (TypeDefKind, Int)] = Map.empty // TODO?
-                  val ty = typeType(tpe)
-                  nme -> FieldType(N, ty)(provTODO)
-                case _ => ???
-              }
-            case (N, Fld(mut, spec, nme: Var)) =>
-              // assert(!mut && !spec, "TODO") // TODO
-              // nme -> FieldType(N, freshVar(ttp(nme), N, S(nme.name)))(provTODO)
-              nme -> FieldType(N, err(msg"Class parameters currently need type annotations", nme.toLoc))(provTODO)
-            case _ => ???
-          }
-        case fd: NuFunDef => Nil // TODO
-      }
-    }
-    
-    
-    // val tparams: Ls[(TN, TV, VarianceInfo)] = Nil // TODO
-    var isComputing: Bool = false // TODO replace by a Ctx entry
-    var result: Opt[TypedNuDecl] = N
-    // var result: Opt[A] = N
-    
-    val tv: TV = freshVar(
-      TypeProvenance(decl.toLoc, decl.describe, S(decl.name), decl.isInstanceOf[NuTypeDef]),
-      N,
-      S(decl.name))(level + 1)
-    
-    def map(f: TypedNuDecl => TypedNuDecl): LazyTypeInfo = {
-      val res = new LazyTypeInfo(decl, implicitly)
-      // if (result.nonEmpty) res.result = res
-      res.result = result.map(f)
-      res
-    }
-    
-    // TODO does this also need freshening in freshenAbove?
-    private lazy val thisTV: TV =
-      // freshVar(noProv/*FIXME*/, N, S("this_"+decl.name))(lvl + 1)
-      freshVar(noProv/*FIXME*/, N, S(decl.name.decapitalize))(lvl + 1)
-    
-    def complete()(implicit raise: Raise): TypedNuDecl = result.getOrElse {
-      if (isComputing) {
-        // lastWords(s"TODO cyclic defition ${decl.name}")
-        err(msg"Unhandled cyclic definition", decl.toLoc) // TODO better loc/explanation
-      }
-      // else // TODO avert infinite completion recursion here?
-      trace(s"Completing ${decl.showDbg}") {
-        println(s"Type params ${tparams.mkString(" ")}")
-        println(s"Params ${typedParams.mkString(" ")}")
-        
-        val res = try {
-          isComputing = true
-          decl match {
-            case fd: NuFunDef =>
-              // assert(fd.isLetRec.isEmpty, fd.isLetRec)
-              def checkNoTyParams() =
-                if (fd.tparams.nonEmpty)
-                  err(msg"Type parameters here are not yet supported in this position",
-                    fd.tparams.head.toLoc)
-              val res_ty = fd.rhs match {
-                case R(PolyType(tps, ty)) =>
-                  checkNoTyParams()
-                  // val body_ty = typeType(ty)(ctx.nextLevel, raise,
-                  //   vars = tps.map(tp => tp.name -> freshVar(noProv/*FIXME*/, N)(1)).toMap)
-                  val body_ty = 
-                  // ctx.nextLevel { implicit ctx: Ctx =>
-                  //   // * Note: can't use `ctx.poly` instead of `ctx.nextLevel` because all the methods
-                  //   // * in the current typing unit are quantified together.
-                  ctx.poly { implicit ctx: Ctx =>
-                    typeType(ty)(ctx, raise,
-                      vars = vars ++ tps.map(tp => tp.asInstanceOf[L[TN]].value.name -> freshVar(noProv/*FIXME*/, N)(1)).toMap)
-                  }
-                  // TODO check against `tv`
-                  TypedNuFun(ctx.lvl, fd, PolymorphicType(ctx.lvl, body_ty))
-                case L(body) =>
-                  // println(fd.isLetRec)
-                  // implicit val vars: Map[Str, SimpleType] =
-                  //   outerVars ++ Map.empty // TODO tparams
-                  fd.isLetRec match {
-                    case S(true) => // * Let rec bindings
-                      checkNoTyParams()
-                      implicit val gl: GenLambdas = true
-                      TypedNuFun(ctx.lvl, fd, typeTerm(
-                        Let(true, fd.nme, body, fd.nme)
-                      ))
-                    case S(false) => // * Let bindings
-                      checkNoTyParams()
-                      implicit val gl: GenLambdas = true
-                      TypedNuFun(ctx.lvl, fd, typeTerm(body))
-                    case N =>
-                      /* 
-                      implicit val gl: GenLambdas = true
-                      val body_ty = typeLetRhs2(isrec = true, fd.nme.name, body)
-                      // implicit val prov: TP = noProv // TODO
-                      // subsume(body_ty, PolymorphicType(level, tv)) // TODO
-                      TypedNuFun(ctx.lvl, fd, body_ty)
-                      */
-                      
-                      // * We don't type functions polymorphically from the point of view of a typing unit
-                      // * to avoid cyclic-looking constraints due to the polymorphic recursion limitation,
-                      // * as these functions are allowed to be mutually-recursive.
-                      // * In the future, we should type each mutual-recursion-component independently
-                      // * and polymorphically wrt to non-recursive users of them.
-                      implicit val gl: GenLambdas = false
-                      val body_ty = ctx.nextLevel { implicit ctx: Ctx =>
-                        // * Note: can't use `ctx.poly` instead of `ctx.nextLevel` because all the methods
-                        // * in the current typing unit are quantified together.
-                        vars ++ fd.tparams.map { tn =>
-                          tn.name -> freshVar(TypeProvenance(tn.toLoc, "method type parameter",
-                            originName = S(tn.name),
-                            isType = true), N)
-                        } |> { implicit vars =>
-                          typeTerm(body)
-                        }
-                      }
-                      TypedNuFun(ctx.lvl, fd, body_ty)
-                  }
-              }
-              // // subsume(res_ty, tv)
-              // constrain(res_ty.ty, tv)
-              ctx.nextLevel { implicit ctx: Ctx => constrain(res_ty.ty, tv) }
-              res_ty
-              
-              
-            case td: NuTypeDef =>
-              
-              td.kind match {
-                
-                case Trt =>
-                  err(msg"traits are not yet supported" -> td.toLoc :: Nil)
-                  ???
-                  
-                case Als =>
-                  
-                  if (td.params.fields.nonEmpty)
-                    err(msg"type alias definitions cannot have value parameters" -> td.params.toLoc :: Nil)
-                  if (td.parents.nonEmpty)
-                    err(msg"type alias definitions cannot extend parents" -> Loc(td.parents) :: Nil)
-                  
-                  val body_ty = td.sig match {
-                    case S(sig) =>
-                      typeType(sig)
-                    case N =>
-                      err(msg"type alias definition requires a right-hand side", td.toLoc)
-                  }
-                  
-                  TypedNuAls(outerCtx.lvl, td, tparams, body_ty)
-                  
-                case Cls | Nms =>
-                  
-                  // implicit val prov: TP = noProv // TODO
-                  ctx.nest.nextLevel { implicit ctx =>
-                    
-                    if ((td.kind is Nms) && typedParams.nonEmpty)
-                      // * Can we do better? (Memoization semantics?)
-                      err(msg"${td.kind.str} parameters are not supported",
-                        Loc(typedParams.iterator.map(_._1)))
-                    
-                    ctx ++= typedParams.map(p => p._1.name -> VarSymbol(p._2.ub, p._1))
-                    
-                    ctx += "this" -> VarSymbol(thisTV, Var("this"))
-                    
-                    val sig_ty = typeType(td.sig.getOrElse(Top))
-                    td.sig match {
-                      case S(sig) =>
-                        err(msg"type signatures not yet supported for classes", sig.toLoc)
-                      case N => ()
-                    }
-                    
-                    implicit val prov: TP =
-                      TypeProvenance(decl.toLoc, decl.describe)
-                    
-                    // val finalType = freshVar(noProv/*TODO*/, N, S("this"))
-                    val finalType = thisTV
-                    
-                    val tparamMems = tparams.map { case (tp, tv, vi) => // TODO use vi
-                      val fldNme = td.nme.name + "#" + tp.name
-                      NuParam(Var(fldNme).withLocOf(tp), FieldType(S(tv), tv)(tv.prov), isType = true)
-                    }
-                    // tparamMems.map(p => p.nme -> p.ty):Int
-                    val tparamFields = tparamMems.map(p => p.nme -> p.ty)
-                    assert(!typedParams.keys.exists(tparamFields.keys.toSet), ???)
-                    
-                    
-                    def inherit(parents: Ls[Term], superType: ST, members: Ls[NuMember])
-                          : (ST, Ls[NuMember]) =
-                        parents match {
-                    // def inherit(parents: Ls[Term \/ TypedTypingUnit], superType: ST, members: Ls[TypedNuDecl]): Ls[TypedNuDecl] = parents match {
-                      // case R(p) :: ps => ???
-                      // case L(p) :: ps =>
-                      case p :: ps =>
-                        val newMembs = trace(s"${lvl}. Inheriting from $p") {
-                          val (v @ Var(mxnNme), mxnArgs) = p match {
-                            case v @ Var(nme) =>
-                              v -> Nil
-                            case App(v @ Var(nme), Tup(args)) =>
-                              v -> args
-                            case _ =>
-                              err(msg"Unsupported parent specification", p.toLoc) // TODO
-                              return inherit(ps, superType, members)
-                          }
-                          ctx.get(mxnNme) match {
-                            case S(lti: LazyTypeInfo) =>
-                              lti.complete().freshen match {
-                                case mxn: TypedNuMxn =>
-                                  
-                                  println(s"Fresh $mxn")
-                                  
-                                  assert(finalType.level === lvl)
-                                  assert(mxn.superTV.level === lvl)
-                                  assert(mxn.thisTV.level === lvl)
-                                  
-                                  constrain(superType, mxn.superTV)
-                                  constrain(finalType, mxn.thisTV)
-                                  
-                                  if (mxnArgs.sizeCompare(mxn.params) =/= 0)
-                                    err(msg"mixin $mxnNme expects ${
-                                      mxn.params.size.toString} parameters; got ${mxnArgs.size.toString}", Loc(v :: mxnArgs.unzip._2))
-                                  
-                                  val paramMems = mxn.params.lazyZip(mxnArgs).map { case (nme -> p, _ -> Fld(_, _, a)) => // TODO check name, mut, spec
-                                    implicit val genLambdas: GenLambdas = true
-                                    val a_ty = typeTerm(a)
-                                    p.lb.foreach(constrain(_, a_ty))
-                                    constrain(a_ty, p.ub)
-                                    NuParam(nme, FieldType(p.lb, a_ty)(provTODO), isType = false)
-                                  }
-                                  
-                                  // TODO check overriding
-                                  val bodyMems = mxn.ttu.entities.map(_.complete()).map {
-                                    case fun @ TypedNuFun(_, fd, ty) =>
-                                      fun
-                                    case m: NuMember => m
-                                    // case _ => ???
-                                  }
-                                  
-                                  paramMems ++ bodyMems
-                                  
-                                case cls: TypedNuCls =>
-                                  err(msg"Class inheritance is not supported yet (use mixins)", p.toLoc) // TODO
-                                  Nil
-                                case als: TypedNuAls =>
-                                  // TODO dealias first?
-                                  err(msg"Cannot inherit from a type alias", p.toLoc)
-                                  Nil
-                                case cls: TypedNuFun =>
-                                  err(msg"Cannot inherit from this", p.toLoc)
-                                  Nil
-                              }
-                            case S(_) =>
-                              err(msg"Cannot inherit from this", p.toLoc)
-                              Nil
-                            case N => 
-                              err(msg"Could not find definition `${mxnNme}`", p.toLoc)
-                              Nil
-                          }
-                        }()
-                        val newSuperType = 
-                          // superType &
-                          WithType(
-                          superType,
-                          RecordType(
-                            // newMembs.foldLeft(TopType.toUpper(provTODO))(_ && _.ty.toUpper(provTODO))
-                            // newMembs.map(m => m.fd.nme -> m.ty.toUpper(provTODO))
-                            newMembs.collect{
-                              case m: NuParam => m.nme -> m.ty
-                              case m: TypedNuFun => m.fd.nme -> m.ty.toUpper(provTODO)
-                            }
-                          )(provTODO)
-                          )(provTODO)
-                        inherit(ps, newSuperType, members ++ newMembs)
-                      case Nil =>
-                        val thisType = WithType(superType, RecordType(typedParams)(ttp(td.params, isType = true)))(provTODO) &
-                          clsNameToNomTag(td)(provTODO, ctx) &
-                          RecordType(tparamFields)(TypeProvenance(Loc(td.tparams.map(_._2)), "type parameters", isType = true))
-                        trace(s"${lvl}. Finalizing inheritance with $thisType <: $finalType") {
-                          assert(finalType.level === lvl)
-                          constrain(thisType, finalType)
-                          members
-                        }()
-                        // println(s"${lvl}. Finalized inheritance with $superType ~> $thisType")
-                        (thisType, members)
-                    }
-                    
-                    // * We start from an empty super type.
-                    val baseType =
-                      RecordType(Nil)(TypeProvenance(Loc(td.parents).map(_.left), "Object"))
-                    
-                    val paramMems = typedParams.map(f => NuParam(f._1, f._2, isType = false))
-                    // val baseMems = inherit(td.parents, baseType, Nil)
-                    
-                    val (thisType, baseMems) =
-                      inherit(td.parents, baseType, tparamMems ++ paramMems)
-                    
-                    // ctx += thisTV
-                    
-                    // TODO
-                    // ctx += "super" -> VarSymbol(superTV, Var("super"))
-                    ctx += "super" -> VarSymbol(thisType, Var("super"))
-                    
-                    val ttu = typeTypingUnit(td.body, allowPure = false) // TODO use
-                    
-                    // TODO check overriding
-                    val clsMems = ttu.entities.map(_.complete())
-                    // .map {
-                    //   case fun @ TypedNuFun(_, fd, ty) =>
-                    //     fun
-                    //   // case _ => ???
-                    //   case m => m
-                    // }
-                    
-                    // val thisTy = ClassTag(Var(td.name),
-                    //       Set.empty//TODO
-                    //     )(provTODO)
-                    // constrain(thisTy, thisTV)
-                    
-                    // val thisType = superType &
-                    //   clsNameToNomTag(td)(provTODO, ctx) &
-                    //   RecordType(tparamFields)(ttp(td.params, isType = true))
-                    
-                    // val mems = baseMems ++ paramMems ++ clsMems
-                    val mems = baseMems ++ clsMems
-                    
-                    TypedNuCls(outerCtx.lvl, td, ttu,
-                      tparams, typedParams, mems.map(d => d.name -> d).toMap,
-                      // if (td.kind is Nms) TopType else thisTV
-                      TopType
-                    )(thisType)
-                  }
-                case Mxn =>
-                  if (td.parents.nonEmpty)
-                    err(msg"mixin definitions cannot yet extend parents" -> Loc(td.parents) :: Nil)
-                  ctx ++= typedParams.map(p => p._1.name -> VarSymbol(p._2.ub, p._1))
-                  val paramMems = typedParams.map(f => NuParam(f._1, f._2, isType = false))
-                  ctx.nest.nextLevel { implicit ctx =>
-                    implicit val vars: Map[Str, SimpleType] =
-                      outerVars ++ Map.empty // TODO type params
-                    val thisTV = freshVar(noProv/*FIXME*/, N, S("this"))
-                    val superTV = freshVar(noProv/*FIXME*/, N, S("super"))
-                    ctx += "this" -> VarSymbol(thisTV, Var("this"))
-                    ctx += "super" -> VarSymbol(superTV, Var("super"))
-                    // ctx |> { implicit ctx =>
-                    val ttu = typeTypingUnit(td.body, allowPure = false)
-                    val mems = paramMems ++ttu.entities.map(_.complete())
-                    TypedNuMxn(td, thisTV, superTV, tparams, typedParams, mems.map(m => m.name -> m).toMap, ttu)
-                    // }
-                  }
-                // case Als => ???
-                // case _ => ???
-              }
-          }
-          
-        // } finally { result = S(res); isComputing = false }
-        } finally { /* result = S(res); */ isComputing = false }
-        
-        result = S(res)
-        res
-        
-      }()
-    }
-    def typeSignature(implicit raise: Raise): ST =
-    /* 
-        if (isComputing)
-          decl match {
-            case _: NuFunDef =>
-              println(s"Already computing! Using TV: $tv")
-              tv // TODO FIXME wrong in general (when accessed from difft scope/level)
-            case _ =>
-              err(msg"Cyclic definition", decl.toLoc)
-          }
-        else complete() match {
-      case cls: TypedNuCls if cls.td.kind is Nms =>
-        ClassTag(Var(cls.td.nme.name), Set.empty)(provTODO)
-      case _cls: TypedNuCls =>
-        val cls = _cls.freshen.asInstanceOf[TypedNuCls]
-        PolymorphicType.mk(cls.level,
-          FunctionType(
-            TupleType(cls.params.mapKeys(some))(provTODO),
-            // cls.tparams.foldLeft(
-            //   ClassTag(Var(cls.td.nme.name), Set.empty)(provTODO)
-            // ) { case (acc, (tn, tv)) => acc &  }
-            ClassTag(Var(cls.td.nme.name), Set.empty)(provTODO) & RecordType.mk(
-              cls.tparams.map { case (tn, tv, vi) => // TODO use vi
-                Var(cls.td.nme.name + "#" + tn.name).withLocOf(tn) -> FieldType(S(tv), tv)(provTODO) }
-            )(provTODO)
-          )(provTODO)
-        )
-      case TypedNuFun(_, fd, ty) =>
-        // println(fd, ty)
-        // ???
-        ty
-    }
-    */
-      decl match {
-        case _: NuFunDef =>
-          if (isComputing) {
-            println(s"Already computing! Using TV: $tv")
-            tv // TODO FIXME wrong in general (when accessed from difft scope/level)
-          } else complete() match {
-            case TypedNuFun(_, fd, ty) =>
-              ty
-            case _ => die
-          }
-        case td: NuTypeDef if td.kind is Nms =>
-          ClassTag(Var(td.nme.name), Set.empty)(provTODO)
-        case td: NuTypeDef if td.kind is Cls =>
-          PolymorphicType.mk(level,
-            FunctionType(
-              TupleType(typedParams.mapKeys(some))(provTODO),
-              ClassTag(Var(td.nme.name), Set.empty)(provTODO) & RecordType.mk(
-                tparams.map { case (tn, tv, vi) => // TODO use vi
-                  Var(td.nme.name + "#" + tn.name).withLocOf(tn) -> FieldType(S(tv), tv)(provTODO) }
-              )(provTODO)
-            )(provTODO)
-          )
-        // case td: NuTypeDef =>
-        //   ??? // TODO
-      }
-    
-    def force()(implicit raise: Raise): TypedNuDecl = {
-      val res = complete()
-      res.force()
-      // decl match {
-      //   case td: NuTypeDef =>
-      //     td.kind match {
-      //       case Cls | Nms =>
-      //         // implicit val prov: TP = noProv // TODO
-      //         // val thisTy = ClassTag(Var(td.name),
-      //         //       Set.empty//TODO
-      //         //     )(provTODO)
-      //         // constrain(thisTy, thisTV)
-      //       case _ =>
-      //     }
-      //   case _ =>
-      // }
-      res match {
-        case cls: TypedNuCls =>
-          // implicit val prov: TP = noProv // TODO
-          // constrain(cls.instanceType, thisTV)
-          // println(cls.variances)
-        case _ =>
-      }
-      res
-    }
-    override def toString: String =
-      s"${decl.name} ~> ${if (isComputing) "<computing>" else result.fold("<uncomputed>")(_.toString)}"
+  /** Some type information which may not yet be available. */
+  sealed abstract class LazyTypeInfo extends TypeInfo {
+    def complete()(implicit raise: Raise): NuMember
+    def kind: DeclKind
   }
   
-  // /** A type that potentially contains universally quantified type variables,
-  //   * and which can be isntantiated to a given level. */
-  // sealed abstract class TypeScheme {
-  //   def uninstantiatedBody: SimpleType
-  //   def instantiate(implicit lvl: Int): SimpleType
-  // }
+  /** A LazyTypeInfo whose typing has been completed. */
+  case class CompletedTypeInfo(member: NuMember) extends LazyTypeInfo {
+    def complete()(implicit raise: Raise): NuMember = member
+    def kind: DeclKind = member.kind
+  }
+  
+  /** Initialized lazy type information, to be computed soon. */
+  class DelayedTypeInfo(val decl: NuDecl, val outerVars: Map[Str, SimpleType])
+          (implicit val ctx: Ctx, val raise: Raise) extends LazyTypeInfo with DelayedTypeInfoImpl 
+  
   
   /** A type with universally quantified type variables
     * (by convention, those variables of level greater than `level` are considered quantified). */
-  case class PolymorphicType(polymLevel: Level, body: SimpleType) extends SimpleType { // TODO add own prov?
+  case class PolymorphicType(polymLevel: Level, body: SimpleType) // TODO add own type provenance for consistency
+      extends SimpleType with PolymorphicTypeImpl {
     require(polymLevel < MaxLevel, polymLevel)
     val prov: TypeProvenance = body.prov
     lazy val level = levelBelow(polymLevel)(MutSet.empty)
     def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level = body.levelBelow(ub min polymLevel)
-    def instantiate(implicit ctx:Ctx, shadows: Shadows): SimpleType = {
-      implicit val state: MutMap[TV, ST] = MutMap.empty
-      println(s"INST [${polymLevel}]   $this")
-      println(s"  where  ${showBounds}")
-      val res = body.freshenAbove(polymLevel, rigidify = false)
-      println(s"TO [${lvl}] ~>  $res")
-      println(s"  where  ${res.showBounds}")
-      res
-    }
-    def rigidify(implicit ctx:Ctx, raise:Raise, shadows: Shadows): SimpleType = {
-      implicit val state: MutMap[TV, ST] = MutMap.empty
-      body.freshenAbove(polymLevel, rigidify = true)
-    }
-    def raiseLevelTo(newPolymLevel: Level, leaveAlone: Set[TV] = Set.empty)
-          (implicit ctx: Ctx, shadows: Shadows): PolymorphicType = {
-      require(newPolymLevel >= polymLevel)
-      if (newPolymLevel === polymLevel) return this
-      implicit val freshened: MutMap[TV, ST] = MutMap.empty
-      PolymorphicType(newPolymLevel,
-        self.freshenAbove(polymLevel, body, leaveAlone = leaveAlone)(
-          ctx.copy(lvl = newPolymLevel + 1), // * Q: is this really fine? cf. stashing/unstashing etc.
-          freshened, shadows)
-      ) //(prov)
-    }
-    /** Tries to split a polymorphic function type
-      * by distributing the quantification of *some* of its type vars into the function result. */
-    def splitFunction(implicit ctx: Ctx, raise: Raise, shadows: Shadows): Opt[ST] = body match {
-      case AliasOf(ft @ FunctionType(par, bod)) =>
-        val couldBeDistribbed = bod.varsBetween(polymLevel, MaxLevel)
-        println(s"could be distribbed: $couldBeDistribbed")
-        if (couldBeDistribbed.isEmpty) return N
-        val cannotBeDistribbed = par.varsBetween(polymLevel, MaxLevel)
-        println(s"cannot be distribbed: $cannotBeDistribbed")
-        val canBeDistribbed = couldBeDistribbed -- cannotBeDistribbed
-        if (canBeDistribbed.isEmpty) return N // TODO
-        val newInnerLevel =
-          (polymLevel + 1) max cannotBeDistribbed.maxByOption(_.level).fold(MinLevel)(_.level)
-        val innerPoly = PolymorphicType(polymLevel, bod)
-        println(s"inner: ${innerPoly}")
-        val res = FunctionType(par, innerPoly.raiseLevelTo(newInnerLevel, cannotBeDistribbed))(ft.prov)
-        println(s"raised: ${res}")
-        println(s"  where: ${res.showBounds}")
-        if (cannotBeDistribbed.isEmpty) S(res)
-        else S(PolymorphicType(polymLevel, res))
-      case _ => N
-    }
     override def toString = s"‹∀ $polymLevel. $body›"
   }
   object PolymorphicType {
     def mk(polymLevel: Level, body: SimpleType): SimpleType = {
       require(polymLevel <= MaxLevel)
-      println(polymLevel, body.level)
+      // println(polymLevel, body.level)
       if (polymLevel === MaxLevel || body.level <= polymLevel) body
       else body.unwrapProvs match { // Q: unwrap other proxies?
         case PolymorphicType(lvl, bod) => PolymorphicType(polymLevel min lvl, bod)
@@ -670,12 +136,12 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   }
   type TL = TypeLike
   
-  abstract class OtherTypeLike extends TypeLike { this: CompletedTypingUnit =>
-    def self: CompletedTypingUnit = this
+  abstract class OtherTypeLike extends TypeLike { this: TypedTypingUnit =>
+    def self: TypedTypingUnit = this
     def unwrapProvs: TypeLike = this
   }
   object OtherTypeLike {
-    def unapply(ot: OtherTypeLike): S[CompletedTypingUnit] = S(ot.self)
+    def unapply(ot: OtherTypeLike): S[TypedTypingUnit] = S(ot.self)
   }
   
   /** A general type form (TODO: rename to AnyType). */
@@ -684,7 +150,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     def level: Level
     def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level
     def freshenAbove(lim: Int, rigidify: Bool)(implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV, ST]): SimpleType =
-      self.freshenAbove(lim, this, rigidify)
+      Typer.freshenAbove(lim, this, rigidify)
     constructedTypes += 1
   }
   type ST = SimpleType
@@ -745,7 +211,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     lazy val level: Level = levelBelow(MaxLevel)(MutSet.empty)
     def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level = fields.iterator.map(_._2.levelBelow(ub)).maxOption.getOrElse(MinLevel)
     override def freshenAbove(lim: Int, rigidify: Bool)(implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV, ST]): RecordType =
-      self.mapPol(this, N, false)((_, x) => x.freshenAbove(lim, rigidify))
+      Typer.mapPol(this, N, false)((_, x) => x.freshenAbove(lim, rigidify))
     def toInter: SimpleType =
       fields.map(f => RecordType(f :: Nil)(prov)).foldLeft(TopType: ST)(((l, r) => ComposedType(false, l, r)(noProv)))
     def mergeAllFields(fs: Iterable[Var -> FieldType]): RecordType = {
@@ -894,121 +360,11 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   }
   
   type TR = TypeRef
-  case class TypeRef(defn: TypeName, targs: Ls[SimpleType])(val prov: TypeProvenance) extends SimpleType {
+  case class TypeRef(defn: TypeName, targs: Ls[SimpleType])(val prov: TypeProvenance) extends SimpleType with TypeRefImpl {
     def level: Level = targs.iterator.map(_.level).maxOption.getOrElse(0)
     def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level = targs.iterator.map(_.levelBelow(ub)).maxOption.getOrElse(MinLevel)
     override def freshenAbove(lim: Int, rigidify: Bool)(implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV, ST]): TypeRef =
       TypeRef(defn, targs.map(_.freshenAbove(lim, rigidify)))(prov)
-    def expand(implicit ctx: Ctx): SimpleType = expandWith(paramTags = true)
-    def expandWith(paramTags: Bool)(implicit ctx: Ctx): SimpleType = //if (defn.name.isCapitalized) {
-      // ctx.tyDefs2.get(defn.name).map(_.decl match {
-      //   case td: NuTypeDef if td.kind is Cls =>
-      //     ClassTag(Var(td.nme.name).withLocOf(td.nme),
-      //       Set.empty//TODO
-      //       )(provTODO)
-      //   case _ => ???
-      // }
-      ctx.tyDefs2.get(defn.name).map { info =>
-        implicit val raise: Raise = throw _ // FIXME
-        info.complete() match {
-          case td: TypedNuAls =>
-            assert(td.tparams.size === targs.size)
-            substSyntax(td.body)(td.tparams.lazyZip(targs).map {
-              case (tp, ta) => SkolemTag(tp._2.level, tp._2)(noProv) -> ta
-            }.toMap)
-          case td: TypedNuCls =>
-            assert(td.tparams.size === targs.size)
-            ClassTag(Var(td.nme.name).withLocOf(td.nme),
-              Set.empty//TODO
-              )(provTODO) & RecordType(td.tparams.lazyZip(targs).map {
-                case ((tn, tv, vi), ta) => // TODO use vi
-                  val fldNme = td.td.nme.name + "#" + tn.name
-                  Var(fldNme).withLocOf(tn) -> FieldType(S(ta), ta)(provTODO)
-              })(provTODO)
-          case _ => ???
-        }
-    }.getOrElse {
-      val td = ctx.tyDefs(defn.name)
-      require(targs.size === td.tparamsargs.size)
-      lazy val tparamTags =
-        if (paramTags) RecordType.mk(td.tparamsargs.map { case (tp, tv) =>
-            val tvv = td.getVariancesOrDefault
-            tparamField(defn, tp) -> FieldType(
-              Some(if (tvv(tv).isCovariant) BotType else tv),
-              if (tvv(tv).isContravariant) TopType else tv)(prov)
-          })(noProv)
-        else TopType
-      subst(td.kind match {
-        case Als => td.bodyTy
-        case Nms => throw new NotImplementedError("Namespaces are not supported yet.")
-        case Cls => clsNameToNomTag(td)(prov, ctx) & td.bodyTy & tparamTags
-        case Trt => trtNameToNomTag(td)(prov, ctx) & td.bodyTy & tparamTags
-      }, td.targs.lazyZip(targs).toMap) //.withProv(prov)
-    } //tap { res => println(s"Expand $this => $res") }
-    private var tag: Opt[Opt[ClassTag]] = N
-    def mkTag(implicit ctx: Ctx): Opt[ClassTag] = tag.getOrElse {
-      val res = ctx.tyDefs.get(defn.name) match {
-        case S(td: TypeDef) if td.kind is Cls => S(clsNameToNomTag(td)(noProv, ctx))
-        case _ => N
-      }
-      tag = S(res)
-      res
-    }
-    def mapTargs[R](pol: Opt[Bool])(f: (Opt[Bool], ST) => R)(implicit ctx: Ctx): Ls[R] = {
-      // val td = ctx.tyDefs(defn.name)
-      // td.tvarVariances.fold(targs.map(f(N, _))) { tvv =>
-      //   assert(td.tparamsargs.sizeCompare(targs) === 0)
-      //   (td.tparamsargs lazyZip targs).map { case ((_, tv), ta) =>
-      
-      // TODO factor w/ below
-      val (tvarVariances, tparamsargs) = ctx.tyDefs.get(defn.name) match {
-        case S(td) =>
-          (td.tvarVariances, td.tparamsargs)
-        case N =>
-          val td = ctx.tyDefs2(defn.name)
-          (N, td.tparams.map(tp => (tp._1, tp._2)))
-      }
-      tvarVariances.fold(targs.map(f(N, _))) { tvv =>
-        assert(tparamsargs.sizeCompare(targs) === 0)
-        (tparamsargs lazyZip targs).map { case ((_, tv), ta) =>
-          tvv(tv) match {
-            case VarianceInfo(true, true) =>
-              f(N, TypeBounds(BotType, TopType)(noProv))
-            case VarianceInfo(co, contra) =>
-              f(if (co) pol else if (contra) pol.map(!_) else N, ta)
-          }
-      }}
-    }
-    // TODO dedup w/ above
-    def mapTargs[R](pol: PolMap)(f: (PolMap, ST) => R)(implicit ctx: Ctx): Ls[R] = {
-      // val td = ctx.tyDefs.getOrElse(defn.name, ctx.tyDefs2(defn.name))
-      // td.tvarVariances.fold(targs.map(f(pol.invar, _))) { tvv =>
-      //   assert(td.tparamsargs.sizeCompare(targs) === 0)
-      //   (td.tparamsargs lazyZip targs).map { case ((_, tv), ta) =>
-      val (tvarVariances, tparamsargs) = ctx.tyDefs.get(defn.name) match {
-        case S(td) =>
-          (td.tvarVariances, td.tparamsargs)
-        case N =>
-          val td = ctx.tyDefs2(defn.name)
-          // (N, td.tparams)
-          // (td.explicitVariances, td.tparams)
-          // TODO computed varces
-          // (some[VarianceStore](
-          //   MutMap.from(td.tparams.iterator.map(tp => tp._2 -> tp._3.getOrElse(VarianceInfo.in)))
-          // ), td.tparams.map(tp => (tp._1, tp._2)))
-          (some(td.explicitVariances), td.tparams.map(tp => (tp._1, tp._2)))
-      }
-      tvarVariances.fold(targs.map(f(pol.invar, _))) { tvv =>
-        assert(tparamsargs.sizeCompare(targs) === 0)
-        (tparamsargs lazyZip targs).map { case ((_, tv), ta) =>
-          tvv(tv) match {
-            case VarianceInfo(true, true) =>
-              f(pol.invar, TypeBounds(BotType, TopType)(noProv))
-            case VarianceInfo(co, contra) =>
-              f(if (co) pol else if (contra) pol.contravar else pol.invar, ta)
-          }
-      }}
-    }
     override def toString = showProvOver(false) {
       val displayName =
         if (primitiveTypes.contains(defn.name)) defn.name.capitalize else defn.name
@@ -1048,7 +404,12 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     override def toString = showProvOver(false)(id.idStr+s"<${parents.map(_.name).mkString(",")}>")
   }
   
-  sealed trait TypeVarOrRigidVar extends SimpleType
+  sealed trait TypeVarOrRigidVar extends SimpleType {
+    def assertTV: TV = this match {
+      case tv: TV => tv
+      case _ => lastWords(s"$this was not a type variable")
+    }
+  }
   
   sealed trait ObjectTag extends TypeTag {
     val id: SimpleTerm

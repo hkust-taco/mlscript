@@ -45,13 +45,15 @@ final case class MethodDef[RHS <: Term \/ Type](
 
 sealed trait NameRef extends Located { val name: Str }
 
-sealed abstract class TypeDefKind(val str: Str)
+sealed abstract class DeclKind(val str: Str)
+case object Val extends DeclKind("value")
+sealed abstract class TypeDefKind(str: Str) extends DeclKind(str)
 sealed trait ObjDefKind
 case object Cls extends TypeDefKind("class") with ObjDefKind
 case object Trt extends TypeDefKind("trait") with ObjDefKind
 case object Mxn extends TypeDefKind("mixin")
 case object Als extends TypeDefKind("type alias")
-case object Nms extends TypeDefKind("module")
+case object Nms extends TypeDefKind("module") with ObjDefKind
 
 sealed abstract class Term                                           extends Terms with TermImpl
 sealed abstract class Lit                                            extends SimpleTerm with LitImpl
@@ -139,7 +141,7 @@ final case class Bounds(lb: Type, ub: Type)              extends Type
 final case class WithExtension(base: Type, rcd: Record)  extends Type
 final case class Splice(fields: Ls[Either[Type, Field]]) extends Type
 final case class Constrained(base: TypeLike, tvBounds: Ls[TypeVar -> Bounds], where: Ls[Bounds]) extends Type
-final case class FirstClassDefn(defn: NuTypeDef)         extends Type
+// final case class FirstClassDefn(defn: NuTypeDef)         extends Type // TODO
 
 final case class Field(in: Opt[Type], out: Type)         extends FieldImpl
 
@@ -189,10 +191,10 @@ final case class NuFunDef(
   isLetRec: Opt[Bool], // None means it's a `fun`, which is always recursive; Some means it's a `let`
   nme: Var,
   tparams: Ls[TypeName],
-  // rhs: Term \/ PolyType,
   rhs: Term \/ Type,
 ) extends NuDecl with DesugaredStatement {
   val body: Located = rhs.fold(identity, identity)
+  def kind: DeclKind = Val
 }
 
 

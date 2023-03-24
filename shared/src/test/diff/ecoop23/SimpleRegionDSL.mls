@@ -32,7 +32,7 @@ mixin SizeBase {
 }
 //│ mixin SizeBase() {
 //│   this: {size: ('a | 'a0 | 'a1 | 'a2) -> int}
-//│   fun size: (Circle | Intersect['a2] | Outside['a0] | Translate['a] | Union['a1]) -> int
+//│   fun size: (Circle | Intersect['a1] | Outside['a] | Translate['a2] | Union['a0]) -> int
 //│ }
 
 // ******************* Linguistic Reuse and Meta-Language Optimizations *******************
@@ -45,7 +45,7 @@ fun go(x, offset) =
   else
     let shared = go(x - 1, round(offset / 2))
     Union(Translate(Vector(0 - offset, 0), shared), Translate(Vector(offset, 0), shared))
-//│ fun go: (int, int,) -> 'Region
+//│ fun go: forall 'Region. (int, int,) -> 'Region
 //│   where
 //│     'Region :> Circle | Union[Translate['Region]]
 
@@ -77,7 +77,7 @@ mixin SizeExt {
 //│ mixin SizeExt() {
 //│   super: {size: 'b -> 'c}
 //│   this: {size: 'a -> int}
-//│   fun size: (Empty | Scale['a] | Univ | 'b & ~Empty & ~Scale & ~Univ) -> (int | 'c)
+//│   fun size: (Empty | Scale['a] | Univ | 'b & ~#Empty & ~#Scale & ~#Univ) -> (int | 'c)
 //│ }
 
 module TestSize extends SizeBase, SizeExt
@@ -186,16 +186,16 @@ mixin Text {
 
 :e
 module SizeText extends Text
-//│ ╔══[ERROR] unsupported indirectly recursive member access
+//│ ╔══[ERROR] Module `SizeText` does not contain member `size`
 //│ ║  l.180: 	      Translate then concat("a translated region of size ", toString(this.size(e)))
 //│ ╙──       	                                                                         ^^^^^
-//│ ╔══[ERROR] unsupported indirectly recursive member access
+//│ ╔══[ERROR] Module `SizeText` does not contain member `size`
 //│ ║  l.179: 	      Intersect then concat("the intersection of two regions of size ", toString(this.size(e)))
 //│ ╙──       	                                                                                     ^^^^^
-//│ ╔══[ERROR] unsupported indirectly recursive member access
+//│ ╔══[ERROR] Module `SizeText` does not contain member `size`
 //│ ║  l.178: 	      Union then concat("the union of two regions of size ", toString(this.size(e)))
 //│ ╙──       	                                                                          ^^^^^
-//│ ╔══[ERROR] unsupported indirectly recursive member access
+//│ ╔══[ERROR] Module `SizeText` does not contain member `size`
 //│ ║  l.177: 	      Outside(a) then concat("outside a region of size ", toString(this.size(a)))
 //│ ╙──       	                                                                       ^^^^^
 //│ module SizeText() {
@@ -313,7 +313,7 @@ mixin Eliminate {
 }
 //│ mixin Eliminate() {
 //│   this: {eliminate: 'a -> 'b & 'a0 -> 'c & 'a1 -> 'd & 'a2 -> 'e & 'a3 -> 'f & 'a4 -> 'g}
-//│   fun eliminate: (Intersect['a2] | Outside['a0 & (Outside['a] | ~Outside)] | Scale['a4] | Translate['a3] | Union['a1] | 'h & ~Intersect & ~Outside & ~Scale & ~Translate & ~Union) -> (Intersect['e] | Outside['c] | Scale['g] | Translate['f] | Union['d] | 'b | 'h)
+//│   fun eliminate: forall 'h. (Intersect['a2] | Outside['a0 & (Outside['a] | ~#Outside)] | Scale['a4] | Translate['a3] | Union['a1] | 'h & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union) -> (Intersect['e] | Outside['c] | Scale['g] | Translate['f] | Union['d] | 'b | 'h)
 //│ }
 
 module TestElim extends Eliminate
@@ -321,7 +321,7 @@ module TestElim extends Eliminate
 //│   fun eliminate: 'a -> 'b
 //│ }
 //│ where
-//│   'a <: Intersect['a] | Outside['a & (Outside['a] | ~Outside)] | Scale['a] | Translate['a] | Union['a] | 'b & ~Intersect & ~Outside & ~Scale & ~Translate & ~Union
+//│   'a <: Intersect['a] | Outside['a & (Outside['a] | ~#Outside)] | Scale['a] | Translate['a] | Union['a] | 'b & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union
 //│   'b :> Outside['b] | Union['b] | Intersect['b] | Translate['b] | Scale['b]
 
 TestElim.eliminate(Outside(Outside(Univ())))
@@ -344,7 +344,7 @@ fun mk(n) = if n is
   3 then Intersect(mk(n), mk(n))
   4 then Translate(Vector(0, 0), mk(n))
   _ then Scale(Vector(0, 0), mk(n))
-//│ fun mk: number -> 'Region
+//│ fun mk: forall 'Region. number -> 'Region
 //│   where
 //│     'Region :> Intersect['Region] | Outside['Region] | Scale['Region] | Translate['Region] | Union['Region]
 
@@ -375,8 +375,8 @@ module Lang extends SizeBase, SizeExt, Contains, Text, IsUniv, IsEmpty, Eliminat
 //│   'Region <: 'f
 //│   'd <: Intersect['d] | Outside['e] | Scale['d] | Translate['d] | Union['d] | Univ | ~Intersect[anything] & ~Outside[anything] & ~Scale[anything] & ~Translate[anything] & ~Union[anything] & ~Univ
 //│   'e <: Intersect['e] | Outside['d] | Scale['e] | Translate['e] | Union['e] | Univ | ~Intersect[anything] & ~Outside[anything] & ~Scale[anything] & ~Translate[anything] & ~Union[anything] & ~Univ
-//│   'b <: Intersect['b] | Outside['b & (Outside['b] | ~Outside)] | Scale['b] | Translate['b] | Union['b] | 'c & ~Intersect & ~Outside & ~Scale & ~Translate & ~Union
-//│   'c :> Union['c] | Intersect['c] | Translate['c] | Scale['c] | Outside['c]
+//│   'b <: Intersect['b] | Outside['b & (Outside['b] | ~#Outside)] | Scale['b] | Translate['b] | Union['b] | 'c & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union
+//│   'c :> Translate['c] | Scale['c] | Outside['c] | Union['c] | Intersect['c]
 //│   'a <: Circle | Intersect['a] | Outside['a] | Translate['a] | Union['a]
 
 // TODO investigate

@@ -1,6 +1,4 @@
-:NewParser
 :NewDefs
-:NoJS
 
 
 fun foo1 = forall 'A; (x: 'A) => x
@@ -8,6 +6,8 @@ fun foo1 = forall 'A; (x: 'A) => x
 
 foo1(42)
 //│ 42
+//│ res
+//│     = 42
 
 :e
 foo1[int](42)
@@ -15,34 +15,44 @@ foo1[int](42)
 //│ ║  l.13: 	foo1[int](42)
 //│ ╙──      	^^^^^^^^^
 //│ error
+//│ res
+//│     = 42
 
 
 fun foo2<A>(x: A) = x
-//│ fun foo2: (x: 'a,) -> 'a
+//│ fun foo2: forall 'A. (x: 'A,) -> 'A
 
 foo2(42)
 //│ 42
+//│ res
+//│     = 42
 
 :e
 foo2<int>(42)
 //│ ╔══[ERROR] Type application syntax is not yet supported
-//│ ║  l.27: 	foo2<int>(42)
+//│ ║  l.31: 	foo2<int>(42)
 //│ ╙──      	^^^^^^^^^
 //│ error
+//│ res
+//│     = 42
 
 
 fun foo3[A](x: A) = x
-//│ fun foo3: (x: 'a,) -> 'a
+//│ fun foo3: forall 'A. (x: 'A,) -> 'A
 
 foo3(42)
 //│ 42
+//│ res
+//│     = 42
 
 :e
 foo3[int](42)
 //│ ╔══[ERROR] Type application syntax is not yet supported
-//│ ║  l.41: 	foo3[int](42)
+//│ ║  l.49: 	foo3[int](42)
 //│ ╙──      	^^^^^^^^^
 //│ error
+//│ res
+//│     = 42
 
 
 fun bar: forall 'A; 'A => 'A
@@ -51,55 +61,65 @@ fun bar: forall 'A; 'A => 'A
 :e
 fun bar<A> : A => A
 //│ ╔══[ERROR] Type parameters here are not yet supported in this position
-//│ ║  l.52: 	fun bar<A> : A => A
+//│ ║  l.62: 	fun bar<A> : A => A
 //│ ╙──      	        ^
 //│ ╔══[ERROR] type identifier not found: A
-//│ ║  l.52: 	fun bar<A> : A => A
+//│ ║  l.62: 	fun bar<A> : A => A
 //│ ╙──      	             ^
 //│ ╔══[ERROR] type identifier not found: A
-//│ ║  l.52: 	fun bar<A> : A => A
+//│ ║  l.62: 	fun bar<A> : A => A
 //│ ╙──      	                  ^
 //│ fun bar: error -> error
 
 :pe
 :e
 :w
+:ge
 fun bar<A>: A => A
 //│ ╔══[PARSE ERROR] Unmatched opening angle bracket
-//│ ║  l.67: 	fun bar<A>: A => A
+//│ ║  l.78: 	fun bar<A>: A => A
 //│ ║        	       ^
 //│ ╙── Note that `<` without spaces around it is considered as an angle bracket and not as an operator
 //│ ╔══[PARSE ERROR] Unexpected 'fun' keyword in expression position
-//│ ║  l.67: 	fun bar<A>: A => A
+//│ ║  l.78: 	fun bar<A>: A => A
 //│ ╙──      	^^^
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.67: 	fun bar<A>: A => A
+//│ ║  l.78: 	fun bar<A>: A => A
 //│ ╙──      	    ^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Unsupported pattern shape:
-//│ ║  l.67: 	fun bar<A>: A => A
+//│ ║  l.78: 	fun bar<A>: A => A
 //│ ╙──      	        ^^^^^
 //│ ╔══[ERROR] identifier not found: A
-//│ ║  l.67: 	fun bar<A>: A => A
+//│ ║  l.78: 	fun bar<A>: A => A
 //│ ╙──      	                 ^
 //│ error -> error
+//│ Code generation encountered an error:
+//│   term App(App(Var(>:), Tup(_: Var(A))), Tup(_: Var(A))) is not a valid pattern
 
 
+:e
 module Test {
   fun foo: 'A => 'A
   fun bar: 'A
   fun test<A>(x: A) = x
 }
+//│ ╔══[ERROR] Member foo is declared but not defined
+//│ ║  l.102: 	  fun foo: 'A => 'A
+//│ ╙──       	      ^^^
+//│ ╔══[ERROR] Member bar is declared but not defined
+//│ ║  l.103: 	  fun bar: 'A
+//│ ╙──       	      ^^^
 //│ module Test() {
 //│   fun bar: nothing
 //│   fun foo: forall 'A. 'A -> 'A
-//│   fun test: (x: 'a,) -> 'a
+//│   fun test: forall 'A0. (x: 'A0,) -> 'A0
 //│ }
 
 class Test<A>(n: A) {
   fun test<A>(x: A) = [x, n]
 }
 //│ class Test[A](n: A) {
-//│   fun test: (x: 'a,) -> ('a, A,)
+//│   fun test: forall 'A. (x: 'A,) -> ('A, A,)
 //│ }
 
 

@@ -3,7 +3,6 @@
 
 
 
-// * FIXME `let` fields should not be getters
 :js
 mixin Foo0 {
   let foo0 = 0
@@ -17,11 +16,12 @@ mixin Foo0 {
 //│   cache: {},
 //│   Foo0(base) {
 //│     return (class Foo0 extends base {
+//│       #foo0;
+//│       get foo0() { return this.#foo0; }
 //│       constructor(...rest) {
 //│         super(...rest);
-//│       }
-//│       get foo0() {
-//│         return 0;
+//│         this.#foo0 = 0;
+//│         const foo0 = this.#foo0;
 //│       }
 //│     });
 //│   }
@@ -44,14 +44,16 @@ mixin Foo1 {
 //│   cache: {},
 //│   Foo1(base) {
 //│     return (class Foo1 extends base {
+//│       #foo0;
+//│       #foo1;
+//│       get foo0() { return this.#foo0; }
+//│       get foo1() { return this.#foo1; }
 //│       constructor(...rest) {
 //│         super(...rest);
-//│       }
-//│       get foo0() {
-//│         return 1;
-//│       }
-//│       get foo1() {
-//│         return super.foo0;
+//│         this.#foo0 = 1;
+//│         const foo0 = this.#foo0;
+//│         this.#foo1 = super.foo0;
+//│         const foo1 = this.#foo1;
 //│       }
 //│     });
 //│   }
@@ -78,7 +80,7 @@ mixin Foo2 {
   fun foo2 = super
 }
 //│ ╔══[ERROR] Illegal use of `super`
-//│ ║  l.78: 	  fun foo2 = super
+//│ ║  l.80: 	  fun foo2 = super
 //│ ╙──      	             ^^^^^
 //│ mixin Foo2() {
 //│   super: 'super
@@ -112,37 +114,33 @@ module Test0 extends Foo2
 //│ // Prelude
 //│ let typing_unit5 = {
 //│   cache: {},
-//│   get Test01() {
-//│     if (this.cache.Test01 === undefined) {
-//│       class Test01 extends Foo2(Object) {
+//│   get Test0() {
+//│     if (this.cache.Test0 === undefined) {
+//│       class Test0 extends Foo2(Object) {
 //│         constructor() {
 //│           super();
 //│         }
 //│       }
-//│       this.cache.Test01 = new Test01();
-//│       this.cache.Test01["class"] = Test01;
+//│       this.cache.Test0 = new Test0();
+//│       this.cache.Test0["class"] = Test0;
 //│     }
-//│     return this.cache.Test01;
+//│     return this.cache.Test0;
 //│   }
 //│ };
-//│ globalThis.Test01 = typing_unit5.Test01;
+//│ globalThis.Test0 = typing_unit5.Test0;
 //│ // End of generated code
 //│ Runtime error:
 //│   ReferenceError: Foo2 is not defined
 
-:re
 Test0
 //│ Test0
 //│ res
-//│ Runtime error:
-//│   ReferenceError: Test01 is not defined
+//│     = Test0 { class: [Function: Test0] }
 
-:re
 Test0.foo2
 //│ anything
 //│ res
-//│ Runtime error:
-//│   ReferenceError: Test01 is not defined
+//│     = undefined
 
 
 class Foo extends Foo0 {

@@ -1,6 +1,4 @@
-:NewParser
 :NewDefs
-:NoJS
 
 
 mixin Over {
@@ -24,8 +22,12 @@ class Base1(p: int) extends Over {
 
 Base1(123).test
 //│ (int, int,)
+//│ res
+//│     = [ 123, 123 ]
 
 Base1(123).test2
 //│ int
+//│ res
+//│     = 'hi'
 
 

@@ -1,4 +1,3 @@
-:NewParser
 :NewDefs
 
 
@@ -12,13 +11,13 @@ fun foo(x: Foo[int]): Foo[number] = x
 :e
 fun foo(x: Foo[number]): Foo[int] = x
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.13: 	fun foo(x: Foo[number]): Foo[int] = x
+//│ ║  l.12: 	fun foo(x: Foo[number]): Foo[int] = x
 //│ ║        	                                    ^
 //│ ╟── type `number` is not an instance of `int`
-//│ ║  l.13: 	fun foo(x: Foo[number]): Foo[int] = x
+//│ ║  l.12: 	fun foo(x: Foo[number]): Foo[int] = x
 //│ ║        	               ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.13: 	fun foo(x: Foo[number]): Foo[int] = x
+//│ ║  l.12: 	fun foo(x: Foo[number]): Foo[int] = x
 //│ ╙──      	                             ^^^
 //│ fun foo: (x: Foo[number],) -> Foo[int]
 
@@ -32,13 +31,13 @@ fun foo(x: Foo[number]): Foo[int] = x
 :e
 fun foo(x: Foo[int]): Foo[number] = x
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.33: 	fun foo(x: Foo[int]): Foo[number] = x
+//│ ║  l.32: 	fun foo(x: Foo[int]): Foo[number] = x
 //│ ║        	                                    ^
 //│ ╟── type `number` is not an instance of `int`
-//│ ║  l.33: 	fun foo(x: Foo[int]): Foo[number] = x
+//│ ║  l.32: 	fun foo(x: Foo[int]): Foo[number] = x
 //│ ║        	                          ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.33: 	fun foo(x: Foo[int]): Foo[number] = x
+//│ ║  l.32: 	fun foo(x: Foo[int]): Foo[number] = x
 //│ ╙──      	               ^^^
 //│ fun foo: (x: Foo[int],) -> Foo[number]
 

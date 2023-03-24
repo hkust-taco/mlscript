@@ -829,11 +829,13 @@ final case class JSClassDecl(
 final case class JSClassNewDecl(
     name: Str,
     fields: Ls[Str],
+    privateMem: Ls[Str],
     `extends`: Opt[JSExpr] = N,
     superFields: Ls[JSExpr] = Nil,
     rest: Opt[Str] = N,
     methods: Ls[JSClassMemberDecl] = Nil,
     implements: Ls[Str] = Nil,
+    initStmts: Ls[JSStmt] = Nil
 ) extends JSStmt {
   def toSourceCode: SourceCode = {
     val constructor: SourceCode = {
@@ -845,9 +847,9 @@ final case class JSClassNewDecl(
         })((p, s) =>
         if (s.isEmpty) s"${p._1}"
         else s"${p._1}, $s")
-      if (!fields.isEmpty) {
-        fields.foreach(f => buffer += s"  #${f};")
-        fields.foreach(f => buffer += s"  get ${f}() { return this.#${f}; }")
+      if (!privateMem.isEmpty) {
+        privateMem.foreach(f => buffer += s"  #${f};")
+        privateMem.foreach(f => buffer += s"  get ${f}() { return this.#${f}; }")
       }
       buffer += s"  constructor($params) {"
       if (`extends`.isDefined) {
@@ -863,6 +865,11 @@ final case class JSClassNewDecl(
       fields.iterator.zipWithIndex.foreach { pair =>
         buffer += s"    this.#${pair._1} = ${pair._1};" // TODO: invalid name?
       }
+      initStmts.foreach { s =>
+        s.toSourceCode.indented.indented.toString.split("\n").foreach {
+          line => buffer += line
+        }
+      }
       buffer += "  }"
       SourceCode(buffer.toList)
     }
@@ -876,7 +883,7 @@ final case class JSClassNewDecl(
         SourceCode(s"class $name extends ") ++ base.toSourceCode ++
           SourceCode(" {") + constructor + methodsSourceCode + epilogue
       case None =>
-        if (fields.isEmpty && methods.isEmpty && implements.isEmpty) {
+        if (fields.isEmpty && methods.isEmpty && implements.isEmpty && initStmts.isEmpty) {
           SourceCode(s"class $name {}")
         } else {
           SourceCode(

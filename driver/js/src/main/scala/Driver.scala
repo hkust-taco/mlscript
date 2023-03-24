@@ -121,15 +121,14 @@ class Driver(options: DriverOptions) {
     implicit val extrCtx: Opt[typer.ExtrCtx] = N
 
     val vars: Map[Str, typer.SimpleType] = Map.empty
-    val tpd = typer.typeTypingUnit(packedTU, allowPure = true)(ctx.nest, raise, vars)
-    val comp = tpd.force()(raise)
+    val tpd = typer.typeTypingUnit(packedTU, topLevel = true)(ctx.nest, raise, vars)
     
     object SimplifyPipeline extends typer.SimplifyPipeline {
       def debugOutput(msg: => Str): Unit =
         // if (mode.dbgSimplif) output(msg)
         println(msg)
     }
-    val sim = SimplifyPipeline(comp, all = false)(ctx)
+    val sim = SimplifyPipeline(tpd, all = false)(ctx)
     val exp = typer.expandType(sim)(ctx)
     val expStr = exp.showIn(ShowCtx.mk(exp :: Nil), 0)
     writeFile(s"${options.outputDir}/.temp", s"$filename.mlsi", expStr)

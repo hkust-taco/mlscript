@@ -1,4 +1,3 @@
-:NewParser
 :NewDefs
 :NoJS
 
@@ -14,6 +13,7 @@
 
 class List<A> {
   fun match: forall 'res; (ifNil: () => 'res, ifCons: (A, List[A]) => 'res) => 'res
+  fun match = error
 }
 let Nil: () => List<'a>
 let Cons: (head: 'a, tail: List<'a>) => List<'a>
@@ -40,7 +40,7 @@ fun list_assoc(s, l: List<'a>) =
       if eq(s, h._1) then Success(h._2)
       else list_assoc(s, t)
   )
-//│ fun list_assoc: (string, l: List['a],) -> (NotFound | Success['A])
+//│ fun list_assoc: forall 'a 'A. (string, l: List['a],) -> (NotFound | Success['A])
 //│   where
 //│     'a <: {_1: string, _2: 'A}
 
@@ -61,7 +61,7 @@ mixin EvalVar {
         Success(r) then r
 }
 //│ mixin EvalVar() {
-//│   fun eval: (List[{_1: string, _2: 'b}], Var,) -> ('b | Var)
+//│   fun eval: forall 'b. (List[{_1: string, _2: 'b}], Var,) -> ('b | Var)
 //│ }
 
 class Abs<A>(x: string, t: A)
@@ -96,8 +96,8 @@ mixin EvalLambda {
 }
 //│ mixin EvalLambda() {
 //│   super: {eval: ('b, 'c,) -> 'd}
-//│   this: {eval: (List[out (string, 'e,)], 't,) -> 'd & ('b, 't0,) -> ('e & 'f) & (List[in 'a out 'a | 'a0 | (string, Var,)], 't1,) -> 'g}
-//│   fun eval: (List['a1] & 'b, Abs['t1] | App['t0 & (Abs['t] | ~Abs)] | 'c & ~Abs & ~App,) -> (Abs['g] | App['e | 'f] | 'd)
+//│   this: {eval: ('b, 's,) -> ('e & 'f) & (List[out (string, 'f,)], 't,) -> 'd & (List[in 'a out 'a | 'a0 | (string, Var,)], 't0,) -> 'g}
+//│   fun eval: forall 'a1. (List['a1] & 'b, Abs['t0] | App['s & (Abs['t] | ~#Abs)] | 'c & ~#Abs & ~#App,) -> (Abs['g] | App['e | 'f] | 'd)
 //│ }
 //│ where
 //│   'a1 :> 'a | (string, Var,)
@@ -108,7 +108,7 @@ module Test1 extends EvalVar, EvalLambda
 //│   fun eval: (List[{_1: string, _2: 'result}], 'a,) -> 'result
 //│ }
 //│ where
-//│   'a <: Abs['a] | App['a & (Abs['a] | ~Abs)] | Var
+//│   'a <: Abs['a] | App['a & (Abs['a] | ~#Abs)] | Var
 //│   'result :> anything
 
 Test1.eval(Nil(), Var("a"))
@@ -119,7 +119,7 @@ Test1.eval(Nil(), Var("a"))
 Test1.eval(Nil(), Abs("b", Var("a")))
 //│ 'a
 //│   where
-//│     'a :> App['a] | Abs['a] | Var
+//│     'a :> Var | App['a] | Abs['a]
 
 Test1.eval(Cons(("c", Var("d")), Nil()), App(Abs("b", Var("b")), Var("c")))
 //│ 'a
@@ -129,7 +129,7 @@ Test1.eval(Cons(("c", Var("d")), Nil()), App(Abs("b", Var("b")), Var("c")))
 Test1.eval(Cons(("c", Abs("d", Var("d"))), Nil()), App(Abs("b", Var("b")), Var("c")))
 //│ 'a
 //│   where
-//│     'a :> App['a] | Abs['a] | Abs[Var] | Var
+//│     'a :> Abs[Var] | Var | App['a] | Abs['a]
 
 class Num(n: int)
 class Add<A>(l: A, r: A)
@@ -144,7 +144,7 @@ fun map_expr(f, v) =
     Num then v
     Add(l, r) then Add(f(l), f(r))
     Mul(l, r) then Mul(f(l), f(r))
-//│ fun map_expr: ('l -> 'A & 'l0 -> 'A0, Add['l] | Mul['l0] | Num | Var,) -> (Add['A] | Mul['A0] | Num | Var)
+//│ fun map_expr: forall 'A 'l 'A0 'l0. ('l -> 'A0 & 'l0 -> 'A, Add['l] | Mul['l0] | Num | Var,) -> (Add['A0] | Mul['A] | Num | Var)
 
 mixin EvalExpr {
   fun eval(sub, v) =
@@ -159,7 +159,7 @@ mixin EvalExpr {
 //│ mixin EvalExpr() {
 //│   super: {eval: ('a, Var,) -> 'b}
 //│   this: {eval: ('a, 'c,) -> anything}
-//│   fun eval: ('a, 'd & (Add['c] | Mul['c] | Num | Var),) -> (Num | 'd | 'b)
+//│   fun eval: forall 'd. ('a, 'd & (Add['c] | Mul['c] | Num | Var),) -> (Num | 'd | 'b)
 //│ }
 
 module Test2 extends EvalVar, EvalExpr
@@ -187,7 +187,7 @@ module Test3 extends EvalVar, EvalExpr, EvalLambda
 //│   fun eval: (List[{_1: string, _2: 'result}], 'a,) -> anything
 //│ }
 //│ where
-//│   'a <: Abs['a] | App['a & (Abs['a] | ~Abs)] | (Add['b] | Mul['b] | Num | Var) & ~Abs & ~App
+//│   'a <: Abs['a] | App['a & (Abs['a] | ~#Abs)] | (Add['b] | Mul['b] | Num | Var) & ~#Abs & ~#App
 //│   'b <: 'a
 //│   'result :> anything
 //│           <: Num

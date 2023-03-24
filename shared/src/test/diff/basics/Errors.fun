@@ -477,7 +477,7 @@ f arg2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+3: 	f arg1
 //│ ║        	^^^^^^
-//│ ╟── record of type `{fld: ?a}` does not have field 'prop'
+//│ ╟── record of type `forall ?a. {fld: ?a}` does not have field 'prop'
 //│ ║  l.+1: 	let arg1 = {fld: not true}
 //│ ║        	           ^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{prop: ?prop}`
@@ -612,7 +612,7 @@ i arg
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+2: 	i arg
 //│ ║        	^^^^^
-//│ ╟── record of type `{prop: ?a}` does not have field 'fld'
+//│ ╟── record of type `forall ?a. {prop: ?a}` does not have field 'fld'
 //│ ║  l.402: 	let arg = {prop: not true}
 //│ ║         	          ^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{fld: ?fld}`

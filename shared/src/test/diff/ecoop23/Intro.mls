@@ -2,6 +2,8 @@
 :NewDefs
 
 
+// * Examples from paper intro
+
 
 class Some<A>(value: A)
 module None
@@ -12,18 +14,18 @@ module None
 
 mixin ComparePoint {
   fun compare(lhs, rhs) =
-    (lhs.x == rhs.x) && (lhs.y == rhs.y)
+    (lhs.x === rhs.x) && (lhs.y === rhs.y)
 }
 //│ mixin ComparePoint() {
-//│   fun compare: ({x: number, y: number}, {x: number, y: number},) -> bool
+//│   fun compare: forall 'a 'b. ({x: Eql['a], y: Eql['b]}, {x: 'a, y: 'b},) -> bool
 //│ }
 
 
 class Color(str: string) {
-  fun equals(that) = eq(str)(that.str)
+  fun equals(that) = str === that.str
 }
 //│ class Color(str: string) {
-//│   fun equals: {str: anything} -> bool
+//│   fun equals: {str: string} -> bool
 //│ }
 
 let Red = Color("red")
@@ -38,7 +40,7 @@ mixin CompareColored {
 }
 //│ mixin CompareColored() {
 //│   super: {compare: ('a, 'b,) -> bool}
-//│   fun compare: ({color: {equals: 'color -> bool}} & 'a, {color: 'color} & 'b,) -> bool
+//│   fun compare: forall 'color. ({color: {equals: 'color -> bool}} & 'a, {color: 'color} & 'b,) -> bool
 //│ }
 
 
@@ -86,7 +88,7 @@ mixin CompareNested {
 
 
 class MyPoint(x: int, y: int, color: Color, parent: Some[MyPoint] | None)
-//│ class MyPoint(x: int, y: int, color: Color, parent: None | Some[MyPoint])
+//│ class MyPoint(x: int, y: int, color: Color, parent: Some[MyPoint] | None)
 
 
 module CompareMyPoint extends ComparePoint, CompareColored, CompareNested
@@ -94,8 +96,8 @@ module CompareMyPoint extends ComparePoint, CompareColored, CompareNested
 //│   fun compare: ('a, 'b,) -> bool
 //│ }
 //│ where
-//│   'b <: {color: 'color, parent: Some['b] | ~Some[anything], x: number, y: number}
-//│   'a <: {color: {equals: 'color -> bool}, parent: Some['a] | ~Some[anything], x: number, y: number}
+//│   'b <: {color: 'color, parent: Some['b] | ~Some[anything], x: 'c, y: 'd}
+//│   'a <: {color: {equals: 'color -> bool}, parent: Some['a] | ~Some[anything], x: Eql['c], y: Eql['d]}
 
 
 let p0 = MyPoint(0, 0, Red, None)
