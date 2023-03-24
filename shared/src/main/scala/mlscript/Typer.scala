@@ -478,6 +478,34 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             TypeRef(base, realTargs)(prov)
           case L(e) => e()
         }
+      case Selection(base, nme) =>
+        implicit val gl: GenLambdas = false
+        // val base_ty = typeTerm(base)
+        val base_ty = rec(base)
+        def go(b_ty: ST, rfnt: Var => Opt[FieldType]): ST = b_ty.unwrapAll match {
+          case ct: TypeRef => die // TODO actually
+          case ClassTag(Var(clsNme), _) =>
+            // ctx.tyDefs2.get(clsNme) match {
+            //   case S(lti) =>
+            //     ???
+            //   case N => die
+            // }
+            
+            // TODO we should still succeed even if the member is not completed...
+            lookupMember(clsNme, rfnt, nme.toVar) match {
+              case R(cls: TypedNuCls) =>
+                if (cls.tparams.nonEmpty) ??? // TODO
+                clsNameToNomTag(cls.td)(TypeProvenance(ty.toLoc, "type selection", isType = true), ctx)
+              case R(als: TypedNuAls) =>
+                if (als.tparams.nonEmpty) ??? // TODO
+                als.body
+              case R(m) => err(msg"Illegal selection of ${m.kind.str} member in type position", nme.toLoc)
+              case L(d) => err(d)
+            }
+          case _ =>
+            err(msg"Illegal prefix of type selection: ${b_ty.expPos}", base.toLoc)
+        }
+        go(base_ty, _ => N)
       case Recursive(uv, body) =>
         val tv = freshVar(tyTp(ty.toLoc, "local type binding"), N, uv.name)
         val bod = rec(body)(ctx, recVars + (uv -> tv))
