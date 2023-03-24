@@ -84,8 +84,9 @@ class Driver(options: DriverOptions) {
     import typer._
     type ModuleType = DelayedTypeInfo
 
-    var ctx: Ctx = Ctx.init
+    implicit var ctx: Ctx = Ctx.init
     implicit val raise: Raise = report
+    implicit val extrCtx: Opt[typer.ExtrCtx] = N
 
     def importModule(modulePath: String): Unit = {
       val filename = s"${options.outputDir}/.temp/$modulePath.mlsi"
@@ -96,7 +97,7 @@ class Driver(options: DriverOptions) {
             content.splitSane('\n').toIndexedSeq.map(line => s"  $line").reduceLeft(_ + "\n" + _) + "\n}"
           val lines = wrapped.splitSane('\n').toIndexedSeq
           val fph = new mlscript.FastParseHelpers(wrapped, lines)
-          val origin = Origin("<input>", 1, fph)
+          val origin = Origin(modulePath, 1, fph)
           val lexer = new NewLexer(origin, throw _, dbg = false)
           val tokens = lexer.bracketedTokens
 
@@ -109,9 +110,7 @@ class Driver(options: DriverOptions) {
               val vars: Map[Str, typer.SimpleType] = Map.empty
               val tpd = typer.typeTypingUnit(tu, topLevel = true)(ctx.nest, raise, vars)
               object SimplifyPipeline extends typer.SimplifyPipeline {
-                def debugOutput(msg: => Str): Unit =
-                  // if (mode.dbgSimplif) output(msg)
-                  println(msg)
+                def debugOutput(msg: => Str): Unit = println(msg)
               }
               val sim = SimplifyPipeline(tpd, all = false)(ctx)
               val exp = typer.expandType(sim)(ctx)
@@ -123,18 +122,15 @@ class Driver(options: DriverOptions) {
     }
 
     depList.foreach(d => importModule(d.substring(0, d.lastIndexOf("."))))
-    
-    implicit var nestedCtx: Ctx = ctx.nest
-    implicit val extrCtx: Opt[typer.ExtrCtx] = N
     val vars: Map[Str, typer.SimpleType] = Map.empty
-    val tpd = typer.typeTypingUnit(tu, topLevel = true)(nestedCtx.nest, raise, vars)
+    val tpd = typer.typeTypingUnit(tu, topLevel = true)(ctx.nest, raise, vars)
     object SimplifyPipeline extends typer.SimplifyPipeline {
       def debugOutput(msg: => Str): Unit =
         // if (mode.dbgSimplif) output(msg)
         println(msg)
     }
-    val sim = SimplifyPipeline(tpd, all = false)(nestedCtx)
-    val exp = typer.expandType(sim)(nestedCtx)
+    val sim = SimplifyPipeline(tpd, all = false)(ctx)
+    val exp = typer.expandType(sim)(ctx)
     val expStr = exp.showIn(ShowCtx.mk(exp :: Nil), 0)
     writeFile(s"${options.outputDir}/.temp", s"$filename.mlsi", expStr)
   }
