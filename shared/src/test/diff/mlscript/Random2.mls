@@ -57,9 +57,7 @@ rec def f a = a a
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.51: 	rec def f a = a a
 //│ ║        	^^^^^^^^^^^^^^^^^
-//│ ╟── function of type `?a -> ?b` does not have field 'x'
-//│ ║  l.51: 	rec def f a = a a
-//│ ║        	          ^^^^^^^
+//│ ╟── expression of type `forall ?f. ?f` does not have field 'x'
 //│ ╟── Note: constraint arises from record type:
 //│ ║  l.8: 	def f: { x: 'a } as 'a
 //│ ╙──     	       ^^^^^^^^^

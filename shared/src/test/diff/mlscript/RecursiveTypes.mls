@@ -360,7 +360,7 @@ bar2_ty2 = bar_ty2
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.352: 	bar2_ty2 = bar_ty2
 //│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ╟── type `C['r]` does not have field 'x'
+//│ ╟── type `forall 'r. 'r` does not have field 'x'
 //│ ║  l.285: 	def bar_ty2: C['r] as 'r
 //│ ║         	             ^^^^^
 //│ ╟── but it flows into reference with expected type `{x: 'r0}`
@@ -587,9 +587,9 @@ f_manual_ns ainf
 //│ ╟── Note: constraint arises from record type:
 //│ ║  l.571: 	def f_manual_ns: 'a | ('b & (({a: 'd & 'c} as 'c) | ~{a: 'e | int} | ~{})\a & (({a: 'd & 'c} as 'c) | ~{a: 'e | int})\a & (({a: 'f} as 'c) as 'f) & (int | ~{a: 'e | int} | ~{})\a & (int | ~{a: 'e | int})\a & int & int) -> ('g | 'd | ('b | 'h\a & {a: 'e | int} as 'h))
 //│ ║         	                              ^^^^^^^^^^^^
-//│ ╟── from intersection type:
+//│ ╟── from local type binding:
 //│ ║  l.571: 	def f_manual_ns: 'a | ('b & (({a: 'd & 'c} as 'c) | ~{a: 'e | int} | ~{})\a & (({a: 'd & 'c} as 'c) | ~{a: 'e | int})\a & (({a: 'f} as 'c) as 'f) & (int | ~{a: 'e | int} | ~{})\a & (int | ~{a: 'e | int})\a & int & int) -> ('g | 'd | ('b | 'h\a & {a: 'e | int} as 'h))
-//│ ╙──       	                                  ^^^^^^^
+//│ ╙──       	                             ^^^^^^^^^^^^^^^^^^^^
 //│ res: error
 
 def f_manual_2: (({a: 'a} as 'a) & 'b) -> ('b | 'c\a & {a: int} as 'c)

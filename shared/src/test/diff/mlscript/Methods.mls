@@ -288,7 +288,7 @@ Test3A.F
 //│ ╔══[ERROR] identifier not found: Test3A
 //│ ║  l.284: 	Test3A.F
 //│ ╙──       	^^^^^^
-//│ res: error
+//│ res: nothing
 //│    = undefined
 
 class Test3A: Test1[forall 'a. 'a -> 'a]
@@ -306,7 +306,7 @@ Test3B.F
 //│ ╔══[ERROR] identifier not found: Test3B
 //│ ║  l.302: 	Test3B.F
 //│ ╙──       	^^^^^^
-//│ res: error
+//│ res: nothing
 //│    = undefined
 
 

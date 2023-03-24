@@ -22,13 +22,7 @@ x: List<anything>
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.21: 	x: List<anything>
 //│ ║        	^
-//│ ╟── expression of type `anything` is not an instance of type `int`
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.17: 	let x: List<int>
-//│ ║        	            ^^^
-//│ ╟── Note: type parameter A is defined at:
-//│ ║  l.5: 	class List<A> {
-//│ ╙──     	           ^
+//│ ╙── expression of type `anything` does not match type `int`
 //│ List[anything]
 
 

@@ -11,22 +11,36 @@ fun f(x) = if x is C then x
 // f(C : #C)
 
 
-// :d
 class C<A>(a: A)
 //│ class C[A](a: A)
-
-fun f(x) = if x is C(a) then a
-//│ fun f: forall 'a. C['a] -> 'a
 
 let c = C(1)
 //│ let c: C[1]
 //│ c
 //│   = C1 {}
 
+c.a
+//│ 1
+//│ res
+//│     = 1
+
+fun f(x) = if x is C(a) then a
+//│ fun f: forall 'a. C['a] -> 'a
+
 f(c)
 //│ 1
 //│ res
 //│     = 1
+
+
+class C[A](n: A) {
+  fun f = this.n
+  fun g = C(12).n
+}
+//│ class C[A](n: A) {
+//│   fun f: A
+//│   fun g: 12
+//│ }
 
 
 class Some<A>(value: A) {
@@ -175,7 +189,7 @@ class Test(n) {
   fun bar = n
 }
 //│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.173: 	class Test(n) {
+//│ ║  l.187: 	class Test(n) {
 //│ ╙──       	           ^
 //│ class Test(n: error) {
 //│   fun bar: error
@@ -199,13 +213,13 @@ class Test<A>(n: A) {
   fun foo = n + 1
 }
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.199: 	  fun foo = n + 1
+//│ ║  l.213: 	  fun foo = n + 1
 //│ ║         	            ^^^
 //│ ╟── reference of type `A` is not an instance of type `int`
-//│ ║  l.199: 	  fun foo = n + 1
+//│ ║  l.213: 	  fun foo = n + 1
 //│ ║         	            ^
 //│ ╟── Note: type parameter A is defined at:
-//│ ║  l.198: 	class Test<A>(n: A) {
+//│ ║  l.212: 	class Test<A>(n: A) {
 //│ ╙──       	           ^
 //│ class Test[A](n: A) {
 //│   fun foo: error | int
@@ -282,13 +296,13 @@ class TestBad<A> {
   fun foo2(x: A) = x + 1
 }
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.282: 	  fun foo2(x: A) = x + 1
+//│ ║  l.296: 	  fun foo2(x: A) = x + 1
 //│ ║         	                   ^^^
 //│ ╟── reference of type `A` is not an instance of type `int`
-//│ ║  l.282: 	  fun foo2(x: A) = x + 1
+//│ ║  l.296: 	  fun foo2(x: A) = x + 1
 //│ ║         	                   ^
 //│ ╟── Note: type parameter A is defined at:
-//│ ║  l.280: 	class TestBad<A> {
+//│ ║  l.294: 	class TestBad<A> {
 //│ ╙──       	              ^
 //│ class TestBad[A]() {
 //│   fun foo1: (x: A,) -> A
@@ -371,10 +385,19 @@ w.x
 //│ res
 //│     = C1 {}
 
-// FIXME
+not(w.x.n)
+//│ bool
+//│ res
+//│     = true
+
+:e
 not(w.x.a)
+//│ ╔══[ERROR] Class `C` does not contain member `a`
+//│ ║  l.394: 	not(w.x.a)
+//│ ╙──       	       ^^
 //│ bool
 //│ res
 //│     = false
+
 
 
