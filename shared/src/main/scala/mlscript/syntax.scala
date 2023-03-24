@@ -112,6 +112,7 @@ sealed trait Statement extends StatementImpl
 final case class LetS(isRec: Bool, pat: Term, rhs: Term)  extends Statement
 final case class DataDefn(body: Term)                     extends Statement
 final case class DatatypeDefn(head: Term, body: Term)     extends Statement
+final case class Import(path: Str)                        extends Statement
 
 sealed trait DesugaredStatement extends Statement with DesugaredStatementImpl
 

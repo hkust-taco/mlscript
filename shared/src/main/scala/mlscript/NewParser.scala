@@ -258,6 +258,20 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
       case (SPACE, _) :: _ => consume; block
       case c =>
         val t = c match {
+          case (KEYWORD("import"), l0) :: c =>
+            consume
+            val path = yeetSpaces match {
+              case (LITVAL(StrLit(path)), _) :: _ =>
+                consume
+                path
+              case c =>
+                val (tkstr, loc) = c.headOption.fold(("end of input", lastLoc))(_.mapFirst(_.describe).mapSecond(some))
+                err((
+                  msg"Expected a module path; found ${tkstr} instead" -> loc :: Nil))
+                "<error>"
+            }
+            val res = Import(path)
+            R(res.withLoc(S(l0 ++ res.getLoc)))
           case (KEYWORD(k @ ("class" | "infce" | "trait" | "mixin" | "type" | "namespace" | "module")), l0) :: c =>
             consume
             val kind = k match {

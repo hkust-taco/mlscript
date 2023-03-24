@@ -277,6 +277,7 @@ object NewLexer {
     "exists",
     "in",
     "out",
+    "import"
   )
   
   def printToken(tl: TokLoc): Str = tl match {

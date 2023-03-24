@@ -42,10 +42,7 @@ class Driver(options: DriverOptions) {
         import mlscript.{NewLexer, NewParser, ErrorReport, Origin}
 
         val dependencies = ListBuffer[String]()
-        val lines = content.splitSane('\n').toIndexedSeq.filter((line) =>
-          if (line.startsWith("open ")) { dependencies += line.substring(5); false }
-          else true
-        )
+        val lines = content.splitSane('\n').toIndexedSeq
 
         val depList = dependencies.toList
         val needRecomp = depList.foldLeft(false)((nr, dp) => nr || compile(s"$path$dp.mls", true))
