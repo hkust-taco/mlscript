@@ -365,3 +365,60 @@ let x4 = code"x => ${qq}"
 run(x4)(5)
 //│ res: error
 //│    = 5
+
+
+let f = 0
+//│ f: 0
+//│  = 0
+
+// Note the renaming of `f`, which means it won't be picked up by the QQ
+:js
+fun f(x) = x
+//│ // Query 1
+//│ globalThis.f1 = function f1(x) {
+//│   return x;
+//│ };
+//│ // End of generated code
+//│ f: 'a -> 'a
+//│  = [Function: f1]
+
+code"f(1)"
+//│ res: code & {Code#C = anything, Code#T <: 1}
+//│    = [ 'Fun', [ 'Var', [ 'FreeVar', 'f' ] ], [ 'Tup', [ [Array] ] ] ]
+
+:re
+run(res)
+//│ res: 1
+//│ Runtime error:
+//│   TypeError: globalThis[callee] is not a function
+
+
+// See renaming
+:js
+class Foo(n)
+//│ Defined class Foo
+//│ // Prelude
+//│ class Foo {
+//│   constructor(fields) {
+//│     this.n = fields.n;
+//│   }
+//│ }
+//│ // Query 1
+//│ globalThis.Foo1 = function Foo1(n) {
+//│   return new Foo({ n: n });
+//│ };
+//│ // End of generated code
+//│ Foo: 'n -> (Foo with {n: 'n})
+//│    = [Function: Foo1]
+
+code"Foo(1)"
+//│ res: code & {Code#C = anything, Code#T <: Foo & {n: 1}}
+//│    = [ 'Fun', [ 'Var', [ 'FreeVar', 'Foo' ] ], [ 'Tup', [ [Array] ] ] ]
+
+:re
+run(res)
+//│ res: Foo & {n: 1}
+//│ Runtime error:
+//│   TypeError: globalThis[callee] is not a function
+
+

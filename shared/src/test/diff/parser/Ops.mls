@@ -73,7 +73,7 @@ acc +
 a+
   b
   c
-//│ /!!!\ Uncaught error: java.lang.ArrayIndexOutOfBoundsException: 10
+//│ /!!!\ Uncaught error: java.lang.ArrayIndexOutOfBoundsException: Index 10 out of bounds for length 10
 //│ 	at: mlscript.NewLexer.isQuasiquoteKeyword$1(NewLexer.scala:81)
 //│ 	at: mlscript.NewLexer.lex(NewLexer.scala:91)
 //│ 	at: mlscript.NewLexer.lex(NewLexer.scala:140)
@@ -88,7 +88,7 @@ a+
 a+
   b
 c
-//│ /!!!\ Uncaught error: java.lang.ArrayIndexOutOfBoundsException: 8
+//│ /!!!\ Uncaught error: java.lang.ArrayIndexOutOfBoundsException: Index 8 out of bounds for length 8
 //│ 	at: mlscript.NewLexer.isQuasiquoteKeyword$1(NewLexer.scala:81)
 //│ 	at: mlscript.NewLexer.lex(NewLexer.scala:91)
 //│ 	at: mlscript.NewLexer.lex(NewLexer.scala:140)
@@ -103,7 +103,7 @@ c
 a
   +b
 c
-//│ /!!!\ Uncaught error: java.lang.ArrayIndexOutOfBoundsException: 8
+//│ /!!!\ Uncaught error: java.lang.ArrayIndexOutOfBoundsException: Index 8 out of bounds for length 8
 //│ 	at: mlscript.NewLexer.isQuasiquoteKeyword$1(NewLexer.scala:81)
 //│ 	at: mlscript.NewLexer.lex(NewLexer.scala:91)
 //│ 	at: mlscript.NewLexer.lex(NewLexer.scala:140)

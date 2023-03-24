@@ -42,18 +42,35 @@ run(test(5, code"0"))
 //│    = 15
 
 
-// Test 3: TODO: should we support this?
+// Test 3: note that the free variable makes this unhygienic, which is intended
 
-let cde_template = code"${cde} + x"
-fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, cde_template)}" else cde
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$6(Typer.scala:588)
-//│ 	at: scala.Option.fold(Option.scala:263)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:593)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:882)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:872)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:882)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$15(Typer.scala:640)
+fun cde_template(cde) = code"${cde} + x"
+fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, cde_template(cde))}" else cde
+//│ ╔══[ERROR] Type mismatch. Required: Code, found: [α71']
+//│ ║  l.47: 	fun cde_template(cde) = code"${cde} + x"
+//│ ╙──      	                               ^^^
+//│ cde_template: anything -> (code & {Code#C = anything, Code#T <: int})
+//│             = [Function: cde_template]
+//│ ╔══[ERROR] Type mismatch. Required: Code, found: α85'
+//│ ║  l.48: 	fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, cde_template(cde))}" else cde
+//│ ╙──      	                                                ^^^^^^^^
+//│ ╔══[ERROR] Type mismatch. Required: Code, found: α93'
+//│ ║  l.48: 	fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, cde_template(cde))}" else cde
+//│ ╙──      	                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ test: (int, 'a,) -> (code & {Code#C = anything, Code#T <: error | int} | 'a)
+//│     = [Function: test1]
+
+let c = test(3, code"2")
+//│ c: code & {Code#C = anything, Code#T <: error | int}
+//│  = [
+//│      'Let',
+//│      'x',
+//│      Symbol(x),
+//│      [ 'Unquoted', [ '_', 3 ] ],
+//│      [ 'Unquoted', [ 'Let', 'x', Symbol(x), [Array], [Array] ] ]
+//│    ]
+
+run(c)
+//│ res: error | int
+//│    = 5
+
