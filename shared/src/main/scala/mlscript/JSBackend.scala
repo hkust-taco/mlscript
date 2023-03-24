@@ -267,11 +267,11 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     case Inst(bod) => translateTerm(bod)
     case iff: If =>
       throw CodeGenError(s"if expression was not desugared")
-    case New(N, TypingUnit(Nil)) => JSRecord(Nil)
-    case New(S(TypeName(className) -> Tup(args)), TypingUnit(Nil)) =>
+    case New(N, TypingUnit(Nil, _)) => JSRecord(Nil)
+    case New(S(TypeName(className) -> Tup(args)), TypingUnit(Nil, _)) =>
       val callee = translateVar(className, true)
       callee(args.map { case (_, Fld(_, _, arg)) => translateTerm(arg) }: _*)
-    case New(_, TypingUnit(_)) =>
+    case New(_, TypingUnit(_, _)) =>
       throw CodeGenError("custom class body is not supported yet")
     case Forall(_, bod) => translateTerm(bod)
     case TyApp(base, _) => translateTerm(base)
@@ -1011,7 +1011,13 @@ class JSCompilerBackend extends JSBackend(allowUnresolvedSymbols = true) {
     SourceCode.fromStmts(polyfill.emit() ::: stmts ::: exportedNuTypes).toLines
   }
 
-  def apply(pgrm: Pgrm, exported: Bool): Ls[Str] = generateNewDef(pgrm, exported)
+  private def translateImport(imp: Import) = imp match {
+    case Import(path) => JSImport(path.substring(path.lastIndexOf("/") + 1, path.lastIndexOf(".")))
+  }
+
+  def apply(pgrm: Pgrm, imports: Ls[Import], exported: Bool): Ls[Str] = {
+    imports.flatMap(translateImport(_).toSourceCode.toLines) ::: generateNewDef(pgrm, exported)
+  }
 }
 
 class JSWebBackend extends JSBackend(allowUnresolvedSymbols = true) {

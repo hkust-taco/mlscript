@@ -1054,7 +1054,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         } catch {
           case e: DesugaringException => err(e.messages)
         }
-      case New(S((nmedTy, trm)), TypingUnit(Nil)) =>
+      case New(S((nmedTy, trm)), TypingUnit(Nil, _)) =>
         typeMonomorphicTerm(App(Var(nmedTy.base.name).withLocOf(nmedTy), trm))
       case New(base, args) => ???
       case TyApp(_, _) =>

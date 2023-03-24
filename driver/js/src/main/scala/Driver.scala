@@ -46,7 +46,6 @@ class Driver(options: DriverOptions) {
 
         val depList = dependencies.toList
         val needRecomp = depList.foldLeft(false)((nr, dp) => nr || compile(s"$path$dp.mls", true))
-        val imports = depList.map(JSImport(_))
 
         val mtime = getModificationTime(filename)
         val imtime = getModificationTime(s"${options.outputDir}/.temp/$prefixName.mlsi")
@@ -62,7 +61,7 @@ class Driver(options: DriverOptions) {
           parser.parseAll(parser.typingUnit) match {
             case tu => {
               typeCheck(tu, prefixName, depList)
-              generate(Pgrm(tu.entities), prefixName, exported, imports)
+              generate(Pgrm(tu.entities), tu.depList, prefixName, exported)
               true
             }
           }
@@ -101,9 +100,9 @@ class Driver(options: DriverOptions) {
           }
 
           parser.parseAll(parser.typingUnit) match {
-            case TypingUnit(entities1) => {
+            case TypingUnit(entities1, _) => {
               pgm match {
-                case TypingUnit(entities2) => TypingUnit(entities1 ::: entities2)
+                case TypingUnit(entities2, _) => TypingUnit(entities1 ::: entities2)
               }
             }
           }
@@ -131,14 +130,10 @@ class Driver(options: DriverOptions) {
     writeFile(s"${options.outputDir}/.temp", s"$filename.mlsi", expStr)
   }
 
-  private def generate(program: Pgrm, filename: String, exported: Boolean, imports: Ls[JSImport]): Unit = {
+  private def generate(program: Pgrm, imports: Ls[Import], filename: String, exported: Boolean): Unit = {
     val backend = new JSCompilerBackend()
-    val lines = backend(program, exported)
-    val code =
-      if (imports.isEmpty)
-        lines.mkString("", "\n", "\n")
-      else
-        imports.map(_.toSourceCode).reduceLeft(_ + _).lines.map(_.toString).reduceLeft(_ + _) + lines.mkString("", "\n", "\n")
+    val lines = backend(program, imports, exported)
+    val code = lines.mkString("", "\n", "\n")
     writeFile(options.outputDir, s"$filename.js", code)
   }
 }

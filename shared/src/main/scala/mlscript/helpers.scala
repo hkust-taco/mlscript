@@ -947,6 +947,7 @@ trait StatementImpl extends Located { self: Statement =>
     case Super() => Nil
     case NuTypeDef(k, nme, tps, ps, sig, pars, sup, ths, bod) =>
       nme :: tps.map(_._2) ::: ps :: pars ::: ths.toList ::: bod :: Nil
+    case _: Import => Nil
   }
   
   
@@ -957,6 +958,7 @@ trait StatementImpl extends Located { self: Statement =>
     case _: Term => super.toString
     case d: Decl => d.showDbg
     case d: NuDecl => d.showDbg
+    case Import(path) => s"""import "$path""""
   }
 }
 
