@@ -17,7 +17,7 @@ class C<A>(a: A)
 let c = C(1)
 //│ let c: C[1]
 //│ c
-//│   = C1 {}
+//│   = C {}
 
 c.a
 //│ 1
@@ -228,12 +228,12 @@ class Test<A>(n: A) {
 Test(1)
 //│ Test[1]
 //│ res
-//│     = Test1 {}
+//│     = Test {}
 
 Test(true)
 //│ Test[true]
 //│ res
-//│     = Test1 {}
+//│     = Test {}
 
 
 class Test<A>(n: A) {
@@ -250,7 +250,7 @@ class Test<A>(n: A) {
 Test(1)
 //│ Test[1]
 //│ res
-//│     = Test2 {}
+//│     = Test {}
 
 Test(1).foo
 //│ 1
@@ -265,7 +265,7 @@ Test("ok").foo
 let t = Test(1)
 //│ let t: Test[1]
 //│ t
-//│   = Test2 {}
+//│   = Test {}
 
 t.foo1(true)
 //│ 1 | true
@@ -277,7 +277,7 @@ t : Test<'a>
 //│   where
 //│     'a :> 1 | true
 //│ res
-//│     = Test2 {}
+//│     = Test {}
 
 t.id
 //│ forall 'a. 'a -> 'a
@@ -383,7 +383,7 @@ let w = Weird(c)
 w.x
 //│ C['a]
 //│ res
-//│     = C1 {}
+//│     = C {}
 
 not(w.x.n)
 //│ bool

@@ -1,7 +1,6 @@
 :NewDefs
 
 
-:ge // FIXME
 class C[A](n: A) {
   fun f = g
   fun g = 0
@@ -10,7 +9,5 @@ class C[A](n: A) {
 //│   fun f: 0
 //│   fun g: 0
 //│ }
-//│ Code generation encountered an error:
-//│   unresolved symbol g
 
 

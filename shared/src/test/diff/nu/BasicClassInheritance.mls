@@ -22,7 +22,7 @@ class B(m: int) extends A(n + 1)
 //│ ╙──      	                        ^^^^^^^^
 //│ class B(m: int)
 //│ Code generation encountered an error:
-//│   unresolved symbol in parents: A1
+//│   unresolved symbol n
 
 
 

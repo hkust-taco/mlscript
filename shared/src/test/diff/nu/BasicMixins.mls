@@ -135,7 +135,7 @@ class Base1(x): BaseTest
 Base1
 //│ (x: error,) -> Base1
 //│ res
-//│     = [Function (anonymous)] { class: [class Base11] }
+//│     = [Function (anonymous)] { class: [class Base1] }
 
 
 // :ns

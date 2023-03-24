@@ -42,8 +42,6 @@ class Foo {
 //│   fun bar: 0
 //│   fun foo: 0
 //│ }
-//│ Code generation encountered an error:
-//│   unresolved symbol foo
 
 // FIXME
 class Foo {
@@ -54,8 +52,6 @@ class Foo {
 //│   fun bar: 0
 //│   let foo: 0
 //│ }
-//│ Code generation encountered an error:
-//│   unresolved symbol foo
 
 
 module Bar {
@@ -71,7 +67,7 @@ module Bar {
 :ge
 hello
 //│ ╔══[ERROR] identifier not found: hello
-//│ ║  l.72: 	hello
+//│ ║  l.68: 	hello
 //│ ╙──      	^^^^^
 //│ error
 //│ Code generation encountered an error:
@@ -80,7 +76,7 @@ hello
 :e
 1 : I
 //│ ╔══[ERROR] type identifier not found: I
-//│ ║  l.81: 	1 : I
+//│ ║  l.77: 	1 : I
 //│ ╙──      	    ^
 //│ error
 //│ res
@@ -90,11 +86,11 @@ hello
 :e
 class Foo[A] { 42: A }
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.91: 	class Foo[A] { 42: A }
+//│ ║  l.87: 	class Foo[A] { 42: A }
 //│ ║        	               ^^
 //│ ╟── integer literal of type `42` does not match type `A`
 //│ ╟── Note: constraint arises from type parameter:
-//│ ║  l.91: 	class Foo[A] { 42: A }
+//│ ║  l.87: 	class Foo[A] { 42: A }
 //│ ╙──      	          ^
 //│ class Foo[A]()
 
@@ -102,8 +98,8 @@ class Foo[A] { 42: A }
 :e
 class C1 { fun oops = this.x }
 //│ ╔══[ERROR] Class `C1` does not contain member `x`
-//│ ║  l.103: 	class C1 { fun oops = this.x }
-//│ ╙──       	                          ^^
+//│ ║  l.99: 	class C1 { fun oops = this.x }
+//│ ╙──      	                          ^^
 //│ class C1() {
 //│   fun oops: error
 //│ }
