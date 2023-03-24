@@ -13,10 +13,11 @@ function B(base) {
 (() => {
   if (globalThis.C === undefined) {
     class C {
+      #b;
+      get b() { return this.#b; }
       constructor() {
-      }
-      get b() {
-        return 1;
+        this.#b = 1;
+        const b = this.#b;
       }
     }
     globalThis.C = new C();

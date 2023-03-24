@@ -963,7 +963,7 @@ class JSCompilerBackend extends JSBackend(allowUnresolvedSymbols = true) {
     val defs =
       traitSymbols.map { translateTraitDeclaration(_)(topLevelScope) } ++
       mixinSymbols.map { translateMixinDeclaration(_, false)(topLevelScope) } ++
-      moduleSymbols.map{ translateModuleDeclaration(_)(topLevelScope) } ++
+      moduleSymbols.map{ translateModuleDeclaration(_, false)(topLevelScope) } ++
       classSymbols.map { translateNewClassDeclaration(_, false)(topLevelScope) }.toList
 
     def include(typeName: Str) =
