@@ -69,8 +69,15 @@ class Driver(options: DriverOptions) {
         import fastparse.Parsed.{Success, Failure}
         import mlscript.{NewLexer, NewParser, ErrorReport, Origin}
 
-        val lines = content.splitSane('\n').toIndexedSeq
-        val fph = new mlscript.FastParseHelpers(content, lines)
+        val moduleName = prefixName.substring(prefixName.lastIndexOf("/") + 1)
+        val wrapped =
+          if (!exported) content
+          else s"module $moduleName() {\n" +
+                  content.splitSane('\n').toIndexedSeq.map(line => s"  $line").reduceLeft(_ + "\n" + _) +
+                "\n}"
+
+        val lines = wrapped.splitSane('\n').toIndexedSeq
+        val fph = new mlscript.FastParseHelpers(wrapped, lines)
         val origin = Origin("<input>", 1, fph)
         val lexer = new NewLexer(origin, throw _, dbg = false)
         val tokens = lexer.bracketedTokens
@@ -101,11 +108,8 @@ class Driver(options: DriverOptions) {
                 val filename = s"${options.outputDir}/.temp/$modulePath.mlsi"
                 readFile(filename) match {
                   case Some(content) => {
-                    val moduleName = modulePath.substring(modulePath.lastIndexOf("/") + 1)
-                    val wrapped = s"module $moduleName() {\n" +
-                      content.splitSane('\n').toIndexedSeq.map(line => s"  $line").reduceLeft(_ + "\n" + _) + "\n}"
-                    val lines = wrapped.splitSane('\n').toIndexedSeq
-                    val fph = new mlscript.FastParseHelpers(wrapped, lines)
+                    val lines = content.splitSane('\n').toIndexedSeq
+                    val fph = new mlscript.FastParseHelpers(content, lines)
                     val origin = Origin(modulePath, 1, fph)
                     val lexer = new NewLexer(origin, throw _, dbg = false)
                     val tokens = lexer.bracketedTokens

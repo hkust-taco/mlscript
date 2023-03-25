@@ -901,9 +901,9 @@ final case class JSExport(items: Ls[Str]) extends JSStmt {
     SourceCode(s"export {${items.reduceLeft((r, s) => r + ", " + s)}}")
 }
 
-final case class JSImport(name: Str) extends JSStmt {
+final case class JSImport(name: Str, path: Str) extends JSStmt {
   def toSourceCode: SourceCode =
-    SourceCode(s"import * as $name from \"./$name.js\"\n") // TODO: submodule?
+    SourceCode(s"import { $name } from \"$path\"\n")
 }
 
 final case class JSComment(text: Str) extends JSStmt {

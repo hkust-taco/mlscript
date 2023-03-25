@@ -1,4 +1,4 @@
-import * as Opened from "./Opened.js"
+import { Opened } from "./Opened.js"
 
 function log(x) {
   return console.info(x);

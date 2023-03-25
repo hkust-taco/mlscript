@@ -1,8 +1,22 @@
 function log(x) {
   return console.info(x);
 }
-const hello = (x) => log([
-  "hello!",
-  x
-]);
-export {hello}
+(() => {
+  if (globalThis.Opened === undefined) {
+    class Opened {
+      constructor() {
+      }
+      hello(x) {
+        return (log([
+          "hello!",
+          x
+        ]));
+      }
+    }
+    globalThis.Opened = new Opened();
+    globalThis.Opened["class"] = Opened;
+  }
+  return globalThis.Opened;
+})();
+const Opened = globalThis.Opened;
+export {Opened}

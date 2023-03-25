@@ -1012,7 +1012,11 @@ class JSCompilerBackend extends JSBackend(allowUnresolvedSymbols = true) {
   }
 
   private def translateImport(imp: Import) = imp match {
-    case Import(path) => JSImport(path.substring(path.lastIndexOf("/") + 1, path.lastIndexOf(".")))
+    case Import(path) =>
+      JSImport(
+        path.substring(path.lastIndexOf("/") + 1, path.lastIndexOf(".")),
+        "./" + path.substring(0, path.lastIndexOf(".")) + ".js"
+      )
   }
 
   def apply(pgrm: Pgrm, imports: Ls[Import], exported: Bool): Ls[Str] = {
