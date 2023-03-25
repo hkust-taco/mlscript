@@ -1,3 +1,4 @@
+import "Opened.mls"
 mixin B() {
   this: {n: 'n}
   fun foo: 'n

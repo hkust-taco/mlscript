@@ -805,8 +805,9 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       constrain(memSign, sign)
                     case S(mem: NuParam) =>
                     case S(_) => ??? // TODO
-                    case N =>
+                    case N if (!self.noDefinitionCheck) =>
                       err(msg"Member ${fd.nme.name} is declared but not defined", fd.nme.toLoc)
+                    case _ => ()
                   }
                 }
               }

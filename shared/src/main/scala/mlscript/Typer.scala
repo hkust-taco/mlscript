@@ -34,6 +34,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   var constrainedTypes: Boolean = false
   
   var newDefs: Bool = false
+  var noDefinitionCheck: Bool = false
   
   var recordProvenances: Boolean = true
   

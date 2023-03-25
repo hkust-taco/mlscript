@@ -1,3 +1,5 @@
+import { Inc } from "./tools/Inc.js"
+
 function log(x) {
   return console.info(x);
 }
@@ -9,7 +11,7 @@ function log(x) {
       hello(x) {
         return (log([
           "hello!",
-          x
+          Inc.inc(x)
         ]));
       }
     }

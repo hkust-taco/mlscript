@@ -18,6 +18,7 @@ class Driver(options: DriverOptions) {
       explainErrors = false
     ) {
       newDefs = true
+      noDefinitionCheck = true
     }
 
   import typer._
@@ -75,21 +76,28 @@ class Driver(options: DriverOptions) {
           else s"module $moduleName() {\n" +
                   content.splitSane('\n').toIndexedSeq.map(line => s"  $line").reduceLeft(_ + "\n" + _) +
                 "\n}"
-
         val lines = wrapped.splitSane('\n').toIndexedSeq
         val fph = new mlscript.FastParseHelpers(wrapped, lines)
-        val origin = Origin("<input>", 1, fph)
+        val origin = Origin(filename, 1, fph)
         val lexer = new NewLexer(origin, throw _, dbg = false)
         val tokens = lexer.bracketedTokens
 
         val parser = new NewParser(origin, tokens, throw _, dbg = false, None) {
           def doPrintDbg(msg: => String): Unit = if (dbg) println(msg)
         }
+
         parser.parseAll(parser.typingUnit) match {
           case tu => {
-            val depList = tu.depList.map {
+            def getAllImport(top: Ls[Import], tu: TypingUnit): Ls[Import] =
+              tu.entities.foldLeft(top)((res, ett) => ett match {
+                case nudef: NuTypeDef => res ::: nudef.body.depList
+                case _ => res
+              })
+            val importsList = getAllImport(tu.depList, tu)
+            val depList = importsList.map {
               case Import(path) => path
             }
+
             val needRecomp = depList.foldLeft(false)((nr, dp) => nr || {
               // We need to create another new context when compiling other files
               // e.g. A -> B, A -> C, B -> D, C -> D, -> means "depends on"
@@ -120,6 +128,10 @@ class Driver(options: DriverOptions) {
 
                     parser.parseAll(parser.typingUnit) match {
                       case tu: TypingUnit => {
+                        val depList = tu.depList.map {
+                          case Import(path) => path
+                        }
+                        depList.foreach(d => importModule(d.substring(0, d.lastIndexOf("."))))
                         val tpd = typer.typeTypingUnit(tu, topLevel = true)
                         val sim = SimplifyPipeline(tpd, all = false)
                         val exp = typer.expandType(sim)
@@ -135,9 +147,11 @@ class Driver(options: DriverOptions) {
               val sim = SimplifyPipeline(tpd, all = false)(ctx)
               val exp = typer.expandType(sim)(ctx)
               val expStr = exp.showIn(ShowCtx.mk(exp :: Nil), 0)
-              writeFile(s"${options.outputDir}/.temp", s"$prefixName.mlsi", expStr)
+              val interfaces = importsList.map(_.toString).foldRight(expStr)((imp, itf) => s"$imp\n$itf")
 
-              generate(Pgrm(tu.entities), tu.depList, prefixName, exported)
+              val relatedPath = path.substring(options.path.length)
+              writeFile(s"${options.outputDir}/.temp/$relatedPath", s"$prefixName.mlsi", interfaces)
+              generate(Pgrm(tu.entities), importsList, prefixName, s"${options.outputDir}/$relatedPath", exported)
               true
             }
             else false
@@ -148,11 +162,17 @@ class Driver(options: DriverOptions) {
     }
   }
 
-  private def generate(program: Pgrm, imports: Ls[Import], filename: String, exported: Boolean): Unit = {
+  private def generate(
+    program: Pgrm,
+    imports: Ls[Import],
+    filename: String,
+    outputDir: String,
+    exported: Boolean
+  ): Unit = {
     val backend = new JSCompilerBackend()
     val lines = backend(program, imports, exported)
     val code = lines.mkString("", "\n", "\n")
-    writeFile(options.outputDir, s"$filename.js", code)
+    writeFile(outputDir, s"$filename.js", code)
   }
 }
 
