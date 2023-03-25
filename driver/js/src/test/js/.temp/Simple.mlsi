@@ -9,4 +9,4 @@ let a: A
 module C() {
   let b: 1
 }
-error
+unit

@@ -11,8 +11,28 @@ import mlscript.codegen._
 class Driver(options: DriverOptions) {
   import Driver._
 
+  private val typer =
+    new mlscript.Typer(
+      dbg = false,
+      verbose = false,
+      explainErrors = false
+    ) {
+      newDefs = true
+    }
+
+  import typer._
+
+  private object SimplifyPipeline extends typer.SimplifyPipeline {
+    def debugOutput(msg: => Str): Unit =
+      println(msg)
+  }
+
   def execute: Unit =
     try {
+      implicit var ctx: Ctx = Ctx.init
+      implicit val raise: Raise = report
+      implicit val extrCtx: Opt[typer.ExtrCtx] = N
+      implicit val vars: Map[Str, typer.SimpleType] = Map.empty
       compile(options.filename)
       if (Driver.totalErrors > 0)
         js.Dynamic.global.process.exit(-1)
@@ -28,7 +48,15 @@ class Driver(options: DriverOptions) {
     writeFile(options.outputDir, "package.json", content)
   }
 
-  private def compile(filename: String, exported: Boolean = false): Boolean = {
+  private def compile(
+    filename: String,
+    exported: Boolean = false
+  )(
+    implicit ctx: Ctx,
+    raise: Raise,
+    extrCtx: Opt[typer.ExtrCtx],
+    vars: Map[Str, typer.SimpleType]
+  ): Boolean = {
     val beginIndex = filename.lastIndexOf("/")
     val endIndex = filename.lastIndexOf(".")
     val prefixName = filename.substring(beginIndex + 1, endIndex)
@@ -55,12 +83,56 @@ class Driver(options: DriverOptions) {
             val depList = tu.depList.map {
               case Import(path) => path
             }
-            val needRecomp = depList.foldLeft(false)((nr, dp) => nr || compile(s"$path$dp", true))
+            val needRecomp = depList.foldLeft(false)((nr, dp) => nr || {
+              // We need to create another new context when compiling other files
+              // e.g. A -> B, A -> C, B -> D, C -> D, -> means "depends on"
+              // If we forget to add `import "D.mls"` in C, we need to raise an error
+              // Keeping using the same environment would not.
+              var newCtx: Ctx = Ctx.init
+              val newExtrCtx: Opt[typer.ExtrCtx] = N
+              val newVars: Map[Str, typer.SimpleType] = Map.empty
+              compile(s"$path$dp", true)(newCtx, raise, newExtrCtx, newVars)
+            })
             val mtime = getModificationTime(filename)
             val imtime = getModificationTime(s"${options.outputDir}/.temp/$prefixName.mlsi")
 
             if (options.force || needRecomp || imtime.isEmpty || mtime.compareTo(imtime) >= 0) {
-              typeCheck(tu, prefixName, depList)
+              def importModule(modulePath: String): Unit = {
+                val filename = s"${options.outputDir}/.temp/$modulePath.mlsi"
+                readFile(filename) match {
+                  case Some(content) => {
+                    val moduleName = modulePath.substring(modulePath.lastIndexOf("/") + 1)
+                    val wrapped = s"module $moduleName() {\n" +
+                      content.splitSane('\n').toIndexedSeq.map(line => s"  $line").reduceLeft(_ + "\n" + _) + "\n}"
+                    val lines = wrapped.splitSane('\n').toIndexedSeq
+                    val fph = new mlscript.FastParseHelpers(wrapped, lines)
+                    val origin = Origin(modulePath, 1, fph)
+                    val lexer = new NewLexer(origin, throw _, dbg = false)
+                    val tokens = lexer.bracketedTokens
+
+                    val parser = new NewParser(origin, tokens, throw _, dbg = false, None) {
+                      def doPrintDbg(msg: => String): Unit = if (dbg) println(msg)
+                    }
+
+                    parser.parseAll(parser.typingUnit) match {
+                      case tu: TypingUnit => {
+                        val tpd = typer.typeTypingUnit(tu, topLevel = true)
+                        val sim = SimplifyPipeline(tpd, all = false)
+                        val exp = typer.expandType(sim)
+                      }
+                    }
+                  }
+                  case _ => report(s"can not open file $filename")
+                }
+              }
+
+              depList.foreach(d => importModule(d.substring(0, d.lastIndexOf("."))))
+              val tpd = typer.typeTypingUnit(tu, topLevel = true)
+              val sim = SimplifyPipeline(tpd, all = false)(ctx)
+              val exp = typer.expandType(sim)(ctx)
+              val expStr = exp.showIn(ShowCtx.mk(exp :: Nil), 0)
+              writeFile(s"${options.outputDir}/.temp", s"$prefixName.mlsi", expStr)
+
               generate(Pgrm(tu.entities), tu.depList, prefixName, exported)
               true
             }
@@ -70,69 +142,6 @@ class Driver(options: DriverOptions) {
       }
       case _ => report(s"can not open file $filename"); true
     }
-  }
-
-  private def typeCheck(tu: TypingUnit, filename: String, depList: List[String]): Unit = {
-    val typer = new mlscript.Typer(
-        dbg = false,
-        verbose = false,
-        explainErrors = false
-      ) {
-        newDefs = true
-      }
-
-    import typer._
-    type ModuleType = DelayedTypeInfo
-
-    implicit var ctx: Ctx = Ctx.init
-    implicit val raise: Raise = report
-    implicit val extrCtx: Opt[typer.ExtrCtx] = N
-
-    def importModule(modulePath: String): Unit = {
-      val filename = s"${options.outputDir}/.temp/$modulePath.mlsi"
-      readFile(filename) match {
-        case Some(content) => {
-          val moduleName = modulePath.substring(modulePath.lastIndexOf("/") + 1)
-          val wrapped = s"module $moduleName() {\n" +
-            content.splitSane('\n').toIndexedSeq.map(line => s"  $line").reduceLeft(_ + "\n" + _) + "\n}"
-          val lines = wrapped.splitSane('\n').toIndexedSeq
-          val fph = new mlscript.FastParseHelpers(wrapped, lines)
-          val origin = Origin(modulePath, 1, fph)
-          val lexer = new NewLexer(origin, throw _, dbg = false)
-          val tokens = lexer.bracketedTokens
-
-          val parser = new NewParser(origin, tokens, throw _, dbg = false, None) {
-            def doPrintDbg(msg: => String): Unit = if (dbg) println(msg)
-          }
-
-          parser.parseAll(parser.typingUnit) match {
-            case tu: TypingUnit => {
-              val vars: Map[Str, typer.SimpleType] = Map.empty
-              val tpd = typer.typeTypingUnit(tu, topLevel = true)(ctx.nest, raise, vars)
-              object SimplifyPipeline extends typer.SimplifyPipeline {
-                def debugOutput(msg: => Str): Unit = println(msg)
-              }
-              val sim = SimplifyPipeline(tpd, all = false)(ctx)
-              val exp = typer.expandType(sim)(ctx)
-            }
-          }
-        }
-        case _ => report(s"can not open file $filename")
-      }
-    }
-
-    depList.foreach(d => importModule(d.substring(0, d.lastIndexOf("."))))
-    val vars: Map[Str, typer.SimpleType] = Map.empty
-    val tpd = typer.typeTypingUnit(tu, topLevel = true)(ctx.nest, raise, vars)
-    object SimplifyPipeline extends typer.SimplifyPipeline {
-      def debugOutput(msg: => Str): Unit =
-        // if (mode.dbgSimplif) output(msg)
-        println(msg)
-    }
-    val sim = SimplifyPipeline(tpd, all = false)(ctx)
-    val exp = typer.expandType(sim)(ctx)
-    val expStr = exp.showIn(ShowCtx.mk(exp :: Nil), 0)
-    writeFile(s"${options.outputDir}/.temp", s"$filename.mlsi", expStr)
   }
 
   private def generate(program: Pgrm, imports: Ls[Import], filename: String, exported: Boolean): Unit = {
