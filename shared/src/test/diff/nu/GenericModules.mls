@@ -4,29 +4,83 @@
 :e
 module Test<A> {
   fun foo: A => A
+  fun bar: A => A = id
+  fun baz(x: A) = x
+  fun poly0: 'a -> 'a
+  fun poly1: forall 'a; 'a -> 'a
+  fun poly2: 'a -> 'a = id
 }
 //│ ╔══[ERROR] Member foo is declared but not defined
 //│ ║  l.6: 	  fun foo: A => A
 //│ ╙──     	      ^^^
+//│ ╔══[ERROR] Member poly0 is declared but not defined
+//│ ║  l.9: 	  fun poly0: 'a -> 'a
+//│ ╙──     	      ^^^^^
+//│ ╔══[ERROR] Member poly1 is declared but not defined
+//│ ║  l.10: 	  fun poly1: forall 'a; 'a -> 'a
+//│ ╙──      	      ^^^^^
 //│ module Test[A]() {
+//│   fun bar: A -> A
+//│   fun baz: (x: A,) -> A
 //│   fun foo: A -> A
+//│   fun poly0: forall 'a. 'a -> 'a
+//│   fun poly1: forall 'a0. 'a0 -> 'a0
+//│   fun poly2: forall 'a1. 'a1 -> 'a1
 //│ }
 
 Test.foo
-//│ forall 'A. 'A -> 'A
+//│ (??A & 'A) -> ('A | ??A0)
 //│ res
 //│     = undefined
 
-:re
+Test.bar
+//│ (??A & 'A) -> ('A | ??A0)
+//│ res
+//│     = [Function: id]
+
+Test.baz
+//│ (x: ??A & 'A,) -> ('A | ??A0)
+//│ res
+//│     = [Function: baz]
+
+Test.poly0
+//│ forall 'a. 'a -> 'a
+//│ res
+//│     = undefined
+
+Test.poly1
+//│ forall 'a. 'a -> 'a
+//│ res
+//│     = undefined
+
+Test.poly2
+//│ forall 'a. 'a -> 'a
+//│ res
+//│     = [Function: id]
+
+:e
 Test.foo(1)
-//│ 1
+//│ ╔══[ERROR] Type error in application
+//│ ║  l.62: 	Test.foo(1)
+//│ ║        	^^^^^^^^^^^
+//│ ╟── type variable `A` leaks out of its scope
+//│ ║  l.62: 	Test.foo(1)
+//│ ╙──      	         ^
+//│ error | ??A
 //│ res
 //│ Runtime error:
 //│   TypeError: Test.foo is not a function
 
-:re
+:e
 Test.foo(error) + 1
-//│ int
+//│ ╔══[ERROR] Type error in operator application
+//│ ║  l.75: 	Test.foo(error) + 1
+//│ ║        	^^^^^^^^^^^^^^^^^
+//│ ╟── type variable `A` leaks out of its scope
+//│ ║  l.75: 	Test.foo(error) + 1
+//│ ║        	^^^^^^^^^^^^^^^
+//│ ╙── into type `int`
+//│ error | int
 //│ res
 //│ Runtime error:
 //│   Error: unexpected runtime error
@@ -34,7 +88,7 @@ Test.foo(error) + 1
 :e
 Test<int> .foo
 //│ ╔══[ERROR] Type application syntax is not yet supported
-//│ ║  l.35: 	Test<int> .foo
+//│ ║  l.89: 	Test<int> .foo
 //│ ╙──      	^^^^^^^^^
 //│ error
 //│ res
@@ -43,7 +97,7 @@ Test<int> .foo
 :e
 (Test<int>).foo
 //│ ╔══[ERROR] Type application syntax is not yet supported
-//│ ║  l.44: 	(Test<int>).foo
+//│ ║  l.98: 	(Test<int>).foo
 //│ ╙──      	 ^^^^^^^^^
 //│ error
 //│ res
@@ -58,34 +112,34 @@ Test
 :e
 Test:  Test<'a>
 //│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.59: 	Test:  Test<'a>
-//│ ║        	^^^^
+//│ ║  l.113: 	Test:  Test<'a>
+//│ ║         	^^^^
 //│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.59: 	Test:  Test<'a>
-//│ ║        	            ^^
+//│ ║  l.113: 	Test:  Test<'a>
+//│ ║         	            ^^
 //│ ╟── back into type variable `A`
 //│ ║  l.5: 	module Test<A> {
 //│ ╙──     	            ^
 //│ Test['a]
 //│   where
-//│     'a :> error | ??A
+//│     'a :> ??A
 //│        <: ??A0
 //│ res
 //│     = Test { class: [class Test] }
 
 
 fun test(x) = if x is Test then x.foo
-//│ fun test: forall 'A. Test['A] -> (forall 'A0. 'A0 -> 'A0)
+//│ fun test: forall 'A. Test['A] -> 'A -> 'A
 
 :e
 test(Test)
 //│ ╔══[ERROR] Type error in application
-//│ ║  l.81: 	test(Test)
-//│ ║        	^^^^^^^^^^
+//│ ║  l.135: 	test(Test)
+//│ ║         	^^^^^^^^^^
 //│ ╟── type variable `A` leaks out of its scope
 //│ ║  l.5: 	module Test<A> {
 //│ ╙──     	            ^
-//│ forall 'A. 'A -> 'A | error
+//│ (??A & 'A) -> ('A | ??A0) | error
 //│ res
 //│     = undefined
 
@@ -112,9 +166,10 @@ module Test<A> {
 //│ }
 
 Test.foo
-//│ forall 'A. 'A -> 'A
+//│ (??A & 'A) -> ('A | ??A0)
 //│ res
 //│     = [Function: id]
+
 
 
 

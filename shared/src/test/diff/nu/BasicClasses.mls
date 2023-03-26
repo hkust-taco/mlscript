@@ -14,6 +14,11 @@ let a = A(42)
 //│ a
 //│   = A {}
 
+a.n
+//│ int
+//│ res
+//│     = 42
+
 
 fun f(x: A) = x.n
 //│ fun f: (x: A,) -> int
@@ -69,10 +74,10 @@ class Base0(n) {
   fun oops = this.my
 }
 //│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.65: 	class Base0(n) {
+//│ ║  l.70: 	class Base0(n) {
 //│ ╙──      	            ^
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.69: 	  fun oops = this.my
+//│ ║  l.74: 	  fun oops = this.my
 //│ ╙──      	                 ^^^
 //│ class Base0(n: error) {
 //│   fun me: Base0 & {n: error}
@@ -163,7 +168,7 @@ b.me
 :e
 b.getBaseTypo
 //│ ╔══[ERROR] Class `Base1` does not contain member `getBaseTypo`
-//│ ║  l.164: 	b.getBaseTypo
+//│ ║  l.169: 	b.getBaseTypo
 //│ ╙──       	 ^^^^^^^^^^^^
 //│ error
 //│ res

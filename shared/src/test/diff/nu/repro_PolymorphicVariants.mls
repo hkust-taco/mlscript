@@ -1,0 +1,32 @@
+:NewDefs
+
+// Test that reprduces subtle type simplification bug
+
+class Cons[out A](head: A, tail: Cons[A] | Nil)
+module Nil
+//│ class Cons[A](head: A, tail: Cons[A] | Nil)
+//│ module Nil()
+
+class Abs[A](x: string, t: A)
+class App[A](s: A, t: A)
+//│ class Abs[A](x: string, t: A)
+//│ class App[A](s: A, t: A)
+
+mixin EvalLambda {
+  fun eval(sub, v) =
+    if v is
+      Abs(x, t) then
+        this.eval(Cons((error, error), Nil), error)
+        this.eval(Cons((x, error), sub), error)
+        error
+}
+//│ mixin EvalLambda() {
+//│   this: {eval: (Cons[(string, nothing,) | 'A], nothing,) -> anything}
+//│   fun eval: (Cons['A] | Nil, Abs[anything],) -> nothing
+//│ }
+
+// FIXME type simplification bug: analyze2 does not traverse TVs witht he correct PolMap
+// :ds
+module Test1 extends EvalLambda
+//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: x46_115' has no occurrences...
+

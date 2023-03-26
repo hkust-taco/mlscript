@@ -56,14 +56,15 @@ trait TypeSimplifier { self: Typer =>
           // *  Maybe we should process with the appropriate parent, but still generate an `assignedTo`?
           // * (Tried it, and it makes almost no difference in the end result.)
           allVarPols(tv) match {
+            case p if p.isEmpty || nv.assignedTo.nonEmpty =>
+              nv.assignedTo = S(process(ty, N))
+              case N => die // covered
             case S(true) =>
               nv.lowerBounds =
                 (process(ty, S(true -> tv)) :: Nil).filterNot(_.isBot)
             case S(false) =>
               nv.upperBounds =
                 (process(ty, S(false -> tv)) :: Nil).filterNot(_.isTop)
-            case N =>
-              nv.assignedTo = S(process(ty, N))
           }
         case N =>
           nv.lowerBounds = if (allVarPols(tv).forall(_ === true))
@@ -501,7 +502,7 @@ trait TypeSimplifier { self: Typer =>
     // *    coincides with that of the later `transform` function.
     // *  In particular, the traversal of fields with identical UB/LB is considered invariant.
     object Analyze1 extends Traverser2.InvariantFields {
-      override def apply(pol: PolMap)(st: ST): Unit = trace(s"analyze1[${printPol(pol)}] $st") {
+      override def apply(pol: PolMap)(st: ST): Unit = trace(s"analyze1[${(pol)}] $st") {
         st match {
           case tv: TV =>
             pol(tv) match {
@@ -607,6 +608,7 @@ trait TypeSimplifier { self: Typer =>
     */
     
     
+    // FIXME Currently we don't traverse TVs witht he correct PolMap, which introduces misatches with other analyses in tricky cases
     def analyze2(st: TL, pol: PolMap): Unit =
       Analyze2.applyLike(pol)(st.unwrapProvs)
     

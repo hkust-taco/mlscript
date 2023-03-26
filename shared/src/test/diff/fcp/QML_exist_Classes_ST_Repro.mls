@@ -60,12 +60,10 @@ simpleStepImpl : ArraysImpl['a, 'r] -> ArraysImpl['a, ('r, string)]
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: ArraysImpl['a, 'r] -> ArraysImpl['a, ('r, string,)]
-//│   where
-//│     'a :> error
 //│    = [Function: simpleStepImpl]
-//│ constrain calls  : 5230
+//│ constrain calls  : 4942
 //│ annoying  calls  : 62
-//│ subtyping calls  : 32236
+//│ subtyping calls  : 31637
 // :ResetFuel
 
 // * Note that the above incidentally can be checked using recursive types
@@ -99,18 +97,18 @@ mkArrays impl k = k impl
 :e
 def stepped = arr (fun arrImpl -> fun k -> k (simpleStepImpl arrImpl))
 //│ ╔══[ERROR] Type error in application
-//│ ║  l.100: 	def stepped = arr (fun arrImpl -> fun k -> k (simpleStepImpl arrImpl))
-//│ ║         	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.98: 	def stepped = arr (fun arrImpl -> fun k -> k (simpleStepImpl arrImpl))
+//│ ║        	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `'Rep` leaks out of its scope
 //│ ║  l.35: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
 //│ ║        	                                            ^^^^
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this function:
-//│ ║  l.100: 	def stepped = arr (fun arrImpl -> fun k -> k (simpleStepImpl arrImpl))
-//│ ║         	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.98: 	def stepped = arr (fun arrImpl -> fun k -> k (simpleStepImpl arrImpl))
+//│ ║        	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── • this reference:
-//│ ║  l.100: 	def stepped = arr (fun arrImpl -> fun k -> k (simpleStepImpl arrImpl))
-//│ ║         	              ^^^
+//│ ║  l.98: 	def stepped = arr (fun arrImpl -> fun k -> k (simpleStepImpl arrImpl))
+//│ ║        	              ^^^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.41: 	    sub    = fun ((r0, r1)) -> fun i -> arrImpl.Sub r0 i;
 //│ ╙──      	                                                    ^^

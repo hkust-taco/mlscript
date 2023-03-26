@@ -349,9 +349,9 @@ s: ChurchInt -> ChurchInt
 //│ ╙──       	^
 //│ res: ChurchInt -> ChurchInt
 //│    = [Function: s]
-//│ constrain calls  : 104
+//│ constrain calls  : 103
 //│ annoying  calls  : 0
-//│ subtyping calls  : 322
+//│ subtyping calls  : 321
 
 
 

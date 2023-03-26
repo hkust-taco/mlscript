@@ -26,7 +26,7 @@ M.f.n
 
 :e
 M.Foo
-//│ ╔══[ERROR] access to module member not yet supported
+//│ ╔══[ERROR] access to class member not yet supported
 //│ ║  l.28: 	M.Foo
 //│ ╙──      	 ^^^^
 //│ error

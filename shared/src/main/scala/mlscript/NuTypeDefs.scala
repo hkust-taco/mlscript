@@ -209,7 +209,11 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           Trav(PolMap.pos)(instanceType)
           
           // TODO check consistency with explicitVariances
-          store ++ tparams.iterator.collect { case (_, tv, S(vi)) => tv -> vi }
+          val res = store ++ tparams.iterator.collect { case (_, tv, S(vi)) => tv -> vi }
+          
+          _variances = S(res)
+          
+          res
         }(r => s"= $r")
       }
     }
@@ -507,7 +511,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     }
     lazy val typedSignatureMembers: Ls[Str -> TypedNuFun] =
       typedSignatures.iterator.map { case (fd, ty) =>
-        fd.nme.name -> TypedNuFun(level, fd, ty)
+        fd.nme.name -> TypedNuFun(level + 1, fd, ty)
       }.toList
     
     lazy val allFields: Set[Var] = decl match {

@@ -665,7 +665,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     def merge(pol: Bool)(l: DNF, r: DNF)(implicit ctx: Ctx, etf: ExpandTupleFields): DNF = if (pol) l | r else l & (r, pol)
     
     def mkDeep(polymLvl: Level, cons: Constrs, ty: SimpleType, pol: Bool)
-          (implicit ctx: Ctx, ptr: PreserveTypeRefs = false, etf: ExpandTupleFields = true): DNF = {
+          (implicit ctx: Ctx, ptr: PreserveTypeRefs = false, etf: ExpandTupleFields = true, expandedTVs: Set[TV] = Set.empty): DNF = {
       mk(polymLvl, cons, mkDeepST(polymLvl, cons, ty, pol), pol)
     }
     def mkDeepST(polymLvl: Level, cons: Constrs, ty: SimpleType, pol: Bool)
@@ -688,7 +688,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     }
     // }(r => s"= $r")
     
-    def mk(polymLvl: Level, cons: Constrs, ty: SimpleType, pol: Bool)(implicit ctx: Ctx, ptr: PreserveTypeRefs = false, etf: ExpandTupleFields = true): DNF =
+    def mk(polymLvl: Level, cons: Constrs, ty: SimpleType, pol: Bool)(implicit ctx: Ctx, ptr: PreserveTypeRefs = false, etf: ExpandTupleFields = true, expandedTVs: Set[TV] = Set.empty): DNF =
         // trace(s"DNF[$pol,$ptr,$etf,$polymLvl](${ty})") {
         (if (pol) ty.pushPosWithout else ty) match {
       case bt: BaseType => DNF.of(polymLvl, cons, LhsRefined(S(bt), ssEmp, if (expandTupleFields) bt.toRecord else RecordType.empty, smEmp))
@@ -697,6 +697,8 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       case ExtrType(pol) => extr(!pol)
       case ty @ ComposedType(p, l, r) => merge(p)(mk(polymLvl, cons, l, pol), mk(polymLvl, cons, r, pol))
       case NegType(und) => DNF.of(polymLvl, cons, CNF.mk(polymLvl, Nil, und, !pol).ds.map(_.neg))
+      case tv @ AssignedVariable(ty) if !preserveTypeRefs && !expandedTVs.contains(tv) =>
+        (expandedTVs + tv) |> { implicit expandedTVs => DNF.mk(polymLvl, cons, ty, pol) }
       case tv: TypeVariable => DNF.of(polymLvl, cons, Conjunct.of(SortedSet.single(tv)) :: Nil)
       case ProxyType(underlying) => mk(polymLvl, cons, underlying, pol)
       case tr @ TypeRef(defn, targs) =>
@@ -731,7 +733,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       Disjunct(RhsField(f._1, f._2), ssEmp, LhsTop, ssEmp)).toList)
     def extr(pol: Bool): CNF = if (pol) CNF(Nil) else of(RhsBot)
     def merge(pol: Bool)(l: CNF, r: CNF)(implicit ctx: Ctx, etf: ExpandTupleFields): CNF = if (pol) l | (r, pol) else l & r
-    def mk(polymLvl: Level, cons: Constrs, ty: SimpleType, pol: Bool)(implicit ctx: Ctx, ptr: PreserveTypeRefs, etf: ExpandTupleFields): CNF =
+    def mk(polymLvl: Level, cons: Constrs, ty: SimpleType, pol: Bool)(implicit ctx: Ctx, ptr: PreserveTypeRefs, etf: ExpandTupleFields, expandedTVs: Set[TV] = Set.empty): CNF =
       // trace(s"?CNF $ty") {
       ty match {
         case bt: BaseType => of(bt)
@@ -740,6 +742,8 @@ class NormalForms extends TyperDatatypes { self: Typer =>
         case ExtrType(pol) => extr(!pol)
         case ty @ ComposedType(p, l, r) => merge(p)(mk(polymLvl, cons, l, pol), mk(polymLvl, cons, r, pol))
         case NegType(und) => CNF(DNF.mk(polymLvl, cons, und, !pol).cs.map(_.neg))
+        case tv @ AssignedVariable(ty) if !preserveTypeRefs && !expandedTVs.contains(tv) =>
+          (expandedTVs + tv) |> { implicit expandedTVs => CNF.mk(polymLvl, cons, ty, pol) }
         case tv: TypeVariable => of(SortedSet.single(tv))
         case ProxyType(underlying) => mk(polymLvl, cons, underlying, pol)
         case tr @ TypeRef(defn, targs) =>

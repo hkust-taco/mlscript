@@ -32,7 +32,7 @@ module M0 {
 
 :e
 M0.NC0
-//│ ╔══[ERROR] access to module member not yet supported
+//│ ╔══[ERROR] access to class member not yet supported
 //│ ║  l.34: 	M0.NC0
 //│ ╙──      	  ^^^^
 //│ error

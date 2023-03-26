@@ -566,9 +566,9 @@ t : Dup[int, bool]
 //│ ║  l.558: 	t : Dup[int, bool]
 //│ ╙──       	             ^^^^
 //│ res: Dup[?, bool]
-//│ constrain calls  : 39
+//│ constrain calls  : 30
 //│ annoying  calls  : 24
-//│ subtyping calls  : 109
+//│ subtyping calls  : 95
 
 :stats
 t.MthDup (fun x -> mul 2 x)

@@ -55,7 +55,7 @@ class A0: S0[int] & T0[string]
 //│ ╟── Hint: method Foo0 is abstract
 //│ ║  l.44: 	class A0: S0[int] & T0[string]
 //│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^^^
-//│ res: error
+//│ res: nothing
 //│    = undefined
 
 :e

@@ -165,7 +165,7 @@ someRec: BadRec
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.+1: 	someRec: BadRec
 //│ ║        	^^^^^^^
-//│ ╟── type `{y: 'a}` does not have field 'x'
+//│ ╟── type `forall 'a. 'a` is not a record (expected a record with fields: x, y)
 //│ ║  l.157: 	def someRec: { y: 'a } as 'a
 //│ ║         	             ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{x: 'a0, y: BadRec}`

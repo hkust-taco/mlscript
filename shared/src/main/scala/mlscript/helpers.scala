@@ -81,6 +81,7 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
     // 
     case AppliedType(n, args) =>
       s"${n.name}${args.map(_.showIn(ctx, 0)).mkString(ctx.<, ", ", ctx.>)}"
+    case Selection(b, n) => b.showIn(ctx, 100) + "." + n.name
     case Rem(b, ns) => s"${b.showIn(ctx, 90)}${ns.map("\\"+_).mkString}"
     case Literal(IntLit(n)) => n.toString
     case Literal(DecLit(n)) => n.toString
@@ -168,6 +169,7 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
     case Inter(l, r) => l :: r :: Nil
     case Recursive(n, b) => b :: Nil
     case AppliedType(n, ts) => ts
+    case Selection(b, nme) => b :: nme :: Nil
     case Rem(b, _) => b :: Nil
     case WithExtension(b, r) => b :: r :: Nil
     case PolyType(targs, body) => targs.map(_.fold(identity, identity)) :+ body
@@ -668,6 +670,8 @@ trait TermImpl extends StatementImpl { self: Term =>
     case Forall(ps, bod) =>
       PolyType(ps.map(R(_)), bod.toType_!)
     // 
+    case Sel(receiver, field) =>
+      Selection(receiver.toType_!, TypeName(field.name).withLocOf(field))
     case Sel(receiver, fieldName) => receiver match {
       case Var(name) if !name.startsWith("`") => TypeName(s"$name.$fieldName")
       case _ => throw new NotAType(this)
