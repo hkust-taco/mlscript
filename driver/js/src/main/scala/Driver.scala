@@ -7,6 +7,7 @@ import mlscript._
 import mlscript.utils.shorthands._
 import scala.collection.mutable.{ListBuffer,Map => MutMap}
 import mlscript.codegen._
+import mlscript.{NewLexer, NewParser, ErrorReport, Origin, Diagnostic}
 
 class Driver(options: DriverOptions) {
   import Driver._
@@ -60,9 +61,9 @@ class Driver(options: DriverOptions) {
     vars: Map[Str, typer.SimpleType],
     stack: List[String]
   ): Boolean =
-    if (stack.contains(filename)) {
-      report(s"cycle dependence on $filename"); true
-    }
+    if (stack.contains(filename))
+      throw
+        ErrorReport(Ls((s"cycle dependence on $filename", None)), Diagnostic.Compilation)
     else {
       val beginIndex = filename.lastIndexOf("/")
       val endIndex = filename.lastIndexOf(".")
@@ -74,7 +75,6 @@ class Driver(options: DriverOptions) {
         case Some(content) => {
           import fastparse._
           import fastparse.Parsed.{Success, Failure}
-          import mlscript.{NewLexer, NewParser, ErrorReport, Origin}
 
           val moduleName = prefixName.substring(prefixName.lastIndexOf("/") + 1)
           val wrapped =
@@ -144,7 +144,9 @@ class Driver(options: DriverOptions) {
                       }
                     }
                   }
-                  case _ => report(s"can not open file $filename")
+                  case _ =>
+                    throw
+                      ErrorReport(Ls((s"can not open file $filename", None)), Diagnostic.Compilation)
                 }
                 }
 
@@ -164,7 +166,9 @@ class Driver(options: DriverOptions) {
             }
           }
         }
-        case _ => report(s"can not open file $filename"); true
+        case _ =>
+          throw
+            ErrorReport(Ls((s"can not open file $filename", None)), Diagnostic.Compilation)
       }
     }
 

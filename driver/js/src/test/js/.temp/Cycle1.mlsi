@@ -1,4 +1,0 @@
-import "Cycle2.mls"
-module Cycle1() {
-  fun f: (x: int,) -> error
-}

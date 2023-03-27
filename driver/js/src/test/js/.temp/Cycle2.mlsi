@@ -1,3 +1,0 @@
-import "Cycle1.mls"
-class A(x: int)
-let a: error
