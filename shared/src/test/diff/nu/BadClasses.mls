@@ -64,10 +64,9 @@ module Bar {
 //│ }
 
 :e
-:ge
 hello
 //│ ╔══[ERROR] identifier not found: hello
-//│ ║  l.68: 	hello
+//│ ║  l.67: 	hello
 //│ ╙──      	^^^^^
 //│ error
 //│ Code generation encountered an error:
@@ -76,7 +75,7 @@ hello
 :e
 1 : I
 //│ ╔══[ERROR] type identifier not found: I
-//│ ║  l.77: 	1 : I
+//│ ║  l.76: 	1 : I
 //│ ╙──      	    ^
 //│ error
 //│ res
@@ -86,11 +85,11 @@ hello
 :e
 class Foo[A] { 42: A }
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.87: 	class Foo[A] { 42: A }
+//│ ║  l.86: 	class Foo[A] { 42: A }
 //│ ║        	               ^^
 //│ ╟── integer literal of type `42` does not match type `A`
 //│ ╟── Note: constraint arises from type parameter:
-//│ ║  l.87: 	class Foo[A] { 42: A }
+//│ ║  l.86: 	class Foo[A] { 42: A }
 //│ ╙──      	          ^
 //│ class Foo[A]()
 
@@ -98,7 +97,7 @@ class Foo[A] { 42: A }
 :e
 class C1 { fun oops = this.x }
 //│ ╔══[ERROR] Class `C1` does not contain member `x`
-//│ ║  l.99: 	class C1 { fun oops = this.x }
+//│ ║  l.98: 	class C1 { fun oops = this.x }
 //│ ╙──      	                          ^^
 //│ class C1() {
 //│   fun oops: error

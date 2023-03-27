@@ -1,0 +1,77 @@
+:NewDefs
+
+
+
+declare fun console: nothing
+//│ fun console: nothing
+
+console.error("hello")
+//│ nothing
+//│ res
+//│     = undefined
+//│ // Output
+//│ hello
+
+
+declare module console {
+  fun error: string -> unit
+}
+//│ module console() {
+//│   fun error: string -> unit
+//│ }
+
+console.error("hello")
+//│ unit
+//│ res
+//│     = undefined
+//│ // Output
+//│ hello
+
+:e
+console.log("hello")
+//│ ╔══[ERROR] Module `console` does not contain member `log`
+//│ ║  l.31: 	console.log("hello")
+//│ ╙──      	       ^^^^
+//│ error
+//│ res
+//│     = undefined
+
+
+declare module Foo {
+  fun foo: int
+}
+//│ module Foo() {
+//│   fun foo: int
+//│ }
+
+:re
+Foo.foo
+//│ int
+//│ res
+//│ Runtime error:
+//│   ReferenceError: Foo is not defined
+
+
+declare type A = int 
+//│ type A = int
+
+42 : A
+//│ A
+//│ res
+//│     = 42
+
+
+
+:pe
+declare 42
+//│ ╔══[PARSE ERROR] Unexpected literal token after modifier
+//│ ║  l.66: 	declare 42
+//│ ╙──      	        ^^
+//│ ╔══[PARSE ERROR] Unexpected literal token after modifier
+//│ ║  l.66: 	declare 42
+//│ ╙──      	        ^^
+//│ 42
+//│ res
+//│     = 42
+
+

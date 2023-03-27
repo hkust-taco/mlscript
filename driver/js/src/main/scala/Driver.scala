@@ -19,7 +19,6 @@ class Driver(options: DriverOptions) {
       explainErrors = false
     ) {
       newDefs = true
-      noDefinitionCheck = true
     }
 
   import typer._
@@ -119,42 +118,44 @@ class Driver(options: DriverOptions) {
 
               if (options.force || needRecomp || imtime.isEmpty || mtime.compareTo(imtime) >= 0) {
                 def importModule(modulePath: String): Unit = {
-                val filename = s"${options.outputDir}/.temp/$modulePath.mlsi"
-                readFile(filename) match {
-                  case Some(content) => {
-                    val lines = content.splitSane('\n').toIndexedSeq
-                    val fph = new mlscript.FastParseHelpers(content, lines)
-                    val origin = Origin(modulePath, 1, fph)
-                    val lexer = new NewLexer(origin, throw _, dbg = false)
-                    val tokens = lexer.bracketedTokens
+                  val filename = s"${options.outputDir}/.temp/$modulePath.mlsi"
+                  readFile(filename) match {
+                    case Some(content) => {
+                      val lines = content.splitSane('\n').toIndexedSeq
+                      val fph = new mlscript.FastParseHelpers(content, lines)
+                      val origin = Origin(modulePath, 1, fph)
+                      val lexer = new NewLexer(origin, throw _, dbg = false)
+                      val tokens = lexer.bracketedTokens
 
-                    val parser = new NewParser(origin, tokens, throw _, dbg = false, None) {
-                      def doPrintDbg(msg: => String): Unit = if (dbg) println(msg)
-                    }
+                      val parser = new NewParser(origin, tokens, throw _, dbg = false, None) {
+                        def doPrintDbg(msg: => String): Unit = if (dbg) println(msg)
+                      }
 
-                    parser.parseAll(parser.typingUnit) match {
-                      case tu: TypingUnit => {
-                        val depList = tu.depList.map {
-                          case Import(path) => path
+                      parser.parseAll(parser.typingUnit) match {
+                        case tu: TypingUnit => {
+                          val depList = tu.depList.map {
+                            case Import(path) => path
+                          }
+                          depList.foreach(d => importModule(d.substring(0, d.lastIndexOf("."))))
+                          val tpd = typer.typeTypingUnit(tu, topLevel = true)
+                          val sim = SimplifyPipeline(tpd, all = false)
+                          val exp = typer.expandType(sim)
                         }
-                        depList.foreach(d => importModule(d.substring(0, d.lastIndexOf("."))))
-                        val tpd = typer.typeTypingUnit(tu, topLevel = true)
-                        val sim = SimplifyPipeline(tpd, all = false)
-                        val exp = typer.expandType(sim)
                       }
                     }
+                    case _ =>
+                      throw
+                        ErrorReport(Ls((s"can not open file $filename", None)), Diagnostic.Compilation)
                   }
-                  case _ =>
-                    throw
-                      ErrorReport(Ls((s"can not open file $filename", None)), Diagnostic.Compilation)
-                }
                 }
 
                 depList.foreach(d => importModule(d.substring(0, d.lastIndexOf("."))))
                 val tpd = typer.typeTypingUnit(tu, topLevel = true)
                 val sim = SimplifyPipeline(tpd, all = false)(ctx)
                 val exp = typer.expandType(sim)(ctx)
-                val expStr = exp.showIn(ShowCtx.mk(exp :: Nil), 0)
+                val expStr =
+                  if (exported) "declare " + exp.showIn(ShowCtx.mk(exp :: Nil), 0)
+                  else exp.showIn(ShowCtx.mk(exp :: Nil), 0)
                 val interfaces = importsList.map(_.toString).foldRight(expStr)((imp, itf) => s"$imp\n$itf")
 
                 val relatedPath = path.substring(options.path.length)

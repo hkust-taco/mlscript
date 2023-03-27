@@ -304,16 +304,16 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
     symbol
   }
 
-  def declareStubValue(lexicalName: Str)(implicit accessible: Bool): StubValueSymbol =
+  def declareStubValue(lexicalName: Str)(implicit allowEscape: Bool): StubValueSymbol =
     declareStubValue(lexicalName, N)
 
   def declareStubValue(lexicalName: Str, previous: StubValueSymbol)(implicit
-      accessible: Bool
+      allowEscape: Bool
   ): StubValueSymbol =
     declareStubValue(lexicalName, S(previous))
 
   private def declareStubValue(lexicalName: Str, previous: Opt[StubValueSymbol])(implicit
-      accessible: Bool
+      allowEscape: Bool
   ): StubValueSymbol = {
 
     val symbol = lexicalValueSymbols.get(lexicalName) match {
@@ -327,7 +327,7 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
   }
 
   def stubize(sym: ValueSymbol, previous: StubValueSymbol)(implicit
-      accessible: Bool
+      allowEscape: Bool
   ): StubValueSymbol = {
     unregister(sym)
     declareStubValue(sym.lexicalName, S(previous))

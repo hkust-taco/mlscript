@@ -350,84 +350,7 @@ trait PgrmImpl { self: Pgrm =>
    }
     diags.toList -> res
   }
-  lazy val newDesugared: (Ls[Diagnostic] -> (Ls[NuTypeDef], Ls[Terms])) = {
-    val diags = Buffer.empty[Diagnostic]
-    val res = tops.flatMap { s => s match {
-      case nd: NuTypeDef => {
-        diags ++= tryDesugaredNewDec(nd)
-        Ls(nd)
-      }
-      case _ => {
-        val (ds, d) = s.desugared
-        diags ++= ds
-        d
-      }
-    }
-    }.partitionMap {
-      case ot: Terms => R(ot)
-      case nd: NuTypeDef => L(nd)
-      case NuFunDef(isLetRec, nme, tys, rhs) =>
-        R(Def(isLetRec.getOrElse(true), nme, rhs, isLetRec.isEmpty))
-   }
-    diags.toList -> res
-  }
   override def toString = tops.map("" + _ + ";").mkString(" ")
-
-  // TODO remove this senseless method
-  private def tryDesugaredNewDec(nd: NuTypeDef): Ls[Diagnostic] = nd match {
-    case NuTypeDef(Mxn, TypeName(mxName), tps, tup @ Tup(fs), sig, pars, sup, ths, unit) =>
-      val bases = pars.foldLeft(Var("base"): Term)((res, p) => p match {
-          case Var(pname) => App(Var(pname), Tup(Ls(None -> Fld(false, false, res))))
-          case _ => Var("anything") // ?? FIXME
-        })
-      tryDesugaredNewDec(NuTypeDef(Cls, TypeName(mxName), tps, tup, sig, Ls(bases), sup, ths, unit))
-    case NuTypeDef(Nms, nme, tps, tup @ Tup(fs), sig, pars, sup, ths, unit) =>
-      if (pars.length > 0) {
-        val bases = pars.drop(1).foldLeft(App(pars.head, Tup(Ls())): Term)((res, p) => p match {
-          case Var(pname) => App(Var(pname), Tup(Ls(None -> Fld(false, false, res))))
-          case App(pname, _) => App(pname, Tup(Ls(None -> Fld(false, false, res))))
-          case _ => Var("anything") // ?? FIXME
-        })
-        tryDesugaredNewDec(NuTypeDef(Cls, nme, tps, tup, sig, Ls(bases), sup, ths, unit))
-      }
-      else {
-        tryDesugaredNewDec(NuTypeDef(Cls, nme, tps, tup, sig, Ls(), sup, ths, unit))
-      }
-    case NuTypeDef(k @ Als, nme, tps, tup @ Tup(fs), sig, pars, sup, ths, unit) =>
-      // TODO properly check:
-      // require(fs.isEmpty, fs)
-      // require(sig.isDefined)
-      // require(pars.size === 0, pars)
-      require(ths.isEmpty, ths)
-      require(unit.entities.isEmpty, unit)
-      // val (diags, rhs) = sig.get match {
-      //   case L(ds) => (ds :: Nil) -> Top
-      //   case R(ty) => Nil -> ty
-      // }
-      Nil
-    case NuTypeDef(k @ (Cls | Trt), nme, tps, tup @ Tup(fs), sig, pars, sup, ths, unit) =>
-      val diags = Buffer.empty[Diagnostic]
-      def tt(trm: Term): Type = trm.toType match {
-        case L(ds) => diags += ds; Top
-        case R(ty) => ty
-      }
-      val params = fs.map {
-        case (S(nme), Fld(mut, spec, trm)) =>
-          val ty = tt(trm)
-          nme -> Field(if (mut) S(ty) else N, ty)
-        case (N, Fld(mut, spec, nme: Var)) => nme -> Field(if (mut) S(Bot) else N, Top)
-        case _ => die
-      }
-      val pos = params.unzip._1
-      val bod = pars.map(tt).foldRight(Record(params): Type)(Inter)
-      val termName = Var(nme.name).withLocOf(nme)
-      val mthDefs = unit.children.foldLeft(List[MethodDef[Left[Term, Type]]]())((lst, loc) => loc match {
-        case NuFunDef(isLetRec, mnme, tys, Left(rhs)) => lst :+ MethodDef(isLetRec.getOrElse(false), nme, mnme, tys, Left(rhs))
-        case _ => lst
-      })
-      // TODO: mthDecls
-      diags.toList
-  }
 }
 
 object OpApp {
@@ -464,10 +387,9 @@ trait DeclImpl extends Located { self: Decl =>
 trait NuDeclImpl extends Located { self: NuDecl =>
   val body: Located
   def kind: DeclKind
-  // val name: Str = self match {
-  //   case td: NuTypeDef => td.nme.name
-  //   case fd: NuFunDef => fd.nme.name
-  // }
+  val declareLoc: Opt[Loc]
+  def isDecl: Bool = declareLoc.nonEmpty
+  def declStr: Str = if (isDecl) "declare " else ""
   val nameVar: Var = self match {
     case td: NuTypeDef => td.nme.toVar
     case fd: NuFunDef => fd.nme

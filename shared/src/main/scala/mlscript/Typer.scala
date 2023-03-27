@@ -34,7 +34,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   var constrainedTypes: Boolean = false
   
   var newDefs: Bool = false
-  var noDefinitionCheck: Bool = false
   
   var recordProvenances: Boolean = true
   
@@ -486,12 +485,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         def go(b_ty: ST, rfnt: Var => Opt[FieldType]): ST = b_ty.unwrapAll match {
           case ct: TypeRef => die // TODO actually
           case ClassTag(Var(clsNme), _) =>
-            // ctx.tyDefs2.get(clsNme) match {
-            //   case S(lti) =>
-            //     ???
-            //   case N => die
-            // }
-            
             // TODO we should still succeed even if the member is not completed...
             lookupMember(clsNme, rfnt, nme.toVar) match {
               case R(cls: TypedNuCls) =>
@@ -1317,7 +1310,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     def goDecl(d: NuMember)(implicit ectx: ExpCtx): NuDecl = d match {
       case TypedNuAls(level, td, tparams, body) =>
         ectx(tparams) |> { implicit ectx =>
-          NuTypeDef(td.kind, td.nme, td.tparams, Tup(Nil), S(go(body)), Nil, N, N, TypingUnit(Nil))
+          NuTypeDef(td.kind, td.nme, td.tparams, Tup(Nil), S(go(body)), Nil, N, N, TypingUnit(Nil))(td.declareLoc)
         }
       case TypedNuMxn(td, thisTy, superTy, tparams, params, members, ttu) =>
         ectx(tparams) |> { implicit ectx =>
@@ -1327,7 +1320,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             Nil,//TODO
             Option.when(!(TopType <:< superTy))(go(superTy)),
             Option.when(!(TopType <:< thisTy))(go(thisTy)),
-            mkTypingUnit(thisTy, members))
+            mkTypingUnit(thisTy, members))(td.declareLoc)
         }
       case TypedNuCls(level, td, ttu, tparams, params, members, thisTy) =>
         ectx(tparams) |> { implicit ectx =>
@@ -1337,10 +1330,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             Nil,//TODO
             N,//TODO
             Option.when(!(TopType <:< thisTy))(go(thisTy)),
-            mkTypingUnit(thisTy, members))
+            mkTypingUnit(thisTy, members))(td.declareLoc)
           }
       case tf @ TypedNuFun(level, fd, bodyTy) =>
-        NuFunDef(fd.isLetRec, fd.nme, Nil, R(go(tf.typeSignature)))
+        NuFunDef(fd.isLetRec, fd.nme, Nil, R(go(tf.typeSignature)))(fd.declareLoc)
       case p: NuParam =>
         ??? // TODO
     }

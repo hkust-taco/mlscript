@@ -1,4 +1,4 @@
 import "tools/Inc.mls"
-module Opened() {
+declare module Opened() {
   fun hello: (x: int,) -> unit
 }
