@@ -831,28 +831,28 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     }
 
     typeDefs.foreach {
-      case NuTypeDef(Mxn, TypeName(mxName), tps, tup @ Tup(fs), sig, pars, sup, ths, unit) => {
+      case td @ NuTypeDef(Mxn, TypeName(mxName), tps, tup @ Tup(fs), sig, pars, sup, ths, unit) => {
         val (body, members, stmts) = prepare(mxName, fs, pars, unit)
         val sym = topLevelScope.declareMixin(mxName, tps map { _._2.name }, body, members, stmts)
-        mixins += sym
+        if (!td.isDecl) mixins += sym
       }
-      case NuTypeDef(Nms, TypeName(nme), tps, tup @ Tup(fs), sig, pars, sup, ths, unit) => {
+      case td @ NuTypeDef(Nms, TypeName(nme), tps, tup @ Tup(fs), sig, pars, sup, ths, unit) => {
         val (body, members, stmts) = prepare(nme, fs, pars, unit)
         val sym = topLevelScope.declareModule(nme, tps map { _._2.name }, body, members, stmts, pars)
-        modules += sym
+        if (!td.isDecl) modules += sym
       }
-      case NuTypeDef(Als, TypeName(nme), tps, _, sig, pars, _, _, _) => {
+      case td @ NuTypeDef(Als, TypeName(nme), tps, _, sig, pars, _, _, _) => {
         topLevelScope.declareTypeAlias(nme, tps map { _._2.name }, sig.getOrElse(Top))
       }
-      case NuTypeDef(Cls, TypeName(nme), tps, tup @ Tup(fs), sig, pars, sup, ths, unit) => {
+      case td @ NuTypeDef(Cls, TypeName(nme), tps, tup @ Tup(fs), sig, pars, sup, ths, unit) => {
         val (body, members, stmts) = prepare(nme, fs, pars, unit)
         val sym = topLevelScope.declareNewClass(nme, tps map { _._2.name }, body, members, stmts, pars)
-        classes += sym
+        if (!td.isDecl) classes += sym
       }
-      case NuTypeDef(Trt, TypeName(nme), tps, tup @ Tup(fs), sig, pars, sup, ths, unit) => {
+      case td @ NuTypeDef(Trt, TypeName(nme), tps, tup @ Tup(fs), sig, pars, sup, ths, unit) => {
         val (body, members, _) = prepare(nme, fs, pars, unit)
         val sym = topLevelScope.declareTrait(nme, tps map { _._2.name }, body, members)
-        traits += sym
+        if (!td.isDecl) traits += sym
       }
     }
     (traits.toList, classes.toList, mixins.toList, modules.toList)
@@ -977,7 +977,12 @@ class JSWebBackend extends JSBackend(allowUnresolvedSymbols = true) {
 
   private def generateNewDef(pgrm: Pgrm): (Ls[Str], Ls[Str]) = {
     val mlsModule = topLevelScope.declareValue("typing_unit", Some(false), false)
-    val (diags, (typeDefs, otherStmts)) = pgrm.newDesugared
+    val (typeDefs, otherStmts) = pgrm.tops.partitionMap {
+      case ot: Terms => R(ot)
+      case fd: NuFunDef => R(fd)
+      case nd: NuTypeDef => L(nd)
+      case _ => die
+   }
 
     val (traitSymbols, classSymbols, mixinSymbols, moduleSymbols) = declareNewTypeDefs(typeDefs)
     def include(typeName: Str, moduleName: Str) =
@@ -986,13 +991,13 @@ class JSWebBackend extends JSBackend(allowUnresolvedSymbols = true) {
       traitSymbols.map((sym) => include(sym.runtimeName, mlsModule.runtimeName)) ++
       mixinSymbols.map((sym) => include(sym.runtimeName, mlsModule.runtimeName)) ++
       moduleSymbols.map((sym) => include(sym.runtimeName, mlsModule.runtimeName)) ++
-      classSymbols.map((sym) => include(sym.runtimeName, mlsModule.runtimeName)).toList
+      classSymbols.map((sym) => include(sym.runtimeName, mlsModule.runtimeName))
 
     val defs =
       traitSymbols.map { translateTraitDeclaration(_)(topLevelScope) } ++
       mixinSymbols.map { translateMixinDeclaration(_)(topLevelScope) } ++
       moduleSymbols.map { translateModuleDeclaration(_)(topLevelScope) } ++
-      classSymbols.map { translateNewClassDeclaration(_)(topLevelScope) }.toList
+      classSymbols.map { translateNewClassDeclaration(_)(topLevelScope) }
 
     val defStmts =
       JSLetDecl(Ls(mlsModule.runtimeName -> S(JSRecord(Ls("cache" -> JSRecord(Ls())), defs)))) :: includes
@@ -1169,14 +1174,19 @@ class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
 
   private def generateNewDef(pgrm: Pgrm)(implicit scope: Scope, allowEscape: Bool): JSTestBackend.TestCode = {
     val mlsModule = topLevelScope.declareValue("typing_unit", Some(false), false)
-    val (diags, (typeDefs, otherStmts)) = pgrm.newDesugared
+    val (typeDefs, otherStmts) = pgrm.tops.partitionMap {
+      case ot: Terms => R(ot)
+      case fd: NuFunDef => R(fd)
+      case nd: NuTypeDef => L(nd)
+      case _ => die
+   }
 
     val (traitSymbols, classSymbols, mixinSymbols, moduleSymbols) = declareNewTypeDefs(typeDefs)
     val defStmts = 
       traitSymbols.map { translateTraitDeclaration(_)(topLevelScope) } ++
       mixinSymbols.map { translateMixinDeclaration(_)(topLevelScope) } ++
       moduleSymbols.map { translateModuleDeclaration(_)(topLevelScope) } ++
-      classSymbols.map { translateNewClassDeclaration(_)(topLevelScope) }.toList
+      classSymbols.map { translateNewClassDeclaration(_)(topLevelScope) }
 
     def include(typeName: Str, moduleName: Str) =
       JSExprStmt(JSAssignExpr(JSField(JSIdent("globalThis"), typeName), JSField(JSIdent(moduleName), typeName)))
@@ -1184,7 +1194,7 @@ class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
       traitSymbols.map((sym) => include(sym.runtimeName, mlsModule.runtimeName)) ++
       mixinSymbols.map((sym) => include(sym.runtimeName, mlsModule.runtimeName)) ++
       moduleSymbols.map((sym) => include(sym.runtimeName, mlsModule.runtimeName)) ++
-      classSymbols.map((sym) => include(sym.runtimeName, mlsModule.runtimeName)).toList
+      classSymbols.map((sym) => include(sym.runtimeName, mlsModule.runtimeName))
 
     val zeroWidthSpace = JSLit("\"\\u200B\"")
     val catchClause = JSCatchClause(
@@ -1194,7 +1204,9 @@ class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
 
     // Generate statements.
     val queries = otherStmts.map {
-      case Def(recursive, Var(name), L(body), isByname) =>
+      case NuFunDef(isLetRec, nme @ Var(name), tys, rhs @ L(body)) =>
+        val recursive = isLetRec.getOrElse(true)
+        val isByname = isLetRec.isEmpty
         val bodyIsLam = body match { case _: Lam => true case _ => false }
         (if (recursive) {
           val isByvalueRecIn = if (isByname) None else Some(true)
@@ -1241,8 +1253,8 @@ class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
             )
           case L(reason) => JSTestBackend.AbortedQuery(reason)
         }
-      case Def(_, Var(name), _, _) =>
-        scope.declareStubValue(name)
+      case fd @ NuFunDef(isLetRec, Var(name), tys, R(ty)) =>
+        scope.declareStubValue(name)(allowEscape || fd.isDecl)
         JSTestBackend.EmptyQuery
       case term: Term =>
         try {

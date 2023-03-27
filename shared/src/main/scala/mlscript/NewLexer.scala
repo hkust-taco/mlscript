@@ -261,6 +261,7 @@ object NewLexer {
     // "any",
     // "all",
     "mut",
+    "declare",
     "class",
     "trait",
     "mixin",
