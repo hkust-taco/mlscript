@@ -34,6 +34,7 @@ class Driver(options: DriverOptions) {
       implicit val raise: Raise = report
       implicit val extrCtx: Opt[typer.ExtrCtx] = N
       implicit val vars: Map[Str, typer.SimpleType] = Map.empty
+      implicit val stack = List[String]()
       compile(options.filename)
       if (Driver.totalErrors > 0)
         js.Dynamic.global.process.exit(-1)
@@ -56,63 +57,68 @@ class Driver(options: DriverOptions) {
     implicit ctx: Ctx,
     raise: Raise,
     extrCtx: Opt[typer.ExtrCtx],
-    vars: Map[Str, typer.SimpleType]
-  ): Boolean = {
-    val beginIndex = filename.lastIndexOf("/")
-    val endIndex = filename.lastIndexOf(".")
-    val prefixName = filename.substring(beginIndex + 1, endIndex)
-    val path = filename.substring(0, beginIndex + 1)
+    vars: Map[Str, typer.SimpleType],
+    stack: List[String]
+  ): Boolean =
+    if (stack.contains(filename)) {
+      report(s"cycle dependence on $filename"); true
+    }
+    else {
+      val beginIndex = filename.lastIndexOf("/")
+      val endIndex = filename.lastIndexOf(".")
+      val prefixName = filename.substring(beginIndex + 1, endIndex)
+      val path = filename.substring(0, beginIndex + 1)
 
-    System.out.println(s"compiling $filename...")
-    readFile(filename) match {
-      case Some(content) => {
-        import fastparse._
-        import fastparse.Parsed.{Success, Failure}
-        import mlscript.{NewLexer, NewParser, ErrorReport, Origin}
+      System.out.println(s"compiling $filename...")
+      readFile(filename) match {
+        case Some(content) => {
+          import fastparse._
+          import fastparse.Parsed.{Success, Failure}
+          import mlscript.{NewLexer, NewParser, ErrorReport, Origin}
 
-        val moduleName = prefixName.substring(prefixName.lastIndexOf("/") + 1)
-        val wrapped =
-          if (!exported) content
-          else s"module $moduleName() {\n" +
-                  content.splitSane('\n').toIndexedSeq.map(line => s"  $line").reduceLeft(_ + "\n" + _) +
-                "\n}"
-        val lines = wrapped.splitSane('\n').toIndexedSeq
-        val fph = new mlscript.FastParseHelpers(wrapped, lines)
-        val origin = Origin(filename, 1, fph)
-        val lexer = new NewLexer(origin, throw _, dbg = false)
-        val tokens = lexer.bracketedTokens
+          val moduleName = prefixName.substring(prefixName.lastIndexOf("/") + 1)
+          val wrapped =
+            if (!exported) content
+            else s"module $moduleName() {\n" +
+                    content.splitSane('\n').toIndexedSeq.map(line => s"  $line").reduceLeft(_ + "\n" + _) +
+                  "\n}"
+          val lines = wrapped.splitSane('\n').toIndexedSeq
+          val fph = new mlscript.FastParseHelpers(wrapped, lines)
+          val origin = Origin(filename, 1, fph)
+          val lexer = new NewLexer(origin, throw _, dbg = false)
+          val tokens = lexer.bracketedTokens
 
-        val parser = new NewParser(origin, tokens, throw _, dbg = false, None) {
-          def doPrintDbg(msg: => String): Unit = if (dbg) println(msg)
-        }
+          val parser = new NewParser(origin, tokens, throw _, dbg = false, None) {
+            def doPrintDbg(msg: => String): Unit = if (dbg) println(msg)
+          }
 
-        parser.parseAll(parser.typingUnit) match {
-          case tu => {
-            def getAllImport(top: Ls[Import], tu: TypingUnit): Ls[Import] =
-              tu.entities.foldLeft(top)((res, ett) => ett match {
-                case nudef: NuTypeDef => res ::: nudef.body.depList
-                case _ => res
+          parser.parseAll(parser.typingUnit) match {
+            case tu => {
+              def getAllImport(top: Ls[Import], tu: TypingUnit): Ls[Import] =
+                tu.entities.foldLeft(top)((res, ett) => ett match {
+                  case nudef: NuTypeDef => res ::: nudef.body.depList
+                  case _ => res
+                })
+              val importsList = getAllImport(tu.depList, tu)
+              val depList = importsList.map {
+                case Import(path) => path
+              }
+
+              val needRecomp = depList.foldLeft(false)((nr, dp) => nr || {
+                // We need to create another new context when compiling other files
+                // e.g. A -> B, A -> C, B -> D, C -> D, -> means "depends on"
+                // If we forget to add `import "D.mls"` in C, we need to raise an error
+                // Keeping using the same environment would not.
+                var newCtx: Ctx = Ctx.init
+                val newExtrCtx: Opt[typer.ExtrCtx] = N
+                val newVars: Map[Str, typer.SimpleType] = Map.empty
+                compile(s"$path$dp", true)(newCtx, raise, newExtrCtx, newVars, stack :+ filename)
               })
-            val importsList = getAllImport(tu.depList, tu)
-            val depList = importsList.map {
-              case Import(path) => path
-            }
+              val mtime = getModificationTime(filename)
+              val imtime = getModificationTime(s"${options.outputDir}/.temp/$prefixName.mlsi")
 
-            val needRecomp = depList.foldLeft(false)((nr, dp) => nr || {
-              // We need to create another new context when compiling other files
-              // e.g. A -> B, A -> C, B -> D, C -> D, -> means "depends on"
-              // If we forget to add `import "D.mls"` in C, we need to raise an error
-              // Keeping using the same environment would not.
-              var newCtx: Ctx = Ctx.init
-              val newExtrCtx: Opt[typer.ExtrCtx] = N
-              val newVars: Map[Str, typer.SimpleType] = Map.empty
-              compile(s"$path$dp", true)(newCtx, raise, newExtrCtx, newVars)
-            })
-            val mtime = getModificationTime(filename)
-            val imtime = getModificationTime(s"${options.outputDir}/.temp/$prefixName.mlsi")
-
-            if (options.force || needRecomp || imtime.isEmpty || mtime.compareTo(imtime) >= 0) {
-              def importModule(modulePath: String): Unit = {
+              if (options.force || needRecomp || imtime.isEmpty || mtime.compareTo(imtime) >= 0) {
+                def importModule(modulePath: String): Unit = {
                 val filename = s"${options.outputDir}/.temp/$modulePath.mlsi"
                 readFile(filename) match {
                   case Some(content) => {
@@ -140,27 +146,27 @@ class Driver(options: DriverOptions) {
                   }
                   case _ => report(s"can not open file $filename")
                 }
+                }
+
+                depList.foreach(d => importModule(d.substring(0, d.lastIndexOf("."))))
+                val tpd = typer.typeTypingUnit(tu, topLevel = true)
+                val sim = SimplifyPipeline(tpd, all = false)(ctx)
+                val exp = typer.expandType(sim)(ctx)
+                val expStr = exp.showIn(ShowCtx.mk(exp :: Nil), 0)
+                val interfaces = importsList.map(_.toString).foldRight(expStr)((imp, itf) => s"$imp\n$itf")
+
+                val relatedPath = path.substring(options.path.length)
+                writeFile(s"${options.outputDir}/.temp/$relatedPath", s"$prefixName.mlsi", interfaces)
+                generate(Pgrm(tu.entities), importsList, prefixName, s"${options.outputDir}/$relatedPath", exported)
+                true
               }
-
-              depList.foreach(d => importModule(d.substring(0, d.lastIndexOf("."))))
-              val tpd = typer.typeTypingUnit(tu, topLevel = true)
-              val sim = SimplifyPipeline(tpd, all = false)(ctx)
-              val exp = typer.expandType(sim)(ctx)
-              val expStr = exp.showIn(ShowCtx.mk(exp :: Nil), 0)
-              val interfaces = importsList.map(_.toString).foldRight(expStr)((imp, itf) => s"$imp\n$itf")
-
-              val relatedPath = path.substring(options.path.length)
-              writeFile(s"${options.outputDir}/.temp/$relatedPath", s"$prefixName.mlsi", interfaces)
-              generate(Pgrm(tu.entities), importsList, prefixName, s"${options.outputDir}/$relatedPath", exported)
-              true
+              else false
             }
-            else false
           }
         }
+        case _ => report(s"can not open file $filename"); true
       }
-      case _ => report(s"can not open file $filename"); true
     }
-  }
 
   private def generate(
     program: Pgrm,

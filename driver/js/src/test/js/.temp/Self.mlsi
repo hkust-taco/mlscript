@@ -1,0 +1,2 @@
+import "Self.mls"
+class Foo()
