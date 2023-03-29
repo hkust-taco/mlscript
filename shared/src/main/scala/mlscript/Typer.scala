@@ -54,7 +54,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
                   outerQuoteEnvironments: List[Ctx],
                   var outermostCtx: Opt[Ctx],
                   innerUnquoteContextRequirements: mutable.ListBuffer[SimpleType],
-                  outermostFreeVarType: MutSet[SimpleType],
+                  outermostFreeVarType: MutSet[Str -> SimpleType],
                   id: Int,
                   isTopLvlCtx: Bool
                 ) {
@@ -216,7 +216,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     } :: {
       val tvT, tvC = freshVar(noProv)(1)
       val td = TypeDef(Cls, TypeName("Code"), (TypeName("T"), tvT) :: (TypeName("C"), tvC) :: Nil, Nil, TopType, Nil, Nil, Set.empty, N, Nil)
-      td.tvarVariances = S(MutMap(tvT -> VarianceInfo.co, tvC -> VarianceInfo.co))
+      td.tvarVariances = S(MutMap(tvT -> VarianceInfo.co, tvC -> VarianceInfo.contra))
       td
     } :: Nil
   val primitiveTypes: Set[Str] =
@@ -597,16 +597,16 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           }
       case v@ValidVar(name) =>
         println(s"inspect $name by ctx.get")
-        val isOpChar = Set(
-          '!', '#', '%', '&', '*', '+', '-', '/', ':', '<', '=', '>', '?', '@', '\\', '^', '|', '~', '.',
-          // ',',
-          ';'
-        )
+//        val isOpChar = Set(
+//          '!', '#', '%', '&', '*', '+', '-', '/', ':', '<', '=', '>', '?', '@', '\\', '^', '|', '~', '.',
+//          // ',',
+//          ';'
+//        )
+//
+//        val isOP = isOpChar.contains(name[0])
+//        println(s"is op = $isOP")
 
-        val isOP = isOpChar.contains(name[0])
-        println(s"is op = $isOP")
-
-        val ty = ctx.get(name, searchInsideQQ = isOpChar.contains(name[0])).fold(
+        val ty = ctx.get(name).fold(
           if (ctx.inQuasiquote) {
             val res = new TypeVariable(lvl, Nil, Nil)(prov)
             val tag = ClassTag(StrLit(name), Set.empty)(noProv)
@@ -616,7 +616,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             ctx.outermostCtx match {
               case Some(outermost) =>
                 outermost.freeVarsEnv += name -> VarSymbol(tag, v)
-                outermost.outermostFreeVarType += tag
+                outermost.outermostFreeVarType += (name -> res)
               case None => err("identifier not found: " + name, term.toLoc): TypeScheme
             }
             res
@@ -890,64 +890,58 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         println(s"typing for ${nested_ctx.id}")
         val body_type = typeTerm(body)(nested_ctx, raise, vars)
 
+        val empty_rcd = RecordType(Nil)(NoProv)
+
         val requirements = nested_ctx.innerUnquoteContextRequirements.toList
         println(s"chaining for ${nested_ctx.id}")
         println("local unquoted context:")
         println(requirements)
 
         val unquote_requirement = requirements match {
-          case Nil => TypeRef(TypeName("nothing"), Nil)(noProv)
-          case _ => nested_ctx.innerUnquoteContextRequirements.reduce(_ | _)
+          case Nil => empty_rcd
+          case _ => nested_ctx.innerUnquoteContextRequirements.reduce(_ & _)
         }
 
         val free_vars = nested_ctx.outermostFreeVarType.toList
 
         val free_var_requirement = free_vars match {
-          case Nil => TypeRef(TypeName("nothing"), Nil)(NoProv)
-          case _ => free_vars.reduceLeft(_ | _)
+          case Nil => empty_rcd
+          case _ =>
+            val list = free_vars.map(e => (Var(e._1), FieldType(N, e._2)(noProv)))
+            RecordType(list)(NoProv)
         }
 
-        var ctx_type = unquote_requirement | free_var_requirement
-
-
-//        println("typing for neg")
-//        println(nested_ctx.env)
-//
-//        for (elem <- nested_ctx.env) {
-//          println(elem._1)
-//          ctx_type = elem._2 match {
-//            case VarSymbol(ty, _) => ctx_type & ty.instantiate.neg()
-//            case _ => ctx_type
-//          }
-//        }
+        println(free_var_requirement)
+        var ctx_type = unquote_requirement & free_var_requirement
 
         TypeRef(TypeName("Code"), body_type :: ctx_type :: Nil)(noProv)
       case Unquoted(body) =>
-        val nestedCtx = ctx.parent match {
-          case Some(p) => p.nest.copy(inQuasiquote = true, inUnquoted = true)
-          case _ => ???
-        }
-//        println(s"Typing for unquoted ${nestedCtx.id}")
-
-        val tt = freshVar(noProv)(0)
-        val tc = freshVar(noProv)(0)
-
-
-        ctx.outermostCtx match {
+        ctx.parent match {
           case Some(p) =>
-            p.innerUnquoteContextRequirements.append(tc)
-          case _ => ???
+            val nestedCtx = p.nest.copy(inQuasiquote = true, inUnquoted = true)
+            //        println(s"Typing for unquoted ${nestedCtx.id}")
+
+            val tt = freshVar(noProv)(0)
+            val tc = freshVar(noProv)(0)
+
+
+            ctx.outermostCtx match {
+              case Some(p) =>
+                p.innerUnquoteContextRequirements.append(tc)
+              case _ => ???
+            }
+            // func <return_type> foo(<param_type> param)
+            // Code[tt, tc] <: Code[T <- co, C <- cotra]
+
+            val f_ty = FunctionType(TypeRef(TypeName("Code"), Ls(tt, tc))(noProv), tt)(noProv)
+
+            val body_type = typeTerm(body)(nestedCtx, raise, vars)
+
+            val res = freshVar(prov)
+            val resTy = con(f_ty, FunctionType(body_type, res)(prov), res)
+            resTy
+          case _ => err("An unquote should enclose with a quasiquote", body.toLoc)(raise)
         }
-        // func <return_type> foo(<param_type> param)
-        // Code[tt, tc] <: Code[T <- co, C <- cotra]
-
-        val f_ty = FunctionType(TypeRef(TypeName("Code"), Ls(tt, tc))(noProv), tt)(noProv)
-
-        val body_type = typeTerm(body)(nestedCtx, raise, vars)
-
-        val res = freshVar(prov)
-        val resTy = con(f_ty, FunctionType(body_type, res)(prov), res)
-        resTy
     }
   }(r => s"$lvl. : ${r}")
 
