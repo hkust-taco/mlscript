@@ -25,7 +25,7 @@ b,
 a,
 b,
 c
-//│ /!!!\ Uncaught error: java.lang.ArrayIndexOutOfBoundsException: 7
+//│ /!!!\ Uncaught error: java.lang.ArrayIndexOutOfBoundsException: Index 7 out of bounds for length 7
 //│ 	at: mlscript.NewLexer.isQuasiquoteKeyword$1(NewLexer.scala:81)
 //│ 	at: mlscript.NewLexer.lex(NewLexer.scala:91)
 //│ 	at: mlscript.NewLexer.lex(NewLexer.scala:140)
@@ -106,7 +106,7 @@ foo +
 
 foo(a, b, c)
 foo of a, b, c
-//│ /!!!\ Uncaught error: java.lang.ArrayIndexOutOfBoundsException: 27
+//│ /!!!\ Uncaught error: java.lang.ArrayIndexOutOfBoundsException: Index 27 out of bounds for length 27
 //│ 	at: mlscript.NewLexer.isQuasiquoteKeyword$1(NewLexer.scala:81)
 //│ 	at: mlscript.NewLexer.lex(NewLexer.scala:91)
 //│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
@@ -131,7 +131,7 @@ foo of
     x
     y
   c
-//│ /!!!\ Uncaught error: java.lang.ArrayIndexOutOfBoundsException: 32
+//│ /!!!\ Uncaught error: java.lang.ArrayIndexOutOfBoundsException: Index 32 out of bounds for length 32
 //│ 	at: mlscript.NewLexer.isQuasiquoteKeyword$1(NewLexer.scala:81)
 //│ 	at: mlscript.NewLexer.lex(NewLexer.scala:91)
 //│ 	at: mlscript.NewLexer.lex(NewLexer.scala:140)

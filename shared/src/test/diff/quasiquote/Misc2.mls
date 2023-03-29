@@ -6,7 +6,7 @@ code"let x = 1 in ${ 1 }"
 //│ ║  l.4: 	code"let x = 1 in ${ 1 }"
 //│ ╙──     	                     ^
 //│ res: code & {Code#C = anything, Code#T <: error}
-//│    = [ 'Let', 'x', [ 1 ], 1 ]
+//│    = [ 'Let', 'x', Symbol(x), [ '_', 1 ], [ 'Unquoted', 1 ] ]
 
 :e // Should be two errors
 code"let x = 1 in ${ x }"
@@ -20,21 +20,27 @@ code"let x = 1 in ${ x }"
 // The type is wrong
 code"let x = 1 in ${ code"x + 1" }"
 //│ res: code & {Code#C = anything, Code#T <: code & {Code#C = anything, Code#T <: int}}
-//│    = [ 'Let', 'x', [ 1 ], [ 'App', '+', [ 'Var', 'x' ], [ 1 ] ] ]
+//│    = [
+//│        'Let',
+//│        'x',
+//│        Symbol(x),
+//│        [ '_', 1 ],
+//│        [ 'Unquoted', [ 'App', '+', [Array], [Array] ] ]
+//│      ]
 
 :e
 1 + code"2"
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.26: 	1 + code"2"
+//│ ║  l.32: 	1 + code"2"
 //│ ║        	^^^^^^^^^^^
 //│ ╙── expression of type `code & {Code#C = anything, Code#T <: 2}` is not an instance of type `int`
 //│ res: error | int
-//│    = '12'
+//│    = '1_,2'
 
 :e // Should be an error
 code"let x = 1 in ${ code"x + ${ x }" }"
 //│ ╔══[ERROR] Type mismatch. Required: Code, found: [x.type41]
-//│ ║  l.35: 	code"let x = 1 in ${ code"x + ${ x }" }"
+//│ ║  l.41: 	code"let x = 1 in ${ code"x + ${ x }" }"
 //│ ╙──      	                                 ^
 //│ res: code & {Code#C = anything, Code#T <: code & {Code#C = anything, Code#T <: int}}
 //│ Code generation encountered an error:
@@ -43,14 +49,14 @@ code"let x = 1 in ${ code"x + ${ x }" }"
 
 fun x: Code‹int›
 //│ ╔══[ERROR] Wrong number of type arguments – expected 2, found 1
-//│ ║  l.44: 	fun x: Code‹int›
+//│ ║  l.50: 	fun x: Code‹int›
 //│ ╙──      	       ^^^^^^^^
 //│ x: code & {Code#C = anything, Code#T <: int}
 //│  = <missing implementation>
 
 code"1 + ${x}"
 //│ ╔══[ERROR] Type mismatch. Required: Code, found: [Code[Int,α51]]
-//│ ║  l.51: 	code"1 + ${x}"
+//│ ║  l.57: 	code"1 + ${x}"
 //│ ╙──      	           ^
 //│ res: code & {Code#C = anything, Code#T <: int}
 //│    = <no result>
@@ -188,28 +194,28 @@ code"let a = 1; ${a + code"b + ${a + b}" }"
 //│ ⬤ Typed as: Code[error<>,a.type54&b.type5965]
 //│  where: 
 //│ ╔══[ERROR] Type mismatch. Required: Code, found: α60
-//│ ║  l.63: 	code"let a = 1; ${a + code"b + ${a + b}" }"
+//│ ║  l.69: 	code"let a = 1; ${a + code"b + ${a + b}" }"
 //│ ╙──      	                                 ^^^^^
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.63: 	code"let a = 1; ${a + code"b + ${a + b}" }"
+//│ ║  l.69: 	code"let a = 1; ${a + code"b + ${a + b}" }"
 //│ ║        	                  ^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── expression of type `code & {Code#C :> ?b.type56, Code#T <: ?a}` is not an instance of type `int`
 //│ ╔══[ERROR] Type mismatch. Required: Code, found: α63
-//│ ║  l.63: 	code"let a = 1; ${a + code"b + ${a + b}" }"
+//│ ║  l.69: 	code"let a = 1; ${a + code"b + ${a + b}" }"
 //│ ╙──      	                  ^^^^^^^^^^^^^^^^^^^^^^
 //│ res: code & {Code#C = anything, Code#T <: error}
 
 
 code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
 //│ ╔══[ERROR] Type mismatch. Required: Code, found: α72
-//│ ║  l.203: 	code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
+//│ ║  l.209: 	code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
 //│ ╙──       	                                            ^^^^^
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.203: 	code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
+//│ ║  l.209: 	code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
 //│ ║         	                             ^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── expression of type `code & {Code#C :> ?b.type68, Code#T <: ?a}` is not an instance of type `int`
 //│ ╔══[ERROR] Type mismatch. Required: Code, found: α75
-//│ ║  l.203: 	code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
+//│ ║  l.209: 	code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
 //│ ╙──       	                             ^^^^^^^^^^^^^^^^^^^^^^
 //│ res: code & {Code#C = anything, Code#T <: error}
 
