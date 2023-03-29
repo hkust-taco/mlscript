@@ -531,7 +531,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       ))
     case App(trm, params @ Tup(_)) =>
       JSArray(Ls(
-        JSExpr("Fun"),
+        JSExpr("App_Fun"),
         translateQuotedTerm(trm),
         translateQuotedTerm(params)
       ))

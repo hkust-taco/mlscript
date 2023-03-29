@@ -59,13 +59,13 @@ fun id(x) = x
 //│ id: 'a -> 'a
 //│   = [Function: id]
 
-let global_fun = code"id(3)"
-//│ global_fun: code & {Code#C = anything, Code#T <: 3}
-//│           = [ 'Fun', [ 'Var', [ 'FreeVar', 'id' ] ], [ 'Tup', [ [Array] ] ] ]
+let global_fun = code"id(4)"
+//│ global_fun: code & {Code#C = anything, Code#T <: 4}
+//│           = [ 'App_Fun', [ 'Var', [ 'FreeVar', 'id' ] ], [ 'Tup', [ [Array] ] ] ]
 
 run(global_fun)
-//│ res: 3
-//│    = 3
+//│ res: 4
+//│    = 4
 
 let local_fun = code"let plus1 = x => x + 1; plus1(if true then 1 else 2)"
 //│ local_fun: code & {Code#C = anything, Code#T <: int}
@@ -74,7 +74,7 @@ let local_fun = code"let plus1 = x => x + 1; plus1(if true then 1 else 2)"
 //│              'plus1',
 //│              Symbol(plus1),
 //│              [ '_', [Function (anonymous)] ],
-//│              [ 'Fun', [ 'Var', Symbol(plus1) ], [ 'Tup', [Array] ] ]
+//│              [ 'App_Fun', [ 'Var', Symbol(plus1) ], [ 'Tup', [Array] ] ]
 //│            ]
 
 run(local_fun)
@@ -103,7 +103,7 @@ code"let id = x => x; id(3)"
 //│        'id',
 //│        Symbol(id),
 //│        [ '_', [Function (anonymous)] ],
-//│        [ 'Fun', [ 'Var', Symbol(id) ], [ 'Tup', [Array] ] ]
+//│        [ 'App_Fun', [ 'Var', Symbol(id) ], [ 'Tup', [Array] ] ]
 //│      ]
 run(res)
 //│ res: 3
@@ -215,7 +215,7 @@ code"let id = x => ${code"x"}; id(3)"
 //│        'id',
 //│        Symbol(id),
 //│        [ '_', [Function (anonymous)] ],
-//│        [ 'Fun', [ 'Var', Symbol(id) ], [ 'Tup', [Array] ] ]
+//│        [ 'App_Fun', [ 'Var', Symbol(id) ], [ 'Tup', [Array] ] ]
 //│      ]
 
 run(res)
@@ -238,7 +238,7 @@ run(res)
 //│        'id',
 //│        Symbol(id),
 //│        [ '_', [Function (anonymous)] ],
-//│        [ 'Fun', [ 'Var', Symbol(id) ], [ 'Tup', [Array] ] ]
+//│        [ 'App_Fun', [ 'Var', Symbol(id) ], [ 'Tup', [Array] ] ]
 //│      ]
 //│ res: error
 //│    = 3
@@ -384,7 +384,7 @@ fun f(x) = x
 
 code"f(1)"
 //│ res: code & {Code#C = anything, Code#T <: 1}
-//│    = [ 'Fun', [ 'Var', [ 'FreeVar', 'f' ] ], [ 'Tup', [ [Array] ] ] ]
+//│    = [ 'App_Fun', [ 'Var', [ 'FreeVar', 'f' ] ], [ 'Tup', [ [Array] ] ] ]
 
 :re
 run(res)
@@ -413,7 +413,7 @@ class Foo(n)
 
 code"Foo(1)"
 //│ res: code & {Code#C = anything, Code#T <: Foo & {n: 1}}
-//│    = [ 'Fun', [ 'Var', [ 'FreeVar', 'Foo' ] ], [ 'Tup', [ [Array] ] ] ]
+//│    = [ 'App_Fun', [ 'Var', [ 'FreeVar', 'Foo' ] ], [ 'Tup', [ [Array] ] ] ]
 
 :re
 run(res)

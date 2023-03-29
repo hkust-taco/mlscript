@@ -876,7 +876,7 @@ final case class JSQuasiquoteRunFunctionBody() extends JSStmt {
           return symbol_value.get(s_expr[1]);
         case "App": // ['App', 'binary_operator', translateQuoted(lhs), translateQuoted(rhs)]
           return eval(_run(s_expr[2]) + s_expr[1] + _run(s_expr[3]));
-        case "Fun": // ['Fun', translateQuoted(callee), translateQuoted(params)]
+        case "App_Fun": // ['App_Fun', translateQuoted(callee), translateQuoted(params)]
           // test for type of _run(callee) if it is a string, then test for globalThis, otherwise it is an error
           let callee = _run(s_expr[1]);
           if (typeof callee == "string") {
