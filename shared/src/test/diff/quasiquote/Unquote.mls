@@ -1,5 +1,231 @@
 // :NewParser
+:NewParser
+:d
+:ne
+:NoJS
+code"z"
+code"z + y"
+//│ 0. Typing term Quoted' z '
+//│ | typing for 883
+//│ | 0. Typing term z
+//│ | | inspect z by ctx.get
+//│ | | insert z into the free vars
+//│ | 0. : α26
+//│ | chaining for 883
+//│ | local unquoted context:
+//│ | List()
+//│ | {z: α26}
+//│ 0. : Code[α26,{z: α26}]
+//│ ⬤ Typed as: Code[α26,{z: α26}]
+//│  where: 
+//│ 0. Typing term Quoted' + (z,) (y,) '
+//│ | typing for 375
+//│ | 0. Typing term + (z,) (y,)
+//│ | | 0. Typing term + (z,)
+//│ | | | 0. Typing term +
+//│ | | | | inspect + by ctx.get
+//│ | | | 0. : (int<number> -> (int<number> -> int<number>))
+//│ | | | 0. Typing term z,
+//│ | | | | 0. Typing term z
+//│ | | | | | inspect z by ctx.get
+//│ | | | | | insert z into the free vars
+//│ | | | | 0. : α30
+//│ | | | 0. : (α30,)
+//│ | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (α30 -> α31)
+//│ | | |   where 
+//│ | | | C (int<number> -> (int<number> -> int<number>)) <! (α30 -> α31)    (0)
+//│ | | | | C (α30,) <! (int<number>,)    (1)
+//│ | | | | | C α30 <! int<number>    (2)
+//│ | | | | C (int<number> -> int<number>) <! α31    (3)
+//│ | | 0. : α31
+//│ | | 0. Typing term y,
+//│ | | | 0. Typing term y
+//│ | | | | inspect y by ctx.get
+//│ | | | | insert y into the free vars
+//│ | | | 0. : α32
+//│ | | 0. : (α32,)
+//│ | | CONSTRAIN α31 <! (α32 -> α33)
+//│ | |   where 
+//│ 		α31 :> (int<number> -> int<number>)
+//│ | | C α31 <! (α32 -> α33)    (0)
+//│ | | | C (int<number> -> int<number>) <! (α32 -> α33)    (1)
+//│ | | | | C (α32,) <! (int<number>,)    (2)
+//│ | | | | | C α32 <! int<number>    (3)
+//│ | | | | C int<number> <! α33    (4)
+//│ | 0. : α33
+//│ | chaining for 375
+//│ | local unquoted context:
+//│ | List()
+//│ | {y: α32, z: α30}
+//│ 0. : Code[α33,{y: α32, z: α30}]
+//│ ⬤ Typed as: Code[α33,{y: α32, z: α30}]
+//│  where: 
+//│ 		α30 <: int<number>
+//│ 		α32 <: int<number>
+//│ 		α33 :> int<number>
+//│ res: Code['a, {z: 'a}]
+//│ res: Code[int, {y: int, z: int}]
 
+:d
+:ne
+:NoJS
+fun f(x, y) = [code"[${x}, ${y}]", code"${x}"]
+fun f(x, y) = code"[${x}, ${y}]"
+//│ 1. Typing term x, y, => '(' Quoted' '(' Unquote' x ', Unquote' y ', ')' ', Quoted' Unquote' x ' ', ')'
+//│ | 1. Typing pattern x, y,
+//│ | | 1. Typing pattern x
+//│ | | 1. : α38'
+//│ | | 1. Typing pattern y
+//│ | | 1. : α39'
+//│ | 1. : (α38', α39',)
+//│ | 1. Typing term '(' Quoted' '(' Unquote' x ', Unquote' y ', ')' ', Quoted' Unquote' x ' ', ')'
+//│ | | 1. Typing term Quoted' '(' Unquote' x ', Unquote' y ', ')' ', Quoted' Unquote' x ' ',
+//│ | | | 1. Typing term Quoted' '(' Unquote' x ', Unquote' y ', ')' '
+//│ | | | | typing for 989
+//│ | | | | 1. Typing term '(' Unquote' x ', Unquote' y ', ')'
+//│ | | | | | 1. Typing term Unquote' x ', Unquote' y ',
+//│ | | | | | | 1. Typing term Unquote' x '
+//│ | | | | | | | 1. Typing term x
+//│ | | | | | | | | inspect x by ctx.get
+//│ | | | | | | | 1. : α38'
+//│ | | | | | | | CONSTRAIN (Code[α40,α41] -> α40) <! (α38' -> α42')
+//│ | | | | | | |   where 
+//│ | | | | | | | C (Code[α40,α41] -> α40) <! (α38' -> α42')    (0)
+//│ | | | | | | | | C α38' <! Code[α40,α41]    (1)
+//│ | | | | | | | | C α40 <! α42'    (2)
+//│ | | | | | | 1. : α42'
+//│ | | | | | | 1. Typing term Unquote' y '
+//│ | | | | | | | 1. Typing term y
+//│ | | | | | | | | inspect y by ctx.get
+//│ | | | | | | | 1. : α39'
+//│ | | | | | | | CONSTRAIN (Code[α43,α44] -> α43) <! (α39' -> α45')
+//│ | | | | | | |   where 
+//│ | | | | | | | C (Code[α43,α44] -> α43) <! (α39' -> α45')    (0)
+//│ | | | | | | | | C α39' <! Code[α43,α44]    (1)
+//│ | | | | | | | | C α43 <! α45'    (2)
+//│ | | | | | | 1. : α45'
+//│ | | | | | 1. : (α42', α45',)
+//│ | | | | 1. : (α42', α45',)
+//│ | | | | chaining for 989
+//│ | | | | local unquoted context:
+//│ | | | | List(α41, α44)
+//│ | | | | {}
+//│ | | | 1. : Code[(α42', α45',),(α41 & α44)]
+//│ | | | 1. Typing term Quoted' Unquote' x ' '
+//│ | | | | typing for 804
+//│ | | | | 1. Typing term Unquote' x '
+//│ | | | | | 1. Typing term x
+//│ | | | | | | inspect x by ctx.get
+//│ | | | | | 1. : α38'
+//│ | | | | | CONSTRAIN (Code[α46,α47] -> α46) <! (α38' -> α48')
+//│ | | | | |   where 
+//│ 		α38' <: Code[α40,α41]
+//│ | | | | | C (Code[α46,α47] -> α46) <! (α38' -> α48')    (0)
+//│ | | | | | | C α38' <! Code[α46,α47]    (1)
+//│ | | | | | | C α46 <! α48'    (2)
+//│ | | | | 1. : α48'
+//│ | | | | chaining for 804
+//│ | | | | local unquoted context:
+//│ | | | | List(α47)
+//│ | | | | {}
+//│ | | | 1. : Code[α48',α47]
+//│ | | 1. : (Code[(α42', α45',),(α41 & α44)], Code[α48',α47],)
+//│ | 1. : (Code[(α42', α45',),(α41 & α44)], Code[α48',α47],)
+//│ 1. : ((α38', α39',) -> (Code[(α42', α45',),(α41 & α44)], Code[α48',α47],))
+//│ CONSTRAIN ((α38', α39',) -> (Code[(α42', α45',),(α41 & α44)], Code[α48',α47],)) <! f37'
+//│   where 
+//│ 		α38' <: Code[α46,α47] & Code[α40,α41]
+//│ 		α39' <: Code[α43,α44]
+//│ 		α42' :> α40
+//│ 		α45' :> α43
+//│ 		α48' :> α46
+//│ C ((α38', α39',) -> (Code[(α42', α45',),(α41 & α44)], Code[α48',α47],)) <! f37'    (0)
+//│ ⬤ Typed as: f37'
+//│  where: 
+//│ 		f37' :> ((α38', α39',) -> (Code[(α42', α45',),(α41 & α44)], Code[α48',α47],))
+//│ 		α38' <: Code[α46,α47] & Code[α40,α41]
+//│ 		α39' <: Code[α43,α44]
+//│ 		α42' :> α40
+//│ 		α45' :> α43
+//│ 		α48' :> α46
+//│ 1. Typing term x, y, => Quoted' '(' Unquote' x ', Unquote' y ', ')' '
+//│ | 1. Typing pattern x, y,
+//│ | | 1. Typing pattern x
+//│ | | 1. : α72'
+//│ | | 1. Typing pattern y
+//│ | | 1. : α73'
+//│ | 1. : (α72', α73',)
+//│ | 1. Typing term Quoted' '(' Unquote' x ', Unquote' y ', ')' '
+//│ | | typing for 117
+//│ | | 1. Typing term '(' Unquote' x ', Unquote' y ', ')'
+//│ | | | 1. Typing term Unquote' x ', Unquote' y ',
+//│ | | | | 1. Typing term Unquote' x '
+//│ | | | | | 1. Typing term x
+//│ | | | | | | inspect x by ctx.get
+//│ | | | | | 1. : α72'
+//│ | | | | | CONSTRAIN (Code[α74,α75] -> α74) <! (α72' -> α76')
+//│ | | | | |   where 
+//│ | | | | | C (Code[α74,α75] -> α74) <! (α72' -> α76')    (0)
+//│ | | | | | | C α72' <! Code[α74,α75]    (1)
+//│ | | | | | | C α74 <! α76'    (2)
+//│ | | | | 1. : α76'
+//│ | | | | 1. Typing term Unquote' y '
+//│ | | | | | 1. Typing term y
+//│ | | | | | | inspect y by ctx.get
+//│ | | | | | 1. : α73'
+//│ | | | | | CONSTRAIN (Code[α77,α78] -> α77) <! (α73' -> α79')
+//│ | | | | |   where 
+//│ | | | | | C (Code[α77,α78] -> α77) <! (α73' -> α79')    (0)
+//│ | | | | | | C α73' <! Code[α77,α78]    (1)
+//│ | | | | | | C α77 <! α79'    (2)
+//│ | | | | 1. : α79'
+//│ | | | 1. : (α76', α79',)
+//│ | | 1. : (α76', α79',)
+//│ | | chaining for 117
+//│ | | local unquoted context:
+//│ | | List(α75, α78)
+//│ | | {}
+//│ | 1. : Code[(α76', α79',),(α75 & α78)]
+//│ 1. : ((α72', α73',) -> Code[(α76', α79',),(α75 & α78)])
+//│ CONSTRAIN ((α72', α73',) -> Code[(α76', α79',),(α75 & α78)]) <! f71'
+//│   where 
+//│ 		α72' <: Code[α74,α75]
+//│ 		α73' <: Code[α77,α78]
+//│ 		α76' :> α74
+//│ 		α79' :> α77
+//│ C ((α72', α73',) -> Code[(α76', α79',),(α75 & α78)]) <! f71'    (0)
+//│ ⬤ Typed as: f71'
+//│  where: 
+//│ 		f71' :> ((α72', α73',) -> Code[(α76', α79',),(α75 & α78)])
+//│ 		α72' <: Code[α74,α75]
+//│ 		α73' <: Code[α77,α78]
+//│ 		α76' :> α74
+//│ 		α79' :> α77
+//│ f: (Code['a | 'b, 'c & 'd], Code['e, 'd],) -> (Code[('b, 'e,), 'd], Code['a, 'c],)
+//│ f: (Code['a, 'b], Code['c, 'b],) -> Code[('a, 'c,), 'b]
+
+let x = code"y"
+//│ x: Code['a, {y: 'a}]
+
+let c = f(x, x)
+//│ c: Code[('a, 'a,), {y: 'a}]
+
+code"y => ${c}"
+//│ res: Code[anything -> ('a, 'a,), {y: 'a}]
+
+
+fun f(x, y) = [code"[${x}, ${y}]", x, y]
+//│ f: (Code['a, 'b] & 'c, Code['d, 'b] & 'e,) -> (Code[('a, 'd,), 'b], 'c, 'e,)
+
+let a: Code<int, {z: int}>
+//│ a: Code[int, {z: int}]
+
+
+fun f(x) = x
+//│ f: 'a -> 'a
+
+code"f(0)"
+//│ res: Code[0, anything]
 code"${a + b} + 10"
 //│ res: "${a + b} + 10"
 //│    = '${a + b} + 10'
@@ -26,24 +252,21 @@ code"${Const(n)} + 1"
 //│ ⬤ Typed as: 1<int,number>
 //│  where: 
 //│ 0. Typing term Quoted' + (Unquote' Const (n,) ',) (1,) '
-//│ | typing for 373
+//│ | typing for 96
 //│ | 0. Typing term + (Unquote' Const (n,) ',) (1,)
 //│ | | 0. Typing term + (Unquote' Const (n,) ',)
 //│ | | | 0. Typing term +
-//│ | | | | search inside QQ
-//│ | | | | try env
-//│ | | | | try free env
-//│ | | | | try parent
-//│ | | | | search inside QQ
-//│ | | | | Reach limit
-//│ | | | 0. : α159
+//│ | | | | inspect + by ctx.get
+//│ | | | 0. : (int<number> -> (int<number> -> int<number>))
 //│ | | | 0. Typing term Unquote' Const (n,) ',
 //│ | | | | 0. Typing term Unquote' Const (n,) '
 //│ | | | | | 0. Typing term Const (n,)
 //│ | | | | | | 0. Typing term Const
+//│ | | | | | | | inspect Const by ctx.get
 //│ | | | | | | 0. : (int<number> -> Code[int<number>,⊥])
 //│ | | | | | | 0. Typing term n,
 //│ | | | | | | | 0. Typing term n
+//│ | | | | | | | | inspect n by ctx.get
 //│ | | | | | | | 0. : 1<int,number>
 //│ | | | | | | 0. : (1<int,number>,)
 //│ | | | | | | CONSTRAIN (int<number> -> Code[int<number>,⊥]) <! (1<int,number> -> α41)
@@ -77,16 +300,23 @@ code"${Const(n)} + 1"
 //│ | | | 0. Typing term 1
 //│ | | | 0. : 1<int,number>
 //│ | | 0. : (1<int,number>,)
-//│ | | CONSTRAIN α164 <! (1<int,number> -> α165)
+//│ | | CONSTRAIN α239 <! (1<int,number> -> α240)
 //│ | |   where 
-//│ | | C α164 <! (1<int,number> -> α165)    (0)
-//│ | 0. : α165
-//│ | chaining for 373
+//│ 		α239 :> (int<number> -> int<number>)
+//│ | | C α239 <! (1<int,number> -> α240)    (0)
+//│ | | | C (int<number> -> int<number>) <! (1<int,number> -> α240)    (1)
+//│ | | | | C (1<int,number>,) <! (int<number>,)    (2)
+//│ | | | | C int<number> <! α240    (2)
+//│ | 0. : α240
+//│ | chaining for 96
 //│ | local unquoted context:
-//│ | List(α161)
-//│ 0. : Code[α165,(α161 | "+"<>)]
-//│ ⬤ Typed as: Code[α165,(α161 | "+"<>)]
+//│ | List(α236)
+//│ | {}
+//│ 0. : Code[α240,α236]
+//│ ⬤ Typed as: Code[α240,α236]
 //│  where: 
+//│ 		α236 <: ⊥
+//│ 		α240 :> int<number>
 //│ n: 1
 //│ res: Code[int, ?]
 
