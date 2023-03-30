@@ -88,7 +88,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
       case ',' =>
         val j = i + 1
         go(j, COMMA)
-      case 'c' if isQuasiquoteKeyword(i) => 
+      case 'c' if isQuasiquoteKeyword(i) =>
         go(i + 5, OPEN_BRACKET(BracketKind.Quasiquote), obq = true) // TODO: throw error if the double quote doesn't align
       case '$' if (isUnquoteKey(i) && obq) =>
         go(i + 2, OPEN_BRACKET(BracketKind.Unquote))
@@ -127,7 +127,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
           takeWhile(j)(c => c === ' ' || c === '\n')
         val nextInd = space.reverseIterator.takeWhile(_ =/= '\n').size
         if (ind.headOption.forall(_ < nextInd) && nextInd > 0)
-          lex(k, nextInd :: ind, (INDENT, loc(j, k)) :: acc)
+          lex(k, nextInd :: ind, (INDENT, loc(j, k)) :: acc, obq = obq)
         else {
           val newIndBase = ind.dropWhile(_ > nextInd)
           val droppedNum = ind.size - newIndBase.size
@@ -143,7 +143,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
               else (NEWLINE, loc(i, k))
             } :: List.fill(droppedNum)((DEINDENT, loc(j-1, k))) ::: acc
             else (NEWLINE, loc(i, k)) :: acc
-          )
+          , obq = obq)
         }
       case _ if isIdentFirstChar(c) =>
         val (n, j) = takeWhile(i)(isIdentChar)

@@ -878,6 +878,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case New(base, args) => ???
       case TyApp(_, _) => ??? // TODO
       case Quoted(body) =>
+        def allUnboundedVaribles(ls: Iterable[Var -> FieldType], ctx: Ctx) =
+          ls.filter(e => ctx.get(e._1.name).isDefined).toList
+
         val nested = ctx.nest
         val nested_ctx = nested.copy(
           inQuasiquote = true,
@@ -893,6 +896,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         val empty_rcd = RecordType(Nil)(NoProv)
 
         val requirements = nested_ctx.innerUnquoteContextRequirements.toList
+//        val filtered_requirements = requirements.map {
+//          case RecordType(ls) => RecordType(allUnboundedVaribles(ls, ctx))(noProv)
+//          case v =>
+//            println(s"value: ${v}, type: ${v.getClass}")
+//            ???
+//        }
+
         println(s"chaining for ${nested_ctx.id}")
         println("local unquoted context:")
         println(requirements)
@@ -914,7 +924,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         println(free_var_requirement)
         var ctx_type = unquote_requirement & free_var_requirement
 
-        TypeRef(TypeName("Code"), body_type :: ctx_type :: Nil)(noProv)
+        val tmp = freshVar(noProv)
+        val lhs = RecordType((Var("test1"), FieldType(N, tmp)(noProv))::(Var("test2"), FieldType(N, tmp)(noProv)) ::Nil)(noProv)
+        val rhs = RecordType((Var("test1"), FieldType(N, tmp)(noProv))::Nil)(noProv)
+        TypeRef(TypeName("Code"), body_type :: (lhs & rhs.neg()) :: Nil)(noProv)
       case Unquoted(body) =>
         ctx.parent match {
           case Some(p) =>
