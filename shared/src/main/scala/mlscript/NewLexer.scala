@@ -178,7 +178,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
   }
   
   
-  lazy val tokens: Ls[Token -> Loc] = lex(0, Nil, Nil)
+  lazy val tokens: Ls[Token -> Loc] = lex(0, Nil, Nil) 
   
   /** Converts the lexed tokens into structured tokens. */
   lazy val bracketedTokens: Ls[Stroken -> Loc] = {
