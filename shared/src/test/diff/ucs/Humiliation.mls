@@ -32,17 +32,8 @@ class Bar(y, z)
 fun test(f) = if f is
   Foo(a) then a
   Bar(b, c) then b + c
-//│ /!!!\ Uncaught error: java.lang.ArrayIndexOutOfBoundsException: Index 60 out of bounds for length 60
-//│ 	at: mlscript.NewLexer.isQuasiquoteKeyword$1(NewLexer.scala:81)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:91)
-//│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:87)
-//│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:157)
-//│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:87)
-//│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:150)
+//│ test: (Bar & {y: int, z: int} | (Foo with {x: 'x})) -> (int | 'x)
+//│     = [Function: test1]
 
 
 class Pair(fst, snd)
@@ -75,14 +66,14 @@ fun foo(x) = if x is
   Pair(Z(), Z()) then "zeros"
   Pair(O(), O()) then "ones"
 //│ ╔══[ERROR] The match is not exhaustive.
-//│ ║  l.74: 	fun foo(x) = if x is
+//│ ║  l.65: 	fun foo(x) = if x is
 //│ ║        	                ^^^^
 //│ ╟── The scrutinee at this position misses 1 case.
-//│ ║  l.75: 	  Pair(Z(), Z()) then "zeros"
+//│ ║  l.66: 	  Pair(Z(), Z()) then "zeros"
 //│ ║        	            ^^^
 //│ ╟── [Missing Case 1/1] `O`
 //│ ╟── It first appears here.
-//│ ║  l.76: 	  Pair(O(), O()) then "ones"
+//│ ║  l.67: 	  Pair(O(), O()) then "ones"
 //│ ╙──      	            ^^^
 //│ foo: anything -> error
 //│ Code generation encountered an error:
@@ -95,14 +86,14 @@ fun foo(x) = if x is
   (Z(), Z()) then "zeros"
   (O(), O()) then "ones"
 //│ ╔══[ERROR] The match is not exhaustive.
-//│ ║  l.94: 	fun foo(x) = if x is
+//│ ║  l.85: 	fun foo(x) = if x is
 //│ ║        	                ^^^^
 //│ ╟── The scrutinee at this position misses 1 case.
-//│ ║  l.95: 	  (Z(), Z()) then "zeros"
+//│ ║  l.86: 	  (Z(), Z()) then "zeros"
 //│ ║        	        ^^^
 //│ ╟── [Missing Case 1/1] `O`
 //│ ╟── It first appears here.
-//│ ║  l.96: 	  (O(), O()) then "ones"
+//│ ║  l.87: 	  (O(), O()) then "ones"
 //│ ╙──      	        ^^^
 //│ foo: anything -> error
 //│ Code generation encountered an error:
@@ -168,14 +159,14 @@ fun foo(x) = if x is
   Pair(O(), O()) then "ones"
   Pair(y, O()) then x
 //│ ╔══[ERROR] The match is not exhaustive.
-//│ ║  l.166: 	fun foo(x) = if x is
+//│ ║  l.157: 	fun foo(x) = if x is
 //│ ║         	                ^^^^
 //│ ╟── The scrutinee at this position misses 1 case.
-//│ ║  l.167: 	  Pair(Z(), Z()) then "zeros"
+//│ ║  l.158: 	  Pair(Z(), Z()) then "zeros"
 //│ ║         	            ^^^
 //│ ╟── [Missing Case 1/1] `Z`
 //│ ╟── It first appears here.
-//│ ║  l.167: 	  Pair(Z(), Z()) then "zeros"
+//│ ║  l.158: 	  Pair(Z(), Z()) then "zeros"
 //│ ╙──       	            ^^^
 //│ foo: anything -> error
 //│ Code generation encountered an error:
@@ -189,7 +180,7 @@ fun foo(x, y) = if x is Z() and y is O() then 0 else 1
 fun foo(x, y) = if x is
   Z() and y is O() then 0 else 1
 //│ ╔══[PARSE ERROR] Unexpected 'else' keyword here
-//│ ║  l.190: 	  Z() and y is O() then 0 else 1
+//│ ║  l.181: 	  Z() and y is O() then 0 else 1
 //│ ╙──       	                          ^^^^
 //│ foo: (Z, O,) -> 0
 //│    = [Function: foo8]

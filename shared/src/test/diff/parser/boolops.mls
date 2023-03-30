@@ -4,30 +4,12 @@ true and false
 //│ Parsed: {and (true,) (false,)}
 
 a and b or c
-//│ /!!!\ Uncaught error: java.lang.ArrayIndexOutOfBoundsException: Index 12 out of bounds for length 12
-//│ 	at: mlscript.NewLexer.isQuasiquoteKeyword$1(NewLexer.scala:81)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:91)
-//│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:87)
-//│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:150)
-//│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:87)
-//│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:150)
+//│ |a| |and| |b| |or| |c|
+//│ Parsed: {or (and (a,) (b,),) (c,)}
 
 a or b and c
-//│ /!!!\ Uncaught error: java.lang.ArrayIndexOutOfBoundsException: Index 12 out of bounds for length 12
-//│ 	at: mlscript.NewLexer.isQuasiquoteKeyword$1(NewLexer.scala:81)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:91)
-//│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:87)
-//│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:150)
-//│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:87)
-//│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:150)
+//│ |a| |or| |b| |and| |c|
+//│ Parsed: {or (a,) (and (b,) (c,),)}
 
 a + 1 or b + 2 and c + 3
 //│ |a| |+| |1| |or| |b| |+| |2| |and| |c| |+| |3|
@@ -35,33 +17,15 @@ a + 1 or b + 2 and c + 3
 
 
 any of a, b, c
-//│ /!!!\ Uncaught error: java.lang.ArrayIndexOutOfBoundsException: Index 14 out of bounds for length 14
-//│ 	at: mlscript.NewLexer.isQuasiquoteKeyword$1(NewLexer.scala:81)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:91)
-//│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:87)
-//│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:90)
-//│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:150)
-//│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:87)
+//│ |any| |#of| |a|,| |b|,| |c|
+//│ Parsed: {any (a, b, c,)}
 
 any of
   a
   b
   c
-//│ /!!!\ Uncaught error: java.lang.ArrayIndexOutOfBoundsException: Index 18 out of bounds for length 18
-//│ 	at: mlscript.NewLexer.isQuasiquoteKeyword$1(NewLexer.scala:81)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:91)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:140)
-//│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:150)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:140)
-//│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:150)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:130)
-//│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
+//│ |any| |#of|→|a|↵|b|↵|c|←|
+//│ Parsed: {any ({a; b; c},)}
 
 all of
   x

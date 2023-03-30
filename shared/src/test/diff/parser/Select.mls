@@ -169,80 +169,38 @@ a + b
 a
   .b
   of c
-//│ /!!!\ Uncaught error: java.lang.ArrayIndexOutOfBoundsException: Index 13 out of bounds for length 13
-//│ 	at: mlscript.NewLexer.isQuasiquoteKeyword$1(NewLexer.scala:81)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:91)
-//│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:87)
-//│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:150)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:140)
-//│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:155)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:130)
+//│ |a|→|.b|↵|#of| |c|←|
+//│ Parsed: {(a).b (c,)}
 
 a
   .b + 1
   of c
-//│ /!!!\ Uncaught error: java.lang.ArrayIndexOutOfBoundsException: Index 17 out of bounds for length 17
-//│ 	at: mlscript.NewLexer.isQuasiquoteKeyword$1(NewLexer.scala:81)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:91)
-//│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:87)
-//│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:150)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:140)
-//│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:160)
-//│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
+//│ |a|→|.b| |+| |1|↵|#of| |c|←|
+//│ Parsed: {+ ((a).b,) (1,) (c,)}
 
 a
   .b + 1
     of c
-//│ /!!!\ Uncaught error: java.lang.ArrayIndexOutOfBoundsException: Index 19 out of bounds for length 19
-//│ 	at: mlscript.NewLexer.isQuasiquoteKeyword$1(NewLexer.scala:81)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:91)
-//│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:87)
-//│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:150)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:130)
-//│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:160)
-//│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
+//│ |a|→|.b| |+| |1|→|#of| |c|←|←|
+//│ Parsed: {+ ((a).b,) (1,) (c,)}
 
 :pe
 a
   .b +
     1
     of c
-//│ /!!!\ Uncaught error: java.lang.ArrayIndexOutOfBoundsException: Index 23 out of bounds for length 23
-//│ 	at: mlscript.NewLexer.isQuasiquoteKeyword$1(NewLexer.scala:81)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:91)
-//│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:87)
-//│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:150)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:140)
-//│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:160)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:130)
+//│ |a|→|.b| |+|→|1|↵|#of| |c|←|←|
+//│ ╔══[PARSE ERROR] Unexpected 'of' keyword in expression position
+//│ ║  l.191: 	    of c
+//│ ╙──       	    ^^
+//│ Parsed: {+ ((a).b,) ({1; c},)}
 
 a
   .b +
     1
       of c
-//│ /!!!\ Uncaught error: java.lang.ArrayIndexOutOfBoundsException: Index 25 out of bounds for length 25
-//│ 	at: mlscript.NewLexer.isQuasiquoteKeyword$1(NewLexer.scala:81)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:91)
-//│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:87)
-//│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:150)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:130)
-//│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:160)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:130)
+//│ |a|→|.b| |+|→|1|→|#of| |c|←|←|←|
+//│ Parsed: {+ ((a).b,) ({1 (c,)},)}
 
 a
   .b
@@ -272,7 +230,7 @@ a
   .b
 //│ |a|→|+|1|↵|*|2|↵|.b|←|
 //│ ╔══[PARSE ERROR] Unexpected selector in operator block
-//│ ║  l.272: 	  .b
+//│ ║  l.230: 	  .b
 //│ ╙──       	  ^^
 //│ Parsed: {* (+ a 1) 2}
 
@@ -297,7 +255,7 @@ a
 1 .+a 2
 //│ |1| |.+|a| |2|
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.297: 	1 .+a 2
+//│ ║  l.255: 	1 .+a 2
 //│ ╙──       	    ^^^
 //│ Parsed: {.+ (1,) (a (2,),)}
 
