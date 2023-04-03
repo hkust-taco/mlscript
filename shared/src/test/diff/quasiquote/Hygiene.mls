@@ -3,7 +3,7 @@
 
 // Test 1
 let code_test = code"let x_0 = 1; let x_1 = 10; let x_2 = 100; x_0 + x_1 + x_2"
-//│ code_test: code & {Code#C = anything, Code#T <: int}
+//│ code_test: Code[int, ?]
 //│          = [
 //│              'Let',
 //│              'x_0',
@@ -23,22 +23,12 @@ run(code_test)
 //│    = 111
 
 // Test 2:
-:e // context-tracking
 fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, code"${cde} + x")}" else cde
-//│ ╔══[ERROR] Type mismatch. Required: Code, found: α42'
-//│ ║  l.27: 	fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, code"${cde} + x")}" else cde
-//│ ╙──      	                                                ^^^^^^^^
-//│ ╔══[ERROR] Type mismatch. Required: Code, found: [α39']
-//│ ║  l.27: 	fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, code"${cde} + x")}" else cde
-//│ ╙──      	                                                                                ^^^
-//│ ╔══[ERROR] Type mismatch. Required: Code, found: α49'
-//│ ║  l.27: 	fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, code"${cde} + x")}" else cde
-//│ ╙──      	                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ test: (int, 'a,) -> (code & {Code#C = anything, Code#T <: error | int} | 'a)
+//│ test: (int, Code[int | 'a, ?],) -> Code[int | 'a, ?]
 //│     = [Function: test]
 
 run(test(5, code"0"))
-//│ res: error | int
+//│ res: int
 //│    = 15
 
 
@@ -46,22 +36,13 @@ run(test(5, code"0"))
 
 fun cde_template(cde) = code"${cde} + x"
 fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, cde_template(cde))}" else cde
-//│ ╔══[ERROR] Type mismatch. Required: Code, found: [α71']
-//│ ║  l.47: 	fun cde_template(cde) = code"${cde} + x"
-//│ ╙──      	                               ^^^
-//│ cde_template: anything -> (code & {Code#C = anything, Code#T <: int})
+//│ cde_template: Code[int, ?] -> Code[int, ?]
 //│             = [Function: cde_template]
-//│ ╔══[ERROR] Type mismatch. Required: Code, found: α85'
-//│ ║  l.48: 	fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, cde_template(cde))}" else cde
-//│ ╙──      	                                                ^^^^^^^^
-//│ ╔══[ERROR] Type mismatch. Required: Code, found: α93'
-//│ ║  l.48: 	fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, cde_template(cde))}" else cde
-//│ ╙──      	                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ test: (int, 'a,) -> (code & {Code#C = anything, Code#T <: error | int} | 'a)
+//│ test: (int, Code[int | 'a, ?],) -> Code[int | 'a, ?]
 //│     = [Function: test1]
 
 let c = test(3, code"2")
-//│ c: code & {Code#C = anything, Code#T <: error | int}
+//│ c: Code[int, ?]
 //│  = [
 //│      'Let',
 //│      'x',
@@ -71,6 +52,6 @@ let c = test(3, code"2")
 //│    ]
 
 run(c)
-//│ res: error | int
+//│ res: int
 //│    = 5
 

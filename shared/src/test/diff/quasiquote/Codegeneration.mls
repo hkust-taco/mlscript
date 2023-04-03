@@ -2,31 +2,27 @@
 
 // basic test from meeting on Mar 10
 let c = code"x"
-//│ c: code & {Code#C = anything, Code#T = nothing}
+//│ c: Code[nothing, ?]
 //│  = [ 'Var', [ 'FreeVar', 'x' ] ]
 
-:e // context tracking
 let r = code"x => ${c}"
-//│ ╔══[ERROR] Type mismatch. Required: Code, found: [Code[[x.type32'],x.type27'33']]
-//│ ║  l.9: 	let r = code"x => ${c}"
-//│ ╙──     	                    ^
-//│ r: code & {Code#C = anything, Code#T <: anything -> error}
+//│ r: Code[anything -> nothing, ?]
 //│  = [ '_', [Function (anonymous)] ]
 
 
 run(r)(1)
-//│ res: error
+//│ res: nothing
 //│    = 1
 
 
 // IntLit
 let int_lit = code"1"
-//│ int_lit: code & {Code#C = anything, Code#T <: 1}
+//│ int_lit: Code[1, ?]
 //│        = [ '_', 1 ]
 
 // Bra, Rcd, Sel 
 let rcd = code"{x: 10, y: 100, z: 1000}.z"
-//│ rcd: code & {Code#C = anything, Code#T <: 1000}
+//│ rcd: Code[1000, ?]
 //│    = [ 'Sel', [ 'Bra', [ 'Rcd', [Object] ] ], 'z' ]
 
 run(rcd)
@@ -36,7 +32,7 @@ run(rcd)
 
 // Let, Var, App -> evaluates to 3
 let let_var = code"let y = 1; y + 1 * 2"
-//│ let_var: code & {Code#C = anything, Code#T <: int}
+//│ let_var: Code[int, ?]
 //│        = [
 //│            'Let',
 //│            'y',
@@ -60,7 +56,7 @@ fun id(x) = x
 //│   = [Function: id]
 
 let global_fun = code"id(4)"
-//│ global_fun: code & {Code#C = anything, Code#T <: 4}
+//│ global_fun: Code[4, ?]
 //│           = [ 'App_Fun', [ 'Var', [ 'FreeVar', 'id' ] ], [ 'Tup', [ [Array] ] ] ]
 
 run(global_fun)
@@ -68,7 +64,7 @@ run(global_fun)
 //│    = 4
 
 let local_fun = code"let plus1 = x => x + 1; plus1(if true then 1 else 2)"
-//│ local_fun: code & {Code#C = anything, Code#T <: int}
+//│ local_fun: Code[int, ?]
 //│          = [
 //│              'Let',
 //│              'plus1',
@@ -90,14 +86,14 @@ code"x => x"
 //│   (x) => x
 //│ ];
 //│ // End of generated code
-//│ res: code & {Code#C = anything, Code#T <: 'a -> 'a}
+//│ res: Code['a -> 'a, ?]
 //│    = [ '_', [Function (anonymous)] ]
 run(res)(1)
 //│ res: 1
 //│    = 1
 
 code"let id = x => x; id(3)"
-//│ res: code & {Code#C = anything, Code#T <: 3}
+//│ res: Code[3, ?]
 //│    = [
 //│        'Let',
 //│        'id',
@@ -110,12 +106,8 @@ run(res)
 //│    = 3
 
 
-:e // context tracking
 code"x => x + ${Const(1)}"
-//│ ╔══[ERROR] Type mismatch. Required: Code, found: α106
-//│ ║  l.114: 	code"x => x + ${Const(1)}"
-//│ ╙──       	                ^^^^^^^^
-//│ res: code & {Code#C = anything, Code#T <: int -> int}
+//│ res: Code[int -> int, ?]
 //│    = [ '_', [Function (anonymous)] ]
 
 run(res)(3)
@@ -124,7 +116,7 @@ run(res)(3)
 
 // Tup, Subs
 let tup = code"let x = 1; let y = 2; (x, y)[0]"
-//│ tup: code & {Code#C = anything, Code#T <: 1 | 2 | undefined}
+//│ tup: Code[1 | 2 | undefined, ?]
 //│    = [
 //│        'Let',
 //│        'x',
@@ -139,11 +131,11 @@ run(tup)
 
 // Quasiquote 
 let code_in_code = code"let x = code"1"; x"
-//│ code_in_code: code & {Code#C = anything, Code#T <: code & {Code#C = anything, Code#T <: 1}}
+//│ code_in_code: Code[Code[1, ?], ?]
 //│             = [ 'Let', 'x', Symbol(x), [ '_', [ '_', 1 ] ], [ 'Var', Symbol(x) ] ]
 
 run(code_in_code)
-//│ res: code & {Code#C = anything, Code#T <: 1}
+//│ res: Code[1, ?]
 //│    = [ '_', 1 ]
 
 run(res)
@@ -151,12 +143,8 @@ run(res)
 //│    = 1
 
 // Unquoted - Const function
-:e // context tracking
 let unquoted = code"let x = 3; ${Const(10)} * x"
-//│ ╔══[ERROR] Type mismatch. Required: Code, found: α131'
-//│ ║  l.155: 	let unquoted = code"let x = 3; ${Const(10)} * x"
-//│ ╙──       	                                 ^^^^^^^^^
-//│ unquoted: code & {Code#C = anything, Code#T <: int}
+//│ unquoted: Code[int, ?]
 //│         = [
 //│             'Let',
 //│             'x',
@@ -174,28 +162,28 @@ run(unquoted)
 :pe
 let str_lit = code""hello""
 //│ ╔══[PARSE ERROR] Unexpected closing quasiquote
-//│ ║  l.175: 	let str_lit = code""hello""
+//│ ║  l.163: 	let str_lit = code""hello""
 //│ ╙──       	                         ^
 //│ ╔══[PARSE ERROR] Unexpected closing quasiquote
-//│ ║  l.175: 	let str_lit = code""hello""
+//│ ║  l.163: 	let str_lit = code""hello""
 //│ ╙──       	                          ^
 //│ ╔══[PARSE ERROR] Unexpected end of quasiquote section; an expression was expected here
-//│ ║  l.175: 	let str_lit = code""hello""
+//│ ║  l.163: 	let str_lit = code""hello""
 //│ ╙──       	                   ^
 //│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
-//│ ║  l.175: 	let str_lit = code""hello""
+//│ ║  l.163: 	let str_lit = code""hello""
 //│ ╙──       	                    ^^^^^
-//│ str_lit: code & {Code#C = anything, Code#T <: undefined}
+//│ str_lit: Code[undefined, ?]
 //│        = [ '_', undefined ]
 
 // free variables 
 let free = code"y"
-//│ free: code & {Code#C = anything, Code#T = nothing}
+//│ free: Code[nothing, ?]
 //│     = [ 'Var', [ 'FreeVar', 'y' ] ]
 
 // Unquote - variable name for quasiquote
 let code_nested = code"let a = 1; let b = 2; ${code"a + b"}"
-//│ code_nested: code & {Code#C = anything, Code#T <: code & {Code#C = anything, Code#T <: int}}
+//│ code_nested: Code[int, ?]
 //│            = [
 //│                'Let',
 //│                'a',
@@ -205,11 +193,11 @@ let code_nested = code"let a = 1; let b = 2; ${code"a + b"}"
 //│              ]
 
 run(code_nested)
-//│ res: code & {Code#C = anything, Code#T <: int}
+//│ res: int
 //│    = 3
 
 code"let id = x => ${code"x"}; id(3)"
-//│ res: code & {Code#C = anything, Code#T <: code & {Code#C = anything, Code#T = nothing}}
+//│ res: Code[nothing, ?]
 //│    = [
 //│        'Let',
 //│        'id',
@@ -219,20 +207,16 @@ code"let id = x => ${code"x"}; id(3)"
 //│      ]
 
 run(res)
-//│ res: code & {Code#C = anything, Code#T = nothing}
+//│ res: nothing
 //│    = 3
 
 let free = code"x"
-//│ free: code & {Code#C = anything, Code#T = nothing}
+//│ free: Code[nothing, ?]
 //│     = [ 'Var', [ 'FreeVar', 'x' ] ]
 
-:e // context tracking
 code"let id = x => ${free}; id(3)"
 run(res)
-//│ ╔══[ERROR] Type mismatch. Required: Code, found: [Code[[x.type179'],x.type174'180']]
-//│ ║  l.230: 	code"let id = x => ${free}; id(3)"
-//│ ╙──       	                     ^^^^
-//│ res: code & {Code#C = anything, Code#T <: error}
+//│ res: Code[nothing, ?]
 //│    = [
 //│        'Let',
 //│        'id',
@@ -240,38 +224,30 @@ run(res)
 //│        [ '_', [Function (anonymous)] ],
 //│        [ 'App_Fun', [ 'Var', Symbol(id) ], [ 'Tup', [Array] ] ]
 //│      ]
-//│ res: error
+//│ res: nothing
 //│    = 3
 
-:e
 let id_external = code"x => ${free}"
 run(id_external)(10)
-//│ ╔══[ERROR] Type mismatch. Required: Code, found: [Code[[x.type189'],x.type174'190']]
-//│ ║  l.247: 	let id_external = code"x => ${free}"
-//│ ╙──       	                              ^^^^
-//│ id_external: code & {Code#C = anything, Code#T <: anything -> error}
+//│ id_external: Code[anything -> nothing, ?]
 //│            = [ '_', [Function (anonymous)] ]
-//│ res: error
+//│ res: nothing
 //│    = 10
 
 
 let id_internal = code"x => ${code"x"}"
 run(id_internal)(10)
-//│ id_internal: code & {Code#C = anything, Code#T <: anything -> (code & {Code#C = anything, Code#T = nothing})}
+//│ id_internal: Code[anything -> nothing, ?]
 //│            = [ '_', [Function (anonymous)] ]
-//│ res: code & {Code#C = anything, Code#T = nothing}
+//│ res: nothing
 //│    = 10
 
 let free_y = code"y"
-//│ free_y: code & {Code#C = anything, Code#T = nothing}
+//│ free_y: Code[nothing, ?]
 //│       = [ 'Var', [ 'FreeVar', 'y' ] ]
 
-:e // context tracking
 let use_free = code"let y = 3; ${code"let y = 5; ${free_y} + y"} + y"
-//│ ╔══[ERROR] Type mismatch. Required: Code, found: [Code[[y.type218'],y.type214'219']]
-//│ ║  l.270: 	let use_free = code"let y = 3; ${code"let y = 5; ${free_y} + y"} + y"
-//│ ╙──       	                                                   ^^^^^^
-//│ use_free: code & {Code#C = anything, Code#T <: int}
+//│ use_free: Code[int, ?]
 //│         = [
 //│             'Let',
 //│             'y',
@@ -284,12 +260,8 @@ run(use_free)
 //│ res: int
 //│    = 13
 
-:e // context tracking
 code"let z = x => ${let c = code"x + 1"; c}; z"
-//│ ╔══[ERROR] Type mismatch. Required: Code, found: [Code[α235',x.type231''236']]
-//│ ║  l.288: 	code"let z = x => ${let c = code"x + 1"; c}; z"
-//│ ╙──       	                            ^^^^^^^^^^^^^^
-//│ res: code & {Code#C = anything, Code#T <: anything -> error}
+//│ res: Code[anything -> nothing, ?]
 //│    = [
 //│        'Let',
 //│        'z',
@@ -299,15 +271,11 @@ code"let z = x => ${let c = code"x + 1"; c}; z"
 //│      ]
 
 run(res)(100)
-//│ res: error
+//│ res: nothing
 //│    = 101
 
-:e // context tracking
 code"x => y => 100 + ${  Const(x + y)   }"
-//│ ╔══[ERROR] Type mismatch. Required: Code, found: α250
-//│ ║  l.306: 	code"x => y => 100 + ${  Const(x + y)   }"
-//│ ╙──       	                         ^^^^^^^^^^^^
-//│ res: code & {Code#C = anything, Code#T <: int -> anything -> int}
+//│ res: Code[anything -> anything -> int, ?]
 //│    = [ '_', [Function (anonymous)] ]
 
 run(res)(1)(10)
@@ -315,55 +283,47 @@ run(res)(1)(10)
 //│    = 111
 
 
-// Testing error messages for unquotes -> is it ok that we handle Unquote directly in translateTerm?
+// Testing error messages for unquotes
 let qq = code"x"
-//│ qq: code & {Code#C = anything, Code#T = nothing}
+//│ qq: Code[nothing, ?]
 //│   = [ 'Var', [ 'FreeVar', 'x' ] ]
 
 // 1. In general code - ERROR
 :pe
 let x = ${qq}
 //│ ╔══[LEXICAL ERROR] unexpected character '$'
-//│ ║  l.325: 	let x = ${qq}
+//│ ║  l.282: 	let x = ${qq}
 //│ ╙──       	        ^
 //│ ╔══[PARSE ERROR] Unexpected error in expression position
-//│ ║  l.325: 	let x = ${qq}
+//│ ║  l.282: 	let x = ${qq}
 //│ ╙──       	        ^
-//│ x: {qq: code & {Code#C = anything, Code#T = nothing}}
+//│ x: {qq: Code[nothing, ?]}
 //│  = { qq: [ 'Var', [ 'FreeVar', 'x' ] ] }
 
 // 2. In lambdas in general code - ERROR 
 :pe
 let x2 = x => ${qq}
 //│ ╔══[LEXICAL ERROR] unexpected character '$'
-//│ ║  l.337: 	let x2 = x => ${qq}
+//│ ║  l.294: 	let x2 = x => ${qq}
 //│ ╙──       	              ^
 //│ ╔══[PARSE ERROR] Unexpected error in expression position
-//│ ║  l.337: 	let x2 = x => ${qq}
+//│ ║  l.294: 	let x2 = x => ${qq}
 //│ ╙──       	              ^
-//│ x2: anything -> {qq: code & {Code#C = anything, Code#T = nothing}}
+//│ x2: anything -> {qq: Code[nothing, ?]}
 //│   = [Function: x2]
 
 // 3. In quasiquotes - OK
-:e // TODO - context-tracking
 let x3 = code"${qq}"
-//│ ╔══[ERROR] Type mismatch. Required: Code, found: [Code[[x.type279'],x.type263'280']]
-//│ ║  l.349: 	let x3 = code"${qq}"
-//│ ╙──       	                ^^
-//│ x3: code & {Code#C = anything, Code#T <: error}
+//│ x3: Code[nothing, ?]
 //│   = [ 'Unquoted', [ 'Var', [ 'FreeVar', 'x' ] ] ]
 
 // 4. In lambdas in quasiquotes - OK 
-:e 
 let x4 = code"x => ${qq}"
-//│ ╔══[ERROR] Type mismatch. Required: Code, found: [Code[[x.type284'],x.type263'285']]
-//│ ║  l.358: 	let x4 = code"x => ${qq}"
-//│ ╙──       	                     ^^
-//│ x4: code & {Code#C = anything, Code#T <: anything -> error}
+//│ x4: Code[anything -> nothing, ?]
 //│   = [ '_', [Function (anonymous)] ]
 
 run(x4)(5)
-//│ res: error
+//│ res: nothing
 //│    = 5
 
 
@@ -383,7 +343,7 @@ fun f(x) = x
 //│  = [Function: f1]
 
 code"f(1)"
-//│ res: code & {Code#C = anything, Code#T <: 1}
+//│ res: Code[1, ?]
 //│    = [ 'App_Fun', [ 'Var', [ 'FreeVar', 'f' ] ], [ 'Tup', [ [Array] ] ] ]
 
 :re
@@ -412,7 +372,7 @@ class Foo(n)
 //│    = [Function: Foo1]
 
 code"Foo(1)"
-//│ res: code & {Code#C = anything, Code#T <: Foo & {n: 1}}
+//│ res: Code[Foo & {n: 1}, ?]
 //│    = [ 'App_Fun', [ 'Var', [ 'FreeVar', 'Foo' ] ], [ 'Tup', [ [Array] ] ] ]
 
 :re
@@ -420,5 +380,3 @@ run(res)
 //│ res: Foo & {n: 1}
 //│ Runtime error:
 //│   TypeError: globalThis[callee] is not a function
-
-

@@ -1,0 +1,295 @@
+:NewParser 
+// All these are examples that have NO PARSE ERROR in parser/
+
+// this error occurs because the indent causes the code to be stored in node Blk
+// is this desired behaviour for multiline quasiquote?
+code"
+  let arr = [
+      1
+  ]
+"
+//│ ╔══[ERROR] Illegal position for this definition statement.
+//│ ║  l.7: 	  let arr = [
+//│ ║       	      ^^^^^^^
+//│ ║  l.8: 	      1
+//│ ║       	^^^^^^^
+//│ ║  l.9: 	  ]
+//│ ╙──     	^^^
+//│ res: Code[(), ?]
+//│ Code generation encountered an error:
+//│   unsupported definitions in blocks
+
+code"
+let arr = [
+  1
+]; arr
+"
+run(res)
+//│ ╔══[PARSE ERROR] Unexpected newline in expression position
+//│ ║  l.22: 	code"
+//│ ║        	     ^
+//│ ║  l.23: 	let arr = [
+//│ ╙──      	
+//│ res: Code[(1,), ?]
+//│    = [
+//│        'Let',
+//│        'arr',
+//│        Symbol(arr),
+//│        [ 'Bra', [ 'Tup', [Array] ] ],
+//│        [ 'Var', Symbol(arr) ]
+//│      ]
+//│ res: (1,)
+//│    = [ 1 ]
+
+code"let arr = [
+  1
+];
+arr
+"
+//│ ╔══[PARSE ERROR] Unexpected newline in expression position
+//│ ║  l.46: 	];
+//│ ║        	  ^
+//│ ║  l.47: 	arr
+//│ ╙──      	
+//│ res: Code[(1,), ?]
+//│    = [
+//│        'Let',
+//│        'arr',
+//│        Symbol(arr),
+//│        [ 'Bra', [ 'Tup', [Array] ] ],
+//│        [ 'Var', Symbol(arr) ]
+//│      ]
+
+code"let arr = [
+  1
+]; arr"
+//│ res: Code[(1,), ?]
+//│    = [
+//│        'Let',
+//│        'arr',
+//│        Symbol(arr),
+//│        [ 'Bra', [ 'Tup', [Array] ] ],
+//│        [ 'Var', Symbol(arr) ]
+//│      ]
+run(res)
+//│ res: (1,)
+//│    = [ 1 ]
+
+// Do we want the difference with the test case below (semicolon or not)?
+:js
+code"let f = x => x;
+f of 
+  1
+"
+run(res)
+//│ ╔══[PARSE ERROR] Unexpected newline in expression position
+//│ ║  l.80: 	code"let f = x => x;
+//│ ║        	                    ^
+//│ ║  l.81: 	f of 
+//│ ╙──      	
+//│ // Query 1
+//│ res = ((f) => [
+//│   "Let",
+//│   "f",
+//│   f,
+//│   [
+//│     "_",
+//│     (x) => x
+//│   ],
+//│   [
+//│     "App_Fun",
+//│     [
+//│       "Var",
+//│       f
+//│     ],
+//│     [
+//│       "Tup",
+//│       [
+//│         [
+//│           "Blk",
+//│           [
+//│             "_",
+//│             1
+//│           ]
+//│         ]
+//│       ]
+//│     ]
+//│   ]
+//│ ])(Symbol('f'));
+//│ // Query 2
+//│ res = run(res);
+//│ // End of generated code
+//│ res: Code[1, ?]
+//│    = [
+//│        'Let',
+//│        'f',
+//│        Symbol(f),
+//│        [ '_', [Function (anonymous)] ],
+//│        [ 'App_Fun', [ 'Var', Symbol(f) ], [ 'Tup', [Array] ] ]
+//│      ]
+//│ res: 1
+//│    = 1
+
+code"let foo = (x, y) => x * y
+foo(
+  2,
+  3
+)"
+run(res)
+//│ res: Code[int, ?]
+//│    = [
+//│        'Let',
+//│        'foo',
+//│        Symbol(foo),
+//│        [ '_', [Function (anonymous)] ],
+//│        [ 'App_Fun', [ 'Var', Symbol(foo) ], [ 'Tup', [Array] ] ]
+//│      ]
+//│ res: int
+//│    = 6
+
+
+code"
+let a = 0
+let b = 1
+if a == 0
+then true
+else false"
+run(res)
+//│ ╔══[PARSE ERROR] Unexpected newline in expression position
+//│ ║  l.151: 	code"
+//│ ║         	     ^
+//│ ║  l.152: 	let a = 0
+//│ ╙──       	
+//│ res: Code[bool, ?]
+//│    = [
+//│        'Let',
+//│        'a',
+//│        Symbol(a),
+//│        [ '_', 0 ],
+//│        [
+//│          'Let',
+//│          'b',
+//│          Symbol(b),
+//│          [ '_', 1 ],
+//│          [ 'If', [Array], [Array], [Array] ]
+//│        ]
+//│      ]
+//│ res: bool
+//│    = true
+
+code"if 1 == 0
+  then false
+  else true"
+run(res)
+//│ ╔══[PARSE ERROR] Unexpected closing indentation
+//│ ║  l.182: 	  else true"
+//│ ║         	            ^
+//│ ║  l.183: 	run(res)
+//│ ╙──       	
+//│ res: Code[bool, ?]
+//│    = [
+//│        'If',
+//│        [ 'App', '==', [ '_', 1 ], [ '_', 0 ] ],
+//│        [ '_', false ],
+//│        [ '_', true ]
+//│      ]
+//│ res: bool
+//│    = true
+
+code"if 1 == 0
+then false
+  else true"
+run(res)
+//│ ╔══[PARSE ERROR] Unexpected closing indentation
+//│ ║  l.201: 	  else true"
+//│ ║         	            ^
+//│ ║  l.202: 	run(res)
+//│ ╙──       	
+//│ res: Code[bool, ?]
+//│    = [
+//│        'If',
+//│        [ 'App', '==', [ '_', 1 ], [ '_', 0 ] ],
+//│        [ '_', false ],
+//│        [ '_', true ]
+//│      ]
+//│ res: bool
+//│    = true
+
+code"
+if 1 == 0
+then false
+  else true
+"
+run(res)
+//│ ╔══[PARSE ERROR] Unexpected newline in expression position
+//│ ║  l.218: 	code"
+//│ ║         	     ^
+//│ ║  l.219: 	if 1 == 0
+//│ ╙──       	
+//│ res: Code[bool, ?]
+//│    = [
+//│        'If',
+//│        [ 'App', '==', [ '_', 1 ], [ '_', 0 ] ],
+//│        [ '_', false ],
+//│        [ '_', true ]
+//│      ]
+//│ res: bool
+//│    = true
+
+// all these have a type mismatch in normal code generation
+// 1
+//   + 1
+
+// acc + 
+//   1 
+
+// acc 
+//   + 
+//     1
+
+// acc 
+//   + 1 
+//   * 3 
+
+// a +
+//   b
+//     * 2
+//     +
+//       1
+//         * 3
+
+code"
+{
+  x: 1,
+  y: 2,
+  z: 3,
+}
+"
+run(res)
+//│ ╔══[PARSE ERROR] Unexpected newline in expression position
+//│ ║  l.261: 	code"
+//│ ║         	     ^
+//│ ║  l.262: 	{
+//│ ╙──       	
+//│ res: Code[{x: 1, y: 2, z: 3}, ?]
+//│    = [ 'Bra', [ 'Rcd', { x: [Array], y: [Array], z: [Array] } ] ]
+//│ res: {x: 1, y: 2, z: 3}
+//│    = { x: 1, y: 2, z: 3 }
+
+
+
+code"let x = {a: 100}
+x 
+  .a
+"
+run(res)
+//│ res: Code[100, ?]
+//│    = [
+//│        'Let',
+//│        'x',
+//│        Symbol(x),
+//│        [ 'Bra', [ 'Rcd', [Object] ] ],
+//│        [ 'Sel', [ 'Var', Symbol(x) ], 'a' ]
+//│      ]
+//│ res: 100
+//│    = 100
