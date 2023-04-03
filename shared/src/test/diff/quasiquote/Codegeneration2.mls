@@ -1,0 +1,77 @@
+:NewParser
+
+// More specific checks from parser folder
+
+code"[]"
+//│ res: code & {Code#C = anything, Code#T <: ()}
+//│    = [ 'Bra', [ 'Tup', [] ] ]
+run(res)
+//│ res: ()
+//│    = []
+
+code"()"
+run(res)
+//│ res: code & {Code#C = anything, Code#T <: ()}
+//│    = [ 'Bra', [ 'Tup', [] ] ]
+//│ res: ()
+//│    = []
+
+code"(1,)"
+run(res)
+//│ res: code & {Code#C = anything, Code#T <: (1,)}
+//│    = [ 'Bra', [ 'Tup', [ [Array] ] ] ]
+//│ res: (1,)
+//│    = [ 1 ]
+
+code"let f = (x, y, z) => x + y + x; f of 1,2,3"
+run(res)
+//│ res: code & {Code#C = anything, Code#T <: int}
+//│    = [
+//│        'Let',
+//│        'f',
+//│        Symbol(f),
+//│        [ '_', [Function (anonymous)] ],
+//│        [ 'App_Fun', [ 'Var', Symbol(f) ], [ 'Tup', [Array] ] ]
+//│      ]
+//│ res: int
+//│    = 4
+
+//any of a, b, c -> codegen error from unresolved symbol "any"
+
+:pe
+code"// Can I comment?"
+//│ ╔══[PARSE ERROR] Unmatched opening quasiquote
+//│ ║  l.42: 	code"// Can I comment?"
+//│ ╙──      	^^^^^
+
+code"[x: 1,]"
+//│ res: code & {Code#C = anything, Code#T <: (x: 1,)}
+//│    = [ 'Bra', [ 'Tup', [ [Array] ] ] ]
+run(res)
+//│ res: (x: 1,)
+//│    = [ 1 ]
+
+// should be unresolved symbol error 
+:ge
+code"let x = {a: 100}; x . a"
+//│ res: code & {Code#C = anything, Code#T = nothing}
+//│ Syntax error:
+//│   Unexpected token '.'
+
+// should be unresolved symbol error
+:ge
+code"let x = {a: 100}; x. a"
+//│ res: code & {Code#C = anything, Code#T = nothing}
+//│ Syntax error:
+//│   Unexpected token '.'
+
+// should be ok
+code"let x = {a: 100}; x .a"
+//│ res: code & {Code#C = anything, Code#T <: 100}
+//│    = [
+//│        'Let',
+//│        'x',
+//│        Symbol(x),
+//│        [ 'Bra', [ 'Rcd', [Object] ] ],
+//│        [ 'Sel', [ 'Var', Symbol(x) ], 'a' ]
+//│      ]

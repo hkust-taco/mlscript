@@ -898,6 +898,8 @@ final case class JSQuasiquoteRunFunctionBody() extends JSStmt {
           return _run(s_expr[1]);
         case "If": // ['If', translateQuoted(condition), translateQuoted(branch1), translateQuoted(branch2)]
           if (_run(s_expr[1])) { return _run(s_expr[2]); } else { return _run(s_expr[3]); }
+        case "Blk":
+          return _run(s_expr[1]);
         default:
           throw Error("Encountered s-expression that is not handled");
       }

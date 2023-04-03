@@ -561,7 +561,14 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         translateQuotedTerm(body)
       ))
       JSImmEvalFn(None, Ls(JSNamePattern(name)), L(s_expr), Ls(JSLit(s"Symbol('${name}')")))
-    case Blk(stmts) => throw CodeGenError("Blk") // flatten, then JSImmEvalFn also 
+    case Blk(stmts) => 
+      val flattened = stmts.iterator.flatMap(_.desugared._2).toList
+      val s_expr_list = flattened.iterator.zipWithIndex.map {
+        case (t: Term, index) => translateQuotedTerm(t)
+        case (_: Def | _: TypeDef | _: NuFunDef /* | _: NuTypeDef */, _) =>
+          throw CodeGenError("unsupported definitions in blocks")
+      }.toList
+      JSArray(JSExpr("Blk") :: s_expr_list)
     case IntLit(value) => 
       JSArray(Ls(JSExpr("_"), JSLit(value.toString + (if (JSBackend isSafeInteger value) "" else "n")))) 
     case DecLit(value) => 
