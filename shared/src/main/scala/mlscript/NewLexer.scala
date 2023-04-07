@@ -89,12 +89,12 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
         val j = i + 1
         go(j, COMMA)
       case 'c' if isQuasiquoteKeyword(i) =>
-        go(i + 5, OPEN_BRACKET(BracketKind.Quasiquote), obq = 1) // TODO: throw error if the double quote doesn't align
-      case '$' if (isUnquoteKey(i) && obq === 1) =>
+        go(i + 5, OPEN_BRACKET(BracketKind.Quasiquote), obq = obq + 1) // TODO: throw error if the double quote doesn't align
+      case '$' if (isUnquoteKey(i) && obq >= 1) =>
         go(i + 2, OPEN_BRACKET(BracketKind.Unquote))
       case '"' =>
-        if (obq === 1)
-          go(i + 1, CLOSE_BRACKET(BracketKind.Quasiquote))
+        if (obq >= 1)
+          go(i + 1, CLOSE_BRACKET(BracketKind.Quasiquote), obq = obq - 1)
         else {
           val j = i + 1
           val (chars, k) = takeWhile(j)(c => c =/= '"' && c =/= '\n')
