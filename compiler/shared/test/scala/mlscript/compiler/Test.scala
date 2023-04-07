@@ -20,7 +20,7 @@ class DiffTestCompiler extends DiffTests {
     outputBuilder ++= "\nLifted:\n"
     var rstUnit = unit;
     try
-      rstUnit = ClassLifter().liftTypingUnit(unit)
+      rstUnit = ClassLifter(mode.fullExceptionStack).liftTypingUnit(unit)
       outputBuilder ++= PrettyPrinter.showTypingUnit(rstUnit)
     catch
       case NonFatal(err) =>
@@ -33,14 +33,14 @@ class DiffTestCompiler extends DiffTests {
       try{
         val monomorph = new Monomorph(treeDebug)
         val monomorphized = monomorph.monomorphize(rstUnit)
-        outputBuilder ++= "\nMono result: \n"
+        outputBuilder ++= "\nDefunc result: \n"
         outputBuilder ++= ExprPrinter.print(monomorphized)
         outputBuilder ++= "\n"
       }catch{
         case error: MonomorphError => outputBuilder ++= (error.getMessage() :: error.getStackTrace().map(_.toString()).toList).mkString("\n")
         // case error: StackOverflowError => outputBuilder ++= (error.getMessage() :: error.getStackTrace().take(40).map(_.toString()).toList).mkString("\n")
       }
-      outputBuilder ++= treeDebug.getLines.mkString("\n")
+      // outputBuilder ++= treeDebug.getLines.mkString("\n")
     }
     outputBuilder.toString().linesIterator.toList
   

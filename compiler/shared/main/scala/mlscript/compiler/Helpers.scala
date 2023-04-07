@@ -172,7 +172,10 @@ object Helpers:
       toFuncParams(params).toList, // params
       parents.map {
         case Var(name) => (TypeName(name), Nil)
-        case App(Var(name), _) => (TypeName(name), Nil)
+        case App(Var(name), args) => (TypeName(name), term2Expr(args) match{
+          case Expr.Tuple(fields) => fields
+          case _ => Nil
+        })
         case _ => throw MonomorphError("unsupported parent term")
       }, // parents
       isolation // body

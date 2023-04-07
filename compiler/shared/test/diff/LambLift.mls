@@ -15,9 +15,10 @@ foo()
 //│ TypingUnit(NuFunDef(None, foo, [], Lam(Tup(), Blk(...))), App(Var(foo), Tup()))
 //│ Lifted:
 //│ TypingUnit {
-//│   class Foo$1(x,) {fun bar = + ((this).x,) (foo ((this).x,),)}
-//│   fun foo =  => {fun local = x, => {(Foo$1 (x,)).bar}; local (1,)}
-//│   Code(List(foo ()))
+//│   class Foo$1(x,) {fun bar =  => + ((this).x,) (foo$1 ((this).x,),)}
+//│   fun local$2 = x, => {(Foo$1 (x,)).bar}
+//│   fun foo$1 =  => {local$2 (1,)}
+//│   Code(List(foo$1 ()))
 //│ }
 
 fun foo(f) = 
@@ -29,9 +30,9 @@ foo(x => x+1)
 //│ TypingUnit(NuFunDef(None, foo, [], Lam(Tup(_: Var(f)), Blk(...))), App(Var(foo), Tup(_: Lam(Tup(_: Var(x)), App(App(Var(+), Tup(_: Var(x))), Tup(_: IntLit(1)))))))
 //│ Lifted:
 //│ TypingUnit {
-//│   class Lambda1$1$1() {fun apply = x, => + (x,) (1,)}
-//│   fun foo = f, => {f (1,)}
-//│   Code(List(foo ({new Lambda1$1$1() {}},)))
+//│   class Lambda1$2$1() {fun apply = x, => + (x,) (1,)}
+//│   fun foo$1 = f, => {f (1,)}
+//│   Code(List(foo$1 ({new Lambda1$2$1() {}},)))
 //│ }
 
 fun foo(x) = 
@@ -45,9 +46,10 @@ foo(1)
 //│ TypingUnit(NuFunDef(None, foo, [], Lam(Tup(_: Var(x)), Blk(...))), App(Var(foo), Tup(_: IntLit(1))))
 //│ Lifted:
 //│ TypingUnit {
-//│   class Lambda1$1$1(x,) {fun apply = y, => + (y,) ((this).x,)}
-//│   fun foo = x, => {fun bar = f, => {f (x,)}; bar ({new Lambda1$1$1(x,) {}},)}
-//│   Code(List(foo (1,)))
+//│   class Lambda1$3$1(x,) {fun apply = y, => + (y,) ((this).x,)}
+//│   fun bar$2 = f, x, => {f (x,)}
+//│   fun foo$1 = x, => {bar$2 ({new Lambda1$3$1(x,) {}}, x,)}
+//│   Code(List(foo$1 (1,)))
 //│ }
 
 fun foo(f) = 
@@ -65,8 +67,8 @@ app(new A(1))
 //│ Lifted:
 //│ TypingUnit {
 //│   class A$1(y,) {fun bar = z, => + ((this).y,) (z,)}
-//│   class Lambda1$1$2(a,) {fun apply = z, => ((this).a).bar (z,)}
-//│   fun foo = f, => {f (1,)}
-//│   fun app = a, => {foo ({new Lambda1$1$2(a,) {}},)}
-//│   Code(List(app (new A$1(1,) {},)))
+//│   class Lambda1$3$2(a,) {fun apply = z, => ((this).a).bar (z,)}
+//│   fun foo$2 = f, => {f (1,)}
+//│   fun app$1 = a, => {foo$2 ({new Lambda1$3$2(a,) {}},)}
+//│   Code(List(app$1 (new A$1(1,) {},)))
 //│ }

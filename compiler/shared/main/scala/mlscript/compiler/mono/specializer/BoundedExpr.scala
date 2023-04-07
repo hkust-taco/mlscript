@@ -26,24 +26,6 @@ case class ObjectValue(name: String, fields: MutMap[String, BoundedExpr]) extend
     })
     ObjectValue(name, MutMap(nFlds.toSeq: _*))
   }
-  def mergeMut(other: ObjectValue)(using inStackExps: Set[Int]): Boolean = {
-    val retVals = other.fields.map[Boolean]((k, s2) => {
-      val s1 = fields.get(k).get
-      if(!inStackExps.contains(s1.hashCode()) || !inStackExps.contains(s2.hashCode())){
-        if(inStackExps.contains(s1.hashCode())){
-          val tmp = BoundedExpr()
-          tmp += s1
-          val ret = tmp += s2
-          fields.update(k, tmp)
-          ret
-        } 
-        else
-          s1 += s2
-      }
-      else false
-    })
-    retVals.fold(false)(_ || _)
-  }
   override def equals(x: Any): Boolean = {
     x match {
       case ObjectValue(xName, _) => name.equals(xName)
@@ -70,16 +52,17 @@ object UnknownValue{
     unknownCnt
   }
 }
-case class VariableValue(vx: Int) extends MonoValue{
+case class VariableValue(vx: Int, version: Int) extends MonoValue{
   override def toStringSafe(using Set[Int]): String = s"*$vx*=${VariableValue.get(this).toStringSafe}"
   override def toString(): String = toStringSafe(using Set())
+  def refresh() = VariableValue(vx, version+1)
 }
 object VariableValue{
   var vxCnt = 0
   val vMap = MutMap[Int, BoundedExpr]()
   def refresh(): VariableValue = {
     vxCnt += 1
-    val ret = VariableValue(vxCnt)
+    val ret = VariableValue(vxCnt, 0)
     vMap.addOne(vxCnt -> BoundedExpr(ret))
     ret
   }
@@ -100,10 +83,9 @@ case class PrimitiveValue() extends MonoValue{
   override def toString(): String = "*LIT*"
 }
 
-class BoundedExpr(private val values: MutSet[MonoValue]) extends Printable {
-  def this(singleVal: MonoValue) = this(MutSet(singleVal))
-  def this() = this(MutSet())
-  def this(vs: Set[MonoValue]) = this(MutSet(vs.toSeq: _*))
+class BoundedExpr(private val values: Set[MonoValue]) extends Printable {
+  def this(singleVal: MonoValue) = this(Set(singleVal))
+  def this() = this(Set())
   def getDebugOutput: DebugOutput = DebugOutput.Plain(toStringSafe)
   def getObjNames() = values.flatMap{
     // case FunctionValue(name, body, prm, ctx) => Some(name)
@@ -115,7 +97,7 @@ class BoundedExpr(private val values: MutSet[MonoValue]) extends Printable {
   var updateCnt: Int = 0
   def toStringSafe(using printed: Set[Int] = Set()): String = {
     if(printed.contains(this.hashCode())) s"..."
-    else values.map(_.toStringSafe(using printed + this.hashCode())).mkString("[", " | ", s"]${hashCode()%1000000}")
+    else values.map(_.toStringSafe(using printed + this.hashCode())).mkString("[", " | ", s"]")
   }
   def asValue: Option[MonoValue] = {
     val tmp = this.unfoldVars
@@ -128,7 +110,7 @@ class BoundedExpr(private val values: MutSet[MonoValue]) extends Printable {
     unfoldVars.values.toSet.filterNot(_.isInstanceOf[VariableValue])
   }
 
-  private def split(vs: Set[MonoValue], nms: Set[String]): (Set[MonoValue], Map[String, ObjectValue]) = {
+  private def splitSpecifiedObjects(vs: Set[MonoValue], nms: Set[String]): (Set[MonoValue], Map[String, ObjectValue]) = {
       val ret = vs.map{
         case o@ObjectValue(name, fields) => 
           if nms.contains(name) then {
@@ -151,19 +133,18 @@ class BoundedExpr(private val values: MutSet[MonoValue]) extends Printable {
     val varSets: List[BoundedExpr] = vars._1.flatten.map(x => {
       val vSet = VariableValue.get(x)
       if(!instackExps.contains(vSet.hashCode())){
-        // val ret = vSet.values.toList.toSet
-        // println(s"found $x mapsto $ret")
-        // values -= x
-        // println(s"found $x mapsto $ret")
         vSet.unfoldVars(using instackExps + vSet.hashCode())
       }
       else BoundedExpr(x)
     })
-    val ret = BoundedExpr(MutSet(vars._2.flatten.toSeq: _*))
-    // if(varSets.size > 0)
-      // println(s"adding $varSets to $this")
-    varSets.foreach(x => {ret.mergeWithoutUnfold(x)(using instackExps + x.hashCode())})
-    ret
+    varSets.foldLeft(BoundedExpr(vars._2.flatten.toSet))((x, y) => (x ++ y)(using instackExps + y.hashCode()))
+  }
+
+  def literals2Prims: BoundedExpr = {
+    val hasPrim = values.find(x => x.isInstanceOf[PrimitiveValue] || x.isInstanceOf[LiteralValue]).isDefined
+    if(hasPrim)
+      BoundedExpr(values.filterNot(x => x.isInstanceOf[PrimitiveValue] || x.isInstanceOf[LiteralValue]) + PrimitiveValue())
+    else this
   }
 
   def ++(other: BoundedExpr)(using instackExps: Set[Int] = Set()): BoundedExpr = {
@@ -172,8 +153,8 @@ class BoundedExpr(private val values: MutSet[MonoValue]) extends Printable {
       // unfoldVars
       // other.unfoldVars
       val mergingValNms = getObjNames().intersect(other.getObjNames())
-      val (restVals1, mergingVals1) = split(values.toSet, mergingValNms)
-      val (restVals2, mergingVals2) = split(other.values.toSet, mergingValNms)
+      val (restVals1, mergingVals1) = splitSpecifiedObjects(values.toSet, mergingValNms)
+      val (restVals2, mergingVals2) = splitSpecifiedObjects(other.values.toSet, mergingValNms)
       // val map2 = other.values.flatMap(x => if(values.fin(x)) then None else Some(x))
       val ret = mergingValNms.map(nm => (mergingVals1.get(nm), mergingVals2.get(nm)) match
         case (Some(x1: ObjectValue), Some(x2: ObjectValue)) => x1.merge(x2)(using instackExps ++ Set(this.hashCode(), other.hashCode()))
@@ -184,89 +165,11 @@ class BoundedExpr(private val values: MutSet[MonoValue]) extends Printable {
       if(ret2.count(x => (x.isInstanceOf[LiteralValue] || x.isInstanceOf[PrimitiveValue])) > 1){
         ret2 = ret2.filterNot(_.isInstanceOf[LiteralValue]) + PrimitiveValue()
       }
-      val retVals = BoundedExpr(MutSet((ret2 ++ ret).toSeq: _*))
+      val retVals = BoundedExpr(ret2 ++ ret)
       retVals.updateCnt = this.updateCnt
       if(this.compare(retVals)) retVals.updateCnt += 1
       retVals
     }
-  }
-
-  def mergeWithoutUnfold(other: BoundedExpr)(using instackExps: Set[Int] = Set()): Boolean = {
-    val retVal = if(other != this) {
-      // println(s"merging $other into $this")
-      val mergingValNms = getObjNames().intersect(other.getObjNames()).toSet
-      val (_, mergingVals) = split(values.toSet, mergingValNms)
-      var litCount = values.find(x => (x.isInstanceOf[LiteralValue] || x.isInstanceOf[PrimitiveValue]))
-      val ret = other.values.map{
-        case i: (LiteralValue | PrimitiveValue) => 
-          if(litCount.isEmpty) {
-            values.add(i) 
-            true
-          }
-          else if(!litCount.get.isInstanceOf[PrimitiveValue]) {
-            values.remove(litCount.get)
-            values.add(PrimitiveValue())
-            litCount = Some(PrimitiveValue())
-            true
-          }
-          else false
-        case o@ObjectValue(name, fields) => 
-          mergingVals.get(name).fold[Boolean]{
-            values.add(o)
-            true
-          }(v => {
-            v.mergeMut(o)(using instackExps ++ Set(this.hashCode(), other.hashCode()))
-          })
-        case other => {
-          // println(s"adding $other to $this")
-          values.add(other)
-          true
-        }
-      }
-      ret.fold(false)(_ || _)
-    }
-    else false
-    if(retVal)  updateCnt += 1
-    retVal
-  }
-
-  def +=(other: BoundedExpr)(using instackExps: Set[Int] = Set()): Boolean = {
-    val retVal = if(other != this) {
-      // unfoldVars
-      // other.unfoldVars
-      val mergingValNms = getObjNames().intersect(other.getObjNames()).toSet
-      val (_, mergingVals) = split(values.toSet, mergingValNms)
-      var litCount = values.find(x => (x.isInstanceOf[LiteralValue] || x.isInstanceOf[PrimitiveValue]))
-      val ret = other.values.map{
-        case i: (LiteralValue | PrimitiveValue) => 
-          if(litCount.isEmpty) {
-            values.add(i) 
-            true
-          }
-          else if(!litCount.get.isInstanceOf[PrimitiveValue]) {
-            values.remove(litCount.get)
-            values.add(PrimitiveValue())
-            litCount = Some(PrimitiveValue())
-            true
-          }
-          else false
-        case o@ObjectValue(name, fields) => 
-          mergingVals.get(name).fold[Boolean]{
-            values.add(o)
-            true
-          }(v => {
-            v.mergeMut(o)(using instackExps ++ Set(this.hashCode(), other.hashCode()))
-          })
-        case other => {
-          values.add(other)
-          true
-        }
-      }
-      ret.fold(false)(_ || _)
-    }
-    else false
-    if(retVal)  updateCnt += 1
-    retVal
   }
 
   def size = values.size
@@ -299,8 +202,6 @@ class BoundedExpr(private val values: MutSet[MonoValue]) extends Printable {
     if(instackExps.contains(this.hashCode()) && instackExps.contains(other.hashCode()))
       false
     else {
-      // this.unfoldVars
-      // other.unfoldVars
       if(values.find(_.isInstanceOf[PrimitiveValue]).isEmpty && other.values.find(_.isInstanceOf[PrimitiveValue]).isDefined)
         true
       else if(this.size != other.size)
@@ -309,8 +210,8 @@ class BoundedExpr(private val values: MutSet[MonoValue]) extends Printable {
         val nms1 = this.getObjNames()
         val nms2 = other.getObjNames()
         if(nms1.equals(nms2)){
-          val (rests1, objs1) = split(this.values.toSet, nms1)
-          val (rests2, objs2) = split(other.values.toSet, nms1)
+          val (rests1, objs1) = splitSpecifiedObjects(this.values.toSet, nms1)
+          val (rests2, objs2) = splitSpecifiedObjects(other.values.toSet, nms1)
           nms1.find(nm => {
             val v1s = objs1.get(nm).get.fields
             val v2s = objs2.get(nm).get.fields
@@ -320,14 +221,5 @@ class BoundedExpr(private val values: MutSet[MonoValue]) extends Printable {
         else true
       }
     }
-    // (values.find(_.isInstanceOf[UnknownValue]), other.values.find(_.isInstanceOf[UnknownValue])) match{
-    //   // case (Some(_), None) => true
-    //   // case (None, Some(_)) => false
-    // }
   }
 }
-
-// given Conversion[MutSet[? <: MonoValue], BoundedExpr] with 
-//   def apply(x: MutSet[? <: MonoValue]): BoundedExpr = BoundedExpr(x)
-// given Conversion[BoundedExpr, MutSet[? <: MonoValue]] with 
-//   def apply(x: BoundedExpr): MutSet[? <: MonoValue] = x.values
