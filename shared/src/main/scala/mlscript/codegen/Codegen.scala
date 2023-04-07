@@ -598,12 +598,12 @@ object JSMember {
   def apply(`object`: JSExpr, property: JSExpr): JSMember = new JSMember(`object`, property)
 }
 
-class JSField(`object`: JSExpr, property: JSIdent) extends JSMember(`object`, property) {
+class JSField(`object`: JSExpr, val property: JSIdent) extends JSMember(`object`, property) {
   override def toSourceCode: SourceCode =
     `object`.toSourceCode.parenthesized(
       `object`.precedence < precedence || `object`.isInstanceOf[JSRecord]
     ) ++ SourceCode(
-      if (JSField.isValidIdentifier(property.name)) {
+      if (JSField.isValidFieldName(property.name)) {
         s".${property.name}"
       } else {
         s"[${JSLit.makeStringLiteral(property.name)}]"
@@ -617,6 +617,10 @@ object JSField {
   private val identifierPattern: Regex = "^[A-Za-z$][A-Za-z0-9$]*$".r
 
   def isValidIdentifier(s: Str): Bool = identifierPattern.matches(s) && !Symbol.isKeyword(s)
+
+  // in this case, a keyword can be used as a field name
+  // e.g. `something.class` is valid
+  def isValidFieldName(s: Str): Bool = identifierPattern.matches(s)
 
   def emitValidFieldName(s: Str): Str = if (isValidIdentifier(s)) s else JSLit.makeStringLiteral(s)
 }
@@ -830,23 +834,26 @@ final case class JSClassNewDecl(
     name: Str,
     fields: Ls[Str],
     privateMem: Ls[Str],
-    `extends`: Opt[JSExpr] = N,
-    superFields: Ls[JSExpr] = Nil,
-    rest: Opt[Str] = N,
-    methods: Ls[JSClassMemberDecl] = Nil,
-    implements: Ls[Str] = Nil,
-    initStmts: Ls[JSStmt] = Nil
+    `extends`: Opt[JSExpr],
+    superFields: Ls[JSExpr],
+    ctorParams: Ls[Str],
+    rest: Opt[Str],
+    methods: Ls[JSClassMemberDecl],
+    implements: Ls[Str],
+    initStmts: Ls[JSStmt],
+    nestedTypes: Ls[Str]
 ) extends JSStmt {
   def toSourceCode: SourceCode = {
     val constructor: SourceCode = {
       val buffer = new ListBuffer[Str]()
       val params =
-        fields.iterator.zipWithIndex.foldRight(rest match {
+        ctorParams.iterator.zipWithIndex.foldRight(rest match {
           case Some(rest) => s"...$rest"
           case _ => ""
         })((p, s) =>
         if (s.isEmpty) s"${p._1}"
         else s"${p._1}, $s")
+      nestedTypes.foreach(t => buffer += s"  #$t;")
       if (!privateMem.isEmpty) {
         privateMem.foreach(f => buffer += s"  #${f};")
         privateMem.foreach(f => buffer += s"  get ${f}() { return this.#${f}; }")
@@ -862,8 +869,10 @@ final case class JSClassNewDecl(
       implements.foreach { name =>
         buffer += s"    $name.implement(this);"
       }
-      fields.iterator.zipWithIndex.foreach { pair =>
-        buffer += s"    this.#${pair._1} = ${pair._1};" // TODO: invalid name?
+
+      assert(fields.length === ctorParams.length, s"fields and ctorParams have different size in class $name.")
+      fields.lazyZip(ctorParams).foreach { (field, param) =>
+        buffer += s"    this.#$field = $param;" // TODO: invalid name?
       }
       initStmts.foreach { s =>
         s.toSourceCode.indented.indented.toString.split("\n").foreach {

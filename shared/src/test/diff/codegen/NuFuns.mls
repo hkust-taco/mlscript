@@ -8,7 +8,8 @@ fun foo =
 //│ fun foo: int
 //│ // Prelude
 //│ let res;
-//│ let typing_unit = { cache: {} };
+//│ class TypingUnit {}
+//│ const typing_unit = new TypingUnit;
 //│ // Query 1
 //│ globalThis.foo = function foo() {
 //│   return ((() => {
@@ -18,13 +19,22 @@ fun foo =
 //│ };
 //│ // End of generated code
 
-
-// TODO
 fun foo =
   class C(a: int) { fun bar(x) = a + x + 1 }
   C(100).bar(10)
+foo
 //│ fun foo: int
-//│ Code generation encountered an error:
-//│   unsupported definitions in blocks
+//│ int
+//│ res
+//│     = [Function: foo1]
 
-
+fun main =
+  mixin B { log(1) }
+  log(0)
+  module M extends B
+  log(2)
+main
+//│ fun main: unit
+//│ unit
+//│ res
+//│     = [Function: main]

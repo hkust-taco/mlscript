@@ -9,11 +9,13 @@ class Test(n: int) {
 //│ }
 //│ // Prelude
 //│ let res;
-//│ let typing_unit = {
-//│   cache: {},
+//│ class TypingUnit {
+//│   #Test;
+//│   constructor() {
+//│   }
 //│   get Test() {
-//│     const cache = this.cache;
-//│     if (this.cache.Test === undefined) {
+//│     const outer = this;
+//│     if (this.#Test === undefined) {
 //│       class Test {
 //│         #n;
 //│         get n() { return this.#n; }
@@ -21,17 +23,17 @@ class Test(n: int) {
 //│           this.#n = n;
 //│         }
 //│         get inc() {
-//│           const Test = cache.Test;
 //│           const n = this.#n;
-//│           return Test(n + 1);
+//│           return outer.Test(n + 1);
 //│         }
 //│       };
-//│       this.cache.Test = ((n) => new Test(n));
-//│       this.cache.Test["class"] = Test;
+//│       this.#Test = ((n) => new Test(n));
+//│       this.#Test.class = Test;
 //│     }
-//│     return this.cache.Test;
+//│     return this.#Test;
 //│   }
-//│ };
+//│ }
+//│ const typing_unit = new TypingUnit;
 //│ globalThis.Test = typing_unit.Test;
 //│ // End of generated code
 
@@ -71,7 +73,7 @@ class C[A](n: A) {
 let a = C[int](42)
 a.f
 //│ ╔══[ERROR] Type application syntax is not yet supported
-//│ ║  l.71: 	let a = C[int](42)
+//│ ║  l.73: 	let a = C[int](42)
 //│ ╙──      	        ^^^^^^
 //│ let a: error
 //│ error
@@ -81,7 +83,6 @@ a.f
 //│     = 42
 
 
-// FIXME
 module Foo {
   fun f = C0()
   class C0()
@@ -90,8 +91,6 @@ module Foo {
 //│   class C0()
 //│   fun f: C0
 //│ }
-//│ Code generation encountered an error:
-//│   unresolved symbol C0
 
 
 mixin M0(n: int) {
@@ -137,17 +136,20 @@ module M2 {
     bar(10)
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.136: 	    fun bar(x) = x + y + this.m
+//│ ║  l.135: 	    fun bar(x) = x + y + this.m
 //│ ╙──       	                             ^^
 //│ module M2() {
 //│   fun foo: int -> int
 //│   let m: 100
 //│ }
 //│ // Prelude
-//│ let typing_unit11 = {
-//│   cache: {},
+//│ class TypingUnit11 {
+//│   #M2;
+//│   constructor() {
+//│   }
 //│   get M2() {
-//│     if (this.cache.M2 === undefined) {
+//│     const outer = this;
+//│     if (this.#M2 === undefined) {
 //│       class M2 {
 //│         #m;
 //│         get m() { return this.#m; }
@@ -163,12 +165,13 @@ module M2 {
 //│           })());
 //│         }
 //│       }
-//│       this.cache.M2 = new M2();
-//│       this.cache.M2["class"] = M2;
+//│       this.#M2 = new M2();
+//│       this.#M2.class = M2;
 //│     }
-//│     return this.cache.M2;
+//│     return this.#M2;
 //│   }
-//│ };
+//│ }
+//│ const typing_unit11 = new TypingUnit11;
 //│ globalThis.M2 = typing_unit11.M2;
 //│ // End of generated code
 
