@@ -31,7 +31,7 @@ def foo x = case x of {
 //│ foo: ((A[?] with {fA: 'fA}) | (B[?] with {fB: 'fA}) | (C[?] with {fC: 'fA}) | (D[?] with {fD: 'fA}) | (E[?] with {fE: 'fA}) | (F[?] with {fF: 'fA}) | (G[?] with {fG: 'fA}) | (H[?] with {fH: 'fA})) -> 'fA
 //│ constrain calls  : 26
 //│ annoying  calls  : 0
-//│ subtyping calls  : 978
+//│ subtyping calls  : 1059
 
 
 // ====== 1 & all ====== //
@@ -64,7 +64,7 @@ foo arg
 //│ res: int
 //│ constrain calls  : 37
 //│ annoying  calls  : 20
-//│ subtyping calls  : 85
+//│ subtyping calls  : 322
 
 
 // ====== 3 ====== //
@@ -82,7 +82,7 @@ foo arg
 //│ res: int
 //│ constrain calls  : 50
 //│ annoying  calls  : 30
-//│ subtyping calls  : 188
+//│ subtyping calls  : 597
 
 
 // ====== 4 ====== //
@@ -101,21 +101,21 @@ foo arg
 //│ res: int
 //│ constrain calls  : 63
 //│ annoying  calls  : 40
-//│ subtyping calls  : 350
+//│ subtyping calls  : 975
 
 :stats
 foo (arg with { x = 1} with { y = 2 })
 //│ res: int
 //│ constrain calls  : 38
 //│ annoying  calls  : 37
-//│ subtyping calls  : 234
+//│ subtyping calls  : 520
 
 :stats
 foo (arg with { x = 1; y = 2; z = 3 })
 //│ res: int
 //│ constrain calls  : 38
 //│ annoying  calls  : 37
-//│ subtyping calls  : 198
+//│ subtyping calls  : 484
 
 
 // ====== 5 ====== //
@@ -135,7 +135,7 @@ foo arg
 //│ res: int
 //│ constrain calls  : 76
 //│ annoying  calls  : 50
-//│ subtyping calls  : 585
+//│ subtyping calls  : 1470
 
 
 // ====== 6 ====== //
@@ -156,7 +156,7 @@ foo arg
 //│ res: int
 //│ constrain calls  : 89
 //│ annoying  calls  : 60
-//│ subtyping calls  : 907
+//│ subtyping calls  : 2096
 
 
 // ====== 7 ====== //
@@ -178,7 +178,7 @@ foo arg
 //│ res: int
 //│ constrain calls  : 102
 //│ annoying  calls  : 70
-//│ subtyping calls  : 1330
+//│ subtyping calls  : 2867
 
 
 // ====== 8 ====== //
@@ -201,6 +201,6 @@ foo arg
 //│ res: int
 //│ constrain calls  : 115
 //│ annoying  calls  : 80
-//│ subtyping calls  : 1868
+//│ subtyping calls  : 3797
 
 

@@ -208,13 +208,13 @@ class A1_2: S1 & T1
 //│   Error: unexpected runtime error
 
 
-def f = 0
+f = 0
 //│ f: 0
-//│  = [Function: f]
+//│  = 0
 
-def f' = 1
+f' = 1
 //│ f': 1
-//│   = [Function: f$]
+//│   = 1
 
 f'
 //│ res: 1

@@ -9,14 +9,12 @@
 //│    = 42
 
 :js
-def foo = "oops"
+foo = "oops"
 //│ // Query 1
-//│ globalThis.foo = function foo() {
-//│   return "oops";
-//│ };
+//│ globalThis.foo = "oops";
 //│ // End of generated code
 //│ foo: "oops"
-//│    = [Function: foo]
+//│    = 'oops'
 
 :js
 res
@@ -41,7 +39,7 @@ res
 :js
 foo
 //│ // Query 1
-//│ res = foo();
+//│ res = foo;
 //│ // End of generated code
 //│ res: "oops"
 //│    = 'oops'

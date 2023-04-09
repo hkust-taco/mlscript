@@ -39,9 +39,9 @@ rec def eval e = case e of {
 //│     'a <: Add[?] & {lhs: 'a, rhs: 'a} | Lit | Nega[?] & {arg: 'a}
 //│     = [Function: eval]
 
-def ex = add (lit 2) (lit 2)
+ex = add (lit 2) (lit 2)
 //│ ex: Add[Lit & {val: 2}]
-//│   = [Function: ex]
+//│   = Add { lhs: Lit { val: 2 }, rhs: Lit { val: 2 } }
 
 eval ex
 //│ res: int
@@ -65,13 +65,13 @@ def e: Lit | Add['e] | Nega['e] as 'e
 //│     'e :> Add['e] | Lit | Nega['e]
 //│  = <missing implementation>
 
-def e = ex
+e = ex
 //│ Add[Lit & {val: 2}]
 //│   <:  e:
 //│ 'e
 //│   where
 //│     'e :> Add['e] | Lit | Nega['e]
-//│  = [Function: e1]
+//│  = Add { lhs: Lit { val: 2 }, rhs: Lit { val: 2 } }
 
 eval e
 //│ res: int

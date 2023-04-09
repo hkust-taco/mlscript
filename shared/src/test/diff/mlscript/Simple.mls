@@ -1,13 +1,13 @@
 
-def a = 1
-def b = 2
-def c = 3
+a = 1
+b = 2
+c = 3
 //│ a: 1
-//│  = [Function: a]
+//│  = 1
 //│ b: 2
-//│  = [Function: b]
+//│  = 2
 //│ c: 3
-//│  = [Function: c]
+//│  = 3
 
 if true then if true then a else b else a
 //│ res: 1 | 2
@@ -22,9 +22,9 @@ class Bar: {}
 //│ Defined class Foo[+A]
 //│ Defined class Bar
 
-def foo = Foo { field = id 1 }
+foo = Foo { field = id 1 }
 //│ foo: Foo[1]
-//│    = [Function: foo]
+//│    = Foo { field: 1 }
 
 (if true then foo else { field = 2 }).field
 //│ res: 1 | 2

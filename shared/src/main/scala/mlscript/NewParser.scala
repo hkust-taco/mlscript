@@ -93,6 +93,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
       "",
       "",
       "",
+      "",
       // ^ for keywords
       ",",
       ";",
@@ -116,10 +117,11 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
   
   def opCharPrec(opChar: Char): Int = prec(opChar)
   def opPrec(opStr: Str): (Int, Int) = opStr match {
+    case "is" => (4, 4)
     case "and" => (3, 3)
     case "or" => (2, 2)
     case _ if opStr.exists(_.isLetter) =>
-      (4, 4)
+      (5, 5)
     case _ =>
       val r = opStr.last
       (prec(opStr.head), prec(r) - (if (r === '@' || r === '/' || r === ',') 1 else 0))
@@ -226,8 +228,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
     case t: Tuple => t
     case _ => Tuple((N, Field(None, t)) :: Nil)
   }
-  def typ(implicit fe: FoundErr, l: Line): Type =
-    expr(0).toType match {
+  def typ(prec: Int = 0)(implicit fe: FoundErr, l: Line): Type =
+    expr(prec).toType match {
       case L(d) => raise(d); Top // TODO better
       case R(ty) => ty
     }
@@ -326,7 +328,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
               val asc = yeetSpaces match {
                 case (KEYWORD(":"), _) :: _ =>
                   consume
-                  S(typ)
+                  S(typ(2))
                 case _ => N
               }
               yeetSpaces match {
@@ -560,6 +562,10 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
                 exprCont(App(App(v, toParams(acc)), toParams(rhs)), prec, allowNewlines)
             }
         }
+      case (KEYWORD(":"), _) :: _ if prec <= 1 =>
+        consume
+        val ty = typ(1)
+        R(Asc(acc, ty))
       case (SPACE, l0) :: _ =>
         consume
         exprCont(acc, prec, allowNewlines)
@@ -648,25 +654,26 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
           }
           case _ => ???
         })
-        exprCont(res, 0, allowNewlines)
+        exprCont(res, prec, allowNewlines)
         
       case (br @ BRACKETS(Square, toks), loc) :: _ =>
         consume
         val idx = rec(toks, S(br.innerLoc), "subscript").concludeWith(_.expr(0))
         val res = Subs(acc, idx.withLoc(S(loc)))
-        exprCont(res, 0, allowNewlines)
+        exprCont(res, prec, allowNewlines)
         
         case (br @ BRACKETS(Round, toks), loc) :: _ =>
           consume
           val as = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented())
           val res = App(acc, Tup(as).withLoc(S(loc)))
-          exprCont(res, 0, allowNewlines)
+          exprCont(res, prec, allowNewlines)
+          
         case (KEYWORD("of"), _) :: _ =>
           consume
           val as = argsMaybeIndented()
           // val as = argsOrIf(Nil) // TODO
           val res = App(acc, Tup(as))
-          exprCont(res, 0, allowNewlines)
+          exprCont(res, prec, allowNewlines)
           
       case c @ (h :: _) if (h._1 match {
         case KEYWORD(";" | "of") | BRACKETS(Round | Square, _)
@@ -682,7 +689,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
         val res = App(acc, Tup(as))
         raise(WarningReport(msg"Paren-less applications should use the 'of' keyword"
           -> res.toLoc :: Nil))
-        exprCont(res, 0, allowNewlines)
+        exprCont(res, prec, allowNewlines)
         
       case _ => R(acc)
     }
@@ -796,19 +803,19 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
     
     // val blck = block
     
-    val argMut = cur match {
+    val argMut = yeetSpaces match {
       case (KEYWORD("mut"), l0) :: _ =>
         consume
         S(l0)
       case _ => N
     }
-    val argSpec = cur match {
+    val argSpec = yeetSpaces match {
       case (KEYWORD("#"), l0) :: _ =>
         consume
         S(l0)
       case _ => N
     }
-    val argName = cur match {
+    val argName = yeetSpaces match {
       case (IDENT(idStr, false), l0) :: (KEYWORD(":"), _) :: _ => // TODO: | ...
         consume
         consume

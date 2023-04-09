@@ -210,8 +210,12 @@ trait TypeSimplifier { self: Typer =>
                 val withType = if (needsWith) if (cleanedRcd.fields.isEmpty) withoutType
                   else WithType(withoutType, cleanedRcd.sorted)(noProv) else typeRef & cleanedRcd.sorted
                 
-                tts.toArray.sorted // TODO also filter out tts that are inherited by the class
+                val withTraits = tts.toArray.sorted // TODO also filter out tts that are inherited by the class
                   .foldLeft(withType: ST)(_ & _)
+                
+                val trs3 = trs2 - td.nme // TODO also filter out class refs that are inherited by the class
+                
+                trs3.valuesIterator.foldLeft(withTraits)(_ & _)
                 
               case _ =>
                 lazy val nFields = rcd.fields
@@ -433,7 +437,7 @@ trait TypeSimplifier { self: Typer =>
     // *  (We may unfy a non-rec TV with a rec one, makingthe non-rec TV recursive.)
     
     // * This will be filled during the processing phase, to guide the transformation phase:
-    val varSubst = MutMap.empty[TypeVariable, Option[TypeVariable]]
+    val varSubst = MutMap.empty[TypeVariable, Option[ST]]
     
     // val allVars = st.getVars
     val allVars = analyzed1.iterator.map(_._1).toSortedSet
@@ -478,7 +482,11 @@ trait TypeSimplifier { self: Typer =>
           && coOccurrences.get(false -> v).exists(_(atom))
         =>
           println(s"  [..] $v ${atom}")
-          varSubst += v -> None; ()
+          val bundle = TypeBounds.mk(
+              v.upperBounds.foldLeft(atom)(_ & _),
+              v.lowerBounds.foldLeft(atom)(_ | _),
+            )
+          varSubst += v -> S(bundle)
         
         case w: TV if !(w is v) && !varSubst.contains(w) && !varSubst.contains(v) && !recVars(v)
           && coOccurrences.get(false -> v).exists(_(w))
@@ -494,7 +502,11 @@ trait TypeSimplifier { self: Typer =>
           // } else {
           
           println(s"  [..] $v ${w}")
-          varSubst += v -> N
+          val bundle = TypeBounds.mk(
+              v.upperBounds.foldLeft(w: ST)(_ & _),
+              v.lowerBounds.foldLeft(w: ST)(_ | _),
+            )
+          varSubst += v -> S(bundle)
           
           // }
           
@@ -592,38 +604,40 @@ trait TypeSimplifier { self: Typer =>
     
     val renewals = MutMap.empty[TypeVariable, TypeVariable]
     
-    def mergeTransform(pol: Bool, tv: TV, parent: Opt[TV]): ST =
-      transform(merge(pol, if (pol) tv.lowerBounds else tv.upperBounds), S(pol), parent)
+    val semp = Set.empty[TV]
     
-    def transform(st: SimpleType, pol: Opt[Bool], parent: Opt[TV]): SimpleType =
+    def mergeTransform(pol: Bool, tv: TV, parents: Set[TV]): ST =
+      transform(merge(pol, if (pol) tv.lowerBounds else tv.upperBounds), S(pol), parents)
+    
+    def transform(st: SimpleType, pol: Opt[Bool], parents: Set[TV]): SimpleType =
           trace(s"transform[${printPol(pol)}] $st") {
         def transformField(f: FieldType): FieldType = f match {
           case FieldType(S(lb), ub) if lb === ub =>
-            val b = transform(ub, N, N)
+            val b = transform(ub, N, semp)
             FieldType(S(b), b)(f.prov)
-          case _ => f.update(transform(_, pol.map(!_), N), transform(_, pol, N))
+          case _ => f.update(transform(_, pol.map(!_), semp), transform(_, pol, semp))
         }
         st match {
       case RecordType(fs) => RecordType(fs.mapValues(_ |> transformField))(st.prov)
       case TupleType(fs) => TupleType(fs.mapValues(_ |> transformField))(st.prov)
       case ArrayType(inner) => ArrayType(inner |> transformField)(st.prov)
       case sp @ SpliceType(elems) => SpliceType(elems map {
-        case L(l) => L(transform(l, pol, N)) 
+        case L(l) => L(transform(l, pol, semp)) 
         case R(r) => R(transformField(r))})(st.prov)
-      case FunctionType(l, r) => FunctionType(transform(l, pol.map(!_), N), transform(r, pol, N))(st.prov)
+      case FunctionType(l, r) => FunctionType(transform(l, pol.map(!_), semp), transform(r, pol, semp))(st.prov)
       case _: ObjectTag | ExtrType(_) => st
-      case tv: TypeVariable if parent.exists(_ === tv) =>
-        if (pol.getOrElse(lastWords(s"parent in invariant position $tv $parent"))) BotType else TopType
+      case tv: TypeVariable if parents.exists(_ === tv) =>
+        if (pol.getOrElse(lastWords(s"parent in invariant position $tv $parents"))) BotType else TopType
       case tv: TypeVariable =>
         varSubst.get(tv) match {
-          case S(S(tv)) =>
-            println(s"-> $tv")
-            transform(tv, pol, parent)
+          case S(S(tv2)) =>
+            println(s"-> $tv2")
+            transform(tv2, pol, parents + tv)
           case S(N) =>
             println(s"-> bound")
             pol.fold(
-              TypeBounds.mk(mergeTransform(true, tv, parent), mergeTransform(false, tv, parent))
-            )(mergeTransform(_, tv, parent))
+              lastWords("Should not be replacing an invariant type variable by its bound...")
+            )(mergeTransform(_, tv, parents + tv))
           case N =>
             var wasDefined = true
             val res = renewals.getOrElseUpdate(tv, {
@@ -636,13 +650,13 @@ trait TypeSimplifier { self: Typer =>
               case S(pol) if inlineBounds && !occursInvariantly(tv) && !recVars.contains(tv) =>
                 // * Inline the bounds of non-rec non-invar-occ type variables
                 println(s"Inlining bounds of $tv (~> $res)")
-                if (pol) mergeTransform(true, tv, S(tv)) | res
-                else mergeTransform(false, tv, S(tv)) & res
+                if (pol) mergeTransform(true, tv, Set.single(tv)) | res
+                else mergeTransform(false, tv, Set.single(tv)) & res
               case _ if (!wasDefined) =>
                 def setBounds = {
                   trace(s"Setting bounds of $res...") {
-                    res.lowerBounds = tv.lowerBounds.map(transform(_, S(true), S(tv)))
-                    res.upperBounds = tv.upperBounds.map(transform(_, S(false), S(tv)))
+                    res.lowerBounds = tv.lowerBounds.map(transform(_, S(true), Set.single(tv)))
+                    res.upperBounds = tv.upperBounds.map(transform(_, S(false), Set.single(tv)))
                     res
                   }()
                 }
@@ -663,7 +677,7 @@ trait TypeSimplifier { self: Typer =>
                     }) {
                       println(s"NEW SUBS $tv -> N")
                       varSubst += tv -> N
-                      transform(merge(pol, bounds), polo, parent)
+                      transform(merge(pol, bounds), polo, parents + tv)
                     }
                     else setBounds
                   case _ => setBounds
@@ -671,25 +685,25 @@ trait TypeSimplifier { self: Typer =>
               case _ => res
             }
         }
-      case ty @ ComposedType(true, l, r) => transform(l, pol, parent) | transform(r, pol, parent)
-      case ty @ ComposedType(false, l, r) => transform(l, pol, parent) & transform(r, pol, parent)
-      case NegType(und) => transform(und, pol.map(!_), N).neg()
-      case WithType(base, RecordType(fs)) => WithType(transform(base, pol, N), 
-        RecordType(fs.mapValues(_.update(transform(_, pol.map(!_), N), transform(_, pol, N))))(noProv))(noProv)
-      case ProxyType(underlying) => transform(underlying, pol, parent)
+      case ty @ ComposedType(true, l, r) => transform(l, pol, parents) | transform(r, pol, parents)
+      case ty @ ComposedType(false, l, r) => transform(l, pol, parents) & transform(r, pol, parents)
+      case NegType(und) => transform(und, pol.map(!_), semp).neg()
+      case WithType(base, RecordType(fs)) => WithType(transform(base, pol, semp), 
+        RecordType(fs.mapValues(_.update(transform(_, pol.map(!_), semp), transform(_, pol, semp))))(noProv))(noProv)
+      case ProxyType(underlying) => transform(underlying, pol, parents)
       case tr @ TypeRef(defn, targs) =>
-        TypeRef(defn, tr.mapTargs(pol)((pol, ty) => transform(ty, pol, N)))(tr.prov)
+        TypeRef(defn, tr.mapTargs(pol)((pol, ty) => transform(ty, pol, semp)))(tr.prov)
       case wo @ Without(base, names) =>
-        if (names.isEmpty) transform(base, pol, N)
-        else if (pol === S(true)) transform(base, pol, N).withoutPos(names)
-        else transform(base, pol, N).without(names)
+        if (names.isEmpty) transform(base, pol, semp)
+        else if (pol === S(true)) transform(base, pol, semp).withoutPos(names)
+        else transform(base, pol, semp).without(names)
       case tb @ TypeBounds(lb, ub) =>
-        pol.fold[ST](TypeBounds.mk(transform(lb, S(false), parent), transform(ub, S(true), parent), noProv))(pol =>
-          if (pol) transform(ub, S(true), parent) else transform(lb, S(false), parent))
+        pol.fold[ST](TypeBounds.mk(transform(lb, S(false), parents), transform(ub, S(true), parents), noProv))(pol =>
+          if (pol) transform(ub, S(true), parents) else transform(lb, S(false), parents))
     }
     }(r => s"~> $r")
     
-    transform(st, pol, N)
+    transform(st, pol, semp)
     
     
   }

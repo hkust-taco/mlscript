@@ -1,0 +1,45 @@
+:NewParser
+
+1: int
+//│ res: int
+//│    = 1
+
+1 : int
+//│ res: int
+//│    = 1
+
+// TODO?
+:e
+1 : int : int
+//│ ╔══[ERROR] not a recognized type: int : TypeName(int)
+//│ ║  l.13: 	1 : int : int
+//│ ╙──      	    ^^^
+//│ res: anything
+//│    = 1
+
+// FIXME
+:w
+:e
+fun foo(x: int) = x + 1
+//│ ╔══[WARNING] Variable name 'int' already names a symbol in scope. If you want to refer to that symbol, you can use `scope.int`; if not, give your future readers a break and use another name :^)
+//│ ║  l.23: 	fun foo(x: int) = x + 1
+//│ ╙──      	           ^^^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.23: 	fun foo(x: int) = x + 1
+//│ ╙──      	                  ^
+//│ foo: (x: anything,) -> int
+//│ Code generation encountered an error:
+//│   unresolved symbol x
+
+fun foo(x : int) = x + 1
+//│ foo: int -> int
+//│    = [Function: foo1]
+
+foo(123 : int) : int
+//│ res: int
+//│    = 124
+
+foo(123:int):int
+//│ res: int
+//│    = 124
+

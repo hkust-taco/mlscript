@@ -137,6 +137,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     * Translate MLscript terms into JavaScript expressions.
     */
   protected def translateTerm(term: Term)(implicit scope: Scope): JSExpr = term match {
+    case _ if term.desugaredTerm.isDefined => translateTerm(term.desugaredTerm.getOrElse(die))
     case Var(name) => translateVar(name, false)
     case Lam(params, body) =>
       val lamScope = scope.derive("Lam")
@@ -178,15 +179,17 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       )
     case Blk(stmts) =>
       val blkScope = scope.derive("Blk")
+      val flattened = stmts.iterator.flatMap(_.desugared._2).toList
       JSImmEvalFn(
         N,
         Nil,
-        R(blkScope.tempVars `with` (stmts flatMap (_.desugared._2) map {
-          case t: Term             => JSExprStmt(translateTerm(t))
+        R(blkScope.tempVars `with` (flattened.iterator.zipWithIndex.map {
+          case (t: Term, index) if index + 1 == flattened.length => translateTerm(t)(blkScope).`return`
+          case (t: Term, index)                                  => JSExprStmt(translateTerm(t)(blkScope))
           // TODO: find out if we need to support this.
-          case _: Def | _: TypeDef | _: NuFunDef /* | _: NuTypeDef */ =>
-            throw CodeGenError("unexpected definitions in blocks")
-        })),
+          case (_: Def | _: TypeDef | _: NuFunDef /* | _: NuTypeDef */, _) =>
+            throw CodeGenError("unsupported definitions in blocks")
+        }.toList)),
         Nil
       )
     // Pattern match with only one branch -> comma expression
@@ -235,7 +238,15 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         case _ =>
           throw CodeGenError(s"illegal assignemnt left-hand side: ${inspect(lhs)}")
       }
-    case _: Bind | _: Test | If(_, _) | New(_, _) | TyApp(_, _) | _: Splc =>
+    case iff: If =>
+      throw CodeGenError(s"if expression has not been desugared")
+    case New(N, TypingUnit(Nil)) => JSRecord(Nil)
+    case New(S(TypeName(className) -> Tup(args)), TypingUnit(Nil)) =>
+      val callee = translateVar(className, true)
+      callee(args.map { case (_, Fld(_, _, arg)) => translateTerm(arg) }: _*)
+    case New(_, TypingUnit(_)) =>
+      throw CodeGenError("custom class body is not supported yet")
+    case _: Bind | _: Test | If(_, _) | TyApp(_, _) | _: Splc =>
       throw CodeGenError(s"cannot generate code for term ${inspect(term)}")
   }
 
@@ -629,14 +640,15 @@ class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
     // Generate statements.
     val queries = otherStmts.map {
       case Def(recursive, Var(name), L(body), isByname) =>
+        val bodyIsLam = body match { case _: Lam => true case _ => false }
         (if (recursive) {
           val isByvalueRecIn = if (isByname) None else Some(true)
-          val sym = scope.declareValue(name, isByvalueRecIn, body.isInstanceOf[Lam])
+          val sym = scope.declareValue(name, isByvalueRecIn, bodyIsLam)
           try {
             val translated = translateTerm(body)
             scope.unregisterSymbol(sym)
             val isByvalueRecOut = if (isByname) None else Some(false)
-            R((translated, scope.declareValue(name, isByvalueRecOut, body.isInstanceOf[Lam])))
+            R((translated, scope.declareValue(name, isByvalueRecOut, bodyIsLam)))
           } catch {
             case e: UnimplementedError =>
               scope.stubize(sym, e.symbol)
@@ -644,7 +656,7 @@ class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
             case e: Throwable =>
               scope.unregisterSymbol(sym)
               val isByvalueRecOut = if (isByname) None else Some(false)
-              scope.declareValue(name, isByvalueRecOut, body.isInstanceOf[Lam])
+              scope.declareValue(name, isByvalueRecOut, bodyIsLam)
               throw e
           }
         } else {
@@ -655,7 +667,7 @@ class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
             case e: Throwable => throw e
           }) map {
             val isByvalueRec = if (isByname) None else Some(false)
-            expr => (expr, scope.declareValue(name, isByvalueRec, body.isInstanceOf[Lam]))
+            expr => (expr, scope.declareValue(name, isByvalueRec, bodyIsLam))
           }
         }) match {
           case R((originalExpr, sym)) =>
@@ -736,7 +748,9 @@ object JSTestBackend {
   /**
     * Represents the result of code generation.
     */
-  abstract class Result
+  abstract class Result {
+    def showFirstResult(prefixLength: Int): Unit = ()
+  }
 
   /**
     * Emitted code.
