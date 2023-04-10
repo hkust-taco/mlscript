@@ -54,7 +54,7 @@ f(0)
 //│ |#class| |A|(|y|)|{||}|↵|#let| |f| |#=| |x| |=>| |#new| |A|(|0|)|{|#fun| |bar| |#=| |x|+|y|}|↵|f|(|0|)|
 //│ Parsed: {class A(y,) {}; let f = x, => new A(0,) {fun bar = + (x,) (y,)}; f (0,)}
 //│ Parsed:
-//│ TypingUnit(NuTypeDef(class, A, (), Tup(_: Var(y)), (), TypingUnit()), NuFunDef(Some(false), f, [], Lam(Tup(_: Var(x)), New(Some((TypeName(A),0,)), TypingUnit(List(fun bar = + (x,) (y,)))))), App(Var(f), Tup(_: IntLit(0))))
+//│ TypingUnit(NuTypeDef(class, A, (), Tup(_: Var(y)), (), TypingUnit()), NuFunDef(Some(false), f, [], Lam(Tup(_: Var(x)), New(Some((TypeName(A),0,)), TypingUnit(NuFunDef(None, bar, [], App(App(Var(+), Tup(_: Var(x))), Tup(_: Var(y)))))))), App(Var(f), Tup(_: IntLit(0))))
 //│ Lifted:
 //│ TypingUnit {
 //│   class A$1(y,) {}
@@ -148,7 +148,7 @@ fun f(x,y,z) =
 //│     fun bar2 =  => ((this).par$C$1).y
 //│   }
 //│   class C$1(x, y, z,) {
-//│     fun boo =  => + (('(' new C$1_A$2(this,) {}, ')').bar1,) (+ ((C$1_B$3 (this,)).bar2,) ((this).z,),)
+//│     fun boo =  => + (+ (('(' new C$1_A$2(this,) {}, ')').bar1,) ((C$1_B$3 (this,)).bar2,),) ((this).z,)
 //│   }
 //│   fun f$1 = x, y, z, => {}
 //│ }
@@ -211,7 +211,7 @@ fun foo<T, U>(x: T): string =
 //│ TypingUnit(NuFunDef(None, foo, [TypeName(T), TypeName(U)], Lam(Tup(x: Var(T)), Asc(Blk(...), TypeName(string)))))
 //│ Lifted:
 //│ TypingUnit {
-//│   class A$1(y,): B‹T›, C (y: U,) {fun bar =  => this}
+//│   class A$1[T,U](y,): B‹T›, C (y: U,) {fun bar =  => this}
 //│   fun foo$1[T, U] = x: T, => {"rua"} : TypeName(string)
 //│ }
 
@@ -221,8 +221,8 @@ class A<T>{
     fun g: T => B => T
   }
 }
-//│ |#class| |A|‹|T|›|{|→|#class| |B|{|→|#fun| |f|#:| |T| |=>| |B| |=>| |T| |#=| |x| |=>| |y| |=>| |x|↵|#fun| |g|#:| |T| |=>| |B| |=>| |T|←|↵|}|←|↵|}|
-//│ Parsed: {class A‹T›() {class B() {fun f = x, => y, => x : Function(Tuple(List((None,Field(None,TypeName(T))))),Function(Tuple(List((None,Field(None,TypeName(B))))),TypeName(T))); fun g: [] -> T -> B -> T}}}
+//│ |#class| |A|‹|T|›|{|→|#class| |B|{|→|#fun| |f| |#=| |x| |=>| |y| |=>| |x|↵|#fun| |g|#:| |T| |=>| |B| |=>| |T|←|↵|}|←|↵|}|
+//│ Parsed: {class A‹T›() {class B() {fun f = x, => y, => x; fun g: [] -> T -> B -> T}}}
 //│ Parsed:
 //│ TypingUnit(NuTypeDef(class, A, (TypeName(T)), Tup(), (), TypingUnit(NuTypeDef(class, B, (), Tup(), (), TypingUnit(NuFunDef(None, f, [], Lam(Tup(_: Var(x)), Lam(Tup(_: Var(y)), Var(x)))), NuFunDef(None, g, [], PolyType(List(),Function(Tuple(List((None,Field(None,TypeName(T))))),Function(Tuple(List((None,Field(None,TypeName(B))))),TypeName(T))))))))))
 //│ Lifted:
@@ -270,7 +270,7 @@ fun ctx(a,b) =
 //│ TypingUnit {
 //│   class Func$1[T,U]() {fun apply = T -> U}
 //│   class Lambda$2[T,U](): Func$1 ()‹T, U› {}
-//│   class Lambda$3$3(a,): Lambda$2 () {fun apply = x, => + ((this).a,) (x,)}
+//│   class Lambda$3$3[T,U](a,): Lambda$2 () {fun apply = x, => + ((this).a,) (x,)}
 //│   fun foo$2 = f: Func$1, x, => {(f).apply (x,)}
 //│   fun ctx$1 = a, b, => {foo$2 ({new Lambda$3$3(a,) {}}, b,)}
 //│ }

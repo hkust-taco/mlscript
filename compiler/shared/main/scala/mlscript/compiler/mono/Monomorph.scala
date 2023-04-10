@@ -35,10 +35,6 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
     val info = funImpls.get(nm).get
     s"$nm: (${info._3.mkString(" X ")}) -> ${info._4} @${funDependence.get(nm).get.mkString("{", ", ", "}")}"
 
-  // private def allFunImpls: IterableOnce[(Item.FuncDecl, Item.FuncDecl)] =
-  //   funImpls.iterator.flatMap { case (name, (protoFunc, implFunc, _, _)) =>
-  //     implFunc.values.map((protoFunc, _))
-  //   }
   private val funDependence = MutMap[String, Set[String]]()
 
   val evalQueue = MutSet[String]()
@@ -75,21 +71,21 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
   
   val specializer = mono.specializer.Specializer(this)(using debug)
 
-  def addNewFunction(func: Item.FuncDecl): Unit = {
+  private def addNewFunction(func: Item.FuncDecl): Unit = {
     funImpls.addOne(func.name.name, (func, MutMap(), func.params.map(_ => BoundedExpr()), VariableValue.refresh()))
     funDependence.addOne(func.name.name, Set())
   }
 
-  def getResult(exps: List[Expr]) = mlscript.compiler.Module(exps.concat[Expr | Item](funImpls.map(x => x._2._1))
+  private def getResult(exps: List[Expr]) = mlscript.compiler.Module(exps.concat[Expr | Item](funImpls.map(x => x._2._1))
        .concat(allTypeImpls.values.map(x => x.copy(body = Isolation(Nil))))
        .concat(lamTyDefs.values)
        .concat(anonymTyDefs.values)
        .toList)
 
   /**
-   * This function monomorphizes the top-level `TypingUnit` into a `Module`.
+   * This function defunctionalizes the top-level `TypingUnit` into a `Module`.
    */
-  def monomorphize(tu: TypingUnit): Module =
+  def defunctionalize(tu: TypingUnit): Module =
     // debug.trace("MONO MODL", PrettyPrinter.show(tu)) {
       val exps = tu.entities.zipWithIndex.flatMap[Expr] {
         case (term: Term, i) =>
@@ -127,15 +123,13 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
       funImpls.foreach(
         (nm, info) => {
           debug.log(s"$nm: (${info._3.mkString(" X ")}) -> ${info._4}")
-          // updateFunc(nm)
-          // debug.log("")
         }
       )
        
        ret
     // }()
   
-  def updateFunction(crt: String): Unit = {
+  private def updateFunction(crt: String): Unit = {
     debug.log(s"evaluating $crt, rests: ${evalQueue}")
     val cnt = evalCnt.get(crt).getOrElse(0)
     if(cnt <= 10){
@@ -153,7 +147,7 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
   /**
    * This function monomorphizes the nested `TypingUnit` into a `Isolation`.
    */
-  def monomorphizeBody(body: TypingUnit): Isolation =
+  private def trans2Expr(body: TypingUnit): Isolation =
     debug.trace("MONO BODY", PrettyPrinter.show(body)) {
       Isolation(body.entities.flatMap[Expr | Item.FuncDecl | Item.FuncDefn] {
         case term: Term =>
@@ -167,7 +161,7 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
       })
     }(identity)
   
-  def monomorphizeCall(name: String, args: List[BoundedExpr])(using evalCtx: Context, callingStack: List[String]): BoundedExpr = {
+  def getFuncRetVal(name: String, args: List[BoundedExpr])(using evalCtx: Context, callingStack: List[String]): BoundedExpr = {
     debug.trace[BoundedExpr]("SPEC CALL", name + args.mkString(" with (", ", ", ")")) {
       if(funImpls.contains(name)){
         val (funcdecl, mps, oldArgs, oldVs) = funImpls.get(name).get
@@ -187,7 +181,6 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
               updateFunction(name)
             }
             else{
-              // val newA = (oldArgs zip nArgs).find(x => x._1.compare(x._2)).get
               debug.log(s"find finer args")
               evalQueue.add(name)
             }
@@ -251,20 +244,20 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
   private def generateSignature(staticArguments: List[Expr])(using MonomorphContext): String =
     staticArguments.iterator.map(infer(_, None)).mkString("__", "_", "")
 
-  def specializeClassCall(name: String, args: List[Expr])(using MonomorphContext): Option[Expr] =
+  private def specializeClassCall(name: String, args: List[Expr])(using MonomorphContext): Option[Expr] =
     debug.trace("SPEC CALL", "class " + name + args.mkString(" with (", ", ", ")")) {
       ???
     }(_.fold(Debug.noPostTrace)(identity))
 
-  def specializeNew(name: String, args: List[BoundedExpr]): MonoValue = 
-    debug.trace("SPEC NEW", s"$name($args)"){
-    if(allTypeImpls.contains(name)){
-      val tp = allTypeImpls.get(name).get
+  def createObjValue(tpName: String, args: List[BoundedExpr]): MonoValue = 
+    debug.trace("SPEC NEW", s"$tpName($args)"){
+    if(allTypeImpls.contains(tpName)){
+      val tp = allTypeImpls.get(tpName).get
       val ags = (tp.params.map(_._2.name) zip args)
-      val ret = ObjectValue(name, MutMap(ags: _*))
+      val ret = ObjectValue(tpName, MutMap(ags: _*))
       val pars = tp.parents.map((supTp, prms) => {
-        val evArgs = prms.map(specializer.evaluate(_)(using Context() ++ (("this"->BoundedExpr(ret)) :: ags), List(name)).expValue)
-        BoundedExpr(specializeNew(supTp.base.name, evArgs))
+        val evArgs = prms.map(specializer.evaluate(_)(using Context() ++ (("this"->BoundedExpr(ret)) :: ags), List(tpName)).expValue)
+        BoundedExpr(createObjValue(supTp.base.name, evArgs))
       })
       val parObjs = pars.zipWithIndex.map((e, i) => s"sup$$$i" -> e)
       debug.log(s"par objs: $parObjs")
@@ -274,7 +267,7 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
     else ???
   }(identity)
 
-  def specializeSelect(obj: ObjectValue, field: String): BoundedExpr = 
+  def getFieldVal(obj: ObjectValue, field: String): BoundedExpr = 
     debug.trace("SPEC SEL", s"$obj :: $field"){
     if(allTypeImpls.contains(obj.name)){
       val tpDef = allTypeImpls.get(obj.name).get
@@ -299,7 +292,7 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
           if (x._1.matches("sup\\$[0-9]+")) {
             x._2.asValue match{
               case Some(o: ObjectValue) => 
-                Some(specializeSelect(o, field))
+                Some(getFieldVal(o, field))
               case _ => None
             }
           }
@@ -311,74 +304,6 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
       ???
     }
   }(identity)
-
-  // TODO: Remove `Option[Expr]` by passing the callee.
-  def specializeFunctionCall(name: String, args: List[Expr])(using MonomorphContext): Option[Expr] =
-    debug.trace("SPEC CALL", "function " + name + args.mkString(" with (", ", ", ")")) {
-      ???
-    }(_.fold(Debug.noPostTrace)(identity))
-
-  def specializeExpr(expr: Expr)(using ctx: Context, typeContext: MonomorphContext): Expr =
-    debug.trace[Expr]("SPEC EXPR", expr, "in context", ctx) {
-      ???
-    }(identity)
-
-  /**
-   * This function monomorphizes the given class with given arguments.
-   * @return specialized class name and all included classes
-   */
-  def specializeTypeDef(
-      name: String,
-      args: List[Expr],
-      body: Isolation
-  ): Item.TypeDecl =
-    debug.trace[Item.TypeDecl]("SPEC TDEF", name + args.mkString("(", ", ", ")") + " {\n" + body + "\n}") {
-      tyImpls.get(name) match {
-        case Some(classSpecMap) =>
-          val Item.TypeDecl(_, kind, typeParams, params, parents, body) = classSpecMap.prototype
-          val implClassName: Expr.Ref = Expr.Ref(s"${name}_${classSpecMap.size}")
-          Item.TypeDecl(implClassName, kind, typeParams, params, parents, body)
-          // FIXME: Logic here does not work.
-        case None => throw new MonomorphError(s"cannot specialize undeclared type $name")
-      }
-    }(identity)
-
-  def specializeFunction(funcProto: Item.FuncDecl)(using ctx: Context, typeContext: MonomorphContext): Item.FuncDecl =
-    Item.FuncDecl(funcProto.name, funcProto.params, specializeExpr(funcProto.body))
-
-  def specializeClass(classProto: Item.TypeDecl)(using ctx: Context, typeContext: MonomorphContext): Isolation =
-    debug.trace("SPEC CLASS", s"class ${classProto.name.name}", "in value context", ctx) {
-      Isolation(classProto.body.items.map {
-        case expr: Expr => specializeExpr(expr)
-        case funcDecl: Item.FuncDecl => specializeFunction(funcDecl)
-        case other => throw MonomorphError(s"$other is not supported")
-      })
-    }(identity)
-
-  def infer(expr: Expr, compatiableType: Option[DataType])(using context: MonomorphContext): DataType =
-    debug.trace("INFER", expr.toString) {
-      expr match
-        case Expr.Ref(name) => context.get(name).getOrElse(DataType.Unknown)
-        case other => super.infer(expr, compatiableType)
-    }(_.toString)
-
-  // Shorthand implicit conversions.
-
-  // private given Conversion[String, Expr.Ref] with
-  //   def apply(name: String): Expr.Ref = Expr.Ref(name)
-
-  // private given Conversion[Var, Expr.Ref] with
-  //   def apply(nme: Var): Expr.Ref = Expr.Ref(nme.name)
-
-  // private given Conversion[TypeName, Expr.Ref] with
-  //   def apply(nme: TypeName): Expr.Ref = Expr.Ref(nme.name)
-
-  // private given Conversion[TypeDefKind, TypeDeclKind] with
-  //   import mlscript.{Als, Cls, Trt}
-  //   def apply(kind: TypeDefKind): TypeDeclKind = kind match
-  //     case Als => TypeDeclKind.Alias
-  //     case Cls => TypeDeclKind.Class
-  //     case Trt => TypeDeclKind.Trait
 
 object Monomorph:
   class SpecializationMap[T <: Item](val prototype: T):

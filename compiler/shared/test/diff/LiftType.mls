@@ -8,7 +8,7 @@ class CTX{
 //│ |#class| |CTX|{|→|#class| |A| |{||}|↵|#fun| |foo|(|f|#:| |A| |=>| |A|)|#:| |(|A| |=>| |A|)| |=>| |A| |#=| |f|(|#new| |A|)|←|↵|}|
 //│ Parsed: {class CTX() {class A() {}; fun foo = f: A, => A, => f (new A() {},) : Function(Tuple(List((None,Field(None,Function(Tuple(List((None,Field(None,TypeName(A))))),TypeName(A)))))),TypeName(A))}}
 //│ Parsed:
-//│ TypingUnit(NuTypeDef(class, CTX, (), Tup(), (), TypingUnit(NuTypeDef(class, A, (), Tup(), (), TypingUnit()), NuFunDef(None, foo, [], Lam(Tup(f: Lam(Tup(_: Var(A)), Var(A))), Asc(App(Var(f), Tup(_: New(Some((TypeName(A),)), TypingUnit(List())))), Function(Tuple(List((None,Field(None,Function(Tuple(List((None,Field(None,TypeName(A))))),TypeName(A)))))),TypeName(A))))))))
+//│ TypingUnit(NuTypeDef(class, CTX, (), Tup(), (), TypingUnit(NuTypeDef(class, A, (), Tup(), (), TypingUnit()), NuFunDef(None, foo, [], Lam(Tup(f: Lam(Tup(_: Var(A)), Var(A))), Asc(App(Var(f), Tup(_: New(Some((TypeName(A),)), TypingUnit()))), Function(Tuple(List((None,Field(None,Function(Tuple(List((None,Field(None,TypeName(A))))),TypeName(A)))))),TypeName(A))))))))
 //│ Lifted:
 //│ TypingUnit {
 //│   class CTX$1_A$2(par$CTX$1,) {}

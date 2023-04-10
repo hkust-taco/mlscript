@@ -634,7 +634,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
     val nmsInTrm = rstTrms.flatMap(grepFieldsInTrm)
     val clsInfos = newCls.map(x => {
       val infos = collectClassInfo(x, newCls.map(_.nme).toSet)(using emptyCtx)
-      infos.capturedParams = infos.capturedParams.intersect(ctx.addV(newClsNms ++ newFuncNms ++ nmsInTrm -- globFuncs.keySet ++ outer.map(_ => Var("this"))))
+      infos.capturedParams = infos.capturedParams.intersect(ctx.addT(infos.capturedParams.tSet).addV(newClsNms ++ newFuncNms ++ nmsInTrm -- globFuncs.keySet ++ outer.map(_ => Var("this"))))
       x.nme.name -> infos}).toMap
     val funcInfos = 
       newFuncs.map(x => x.nme.name -> (x.rhs match {

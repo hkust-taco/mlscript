@@ -46,14 +46,14 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
         val args = nArgs.map(_.expValue)
         val retV = cal.getValue.map{
           case FunctionValue(name, prm, ctxArg) => 
-            val callResult = monoer.monomorphizeCall(name, ctxArg.unzip._2 ++ args)
+            val callResult = monoer.getFuncRetVal(name, ctxArg.unzip._2 ++ args)
             // debug.log(s"call result: $callResult")
             callResult
           case o: ObjectValue => 
-            val sel = monoer.specializeSelect(o, "apply")
+            val sel = monoer.getFieldVal(o, "apply")
             sel.asValue match
               case Some(FunctionValue(name, prm, ctx)) => 
-                val callResult = monoer.monomorphizeCall(name, ctx.unzip._2 ++ args)
+                val callResult = monoer.getFuncRetVal(name, ctx.unzip._2 ++ args)
                 // debug.log(s"call result: $callResult")
                 callResult
               case _ => BoundedExpr(UnknownValue())
@@ -74,7 +74,7 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
           case ObjectValue(_, flds) if flds.contains(field.name) =>
             flds.get(field.name).get 
           case obj: ObjectValue => 
-            monoer.specializeSelect(obj, field.name)
+            monoer.getFieldVal(obj, field.name)
           case _ => 
             BoundedExpr(UnknownValue())
         }.fold(BoundedExpr())(_ ++ _)
@@ -97,7 +97,7 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
       case Expr.New(apply, arguments) => 
         val nArgs = arguments.map(evaluate(_))
         val args = nArgs.map(_.expValue)
-        val retV = BoundedExpr(monoer.specializeNew(apply.name, args))
+        val retV = BoundedExpr(monoer.createObjValue(apply.name, args))
         val retExp = Expr.New(apply, nArgs)
         retExp.expValue = retV
         retExp
@@ -178,7 +178,7 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
         val branches = ArrayBuffer[CaseBranch]()
         receiver.expValue.getValue.foreach{
           case o@ObjectValue(name, _) => 
-            val selValue = monoer.specializeSelect(o, field.name)
+            val selValue = monoer.getFieldVal(o, field.name)
             val branchExp = selValue.asValue match{
               // foo.f is a member function
               case Some(f: FunctionValue) =>
@@ -189,7 +189,7 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
                 val scrut = Expr.Select(Expr.Ref("obj"), field)
                 val brchs = selValue.getValue.toList.map(_.asInstanceOf[ObjectValue])
                   .map(o => {
-                    val lambdaMemFunc = monoer.specializeSelect(o, "apply").asValue.get.asInstanceOf[FunctionValue]
+                    val lambdaMemFunc = monoer.getFieldVal(o, "apply").asValue.get.asInstanceOf[FunctionValue]
                     val caseVarNm: Expr.Ref = Expr.Ref(s"obj$$${o.name}")
                     CaseBranch.Instance(Expr.Ref(o.name), caseVarNm, 
                       Expr.Apply(Expr.Ref(lambdaMemFunc.name), caseVarNm :: nArgs))

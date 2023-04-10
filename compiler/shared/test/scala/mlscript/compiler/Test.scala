@@ -32,7 +32,7 @@ class DiffTestCompiler extends DiffTests {
       val treeDebug = new TreeDebug()
       try{
         val monomorph = new Monomorph(treeDebug)
-        val monomorphized = monomorph.monomorphize(rstUnit)
+        val monomorphized = monomorph.defunctionalize(rstUnit)
         outputBuilder ++= "\nDefunc result: \n"
         outputBuilder ++= ExprPrinter.print(monomorphized)
         outputBuilder ++= "\n"

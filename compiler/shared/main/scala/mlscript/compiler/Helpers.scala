@@ -125,7 +125,7 @@ object Helpers:
             case AppliedType(TypeName(name), _) => name
             case TypeName(name)                 => name
           Expr.New(TypeName(typeName), toFuncArgs(args).map(term2Expr).toList)
-        // case Blk(unit) => Expr.Isolated(monomorphizeBody(TypingUnit(unit)))
+        // case Blk(unit) => Expr.Isolated(trans2Expr(TypingUnit(unit)))
         case If(body, alternate) => body match
           case IfThen(condition, consequent) =>
             Expr.IfThenElse(
