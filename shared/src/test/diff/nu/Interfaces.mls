@@ -14,7 +14,9 @@ trait Oth extends Test {
     fun cool : int -> bool
 }
 //│ trait Oth() {
+//│   fun bar: bool -> bool
 //│   fun cool: int -> bool
+//│   fun foo: int
 //│ }
 
 
@@ -33,9 +35,9 @@ class F extends Oth {
     fun bar(x) = x
 }
 //│ class F() {
-//│   fun bar: forall 'a. 'a -> 'a
+//│   fun bar: bool -> bool
 //│   fun cool: int -> bool
-//│   fun foo: 2
+//│   fun foo: int
 //│ }
 
 let c = C()
@@ -45,28 +47,37 @@ c.bar(true)
 //│ bool
 
 // FIXME
-c: Test
-//│ /!!!\ Uncaught error: java.lang.ClassCastException: class mlscript.NuTypeDefs$TypedNuTrt cannot be cast to class mlscript.NuTypeDefs$TypedNuCls (mlscript.NuTypeDefs$TypedNuTrt and mlscript.NuTypeDefs$TypedNuCls are in unnamed module of loader sbt.internal.LayeredClassLoader @1a8f3d9d)
+let c1: Test = C()
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.50: 	let c1: Test = C()
+//│ ║        	               ^^^
+//│ ╟── application of type `C` is not an instance of type `Test`
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.50: 	let c1: Test = C()
+//│ ╙──      	        ^^^^
+//│ let c1: Test
 
 :e
 class E1 extends Test {
     fun foo = 2
 }
-trait TE1 extends C
 //│ ╔══[ERROR] Member bar is declared in parent trait but not implemented
-//│ ║  l.52: 	class E1 extends Test {
+//│ ║  l.61: 	class E1 extends Test {
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.53: 	    fun foo = 2
+//│ ║  l.62: 	    fun foo = 2
 //│ ║        	^^^^^^^^^^^^^^^
-//│ ║  l.54: 	}
+//│ ║  l.63: 	}
 //│ ╙──      	^
-//│ ╔══[ERROR] trait can only inherit traits
-//│ ║  l.55: 	trait TE1 extends C
-//│ ╙──      	                  ^
 //│ class E1() {
 //│   fun bar: bool -> bool
 //│   fun foo: int
 //│ }
+
+:e
+trait TE1 extends C
+//│ ╔══[ERROR] trait can only inherit traits
+//│ ║  l.77: 	trait TE1 extends C
+//│ ╙──      	                  ^
 //│ trait TE1()
 
 :e
@@ -75,13 +86,13 @@ class E2 extends Test {
     fun bar(x) = x
 }
 //│ ╔══[ERROR] Type mismatch in definition of method foo:
-//│ ║  l.74: 	    fun foo = true
+//│ ║  l.85: 	    fun foo = true
 //│ ║        	        ^^^^^^^^^^
 //│ ╟── reference of type `true` is not an instance of type `int`
-//│ ║  l.74: 	    fun foo = true
+//│ ║  l.85: 	    fun foo = true
 //│ ║        	              ^^^^
 //│ ╟── but it flows into definition of method foo with expected type `int`
-//│ ║  l.74: 	    fun foo = true
+//│ ║  l.85: 	    fun foo = true
 //│ ║        	        ^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.5: 	    fun foo: int
@@ -98,15 +109,15 @@ class E2 extends Test {
 :e
 class D extends Test[int], Test[bool]
 //│ ╔══[ERROR] Unsupported parent specification
-//│ ║  l.99: 	class D extends Test[int], Test[bool]
-//│ ╙──      	                ^^^^^^^^^
+//│ ║  l.110: 	class D extends Test[int], Test[bool]
+//│ ╙──       	                ^^^^^^^^^
 //│ ╔══[ERROR] Unsupported parent specification
-//│ ║  l.99: 	class D extends Test[int], Test[bool]
-//│ ╙──      	                           ^^^^^^^^^^
+//│ ║  l.110: 	class D extends Test[int], Test[bool]
+//│ ╙──       	                           ^^^^^^^^^^
 //│ class D()
 
 
-// FIXME
+
 trait Base: A | B
 class A
 class B
@@ -118,17 +129,17 @@ class B
 // FIXME
 let b: Base = A()
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.119: 	let b: Base = A()
+//│ ║  l.130: 	let b: Base = A()
 //│ ║         	              ^^^
 //│ ╟── application of type `A` is not an instance of type `Base`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.119: 	let b: Base = A()
+//│ ║  l.130: 	let b: Base = A()
 //│ ╙──       	       ^^^^
 //│ let b: Base
 
 // FIXME
 b: Base & (A | B)
-//│ /!!!\ Uncaught error: java.lang.ClassCastException: class mlscript.NuTypeDefs$TypedNuTrt cannot be cast to class mlscript.NuTypeDefs$TypedNuCls (mlscript.NuTypeDefs$TypedNuTrt and mlscript.NuTypeDefs$TypedNuCls are in unnamed module of loader sbt.internal.LayeredClassLoader @1a8f3d9d)
+//│ /!!!\ Uncaught error: java.lang.ClassCastException: class mlscript.NuTypeDefs$TypedNuTrt cannot be cast to class mlscript.NuTypeDefs$TypedNuCls (mlscript.NuTypeDefs$TypedNuTrt and mlscript.NuTypeDefs$TypedNuCls are in unnamed module of loader sbt.internal.LayeredClassLoader @6d580313)
 
 
 // FIXME

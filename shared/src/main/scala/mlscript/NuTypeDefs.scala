@@ -658,12 +658,14 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                         S(p, v, args)
                       case p =>
                         err(msg"Unsupported parent specification", p.toLoc) // TODO
+                        // support type application
                         N
                     }
 
                     ctx ++= paramSymbols
                     ctx += "this" -> VarSymbol(thisTV, Var("this"))
 
+                    // inherit traits
                     def inherit(parents: Ls[ParentSpec], superType: ST, members: Ls[NuMember])
                           : (ST, Ls[NuMember]) =
                         parents match {
@@ -685,10 +687,10 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       inherit(parentSpecs, TopType, Nil)
 
                     val ttu = typeTypingUnit(td.body, topLevel = false)
-                    val trtMems = baseMems // ? what is ttu ++ ttu.entities
-                    val mems = typedSignatureMembers.toMap // ? ++ trtMems.map(d => d.name -> d).toMap
+                    val trtMems = baseMems // ? [what is ttu] ++ ttu.entities
+                    val mems = typedSignatureMembers.toMap ++ trtMems.map(d => d.name -> d).toMap
 
-                    TypedNuTrt(outerCtx.lvl, td, ttu, tparams, mems, TopType, None) -> Nil
+                    TypedNuTrt(outerCtx.lvl, td, ttu, tparams, mems, thisType, None) -> Nil
                   }
                   
                 case Als =>
