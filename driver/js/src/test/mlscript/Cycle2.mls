@@ -1,5 +1,5 @@
 import "Cycle1.mls"
 
-class A(x: int) {}
+fun g(x: int): int = Cycle1.f(x)
 
-let a = Cycle1.f(42)
+log(g(42))

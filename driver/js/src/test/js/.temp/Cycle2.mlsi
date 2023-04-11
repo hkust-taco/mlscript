@@ -1,0 +1,6 @@
+import "Cycle1.mls"
+declare module Cycle2() {
+  fun g: (x: int,) -> int
+  unit
+  
+}

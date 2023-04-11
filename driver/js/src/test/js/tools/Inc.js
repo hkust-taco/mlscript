@@ -4,4 +4,6 @@ export const Inc = new class Inc {
   inc(x) {
     return x + 1;
   }
+  $init() {}
 };
+Inc.$init();

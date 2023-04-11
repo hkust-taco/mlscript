@@ -5,7 +5,7 @@ import js.JSConverters._
 import mlscript.utils._
 import mlscript._
 import mlscript.utils.shorthands._
-import scala.collection.mutable.{ListBuffer,Map => MutMap}
+import scala.collection.mutable.{ListBuffer,Map => MutMap, Set => MutSet}
 import mlscript.codegen._
 import mlscript.{NewLexer, NewParser, ErrorReport, Origin, Diagnostic}
 
@@ -27,6 +27,8 @@ class Driver(options: DriverOptions) {
     def debugOutput(msg: => Str): Unit =
       println(msg)
   }
+
+  private val importedModule = MutSet[String]()
 
   def execute: Unit =
     try {
@@ -84,32 +86,30 @@ class Driver(options: DriverOptions) {
     val moduleName = prefixName.substring(prefixName.lastIndexOf("/") + 1)
 
     if (stack.contains(filename)) {
-      throw // TODO: how to handle it?
-        ErrorReport(Ls((s"cycle dependence on $filename", None)), Diagnostic.Compilation)
-      // if (stack.last === filename) // it means a file is trying to import itself!
-      //   throw
-      //     ErrorReport(Ls((s"can not import $filename itself", None)), Diagnostic.Compilation)
-      // else readFile(filename) match {
-      //   case Some(content) =>
-      //     parse(filename, content) match {
-      //       case tu => {
-      //         val tpd = typer.typeTypingUnit(tu, topLevel = true)
-      //         val sim = SimplifyPipeline(tpd, all = false)(ctx)
-      //         val exp = typer.expandType(sim)(ctx)
-      //         val expStr =
-      //           s"declare module $moduleName() {\n" +
-      //             exp.showIn(ShowCtx.mk(exp :: Nil), 0).splitSane('\n').toIndexedSeq.map(line => s"  $line").reduceLeft(_ + "\n" + _) +
-      //           "\n}"
+      if (stack.last === filename) // it means a file is trying to import itself!
+        throw
+          ErrorReport(Ls((s"can not import $filename itself", None)), Diagnostic.Compilation)
+      else readFile(filename) match {
+        case Some(content) =>
+          parse(filename, content) match {
+            case tu => {
+              val tpd = typer.typeTypingUnit(tu, topLevel = true)
+              val sim = SimplifyPipeline(tpd, all = false)(ctx)
+              val exp = typer.expandType(sim)(ctx)
+              val expStr =
+                s"declare module $moduleName() {\n" +
+                  exp.showIn(ShowCtx.mk(exp :: Nil), 0).splitSane('\n').toIndexedSeq.map(line => s"  $line").reduceLeft(_ + "\n" + _) +
+                "\n}"
 
-      //         val relatedPath = path.substring(options.path.length)
-      //         writeFile(s"${options.outputDir}/.temp/$relatedPath", s"$prefixName.mlsi", expStr)
-      //         true
-      //       }
-      //     }
-      //   case _ =>
-      //     throw
-      //       ErrorReport(Ls((s"can not open file $filename", None)), Diagnostic.Compilation)
-      // }
+              val relatedPath = path.substring(options.path.length)
+              writeFile(s"${options.outputDir}/.temp/$relatedPath", s"$prefixName.mlsi", expStr)
+              true
+            }
+          }
+        case _ =>
+          throw
+            ErrorReport(Ls((s"can not open file $filename", None)), Diagnostic.Compilation)
+      }
     }
     else {
       System.out.println(s"compiling $filename...")
@@ -135,7 +135,9 @@ class Driver(options: DriverOptions) {
                 var newCtx: Ctx = Ctx.init
                 val newExtrCtx: Opt[typer.ExtrCtx] = N
                 val newVars: Map[Str, typer.SimpleType] = Map.empty
-                compile(s"$path$dp", true)(newCtx, raise, newExtrCtx, newVars, stack :+ filename)
+                val newFilename = s"$path$dp"
+                importedModule += newFilename
+                compile(newFilename, true)(newCtx, raise, newExtrCtx, newVars, stack :+ filename)
               })
               val mtime = getModificationTime(filename)
               val imtime = getModificationTime(s"${options.outputDir}/.temp/$prefixName.mlsi")
@@ -176,7 +178,7 @@ class Driver(options: DriverOptions) {
 
                 val relatedPath = path.substring(options.path.length)
                 writeFile(s"${options.outputDir}/.temp/$relatedPath", s"$prefixName.mlsi", interfaces)
-                generate(Pgrm(tu.entities), moduleName, importsList, prefixName, s"${options.outputDir}/$relatedPath", exported)
+                generate(Pgrm(tu.entities), moduleName, importsList, prefixName, s"${options.outputDir}/$relatedPath", exported || importedModule(filename))
                 true
               }
               else false

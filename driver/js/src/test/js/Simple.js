@@ -3,17 +3,12 @@ import { Opened } from "./Opened.js"
 function log(x) {
   return console.info(x);
 }
-class Simple {
+const Simple = new class Simple {
   #A;
   #C;
   #a;
   get a() { return this.#a; }
   constructor() {
-    const self = this;
-    this.#a = self.A(42);
-    const a = this.#a;
-    log(a.foo);
-    Opened.hello(a.n);
   }
   B(base) {
     const outer = this;
@@ -59,5 +54,12 @@ class Simple {
     }
     return this.#A;
   }
-}
-new Simple;
+  $init() {
+    const self = this;
+    this.#a = self.A(42);
+    const a = this.#a;
+    log(a.foo);
+    Opened.hello(a.n);
+  }
+};
+Simple.$init();

@@ -5,8 +5,6 @@ function log(x) {
 }
 export const Opened = new class Opened {
   constructor() {
-    const self = this;
-    self.hello(114513);
   }
   hello(x) {
     return (log([
@@ -14,4 +12,9 @@ export const Opened = new class Opened {
       Inc.inc(x)
     ]));
   }
+  $init() {
+    const self = this;
+    self.hello(114513);
+  }
 };
+Opened.$init();
