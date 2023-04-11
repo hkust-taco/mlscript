@@ -3,7 +3,7 @@ import { Inc } from "./tools/Inc.js"
 function log(x) {
   return console.info(x);
 }
-export const Opened = (() => new class Opened {
+export const Opened = new class Opened {
   constructor() {
     const self = this;
     self.hello(114513);
@@ -14,4 +14,4 @@ export const Opened = (() => new class Opened {
       Inc.inc(x)
     ]));
   }
-})();
+};

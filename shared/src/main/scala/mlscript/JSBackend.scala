@@ -1011,7 +1011,7 @@ class JSCompilerBackend extends JSBackend(allowUnresolvedSymbols = true) {
     val moduleDecl = translateTopModuleDeclaration(topModule, false)(topLevelScope)
     val ins =
       if (exported)
-        JSExport(JSConstDecl(topModuleName, JSImmEvalFn(N, Nil, L(JSNew(JSClassExpr(moduleDecl))), Nil))) :: Nil
+        JSExport(JSConstDecl(topModuleName, JSNew(JSClassExpr(moduleDecl)))) :: Nil
       else moduleDecl :: JSNew(JSIdent(topModuleName)).stmt :: Nil
 
     SourceCode.fromStmts(polyfill.emit() ++ ins).toLines
