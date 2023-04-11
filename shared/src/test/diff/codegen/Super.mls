@@ -12,9 +12,11 @@ mixin Foo0 {
 //│ }
 //│ // Prelude
 //│ let res;
-//│ let typing_unit = {
-//│   cache: {},
+//│ class TypingUnit {
+//│   constructor() {
+//│   }
 //│   Foo0(base) {
+//│     const outer = this;
 //│     return (class Foo0 extends base {
 //│       #foo0;
 //│       get foo0() { return this.#foo0; }
@@ -25,7 +27,8 @@ mixin Foo0 {
 //│       }
 //│     });
 //│   }
-//│ };
+//│ }
+//│ const typing_unit = new TypingUnit;
 //│ globalThis.Foo0 = typing_unit.Foo0;
 //│ // End of generated code
 
@@ -40,9 +43,11 @@ mixin Foo1 {
 //│   let foo1: 'foo0
 //│ }
 //│ // Prelude
-//│ let typing_unit1 = {
-//│   cache: {},
+//│ class TypingUnit1 {
+//│   constructor() {
+//│   }
 //│   Foo1(base) {
+//│     const outer = this;
 //│     return (class Foo1 extends base {
 //│       #foo0;
 //│       #foo1;
@@ -57,7 +62,8 @@ mixin Foo1 {
 //│       }
 //│     });
 //│   }
-//│ };
+//│ }
+//│ const typing_unit1 = new TypingUnit1;
 //│ globalThis.Foo1 = typing_unit1.Foo1;
 //│ // End of generated code
 
@@ -80,16 +86,18 @@ mixin Foo2 {
   fun foo2 = super
 }
 //│ ╔══[ERROR] Illegal use of `super`
-//│ ║  l.80: 	  fun foo2 = super
+//│ ║  l.86: 	  fun foo2 = super
 //│ ╙──      	             ^^^^^
 //│ mixin Foo2() {
 //│   super: 'super
 //│   fun foo2: 'super
 //│ }
 //│ // Prelude
-//│ let typing_unit4 = {
-//│   cache: {},
+//│ class TypingUnit4 {
+//│   constructor() {
+//│   }
 //│   Foo2(base) {
+//│     const outer = this;
 //│     return (class Foo2 extends base {
 //│       constructor(...rest) {
 //│         super(...rest);
@@ -99,7 +107,8 @@ mixin Foo2 {
 //│       }
 //│     });
 //│   }
-//│ };
+//│ }
+//│ const typing_unit4 = new TypingUnit4;
 //│ globalThis.Foo2 = typing_unit4.Foo2;
 //│ // End of generated code
 //│ Syntax error:
@@ -112,21 +121,25 @@ module Test0 extends Foo2
 //│   fun foo2: anything
 //│ }
 //│ // Prelude
-//│ let typing_unit5 = {
-//│   cache: {},
+//│ class TypingUnit5 {
+//│   #Test0;
+//│   constructor() {
+//│   }
 //│   get Test0() {
-//│     if (this.cache.Test0 === undefined) {
+//│     const outer = this;
+//│     if (this.#Test0 === undefined) {
 //│       class Test0 extends Foo2(Object) {
 //│         constructor() {
 //│           super();
 //│         }
 //│       }
-//│       this.cache.Test0 = new Test0();
-//│       this.cache.Test0["class"] = Test0;
+//│       this.#Test0 = new Test0();
+//│       this.#Test0.class = Test0;
 //│     }
-//│     return this.cache.Test0;
+//│     return this.#Test0;
 //│   }
-//│ };
+//│ }
+//│ const typing_unit5 = new TypingUnit5;
 //│ globalThis.Test0 = typing_unit5.Test0;
 //│ // End of generated code
 //│ Runtime error:

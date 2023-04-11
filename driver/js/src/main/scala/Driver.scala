@@ -76,13 +76,8 @@ class Driver(options: DriverOptions) {
           import fastparse.Parsed.{Success, Failure}
 
           val moduleName = prefixName.substring(prefixName.lastIndexOf("/") + 1)
-          val wrapped =
-            if (!exported) content
-            else s"module $moduleName() {\n" +
-                    content.splitSane('\n').toIndexedSeq.map(line => s"  $line").reduceLeft(_ + "\n" + _) +
-                  "\n}"
-          val lines = wrapped.splitSane('\n').toIndexedSeq
-          val fph = new mlscript.FastParseHelpers(wrapped, lines)
+          val lines = content.splitSane('\n').toIndexedSeq
+          val fph = new mlscript.FastParseHelpers(content, lines)
           val origin = Origin(filename, 1, fph)
           val lexer = new NewLexer(origin, throw _, dbg = false)
           val tokens = lexer.bracketedTokens
@@ -119,6 +114,7 @@ class Driver(options: DriverOptions) {
               if (options.force || needRecomp || imtime.isEmpty || mtime.compareTo(imtime) >= 0) {
                 def importModule(modulePath: String): Unit = {
                   val filename = s"${options.outputDir}/.temp/$modulePath.mlsi"
+                  val moduleName = modulePath.substring(modulePath.lastIndexOf("/") + 1)
                   readFile(filename) match {
                     case Some(content) => {
                       val lines = content.splitSane('\n').toIndexedSeq
@@ -153,14 +149,18 @@ class Driver(options: DriverOptions) {
                 val tpd = typer.typeTypingUnit(tu, topLevel = true)
                 val sim = SimplifyPipeline(tpd, all = false)(ctx)
                 val exp = typer.expandType(sim)(ctx)
+                val wrapped =
+                  s"module $moduleName() {\n" +
+                    exp.showIn(ShowCtx.mk(exp :: Nil), 0).splitSane('\n').toIndexedSeq.map(line => s"  $line").reduceLeft(_ + "\n" + _) +
+                  "\n}"
                 val expStr =
-                  if (exported) "declare " + exp.showIn(ShowCtx.mk(exp :: Nil), 0)
-                  else exp.showIn(ShowCtx.mk(exp :: Nil), 0)
+                  if (exported) "declare " + wrapped
+                  else wrapped
                 val interfaces = importsList.map(_.toString).foldRight(expStr)((imp, itf) => s"$imp\n$itf")
 
                 val relatedPath = path.substring(options.path.length)
                 writeFile(s"${options.outputDir}/.temp/$relatedPath", s"$prefixName.mlsi", interfaces)
-                generate(Pgrm(tu.entities), importsList, prefixName, s"${options.outputDir}/$relatedPath", exported)
+                generate(Pgrm(tu.entities), moduleName, importsList, prefixName, s"${options.outputDir}/$relatedPath", exported)
                 true
               }
               else false
@@ -175,13 +175,14 @@ class Driver(options: DriverOptions) {
 
   private def generate(
     program: Pgrm,
+    moduleName: String,
     imports: Ls[Import],
     filename: String,
     outputDir: String,
     exported: Boolean
   ): Unit = {
     val backend = new JSCompilerBackend()
-    val lines = backend(program, imports, exported)
+    val lines = backend(program, moduleName, imports, exported)
     val code = lines.mkString("", "\n", "\n")
     writeFile(outputDir, s"$filename.js", code)
   }

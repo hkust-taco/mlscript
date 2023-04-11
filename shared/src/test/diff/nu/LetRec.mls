@@ -6,7 +6,8 @@ fun f(x) = x > 0 && f(x - 1)
 //│ fun f: int -> bool
 //│ // Prelude
 //│ let res;
-//│ let typing_unit = { cache: {} };
+//│ class TypingUnit {}
+//│ const typing_unit = new TypingUnit;
 //│ // Query 1
 //│ globalThis.f = function f(x) {
 //│   return x > 0 && f(x - 1);
@@ -22,7 +23,8 @@ f(12)
 let rec f(x) = x > 0 && f(x - 1)
 //│ let rec f: int -> bool
 //│ // Prelude
-//│ let typing_unit2 = { cache: {} };
+//│ class TypingUnit2 {}
+//│ const typing_unit2 = new TypingUnit2;
 //│ // Query 1
 //│ globalThis.f1 = function f1(x) {
 //│   return x > 0 && f1(x - 1);
@@ -41,7 +43,8 @@ let rec f() =
   f()
 //│ let rec f: () -> nothing
 //│ // Prelude
-//│ let typing_unit4 = { cache: {} };
+//│ class TypingUnit4 {}
+//│ const typing_unit4 = new TypingUnit4;
 //│ // Query 1
 //│ globalThis.f2 = function f2() {
 //│   return ((() => {
@@ -73,7 +76,8 @@ let rec f =
 f
 //│ nothing
 //│ // Prelude
-//│ let typing_unit7 = { cache: {} };
+//│ class TypingUnit7 {}
+//│ const typing_unit7 = new TypingUnit7;
 //│ // Query 1
 //│ res = f3;
 //│ // End of generated code

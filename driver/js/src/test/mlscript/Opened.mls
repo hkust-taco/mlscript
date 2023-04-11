@@ -1,3 +1,5 @@
 import "tools/Inc.mls"
 
 fun hello(x: int) = log(("hello!", Inc.inc(x)))
+
+hello(114513)

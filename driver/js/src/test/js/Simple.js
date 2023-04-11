@@ -1,51 +1,63 @@
-import { Opened } from "./Opened.js"
+import { _Opened as Opened } from "./Opened.js"
 
 function log(x) {
   return console.info(x);
 }
-function B(base) {
-  return (class B extends base {
-    constructor(...rest) {
-      super(...rest);
+class Simple {
+  #A;
+  #C;
+  #a;
+  get a() { return this.#a; }
+  constructor() {
+    const self = this;
+    this.#a = self.A(42);
+    const a = this.#a;
+    log(a.foo);
+    Opened.hello(a.n);
+  }
+  B(base) {
+    const outer = this;
+    return (class B extends base {
+      constructor(...rest) {
+        super(...rest);
+      }
+      get foo() {
+        const self = this;
+        return self.n;
+      }
+    });
+  }
+  get C() {
+    const outer = this;
+    if (this.#C === undefined) {
+      class C {
+        #b;
+        get b() { return this.#b; }
+        constructor() {
+          this.#b = 1;
+          const b = this.#b;
+        }
+      }
+      this.#C = new C();
+      this.#C.class = C;
     }
-    get foo() {
-      const self = this;
-      return self.n;
+    return this.#C;
+  }
+  get A() {
+    const outer = this;
+    if (this.#A === undefined) {
+      class A extends outer.B(Object) {
+        #n;
+        get n() { return this.#n; }
+        constructor(n) {
+          super();
+          this.#n = n;
+        }
+      };
+      this.#A = ((n) => new A(n));
+      this.#A.class = A;
     }
-  });
+    return this.#A;
+  }
 }
-(() => {
-  if (globalThis.C === undefined) {
-    class C {
-      #b;
-      get b() { return this.#b; }
-      constructor() {
-        this.#b = 1;
-        const b = this.#b;
-      }
-    }
-    globalThis.C = new C();
-    globalThis.C["class"] = C;
-  }
-  return globalThis.C;
-})();
-(() => {
-  if (globalThis.A === undefined) {
-    class A extends B(Object) {
-      #n;
-      get n() { return this.#n; }
-      constructor(n) {
-        super();
-        this.#n = n;
-      }
-    };
-    globalThis.A = ((n) => new A(n));
-    globalThis.A["class"] = A;
-  }
-  return globalThis.A;
-})();
-const C = globalThis.C;
-const A = globalThis.A;
-const a = A(42);
-log(a.foo);
-Opened.hello(a.n);
+const _Simple = new Simple;

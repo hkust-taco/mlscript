@@ -213,8 +213,6 @@ class Annots(base: 0 | 1) {
 //│ class Annots(base: 0 | 1) {
 //│   fun a: 0 | 1
 //│ }
-//│ Code generation encountered an error:
-//│   unexpected new class member a
 
 
 

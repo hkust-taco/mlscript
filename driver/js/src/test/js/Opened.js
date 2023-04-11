@@ -1,24 +1,18 @@
-import { Inc } from "./tools/Inc.js"
+import { _Inc as Inc } from "./tools/Inc.js"
 
 function log(x) {
   return console.info(x);
 }
-(() => {
-  if (globalThis.Opened === undefined) {
-    class Opened {
-      constructor() {
-      }
-      hello(x) {
-        return (log([
-          "hello!",
-          Inc.inc(x)
-        ]));
-      }
-    }
-    globalThis.Opened = new Opened();
-    globalThis.Opened["class"] = Opened;
+class Opened {
+  constructor() {
+    const self = this;
+    self.hello(114513);
   }
-  return globalThis.Opened;
-})();
-const Opened = globalThis.Opened;
-export {Opened}
+  hello(x) {
+    return (log([
+      "hello!",
+      Inc.inc(x)
+    ]));
+  }
+}
+export const _Opened = new Opened;

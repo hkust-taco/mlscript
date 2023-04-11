@@ -20,7 +20,7 @@ c.NC0
 //│ ╙──      	 ^^^^
 //│ error
 //│ res
-//│     = undefined
+//│     = [Function (anonymous)] { class: [class NC0] }
 
 
 module M0 {
@@ -37,7 +37,7 @@ M0.NC0
 //│ ╙──      	  ^^^^
 //│ error
 //│ res
-//│     = undefined
+//│     = [Function (anonymous)] { class: [class NC0] }
 
 
 module M1 {
@@ -54,5 +54,5 @@ M1.NM1
 //│ ╙──      	  ^^^^
 //│ error
 //│ res
-//│     = undefined
+//│     = NM1 { class: [class NM1] }
 

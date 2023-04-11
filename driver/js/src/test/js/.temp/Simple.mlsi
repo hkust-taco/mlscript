@@ -1,13 +1,16 @@
 import "Opened.mls"
-mixin B() {
-  this: {n: 'n}
-  fun foo: 'n
+module Simple() {
+  mixin B() {
+    this: {n: 'n}
+    fun foo: 'n
+  }
+  class A(n: int) {
+    fun foo: int
+  }
+  let a: A
+  module C() {
+    let b: 1
+  }
+  unit
+  
 }
-class A(n: int) {
-  fun foo: int
-}
-let a: A
-module C() {
-  let b: 1
-}
-unit

@@ -1,16 +1,8 @@
-(() => {
-  if (globalThis.Inc === undefined) {
-    class Inc {
-      constructor() {
-      }
-      inc(x) {
-        return x + 1;
-      }
-    }
-    globalThis.Inc = new Inc();
-    globalThis.Inc["class"] = Inc;
+class Inc {
+  constructor() {
   }
-  return globalThis.Inc;
-})();
-const Inc = globalThis.Inc;
-export {Inc}
+  inc(x) {
+    return x + 1;
+  }
+}
+export const _Inc = new Inc;
