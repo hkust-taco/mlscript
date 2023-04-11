@@ -160,6 +160,40 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   }
   
   
+  case class TypedNuTrt(
+        level: Level, td: NuTypeDef, ttu: TypedTypingUnit,
+        tparams: TyParams,
+        members: Map[Str, NuMember],
+        thisTy: ST,
+        sign: Opt[ST],
+      ) extends TypedNuTypeDef(Trt) with TypedNuTermDef
+  {
+    def decl: NuTypeDef = td
+    def kind: DeclKind = td.kind
+    def nme: TypeName = td.nme
+    def name: Str = nme.name
+    
+    def typeSignature: ST = typeSignatureOf(td, level, tparams, Nil)
+    
+    def mapPol(pol: Opt[Bool], smart: Bool)(f: (Opt[Bool], SimpleType) => SimpleType)
+          (implicit ctx: Ctx): TypedNuTrt =
+        TypedNuTrt(level, td, ttu,
+          tparams.map(tp => (tp._1, f(N, tp._2).asInstanceOf[TV], tp._3)),
+          members.mapValuesIter(_.mapPol(pol, smart)(f)).toMap,
+          f(pol.map(!_), thisTy),
+          sign.map(f(pol, _))
+        )
+    def mapPolMap(pol: PolMap)(f: (PolMap, SimpleType) => SimpleType)
+          (implicit ctx: Ctx): TypedNuTrt =
+        TypedNuTrt(level, td, ttu,
+          tparams.map(tp => (tp._1, f(pol.invar, tp._2).asInstanceOf[TV], tp._3)),
+          members.mapValuesIter(_.mapPolMap(pol)(f)).toMap,
+          f(pol.contravar, thisTy),
+          sign.map(f(pol, _))
+        )
+  }
+  
+  
   case class TypedNuCls(
         level: Level, td: NuTypeDef, ttu: TypedTypingUnit,
         tparams: TyParams, params: Ls[Var -> FieldType],
@@ -659,20 +693,22 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     assert(!typedParams.keys.exists(tparamFields.keys.toSet), ???)
                     
                     
-                    def inherit(parents: Ls[Term], superType: ST, members: Ls[NuMember])
+                    type ParentSpec = (Term, Var, Ls[Opt[Var] -> Fld])
+                    val parentSpecs: Ls[ParentSpec] = td.parents.flatMap {
+                      case v @ Var(nme) =>
+                        S(v, v, Nil)
+                      case p @ App(v @ Var(nme), Tup(args)) =>
+                        S(p, v, args)
+                      case p =>
+                        err(msg"Unsupported parent specification", p.toLoc) // TODO
+                        N
+                    }
+                    
+                    def inherit(parents: Ls[ParentSpec], superType: ST, members: Ls[NuMember])
                           : (ST, Ls[NuMember]) =
                         parents match {
-                      case p :: ps =>
+                      case (p, v @ Var(mxnNme), mxnArgs) :: ps =>
                         val newMembs = trace(s"${lvl}. Inheriting from $p") {
-                          val (v @ Var(mxnNme), mxnArgs) = p match {
-                            case v @ Var(nme) =>
-                              v -> Nil
-                            case App(v @ Var(nme), Tup(args)) =>
-                              v -> args
-                            case _ =>
-                              err(msg"Unsupported parent specification", p.toLoc) // TODO
-                              return inherit(ps, superType, members)
-                          }
                           ctx.get(mxnNme) match {
                             case S(lti: LazyTypeInfo) =>
                               lti.complete().freshen match {
@@ -757,7 +793,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     val paramMems = typedParams.map(f => NuParam(f._1, f._2, isType = false))
                     
                     val (thisType, baseMems) =
-                      inherit(td.parents, baseType, tparamMems ++ paramMems)
+                      inherit(parentSpecs, baseType, tparamMems ++ paramMems)
                     
                     ctx += "super" -> VarSymbol(thisType, Var("super"))
                     
@@ -769,6 +805,30 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     
                     val impltdMems = baseMems ++ clsMems
                     val mems = impltdMems.map(d => d.name -> d).toMap ++ typedSignatureMembers
+                    
+                    
+                    def computeInterface(parents: Ls[ParentSpec], annot: ST, members: Ls[NuMember]): (ST, Ls[NuMember]) = 
+                        parents match {
+                      case (p, v @ Var(parNme), parArgs) :: ps =>
+                        // TODO find traits in `parents`; intersect their member types and self types
+                        ctx.get(parNme) match {
+                            case S(lti: LazyTypeInfo) =>
+                              val info = lti.complete()
+                              // TODO substitute type parameters in info
+                              info match {
+                                case cls: TypedNuTrt =>
+                                  ???
+                                case _ => computeInterface(ps, annot, members)
+                              }
+                            case N => 
+                              // err(msg"Could not find definition `${parNme}`", p.toLoc)
+                              computeInterface(ps, annot, members)
+                        }
+                      case Nil => (annot, members)
+                    }
+                    val (ifaceAnnot, ifaceMembers) = computeInterface(parentSpecs, TopType, Nil)
+                    // TODO check mems against interface stuff above
+                    
                     
                     TypedNuCls(outerCtx.lvl, td, ttu,
                       tparams, typedParams, mems,

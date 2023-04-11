@@ -1,0 +1,71 @@
+:NewDefs
+
+
+// FIXME
+trait Test[A] { fun foo: A }
+//│ ╔══[ERROR] traits are not yet supported
+//│ ║  l.5: 	trait Test[A] { fun foo: A }
+//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+
+
+// FIXME
+class C extends Test[int]
+//│ ╔══[ERROR] Unsupported parent specification
+//│ ║  l.13: 	class C extends Test[int]
+//│ ╙──      	                ^^^^^^^^^
+//│ class C()
+//│ Code generation encountered an error:
+//│   unresolved symbol Test
+
+
+// TODO
+:e
+class D extends Test[int], Test[bool]
+//│ ╔══[ERROR] Unsupported parent specification
+//│ ║  l.24: 	class D extends Test[int], Test[bool]
+//│ ╙──      	                ^^^^^^^^^
+//│ ╔══[ERROR] Unsupported parent specification
+//│ ║  l.24: 	class D extends Test[int], Test[bool]
+//│ ╙──      	                           ^^^^^^^^^^
+//│ class D()
+//│ Code generation encountered an error:
+//│   unresolved symbol Test
+
+
+// FIXME
+trait Base: A | B
+class A
+class B
+//│ ╔══[ERROR] traits are not yet supported
+//│ ║  l.37: 	trait Base: A | B
+//│ ╙──      	^^^^^^^^^^
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+
+
+// FIXME
+let b: Base = A()
+//│ ╔══[ERROR] trait Base cannot be used as a type
+//│ ║  l.47: 	let b: Base = A()
+//│ ╙──      	       ^^^^
+//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed: Trt
+
+// FIXME
+b: Base & (A | B)
+//│ ╔══[ERROR] trait Base cannot be used as a type
+//│ ║  l.47: 	let b: Base = A()
+//│ ╙──      	       ^^^^
+//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed: Trt
+
+
+// FIXME
+trait Base: Foo | Bar
+class Foo[A]
+class Bar[B]
+//│ ╔══[ERROR] traits are not yet supported
+//│ ║  l.62: 	trait Base: Foo | Bar
+//│ ╙──      	^^^^^^^^^^
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+
+
+
