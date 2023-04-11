@@ -1008,13 +1008,13 @@ class JSCompilerBackend extends JSBackend(allowUnresolvedSymbols = true) {
     }
 
     val topModule = topLevelScope.declareTopModule(topModuleName, otherStmts, typeDefs, false)
-    val insName = s"_$topModuleName"
     val moduleDecl = translateTopModuleDeclaration(topModule, false)(topLevelScope)
-    val insDecl =
-      if (exported) JSExport(JSConstDecl(insName, JSNew(JSIdent(topModuleName))))
-      else JSConstDecl(insName, JSNew(JSIdent(topModuleName)))
+    val ins =
+      if (exported)
+        JSExport(JSConstDecl(topModuleName, JSImmEvalFn(N, Nil, L(JSNew(JSClassExpr(moduleDecl))), Nil))) :: Nil
+      else moduleDecl :: JSNew(JSIdent(topModuleName)).stmt :: Nil
 
-    SourceCode.fromStmts(polyfill.emit() ::: (moduleDecl :: insDecl :: Nil)).toLines
+    SourceCode.fromStmts(polyfill.emit() ++ ins).toLines
   }
 
   private def translateImport(imp: Import) = imp match {

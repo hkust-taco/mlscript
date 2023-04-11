@@ -1,4 +1,4 @@
-import { _Opened as Opened } from "./Opened.js"
+import { Opened } from "./Opened.js"
 
 function log(x) {
   return console.info(x);
@@ -60,4 +60,4 @@ class Simple {
     return this.#A;
   }
 }
-const _Simple = new Simple;
+new Simple;

@@ -1,9 +1,9 @@
-import { _Inc as Inc } from "./tools/Inc.js"
+import { Inc } from "./tools/Inc.js"
 
 function log(x) {
   return console.info(x);
 }
-class Opened {
+export const Opened = (() => new class Opened {
   constructor() {
     const self = this;
     self.hello(114513);
@@ -14,5 +14,4 @@ class Opened {
       Inc.inc(x)
     ]));
   }
-}
-export const _Opened = new Opened;
+})();
