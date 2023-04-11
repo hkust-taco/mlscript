@@ -1332,6 +1332,16 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             Option.when(!(TopType <:< thisTy))(go(thisTy)),
             mkTypingUnit(thisTy, members))(td.declareLoc)
           }
+      case TypedNuTrt(level, td, ttu, tparams, members, thisTy, sign) => 
+        ectx(tparams) |> { implicit ectx =>
+          NuTypeDef(td.kind, td.nme, td.tparams,
+            Tup(Nil),
+            N,//TODO
+            Nil,//TODO
+            N,//TODO
+            Option.when(!(TopType <:< thisTy))(go(thisTy)),
+            mkTypingUnit(thisTy, members))(td.declareLoc)
+          }
       case tf @ TypedNuFun(level, fd, bodyTy) =>
         NuFunDef(fd.isLetRec, fd.nme, Nil, R(go(tf.typeSignature)))(fd.declareLoc)
       case p: NuParam =>

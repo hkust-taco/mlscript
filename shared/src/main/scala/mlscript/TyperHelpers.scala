@@ -790,6 +790,10 @@ abstract class TyperHelpers { Typer: Typer =>
                 cls.members.valuesIterator.flatMap(childrenPolMem) ++
                 S(pol.contravar -> cls.thisTy) ++
                 S(pol.covar -> cls.instanceType)
+            case cls: TypedNuTrt =>
+              cls.tparams.iterator.map(pol.invar -> _._2) ++
+                cls.members.valuesIterator.flatMap(childrenPolMem) ++
+                S(pol.contravar -> cls.thisTy)
           }
           ents ::: tu.result.toList.map(pol -> _)
     }}
@@ -1152,6 +1156,11 @@ abstract class TyperHelpers { Typer: Typer =>
       case TypedNuCls(level, td, ttu, tparams, params, members, thisTy) =>
         tparams.iterator.foreach(tp => apply(pol.invar)(tp._2))
         params.foreach(p => applyField(pol)(p._2))
+        members.valuesIterator.foreach(applyMem(pol))
+        // thisTy.foreach(apply(pol.invar)(_))
+        apply(pol.contravar)(thisTy)
+      case TypedNuTrt(level, td, ttu, tparams, members, thisTy, sign) => 
+        tparams.iterator.foreach(tp => apply(pol.invar)(tp._2))
         members.valuesIterator.foreach(applyMem(pol))
         // thisTy.foreach(apply(pol.invar)(_))
         apply(pol.contravar)(thisTy)

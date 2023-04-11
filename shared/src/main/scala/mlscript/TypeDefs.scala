@@ -111,7 +111,7 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
     Var(clsNme.name + "#" + tparamNme.name)
   
   def clsNameToNomTag(td: NuTypeDef)(prov: TypeProvenance, ctx: Ctx): ClassTag = {
-    require((td.kind is Cls) || (td.kind is Nms), td.kind)
+    require((td.kind is Cls) || (td.kind is Nms) || (td.kind is Trt), td.kind)
     ClassTag(Var(td.nme.name),
         // ctx.allBaseClassesOf(td.nme.name)
         Set.single(TypeName("Eql")) // TODO superclasses

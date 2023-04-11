@@ -127,6 +127,13 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           TypedNuAls(level, td,
             tparams.map(tp => (tp._1, tp._2.freshenAbove(lim, rigidify).assertTV, tp._3)),
             body.freshenAbove(lim, rigidify))
+        case cls @ TypedNuTrt(level, td, ttu, tparams, members, thisTy, sign) =>
+          TypedNuTrt(level, td, ttu.freshenAbove(lim, rigidify),
+            tparams.map(tp => (tp._1, tp._2.freshenAbove(lim, rigidify).assertTV, tp._3)),
+            members.mapValuesIter(_.freshenAbove(lim, rigidify)).toMap,
+            thisTy.freshenAbove(lim, rigidify),
+            sign.map(_.freshenAbove(lim, rigidify))  // todo
+          )
       }
     val td: NuTypeDef
     val prov: TP = TypeProvenance(td.toLoc, td.describe, isType = true)
@@ -641,8 +648,48 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
               val (res, funMembers) = td.kind match {
                 
                 case Trt =>
-                  err(msg"traits are not yet supported" -> td.toLoc :: Nil)
-                  ???
+                  ctx.nest.nextLevel { implicit ctx =>
+
+                    type ParentSpec = (Term, Var, Ls[Opt[Var] -> Fld])
+                    val parentSpecs: Ls[ParentSpec] = td.parents.flatMap {
+                      case v @ Var(nme) =>
+                        S(v, v, Nil)
+                      case p @ App(v @ Var(nme), Tup(args)) =>
+                        S(p, v, args)
+                      case p =>
+                        err(msg"Unsupported parent specification", p.toLoc) // TODO
+                        N
+                    }
+
+                    ctx ++= paramSymbols
+                    ctx += "this" -> VarSymbol(thisTV, Var("this"))
+
+                    def inherit(parents: Ls[ParentSpec], superType: ST, members: Ls[NuMember])
+                          : (ST, Ls[NuMember]) =
+                        parents match {
+                          case (p, v @ Var(trtName), mxnArgs) :: ps =>
+                            ctx.get(trtName) match {
+                              case S(lti: LazyTypeInfo) => lti.complete().freshen match {
+                                case trt: TypedNuTrt =>
+                                  inherit(ps, superType & trt.thisTy, members ++ trt.members.values)
+                                case _ => 
+                                  err(msg"trait can only inherit traits", p.toLoc)
+                                  (superType, members)
+                              }
+                              case _ => (superType, members)
+                            }
+                          case Nil => (superType, members)
+                    }
+
+                    val (thisType, baseMems) =
+                      inherit(parentSpecs, TopType, Nil)
+
+                    val ttu = typeTypingUnit(td.body, topLevel = false)
+                    val trtMems = baseMems // ? what is ttu ++ ttu.entities
+                    val mems = typedSignatureMembers.toMap // ? ++ trtMems.map(d => d.name -> d).toMap
+
+                    TypedNuTrt(outerCtx.lvl, td, ttu, tparams, mems, TopType, None) -> Nil
+                  }
                   
                 case Als =>
                   
@@ -739,6 +786,9 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                                   val bodyMems = mxn.ttu.entities
                                   
                                   paramMems ++ bodyMems
+                                
+                                case trt: TypedNuTrt =>
+                                  Nil
                                   
                                 case cls: TypedNuCls =>
                                   err(msg"Class inheritance is not supported yet (use mixins)", p.toLoc) // TODO
@@ -816,10 +866,13 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                               val info = lti.complete()
                               // TODO substitute type parameters in info
                               info match {
-                                case cls: TypedNuTrt =>
-                                  ???
+                                case trt: TypedNuTrt =>
+                                  computeInterface(ps, annot & trt.thisTy, members ++ trt.members.values) // intersect members
                                 case _ => computeInterface(ps, annot, members)
                               }
+                            case S(_) => 
+                              err("i don't know", p.toLoc)
+                              computeInterface(ps, annot, members)
                             case N => 
                               // err(msg"Could not find definition `${parNme}`", p.toLoc)
                               computeInterface(ps, annot, members)
@@ -828,12 +881,23 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     }
                     val (ifaceAnnot, ifaceMembers) = computeInterface(parentSpecs, TopType, Nil)
                     // TODO check mems against interface stuff above
-                    
+
+                    ifaceMembers.foreach { m =>
+                      impltdMems.find(x => x.name == m.name) match {
+                        case S(mem: TypedNuTermDef) =>
+                          val memSign = mem.typeSignature
+                          implicit val prov: TP = memSign.prov
+                          constrain(memSign, m.asInstanceOf[TypedNuFun].typeSignature)
+                        case S(_) => ()
+                        case N => 
+                          err(msg"Member ${m.name} is declared in parent trait but not implemented", td.toLoc)
+                      }
+                    }
                     
                     TypedNuCls(outerCtx.lvl, td, ttu,
-                      tparams, typedParams, mems,
+                      tparams, typedParams, mems ++ ifaceMembers.map(d => d.name -> d).toMap,
                       // if (td.kind is Nms) TopType else thisTV
-                      TopType
+                      ifaceAnnot  // ? TopType ? not sure
                     )(thisType) -> impltdMems
                   }
                 case Mxn =>
@@ -870,7 +934,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     case S(mem: NuParam) =>
                     case S(_) => ??? // TODO
                     case N =>
-                      if (!td.isDecl)
+                      if (!td.isDecl && td.kind != Trt)
                         err(msg"Member ${fd.nme.name} is declared but not defined", fd.nme.toLoc)
                   }
                 }
