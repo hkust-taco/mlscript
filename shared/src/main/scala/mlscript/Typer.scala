@@ -878,6 +878,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case New(base, args) => ???
       case TyApp(_, _) => ??? // TODO
       case Quoted(body) =>
+
         def allUnboundedVaribles(ls: Iterable[Var -> FieldType], ctx: Ctx) =
           ls.filter(e => ctx.get(e._1.name).isDefined).toList
 
@@ -927,7 +928,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         val tmp = freshVar(noProv)
         val lhs = RecordType((Var("test1"), FieldType(N, tmp)(noProv))::(Var("test2"), FieldType(N, tmp)(noProv)) ::Nil)(noProv)
         val rhs = RecordType((Var("test1"), FieldType(N, tmp)(noProv))::Nil)(noProv)
-        TypeRef(TypeName("Code"), body_type :: (lhs & rhs.neg()) :: Nil)(noProv)
+        TypeRef(TypeName("Code"), body_type :: ctx_type :: Nil)(noProv)
       case Unquoted(body) =>
         ctx.parent match {
           case Some(p) =>
@@ -951,6 +952,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             val body_type = typeTerm(body)(nestedCtx, raise, vars)
 
             val res = freshVar(prov)
+
             val resTy = con(f_ty, FunctionType(body_type, res)(prov), res)
             resTy
           case _ => err("An unquote should enclose with a quasiquote", body.toLoc)(raise)
