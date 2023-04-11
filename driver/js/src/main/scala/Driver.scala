@@ -50,6 +50,23 @@ class Driver(options: DriverOptions) {
     writeFile(options.outputDir, "package.json", content)
   }
 
+  private def parse(filename: String, content: String) = {
+    import fastparse._
+    import fastparse.Parsed.{Success, Failure}
+
+    val lines = content.splitSane('\n').toIndexedSeq
+    val fph = new mlscript.FastParseHelpers(content, lines)
+    val origin = Origin(filename, 1, fph)
+    val lexer = new NewLexer(origin, throw _, dbg = false)
+    val tokens = lexer.bracketedTokens
+
+    val parser = new NewParser(origin, tokens, throw _, dbg = false, None) {
+      def doPrintDbg(msg: => String): Unit = if (dbg) println(msg)
+    }
+
+    parser.parseAll(parser.typingUnit)
+  }
+
   private def compile(
     filename: String,
     exported: Boolean = false
@@ -59,34 +76,46 @@ class Driver(options: DriverOptions) {
     extrCtx: Opt[typer.ExtrCtx],
     vars: Map[Str, typer.SimpleType],
     stack: List[String]
-  ): Boolean =
-    if (stack.contains(filename))
-      throw
-        ErrorReport(Ls((s"cycle dependence on $filename", None)), Diagnostic.Compilation)
-    else {
-      val beginIndex = filename.lastIndexOf("/")
-      val endIndex = filename.lastIndexOf(".")
-      val prefixName = filename.substring(beginIndex + 1, endIndex)
-      val path = filename.substring(0, beginIndex + 1)
+  ): Boolean = {
+    val beginIndex = filename.lastIndexOf("/")
+    val endIndex = filename.lastIndexOf(".")
+    val prefixName = filename.substring(beginIndex + 1, endIndex)
+    val path = filename.substring(0, beginIndex + 1)
+    val moduleName = prefixName.substring(prefixName.lastIndexOf("/") + 1)
 
+    if (stack.contains(filename)) {
+      throw // TODO: how to handle it?
+        ErrorReport(Ls((s"cycle dependence on $filename", None)), Diagnostic.Compilation)
+      // if (stack.last === filename) // it means a file is trying to import itself!
+      //   throw
+      //     ErrorReport(Ls((s"can not import $filename itself", None)), Diagnostic.Compilation)
+      // else readFile(filename) match {
+      //   case Some(content) =>
+      //     parse(filename, content) match {
+      //       case tu => {
+      //         val tpd = typer.typeTypingUnit(tu, topLevel = true)
+      //         val sim = SimplifyPipeline(tpd, all = false)(ctx)
+      //         val exp = typer.expandType(sim)(ctx)
+      //         val expStr =
+      //           s"declare module $moduleName() {\n" +
+      //             exp.showIn(ShowCtx.mk(exp :: Nil), 0).splitSane('\n').toIndexedSeq.map(line => s"  $line").reduceLeft(_ + "\n" + _) +
+      //           "\n}"
+
+      //         val relatedPath = path.substring(options.path.length)
+      //         writeFile(s"${options.outputDir}/.temp/$relatedPath", s"$prefixName.mlsi", expStr)
+      //         true
+      //       }
+      //     }
+      //   case _ =>
+      //     throw
+      //       ErrorReport(Ls((s"can not open file $filename", None)), Diagnostic.Compilation)
+      // }
+    }
+    else {
       System.out.println(s"compiling $filename...")
       readFile(filename) match {
         case Some(content) => {
-          import fastparse._
-          import fastparse.Parsed.{Success, Failure}
-
-          val moduleName = prefixName.substring(prefixName.lastIndexOf("/") + 1)
-          val lines = content.splitSane('\n').toIndexedSeq
-          val fph = new mlscript.FastParseHelpers(content, lines)
-          val origin = Origin(filename, 1, fph)
-          val lexer = new NewLexer(origin, throw _, dbg = false)
-          val tokens = lexer.bracketedTokens
-
-          val parser = new NewParser(origin, tokens, throw _, dbg = false, None) {
-            def doPrintDbg(msg: => String): Unit = if (dbg) println(msg)
-          }
-
-          parser.parseAll(parser.typingUnit) match {
+          parse(filename, content) match {
             case tu => {
               def getAllImport(top: Ls[Import], tu: TypingUnit): Ls[Import] =
                 tu.entities.foldLeft(top)((res, ett) => ett match {
@@ -117,17 +146,7 @@ class Driver(options: DriverOptions) {
                   val moduleName = modulePath.substring(modulePath.lastIndexOf("/") + 1)
                   readFile(filename) match {
                     case Some(content) => {
-                      val lines = content.splitSane('\n').toIndexedSeq
-                      val fph = new mlscript.FastParseHelpers(content, lines)
-                      val origin = Origin(modulePath, 1, fph)
-                      val lexer = new NewLexer(origin, throw _, dbg = false)
-                      val tokens = lexer.bracketedTokens
-
-                      val parser = new NewParser(origin, tokens, throw _, dbg = false, None) {
-                        def doPrintDbg(msg: => String): Unit = if (dbg) println(msg)
-                      }
-
-                      parser.parseAll(parser.typingUnit) match {
+                      parse(filename, content) match {
                         case tu: TypingUnit => {
                           val depList = tu.depList.map {
                             case Import(path) => path
@@ -149,13 +168,10 @@ class Driver(options: DriverOptions) {
                 val tpd = typer.typeTypingUnit(tu, topLevel = true)
                 val sim = SimplifyPipeline(tpd, all = false)(ctx)
                 val exp = typer.expandType(sim)(ctx)
-                val wrapped =
-                  s"module $moduleName() {\n" +
+                val expStr =
+                  s"declare module $moduleName() {\n" +
                     exp.showIn(ShowCtx.mk(exp :: Nil), 0).splitSane('\n').toIndexedSeq.map(line => s"  $line").reduceLeft(_ + "\n" + _) +
                   "\n}"
-                val expStr =
-                  if (exported) "declare " + wrapped
-                  else wrapped
                 val interfaces = importsList.map(_.toString).foldRight(expStr)((imp, itf) => s"$imp\n$itf")
 
                 val relatedPath = path.substring(options.path.length)
@@ -172,6 +188,7 @@ class Driver(options: DriverOptions) {
             ErrorReport(Ls((s"can not open file $filename", None)), Diagnostic.Compilation)
       }
     }
+  }
 
   private def generate(
     program: Pgrm,

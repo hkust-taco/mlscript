@@ -1,5 +1,5 @@
 import "Opened.mls"
-module Simple() {
+declare module Simple() {
   mixin B() {
     this: {n: 'n}
     fun foo: 'n
