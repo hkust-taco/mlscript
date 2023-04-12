@@ -32,27 +32,28 @@ class Driver(options: DriverOptions) {
 
   private val importedModule = MutSet[String]()
 
-  def execute: Unit =
+  // Return true if success
+  def execute: Boolean =
     try {
       implicit var ctx: Ctx = Ctx.init
       implicit val raise: Raise = report
       implicit val extrCtx: Opt[typer.ExtrCtx] = N
       implicit val vars: Map[Str, typer.SimpleType] = Map.empty
       implicit val stack = List[String]()
-      compile(options.filename)
-      if (Driver.totalErrors > 0)
-        js.Dynamic.global.process.exit(-1)
+      compile(options.filename, false)
+      Driver.totalErrors == 0
     }
     catch {
       case err: Diagnostic =>
         report(err)
-        js.Dynamic.global.process.exit(-1)
+        false
     }
   
-  def genPackageJson(): Unit = {
-    val content = """{ "type": "module" }""" // TODO: more settings?
-    writeFile(options.outputDir, "package.json", content)
-  }
+  def genPackageJson(): Unit =
+    if (!fs.existsSync(s"${options.outputDir}/package.json")) {
+      val content = """{ "type": "module" }""" // TODO: more settings?
+      writeFile(options.outputDir, "package.json", content)
+    }
 
   private def parse(filename: String, content: String) = {
     import fastparse._
@@ -73,7 +74,7 @@ class Driver(options: DriverOptions) {
 
   private def compile(
     filename: String,
-    exported: Boolean = false
+    exported: Boolean
   )(
     implicit ctx: Ctx,
     raise: Raise,
@@ -86,6 +87,7 @@ class Driver(options: DriverOptions) {
     val prefixName = filename.substring(beginIndex + 1, endIndex)
     val path = filename.substring(0, beginIndex + 1)
     val moduleName = prefixName.substring(prefixName.lastIndexOf("/") + 1)
+    val relatedPath = path.substring(options.path.length)
 
     if (stack.contains(filename)) {
       if (stack.last === filename) // it means a file is trying to import itself!
@@ -117,7 +119,6 @@ class Driver(options: DriverOptions) {
       }
     }
     else {
-      System.out.println(s"compiling $filename...")
       readFile(filename) match {
         case Some(content) => {
           parse(filename, content) match {
@@ -145,9 +146,10 @@ class Driver(options: DriverOptions) {
                 compile(newFilename, true)(newCtx, raise, newExtrCtx, newVars, stack :+ filename)
               })
               val mtime = getModificationTime(filename)
-              val imtime = getModificationTime(s"${options.outputDir}/.temp/$prefixName.mlsi")
+              val imtime = getModificationTime(s"${options.outputDir}/.temp/$relatedPath/$prefixName.mlsi")
 
               if (options.force || needRecomp || imtime.isEmpty || mtime.compareTo(imtime) >= 0) {
+                System.out.println(s"compiling $filename...")
                 def importModule(modulePath: String): Unit = {
                   val filename = s"${options.outputDir}/.temp/$modulePath.mlsi"
                   val moduleName = modulePath.substring(modulePath.lastIndexOf("/") + 1)
@@ -181,7 +183,6 @@ class Driver(options: DriverOptions) {
                   "\n}"
                 val interfaces = importsList.map(_.toString).foldRight(expStr)((imp, itf) => s"$imp\n$itf")
 
-                val relatedPath = path.substring(options.path.length)
                 writeFile(s"${options.outputDir}/.temp/$relatedPath", s"$prefixName.mlsi", interfaces)
                 generate(Pgrm(tu.entities), moduleName, importsList, prefixName, s"${options.outputDir}/$relatedPath", exported || importedModule(filename))
                 true

@@ -103,7 +103,6 @@ lazy val driver = crossProject(JSPlatform, JVMPlatform).in(file("driver"))
   )
   .jvmSettings()
   .jsSettings(
-    scalaJSUseMainModuleInitializer := true,
     libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "2.1.0",
     libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.12" % "test",
     Compile / fastOptJS / artifactPath := baseDirectory.value / ".." / ".." / "bin" / "mlsc.js"
@@ -111,15 +110,3 @@ lazy val driver = crossProject(JSPlatform, JVMPlatform).in(file("driver"))
   .dependsOn(mlscript % "compile->compile;test->test")
 
 lazy val driverJS = driver.js
-
-import complete.DefaultParsers._
-import scala.sys.process._
-
-lazy val mlsc = inputKey[Unit]("mlsc")
-mlsc := {
-  (driverJS / Compile / fastOptJS).value
-  val args: Seq[String] = spaceDelimited("<arg>").parsed
-  if (args.length > 0)
-    s"node bin/mlsc.js ${args.reduceLeft((r, s) => s"$r $s")}" !
-  else "node bin/mlsc.js" !
-}
