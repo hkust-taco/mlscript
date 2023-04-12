@@ -1,3 +1,5 @@
+package driver
+
 import scala.scalajs.js
 import js.Dynamic.{global => g}
 import js.DynamicImplicits._

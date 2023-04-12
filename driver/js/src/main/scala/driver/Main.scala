@@ -1,3 +1,5 @@
+package driver
+
 object Main {
   def main(args: Array[String]): Unit = DriverOptions.parse match {
     case Some(options) => {
