@@ -1,7 +1,7 @@
 :NewDefs
 :NoJS
 
-trait Test { 
+trait Test {
     fun foo: int
     fun bar: bool -> bool
 }
@@ -11,12 +11,42 @@ trait Test {
 //│ }
 
 trait Oth extends Test {
+    let a : int
     fun cool : int -> bool
 }
 //│ trait Oth() {
+//│   let a: int
 //│   fun bar: bool -> bool
 //│   fun cool: int -> bool
 //│   fun foo: int
+//│ }
+
+trait Geo { 
+    let v: 2 | 3 
+    fun get: int | bool
+    fun ter: int
+}
+trait Anemo { 
+    let v: 1 | 2
+    fun get: bool | string
+    fun ter: bool
+}
+//│ trait Geo() {
+//│   fun get: bool | int
+//│   fun ter: int
+//│   let v: 2 | 3
+//│ }
+//│ trait Anemo() {
+//│   fun get: bool | string
+//│   fun ter: bool
+//│   let v: 1 | 2
+//│ }
+
+trait Mixed extends Geo, Anemo
+//│ trait Mixed() {
+//│   fun get: bool
+//│   fun ter: nothing
+//│   let v: 2
 //│ }
 
 
@@ -29,15 +59,31 @@ class C extends Test {
 //│   fun foo: int
 //│ }
 
-class F extends Oth {
+mixin M {
+    fun m1 = 3
+}
+//│ mixin M() {
+//│   fun m1: 3
+//│ }
+
+class F extends Oth, M, Mixed {
     fun cool(x) = x == 1
     fun foo = 2
     fun bar(x) = x
+    fun get = true
+    fun ter = ter
+    let a = 3
+    let v = 2
 }
 //│ class F() {
+//│   let a: int
 //│   fun bar: bool -> bool
 //│   fun cool: int -> bool
 //│   fun foo: int
+//│   fun get: bool
+//│   fun m1: 3
+//│   fun ter: nothing
+//│   let v: 2
 //│ }
 
 let c = C()
@@ -47,27 +93,63 @@ c.bar(true)
 //│ bool
 
 // FIXME
+c: Test
+//│ /!!!\ Uncaught error: java.lang.ClassCastException: class mlscript.NuTypeDefs$TypedNuTrt cannot be cast to class mlscript.NuTypeDefs$TypedNuCls (mlscript.NuTypeDefs$TypedNuTrt and mlscript.NuTypeDefs$TypedNuCls are in unnamed module of loader sbt.internal.LayeredClassLoader @3bf50bf8)
+
+// FIXME
 let c1: Test = C()
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.50: 	let c1: Test = C()
-//│ ║        	               ^^^
+//│ ║  l.100: 	let c1: Test = C()
+//│ ║         	               ^^^
 //│ ╟── application of type `C` is not an instance of type `Test`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.50: 	let c1: Test = C()
-//│ ╙──      	        ^^^^
+//│ ║  l.100: 	let c1: Test = C()
+//│ ╙──       	        ^^^^
 //│ let c1: Test
+
+trait A1 { fun a1: 1 | 2 | 3}
+trait A2 { fun a1: 2 | 3 | 4}
+//│ trait A1() {
+//│   fun a1: 1 | 2 | 3
+//│ }
+//│ trait A2() {
+//│   fun a1: 2 | 3 | 4
+//│ }
+
+:e
+class Ea1 extends A1, A2 {
+    fun a1 = 4
+}
+//│ ╔══[ERROR] Type mismatch in definition of method a1:
+//│ ║  l.121: 	    fun a1 = 4
+//│ ║         	        ^^^^^^
+//│ ╟── integer literal of type `4` does not match type `1 | 2 | 3`
+//│ ║  l.121: 	    fun a1 = 4
+//│ ║         	             ^
+//│ ╟── but it flows into definition of method a1 with expected type `1 | 2 | 3`
+//│ ║  l.121: 	    fun a1 = 4
+//│ ║         	        ^^^^^^
+//│ ╟── Note: constraint arises from union type:
+//│ ║  l.110: 	trait A1 { fun a1: 1 | 2 | 3}
+//│ ║         	                   ^^^^^^^^^
+//│ ╟── from signature of member a1:
+//│ ║  l.110: 	trait A1 { fun a1: 1 | 2 | 3}
+//│ ╙──       	               ^^^^^^^^^^^^^
+//│ class Ea1() {
+//│   fun a1: 2 | 3
+//│ }
 
 :e
 class E1 extends Test {
     fun foo = 2
 }
 //│ ╔══[ERROR] Member bar is declared in parent trait but not implemented
-//│ ║  l.61: 	class E1 extends Test {
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.62: 	    fun foo = 2
-//│ ║        	^^^^^^^^^^^^^^^
-//│ ║  l.63: 	}
-//│ ╙──      	^
+//│ ║  l.143: 	class E1 extends Test {
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.144: 	    fun foo = 2
+//│ ║         	^^^^^^^^^^^^^^^
+//│ ║  l.145: 	}
+//│ ╙──       	^
 //│ class E1() {
 //│   fun bar: bool -> bool
 //│   fun foo: int
@@ -75,10 +157,15 @@ class E1 extends Test {
 
 :e
 trait TE1 extends C
+trait TE2 extends M, Test
 //│ ╔══[ERROR] trait can only inherit traits
-//│ ║  l.77: 	trait TE1 extends C
-//│ ╙──      	                  ^
+//│ ║  l.159: 	trait TE1 extends C
+//│ ╙──       	                  ^
+//│ ╔══[ERROR] trait can only inherit traits
+//│ ║  l.160: 	trait TE2 extends M, Test
+//│ ╙──       	                  ^
 //│ trait TE1()
+//│ trait TE2()
 
 :e
 class E2 extends Test {
@@ -86,14 +173,14 @@ class E2 extends Test {
     fun bar(x) = x
 }
 //│ ╔══[ERROR] Type mismatch in definition of method foo:
-//│ ║  l.85: 	    fun foo = true
-//│ ║        	        ^^^^^^^^^^
+//│ ║  l.172: 	    fun foo = true
+//│ ║         	        ^^^^^^^^^^
 //│ ╟── reference of type `true` is not an instance of type `int`
-//│ ║  l.85: 	    fun foo = true
-//│ ║        	              ^^^^
+//│ ║  l.172: 	    fun foo = true
+//│ ║         	              ^^^^
 //│ ╟── but it flows into definition of method foo with expected type `int`
-//│ ║  l.85: 	    fun foo = true
-//│ ║        	        ^^^^^^^^^^
+//│ ║  l.172: 	    fun foo = true
+//│ ║         	        ^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.5: 	    fun foo: int
 //│ ║       	             ^^^
@@ -109,10 +196,10 @@ class E2 extends Test {
 :e
 class D extends Test[int], Test[bool]
 //│ ╔══[ERROR] Unsupported parent specification
-//│ ║  l.110: 	class D extends Test[int], Test[bool]
+//│ ║  l.197: 	class D extends Test[int], Test[bool]
 //│ ╙──       	                ^^^^^^^^^
 //│ ╔══[ERROR] Unsupported parent specification
-//│ ║  l.110: 	class D extends Test[int], Test[bool]
+//│ ║  l.197: 	class D extends Test[int], Test[bool]
 //│ ╙──       	                           ^^^^^^^^^^
 //│ class D()
 
@@ -129,17 +216,17 @@ class B
 // FIXME
 let b: Base = A()
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.130: 	let b: Base = A()
+//│ ║  l.217: 	let b: Base = A()
 //│ ║         	              ^^^
 //│ ╟── application of type `A` is not an instance of type `Base`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.130: 	let b: Base = A()
+//│ ║  l.217: 	let b: Base = A()
 //│ ╙──       	       ^^^^
 //│ let b: Base
 
 // FIXME
 b: Base & (A | B)
-//│ /!!!\ Uncaught error: java.lang.ClassCastException: class mlscript.NuTypeDefs$TypedNuTrt cannot be cast to class mlscript.NuTypeDefs$TypedNuCls (mlscript.NuTypeDefs$TypedNuTrt and mlscript.NuTypeDefs$TypedNuCls are in unnamed module of loader sbt.internal.LayeredClassLoader @6d580313)
+//│ /!!!\ Uncaught error: java.lang.ClassCastException: class mlscript.NuTypeDefs$TypedNuTrt cannot be cast to class mlscript.NuTypeDefs$TypedNuCls (mlscript.NuTypeDefs$TypedNuTrt and mlscript.NuTypeDefs$TypedNuCls are in unnamed module of loader sbt.internal.LayeredClassLoader @3bf50bf8)
 
 
 // FIXME
@@ -150,5 +237,11 @@ class Bar[B]
 //│ class Foo[A]()
 //│ class Bar[B]()
 
-
-
+// FIXME
+fun mt(x) = if x is Test then 1 else 0
+//│ ╔══[ERROR] Cannot find constructor `Test` in scope
+//│ ║  l.241: 	fun mt(x) = if x is Test then 1 else 0
+//│ ╙──       	                    ^^^^
+//│ fun mt: anything -> error
+ //│ ╙──       	                    ^^^^
+//│ 

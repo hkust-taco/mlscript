@@ -367,6 +367,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           )(provTODO)
         )(provTODO)
       )
+    case Trt => 
+      TraitTag(Var(td.nme.name))(provTODO)
     // case k => err
     case k => errType // FIXME
   }
@@ -673,7 +675,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                             ctx.get(trtName) match {
                               case S(lti: LazyTypeInfo) => lti.complete().freshen match {
                                 case trt: TypedNuTrt =>
-                                  inherit(ps, superType & trt.thisTy, members ++ trt.members.values)
+                                  // TODO check intersection of members
+                                  inherit(ps, superType & trt.thisTy, memberUn(members, trt.members.values.toList))
                                 case _ => 
                                   err(msg"trait can only inherit traits", p.toLoc)
                                   (superType, members)
@@ -687,7 +690,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       inherit(parentSpecs, TopType, Nil)
 
                     val ttu = typeTypingUnit(td.body, topLevel = false)
-                    val trtMems = baseMems // ? [what is ttu] ++ ttu.entities
+                    val trtMems = baseMems ++ ttu.entities
                     val mems = typedSignatureMembers.toMap ++ trtMems.map(d => d.name -> d).toMap
 
                     TypedNuTrt(outerCtx.lvl, td, ttu, tparams, mems, thisType, None) -> Nil
@@ -858,7 +861,6 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     val impltdMems = baseMems ++ clsMems
                     val mems = impltdMems.map(d => d.name -> d).toMap ++ typedSignatureMembers
                     
-                    
                     def computeInterface(parents: Ls[ParentSpec], annot: ST, members: Ls[NuMember]): (ST, Ls[NuMember]) = 
                         parents match {
                       case (p, v @ Var(parNme), parArgs) :: ps =>
@@ -869,7 +871,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                               // TODO substitute type parameters in info
                               info match {
                                 case trt: TypedNuTrt =>
-                                  computeInterface(ps, annot & trt.thisTy, members ++ trt.members.values) // intersect members
+                                  // TODO also computer intersect
+                                  computeInterface(ps, annot & trt.thisTy, memberUn(members, trt.members.values.toList)) // intersect members
                                 case _ => computeInterface(ps, annot, members)
                               }
                             case S(_) => 
@@ -889,7 +892,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                         case S(mem: TypedNuTermDef) =>
                           val memSign = mem.typeSignature
                           implicit val prov: TP = memSign.prov
-                          constrain(memSign, m.asInstanceOf[TypedNuFun].typeSignature)
+                          constrain(memSign, m.asInstanceOf[TypedNuTermDef].typeSignature)
                         case S(_) => ()
                         case N => 
                           err(msg"Member ${m.name} is declared in parent trait but not implemented", td.toLoc)
@@ -972,7 +975,26 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     
   }
   
-  
+  def memberUn(l: Ls[NuMember], r: Ls[NuMember])(implicit raise: Raise): Ls[NuMember] = {
+    val nms = Set.from(l.map(_.name) ++ r.map(_.name)).toList
+    nms.map {n => 
+      (l.find(x => x.name == n), r.find(x => x.name == n)) match {
+        case(S(a: TypedNuFun), S(b: TypedNuFun)) 
+          if a.level == b.level 
+            && a.fd.isLetRec == b.fd.isLetRec 
+            && a.fd.nme == b.fd.nme
+            && a.fd.tparams == b.fd.tparams
+            // todo: check fd.rhs
+          =>
+            TypedNuFun(a.level, a.fd, a.bodyType & b.bodyType)
+        case(S(a), N) => a
+        case(N, S(b)) => b
+        case _ => 
+          err(msg"invalid $n", N)
+          ???
+      }
+    }
+  }
   
 }
 
