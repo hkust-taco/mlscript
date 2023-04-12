@@ -93,7 +93,10 @@ class Driver(options: DriverOptions) {
         case Some(content) =>
           parse(filename, content) match {
             case tu => {
-              val tpd = typer.typeTypingUnit(tu, topLevel = true)
+              // To break the cycle dependencies, we need to generate one mlsi file in the cycle
+              // and it will lead to some errors. We silence error messages in this case
+              val silentRaise = (diag: Diagnostic) => ()
+              val tpd = typer.typeTypingUnit(tu, topLevel = true)(ctx, silentRaise, vars)
               val sim = SimplifyPipeline(tpd, all = false)(ctx)
               val exp = typer.expandType(sim)(ctx)
               val expStr =
