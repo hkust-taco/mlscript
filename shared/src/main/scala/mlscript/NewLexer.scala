@@ -72,14 +72,14 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
 
   
   // @tailrec final
-  def lex(i: Int, ind: Ls[Int], acc: Ls[TokLoc], obq: Int = 0): Ls[TokLoc] = if (i >= length) acc.reverse else {
+  def lex(i: Int, ind: Ls[Int], acc: Ls[TokLoc], qcnt: Int = 0): Ls[TokLoc] = if (i >= length) acc.reverse else {
     val c = bytes(i)
     def pe(msg: Message): Unit =
       // raise(ParseError(false, msg -> S(loc(i, i + 1)) :: Nil))
       raise(ErrorReport(msg -> S(loc(i, i + 1)) :: Nil, source = Lexing)) // TODO parse error
       // @inline
     def isQuasiquoteKeyword(i: Int): Boolean = (i + 4 < length) && (bytes(i) === 'c' && bytes(i + 1) === 'o' && bytes(i + 2) === 'd' && bytes(i + 3) === 'e' && bytes(i + 4) === '"')
-    def go(j: Int, tok: Token, obq: Int = obq) = lex(j, ind, (tok, loc(i, j)) :: acc, obq)
+    def go(j: Int, tok: Token, qcnt: Int = qcnt) = lex(j, ind, (tok, loc(i, j)) :: acc, qcnt)
     def isUnquoteKey(i: Int): Boolean = bytes(i) === '$' && bytes(i + 1) === '{'
     c match {
       case ' ' =>
@@ -89,12 +89,12 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
         val j = i + 1
         go(j, COMMA)
       case 'c' if isQuasiquoteKeyword(i) =>
-        go(i + 5, OPEN_BRACKET(BracketKind.Quasiquote), obq = obq + 1) // TODO: throw error if the double quote doesn't align
-      case '$' if (isUnquoteKey(i) && obq >= 1) =>
+        go(i + 5, OPEN_BRACKET(BracketKind.Quasiquote), qcnt = qcnt + 1) // TODO: throw error if the double quote doesn't align
+      case '$' if (isUnquoteKey(i) && qcnt >= 1) =>
         go(i + 2, OPEN_BRACKET(BracketKind.Unquote))
       case '"' =>
-        if (obq >= 1)
-          go(i + 1, CLOSE_BRACKET(BracketKind.Quasiquote), obq = obq - 1)
+        if (qcnt >= 1)
+          go(i + 1, CLOSE_BRACKET(BracketKind.Quasiquote), qcnt = qcnt - 1)
         else {
           val j = i + 1
           val (chars, k) = takeWhile(j)(c => c =/= '"' && c =/= '\n')
@@ -127,7 +127,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
           takeWhile(j)(c => c === ' ' || c === '\n')
         val nextInd = space.reverseIterator.takeWhile(_ =/= '\n').size
         if (ind.headOption.forall(_ < nextInd) && nextInd > 0)
-          lex(k, nextInd :: ind, (INDENT, loc(j, k)) :: acc, obq = obq)
+          lex(k, nextInd :: ind, (INDENT, loc(j, k)) :: acc, qcnt = qcnt)
         else {
           val newIndBase = ind.dropWhile(_ > nextInd)
           val droppedNum = ind.size - newIndBase.size
@@ -143,7 +143,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
               else (NEWLINE, loc(i, k))
             } :: List.fill(droppedNum)((DEINDENT, loc(j-1, k))) ::: acc
             else (NEWLINE, loc(i, k)) :: acc
-          , obq = obq)
+          , qcnt = qcnt)
         }
       case _ if isIdentFirstChar(c) =>
         val (n, j) = takeWhile(i)(isIdentChar)
