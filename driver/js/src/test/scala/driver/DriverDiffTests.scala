@@ -48,7 +48,7 @@ object DriverDiffTests {
     TestOption(
       s"${mlscriptPath}${entryModule}.mls",
       s"${jsPath}${entryModule}.js",
-      s"${outputPath}${entryModule}.txt",
+      s"${outputPath}${entryModule}.check",
       expectError
     )
 
