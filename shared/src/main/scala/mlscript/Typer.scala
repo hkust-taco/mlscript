@@ -621,7 +621,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
 //        println(s"inspect $name by ctx.get")
         val strategy = if (ctx.overridingStrategy != N) {
           ctx.overridingStrategy.get
-        } else if (ctx.inUnquoted)
+        } else if (builtinBindings.contains(name))
+          SuperSearchStrategy()
+        else if (ctx.inUnquoted)
           UnquoteSearchStrategy()
         else if (ctx.inQQ)
           QuasiquoteSearchStrategy(ctx.quasiquoteLvl)
@@ -788,7 +790,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           case Var(_) => ctx.overridingStrategy = S(SuperSearchStrategy())
           case _ =>
         }
-//        println(s"Applying $f(${f.getClass}) to $a(${a.getClass})")
+        println(s"Applying $f(${f.getClass}) to $a(${a.getClass})")
         val f_ty = typeTerm(f)
         val a_ty = typeTerm(a)
         val res = freshVar(prov)

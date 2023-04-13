@@ -3,7 +3,7 @@
 // More specific checks from parser folder
 
 code"[]"
-//│ res: code & {Code#C = anything, Code#T <: ()}
+//│ res: Code[(), anything]
 //│    = [ 'Bra', [ 'Tup', [] ] ]
 run(res)
 //│ res: ()
@@ -11,21 +11,22 @@ run(res)
 
 code"()"
 run(res)
-//│ res: code & {Code#C = anything, Code#T <: ()}
+//│ res: Code[(), anything]
 //│    = [ 'Bra', [ 'Tup', [] ] ]
 //│ res: ()
 //│    = []
 
+
 code"(1,)"
 run(res)
-//│ res: code & {Code#C = anything, Code#T <: (1,)}
+//│ res: Code[(1,), anything]
 //│    = [ 'Bra', [ 'Tup', [ [Array] ] ] ]
 //│ res: (1,)
 //│    = [ 1 ]
 
 code"let f = (x, y, z) => x + y + x; f of 1,2,3"
 run(res)
-//│ res: code & {Code#C = anything, Code#T <: int}
+//│ res: Code[int, anything\f\x\y\z]
 //│    = [
 //│        'Let',
 //│        'f',
@@ -41,11 +42,11 @@ run(res)
 :pe
 code"// Can I comment?"
 //│ ╔══[PARSE ERROR] Unmatched opening quasiquote
-//│ ║  l.42: 	code"// Can I comment?"
+//│ ║  l.43: 	code"// Can I comment?"
 //│ ╙──      	^^^^^
 
 code"[x: 1,]"
-//│ res: code & {Code#C = anything, Code#T <: (x: 1,)}
+//│ res: Code[(x: 1,), anything]
 //│    = [ 'Bra', [ 'Tup', [ [Array] ] ] ]
 run(res)
 //│ res: (x: 1,)
@@ -54,20 +55,20 @@ run(res)
 // should be unresolved symbol error 
 :ge
 code"let x = {a: 100}; x . a"
-//│ res: code & {Code#C = anything, Code#T = nothing}
+//│ res: Code['a, {.: {a: 100} -> 'b -> 'a, a: 'b}\x]
 //│ Syntax error:
 //│   Unexpected token '.'
 
 // should be unresolved symbol error
 :ge
 code"let x = {a: 100}; x. a"
-//│ res: code & {Code#C = anything, Code#T = nothing}
+//│ res: Code['a, {.: {a: 100} -> 'b -> 'a, a: 'b}\x]
 //│ Syntax error:
 //│   Unexpected token '.'
 
 // should be ok
 code"let x = {a: 100}; x .a"
-//│ res: code & {Code#C = anything, Code#T <: 100}
+//│ res: Code[100, anything\x]
 //│    = [
 //│        'Let',
 //│        'x',
