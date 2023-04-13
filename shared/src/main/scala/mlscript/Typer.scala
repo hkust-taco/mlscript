@@ -40,6 +40,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
    * (See the case for `Sel` in `typeTerm` for documentation on explicit vs. implicit calls.)
    * The public helper functions should be preferred for manipulating `mthEnv`
    */
+  class SearchStrategy()
+
+  final case class NormalSearchStrategy() extends SearchStrategy
+
+  final case class UnquoteSearchStrategy() extends SearchStrategy
+
+  final case class QuasiquoteSearchStrategy(lvl: Int) extends SearchStrategy
   case class Ctx(
                   parent: Opt[Ctx],
                   env: MutMap[Str, TypeInfo],
@@ -49,13 +56,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
                   inPattern: Bool,
                   tyDefs: Map[Str, TypeDef],
                   nuTyDefs: Map[Str, TypedNuTypeDef],
-                  inQuasiquote: Boolean,
+                  quasiquoteLvl: Int, // > 0 means inside a quasiquote
                   inUnquoted: Boolean,
                   outerQuoteEnvironments: List[Ctx],
                   var outermostCtx: Opt[Ctx],
                   innerUnquoteContextRequirements: mutable.ListBuffer[SimpleType],
                   outermostFreeVarType: MutSet[Str -> SimpleType],
-                  id: Int,
+                  outermostBoundedVarType: mutable.ListBuffer[Str],
                   isTopLvlCtx: Bool
                 ) {
 
@@ -63,34 +70,35 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
 
     def ++=(bs: IterableOnce[Str -> TypeInfo]): Unit = bs.iterator.foreach(+=)
 
-    def get(name: Str, searchOutsideQQ: Boolean = inUnquoted, searchInsideQQ: Boolean = false): Opt[TypeInfo] =
-      if (searchOutsideQQ) {
-        // when you are getting a variable definition, it should bypass all qq context
-        parent match {
-          case Some(p) =>
-            p.get(name, p.inQuasiquote)
-          case _ => None
-        }
-      } else if (searchInsideQQ) {
-        // if you're in the qq, you should search within the qq only but not outside
-        if (!inQuasiquote) {
-          println("Reached outside of QQ -> failed to find the identifier")
-          None
-        } else {
-          {
-            println("try searching in bounded env")
-            env.get(name)
-          } orElse {
-            println("try searching in free variable env")
-            freeVarsEnv.get(name)
-          } orElse {
-            println("try searching from parent")
-            parent.dlof(_.get(name, searchOutsideQQ = false, searchInsideQQ = true))(N)
+    def inQQ: Bool = quasiquoteLvl > 0
+
+    def get(name: Str, strategy: SearchStrategy = NormalSearchStrategy()): Opt[TypeInfo] = {
+      strategy match {
+        case NormalSearchStrategy() =>
+          env.get(name) orElse parent.dlof(_.get(name, strategy))(N)
+        case UnquoteSearchStrategy() =>
+          if (!inQQ) {
+            env.get(name) orElse parent.dlof(_.get(name, strategy))(N)
+          } else {
+            // recursively search until find the top level context
+            parent match {
+              case Some(p) =>
+                p.get(name, strategy)
+              case _ => None
+            }
           }
-        }
-      } else {
-        env.get(name) orElse parent.dlof(_.get(name))(N)
+        case QuasiquoteSearchStrategy(lvl) =>
+          if (quasiquoteLvl == lvl) {
+            env.get(name)
+          } else {
+            parent match {
+              case Some(p) =>
+                env.get(name) orElse freeVarsEnv.get(name) orElse parent.dlof(_.get(name, strategy))(N)
+              case _ => None
+            }
+          }
       }
+    }
 
     def contains(name: Str): Bool = env.contains(name) || parent.exists(_.contains(name))
 
@@ -109,9 +117,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
 
     def containsMth(parent: Opt[Str], nme: Str): Bool = containsMth(R(parent, nme))
 
-    def nest: Ctx = copy(Some(this), MutMap.empty, MutMap.empty, MutMap.empty, inQuasiquote = inQuasiquote, outermostFreeVarType = MutSet.empty, id = Random.between(0, 1000), isTopLvlCtx = false)
+    def nest: Ctx = copy(Some(this), MutMap.empty, MutMap.empty, MutMap.empty, outermostFreeVarType = MutSet.empty, outermostBoundedVarType = ListBuffer.empty, isTopLvlCtx = false)
 
-    def nextLevel: Ctx = copy(lvl = lvl + 1, id = Random.between(0, 1000))
+    def nextLevel: Ctx = copy(lvl = lvl + 1)
 
     private val abcCache: MutMap[Str, Set[TypeName]] = MutMap.empty
 
@@ -129,13 +137,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       inPattern = false,
       tyDefs = Map.from(builtinTypes.map(t => t.nme.name -> t)),
       nuTyDefs = Map.empty,
-      inQuasiquote = false,
+      quasiquoteLvl = 0,
       inUnquoted = false,
       outermostCtx = None,
       outerQuoteEnvironments = List.empty,
       outermostFreeVarType = MutSet.empty,
+      outermostBoundedVarType = ListBuffer.empty,
       innerUnquoteContextRequirements = ListBuffer.empty,
-      id = Random.between(0, 1000),
       isTopLvlCtx = true
     )
 
@@ -502,6 +510,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         S(nme)
       )(lvl + 1)
       ctx += nme -> VarSymbol(e_ty, Var(nme))
+//      println(s"Adding $nme to ctx: $ctx")
       val ty = typeTerm(rhs)(ctx.nextLevel, raise, vars)
       constrain(ty, e_ty)(raise, TypeProvenance(rhs.toLoc, "binding of " + rhs.describe), ctx)
       e_ty
@@ -592,22 +601,28 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           .getOrElse {
             val res = new TypeVariable(lvl, Nil, Nil)(prov)
             v.uid = S(nextUid)
-            ctx += nme -> VarSymbol(res, v)
+            ctx += nme -> VarSymbol(res, v) // adding this bounded variables
+//            println(s"Adding $nme to ctx: $ctx")
+            ctx.outermostCtx match {
+              case Some(outermost) =>
+                outermost.outermostBoundedVarType.append(nme)
+              case _ => println(nme)
+            }
             res
           }
       case v@ValidVar(name) =>
         println(s"inspect $name by ctx.get")
-//        val isOpChar = Set(
-//          '!', '#', '%', '&', '*', '+', '-', '/', ':', '<', '=', '>', '?', '@', '\\', '^', '|', '~', '.',
-//          // ',',
-//          ';'
-//        )
-//
-//        val isOP = isOpChar.contains(name[0])
-//        println(s"is op = $isOP")
-
-        val ty = ctx.get(name).fold(
-          if (ctx.inQuasiquote) {
+        val strategy = if (name == "+" || name == "f")
+          NormalSearchStrategy()
+        else if (ctx.inUnquoted)
+          UnquoteSearchStrategy()
+        else if (ctx.inQQ)
+          QuasiquoteSearchStrategy(ctx.quasiquoteLvl)
+        else
+          NormalSearchStrategy()
+        println(s"searching method: $strategy")
+        val ty = ctx.get(name, strategy).fold(
+          if (ctx.inQQ) {
             val res = new TypeVariable(lvl, Nil, Nil)(prov)
             val tag = ClassTag(StrLit(name), Set.empty)(noProv)
             println(s"insert $name into the free vars")
@@ -828,6 +843,14 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         val n_ty = typeLetRhs(isrec, nme.name, rhs)
         val newCtx = ctx.nest
         newCtx += nme.name -> VarSymbol(n_ty, nme)
+        println(s"Let: ${nme.name}")
+        ctx.outermostCtx match {
+          case Some(outermost) =>
+            outermost.outermostBoundedVarType.append(nme.name)
+          case _ =>
+            println(s"failed to insert ${nme.name} to bounded")
+        }
+
         typeTerm(bod)(newCtx, raise)
       // case Blk(s :: stmts) =>
       //   val (newCtx, ty) = typeStatement(s)
@@ -878,39 +901,24 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case New(base, args) => ???
       case TyApp(_, _) => ??? // TODO
       case Quoted(body) =>
-
-        def allUnboundedVaribles(ls: Iterable[Var -> FieldType], ctx: Ctx) =
-          ls.filter(e => ctx.get(e._1.name).isDefined).toList
-
         val nested = ctx.nest
         val nested_ctx = nested.copy(
-          inQuasiquote = true,
+          quasiquoteLvl = ctx.quasiquoteLvl + 1,
           inUnquoted = false,
           outerQuoteEnvironments = nested :: ctx.outerQuoteEnvironments,
-          innerUnquoteContextRequirements = ListBuffer.empty,
-          id = Random.between(0, 1000))
+          innerUnquoteContextRequirements = ListBuffer.empty)
         nested_ctx.outermostCtx = Some(nested_ctx)
 
-        println(s"typing for ${nested_ctx.id}")
         val body_type = typeTerm(body)(nested_ctx, raise, vars)
-
         val empty_rcd = RecordType(Nil)(NoProv)
-
         val requirements = nested_ctx.innerUnquoteContextRequirements.toList
-//        val filtered_requirements = requirements.map {
-//          case RecordType(ls) => RecordType(allUnboundedVaribles(ls, ctx))(noProv)
-//          case v =>
-//            println(s"value: ${v}, type: ${v.getClass}")
-//            ???
-//        }
 
-        println(s"chaining for ${nested_ctx.id}")
-        println("local unquoted context:")
-        println(requirements)
+//        println("local unquoted context:")
+//        println(requirements)
 
         val unquote_requirement = requirements match {
           case Nil => empty_rcd
-          case _ => nested_ctx.innerUnquoteContextRequirements.reduce(_ & _)
+          case _ => requirements.reduce(_ & _)
         }
 
         val free_vars = nested_ctx.outermostFreeVarType.toList
@@ -923,16 +931,20 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         }
 
         println(free_var_requirement)
-        var ctx_type = unquote_requirement & free_var_requirement
+        println(nested_ctx.outermostBoundedVarType)
+        val ctx_type = unquote_requirement & free_var_requirement
+        val ctx_ty_without_bounded = ctx_type.without(nested_ctx.outermostBoundedVarType.map(Var(_)).toSortedSet)
 
-        val tmp = freshVar(noProv)
-        val lhs = RecordType((Var("test1"), FieldType(N, tmp)(noProv))::(Var("test2"), FieldType(N, tmp)(noProv)) ::Nil)(noProv)
-        val rhs = RecordType((Var("test1"), FieldType(N, tmp)(noProv))::Nil)(noProv)
-        TypeRef(TypeName("Code"), body_type :: ctx_type :: Nil)(noProv)
+//        val tmp = freshVar(noProv)
+//        val lhs = RecordType((Var("test1"), FieldType(N, tmp)(noProv))::(Var("test2"), FieldType(N, tmp)(noProv)) ::Nil)(noProv)
+//        val rhs = RecordType((Var("test1"), FieldType(N, tmp)(noProv))::Nil)(noProv)
+//        lhs.without(rhs.fields.iterator.map(_._1).toSortedSet)
+        TypeRef(TypeName("Code"), body_type :: ctx_ty_without_bounded :: Nil)(noProv)
       case Unquoted(body) =>
         ctx.parent match {
           case Some(p) =>
-            val nestedCtx = p.nest.copy(inQuasiquote = true, inUnquoted = true)
+            println(s"qq level: ${p.quasiquoteLvl}")
+            val nestedCtx = p.nest.copy(quasiquoteLvl = p.quasiquoteLvl + 1, inUnquoted = true)
             //        println(s"Typing for unquoted ${nestedCtx.id}")
 
             val tt = freshVar(noProv)(0)

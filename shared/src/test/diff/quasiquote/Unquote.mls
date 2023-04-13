@@ -1,108 +1,17 @@
 :NewParser
-:d
 :ne
 :NoJS
-code"z + 1"
-//│ 0. Typing term Quoted' + (z,) (1,) '
-//│ | typing for 618
-//│ | 0. Typing term + (z,) (1,)
-//│ | | 0. Typing term + (z,)
-//│ | | | 0. Typing term +
-//│ | | | | inspect + by ctx.get
-//│ | | | 0. : (int<number> -> (int<number> -> int<number>))
-//│ | | | 0. Typing term z,
-//│ | | | | 0. Typing term z
-//│ | | | | | inspect z by ctx.get
-//│ | | | | | insert z into the free vars
-//│ | | | | 0. : α26
-//│ | | | 0. : (α26,)
-//│ | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (α26 -> α27)
-//│ | | |   where 
-//│ | | | C (int<number> -> (int<number> -> int<number>)) <! (α26 -> α27)    (0)
-//│ | | | | C (α26,) <! (int<number>,)    (1)
-//│ | | | | | C α26 <! int<number>    (2)
-//│ | | | | C (int<number> -> int<number>) <! α27    (3)
-//│ | | 0. : α27
-//│ | | 0. Typing term 1,
-//│ | | | 0. Typing term 1
-//│ | | | 0. : 1<int,number>
-//│ | | 0. : (1<int,number>,)
-//│ | | CONSTRAIN α27 <! (1<int,number> -> α28)
-//│ | |   where 
-//│ 		α27 :> (int<number> -> int<number>)
-//│ | | C α27 <! (1<int,number> -> α28)    (0)
-//│ | | | C (int<number> -> int<number>) <! (1<int,number> -> α28)    (1)
-//│ | | | | C (1<int,number>,) <! (int<number>,)    (2)
-//│ | | | | C int<number> <! α28    (2)
-//│ | 0. : α28
-//│ | chaining for 618
-//│ | local unquoted context:
-//│ | List()
-//│ | {z: α26}
-//│ 0. : Code[α28,{z: α26}]
-//│ ⬤ Typed as: Code[α28,{z: α26}]
-//│  where: 
-//│ 		α26 <: int<number>
-//│ 		α28 :> int<number>
-//│ res: Code[int, {z: int}]
+let cde = code"a"
+code"let a = 10; let b = 10;${cde}"
+//│ cde: Code['a, {a: 'a}]
+//│ res: Code['a, {a: 'a}\a\b]
 
-:d
+code"1"
+//│ res: Code[1, anything]
+
 :ne
 :NoJS
 fun f(x, y) = code"[${x}, ${y}]"
-//│ 1. Typing term x, y, => Quoted' '(' Unquote' x ', Unquote' y ', ')' '
-//│ | 1. Typing pattern x, y,
-//│ | | 1. Typing pattern x
-//│ | | 1. : α33'
-//│ | | 1. Typing pattern y
-//│ | | 1. : α34'
-//│ | 1. : (α33', α34',)
-//│ | 1. Typing term Quoted' '(' Unquote' x ', Unquote' y ', ')' '
-//│ | | typing for 563
-//│ | | 1. Typing term '(' Unquote' x ', Unquote' y ', ')'
-//│ | | | 1. Typing term Unquote' x ', Unquote' y ',
-//│ | | | | 1. Typing term Unquote' x '
-//│ | | | | | 1. Typing term x
-//│ | | | | | | inspect x by ctx.get
-//│ | | | | | 1. : α33'
-//│ | | | | | CONSTRAIN (Code[α35,α36] -> α35) <! (α33' -> α37')
-//│ | | | | |   where 
-//│ | | | | | C (Code[α35,α36] -> α35) <! (α33' -> α37')    (0)
-//│ | | | | | | C α33' <! Code[α35,α36]    (1)
-//│ | | | | | | C α35 <! α37'    (2)
-//│ | | | | 1. : α37'
-//│ | | | | 1. Typing term Unquote' y '
-//│ | | | | | 1. Typing term y
-//│ | | | | | | inspect y by ctx.get
-//│ | | | | | 1. : α34'
-//│ | | | | | CONSTRAIN (Code[α38,α39] -> α38) <! (α34' -> α40')
-//│ | | | | |   where 
-//│ | | | | | C (Code[α38,α39] -> α38) <! (α34' -> α40')    (0)
-//│ | | | | | | C α34' <! Code[α38,α39]    (1)
-//│ | | | | | | C α38 <! α40'    (2)
-//│ | | | | 1. : α40'
-//│ | | | 1. : (α37', α40',)
-//│ | | 1. : (α37', α40',)
-//│ | | chaining for 563
-//│ | | local unquoted context:
-//│ | | List(α36, α39)
-//│ | | {}
-//│ | 1. : Code[(α37', α40',),(α36 & α39)]
-//│ 1. : ((α33', α34',) -> Code[(α37', α40',),(α36 & α39)])
-//│ CONSTRAIN ((α33', α34',) -> Code[(α37', α40',),(α36 & α39)]) <! f32'
-//│   where 
-//│ 		α33' <: Code[α35,α36]
-//│ 		α34' <: Code[α38,α39]
-//│ 		α37' :> α35
-//│ 		α40' :> α38
-//│ C ((α33', α34',) -> Code[(α37', α40',),(α36 & α39)]) <! f32'    (0)
-//│ ⬤ Typed as: f32'
-//│  where: 
-//│ 		f32' :> ((α33', α34',) -> Code[(α37', α40',),(α36 & α39)])
-//│ 		α33' <: Code[α35,α36]
-//│ 		α34' <: Code[α38,α39]
-//│ 		α37' :> α35
-//│ 		α40' :> α38
 //│ f: (Code['a, 'b], Code['c, 'b],) -> Code[('a, 'c,), 'b]
 
 let x = code"y"
@@ -111,13 +20,14 @@ let x = code"y"
 let c = f(x, x)
 //│ c: Code[('a, 'a,), {y: 'a}]
 
-code"y"
+code"[${code"y"}, ${code"y"}]"
+//│ res: Code[('a, 'a,), {y: 'a}]
+
 y => code"[${code"y"}, ${code"y"}]"
-//│ res: Code['a, {y: 'a}]
-//│ res: 'a -> Code[('a, 'a,), anything]
+//│ res: anything -> Code[('a, 'a,), {y: 'a}]
 
 code"y => ${c}"
-//│ res: Code[anything -> ('a, 'a,), {y: 'a}]
+//│ res: Code[anything -> ('a, 'a,), {y: 'a}\y]
 
 
 fun f(x, y) = [code"[${x}, ${y}]", x, y]
@@ -130,7 +40,37 @@ let a: Code<int, {z: int}>
 fun f(x) = x
 //│ f: 'a -> 'a
 
+
+:d
 code"f(0)"
+//│ 0. Typing term Quoted' f (0,) '
+//│ | 0. Typing term f (0,)
+//│ | | 0. Typing term f
+//│ | | | inspect f by ctx.get
+//│ | | | searching method: NormalSearchStrategy()
+//│ | | 0. : f187
+//│ | | 0. Typing term 0,
+//│ | | | 0. Typing term 0
+//│ | | | 0. : 0<int,number>
+//│ | | 0. : (0<int,number>,)
+//│ | | CONSTRAIN f187 <! (0<int,number> -> α189)
+//│ | |   where 
+//│ 		f187 :> [(α188 -> [α188])]
+//│ | | C f187 <! (0<int,number> -> α189)    (0)
+//│ | | | C [(α188 -> [α188])] <! (0<int,number> -> α189)    (1)
+//│ | | | | C (α188 -> [α188]) <! (0<int,number> -> α189)    (1)
+//│ | | | | | C (0<int,number>,) <! (α188,)    (2)
+//│ | | | | | | C 0<int,number> <! α188    (3)
+//│ | | | | | C [α188] <! α189    (4)
+//│ | | | | | | C α188 <! α189    (4)
+//│ | | | | | | | C 0<int,number> <! α189    (5)
+//│ | 0. : α189
+//│ | {}
+//│ | ListBuffer()
+//│ 0. : Code[α189,{}]
+//│ ⬤ Typed as: Code[α189,{}]
+//│  where: 
+//│ 		α189 :> 0<int,number>
 //│ res: Code[0, anything]
 
 :NewParser
@@ -139,63 +79,58 @@ code"f(0)"
 :NoJS
 code"${code"${code"${z}"}"}"
 //│ 0. Typing term Quoted' Unquote' Quoted' Unquote' Quoted' Unquote' z ' ' ' ' ' '
-//│ | typing for 295
 //│ | 0. Typing term Unquote' Quoted' Unquote' Quoted' Unquote' z ' ' ' ' '
+//│ | | qq level: 0
 //│ | | 0. Typing term Quoted' Unquote' Quoted' Unquote' z ' ' ' '
-//│ | | | typing for 719
 //│ | | | 0. Typing term Unquote' Quoted' Unquote' z ' ' '
+//│ | | | | qq level: 1
 //│ | | | | 0. Typing term Quoted' Unquote' z ' '
-//│ | | | | | typing for 41
 //│ | | | | | 0. Typing term Unquote' z '
+//│ | | | | | | qq level: 2
 //│ | | | | | | 0. Typing term z
 //│ | | | | | | | inspect z by ctx.get
+//│ | | | | | | | searching method: UnquoteSearchStrategy()
 //│ | | | | | | | insert z into the free vars
-//│ | | | | | | 0. : α178
-//│ | | | | | | CONSTRAIN (Code[α176,α177] -> α176) <! (α178 -> α179)
+//│ | | | | | | 0. : α197
+//│ | | | | | | CONSTRAIN (Code[α195,α196] -> α195) <! (α197 -> α198)
 //│ | | | | | |   where 
-//│ | | | | | | C (Code[α176,α177] -> α176) <! (α178 -> α179)    (0)
-//│ | | | | | | | C α178 <! Code[α176,α177]    (1)
-//│ | | | | | | | C α176 <! α179    (2)
-//│ | | | | | 0. : α179
-//│ | | | | | chaining for 41
-//│ | | | | | local unquoted context:
-//│ | | | | | List(α177)
+//│ | | | | | | C (Code[α195,α196] -> α195) <! (α197 -> α198)    (0)
+//│ | | | | | | | C α197 <! Code[α195,α196]    (1)
+//│ | | | | | | | C α195 <! α198    (2)
+//│ | | | | | 0. : α198
 //│ | | | | | {}
-//│ | | | | 0. : Code[α179,α177]
-//│ | | | | CONSTRAIN (Code[α174,α175] -> α174) <! (Code[α179,α177] -> α181)
+//│ | | | | | ListBuffer()
+//│ | | | | 0. : Code[α198,α196]
+//│ | | | | CONSTRAIN (Code[α193,α194] -> α193) <! (Code[α198,α196] -> α199)
 //│ | | | |   where 
-//│ | | | | C (Code[α174,α175] -> α174) <! (Code[α179,α177] -> α181)    (0)
-//│ | | | | | C Code[α179,α177] <! Code[α174,α175]    (1)
-//│ | | | | | | C α179 <! α174    (2)
-//│ | | | | | | C α175 <! α177    (3)
-//│ | | | | | C α174 <! α181    (4)
-//│ | | | 0. : α181
-//│ | | | chaining for 719
-//│ | | | local unquoted context:
-//│ | | | List(α175)
+//│ | | | | C (Code[α193,α194] -> α193) <! (Code[α198,α196] -> α199)    (0)
+//│ | | | | | C Code[α198,α196] <! Code[α193,α194]    (1)
+//│ | | | | | | C α198 <! α193    (2)
+//│ | | | | | | C α194 <! α196    (3)
+//│ | | | | | C α193 <! α199    (4)
+//│ | | | 0. : α199
 //│ | | | {}
-//│ | | 0. : Code[α181,α175]
-//│ | | CONSTRAIN (Code[α172,α173] -> α172) <! (Code[α181,α175] -> α183)
+//│ | | | ListBuffer()
+//│ | | 0. : Code[α199,α194]
+//│ | | CONSTRAIN (Code[α191,α192] -> α191) <! (Code[α199,α194] -> α200)
 //│ | |   where 
-//│ 		α175 <: α177
-//│ | | C (Code[α172,α173] -> α172) <! (Code[α181,α175] -> α183)    (0)
-//│ | | | C Code[α181,α175] <! Code[α172,α173]    (1)
-//│ | | | | C α181 <! α172    (2)
-//│ | | | | C α173 <! α175    (3)
-//│ | | | C α172 <! α183    (4)
-//│ | 0. : α183
-//│ | chaining for 295
-//│ | local unquoted context:
-//│ | List(α173)
+//│ 		α194 <: α196
+//│ | | C (Code[α191,α192] -> α191) <! (Code[α199,α194] -> α200)    (0)
+//│ | | | C Code[α199,α194] <! Code[α191,α192]    (1)
+//│ | | | | C α199 <! α191    (2)
+//│ | | | | C α192 <! α194    (3)
+//│ | | | C α191 <! α200    (4)
+//│ | 0. : α200
 //│ | {}
-//│ 0. : Code[α183,α173]
-//│ ⬤ Typed as: Code[α183,α173]
+//│ | ListBuffer()
+//│ 0. : Code[α200,α192]
+//│ ⬤ Typed as: Code[α200,α192]
 //│  where: 
-//│ 		α173 <: α175
-//│ 		α175 <: α177
+//│ 		α192 <: α194
+//│ 		α194 <: α196
 //│ ╔══[ERROR] identifier not found: z
-//│ ║  l.115: 	code"${code"${code"${z}"}"}"
-//│ ╙──       	                     ^
+//│ ║  l.79: 	code"${code"${code"${z}"}"}"
+//│ ╙──      	                     ^
 //│ res: Code[nothing, anything]
 
 
@@ -206,59 +141,53 @@ code"${code"${code"${z}"}"}"
 let z = code"1"
 code"${code"${z}"}"
 //│ 1. Typing term Quoted' 1 '
-//│ | typing for 527
 //│ | 1. Typing term 1
 //│ | 1. : 1<int,number>
-//│ | chaining for 527
-//│ | local unquoted context:
-//│ | List()
 //│ | {}
+//│ | ListBuffer()
 //│ 1. : Code[1<int,number>,{}]
 //│ ⬤ Typed as: Code[1<int,number>,{}]
 //│  where: 
 //│ 0. Typing term Quoted' Unquote' Quoted' Unquote' z ' ' ' '
-//│ | typing for 125
 //│ | 0. Typing term Unquote' Quoted' Unquote' z ' ' '
+//│ | | qq level: 0
 //│ | | 0. Typing term Quoted' Unquote' z ' '
-//│ | | | typing for 14
 //│ | | | 0. Typing term Unquote' z '
+//│ | | | | qq level: 1
 //│ | | | | 0. Typing term z
 //│ | | | | | inspect z by ctx.get
+//│ | | | | | searching method: UnquoteSearchStrategy()
 //│ | | | | 0. : Code[1<int,number>,{}]
-//│ | | | | CONSTRAIN (Code[α192,α193] -> α192) <! (Code[1<int,number>,{}] -> α194)
+//│ | | | | CONSTRAIN (Code[α207,α208] -> α207) <! (Code[1<int,number>,{}] -> α209)
 //│ | | | |   where 
-//│ | | | | C (Code[α192,α193] -> α192) <! (Code[1<int,number>,{}] -> α194)    (0)
-//│ | | | | | C Code[1<int,number>,{}] <! Code[α192,α193]    (1)
-//│ | | | | | | C 1<int,number> <! α192    (2)
-//│ | | | | | | C α193 <! {}    (3)
-//│ | | | | | C α192 <! α194    (4)
-//│ | | | | | | C 1<int,number> <! α194    (5)
-//│ | | | 0. : α194
-//│ | | | chaining for 14
-//│ | | | local unquoted context:
-//│ | | | List(α193)
+//│ | | | | C (Code[α207,α208] -> α207) <! (Code[1<int,number>,{}] -> α209)    (0)
+//│ | | | | | C Code[1<int,number>,{}] <! Code[α207,α208]    (1)
+//│ | | | | | | C 1<int,number> <! α207    (2)
+//│ | | | | | | C α208 <! {}    (3)
+//│ | | | | | C α207 <! α209    (4)
+//│ | | | | | | C 1<int,number> <! α209    (5)
+//│ | | | 0. : α209
 //│ | | | {}
-//│ | | 0. : Code[α194,α193]
-//│ | | CONSTRAIN (Code[α190,α191] -> α190) <! (Code[α194,α193] -> α196)
+//│ | | | ListBuffer()
+//│ | | 0. : Code[α209,α208]
+//│ | | CONSTRAIN (Code[α205,α206] -> α205) <! (Code[α209,α208] -> α210)
 //│ | |   where 
-//│ 		α194 :> 1<int,number>
-//│ | | C (Code[α190,α191] -> α190) <! (Code[α194,α193] -> α196)    (0)
-//│ | | | C Code[α194,α193] <! Code[α190,α191]    (1)
-//│ | | | | C α194 <! α190    (2)
-//│ | | | | | C 1<int,number> <! α190    (3)
-//│ | | | | C α191 <! α193    (4)
-//│ | | | C α190 <! α196    (5)
-//│ | | | | C 1<int,number> <! α196    (6)
-//│ | 0. : α196
-//│ | chaining for 125
-//│ | local unquoted context:
-//│ | List(α191)
+//│ 		α209 :> 1<int,number>
+//│ | | C (Code[α205,α206] -> α205) <! (Code[α209,α208] -> α210)    (0)
+//│ | | | C Code[α209,α208] <! Code[α205,α206]    (1)
+//│ | | | | C α209 <! α205    (2)
+//│ | | | | | C 1<int,number> <! α205    (3)
+//│ | | | | C α206 <! α208    (4)
+//│ | | | C α205 <! α210    (5)
+//│ | | | | C 1<int,number> <! α210    (6)
+//│ | 0. : α210
 //│ | {}
-//│ 0. : Code[α196,α191]
-//│ ⬤ Typed as: Code[α196,α191]
+//│ | ListBuffer()
+//│ 0. : Code[α210,α206]
+//│ ⬤ Typed as: Code[α210,α206]
 //│  where: 
-//│ 		α191 <: α193
-//│ 		α196 :> 1<int,number>
+//│ 		α206 <: α208
+//│ 		α210 :> 1<int,number>
 //│ z: Code[1, anything]
 //│ res: Code[1, anything]
 
@@ -266,57 +195,67 @@ code"${code"${z}"}"
 :d
 :ne
 :NoJS
-code"let x = 1; let z = 1; code"x""
-//│ 0. Typing term Quoted' let x = 1 in let z = 1 in Quoted' x ' '
-//│ | typing for 688
-//│ | 0. Typing term let x = 1 in let z = 1 in Quoted' x '
+code"let x = 1; let z = 1; code"x + y""
+//│ 0. Typing term Quoted' let x = 1 in let z = 1 in Quoted' + (x,) (y,) ' '
+//│ | 0. Typing term let x = 1 in let z = 1 in Quoted' + (x,) (y,) '
 //│ | | 1. Typing term 1
 //│ | | 1. : 1<int,number>
-//│ | | 0. Typing term let z = 1 in Quoted' x '
+//│ | | Let: x
+//│ | | 0. Typing term let z = 1 in Quoted' + (x,) (y,) '
 //│ | | | 1. Typing term 1
 //│ | | | 1. : 1<int,number>
-//│ | | | 0. Typing term Quoted' x '
-//│ | | | | typing for 194
-//│ | | | | 0. Typing term x
-//│ | | | | | inspect x by ctx.get
-//│ | | | | 0. : 1<int,number>
-//│ | | | | chaining for 194
-//│ | | | | local unquoted context:
-//│ | | | | List()
-//│ | | | | {}
-//│ | | | 0. : Code[1<int,number>,{}]
-//│ | | 0. : Code[1<int,number>,{}]
-//│ | 0. : Code[1<int,number>,{}]
-//│ | chaining for 688
-//│ | local unquoted context:
-//│ | List()
+//│ | | | Let: z
+//│ | | | 0. Typing term Quoted' + (x,) (y,) '
+//│ | | | | 0. Typing term + (x,) (y,)
+//│ | | | | | 0. Typing term + (x,)
+//│ | | | | | | 0. Typing term +
+//│ | | | | | | | inspect + by ctx.get
+//│ | | | | | | | searching method: NormalSearchStrategy()
+//│ | | | | | | 0. : (int<number> -> (int<number> -> int<number>))
+//│ | | | | | | 0. Typing term x,
+//│ | | | | | | | 0. Typing term x
+//│ | | | | | | | | inspect x by ctx.get
+//│ | | | | | | | | searching method: QuasiquoteSearchStrategy(2)
+//│ | | | | | | | | insert x into the free vars
+//│ | | | | | | | 0. : α214
+//│ | | | | | | 0. : (α214,)
+//│ | | | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (α214 -> α215)
+//│ | | | | | |   where 
+//│ | | | | | | C (int<number> -> (int<number> -> int<number>)) <! (α214 -> α215)    (0)
+//│ | | | | | | | C (α214,) <! (int<number>,)    (1)
+//│ | | | | | | | | C α214 <! int<number>    (2)
+//│ | | | | | | | C (int<number> -> int<number>) <! α215    (3)
+//│ | | | | | 0. : α215
+//│ | | | | | 0. Typing term y,
+//│ | | | | | | 0. Typing term y
+//│ | | | | | | | inspect y by ctx.get
+//│ | | | | | | | searching method: QuasiquoteSearchStrategy(2)
+//│ | | | | | | | insert y into the free vars
+//│ | | | | | | 0. : α216
+//│ | | | | | 0. : (α216,)
+//│ | | | | | CONSTRAIN α215 <! (α216 -> α217)
+//│ | | | | |   where 
+//│ 		α215 :> (int<number> -> int<number>)
+//│ | | | | | C α215 <! (α216 -> α217)    (0)
+//│ | | | | | | C (int<number> -> int<number>) <! (α216 -> α217)    (1)
+//│ | | | | | | | C (α216,) <! (int<number>,)    (2)
+//│ | | | | | | | | C α216 <! int<number>    (3)
+//│ | | | | | | | C int<number> <! α217    (4)
+//│ | | | | 0. : α217
+//│ | | | | {y: α216, x: α214}
+//│ | | | | ListBuffer()
+//│ | | | 0. : Code[α217,{y: α216, x: α214}]
+//│ | | 0. : Code[α217,{y: α216, x: α214}]
+//│ | 0. : Code[α217,{y: α216, x: α214}]
 //│ | {}
-//│ 0. : Code[Code[1<int,number>,{}],{}]
-//│ ⬤ Typed as: Code[Code[1<int,number>,{}],{}]
+//│ | ListBuffer(x, z)
+//│ 0. : Code[Code[α217,{y: α216, x: α214}],{}\x-z]
+//│ ⬤ Typed as: Code[Code[α217,{y: α216, x: α214}],{}\x-z]
 //│  where: 
-//│ res: Code[Code[1, anything], anything]
-
-:NewParser
-:d
-:ne
-:NoJS
-code"x; code"x""
-//│ ╔══[PARSE ERROR] Unexpected ';' keyword here
-//│ ║  l.278: 	code"x; code"x""
-//│ ╙──       	      ^
-//│ 0. Typing term Quoted' x '
-//│ | typing for 342
-//│ | 0. Typing term x
-//│ | | inspect x by ctx.get
-//│ | 0. : Code[[α203],{y: α203}]
-//│ | chaining for 342
-//│ | local unquoted context:
-//│ | List()
-//│ | {}
-//│ 0. : Code[Code[[α203],{y: α203}],{}]
-//│ ⬤ Typed as: Code[Code[[α203],{y: α203}],{}]
-//│  where: 
-//│ res: Code[Code['a, {y: 'a}], anything]
+//│ 		α214 <: int<number>
+//│ 		α216 <: int<number>
+//│ 		α217 :> int<number>
+//│ res: Code[Code[int, {x: int, y: int}], anything\x\z]
 
 :NewParser
 :d
@@ -324,40 +263,39 @@ code"x; code"x""
 :NoJS
 code"let z = 0;${code"z"}"
 //│ 0. Typing term Quoted' let z = 0 in Unquote' Quoted' z ' ' '
-//│ | typing for 145
 //│ | 0. Typing term let z = 0 in Unquote' Quoted' z ' '
 //│ | | 1. Typing term 0
 //│ | | 1. : 0<int,number>
+//│ | | Let: z
 //│ | | 0. Typing term Unquote' Quoted' z ' '
+//│ | | | qq level: 1
 //│ | | | 0. Typing term Quoted' z '
-//│ | | | | typing for 625
 //│ | | | | 0. Typing term z
 //│ | | | | | inspect z by ctx.get
-//│ | | | | 0. : Code[1<int,number>,{}]
-//│ | | | | chaining for 625
-//│ | | | | local unquoted context:
-//│ | | | | List()
-//│ | | | | {}
-//│ | | | 0. : Code[Code[1<int,number>,{}],{}]
-//│ | | | CONSTRAIN (Code[α208,α209] -> α208) <! (Code[Code[1<int,number>,{}],{}] -> α211)
+//│ | | | | | searching method: QuasiquoteSearchStrategy(3)
+//│ | | | | | insert z into the free vars
+//│ | | | | 0. : α223
+//│ | | | | {z: α223}
+//│ | | | | ListBuffer()
+//│ | | | 0. : Code[α223,{z: α223}]
+//│ | | | CONSTRAIN (Code[α221,α222] -> α221) <! (Code[α223,{z: α223}] -> α224)
 //│ | | |   where 
-//│ | | | C (Code[α208,α209] -> α208) <! (Code[Code[1<int,number>,{}],{}] -> α211)    (0)
-//│ | | | | C Code[Code[1<int,number>,{}],{}] <! Code[α208,α209]    (1)
-//│ | | | | | C Code[1<int,number>,{}] <! α208    (2)
-//│ | | | | | C α209 <! {}    (3)
-//│ | | | | C α208 <! α211    (4)
-//│ | | | | | C Code[1<int,number>,{}] <! α211    (5)
-//│ | | 0. : α211
-//│ | 0. : α211
-//│ | chaining for 145
-//│ | local unquoted context:
-//│ | List(α209)
+//│ | | | C (Code[α221,α222] -> α221) <! (Code[α223,{z: α223}] -> α224)    (0)
+//│ | | | | C Code[α223,{z: α223}] <! Code[α221,α222]    (1)
+//│ | | | | | C α223 <! α221    (2)
+//│ | | | | | C α222 <! {z: α223}    (3)
+//│ | | | | C α221 <! α224    (4)
+//│ | | 0. : α224
+//│ | 0. : α224
 //│ | {}
-//│ 0. : Code[α211,α209]
-//│ ⬤ Typed as: Code[α211,α209]
+//│ | ListBuffer(z)
+//│ 0. : Code[α224,α222\z]
+//│ ⬤ Typed as: Code[α224,α222\z]
 //│  where: 
-//│ 		α211 :> Code[1<int,number>,{}]
-//│ res: Code[Code[1, anything], anything]
+//│ 		α221 <: α224
+//│ 		α222 <: {z: α223}
+//│ 		α223 <: α221
+//│ res: Code['a, {z: 'a}\z]
 
 :NewParser
 :d
@@ -365,111 +303,76 @@ code"let z = 0;${code"z"}"
 :NoJS
 code"let x = 1;${code"x + y"}"
 //│ 0. Typing term Quoted' let x = 1 in Unquote' Quoted' + (x,) (y,) ' ' '
-//│ | typing for 53
 //│ | 0. Typing term let x = 1 in Unquote' Quoted' + (x,) (y,) ' '
 //│ | | 1. Typing term 1
 //│ | | 1. : 1<int,number>
+//│ | | Let: x
 //│ | | 0. Typing term Unquote' Quoted' + (x,) (y,) ' '
+//│ | | | qq level: 1
 //│ | | | 0. Typing term Quoted' + (x,) (y,) '
-//│ | | | | typing for 360
 //│ | | | | 0. Typing term + (x,) (y,)
 //│ | | | | | 0. Typing term + (x,)
 //│ | | | | | | 0. Typing term +
 //│ | | | | | | | inspect + by ctx.get
+//│ | | | | | | | searching method: NormalSearchStrategy()
 //│ | | | | | | 0. : (int<number> -> (int<number> -> int<number>))
 //│ | | | | | | 0. Typing term x,
 //│ | | | | | | | 0. Typing term x
 //│ | | | | | | | | inspect x by ctx.get
-//│ | | | | | | | 0. : Code[[α217],{y: α217}]
-//│ | | | | | | 0. : (Code[[α217],{y: α217}],)
-//│ | | | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (Code[[α217],{y: α217}] -> α218)
+//│ | | | | | | | | searching method: QuasiquoteSearchStrategy(3)
+//│ | | | | | | | | insert x into the free vars
+//│ | | | | | | | 0. : α233
+//│ | | | | | | 0. : (α233,)
+//│ | | | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (α233 -> α234)
 //│ | | | | | |   where 
-//│ | | | | | | C (int<number> -> (int<number> -> int<number>)) <! (Code[[α217],{y: α217}] -> α218)    (0)
-//│ | | | | | | | C (Code[[α217],{y: α217}],) <! (int<number>,)    (1)
-//│ | | | | | | | | C Code[[α217],{y: α217}] <! int<number>    (2)
-//│ | | | | | | | | | C (code<> & {Code#T: mut ..[α217], Code#C: mut {y: α217}..⊤}) <! int<number>    (3)
-//│ | | | | | | | | | | ARGH  DNF(code<>{Code#T: mut ..α217, Code#C: mut {y: α217}..⊤})  <!  DNF(int<number>{})
-//│ | | | | | | | | | | | Consider code<>{Code#T: mut ..α217, Code#C: mut {y: α217}..⊤} <: DNF(int<number>{})
-//│ | | | | | | | | | | | Possible: List()
-//│ | | | | | | | | | | | A  code<>{Code#T: mut ..α217, Code#C: mut {y: α217}..⊤}  %  List()  <!  List()  %  ⊥
-//│ | | | | | | | | | | | | CONSTRAINT FAILURE: (code<> & {Code#T: mut ..[α217], Code#C: mut {y: α217}..⊤}) <: int<number>
-//│ | | | | | | | | | | | | allVarPols: =α217
-//│ | | | | | | | | | | | | norm[+] (code<> & {Code#T: mut ..[α217], Code#C: mut {y: α217}..⊤})
-//│ | | | | | | | | | | | | | DNF: DNF(code<>{Code#T: mut ..[α217], Code#C: mut {y: α217}..⊤})
-//│ | | | | | | | | | | | | | norm[-] ⊥
-//│ | | | | | | | | | | | | | | DNF: DNF()
-//│ | | | | | | | | | | | | | ~> ⊥
-//│ | | | | | | | | | | | | | norm[+] [α217]
-//│ | | | | | | | | | | | | | | DNF: DNF(α217)
-//│ | | | | | | | | | | | | | ~> α217
-//│ | | | | | | | | | | | | | norm[-] {y: α217}
-//│ | | | | | | | | | | | | | | DNF: DNF({y: α217})
-//│ | | | | | | | | | | | | | | norm[-] α217
-//│ | | | | | | | | | | | | | | | DNF: DNF(α217)
-//│ | | | | | | | | | | | | | | ~> α217
-//│ | | | | | | | | | | | | | ~> {y: α217}
-//│ | | | | | | | | | | | | | norm[+] ⊤
-//│ | | | | | | | | | | | | | | DNF: DNF()
-//│ | | | | | | | | | | | | | ~> ⊤
-//│ | | | | | | | | | | | | ~> (code<> & {Code#C: mut {y: α217}..⊤, Code#T: mut ..α217})
-//│ | | | | | | | | | | | | CONSTRAIN error<> <! α218
-//│ | | | | | | | | | | | |   where 
-//│ | | | | | | | | | | | | C error<> <! α218    (0)
-//│ | | | | | | | C (int<number> -> int<number>) <! α218    (4)
-//│ | | | | | 0. : α218
+//│ | | | | | | C (int<number> -> (int<number> -> int<number>)) <! (α233 -> α234)    (0)
+//│ | | | | | | | C (α233,) <! (int<number>,)    (1)
+//│ | | | | | | | | C α233 <! int<number>    (2)
+//│ | | | | | | | C (int<number> -> int<number>) <! α234    (3)
+//│ | | | | | 0. : α234
 //│ | | | | | 0. Typing term y,
 //│ | | | | | | 0. Typing term y
 //│ | | | | | | | inspect y by ctx.get
+//│ | | | | | | | searching method: QuasiquoteSearchStrategy(3)
 //│ | | | | | | | insert y into the free vars
-//│ | | | | | | 0. : α219
-//│ | | | | | 0. : (α219,)
-//│ | | | | | CONSTRAIN α218 <! (α219 -> α220)
+//│ | | | | | | 0. : α235
+//│ | | | | | 0. : (α235,)
+//│ | | | | | CONSTRAIN α234 <! (α235 -> α236)
 //│ | | | | |   where 
-//│ 		α218 :> (int<number> -> int<number>) | error<>
-//│ | | | | | C α218 <! (α219 -> α220)    (0)
-//│ | | | | | | C (int<number> -> int<number>) <! (α219 -> α220)    (1)
-//│ | | | | | | | C (α219,) <! (int<number>,)    (2)
-//│ | | | | | | | | C α219 <! int<number>    (3)
-//│ | | | | | | | C int<number> <! α220    (4)
-//│ | | | | | | C error<> <! (α219 -> α220)    (5)
-//│ | | | | | | | C (α219,) <! error<>    (6)
-//│ | | | | | | | C error<> <! α220    (7)
-//│ | | | | 0. : α220
-//│ | | | | chaining for 360
-//│ | | | | local unquoted context:
-//│ | | | | List()
-//│ | | | | {y: α219}
-//│ | | | 0. : Code[α220,{y: α219}]
-//│ | | | CONSTRAIN (Code[α215,α216] -> α215) <! (Code[α220,{y: α219}] -> α222)
+//│ 		α234 :> (int<number> -> int<number>)
+//│ | | | | | C α234 <! (α235 -> α236)    (0)
+//│ | | | | | | C (int<number> -> int<number>) <! (α235 -> α236)    (1)
+//│ | | | | | | | C (α235,) <! (int<number>,)    (2)
+//│ | | | | | | | | C α235 <! int<number>    (3)
+//│ | | | | | | | C int<number> <! α236    (4)
+//│ | | | | 0. : α236
+//│ | | | | {y: α235, x: α233}
+//│ | | | | ListBuffer()
+//│ | | | 0. : Code[α236,{y: α235, x: α233}]
+//│ | | | CONSTRAIN (Code[α231,α232] -> α231) <! (Code[α236,{y: α235, x: α233}] -> α237)
 //│ | | |   where 
-//│ 		α219 <: int<number>
-//│ 		α220 :> error<> | int<number>
-//│ | | | C (Code[α215,α216] -> α215) <! (Code[α220,{y: α219}] -> α222)    (0)
-//│ | | | | C Code[α220,{y: α219}] <! Code[α215,α216]    (1)
-//│ | | | | | C α220 <! α215    (2)
-//│ | | | | | | C error<> <! α215    (3)
-//│ | | | | | | C int<number> <! α215    (4)
-//│ | | | | | C α216 <! {y: α219}    (5)
-//│ | | | | C α215 <! α222    (6)
-//│ | | | | | C int<number> <! α222    (7)
-//│ | | | | | C error<> <! α222    (8)
-//│ | | 0. : α222
-//│ | 0. : α222
-//│ | chaining for 53
-//│ | local unquoted context:
-//│ | List(α216)
+//│ 		α233 <: int<number>
+//│ 		α235 <: int<number>
+//│ 		α236 :> int<number>
+//│ | | | C (Code[α231,α232] -> α231) <! (Code[α236,{y: α235, x: α233}] -> α237)    (0)
+//│ | | | | C Code[α236,{y: α235, x: α233}] <! Code[α231,α232]    (1)
+//│ | | | | | C α236 <! α231    (2)
+//│ | | | | | | C int<number> <! α231    (3)
+//│ | | | | | C α232 <! {y: α235, x: α233}    (4)
+//│ | | | | C α231 <! α237    (5)
+//│ | | | | | C int<number> <! α237    (6)
+//│ | | 0. : α237
+//│ | 0. : α237
 //│ | {}
-//│ 0. : Code[α222,α216]
-//│ ⬤ Typed as: Code[α222,α216]
+//│ | ListBuffer(x)
+//│ 0. : Code[α237,α232\x]
+//│ ⬤ Typed as: Code[α237,α232\x]
 //│  where: 
-//│ 		α216 <: {y: α219}
-//│ 		α219 <: int<number>
-//│ 		α222 :> error<> | int<number>
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.341: 	code"let x = 1;${code"x + y"}"
-//│ ║         	                      ^^^
-//│ ╙── expression of type `code & {Code#C :> {y: ?a}, Code#T <: ?a}` is not an instance of type `int`
-//│ res: Code[error | int, {y: int}]
+//│ 		α232 <: {y: α235, x: α233}
+//│ 		α233 <: int<number>
+//│ 		α235 <: int<number>
+//│ 		α237 :> int<number>
+//│ res: Code[int, {x: int, y: int}\x]
 
 
 :NewParser
@@ -478,65 +381,62 @@ code"let x = 1;${code"x + y"}"
 :NoJS
 code"1 + ${code"b"}"
 //│ 0. Typing term Quoted' + (1,) (Unquote' Quoted' b ' ',) '
-//│ | typing for 472
 //│ | 0. Typing term + (1,) (Unquote' Quoted' b ' ',)
 //│ | | 0. Typing term + (1,)
 //│ | | | 0. Typing term +
 //│ | | | | inspect + by ctx.get
+//│ | | | | searching method: NormalSearchStrategy()
 //│ | | | 0. : (int<number> -> (int<number> -> int<number>))
 //│ | | | 0. Typing term 1,
 //│ | | | | 0. Typing term 1
 //│ | | | | 0. : 1<int,number>
 //│ | | | 0. : (1<int,number>,)
-//│ | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (1<int,number> -> α227)
+//│ | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (1<int,number> -> α242)
 //│ | | |   where 
-//│ | | | C (int<number> -> (int<number> -> int<number>)) <! (1<int,number> -> α227)    (0)
+//│ | | | C (int<number> -> (int<number> -> int<number>)) <! (1<int,number> -> α242)    (0)
 //│ | | | | C (1<int,number>,) <! (int<number>,)    (1)
-//│ | | | | C (int<number> -> int<number>) <! α227    (1)
-//│ | | 0. : α227
+//│ | | | | C (int<number> -> int<number>) <! α242    (1)
+//│ | | 0. : α242
 //│ | | 0. Typing term Unquote' Quoted' b ' ',
 //│ | | | 0. Typing term Unquote' Quoted' b ' '
+//│ | | | | qq level: 0
 //│ | | | | 0. Typing term Quoted' b '
-//│ | | | | | typing for 521
 //│ | | | | | 0. Typing term b
 //│ | | | | | | inspect b by ctx.get
+//│ | | | | | | searching method: QuasiquoteSearchStrategy(2)
 //│ | | | | | | insert b into the free vars
-//│ | | | | | 0. : α230
-//│ | | | | | chaining for 521
-//│ | | | | | local unquoted context:
-//│ | | | | | List()
-//│ | | | | | {b: α230}
-//│ | | | | 0. : Code[α230,{b: α230}]
-//│ | | | | CONSTRAIN (Code[α228,α229] -> α228) <! (Code[α230,{b: α230}] -> α232)
+//│ | | | | | 0. : α245
+//│ | | | | | {b: α245}
+//│ | | | | | ListBuffer()
+//│ | | | | 0. : Code[α245,{b: α245}]
+//│ | | | | CONSTRAIN (Code[α243,α244] -> α243) <! (Code[α245,{b: α245}] -> α246)
 //│ | | | |   where 
-//│ | | | | C (Code[α228,α229] -> α228) <! (Code[α230,{b: α230}] -> α232)    (0)
-//│ | | | | | C Code[α230,{b: α230}] <! Code[α228,α229]    (1)
-//│ | | | | | | C α230 <! α228    (2)
-//│ | | | | | | C α229 <! {b: α230}    (3)
-//│ | | | | | C α228 <! α232    (4)
-//│ | | | 0. : α232
-//│ | | 0. : (α232,)
-//│ | | CONSTRAIN α227 <! (α232 -> α233)
+//│ | | | | C (Code[α243,α244] -> α243) <! (Code[α245,{b: α245}] -> α246)    (0)
+//│ | | | | | C Code[α245,{b: α245}] <! Code[α243,α244]    (1)
+//│ | | | | | | C α245 <! α243    (2)
+//│ | | | | | | C α244 <! {b: α245}    (3)
+//│ | | | | | C α243 <! α246    (4)
+//│ | | | 0. : α246
+//│ | | 0. : (α246,)
+//│ | | CONSTRAIN α242 <! (α246 -> α247)
 //│ | |   where 
-//│ 		α227 :> (int<number> -> int<number>)
-//│ | | C α227 <! (α232 -> α233)    (0)
-//│ | | | C (int<number> -> int<number>) <! (α232 -> α233)    (1)
-//│ | | | | C (α232,) <! (int<number>,)    (2)
-//│ | | | | | C α232 <! int<number>    (3)
-//│ | | | | C int<number> <! α233    (4)
-//│ | 0. : α233
-//│ | chaining for 472
-//│ | local unquoted context:
-//│ | List(α229)
+//│ 		α242 :> (int<number> -> int<number>)
+//│ | | C α242 <! (α246 -> α247)    (0)
+//│ | | | C (int<number> -> int<number>) <! (α246 -> α247)    (1)
+//│ | | | | C (α246,) <! (int<number>,)    (2)
+//│ | | | | | C α246 <! int<number>    (3)
+//│ | | | | C int<number> <! α247    (4)
+//│ | 0. : α247
 //│ | {}
-//│ 0. : Code[α233,α229]
-//│ ⬤ Typed as: Code[α233,α229]
+//│ | ListBuffer()
+//│ 0. : Code[α247,α244]
+//│ ⬤ Typed as: Code[α247,α244]
 //│  where: 
-//│ 		α228 <: α232
-//│ 		α229 <: {b: α230}
-//│ 		α230 <: α228
-//│ 		α232 <: int<number>
-//│ 		α233 :> int<number>
+//│ 		α243 <: α246
+//│ 		α244 <: {b: α245}
+//│ 		α245 <: α243
+//│ 		α246 <: int<number>
+//│ 		α247 :> int<number>
 //│ res: Code[int, {b: int}]
 
 
@@ -551,71 +451,72 @@ code"${Const(n)} + 1"
 //│ ⬤ Typed as: 1<int,number>
 //│  where: 
 //│ 0. Typing term Quoted' + (Unquote' Const (n,) ',) (1,) '
-//│ | typing for 871
 //│ | 0. Typing term + (Unquote' Const (n,) ',) (1,)
 //│ | | 0. Typing term + (Unquote' Const (n,) ',)
 //│ | | | 0. Typing term +
 //│ | | | | inspect + by ctx.get
+//│ | | | | searching method: NormalSearchStrategy()
 //│ | | | 0. : (int<number> -> (int<number> -> int<number>))
 //│ | | | 0. Typing term Unquote' Const (n,) ',
 //│ | | | | 0. Typing term Unquote' Const (n,) '
+//│ | | | | | qq level: 0
 //│ | | | | | 0. Typing term Const (n,)
 //│ | | | | | | 0. Typing term Const
 //│ | | | | | | | inspect Const by ctx.get
+//│ | | | | | | | searching method: UnquoteSearchStrategy()
 //│ | | | | | | 0. : (int<number> -> Code[int<number>,⊥])
 //│ | | | | | | 0. Typing term n,
 //│ | | | | | | | 0. Typing term n
 //│ | | | | | | | | inspect n by ctx.get
+//│ | | | | | | | | searching method: UnquoteSearchStrategy()
 //│ | | | | | | | 0. : 1<int,number>
 //│ | | | | | | 0. : (1<int,number>,)
-//│ | | | | | | CONSTRAIN (int<number> -> Code[int<number>,⊥]) <! (1<int,number> -> α242)
+//│ | | | | | | CONSTRAIN (int<number> -> Code[int<number>,⊥]) <! (1<int,number> -> α255)
 //│ | | | | | |   where 
-//│ | | | | | | C (int<number> -> Code[int<number>,⊥]) <! (1<int,number> -> α242)    (0)
+//│ | | | | | | C (int<number> -> Code[int<number>,⊥]) <! (1<int,number> -> α255)    (0)
 //│ | | | | | | | C (1<int,number>,) <! (int<number>,)    (1)
-//│ | | | | | | | C Code[int<number>,⊥] <! α242    (1)
-//│ | | | | | 0. : α242
-//│ | | | | | CONSTRAIN (Code[α240,α241] -> α240) <! (α242 -> α243)
+//│ | | | | | | | C Code[int<number>,⊥] <! α255    (1)
+//│ | | | | | 0. : α255
+//│ | | | | | CONSTRAIN (Code[α253,α254] -> α253) <! (α255 -> α256)
 //│ | | | | |   where 
-//│ 		α242 :> Code[int<number>,⊥]
-//│ | | | | | C (Code[α240,α241] -> α240) <! (α242 -> α243)    (0)
-//│ | | | | | | C α242 <! Code[α240,α241]    (1)
-//│ | | | | | | | C Code[int<number>,⊥] <! Code[α240,α241]    (2)
-//│ | | | | | | | | C int<number> <! α240    (3)
-//│ | | | | | | | | C α241 <! ⊥    (4)
-//│ | | | | | | C α240 <! α243    (5)
-//│ | | | | | | | C int<number> <! α243    (6)
-//│ | | | | 0. : α243
-//│ | | | 0. : (α243,)
-//│ | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (α243 -> α244)
+//│ 		α255 :> Code[int<number>,⊥]
+//│ | | | | | C (Code[α253,α254] -> α253) <! (α255 -> α256)    (0)
+//│ | | | | | | C α255 <! Code[α253,α254]    (1)
+//│ | | | | | | | C Code[int<number>,⊥] <! Code[α253,α254]    (2)
+//│ | | | | | | | | C int<number> <! α253    (3)
+//│ | | | | | | | | C α254 <! ⊥    (4)
+//│ | | | | | | C α253 <! α256    (5)
+//│ | | | | | | | C int<number> <! α256    (6)
+//│ | | | | 0. : α256
+//│ | | | 0. : (α256,)
+//│ | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (α256 -> α257)
 //│ | | |   where 
-//│ 		α243 :> int<number>
-//│ | | | C (int<number> -> (int<number> -> int<number>)) <! (α243 -> α244)    (0)
-//│ | | | | C (α243,) <! (int<number>,)    (1)
-//│ | | | | | C α243 <! int<number>    (2)
+//│ 		α256 :> int<number>
+//│ | | | C (int<number> -> (int<number> -> int<number>)) <! (α256 -> α257)    (0)
+//│ | | | | C (α256,) <! (int<number>,)    (1)
+//│ | | | | | C α256 <! int<number>    (2)
 //│ | | | | | | C int<number> <! int<number>    (3)
-//│ | | | | C (int<number> -> int<number>) <! α244    (3)
-//│ | | 0. : α244
+//│ | | | | C (int<number> -> int<number>) <! α257    (3)
+//│ | | 0. : α257
 //│ | | 0. Typing term 1,
 //│ | | | 0. Typing term 1
 //│ | | | 0. : 1<int,number>
 //│ | | 0. : (1<int,number>,)
-//│ | | CONSTRAIN α244 <! (1<int,number> -> α245)
+//│ | | CONSTRAIN α257 <! (1<int,number> -> α258)
 //│ | |   where 
-//│ 		α244 :> (int<number> -> int<number>)
-//│ | | C α244 <! (1<int,number> -> α245)    (0)
-//│ | | | C (int<number> -> int<number>) <! (1<int,number> -> α245)    (1)
+//│ 		α257 :> (int<number> -> int<number>)
+//│ | | C α257 <! (1<int,number> -> α258)    (0)
+//│ | | | C (int<number> -> int<number>) <! (1<int,number> -> α258)    (1)
 //│ | | | | C (1<int,number>,) <! (int<number>,)    (2)
-//│ | | | | C int<number> <! α245    (2)
-//│ | 0. : α245
-//│ | chaining for 871
-//│ | local unquoted context:
-//│ | List(α241)
+//│ | | | | C int<number> <! α258    (2)
+//│ | 0. : α258
 //│ | {}
-//│ 0. : Code[α245,α241]
-//│ ⬤ Typed as: Code[α245,α241]
+//│ | ListBuffer()
+//│ 0. : Code[α258,α254]
+//│ ⬤ Typed as: Code[α258,α254]
 //│  where: 
-//│ 		α241 <: ⊥
-//│ 		α245 :> int<number>
+//│ 		α254 <: ⊥
+//│ 		α258 :> int<number>
 //│ n: 1
 //│ res: Code[int, ?]
 
@@ -627,10 +528,12 @@ fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, code"${
 //│ 1. Typing term n, cde, => if (> (n,) (0,)) then Quoted' let x = Unquote' Const (n,) ' in Unquote' test (- (n,) (1,), Quoted' + (Unquote' cde ',) (x,) ',) ' ' else cde
 //│ | 1. Typing pattern n, cde,
 //│ | | 1. Typing pattern n
-//│ | | 1. : α250'
+//│ | | | n
+//│ | | 1. : α262'
 //│ | | 1. Typing pattern cde
-//│ | | 1. : α251'
-//│ | 1. : (α250', α251',)
+//│ | | | cde
+//│ | | 1. : α264'
+//│ | 1. : (α262', α264',)
 //│ | 1. Typing term if (> (n,) (0,)) then Quoted' let x = Unquote' Const (n,) ' in Unquote' test (- (n,) (1,), Quoted' + (Unquote' cde ',) (x,) ',) ' ' else cde
 //│ | | The mutable CaseOf tree
 //│ | | if «> (n,) (0,)»
@@ -643,268 +546,267 @@ fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, code"${
 //│ | | | | 1. Typing term > (n,)
 //│ | | | | | 1. Typing term >
 //│ | | | | | | inspect > by ctx.get
+//│ | | | | | | searching method: NormalSearchStrategy()
 //│ | | | | | 1. : (number<> -> (number<> -> bool<>))
 //│ | | | | | 1. Typing term n,
 //│ | | | | | | 1. Typing term n
 //│ | | | | | | | inspect n by ctx.get
-//│ | | | | | | 1. : α250'
-//│ | | | | | 1. : (α250',)
-//│ | | | | | CONSTRAIN (number<> -> (number<> -> bool<>)) <! (α250' -> α252')
+//│ | | | | | | | searching method: NormalSearchStrategy()
+//│ | | | | | | 1. : α262'
+//│ | | | | | 1. : (α262',)
+//│ | | | | | CONSTRAIN (number<> -> (number<> -> bool<>)) <! (α262' -> α265')
 //│ | | | | |   where 
-//│ | | | | | C (number<> -> (number<> -> bool<>)) <! (α250' -> α252')    (0)
-//│ | | | | | | C (α250',) <! (number<>,)    (1)
-//│ | | | | | | | C α250' <! number<>    (2)
-//│ | | | | | | C (number<> -> bool<>) <! α252'    (3)
-//│ | | | | 1. : α252'
+//│ | | | | | C (number<> -> (number<> -> bool<>)) <! (α262' -> α265')    (0)
+//│ | | | | | | C (α262',) <! (number<>,)    (1)
+//│ | | | | | | | C α262' <! number<>    (2)
+//│ | | | | | | C (number<> -> bool<>) <! α265'    (3)
+//│ | | | | 1. : α265'
 //│ | | | | 1. Typing term 0,
 //│ | | | | | 1. Typing term 0
 //│ | | | | | 1. : 0<int,number>
 //│ | | | | 1. : (0<int,number>,)
-//│ | | | | CONSTRAIN α252' <! (0<int,number> -> α253')
+//│ | | | | CONSTRAIN α265' <! (0<int,number> -> α266')
 //│ | | | |   where 
-//│ 		α252' :> (number<> -> bool<>)
-//│ | | | | C α252' <! (0<int,number> -> α253')    (0)
-//│ | | | | | C (number<> -> bool<>) <! (0<int,number> -> α253')    (1)
+//│ 		α265' :> (number<> -> bool<>)
+//│ | | | | C α265' <! (0<int,number> -> α266')    (0)
+//│ | | | | | C (number<> -> bool<>) <! (0<int,number> -> α266')    (1)
 //│ | | | | | | C (0<int,number>,) <! (number<>,)    (2)
-//│ | | | | | | C bool<> <! α253'    (2)
-//│ | | | 1. : α253'
+//│ | | | | | | C bool<> <! α266'    (2)
+//│ | | | 1. : α266'
 //│ | | | 1. Typing term Quoted' let x = Unquote' Const (n,) ' in Unquote' test (- (n,) (1,), Quoted' + (Unquote' cde ',) (x,) ',) ' '
-//│ | | | | typing for 534
 //│ | | | | 1. Typing term let x = Unquote' Const (n,) ' in Unquote' test (- (n,) (1,), Quoted' + (Unquote' cde ',) (x,) ',) '
 //│ | | | | | 2. Typing term Unquote' Const (n,) '
+//│ | | | | | | qq level: 0
 //│ | | | | | | 1. Typing term Const (n,)
 //│ | | | | | | | 1. Typing term Const
 //│ | | | | | | | | inspect Const by ctx.get
+//│ | | | | | | | | searching method: UnquoteSearchStrategy()
 //│ | | | | | | | 1. : (int<number> -> Code[int<number>,⊥])
 //│ | | | | | | | 1. Typing term n,
 //│ | | | | | | | | 1. Typing term n
 //│ | | | | | | | | | inspect n by ctx.get
-//│ | | | | | | | | 1. : α250'
-//│ | | | | | | | 1. : (α250',)
-//│ | | | | | | | CONSTRAIN (int<number> -> Code[int<number>,⊥]) <! (α250' -> α256')
+//│ | | | | | | | | | searching method: UnquoteSearchStrategy()
+//│ | | | | | | | | 1. : α262'
+//│ | | | | | | | 1. : (α262',)
+//│ | | | | | | | CONSTRAIN (int<number> -> Code[int<number>,⊥]) <! (α262' -> α269')
 //│ | | | | | | |   where 
-//│ 		α250' <: number<>
-//│ | | | | | | | C (int<number> -> Code[int<number>,⊥]) <! (α250' -> α256')    (0)
-//│ | | | | | | | | C (α250',) <! (int<number>,)    (1)
-//│ | | | | | | | | | C α250' <! int<number>    (2)
-//│ | | | | | | | | C Code[int<number>,⊥] <! α256'    (3)
-//│ | | | | | | 1. : α256'
-//│ | | | | | | CONSTRAIN (Code[α254,α255] -> α254) <! (α256' -> α257'')
+//│ 		α262' <: number<>
+//│ | | | | | | | C (int<number> -> Code[int<number>,⊥]) <! (α262' -> α269')    (0)
+//│ | | | | | | | | C (α262',) <! (int<number>,)    (1)
+//│ | | | | | | | | | C α262' <! int<number>    (2)
+//│ | | | | | | | | C Code[int<number>,⊥] <! α269'    (3)
+//│ | | | | | | 1. : α269'
+//│ | | | | | | CONSTRAIN (Code[α267,α268] -> α267) <! (α269' -> α270'')
 //│ | | | | | |   where 
-//│ 		α256' :> Code[int<number>,⊥]
-//│ | | | | | | C (Code[α254,α255] -> α254) <! (α256' -> α257'')    (0)
-//│ | | | | | | | C α256' <! Code[α254,α255]    (1)
-//│ | | | | | | | | C Code[int<number>,⊥] <! Code[α254,α255]    (2)
-//│ | | | | | | | | | C int<number> <! α254    (3)
-//│ | | | | | | | | | C α255 <! ⊥    (4)
-//│ | | | | | | | C α254 <! α257''    (5)
-//│ | | | | | 2. : α257''
+//│ 		α269' :> Code[int<number>,⊥]
+//│ | | | | | | C (Code[α267,α268] -> α267) <! (α269' -> α270'')    (0)
+//│ | | | | | | | C α269' <! Code[α267,α268]    (1)
+//│ | | | | | | | | C Code[int<number>,⊥] <! Code[α267,α268]    (2)
+//│ | | | | | | | | | C int<number> <! α267    (3)
+//│ | | | | | | | | | C α268 <! ⊥    (4)
+//│ | | | | | | | C α267 <! α270''    (5)
+//│ | | | | | 2. : α270''
+//│ | | | | | Let: x
 //│ | | | | | 1. Typing term Unquote' test (- (n,) (1,), Quoted' + (Unquote' cde ',) (x,) ',) '
+//│ | | | | | | qq level: 1
 //│ | | | | | | 1. Typing term test (- (n,) (1,), Quoted' + (Unquote' cde ',) (x,) ',)
 //│ | | | | | | | 1. Typing term test
 //│ | | | | | | | | inspect test by ctx.get
-//│ | | | | | | | 1. : test249'
+//│ | | | | | | | | searching method: UnquoteSearchStrategy()
+//│ | | | | | | | 1. : test261'
 //│ | | | | | | | 1. Typing term - (n,) (1,), Quoted' + (Unquote' cde ',) (x,) ',
 //│ | | | | | | | | 1. Typing term - (n,) (1,)
 //│ | | | | | | | | | 1. Typing term - (n,)
 //│ | | | | | | | | | | 1. Typing term -
 //│ | | | | | | | | | | | inspect - by ctx.get
+//│ | | | | | | | | | | | searching method: UnquoteSearchStrategy()
 //│ | | | | | | | | | | 1. : (int<number> -> (int<number> -> int<number>))
 //│ | | | | | | | | | | 1. Typing term n,
 //│ | | | | | | | | | | | 1. Typing term n
 //│ | | | | | | | | | | | | inspect n by ctx.get
-//│ | | | | | | | | | | | 1. : α250'
-//│ | | | | | | | | | | 1. : (α250',)
-//│ | | | | | | | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (α250' -> α260')
+//│ | | | | | | | | | | | | searching method: UnquoteSearchStrategy()
+//│ | | | | | | | | | | | 1. : α262'
+//│ | | | | | | | | | | 1. : (α262',)
+//│ | | | | | | | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (α262' -> α273')
 //│ | | | | | | | | | |   where 
-//│ 		α250' <: int<number> & number<>
-//│ | | | | | | | | | | C (int<number> -> (int<number> -> int<number>)) <! (α250' -> α260')    (0)
-//│ | | | | | | | | | | | C (α250',) <! (int<number>,)    (1)
-//│ | | | | | | | | | | | C (int<number> -> int<number>) <! α260'    (1)
-//│ | | | | | | | | | 1. : α260'
+//│ 		α262' <: int<number> & number<>
+//│ | | | | | | | | | | C (int<number> -> (int<number> -> int<number>)) <! (α262' -> α273')    (0)
+//│ | | | | | | | | | | | C (α262',) <! (int<number>,)    (1)
+//│ | | | | | | | | | | | C (int<number> -> int<number>) <! α273'    (1)
+//│ | | | | | | | | | 1. : α273'
 //│ | | | | | | | | | 1. Typing term 1,
 //│ | | | | | | | | | | 1. Typing term 1
 //│ | | | | | | | | | | 1. : 1<int,number>
 //│ | | | | | | | | | 1. : (1<int,number>,)
-//│ | | | | | | | | | CONSTRAIN α260' <! (1<int,number> -> α261')
+//│ | | | | | | | | | CONSTRAIN α273' <! (1<int,number> -> α274')
 //│ | | | | | | | | |   where 
-//│ 		α260' :> (int<number> -> int<number>)
-//│ | | | | | | | | | C α260' <! (1<int,number> -> α261')    (0)
-//│ | | | | | | | | | | C (int<number> -> int<number>) <! (1<int,number> -> α261')    (1)
+//│ 		α273' :> (int<number> -> int<number>)
+//│ | | | | | | | | | C α273' <! (1<int,number> -> α274')    (0)
+//│ | | | | | | | | | | C (int<number> -> int<number>) <! (1<int,number> -> α274')    (1)
 //│ | | | | | | | | | | | C (1<int,number>,) <! (int<number>,)    (2)
-//│ | | | | | | | | | | | C int<number> <! α261'    (2)
-//│ | | | | | | | | 1. : α261'
+//│ | | | | | | | | | | | C int<number> <! α274'    (2)
+//│ | | | | | | | | 1. : α274'
 //│ | | | | | | | | 1. Typing term Quoted' + (Unquote' cde ',) (x,) '
-//│ | | | | | | | | | typing for 496
 //│ | | | | | | | | | 1. Typing term + (Unquote' cde ',) (x,)
 //│ | | | | | | | | | | 1. Typing term + (Unquote' cde ',)
 //│ | | | | | | | | | | | 1. Typing term +
 //│ | | | | | | | | | | | | inspect + by ctx.get
+//│ | | | | | | | | | | | | searching method: NormalSearchStrategy()
 //│ | | | | | | | | | | | 1. : (int<number> -> (int<number> -> int<number>))
 //│ | | | | | | | | | | | 1. Typing term Unquote' cde ',
 //│ | | | | | | | | | | | | 1. Typing term Unquote' cde '
+//│ | | | | | | | | | | | | | qq level: 2
 //│ | | | | | | | | | | | | | 1. Typing term cde
 //│ | | | | | | | | | | | | | | inspect cde by ctx.get
-//│ | | | | | | | | | | | | | 1. : α251'
-//│ | | | | | | | | | | | | | CONSTRAIN (Code[α262,α263] -> α262) <! (α251' -> α264')
+//│ | | | | | | | | | | | | | | searching method: UnquoteSearchStrategy()
+//│ | | | | | | | | | | | | | 1. : α264'
+//│ | | | | | | | | | | | | | CONSTRAIN (Code[α275,α276] -> α275) <! (α264' -> α277')
 //│ | | | | | | | | | | | | |   where 
-//│ | | | | | | | | | | | | | C (Code[α262,α263] -> α262) <! (α251' -> α264')    (0)
-//│ | | | | | | | | | | | | | | C α251' <! Code[α262,α263]    (1)
-//│ | | | | | | | | | | | | | | C α262 <! α264'    (2)
-//│ | | | | | | | | | | | | 1. : α264'
-//│ | | | | | | | | | | | 1. : (α264',)
-//│ | | | | | | | | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (α264' -> α265')
+//│ | | | | | | | | | | | | | C (Code[α275,α276] -> α275) <! (α264' -> α277')    (0)
+//│ | | | | | | | | | | | | | | C α264' <! Code[α275,α276]    (1)
+//│ | | | | | | | | | | | | | | C α275 <! α277'    (2)
+//│ | | | | | | | | | | | | 1. : α277'
+//│ | | | | | | | | | | | 1. : (α277',)
+//│ | | | | | | | | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (α277' -> α278')
 //│ | | | | | | | | | | |   where 
-//│ 		α264' :> α262
-//│ | | | | | | | | | | | C (int<number> -> (int<number> -> int<number>)) <! (α264' -> α265')    (0)
-//│ | | | | | | | | | | | | C (α264',) <! (int<number>,)    (1)
-//│ | | | | | | | | | | | | | C α264' <! int<number>    (2)
-//│ | | | | | | | | | | | | | | C α262 <! int<number>    (3)
-//│ | | | | | | | | | | | | C (int<number> -> int<number>) <! α265'    (4)
-//│ | | | | | | | | | | 1. : α265'
+//│ 		α277' :> α275
+//│ | | | | | | | | | | | C (int<number> -> (int<number> -> int<number>)) <! (α277' -> α278')    (0)
+//│ | | | | | | | | | | | | C (α277',) <! (int<number>,)    (1)
+//│ | | | | | | | | | | | | | C α277' <! int<number>    (2)
+//│ | | | | | | | | | | | | | | C α275 <! int<number>    (3)
+//│ | | | | | | | | | | | | C (int<number> -> int<number>) <! α278'    (4)
+//│ | | | | | | | | | | 1. : α278'
 //│ | | | | | | | | | | 1. Typing term x,
 //│ | | | | | | | | | | | 1. Typing term x
 //│ | | | | | | | | | | | | inspect x by ctx.get
-//│ | | | | | | | | | | | 1. : Code[[α266'],{y: α266'}]
-//│ | | | | | | | | | | 1. : (Code[[α266'],{y: α266'}],)
-//│ | | | | | | | | | | CONSTRAIN α265' <! (Code[[α266'],{y: α266'}] -> α267')
+//│ | | | | | | | | | | | | searching method: QuasiquoteSearchStrategy(3)
+//│ | | | | | | | | | | | | insert x into the free vars
+//│ | | | | | | | | | | | 1. : α279'
+//│ | | | | | | | | | | 1. : (α279',)
+//│ | | | | | | | | | | CONSTRAIN α278' <! (α279' -> α280')
 //│ | | | | | | | | | |   where 
-//│ 		α265' :> (int<number> -> int<number>)
-//│ | | | | | | | | | | C α265' <! (Code[[α266'],{y: α266'}] -> α267')    (0)
-//│ | | | | | | | | | | | C (int<number> -> int<number>) <! (Code[[α266'],{y: α266'}] -> α267')    (1)
-//│ | | | | | | | | | | | | C (Code[[α266'],{y: α266'}],) <! (int<number>,)    (2)
-//│ | | | | | | | | | | | | | C Code[[α266'],{y: α266'}] <! int<number>    (3)
-//│ | | | | | | | | | | | | | | C (code<> & {Code#T: mut ..[α266'], Code#C: mut {y: α266'}..⊤}) <! int<number>    (4)
-//│ | | | | | | | | | | | | | | | ARGH  DNF(code<>{Code#T: mut ..α266', Code#C: mut {y: α266'}..⊤})  <!  DNF(int<number>{})
-//│ | | | | | | | | | | | | | | | | Consider code<>{Code#T: mut ..α266', Code#C: mut {y: α266'}..⊤} <: DNF(int<number>{})
-//│ | | | | | | | | | | | | | | | | Possible: List()
-//│ | | | | | | | | | | | | | | | | A  code<>{Code#T: mut ..α266', Code#C: mut {y: α266'}..⊤}  %  List()  <!  List()  %  ⊥
-//│ | | | | | | | | | | | | | | | | | CONSTRAINT FAILURE: (code<> & {Code#T: mut ..[α266'], Code#C: mut {y: α266'}..⊤}) <: int<number>
-//│ | | | | | | | | | | | | | | | | | allVarPols: =α266'
-//│ | | | | | | | | | | | | | | | | | norm[+] (code<> & {Code#T: mut ..[α266'], Code#C: mut {y: α266'}..⊤})
-//│ | | | | | | | | | | | | | | | | | | DNF: DNF(code<>{Code#T: mut ..[α266'], Code#C: mut {y: α266'}..⊤})
-//│ | | | | | | | | | | | | | | | | | | norm[-] ⊥
-//│ | | | | | | | | | | | | | | | | | | | DNF: DNF()
-//│ | | | | | | | | | | | | | | | | | | ~> ⊥
-//│ | | | | | | | | | | | | | | | | | | norm[+] [α266']
-//│ | | | | | | | | | | | | | | | | | | | DNF: DNF(α266')
-//│ | | | | | | | | | | | | | | | | | | ~> α266'
-//│ | | | | | | | | | | | | | | | | | | norm[-] {y: α266'}
-//│ | | | | | | | | | | | | | | | | | | | DNF: DNF({y: α266'})
-//│ | | | | | | | | | | | | | | | | | | | norm[-] α266'
-//│ | | | | | | | | | | | | | | | | | | | | DNF: DNF(α266')
-//│ | | | | | | | | | | | | | | | | | | | ~> α266'
-//│ | | | | | | | | | | | | | | | | | | ~> {y: α266'}
-//│ | | | | | | | | | | | | | | | | | | norm[+] ⊤
-//│ | | | | | | | | | | | | | | | | | | | DNF: DNF()
-//│ | | | | | | | | | | | | | | | | | | ~> ⊤
-//│ | | | | | | | | | | | | | | | | | ~> (code<> & {Code#C: mut {y: α266'}..⊤, Code#T: mut ..α266'})
-//│ | | | | | | | | | | | | | | | | | CONSTRAIN error<> <! α267'
-//│ | | | | | | | | | | | | | | | | |   where 
-//│ | | | | | | | | | | | | | | | | | C error<> <! α267'    (0)
-//│ | | | | | | | | | | | | C int<number> <! α267'    (5)
-//│ | | | | | | | | | 1. : α267'
-//│ | | | | | | | | | chaining for 496
-//│ | | | | | | | | | local unquoted context:
-//│ | | | | | | | | | List(α263)
-//│ | | | | | | | | | {}
-//│ | | | | | | | | 1. : Code[α267',α263]
-//│ | | | | | | | 1. : (α261', Code[α267',α263],)
-//│ | | | | | | | CONSTRAIN test249' <! ((α261', Code[α267',α263],) -> α269')
+//│ 		α278' :> (int<number> -> int<number>)
+//│ | | | | | | | | | | C α278' <! (α279' -> α280')    (0)
+//│ | | | | | | | | | | | C (int<number> -> int<number>) <! (α279' -> α280')    (1)
+//│ | | | | | | | | | | | | C (α279',) <! (int<number>,)    (2)
+//│ | | | | | | | | | | | | | C α279' <! int<number>    (3)
+//│ | | | | | | | | | | | | C int<number> <! α280'    (4)
+//│ | | | | | | | | | 1. : α280'
+//│ | | | | | | | | | {x: α279'}
+//│ | | | | | | | | | ListBuffer()
+//│ | | | | | | | | 1. : Code[α280',(α276 & {x: α279'})]
+//│ | | | | | | | 1. : (α274', Code[α280',(α276 & {x: α279'})],)
+//│ | | | | | | | CONSTRAIN test261' <! ((α274', Code[α280',(α276 & {x: α279'})],) -> α281')
 //│ | | | | | | |   where 
-//│ 		α261' :> int<number>
-//│ 		α267' :> int<number> | error<>
-//│ | | | | | | | C test249' <! ((α261', Code[α267',α263],) -> α269')    (0)
-//│ | | | | | | 1. : α269'
-//│ | | | | | | CONSTRAIN (Code[α258,α259] -> α258) <! (α269' -> α270')
+//│ 		α274' :> int<number>
+//│ 		α279' <: int<number>
+//│ 		α280' :> int<number>
+//│ | | | | | | | C test261' <! ((α274', Code[α280',(α276 & {x: α279'})],) -> α281')    (0)
+//│ | | | | | | 1. : α281'
+//│ | | | | | | CONSTRAIN (Code[α271,α272] -> α271) <! (α281' -> α282')
 //│ | | | | | |   where 
-//│ | | | | | | C (Code[α258,α259] -> α258) <! (α269' -> α270')    (0)
-//│ | | | | | | | C α269' <! Code[α258,α259]    (1)
-//│ | | | | | | | C α258 <! α270'    (2)
-//│ | | | | | 1. : α270'
-//│ | | | | 1. : α270'
-//│ | | | | chaining for 534
-//│ | | | | local unquoted context:
-//│ | | | | List(α255, α259)
+//│ | | | | | | C (Code[α271,α272] -> α271) <! (α281' -> α282')    (0)
+//│ | | | | | | | C α281' <! Code[α271,α272]    (1)
+//│ | | | | | | | C α271 <! α282'    (2)
+//│ | | | | | 1. : α282'
+//│ | | | | 1. : α282'
 //│ | | | | {}
-//│ | | | 1. : Code[α270',(α255 & α259)]
+//│ | | | | ListBuffer(x)
+//│ | | | 1. : Code[α282',(α268 & α272)\x]
 //│ | | | 1. Typing term cde
 //│ | | | | inspect cde by ctx.get
-//│ | | | 1. : α251'
-//│ | | | CONSTRAIN α253' <! (true<bool> | (α272' & ~(true<bool>)))
+//│ | | | | searching method: NormalSearchStrategy()
+//│ | | | 1. : α264'
+//│ | | | CONSTRAIN α266' <! (true<bool> | (α283' & ~(true<bool>)))
 //│ | | |   where 
-//│ 		α253' :> bool<>
-//│ | | | C α253' <! (true<bool> | (α272' & ~(true<bool>)))    (0)
-//│ | | | | C bool<> <! (true<bool> | (α272' & ~(true<bool>)))    (1)
-//│ | | | | | ARGH  DNF(bool<>{})  <!  DNF(true<bool>{} | α272'∧~(true<bool>))
-//│ | | | | | | Consider bool<>{} <: DNF(true<bool>{} | α272'∧~(true<bool>))
-//│ | | | | | | Possible: List(true<bool>{}, α272'∧~(true<bool>))
-//│ | | | | | | A  bool<>{}  %  List()  <!  List(true<bool>, (α272' & ~(true<bool>)))  %  ⊥
-//│ | | | | | | | A  bool<>{}  %  List()  <!  List((α272' & ~(true<bool>)))  %  true<bool>
+//│ 		α266' :> bool<>
+//│ | | | C α266' <! (true<bool> | (α283' & ~(true<bool>)))    (0)
+//│ | | | | C bool<> <! (true<bool> | (α283' & ~(true<bool>)))    (1)
+//│ | | | | | ARGH  DNF(bool<>{})  <!  DNF(true<bool>{} | α283'∧~(true<bool>))
+//│ | | | | | | Consider bool<>{} <: DNF(true<bool>{} | α283'∧~(true<bool>))
+//│ | | | | | | Possible: List(true<bool>{}, α283'∧~(true<bool>))
+//│ | | | | | | A  bool<>{}  %  List()  <!  List(true<bool>, (α283' & ~(true<bool>)))  %  ⊥
+//│ | | | | | | | A  bool<>{}  %  List()  <!  List((α283' & ~(true<bool>)))  %  true<bool>
 //│ | | | | | | | | Case.1
-//│ | | | | | | | | A  bool<>{}  %  List()  <!  List(α272')  %  true<bool>
-//│ | | | | | | | | | C (bool<> & ~(true<bool>)) <! α272'    (2)
+//│ | | | | | | | | A  bool<>{}  %  List()  <!  List(α283')  %  true<bool>
+//│ | | | | | | | | | C (bool<> & ~(true<bool>)) <! α283'    (2)
 //│ | | | | | | | | Case.2
 //│ | | | | | | | | A  bool<>{}  %  List()  <!  List(~(true<bool>))  %  true<bool>
 //│ | | | | | | | | | A  bool<>{}  %  List(true<bool>)  <!  List()  %  true<bool>
 //│ | | | | | | | | | | A  true<bool>{}  %  List()  <!  List()  %  true<bool>
 //│ | | | | | | | | | | | OK  true<bool>  <:  true<bool>
-//│ | | 1. : (Code[α270',(α255 & α259)] | α251')
-//│ | 1. : (Code[α270',(α255 & α259)] | α251')
-//│ 1. : ((α250', α251',) -> (Code[α270',(α255 & α259)] | α251'))
-//│ CONSTRAIN ((α250', α251',) -> (Code[α270',(α255 & α259)] | α251')) <! test249'
+//│ | | 1. : (Code[α282',(α268 & α272)\x] | α264')
+//│ | 1. : (Code[α282',(α268 & α272)\x] | α264')
+//│ 1. : ((α262', α264',) -> (Code[α282',(α268 & α272)\x] | α264'))
+//│ CONSTRAIN ((α262', α264',) -> (Code[α282',(α268 & α272)\x] | α264')) <! test261'
 //│   where 
-//│ 		test249' <: ((α261', Code[α267',α263],) -> α269')
-//│ 		α250' <: int<number> & number<>
-//│ 		α251' <: Code[α262,α263]
-//│ 		α255 <: ⊥
-//│ 		α261' :> int<number>
-//│ 		α262 <: int<number>
-//│ 		α267' :> int<number> | error<>
-//│ 		α269' <: Code[α258,α259]
-//│ 		α270' :> α258
-//│ C ((α250', α251',) -> (Code[α270',(α255 & α259)] | α251')) <! test249'    (0)
-//│ | C ((α250', α251',) -> (Code[α270',(α255 & α259)] | α251')) <! ((α261', Code[α267',α263],) -> α269')    (1)
-//│ | | C (α261', Code[α267',α263],) <! (α250', α251',)    (2)
-//│ | | | C α261' <! α250'    (3)
-//│ | | | | C int<number> <! α250'    (4)
+//│ 		test261' <: ((α274', Code[α280',(α276 & {x: α279'})],) -> α281')
+//│ 		α262' <: int<number> & number<>
+//│ 		α264' <: Code[α275,α276]
+//│ 		α268 <: ⊥
+//│ 		α274' :> int<number>
+//│ 		α275 <: int<number>
+//│ 		α279' <: int<number>
+//│ 		α280' :> int<number>
+//│ 		α281' <: Code[α271,α272]
+//│ 		α282' :> α271
+//│ C ((α262', α264',) -> (Code[α282',(α268 & α272)\x] | α264')) <! test261'    (0)
+//│ | C ((α262', α264',) -> (Code[α282',(α268 & α272)\x] | α264')) <! ((α274', Code[α280',(α276 & {x: α279'})],) -> α281')    (1)
+//│ | | C (α274', Code[α280',(α276 & {x: α279'})],) <! (α262', α264',)    (2)
+//│ | | | C α274' <! α262'    (3)
+//│ | | | | C int<number> <! α262'    (4)
 //│ | | | | | C int<number> <! int<number>    (5)
 //│ | | | | | C int<number> <! number<>    (5)
-//│ | | | C Code[α267',α263] <! α251'    (5)
-//│ | | | | C Code[α267',α263] <! Code[α262,α263]    (6)
-//│ | | | | | C α267' <! α262    (7)
-//│ | | | | | | C int<number> <! α262    (8)
+//│ | | | C Code[α280',(α276 & {x: α279'})] <! α264'    (5)
+//│ | | | | C Code[α280',(α276 & {x: α279'})] <! Code[α275,α276]    (6)
+//│ | | | | | C α280' <! α275    (7)
+//│ | | | | | | C int<number> <! α275    (8)
 //│ | | | | | | | C int<number> <! int<number>    (9)
-//│ | | | | | | C error<> <! α262    (9)
-//│ | | | | | | | C error<> <! int<number>    (10)
-//│ | | | | | C α263 <! α263    (11)
-//│ | | C (Code[α270',(α255 & α259)] | α251') <! α269'    (11)
-//│ | | | C (Code[α270',(α255 & α259)] | α251') <! Code[α258,α259]    (12)
-//│ | | | | C Code[α270',(α255 & α259)] <! Code[α258,α259]    (13)
-//│ | | | | | C α270' <! α258    (14)
-//│ | | | | | | C α258 <! α258    (15)
-//│ | | | | | C α259 <! (α255 & α259)    (15)
-//│ | | | | C α251' <! Code[α258,α259]    (16)
-//│ | | | | | C Code[α267',α263] <! Code[α258,α259]    (17)
-//│ | | | | | | C α267' <! α258    (18)
-//│ | | | | | | | C int<number> <! α258    (19)
-//│ | | | | | | | C error<> <! α258    (20)
-//│ | | | | | | C α259 <! α263    (21)
-//│ ⬤ Typed as: test249'
+//│ | | | | | C α276 <! (α276 & {x: α279'})    (9)
+//│ | | | | | | EXTR RHS  (α276 & {x: α279'})  ~>  (α276 & {x: α284})  to 0
+//│ | | | | | |  where 
+//│ 		α284 <: int<number>
+//│ | | | | | |    and 
+//│ 		α279' :> α284 <: int<number>
+//│ 		α284 <: int<number>
+//│ | | | | | | C α276 <! (α276 & {x: α284})    (10)
+//│ | | C (Code[α282',(α268 & α272)\x] | α264') <! α281'    (11)
+//│ | | | C (Code[α282',(α268 & α272)\x] | α264') <! Code[α271,α272]    (12)
+//│ | | | | C Code[α282',(α268 & α272)\x] <! Code[α271,α272]    (13)
+//│ | | | | | C α282' <! α271    (14)
+//│ | | | | | | C α271 <! α271    (15)
+//│ | | | | | C α272 <! (α268 & α272)\x    (15)
+//│ | | | | C α264' <! Code[α271,α272]    (16)
+//│ | | | | | C Code[α280',(α276 & {x: α279'})] <! Code[α271,α272]    (17)
+//│ | | | | | | C α280' <! α271    (18)
+//│ | | | | | | | C int<number> <! α271    (19)
+//│ | | | | | | C α272 <! (α276 & {x: α279'})    (20)
+//│ | | | | | | | EXTR RHS  (α276 & {x: α279'})  ~>  (α276 & {x: α285})  to 0
+//│ | | | | | | |  where 
+//│ 		α276 <: (α276 & {x: α284})
+//│ 		α284 <: int<number>
+//│ 		α285 <: int<number>
+//│ | | | | | | |    and 
+//│ 		α276 <: (α276 & {x: α284})
+//│ 		α279' :> α285 | α284 <: int<number>
+//│ 		α284 <: int<number>
+//│ 		α285 <: int<number>
+//│ | | | | | | | C α272 <! (α276 & {x: α285})    (21)
+//│ ⬤ Typed as: test261'
 //│  where: 
-//│ 		test249' :> ((α250', α251',) -> (Code[α270',(α255 & α259)] | α251')) <: ((α261', Code[α267',α263],) -> α269')
-//│ 		α250' :> int<number> <: int<number> & number<>
-//│ 		α251' :> Code[α267',α263] <: Code[α258,α259] & Code[α262,α263]
-//│ 		α255 <: ⊥
-//│ 		α258 :> error<> | int<number>
-//│ 		α259 <: α263 & (α255 & α259)
-//│ 		α261' :> int<number> <: α250'
-//│ 		α262 :> error<> | int<number> <: int<number>
-//│ 		α267' :> int<number> | error<> <: α258 & α262
-//│ 		α269' :> (Code[α270',(α255 & α259)] | α251') <: Code[α258,α259]
-//│ 		α270' :> α258 <: α258
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.601: 	fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, code"${cde} + x")}" else cde
-//│ ║         	                                                                              ^^^^^^^^^^
-//│ ╙── expression of type `code & {Code#C :> {y: ?a}, Code#T <: ?a}` is not an instance of type `int`
-//│ test: (int, Code[int | 'a, ?] & 'b,) -> (Code[error | int | 'a, ?] | 'b)
+//│ 		test261' :> ((α262', α264',) -> (Code[α282',(α268 & α272)\x] | α264')) <: ((α274', Code[α280',(α276 & {x: α279'})],) -> α281')
+//│ 		α262' :> int<number> <: int<number> & number<>
+//│ 		α264' :> Code[α280',(α276 & {x: α279'})] <: Code[α271,α272] & Code[α275,α276]
+//│ 		α268 <: ⊥
+//│ 		α271 :> int<number>
+//│ 		α272 <: (α276 & {x: α285}) & (α268 & α272)\x
+//│ 		α274' :> int<number> <: α262'
+//│ 		α275 :> int<number> <: int<number>
+//│ 		α276 <: (α276 & {x: α284})
+//│ 		α279' :> α285 | α284 <: int<number>
+//│ 		α280' :> int<number> <: α271 & α275
+//│ 		α281' :> (Code[α282',(α268 & α272)\x] | α264') <: Code[α271,α272]
+//│ 		α282' :> α271 <: α271
+//│ 		α284 <: int<number>
+//│ 		α285 <: int<number>
+//│ test: (int, Code[int | 'a, ?] & 'b,) -> (Code[int | 'a, nothing\x & {x: int} & 'c] | 'b)
