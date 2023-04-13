@@ -141,6 +141,7 @@ class Driver(options: DriverOptions) {
             val (cycleSigs, cycleRecomp) = cycleList.foldLeft((Ls[TypingUnit](), false))((r, dep) => r match {
               case (sigs, recomp) => {
                 val filename = s"$path$dep"
+                importedModule += filename
                 val prefixName = dep.substring(0, dep.lastIndexOf("."))
                 (sigs :+ extractSig(filename, prefixName),
                   isInterfaceOutdate(filename, s"${options.outputDir}/.temp/$relatedPath/$prefixName.mlsi"))
@@ -232,7 +233,7 @@ object Driver {
 
   private val fs = g.require("fs") // must use fs module to manipulate files in JS
 
-  private def readFile(filename: String) =
+  def readFile(filename: String) =
     if (!fs.existsSync(filename)) None
     else Some(fs.readFileSync(filename).toString)
 

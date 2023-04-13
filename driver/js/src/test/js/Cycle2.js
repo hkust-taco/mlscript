@@ -3,7 +3,7 @@ import { Cycle1 } from "./Cycle1.js"
 function log(x) {
   return console.info(x);
 }
-const Cycle2 = new class Cycle2 {
+export const Cycle2 = new class Cycle2 {
   constructor() {
   }
   g(x) {
