@@ -842,46 +842,68 @@ object JSCodeHelpers {
 final case class JSQuasiquoteRunFunctionBody() extends JSStmt {
   def toSourceCode: SourceCode = SourceCode(
     """
-    const symbol_value_map = new Map();
-         
-    function _run(s_expr) { 
+    const symbol_value = new Map();
+    const name_value = new Map();
+
+    if (context != null) {
+      context.forEach(context_pair => name_value.set(context_pair[0], context_pair[1]));
+    }    
+    function _run(s_expr) {
       switch(s_expr[0]) {
-        case "Var":
-          if (symbol_value_map.has(s_expr[1])) {
-            return symbol_value_map.get(s_expr[1]);
-          } else {
-            return s_expr[1];
-          }
-        case "App":
-          return eval(_run(s_expr[2]) + s_expr[1] + _run(s_expr[3]));
-        case "Fun": 
-          return _run(s_expr[1])(..._run(s_expr[2]))
-        case "If":
-          if (_run(s_expr[1])) { return _run(s_expr[2]) } else { return _run(s_expr[3]) };
-        case "Lam":
+        // data
+        case "_": 
           return s_expr[1];
-        
-        case "Sel": 
-          return _run(s_expr[1])[s_expr[2]];
-
-        case "Let":
-          symbol_value_map.set(s_expr[1], _run(s_expr[2]));
-          return _run(s_expr[3]);
-
-        case "Subs": 
-          return _run(s_expr[1])[_run(s_expr[2])];
-
-        case "StrLit":
-          return `'${s_expr[1]}'`;
-
-        case "Unquoted": 
-          let res = run(s_expr[1]);
-          return _run(res);
           
+        // expressions
+        case "Rcd": // ['Rcd', {key -> translateQuoted(value)}]
+          let rcd = {};
+          for ([key, value] of Object.entries(s_expr[1])) {
+            rcd[key] = _run(value);
+          }
+          return rcd;
+        case "Sel": // ['Sel', translateQuoted(receiver), 'name']
+          return _run(s_expr[1])[s_expr[2]];
+        case "Var": // ['Var', ['FreeVar', 'name']] OR ['Var', Symbol(name)]
+          if (Array.isArray(s_expr[1]) && s_expr[1][0] == "FreeVar") {
+            // if a binder for the variable cannot be found, return the string name first
+            if (name_value.has(s_expr[1][1])) {
+              return name_value.get(s_expr[1][1]);
+            }
+            else {
+              return s_expr[1][1];
+            }
+          }
+          return symbol_value.get(s_expr[1]);
+        case "App": // ['App', 'binary_operator', translateQuoted(lhs), translateQuoted(rhs)]
+          return eval(_run(s_expr[2]) + s_expr[1] + _run(s_expr[3]));
+        case "App_Fun": // ['App_Fun', translateQuoted(callee), translateQuoted(params)]
+          // test for type of _run(callee) if it is a string, then test for globalThis, otherwise it is an error
+          let callee = _run(s_expr[1]);
+          if (typeof callee == "string") {
+            return globalThis[callee](..._run(s_expr[2]));
+          } else {
+            return callee(..._run(s_expr[2]));
+          }
+        case "Let": // ['Let', 'name_str', Symbol(name), translateQuoted(value), translateQuoted(body)]
+          name_value.set(s_expr[1], _run(s_expr[3]));
+          symbol_value.set(s_expr[2], _run(s_expr[3]));
+          return _run(s_expr[4]);
+        case "Bra": // ['Bra', translateQuoted(trm)]
+          return _run(s_expr[1]);
+        case "Tup": // ['Tup', [translateQuoted(...)...]
+          return s_expr[1].map(elem => _run(elem));
+        case "Subs": // ['Subs', translateQuoted(arr), translateQuoted(idx)]
+          return _run(s_expr[1])[_run(s_expr[2])];
+        case "Unquoted": // ['Unquoted', translateTerm(body)]
+          return _run(s_expr[1]);
+        case "If": // ['If', translateQuoted(condition), translateQuoted(branch1), translateQuoted(branch2)]
+          if (_run(s_expr[1])) { return _run(s_expr[2]); } else { return _run(s_expr[3]); }
+        case "Blk":
+          return _run(s_expr[1]);
         default:
-          return s_expr[0];
+          throw Error("Encountered s-expression that is not handled");
       }
-    } 
+    }
     return _run(s_expr);
     """
   )

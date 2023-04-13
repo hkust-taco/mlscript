@@ -25,28 +25,22 @@ b,
 a,
 b,
 c
-//│ /!!!\ Uncaught error: java.lang.ArrayIndexOutOfBoundsException: 7
-//│ 	at: mlscript.NewLexer.isQuasiquoteKeyword$1(NewLexer.scala:81)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:91)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:140)
-//│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:90)
-//│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:150)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:140)
-//│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:90)
+//│ |a|,|↵|b|,|↵|c|
+//│ ╔══[PARSE ERROR] Expected end of input; found comma instead
+//│ ║  l.25: 	a,
+//│ ╙──      	 ^
+//│ Parsed: {a}
 
 foo
   a
   b
 //│ |foo|→|a|↵|b|←|
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.40: 	foo
+//│ ║  l.34: 	foo
 //│ ║        	^^^
-//│ ║  l.41: 	  a
+//│ ║  l.35: 	  a
 //│ ║        	^^^
-//│ ║  l.42: 	  b
+//│ ║  l.36: 	  b
 //│ ╙──      	^^^
 //│ Parsed: {foo ({a; b},)}
 
@@ -77,9 +71,9 @@ foo(
 )
 //│ |foo|(|→|a|←|→|b|←|↵|)|
 //│ ╔══[PARSE ERROR] Unexpected indented block here
-//│ ║  l.76: 	  b
+//│ ║  l.70: 	  b
 //│ ║        	^^^
-//│ ║  l.77: 	)
+//│ ║  l.71: 	)
 //│ ╙──      	^
 //│ Parsed: {foo (a,)}
 
@@ -90,10 +84,10 @@ foo of
   b
 //│ |foo| |#of|→|a|↵|#fun| |f| |#=| |1|↵|b|←|
 //│ ╔══[PARSE ERROR] Unexpected 'fun' keyword in expression position
-//│ ║  l.89: 	  fun f = 1
+//│ ║  l.83: 	  fun f = 1
 //│ ╙──      	  ^^^
 //│ ╔══[PARSE ERROR] Unexpected '=' keyword here
-//│ ║  l.89: 	  fun f = 1
+//│ ║  l.83: 	  fun f = 1
 //│ ╙──      	        ^
 //│ Parsed: {foo ({a; f},)}
 
@@ -106,17 +100,8 @@ foo +
 
 foo(a, b, c)
 foo of a, b, c
-//│ /!!!\ Uncaught error: java.lang.ArrayIndexOutOfBoundsException: 27
-//│ 	at: mlscript.NewLexer.isQuasiquoteKeyword$1(NewLexer.scala:81)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:91)
-//│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:87)
-//│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:90)
-//│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:150)
-//│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:87)
+//│ |foo|(|a|,| |b|,| |c|)|↵|foo| |#of| |a|,| |b|,| |c|
+//│ Parsed: {foo (a, b, c,); foo (a, b, c,)}
 
 foo of
   aaaaa,
@@ -131,17 +116,15 @@ foo of
     x
     y
   c
-//│ /!!!\ Uncaught error: java.lang.ArrayIndexOutOfBoundsException: 32
-//│ 	at: mlscript.NewLexer.isQuasiquoteKeyword$1(NewLexer.scala:81)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:91)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:140)
-//│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:150)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:140)
-//│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:150)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:130)
-//│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
+//│ |foo| |#of|→|a|↵|boo|→|x|↵|y|←|↵|c|←|
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.115: 	  boo
+//│ ║         	  ^^^
+//│ ║  l.116: 	    x
+//│ ║         	^^^^^
+//│ ║  l.117: 	    y
+//│ ╙──       	^^^^^
+//│ Parsed: {foo ({a; boo ({x; y},); c},)}
 
 
 fun foo =

@@ -3,17 +3,13 @@
 code"2 + 2"
 // in JS: ["+", 2, 2]
 //│ res: code & {Code#C = anything, Code#T <: int}
-//│    = [ 'App', '+', [ 2 ], [ 2 ] ]
+//│    = [ 'App', '+', [ '_', 2 ], [ '_', 2 ] ]
 
 code"x => x + 2"
 // in JS (bad): ["lambda", ["x"], ["+", ["ref", "x"]], 2]]
 // in JS (hygienic): const x_sym = Symbol("x"); ["lambda", [x_sym], ["+", x_sym], 2]]
 //│ res: code & {Code#C = anything, Code#T <: int -> int}
-//│    = [
-//│        'Lam',
-//│        [ 'Tup', [ 'Var', 'x' ] ],
-//│        [ 'App', '+', [ 'Var', 'x' ], [ 2 ] ]
-//│      ]
+//│    = [ '_', [Function (anonymous)] ]
 
 fun foo(x) =
   code"10 + x"
@@ -22,13 +18,18 @@ fun foo(x) =
 
 code"foo(123) + 1"
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.23: 	code"foo(123) + 1"
+//│ ║  l.19: 	code"foo(123) + 1"
 //│ ║        	     ^^^^^^^^^^
 //│ ╟── application of type `code & {Code#C = anything, Code#T <: ?a}` is not an instance of type `int`
-//│ ║  l.23: 	code"foo(123) + 1"
+//│ ║  l.19: 	code"foo(123) + 1"
 //│ ╙──      	     ^^^^^^^^
 //│ res: code & {Code#C = anything, Code#T <: error | int}
-//│    = [ 'App', '+', [ 'Fun', [ 'Var', 'foo' ], [ 'Tup', [Array] ] ], [ 1 ] ]
+//│    = [
+//│        'App',
+//│        '+',
+//│        [ 'Fun', [ 'Var', [Array] ], [ 'Tup', [Array] ] ],
+//│        [ '_', 1 ]
+//│      ]
 
 code"10 + ${qq_int}"
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
@@ -50,23 +51,19 @@ code"10 + ${qq_int}"
 // The inner code should have type Code<int, "x" | "y">
 code"x => y => 15 + ${   code"x + y"   }"
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.51: 	code"x => y => 15 + ${   code"x + y"   }"
+//│ ║  l.52: 	code"x => y => 15 + ${   code"x + y"   }"
 //│ ║        	               ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── expression of type `code & {Code#C :> ?y.type56, Code#T <: ?a}` is not an instance of type `int`
 //│ res: code & {Code#C = anything, Code#T <: int -> anything -> (error | int)}
-//│    = [
-//│        'Lam',
-//│        [ 'Tup', [ 'Var', 'x' ] ],
-//│        [ 'Lam', [ 'Tup', [Array] ], [ 'App', '+', [Array], [Array] ] ]
-//│      ]
+//│    = [ '_', [Function (anonymous)] ]
 
 // FIXME
 qq_int : Code<int>
 //│ ╔══[ERROR] identifier not found: qq_int
-//│ ║  l.64: 	qq_int : Code<int>
+//│ ║  l.61: 	qq_int : Code<int>
 //│ ╙──      	^^^^^^
 //│ ╔══[ERROR] Wrong number of type arguments – expected 2, found 1
-//│ ║  l.64: 	qq_int : Code<int>
+//│ ║  l.61: 	qq_int : Code<int>
 //│ ╙──      	         ^^^^^^^^
 //│ res: code & {Code#C = anything, Code#T <: int}
 //│ Code generation encountered an error:
