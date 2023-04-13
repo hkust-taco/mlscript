@@ -78,20 +78,20 @@ code"1
 //│ ? parseAll		inspects ||    [at l.60]
 //│ Parsed: Quoted' + 1 1 ';
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.44: 	code"1
+//│ ║  l.45: 	code"1
 //│ ║        	     ^
-//│ ║  l.45: 	 +1"
+//│ ║  l.46: 	 +1"
 //│ ║        	^^
 //│ ╟── integer literal of type `1` is not a 1-element tuple
-//│ ║  l.44: 	code"1
+//│ ║  l.45: 	code"1
 //│ ╙──      	     ^
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.44: 	code"1
+//│ ║  l.45: 	code"1
 //│ ║        	     ^
-//│ ║  l.45: 	 +1"
+//│ ║  l.46: 	 +1"
 //│ ║        	^^^
 //│ ╟── integer literal of type `1` is not a 1-element tuple
-//│ ║  l.45: 	 +1"
+//│ ║  l.46: 	 +1"
 //│ ╙──      	  ^
 //│ res: Code[error | int, ?]
 //│ Code generation encountered an error:
@@ -165,9 +165,9 @@ code"z +
 //│ │ > │ │ │ │ @ exprOrIf(18,true)    [at l.576]
 //│ │ > │ │ │ │ │ ? exprOrIf		inspects |↵|1|    [at l.403]
 //│ ╔══[PARSE ERROR] Unexpected newline in expression position
-//│ ║  l.129: 	code"z +
+//│ ║  l.148: 	code"z +
 //│ ║         	        ^
-//│ ║  l.130: 	1"
+//│ ║  l.149: 	1"
 //│ ╙──       	
 //│ │ > │ │ │ │ │ ! exprOrIf		consumes |↵|    [at l.562]
 //│ │ > │ │ │ │ │ @ exprOrIf(18,true)    [at l.563]
@@ -275,7 +275,7 @@ code"let a = 1; let b = 3"
 //│ │ > │ │ │ @ skip(KEYWORD(=),Set(SPACE),false)    [at l.156]
 //│ │ > │ │ │ │ ? skip_res		inspects |#=| |1|#;| |...    [at l.158]
 //│ │ > │ │ │ │ ! skip		consumes |#=|    [at l.174]
-//│ │ > │ │ │ = (true,Some(Loc(11,12,quasiquote/Unquote:+239)))
+//│ │ > │ │ │ = (true,Some(Loc(11,12,quasiquote/Unquote:+258)))
 //│ │ > │ │ @ expr(0,true)    [at l.898]
 //│ │ > │ │ │ @ exprOrIf(0,true)    [at l.391]
 //│ │ > │ │ │ │ ? exprOrIf		inspects | |1|#;| |#let|...    [at l.403]
@@ -308,7 +308,7 @@ code"let a = 1; let b = 3"
 //│ │ > │ │ │ │ │ @ skip(KEYWORD(=),Set(SPACE),false)    [at l.156]
 //│ │ > │ │ │ │ │ │ ? skip_res		inspects |#=| |3|    [at l.158]
 //│ │ > │ │ │ │ │ │ ! skip		consumes |#=|    [at l.174]
-//│ │ > │ │ │ │ │ = (true,Some(Loc(22,23,quasiquote/Unquote:+239)))
+//│ │ > │ │ │ │ │ = (true,Some(Loc(22,23,quasiquote/Unquote:+258)))
 //│ │ > │ │ │ │ @ expr(0,true)    [at l.898]
 //│ │ > │ │ │ │ │ @ exprOrIf(0,true)    [at l.391]
 //│ │ > │ │ │ │ │ │ ? exprOrIf		inspects | |3|    [at l.403]
@@ -359,7 +359,7 @@ let b = 3"
 //│ │ > │ │ │ @ skip(KEYWORD(=),Set(SPACE),false)    [at l.156]
 //│ │ > │ │ │ │ ? skip_res		inspects |#=| |1|#;| |...    [at l.158]
 //│ │ > │ │ │ │ ! skip		consumes |#=|    [at l.174]
-//│ │ > │ │ │ = (true,Some(Loc(11,12,quasiquote/Unquote:+322)))
+//│ │ > │ │ │ = (true,Some(Loc(11,12,quasiquote/Unquote:+341)))
 //│ │ > │ │ @ expr(0,true)    [at l.898]
 //│ │ > │ │ │ @ exprOrIf(0,true)    [at l.391]
 //│ │ > │ │ │ │ ? exprOrIf		inspects | |1|#;| |↵|...    [at l.403]
@@ -382,9 +382,9 @@ let b = 3"
 //│ │ > │ │ │ @ exprOrIf(0,true)    [at l.406]
 //│ │ > │ │ │ │ ? exprOrIf		inspects |↵|#let| |b| |...    [at l.403]
 //│ ╔══[PARSE ERROR] Unexpected newline in expression position
-//│ ║  l.322: 	code"let a = 1; 
+//│ ║  l.341: 	code"let a = 1; 
 //│ ║         	                ^
-//│ ║  l.323: 	let b = 3"
+//│ ║  l.342: 	let b = 3"
 //│ ╙──       	
 //│ │ > │ │ │ │ ! exprOrIf		consumes |↵|    [at l.562]
 //│ │ > │ │ │ │ @ exprOrIf(0,true)    [at l.563]
@@ -400,7 +400,7 @@ let b = 3"
 //│ │ > │ │ │ │ │ │ @ skip(KEYWORD(=),Set(SPACE),false)    [at l.156]
 //│ │ > │ │ │ │ │ │ │ ? skip_res		inspects |#=| |3|    [at l.158]
 //│ │ > │ │ │ │ │ │ │ ! skip		consumes |#=|    [at l.174]
-//│ │ > │ │ │ │ │ │ = (true,Some(Loc(23,24,quasiquote/Unquote:+322)))
+//│ │ > │ │ │ │ │ │ = (true,Some(Loc(23,24,quasiquote/Unquote:+341)))
 //│ │ > │ │ │ │ │ @ expr(0,true)    [at l.898]
 //│ │ > │ │ │ │ │ │ @ exprOrIf(0,true)    [at l.391]
 //│ │ > │ │ │ │ │ │ │ ? exprOrIf		inspects | |3|    [at l.403]
@@ -449,9 +449,9 @@ let f = new Foo(
 5)
 //│ |#class| |Foo|(|↵|x|↵|)| |↵|#let| |f| |#=| |#new| |Foo|(|↵|5|)|
 //│ ╔══[PARSE ERROR] Unexpected identifier here
-//│ ║  l.427: 	x
+//│ ║  l.446: 	x
 //│ ╙──       	^
 //│ ╔══[PARSE ERROR] Unexpected literal here
-//│ ║  l.430: 	5)
+//│ ║  l.449: 	5)
 //│ ╙──       	^
 //│ Parsed: {class Foo() {}; let f = new Foo() {}}

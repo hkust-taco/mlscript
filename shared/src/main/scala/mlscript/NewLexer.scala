@@ -78,9 +78,16 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
       // raise(ParseError(false, msg -> S(loc(i, i + 1)) :: Nil))
       raise(ErrorReport(msg -> S(loc(i, i + 1)) :: Nil, source = Lexing)) // TODO parse error
       // @inline
-    def isQuasiquoteKeyword(i: Int): Boolean = (i + 4 < length) && (bytes(i) === 'c' && bytes(i + 1) === 'o' && bytes(i + 2) === 'd' && bytes(i + 3) === 'e' && bytes(i + 4) === '"')
     def go(j: Int, tok: Token, qcnt: Int = qcnt) = lex(j, ind, (tok, loc(i, j)) :: acc, qcnt)
-    def isUnquoteKey(i: Int): Boolean = bytes(i) === '$' && bytes(i + 1) === '{'
+    def isQuasiquoteKeyword(i: Int): Boolean = {
+      val syntax = BracketKind.Quasiquote.beg.asInstanceOf[Str]
+      i + syntax.length < length + 1 && bytes.slice(i, i + syntax.length).mkString === syntax
+    }
+    def isUnquoteKey(i: Int): Boolean = {
+      val syntax = BracketKind.Unquote.beg.asInstanceOf[Str]
+      i + syntax.length < length + 1 && bytes.slice(i, i + syntax.length).mkString === syntax
+    }
+
     c match {
       case ' ' =>
         val (_, j) = takeWhile(i)(_ === ' ')
