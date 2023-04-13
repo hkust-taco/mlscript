@@ -129,6 +129,10 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
     require(td.kind is Trt)
     TraitTag(Var(td.nme.name))(prov)
   }
+  def trtNameToNomTag(td: NuTypeDef)(prov: TypeProvenance, ctx: Ctx): TraitTag = {
+    require(td.kind is Trt)
+    TraitTag(Var(td.nme.name))(prov)
+  }
   
   def baseClassesOf(tyd: mlscript.TypeDef): Set[TypeName] =
     if (tyd.kind === Als) Set.empty else baseClassesOf(tyd.body)

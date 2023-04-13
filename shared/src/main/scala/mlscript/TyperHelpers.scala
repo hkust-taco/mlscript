@@ -995,8 +995,34 @@ abstract class TyperHelpers { Typer: Typer =>
             substSyntax(td.body)(td.tparams.lazyZip(targs).map {
               case (tp, ta) => SkolemTag(tp._2.level, tp._2)(noProv) -> ta
             }.toMap)
+          case S(td: TypedNuTrt) => 
+            assert(td.tparams.size === targs.size)
+            td.thisTy & RecordType(info.tparams.lazyZip(targs).map {
+                    case ((tn, tv, vi), ta) => // TODO use vi
+                      val fldNme = td.nme.name + "#" + tn.name
+                      Var(fldNme).withLocOf(tn) -> FieldType(S(ta), ta)(provTODO)
+                  })(provTODO)
+          case S(td: TypedNuCls) =>
+            assert(td.tparams.size === targs.size)
+            td.thisTy &
+              clsNameToNomTag(td.decl)(provTODO, ctx) &
+                RecordType(info.tparams.lazyZip(targs).map {
+                  case ((tn, tv, vi), ta) => // TODO use vi
+                    val fldNme = td.nme.name + "#" + tn.name
+                    Var(fldNme).withLocOf(tn) -> FieldType(S(ta), ta)(provTODO)
+                })(provTODO)
           case _ =>
             info.decl match {
+              case td: NuTypeDef if td.kind is Trt => ???
+                // assert(td.tparams.size === targs.size)
+                // // TODO add parent tags
+
+                // trtNameToNomTag(td)(provTODO, ctx) &
+                //   RecordType(info.tparams.lazyZip(targs).map {
+                //     case ((tn, tv, vi), ta) => // TODO use vi
+                //       val fldNme = td.nme.name + "#" + tn.name
+                //       Var(fldNme).withLocOf(tn) -> FieldType(S(ta), ta)(provTODO)
+                //   })(provTODO)
               case td: NuTypeDef if td.kind.isInstanceOf[ObjDefKind] =>
                 assert(td.tparams.size === targs.size)
                 clsNameToNomTag(td)(provTODO, ctx) &

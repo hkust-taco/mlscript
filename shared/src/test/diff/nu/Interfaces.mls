@@ -6,6 +6,7 @@ trait Test {
     fun bar: bool -> bool
 }
 //│ trait Test() {
+//│   this: #Test
 //│   fun bar: bool -> bool
 //│   fun foo: int
 //│ }
@@ -15,6 +16,7 @@ trait Oth extends Test {
     fun cool : int -> bool
 }
 //│ trait Oth() {
+//│   this: #Oth & #Test
 //│   let a: int
 //│   fun bar: bool -> bool
 //│   fun cool: int -> bool
@@ -32,11 +34,13 @@ trait Anemo {
     fun ter: bool
 }
 //│ trait Geo() {
+//│   this: #Geo
 //│   fun get: bool | int
 //│   fun ter: int
 //│   let v: 2 | 3
 //│ }
 //│ trait Anemo() {
+//│   this: #Anemo
 //│   fun get: bool | string
 //│   fun ter: bool
 //│   let v: 1 | 2
@@ -44,6 +48,7 @@ trait Anemo {
 
 trait Mixed extends Geo, Anemo
 //│ trait Mixed() {
+//│   this: #Anemo & #Geo & #Mixed
 //│   fun get: bool
 //│   fun ter: nothing
 //│   let v: 2
@@ -94,25 +99,39 @@ c.bar(true)
 
 // FIXME
 c: Test
-//│ /!!!\ Uncaught error: java.lang.ClassCastException: class mlscript.NuTypeDefs$TypedNuTrt cannot be cast to class mlscript.NuTypeDefs$TypedNuCls (mlscript.NuTypeDefs$TypedNuTrt and mlscript.NuTypeDefs$TypedNuCls are in unnamed module of loader sbt.internal.LayeredClassLoader @3bf50bf8)
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.101: 	c: Test
+//│ ║         	^
+//│ ╟── application of type `C` is not an instance of type `Test`
+//│ ║  l.94: 	let c = C()
+//│ ║        	        ^^^
+//│ ╟── but it flows into reference with expected type `#Test`
+//│ ║  l.101: 	c: Test
+//│ ║         	^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.101: 	c: Test
+//│ ╙──       	   ^^^^
+//│ Test
 
 // FIXME
 let c1: Test = C()
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.100: 	let c1: Test = C()
+//│ ║  l.117: 	let c1: Test = C()
 //│ ║         	               ^^^
 //│ ╟── application of type `C` is not an instance of type `Test`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.100: 	let c1: Test = C()
+//│ ║  l.117: 	let c1: Test = C()
 //│ ╙──       	        ^^^^
 //│ let c1: Test
 
-trait A1 { fun a1: 1 | 2 | 3}
-trait A2 { fun a1: 2 | 3 | 4}
+trait A1 { fun a1: 1 | 2 | 3 }
+trait A2 { fun a1: 2 | 3 | 4 }
 //│ trait A1() {
+//│   this: #A1
 //│   fun a1: 1 | 2 | 3
 //│ }
 //│ trait A2() {
+//│   this: #A2
 //│   fun a1: 2 | 3 | 4
 //│ }
 
@@ -121,22 +140,38 @@ class Ea1 extends A1, A2 {
     fun a1 = 4
 }
 //│ ╔══[ERROR] Type mismatch in definition of method a1:
-//│ ║  l.121: 	    fun a1 = 4
+//│ ║  l.140: 	    fun a1 = 4
 //│ ║         	        ^^^^^^
 //│ ╟── integer literal of type `4` does not match type `1 | 2 | 3`
-//│ ║  l.121: 	    fun a1 = 4
+//│ ║  l.140: 	    fun a1 = 4
 //│ ║         	             ^
 //│ ╟── but it flows into definition of method a1 with expected type `1 | 2 | 3`
-//│ ║  l.121: 	    fun a1 = 4
+//│ ║  l.140: 	    fun a1 = 4
 //│ ║         	        ^^^^^^
 //│ ╟── Note: constraint arises from union type:
-//│ ║  l.110: 	trait A1 { fun a1: 1 | 2 | 3}
+//│ ║  l.127: 	trait A1 { fun a1: 1 | 2 | 3 }
 //│ ║         	                   ^^^^^^^^^
 //│ ╟── from signature of member a1:
-//│ ║  l.110: 	trait A1 { fun a1: 1 | 2 | 3}
+//│ ║  l.127: 	trait A1 { fun a1: 1 | 2 | 3 }
 //│ ╙──       	               ^^^^^^^^^^^^^
 //│ class Ea1() {
 //│   fun a1: 2 | 3
+//│ }
+
+trait Ele {
+    fun ce: Oth -> Test
+}
+//│ trait Ele() {
+//│   this: #Ele
+//│   fun ce: Oth -> Test
+//│ }
+
+// FIXME
+class CE extends Ele {
+    fun ce(x) = x
+}
+//│ class CE() {
+//│   fun ce: Oth -> Test
 //│ }
 
 :e
@@ -144,11 +179,11 @@ class E1 extends Test {
     fun foo = 2
 }
 //│ ╔══[ERROR] Member bar is declared in parent trait but not implemented
-//│ ║  l.143: 	class E1 extends Test {
+//│ ║  l.178: 	class E1 extends Test {
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.144: 	    fun foo = 2
+//│ ║  l.179: 	    fun foo = 2
 //│ ║         	^^^^^^^^^^^^^^^
-//│ ║  l.145: 	}
+//│ ║  l.180: 	}
 //│ ╙──       	^
 //│ class E1() {
 //│   fun bar: bool -> bool
@@ -159,13 +194,17 @@ class E1 extends Test {
 trait TE1 extends C
 trait TE2 extends M, Test
 //│ ╔══[ERROR] trait can only inherit traits
-//│ ║  l.159: 	trait TE1 extends C
+//│ ║  l.194: 	trait TE1 extends C
 //│ ╙──       	                  ^
 //│ ╔══[ERROR] trait can only inherit traits
-//│ ║  l.160: 	trait TE2 extends M, Test
+//│ ║  l.195: 	trait TE2 extends M, Test
 //│ ╙──       	                  ^
-//│ trait TE1()
-//│ trait TE2()
+//│ trait TE1() {
+//│   this: #TE1
+//│ }
+//│ trait TE2() {
+//│   this: #TE2
+//│ }
 
 :e
 class E2 extends Test {
@@ -173,13 +212,13 @@ class E2 extends Test {
     fun bar(x) = x
 }
 //│ ╔══[ERROR] Type mismatch in definition of method foo:
-//│ ║  l.172: 	    fun foo = true
+//│ ║  l.211: 	    fun foo = true
 //│ ║         	        ^^^^^^^^^^
 //│ ╟── reference of type `true` is not an instance of type `int`
-//│ ║  l.172: 	    fun foo = true
+//│ ║  l.211: 	    fun foo = true
 //│ ║         	              ^^^^
 //│ ╟── but it flows into definition of method foo with expected type `int`
-//│ ║  l.172: 	    fun foo = true
+//│ ║  l.211: 	    fun foo = true
 //│ ║         	        ^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.5: 	    fun foo: int
@@ -196,10 +235,10 @@ class E2 extends Test {
 :e
 class D extends Test[int], Test[bool]
 //│ ╔══[ERROR] Unsupported parent specification
-//│ ║  l.197: 	class D extends Test[int], Test[bool]
+//│ ║  l.236: 	class D extends Test[int], Test[bool]
 //│ ╙──       	                ^^^^^^^^^
 //│ ╔══[ERROR] Unsupported parent specification
-//│ ║  l.197: 	class D extends Test[int], Test[bool]
+//│ ║  l.236: 	class D extends Test[int], Test[bool]
 //│ ╙──       	                           ^^^^^^^^^^
 //│ class D()
 
@@ -208,7 +247,9 @@ class D extends Test[int], Test[bool]
 trait Base: A | B
 class A
 class B
-//│ trait Base()
+//│ trait Base() {
+//│   this: #Base
+//│ }
 //│ class A()
 //│ class B()
 
@@ -216,32 +257,89 @@ class B
 // FIXME
 let b: Base = A()
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.217: 	let b: Base = A()
+//│ ║  l.258: 	let b: Base = A()
 //│ ║         	              ^^^
 //│ ╟── application of type `A` is not an instance of type `Base`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.217: 	let b: Base = A()
+//│ ║  l.258: 	let b: Base = A()
 //│ ╙──       	       ^^^^
 //│ let b: Base
 
 // FIXME
 b: Base & (A | B)
-//│ /!!!\ Uncaught error: java.lang.ClassCastException: class mlscript.NuTypeDefs$TypedNuTrt cannot be cast to class mlscript.NuTypeDefs$TypedNuCls (mlscript.NuTypeDefs$TypedNuTrt and mlscript.NuTypeDefs$TypedNuCls are in unnamed module of loader sbt.internal.LayeredClassLoader @3bf50bf8)
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.269: 	b: Base & (A | B)
+//│ ║         	^
+//│ ╟── type `#Base` does not match type `A | B`
+//│ ║  l.258: 	let b: Base = A()
+//│ ║         	       ^^^^
+//│ ╟── but it flows into reference with expected type `A | B`
+//│ ║  l.269: 	b: Base & (A | B)
+//│ ║         	^
+//│ ╟── Note: constraint arises from union type:
+//│ ║  l.269: 	b: Base & (A | B)
+//│ ║         	          ^^^^^^^
+//│ ╟── from intersection type:
+//│ ║  l.269: 	b: Base & (A | B)
+//│ ╙──       	   ^^^^^^^^^^^^^^
+//│ A & Base | B & Base
 
 
 // FIXME
 trait Base: Foo | Bar
 class Foo[A]
 class Bar[B]
-//│ trait Base()
+//│ trait Base() {
+//│   this: #Base
+//│ }
 //│ class Foo[A]()
 //│ class Bar[B]()
 
 // FIXME
 fun mt(x) = if x is Test then 1 else 0
 //│ ╔══[ERROR] Cannot find constructor `Test` in scope
-//│ ║  l.241: 	fun mt(x) = if x is Test then 1 else 0
+//│ ║  l.299: 	fun mt(x) = if x is Test then 1 else 0
 //│ ╙──       	                    ^^^^
 //│ fun mt: anything -> error
  //│ ╙──       	                    ^^^^
 //│ 
+
+let ot : Oth
+let tt : Test
+//│ let ot: Oth
+//│ let tt: Test
+
+fun fot(x: Oth): Test = x
+ot : Test
+//│ fun fot: (x: Oth,) -> Test
+//│ Test
+
+:e
+tt : Oth
+fun fto(x: Test): Oth = x
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.319: 	fun fto(x: Test): Oth = x
+//│ ║         	                        ^
+//│ ╟── type `#Test` is not an instance of type `Oth`
+//│ ║  l.319: 	fun fto(x: Test): Oth = x
+//│ ║         	           ^^^^
+//│ ╟── but it flows into reference with expected type `#Oth`
+//│ ║  l.319: 	fun fto(x: Test): Oth = x
+//│ ║         	                        ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.319: 	fun fto(x: Test): Oth = x
+//│ ╙──       	                  ^^^
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.318: 	tt : Oth
+//│ ║         	^^
+//│ ╟── type `#Test` is not an instance of type `Oth`
+//│ ║  l.308: 	let tt : Test
+//│ ║         	         ^^^^
+//│ ╟── but it flows into reference with expected type `#Oth`
+//│ ║  l.318: 	tt : Oth
+//│ ║         	^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.318: 	tt : Oth
+//│ ╙──       	     ^^^
+//│ fun fto: (x: Test,) -> Oth
+//│ Oth

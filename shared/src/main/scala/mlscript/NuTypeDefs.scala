@@ -675,7 +675,6 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                             ctx.get(trtName) match {
                               case S(lti: LazyTypeInfo) => lti.complete().freshen match {
                                 case trt: TypedNuTrt =>
-                                  // TODO check intersection of members
                                   inherit(ps, superType & trt.thisTy, memberUn(members, trt.members.values.toList))
                                 case _ => 
                                   err(msg"trait can only inherit traits", p.toLoc)
@@ -687,7 +686,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     }
 
                     val (thisType, baseMems) =
-                      inherit(parentSpecs, TopType, Nil)
+                      // ? is it really a good idea
+                      inherit(parentSpecs, trtNameToNomTag(td)(noProv, ctx), Nil)
 
                     val ttu = typeTypingUnit(td.body, topLevel = false)
                     val trtMems = baseMems ++ ttu.entities
@@ -884,7 +884,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                         }
                       case Nil => (annot, members)
                     }
-                    val (ifaceAnnot, ifaceMembers) = computeInterface(parentSpecs, TopType, Nil)
+                    val (ifaceAnnot, ifaceMembers) = computeInterface(parentSpecs, thisType, Nil)
                     // TODO check mems against interface stuff above
 
                     ifaceMembers.foreach { m =>
@@ -902,7 +902,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     TypedNuCls(outerCtx.lvl, td, ttu,
                       tparams, typedParams, mems ++ ifaceMembers.map(d => d.name -> d).toMap,
                       // if (td.kind is Nms) TopType else thisTV
-                      ifaceAnnot  // ? TopType ? not sure
+                      TopType
+                      // ifaceAnnot  // ? TopType ? not sure
                     )(thisType) -> impltdMems
                   }
                 case Mxn =>
