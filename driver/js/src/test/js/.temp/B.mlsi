@@ -1,0 +1,4 @@
+import "A.mlsi"
+declare module B() {
+  fun foo: error
+}

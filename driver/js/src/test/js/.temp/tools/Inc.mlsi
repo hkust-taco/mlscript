@@ -1,4 +1,3 @@
 declare module Inc() {
   fun inc: (x: int,) -> int
-  
 }

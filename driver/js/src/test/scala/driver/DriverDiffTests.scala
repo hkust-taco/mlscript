@@ -37,6 +37,7 @@ object DriverDiffTests {
   private val testCases = List(
     entry("Simple.mls"),
     entry("Cycle2.mls"),
-    entry("Self.mls", true)
+    entry("Self.mls", true),
+    entry("C.mls", true) // FIXME: access to class member not yet supported
   )
 }

@@ -1,0 +1,3 @@
+declare module A() {
+  class Foo(x: int)
+}

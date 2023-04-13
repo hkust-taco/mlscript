@@ -1,5 +1,6 @@
-import "Cycle2.mls"
+declare module Cycle2() {
+  fun g: (x: int,) -> int
+}
 declare module Cycle1() {
   fun f: (x: int,) -> int
-  
 }

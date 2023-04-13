@@ -1,0 +1,5 @@
+import "B.mlsi"
+declare module C() {
+  let a: error
+  unit
+}

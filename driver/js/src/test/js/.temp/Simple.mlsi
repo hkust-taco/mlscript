@@ -1,4 +1,4 @@
-import "Opened.mls"
+import "Opened.mlsi"
 declare module Simple() {
   mixin B() {
     this: {n: 'n}
@@ -12,5 +12,4 @@ declare module Simple() {
     let b: 1
   }
   unit
-  
 }

@@ -1,0 +1,4 @@
+import "B.mls"
+
+let a = B.foo
+log(a.x)
