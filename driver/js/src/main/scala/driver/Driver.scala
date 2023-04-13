@@ -217,12 +217,14 @@ class Driver(options: DriverOptions) {
     filename: String,
     outputDir: String,
     exported: Boolean
-  ): Unit = {
+  ): Unit = try {
     val backend = new JSCompilerBackend()
     val lines = backend(program, moduleName, imports, exported)
     val code = lines.mkString("", "\n", "\n")
     writeFile(outputDir, s"$filename.js", code)
-  }
+  } catch {
+      case CodeGenError(err) => report(ErrorReport(err, Nil, Diagnostic.Compilation))
+    }
 }
 
 object Driver {

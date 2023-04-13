@@ -1009,7 +1009,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
   
 }
 
-class JSCompilerBackend extends JSBackend(allowUnresolvedSymbols = true) {
+class JSCompilerBackend extends JSBackend(allowUnresolvedSymbols = false) {
   private def generateNewDef(pgrm: Pgrm, topModuleName: Str, exported: Bool): Ls[Str] = {
     val (typeDefs, otherStmts) = pgrm.tops.partitionMap {
       case ot: Terms => R(ot)
@@ -1043,7 +1043,12 @@ class JSCompilerBackend extends JSBackend(allowUnresolvedSymbols = true) {
   }
 
   def apply(pgrm: Pgrm, topModuleName: Str, imports: Ls[Import], exported: Bool): Ls[Str] = {
-    imports.flatMap(translateImport(_).toSourceCode.toLines) ::: generateNewDef(pgrm, topModuleName, exported)
+    imports.flatMap {
+      case imp @ Import(path) =>
+        val moduleName = path.substring(path.lastIndexOf("/") + 1, path.lastIndexOf("."))
+        topLevelScope.declareValue(moduleName, Some(false), false)
+        translateImport(imp).toSourceCode.toLines
+    } ::: generateNewDef(pgrm, topModuleName, exported)
   }
 }
 

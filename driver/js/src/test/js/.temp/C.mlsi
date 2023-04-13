@@ -1,5 +1,6 @@
 import "B.mlsi"
 declare module C() {
   let a: error
+  let b: error
   unit
 }
