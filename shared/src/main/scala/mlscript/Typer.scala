@@ -42,11 +42,18 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
    */
   class SearchStrategy()
 
+
+  // Searches everywhere
   final case class NormalSearchStrategy() extends SearchStrategy
 
+  // Searches only outside a quasiquote
   final case class UnquoteSearchStrategy() extends SearchStrategy
 
+  // Searches only inside a quasiquote
   final case class QuasiquoteSearchStrategy(lvl: Int) extends SearchStrategy
+  // uses only if you need to search a method definition (e.g. + - * /)
+  // it has the same effect as `NormalSearchStrategy`
+  final case class SuperSearchStrategy() extends SearchStrategy
   case class Ctx(
                   parent: Opt[Ctx],
                   env: MutMap[Str, TypeInfo],
@@ -60,10 +67,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
                   inUnquoted: Boolean,
                   outerQuoteEnvironments: List[Ctx],
                   var outermostCtx: Opt[Ctx],
+                  var overridingStrategy: Opt[SearchStrategy], // override once only, will set to N if the overrided strategy is used
                   innerUnquoteContextRequirements: mutable.ListBuffer[SimpleType],
                   outermostFreeVarType: MutSet[Str -> SimpleType],
-                  outermostBoundedVarType: mutable.ListBuffer[Str],
-                  isTopLvlCtx: Bool
+                  outermostBoundedVarType: mutable.ListBuffer[Str]
                 ) {
 
     def +=(b: Str -> TypeInfo): Unit = env += b
@@ -74,7 +81,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
 
     def get(name: Str, strategy: SearchStrategy = NormalSearchStrategy()): Opt[TypeInfo] = {
       strategy match {
-        case NormalSearchStrategy() =>
+        case NormalSearchStrategy() | SuperSearchStrategy() =>
           env.get(name) orElse parent.dlof(_.get(name, strategy))(N)
         case UnquoteSearchStrategy() =>
           if (!inQQ) {
@@ -117,7 +124,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
 
     def containsMth(parent: Opt[Str], nme: Str): Bool = containsMth(R(parent, nme))
 
-    def nest: Ctx = copy(Some(this), MutMap.empty, MutMap.empty, MutMap.empty, outermostFreeVarType = MutSet.empty, outermostBoundedVarType = ListBuffer.empty, isTopLvlCtx = false)
+    def nest: Ctx = copy(Some(this), MutMap.empty, MutMap.empty, MutMap.empty, outermostFreeVarType = MutSet.empty, outermostBoundedVarType = ListBuffer.empty)
 
     def nextLevel: Ctx = copy(lvl = lvl + 1)
 
@@ -144,7 +151,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       outermostFreeVarType = MutSet.empty,
       outermostBoundedVarType = ListBuffer.empty,
       innerUnquoteContextRequirements = ListBuffer.empty,
-      isTopLvlCtx = true
+      overridingStrategy = None
     )
 
     val empty: Ctx = init
@@ -611,21 +618,22 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             res
           }
       case v@ValidVar(name) =>
-        println(s"inspect $name by ctx.get")
-        val strategy = if (name == "+" || name == "f")
-          NormalSearchStrategy()
-        else if (ctx.inUnquoted)
+//        println(s"inspect $name by ctx.get")
+        val strategy = if (ctx.overridingStrategy != N) {
+          ctx.overridingStrategy.get
+        } else if (ctx.inUnquoted)
           UnquoteSearchStrategy()
         else if (ctx.inQQ)
           QuasiquoteSearchStrategy(ctx.quasiquoteLvl)
         else
           NormalSearchStrategy()
-        println(s"searching method: $strategy")
+        ctx.overridingStrategy = N
+//        println(s"searching method: $strategy")
         val ty = ctx.get(name, strategy).fold(
           if (ctx.inQQ) {
             val res = new TypeVariable(lvl, Nil, Nil)(prov)
             val tag = ClassTag(StrLit(name), Set.empty)(noProv)
-            println(s"insert $name into the free vars")
+//            println(s"insert $name into the free vars")
             ctx.freeVarsEnv += name -> VarSymbol(tag, v)
 
             ctx.outermostCtx match {
@@ -775,6 +783,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         term.desugaredTerm = S(desug)
         typeTerm(desug)
       case App(f, a) =>
+        // TODO: implement non-overriding approach to force search outside
+        f match {
+          case Var(_) => ctx.overridingStrategy = S(SuperSearchStrategy())
+          case _ =>
+        }
+//        println(s"Applying $f(${f.getClass}) to $a(${a.getClass})")
         val f_ty = typeTerm(f)
         val a_ty = typeTerm(a)
         val res = freshVar(prov)
@@ -930,8 +944,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             RecordType(list)(NoProv)
         }
 
-        println(free_var_requirement)
-        println(nested_ctx.outermostBoundedVarType)
+//        println(free_var_requirement)
+//        println(nested_ctx.outermostBoundedVarType)
         val ctx_type = unquote_requirement & free_var_requirement
         val ctx_ty_without_bounded = ctx_type.without(nested_ctx.outermostBoundedVarType.map(Var(_)).toSortedSet)
 
@@ -943,7 +957,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case Unquoted(body) =>
         ctx.parent match {
           case Some(p) =>
-            println(s"qq level: ${p.quasiquoteLvl}")
+//            println(s"qq level: ${p.quasiquoteLvl}")
             val nestedCtx = p.nest.copy(quasiquoteLvl = p.quasiquoteLvl + 1, inUnquoted = true)
             //        println(s"Typing for unquoted ${nestedCtx.id}")
 

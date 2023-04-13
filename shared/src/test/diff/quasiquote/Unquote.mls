@@ -17,7 +17,67 @@ fun f(x, y) = code"[${x}, ${y}]"
 let x = code"y"
 //│ x: Code['a, {y: 'a}]
 
+:d
 let c = f(x, x)
+//│ 1. Typing term f (x, x,)
+//│ | 1. Typing term f
+//│ | 1. : f68'
+//│ | 1. Typing term x, x,
+//│ | | 1. Typing term x
+//│ | | 1. : Code[[α73'],{y: α73'}]
+//│ | | 1. Typing term x
+//│ | | 1. : Code[[α74'],{y: α74'}]
+//│ | 1. : (Code[[α73'],{y: α73'}], Code[[α74'],{y: α74'}],)
+//│ | CONSTRAIN f68' <! ((Code[[α73'],{y: α73'}], Code[[α74'],{y: α74'}],) -> α75')
+//│ |   where 
+//│ 		f68' :> [((α69', α70',) -> Code[(α71', α72',),(α44 & α47)])]
+//│ 		α69' <: [[Code[α43,α44]]]
+//│ 		α70' <: [[Code[α46,α47]]]
+//│ 		α71' :> [α43]
+//│ 		α72' :> [α46]
+//│ | C f68' <! ((Code[[α73'],{y: α73'}], Code[[α74'],{y: α74'}],) -> α75')    (0)
+//│ | | C [((α69', α70',) -> Code[(α71', α72',),(α44 & α47)])] <! ((Code[[α73'],{y: α73'}], Code[[α74'],{y: α74'}],) -> α75')    (1)
+//│ | | | C ((α69', α70',) -> Code[(α71', α72',),(α44 & α47)]) <! ((Code[[α73'],{y: α73'}], Code[[α74'],{y: α74'}],) -> α75')    (1)
+//│ | | | | C (Code[[α73'],{y: α73'}], Code[[α74'],{y: α74'}],) <! (α69', α70',)    (2)
+//│ | | | | | C Code[[α73'],{y: α73'}] <! α69'    (3)
+//│ | | | | | | C Code[[α73'],{y: α73'}] <! [[Code[α43,α44]]]    (4)
+//│ | | | | | | | C Code[[α73'],{y: α73'}] <! [Code[α43,α44]]    (4)
+//│ | | | | | | | | C Code[[α73'],{y: α73'}] <! Code[α43,α44]    (4)
+//│ | | | | | | | | | C [α73'] <! α43    (5)
+//│ | | | | | | | | | | C α73' <! α43    (5)
+//│ | | | | | | | | | C α44 <! {y: α73'}    (6)
+//│ | | | | | | | | | | EXTR RHS  {y: α73'}  ~>  {y: α76}  to 0
+//│ | | | | | | | | | |  where 
+//│ 		α76 <: α43
+//│ | | | | | | | | | |    and 
+//│ 		α73' :> α76 <: α43
+//│ 		α76 <: α43
+//│ | | | | | | | | | | C α44 <! {y: α76}    (7)
+//│ | | | | | C Code[[α74'],{y: α74'}] <! α70'    (8)
+//│ | | | | | | C Code[[α74'],{y: α74'}] <! [[Code[α46,α47]]]    (9)
+//│ | | | | | | | C Code[[α74'],{y: α74'}] <! [Code[α46,α47]]    (9)
+//│ | | | | | | | | C Code[[α74'],{y: α74'}] <! Code[α46,α47]    (9)
+//│ | | | | | | | | | C [α74'] <! α46    (10)
+//│ | | | | | | | | | | C α74' <! α46    (10)
+//│ | | | | | | | | | C α47 <! {y: α74'}    (11)
+//│ | | | | | | | | | | EXTR RHS  {y: α74'}  ~>  {y: α77}  to 0
+//│ | | | | | | | | | |  where 
+//│ 		α77 <: α46
+//│ | | | | | | | | | |    and 
+//│ 		α74' :> α77 <: α46
+//│ 		α77 <: α46
+//│ | | | | | | | | | | C α47 <! {y: α77}    (12)
+//│ | | | | C Code[(α71', α72',),(α44 & α47)] <! α75'    (13)
+//│ 1. : α75'
+//│ ⬤ Typed as: α75'
+//│  where: 
+//│ 		α44 <: {y: α76}
+//│ 		α47 <: {y: α77}
+//│ 		α71' :> [α43]
+//│ 		α72' :> [α46]
+//│ 		α75' :> Code[(α71', α72',),(α44 & α47)]
+//│ 		α76 <: α43
+//│ 		α77 <: α46
 //│ c: Code[('a, 'a,), {y: 'a}]
 
 code"[${code"y"}, ${code"y"}]"
@@ -46,8 +106,6 @@ code"f(0)"
 //│ 0. Typing term Quoted' f (0,) '
 //│ | 0. Typing term f (0,)
 //│ | | 0. Typing term f
-//│ | | | inspect f by ctx.get
-//│ | | | searching method: NormalSearchStrategy()
 //│ | | 0. : f187
 //│ | | 0. Typing term 0,
 //│ | | | 0. Typing term 0
@@ -65,8 +123,6 @@ code"f(0)"
 //│ | | | | | | C α188 <! α189    (4)
 //│ | | | | | | | C 0<int,number> <! α189    (5)
 //│ | 0. : α189
-//│ | {}
-//│ | ListBuffer()
 //│ 0. : Code[α189,{}]
 //│ ⬤ Typed as: Code[α189,{}]
 //│  where: 
@@ -80,17 +136,11 @@ code"f(0)"
 code"${code"${code"${z}"}"}"
 //│ 0. Typing term Quoted' Unquote' Quoted' Unquote' Quoted' Unquote' z ' ' ' ' ' '
 //│ | 0. Typing term Unquote' Quoted' Unquote' Quoted' Unquote' z ' ' ' ' '
-//│ | | qq level: 0
 //│ | | 0. Typing term Quoted' Unquote' Quoted' Unquote' z ' ' ' '
 //│ | | | 0. Typing term Unquote' Quoted' Unquote' z ' ' '
-//│ | | | | qq level: 1
 //│ | | | | 0. Typing term Quoted' Unquote' z ' '
 //│ | | | | | 0. Typing term Unquote' z '
-//│ | | | | | | qq level: 2
 //│ | | | | | | 0. Typing term z
-//│ | | | | | | | inspect z by ctx.get
-//│ | | | | | | | searching method: UnquoteSearchStrategy()
-//│ | | | | | | | insert z into the free vars
 //│ | | | | | | 0. : α197
 //│ | | | | | | CONSTRAIN (Code[α195,α196] -> α195) <! (α197 -> α198)
 //│ | | | | | |   where 
@@ -98,8 +148,6 @@ code"${code"${code"${z}"}"}"
 //│ | | | | | | | C α197 <! Code[α195,α196]    (1)
 //│ | | | | | | | C α195 <! α198    (2)
 //│ | | | | | 0. : α198
-//│ | | | | | {}
-//│ | | | | | ListBuffer()
 //│ | | | | 0. : Code[α198,α196]
 //│ | | | | CONSTRAIN (Code[α193,α194] -> α193) <! (Code[α198,α196] -> α199)
 //│ | | | |   where 
@@ -109,8 +157,6 @@ code"${code"${code"${z}"}"}"
 //│ | | | | | | C α194 <! α196    (3)
 //│ | | | | | C α193 <! α199    (4)
 //│ | | | 0. : α199
-//│ | | | {}
-//│ | | | ListBuffer()
 //│ | | 0. : Code[α199,α194]
 //│ | | CONSTRAIN (Code[α191,α192] -> α191) <! (Code[α199,α194] -> α200)
 //│ | |   where 
@@ -121,16 +167,14 @@ code"${code"${code"${z}"}"}"
 //│ | | | | C α192 <! α194    (3)
 //│ | | | C α191 <! α200    (4)
 //│ | 0. : α200
-//│ | {}
-//│ | ListBuffer()
 //│ 0. : Code[α200,α192]
 //│ ⬤ Typed as: Code[α200,α192]
 //│  where: 
 //│ 		α192 <: α194
 //│ 		α194 <: α196
 //│ ╔══[ERROR] identifier not found: z
-//│ ║  l.79: 	code"${code"${code"${z}"}"}"
-//│ ╙──      	                     ^
+//│ ║  l.138: 	code"${code"${code"${z}"}"}"
+//│ ╙──       	                     ^
 //│ res: Code[nothing, anything]
 
 
@@ -143,20 +187,14 @@ code"${code"${z}"}"
 //│ 1. Typing term Quoted' 1 '
 //│ | 1. Typing term 1
 //│ | 1. : 1<int,number>
-//│ | {}
-//│ | ListBuffer()
 //│ 1. : Code[1<int,number>,{}]
 //│ ⬤ Typed as: Code[1<int,number>,{}]
 //│  where: 
 //│ 0. Typing term Quoted' Unquote' Quoted' Unquote' z ' ' ' '
 //│ | 0. Typing term Unquote' Quoted' Unquote' z ' ' '
-//│ | | qq level: 0
 //│ | | 0. Typing term Quoted' Unquote' z ' '
 //│ | | | 0. Typing term Unquote' z '
-//│ | | | | qq level: 1
 //│ | | | | 0. Typing term z
-//│ | | | | | inspect z by ctx.get
-//│ | | | | | searching method: UnquoteSearchStrategy()
 //│ | | | | 0. : Code[1<int,number>,{}]
 //│ | | | | CONSTRAIN (Code[α207,α208] -> α207) <! (Code[1<int,number>,{}] -> α209)
 //│ | | | |   where 
@@ -167,8 +205,6 @@ code"${code"${z}"}"
 //│ | | | | | C α207 <! α209    (4)
 //│ | | | | | | C 1<int,number> <! α209    (5)
 //│ | | | 0. : α209
-//│ | | | {}
-//│ | | | ListBuffer()
 //│ | | 0. : Code[α209,α208]
 //│ | | CONSTRAIN (Code[α205,α206] -> α205) <! (Code[α209,α208] -> α210)
 //│ | |   where 
@@ -181,8 +217,6 @@ code"${code"${z}"}"
 //│ | | | C α205 <! α210    (5)
 //│ | | | | C 1<int,number> <! α210    (6)
 //│ | 0. : α210
-//│ | {}
-//│ | ListBuffer()
 //│ 0. : Code[α210,α206]
 //│ ⬤ Typed as: Code[α210,α206]
 //│  where: 
@@ -209,14 +243,9 @@ code"let x = 1; let z = 1; code"x + y""
 //│ | | | | 0. Typing term + (x,) (y,)
 //│ | | | | | 0. Typing term + (x,)
 //│ | | | | | | 0. Typing term +
-//│ | | | | | | | inspect + by ctx.get
-//│ | | | | | | | searching method: NormalSearchStrategy()
 //│ | | | | | | 0. : (int<number> -> (int<number> -> int<number>))
 //│ | | | | | | 0. Typing term x,
 //│ | | | | | | | 0. Typing term x
-//│ | | | | | | | | inspect x by ctx.get
-//│ | | | | | | | | searching method: QuasiquoteSearchStrategy(2)
-//│ | | | | | | | | insert x into the free vars
 //│ | | | | | | | 0. : α214
 //│ | | | | | | 0. : (α214,)
 //│ | | | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (α214 -> α215)
@@ -228,9 +257,6 @@ code"let x = 1; let z = 1; code"x + y""
 //│ | | | | | 0. : α215
 //│ | | | | | 0. Typing term y,
 //│ | | | | | | 0. Typing term y
-//│ | | | | | | | inspect y by ctx.get
-//│ | | | | | | | searching method: QuasiquoteSearchStrategy(2)
-//│ | | | | | | | insert y into the free vars
 //│ | | | | | | 0. : α216
 //│ | | | | | 0. : (α216,)
 //│ | | | | | CONSTRAIN α215 <! (α216 -> α217)
@@ -242,13 +268,9 @@ code"let x = 1; let z = 1; code"x + y""
 //│ | | | | | | | | C α216 <! int<number>    (3)
 //│ | | | | | | | C int<number> <! α217    (4)
 //│ | | | | 0. : α217
-//│ | | | | {y: α216, x: α214}
-//│ | | | | ListBuffer()
 //│ | | | 0. : Code[α217,{y: α216, x: α214}]
 //│ | | 0. : Code[α217,{y: α216, x: α214}]
 //│ | 0. : Code[α217,{y: α216, x: α214}]
-//│ | {}
-//│ | ListBuffer(x, z)
 //│ 0. : Code[Code[α217,{y: α216, x: α214}],{}\x-z]
 //│ ⬤ Typed as: Code[Code[α217,{y: α216, x: α214}],{}\x-z]
 //│  where: 
@@ -268,15 +290,9 @@ code"let z = 0;${code"z"}"
 //│ | | 1. : 0<int,number>
 //│ | | Let: z
 //│ | | 0. Typing term Unquote' Quoted' z ' '
-//│ | | | qq level: 1
 //│ | | | 0. Typing term Quoted' z '
 //│ | | | | 0. Typing term z
-//│ | | | | | inspect z by ctx.get
-//│ | | | | | searching method: QuasiquoteSearchStrategy(3)
-//│ | | | | | insert z into the free vars
 //│ | | | | 0. : α223
-//│ | | | | {z: α223}
-//│ | | | | ListBuffer()
 //│ | | | 0. : Code[α223,{z: α223}]
 //│ | | | CONSTRAIN (Code[α221,α222] -> α221) <! (Code[α223,{z: α223}] -> α224)
 //│ | | |   where 
@@ -287,8 +303,6 @@ code"let z = 0;${code"z"}"
 //│ | | | | C α221 <! α224    (4)
 //│ | | 0. : α224
 //│ | 0. : α224
-//│ | {}
-//│ | ListBuffer(z)
 //│ 0. : Code[α224,α222\z]
 //│ ⬤ Typed as: Code[α224,α222\z]
 //│  where: 
@@ -308,19 +322,13 @@ code"let x = 1;${code"x + y"}"
 //│ | | 1. : 1<int,number>
 //│ | | Let: x
 //│ | | 0. Typing term Unquote' Quoted' + (x,) (y,) ' '
-//│ | | | qq level: 1
 //│ | | | 0. Typing term Quoted' + (x,) (y,) '
 //│ | | | | 0. Typing term + (x,) (y,)
 //│ | | | | | 0. Typing term + (x,)
 //│ | | | | | | 0. Typing term +
-//│ | | | | | | | inspect + by ctx.get
-//│ | | | | | | | searching method: NormalSearchStrategy()
 //│ | | | | | | 0. : (int<number> -> (int<number> -> int<number>))
 //│ | | | | | | 0. Typing term x,
 //│ | | | | | | | 0. Typing term x
-//│ | | | | | | | | inspect x by ctx.get
-//│ | | | | | | | | searching method: QuasiquoteSearchStrategy(3)
-//│ | | | | | | | | insert x into the free vars
 //│ | | | | | | | 0. : α233
 //│ | | | | | | 0. : (α233,)
 //│ | | | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (α233 -> α234)
@@ -332,9 +340,6 @@ code"let x = 1;${code"x + y"}"
 //│ | | | | | 0. : α234
 //│ | | | | | 0. Typing term y,
 //│ | | | | | | 0. Typing term y
-//│ | | | | | | | inspect y by ctx.get
-//│ | | | | | | | searching method: QuasiquoteSearchStrategy(3)
-//│ | | | | | | | insert y into the free vars
 //│ | | | | | | 0. : α235
 //│ | | | | | 0. : (α235,)
 //│ | | | | | CONSTRAIN α234 <! (α235 -> α236)
@@ -346,8 +351,6 @@ code"let x = 1;${code"x + y"}"
 //│ | | | | | | | | C α235 <! int<number>    (3)
 //│ | | | | | | | C int<number> <! α236    (4)
 //│ | | | | 0. : α236
-//│ | | | | {y: α235, x: α233}
-//│ | | | | ListBuffer()
 //│ | | | 0. : Code[α236,{y: α235, x: α233}]
 //│ | | | CONSTRAIN (Code[α231,α232] -> α231) <! (Code[α236,{y: α235, x: α233}] -> α237)
 //│ | | |   where 
@@ -363,8 +366,6 @@ code"let x = 1;${code"x + y"}"
 //│ | | | | | C int<number> <! α237    (6)
 //│ | | 0. : α237
 //│ | 0. : α237
-//│ | {}
-//│ | ListBuffer(x)
 //│ 0. : Code[α237,α232\x]
 //│ ⬤ Typed as: Code[α237,α232\x]
 //│  where: 
@@ -384,8 +385,6 @@ code"1 + ${code"b"}"
 //│ | 0. Typing term + (1,) (Unquote' Quoted' b ' ',)
 //│ | | 0. Typing term + (1,)
 //│ | | | 0. Typing term +
-//│ | | | | inspect + by ctx.get
-//│ | | | | searching method: NormalSearchStrategy()
 //│ | | | 0. : (int<number> -> (int<number> -> int<number>))
 //│ | | | 0. Typing term 1,
 //│ | | | | 0. Typing term 1
@@ -399,15 +398,9 @@ code"1 + ${code"b"}"
 //│ | | 0. : α242
 //│ | | 0. Typing term Unquote' Quoted' b ' ',
 //│ | | | 0. Typing term Unquote' Quoted' b ' '
-//│ | | | | qq level: 0
 //│ | | | | 0. Typing term Quoted' b '
 //│ | | | | | 0. Typing term b
-//│ | | | | | | inspect b by ctx.get
-//│ | | | | | | searching method: QuasiquoteSearchStrategy(2)
-//│ | | | | | | insert b into the free vars
 //│ | | | | | 0. : α245
-//│ | | | | | {b: α245}
-//│ | | | | | ListBuffer()
 //│ | | | | 0. : Code[α245,{b: α245}]
 //│ | | | | CONSTRAIN (Code[α243,α244] -> α243) <! (Code[α245,{b: α245}] -> α246)
 //│ | | | |   where 
@@ -427,8 +420,6 @@ code"1 + ${code"b"}"
 //│ | | | | | C α246 <! int<number>    (3)
 //│ | | | | C int<number> <! α247    (4)
 //│ | 0. : α247
-//│ | {}
-//│ | ListBuffer()
 //│ 0. : Code[α247,α244]
 //│ ⬤ Typed as: Code[α247,α244]
 //│  where: 
@@ -454,21 +445,14 @@ code"${Const(n)} + 1"
 //│ | 0. Typing term + (Unquote' Const (n,) ',) (1,)
 //│ | | 0. Typing term + (Unquote' Const (n,) ',)
 //│ | | | 0. Typing term +
-//│ | | | | inspect + by ctx.get
-//│ | | | | searching method: NormalSearchStrategy()
 //│ | | | 0. : (int<number> -> (int<number> -> int<number>))
 //│ | | | 0. Typing term Unquote' Const (n,) ',
 //│ | | | | 0. Typing term Unquote' Const (n,) '
-//│ | | | | | qq level: 0
 //│ | | | | | 0. Typing term Const (n,)
 //│ | | | | | | 0. Typing term Const
-//│ | | | | | | | inspect Const by ctx.get
-//│ | | | | | | | searching method: UnquoteSearchStrategy()
 //│ | | | | | | 0. : (int<number> -> Code[int<number>,⊥])
 //│ | | | | | | 0. Typing term n,
 //│ | | | | | | | 0. Typing term n
-//│ | | | | | | | | inspect n by ctx.get
-//│ | | | | | | | | searching method: UnquoteSearchStrategy()
 //│ | | | | | | | 0. : 1<int,number>
 //│ | | | | | | 0. : (1<int,number>,)
 //│ | | | | | | CONSTRAIN (int<number> -> Code[int<number>,⊥]) <! (1<int,number> -> α255)
@@ -510,8 +494,6 @@ code"${Const(n)} + 1"
 //│ | | | | C (1<int,number>,) <! (int<number>,)    (2)
 //│ | | | | C int<number> <! α258    (2)
 //│ | 0. : α258
-//│ | {}
-//│ | ListBuffer()
 //│ 0. : Code[α258,α254]
 //│ ⬤ Typed as: Code[α258,α254]
 //│  where: 
@@ -545,13 +527,9 @@ fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, code"${
 //│ | | | 1. Typing term > (n,) (0,)
 //│ | | | | 1. Typing term > (n,)
 //│ | | | | | 1. Typing term >
-//│ | | | | | | inspect > by ctx.get
-//│ | | | | | | searching method: NormalSearchStrategy()
 //│ | | | | | 1. : (number<> -> (number<> -> bool<>))
 //│ | | | | | 1. Typing term n,
 //│ | | | | | | 1. Typing term n
-//│ | | | | | | | inspect n by ctx.get
-//│ | | | | | | | searching method: NormalSearchStrategy()
 //│ | | | | | | 1. : α262'
 //│ | | | | | 1. : (α262',)
 //│ | | | | | CONSTRAIN (number<> -> (number<> -> bool<>)) <! (α262' -> α265')
@@ -576,16 +554,11 @@ fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, code"${
 //│ | | | 1. Typing term Quoted' let x = Unquote' Const (n,) ' in Unquote' test (- (n,) (1,), Quoted' + (Unquote' cde ',) (x,) ',) ' '
 //│ | | | | 1. Typing term let x = Unquote' Const (n,) ' in Unquote' test (- (n,) (1,), Quoted' + (Unquote' cde ',) (x,) ',) '
 //│ | | | | | 2. Typing term Unquote' Const (n,) '
-//│ | | | | | | qq level: 0
 //│ | | | | | | 1. Typing term Const (n,)
 //│ | | | | | | | 1. Typing term Const
-//│ | | | | | | | | inspect Const by ctx.get
-//│ | | | | | | | | searching method: UnquoteSearchStrategy()
 //│ | | | | | | | 1. : (int<number> -> Code[int<number>,⊥])
 //│ | | | | | | | 1. Typing term n,
 //│ | | | | | | | | 1. Typing term n
-//│ | | | | | | | | | inspect n by ctx.get
-//│ | | | | | | | | | searching method: UnquoteSearchStrategy()
 //│ | | | | | | | | 1. : α262'
 //│ | | | | | | | 1. : (α262',)
 //│ | | | | | | | CONSTRAIN (int<number> -> Code[int<number>,⊥]) <! (α262' -> α269')
@@ -608,23 +581,16 @@ fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, code"${
 //│ | | | | | 2. : α270''
 //│ | | | | | Let: x
 //│ | | | | | 1. Typing term Unquote' test (- (n,) (1,), Quoted' + (Unquote' cde ',) (x,) ',) '
-//│ | | | | | | qq level: 1
 //│ | | | | | | 1. Typing term test (- (n,) (1,), Quoted' + (Unquote' cde ',) (x,) ',)
 //│ | | | | | | | 1. Typing term test
-//│ | | | | | | | | inspect test by ctx.get
-//│ | | | | | | | | searching method: UnquoteSearchStrategy()
 //│ | | | | | | | 1. : test261'
 //│ | | | | | | | 1. Typing term - (n,) (1,), Quoted' + (Unquote' cde ',) (x,) ',
 //│ | | | | | | | | 1. Typing term - (n,) (1,)
 //│ | | | | | | | | | 1. Typing term - (n,)
 //│ | | | | | | | | | | 1. Typing term -
-//│ | | | | | | | | | | | inspect - by ctx.get
-//│ | | | | | | | | | | | searching method: UnquoteSearchStrategy()
 //│ | | | | | | | | | | 1. : (int<number> -> (int<number> -> int<number>))
 //│ | | | | | | | | | | 1. Typing term n,
 //│ | | | | | | | | | | | 1. Typing term n
-//│ | | | | | | | | | | | | inspect n by ctx.get
-//│ | | | | | | | | | | | | searching method: UnquoteSearchStrategy()
 //│ | | | | | | | | | | | 1. : α262'
 //│ | | | | | | | | | | 1. : (α262',)
 //│ | | | | | | | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (α262' -> α273')
@@ -650,15 +616,10 @@ fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, code"${
 //│ | | | | | | | | | 1. Typing term + (Unquote' cde ',) (x,)
 //│ | | | | | | | | | | 1. Typing term + (Unquote' cde ',)
 //│ | | | | | | | | | | | 1. Typing term +
-//│ | | | | | | | | | | | | inspect + by ctx.get
-//│ | | | | | | | | | | | | searching method: NormalSearchStrategy()
 //│ | | | | | | | | | | | 1. : (int<number> -> (int<number> -> int<number>))
 //│ | | | | | | | | | | | 1. Typing term Unquote' cde ',
 //│ | | | | | | | | | | | | 1. Typing term Unquote' cde '
-//│ | | | | | | | | | | | | | qq level: 2
 //│ | | | | | | | | | | | | | 1. Typing term cde
-//│ | | | | | | | | | | | | | | inspect cde by ctx.get
-//│ | | | | | | | | | | | | | | searching method: UnquoteSearchStrategy()
 //│ | | | | | | | | | | | | | 1. : α264'
 //│ | | | | | | | | | | | | | CONSTRAIN (Code[α275,α276] -> α275) <! (α264' -> α277')
 //│ | | | | | | | | | | | | |   where 
@@ -678,9 +639,6 @@ fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, code"${
 //│ | | | | | | | | | | 1. : α278'
 //│ | | | | | | | | | | 1. Typing term x,
 //│ | | | | | | | | | | | 1. Typing term x
-//│ | | | | | | | | | | | | inspect x by ctx.get
-//│ | | | | | | | | | | | | searching method: QuasiquoteSearchStrategy(3)
-//│ | | | | | | | | | | | | insert x into the free vars
 //│ | | | | | | | | | | | 1. : α279'
 //│ | | | | | | | | | | 1. : (α279',)
 //│ | | | | | | | | | | CONSTRAIN α278' <! (α279' -> α280')
@@ -692,8 +650,6 @@ fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, code"${
 //│ | | | | | | | | | | | | | C α279' <! int<number>    (3)
 //│ | | | | | | | | | | | | C int<number> <! α280'    (4)
 //│ | | | | | | | | | 1. : α280'
-//│ | | | | | | | | | {x: α279'}
-//│ | | | | | | | | | ListBuffer()
 //│ | | | | | | | | 1. : Code[α280',(α276 & {x: α279'})]
 //│ | | | | | | | 1. : (α274', Code[α280',(α276 & {x: α279'})],)
 //│ | | | | | | | CONSTRAIN test261' <! ((α274', Code[α280',(α276 & {x: α279'})],) -> α281')
@@ -710,12 +666,8 @@ fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, code"${
 //│ | | | | | | | C α271 <! α282'    (2)
 //│ | | | | | 1. : α282'
 //│ | | | | 1. : α282'
-//│ | | | | {}
-//│ | | | | ListBuffer(x)
 //│ | | | 1. : Code[α282',(α268 & α272)\x]
 //│ | | | 1. Typing term cde
-//│ | | | | inspect cde by ctx.get
-//│ | | | | searching method: NormalSearchStrategy()
 //│ | | | 1. : α264'
 //│ | | | CONSTRAIN α266' <! (true<bool> | (α283' & ~(true<bool>)))
 //│ | | |   where 
