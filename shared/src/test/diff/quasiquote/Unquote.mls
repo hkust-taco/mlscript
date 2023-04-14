@@ -4,42 +4,82 @@ let cde = code"a"
 //│ cde: Code['a, {a: 'a}]
 //│    = [ 'Var', [ 'FreeVar', 'a' ] ]
 
-let c = code"let a = 10; let b = 10;a + b"
-//│ c: Code[int, anything\a\b]
-//│  = [
-//│      'Let',
-//│      'a',
-//│      Symbol(a),
-//│      [ '_', 10 ],
-//│      [
-//│        'Let',
-//│        'b',
-//│        Symbol(b),
-//│        [ '_', 10 ],
-//│        [ 'App', '+', [Array], [Array] ]
-//│      ]
-//│    ]
+let cde_w_free_vars = code"let x = 1; x + y"
+//│ cde_w_free_vars: Code[int, {y: int}\x]
+//│                = [
+//│                    'Let',
+//│                    'x',
+//│                    Symbol(x),
+//│                    [ '_', 1 ],
+//│                    [ 'App', '+', [ 'Var', Symbol(x) ], [ 'Var', [Array] ] ]
+//│                  ]
+
+
+let cde_w_unquote = code"${cde}"
+//│ cde_w_unquote: Code['a, {a: 'a}]
+//│              = [ 'Unquoted', [ 'Var', [ 'FreeVar', 'a' ] ] ]
+
+let cde_w_unquote_w_free_vars = code"${cde_w_free_vars}"
+//│ cde_w_unquote_w_free_vars: Code[int, {y: int}\x]
+//│                          = [
+//│                              'Unquoted',
+//│                              [
+//│                                'Let',
+//│                                'x',
+//│                                Symbol(x),
+//│                                [ '_', 1 ],
+//│                                [ 'App', '+', [Array], [Array] ]
+//│                              ]
+//│                            ]
+
+
+let cde_w_unquote_w_local_free_vars = code"[z, ${cde_w_unquote_w_free_vars}]"
+//│ cde_w_unquote_w_local_free_vars: Code[('a, int,), {y: int}\x & {z: 'a}]
+//│                                = [ 'Bra', [ 'Tup', [ [Array], [Array] ] ] ]
+
+let free_var1 = code"let x = 1; x + y"
+let free_var2 = code"let i = 1; i + x"
+let cde_w_mutli_unquote = code"${free_var2};${free_var1}"
+//│ ╔══[PARSE ERROR] Unexpected ';' keyword here
+//│ ║  l.42: 	let cde_w_mutli_unquote = code"${free_var2};${free_var1}"
+//│ ╙──      	                                           ^
+//│ free_var1: Code[int, {y: int}\x]
+//│          = [
+//│              'Let',
+//│              'x',
+//│              Symbol(x),
+//│              [ '_', 1 ],
+//│              [ 'App', '+', [ 'Var', Symbol(x) ], [ 'Var', [Array] ] ]
+//│            ]
+//│ free_var2: Code[int, {x: int}\i]
+//│          = [
+//│              'Let',
+//│              'i',
+//│              Symbol(i),
+//│              [ '_', 1 ],
+//│              [ 'App', '+', [ 'Var', Symbol(i) ], [ 'Var', [Array] ] ]
+//│            ]
+//│ cde_w_mutli_unquote: Code[int, {x: int}\i]
+//│                    = [
+//│                        'Unquoted',
+//│                        [
+//│                          'Let',
+//│                          'i',
+//│                          Symbol(i),
+//│                          [ '_', 1 ],
+//│                          [ 'App', '+', [Array], [Array] ]
+//│                        ]
+//│                      ]
 
 // FIXME
 c: Code<int, {}>
+//│ ╔══[ERROR] identifier not found: c
+//│ ║  l.63: 	c: Code<int, {}>
+//│ ╙──      	^
 //│ res: Code[int, anything]
-//│    = [
-//│        'Let',
-//│        'a',
-//│        Symbol(a),
-//│        [ '_', 10 ],
-//│        [
-//│          'Let',
-//│          'b',
-//│          Symbol(b),
-//│          [ '_', 10 ],
-//│          [ 'App', '+', [Array], [Array] ]
-//│        ]
-//│      ]
+//│ Code generation encountered an error:
+//│   unresolved symbol c
 
-code"1"
-//│ res: Code[1, anything]
-//│    = [ '_', 1 ]
 
 // :d
 fun f(x, y) = code"[${x}, ${y}]"
@@ -102,7 +142,7 @@ code"f(0)"
 :e
 code"${code"${code"${z}"}"}"
 //│ ╔══[ERROR] identifier not found: z
-//│ ║  l.146: 	code"${code"${code"${z}"}"}"
+//│ ║  l.131: 	code"${code"${code"${z}"}"}"
 //│ ╙──       	                     ^
 //│ res: Code[error, anything]
 //│ Code generation encountered an error:
