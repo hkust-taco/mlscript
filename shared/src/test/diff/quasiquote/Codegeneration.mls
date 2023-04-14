@@ -166,16 +166,16 @@ run(unquoted)
 :pe
 let str_lit = code""hello""
 //│ ╔══[PARSE ERROR] Unexpected closing quasiquote
-//│ ║  l.257: 	let str_lit = code""hello""
+//│ ║  l.167: 	let str_lit = code""hello""
 //│ ╙──       	                         ^
 //│ ╔══[PARSE ERROR] Unexpected closing quasiquote
-//│ ║  l.257: 	let str_lit = code""hello""
+//│ ║  l.167: 	let str_lit = code""hello""
 //│ ╙──       	                          ^
 //│ ╔══[PARSE ERROR] Unexpected end of quasiquote section; an expression was expected here
-//│ ║  l.257: 	let str_lit = code""hello""
+//│ ║  l.167: 	let str_lit = code""hello""
 //│ ╙──       	                   ^
 //│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
-//│ ║  l.257: 	let str_lit = code""hello""
+//│ ║  l.167: 	let str_lit = code""hello""
 //│ ╙──       	                    ^^^^^
 //│ str_lit: Code[undefined, anything]
 //│        = [ '_', undefined ]
@@ -301,10 +301,10 @@ let qq = code"x"
 :pe
 let x = ${qq}
 //│ ╔══[LEXICAL ERROR] unexpected character '$'
-//│ ║  l.392: 	let x = ${qq}
+//│ ║  l.302: 	let x = ${qq}
 //│ ╙──       	        ^
 //│ ╔══[PARSE ERROR] Unexpected error in expression position
-//│ ║  l.392: 	let x = ${qq}
+//│ ║  l.302: 	let x = ${qq}
 //│ ╙──       	        ^
 //│ x: {qq: Code['a, {x: 'a}]}
 //│  = { qq: [ 'Var', [ 'FreeVar', 'x' ] ] }
@@ -313,10 +313,10 @@ let x = ${qq}
 :pe
 let x2 = x => ${qq}
 //│ ╔══[LEXICAL ERROR] unexpected character '$'
-//│ ║  l.404: 	let x2 = x => ${qq}
+//│ ║  l.314: 	let x2 = x => ${qq}
 //│ ╙──       	              ^
 //│ ╔══[PARSE ERROR] Unexpected error in expression position
-//│ ║  l.404: 	let x2 = x => ${qq}
+//│ ║  l.314: 	let x2 = x => ${qq}
 //│ ╙──       	              ^
 //│ x2: anything -> {qq: Code['a, {x: 'a}]}
 //│   = [Function: x2]

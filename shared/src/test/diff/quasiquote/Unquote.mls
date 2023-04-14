@@ -1,921 +1,154 @@
 :NewParser
-:ne
-:NoJS
+
 let cde = code"a"
-code"let a = 10; let b = 10;${cde}"
 //│ cde: Code['a, {a: 'a}]
-//│ res: Code['a, {a: 'a}\a\b]
+//│    = [ 'Var', [ 'FreeVar', 'a' ] ]
+
+let c = code"let a = 10; let b = 10;${cde}"
+//│ c: Code['a, {a: 'a}\a\b]
+//│  = [
+//│      'Let',
+//│      'a',
+//│      Symbol(a),
+//│      [ '_', 10 ],
+//│      [ 'Let', 'b', Symbol(b), [ '_', 10 ], [ 'Unquoted', [Array] ] ]
+//│    ]
+
+// FIXME
+c: Code<int, {}>
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.18: 	c: Code<int, {}>
+//│ ║        	^
+//│ ╟── type `anything` does not have field 'a'
+//│ ║  l.18: 	c: Code<int, {}>
+//│ ╙──      	             ^^
+//│ res: Code[int, anything]
+//│    = [
+//│        'Let',
+//│        'a',
+//│        Symbol(a),
+//│        [ '_', 10 ],
+//│        [ 'Let', 'b', Symbol(b), [ '_', 10 ], [ 'Unquoted', [Array] ] ]
+//│      ]
 
 code"1"
 //│ res: Code[1, anything]
+//│    = [ '_', 1 ]
 
-:ne
-:NoJS
-:d
+// :d
 fun f(x, y) = code"[${x}, ${y}]"
-//│ 1. Typing term x, y, => Quoted' '(' Unquote' x ', Unquote' y ', ')' '
-//│ | 1. Typing pattern x, y,
-//│ | | 1. Typing pattern x
-//│ | | | x
-//│ | | 1. : α41'
-//│ | | 1. Typing pattern y
-//│ | | | y
-//│ | | 1. : α42'
-//│ | 1. : (α41', α42',)
-//│ | 1. Typing term Quoted' '(' Unquote' x ', Unquote' y ', ')' '
-//│ | | 1. Typing term '(' Unquote' x ', Unquote' y ', ')'
-//│ | | | 1. Typing term Unquote' x ', Unquote' y ',
-//│ | | | | 1. Typing term Unquote' x '
-//│ | | | | | 1. Typing term x
-//│ | | | | | 1. : α41'
-//│ | | | | | CONSTRAIN (Code[α43,α44] -> α43) <! (α41' -> α45')
-//│ | | | | |   where 
-//│ | | | | | C (Code[α43,α44] -> α43) <! (α41' -> α45')    (0)
-//│ | | | | | | C α41' <! Code[α43,α44]    (1)
-//│ | | | | | | C α43 <! α45'    (2)
-//│ | | | | 1. : α45'
-//│ | | | | 1. Typing term Unquote' y '
-//│ | | | | | 1. Typing term y
-//│ | | | | | 1. : α42'
-//│ | | | | | CONSTRAIN (Code[α46,α47] -> α46) <! (α42' -> α48')
-//│ | | | | |   where 
-//│ | | | | | C (Code[α46,α47] -> α46) <! (α42' -> α48')    (0)
-//│ | | | | | | C α42' <! Code[α46,α47]    (1)
-//│ | | | | | | C α46 <! α48'    (2)
-//│ | | | | 1. : α48'
-//│ | | | 1. : (α45', α48',)
-//│ | | 1. : (α45', α48',)
-//│ | 1. : Code[(α45', α48',),(α44 & α47)]
-//│ 1. : ((α41', α42',) -> Code[(α45', α48',),(α44 & α47)])
-//│ CONSTRAIN ((α41', α42',) -> Code[(α45', α48',),(α44 & α47)]) <! f40'
-//│   where 
-//│ 		α41' <: Code[α43,α44]
-//│ 		α42' <: Code[α46,α47]
-//│ 		α45' :> α43
-//│ 		α48' :> α46
-//│ C ((α41', α42',) -> Code[(α45', α48',),(α44 & α47)]) <! f40'    (0)
-//│ ⬤ Typed as: f40'
-//│  where: 
-//│ 		f40' :> ((α41', α42',) -> Code[(α45', α48',),(α44 & α47)])
-//│ 		α41' <: Code[α43,α44]
-//│ 		α42' <: Code[α46,α47]
-//│ 		α45' :> α43
-//│ 		α48' :> α46
 //│ f: (Code['a, 'b], Code['c, 'b],) -> Code[('a, 'c,), 'b]
+//│  = [Function: f]
 
 let x = code"y"
 //│ x: Code['a, {y: 'a}]
+//│  = [ 'Var', [ 'FreeVar', 'y' ] ]
 
-:d
+// :d
 let c = f(x, x)
-//│ 1. Typing term f (x, x,)
-//│ | Applying f(class mlscript.Var) to x, x,(class mlscript.Tup)
-//│ | 1. Typing term f
-//│ | 1. : f68'
-//│ | 1. Typing term x, x,
-//│ | | 1. Typing term x
-//│ | | 1. : Code[[α73'],{y: α73'}]
-//│ | | 1. Typing term x
-//│ | | 1. : Code[[α74'],{y: α74'}]
-//│ | 1. : (Code[[α73'],{y: α73'}], Code[[α74'],{y: α74'}],)
-//│ | CONSTRAIN f68' <! ((Code[[α73'],{y: α73'}], Code[[α74'],{y: α74'}],) -> α75')
-//│ |   where 
-//│ 		f68' :> ((α69', α70',) -> Code[(α71', α72',),(α44 & α47)])
-//│ 		α69' <: Code[α43,α44]
-//│ 		α70' <: Code[α46,α47]
-//│ 		α71' :> α43
-//│ 		α72' :> α46
-//│ | C f68' <! ((Code[[α73'],{y: α73'}], Code[[α74'],{y: α74'}],) -> α75')    (0)
-//│ | | C ((α69', α70',) -> Code[(α71', α72',),(α44 & α47)]) <! ((Code[[α73'],{y: α73'}], Code[[α74'],{y: α74'}],) -> α75')    (1)
-//│ | | | C (Code[[α73'],{y: α73'}], Code[[α74'],{y: α74'}],) <! (α69', α70',)    (2)
-//│ | | | | C Code[[α73'],{y: α73'}] <! α69'    (3)
-//│ | | | | | C Code[[α73'],{y: α73'}] <! Code[α43,α44]    (4)
-//│ | | | | | | C [α73'] <! α43    (5)
-//│ | | | | | | | C α73' <! α43    (5)
-//│ | | | | | | C α44 <! {y: α73'}    (6)
-//│ | | | | | | | EXTR RHS  {y: α73'}  ~>  {y: α76}  to 0
-//│ | | | | | | |  where 
-//│ 		α76 <: α43
-//│ | | | | | | |    and 
-//│ 		α73' :> α76 <: α43
-//│ 		α76 <: α43
-//│ | | | | | | | C α44 <! {y: α76}    (7)
-//│ | | | | C Code[[α74'],{y: α74'}] <! α70'    (8)
-//│ | | | | | C Code[[α74'],{y: α74'}] <! Code[α46,α47]    (9)
-//│ | | | | | | C [α74'] <! α46    (10)
-//│ | | | | | | | C α74' <! α46    (10)
-//│ | | | | | | C α47 <! {y: α74'}    (11)
-//│ | | | | | | | EXTR RHS  {y: α74'}  ~>  {y: α77}  to 0
-//│ | | | | | | |  where 
-//│ 		α77 <: α46
-//│ | | | | | | |    and 
-//│ 		α74' :> α77 <: α46
-//│ 		α77 <: α46
-//│ | | | | | | | C α47 <! {y: α77}    (12)
-//│ | | | C Code[(α71', α72',),(α44 & α47)] <! α75'    (13)
-//│ 1. : α75'
-//│ ⬤ Typed as: α75'
-//│  where: 
-//│ 		α44 <: {y: α76}
-//│ 		α47 <: {y: α77}
-//│ 		α71' :> α43
-//│ 		α72' :> α46
-//│ 		α75' :> Code[(α71', α72',),(α44 & α47)]
-//│ 		α76 <: α43
-//│ 		α77 <: α46
 //│ c: Code[('a, 'a,), {y: 'a}]
+//│  = [ 'Bra', [ 'Tup', [ [Array], [Array] ] ] ]
 
 code"[${code"y"}, ${code"y"}]"
 //│ res: Code[('a, 'a,), {y: 'a}]
+//│ Runtime error:
+//│   ReferenceError: y is not defined
 
 y => code"[${code"y"}, ${code"y"}]"
 //│ res: anything -> Code[('a, 'a,), {y: 'a}]
+//│    = [Function: res]
 
 code"y => ${c}"
 //│ res: Code[anything -> ('a, 'a,), {y: 'a}\y]
+//│    = [ '_', [Function (anonymous)] ]
 
 
 fun f(x, y) = [code"[${x}, ${y}]", x, y]
 //│ f: (Code['a, 'b] & 'c, Code['d, 'b] & 'e,) -> (Code[('a, 'd,), 'b], 'c, 'e,)
+//│  = [Function: f1]
 
 let a: Code<int, {z: int}>
 //│ a: Code[int, {z: int}]
+//│  = <missing implementation>
 
 
 fun f(x) = x
 //│ f: 'a -> 'a
+//│  = [Function: f2]
 
-:d
+// :d
 let built_in_binding_test = code"let f = x => x + 1; f(if true then 1 else 2)"
-//│ 1. Typing term Quoted' let f = x, => + (x,) (1,) in f (if (true) then 1 else 2,) '
-//│ | 1. Typing term let f = x, => + (x,) (1,) in f (if (true) then 1 else 2,)
-//│ | | 2. Typing term x, => + (x,) (1,)
-//│ | | | 2. Typing pattern x,
-//│ | | | | 2. Typing pattern x
-//│ | | | | 2. : α188''
-//│ | | | 2. : (α188'',)
-//│ | | | 2. Typing term + (x,) (1,)
-//│ | | | | Applying + (x,)(class mlscript.App) to 1,(class mlscript.Tup)
-//│ | | | | 2. Typing term + (x,)
-//│ | | | | | Applying +(class mlscript.Var) to x,(class mlscript.Tup)
-//│ | | | | | 2. Typing term +
-//│ | | | | | 2. : (int<number> -> (int<number> -> int<number>))
-//│ | | | | | 2. Typing term x,
-//│ | | | | | | 2. Typing term x
-//│ | | | | | | 2. : α188''
-//│ | | | | | 2. : (α188'',)
-//│ | | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (α188'' -> α189'')
-//│ | | | | |   where 
-//│ | | | | | C (int<number> -> (int<number> -> int<number>)) <! (α188'' -> α189'')    (0)
-//│ | | | | | | C (α188'',) <! (int<number>,)    (1)
-//│ | | | | | | | C α188'' <! int<number>    (2)
-//│ | | | | | | C (int<number> -> int<number>) <! α189''    (3)
-//│ | | | | 2. : α189''
-//│ | | | | 2. Typing term 1,
-//│ | | | | | 2. Typing term 1
-//│ | | | | | 2. : 1<int,number>
-//│ | | | | 2. : (1<int,number>,)
-//│ | | | | CONSTRAIN α189'' <! (1<int,number> -> α190'')
-//│ | | | |   where 
-//│ 		α189'' :> (int<number> -> int<number>)
-//│ | | | | C α189'' <! (1<int,number> -> α190'')    (0)
-//│ | | | | | C (int<number> -> int<number>) <! (1<int,number> -> α190'')    (1)
-//│ | | | | | | C (1<int,number>,) <! (int<number>,)    (2)
-//│ | | | | | | C int<number> <! α190''    (2)
-//│ | | | 2. : α190''
-//│ | | 2. : (α188'' -> α190'')
-//│ | | Let: f
-//│ | | 1. Typing term f (if (true) then 1 else 2,)
-//│ | | | Applying f(class mlscript.Var) to if (true) then 1 else 2,(class mlscript.Tup)
-//│ | | | 1. Typing term f
-//│ | | | 1. : (α191' -> α192')
-//│ | | | 1. Typing term if (true) then 1 else 2,
-//│ | | | | 1. Typing term if (true) then 1 else 2
-//│ | | | | | The mutable CaseOf tree
-//│ | | | | | if «true»
-//│ | | | | |   «1»
-//│ | | | | | else
-//│ | | | | |   «2»
-//│ | | | | | Desugared term: case true of { true => 1; _ => 2 }
-//│ | | | | | 1. Typing term case true of { true => 1; _ => 2 }
-//│ | | | | | | 1. Typing term true
-//│ | | | | | | 1. : true<bool>
-//│ | | | | | | 1. Typing term 1
-//│ | | | | | | 1. : 1<int,number>
-//│ | | | | | | 1. Typing term 2
-//│ | | | | | | 1. : 2<int,number>
-//│ | | | | | | CONSTRAIN true<bool> <! ((true<bool> & α193') | (α194' & ~(true<bool>)))
-//│ | | | | | |   where 
-//│ | | | | | | C true<bool> <! ((true<bool> & α193') | (α194' & ~(true<bool>)))    (0)
-//│ | | | | | | | ARGH  DNF(true<bool>{})  <!  DNF(true<bool>{}∧α193' | α194'∧~(true<bool>))
-//│ | | | | | | | | Consider true<bool>{} <: DNF(true<bool>{}∧α193' | α194'∧~(true<bool>))
-//│ | | | | | | | | Possible: List(true<bool>{}∧α193')
-//│ | | | | | | | | A  true<bool>{}  %  List()  <!  List((true<bool> & α193'))  %  ⊥
-//│ | | | | | | | | | Case.1
-//│ | | | | | | | | | A  true<bool>{}  %  List()  <!  List(true<bool>)  %  ⊥
-//│ | | | | | | | | | | A  true<bool>{}  %  List()  <!  List()  %  true<bool>
-//│ | | | | | | | | | | | OK  true<bool>  <:  true<bool>
-//│ | | | | | | | | | Case.2
-//│ | | | | | | | | | A  true<bool>{}  %  List()  <!  List(α193')  %  ⊥
-//│ | | | | | | | | | | C true<bool> <! α193'    (1)
-//│ | | | | | 1. : (1<int,number> | 2<int,number>)
-//│ | | | | 1. : (1<int,number> | 2<int,number>)
-//│ | | | 1. : ((1<int,number> | 2<int,number>),)
-//│ | | | CONSTRAIN (α191' -> α192') <! ((1<int,number> | 2<int,number>) -> α195')
-//│ | | |   where 
-//│ 		α191' <: int<number>
-//│ 		α192' :> int<number>
-//│ | | | C (α191' -> α192') <! ((1<int,number> | 2<int,number>) -> α195')    (0)
-//│ | | | | C ((1<int,number> | 2<int,number>),) <! (α191',)    (1)
-//│ | | | | | C (1<int,number> | 2<int,number>) <! α191'    (2)
-//│ | | | | | | C (1<int,number> | 2<int,number>) <! int<number>    (3)
-//│ | | | | C α192' <! α195'    (3)
-//│ | | | | | C int<number> <! α195'    (4)
-//│ | | 1. : α195'
-//│ | 1. : α195'
-//│ 1. : Code[α195',{}\f-x]
-//│ ⬤ Typed as: Code[α195',{}\f-x]
-//│  where: 
-//│ 		α195' :> int<number>
 //│ built_in_binding_test: Code[int, anything\f\x]
+//│                      = [
+//│                          'Let',
+//│                          'f',
+//│                          Symbol(f),
+//│                          [ '_', [Function (anonymous)] ],
+//│                          [ 'App_Fun', [ 'Var', Symbol(f) ], [ 'Tup', [Array] ] ]
+//│                        ]
 
 
-:d
+// :d
 code"f(0)"
-//│ 0. Typing term Quoted' f (0,) '
-//│ | 0. Typing term f (0,)
-//│ | | Applying f(class mlscript.Var) to 0,(class mlscript.Tup)
-//│ | | 0. Typing term f
-//│ | | 0. : f197
-//│ | | 0. Typing term 0,
-//│ | | | 0. Typing term 0
-//│ | | | 0. : 0<int,number>
-//│ | | 0. : (0<int,number>,)
-//│ | | CONSTRAIN f197 <! (0<int,number> -> α199)
-//│ | |   where 
-//│ 		f197 :> [(α198 -> [α198])]
-//│ | | C f197 <! (0<int,number> -> α199)    (0)
-//│ | | | C [(α198 -> [α198])] <! (0<int,number> -> α199)    (1)
-//│ | | | | C (α198 -> [α198]) <! (0<int,number> -> α199)    (1)
-//│ | | | | | C (0<int,number>,) <! (α198,)    (2)
-//│ | | | | | | C 0<int,number> <! α198    (3)
-//│ | | | | | C [α198] <! α199    (4)
-//│ | | | | | | C α198 <! α199    (4)
-//│ | | | | | | | C 0<int,number> <! α199    (5)
-//│ | 0. : α199
-//│ 0. : Code[α199,{}]
-//│ ⬤ Typed as: Code[α199,{}]
-//│  where: 
-//│ 		α199 :> 0<int,number>
 //│ res: Code[0, anything]
+//│    = [ 'App_Fun', [ 'Var', [ 'FreeVar', 'f' ] ], [ 'Tup', [ [Array] ] ] ]
 
-:NewParser
-:d
-:ne
-:NoJS
+:e
 code"${code"${code"${z}"}"}"
-//│ 0. Typing term Quoted' Unquote' Quoted' Unquote' Quoted' Unquote' z ' ' ' ' ' '
-//│ | 0. Typing term Unquote' Quoted' Unquote' Quoted' Unquote' z ' ' ' ' '
-//│ | | 0. Typing term Quoted' Unquote' Quoted' Unquote' z ' ' ' '
-//│ | | | 0. Typing term Unquote' Quoted' Unquote' z ' ' '
-//│ | | | | 0. Typing term Quoted' Unquote' z ' '
-//│ | | | | | 0. Typing term Unquote' z '
-//│ | | | | | | 0. Typing term z
-//│ | | | | | | 0. : α207
-//│ | | | | | | CONSTRAIN (Code[α205,α206] -> α205) <! (α207 -> α208)
-//│ | | | | | |   where 
-//│ | | | | | | C (Code[α205,α206] -> α205) <! (α207 -> α208)    (0)
-//│ | | | | | | | C α207 <! Code[α205,α206]    (1)
-//│ | | | | | | | C α205 <! α208    (2)
-//│ | | | | | 0. : α208
-//│ | | | | 0. : Code[α208,α206]
-//│ | | | | CONSTRAIN (Code[α203,α204] -> α203) <! (Code[α208,α206] -> α209)
-//│ | | | |   where 
-//│ | | | | C (Code[α203,α204] -> α203) <! (Code[α208,α206] -> α209)    (0)
-//│ | | | | | C Code[α208,α206] <! Code[α203,α204]    (1)
-//│ | | | | | | C α208 <! α203    (2)
-//│ | | | | | | C α204 <! α206    (3)
-//│ | | | | | C α203 <! α209    (4)
-//│ | | | 0. : α209
-//│ | | 0. : Code[α209,α204]
-//│ | | CONSTRAIN (Code[α201,α202] -> α201) <! (Code[α209,α204] -> α210)
-//│ | |   where 
-//│ 		α204 <: α206
-//│ | | C (Code[α201,α202] -> α201) <! (Code[α209,α204] -> α210)    (0)
-//│ | | | C Code[α209,α204] <! Code[α201,α202]    (1)
-//│ | | | | C α209 <! α201    (2)
-//│ | | | | C α202 <! α204    (3)
-//│ | | | C α201 <! α210    (4)
-//│ | 0. : α210
-//│ 0. : Code[α210,α202]
-//│ ⬤ Typed as: Code[α210,α202]
-//│  where: 
-//│ 		α202 <: α204
-//│ 		α204 <: α206
 //│ ╔══[ERROR] identifier not found: z
-//│ ║  l.276: 	code"${code"${code"${z}"}"}"
-//│ ╙──       	                     ^
+//│ ║  l.97: 	code"${code"${code"${z}"}"}"
+//│ ╙──      	                     ^
 //│ res: Code[nothing, anything]
+//│ Code generation encountered an error:
+//│   unresolved symbol z
 
-
-:NewParser
-:d
-:ne
-:NoJS
+// :d
 let z = code"1"
 code"${code"${z}"}"
-//│ 1. Typing term Quoted' 1 '
-//│ | 1. Typing term 1
-//│ | 1. : 1<int,number>
-//│ 1. : Code[1<int,number>,{}]
-//│ ⬤ Typed as: Code[1<int,number>,{}]
-//│  where: 
-//│ 0. Typing term Quoted' Unquote' Quoted' Unquote' z ' ' ' '
-//│ | 0. Typing term Unquote' Quoted' Unquote' z ' ' '
-//│ | | 0. Typing term Quoted' Unquote' z ' '
-//│ | | | 0. Typing term Unquote' z '
-//│ | | | | 0. Typing term z
-//│ | | | | 0. : Code[1<int,number>,{}]
-//│ | | | | CONSTRAIN (Code[α217,α218] -> α217) <! (Code[1<int,number>,{}] -> α219)
-//│ | | | |   where 
-//│ | | | | C (Code[α217,α218] -> α217) <! (Code[1<int,number>,{}] -> α219)    (0)
-//│ | | | | | C Code[1<int,number>,{}] <! Code[α217,α218]    (1)
-//│ | | | | | | C 1<int,number> <! α217    (2)
-//│ | | | | | | C α218 <! {}    (3)
-//│ | | | | | C α217 <! α219    (4)
-//│ | | | | | | C 1<int,number> <! α219    (5)
-//│ | | | 0. : α219
-//│ | | 0. : Code[α219,α218]
-//│ | | CONSTRAIN (Code[α215,α216] -> α215) <! (Code[α219,α218] -> α220)
-//│ | |   where 
-//│ 		α219 :> 1<int,number>
-//│ | | C (Code[α215,α216] -> α215) <! (Code[α219,α218] -> α220)    (0)
-//│ | | | C Code[α219,α218] <! Code[α215,α216]    (1)
-//│ | | | | C α219 <! α215    (2)
-//│ | | | | | C 1<int,number> <! α215    (3)
-//│ | | | | C α216 <! α218    (4)
-//│ | | | C α215 <! α220    (5)
-//│ | | | | C 1<int,number> <! α220    (6)
-//│ | 0. : α220
-//│ 0. : Code[α220,α216]
-//│ ⬤ Typed as: Code[α220,α216]
-//│  where: 
-//│ 		α216 <: α218
-//│ 		α220 :> 1<int,number>
 //│ z: Code[1, anything]
+//│  = [ '_', 1 ]
 //│ res: Code[1, anything]
-
-:NewParser
-:d
-:ne
-:NoJS
+//│    = [ 'Unquoted', [ 'Unquoted', [ '_', 1 ] ] ]
+// :d
 code"let x = 1; let z = 1; code"x + y""
-//│ 0. Typing term Quoted' let x = 1 in let z = 1 in Quoted' + (x,) (y,) ' '
-//│ | 0. Typing term let x = 1 in let z = 1 in Quoted' + (x,) (y,) '
-//│ | | 1. Typing term 1
-//│ | | 1. : 1<int,number>
-//│ | | Let: x
-//│ | | 0. Typing term let z = 1 in Quoted' + (x,) (y,) '
-//│ | | | 1. Typing term 1
-//│ | | | 1. : 1<int,number>
-//│ | | | Let: z
-//│ | | | 0. Typing term Quoted' + (x,) (y,) '
-//│ | | | | 0. Typing term + (x,) (y,)
-//│ | | | | | Applying + (x,)(class mlscript.App) to y,(class mlscript.Tup)
-//│ | | | | | 0. Typing term + (x,)
-//│ | | | | | | Applying +(class mlscript.Var) to x,(class mlscript.Tup)
-//│ | | | | | | 0. Typing term +
-//│ | | | | | | 0. : (int<number> -> (int<number> -> int<number>))
-//│ | | | | | | 0. Typing term x,
-//│ | | | | | | | 0. Typing term x
-//│ | | | | | | | 0. : α224
-//│ | | | | | | 0. : (α224,)
-//│ | | | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (α224 -> α225)
-//│ | | | | | |   where 
-//│ | | | | | | C (int<number> -> (int<number> -> int<number>)) <! (α224 -> α225)    (0)
-//│ | | | | | | | C (α224,) <! (int<number>,)    (1)
-//│ | | | | | | | | C α224 <! int<number>    (2)
-//│ | | | | | | | C (int<number> -> int<number>) <! α225    (3)
-//│ | | | | | 0. : α225
-//│ | | | | | 0. Typing term y,
-//│ | | | | | | 0. Typing term y
-//│ | | | | | | 0. : α226
-//│ | | | | | 0. : (α226,)
-//│ | | | | | CONSTRAIN α225 <! (α226 -> α227)
-//│ | | | | |   where 
-//│ 		α225 :> (int<number> -> int<number>)
-//│ | | | | | C α225 <! (α226 -> α227)    (0)
-//│ | | | | | | C (int<number> -> int<number>) <! (α226 -> α227)    (1)
-//│ | | | | | | | C (α226,) <! (int<number>,)    (2)
-//│ | | | | | | | | C α226 <! int<number>    (3)
-//│ | | | | | | | C int<number> <! α227    (4)
-//│ | | | | 0. : α227
-//│ | | | 0. : Code[α227,{y: α226, x: α224}]
-//│ | | 0. : Code[α227,{y: α226, x: α224}]
-//│ | 0. : Code[α227,{y: α226, x: α224}]
-//│ 0. : Code[Code[α227,{y: α226, x: α224}],{}\x-z]
-//│ ⬤ Typed as: Code[Code[α227,{y: α226, x: α224}],{}\x-z]
-//│  where: 
-//│ 		α224 <: int<number>
-//│ 		α226 <: int<number>
-//│ 		α227 :> int<number>
 //│ res: Code[Code[int, {x: int, y: int}], anything\x\z]
-
-:NewParser
-:d
-:ne
-:NoJS
+//│    = [
+//│        'Let',
+//│        'x',
+//│        Symbol(x),
+//│        [ '_', 1 ],
+//│        [ 'Let', 'z', Symbol(z), [ '_', 1 ], [ '_', [Array] ] ]
+//│      ]
+// :d
 code"let z = 0;${code"z"}"
-//│ 0. Typing term Quoted' let z = 0 in Unquote' Quoted' z ' ' '
-//│ | 0. Typing term let z = 0 in Unquote' Quoted' z ' '
-//│ | | 1. Typing term 0
-//│ | | 1. : 0<int,number>
-//│ | | Let: z
-//│ | | 0. Typing term Unquote' Quoted' z ' '
-//│ | | | 0. Typing term Quoted' z '
-//│ | | | | 0. Typing term z
-//│ | | | | 0. : α233
-//│ | | | 0. : Code[α233,{z: α233}]
-//│ | | | CONSTRAIN (Code[α231,α232] -> α231) <! (Code[α233,{z: α233}] -> α234)
-//│ | | |   where 
-//│ | | | C (Code[α231,α232] -> α231) <! (Code[α233,{z: α233}] -> α234)    (0)
-//│ | | | | C Code[α233,{z: α233}] <! Code[α231,α232]    (1)
-//│ | | | | | C α233 <! α231    (2)
-//│ | | | | | C α232 <! {z: α233}    (3)
-//│ | | | | C α231 <! α234    (4)
-//│ | | 0. : α234
-//│ | 0. : α234
-//│ 0. : Code[α234,α232\z]
-//│ ⬤ Typed as: Code[α234,α232\z]
-//│  where: 
-//│ 		α231 <: α234
-//│ 		α232 <: {z: α233}
-//│ 		α233 <: α231
 //│ res: Code['a, {z: 'a}\z]
-
-:NewParser
-:d
-:ne
-:NoJS
+//│    = [
+//│        'Let',
+//│        'z',
+//│        Symbol(z),
+//│        [ '_', 0 ],
+//│        [ 'Unquoted', [ 'Var', Symbol(z) ] ]
+//│      ]
+// :d
 code"let x = 1;${code"x + y"}"
-//│ 0. Typing term Quoted' let x = 1 in Unquote' Quoted' + (x,) (y,) ' ' '
-//│ | 0. Typing term let x = 1 in Unquote' Quoted' + (x,) (y,) ' '
-//│ | | 1. Typing term 1
-//│ | | 1. : 1<int,number>
-//│ | | Let: x
-//│ | | 0. Typing term Unquote' Quoted' + (x,) (y,) ' '
-//│ | | | 0. Typing term Quoted' + (x,) (y,) '
-//│ | | | | 0. Typing term + (x,) (y,)
-//│ | | | | | Applying + (x,)(class mlscript.App) to y,(class mlscript.Tup)
-//│ | | | | | 0. Typing term + (x,)
-//│ | | | | | | Applying +(class mlscript.Var) to x,(class mlscript.Tup)
-//│ | | | | | | 0. Typing term +
-//│ | | | | | | 0. : (int<number> -> (int<number> -> int<number>))
-//│ | | | | | | 0. Typing term x,
-//│ | | | | | | | 0. Typing term x
-//│ | | | | | | | 0. : α243
-//│ | | | | | | 0. : (α243,)
-//│ | | | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (α243 -> α244)
-//│ | | | | | |   where 
-//│ | | | | | | C (int<number> -> (int<number> -> int<number>)) <! (α243 -> α244)    (0)
-//│ | | | | | | | C (α243,) <! (int<number>,)    (1)
-//│ | | | | | | | | C α243 <! int<number>    (2)
-//│ | | | | | | | C (int<number> -> int<number>) <! α244    (3)
-//│ | | | | | 0. : α244
-//│ | | | | | 0. Typing term y,
-//│ | | | | | | 0. Typing term y
-//│ | | | | | | 0. : α245
-//│ | | | | | 0. : (α245,)
-//│ | | | | | CONSTRAIN α244 <! (α245 -> α246)
-//│ | | | | |   where 
-//│ 		α244 :> (int<number> -> int<number>)
-//│ | | | | | C α244 <! (α245 -> α246)    (0)
-//│ | | | | | | C (int<number> -> int<number>) <! (α245 -> α246)    (1)
-//│ | | | | | | | C (α245,) <! (int<number>,)    (2)
-//│ | | | | | | | | C α245 <! int<number>    (3)
-//│ | | | | | | | C int<number> <! α246    (4)
-//│ | | | | 0. : α246
-//│ | | | 0. : Code[α246,{y: α245, x: α243}]
-//│ | | | CONSTRAIN (Code[α241,α242] -> α241) <! (Code[α246,{y: α245, x: α243}] -> α247)
-//│ | | |   where 
-//│ 		α243 <: int<number>
-//│ 		α245 <: int<number>
-//│ 		α246 :> int<number>
-//│ | | | C (Code[α241,α242] -> α241) <! (Code[α246,{y: α245, x: α243}] -> α247)    (0)
-//│ | | | | C Code[α246,{y: α245, x: α243}] <! Code[α241,α242]    (1)
-//│ | | | | | C α246 <! α241    (2)
-//│ | | | | | | C int<number> <! α241    (3)
-//│ | | | | | C α242 <! {y: α245, x: α243}    (4)
-//│ | | | | C α241 <! α247    (5)
-//│ | | | | | C int<number> <! α247    (6)
-//│ | | 0. : α247
-//│ | 0. : α247
-//│ 0. : Code[α247,α242\x]
-//│ ⬤ Typed as: Code[α247,α242\x]
-//│  where: 
-//│ 		α242 <: {y: α245, x: α243}
-//│ 		α243 <: int<number>
-//│ 		α245 <: int<number>
-//│ 		α247 :> int<number>
 //│ res: Code[int, {x: int, y: int}\x]
+//│ Runtime error:
+//│   ReferenceError: y is not defined
 
-
-:NewParser
-:d
-:ne
-:NoJS
+// :d
 code"1 + ${code"b"}"
-//│ 0. Typing term Quoted' + (1,) (Unquote' Quoted' b ' ',) '
-//│ | 0. Typing term + (1,) (Unquote' Quoted' b ' ',)
-//│ | | Applying + (1,)(class mlscript.App) to Unquote' Quoted' b ' ',(class mlscript.Tup)
-//│ | | 0. Typing term + (1,)
-//│ | | | Applying +(class mlscript.Var) to 1,(class mlscript.Tup)
-//│ | | | 0. Typing term +
-//│ | | | 0. : (int<number> -> (int<number> -> int<number>))
-//│ | | | 0. Typing term 1,
-//│ | | | | 0. Typing term 1
-//│ | | | | 0. : 1<int,number>
-//│ | | | 0. : (1<int,number>,)
-//│ | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (1<int,number> -> α252)
-//│ | | |   where 
-//│ | | | C (int<number> -> (int<number> -> int<number>)) <! (1<int,number> -> α252)    (0)
-//│ | | | | C (1<int,number>,) <! (int<number>,)    (1)
-//│ | | | | C (int<number> -> int<number>) <! α252    (1)
-//│ | | 0. : α252
-//│ | | 0. Typing term Unquote' Quoted' b ' ',
-//│ | | | 0. Typing term Unquote' Quoted' b ' '
-//│ | | | | 0. Typing term Quoted' b '
-//│ | | | | | 0. Typing term b
-//│ | | | | | 0. : α255
-//│ | | | | 0. : Code[α255,{b: α255}]
-//│ | | | | CONSTRAIN (Code[α253,α254] -> α253) <! (Code[α255,{b: α255}] -> α256)
-//│ | | | |   where 
-//│ | | | | C (Code[α253,α254] -> α253) <! (Code[α255,{b: α255}] -> α256)    (0)
-//│ | | | | | C Code[α255,{b: α255}] <! Code[α253,α254]    (1)
-//│ | | | | | | C α255 <! α253    (2)
-//│ | | | | | | C α254 <! {b: α255}    (3)
-//│ | | | | | C α253 <! α256    (4)
-//│ | | | 0. : α256
-//│ | | 0. : (α256,)
-//│ | | CONSTRAIN α252 <! (α256 -> α257)
-//│ | |   where 
-//│ 		α252 :> (int<number> -> int<number>)
-//│ | | C α252 <! (α256 -> α257)    (0)
-//│ | | | C (int<number> -> int<number>) <! (α256 -> α257)    (1)
-//│ | | | | C (α256,) <! (int<number>,)    (2)
-//│ | | | | | C α256 <! int<number>    (3)
-//│ | | | | C int<number> <! α257    (4)
-//│ | 0. : α257
-//│ 0. : Code[α257,α254]
-//│ ⬤ Typed as: Code[α257,α254]
-//│  where: 
-//│ 		α253 <: α256
-//│ 		α254 <: {b: α255}
-//│ 		α255 <: α253
-//│ 		α256 <: int<number>
-//│ 		α257 :> int<number>
 //│ res: Code[int, {b: int}]
+//│ Runtime error:
+//│   ReferenceError: b is not defined
 
-
-:NewParser
-:d
-:ne
-:NoJS
+// :d
 let n = 1
 code"${Const(n)} + 1"
-//│ 1. Typing term 1
-//│ 1. : 1<int,number>
-//│ ⬤ Typed as: 1<int,number>
-//│  where: 
-//│ 0. Typing term Quoted' + (Unquote' Const (n,) ',) (1,) '
-//│ | 0. Typing term + (Unquote' Const (n,) ',) (1,)
-//│ | | Applying + (Unquote' Const (n,) ',)(class mlscript.App) to 1,(class mlscript.Tup)
-//│ | | 0. Typing term + (Unquote' Const (n,) ',)
-//│ | | | Applying +(class mlscript.Var) to Unquote' Const (n,) ',(class mlscript.Tup)
-//│ | | | 0. Typing term +
-//│ | | | 0. : (int<number> -> (int<number> -> int<number>))
-//│ | | | 0. Typing term Unquote' Const (n,) ',
-//│ | | | | 0. Typing term Unquote' Const (n,) '
-//│ | | | | | 0. Typing term Const (n,)
-//│ | | | | | | Applying Const(class mlscript.Var) to n,(class mlscript.Tup)
-//│ | | | | | | 0. Typing term Const
-//│ | | | | | | 0. : (int<number> -> Code[int<number>,⊥])
-//│ | | | | | | 0. Typing term n,
-//│ | | | | | | | 0. Typing term n
-//│ | | | | | | | 0. : 1<int,number>
-//│ | | | | | | 0. : (1<int,number>,)
-//│ | | | | | | CONSTRAIN (int<number> -> Code[int<number>,⊥]) <! (1<int,number> -> α265)
-//│ | | | | | |   where 
-//│ | | | | | | C (int<number> -> Code[int<number>,⊥]) <! (1<int,number> -> α265)    (0)
-//│ | | | | | | | C (1<int,number>,) <! (int<number>,)    (1)
-//│ | | | | | | | C Code[int<number>,⊥] <! α265    (1)
-//│ | | | | | 0. : α265
-//│ | | | | | CONSTRAIN (Code[α263,α264] -> α263) <! (α265 -> α266)
-//│ | | | | |   where 
-//│ 		α265 :> Code[int<number>,⊥]
-//│ | | | | | C (Code[α263,α264] -> α263) <! (α265 -> α266)    (0)
-//│ | | | | | | C α265 <! Code[α263,α264]    (1)
-//│ | | | | | | | C Code[int<number>,⊥] <! Code[α263,α264]    (2)
-//│ | | | | | | | | C int<number> <! α263    (3)
-//│ | | | | | | | | C α264 <! ⊥    (4)
-//│ | | | | | | C α263 <! α266    (5)
-//│ | | | | | | | C int<number> <! α266    (6)
-//│ | | | | 0. : α266
-//│ | | | 0. : (α266,)
-//│ | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (α266 -> α267)
-//│ | | |   where 
-//│ 		α266 :> int<number>
-//│ | | | C (int<number> -> (int<number> -> int<number>)) <! (α266 -> α267)    (0)
-//│ | | | | C (α266,) <! (int<number>,)    (1)
-//│ | | | | | C α266 <! int<number>    (2)
-//│ | | | | | | C int<number> <! int<number>    (3)
-//│ | | | | C (int<number> -> int<number>) <! α267    (3)
-//│ | | 0. : α267
-//│ | | 0. Typing term 1,
-//│ | | | 0. Typing term 1
-//│ | | | 0. : 1<int,number>
-//│ | | 0. : (1<int,number>,)
-//│ | | CONSTRAIN α267 <! (1<int,number> -> α268)
-//│ | |   where 
-//│ 		α267 :> (int<number> -> int<number>)
-//│ | | C α267 <! (1<int,number> -> α268)    (0)
-//│ | | | C (int<number> -> int<number>) <! (1<int,number> -> α268)    (1)
-//│ | | | | C (1<int,number>,) <! (int<number>,)    (2)
-//│ | | | | C int<number> <! α268    (2)
-//│ | 0. : α268
-//│ 0. : Code[α268,α264]
-//│ ⬤ Typed as: Code[α268,α264]
-//│  where: 
-//│ 		α264 <: ⊥
-//│ 		α268 :> int<number>
 //│ n: 1
+//│  = 1
 //│ res: Code[int, ?]
-
-:NewParser
-:d
-:ne
-:NoJS
+//│    = [ 'App', '+', [ 'Unquoted', [ '_', 1 ] ], [ '_', 1 ] ]
+// :d
 fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, code"${cde} + x")}" else cde
-//│ 1. Typing term n, cde, => if (> (n,) (0,)) then Quoted' let x = Unquote' Const (n,) ' in Unquote' test (- (n,) (1,), Quoted' + (Unquote' cde ',) (x,) ',) ' ' else cde
-//│ | 1. Typing pattern n, cde,
-//│ | | 1. Typing pattern n
-//│ | | | n
-//│ | | 1. : α272'
-//│ | | 1. Typing pattern cde
-//│ | | | cde
-//│ | | 1. : α274'
-//│ | 1. : (α272', α274',)
-//│ | 1. Typing term if (> (n,) (0,)) then Quoted' let x = Unquote' Const (n,) ' in Unquote' test (- (n,) (1,), Quoted' + (Unquote' cde ',) (x,) ',) ' ' else cde
-//│ | | The mutable CaseOf tree
-//│ | | if «> (n,) (0,)»
-//│ | |   «Quoted' let x = Unquote' Const (n,) ' in Unquote' test (- (n,) (1,), Quoted' + (Unquote' cde ',) (x,) ',) ' '»
-//│ | | else
-//│ | |   «cde»
-//│ | | Desugared term: case > (n,) (0,) of { true => Quoted' let x = Unquote' Const (n,) ' in Unquote' test (- (n,) (1,), Quoted' + (Unquote' cde ',) (x,) ',) ' '; _ => cde }
-//│ | | 1. Typing term case > (n,) (0,) of { true => Quoted' let x = Unquote' Const (n,) ' in Unquote' test (- (n,) (1,), Quoted' + (Unquote' cde ',) (x,) ',) ' '; _ => cde }
-//│ | | | 1. Typing term > (n,) (0,)
-//│ | | | | Applying > (n,)(class mlscript.App) to 0,(class mlscript.Tup)
-//│ | | | | 1. Typing term > (n,)
-//│ | | | | | Applying >(class mlscript.Var) to n,(class mlscript.Tup)
-//│ | | | | | 1. Typing term >
-//│ | | | | | 1. : (number<> -> (number<> -> bool<>))
-//│ | | | | | 1. Typing term n,
-//│ | | | | | | 1. Typing term n
-//│ | | | | | | 1. : α272'
-//│ | | | | | 1. : (α272',)
-//│ | | | | | CONSTRAIN (number<> -> (number<> -> bool<>)) <! (α272' -> α275')
-//│ | | | | |   where 
-//│ | | | | | C (number<> -> (number<> -> bool<>)) <! (α272' -> α275')    (0)
-//│ | | | | | | C (α272',) <! (number<>,)    (1)
-//│ | | | | | | | C α272' <! number<>    (2)
-//│ | | | | | | C (number<> -> bool<>) <! α275'    (3)
-//│ | | | | 1. : α275'
-//│ | | | | 1. Typing term 0,
-//│ | | | | | 1. Typing term 0
-//│ | | | | | 1. : 0<int,number>
-//│ | | | | 1. : (0<int,number>,)
-//│ | | | | CONSTRAIN α275' <! (0<int,number> -> α276')
-//│ | | | |   where 
-//│ 		α275' :> (number<> -> bool<>)
-//│ | | | | C α275' <! (0<int,number> -> α276')    (0)
-//│ | | | | | C (number<> -> bool<>) <! (0<int,number> -> α276')    (1)
-//│ | | | | | | C (0<int,number>,) <! (number<>,)    (2)
-//│ | | | | | | C bool<> <! α276'    (2)
-//│ | | | 1. : α276'
-//│ | | | 1. Typing term Quoted' let x = Unquote' Const (n,) ' in Unquote' test (- (n,) (1,), Quoted' + (Unquote' cde ',) (x,) ',) ' '
-//│ | | | | 1. Typing term let x = Unquote' Const (n,) ' in Unquote' test (- (n,) (1,), Quoted' + (Unquote' cde ',) (x,) ',) '
-//│ | | | | | 2. Typing term Unquote' Const (n,) '
-//│ | | | | | | 1. Typing term Const (n,)
-//│ | | | | | | | Applying Const(class mlscript.Var) to n,(class mlscript.Tup)
-//│ | | | | | | | 1. Typing term Const
-//│ | | | | | | | 1. : (int<number> -> Code[int<number>,⊥])
-//│ | | | | | | | 1. Typing term n,
-//│ | | | | | | | | 1. Typing term n
-//│ | | | | | | | | 1. : α272'
-//│ | | | | | | | 1. : (α272',)
-//│ | | | | | | | CONSTRAIN (int<number> -> Code[int<number>,⊥]) <! (α272' -> α279')
-//│ | | | | | | |   where 
-//│ 		α272' <: number<>
-//│ | | | | | | | C (int<number> -> Code[int<number>,⊥]) <! (α272' -> α279')    (0)
-//│ | | | | | | | | C (α272',) <! (int<number>,)    (1)
-//│ | | | | | | | | | C α272' <! int<number>    (2)
-//│ | | | | | | | | C Code[int<number>,⊥] <! α279'    (3)
-//│ | | | | | | 1. : α279'
-//│ | | | | | | CONSTRAIN (Code[α277,α278] -> α277) <! (α279' -> α280'')
-//│ | | | | | |   where 
-//│ 		α279' :> Code[int<number>,⊥]
-//│ | | | | | | C (Code[α277,α278] -> α277) <! (α279' -> α280'')    (0)
-//│ | | | | | | | C α279' <! Code[α277,α278]    (1)
-//│ | | | | | | | | C Code[int<number>,⊥] <! Code[α277,α278]    (2)
-//│ | | | | | | | | | C int<number> <! α277    (3)
-//│ | | | | | | | | | C α278 <! ⊥    (4)
-//│ | | | | | | | C α277 <! α280''    (5)
-//│ | | | | | 2. : α280''
-//│ | | | | | Let: x
-//│ | | | | | 1. Typing term Unquote' test (- (n,) (1,), Quoted' + (Unquote' cde ',) (x,) ',) '
-//│ | | | | | | 1. Typing term test (- (n,) (1,), Quoted' + (Unquote' cde ',) (x,) ',)
-//│ | | | | | | | Applying test(class mlscript.Var) to - (n,) (1,), Quoted' + (Unquote' cde ',) (x,) ',(class mlscript.Tup)
-//│ | | | | | | | 1. Typing term test
-//│ | | | | | | | 1. : test271'
-//│ | | | | | | | 1. Typing term - (n,) (1,), Quoted' + (Unquote' cde ',) (x,) ',
-//│ | | | | | | | | 1. Typing term - (n,) (1,)
-//│ | | | | | | | | | Applying - (n,)(class mlscript.App) to 1,(class mlscript.Tup)
-//│ | | | | | | | | | 1. Typing term - (n,)
-//│ | | | | | | | | | | Applying -(class mlscript.Var) to n,(class mlscript.Tup)
-//│ | | | | | | | | | | 1. Typing term -
-//│ | | | | | | | | | | 1. : (int<number> -> (int<number> -> int<number>))
-//│ | | | | | | | | | | 1. Typing term n,
-//│ | | | | | | | | | | | 1. Typing term n
-//│ | | | | | | | | | | | 1. : α272'
-//│ | | | | | | | | | | 1. : (α272',)
-//│ | | | | | | | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (α272' -> α283')
-//│ | | | | | | | | | |   where 
-//│ 		α272' <: int<number> & number<>
-//│ | | | | | | | | | | C (int<number> -> (int<number> -> int<number>)) <! (α272' -> α283')    (0)
-//│ | | | | | | | | | | | C (α272',) <! (int<number>,)    (1)
-//│ | | | | | | | | | | | C (int<number> -> int<number>) <! α283'    (1)
-//│ | | | | | | | | | 1. : α283'
-//│ | | | | | | | | | 1. Typing term 1,
-//│ | | | | | | | | | | 1. Typing term 1
-//│ | | | | | | | | | | 1. : 1<int,number>
-//│ | | | | | | | | | 1. : (1<int,number>,)
-//│ | | | | | | | | | CONSTRAIN α283' <! (1<int,number> -> α284')
-//│ | | | | | | | | |   where 
-//│ 		α283' :> (int<number> -> int<number>)
-//│ | | | | | | | | | C α283' <! (1<int,number> -> α284')    (0)
-//│ | | | | | | | | | | C (int<number> -> int<number>) <! (1<int,number> -> α284')    (1)
-//│ | | | | | | | | | | | C (1<int,number>,) <! (int<number>,)    (2)
-//│ | | | | | | | | | | | C int<number> <! α284'    (2)
-//│ | | | | | | | | 1. : α284'
-//│ | | | | | | | | 1. Typing term Quoted' + (Unquote' cde ',) (x,) '
-//│ | | | | | | | | | 1. Typing term + (Unquote' cde ',) (x,)
-//│ | | | | | | | | | | Applying + (Unquote' cde ',)(class mlscript.App) to x,(class mlscript.Tup)
-//│ | | | | | | | | | | 1. Typing term + (Unquote' cde ',)
-//│ | | | | | | | | | | | Applying +(class mlscript.Var) to Unquote' cde ',(class mlscript.Tup)
-//│ | | | | | | | | | | | 1. Typing term +
-//│ | | | | | | | | | | | 1. : (int<number> -> (int<number> -> int<number>))
-//│ | | | | | | | | | | | 1. Typing term Unquote' cde ',
-//│ | | | | | | | | | | | | 1. Typing term Unquote' cde '
-//│ | | | | | | | | | | | | | 1. Typing term cde
-//│ | | | | | | | | | | | | | 1. : α274'
-//│ | | | | | | | | | | | | | CONSTRAIN (Code[α285,α286] -> α285) <! (α274' -> α287')
-//│ | | | | | | | | | | | | |   where 
-//│ | | | | | | | | | | | | | C (Code[α285,α286] -> α285) <! (α274' -> α287')    (0)
-//│ | | | | | | | | | | | | | | C α274' <! Code[α285,α286]    (1)
-//│ | | | | | | | | | | | | | | C α285 <! α287'    (2)
-//│ | | | | | | | | | | | | 1. : α287'
-//│ | | | | | | | | | | | 1. : (α287',)
-//│ | | | | | | | | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (α287' -> α288')
-//│ | | | | | | | | | | |   where 
-//│ 		α287' :> α285
-//│ | | | | | | | | | | | C (int<number> -> (int<number> -> int<number>)) <! (α287' -> α288')    (0)
-//│ | | | | | | | | | | | | C (α287',) <! (int<number>,)    (1)
-//│ | | | | | | | | | | | | | C α287' <! int<number>    (2)
-//│ | | | | | | | | | | | | | | C α285 <! int<number>    (3)
-//│ | | | | | | | | | | | | C (int<number> -> int<number>) <! α288'    (4)
-//│ | | | | | | | | | | 1. : α288'
-//│ | | | | | | | | | | 1. Typing term x,
-//│ | | | | | | | | | | | 1. Typing term x
-//│ | | | | | | | | | | | 1. : α289'
-//│ | | | | | | | | | | 1. : (α289',)
-//│ | | | | | | | | | | CONSTRAIN α288' <! (α289' -> α290')
-//│ | | | | | | | | | |   where 
-//│ 		α288' :> (int<number> -> int<number>)
-//│ | | | | | | | | | | C α288' <! (α289' -> α290')    (0)
-//│ | | | | | | | | | | | C (int<number> -> int<number>) <! (α289' -> α290')    (1)
-//│ | | | | | | | | | | | | C (α289',) <! (int<number>,)    (2)
-//│ | | | | | | | | | | | | | C α289' <! int<number>    (3)
-//│ | | | | | | | | | | | | C int<number> <! α290'    (4)
-//│ | | | | | | | | | 1. : α290'
-//│ | | | | | | | | 1. : Code[α290',(α286 & {x: α289'})]
-//│ | | | | | | | 1. : (α284', Code[α290',(α286 & {x: α289'})],)
-//│ | | | | | | | CONSTRAIN test271' <! ((α284', Code[α290',(α286 & {x: α289'})],) -> α291')
-//│ | | | | | | |   where 
-//│ 		α284' :> int<number>
-//│ 		α289' <: int<number>
-//│ 		α290' :> int<number>
-//│ | | | | | | | C test271' <! ((α284', Code[α290',(α286 & {x: α289'})],) -> α291')    (0)
-//│ | | | | | | 1. : α291'
-//│ | | | | | | CONSTRAIN (Code[α281,α282] -> α281) <! (α291' -> α292')
-//│ | | | | | |   where 
-//│ | | | | | | C (Code[α281,α282] -> α281) <! (α291' -> α292')    (0)
-//│ | | | | | | | C α291' <! Code[α281,α282]    (1)
-//│ | | | | | | | C α281 <! α292'    (2)
-//│ | | | | | 1. : α292'
-//│ | | | | 1. : α292'
-//│ | | | 1. : Code[α292',(α278 & α282)\x]
-//│ | | | 1. Typing term cde
-//│ | | | 1. : α274'
-//│ | | | CONSTRAIN α276' <! (true<bool> | (α293' & ~(true<bool>)))
-//│ | | |   where 
-//│ 		α276' :> bool<>
-//│ | | | C α276' <! (true<bool> | (α293' & ~(true<bool>)))    (0)
-//│ | | | | C bool<> <! (true<bool> | (α293' & ~(true<bool>)))    (1)
-//│ | | | | | ARGH  DNF(bool<>{})  <!  DNF(true<bool>{} | α293'∧~(true<bool>))
-//│ | | | | | | Consider bool<>{} <: DNF(true<bool>{} | α293'∧~(true<bool>))
-//│ | | | | | | Possible: List(true<bool>{}, α293'∧~(true<bool>))
-//│ | | | | | | A  bool<>{}  %  List()  <!  List(true<bool>, (α293' & ~(true<bool>)))  %  ⊥
-//│ | | | | | | | A  bool<>{}  %  List()  <!  List((α293' & ~(true<bool>)))  %  true<bool>
-//│ | | | | | | | | Case.1
-//│ | | | | | | | | A  bool<>{}  %  List()  <!  List(α293')  %  true<bool>
-//│ | | | | | | | | | C (bool<> & ~(true<bool>)) <! α293'    (2)
-//│ | | | | | | | | Case.2
-//│ | | | | | | | | A  bool<>{}  %  List()  <!  List(~(true<bool>))  %  true<bool>
-//│ | | | | | | | | | A  bool<>{}  %  List(true<bool>)  <!  List()  %  true<bool>
-//│ | | | | | | | | | | A  true<bool>{}  %  List()  <!  List()  %  true<bool>
-//│ | | | | | | | | | | | OK  true<bool>  <:  true<bool>
-//│ | | 1. : (Code[α292',(α278 & α282)\x] | α274')
-//│ | 1. : (Code[α292',(α278 & α282)\x] | α274')
-//│ 1. : ((α272', α274',) -> (Code[α292',(α278 & α282)\x] | α274'))
-//│ CONSTRAIN ((α272', α274',) -> (Code[α292',(α278 & α282)\x] | α274')) <! test271'
-//│   where 
-//│ 		test271' <: ((α284', Code[α290',(α286 & {x: α289'})],) -> α291')
-//│ 		α272' <: int<number> & number<>
-//│ 		α274' <: Code[α285,α286]
-//│ 		α278 <: ⊥
-//│ 		α284' :> int<number>
-//│ 		α285 <: int<number>
-//│ 		α289' <: int<number>
-//│ 		α290' :> int<number>
-//│ 		α291' <: Code[α281,α282]
-//│ 		α292' :> α281
-//│ C ((α272', α274',) -> (Code[α292',(α278 & α282)\x] | α274')) <! test271'    (0)
-//│ | C ((α272', α274',) -> (Code[α292',(α278 & α282)\x] | α274')) <! ((α284', Code[α290',(α286 & {x: α289'})],) -> α291')    (1)
-//│ | | C (α284', Code[α290',(α286 & {x: α289'})],) <! (α272', α274',)    (2)
-//│ | | | C α284' <! α272'    (3)
-//│ | | | | C int<number> <! α272'    (4)
-//│ | | | | | C int<number> <! int<number>    (5)
-//│ | | | | | C int<number> <! number<>    (5)
-//│ | | | C Code[α290',(α286 & {x: α289'})] <! α274'    (5)
-//│ | | | | C Code[α290',(α286 & {x: α289'})] <! Code[α285,α286]    (6)
-//│ | | | | | C α290' <! α285    (7)
-//│ | | | | | | C int<number> <! α285    (8)
-//│ | | | | | | | C int<number> <! int<number>    (9)
-//│ | | | | | C α286 <! (α286 & {x: α289'})    (9)
-//│ | | | | | | EXTR RHS  (α286 & {x: α289'})  ~>  (α286 & {x: α294})  to 0
-//│ | | | | | |  where 
-//│ 		α294 <: int<number>
-//│ | | | | | |    and 
-//│ 		α289' :> α294 <: int<number>
-//│ 		α294 <: int<number>
-//│ | | | | | | C α286 <! (α286 & {x: α294})    (10)
-//│ | | C (Code[α292',(α278 & α282)\x] | α274') <! α291'    (11)
-//│ | | | C (Code[α292',(α278 & α282)\x] | α274') <! Code[α281,α282]    (12)
-//│ | | | | C Code[α292',(α278 & α282)\x] <! Code[α281,α282]    (13)
-//│ | | | | | C α292' <! α281    (14)
-//│ | | | | | | C α281 <! α281    (15)
-//│ | | | | | C α282 <! (α278 & α282)\x    (15)
-//│ | | | | C α274' <! Code[α281,α282]    (16)
-//│ | | | | | C Code[α290',(α286 & {x: α289'})] <! Code[α281,α282]    (17)
-//│ | | | | | | C α290' <! α281    (18)
-//│ | | | | | | | C int<number> <! α281    (19)
-//│ | | | | | | C α282 <! (α286 & {x: α289'})    (20)
-//│ | | | | | | | EXTR RHS  (α286 & {x: α289'})  ~>  (α286 & {x: α295})  to 0
-//│ | | | | | | |  where 
-//│ 		α286 <: (α286 & {x: α294})
-//│ 		α294 <: int<number>
-//│ 		α295 <: int<number>
-//│ | | | | | | |    and 
-//│ 		α286 <: (α286 & {x: α294})
-//│ 		α289' :> α295 | α294 <: int<number>
-//│ 		α294 <: int<number>
-//│ 		α295 <: int<number>
-//│ | | | | | | | C α282 <! (α286 & {x: α295})    (21)
-//│ ⬤ Typed as: test271'
-//│  where: 
-//│ 		test271' :> ((α272', α274',) -> (Code[α292',(α278 & α282)\x] | α274')) <: ((α284', Code[α290',(α286 & {x: α289'})],) -> α291')
-//│ 		α272' :> int<number> <: int<number> & number<>
-//│ 		α274' :> Code[α290',(α286 & {x: α289'})] <: Code[α281,α282] & Code[α285,α286]
-//│ 		α278 <: ⊥
-//│ 		α281 :> int<number>
-//│ 		α282 <: (α286 & {x: α295}) & (α278 & α282)\x
-//│ 		α284' :> int<number> <: α272'
-//│ 		α285 :> int<number> <: int<number>
-//│ 		α286 <: (α286 & {x: α294})
-//│ 		α289' :> α295 | α294 <: int<number>
-//│ 		α290' :> int<number> <: α281 & α285
-//│ 		α291' :> (Code[α292',(α278 & α282)\x] | α274') <: Code[α281,α282]
-//│ 		α292' :> α281 <: α281
-//│ 		α294 <: int<number>
-//│ 		α295 <: int<number>
 //│ test: (int, Code[int | 'a, ?] & 'b,) -> (Code[int | 'a, nothing\x & {x: int} & 'c] | 'b)
+//│     = [Function: test]

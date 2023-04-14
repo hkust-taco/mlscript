@@ -7,10 +7,10 @@ let qq_int = code"10"
 //│ 1. Typing term Quoted' 10 '
 //│ | 1. Typing term 10
 //│ | 1. : 10<int,number>
-//│ 1. : Code[10<int,number>,Anything]
-//│ ⬤ Typed as: Code[10<int,number>,Anything]
+//│ 1. : Code[10<int,number>,{}]
+//│ ⬤ Typed as: Code[10<int,number>,{}]
 //│  where: 
-//│ qq_int: code & {Code#C = anything, Code#T <: 10}
+//│ qq_int: Code[10, anything]
 
 :d 
 :ne
@@ -19,47 +19,48 @@ let qq_bool : Code<int> = code"10+2"
 //│ 1. Typing term Quoted' + (10,) (2,) ' : AppliedType(TypeName(Code),List(TypeName(int)))
 //│ | 1. Typing term Quoted' + (10,) (2,) '
 //│ | | 1. Typing term + (10,) (2,)
+//│ | | | Applying + (10,)(class mlscript.App) to 2,(class mlscript.Tup)
 //│ | | | 1. Typing term + (10,)
+//│ | | | | Applying +(class mlscript.Var) to 10,(class mlscript.Tup)
 //│ | | | | 1. Typing term +
 //│ | | | | 1. : (int<number> -> (int<number> -> int<number>))
 //│ | | | | 1. Typing term 10,
 //│ | | | | | 1. Typing term 10
 //│ | | | | | 1. : 10<int,number>
 //│ | | | | 1. : (10<int,number>,)
-//│ | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (10<int,number> -> α27')
+//│ | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (10<int,number> -> α26')
 //│ | | | |   where 
-//│ | | | | C (int<number> -> (int<number> -> int<number>)) <! (10<int,number> -> α27')    (0)
+//│ | | | | C (int<number> -> (int<number> -> int<number>)) <! (10<int,number> -> α26')    (0)
 //│ | | | | | C (10<int,number>,) <! (int<number>,)    (1)
-//│ | | | | | C (int<number> -> int<number>) <! α27'    (1)
-//│ | | | 1. : α27'
+//│ | | | | | C (int<number> -> int<number>) <! α26'    (1)
+//│ | | | 1. : α26'
 //│ | | | 1. Typing term 2,
 //│ | | | | 1. Typing term 2
 //│ | | | | 1. : 2<int,number>
 //│ | | | 1. : (2<int,number>,)
-//│ | | | CONSTRAIN α27' <! (2<int,number> -> α28')
+//│ | | | CONSTRAIN α26' <! (2<int,number> -> α27')
 //│ | | |   where 
-//│ 		α27' :> (int<number> -> int<number>)
-//│ | | | C α27' <! (2<int,number> -> α28')    (0)
-//│ | | | | C (int<number> -> int<number>) <! (2<int,number> -> α28')    (1)
+//│ 		α26' :> (int<number> -> int<number>)
+//│ | | | C α26' <! (2<int,number> -> α27')    (0)
+//│ | | | | C (int<number> -> int<number>) <! (2<int,number> -> α27')    (1)
 //│ | | | | | C (2<int,number>,) <! (int<number>,)    (2)
-//│ | | | | | C int<number> <! α28'    (2)
-//│ | | 1. : α28'
-//│ | 1. : Code[α28',Anything]
+//│ | | | | | C int<number> <! α27'    (2)
+//│ | | 1. : α27'
+//│ | 1. : Code[α27',{}]
 //│ | 1. Typing type AppliedType(TypeName(Code),List(TypeName(int)))
 //│ | | vars=Map() newDefsInfo=Map()
-//│ | => Code[Int,α29'] | 
-//│ | CONSTRAIN Code[α28',Anything] <! Code[Int,α29']
+//│ | => Code[Int,α28'] | 
+//│ | CONSTRAIN Code[α27',{}] <! Code[Int,α28']
 //│ |   where 
-//│ 		α28' :> int<number>
-//│ | C Code[α28',Anything] <! Code[Int,α29']    (0)
-//│ | | C α28' <! Int    (1)
+//│ 		α27' :> int<number>
+//│ | C Code[α27',{}] <! Code[Int,α28']    (0)
+//│ | | C α27' <! Int    (1)
 //│ | | | C int<number> <! Int    (2)
-//│ | | C α29' <! Anything    (2)
-//│ 1. : Code[Int,α29']
-//│ ⬤ Typed as: Code[Int,α29']
+//│ | | C α28' <! {}    (2)
+//│ 1. : Code[Int,α28']
+//│ ⬤ Typed as: Code[Int,α28']
 //│  where: 
-//│ 		α29' <: Anything
 //│ ╔══[ERROR] Wrong number of type arguments – expected 2, found 1
 //│ ║  l.18: 	let qq_bool : Code<int> = code"10+2"
 //│ ╙──      	              ^^^^^^^^
-//│ qq_bool: code & {Code#C = anything, Code#T <: int}
+//│ qq_bool: Code[int, anything]
