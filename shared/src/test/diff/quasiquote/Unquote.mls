@@ -98,7 +98,7 @@ code"${code"${code"${z}"}"}"
 //│ ╔══[ERROR] identifier not found: z
 //│ ║  l.97: 	code"${code"${code"${z}"}"}"
 //│ ╙──      	                     ^
-//│ res: Code[nothing, anything]
+//│ res: Code[error, anything]
 //│ Code generation encountered an error:
 //│   unresolved symbol z
 
@@ -146,9 +146,11 @@ let n = 1
 code"${Const(n)} + 1"
 //│ n: 1
 //│  = 1
-//│ res: Code[int, ?]
+//│ res: Code[int, anything]
 //│    = [ 'App', '+', [ 'Unquoted', [ '_', 1 ] ], [ '_', 1 ] ]
 // :d
 fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, code"${cde} + x")}" else cde
-//│ test: (int, Code[int | 'a, ?] & 'b,) -> (Code[int | 'a, nothing\x & {x: int} & 'c] | 'b)
+//│ test: (int, Code[int | 'a, 'b & 'c] & 'd,) -> (Code[int | 'a, 'b\x & {x: int} & 'c] | 'd)
+//│   where
+//│     'b <: 'b\x & {x: int} & 'c
 //│     = [Function: test]

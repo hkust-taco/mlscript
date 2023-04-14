@@ -18,32 +18,46 @@ let code_test = code"let x_0 = 1; let x_1 = 10; let x_2 = 100; x_0 + x_1 + x_2"
 //│              ]
 //│            ]
 
+:e
 run(code_test)
-//│ res: int
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.22: 	run(code_test)
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╙── expression of type `anything` is not a record (expected a record with fields: x_0, x_1)
+//│ res: error | int
 //│    = 111
 
 // Test 2:
-:e // context-tracking
 fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, code"${cde} + x")}" else cde
-//│ test: (int, Code[int | 'a, ?] & 'b,) -> (Code[int | 'a, nothing\x & {x: int} & 'c] | 'b)
+//│ test: (int, Code[int | 'a, 'b & 'c] & 'd,) -> (Code[int | 'a, 'b\x & {x: int} & 'c] | 'd)
+//│   where
+//│     'b <: 'b\x & {x: int} & 'c
 //│     = [Function: test]
 
+:e
 run(test(5, code"0"))
-//│ res: int
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.38: 	run(test(5, code"0"))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── expression of type `anything` does not have field 'x'
+//│ res: error
 //│    = 15
 
 
 // Test 3: note that the free variable makes this unhygienic, which is intended
-
 fun cde_template(cde) = code"${cde} + x"
 fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, cde_template(cde))}" else cde
 //│ cde_template: Code[int, 'a] -> Code[int, {x: int} & 'a]
 //│             = [Function: cde_template]
-//│ test: (int, Code[int | 'a, ?] & 'b,) -> (Code[int | 'a, nothing\x & {x: int} & 'c] | 'b)
+//│ test: (int, Code[int | 'a, 'b & 'c] & 'd,) -> (Code[int | 'a, 'b\x & {x: int} & 'c] | 'd)
+//│   where
+//│     'b <: 'b\x & {x: int} & 'c
 //│     = [Function: test1]
 
 let c = test(3, code"2")
-//│ c: Code[int, nothing\x & {x: int}]
+//│ c: Code[int, 'a]
+//│   where
+//│     'a <: 'a\x & {x: int}
 //│  = [
 //│      'Let',
 //│      'x',
@@ -52,7 +66,12 @@ let c = test(3, code"2")
 //│      [ 'Unquoted', [ 'Let', 'x', Symbol(x), [Array], [Array] ] ]
 //│    ]
 
+:e
 run(c)
-//│ res: int
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.70: 	run(c)
+//│ ║        	^^^^^^
+//│ ╙── expression of type `anything` does not have field 'x'
+//│ res: error
 //│    = 5
 
