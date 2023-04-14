@@ -90,6 +90,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             // recursively search until find the top level context
             parent match {
               case Some(p) =>
+//                println("Continue to search")
                 p.get(name, strategy)
               case _ => None
             }
@@ -632,7 +633,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         ctx.overridingStrategy = N
 //        println(s"searching method: $strategy")
         val ty = ctx.get(name, strategy).fold(
-          if (ctx.inQQ) {
+          if (ctx.inQQ && !ctx.inUnquoted) {
             val res = new TypeVariable(lvl, Nil, Nil)(prov)
             val tag = ClassTag(StrLit(name), Set.empty)(noProv)
 //            println(s"insert $name into the free vars")
