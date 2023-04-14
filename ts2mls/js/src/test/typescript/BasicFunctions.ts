@@ -60,7 +60,7 @@ function inn(f: Foooooo) {
   console.log(f.ooooooo)
 }
 
-function out(): Foooooo {
+function out1(): Foooooo {
   return new Foooooo();
 }
 
