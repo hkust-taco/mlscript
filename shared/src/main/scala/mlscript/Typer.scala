@@ -97,11 +97,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           }
         case QuasiquoteSearchStrategy(lvl) =>
           if (quasiquoteLvl == lvl) {
-            env.get(name)
+            env.get(name) orElse freeVarsEnv.get(name) orElse parent.dlof(_.get(name, strategy))(N)
           } else {
             parent match {
               case Some(p) =>
-                env.get(name) orElse freeVarsEnv.get(name) orElse parent.dlof(_.get(name, strategy))(N)
+                p.get(name, strategy)
               case _ => None
             }
           }

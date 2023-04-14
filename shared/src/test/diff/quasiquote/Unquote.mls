@@ -4,38 +4,83 @@ let cde = code"a"
 //│ cde: Code['a, {a: 'a}]
 //│    = [ 'Var', [ 'FreeVar', 'a' ] ]
 
-let c = code"let a = 10; let b = 10;${cde}"
-//│ c: Code['a, {a: 'a}\a\b]
-//│  = [
-//│      'Let',
-//│      'a',
-//│      Symbol(a),
-//│      [ '_', 10 ],
-//│      [ 'Let', 'b', Symbol(b), [ '_', 10 ], [ 'Unquoted', [Array] ] ]
-//│    ]
+let cde_w_free_vars = code"let x = 1; x + y"
+//│ cde_w_free_vars: Code[int, {y: int}\x]
+//│                = [
+//│                    'Let',
+//│                    'x',
+//│                    Symbol(x),
+//│                    [ '_', 1 ],
+//│                    [ 'App', '+', [ 'Var', Symbol(x) ], [ 'Var', [Array] ] ]
+//│                  ]
+
+
+let cde_w_unquote = code"${cde}"
+//│ cde_w_unquote: Code['a, {a: 'a}]
+//│              = [ 'Unquoted', [ 'Var', [ 'FreeVar', 'a' ] ] ]
+
+let cde_w_unquote_w_free_vars = code"${cde_w_free_vars}"
+//│ cde_w_unquote_w_free_vars: Code[int, {y: int}\x]
+//│                          = [
+//│                              'Unquoted',
+//│                              [
+//│                                'Let',
+//│                                'x',
+//│                                Symbol(x),
+//│                                [ '_', 1 ],
+//│                                [ 'App', '+', [Array], [Array] ]
+//│                              ]
+//│                            ]
+
+
+let cde_w_unquote_w_local_free_vars = code"[z, ${cde_w_unquote_w_free_vars}]"
+//│ cde_w_unquote_w_local_free_vars: Code[('a, int,), {y: int}\x & {z: 'a}]
+//│                                = [ 'Bra', [ 'Tup', [ [Array], [Array] ] ] ]
+
+let free_var1 = code"let x = 1; x + y"
+let free_var2 = code"let i = 1; i + x"
+let cde_w_mutli_unquote = code"${free_var2};${free_var1}"
+//│ ╔══[PARSE ERROR] Unexpected ';' keyword here
+//│ ║  l.42: 	let cde_w_mutli_unquote = code"${free_var2};${free_var1}"
+//│ ╙──      	                                           ^
+//│ free_var1: Code[int, {y: int}\x]
+//│          = [
+//│              'Let',
+//│              'x',
+//│              Symbol(x),
+//│              [ '_', 1 ],
+//│              [ 'App', '+', [ 'Var', Symbol(x) ], [ 'Var', [Array] ] ]
+//│            ]
+//│ free_var2: Code[int, {x: int}\i]
+//│          = [
+//│              'Let',
+//│              'i',
+//│              Symbol(i),
+//│              [ '_', 1 ],
+//│              [ 'App', '+', [ 'Var', Symbol(i) ], [ 'Var', [Array] ] ]
+//│            ]
+//│ cde_w_mutli_unquote: Code[int, {x: int}\i]
+//│                    = [
+//│                        'Unquoted',
+//│                        [
+//│                          'Let',
+//│                          'i',
+//│                          Symbol(i),
+//│                          [ '_', 1 ],
+//│                          [ 'App', '+', [Array], [Array] ]
+//│                        ]
+//│                      ]
 
 // FIXME
 c: Code<int, {}>
-//│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.18: 	c: Code<int, {}>
-//│ ║        	^
-//│ ╟── type `anything` does not have field 'a'
-//│ ║  l.18: 	c: Code<int, {}>
-//│ ╙──      	             ^^
+//│ ╔══[ERROR] identifier not found: c
+//│ ║  l.75: 	c: Code<int, {}>
+//│ ╙──      	^
 //│ res: Code[int, anything]
-//│    = [
-//│        'Let',
-//│        'a',
-//│        Symbol(a),
-//│        [ '_', 10 ],
-//│        [ 'Let', 'b', Symbol(b), [ '_', 10 ], [ 'Unquoted', [Array] ] ]
-//│      ]
+//│ Code generation encountered an error:
+//│   unresolved symbol c
 
-code"1"
-//│ res: Code[1, anything]
-//│    = [ '_', 1 ]
 
-// :d
 fun f(x, y) = code"[${x}, ${y}]"
 //│ f: (Code['a, 'b], Code['c, 'b],) -> Code[('a, 'c,), 'b]
 //│  = [Function: f]
@@ -44,7 +89,6 @@ let x = code"y"
 //│ x: Code['a, {y: 'a}]
 //│  = [ 'Var', [ 'FreeVar', 'y' ] ]
 
-// :d
 let c = f(x, x)
 //│ c: Code[('a, 'a,), {y: 'a}]
 //│  = [ 'Bra', [ 'Tup', [ [Array], [Array] ] ] ]
@@ -76,7 +120,6 @@ fun f(x) = x
 //│ f: 'a -> 'a
 //│  = [Function: f2]
 
-// :d
 let built_in_binding_test = code"let f = x => x + 1; f(if true then 1 else 2)"
 //│ built_in_binding_test: Code[int, anything\f\x]
 //│                      = [
@@ -88,7 +131,6 @@ let built_in_binding_test = code"let f = x => x + 1; f(if true then 1 else 2)"
 //│                        ]
 
 
-// :d
 code"f(0)"
 //│ res: Code[0, anything]
 //│    = [ 'App_Fun', [ 'Var', [ 'FreeVar', 'f' ] ], [ 'Tup', [ [Array] ] ] ]
@@ -96,20 +138,19 @@ code"f(0)"
 :e
 code"${code"${code"${z}"}"}"
 //│ ╔══[ERROR] identifier not found: z
-//│ ║  l.97: 	code"${code"${code"${z}"}"}"
-//│ ╙──      	                     ^
+//│ ║  l.139: 	code"${code"${code"${z}"}"}"
+//│ ╙──       	                     ^
 //│ res: Code[error, anything]
 //│ Code generation encountered an error:
 //│   unresolved symbol z
 
-// :d
 let z = code"1"
 code"${code"${z}"}"
 //│ z: Code[1, anything]
 //│  = [ '_', 1 ]
 //│ res: Code[1, anything]
 //│    = [ 'Unquoted', [ 'Unquoted', [ '_', 1 ] ] ]
-// :d
+
 code"let x = 1; let z = 1; code"x + y""
 //│ res: Code[Code[int, {x: int, y: int}], anything\x\z]
 //│    = [
@@ -119,7 +160,6 @@ code"let x = 1; let z = 1; code"x + y""
 //│        [ '_', 1 ],
 //│        [ 'Let', 'z', Symbol(z), [ '_', 1 ], [ '_', [Array] ] ]
 //│      ]
-// :d
 code"let z = 0;${code"z"}"
 //│ res: Code['a, {z: 'a}\z]
 //│    = [
@@ -129,26 +169,22 @@ code"let z = 0;${code"z"}"
 //│        [ '_', 0 ],
 //│        [ 'Unquoted', [ 'Var', Symbol(z) ] ]
 //│      ]
-// :d
 code"let x = 1;${code"x + y"}"
 //│ res: Code[int, {x: int, y: int}\x]
 //│ Runtime error:
 //│   ReferenceError: y is not defined
 
-// :d
 code"1 + ${code"b"}"
 //│ res: Code[int, {b: int}]
 //│ Runtime error:
 //│   ReferenceError: b is not defined
 
-// :d
 let n = 1
 code"${Const(n)} + 1"
 //│ n: 1
 //│  = 1
 //│ res: Code[int, anything]
 //│    = [ 'App', '+', [ 'Unquoted', [ '_', 1 ] ], [ '_', 1 ] ]
-// :d
 fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, code"${cde} + x")}" else cde
 //│ test: (int, Code[int | 'a, 'b & 'c] & 'd,) -> (Code[int | 'a, 'b\x & {x: int} & 'c] | 'd)
 //│   where
