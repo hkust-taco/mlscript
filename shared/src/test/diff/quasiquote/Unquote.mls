@@ -93,11 +93,30 @@ let c = f(x, x)
 //│ c: Code[('a, 'a,), {y: 'a}]
 //│  = [ 'Bra', [ 'Tup', [ [Array], [Array] ] ] ]
 
-code"[${code"y"}, ${code"y"}]"
-//│ res: Code[('a, 'a,), {y: 'a}]
-//│ Runtime error:
-//│   ReferenceError: y is not defined
+let tuple_free = code"[${code"y"}, ${code"y"}]"
+//│ tuple_free: Code[('a, 'a,), {y: 'a}]
+//│           = [ 'Bra', [ 'Tup', [ [Array], [Array] ] ] ]
 
+code"let y = 1; ${tuple_free}"
+//│ res: Code[('a, 'a,), {y: 'a}\y]
+//│    = [
+//│        'Let',
+//│        'y',
+//│        Symbol(y),
+//│        [ '_', 1 ],
+//│        [ 'Unquoted', [ 'Bra', [Array] ] ]
+//│      ]
+
+:e
+run(res)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.111: 	run(res)
+//│ ║         	^^^^^^^^
+//│ ╙── expression of type `anything` does not have field 'y'
+//│ res: (nothing, nothing,) | error
+//│    = [ 1, 1 ]
+
+// CHECK THIS
 y => code"[${code"y"}, ${code"y"}]"
 //│ res: anything -> Code[('a, 'a,), {y: 'a}]
 //│    = [Function: res]
@@ -136,9 +155,10 @@ code"f(0)"
 //│    = [ 'App_Fun', [ 'Var', [ 'FreeVar', 'f' ] ], [ 'Tup', [ [Array] ] ] ]
 
 :e
+:ge
 code"${code"${code"${z}"}"}"
 //│ ╔══[ERROR] identifier not found: z
-//│ ║  l.139: 	code"${code"${code"${z}"}"}"
+//│ ║  l.159: 	code"${code"${code"${z}"}"}"
 //│ ╙──       	                     ^
 //│ res: Code[error, anything]
 //│ Code generation encountered an error:
@@ -167,17 +187,21 @@ code"let z = 0;${code"z"}"
 //│        'z',
 //│        Symbol(z),
 //│        [ '_', 0 ],
-//│        [ 'Unquoted', [ 'Var', Symbol(z) ] ]
+//│        [ 'Unquoted', [ 'Var', [Array] ] ]
 //│      ]
 code"let x = 1;${code"x + y"}"
 //│ res: Code[int, {x: int, y: int}\x]
-//│ Runtime error:
-//│   ReferenceError: y is not defined
+//│    = [
+//│        'Let',
+//│        'x',
+//│        Symbol(x),
+//│        [ '_', 1 ],
+//│        [ 'Unquoted', [ 'App', '+', [Array], [Array] ] ]
+//│      ]
 
 code"1 + ${code"b"}"
 //│ res: Code[int, {b: int}]
-//│ Runtime error:
-//│   ReferenceError: b is not defined
+//│    = [ 'App', '+', [ '_', 1 ], [ 'Unquoted', [ 'Var', [Array] ] ] ]
 
 let n = 1
 code"${Const(n)} + 1"

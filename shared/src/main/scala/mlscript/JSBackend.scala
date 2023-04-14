@@ -483,9 +483,9 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     val tracker = new FreeVarTracker
     val sExpr = translateQuotedTerm(body)(scope, tracker)
     val freeVarList = tracker.getFreeVar()
-    if (inUnquote) {
-      sExpr
-    } else {
+    //if (inUnquote) {
+    //  sExpr
+    //} else {
       freeVarList match {
         case S(nameList : Ls[Str]) =>
           nameList.foldLeft(sExpr)(
@@ -493,7 +493,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
           )
         case N => sExpr
       }
-    }
+    //}
   }
 
   protected def translateQuotedTerm(body: Term)(implicit scope: Scope, tracker: FreeVarTracker) : JSExpr = body match {

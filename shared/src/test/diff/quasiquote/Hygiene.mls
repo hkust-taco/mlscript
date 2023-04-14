@@ -3,7 +3,7 @@
 
 // Test 1
 let code_test = code"let x_0 = 1; let x_1 = 10; let x_2 = 100; x_0 + x_1 + x_2"
-//│ code_test: Code[int, {x_0: int, x_1: int}\x_0\x_1\x_2]
+//│ code_test: Code[int, anything\x_0\x_1\x_2]
 //│          = [
 //│              'Let',
 //│              'x_0',
@@ -18,16 +18,11 @@ let code_test = code"let x_0 = 1; let x_1 = 10; let x_2 = 100; x_0 + x_1 + x_2"
 //│              ]
 //│            ]
 
-:e
 run(code_test)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.22: 	run(code_test)
-//│ ║        	^^^^^^^^^^^^^^
-//│ ╙── expression of type `anything` is not a record (expected a record with fields: x_0, x_1)
-//│ res: error | int
+//│ res: int
 //│    = 111
 
-// Test 2:
+// Test 2: note that the free variable makes this unhygienic, which is intended 
 fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, code"${cde} + x")}" else cde
 //│ test: (int, Code[int | 'a, 'b & 'c] & 'd,) -> (Code[int | 'a, 'b\x & {x: int} & 'c] | 'd)
 //│   where
@@ -37,11 +32,11 @@ fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, code"${
 :e
 run(test(5, code"0"))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.38: 	run(test(5, code"0"))
+//│ ║  l.33: 	run(test(5, code"0"))
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── expression of type `anything` does not have field 'x'
 //│ res: error
-//│    = 15
+//│    = 5
 
 
 // Test 3: note that the free variable makes this unhygienic, which is intended
@@ -69,7 +64,7 @@ let c = test(3, code"2")
 :e
 run(c)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.70: 	run(c)
+//│ ║  l.65: 	run(c)
 //│ ║        	^^^^^^
 //│ ╙── expression of type `anything` does not have field 'x'
 //│ res: error
