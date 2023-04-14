@@ -34,7 +34,7 @@ code"let x = 1 in ${ code"x + 1" }"
 :e
 1 + code"2"
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.60: 	1 + code"2"
+//│ ║  l.35: 	1 + code"2"
 //│ ║        	^^^^^^^^^^^
 //│ ╙── expression of type `code & {Code#C = anything, Code#T <: 2}` is not an instance of type `int`
 //│ res: error | int
@@ -43,7 +43,7 @@ code"let x = 1 in ${ code"x + 1" }"
 :e // Should be an error
 code"let x = 1 in ${ code"x + ${ x }" }"
 //│ ╔══[ERROR] identifier not found: x
-//│ ║  l.69: 	code"let x = 1 in ${ code"x + ${ x }" }"
+//│ ║  l.44: 	code"let x = 1 in ${ code"x + ${ x }" }"
 //│ ╙──      	                                 ^
 //│ res: Code[int, {x: int}\x]
 //│ Code generation encountered an error:
@@ -52,7 +52,7 @@ code"let x = 1 in ${ code"x + ${ x }" }"
 
 fun x: Code‹int›
 //│ ╔══[ERROR] Wrong number of type arguments – expected 2, found 1
-//│ ║  l.78: 	fun x: Code‹int›
+//│ ║  l.53: 	fun x: Code‹int›
 //│ ╙──      	       ^^^^^^^^
 //│ x: Code[int, anything]
 //│  = <missing implementation>
@@ -261,58 +261,58 @@ code"let a = 1; ${a + code"b + ${a + b}" }"
 //│  where: 
 //│ 		α86 :> error<> | error<>
 //│ ╔══[ERROR] identifier not found: a
-//│ ║  l.94: 	code"let a = 1; ${a + code"b + ${a + b}" }"
+//│ ║  l.69: 	code"let a = 1; ${a + code"b + ${a + b}" }"
 //│ ╙──      	                  ^
 //│ ╔══[ERROR] identifier not found: a
-//│ ║  l.94: 	code"let a = 1; ${a + code"b + ${a + b}" }"
+//│ ║  l.69: 	code"let a = 1; ${a + code"b + ${a + b}" }"
 //│ ╙──      	                                 ^
 //│ ╔══[ERROR] identifier not found: b
-//│ ║  l.94: 	code"let a = 1; ${a + code"b + ${a + b}" }"
+//│ ║  l.69: 	code"let a = 1; ${a + code"b + ${a + b}" }"
 //│ ╙──      	                                     ^
 //│ ╔══[ERROR] Type mismatch in unquote:
-//│ ║  l.94: 	code"let a = 1; ${a + code"b + ${a + b}" }"
+//│ ║  l.69: 	code"let a = 1; ${a + code"b + ${a + b}" }"
 //│ ║        	                               ^^^^^^^^
 //│ ╟── operator application of type `int` is not an instance of type `code`
-//│ ║  l.94: 	code"let a = 1; ${a + code"b + ${a + b}" }"
+//│ ║  l.69: 	code"let a = 1; ${a + code"b + ${a + b}" }"
 //│ ╙──      	                                 ^^^^^
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.94: 	code"let a = 1; ${a + code"b + ${a + b}" }"
+//│ ║  l.69: 	code"let a = 1; ${a + code"b + ${a + b}" }"
 //│ ║        	                  ^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── expression of type `code & {Code#C :> {b: ?a} & ?b, Code#T <: ?c}` is not an instance of type `int`
 //│ ╔══[ERROR] Type mismatch in unquote:
-//│ ║  l.94: 	code"let a = 1; ${a + code"b + ${a + b}" }"
+//│ ║  l.69: 	code"let a = 1; ${a + code"b + ${a + b}" }"
 //│ ║        	                ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── operator application of type `int` is not an instance of type `code`
-//│ ║  l.94: 	code"let a = 1; ${a + code"b + ${a + b}" }"
+//│ ║  l.69: 	code"let a = 1; ${a + code"b + ${a + b}" }"
 //│ ╙──      	                  ^^^^^^^^^^^^^^^^^^^^^^
 //│ res: Code[error, anything\a]
 
 
 code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
 //│ ╔══[ERROR] identifier not found: a
-//│ ║  l.316: 	code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
+//│ ║  l.291: 	code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
 //│ ╙──       	                             ^
 //│ ╔══[ERROR] identifier not found: a
-//│ ║  l.316: 	code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
+//│ ║  l.291: 	code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
 //│ ╙──       	                                            ^
 //│ ╔══[ERROR] identifier not found: b
-//│ ║  l.316: 	code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
+//│ ║  l.291: 	code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
 //│ ╙──       	                                                ^
 //│ ╔══[ERROR] Type mismatch in unquote:
-//│ ║  l.316: 	code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
+//│ ║  l.291: 	code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
 //│ ║         	                                          ^^^^^^^^
 //│ ╟── operator application of type `int` is not an instance of type `code`
-//│ ║  l.316: 	code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
+//│ ║  l.291: 	code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
 //│ ╙──       	                                            ^^^^^
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.316: 	code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
+//│ ║  l.291: 	code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
 //│ ║         	                             ^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── expression of type `code & {Code#C :> {b: ?a} & ?b, Code#T <: ?c}` is not an instance of type `int`
 //│ ╔══[ERROR] Type mismatch in unquote:
-//│ ║  l.316: 	code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
+//│ ║  l.291: 	code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
 //│ ║         	                           ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── operator application of type `int` is not an instance of type `code`
-//│ ║  l.316: 	code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
+//│ ║  l.291: 	code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
 //│ ╙──       	                             ^^^^^^^^^^^^^^^^^^^^^^
 //│ res: Code[error, anything\a\b]
 

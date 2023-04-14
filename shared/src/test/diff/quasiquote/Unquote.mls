@@ -4,31 +4,37 @@ let cde = code"a"
 //│ cde: Code['a, {a: 'a}]
 //│    = [ 'Var', [ 'FreeVar', 'a' ] ]
 
-let c = code"let a = 10; let b = 10;${cde}"
-//│ c: Code['a, {a: 'a}\a\b]
+let c = code"let a = 10; let b = 10;a + b"
+//│ c: Code[int, anything\a\b]
 //│  = [
 //│      'Let',
 //│      'a',
 //│      Symbol(a),
 //│      [ '_', 10 ],
-//│      [ 'Let', 'b', Symbol(b), [ '_', 10 ], [ 'Unquoted', [Array] ] ]
+//│      [
+//│        'Let',
+//│        'b',
+//│        Symbol(b),
+//│        [ '_', 10 ],
+//│        [ 'App', '+', [Array], [Array] ]
+//│      ]
 //│    ]
 
 // FIXME
 c: Code<int, {}>
-//│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.18: 	c: Code<int, {}>
-//│ ║        	^
-//│ ╟── type `anything` does not have field 'a'
-//│ ║  l.18: 	c: Code<int, {}>
-//│ ╙──      	             ^^
 //│ res: Code[int, anything]
 //│    = [
 //│        'Let',
 //│        'a',
 //│        Symbol(a),
 //│        [ '_', 10 ],
-//│        [ 'Let', 'b', Symbol(b), [ '_', 10 ], [ 'Unquoted', [Array] ] ]
+//│        [
+//│          'Let',
+//│          'b',
+//│          Symbol(b),
+//│          [ '_', 10 ],
+//│          [ 'App', '+', [Array], [Array] ]
+//│        ]
 //│      ]
 
 code"1"
@@ -96,9 +102,9 @@ code"f(0)"
 :e
 code"${code"${code"${z}"}"}"
 //│ ╔══[ERROR] identifier not found: z
-//│ ║  l.97: 	code"${code"${code"${z}"}"}"
-//│ ╙──      	                     ^
-//│ res: Code[nothing, anything]
+//│ ║  l.146: 	code"${code"${code"${z}"}"}"
+//│ ╙──       	                     ^
+//│ res: Code[error, anything]
 //│ Code generation encountered an error:
 //│   unresolved symbol z
 

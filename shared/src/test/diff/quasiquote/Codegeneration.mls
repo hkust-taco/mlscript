@@ -284,6 +284,12 @@ run(res)(100)
 
 :e // context tracking
 code"x => y => 100 + ${  Const(x + y)   }"
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.286: 	code"x => y => 100 + ${  Const(x + y)   }"
+//│ ╙──       	                               ^
+//│ ╔══[ERROR] identifier not found: y
+//│ ║  l.286: 	code"x => y => 100 + ${  Const(x + y)   }"
+//│ ╙──       	                                   ^
 //│ res: Code[anything -> anything -> int, nothing\x\y]
 //│    = [ '_', [Function (anonymous)] ]
 
