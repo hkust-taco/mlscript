@@ -27,19 +27,25 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
     // ',', 
     ';'
   )
+
+  val tripleQuote = "'''"
+  def isTripleQuote(i: Int): Bool = {
+    val syntax = tripleQuote
+    i + syntax.length < length + 1 && bytes.slice(i, i + syntax.length).mkString == syntax
+  }
   def isIdentFirstChar(c: Char): Bool =
     c.isLetter || c === '_' || c === '\''
   def isIdentChar(c: Char): Bool =
     isIdentFirstChar(c) || isDigit(c) || c === '\''
   def isDigit(c: Char): Bool =
     c >= '0' && c <= '9'
-  
+
   private val isNonStickyKeywordChar = Set(
     ',',
     ':',
     ';',
   )
-  
+
   private val isSymKeyword = Set(
     "->",
     "=",
@@ -49,14 +55,14 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
     // "<",
     // ">",
   )
-  
+
   private val isAlphaOp = Set(
     "and",
     "or",
     "is",
     "as",
   )
-  
+
   @tailrec final
   /**
    * @param i intialial position on where you start getting the character
@@ -66,11 +72,16 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
   def takeWhile(i: Int, cur: Ls[Char] = Nil)(pred: Char => Bool): (Str, Int) =
     if (i < length && pred(bytes(i))) takeWhile(i + 1, bytes(i) :: cur)(pred)
     else (cur.reverseIterator.mkString, i)
-  
+
+
+  def takeWhileIndex(i: Int, cur: Ls[Char] = Nil)(pred: Int => Bool): (Str, Int) =
+    if (i < length && pred(i)) takeWhileIndex(i + 1, bytes(i) :: cur)(pred)
+    else (cur.reverseIterator.mkString, i)
+
   def loc(start: Int, end: Int): Loc = Loc(start, end, origin)
 
 
-  
+
   // @tailrec final
   def lex(i: Int, ind: Ls[Int], acc: Ls[TokLoc])(implicit qcnt: Int = 0): Ls[TokLoc] = if (i >= length) acc.reverse else {
     val c = bytes(i)
@@ -111,6 +122,14 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
           }
           go(k2, LITVAL(StrLit(chars)))
         }
+      case '\'' if isTripleQuote(i) =>
+        val j = i + tripleQuote.length
+        val (chars, k) = takeWhileIndex(j)(idx => !isTripleQuote(idx) && c =/= '\n')
+        val k2 = if (isTripleQuote(k)) k + tripleQuote.length else {
+          pe(msg"unclosed quotation mark")
+          k
+        }
+        go(k2, LITVAL(StrLit(chars)))
       case '/' if bytes.lift(i + 1).contains('/') =>
         val j = i + 2
         val (txt, k) =
