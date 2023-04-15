@@ -971,7 +971,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             ctx.outermostCtx match {
               case Some(p) =>
                 p.innerUnquoteContextRequirements.append(tc)
-              case _ => ???
+              case _ => err("Unquotes should be enclosed with a quasiquote.", body.toLoc)(raise)
             }
             // func <return_type> foo(<param_type> param)
             // Code[tt, tc] <: Code[T <- co, C <- cotra]
@@ -984,7 +984,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
 
             val resTy = con(f_ty, FunctionType(body_type, res)(prov), res)
             resTy
-          case _ => err("An unquote should enclose with a quasiquote", body.toLoc)(raise)
+          case _ => err("Unquotes should be enclosed with a quasiquote.", body.toLoc)(raise)
         }
     }
   }(r => s"$lvl. : ${r}")

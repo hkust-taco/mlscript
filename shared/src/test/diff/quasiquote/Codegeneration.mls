@@ -158,12 +158,6 @@ run(unquoted)
 // Parsing error for StrLit 
 :pe
 let str_lit = code""hello""
-//│ ╔══[PARSE ERROR] Unexpected closing quasiquote
-//│ ║  l.160: 	let str_lit = code""hello""
-//│ ╙──       	                         ^
-//│ ╔══[PARSE ERROR] Unexpected closing quasiquote
-//│ ║  l.160: 	let str_lit = code""hello""
-//│ ╙──       	                          ^
 //│ ╔══[PARSE ERROR] Unexpected end of quasiquote section; an expression was expected here
 //│ ║  l.160: 	let str_lit = code""hello""
 //│ ╙──       	                   ^
@@ -192,7 +186,7 @@ let code_nested = code"let a = 1; let b = 2; ${code"a + b"}"
 :e
 run(code_nested)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.193: 	run(code_nested)
+//│ ║  l.187: 	run(code_nested)
 //│ ║         	^^^^^^^^^^^^^^^^
 //│ ╙── expression of type `anything` is not a record (expected a record with fields: b, a)
 //│ res: error | int
@@ -211,7 +205,7 @@ code"let id = x => ${code"x"}; id(3)"
 :e
 run(res)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.212: 	run(res)
+//│ ║  l.206: 	run(res)
 //│ ║         	^^^^^^^^
 //│ ╙── expression of type `anything` does not have field 'x'
 //│ res: error
@@ -233,7 +227,7 @@ run(res)
 //│        [ 'App_Fun', [ 'Var', Symbol(id) ], [ 'Tup', [Array] ] ]
 //│      ]
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.226: 	run(res)
+//│ ║  l.220: 	run(res)
 //│ ║         	^^^^^^^^
 //│ ╙── expression of type `anything` does not have field 'x'
 //│ res: error
@@ -245,7 +239,7 @@ run(id_external)
 //│ id_external: Code[anything -> 'a, {x: 'a}\x]
 //│            = [ '_', [Function (anonymous)] ]
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.244: 	run(id_external)
+//│ ║  l.238: 	run(id_external)
 //│ ║         	^^^^^^^^^^^^^^^^
 //│ ╙── expression of type `anything` does not have field 'x'
 //│ res: anything -> nothing | error
@@ -261,7 +255,7 @@ run(id_internal)(10)
 //│ id_internal: Code[anything -> 'a, {x: 'a}\x]
 //│            = [ '_', [Function (anonymous)] ]
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.260: 	run(id_internal)(10)
+//│ ║  l.254: 	run(id_internal)(10)
 //│ ║         	^^^^^^^^^^^^^^^^
 //│ ╙── expression of type `anything` does not have field 'x'
 //│ res: error
@@ -284,7 +278,7 @@ let use_free = code"let y = 3; ${code"let y = 5; ${free_y} + y"} + y"
 :e
 run(use_free)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.285: 	run(use_free)
+//│ ║  l.279: 	run(use_free)
 //│ ║         	^^^^^^^^^^^^^
 //│ ╙── expression of type `anything` does not have field 'y'
 //│ res: error | int
@@ -303,7 +297,7 @@ code"let z = x => ${let c = code"x + 1"; c}; z"
 :e
 run(res)(100)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.304: 	run(res)(100)
+//│ ║  l.298: 	run(res)(100)
 //│ ║         	^^^^^^^^
 //│ ╙── expression of type `anything` does not have field 'x'
 //│ res: error
@@ -312,10 +306,10 @@ run(res)(100)
 :e
 code"x => y => 100 + ${  Const(x + y)   }"
 //│ ╔══[ERROR] identifier not found: x
-//│ ║  l.313: 	code"x => y => 100 + ${  Const(x + y)   }"
+//│ ║  l.307: 	code"x => y => 100 + ${  Const(x + y)   }"
 //│ ╙──       	                               ^
 //│ ╔══[ERROR] identifier not found: y
-//│ ║  l.313: 	code"x => y => 100 + ${  Const(x + y)   }"
+//│ ║  l.307: 	code"x => y => 100 + ${  Const(x + y)   }"
 //│ ╙──       	                                   ^
 //│ res: Code[anything -> anything -> int, anything\x\y]
 //│    = [ '_', [Function (anonymous)] ]
@@ -333,25 +327,20 @@ let qq = code"x"
 // 1. In general code - ERROR
 :pe
 let x = ${qq}
-//│ ╔══[LEXICAL ERROR] unexpected character '$'
-//│ ║  l.335: 	let x = ${qq}
-//│ ╙──       	        ^
-//│ ╔══[PARSE ERROR] Unexpected error in expression position
-//│ ║  l.335: 	let x = ${qq}
-//│ ╙──       	        ^
-//│ x: {qq: Code['a, {x: 'a}]}
-//│  = { qq: [ 'Var', [ 'FreeVar', 'x' ] ] }
+//│ ╔══[ERROR] An unquote should enclose with a quasiquote
+//│ ║  l.329: 	let x = ${qq}
+//│ ╙──       	          ^^
+//│ x: error
+//│ Runtime error:
+//│   ReferenceError: sub is not defined
 
 // 2. In lambdas in general code - ERROR 
 :pe
 let x2 = x => ${qq}
-//│ ╔══[LEXICAL ERROR] unexpected character '$'
-//│ ║  l.347: 	let x2 = x => ${qq}
-//│ ╙──       	              ^
-//│ ╔══[PARSE ERROR] Unexpected error in expression position
-//│ ║  l.347: 	let x2 = x => ${qq}
-//│ ╙──       	              ^
-//│ x2: anything -> {qq: Code['a, {x: 'a}]}
+//│ ╔══[ERROR] An unquote should enclose with a quasiquote
+//│ ║  l.339: 	let x2 = x => ${qq}
+//│ ╙──       	                ^^
+//│ x2: anything -> nothing
 //│   = [Function: x2]
 
 // 3. In quasiquotes - OK
@@ -367,7 +356,7 @@ let x4 = code"x => ${qq}"
 :e
 run(x4)(5)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.368: 	run(x4)(5)
+//│ ║  l.363: 	run(x4)(5)
 //│ ║         	^^^^^^^
 //│ ╙── expression of type `anything` does not have field 'x'
 //│ res: error
