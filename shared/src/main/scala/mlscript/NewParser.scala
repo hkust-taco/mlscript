@@ -435,10 +435,10 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
       case (br @ BRACKETS(Quasiquote, toks), loc) :: _ =>
         consume 
         val body = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.expr(0))
-        R(Quoted(body).withLoc(S(loc)))
+        R(Quoted(body).withLoc(S(loc)))   
       case (br @ BRACKETS(Unquote, toks), loc) :: _ =>
         consume 
-        val body = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.expr(0)) // this is the problem line which I have to fix
+        val body = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.expr(0)) 
         // val res = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented()) // TODO
         // exprCont(body.withLoc(S(loc)), prec, allowNewlines = false)
         

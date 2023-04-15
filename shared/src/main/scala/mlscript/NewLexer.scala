@@ -72,15 +72,22 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
 
   
   // @tailrec final
-  def lex(i: Int, ind: Ls[Int], acc: Ls[TokLoc], obq: Boolean = false): Ls[TokLoc] = if (i >= length) acc.reverse else {
+  def lex(i: Int, ind: Ls[Int], acc: Ls[TokLoc], qcnt: Int = 0): Ls[TokLoc] = if (i >= length) acc.reverse else {
     val c = bytes(i)
     def pe(msg: Message): Unit =
       // raise(ParseError(false, msg -> S(loc(i, i + 1)) :: Nil))
       raise(ErrorReport(msg -> S(loc(i, i + 1)) :: Nil, source = Lexing)) // TODO parse error
       // @inline
-    def isQuasiquoteKeyword(i: Int): Boolean = (i + 4 < length) && (bytes(i) === 'c' && bytes(i + 1) === 'o' && bytes(i + 2) === 'd' && bytes(i + 3) === 'e' && bytes(i + 4) === '"')
-    def go(j: Int, tok: Token, obq: Boolean = obq) = lex(j, ind, (tok, loc(i, j)) :: acc, obq)
-    def isUnquoteKey(i: Int): Boolean = bytes(i) === '$' && bytes(i + 1) === '{'
+    def go(j: Int, tok: Token, qcnt: Int = qcnt) = lex(j, ind, (tok, loc(i, j)) :: acc, qcnt)
+    def isQuasiquoteKeyword(i: Int): Boolean = {
+      val syntax = BracketKind.Quasiquote.beg.asInstanceOf[Str]
+      i + syntax.length < length + 1 && bytes.slice(i, i + syntax.length).mkString === syntax
+    }
+    def isUnquoteKey(i: Int): Boolean = {
+      val syntax = BracketKind.Unquote.beg.asInstanceOf[Str]
+      i + syntax.length < length + 1 && bytes.slice(i, i + syntax.length).mkString === syntax
+    }
+
     c match {
       case ' ' =>
         val (_, j) = takeWhile(i)(_ === ' ')
@@ -89,12 +96,12 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
         val j = i + 1
         go(j, COMMA)
       case 'c' if isQuasiquoteKeyword(i) =>
-        go(i + 5, OPEN_BRACKET(BracketKind.Quasiquote), obq = true) // TODO: throw error if the double quote doesn't align
-      case '$' if (isUnquoteKey(i) && obq) =>
+        go(i + 5, OPEN_BRACKET(BracketKind.Quasiquote), qcnt = qcnt + 1) // TODO: throw error if the double quote doesn't align
+      case '$' if (isUnquoteKey(i) && qcnt >= 1) =>
         go(i + 2, OPEN_BRACKET(BracketKind.Unquote))
       case '"' =>
-        if (obq)
-          go(i + 1, CLOSE_BRACKET(BracketKind.Quasiquote))
+        if (qcnt >= 1)
+          go(i + 1, CLOSE_BRACKET(BracketKind.Quasiquote), qcnt = qcnt - 1)
         else {
           val j = i + 1
           val (chars, k) = takeWhile(j)(c => c =/= '"' && c =/= '\n')
@@ -127,7 +134,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
           takeWhile(j)(c => c === ' ' || c === '\n')
         val nextInd = space.reverseIterator.takeWhile(_ =/= '\n').size
         if (ind.headOption.forall(_ < nextInd) && nextInd > 0)
-          lex(k, nextInd :: ind, (INDENT, loc(j, k)) :: acc, obq = obq)
+          lex(k, nextInd :: ind, (INDENT, loc(j, k)) :: acc, qcnt = qcnt)
         else {
           val newIndBase = ind.dropWhile(_ > nextInd)
           val droppedNum = ind.size - newIndBase.size
@@ -143,7 +150,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
               else (NEWLINE, loc(i, k))
             } :: List.fill(droppedNum)((DEINDENT, loc(j-1, k))) ::: acc
             else (NEWLINE, loc(i, k)) :: acc
-          , obq = obq)
+          , qcnt = qcnt)
         }
       case _ if isIdentFirstChar(c) =>
         val (n, j) = takeWhile(i)(isIdentChar)
@@ -178,7 +185,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
   }
   
   
-  lazy val tokens: Ls[Token -> Loc] = lex(0, Nil, Nil)
+  lazy val tokens: Ls[Token -> Loc] = lex(0, Nil, Nil) 
   
   /** Converts the lexed tokens into structured tokens. */
   lazy val bracketedTokens: Ls[Stroken -> Loc] = {
