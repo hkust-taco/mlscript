@@ -1,8 +1,7 @@
 :NewParser
+:NoJS
 
 :d
-:ne
-:NoJS
 let qq_int = code"10"
 //│ 1. Typing term Quoted' 10 '
 //│ | 1. Typing term 10
@@ -13,10 +12,8 @@ let qq_int = code"10"
 //│ qq_int: Code[10, anything]
 
 :d 
-:ne
-:NoJS
-let qq_bool : Code<int> = code"10+2"
-//│ 1. Typing term Quoted' + (10,) (2,) ' : AppliedType(TypeName(Code),List(TypeName(int)))
+let qq_bool : Code<int, anything> = code"10+2"
+//│ 1. Typing term Quoted' + (10,) (2,) ' : AppliedType(TypeName(Code),List(TypeName(int), TypeName(anything)))
 //│ | 1. Typing term Quoted' + (10,) (2,) '
 //│ | | 1. Typing term + (10,) (2,)
 //│ | | | Applying + (10,)(class mlscript.App) to 2,(class mlscript.Tup)
@@ -47,20 +44,17 @@ let qq_bool : Code<int> = code"10+2"
 //│ | | | | | C int<number> <! α27'    (2)
 //│ | | 1. : α27'
 //│ | 1. : Code[α27',{}]
-//│ | 1. Typing type AppliedType(TypeName(Code),List(TypeName(int)))
+//│ | 1. Typing type AppliedType(TypeName(Code),List(TypeName(int), TypeName(anything)))
 //│ | | vars=Map() newDefsInfo=Map()
-//│ | => Code[Int,α28'] | 
-//│ | CONSTRAIN Code[α27',{}] <! Code[Int,α28']
+//│ | => Code[Int,Anything] | 
+//│ | CONSTRAIN Code[α27',{}] <! Code[Int,Anything]
 //│ |   where 
 //│ 		α27' :> int<number>
-//│ | C Code[α27',{}] <! Code[Int,α28']    (0)
+//│ | C Code[α27',{}] <! Code[Int,Anything]    (0)
 //│ | | C α27' <! Int    (1)
 //│ | | | C int<number> <! Int    (2)
-//│ | | C α28' <! {}    (2)
-//│ 1. : Code[Int,α28']
-//│ ⬤ Typed as: Code[Int,α28']
+//│ | | C Anything <! {}    (2)
+//│ 1. : Code[Int,Anything]
+//│ ⬤ Typed as: Code[Int,Anything]
 //│  where: 
-//│ ╔══[ERROR] Wrong number of type arguments – expected 2, found 1
-//│ ║  l.18: 	let qq_bool : Code<int> = code"10+2"
-//│ ╙──      	              ^^^^^^^^
 //│ qq_bool: Code[int, anything]

@@ -16,12 +16,13 @@ fun foo(x) =
 //│ foo: anything -> Code[int, {x: int}]
 //│    = [Function: foo]
 
+:e
 code"foo(123) + 1"
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.19: 	code"foo(123) + 1"
+//│ ║  l.20: 	code"foo(123) + 1"
 //│ ║        	     ^^^^^^^^^^
 //│ ╟── application of type `code & {Code#C :> {x: ?a}, Code#T <: ?b}` is not an instance of type `int`
-//│ ║  l.19: 	code"foo(123) + 1"
+//│ ║  l.20: 	code"foo(123) + 1"
 //│ ╙──      	     ^^^^^^^^
 //│ res: Code[error | int, anything]
 //│    = [
@@ -31,9 +32,11 @@ code"foo(123) + 1"
 //│        [ '_', 1 ]
 //│      ]
 
+:e
+:ge
 code"10 + ${qq_int}"
 //│ ╔══[ERROR] identifier not found: qq_int
-//│ ║  l.34: 	code"10 + ${qq_int}"
+//│ ║  l.37: 	code"10 + ${qq_int}"
 //│ ╙──      	            ^^^^^^
 //│ res: Code[int, anything]
 //│ Code generation encountered an error:
@@ -51,10 +54,10 @@ code"x => y => 15 + ${   code"x + y"   }"
 // FIXME
 qq_int : Code<int>
 //│ ╔══[ERROR] identifier not found: qq_int
-//│ ║  l.52: 	qq_int : Code<int>
+//│ ║  l.55: 	qq_int : Code<int>
 //│ ╙──      	^^^^^^
 //│ ╔══[ERROR] Wrong number of type arguments – expected 2, found 1
-//│ ║  l.52: 	qq_int : Code<int>
+//│ ║  l.55: 	qq_int : Code<int>
 //│ ╙──      	         ^^^^^^^^
 //│ res: Code[int, anything]
 //│ Code generation encountered an error:

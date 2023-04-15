@@ -117,7 +117,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     * Handle all possible cases of MLscript function applications. We extract
     * this method to prevent exhaustivity check from reaching recursion limit.
     */
-  protected def translateApp(term: App)(implicit scope: Scope, inUnquote: Bool = false): JSExpr = term match {
+  protected def translateApp(term: App)(implicit scope: Scope): JSExpr = term match {
     // Binary expressions
     case App(App(Var(op), Tup((N -> Fld(_, _, lhs)) :: Nil)), Tup((N -> Fld(_, _, rhs)) :: Nil))
         if JSBinary.operators contains op =>
@@ -131,21 +131,21 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         case Var(nme) => translateVar(nme, true)
         case _ => translateTerm(trm)
       }
-      callee(args map { case (_, Fld(_, _, arg)) => translateTerm(arg)(scope, inUnquote) }: _*)
+      callee(args map { case (_, Fld(_, _, arg)) => translateTerm(arg)(scope) }: _*)
     case _ => throw CodeGenError(s"ill-formed application ${inspect(term)}")
   }
 
   /**
     * Translate MLscript terms into JavaScript expressions.
     */
-  protected def translateTerm(term: Term)(implicit scope: Scope, inUnquote: Bool = false): JSExpr = term match {
+  protected def translateTerm(term: Term)(implicit scope: Scope): JSExpr = term match {
     case _ if term.desugaredTerm.isDefined => translateTerm(term.desugaredTerm.getOrElse(die))
     case Var(name) => translateVar(name, false)
     case Lam(params, body) =>
       val lamScope = scope.derive("Lam")
       val patterns = translateParams(params)(lamScope)
       JSArrowFn(patterns, lamScope.tempVars `with` translateTerm(body)(lamScope))
-    case t: App => translateApp(t)(scope, inUnquote)
+    case t: App => translateApp(t)(scope)
     case Rcd(fields) =>
       JSRecord(fields map { case (key, Fld(_, _, value)) =>
         key.name -> translateTerm(value)
@@ -479,21 +479,17 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     }
   }
 
-  protected def translateQuoted(body: Term)(implicit scope : Scope, inUnquote: Bool = false) : JSExpr = {
+  protected def translateQuoted(body: Term)(implicit scope : Scope) : JSExpr = {
     val tracker = new FreeVarTracker
     val sExpr = translateQuotedTerm(body)(scope, tracker)
     val freeVarList = tracker.getFreeVar()
-    //if (inUnquote) {
-    //  sExpr
-    //} else {
-      freeVarList match {
-        case S(nameList : Ls[Str]) =>
-          nameList.foldLeft(sExpr)(
-            (sExpr, name) => JSImmEvalFn(None, Ls(JSNamePattern(name)), L(sExpr), Ls(JSArray(Ls(JSExpr("FreeVar"), JSExpr(name)))))
-          )
-        case N => sExpr
-      }
-    //}
+    freeVarList match {
+      case S(nameList : Ls[Str]) =>
+        nameList.foldLeft(sExpr)(
+          (sExpr, name) => JSImmEvalFn(None, Ls(JSNamePattern(name)), L(sExpr), Ls(JSArray(Ls(JSExpr("FreeVar"), JSExpr(name)))))
+        )
+      case N => sExpr
+    }
   }
 
   protected def translateQuotedTerm(body: Term)(implicit scope: Scope, tracker: FreeVarTracker) : JSExpr = body match {
@@ -520,7 +516,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         JSExpr("_"),
         lambdaTerm
       ))
-    // expand translateApp - except for case App(App(App(Var("if"), tst), con), alt) because could not generate example (?)
+    // expand translateApp - except for case App(App(App(Var("if"), tst), con), alt) because could not generate example
     case App(App(Var(op), Tup((N -> Fld(_, _, lhs)) :: Nil)), Tup((N -> Fld(_, _, rhs)) :: Nil))
       if JSBinary.operators contains op => 
       JSArray(Ls(
@@ -548,7 +544,8 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         translateQuotedTerm(receiver),
         JSExpr(fieldName.name)
       ))
-    case Let(true, Var(name), Lam(args, body), expr) => throw CodeGenError("Let with Function") // TODO: cannot generate example yet
+    case Let(true, Var(name), Lam(args, body), expr) => 
+      throw CodeGenError("Let with Function") // TODO: cannot generate example
     case Let(true, Var(name), _, _) => 
       throw new CodeGenError(s"recursive non-function definition $name is not supported")
     case Let(_, Var(name), value, body) => 
@@ -604,7 +601,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     case Unquoted(body) => // TODO: can this handle different levels of unquotes?
       JSArray(Ls(
         JSExpr("Unquoted"),
-        translateTerm(body)(scope, true)
+        translateTerm(body)(scope)
       ))
     case If(IfThen(condition, branch1), S(branch2)) => // error if no ELSE branch in normal code
       JSArray(Ls(

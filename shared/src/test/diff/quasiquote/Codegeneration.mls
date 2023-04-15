@@ -241,13 +241,17 @@ run(res)
 
 :e
 let id_external = code"x => ${free}"
-run(id_external)(10)
+run(id_external)
 //│ id_external: Code[anything -> 'a, {x: 'a}\x]
 //│            = [ '_', [Function (anonymous)] ]
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.244: 	run(id_external)(10)
+//│ ║  l.244: 	run(id_external)
 //│ ║         	^^^^^^^^^^^^^^^^
 //│ ╙── expression of type `anything` does not have field 'x'
+//│ res: anything -> nothing | error
+//│    = [Function (anonymous)]
+
+res(10)
 //│ res: error
 //│    = 10
 
@@ -257,7 +261,7 @@ run(id_internal)(10)
 //│ id_internal: Code[anything -> 'a, {x: 'a}\x]
 //│            = [ '_', [Function (anonymous)] ]
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.256: 	run(id_internal)(10)
+//│ ║  l.260: 	run(id_internal)(10)
 //│ ║         	^^^^^^^^^^^^^^^^
 //│ ╙── expression of type `anything` does not have field 'x'
 //│ res: error
@@ -280,7 +284,7 @@ let use_free = code"let y = 3; ${code"let y = 5; ${free_y} + y"} + y"
 :e
 run(use_free)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.281: 	run(use_free)
+//│ ║  l.285: 	run(use_free)
 //│ ║         	^^^^^^^^^^^^^
 //│ ╙── expression of type `anything` does not have field 'y'
 //│ res: error | int
@@ -299,7 +303,7 @@ code"let z = x => ${let c = code"x + 1"; c}; z"
 :e
 run(res)(100)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.300: 	run(res)(100)
+//│ ║  l.304: 	run(res)(100)
 //│ ║         	^^^^^^^^
 //│ ╙── expression of type `anything` does not have field 'x'
 //│ res: error
@@ -308,10 +312,10 @@ run(res)(100)
 :e
 code"x => y => 100 + ${  Const(x + y)   }"
 //│ ╔══[ERROR] identifier not found: x
-//│ ║  l.309: 	code"x => y => 100 + ${  Const(x + y)   }"
+//│ ║  l.313: 	code"x => y => 100 + ${  Const(x + y)   }"
 //│ ╙──       	                               ^
 //│ ╔══[ERROR] identifier not found: y
-//│ ║  l.309: 	code"x => y => 100 + ${  Const(x + y)   }"
+//│ ║  l.313: 	code"x => y => 100 + ${  Const(x + y)   }"
 //│ ╙──       	                                   ^
 //│ res: Code[anything -> anything -> int, anything\x\y]
 //│    = [ '_', [Function (anonymous)] ]
@@ -330,10 +334,10 @@ let qq = code"x"
 :pe
 let x = ${qq}
 //│ ╔══[LEXICAL ERROR] unexpected character '$'
-//│ ║  l.331: 	let x = ${qq}
+//│ ║  l.335: 	let x = ${qq}
 //│ ╙──       	        ^
 //│ ╔══[PARSE ERROR] Unexpected error in expression position
-//│ ║  l.331: 	let x = ${qq}
+//│ ║  l.335: 	let x = ${qq}
 //│ ╙──       	        ^
 //│ x: {qq: Code['a, {x: 'a}]}
 //│  = { qq: [ 'Var', [ 'FreeVar', 'x' ] ] }
@@ -342,10 +346,10 @@ let x = ${qq}
 :pe
 let x2 = x => ${qq}
 //│ ╔══[LEXICAL ERROR] unexpected character '$'
-//│ ║  l.343: 	let x2 = x => ${qq}
+//│ ║  l.347: 	let x2 = x => ${qq}
 //│ ╙──       	              ^
 //│ ╔══[PARSE ERROR] Unexpected error in expression position
-//│ ║  l.343: 	let x2 = x => ${qq}
+//│ ║  l.347: 	let x2 = x => ${qq}
 //│ ╙──       	              ^
 //│ x2: anything -> {qq: Code['a, {x: 'a}]}
 //│   = [Function: x2]
@@ -363,7 +367,7 @@ let x4 = code"x => ${qq}"
 :e
 run(x4)(5)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.364: 	run(x4)(5)
+//│ ║  l.368: 	run(x4)(5)
 //│ ║         	^^^^^^^
 //│ ╙── expression of type `anything` does not have field 'x'
 //│ res: error
