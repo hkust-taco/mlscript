@@ -466,16 +466,15 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     }
   }
 
-  protected class FreeVarTracker(var used: MutSet[Str] = MutSet(), var defined: MutSet[Str] = MutSet()) {
-    def addUsedVar(name: Str) : Bool = used add name
+  protected class FreeVarTracker(var free: MutSet[Str] = MutSet(), var defined: MutSet[Str] = MutSet()) {
+    def addFreeVar(name: Str) : Bool = free add name
     def addDefinedVar(name: Str) : Bool = defined add name
+    def isDefinedVar(name: Str) : Bool = defined contains name
     def getFreeVar() : Opt[Ls[Str]] = {
-      val freeVars = used diff defined 
-      if (freeVars.isEmpty)
-        N 
-      else {
-        S(freeVars.toList)
-      }
+      if (free.isEmpty)
+        N
+      else 
+        S(free.toList)
     }
   }
 
@@ -501,8 +500,9 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
             polyfill.use(sym.feature, sym.runtimeName)
           val ident = JSIdent(sym.runtimeName)
           if (sym.feature === "error") ident() else JSArray(Ls(JSExpr("_"), ident)) 
-        case _ => // to handle ValueSymbol, ignores cases in translateVar final branch (case N)
-          tracker.addUsedVar(name)
+        case _ => // to handle ValueSymbol
+          if (!tracker.isDefinedVar(name)) 
+            tracker.addFreeVar(name)
           JSArray(Ls(
             JSExpr("Var"),
             JSIdent(name)
@@ -591,19 +591,19 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         translateQuotedTerm(arr),
         translateQuotedTerm(idx)
       ))
-    case New(N, TypingUnit(Nil)) => throw CodeGenError("New #1") //JSRecord(Nil)
-    case New(S(TypeName(className) -> Tup(args)), TypingUnit(Nil)) => throw CodeGenError("New #2") // create a class 
+    case New(N, TypingUnit(Nil)) => throw CodeGenError("New #1")
+    case New(S(TypeName(className) -> Tup(args)), TypingUnit(Nil)) => throw CodeGenError("New #2") 
     case Quoted(body) => 
       JSArray(Ls(
         JSExpr("_"),
         translateQuotedTerm(body)
       ))
-    case Unquoted(body) => // TODO: can this handle different levels of unquotes?
+    case Unquoted(body) =>
       JSArray(Ls(
         JSExpr("Unquoted"),
         translateTerm(body)(scope)
       ))
-    case If(IfThen(condition, branch1), S(branch2)) => // error if no ELSE branch in normal code
+    case If(IfThen(condition, branch1), S(branch2)) =>
       JSArray(Ls(
         JSExpr("If"), 
         translateQuotedTerm(condition), 

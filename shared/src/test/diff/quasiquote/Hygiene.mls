@@ -69,4 +69,3 @@ run(c)
 //│ ╙── expression of type `anything` does not have field 'x'
 //│ res: error
 //│    = 5
-

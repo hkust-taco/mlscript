@@ -411,4 +411,42 @@ run(res)
 //│ Runtime error:
 //│   TypeError: globalThis[callee] is not a function
 
+let codeA = code"let y = 2; y"
+let codeB = code"y"
+//│ codeA: Code[2, anything\y]
+//│      = [ 'Let', 'y', Symbol(y), [ '_', 2 ], [ 'Var', Symbol(y) ] ]
+//│ codeB: Code['a, {y: 'a}]
+//│      = [ 'Var', [ 'FreeVar', 'y' ] ]
 
+:pe
+let both = code"${codeA}; ${codeB}"
+//│ ╔══[PARSE ERROR] Unexpected ';' keyword here
+//│ ║  l.422: 	let both = code"${codeA}; ${codeB}"
+//│ ╙──       	                        ^
+//│ both: Code[2, anything]
+//│     = [
+//│         'Unquoted',
+//│         [ 'Let', 'y', Symbol(y), [ '_', 2 ], [ 'Var', Symbol(y) ] ]
+//│       ]
+run(both)
+//│ res: 2
+//│    = 2
+
+code"x + (let x = 1; x)"
+//│ res: Code[int, {x: int}\x]
+//│    = [
+//│        'App',
+//│        '+',
+//│        [ 'Var', [ 'FreeVar', 'x' ] ],
+//│        [ 'Let', 'x', Symbol(x), [ '_', 1 ], [ 'Var', Symbol(x) ] ]
+//│      ]
+
+:e // BUG: quasiquote still has a free variable
+run(res)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.445: 	run(res)
+//│ ║         	^^^^^^^^
+//│ ╙── expression of type `anything` does not have field 'x'
+//│ res: error | int
+//│ Runtime error:
+//│   ReferenceError: x is not defined
