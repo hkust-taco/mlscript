@@ -37,6 +37,7 @@ object TSSourceFile {
       if (obj.isAnonymous) TSInterfaceType("", getAnonymousPropertiesType(obj.properties), List(), List())
       else TSReferenceType(obj.symbol.fullName)
     else if (obj.isTypeParameter) TSTypeParameter(obj.symbol.escapedName)
+    else if (obj.isConditionalType) TSUnsupportedType("") // in this case, we can not get the full information of the node. the information will be filled in addNodeIntoNamespace
     else TSPrimitiveType(obj.intrinsicName)
 
   // the function `getMemberType` can't process function/tuple type alias correctly
@@ -201,7 +202,10 @@ object TSSourceFile {
     else if (node.isInterfaceDeclaration)
       ns.put(name, parseMembers(name, node, false))
     else if (node.isTypeAliasDeclaration)
-      ns.put(name, TSTypeAlias(name, getTypeAlias(node.`type`), getTypeParameters(node)))
+      getTypeAlias(node.`type`) match {
+        case _: TSUnsupportedType => ns.put(name, TSUnsupportedType(node.toString()))
+        case t => ns.put(name, TSTypeAlias(name, t, getTypeParameters(node)))
+      }
     else if (node.isObjectLiteral)
       ns.put(name, TSInterfaceType("", getObjectLiteralMembers(node.initializer.properties), List(), List()))
     else if (node.isVariableDeclaration)

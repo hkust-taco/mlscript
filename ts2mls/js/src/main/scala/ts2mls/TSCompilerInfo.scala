@@ -23,6 +23,7 @@ object TypeScript {
   val syntaxKindStatic = ts.SyntaxKind.StaticKeyword
   val objectFlagsAnonymous = ts.ObjectFlags.Anonymous
   val symbolFlagsOptional = ts.SymbolFlags.Optional // this flag is only for checking optional members of interfaces
+  val typeFlagsConditional = ts.TypeFlags.Conditional
 
   def isToken(node: js.Dynamic) = ts.isToken(node)
   def isClassDeclaration(node: js.Dynamic) = ts.isClassDeclaration(node)
@@ -146,6 +147,8 @@ class TSNodeObject(node: js.Dynamic)(implicit checker: TSTypeChecker) extends TS
   lazy val symbolType = TSTypeObject(checker.getTypeOfSymbolAtLocation(node.symbol, node))
   lazy val literal = TSTokenObject(node.literal)
   lazy val name = TSIdentifierObject(node.name)
+
+  override def toString(): String = node.getText().toString()
 }
 
 object TSNodeObject {
@@ -194,6 +197,7 @@ class TSTypeObject(obj: js.Dynamic)(implicit checker: TSTypeChecker) extends TSA
   lazy val isTypeParameter = flags == TypeScript.typeFlagsTypeParameter
   lazy val isObject = flags == TypeScript.typeFlagsObject
   lazy val isTypeParameterSubstitution = isObject && typeArguments.length > 0
+  lazy val isConditionalType = flags == TypeScript.typeFlagsConditional
 }
 
 object TSTypeObject {

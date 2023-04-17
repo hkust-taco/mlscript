@@ -45,6 +45,7 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
       case Right(name) => {
         val mem = members(name)
         mem match {
+          case TSUnsupportedType(original) => writer.writeln(s"// UNSUPPORTED: $original")
           case inter: TSIntersectionType => // overloaded functions
             writer.writeln(Converter.generateFunDeclaration(inter, name)(indent))
           case f: TSFunctionType =>
