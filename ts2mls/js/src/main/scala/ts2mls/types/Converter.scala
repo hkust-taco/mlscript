@@ -15,7 +15,8 @@ object Converter {
     "never" -> "nothing",
     "object" -> "object",
     "true" -> "true",
-    "false" -> "false"
+    "false" -> "false",
+    "symbol" -> "Symbol"
   )
 
   def generateFunDeclaration(tsType: TSType, name: String)(implicit indent: String = ""): String = tsType match {

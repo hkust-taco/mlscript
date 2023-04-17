@@ -23,6 +23,7 @@ object TSTypeGenerationTest {
     (Seq("ClassMember.ts"), "ClassMember.mlsi"),
     (Seq("Dec.d.ts"), "Dec.mlsi"),
     (Seq("Enum.ts"), "Enum.mlsi"),
+    (Seq("ES5.d.ts"), "ES5.mlsi"),
     (Seq("Heritage.ts"), "Heritage.mlsi"),
     (Seq("HighOrderFunc.ts"), "HighOrderFunc.mlsi"),
     (Seq("InterfaceMember.ts"), "InterfaceMember.mlsi"),
