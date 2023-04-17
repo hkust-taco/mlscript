@@ -5,19 +5,20 @@ import js.DynamicImplicits._
 import types._
 import mlscript.utils._
 
-object TSSourceFile {
-  def apply(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSTypeChecker) =
-    TypeScript.forEachChild(sf, (node: js.Dynamic) => {
-      val nodeObject = TSNodeObject(node)
-      if (!nodeObject.isToken) {
-        if (!nodeObject.symbol.isUndefined) // for functions/classes/interfaces
-          addNodeIntoNamespace(nodeObject, nodeObject.symbol.escapedName)(global)
-        else if (!nodeObject.declarationList.isUndefined) { // for variables
-          val decNode = nodeObject.declarationList.declaration
-          addNodeIntoNamespace(decNode, decNode.symbol.escapedName)(global)
-        }
+class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSTypeChecker) {
+  private val lineHelper = new TSLineStartsHelper(sf.getLineStarts())
+
+  TypeScript.forEachChild(sf, (node: js.Dynamic) => {
+    val nodeObject = TSNodeObject(node)
+    if (!nodeObject.isToken) {
+      if (!nodeObject.symbol.isUndefined) // for functions/classes/interfaces
+        addNodeIntoNamespace(nodeObject, nodeObject.symbol.escapedName)(global)
+      else if (!nodeObject.declarationList.isUndefined) { // for variables
+        val decNode = nodeObject.declarationList.declaration
+        addNodeIntoNamespace(decNode, decNode.symbol.escapedName)(global)
       }
-    })
+    }
+  })
 
   private def getSubstitutionArguments[T <: TSAny](args: TSArray[T]): List[TSType] =
     args.foldLeft(List[TSType]())((lst, arg) => arg match {
@@ -37,7 +38,9 @@ object TSSourceFile {
       if (obj.isAnonymous) TSInterfaceType("", getAnonymousPropertiesType(obj.properties), List(), List())
       else TSReferenceType(obj.symbol.fullName)
     else if (obj.isTypeParameter) TSTypeParameter(obj.symbol.escapedName)
-    else if (obj.isConditionalType) TSUnsupportedType("") // in this case, we can not get the full information of the node. the information will be filled in addNodeIntoNamespace
+    else if (obj.isConditionalType) lineHelper.getPos(obj.pos) match {
+      case (line, column) => TSUnsupportedType(obj.toString(), obj.filename, line, column)
+    }
     else TSPrimitiveType(obj.intrinsicName)
 
   // the function `getMemberType` can't process function/tuple type alias correctly
@@ -202,10 +205,7 @@ object TSSourceFile {
     else if (node.isInterfaceDeclaration)
       ns.put(name, parseMembers(name, node, false))
     else if (node.isTypeAliasDeclaration)
-      getTypeAlias(node.`type`) match {
-        case _: TSUnsupportedType => ns.put(name, TSUnsupportedType(node.toString()))
-        case t => ns.put(name, TSTypeAlias(name, t, getTypeParameters(node)))
-      }
+      ns.put(name, TSTypeAlias(name, getTypeAlias(node.`type`), getTypeParameters(node)))
     else if (node.isObjectLiteral)
       ns.put(name, TSInterfaceType("", getObjectLiteralMembers(node.initializer.properties), List(), List()))
     else if (node.isVariableDeclaration)
@@ -215,4 +215,9 @@ object TSSourceFile {
 
   private def parseNamespace(node: TSNodeObject)(implicit ns: TSNamespace): Unit =
     parseNamespaceLocals(node.locals)(ns.derive(node.symbol.escapedName))
+}
+
+object TSSourceFile {
+  def apply(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSTypeChecker) =
+    new TSSourceFile(sf, global)
 }

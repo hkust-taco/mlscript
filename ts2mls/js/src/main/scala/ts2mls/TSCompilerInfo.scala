@@ -90,6 +90,7 @@ object TSSymbolObject {
 
 class TSNodeObject(node: js.Dynamic)(implicit checker: TSTypeChecker) extends TSAny(node) {
   private lazy val modifiers = TSTokenArray(node.modifiers)
+  private lazy val parent = TSNodeObject(node.parent)
 
   lazy val isToken = TypeScript.isToken(node)
   lazy val isClassDeclaration = TypeScript.isClassDeclaration(node)
@@ -149,6 +150,10 @@ class TSNodeObject(node: js.Dynamic)(implicit checker: TSTypeChecker) extends TS
   lazy val name = TSIdentifierObject(node.name)
 
   override def toString(): String = node.getText().toString()
+  lazy val filename: String =
+    if (parent.isUndefined) node.fileName.toString()
+    else parent.filename
+  lazy val pos = node.pos
 }
 
 object TSNodeObject {
@@ -175,6 +180,7 @@ class TSTypeObject(obj: js.Dynamic)(implicit checker: TSTypeChecker) extends TSA
   private lazy val flags = obj.flags
   private lazy val objectFlags = if (IsUndefined(obj.objectFlags)) 0 else obj.objectFlags
   private lazy val baseType = TSTypeObject(checker.getBaseType(obj))
+  private lazy val root = TSNodeObject(obj.root.node)
 
   lazy val symbol = TSSymbolObject(obj.symbol)
   lazy val typeArguments = TSTypeArray(checker.getTypeArguments(obj))
@@ -198,6 +204,10 @@ class TSTypeObject(obj: js.Dynamic)(implicit checker: TSTypeChecker) extends TSA
   lazy val isObject = flags == TypeScript.typeFlagsObject
   lazy val isTypeParameterSubstitution = isObject && typeArguments.length > 0
   lazy val isConditionalType = flags == TypeScript.typeFlagsConditional
+
+  override def toString(): String = root.toString()
+  lazy val filename = root.filename
+  lazy val pos = root.pos
 }
 
 object TSTypeObject {

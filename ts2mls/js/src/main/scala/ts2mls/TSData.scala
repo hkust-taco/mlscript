@@ -73,3 +73,28 @@ class TSSymbolMap(map: js.Dynamic)(implicit checker: TSTypeChecker) extends TSAn
 object TSSymbolMap {
   def apply(map: js.Dynamic)(implicit checker: TSTypeChecker) = new TSSymbolMap(map)
 }
+
+class TSLineStartsHelper(arr: js.Dynamic) extends TSAny(arr) {
+  if (isUndefined) throw new AssertionError("can not read line starts from the source file.")
+
+  // line, column in string
+  def getPos(pos: js.Dynamic): (String, String) = {
+    val len = arr.length
+    def run(index: Int): (String, String) =
+      if (index >= len) throw new AssertionError(s"invalid pos parameter $pos.")
+      else {
+        val starts = arr.selectDynamic(index.toString)
+        if (pos >= starts) {
+          if (index + 1 >= len) ((index + 1).toString, (pos - starts).toString())
+          else {
+            val next = arr.selectDynamic((index + 1).toString)
+            if (pos >= next) run(index + 1)
+            else ((index + 1).toString, (pos - starts).toString())
+          }
+        }
+        else throw new AssertionError(s"invalid pos parameter $pos.")
+      }
+
+    run(0)
+  }
+}
