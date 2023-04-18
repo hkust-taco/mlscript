@@ -50,7 +50,12 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
   private def getTypeAlias(tn: TSNodeObject): TSType =
     if (tn.isFunctionLike) getFunctionType(tn)
     else if (tn.isTupleTypeNode) TSTupleType(getTupleElements(tn.typeNode.typeArguments))
-    else getObjectType(tn.typeNode)
+    else getObjectType(tn.typeNode) match {
+      case TSPrimitiveType("intrinsic") => lineHelper.getPos(tn.pos) match {
+        case (line, column) => TSUnsupportedType(tn.toString(), tn.filename, line, column)
+      }
+      case t => t
+    }
 
   // parse string/numeric literal types. we need to add quotes if it is a string literal
   private def getLiteralType(tp: TSNodeObject) =
