@@ -847,7 +847,10 @@ final case class JSQuasiquoteRunFunctionBody() extends JSStmt {
 
     if (context != null) {
       context.forEach(context_pair => name_value.set(context_pair[0], context_pair[1]));
-    }    
+    }
+    function contextToList() {
+      return Array.from(name_value);
+    }
     function _run(s_expr) {
       switch(s_expr[0]) {
         // data
@@ -895,7 +898,7 @@ final case class JSQuasiquoteRunFunctionBody() extends JSStmt {
         case "Subs": // ['Subs', translateQuoted(arr), translateQuoted(idx)]
           return _run(s_expr[1])[_run(s_expr[2])];
         case "Unquoted": // ['Unquoted', translateTerm(body)]
-          return _run(s_expr[1]);
+          return run(s_expr[1], contextToList());
         case "If": // ['If', translateQuoted(condition), translateQuoted(branch1), translateQuoted(branch2)]
           if (_run(s_expr[1])) { return _run(s_expr[2]); } else { return _run(s_expr[3]); }
         case "Blk":
