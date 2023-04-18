@@ -56,7 +56,7 @@ object Converter {
       else s"${indent}type $name<${tp.map(t => convert(t)).reduceLeft((s, t) => s"$s, $t")}> = ${convert(ori)}"
     case TSLiteralType(value, isString) => if (isString) s"\"$value\"" else value
     case TSUnsupportedType(code, filename, line, column) =>
-      s"""Unsupported["$code", "$filename", $line, $column]"""
+      s"""Unsupported<"$code", "$filename", $line, $column>"""
   }
 
   private def convertRecord(typeName: String, members: Map[String, TSMemberType], typeVars: List[TSTypeParameter],

@@ -37,6 +37,9 @@ object TypeScript {
   def isLiteralTypeNode(node: js.Dynamic) = ts.isLiteralTypeNode(node)
   def isStringLiteral(node: js.Dynamic) = ts.isStringLiteral(node)
   def isVariableDeclaration(node: js.Dynamic) = ts.isVariableDeclaration(node)
+  def isIndexSignatureDeclaration(node: js.Dynamic) = ts.isIndexSignatureDeclaration(node)
+  def isConstructSignatureDeclaration(node: js.Dynamic) = ts.isConstructSignatureDeclaration(node)
+  def isCallSignatureDeclaration(node: js.Dynamic) = ts.isCallSignatureDeclaration(node)
 
   def forEachChild(root: js.Dynamic, func: js.Dynamic => Unit) = ts.forEachChild(root, func)
   def createProgram(filenames: Seq[String]) =
@@ -99,6 +102,9 @@ class TSNodeObject(node: js.Dynamic)(implicit checker: TSTypeChecker) extends TS
   lazy val isTypeAliasDeclaration = TypeScript.isTypeAliasDeclaration(node)
   lazy val isLiteralTypeNode = TypeScript.isLiteralTypeNode(node)
   lazy val isVariableDeclaration = TypeScript.isVariableDeclaration(node)
+  lazy val isIndexSignature = TypeScript.isIndexSignatureDeclaration(node)
+  lazy val isCallSignature = TypeScript.isCallSignatureDeclaration(node)
+  lazy val isConstructSignature = TypeScript.isConstructSignatureDeclaration(node)
   lazy val isObjectLiteral = !initializer.isUndefined && !initializer.isToken &&
                              TypeScript.isObjectLiteralExpression(node.initializer)
 

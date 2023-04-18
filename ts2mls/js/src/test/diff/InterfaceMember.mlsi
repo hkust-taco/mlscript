@@ -15,13 +15,13 @@ trait IEvent() {
   fun callback(): (number) => unit
 }
 trait SearchFunc() {
-  fun __call(source: string, subString: string): (false) | (true)
+  let __call: Unsupported<"(source: string, subString: string): boolean;", "ts2mls/js/src/test/typescript/InterfaceMember.ts", 24, 22>
 }
 trait StringArray() {
-  fun __index(index: number): string
+  let __index: Unsupported<"[index: number]: string;", "ts2mls/js/src/test/typescript/InterfaceMember.ts", 28, 23>
 }
 trait Counter() {
-  fun __call(start: number): string
+  let __call: Unsupported<"(start: number): string;", "ts2mls/js/src/test/typescript/InterfaceMember.ts", 32, 19>
   let interval: number
   fun reset(): unit
 }
@@ -36,5 +36,5 @@ trait Next(): Simple {}
 trait TTT<T>() {
   fun ttt(x: T): T
 }
-//│ |#trait| |IFoo|(||)| |{|→|#let| |a|#:| |string|↵|#fun| |b|(|x|#:| |number|)|#:| |number|↵|#fun| |c|(||)|#:| |(|false|)| ||| |(|true|)|↵|#fun| |d|(|x|#:| |string|)|#:| |unit|←|↵|}|↵|#trait| |II|‹|T|›|(||)| |{|→|#fun| |test|(|x|#:| |T|)|#:| |number|←|↵|}|↵|#fun| |create|(||)|#:| |{|v|#:| |number|,|}|↵|#fun| |get|(|x|#:| |{|t|#:| |string|,|}|)|#:| |string|↵|#trait| |IEvent|(||)| |{|→|#fun| |callback|(||)|#:| |(|number|)| |=>| |unit|←|↵|}|↵|#trait| |SearchFunc|(||)| |{|→|#fun| |__call|(|source|#:| |string|,| |subString|#:| |string|)|#:| |(|false|)| ||| |(|true|)|←|↵|}|↵|#trait| |StringArray|(||)| |{|→|#fun| |__index|(|index|#:| |number|)|#:| |string|←|↵|}|↵|#trait| |Counter|(||)| |{|→|#fun| |__call|(|start|#:| |number|)|#:| |string|↵|#let| |interval|#:| |number|↵|#fun| |reset|(||)|#:| |unit|←|↵|}|↵|#trait| |Simple|(||)| |{|→|#let| |a|#:| |number|↵|#fun| |b|(|x|#:| |(|false|)| ||| |(|true|)|)|#:| |string|←|↵|}|↵|#trait| |Simple2|‹|T|›|(||)| |{|→|#let| |abc|#:| |T|←|↵|}|↵|#trait| |Next|(||)|#:| |Simple| |{||}|↵|#trait| |TTT|‹|T|›|(||)| |{|→|#fun| |ttt|(|x|#:| |T|)|#:| |T|←|↵|}|
-//│ Parsed: {trait IFoo() {let a: string; fun b: (x: number,) -> number; fun c: () -> bool; fun d: (x: string,) -> unit}; trait II‹T›() {fun test: (x: T,) -> number}; fun create: () -> {v: number}; fun get: (x: {t: string},) -> string; trait IEvent() {fun callback: () -> number -> unit}; trait SearchFunc() {fun __call: (source: string, subString: string,) -> bool}; trait StringArray() {fun __index: (index: number,) -> string}; trait Counter() {fun __call: (start: number,) -> string; let interval: number; fun reset: () -> unit}; trait Simple() {let a: number; fun b: (x: bool,) -> string}; trait Simple2‹T›() {let abc: T}; trait Next(): Simple {}; trait TTT‹T›() {fun ttt: (x: T,) -> T}}
+//│ |#trait| |IFoo|(||)| |{|→|#let| |a|#:| |string|↵|#fun| |b|(|x|#:| |number|)|#:| |number|↵|#fun| |c|(||)|#:| |(|false|)| ||| |(|true|)|↵|#fun| |d|(|x|#:| |string|)|#:| |unit|←|↵|}|↵|#trait| |II|‹|T|›|(||)| |{|→|#fun| |test|(|x|#:| |T|)|#:| |number|←|↵|}|↵|#fun| |create|(||)|#:| |{|v|#:| |number|,|}|↵|#fun| |get|(|x|#:| |{|t|#:| |string|,|}|)|#:| |string|↵|#trait| |IEvent|(||)| |{|→|#fun| |callback|(||)|#:| |(|number|)| |=>| |unit|←|↵|}|↵|#trait| |SearchFunc|(||)| |{|→|#let| |__call|#:| |Unsupported|‹|"(source: string, subString: string): boolean;"|,| |"ts2mls/js/src/test/typescript/InterfaceMember.ts"|,| |24|,| |22|›|←|↵|}|↵|#trait| |StringArray|(||)| |{|→|#let| |__index|#:| |Unsupported|‹|"[index: number]: string;"|,| |"ts2mls/js/src/test/typescript/InterfaceMember.ts"|,| |28|,| |23|›|←|↵|}|↵|#trait| |Counter|(||)| |{|→|#let| |__call|#:| |Unsupported|‹|"(start: number): string;"|,| |"ts2mls/js/src/test/typescript/InterfaceMember.ts"|,| |32|,| |19|›|↵|#let| |interval|#:| |number|↵|#fun| |reset|(||)|#:| |unit|←|↵|}|↵|#trait| |Simple|(||)| |{|→|#let| |a|#:| |number|↵|#fun| |b|(|x|#:| |(|false|)| ||| |(|true|)|)|#:| |string|←|↵|}|↵|#trait| |Simple2|‹|T|›|(||)| |{|→|#let| |abc|#:| |T|←|↵|}|↵|#trait| |Next|(||)|#:| |Simple| |{||}|↵|#trait| |TTT|‹|T|›|(||)| |{|→|#fun| |ttt|(|x|#:| |T|)|#:| |T|←|↵|}|
+//│ Parsed: {trait IFoo() {let a: string; fun b: (x: number,) -> number; fun c: () -> bool; fun d: (x: string,) -> unit}; trait II‹T›() {fun test: (x: T,) -> number}; fun create: () -> {v: number}; fun get: (x: {t: string},) -> string; trait IEvent() {fun callback: () -> number -> unit}; trait SearchFunc() {let __call: Unsupported["(source: string, subString: string): boolean;", "ts2mls/js/src/test/typescript/InterfaceMember.ts", 24, 22]}; trait StringArray() {let __index: Unsupported["[index: number]: string;", "ts2mls/js/src/test/typescript/InterfaceMember.ts", 28, 23]}; trait Counter() {let __call: Unsupported["(start: number): string;", "ts2mls/js/src/test/typescript/InterfaceMember.ts", 32, 19]; let interval: number; fun reset: () -> unit}; trait Simple() {let a: number; fun b: (x: bool,) -> string}; trait Simple2‹T›() {let abc: T}; trait Next(): Simple {}; trait TTT‹T›() {fun ttt: (x: T,) -> T}}

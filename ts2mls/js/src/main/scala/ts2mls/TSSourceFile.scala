@@ -62,7 +62,11 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
   // get the type of variables in classes/named interfaces/anonymous interfaces
   private def getMemberType(node: TSNodeObject): TSType = {
     val res: TSType =
-      if (node.isFunctionLike) getFunctionType(node)
+      if (node.isIndexSignature || node.isCallSignature || node.isConstructSignature)
+        lineHelper.getPos(node.pos) match {
+          case (line, column) => TSUnsupportedType(node.toString(), node.filename, line, column)
+        }
+      else if (node.isFunctionLike) getFunctionType(node)
       else if (node.`type`.isUndefined) getObjectType(node.typeAtLocation)
       else if (node.`type`.isLiteralTypeNode) getLiteralType(node.`type`)
       else getObjectType(node.`type`.typeNode)
