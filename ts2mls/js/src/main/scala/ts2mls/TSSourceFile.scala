@@ -107,6 +107,29 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
       lst :+ getObjectType(h.types.get(index).typeNode)
     )
 
+  private def addMember(mem: TSType, node: TSNodeObject, name: String, others: Map[String, TSMemberType]): Map[String, TSMemberType] = mem match {
+    case func: TSFunctionType => {
+      if (!others.contains(name)) others ++ Map(name -> TSMemberType(func, node.modifier))
+      else { // deal with functions overloading
+        val old = others(name)
+        val res = old.base match {
+          case f @ TSFunctionType(_, _, tv) =>
+            if (!tv.isEmpty || !func.typeVars.isEmpty) TSIgnoredOverload(func, name)
+            else if (!node.isImplementationOfOverload) TSIntersectionType(f, func)
+            else f
+          case int: TSIntersectionType =>
+            if (!func.typeVars.isEmpty) TSIgnoredOverload(func, name)
+            else if (!node.isImplementationOfOverload) TSIntersectionType(int, func)
+            else int
+          case TSIgnoredOverload(_, name) => TSIgnoredOverload(func, name) // the implementation is always after declarations
+          case _ => old.base
+        }
+        others.removed(name) ++ Map(name -> TSMemberType(res, node.modifier))
+      }
+    }
+    case _ => others ++ Map(name -> TSMemberType(mem, node.modifier))
+  }
+
   private def getClassMembersType(list: TSNodeArray, requireStatic: Boolean): Map[String, TSMemberType] =
     list.foldLeft(Map[String, TSMemberType]())((mp, p) => {
       val name = p.symbol.escapedName
@@ -115,30 +138,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
         val mem =
           if (!p.isStatic) getMemberType(p)
           else parseMembers(name, p.initializer, true)
-
-        mem match {
-          case func: TSFunctionType => {
-            if (!mp.contains(name)) mp ++ Map(name -> TSMemberType(func, p.modifier))
-            else { // deal with functions overloading
-              val old = mp(name)
-              val res = old.base match {
-                case f @ TSFunctionType(_, _, tv) =>
-                  if (!tv.isEmpty || !func.typeVars.isEmpty) TSIgnoredOverload(func, name)
-                  else if (!p.isImplementationOfOverload) TSIntersectionType(f, func)
-                  else f
-                case int: TSIntersectionType =>
-                  if (!func.typeVars.isEmpty) TSIgnoredOverload(func, name)
-                  else if (!p.isImplementationOfOverload) TSIntersectionType(int, func)
-                  else int
-                case TSIgnoredOverload(_, name) => TSIgnoredOverload(func, name) // the implementation is always after declarations
-                case _ => old.base
-              }
-
-              mp.removed(name) ++ Map(name -> TSMemberType(res, p.modifier))
-            }
-          }
-          case _ => mp ++ Map(name -> TSMemberType(mem, p.modifier))
-        }
+        addMember(mem, p, name, mp)
       }
       else mp
     })
@@ -153,7 +153,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
     })
 
   private def getInterfacePropertiesType(list: TSNodeArray): Map[String, TSMemberType] =
-    list.foldLeft(Map[String, TSMemberType]())((mp, p) => mp ++ Map(p.symbol.escapedName -> TSMemberType(getMemberType(p))))
+    list.foldLeft(Map[String, TSMemberType]())((mp, p) => addMember(getMemberType(p), p, p.symbol.escapedName, mp))
 
   private def getAnonymousPropertiesType(list: TSSymbolArray): Map[String, TSMemberType] =
     list.foldLeft(Map[String, TSMemberType]())((mp, p) =>
