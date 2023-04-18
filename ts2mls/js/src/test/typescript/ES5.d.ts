@@ -1489,7 +1489,6 @@ interface TypedPropertyDescriptor<T> {
 
 declare type PromiseConstructorLike = new <T>(executor: (resolve: (value: T | PromiseLike<T>) => void, reject: (reason?: any) => void) => void) => PromiseLike<T>;
 
-// TODO:
 // interface PromiseLike<T> {
 //     /**
 //      * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -1520,21 +1519,21 @@ declare type PromiseConstructorLike = new <T>(executor: (resolve: (value: T | Pr
 //     catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): Promise<T | TResult>;
 // }
 
-// /**
-//  * Recursively unwraps the "awaited type" of a type. Non-promise "thenables" should resolve to `never`. This emulates the behavior of `await`.
-//  */
-// type Awaited<T> =
-//     T extends null | undefined ? T : // special case for `null | undefined` when not in `--strictNullChecks` mode
-//         T extends object & { then(onfulfilled: infer F, ...args: infer _): any } ? // `await` only unwraps object types with a callable `then`. Non-object types are not unwrapped
-//             F extends ((value: infer V, ...args: infer _) => any) ? // if the argument to `then` is callable, extracts the first argument
-//                 Awaited<V> : // recursively unwrap the value
-//                 never : // the argument to `then` was not callable
-//         T; // non-object or non-thenable
+/**
+ * Recursively unwraps the "awaited type" of a type. Non-promise "thenables" should resolve to `never`. This emulates the behavior of `await`.
+ */
+type Awaited<T> =
+    T extends null | undefined ? T : // special case for `null | undefined` when not in `--strictNullChecks` mode
+        T extends object & { then(onfulfilled: infer F, ...args: infer _): any } ? // `await` only unwraps object types with a callable `then`. Non-object types are not unwrapped
+            F extends ((value: infer V, ...args: infer _) => any) ? // if the argument to `then` is callable, extracts the first argument
+                Awaited<V> : // recursively unwrap the value
+                never : // the argument to `then` was not callable
+        T; // non-object or non-thenable
 
-// interface ArrayLike<T> {
-//     readonly length: number;
-//     readonly [n: number]: T;
-// }
+interface ArrayLike<T> {
+    readonly length: number;
+    readonly [n: number]: T;
+}
 
 // /**
 //  * Make all properties in T optional
@@ -1571,46 +1570,47 @@ declare type PromiseConstructorLike = new <T>(executor: (resolve: (value: T | Pr
 //     [P in K]: T;
 // };
 
-// /**
-//  * Exclude from T those types that are assignable to U
-//  */
-// type Exclude<T, U> = T extends U ? never : T;
+/**
+ * Exclude from T those types that are assignable to U
+ */
+type Exclude<T, U> = T extends U ? never : T;
 
-// /**
-//  * Extract from T those types that are assignable to U
-//  */
-// type Extract<T, U> = T extends U ? T : never;
+/**
+ * Extract from T those types that are assignable to U
+ */
+type Extract<T, U> = T extends U ? T : never;
 
-// /**
-//  * Construct a type with the properties of T except for those in type K.
-//  */
-// type Omit<T, K extends keyof any> = Pick<T, Exclude<keyof T, K>>;
+/**
+ * Construct a type with the properties of T except for those in type K.
+ */
+type Omit<T, K extends keyof any> = Pick<T, Exclude<keyof T, K>>;
 
-// /**
-//  * Exclude null and undefined from T
-//  */
-// type NonNullable<T> = T & {};
+/**
+ * Exclude null and undefined from T
+ */
+type NonNullable<T> = T & {};
 
-// /**
-//  * Obtain the parameters of a function type in a tuple
-//  */
-// type Parameters<T extends (...args: any) => any> = T extends (...args: infer P) => any ? P : never;
+/**
+ * Obtain the parameters of a function type in a tuple
+ */
+type Parameters<T extends (...args: any) => any> = T extends (...args: infer P) => any ? P : never;
 
-// /**
-//  * Obtain the parameters of a constructor function type in a tuple
-//  */
-// type ConstructorParameters<T extends abstract new (...args: any) => any> = T extends abstract new (...args: infer P) => any ? P : never;
+/**
+ * Obtain the parameters of a constructor function type in a tuple
+ */
+type ConstructorParameters<T extends abstract new (...args: any) => any> = T extends abstract new (...args: infer P) => any ? P : never;
 
-// /**
-//  * Obtain the return type of a function type
-//  */
-// type ReturnType<T extends (...args: any) => any> = T extends (...args: any) => infer R ? R : any;
+/**
+ * Obtain the return type of a function type
+ */
+type ReturnType<T extends (...args: any) => any> = T extends (...args: any) => infer R ? R : any;
 
-// /**
-//  * Obtain the return type of a constructor function type
-//  */
-// type InstanceType<T extends abstract new (...args: any) => any> = T extends abstract new (...args: any) => infer R ? R : any;
+/**
+ * Obtain the return type of a constructor function type
+ */
+type InstanceType<T extends abstract new (...args: any) => any> = T extends abstract new (...args: any) => infer R ? R : any;
 
+// TODO: intrinsic
 // /**
 //  * Convert string literal type to uppercase
 //  */

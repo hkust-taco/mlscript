@@ -155,7 +155,8 @@ class TSNodeObject(node: js.Dynamic)(implicit checker: TSTypeChecker) extends TS
   lazy val literal = TSTokenObject(node.literal)
   lazy val name = TSIdentifierObject(node.name)
 
-  override def toString(): String = node.getText().toString()
+  // TODO: multiline string support
+  override def toString(): String = node.getText().toString().replaceAll("\n", " ")
   lazy val filename: String =
     if (parent.isUndefined) node.fileName.toString()
     else parent.filename
