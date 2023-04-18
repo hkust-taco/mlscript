@@ -22,8 +22,11 @@ object TypeScript {
   val syntaxKindProtected = ts.SyntaxKind.ProtectedKeyword
   val syntaxKindStatic = ts.SyntaxKind.StaticKeyword
   val objectFlagsAnonymous = ts.ObjectFlags.Anonymous
+  val objectFlagsMapped = ts.ObjectFlags.Mapped
   val symbolFlagsOptional = ts.SymbolFlags.Optional // this flag is only for checking optional members of interfaces
-  val typeFlagsConditional = ts.TypeFlags.Conditional
+  val typeFlagsConditional = ts.TypeFlags.Conditional // T extends U ? X : Y
+  val typeFlagsIndex = ts.TypeFlags.Index // keyof T
+  val typeFlagsIndexedAccess = ts.TypeFlags.IndexedAccess // T[K]
 
   def isToken(node: js.Dynamic) = ts.isToken(node)
   def isClassDeclaration(node: js.Dynamic) = ts.isClassDeclaration(node)
@@ -187,7 +190,11 @@ class TSTypeObject(obj: js.Dynamic)(implicit checker: TSTypeChecker) extends TSA
   private lazy val flags = obj.flags
   private lazy val objectFlags = if (IsUndefined(obj.objectFlags)) 0 else obj.objectFlags
   private lazy val baseType = TSTypeObject(checker.getBaseType(obj))
-  private lazy val root = TSNodeObject(obj.root.node)
+  private lazy val root =
+    if (!IsUndefined(obj.root)) TSNodeObject(obj.root.node)
+    else if (!`type`.isUndefined && !`type`.symbol.isUndefined && !`type`.symbol.declaration.isUndefined)
+      `type`.symbol.declaration
+    else TSNodeObject(obj.declaration)
 
   lazy val symbol = TSSymbolObject(obj.symbol)
   lazy val typeArguments = TSTypeArray(checker.getTypeArguments(obj))
@@ -195,6 +202,7 @@ class TSTypeObject(obj: js.Dynamic)(implicit checker: TSTypeChecker) extends TSA
     if (!IsUndefined(obj.intrinsicName)) obj.intrinsicName.toString
     else baseType.intrinsicName
 
+  lazy val `type` = TSTypeObject(obj.selectDynamic("type"))
   lazy val types = TSTypeArray(obj.types)
   lazy val properties = TSSymbolArray(checker.getPropertiesOfType(obj))
   lazy val node = TSNodeObject(checker.typeToTypeNode(obj))
@@ -207,10 +215,13 @@ class TSTypeObject(obj: js.Dynamic)(implicit checker: TSTypeChecker) extends TSA
   lazy val isIntersectionType = obj.isIntersection()
   lazy val isFunctionLike = node.isFunctionLike
   lazy val isAnonymous = objectFlags == TypeScript.objectFlagsAnonymous
+  lazy val isMapped = objectFlags == TypeScript.objectFlagsMapped // mapping a type to another by using `keyof` and so on
   lazy val isTypeParameter = flags == TypeScript.typeFlagsTypeParameter
   lazy val isObject = flags == TypeScript.typeFlagsObject
   lazy val isTypeParameterSubstitution = isObject && typeArguments.length > 0
   lazy val isConditionalType = flags == TypeScript.typeFlagsConditional
+  lazy val isIndexType = flags == TypeScript.typeFlagsIndex
+  lazy val isIndexedAccessType = flags == TypeScript.typeFlagsIndexedAccess
 
   override def toString(): String = root.toString()
   lazy val filename = root.filename

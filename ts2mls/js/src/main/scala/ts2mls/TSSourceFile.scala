@@ -27,7 +27,10 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
     })
 
   private def getObjectType(obj: TSTypeObject): TSType =
-    if (obj.isEnumType) TSEnumType
+    if (obj.isMapped) lineHelper.getPos(obj.pos) match {
+        case (line, column) => TSUnsupportedType(obj.toString(), obj.filename, line, column)
+      }
+    else if (obj.isEnumType) TSEnumType
     else if (obj.isFunctionLike) getFunctionType(obj.symbol.declaration)
     else if (obj.isTupleType) TSTupleType(getTupleElements(obj.typeArguments))
     else if (obj.isUnionType) getStructuralType(obj.types, true)
@@ -38,7 +41,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
       if (obj.isAnonymous) TSInterfaceType("", getAnonymousPropertiesType(obj.properties), List(), List())
       else TSReferenceType(obj.symbol.fullName)
     else if (obj.isTypeParameter) TSTypeParameter(obj.symbol.escapedName)
-    else if (obj.isConditionalType) lineHelper.getPos(obj.pos) match {
+    else if (obj.isConditionalType || obj.isIndexType || obj.isIndexedAccessType) lineHelper.getPos(obj.pos) match {
       case (line, column) => TSUnsupportedType(obj.toString(), obj.filename, line, column)
     }
     else TSPrimitiveType(obj.intrinsicName)
