@@ -607,8 +607,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
               val (res, funMembers) = td.kind match {
                 
                 case Trt =>
-                  err(msg"traits are not yet supported" -> td.toLoc :: Nil)
-                  ???
+                  TypedNuAls(outerCtx.lvl, td, tparams, err(msg"traits are not yet supported" -> td.toLoc :: Nil)) -> Nil
                   
                 case Als =>
                   

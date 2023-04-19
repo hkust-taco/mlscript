@@ -1,5 +1,7 @@
 :NewParser
-:ParseOnly
+:NewDefs
+:NoJS
+:AllowTypeErrors
 class A() {
   fun foo(): unit
 }
@@ -33,12 +35,118 @@ trait O<I>() {
 class OR<R>(): O<R> {
   fun xx(x: R): R
 }
-namespace Five {
+module Five {
   class ROTK() {
     let wu: string
   }
   class Y(): Five.ROTK {}
 }
 class Y(): Five.ROTK {}
-//│ |#class| |A|(||)| |{|→|#fun| |foo|(||)|#:| |unit|←|↵|}|↵|#class| |B|(||)|#:| |A| |{||}|↵|#class| |C|‹|T|›|(||)| |{|→|#fun| |set|(|x|#:| |T|)|#:| |unit|↵|#fun| |get|(||)|#:| |T|←|↵|}|↵|#class| |D|(||)|#:| |C|‹|number|›| |{||}|↵|#trait| |Wu|(||)| |{|→|#let| |x|#:| |(|false|)| ||| |(|true|)|←|↵|}|↵|#class| |WuWu|(||)|#:| |Wu| |{|→|#let| |y|#:| |(|false|)| ||| |(|true|)|←|↵|}|↵|#trait| |WuWuWu|(||)|#:| |WuWu| |{|→|#let| |z|#:| |(|false|)| ||| |(|true|)|←|↵|}|↵|#trait| |Never|(||)|#:| |WuWuWu| |{|→|#fun| |w|(||)|#:| |nothing|←|↵|}|↵|#class| |VG|‹|T|›|(||)| |{|→|#let| |x|#:| |T|←|↵|}|↵|#class| |Home|‹|T|›|(||)|#:| |VG|‹|string|›| |{|→|#let| |y|#:| |T|←|↵|}|↵|#trait| |O|‹|I|›|(||)| |{|→|#fun| |xx|(|x|#:| |I|)|#:| |I|←|↵|}|↵|#class| |OR|‹|R|›|(||)|#:| |O|‹|R|›| |{|→|#fun| |xx|(|x|#:| |R|)|#:| |R|←|↵|}|↵|#namespace| |Five| |{|→|#class| |ROTK|(||)| |{|→|#let| |wu|#:| |string|←|↵|}|↵|#class| |Y|(||)|#:| |Five|.ROTK| |{||}|←|↵|}|↵|#class| |Y|(||)|#:| |Five|.ROTK| |{||}|
-//│ Parsed: {class A() {fun foo: () -> unit}; class B(): A {}; class C‹T›() {fun set: (x: T,) -> unit; fun get: () -> T}; class D(): C[number] {}; trait Wu() {let x: bool}; class WuWu(): Wu {let y: bool}; trait WuWuWu(): WuWu {let z: bool}; trait Never(): WuWuWu {fun w: () -> nothing}; class VG‹T›() {let x: T}; class Home‹T›(): VG[string] {let y: T}; trait O‹I›() {fun xx: (x: I,) -> I}; class OR‹R›(): O[R] {fun xx: (x: R,) -> R}; module Five() {class ROTK() {let wu: string}; class Y(): Five.ROTK {}}; class Y(): Five.ROTK {}}
+//│ ╔══[ERROR] Member foo is declared but not defined
+//│ ║  l.6: 	  fun foo(): unit
+//│ ╙──     	      ^^^
+//│ ╔══[ERROR] type signatures not yet supported for classes
+//│ ║  l.8: 	class B(): A {}
+//│ ╙──     	           ^
+//│ ╔══[ERROR] Member set is declared but not defined
+//│ ║  l.10: 	  fun set(x: T): unit
+//│ ╙──      	      ^^^
+//│ ╔══[ERROR] Member get is declared but not defined
+//│ ║  l.11: 	  fun get(): T
+//│ ╙──      	      ^^^
+//│ ╔══[ERROR] type signatures not yet supported for classes
+//│ ║  l.13: 	class D(): C<number> {}
+//│ ╙──      	           ^^^^^^^^^
+//│ ╔══[ERROR] traits are not yet supported
+//│ ║  l.14: 	trait Wu() {
+//│ ║        	^^^^^^^^^^^^
+//│ ║  l.15: 	  let x: (false) | (true)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.16: 	}
+//│ ╙──      	^
+//│ ╔══[ERROR] trait Wu cannot be used as a type
+//│ ║  l.17: 	class WuWu(): Wu {
+//│ ╙──      	              ^^
+//│ ╔══[ERROR] type signatures not yet supported for classes
+//│ ║  l.17: 	class WuWu(): Wu {
+//│ ╙──      	              ^^
+//│ ╔══[ERROR] traits are not yet supported
+//│ ║  l.20: 	trait WuWuWu(): WuWu {
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.21: 	  let z: (false) | (true)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.22: 	}
+//│ ╙──      	^
+//│ ╔══[ERROR] traits are not yet supported
+//│ ║  l.23: 	trait Never(): WuWuWu {
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.24: 	  fun w(): nothing
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ║  l.25: 	}
+//│ ╙──      	^
+//│ ╔══[ERROR] Member w is declared but not defined
+//│ ║  l.24: 	  fun w(): nothing
+//│ ╙──      	      ^
+//│ ╔══[ERROR] type signatures not yet supported for classes
+//│ ║  l.29: 	class Home<T>(): VG<string> {
+//│ ╙──      	                 ^^^^^^^^^^
+//│ ╔══[ERROR] traits are not yet supported
+//│ ║  l.32: 	trait O<I>() {
+//│ ║        	^^^^^^^^^^^^^^
+//│ ║  l.33: 	  fun xx(x: I): I
+//│ ║        	^^^^^^^^^^^^^^^^^
+//│ ║  l.34: 	}
+//│ ╙──      	^
+//│ ╔══[ERROR] Member xx is declared but not defined
+//│ ║  l.33: 	  fun xx(x: I): I
+//│ ╙──      	      ^^
+//│ ╔══[ERROR] trait O cannot be used as a type
+//│ ║  l.35: 	class OR<R>(): O<R> {
+//│ ╙──      	               ^^^^
+//│ ╔══[ERROR] type signatures not yet supported for classes
+//│ ║  l.35: 	class OR<R>(): O<R> {
+//│ ╙──      	               ^^^^
+//│ ╔══[ERROR] Member xx is declared but not defined
+//│ ║  l.36: 	  fun xx(x: R): R
+//│ ╙──      	      ^^
+//│ ╔══[ERROR] Module `Five` is not supported yet.
+//│ ║  l.42: 	  class Y(): Five.ROTK {}
+//│ ╙──      	                 ^^^^^
+//│ ╔══[ERROR] type signatures not yet supported for classes
+//│ ║  l.42: 	  class Y(): Five.ROTK {}
+//│ ╙──      	             ^^^^^^^^^
+//│ ╔══[ERROR] type signatures not yet supported for classes
+//│ ║  l.44: 	class Y(): Five.ROTK {}
+//│ ╙──      	           ^^^^^^^^^
+//│ class A() {
+//│   fun foo: () -> unit
+//│ }
+//│ class B()
+//│ class C[T]() {
+//│   fun get: () -> T
+//│   fun set: (x: T,) -> unit
+//│ }
+//│ class D()
+//│ trait Wu()
+//│ class WuWu() {
+//│   let y: bool
+//│ }
+//│ trait WuWuWu()
+//│ trait Never()
+//│ class VG[T]() {
+//│   let x: T
+//│ }
+//│ class Home[T]() {
+//│   let y: T
+//│ }
+//│ trait O[I]()
+//│ class OR[R]() {
+//│   fun xx: (x: R,) -> R
+//│ }
+//│ module Five() {
+//│   class ROTK() {
+//│     let wu: string
+//│   }
+//│   class Y()
+//│ }
+//│ class Y()

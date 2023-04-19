@@ -1,12 +1,14 @@
 :NewParser
-:ParseOnly
+:NewDefs
+:NoJS
+:AllowTypeErrors
 fun multi1(x: number): number
 fun multi3(): unit
 class Foo(): Base {}
 trait AnotherBase() {
   let y: string
 }
-namespace N {
+module N {
   fun f(): unit
   fun g(): unit
   fun h(): unit
@@ -18,5 +20,52 @@ trait Base() {
 }
 class AnotherFoo(): AnotherBase {}
 fun multi5(): unit
-//│ |#fun| |multi1|(|x|#:| |number|)|#:| |number|↵|#fun| |multi3|(||)|#:| |unit|↵|#class| |Foo|(||)|#:| |Base| |{||}|↵|#trait| |AnotherBase|(||)| |{|→|#let| |y|#:| |string|←|↵|}|↵|#namespace| |N| |{|→|#fun| |f|(||)|#:| |unit|↵|#fun| |g|(||)|#:| |unit|↵|#fun| |h|(||)|#:| |unit|←|↵|}|↵|#fun| |multi2|(|x|#:| |string|)|#:| |string|↵|#fun| |multi4|(||)|#:| |unit|↵|#trait| |Base|(||)| |{|→|#let| |a|#:| |number|←|↵|}|↵|#class| |AnotherFoo|(||)|#:| |AnotherBase| |{||}|↵|#fun| |multi5|(||)|#:| |unit|
-//│ Parsed: {fun multi1: (x: number,) -> number; fun multi3: () -> unit; class Foo(): Base {}; trait AnotherBase() {let y: string}; module N() {fun f: () -> unit; fun g: () -> unit; fun h: () -> unit}; fun multi2: (x: string,) -> string; fun multi4: () -> unit; trait Base() {let a: number}; class AnotherFoo(): AnotherBase {}; fun multi5: () -> unit}
+//│ ╔══[ERROR] trait Base cannot be used as a type
+//│ ║  l.7: 	class Foo(): Base {}
+//│ ╙──     	             ^^^^
+//│ ╔══[ERROR] type signatures not yet supported for classes
+//│ ║  l.7: 	class Foo(): Base {}
+//│ ╙──     	             ^^^^
+//│ ╔══[ERROR] traits are not yet supported
+//│ ║  l.8: 	trait AnotherBase() {
+//│ ║       	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.9: 	  let y: string
+//│ ║       	^^^^^^^^^^^^^^^
+//│ ║  l.10: 	}
+//│ ╙──      	^
+//│ ╔══[ERROR] Member f is declared but not defined
+//│ ║  l.12: 	  fun f(): unit
+//│ ╙──      	      ^
+//│ ╔══[ERROR] Member g is declared but not defined
+//│ ║  l.13: 	  fun g(): unit
+//│ ╙──      	      ^
+//│ ╔══[ERROR] Member h is declared but not defined
+//│ ║  l.14: 	  fun h(): unit
+//│ ╙──      	      ^
+//│ ╔══[ERROR] traits are not yet supported
+//│ ║  l.18: 	trait Base() {
+//│ ║        	^^^^^^^^^^^^^^
+//│ ║  l.19: 	  let a: number
+//│ ║        	^^^^^^^^^^^^^^^
+//│ ║  l.20: 	}
+//│ ╙──      	^
+//│ ╔══[ERROR] trait AnotherBase cannot be used as a type
+//│ ║  l.21: 	class AnotherFoo(): AnotherBase {}
+//│ ╙──      	                    ^^^^^^^^^^^
+//│ ╔══[ERROR] type signatures not yet supported for classes
+//│ ║  l.21: 	class AnotherFoo(): AnotherBase {}
+//│ ╙──      	                    ^^^^^^^^^^^
+//│ fun multi1: (x: number,) -> number
+//│ fun multi3: () -> unit
+//│ class Foo()
+//│ trait AnotherBase()
+//│ module N() {
+//│   fun f: () -> unit
+//│   fun g: () -> unit
+//│   fun h: () -> unit
+//│ }
+//│ fun multi2: (x: string,) -> string
+//│ fun multi4: () -> unit
+//│ trait Base()
+//│ class AnotherFoo()
+//│ fun multi5: () -> unit

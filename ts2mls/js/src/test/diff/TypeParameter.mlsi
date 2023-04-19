@@ -1,5 +1,7 @@
 :NewParser
-:ParseOnly
+:NewDefs
+:NoJS
+:AllowTypeErrors
 fun inc<T>(x: T): number
 class CC<T>() {
   fun print(s: T): unit
@@ -25,5 +27,88 @@ class FFF<T>() {
 }
 fun fff(p: FFF<string>, s: string): unit
 fun getFFF(): FFF<number>
-//│ |#fun| |inc|‹|T|›|(|x|#:| |T|)|#:| |number|↵|#class| |CC|‹|T|›|(||)| |{|→|#fun| |print|(|s|#:| |T|)|#:| |unit|←|↵|}|↵|#fun| |con|‹|U|,| |T|›|(|t|#:| |T|)|#:| |U|↵|#class| |Printer|‹|T|›|(||)| |{|→|#fun| |print|(|t|#:| |T|)|#:| |unit|←|↵|}|↵|#fun| |setStringPrinter|(|p|#:| |Printer|‹|string|›|)|#:| |unit|↵|#fun| |getStringPrinter|(||)|#:| |Printer|‹|string|›|↵|#fun| |foo|‹|T|›|(|p|#:| |Printer|‹|T|›|,| |x|#:| |T|)|#:| |T|↵|#fun| |foo2|‹|T|›|(|p|#:| |Printer|‹|T|›|,| |x|#:| |T|)|#:| |T|↵|#class| |F|‹|T|›|(||)| |{|→|#let| |x|#:| |T|↵|#fun| |GG|‹|U|›|(|y|#:| |U|)|#:| |T|←|↵|}|↵|#trait| |I|‹|T|›|(||)| |{|→|#let| |x|#:| |T|↵|#fun| |GG|‹|U|›|(|y|#:| |U|)|#:| |T|←|↵|}|↵|#class| |FFF|‹|T|›|(||)| |{|→|#fun| |fff|(|x|#:| |T|)|#:| |unit|←|↵|}|↵|#fun| |fff|(|p|#:| |FFF|‹|string|›|,| |s|#:| |string|)|#:| |unit|↵|#fun| |getFFF|(||)|#:| |FFF|‹|number|›|
-//│ Parsed: {fun inc: (x: T,) -> number; class CC‹T›() {fun print: (s: T,) -> unit}; fun con: (t: T,) -> U; class Printer‹T›() {fun print: (t: T,) -> unit}; fun setStringPrinter: (p: Printer[string],) -> unit; fun getStringPrinter: () -> Printer[string]; fun foo: (p: Printer[T], x: T,) -> T; fun foo2: (p: Printer[T], x: T,) -> T; class F‹T›() {let x: T; fun GG: (y: U,) -> T}; trait I‹T›() {let x: T; fun GG: (y: U,) -> T}; class FFF‹T›() {fun fff: (x: T,) -> unit}; fun fff: (p: FFF[string], s: string,) -> unit; fun getFFF: () -> FFF[number]}
+//│ ╔══[ERROR] Type parameters here are not yet supported in this position
+//│ ║  l.5: 	fun inc<T>(x: T): number
+//│ ╙──     	        ^
+//│ ╔══[ERROR] type identifier not found: T
+//│ ║  l.5: 	fun inc<T>(x: T): number
+//│ ╙──     	              ^
+//│ ╔══[ERROR] Member print is declared but not defined
+//│ ║  l.7: 	  fun print(s: T): unit
+//│ ╙──     	      ^^^^^
+//│ ╔══[ERROR] Type parameters here are not yet supported in this position
+//│ ║  l.9: 	fun con<U, T>(t: T): U
+//│ ╙──     	        ^
+//│ ╔══[ERROR] type identifier not found: T
+//│ ║  l.9: 	fun con<U, T>(t: T): U
+//│ ╙──     	                 ^
+//│ ╔══[ERROR] type identifier not found: U
+//│ ║  l.9: 	fun con<U, T>(t: T): U
+//│ ╙──     	                     ^
+//│ ╔══[ERROR] Member print is declared but not defined
+//│ ║  l.11: 	  fun print(t: T): unit
+//│ ╙──      	      ^^^^^
+//│ ╔══[ERROR] Type parameters here are not yet supported in this position
+//│ ║  l.15: 	fun foo<T>(p: Printer<T>, x: T): T
+//│ ╙──      	        ^
+//│ ╔══[ERROR] type identifier not found: T
+//│ ║  l.15: 	fun foo<T>(p: Printer<T>, x: T): T
+//│ ╙──      	                      ^
+//│ ╔══[ERROR] type identifier not found: T
+//│ ║  l.15: 	fun foo<T>(p: Printer<T>, x: T): T
+//│ ╙──      	                             ^
+//│ ╔══[ERROR] type identifier not found: T
+//│ ║  l.15: 	fun foo<T>(p: Printer<T>, x: T): T
+//│ ╙──      	                                 ^
+//│ ╔══[ERROR] Type parameters here are not yet supported in this position
+//│ ║  l.16: 	fun foo2<T>(p: Printer<T>, x: T): T
+//│ ╙──      	         ^
+//│ ╔══[ERROR] type identifier not found: T
+//│ ║  l.16: 	fun foo2<T>(p: Printer<T>, x: T): T
+//│ ╙──      	                       ^
+//│ ╔══[ERROR] type identifier not found: T
+//│ ║  l.16: 	fun foo2<T>(p: Printer<T>, x: T): T
+//│ ╙──      	                              ^
+//│ ╔══[ERROR] type identifier not found: T
+//│ ║  l.16: 	fun foo2<T>(p: Printer<T>, x: T): T
+//│ ╙──      	                                  ^
+//│ ╔══[ERROR] Member GG is declared but not defined
+//│ ║  l.19: 	  fun GG<U>(y: U): T
+//│ ╙──      	      ^^
+//│ ╔══[ERROR] traits are not yet supported
+//│ ║  l.21: 	trait I<T>() {
+//│ ║        	^^^^^^^^^^^^^^
+//│ ║  l.22: 	  let x: T
+//│ ║        	^^^^^^^^^^
+//│ ║  l.23: 	  fun GG<U>(y: U): T
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.24: 	}
+//│ ╙──      	^
+//│ ╔══[ERROR] Member GG is declared but not defined
+//│ ║  l.23: 	  fun GG<U>(y: U): T
+//│ ╙──      	      ^^
+//│ ╔══[ERROR] Member fff is declared but not defined
+//│ ║  l.26: 	  fun fff(x: T): unit
+//│ ╙──      	      ^^^
+//│ fun inc: (x: error,) -> number
+//│ class CC[T]() {
+//│   fun print: (s: T,) -> unit
+//│ }
+//│ fun con: (t: error,) -> error
+//│ class Printer[T]() {
+//│   fun print: (t: T,) -> unit
+//│ }
+//│ fun setStringPrinter: (p: Printer[string],) -> unit
+//│ fun getStringPrinter: () -> Printer[string]
+//│ fun foo: (p: Printer[error], x: error,) -> error
+//│ fun foo2: (p: Printer[error], x: error,) -> error
+//│ class F[T]() {
+//│   fun GG: (y: anything,) -> T
+//│   let x: T
+//│ }
+//│ trait I[T]()
+//│ class FFF[T]() {
+//│   fun fff: (x: T,) -> unit
+//│ }
+//│ fun fff: (p: FFF[string], s: string,) -> unit
+//│ fun getFFF: () -> FFF[number]

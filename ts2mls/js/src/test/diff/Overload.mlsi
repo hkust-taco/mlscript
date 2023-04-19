@@ -1,5 +1,7 @@
 :NewParser
-:ParseOnly
+:NewDefs
+:NoJS
+:AllowTypeErrors
 fun f: ((number) => string) & ((string) => string)
 class M() {
   let foo: ((number) => string) & ((string) => string)
@@ -15,12 +17,50 @@ fun op: ((number) => ((number) | (undefined)) => unit) & ((number) => (((false) 
 fun swap: (((number, string, )) => (number, string, )) & (((string, number, )) => (number, string, ))
 fun u: ((((number) | (false)) | (true)) => string) & ((object) => string)
 fun doSome<T, U>(x: anything): unit /* warning: the overload of function doSome is not supported yet. */
-namespace XX {
+module XX {
   fun f<T>(x: T, n: anything): string /* warning: the overload of function f is not supported yet. */
 }
 class WWW() {
   fun F<T>(x: T): anything /* warning: the overload of function F is not supported yet. */
 }
 fun baz(): anything /* warning: the overload of function baz is not supported yet. */
-//│ |#fun| |f|#:| |(|(|number|)| |=>| |string|)| |&| |(|(|string|)| |=>| |string|)|↵|#class| |M|(||)| |{|→|#let| |foo|#:| |(|(|number|)| |=>| |string|)| |&| |(|(|string|)| |=>| |string|)|←|↵|}|↵|#fun| |app|#:| |(|(|(|string|)| |=>| |unit|)| |=>| |(|number|)| |=>| |unit|)| |&| |(|(|(|string|)| |=>| |unit|)| |=>| |(|string|)| |=>| |unit|)|↵|#fun| |create|#:| |(|(|number|)| |=>| |unit| |=>| |(|false|)| ||| |(|true|)|)| |&| |(|(|(|false|)| ||| |(|true|)|)| |=>| |unit| |=>| |(|false|)| ||| |(|true|)|)|↵|#fun| |g0|#:| |(|(|MutArray|‹|string|›|)| |=>| |string|)| |&| |(|(|MutArray|‹|object|›|)| |=>| |string|)|↵|#fun| |db|#:| |(|(|number|)| |=>| |MutArray|‹|number|›|)| |&| |(|(|object|)| |=>| |MutArray|‹|number|›|)|↵|#class| |N|(||)| |{||}|↵|#fun| |id|#:| |(|(|M|)| |=>| |unit|)| |&| |(|(|N|)| |=>| |unit|)|↵|#fun| |tst|#:| |(|(|{|z|#:| |number|,|}|)| |=>| |{|y|#:| |string|,|}|)| |&| |(|(|{|z|#:| |(|false|)| ||| |(|true|)|,|}|)| |=>| |{|y|#:| |string|,|}|)|↵|#fun| |op|#:| |(|(|number|)| |=>| |(|(|number|)| ||| |(|undefined|)|)| |=>| |unit|)| |&| |(|(|number|)| |=>| |(|(|(|false|)| ||| |(|true|)|)| ||| |(|undefined|)|)| |=>| |unit|)|↵|#fun| |swap|#:| |(|(|(|number|,| |string|,| |)|)| |=>| |(|number|,| |string|,| |)|)| |&| |(|(|(|string|,| |number|,| |)|)| |=>| |(|number|,| |string|,| |)|)|↵|#fun| |u|#:| |(|(|(|(|number|)| ||| |(|false|)|)| ||| |(|true|)|)| |=>| |string|)| |&| |(|(|object|)| |=>| |string|)|↵|#fun| |doSome|‹|T|,| |U|›|(|x|#:| |anything|)|#:| |unit| |/* warning: the overload of function doSome is not supported yet. */|↵|#namespace| |XX| |{|→|#fun| |f|‹|T|›|(|x|#:| |T|,| |n|#:| |anything|)|#:| |string| |/* warning: the overload of function f is not supported yet. */|←|↵|}|↵|#class| |WWW|(||)| |{|→|#fun| |F|‹|T|›|(|x|#:| |T|)|#:| |anything| |/* warning: the overload of function F is not supported yet. */|←|↵|}|↵|#fun| |baz|(||)|#:| |anything| |/* warning: the overload of function baz is not supported yet. */|
-//│ Parsed: {fun f: number -> string & string -> string; class M() {let foo: number -> string & string -> string}; fun app: (string -> unit) -> number -> unit & (string -> unit) -> string -> unit; fun create: number -> unit -> bool & bool -> unit -> bool; fun g0: MutArray[string] -> string & MutArray[object] -> string; fun db: number -> MutArray[number] & object -> MutArray[number]; class N() {}; fun id: M -> unit & N -> unit; fun tst: {z: number} -> {y: string} & {z: bool} -> {y: string}; fun op: number -> (number | undefined) -> unit & number -> (false | true | undefined) -> unit; fun swap: (number, string,) -> (number, string,) & (string, number,) -> (number, string,); fun u: (number | false | true) -> string & object -> string; fun doSome: (x: anything,) -> unit; module XX() {fun f: (x: T, n: anything,) -> string}; class WWW() {fun F: (x: T,) -> anything}; fun baz: () -> anything}
+//│ ╔══[ERROR] type identifier not found: object
+//│ ║  l.11: 	fun g0: ((MutArray<string>) => string) & ((MutArray<object>) => string)
+//│ ╙──      	                                                    ^^^^^^
+//│ ╔══[ERROR] type identifier not found: object
+//│ ║  l.12: 	fun db: ((number) => MutArray<number>) & ((object) => MutArray<number>)
+//│ ╙──      	                                          ^^^^^^^^
+//│ ╔══[ERROR] type identifier not found: object
+//│ ║  l.18: 	fun u: ((((number) | (false)) | (true)) => string) & ((object) => string)
+//│ ╙──      	                                                      ^^^^^^^^
+//│ ╔══[ERROR] Type parameters here are not yet supported in this position
+//│ ║  l.19: 	fun doSome<T, U>(x: anything): unit /* warning: the overload of function doSome is not supported yet. */
+//│ ╙──      	           ^
+//│ ╔══[ERROR] Member f is declared but not defined
+//│ ║  l.21: 	  fun f<T>(x: T, n: anything): string /* warning: the overload of function f is not supported yet. */
+//│ ╙──      	      ^
+//│ ╔══[ERROR] Member F is declared but not defined
+//│ ║  l.24: 	  fun F<T>(x: T): anything /* warning: the overload of function F is not supported yet. */
+//│ ╙──      	      ^
+//│ fun f: (number | string) -> string
+//│ class M() {
+//│   let foo: (number | string) -> string
+//│ }
+//│ fun app: (string -> unit) -> (number | string) -> unit
+//│ fun create: (false | number | true) -> unit -> bool
+//│ fun g0: MutArray[out error | string] -> string
+//│ fun db: (error | number) -> MutArray[number]
+//│ class N()
+//│ fun id: (M | N) -> unit
+//│ fun tst: {z: false | number | true} -> {y: string}
+//│ fun op: number -> (false | number | true | undefined) -> unit
+//│ fun swap: (number | string, number | string,) -> (number, string,)
+//│ fun u: (error | false | number | true) -> string
+//│ fun doSome: (x: anything,) -> unit
+//│ module XX() {
+//│   fun f: (x: anything, n: anything,) -> string
+//│ }
+//│ class WWW() {
+//│   fun F: (x: anything,) -> anything
+//│ }
+//│ fun baz: () -> anything

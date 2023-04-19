@@ -1,6 +1,8 @@
 :NewParser
-:ParseOnly
-namespace N1 {
+:NewDefs
+:NoJS
+:AllowTypeErrors
+module N1 {
   fun f(x: anything): number
   fun ff(y: anything): number
   class C() {
@@ -9,13 +11,13 @@ namespace N1 {
   trait I() {
     fun f(): number
   }
-  namespace N2 {
+  module N2 {
     fun fff(x: (false) | (true)): number
     fun gg(c: N1.C): N1.C
     class BBB(): N1.C {}
   }
 }
-namespace AA {
+module AA {
   fun f(x: anything): string
   class C() {
     fun f(): unit
@@ -23,10 +25,84 @@ namespace AA {
   trait I() {
     fun f(): number
   }
-  namespace N2 {
+  module N2 {
   }
 }
 fun f1(x: N1.C): N1.C
 fun f2(x: AA.C): AA.C
-//│ |#namespace| |N1| |{|→|#fun| |f|(|x|#:| |anything|)|#:| |number|↵|#fun| |ff|(|y|#:| |anything|)|#:| |number|↵|#class| |C|(||)| |{|→|#fun| |f|(||)|#:| |unit|←|↵|}|↵|#trait| |I|(||)| |{|→|#fun| |f|(||)|#:| |number|←|↵|}|↵|#namespace| |N2| |{|→|#fun| |fff|(|x|#:| |(|false|)| ||| |(|true|)|)|#:| |number|↵|#fun| |gg|(|c|#:| |N1|.C|)|#:| |N1|.C|↵|#class| |BBB|(||)|#:| |N1|.C| |{||}|←|↵|}|←|↵|}|↵|#namespace| |AA| |{|→|#fun| |f|(|x|#:| |anything|)|#:| |string|↵|#class| |C|(||)| |{|→|#fun| |f|(||)|#:| |unit|←|↵|}|↵|#trait| |I|(||)| |{|→|#fun| |f|(||)|#:| |number|←|↵|}|↵|#namespace| |N2| |{|↵|}|←|↵|}|↵|#fun| |f1|(|x|#:| |N1|.C|)|#:| |N1|.C|↵|#fun| |f2|(|x|#:| |AA|.C|)|#:| |AA|.C|
-//│ Parsed: {module N1() {fun f: (x: anything,) -> number; fun ff: (y: anything,) -> number; class C() {fun f: () -> unit}; trait I() {fun f: () -> number}; module N2() {fun fff: (x: bool,) -> number; fun gg: (c: N1.C,) -> N1.C; class BBB(): N1.C {}}}; module AA() {fun f: (x: anything,) -> string; class C() {fun f: () -> unit}; trait I() {fun f: () -> number}; module N2() {}}; fun f1: (x: N1.C,) -> N1.C; fun f2: (x: AA.C,) -> AA.C}
+//│ ╔══[ERROR] Member f is declared but not defined
+//│ ║  l.9: 	    fun f(): unit
+//│ ╙──     	        ^
+//│ ╔══[ERROR] traits are not yet supported
+//│ ║  l.11: 	  trait I() {
+//│ ║        	  ^^^^^^^^^^^
+//│ ║  l.12: 	    fun f(): number
+//│ ║        	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.13: 	  }
+//│ ╙──      	^^^
+//│ ╔══[ERROR] Member f is declared but not defined
+//│ ║  l.12: 	    fun f(): number
+//│ ╙──      	        ^
+//│ ╔══[ERROR] Module `N1` is not supported yet.
+//│ ║  l.16: 	    fun gg(c: N1.C): N1.C
+//│ ╙──      	                ^^
+//│ ╔══[ERROR] Module `N1` is not supported yet.
+//│ ║  l.16: 	    fun gg(c: N1.C): N1.C
+//│ ╙──      	                       ^^
+//│ ╔══[ERROR] Module `N1` is not supported yet.
+//│ ║  l.17: 	    class BBB(): N1.C {}
+//│ ╙──      	                   ^^
+//│ ╔══[ERROR] type signatures not yet supported for classes
+//│ ║  l.17: 	    class BBB(): N1.C {}
+//│ ╙──      	                 ^^^^
+//│ ╔══[ERROR] Member fff is declared but not defined
+//│ ║  l.15: 	    fun fff(x: (false) | (true)): number
+//│ ╙──      	        ^^^
+//│ ╔══[ERROR] Member gg is declared but not defined
+//│ ║  l.16: 	    fun gg(c: N1.C): N1.C
+//│ ╙──      	        ^^
+//│ ╔══[ERROR] Member f is declared but not defined
+//│ ║  l.6: 	  fun f(x: anything): number
+//│ ╙──     	      ^
+//│ ╔══[ERROR] Member ff is declared but not defined
+//│ ║  l.7: 	  fun ff(y: anything): number
+//│ ╙──     	      ^^
+//│ ╔══[ERROR] Member f is declared but not defined
+//│ ║  l.23: 	    fun f(): unit
+//│ ╙──      	        ^
+//│ ╔══[ERROR] traits are not yet supported
+//│ ║  l.25: 	  trait I() {
+//│ ║        	  ^^^^^^^^^^^
+//│ ║  l.26: 	    fun f(): number
+//│ ║        	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.27: 	  }
+//│ ╙──      	^^^
+//│ ╔══[ERROR] Member f is declared but not defined
+//│ ║  l.26: 	    fun f(): number
+//│ ╙──      	        ^
+//│ ╔══[ERROR] Member f is declared but not defined
+//│ ║  l.21: 	  fun f(x: anything): string
+//│ ╙──      	      ^
+//│ module N1() {
+//│   class C() {
+//│     fun f: () -> unit
+//│   }
+//│   trait I()
+//│   module N2() {
+//│     class BBB()
+//│     fun fff: (x: bool,) -> number
+//│     fun gg: (c: error,) -> error
+//│   }
+//│   fun f: (x: anything,) -> number
+//│   fun ff: (y: anything,) -> number
+//│ }
+//│ module AA() {
+//│   class C() {
+//│     fun f: () -> unit
+//│   }
+//│   trait I()
+//│   module N2()
+//│   fun f: (x: anything,) -> string
+//│ }
+//│ fun f1: (x: C,) -> C
+//│ fun f2: (x: C,) -> C

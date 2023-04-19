@@ -1,5 +1,7 @@
 :NewParser
-:ParseOnly
+:NewDefs
+:NoJS
+:AllowTypeErrors
 fun hello(): unit
 fun add(x: number, y: number): number
 fun sub(x: number, y: number): number
@@ -24,5 +26,41 @@ trait Barrrrrrrrr() {
 }
 fun inn2(b: Barrrrrrrrr): unit
 fun out2(): Barrrrrrrrr
-//│ |#fun| |hello|(||)|#:| |unit|↵|#fun| |add|(|x|#:| |number|,| |y|#:| |number|)|#:| |number|↵|#fun| |sub|(|x|#:| |number|,| |y|#:| |number|)|#:| |number|↵|#fun| |foo|(||)|#:| |number|↵|#fun| |id|(|x|#:| |anything|)|#:| |anything|↵|#fun| |odd|(|x|#:| |number|)|#:| |(|false|)| ||| |(|true|)|↵|#fun| |isnull|(|x|#:| |anything|)|#:| |(|false|)| ||| |(|true|)|↵|#fun| |bar|(||)|#:| |anything|↵|#fun| |nu|(|n|#:| |null|)|#:| |null|↵|#fun| |un|(|n|#:| |undefined|)|#:| |undefined|↵|#fun| |fail|(||)|#:| |nothing|↵|#fun| |create|(||)|#:| |object|↵|#fun| |pa|(|x|#:| |number|)|#:| |number|↵|#fun| |wtf|(|x|#:| |anything|)|#:| |unit|↵|#class| |Foooooo|(||)| |{|→|#let| |ooooooo|#:| |number|←|↵|}|↵|#fun| |inn|(|f|#:| |Foooooo|)|#:| |unit|↵|#fun| |out1|(||)|#:| |Foooooo|↵|#trait| |Barrrrrrrrr|(||)| |{|→|#let| |rrrrrrr|#:| |number|←|↵|}|↵|#fun| |inn2|(|b|#:| |Barrrrrrrrr|)|#:| |unit|↵|#fun| |out2|(||)|#:| |Barrrrrrrrr|
-//│ Parsed: {fun hello: () -> unit; fun add: (x: number, y: number,) -> number; fun sub: (x: number, y: number,) -> number; fun foo: () -> number; fun id: (x: anything,) -> anything; fun odd: (x: number,) -> bool; fun isnull: (x: anything,) -> bool; fun bar: () -> anything; fun nu: (n: null,) -> null; fun un: (n: undefined,) -> undefined; fun fail: () -> nothing; fun create: () -> object; fun pa: (x: number,) -> number; fun wtf: (x: anything,) -> unit; class Foooooo() {let ooooooo: number}; fun inn: (f: Foooooo,) -> unit; fun out1: () -> Foooooo; trait Barrrrrrrrr() {let rrrrrrr: number}; fun inn2: (b: Barrrrrrrrr,) -> unit; fun out2: () -> Barrrrrrrrr}
+//│ ╔══[ERROR] type identifier not found: object
+//│ ║  l.16: 	fun create(): object
+//│ ╙──      	              ^^^^^^
+//│ ╔══[ERROR] traits are not yet supported
+//│ ║  l.24: 	trait Barrrrrrrrr() {
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.25: 	  let rrrrrrr: number
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.26: 	}
+//│ ╙──      	^
+//│ ╔══[ERROR] trait Barrrrrrrrr cannot be used as a type
+//│ ║  l.27: 	fun inn2(b: Barrrrrrrrr): unit
+//│ ╙──      	            ^^^^^^^^^^^
+//│ ╔══[ERROR] trait Barrrrrrrrr cannot be used as a type
+//│ ║  l.28: 	fun out2(): Barrrrrrrrr
+//│ ╙──      	            ^^^^^^^^^^^
+//│ fun hello: () -> unit
+//│ fun add: (x: number, y: number,) -> number
+//│ fun sub: (x: number, y: number,) -> number
+//│ fun foo: () -> number
+//│ fun id: (x: anything,) -> anything
+//│ fun odd: (x: number,) -> bool
+//│ fun isnull: (x: anything,) -> bool
+//│ fun bar: () -> anything
+//│ fun nu: (n: null,) -> null
+//│ fun un: (n: undefined,) -> undefined
+//│ fun fail: () -> nothing
+//│ fun create: () -> error
+//│ fun pa: (x: number,) -> number
+//│ fun wtf: (x: anything,) -> unit
+//│ class Foooooo() {
+//│   let ooooooo: number
+//│ }
+//│ fun inn: (f: Foooooo,) -> unit
+//│ fun out1: () -> Foooooo
+//│ trait Barrrrrrrrr()
+//│ fun inn2: (b: Barrrrrrrrr,) -> unit
+//│ fun out2: () -> Barrrrrrrrr

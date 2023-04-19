@@ -1,7 +1,10 @@
 :NewParser
-:ParseOnly
+:NewDefs
+:NoJS
+:AllowTypeErrors
 fun pass(c: int): (false) | (true)
 fun stop(): int
 fun g(x: int): int
-//│ |#fun| |pass|(|c|#:| |int|)|#:| |(|false|)| ||| |(|true|)|↵|#fun| |stop|(||)|#:| |int|↵|#fun| |g|(|x|#:| |int|)|#:| |int|
-//│ Parsed: {fun pass: (c: int,) -> bool; fun stop: () -> int; fun g: (x: int,) -> int}
+//│ fun pass: (c: int,) -> bool
+//│ fun stop: () -> int
+//│ fun g: (x: int,) -> int

@@ -1,5 +1,7 @@
 :NewParser
-:ParseOnly
+:NewDefs
+:NoJS
+:AllowTypeErrors
 fun extend<T, U>(first: T, second: U): (T) & (U)
 fun foo<T, U>(x: (T) & (U)): unit
 fun over(f: ((number) => string) & ((object) => string)): string
@@ -17,5 +19,183 @@ fun tt<U, T, V>(x: ((U, T, )) & ((V, V, ))): ((U, T, )) & ((V, V, ))
 class A() {}
 class B() {}
 fun inter(c: (A) & (B)): (A) & (B)
-//│ |#fun| |extend|‹|T|,| |U|›|(|first|#:| |T|,| |second|#:| |U|)|#:| |(|T|)| |&| |(|U|)|↵|#fun| |foo|‹|T|,| |U|›|(|x|#:| |(|T|)| |&| |(|U|)|)|#:| |unit|↵|#fun| |over|(|f|#:| |(|(|number|)| |=>| |string|)| |&| |(|(|object|)| |=>| |string|)|)|#:| |string|↵|#trait| |IA|(||)| |{|→|#let| |x|#:| |number|←|↵|}|↵|#trait| |IB|(||)| |{|→|#let| |y|#:| |number|←|↵|}|↵|#fun| |iii|(|x|#:| |(|IA|)| |&| |(|IB|)|)|#:| |(|IA|)| |&| |(|IB|)|↵|#fun| |uu|‹|U|,| |V|,| |T|,| |P|›|(|x|#:| |(|(|(|(|U|)| |&| |(|T|)|)| ||| |(|(|U|)| |&| |(|P|)|)|)| ||| |(|(|V|)| |&| |(|T|)|)|)| ||| |(|(|V|)| |&| |(|P|)|)|)|#:| |(|(|(|(|U|)| |&| |(|T|)|)| ||| |(|(|U|)| |&| |(|P|)|)|)| ||| |(|(|V|)| |&| |(|T|)|)|)| ||| |(|(|V|)| |&| |(|P|)|)|↵|#fun| |iiii|‹|U|,| |T|,| |V|›|(|x|#:| |(|(|U|)| |&| |(|T|)|)| |&| |(|V|)|)|#:| |(|(|U|)| |&| |(|T|)|)| |&| |(|V|)|↵|#fun| |arr|‹|U|,| |T|›|(|a|#:| |(|MutArray|‹|U|›|)| |&| |(|MutArray|‹|T|›|)|)|#:| |(|MutArray|‹|U|›|)| |&| |(|MutArray|‹|T|›|)|↵|#fun| |tt|‹|U|,| |T|,| |V|›|(|x|#:| |(|(|U|,| |T|,| |)|)| |&| |(|(|V|,| |V|,| |)|)|)|#:| |(|(|U|,| |T|,| |)|)| |&| |(|(|V|,| |V|,| |)|)|↵|#class| |A|(||)| |{||}|↵|#class| |B|(||)| |{||}|↵|#fun| |inter|(|c|#:| |(|A|)| |&| |(|B|)|)|#:| |(|A|)| |&| |(|B|)|
-//│ Parsed: {fun extend: (first: T, second: U,) -> (T & U); fun foo: (x: T & U,) -> unit; fun over: (f: number -> string & object -> string,) -> string; trait IA() {let x: number}; trait IB() {let y: number}; fun iii: (x: IA & IB,) -> (IA & IB); fun uu: (x: U & T | U & P | V & T | V & P,) -> (U & T | U & P | V & T | V & P); fun iiii: (x: U & T & V,) -> (U & T & V); fun arr: (a: MutArray[U] & MutArray[T],) -> (MutArray[U] & MutArray[T]); fun tt: (x: (U, T,) & (V, V,),) -> ((U, T,) & (V, V,)); class A() {}; class B() {}; fun inter: (c: A & B,) -> (A & B)}
+//│ ╔══[ERROR] Type parameters here are not yet supported in this position
+//│ ║  l.5: 	fun extend<T, U>(first: T, second: U): (T) & (U)
+//│ ╙──     	           ^
+//│ ╔══[ERROR] type identifier not found: T
+//│ ║  l.5: 	fun extend<T, U>(first: T, second: U): (T) & (U)
+//│ ╙──     	                        ^
+//│ ╔══[ERROR] type identifier not found: U
+//│ ║  l.5: 	fun extend<T, U>(first: T, second: U): (T) & (U)
+//│ ╙──     	                                   ^
+//│ ╔══[ERROR] type identifier not found: T
+//│ ║  l.5: 	fun extend<T, U>(first: T, second: U): (T) & (U)
+//│ ╙──     	                                       ^^^
+//│ ╔══[ERROR] type identifier not found: U
+//│ ║  l.5: 	fun extend<T, U>(first: T, second: U): (T) & (U)
+//│ ╙──     	                                             ^^^
+//│ ╔══[ERROR] Type parameters here are not yet supported in this position
+//│ ║  l.6: 	fun foo<T, U>(x: (T) & (U)): unit
+//│ ╙──     	        ^
+//│ ╔══[ERROR] type identifier not found: T
+//│ ║  l.6: 	fun foo<T, U>(x: (T) & (U)): unit
+//│ ╙──     	                 ^^^
+//│ ╔══[ERROR] type identifier not found: U
+//│ ║  l.6: 	fun foo<T, U>(x: (T) & (U)): unit
+//│ ╙──     	                       ^^^
+//│ ╔══[ERROR] type identifier not found: object
+//│ ║  l.7: 	fun over(f: ((number) => string) & ((object) => string)): string
+//│ ╙──     	                                    ^^^^^^^^
+//│ ╔══[ERROR] traits are not yet supported
+//│ ║  l.8: 	trait IA() {
+//│ ║       	^^^^^^^^^^^^
+//│ ║  l.9: 	  let x: number
+//│ ║       	^^^^^^^^^^^^^^^
+//│ ║  l.10: 	}
+//│ ╙──      	^
+//│ ╔══[ERROR] traits are not yet supported
+//│ ║  l.11: 	trait IB() {
+//│ ║        	^^^^^^^^^^^^
+//│ ║  l.12: 	  let y: number
+//│ ║        	^^^^^^^^^^^^^^^
+//│ ║  l.13: 	}
+//│ ╙──      	^
+//│ ╔══[ERROR] trait IA cannot be used as a type
+//│ ║  l.14: 	fun iii(x: (IA) & (IB)): (IA) & (IB)
+//│ ╙──      	           ^^^^
+//│ ╔══[ERROR] trait IB cannot be used as a type
+//│ ║  l.14: 	fun iii(x: (IA) & (IB)): (IA) & (IB)
+//│ ╙──      	                  ^^^^
+//│ ╔══[ERROR] trait IA cannot be used as a type
+//│ ║  l.14: 	fun iii(x: (IA) & (IB)): (IA) & (IB)
+//│ ╙──      	                         ^^^^
+//│ ╔══[ERROR] trait IB cannot be used as a type
+//│ ║  l.14: 	fun iii(x: (IA) & (IB)): (IA) & (IB)
+//│ ╙──      	                                ^^^^
+//│ ╔══[ERROR] Type parameters here are not yet supported in this position
+//│ ║  l.15: 	fun uu<U, V, T, P>(x: ((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P))): ((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P))
+//│ ╙──      	       ^
+//│ ╔══[ERROR] type identifier not found: U
+//│ ║  l.15: 	fun uu<U, V, T, P>(x: ((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P))): ((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P))
+//│ ╙──      	                         ^^^
+//│ ╔══[ERROR] type identifier not found: T
+//│ ║  l.15: 	fun uu<U, V, T, P>(x: ((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P))): ((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P))
+//│ ╙──      	                               ^^^
+//│ ╔══[ERROR] type identifier not found: U
+//│ ║  l.15: 	fun uu<U, V, T, P>(x: ((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P))): ((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P))
+//│ ╙──      	                                       ^^^
+//│ ╔══[ERROR] type identifier not found: P
+//│ ║  l.15: 	fun uu<U, V, T, P>(x: ((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P))): ((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P))
+//│ ╙──      	                                             ^^^
+//│ ╔══[ERROR] type identifier not found: V
+//│ ║  l.15: 	fun uu<U, V, T, P>(x: ((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P))): ((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P))
+//│ ╙──      	                                                      ^^^
+//│ ╔══[ERROR] type identifier not found: T
+//│ ║  l.15: 	fun uu<U, V, T, P>(x: ((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P))): ((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P))
+//│ ╙──      	                                                            ^^^
+//│ ╔══[ERROR] type identifier not found: V
+//│ ║  l.15: 	fun uu<U, V, T, P>(x: ((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P))): ((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P))
+//│ ╙──      	                                                                     ^^^
+//│ ╔══[ERROR] type identifier not found: P
+//│ ║  l.15: 	fun uu<U, V, T, P>(x: ((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P))): ((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P))
+//│ ╙──      	                                                                           ^^^
+//│ ╔══[ERROR] type identifier not found: U
+//│ ║  l.15: 	fun uu<U, V, T, P>(x: ((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P))): ((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P))
+//│ ╙──      	                                                                                     ^^^
+//│ ╔══[ERROR] type identifier not found: T
+//│ ║  l.15: 	fun uu<U, V, T, P>(x: ((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P))): ((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P))
+//│ ╙──      	                                                                                           ^^^
+//│ ╔══[ERROR] type identifier not found: U
+//│ ║  l.15: 	fun uu<U, V, T, P>(x: ((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P))): ((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P))
+//│ ╙──      	                                                                                                   ^^^
+//│ ╔══[ERROR] type identifier not found: P
+//│ ║  l.15: 	fun uu<U, V, T, P>(x: ((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P))): ((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P))
+//│ ╙──      	                                                                                                         ^^^
+//│ ╔══[ERROR] type identifier not found: V
+//│ ║  l.15: 	fun uu<U, V, T, P>(x: ((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P))): ((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P))
+//│ ╙──      	                                                                                                                  ^^^
+//│ ╔══[ERROR] type identifier not found: T
+//│ ║  l.15: 	fun uu<U, V, T, P>(x: ((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P))): ((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P))
+//│ ╙──      	                                                                                                                        ^^^
+//│ ╔══[ERROR] type identifier not found: V
+//│ ║  l.15: 	fun uu<U, V, T, P>(x: ((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P))): ((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P))
+//│ ╙──      	                                                                                                                                 ^^^
+//│ ╔══[ERROR] type identifier not found: P
+//│ ║  l.15: 	fun uu<U, V, T, P>(x: ((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P))): ((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P))
+//│ ╙──      	                                                                                                                                       ^^^
+//│ ╔══[ERROR] Type parameters here are not yet supported in this position
+//│ ║  l.16: 	fun iiii<U, T, V>(x: ((U) & (T)) & (V)): ((U) & (T)) & (V)
+//│ ╙──      	         ^
+//│ ╔══[ERROR] type identifier not found: U
+//│ ║  l.16: 	fun iiii<U, T, V>(x: ((U) & (T)) & (V)): ((U) & (T)) & (V)
+//│ ╙──      	                      ^^^
+//│ ╔══[ERROR] type identifier not found: T
+//│ ║  l.16: 	fun iiii<U, T, V>(x: ((U) & (T)) & (V)): ((U) & (T)) & (V)
+//│ ╙──      	                            ^^^
+//│ ╔══[ERROR] type identifier not found: V
+//│ ║  l.16: 	fun iiii<U, T, V>(x: ((U) & (T)) & (V)): ((U) & (T)) & (V)
+//│ ╙──      	                                   ^^^
+//│ ╔══[ERROR] type identifier not found: U
+//│ ║  l.16: 	fun iiii<U, T, V>(x: ((U) & (T)) & (V)): ((U) & (T)) & (V)
+//│ ╙──      	                                          ^^^
+//│ ╔══[ERROR] type identifier not found: T
+//│ ║  l.16: 	fun iiii<U, T, V>(x: ((U) & (T)) & (V)): ((U) & (T)) & (V)
+//│ ╙──      	                                                ^^^
+//│ ╔══[ERROR] type identifier not found: V
+//│ ║  l.16: 	fun iiii<U, T, V>(x: ((U) & (T)) & (V)): ((U) & (T)) & (V)
+//│ ╙──      	                                                       ^^^
+//│ ╔══[ERROR] Type parameters here are not yet supported in this position
+//│ ║  l.17: 	fun arr<U, T>(a: (MutArray<U>) & (MutArray<T>)): (MutArray<U>) & (MutArray<T>)
+//│ ╙──      	        ^
+//│ ╔══[ERROR] type identifier not found: U
+//│ ║  l.17: 	fun arr<U, T>(a: (MutArray<U>) & (MutArray<T>)): (MutArray<U>) & (MutArray<T>)
+//│ ╙──      	                           ^
+//│ ╔══[ERROR] type identifier not found: T
+//│ ║  l.17: 	fun arr<U, T>(a: (MutArray<U>) & (MutArray<T>)): (MutArray<U>) & (MutArray<T>)
+//│ ╙──      	                                           ^
+//│ ╔══[ERROR] type identifier not found: U
+//│ ║  l.17: 	fun arr<U, T>(a: (MutArray<U>) & (MutArray<T>)): (MutArray<U>) & (MutArray<T>)
+//│ ╙──      	                                                           ^
+//│ ╔══[ERROR] type identifier not found: T
+//│ ║  l.17: 	fun arr<U, T>(a: (MutArray<U>) & (MutArray<T>)): (MutArray<U>) & (MutArray<T>)
+//│ ╙──      	                                                                           ^
+//│ ╔══[ERROR] Type parameters here are not yet supported in this position
+//│ ║  l.18: 	fun tt<U, T, V>(x: ((U, T, )) & ((V, V, ))): ((U, T, )) & ((V, V, ))
+//│ ╙──      	       ^
+//│ ╔══[ERROR] type identifier not found: U
+//│ ║  l.18: 	fun tt<U, T, V>(x: ((U, T, )) & ((V, V, ))): ((U, T, )) & ((V, V, ))
+//│ ╙──      	                     ^
+//│ ╔══[ERROR] type identifier not found: T
+//│ ║  l.18: 	fun tt<U, T, V>(x: ((U, T, )) & ((V, V, ))): ((U, T, )) & ((V, V, ))
+//│ ╙──      	                        ^
+//│ ╔══[ERROR] type identifier not found: V
+//│ ║  l.18: 	fun tt<U, T, V>(x: ((U, T, )) & ((V, V, ))): ((U, T, )) & ((V, V, ))
+//│ ╙──      	                                  ^
+//│ ╔══[ERROR] type identifier not found: V
+//│ ║  l.18: 	fun tt<U, T, V>(x: ((U, T, )) & ((V, V, ))): ((U, T, )) & ((V, V, ))
+//│ ╙──      	                                     ^
+//│ ╔══[ERROR] type identifier not found: U
+//│ ║  l.18: 	fun tt<U, T, V>(x: ((U, T, )) & ((V, V, ))): ((U, T, )) & ((V, V, ))
+//│ ╙──      	                                               ^
+//│ ╔══[ERROR] type identifier not found: T
+//│ ║  l.18: 	fun tt<U, T, V>(x: ((U, T, )) & ((V, V, ))): ((U, T, )) & ((V, V, ))
+//│ ╙──      	                                                  ^
+//│ ╔══[ERROR] type identifier not found: V
+//│ ║  l.18: 	fun tt<U, T, V>(x: ((U, T, )) & ((V, V, ))): ((U, T, )) & ((V, V, ))
+//│ ╙──      	                                                            ^
+//│ ╔══[ERROR] type identifier not found: V
+//│ ║  l.18: 	fun tt<U, T, V>(x: ((U, T, )) & ((V, V, ))): ((U, T, )) & ((V, V, ))
+//│ ╙──      	                                                               ^
+//│ fun extend: (first: error, second: error,) -> error
+//│ fun foo: (x: error,) -> unit
+//│ fun over: (f: (error | number) -> string,) -> string
+//│ trait IA()
+//│ trait IB()
+//│ fun iii: (x: IA & IB,) -> (IA & IB)
+//│ fun uu: (x: error,) -> error
+//│ fun iiii: (x: error,) -> error
+//│ fun arr: (a: MutArray[error],) -> MutArray[error]
+//│ fun tt: (x: (error, error,),) -> (error, error,)
+//│ class A()
+//│ class B()
+//│ fun inter: (c: nothing,) -> nothing

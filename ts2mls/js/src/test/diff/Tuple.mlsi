@@ -1,5 +1,7 @@
 :NewParser
-:ParseOnly
+:NewDefs
+:NoJS
+:AllowTypeErrors
 fun key(x: (string, (false) | (true), )): string
 fun value(x: (string, (false) | (true), )): (false) | (true)
 fun third(x: (number, number, number, )): number
@@ -16,5 +18,49 @@ class A() {
 }
 class B() {}
 fun swap(x: (A, B, )): (B, A, )
-//│ |#fun| |key|(|x|#:| |(|string|,| |(|false|)| ||| |(|true|)|,| |)|)|#:| |string|↵|#fun| |value|(|x|#:| |(|string|,| |(|false|)| ||| |(|true|)|,| |)|)|#:| |(|false|)| ||| |(|true|)|↵|#fun| |third|(|x|#:| |(|number|,| |number|,| |number|,| |)|)|#:| |number|↵|#fun| |vec2|(|x|#:| |number|,| |y|#:| |number|)|#:| |(|number|,| |number|,| |)|↵|#fun| |twoFunctions|(|ff|#:| |(|(|number|)| |=>| |number|,| |(|number|)| |=>| |number|,| |)|,| |x|#:| |number|)|#:| |number|↵|#fun| |tupleIt|(|x|#:| |string|)|#:| |(|unit| |=>| |string|,| |)|↵|#fun| |s|(|flag|#:| |(|false|)| ||| |(|true|)|)|#:| |(|(|string|)| ||| |(|number|)|,| |(|(|number|)| ||| |(|false|)|)| ||| |(|true|)|,| |)|↵|#fun| |s2|(|t|#:| |(|(|false|)| ||| |(|true|)|,| |(|string|)| ||| |(|number|)|,| |)|)|#:| |(|string|)| ||| |(|number|)|↵|#fun| |ex|‹|T|,| |U|›|(|x|#:| |T|,| |y|#:| |U|)|#:| |(|T|,| |U|,| |(|T|)| |&| |(|U|)|,| |)|↵|#fun| |foo|‹|T|,| |U|›|(|x|#:| |(|(|T|)| |&| |(|U|)|,| |)|)|#:| |unit|↵|#fun| |conv|(|x|#:| |{|y|#:| |number|,|}|)|#:| |(|{|y|#:| |number|,|}|,| |{|z|#:| |string|,|}|,| |)|↵|#class| |A|(||)| |{|→|#let| |x|#:| |number|←|↵|}|↵|#class| |B|(||)| |{||}|↵|#fun| |swap|(|x|#:| |(|A|,| |B|,| |)|)|#:| |(|B|,| |A|,| |)|
-//│ Parsed: {fun key: (x: (string, bool,),) -> string; fun value: (x: (string, bool,),) -> bool; fun third: (x: (number, number, number,),) -> number; fun vec2: (x: number, y: number,) -> (number, number,); fun twoFunctions: (ff: (number -> number, number -> number,), x: number,) -> number; fun tupleIt: (x: string,) -> unit -> string; fun s: (flag: bool,) -> (string | number, number | false | true,); fun s2: (t: (bool, string | number,),) -> (string | number); fun ex: (x: T, y: U,) -> (T, U, T & U,); fun foo: (x: T & U,) -> unit; fun conv: (x: {y: number},) -> ({y: number}, {z: string},); class A() {let x: number}; class B() {}; fun swap: (x: (A, B,),) -> (B, A,)}
+//│ ╔══[ERROR] Type parameters here are not yet supported in this position
+//│ ║  l.13: 	fun ex<T, U>(x: T, y: U): (T, U, (T) & (U), )
+//│ ╙──      	       ^
+//│ ╔══[ERROR] type identifier not found: T
+//│ ║  l.13: 	fun ex<T, U>(x: T, y: U): (T, U, (T) & (U), )
+//│ ╙──      	                ^
+//│ ╔══[ERROR] type identifier not found: U
+//│ ║  l.13: 	fun ex<T, U>(x: T, y: U): (T, U, (T) & (U), )
+//│ ╙──      	                      ^
+//│ ╔══[ERROR] type identifier not found: T
+//│ ║  l.13: 	fun ex<T, U>(x: T, y: U): (T, U, (T) & (U), )
+//│ ╙──      	                           ^
+//│ ╔══[ERROR] type identifier not found: U
+//│ ║  l.13: 	fun ex<T, U>(x: T, y: U): (T, U, (T) & (U), )
+//│ ╙──      	                              ^
+//│ ╔══[ERROR] type identifier not found: T
+//│ ║  l.13: 	fun ex<T, U>(x: T, y: U): (T, U, (T) & (U), )
+//│ ╙──      	                                 ^^^
+//│ ╔══[ERROR] type identifier not found: U
+//│ ║  l.13: 	fun ex<T, U>(x: T, y: U): (T, U, (T) & (U), )
+//│ ╙──      	                                       ^^^
+//│ ╔══[ERROR] Type parameters here are not yet supported in this position
+//│ ║  l.14: 	fun foo<T, U>(x: ((T) & (U), )): unit
+//│ ╙──      	        ^
+//│ ╔══[ERROR] type identifier not found: T
+//│ ║  l.14: 	fun foo<T, U>(x: ((T) & (U), )): unit
+//│ ╙──      	                  ^^^
+//│ ╔══[ERROR] type identifier not found: U
+//│ ║  l.14: 	fun foo<T, U>(x: ((T) & (U), )): unit
+//│ ╙──      	                        ^^^
+//│ fun key: (x: (string, bool,),) -> string
+//│ fun value: (x: (string, bool,),) -> bool
+//│ fun third: (x: (number, number, number,),) -> number
+//│ fun vec2: (x: number, y: number,) -> (number, number,)
+//│ fun twoFunctions: (ff: (number -> number, number -> number,), x: number,) -> number
+//│ fun tupleIt: (x: string,) -> unit -> string
+//│ fun s: (flag: bool,) -> (number | string, false | number | true,)
+//│ fun s2: (t: (bool, number | string,),) -> (number | string)
+//│ fun ex: (x: error, y: error,) -> (error, error, error,)
+//│ fun foo: (x: error,) -> unit
+//│ fun conv: (x: {y: number},) -> ({y: number}, {z: string},)
+//│ class A() {
+//│   let x: number
+//│ }
+//│ class B()
+//│ fun swap: (x: (A, B,),) -> (B, A,)
