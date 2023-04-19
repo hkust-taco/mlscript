@@ -111,6 +111,16 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
       case '$' if isUnquoteKey(i) =>
         go(i + 2, OPEN_BRACKET(BracketKind.Unquote))
       case '"' =>
+        //       val j = i + 1
+        // val (chars, k) = takeWhile(j)(c => c =/= '"' && c =/= '\n')
+        // if (bytes.lift(k) === Some('"')) 
+        //   go(k + 1, LITVAL(StrLit(chars)))
+        // else if (qcnt >= 1)
+        //   go(i + 1, CLOSE_BRACKET(BracketKind.Quasiquote))(qcnt - 1)
+        // else {
+        //   pe(msg"unclosed quotation mark")
+        //   go(k, LITVAL(StrLit(chars)))
+        // }
         if (qcnt >= 1)
           go(i + 1, CLOSE_BRACKET(BracketKind.Quasiquote))(qcnt - 1)
         else {

@@ -65,11 +65,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
                   nuTyDefs: Map[Str, TypedNuTypeDef],
                   quasiquoteLvl: Int, // > 0 means inside a quasiquote
                   inUnquoted: Boolean,
+                  inTuple: Boolean,
                   outerQuoteEnvironments: List[Ctx],
                   var outermostCtx: Opt[Ctx],
                   var overridingStrategy: Opt[SearchStrategy], // override once only, will set to N if the overrided strategy is used
-                  innerUnquoteContextRequirements: mutable.ListBuffer[SimpleType],
-                  outermostFreeVarType: MutSet[Str -> SimpleType],
+                  innerUnquoteContextRequirements: mutable.ListBuffer[TypeVariable],
+                  outermostFreeVarType: MutMap[Str, SimpleType],
                   outermostBoundedVarType: mutable.ListBuffer[Str]
                 ) {
 
@@ -125,7 +126,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
 
     def containsMth(parent: Opt[Str], nme: Str): Bool = containsMth(R(parent, nme))
 
-    def nest: Ctx = copy(Some(this), MutMap.empty, MutMap.empty, MutMap.empty, outermostFreeVarType = MutSet.empty, outermostBoundedVarType = ListBuffer.empty)
+    def nest: Ctx = copy(Some(this), MutMap.empty, MutMap.empty, MutMap.empty, outermostFreeVarType = MutMap.empty, outermostBoundedVarType = ListBuffer.empty)
 
     def nextLevel: Ctx = copy(lvl = lvl + 1)
 
@@ -149,10 +150,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       inUnquoted = false,
       outermostCtx = None,
       outerQuoteEnvironments = List.empty,
-      outermostFreeVarType = MutSet.empty,
+      outermostFreeVarType = MutMap.empty,
       outermostBoundedVarType = ListBuffer.empty,
       innerUnquoteContextRequirements = ListBuffer.empty,
-      overridingStrategy = None
+      overridingStrategy = None,
+      inTuple = false
     )
 
     val empty: Ctx = init
@@ -613,7 +615,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
 //            println(s"Adding $nme to ctx: $ctx")
             ctx.outermostCtx match {
               case Some(outermost) =>
-                outermost.outermostBoundedVarType.append(nme)
+                println(s"inTuple = ${ctx.inTuple}")
+                if (!outermost.outermostFreeVarType.contains(nme) && !ctx.inTuple)
+                  outermost.outermostBoundedVarType.append(nme)
               case _ => println(nme)
             }
             res
@@ -694,8 +698,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case tup: Tup if funkyTuples =>
         typeTerms(tup :: Nil, false, Nil)
       case Tup(fs) =>
+
         TupleType(fs.map { case (n, Fld(mut, _, t)) =>
-          val tym = typeTerm(t)
+          println(s"tup 3 - t: ${t}")
+          val tym = typeTerm(t)(ctx.copy(inTuple = true), raise, vars)
           val fprov = tp(t.toLoc, (if (mut) "mutable " else "") + "tuple field")
           if (mut) {
             val res = freshVar(fprov, n.map(_.name))
@@ -763,7 +769,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             }
           }
         })(prov)
-      case Bra(false, trm: Blk) => typeTerm(trm)
+      case Bra(false, trm: Blk) =>
+        typeTerm(trm)
       case Bra(rcd, trm@(_: Tup | _: Blk)) if funkyTuples => typeTerms(trm :: Nil, rcd, Nil)
       case Bra(_, trm) => typeTerm(trm)
       case Blk((s: Term) :: Nil) => typeTerm(s)
@@ -860,9 +867,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         val n_ty = typeLetRhs(isrec, nme.name, rhs)
         val newCtx = ctx.nest
         newCtx += nme.name -> VarSymbol(n_ty, nme)
-        println(s"Let: ${nme.name}")
         ctx.outermostCtx match {
           case Some(outermost) =>
+            if (!outermost.outermostFreeVarType.contains(nme.name) && !ctx.inTuple)
             outermost.outermostBoundedVarType.append(nme.name)
           case _ =>
             println(s"failed to insert ${nme.name} to bounded")
@@ -918,6 +925,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case New(base, args) => ???
       case TyApp(_, _) => ??? // TODO
       case Quoted(body) =>
+        println(s"class: ${body.getClass} (${body})")
         val nested = ctx.nest
         val nested_ctx = nested.copy(
           quasiquoteLvl = ctx.quasiquoteLvl + 1,
@@ -929,13 +937,14 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         val body_type = typeTerm(body)(nested_ctx, raise, vars)
         val empty_rcd = RecordType(Nil)(NoProv)
         val requirements = nested_ctx.innerUnquoteContextRequirements.toList
+        requirements.foreach( ty => println(s"up ${ty.upperBounds}"))
 
 //        println("local unquoted context:")
 //        println(requirements)
 
         val unquote_requirement = requirements match {
           case Nil => empty_rcd
-          case _ => requirements.reduce(_ & _)
+          case _ => requirements.reduce[SimpleType](_ & _)
         }
 
         val free_vars = nested_ctx.outermostFreeVarType.toList
@@ -951,11 +960,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
 //        println(nested_ctx.outermostBoundedVarType)
         val ctx_type = unquote_requirement & free_var_requirement
         val ctx_ty_without_bounded = ctx_type.without(nested_ctx.outermostBoundedVarType.map(Var(_)).toSortedSet)
-
-//        val tmp = freshVar(noProv)
-//        val lhs = RecordType((Var("test1"), FieldType(N, tmp)(noProv))::(Var("test2"), FieldType(N, tmp)(noProv)) ::Nil)(noProv)
-//        val rhs = RecordType((Var("test1"), FieldType(N, tmp)(noProv))::Nil)(noProv)
-//        lhs.without(rhs.fields.iterator.map(_._1).toSortedSet)
         TypeRef(TypeName("Code"), body_type :: ctx_ty_without_bounded :: Nil)(noProv)
       case Unquoted(body) =>
         ctx.parent match {
@@ -967,12 +971,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             val tt = freshVar(noProv)(0)
             val tc = freshVar(noProv)(0)
 
-
-            ctx.outermostCtx match {
-              case Some(p) =>
-                p.innerUnquoteContextRequirements.append(tc)
-              case _ => err("Unquotes should be enclosed with a quasiquote.", body.toLoc)(raise)
-            }
             // func <return_type> foo(<param_type> param)
             // Code[tt, tc] <: Code[T <- co, C <- cotra]
 
@@ -983,6 +981,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             val res = freshVar(prov)
 
             val resTy = con(f_ty, FunctionType(body_type, res)(prov), res)
+            println(s"Unquoted type: ${resTy} ${resTy.getClass}")
+            ctx.outermostCtx match {
+              case Some(p) =>
+                p.innerUnquoteContextRequirements.append(tc)
+              case _ => err("Unquotes should be enclosed with a quasiquote.", body.toLoc)(raise)
+            }
             resTy
           case _ => err("Unquotes should be enclosed with a quasiquote.", body.toLoc)(raise)
         }
