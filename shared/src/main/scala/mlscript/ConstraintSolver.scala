@@ -95,6 +95,21 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               case N => S(nope)
             }
         }
+
+      case trt: TypedNuTrt =>
+        trt.members.get(fld.name) match {
+          case S(d: TypedNuFun) =>
+            S(d.typeSignature.toUpper(provTODO))
+          case S(p: NuParam) =>
+            S(p.ty)
+          case S(m) =>
+            S(err(msg"access to ${m.kind.str} member not yet supported", fld.toLoc).toUpper(noProv))
+          case N =>
+            fromRft match {
+              case S(fty) => N
+              case N => S(nope)
+            }
+        }
         
       case _ => ??? // TODO
     }

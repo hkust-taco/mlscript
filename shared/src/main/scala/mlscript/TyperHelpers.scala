@@ -997,32 +997,21 @@ abstract class TyperHelpers { Typer: Typer =>
             }.toMap)
           case S(td: TypedNuTrt) => 
             assert(td.tparams.size === targs.size)
-            td.thisTy & RecordType(info.tparams.lazyZip(targs).map {
+            td.tags & RecordType(info.tparams.lazyZip(targs).map {
                     case ((tn, tv, vi), ta) => // TODO use vi
                       val fldNme = td.nme.name + "#" + tn.name
                       Var(fldNme).withLocOf(tn) -> FieldType(S(ta), ta)(provTODO)
                   })(provTODO)
           case S(td: TypedNuCls) =>
             assert(td.tparams.size === targs.size)
-            td.thisTy &
-              clsNameToNomTag(td.decl)(provTODO, ctx) &
-                RecordType(info.tparams.lazyZip(targs).map {
+            clsNameToNomTag(td.decl)(provTODO, ctx) &
+              td.tags & RecordType(info.tparams.lazyZip(targs).map {
                   case ((tn, tv, vi), ta) => // TODO use vi
                     val fldNme = td.nme.name + "#" + tn.name
                     Var(fldNme).withLocOf(tn) -> FieldType(S(ta), ta)(provTODO)
                 })(provTODO)
           case _ =>
             info.decl match {
-              case td: NuTypeDef if td.kind is Trt => ???
-                // assert(td.tparams.size === targs.size)
-                // // TODO add parent tags
-
-                // trtNameToNomTag(td)(provTODO, ctx) &
-                //   RecordType(info.tparams.lazyZip(targs).map {
-                //     case ((tn, tv, vi), ta) => // TODO use vi
-                //       val fldNme = td.nme.name + "#" + tn.name
-                //       Var(fldNme).withLocOf(tn) -> FieldType(S(ta), ta)(provTODO)
-                //   })(provTODO)
               case td: NuTypeDef if td.kind.isInstanceOf[ObjDefKind] =>
                 assert(td.tparams.size === targs.size)
                 clsNameToNomTag(td)(provTODO, ctx) &
@@ -1179,13 +1168,13 @@ abstract class TyperHelpers { Typer: Typer =>
       case TypedNuAls(level, td, tparams, body) =>
         tparams.iterator.foreach(tp => apply(pol.invar)(tp._2))
         apply(pol)(body)
-      case TypedNuCls(level, td, ttu, tparams, params, members, thisTy) =>
+      case TypedNuCls(level, td, ttu, tparams, params, members, thisTy, _) =>
         tparams.iterator.foreach(tp => apply(pol.invar)(tp._2))
         params.foreach(p => applyField(pol)(p._2))
         members.valuesIterator.foreach(applyMem(pol))
         // thisTy.foreach(apply(pol.invar)(_))
         apply(pol.contravar)(thisTy)
-      case TypedNuTrt(level, td, ttu, tparams, members, thisTy, sign) => 
+      case TypedNuTrt(level, td, ttu, tparams, members, thisTy, sign, _) => 
         tparams.iterator.foreach(tp => apply(pol.invar)(tp._2))
         members.valuesIterator.foreach(applyMem(pol))
         // thisTy.foreach(apply(pol.invar)(_))

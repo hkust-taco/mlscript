@@ -6,17 +6,28 @@ trait Test {
     fun bar: bool -> bool
 }
 //│ trait Test() {
-//│   this: #Test
 //│   fun bar: bool -> bool
 //│   fun foo: int
 //│ }
+
+// FIXME
+fun ts(x: Test) = x.foo
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.14: 	fun ts(x: Test) = x.foo
+//│ ║        	                  ^^^^^
+//│ ╟── type `Test` does not have field 'foo'
+//│ ║  l.14: 	fun ts(x: Test) = x.foo
+//│ ║        	          ^^^^
+//│ ╟── but it flows into reference with expected type `{foo: ?foo}`
+//│ ║  l.14: 	fun ts(x: Test) = x.foo
+//│ ╙──      	                  ^
+//│ fun ts: (x: Test,) -> error
 
 trait Oth extends Test {
     let a : int
     fun cool : int -> bool
 }
 //│ trait Oth() {
-//│   this: #Oth & #Test
 //│   let a: int
 //│   fun bar: bool -> bool
 //│   fun cool: int -> bool
@@ -34,13 +45,11 @@ trait Anemo {
     fun ter: bool
 }
 //│ trait Geo() {
-//│   this: #Geo
 //│   fun get: bool | int
 //│   fun ter: int
 //│   let v: 2 | 3
 //│ }
 //│ trait Anemo() {
-//│   this: #Anemo
 //│   fun get: bool | string
 //│   fun ter: bool
 //│   let v: 1 | 2
@@ -48,7 +57,6 @@ trait Anemo {
 
 trait Mixed extends Geo, Anemo
 //│ trait Mixed() {
-//│   this: #Anemo & #Geo & #Mixed
 //│   fun get: bool
 //│   fun ter: nothing
 //│   let v: 2
@@ -92,46 +100,109 @@ class F extends Oth, M, Mixed {
 //│ }
 
 let c = C()
+//│ let c: C & #Test
+
 c.foo
+//│ int
+
 c.bar(true)
-//│ let c: C
 //│ bool
 
-// FIXME
 c: Test
-//│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.101: 	c: Test
-//│ ║         	^
-//│ ╟── application of type `C` is not an instance of type `Test`
-//│ ║  l.94: 	let c = C()
-//│ ║        	        ^^^
-//│ ╟── but it flows into reference with expected type `#Test`
-//│ ║  l.101: 	c: Test
-//│ ║         	^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.101: 	c: Test
-//│ ╙──       	   ^^^^
+let c1: Test = C()
+//│ let c1: Test
 //│ Test
 
+:d
+fun fcc(x: C) = x.foo
+//│ 0. Typing TypingUnit(List(fun fcc = (x: C,) => (x).foo))
+//│ | 0. Created lazy type info for fun fcc = (x: C,) => (x).foo
+//│ | Completing fun fcc = (x: C,) => (x).foo
+//│ | | UNSTASHING... (out)
+//│ | | Type params 
+//│ | | UNSTASHING... (out)
+//│ | | Params 
+//│ | | 1. Typing term (x: C,) => (x).foo
+//│ | | | 1. Typing pattern x: C,
+//│ | | | | 1. Typing pattern x : C
+//│ | | | | | Typing type TypeName(C)
+//│ | | | | | | vars=Map() newDefsInfo=Map()
+//│ | | | | | | 1. type TypeName(C)
+//│ | | | | | | => C
+//│ | | | | | => C ——— 
+//│ | | | | 1. : C
+//│ | | | 1. : (x: C,)
+//│ | | | 1. Typing term (x).foo
+//│ | | | | 1. Typing term x
+//│ | | | | 1. : C
+//│ | | | | CONSTRAIN C <! {foo: foo76'}
+//│ | | | |   where 
+//│ | | | | 1. C C <! {foo: foo76'}    (0)
+//│ | | | | | 1. ARGH  DNF(0, C<Eql>{}∧#Test)  <!  DNF(1, {foo: foo76'})
+//│ | | | | | | DNF DISCHARGE CONSTRAINTS
+//│ | | | | | | Consider C<Eql>{}∧#Test <: DNF(1, {foo: foo76'})
+//│ | | | | | | Possible: List({foo: foo76'})
+//│ | | | | | | 1. A  C<Eql>{}∧#Test  %  List()  <!  List({foo: foo76'})  %  ⊥
+//│ | | | | | | | 1. A  C<Eql>{}∧#Test  %  List()  <!  List()  %  {foo:foo76'}
+//│ | | | | | | | | 1. A  C<Eql>{}∧#Test  %  List()  <!  List()  %  |{foo:foo76'}
+//│ | | | | | | | | | Lookup C.foo : Some(Int) where 
+//│ | | | | | | | | | Fresh C.foo : Int where 
+//│ | | | | | | | | |   & None  (from refinement)
+//│ | | | | | | | | | 1. C Int <! foo76'    (1)
+//│ | | | | | | | | | | 1. C Int <! foo76'    (1)
+//│ | | | | | | | | | | | NEW foo76' LB (0)
+//│ | | | 1. : foo76'
+//│ | | 1. : ((x: C,) -> foo76')
+//│ | | UNSTASHING... (out)
+//│ | | CONSTRAIN ((x: C,) -> foo76') <! fcc77'
+//│ | |   where 
+//│ 		foo76' :> Int
+//│ | | 1. C ((x: C,) -> foo76') <! fcc77'    (0)
+//│ | | | NEW fcc77' LB (1)
+//│ | | UNSTASHING... (out)
+//│ | Typing unit statements
+//│ | : None
+//│ ======== TYPED ========
+//│ fun fcc: ‹∀ 0. ((x: C,) -> foo76')› where 
+//│ |		foo76' :> Int
+//│ fun fcc: (x: C,) -> int
+
+fun fc(x: Test) = x
+//│ fun fc: (x: Test,) -> Test
+
+fc(c)
+//│ Test
+
+fun fts['a](x: 'a & Test) = x.foo
+fts(c)
+//│ fun fts: forall 'foo. (x: Test & {foo: 'foo} | Test & ~#Test,) -> 'foo
+//│ int
+
 // FIXME
-let c1: Test = C()
-//│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.117: 	let c1: Test = C()
-//│ ║         	               ^^^
-//│ ╟── application of type `C` is not an instance of type `Test`
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.117: 	let c1: Test = C()
-//│ ╙──       	        ^^^^
-//│ let c1: Test
+fts(c1)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.233: 	fts(c1)
+//│ ║         	^^^^^^^
+//│ ╟── type `#Test` does not match type `{foo: ?foo} | ~#Test`
+//│ ║  l.163: 	let c1: Test = C()
+//│ ║         	        ^^^^
+//│ ╟── but it flows into reference with expected type `{foo: ?foo} | ~#Test`
+//│ ║  l.233: 	fts(c1)
+//│ ║         	    ^^
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.227: 	fun fts['a](x: 'a & Test) = x.foo
+//│ ║         	                            ^^^^^
+//│ ╟── from intersection type:
+//│ ║  l.227: 	fun fts['a](x: 'a & Test) = x.foo
+//│ ╙──       	               ^^^^^^^^^
+//│ error
 
 trait A1 { fun a1: 1 | 2 | 3 }
 trait A2 { fun a1: 2 | 3 | 4 }
 //│ trait A1() {
-//│   this: #A1
 //│   fun a1: 1 | 2 | 3
 //│ }
 //│ trait A2() {
-//│   this: #A2
 //│   fun a1: 2 | 3 | 4
 //│ }
 
@@ -140,19 +211,19 @@ class Ea1 extends A1, A2 {
     fun a1 = 4
 }
 //│ ╔══[ERROR] Type mismatch in definition of method a1:
-//│ ║  l.140: 	    fun a1 = 4
+//│ ║  l.262: 	    fun a1 = 4
 //│ ║         	        ^^^^^^
 //│ ╟── integer literal of type `4` does not match type `1 | 2 | 3`
-//│ ║  l.140: 	    fun a1 = 4
+//│ ║  l.262: 	    fun a1 = 4
 //│ ║         	             ^
 //│ ╟── but it flows into definition of method a1 with expected type `1 | 2 | 3`
-//│ ║  l.140: 	    fun a1 = 4
+//│ ║  l.262: 	    fun a1 = 4
 //│ ║         	        ^^^^^^
 //│ ╟── Note: constraint arises from union type:
-//│ ║  l.127: 	trait A1 { fun a1: 1 | 2 | 3 }
+//│ ║  l.251: 	trait A1 { fun a1: 1 | 2 | 3 }
 //│ ║         	                   ^^^^^^^^^
 //│ ╟── from signature of member a1:
-//│ ║  l.127: 	trait A1 { fun a1: 1 | 2 | 3 }
+//│ ║  l.251: 	trait A1 { fun a1: 1 | 2 | 3 }
 //│ ╙──       	               ^^^^^^^^^^^^^
 //│ class Ea1() {
 //│   fun a1: 2 | 3
@@ -162,7 +233,6 @@ trait Ele {
     fun ce: Oth -> Test
 }
 //│ trait Ele() {
-//│   this: #Ele
 //│   fun ce: Oth -> Test
 //│ }
 
@@ -179,11 +249,11 @@ class E1 extends Test {
     fun foo = 2
 }
 //│ ╔══[ERROR] Member bar is declared in parent trait but not implemented
-//│ ║  l.178: 	class E1 extends Test {
+//│ ║  l.299: 	class E1 extends Test {
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.179: 	    fun foo = 2
+//│ ║  l.300: 	    fun foo = 2
 //│ ║         	^^^^^^^^^^^^^^^
-//│ ║  l.180: 	}
+//│ ║  l.301: 	}
 //│ ╙──       	^
 //│ class E1() {
 //│   fun bar: bool -> bool
@@ -194,17 +264,13 @@ class E1 extends Test {
 trait TE1 extends C
 trait TE2 extends M, Test
 //│ ╔══[ERROR] trait can only inherit traits
-//│ ║  l.194: 	trait TE1 extends C
+//│ ║  l.315: 	trait TE1 extends C
 //│ ╙──       	                  ^
 //│ ╔══[ERROR] trait can only inherit traits
-//│ ║  l.195: 	trait TE2 extends M, Test
+//│ ║  l.316: 	trait TE2 extends M, Test
 //│ ╙──       	                  ^
-//│ trait TE1() {
-//│   this: #TE1
-//│ }
-//│ trait TE2() {
-//│   this: #TE2
-//│ }
+//│ trait TE1()
+//│ trait TE2()
 
 :e
 class E2 extends Test {
@@ -212,13 +278,13 @@ class E2 extends Test {
     fun bar(x) = x
 }
 //│ ╔══[ERROR] Type mismatch in definition of method foo:
-//│ ║  l.211: 	    fun foo = true
+//│ ║  l.328: 	    fun foo = true
 //│ ║         	        ^^^^^^^^^^
 //│ ╟── reference of type `true` is not an instance of type `int`
-//│ ║  l.211: 	    fun foo = true
+//│ ║  l.328: 	    fun foo = true
 //│ ║         	              ^^^^
 //│ ╟── but it flows into definition of method foo with expected type `int`
-//│ ║  l.211: 	    fun foo = true
+//│ ║  l.328: 	    fun foo = true
 //│ ║         	        ^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.5: 	    fun foo: int
@@ -235,10 +301,10 @@ class E2 extends Test {
 :e
 class D extends Test[int], Test[bool]
 //│ ╔══[ERROR] Unsupported parent specification
-//│ ║  l.236: 	class D extends Test[int], Test[bool]
+//│ ║  l.353: 	class D extends Test[int], Test[bool]
 //│ ╙──       	                ^^^^^^^^^
 //│ ╔══[ERROR] Unsupported parent specification
-//│ ║  l.236: 	class D extends Test[int], Test[bool]
+//│ ║  l.353: 	class D extends Test[int], Test[bool]
 //│ ╙──       	                           ^^^^^^^^^^
 //│ class D()
 
@@ -247,9 +313,7 @@ class D extends Test[int], Test[bool]
 trait Base: A | B
 class A
 class B
-//│ trait Base() {
-//│   this: #Base
-//│ }
+//│ trait Base()
 //│ class A()
 //│ class B()
 
@@ -257,30 +321,30 @@ class B
 // FIXME
 let b: Base = A()
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.258: 	let b: Base = A()
+//│ ║  l.373: 	let b: Base = A()
 //│ ║         	              ^^^
 //│ ╟── application of type `A` is not an instance of type `Base`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.258: 	let b: Base = A()
+//│ ║  l.373: 	let b: Base = A()
 //│ ╙──       	       ^^^^
 //│ let b: Base
 
 // FIXME
 b: Base & (A | B)
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.269: 	b: Base & (A | B)
+//│ ║  l.384: 	b: Base & (A | B)
 //│ ║         	^
 //│ ╟── type `#Base` does not match type `A | B`
-//│ ║  l.258: 	let b: Base = A()
+//│ ║  l.373: 	let b: Base = A()
 //│ ║         	       ^^^^
 //│ ╟── but it flows into reference with expected type `A | B`
-//│ ║  l.269: 	b: Base & (A | B)
+//│ ║  l.384: 	b: Base & (A | B)
 //│ ║         	^
 //│ ╟── Note: constraint arises from union type:
-//│ ║  l.269: 	b: Base & (A | B)
+//│ ║  l.384: 	b: Base & (A | B)
 //│ ║         	          ^^^^^^^
 //│ ╟── from intersection type:
-//│ ║  l.269: 	b: Base & (A | B)
+//│ ║  l.384: 	b: Base & (A | B)
 //│ ╙──       	   ^^^^^^^^^^^^^^
 //│ A & Base | B & Base
 
@@ -289,57 +353,87 @@ b: Base & (A | B)
 trait Base: Foo | Bar
 class Foo[A]
 class Bar[B]
-//│ trait Base() {
-//│   this: #Base
-//│ }
+//│ trait Base()
 //│ class Foo[A]()
 //│ class Bar[B]()
 
 // FIXME
 fun mt(x) = if x is Test then 1 else 0
 //│ ╔══[ERROR] Cannot find constructor `Test` in scope
-//│ ║  l.299: 	fun mt(x) = if x is Test then 1 else 0
+//│ ║  l.412: 	fun mt(x) = if x is Test then 1 else 0
 //│ ╙──       	                    ^^^^
 //│ fun mt: anything -> error
  //│ ╙──       	                    ^^^^
 //│ 
 
-let ot : Oth
-let tt : Test
-//│ let ot: Oth
-//│ let tt: Test
+trait Geo
+trait ZL extends Geo
+trait GL extends Geo
+trait WP extends ZL, GL
+trait EM extends WP, Geo
+//│ trait Geo()
+//│ trait ZL()
+//│ trait GL()
+//│ trait WP()
+//│ trait EM()
 
-fun fot(x: Oth): Test = x
-ot : Test
-//│ fun fot: (x: Oth,) -> Test
-//│ Test
+let g: Geo
+let z: ZL
+let w: WP
+let e: EM
+//│ let g: Geo
+//│ let z: ZL
+//│ let w: WP
+//│ let e: EM
+
+fun fot(x: EM): Geo = x
+fun fit(x: EM): WP = x
+w: Geo
+z: Geo
+e: WP
+//│ fun fot: (x: EM,) -> Geo
+//│ fun fit: (x: EM,) -> WP
+//│ WP
 
 :e
-tt : Oth
-fun fto(x: Test): Oth = x
+fun fto(w: WP): EM = w
+z: WP
+g: ZL
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.319: 	fun fto(x: Test): Oth = x
-//│ ║         	                        ^
-//│ ╟── type `#Test` is not an instance of type `Oth`
-//│ ║  l.319: 	fun fto(x: Test): Oth = x
-//│ ║         	           ^^^^
-//│ ╟── but it flows into reference with expected type `#Oth`
-//│ ║  l.319: 	fun fto(x: Test): Oth = x
-//│ ║         	                        ^
+//│ ║  l.450: 	fun fto(w: WP): EM = w
+//│ ║         	                     ^
+//│ ╟── type `#GL & #Geo & #WP & #ZL` is not an instance of type `EM`
+//│ ║  l.450: 	fun fto(w: WP): EM = w
+//│ ║         	           ^^
+//│ ╟── but it flows into reference with expected type `#EM`
+//│ ║  l.450: 	fun fto(w: WP): EM = w
+//│ ║         	                     ^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.319: 	fun fto(x: Test): Oth = x
-//│ ╙──       	                  ^^^
+//│ ║  l.450: 	fun fto(w: WP): EM = w
+//│ ╙──       	                ^^
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.318: 	tt : Oth
-//│ ║         	^^
-//│ ╟── type `#Test` is not an instance of type `Oth`
-//│ ║  l.308: 	let tt : Test
-//│ ║         	         ^^^^
-//│ ╟── but it flows into reference with expected type `#Oth`
-//│ ║  l.318: 	tt : Oth
-//│ ║         	^^
+//│ ║  l.451: 	z: WP
+//│ ║         	^
+//│ ╟── type `#Geo & #ZL` is not an instance of type `WP`
+//│ ║  l.432: 	let z: ZL
+//│ ║         	       ^^
+//│ ╟── but it flows into reference with expected type `#WP`
+//│ ║  l.451: 	z: WP
+//│ ║         	^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.318: 	tt : Oth
-//│ ╙──       	     ^^^
-//│ fun fto: (x: Test,) -> Oth
-//│ Oth
+//│ ║  l.451: 	z: WP
+//│ ╙──       	   ^^
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.452: 	g: ZL
+//│ ║         	^
+//│ ╟── type `#Geo` is not an instance of type `ZL`
+//│ ║  l.431: 	let g: Geo
+//│ ║         	       ^^^
+//│ ╟── but it flows into reference with expected type `#ZL`
+//│ ║  l.452: 	g: ZL
+//│ ║         	^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.452: 	g: ZL
+//│ ╙──       	   ^^
+//│ fun fto: (w: WP,) -> EM
+//│ ZL
