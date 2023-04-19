@@ -26,7 +26,7 @@ run(res)
 
 code"let f = (x, y, z) => x + y + x; f of 1,2,3"
 run(res)
-//│ res: Code[int, anything\f\x\y\z]
+//│ res: Code[int, anything]
 //│    = [
 //│        'Let',
 //│        'f',
@@ -55,20 +55,20 @@ run(res)
 // should be unresolved symbol error 
 :ge
 code"let x = {a: 100}; x . a"
-//│ res: Code['a, {.: {a: 100} -> 'b -> 'a, a: 'b}\x]
+//│ res: Code['a, {.: {a: 100} -> 'b -> 'a, a: 'b}]
 //│ Syntax error:
 //│   Unexpected token '.'
 
 // should be unresolved symbol error
 :ge
 code"let x = {a: 100}; x. a"
-//│ res: Code['a, {.: {a: 100} -> 'b -> 'a, a: 'b}\x]
+//│ res: Code['a, {.: {a: 100} -> 'b -> 'a, a: 'b}]
 //│ Syntax error:
 //│   Unexpected token '.'
 
 // should be ok
 code"let x = {a: 100}; x .a"
-//│ res: Code[100, anything\x]
+//│ res: Code[100, anything]
 //│    = [
 //│        'Let',
 //│        'x',

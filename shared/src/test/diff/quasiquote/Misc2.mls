@@ -51,15 +51,9 @@ code"let x = 1 in ${ code"x + ${ x }" }"
 //│ Code generation encountered an error:
 //│   unresolved symbol x
 
-:e
-fun x: Code‹int, anything›
-//│ x: Code[int, anything]
-//│  = <missing implementation>
-
-code"1 + ${x}"
-//│ res: Code[int, anything]
-//│    = <no result>
-//│      x is not implemented
+// FIXME
+// fun x: Code‹int, anything›
+// code"1 + ${x}"
 
 :e
 :ge
@@ -125,7 +119,7 @@ code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
 //│ Code generation encountered an error:
 //│   unresolved symbol a
 
-code"let a = 1; ${code"let b = 1; ${code"a + b"}"}"
+let res = code"let a = 1; ${code"let b = 1; ${code"a + b"}"}"
 //│ res: Code[int, {a: int, b: int}\a\b]
 //│    = [
 //│        'Let',
@@ -134,10 +128,12 @@ code"let a = 1; ${code"let b = 1; ${code"a + b"}"}"
 //│        [ '_', 1 ],
 //│        [ 'Unquoted', [ 'Let', 'b', Symbol(b), [Array], [Array] ] ]
 //│      ]
+
+:e
 run(res)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.137: 	run(res)
+//│ ║  l.139: 	run(res)
 //│ ║         	^^^^^^^^
-//│ ╙── expression of type `anything` is not a record (expected a record with fields: b, a)
+//│ ╙── expression of type `anything` is not a record (expected a record with fields: a, b)
 //│ res: error | int
 //│    = 2

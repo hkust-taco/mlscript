@@ -8,7 +8,7 @@ code"2 + 2"
 code"x => x + 2"
 // in JS (bad): ["lambda", ["x"], ["+", ["ref", "x"]], 2]]
 // in JS (hygienic): const x_sym = Symbol("x"); ["lambda", [x_sym], ["+", x_sym], 2]]
-//│ res: Code[int -> int, anything\x]
+//│ res: Code[int -> int, anything]
 //│    = [ '_', [Function (anonymous)] ]
 
 fun foo(x) =
