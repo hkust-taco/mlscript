@@ -997,7 +997,9 @@ abstract class TyperHelpers { Typer: Typer =>
             }.toMap)
           case S(td: TypedNuTrt) => 
             assert(td.tparams.size === targs.size)
-            td.tags & RecordType(info.tparams.lazyZip(targs).map {
+            td.selfTy & 
+              trtNameToNomTag(td.decl)(provTODO, ctx) &
+              RecordType(info.tparams.lazyZip(targs).map {
                     case ((tn, tv, vi), ta) => // TODO use vi
                       val fldNme = td.nme.name + "#" + tn.name
                       Var(fldNme).withLocOf(tn) -> FieldType(S(ta), ta)(provTODO)
@@ -1005,7 +1007,8 @@ abstract class TyperHelpers { Typer: Typer =>
           case S(td: TypedNuCls) =>
             assert(td.tparams.size === targs.size)
             clsNameToNomTag(td.decl)(provTODO, ctx) &
-              td.tags & RecordType(info.tparams.lazyZip(targs).map {
+              td.tags & 
+                RecordType(info.tparams.lazyZip(targs).map {
                   case ((tn, tv, vi), ta) => // TODO use vi
                     val fldNme = td.nme.name + "#" + tn.name
                     Var(fldNme).withLocOf(tn) -> FieldType(S(ta), ta)(provTODO)

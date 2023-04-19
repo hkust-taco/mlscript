@@ -1165,6 +1165,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             rec(ov.approximatePos, rhs, true)
           case (_: NegType | _: Without, _) | (_, _: NegType | _: Without) =>
             goToWork(lhs, rhs)
+          case (_: ClassTag | _: TraitTag, _: TraitTag) =>
+            goToWork(lhs, rhs)
           case _ => reportError()
       }}
     }}()

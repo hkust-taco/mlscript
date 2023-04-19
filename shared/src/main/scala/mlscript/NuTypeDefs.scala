@@ -175,7 +175,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
         members: Map[Str, NuMember],
         thisTy: ST,
         sign: Opt[ST],
-        tags: ST
+        selfTy: ST
       ) extends TypedNuTypeDef(Trt) with TypedNuTermDef
   {
     def decl: NuTypeDef = td
@@ -183,7 +183,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     def nme: TypeName = td.nme
     def name: Str = nme.name
     
-    def typeSignature: ST = typeSignatureOf(td, level, tparams, Nil, tags)
+    def typeSignature: ST = typeSignatureOf(td, level, tparams, Nil, selfTy)
     
     def mapPol(pol: Opt[Bool], smart: Bool)(f: (Opt[Bool], SimpleType) => SimpleType)
           (implicit ctx: Ctx): TypedNuTrt =
@@ -192,7 +192,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           members.mapValuesIter(_.mapPol(pol, smart)(f)).toMap,
           f(pol.map(!_), thisTy),
           sign.map(f(pol, _)),
-          f(pol, tags),
+          f(pol, selfTy),
         )
     def mapPolMap(pol: PolMap)(f: (PolMap, SimpleType) => SimpleType)
           (implicit ctx: Ctx): TypedNuTrt =
@@ -201,7 +201,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           members.mapValuesIter(_.mapPolMap(pol)(f)).toMap,
           f(pol.contravar, thisTy),
           sign.map(f(pol, _)),
-          f(pol, tags),
+          f(pol, selfTy),
         )
   }
   
@@ -275,7 +275,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           params.mapValues(_.update(t => f(pol.map(!_), t), t => f(pol, t))),
           members.mapValuesIter(_.mapPol(pol, smart)(f)).toMap,
           f(pol.map(!_), thisTy),
-          tags
+          f(pol, tags),
         )(f(pol, instanceType))
     def mapPolMap(pol: PolMap)(f: (PolMap, SimpleType) => SimpleType)
           (implicit ctx: Ctx): TypedNuTermDef =
@@ -284,7 +284,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           params.mapValues(_.update(t => f(pol.contravar, t), t => f(pol, t))),
           members.mapValuesIter(_.mapPolMap(pol)(f)).toMap,
           f(pol.contravar, thisTy),
-          tags
+          f(pol, tags),
         )(f(pol, instanceType))
   }
   
@@ -476,6 +476,12 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
       TypeProvenance(decl.toLoc, decl.describe)
     
     println(s"${ctx.lvl}. Created lazy type info for $decl")
+    
+    // YTODO:
+    // Add here thes ecomputations:
+                    // type ParentSpec = (Term, Var, Ls[Opt[Var] -> Fld])
+                    // val parentSpecs: Ls[ParentSpec] = td.parents.flatMap {
+    // and derive from these the full set of transitively inherited tags
     
     lazy val tparams: TyParams = ctx.nest.nextLevel { implicit ctx =>
       decl match {
@@ -672,7 +678,13 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
 
                     ctx ++= paramSymbols
                     ctx += "this" -> VarSymbol(thisTV, Var("this"))
-
+                    
+                    val sig_ty = typeType(td.sig.getOrElse(Top))
+                    // td.sig match {
+                    //   case S(sig) =>
+                    //   case N => ()
+                    // }
+                    
                     // inherit traits
                     def inherit(parents: Ls[ParentSpec], superType: ST, tags: ST, members: Ls[NuMember])
                           : (ST, ST, Ls[NuMember]) =
@@ -681,7 +693,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                             ctx.get(trtName) match {
                               case S(lti: LazyTypeInfo) => lti.complete().freshen match {
                                 case trt: TypedNuTrt =>
-                                  inherit(ps, superType & trt.thisTy, tags & trt.tags, memberUn(members, trt.members.values.toList))
+                                  inherit(ps, superType & trt.thisTy, tags & trt.selfTy, memberUn(members, trt.members.values.toList))
                                 case _ => 
                                   err(msg"trait can only inherit traits", p.toLoc)
                                   (superType, tags, members)
@@ -693,13 +705,16 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
 
                     val (thisType, tags, baseMems) =
                       // ? is it really a good idea
-                      inherit(parentSpecs, TopType, trtNameToNomTag(td)(noProv, ctx), Nil)
-
+                      inherit(parentSpecs, TopType/*TODO*/, trtNameToNomTag(td)(noProv, ctx), Nil)
+                    
+                    // val selfType = tags & sig_ty
+                    val selfType = sig_ty
+                    
                     val ttu = typeTypingUnit(td.body, topLevel = false)
                     val trtMems = baseMems ++ ttu.entities
                     val mems = typedSignatureMembers.toMap ++ trtMems.map(d => d.name -> d).toMap
 
-                    TypedNuTrt(outerCtx.lvl, td, ttu, tparams, mems, thisType, None, tags) -> Nil
+                    TypedNuTrt(outerCtx.lvl, td, ttu, tparams, mems, thisType, None, selfType) -> Nil
                   }
                   
                 case Als =>
@@ -878,7 +893,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                               info match {
                                 case trt: TypedNuTrt =>
                                   // TODO also computer intersect
-                                  computeInterface(ps, annot & trt.tags, memberUn(members, trt.members.values.toList)) // intersect members
+                                  computeInterface(ps, annot & trt.selfTy, memberUn(members, trt.members.values.toList)) // intersect members
                                 case _ => computeInterface(ps, annot, members)
                               }
                             case S(_) => 
@@ -910,7 +925,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       tparams, typedParams, mems ++ ifaceMembers.map(d => d.name -> d).toMap,
                       // if (td.kind is Nms) TopType else thisTV
                       TopType,
-                      ifaceAnnot,
+                      // ifaceAnnot,
+                      TopType, // TODO use signature
                     )(thisType) -> impltdMems
                   }
                 case Mxn =>
