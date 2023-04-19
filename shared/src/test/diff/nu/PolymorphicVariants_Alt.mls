@@ -112,24 +112,32 @@ module Test1 extends EvalVar, EvalLambda
 //│   'b :> App['b] | Abs['b] | Var
 
 Test1.eval(Nil(), Var("a"))
-//│ 'a
-//│   where
-//│     'a :> Abs['a] | Var | App['a]
+//│ ╔══[ERROR] Subtyping constraint of the form `?eval <: (?a, ?b,) -> ?c` took too many steps and ran out of fuel (5000)
+//│ ║  l.114: 	Test1.eval(Nil(), Var("a"))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Note: use flag `:ex` to see internal error info.
+//│ error
 
 Test1.eval(Nil(), Abs("b", Var("a")))
-//│ 'a
-//│   where
-//│     'a :> App['a] | Abs['a] | Var
+//│ ╔══[ERROR] Subtyping constraint of the form `?eval <: (?a, ?b,) -> ?c` took too many steps and ran out of fuel (5000)
+//│ ║  l.121: 	Test1.eval(Nil(), Abs("b", Var("a")))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Note: use flag `:ex` to see internal error info.
+//│ error
 
 Test1.eval(Cons(("c", Var("d")), Nil()), App(Abs("b", Var("b")), Var("c")))
-//│ 'a
-//│   where
-//│     'a :> Abs['a] | Var | App['a]
+//│ ╔══[ERROR] Subtyping constraint of the form `?eval <: (?a, ?b,) -> ?c` took too many steps and ran out of fuel (5000)
+//│ ║  l.128: 	Test1.eval(Cons(("c", Var("d")), Nil()), App(Abs("b", Var("b")), Var("c")))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Note: use flag `:ex` to see internal error info.
+//│ error
 
 Test1.eval(Cons(("c", Abs("d", Var("d"))), Nil()), App(Abs("b", Var("b")), Var("c")))
-//│ 'a
-//│   where
-//│     'a :> App['a] | Abs['a] | Abs[Var] | Var
+//│ ╔══[ERROR] Subtyping constraint of the form `?eval <: (?a, ?b,) -> ?c` took too many steps and ran out of fuel (5000)
+//│ ║  l.135: 	Test1.eval(Cons(("c", Abs("d", Var("d"))), Nil()), App(Abs("b", Var("b")), Var("c")))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Note: use flag `:ex` to see internal error info.
+//│ error
 
 class Num(n: int)
 class Add<A>(l: A, r: A)
@@ -144,7 +152,7 @@ fun map_expr(f, v) =
     Num then v
     Add(l, r) then Add(f(l), f(r))
     Mul(l, r) then Mul(f(l), f(r))
-//│ fun map_expr: forall 'l 'A 'l0 'A0. ('l -> 'A & 'l0 -> 'A0, Add['l] | Mul['l0] | Num | Var,) -> (Add['A] | Mul['A0] | Num | Var)
+//│ fun map_expr: forall 'A 'l 'A0 'l0. ('l -> 'A0 & 'l0 -> 'A, Add['l] | Mul['l0] | Num | Var,) -> (Add['A0] | Mul['A] | Num | Var)
 
 mixin EvalExpr {
   fun eval(sub, v) =
@@ -187,20 +195,24 @@ module Test3 extends EvalVar, EvalExpr, EvalLambda
 //│   fun eval: (List[{_1: string, _2: 'b}], 'a,) -> 'b
 //│ }
 //│ where
-//│   'b :> Num | Var | 'c | App['b] | Abs['b]
+//│   'b :> App['b] | Abs['b] | Num | Var | 'c
 //│   'c <: Add['d] | Mul['d] | Num | Var
 //│   'd <: 'a
 //│   'a <: Abs['a] | App['a & (Abs['a] | ~#Abs)] | 'c & ~#Abs & ~#App
 
 Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Abs("a", Var("a")))
-//│ 'a
-//│   where
-//│     'a :> Abs[Var] | Var | Num | App['a] | Abs['a]
+//│ ╔══[ERROR] Subtyping constraint of the form `?eval <: (?a, ?b,) -> ?c` took too many steps and ran out of fuel (5000)
+//│ ║  l.203: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Abs("a", Var("a")))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Note: use flag `:ex` to see internal error info.
+//│ error
 
 Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), App(Abs("a", Var("a")), Add(Num(1), Var("c"))))
-//│ 'a
-//│   where
-//│     'a :> App['a] | Abs['a] | Abs[Var] | Var | Add[Num | Var] | Num
+//│ ╔══[ERROR] Subtyping constraint of the form `?eval <: (?a, ?b,) -> ?c` took too many steps and ran out of fuel (5000)
+//│ ║  l.210: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), App(Abs("a", Var("a")), Add(Num(1), Var("c"))))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Note: use flag `:ex` to see internal error info.
+//│ error
 
 module Test3 extends EvalVar, EvalLambda, EvalExpr
 //│ module Test3() {

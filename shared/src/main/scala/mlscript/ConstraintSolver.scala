@@ -681,7 +681,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             case (lr @ LhsRefined(bo, ts, r, _), rf @ RhsField(n, t2)) =>
               // Reuse the case implemented below:  (this shortcut adds a few more annoying calls in stats)
               annoying(Nil, lr, Nil, RhsBases(Nil, S(R(rf)), SortedMap.empty))
-            case (LhsRefined(N, ts, r, _), RhsBases(ots, S(R(RhsField(fldNme, fldTy))), trs)) =>
+            case (LhsRefined(N, ts, r, _), RhsBases(ots, S(R(RhsField(fldNme, fldTy))), trs)) if newDefs =>
               val fty = lookupField(N, r.fields.toMap.get, ts, fldNme)
                 rec(fty.ub, fldTy.ub, false)
                 recLb(fldTy, fty)
