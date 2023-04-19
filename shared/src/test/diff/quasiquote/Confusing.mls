@@ -1,0 +1,16 @@
+:NewParser
+
+:e
+code"x => y => 100 + ${  Const(x + y)   }"
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.4: 	code"x => y => 100 + ${  Const(x + y)   }"
+//│ ╙──     	                               ^
+//│ ╔══[ERROR] identifier not found: y
+//│ ║  l.4: 	code"x => y => 100 + ${  Const(x + y)   }"
+//│ ╙──     	                                   ^
+//│ res: Code[anything -> anything -> int, anything\x\y]
+//│    = [ '_', [Function (anonymous)] ]
+
+run(res)(1)(10)
+//│ res: int
+//│    = 111

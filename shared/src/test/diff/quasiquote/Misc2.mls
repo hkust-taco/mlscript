@@ -52,10 +52,7 @@ code"let x = 1 in ${ code"x + ${ x }" }"
 //│   unresolved symbol x
 
 :e
-fun x: Code‹int›
-//│ ╔══[ERROR] Wrong number of type arguments – expected 2, found 1
-//│ ║  l.55: 	fun x: Code‹int›
-//│ ╙──      	       ^^^^^^^^
+fun x: Code‹int, anything›
 //│ x: Code[int, anything]
 //│  = <missing implementation>
 
@@ -68,29 +65,29 @@ code"1 + ${x}"
 :ge
 code"let a = 1; ${a + code"b + ${a + b}" }"
 //│ ╔══[ERROR] identifier not found: a
-//│ ║  l.69: 	code"let a = 1; ${a + code"b + ${a + b}" }"
+//│ ║  l.66: 	code"let a = 1; ${a + code"b + ${a + b}" }"
 //│ ╙──      	                  ^
 //│ ╔══[ERROR] identifier not found: a
-//│ ║  l.69: 	code"let a = 1; ${a + code"b + ${a + b}" }"
+//│ ║  l.66: 	code"let a = 1; ${a + code"b + ${a + b}" }"
 //│ ╙──      	                                 ^
 //│ ╔══[ERROR] identifier not found: b
-//│ ║  l.69: 	code"let a = 1; ${a + code"b + ${a + b}" }"
+//│ ║  l.66: 	code"let a = 1; ${a + code"b + ${a + b}" }"
 //│ ╙──      	                                     ^
 //│ ╔══[ERROR] Type mismatch in unquote:
-//│ ║  l.69: 	code"let a = 1; ${a + code"b + ${a + b}" }"
+//│ ║  l.66: 	code"let a = 1; ${a + code"b + ${a + b}" }"
 //│ ║        	                               ^^^^^^^^
 //│ ╟── operator application of type `int` is not an instance of type `code`
-//│ ║  l.69: 	code"let a = 1; ${a + code"b + ${a + b}" }"
+//│ ║  l.66: 	code"let a = 1; ${a + code"b + ${a + b}" }"
 //│ ╙──      	                                 ^^^^^
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.69: 	code"let a = 1; ${a + code"b + ${a + b}" }"
+//│ ║  l.66: 	code"let a = 1; ${a + code"b + ${a + b}" }"
 //│ ║        	                  ^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── expression of type `code & {Code#C :> {b: ?a} & ?b, Code#T <: ?c}` is not an instance of type `int`
 //│ ╔══[ERROR] Type mismatch in unquote:
-//│ ║  l.69: 	code"let a = 1; ${a + code"b + ${a + b}" }"
+//│ ║  l.66: 	code"let a = 1; ${a + code"b + ${a + b}" }"
 //│ ║        	                ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── operator application of type `int` is not an instance of type `code`
-//│ ║  l.69: 	code"let a = 1; ${a + code"b + ${a + b}" }"
+//│ ║  l.66: 	code"let a = 1; ${a + code"b + ${a + b}" }"
 //│ ╙──      	                  ^^^^^^^^^^^^^^^^^^^^^^
 //│ res: Code[error, anything\a]
 //│ Code generation encountered an error:
@@ -100,119 +97,47 @@ code"let a = 1; ${a + code"b + ${a + b}" }"
 :ge
 code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
 //│ ╔══[ERROR] identifier not found: a
-//│ ║  l.101: 	code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
-//│ ╙──       	                             ^
+//│ ║  l.98: 	code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
+//│ ╙──      	                             ^
 //│ ╔══[ERROR] identifier not found: a
-//│ ║  l.101: 	code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
-//│ ╙──       	                                            ^
+//│ ║  l.98: 	code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
+//│ ╙──      	                                            ^
 //│ ╔══[ERROR] identifier not found: b
-//│ ║  l.101: 	code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
-//│ ╙──       	                                                ^
+//│ ║  l.98: 	code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
+//│ ╙──      	                                                ^
 //│ ╔══[ERROR] Type mismatch in unquote:
-//│ ║  l.101: 	code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
-//│ ║         	                                          ^^^^^^^^
+//│ ║  l.98: 	code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
+//│ ║        	                                          ^^^^^^^^
 //│ ╟── operator application of type `int` is not an instance of type `code`
-//│ ║  l.101: 	code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
-//│ ╙──       	                                            ^^^^^
+//│ ║  l.98: 	code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
+//│ ╙──      	                                            ^^^^^
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.101: 	code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
-//│ ║         	                             ^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.98: 	code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
+//│ ║        	                             ^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── expression of type `code & {Code#C :> {b: ?a} & ?b, Code#T <: ?c}` is not an instance of type `int`
 //│ ╔══[ERROR] Type mismatch in unquote:
-//│ ║  l.101: 	code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
-//│ ║         	                           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.98: 	code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
+//│ ║        	                           ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── operator application of type `int` is not an instance of type `code`
-//│ ║  l.101: 	code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
-//│ ╙──       	                             ^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.98: 	code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
+//│ ╙──      	                             ^^^^^^^^^^^^^^^^^^^^^^
 //│ res: Code[error, anything\a\b]
 //│ Code generation encountered an error:
 //│   unresolved symbol a
 
-:NewParser
-:d
-:ne
-:NoJS
 code"let a = 1; ${code"let b = 1; ${code"a + b"}"}"
-//│ 0. Typing term Quoted' let a = 1 in Unquote' Quoted' let b = 1 in Unquote' Quoted' + (a,) (b,) ' ' ' ' '
-//│ | 0. Typing term let a = 1 in Unquote' Quoted' let b = 1 in Unquote' Quoted' + (a,) (b,) ' ' ' '
-//│ | | 1. Typing term 1
-//│ | | 1. : 1<int,number>
-//│ | | Let: a
-//│ | | 0. Typing term Unquote' Quoted' let b = 1 in Unquote' Quoted' + (a,) (b,) ' ' ' '
-//│ | | | 0. Typing term Quoted' let b = 1 in Unquote' Quoted' + (a,) (b,) ' ' '
-//│ | | | | 0. Typing term let b = 1 in Unquote' Quoted' + (a,) (b,) ' '
-//│ | | | | | 1. Typing term 1
-//│ | | | | | 1. : 1<int,number>
-//│ | | | | | Let: b
-//│ | | | | | 0. Typing term Unquote' Quoted' + (a,) (b,) ' '
-//│ | | | | | | 0. Typing term Quoted' + (a,) (b,) '
-//│ | | | | | | | 0. Typing term + (a,) (b,)
-//│ | | | | | | | | Applying + (a,)(class mlscript.App) to b,(class mlscript.Tup)
-//│ | | | | | | | | 0. Typing term + (a,)
-//│ | | | | | | | | | Applying +(class mlscript.Var) to a,(class mlscript.Tup)
-//│ | | | | | | | | | 0. Typing term +
-//│ | | | | | | | | | 0. : (int<number> -> (int<number> -> int<number>))
-//│ | | | | | | | | | 0. Typing term a,
-//│ | | | | | | | | | | 0. Typing term a
-//│ | | | | | | | | | | 0. : α110
-//│ | | | | | | | | | 0. : (α110,)
-//│ | | | | | | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (α110 -> α111)
-//│ | | | | | | | | |   where 
-//│ | | | | | | | | | C (int<number> -> (int<number> -> int<number>)) <! (α110 -> α111)    (0)
-//│ | | | | | | | | | | C (α110,) <! (int<number>,)    (1)
-//│ | | | | | | | | | | | C α110 <! int<number>    (2)
-//│ | | | | | | | | | | C (int<number> -> int<number>) <! α111    (3)
-//│ | | | | | | | | 0. : α111
-//│ | | | | | | | | 0. Typing term b,
-//│ | | | | | | | | | 0. Typing term b
-//│ | | | | | | | | | 0. : α112
-//│ | | | | | | | | 0. : (α112,)
-//│ | | | | | | | | CONSTRAIN α111 <! (α112 -> α113)
-//│ | | | | | | | |   where 
-//│ 		α111 :> (int<number> -> int<number>)
-//│ | | | | | | | | C α111 <! (α112 -> α113)    (0)
-//│ | | | | | | | | | C (int<number> -> int<number>) <! (α112 -> α113)    (1)
-//│ | | | | | | | | | | C (α112,) <! (int<number>,)    (2)
-//│ | | | | | | | | | | | C α112 <! int<number>    (3)
-//│ | | | | | | | | | | C int<number> <! α113    (4)
-//│ | | | | | | | 0. : α113
-//│ | | | | | | 0. : Code[α113,{b: α112, a: α110}]
-//│ | | | | | | CONSTRAIN (Code[α108,α109] -> α108) <! (Code[α113,{b: α112, a: α110}] -> α114)
-//│ | | | | | |   where 
-//│ 		α110 <: int<number>
-//│ 		α112 <: int<number>
-//│ 		α113 :> int<number>
-//│ | | | | | | C (Code[α108,α109] -> α108) <! (Code[α113,{b: α112, a: α110}] -> α114)    (0)
-//│ | | | | | | | C Code[α113,{b: α112, a: α110}] <! Code[α108,α109]    (1)
-//│ | | | | | | | | C α113 <! α108    (2)
-//│ | | | | | | | | | C int<number> <! α108    (3)
-//│ | | | | | | | | C α109 <! {b: α112, a: α110}    (4)
-//│ | | | | | | | C α108 <! α114    (5)
-//│ | | | | | | | | C int<number> <! α114    (6)
-//│ | | | | | 0. : α114
-//│ | | | | 0. : α114
-//│ | | | 0. : Code[α114,α109\b]
-//│ | | | CONSTRAIN (Code[α106,α107] -> α106) <! (Code[α114,α109\b] -> α115)
-//│ | | |   where 
-//│ 		α109 <: {b: α112, a: α110}
-//│ 		α110 <: int<number>
-//│ 		α112 <: int<number>
-//│ 		α114 :> int<number>
-//│ | | | C (Code[α106,α107] -> α106) <! (Code[α114,α109\b] -> α115)    (0)
-//│ | | | | C Code[α114,α109\b] <! Code[α106,α107]    (1)
-//│ | | | | | C α114 <! α106    (2)
-//│ | | | | | | C int<number> <! α106    (3)
-//│ | | | | | C α107 <! α109\b    (4)
-//│ | | | | C α106 <! α115    (5)
-//│ | | | | | C int<number> <! α115    (6)
-//│ | | 0. : α115
-//│ | 0. : α115
-//│ 0. : Code[α115,α107\a]
-//│ ⬤ Typed as: Code[α115,α107\a]
-//│  where: 
-//│ 		α107 <: α109\b
-//│ 		α109 <: {b: α112, a: α110}
-//│ 		α110 <: int<number>
-//│ 		α112 <: int<number>
-//│ 		α115 :> int<number>
 //│ res: Code[int, {a: int, b: int}\a\b]
+//│    = [
+//│        'Let',
+//│        'a',
+//│        Symbol(a),
+//│        [ '_', 1 ],
+//│        [ 'Unquoted', [ 'Let', 'b', Symbol(b), [Array], [Array] ] ]
+//│      ]
+run(res)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.137: 	run(res)
+//│ ║         	^^^^^^^^
+//│ ╙── expression of type `anything` is not a record (expected a record with fields: b, a)
+//│ res: error | int
+//│    = 2
