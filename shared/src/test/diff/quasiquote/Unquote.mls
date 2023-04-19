@@ -1,11 +1,45 @@
 :NewParser
 
+let empty = code"x"
+let empty2 = code"y"
+//│ empty: Code['a, {x: 'a}]
+//│      = [ 'Var', [ 'FreeVar', 'x' ] ]
+//│ empty2: Code['a, {y: 'a}]
+//│       = [ 'Var', [ 'FreeVar', 'y' ] ]
+
+code"let x = 1
+let b = 1
+${empty} + (let y = 1; ${empty2})
+"
+//│ res: Code[int, {x: int}\b\x & {y: int}\b\x\y]
+//│    = [
+//│        'Let',
+//│        'x',
+//│        Symbol(x),
+//│        [ '_', 1 ],
+//│        [
+//│          'Let',
+//│          'b',
+//│          Symbol(b),
+//│          [ '_', 1 ],
+//│          [ 'App', '+', [Array], [Array] ]
+//│        ]
+//│      ]
+
+:d
 let cde = code"a"
+//│ 1. Typing term Quoted' a '
+//│ | class: class mlscript.Var (a)
+//│ | 1. Typing term a
+//│ | 1. : α53'
+//│ 1. : Code[α53',{a: α53'}]
+//│ ⬤ Typed as: Code[α53',{a: α53'}]
+//│  where: 
 //│ cde: Code['a, {a: 'a}]
 //│    = [ 'Var', [ 'FreeVar', 'a' ] ]
 
 let cde_w_free_vars = code"let x = 1; x + y"
-//│ cde_w_free_vars: Code[int, {y: int}\x]
+//│ cde_w_free_vars: Code[int, {y: int}]
 //│                = [
 //│                    'Let',
 //│                    'x',
@@ -20,7 +54,7 @@ let cde_w_unquote = code"${cde}"
 //│              = [ 'Unquoted', [ 'Var', [ 'FreeVar', 'a' ] ] ]
 
 let cde_w_unquote_w_free_vars = code"${cde_w_free_vars}"
-//│ cde_w_unquote_w_free_vars: Code[int, {y: int}\x]
+//│ cde_w_unquote_w_free_vars: Code[int, {y: int}]
 //│                          = [
 //│                              'Unquoted',
 //│                              [
@@ -34,16 +68,13 @@ let cde_w_unquote_w_free_vars = code"${cde_w_free_vars}"
 
 
 let cde_w_unquote_w_local_free_vars = code"[z, ${cde_w_unquote_w_free_vars}]"
-//│ cde_w_unquote_w_local_free_vars: Code[('a, int,), {y: int}\x & {z: 'a}]
+//│ cde_w_unquote_w_local_free_vars: Code[('a, int,), {y: int, z: 'a}]
 //│                                = [ 'Bra', [ 'Tup', [ [Array], [Array] ] ] ]
 
 let free_var1 = code"let x = 1; x + y"
 let free_var2 = code"let i = 1; i + x"
-let cde_w_mutli_unquote = code"${free_var2};${free_var1}"
-//│ ╔══[PARSE ERROR] Unexpected ';' keyword here
-//│ ║  l.42: 	let cde_w_mutli_unquote = code"${free_var2};${free_var1}"
-//│ ╙──      	                                           ^
-//│ free_var1: Code[int, {y: int}\x]
+let cde_w_mutli_unquote = code"${free_var2} + ${free_var1}"
+//│ free_var1: Code[int, {y: int}]
 //│          = [
 //│              'Let',
 //│              'x',
@@ -51,7 +82,7 @@ let cde_w_mutli_unquote = code"${free_var2};${free_var1}"
 //│              [ '_', 1 ],
 //│              [ 'App', '+', [ 'Var', Symbol(x) ], [ 'Var', [Array] ] ]
 //│            ]
-//│ free_var2: Code[int, {x: int}\i]
+//│ free_var2: Code[int, {x: int}]
 //│          = [
 //│              'Let',
 //│              'i',
@@ -59,23 +90,19 @@ let cde_w_mutli_unquote = code"${free_var2};${free_var1}"
 //│              [ '_', 1 ],
 //│              [ 'App', '+', [ 'Var', Symbol(i) ], [ 'Var', [Array] ] ]
 //│            ]
-//│ cde_w_mutli_unquote: Code[int, {x: int}\i]
+//│ cde_w_mutli_unquote: Code[int, {x: int, y: int}]
 //│                    = [
-//│                        'Unquoted',
-//│                        [
-//│                          'Let',
-//│                          'i',
-//│                          Symbol(i),
-//│                          [ '_', 1 ],
-//│                          [ 'App', '+', [Array], [Array] ]
-//│                        ]
+//│                        'App',
+//│                        '+',
+//│                        [ 'Unquoted', [ 'Let', 'i', Symbol(i), [Array], [Array] ] ],
+//│                        [ 'Unquoted', [ 'Let', 'x', Symbol(x), [Array], [Array] ] ]
 //│                      ]
 
 // FIXME
 c: Code<int, {}>
 //│ ╔══[ERROR] identifier not found: c
-//│ ║  l.75: 	c: Code<int, {}>
-//│ ╙──      	^
+//│ ║  l.102: 	c: Code<int, {}>
+//│ ╙──       	^
 //│ res: Code[int, anything]
 //│ Code generation encountered an error:
 //│   unresolved symbol c
@@ -110,7 +137,7 @@ code"let y = 1; ${tuple_free}"
 :e
 run(res)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.111: 	run(res)
+//│ ║  l.138: 	run(res)
 //│ ║         	^^^^^^^^
 //│ ╙── expression of type `anything` does not have field 'y'
 //│ res: (nothing, nothing,) | error
@@ -140,7 +167,7 @@ fun f(x) = x
 //│  = [Function: f2]
 
 let built_in_binding_test = code"let f = x => x + 1; f(if true then 1 else 2)"
-//│ built_in_binding_test: Code[int, anything\f\x]
+//│ built_in_binding_test: Code[int, anything]
 //│                      = [
 //│                          'Let',
 //│                          'f',
@@ -158,7 +185,7 @@ code"f(0)"
 :ge
 code"${code"${code"${z}"}"}"
 //│ ╔══[ERROR] identifier not found: z
-//│ ║  l.159: 	code"${code"${code"${z}"}"}"
+//│ ║  l.186: 	code"${code"${code"${z}"}"}"
 //│ ╙──       	                     ^
 //│ res: Code[error, anything]
 //│ Code generation encountered an error:
@@ -172,7 +199,7 @@ code"${code"${z}"}"
 //│    = [ 'Unquoted', [ 'Unquoted', [ '_', 1 ] ] ]
 
 code"let x = 1; let z = 1; code"x + y""
-//│ res: Code[Code[int, {x: int, y: int}], anything\x\z]
+//│ res: Code[Code[int, {x: int, y: int}], anything]
 //│    = [
 //│        'Let',
 //│        'x',

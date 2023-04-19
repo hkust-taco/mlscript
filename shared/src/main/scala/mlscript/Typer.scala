@@ -12,6 +12,22 @@ import mlscript.Message._
 import scala.util.Random
 import scala.util.control.Breaks.break
 
+abstract class SearchStrategy()
+
+
+// Searches everywhere
+final case class LinearSearchStrategy() extends SearchStrategy
+
+// Searches only outside a quasiquote
+final case class UnquoteSearchStrategy() extends SearchStrategy
+
+// Searches only inside a quasiquote
+final case class QuasiquoteSearchStrategy(lvl: Int) extends SearchStrategy
+
+// uses only if you need to search a method definition (e.g. + - * /)
+// it has the same effect as `NormalSearchStrategy`
+final case class SuperSearchStrategy() extends SearchStrategy
+
 /** A class encapsulating type inference state.
  * It uses its own internal representation of types and type variables, using mutable data structures.
  * Inferred SimpleType values are then turned into CompactType values for simplification.
@@ -40,20 +56,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
    * (See the case for `Sel` in `typeTerm` for documentation on explicit vs. implicit calls.)
    * The public helper functions should be preferred for manipulating `mthEnv`
    */
-  class SearchStrategy()
-
-
-  // Searches everywhere
-  final case class NormalSearchStrategy() extends SearchStrategy
-
-  // Searches only outside a quasiquote
-  final case class UnquoteSearchStrategy() extends SearchStrategy
-
-  // Searches only inside a quasiquote
-  final case class QuasiquoteSearchStrategy(lvl: Int) extends SearchStrategy
-  // uses only if you need to search a method definition (e.g. + - * /)
-  // it has the same effect as `NormalSearchStrategy`
-  final case class SuperSearchStrategy() extends SearchStrategy
   case class Ctx(
                   parent: Opt[Ctx],
                   env: MutMap[Str, TypeInfo],
@@ -65,11 +67,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
                   nuTyDefs: Map[Str, TypedNuTypeDef],
                   quasiquoteLvl: Int, // > 0 means inside a quasiquote
                   inUnquoted: Boolean,
-                  inTuple: Boolean,
                   outerQuoteEnvironments: List[Ctx],
                   var outermostCtx: Opt[Ctx],
                   var overridingStrategy: Opt[SearchStrategy], // override once only, will set to N if the overrided strategy is used
-                  innerUnquoteContextRequirements: mutable.ListBuffer[TypeVariable],
+                  innerUnquoteContextRequirements: mutable.ListBuffer[SimpleType],
                   outermostFreeVarType: MutMap[Str, SimpleType],
                   outermostBoundedVarType: mutable.ListBuffer[Str]
                 ) {
@@ -80,32 +81,20 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
 
     def inQQ: Bool = quasiquoteLvl > 0
 
-    def get(name: Str, strategy: SearchStrategy = NormalSearchStrategy()): Opt[TypeInfo] = {
+    def get(name: Str, strategy: SearchStrategy = LinearSearchStrategy()): Opt[TypeInfo] = {
       strategy match {
-        case NormalSearchStrategy() | SuperSearchStrategy() =>
+        case LinearSearchStrategy() | SuperSearchStrategy() =>
           env.get(name) orElse parent.dlof(_.get(name, strategy))(N)
         case UnquoteSearchStrategy() =>
           if (!inQQ) {
             env.get(name) orElse parent.dlof(_.get(name, strategy))(N)
-          } else {
-            // recursively search until find the top level context
-            parent match {
-              case Some(p) =>
-//                println("Continue to search")
-                p.get(name, strategy)
-              case _ => None
-            }
-          }
+          } else
+            parent.dlof(_.get(name, strategy))(N)
         case QuasiquoteSearchStrategy(lvl) =>
-          if (quasiquoteLvl == lvl) {
+          if (quasiquoteLvl === lvl) {
             env.get(name) orElse freeVarsEnv.get(name) orElse parent.dlof(_.get(name, strategy))(N)
-          } else {
-            parent match {
-              case Some(p) =>
-                p.get(name, strategy)
-              case _ => None
-            }
-          }
+          } else
+            parent.dlof(_.get(name, strategy))(N)
       }
     }
 
@@ -153,8 +142,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       outermostFreeVarType = MutMap.empty,
       outermostBoundedVarType = ListBuffer.empty,
       innerUnquoteContextRequirements = ListBuffer.empty,
-      overridingStrategy = None,
-      inTuple = false
+      overridingStrategy = None
     )
 
     val empty: Ctx = init
@@ -602,7 +590,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         val ty_ty = typeType(ty)(ctx.copy(inPattern = false), raise, vars)
         con(trm_ty, ty_ty, ty_ty)
         if (ctx.inPattern)
-          con(ty_ty, trm_ty, ty_ty) // In patterns, we actually _unify_ the pattern and ascribed type 
+          con(ty_ty, trm_ty, ty_ty) // In patterns, we actually _unify_ the pattern and ascribed type
         else ty_ty
       case (v@ValidPatVar(nme)) =>
         val prov = tp(if (verboseConstraintProvenanceHints) v.toLoc else N, "variable")
@@ -612,28 +600,25 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             val res = new TypeVariable(lvl, Nil, Nil)(prov)
             v.uid = S(nextUid)
             ctx += nme -> VarSymbol(res, v) // adding this bounded variables
-//            println(s"Adding $nme to ctx: $ctx")
             ctx.outermostCtx match {
-              case Some(outermost) =>
-                println(s"inTuple = ${ctx.inTuple}")
-                if (!outermost.outermostFreeVarType.contains(nme) && !ctx.inTuple)
+              case Some(outermost) if !outermost.outermostFreeVarType.contains(nme) =>
                   outermost.outermostBoundedVarType.append(nme)
-              case _ => println(nme)
+              case _ =>
             }
             res
           }
       case v@ValidVar(name) =>
 //        println(s"inspect $name by ctx.get")
-        val strategy = if (ctx.overridingStrategy != N) {
-          ctx.overridingStrategy.get
-        } else if (builtinBindings.contains(name))
-          SuperSearchStrategy()
-        else if (ctx.inUnquoted)
-          UnquoteSearchStrategy()
-        else if (ctx.inQQ)
-          QuasiquoteSearchStrategy(ctx.quasiquoteLvl)
-        else
-          NormalSearchStrategy()
+        val strategy = ctx.overridingStrategy.getOrElse(
+          if (builtinBindings.contains(name))
+            SuperSearchStrategy()
+          else if (ctx.inUnquoted)
+            UnquoteSearchStrategy()
+          else if (ctx.inQQ)
+            QuasiquoteSearchStrategy(ctx.quasiquoteLvl)
+          else
+            LinearSearchStrategy()
+        )
         ctx.overridingStrategy = N
 //        println(s"searching method: $strategy")
         val ty = ctx.get(name, strategy).fold(
@@ -700,8 +685,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case Tup(fs) =>
 
         TupleType(fs.map { case (n, Fld(mut, _, t)) =>
-          println(s"tup 3 - t: ${t}")
-          val tym = typeTerm(t)(ctx.copy(inTuple = true), raise, vars)
+          val tym = typeTerm(t)(ctx, raise, vars)
           val fprov = tp(t.toLoc, (if (mut) "mutable " else "") + "tuple field")
           if (mut) {
             val res = freshVar(fprov, n.map(_.name))
@@ -868,11 +852,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         val newCtx = ctx.nest
         newCtx += nme.name -> VarSymbol(n_ty, nme)
         ctx.outermostCtx match {
-          case Some(outermost) =>
-            if (!outermost.outermostFreeVarType.contains(nme.name) && !ctx.inTuple)
+          case Some(outermost) if !outermost.outermostFreeVarType.contains(nme.name) =>
             outermost.outermostBoundedVarType.append(nme.name)
           case _ =>
-            println(s"failed to insert ${nme.name} to bounded")
         }
 
         typeTerm(bod)(newCtx, raise)
@@ -937,14 +919,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         val body_type = typeTerm(body)(nested_ctx, raise, vars)
         val empty_rcd = RecordType(Nil)(NoProv)
         val requirements = nested_ctx.innerUnquoteContextRequirements.toList
-        requirements.foreach( ty => println(s"up ${ty.upperBounds}"))
 
 //        println("local unquoted context:")
 //        println(requirements)
 
         val unquote_requirement = requirements match {
           case Nil => empty_rcd
-          case _ => requirements.reduce[SimpleType](_ & _)
+          case _ => requirements.reduce(_ & _)
         }
 
         val free_vars = nested_ctx.outermostFreeVarType.toList
@@ -956,23 +937,17 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             RecordType(list)(NoProv)
         }
 
-//        println(free_var_requirement)
-//        println(nested_ctx.outermostBoundedVarType)
         val ctx_type = unquote_requirement & free_var_requirement
-        val ctx_ty_without_bounded = ctx_type.without(nested_ctx.outermostBoundedVarType.map(Var(_)).toSortedSet)
-        TypeRef(TypeName("Code"), body_type :: ctx_ty_without_bounded :: Nil)(noProv)
+
+        TypeRef(TypeName("Code"), body_type :: ctx_type :: Nil)(noProv)
       case Unquoted(body) =>
         ctx.parent match {
           case Some(p) =>
-//            println(s"qq level: ${p.quasiquoteLvl}")
             val nestedCtx = p.nest.copy(quasiquoteLvl = p.quasiquoteLvl + 1, inUnquoted = true)
-            //        println(s"Typing for unquoted ${nestedCtx.id}")
 
             val tt = freshVar(noProv)(0)
             val tc = freshVar(noProv)(0)
 
-            // func <return_type> foo(<param_type> param)
-            // Code[tt, tc] <: Code[T <- co, C <- cotra]
 
             val f_ty = FunctionType(TypeRef(TypeName("Code"), Ls(tt, tc))(noProv), tt)(noProv)
 
@@ -981,10 +956,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             val res = freshVar(prov)
 
             val resTy = con(f_ty, FunctionType(body_type, res)(prov), res)
-            println(s"Unquoted type: ${resTy} ${resTy.getClass}")
+
             ctx.outermostCtx match {
               case Some(p) =>
-                p.innerUnquoteContextRequirements.append(tc)
+                val tc_with_bounded = tc.without(p.outermostBoundedVarType.map(Var).toSortedSet)
+                p.innerUnquoteContextRequirements.append(tc_with_bounded)
               case _ => err("Unquotes should be enclosed with a quasiquote.", body.toLoc)(raise)
             }
             resTy
