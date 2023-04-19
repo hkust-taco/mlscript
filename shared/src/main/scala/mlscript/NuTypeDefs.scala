@@ -192,7 +192,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           members.mapValuesIter(_.mapPol(pol, smart)(f)).toMap,
           f(pol.map(!_), thisTy),
           sign.map(f(pol, _)),
-          tags
+          f(pol, tags),
         )
     def mapPolMap(pol: PolMap)(f: (PolMap, SimpleType) => SimpleType)
           (implicit ctx: Ctx): TypedNuTrt =
@@ -201,7 +201,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           members.mapValuesIter(_.mapPolMap(pol)(f)).toMap,
           f(pol.contravar, thisTy),
           sign.map(f(pol, _)),
-          tags
+          f(pol, tags),
         )
   }
   
@@ -356,7 +356,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   }
   
   
-  def typeSignatureOf(td: NuTypeDef, level: Level, tparams: TyParams, params: Params, tags: ST = TopType): ST = td.kind match {
+  def typeSignatureOf(td: NuTypeDef, level: Level, tparams: TyParams, params: Params, tags: ST): ST = td.kind match {
     case Nms =>
       ClassTag(Var(td.nme.name),
           // TODO base classes
@@ -975,7 +975,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
             case _ => die
           }
         case td: NuTypeDef =>
-          typeSignatureOf(td, level, tparams, typedParams)
+          typeSignatureOf(td, level, tparams, typedParams, TopType)
       }
     
     override def toString: String =
