@@ -96,7 +96,7 @@ class Foo[A] { 42: A }
 
 :e
 class C1 { fun oops = this.x }
-//│ ╔══[ERROR] Class `C1` does not contain member `x`
+//│ ╔══[ERROR] Type `#C1` does not contain member `x`
 //│ ║  l.98: 	class C1 { fun oops = this.x }
 //│ ╙──      	                          ^^
 //│ class C1() {

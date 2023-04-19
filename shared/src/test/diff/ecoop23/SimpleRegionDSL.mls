@@ -186,16 +186,16 @@ mixin Text {
 
 :e
 module SizeText extends Text
-//│ ╔══[ERROR] Module `SizeText` does not contain member `size`
+//│ ╔══[ERROR] Type `#SizeText & {text: ?a -> (?b | ?c | ?d | ?e | ?f)}` does not contain member `size`
 //│ ║  l.180: 	      Translate then concat("a translated region of size ", toString(this.size(e)))
 //│ ╙──       	                                                                         ^^^^^
-//│ ╔══[ERROR] Module `SizeText` does not contain member `size`
+//│ ╔══[ERROR] Type `#SizeText & {text: ?a -> (?b | ?c | ?d | ?e | ?f)}` does not contain member `size`
 //│ ║  l.179: 	      Intersect then concat("the intersection of two regions of size ", toString(this.size(e)))
 //│ ╙──       	                                                                                     ^^^^^
-//│ ╔══[ERROR] Module `SizeText` does not contain member `size`
+//│ ╔══[ERROR] Type `#SizeText & {text: ?a -> (?b | ?c | ?d | ?e | ?f)}` does not contain member `size`
 //│ ║  l.178: 	      Union then concat("the union of two regions of size ", toString(this.size(e)))
 //│ ╙──       	                                                                          ^^^^^
-//│ ╔══[ERROR] Module `SizeText` does not contain member `size`
+//│ ╔══[ERROR] Type `#SizeText & {text: ?a -> (?b | ?c | ?d | ?e | ?f)}` does not contain member `size`
 //│ ║  l.177: 	      Outside(a) then concat("outside a region of size ", toString(this.size(a)))
 //│ ╙──       	                                                                       ^^^^^
 //│ module SizeText() {
@@ -324,19 +324,19 @@ module TestElim extends Eliminate
 //│ }
 //│ where
 //│   'a <: Intersect['a] | Outside['a & (Outside['a] | ~#Outside)] | Scale['a] | Translate['a] | Union['a] | 'b & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union
-//│   'b :> Outside['b] | Union['b] | Intersect['b] | Translate['b] | Scale['b]
+//│   'b :> Intersect['b] | Translate['b] | Scale['b] | Outside['b] | Union['b]
 
 TestElim.eliminate(Outside(Outside(Univ())))
 //│ 'a
 //│   where
-//│     'a :> Intersect['a] | Translate['a] | Scale['a] | Univ | Outside['a] | Union['a]
+//│     'a :> Outside['a] | Union['a] | Intersect['a] | Translate['a] | Scale['a] | Univ
 //│ res
 //│     = Univ {}
 
 TestElim.eliminate(circles)
 //│ 'a
 //│   where
-//│     'a :> Outside['a] | Union['a] | Intersect['a] | Translate['a] | Scale['a] | Circle
+//│     'a :> Circle | Outside['a] | Union['a] | Intersect['a] | Translate['a] | Scale['a]
 //│ res
 //│     = Union {}
 
@@ -354,7 +354,7 @@ fun mk(n) = if n is
 TestElim.eliminate(mk(100))
 //│ 'a
 //│   where
-//│     'a :> Outside['a] | Union['a] | Intersect['a] | Translate['a] | Scale['a]
+//│     'a :> Intersect['a] | Translate['a] | Scale['a] | Outside['a] | Union['a]
 //│ res
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded
@@ -377,7 +377,7 @@ module Lang extends SizeBase, SizeExt, Contains, Text, IsUniv, IsEmpty, Eliminat
 //│   'd <: Intersect['d] | Outside['e] | Scale['d] | Translate['d] | Union['d] | Univ | ~Intersect[anything] & ~Outside[anything] & ~Scale[anything] & ~Translate[anything] & ~Union[anything] & ~Univ
 //│   'e <: Intersect['e] | Outside['d] | Scale['e] | Translate['e] | Union['e] | Univ | ~Intersect[anything] & ~Outside[anything] & ~Scale[anything] & ~Translate[anything] & ~Union[anything] & ~Univ
 //│   'b <: Intersect['b] | Outside['b & (Outside['b] | ~#Outside)] | Scale['b] | Translate['b] | Union['b] | 'c & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union
-//│   'c :> Translate['c] | Scale['c] | Outside['c] | Union['c] | Intersect['c]
+//│   'c :> Outside['c] | Union['c] | Intersect['c] | Translate['c] | Scale['c]
 //│   'a <: Circle | Intersect['a] | Outside['a] | Translate['a] | Union['a]
 
 // TODO investigate

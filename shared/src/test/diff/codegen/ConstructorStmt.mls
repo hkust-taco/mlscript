@@ -135,7 +135,7 @@ let ab = A(0)
 class Foo {
   this: { x: int }
 }
-//│ ╔══[ERROR] Class `Foo` does not contain member `x`
+//│ ╔══[ERROR] Type `#Foo` does not contain member `x`
 //│ ║  l.136: 	  this: { x: int }
 //│ ╙──       	          ^
 //│ class Foo()
@@ -166,7 +166,7 @@ class Bar {
 //│ ╔══[ERROR] Illegal use of `super`
 //│ ║  l.164: 	  super: { x: int }
 //│ ╙──       	  ^^^^^
-//│ ╔══[ERROR] Class `Bar` does not contain member `x`
+//│ ╔══[ERROR] Type `#Bar` does not contain member `x`
 //│ ║  l.164: 	  super: { x: int }
 //│ ╙──       	           ^
 //│ class Bar()

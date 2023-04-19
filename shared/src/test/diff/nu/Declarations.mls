@@ -29,7 +29,7 @@ console.error("hello")
 
 :e
 console.log("hello")
-//│ ╔══[ERROR] Module `console` does not contain member `log`
+//│ ╔══[ERROR] Type `console` does not contain member `log`
 //│ ║  l.31: 	console.log("hello")
 //│ ╙──      	       ^^^^
 //│ error

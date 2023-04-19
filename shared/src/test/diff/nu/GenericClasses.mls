@@ -392,7 +392,7 @@ not(w.x.n)
 
 :e
 not(w.x.a)
-//│ ╔══[ERROR] Class `C` does not contain member `a`
+//│ ╔══[ERROR] Type `C['a]` does not contain member `a`
 //│ ║  l.394: 	not(w.x.a)
 //│ ╙──       	       ^^
 //│ bool

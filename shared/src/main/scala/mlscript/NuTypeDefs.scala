@@ -25,9 +25,16 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   sealed trait NuMember {
     def name: Str
     def kind: DeclKind
+    def level: Level
     
     /** Used in inheritance processing, for parent types. */
-    def freshen(implicit ctx: Ctx): NuMember
+    def freshen(implicit ctx: Ctx): NuMember = {
+      implicit val freshened: MutMap[TV, ST] = MutMap.empty
+      implicit val shadows: Shadows = Shadows.empty
+      ctx.copy(lvl = level + 1) |> { implicit ctx =>
+        freshenAbove(level, rigidify = false)
+      }
+    }
     
     def freshenAbove(lim: Int, rigidify: Bool)
           (implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV, ST])
@@ -45,49 +52,50 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   }
   
   
-  case class NuParam(nme: Var, ty: FieldType, isType: Bool) extends NuMember {
+  case class NuParam(nme: Var, ty: FieldType, isType: Bool)(val level: Level) extends NuMember {
     def name: Str = nme.name
     def kind: DeclKind = Val
     def typeSignature: ST = ty.ub
     
-    def freshen(implicit ctx: Ctx): NuMember = this
-    
     def freshenAbove(lim: Int, rigidify: Bool)
           (implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV, ST])
           : NuParam =
-      NuParam(nme, ty.freshenAbove(lim, rigidify), isType)
+      NuParam(nme, ty.freshenAbove(lim, rigidify), isType)(level)
     
     def mapPol(pol: Opt[Bool], smart: Bool)(f: (Opt[Bool], SimpleType) => SimpleType)
           (implicit ctx: Ctx): NuMember =
-        NuParam(nme, ty.update(t => f(pol.map(!_), t), t => f(pol, t)), isType)
+        NuParam(nme, ty.update(t => f(pol.map(!_), t), t => f(pol, t)), isType)(level)
     def mapPolMap(pol: PolMap)(f: (PolMap, SimpleType) => SimpleType)
           (implicit ctx: Ctx): NuMember =
-        NuParam(nme, ty.update(t => f(pol.contravar, t), t => f(pol, t)), isType)
+        NuParam(nme, ty.update(t => f(pol.contravar, t), t => f(pol, t)), isType)(level)
   }
   
   
   // TODO:
-  // case class NuTypeParam(nme: TN, ty: FieldType) extends NuMember {
-  //   def name: Str = nme.name
-  //   
-  //   def freshenAbove(lim: Int, rigidify: Bool)
-  //         (implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV, ST])
-  //         : NuParam =
-  //     NuParam(nme, ty.freshenAbove(lim, rigidify))
-  // }
+  case class NuTypeParam(nme: TN, ty: FieldType)(val level: Level) extends NuMember {
+    def name: Str = nme.name
+    
+    def freshenAbove(lim: Int, rigidify: Bool)
+          (implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV, ST])
+          : NuTypeParam =
+      NuTypeParam(nme, ty.freshenAbove(lim, rigidify))(level)
+      
+    def mapPol(pol: Opt[Bool], smart: Bool)(f: (Opt[Bool], SimpleType) => SimpleType)
+          (implicit ctx: Ctx): NuMember =
+        NuTypeParam(nme, ty.update(t => f(pol.map(!_), t), t => f(pol, t)))(level)
+    
+    def mapPolMap(pol: PolMap)(f: (PolMap, SimpleType) => SimpleType)
+          (implicit ctx: Ctx): NuMember =
+        NuTypeParam(nme, ty.update(t => f(pol.contravar, t), t => f(pol, t)))(level)
+    
+    def kind: DeclKind = Als // FIXME?
+  }
   
   
   sealed trait TypedNuDecl extends NuMember {
     def name: Str
     def level: Level
     
-    def freshen(implicit ctx: Ctx): NuMember = {
-      implicit val freshened: MutMap[TV, ST] = MutMap.empty
-      implicit val shadows: Shadows = Shadows.empty
-      ctx.copy(lvl = level + 1) |> { implicit ctx =>
-        freshenAbove(level, rigidify = false)
-      }
-    }
     def mapPol(pol: Opt[Bool], smart: Bool)(f: (Opt[Bool], SimpleType) => SimpleType)
           (implicit ctx: Ctx): TypedNuDecl
     def mapPolMap(pol: PolMap)(f: (PolMap, SimpleType) => SimpleType)
@@ -221,6 +229,10 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     
     def typeSignature: ST = typeSignatureOf(td, level, tparams, params, tags)
     
+    /** Includes class-name-coded type parameter fields. */
+    lazy val virtualMembers: Map[Str, NuMember] = members ++ tparams.map {
+      case (nme @ TypeName(name), tv, _) => td.nme.name+"#"+name -> NuTypeParam(nme, FieldType(S(tv), tv)(provTODO))(level)
+    }
     
     // TODO
     // def checkVariances
@@ -760,7 +772,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     
                     val tparamMems = tparams.map { case (tp, tv, vi) => // TODO use vi
                       val fldNme = td.nme.name + "#" + tp.name
-                      NuParam(Var(fldNme).withLocOf(tp), FieldType(S(tv), tv)(tv.prov), isType = true)
+                      NuParam(Var(fldNme).withLocOf(tp), FieldType(S(tv), tv)(tv.prov), isType = true)(lvl)
                     }
                     val tparamFields = tparamMems.map(p => p.nme -> p.ty)
                     assert(!typedParams.keys.exists(tparamFields.keys.toSet), ???)
@@ -805,7 +817,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                                     val a_ty = typeTerm(a)
                                     p.lb.foreach(constrain(_, a_ty))
                                     constrain(a_ty, p.ub)
-                                    NuParam(nme, FieldType(p.lb, a_ty)(provTODO), isType = false)
+                                    NuParam(nme, FieldType(p.lb, a_ty)(provTODO), isType = false)(lvl)
                                   }
                                   
                                   // TODO check overriding
@@ -866,7 +878,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     val baseType =
                       RecordType(Nil)(TypeProvenance(Loc(td.parents).map(_.left), "Object"))
                     
-                    val paramMems = typedParams.map(f => NuParam(f._1, f._2, isType = false))
+                    val paramMems = typedParams.map(f => NuParam(f._1, f._2, isType = false)(lvl))
                     
                     val (thisType, baseMems) =
                       inherit(parentSpecs, baseType, tparamMems ++ paramMems)
@@ -934,7 +946,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     err(msg"mixin definitions cannot yet extend parents" -> Loc(td.parents) :: Nil)
                   ctx.nest.nextLevel { implicit ctx =>
                     ctx ++= paramSymbols
-                    val paramMems = typedParams.map(f => NuParam(f._1, f._2, isType = false))
+                    val paramMems = typedParams.map(f => NuParam(f._1, f._2, isType = false)(lvl))
                     implicit val vars: Map[Str, SimpleType] =
                       outerVars ++ Map.empty // TODO type params
                     val thisTV = freshVar(provTODO, N, S("this"))

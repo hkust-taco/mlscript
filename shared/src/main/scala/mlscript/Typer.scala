@@ -442,9 +442,18 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         vars.getOrElse(name, {
           typeNamed(tyLoc, name) match {
             case R((_, tpnum)) =>
-              if (tpnum =/= 0) {
-                err(msg"Type $name takes parameters", tyLoc)(raise)
-              } else TypeRef(tn, Nil)(tpr)
+              if (tpnum === 0) TypeRef(tn, Nil)(tpr)
+              else ctx.tyDefs2.get(name) match {
+                case S(lti) =>
+                  lti.decl match {
+                    case NuTypeDef(Cls | Nms, _, _, _, _, _, _, _, _) =>
+                      clsNameToNomTag(ctx.tyDefs2(name).decl.asInstanceOf[NuTypeDef])(tyTp(tyLoc, "class tag"), ctx)
+                    case NuTypeDef(Trt, _, _, _, _, _, _, _, _) =>
+                      trtNameToNomTag(ctx.tyDefs2(name).decl.asInstanceOf[NuTypeDef])(tyTp(tyLoc, "class tag"), ctx)
+                    case _ => die // TODO
+                  }
+                case _ => err(msg"Type $name takes parameters", tyLoc)(raise)
+              }
             case L(e) =>
               if (name.isEmpty || !name.head.isLower) e()
               else (typeNamed(tyLoc, name.capitalize), ctx.tyDefs.get(name.capitalize)) match {
