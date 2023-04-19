@@ -27,12 +27,6 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
     // ',', 
     ';'
   )
-
-  val tripleQuote = "'''"
-  def isTripleQuote(i: Int): Bool = {
-    val syntax = tripleQuote
-    i + syntax.length < length + 1 && bytes.slice(i, i + syntax.length).mkString == syntax
-  }
   def isIdentFirstChar(c: Char): Bool =
     c.isLetter || c === '_' || c === '\''
   def isIdentChar(c: Char): Bool =
@@ -80,23 +74,35 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
 
   def loc(start: Int, end: Int): Loc = Loc(start, end, origin)
 
-
-
   // @tailrec final
-  def lex(i: Int, ind: Ls[Int], acc: Ls[TokLoc])(implicit qcnt: Int = 0): Ls[TokLoc] = if (i >= length) acc.reverse else {
+  def lex(i: Int, ind: Ls[Int], acc: Ls[TokLoc])(implicit qqList: Ls[BracketKind] = Nil): Ls[TokLoc] = if (i >= length) acc.reverse else {
     val c = bytes(i)
     def pe(msg: Message): Unit =
       // raise(ParseError(false, msg -> S(loc(i, i + 1)) :: Nil))
       raise(ErrorReport(msg -> S(loc(i, i + 1)) :: Nil, source = Lexing)) // TODO parse error
       // @inline
-    def go(j: Int, tok: Token)(implicit qcnt: Int) = lex(j, ind, (tok, loc(i, j)) :: acc)
+    def go(j: Int, tok: Token)(implicit qqList: Ls[BracketKind]) = lex(j, ind, (tok, loc(i, j)) :: acc)
+
+    def isMatchSyntax(i: Int, syntax: Str): Bool = {
+      i + syntax.length < length + 1 && bytes.slice(i, i + syntax.length).mkString === syntax
+    }
     def isQuasiquoteKeyword(i: Int): Boolean = {
       val syntax = BracketKind.Quasiquote.beg.asInstanceOf[Str]
-      i + syntax.length < length + 1 && bytes.slice(i, i + syntax.length).mkString === syntax
+      isMatchSyntax(i, syntax)
+    }
+
+    def isQuasiquoteTripleKeyword(i: Int): Boolean = {
+      val syntax = BracketKind.QuasiquoteTriple.beg.asInstanceOf[Str]
+      isMatchSyntax(i, syntax)
     }
     def isUnquoteKey(i: Int): Boolean = {
       val syntax = BracketKind.Unquote.beg.asInstanceOf[Str]
-      i + syntax.length < length + 1 && bytes.slice(i, i + syntax.length).mkString === syntax
+      isMatchSyntax(i, syntax)
+    }
+
+    def isTripleQuote(i: Int): Bool = {
+      val syntax = BracketKind.QuasiquoteTriple.end.asInstanceOf[Str]
+      isMatchSyntax(i, syntax)
     }
 
     c match {
@@ -106,40 +112,33 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
       case ',' =>
         val j = i + 1
         go(j, COMMA)
-      case 'c' if isQuasiquoteKeyword(i) =>
-        go(i + 5, OPEN_BRACKET(BracketKind.Quasiquote))(qcnt + 1) // TODO: throw error if the double quote doesn't align
+      case 'c' if isQuasiquoteKeyword(i) || isQuasiquoteTripleKeyword(i) =>
+        val isTripleQuoteQQ = isQuasiquoteTripleKeyword(i)
+        val bracket_kind = if (isTripleQuoteQQ)
+          BracketKind.QuasiquoteTriple
+        else
+          BracketKind.Quasiquote
+        val len = bracket_kind.beg.asInstanceOf[Str].length
+        go(i + len, OPEN_BRACKET(bracket_kind))(bracket_kind :: qqList)
       case '$' if isUnquoteKey(i) =>
         go(i + 2, OPEN_BRACKET(BracketKind.Unquote))
       case '"' =>
-        //       val j = i + 1
-        // val (chars, k) = takeWhile(j)(c => c =/= '"' && c =/= '\n')
-        // if (bytes.lift(k) === Some('"')) 
-        //   go(k + 1, LITVAL(StrLit(chars)))
-        // else if (qcnt >= 1)
-        //   go(i + 1, CLOSE_BRACKET(BracketKind.Quasiquote))(qcnt - 1)
-        // else {
-        //   pe(msg"unclosed quotation mark")
-        //   go(k, LITVAL(StrLit(chars)))
-        // }
-        if (qcnt >= 1)
-          go(i + 1, CLOSE_BRACKET(BracketKind.Quasiquote))(qcnt - 1)
-        else {
-          val j = i + 1
-          val (chars, k) = takeWhile(j)(c => c =/= '"' && c =/= '\n')
+        val j = i + 1
+        val (chars, k) = takeWhile(j)(c => c =/= '"' && c =/= '\n')
+        val isLexingTripleQQ = qqList.nonEmpty && qqList.head === BracketKind.QuasiquoteTriple
+
+        if (isLexingTripleQQ && isTripleQuote(i)) {
+          val syntax_length = BracketKind.QuasiquoteTriple.end.asInstanceOf[Str].length
+          go(i + syntax_length, CLOSE_BRACKET(BracketKind.QuasiquoteTriple))(qqList.tail)
+        } else if (!isLexingTripleQQ && qqList.nonEmpty) {
+          go(i + 1, CLOSE_BRACKET(BracketKind.Quasiquote))(qqList.tail)
+        } else {
           val k2 = if (bytes.lift(k) === Some('"')) k + 1 else {
             pe(msg"unclosed quotation mark")
             k
           }
           go(k2, LITVAL(StrLit(chars)))
         }
-      case '\'' if isTripleQuote(i) =>
-        val j = i + tripleQuote.length
-        val (chars, k) = takeWhileIndex(j)(idx => !isTripleQuote(idx) && c =/= '\n')
-        val k2 = if (isTripleQuote(k)) k + tripleQuote.length else {
-          pe(msg"unclosed quotation mark")
-          k
-        }
-        go(k2, LITVAL(StrLit(chars)))
       case '/' if bytes.lift(i + 1).contains('/') =>
         val j = i + 2
         val (txt, k) =

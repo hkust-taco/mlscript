@@ -157,11 +157,11 @@ run(unquoted)
 // No obvious test for UnitLit
 // Parsing error for StrLit 
 
-let str_lit = code"'''hello'''"
+let str_lit = code""" "hello" """
 //│ str_lit: Code["hello", anything]
 //│        = [ '_', 'hello' ]
 
-// free variables 
+// free variables
 let free = code"y"
 //│ free: Code['a, {y: 'a}]
 //│     = [ 'Var', [ 'FreeVar', 'y' ] ]
@@ -483,6 +483,7 @@ run(c)
 
 
 
+
 let c = x => code"1 + ${code"x"}"
 let res = c(2)
 //│ c: anything -> Code[int, {x: int}]
@@ -493,7 +494,7 @@ let res = c(2)
 :e
 run(res)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.494: 	run(res)
+//│ ║  l.495: 	run(res)
 //│ ║         	^^^^^^^^
 //│ ╙── type `anything` does not have field 'x'
 //│ res: error | int

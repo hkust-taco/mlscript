@@ -1,6 +1,7 @@
 :NewParser
 :ge
 
+
 // Test 1
 let code_test = code"let x_0 = 1; let x_1 = 10; let x_2 = 100; x_0 + x_1 + x_2"
 //│ code_test: Code[int, anything]
@@ -32,7 +33,7 @@ fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, code"${
 :e
 run(test(5, code"0"))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.33: 	run(test(5, code"0"))
+//│ ║  l.34: 	run(test(5, code"0"))
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── expression of type `anything` does not have field 'x'
 //│ res: error
@@ -64,7 +65,7 @@ let c = test(3, code"2")
 :e
 run(c)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.65: 	run(c)
+//│ ║  l.66: 	run(c)
 //│ ║        	^^^^^^
 //│ ╙── expression of type `anything` does not have field 'x'
 //│ res: error

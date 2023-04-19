@@ -1,16 +1,40 @@
 :NewParser
 
-let empty = code"x"
-let empty2 = code"y"
-//│ empty: Code['a, {x: 'a}]
-//│      = [ 'Var', [ 'FreeVar', 'x' ] ]
-//│ empty2: Code['a, {y: 'a}]
-//│       = [ 'Var', [ 'FreeVar', 'y' ] ]
+let a = code"x"
+let b = code"y"
+//│ a: Code['a, {x: 'a}]
+//│  = [ 'Var', [ 'FreeVar', 'x' ] ]
+//│ b: Code['a, {y: 'a}]
+//│  = [ 'Var', [ 'FreeVar', 'y' ] ]
 
+code"x + (let x = 2; x * x)"
+//│ res: Code[int, {x: int}]
+//│    = [
+//│        'App',
+//│        '+',
+//│        [ 'Var', [ 'FreeVar', 'x' ] ],
+//│        [
+//│          'Let',
+//│          'x',
+//│          Symbol(x),
+//│          [ '_', 2 ],
+//│          [ 'App', '*', [Array], [Array] ]
+//│        ]
+//│      ]
+
+let a = code"x"
+let b = code"y"
+let x = 1
 code"let x = 1
 let b = 1
-${empty} + (let y = 1; ${empty2})
+${a} + (let y = 1; ${b})
 "
+//│ a: Code['a, {x: 'a}]
+//│  = [ 'Var', [ 'FreeVar', 'x' ] ]
+//│ b: Code['a, {y: 'a}]
+//│  = [ 'Var', [ 'FreeVar', 'y' ] ]
+//│ x: 1
+//│  = 1
 //│ res: Code[int, {x: int}\b\x & {y: int}\b\x\y]
 //│    = [
 //│        'Let',
@@ -31,9 +55,9 @@ let cde = code"a"
 //│ 1. Typing term Quoted' a '
 //│ | class: class mlscript.Var (a)
 //│ | 1. Typing term a
-//│ | 1. : α53'
-//│ 1. : Code[α53',{a: α53'}]
-//│ ⬤ Typed as: Code[α53',{a: α53'}]
+//│ | 1. : α68'
+//│ 1. : Code[α68',{a: α68'}]
+//│ ⬤ Typed as: Code[α68',{a: α68'}]
 //│  where: 
 //│ cde: Code['a, {a: 'a}]
 //│    = [ 'Var', [ 'FreeVar', 'a' ] ]
@@ -101,7 +125,7 @@ let cde_w_mutli_unquote = code"${free_var2} + ${free_var1}"
 // FIXME
 c: Code<int, {}>
 //│ ╔══[ERROR] identifier not found: c
-//│ ║  l.102: 	c: Code<int, {}>
+//│ ║  l.126: 	c: Code<int, {}>
 //│ ╙──       	^
 //│ res: Code[int, anything]
 //│ Code generation encountered an error:
@@ -120,11 +144,11 @@ let c = f(x, x)
 //│ c: Code[('a, 'a,), {y: 'a}]
 //│  = [ 'Bra', [ 'Tup', [ [Array], [Array] ] ] ]
 
-let tuple_free = code"[${code"y"}, ${code"y"}]"
-//│ tuple_free: Code[('a, 'a,), {y: 'a}]
-//│           = [ 'Bra', [ 'Tup', [ [Array], [Array] ] ] ]
+let cde_arr = code"[${code"y"}, ${code"y"}]"
+//│ cde_arr: Code[('a, 'a,), {y: 'a}]
+//│        = [ 'Bra', [ 'Tup', [ [Array], [Array] ] ] ]
 
-code"let y = 1; ${tuple_free}"
+code"let y = 1; ${cde_arr}"
 //│ res: Code[('a, 'a,), {y: 'a}\y]
 //│    = [
 //│        'Let',
@@ -137,7 +161,7 @@ code"let y = 1; ${tuple_free}"
 :e
 run(res)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.138: 	run(res)
+//│ ║  l.162: 	run(res)
 //│ ║         	^^^^^^^^
 //│ ╙── expression of type `anything` does not have field 'y'
 //│ res: (nothing, nothing,) | error
@@ -185,7 +209,7 @@ code"f(0)"
 :ge
 code"${code"${code"${z}"}"}"
 //│ ╔══[ERROR] identifier not found: z
-//│ ║  l.186: 	code"${code"${code"${z}"}"}"
+//│ ║  l.210: 	code"${code"${code"${z}"}"}"
 //│ ╙──       	                     ^
 //│ res: Code[error, anything]
 //│ Code generation encountered an error:
@@ -225,6 +249,7 @@ code"let x = 1;${code"x + y"}"
 //│        [ '_', 1 ],
 //│        [ 'Unquoted', [ 'App', '+', [Array], [Array] ] ]
 //│      ]
+
 
 code"1 + ${code"b"}"
 //│ res: Code[int, {b: int}]

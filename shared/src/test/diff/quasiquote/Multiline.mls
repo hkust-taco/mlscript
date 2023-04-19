@@ -149,6 +149,7 @@ run(res)
 
 
 
+
 code"let x = {a: 100}
 x 
   .a

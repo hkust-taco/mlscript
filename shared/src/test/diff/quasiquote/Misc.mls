@@ -1,7 +1,12 @@
 :NewParser
 
+:p
 code"2 + 2"
 // in JS: ["+", 2, 2]
+//│ |code"|2| |+| |2|"|↵|/* in JS: ["+", 2, 2]*/|
+//│ Parsed: Quoted' + (2,) (2,) ';
+//│ Desugared: Quoted' + (2,) (2,) '
+//│ AST: Quoted(App(App(Var(+), Tup(_: IntLit(2))), Tup(_: IntLit(2))))
 //│ res: Code[int, anything]
 //│    = [ 'App', '+', [ '_', 2 ], [ '_', 2 ] ]
 
@@ -19,10 +24,10 @@ fun foo(x) =
 :e
 code"foo(123) + 1"
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.20: 	code"foo(123) + 1"
+//│ ║  l.25: 	code"foo(123) + 1"
 //│ ║        	     ^^^^^^^^^^
 //│ ╟── application of type `code & {Code#C :> {x: ?a}, Code#T <: ?b}` is not an instance of type `int`
-//│ ║  l.20: 	code"foo(123) + 1"
+//│ ║  l.25: 	code"foo(123) + 1"
 //│ ╙──      	     ^^^^^^^^
 //│ res: Code[error | int, anything]
 //│    = [
@@ -36,7 +41,7 @@ code"foo(123) + 1"
 :ge
 code"10 + ${qq_int}"
 //│ ╔══[ERROR] identifier not found: qq_int
-//│ ║  l.37: 	code"10 + ${qq_int}"
+//│ ║  l.42: 	code"10 + ${qq_int}"
 //│ ╙──      	            ^^^^^^
 //│ res: Code[int, anything]
 //│ Code generation encountered an error:
@@ -54,10 +59,10 @@ code"x => y => 15 + ${   code"x + y"   }"
 // FIXME
 qq_int : Code<int>
 //│ ╔══[ERROR] identifier not found: qq_int
-//│ ║  l.55: 	qq_int : Code<int>
+//│ ║  l.60: 	qq_int : Code<int>
 //│ ╙──      	^^^^^^
 //│ ╔══[ERROR] Wrong number of type arguments – expected 2, found 1
-//│ ║  l.55: 	qq_int : Code<int>
+//│ ║  l.60: 	qq_int : Code<int>
 //│ ╙──      	         ^^^^^^^^
 //│ res: Code[int, anything]
 //│ Code generation encountered an error:
