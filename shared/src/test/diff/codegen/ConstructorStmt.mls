@@ -216,24 +216,9 @@ class Baz {
     x + 1
   log((3, y))
 }
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.216: 	    x + 1
-//│ ║         	    ^^^
-//│ ╟── integer literal of type `123` is not an instance of type `int`
-//│ ║  l.212: 	  let x = 123
-//│ ║         	          ^^^
-//│ ╟── but it flows into reference with expected type `int`
-//│ ║  l.216: 	    x + 1
-//│ ╙──       	    ^
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.216: 	    x + 1
-//│ ║         	    ^^^^^
-//│ ╟── integer literal of type `1` is not an instance of type `int`
-//│ ║  l.216: 	    x + 1
-//│ ╙──       	        ^
 //│ class Baz() {
 //│   let x: 123
-//│   let y: error | int
+//│   let y: Int
 //│ }
 //│ // Prelude
 //│ class TypingUnit9 {
@@ -301,26 +286,26 @@ class Q() {
     let f = (x: int) => {q: x + q}; f(1)
 }
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.301: 	    let f = (x: int) => {q: x + q}; f(1)
-//│ ║         	                            ^^^^^
-//│ ╟── integer literal of type `42` is not an instance of type `int`
-//│ ║  l.299: 	  let q = 42
-//│ ║         	          ^^
-//│ ╟── but it flows into reference with expected type `int`
-//│ ║  l.301: 	    let f = (x: int) => {q: x + q}; f(1)
-//│ ╙──       	                                ^
+//│ ║  l.286: 	    let f = (x: int) => {q: x + q}; f(1)
+//│ ║         	                            ^^^
+//│ ╟── type `int` is not an instance of type `Int`
+//│ ║  l.286: 	    let f = (x: int) => {q: x + q}; f(1)
+//│ ║         	                ^^^
+//│ ╟── but it flows into reference with expected type `Int`
+//│ ║  l.286: 	    let f = (x: int) => {q: x + q}; f(1)
+//│ ╙──       	                            ^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.301: 	    let f = (x: int) => {q: x + q}; f(1)
+//│ ║  l.286: 	    let f = (x: int) => {q: x + q}; f(1)
 //│ ║         	                                    ^^^^
 //│ ╟── integer literal of type `1` is not an instance of type `int`
-//│ ║  l.301: 	    let f = (x: int) => {q: x + q}; f(1)
+//│ ║  l.286: 	    let f = (x: int) => {q: x + q}; f(1)
 //│ ║         	                                      ^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.301: 	    let f = (x: int) => {q: x + q}; f(1)
+//│ ║  l.286: 	    let f = (x: int) => {q: x + q}; f(1)
 //│ ╙──       	                ^^^
 //│ class Q() {
 //│   let q: 42
-//│   fun qq: error | {q: error | int}
+//│   fun qq: error | {q: Int | error}
 //│ }
 //│ // Prelude
 //│ class TypingUnit11 {
@@ -358,7 +343,7 @@ class Q() {
 let q = Q()
 q.qq.q
 //│ let q: Q
-//│ error | int
+//│ Int | error
 //│ q
 //│   = Q {}
 //│ res
@@ -370,16 +355,16 @@ class W() {
   fun add(self: int) = x + self
 }
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.370: 	  fun add(self: int) = x + self
-//│ ║         	                       ^^^
-//│ ╟── integer literal of type `42` is not an instance of type `int`
-//│ ║  l.369: 	  let x = 42
-//│ ║         	          ^^
-//│ ╟── but it flows into reference with expected type `int`
-//│ ║  l.370: 	  fun add(self: int) = x + self
-//│ ╙──       	                       ^
+//│ ║  l.355: 	  fun add(self: int) = x + self
+//│ ║         	                       ^^^^^^^^
+//│ ╟── type `int` is not an instance of type `Int`
+//│ ║  l.355: 	  fun add(self: int) = x + self
+//│ ║         	                ^^^
+//│ ╟── but it flows into reference with expected type `Int`
+//│ ║  l.355: 	  fun add(self: int) = x + self
+//│ ╙──       	                           ^^^^
 //│ class W() {
-//│   fun add: (self: int,) -> (error | int)
+//│   fun add: (self: int,) -> (Int | error)
 //│   let x: 42
 //│ }
 //│ // Prelude
@@ -416,16 +401,16 @@ class W() {
 let www = W()
 www.add(42)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.417: 	www.add(42)
+//│ ║  l.402: 	www.add(42)
 //│ ║         	^^^^^^^^^^^
 //│ ╟── integer literal of type `42` is not an instance of type `int`
-//│ ║  l.417: 	www.add(42)
+//│ ║  l.402: 	www.add(42)
 //│ ║         	        ^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.370: 	  fun add(self: int) = x + self
+//│ ║  l.355: 	  fun add(self: int) = x + self
 //│ ╙──       	                ^^^
 //│ let www: W
-//│ error | int
+//│ Int | error
 //│ // Prelude
 //│ class TypingUnit14 {}
 //│ const typing_unit14 = new TypingUnit14;

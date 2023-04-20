@@ -192,6 +192,19 @@ class Test3(n: string) extends Base1(1/2), Derived1(length(n)) {
 //│ ╟── integer literal of type `2` is not an instance of type `number`
 //│ ║  l.180: 	class Test3(n: string) extends Base1(1/2), Derived1(length(n)) {
 //│ ╙──       	                                       ^
+//│ ╔══[ERROR] Type mismatch in type declaration:
+//│ ║  l.180: 	class Test3(n: string) extends Base1(1/2), Derived1(length(n)) {
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.181: 	  fun foo = [super.foo, n, this.original]
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.182: 	}
+//│ ║         	^
+//│ ╟── application of type `Int` is not an instance of type `int`
+//│ ║  l.180: 	class Test3(n: string) extends Base1(1/2), Derived1(length(n)) {
+//│ ║         	                                                    ^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.31: 	mixin Derived1(n: int) {
+//│ ╙──      	                  ^^^
 //│ class Test3(n: string) {
 //│   fun foo: ((int, string, error | number,), string, number,)
 //│   fun original: number
@@ -199,10 +212,10 @@ class Test3(n: string) extends Base1(1/2), Derived1(length(n)) {
 
 Test3("test").foo
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.200: 	Test3("test").foo
+//│ ║  l.213: 	Test3("test").foo
 //│ ║         	^^^^^^^^^^^^^
 //│ ╟── string literal of type `"test"` is not an instance of type `string`
-//│ ║  l.200: 	Test3("test").foo
+//│ ║  l.213: 	Test3("test").foo
 //│ ║         	      ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.180: 	class Test3(n: string) extends Base1(1/2), Derived1(length(n)) {

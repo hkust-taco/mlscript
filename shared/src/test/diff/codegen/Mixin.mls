@@ -111,8 +111,8 @@ mixin EvalBase {
       Add(l, r) then this.eval(l) + this.eval(r)
 }
 //│ mixin EvalBase() {
-//│   this: {eval: 'lhs -> int}
-//│   fun eval: (Add['lhs] | Lit) -> int
+//│   this: {eval: 'lhs -> Int}
+//│   fun eval: (Add['lhs] | Lit) -> (Int | int)
 //│ }
 //│ // Prelude
 //│ class TypingUnit1 {
@@ -233,16 +233,10 @@ mixin EvalNeg {
     if e is Neg(d) then 0 - this.eval(d)
     else super.eval(e)
 }
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.233: 	    if e is Neg(d) then 0 - this.eval(d)
-//│ ║         	                        ^^^
-//│ ╟── integer literal of type `0` is not an instance of type `int`
-//│ ║  l.233: 	    if e is Neg(d) then 0 - this.eval(d)
-//│ ╙──       	                        ^
 //│ mixin EvalNeg() {
 //│   super: {eval: 'a -> 'b}
-//│   this: {eval: 'expr -> int}
-//│   fun eval: (Neg['expr] | #Object & 'a & ~#Neg) -> (error | int | 'b)
+//│   this: {eval: 'expr -> Int}
+//│   fun eval: (Neg['expr] | #Object & 'a & ~#Neg) -> (Int | 'b)
 //│ }
 //│ // Prelude
 //│ class TypingUnit3 {
@@ -327,7 +321,7 @@ mixin EvalNegNeg {
 //│ const typing_unit4 = new TypingUnit4;
 //│ globalThis.EvalNegNeg = typing_unit4.EvalNegNeg;
 //│ // End of generated code
-//│ ┌ Block at Mixin.mls:298
+//│ ┌ Block at Mixin.mls:292
 //│ ├─┬ Prelude
 //│ │ ├── Code
 //│ │ │   class TypingUnit4 {
@@ -357,8 +351,17 @@ mixin EvalNegNeg {
 :js
 :ShowRepl
 module TestLang extends EvalBase, EvalNeg, EvalNegNeg
+//│ ╔══[ERROR] Type mismatch in type declaration:
+//│ ║  l.353: 	module TestLang extends EvalBase, EvalNeg, EvalNegNeg
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `int` is not an instance of type `Int`
+//│ ║  l.110: 	      Lit(n) then n: int
+//│ ║         	                     ^^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.233: 	    if e is Neg(d) then 0 - this.eval(d)
+//│ ╙──       	                            ^^^^^^^^^^^^
 //│ module TestLang() {
-//│   fun eval: 'a -> (error | int)
+//│   fun eval: 'a -> (Int | int)
 //│ }
 //│ where
 //│   'a <: Neg['A] | #Object & 'b & ~#Neg
@@ -386,7 +389,7 @@ module TestLang extends EvalBase, EvalNeg, EvalNegNeg
 //│ const typing_unit5 = new TypingUnit5;
 //│ globalThis.TestLang = typing_unit5.TestLang;
 //│ // End of generated code
-//│ ┌ Block at Mixin.mls:359
+//│ ┌ Block at Mixin.mls:353
 //│ ├─┬ Prelude
 //│ │ ├── Code
 //│ │ │   class TypingUnit5 {
@@ -421,73 +424,43 @@ fun mk(n) = if n is
   _ then Add(mk(n), mk(n))
 TestLang.eval(mk(0))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.418: 	fun mk(n) = if n is
+//│ ║  l.421: 	fun mk(n) = if n is
 //│ ║         	               ^^^^
-//│ ║  l.419: 	  0 then Lit(0)
+//│ ║  l.422: 	  0 then Lit(0)
 //│ ║         	^^^
 //│ ╟── integer literal of type `0` is not an instance of type `number`
-//│ ║  l.419: 	  0 then Lit(0)
+//│ ║  l.422: 	  0 then Lit(0)
 //│ ╙──       	  ^
-//│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.418: 	fun mk(n) = if n is
-//│ ║         	               ^^^^
-//│ ║  l.419: 	  0 then Lit(0)
-//│ ║         	^^^^^^^^^^^^^^^^
-//│ ║  l.420: 	  1 then Neg(mk(n))
-//│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.421: 	  _ then Add(mk(n), mk(n))
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `bool` is not an instance of type `Object`
-//│ ║  l.418: 	fun mk(n) = if n is
-//│ ║         	               ^^^^
-//│ ║  l.419: 	  0 then Lit(0)
-//│ ╙──       	^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.419: 	  0 then Lit(0)
+//│ ║  l.422: 	  0 then Lit(0)
 //│ ║         	         ^^^^^^
 //│ ╟── integer literal of type `0` is not an instance of type `int`
-//│ ║  l.419: 	  0 then Lit(0)
+//│ ║  l.422: 	  0 then Lit(0)
 //│ ║         	             ^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.7: 	class Lit(n: int)
 //│ ╙──     	             ^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.418: 	fun mk(n) = if n is
+//│ ║  l.421: 	fun mk(n) = if n is
 //│ ║         	               ^^^^
-//│ ║  l.419: 	  0 then Lit(0)
+//│ ║  l.422: 	  0 then Lit(0)
 //│ ║         	^^^^^^^^^^^^^^^^
-//│ ║  l.420: 	  1 then Neg(mk(n))
+//│ ║  l.423: 	  1 then Neg(mk(n))
 //│ ║         	^^^
 //│ ╟── integer literal of type `1` is not an instance of type `number`
-//│ ║  l.420: 	  1 then Neg(mk(n))
+//│ ║  l.423: 	  1 then Neg(mk(n))
 //│ ╙──       	  ^
-//│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.418: 	fun mk(n) = if n is
-//│ ║         	               ^^^^
-//│ ║  l.419: 	  0 then Lit(0)
-//│ ║         	^^^^^^^^^^^^^^^^
-//│ ║  l.420: 	  1 then Neg(mk(n))
-//│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.421: 	  _ then Add(mk(n), mk(n))
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `bool` is not an instance of type `Object`
-//│ ║  l.418: 	fun mk(n) = if n is
-//│ ║         	               ^^^^
-//│ ║  l.419: 	  0 then Lit(0)
-//│ ║         	^^^^^^^^^^^^^^^^
-//│ ║  l.420: 	  1 then Neg(mk(n))
-//│ ╙──       	^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.422: 	TestLang.eval(mk(0))
+//│ ║  l.425: 	TestLang.eval(mk(0))
 //│ ║         	              ^^^^^
 //│ ╟── integer literal of type `0` is not an instance of type `number`
-//│ ║  l.422: 	TestLang.eval(mk(0))
+//│ ║  l.425: 	TestLang.eval(mk(0))
 //│ ║         	                 ^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.418: 	fun mk(n) = if n is
+//│ ║  l.421: 	fun mk(n) = if n is
 //│ ╙──       	               ^
 //│ fun mk: forall 'E. number -> 'E
-//│ error | int
+//│ Int | int
 //│ where
 //│   'E :> Add['E] | Lit | Neg['E] | error
 //│ // Prelude
@@ -500,7 +473,7 @@ TestLang.eval(mk(0))
 //│ // Query 2
 //│ res = TestLang.eval(mk(0));
 //│ // End of generated code
-//│ ┌ Block at Mixin.mls:418
+//│ ┌ Block at Mixin.mls:421
 //│ ├─┬ Prelude
 //│ │ ├── Code
 //│ │ │   class TypingUnit6 {}
@@ -532,7 +505,7 @@ class Foo(x: int)
 :e
 class Bar(x: int, y: int) extends Foo(x + y)
 //│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
-//│ ║  l.533: 	class Bar(x: int, y: int) extends Foo(x + y)
+//│ ║  l.506: 	class Bar(x: int, y: int) extends Foo(x + y)
 //│ ╙──       	                                  ^^^^^^^^^^
 //│ class Bar(x: int, y: int)
 
@@ -614,22 +587,22 @@ mixin Bazz(y: int)
 :js
 module Barr extends Fooo(0), Bazz(1)
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.615: 	module Barr extends Fooo(0), Bazz(1)
+//│ ║  l.588: 	module Barr extends Fooo(0), Bazz(1)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── integer literal of type `0` is not an instance of type `int`
-//│ ║  l.615: 	module Barr extends Fooo(0), Bazz(1)
+//│ ║  l.588: 	module Barr extends Fooo(0), Bazz(1)
 //│ ║         	                         ^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.558: 	mixin Fooo(x: int) { fun f = [x, this.x] }
+//│ ║  l.531: 	mixin Fooo(x: int) { fun f = [x, this.x] }
 //│ ╙──       	              ^^^
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.615: 	module Barr extends Fooo(0), Bazz(1)
+//│ ║  l.588: 	module Barr extends Fooo(0), Bazz(1)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── integer literal of type `1` is not an instance of type `int`
-//│ ║  l.615: 	module Barr extends Fooo(0), Bazz(1)
+//│ ║  l.588: 	module Barr extends Fooo(0), Bazz(1)
 //│ ║         	                                  ^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.592: 	mixin Bazz(y: int)
+//│ ║  l.565: 	mixin Bazz(y: int)
 //│ ╙──       	              ^^^
 //│ module Barr() {
 //│   fun f: (int, 0,)
@@ -673,7 +646,7 @@ mixin Base {
   fun x = y
 }
 //│ ╔══[ERROR] identifier not found: y
-//│ ║  l.673: 	  fun x = y
+//│ ║  l.646: 	  fun x = y
 //│ ╙──       	          ^
 //│ mixin Base() {
 //│   fun x: error
@@ -701,40 +674,40 @@ mixin MC(c: int)
 :js
 module MM extends MA(1), MB(2, 3), MC(4)
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.702: 	module MM extends MA(1), MB(2, 3), MC(4)
+//│ ║  l.675: 	module MM extends MA(1), MB(2, 3), MC(4)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── integer literal of type `1` is not an instance of type `int`
-//│ ║  l.702: 	module MM extends MA(1), MB(2, 3), MC(4)
+//│ ║  l.675: 	module MM extends MA(1), MB(2, 3), MC(4)
 //│ ║         	                     ^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.694: 	mixin MA(a: int)
+//│ ║  l.667: 	mixin MA(a: int)
 //│ ╙──       	            ^^^
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.702: 	module MM extends MA(1), MB(2, 3), MC(4)
+//│ ║  l.675: 	module MM extends MA(1), MB(2, 3), MC(4)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── integer literal of type `2` is not an instance of type `int`
-//│ ║  l.702: 	module MM extends MA(1), MB(2, 3), MC(4)
+//│ ║  l.675: 	module MM extends MA(1), MB(2, 3), MC(4)
 //│ ║         	                            ^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.695: 	mixin MB(b1: int, b2: int)
+//│ ║  l.668: 	mixin MB(b1: int, b2: int)
 //│ ╙──       	             ^^^
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.702: 	module MM extends MA(1), MB(2, 3), MC(4)
+//│ ║  l.675: 	module MM extends MA(1), MB(2, 3), MC(4)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── integer literal of type `3` is not an instance of type `int`
-//│ ║  l.702: 	module MM extends MA(1), MB(2, 3), MC(4)
+//│ ║  l.675: 	module MM extends MA(1), MB(2, 3), MC(4)
 //│ ║         	                               ^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.695: 	mixin MB(b1: int, b2: int)
+//│ ║  l.668: 	mixin MB(b1: int, b2: int)
 //│ ╙──       	                      ^^^
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.702: 	module MM extends MA(1), MB(2, 3), MC(4)
+//│ ║  l.675: 	module MM extends MA(1), MB(2, 3), MC(4)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── integer literal of type `4` is not an instance of type `int`
-//│ ║  l.702: 	module MM extends MA(1), MB(2, 3), MC(4)
+//│ ║  l.675: 	module MM extends MA(1), MB(2, 3), MC(4)
 //│ ║         	                                      ^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.696: 	mixin MC(c: int)
+//│ ║  l.669: 	mixin MC(c: int)
 //│ ╙──       	            ^^^
 //│ module MM()
 //│ // Prelude

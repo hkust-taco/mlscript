@@ -56,35 +56,38 @@ mixin EvalNeg {
     if e is Neg(d) then 0 - this.eval(d)
     else super.eval(e)
 }
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.56: 	    if e is Neg(d) then 0 - this.eval(d)
-//│ ║        	                        ^^^
-//│ ╟── integer literal of type `0` is not an instance of type `int`
-//│ ║  l.56: 	    if e is Neg(d) then 0 - this.eval(d)
-//│ ╙──      	                        ^
 //│ mixin EvalNothing() {
 //│   fun eval: (e: nothing,) -> nothing
 //│ }
 //│ mixin EvalAddLit() {
 //│   super: {eval: 'a -> 'b}
-//│   this: {eval: 'lhs -> int}
-//│   fun eval: (Add['lhs] | Lit | #Object & 'a & ~#Add & ~#Lit) -> (int | 'b)
+//│   this: {eval: 'lhs -> Int}
+//│   fun eval: (Add['lhs] | Lit | #Object & 'a & ~#Add & ~#Lit) -> (Int | int | 'b)
 //│ }
 //│ mixin EvalNeg() {
 //│   super: {eval: 'c -> 'd}
-//│   this: {eval: 'expr -> int}
-//│   fun eval: (Neg['expr] | #Object & 'c & ~#Neg) -> (error | int | 'd)
+//│   this: {eval: 'expr -> Int}
+//│   fun eval: (Neg['expr] | #Object & 'c & ~#Neg) -> (Int | 'd)
 //│ }
 
 module TestLang extends EvalNothing, EvalAddLit, EvalNeg
+//│ ╔══[ERROR] Type mismatch in type declaration:
+//│ ║  l.73: 	module TestLang extends EvalNothing, EvalAddLit, EvalNeg
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `int` is not an instance of type `Int`
+//│ ║  l.7: 	class Lit(n: int)
+//│ ║       	             ^^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.56: 	    if e is Neg(d) then 0 - this.eval(d)
+//│ ╙──      	                            ^^^^^^^^^^^^
 //│ module TestLang() {
-//│   fun eval: 'a -> (error | int)
+//│   fun eval: 'a -> (Int | int)
 //│ }
 //│ where
 //│   'a <: Add['a] | Lit | Neg['a]
 
 TestLang.eval
-//│ 'a -> (error | int)
+//│ 'a -> (Int | int)
 //│   where
 //│     'a <: Add['a] | Lit | Neg['a]
 

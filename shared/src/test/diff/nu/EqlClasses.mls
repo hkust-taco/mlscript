@@ -6,7 +6,7 @@ module Mod
 //│ module Mod()
 
 Mod === Mod
-//│ bool
+//│ Bool
 //│ res
 //│     = true
 
@@ -15,7 +15,7 @@ class Cls1()
 //│ class Cls1()
 
 Cls1() === Cls1()
-//│ bool
+//│ Bool
 //│ res
 //│     = false
 
@@ -42,7 +42,7 @@ Cls2(0) === Cls2(1)
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.23: 	class Cls2(x: int)
 //│ ╙──      	              ^^^
-//│ bool
+//│ Bool
 //│ res
 //│     = false
 
@@ -70,12 +70,12 @@ p === p
 
 
 x => p === x
-//│ {fst: Eql[1 | 2], snd: Eql[1 | 2]} -> bool
+//│ {fst: Eql[1 | 2], snd: Eql[1 | 2]} -> Bool
 //│ res
 //│     = [Function: res]
 
 x => x === p
-//│ Eql[Pair[1 | 2]] -> bool
+//│ Eql[Pair[1 | 2]] -> Bool
 //│ res
 //│     = [Function: res]
 
@@ -98,7 +98,7 @@ p === { fst: 1, snd: 2 }
 //│ ╟── record literal of type `{fst: 1, snd: 2}` is not an instance of type `Eql`
 //│ ║  l.94: 	{ fst: 1, snd: 2 } === p
 //│ ╙──      	       ^^^^^^^^^
-//│ bool | error
+//│ Bool | error
 //│ res
 //│     = false
 
@@ -130,13 +130,13 @@ x => { a: 0 } === x
 //│ ╟── record literal of type `{a: 0}` is not an instance of type `Eql`
 //│ ║  l.126: 	x => { a: 0 } === x
 //│ ╙──       	          ^
-//│ anything -> (bool | error)
+//│ anything -> (Bool | error)
 //│ res
 //│ Syntax error:
 //│   Unexpected token '==='
 
 x => x === { a: 0 }
-//│ Eql[{a: 0}] -> bool
+//│ Eql[{a: 0}] -> Bool
 //│ res
 //│     = [Function: res]
 

@@ -5,22 +5,7 @@
 fun foo =
   fun bar(x) = x + 1
   bar(10)
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.6: 	  fun bar(x) = x + 1
-//│ ║       	               ^^^^^
-//│ ╟── integer literal of type `1` is not an instance of type `int`
-//│ ║  l.6: 	  fun bar(x) = x + 1
-//│ ╙──     	                   ^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.7: 	  bar(10)
-//│ ║       	  ^^^^^^^
-//│ ╟── integer literal of type `10` is not an instance of type `int`
-//│ ║  l.7: 	  bar(10)
-//│ ║       	      ^^
-//│ ╟── Note: constraint arises from reference:
-//│ ║  l.6: 	  fun bar(x) = x + 1
-//│ ╙──     	               ^
-//│ fun foo: error | int
+//│ fun foo: Int
 //│ // Prelude
 //│ let res;
 //│ class TypingUnit {}
@@ -39,31 +24,25 @@ fun foo =
   C(100).bar(10)
 foo
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.38: 	  class C(a: int) { fun bar(x) = a + x + 1 }
-//│ ║        	                                 ^^^^^^^^^
-//│ ╟── integer literal of type `1` is not an instance of type `int`
-//│ ║  l.38: 	  class C(a: int) { fun bar(x) = a + x + 1 }
-//│ ╙──      	                                         ^
+//│ ║  l.23: 	  class C(a: int) { fun bar(x) = a + x + 1 }
+//│ ║        	                                 ^^^
+//│ ╟── type `int` is not an instance of type `Int`
+//│ ║  l.23: 	  class C(a: int) { fun bar(x) = a + x + 1 }
+//│ ║        	             ^^^
+//│ ╟── but it flows into reference with expected type `Int`
+//│ ║  l.23: 	  class C(a: int) { fun bar(x) = a + x + 1 }
+//│ ╙──      	                                 ^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.39: 	  C(100).bar(10)
+//│ ║  l.24: 	  C(100).bar(10)
 //│ ║        	  ^^^^^^
 //│ ╟── integer literal of type `100` is not an instance of type `int`
-//│ ║  l.39: 	  C(100).bar(10)
+//│ ║  l.24: 	  C(100).bar(10)
 //│ ║        	    ^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.38: 	  class C(a: int) { fun bar(x) = a + x + 1 }
+//│ ║  l.23: 	  class C(a: int) { fun bar(x) = a + x + 1 }
 //│ ╙──      	             ^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.39: 	  C(100).bar(10)
-//│ ║        	  ^^^^^^^^^^^^^^
-//│ ╟── integer literal of type `10` is not an instance of type `int`
-//│ ║  l.39: 	  C(100).bar(10)
-//│ ║        	             ^^
-//│ ╟── Note: constraint arises from reference:
-//│ ║  l.38: 	  class C(a: int) { fun bar(x) = a + x + 1 }
-//│ ╙──      	                                     ^
-//│ fun foo: error | int
-//│ error | int
+//│ fun foo: Int | error
+//│ Int | error
 //│ res
 //│     = [Function: foo1]
 

@@ -7,6 +7,20 @@ class B
 //│ class A()
 //│ class B()
 
+let a: Object = A()
+//│ let a: Object
+//│ a
+//│   = A {}
+
+
+module M
+//│ module M()
+
+M: Object
+//│ Object
+//│ res
+//│     = M { class: [class M] }
+
 
 
 fun foo(x) = if x is A then true
@@ -19,38 +33,38 @@ fun foo(x) = if x is A then true else false
 :e
 fun foo(x: anything) = if x is A then true
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.20: 	fun foo(x: anything) = if x is A then true
+//│ ║  l.34: 	fun foo(x: anything) = if x is A then true
 //│ ║        	                          ^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` is not an instance of type `Object`
-//│ ║  l.20: 	fun foo(x: anything) = if x is A then true
+//│ ║  l.34: 	fun foo(x: anything) = if x is A then true
 //│ ║        	           ^^^^^^^^
 //│ ╟── but it flows into reference with expected type `#Object`
-//│ ║  l.20: 	fun foo(x: anything) = if x is A then true
+//│ ║  l.34: 	fun foo(x: anything) = if x is A then true
 //│ ╙──      	                          ^
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.20: 	fun foo(x: anything) = if x is A then true
+//│ ║  l.34: 	fun foo(x: anything) = if x is A then true
 //│ ║        	                          ^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` is not an instance of type `A`
-//│ ║  l.20: 	fun foo(x: anything) = if x is A then true
+//│ ║  l.34: 	fun foo(x: anything) = if x is A then true
 //│ ║        	           ^^^^^^^^
 //│ ╟── but it flows into reference with expected type `A`
-//│ ║  l.20: 	fun foo(x: anything) = if x is A then true
+//│ ║  l.34: 	fun foo(x: anything) = if x is A then true
 //│ ║        	                          ^
 //│ ╟── Note: constraint arises from class pattern:
-//│ ║  l.20: 	fun foo(x: anything) = if x is A then true
+//│ ║  l.34: 	fun foo(x: anything) = if x is A then true
 //│ ╙──      	                               ^
 //│ fun foo: (x: anything,) -> true
 
 :e
 fun foo(x: anything) = if x is A then true else false
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.45: 	fun foo(x: anything) = if x is A then true else false
+//│ ║  l.59: 	fun foo(x: anything) = if x is A then true else false
 //│ ║        	                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` is not an instance of type `Object`
-//│ ║  l.45: 	fun foo(x: anything) = if x is A then true else false
+//│ ║  l.59: 	fun foo(x: anything) = if x is A then true else false
 //│ ║        	           ^^^^^^^^
 //│ ╟── but it flows into reference with expected type `#Object`
-//│ ║  l.45: 	fun foo(x: anything) = if x is A then true else false
+//│ ║  l.59: 	fun foo(x: anything) = if x is A then true else false
 //│ ╙──      	                          ^
 //│ fun foo: (x: anything,) -> bool
 
@@ -63,13 +77,13 @@ fun foo(x: Object) = if x is A then true else false
 // :e
 fun foo = forall 'a; (x: 'a) => if x is A then true else false
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.64: 	fun foo = forall 'a; (x: 'a) => if x is A then true else false
+//│ ║  l.78: 	fun foo = forall 'a; (x: 'a) => if x is A then true else false
 //│ ║        	                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── rigid type variable of type `'a` is not an instance of type `Object`
-//│ ║  l.64: 	fun foo = forall 'a; (x: 'a) => if x is A then true else false
+//│ ║  l.78: 	fun foo = forall 'a; (x: 'a) => if x is A then true else false
 //│ ║        	                 ^^
 //│ ╟── but it flows into reference with expected type `#Object`
-//│ ║  l.64: 	fun foo = forall 'a; (x: 'a) => if x is A then true else false
+//│ ║  l.78: 	fun foo = forall 'a; (x: 'a) => if x is A then true else false
 //│ ╙──      	                                   ^
 //│ fun foo: (x: anything,) -> bool
 
@@ -92,8 +106,8 @@ Object()
 // TODO
 class B extends Object
 //│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
-//│ ║  l.93: 	class B extends Object
-//│ ╙──      	                ^^^^^^
+//│ ║  l.107: 	class B extends Object
+//│ ╙──       	                ^^^^^^
 //│ class B()
 //│ Code generation encountered an error:
 //│   unresolved symbol Object
@@ -101,14 +115,9 @@ class B extends Object
 // TODO
 class C extends A
 //│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
-//│ ║  l.102: 	class C extends A
+//│ ║  l.116: 	class C extends A
 //│ ╙──       	                ^
 //│ class C()
-
-let a: Object = A()
-//│ let a: Object
-//│ a
-//│   = A {}
 
 let o: Object = C()
 //│ let o: Object

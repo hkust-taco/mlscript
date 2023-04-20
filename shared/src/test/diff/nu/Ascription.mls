@@ -37,41 +37,71 @@
 fun foo(x: int) = x + 1
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.37: 	fun foo(x: int) = x + 1
-//│ ║        	                  ^^^^^
-//│ ╟── integer literal of type `1` is not an instance of type `int`
+//│ ║        	                  ^^^
+//│ ╟── type `int` is not an instance of type `Int`
 //│ ║  l.37: 	fun foo(x: int) = x + 1
-//│ ╙──      	                      ^
-//│ fun foo: (x: int,) -> (error | int)
+//│ ║        	           ^^^
+//│ ╟── but it flows into reference with expected type `Int`
+//│ ║  l.37: 	fun foo(x: int) = x + 1
+//│ ╙──      	                  ^
+//│ fun foo: (x: int,) -> (Int | error)
 
 fun foo(x : int) = x + 1
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.46: 	fun foo(x : int) = x + 1
-//│ ║        	                   ^^^^^
-//│ ╟── integer literal of type `1` is not an instance of type `int`
-//│ ║  l.46: 	fun foo(x : int) = x + 1
-//│ ╙──      	                       ^
-//│ fun foo: int -> (error | int)
+//│ ║  l.49: 	fun foo(x : int) = x + 1
+//│ ║        	                   ^^^
+//│ ╟── type `int` is not an instance of type `Int`
+//│ ║  l.49: 	fun foo(x : int) = x + 1
+//│ ║        	            ^^^
+//│ ╟── but it flows into reference with expected type `Int`
+//│ ║  l.49: 	fun foo(x : int) = x + 1
+//│ ╙──      	                   ^
+//│ fun foo: int -> (Int | error)
 
 foo(123 : int) : int
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.55: 	foo(123 : int) : int
+//│ ║  l.61: 	foo(123 : int) : int
 //│ ║        	    ^^^
 //│ ╟── integer literal of type `123` is not an instance of type `int`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.55: 	foo(123 : int) : int
+//│ ║  l.61: 	foo(123 : int) : int
 //│ ╙──      	          ^^^
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.61: 	foo(123 : int) : int
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── operator application of type `Int` is not an instance of type `int`
+//│ ║  l.49: 	fun foo(x : int) = x + 1
+//│ ║        	                   ^^^^^
+//│ ╟── but it flows into application with expected type `int`
+//│ ║  l.61: 	foo(123 : int) : int
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.61: 	foo(123 : int) : int
+//│ ╙──      	                 ^^^
 //│ int
 //│ res
 //│     = 124
 
 foo(123:int):int
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.67: 	foo(123:int):int
+//│ ║  l.85: 	foo(123:int):int
 //│ ║        	    ^^^
 //│ ╟── integer literal of type `123` is not an instance of type `int`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.67: 	foo(123:int):int
+//│ ║  l.85: 	foo(123:int):int
 //│ ╙──      	        ^^^
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.85: 	foo(123:int):int
+//│ ║        	^^^^^^^^^^^^
+//│ ╟── operator application of type `Int` is not an instance of type `int`
+//│ ║  l.49: 	fun foo(x : int) = x + 1
+//│ ║        	                   ^^^^^
+//│ ╟── but it flows into application with expected type `int`
+//│ ║  l.85: 	foo(123:int):int
+//│ ║        	^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.85: 	foo(123:int):int
+//│ ╙──      	             ^^^
 //│ int
 //│ res
 //│     = 124

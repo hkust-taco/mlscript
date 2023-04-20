@@ -41,7 +41,22 @@ fun eval(e) =
   if e is
     Lit(n) then n: int
     Add(l, r) then eval(l) + eval(r)
-//│ fun eval: forall 'a. 'a -> int
+//│ ╔══[ERROR] Type mismatch in definition:
+//│ ║  l.40: 	fun eval(e) =
+//│ ║        	    ^^^^^^^^^
+//│ ║  l.41: 	  if e is
+//│ ║        	^^^^^^^^^
+//│ ║  l.42: 	    Lit(n) then n: int
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.43: 	    Add(l, r) then eval(l) + eval(r)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `int` is not an instance of type `Int`
+//│ ║  l.42: 	    Lit(n) then n: int
+//│ ║        	                   ^^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.43: 	    Add(l, r) then eval(l) + eval(r)
+//│ ╙──      	                             ^^^^^^^
+//│ fun eval: forall 'a. 'a -> (Int | int)
 //│   where
 //│     'a <: Add['a] | Lit
 
@@ -94,20 +109,29 @@ mixin EvalBase {
       Add(l, r) then this.eval(l) + this.eval(r)
 }
 //│ mixin EvalBase() {
-//│   this: {eval: 'lhs -> int}
-//│   fun eval: (Add['lhs] | Lit) -> int
+//│   this: {eval: 'lhs -> Int}
+//│   fun eval: (Add['lhs] | Lit) -> (Int | int)
 //│ }
 
 
 module TestLang extends EvalBase
+//│ ╔══[ERROR] Type mismatch in type declaration:
+//│ ║  l.117: 	module TestLang extends EvalBase
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `int` is not an instance of type `Int`
+//│ ║  l.108: 	      Lit(n) then n: int
+//│ ║         	                     ^^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.109: 	      Add(l, r) then this.eval(l) + this.eval(r)
+//│ ╙──       	                                    ^^^^^^^^^^^^
 //│ module TestLang() {
-//│   fun eval: 'a -> int
+//│   fun eval: 'a -> (Int | int)
 //│ }
 //│ where
 //│   'a <: Add['a] | Lit
 
 TestLang.eval
-//│ 'a -> int
+//│ 'a -> (Int | int)
 //│   where
 //│     'a <: Add['a] | Lit
 
@@ -117,13 +141,13 @@ add11
 //│ Add[Lit | error]
 
 TestLang.eval(add11)
-//│ int
+//│ Int | int
 
 add11
 //│ Add[Lit | error]
 
 TestLang.eval(add11)
-//│ int
+//│ Int | int
 
 add11
 //│ Add[Lit | error]
@@ -135,10 +159,10 @@ class Neg<A>(expr: A)
 
 let add2negadd11 = Add(Lit(2), Neg(add11))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.136: 	let add2negadd11 = Add(Lit(2), Neg(add11))
+//│ ║  l.160: 	let add2negadd11 = Add(Lit(2), Neg(add11))
 //│ ║         	                       ^^^^^^
 //│ ╟── integer literal of type `2` is not an instance of type `int`
-//│ ║  l.136: 	let add2negadd11 = Add(Lit(2), Neg(add11))
+//│ ║  l.160: 	let add2negadd11 = Add(Lit(2), Neg(add11))
 //│ ║         	                           ^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.15: 	class Lit(value: int)
@@ -151,76 +175,79 @@ mixin EvalNeg {
     if e is Neg(d) then 0 - this.eval(d)
     else super.eval(e)
 }
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.151: 	    if e is Neg(d) then 0 - this.eval(d)
-//│ ║         	                        ^^^
-//│ ╟── integer literal of type `0` is not an instance of type `int`
-//│ ║  l.151: 	    if e is Neg(d) then 0 - this.eval(d)
-//│ ╙──       	                        ^
 //│ mixin EvalNeg() {
 //│   super: {eval: 'a -> 'b}
-//│   this: {eval: 'expr -> int}
-//│   fun eval: (Neg['expr] | #Object & 'a & ~#Neg) -> (error | int | 'b)
+//│   this: {eval: 'expr -> Int}
+//│   fun eval: (Neg['expr] | #Object & 'a & ~#Neg) -> (Int | 'b)
 //│ }
 
 
 module TestLang extends EvalBase, EvalNeg
+//│ ╔══[ERROR] Type mismatch in type declaration:
+//│ ║  l.185: 	module TestLang extends EvalBase, EvalNeg
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `int` is not an instance of type `Int`
+//│ ║  l.108: 	      Lit(n) then n: int
+//│ ║         	                     ^^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.175: 	    if e is Neg(d) then 0 - this.eval(d)
+//│ ╙──       	                            ^^^^^^^^^^^^
 //│ module TestLang() {
-//│   fun eval: 'a -> (error | int)
+//│   fun eval: 'a -> (Int | int)
 //│ }
 //│ where
 //│   'a <: Add['a] | Lit | Neg['a]
 
 TestLang.eval
-//│ 'a -> (error | int)
+//│ 'a -> (Int | int)
 //│   where
 //│     'a <: Add['a] | Lit | Neg['a]
 
 
 TestLang.eval(add11)
-//│ error | int
+//│ Int | int
 
 TestLang.eval(Neg(add11))
-//│ error | int
+//│ Int | int
 
 TestLang.eval(Add(Lit(2), Neg(Lit(1))))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.186: 	TestLang.eval(Add(Lit(2), Neg(Lit(1))))
+//│ ║  l.213: 	TestLang.eval(Add(Lit(2), Neg(Lit(1))))
 //│ ║         	                  ^^^^^^
 //│ ╟── integer literal of type `2` is not an instance of type `int`
-//│ ║  l.186: 	TestLang.eval(Add(Lit(2), Neg(Lit(1))))
+//│ ║  l.213: 	TestLang.eval(Add(Lit(2), Neg(Lit(1))))
 //│ ║         	                      ^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.15: 	class Lit(value: int)
 //│ ╙──      	                 ^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.186: 	TestLang.eval(Add(Lit(2), Neg(Lit(1))))
+//│ ║  l.213: 	TestLang.eval(Add(Lit(2), Neg(Lit(1))))
 //│ ║         	                              ^^^^^^
 //│ ╟── integer literal of type `1` is not an instance of type `int`
-//│ ║  l.186: 	TestLang.eval(Add(Lit(2), Neg(Lit(1))))
+//│ ║  l.213: 	TestLang.eval(Add(Lit(2), Neg(Lit(1))))
 //│ ║         	                                  ^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.15: 	class Lit(value: int)
 //│ ╙──      	                 ^^^
-//│ error | int
+//│ Int | int
 
 TestLang.eval(Neg(Neg(add11)))
-//│ error | int
+//│ Int | int
 
 
 TestLang.eval(add2negadd11)
-//│ error | int
+//│ Int | int
 
 TestLang.eval(Add(Lit(2), Neg(add11)))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.214: 	TestLang.eval(Add(Lit(2), Neg(add11)))
+//│ ║  l.241: 	TestLang.eval(Add(Lit(2), Neg(add11)))
 //│ ║         	                  ^^^^^^
 //│ ╟── integer literal of type `2` is not an instance of type `int`
-//│ ║  l.214: 	TestLang.eval(Add(Lit(2), Neg(add11)))
+//│ ║  l.241: 	TestLang.eval(Add(Lit(2), Neg(add11)))
 //│ ║         	                      ^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.15: 	class Lit(value: int)
 //│ ╙──      	                 ^^^
-//│ error | int
+//│ Int | int
 
 

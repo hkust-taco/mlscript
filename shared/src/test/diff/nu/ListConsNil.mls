@@ -27,14 +27,6 @@ fun list_assoc(s, l) =
       if eq(s)(h._1) then Cons(h._2, Nil)
       else list_assoc(s, t)
     Nil then Nil
-//│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.27: 	      if eq(s)(h._1) then Cons(h._2, Nil)
-//│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.28: 	      else list_assoc(s, t)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `bool` is not an instance of type `Object`
-//│ ║  l.27: 	      if eq(s)(h._1) then Cons(h._2, Nil)
-//│ ╙──      	         ^^^^^^^^^^^
 //│ fun list_assoc: forall 'A. (anything, Cons[{_1: anything, _2: 'A}] | Nil,) -> (Cons['A] | Nil)
 
 fun test(x, l) = list_assoc(42, Cons(x, l))

@@ -85,13 +85,7 @@ s.map
 //│     = [Function: map]
 
 s.map(succ)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.87: 	s.map(succ)
-//│ ║        	^^^^^^^^^^^
-//│ ╟── integer literal of type `1` is not an instance of type `int`
-//│ ║  l.60: 	let s = Some(1)
-//│ ╙──      	             ^
-//│ Some[int] | error
+//│ Some[Int]
 //│ res
 //│     = Some {}
 
@@ -102,7 +96,7 @@ s.map_A
 //│     = [Function: map_A]
 
 s.map_A(succ)
-//│ Some[int]
+//│ Some[Int]
 //│ res
 //│     = Some {}
 
@@ -135,10 +129,10 @@ type Option<A> = Some<A> | None
 
 let opt = if true then Some(123) else None
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.136: 	let opt = if true then Some(123) else None
+//│ ║  l.130: 	let opt = if true then Some(123) else None
 //│ ║         	             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── reference of type `true` is not an instance of type `Object`
-//│ ║  l.136: 	let opt = if true then Some(123) else None
+//│ ║  l.130: 	let opt = if true then Some(123) else None
 //│ ╙──       	             ^^^^
 //│ let opt: None | Some[123]
 //│ opt
@@ -151,67 +145,43 @@ opt.toArray
 
 
 opt.map(succ)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.153: 	opt.map(succ)
-//│ ║         	^^^^^^^^^^^^^
-//│ ╟── integer literal of type `123` is not an instance of type `int`
-//│ ║  l.136: 	let opt = if true then Some(123) else None
-//│ ╙──       	                            ^^^
-//│ None | Some[int] | error
+//│ None | Some[Int]
 //│ res
 //│     = Some {}
 
 opt.map_A(succ)
-//│ None | Some[int]
+//│ None | Some[Int]
 //│ res
 //│     = Some {}
 
 opt.map(x => x > 0)
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.169: 	opt.map(x => x > 0)
+//│ ║  l.157: 	opt.map(x => x > 0)
 //│ ║         	             ^^^^^
 //│ ╟── integer literal of type `0` is not an instance of type `number`
-//│ ║  l.169: 	opt.map(x => x > 0)
+//│ ║  l.157: 	opt.map(x => x > 0)
 //│ ╙──       	                 ^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.169: 	opt.map(x => x > 0)
+//│ ║  l.157: 	opt.map(x => x > 0)
 //│ ║         	^^^^^^^^^^^^^^^^^^^
 //│ ╟── integer literal of type `123` is not an instance of type `number`
-//│ ║  l.136: 	let opt = if true then Some(123) else None
+//│ ║  l.130: 	let opt = if true then Some(123) else None
 //│ ║         	                            ^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.169: 	opt.map(x => x > 0)
+//│ ║  l.157: 	opt.map(x => x > 0)
 //│ ╙──       	             ^
-//│ None | Some[bool | error] | error
+//│ None | Some[Bool | error] | error
 //│ res
 //│     = Some {}
 
 
 
 if opt is Some then opt.value else 0
-//│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.191: 	if opt is Some then opt.value else 0
-//│ ║         	   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── reference of type `None` is not an instance of type `Object`
-//│ ║  l.136: 	let opt = if true then Some(123) else None
-//│ ║         	                                      ^^^^
-//│ ╟── but it flows into reference with expected type `#Object`
-//│ ║  l.191: 	if opt is Some then opt.value else 0
-//│ ╙──       	   ^^^
 //│ 0 | 123
 //│ res
 //│     = 123
 
 if opt is Some(v) then v else 0
-//│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.205: 	if opt is Some(v) then v else 0
-//│ ║         	   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── reference of type `None` is not an instance of type `Object`
-//│ ║  l.136: 	let opt = if true then Some(123) else None
-//│ ║         	                                      ^^^^
-//│ ╟── but it flows into reference with expected type `#Object`
-//│ ║  l.205: 	if opt is Some(v) then v else 0
-//│ ╙──       	   ^^^
 //│ 0 | 123
 //│ res
 //│     = 123
@@ -223,31 +193,12 @@ fun map(x, f) = if x is
 //│ fun map: forall 'value 'A. (None | Some['value], 'value -> 'A,) -> (None | Some['A])
 
 let mo = map(opt, succ)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.225: 	let mo = map(opt, succ)
-//│ ║         	         ^^^^^^^^^^^^^^
-//│ ╟── reference of type `None` is not an instance of type `Object`
-//│ ║  l.136: 	let opt = if true then Some(123) else None
-//│ ║         	                                      ^^^^
-//│ ╟── but it flows into reference with expected type `#Object`
-//│ ║  l.225: 	let mo = map(opt, succ)
-//│ ║         	             ^^^
-//│ ╟── Note: constraint arises from `case` expression:
-//│ ║  l.220: 	fun map(x, f) = if x is
-//│ ║         	                   ^^^^
-//│ ║  l.221: 	  None then None
-//│ ║         	^^^^^^^^^^^^^^^^
-//│ ║  l.222: 	  Some(v) then Some(f(v))
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── from reference:
-//│ ║  l.220: 	fun map(x, f) = if x is
-//│ ╙──       	                   ^
-//│ let mo: None | Some[int] | error
+//│ let mo: None | Some[Int]
 //│ mo
 //│    = Some {}
 
 mo.toArray
-//│ Array[int] | error
+//│ Array[Int]
 //│ res
 //│     = [ 124 ]
 
@@ -259,17 +210,11 @@ class Test(n) {
   fun bar = n
 }
 //│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.257: 	class Test(n) {
+//│ ║  l.208: 	class Test(n) {
 //│ ╙──       	           ^
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.258: 	  fun foo = n + 1
-//│ ║         	            ^^^^^
-//│ ╟── integer literal of type `1` is not an instance of type `int`
-//│ ║  l.258: 	  fun foo = n + 1
-//│ ╙──       	                ^
 //│ class Test(n: error) {
 //│   fun bar: error
-//│   fun foo: error | int
+//│   fun foo: Int
 //│ }
 
 Test(1)
@@ -289,22 +234,16 @@ class Test<A>(n: A) {
   fun foo = n + 1
 }
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.289: 	  fun foo = n + 1
+//│ ║  l.234: 	  fun foo = n + 1
 //│ ║         	            ^^^
-//│ ╟── reference of type `A` is not an instance of type `int`
-//│ ║  l.289: 	  fun foo = n + 1
+//│ ╟── reference of type `A` is not an instance of type `Int`
+//│ ║  l.234: 	  fun foo = n + 1
 //│ ║         	            ^
 //│ ╟── Note: type parameter A is defined at:
-//│ ║  l.288: 	class Test<A>(n: A) {
+//│ ║  l.233: 	class Test<A>(n: A) {
 //│ ╙──       	           ^
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.289: 	  fun foo = n + 1
-//│ ║         	            ^^^^^
-//│ ╟── integer literal of type `1` is not an instance of type `int`
-//│ ║  l.289: 	  fun foo = n + 1
-//│ ╙──       	                ^
 //│ class Test[A](n: A) {
-//│   fun foo: error | int
+//│   fun foo: Int | error
 //│ }
 
 Test(1)
@@ -378,23 +317,17 @@ class TestBad<A> {
   fun foo2(x: A) = x + 1
 }
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.378: 	  fun foo2(x: A) = x + 1
+//│ ║  l.317: 	  fun foo2(x: A) = x + 1
 //│ ║         	                   ^^^
-//│ ╟── reference of type `A` is not an instance of type `int`
-//│ ║  l.378: 	  fun foo2(x: A) = x + 1
+//│ ╟── reference of type `A` is not an instance of type `Int`
+//│ ║  l.317: 	  fun foo2(x: A) = x + 1
 //│ ║         	                   ^
 //│ ╟── Note: type parameter A is defined at:
-//│ ║  l.376: 	class TestBad<A> {
+//│ ║  l.315: 	class TestBad<A> {
 //│ ╙──       	              ^
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.378: 	  fun foo2(x: A) = x + 1
-//│ ║         	                   ^^^^^
-//│ ╟── integer literal of type `1` is not an instance of type `int`
-//│ ║  l.378: 	  fun foo2(x: A) = x + 1
-//│ ╙──       	                       ^
 //│ class TestBad[A]() {
 //│   fun foo1: (x: A,) -> A
-//│   fun foo2: (x: A,) -> (error | int)
+//│   fun foo2: (x: A,) -> (Int | error)
 //│ }
 
 TestBad().foo1
@@ -449,16 +382,16 @@ foo(t)
 
 foo(t)(1)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.450: 	foo(t)(1)
+//│ ║  l.383: 	foo(t)(1)
 //│ ║         	^^^^^^^^^
 //│ ╟── integer literal of type `1` is not an instance of type `int`
-//│ ║  l.450: 	foo(t)(1)
+//│ ║  l.383: 	foo(t)(1)
 //│ ║         	       ^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.442: 	fun foo(x: TestBad<int>) = x.foo1
+//│ ║  l.375: 	fun foo(x: TestBad<int>) = x.foo1
 //│ ║         	                   ^^^
 //│ ╟── Note: type parameter A is defined at:
-//│ ║  l.376: 	class TestBad<A> {
+//│ ║  l.315: 	class TestBad<A> {
 //│ ╙──       	              ^
 //│ error | int
 //│ res
@@ -466,7 +399,7 @@ foo(t)(1)
 
 
 TestBad().foo2
-//│ (x: anything,) -> (error | int)
+//│ (x: anything,) -> (Int | error)
 //│ res
 //│     = [Function: foo2]
 
@@ -486,16 +419,16 @@ w.x
 //│     = C {}
 
 not(w.x.n)
-//│ bool
+//│ Bool
 //│ res
 //│     = true
 
 :e
 not(w.x.a)
 //│ ╔══[ERROR] Class `C` does not contain member `a`
-//│ ║  l.494: 	not(w.x.a)
+//│ ║  l.427: 	not(w.x.a)
 //│ ╙──       	       ^^
-//│ bool
+//│ Bool
 //│ res
 //│     = false
 

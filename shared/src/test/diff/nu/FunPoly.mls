@@ -11,7 +11,16 @@ fun id(x) = x
 //│     = [ 1, true ]
 
 not(id(true))
-//│ bool
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.13: 	not(id(true))
+//│ ║        	^^^^^^^^^^^^^
+//│ ╟── reference of type `true` is not an instance of type `Bool`
+//│ ║  l.13: 	not(id(true))
+//│ ║        	       ^^^^
+//│ ╟── but it flows into application with expected type `Bool`
+//│ ║  l.13: 	not(id(true))
+//│ ╙──      	    ^^^^^^^^
+//│ Bool | error
 //│ res
 //│     = false
 
@@ -41,15 +50,15 @@ fun id(x) = x
 :e
 not(id(true))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.42: 	not(id(true))
+//│ ║  l.51: 	not(id(true))
 //│ ║        	^^^^^^^^^^^^^
-//│ ╟── integer literal of type `1` is not an instance of type `bool`
-//│ ║  l.31: 	fun test = [id(1), id(true)]
+//│ ╟── integer literal of type `1` is not an instance of type `Bool`
+//│ ║  l.40: 	fun test = [id(1), id(true)]
 //│ ║        	               ^
-//│ ╟── but it flows into application with expected type `bool`
-//│ ║  l.42: 	not(id(true))
+//│ ╟── but it flows into application with expected type `Bool`
+//│ ║  l.51: 	not(id(true))
 //│ ╙──      	    ^^^^^^^^
-//│ bool | error
+//│ Bool | error
 //│ res
 //│     = false
 

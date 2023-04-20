@@ -39,20 +39,6 @@ fun filtermap(f, xs) = if xs is
 //│ ╟── reference of type `false` is not an instance of type `number`
 //│ ║  l.28: 	    false then filtermap(f, ys)
 //│ ╙──      	    ^^^^^
-//│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.27: 	  Cons(y, ys) and f(ys) is
-//│ ║        	                  ^^^^^^^^
-//│ ║  l.28: 	    false then filtermap(f, ys)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.29: 	    true then Cons(y, filtermap(f, ys))
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.30: 	    [true, z] then Cons(y, filtermap(f, ys))
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `bool` is not an instance of type `Object`
-//│ ║  l.27: 	  Cons(y, ys) and f(ys) is
-//│ ║        	                  ^^^^^^^^
-//│ ║  l.28: 	    false then filtermap(f, ys)
-//│ ╙──      	^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.27: 	  Cons(y, ys) and f(ys) is
 //│ ║        	                  ^^^^^^^^
@@ -63,22 +49,6 @@ fun filtermap(f, xs) = if xs is
 //│ ╟── reference of type `true` is not an instance of type `number`
 //│ ║  l.29: 	    true then Cons(y, filtermap(f, ys))
 //│ ╙──      	    ^^^^
-//│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.27: 	  Cons(y, ys) and f(ys) is
-//│ ║        	                  ^^^^^^^^
-//│ ║  l.28: 	    false then filtermap(f, ys)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.29: 	    true then Cons(y, filtermap(f, ys))
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.30: 	    [true, z] then Cons(y, filtermap(f, ys))
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `bool` is not an instance of type `Object`
-//│ ║  l.27: 	  Cons(y, ys) and f(ys) is
-//│ ║        	                  ^^^^^^^^
-//│ ║  l.28: 	    false then filtermap(f, ys)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.29: 	    true then Cons(y, filtermap(f, ys))
-//│ ╙──      	^^^^^^^^
 //│ ╔══[ERROR] type identifier not found: Tuple#2
 //│ ╙──
 //│ fun filtermap: ((Cons[nothing] | error | Nil) -> number & (Cons[nothing] | Nil) -> nothing, Cons[anything] | Nil,) -> (Cons[nothing] | Nil | error)

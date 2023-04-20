@@ -16,7 +16,7 @@ x === 1
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.4: 	let x: Eql[int]
 //│ ╙──     	           ^^^
-//│ bool | error
+//│ Bool | error
 //│ res
 //│     = <no result>
 //│       x is not implemented
@@ -38,7 +38,7 @@ x === 1
 //│ ╟── but it flows into reference with expected type `number`
 //│ ║  l.25: 	1 === x
 //│ ╙──      	      ^
-//│ bool | error
+//│ Bool | error
 //│ res
 //│     = <no result>
 //│       x is not implemented
@@ -57,7 +57,7 @@ x === x
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.4: 	let x: Eql[int]
 //│ ╙──     	           ^^^
-//│ bool | error
+//│ Bool | error
 //│ res
 //│     = <no result>
 //│       x is not implemented
@@ -65,11 +65,11 @@ x === x
 
 fun test1(x) =
   x === x
-//│ fun test1: forall 'a. (Eql['a] & 'a) -> bool
+//│ fun test1: forall 'a. (Eql['a] & 'a) -> Bool
 
 fun test2(x, y) =
   x === y
-//│ fun test2: forall 'a. (Eql['a], 'a,) -> bool
+//│ fun test2: forall 'a. (Eql['a], 'a,) -> Bool
 
 
 1 : Eql['a]
@@ -118,7 +118,7 @@ test1(1)
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.67: 	  x === x
 //│ ╙──      	  ^
-//│ bool | error
+//│ Bool | error
 //│ res
 //│     = true
 
@@ -141,7 +141,7 @@ n : Eql['a]
 //│     = 1
 
 test1(n)
-//│ bool
+//│ Bool
 //│ res
 //│     = true
 
@@ -152,7 +152,7 @@ let n: number
 //│   = <missing implementation>
 
 test1(n)
-//│ bool
+//│ Bool
 //│ res
 //│     = <no result>
 //│       n is not implemented
@@ -175,7 +175,7 @@ let d = 1/2
 //│   = 0.5
 
 test1(d)
-//│ bool
+//│ Bool
 //│ res
 //│     = true
 
@@ -189,7 +189,7 @@ test1("hello")
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.67: 	  x === x
 //│ ╙──      	  ^
-//│ bool | error
+//│ Bool | error
 //│ res
 //│     = true
 
@@ -204,7 +204,7 @@ test2(0, 1)
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.71: 	  x === y
 //│ ╙──      	  ^
-//│ bool | error
+//│ Bool | error
 //│ res
 //│     = false
 
@@ -218,7 +218,7 @@ test2(0, d)
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.71: 	  x === y
 //│ ╙──      	  ^
-//│ bool | error
+//│ Bool | error
 //│ res
 //│     = false
 
@@ -232,22 +232,22 @@ x => test2(0, x)
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.71: 	  x === y
 //│ ╙──      	  ^
-//│ number -> (bool | error)
+//│ number -> (Bool | error)
 //│ res
 //│     = [Function: res]
 
 x => test2(x, 0)
-//│ Eql[0] -> bool
+//│ Eql[0] -> Bool
 //│ res
 //│     = [Function: res]
 
 x => test2(d, x)
-//│ number -> bool
+//│ number -> Bool
 //│ res
 //│     = [Function: res]
 
 x => test2(x, d)
-//│ Eql[error | number] -> bool
+//│ Eql[error | number] -> Bool
 //│ res
 //│     = [Function: res]
 
@@ -263,7 +263,7 @@ test2(1, "oops")
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.71: 	  x === y
 //│ ╙──      	  ^
-//│ bool | error
+//│ Bool | error
 //│ res
 //│     = false
 
@@ -278,7 +278,7 @@ test2("oops", 1)
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.71: 	  x === y
 //│ ╙──      	  ^
-//│ bool | error
+//│ Bool | error
 //│ res
 //│     = false
 
@@ -293,7 +293,7 @@ test2(1, {})
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.71: 	  x === y
 //│ ╙──      	  ^
-//│ bool | error
+//│ Bool | error
 //│ res
 //│     = false
 
@@ -306,7 +306,7 @@ test2({}, 1)
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.71: 	  x === y
 //│ ╙──      	  ^
-//│ bool | error
+//│ Bool | error
 //│ res
 //│     = false
 
@@ -319,7 +319,7 @@ test2({}, {})
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.71: 	  x === y
 //│ ╙──      	  ^
-//│ bool | error
+//│ Bool | error
 //│ res
 //│     = false
 

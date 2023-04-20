@@ -311,7 +311,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     case Nms =>
       ClassTag(Var(td.nme.name),
           // TODO base classes
-          Set.single(TN("Eql"))
+          Set.single(TypeName("Object")) + TypeName("Eql")
         )(provTODO)
     case Cls =>
       PolymorphicType.mk(level,

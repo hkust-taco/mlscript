@@ -18,27 +18,24 @@ mixin EvalBase {
       Lit(n) then n
       Add(l, r) then this.eval(l) + this.eval(r)
 }
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.16: 	    else if e is Neg(d) then 0 - this.eval(d)
-//│ ║        	                             ^^^
-//│ ╟── integer literal of type `0` is not an instance of type `int`
-//│ ║  l.16: 	    else if e is Neg(d) then 0 - this.eval(d)
-//│ ╙──      	                             ^
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.16: 	    else if e is Neg(d) then 0 - this.eval(d)
-//│ ║        	                             ^^^
-//│ ╟── integer literal of type `0` is not an instance of type `int`
-//│ ║  l.16: 	    else if e is Neg(d) then 0 - this.eval(d)
-//│ ╙──      	                             ^
 //│ mixin EvalBase() {
-//│   this: {eval: nothing -> 'a & 'lhs -> int}
-//│   fun eval: (Add['lhs] | Lit | Neg[nothing]) -> (error | int | 'a)
+//│   this: {eval: nothing -> 'a & 'lhs -> Int}
+//│   fun eval: (Add['lhs] | Lit | Neg[nothing]) -> (Int | int | 'a)
 //│ }
 
 // module TestLang extends EvalBase, EvalNeg
 module TestLang extends EvalBase
+//│ ╔══[ERROR] Type mismatch in type declaration:
+//│ ║  l.27: 	module TestLang extends EvalBase
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `int` is not an instance of type `Int`
+//│ ║  l.5: 	class Lit(n: int)
+//│ ║       	             ^^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.19: 	      Add(l, r) then this.eval(l) + this.eval(r)
+//│ ╙──      	                                    ^^^^^^^^^^^^
 //│ module TestLang() {
-//│   fun eval: 'a -> (error | int)
+//│   fun eval: 'a -> (Int | int)
 //│ }
 //│ where
 //│   'a <: Add['a] | Lit | Neg[nothing]
@@ -49,62 +46,32 @@ fun mk(n) = if n is
   1 then Neg(mk(n))
   _ then Add(mk(n), mk(n))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.47: 	fun mk(n) = if n is
+//│ ║  l.44: 	fun mk(n) = if n is
 //│ ║        	               ^^^^
-//│ ║  l.48: 	  0 then Lit(0)
+//│ ║  l.45: 	  0 then Lit(0)
 //│ ║        	^^^
 //│ ╟── integer literal of type `0` is not an instance of type `number`
-//│ ║  l.48: 	  0 then Lit(0)
+//│ ║  l.45: 	  0 then Lit(0)
 //│ ╙──      	  ^
-//│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.47: 	fun mk(n) = if n is
-//│ ║        	               ^^^^
-//│ ║  l.48: 	  0 then Lit(0)
-//│ ║        	^^^^^^^^^^^^^^^^
-//│ ║  l.49: 	  1 then Neg(mk(n))
-//│ ║        	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.50: 	  _ then Add(mk(n), mk(n))
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `bool` is not an instance of type `Object`
-//│ ║  l.47: 	fun mk(n) = if n is
-//│ ║        	               ^^^^
-//│ ║  l.48: 	  0 then Lit(0)
-//│ ╙──      	^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.48: 	  0 then Lit(0)
+//│ ║  l.45: 	  0 then Lit(0)
 //│ ║        	         ^^^^^^
 //│ ╟── integer literal of type `0` is not an instance of type `int`
-//│ ║  l.48: 	  0 then Lit(0)
+//│ ║  l.45: 	  0 then Lit(0)
 //│ ║        	             ^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.5: 	class Lit(n: int)
 //│ ╙──     	             ^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.47: 	fun mk(n) = if n is
+//│ ║  l.44: 	fun mk(n) = if n is
 //│ ║        	               ^^^^
-//│ ║  l.48: 	  0 then Lit(0)
+//│ ║  l.45: 	  0 then Lit(0)
 //│ ║        	^^^^^^^^^^^^^^^^
-//│ ║  l.49: 	  1 then Neg(mk(n))
+//│ ║  l.46: 	  1 then Neg(mk(n))
 //│ ║        	^^^
 //│ ╟── integer literal of type `1` is not an instance of type `number`
-//│ ║  l.49: 	  1 then Neg(mk(n))
+//│ ║  l.46: 	  1 then Neg(mk(n))
 //│ ╙──      	  ^
-//│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.47: 	fun mk(n) = if n is
-//│ ║        	               ^^^^
-//│ ║  l.48: 	  0 then Lit(0)
-//│ ║        	^^^^^^^^^^^^^^^^
-//│ ║  l.49: 	  1 then Neg(mk(n))
-//│ ║        	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.50: 	  _ then Add(mk(n), mk(n))
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `bool` is not an instance of type `Object`
-//│ ║  l.47: 	fun mk(n) = if n is
-//│ ║        	               ^^^^
-//│ ║  l.48: 	  0 then Lit(0)
-//│ ║        	^^^^^^^^^^^^^^^^
-//│ ║  l.49: 	  1 then Neg(mk(n))
-//│ ╙──      	^^^
 //│ fun mk: forall 'E. number -> 'E
 //│   where
 //│     'E :> Add['E] | Lit | Neg['E] | error
@@ -113,24 +80,24 @@ fun mk(n) = if n is
 :stats
 TestLang.eval(mk(0))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.114: 	TestLang.eval(mk(0))
-//│ ║         	              ^^^^^
+//│ ║  l.81: 	TestLang.eval(mk(0))
+//│ ║        	              ^^^^^
 //│ ╟── integer literal of type `0` is not an instance of type `number`
-//│ ║  l.114: 	TestLang.eval(mk(0))
-//│ ║         	                 ^
+//│ ║  l.81: 	TestLang.eval(mk(0))
+//│ ║        	                 ^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.47: 	fun mk(n) = if n is
+//│ ║  l.44: 	fun mk(n) = if n is
 //│ ╙──      	               ^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.114: 	TestLang.eval(mk(0))
-//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.81: 	TestLang.eval(mk(0))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Lit` does not match type `nothing`
-//│ ║  l.48: 	  0 then Lit(0)
+//│ ║  l.45: 	  0 then Lit(0)
 //│ ║        	         ^^^^^^
 //│ ╟── Note: type parameter A is defined at:
 //│ ║  l.6: 	class Neg<A>(expr: A)
 //│ ╙──     	          ^
-//│ error | int
+//│ error | Int | int
 //│ res
 //│     = 0
 //│ constrain calls  : 340

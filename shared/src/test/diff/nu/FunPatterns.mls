@@ -3,15 +3,15 @@
 
 
 fun f(x, y) = x + y
-//│ fun f: (int, int,) -> int
+//│ fun f: (Int, Int,) -> Int
 
 // FIXME array pattern...?!
 fun f1([x, y]) = x + y
 fun f2([x, y],) = x + y
 fun f3([(x, y,),],) = x + y
-//│ fun f1: (int, int,) -> int
-//│ fun f2: (int, int,) -> int
-//│ fun f3: (int, int,) -> int
+//│ fun f1: (Int, Int,) -> Int
+//│ fun f2: (Int, Int,) -> Int
+//│ fun f3: (Int, Int,) -> Int
 
 
 class Pair(lhs: int, rhs: int)
@@ -28,6 +28,6 @@ fun f(Pair(x, y)) = x + y
 //│ ╔══[ERROR] identifier not found: y
 //│ ║  l.21: 	fun f(Pair(x, y)) = x + y
 //│ ╙──      	                        ^
-//│ fun f: error -> int
+//│ fun f: error -> Int
 
 

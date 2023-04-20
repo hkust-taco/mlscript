@@ -293,15 +293,69 @@ mixin EvalExpr {
       Mul(Num(l), Num(r)) then Num(l * r)
     else v
 }
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.292: 	      Add(Num(l), Num(r)) then Num(l + r)
+//│ ║         	                                   ^^^
+//│ ╟── type `int` is not an instance of type `Int`
+//│ ║  l.271: 	class Num(n: int)
+//│ ║         	             ^^^
+//│ ╟── but it flows into reference with expected type `Int`
+//│ ║  l.292: 	      Add(Num(l), Num(r)) then Num(l + r)
+//│ ╙──       	                                   ^
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.292: 	      Add(Num(l), Num(r)) then Num(l + r)
+//│ ║         	                                   ^^^^^
+//│ ╟── type `int` is not an instance of type `Int`
+//│ ║  l.271: 	class Num(n: int)
+//│ ║         	             ^^^
+//│ ╟── but it flows into reference with expected type `Int`
+//│ ║  l.292: 	      Add(Num(l), Num(r)) then Num(l + r)
+//│ ╙──       	                                       ^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.292: 	      Add(Num(l), Num(r)) then Num(l + r)
+//│ ║         	                               ^^^^^^^^^^
+//│ ╟── operator application of type `Int` is not an instance of type `int`
+//│ ║  l.292: 	      Add(Num(l), Num(r)) then Num(l + r)
+//│ ║         	                                   ^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.271: 	class Num(n: int)
+//│ ╙──       	             ^^^
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.293: 	      Mul(Num(l), Num(r)) then Num(l * r)
+//│ ║         	                                   ^^^
+//│ ╟── type `int` is not an instance of type `Int`
+//│ ║  l.271: 	class Num(n: int)
+//│ ║         	             ^^^
+//│ ╟── but it flows into reference with expected type `Int`
+//│ ║  l.293: 	      Mul(Num(l), Num(r)) then Num(l * r)
+//│ ╙──       	                                   ^
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.293: 	      Mul(Num(l), Num(r)) then Num(l * r)
+//│ ║         	                                   ^^^^^
+//│ ╟── type `int` is not an instance of type `Int`
+//│ ║  l.271: 	class Num(n: int)
+//│ ║         	             ^^^
+//│ ╟── but it flows into reference with expected type `Int`
+//│ ║  l.293: 	      Mul(Num(l), Num(r)) then Num(l * r)
+//│ ╙──       	                                       ^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.293: 	      Mul(Num(l), Num(r)) then Num(l * r)
+//│ ║         	                               ^^^^^^^^^^
+//│ ╟── operator application of type `Int` is not an instance of type `int`
+//│ ║  l.293: 	      Mul(Num(l), Num(r)) then Num(l * r)
+//│ ║         	                                   ^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.271: 	class Num(n: int)
+//│ ╙──       	             ^^^
 //│ mixin EvalExpr() {
 //│   super: {eval: ('a, Var,) -> 'b}
 //│   this: {eval: ('a, 'c,) -> #Object}
-//│   fun eval: forall 'd. ('a, 'd & (Add['c] | Mul['c] | Num | Var),) -> (Num | 'd | 'b)
+//│   fun eval: forall 'd. ('a, 'd & (Add['c] | Mul['c] | Num | Var),) -> (Num | error | 'd | 'b)
 //│ }
 
 module Test2 extends EvalVar, EvalExpr
 //│ module Test2() {
-//│   fun eval: (List[{_1: string, _2: 'b}], 'a,) -> ('b | Num | Var | 'a)
+//│   fun eval: (List[{_1: string, _2: 'b}], 'a,) -> ('b | Num | Var | error | 'a)
 //│ }
 //│ where
 //│   'a <: Add['c] | Mul['c] | Num | Var
@@ -310,10 +364,10 @@ module Test2 extends EvalVar, EvalExpr
 
 Test2.eval(Nil(), Var("a"))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.311: 	Test2.eval(Nil(), Var("a"))
+//│ ║  l.365: 	Test2.eval(Nil(), Var("a"))
 //│ ║         	                  ^^^^^^^^
 //│ ╟── string literal of type `"a"` is not an instance of type `string`
-//│ ║  l.311: 	Test2.eval(Nil(), Var("a"))
+//│ ║  l.365: 	Test2.eval(Nil(), Var("a"))
 //│ ║         	                      ^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.64: 	class Var(s: string)
@@ -322,37 +376,37 @@ Test2.eval(Nil(), Var("a"))
 
 Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Var("a"))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.323: 	Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Var("a"))
+//│ ║  l.377: 	Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Var("a"))
 //│ ║         	                               ^^^^^^^^
 //│ ╟── string literal of type `"d"` is not an instance of type `string`
-//│ ║  l.323: 	Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Var("a"))
+//│ ║  l.377: 	Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Var("a"))
 //│ ║         	                                   ^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.64: 	class Var(s: string)
 //│ ╙──      	             ^^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.323: 	Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Var("a"))
+//│ ║  l.377: 	Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Var("a"))
 //│ ║         	                      ^^^^^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"d"` is not an instance of type `string`
-//│ ║  l.323: 	Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Var("a"))
+//│ ║  l.377: 	Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Var("a"))
 //│ ║         	                          ^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.78: 	class Abs<A>(x: string, t: A)
 //│ ╙──      	                ^^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.323: 	Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Var("a"))
+//│ ║  l.377: 	Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Var("a"))
 //│ ║         	                                                   ^^^^^^^^
 //│ ╟── string literal of type `"a"` is not an instance of type `string`
-//│ ║  l.323: 	Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Var("a"))
+//│ ║  l.377: 	Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Var("a"))
 //│ ║         	                                                       ^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.64: 	class Var(s: string)
 //│ ╙──      	             ^^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.323: 	Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Var("a"))
+//│ ║  l.377: 	Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Var("a"))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"c"` is not an instance of type `string`
-//│ ║  l.323: 	Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Var("a"))
+//│ ║  l.377: 	Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Var("a"))
 //│ ║         	                 ^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.61: 	fun list_assoc(s: string, l: List<{ _1: string, _2: 'b }>): NotFound | Success['b]
@@ -361,28 +415,28 @@ Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Var("a"))
 
 Test2.eval(Cons(("a", Num(1)), Nil()), Var("a"))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.362: 	Test2.eval(Cons(("a", Num(1)), Nil()), Var("a"))
+//│ ║  l.416: 	Test2.eval(Cons(("a", Num(1)), Nil()), Var("a"))
 //│ ║         	                      ^^^^^^
 //│ ╟── integer literal of type `1` is not an instance of type `int`
-//│ ║  l.362: 	Test2.eval(Cons(("a", Num(1)), Nil()), Var("a"))
+//│ ║  l.416: 	Test2.eval(Cons(("a", Num(1)), Nil()), Var("a"))
 //│ ║         	                          ^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.271: 	class Num(n: int)
 //│ ╙──       	             ^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.362: 	Test2.eval(Cons(("a", Num(1)), Nil()), Var("a"))
+//│ ║  l.416: 	Test2.eval(Cons(("a", Num(1)), Nil()), Var("a"))
 //│ ║         	                                       ^^^^^^^^
 //│ ╟── string literal of type `"a"` is not an instance of type `string`
-//│ ║  l.362: 	Test2.eval(Cons(("a", Num(1)), Nil()), Var("a"))
+//│ ║  l.416: 	Test2.eval(Cons(("a", Num(1)), Nil()), Var("a"))
 //│ ║         	                                           ^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.64: 	class Var(s: string)
 //│ ╙──      	             ^^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.362: 	Test2.eval(Cons(("a", Num(1)), Nil()), Var("a"))
+//│ ║  l.416: 	Test2.eval(Cons(("a", Num(1)), Nil()), Var("a"))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"a"` is not an instance of type `string`
-//│ ║  l.362: 	Test2.eval(Cons(("a", Num(1)), Nil()), Var("a"))
+//│ ║  l.416: 	Test2.eval(Cons(("a", Num(1)), Nil()), Var("a"))
 //│ ║         	                 ^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.61: 	fun list_assoc(s: string, l: List<{ _1: string, _2: 'b }>): NotFound | Success['b]
@@ -391,46 +445,46 @@ Test2.eval(Cons(("a", Num(1)), Nil()), Var("a"))
 
 Test2.eval(Cons(("a", Abs("d", Var("d"))), Nil()), Add(Num(1), Var("a")))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.392: 	Test2.eval(Cons(("a", Abs("d", Var("d"))), Nil()), Add(Num(1), Var("a")))
+//│ ║  l.446: 	Test2.eval(Cons(("a", Abs("d", Var("d"))), Nil()), Add(Num(1), Var("a")))
 //│ ║         	                               ^^^^^^^^
 //│ ╟── string literal of type `"d"` is not an instance of type `string`
-//│ ║  l.392: 	Test2.eval(Cons(("a", Abs("d", Var("d"))), Nil()), Add(Num(1), Var("a")))
+//│ ║  l.446: 	Test2.eval(Cons(("a", Abs("d", Var("d"))), Nil()), Add(Num(1), Var("a")))
 //│ ║         	                                   ^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.64: 	class Var(s: string)
 //│ ╙──      	             ^^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.392: 	Test2.eval(Cons(("a", Abs("d", Var("d"))), Nil()), Add(Num(1), Var("a")))
+//│ ║  l.446: 	Test2.eval(Cons(("a", Abs("d", Var("d"))), Nil()), Add(Num(1), Var("a")))
 //│ ║         	                      ^^^^^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"d"` is not an instance of type `string`
-//│ ║  l.392: 	Test2.eval(Cons(("a", Abs("d", Var("d"))), Nil()), Add(Num(1), Var("a")))
+//│ ║  l.446: 	Test2.eval(Cons(("a", Abs("d", Var("d"))), Nil()), Add(Num(1), Var("a")))
 //│ ║         	                          ^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.78: 	class Abs<A>(x: string, t: A)
 //│ ╙──      	                ^^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.392: 	Test2.eval(Cons(("a", Abs("d", Var("d"))), Nil()), Add(Num(1), Var("a")))
+//│ ║  l.446: 	Test2.eval(Cons(("a", Abs("d", Var("d"))), Nil()), Add(Num(1), Var("a")))
 //│ ║         	                                                       ^^^^^^
 //│ ╟── integer literal of type `1` is not an instance of type `int`
-//│ ║  l.392: 	Test2.eval(Cons(("a", Abs("d", Var("d"))), Nil()), Add(Num(1), Var("a")))
+//│ ║  l.446: 	Test2.eval(Cons(("a", Abs("d", Var("d"))), Nil()), Add(Num(1), Var("a")))
 //│ ║         	                                                           ^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.271: 	class Num(n: int)
 //│ ╙──       	             ^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.392: 	Test2.eval(Cons(("a", Abs("d", Var("d"))), Nil()), Add(Num(1), Var("a")))
+//│ ║  l.446: 	Test2.eval(Cons(("a", Abs("d", Var("d"))), Nil()), Add(Num(1), Var("a")))
 //│ ║         	                                                               ^^^^^^^^
 //│ ╟── string literal of type `"a"` is not an instance of type `string`
-//│ ║  l.392: 	Test2.eval(Cons(("a", Abs("d", Var("d"))), Nil()), Add(Num(1), Var("a")))
+//│ ║  l.446: 	Test2.eval(Cons(("a", Abs("d", Var("d"))), Nil()), Add(Num(1), Var("a")))
 //│ ║         	                                                                   ^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.64: 	class Var(s: string)
 //│ ╙──      	             ^^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.392: 	Test2.eval(Cons(("a", Abs("d", Var("d"))), Nil()), Add(Num(1), Var("a")))
+//│ ║  l.446: 	Test2.eval(Cons(("a", Abs("d", Var("d"))), Nil()), Add(Num(1), Var("a")))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"a"` is not an instance of type `string`
-//│ ║  l.392: 	Test2.eval(Cons(("a", Abs("d", Var("d"))), Nil()), Add(Num(1), Var("a")))
+//│ ║  l.446: 	Test2.eval(Cons(("a", Abs("d", Var("d"))), Nil()), Add(Num(1), Var("a")))
 //│ ║         	                 ^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.61: 	fun list_assoc(s: string, l: List<{ _1: string, _2: 'b }>): NotFound | Success['b]
@@ -444,128 +498,128 @@ module Test3 extends EvalVar, EvalExpr, EvalLambda
 //│ where
 //│   'b :> Var | 'c
 //│      <: #Object
-//│   'c :> Abs['c] | 'b | Num | Var | 'd | App['c]
+//│   'c :> Abs['c] | 'b | Num | Var | error | 'd | App['c]
 //│   'd <: Add['e] | Mul['e] | Num | Var
 //│   'e <: 'a
 //│   'a <: Abs['a] | App['a & (Abs['a] | #Object & ~#Abs)] | #Object & 'd & ~#Abs & ~#App
 
 Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Abs("a", Var("a")))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.452: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Abs("a", Var("a")))
+//│ ║  l.506: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Abs("a", Var("a")))
 //│ ║         	                               ^^^^^^^^
 //│ ╟── string literal of type `"d"` is not an instance of type `string`
-//│ ║  l.452: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Abs("a", Var("a")))
+//│ ║  l.506: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Abs("a", Var("a")))
 //│ ║         	                                   ^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.64: 	class Var(s: string)
 //│ ╙──      	             ^^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.452: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Abs("a", Var("a")))
+//│ ║  l.506: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Abs("a", Var("a")))
 //│ ║         	                      ^^^^^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"d"` is not an instance of type `string`
-//│ ║  l.452: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Abs("a", Var("a")))
+//│ ║  l.506: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Abs("a", Var("a")))
 //│ ║         	                          ^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.78: 	class Abs<A>(x: string, t: A)
 //│ ╙──      	                ^^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.452: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Abs("a", Var("a")))
+//│ ║  l.506: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Abs("a", Var("a")))
 //│ ║         	                                                            ^^^^^^^^
 //│ ╟── string literal of type `"a"` is not an instance of type `string`
-//│ ║  l.452: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Abs("a", Var("a")))
+//│ ║  l.506: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Abs("a", Var("a")))
 //│ ║         	                                                                ^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.64: 	class Var(s: string)
 //│ ╙──      	             ^^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.452: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Abs("a", Var("a")))
+//│ ║  l.506: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Abs("a", Var("a")))
 //│ ║         	                                                   ^^^^^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"a"` is not an instance of type `string`
-//│ ║  l.452: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Abs("a", Var("a")))
+//│ ║  l.506: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Abs("a", Var("a")))
 //│ ║         	                                                       ^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.78: 	class Abs<A>(x: string, t: A)
 //│ ╙──      	                ^^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.452: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Abs("a", Var("a")))
+//│ ║  l.506: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Abs("a", Var("a")))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"c"` is not an instance of type `string`
-//│ ║  l.452: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Abs("a", Var("a")))
+//│ ║  l.506: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Abs("a", Var("a")))
 //│ ║         	                 ^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.61: 	fun list_assoc(s: string, l: List<{ _1: string, _2: 'b }>): NotFound | Success['b]
 //│ ╙──      	                                        ^^^^^^
-//│ error | 'a
+//│ 'a
 //│   where
-//│     'a :> App['a] | Abs['a] | Abs[Var | error] | Var | Num
+//│     'a :> App['a] | Abs['a] | Abs[Var | error] | Var | Num | error
 
 Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), App(Abs("a", Var("a")), Add(Num(1), Var("c"))))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.502: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), App(Abs("a", Var("a")), Add(Num(1), Var("c"))))
+//│ ║  l.556: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), App(Abs("a", Var("a")), Add(Num(1), Var("c"))))
 //│ ║         	                               ^^^^^^^^
 //│ ╟── string literal of type `"d"` is not an instance of type `string`
-//│ ║  l.502: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), App(Abs("a", Var("a")), Add(Num(1), Var("c"))))
+//│ ║  l.556: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), App(Abs("a", Var("a")), Add(Num(1), Var("c"))))
 //│ ║         	                                   ^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.64: 	class Var(s: string)
 //│ ╙──      	             ^^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.502: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), App(Abs("a", Var("a")), Add(Num(1), Var("c"))))
+//│ ║  l.556: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), App(Abs("a", Var("a")), Add(Num(1), Var("c"))))
 //│ ║         	                      ^^^^^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"d"` is not an instance of type `string`
-//│ ║  l.502: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), App(Abs("a", Var("a")), Add(Num(1), Var("c"))))
+//│ ║  l.556: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), App(Abs("a", Var("a")), Add(Num(1), Var("c"))))
 //│ ║         	                          ^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.78: 	class Abs<A>(x: string, t: A)
 //│ ╙──      	                ^^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.502: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), App(Abs("a", Var("a")), Add(Num(1), Var("c"))))
+//│ ║  l.556: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), App(Abs("a", Var("a")), Add(Num(1), Var("c"))))
 //│ ║         	                                                                ^^^^^^^^
 //│ ╟── string literal of type `"a"` is not an instance of type `string`
-//│ ║  l.502: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), App(Abs("a", Var("a")), Add(Num(1), Var("c"))))
+//│ ║  l.556: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), App(Abs("a", Var("a")), Add(Num(1), Var("c"))))
 //│ ║         	                                                                    ^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.64: 	class Var(s: string)
 //│ ╙──      	             ^^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.502: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), App(Abs("a", Var("a")), Add(Num(1), Var("c"))))
+//│ ║  l.556: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), App(Abs("a", Var("a")), Add(Num(1), Var("c"))))
 //│ ║         	                                                       ^^^^^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"a"` is not an instance of type `string`
-//│ ║  l.502: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), App(Abs("a", Var("a")), Add(Num(1), Var("c"))))
+//│ ║  l.556: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), App(Abs("a", Var("a")), Add(Num(1), Var("c"))))
 //│ ║         	                                                           ^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.78: 	class Abs<A>(x: string, t: A)
 //│ ╙──      	                ^^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.502: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), App(Abs("a", Var("a")), Add(Num(1), Var("c"))))
+//│ ║  l.556: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), App(Abs("a", Var("a")), Add(Num(1), Var("c"))))
 //│ ║         	                                                                               ^^^^^^
 //│ ╟── integer literal of type `1` is not an instance of type `int`
-//│ ║  l.502: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), App(Abs("a", Var("a")), Add(Num(1), Var("c"))))
+//│ ║  l.556: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), App(Abs("a", Var("a")), Add(Num(1), Var("c"))))
 //│ ║         	                                                                                   ^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.271: 	class Num(n: int)
 //│ ╙──       	             ^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.502: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), App(Abs("a", Var("a")), Add(Num(1), Var("c"))))
+//│ ║  l.556: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), App(Abs("a", Var("a")), Add(Num(1), Var("c"))))
 //│ ║         	                                                                                       ^^^^^^^^
 //│ ╟── string literal of type `"c"` is not an instance of type `string`
-//│ ║  l.502: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), App(Abs("a", Var("a")), Add(Num(1), Var("c"))))
+//│ ║  l.556: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), App(Abs("a", Var("a")), Add(Num(1), Var("c"))))
 //│ ║         	                                                                                           ^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.64: 	class Var(s: string)
 //│ ╙──      	             ^^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.502: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), App(Abs("a", Var("a")), Add(Num(1), Var("c"))))
+//│ ║  l.556: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), App(Abs("a", Var("a")), Add(Num(1), Var("c"))))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"c"` is not an instance of type `string`
-//│ ║  l.502: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), App(Abs("a", Var("a")), Add(Num(1), Var("c"))))
+//│ ║  l.556: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), App(Abs("a", Var("a")), Add(Num(1), Var("c"))))
 //│ ║         	                 ^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.61: 	fun list_assoc(s: string, l: List<{ _1: string, _2: 'b }>): NotFound | Success['b]
 //│ ╙──      	                                        ^^^^^^
-//│ error | 'a
+//│ 'a
 //│   where
-//│     'a :> App['a] | Abs['a] | Abs[Var | error] | Var | Add[Num | Var | error] | Num
+//│     'a :> App['a] | Abs['a] | Abs[Var | error] | Var | Add[Num | Var | error] | Num | error
 
 module Test3 extends EvalVar, EvalLambda, EvalExpr
 //│ module Test3() {
@@ -574,7 +628,7 @@ module Test3 extends EvalVar, EvalLambda, EvalExpr
 //│ where
 //│   'b :> Var | 'c
 //│      <: #Object
-//│   'c :> 'b | Abs['c] | App['c] | Var | Num | 'a
+//│   'c :> 'b | Abs['c] | App['c] | Var | Num | error | 'a
 //│   'a <: Add['d] | Mul['d] | Num | Var
 //│   'd <: 'a
 

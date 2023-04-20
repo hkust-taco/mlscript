@@ -9,17 +9,18 @@
 true
 //│ res: true
 
+:e
 1 as Int
 "hello" as String
 true as Bool
 //│ ╔══[ERROR] Type mismatch in 'as' binding:
-//│ ║  l.12: 	1 as Int
+//│ ║  l.13: 	1 as Int
 //│ ║        	^^^^^^^^
 //│ ╟── integer literal of type `1` is not a function
-//│ ║  l.12: 	1 as Int
+//│ ║  l.13: 	1 as Int
 //│ ║        	^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.12: 	1 as Int
+//│ ║  l.13: 	1 as Int
 //│ ╙──      	     ^^^
 //│ res: () -> Int
 //│ res: string
@@ -29,11 +30,11 @@ true as Bool
 1 as int
 "hello" as string
 //│ ╔══[WARNING] Variable name 'int' already names a symbol in scope. If you want to refer to that symbol, you can use `scope.int`; if not, give your future readers a break and use another name :^)
-//│ ║  l.29: 	1 as int
+//│ ║  l.30: 	1 as int
 //│ ╙──      	     ^^^
 //│ res: 1
 //│ ╔══[WARNING] Variable name 'string' already names a symbol in scope. If you want to refer to that symbol, you can use `scope.string`; if not, give your future readers a break and use another name :^)
-//│ ║  l.30: 	"hello" as string
+//│ ║  l.31: 	"hello" as string
 //│ ╙──      	           ^^^^^^
 //│ res: "hello"
 
@@ -47,33 +48,33 @@ true as Bool
 true as Int
 false as 1
 //│ ╔══[ERROR] Type mismatch in 'as' binding:
-//│ ║  l.46: 	1 as true
+//│ ║  l.47: 	1 as true
 //│ ║        	^^^^^^^^^
 //│ ╟── integer literal of type `1` is not an instance of type `true`
-//│ ║  l.46: 	1 as true
+//│ ║  l.47: 	1 as true
 //│ ║        	^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.46: 	1 as true
+//│ ║  l.47: 	1 as true
 //│ ╙──      	     ^^^^
 //│ res: true
 //│ ╔══[ERROR] Type mismatch in 'as' binding:
-//│ ║  l.47: 	true as Int
+//│ ║  l.48: 	true as Int
 //│ ║        	^^^^^^^^^^^
 //│ ╟── reference of type `true` is not a function
-//│ ║  l.47: 	true as Int
+//│ ║  l.48: 	true as Int
 //│ ║        	^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.47: 	true as Int
+//│ ║  l.48: 	true as Int
 //│ ╙──      	        ^^^
 //│ res: () -> Int
 //│ ╔══[ERROR] Type mismatch in 'as' binding:
-//│ ║  l.48: 	false as 1
+//│ ║  l.49: 	false as 1
 //│ ║        	^^^^^^^^^^
 //│ ╟── reference of type `false` does not match type `1`
-//│ ║  l.48: 	false as 1
+//│ ║  l.49: 	false as 1
 //│ ║        	^^^^^
 //│ ╟── Note: constraint arises from integer literal:
-//│ ║  l.48: 	false as 1
+//│ ║  l.49: 	false as 1
 //│ ╙──      	         ^
 //│ res: 1
 
@@ -112,13 +113,13 @@ x => if pred x then x else f x
 :e
 f false
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.113: 	f false
+//│ ║  l.114: 	f false
 //│ ║         	^^^^^^^
 //│ ╟── reference of type `false` is not an instance of type `int`
-//│ ║  l.113: 	f false
+//│ ║  l.114: 	f false
 //│ ║         	  ^^^^^
 //│ ╟── Note: constraint arises from argument:
-//│ ║  l.102: 	  if pred n then n else f (n + 1)
+//│ ║  l.103: 	  if pred n then n else f (n + 1)
 //│ ╙──       	                           ^
 //│ res: error | false | int
 

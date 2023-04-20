@@ -79,14 +79,8 @@ Test.foo(error) + 1
 //│ ╟── type variable `A` leaks out of its scope
 //│ ║  l.75: 	Test.foo(error) + 1
 //│ ║        	^^^^^^^^^^^^^^^
-//│ ╙── into type `int`
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.75: 	Test.foo(error) + 1
-//│ ║        	^^^^^^^^^^^^^^^^^^^
-//│ ╟── integer literal of type `1` is not an instance of type `int`
-//│ ║  l.75: 	Test.foo(error) + 1
-//│ ╙──      	                  ^
-//│ error | int
+//│ ╙── into type `Int`
+//│ Int | error
 //│ res
 //│ Runtime error:
 //│   Error: unexpected runtime error
@@ -94,7 +88,7 @@ Test.foo(error) + 1
 :e
 Test<int> .foo
 //│ ╔══[ERROR] Type application syntax is not yet supported
-//│ ║  l.95: 	Test<int> .foo
+//│ ║  l.89: 	Test<int> .foo
 //│ ╙──      	^^^^^^^^^
 //│ error
 //│ res
@@ -103,8 +97,8 @@ Test<int> .foo
 :e
 (Test<int>).foo
 //│ ╔══[ERROR] Type application syntax is not yet supported
-//│ ║  l.104: 	(Test<int>).foo
-//│ ╙──       	 ^^^^^^^^^
+//│ ║  l.98: 	(Test<int>).foo
+//│ ╙──      	 ^^^^^^^^^
 //│ error
 //│ res
 //│     = undefined
@@ -118,10 +112,10 @@ Test
 :e
 Test:  Test<'a>
 //│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.119: 	Test:  Test<'a>
+//│ ║  l.113: 	Test:  Test<'a>
 //│ ║         	^^^^
 //│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.119: 	Test:  Test<'a>
+//│ ║  l.113: 	Test:  Test<'a>
 //│ ║         	            ^^
 //│ ╟── back into type variable `A`
 //│ ║  l.5: 	module Test<A> {
@@ -140,7 +134,7 @@ fun test(x) = if x is Test then x.foo
 :e
 test(Test)
 //│ ╔══[ERROR] Type error in application
-//│ ║  l.141: 	test(Test)
+//│ ║  l.135: 	test(Test)
 //│ ║         	^^^^^^^^^^
 //│ ╟── type variable `A` leaks out of its scope
 //│ ║  l.5: 	module Test<A> {

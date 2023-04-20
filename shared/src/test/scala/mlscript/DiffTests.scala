@@ -119,12 +119,16 @@ class DiffTests
       str.splitSane('\n').foreach(l => out.println(outputMarker + l))
     def outputSourceCode(code: SourceCode) = code.lines.foreach{line => out.println(outputMarker + line.toString())}
     val allStatements = mutable.Buffer.empty[DesugaredStatement]
-    val typer = new Typer(dbg = false, verbose = false, explainErrors = false) {
+    var newDefs = false
+    // def outerNewDefs = newDefs
+    trait MyTyper extends Typer { var ctx: Ctx }
+    lazy val typer = new Typer(dbg = false, verbose = false, explainErrors = false, newDefs = newDefs) with MyTyper {
+      var ctx: Ctx = Ctx.init
       override def funkyTuples = file.ext =:= "fun"
       // override def emitDbg(str: String): Unit = if (stdout) System.out.println(str) else output(str)
       override def emitDbg(str: String): Unit = output(str)
     }
-    var ctx: typer.Ctx = typer.Ctx.init
+    def ctx = typer.ctx
     var declared: Map[Str, typer.ST] = Map.empty
     val failures = mutable.Buffer.empty[Int]
     val unmergedChanges = mutable.Buffer.empty[Int]
@@ -179,8 +183,6 @@ class DiffTests
     var irregularTypes = false
     var generalizeArguments = false
     var newParser = basePath.headOption.contains("parser") || basePath.headOption.contains("compiler")
-    
-    var newDefs = false
     
     val backend = new JSTestBackend()
     val host = ReplHost()
@@ -602,7 +604,7 @@ class DiffTests
                 }
               }
               
-              ctx = 
+              typer.ctx = 
                 // if (newParser) typer.typeTypingUnit(tu)
                 // else 
                 typer.processTypeDefs(typeDefs)(ctx, raise)

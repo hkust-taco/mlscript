@@ -1,4 +1,3 @@
-:NewParser
 :NewDefs
 
 
@@ -17,28 +16,19 @@ mixin ComparePoint {
     (lhs.x === rhs.x) && (lhs.y === rhs.y)
 }
 //│ mixin ComparePoint() {
-//│   fun compare: forall 'a 'b. ({x: Eql['a], y: Eql['b]}, {x: 'a, y: 'b},) -> bool
+//│   fun compare: forall 'a 'b. ({x: Eql['a], y: Eql['b]}, {x: 'a, y: 'b},) -> Bool
 //│ }
 
 
-class Color(str: string) {
+class Color(str: Str) {
   fun equals(that) = str === that.str
 }
-//│ class Color(str: string) {
-//│   fun equals: {str: string} -> bool
+//│ class Color(str: Str) {
+//│   fun equals: {str: anything} -> Bool
 //│ }
 
 let Red = Color("red")
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.31: 	let Red = Color("red")
-//│ ║        	          ^^^^^^^^^^^^
-//│ ╟── string literal of type `"red"` is not an instance of type `string`
-//│ ║  l.31: 	let Red = Color("red")
-//│ ║        	                ^^^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.24: 	class Color(str: string) {
-//│ ╙──      	                 ^^^^^^
-//│ let Red: Color | error
+//│ let Red: Color
 //│ Red
 //│     = Color {}
 
@@ -48,8 +38,8 @@ mixin CompareColored {
     super.compare(lhs, rhs) && lhs.color.equals(rhs.color)
 }
 //│ mixin CompareColored() {
-//│   super: {compare: ('a, 'b,) -> bool}
-//│   fun compare: forall 'color. ({color: {equals: 'color -> bool}} & 'a, {color: 'color} & 'b,) -> bool
+//│   super: {compare: ('a, 'b,) -> Bool}
+//│   fun compare: forall 'color. ({color: {equals: 'color -> Bool}} & 'a, {color: 'color} & 'b,) -> Bool
 //│ }
 
 
@@ -78,9 +68,32 @@ mixin CompareNested {
         then rhs.parent is Some(q) and this.compare(p, q)
         else rhs.parent is None
 }
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.66: 	    super.compare(lhs, rhs) &&
+//│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.67: 	      if lhs.parent is Some(p)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.68: 	        then rhs.parent is Some(q) and this.compare(p, q)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.69: 	        else rhs.parent is None
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── type `false` is not an instance of type `Bool`
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.66: 	    super.compare(lhs, rhs) &&
+//│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.67: 	      if lhs.parent is Some(p)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.68: 	        then rhs.parent is Some(q) and this.compare(p, q)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.69: 	        else rhs.parent is None
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── operator application of type `Bool` is not an instance of type `bool`
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.65: 	  fun compare(lhs, rhs): bool =
+//│ ╙──      	                         ^^^^
 //│ mixin CompareNested() {
-//│   super: {compare: ('a, 'b,) -> bool}
-//│   this: {compare: ('value, 'value0,) -> bool}
+//│   super: {compare: ('a, 'b,) -> Bool}
+//│   this: {compare: ('value, 'value0,) -> Bool}
 //│   fun compare: ({parent: #Object & ~#Some | Some['value]} & 'a, {parent: #Object & ~#Some | Some['value0]} & 'b,) -> bool
 //│ }
 
@@ -96,17 +109,26 @@ mixin CompareNested {
 
 
 
-class MyPoint(x: int, y: int, color: Color, parent: Some[MyPoint] | None)
-//│ class MyPoint(x: int, y: int, color: Color, parent: Some[MyPoint] | None)
+class MyPoint(x: Int, y: Int, color: Color, parent: Some[MyPoint] | None)
+//│ class MyPoint(x: Int, y: Int, color: Color, parent: Some[MyPoint] | None)
 
 
 module CompareMyPoint extends ComparePoint, CompareColored, CompareNested
+//│ ╔══[ERROR] Type mismatch in type declaration:
+//│ ║  l.116: 	module CompareMyPoint extends ComparePoint, CompareColored, CompareNested
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `bool` is not an instance of type `Bool`
+//│ ║  l.65: 	  fun compare(lhs, rhs): bool =
+//│ ║        	                         ^^^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.68: 	        then rhs.parent is Some(q) and this.compare(p, q)
+//│ ╙──      	                                       ^^^^^^^^^^^^^^^^^^
 //│ module CompareMyPoint() {
 //│   fun compare: ('a, 'b,) -> bool
 //│ }
 //│ where
 //│   'b <: {color: 'color, parent: #Object & ~#Some | Some['b], x: 'c, y: 'd}
-//│   'a <: {color: {equals: 'color -> bool}, parent: #Object & ~#Some | Some['a], x: Eql['c], y: Eql['d]}
+//│   'a <: {color: {equals: 'color -> Bool}, parent: #Object & ~#Some | Some['a], x: Eql['c], y: Eql['d]}
 
 
 let p0 = MyPoint(0, 0, Red, None)
@@ -115,66 +137,12 @@ let p2 = MyPoint(0, 1, Red, None)
 let p3 = MyPoint(0, 1, Red, Some(p1))
 let p4 = MyPoint(0, 1, Red, Some(p2))
 let p5 = MyPoint(0, 1, Red, Some(p3))
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.112: 	let p0 = MyPoint(0, 0, Red, None)
-//│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── integer literal of type `0` is not an instance of type `int`
-//│ ║  l.112: 	let p0 = MyPoint(0, 0, Red, None)
-//│ ║         	                 ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.99: 	class MyPoint(x: int, y: int, color: Color, parent: Some[MyPoint] | None)
-//│ ╙──      	                 ^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.113: 	let p1 = MyPoint(0, 1, Red, None)
-//│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── integer literal of type `0` is not an instance of type `int`
-//│ ║  l.113: 	let p1 = MyPoint(0, 1, Red, None)
-//│ ║         	                 ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.99: 	class MyPoint(x: int, y: int, color: Color, parent: Some[MyPoint] | None)
-//│ ╙──      	                 ^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.114: 	let p2 = MyPoint(0, 1, Red, None)
-//│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── integer literal of type `0` is not an instance of type `int`
-//│ ║  l.114: 	let p2 = MyPoint(0, 1, Red, None)
-//│ ║         	                 ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.99: 	class MyPoint(x: int, y: int, color: Color, parent: Some[MyPoint] | None)
-//│ ╙──      	                 ^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.115: 	let p3 = MyPoint(0, 1, Red, Some(p1))
-//│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── integer literal of type `0` is not an instance of type `int`
-//│ ║  l.115: 	let p3 = MyPoint(0, 1, Red, Some(p1))
-//│ ║         	                 ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.99: 	class MyPoint(x: int, y: int, color: Color, parent: Some[MyPoint] | None)
-//│ ╙──      	                 ^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.116: 	let p4 = MyPoint(0, 1, Red, Some(p2))
-//│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── integer literal of type `0` is not an instance of type `int`
-//│ ║  l.116: 	let p4 = MyPoint(0, 1, Red, Some(p2))
-//│ ║         	                 ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.99: 	class MyPoint(x: int, y: int, color: Color, parent: Some[MyPoint] | None)
-//│ ╙──      	                 ^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.117: 	let p5 = MyPoint(0, 1, Red, Some(p3))
-//│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── integer literal of type `0` is not an instance of type `int`
-//│ ║  l.117: 	let p5 = MyPoint(0, 1, Red, Some(p3))
-//│ ║         	                 ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.99: 	class MyPoint(x: int, y: int, color: Color, parent: Some[MyPoint] | None)
-//│ ╙──      	                 ^^^
-//│ let p0: MyPoint | error
-//│ let p1: MyPoint | error
-//│ let p2: MyPoint | error
-//│ let p3: MyPoint | error
-//│ let p4: MyPoint | error
-//│ let p5: MyPoint | error
+//│ let p0: MyPoint
+//│ let p1: MyPoint
+//│ let p2: MyPoint
+//│ let p3: MyPoint
+//│ let p4: MyPoint
+//│ let p5: MyPoint
 //│ p0
 //│    = MyPoint {}
 //│ p1

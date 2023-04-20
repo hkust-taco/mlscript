@@ -11,10 +11,28 @@ class Pair(lhs: int, rhs: int)
 fun f(override Pair(x, y)) = x + y
 //│ |#fun| |f|(|#override| |Pair|(|x|,| |y|)|)| |#=| |x| |+| |y|
 //│ Parsed: fun f = (_$0,) => if _$0 is (Pair (x, y,)) then + (x,) (y,) else (super).f (_$0,);
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.11: 	fun f(override Pair(x, y)) = x + y
+//│ ║        	                             ^^^
+//│ ╟── type `int` is not an instance of type `Int`
+//│ ║  l.5: 	class Pair(lhs: int, rhs: int)
+//│ ║       	                ^^^
+//│ ╟── but it flows into reference with expected type `Int`
+//│ ║  l.11: 	fun f(override Pair(x, y)) = x + y
+//│ ╙──      	                             ^
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.11: 	fun f(override Pair(x, y)) = x + y
+//│ ║        	                             ^^^^^
+//│ ╟── type `int` is not an instance of type `Int`
+//│ ║  l.5: 	class Pair(lhs: int, rhs: int)
+//│ ║       	                          ^^^
+//│ ╟── but it flows into reference with expected type `Int`
+//│ ║  l.11: 	fun f(override Pair(x, y)) = x + y
+//│ ╙──      	                                 ^
 //│ ╔══[ERROR] identifier not found: super
 //│ ║  l.11: 	fun f(override Pair(x, y)) = x + y
 //│ ╙──      	      ^^^^^^^^
-//│ fun f: #Object -> (error | int)
+//│ fun f: #Object -> (Int | error)
 //│ Syntax error:
 //│   'super' keyword unexpected here
 
@@ -22,9 +40,27 @@ fun f(override Pair(x, y)) = x + y
 mixin Test {
   fun f(override Pair(x, y)) = x + y
 }
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.41: 	  fun f(override Pair(x, y)) = x + y
+//│ ║        	                               ^^^
+//│ ╟── type `int` is not an instance of type `Int`
+//│ ║  l.5: 	class Pair(lhs: int, rhs: int)
+//│ ║       	                ^^^
+//│ ╟── but it flows into reference with expected type `Int`
+//│ ║  l.41: 	  fun f(override Pair(x, y)) = x + y
+//│ ╙──      	                               ^
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.41: 	  fun f(override Pair(x, y)) = x + y
+//│ ║        	                               ^^^^^
+//│ ╟── type `int` is not an instance of type `Int`
+//│ ║  l.5: 	class Pair(lhs: int, rhs: int)
+//│ ║       	                          ^^^
+//│ ╟── but it flows into reference with expected type `Int`
+//│ ║  l.41: 	  fun f(override Pair(x, y)) = x + y
+//│ ╙──      	                                   ^
 //│ mixin Test() {
 //│   super: {f: 'a -> 'b}
-//│   fun f: (#Object & 'a & ~#Pair | Pair) -> (int | 'b)
+//│   fun f: (#Object & 'a & ~#Pair | Pair) -> (Int | error | 'b)
 //│ }
 
 
@@ -32,18 +68,18 @@ mixin Test {
 :e
 fun f(override Pair(x, y), z) = x + y
 //│ ╔══[PARSE ERROR] Unsupported 'override' parameter list shape
-//│ ║  l.33: 	fun f(override Pair(x, y), z) = x + y
+//│ ║  l.69: 	fun f(override Pair(x, y), z) = x + y
 //│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Unsupported pattern shape:
-//│ ║  l.33: 	fun f(override Pair(x, y), z) = x + y
+//│ ║  l.69: 	fun f(override Pair(x, y), z) = x + y
 //│ ╙──      	               ^^^^^^^^^^
 //│ ╔══[ERROR] identifier not found: x
-//│ ║  l.33: 	fun f(override Pair(x, y), z) = x + y
+//│ ║  l.69: 	fun f(override Pair(x, y), z) = x + y
 //│ ╙──      	                                ^
 //│ ╔══[ERROR] identifier not found: y
-//│ ║  l.33: 	fun f(override Pair(x, y), z) = x + y
+//│ ║  l.69: 	fun f(override Pair(x, y), z) = x + y
 //│ ╙──      	                                    ^
-//│ fun f: (error, anything,) -> int
+//│ fun f: (error, anything,) -> Int
 //│ Code generation encountered an error:
 //│   term App(Var(Pair), Tup(_: Var(x), _: Var(y))) is not a valid pattern
 

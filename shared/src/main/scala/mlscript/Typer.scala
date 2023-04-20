@@ -14,7 +14,7 @@ import mlscript.Message._
  *  Inferred SimpleType values are then turned into CompactType values for simplification.
  *  In order to turn the resulting CompactType into a mlscript.Type, we use `expandCompactType`.
  */
-class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
+class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var newDefs: Bool = false)
     extends ucs.Desugarer with TypeSimplifier {
   
   def funkyTuples: Bool = false
@@ -33,7 +33,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   var irregularTypes: Boolean = false
   var constrainedTypes: Boolean = false
   
-  var newDefs: Bool = false
+  // var newDefs: Bool = false
   
   var recordProvenances: Boolean = true
   
@@ -193,12 +193,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   
   val UnitType: ClassTag = ClassTag(Var("unit"), semp)(noTyProv)
   
-  val BoolType: ClassTag = ClassTag(Var("bool"), sing(TN("Eql")))(noTyProv)
+  val BoolType: ClassTag = ClassTag(Var(if (newDefs) "Bool" else "bool"), if (newDefs) sing(TN("Object")) else semp)(noTyProv)
   val TrueType: ClassTag = ClassTag(Var("true"), sing(TN("bool")) + TN("Eql"))(noTyProv)
   val FalseType: ClassTag = ClassTag(Var("false"), sing(TN("bool")) + TN("Eql"))(noTyProv)
   
   val ObjType: ClassTag = ClassTag(Var("Object"), sing(TN("Eql")))(noTyProv)
-  val IntType: ClassTag = ClassTag(Var("int"), sing(TN("number")) + TN("Eql"))(noTyProv)
+  val IntType: ClassTag = ClassTag(Var(if (newDefs) "Int" else "int"), if (newDefs) sing(TN("Num")) + TN("Eql") else sing(TN("number")))(noTyProv)
   val DecType: ClassTag = ClassTag(Var("number"), sing(TN("Eql")))(noTyProv)
   val StrType: ClassTag = ClassTag(Var("string"), sing(TN("Eql")))(noTyProv)
   // val IntType: ST = TypeRef(TN("int"), Nil)(noTyProv)
@@ -215,6 +215,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   val nuBuiltinTypes: Ls[NuTypeDef] = Ls(
     NuTypeDef(Cls, TN("Object"), Nil, Tup(Nil), N, Nil, N, N, TypingUnit(Nil))(N),
     NuTypeDef(Cls, TN("Int"), Nil, Tup(Nil), N, Nil, N, N, TypingUnit(Nil))(N), // TODO mk abstract
+    NuTypeDef(Cls, TN("Str"), Nil, Tup(Nil), N, Nil, N, N, TypingUnit(Nil))(N), // TODO mk abstract
   )
   val builtinTypes: Ls[TypeDef] =
     // TypeDef(Cls, TN("Object"), Nil, TopType, Nil, Nil, sing(TN("Eql")), N, Nil) ::
