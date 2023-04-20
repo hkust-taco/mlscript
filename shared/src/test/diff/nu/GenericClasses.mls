@@ -128,12 +128,6 @@ type Option<A> = Some<A> | None
 
 
 let opt = if true then Some(123) else None
-//│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.130: 	let opt = if true then Some(123) else None
-//│ ║         	             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── reference of type `true` is not an instance of type `Object`
-//│ ║  l.130: 	let opt = if true then Some(123) else None
-//│ ╙──       	             ^^^^
 //│ let opt: None | Some[123]
 //│ opt
 //│     = Some {}
@@ -155,22 +149,7 @@ opt.map_A(succ)
 //│     = Some {}
 
 opt.map(x => x > 0)
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.157: 	opt.map(x => x > 0)
-//│ ║         	             ^^^^^
-//│ ╟── integer literal of type `0` is not an instance of type `number`
-//│ ║  l.157: 	opt.map(x => x > 0)
-//│ ╙──       	                 ^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.157: 	opt.map(x => x > 0)
-//│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ╟── integer literal of type `123` is not an instance of type `number`
-//│ ║  l.130: 	let opt = if true then Some(123) else None
-//│ ║         	                            ^^^
-//│ ╟── Note: constraint arises from reference:
-//│ ║  l.157: 	opt.map(x => x > 0)
-//│ ╙──       	             ^
-//│ None | Some[Bool | error] | error
+//│ None | Some[Bool]
 //│ res
 //│     = Some {}
 
@@ -210,7 +189,7 @@ class Test(n) {
   fun bar = n
 }
 //│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.208: 	class Test(n) {
+//│ ║  l.187: 	class Test(n) {
 //│ ╙──       	           ^
 //│ class Test(n: error) {
 //│   fun bar: error
@@ -234,13 +213,13 @@ class Test<A>(n: A) {
   fun foo = n + 1
 }
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.234: 	  fun foo = n + 1
+//│ ║  l.213: 	  fun foo = n + 1
 //│ ║         	            ^^^
 //│ ╟── reference of type `A` is not an instance of type `Int`
-//│ ║  l.234: 	  fun foo = n + 1
+//│ ║  l.213: 	  fun foo = n + 1
 //│ ║         	            ^
 //│ ╟── Note: type parameter A is defined at:
-//│ ║  l.233: 	class Test<A>(n: A) {
+//│ ║  l.212: 	class Test<A>(n: A) {
 //│ ╙──       	           ^
 //│ class Test[A](n: A) {
 //│   fun foo: Int | error
@@ -252,7 +231,7 @@ Test(1)
 //│     = Test {}
 
 Test(true)
-//│ Test[true]
+//│ Test[True]
 //│ res
 //│     = Test {}
 
@@ -289,14 +268,14 @@ let t = Test(1)
 //│   = Test {}
 
 t.foo1(true)
-//│ 1 | true
+//│ 1 | True
 //│ res
 //│     = true
 
 t : Test<'a>
 //│ Test['a]
 //│   where
-//│     'a :> 1 | true
+//│     'a :> 1 | True
 //│ res
 //│     = Test {}
 
@@ -306,7 +285,7 @@ t.id
 //│     = [Function: id]
 
 [t.id(1), t.id(true)]
-//│ (1, true,)
+//│ (1, True,)
 //│ res
 //│     = [ 1, true ]
 
@@ -317,13 +296,13 @@ class TestBad<A> {
   fun foo2(x: A) = x + 1
 }
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.317: 	  fun foo2(x: A) = x + 1
+//│ ║  l.296: 	  fun foo2(x: A) = x + 1
 //│ ║         	                   ^^^
 //│ ╟── reference of type `A` is not an instance of type `Int`
-//│ ║  l.317: 	  fun foo2(x: A) = x + 1
+//│ ║  l.296: 	  fun foo2(x: A) = x + 1
 //│ ║         	                   ^
 //│ ╟── Note: type parameter A is defined at:
-//│ ║  l.315: 	class TestBad<A> {
+//│ ║  l.294: 	class TestBad<A> {
 //│ ╙──       	              ^
 //│ class TestBad[A]() {
 //│   fun foo1: (x: A,) -> A
@@ -357,7 +336,7 @@ t.foo1
 //│     = [Function: foo1]
 
 [t.foo1(0), t.foo1(true)]
-//│ (0, true,)
+//│ (0, True,)
 //│ res
 //│     = [ 0, true ]
 
@@ -372,28 +351,16 @@ t
 //│     = TestBad {}
 
 
-fun foo(x: TestBad<int>) = x.foo1
-//│ fun foo: (x: TestBad[int],) -> (x: int,) -> int
+fun foo(x: TestBad<Int>) = x.foo1
+//│ fun foo: (x: TestBad[Int],) -> (x: Int,) -> Int
 
 foo(t)
-//│ (x: int,) -> int
+//│ (x: Int,) -> Int
 //│ res
 //│     = [Function: foo1]
 
 foo(t)(1)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.383: 	foo(t)(1)
-//│ ║         	^^^^^^^^^
-//│ ╟── integer literal of type `1` is not an instance of type `int`
-//│ ║  l.383: 	foo(t)(1)
-//│ ║         	       ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.375: 	fun foo(x: TestBad<int>) = x.foo1
-//│ ║         	                   ^^^
-//│ ╟── Note: type parameter A is defined at:
-//│ ║  l.315: 	class TestBad<A> {
-//│ ╙──       	              ^
-//│ error | int
+//│ Int
 //│ res
 //│     = 1
 
@@ -426,7 +393,7 @@ not(w.x.n)
 :e
 not(w.x.a)
 //│ ╔══[ERROR] Class `C` does not contain member `a`
-//│ ║  l.427: 	not(w.x.a)
+//│ ║  l.394: 	not(w.x.a)
 //│ ╙──       	       ^^
 //│ Bool
 //│ res

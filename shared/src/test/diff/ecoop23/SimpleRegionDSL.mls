@@ -1,4 +1,3 @@
-:NewParser
 :NewDefs
 
 
@@ -7,15 +6,15 @@
 
 // ******************* Initial System *******************
 
-class Vector(x: int, y: int)
-//│ class Vector(x: int, y: int)
+class Vector(x: Int, y: Int)
+//│ class Vector(x: Int, y: Int)
 
-class Circle(radius: int)
+class Circle(radius: Int)
 class Outside[Region](a: Region)
 class Union[Region](a: Region, b: Region)
 class Intersect[Region](a: Region, b: Region)
 class Translate[Region](v: Vector, a: Region)
-//│ class Circle(radius: int)
+//│ class Circle(radius: Int)
 //│ class Outside[Region](a: Region)
 //│ class Union[Region](a: Region, b: Region)
 //│ class Intersect[Region](a: Region, b: Region)
@@ -37,115 +36,43 @@ mixin SizeBase {
 
 // ******************* Linguistic Reuse and Meta-Language Optimizations *******************
 
-fun round(n: number): int = 0
-//│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.40: 	fun round(n: number): int = 0
-//│ ║        	                            ^
-//│ ╟── integer literal of type `0` is not an instance of type `int`
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.40: 	fun round(n: number): int = 0
-//│ ╙──      	                      ^^^
-//│ fun round: (n: number,) -> int
+fun round(n: Num): Int = 0
+//│ fun round: (n: Num,) -> Int
 
 fun go(x, offset) =
   if x is 0 then Circle(1)
   else
     let shared = go(x - 1, round(offset / 2))
     Union(Translate(Vector(0 - offset, 0), shared), Translate(Vector(offset, 0), shared))
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.51: 	  if x is 0 then Circle(1)
-//│ ║        	     ^^^^^^
-//│ ╟── integer literal of type `0` is not an instance of type `number`
-//│ ║  l.51: 	  if x is 0 then Circle(1)
-//│ ╙──      	          ^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.51: 	  if x is 0 then Circle(1)
-//│ ║        	                 ^^^^^^^^^
-//│ ╟── integer literal of type `1` is not an instance of type `int`
-//│ ║  l.51: 	  if x is 0 then Circle(1)
-//│ ║        	                        ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.13: 	class Circle(radius: int)
-//│ ╙──      	                     ^^^
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.53: 	    let shared = go(x - 1, round(offset / 2))
-//│ ║        	                                 ^^^^^^^^^^
-//│ ╟── integer literal of type `2` is not an instance of type `number`
-//│ ║  l.53: 	    let shared = go(x - 1, round(offset / 2))
-//│ ╙──      	                                          ^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.54: 	    Union(Translate(Vector(0 - offset, 0), shared), Translate(Vector(offset, 0), shared))
-//│ ║        	                    ^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── operator application of type `Int` is not an instance of type `int`
-//│ ║  l.54: 	    Union(Translate(Vector(0 - offset, 0), shared), Translate(Vector(offset, 0), shared))
-//│ ║        	                           ^^^^^^^^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.10: 	class Vector(x: int, y: int)
-//│ ╙──      	                ^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.54: 	    Union(Translate(Vector(0 - offset, 0), shared), Translate(Vector(offset, 0), shared))
-//│ ║        	                                                              ^^^^^^^^^^^^^^^^^
-//│ ╟── integer literal of type `0` is not an instance of type `int`
-//│ ║  l.54: 	    Union(Translate(Vector(0 - offset, 0), shared), Translate(Vector(offset, 0), shared))
-//│ ║        	                                                                             ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.10: 	class Vector(x: int, y: int)
-//│ ╙──      	                        ^^^
 //│ ╔══[ERROR] Type mismatch in definition:
-//│ ║  l.50: 	fun go(x, offset) =
+//│ ║  l.42: 	fun go(x, offset) =
 //│ ║        	    ^^^^^^^^^^^^^^^
-//│ ║  l.51: 	  if x is 0 then Circle(1)
+//│ ║  l.43: 	  if x is 0 then Circle(1)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.52: 	  else
+//│ ║  l.44: 	  else
 //│ ║        	^^^^^^
-//│ ║  l.53: 	    let shared = go(x - 1, round(offset / 2))
+//│ ║  l.45: 	    let shared = go(x - 1, round(offset / 2))
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.54: 	    Union(Translate(Vector(0 - offset, 0), shared), Translate(Vector(offset, 0), shared))
+//│ ║  l.46: 	    Union(Translate(Vector(0 - offset, 0), shared), Translate(Vector(offset, 0), shared))
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── operator application of type `Int` is not an instance of type `number`
-//│ ║  l.53: 	    let shared = go(x - 1, round(offset / 2))
-//│ ║        	                    ^^^^^
-//│ ╟── Note: constraint arises from reference:
-//│ ║  l.51: 	  if x is 0 then Circle(1)
-//│ ╙──      	     ^
-//│ ╔══[ERROR] Type mismatch in definition:
-//│ ║  l.50: 	fun go(x, offset) =
-//│ ║        	    ^^^^^^^^^^^^^^^
-//│ ║  l.51: 	  if x is 0 then Circle(1)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.52: 	  else
-//│ ║        	^^^^^^
-//│ ║  l.53: 	    let shared = go(x - 1, round(offset / 2))
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.54: 	    Union(Translate(Vector(0 - offset, 0), shared), Translate(Vector(offset, 0), shared))
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `int` is not an instance of type `Int`
-//│ ║  l.40: 	fun round(n: number): int = 0
-//│ ║        	                      ^^^
-//│ ╟── but it flows into application with expected type `Int`
-//│ ║  l.53: 	    let shared = go(x - 1, round(offset / 2))
+//│ ╟── type `Int` is not an instance of type `Num`
+//│ ║  l.39: 	fun round(n: Num): Int = 0
+//│ ║        	                   ^^^
+//│ ╟── but it flows into application with expected type `#Num`
+//│ ║  l.45: 	    let shared = go(x - 1, round(offset / 2))
 //│ ║        	                           ^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.54: 	    Union(Translate(Vector(0 - offset, 0), shared), Translate(Vector(offset, 0), shared))
-//│ ╙──      	                               ^^^^^^
-//│ fun go: forall 'Region. (nothing, nothing,) -> 'Region
+//│ ║  l.45: 	    let shared = go(x - 1, round(offset / 2))
+//│ ╙──      	                                 ^^^^^^
+//│ fun go: forall 'Region. (Int, Int,) -> 'Region
 //│   where
-//│     'Region :> Circle | Union[Translate['Region]] | error
+//│     'Region :> Circle | Union[Translate['Region]]
 
 // * Note that first-class polymorphism manages (correctly) to preserve the universal quantification
 let circles = go(2, 1024)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.136: 	let circles = go(2, 1024)
-//│ ║         	              ^^^^^^^^^^^
-//│ ╟── integer literal of type `2` is not an instance of type `number`
-//│ ║  l.136: 	let circles = go(2, 1024)
-//│ ║         	                 ^
-//│ ╟── Note: constraint arises from reference:
-//│ ║  l.51: 	  if x is 0 then Circle(1)
-//│ ╙──      	     ^
-//│ let circles: forall 'Region. 'Region | error
+//│ let circles: forall 'Region. 'Region
 //│   where
-//│     'Region :> Circle | Union[Translate['Region]] | error
+//│     'Region :> Circle | Union[Translate['Region]]
 //│ circles
 //│         = Union {}
 
@@ -198,45 +125,17 @@ TestSize.size(circles)
 // TODO investigate
 :re
 TestSize.size(Scale(Vector(1, 1), circles))
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.200: 	TestSize.size(Scale(Vector(1, 1), circles))
-//│ ║         	                    ^^^^^^^^^^^^
-//│ ╟── integer literal of type `1` is not an instance of type `int`
-//│ ║  l.200: 	TestSize.size(Scale(Vector(1, 1), circles))
-//│ ║         	                           ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.10: 	class Vector(x: int, y: int)
-//│ ╙──      	                ^^^
 //│ Int
 //│ res
 //│ Runtime error:
 //│   Error: non-exhaustive case expression
 
 // ******************* Adding a New Interpretation *******************
-// a stupid power (int ** int) implementation
+// a stupid power (Int ** Int) implementation
 fun pow(x, a) =
   if a is 0 then 1
   else x * pow(x, a - 1)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.218: 	  if a is 0 then 1
-//│ ║         	     ^^^^^^
-//│ ╟── integer literal of type `0` is not an instance of type `number`
-//│ ║  l.218: 	  if a is 0 then 1
-//│ ╙──       	          ^
-//│ ╔══[ERROR] Type mismatch in definition:
-//│ ║  l.217: 	fun pow(x, a) =
-//│ ║         	    ^^^^^^^^^^^
-//│ ║  l.218: 	  if a is 0 then 1
-//│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ║  l.219: 	  else x * pow(x, a - 1)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── operator application of type `Int` is not an instance of type `number`
-//│ ║  l.219: 	  else x * pow(x, a - 1)
-//│ ║         	                  ^^^^^
-//│ ╟── Note: constraint arises from reference:
-//│ ║  l.218: 	  if a is 0 then 1
-//│ ╙──       	     ^
-//│ fun pow: (Int, nothing,) -> Int
+//│ fun pow: (Int, Int,) -> Int
 
 mixin Contains {
   fun contains(a, p) =
@@ -247,95 +146,14 @@ mixin Contains {
       Intersect(lhs, rhs) then this.contains(lhs, p) && this.contains(rhs, p)
       Translate(v, a) then this.contains(a, Vector(p.x - v.x, p.y - v.y))
 }
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.244: 	      Circle(r) then pow(p.x, 2) + pow(p.y, 2) <= pow(r, 2)
-//│ ║         	                     ^^^^^^^^^^^
-//│ ╟── integer literal of type `2` is not an instance of type `number`
-//│ ║  l.244: 	      Circle(r) then pow(p.x, 2) + pow(p.y, 2) <= pow(r, 2)
-//│ ║         	                              ^
-//│ ╟── Note: constraint arises from reference:
-//│ ║  l.218: 	  if a is 0 then 1
-//│ ╙──       	     ^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.244: 	      Circle(r) then pow(p.x, 2) + pow(p.y, 2) <= pow(r, 2)
-//│ ║         	                                   ^^^^^^^^^^^
-//│ ╟── integer literal of type `2` is not an instance of type `number`
-//│ ║  l.244: 	      Circle(r) then pow(p.x, 2) + pow(p.y, 2) <= pow(r, 2)
-//│ ║         	                                            ^
-//│ ╟── Note: constraint arises from reference:
-//│ ║  l.218: 	  if a is 0 then 1
-//│ ╙──       	     ^
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.244: 	      Circle(r) then pow(p.x, 2) + pow(p.y, 2) <= pow(r, 2)
-//│ ║         	                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── operator application of type `Int` is not an instance of type `number`
-//│ ║  l.244: 	      Circle(r) then pow(p.x, 2) + pow(p.y, 2) <= pow(r, 2)
-//│ ╙──       	                     ^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.244: 	      Circle(r) then pow(p.x, 2) + pow(p.y, 2) <= pow(r, 2)
-//│ ║         	                                                  ^^^^^^^^^
-//│ ╟── type `int` is not an instance of type `Int`
-//│ ║  l.13: 	class Circle(radius: int)
-//│ ║        	                     ^^^
-//│ ╟── but it flows into reference with expected type `Int`
-//│ ║  l.244: 	      Circle(r) then pow(p.x, 2) + pow(p.y, 2) <= pow(r, 2)
-//│ ║         	                                                      ^
-//│ ╟── Note: constraint arises from reference:
-//│ ║  l.219: 	  else x * pow(x, a - 1)
-//│ ╙──       	       ^
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.244: 	      Circle(r) then pow(p.x, 2) + pow(p.y, 2) <= pow(r, 2)
-//│ ║         	                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── integer literal of type `1` is not an instance of type `number`
-//│ ║  l.218: 	  if a is 0 then 1
-//│ ║         	                 ^
-//│ ╟── but it flows into application with expected type `number`
-//│ ║  l.244: 	      Circle(r) then pow(p.x, 2) + pow(p.y, 2) <= pow(r, 2)
-//│ ╙──       	                                                  ^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.248: 	      Translate(v, a) then this.contains(a, Vector(p.x - v.x, p.y - v.y))
-//│ ║         	                                                   ^^^^^^^^^
-//│ ╟── type `int` is not an instance of type `Int`
-//│ ║  l.10: 	class Vector(x: int, y: int)
-//│ ║        	                ^^^
-//│ ╟── but it flows into field selection with expected type `Int`
-//│ ║  l.248: 	      Translate(v, a) then this.contains(a, Vector(p.x - v.x, p.y - v.y))
-//│ ╙──       	                                                         ^^^
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.248: 	      Translate(v, a) then this.contains(a, Vector(p.x - v.x, p.y - v.y))
-//│ ║         	                                                              ^^^^^^^^^
-//│ ╟── type `int` is not an instance of type `Int`
-//│ ║  l.10: 	class Vector(x: int, y: int)
-//│ ║        	                        ^^^
-//│ ╟── but it flows into field selection with expected type `Int`
-//│ ║  l.248: 	      Translate(v, a) then this.contains(a, Vector(p.x - v.x, p.y - v.y))
-//│ ╙──       	                                                                    ^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.248: 	      Translate(v, a) then this.contains(a, Vector(p.x - v.x, p.y - v.y))
-//│ ║         	                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── operator application of type `Int` is not an instance of type `int`
-//│ ║  l.248: 	      Translate(v, a) then this.contains(a, Vector(p.x - v.x, p.y - v.y))
-//│ ║         	                                                   ^^^^^^^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.10: 	class Vector(x: int, y: int)
-//│ ╙──      	                ^^^
 //│ mixin Contains() {
-//│   this: {contains: ('a | 'a0 | 'a1, 'b,) -> Bool & ('a2, Vector | error,) -> 'c}
-//│   fun contains: (Circle | Intersect['a1] | Outside['a] | Translate['a2] | Union['a0], {x: Int, y: Int} & 'b,) -> (Bool | error | 'c)
+//│   this: {contains: ('a | 'a0 | 'a1, 'b,) -> Bool & ('a2, Vector,) -> 'c}
+//│   fun contains: (Circle | Intersect['a1] | Outside['a] | Translate['a2] | Union['a0], {x: Int, y: Int} & 'b,) -> (Bool | 'c)
 //│ }
 
 module TestContains extends Contains
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.327: 	module TestContains extends Contains
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `int` is not an instance of type `Int`
-//│ ║  l.10: 	class Vector(x: int, y: int)
-//│ ║        	                        ^^^
-//│ ╟── Note: constraint arises from field selection:
-//│ ║  l.248: 	      Translate(v, a) then this.contains(a, Vector(p.x - v.x, p.y - v.y))
-//│ ╙──       	                                                              ^^^
 //│ module TestContains() {
-//│   fun contains: ('a, {x: Int, y: Int},) -> (Bool | error)
+//│   fun contains: ('a, {x: Int, y: Int},) -> Bool
 //│ }
 //│ where
 //│   'a <: Circle | Intersect['a] | Outside['a] | Translate['a] | Union['a]
@@ -343,43 +161,7 @@ module TestContains extends Contains
 // TODO investigate
 :re
 TestContains.contains(Translate(Vector(0, 0), Circle(1)), Vector(0, 0))
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.345: 	TestContains.contains(Translate(Vector(0, 0), Circle(1)), Vector(0, 0))
-//│ ║         	                                ^^^^^^^^^^^^
-//│ ╟── integer literal of type `0` is not an instance of type `int`
-//│ ║  l.345: 	TestContains.contains(Translate(Vector(0, 0), Circle(1)), Vector(0, 0))
-//│ ║         	                                       ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.10: 	class Vector(x: int, y: int)
-//│ ╙──      	                ^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.345: 	TestContains.contains(Translate(Vector(0, 0), Circle(1)), Vector(0, 0))
-//│ ║         	                                              ^^^^^^^^^
-//│ ╟── integer literal of type `1` is not an instance of type `int`
-//│ ║  l.345: 	TestContains.contains(Translate(Vector(0, 0), Circle(1)), Vector(0, 0))
-//│ ║         	                                                     ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.13: 	class Circle(radius: int)
-//│ ╙──      	                     ^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.345: 	TestContains.contains(Translate(Vector(0, 0), Circle(1)), Vector(0, 0))
-//│ ║         	                                                          ^^^^^^^^^^^^
-//│ ╟── integer literal of type `0` is not an instance of type `int`
-//│ ║  l.345: 	TestContains.contains(Translate(Vector(0, 0), Circle(1)), Vector(0, 0))
-//│ ║         	                                                                 ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.10: 	class Vector(x: int, y: int)
-//│ ╙──      	                ^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.345: 	TestContains.contains(Translate(Vector(0, 0), Circle(1)), Vector(0, 0))
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `int` is not an instance of type `Int`
-//│ ║  l.10: 	class Vector(x: int, y: int)
-//│ ║        	                        ^^^
-//│ ╟── Note: constraint arises from field selection:
-//│ ║  l.248: 	      Translate(v, a) then this.contains(a, Vector(p.x - v.x, p.y - v.y))
-//│ ╙──       	                                                              ^^^
-//│ Bool | error
+//│ Bool
 //│ res
 //│ Runtime error:
 //│   Error: non-exhaustive case expression
@@ -387,52 +169,7 @@ TestContains.contains(Translate(Vector(0, 0), Circle(1)), Vector(0, 0))
 // TODO investigate
 :re
 TestContains.contains(Intersect(Translate(Vector(0, 0), Circle(1)), Circle(1)), Vector(0, 0))
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.389: 	TestContains.contains(Intersect(Translate(Vector(0, 0), Circle(1)), Circle(1)), Vector(0, 0))
-//│ ║         	                                          ^^^^^^^^^^^^
-//│ ╟── integer literal of type `0` is not an instance of type `int`
-//│ ║  l.389: 	TestContains.contains(Intersect(Translate(Vector(0, 0), Circle(1)), Circle(1)), Vector(0, 0))
-//│ ║         	                                                 ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.10: 	class Vector(x: int, y: int)
-//│ ╙──      	                ^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.389: 	TestContains.contains(Intersect(Translate(Vector(0, 0), Circle(1)), Circle(1)), Vector(0, 0))
-//│ ║         	                                                        ^^^^^^^^^
-//│ ╟── integer literal of type `1` is not an instance of type `int`
-//│ ║  l.389: 	TestContains.contains(Intersect(Translate(Vector(0, 0), Circle(1)), Circle(1)), Vector(0, 0))
-//│ ║         	                                                               ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.13: 	class Circle(radius: int)
-//│ ╙──      	                     ^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.389: 	TestContains.contains(Intersect(Translate(Vector(0, 0), Circle(1)), Circle(1)), Vector(0, 0))
-//│ ║         	                                                                    ^^^^^^^^^
-//│ ╟── integer literal of type `1` is not an instance of type `int`
-//│ ║  l.389: 	TestContains.contains(Intersect(Translate(Vector(0, 0), Circle(1)), Circle(1)), Vector(0, 0))
-//│ ║         	                                                                           ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.13: 	class Circle(radius: int)
-//│ ╙──      	                     ^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.389: 	TestContains.contains(Intersect(Translate(Vector(0, 0), Circle(1)), Circle(1)), Vector(0, 0))
-//│ ║         	                                                                                ^^^^^^^^^^^^
-//│ ╟── integer literal of type `0` is not an instance of type `int`
-//│ ║  l.389: 	TestContains.contains(Intersect(Translate(Vector(0, 0), Circle(1)), Circle(1)), Vector(0, 0))
-//│ ║         	                                                                                       ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.10: 	class Vector(x: int, y: int)
-//│ ╙──      	                ^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.389: 	TestContains.contains(Intersect(Translate(Vector(0, 0), Circle(1)), Circle(1)), Vector(0, 0))
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `int` is not an instance of type `Int`
-//│ ║  l.10: 	class Vector(x: int, y: int)
-//│ ║        	                        ^^^
-//│ ╟── Note: constraint arises from field selection:
-//│ ║  l.248: 	      Translate(v, a) then this.contains(a, Vector(p.x - v.x, p.y - v.y))
-//│ ╙──       	                                                              ^^^
-//│ Bool | error
+//│ Bool
 //│ res
 //│ Runtime error:
 //│   Error: non-exhaustive case expression
@@ -440,42 +177,17 @@ TestContains.contains(Intersect(Translate(Vector(0, 0), Circle(1)), Circle(1)), 
 // TODO investigate
 :re
 TestContains.contains(circles, Vector(0, 0))
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.442: 	TestContains.contains(circles, Vector(0, 0))
-//│ ║         	                               ^^^^^^^^^^^^
-//│ ╟── integer literal of type `0` is not an instance of type `int`
-//│ ║  l.442: 	TestContains.contains(circles, Vector(0, 0))
-//│ ║         	                                      ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.10: 	class Vector(x: int, y: int)
-//│ ╙──      	                ^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.442: 	TestContains.contains(circles, Vector(0, 0))
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `int` is not an instance of type `Int`
-//│ ║  l.10: 	class Vector(x: int, y: int)
-//│ ║        	                        ^^^
-//│ ╟── Note: constraint arises from field selection:
-//│ ║  l.248: 	      Translate(v, a) then this.contains(a, Vector(p.x - v.x, p.y - v.y))
-//│ ╙──       	                                                              ^^^
-//│ Bool | error
+//│ Bool
 //│ res
 //│ Runtime error:
 //│   Error: non-exhaustive case expression
 
 // ******************* Dependencies, Complex Interpretations, and Domain-Specific Optimizations *******************
 
-fun toString(a: int): string = "foo"
-fun concat(a: string, b: string): string = a
-//│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.468: 	fun toString(a: int): string = "foo"
-//│ ║         	                               ^^^^^
-//│ ╟── string literal of type `"foo"` is not an instance of type `string`
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.468: 	fun toString(a: int): string = "foo"
-//│ ╙──       	                      ^^^^^^
-//│ fun toString: (a: int,) -> string
-//│ fun concat: (a: string, b: string,) -> string
+fun toString(a: Int): Str = "foo"
+fun concat(a: Str, b: Str): Str = a
+//│ fun toString: (a: Int,) -> Str
+//│ fun concat: (a: Str, b: Str,) -> Str
 
 mixin Text {
   fun text(e) =
@@ -486,103 +198,34 @@ mixin Text {
       Intersect then concat("the intersection of two regions of size ", toString(this.size(e)))
       Translate then concat("a translated region of size ", toString(this.size(e)))
 }
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.483: 	      Circle(r) then concat("a circular region of radius ", toString(r))
-//│ ║         	                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── string literal of type `"a circular region of radius "` is not an instance of type `string`
-//│ ║  l.483: 	      Circle(r) then concat("a circular region of radius ", toString(r))
-//│ ║         	                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.469: 	fun concat(a: string, b: string): string = a
-//│ ╙──       	              ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.484: 	      Outside(a) then concat("outside a region of size ", toString(this.size(a)))
-//│ ║         	                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── string literal of type `"outside a region of size "` is not an instance of type `string`
-//│ ║  l.484: 	      Outside(a) then concat("outside a region of size ", toString(this.size(a)))
-//│ ║         	                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.469: 	fun concat(a: string, b: string): string = a
-//│ ╙──       	              ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.485: 	      Union then concat("the union of two regions of size ", toString(this.size(e)))
-//│ ║         	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── string literal of type `"the union of two regions of size "` is not an instance of type `string`
-//│ ║  l.485: 	      Union then concat("the union of two regions of size ", toString(this.size(e)))
-//│ ║         	                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.469: 	fun concat(a: string, b: string): string = a
-//│ ╙──       	              ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.486: 	      Intersect then concat("the intersection of two regions of size ", toString(this.size(e)))
-//│ ║         	                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── string literal of type `"the intersection of two regions of size "` is not an instance of type `string`
-//│ ║  l.486: 	      Intersect then concat("the intersection of two regions of size ", toString(this.size(e)))
-//│ ║         	                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.469: 	fun concat(a: string, b: string): string = a
-//│ ╙──       	              ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.487: 	      Translate then concat("a translated region of size ", toString(this.size(e)))
-//│ ║         	                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── string literal of type `"a translated region of size "` is not an instance of type `string`
-//│ ║  l.487: 	      Translate then concat("a translated region of size ", toString(this.size(e)))
-//│ ║         	                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.469: 	fun concat(a: string, b: string): string = a
-//│ ╙──       	              ^^^^^^
 //│ mixin Text() {
-//│   this: {size: (Intersect['Region] | Translate['Region0] | Union['Region1] | 'a) -> int}
-//│   fun text: (Circle | Intersect['Region] | Outside['a] | Translate['Region0] | Union['Region1]) -> (error | string)
+//│   this: {size: (Intersect['Region] | Translate['Region0] | Union['Region1] | 'a) -> Int}
+//│   fun text: (Circle | Intersect['Region] | Outside['a] | Translate['Region0] | Union['Region1]) -> Str
 //│ }
 
 :e
 module SizeText extends Text
 //│ ╔══[ERROR] Module `SizeText` does not contain member `size`
-//│ ║  l.487: 	      Translate then concat("a translated region of size ", toString(this.size(e)))
+//│ ║  l.199: 	      Translate then concat("a translated region of size ", toString(this.size(e)))
 //│ ╙──       	                                                                         ^^^^^
 //│ ╔══[ERROR] Module `SizeText` does not contain member `size`
-//│ ║  l.486: 	      Intersect then concat("the intersection of two regions of size ", toString(this.size(e)))
+//│ ║  l.198: 	      Intersect then concat("the intersection of two regions of size ", toString(this.size(e)))
 //│ ╙──       	                                                                                     ^^^^^
 //│ ╔══[ERROR] Module `SizeText` does not contain member `size`
-//│ ║  l.485: 	      Union then concat("the union of two regions of size ", toString(this.size(e)))
+//│ ║  l.197: 	      Union then concat("the union of two regions of size ", toString(this.size(e)))
 //│ ╙──       	                                                                          ^^^^^
 //│ ╔══[ERROR] Module `SizeText` does not contain member `size`
-//│ ║  l.484: 	      Outside(a) then concat("outside a region of size ", toString(this.size(a)))
+//│ ║  l.196: 	      Outside(a) then concat("outside a region of size ", toString(this.size(a)))
 //│ ╙──       	                                                                       ^^^^^
 //│ module SizeText() {
-//│   fun text: (Circle | Intersect[anything] | Outside[anything] | Translate[anything] | Union[anything]) -> (error | string)
+//│   fun text: (Circle | Intersect[anything] | Outside[anything] | Translate[anything] | Union[anything]) -> Str
 //│ }
 
 // * Note: this inferred type got *much worse* after this commit (field access type refinement)
 module SizeText extends SizeBase, Text
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.558: 	module SizeText extends SizeBase, Text
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── integer literal of type `1` is not an instance of type `int`
-//│ ║  l.27: 	      Circle(_) then 1
-//│ ║        	                     ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.468: 	fun toString(a: int): string = "foo"
-//│ ║         	                ^^^
-//│ ╟── from application:
-//│ ║  l.487: 	      Translate then concat("a translated region of size ", toString(this.size(e)))
-//│ ╙──       	                                                                     ^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.558: 	module SizeText extends SizeBase, Text
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── operator application of type `Int` is not an instance of type `int`
-//│ ║  l.28: 	      Outside(a) then this.size(a) + 1
-//│ ║        	                      ^^^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.468: 	fun toString(a: int): string = "foo"
-//│ ║         	                ^^^
-//│ ╟── from application:
-//│ ║  l.487: 	      Translate then concat("a translated region of size ", toString(this.size(e)))
-//│ ╙──       	                                                                     ^^^^^^^^^^^^
 //│ module SizeText() {
 //│   fun size: 'a -> Int
-//│   fun text: (Circle | Intersect[Circle | Intersect['Region] | Outside['Region0] | Translate['Region1] | Union['Region2]] | Outside['a] | Translate[Circle | Intersect['Region] | Outside['Region0] | Translate['Region1] | Union['Region2]] | Union[Circle | Intersect['Region] | Outside['Region0] | Translate['Region1] | Union['Region2]]) -> (error | string)
+//│   fun text: (Circle | Intersect[Circle | Intersect['Region] | Outside['Region0] | Translate['Region1] | Union['Region2]] | Outside['a] | Translate[Circle | Intersect['Region] | Outside['Region0] | Translate['Region1] | Union['Region2]] | Union[Circle | Intersect['Region] | Outside['Region0] | Translate['Region1] | Union['Region2]]) -> Str
 //│ }
 //│ where
 //│   'a <: Circle | Intersect['Region] | Outside['Region0] | Translate['Region1] | Union['Region2]
@@ -592,7 +235,7 @@ module SizeText extends SizeBase, Text
 //│   'Region <: 'a
 
 SizeText.text(circles)
-//│ error | string
+//│ Str
 //│ res
 //│     = 'the union of two regions of size '
 
@@ -602,65 +245,11 @@ SizeText.size(circles)
 //│     = 13
 
 SizeText.text(Intersect(Translate(Vector(0, 0), Circle(1)), Circle(1)))
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.604: 	SizeText.text(Intersect(Translate(Vector(0, 0), Circle(1)), Circle(1)))
-//│ ║         	                                  ^^^^^^^^^^^^
-//│ ╟── integer literal of type `0` is not an instance of type `int`
-//│ ║  l.604: 	SizeText.text(Intersect(Translate(Vector(0, 0), Circle(1)), Circle(1)))
-//│ ║         	                                         ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.10: 	class Vector(x: int, y: int)
-//│ ╙──      	                ^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.604: 	SizeText.text(Intersect(Translate(Vector(0, 0), Circle(1)), Circle(1)))
-//│ ║         	                                                ^^^^^^^^^
-//│ ╟── integer literal of type `1` is not an instance of type `int`
-//│ ║  l.604: 	SizeText.text(Intersect(Translate(Vector(0, 0), Circle(1)), Circle(1)))
-//│ ║         	                                                       ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.13: 	class Circle(radius: int)
-//│ ╙──      	                     ^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.604: 	SizeText.text(Intersect(Translate(Vector(0, 0), Circle(1)), Circle(1)))
-//│ ║         	                                                            ^^^^^^^^^
-//│ ╟── integer literal of type `1` is not an instance of type `int`
-//│ ║  l.604: 	SizeText.text(Intersect(Translate(Vector(0, 0), Circle(1)), Circle(1)))
-//│ ║         	                                                                   ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.13: 	class Circle(radius: int)
-//│ ╙──      	                     ^^^
-//│ error | string
+//│ Str
 //│ res
 //│     = 'the intersection of two regions of size '
 
 SizeText.size(Intersect(Translate(Vector(0, 0), Circle(1)), Circle(1)))
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.636: 	SizeText.size(Intersect(Translate(Vector(0, 0), Circle(1)), Circle(1)))
-//│ ║         	                                  ^^^^^^^^^^^^
-//│ ╟── integer literal of type `0` is not an instance of type `int`
-//│ ║  l.636: 	SizeText.size(Intersect(Translate(Vector(0, 0), Circle(1)), Circle(1)))
-//│ ║         	                                         ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.10: 	class Vector(x: int, y: int)
-//│ ╙──      	                ^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.636: 	SizeText.size(Intersect(Translate(Vector(0, 0), Circle(1)), Circle(1)))
-//│ ║         	                                                ^^^^^^^^^
-//│ ╟── integer literal of type `1` is not an instance of type `int`
-//│ ║  l.636: 	SizeText.size(Intersect(Translate(Vector(0, 0), Circle(1)), Circle(1)))
-//│ ║         	                                                       ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.13: 	class Circle(radius: int)
-//│ ╙──      	                     ^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.636: 	SizeText.size(Intersect(Translate(Vector(0, 0), Circle(1)), Circle(1)))
-//│ ║         	                                                            ^^^^^^^^^
-//│ ╟── integer literal of type `1` is not an instance of type `int`
-//│ ║  l.636: 	SizeText.size(Intersect(Translate(Vector(0, 0), Circle(1)), Circle(1)))
-//│ ║         	                                                                   ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.13: 	class Circle(radius: int)
-//│ ╙──      	                     ^^^
 //│ Int
 //│ res
 //│     = 4
@@ -678,7 +267,7 @@ mixin IsUniv {
 }
 //│ mixin IsUniv() {
 //│   this: {isEmpty: 'a -> 'b, isUniv: ('a0 | 'a1) -> Bool & ('a2 | 'a3) -> 'b}
-//│   fun isUniv: (Intersect['a1] | #Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~#Univ | Outside['a] | Scale['a3] | Translate['a2] | Union['a0] | Univ) -> (Bool | false | true | 'b)
+//│   fun isUniv: (Intersect['a1] | #Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~#Univ | Outside['a] | Scale['a3] | Translate['a2] | Union['a0] | Univ) -> (Bool | 'b)
 //│ }
 
 mixin IsEmpty {
@@ -694,78 +283,41 @@ mixin IsEmpty {
 }
 //│ mixin IsEmpty() {
 //│   this: {isEmpty: ('a | 'a0) -> Bool & ('a1 | 'a2) -> 'b, isUniv: 'a3 -> 'b}
-//│   fun isEmpty: (Intersect['a0] | #Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~#Univ | Outside['a3] | Scale['a2] | Translate['a1] | Union['a] | Univ) -> (Bool | false | true | 'b)
+//│   fun isEmpty: (Intersect['a0] | #Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~#Univ | Outside['a3] | Scale['a2] | Translate['a1] | Union['a] | Univ) -> (Bool | 'b)
 //│ }
 
 module IsUnivIsEmpty extends IsUniv, IsEmpty
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.700: 	module IsUnivIsEmpty extends IsUniv, IsEmpty
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `true` is not an instance of type `Bool`
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.690: 	      Intersect(a, b) then this.isEmpty(a) && this.isEmpty(b)
-//│ ╙──       	                                              ^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.700: 	module IsUnivIsEmpty extends IsUniv, IsEmpty
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `false` is not an instance of type `Bool`
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.690: 	      Intersect(a, b) then this.isEmpty(a) && this.isEmpty(b)
-//│ ╙──       	                                              ^^^^^^^^^^^^^^^
 //│ module IsUnivIsEmpty() {
-//│   fun isEmpty: 'a -> (Bool | false | true)
-//│   fun isUniv: 'b -> (Bool | false | true)
+//│   fun isEmpty: 'a -> Bool
+//│   fun isUniv: 'b -> Bool
 //│ }
 //│ where
 //│   'a <: Intersect['a] | #Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~#Univ | Outside['b] | Scale['a] | Translate['a] | Union['a] | Univ
 //│   'b <: Intersect['b] | #Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~#Univ | Outside['a] | Scale['b] | Translate['b] | Union['b] | Univ
 
 module IsUnivIsEmpty extends IsEmpty, IsUniv
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.723: 	module IsUnivIsEmpty extends IsEmpty, IsUniv
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `true` is not an instance of type `Bool`
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.674: 	      Intersect(a, b) then this.isUniv(a) && this.isUniv(b)
-//│ ╙──       	                                             ^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.723: 	module IsUnivIsEmpty extends IsEmpty, IsUniv
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `false` is not an instance of type `Bool`
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.674: 	      Intersect(a, b) then this.isUniv(a) && this.isUniv(b)
-//│ ╙──       	                                             ^^^^^^^^^^^^^^
 //│ module IsUnivIsEmpty() {
-//│   fun isEmpty: 'a -> (Bool | false | true)
-//│   fun isUniv: 'b -> (Bool | false | true)
+//│   fun isEmpty: 'a -> Bool
+//│   fun isUniv: 'b -> Bool
 //│ }
 //│ where
 //│   'a <: Intersect['a] | #Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~#Univ | Outside['b] | Scale['a] | Translate['a] | Union['a] | Univ
 //│   'b <: Intersect['b] | #Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~#Univ | Outside['a] | Scale['b] | Translate['b] | Union['b] | Univ
 
 IsUnivIsEmpty.isUniv(circles)
-//│ Bool | false | true
+//│ Bool
 //│ res
 //│     = false
 
 IsUnivIsEmpty.isEmpty(circles)
-//│ Bool | false | true
+//│ Bool
 //│ res
 //│     = false
 
 class Foo
 IsUnivIsEmpty.isEmpty(Scale(Vector(1, 2), Intersect(Foo(), circles)))
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.757: 	IsUnivIsEmpty.isEmpty(Scale(Vector(1, 2), Intersect(Foo(), circles)))
-//│ ║         	                            ^^^^^^^^^^^^
-//│ ╟── integer literal of type `1` is not an instance of type `int`
-//│ ║  l.757: 	IsUnivIsEmpty.isEmpty(Scale(Vector(1, 2), Intersect(Foo(), circles)))
-//│ ║         	                                   ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.10: 	class Vector(x: int, y: int)
-//│ ╙──      	                ^^^
 //│ class Foo()
-//│ Bool | false | true
+//│ Bool
 //│ res
 //│     = false
 
@@ -813,83 +365,12 @@ fun mk(n) = if n is
   3 then Intersect(mk(n), mk(n))
   4 then Translate(Vector(0, 0), mk(n))
   _ then Scale(Vector(0, 0), mk(n))
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.810: 	fun mk(n) = if n is
-//│ ║         	               ^^^^
-//│ ║  l.811: 	  1 then Outside(mk(n))
-//│ ║         	^^^
-//│ ╟── integer literal of type `1` is not an instance of type `number`
-//│ ║  l.811: 	  1 then Outside(mk(n))
-//│ ╙──       	  ^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.810: 	fun mk(n) = if n is
-//│ ║         	               ^^^^
-//│ ║  l.811: 	  1 then Outside(mk(n))
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.812: 	  2 then Union(mk(n), mk(n))
-//│ ║         	^^^
-//│ ╟── integer literal of type `2` is not an instance of type `number`
-//│ ║  l.812: 	  2 then Union(mk(n), mk(n))
-//│ ╙──       	  ^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.810: 	fun mk(n) = if n is
-//│ ║         	               ^^^^
-//│ ║  l.811: 	  1 then Outside(mk(n))
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.812: 	  2 then Union(mk(n), mk(n))
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.813: 	  3 then Intersect(mk(n), mk(n))
-//│ ║         	^^^
-//│ ╟── integer literal of type `3` is not an instance of type `number`
-//│ ║  l.813: 	  3 then Intersect(mk(n), mk(n))
-//│ ╙──       	  ^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.810: 	fun mk(n) = if n is
-//│ ║         	               ^^^^
-//│ ║  l.811: 	  1 then Outside(mk(n))
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.812: 	  2 then Union(mk(n), mk(n))
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.813: 	  3 then Intersect(mk(n), mk(n))
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.814: 	  4 then Translate(Vector(0, 0), mk(n))
-//│ ║         	^^^
-//│ ╟── integer literal of type `4` is not an instance of type `number`
-//│ ║  l.814: 	  4 then Translate(Vector(0, 0), mk(n))
-//│ ╙──       	  ^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.814: 	  4 then Translate(Vector(0, 0), mk(n))
-//│ ║         	                   ^^^^^^^^^^^^
-//│ ╟── integer literal of type `0` is not an instance of type `int`
-//│ ║  l.814: 	  4 then Translate(Vector(0, 0), mk(n))
-//│ ║         	                          ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.10: 	class Vector(x: int, y: int)
-//│ ╙──      	                ^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.815: 	  _ then Scale(Vector(0, 0), mk(n))
-//│ ║         	               ^^^^^^^^^^^^
-//│ ╟── integer literal of type `0` is not an instance of type `int`
-//│ ║  l.815: 	  _ then Scale(Vector(0, 0), mk(n))
-//│ ║         	                      ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.10: 	class Vector(x: int, y: int)
-//│ ╙──      	                ^^^
-//│ fun mk: forall 'Region. number -> 'Region
+//│ fun mk: forall 'Region. #Num -> 'Region
 //│   where
 //│     'Region :> Intersect['Region] | Outside['Region] | Scale['Region] | Translate['Region] | Union['Region]
 
 :re
 TestElim.eliminate(mk(100))
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.883: 	TestElim.eliminate(mk(100))
-//│ ║         	                   ^^^^^^^
-//│ ╟── integer literal of type `100` is not an instance of type `number`
-//│ ║  l.883: 	TestElim.eliminate(mk(100))
-//│ ║         	                      ^^^
-//│ ╟── Note: constraint arises from reference:
-//│ ║  l.810: 	fun mk(n) = if n is
-//│ ╙──       	               ^
 //│ 'a
 //│   where
 //│     'a :> Outside['a] | Union['a] | Intersect['a] | Translate['a] | Scale['a]
@@ -900,60 +381,13 @@ TestElim.eliminate(mk(100))
 // *************************************************************************
 
 module Lang extends SizeBase, SizeExt, Contains, Text, IsUniv, IsEmpty, Eliminate
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.902: 	module Lang extends SizeBase, SizeExt, Contains, Text, IsUniv, IsEmpty, Eliminate
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `true` is not an instance of type `Bool`
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.690: 	      Intersect(a, b) then this.isEmpty(a) && this.isEmpty(b)
-//│ ╙──       	                                              ^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.902: 	module Lang extends SizeBase, SizeExt, Contains, Text, IsUniv, IsEmpty, Eliminate
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `false` is not an instance of type `Bool`
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.690: 	      Intersect(a, b) then this.isEmpty(a) && this.isEmpty(b)
-//│ ╙──       	                                              ^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.902: 	module Lang extends SizeBase, SizeExt, Contains, Text, IsUniv, IsEmpty, Eliminate
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── integer literal of type `1` is not an instance of type `int`
-//│ ║  l.165: 	      Empty then 1
-//│ ║         	                 ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.468: 	fun toString(a: int): string = "foo"
-//│ ║         	                ^^^
-//│ ╟── from application:
-//│ ║  l.487: 	      Translate then concat("a translated region of size ", toString(this.size(e)))
-//│ ╙──       	                                                                     ^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.902: 	module Lang extends SizeBase, SizeExt, Contains, Text, IsUniv, IsEmpty, Eliminate
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── operator application of type `Int` is not an instance of type `int`
-//│ ║  l.166: 	      Scale(_, b) then this.size(b) + 1
-//│ ║         	                       ^^^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.468: 	fun toString(a: int): string = "foo"
-//│ ║         	                ^^^
-//│ ╟── from application:
-//│ ║  l.487: 	      Translate then concat("a translated region of size ", toString(this.size(e)))
-//│ ╙──       	                                                                     ^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.902: 	module Lang extends SizeBase, SizeExt, Contains, Text, IsUniv, IsEmpty, Eliminate
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `int` is not an instance of type `Int`
-//│ ║  l.10: 	class Vector(x: int, y: int)
-//│ ║        	                        ^^^
-//│ ╟── Note: constraint arises from field selection:
-//│ ║  l.248: 	      Translate(v, a) then this.contains(a, Vector(p.x - v.x, p.y - v.y))
-//│ ╙──       	                                                              ^^^
 //│ module Lang() {
-//│   fun contains: ('a, {x: Int, y: Int},) -> (Bool | error)
+//│   fun contains: ('a, {x: Int, y: Int},) -> Bool
 //│   fun eliminate: 'b -> 'c
-//│   fun isEmpty: 'd -> (Bool | false | true)
-//│   fun isUniv: 'e -> (Bool | false | true)
+//│   fun isEmpty: 'd -> Bool
+//│   fun isUniv: 'e -> Bool
 //│   fun size: 'f -> Int
-//│   fun text: (Circle | Intersect[Empty | #Object & 'g & ~#Empty & ~#Scale & ~#Univ | Scale['Region] | Univ] | Outside['f] | Translate[Empty | #Object & 'g & ~#Empty & ~#Scale & ~#Univ | Scale['Region] | Univ] | Union[Empty | #Object & 'g & ~#Empty & ~#Scale & ~#Univ | Scale['Region] | Univ]) -> (error | string)
+//│   fun text: (Circle | Intersect[Empty | #Object & 'g & ~#Empty & ~#Scale & ~#Univ | Scale['Region] | Univ] | Outside['f] | Translate[Empty | #Object & 'g & ~#Empty & ~#Scale & ~#Univ | Scale['Region] | Univ] | Union[Empty | #Object & 'g & ~#Empty & ~#Scale & ~#Univ | Scale['Region] | Univ]) -> Str
 //│ }
 //│ where
 //│   'f <: Empty | #Object & 'g & ~#Empty & ~#Scale & ~#Univ | Scale['Region] | Univ
@@ -976,25 +410,7 @@ Lang.size(circles)
 // TODO investigate
 :re
 Lang.contains(circles, Vector(0, 0))
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.978: 	Lang.contains(circles, Vector(0, 0))
-//│ ║         	                       ^^^^^^^^^^^^
-//│ ╟── integer literal of type `0` is not an instance of type `int`
-//│ ║  l.978: 	Lang.contains(circles, Vector(0, 0))
-//│ ║         	                              ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.10: 	class Vector(x: int, y: int)
-//│ ╙──      	                ^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.978: 	Lang.contains(circles, Vector(0, 0))
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `int` is not an instance of type `Int`
-//│ ║  l.10: 	class Vector(x: int, y: int)
-//│ ║        	                        ^^^
-//│ ╟── Note: constraint arises from field selection:
-//│ ║  l.248: 	      Translate(v, a) then this.contains(a, Vector(p.x - v.x, p.y - v.y))
-//│ ╙──       	                                                              ^^^
-//│ Bool | error
+//│ Bool
 //│ res
 //│ Runtime error:
 //│   Error: non-exhaustive case expression
@@ -1002,18 +418,18 @@ Lang.contains(circles, Vector(0, 0))
 // TODO investigate
 :re
 Lang.text(circles)
-//│ error | string
+//│ Str
 //│ res
 //│ Runtime error:
 //│   Error: non-exhaustive case expression
 
 Lang.isUniv(circles)
-//│ Bool | false | true
+//│ Bool
 //│ res
 //│     = false
 
 Lang.isEmpty(circles)
-//│ Bool | false | true
+//│ Bool
 //│ res
 //│     = false
 
@@ -1027,15 +443,6 @@ Lang.size(Lang.eliminate(circles))
 
 :re
 Lang.size(mk(100))
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1029: 	Lang.size(mk(100))
-//│ ║          	          ^^^^^^^
-//│ ╟── integer literal of type `100` is not an instance of type `number`
-//│ ║  l.1029: 	Lang.size(mk(100))
-//│ ║          	             ^^^
-//│ ╟── Note: constraint arises from reference:
-//│ ║  l.810: 	fun mk(n) = if n is
-//│ ╙──       	               ^
 //│ Int
 //│ res
 //│ Runtime error:
@@ -1045,36 +452,18 @@ Lang.size(mk(100))
 :re
 Lang.contains(mk(100), Vector(0, 0))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1046: 	Lang.contains(mk(100), Vector(0, 0))
-//│ ║          	              ^^^^^^^
-//│ ╟── integer literal of type `100` is not an instance of type `number`
-//│ ║  l.1046: 	Lang.contains(mk(100), Vector(0, 0))
-//│ ║          	                 ^^^
-//│ ╟── Note: constraint arises from reference:
-//│ ║  l.810: 	fun mk(n) = if n is
-//│ ╙──       	               ^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1046: 	Lang.contains(mk(100), Vector(0, 0))
-//│ ║          	                       ^^^^^^^^^^^^
-//│ ╟── integer literal of type `0` is not an instance of type `int`
-//│ ║  l.1046: 	Lang.contains(mk(100), Vector(0, 0))
-//│ ║          	                              ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.10: 	class Vector(x: int, y: int)
-//│ ╙──      	                ^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1046: 	Lang.contains(mk(100), Vector(0, 0))
-//│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.453: 	Lang.contains(mk(100), Vector(0, 0))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Scale[?Region]` does not match type `Circle | Intersect[?Region0] | Outside[?Region1] | Translate[?Region2] | Union[?Region3]`
-//│ ║  l.815: 	  _ then Scale(Vector(0, 0), mk(n))
+//│ ║  l.367: 	  _ then Scale(Vector(0, 0), mk(n))
 //│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into application with expected type `Circle | Intersect[?Region4] | Outside[?Region5] | Translate[?Region6] | Union[?Region7]`
-//│ ║  l.1046: 	Lang.contains(mk(100), Vector(0, 0))
-//│ ║          	              ^^^^^^^
+//│ ║  l.453: 	Lang.contains(mk(100), Vector(0, 0))
+//│ ║         	              ^^^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.243: 	    if a is
+//│ ║  l.142: 	    if a is
 //│ ╙──       	       ^
-//│ Bool | error
+//│ error | Bool
 //│ res
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded
@@ -1083,74 +472,38 @@ Lang.contains(mk(100), Vector(0, 0))
 :re
 Lang.text(mk(100))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1084: 	Lang.text(mk(100))
-//│ ║          	          ^^^^^^^
-//│ ╟── integer literal of type `100` is not an instance of type `number`
-//│ ║  l.1084: 	Lang.text(mk(100))
-//│ ║          	             ^^^
-//│ ╟── Note: constraint arises from reference:
-//│ ║  l.810: 	fun mk(n) = if n is
-//│ ╙──       	               ^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1084: 	Lang.text(mk(100))
-//│ ║          	^^^^^^^^^^^^^^^^^^
+//│ ║  l.473: 	Lang.text(mk(100))
+//│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Scale[?Region]` does not match type `Circle | Intersect[?Region0] | Outside[?Region1] | Translate[?Region2] | Union[?Region3]`
-//│ ║  l.815: 	  _ then Scale(Vector(0, 0), mk(n))
+//│ ║  l.367: 	  _ then Scale(Vector(0, 0), mk(n))
 //│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into application with expected type `Circle | Intersect[?Region4] | Outside[?Region5] | Translate[?Region6] | Union[?Region7]`
-//│ ║  l.1084: 	Lang.text(mk(100))
-//│ ║          	          ^^^^^^^
+//│ ║  l.473: 	Lang.text(mk(100))
+//│ ║         	          ^^^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.482: 	    if e is
+//│ ║  l.194: 	    if e is
 //│ ╙──       	       ^
-//│ error | string
+//│ Str | error
 //│ res
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded
 
 :re
 Lang.isUniv(mk(100))
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1112: 	Lang.isUniv(mk(100))
-//│ ║          	            ^^^^^^^
-//│ ╟── integer literal of type `100` is not an instance of type `number`
-//│ ║  l.1112: 	Lang.isUniv(mk(100))
-//│ ║          	               ^^^
-//│ ╟── Note: constraint arises from reference:
-//│ ║  l.810: 	fun mk(n) = if n is
-//│ ╙──       	               ^
-//│ Bool | false | true
+//│ Bool
 //│ res
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded
 
 :re
 Lang.isEmpty(mk(100))
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1128: 	Lang.isEmpty(mk(100))
-//│ ║          	             ^^^^^^^
-//│ ╟── integer literal of type `100` is not an instance of type `number`
-//│ ║  l.1128: 	Lang.isEmpty(mk(100))
-//│ ║          	                ^^^
-//│ ╟── Note: constraint arises from reference:
-//│ ║  l.810: 	fun mk(n) = if n is
-//│ ╙──       	               ^
-//│ Bool | false | true
+//│ Bool
 //│ res
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded
 
 :re
 Lang.size(Lang.eliminate(mk(100)))
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1144: 	Lang.size(Lang.eliminate(mk(100)))
-//│ ║          	                         ^^^^^^^
-//│ ╟── integer literal of type `100` is not an instance of type `number`
-//│ ║  l.1144: 	Lang.size(Lang.eliminate(mk(100)))
-//│ ║          	                            ^^^
-//│ ╟── Note: constraint arises from reference:
-//│ ║  l.810: 	fun mk(n) = if n is
-//│ ╙──       	               ^
 //│ Int
 //│ res
 //│ Runtime error:

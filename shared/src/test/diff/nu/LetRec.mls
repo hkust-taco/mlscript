@@ -3,22 +3,7 @@
 
 :js
 fun f(x) = x > 0 && f(x - 1)
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.5: 	fun f(x) = x > 0 && f(x - 1)
-//│ ║       	           ^^^^^
-//│ ╟── integer literal of type `0` is not an instance of type `number`
-//│ ║  l.5: 	fun f(x) = x > 0 && f(x - 1)
-//│ ╙──     	               ^
-//│ ╔══[ERROR] Type mismatch in definition:
-//│ ║  l.5: 	fun f(x) = x > 0 && f(x - 1)
-//│ ║       	    ^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── operator application of type `Int` is not an instance of type `number`
-//│ ║  l.5: 	fun f(x) = x > 0 && f(x - 1)
-//│ ║       	                      ^^^^^
-//│ ╟── Note: constraint arises from reference:
-//│ ║  l.5: 	fun f(x) = x > 0 && f(x - 1)
-//│ ╙──     	           ^
-//│ fun f: nothing -> Bool
+//│ fun f: Int -> Bool
 //│ // Prelude
 //│ let res;
 //│ class TypingUnit {}
@@ -36,22 +21,7 @@ f(12)
 
 :js
 let rec f(x) = x > 0 && f(x - 1)
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.38: 	let rec f(x) = x > 0 && f(x - 1)
-//│ ║        	               ^^^^^
-//│ ╟── integer literal of type `0` is not an instance of type `number`
-//│ ║  l.38: 	let rec f(x) = x > 0 && f(x - 1)
-//│ ╙──      	                   ^
-//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.38: 	let rec f(x) = x > 0 && f(x - 1)
-//│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── operator application of type `Int` is not an instance of type `number`
-//│ ║  l.38: 	let rec f(x) = x > 0 && f(x - 1)
-//│ ║        	                          ^^^^^
-//│ ╟── Note: constraint arises from reference:
-//│ ║  l.38: 	let rec f(x) = x > 0 && f(x - 1)
-//│ ╙──      	               ^
-//│ let rec f: nothing -> Bool
+//│ let rec f: Int -> Bool
 //│ // Prelude
 //│ class TypingUnit2 {}
 //│ const typing_unit2 = new TypingUnit2;

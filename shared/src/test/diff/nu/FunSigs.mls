@@ -1,52 +1,34 @@
 :NewDefs
 
 
-fun log(msg: string): unit
-//│ fun log: (msg: string,) -> unit
+fun log(msg: Str): unit
+//│ fun log: (msg: Str,) -> unit
 
 let f =
   log("ok")
   123
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.8: 	  log("ok")
-//│ ║       	  ^^^^^^^^^
-//│ ╟── string literal of type `"ok"` is not an instance of type `string`
-//│ ║  l.8: 	  log("ok")
-//│ ║       	      ^^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.4: 	fun log(msg: string): unit
-//│ ╙──     	             ^^^^^^
 //│ let f: 123
 //│ f
 //│   = <no result>
 //│     log is not implemented
 
-fun log: string -> unit
-//│ fun log: string -> unit
+fun log: Str -> unit
+//│ fun log: Str -> unit
 
-fun log: string => unit
-//│ fun log: string -> unit
+fun log: Str => unit
+//│ fun log: Str -> unit
 
 log("ok")
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.30: 	log("ok")
-//│ ║        	^^^^^^^^^
-//│ ╟── string literal of type `"ok"` is not an instance of type `string`
-//│ ║  l.30: 	log("ok")
-//│ ║        	    ^^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.27: 	fun log: string => unit
-//│ ╙──      	         ^^^^^^
-//│ error | unit
+//│ unit
 //│ res
 //│     = <no result>
 //│       log is not implemented
 
 
-fun con: string => string => string
-//│ fun con: string -> string -> string
+fun con: Str => Str => Str
+//│ fun con: Str -> Str -> Str
 
 fun con = concat
-//│ fun con: string -> string -> string
+//│ fun con: #Str -> #Str -> #Str
 
 

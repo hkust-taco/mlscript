@@ -4,53 +4,44 @@
 
 
 mixin Test {
-  class Foo(n: int)
+  class Foo(n: Int)
   let f = Foo(123)
 }
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.8: 	  let f = Foo(123)
-//│ ║       	          ^^^^^^^^
-//│ ╟── integer literal of type `123` is not an instance of type `int`
-//│ ║  l.8: 	  let f = Foo(123)
-//│ ║       	              ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.7: 	  class Foo(n: int)
-//│ ╙──     	               ^^^
 //│ mixin Test() {
-//│   class Foo(n: int)
-//│   let f: Foo | error
+//│   class Foo(n: Int)
+//│   let f: Foo
 //│ }
 
 module M extends Test
 //│ module M() {
-//│   class Foo(n: int)
-//│   let f: Foo | error
+//│   class Foo(n: Int)
+//│   let f: Foo
 //│ }
 
 M.f
-//│ Foo | error
+//│ Foo
 
 M.f.n
-//│ error | int
+//│ Int
 
 :e
 M.Foo
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.37: 	M.Foo
+//│ ║  l.28: 	M.Foo
 //│ ╙──      	 ^^^^
 //│ error
 
 :e // TODO support
 fun foo(x) = if x is M.Foo then 1
 //│ ╔══[ERROR] illegal pattern
-//│ ║  l.44: 	fun foo(x) = if x is M.Foo then 1
+//│ ║  l.35: 	fun foo(x) = if x is M.Foo then 1
 //│ ╙──      	                     ^^^^^
 //│ fun foo: anything -> error
 
 :e
 mixin Test2 { let f = Foo(1) }
 //│ ╔══[ERROR] identifier not found: Foo
-//│ ║  l.51: 	mixin Test2 { let f = Foo(1) }
+//│ ║  l.42: 	mixin Test2 { let f = Foo(1) }
 //│ ╙──      	                      ^^^
 //│ mixin Test2() {
 //│   let f: error
@@ -59,7 +50,7 @@ mixin Test2 { let f = Foo(1) }
 :e
 mixin Test3 { fun f(x) = if x is Foo then 1 }
 //│ ╔══[ERROR] Cannot find constructor `Foo` in scope
-//│ ║  l.60: 	mixin Test3 { fun f(x) = if x is Foo then 1 }
+//│ ║  l.51: 	mixin Test3 { fun f(x) = if x is Foo then 1 }
 //│ ╙──      	                                 ^^^
 //│ mixin Test3() {
 //│   fun f: anything -> error
@@ -69,7 +60,7 @@ mixin Test3 { fun f(x) = if x is Foo then 1 }
 
 :e // TODO support
 mixin Test {
-  class Lit(n: int)
+  class Lit(n: Int)
   class Add<A>(lhs: A, rhs: A) {
     let cached = size(this)
   }
@@ -77,20 +68,20 @@ mixin Test {
     Add(l, r) then this.size(l) + this.size(r)
 }
 //│ ╔══[ERROR] Unhandled cyclic definition
-//│ ║  l.73: 	  class Add<A>(lhs: A, rhs: A) {
+//│ ║  l.64: 	  class Add<A>(lhs: A, rhs: A) {
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.74: 	    let cached = size(this)
+//│ ║  l.65: 	    let cached = size(this)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.75: 	  }
+//│ ║  l.66: 	  }
 //│ ╙──      	^^^
 //│ ╔══[ERROR] Illegal pattern `Add`
-//│ ║  l.77: 	    Add(l, r) then this.size(l) + this.size(r)
+//│ ║  l.68: 	    Add(l, r) then this.size(l) + this.size(r)
 //│ ╙──      	    ^^^
 //│ mixin Test() {
 //│   class Add[A](lhs: A, rhs: A) {
 //│     let cached: error
 //│   }
-//│   class Lit(n: int)
+//│   class Lit(n: Int)
 //│   fun size: anything -> error
 //│ }
 

@@ -9,7 +9,7 @@ let foo = _ as (_: (Int => Int) & (Bool => Bool))
 let foo = (_ as (_: (Int => Int) & (Bool => Bool)))._1
 //│ foo: forall 'a. (_: 'a,)
 //│   where
-//│     'a <: (() -> Int) -> () -> Int & bool -> bool
+//│     'a <: (() -> Int) -> () -> Int & (() -> Bool) -> () -> Bool
 //│ foo: forall 'a. 'a
 
 foo(1)
@@ -24,7 +24,7 @@ succ / foo(1)
 
 // Intersection-based overloading is not actually supported... a value of this type is impossible to provide:
 let foo = (Int => Int) & (Bool => Bool)
-//│ foo: (() -> Int) -> () -> Int & bool -> bool
+//│ foo: (() -> Int) -> () -> Int & (() -> Bool) -> () -> Bool
 
 :e
 foo(1) // returns int & bool, equivalent to nothing
@@ -43,7 +43,7 @@ not / foo(true)
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.26: 	let foo = (Int => Int) & (Bool => Bool)
 //│ ╙──      	           ^^^
-//│ res: () -> Int | bool | error
+//│ res: () -> (Bool | Int) | error
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.31: 	succ / foo(1)
 //│ ║        	       ^^^^^^
@@ -78,7 +78,7 @@ not / foo(true)
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.26: 	let foo = (Int => Int) & (Bool => Bool)
 //│ ╙──      	           ^^^
-//│ res: () -> Int | bool | error
+//│ res: () -> (Bool | Int) | error
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.33: 	not / foo(true)
 //│ ║        	      ^^^^^^^^^
@@ -158,7 +158,7 @@ foo as Nothing
 //│ ╔══[ERROR] Type mismatch in 'as' binding:
 //│ ║  l.157: 	foo as Nothing
 //│ ║         	^^^^^^^^^^^^^^
-//│ ╟── type intersection of type `(() -> Int) -> () -> Int & bool -> bool` does not match type `nothing`
+//│ ╟── type intersection of type `(() -> Int) -> () -> Int & (() -> Bool) -> () -> Bool` does not match type `nothing`
 //│ ║  l.26: 	let foo = (Int => Int) & (Bool => Bool)
 //│ ║        	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `nothing`

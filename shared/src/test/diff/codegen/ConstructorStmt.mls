@@ -60,10 +60,10 @@ Test0
 //│     = Test0 { class: [class Test0] }
 
 :js
-class A(a: int) {
+class A(a: Int) {
   log(a)
 }
-//│ class A(a: int)
+//│ class A(a: Int)
 //│ // Prelude
 //│ class TypingUnit3 {
 //│   #A;
@@ -92,16 +92,7 @@ class A(a: int) {
 
 :js
 let aa = A(42)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.94: 	let aa = A(42)
-//│ ║        	         ^^^^^
-//│ ╟── integer literal of type `42` is not an instance of type `int`
-//│ ║  l.94: 	let aa = A(42)
-//│ ║        	           ^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.63: 	class A(a: int) {
-//│ ╙──      	           ^^^
-//│ let aa: A | error
+//│ let aa: A
 //│ // Prelude
 //│ class TypingUnit4 {}
 //│ const typing_unit4 = new TypingUnit4;
@@ -115,7 +106,7 @@ let aa = A(42)
 
 :js
 aa
-//│ A | error
+//│ A
 //│ // Prelude
 //│ class TypingUnit5 {}
 //│ const typing_unit5 = new TypingUnit5;
@@ -127,16 +118,7 @@ aa
 
 :js
 let ab = A(0)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.129: 	let ab = A(0)
-//│ ║         	         ^^^^
-//│ ╟── integer literal of type `0` is not an instance of type `int`
-//│ ║  l.129: 	let ab = A(0)
-//│ ║         	           ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.63: 	class A(a: int) {
-//│ ╙──      	           ^^^
-//│ let ab: A | error
+//│ let ab: A
 //│ // Prelude
 //│ class TypingUnit6 {}
 //│ const typing_unit6 = new TypingUnit6;
@@ -151,10 +133,10 @@ let ab = A(0)
 :e
 :js
 class Foo {
-  this: { x: int }
+  this: { x: Int }
 }
 //│ ╔══[ERROR] Class `Foo` does not contain member `x`
-//│ ║  l.154: 	  this: { x: int }
+//│ ║  l.136: 	  this: { x: Int }
 //│ ╙──       	          ^
 //│ class Foo()
 //│ // Prelude
@@ -179,13 +161,13 @@ class Foo {
 :e
 :js
 class Bar {
-  super: { x: int }
+  super: { x: Int }
 }
 //│ ╔══[ERROR] Illegal use of `super`
-//│ ║  l.182: 	  super: { x: int }
+//│ ║  l.164: 	  super: { x: Int }
 //│ ╙──       	  ^^^^^
 //│ ╔══[ERROR] Class `Bar` does not contain member `x`
-//│ ║  l.182: 	  super: { x: int }
+//│ ║  l.164: 	  super: { x: Int }
 //│ ╙──       	           ^
 //│ class Bar()
 //│ // Prelude
@@ -283,29 +265,11 @@ log((baz.x, baz.y))
 class Q() {
   let q = 42
   fun qq =
-    let f = (x: int) => {q: x + q}; f(1)
+    let f = (x: Int) => {q: x + q}; f(1)
 }
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.286: 	    let f = (x: int) => {q: x + q}; f(1)
-//│ ║         	                            ^^^
-//│ ╟── type `int` is not an instance of type `Int`
-//│ ║  l.286: 	    let f = (x: int) => {q: x + q}; f(1)
-//│ ║         	                ^^^
-//│ ╟── but it flows into reference with expected type `Int`
-//│ ║  l.286: 	    let f = (x: int) => {q: x + q}; f(1)
-//│ ╙──       	                            ^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.286: 	    let f = (x: int) => {q: x + q}; f(1)
-//│ ║         	                                    ^^^^
-//│ ╟── integer literal of type `1` is not an instance of type `int`
-//│ ║  l.286: 	    let f = (x: int) => {q: x + q}; f(1)
-//│ ║         	                                      ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.286: 	    let f = (x: int) => {q: x + q}; f(1)
-//│ ╙──       	                ^^^
 //│ class Q() {
 //│   let q: 42
-//│   fun qq: error | {q: Int | error}
+//│   fun qq: {q: Int}
 //│ }
 //│ // Prelude
 //│ class TypingUnit11 {
@@ -343,7 +307,7 @@ class Q() {
 let q = Q()
 q.qq.q
 //│ let q: Q
-//│ Int | error
+//│ Int
 //│ q
 //│   = Q {}
 //│ res
@@ -352,19 +316,10 @@ q.qq.q
 :js
 class W() {
   let x = 42
-  fun add(self: int) = x + self
+  fun add(self: Int) = x + self
 }
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.355: 	  fun add(self: int) = x + self
-//│ ║         	                       ^^^^^^^^
-//│ ╟── type `int` is not an instance of type `Int`
-//│ ║  l.355: 	  fun add(self: int) = x + self
-//│ ║         	                ^^^
-//│ ╟── but it flows into reference with expected type `Int`
-//│ ║  l.355: 	  fun add(self: int) = x + self
-//│ ╙──       	                           ^^^^
 //│ class W() {
-//│   fun add: (self: int,) -> (Int | error)
+//│   fun add: (self: Int,) -> Int
 //│   let x: 42
 //│ }
 //│ // Prelude
@@ -400,17 +355,8 @@ class W() {
 :js
 let www = W()
 www.add(42)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.402: 	www.add(42)
-//│ ║         	^^^^^^^^^^^
-//│ ╟── integer literal of type `42` is not an instance of type `int`
-//│ ║  l.402: 	www.add(42)
-//│ ║         	        ^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.355: 	  fun add(self: int) = x + self
-//│ ╙──       	                ^^^
 //│ let www: W
-//│ Int | error
+//│ Int
 //│ // Prelude
 //│ class TypingUnit14 {}
 //│ const typing_unit14 = new TypingUnit14;

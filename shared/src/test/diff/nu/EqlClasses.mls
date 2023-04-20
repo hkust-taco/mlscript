@@ -20,28 +20,10 @@ Cls1() === Cls1()
 //│     = false
 
 
-class Cls2(x: int)
-//│ class Cls2(x: int)
+class Cls2(x: Int)
+//│ class Cls2(x: Int)
 
 Cls2(0) === Cls2(1)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.26: 	Cls2(0) === Cls2(1)
-//│ ║        	^^^^^^^
-//│ ╟── integer literal of type `0` is not an instance of type `int`
-//│ ║  l.26: 	Cls2(0) === Cls2(1)
-//│ ║        	     ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.23: 	class Cls2(x: int)
-//│ ╙──      	              ^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.26: 	Cls2(0) === Cls2(1)
-//│ ║        	            ^^^^^^^
-//│ ╟── integer literal of type `1` is not an instance of type `int`
-//│ ║  l.26: 	Cls2(0) === Cls2(1)
-//│ ║        	                 ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.23: 	class Cls2(x: int)
-//│ ╙──      	              ^^^
 //│ Bool
 //│ res
 //│     = false
@@ -58,13 +40,7 @@ let p = Pair(1, 2)
 //│   = Pair {}
 
 p === p
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.60: 	p === p
-//│ ║        	^^^^^^^
-//│ ╟── integer literal of type `2` is not an instance of type `Eql`
-//│ ║  l.55: 	let p = Pair(1, 2)
-//│ ╙──      	                ^
-//│ error
+//│ Bool
 //│ res
 //│     = true
 
@@ -80,23 +56,17 @@ x => x === p
 //│     = [Function: res]
 
 p === { fst: 1, snd: 2 }
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.82: 	p === { fst: 1, snd: 2 }
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── integer literal of type `2` is not an instance of type `Eql`
-//│ ║  l.82: 	p === { fst: 1, snd: 2 }
-//│ ╙──      	                     ^
-//│ error
+//│ Bool
 //│ res
 //│     = false
 
 :e
 { fst: 1, snd: 2 } === p
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.94: 	{ fst: 1, snd: 2 } === p
+//│ ║  l.64: 	{ fst: 1, snd: 2 } === p
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── record literal of type `{fst: 1, snd: 2}` is not an instance of type `Eql`
-//│ ║  l.94: 	{ fst: 1, snd: 2 } === p
+//│ ║  l.64: 	{ fst: 1, snd: 2 } === p
 //│ ╙──      	       ^^^^^^^^^
 //│ Bool | error
 //│ res
@@ -107,17 +77,8 @@ let r = {x: 42, y: y => y}
 //│ r
 //│   = { x: 42, y: [Function: y] }
 
-r : {x: int}
-//│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.110: 	r : {x: int}
-//│ ║         	^
-//│ ╟── integer literal of type `42` is not an instance of type `int`
-//│ ║  l.105: 	let r = {x: 42, y: y => y}
-//│ ║         	            ^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.110: 	r : {x: int}
-//│ ╙──       	        ^^^
-//│ {x: int}
+r : {x: Int}
+//│ {x: Int}
 //│ res
 //│     = { x: 42, y: [Function: y] }
 
@@ -125,11 +86,11 @@ r : {x: int}
 :e
 x => { a: 0 } === x
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.126: 	x => { a: 0 } === x
-//│ ║         	     ^^^^^^^^^^^^
+//│ ║  l.87: 	x => { a: 0 } === x
+//│ ║        	     ^^^^^^^^^^^^
 //│ ╟── record literal of type `{a: 0}` is not an instance of type `Eql`
-//│ ║  l.126: 	x => { a: 0 } === x
-//│ ╙──       	          ^
+//│ ║  l.87: 	x => { a: 0 } === x
+//│ ╙──      	          ^
 //│ anything -> (Bool | error)
 //│ res
 //│ Syntax error:
@@ -150,12 +111,12 @@ let q = Pair(1, "oops")
 :e
 q === q
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.151: 	q === q
+//│ ║  l.112: 	q === q
 //│ ║         	^^^^^^^
-//│ ╟── string literal of type `"oops"` is not an instance of type `Eql`
-//│ ║  l.145: 	let q = Pair(1, "oops")
-//│ ╙──       	                ^^^^^^
-//│ error
+//│ ╟── integer literal of type `1` is not an instance of type `Str`
+//│ ║  l.106: 	let q = Pair(1, "oops")
+//│ ╙──       	             ^
+//│ Bool | error
 //│ res
 //│     = true
 
@@ -169,13 +130,7 @@ let q = Pair2(1, "oops")
 //│   = Pair2 {}
 
 q === q
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.171: 	q === q
-//│ ║         	^^^^^^^
-//│ ╟── string literal of type `"oops"` is not an instance of type `Eql`
-//│ ║  l.166: 	let q = Pair2(1, "oops")
-//│ ╙──       	                 ^^^^^^
-//│ error
+//│ Bool
 //│ res
 //│     = true
 

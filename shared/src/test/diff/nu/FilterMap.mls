@@ -36,7 +36,7 @@ fun filtermap(f, xs) = if xs is
 //│ ║        	                  ^^^^^^^^
 //│ ║  l.28: 	    false then filtermap(f, ys)
 //│ ║        	^^^^^^^^^
-//│ ╟── reference of type `false` is not an instance of type `number`
+//│ ╟── reference of type `False` is not an instance of type `Num`
 //│ ║  l.28: 	    false then filtermap(f, ys)
 //│ ╙──      	    ^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
@@ -46,12 +46,12 @@ fun filtermap(f, xs) = if xs is
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.29: 	    true then Cons(y, filtermap(f, ys))
 //│ ║        	^^^^^^^^
-//│ ╟── reference of type `true` is not an instance of type `number`
+//│ ╟── reference of type `True` is not an instance of type `Num`
 //│ ║  l.29: 	    true then Cons(y, filtermap(f, ys))
 //│ ╙──      	    ^^^^
 //│ ╔══[ERROR] type identifier not found: Tuple#2
 //│ ╙──
-//│ fun filtermap: ((Cons[nothing] | error | Nil) -> number & (Cons[nothing] | Nil) -> nothing, Cons[anything] | Nil,) -> (Cons[nothing] | Nil | error)
+//│ fun filtermap: ((Cons[nothing] | error | Nil) -> #Num & (Cons[nothing] | Nil) -> nothing, Cons[anything] | Nil,) -> (Cons[nothing] | Nil | error)
 //│ Code generation encountered an error:
 //│   unknown match case: Tuple#2
 

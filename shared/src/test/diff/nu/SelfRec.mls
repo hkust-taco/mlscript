@@ -2,20 +2,11 @@
 
 
 
-class Foo1(x: int) {
+class Foo1(x: Int) {
   fun test = Foo1(1).x
 }
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.6: 	  fun test = Foo1(1).x
-//│ ║       	             ^^^^^^^
-//│ ╟── integer literal of type `1` is not an instance of type `int`
-//│ ║  l.6: 	  fun test = Foo1(1).x
-//│ ║       	                  ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.5: 	class Foo1(x: int) {
-//│ ╙──     	              ^^^
-//│ class Foo1(x: int) {
-//│   fun test: error | int
+//│ class Foo1(x: Int) {
+//│   fun test: Int
 //│ }
 
 class Foo2[A](x: A) {
@@ -60,32 +51,23 @@ class Foo4 {
   fun test = [Foo4.test]
 }
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.60: 	  fun test = [Foo4.test]
+//│ ║  l.51: 	  fun test = [Foo4.test]
 //│ ║        	              ^^^^^^^^^
 //│ ╟── reference of type `() -> #Foo4` does not have field 'test'
-//│ ║  l.60: 	  fun test = [Foo4.test]
+//│ ║  l.51: 	  fun test = [Foo4.test]
 //│ ╙──      	              ^^^^
 //│ class Foo4() {
 //│   fun test: (error,)
 //│ }
 
 :e
-class Foo5(x: int) {
+class Foo5(x: Int) {
   fun test = [Foo5(5).test]
 }
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.74: 	  fun test = [Foo5(5).test]
-//│ ║        	              ^^^^^^^
-//│ ╟── integer literal of type `5` is not an instance of type `int`
-//│ ║  l.74: 	  fun test = [Foo5(5).test]
-//│ ║        	                   ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.73: 	class Foo5(x: int) {
-//│ ╙──      	              ^^^
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.74: 	  fun test = [Foo5(5).test]
+//│ ║  l.65: 	  fun test = [Foo5(5).test]
 //│ ╙──      	                     ^^^^^
-//│ class Foo5(x: int) {
+//│ class Foo5(x: Int) {
 //│   fun test: (error,)
 //│ }
 
@@ -96,13 +78,13 @@ class Foo6[A](x: A) {
   fun test3 = [Foo6([x]).test3]
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.94: 	  fun test1 = [Foo6(x).test1]
+//│ ║  l.76: 	  fun test1 = [Foo6(x).test1]
 //│ ╙──      	                      ^^^^^^
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.95: 	  fun test2 = [Foo6(123).test2]
+//│ ║  l.77: 	  fun test2 = [Foo6(123).test2]
 //│ ╙──      	                        ^^^^^^
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.96: 	  fun test3 = [Foo6([x]).test3]
+//│ ║  l.78: 	  fun test3 = [Foo6([x]).test3]
 //│ ╙──      	                        ^^^^^^
 //│ class Foo6[A](x: A) {
 //│   fun test1: (error,)
@@ -120,7 +102,7 @@ class Foo7[A](head: A, tail: Foo7[A] | N) {
     _ then tail.test1
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.120: 	    _ then tail.test1
+//│ ║  l.102: 	    _ then tail.test1
 //│ ╙──       	               ^^^^^^
 //│ class Foo7[A](head: A, tail: Foo7[A] | N) {
 //│   fun test1: A | error
@@ -145,13 +127,13 @@ class Foo7_A2[A](head: A, tail: Foo7_A[A] | N) {
 //│   fun test1: A
 //│ }
 
-class Foo7_2_A[A](head: A, tail: Foo7_A[int] | N) {
-  fun test1: int | A = if tail is
+class Foo7_2_A[A](head: A, tail: Foo7_A[Int] | N) {
+  fun test1: Int | A = if tail is
     N then head
     _ then tail.test1
 }
-//│ class Foo7_2_A[A](head: A, tail: Foo7_A[int] | N) {
-//│   fun test1: A | int
+//│ class Foo7_2_A[A](head: A, tail: Foo7_A[Int] | N) {
+//│   fun test1: A | Int
 //│ }
 
 :e
@@ -161,7 +143,7 @@ class Foo8[A](x: A) {
     x
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.160: 	    let tmp = Foo8(y).test1(x)
+//│ ║  l.142: 	    let tmp = Foo8(y).test1(x)
 //│ ╙──       	                     ^^^^^^
 //│ class Foo8[A](x: A) {
 //│   fun test1: (y: anything,) -> A

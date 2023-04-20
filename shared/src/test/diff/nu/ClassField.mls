@@ -2,52 +2,43 @@
 
 
 
-class Foo(x: int)
-//│ class Foo(x: int)
+class Foo(x: Int)
+//│ class Foo(x: Int)
 
 Foo
-//│ (x: int,) -> Foo
+//│ (x: Int,) -> Foo
 //│ res
 //│     = [Function (anonymous)] { class: [class Foo] }
 
 typeof(Foo)
-//│ string
+//│ #Str
 //│ res
 //│     = 'function'
 
 let f = Foo(123)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.18: 	let f = Foo(123)
-//│ ║        	        ^^^^^^^^
-//│ ╟── integer literal of type `123` is not an instance of type `int`
-//│ ║  l.18: 	let f = Foo(123)
-//│ ║        	            ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.5: 	class Foo(x: int)
-//│ ╙──     	             ^^^
-//│ let f: Foo | error
+//│ let f: Foo
 //│ f
 //│   = Foo {}
 
 typeof(f)
-//│ string
+//│ #Str
 //│ res
 //│     = 'object'
 
 :e
 let cls = Foo.class
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.38: 	let cls = Foo.class
+//│ ║  l.29: 	let cls = Foo.class
 //│ ║        	          ^^^^^^^^^
-//│ ╟── reference of type `(x: int,) -> Foo` does not have field 'class'
-//│ ║  l.38: 	let cls = Foo.class
+//│ ╟── reference of type `(x: Int,) -> Foo` does not have field 'class'
+//│ ║  l.29: 	let cls = Foo.class
 //│ ╙──      	          ^^^
 //│ let cls: error
 //│ cls
 //│     = [class Foo]
 
 typeof(cls)
-//│ string
+//│ #Str
 //│ res
 //│     = 'function'
 
@@ -68,17 +59,17 @@ Derived
 :e
 let cls = Derived.class
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.69: 	let cls = Derived.class
+//│ ║  l.60: 	let cls = Derived.class
 //│ ║        	          ^^^^^^^^^^^^^
 //│ ╟── reference of type `() -> Derived` does not have field 'class'
-//│ ║  l.69: 	let cls = Derived.class
+//│ ║  l.60: 	let cls = Derived.class
 //│ ╙──      	          ^^^^^^^
 //│ let cls: error
 //│ cls
 //│     = [Function: Derived]
 
 typeof(cls)
-//│ string
+//│ #Str
 //│ res
 //│     = 'function'
 

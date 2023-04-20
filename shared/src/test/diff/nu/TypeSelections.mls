@@ -2,18 +2,18 @@
 
 
 module M {
-  type T = int -> int
-  class C(n: int)
+  type T = Int -> Int
+  class C(n: Int)
   fun mkC = C
 }
 //│ module M() {
-//│   class C(n: int)
-//│   type T = int -> int
-//│   fun mkC: (n: int,) -> C
+//│   class C(n: Int)
+//│   type T = Int -> Int
+//│   fun mkC: (n: Int,) -> C
 //│ }
 
 let x: M.T = id
-//│ let x: int -> int
+//│ let x: Int -> Int
 //│ x
 //│   = [Function: id]
 
@@ -22,15 +22,6 @@ fun foo(x: M.C) = x
 
 
 foo(M.mkC(42))
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.24: 	foo(M.mkC(42))
-//│ ║        	    ^^^^^^^^^
-//│ ╟── integer literal of type `42` is not an instance of type `int`
-//│ ║  l.24: 	foo(M.mkC(42))
-//│ ║        	          ^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.6: 	  class C(n: int)
-//│ ╙──     	             ^^^
 //│ C
 //│ res
 //│     = C {}
@@ -39,7 +30,7 @@ foo(M.mkC(42))
 :e
 42 : M.mkC
 //│ ╔══[ERROR] Illegal selection of value member in type position
-//│ ║  l.40: 	42 : M.mkC
+//│ ║  l.31: 	42 : M.mkC
 //│ ╙──      	      ^^^^
 //│ error
 //│ res

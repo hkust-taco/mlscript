@@ -18,23 +18,14 @@ atob(str)
 
 
 declare module console {
-  fun error: string -> unit
+  fun error: Str -> unit
 }
 //│ module console() {
-//│   fun error: string -> unit
+//│   fun error: Str -> unit
 //│ }
 
 console.error("hello")
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.27: 	console.error("hello")
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── string literal of type `"hello"` is not an instance of type `string`
-//│ ║  l.27: 	console.error("hello")
-//│ ║        	              ^^^^^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.21: 	  fun error: string -> unit
-//│ ╙──      	             ^^^^^^
-//│ error | unit
+//│ unit
 //│ res
 //│     = undefined
 //│ // Output
@@ -43,7 +34,7 @@ console.error("hello")
 :e
 console.log("hello")
 //│ ╔══[ERROR] Module `console` does not contain member `log`
-//│ ║  l.44: 	console.log("hello")
+//│ ║  l.35: 	console.log("hello")
 //│ ╙──      	       ^^^^
 //│ error
 //│ res
@@ -52,34 +43,24 @@ console.log("hello")
 
 
 declare module Foo {
-  fun foo: int
+  fun foo: Int
 }
 //│ module Foo() {
-//│   fun foo: int
+//│   fun foo: Int
 //│ }
 
 :re
 Foo.foo
-//│ int
+//│ Int
 //│ res
 //│ Runtime error:
 //│   ReferenceError: Foo is not defined
 
 
-declare type A = int
-//│ type A = int
+declare type A = Int
+//│ type A = Int
 
 42 : A
-//│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.72: 	42 : A
-//│ ║        	^^
-//│ ╟── integer literal of type `42` is not an instance of type `int`
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.69: 	declare type A = int
-//│ ║        	                 ^^^
-//│ ╟── from type reference:
-//│ ║  l.72: 	42 : A
-//│ ╙──      	     ^
 //│ A
 //│ res
 //│     = 42
@@ -87,10 +68,10 @@ declare type A = int
 
 
 declare class Sanitizer {
-  fun sanitizeFor(element: string, input: string): string
+  fun sanitizeFor(element: Str, input: Str): Str
 }
 //│ class Sanitizer() {
-//│   fun sanitizeFor: (element: string, input: string,) -> string
+//│   fun sanitizeFor: (element: Str, input: Str,) -> Str
 //│ }
 
 :re
@@ -106,37 +87,28 @@ let s = Sanitizer()
 // :d
 declare module Buffer {
   class Buffer2 {
-    val length: int
+    val length: Int
   }
-  fun bar: int
-  fun from(a: Array[int]): Buffer2 = from(a)
-  // fun from1(a: Array[int]): this.Buffer2 = from1(a) // FIXME
-  // fun from2(a: Array[int]): Buffer.Buffer2 = from2(a) // FIXME
+  fun bar: Int
+  fun from(a: Array[Int]): Buffer2 = from(a)
+  // fun from1(a: Array[Int]): this.Buffer2 = from1(a) // FIXME
+  // fun from2(a: Array[Int]): Buffer.Buffer2 = from2(a) // FIXME
 }
 //│ module Buffer() {
 //│   class Buffer2() {
-//│     let length: int
+//│     let length: Int
 //│   }
-//│   fun bar: int
-//│   fun from: (a: Array[int],) -> Buffer2
+//│   fun bar: Int
+//│   fun from: (a: Array[Int],) -> Buffer2
 //│ }
 
 let b = Buffer.from([0, 1, 2])
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.124: 	let b = Buffer.from([0, 1, 2])
-//│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── integer literal of type `0` is not an instance of type `int`
-//│ ║  l.124: 	let b = Buffer.from([0, 1, 2])
-//│ ║         	                     ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.112: 	  fun from(a: Array[int]): Buffer2 = from(a)
-//│ ╙──       	                    ^^^
-//│ let b: Buffer2 | error
+//│ let b: Buffer2
 //│ b
 //│   = <Buffer 00 01 02>
 
 b.length
-//│ error | int
+//│ Int
 //│ res
 //│     = 3
 
@@ -146,10 +118,10 @@ b.length
 :pe
 declare 42
 //│ ╔══[PARSE ERROR] Unexpected literal token after modifier
-//│ ║  l.147: 	declare 42
+//│ ║  l.119: 	declare 42
 //│ ╙──       	        ^^
 //│ ╔══[PARSE ERROR] Unexpected literal token after modifier
-//│ ║  l.147: 	declare 42
+//│ ║  l.119: 	declare 42
 //│ ╙──       	        ^^
 //│ 42
 //│ res

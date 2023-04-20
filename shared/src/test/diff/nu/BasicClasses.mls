@@ -1,65 +1,56 @@
 :NewDefs
 
 
-class A(n: int)
-//│ class A(n: int)
+class A(n: Int)
+//│ class A(n: Int)
 
 A
-//│ (n: int,) -> A
+//│ (n: Int,) -> A
 //│ res
 //│     = [Function (anonymous)] { class: [class A] }
 
 let a = A(42)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.12: 	let a = A(42)
-//│ ║        	        ^^^^^
-//│ ╟── integer literal of type `42` is not an instance of type `int`
-//│ ║  l.12: 	let a = A(42)
-//│ ║        	          ^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.4: 	class A(n: int)
-//│ ╙──     	           ^^^
-//│ let a: A | error
+//│ let a: A
 //│ a
 //│   = A {}
 
 a.n
-//│ error | int
+//│ Int
 //│ res
 //│     = 42
 
 
 fun f(x: A) = x.n
-//│ fun f: (x: A,) -> int
+//│ fun f: (x: A,) -> Int
 
 fun f(x: A) = if x is A then x.n
-//│ fun f: (x: A,) -> int
+//│ fun f: (x: A,) -> Int
 
 fun f(x: A | 'b) = if x is A then x.n else 0
-//│ fun f: (x: #Object,) -> (0 | int)
+//│ fun f: (x: #Object,) -> Int
 
 
 fun f(x) = x.n
 //│ fun f: forall 'n. {n: 'n} -> 'n
 
 f(a)
-//│ error | int
+//│ Int
 //│ res
 //│     = 42
 
 fun f(x) = if x is A then x.n
-//│ fun f: A -> int
+//│ fun f: A -> Int
 
 f(a)
-//│ int
+//│ Int
 //│ res
 //│     = 42
 
 fun f(x) = if x is A then x.n else 0
-//│ fun f: #Object -> (0 | int)
+//│ fun f: #Object -> Int
 
 f(a)
-//│ 0 | int
+//│ Int
 //│ res
 //│     = 42
 
@@ -83,10 +74,10 @@ class Base0(n) {
   fun oops = this.my
 }
 //│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.79: 	class Base0(n) {
+//│ ║  l.70: 	class Base0(n) {
 //│ ╙──      	            ^
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.83: 	  fun oops = this.my
+//│ ║  l.74: 	  fun oops = this.my
 //│ ╙──      	                 ^^^
 //│ class Base0(n: error) {
 //│   fun me: Base0 & {n: error}
@@ -126,82 +117,58 @@ let n2 = b2.n
 
 
 
-class Base1(base: int) {
+class Base1(base: Int) {
   fun getBase1 = base
   fun getBase2 = this.base
   fun foo(x) = this.base + x
 }
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.132: 	  fun foo(x) = this.base + x
-//│ ║         	               ^^^^^^^^^^^
-//│ ╟── field selection of type `int` is not an instance of type `Int`
-//│ ║  l.132: 	  fun foo(x) = this.base + x
-//│ ╙──       	               ^^^^^^^^^
-//│ class Base1(base: int) {
-//│   fun foo: Int -> (Int | error)
-//│   fun getBase1: int
-//│   fun getBase2: int
+//│ class Base1(base: Int) {
+//│   fun foo: Int -> Int
+//│   fun getBase1: Int
+//│   fun getBase2: Int
 //│ }
 
-class Base1(base: int) {
+class Base1(base: Int) {
   fun getBase1 = base
   fun me = this
   fun foo(x) = base + x
 }
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.149: 	  fun foo(x) = base + x
-//│ ║         	               ^^^^^^
-//│ ╟── type `int` is not an instance of type `Int`
-//│ ║  l.146: 	class Base1(base: int) {
-//│ ║         	                  ^^^
-//│ ╟── but it flows into reference with expected type `Int`
-//│ ║  l.149: 	  fun foo(x) = base + x
-//│ ╙──       	               ^^^^
-//│ class Base1(base: int) {
-//│   fun foo: Int -> (Int | error)
-//│   fun getBase1: int
-//│   fun me: Base1 & {base: int}
+//│ class Base1(base: Int) {
+//│   fun foo: Int -> Int
+//│   fun getBase1: Int
+//│   fun me: Base1 & {base: Int}
 //│ }
 
 Base1
-//│ (base: int,) -> Base1
+//│ (base: Int,) -> Base1
 //│ res
 //│     = [Function (anonymous)] { class: [class Base1] }
 
 let b = Base1(1)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.171: 	let b = Base1(1)
-//│ ║         	        ^^^^^^^^
-//│ ╟── integer literal of type `1` is not an instance of type `int`
-//│ ║  l.171: 	let b = Base1(1)
-//│ ║         	              ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.146: 	class Base1(base: int) {
-//│ ╙──       	                  ^^^
-//│ let b: Base1 | error
+//│ let b: Base1
 //│ b
 //│   = Base1 {}
 
 b.base
-//│ error | int
+//│ Int
 //│ res
 //│     = 1
 
 b.getBase1
-//│ error | int
+//│ Int
 //│ res
 //│     = 1
 
 // :d
 b.me
-//│ Base1 & {base: int} | error
+//│ Base1 & {base: Int}
 //│ res
 //│     = Base1 {}
 
 :e
 b.getBaseTypo
 //│ ╔══[ERROR] Class `Base1` does not contain member `getBaseTypo`
-//│ ║  l.202: 	b.getBaseTypo
+//│ ║  l.169: 	b.getBaseTypo
 //│ ╙──       	 ^^^^^^^^^^^^
 //│ error
 //│ res
@@ -214,74 +181,35 @@ b : Base1
 //│     = Base1 {}
 
 
-class Rec(n: int) {
+class Rec(n: Int) {
   fun go = Rec(n + 1)
 }
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.218: 	  fun go = Rec(n + 1)
-//│ ║         	               ^^^
-//│ ╟── type `int` is not an instance of type `Int`
-//│ ║  l.217: 	class Rec(n: int) {
-//│ ║         	             ^^^
-//│ ╟── but it flows into reference with expected type `Int`
-//│ ║  l.218: 	  fun go = Rec(n + 1)
-//│ ╙──       	               ^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.218: 	  fun go = Rec(n + 1)
-//│ ║         	           ^^^^^^^^^^
-//│ ╟── operator application of type `Int` is not an instance of type `int`
-//│ ║  l.218: 	  fun go = Rec(n + 1)
-//│ ║         	               ^^^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.217: 	class Rec(n: int) {
-//│ ╙──       	             ^^^
-//│ class Rec(n: int) {
-//│   fun go: Rec | error
+//│ class Rec(n: Int) {
+//│   fun go: Rec
 //│ }
 
 let r = Rec(0)
 r.n
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.242: 	let r = Rec(0)
-//│ ║         	        ^^^^^^
-//│ ╟── integer literal of type `0` is not an instance of type `int`
-//│ ║  l.242: 	let r = Rec(0)
-//│ ║         	            ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.217: 	class Rec(n: int) {
-//│ ╙──       	             ^^^
-//│ let r: Rec | error
-//│ error | int
+//│ let r: Rec
+//│ Int
 //│ r
 //│   = Rec {}
 //│ res
 //│     = 0
 
 r.go.n
-//│ error | int
+//│ Int
 //│ res
 //│     = 1
 
 
 
 
-// TODO treat `a: int` as a signature
+// TODO treat `a: Int` as a signature
 class Annots(base: 0 | 1) {
-  a: int
+  a: Int
   fun a = base
 }
-//│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.270: 	  a: int
-//│ ║         	  ^
-//│ ╟── type `0` is not an instance of type `int`
-//│ ║  l.269: 	class Annots(base: 0 | 1) {
-//│ ║         	                   ^
-//│ ╟── but it flows into reference with expected type `int`
-//│ ║  l.270: 	  a: int
-//│ ║         	  ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.270: 	  a: int
-//│ ╙──       	     ^^^
 //│ class Annots(base: 0 | 1) {
 //│   fun a: 0 | 1
 //│ }

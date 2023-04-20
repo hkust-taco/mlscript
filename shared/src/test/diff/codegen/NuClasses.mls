@@ -1,29 +1,11 @@
 :NewDefs
 
 :js
-class Test(n: int) {
+class Test(n: Int) {
   fun inc = Test(n + 1)
 }
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.5: 	  fun inc = Test(n + 1)
-//│ ║       	                 ^^^
-//│ ╟── type `int` is not an instance of type `Int`
-//│ ║  l.4: 	class Test(n: int) {
-//│ ║       	              ^^^
-//│ ╟── but it flows into reference with expected type `Int`
-//│ ║  l.5: 	  fun inc = Test(n + 1)
-//│ ╙──     	                 ^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.5: 	  fun inc = Test(n + 1)
-//│ ║       	            ^^^^^^^^^^^
-//│ ╟── operator application of type `Int` is not an instance of type `int`
-//│ ║  l.5: 	  fun inc = Test(n + 1)
-//│ ║       	                 ^^^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.4: 	class Test(n: int) {
-//│ ╙──     	              ^^^
-//│ class Test(n: int) {
-//│   fun inc: Test | error
+//│ class Test(n: Int) {
+//│   fun inc: Test
 //│ }
 //│ // Prelude
 //│ let res;
@@ -56,64 +38,25 @@ class Test(n: int) {
 //│ // End of generated code
 
 Test(0).inc.n
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.58: 	Test(0).inc.n
-//│ ║        	^^^^^^^
-//│ ╟── integer literal of type `0` is not an instance of type `int`
-//│ ║  l.58: 	Test(0).inc.n
-//│ ║        	     ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.4: 	class Test(n: int) {
-//│ ╙──     	              ^^^
-//│ error | int
+//│ Int
 //│ res
 //│     = 1
 
-class Test2(n: int) {
+class Test2(n: Int) {
   fun inc = Test3.inc(n)
 }
 module Test3 {
   fun inc(n) = Test2(n + 1)
 }
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.76: 	  fun inc(n) = Test2(n + 1)
-//│ ║        	               ^^^^^^^^^^^^
-//│ ╟── operator application of type `Int` is not an instance of type `int`
-//│ ║  l.76: 	  fun inc(n) = Test2(n + 1)
-//│ ║        	                     ^^^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.72: 	class Test2(n: int) {
-//│ ╙──      	               ^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.73: 	  fun inc = Test3.inc(n)
-//│ ║        	            ^^^^^^^^^^^^
-//│ ╟── type `int` is not an instance of type `Int`
-//│ ║  l.72: 	class Test2(n: int) {
-//│ ║        	               ^^^
-//│ ╟── but it flows into reference with expected type `Int`
-//│ ║  l.73: 	  fun inc = Test3.inc(n)
-//│ ║        	                      ^
-//│ ╟── Note: constraint arises from reference:
-//│ ║  l.76: 	  fun inc(n) = Test2(n + 1)
-//│ ╙──      	                     ^
-//│ class Test2(n: int) {
-//│   fun inc: Test2 | error
+//│ class Test2(n: Int) {
+//│   fun inc: Test2
 //│ }
 //│ module Test3() {
-//│   fun inc: Int -> (Test2 | error)
+//│   fun inc: Int -> Test2
 //│ }
 
 Test2(0).inc.n
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.106: 	Test2(0).inc.n
-//│ ║         	^^^^^^^^
-//│ ╟── integer literal of type `0` is not an instance of type `int`
-//│ ║  l.106: 	Test2(0).inc.n
-//│ ║         	      ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.72: 	class Test2(n: int) {
-//│ ╙──      	               ^^^
-//│ error | int
+//│ Int
 //│ res
 //│     = 1
 
@@ -127,11 +70,11 @@ class C[A](n: A) {
 //│ }
 
 :e
-let a = C[int](42)
+let a = C[Int](42)
 a.f
 //│ ╔══[ERROR] Type application syntax is not yet supported
-//│ ║  l.130: 	let a = C[int](42)
-//│ ╙──       	        ^^^^^^
+//│ ║  l.73: 	let a = C[Int](42)
+//│ ╙──      	        ^^^^^^
 //│ let a: error
 //│ error
 //│ a
@@ -150,15 +93,15 @@ module Foo {
 //│ }
 
 
-mixin M0(n: int) {
+mixin M0(n: Int) {
   let m = n // this refers to specifically the `n` we had in parameter, not necessarily this.n
   fun bar = m
   fun foo = [n, m, bar] // should this be the same as `[this.n, this.m, this.bar]`?
 }
-//│ mixin M0(n: int) {
-//│   fun bar: int
-//│   fun foo: (int, int, int,)
-//│   let m: int
+//│ mixin M0(n: Int) {
+//│   fun bar: Int
+//│   fun foo: (Int, Int, Int,)
+//│   let m: Int
 //│ }
 
 module M1 extends M0(123) {
@@ -166,26 +109,9 @@ module M1 extends M0(123) {
   fun m = "m"
   fun bar = "bar"
 }
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.164: 	module M1 extends M0(123) {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.165: 	  fun n = "n"
-//│ ║         	^^^^^^^^^^^^^
-//│ ║  l.166: 	  fun m = "m"
-//│ ║         	^^^^^^^^^^^^^
-//│ ║  l.167: 	  fun bar = "bar"
-//│ ║         	^^^^^^^^^^^^^^^^^
-//│ ║  l.168: 	}
-//│ ║         	^
-//│ ╟── integer literal of type `123` is not an instance of type `int`
-//│ ║  l.164: 	module M1 extends M0(123) {
-//│ ║         	                     ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.153: 	mixin M0(n: int) {
-//│ ╙──       	            ^^^
 //│ module M1() {
 //│   fun bar: "bar"
-//│   fun foo: (int, int, int,)
+//│   fun foo: (Int, Int, Int,)
 //│   fun m: "m"
 //│   fun n: "n"
 //│ }
@@ -197,7 +123,7 @@ module M1 extends M0(123) {
 
 // FIXME typing/runtime mismatch
 M1.foo
-//│ (int, int, int,)
+//│ (Int, Int, Int,)
 //│ res
 //│     = [ 123, 'm', 'bar' ]
 
@@ -210,7 +136,7 @@ module M2 {
     bar(10)
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.209: 	    fun bar(x) = x + y + this.m
+//│ ║  l.135: 	    fun bar(x) = x + y + this.m
 //│ ╙──       	                             ^^
 //│ module M2() {
 //│   fun foo: Int -> Int

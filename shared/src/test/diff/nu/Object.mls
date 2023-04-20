@@ -24,10 +24,10 @@ M: Object
 
 
 fun foo(x) = if x is A then true
-//│ fun foo: A -> true
+//│ fun foo: A -> True
 
 fun foo(x) = if x is A then true else false
-//│ fun foo: #Object -> bool
+//│ fun foo: #Object -> (False | True)
 
 
 :e
@@ -53,7 +53,7 @@ fun foo(x: anything) = if x is A then true
 //│ ╟── Note: constraint arises from class pattern:
 //│ ║  l.34: 	fun foo(x: anything) = if x is A then true
 //│ ╙──      	                               ^
-//│ fun foo: (x: anything,) -> true
+//│ fun foo: (x: anything,) -> True
 
 :e
 fun foo(x: anything) = if x is A then true else false
@@ -66,11 +66,11 @@ fun foo(x: anything) = if x is A then true else false
 //│ ╟── but it flows into reference with expected type `#Object`
 //│ ║  l.59: 	fun foo(x: anything) = if x is A then true else false
 //│ ╙──      	                          ^
-//│ fun foo: (x: anything,) -> bool
+//│ fun foo: (x: anything,) -> (False | True)
 
 
 fun foo(x: Object) = if x is A then true else false
-//│ fun foo: (x: Object,) -> bool
+//│ fun foo: (x: Object,) -> (False | True)
 
 
 // TODO make this a rigid type variable!
@@ -85,7 +85,7 @@ fun foo = forall 'a; (x: 'a) => if x is A then true else false
 //│ ╟── but it flows into reference with expected type `#Object`
 //│ ║  l.78: 	fun foo = forall 'a; (x: 'a) => if x is A then true else false
 //│ ╙──      	                                   ^
-//│ fun foo: (x: anything,) -> bool
+//│ fun foo: (x: anything,) -> (False | True)
 
 
 
@@ -128,15 +128,15 @@ fun foo(x) = if x is
   A then true
   B then true
   else false
-//│ fun foo: Object -> bool
+//│ fun foo: Object -> (False | True)
 
 foo(0)
-//│ bool
+//│ False | True
 //│ res
 //│     = false
 
 foo(o)
-//│ bool
+//│ False | True
 //│ res
 //│     = true
 

@@ -2,7 +2,7 @@
 
 
 let x = NaN
-//│ let x: number
+//│ let x: #Num
 //│ x
 //│   = NaN
 
@@ -11,7 +11,7 @@ x + 1
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.10: 	x + 1
 //│ ║        	^^^
-//│ ╟── reference of type `number` is not an instance of type `Int`
+//│ ╟── reference of type `#Num` is not an instance of type `Int`
 //│ ║  l.4: 	let x = NaN
 //│ ║       	        ^^^
 //│ ╟── but it flows into reference with expected type `Int`

@@ -155,7 +155,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
       inRecursiveDef = N,
       MutMap.empty,
     )
-    def init: Ctx = initBase.copy(
+    def init: Ctx = if (!newDefs) initBase else initBase.copy(
       tyDefs2 = MutMap.from(nuBuiltinTypes.map { t =>
         val lti = new DelayedTypeInfo(t, Map.empty)(initBase, e => lastWords(e.theMsg))
         initBase.env += t.nme.name -> lti
@@ -193,14 +193,14 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
   
   val UnitType: ClassTag = ClassTag(Var("unit"), semp)(noTyProv)
   
-  val BoolType: ClassTag = ClassTag(Var(if (newDefs) "Bool" else "bool"), if (newDefs) sing(TN("Object")) else semp)(noTyProv)
-  val TrueType: ClassTag = ClassTag(Var("true"), sing(TN("bool")) + TN("Eql"))(noTyProv)
-  val FalseType: ClassTag = ClassTag(Var("false"), sing(TN("bool")) + TN("Eql"))(noTyProv)
+  val BoolType: ClassTag = ClassTag(Var(if (newDefs) "Bool" else "bool"), if (newDefs) sing(TN("Object")) + TN("Eql") else semp)(noTyProv)
+  val TrueType: ClassTag = ClassTag(Var(if (newDefs) "True" else "true"), if (newDefs) sing(TN("Bool")) + TN("Object") + TN("Eql") else sing(TN("bool")))(noTyProv)
+  val FalseType: ClassTag = ClassTag(Var(if (newDefs) "False" else "false"), if (newDefs) sing(TN("Bool")) + TN("Object") + TN("Eql") else sing(TN("bool")))(noTyProv)
   
   val ObjType: ClassTag = ClassTag(Var("Object"), sing(TN("Eql")))(noTyProv)
   val IntType: ClassTag = ClassTag(Var(if (newDefs) "Int" else "int"), if (newDefs) sing(TN("Num")) + TN("Eql") else sing(TN("number")))(noTyProv)
-  val DecType: ClassTag = ClassTag(Var("number"), sing(TN("Eql")))(noTyProv)
-  val StrType: ClassTag = ClassTag(Var("string"), sing(TN("Eql")))(noTyProv)
+  val DecType: ClassTag = ClassTag(Var(if (newDefs) "Num" else "number"), if (newDefs) sing(TN("Eql")) else semp)(noTyProv)
+  val StrType: ClassTag = ClassTag(Var(if (newDefs) "Str" else "string"), if (newDefs) sing(TN("Eql")) else semp)(noTyProv)
   // val IntType: ST = TypeRef(TN("int"), Nil)(noTyProv)
   // val DecType: ST = TypeRef(TN("number"), Nil)(noTyProv)
   // val StrType: ST = TypeRef(TN("string"), Nil)(noTyProv)
@@ -216,6 +216,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
     NuTypeDef(Cls, TN("Object"), Nil, Tup(Nil), N, Nil, N, N, TypingUnit(Nil))(N),
     NuTypeDef(Cls, TN("Int"), Nil, Tup(Nil), N, Nil, N, N, TypingUnit(Nil))(N), // TODO mk abstract
     NuTypeDef(Cls, TN("Str"), Nil, Tup(Nil), N, Nil, N, N, TypingUnit(Nil))(N), // TODO mk abstract
+    NuTypeDef(Cls, TN("Bool"), Nil, Tup(Nil), N, Nil, N, N, TypingUnit(Nil))(N), // TODO mk abstract
+    NuTypeDef(Cls, TN("Num"), Nil, Tup(Nil), N, Nil, N, N, TypingUnit(Nil))(N), // TODO mk abstract
   )
   val builtinTypes: Ls[TypeDef] =
     // TypeDef(Cls, TN("Object"), Nil, TopType, Nil, Nil, sing(TN("Eql")), N, Nil) ::

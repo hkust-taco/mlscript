@@ -235,7 +235,7 @@ addOne2 x = case x of {
   | Num -> x.addOne x
   | Str -> x.addOne x
   }
-//│ addOne2: ((Integer\value with {addOne: 'a -> 'b}) & 'a | Str & {addOne: 'c -> 'b} & 'c) -> 'b
+//│ addOne2: ((Integer\value with {addOne: 'a -> 'b}) & 'a | (Str\value with {addOne: 'c -> 'b}) & 'c) -> 'b
 //│        = [Function: addOne2]
 
 addOne2 (mkIntegerPrecise 42)
@@ -252,30 +252,15 @@ def mkStr: string -> Str
 rec def mkStr value = Str { value; addOne = fun s -> mkStr (concat s.value "1") }
 //│ mkStr: string -> Str
 //│      = <missing implementation>
-//│ string -> (Str & {addOne: 'addOne, value: string} | error)
+//│ string -> 'a
 //│   where
-//│     'addOne :> {value: string} -> (Str & {addOne: 'addOne, value: string} | error)
+//│     'a :> Str with {addOne: {value: string} -> 'a}
 //│   <:  mkStr:
 //│ string -> Str
-//│ ╔══[ERROR] Class `Str` does not contain member `value`
-//│ ║  l.252: 	rec def mkStr value = Str { value; addOne = fun s -> mkStr (concat s.value "1") }
-//│ ╙──       	                                                                     ^^^^^
 //│      = [Function: mkStr]
 
 addOne2 (mkStr "hello")
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.265: 	addOne2 (mkStr "hello")
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `Str` does not match type `Integer & ?a | Str & ?b`
-//│ ║  l.251: 	def mkStr: string -> Str
-//│ ║         	                     ^^^
-//│ ╟── but it flows into application with expected type `Integer & ?c | Str & ?d`
-//│ ║  l.265: 	addOne2 (mkStr "hello")
-//│ ║         	         ^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from reference:
-//│ ║  l.233: 	addOne2 x = case x of {
-//│ ╙──       	                 ^
-//│ res: error
+//│ res: Str
 //│    = Str { value: 'hello1', addOne: [Function: addOne] }
 
 union = if true then mkIntegerPrecise 42 else mkStr "hello"
@@ -283,22 +268,10 @@ union = if true then mkIntegerPrecise 42 else mkStr "hello"
 //│      = Integer { value: 42, addOne: [Function: addOne] }
 
 union2 = addOne2 union
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.285: 	union2 = addOne2 union
-//│ ║         	         ^^^^^^^^^^^^^
-//│ ╟── type `Str` does not match type `Integer & ?a | Str & ?b`
-//│ ║  l.251: 	def mkStr: string -> Str
-//│ ║         	                     ^^^
-//│ ╟── but it flows into reference with expected type `Integer & ?c | Str & ?d`
-//│ ║  l.285: 	union2 = addOne2 union
-//│ ║         	                 ^^^^^
-//│ ╟── Note: constraint arises from reference:
-//│ ║  l.233: 	addOne2 x = case x of {
-//│ ╙──       	                 ^
-//│ union2: Integer | error
+//│ union2: Integer | Str
 //│       = Integer { value: 43, addOne: [Function: addOne] }
 
 addOne2 union2
-//│ res: Integer
+//│ res: Integer | Str
 //│    = Integer { value: 44, addOne: [Function: addOne] }
 
