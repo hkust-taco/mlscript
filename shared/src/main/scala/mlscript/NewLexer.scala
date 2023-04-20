@@ -104,6 +104,12 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
         lex(k, ind, next(k, COMMENT(txt.dropRight(2))))
       // case BracketKind(Left(k)) => go(i + 1, OPEN_BRACKET(k))
       // case BracketKind(Right(k)) => go(i + 1, CLOSE_BRACKET(k))
+      case 'i' if (bytes(i + 1) === 'd' && bytes(i + 2) === '"') =>
+        val (n, j) = takeWhile(i + 3)(isIdentChar)
+        lex(j + 1, ind, next(j + 1,
+          if (bytes(j) === '"' && !n.isEmpty()) IDENT(n, isAlphaOp(n))
+          else { pe(msg"unexpected identifier escape"); ERROR }
+        ))
       case BracketKind(Left(k)) => lex(i + 1, ind, next(i + 1, OPEN_BRACKET(k)))
       case BracketKind(Right(k)) => lex(i + 1, ind, next(i + 1, CLOSE_BRACKET(k)))
       case '\n' =>

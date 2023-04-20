@@ -1,0 +1,65 @@
+:NewDefs
+
+let id"of" = 42
+fun id"fun"(x: int) = x + 1
+//│ let of: 42
+//│ fun fun: (x: int,) -> int
+//│ of
+//│    = 42
+
+id"fun"(id"of")
+//│ int
+//│ res
+//│     = 43
+
+let id"if" = 1
+id"if" + 1
+//│ let if: 1
+//│ int
+//│ if
+//│    = 1
+//│ res
+//│     = 2
+
+// FIXME
+class Foo(id"class": int) {
+  fun id"mixin"(x: int) = id"class" + x
+}
+let foo = Foo(2)
+foo.id"mixin"(3)
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.29: 	foo.id"mixin"(3)
+//│ ╙──      	^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Class `Foo` does not contain member `id`
+//│ ║  l.29: 	foo.id"mixin"(3)
+//│ ╙──      	   ^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.29: 	foo.id"mixin"(3)
+//│ ║        	      ^^^^^^^^^^
+//│ ╟── string literal of type `"mixin"` is not a function
+//│ ║  l.29: 	foo.id"mixin"(3)
+//│ ╙──      	      ^^^^^^^
+//│ class Foo(class: int) {
+//│   fun mixin: (x: int,) -> int
+//│ }
+//│ let foo: Foo
+//│ error
+//│ foo
+//│ Syntax error:
+//│   Unexpected token ')'
+//│ res
+
+:pe
+id""
+//│ ╔══[LEXICAL ERROR] unexpected identifier escape
+//│ ║  l.53: 	id""
+//│ ╙──      	^
+//│ ╔══[PARSE ERROR] Unexpected error in expression position
+//│ ║  l.53: 	id""
+//│ ╙──      	^^^^
+//│ ╔══[PARSE ERROR] Unexpected end of input; an expression was expected here
+//│ ║  l.53: 	id""
+//│ ╙──      	    ^
+//│ undefined
+//│ res
+//│     = undefined
