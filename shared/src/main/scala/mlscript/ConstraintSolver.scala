@@ -666,7 +666,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             }
             case (LhsRefined(S(pt: ClassTag), ts, r, trs), RhsBases(pts, bf, trs2)) =>
               // TODO: inherited trait tags
-              // println(s"!!! TODO !!! ${pt.parentsST} $pts")
+              println(s"class checking $pt $pts")
               if (pts.contains(pt) || pts.exists(p => pt.parentsST.contains(p.id)))
                 println(s"OK  $pt  <:  ${pts.mkString(" | ")}")
               // else f.fold(reportError())(f => annoying(Nil, done_ls, Nil, f))
@@ -694,10 +694,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               }
             case (LhsRefined(N, ts, r, trs), RhsBases(pts, N, trs2))  =>
                 // TODO inherited trait tags
-                // println(s"!!! TODO !!! ${ts} ${pts}")
-                if (pts.exists(p => ts.toList.collect {
+                println(s"tag checking ${ts} ${pts}")
+                if (pts.exists(p => ts.toList.flatMap {
                   case TraitTag(n, h) => n :: h.toList.map(n => Var(n.name))
-                }.flatten.contains(p.id)))
+                  case _ => Nil
+                }.contains(p.id)))
                   println(s"OK $ts <: $pts")
                 else
                 reportError()
