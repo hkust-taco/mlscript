@@ -34,7 +34,7 @@ trait Simple() {
 trait Simple2<T>() {
   let abc: T
 }
-trait Next(): Simple {}
+trait Next() extends Simple {}
 trait TTT<T>() {
   fun ttt(x: T): T
 }
@@ -128,8 +128,8 @@ trait TTT<T>() {
 //│ ║  l.36: 	}
 //│ ╙──      	^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.37: 	trait Next(): Simple {}
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.37: 	trait Next() extends Simple {}
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] traits are not yet supported
 //│ ║  l.38: 	trait TTT<T>() {
 //│ ║        	^^^^^^^^^^^^^^^^

@@ -4,7 +4,7 @@
 :AllowTypeErrors
 fun multi1(x: number): number
 fun multi3(): unit
-class Foo(): Base {}
+class Foo() extends Base {}
 trait AnotherBase() {
   let y: string
 }
@@ -18,14 +18,18 @@ fun multi4(): unit
 trait Base() {
   let a: number
 }
-class AnotherFoo(): AnotherBase {}
+class AnotherFoo() extends AnotherBase {}
 fun multi5(): unit
-//│ ╔══[ERROR] trait Base cannot be used as a type
-//│ ║  l.7: 	class Foo(): Base {}
-//│ ╙──     	             ^^^^
-//│ ╔══[ERROR] type signatures not yet supported for classes
-//│ ║  l.7: 	class Foo(): Base {}
-//│ ╙──     	             ^^^^
+//│ ╔══[ERROR] traits are not yet supported
+//│ ║  l.18: 	trait Base() {
+//│ ║        	^^^^^^^^^^^^^^
+//│ ║  l.19: 	  let a: number
+//│ ║        	^^^^^^^^^^^^^^^
+//│ ║  l.20: 	}
+//│ ╙──      	^
+//│ ╔══[ERROR] Cannot inherit from a type alias
+//│ ║  l.7: 	class Foo() extends Base {}
+//│ ╙──     	                    ^^^^
 //│ ╔══[ERROR] traits are not yet supported
 //│ ║  l.8: 	trait AnotherBase() {
 //│ ║       	^^^^^^^^^^^^^^^^^^^^^
@@ -42,19 +46,9 @@ fun multi5(): unit
 //│ ╔══[ERROR] Member h is declared but not defined
 //│ ║  l.14: 	  fun h(): unit
 //│ ╙──      	      ^
-//│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.18: 	trait Base() {
-//│ ║        	^^^^^^^^^^^^^^
-//│ ║  l.19: 	  let a: number
-//│ ║        	^^^^^^^^^^^^^^^
-//│ ║  l.20: 	}
-//│ ╙──      	^
-//│ ╔══[ERROR] trait AnotherBase cannot be used as a type
-//│ ║  l.21: 	class AnotherFoo(): AnotherBase {}
-//│ ╙──      	                    ^^^^^^^^^^^
-//│ ╔══[ERROR] type signatures not yet supported for classes
-//│ ║  l.21: 	class AnotherFoo(): AnotherBase {}
-//│ ╙──      	                    ^^^^^^^^^^^
+//│ ╔══[ERROR] Cannot inherit from a type alias
+//│ ║  l.21: 	class AnotherFoo() extends AnotherBase {}
+//│ ╙──      	                           ^^^^^^^^^^^
 //│ fun multi1: (x: number,) -> number
 //│ fun multi3: () -> unit
 //│ class Foo()

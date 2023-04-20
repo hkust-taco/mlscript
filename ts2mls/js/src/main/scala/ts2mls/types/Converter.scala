@@ -94,7 +94,7 @@ object Converter {
 
       val inheritance =
         if (parents.isEmpty) constructor
-        else parents.foldLeft(s"$constructor: ")((b, p) => s"$b${convert(p)}, ").dropRight(2)
+        else parents.foldLeft(s"$constructor extends ")((b, p) => s"$b${convert(p)}, ").dropRight(2)
       if (typeVars.isEmpty) s"${indent}$typeName$inheritance $body"
       else
         s"${indent}$typeName<${typeVars.map((tv) => tv.name).reduceLeft((p, s) => s"$p, $s")}>$inheritance $body" // TODO: add constraints

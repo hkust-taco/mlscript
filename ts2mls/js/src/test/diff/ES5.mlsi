@@ -48,12 +48,12 @@ trait FunctionConstructor() {
 }
 type ThisParameterType<T> = Unsupported<"T extends (this: infer U, ...args: never) => any ? U : unknown", "ts2mls/js/src/test/typescript/ES5.d.ts", 306, 27>
 type OmitThisParameter<T> = Unsupported<"unknown extends ThisParameterType<T> ? T : T extends (...args: infer A) => infer R ? (...args: A) => R : T", "ts2mls/js/src/test/typescript/ES5.d.ts", 311, 27>
-trait CallableFunction(): Function {
+trait CallableFunction() extends Function {
   fun apply<T, A, R>(thisArg: T, args: A): R /* warning: the overload of function apply is not supported yet. */
   fun call<T, A, R>(thisArg: T, args: A): R
   fun bind<T, AX, R>(thisArg: T, args: MutArray<AX>): (MutArray<AX>) => R /* warning: the overload of function bind is not supported yet. */
 }
-trait NewableFunction(): Function {
+trait NewableFunction() extends Function {
   fun apply<T, A>(thisArg: T, args: A): unit /* warning: the overload of function apply is not supported yet. */
   fun call<T, A>(thisArg: T, args: A): unit
   fun bind<AX, R>(thisArg: anything, args: MutArray<AX>): (MutArray<AX>) => R /* warning: the overload of function bind is not supported yet. */
@@ -91,7 +91,7 @@ trait NumberConstructor() {
   let MAX_VALUE: number
   let prototype: Number
 }
-trait TemplateStringsArray(): ReadonlyArray<string> {
+trait TemplateStringsArray() extends ReadonlyArray<string> {
   let raw: ReadonlyArray<string>
 }
 trait ImportMeta() {}
@@ -123,37 +123,37 @@ trait ErrorConstructor() {
   let prototype: Error
 }
 let EvalError: EvalErrorConstructor
-trait EvalErrorConstructor(): ErrorConstructor {
+trait EvalErrorConstructor() extends ErrorConstructor {
   let __new: Unsupported<"new(message?: string): EvalError;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1053, 57>
   let __call: Unsupported<"(message?: string): EvalError;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1054, 37>
   let prototype: EvalError
 }
 let RangeError: RangeErrorConstructor
-trait RangeErrorConstructor(): ErrorConstructor {
+trait RangeErrorConstructor() extends ErrorConstructor {
   let __new: Unsupported<"new(message?: string): RangeError;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1064, 58>
   let __call: Unsupported<"(message?: string): RangeError;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1065, 38>
   let prototype: RangeError
 }
 let ReferenceError: ReferenceErrorConstructor
-trait ReferenceErrorConstructor(): ErrorConstructor {
+trait ReferenceErrorConstructor() extends ErrorConstructor {
   let __new: Unsupported<"new(message?: string): ReferenceError;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1075, 62>
   let __call: Unsupported<"(message?: string): ReferenceError;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1076, 42>
   let prototype: ReferenceError
 }
 let SyntaxError: SyntaxErrorConstructor
-trait SyntaxErrorConstructor(): ErrorConstructor {
+trait SyntaxErrorConstructor() extends ErrorConstructor {
   let __new: Unsupported<"new(message?: string): SyntaxError;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1086, 59>
   let __call: Unsupported<"(message?: string): SyntaxError;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1087, 39>
   let prototype: SyntaxError
 }
 let TypeError: TypeErrorConstructor
-trait TypeErrorConstructor(): ErrorConstructor {
+trait TypeErrorConstructor() extends ErrorConstructor {
   let __new: Unsupported<"new(message?: string): TypeError;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1097, 57>
   let __call: Unsupported<"(message?: string): TypeError;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1098, 37>
   let prototype: TypeError
 }
 let URIError: URIErrorConstructor
-trait URIErrorConstructor(): ErrorConstructor {
+trait URIErrorConstructor() extends ErrorConstructor {
   let __new: Unsupported<"new(message?: string): URIError;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1108, 56>
   let __call: Unsupported<"(message?: string): URIError;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1109, 36>
   let prototype: URIError
@@ -712,8 +712,8 @@ module Intl {
 //│ ║  l.50: 	type OmitThisParameter<T> = Unsupported<"unknown extends ThisParameterType<T> ? T : T extends (...args: infer A) => infer R ? (...args: A) => R : T", "ts2mls/js/src/test/typescript/ES5.d.ts", 311, 27>
 //│ ╙──      	                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.51: 	trait CallableFunction(): Function {
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.51: 	trait CallableFunction() extends Function {
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.52: 	  fun apply<T, A, R>(thisArg: T, args: A): R /* warning: the overload of function apply is not supported yet. */
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.53: 	  fun call<T, A, R>(thisArg: T, args: A): R
@@ -732,8 +732,8 @@ module Intl {
 //│ ║  l.54: 	  fun bind<T, AX, R>(thisArg: T, args: MutArray<AX>): (MutArray<AX>) => R /* warning: the overload of function bind is not supported yet. */
 //│ ╙──      	      ^^^^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.56: 	trait NewableFunction(): Function {
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.56: 	trait NewableFunction() extends Function {
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.57: 	  fun apply<T, A>(thisArg: T, args: A): unit /* warning: the overload of function apply is not supported yet. */
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.58: 	  fun call<T, A>(thisArg: T, args: A): unit
@@ -1041,8 +1041,8 @@ module Intl {
 //│ ║  l.93: 	}
 //│ ╙──      	^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.94: 	trait TemplateStringsArray(): ReadonlyArray<string> {
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.94: 	trait TemplateStringsArray() extends ReadonlyArray<string> {
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.95: 	  let raw: ReadonlyArray<string>
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.96: 	}
@@ -1137,8 +1137,8 @@ module Intl {
 //│ ║  l.125: 	let EvalError: EvalErrorConstructor
 //│ ╙──       	               ^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.126: 	trait EvalErrorConstructor(): ErrorConstructor {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.126: 	trait EvalErrorConstructor() extends ErrorConstructor {
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.127: 	  let __new: Unsupported<"new(message?: string): EvalError;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1053, 57>
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.128: 	  let __call: Unsupported<"(message?: string): EvalError;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1054, 37>
@@ -1151,8 +1151,8 @@ module Intl {
 //│ ║  l.131: 	let RangeError: RangeErrorConstructor
 //│ ╙──       	                ^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.132: 	trait RangeErrorConstructor(): ErrorConstructor {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.132: 	trait RangeErrorConstructor() extends ErrorConstructor {
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.133: 	  let __new: Unsupported<"new(message?: string): RangeError;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1064, 58>
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.134: 	  let __call: Unsupported<"(message?: string): RangeError;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1065, 38>
@@ -1165,8 +1165,8 @@ module Intl {
 //│ ║  l.137: 	let ReferenceError: ReferenceErrorConstructor
 //│ ╙──       	                    ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.138: 	trait ReferenceErrorConstructor(): ErrorConstructor {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.138: 	trait ReferenceErrorConstructor() extends ErrorConstructor {
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.139: 	  let __new: Unsupported<"new(message?: string): ReferenceError;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1075, 62>
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.140: 	  let __call: Unsupported<"(message?: string): ReferenceError;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1076, 42>
@@ -1179,8 +1179,8 @@ module Intl {
 //│ ║  l.143: 	let SyntaxError: SyntaxErrorConstructor
 //│ ╙──       	                 ^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.144: 	trait SyntaxErrorConstructor(): ErrorConstructor {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.144: 	trait SyntaxErrorConstructor() extends ErrorConstructor {
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.145: 	  let __new: Unsupported<"new(message?: string): SyntaxError;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1086, 59>
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.146: 	  let __call: Unsupported<"(message?: string): SyntaxError;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1087, 39>
@@ -1193,8 +1193,8 @@ module Intl {
 //│ ║  l.149: 	let TypeError: TypeErrorConstructor
 //│ ╙──       	               ^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.150: 	trait TypeErrorConstructor(): ErrorConstructor {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.150: 	trait TypeErrorConstructor() extends ErrorConstructor {
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.151: 	  let __new: Unsupported<"new(message?: string): TypeError;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1097, 57>
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.152: 	  let __call: Unsupported<"(message?: string): TypeError;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1098, 37>
@@ -1207,8 +1207,8 @@ module Intl {
 //│ ║  l.155: 	let URIError: URIErrorConstructor
 //│ ╙──       	              ^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.156: 	trait URIErrorConstructor(): ErrorConstructor {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.156: 	trait URIErrorConstructor() extends ErrorConstructor {
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.157: 	  let __new: Unsupported<"new(message?: string): URIError;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1108, 56>
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.158: 	  let __call: Unsupported<"(message?: string): URIError;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1109, 36>
