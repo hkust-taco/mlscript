@@ -304,3 +304,34 @@ K K
 //│ res: anything -> 'a -> anything -> 'a
 
 
+
+// ============ A new look on MLF (2008 slides) ============
+
+
+// def pack : forall α. forall β. (α, (α -> β)) -> (forall γ. (forall δ. (δ, (δ -> β)) -> γ) -> γ)
+
+type Pair[A,B] = (A,B)
+def pack : forall α. forall β. (α, (α -> β)) -> (forall γ. (forall δ. Pair[δ, (δ -> β)] -> γ) -> γ)
+//│ Defined type alias Pair[+A, +B]
+//│ pack: ('α, 'α -> 'β,) -> (forall 'δ. Pair['δ, 'δ -> 'β] -> 'γ) -> 'γ
+
+def packed_int = pack (1, fun x -> x + 1)
+//│ packed_int: (forall 'δ. Pair['δ, 'δ -> int] -> 'γ) -> 'γ
+
+def packed_pair = pack (1, fun x -> (x, x ))
+//│ packed_pair: (forall 'δ. Pair['δ, 'δ -> (1, 1,)] -> 'γ) -> 'γ
+
+def fst((x,y)) = x
+def snd((x,y)) = y
+//│ fst: ('a, anything,) -> 'a
+//│ snd: (anything, 'a,) -> 'a
+
+v = packed_int (fun p -> (snd p) ( fst p ))
+//│ v: int
+
+
+def a: ' -> '
+//│ a: ' -> '
+
+
+

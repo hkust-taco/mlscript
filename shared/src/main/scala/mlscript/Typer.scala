@@ -836,6 +836,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         typeTerm(desug)
       case App(f, a) =>
         val f_ty = typeMonomorphicTerm(f)
+        // * ^ Note: typing the function monomorphically simplifies type inference but
+        // *    breaks beta expansion stability property
+        // *    (ie a well-typed term may stop type-checking after beta expansion)
         val a_ty = {
           def typeArg(a: Term): ST =
             if (!generalizeArguments) typePolymorphicTerm(a)

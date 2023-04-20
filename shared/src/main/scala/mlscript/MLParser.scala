@@ -256,7 +256,11 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def tyNeg[p: P]: P[Type] = locate(P("~" ~/ tyNoFun map { t => Neg(t) }))
   def tyTag[p: P]: P[TypeTag] = locate(P("#" ~~ (ident map TypeTag)))
   def tyName[p: P]: P[TypeName] = locate(P(ident map TypeName))
-  def tyVar[p: P]: P[TypeVar] = locate(P("'" ~ ident map (id => TypeVar(R("'" + id), N))))
+  def tyVar[p: P]: P[TypeVar] = locate(P(
+    (("α" | "β" | "γ" | "δ" | "'").! ~ ident.? map {
+      case (pre, id) => TypeVar(R(pre + id.getOrElse("")), N)
+    })
+  ))
   def tyWild[p: P]: P[Bounds] = locate(P("?".! map (_ => Bounds(Bot, Top))))
   def rcd[p: P]: P[Record] =
     locate(P( "{" ~/ ( kw("mut").!.? ~ variable ~ ":" ~ ty).rep(sep = ";") ~ "}" )

@@ -1285,7 +1285,6 @@ fst (fst (fst (n3 (fun x -> (x, 0)) 1)))
 //│ res: ('M -> 'M) -> 'M -> 'M
 //│    = [Function (anonymous)]
 
-// * Note: cycle check fails when generalizing curried lambdas
 (s (s z)) (s (s z))
 //│ res: ('a -> ('a & 'b & 'c) & 'c -> ('a & 'c)) -> 'c -> 'b
 //│    = [Function (anonymous)]
@@ -1304,7 +1303,7 @@ to_ch: int -> ChurchInt
 // G8
 rec def id1 x = if true then x else id1 id1 x
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
-//│ ║  l.1305: 	rec def id1 x = if true then x else id1 id1 x
+//│ ║  l.1304: 	rec def id1 x = if true then x else id1 id1 x
 //│ ║          	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ id1: 'id1
@@ -1320,7 +1319,7 @@ rec def id1 x = if true then x else id1 id1 x
 // G9
 id1 id1
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.1321: 	id1 id1
+//│ ║  l.1320: 	id1 id1
 //│ ║          	^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: error
@@ -1330,7 +1329,7 @@ id1 id1
 :e
 auto auto
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1331: 	auto auto
+//│ ║  l.1330: 	auto auto
 //│ ║          	^^^^^^^^^
 //│ ╟── type `'a` is not a function
 //│ ║  l.163: 	def auto : (forall 'a. 'a -> 'a) -> (forall 'b. 'b -> 'b)
@@ -1349,7 +1348,7 @@ auto auto
 :e
 (fun x -> x x) (fun x -> x x)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.1350: 	(fun x -> x x) (fun x -> x x)
+//│ ║  l.1349: 	(fun x -> x x) (fun x -> x x)
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: error
@@ -1636,7 +1635,6 @@ fst (fst (fst (n3 (fun x -> (x, 0)) 1)))
 //│ res: ('M -> 'M) -> 'M -> 'M
 //│    = [Function (anonymous)]
 
-// * Note: cycle check fails when generalizing curried lambdas
 (s (s z)) (s (s z))
 //│ res: ('a -> ('a & 'b & 'c) & 'c -> ('a & 'c)) -> 'c -> 'b
 //│    = [Function (anonymous)]
@@ -1681,7 +1679,7 @@ id1 id1
 :e
 auto auto
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1682: 	auto auto
+//│ ║  l.1680: 	auto auto
 //│ ║          	^^^^^^^^^
 //│ ╟── type `'a` is not a function
 //│ ║  l.163: 	def auto : (forall 'a. 'a -> 'a) -> (forall 'b. 'b -> 'b)
@@ -1700,7 +1698,7 @@ auto auto
 :e
 (fun x -> x x) (fun x -> x x)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.1701: 	(fun x -> x x) (fun x -> x x)
+//│ ║  l.1699: 	(fun x -> x x) (fun x -> x x)
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: error
