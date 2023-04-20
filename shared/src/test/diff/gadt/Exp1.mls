@@ -10,15 +10,15 @@ class Exp[A]: Pair | Lit {
 // TODO enable class inheritance
 class Lit(n: int) extends Exp[int]
 class Pair[L, R](lhs: L, rhs: R) extends Exp[A]
-//│ ╔══[ERROR] type signatures not yet supported for classes
-//│ ║  l.5: 	class Exp[A]: Pair | Lit {
-//│ ╙──     	              ^^^^^^^^^^
 //│ ╔══[ERROR] Unsupported parent specification
 //│ ║  l.11: 	class Lit(n: int) extends Exp[int]
 //│ ╙──      	                          ^^^^^^^^
 //│ ╔══[ERROR] Unsupported parent specification
 //│ ║  l.12: 	class Pair[L, R](lhs: L, rhs: R) extends Exp[A]
 //│ ╙──      	                                         ^^^^^^
+//│ ╔══[ERROR] type signatures not yet supported for classes
+//│ ║  l.5: 	class Exp[A]: Pair | Lit {
+//│ ╙──     	              ^^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in `case` expression:
 //│ ║  l.6: 	  fun test = if this is
 //│ ║       	                ^^^^^^^

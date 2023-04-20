@@ -165,7 +165,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     val fromCls = clsNme.flatMap(clsNme => getFieldType(ctx.tyDefs2(clsNme)))
     
     val fromTrts = tags.toList.collect {
-      case TraitTag(nme) =>
+      case TraitTag(nme, iht) =>
         getFieldType(ctx.tyDefs2(nme.name))
     }.flatten
     
@@ -665,6 +665,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               // }
             }
             case (LhsRefined(S(pt: ClassTag), ts, r, trs), RhsBases(pts, bf, trs2)) =>
+              // TODO: inherited trait tags
+              // println(s"!!! TODO !!! ${pt.parentsST} $pts")
               if (pts.contains(pt) || pts.exists(p => pt.parentsST.contains(p.id)))
                 println(s"OK  $pt  <:  ${pts.mkString(" | ")}")
               // else f.fold(reportError())(f => annoying(Nil, done_ls, Nil, f))
@@ -690,8 +692,17 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                     case _ => reportError()
                   }
               }
-            case (LhsRefined(N, ts, r, _), RhsBases(pts, N | S(L(_: FunctionType | _: ArrayBase)), _)) =>
-              reportError()
+            case (LhsRefined(N, ts, r, trs), RhsBases(pts, N, trs2))  =>
+                // TODO inherited trait tags
+                // println(s"!!! TODO !!! ${ts} ${pts}")
+                if (pts.exists(p => ts.toList.collect {
+                  case TraitTag(n, h) => n :: h.toList.map(n => Var(n.name))
+                }.flatten.contains(p.id)))
+                  println(s"OK $ts <: $pts")
+                else
+                reportError()
+            case (LhsRefined(N, ts, r, _), RhsBases(pts, S(L(_: FunctionType | _: ArrayBase)), _)) =>
+                  reportError()
             case (LhsRefined(S(b: TupleType), ts, r, _), RhsBases(pts, S(L(ty: TupleType)), _))
               if b.fields.size === ty.fields.size =>
                 (b.fields.unzip._2 lazyZip ty.fields.unzip._2).foreach { (l, r) =>

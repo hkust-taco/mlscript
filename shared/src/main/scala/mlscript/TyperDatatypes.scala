@@ -418,7 +418,7 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
   
   sealed abstract class AbstractTag extends BaseTypeOrTag with TypeTag with Factorizable
   
-  case class TraitTag(id: Var)(val prov: TypeProvenance) extends AbstractTag with ObjectTag {
+  case class TraitTag(id: Var, parents: Set[TypeName])(val prov: TypeProvenance) extends AbstractTag with ObjectTag {
     def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level = MinLevel
     def level: Level = MinLevel
   }

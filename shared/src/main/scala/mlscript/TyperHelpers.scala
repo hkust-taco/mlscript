@@ -1171,13 +1171,13 @@ abstract class TyperHelpers { Typer: Typer =>
       case TypedNuAls(level, td, tparams, body) =>
         tparams.iterator.foreach(tp => apply(pol.invar)(tp._2))
         apply(pol)(body)
-      case TypedNuCls(level, td, ttu, tparams, params, members, thisTy, _) =>
+      case TypedNuCls(level, td, ttu, tparams, params, members, thisTy, _, _) =>
         tparams.iterator.foreach(tp => apply(pol.invar)(tp._2))
         params.foreach(p => applyField(pol)(p._2))
         members.valuesIterator.foreach(applyMem(pol))
         // thisTy.foreach(apply(pol.invar)(_))
         apply(pol.contravar)(thisTy)
-      case TypedNuTrt(level, td, ttu, tparams, members, thisTy, sign, _) => 
+      case TypedNuTrt(level, td, ttu, tparams, members, thisTy, sign, _, _) => 
         tparams.iterator.foreach(tp => apply(pol.invar)(tp._2))
         members.valuesIterator.foreach(applyMem(pol))
         // thisTy.foreach(apply(pol.invar)(_))
