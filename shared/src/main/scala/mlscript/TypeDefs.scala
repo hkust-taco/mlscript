@@ -116,7 +116,7 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
     ClassTag(Var(td.nme.name),
         // ctx.allBaseClassesOf(td.nme.name)
         Set.single(TypeName("Eql")) // TODO superclasses
-        union ctx.tyDefs2.get(td.nme.name).map(_.inheritedTags).getOrElse(Set.empty)
+          | ctx.tyDefs2.get(td.nme.name).map(_.inheritedTags).getOrElse(Set.empty)
       )(prov)
   }
   def clsNameToNomTag(td: TypeDef)(prov: TypeProvenance, ctx: Ctx): ClassTag = {
@@ -124,6 +124,7 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
     if (newDefs && td.kind.str.isCapitalized) ClassTag(Var(td.nme.name),
       // ctx.allBaseClassesOf(td.nme.name))(prov)
       Set.single(TypeName("Eql")) // TODO superclasses
+        | ctx.tyDefs2.get(td.nme.name).map(_.inheritedTags).getOrElse(Set.empty)
       )(prov)
     else ClassTag(Var(td.nme.name), ctx.allBaseClassesOf(td.nme.name))(prov)
   }
