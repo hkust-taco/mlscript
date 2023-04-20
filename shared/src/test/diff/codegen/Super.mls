@@ -159,8 +159,17 @@ Test0.foo2
 class Foo extends Foo0 {
   fun foo0(n) = [super.foo0, super.foo0 + n]
 }
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.160: 	  fun foo0(n) = [super.foo0, super.foo0 + n]
+//│ ║         	                             ^^^^^^^^^^^^
+//│ ╟── integer literal of type `0` is not an instance of type `int`
+//│ ║  l.8: 	  let foo0 = 0
+//│ ║       	             ^
+//│ ╟── but it flows into field selection with expected type `int`
+//│ ║  l.160: 	  fun foo0(n) = [super.foo0, super.foo0 + n]
+//│ ╙──       	                             ^^^^^^^^^^
 //│ class Foo() {
-//│   fun foo0: int -> (0, int,)
+//│   fun foo0: int -> (0, error | int,)
 //│ }
 
 

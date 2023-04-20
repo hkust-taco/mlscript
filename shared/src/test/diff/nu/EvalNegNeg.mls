@@ -28,10 +28,16 @@ mixin EvalNeg {
     if e is Neg(d) then 0 - this.eval(d)
     else super.eval(e)
 }
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.28: 	    if e is Neg(d) then 0 - this.eval(d)
+//│ ║        	                        ^^^
+//│ ╟── integer literal of type `0` is not an instance of type `int`
+//│ ║  l.28: 	    if e is Neg(d) then 0 - this.eval(d)
+//│ ╙──      	                        ^
 //│ mixin EvalNeg() {
 //│   super: {eval: 'a -> 'b}
 //│   this: {eval: 'expr -> int}
-//│   fun eval: (Neg['expr] | Object & 'a & ~#Neg) -> (int | 'b)
+//│   fun eval: (Neg['expr] | #Object & 'a & ~#Neg) -> (error | int | 'b)
 //│ }
 
 
@@ -43,17 +49,17 @@ mixin EvalNegNeg {
 //│ mixin EvalNegNeg() {
 //│   super: {eval: (Neg['A] | 'a) -> 'b}
 //│   this: {eval: 'expr -> 'b}
-//│   fun eval: (Neg['A & (Neg['expr] | Object & ~#Neg)] | Object & 'a & ~#Neg) -> 'b
+//│   fun eval: (Neg['A & (Neg['expr] | #Object & ~#Neg)] | #Object & 'a & ~#Neg) -> 'b
 //│ }
 
 
 module TestLang extends EvalBase, EvalNeg, EvalNegNeg
 //│ module TestLang() {
-//│   fun eval: 'a -> int
+//│   fun eval: 'a -> (error | int)
 //│ }
 //│ where
-//│   'a <: Neg['A] | Object & 'b & ~#Neg
-//│   'A <: Neg['a & 'A] | Neg['A] & ~#Neg | Object & 'b & ~#Neg
+//│   'a <: Neg['A] | #Object & 'b & ~#Neg
+//│   'A <: Neg['a & 'A] | Neg['A] & ~#Neg | #Object & 'b & ~#Neg
 //│   'b <: Add['a] | Lit | Neg['a]
 
 
@@ -62,39 +68,75 @@ fun mk(n) = if n is
   1 then Neg(mk(n))
   _ then Add(mk(n), mk(n))
 TestLang.eval(mk(0))
-//│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.60: 	fun mk(n) = if n is
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.66: 	fun mk(n) = if n is
 //│ ║        	               ^^^^
-//│ ║  l.61: 	  0 then Lit(0)
+//│ ║  l.67: 	  0 then Lit(0)
+//│ ║        	^^^
+//│ ╟── integer literal of type `0` is not an instance of type `number`
+//│ ║  l.67: 	  0 then Lit(0)
+//│ ╙──      	  ^
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.66: 	fun mk(n) = if n is
+//│ ║        	               ^^^^
+//│ ║  l.67: 	  0 then Lit(0)
 //│ ║        	^^^^^^^^^^^^^^^^
-//│ ║  l.62: 	  1 then Neg(mk(n))
+//│ ║  l.68: 	  1 then Neg(mk(n))
 //│ ║        	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.63: 	  _ then Add(mk(n), mk(n))
+//│ ║  l.69: 	  _ then Add(mk(n), mk(n))
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `bool` is not an instance of type `Object`
-//│ ║  l.60: 	fun mk(n) = if n is
+//│ ║  l.66: 	fun mk(n) = if n is
 //│ ║        	               ^^^^
-//│ ║  l.61: 	  0 then Lit(0)
+//│ ║  l.67: 	  0 then Lit(0)
 //│ ╙──      	^^^
-//│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.60: 	fun mk(n) = if n is
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.67: 	  0 then Lit(0)
+//│ ║        	         ^^^^^^
+//│ ╟── integer literal of type `0` is not an instance of type `int`
+//│ ║  l.67: 	  0 then Lit(0)
+//│ ║        	             ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.5: 	class Lit(n: int)
+//│ ╙──     	             ^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.66: 	fun mk(n) = if n is
 //│ ║        	               ^^^^
-//│ ║  l.61: 	  0 then Lit(0)
+//│ ║  l.67: 	  0 then Lit(0)
 //│ ║        	^^^^^^^^^^^^^^^^
-//│ ║  l.62: 	  1 then Neg(mk(n))
+//│ ║  l.68: 	  1 then Neg(mk(n))
+//│ ║        	^^^
+//│ ╟── integer literal of type `1` is not an instance of type `number`
+//│ ║  l.68: 	  1 then Neg(mk(n))
+//│ ╙──      	  ^
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.66: 	fun mk(n) = if n is
+//│ ║        	               ^^^^
+//│ ║  l.67: 	  0 then Lit(0)
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ║  l.68: 	  1 then Neg(mk(n))
 //│ ║        	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.63: 	  _ then Add(mk(n), mk(n))
+//│ ║  l.69: 	  _ then Add(mk(n), mk(n))
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `bool` is not an instance of type `Object`
-//│ ║  l.60: 	fun mk(n) = if n is
+//│ ║  l.66: 	fun mk(n) = if n is
 //│ ║        	               ^^^^
-//│ ║  l.61: 	  0 then Lit(0)
+//│ ║  l.67: 	  0 then Lit(0)
 //│ ║        	^^^^^^^^^^^^^^^^
-//│ ║  l.62: 	  1 then Neg(mk(n))
+//│ ║  l.68: 	  1 then Neg(mk(n))
 //│ ╙──      	^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.70: 	TestLang.eval(mk(0))
+//│ ║        	              ^^^^^
+//│ ╟── integer literal of type `0` is not an instance of type `number`
+//│ ║  l.70: 	TestLang.eval(mk(0))
+//│ ║        	                 ^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.66: 	fun mk(n) = if n is
+//│ ╙──      	               ^
 //│ fun mk: forall 'E. number -> 'E
-//│ int
+//│ error | int
 //│ where
-//│   'E :> Add['E] | Lit | Neg['E]
+//│   'E :> Add['E] | Lit | Neg['E] | error
 //│ res
 //│     = [Function: mk]

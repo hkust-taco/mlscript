@@ -144,7 +144,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       tyDefs.get(name).fold(Set.empty[TypeName])(_.allBaseClasses(this)(Set.empty)))
   }
   object Ctx {
-    def init: Ctx = Ctx(
+    private val initBase: Ctx = Ctx(
       parent = N,
       env = MutMap.from(builtinBindings.iterator.map(nt => nt._1 -> VarSymbol(nt._2, Var(nt._1)))),
       mthEnv = MutMap.empty,
@@ -154,6 +154,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       tyDefs2 = MutMap.empty,
       inRecursiveDef = N,
       MutMap.empty,
+    )
+    def init: Ctx = initBase.copy(
+      tyDefs2 = MutMap.from(nuBuiltinTypes.map { t =>
+        val lti = new DelayedTypeInfo(t, Map.empty)(initBase, e => lastWords(e.theMsg))
+        initBase.env += t.nme.name -> lti
+        t.nme.name -> lti
+      }),
     )
     val empty: Ctx = init
   }
@@ -205,8 +212,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     List("unit" -> UnitType, "bool" -> BoolType, "int" -> IntType, "number" -> DecType, "string" -> StrType,
       "anything" -> TopType, "nothing" -> BotType)
   
+  val nuBuiltinTypes: Ls[NuTypeDef] = Ls(
+    NuTypeDef(Cls, TN("Object"), Nil, Tup(Nil), N, Nil, N, N, TypingUnit(Nil))(N),
+    NuTypeDef(Cls, TN("Int"), Nil, Tup(Nil), N, Nil, N, N, TypingUnit(Nil))(N), // TODO mk abstract
+  )
   val builtinTypes: Ls[TypeDef] =
-    TypeDef(Cls, TN("Object"), Nil, TopType, Nil, Nil, sing(TN("Eql")), N, Nil) ::
+    // TypeDef(Cls, TN("Object"), Nil, TopType, Nil, Nil, sing(TN("Eql")), N, Nil) ::
     TypeDef(Cls, TN("int"), Nil, TopType, Nil, Nil, sing(TN("number")) + TN("Eql"), N, Nil) ::
     TypeDef(Cls, TN("number"), Nil, TopType, Nil, Nil, sing(TN("Eql")), N, Nil) ::
     TypeDef(Cls, TN("bool"), Nil, TopType, Nil, Nil, sing(TN("Eql")), N, Nil) ::
@@ -430,7 +441,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
               tyTp(App(n, Var("").withLocOf(f)).toCoveringLoc, "extension field")) }
           )(tyTp(r.toLoc, "extension record")))(tyTp(ty.toLoc, "extension type"))
       case Literal(lit) =>
-        ClassTag(lit, lit.baseClasses)(tyTp(ty.toLoc, "literal type"))
+        ClassTag(lit, if (newDefs) lit.baseClassesNu else lit.baseClassesOld)(tyTp(ty.toLoc, "literal type"))
       case TypeName("this") =>
         ctx.env.get("this") match {
           case S(AbstractConstructor(_, _)) => die
@@ -795,7 +806,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         // ^ TODO maybe use a description passed in param?
         // currently we get things like "flows into variable reference"
         // but we used to get the better "flows into object receiver" or "flows into applied expression"...
-      case lit: Lit => ClassTag(lit, lit.baseClasses)(prov)
+      case lit: Lit => ClassTag(lit, if (newDefs) lit.baseClassesNu else lit.baseClassesOld)(prov)
       case Super() =>
         err(s"Illegal use of `super`", term.toLoc)(raise)
         typeTerm(Var("super").withLocOf(term))
@@ -1135,7 +1146,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     case Case(pat, bod, rest) =>
       val (tagTy: ST, patTy: ST) = pat match {
         case lit: Lit =>
-          val t = ClassTag(lit, lit.baseClasses)(tp(pat.toLoc, "literal pattern"))
+          val t = ClassTag(lit, if (newDefs) lit.baseClassesNu else lit.baseClassesOld)(tp(pat.toLoc, "literal pattern"))
           t -> t
         case v @ Var(nme) =>
           val tpr = tp(pat.toLoc, "type pattern")

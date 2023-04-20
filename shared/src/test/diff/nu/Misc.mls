@@ -7,7 +7,19 @@
 //│     = 1
 
 2 + 2
-//│ int
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.9: 	2 + 2
+//│ ║       	^^^
+//│ ╟── integer literal of type `2` is not an instance of type `int`
+//│ ║  l.9: 	2 + 2
+//│ ╙──     	^
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.9: 	2 + 2
+//│ ║       	^^^^^
+//│ ╟── integer literal of type `2` is not an instance of type `int`
+//│ ║  l.9: 	2 + 2
+//│ ╙──     	    ^
+//│ error | int
 //│ res
 //│     = 4
 
@@ -17,13 +29,34 @@ let r = { x: 1 }
 //│   = { x: 1 }
 
 r.x + 1
-//│ int
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.31: 	r.x + 1
+//│ ║        	^^^^^
+//│ ╟── integer literal of type `1` is not an instance of type `int`
+//│ ║  l.26: 	let r = { x: 1 }
+//│ ║        	             ^
+//│ ╟── but it flows into field selection with expected type `int`
+//│ ║  l.31: 	r.x + 1
+//│ ╙──      	^^^
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.31: 	r.x + 1
+//│ ║        	^^^^^^^
+//│ ╟── integer literal of type `1` is not an instance of type `int`
+//│ ║  l.31: 	r.x + 1
+//│ ╙──      	      ^
+//│ error | int
 //│ res
 //│     = 2
 
 
 x => x + 1
-//│ int -> int
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.52: 	x => x + 1
+//│ ║        	     ^^^^^
+//│ ╟── integer literal of type `1` is not an instance of type `int`
+//│ ║  l.52: 	x => x + 1
+//│ ╙──      	         ^
+//│ int -> (error | int)
 //│ res
 //│     = [Function: res]
 
@@ -50,20 +83,29 @@ let f = (x, y) => x + y
 //│   = [Function: f2]
 
 f(1, 2)
-//│ int
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.85: 	f(1, 2)
+//│ ║        	^^^^^^^
+//│ ╟── integer literal of type `1` is not an instance of type `int`
+//│ ║  l.85: 	f(1, 2)
+//│ ║        	  ^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.80: 	let f = (x, y) => x + y
+//│ ╙──      	                  ^
+//│ error | int
 //│ res
 //│     = 3
 
 :e
 f([1, 2])
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.58: 	f([1, 2])
-//│ ║        	^^^^^^^^^
+//│ ║  l.100: 	f([1, 2])
+//│ ║         	^^^^^^^^^
 //│ ╟── argument of type `((1, 2,),)` does not match type `(?a, ?b,)`
-//│ ║  l.58: 	f([1, 2])
-//│ ║        	 ^^^^^^^^
+//│ ║  l.100: 	f([1, 2])
+//│ ║         	 ^^^^^^^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.47: 	let f = (x, y) => x + y
+//│ ║  l.80: 	let f = (x, y) => x + y
 //│ ╙──      	         ^^^^
 //│ error | int
 //│ res
@@ -79,11 +121,11 @@ let f = ((x, y)) => x + y
 :e
 f(1, 2)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.80: 	f(1, 2)
-//│ ║        	^^^^^^^
+//│ ║  l.122: 	f(1, 2)
+//│ ║         	^^^^^^^
 //│ ╟── argument list of type `(1, 2,)` does not match type `((?a, ?b,),)`
-//│ ║  l.80: 	f(1, 2)
-//│ ╙──      	 ^^^^^^
+//│ ║  l.122: 	f(1, 2)
+//│ ╙──       	 ^^^^^^
 //│ error | int
 //│ res
 //│ Runtime error:
@@ -92,12 +134,30 @@ f(1, 2)
 
 
 f((1, 2))
-//│ int
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.136: 	f((1, 2))
+//│ ║         	^^^^^^^^^
+//│ ╟── integer literal of type `1` is not an instance of type `int`
+//│ ║  l.136: 	f((1, 2))
+//│ ║         	   ^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.116: 	let f = ((x, y)) => x + y
+//│ ╙──       	                    ^
+//│ error | int
 //│ res
 //│     = 3
 
 f([1, 2])
-//│ int
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.150: 	f([1, 2])
+//│ ║         	^^^^^^^^^
+//│ ╟── integer literal of type `1` is not an instance of type `int`
+//│ ║  l.150: 	f([1, 2])
+//│ ║         	   ^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.116: 	let f = ((x, y)) => x + y
+//│ ╙──       	                    ^
+//│ error | int
 //│ res
 //│     = 3
 
@@ -113,7 +173,16 @@ let f = [x, y] => x + y
 //│   = [Function: f5]
 
 f(1, 2)
-//│ int
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.175: 	f(1, 2)
+//│ ║         	^^^^^^^
+//│ ╟── integer literal of type `1` is not an instance of type `int`
+//│ ║  l.175: 	f(1, 2)
+//│ ║         	  ^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.170: 	let f = [x, y] => x + y
+//│ ╙──       	                  ^
+//│ error | int
 //│ res
 //│     = 3
 

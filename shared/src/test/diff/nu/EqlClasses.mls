@@ -24,6 +24,24 @@ class Cls2(x: int)
 //│ class Cls2(x: int)
 
 Cls2(0) === Cls2(1)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.26: 	Cls2(0) === Cls2(1)
+//│ ║        	^^^^^^^
+//│ ╟── integer literal of type `0` is not an instance of type `int`
+//│ ║  l.26: 	Cls2(0) === Cls2(1)
+//│ ║        	     ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.23: 	class Cls2(x: int)
+//│ ╙──      	              ^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.26: 	Cls2(0) === Cls2(1)
+//│ ║        	            ^^^^^^^
+//│ ╟── integer literal of type `1` is not an instance of type `int`
+//│ ║  l.26: 	Cls2(0) === Cls2(1)
+//│ ║        	                 ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.23: 	class Cls2(x: int)
+//│ ╙──      	              ^^^
 //│ bool
 //│ res
 //│     = false
@@ -40,7 +58,13 @@ let p = Pair(1, 2)
 //│   = Pair {}
 
 p === p
-//│ bool
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.60: 	p === p
+//│ ║        	^^^^^^^
+//│ ╟── integer literal of type `2` is not an instance of type `Eql`
+//│ ║  l.55: 	let p = Pair(1, 2)
+//│ ╙──      	                ^
+//│ error
 //│ res
 //│     = true
 
@@ -56,17 +80,23 @@ x => x === p
 //│     = [Function: res]
 
 p === { fst: 1, snd: 2 }
-//│ bool
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.82: 	p === { fst: 1, snd: 2 }
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── integer literal of type `2` is not an instance of type `Eql`
+//│ ║  l.82: 	p === { fst: 1, snd: 2 }
+//│ ╙──      	                     ^
+//│ error
 //│ res
 //│     = false
 
 :e
 { fst: 1, snd: 2 } === p
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.64: 	{ fst: 1, snd: 2 } === p
+//│ ║  l.94: 	{ fst: 1, snd: 2 } === p
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── record literal of type `{fst: 1, snd: 2}` is not an instance of type `Eql`
-//│ ║  l.64: 	{ fst: 1, snd: 2 } === p
+//│ ║  l.94: 	{ fst: 1, snd: 2 } === p
 //│ ╙──      	       ^^^^^^^^^
 //│ bool | error
 //│ res
@@ -78,6 +108,15 @@ let r = {x: 42, y: y => y}
 //│   = { x: 42, y: [Function: y] }
 
 r : {x: int}
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.110: 	r : {x: int}
+//│ ║         	^
+//│ ╟── integer literal of type `42` is not an instance of type `int`
+//│ ║  l.105: 	let r = {x: 42, y: y => y}
+//│ ║         	            ^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.110: 	r : {x: int}
+//│ ╙──       	        ^^^
 //│ {x: int}
 //│ res
 //│     = { x: 42, y: [Function: y] }
@@ -86,11 +125,11 @@ r : {x: int}
 :e
 x => { a: 0 } === x
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.87: 	x => { a: 0 } === x
-//│ ║        	     ^^^^^^^^^^^^
+//│ ║  l.126: 	x => { a: 0 } === x
+//│ ║         	     ^^^^^^^^^^^^
 //│ ╟── record literal of type `{a: 0}` is not an instance of type `Eql`
-//│ ║  l.87: 	x => { a: 0 } === x
-//│ ╙──      	          ^
+//│ ║  l.126: 	x => { a: 0 } === x
+//│ ╙──       	          ^
 //│ anything -> (bool | error)
 //│ res
 //│ Syntax error:
@@ -111,12 +150,12 @@ let q = Pair(1, "oops")
 :e
 q === q
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.112: 	q === q
+//│ ║  l.151: 	q === q
 //│ ║         	^^^^^^^
-//│ ╟── integer literal of type `1` is not an instance of type `string`
-//│ ║  l.106: 	let q = Pair(1, "oops")
-//│ ╙──       	             ^
-//│ bool | error
+//│ ╟── string literal of type `"oops"` is not an instance of type `Eql`
+//│ ║  l.145: 	let q = Pair(1, "oops")
+//│ ╙──       	                ^^^^^^
+//│ error
 //│ res
 //│     = true
 
@@ -130,7 +169,13 @@ let q = Pair2(1, "oops")
 //│   = Pair2 {}
 
 q === q
-//│ bool
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.171: 	q === q
+//│ ║         	^^^^^^^
+//│ ╟── string literal of type `"oops"` is not an instance of type `Eql`
+//│ ║  l.166: 	let q = Pair2(1, "oops")
+//│ ╙──       	                 ^^^^^^
+//│ error
 //│ res
 //│     = true
 

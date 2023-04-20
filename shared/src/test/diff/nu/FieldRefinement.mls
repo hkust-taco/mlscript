@@ -15,10 +15,10 @@ let foo: Foo & { x: 0 | 1, bar: 0 | 1, baz: 0 | 1, y: bool }
 //│ let foo: Foo & {y: bool, bar: 0 | 1, baz: 0 | 1, x: 0 | 1}
 
 foo.x
-//│ 0 | 1
+//│ nothing
 
 foo.bar
-//│ 0 | 1
+//│ nothing
 
 foo.baz
 //│ 1

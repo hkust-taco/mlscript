@@ -84,10 +84,19 @@ let uid = 0
 let ty = Type("A")
 let underlying = 42
 let a = { uid, underlying: { ty, underlying } }
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.84: 	let ty = Type("A")
+//│ ║        	         ^^^^^^^^^
+//│ ╟── string literal of type `"A"` is not an instance of type `string`
+//│ ║  l.84: 	let ty = Type("A")
+//│ ║        	              ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.35: 	class Type(name: string)
+//│ ╙──      	                 ^^^^^^
 //│ let uid: 0
-//│ let ty: Type
+//│ let ty: Type | error
 //│ let underlying: 42
-//│ let a: {uid: 0, underlying: {ty: Type, underlying: 42}}
+//│ let a: {uid: 0, underlying: {ty: Type | error, underlying: 42}}
 //│ uid
 //│     = 0
 //│ ty
@@ -108,32 +117,50 @@ Test1.getUid(a)
 //│     = 0
 
 Test1.setUid(a, 1)
-//│ {uid: int, underlying: {ty: Type, underlying: 42}}
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.119: 	Test1.setUid(a, 1)
+//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ╟── integer literal of type `1` is not an instance of type `int`
+//│ ║  l.119: 	Test1.setUid(a, 1)
+//│ ║         	                ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.21: 	  fun setUid(x, uid: int) = super.rewrap(x, y => {
+//│ ╙──      	                     ^^^
+//│ error | {uid: 0 | int, underlying: {ty: Type | error, underlying: 42}}
 //│ res
 //│     = { underlying: { ty: Type {}, underlying: 42 }, uid: 1 }
 
 Test1.getType(a).name
-//│ string
+//│ error | string
 //│ res
 //│     = 'A'
 
 a.underlying.ty.name
-//│ string
+//│ error | string
 //│ res
 //│     = 'A'
 
 let b = Test1.setType(a, Type("B"))
-//│ let b: {uid: int, underlying: {ty: Type, underlying: 42}}
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.143: 	let b = Test1.setType(a, Type("B"))
+//│ ║         	                         ^^^^^^^^^
+//│ ╟── string literal of type `"B"` is not an instance of type `string`
+//│ ║  l.143: 	let b = Test1.setType(a, Type("B"))
+//│ ║         	                              ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.35: 	class Type(name: string)
+//│ ╙──      	                 ^^^^^^
+//│ let b: {uid: 0 | int, underlying: {ty: Type | error, underlying: 42}}
 //│ b
 //│   = { underlying: { underlying: 42, ty: Type {} }, uid: 0 }
 
 Test1.getType(b).name
-//│ string
+//│ error | string
 //│ res
 //│     = 'B'
 
 b.underlying.ty.name
-//│ string
+//│ error | string
 //│ res
 //│     = 'B'
 

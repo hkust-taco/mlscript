@@ -137,8 +137,8 @@ def test extr x =
   in f 0
 //│ test: anything -> 'a -> (anything -> 'b
 //│   where
-//│     'a <: 'c -> 'b
-//│     0 <: 0 -> 'c)
+//│     0 <: 0 -> 'c
+//│     'a <: 'c -> 'b)
 //│     = [Function: test2]
 
 // Error delayed by inconsistent constrained types

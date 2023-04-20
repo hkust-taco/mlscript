@@ -17,6 +17,12 @@ x + 1
 //│ ╟── but it flows into reference with expected type `int`
 //│ ║  l.10: 	x + 1
 //│ ╙──      	^
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.10: 	x + 1
+//│ ║        	^^^^^
+//│ ╟── integer literal of type `1` is not an instance of type `int`
+//│ ║  l.10: 	x + 1
+//│ ╙──      	    ^
 //│ error | int
 //│ res
 //│     = NaN

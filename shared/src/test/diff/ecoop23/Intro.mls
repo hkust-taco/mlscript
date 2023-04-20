@@ -29,7 +29,16 @@ class Color(str: string) {
 //│ }
 
 let Red = Color("red")
-//│ let Red: Color
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.31: 	let Red = Color("red")
+//│ ║        	          ^^^^^^^^^^^^
+//│ ╟── string literal of type `"red"` is not an instance of type `string`
+//│ ║  l.31: 	let Red = Color("red")
+//│ ║        	                ^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.24: 	class Color(str: string) {
+//│ ╙──      	                 ^^^^^^
+//│ let Red: Color | error
 //│ Red
 //│     = Color {}
 
@@ -72,7 +81,7 @@ mixin CompareNested {
 //│ mixin CompareNested() {
 //│   super: {compare: ('a, 'b,) -> bool}
 //│   this: {compare: ('value, 'value0,) -> bool}
-//│   fun compare: ({parent: Object & ~#Some | Some['value]} & 'a, {parent: Object & ~#Some | Some['value0]} & 'b,) -> bool
+//│   fun compare: ({parent: #Object & ~#Some | Some['value]} & 'a, {parent: #Object & ~#Some | Some['value0]} & 'b,) -> bool
 //│ }
 
 // * Alternatively:
@@ -96,8 +105,8 @@ module CompareMyPoint extends ComparePoint, CompareColored, CompareNested
 //│   fun compare: ('a, 'b,) -> bool
 //│ }
 //│ where
-//│   'b <: {color: 'color, parent: Object & ~#Some | Some['b], x: 'c, y: 'd}
-//│   'a <: {color: {equals: 'color -> bool}, parent: Object & ~#Some | Some['a], x: Eql['c], y: Eql['d]}
+//│   'b <: {color: 'color, parent: #Object & ~#Some | Some['b], x: 'c, y: 'd}
+//│   'a <: {color: {equals: 'color -> bool}, parent: #Object & ~#Some | Some['a], x: Eql['c], y: Eql['d]}
 
 
 let p0 = MyPoint(0, 0, Red, None)
@@ -106,12 +115,66 @@ let p2 = MyPoint(0, 1, Red, None)
 let p3 = MyPoint(0, 1, Red, Some(p1))
 let p4 = MyPoint(0, 1, Red, Some(p2))
 let p5 = MyPoint(0, 1, Red, Some(p3))
-//│ let p0: MyPoint
-//│ let p1: MyPoint
-//│ let p2: MyPoint
-//│ let p3: MyPoint
-//│ let p4: MyPoint
-//│ let p5: MyPoint
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.112: 	let p0 = MyPoint(0, 0, Red, None)
+//│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── integer literal of type `0` is not an instance of type `int`
+//│ ║  l.112: 	let p0 = MyPoint(0, 0, Red, None)
+//│ ║         	                 ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.99: 	class MyPoint(x: int, y: int, color: Color, parent: Some[MyPoint] | None)
+//│ ╙──      	                 ^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.113: 	let p1 = MyPoint(0, 1, Red, None)
+//│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── integer literal of type `0` is not an instance of type `int`
+//│ ║  l.113: 	let p1 = MyPoint(0, 1, Red, None)
+//│ ║         	                 ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.99: 	class MyPoint(x: int, y: int, color: Color, parent: Some[MyPoint] | None)
+//│ ╙──      	                 ^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.114: 	let p2 = MyPoint(0, 1, Red, None)
+//│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── integer literal of type `0` is not an instance of type `int`
+//│ ║  l.114: 	let p2 = MyPoint(0, 1, Red, None)
+//│ ║         	                 ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.99: 	class MyPoint(x: int, y: int, color: Color, parent: Some[MyPoint] | None)
+//│ ╙──      	                 ^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.115: 	let p3 = MyPoint(0, 1, Red, Some(p1))
+//│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── integer literal of type `0` is not an instance of type `int`
+//│ ║  l.115: 	let p3 = MyPoint(0, 1, Red, Some(p1))
+//│ ║         	                 ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.99: 	class MyPoint(x: int, y: int, color: Color, parent: Some[MyPoint] | None)
+//│ ╙──      	                 ^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.116: 	let p4 = MyPoint(0, 1, Red, Some(p2))
+//│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── integer literal of type `0` is not an instance of type `int`
+//│ ║  l.116: 	let p4 = MyPoint(0, 1, Red, Some(p2))
+//│ ║         	                 ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.99: 	class MyPoint(x: int, y: int, color: Color, parent: Some[MyPoint] | None)
+//│ ╙──      	                 ^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.117: 	let p5 = MyPoint(0, 1, Red, Some(p3))
+//│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── integer literal of type `0` is not an instance of type `int`
+//│ ║  l.117: 	let p5 = MyPoint(0, 1, Red, Some(p3))
+//│ ║         	                 ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.99: 	class MyPoint(x: int, y: int, color: Color, parent: Some[MyPoint] | None)
+//│ ╙──      	                 ^^^
+//│ let p0: MyPoint | error
+//│ let p1: MyPoint | error
+//│ let p2: MyPoint | error
+//│ let p3: MyPoint | error
+//│ let p4: MyPoint | error
+//│ let p5: MyPoint | error
 //│ p0
 //│    = MyPoint {}
 //│ p1

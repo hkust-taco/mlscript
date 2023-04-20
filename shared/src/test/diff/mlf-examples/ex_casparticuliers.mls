@@ -523,14 +523,14 @@ def succ (n: ChurchInt) = fun f -> fun x -> f (n f x)
 def succ' n = fun f -> fun x -> f (n f x)
 //│ succ_ty: ChurchInt -> ChurchInt
 //│        = <missing implementation>
-//│ succ: ChurchInt -> (forall 'b. 'b -> (forall 'a 'c. 'a -> 'c
+//│ succ: ChurchInt -> (forall 'b. 'b -> (forall 'c 'a. 'a -> 'c
 //│   where
 //│     'b <: 'a -> 'a & 'a -> 'c))
 //│     = [Function: succ1]
 //│ succ': 'a -> (forall 'b. 'b -> (forall 'c 'd 'e. 'c -> 'e
 //│   where
-//│     'b <: 'd -> 'e
-//│     'a <: 'b -> 'c -> 'd))
+//│     'a <: 'b -> 'c -> 'd
+//│     'b <: 'd -> 'e))
 //│      = [Function: succ$1]
 
 // * Note: without constrained types we wouldn't get the principal type of succ'
@@ -583,16 +583,16 @@ succ_ty = succ'
 succ'
 //│ res: 'a -> (forall 'b. 'b -> (forall 'c 'd 'e. 'c -> 'e
 //│   where
-//│     'b <: 'd -> 'e
-//│     'a <: 'b -> 'c -> 'd))
+//│     'a <: 'b -> 'c -> 'd
+//│     'b <: 'd -> 'e))
 //│    = [Function: succ$1]
 
 // :e // * Error delayed by inconsistent constrained types
 succ' {}
-//│ res: 'a -> (forall 'b 'c 'd. 'd -> 'c
+//│ res: 'a -> (forall 'b 'c 'd. 'c -> 'b
 //│   where
-//│     anything <: 'a -> 'd -> 'b
-//│     'a <: 'b -> 'c)
+//│     anything <: 'a -> 'c -> 'd
+//│     'a <: 'd -> 'b)
 //│    = [Function (anonymous)]
 
 // :e // * Error delayed by inconsistent constrained types

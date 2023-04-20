@@ -11,8 +11,35 @@ class Lit(n: int)
 
 let add11 = Add(Lit(1), Lit(2))
 let add2negadd11 = Add(Lit(2), Neg(add11))
-//│ let add11: Add[Lit]
-//│ let add2negadd11: Add[Lit | Neg[Add[Lit]]]
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.12: 	let add11 = Add(Lit(1), Lit(2))
+//│ ║        	                ^^^^^^
+//│ ╟── integer literal of type `1` is not an instance of type `int`
+//│ ║  l.12: 	let add11 = Add(Lit(1), Lit(2))
+//│ ║        	                    ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.7: 	class Lit(n: int)
+//│ ╙──     	             ^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.12: 	let add11 = Add(Lit(1), Lit(2))
+//│ ║        	                        ^^^^^^
+//│ ╟── integer literal of type `2` is not an instance of type `int`
+//│ ║  l.12: 	let add11 = Add(Lit(1), Lit(2))
+//│ ║        	                            ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.7: 	class Lit(n: int)
+//│ ╙──     	             ^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.13: 	let add2negadd11 = Add(Lit(2), Neg(add11))
+//│ ║        	                       ^^^^^^
+//│ ╟── integer literal of type `2` is not an instance of type `int`
+//│ ║  l.13: 	let add2negadd11 = Add(Lit(2), Neg(add11))
+//│ ║        	                           ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.7: 	class Lit(n: int)
+//│ ╙──     	             ^^^
+//│ let add11: Add[Lit | error]
+//│ let add2negadd11: Add[Lit | Neg[Add[Lit | error]] | error]
 
 mixin EvalNothing {
   fun eval(e: nothing) = e
@@ -29,29 +56,35 @@ mixin EvalNeg {
     if e is Neg(d) then 0 - this.eval(d)
     else super.eval(e)
 }
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.56: 	    if e is Neg(d) then 0 - this.eval(d)
+//│ ║        	                        ^^^
+//│ ╟── integer literal of type `0` is not an instance of type `int`
+//│ ║  l.56: 	    if e is Neg(d) then 0 - this.eval(d)
+//│ ╙──      	                        ^
 //│ mixin EvalNothing() {
 //│   fun eval: (e: nothing,) -> nothing
 //│ }
 //│ mixin EvalAddLit() {
 //│   super: {eval: 'a -> 'b}
 //│   this: {eval: 'lhs -> int}
-//│   fun eval: (Add['lhs] | Lit | Object & 'a & ~#Add & ~#Lit) -> (int | 'b)
+//│   fun eval: (Add['lhs] | Lit | #Object & 'a & ~#Add & ~#Lit) -> (int | 'b)
 //│ }
 //│ mixin EvalNeg() {
 //│   super: {eval: 'c -> 'd}
 //│   this: {eval: 'expr -> int}
-//│   fun eval: (Neg['expr] | Object & 'c & ~#Neg) -> (int | 'd)
+//│   fun eval: (Neg['expr] | #Object & 'c & ~#Neg) -> (error | int | 'd)
 //│ }
 
 module TestLang extends EvalNothing, EvalAddLit, EvalNeg
 //│ module TestLang() {
-//│   fun eval: 'a -> int
+//│   fun eval: 'a -> (error | int)
 //│ }
 //│ where
 //│   'a <: Add['a] | Lit | Neg['a]
 
 TestLang.eval
-//│ 'a -> int
+//│ 'a -> (error | int)
 //│   where
 //│     'a <: Add['a] | Lit | Neg['a]
 

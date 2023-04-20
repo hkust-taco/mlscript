@@ -21,12 +21,30 @@ class Base1(p: int) extends Over {
 
 
 Base1(123).test
-//│ (int, int,)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.23: 	Base1(123).test
+//│ ║        	^^^^^^^^^^
+//│ ╟── integer literal of type `123` is not an instance of type `int`
+//│ ║  l.23: 	Base1(123).test
+//│ ║        	      ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.12: 	class Base1(p: int) extends Over {
+//│ ╙──      	               ^^^
+//│ (int, int,) | error
 //│ res
 //│     = [ 123, 123 ]
 
 Base1(123).test2
-//│ int
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.37: 	Base1(123).test2
+//│ ║        	^^^^^^^^^^
+//│ ╟── integer literal of type `123` is not an instance of type `int`
+//│ ║  l.37: 	Base1(123).test2
+//│ ║        	      ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.12: 	class Base1(p: int) extends Over {
+//│ ╙──      	               ^^^
+//│ error | int
 //│ res
 //│     = 'hi'
 

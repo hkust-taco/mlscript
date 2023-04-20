@@ -10,6 +10,14 @@ fun f(x, y) = if x ==
     0 then true
     1 then false
   else false
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.6: 	fun f(x, y) = if x ==
+//│ ║       	                 ^^^^
+//│ ║  l.7: 	    0 then true
+//│ ║       	^^^^^
+//│ ╟── integer literal of type `0` is not an instance of type `number`
+//│ ║  l.7: 	    0 then true
+//│ ╙──     	    ^
 //│ ╔══[ERROR] Type mismatch in `case` expression:
 //│ ║  l.6: 	fun f(x, y) = if x ==
 //│ ║       	                 ^^^^
@@ -30,6 +38,16 @@ fun f(x, y) = if x ==
 //│ ║       	                 ^^^^
 //│ ║  l.7: 	    0 then true
 //│ ╙──     	^^^^^
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.6: 	fun f(x, y) = if x ==
+//│ ║       	                 ^^^^
+//│ ║  l.7: 	    0 then true
+//│ ║       	^^^^^^^^^^^^^^^
+//│ ║  l.8: 	    1 then false
+//│ ║       	^^^^^
+//│ ╟── integer literal of type `1` is not an instance of type `number`
+//│ ║  l.8: 	    1 then false
+//│ ╙──     	    ^
 //│ ╔══[ERROR] Type mismatch in `case` expression:
 //│ ║  l.6: 	fun f(x, y) = if x ==
 //│ ║       	                 ^^^^
@@ -52,6 +70,14 @@ fun f(x, y) = if x ==
 //│ ║       	^^^^^^^^^^^^^^^
 //│ ║  l.8: 	    1 then false
 //│ ╙──     	^^^^^
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.9: 	  else if y ==
+//│ ║       	          ^^^^
+//│ ║  l.10: 	    0 then true
+//│ ║        	^^^^^
+//│ ╟── integer literal of type `0` is not an instance of type `number`
+//│ ║  l.10: 	    0 then true
+//│ ╙──      	    ^
 //│ ╔══[ERROR] Type mismatch in `case` expression:
 //│ ║  l.9: 	  else if y ==
 //│ ║       	          ^^^^
@@ -66,6 +92,16 @@ fun f(x, y) = if x ==
 //│ ║       	          ^^^^
 //│ ║  l.10: 	    0 then true
 //│ ╙──      	^^^^^
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.9: 	  else if y ==
+//│ ║       	          ^^^^
+//│ ║  l.10: 	    0 then true
+//│ ║        	^^^^^^^^^^^^^^^
+//│ ║  l.11: 	    1 then false
+//│ ║        	^^^^^
+//│ ╟── integer literal of type `1` is not an instance of type `number`
+//│ ║  l.11: 	    1 then false
+//│ ╙──      	    ^
 //│ ╔══[ERROR] Type mismatch in `case` expression:
 //│ ║  l.9: 	  else if y ==
 //│ ║       	          ^^^^
@@ -90,56 +126,82 @@ fun f(x, y) = if x ==
   else if y ==
     0 then true
     _ then false
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.123: 	fun f(x, y) = if x ==
+//│ ║         	                 ^^^^
+//│ ║  l.124: 	    0 then true
+//│ ║         	^^^^^
+//│ ╟── integer literal of type `0` is not an instance of type `number`
+//│ ║  l.124: 	    0 then true
+//│ ╙──       	    ^
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.87: 	fun f(x, y) = if x ==
-//│ ║        	                 ^^^^
-//│ ║  l.88: 	    0 then true
-//│ ║        	^^^^^^^^^^^^^^^
-//│ ║  l.89: 	    1 then false
-//│ ║        	^^^^^^^^^^^^^^^^
-//│ ║  l.90: 	  else if y ==
-//│ ║        	^^^^^^^^^^^^^^
-//│ ║  l.91: 	    0 then true
-//│ ║        	^^^^^^^^^^^^^^^
-//│ ║  l.92: 	    _ then false
-//│ ║        	^^^^^^^^^^^^^^^^
+//│ ║  l.123: 	fun f(x, y) = if x ==
+//│ ║         	                 ^^^^
+//│ ║  l.124: 	    0 then true
+//│ ║         	^^^^^^^^^^^^^^^
+//│ ║  l.125: 	    1 then false
+//│ ║         	^^^^^^^^^^^^^^^^
+//│ ║  l.126: 	  else if y ==
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.127: 	    0 then true
+//│ ║         	^^^^^^^^^^^^^^^
+//│ ║  l.128: 	    _ then false
+//│ ║         	^^^^^^^^^^^^^^^^
 //│ ╟── operator application of type `bool` is not an instance of type `Object`
-//│ ║  l.87: 	fun f(x, y) = if x ==
-//│ ║        	                 ^^^^
-//│ ║  l.88: 	    0 then true
-//│ ╙──      	^^^^^
+//│ ║  l.123: 	fun f(x, y) = if x ==
+//│ ║         	                 ^^^^
+//│ ║  l.124: 	    0 then true
+//│ ╙──       	^^^^^
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.123: 	fun f(x, y) = if x ==
+//│ ║         	                 ^^^^
+//│ ║  l.124: 	    0 then true
+//│ ║         	^^^^^^^^^^^^^^^
+//│ ║  l.125: 	    1 then false
+//│ ║         	^^^^^
+//│ ╟── integer literal of type `1` is not an instance of type `number`
+//│ ║  l.125: 	    1 then false
+//│ ╙──       	    ^
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.87: 	fun f(x, y) = if x ==
-//│ ║        	                 ^^^^
-//│ ║  l.88: 	    0 then true
-//│ ║        	^^^^^^^^^^^^^^^
-//│ ║  l.89: 	    1 then false
-//│ ║        	^^^^^^^^^^^^^^^^
-//│ ║  l.90: 	  else if y ==
-//│ ║        	^^^^^^^^^^^^^^
-//│ ║  l.91: 	    0 then true
-//│ ║        	^^^^^^^^^^^^^^^
-//│ ║  l.92: 	    _ then false
-//│ ║        	^^^^^^^^^^^^^^^^
+//│ ║  l.123: 	fun f(x, y) = if x ==
+//│ ║         	                 ^^^^
+//│ ║  l.124: 	    0 then true
+//│ ║         	^^^^^^^^^^^^^^^
+//│ ║  l.125: 	    1 then false
+//│ ║         	^^^^^^^^^^^^^^^^
+//│ ║  l.126: 	  else if y ==
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.127: 	    0 then true
+//│ ║         	^^^^^^^^^^^^^^^
+//│ ║  l.128: 	    _ then false
+//│ ║         	^^^^^^^^^^^^^^^^
 //│ ╟── operator application of type `bool` is not an instance of type `Object`
-//│ ║  l.87: 	fun f(x, y) = if x ==
-//│ ║        	                 ^^^^
-//│ ║  l.88: 	    0 then true
-//│ ║        	^^^^^^^^^^^^^^^
-//│ ║  l.89: 	    1 then false
-//│ ╙──      	^^^^^
+//│ ║  l.123: 	fun f(x, y) = if x ==
+//│ ║         	                 ^^^^
+//│ ║  l.124: 	    0 then true
+//│ ║         	^^^^^^^^^^^^^^^
+//│ ║  l.125: 	    1 then false
+//│ ╙──       	^^^^^
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.126: 	  else if y ==
+//│ ║         	          ^^^^
+//│ ║  l.127: 	    0 then true
+//│ ║         	^^^^^
+//│ ╟── integer literal of type `0` is not an instance of type `number`
+//│ ║  l.127: 	    0 then true
+//│ ╙──       	    ^
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.90: 	  else if y ==
-//│ ║        	          ^^^^
-//│ ║  l.91: 	    0 then true
-//│ ║        	^^^^^^^^^^^^^^^
-//│ ║  l.92: 	    _ then false
-//│ ║        	^^^^^^^^^^^^^^^^
+//│ ║  l.126: 	  else if y ==
+//│ ║         	          ^^^^
+//│ ║  l.127: 	    0 then true
+//│ ║         	^^^^^^^^^^^^^^^
+//│ ║  l.128: 	    _ then false
+//│ ║         	^^^^^^^^^^^^^^^^
 //│ ╟── operator application of type `bool` is not an instance of type `Object`
-//│ ║  l.90: 	  else if y ==
-//│ ║        	          ^^^^
-//│ ║  l.91: 	    0 then true
-//│ ╙──      	^^^^^
+//│ ║  l.126: 	  else if y ==
+//│ ║         	          ^^^^
+//│ ║  l.127: 	    0 then true
+//│ ╙──       	^^^^^
 //│ fun f: (number, number,) -> bool
 
 
@@ -157,10 +219,10 @@ fun f(x, y) = if x is
     True and y is True then true
     False and y is False then false
 //│ ╔══[ERROR] The match is not exhaustive.
-//│ ║  l.157: 	    True and y is True then true
+//│ ║  l.219: 	    True and y is True then true
 //│ ║         	             ^^^^^^^^^
 //│ ╟── The scrutinee at this position misses 1 case.
-//│ ║  l.157: 	    True and y is True then true
+//│ ║  l.219: 	    True and y is True then true
 //│ ║         	             ^
 //│ ╙── [Missing Case 1/1] `False`
 //│ fun f: (anything, anything,) -> error
@@ -182,10 +244,10 @@ fun f(x, y) = if x is
       True then true
       False then false
 //│ ╔══[ERROR] The match is not exhaustive.
-//│ ║  l.179: 	    True and y is True then true
+//│ ║  l.241: 	    True and y is True then true
 //│ ║         	             ^^^^^^^^^
 //│ ╟── The scrutinee at this position misses 1 case.
-//│ ║  l.179: 	    True and y is True then true
+//│ ║  l.241: 	    True and y is True then true
 //│ ║         	             ^
 //│ ╙── [Missing Case 1/1] `False`
 //│ fun f: (anything, anything,) -> error
@@ -200,10 +262,10 @@ fun f(x, y) = if x is
     True then true
     False then false
 //│ ╔══[ERROR] The match is not exhaustive.
-//│ ║  l.197: 	    True and y is True then true
+//│ ║  l.259: 	    True and y is True then true
 //│ ║         	             ^^^^^^^^^
 //│ ╟── The scrutinee at this position misses 1 case.
-//│ ║  l.197: 	    True and y is True then true
+//│ ║  l.259: 	    True and y is True then true
 //│ ║         	             ^
 //│ ╙── [Missing Case 1/1] `False`
 //│ fun f: (anything, anything,) -> error
@@ -218,10 +280,10 @@ fun f(x, y) = if x is
     True and x is False then true
     False and x is True then false
 //│ ╔══[ERROR] The match is not exhaustive.
-//│ ║  l.215: 	    True and y is True then true
+//│ ║  l.277: 	    True and y is True then true
 //│ ║         	             ^^^^^^^^^
 //│ ╟── The scrutinee at this position misses 1 case.
-//│ ║  l.215: 	    True and y is True then true
+//│ ║  l.277: 	    True and y is True then true
 //│ ║         	             ^
 //│ ╙── [Missing Case 1/1] `False`
 //│ fun f: (anything, anything,) -> error

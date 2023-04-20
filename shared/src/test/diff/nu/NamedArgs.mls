@@ -5,17 +5,38 @@ class Foo(x: int)
 //│ class Foo(x: int)
 
 Foo(1)
-//│ Foo
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.7: 	Foo(1)
+//│ ║       	^^^^^^
+//│ ╟── integer literal of type `1` is not an instance of type `int`
+//│ ║  l.7: 	Foo(1)
+//│ ║       	    ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.4: 	class Foo(x: int)
+//│ ╙──     	             ^^^
+//│ Foo | error
 //│ res
 //│     = Foo {}
 
 Foo(x: 1)
-//│ Foo
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.21: 	Foo(x: 1)
+//│ ║        	^^^^^^^^^
+//│ ╟── integer literal of type `1` is not an instance of type `int`
+//│ ║  l.21: 	Foo(x: 1)
+//│ ║        	       ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.4: 	class Foo(x: int)
+//│ ╙──     	             ^^^
+//│ Foo | error
 //│ res
 //│     = Foo {}
 
 Foo(y: 1)
-//│ Foo
+//│ ╔══[ERROR] Wrong tuple field name: found 'y' instead of 'x'
+//│ ║  l.35: 	Foo(y: 1)
+//│ ╙──      	   ^^^^^^
+//│ Foo | error
 //│ res
 //│     = Foo {}
 
@@ -23,7 +44,7 @@ Foo(y: 1)
 :e // TODO: Here `x` is not currently treated as a field name
 class Bar(x)
 //│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.24: 	class Bar(x)
+//│ ║  l.45: 	class Bar(x)
 //│ ╙──      	          ^
 //│ class Bar(x: error)
 
@@ -40,7 +61,7 @@ Bar(x: 1)
 :e
 Bar(y: 1)
 //│ ╔══[ERROR] Wrong tuple field name: found 'y' instead of 'x'
-//│ ║  l.41: 	Bar(y: 1)
+//│ ║  l.62: 	Bar(y: 1)
 //│ ╙──      	   ^^^^^^
 //│ Bar | error
 //│ res

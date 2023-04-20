@@ -7,6 +7,15 @@ fun log(msg: string): unit
 let f =
   log("ok")
   123
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.8: 	  log("ok")
+//│ ║       	  ^^^^^^^^^
+//│ ╟── string literal of type `"ok"` is not an instance of type `string`
+//│ ║  l.8: 	  log("ok")
+//│ ║       	      ^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.4: 	fun log(msg: string): unit
+//│ ╙──     	             ^^^^^^
 //│ let f: 123
 //│ f
 //│   = <no result>
@@ -19,7 +28,16 @@ fun log: string => unit
 //│ fun log: string -> unit
 
 log("ok")
-//│ unit
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.30: 	log("ok")
+//│ ║        	^^^^^^^^^
+//│ ╟── string literal of type `"ok"` is not an instance of type `string`
+//│ ║  l.30: 	log("ok")
+//│ ║        	    ^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.27: 	fun log: string => unit
+//│ ╙──      	         ^^^^^^
+//│ error | unit
 //│ res
 //│     = <no result>
 //│       log is not implemented

@@ -212,8 +212,14 @@ class Test2(n: int) {
 module Test3 {
   fun inc(t: Test2) = Test2(t.n + 1)
 }
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.213: 	  fun inc(t: Test2) = Test2(t.n + 1)
+//│ ║         	                            ^^^^^^^
+//│ ╟── integer literal of type `1` is not an instance of type `int`
+//│ ║  l.213: 	  fun inc(t: Test2) = Test2(t.n + 1)
+//│ ╙──       	                                  ^
 //│ class Test2(n: int) {
-//│   fun inc: Test2
+//│   fun inc: Test2 | error
 //│ }
 //│ module Test3() {
 //│   fun inc: (t: Test2,) -> Test2

@@ -62,13 +62,13 @@ def succ n f x = f (n f x)
 
 // * This explicit annotation makes it type check; like in MLF:
 def succ (n: (forall 'N. ('N -> 'N) -> ('N -> 'N))) = fun f -> fun x -> f (n f x)
-//│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'N0 'a 'N1. ('N1 -> ('N1 & 'N0) & 'N0 -> 'a) -> ('N1 & 'N0) -> 'a)
+//│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'a 'N0 'N1. ('N0 -> ('N0 & 'N1) & 'N1 -> 'a) -> ('N0 & 'N1) -> 'a)
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│     = [Function: succ2]
 
 def succ (n: ChurchInt) f x = f (n f x)
-//│ ChurchInt -> (forall 'N 'a 'N0. ('N0 -> ('N0 & 'N) & 'N -> 'a) -> ('N0 & 'N) -> 'a)
+//│ ChurchInt -> (forall 'a 'N 'N0. ('N -> ('N & 'N0) & 'N0 -> 'a) -> ('N & 'N0) -> 'a)
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│     = [Function: succ3]
@@ -493,16 +493,16 @@ sz = s zero
 
 :ns
 sz
-//│ res: forall 'a 'N 'b 'c 'd. 'd
+//│ res: forall 'a 'b 'c 'd 'N. 'c
 //│   where
-//│     'd :> forall 'e 'f 'g. 'e -> (forall 'h 'i. 'h -> 'i)
+//│     'c :> forall 'e 'f 'g. 'e -> (forall 'h 'i. 'h -> 'i)
 //│     'i :> 'g
 //│     'h <: 'a
 //│     'a <: 'N
-//│     'e <: 'f -> 'g & 'b
-//│     'b <: 'N -> 'N
-//│     'N <: 'c
-//│     'f :> 'c
+//│     'e <: 'f -> 'g & 'd
+//│     'd <: 'N -> 'N
+//│     'N <: 'b
+//│     'f :> 'b
 //│    = [Function (anonymous)]
 
 sz: ChurchInt

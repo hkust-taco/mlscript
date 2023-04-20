@@ -37,6 +37,21 @@ let r = 123
 //│   = 123
 
 r: I
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.39: 	r: I
+//│ ║        	^
+//│ ╟── integer literal of type `123` is not an instance of type `int`
+//│ ║  l.34: 	let r = 123
+//│ ║        	        ^^^
+//│ ╟── but it flows into reference with expected type `int`
+//│ ║  l.39: 	r: I
+//│ ║        	^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.4: 	type I = int
+//│ ║       	         ^^^
+//│ ╟── from type reference:
+//│ ║  l.39: 	r: I
+//│ ╙──      	   ^
 //│ I
 //│ res
 //│     = 123
@@ -47,21 +62,57 @@ let a = [r, r, r]
 //│   = [ 123, 123, 123 ]
 
 a : AI1
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.64: 	a : AI1
+//│ ║        	^
+//│ ╟── integer literal of type `123` is not an instance of type `int`
+//│ ║  l.34: 	let r = 123
+//│ ║        	        ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.11: 	type AI1 = Array[int]
+//│ ╙──      	                 ^^^
 //│ AI1
 //│ res
 //│     = [ 123, 123, 123 ]
 
 a : AI2
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.78: 	a : AI2
+//│ ║        	^
+//│ ╟── integer literal of type `123` is not an instance of type `int`
+//│ ║  l.34: 	let r = 123
+//│ ║        	        ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.14: 	type AI2 = Array<int>
+//│ ╙──      	                 ^^^
 //│ AI2
 //│ res
 //│     = [ 123, 123, 123 ]
 
 a : AI3[int]
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.92: 	a : AI3[int]
+//│ ║        	^
+//│ ╟── integer literal of type `123` is not an instance of type `int`
+//│ ║  l.34: 	let r = 123
+//│ ║        	        ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.92: 	a : AI3[int]
+//│ ╙──      	        ^^^
 //│ AI3[int]
 //│ res
 //│     = [ 123, 123, 123 ]
 
 a : AI4<int>
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.106: 	a : AI4<int>
+//│ ║         	^
+//│ ╟── integer literal of type `123` is not an instance of type `int`
+//│ ║  l.34: 	let r = 123
+//│ ║        	        ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.106: 	a : AI4<int>
+//│ ╙──       	        ^^^
 //│ AI4[int]
 //│ res
 //│     = [ 123, 123, 123 ]

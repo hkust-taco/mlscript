@@ -39,8 +39,29 @@ mixin Derived1(n: int) {
 
 
 class Test0 extends Base1(1/2), Derived1(1)
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.41: 	class Test0 extends Base1(1/2), Derived1(1)
+//│ ║        	                          ^^
+//│ ╟── integer literal of type `1` is not an instance of type `number`
+//│ ║  l.41: 	class Test0 extends Base1(1/2), Derived1(1)
+//│ ╙──      	                          ^
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.41: 	class Test0 extends Base1(1/2), Derived1(1)
+//│ ║        	                          ^^^
+//│ ╟── integer literal of type `2` is not an instance of type `number`
+//│ ║  l.41: 	class Test0 extends Base1(1/2), Derived1(1)
+//│ ╙──      	                            ^
+//│ ╔══[ERROR] Type mismatch in type declaration:
+//│ ║  l.41: 	class Test0 extends Base1(1/2), Derived1(1)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── integer literal of type `1` is not an instance of type `int`
+//│ ║  l.41: 	class Test0 extends Base1(1/2), Derived1(1)
+//│ ║        	                                         ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.31: 	mixin Derived1(n: int) {
+//│ ╙──      	                  ^^^
 //│ class Test0() {
-//│   fun foo: (int, 1, number,)
+//│   fun foo: (int, 1, error | number,)
 //│   fun original: number
 //│ }
 
@@ -60,7 +81,7 @@ t.original
 //│     = 0.5
 
 t.foo
-//│ (int, 1, number,)
+//│ (int, 1, error | number,)
 //│ res
 //│     = [ 1, 1, 0.5 ]
 
@@ -68,8 +89,33 @@ t.foo
 module Test1 extends Base1(1/2), Derived1(1) {
   fun n = this.n
 }
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.89: 	module Test1 extends Base1(1/2), Derived1(1) {
+//│ ║        	                           ^^
+//│ ╟── integer literal of type `1` is not an instance of type `number`
+//│ ║  l.89: 	module Test1 extends Base1(1/2), Derived1(1) {
+//│ ╙──      	                           ^
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.89: 	module Test1 extends Base1(1/2), Derived1(1) {
+//│ ║        	                           ^^^
+//│ ╟── integer literal of type `2` is not an instance of type `number`
+//│ ║  l.89: 	module Test1 extends Base1(1/2), Derived1(1) {
+//│ ╙──      	                             ^
+//│ ╔══[ERROR] Type mismatch in type declaration:
+//│ ║  l.89: 	module Test1 extends Base1(1/2), Derived1(1) {
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.90: 	  fun n = this.n
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ║  l.91: 	}
+//│ ║        	^
+//│ ╟── integer literal of type `1` is not an instance of type `int`
+//│ ║  l.89: 	module Test1 extends Base1(1/2), Derived1(1) {
+//│ ║        	                                          ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.31: 	mixin Derived1(n: int) {
+//│ ╙──      	                  ^^^
 //│ module Test1() {
-//│   fun foo: (int, 1, number,)
+//│   fun foo: (int, 1, error | number,)
 //│   fun n: 1
 //│   fun original: number
 //│ }
@@ -85,14 +131,48 @@ Test1.n
 class Test2(n: string) extends Base1(1/2), Derived1(1) {
   fun bar = [this.foo, n, this.n, this.original]
 }
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.131: 	class Test2(n: string) extends Base1(1/2), Derived1(1) {
+//│ ║         	                                     ^^
+//│ ╟── integer literal of type `1` is not an instance of type `number`
+//│ ║  l.131: 	class Test2(n: string) extends Base1(1/2), Derived1(1) {
+//│ ╙──       	                                     ^
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.131: 	class Test2(n: string) extends Base1(1/2), Derived1(1) {
+//│ ║         	                                     ^^^
+//│ ╟── integer literal of type `2` is not an instance of type `number`
+//│ ║  l.131: 	class Test2(n: string) extends Base1(1/2), Derived1(1) {
+//│ ╙──       	                                       ^
+//│ ╔══[ERROR] Type mismatch in type declaration:
+//│ ║  l.131: 	class Test2(n: string) extends Base1(1/2), Derived1(1) {
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.132: 	  fun bar = [this.foo, n, this.n, this.original]
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.133: 	}
+//│ ║         	^
+//│ ╟── integer literal of type `1` is not an instance of type `int`
+//│ ║  l.131: 	class Test2(n: string) extends Base1(1/2), Derived1(1) {
+//│ ║         	                                                    ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.31: 	mixin Derived1(n: int) {
+//│ ╙──      	                  ^^^
 //│ class Test2(n: string) {
-//│   fun bar: ((int, string, number,), string, string, number,)
-//│   fun foo: (int, string, number,)
+//│   fun bar: ((int, string, error | number,), string, string, number,)
+//│   fun foo: (int, string, error | number,)
 //│   fun original: number
 //│ }
 
 Test2("test").bar
-//│ ((int, string, number,), string, string, number,)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.165: 	Test2("test").bar
+//│ ║         	^^^^^^^^^^^^^
+//│ ╟── string literal of type `"test"` is not an instance of type `string`
+//│ ║  l.165: 	Test2("test").bar
+//│ ║         	      ^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.131: 	class Test2(n: string) extends Base1(1/2), Derived1(1) {
+//│ ╙──       	               ^^^^^^
+//│ ((int, string, error | number,), string, string, number,) | error
 //│ res
 //│     = [ [ 1, 'test', 0.5 ], 'test', 'test', 0.5 ]
 
@@ -100,13 +180,34 @@ Test2("test").bar
 class Test3(n: string) extends Base1(1/2), Derived1(length(n)) {
   fun foo = [super.foo, n, this.original]
 }
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.180: 	class Test3(n: string) extends Base1(1/2), Derived1(length(n)) {
+//│ ║         	                                     ^^
+//│ ╟── integer literal of type `1` is not an instance of type `number`
+//│ ║  l.180: 	class Test3(n: string) extends Base1(1/2), Derived1(length(n)) {
+//│ ╙──       	                                     ^
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.180: 	class Test3(n: string) extends Base1(1/2), Derived1(length(n)) {
+//│ ║         	                                     ^^^
+//│ ╟── integer literal of type `2` is not an instance of type `number`
+//│ ║  l.180: 	class Test3(n: string) extends Base1(1/2), Derived1(length(n)) {
+//│ ╙──       	                                       ^
 //│ class Test3(n: string) {
-//│   fun foo: ((int, string, number,), string, number,)
+//│   fun foo: ((int, string, error | number,), string, number,)
 //│   fun original: number
 //│ }
 
 Test3("test").foo
-//│ ((int, string, number,), string, number,)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.200: 	Test3("test").foo
+//│ ║         	^^^^^^^^^^^^^
+//│ ╟── string literal of type `"test"` is not an instance of type `string`
+//│ ║  l.200: 	Test3("test").foo
+//│ ║         	      ^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.180: 	class Test3(n: string) extends Base1(1/2), Derived1(length(n)) {
+//│ ╙──       	               ^^^^^^
+//│ ((int, string, error | number,), string, number,) | error
 //│ res
 //│     = [ [ 4, 'test', 0.5 ], 'test', 0.5 ]
 

@@ -16,7 +16,16 @@ typeof(Foo)
 //│     = 'function'
 
 let f = Foo(123)
-//│ let f: Foo
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.18: 	let f = Foo(123)
+//│ ║        	        ^^^^^^^^
+//│ ╟── integer literal of type `123` is not an instance of type `int`
+//│ ║  l.18: 	let f = Foo(123)
+//│ ║        	            ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.5: 	class Foo(x: int)
+//│ ╙──     	             ^^^
+//│ let f: Foo | error
 //│ f
 //│   = Foo {}
 
@@ -28,10 +37,10 @@ typeof(f)
 :e
 let cls = Foo.class
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.29: 	let cls = Foo.class
+//│ ║  l.38: 	let cls = Foo.class
 //│ ║        	          ^^^^^^^^^
 //│ ╟── reference of type `(x: int,) -> Foo` does not have field 'class'
-//│ ║  l.29: 	let cls = Foo.class
+//│ ║  l.38: 	let cls = Foo.class
 //│ ╙──      	          ^^^
 //│ let cls: error
 //│ cls
@@ -59,10 +68,10 @@ Derived
 :e
 let cls = Derived.class
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.60: 	let cls = Derived.class
+//│ ║  l.69: 	let cls = Derived.class
 //│ ║        	          ^^^^^^^^^^^^^
 //│ ╟── reference of type `() -> Derived` does not have field 'class'
-//│ ║  l.60: 	let cls = Derived.class
+//│ ║  l.69: 	let cls = Derived.class
 //│ ╙──      	          ^^^^^^^
 //│ let cls: error
 //│ cls

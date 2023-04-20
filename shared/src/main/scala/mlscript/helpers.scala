@@ -616,10 +616,16 @@ trait TermImpl extends StatementImpl { self: Term =>
 private class NotAType(val trm: Statement) extends Throwable
 
 trait LitImpl { self: Lit =>
-  def baseClasses: Set[TypeName] = this match {
+  def baseClassesOld: Set[TypeName] = this match { // TODO rm Eql
     case _: IntLit => Set.single(TypeName("int")) + TypeName("number") + TypeName("Eql")
     case _: StrLit => Set.single(TypeName("string")) + TypeName("Eql")
     case _: DecLit => Set.single(TypeName("number")) + TypeName("Eql")
+    case _: UnitLit => Set.empty
+  }
+  def baseClassesNu: Set[TypeName] = this match {
+    case _: IntLit => Set.single(TypeName("Int")) + TypeName("Num") + TypeName("Object")
+    case _: StrLit => Set.single(TypeName("Str")) + TypeName("Object")
+    case _: DecLit => Set.single(TypeName("Num")) + TypeName("Object")
     case _: UnitLit => Set.empty
   }
 }

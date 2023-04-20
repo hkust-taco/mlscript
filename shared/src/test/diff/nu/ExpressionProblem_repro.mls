@@ -17,7 +17,25 @@ class Lit(value: int)
 //│ class Lit(value: int)
 
 let add11 = Add(Lit(1), Lit(2))
-//│ let add11: Add[Lit]
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.19: 	let add11 = Add(Lit(1), Lit(2))
+//│ ║        	                ^^^^^^
+//│ ╟── integer literal of type `1` is not an instance of type `int`
+//│ ║  l.19: 	let add11 = Add(Lit(1), Lit(2))
+//│ ║        	                    ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.15: 	class Lit(value: int)
+//│ ╙──      	                 ^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.19: 	let add11 = Add(Lit(1), Lit(2))
+//│ ║        	                        ^^^^^^
+//│ ╟── integer literal of type `2` is not an instance of type `int`
+//│ ║  l.19: 	let add11 = Add(Lit(1), Lit(2))
+//│ ║        	                            ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.15: 	class Lit(value: int)
+//│ ╙──      	                 ^^^
+//│ let add11: Add[Lit | error]
 
 fun eval(e) =
   if e is
@@ -96,19 +114,19 @@ TestLang.eval
 
 
 add11
-//│ Add[Lit]
+//│ Add[Lit | error]
 
 TestLang.eval(add11)
 //│ int
 
 add11
-//│ Add[Lit]
+//│ Add[Lit | error]
 
 TestLang.eval(add11)
 //│ int
 
 add11
-//│ Add[Lit]
+//│ Add[Lit | error]
 
 
 
@@ -116,7 +134,16 @@ class Neg<A>(expr: A)
 //│ class Neg[A](expr: A)
 
 let add2negadd11 = Add(Lit(2), Neg(add11))
-//│ let add2negadd11: Add[Lit | Neg[Add[Lit]]]
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.136: 	let add2negadd11 = Add(Lit(2), Neg(add11))
+//│ ║         	                       ^^^^^^
+//│ ╟── integer literal of type `2` is not an instance of type `int`
+//│ ║  l.136: 	let add2negadd11 = Add(Lit(2), Neg(add11))
+//│ ║         	                           ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.15: 	class Lit(value: int)
+//│ ╙──      	                 ^^^
+//│ let add2negadd11: Add[Lit | Neg[Add[Lit | error]] | error]
 
 
 mixin EvalNeg {
@@ -124,43 +151,76 @@ mixin EvalNeg {
     if e is Neg(d) then 0 - this.eval(d)
     else super.eval(e)
 }
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.151: 	    if e is Neg(d) then 0 - this.eval(d)
+//│ ║         	                        ^^^
+//│ ╟── integer literal of type `0` is not an instance of type `int`
+//│ ║  l.151: 	    if e is Neg(d) then 0 - this.eval(d)
+//│ ╙──       	                        ^
 //│ mixin EvalNeg() {
 //│   super: {eval: 'a -> 'b}
 //│   this: {eval: 'expr -> int}
-//│   fun eval: (Neg['expr] | Object & 'a & ~#Neg) -> (int | 'b)
+//│   fun eval: (Neg['expr] | #Object & 'a & ~#Neg) -> (error | int | 'b)
 //│ }
 
 
 module TestLang extends EvalBase, EvalNeg
 //│ module TestLang() {
-//│   fun eval: 'a -> int
+//│   fun eval: 'a -> (error | int)
 //│ }
 //│ where
 //│   'a <: Add['a] | Lit | Neg['a]
 
 TestLang.eval
-//│ 'a -> int
+//│ 'a -> (error | int)
 //│   where
 //│     'a <: Add['a] | Lit | Neg['a]
 
 
 TestLang.eval(add11)
-//│ int
+//│ error | int
 
 TestLang.eval(Neg(add11))
-//│ int
+//│ error | int
 
 TestLang.eval(Add(Lit(2), Neg(Lit(1))))
-//│ int
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.186: 	TestLang.eval(Add(Lit(2), Neg(Lit(1))))
+//│ ║         	                  ^^^^^^
+//│ ╟── integer literal of type `2` is not an instance of type `int`
+//│ ║  l.186: 	TestLang.eval(Add(Lit(2), Neg(Lit(1))))
+//│ ║         	                      ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.15: 	class Lit(value: int)
+//│ ╙──      	                 ^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.186: 	TestLang.eval(Add(Lit(2), Neg(Lit(1))))
+//│ ║         	                              ^^^^^^
+//│ ╟── integer literal of type `1` is not an instance of type `int`
+//│ ║  l.186: 	TestLang.eval(Add(Lit(2), Neg(Lit(1))))
+//│ ║         	                                  ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.15: 	class Lit(value: int)
+//│ ╙──      	                 ^^^
+//│ error | int
 
 TestLang.eval(Neg(Neg(add11)))
-//│ int
+//│ error | int
 
 
 TestLang.eval(add2negadd11)
-//│ int
+//│ error | int
 
 TestLang.eval(Add(Lit(2), Neg(add11)))
-//│ int
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.214: 	TestLang.eval(Add(Lit(2), Neg(add11)))
+//│ ║         	                  ^^^^^^
+//│ ╟── integer literal of type `2` is not an instance of type `int`
+//│ ║  l.214: 	TestLang.eval(Add(Lit(2), Neg(add11)))
+//│ ║         	                      ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.15: 	class Lit(value: int)
+//│ ╙──      	                 ^^^
+//│ error | int
 
 

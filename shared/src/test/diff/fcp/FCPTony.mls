@@ -142,13 +142,13 @@ add
 
 :ns
 def f x y = add x y
-//│ f: forall 'a. 'a -> (forall 'b 'c 'd 'e 'f. 'd -> 'b
+//│ f: forall 'a. 'a -> (forall 'b 'c 'd 'e 'f. 'e -> 'f
 //│   where
-//│     'a <: (ChurchInt -> ChurchInt) -> 'c)
+//│     'a <: (ChurchInt -> ChurchInt) -> 'b)
 //│ where
-//│   'd <: 'e
-//│   'c <: 'e -> 'f
-//│   'f <: 'b
+//│   'e <: 'c
+//│   'b <: 'c -> 'd
+//│   'd <: 'f
 //│  = [Function: f]
 
 // :ds

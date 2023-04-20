@@ -5,7 +5,22 @@
 fun foo =
   fun bar(x) = x + 1
   bar(10)
-//│ fun foo: int
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.6: 	  fun bar(x) = x + 1
+//│ ║       	               ^^^^^
+//│ ╟── integer literal of type `1` is not an instance of type `int`
+//│ ║  l.6: 	  fun bar(x) = x + 1
+//│ ╙──     	                   ^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.7: 	  bar(10)
+//│ ║       	  ^^^^^^^
+//│ ╟── integer literal of type `10` is not an instance of type `int`
+//│ ║  l.7: 	  bar(10)
+//│ ║       	      ^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.6: 	  fun bar(x) = x + 1
+//│ ╙──     	               ^
+//│ fun foo: error | int
 //│ // Prelude
 //│ let res;
 //│ class TypingUnit {}
@@ -23,8 +38,32 @@ fun foo =
   class C(a: int) { fun bar(x) = a + x + 1 }
   C(100).bar(10)
 foo
-//│ fun foo: int
-//│ int
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.38: 	  class C(a: int) { fun bar(x) = a + x + 1 }
+//│ ║        	                                 ^^^^^^^^^
+//│ ╟── integer literal of type `1` is not an instance of type `int`
+//│ ║  l.38: 	  class C(a: int) { fun bar(x) = a + x + 1 }
+//│ ╙──      	                                         ^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.39: 	  C(100).bar(10)
+//│ ║        	  ^^^^^^
+//│ ╟── integer literal of type `100` is not an instance of type `int`
+//│ ║  l.39: 	  C(100).bar(10)
+//│ ║        	    ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.38: 	  class C(a: int) { fun bar(x) = a + x + 1 }
+//│ ╙──      	             ^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.39: 	  C(100).bar(10)
+//│ ║        	  ^^^^^^^^^^^^^^
+//│ ╟── integer literal of type `10` is not an instance of type `int`
+//│ ║  l.39: 	  C(100).bar(10)
+//│ ║        	             ^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.38: 	  class C(a: int) { fun bar(x) = a + x + 1 }
+//│ ╙──      	                                     ^
+//│ fun foo: error | int
+//│ error | int
 //│ res
 //│     = [Function: foo1]
 

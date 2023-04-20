@@ -114,7 +114,7 @@ EM_to_DNE_A1: EM -> DNE
 // *      )
 def DNE_to_EM dne =
   dne (fun not_em -> not_em (Right { v = fun a -> not_em (Left { v = a }) }))
-//│ DNE_to_EM: ((forall 'a 'v 'b. ((Left with {v: 'v}) -> 'b & (Right & {v: 'v -> 'b}) -> 'a) -> 'a) -> 'c) -> 'c
+//│ DNE_to_EM: ((forall 'v 'a 'b. ((Left with {v: 'v}) -> 'a & (Right & {v: 'v -> 'a}) -> 'b) -> 'b) -> 'c) -> 'c
 //│          = [Function: DNE_to_EM]
 
 // * Requires distributivity because we currently don't generalize function bodies

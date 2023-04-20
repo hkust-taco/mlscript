@@ -4,6 +4,12 @@
 class Test(n: int) {
   fun inc = Test(n + 1)
 }
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.5: 	  fun inc = Test(n + 1)
+//│ ║       	                 ^^^^^
+//│ ╟── integer literal of type `1` is not an instance of type `int`
+//│ ║  l.5: 	  fun inc = Test(n + 1)
+//│ ╙──     	                     ^
 //│ class Test(n: int) {
 //│   fun inc: Test
 //│ }
@@ -38,7 +44,16 @@ class Test(n: int) {
 //│ // End of generated code
 
 Test(0).inc.n
-//│ int
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.46: 	Test(0).inc.n
+//│ ║        	^^^^^^^
+//│ ╟── integer literal of type `0` is not an instance of type `int`
+//│ ║  l.46: 	Test(0).inc.n
+//│ ║        	     ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.4: 	class Test(n: int) {
+//│ ╙──     	              ^^^
+//│ error | int
 //│ res
 //│     = 1
 
@@ -48,15 +63,30 @@ class Test2(n: int) {
 module Test3 {
   fun inc(n) = Test2(n + 1)
 }
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.64: 	  fun inc(n) = Test2(n + 1)
+//│ ║        	                     ^^^^^
+//│ ╟── integer literal of type `1` is not an instance of type `int`
+//│ ║  l.64: 	  fun inc(n) = Test2(n + 1)
+//│ ╙──      	                         ^
 //│ class Test2(n: int) {
-//│   fun inc: Test2
+//│   fun inc: Test2 | error
 //│ }
 //│ module Test3() {
 //│   fun inc: int -> Test2
 //│ }
 
 Test2(0).inc.n
-//│ int
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.79: 	Test2(0).inc.n
+//│ ║        	^^^^^^^^
+//│ ╟── integer literal of type `0` is not an instance of type `int`
+//│ ║  l.79: 	Test2(0).inc.n
+//│ ║        	      ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.60: 	class Test2(n: int) {
+//│ ╙──      	               ^^^
+//│ error | int
 //│ res
 //│     = 1
 
@@ -73,8 +103,8 @@ class C[A](n: A) {
 let a = C[int](42)
 a.f
 //│ ╔══[ERROR] Type application syntax is not yet supported
-//│ ║  l.73: 	let a = C[int](42)
-//│ ╙──      	        ^^^^^^
+//│ ║  l.103: 	let a = C[int](42)
+//│ ╙──       	        ^^^^^^
 //│ let a: error
 //│ error
 //│ a
@@ -109,6 +139,23 @@ module M1 extends M0(123) {
   fun m = "m"
   fun bar = "bar"
 }
+//│ ╔══[ERROR] Type mismatch in type declaration:
+//│ ║  l.137: 	module M1 extends M0(123) {
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.138: 	  fun n = "n"
+//│ ║         	^^^^^^^^^^^^^
+//│ ║  l.139: 	  fun m = "m"
+//│ ║         	^^^^^^^^^^^^^
+//│ ║  l.140: 	  fun bar = "bar"
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ║  l.141: 	}
+//│ ║         	^
+//│ ╟── integer literal of type `123` is not an instance of type `int`
+//│ ║  l.137: 	module M1 extends M0(123) {
+//│ ║         	                     ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.126: 	mixin M0(n: int) {
+//│ ╙──       	            ^^^
 //│ module M1() {
 //│   fun bar: "bar"
 //│   fun foo: (int, int, int,)
@@ -136,10 +183,19 @@ module M2 {
     bar(10)
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.135: 	    fun bar(x) = x + y + this.m
+//│ ║  l.182: 	    fun bar(x) = x + y + this.m
 //│ ╙──       	                             ^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.183: 	    bar(10)
+//│ ║         	    ^^^^^^^
+//│ ╟── integer literal of type `10` is not an instance of type `int`
+//│ ║  l.183: 	    bar(10)
+//│ ║         	        ^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.182: 	    fun bar(x) = x + y + this.m
+//│ ╙──       	                 ^
 //│ module M2() {
-//│   fun foo: int -> int
+//│   fun foo: int -> (error | int)
 //│   let m: 100
 //│ }
 //│ // Prelude
@@ -176,7 +232,16 @@ module M2 {
 //│ // End of generated code
 
 M2.foo(1)
-//│ int
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.234: 	M2.foo(1)
+//│ ║         	^^^^^^^^^
+//│ ╟── integer literal of type `1` is not an instance of type `int`
+//│ ║  l.234: 	M2.foo(1)
+//│ ║         	       ^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.182: 	    fun bar(x) = x + y + this.m
+//│ ╙──       	                     ^
+//│ error | int
 //│ res
 //│     = 111
 

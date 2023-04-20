@@ -25,7 +25,16 @@ declare module console {
 //│ }
 
 console.error("hello")
-//│ unit
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.27: 	console.error("hello")
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── string literal of type `"hello"` is not an instance of type `string`
+//│ ║  l.27: 	console.error("hello")
+//│ ║        	              ^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.21: 	  fun error: string -> unit
+//│ ╙──      	             ^^^^^^
+//│ error | unit
 //│ res
 //│     = undefined
 //│ // Output
@@ -34,7 +43,7 @@ console.error("hello")
 :e
 console.log("hello")
 //│ ╔══[ERROR] Module `console` does not contain member `log`
-//│ ║  l.35: 	console.log("hello")
+//│ ║  l.44: 	console.log("hello")
 //│ ╙──      	       ^^^^
 //│ error
 //│ res
@@ -61,6 +70,16 @@ declare type A = int
 //│ type A = int
 
 42 : A
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.72: 	42 : A
+//│ ║        	^^
+//│ ╟── integer literal of type `42` is not an instance of type `int`
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.69: 	declare type A = int
+//│ ║        	                 ^^^
+//│ ╟── from type reference:
+//│ ║  l.72: 	42 : A
+//│ ╙──      	     ^
 //│ A
 //│ res
 //│     = 42
@@ -103,12 +122,21 @@ declare module Buffer {
 //│ }
 
 let b = Buffer.from([0, 1, 2])
-//│ let b: Buffer2
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.124: 	let b = Buffer.from([0, 1, 2])
+//│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── integer literal of type `0` is not an instance of type `int`
+//│ ║  l.124: 	let b = Buffer.from([0, 1, 2])
+//│ ║         	                     ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.112: 	  fun from(a: Array[int]): Buffer2 = from(a)
+//│ ╙──       	                    ^^^
+//│ let b: Buffer2 | error
 //│ b
 //│   = <Buffer 00 01 02>
 
 b.length
-//│ int
+//│ error | int
 //│ res
 //│     = 3
 
@@ -118,10 +146,10 @@ b.length
 :pe
 declare 42
 //│ ╔══[PARSE ERROR] Unexpected literal token after modifier
-//│ ║  l.119: 	declare 42
+//│ ║  l.147: 	declare 42
 //│ ╙──       	        ^^
 //│ ╔══[PARSE ERROR] Unexpected literal token after modifier
-//│ ║  l.119: 	declare 42
+//│ ║  l.147: 	declare 42
 //│ ╙──       	        ^^
 //│ 42
 //│ res

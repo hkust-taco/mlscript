@@ -22,6 +22,15 @@ fun foo(x: M.C) = x
 
 
 foo(M.mkC(42))
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.24: 	foo(M.mkC(42))
+//│ ║        	    ^^^^^^^^^
+//│ ╟── integer literal of type `42` is not an instance of type `int`
+//│ ║  l.24: 	foo(M.mkC(42))
+//│ ║        	          ^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.6: 	  class C(n: int)
+//│ ╙──     	             ^^^
 //│ C
 //│ res
 //│     = C {}
@@ -30,7 +39,7 @@ foo(M.mkC(42))
 :e
 42 : M.mkC
 //│ ╔══[ERROR] Illegal selection of value member in type position
-//│ ║  l.31: 	42 : M.mkC
+//│ ║  l.40: 	42 : M.mkC
 //│ ╙──      	      ^^^^
 //│ error
 //│ res
