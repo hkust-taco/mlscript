@@ -24,6 +24,31 @@ fun test(x: 0 | A) = if x is
 //│ ║       	^^^^^^^^^^
 //│ ║  l.10: 	  A then A
 //│ ║        	^^^^^^^^^^
+//│ ╟── application of type `bool` is not an instance of type `Object`
+//│ ║  l.8: 	fun test(x: 0 | A) = if x is
+//│ ║       	                        ^^^^
+//│ ║  l.9: 	  0 then 0
+//│ ╙──     	^^^
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.8: 	fun test(x: 0 | A) = if x is
+//│ ║       	                        ^^^^
+//│ ║  l.9: 	  0 then 0
+//│ ║       	^^^^^^^^^^
+//│ ║  l.10: 	  A then A
+//│ ║        	^^^^^^^^^^
+//│ ╟── type `0` is not an instance of type `Object`
+//│ ║  l.8: 	fun test(x: 0 | A) = if x is
+//│ ║       	            ^
+//│ ╟── but it flows into reference with expected type `Object`
+//│ ║  l.8: 	fun test(x: 0 | A) = if x is
+//│ ╙──     	                        ^
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.8: 	fun test(x: 0 | A) = if x is
+//│ ║       	                        ^^^^
+//│ ║  l.9: 	  0 then 0
+//│ ║       	^^^^^^^^^^
+//│ ║  l.10: 	  A then A
+//│ ║        	^^^^^^^^^^
 //│ ╟── type `0` is not an instance of type `A`
 //│ ║  l.8: 	fun test(x: 0 | A) = if x is
 //│ ║       	            ^

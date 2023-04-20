@@ -72,7 +72,7 @@ module TestLang extends EvalNothing, EvalAddLit
 //│ mixin EvalAddLit() {
 //│   super: {eval: 'a -> 'b}
 //│   this: {eval: 'lhs -> int}
-//│   fun eval: (Add['lhs] | Lit | 'a & ~#Add & ~#Lit) -> (int | 'b)
+//│   fun eval: (Add['lhs] | Lit | Object & 'a & ~#Add & ~#Lit) -> (int | 'b)
 //│ }
 //│ module TestLang() {
 //│   fun eval: 'c -> int
@@ -110,7 +110,7 @@ mixin EvalNeg {
 //│ mixin EvalNeg() {
 //│   super: {eval: 'a -> 'b}
 //│   this: {eval: 'expr -> int}
-//│   fun eval: (Neg['expr] | 'a & ~#Neg) -> (int | 'b)
+//│   fun eval: (Neg['expr] | Object & 'a & ~#Neg) -> (int | 'b)
 //│ }
 
 
@@ -176,7 +176,7 @@ mixin EvalNegNeg_0 {
 //│ mixin EvalNegNeg_0() {
 //│   super: {eval: (Neg['A] | 'a) -> 'b}
 //│   this: {eval: 'expr -> 'b}
-//│   fun eval: (Neg['A & (~#Neg | Neg['expr])] | 'a & ~#Neg) -> 'b
+//│   fun eval: (Neg['A & (Neg['expr] | Object & ~#Neg)] | Object & 'a & ~#Neg) -> 'b
 //│ }
 
 // * Concise alternative, usign syntax sugar:
@@ -186,28 +186,62 @@ mixin EvalNegNeg {
 //│ mixin EvalNegNeg() {
 //│   super: {eval: (Neg['A] | 'a) -> 'b}
 //│   this: {eval: 'expr -> 'b}
-//│   fun eval: (Neg['A & (~#Neg | Neg['expr])] | 'a & ~#Neg) -> 'b
+//│   fun eval: (Neg['A & (Neg['expr] | Object & ~#Neg)] | Object & 'a & ~#Neg) -> 'b
 //│ }
 
 module TestLang extends EvalBase, EvalNeg, EvalNegNeg
 //│ module TestLang() {
-//│   fun eval: 'A -> int
+//│   fun eval: 'a -> int
 //│ }
 //│ where
-//│   'A <: Add['A] | Lit | Neg['A & (~#Neg | Neg['A])]
+//│   'a <: Neg['A] | Object & 'b & ~#Neg
+//│   'A <: Neg['a & 'A] | Neg['A] & ~#Neg | Object & 'b & ~#Neg
+//│   'b <: Add['a] | Lit | Neg['a]
 
 fun mk(n) = if n is
   0 then Lit(0)
   1 then Neg(mk(n))
   _ then Add(mk(n), mk(n))
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.201: 	fun mk(n) = if n is
+//│ ║         	               ^^^^
+//│ ║  l.202: 	  0 then Lit(0)
+//│ ║         	^^^^^^^^^^^^^^^^
+//│ ║  l.203: 	  1 then Neg(mk(n))
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.204: 	  _ then Add(mk(n), mk(n))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── application of type `bool` is not an instance of type `Object`
+//│ ║  l.201: 	fun mk(n) = if n is
+//│ ║         	               ^^^^
+//│ ║  l.202: 	  0 then Lit(0)
+//│ ╙──       	^^^
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.201: 	fun mk(n) = if n is
+//│ ║         	               ^^^^
+//│ ║  l.202: 	  0 then Lit(0)
+//│ ║         	^^^^^^^^^^^^^^^^
+//│ ║  l.203: 	  1 then Neg(mk(n))
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.204: 	  _ then Add(mk(n), mk(n))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── application of type `bool` is not an instance of type `Object`
+//│ ║  l.201: 	fun mk(n) = if n is
+//│ ║         	               ^^^^
+//│ ║  l.202: 	  0 then Lit(0)
+//│ ║         	^^^^^^^^^^^^^^^^
+//│ ║  l.203: 	  1 then Neg(mk(n))
+//│ ╙──       	^^^
 //│ fun mk: forall 'E. number -> 'E
 //│   where
 //│     'E :> Add['E] | Lit | Neg['E]
 
 TestLang.eval
-//│ 'A -> int
+//│ 'a -> int
 //│   where
-//│     'A <: Add['A] | Lit | Neg['A & (~#Neg | Neg['A])]
+//│     'a <: Neg['A] | Object & 'b & ~#Neg
+//│     'A <: Neg['a & 'A] | Neg['A] & ~#Neg | Object & 'b & ~#Neg
+//│     'b <: Add['a] | Lit | Neg['a]
 //│ res
 //│     = [Function: eval]
 

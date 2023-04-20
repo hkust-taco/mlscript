@@ -36,6 +36,36 @@ fun mk(n) = if n is
   0 then Lit(0)
   1 then Neg(mk(n))
   _ then Add(mk(n), mk(n))
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.35: 	fun mk(n) = if n is
+//│ ║        	               ^^^^
+//│ ║  l.36: 	  0 then Lit(0)
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ║  l.37: 	  1 then Neg(mk(n))
+//│ ║        	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.38: 	  _ then Add(mk(n), mk(n))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── application of type `bool` is not an instance of type `Object`
+//│ ║  l.35: 	fun mk(n) = if n is
+//│ ║        	               ^^^^
+//│ ║  l.36: 	  0 then Lit(0)
+//│ ╙──      	^^^
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.35: 	fun mk(n) = if n is
+//│ ║        	               ^^^^
+//│ ║  l.36: 	  0 then Lit(0)
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ║  l.37: 	  1 then Neg(mk(n))
+//│ ║        	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.38: 	  _ then Add(mk(n), mk(n))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── application of type `bool` is not an instance of type `Object`
+//│ ║  l.35: 	fun mk(n) = if n is
+//│ ║        	               ^^^^
+//│ ║  l.36: 	  0 then Lit(0)
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ║  l.37: 	  1 then Neg(mk(n))
+//│ ╙──      	^^^
 //│ fun mk: forall 'E. number -> 'E
 //│   where
 //│     'E :> Add['E] | Lit | Neg['E]
@@ -44,7 +74,7 @@ fun mk(n) = if n is
 :stats
 TestLang.eval(mk(0))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.45: 	TestLang.eval(mk(0))
+//│ ║  l.75: 	TestLang.eval(mk(0))
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Lit` does not match type `nothing`
 //│ ║  l.36: 	  0 then Lit(0)
@@ -55,8 +85,8 @@ TestLang.eval(mk(0))
 //│ error | int
 //│ res
 //│     = 0
-//│ constrain calls  : 242
+//│ constrain calls  : 304
 //│ annoying  calls  : 116
-//│ subtyping calls  : 4071
+//│ subtyping calls  : 4485
 
 

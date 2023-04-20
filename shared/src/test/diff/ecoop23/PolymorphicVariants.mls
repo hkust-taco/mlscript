@@ -26,6 +26,14 @@ fun list_assoc(s, l) =
       if s === h._1 then Success(h._2)
       else list_assoc(s, t)
     Nil then NotFound()
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.26: 	      if s === h._1 then Success(h._2)
+//│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.27: 	      else list_assoc(s, t)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── operator application of type `bool` is not an instance of type `Object`
+//│ ║  l.26: 	      if s === h._1 then Success(h._2)
+//│ ╙──      	         ^^^^^^^^^^
 //│ fun list_assoc: forall 'a 'A. (Eql['a], Cons[{_1: 'a, _2: 'A}] | Nil,) -> (NotFound | Success['A])
 
 // fun list_assoc(s: string, l: Cons[{ _1: string, _2: 'b }] | Nil): NotFound | Success['b]
@@ -74,7 +82,7 @@ mixin EvalLambda {
 //│ mixin EvalLambda() {
 //│   super: {eval: ('a, 'b,) -> 'c}
 //│   this: {eval: ('a, 's,) -> ('d & 'e) & (Cons[(string, 'e,)], 't,) -> 'c & (Cons[(string, Var,) | 'A], 't0,) -> 'f}
-//│   fun eval: ('a & (Cons['A] | Nil), Abs['t0] | App['s & (Abs['t] | ~#Abs)] | 'b & ~#Abs & ~#App,) -> (Abs['f] | App['d | 'e] | 'c)
+//│   fun eval: ('a & (Cons['A] | Nil), Abs['t0] | App['s & (Abs['t] | Object & ~#Abs)] | Object & 'b & ~#Abs & ~#App,) -> (Abs['f] | App['d | 'e] | 'c)
 //│ }
 
 // FIXME type simplification
@@ -84,15 +92,15 @@ module Test1 extends EvalVar, EvalLambda
 //│   fun eval: ('a, 'b,) -> ('c | 'd | 'e | 'f)
 //│ }
 //│ where
-//│   'b <: #App & {App#A <: 'A} | (#Abs & {Abs#A <: 'A0} | 'g & ~#Abs) & ~#App
+//│   'b <: (#App & {App#A <: 'A} | (#Abs & {Abs#A <: 'A0} | 'g & ~#Abs) & ~#App) & Object
 //│   'g <: 'h
 //│   'h <: 'i
-//│   'i <: #Var
+//│   'i <: #Var & Object
 //│   'A0 <: 't
 //│   't <: 't0
 //│   't0 <: 'b
 //│   'A <: 't1 & 's
-//│   's <: (#Abs & {Abs#A <: 'A1} | 'j & ~#Abs) & 's0
+//│   's <: (#Abs & {Abs#A <: 'A1} | 'j & ~#Abs) & Object & 's0
 //│   's0 <: 'b
 //│   'A1 <: 't2
 //│   't2 <: 't3
@@ -113,7 +121,7 @@ module Test1 extends EvalVar, EvalLambda
 //│   'o :> #Cons & {Cons#A :> 'A2 <: 'A3} | #Cons & {Cons#A :> 'A4 <: 'A5}
 //│      <: 'p
 //│   'p :> #Cons & {Cons#A :> 'A2 <: 'A3} | #Cons & {Cons#A :> 'A4 <: 'A5} | Cons['A9] | Nil
-//│      <: #Cons & {Cons#A <: 'A10} | #Nil & ~#Cons
+//│      <: (#Cons & {Cons#A <: 'A10} | #Nil & ~#Cons) & Object
 //│   'A9 := out 'A10
 //│   'A10 :> 'A3 & 'A11 | 'A5 & 'A12
 //│        <: 'head
@@ -166,14 +174,54 @@ module Test1 extends EvalVar, EvalLambda
 //│   'c1 := string
 
 Test1.eval(Nil, Var("a"))
-//│ 'a
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.176: 	Test1.eval(Nil, Var("a"))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── reference of type `Nil` is not an instance of type `Object`
+//│ ║  l.176: 	Test1.eval(Nil, Var("a"))
+//│ ║         	           ^^^
+//│ ╟── Note: constraint arises from `case` expression:
+//│ ║  l.24: 	  if l is
+//│ ║        	     ^^^^
+//│ ║  l.25: 	    Cons(h, t) then
+//│ ║        	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.26: 	      if s === h._1 then Success(h._2)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.27: 	      else list_assoc(s, t)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.28: 	    Nil then NotFound()
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── from reference:
+//│ ║  l.80: 	      super.eval(sub, v)
+//│ ╙──      	                 ^^^
+//│ error | 'a
 //│   where
-//│     'a :> App['a] | Abs['a] | Var
+//│     'a :> Var | App['a] | Abs['a]
 //│ res
 //│     = Var {}
 
 Test1.eval(Nil, Abs("b", Var("a")))
-//│ 'a
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.203: 	Test1.eval(Nil, Abs("b", Var("a")))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── reference of type `Nil` is not an instance of type `Object`
+//│ ║  l.203: 	Test1.eval(Nil, Abs("b", Var("a")))
+//│ ║         	           ^^^
+//│ ╟── Note: constraint arises from `case` expression:
+//│ ║  l.24: 	  if l is
+//│ ║        	     ^^^^
+//│ ║  l.25: 	    Cons(h, t) then
+//│ ║        	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.26: 	      if s === h._1 then Success(h._2)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.27: 	      else list_assoc(s, t)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.28: 	    Nil then NotFound()
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── from reference:
+//│ ║  l.80: 	      super.eval(sub, v)
+//│ ╙──      	                 ^^^
+//│ error | 'a
 //│   where
 //│     'a :> App['a] | Abs['a] | Var
 //│ res
@@ -182,7 +230,7 @@ Test1.eval(Nil, Abs("b", Var("a")))
 Test1.eval(Cons(("c", Var("d")), Nil), App(Abs("b", Var("b")), Var("c")))
 //│ 'a
 //│   where
-//│     'a :> App['a] | Abs['a] | Var
+//│     'a :> Var | App['a] | Abs['a]
 //│ res
 //│     = Var {}
 
@@ -206,7 +254,7 @@ fun map_expr(f, v) =
     Num then v
     Add(l, r) then Add(f(l), f(r))
     Mul(l, r) then Mul(f(l), f(r))
-//│ fun map_expr: forall 'A 'l 'A0 'l0. ('l -> 'A0 & 'l0 -> 'A, Add['l] | Mul['l0] | Num | Var,) -> (Add['A0] | Mul['A] | Num | Var)
+//│ fun map_expr: forall 'l 'A 'l0 'A0. ('l -> 'A & 'l0 -> 'A0, Add['l] | Mul['l0] | Num | Var,) -> (Add['A] | Mul['A0] | Num | Var)
 
 mixin EvalExpr {
   fun eval(sub, v) =
@@ -220,20 +268,40 @@ mixin EvalExpr {
 }
 //│ mixin EvalExpr() {
 //│   super: {eval: ('a, Var,) -> 'b}
-//│   this: {eval: ('a, 'c,) -> anything}
+//│   this: {eval: ('a, 'c,) -> Object}
 //│   fun eval: forall 'd. ('a, 'd & (Add['c] | Mul['c] | Num | Var),) -> (Num | 'd | 'b)
 //│ }
 
 module Test2 extends EvalVar, EvalExpr
 //│ module Test2() {
-//│   fun eval: (Cons[{_1: string, _2: 'result}] | Nil, 'a,) -> (Num | Var | 'result | 'a)
+//│   fun eval: (Cons[{_1: string, _2: Object & 'result}] | Nil, 'a,) -> (Num | Var | 'result | 'a)
 //│ }
 //│ where
 //│   'a <: Add['b] | Mul['b] | Num | Var
 //│   'b <: 'a
 
 Test2.eval(Nil, Var("a"))
-//│ Num | Var
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.283: 	Test2.eval(Nil, Var("a"))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── reference of type `Nil` is not an instance of type `Object`
+//│ ║  l.283: 	Test2.eval(Nil, Var("a"))
+//│ ║         	           ^^^
+//│ ╟── Note: constraint arises from `case` expression:
+//│ ║  l.24: 	  if l is
+//│ ║        	     ^^^^
+//│ ║  l.25: 	    Cons(h, t) then
+//│ ║        	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.26: 	      if s === h._1 then Success(h._2)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.27: 	      else list_assoc(s, t)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.28: 	    Nil then NotFound()
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── from reference:
+//│ ║  l.264: 	      Var then super.eval(sub, vv)
+//│ ╙──       	                          ^^^
+//│ Num | Var | error
 //│ res
 //│     = Var {}
 
@@ -251,16 +319,16 @@ Test2.eval(Cons(("a", Num(1)), Nil), Var("a"))
 :e
 Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.252: 	Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
+//│ ║  l.320: 	Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Abs[?A]` does not match type `Add[?A0] | Mul[?A1] | Num | Var`
-//│ ║  l.252: 	Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
+//│ ║  l.320: 	Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ ║         	                                                 ^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.204: 	  if v is
+//│ ║  l.252: 	  if v is
 //│ ║         	     ^
 //│ ╟── from reference:
-//│ ║  l.214: 	    let vv = map_expr(eta, v)
+//│ ║  l.262: 	    let vv = map_expr(eta, v)
 //│ ╙──       	                           ^
 //│ Abs[Var] | Num | Var | error
 //│ res
@@ -299,7 +367,7 @@ module Test3 extends EvalVar, EvalExpr, EvalLambda
 //│   'o :> #Cons & {Cons#A :> 'A <: 'A0} | #Cons & {Cons#A :> 'A1 <: 'A2}
 //│      <: 'p
 //│   'p :> #Cons & {Cons#A :> 'A <: 'A0} | #Cons & {Cons#A :> 'A1 <: 'A2} | Cons['A6] | Nil
-//│      <: #Cons & {Cons#A <: 'A7} | #Nil & ~#Cons
+//│      <: (#Cons & {Cons#A <: 'A7} | #Nil & ~#Cons) & Object
 //│   'A6 := out 'A7
 //│   'A7 :> 'A0 & 'A8 | 'A2 & 'A9
 //│       <: 'head
@@ -335,25 +403,25 @@ module Test3 extends EvalVar, EvalExpr, EvalLambda
 //│   'A11 :> 'c | 'd | 'e | 'f | #Var
 //│        <: 'result
 //│   'c :> 'z
-//│      <: (#Num | 'a1 & ~#Num) & (#Num | 'b1 & ~#Num) & (#Num | 'c1 & ~#Num) & (#Num | 'd1 & ~#Num)
+//│      <: (#Num | 'a1 & ~#Num) & Object & (#Num | 'b1 & ~#Num) & (#Num | 'c1 & ~#Num) & (#Num | 'd1 & ~#Num)
 //│   'z :> 'c | 'd | 'e | 'f
-//│      <: (#Num | 'a1 & ~#Num) & (#Num | 'b1 & ~#Num) & (#Num | 'c1 & ~#Num) & (#Num | 'd1 & ~#Num)
+//│      <: (#Num | 'a1 & ~#Num) & Object & (#Num | 'b1 & ~#Num) & (#Num | 'c1 & ~#Num) & (#Num | 'd1 & ~#Num)
 //│   'd :> #App & {App#A = 'A12}
-//│      <: (#Num | 'a1 & ~#Num) & (#Num | 'b1 & ~#Num) & (#Num | 'c1 & ~#Num) & (#Num | 'd1 & ~#Num)
+//│      <: (#Num | 'a1 & ~#Num) & Object & (#Num | 'b1 & ~#Num) & (#Num | 'c1 & ~#Num) & (#Num | 'd1 & ~#Num)
 //│   'A12 :> 'y | 'e1
 //│   'e1 :> 'c | 'd | 'e | 'f
 //│   'e :> #Abs & {Abs#A = 'A13}
-//│      <: (#Num | 'a1 & ~#Num) & (#Num | 'b1 & ~#Num) & (#Num | 'c1 & ~#Num) & (#Num | 'd1 & ~#Num)
+//│      <: (#Num | 'a1 & ~#Num) & Object & (#Num | 'b1 & ~#Num) & (#Num | 'c1 & ~#Num) & (#Num | 'd1 & ~#Num)
 //│   'A13 :> 'f1
 //│   'f1 :> 'c | 'd | 'e | 'f
 //│   'f :> 'g1
-//│      <: (#Num | 'a1 & ~#Num) & (#Num | 'b1 & ~#Num) & (#Num | 'c1 & ~#Num) & (#Num | 'd1 & ~#Num)
+//│      <: (#Num | 'a1 & ~#Num) & Object & (#Num | 'b1 & ~#Num) & (#Num | 'c1 & ~#Num) & (#Num | 'd1 & ~#Num)
 //│   'g1 :> 'h1 | 'i1 | 'j1 | 'k1
-//│       <: (#Num | 'a1 & ~#Num) & (#Num | 'b1 & ~#Num) & (#Num | 'c1 & ~#Num) & (#Num | 'd1 & ~#Num)
+//│       <: (#Num | 'a1 & ~#Num) & Object & (#Num | 'b1 & ~#Num) & (#Num | 'c1 & ~#Num) & (#Num | 'd1 & ~#Num)
 //│   'k1 :> #Num
-//│       <: (#Num | 'a1 & ~#Num) & (#Num | 'b1 & ~#Num) & (#Num | 'c1 & ~#Num) & (#Num | 'd1 & ~#Num)
-//│   'j1 <: (#Num | 'a1 & ~#Num) & (#Num | 'b1 & ~#Num) & (#Num | 'c1 & ~#Num) & (#Num | 'd1 & ~#Num) & 'l1
-//│   'l1 <: #Var | (#Num | (#Add & {Add#A <: 'A14} | #Mul & {Mul#A <: 'A15} & ~#Add) & ~#Num) & ~#Var
+//│       <: (#Num | 'a1 & ~#Num) & Object & (#Num | 'b1 & ~#Num) & (#Num | 'c1 & ~#Num) & (#Num | 'd1 & ~#Num)
+//│   'j1 <: (#Num | 'a1 & ~#Num) & Object & (#Num | 'b1 & ~#Num) & (#Num | 'c1 & ~#Num) & (#Num | 'd1 & ~#Num) & 'l1
+//│   'l1 <: (#Var | (#Num | (#Add & {Add#A <: 'A14} | #Mul & {Mul#A <: 'A15} & ~#Add) & ~#Num) & ~#Var) & Object
 //│   'A15 <: 'r & 'l
 //│   'l <: 'm1
 //│   'r <: 'm1
@@ -362,14 +430,14 @@ module Test3 extends EvalVar, EvalExpr, EvalLambda
 //│   'r0 <: 'm1
 //│   'm1 <: 'n1
 //│   'n1 <: 'b
-//│   'b <: #App & {App#A <: 'A16} | (#Abs & {Abs#A <: 'A17} | 'o1 & ~#Abs) & ~#App
+//│   'b <: (#App & {App#A <: 'A16} | (#Abs & {Abs#A <: 'A17} | 'o1 & ~#Abs) & ~#App) & Object
 //│   'o1 <: 'p1
 //│   'p1 <: 'j1
 //│   'A17 <: 't
 //│   't <: 't0
 //│   't0 <: 'b
 //│   'A16 <: 't1 & 's
-//│   's <: (#Abs & {Abs#A <: 'A18} | 'q1 & ~#Abs) & 's0
+//│   's <: (#Abs & {Abs#A <: 'A18} | 'q1 & ~#Abs) & Object & 's0
 //│   's0 <: 'b
 //│   'A18 <: 't2
 //│   't2 <: 't3
@@ -377,13 +445,13 @@ module Test3 extends EvalVar, EvalExpr, EvalLambda
 //│   't1 <: 't4
 //│   't4 <: 'b
 //│   'i1 :> #Num
-//│       <: (#Num | 'a1 & ~#Num) & (#Num | 'b1 & ~#Num) & (#Num | 'c1 & ~#Num) & (#Num | 'd1 & ~#Num)
+//│       <: (#Num | 'a1 & ~#Num) & Object & (#Num | 'b1 & ~#Num) & (#Num | 'c1 & ~#Num) & (#Num | 'd1 & ~#Num)
 //│   'h1 :> 'r1
-//│       <: (#Num | 'a1 & ~#Num) & (#Num | 'b1 & ~#Num) & (#Num | 'c1 & ~#Num) & (#Num | 'd1 & ~#Num)
+//│       <: (#Num | 'a1 & ~#Num) & Object & (#Num | 'b1 & ~#Num) & (#Num | 'c1 & ~#Num) & (#Num | 'd1 & ~#Num)
 //│   'r1 :> #Var | 'result
-//│       <: (#Num | 'a1 & ~#Num) & (#Num | 'b1 & ~#Num) & (#Num | 'c1 & ~#Num) & (#Num | 'd1 & ~#Num)
+//│       <: (#Num | 'a1 & ~#Num) & Object & (#Num | 'b1 & ~#Num) & (#Num | 'c1 & ~#Num) & (#Num | 'd1 & ~#Num)
 //│   'result :> 'c | 'd | 'e | 'f | #Var
-//│           <: (#Num | 'a1 & ~#Num) & (#Num | 'b1 & ~#Num) & (#Num | 'c1 & ~#Num) & (#Num | 'd1 & ~#Num)
+//│           <: (#Num | 'a1 & ~#Num) & Object & (#Num | 'b1 & ~#Num) & (#Num | 'c1 & ~#Num) & (#Num | 'd1 & ~#Num)
 //│   'd1 :> #Var | #Abs & {Abs#A = 'A13} | #App & {App#A = 'A12}
 //│   'c1 :> #Var | #Abs & {Abs#A = 'A13} | #App & {App#A = 'A12}
 //│   'b1 :> #Var | #Abs & {Abs#A = 'A13} | #App & {App#A = 'A12}
@@ -397,7 +465,7 @@ module Test3 extends EvalVar, EvalExpr, EvalLambda
 Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ 'a
 //│   where
-//│     'a :> Abs['a] | Abs[Var] | Num | Var | App['a]
+//│     'a :> App['a] | Abs['a] | Abs[Var] | Num | Var
 //│ res
 //│     = Abs {}
 
@@ -436,7 +504,7 @@ module Test3 extends EvalVar, EvalLambda, EvalExpr
 //│   'n :> #Cons & {Cons#A :> 'A <: 'A0} | #Cons & {Cons#A :> 'A1 <: 'A2}
 //│      <: 'o
 //│   'o :> #Cons & {Cons#A :> 'A <: 'A0} | #Cons & {Cons#A :> 'A1 <: 'A2} | Cons['A6] | Nil
-//│      <: #Cons & {Cons#A <: 'A7} | #Nil & ~#Cons
+//│      <: (#Cons & {Cons#A <: 'A7} | #Nil & ~#Cons) & Object
 //│   'A6 := out 'A7
 //│   'A7 :> 'A0 & 'A8 | 'A2 & 'A9
 //│       <: 'head
@@ -472,30 +540,30 @@ module Test3 extends EvalVar, EvalLambda, EvalExpr
 //│   'A11 :> 'c | 'd | 'b | 'e | #Var
 //│        <: 'result
 //│   'c :> 'v
-//│      <: (#Num | 'w & ~#Num) & (#Num | 'y & ~#Num) & (#Num | 'z & ~#Num) & (#Num | 'a1 & ~#Num)
+//│      <: (#Num | 'w & ~#Num) & Object & (#Num | 'y & ~#Num) & (#Num | 'z & ~#Num) & (#Num | 'a1 & ~#Num)
 //│   'v :> 'b1 | 'c1 | 'd1 | 'e1
-//│      <: (#Num | 'w & ~#Num) & (#Num | 'y & ~#Num) & (#Num | 'z & ~#Num) & (#Num | 'a1 & ~#Num)
+//│      <: (#Num | 'w & ~#Num) & Object & (#Num | 'y & ~#Num) & (#Num | 'z & ~#Num) & (#Num | 'a1 & ~#Num)
 //│   'e1 :> 'f1
-//│       <: (#Num | 'w & ~#Num) & (#Num | 'y & ~#Num) & (#Num | 'z & ~#Num) & (#Num | 'a1 & ~#Num)
+//│       <: (#Num | 'w & ~#Num) & Object & (#Num | 'y & ~#Num) & (#Num | 'z & ~#Num) & (#Num | 'a1 & ~#Num)
 //│   'f1 :> #Var | 'result
-//│       <: (#Num | 'w & ~#Num) & (#Num | 'y & ~#Num) & (#Num | 'z & ~#Num) & (#Num | 'a1 & ~#Num)
+//│       <: (#Num | 'w & ~#Num) & Object & (#Num | 'y & ~#Num) & (#Num | 'z & ~#Num) & (#Num | 'a1 & ~#Num)
 //│   'result :> 'c | 'd | 'b | 'e | #Var
-//│           <: (#Num | 'w & ~#Num) & (#Num | 'y & ~#Num) & (#Num | 'z & ~#Num) & (#Num | 'a1 & ~#Num)
+//│           <: (#Num | 'w & ~#Num) & Object & (#Num | 'y & ~#Num) & (#Num | 'z & ~#Num) & (#Num | 'a1 & ~#Num)
 //│   'd1 :> #Abs & {Abs#A = 'A12}
-//│       <: (#Num | 'w & ~#Num) & (#Num | 'y & ~#Num) & (#Num | 'z & ~#Num) & (#Num | 'a1 & ~#Num)
+//│       <: (#Num | 'w & ~#Num) & Object & (#Num | 'y & ~#Num) & (#Num | 'z & ~#Num) & (#Num | 'a1 & ~#Num)
 //│   'c1 :> #App & {App#A = 'A13}
-//│       <: (#Num | 'w & ~#Num) & (#Num | 'y & ~#Num) & (#Num | 'z & ~#Num) & (#Num | 'a1 & ~#Num)
+//│       <: (#Num | 'w & ~#Num) & Object & (#Num | 'y & ~#Num) & (#Num | 'z & ~#Num) & (#Num | 'a1 & ~#Num)
 //│   'b1 :> 'g1
-//│       <: (#Num | 'w & ~#Num) & (#Num | 'y & ~#Num) & (#Num | 'z & ~#Num) & (#Num | 'a1 & ~#Num)
+//│       <: (#Num | 'w & ~#Num) & Object & (#Num | 'y & ~#Num) & (#Num | 'z & ~#Num) & (#Num | 'a1 & ~#Num)
 //│   'g1 :> 'c | 'd | 'b | 'e
-//│       <: (#Num | 'w & ~#Num) & (#Num | 'y & ~#Num) & (#Num | 'z & ~#Num) & (#Num | 'a1 & ~#Num)
+//│       <: (#Num | 'w & ~#Num) & Object & (#Num | 'y & ~#Num) & (#Num | 'z & ~#Num) & (#Num | 'a1 & ~#Num)
 //│   'd :> #Num
-//│      <: (#Num | 'w & ~#Num) & (#Num | 'y & ~#Num) & (#Num | 'z & ~#Num) & (#Num | 'a1 & ~#Num)
+//│      <: (#Num | 'w & ~#Num) & Object & (#Num | 'y & ~#Num) & (#Num | 'z & ~#Num) & (#Num | 'a1 & ~#Num)
 //│   'w :> #Var | #Abs & {Abs#A = 'A12} | #App & {App#A = 'A13}
 //│   'A12 :> 'h1
 //│   'h1 :> 'c | 'd | 'b | 'e
-//│   'b <: (#Num | 'w & ~#Num) & (#Num | 'y & ~#Num) & (#Num | 'z & ~#Num) & (#Num | 'a1 & ~#Num) & 'i1
-//│   'i1 <: #Var | (#Num | (#Add & {Add#A <: 'A14} | #Mul & {Mul#A <: 'A15} & ~#Add) & ~#Num) & ~#Var
+//│   'b <: (#Num | 'w & ~#Num) & Object & (#Num | 'y & ~#Num) & (#Num | 'z & ~#Num) & (#Num | 'a1 & ~#Num) & 'i1
+//│   'i1 <: (#Var | (#Num | (#Add & {Add#A <: 'A14} | #Mul & {Mul#A <: 'A15} & ~#Add) & ~#Num) & ~#Var) & Object
 //│   'A15 <: 'r & 'l
 //│   'l <: 'j1
 //│   'r <: 'j1
@@ -508,7 +576,7 @@ module Test3 extends EvalVar, EvalLambda, EvalExpr
 //│   'A13 :> 'u | 'l1
 //│   'l1 :> 'c | 'd | 'b | 'e
 //│   'e :> #Num
-//│      <: (#Num | 'w & ~#Num) & (#Num | 'y & ~#Num) & (#Num | 'z & ~#Num) & (#Num | 'a1 & ~#Num)
+//│      <: (#Num | 'w & ~#Num) & Object & (#Num | 'y & ~#Num) & (#Num | 'z & ~#Num) & (#Num | 'a1 & ~#Num)
 //│   'a1 :> #Var | #Abs & {Abs#A = 'A12} | #App & {App#A = 'A13}
 //│   'z :> #Var | #Abs & {Abs#A = 'A12} | #App & {App#A = 'A13}
 //│   'x1 :> string
@@ -522,16 +590,16 @@ module Test3 extends EvalVar, EvalLambda, EvalExpr
 :e
 Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.523: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
+//│ ║  l.591: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Abs[?A]` does not match type `Add[?A0] | Mul[?A1] | Num | Var`
-//│ ║  l.523: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
+//│ ║  l.591: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ ║         	                                                 ^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.204: 	  if v is
+//│ ║  l.252: 	  if v is
 //│ ║         	     ^
 //│ ╟── from reference:
-//│ ║  l.214: 	    let vv = map_expr(eta, v)
+//│ ║  l.262: 	    let vv = map_expr(eta, v)
 //│ ╙──       	                           ^
 //│ error | 'a
 //│   where

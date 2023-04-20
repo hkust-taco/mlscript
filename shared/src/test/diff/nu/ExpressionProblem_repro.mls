@@ -127,7 +127,7 @@ mixin EvalNeg {
 //│ mixin EvalNeg() {
 //│   super: {eval: 'a -> 'b}
 //│   this: {eval: 'expr -> int}
-//│   fun eval: (Neg['expr] | 'a & ~#Neg) -> (int | 'b)
+//│   fun eval: (Neg['expr] | Object & 'a & ~#Neg) -> (int | 'b)
 //│ }
 
 

@@ -128,6 +128,12 @@ type Option<A> = Some<A> | None
 
 
 let opt = if true then Some(123) else None
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.130: 	let opt = if true then Some(123) else None
+//│ ║         	             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── reference of type `true` is not an instance of type `Object`
+//│ ║  l.130: 	let opt = if true then Some(123) else None
+//│ ╙──       	             ^^^^
 //│ let opt: None | Some[123]
 //│ opt
 //│     = Some {}
@@ -156,11 +162,29 @@ opt.map(x => x > 0)
 
 
 if opt is Some then opt.value else 0
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.164: 	if opt is Some then opt.value else 0
+//│ ║         	   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── reference of type `None` is not an instance of type `Object`
+//│ ║  l.130: 	let opt = if true then Some(123) else None
+//│ ║         	                                      ^^^^
+//│ ╟── but it flows into reference with expected type `Object`
+//│ ║  l.164: 	if opt is Some then opt.value else 0
+//│ ╙──       	   ^^^
 //│ 0 | 123
 //│ res
 //│     = 123
 
 if opt is Some(v) then v else 0
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.178: 	if opt is Some(v) then v else 0
+//│ ║         	   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── reference of type `None` is not an instance of type `Object`
+//│ ║  l.130: 	let opt = if true then Some(123) else None
+//│ ║         	                                      ^^^^
+//│ ╟── but it flows into reference with expected type `Object`
+//│ ║  l.178: 	if opt is Some(v) then v else 0
+//│ ╙──       	   ^^^
 //│ 0 | 123
 //│ res
 //│     = 123
@@ -172,12 +196,31 @@ fun map(x, f) = if x is
 //│ fun map: forall 'value 'A. (None | Some['value], 'value -> 'A,) -> (None | Some['A])
 
 let mo = map(opt, succ)
-//│ let mo: None | Some[int]
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.198: 	let mo = map(opt, succ)
+//│ ║         	         ^^^^^^^^^^^^^^
+//│ ╟── reference of type `None` is not an instance of type `Object`
+//│ ║  l.130: 	let opt = if true then Some(123) else None
+//│ ║         	                                      ^^^^
+//│ ╟── but it flows into reference with expected type `Object`
+//│ ║  l.198: 	let mo = map(opt, succ)
+//│ ║         	             ^^^
+//│ ╟── Note: constraint arises from `case` expression:
+//│ ║  l.193: 	fun map(x, f) = if x is
+//│ ║         	                   ^^^^
+//│ ║  l.194: 	  None then None
+//│ ║         	^^^^^^^^^^^^^^^^
+//│ ║  l.195: 	  Some(v) then Some(f(v))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── from reference:
+//│ ║  l.193: 	fun map(x, f) = if x is
+//│ ╙──       	                   ^
+//│ let mo: None | Some[int] | error
 //│ mo
 //│    = Some {}
 
 mo.toArray
-//│ Array[int]
+//│ Array[int] | error
 //│ res
 //│     = [ 124 ]
 
@@ -189,7 +232,7 @@ class Test(n) {
   fun bar = n
 }
 //│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.187: 	class Test(n) {
+//│ ║  l.230: 	class Test(n) {
 //│ ╙──       	           ^
 //│ class Test(n: error) {
 //│   fun bar: error
@@ -213,13 +256,13 @@ class Test<A>(n: A) {
   fun foo = n + 1
 }
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.213: 	  fun foo = n + 1
+//│ ║  l.256: 	  fun foo = n + 1
 //│ ║         	            ^^^
 //│ ╟── reference of type `A` is not an instance of type `int`
-//│ ║  l.213: 	  fun foo = n + 1
+//│ ║  l.256: 	  fun foo = n + 1
 //│ ║         	            ^
 //│ ╟── Note: type parameter A is defined at:
-//│ ║  l.212: 	class Test<A>(n: A) {
+//│ ║  l.255: 	class Test<A>(n: A) {
 //│ ╙──       	           ^
 //│ class Test[A](n: A) {
 //│   fun foo: error | int
@@ -296,13 +339,13 @@ class TestBad<A> {
   fun foo2(x: A) = x + 1
 }
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.296: 	  fun foo2(x: A) = x + 1
+//│ ║  l.339: 	  fun foo2(x: A) = x + 1
 //│ ║         	                   ^^^
 //│ ╟── reference of type `A` is not an instance of type `int`
-//│ ║  l.296: 	  fun foo2(x: A) = x + 1
+//│ ║  l.339: 	  fun foo2(x: A) = x + 1
 //│ ║         	                   ^
 //│ ╟── Note: type parameter A is defined at:
-//│ ║  l.294: 	class TestBad<A> {
+//│ ║  l.337: 	class TestBad<A> {
 //│ ╙──       	              ^
 //│ class TestBad[A]() {
 //│   fun foo1: (x: A,) -> A
@@ -393,7 +436,7 @@ not(w.x.n)
 :e
 not(w.x.a)
 //│ ╔══[ERROR] Class `C` does not contain member `a`
-//│ ║  l.394: 	not(w.x.a)
+//│ ║  l.437: 	not(w.x.a)
 //│ ╙──       	       ^^
 //│ bool
 //│ res

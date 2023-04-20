@@ -31,7 +31,7 @@ mixin EvalNeg {
 //│ mixin EvalNeg() {
 //│   super: {eval: 'a -> 'b}
 //│   this: {eval: 'expr -> int}
-//│   fun eval: (Neg['expr] | 'a & ~#Neg) -> (int | 'b)
+//│   fun eval: (Neg['expr] | Object & 'a & ~#Neg) -> (int | 'b)
 //│ }
 
 
@@ -43,16 +43,18 @@ mixin EvalNegNeg {
 //│ mixin EvalNegNeg() {
 //│   super: {eval: (Neg['A] | 'a) -> 'b}
 //│   this: {eval: 'expr -> 'b}
-//│   fun eval: (Neg['A & (~#Neg | Neg['expr])] | 'a & ~#Neg) -> 'b
+//│   fun eval: (Neg['A & (Neg['expr] | Object & ~#Neg)] | Object & 'a & ~#Neg) -> 'b
 //│ }
 
 
 module TestLang extends EvalBase, EvalNeg, EvalNegNeg
 //│ module TestLang() {
-//│   fun eval: 'A -> int
+//│   fun eval: 'a -> int
 //│ }
 //│ where
-//│   'A <: Add['A] | Lit | Neg['A & (~#Neg | Neg['A])]
+//│   'a <: Neg['A] | Object & 'b & ~#Neg
+//│   'A <: Neg['a & 'A] | Neg['A] & ~#Neg | Object & 'b & ~#Neg
+//│   'b <: Add['a] | Lit | Neg['a]
 
 
 fun mk(n) = if n is
@@ -60,6 +62,36 @@ fun mk(n) = if n is
   1 then Neg(mk(n))
   _ then Add(mk(n), mk(n))
 TestLang.eval(mk(0))
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.60: 	fun mk(n) = if n is
+//│ ║        	               ^^^^
+//│ ║  l.61: 	  0 then Lit(0)
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ║  l.62: 	  1 then Neg(mk(n))
+//│ ║        	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.63: 	  _ then Add(mk(n), mk(n))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── application of type `bool` is not an instance of type `Object`
+//│ ║  l.60: 	fun mk(n) = if n is
+//│ ║        	               ^^^^
+//│ ║  l.61: 	  0 then Lit(0)
+//│ ╙──      	^^^
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.60: 	fun mk(n) = if n is
+//│ ║        	               ^^^^
+//│ ║  l.61: 	  0 then Lit(0)
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ║  l.62: 	  1 then Neg(mk(n))
+//│ ║        	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.63: 	  _ then Add(mk(n), mk(n))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── application of type `bool` is not an instance of type `Object`
+//│ ║  l.60: 	fun mk(n) = if n is
+//│ ║        	               ^^^^
+//│ ║  l.61: 	  0 then Lit(0)
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ║  l.62: 	  1 then Neg(mk(n))
+//│ ╙──      	^^^
 //│ fun mk: forall 'E. number -> 'E
 //│ int
 //│ where

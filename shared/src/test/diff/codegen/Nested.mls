@@ -935,11 +935,11 @@ M.N.op(M.P())
 //│ ╙──       	        ^^
 //│ module M() {
 //│   module N() {
-//│     fun op: anything -> (0 | 1 | 2)
+//│     fun op: Object -> (0 | 1 | 2)
 //│   }
 //│   class O()
 //│   class P()
-//│   fun op: anything -> (0 | 1 | 2)
+//│   fun op: Object -> (0 | 1 | 2)
 //│ }
 //│ error
 //│ // Prelude
@@ -1179,6 +1179,18 @@ fun main =
     else g(x - 1)
   fun g(x: int): int = f(x)
   f
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.1177: 	  fun f(x: int): int = if x is
+//│ ║          	                          ^^^^
+//│ ║  l.1178: 	    0 then 1
+//│ ║          	^^^^^^^^^^^^
+//│ ║  l.1179: 	    else g(x - 1)
+//│ ║          	^^^^^^^^^^^^^^^^^
+//│ ╟── application of type `bool` is not an instance of type `Object`
+//│ ║  l.1177: 	  fun f(x: int): int = if x is
+//│ ║          	                          ^^^^
+//│ ║  l.1178: 	    0 then 1
+//│ ╙──        	^^^^^
 //│ fun main: (x: int,) -> int
 //│ // Prelude
 //│ class TypingUnit24 {}

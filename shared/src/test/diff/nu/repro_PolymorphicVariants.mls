@@ -28,5 +28,5 @@ mixin EvalLambda {
 // FIXME type simplification bug: analyze2 does not traverse TVs witht he correct PolMap
 // :ds
 module Test1 extends EvalLambda
-//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: x46_115' has no occurrences...
+//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: x47_116' has no occurrences...
 

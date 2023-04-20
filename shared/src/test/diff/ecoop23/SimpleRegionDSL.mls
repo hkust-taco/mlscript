@@ -32,7 +32,7 @@ mixin SizeBase {
 }
 //│ mixin SizeBase() {
 //│   this: {size: ('a | 'a0 | 'a1 | 'a2) -> int}
-//│   fun size: (Circle | Intersect['a1] | Outside['a] | Translate['a2] | Union['a0]) -> int
+//│   fun size: (Circle | Intersect['a2] | Outside['a0] | Translate['a] | Union['a1]) -> int
 //│ }
 
 // ******************* Linguistic Reuse and Meta-Language Optimizations *******************

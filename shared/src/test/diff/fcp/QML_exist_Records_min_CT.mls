@@ -22,9 +22,9 @@ def stepImpl arrImpl = { fold = fun f -> fun r0 -> arrImpl.fold f r0 }
 
 // :d
 def stepImpl2 arr = arr stepImpl
-//│ stepImpl2: ((forall 'a. 'a -> {fold: forall 'b 'c 'd. 'b -> ('c -> 'd
+//│ stepImpl2: ((forall 'a. 'a -> {fold: forall 'b 'c 'd. 'c -> ('d -> 'b
 //│   where
-//│     'a <: {fold: 'b -> 'c -> 'd})}) -> 'e) -> 'e
+//│     'a <: {fold: 'c -> 'd -> 'b})}) -> 'e) -> 'e
 //│          = [Function: stepImpl2]
 
 def step: Arrays -> Arrays

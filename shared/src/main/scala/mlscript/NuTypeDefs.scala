@@ -319,7 +319,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           TupleType(params.mapKeys(some))(provTODO),
           ClassTag(Var(td.nme.name),
             // TODO base classes
-            Set.single(TypeName("Eql"))
+            Set.single(TypeName("Object")) + TypeName("Eql")
           )(provTODO) & RecordType.mk(
             tparams.map { case (tn, tv, vi) => // TODO use vi
               Var(td.nme.name + "#" + tn.name).withLocOf(tn) -> FieldType(S(tv), tv)(provTODO) }

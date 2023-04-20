@@ -1,0 +1,138 @@
+:NewDefs
+
+
+
+class A
+class B
+//│ class A()
+//│ class B()
+
+
+
+fun foo(x) = if x is A then true
+//│ fun foo: A -> true
+
+fun foo(x) = if x is A then true else false
+//│ fun foo: Object -> bool
+
+
+:e
+fun foo(x: anything) = if x is A then true
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.20: 	fun foo(x: anything) = if x is A then true
+//│ ║        	                          ^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` is not an instance of type `Object`
+//│ ║  l.20: 	fun foo(x: anything) = if x is A then true
+//│ ║        	           ^^^^^^^^
+//│ ╟── but it flows into reference with expected type `Object`
+//│ ║  l.20: 	fun foo(x: anything) = if x is A then true
+//│ ╙──      	                          ^
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.20: 	fun foo(x: anything) = if x is A then true
+//│ ║        	                          ^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` is not an instance of type `A`
+//│ ║  l.20: 	fun foo(x: anything) = if x is A then true
+//│ ║        	           ^^^^^^^^
+//│ ╟── but it flows into reference with expected type `A`
+//│ ║  l.20: 	fun foo(x: anything) = if x is A then true
+//│ ║        	                          ^
+//│ ╟── Note: constraint arises from class pattern:
+//│ ║  l.20: 	fun foo(x: anything) = if x is A then true
+//│ ╙──      	                               ^
+//│ fun foo: (x: anything,) -> true
+
+fun foo(x: anything) = if x is A then true else false
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.44: 	fun foo(x: anything) = if x is A then true else false
+//│ ║        	                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` is not an instance of type `Object`
+//│ ║  l.44: 	fun foo(x: anything) = if x is A then true else false
+//│ ║        	           ^^^^^^^^
+//│ ╟── but it flows into reference with expected type `Object`
+//│ ║  l.44: 	fun foo(x: anything) = if x is A then true else false
+//│ ╙──      	                          ^
+//│ fun foo: (x: anything,) -> bool
+
+
+fun foo(x: Object) = if x is A then true else false
+//│ fun foo: (x: Object,) -> bool
+
+
+// TODO make this a rigid type variable!
+// :e
+fun foo = forall 'a; (x: 'a) => if x is A then true else false
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.63: 	fun foo = forall 'a; (x: 'a) => if x is A then true else false
+//│ ║        	                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── rigid type variable of type `'a` is not an instance of type `Object`
+//│ ║  l.63: 	fun foo = forall 'a; (x: 'a) => if x is A then true else false
+//│ ║        	                 ^^
+//│ ╟── but it flows into reference with expected type `Object`
+//│ ║  l.63: 	fun foo = forall 'a; (x: 'a) => if x is A then true else false
+//│ ╙──      	                                   ^
+//│ fun foo: (x: anything,) -> bool
+
+
+
+// TODO
+class B extends Object
+//│ ╔══[ERROR] Could not find definition `Object`
+//│ ║  l.78: 	class B extends Object
+//│ ╙──      	                ^^^^^^
+//│ class B()
+//│ Code generation encountered an error:
+//│   unresolved symbol Object
+
+// TODO
+class C extends A
+//│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
+//│ ║  l.87: 	class C extends A
+//│ ╙──      	                ^
+//│ class C()
+
+let a: Object = A()
+//│ let a: Object
+//│ a
+//│   = A {}
+
+let o: Object = C()
+//│ let o: Object
+//│ o
+//│   = C {}
+
+fun foo(x) = if x is
+  A then true
+  B then true
+  else false
+//│ fun foo: Object -> bool
+
+foo(0)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.109: 	foo(0)
+//│ ║         	^^^^^^
+//│ ╟── integer literal of type `0` is not an instance of type `Object`
+//│ ║  l.109: 	foo(0)
+//│ ║         	    ^
+//│ ╟── Note: constraint arises from `case` expression:
+//│ ║  l.103: 	fun foo(x) = if x is
+//│ ║         	                ^^^^
+//│ ║  l.104: 	  A then true
+//│ ║         	^^^^^^^^^^^^^
+//│ ║  l.105: 	  B then true
+//│ ║         	^^^^^^^^^^^^^
+//│ ║  l.106: 	  else false
+//│ ║         	^^^^^^^^^^^^
+//│ ╟── from reference:
+//│ ║  l.103: 	fun foo(x) = if x is
+//│ ╙──       	                ^
+//│ error | false | true
+//│ res
+//│     = false
+
+foo(o)
+//│ bool
+//│ res
+//│     = true
+
+
+

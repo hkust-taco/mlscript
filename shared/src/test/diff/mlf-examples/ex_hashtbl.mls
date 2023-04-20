@@ -119,30 +119,30 @@ rec def find table key =
 
 :ns
 find
-//│ res: forall 'a 'a0 'b 'c 'val 'd 'e 'a1 'f 'find 'g 'h 'i 'j 'k 'l 'a2. 'find
+//│ res: forall 'a 'b 'find 'c 'd 'e 'f 'a0 'a1 'g 'h 'a2 'i 'val 'j 'k 'l. 'find
 //│   where
-//│     'find := 'b -> 'h -> 'g
-//│     'g :> (forall 'm. 'm) | (forall 'n. 'n)
+//│     'find := 'f -> 'g -> 'c
+//│     'c :> (forall 'm. 'm) | (forall 'n. 'n)
+//│        <: 'h
+//│     'h :> (forall 'm. 'm) | (forall 'n. 'n)
 //│        <: 'd
 //│     'd :> (forall 'm. 'm) | (forall 'n. 'n)
-//│        <: 'k
-//│     'k :> (forall 'm. 'm) | (forall 'n. 'n)
-//│        <: 'e
-//│     'e :> (forall 'm. 'm) | (forall 'n. 'n)
 //│        <: 'i
 //│     'i :> (forall 'm. 'm) | (forall 'n. 'n)
-//│        <: 'g
+//│        <: 'j
+//│     'j :> (forall 'm. 'm) | (forall 'n. 'n)
+//│        <: 'c
 //│     'n :> #None
-//│     'm :> #Some & {val: 'val, Some#a = 'a0}
-//│     'h <: 'c
-//│     'b :> List['a]
-//│        <: List['a] & List['a2] & List['a1]
-//│     'a <: 'a1 & 'a2
-//│     'a2 <: {_2: 'f} & {_1: 'j}
-//│     'j <: 'c
-//│     'f <: 'l
-//│     'l <: 'val
-//│     'val <: 'a0
+//│     'm :> #Some & {val: 'val, Some#a = 'a}
+//│     'g <: 'l
+//│     'f :> List['a0]
+//│        <: List['a0] & List['a1] & List['a2]
+//│     'a0 <: 'a2 & 'a1
+//│     'a1 <: {_2: 'b} & {_1: 'e}
+//│     'e <: 'l
+//│     'b <: 'k
+//│     'k <: 'val
+//│     'val <: 'a
 //│    = [Function: find1]
 
 :ng

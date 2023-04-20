@@ -14,7 +14,7 @@ fun f(override Pair(x, y)) = x + y
 //│ ╔══[ERROR] identifier not found: super
 //│ ║  l.11: 	fun f(override Pair(x, y)) = x + y
 //│ ╙──      	      ^^^^^^^^
-//│ fun f: anything -> (error | int)
+//│ fun f: Object -> (error | int)
 //│ Syntax error:
 //│   'super' keyword unexpected here
 
@@ -24,7 +24,7 @@ mixin Test {
 }
 //│ mixin Test() {
 //│   super: {f: 'a -> 'b}
-//│   fun f: (Pair | 'a & ~#Pair) -> (int | 'b)
+//│   fun f: (Object & 'a & ~#Pair | Pair) -> (int | 'b)
 //│ }
 
 

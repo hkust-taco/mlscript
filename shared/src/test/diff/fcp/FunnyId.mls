@@ -188,14 +188,14 @@ rec def id1 x = if true then x else id1 id1 x
 id1 id
 //│ res: 'a -> 'b | 'id
 //│   where
-//│     'a :> forall 'c 'id 'd. 'a -> 'b | 'id
+//│     'a :> forall 'c 'd 'id. 'a -> 'b | 'id
 //│        <: 'b
-//│     'b :> forall 'c 'id 'd. 'id
+//│     'b :> forall 'c 'd 'id. 'id
 //│        <: 'a -> 'b
-//│     'id :> 'd -> 'c
-//│     'd :> 'id
-//│        <: 'c
+//│     'id :> 'c -> 'd
 //│     'c :> 'id
-//│        <: 'd -> 'c
+//│        <: 'd
+//│     'd :> 'id
+//│        <: 'c -> 'd
 
 

@@ -190,6 +190,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   val TrueType: ClassTag = ClassTag(Var("true"), sing(TN("bool")) + TN("Eql"))(noTyProv)
   val FalseType: ClassTag = ClassTag(Var("false"), sing(TN("bool")) + TN("Eql"))(noTyProv)
   
+  val ObjType: ClassTag = ClassTag(Var("Object"), sing(TN("Eql")))(noTyProv)
   val IntType: ClassTag = ClassTag(Var("int"), sing(TN("number")) + TN("Eql"))(noTyProv)
   val DecType: ClassTag = ClassTag(Var("number"), sing(TN("Eql")))(noTyProv)
   val StrType: ClassTag = ClassTag(Var("string"), sing(TN("Eql")))(noTyProv)
@@ -205,6 +206,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       "anything" -> TopType, "nothing" -> BotType)
   
   val builtinTypes: Ls[TypeDef] =
+    TypeDef(Cls, TN("Object"), Nil, TopType, Nil, Nil, sing(TN("Eql")), N, Nil) ::
     TypeDef(Cls, TN("int"), Nil, TopType, Nil, Nil, sing(TN("number")) + TN("Eql"), N, Nil) ::
     TypeDef(Cls, TN("number"), Nil, TopType, Nil, Nil, sing(TN("Eql")), N, Nil) ::
     TypeDef(Cls, TN("bool"), Nil, TopType, Nil, Nil, sing(TN("Eql")), N, Nil) ::
@@ -1054,6 +1056,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         (t_ty without rcd.fields.iterator.map(_._1).toSortedSet) & (rcd_ty, prov)
       case CaseOf(s, cs) =>
         val s_ty = typeMonomorphicTerm(s)
+        if (newDefs) con(s_ty, ObjType.withProv(prov), TopType)
         val (tys, cs_ty) = typeArms(s |>? {
           case v: Var => v
           case Asc(v: Var, _) => v

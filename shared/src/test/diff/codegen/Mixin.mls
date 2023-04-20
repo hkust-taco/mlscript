@@ -236,7 +236,7 @@ mixin EvalNeg {
 //│ mixin EvalNeg() {
 //│   super: {eval: 'a -> 'b}
 //│   this: {eval: 'expr -> int}
-//│   fun eval: (Neg['expr] | 'a & ~#Neg) -> (int | 'b)
+//│   fun eval: (Neg['expr] | Object & 'a & ~#Neg) -> (int | 'b)
 //│ }
 //│ // Prelude
 //│ class TypingUnit3 {
@@ -297,7 +297,7 @@ mixin EvalNegNeg {
 //│ mixin EvalNegNeg() {
 //│   super: {eval: (Neg['A] | 'a) -> 'b}
 //│   this: {eval: 'expr -> 'b}
-//│   fun eval: (Neg['A & (~#Neg | Neg['expr])] | 'a & ~#Neg) -> 'b
+//│   fun eval: (Neg['A & (Neg['expr] | Object & ~#Neg)] | Object & 'a & ~#Neg) -> 'b
 //│ }
 //│ // Prelude
 //│ class TypingUnit4 {
@@ -352,10 +352,12 @@ mixin EvalNegNeg {
 :ShowRepl
 module TestLang extends EvalBase, EvalNeg, EvalNegNeg
 //│ module TestLang() {
-//│   fun eval: 'A -> int
+//│   fun eval: 'a -> int
 //│ }
 //│ where
-//│   'A <: Add['A] | Lit | Neg['A & (~#Neg | Neg['A])]
+//│   'a <: Neg['A] | Object & 'b & ~#Neg
+//│   'A <: Neg['a & 'A] | Neg['A] & ~#Neg | Object & 'b & ~#Neg
+//│   'b <: Add['a] | Lit | Neg['a]
 //│ // Prelude
 //│ class TypingUnit5 {
 //│   #TestLang;
@@ -412,6 +414,36 @@ fun mk(n) = if n is
   1 then Neg(mk(n))
   _ then Add(mk(n), mk(n))
 TestLang.eval(mk(0))
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.412: 	fun mk(n) = if n is
+//│ ║         	               ^^^^
+//│ ║  l.413: 	  0 then Lit(0)
+//│ ║         	^^^^^^^^^^^^^^^^
+//│ ║  l.414: 	  1 then Neg(mk(n))
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.415: 	  _ then Add(mk(n), mk(n))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── application of type `bool` is not an instance of type `Object`
+//│ ║  l.412: 	fun mk(n) = if n is
+//│ ║         	               ^^^^
+//│ ║  l.413: 	  0 then Lit(0)
+//│ ╙──       	^^^
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.412: 	fun mk(n) = if n is
+//│ ║         	               ^^^^
+//│ ║  l.413: 	  0 then Lit(0)
+//│ ║         	^^^^^^^^^^^^^^^^
+//│ ║  l.414: 	  1 then Neg(mk(n))
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.415: 	  _ then Add(mk(n), mk(n))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── application of type `bool` is not an instance of type `Object`
+//│ ║  l.412: 	fun mk(n) = if n is
+//│ ║         	               ^^^^
+//│ ║  l.413: 	  0 then Lit(0)
+//│ ║         	^^^^^^^^^^^^^^^^
+//│ ║  l.414: 	  1 then Neg(mk(n))
+//│ ╙──       	^^^
 //│ fun mk: forall 'E. number -> 'E
 //│ int
 //│ where
@@ -426,7 +458,7 @@ TestLang.eval(mk(0))
 //│ // Query 2
 //│ res = TestLang.eval(mk(0));
 //│ // End of generated code
-//│ ┌ Block at Mixin.mls:410
+//│ ┌ Block at Mixin.mls:412
 //│ ├─┬ Prelude
 //│ │ ├── Code
 //│ │ │   class TypingUnit6 {}
@@ -458,7 +490,7 @@ class Foo(x: int)
 :e
 class Bar(x: int, y: int) extends Foo(x + y)
 //│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
-//│ ║  l.459: 	class Bar(x: int, y: int) extends Foo(x + y)
+//│ ║  l.491: 	class Bar(x: int, y: int) extends Foo(x + y)
 //│ ╙──       	                                  ^^^^^^^^^^
 //│ class Bar(x: int, y: int)
 
@@ -581,7 +613,7 @@ mixin Base {
   fun x = y
 }
 //│ ╔══[ERROR] identifier not found: y
-//│ ║  l.581: 	  fun x = y
+//│ ║  l.613: 	  fun x = y
 //│ ╙──       	          ^
 //│ mixin Base() {
 //│   fun x: error
