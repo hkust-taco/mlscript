@@ -1640,9 +1640,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             //    where rv is the rigidified variables.
             // Now, since there may be recursive bounds, we do the same
             //    but through the indirection of a type variable tv2:
-            tv2.lowerBounds ::= tv.lowerBounds.map(freshen).foldLeft(rv: ST)(_ & _)
+            tv2.lowerBounds ::= tv.upperBounds.map(freshen).foldLeft(rv: ST)(_ & _)
             println(s"$tv2 :> ${tv2.lowerBounds}")
-            tv2.upperBounds ::= tv.upperBounds.map(freshen).foldLeft(rv: ST)(_ | _)
+            tv2.upperBounds ::= tv.lowerBounds.map(freshen).foldLeft(rv: ST)(_ | _)
             println(s"$tv2 <: ${tv2.upperBounds}")
             tv2
           } else {
