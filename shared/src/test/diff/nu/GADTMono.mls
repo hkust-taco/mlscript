@@ -10,9 +10,6 @@ class Exp[type A]
 
 // TODO
 class Lit(n: int) extends Exp[int]
-//│ ╔══[ERROR] mixin type arguments not yet supported
-//│ ║  l.12: 	class Lit(n: int) extends Exp[int]
-//│ ╙──      	                          ^^^
 //│ ╔══[ERROR] class type arguments not yet supported
 //│ ║  l.12: 	class Lit(n: int) extends Exp[int]
 //│ ╙──      	                          ^^^

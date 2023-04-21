@@ -7,14 +7,14 @@ mixin M0(x: int)
 
 :e
 class C0 extends M0
-//│ ╔══[ERROR] mixin M0 expects 1 parameters; got 0
+//│ ╔══[ERROR] mixin M0 expects 1 parameter(s); got 0
 //│ ║  l.9: 	class C0 extends M0
 //│ ╙──     	                 ^^
 //│ class C0()
 
 :e
 class C0 extends M0(1, 2)
-//│ ╔══[ERROR] mixin M0 expects 1 parameters; got 2
+//│ ╔══[ERROR] mixin M0 expects 1 parameter(s); got 2
 //│ ║  l.16: 	class C0 extends M0(1, 2)
 //│ ╙──      	                 ^^^^^^^
 //│ class C0()

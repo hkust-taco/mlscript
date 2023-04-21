@@ -352,18 +352,12 @@ class E2 extends Test {
 // TODO
 :e
 class D extends Test[int], Test[bool]
-//│ ╔══[ERROR] mixin type arguments not yet supported
+//│ ╔══[ERROR] trait Test expects 0 type parameter(s); got 1
 //│ ║  l.354: 	class D extends Test[int], Test[bool]
-//│ ╙──       	                ^^^^
-//│ ╔══[ERROR] mixin type arguments not yet supported
+//│ ╙──       	                ^^^^^^^^
+//│ ╔══[ERROR] trait Test expects 0 type parameter(s); got 1
 //│ ║  l.354: 	class D extends Test[int], Test[bool]
-//│ ╙──       	                           ^^^^
-//│ ╔══[ERROR] trait type arguments not yet supported
-//│ ║  l.354: 	class D extends Test[int], Test[bool]
-//│ ╙──       	                ^^^^
-//│ ╔══[ERROR] trait type arguments not yet supported
-//│ ║  l.354: 	class D extends Test[int], Test[bool]
-//│ ╙──       	                           ^^^^
+//│ ╙──       	                           ^^^^^^^^^
 //│ ╔══[ERROR] Member foo is declared in parent trait but not implemented
 //│ ║  l.354: 	class D extends Test[int], Test[bool]
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -419,10 +413,10 @@ if b is Foo(a) then a else 0
 // FIXME? why does it happen in this case and not above?
 if b is Bar(f) then f else 0
 //│ ╔══[ERROR] Type error in `case` expression
-//│ ║  l.420: 	if b is Bar(f) then f else 0
+//│ ║  l.414: 	if b is Bar(f) then f else 0
 //│ ║         	   ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `B` leaks out of its scope
-//│ ║  l.402: 	class Bar[B](f: B => B) extends Base
+//│ ║  l.396: 	class Bar[B](f: B => B) extends Base
 //│ ╙──       	          ^
 //│ (??B & 'B) -> ('B | ??B0) | 0
 
@@ -431,14 +425,14 @@ if b is
   Foo(a) then a
   Bar(f) then f
 //│ ╔══[ERROR] Type error in `case` expression
-//│ ║  l.430: 	if b is
+//│ ║  l.424: 	if b is
 //│ ║         	   ^^^^
-//│ ║  l.431: 	  Foo(a) then a
+//│ ║  l.425: 	  Foo(a) then a
 //│ ║         	^^^^^^^^^^^^^^^
-//│ ║  l.432: 	  Bar(f) then f
+//│ ║  l.426: 	  Bar(f) then f
 //│ ║         	^^^^^^^^^^^^^^^
 //│ ╟── type variable `B` leaks out of its scope
-//│ ║  l.402: 	class Bar[B](f: B => B) extends Base
+//│ ║  l.396: 	class Bar[B](f: B => B) extends Base
 //│ ╙──       	          ^
 //│ anything
 
@@ -446,7 +440,7 @@ if b is
 // TODO report proper error
 fun mt(x) = if x is Test then 1 else 0
 //│ ╔══[ERROR] Cannot find constructor `Test` in scope
-//│ ║  l.447: 	fun mt(x) = if x is Test then 1 else 0
+//│ ║  l.441: 	fun mt(x) = if x is Test then 1 else 0
 //│ ╙──       	                    ^^^^
 //│ fun mt: anything -> error
 
@@ -487,40 +481,40 @@ z: WP
 g: ZL
 e: ZL & WP
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.485: 	fun fto(w: WP): EM = w
+//│ ║  l.479: 	fun fto(w: WP): EM = w
 //│ ║         	                     ^
 //│ ╟── type `#WP` is not an instance of type `EM`
-//│ ║  l.485: 	fun fto(w: WP): EM = w
+//│ ║  l.479: 	fun fto(w: WP): EM = w
 //│ ║         	           ^^
 //│ ╟── but it flows into reference with expected type `#EM`
-//│ ║  l.485: 	fun fto(w: WP): EM = w
+//│ ║  l.479: 	fun fto(w: WP): EM = w
 //│ ║         	                     ^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.485: 	fun fto(w: WP): EM = w
+//│ ║  l.479: 	fun fto(w: WP): EM = w
 //│ ╙──       	                ^^
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.486: 	z: WP
+//│ ║  l.480: 	z: WP
 //│ ║         	^
 //│ ╟── type `#ZL` is not an instance of type `WP`
-//│ ║  l.465: 	let z: ZL
+//│ ║  l.459: 	let z: ZL
 //│ ║         	       ^^
 //│ ╟── but it flows into reference with expected type `#WP`
-//│ ║  l.486: 	z: WP
+//│ ║  l.480: 	z: WP
 //│ ║         	^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.486: 	z: WP
+//│ ║  l.480: 	z: WP
 //│ ╙──       	   ^^
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.487: 	g: ZL
+//│ ║  l.481: 	g: ZL
 //│ ║         	^
 //│ ╟── type `#Geo` is not an instance of type `ZL`
-//│ ║  l.464: 	let g: Geo
+//│ ║  l.458: 	let g: Geo
 //│ ║         	       ^^^
 //│ ╟── but it flows into reference with expected type `#ZL`
-//│ ║  l.487: 	g: ZL
+//│ ║  l.481: 	g: ZL
 //│ ║         	^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.487: 	g: ZL
+//│ ║  l.481: 	g: ZL
 //│ ╙──       	   ^^
 //│ fun fto: (w: WP,) -> EM
 //│ WP & ZL
@@ -559,20 +553,20 @@ class Eh2 extends Bs(true), Ele {
     fun ce(x) = x
 }
 //│ ╔══[ERROR] Type mismatch in definition of method foo:
-//│ ║  l.558: 	    fun foo(x) = x && false
+//│ ║  l.552: 	    fun foo(x) = x && false
 //│ ║         	        ^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `int & ?_` is not an instance of type `bool`
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.558: 	    fun foo(x) = x && false
+//│ ║  l.552: 	    fun foo(x) = x && false
 //│ ╙──       	                 ^
 //│ ╔══[ERROR] Type mismatch in definition of method foo:
-//│ ║  l.558: 	    fun foo(x) = x && false
+//│ ║  l.552: 	    fun foo(x) = x && false
 //│ ║         	        ^^^^^^^^^^^^^^^^^^^
 //│ ╟── operator application of type `bool` does not match type `int | ?_`
-//│ ║  l.558: 	    fun foo(x) = x && false
+//│ ║  l.552: 	    fun foo(x) = x && false
 //│ ║         	                 ^^^^^^^^^^
 //│ ╟── Note: constraint arises from operator application:
-//│ ║  l.529: 	  fun foo(x) = x + 1
+//│ ║  l.523: 	  fun foo(x) = x + 1
 //│ ╙──       	               ^^^^^
 //│ class Eh2() {
 //│   fun ce: Oth -> Test
@@ -584,25 +578,25 @@ class Eh extends Bs(1)
 class Eh1 extends Bs
 class Eh3 extends Bs(false), Test
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.583: 	class Eh extends Bs(1)
+//│ ║  l.577: 	class Eh extends Bs(1)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── integer literal of type `1` is not an instance of type `bool`
-//│ ║  l.583: 	class Eh extends Bs(1)
+//│ ║  l.577: 	class Eh extends Bs(1)
 //│ ║         	                    ^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.528: 	class Bs(a: bool) {
+//│ ║  l.522: 	class Bs(a: bool) {
 //│ ╙──       	            ^^^^
-//│ ╔══[ERROR] class Bs expects 1 parameters; got 0
-//│ ║  l.584: 	class Eh1 extends Bs
+//│ ╔══[ERROR] class Bs expects 1 parameter(s); got 0
+//│ ║  l.578: 	class Eh1 extends Bs
 //│ ╙──       	                  ^^
 //│ ╔══[ERROR] Type mismatch in definition of method foo:
-//│ ║  l.529: 	  fun foo(x) = x + 1
+//│ ║  l.523: 	  fun foo(x) = x + 1
 //│ ║         	      ^^^^^^^^^^^^^^
 //│ ╟── function of type `?a -> (forall ?b. ?b)` is not an instance of type `int`
-//│ ║  l.529: 	  fun foo(x) = x + 1
+//│ ║  l.523: 	  fun foo(x) = x + 1
 //│ ║         	         ^^^^^^^^^^^
 //│ ╟── but it flows into definition of method foo with expected type `int`
-//│ ║  l.529: 	  fun foo(x) = x + 1
+//│ ║  l.523: 	  fun foo(x) = x + 1
 //│ ║         	      ^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.5: 	  fun foo: int
@@ -611,7 +605,7 @@ class Eh3 extends Bs(false), Test
 //│ ║  l.5: 	  fun foo: int
 //│ ╙──     	      ^^^^^^^^
 //│ ╔══[ERROR] Member bar is declared in parent trait but not implemented
-//│ ║  l.585: 	class Eh3 extends Bs(false), Test
+//│ ║  l.579: 	class Eh3 extends Bs(false), Test
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ class Eh() {
 //│   fun foo: int -> int
@@ -664,6 +658,68 @@ class Bc2(bar: bool)
 :e
 class Bc12 extends Bc1(1), Bc2(true)
 //│ ╔══[ERROR] cannot inherit from more than one base class: Bc1 and Bc2
-//│ ║  l.665: 	class Bc12 extends Bc1(1), Bc2(true)
+//│ ║  l.659: 	class Bc12 extends Bc1(1), Bc2(true)
 //│ ╙──       	                           ^^^
 //│ class Bc12()
+
+
+
+trait Base[A] { fun f: A -> A }
+//│ trait Base[A]() {
+//│   fun f: A -> A
+//│ }
+
+class Der1 extends Base[int] { fun f(x) = x + 1 }
+//│ class Der1() {
+//│   fun f: int -> int
+//│ }
+
+class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (x, y) }
+//│ class Der2[A, B]() {
+//│   fun f: (A, B,) -> (A, B,)
+//│ }
+
+
+:e
+class DerBad1 extends Base[int, int]
+//│ ╔══[ERROR] trait Base expects 1 type parameter(s); got 2
+//│ ║  l.684: 	class DerBad1 extends Base[int, int]
+//│ ╙──       	                      ^^^^^^^^^^^^^
+//│ ╔══[ERROR] Member f is declared in parent trait but not implemented
+//│ ║  l.684: 	class DerBad1 extends Base[int, int]
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ class DerBad1() {
+//│   fun f: int -> int
+//│ }
+
+:e
+class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
+//│ ╔══[ERROR] Type mismatch in definition of method f:
+//│ ║  l.696: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
+//│ ║         	                                            ^^^^^^^^^^^^^^^^^^
+//│ ╟── reference of type `B` does not match type `A`
+//│ ║  l.696: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
+//│ ║         	                                                         ^
+//│ ╟── Note: constraint arises from type parameter:
+//│ ║  l.696: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
+//│ ║         	           ^
+//│ ╟── Note: type parameter B is defined at:
+//│ ║  l.696: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
+//│ ╙──       	              ^
+//│ ╔══[ERROR] Type mismatch in definition of method f:
+//│ ║  l.696: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
+//│ ║         	                                            ^^^^^^^^^^^^^^^^^^
+//│ ╟── reference of type `A` does not match type `B`
+//│ ║  l.696: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
+//│ ║         	                                                            ^
+//│ ╟── Note: constraint arises from type parameter:
+//│ ║  l.696: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
+//│ ║         	              ^
+//│ ╟── Note: type parameter A is defined at:
+//│ ║  l.696: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
+//│ ╙──       	           ^
+//│ class Der2[A, B]() {
+//│   fun f: (A, B,) -> (A, B,)
+//│ }
+
+

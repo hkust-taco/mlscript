@@ -825,13 +825,13 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                           : (ST, Ls[NuMember]) =
                         parents match {
                       case (p, v @ Var(mxnNme), mxnTargs, mxnArgs) :: ps =>
-                        if (mxnTargs.nonEmpty) err(msg"mixin type arguments not yet supported", p.toLoc)
                         val newMembs = trace(s"${lvl}. Inheriting from $p") {
                           ctx.get(mxnNme) match {
                             case S(lti: LazyTypeInfo) =>
                               
                               lti.complete().freshen match {
                                 case mxn: TypedNuMxn =>
+                                  if (mxnTargs.nonEmpty) err(msg"mixin type arguments not yet supported", p.toLoc)
                                   
                                   println(s"Fresh $mxn")
                                   
@@ -844,7 +844,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                                   
                                   if (mxnArgs.sizeCompare(mxn.params) =/= 0)
                                     err(msg"mixin $mxnNme expects ${
-                                      mxn.params.size.toString} parameters; got ${mxnArgs.size.toString}", Loc(v :: mxnArgs.unzip._2))
+                                      mxn.params.size.toString} parameter(s); got ${mxnArgs.size.toString}", Loc(v :: mxnArgs.unzip._2))
                                   
                                   val paramMems = mxn.params.lazyZip(mxnArgs).map { case (nme -> p, _ -> Fld(_, _, a)) => // TODO check name, mut, spec
                                     implicit val genLambdas: GenLambdas = true
@@ -941,7 +941,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                                   
                                   if (parArgs.sizeCompare(cls.params) =/= 0)
                                     err(msg"class $parNme expects ${
-                                      cls.params.size.toString} parameters; got ${parArgs.size.toString}", Loc(v :: parArgs.unzip._2))
+                                      cls.params.size.toString} parameter(s); got ${parArgs.size.toString}", Loc(v :: parArgs.unzip._2))
                                   
                                   val paramMems = cls.params.lazyZip(parArgs).map { case (nme -> p, _ -> Fld(_, _, a)) => // TODO check name, mut, spec
                                     implicit val genLambdas: GenLambdas = true
@@ -988,10 +988,42 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                               val info = lti.complete()
                               // TODO substitute type parameters in info
                               info match {
-                                case trt: TypedNuTrt =>
-                                  if (parTargs.nonEmpty) err(msg"trait type arguments not yet supported", p.toLoc)
+                                case rawTrt: TypedNuTrt =>
                                   if (parArgs.nonEmpty) err(msg"trait parameters not yet supported", p.toLoc)
+                                  
+                                  
+                                  implicit val freshened: MutMap[TV, ST] = MutMap.empty
+                                  implicit val shadows: Shadows = Shadows.empty
+                                  
+                                  if (rawTrt.tparams.sizeCompare(parTargs.size) =/= 0)
+                                    err(msg"trait $parNme expects ${
+                                      rawTrt.tparams.size.toString} type parameter(s); got ${parTargs.size.toString}", Loc(v :: parTargs))
+                                  
+                                  rawTrt.tparams.lazyZip(parTargs).foreach { case ((tn, _tv, vi), targTy) =>
+                                    
+                                    val targ = typeType(targTy)
+                                    
+                                    freshened += _tv -> (targ match {
+                                      case tv: TypeVarOrRigidVar => tv
+                                      case _ =>
+                                        println(s"Assigning ${_tv} := $targ where ${targ.showBounds}")
+                                        val tv =
+                                          freshVar(_tv.prov, N, _tv.nameHint)(targ.level) // TODO safe not to set original?!
+                                          // freshVar(_tv.prov, S(_tv), _tv.nameHint)(targ.level)
+                                        println(s"Set ${tv} ~> ${_tv}")
+                                        assert(tv.assignedTo.isEmpty)
+                                        tv.assignedTo = S(targ)
+                                        // println(s"Assigned ${tv.assignedTo}")
+                                        tv
+                                    })
+                                    
+                                  }
+                                  
+                                  val trt = rawTrt.freshenAbove(info.level, rigidify = false)
+                                    .asInstanceOf[TypedNuTrt] // FIXME
+                                  
                                   computeInterface(ps, annot & trt.selfTy, memberUn(members, trt.members.values.toList)) // intersect members
+                                  
                                 case _ => computeInterface(ps, annot, members)
                               }
                             case S(_) => 
