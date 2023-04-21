@@ -67,6 +67,13 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
     // @inline 
     // def go(j: Int, tok: Token) = lex(j, ind, (tok, loc(i, j)) :: acc)
     def next(j: Int, tok: Token) = (tok, loc(i, j)) :: acc
+    def isIdentEscape(i: Int): Bool = i + 2 < length && bytes(i) === 'i' && bytes(i + 1) === 'd' && bytes(i + 2) === '"'
+    def takeIdentFromEscape(i: Int, ctor: Str => Token) = {
+      val (n, j) = takeWhile(i + 3)(isIdentChar)
+      if (j < length && bytes(j) === '"' && !n.isEmpty()) (ctor(n), j + 1)
+      else { pe(msg"unexpected identifier escape"); (ERROR, j + 1) }
+    }
+
     c match {
       case ' ' =>
         val (_, j) = takeWhile(i)(_ === ' ')
@@ -104,12 +111,6 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
         lex(k, ind, next(k, COMMENT(txt.dropRight(2))))
       // case BracketKind(Left(k)) => go(i + 1, OPEN_BRACKET(k))
       // case BracketKind(Right(k)) => go(i + 1, CLOSE_BRACKET(k))
-      case 'i' if (bytes(i + 1) === 'd' && bytes(i + 2) === '"') =>
-        val (n, j) = takeWhile(i + 3)(isIdentChar)
-        lex(j + 1, ind, next(j + 1,
-          if (bytes(j) === '"' && !n.isEmpty()) IDENT(n, isAlphaOp(n))
-          else { pe(msg"unexpected identifier escape"); ERROR }
-        ))
       case BracketKind(Left(k)) => lex(i + 1, ind, next(i + 1, OPEN_BRACKET(k)))
       case BracketKind(Right(k)) => lex(i + 1, ind, next(i + 1, CLOSE_BRACKET(k)))
       case '\n' =>
@@ -136,6 +137,9 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
             else (NEWLINE, loc(i, k)) :: acc
           )
         }
+      case _ if isIdentEscape(i) =>
+        val (tok, n) = takeIdentFromEscape(i, s => IDENT(s, isAlphaOp(s)))
+        lex(n, ind, next(n, tok))
       case _ if isIdentFirstChar(c) =>
         val (n, j) = takeWhile(i)(isIdentChar)
         // go(j, if (keywords.contains(n)) KEYWORD(n) else IDENT(n, isAlphaOp(n)))
@@ -143,9 +147,13 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
       case _ if isOpChar(c) =>
         val (n, j) = takeWhile(i)(isOpChar)
         if (n === "." && j < length && isIdentFirstChar(bytes(j))) {
-          val (name, k) = takeWhile(j)(isIdentChar)
-          // go(k, SELECT(name))
-          lex(k, ind, next(k, SELECT(name)))
+          val (body, m) =
+          if (isIdentEscape(j)) takeIdentFromEscape(j, SELECT)
+          else {
+            val (name, k) = takeWhile(j)(isIdentChar)
+            (SELECT(name), k)
+          }
+          lex(m, ind, next(m, body))
         }
         // else go(j, if (isSymKeyword.contains(n)) KEYWORD(n) else IDENT(n, true))
         else lex(j, ind, next(j, if (isSymKeyword.contains(n)) KEYWORD(n) else IDENT(n, true)))

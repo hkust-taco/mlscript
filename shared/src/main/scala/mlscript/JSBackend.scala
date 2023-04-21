@@ -506,7 +506,8 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         val localScope = scope.derive(s"local ${sym.lexicalName}")
         val nd = translateNewTypeDefinition(sym, N, false, false)(localScope)
         val ctorMth = localScope.declareValue("ctor", Some(false), false).runtimeName
-        val (constructor, params) = translateNewClassParameters(nd)
+        val ctorScope = localScope.derive(s"${sym.lexicalName} ctor")
+        val (constructor, params) = translateNewClassParameters(nd)(ctorScope)
         JSConstDecl(sym.lexicalName, JSImmEvalFn(
           N, Nil, R(Ls(
             nd, JSLetDecl.from(Ls(ctorMth)),
@@ -624,16 +625,13 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       )))
   }
 
-  protected def translateNewClassParameters(classBody: JSClassNewDecl) = {
-    val constructor = classBody match {
-      case dec: JSClassNewDecl => dec.fields.map(JSNamePattern(_))
+  protected def translateNewClassParameters(classBody: JSClassNewDecl)(implicit scope: Scope) =
+    classBody.fields.flatMap { f =>
+      { val v = scope.declareValue(f, S(false), false); JSNamePattern(v.runtimeName) :: JSIdent(v.runtimeName) :: Nil }
+    }.partitionMap {
+      case p: JSNamePattern => L(p)
+      case id: JSIdent => R(id)
     }
-    val params = classBody match {
-      case dec: JSClassNewDecl => dec.fields.map(JSIdent(_))
-    }
-
-    (constructor, params)
-  }
 
   protected def translateNewClassDeclaration(
       classSymbol: NewClassSymbol,
@@ -643,9 +641,10 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     val outerSymbol = getterScope.declareOuterSymbol()
     siblingsMembers.foreach(getterScope.captureSymbol(outerSymbol, _))
 
+    val ctorScope = scope.derive(s"${classSymbol.lexicalName} ctor")
     val classBody =
       translateNewTypeDefinition(classSymbol, N, false, false)(getterScope)
-    val (constructor, params) = translateNewClassParameters(classBody)
+    val (constructor, params) = translateNewClassParameters(classBody)(ctorScope)
 
     val privateIdent = JSIdent(s"this.#${classSymbol.lexicalName}")
     val outerStmt = JSConstDecl(outerSymbol.runtimeName, JSIdent("this"))
@@ -918,27 +917,36 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       (body, members, stmts, nested)
     }
 
+    def checkNewTypeName(nme: Str): Unit =
+      if (Symbol.isKeyword(nme))
+        throw CodeGenError(s"$nme is a reserved keyword in ECMAScript and can not be used as type name.")
+
     typeDefs.foreach {
-      case td @ NuTypeDef(Mxn, TypeName(mxName), tps, tup @ Tup(fs), sig, pars, sup, ths, unit) => {
-        val (body, members, stmts, nested) = prepare(mxName, fs, pars, unit)
-        val sym = MixinSymbol(mxName, tps map { _._2.name }, body, members, stmts, nested, isNested).tap(scope.register)
+      case td @ NuTypeDef(Mxn, TypeName(nme), tps, tup @ Tup(fs), sig, pars, sup, ths, unit) => {
+        checkNewTypeName(nme)
+        val (body, members, stmts, nested) = prepare(nme, fs, pars, unit)
+        val sym = MixinSymbol(nme, tps map { _._2.name }, body, members, stmts, nested, isNested).tap(scope.register)
         if (!td.isDecl) mixins += sym
       }
       case td @ NuTypeDef(Nms, TypeName(nme), tps, tup @ Tup(fs), sig, pars, sup, ths, unit) => {
+        checkNewTypeName(nme)
         val (body, members, stmts, nested) = prepare(nme, fs, pars, unit)
         val sym = ModuleSymbol(nme, tps map { _._2.name }, body, members, stmts, pars, nested, isNested).tap(scope.register)
         if (!td.isDecl) modules += sym
       }
       case td @ NuTypeDef(Als, TypeName(nme), tps, _, sig, pars, _, _, _) => {
+        checkNewTypeName(nme)
         scope.declareTypeAlias(nme, tps map { _._2.name }, sig.getOrElse(Top))
       }
       case td @ NuTypeDef(Cls, TypeName(nme), tps, tup @ Tup(fs), sig, pars, sup, ths, unit) => {
+        checkNewTypeName(nme)
         val (body, members, stmts, nested) = prepare(nme, fs, pars, unit)
         val sym =
           NewClassSymbol(nme, tps map { _._2.name }, body, members, stmts, pars, nested, isNested).tap(scope.register)
         if (!td.isDecl) classes += sym
       }
       case td @ NuTypeDef(Trt, TypeName(nme), tps, tup @ Tup(fs), sig, pars, sup, ths, unit) => {
+        checkNewTypeName(nme)
         val (body, members, _, _) = prepare(nme, fs, pars, unit)
         val sym = scope.declareTrait(nme, tps map { _._2.name }, body, members)
         if (!td.isDecl) traits += sym

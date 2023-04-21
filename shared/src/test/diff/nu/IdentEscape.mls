@@ -2,15 +2,20 @@
 
 let id"of" = 42
 fun id"fun"(x: int) = x + 1
+fun id"declare"(id"if": int) = id"of" + id"if"
 //│ let of: 42
 //│ fun fun: (x: int,) -> int
+//│ fun declare: (if: int,) -> int
 //│ of
 //│    = 42
 
 id"fun"(id"of")
+id"declare"(id"of")
 //│ int
 //│ res
 //│     = 43
+//│ res
+//│     = 84
 
 let id"if" = 1
 id"if" + 1
@@ -21,45 +26,57 @@ id"if" + 1
 //│ res
 //│     = 2
 
-// FIXME
+
 class Foo(id"class": int) {
   fun id"mixin"(x: int) = id"class" + x
 }
 let foo = Foo(2)
 foo.id"mixin"(3)
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.29: 	foo.id"mixin"(3)
-//│ ╙──      	^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Class `Foo` does not contain member `id`
-//│ ║  l.29: 	foo.id"mixin"(3)
-//│ ╙──      	   ^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.29: 	foo.id"mixin"(3)
-//│ ║        	      ^^^^^^^^^^
-//│ ╟── string literal of type `"mixin"` is not a function
-//│ ║  l.29: 	foo.id"mixin"(3)
-//│ ╙──      	      ^^^^^^^
 //│ class Foo(class: int) {
 //│   fun mixin: (x: int,) -> int
 //│ }
 //│ let foo: Foo
-//│ error
+//│ int
 //│ foo
-//│ Syntax error:
-//│   Unexpected token ')'
+//│     = Foo {}
 //│ res
+//│     = 5
 
 :pe
 id""
 //│ ╔══[LEXICAL ERROR] unexpected identifier escape
-//│ ║  l.53: 	id""
+//│ ║  l.46: 	id""
 //│ ╙──      	^
 //│ ╔══[PARSE ERROR] Unexpected error in expression position
-//│ ║  l.53: 	id""
+//│ ║  l.46: 	id""
 //│ ╙──      	^^^^
 //│ ╔══[PARSE ERROR] Unexpected end of input; an expression was expected here
-//│ ║  l.53: 	id""
+//│ ║  l.46: 	id""
 //│ ╙──      	    ^
 //│ undefined
 //│ res
 //│     = undefined
+
+:pe
+id"id
+//│ ╔══[LEXICAL ERROR] unexpected identifier escape
+//│ ║  l.61: 	id"id
+//│ ╙──      	^
+//│ ╔══[PARSE ERROR] Unexpected error in expression position
+//│ ║  l.61: 	id"id
+//│ ╙──      	^^^^^^
+//│ ╔══[PARSE ERROR] Unexpected end of input; an expression was expected here
+//│ ║  l.61: 	id"id
+//│ ╙──      	      ^
+//│ undefined
+//│ res
+//│     = undefined
+
+class id"of"
+//│ class of()
+
+:ge
+class id"class"
+//│ class class()
+//│ Code generation encountered an error:
+//│   class is a reserved keyword in ECMAScript and can not be used as type name.
