@@ -510,5 +510,128 @@ e: ZL & WP
 //│ fun fto: (w: WP,) -> EM
 //│ WP & ZL
 
+class Bs(a: bool) {
+  fun foo(x) = x + 1
+}
+//│ class Bs(a: bool) {
+//│   fun foo: int -> int
+//│ }
 
+class Ih extends Bs(false) {
+  fun bar(x) = x
+  fun foo(x) = 1
+}
+//│ class Ih() {
+//│   fun bar: forall 'a. 'a -> 'a
+//│   fun foo: anything -> 1
+//│ }
 
+let ih1 = Ih()
+//│ let ih1: Ih
+
+ih1.foo(1)
+//│ 1
+
+ih1: Bs
+//│ Bs
+
+ih1.a
+//│ false
+
+// FIXME
+class Eh2 extends Bs(true), Ele {
+    fun foo(x) = x && true
+    fun ce(x) = x
+}
+//│ class Eh2() {
+//│   fun ce: Oth -> Test
+//│   fun foo: bool -> bool
+//│ }
+
+:e
+class Eh extends Bs(1)
+class Eh1 extends Bs
+class Eh3 extends Bs(false), Test
+//│ ╔══[ERROR] Type mismatch in type declaration:
+//│ ║  l.552: 	class Eh extends Bs(1)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── integer literal of type `1` is not an instance of type `bool`
+//│ ║  l.552: 	class Eh extends Bs(1)
+//│ ║         	                    ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.513: 	class Bs(a: bool) {
+//│ ╙──       	            ^^^^
+//│ ╔══[ERROR] class Bs expects 1 parameters; got 0
+//│ ║  l.553: 	class Eh1 extends Bs
+//│ ╙──       	                  ^^
+//│ ╔══[ERROR] Type mismatch in definition of method foo:
+//│ ║  l.514: 	  fun foo(x) = x + 1
+//│ ║         	      ^^^^^^^^^^^^^^
+//│ ╟── function of type `?a -> ?b` is not an instance of type `int`
+//│ ║  l.514: 	  fun foo(x) = x + 1
+//│ ║         	         ^^^^^^^^^^^
+//│ ╟── but it flows into definition of method foo with expected type `int`
+//│ ║  l.514: 	  fun foo(x) = x + 1
+//│ ║         	      ^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.5: 	  fun foo: int
+//│ ║       	           ^^^
+//│ ╟── from signature of member foo:
+//│ ║  l.5: 	  fun foo: int
+//│ ╙──     	      ^^^^^^^^
+//│ ╔══[ERROR] Member bar is declared in parent trait but not implemented
+//│ ║  l.554: 	class Eh3 extends Bs(false), Test
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ class Eh() {
+//│   fun foo: int -> int
+//│ }
+//│ class Eh1() {
+//│   fun foo: int -> int
+//│ }
+//│ class Eh3() {
+//│   fun bar: bool -> bool
+//│   fun foo: int
+//│ }
+
+class Ca(a: int) extends Oth {
+  fun foo = 1
+  fun cool(x) = false
+  fun bar(x) = x
+}
+//│ class Ca(a: int) {
+//│   let a: int
+//│   fun bar: bool -> bool
+//│   fun cool: int -> bool
+//│   fun foo: int
+//│ }
+
+class Cx(a: 1 | 2, b: bool) extends Ca(a)
+//│ class Cx(a: 1 | 2, b: bool) {
+//│   fun bar: 'a -> 'a
+//│   fun cool: anything -> false
+//│   fun foo: 1
+//│ }
+
+let cx1 = Cx(2, true)
+//│ let cx1: Cx
+
+cx1.bar(cx1.b)
+//│ bool
+
+cx1: Test
+//│ Test
+
+cx1: Ca
+//│ Ca
+
+class Bc1(foo: int)
+class Bc2(bar: bool)
+//│ class Bc1(foo: int)
+//│ class Bc2(bar: bool)
+
+:e
+class Bc12 extends Bc1(1), Bc2(true)
+//│ ╔══[ERROR] cannot inherit from more than one base class: Bc1 and Bc2
+//│ ║  l.633: 	class Bc12 extends Bc1(1), Bc2(true)
+//│ ╙──       	                           ^^^
+//│ class Bc12()

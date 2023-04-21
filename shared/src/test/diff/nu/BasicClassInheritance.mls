@@ -6,9 +6,6 @@ class A
 
 // TODO
 class B(m: int) extends A
-//│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
-//│ ║  l.8: 	class B(m: int) extends A
-//│ ╙──     	                        ^
 //│ class B(m: int)
 
 
@@ -17,9 +14,9 @@ class A(n: int)
 
 // TODO
 class B(m: int) extends A(n + 1)
-//│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
-//│ ║  l.19: 	class B(m: int) extends A(n + 1)
-//│ ╙──      	                        ^^^^^^^^
+//│ ╔══[ERROR] identifier not found: n
+//│ ║  l.16: 	class B(m: int) extends A(n + 1)
+//│ ╙──      	                          ^
 //│ class B(m: int)
 //│ Code generation encountered an error:
 //│   unresolved symbol n

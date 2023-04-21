@@ -455,11 +455,8 @@ class Foo(x: int)
 //│ class Foo(x: int)
 
 
-:e
+
 class Bar(x: int, y: int) extends Foo(x + y)
-//│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
-//│ ║  l.459: 	class Bar(x: int, y: int) extends Foo(x + y)
-//│ ╙──       	                                  ^^^^^^^^^^
 //│ class Bar(x: int, y: int)
 
 
@@ -581,7 +578,7 @@ mixin Base {
   fun x = y
 }
 //│ ╔══[ERROR] identifier not found: y
-//│ ║  l.581: 	  fun x = y
+//│ ║  l.578: 	  fun x = y
 //│ ╙──       	          ^
 //│ mixin Base() {
 //│   fun x: error

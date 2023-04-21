@@ -525,13 +525,21 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
         case Nil => tags
         case (p, Var(nm), _) :: ps =>
           ctx.get(nm) match {
-          case S(lti: DelayedTypeInfo) if lti.kind == Trt => 
-            lookupTags(ps, Set.single(TypeName(nm)) union lti.inheritedTags union tags)
-          case S(lti: CompletedTypeInfo) if lti.kind == Trt => 
-            lookupTags(ps, 
+          case S(lti: DelayedTypeInfo) => lti.kind match {
+            case Trt | Cls | Nms =>  lookupTags(ps, Set.single(TypeName(nm)) union lti.inheritedTags union tags)
+            case _ => lookupTags(ps, tags)
+          }
+          case S(lti: CompletedTypeInfo) => lti.kind match {
+            case Trt => lookupTags(ps, 
               Set.single(TypeName(nm)) union 
               lti.member.asInstanceOf[TypedNuTrt].inheritedTags union 
               tags)
+            case Cls | Nms => lookupTags(ps, 
+              Set.single(TypeName(nm)) union 
+              lti.member.asInstanceOf[TypedNuCls].inheritedTags union 
+              tags)
+            case _ => lookupTags(ps, tags)
+            }
           case _ => lookupTags(ps, tags)
         }
       }
@@ -808,11 +816,11 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     val tparamFields = tparamMems.map(p => p.nme -> p.ty)
                     assert(!typedParams.keys.exists(tparamFields.keys.toSet), ???)
                     
-                    def inherit(parents: Ls[ParentSpec], superType: ST, members: Ls[NuMember])
+                    def inherit(parents: Ls[ParentSpec], superType: ST, members: Ls[NuMember], baseClass: Opt[Str])
                           : (ST, Ls[NuMember]) =
                         parents match {
                       case (p, v @ Var(mxnNme), mxnArgs) :: ps =>
-                        val newMembs = trace(s"${lvl}. Inheriting from $p") {
+                        val (newMembs, bc) = trace(s"${lvl}. Inheriting from $p") {
                           ctx.get(mxnNme) match {
                             case S(lti: LazyTypeInfo) =>
                               lti.complete().freshen match {
@@ -842,32 +850,53 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                                   // TODO check overriding
                                   val bodyMems = mxn.ttu.entities
                                   
-                                  paramMems ++ bodyMems
+                                  (paramMems ++ bodyMems, N)
                                 
                                 case trt: TypedNuTrt =>
-                                  Nil
+                                  Nil -> N
                                   
                                 case cls: TypedNuCls =>
-                                  err(msg"Class inheritance is not supported yet (use mixins)", p.toLoc) // TODO
-                                  Nil
+                                  // err(msg"Class inheritance is not supported yet (use mixins)", p.toLoc) // TODO
+
+                                  if (baseClass.isDefined) {
+                                    err(msg"cannot inherit from more than one base class: ${baseClass.get} and ${mxnNme}", v.toLoc)
+                                  }
+
+                                  if (mxnArgs.sizeCompare(cls.params) =/= 0)
+                                    err(msg"class $mxnNme expects ${
+                                      cls.params.size.toString} parameters; got ${mxnArgs.size.toString}", Loc(v :: mxnArgs.unzip._2))
+
+                                  val paramMems = cls.params.lazyZip(mxnArgs).map { case (nme -> p, _ -> Fld(_, _, a)) => // TODO check name, mut, spec
+                                    implicit val genLambdas: GenLambdas = true
+                                    val a_ty = typeTerm(a)
+                                    p.lb.foreach(constrain(_, a_ty))
+                                    constrain(a_ty, p.ub)
+                                    NuParam(nme, FieldType(p.lb, a_ty)(provTODO), isType = false)(lvl)
+                                  }
+
+                                  // TODO check overriding
+                                  val bodyMems = cls.ttu.entities
+
+                                  (paramMems ++ bodyMems, S(mxnNme))
+
                                 case als: TypedNuAls =>
                                   // TODO dealias first?
                                   err(msg"Cannot inherit from a type alias", p.toLoc)
-                                  Nil
+                                  Nil -> N
                                 case als: NuParam =>
                                   // TODO first-class mixins/classes...
                                   err(msg"Cannot inherit from a parameter", p.toLoc)
-                                  Nil
+                                  Nil -> N
                                 case cls: TypedNuFun =>
                                   err(msg"Cannot inherit from this", p.toLoc)
-                                  Nil
+                                  Nil -> N
                               }
                             case S(_) =>
                               err(msg"Cannot inherit from this", p.toLoc)
-                              Nil
+                              Nil -> N
                             case N => 
                               err(msg"Could not find definition `${mxnNme}`", p.toLoc)
-                              Nil
+                              Nil -> N
                           }
                         }()
                         val newSuperType = WithType(
@@ -879,7 +908,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                             }
                           )(provTODO)
                         )(provTODO)
-                        inherit(ps, newSuperType, members ++ newMembs)
+                        inherit(ps, newSuperType, members ++ newMembs, bc)
                       case Nil =>
                         val thisType = WithType(superType, RecordType(typedParams)(ttp(td.params, isType = true)))(provTODO) &
                           clsNameToNomTag(td)(provTODO, ctx) &
@@ -900,7 +929,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     val paramMems = typedParams.map(f => NuParam(f._1, f._2, isType = false)(lvl))
                     
                     val (thisType, baseMems) =
-                      inherit(parentSpecs, baseType, tparamMems ++ paramMems)
+                      inherit(parentSpecs, baseType, tparamMems ++ paramMems, N)
                     
                     ctx += "super" -> VarSymbol(thisType, Var("super"))
                     
@@ -923,7 +952,6 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                               // TODO substitute type parameters in info
                               info match {
                                 case trt: TypedNuTrt =>
-                                  // TODO also computer intersect
                                   computeInterface(ps, annot & trt.selfTy, memberUn(members, trt.members.values.toList)) // intersect members
                                 case _ => computeInterface(ps, annot, members)
                               }
