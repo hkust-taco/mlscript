@@ -8,7 +8,7 @@ code"let x = 1 in ${ 1 }"
 //│ ╟── integer literal of type `1` is not an instance of type `code`
 //│ ║  l.4: 	code"let x = 1 in ${ 1 }"
 //│ ╙──     	                     ^
-//│ res: Code[error, anything\x]
+//│ res: Code[nothing, anything\x]
 //│    = [ 'Let', 'x', Symbol(x), [ '_', 1 ], [ 'Unquoted', 1 ] ]
 
 :e // Should be two errors
