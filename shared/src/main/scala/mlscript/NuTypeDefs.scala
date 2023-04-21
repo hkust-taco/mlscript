@@ -503,27 +503,30 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     // val parentSpecs: Ls[ParentSpec] = td.parents.flatMap {
     // and derive from these the full set of transitively inherited tags
 
-    type ParentSpec = (Term, Var, Ls[Opt[Var] -> Fld])
+    type ParentSpec = (Term, Var, Ls[Type], Ls[Opt[Var] -> Fld])
     val parentSpecs: Ls[ParentSpec] = 
       decl match {
         case td: NuTypeDef if td.kind == Trt || td.kind == Cls || td.kind == Nms => 
           td.parents.flatMap {
             case v @ Var(nme) =>
-              S(v, v, Nil)
-              case p @ App(v @ Var(nme), Tup(args)) =>
-                S(p, v, args)
-                case p =>
-                  err(msg"Unsupported parent specification", p.toLoc) // TODO
-                  // support type application
-                  N
-                }
+              S(v, v, Nil, Nil)
+            case p @ App(v @ Var(nme), Tup(args)) =>
+              S(p, v, Nil, args)
+            case TyApp(v @ Var(nme), targs) =>
+              S(v, v, targs, Nil)
+            case p @ App(TyApp(v @ Var(nme), targs), Tup(args)) =>
+              S(p, v, targs, args)
+            case p =>
+              err(msg"Unsupported parent specification", p.toLoc) // TODO
+              N
+          }
         case _ => Nil
     }
 
     def lookupTags(parents: Ls[ParentSpec], tags: Set[TypeName]): Set[TypeName] = {
       parents match {
         case Nil => tags
-        case (p, Var(nm), _) :: ps =>
+        case (p, Var(nm), _, _) :: ps =>
           ctx.get(nm) match {
           case S(lti: DelayedTypeInfo) => lti.kind match {
             case Trt | Cls | Nms =>  lookupTags(ps, Set.single(TypeName(nm)) union lti.inheritedTags union tags)
@@ -740,7 +743,9 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     def inherit(parents: Ls[ParentSpec], superType: ST, tags: ST, members: Ls[NuMember])
                           : (ST, ST, Ls[NuMember]) =
                         parents match {
-                          case (p, v @ Var(trtName), mxnArgs) :: ps =>
+                          case (p, v @ Var(trtName), targs, args) :: ps =>
+                            if (targs.nonEmpty) err(msg"trait type arguments not yet supported", p.toLoc)
+                            if (args.nonEmpty) err(msg"trait arguments not yet supported", p.toLoc)
                             ctx.get(trtName) match {
                               case S(lti: LazyTypeInfo) => lti.complete().freshen match {
                                 case trt: TypedNuTrt =>
@@ -819,10 +824,12 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     def inherit(parents: Ls[ParentSpec], superType: ST, members: Ls[NuMember])
                           : (ST, Ls[NuMember]) =
                         parents match {
-                      case (p, v @ Var(mxnNme), mxnArgs) :: ps =>
+                      case (p, v @ Var(mxnNme), mxnTargs, mxnArgs) :: ps =>
+                        if (mxnTargs.nonEmpty) err(msg"mixin type arguments not yet supported", p.toLoc)
                         val newMembs = trace(s"${lvl}. Inheriting from $p") {
                           ctx.get(mxnNme) match {
                             case S(lti: LazyTypeInfo) =>
+                              
                               lti.complete().freshen match {
                                 case mxn: TypedNuMxn =>
                                   
@@ -866,8 +873,11 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                                   // TODO first-class mixins/classes...
                                   err(msg"Cannot inherit from a parameter", p.toLoc)
                                   Nil
+                                case als: NuTypeParam =>
+                                  err(msg"Cannot inherit from a type parameter", p.toLoc)
+                                  Nil
                                 case cls: TypedNuFun =>
-                                  err(msg"Cannot inherit from this", p.toLoc)
+                                  err(msg"Cannot inherit from a function", p.toLoc)
                                   Nil
                               }
                             case S(_) =>
@@ -918,20 +928,21 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     // TODO check overriding
                     def computeBaseClass(parents: Ls[ParentSpec], members: Ls[NuMember], baseClass: Opt[Str]): Ls[NuMember] = 
                       parents match {
-                      case (p, v @ Var(parNme), parArgs) :: ps =>
+                      case (p, v @ Var(parNme), parTargs, parArgs) :: ps =>
                         ctx.get(parNme) match {
                           case S(lti: LazyTypeInfo) =>
                             val info = lti.complete()
                               info match {
                                 case cls: TypedNuCls =>
+                                  if (parTargs.nonEmpty) err(msg"class type arguments not yet supported", p.toLoc)
                                   if (baseClass.isDefined) {
                                     err(msg"cannot inherit from more than one base class: ${baseClass.get} and ${parNme}", v.toLoc)
                                   }
-
+                                  
                                   if (parArgs.sizeCompare(cls.params) =/= 0)
                                     err(msg"class $parNme expects ${
                                       cls.params.size.toString} parameters; got ${parArgs.size.toString}", Loc(v :: parArgs.unzip._2))
-
+                                  
                                   val paramMems = cls.params.lazyZip(parArgs).map { case (nme -> p, _ -> Fld(_, _, a)) => // TODO check name, mut, spec
                                     implicit val genLambdas: GenLambdas = true
                                     val a_ty = typeTerm(a)
@@ -970,7 +981,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     
                     def computeInterface(parents: Ls[ParentSpec], annot: ST, members: Ls[NuMember]): (ST, Ls[NuMember]) = 
                         parents match {
-                      case (p, v @ Var(parNme), parArgs) :: ps =>
+                      case (p, v @ Var(parNme), parTargs, parArgs) :: ps =>
                         // TODO find traits in `parents`; intersect their member types and self types
                         ctx.get(parNme) match {
                             case S(lti: LazyTypeInfo) =>
@@ -978,6 +989,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                               // TODO substitute type parameters in info
                               info match {
                                 case trt: TypedNuTrt =>
+                                  if (parTargs.nonEmpty) err(msg"trait type arguments not yet supported", p.toLoc)
+                                  if (parArgs.nonEmpty) err(msg"trait parameters not yet supported", p.toLoc)
                                   computeInterface(ps, annot & trt.selfTy, memberUn(members, trt.members.values.toList)) // intersect members
                                 case _ => computeInterface(ps, annot, members)
                               }

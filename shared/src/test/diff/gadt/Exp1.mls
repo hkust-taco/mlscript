@@ -10,15 +10,87 @@ class Exp[A]: Pair | Lit {
 // TODO enable class inheritance
 class Lit(n: int) extends Exp[int]
 class Pair[L, R](lhs: L, rhs: R) extends Exp[A]
-//│ ╔══[ERROR] Unsupported parent specification
-//│ ║  l.11: 	class Lit(n: int) extends Exp[int]
-//│ ╙──      	                          ^^^^^^^^
-//│ ╔══[ERROR] Unsupported parent specification
-//│ ║  l.12: 	class Pair[L, R](lhs: L, rhs: R) extends Exp[A]
-//│ ╙──      	                                         ^^^^^^
 //│ ╔══[ERROR] type signatures not yet supported for classes
 //│ ║  l.5: 	class Exp[A]: Pair | Lit {
 //│ ╙──     	              ^^^^^^^^^^
+//│ ╔══[ERROR] mixin type arguments not yet supported
+//│ ║  l.11: 	class Lit(n: int) extends Exp[int]
+//│ ╙──      	                          ^^^
+//│ ╔══[ERROR] Unhandled cyclic definition
+//│ ║  l.5: 	class Exp[A]: Pair | Lit {
+//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.6: 	  fun test = if this is
+//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.7: 	    Lit then 0
+//│ ║       	^^^^^^^^^^^^^^
+//│ ║  l.8: 	    Pair then 1
+//│ ║       	^^^^^^^^^^^^^^^
+//│ ║  l.9: 	}
+//│ ╙──     	^
+//│ ╔══[ERROR] Cannot inherit from a function
+//│ ║  l.11: 	class Lit(n: int) extends Exp[int]
+//│ ╙──      	                          ^^^
+//│ ╔══[ERROR] Unhandled cyclic definition
+//│ ║  l.5: 	class Exp[A]: Pair | Lit {
+//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.6: 	  fun test = if this is
+//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.7: 	    Lit then 0
+//│ ║       	^^^^^^^^^^^^^^
+//│ ║  l.8: 	    Pair then 1
+//│ ║       	^^^^^^^^^^^^^^^
+//│ ║  l.9: 	}
+//│ ╙──     	^
+//│ ╔══[ERROR] Unhandled cyclic definition
+//│ ║  l.5: 	class Exp[A]: Pair | Lit {
+//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.6: 	  fun test = if this is
+//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.7: 	    Lit then 0
+//│ ║       	^^^^^^^^^^^^^^
+//│ ║  l.8: 	    Pair then 1
+//│ ║       	^^^^^^^^^^^^^^^
+//│ ║  l.9: 	}
+//│ ╙──     	^
+//│ ╔══[ERROR] mixin type arguments not yet supported
+//│ ║  l.12: 	class Pair[L, R](lhs: L, rhs: R) extends Exp[A]
+//│ ╙──      	                                         ^^^
+//│ ╔══[ERROR] Unhandled cyclic definition
+//│ ║  l.5: 	class Exp[A]: Pair | Lit {
+//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.6: 	  fun test = if this is
+//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.7: 	    Lit then 0
+//│ ║       	^^^^^^^^^^^^^^
+//│ ║  l.8: 	    Pair then 1
+//│ ║       	^^^^^^^^^^^^^^^
+//│ ║  l.9: 	}
+//│ ╙──     	^
+//│ ╔══[ERROR] Cannot inherit from a function
+//│ ║  l.12: 	class Pair[L, R](lhs: L, rhs: R) extends Exp[A]
+//│ ╙──      	                                         ^^^
+//│ ╔══[ERROR] Unhandled cyclic definition
+//│ ║  l.5: 	class Exp[A]: Pair | Lit {
+//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.6: 	  fun test = if this is
+//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.7: 	    Lit then 0
+//│ ║       	^^^^^^^^^^^^^^
+//│ ║  l.8: 	    Pair then 1
+//│ ║       	^^^^^^^^^^^^^^^
+//│ ║  l.9: 	}
+//│ ╙──     	^
+//│ ╔══[ERROR] Unhandled cyclic definition
+//│ ║  l.5: 	class Exp[A]: Pair | Lit {
+//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.6: 	  fun test = if this is
+//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.7: 	    Lit then 0
+//│ ║       	^^^^^^^^^^^^^^
+//│ ║  l.8: 	    Pair then 1
+//│ ║       	^^^^^^^^^^^^^^^
+//│ ║  l.9: 	}
+//│ ╙──     	^
 //│ ╔══[ERROR] Type mismatch in `case` expression:
 //│ ║  l.6: 	  fun test = if this is
 //│ ║       	                ^^^^^^^
@@ -38,8 +110,8 @@ class Pair[L, R](lhs: L, rhs: R) extends Exp[A]
 :e // TODO
 Lit(0).test
 //│ ╔══[ERROR] Type `Lit` does not contain member `test`
-//│ ║  l.39: 	Lit(0).test
-//│ ╙──      	      ^^^^^
+//│ ║  l.111: 	Lit(0).test
+//│ ╙──       	      ^^^^^
 //│ error
 //│ res
 //│     = 0
@@ -59,8 +131,8 @@ fun f(e) = if e is
 fun f(e) = if e is
   Pair['a, 'b](l, r) then [l, r]
 //│ ╔══[ERROR] illegal pattern
-//│ ║  l.60: 	  Pair['a, 'b](l, r) then [l, r]
-//│ ╙──      	  ^^^^^^^^^^^^^^^^^^
+//│ ║  l.132: 	  Pair['a, 'b](l, r) then [l, r]
+//│ ╙──       	  ^^^^^^^^^^^^^^^^^^
 //│ fun f: anything -> error
 //│ Code generation encountered an error:
 //│   if expression was not desugared
@@ -72,11 +144,11 @@ fun f(e) = if e is
     fun f(x: a) = x
     f(l)
 //│ ╔══[ERROR] type identifier not found: a
-//│ ║  l.72: 	    fun f(x: a) = x
-//│ ╙──      	             ^
+//│ ║  l.144: 	    fun f(x: a) = x
+//│ ╙──       	             ^
 //│ ╔══[ERROR] identifier not found: l
-//│ ║  l.73: 	    f(l)
-//│ ╙──      	      ^
+//│ ║  l.145: 	    f(l)
+//│ ╙──       	      ^
 //│ fun f: Pair[anything, anything] -> error
 //│ Code generation encountered an error:
 //│   unresolved symbol l
