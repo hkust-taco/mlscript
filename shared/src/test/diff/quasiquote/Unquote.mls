@@ -26,7 +26,6 @@ let a = code"x"
 let b = code"y"
 let x = 1
 code"let x = 1
-let b = 1
 ${a} + (let y = 1; ${b})
 "
 //│ a: Code['a, {x: 'a}]
@@ -35,25 +34,23 @@ ${a} + (let y = 1; ${b})
 //│  = [ 'Var', [ 'FreeVar', 'y' ] ]
 //│ x: 1
 //│  = 1
-//│ res: Code[int, {x: int}\b\x & {y: int}\b\x\y]
+//│ res: Code[int, {x: int}\x & {y: int}\x\y]
 //│    = [
 //│        'Let',
 //│        'x',
 //│        Symbol(x),
 //│        [ '_', 1 ],
 //│        [
-//│          'Let',
-//│          'b',
-//│          Symbol(b),
-//│          [ '_', 1 ],
-//│          [ 'App', '+', [Array], [Array] ]
+//│          'App',
+//│          '+',
+//│          [ 'Unquoted', [Array] ],
+//│          [ 'Let', 'y', Symbol(y), [Array], [Array] ]
 //│        ]
 //│      ]
 
 :d
 let cde = code"a"
 //│ 1. Typing term Quoted' a '
-//│ | class: class mlscript.Var (a)
 //│ | 1. Typing term a
 //│ | 1. : α68'
 //│ 1. : Code[α68',{a: α68'}]
@@ -125,7 +122,7 @@ let cde_w_mutli_unquote = code"${free_var2} + ${free_var1}"
 // FIXME
 c: Code<int, {}>
 //│ ╔══[ERROR] identifier not found: c
-//│ ║  l.126: 	c: Code<int, {}>
+//│ ║  l.138: 	c: Code<int, {}>
 //│ ╙──       	^
 //│ res: Code[int, anything]
 //│ Code generation encountered an error:
@@ -161,7 +158,7 @@ code"let y = 1; ${cde_arr}"
 :e
 run(res)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.162: 	run(res)
+//│ ║  l.186: 	run(res)
 //│ ║         	^^^^^^^^
 //│ ╙── expression of type `anything` does not have field 'y'
 //│ res: (nothing, nothing,) | error
@@ -209,7 +206,7 @@ code"f(0)"
 :ge
 code"${code"${code"${z}"}"}"
 //│ ╔══[ERROR] identifier not found: z
-//│ ║  l.210: 	code"${code"${code"${z}"}"}"
+//│ ║  l.242: 	code"${code"${code"${z}"}"}"
 //│ ╙──       	                     ^
 //│ res: Code[error, anything]
 //│ Code generation encountered an error:
