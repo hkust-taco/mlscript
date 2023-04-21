@@ -467,28 +467,26 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
   }
 
   protected class FreeVarTracker(var free: MutSet[Str] = MutSet(), var defined: MutSet[Str] = MutSet()) {
-    def addFreeVar(name: Str) : Bool = free add name
-    def addDefinedVar(name: Str) : Bool = defined add name
-    def isDefinedVar(name: Str) : Bool = defined contains name
-    def getFreeVar() : Opt[Ls[Str]] = {
-      if (free.isEmpty)
-        N
-      else 
-        S(free.toList)
-    }
+    def addFreeVar(name: Str): Bool = free add name
+
+    def addDefinedVar(name: Str): Bool = defined add name
+
+    def isDefinedVar(name: Str): Bool = defined contains name
+
+    def freeVarNameList: Ls[Str] = free.toList
   }
 
-  protected def translateQuoted(body: Term)(implicit scope : Scope) : JSExpr = {
+  protected def translateQuoted(body: Term)(implicit scope: Scope): JSExpr = {
     val tracker = new FreeVarTracker
     val sExpr = translateQuotedTerm(body)(scope, tracker)
-    val freeVarList = tracker.getFreeVar()
-    freeVarList match {
-      case S(nameList : Ls[Str]) =>
-        nameList.foldLeft(sExpr)(
-          (sExpr, name) => JSImmEvalFn(None, Ls(JSNamePattern(name)), L(sExpr), Ls(JSArray(Ls(JSExpr("FreeVar"), JSExpr(name)))))
-        )
-      case N => sExpr
-    }
+    val freeVarNameList = tracker.freeVarNameList
+    freeVarNameList.foldLeft(sExpr)(
+      (sExpr, name) => {
+        val fParams = Ls(JSNamePattern(name))
+        val fBody = L(sExpr)
+        val fArgs = Ls(JSArray(Ls(JSExpr("FreeVar"), JSExpr(name))))
+        JSImmEvalFn(N, fParams, fBody, fArgs)
+      })
   }
 
   protected def translateQuotedTerm(body: Term)(implicit scope: Scope, tracker: FreeVarTracker) : JSExpr = body match {

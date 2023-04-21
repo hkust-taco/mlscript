@@ -12,7 +12,7 @@ run(res)(1)(10)
 //│ res: int
 //│    = 111
 
-
+:e
 code"x => y => 100 + code"${Const(x + y)}""
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.16: 	code"x => y => 100 + code"${Const(x + y)}""
