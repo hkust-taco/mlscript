@@ -103,7 +103,7 @@ trait Mixed extends Geo, Anemo
 
 
 class C extends Test {
-  fun foo = 1
+  fun foo: 1 = 1
   fun bar(x) = x
 }
 //│ class C() {
@@ -517,12 +517,143 @@ class Bs(a: bool) {
 //│   fun foo: int -> int
 //│ }
 
+:d
 class Ih extends Bs(false) {
   fun bar(x) = x
   fun foo(x) = 1
 }
+//│ 0. Typing TypingUnit(List(class Ih(): Bs (false,) {fun bar = (x,) => x; fun foo = (x,) => 1}))
+//│ | 0. Created lazy type info for class Ih(): Bs (false,) {fun bar = (x,) => x; fun foo = (x,) => 1}
+//│ | Completing class Ih(): Bs (false,) {fun bar = (x,) => x; fun foo = (x,) => 1}
+//│ | | UNSTASHING... (out)
+//│ | | Type params 
+//│ | | UNSTASHING... (out)
+//│ | | Params 
+//│ | | UNSTASHING... (out)
+//│ | | Typing type Top
+//│ | | | vars=Map() newDefsInfo=Map()
+//│ | | | 1. type Top
+//│ | | | => ⊤
+//│ | | => ⊤ ——— 
+//│ | | 1. Inheriting from Bs (false,)
+//│ | | 1. Finalizing inheritance with ({} w/ {} w/ {} & Ih<Eql,Bs>) <: ih223'
+//│ | | | CONSTRAIN ({} w/ {} w/ {} & Ih<Eql,Bs>) <! ih223'
+//│ | | |   where 
+//│ | | | 1. C ({} w/ {} w/ {} & Ih<Eql,Bs>) <! ih223'    (0)
+//│ | | | | NEW ih223' LB (0)
+//│ | | 1. Typing TypingUnit(List(fun bar = (x,) => x, fun foo = (x,) => 1))
+//│ | | | 1. Created lazy type info for fun bar = (x,) => x
+//│ | | | 1. Created lazy type info for fun foo = (x,) => 1
+//│ | | | Completing fun bar = (x,) => x
+//│ | | | | UNSTASHING... (out)
+//│ | | | | Type params 
+//│ | | | | UNSTASHING... (out)
+//│ | | | | Params 
+//│ | | | | 2. Typing term (x,) => x
+//│ | | | | | 2. Typing pattern x,
+//│ | | | | | | 2. Typing pattern x
+//│ | | | | | | 2. : x226''
+//│ | | | | | 2. : (x226'',)
+//│ | | | | | 2. Typing term x
+//│ | | | | | 2. : x226''
+//│ | | | | 2. : (x226'' -> x226'')
+//│ | | | | UNSTASHING... (out)
+//│ | | | | CONSTRAIN (x226'' -> x226'') <! bar227''
+//│ | | | |   where 
+//│ | | | | 2. C (x226'' -> x226'') <! bar227''    (0)
+//│ | | | | | NEW bar227'' LB (2)
+//│ | | | | UNSTASHING... (out)
+//│ | | | Completing fun foo = (x,) => 1
+//│ | | | | UNSTASHING... (out)
+//│ | | | | Type params 
+//│ | | | | UNSTASHING... (out)
+//│ | | | | Params 
+//│ | | | | 2. Typing term (x,) => 1
+//│ | | | | | 2. Typing pattern x,
+//│ | | | | | | 2. Typing pattern x
+//│ | | | | | | 2. : x228''
+//│ | | | | | 2. : (x228'',)
+//│ | | | | | 2. Typing term 1
+//│ | | | | | 2. : 1<int,number,Eql>
+//│ | | | | 2. : (x228'' -> 1<int,number,Eql>)
+//│ | | | | UNSTASHING... (out)
+//│ | | | | CONSTRAIN (x228'' -> 1<int,number,Eql>) <! foo229''
+//│ | | | |   where 
+//│ | | | | 2. C (x228'' -> 1<int,number,Eql>) <! foo229''    (0)
+//│ | | | | | NEW foo229'' LB (2)
+//│ | | | | UNSTASHING... (out)
+//│ | | | Typing unit statements
+//│ | | | : None
+//│ | | 1. Typing term false
+//│ | | 1. : false<bool,Eql>
+//│ | | CONSTRAIN false<bool,Eql> <! Bool
+//│ | |   where 
+//│ | | 1. C false<bool,Eql> <! Bool    (0)
+//│ | | checking overriding: ‹∀ 1. (x228'' -> 1<int,number,Eql>)› <: ‹∀ 1. (α217'' -> α219'')›
+//│ | | CONSTRAIN ‹∀ 1. (x228'' -> 1<int,number,Eql>)› <! ‹∀ 1. (α217'' -> α219'')›
+//│ | |   where 
+//│ 		α217'' <: int<number,Eql>
+//│ 		α219'' :> int<number,Eql>
+//│ | | 1. C ‹∀ 1. (x228'' -> 1<int,number,Eql>)› <! ‹∀ 1. (α217'' -> α219'')›    (0)
+//│ | | | New skolem: α217'' ~> ‘_230''
+//│ | | | α217_231'' :> List(‘_230'')
+//│ | | | α217_231'' <: List((‘_230'' | int<number,Eql>))
+//│ | | | New skolem: α219'' ~> ‘_232''
+//│ | | | α219_233'' :> List((‘_232'' & int<number,Eql>))
+//│ | | | α219_233'' <: List(‘_232'')
+//│ | | | BUMP TO LEVEL 2  -->  (α217_231'' -> α219_233'')
+//│ | | | where 
+//│ 		α217_231'' :> ‘_230'' <: (‘_230'' | int<number,Eql>)
+//│ 		α219_233'' :> (‘_232'' & int<number,Eql>) <: ‘_232''
+//│ | | | 2. C ‹∀ 1. (x228'' -> 1<int,number,Eql>)› <! (α217_231'' -> α219_233'')    (2)
+//│ | | | | 2. C ‹∀ 1. (x228'' -> 1<int,number,Eql>)› <! (α217_231'' -> α219_233'')    (2)
+//│ | | | | | could be distribbed: Set()
+//│ | | | | | INST [1]   ‹∀ 1. (x228'' -> 1<int,number,Eql>)›
+//│ | | | | |   where  
+//│ | | | | | TO [2] ~>  (x228_234'' -> 1<int,number,Eql>)
+//│ | | | | |   where  
+//│ | | | | | 2. C (x228_234'' -> 1<int,number,Eql>) <! (α217_231'' -> α219_233'')    (5)
+//│ | | | | | | 2. C (α217_231'',) <! (x228_234'',)    (3)
+//│ | | | | | | | 2. C α217_231'' <! x228_234''    (4)
+//│ | | | | | | | | NEW α217_231'' UB (2)
+//│ | | | | | | | | 2. C ‘_230'' <! x228_234''    (7)
+//│ | | | | | | | | | NEW x228_234'' LB (2)
+//│ | | | | | | 2. C 1<int,number,Eql> <! α219_233''    (3)
+//│ | | | | | | | NEW α219_233'' LB (0)
+//│ | | | | | | | 2. C 1<int,number,Eql> <! ‘_232''    (6)
+//│ | | | | | | | | CONSTRAINT FAILURE: 1<int,number,Eql> <: ‘_232''
+//│ | | | | | | | | allVarPols: -_232''
+//│ | | | | | | | | normLike[-] ‘_232''
+//│ | | | | | | | | | norm[-] ‘_232''
+//│ | | | | | | | | | | DNF: DNF(2, {}∧‘_232'')
+//│ | | | | | | | | | ~> ‘_232''
+//│ | | | | | | | | allVarPols: 
+//│ | | | | | | | | normLike[+] 1<int,number,Eql>
+//│ | | | | | | | | | norm[+] 1<int,number,Eql>
+//│ | | | | | | | | | | DNF: DNF(0, 1<int,number,Eql>{})
+//│ | | | | | | | | | ~> 1<int,number,Eql>
+//│ ╔══[ERROR] Type mismatch in function:
+//│ ║  l.523: 	  fun foo(x) = 1
+//│ ║         	         ^^^^^^^
+//│ ╟── integer literal of type `1` does not match type `?_`
+//│ ║  l.523: 	  fun foo(x) = 1
+//│ ║         	               ^
+//│ ╟── Note: constraint arises from operator application:
+//│ ║  l.514: 	  fun foo(x) = x + 1
+//│ ╙──       	               ^^^^^
+//│ | | | UNSTASHING...
+//│ | | | UNSTASHING... (out)
+//│ | | UNSTASHING... (out)
+//│ | | UNSTASHING... (out)
+//│ | Typing unit statements
+//│ | : None
+//│ ======== TYPED ========
+//│ class Ih
+//│   this: ⊤ 
+//│   fun bar: ‹∀ 1. (x226'' -> x226'')› where 
+//│   fun foo: ‹∀ 1. (x228'' -> 1<int,number,Eql>)› where 
 //│ class Ih() {
-//│   fun bar: forall 'a. 'a -> 'a
+//│   fun bar: forall 'x. 'x -> 'x
 //│   fun foo: anything -> 1
 //│ }
 
@@ -536,13 +667,29 @@ ih1: Bs
 //│ Bs
 
 ih1.a
-//│ false
+//│ bool
 
-// FIXME
+:e
 class Eh2 extends Bs(true), Ele {
-    fun foo(x) = x && true
+    fun foo(x) = x && false
     fun ce(x) = x
 }
+//│ ╔══[ERROR] Type mismatch in definition of method foo:
+//│ ║  l.674: 	    fun foo(x) = x && false
+//│ ║         	        ^^^^^^^^^^^^^^^^^^^
+//│ ╟── variable of type `?_` is not an instance of type `bool`
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.674: 	    fun foo(x) = x && false
+//│ ╙──       	                 ^
+//│ ╔══[ERROR] Type mismatch in definition of method foo:
+//│ ║  l.674: 	    fun foo(x) = x && false
+//│ ║         	        ^^^^^^^^^^^^^^^^^^^
+//│ ╟── operator application of type `bool` does not match type `?_`
+//│ ║  l.674: 	    fun foo(x) = x && false
+//│ ║         	                 ^^^^^^^^^^
+//│ ╟── Note: constraint arises from operator application:
+//│ ║  l.514: 	  fun foo(x) = x + 1
+//│ ╙──       	               ^^^^^
 //│ class Eh2() {
 //│   fun ce: Oth -> Test
 //│   fun foo: bool -> bool
@@ -553,21 +700,21 @@ class Eh extends Bs(1)
 class Eh1 extends Bs
 class Eh3 extends Bs(false), Test
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.552: 	class Eh extends Bs(1)
+//│ ║  l.699: 	class Eh extends Bs(1)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── integer literal of type `1` is not an instance of type `bool`
-//│ ║  l.552: 	class Eh extends Bs(1)
+//│ ║  l.699: 	class Eh extends Bs(1)
 //│ ║         	                    ^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.513: 	class Bs(a: bool) {
 //│ ╙──       	            ^^^^
 //│ ╔══[ERROR] class Bs expects 1 parameters; got 0
-//│ ║  l.553: 	class Eh1 extends Bs
+//│ ║  l.700: 	class Eh1 extends Bs
 //│ ╙──       	                  ^^
 //│ ╔══[ERROR] Type mismatch in definition of method foo:
 //│ ║  l.514: 	  fun foo(x) = x + 1
 //│ ║         	      ^^^^^^^^^^^^^^
-//│ ╟── function of type `?a -> ?b` is not an instance of type `int`
+//│ ╟── function of type `?a -> (forall ?b. ?b)` is not an instance of type `int`
 //│ ║  l.514: 	  fun foo(x) = x + 1
 //│ ║         	         ^^^^^^^^^^^
 //│ ╟── but it flows into definition of method foo with expected type `int`
@@ -580,7 +727,7 @@ class Eh3 extends Bs(false), Test
 //│ ║  l.5: 	  fun foo: int
 //│ ╙──     	      ^^^^^^^^
 //│ ╔══[ERROR] Member bar is declared in parent trait but not implemented
-//│ ║  l.554: 	class Eh3 extends Bs(false), Test
+//│ ║  l.701: 	class Eh3 extends Bs(false), Test
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ class Eh() {
 //│   fun foo: int -> int
@@ -607,9 +754,10 @@ class Ca(a: int) extends Oth {
 
 class Cx(a: 1 | 2, b: bool) extends Ca(a)
 //│ class Cx(a: 1 | 2, b: bool) {
-//│   fun bar: 'a -> 'a
-//│   fun cool: anything -> false
-//│   fun foo: 1
+//│   let a: int
+//│   fun bar: bool -> bool
+//│   fun cool: int -> bool
+//│   fun foo: int
 //│ }
 
 let cx1 = Cx(2, true)
@@ -632,6 +780,6 @@ class Bc2(bar: bool)
 :e
 class Bc12 extends Bc1(1), Bc2(true)
 //│ ╔══[ERROR] cannot inherit from more than one base class: Bc1 and Bc2
-//│ ║  l.633: 	class Bc12 extends Bc1(1), Bc2(true)
+//│ ║  l.781: 	class Bc12 extends Bc1(1), Bc2(true)
 //│ ╙──       	                           ^^^
 //│ class Bc12()

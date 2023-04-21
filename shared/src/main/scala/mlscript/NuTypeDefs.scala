@@ -816,11 +816,11 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     val tparamFields = tparamMems.map(p => p.nme -> p.ty)
                     assert(!typedParams.keys.exists(tparamFields.keys.toSet), ???)
                     
-                    def inherit(parents: Ls[ParentSpec], superType: ST, members: Ls[NuMember], baseClass: Opt[Str])
+                    def inherit(parents: Ls[ParentSpec], superType: ST, members: Ls[NuMember])
                           : (ST, Ls[NuMember]) =
                         parents match {
                       case (p, v @ Var(mxnNme), mxnArgs) :: ps =>
-                        val (newMembs, bc) = trace(s"${lvl}. Inheriting from $p") {
+                        val newMembs = trace(s"${lvl}. Inheriting from $p") {
                           ctx.get(mxnNme) match {
                             case S(lti: LazyTypeInfo) =>
                               lti.complete().freshen match {
@@ -850,53 +850,32 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                                   // TODO check overriding
                                   val bodyMems = mxn.ttu.entities
                                   
-                                  (paramMems ++ bodyMems, N)
+                                  paramMems ++ bodyMems
                                 
                                 case trt: TypedNuTrt =>
-                                  Nil -> N
+                                  Nil
                                   
                                 case cls: TypedNuCls =>
-                                  // err(msg"Class inheritance is not supported yet (use mixins)", p.toLoc) // TODO
-
-                                  if (baseClass.isDefined) {
-                                    err(msg"cannot inherit from more than one base class: ${baseClass.get} and ${mxnNme}", v.toLoc)
-                                  }
-
-                                  if (mxnArgs.sizeCompare(cls.params) =/= 0)
-                                    err(msg"class $mxnNme expects ${
-                                      cls.params.size.toString} parameters; got ${mxnArgs.size.toString}", Loc(v :: mxnArgs.unzip._2))
-
-                                  val paramMems = cls.params.lazyZip(mxnArgs).map { case (nme -> p, _ -> Fld(_, _, a)) => // TODO check name, mut, spec
-                                    implicit val genLambdas: GenLambdas = true
-                                    val a_ty = typeTerm(a)
-                                    p.lb.foreach(constrain(_, a_ty))
-                                    constrain(a_ty, p.ub)
-                                    NuParam(nme, FieldType(p.lb, a_ty)(provTODO), isType = false)(lvl)
-                                  }
-
-                                  // TODO check overriding
-                                  val bodyMems = cls.ttu.entities
-
-                                  (paramMems ++ bodyMems, S(mxnNme))
-
+                                  // err(msg"Class inheritance is not supported yet (use mixins)", p.toLoc)
+                                  Nil
                                 case als: TypedNuAls =>
                                   // TODO dealias first?
                                   err(msg"Cannot inherit from a type alias", p.toLoc)
-                                  Nil -> N
+                                  Nil
                                 case als: NuParam =>
                                   // TODO first-class mixins/classes...
                                   err(msg"Cannot inherit from a parameter", p.toLoc)
-                                  Nil -> N
+                                  Nil
                                 case cls: TypedNuFun =>
                                   err(msg"Cannot inherit from this", p.toLoc)
-                                  Nil -> N
+                                  Nil
                               }
                             case S(_) =>
                               err(msg"Cannot inherit from this", p.toLoc)
-                              Nil -> N
+                              Nil
                             case N => 
                               err(msg"Could not find definition `${mxnNme}`", p.toLoc)
-                              Nil -> N
+                              Nil
                           }
                         }()
                         val newSuperType = WithType(
@@ -908,7 +887,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                             }
                           )(provTODO)
                         )(provTODO)
-                        inherit(ps, newSuperType, members ++ newMembs, bc)
+                        inherit(ps, newSuperType, members ++ newMembs)
                       case Nil =>
                         val thisType = WithType(superType, RecordType(typedParams)(ttp(td.params, isType = true)))(provTODO) &
                           clsNameToNomTag(td)(provTODO, ctx) &
@@ -929,7 +908,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     val paramMems = typedParams.map(f => NuParam(f._1, f._2, isType = false)(lvl))
                     
                     val (thisType, baseMems) =
-                      inherit(parentSpecs, baseType, tparamMems ++ paramMems, N)
+                      inherit(parentSpecs, baseType, tparamMems ++ paramMems)
                     
                     ctx += "super" -> VarSymbol(thisType, Var("super"))
                     
@@ -937,7 +916,54 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     
                     // TODO report non-unit result/statements?
                     // TODO check overriding
-                    val clsMems = ttu.entities
+                    def computeBaseClass(parents: Ls[ParentSpec], members: Ls[NuMember], baseClass: Opt[Str]): Ls[NuMember] = 
+                      parents match {
+                      case (p, v @ Var(parNme), parArgs) :: ps =>
+                        ctx.get(parNme) match {
+                          case S(lti: LazyTypeInfo) =>
+                            val info = lti.complete()
+                              info match {
+                                case cls: TypedNuCls =>
+                                  if (baseClass.isDefined) {
+                                    err(msg"cannot inherit from more than one base class: ${baseClass.get} and ${parNme}", v.toLoc)
+                                  }
+
+                                  if (parArgs.sizeCompare(cls.params) =/= 0)
+                                    err(msg"class $parNme expects ${
+                                      cls.params.size.toString} parameters; got ${parArgs.size.toString}", Loc(v :: parArgs.unzip._2))
+
+                                  val paramMems = cls.params.lazyZip(parArgs).map { case (nme -> p, _ -> Fld(_, _, a)) => // TODO check name, mut, spec
+                                    implicit val genLambdas: GenLambdas = true
+                                    val a_ty = typeTerm(a)
+                                    p.lb.foreach(constrain(_, a_ty))
+                                    constrain(a_ty, p.ub)
+                                    NuParam(nme, FieldType(p.lb, a_ty)(provTODO), isType = false)(lvl)
+                                  }
+                                  val numem = paramMems ++ cls.members.values.toList
+                                  val res = members ++ numem.flatMap { m =>
+                                    members.find(x => x.name == m.name) match {
+                                      case S(mem: TypedNuTermDef) =>
+                                        val memSign = mem.typeSignature
+                                        // TODO fix here
+                                        val parSign = m.asInstanceOf[TypedNuTermDef].typeSignature
+                                        println(s"checking overriding: $memSign <: $parSign")
+                                        implicit val prov: TP = memSign.prov
+                                        constrain(memSign, parSign)
+                                        Nil
+                                      case _ => m :: Nil
+                                    }
+                                  }
+
+                                  computeBaseClass(ps, res , S(parNme))
+
+                                case _ => computeBaseClass(ps, members, baseClass)
+                              }
+                          case _ => computeBaseClass(ps, members, baseClass)
+                        }
+                      case Nil => members
+                      }
+
+                    val clsMems = computeBaseClass(parentSpecs, ttu.entities, N)
                     
                     val impltdMems = baseMems ++ clsMems
                     val mems = impltdMems.map(d => d.name -> d).toMap ++ typedSignatureMembers
@@ -965,7 +991,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       case Nil => (annot, members)
                     }
                     val thisTag = TopType //clsNameToNomTag(td)(provTODO, ctx)
-                    val (ifaceAnnot, ifaceMembers) = computeInterface(parentSpecs, thisTag, Nil)
+                    val (_, ifaceMembers) = computeInterface(parentSpecs, thisTag, Nil)
                     // TODO check mems against interface stuff above
 
                     ifaceMembers.foreach { m =>
@@ -1071,6 +1097,12 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
             // todo: check fd.rhs
           =>
             TypedNuFun(a.level, a.fd, a.bodyType & b.bodyType)
+        // case (S(a: NuParam), S(b: NuParam))
+        //   if a.level == b.level 
+        //     && a.nme.name == b.nme.name
+        //     && a.isType == b.isType
+        //   =>
+        //     NuParam(a.nme, a.ty && b.ty, a.isType)(a.level)
         case(S(a), N) => a
         case(N, S(b)) => b
         case _ => 
