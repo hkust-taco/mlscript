@@ -248,12 +248,20 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     case New(_, TypingUnit(_)) =>
       throw CodeGenError("custom class body is not supported yet")
     case Quoted(body) =>
-      translateQuoted(body)
+      val qqScope = scope.derive("Quoted", true)
+      translateQuoted(body)(qqScope)
     case Unquoted(body) =>
       // this case only happens without lexical/parse error when it is in a lambda in a quasiquote
       val callee = translateVar("run", true) 
+      // TODO: how to get the scope of the lambda 
+      // modify getAllLexicalNames to store the names in a lambda scope 
+      // - or is there someway to identify a scope based on it's name?
+      // or should i somehow use the lexicalSymbols for the runtimeName? 
       val context = scope.getAllLexicalNames().map( name => JSArray(JSExpr(name) :: JSIdent(name) :: Nil))
-      callee(translateTerm(body), JSArray(context))
+      scope.getQuasiquoteOuterScope() match {
+        case S(qqOuterScope: Scope) => callee(translateTerm(body)(qqOuterScope), JSArray(context))
+        case N => throw CodeGenError("unquote must be in quasiquote")
+      }
     case _: Bind | _: Test | If(_, _) | TyApp(_, _) | _: Splc =>
       throw CodeGenError(s"cannot generate code for term ${inspect(term)}")
   }
@@ -547,19 +555,22 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     case Let(true, Var(name), _, _) => 
       throw new CodeGenError(s"recursive non-function definition $name is not supported")
     case Let(_, Var(name), value, body) => 
+      val letScope = scope.derive("Let")
+      val runtimeName = letScope.declareParameter(name)
       tracker.addDefinedVar(name)
       val s_expr = JSArray(Ls(
         JSExpr("Let"),
         JSExpr(name),
         JSIdent(name),
         translateQuotedTerm(value),
-        translateQuotedTerm(body)
+        translateQuotedTerm(body)(letScope, tracker)
       ))
       JSImmEvalFn(None, Ls(JSNamePattern(name)), L(s_expr), Ls(JSLit(s"Symbol('${name}')")))
     case Blk(stmts) => 
+      val blkScope = scope.derive("Blk")
       val flattened = stmts.iterator.flatMap(_.desugared._2).toList
       val s_expr_list = flattened.iterator.zipWithIndex.map {
-        case (t: Term, index) => translateQuotedTerm(t)
+        case (t: Term, index) => translateQuotedTerm(t)(blkScope, tracker)
         case (_: Def | _: TypeDef | _: NuFunDef /* | _: NuTypeDef */, _) =>
           throw CodeGenError("unsupported definitions in blocks")
       }.toList
@@ -592,15 +603,22 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     case New(N, TypingUnit(Nil)) => throw CodeGenError("New #1")
     case New(S(TypeName(className) -> Tup(args)), TypingUnit(Nil)) => throw CodeGenError("New #2") 
     case Quoted(body) => 
+      val qqScope = scope.derive("Quoted", true)
+      val qqTracker = new FreeVarTracker
       JSArray(Ls(
-        JSExpr("_"),
-        translateQuotedTerm(body)
+        JSExpr("Quoted"),
+        translateQuotedTerm(body)(qqScope, qqTracker)
       ))
     case Unquoted(body) =>
-      JSArray(Ls(
-        JSExpr("Unquoted"),
-        translateTerm(body)(scope)
-      ))
+      scope.getQuasiquoteOuterScope() match {
+        case S(qqOuterScope: Scope) 
+          => JSArray(Ls(
+                      JSExpr("Unquoted"),
+                      translateTerm(body)(qqOuterScope)
+                    ))
+        case N => throw CodeGenError("unquote must be in quasiquote")
+      }
+      
     case If(IfThen(condition, branch1), S(branch2)) =>
       JSArray(Ls(
         JSExpr("If"), 

@@ -1,0 +1,101 @@
+:NewParser 
+
+// BUG: cannot get x from outside qq scope, in Lambda Scope 
+// should be equivalent to code"x => x + 1", now is code"x => x + x"
+// BELOW shows the intended behaviour 
+let y = code"1"
+code"""x => x + ${y}"""
+//│ y: Code[1, anything]
+//│  = [ '_', 1 ]
+//│ res: Code[int -> int, anything\x]
+//│    = [ '_', [Function (anonymous)] ]
+
+run(res)(0)
+//│ res: int
+//│    = 1
+
+// This is the BUG Behaviour 
+:js
+let x = code"1"
+code"""x => (x + ${x})"""
+//│ // Query 1
+//│ globalThis.x = [
+//│   "_",
+//│   1
+//│ ];
+//│ // Query 2
+//│ res = [
+//│   "_",
+//│   (x) => [
+//│     x + run(x, [
+//│       [
+//│         "x",
+//│         x
+//│       ]
+//│     ])
+//│   ]
+//│ ];
+//│ // End of generated code
+//│ x: Code[1, anything]
+//│  = [ '_', 1 ]
+//│ res: Code[int -> (int,), anything\x]
+//│    = [ '_', [Function (anonymous)] ]
+
+run(res)(0)
+//│ res: (int,)
+//│ Runtime error:
+//│   Error: Encountered s-expression that is not handled
+
+let x = code"2"
+//│ x: Code[2, anything]
+//│  = [ '_', 2 ]
+
+code"""x => (let x = 1; x + ${x})"""
+//│ res: Code[anything -> (int,), anything\x]
+//│    = [ '_', [Function (anonymous)] ]
+
+run(res)("happy")
+//│ res: (int,)
+//│    = [ 3 ]
+
+// OK - probably need more testing
+code"""let x = code"1"; code"${x}""""
+//│ res: Code[Code[1, anything], anything]
+//│    = [
+//│        'Let',
+//│        'x',
+//│        Symbol(x),
+//│        [ 'Quoted', [ '_', 1 ] ],
+//│        [ 'Quoted', [ 'Unquoted', Symbol(x) ] ]
+//│      ]
+
+run(res)
+//│ res: Code[1, anything]
+//│    = [ 'Unquoted', [ '_', 1 ] ]
+
+
+// OK
+let x = code"0"
+code"""let x = 1; ${x}"""
+//│ x: Code[0, anything]
+//│  = [ '_', 0 ]
+//│ res: Code[0, anything\x]
+//│    = [ 'Let', 'x', Symbol(x), [ '_', 1 ], [ 'Unquoted', [ '_', 0 ] ] ]
+
+run(res)
+//│ res: 0
+//│    = 0
+
+// OK
+// equivalent to code"x => x"
+code"""x => code"${x}""""
+//│ res: Code[Code['a, 'b] -> Code['a, 'b], anything]
+//│    = [ '_', [Function (anonymous)] ]
+
+run(res)(code"0")
+//│ res: Code[0, anything]
+//│    = [ 'Unquoted', [ '_', 0 ] ]
+
+run(res)
+//│ res: 0
+//│    = 0

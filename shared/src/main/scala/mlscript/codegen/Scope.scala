@@ -10,7 +10,7 @@ import mlscript.Term
 import mlscript.utils.{AnyOps, lastWords}
 import mlscript.JSField
 
-class Scope(name: Str, enclosing: Opt[Scope]) {
+class Scope(name: Str, enclosing: Opt[Scope], quasiquote: Bool = false) {
   private val lexicalTypeSymbols = scala.collection.mutable.HashMap[Str, TypeSymbol]()
   private val lexicalValueSymbols = scala.collection.mutable.HashMap[Str, RuntimeSymbol]()
   private val runtimeSymbols = scala.collection.mutable.HashSet[Str]()
@@ -320,7 +320,7 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
   /**
     * Shorthands for deriving normal scopes.
     */
-  def derive(name: Str): Scope = new Scope(name, S(this))
+  def derive(name: Str, quasiquote: Bool = false): Scope = new Scope(name, S(this), quasiquote)
 
   
   def refreshRes(): Unit = {
@@ -328,6 +328,9 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
   }
   
   def getAllLexicalNames(): Ls[Str] = lexicalValueSymbols.keySet.toList
+
+  def getQuasiquoteOuterScope(): Opt[Scope] = 
+    if (quasiquote) enclosing else enclosing.flatMap(_.getQuasiquoteOuterScope())
 }
 
 object Scope {

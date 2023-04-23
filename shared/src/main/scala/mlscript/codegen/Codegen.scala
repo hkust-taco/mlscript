@@ -846,10 +846,10 @@ final case class JSQuasiquoteRunFunctionBody() extends JSStmt {
     const name_value = new Map();
 
     if (context != null) {
-      context.forEach(context_pair => name_value.set(context_pair[0], context_pair[1]));
+      context.forEach(context_pair => (typeof context_pair[0] == "symbol")? symbol_value .set(context_pair[0], context_pair[1]) : name_value.set(context_pair[0], context_pair[1]));
     }
     function contextToList() {
-      return Array.from(name_value);
+      return Array.from(name_value).concat(Array.from(symbol_value));
     }
     function _run(s_expr) {
       switch(s_expr[0]) {
@@ -903,10 +903,24 @@ final case class JSQuasiquoteRunFunctionBody() extends JSStmt {
           if (_run(s_expr[1])) { return _run(s_expr[2]); } else { return _run(s_expr[3]); }
         case "Blk":
           return _run(s_expr[1]);
+        case "Quoted":
+          return processNestedQQ(s_expr[1]);
         default:
           throw Error("Encountered s-expression that is not handled");
       }
     }
+
+    function processNestedQQ(s_expr) {
+      // go through the nested qq
+      // only replace [Unquoted, Symbol()]
+      if (!Array.isArray(s_expr))
+        return s_expr; 
+      if (s_expr[0] == 'Unquoted' && typeof s_expr[1] == "symbol") 
+        return ["Unquoted", symbol_value.get(s_expr[1])];
+      else
+        return [s_expr[0], processNestedQQ(s_expr[1])];      
+    }
+
     return _run(s_expr);
     """
   )
