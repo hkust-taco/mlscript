@@ -7,6 +7,24 @@ let b = code"y"
 //│ b: Code['a, {y: 'a}]
 //│  = [ 'Var', [ 'FreeVar', 'y' ] ]
 
+code"a + a"
+//│ res: Code[int, {a: int}]
+//│    = [
+//│        'App',
+//│        '+',
+//│        [ 'Var', [ 'FreeVar', 'a' ] ],
+//│        [ 'Var', [ 'FreeVar', 'a' ] ]
+//│      ]
+
+code"a + b"
+//│ res: Code[int, {a: int, b: int}]
+//│    = [
+//│        'App',
+//│        '+',
+//│        [ 'Var', [ 'FreeVar', 'a' ] ],
+//│        [ 'Var', [ 'FreeVar', 'b' ] ]
+//│      ]
+
 code"x + (let x = 2; x * x)"
 //│ res: Code[int, {x: int}]
 //│    = [
@@ -52,9 +70,9 @@ ${a} + (let y = 1; ${b})
 let cde = code"a"
 //│ 1. Typing term Quoted' a '
 //│ | 1. Typing term a
-//│ | 1. : α64'
-//│ 1. : Code[α64',{a: α64'}]
-//│ ⬤ Typed as: Code[α64',{a: α64'}]
+//│ | 1. : α76'
+//│ 1. : Code[α76',{a: α76'}]
+//│ ⬤ Typed as: Code[α76',{a: α76'}]
 //│  where: 
 //│ cde: Code['a, {a: 'a}]
 //│    = [ 'Var', [ 'FreeVar', 'a' ] ]
@@ -122,7 +140,7 @@ let cde_w_mutli_unquote = code"${free_var2} + ${free_var1}"
 // FIXME
 c: Code<int, {}>
 //│ ╔══[ERROR] identifier not found: c
-//│ ║  l.123: 	c: Code<int, {}>
+//│ ║  l.214: 	c: Code<int, {}>
 //│ ╙──       	^
 //│ res: Code[int, anything]
 //│ Code generation encountered an error:
@@ -158,7 +176,7 @@ code"let y = 1; ${cde_arr}"
 :e
 run(res)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.159: 	run(res)
+//│ ║  l.250: 	run(res)
 //│ ║         	^^^^^^^^
 //│ ╙── expression of type `anything` does not have field 'y'
 //│ res: (nothing, nothing,) | error
@@ -206,7 +224,7 @@ code"f(0)"
 :ge
 code"${code"${code"${z}"}"}"
 //│ ╔══[ERROR] identifier not found: z
-//│ ║  l.207: 	code"${code"${code"${z}"}"}"
+//│ ║  l.298: 	code"${code"${code"${z}"}"}"
 //│ ╙──       	                     ^
 //│ res: Code[error, anything]
 //│ Code generation encountered an error:
