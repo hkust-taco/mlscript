@@ -4,24 +4,26 @@
 //│ res: "normal string"
 //│    = 'normal string'
 
+
+
 :pe
 code""error code""
 //│ ╔══[PARSE ERROR] Unexpected end of quasiquote section; an expression was expected here
-//│ ║  l.8: 	code""error code""
-//│ ╙──     	     ^
+//│ ║  l.10: 	code""error code""
+//│ ╙──      	     ^
 //│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
-//│ ║  l.8: 	code""error code""
-//│ ╙──     	      ^^^^^
+//│ ║  l.10: 	code""error code""
+//│ ╙──      	      ^^^^^
 //│ res: Code[undefined, anything]
 //│    = [ '_', undefined ]
 
 :pe
 code""wrong example""
 //│ ╔══[PARSE ERROR] Unexpected end of quasiquote section; an expression was expected here
-//│ ║  l.19: 	code""wrong example""
+//│ ║  l.21: 	code""wrong example""
 //│ ╙──      	     ^
 //│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
-//│ ║  l.19: 	code""wrong example""
+//│ ║  l.21: 	code""wrong example""
 //│ ╙──      	      ^^^^^
 //│ res: Code[undefined, anything]
 //│    = [ '_', undefined ]
@@ -29,3 +31,11 @@ code""wrong example""
 code""""hello world""""
 //│ res: Code["hello world", anything]
 //│    = [ '_', 'hello world' ]
+
+:pe
+code""" "HKUST"
+//│ ╔══[PARSE ERROR] Unmatched opening quasiquote
+//│ ║  l.36: 	code""" "HKUST"
+//│ ╙──      	^^^^^^^
+//│ res: "HKUST"
+//│    = 'HKUST'

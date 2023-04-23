@@ -52,9 +52,9 @@ ${a} + (let y = 1; ${b})
 let cde = code"a"
 //│ 1. Typing term Quoted' a '
 //│ | 1. Typing term a
-//│ | 1. : α66'
-//│ 1. : Code[α66',{a: α66'}]
-//│ ⬤ Typed as: Code[α66',{a: α66'}]
+//│ | 1. : α64'
+//│ 1. : Code[α64',{a: α64'}]
+//│ ⬤ Typed as: Code[α64',{a: α64'}]
 //│  where: 
 //│ cde: Code['a, {a: 'a}]
 //│    = [ 'Var', [ 'FreeVar', 'a' ] ]
@@ -263,3 +263,14 @@ fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, code"${
 //│   where
 //│     'b <: 'b\x & {x: int} & 'c
 //│     = [Function: test]
+
+let y = code"2"
+code"y => (let y = 1; y + ${y})"
+//│ y: Code[2, anything]
+//│  = [ '_', 2 ]
+//│ res: Code[anything -> (int,), anything\y]
+//│    = [ '_', [Function (anonymous)] ]
+run(res)("happy")
+//│ res: (int,)
+//│ Runtime error:
+//│   Error: Encountered s-expression that is not handled

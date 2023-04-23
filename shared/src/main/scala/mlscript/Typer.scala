@@ -619,14 +619,14 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           if (ctx.inQQ && !ctx.inUnquoted) {
             val res = new TypeVariable(lvl, Nil, Nil)(prov)
             val tag = ClassTag(StrLit(name), Set.empty)(noProv)
-//            println(s"insert $name into the free vars")
+
             ctx.freeVarsEnv += name -> VarSymbol(tag, v)
 
             ctx.outermostCtx match {
               case Some(outermost) =>
                 outermost.freeVarsEnv += name -> VarSymbol(tag, v)
                 outermost.outermostFreeVarType += (name -> res)
-              case None => err("identifier not found: " + name, term.toLoc): TypeScheme
+              case N => err("identifier not found: " + name, term.toLoc): TypeScheme
             }
             res
           } else {
@@ -901,7 +901,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case TyApp(_, _) => ??? // TODO
       case Quoted(body) =>
         def toRecordEntry(e: (Str -> SimpleType)) = (Var(e._1), FieldType(N, e._2)(noProv))
-
         val nested = ctx.nest
         val nested_ctx = nested.copy(
           quasiquoteLvl = ctx.quasiquoteLvl + 1,
@@ -923,25 +922,18 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         TypeRef(TypeName("Code"), body_type :: ctx_type :: Nil)(noProv)
       case Unquoted(body) =>
         ctx.parent match {
-          case Some(p) =>
-            val nestedCtx = p.nest.copy(quasiquoteLvl = p.quasiquoteLvl + 1, inUnquoted = true)
+          case Some(p) if ctx.outermostCtx =/= N =>
+            val nest_ctx = ctx.nest.copy(inUnquoted = true)
 
-            val tt = freshVar(noProv)(0)
             val tc = freshVar(noProv)(0)
-            val body_type = typeTerm(body)(nestedCtx, raise, vars)
-
             val res = freshVar(prov)
-            val resTy = con(body_type, TypeRef(TypeName("Code"), Ls(tt, tc))(noProv), res)
+            val body_type = typeTerm(body)(nest_ctx, raise, vars)
 
-            ctx.outermostCtx match {
-              case Some(p) =>
-                val outermost_ctx = p.outermostCtx.get
-                val tc_with_bounded = tc.without(outermost_ctx.outermostBoundedVarType.map(Var).toSortedSet)
-                outermost_ctx.innerUnquoteContextRequirements.append(tc_with_bounded)
-              case _ => err("Unquotes should be enclosed with a quasiquote.", body.toLoc)(raise)
-            }
+            val outermost_ctx = ctx.outermostCtx.get
+            val tc_with_bounded = tc.without(outermost_ctx.outermostBoundedVarType.map(Var).toSortedSet)
+            outermost_ctx.innerUnquoteContextRequirements.append(tc_with_bounded)
 
-            tt
+            con(body_type, TypeRef(TypeName("Code"), Ls(res, tc))(noProv), res)
           case _ => err("Unquotes should be enclosed with a quasiquote.", body.toLoc)(raise)
         }
     }
