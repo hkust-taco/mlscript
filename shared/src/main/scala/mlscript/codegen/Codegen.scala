@@ -913,12 +913,16 @@ final case class JSQuasiquoteRunFunctionBody() extends JSStmt {
     function processNestedQQ(s_expr) {
       // go through the nested qq
       // only replace [Unquoted, Symbol()]
-      if (!Array.isArray(s_expr))
-        return s_expr; 
-      if (s_expr[0] == 'Unquoted' && typeof s_expr[1] == "symbol") 
-        return ["Unquoted", symbol_value.get(s_expr[1])];
-      else
-        return [s_expr[0], processNestedQQ(s_expr[1])];      
+      if (typeof s_expr == "symbol") {
+        return symbol_value.get(s_expr);
+      }
+      if (!Array.isArray(s_expr)) 
+        return s_expr;
+      let processed_sexpr = [];
+      for (elem of s_expr) {
+        processed_sexpr.push(processNestedQQ(elem));
+      }
+      return processed_sexpr;
     }
 
     return _run(s_expr);

@@ -73,6 +73,30 @@ run(res)
 //│ res: Code[1, anything]
 //│    = [ 'Unquoted', [ '_', 1 ] ]
 
+code"""let xhere = code"100"; code"let y = 1; code"${xhere}"""""
+//│ res: Code[Code[Code[100, anything], anything], anything]
+//│    = [
+//│        'Let',
+//│        'xhere',
+//│        Symbol(xhere),
+//│        [ 'Quoted', [ '_', 100 ] ],
+//│        [ 'Quoted', [ 'Let', 'y', Symbol(y), [Array], [Array] ] ]
+//│      ]
+
+run(res)
+//│ res: Code[Code[100, anything], anything]
+//│    = [
+//│        'Let',
+//│        'y',
+//│        undefined,
+//│        [ '_', 1 ],
+//│        [ 'Quoted', [ 'Unquoted', [Array] ] ]
+//│      ]
+
+run(res)
+//│ res: Code[100, anything]
+//│    = [ 'Unquoted', [ '_', 100 ] ]
+
 
 // OK
 let x = code"0"
