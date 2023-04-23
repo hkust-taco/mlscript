@@ -398,18 +398,12 @@ run(res)
 //│ Runtime error:
 //│   TypeError: globalThis[callee] is not a function
 
-:e
+
 let codeA = code"let y = 2; y"
 let codeB = code"y + y"
 //│ codeA: Code[2, anything]
 //│      = [ 'Let', 'y', Symbol(y), [ '_', 2 ], [ 'Var', Symbol(y) ] ]
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.403: 	let codeB = code"y + y"
-//│ ║         	                 ^^^^^
-//│ ╟── reference of type `"y"` is not an instance of type `int`
-//│ ║  l.403: 	let codeB = code"y + y"
-//│ ╙──       	                     ^
-//│ codeB: Code[error | int, {y: int}]
+//│ codeB: Code[int, {y: int}]
 //│      = [
 //│          'App',
 //│          '+',
@@ -421,7 +415,7 @@ let codeB = code"y + y"
 :pe
 let both = code"${codeA}; ${codeB}"
 //│ ╔══[PARSE ERROR] Unexpected ';' keyword here
-//│ ║  l.422: 	let both = code"${codeA}; ${codeB}"
+//│ ║  l.416: 	let both = code"${codeA}; ${codeB}"
 //│ ╙──       	                        ^
 //│ both: Code[2, anything]
 //│     = [
@@ -444,7 +438,7 @@ code"x + (let x = 1; x)"
 :e // BUG: quasiquote still has a free variable
 run(res)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.445: 	run(res)
+//│ ║  l.439: 	run(res)
 //│ ║         	^^^^^^^^
 //│ ╙── type `anything` does not have field 'x'
 //│ res: error | int
@@ -469,7 +463,7 @@ let c = code"${a} + ${b}"
 :e
 run(c)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.470: 	run(c)
+//│ ║  l.464: 	run(c)
 //│ ║         	^^^^^^
 //│ ╙── type `anything` does not have field 'x'
 //│ res: error | int
@@ -489,7 +483,7 @@ let res = c(2)
 :e
 run(res)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.490: 	run(res)
+//│ ║  l.484: 	run(res)
 //│ ║         	^^^^^^^^
 //│ ╙── type `anything` does not have field 'x'
 //│ res: error | int

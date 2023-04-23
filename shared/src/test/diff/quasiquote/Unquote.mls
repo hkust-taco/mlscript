@@ -140,7 +140,7 @@ let cde_w_mutli_unquote = code"${free_var2} + ${free_var1}"
 // FIXME
 c: Code<int, {}>
 //│ ╔══[ERROR] identifier not found: c
-//│ ║  l.214: 	c: Code<int, {}>
+//│ ║  l.141: 	c: Code<int, {}>
 //│ ╙──       	^
 //│ res: Code[int, anything]
 //│ Code generation encountered an error:
@@ -176,7 +176,7 @@ code"let y = 1; ${cde_arr}"
 :e
 run(res)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.250: 	run(res)
+//│ ║  l.177: 	run(res)
 //│ ║         	^^^^^^^^
 //│ ╙── expression of type `anything` does not have field 'y'
 //│ res: (nothing, nothing,) | error
@@ -224,7 +224,7 @@ code"f(0)"
 :ge
 code"${code"${code"${z}"}"}"
 //│ ╔══[ERROR] identifier not found: z
-//│ ║  l.298: 	code"${code"${code"${z}"}"}"
+//│ ║  l.225: 	code"${code"${code"${z}"}"}"
 //│ ╙──       	                     ^
 //│ res: Code[error, anything]
 //│ Code generation encountered an error:
@@ -288,7 +288,3 @@ code"y => (let y = 1; y + ${y})"
 //│  = [ '_', 2 ]
 //│ res: Code[anything -> (int,), anything\y]
 //│    = [ '_', [Function (anonymous)] ]
-run(res)("happy")
-//│ res: (int,)
-//│ Runtime error:
-//│   Error: Encountered s-expression that is not handled

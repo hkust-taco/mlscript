@@ -618,16 +618,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         val ty = ctx.get(name, traversal).fold(
           if (ctx.inQQ && !ctx.inUnquoted) {
             val res = new TypeVariable(lvl, Nil, Nil)(prov)
-//            val tag = ClassTag(StrLit(name), Set.empty)(noProv)
             val sym = VarSymbol(res, v)
-
             ctx.freeVarsEnv += name -> sym
+            val outermost = ctx.outermostCtx.get
+            outermost.outermostFreeVarType += (name -> res)
 
-            ctx.outermostCtx match {
-              case Some(outermost) =>
-                outermost.outermostFreeVarType += (name -> res)
-              case N => err("identifier not found: " + name, term.toLoc): TypeScheme
-            }
             res
           } else {
             err("identifier not found: " + name, term.toLoc): TypeScheme
