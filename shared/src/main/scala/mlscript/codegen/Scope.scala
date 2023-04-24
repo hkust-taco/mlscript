@@ -79,13 +79,15 @@ class Scope(name: Str, enclosing: Opt[Scope], quasiquote: Bool = false) {
     // Replace ticks
     val realPrefix = Scope.replaceTicks(prefix)
     // Try just prefix.
-    if (!runtimeSymbols.contains(realPrefix) && !Symbol.isKeyword(realPrefix)) {
+    // Check for existence in current scope and all parents to avoid shadowing by inner scopes
+    // The shadowing is a problem when unquoting in quasiquotes
+    if (!existsRuntimeSymbolAllScope(realPrefix) && !Symbol.isKeyword(realPrefix)) {
       return realPrefix
     }
     // Try prefix with an integer.
     for (i <- 1 to Int.MaxValue) {
       val name = s"$realPrefix$i"
-      if (!runtimeSymbols.contains(name)) {
+      if (!existsRuntimeSymbolAllScope(name)) {
         return name
       }
     }
@@ -316,6 +318,16 @@ class Scope(name: Str, enclosing: Opt[Scope], quasiquote: Bool = false) {
   }
 
   def existsRuntimeSymbol(name: Str): Bool = runtimeSymbols.contains(name)
+
+  def existsRuntimeSymbolAllScope(name: Str): Bool = 
+    if (runtimeSymbols.contains(name)) 
+      true 
+    else {
+      enclosing match {
+        case S(outerscope: Scope) => outerscope.existsRuntimeSymbolAllScope(name)
+        case N => false
+      }
+    }
 
   /**
     * Shorthands for deriving normal scopes.
