@@ -253,11 +253,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     case Unquoted(body) =>
       // this case only happens without lexical/parse error when it is in a lambda in a quasiquote
       val callee = translateVar("run", true) 
-      // TODO: how to get the scope of the lambda 
-      // modify getAllLexicalNames to store the names in a lambda scope 
-      // - or is there someway to identify a scope based on it's name?
-      // or should i somehow use the lexicalSymbols for the runtimeName? 
-      val context = scope.getAllLexicalNames().map( name => JSArray(JSExpr(name) :: JSIdent(name) :: Nil))
+      val context = scope.getAllRuntimeSymbols().map( name => JSArray(JSExpr(name) :: JSIdent(name) :: Nil))
       scope.getQuasiquoteOuterScope() match {
         case S(qqOuterScope: Scope) => callee(translateTerm(body)(qqOuterScope), JSArray(context))
         case N => throw CodeGenError("unquote must be in quasiquote")

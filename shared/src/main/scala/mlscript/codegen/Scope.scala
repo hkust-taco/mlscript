@@ -340,6 +340,7 @@ class Scope(name: Str, enclosing: Opt[Scope], quasiquote: Bool = false) {
   }
   
   def getAllLexicalNames(): Ls[Str] = lexicalValueSymbols.keySet.toList
+  def getAllRuntimeSymbols(): Ls[Str] = runtimeSymbols.toList
 
   def getQuasiquoteOuterScope(): Opt[Scope] = 
     if (quasiquote) enclosing else enclosing.flatMap(_.getQuasiquoteOuterScope())
