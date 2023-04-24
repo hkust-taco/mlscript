@@ -506,6 +506,11 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
             polyfill.use(sym.feature, sym.runtimeName)
           val ident = JSIdent(sym.runtimeName)
           if (sym.feature === "error") ident() else JSArray(Ls(JSExpr("_"), ident)) 
+        case S(sym: ValueSymbol) => 
+          JSArray(Ls(
+            JSExpr("Var"),
+            JSIdent(sym.runtimeName)
+          )) 
         case _ => // to handle ValueSymbol
           if (!tracker.isDefinedVar(name)) 
             tracker.addFreeVar(name)
@@ -561,11 +566,11 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       val s_expr = JSArray(Ls(
         JSExpr("Let"),
         JSExpr(name),
-        JSIdent(name),
+        JSIdent(runtimeName),
         translateQuotedTerm(value),
         translateQuotedTerm(body)(letScope, tracker)
       ))
-      JSImmEvalFn(None, Ls(JSNamePattern(name)), L(s_expr), Ls(JSLit(s"Symbol('${name}')")))
+      JSImmEvalFn(None, Ls(JSNamePattern(runtimeName)), L(s_expr), Ls(JSLit(s"Symbol('${name}')")))
     case Blk(stmts) => 
       val blkScope = scope.derive("Blk")
       val flattened = stmts.iterator.flatMap(_.desugared._2).toList

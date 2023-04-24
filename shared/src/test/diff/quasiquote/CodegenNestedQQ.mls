@@ -3,6 +3,7 @@
 // BUG: cannot get x from outside qq scope, in Lambda Scope 
 // should be equivalent to code"x => x + 1", now is code"x => x + x"
 // BELOW shows the intended behaviour 
+
 let y = code"1"
 code"""x => x + ${y}"""
 //│ y: Code[1, anything]
@@ -17,7 +18,7 @@ run(res)(0)
 // This is the BUG Behaviour 
 :js
 let x = code"1"
-code"""x => (x + ${x})"""
+code"""x => x + ${x}"""
 //│ // Query 1
 //│ globalThis.x = [
 //│   "_",
@@ -26,23 +27,21 @@ code"""x => (x + ${x})"""
 //│ // Query 2
 //│ res = [
 //│   "_",
-//│   (x) => [
-//│     x + run(x, [
-//│       [
-//│         "x",
-//│         x
-//│       ]
-//│     ])
-//│   ]
+//│   (x) => x + run(x, [
+//│     [
+//│       "x",
+//│       x
+//│     ]
+//│   ])
 //│ ];
 //│ // End of generated code
 //│ x: Code[1, anything]
 //│  = [ '_', 1 ]
-//│ res: Code[int -> (int,), anything\x]
+//│ res: Code[int -> int, anything\x]
 //│    = [ '_', [Function (anonymous)] ]
 
 run(res)(0)
-//│ res: (int,)
+//│ res: int
 //│ Runtime error:
 //│   Error: Encountered s-expression that is not handled
 
@@ -58,20 +57,106 @@ run(res)("happy")
 //│ res: (int,)
 //│    = [ 3 ]
 
-// OK - probably need more testing
-code"""let x = code"1"; code"${x}""""
-//│ res: Code[Code[1, anything], anything]
+:js
+code"let x = code"1"; code"let x = code"2"; ${x}""
+//│ // Query 1
+//│ res = ((x) => [
+//│   "Let",
+//│   "x",
+//│   x,
+//│   [
+//│     "Quoted",
+//│     [
+//│       "_",
+//│       1
+//│     ]
+//│   ],
+//│   [
+//│     "Quoted",
+//│     ((x) => [
+//│       "Let",
+//│       "x",
+//│       x,
+//│       [
+//│         "Quoted",
+//│         [
+//│           "_",
+//│           2
+//│         ]
+//│       ],
+//│       [
+//│         "Unquoted",
+//│         x
+//│       ]
+//│     ])(Symbol('x'))
+//│   ]
+//│ ])(Symbol('x'));
+//│ // End of generated code
+//│ res: Code[Code[1, anything\x], anything]
 //│    = [
 //│        'Let',
 //│        'x',
 //│        Symbol(x),
 //│        [ 'Quoted', [ '_', 1 ] ],
-//│        [ 'Quoted', [ 'Unquoted', Symbol(x) ] ]
+//│        [ 'Quoted', [ 'Let', 'x', Symbol(x), [Array], [Array] ] ]
 //│      ]
 
 run(res)
-//│ res: Code[1, anything]
-//│    = [ 'Unquoted', [ '_', 1 ] ]
+//│ res: Code[1, anything\x]
+//│    = [
+//│        'Let',
+//│        'x',
+//│        Symbol(x),
+//│        [ 'Quoted', [ '_', 2 ] ],
+//│        [ 'Unquoted', undefined ]
+//│      ]
+
+
+// This example works because the unquoted x is globalThis.x1,
+
+code"let x1 = code"100"; let x2 = code"200"; code"let y = 100; ${x}""
+//│ res: Code[Code[2, anything\y], anything]
+//│    = [
+//│        'Let',
+//│        'x1',
+//│        Symbol(x1),
+//│        [ 'Quoted', [ '_', 100 ] ],
+//│        [
+//│          'Let',
+//│          'x2',
+//│          Symbol(x2),
+//│          [ 'Quoted', [Array] ],
+//│          [ 'Quoted', [Array] ]
+//│        ]
+//│      ]
+
+run(res)
+//│ res: Code[2, anything\y]
+//│    = [ 'Let', 'y', Symbol(y), [ '_', 100 ], [ 'Unquoted', [ '_', 100 ] ] ]
+
+run(res)
+//│ res: 2
+//│    = 100
+
+code"let x1 = code"1"; let x = code"3"; code"let y = 100; ${x}""
+//│ res: Code[Code[3, anything\y], anything]
+//│    = [
+//│        'Let',
+//│        'x1',
+//│        Symbol(x1),
+//│        [ 'Quoted', [ '_', 1 ] ],
+//│        [
+//│          'Let',
+//│          'x',
+//│          Symbol(x),
+//│          [ 'Quoted', [Array] ],
+//│          [ 'Quoted', [Array] ]
+//│        ]
+//│      ]
+
+run(res)
+//│ res: Code[3, anything\y]
+//│    = [ 'Let', 'y', Symbol(y), [ '_', 100 ], [ 'Unquoted', [ '_', 3 ] ] ]
 
 code"""let xhere = code"100"; code"let y = 1; code"${xhere}"""""
 //│ res: Code[Code[Code[100, anything], anything], anything]
@@ -88,7 +173,7 @@ run(res)
 //│    = [
 //│        'Let',
 //│        'y',
-//│        undefined,
+//│        Symbol(y),
 //│        [ '_', 1 ],
 //│        [ 'Quoted', [ 'Unquoted', [Array] ] ]
 //│      ]
@@ -98,9 +183,30 @@ run(res)
 //│    = [ 'Unquoted', [ '_', 100 ] ]
 
 
-// OK
+// OK because globalThis.x2 instead of globalThis.x
+:js
 let x = code"0"
 code"""let x = 1; ${x}"""
+//│ // Query 1
+//│ globalThis.x2 = [
+//│   "_",
+//│   0
+//│ ];
+//│ // Query 2
+//│ res = ((x) => [
+//│   "Let",
+//│   "x",
+//│   x,
+//│   [
+//│     "_",
+//│     1
+//│   ],
+//│   [
+//│     "Unquoted",
+//│     x2
+//│   ]
+//│ ])(Symbol('x'));
+//│ // End of generated code
 //│ x: Code[0, anything]
 //│  = [ '_', 0 ]
 //│ res: Code[0, anything\x]
@@ -116,10 +222,58 @@ code"""x => code"${x}""""
 //│ res: Code[Code['a, 'b] -> Code['a, 'b], anything]
 //│    = [ '_', [Function (anonymous)] ]
 
-run(res)(code"0")
-//│ res: Code[0, anything]
-//│    = [ 'Unquoted', [ '_', 0 ] ]
+run(res)(code"1")
+//│ res: Code[1, anything]
+//│    = [ 'Unquoted', [ '_', 1 ] ]
 
 run(res)
-//│ res: 0
-//│    = 0
+//│ res: 1
+//│    = 1
+
+:js
+let x = 1
+let x = 2
+//│ // Query 1
+//│ globalThis.x3 = 1;
+//│ // Query 2
+//│ globalThis.x4 = 2;
+//│ // End of generated code
+//│ x: 1
+//│  = 1
+//│ x: 2
+//│  = 2
+
+code"let x = code"2"; y => code"${x}""
+//│ res: Code[anything -> Code[2, anything], anything]
+//│    = [
+//│        'Let',
+//│        'x',
+//│        Symbol(x),
+//│        [ 'Quoted', [ '_', 2 ] ],
+//│        [ '_', [Function (anonymous)] ]
+//│      ]
+
+run(res)(0)
+//│ res: Code[2, anything]
+//│    = [ 'Unquoted', Symbol(x) ]
+
+
+let a = code"100"
+code"let a = 1; ${a}"
+//│ a: Code[100, anything]
+//│  = [ '_', 100 ]
+//│ res: Code[100, anything\a]
+//│    = [ 'Let', 'a', Symbol(a), [ '_', 1 ], [ 'Unquoted', Symbol(a) ] ]
+
+
+let a = code"1000"
+code"let a = 2; ${a}"
+//│ a: Code[1000, anything]
+//│  = [ '_', 1000 ]
+//│ res: Code[1000, anything\a]
+//│    = [ 'Let', 'a', Symbol(a), [ '_', 2 ], [ 'Unquoted', [ '_', 1000 ] ] ]
+
+
+code"let a1 = 2; ${a}"
+//│ res: Code[1000, anything\a1]
+//│    = [ 'Let', 'a1', Symbol(a1), [ '_', 2 ], [ 'Unquoted', Symbol(a1) ] ]

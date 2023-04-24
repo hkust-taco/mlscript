@@ -3,19 +3,19 @@
 
 
 // Test 1
-let code_test = code"let x_0 = 1; let x_1 = 10; let x_2 = 100; x_0 + x_1 + x_2"
+let code_test = code"let x0 = 1; let x1 = 10; let x2 = 100; x0 + x1 + x2"
 //│ code_test: Code[int, anything]
 //│          = [
 //│              'Let',
-//│              'x_0',
-//│              Symbol(x_0),
+//│              'x0',
+//│              Symbol(x0),
 //│              [ '_', 1 ],
 //│              [
 //│                'Let',
-//│                'x_1',
-//│                Symbol(x_1),
+//│                'x1',
+//│                Symbol(x1),
 //│                [ '_', 10 ],
-//│                [ 'Let', 'x_2', Symbol(x_2), [Array], [Array] ]
+//│                [ 'Let', 'x2', Symbol(x2), [Array], [Array] ]
 //│              ]
 //│            ]
 
