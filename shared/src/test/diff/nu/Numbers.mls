@@ -1,0 +1,23 @@
+:NewDefs
+
+
+let x = NaN
+//│ let x: number
+//│ x
+//│   = NaN
+
+// TODO polymorphic number operations
+x + 1
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.10: 	x + 1
+//│ ║        	^^^
+//│ ╟── reference of type `number` is not an instance of type `int`
+//│ ║  l.4: 	let x = NaN
+//│ ║       	        ^^^
+//│ ╟── but it flows into reference with expected type `int`
+//│ ║  l.10: 	x + 1
+//│ ╙──      	^
+//│ error | int
+//│ res
+//│     = NaN
+

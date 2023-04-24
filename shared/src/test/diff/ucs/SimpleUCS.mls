@@ -315,7 +315,7 @@ class Var(name)
 class ValBase
 class IntVal(value): ValBase
 class BoolVal(value): ValBase
-class Lit(val)
+class Lit(value)
 //│ Defined class Var
 //│ Defined class ValBase
 //│ Defined class IntVal
@@ -329,7 +329,7 @@ class Lit(val)
 //│       = [Function: IntVal1]
 //│ BoolVal: 'value -> (BoolVal & {value: 'value})
 //│        = [Function: BoolVal1]
-//│ Lit: 'val -> (Lit & {val: 'val})
+//│ Lit: 'value -> (Lit & {value: 'value})
 //│    = [Function: Lit1]
 
 fun p(e, context) =
@@ -339,7 +339,7 @@ fun p(e, context) =
       Some(BoolVal(v)) then Right(v)
     Lit(IntVal(v)) then Left(v)
     Lit(BoolVal(v)) then Right(v)
-//│ p: (Lit & {val: BoolVal & {value: 'value} | IntVal & {value: 'value0}} | Var & {name: 'name}, {get: 'name -> (Some & {value: BoolVal & {value: 'value} | IntVal & {value: 'value0}})},) -> (Left & {leftValue: 'value0} | Right & {rightValue: 'value})
+//│ p: (Lit & {value: BoolVal & {value: 'value} | IntVal & {value: 'value0}} | Var & {name: 'name}, {get: 'name -> (Some & {value: BoolVal & {value: 'value} | IntVal & {value: 'value0}})},) -> (Left & {leftValue: 'value0} | Right & {rightValue: 'value})
 //│  = [Function: p1]
 
 class Nil()

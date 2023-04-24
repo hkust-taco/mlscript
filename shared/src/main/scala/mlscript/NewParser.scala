@@ -289,7 +289,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
         yeetSpaces
         go(acc.copy(acc.mods + ("export" -> l0)))
       case _ if acc.mods.isEmpty => acc
-      case (KEYWORD("class" | "infce" | "trait" | "mixin" | "type" | "namespace" | "module" | "fun"), l0) :: _ =>
+      case (KEYWORD("class" | "infce" | "trait" | "mixin" | "type" | "namespace" | "module" | "fun" | "val"), l0) :: _ =>
         acc
       case (tok, loc) :: _ =>
         // TODO support indented blocks of modified declarations...
@@ -400,7 +400,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
             val res = NuTypeDef(kind, tn, tparams, params, sig, ps, N, N, body)(isDecl, isExported)
             R(res.withLoc(S(l0 ++ res.getLoc)))
           
-          case ModifierSet(mods, (KEYWORD(kwStr @ ("fun" | "let")), l0) :: c) => // TODO support rec?
+          case ModifierSet(mods, (KEYWORD(kwStr @ ("fun" | "val" | "let")), l0) :: c) => // TODO support rec?
             consume
             val (isDecl, mods2) = mods.handle("declare")
             val ( isExported, mods3) = mods2.handle("export")
@@ -548,6 +548,9 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
       case (LITVAL(lit), l0) :: _ =>
         consume
         exprCont(lit.withLoc(S(l0)), prec, allowNewlines = false)
+      case (KEYWORD(kwStr @ ("undefined" | "null")), l0) :: _ =>
+        consume
+        exprCont(UnitLit(kwStr === "undefined").withLoc(S(l0)), prec, allowNewlines = false)
       case (IDENT(nme, false), l0) :: _ =>
         consume
         exprCont(Var(nme).withLoc(S(l0)), prec, allowNewlines = false)

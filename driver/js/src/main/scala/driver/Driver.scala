@@ -99,7 +99,7 @@ class Driver(options: DriverOptions) {
       case Some(content) =>
         parse(filename, content) match {
           case (_, declarations, _, origin) => TypingUnit(
-            NuTypeDef(Nms, TypeName(moduleName), Nil, Tup(Nil), N, Nil, N, N, TypingUnit(declarations, Nil))(S(Loc(0, 1, origin))) :: Nil, Nil)
+            NuTypeDef(Nms, TypeName(moduleName), Nil, Tup(Nil), N, Nil, N, N, TypingUnit(declarations, Nil))(S(Loc(0, 1, origin)), N) :: Nil, Nil)
         }
       case None =>
         throw ErrorReport(Ls((s"can not open file $filename", None)), Diagnostic.Compilation)

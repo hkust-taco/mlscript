@@ -264,6 +264,8 @@ object NewLexer {
     "then",
     "else",
     "fun",
+    "val",
+    "var",
     // "is",
     // "as",
     "of",
@@ -293,7 +295,9 @@ object NewLexer {
     "exists",
     "in",
     "out",
-    "import"
+    "import",
+    "null",
+    "undefined",
   )
   
   def printToken(tl: TokLoc): Str = tl match {
