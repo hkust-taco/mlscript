@@ -91,7 +91,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
 
         // TODO factor code with above!!
         case trt: TypedNuTrt =>
-          trt.members.get(fld.name) match {
+          trt.virtualMembers.get(fld.name) match {
             case S(d: TypedNuFun) =>
               S(d.typeSignature.toUpper(provTODO))
             case S(p: NuParam) =>

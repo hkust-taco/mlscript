@@ -137,14 +137,15 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           TypedNuAls(level, td,
             tparams.map(tp => (tp._1, tp._2.freshenAbove(lim, rigidify).assertTV, tp._3)),
             body.freshenAbove(lim, rigidify))
-        case cls @ TypedNuTrt(level, td, ttu, tparams, members, thisTy, sign, tags, inheritedTags) =>
+        case cls @ TypedNuTrt(level, td, ttu, tparams, members, thisTy, sign, tags, inheritedTags, typeMembers) =>
           TypedNuTrt(level, td, ttu.freshenAbove(lim, rigidify),
             tparams.map(tp => (tp._1, tp._2.freshenAbove(lim, rigidify).assertTV, tp._3)),
             members.mapValuesIter(_.freshenAbove(lim, rigidify)).toMap,
             thisTy.freshenAbove(lim, rigidify),
             sign.map(_.freshenAbove(lim, rigidify)),  // todo
             tags.freshenAbove(lim, rigidify),
-            inheritedTags
+            inheritedTags,
+            typeMembers.mapValuesIter(_.freshenAbove(lim, rigidify)).toMap,
             )
       }
     val td: NuTypeDef
@@ -186,7 +187,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
         thisTy: ST,
         sign: Opt[ST],
         selfTy: ST,
-        inheritedTags: Set[TypeName]
+        inheritedTags: Set[TypeName],
+        typeMembers: Map[Str, NuMember]
       ) extends TypedNuTypeDef(Trt) with TypedNuTermDef
   {
     def decl: NuTypeDef = td
@@ -195,6 +197,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     def name: Str = nme.name
     
     def typeSignature: ST = typeSignatureOf(td, level, tparams, Nil, selfTy, inheritedTags)
+
+    def virtualMembers: Map[Str, NuMember] = members ++ typeMembers
     
     def mapPol(pol: Opt[Bool], smart: Bool)(f: (Opt[Bool], SimpleType) => SimpleType)
           (implicit ctx: Ctx): TypedNuTrt =
@@ -204,7 +208,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           f(pol.map(!_), thisTy),
           sign.map(f(pol, _)),
           f(pol, selfTy),
-          inheritedTags
+          inheritedTags,
+          typeMembers.mapValuesIter(_.mapPol(pol, smart)(f)).toMap,
         )
     def mapPolMap(pol: PolMap)(f: (PolMap, SimpleType) => SimpleType)
           (implicit ctx: Ctx): TypedNuTrt =
@@ -214,7 +219,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           f(pol.contravar, thisTy),
           sign.map(f(pol, _)),
           f(pol, selfTy),
-          inheritedTags
+          inheritedTags,
+          typeMembers.mapValuesIter(_.mapPolMap(pol)(f)).toMap,
         )
   }
   
@@ -224,7 +230,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
         tparams: TyParams, params: Ls[Var -> FieldType],
         members: Map[Str, NuMember], thisTy: ST, //typeSignature: ST,
         tags: ST,
-        inheritedTags: Set[TypeName]
+        inheritedTags: Set[TypeName],
       )(val instanceType: ST, // * only meant to be used in `force` and `variances`
       ) extends TypedNuTypeDef(Cls) with TypedNuTermDef
   {
@@ -740,8 +746,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     // }
                     
                     // inherit traits
-                    def inherit(parents: Ls[ParentSpec], superType: ST, tags: ST, members: Ls[NuMember])
-                          : (ST, ST, Ls[NuMember]) =
+                    def inherit(parents: Ls[ParentSpec], superType: ST, tags: ST, members: Ls[NuMember], vMembers: Map[Str, NuMember])
+                          : (ST, ST, Ls[NuMember],  Map[Str, NuMember]) =
                         parents match {
                           case (p, v @ Var(trtName), parTargs, args) :: ps =>
                             // if (parTargs.nonEmpty) err(msg"trait type arguments not yet supported", p.toLoc)
@@ -782,19 +788,24 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                                     val trt = rawTrt.freshenAbove(info.level, rigidify = false)
                                       .asInstanceOf[TypedNuTrt] // FIXME
 
-                                    inherit(ps, superType & trt.thisTy, tags & trt.selfTy, memberUn(members, trt.members.values.toList))
+                                    inherit(ps, 
+                                      superType & trt.thisTy,
+                                      tags & trt.selfTy, 
+                                      memberUn(members, trt.members.values.toList),
+                                      vMembers ++ trt.typeMembers
+                                      )
                                   case _ => 
                                   err(msg"trait can only inherit traits", p.toLoc)
-                                  (superType, tags, members)
+                                  (superType, tags, members, vMembers)
                               }
-                              case _ => (superType, tags, members)
+                              case _ => (superType, tags, members, vMembers)
                             }
-                          case Nil => (superType, tags, members)
+                          case Nil => (superType, tags, members, vMembers)
                     }
 
-                    val (thisType, tags, baseMems) =
+                    val (thisType, tags, baseMems, baseVMems) =
                       // ? is it really a good idea
-                      inherit(parentSpecs, TopType/*TODO*/, trtNameToNomTag(td)(noProv, ctx), Nil)
+                      inherit(parentSpecs, TopType/*TODO*/, trtNameToNomTag(td)(noProv, ctx), Nil, Map.empty)
                     
                     // val selfType = tags & sig_ty
                     val selfType = sig_ty
@@ -802,8 +813,12 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     val ttu = typeTypingUnit(td.body, topLevel = false)
                     val trtMems = baseMems ++ ttu.entities
                     val mems = typedSignatureMembers.toMap ++ trtMems.map(d => d.name -> d).toMap
+                    val vmems = baseVMems ++ tparams.map {
+                      case (nme @ TypeName(name), tv, _) => 
+                        td.nme.name+"#"+name -> NuTypeParam(nme, FieldType(S(tv), tv)(provTODO))(level)
+                      }
 
-                    TypedNuTrt(outerCtx.lvl, td, ttu, tparams, mems, thisType, None, selfType, inheritedTags) -> Nil
+                    TypedNuTrt(outerCtx.lvl, td, ttu, tparams, mems, thisType, None, selfType, inheritedTags, vmems) -> Nil
                   }
                   
                 case Als =>

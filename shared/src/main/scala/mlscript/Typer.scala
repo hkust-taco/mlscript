@@ -1341,7 +1341,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             Option.when(!(TopType <:< thisTy))(go(thisTy)),
             mkTypingUnit(thisTy, members))(td.declareLoc)
           }
-      case TypedNuTrt(level, td, ttu, tparams, members, thisTy, sign, _, _) => 
+      case TypedNuTrt(level, td, ttu, tparams, members, thisTy, sign, _, _, _ /* TODO */) => 
         ectx(tparams) |> { implicit ectx =>
           NuTypeDef(td.kind, td.nme, td.tparams,
             Tup(Nil),

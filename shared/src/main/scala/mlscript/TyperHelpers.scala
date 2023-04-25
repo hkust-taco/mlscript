@@ -745,6 +745,7 @@ abstract class TyperHelpers { Typer: Typer =>
         case NuParam(nme, ty, isType) => childrenPolField(PolMap.pos)(ty) // TODO invariant when mutable
         case TypedNuFun(level, fd, ty) => pol -> ty :: Nil
         case td: TypedNuDecl => TypedTypingUnit(td :: Nil, N).childrenPol(pol: PolMap) // TODO refactor
+        case NuTypeParam(nme, ty) => childrenPolField(PolMap.pos)(ty)
       }
       this match {
         case tv @ AssignedVariable(ty) =>
@@ -1177,7 +1178,7 @@ abstract class TyperHelpers { Typer: Typer =>
         members.valuesIterator.foreach(applyMem(pol))
         // thisTy.foreach(apply(pol.invar)(_))
         apply(pol.contravar)(thisTy)
-      case TypedNuTrt(level, td, ttu, tparams, members, thisTy, sign, _, _) => 
+      case TypedNuTrt(level, td, ttu, tparams, members, thisTy, sign, _, _, tms) => 
         tparams.iterator.foreach(tp => apply(pol.invar)(tp._2))
         members.valuesIterator.foreach(applyMem(pol))
         // thisTy.foreach(apply(pol.invar)(_))
@@ -1190,6 +1191,7 @@ abstract class TyperHelpers { Typer: Typer =>
         apply(pol.contravar)(superTV)
       case NuParam(nme, ty, isType) => applyField(pol)(ty)
       case TypedNuFun(level, fd, ty) => apply(pol)(ty)
+      case NuTypeParam(nme, ty) => applyField(pol)(ty)
     }
     def apply(pol: PolMap)(st: ST): Unit = st match {
       case tv @ AssignedVariable(ty) => apply(pol)(ty)
