@@ -134,121 +134,122 @@ interface Object {
     propertyIsEnumerable(v: PropertyKey): boolean;
 }
 
-// interface ObjectConstructor {
-//     new(value?: any): Object;
-//     (): any;
-//     (value: any): any;
+interface ObjectConstructor {
+    new(value?: any): Object;
+    (): any;
+    (value: any): any;
 
-//     /** A reference to the prototype for a class of objects. */
-//     readonly prototype: Object;
+    /** A reference to the prototype for a class of objects. */
+    readonly prototype: Object;
 
-//     /**
-//      * Returns the prototype of an object.
-//      * @param o The object that references the prototype.
-//      */
-//     getPrototypeOf(o: any): any;
+    /**
+     * Returns the prototype of an object.
+     * @param o The object that references the prototype.
+     */
+    getPrototypeOf(o: any): any;
 
-//     /**
-//      * Gets the own property descriptor of the specified object.
-//      * An own property descriptor is one that is defined directly on the object and is not inherited from the object's prototype.
-//      * @param o Object that contains the property.
-//      * @param p Name of the property.
-//      */
-//     getOwnPropertyDescriptor(o: any, p: PropertyKey): PropertyDescriptor | undefined;
+    /**
+     * Gets the own property descriptor of the specified object.
+     * An own property descriptor is one that is defined directly on the object and is not inherited from the object's prototype.
+     * @param o Object that contains the property.
+     * @param p Name of the property.
+     */
+    getOwnPropertyDescriptor(o: any, p: PropertyKey): PropertyDescriptor | undefined;
 
-//     /**
-//      * Returns the names of the own properties of an object. The own properties of an object are those that are defined directly
-//      * on that object, and are not inherited from the object's prototype. The properties of an object include both fields (objects) and functions.
-//      * @param o Object that contains the own properties.
-//      */
-//     getOwnPropertyNames(o: any): string[];
+    /**
+     * Returns the names of the own properties of an object. The own properties of an object are those that are defined directly
+     * on that object, and are not inherited from the object's prototype. The properties of an object include both fields (objects) and functions.
+     * @param o Object that contains the own properties.
+     */
+    getOwnPropertyNames(o: any): string[];
 
-//     /**
-//      * Creates an object that has the specified prototype or that has null prototype.
-//      * @param o Object to use as a prototype. May be null.
-//      */
-//     create(o: object | null): any;
+    /**
+     * Creates an object that has the specified prototype or that has null prototype.
+     * @param o Object to use as a prototype. May be null.
+     */
+    create(o: object | null): any;
 
-//     /**
-//      * Creates an object that has the specified prototype, and that optionally contains specified properties.
-//      * @param o Object to use as a prototype. May be null
-//      * @param properties JavaScript object that contains one or more property descriptors.
-//      */
-//     create(o: object | null, properties: PropertyDescriptorMap & ThisType<any>): any;
+    /**
+     * Creates an object that has the specified prototype, and that optionally contains specified properties.
+     * @param o Object to use as a prototype. May be null
+     * @param properties JavaScript object that contains one or more property descriptors.
+     */
+    create(o: object | null, properties: PropertyDescriptorMap & ThisType<any>): any;
 
-//     /**
-//      * Adds a property to an object, or modifies attributes of an existing property.
-//      * @param o Object on which to add or modify the property. This can be a native JavaScript object (that is, a user-defined object or a built in object) or a DOM object.
-//      * @param p The property name.
-//      * @param attributes Descriptor for the property. It can be for a data property or an accessor property.
-//      */
-//     defineProperty<T>(o: T, p: PropertyKey, attributes: PropertyDescriptor & ThisType<any>): T;
+    /**
+     * Adds a property to an object, or modifies attributes of an existing property.
+     * @param o Object on which to add or modify the property. This can be a native JavaScript object (that is, a user-defined object or a built in object) or a DOM object.
+     * @param p The property name.
+     * @param attributes Descriptor for the property. It can be for a data property or an accessor property.
+     */
+    defineProperty<T>(o: T, p: PropertyKey, attributes: PropertyDescriptor & ThisType<any>): T;
 
-//     /**
-//      * Adds one or more properties to an object, and/or modifies attributes of existing properties.
-//      * @param o Object on which to add or modify the properties. This can be a native JavaScript object or a DOM object.
-//      * @param properties JavaScript object that contains one or more descriptor objects. Each descriptor object describes a data property or an accessor property.
-//      */
-//     defineProperties<T>(o: T, properties: PropertyDescriptorMap & ThisType<any>): T;
+    /**
+     * Adds one or more properties to an object, and/or modifies attributes of existing properties.
+     * @param o Object on which to add or modify the properties. This can be a native JavaScript object or a DOM object.
+     * @param properties JavaScript object that contains one or more descriptor objects. Each descriptor object describes a data property or an accessor property.
+     */
+    defineProperties<T>(o: T, properties: PropertyDescriptorMap & ThisType<any>): T;
 
-//     /**
-//      * Prevents the modification of attributes of existing properties, and prevents the addition of new properties.
-//      * @param o Object on which to lock the attributes.
-//      */
-//     seal<T>(o: T): T;
+    /**
+     * Prevents the modification of attributes of existing properties, and prevents the addition of new properties.
+     * @param o Object on which to lock the attributes.
+     */
+    seal<T>(o: T): T;
 
-//     /**
-//      * Prevents the modification of existing property attributes and values, and prevents the addition of new properties.
-//      * @param f Object on which to lock the attributes.
-//      */
-//     freeze<T extends Function>(f: T): T;
+    /**
+     * Prevents the modification of existing property attributes and values, and prevents the addition of new properties.
+     * @param f Object on which to lock the attributes.
+     */
+    freeze<T extends Function>(f: T): T;
 
-//     /**
-//      * Prevents the modification of existing property attributes and values, and prevents the addition of new properties.
-//      * @param o Object on which to lock the attributes.
-//      */
-//     freeze<T extends {[idx: string]: U | null | undefined | object}, U extends string | bigint | number | boolean | symbol>(o: T): Readonly<T>;
+    /**
+     * Prevents the modification of existing property attributes and values, and prevents the addition of new properties.
+     * @param o Object on which to lock the attributes.
+     */
+    freeze<T extends {[idx: string]: U | null | undefined | object}, U extends string | bigint | number | boolean | symbol>(o: T): Readonly<T>;
 
-//     /**
-//      * Prevents the modification of existing property attributes and values, and prevents the addition of new properties.
-//      * @param o Object on which to lock the attributes.
-//      */
-//     freeze<T>(o: T): Readonly<T>;
+    /**
+     * Prevents the modification of existing property attributes and values, and prevents the addition of new properties.
+     * @param o Object on which to lock the attributes.
+     */
+    freeze<T>(o: T): Readonly<T>;
 
-//     /**
-//      * Prevents the addition of new properties to an object.
-//      * @param o Object to make non-extensible.
-//      */
-//     preventExtensions<T>(o: T): T;
+    /**
+     * Prevents the addition of new properties to an object.
+     * @param o Object to make non-extensible.
+     */
+    preventExtensions<T>(o: T): T;
 
-//     /**
-//      * Returns true if existing property attributes cannot be modified in an object and new properties cannot be added to the object.
-//      * @param o Object to test.
-//      */
-//     isSealed(o: any): boolean;
+    /**
+     * Returns true if existing property attributes cannot be modified in an object and new properties cannot be added to the object.
+     * @param o Object to test.
+     */
+    isSealed(o: any): boolean;
 
-//     /**
-//      * Returns true if existing property attributes and values cannot be modified in an object, and new properties cannot be added to the object.
-//      * @param o Object to test.
-//      */
-//     isFrozen(o: any): boolean;
+    /**
+     * Returns true if existing property attributes and values cannot be modified in an object, and new properties cannot be added to the object.
+     * @param o Object to test.
+     */
+    isFrozen(o: any): boolean;
 
-//     /**
-//      * Returns a value that indicates whether new properties can be added to an object.
-//      * @param o Object to test.
-//      */
-//     isExtensible(o: any): boolean;
+    /**
+     * Returns a value that indicates whether new properties can be added to an object.
+     * @param o Object to test.
+     */
+    isExtensible(o: any): boolean;
 
-//     /**
-//      * Returns the names of the enumerable string properties and methods of an object.
-//      * @param o Object that contains the properties and methods. This can be an object that you created or an existing Document Object Model (DOM) object.
-//      */
-//     keys(o: object): string[];
-// }
+    /**
+     * Returns the names of the enumerable string properties and methods of an object.
+     * @param o Object that contains the properties and methods. This can be an object that you created or an existing Document Object Model (DOM) object.
+     */
+    keys(o: object): string[];
+}
 
-// /**
-//  * Provides functionality common to all JavaScript objects.
-//  */
+// TODO: name clash?
+/**
+ * Provides functionality common to all JavaScript objects.
+ */
 // declare var Object: ObjectConstructor;
 
 /**
@@ -920,7 +921,7 @@ interface DateConstructor {
 
 declare var Date: DateConstructor;
 
-// TODO: 0??? and $
+// TODO: 0?
 // interface RegExpMatchArray extends Array<string> {
 //     /**
 //      * The index of the search at which the result was found.
@@ -951,38 +952,39 @@ declare var Date: DateConstructor;
 //     0: string;
 // }
 
-// interface RegExp {
-//     /**
-//      * Executes a search on a string using a regular expression pattern, and returns an array containing the results of that search.
-//      * @param string The String object or string literal on which to perform the search.
-//      */
-//     exec(string: string): RegExpExecArray | null;
+interface RegExp {
+    /**
+     * Executes a search on a string using a regular expression pattern, and returns an array containing the results of that search.
+     * @param string The String object or string literal on which to perform the search.
+     */
+    exec(string: string): RegExpExecArray | null;
 
-//     /**
-//      * Returns a Boolean value that indicates whether or not a pattern exists in a searched string.
-//      * @param string String on which to perform the search.
-//      */
-//     test(string: string): boolean;
+    /**
+     * Returns a Boolean value that indicates whether or not a pattern exists in a searched string.
+     * @param string String on which to perform the search.
+     */
+    test(string: string): boolean;
 
-//     /** Returns a copy of the text of the regular expression pattern. Read-only. The regExp argument is a Regular expression object. It can be a variable name or a literal. */
-//     readonly source: string;
+    /** Returns a copy of the text of the regular expression pattern. Read-only. The regExp argument is a Regular expression object. It can be a variable name or a literal. */
+    readonly source: string;
 
-//     /** Returns a Boolean value indicating the state of the global flag (g) used with a regular expression. Default is false. Read-only. */
-//     readonly global: boolean;
+    /** Returns a Boolean value indicating the state of the global flag (g) used with a regular expression. Default is false. Read-only. */
+    readonly global: boolean;
 
-//     /** Returns a Boolean value indicating the state of the ignoreCase flag (i) used with a regular expression. Default is false. Read-only. */
-//     readonly ignoreCase: boolean;
+    /** Returns a Boolean value indicating the state of the ignoreCase flag (i) used with a regular expression. Default is false. Read-only. */
+    readonly ignoreCase: boolean;
 
-//     /** Returns a Boolean value indicating the state of the multiline flag (m) used with a regular expression. Default is false. Read-only. */
-//     readonly multiline: boolean;
+    /** Returns a Boolean value indicating the state of the multiline flag (m) used with a regular expression. Default is false. Read-only. */
+    readonly multiline: boolean;
 
-//     lastIndex: number;
+    lastIndex: number;
 
-//     // Non-standard extensions
-//     /** @deprecated A legacy feature for browser compatibility */
-//     compile(pattern: string, flags?: string): this;
-// }
+    // Non-standard extensions
+    /** @deprecated A legacy feature for browser compatibility */
+    compile(pattern: string, flags?: string): this;
+}
 
+// TODO: $+
 // interface RegExpConstructor {
 //     new(pattern: RegExp | string): RegExp;
 //     new(pattern: string, flags?: string): RegExp;
@@ -1031,7 +1033,7 @@ declare var Date: DateConstructor;
 //     "$'": string;
 // }
 
-declare var RegExp: RegExpConstructor;
+// declare var RegExp: RegExpConstructor;
 
 interface Error {
     name: string;
@@ -2066,40 +2068,40 @@ interface Int8Array {
 
     [index: number]: number;
 }
-// interface Int8ArrayConstructor {
-//     readonly prototype: Int8Array;
-//     new(length: number): Int8Array;
-//     new(array: ArrayLike<number> | ArrayBufferLike): Int8Array;
-//     new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Int8Array;
+interface Int8ArrayConstructor {
+    readonly prototype: Int8Array;
+    new(length: number): Int8Array;
+    new(array: ArrayLike<number> | ArrayBufferLike): Int8Array;
+    new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Int8Array;
 
-//     /**
-//      * The size in bytes of each element in the array.
-//      */
-//     readonly BYTES_PER_ELEMENT: number;
+    /**
+     * The size in bytes of each element in the array.
+     */
+    readonly BYTES_PER_ELEMENT: number;
 
-//     /**
-//      * Returns a new array from a set of elements.
-//      * @param items A set of elements to include in the new array object.
-//      */
-//     of(...items: number[]): Int8Array;
+    /**
+     * Returns a new array from a set of elements.
+     * @param items A set of elements to include in the new array object.
+     */
+    of(...items: number[]): Int8Array;
 
-//     /**
-//      * Creates an array from an array-like or iterable object.
-//      * @param arrayLike An array-like or iterable object to convert to an array.
-//      */
-//     from(arrayLike: ArrayLike<number>): Int8Array;
+    /**
+     * Creates an array from an array-like or iterable object.
+     * @param arrayLike An array-like or iterable object to convert to an array.
+     */
+    from(arrayLike: ArrayLike<number>): Int8Array;
 
-//     /**
-//      * Creates an array from an array-like or iterable object.
-//      * @param arrayLike An array-like or iterable object to convert to an array.
-//      * @param mapfn A mapping function to call on every element of the array.
-//      * @param thisArg Value of 'this' used to invoke the mapfn.
-//      */
-//     from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: number) => number, thisArg?: any): Int8Array;
+    /**
+     * Creates an array from an array-like or iterable object.
+     * @param arrayLike An array-like or iterable object to convert to an array.
+     * @param mapfn A mapping function to call on every element of the array.
+     * @param thisArg Value of 'this' used to invoke the mapfn.
+     */
+    from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: number) => number, thisArg?: any): Int8Array;
 
 
-// }
-// declare var Int8Array: Int8ArrayConstructor;
+}
+declare var Int8Array: Int8ArrayConstructor;
 
 /**
  * A typed array of 8-bit unsigned integer values. The contents are initialized to 0. If the
@@ -2349,40 +2351,39 @@ interface Uint8Array {
     [index: number]: number;
 }
 
-// TODO: of
-// interface Uint8ArrayConstructor {
-//     readonly prototype: Uint8Array;
-//     new(length: number): Uint8Array;
-//     new(array: ArrayLike<number> | ArrayBufferLike): Uint8Array;
-//     new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Uint8Array;
+interface Uint8ArrayConstructor {
+    readonly prototype: Uint8Array;
+    new(length: number): Uint8Array;
+    new(array: ArrayLike<number> | ArrayBufferLike): Uint8Array;
+    new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Uint8Array;
 
-//     /**
-//      * The size in bytes of each element in the array.
-//      */
-//     readonly BYTES_PER_ELEMENT: number;
+    /**
+     * The size in bytes of each element in the array.
+     */
+    readonly BYTES_PER_ELEMENT: number;
 
-//     /**
-//      * Returns a new array from a set of elements.
-//      * @param items A set of elements to include in the new array object.
-//      */
-//     of(...items: number[]): Uint8Array;
+    /**
+     * Returns a new array from a set of elements.
+     * @param items A set of elements to include in the new array object.
+     */
+    of(...items: number[]): Uint8Array;
 
-//     /**
-//      * Creates an array from an array-like or iterable object.
-//      * @param arrayLike An array-like or iterable object to convert to an array.
-//      */
-//     from(arrayLike: ArrayLike<number>): Uint8Array;
+    /**
+     * Creates an array from an array-like or iterable object.
+     * @param arrayLike An array-like or iterable object to convert to an array.
+     */
+    from(arrayLike: ArrayLike<number>): Uint8Array;
 
-//     /**
-//      * Creates an array from an array-like or iterable object.
-//      * @param arrayLike An array-like or iterable object to convert to an array.
-//      * @param mapfn A mapping function to call on every element of the array.
-//      * @param thisArg Value of 'this' used to invoke the mapfn.
-//      */
-//     from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: number) => number, thisArg?: any): Uint8Array;
+    /**
+     * Creates an array from an array-like or iterable object.
+     * @param arrayLike An array-like or iterable object to convert to an array.
+     * @param mapfn A mapping function to call on every element of the array.
+     * @param thisArg Value of 'this' used to invoke the mapfn.
+     */
+    from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: number) => number, thisArg?: any): Uint8Array;
 
-// }
-// // declare var Uint8Array: Uint8ArrayConstructor;
+}
+// declare var Uint8Array: Uint8ArrayConstructor;
 
 /**
  * A typed array of 8-bit unsigned integer (clamped) values. The contents are initialized to 0.
@@ -2632,38 +2633,38 @@ interface Uint8ClampedArray {
     [index: number]: number;
 }
 
-// interface Uint8ClampedArrayConstructor {
-//     readonly prototype: Uint8ClampedArray;
-//     new(length: number): Uint8ClampedArray;
-//     new(array: ArrayLike<number> | ArrayBufferLike): Uint8ClampedArray;
-//     new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Uint8ClampedArray;
+interface Uint8ClampedArrayConstructor {
+    readonly prototype: Uint8ClampedArray;
+    new(length: number): Uint8ClampedArray;
+    new(array: ArrayLike<number> | ArrayBufferLike): Uint8ClampedArray;
+    new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Uint8ClampedArray;
 
-//     /**
-//      * The size in bytes of each element in the array.
-//      */
-//     readonly BYTES_PER_ELEMENT: number;
+    /**
+     * The size in bytes of each element in the array.
+     */
+    readonly BYTES_PER_ELEMENT: number;
 
-//     /**
-//      * Returns a new array from a set of elements.
-//      * @param items A set of elements to include in the new array object.
-//      */
-//     of(...items: number[]): Uint8ClampedArray;
+    /**
+     * Returns a new array from a set of elements.
+     * @param items A set of elements to include in the new array object.
+     */
+    of(...items: number[]): Uint8ClampedArray;
 
-//     /**
-//      * Creates an array from an array-like or iterable object.
-//      * @param arrayLike An array-like or iterable object to convert to an array.
-//      */
-//     from(arrayLike: ArrayLike<number>): Uint8ClampedArray;
+    /**
+     * Creates an array from an array-like or iterable object.
+     * @param arrayLike An array-like or iterable object to convert to an array.
+     */
+    from(arrayLike: ArrayLike<number>): Uint8ClampedArray;
 
-//     /**
-//      * Creates an array from an array-like or iterable object.
-//      * @param arrayLike An array-like or iterable object to convert to an array.
-//      * @param mapfn A mapping function to call on every element of the array.
-//      * @param thisArg Value of 'this' used to invoke the mapfn.
-//      */
-//     from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: number) => number, thisArg?: any): Uint8ClampedArray;
-// }
-// declare var Uint8ClampedArray: Uint8ClampedArrayConstructor;
+    /**
+     * Creates an array from an array-like or iterable object.
+     * @param arrayLike An array-like or iterable object to convert to an array.
+     * @param mapfn A mapping function to call on every element of the array.
+     * @param thisArg Value of 'this' used to invoke the mapfn.
+     */
+    from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: number) => number, thisArg?: any): Uint8ClampedArray;
+}
+declare var Uint8ClampedArray: Uint8ClampedArrayConstructor;
 
 /**
  * A typed array of 16-bit signed integer values. The contents are initialized to 0. If the
@@ -2912,40 +2913,40 @@ interface Int16Array {
     [index: number]: number;
 }
 
-// interface Int16ArrayConstructor {
-//     readonly prototype: Int16Array;
-//     new(length: number): Int16Array;
-//     new(array: ArrayLike<number> | ArrayBufferLike): Int16Array;
-//     new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Int16Array;
+interface Int16ArrayConstructor {
+    readonly prototype: Int16Array;
+    new(length: number): Int16Array;
+    new(array: ArrayLike<number> | ArrayBufferLike): Int16Array;
+    new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Int16Array;
 
-//     /**
-//      * The size in bytes of each element in the array.
-//      */
-//     readonly BYTES_PER_ELEMENT: number;
+    /**
+     * The size in bytes of each element in the array.
+     */
+    readonly BYTES_PER_ELEMENT: number;
 
-//     /**
-//      * Returns a new array from a set of elements.
-//      * @param items A set of elements to include in the new array object.
-//      */
-//     of(...items: number[]): Int16Array;
+    /**
+     * Returns a new array from a set of elements.
+     * @param items A set of elements to include in the new array object.
+     */
+    of(...items: number[]): Int16Array;
 
-//     /**
-//      * Creates an array from an array-like or iterable object.
-//      * @param arrayLike An array-like or iterable object to convert to an array.
-//      */
-//     from(arrayLike: ArrayLike<number>): Int16Array;
+    /**
+     * Creates an array from an array-like or iterable object.
+     * @param arrayLike An array-like or iterable object to convert to an array.
+     */
+    from(arrayLike: ArrayLike<number>): Int16Array;
 
-//     /**
-//      * Creates an array from an array-like or iterable object.
-//      * @param arrayLike An array-like or iterable object to convert to an array.
-//      * @param mapfn A mapping function to call on every element of the array.
-//      * @param thisArg Value of 'this' used to invoke the mapfn.
-//      */
-//     from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: number) => number, thisArg?: any): Int16Array;
+    /**
+     * Creates an array from an array-like or iterable object.
+     * @param arrayLike An array-like or iterable object to convert to an array.
+     * @param mapfn A mapping function to call on every element of the array.
+     * @param thisArg Value of 'this' used to invoke the mapfn.
+     */
+    from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: number) => number, thisArg?: any): Int16Array;
 
 
-// }
-// declare var Int16Array: Int16ArrayConstructor;
+}
+declare var Int16Array: Int16ArrayConstructor;
 
 /**
  * A typed array of 16-bit unsigned integer values. The contents are initialized to 0. If the
@@ -3195,40 +3196,41 @@ interface Uint16Array {
     [index: number]: number;
 }
 
-// interface Uint16ArrayConstructor {
-//     readonly prototype: Uint16Array;
-//     new(length: number): Uint16Array;
-//     new(array: ArrayLike<number> | ArrayBufferLike): Uint16Array;
-//     new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Uint16Array;
+interface Uint16ArrayConstructor {
+    readonly prototype: Uint16Array;
+    new(length: number): Uint16Array;
+    new(array: ArrayLike<number> | ArrayBufferLike): Uint16Array;
+    new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Uint16Array;
 
-//     /**
-//      * The size in bytes of each element in the array.
-//      */
-//     readonly BYTES_PER_ELEMENT: number;
+    /**
+     * The size in bytes of each element in the array.
+     */
+    readonly BYTES_PER_ELEMENT: number;
 
-//     /**
-//      * Returns a new array from a set of elements.
-//      * @param items A set of elements to include in the new array object.
-//      */
-//     of(...items: number[]): Uint16Array;
+    /**
+     * Returns a new array from a set of elements.
+     * @param items A set of elements to include in the new array object.
+     */
+    of(...items: number[]): Uint16Array;
 
-//     /**
-//      * Creates an array from an array-like or iterable object.
-//      * @param arrayLike An array-like or iterable object to convert to an array.
-//      */
-//     from(arrayLike: ArrayLike<number>): Uint16Array;
+    /**
+     * Creates an array from an array-like or iterable object.
+     * @param arrayLike An array-like or iterable object to convert to an array.
+     */
+    from(arrayLike: ArrayLike<number>): Uint16Array;
 
-//     /**
-//      * Creates an array from an array-like or iterable object.
-//      * @param arrayLike An array-like or iterable object to convert to an array.
-//      * @param mapfn A mapping function to call on every element of the array.
-//      * @param thisArg Value of 'this' used to invoke the mapfn.
-//      */
-//     from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: number) => number, thisArg?: any): Uint16Array;
+    /**
+     * Creates an array from an array-like or iterable object.
+     * @param arrayLike An array-like or iterable object to convert to an array.
+     * @param mapfn A mapping function to call on every element of the array.
+     * @param thisArg Value of 'this' used to invoke the mapfn.
+     */
+    from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: number) => number, thisArg?: any): Uint16Array;
 
 
-// }
-// declare var Uint16Array: Uint16ArrayConstructor;
+}
+declare var Uint16Array: Uint16ArrayConstructor;
+
 /**
  * A typed array of 32-bit signed integer values. The contents are initialized to 0. If the
  * requested number of bytes could not be allocated an exception is raised.
@@ -3477,39 +3479,39 @@ interface Int32Array {
     [index: number]: number;
 }
 
-// interface Int32ArrayConstructor {
-//     readonly prototype: Int32Array;
-//     new(length: number): Int32Array;
-//     new(array: ArrayLike<number> | ArrayBufferLike): Int32Array;
-//     new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Int32Array;
+interface Int32ArrayConstructor {
+    readonly prototype: Int32Array;
+    new(length: number): Int32Array;
+    new(array: ArrayLike<number> | ArrayBufferLike): Int32Array;
+    new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Int32Array;
 
-//     /**
-//      * The size in bytes of each element in the array.
-//      */
-//     readonly BYTES_PER_ELEMENT: number;
+    /**
+     * The size in bytes of each element in the array.
+     */
+    readonly BYTES_PER_ELEMENT: number;
 
-//     /**
-//      * Returns a new array from a set of elements.
-//      * @param items A set of elements to include in the new array object.
-//      */
-//     of(...items: number[]): Int32Array;
+    /**
+     * Returns a new array from a set of elements.
+     * @param items A set of elements to include in the new array object.
+     */
+    of(...items: number[]): Int32Array;
 
-//     /**
-//      * Creates an array from an array-like or iterable object.
-//      * @param arrayLike An array-like or iterable object to convert to an array.
-//      */
-//     from(arrayLike: ArrayLike<number>): Int32Array;
+    /**
+     * Creates an array from an array-like or iterable object.
+     * @param arrayLike An array-like or iterable object to convert to an array.
+     */
+    from(arrayLike: ArrayLike<number>): Int32Array;
 
-//     /**
-//      * Creates an array from an array-like or iterable object.
-//      * @param arrayLike An array-like or iterable object to convert to an array.
-//      * @param mapfn A mapping function to call on every element of the array.
-//      * @param thisArg Value of 'this' used to invoke the mapfn.
-//      */
-//     from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: number) => number, thisArg?: any): Int32Array;
+    /**
+     * Creates an array from an array-like or iterable object.
+     * @param arrayLike An array-like or iterable object to convert to an array.
+     * @param mapfn A mapping function to call on every element of the array.
+     * @param thisArg Value of 'this' used to invoke the mapfn.
+     */
+    from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: number) => number, thisArg?: any): Int32Array;
 
-// }
-// declare var Int32Array: Int32ArrayConstructor;
+}
+declare var Int32Array: Int32ArrayConstructor;
 
 /**
  * A typed array of 32-bit unsigned integer values. The contents are initialized to 0. If the
@@ -3758,39 +3760,39 @@ interface Uint32Array {
     [index: number]: number;
 }
 
-// interface Uint32ArrayConstructor {
-//     readonly prototype: Uint32Array;
-//     new(length: number): Uint32Array;
-//     new(array: ArrayLike<number> | ArrayBufferLike): Uint32Array;
-//     new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Uint32Array;
+interface Uint32ArrayConstructor {
+    readonly prototype: Uint32Array;
+    new(length: number): Uint32Array;
+    new(array: ArrayLike<number> | ArrayBufferLike): Uint32Array;
+    new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Uint32Array;
 
-//     /**
-//      * The size in bytes of each element in the array.
-//      */
-//     readonly BYTES_PER_ELEMENT: number;
+    /**
+     * The size in bytes of each element in the array.
+     */
+    readonly BYTES_PER_ELEMENT: number;
 
-//     /**
-//      * Returns a new array from a set of elements.
-//      * @param items A set of elements to include in the new array object.
-//      */
-//     of(...items: number[]): Uint32Array;
+    /**
+     * Returns a new array from a set of elements.
+     * @param items A set of elements to include in the new array object.
+     */
+    of(...items: number[]): Uint32Array;
 
-//     /**
-//      * Creates an array from an array-like or iterable object.
-//      * @param arrayLike An array-like or iterable object to convert to an array.
-//      */
-//     from(arrayLike: ArrayLike<number>): Uint32Array;
+    /**
+     * Creates an array from an array-like or iterable object.
+     * @param arrayLike An array-like or iterable object to convert to an array.
+     */
+    from(arrayLike: ArrayLike<number>): Uint32Array;
 
-//     /**
-//      * Creates an array from an array-like or iterable object.
-//      * @param arrayLike An array-like or iterable object to convert to an array.
-//      * @param mapfn A mapping function to call on every element of the array.
-//      * @param thisArg Value of 'this' used to invoke the mapfn.
-//      */
-//     from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: number) => number, thisArg?: any): Uint32Array;
+    /**
+     * Creates an array from an array-like or iterable object.
+     * @param arrayLike An array-like or iterable object to convert to an array.
+     * @param mapfn A mapping function to call on every element of the array.
+     * @param thisArg Value of 'this' used to invoke the mapfn.
+     */
+    from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: number) => number, thisArg?: any): Uint32Array;
 
-// }
-// declare var Uint32Array: Uint32ArrayConstructor;
+}
+declare var Uint32Array: Uint32ArrayConstructor;
 
 /**
  * A typed array of 32-bit float values. The contents are initialized to 0. If the requested number
@@ -4040,40 +4042,40 @@ interface Float32Array {
     [index: number]: number;
 }
 
-// interface Float32ArrayConstructor {
-//     readonly prototype: Float32Array;
-//     new(length: number): Float32Array;
-//     new(array: ArrayLike<number> | ArrayBufferLike): Float32Array;
-//     new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Float32Array;
+interface Float32ArrayConstructor {
+    readonly prototype: Float32Array;
+    new(length: number): Float32Array;
+    new(array: ArrayLike<number> | ArrayBufferLike): Float32Array;
+    new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Float32Array;
 
-//     /**
-//      * The size in bytes of each element in the array.
-//      */
-//     readonly BYTES_PER_ELEMENT: number;
+    /**
+     * The size in bytes of each element in the array.
+     */
+    readonly BYTES_PER_ELEMENT: number;
 
-//     /**
-//      * Returns a new array from a set of elements.
-//      * @param items A set of elements to include in the new array object.
-//      */
-//     of(...items: number[]): Float32Array;
+    /**
+     * Returns a new array from a set of elements.
+     * @param items A set of elements to include in the new array object.
+     */
+    of(...items: number[]): Float32Array;
 
-//     /**
-//      * Creates an array from an array-like or iterable object.
-//      * @param arrayLike An array-like or iterable object to convert to an array.
-//      */
-//     from(arrayLike: ArrayLike<number>): Float32Array;
+    /**
+     * Creates an array from an array-like or iterable object.
+     * @param arrayLike An array-like or iterable object to convert to an array.
+     */
+    from(arrayLike: ArrayLike<number>): Float32Array;
 
-//     /**
-//      * Creates an array from an array-like or iterable object.
-//      * @param arrayLike An array-like or iterable object to convert to an array.
-//      * @param mapfn A mapping function to call on every element of the array.
-//      * @param thisArg Value of 'this' used to invoke the mapfn.
-//      */
-//     from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: number) => number, thisArg?: any): Float32Array;
+    /**
+     * Creates an array from an array-like or iterable object.
+     * @param arrayLike An array-like or iterable object to convert to an array.
+     * @param mapfn A mapping function to call on every element of the array.
+     * @param thisArg Value of 'this' used to invoke the mapfn.
+     */
+    from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: number) => number, thisArg?: any): Float32Array;
 
 
-// }
-// declare var Float32Array: Float32ArrayConstructor;
+}
+declare var Float32Array: Float32ArrayConstructor;
 
 /**
  * A typed array of 64-bit float values. The contents are initialized to 0. If the requested
@@ -4314,39 +4316,39 @@ interface Float64Array {
     [index: number]: number;
 }
 
-// interface Float64ArrayConstructor {
-//     readonly prototype: Float64Array;
-//     new(length: number): Float64Array;
-//     new(array: ArrayLike<number> | ArrayBufferLike): Float64Array;
-//     new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Float64Array;
+interface Float64ArrayConstructor {
+    readonly prototype: Float64Array;
+    new(length: number): Float64Array;
+    new(array: ArrayLike<number> | ArrayBufferLike): Float64Array;
+    new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Float64Array;
 
-//     /**
-//      * The size in bytes of each element in the array.
-//      */
-//     readonly BYTES_PER_ELEMENT: number;
+    /**
+     * The size in bytes of each element in the array.
+     */
+    readonly BYTES_PER_ELEMENT: number;
 
-//     /**
-//      * Returns a new array from a set of elements.
-//      * @param items A set of elements to include in the new array object.
-//      */
-//     of(...items: number[]): Float64Array;
+    /**
+     * Returns a new array from a set of elements.
+     * @param items A set of elements to include in the new array object.
+     */
+    of(...items: number[]): Float64Array;
 
-//     /**
-//      * Creates an array from an array-like or iterable object.
-//      * @param arrayLike An array-like or iterable object to convert to an array.
-//      */
-//     from(arrayLike: ArrayLike<number>): Float64Array;
+    /**
+     * Creates an array from an array-like or iterable object.
+     * @param arrayLike An array-like or iterable object to convert to an array.
+     */
+    from(arrayLike: ArrayLike<number>): Float64Array;
 
-//     /**
-//      * Creates an array from an array-like or iterable object.
-//      * @param arrayLike An array-like or iterable object to convert to an array.
-//      * @param mapfn A mapping function to call on every element of the array.
-//      * @param thisArg Value of 'this' used to invoke the mapfn.
-//      */
-//     from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: number) => number, thisArg?: any): Float64Array;
+    /**
+     * Creates an array from an array-like or iterable object.
+     * @param arrayLike An array-like or iterable object to convert to an array.
+     * @param mapfn A mapping function to call on every element of the array.
+     * @param thisArg Value of 'this' used to invoke the mapfn.
+     */
+    from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: number) => number, thisArg?: any): Float64Array;
 
-// }
-// declare var Float64Array: Float64ArrayConstructor;
+}
+declare var Float64Array: Float64ArrayConstructor;
 
 /////////////////////////////
 /// ECMAScript Internationalization API

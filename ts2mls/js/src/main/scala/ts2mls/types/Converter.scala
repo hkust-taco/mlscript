@@ -19,11 +19,17 @@ object Converter {
     "symbol" -> "Symbol"
   )
 
+  private def escapeIdent(name: String) = {
+    import mlscript.NewLexer
+    if (NewLexer.keywords(name)) s"""id"$name""""
+    else name
+  }
+
   def generateFunDeclaration(tsType: TSType, name: String)(implicit indent: String = ""): String = tsType match {
     case TSFunctionType(params, res, typeVars) => {
       val pList = if (params.isEmpty) "" else params.map(p => s"${convert(p)("")}").reduceLeft((r, p) => s"$r, $p")
       val tpList = if (typeVars.isEmpty) "" else s"<${typeVars.map(p => convert(p)("")).reduceLeft((r, p) => s"$r, $p")}>"
-      s"${indent}fun $name$tpList($pList): ${convert(res)("")}"
+      s"${indent}fun ${escapeIdent(name)}$tpList($pList): ${convert(res)("")}"
     }
     case overload @ TSIgnoredOverload(base, _) => s"${generateFunDeclaration(base, name)} ${overload.warning}"
     case inter: TSIntersectionType => s"${indent}fun ${name}: ${Converter.convert(inter)}"
@@ -63,11 +69,11 @@ object Converter {
     parents: List[TSType], statics: Map[String, TSMemberType], constructorList: List[TSType])(implicit indent: String) = {
     val allRecs = members.toList.map((m) => m._2.modifier match {
       case Public =>
-        if (typeName === "trait ") s"${m._1}: ${convert(m._2)},"
+        if (typeName === "trait ") s"${escapeIdent(m._1)}: ${convert(m._2)},"
         else m._2.base match {
           case _: TSFunctionType => s"${generateFunDeclaration(m._2.base, m._1)(indent + "  ")}\n"
           case _: TSIgnoredOverload => s"${generateFunDeclaration(m._2.base, m._1)(indent + "  ")}\n"
-          case _ => s"${indent}  let ${m._1}: ${convert(m._2)}\n"
+          case _ => s"${indent}  let ${escapeIdent(m._1)}: ${convert(m._2)}\n"
         }
       case _ => "" // TODO: deal with private/protected members
     }) :::

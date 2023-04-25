@@ -54,13 +54,13 @@ id""
 :pe
 id"id
 //│ ╔══[LEXICAL ERROR] unfinished identifier escape
-//│ ║  l.61: 	id"id
+//│ ║  l.55: 	id"id
 //│ ╙──      	^
 //│ ╔══[PARSE ERROR] Unexpected error in expression position
-//│ ║  l.61: 	id"id
+//│ ║  l.55: 	id"id
 //│ ╙──      	^^^^^^
 //│ ╔══[PARSE ERROR] Unexpected end of input; an expression was expected here
-//│ ║  l.61: 	id"id
+//│ ║  l.55: 	id"id
 //│ ╙──      	      ^
 //│ undefined
 //│ res
