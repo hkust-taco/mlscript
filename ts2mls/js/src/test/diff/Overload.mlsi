@@ -18,7 +18,7 @@ fun swap: (((number, string, )) => (number, string, )) & (((string, number, )) =
 fun u: ((((number) | (false)) | (true)) => string) & ((object) => string)
 fun doSome<T, U>(x: anything): unit /* warning: the overload of function doSome is not supported yet. */
 declare module XX {
-  export fun f<T>(x: T, n: anything): string /* warning: the overload of function f is not supported yet. */
+  fun f<T>(x: T, n: anything): string /* warning: the overload of function f is not supported yet. */
 }
 declare class WWW() {
   fun F<T>(x: T): anything /* warning: the overload of function F is not supported yet. */

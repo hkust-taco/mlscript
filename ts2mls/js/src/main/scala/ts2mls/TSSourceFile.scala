@@ -177,8 +177,8 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
     map.foreach((sym) => {
       val node = sym.declaration
       val name = sym.escapedName
-      if (!node.isToken) // TODO: export variables?
-        addNodeIntoNamespace(node, name, false /*exports.contains(name)*/, if (node.isFunctionLike) Some(sym.declarations) else None)
+      if (!node.isToken)
+        addNodeIntoNamespace(node, name, exports.contains(name), if (node.isFunctionLike) Some(sym.declarations) else None)
     })
 
   private def addFunctionIntoNamespace(fun: TSFunctionType, node: TSNodeObject, name: String)(implicit ns: TSNamespace) =

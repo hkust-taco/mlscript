@@ -21,7 +21,6 @@ declare class ABC() {}
 type DEF = ABC
 type TP<A, B, C> = (A, B, C, )
 declare module NA {
-  fun fb(b: string): unit
   type B = string
 }
 declare class NC() {
@@ -65,19 +64,19 @@ fun some<A>(a: A): (None) | (Some<A>)
 //│ ║  l.17: 	type I3 = (I1) & (I2)
 //│ ╙──      	                 ^^^^
 //│ ╔══[ERROR] Type parameters here are not yet supported in this position
-//│ ║  l.32: 	fun some<A>(a: A): (None) | (Some<A>)
+//│ ║  l.31: 	fun some<A>(a: A): (None) | (Some<A>)
 //│ ╙──      	         ^
 //│ ╔══[ERROR] type identifier not found: A
-//│ ║  l.32: 	fun some<A>(a: A): (None) | (Some<A>)
+//│ ║  l.31: 	fun some<A>(a: A): (None) | (Some<A>)
 //│ ╙──      	               ^
 //│ ╔══[ERROR] trait None cannot be used as a type
-//│ ║  l.32: 	fun some<A>(a: A): (None) | (Some<A>)
+//│ ║  l.31: 	fun some<A>(a: A): (None) | (Some<A>)
 //│ ╙──      	                   ^^^^^^
 //│ ╔══[ERROR] trait Some cannot be used as a type
-//│ ║  l.32: 	fun some<A>(a: A): (None) | (Some<A>)
+//│ ║  l.31: 	fun some<A>(a: A): (None) | (Some<A>)
 //│ ╙──      	                            ^^^^^^^^^
 //│ ╔══[ERROR] type identifier not found: A
-//│ ║  l.32: 	fun some<A>(a: A): (None) | (Some<A>)
+//│ ║  l.31: 	fun some<A>(a: A): (None) | (Some<A>)
 //│ ╙──      	                                  ^
 //│ trait None()
 //│ trait Some[A]()
@@ -94,7 +93,6 @@ fun some<A>(a: A): (None) | (Some<A>)
 //│ type TP[A, B, C] = (A, B, C,)
 //│ module NA() {
 //│   type B = string
-//│   fun fb: (b: string,) -> unit
 //│ }
 //│ class NC() {
 //│   let b: string

@@ -371,7 +371,7 @@ declare trait Float64ArrayConstructor() {
   let BYTES_PER_ELEMENT: number
 }
 declare module Intl {
-  declare trait CollatorOptions() {
+  export declare trait CollatorOptions() {
     let sensitivity: (string) | (undefined)
     let ignorePunctuation: ((false) | (true)) | (undefined)
     let usage: (string) | (undefined)
@@ -379,7 +379,7 @@ declare module Intl {
     let numeric: ((false) | (true)) | (undefined)
     let caseFirst: (string) | (undefined)
   }
-  declare trait ResolvedCollatorOptions() {
+  export declare trait ResolvedCollatorOptions() {
     let sensitivity: string
     let ignorePunctuation: (false) | (true)
     let usage: string
@@ -388,11 +388,11 @@ declare module Intl {
     let caseFirst: string
     let collation: string
   }
-  declare trait Collator() {
+  export declare trait Collator() {
     fun compare(x: string, y: string): number
     fun resolvedOptions(): Intl.ResolvedCollatorOptions
   }
-  declare trait NumberFormatOptions() {
+  export declare trait NumberFormatOptions() {
     let minimumSignificantDigits: (number) | (undefined)
     let useGrouping: ((false) | (true)) | (undefined)
     let style: (string) | (undefined)
@@ -404,7 +404,7 @@ declare module Intl {
     let maximumSignificantDigits: (number) | (undefined)
     let minimumFractionDigits: (number) | (undefined)
   }
-  declare trait ResolvedNumberFormatOptions() {
+  export declare trait ResolvedNumberFormatOptions() {
     let numberingSystem: string
     let minimumSignificantDigits: (number) | (undefined)
     let useGrouping: (false) | (true)
@@ -416,11 +416,11 @@ declare module Intl {
     let maximumSignificantDigits: (number) | (undefined)
     let minimumFractionDigits: number
   }
-  declare trait NumberFormat() {
+  export declare trait NumberFormat() {
     fun format(value: number): string
     fun resolvedOptions(): Intl.ResolvedNumberFormatOptions
   }
-  declare trait DateTimeFormatOptions() {
+  export declare trait DateTimeFormatOptions() {
     let minute: ((string) | (string)) | (undefined)
     let year: ((string) | (string)) | (undefined)
     let hour: ((string) | (string)) | (undefined)
@@ -435,7 +435,7 @@ declare module Intl {
     let timeZoneName: ((((((string) | (string)) | (string)) | (string)) | (string)) | (string)) | (undefined)
     let era: (((string) | (string)) | (string)) | (undefined)
   }
-  declare trait ResolvedDateTimeFormatOptions() {
+  export declare trait ResolvedDateTimeFormatOptions() {
     let numberingSystem: string
     let minute: (string) | (undefined)
     let year: (string) | (undefined)
@@ -451,7 +451,7 @@ declare module Intl {
     let timeZoneName: (string) | (undefined)
     let era: (string) | (undefined)
   }
-  declare trait DateTimeFormat() {
+  export declare trait DateTimeFormat() {
     fun format(date: ((number) | (Date)) | (undefined)): string
     fun resolvedOptions(): Intl.ResolvedDateTimeFormatOptions
   }
@@ -647,8 +647,8 @@ declare module Intl {
 //│ ║  l.83: 	}
 //│ ╙──      	^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.374: 	  declare trait CollatorOptions() {
-//│ ║         	          ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.374: 	  export declare trait CollatorOptions() {
+//│ ║         	                 ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.375: 	    let sensitivity: (string) | (undefined)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.376: 	    let ignorePunctuation: ((false) | (true)) | (undefined)
@@ -664,8 +664,8 @@ declare module Intl {
 //│ ║  l.381: 	  }
 //│ ╙──       	^^^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.382: 	  declare trait ResolvedCollatorOptions() {
-//│ ║         	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.382: 	  export declare trait ResolvedCollatorOptions() {
+//│ ║         	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.383: 	    let sensitivity: string
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.384: 	    let ignorePunctuation: (false) | (true)
@@ -686,8 +686,8 @@ declare module Intl {
 //│ ║  l.393: 	    fun resolvedOptions(): Intl.ResolvedCollatorOptions
 //│ ╙──       	                               ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.391: 	  declare trait Collator() {
-//│ ║         	          ^^^^^^^^^^^^^^^^^^
+//│ ║  l.391: 	  export declare trait Collator() {
+//│ ║         	                 ^^^^^^^^^^^^^^^^^^
 //│ ║  l.392: 	    fun compare(x: string, y: string): number
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.393: 	    fun resolvedOptions(): Intl.ResolvedCollatorOptions
@@ -695,8 +695,8 @@ declare module Intl {
 //│ ║  l.394: 	  }
 //│ ╙──       	^^^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.395: 	  declare trait NumberFormatOptions() {
-//│ ║         	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.395: 	  export declare trait NumberFormatOptions() {
+//│ ║         	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.396: 	    let minimumSignificantDigits: (number) | (undefined)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.397: 	    let useGrouping: ((false) | (true)) | (undefined)
@@ -720,8 +720,8 @@ declare module Intl {
 //│ ║  l.406: 	  }
 //│ ╙──       	^^^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.407: 	  declare trait ResolvedNumberFormatOptions() {
-//│ ║         	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.407: 	  export declare trait ResolvedNumberFormatOptions() {
+//│ ║         	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.408: 	    let numberingSystem: string
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.409: 	    let minimumSignificantDigits: (number) | (undefined)
@@ -748,8 +748,8 @@ declare module Intl {
 //│ ║  l.421: 	    fun resolvedOptions(): Intl.ResolvedNumberFormatOptions
 //│ ╙──       	                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.419: 	  declare trait NumberFormat() {
-//│ ║         	          ^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.419: 	  export declare trait NumberFormat() {
+//│ ║         	                 ^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.420: 	    fun format(value: number): string
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.421: 	    fun resolvedOptions(): Intl.ResolvedNumberFormatOptions
@@ -757,8 +757,8 @@ declare module Intl {
 //│ ║  l.422: 	  }
 //│ ╙──       	^^^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.423: 	  declare trait DateTimeFormatOptions() {
-//│ ║         	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.423: 	  export declare trait DateTimeFormatOptions() {
+//│ ║         	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.424: 	    let minute: ((string) | (string)) | (undefined)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.425: 	    let year: ((string) | (string)) | (undefined)
@@ -788,8 +788,8 @@ declare module Intl {
 //│ ║  l.437: 	  }
 //│ ╙──       	^^^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.438: 	  declare trait ResolvedDateTimeFormatOptions() {
-//│ ║         	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.438: 	  export declare trait ResolvedDateTimeFormatOptions() {
+//│ ║         	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.439: 	    let numberingSystem: string
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.440: 	    let minute: (string) | (undefined)
@@ -827,8 +827,8 @@ declare module Intl {
 //│ ║  l.456: 	    fun resolvedOptions(): Intl.ResolvedDateTimeFormatOptions
 //│ ╙──       	                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.454: 	  declare trait DateTimeFormat() {
-//│ ║         	          ^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.454: 	  export declare trait DateTimeFormat() {
+//│ ║         	                 ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.455: 	    fun format(date: ((number) | (Date)) | (undefined)): string
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.456: 	    fun resolvedOptions(): Intl.ResolvedDateTimeFormatOptions

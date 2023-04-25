@@ -14,7 +14,6 @@ declare module ABC {
 let d: ABC.DEF
 declare module DD {
   let foo: number
-  let bar: number
 }
 //│ let URI: string
 //│ let URI2: string
@@ -27,6 +26,5 @@ declare module DD {
 //│ }
 //│ let d: DEF
 //│ module DD() {
-//│   let bar: number
 //│   let foo: number
 //│ }

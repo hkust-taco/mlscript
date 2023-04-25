@@ -3,18 +3,18 @@
 :NoJS
 :AllowTypeErrors
 export declare module Foo {
-  export fun Baz(aa: string): IBar
+  fun Baz(aa: string): IBar
   declare trait IBar() {
     let a: string
   }
-  declare class Bar() extends IBar {
+  export declare class Bar() extends IBar {
     let a: string
   }
   let baz: IBar
 }
 //│ ╔══[ERROR] type identifier not found: IBar
-//│ ║  l.6: 	  export fun Baz(aa: string): IBar
-//│ ╙──     	                              ^^^^
+//│ ║  l.6: 	  fun Baz(aa: string): IBar
+//│ ╙──     	                       ^^^^
 //│ ╔══[ERROR] traits are not yet supported
 //│ ║  l.7: 	  declare trait IBar() {
 //│ ║       	          ^^^^^^^^^^^^^^
@@ -23,8 +23,8 @@ export declare module Foo {
 //│ ║  l.9: 	  }
 //│ ╙──     	^^^
 //│ ╔══[ERROR] Cannot inherit from a type alias
-//│ ║  l.10: 	  declare class Bar() extends IBar {
-//│ ╙──      	                              ^^^^
+//│ ║  l.10: 	  export declare class Bar() extends IBar {
+//│ ╙──      	                                     ^^^^
 //│ ╔══[ERROR] trait IBar cannot be used as a type
 //│ ║  l.13: 	  let baz: IBar
 //│ ╙──      	           ^^^^

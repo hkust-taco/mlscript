@@ -9,9 +9,9 @@ declare trait AnotherBase() {
   let y: string
 }
 declare module N {
-  export fun f(): unit
-  export fun g(): unit
-  export fun h(): unit
+  fun f(): unit
+  fun g(): unit
+  fun h(): unit
 }
 fun multi2(x: string): string
 fun multi4(): unit
