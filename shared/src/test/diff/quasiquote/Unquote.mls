@@ -5,7 +5,7 @@ code"x"
 code"(x) => ${res}"
 //│ res: Code['a, {x: 'a}]
 //│    = [ 'Var', [ 'FreeVar', 'x' ] ]
-//│ res: Code[anything -> 'a, {x: 'a}\x]
+//│ res: Code['a -> 'a, {x: 'a}\x]
 //│    = [ '_', [Function (anonymous)] ]
 
 :d
@@ -30,6 +30,7 @@ code"${res}"
 //│ | | C Code[α39,{test: α39}] <! Code[α44,α43]    (0)
 //│ | | | C α39 <! α44    (1)
 //│ | | | C α43 <! {test: α39}    (2)
+//│ | | failed to constrain test
 //│ | 0. : α44
 //│ 0. : Code[α44,α43]
 //│ ⬤ Typed as: Code[α44,α43]
@@ -105,16 +106,14 @@ ${a} + (let y = 1; ${b})
 //│        ]
 //│      ]
 
-:d
+
 let cde = code"a"
-//│ 1. Typing term Quoted' a '
-//│ | 1. Typing term a
-//│ | 1. : α100'
-//│ 1. : Code[α100',{a: α100'}]
-//│ ⬤ Typed as: Code[α100',{a: α100'}]
-//│  where: 
 //│ cde: Code['a, {a: 'a}]
 //│    = [ 'Var', [ 'Var', [ 'FreeVar', 'x' ] ] ]
+
+let cde_w_unquote = code"${cde}"
+//│ cde_w_unquote: Code['a, {a: 'a}]
+//│              = [ 'Unquoted', [ 'Var', [ 'Var', [Array] ] ] ]
 
 let cde_w_free_vars = code"let x = 1; x + y"
 //│ cde_w_free_vars: Code[int, {y: int}]
@@ -127,9 +126,7 @@ let cde_w_free_vars = code"let x = 1; x + y"
 //│                  ]
 
 
-let cde_w_unquote = code"${cde}"
-//│ cde_w_unquote: Code['a, {a: 'a}]
-//│              = [ 'Unquoted', [ 'Var', [ 'Var', [Array] ] ] ]
+
 
 let cde_w_unquote_w_free_vars = code"${cde_w_free_vars}"
 //│ cde_w_unquote_w_free_vars: Code[int, {y: int}]
@@ -179,7 +176,7 @@ let cde_w_mutli_unquote = code"${free_var2} + ${free_var1}"
 // FIXME
 c: Code<int, {}>
 //│ ╔══[ERROR] identifier not found: c
-//│ ║  l.180: 	c: Code<int, {}>
+//│ ║  l.177: 	c: Code<int, {}>
 //│ ╙──       	^
 //│ res: Code[int, anything]
 //│ Code generation encountered an error:
@@ -203,7 +200,7 @@ let cde_arr = code"[${code"y"}, ${code"y"}]"
 //│        = [ 'Bra', [ 'Tup', [ [Array], [Array] ] ] ]
 
 code"let y = 1; ${cde_arr}"
-//│ res: Code[('a, 'a,), {y: 'a}\y]
+//│ res: Code[(1 | 'a, 1 | 'a,), {y: 'a}\y]
 //│    = [
 //│        'Let',
 //│        'y',
@@ -215,10 +212,10 @@ code"let y = 1; ${cde_arr}"
 :e
 run(res)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.216: 	run(res)
+//│ ║  l.213: 	run(res)
 //│ ║         	^^^^^^^^
 //│ ╙── expression of type `anything` does not have field 'y'
-//│ res: (nothing, nothing,) | error
+//│ res: (1, 1,) | error
 //│    = [ 1, 1 ]
 
 // CHECK THIS
@@ -227,7 +224,7 @@ y => code"[${code"y"}, ${code"y"}]"
 //│    = [Function: res]
 
 code"y => ${c}"
-//│ res: Code[anything -> ('a, 'a,), {y: 'a}\y]
+//│ res: Code['a -> ('a, 'a,), {y: 'a}\y]
 //│    = [ '_', [Function (anonymous)] ]
 
 
@@ -263,7 +260,7 @@ code"f(0)"
 :ge
 code"${code"${code"${z}"}"}"
 //│ ╔══[ERROR] identifier not found: z
-//│ ║  l.264: 	code"${code"${code"${z}"}"}"
+//│ ║  l.261: 	code"${code"${code"${z}"}"}"
 //│ ╙──       	                     ^
 //│ res: Code[error, anything]
 //│ Code generation encountered an error:
@@ -283,7 +280,7 @@ code"let x = 1; let z = 1; code"x + y""
 //│   ReferenceError: y is not defined
 
 code"let z = 0;${code"z"}"
-//│ res: Code['a, {z: 'a}\z]
+//│ res: Code[0 | 'a, {z: 'a}\z]
 //│    = [
 //│        'Let',
 //│        'z',

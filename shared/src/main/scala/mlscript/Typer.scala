@@ -923,14 +923,16 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
               constrainFreeVarRequirement(rhs)
             case Without(bTy, _) => constrainFreeVarRequirement(bTy)
             case RecordType(fields) => fields.foreach((entry) => {
-              ctx.get(entry._1.name) match {
+              ctx.get(entry._1.name, traversal = QuasiquoteTraversal(ctx.quasiquoteLvl)) match {
                 case S(VarSymbol(ty, _)) =>
-                  val bouned_ty = ty.instantiate
-                  con(entry._2.ub, bouned_ty, bouned_ty)
-                case _ =>
+                  println(s"constraining ${entry._1.name}")
+                  val bounded_ty = ty.instantiate
+//                  con(entry._2.ub, bounded_ty, bounded_ty)
+                  con(bounded_ty, entry._2.ub, bounded_ty)
+                case _ => println(s"failed to constrain ${entry._1.name}")
               }
             })
-//            case TypeVariable(_, _, upper, _) if upper.nonEmpty => constrainFreeVarRequirement(upper.head)
+            case TypeVariable(_, _, upper, _) if upper.nonEmpty => constrainFreeVarRequirement(upper.head)
             case _ => println(s"unhandled type: ${ty} - ${ty.getClass}")
           }
         }
@@ -948,8 +950,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
 
             val res_ty = con(body_type, TypeRef(TypeName("Code"), Ls(res, tc))(noProv), res)
 
-//            if (tc.upperBounds.nonEmpty)
-//              constrainFreeVarRequirement(tc.upperBounds.head)
+            if (tc.upperBounds.nonEmpty)
+              constrainFreeVarRequirement(tc.upperBounds.head)
 
             res_ty
           case _ => err("Unquotes should be enclosed with a quasiquote.", body.toLoc)(raise)
