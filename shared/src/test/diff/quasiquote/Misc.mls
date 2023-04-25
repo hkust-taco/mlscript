@@ -48,7 +48,7 @@ code"foo(123) + 1"
 //│    = [
 //│        'App',
 //│        '+',
-//│        [ 'App_Fun', [ 'Var', [Array] ], [ 'Tup', [Array] ] ],
+//│        [ 'App_Fun', [ 'Var', [Function: foo] ], [ 'Tup', [Array] ] ],
 //│        [ '_', 1 ]
 //│      ]
 

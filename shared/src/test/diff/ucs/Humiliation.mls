@@ -149,8 +149,7 @@ fun foo(x) = if x is
 :re
 foo(Pair(Z(), Z()))
 //│ res: "???" | "zeros"
-//│ Runtime error:
-//│   Error: non-exhaustive case expression
+//│    = '???'
 
 :e
 :ge
@@ -159,14 +158,14 @@ fun foo(x) = if x is
   Pair(O(), O()) then "ones"
   Pair(y, O()) then x
 //│ ╔══[ERROR] The match is not exhaustive.
-//│ ║  l.157: 	fun foo(x) = if x is
+//│ ║  l.156: 	fun foo(x) = if x is
 //│ ║         	                ^^^^
 //│ ╟── The scrutinee at this position misses 1 case.
-//│ ║  l.158: 	  Pair(Z(), Z()) then "zeros"
+//│ ║  l.157: 	  Pair(Z(), Z()) then "zeros"
 //│ ║         	            ^^^
 //│ ╟── [Missing Case 1/1] `Z`
 //│ ╟── It first appears here.
-//│ ║  l.158: 	  Pair(Z(), Z()) then "zeros"
+//│ ║  l.157: 	  Pair(Z(), Z()) then "zeros"
 //│ ╙──       	            ^^^
 //│ foo: anything -> error
 //│ Code generation encountered an error:
@@ -180,7 +179,7 @@ fun foo(x, y) = if x is Z() and y is O() then 0 else 1
 fun foo(x, y) = if x is
   Z() and y is O() then 0 else 1
 //│ ╔══[PARSE ERROR] Unexpected 'else' keyword here
-//│ ║  l.181: 	  Z() and y is O() then 0 else 1
+//│ ║  l.180: 	  Z() and y is O() then 0 else 1
 //│ ╙──       	                          ^^^^
 //│ foo: (Z, O,) -> 0
 //│    = [Function: foo8]

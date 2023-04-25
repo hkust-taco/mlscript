@@ -1,5 +1,44 @@
 :NewParser
 
+
+code"x"
+code"(x) => ${res}"
+//│ res: Code['a, {x: 'a}]
+//│    = [ 'Var', [ 'FreeVar', 'x' ] ]
+//│ res: Code[anything -> 'a, {x: 'a}\x]
+//│    = [ '_', [Function (anonymous)] ]
+
+:d
+code"test"
+//│ 0. Typing term Quoted' test '
+//│ | 0. Typing term test
+//│ | 0. : α39
+//│ 0. : Code[α39,{test: α39}]
+//│ ⬤ Typed as: Code[α39,{test: α39}]
+//│  where: 
+//│ res: Code['a, {test: 'a}]
+//│    = [ 'Var', [ 'FreeVar', 'test' ] ]
+
+:d
+code"${res}"
+//│ 0. Typing term Quoted' Unquote' res ' '
+//│ | 0. Typing term Unquote' res '
+//│ | | 0. Typing term res
+//│ | | 0. : Code[α39,{test: α39}]
+//│ | | CONSTRAIN Code[α39,{test: α39}] <! Code[α44,α43]
+//│ | |   where 
+//│ | | C Code[α39,{test: α39}] <! Code[α44,α43]    (0)
+//│ | | | C α39 <! α44    (1)
+//│ | | | C α43 <! {test: α39}    (2)
+//│ | 0. : α44
+//│ 0. : Code[α44,α43]
+//│ ⬤ Typed as: Code[α44,α43]
+//│  where: 
+//│ 		α39 <: α44
+//│ 		α43 <: {test: α39}
+//│ res: Code['a, {test: 'a}]
+//│    = [ 'Unquoted', [ 'Var', [ 'FreeVar', 'test' ] ] ]
+
 let a = code"x"
 let b = code"y"
 //│ a: Code['a, {x: 'a}]
@@ -12,8 +51,8 @@ code"a + a"
 //│    = [
 //│        'App',
 //│        '+',
-//│        [ 'Var', [ 'FreeVar', 'a' ] ],
-//│        [ 'Var', [ 'FreeVar', 'a' ] ]
+//│        [ 'Var', [ 'Var', [Array] ] ],
+//│        [ 'Var', [ 'Var', [Array] ] ]
 //│      ]
 
 code"a + b"
@@ -21,8 +60,8 @@ code"a + b"
 //│    = [
 //│        'App',
 //│        '+',
-//│        [ 'Var', [ 'FreeVar', 'a' ] ],
-//│        [ 'Var', [ 'FreeVar', 'b' ] ]
+//│        [ 'Var', [ 'Var', [Array] ] ],
+//│        [ 'Var', [ 'Var', [Array] ] ]
 //│      ]
 
 code"x + (let x = 2; x * x)"
@@ -70,12 +109,12 @@ ${a} + (let y = 1; ${b})
 let cde = code"a"
 //│ 1. Typing term Quoted' a '
 //│ | 1. Typing term a
-//│ | 1. : α76'
-//│ 1. : Code[α76',{a: α76'}]
-//│ ⬤ Typed as: Code[α76',{a: α76'}]
+//│ | 1. : α100'
+//│ 1. : Code[α100',{a: α100'}]
+//│ ⬤ Typed as: Code[α100',{a: α100'}]
 //│  where: 
 //│ cde: Code['a, {a: 'a}]
-//│    = [ 'Var', [ 'FreeVar', 'a' ] ]
+//│    = [ 'Var', [ 'Var', [ 'FreeVar', 'x' ] ] ]
 
 let cde_w_free_vars = code"let x = 1; x + y"
 //│ cde_w_free_vars: Code[int, {y: int}]
@@ -90,7 +129,7 @@ let cde_w_free_vars = code"let x = 1; x + y"
 
 let cde_w_unquote = code"${cde}"
 //│ cde_w_unquote: Code['a, {a: 'a}]
-//│              = [ 'Unquoted', [ 'Var', [ 'FreeVar', 'a' ] ] ]
+//│              = [ 'Unquoted', [ 'Var', [ 'Var', [Array] ] ] ]
 
 let cde_w_unquote_w_free_vars = code"${cde_w_free_vars}"
 //│ cde_w_unquote_w_free_vars: Code[int, {y: int}]
@@ -127,7 +166,7 @@ let cde_w_mutli_unquote = code"${free_var2} + ${free_var1}"
 //│              'i',
 //│              Symbol(i),
 //│              [ '_', 1 ],
-//│              [ 'App', '+', [ 'Var', Symbol(i) ], [ 'Var', [Array] ] ]
+//│              [ 'App', '+', [ 'Var', Symbol(i) ], [ 'Var', 1 ] ]
 //│            ]
 //│ cde_w_mutli_unquote: Code[int, {x: int, y: int}]
 //│                    = [
@@ -140,7 +179,7 @@ let cde_w_mutli_unquote = code"${free_var2} + ${free_var1}"
 // FIXME
 c: Code<int, {}>
 //│ ╔══[ERROR] identifier not found: c
-//│ ║  l.141: 	c: Code<int, {}>
+//│ ║  l.180: 	c: Code<int, {}>
 //│ ╙──       	^
 //│ res: Code[int, anything]
 //│ Code generation encountered an error:
@@ -176,7 +215,7 @@ code"let y = 1; ${cde_arr}"
 :e
 run(res)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.177: 	run(res)
+//│ ║  l.216: 	run(res)
 //│ ║         	^^^^^^^^
 //│ ╙── expression of type `anything` does not have field 'y'
 //│ res: (nothing, nothing,) | error
@@ -218,13 +257,13 @@ let built_in_binding_test = code"let f = x => x + 1; f(if true then 1 else 2)"
 
 code"f(0)"
 //│ res: Code[0, anything]
-//│    = [ 'App_Fun', [ 'Var', [ 'FreeVar', 'f' ] ], [ 'Tup', [ [Array] ] ] ]
+//│    = [ 'App_Fun', [ 'Var', [Function: f2] ], [ 'Tup', [ [Array] ] ] ]
 
 :e
 :ge
 code"${code"${code"${z}"}"}"
 //│ ╔══[ERROR] identifier not found: z
-//│ ║  l.225: 	code"${code"${code"${z}"}"}"
+//│ ║  l.264: 	code"${code"${code"${z}"}"}"
 //│ ╙──       	                     ^
 //│ res: Code[error, anything]
 //│ Code generation encountered an error:
@@ -237,15 +276,12 @@ code"${code"${z}"}"
 //│ res: Code[1, anything]
 //│    = [ 'Unquoted', [ 'Unquoted', [ '_', 1 ] ] ]
 
+
 code"let x = 1; let z = 1; code"x + y""
 //│ res: Code[Code[int, {x: int, y: int}], anything]
-//│    = [
-//│        'Let',
-//│        'x',
-//│        Symbol(x),
-//│        [ '_', 1 ],
-//│        [ 'Let', 'z', Symbol(z), [ '_', 1 ], [ '_', [Array] ] ]
-//│      ]
+//│ Runtime error:
+//│   ReferenceError: y is not defined
+
 code"let z = 0;${code"z"}"
 //│ res: Code['a, {z: 'a}\z]
 //│    = [
