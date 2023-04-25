@@ -70,8 +70,8 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
     def isIdentEscape(i: Int): Bool = i + 2 < length && bytes(i) === 'i' && bytes(i + 1) === 'd' && bytes(i + 2) === '"'
     def takeIdentFromEscape(i: Int, ctor: Str => Token) = {
       val (n, j) = takeWhile(i + 3)(isIdentChar)
-      if (j < length && bytes(j) === '"' && !n.isEmpty()) (ctor(n), j + 1)
-      else { pe(msg"unexpected identifier escape"); (ERROR, j + 1) }
+      if (j < length && bytes(j) === '"') (ctor(n), j + 1)
+      else { pe(msg"unfinished identifier escape"); (ERROR, j + 1) }
     }
 
     c match {
@@ -138,7 +138,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
           )
         }
       case _ if isIdentEscape(i) =>
-        val (tok, n) = takeIdentFromEscape(i, s => IDENT(s, isAlphaOp(s)))
+        val (tok, n) = takeIdentFromEscape(i, s => IDENT(s, false))
         lex(n, ind, next(n, tok))
       case _ if isIdentFirstChar(c) =>
         val (n, j) = takeWhile(i)(isIdentChar)

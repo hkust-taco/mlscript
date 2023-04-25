@@ -553,7 +553,11 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
         exprCont(UnitLit(kwStr === "undefined").withLoc(S(l0)), prec, allowNewlines = false)
       case (IDENT(nme, false), l0) :: _ =>
         consume
-        exprCont(Var(nme).withLoc(S(l0)), prec, allowNewlines = false)
+        if (nme.isEmpty()) {
+          err(msg"empty identifier escaped." -> S(l0) :: Nil)
+          R(errExpr)
+        }
+        else exprCont(Var(nme).withLoc(S(l0)), prec, allowNewlines = false)
       case (KEYWORD("super"), l0) :: _ =>
         consume
         exprCont(Super().withLoc(S(l0)), prec, allowNewlines = false)

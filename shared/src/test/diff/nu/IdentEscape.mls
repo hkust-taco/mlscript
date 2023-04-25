@@ -44,22 +44,16 @@ foo.id"mixin"(3)
 
 :pe
 id""
-//│ ╔══[LEXICAL ERROR] unexpected identifier escape
-//│ ║  l.46: 	id""
-//│ ╙──      	^
-//│ ╔══[PARSE ERROR] Unexpected error in expression position
+//│ ╔══[PARSE ERROR] empty identifier escaped.
 //│ ║  l.46: 	id""
 //│ ╙──      	^^^^
-//│ ╔══[PARSE ERROR] Unexpected end of input; an expression was expected here
-//│ ║  l.46: 	id""
-//│ ╙──      	    ^
 //│ undefined
 //│ res
 //│     = undefined
 
 :pe
 id"id
-//│ ╔══[LEXICAL ERROR] unexpected identifier escape
+//│ ╔══[LEXICAL ERROR] unfinished identifier escape
 //│ ║  l.61: 	id"id
 //│ ╙──      	^
 //│ ╔══[PARSE ERROR] Unexpected error in expression position
