@@ -2,47 +2,41 @@
 :NewDefs
 :NoJS
 :AllowTypeErrors
-module N1 {
+declare module N1 {
   fun f(x: anything): number
   fun ff(y: anything): number
-  class C() {
+  declare class C() {
     fun f(): unit
   }
-  trait I() {
+  declare trait I() {
     fun f(): number
   }
-  module N2 {
+  declare module N2 {
     fun fff(x: (false) | (true)): number
     fun gg(c: N1.C): N1.C
-    class BBB() extends N1.C {}
+    declare class BBB() extends N1.C {}
   }
 }
-module AA {
+declare module AA {
   fun f(x: anything): string
-  class C() {
+  declare class C() {
     fun f(): unit
   }
-  trait I() {
+  declare trait I() {
     fun f(): number
   }
-  module N2 {
+  declare module N2 {
   }
 }
 fun f1(x: N1.C): N1.C
 fun f2(x: AA.C): AA.C
-//│ ╔══[ERROR] Member f is declared but not defined
-//│ ║  l.9: 	    fun f(): unit
-//│ ╙──     	        ^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.11: 	  trait I() {
-//│ ║        	  ^^^^^^^^^^^
+//│ ║  l.11: 	  declare trait I() {
+//│ ║        	          ^^^^^^^^^^^
 //│ ║  l.12: 	    fun f(): number
 //│ ║        	^^^^^^^^^^^^^^^^^^^
 //│ ║  l.13: 	  }
 //│ ╙──      	^^^
-//│ ╔══[ERROR] Member f is declared but not defined
-//│ ║  l.12: 	    fun f(): number
-//│ ╙──      	        ^
 //│ ╔══[ERROR] Module `N1` is not supported yet.
 //│ ║  l.16: 	    fun gg(c: N1.C): N1.C
 //│ ╙──      	                ^^
@@ -50,36 +44,15 @@ fun f2(x: AA.C): AA.C
 //│ ║  l.16: 	    fun gg(c: N1.C): N1.C
 //│ ╙──      	                       ^^
 //│ ╔══[ERROR] Unsupported parent specification
-//│ ║  l.17: 	    class BBB() extends N1.C {}
-//│ ╙──      	                        ^^^^
-//│ ╔══[ERROR] Member fff is declared but not defined
-//│ ║  l.15: 	    fun fff(x: (false) | (true)): number
-//│ ╙──      	        ^^^
-//│ ╔══[ERROR] Member gg is declared but not defined
-//│ ║  l.16: 	    fun gg(c: N1.C): N1.C
-//│ ╙──      	        ^^
-//│ ╔══[ERROR] Member f is declared but not defined
-//│ ║  l.6: 	  fun f(x: anything): number
-//│ ╙──     	      ^
-//│ ╔══[ERROR] Member ff is declared but not defined
-//│ ║  l.7: 	  fun ff(y: anything): number
-//│ ╙──     	      ^^
-//│ ╔══[ERROR] Member f is declared but not defined
-//│ ║  l.23: 	    fun f(): unit
-//│ ╙──      	        ^
+//│ ║  l.17: 	    declare class BBB() extends N1.C {}
+//│ ╙──      	                                ^^^^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.25: 	  trait I() {
-//│ ║        	  ^^^^^^^^^^^
+//│ ║  l.25: 	  declare trait I() {
+//│ ║        	          ^^^^^^^^^^^
 //│ ║  l.26: 	    fun f(): number
 //│ ║        	^^^^^^^^^^^^^^^^^^^
 //│ ║  l.27: 	  }
 //│ ╙──      	^^^
-//│ ╔══[ERROR] Member f is declared but not defined
-//│ ║  l.26: 	    fun f(): number
-//│ ╙──      	        ^
-//│ ╔══[ERROR] Member f is declared but not defined
-//│ ║  l.21: 	  fun f(x: anything): string
-//│ ╙──      	      ^
 //│ module N1() {
 //│   class C() {
 //│     fun f: () -> unit

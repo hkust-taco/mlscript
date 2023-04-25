@@ -4,24 +4,21 @@
 :AllowTypeErrors
 fun getName(id: (string) | (number)): string
 fun render(callback: (unit => unit) | (undefined)): string
-trait Get() {
+declare trait Get() {
   let __call: Unsupported<"(id: string): string", "ts2mls/js/src/test/typescript/Dec.d.ts", 4, 22>
 }
-class Person(name: string, age: number) {
+declare class Person(name: string, age: number) {
   fun getName(id: number): string
 }
-module OOO {
+declare module OOO {
 }
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.7: 	trait Get() {
-//│ ║       	^^^^^^^^^^^^^
+//│ ║  l.7: 	declare trait Get() {
+//│ ║       	        ^^^^^^^^^^^^^
 //│ ║  l.8: 	  let __call: Unsupported<"(id: string): string", "ts2mls/js/src/test/typescript/Dec.d.ts", 4, 22>
 //│ ║       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.9: 	}
 //│ ╙──     	^
-//│ ╔══[ERROR] Member getName is declared but not defined
-//│ ║  l.11: 	  fun getName(id: number): string
-//│ ╙──      	      ^^^^^^^
 //│ fun getName: (id: number | string,) -> string
 //│ fun render: (callback: unit -> unit | undefined,) -> string
 //│ trait Get()

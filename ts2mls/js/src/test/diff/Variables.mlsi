@@ -6,13 +6,13 @@ let URI: string
 let URI2: string
 let foo: number
 let bar: false
-class FooBar() {}
+declare class FooBar() {}
 let fb: FooBar
-module ABC {
-  class DEF() {}
+declare module ABC {
+  declare class DEF() {}
 }
 let d: ABC.DEF
-module DD {
+declare module DD {
   let foo: number
   let bar: number
 }

@@ -5,10 +5,10 @@
 fun extend<T, U>(first: T, second: U): (T) & (U)
 fun foo<T, U>(x: (T) & (U)): unit
 fun over(f: ((number) => string) & ((object) => string)): string
-trait IA() {
+declare trait IA() {
   let x: number
 }
-trait IB() {
+declare trait IB() {
   let y: number
 }
 fun iii(x: (IA) & (IB)): (IA) & (IB)
@@ -16,8 +16,8 @@ fun uu<U, V, T, P>(x: ((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P)))
 fun iiii<U, T, V>(x: ((U) & (T)) & (V)): ((U) & (T)) & (V)
 fun arr<U, T>(a: (MutArray<U>) & (MutArray<T>)): (MutArray<U>) & (MutArray<T>)
 fun tt<U, T, V>(x: ((U, T, )) & ((V, V, ))): ((U, T, )) & ((V, V, ))
-class A() {}
-class B() {}
+declare class A() {}
+declare class B() {}
 fun inter(c: (A) & (B)): (A) & (B)
 //│ ╔══[ERROR] Type parameters here are not yet supported in this position
 //│ ║  l.5: 	fun extend<T, U>(first: T, second: U): (T) & (U)
@@ -47,15 +47,15 @@ fun inter(c: (A) & (B)): (A) & (B)
 //│ ║  l.7: 	fun over(f: ((number) => string) & ((object) => string)): string
 //│ ╙──     	                                    ^^^^^^^^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.8: 	trait IA() {
-//│ ║       	^^^^^^^^^^^^
+//│ ║  l.8: 	declare trait IA() {
+//│ ║       	        ^^^^^^^^^^^^
 //│ ║  l.9: 	  let x: number
 //│ ║       	^^^^^^^^^^^^^^^
 //│ ║  l.10: 	}
 //│ ╙──      	^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.11: 	trait IB() {
-//│ ║        	^^^^^^^^^^^^
+//│ ║  l.11: 	declare trait IB() {
+//│ ║        	        ^^^^^^^^^^^^
 //│ ║  l.12: 	  let y: number
 //│ ║        	^^^^^^^^^^^^^^^
 //│ ║  l.13: 	}

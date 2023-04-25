@@ -38,7 +38,7 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
   def generate(writer: JSWriter, indent: String): Unit =
     order.toList.foreach((p) => p match {
       case Left(subName) => {
-        writer.writeln(s"${indent}module $subName {")
+        writer.writeln(s"${indent}declare module $subName {")
         subSpace(subName).generate(writer, indent + "  ")
         writer.writeln(s"$indent}")
       }

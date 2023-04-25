@@ -4,51 +4,42 @@
 :AllowTypeErrors
 fun multi1(x: number): number
 fun multi3(): unit
-class Foo() extends Base {}
-trait AnotherBase() {
+declare class Foo() extends Base {}
+declare trait AnotherBase() {
   let y: string
 }
-module N {
+declare module N {
   fun f(): unit
   fun g(): unit
   fun h(): unit
 }
 fun multi2(x: string): string
 fun multi4(): unit
-trait Base() {
+declare trait Base() {
   let a: number
 }
-class AnotherFoo() extends AnotherBase {}
+declare class AnotherFoo() extends AnotherBase {}
 fun multi5(): unit
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.18: 	trait Base() {
-//│ ║        	^^^^^^^^^^^^^^
+//│ ║  l.18: 	declare trait Base() {
+//│ ║        	        ^^^^^^^^^^^^^^
 //│ ║  l.19: 	  let a: number
 //│ ║        	^^^^^^^^^^^^^^^
 //│ ║  l.20: 	}
 //│ ╙──      	^
 //│ ╔══[ERROR] Cannot inherit from a type alias
-//│ ║  l.7: 	class Foo() extends Base {}
-//│ ╙──     	                    ^^^^
+//│ ║  l.7: 	declare class Foo() extends Base {}
+//│ ╙──     	                            ^^^^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.8: 	trait AnotherBase() {
-//│ ║       	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.8: 	declare trait AnotherBase() {
+//│ ║       	        ^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.9: 	  let y: string
 //│ ║       	^^^^^^^^^^^^^^^
 //│ ║  l.10: 	}
 //│ ╙──      	^
-//│ ╔══[ERROR] Member f is declared but not defined
-//│ ║  l.12: 	  fun f(): unit
-//│ ╙──      	      ^
-//│ ╔══[ERROR] Member g is declared but not defined
-//│ ║  l.13: 	  fun g(): unit
-//│ ╙──      	      ^
-//│ ╔══[ERROR] Member h is declared but not defined
-//│ ║  l.14: 	  fun h(): unit
-//│ ╙──      	      ^
 //│ ╔══[ERROR] Cannot inherit from a type alias
-//│ ║  l.21: 	class AnotherFoo() extends AnotherBase {}
-//│ ╙──      	                           ^^^^^^^^^^^
+//│ ║  l.21: 	declare class AnotherFoo() extends AnotherBase {}
+//│ ╙──      	                                   ^^^^^^^^^^^
 //│ fun multi1: (x: number,) -> number
 //│ fun multi3: () -> unit
 //│ class Foo()

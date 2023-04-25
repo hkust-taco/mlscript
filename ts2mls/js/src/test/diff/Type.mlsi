@@ -2,44 +2,44 @@
 :NewDefs
 :NoJS
 :AllowTypeErrors
-trait None() {
+declare trait None() {
   let _tag: "None"
 }
-trait Some<A>() {
+declare trait Some<A>() {
   let _tag: "Some"
   let value: A
 }
 type Option<A> = (None) | (Some<A>)
 type Func = (number) => number
 type S2 = (string, string, )
-trait I1() {}
-trait I2() {}
+declare trait I1() {}
+declare trait I2() {}
 type I3 = (I1) & (I2)
 type StringArray = Array<string>
 type SomeInterface = {x: number,y: number,}
-class ABC() {}
+declare class ABC() {}
 type DEF = ABC
 type TP<A, B, C> = (A, B, C, )
-module NA {
+declare module NA {
   fun fb(b: string): unit
   type B = string
 }
-class NC() {
+declare class NC() {
   let b: string
 }
 type G = ABC
 let none: {_tag: "None",}
 fun some<A>(a: A): (None) | (Some<A>)
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.5: 	trait None() {
-//│ ║       	^^^^^^^^^^^^^^
+//│ ║  l.5: 	declare trait None() {
+//│ ║       	        ^^^^^^^^^^^^^^
 //│ ║  l.6: 	  let _tag: "None"
 //│ ║       	^^^^^^^^^^^^^^^^^^
 //│ ║  l.7: 	}
 //│ ╙──     	^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.8: 	trait Some<A>() {
-//│ ║       	^^^^^^^^^^^^^^^^^
+//│ ║  l.8: 	declare trait Some<A>() {
+//│ ║       	        ^^^^^^^^^^^^^^^^^
 //│ ║  l.9: 	  let _tag: "Some"
 //│ ║       	^^^^^^^^^^^^^^^^^^
 //│ ║  l.10: 	  let value: A
@@ -53,20 +53,17 @@ fun some<A>(a: A): (None) | (Some<A>)
 //│ ║  l.12: 	type Option<A> = (None) | (Some<A>)
 //│ ╙──      	                          ^^^^^^^^^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.15: 	trait I1() {}
-//│ ╙──      	^^^^^^^^^^^^^
+//│ ║  l.15: 	declare trait I1() {}
+//│ ╙──      	        ^^^^^^^^^^^^^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.16: 	trait I2() {}
-//│ ╙──      	^^^^^^^^^^^^^
+//│ ║  l.16: 	declare trait I2() {}
+//│ ╙──      	        ^^^^^^^^^^^^^
 //│ ╔══[ERROR] trait I1 cannot be used as a type
 //│ ║  l.17: 	type I3 = (I1) & (I2)
 //│ ╙──      	          ^^^^
 //│ ╔══[ERROR] trait I2 cannot be used as a type
 //│ ║  l.17: 	type I3 = (I1) & (I2)
 //│ ╙──      	                 ^^^^
-//│ ╔══[ERROR] Member fb is declared but not defined
-//│ ║  l.24: 	  fun fb(b: string): unit
-//│ ╙──      	      ^^
 //│ ╔══[ERROR] Type parameters here are not yet supported in this position
 //│ ║  l.32: 	fun some<A>(a: A): (None) | (Some<A>)
 //│ ╙──      	         ^

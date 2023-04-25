@@ -13,10 +13,10 @@ fun s2(t: ((false) | (true), (string) | (number), )): (string) | (number)
 fun ex<T, U>(x: T, y: U): (T, U, (T) & (U), )
 fun foo<T, U>(x: ((T) & (U), )): unit
 fun conv(x: {y: number,}): ({y: number,}, {z: string,}, )
-class A() {
+declare class A() {
   let x: number
 }
-class B() {}
+declare class B() {}
 fun swap(x: (A, B, )): (B, A, )
 //│ ╔══[ERROR] Type parameters here are not yet supported in this position
 //│ ║  l.13: 	fun ex<T, U>(x: T, y: U): (T, U, (T) & (U), )

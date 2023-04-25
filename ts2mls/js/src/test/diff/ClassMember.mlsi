@@ -2,48 +2,27 @@
 :NewDefs
 :NoJS
 :AllowTypeErrors
-class Student(s: string, age: number) {
+declare class Student(s: string, age: number) {
   let name: string
   fun isFriend(other: Student): (false) | (true)
   fun addScore(sub: string, score: number): unit
   fun getID(): number
 }
-class Foo<T>() {
+declare class Foo<T>() {
   fun bar(x: T): unit
 }
-class EZ() {
+declare class EZ() {
   fun inc(x: number): number
 }
-class Outer() {
-  class Inner() {
+declare class Outer() {
+  declare class Inner() {
     let a: number
   }
 }
-class TTT<T>() {
+declare class TTT<T>() {
   fun ttt(x: T): T
   fun ttt2(x: T): T
 }
-//│ ╔══[ERROR] Member isFriend is declared but not defined
-//│ ║  l.7: 	  fun isFriend(other: Student): (false) | (true)
-//│ ╙──     	      ^^^^^^^^
-//│ ╔══[ERROR] Member addScore is declared but not defined
-//│ ║  l.8: 	  fun addScore(sub: string, score: number): unit
-//│ ╙──     	      ^^^^^^^^
-//│ ╔══[ERROR] Member getID is declared but not defined
-//│ ║  l.9: 	  fun getID(): number
-//│ ╙──     	      ^^^^^
-//│ ╔══[ERROR] Member bar is declared but not defined
-//│ ║  l.12: 	  fun bar(x: T): unit
-//│ ╙──      	      ^^^
-//│ ╔══[ERROR] Member inc is declared but not defined
-//│ ║  l.15: 	  fun inc(x: number): number
-//│ ╙──      	      ^^^
-//│ ╔══[ERROR] Member ttt is declared but not defined
-//│ ║  l.23: 	  fun ttt(x: T): T
-//│ ╙──      	      ^^^
-//│ ╔══[ERROR] Member ttt2 is declared but not defined
-//│ ║  l.24: 	  fun ttt2(x: T): T
-//│ ╙──      	      ^^^^
 //│ class Student(s: string, age: number) {
 //│   fun addScore: (sub: string, score: number,) -> unit
 //│   fun getID: () -> number

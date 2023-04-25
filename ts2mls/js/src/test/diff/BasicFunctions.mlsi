@@ -16,12 +16,12 @@ fun fail(): nothing
 fun create(): object
 fun pa(x: number): number
 fun wtf(x: anything): unit
-class Foooooo() {
+declare class Foooooo() {
   let ooooooo: number
 }
 fun inn(f: Foooooo): unit
 fun out1(): Foooooo
-trait Barrrrrrrrr() {
+declare trait Barrrrrrrrr() {
   let rrrrrrr: number
 }
 fun inn2(b: Barrrrrrrrr): unit
@@ -30,8 +30,8 @@ fun out2(): Barrrrrrrrr
 //│ ║  l.16: 	fun create(): object
 //│ ╙──      	              ^^^^^^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.24: 	trait Barrrrrrrrr() {
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.24: 	declare trait Barrrrrrrrr() {
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.25: 	  let rrrrrrr: number
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.26: 	}
