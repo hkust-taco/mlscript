@@ -124,14 +124,15 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
             params.mapValues(_.freshenAbove(lim, rigidify)),
             members.mapValuesIter(_.freshenAbove(lim, rigidify)).toMap,
             ttu.freshenAbove(lim, rigidify))
-        case cls @ TypedNuCls(level, td, ttu, tparams, params, members, thisTy, tags, inheritedTags) =>
+        case cls @ TypedNuCls(level, td, ttu, tparams, params, members, thisTy, tags, inheritedTags, typeMembers) =>
           TypedNuCls(level, td, ttu.freshenAbove(lim, rigidify),
             tparams.map(tp => (tp._1, tp._2.freshenAbove(lim, rigidify).assertTV, tp._3)),
             params.mapValues(_.freshenAbove(lim, rigidify)),
             members.mapValuesIter(_.freshenAbove(lim, rigidify)).toMap,
             thisTy.freshenAbove(lim, rigidify),
             tags.freshenAbove(lim, rigidify),
-            inheritedTags
+            inheritedTags,
+            typeMembers
           )(cls.instanceType.freshenAbove(lim, rigidify))
         case cls @ TypedNuAls(level, td, tparams, body) =>
           TypedNuAls(level, td,
@@ -231,6 +232,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
         members: Map[Str, NuMember], thisTy: ST, //typeSignature: ST,
         tags: ST,
         inheritedTags: Set[TypeName],
+        typeMembers: Map[Str, NuMember]
       )(val instanceType: ST, // * only meant to be used in `force` and `variances`
       ) extends TypedNuTypeDef(Cls) with TypedNuTermDef
   {
@@ -242,9 +244,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     def typeSignature: ST = typeSignatureOf(td, level, tparams, params, tags, inheritedTags)
     
     /** Includes class-name-coded type parameter fields. */
-    lazy val virtualMembers: Map[Str, NuMember] = members ++ tparams.map {
-      case (nme @ TypeName(name), tv, _) => td.nme.name+"#"+name -> NuTypeParam(nme, FieldType(S(tv), tv)(provTODO))(level)
-    }
+    lazy val virtualMembers: Map[Str, NuMember] = members ++ typeMembers 
     
     // TODO
     // def checkVariances
@@ -300,7 +300,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           members.mapValuesIter(_.mapPol(pol, smart)(f)).toMap,
           f(pol.map(!_), thisTy),
           f(pol, tags),
-          inheritedTags
+          inheritedTags,
+          typeMembers.mapValuesIter(_.mapPol(pol, smart)(f)).toMap,
         )(f(pol, instanceType))
     def mapPolMap(pol: PolMap)(f: (PolMap, SimpleType) => SimpleType)
           (implicit ctx: Ctx): TypedNuTermDef =
@@ -310,7 +311,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           members.mapValuesIter(_.mapPolMap(pol)(f)).toMap,
           f(pol.contravar, thisTy),
           f(pol, tags),
-          inheritedTags
+          inheritedTags,
+          typeMembers.mapValuesIter(_.mapPolMap(pol)(f)).toMap,
         )(f(pol, instanceType))
   }
   
@@ -1026,7 +1028,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     val impltdMems = baseMems ++ clsMems
                     val mems = impltdMems.map(d => d.name -> d).toMap ++ typedSignatureMembers
                     
-                    def computeInterface(parents: Ls[ParentSpec], annot: ST, members: Ls[NuMember]): (ST, Ls[NuMember]) = 
+                    def computeInterface(parents: Ls[ParentSpec], annot: ST, members: Ls[NuMember], tMem: Map[Str, NuMember]): (ST, Ls[NuMember], Map[Str, NuMember]) = 
                         parents match {
                       case (p, v @ Var(parNme), parTargs, parArgs) :: ps =>
                         // TODO find traits in `parents`; intersect their member types and self types
@@ -1068,22 +1070,27 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                                   val trt = rawTrt.freshenAbove(info.level, rigidify = false)
                                     .asInstanceOf[TypedNuTrt] // FIXME
                                   
-                                  computeInterface(ps, annot & trt.selfTy, memberUn(members, trt.members.values.toList)) // intersect members
+                                  computeInterface(ps, annot & trt.selfTy, memberUn(members, trt.members.values.toList), tMem ++ trt.typeMembers) // intersect members
                                   
-                                case _ => computeInterface(ps, annot, members)
+                                case _ => computeInterface(ps, annot, members, tMem)
                               }
                             case S(_) => 
                               err("i don't know", p.toLoc)
-                              computeInterface(ps, annot, members)
+                              computeInterface(ps, annot, members, tMem)
                             case N => 
                               // err(msg"Could not find definition `${parNme}`", p.toLoc)
-                              computeInterface(ps, annot, members)
+                              computeInterface(ps, annot, members, tMem)
                         }
-                      case Nil => (annot, members)
+                      case Nil => (annot, members, tMem)
                     }
                     val thisTag = TopType //clsNameToNomTag(td)(provTODO, ctx)
-                    val (_, ifaceMembers) = computeInterface(parentSpecs, thisTag, Nil)
-                    // TODO check mems against interface stuff above
+                    val (_, ifaceMembers, ifaceTmem) = computeInterface(parentSpecs, thisTag, Nil, Map.empty)
+
+                    // TODO type members of parent class
+                    val tyMem = ifaceTmem  ++ tparams.map {
+                      case (nme @ TypeName(name), tv, _) => 
+                        td.nme.name+"#"+name -> NuTypeParam(nme, FieldType(S(tv), tv)(provTODO))(level)
+                    } 
 
                     ifaceMembers.foreach { m =>
                       impltdMems.find(x => x.name == m.name) match {
@@ -1103,7 +1110,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       TopType,
                       // ifaceAnnot,
                       TopType, // TODO use signature
-                      inheritedTags
+                      inheritedTags,
+                      tyMem
                     )(thisType) -> impltdMems
                   }
                 case Mxn =>
