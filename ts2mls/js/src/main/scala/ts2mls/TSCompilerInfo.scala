@@ -21,6 +21,7 @@ object TypeScript {
   val syntaxKindPrivate = ts.SyntaxKind.PrivateKeyword
   val syntaxKindProtected = ts.SyntaxKind.ProtectedKeyword
   val syntaxKindStatic = ts.SyntaxKind.StaticKeyword
+  val syntaxKindExport = ts.SyntaxKind.ExportKeyword
   val objectFlagsAnonymous = ts.ObjectFlags.Anonymous
   val objectFlagsMapped = ts.ObjectFlags.Mapped
   val symbolFlagsOptional = ts.SymbolFlags.Optional // this flag is only for checking optional members of interfaces
@@ -126,6 +127,8 @@ class TSNodeObject(node: js.Dynamic)(implicit checker: TSTypeChecker) extends TS
   lazy val isOptionalParameter = checker.isOptionalParameter(node)
   lazy val isStatic = if (modifiers.isUndefined) false
                      else modifiers.foldLeft(false)((s, t) => t.isStatic)
+  lazy val isExported = if (modifiers.isUndefined) false
+                     else modifiers.foldLeft(false)((s, t) => t.isExported)
 
   lazy val typeNode = TSTypeObject(checker.getTypeFromTypeNode(node))
   lazy val typeAtLocation = TSTypeObject(checker.getTypeAtLocation(node))
@@ -151,6 +154,7 @@ class TSNodeObject(node: js.Dynamic)(implicit checker: TSTypeChecker) extends TS
     else declarations.get(0)
 
   lazy val locals = TSSymbolMap(node.locals)
+  lazy val exports = TSSymbolMap(node.symbol.exports)
   lazy val returnType = TSTypeObject(checker.getReturnTypeOfSignature(node))
   lazy val `type` = TSNodeObject(node.selectDynamic("type"))
 
@@ -176,6 +180,7 @@ class TSTokenObject(token: js.Dynamic)(implicit checker: TSTypeChecker) extends 
   lazy val isPrivate = kind == TypeScript.syntaxKindPrivate
   lazy val isProtected = kind == TypeScript.syntaxKindProtected
   lazy val isStatic = kind == TypeScript.syntaxKindStatic
+  lazy val isExported = kind == TypeScript.syntaxKindExport
 
   lazy val typeNode = TSTypeObject(checker.getTypeFromTypeNode(token))
   lazy val text = token.text.toString()

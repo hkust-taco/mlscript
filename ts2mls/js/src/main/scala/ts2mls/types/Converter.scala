@@ -25,18 +25,18 @@ object Converter {
     else name
   }
 
-  def generateFunDeclaration(tsType: TSType, name: String)(implicit indent: String = ""): String = tsType match {
+  def generateFunDeclaration(tsType: TSType, name: String, exported: Boolean)(implicit indent: String = ""): String = tsType match {
     case TSFunctionType(params, res, typeVars) => {
       val pList = if (params.isEmpty) "" else params.map(p => s"${convert(p)("")}").reduceLeft((r, p) => s"$r, $p")
       val tpList = if (typeVars.isEmpty) "" else s"<${typeVars.map(p => convert(p)("")).reduceLeft((r, p) => s"$r, $p")}>"
-      s"${indent}fun ${escapeIdent(name)}$tpList($pList): ${convert(res)("")}"
+      s"${indent}${if (exported) "export " else ""}fun ${escapeIdent(name)}$tpList($pList): ${convert(res)("")}"
     }
-    case overload @ TSIgnoredOverload(base, _) => s"${generateFunDeclaration(base, name)} ${overload.warning}"
-    case inter: TSIntersectionType => s"${indent}fun ${name}: ${Converter.convert(inter)}"
+    case overload @ TSIgnoredOverload(base, _) => s"${generateFunDeclaration(base, name, exported)} ${overload.warning}"
+    case inter: TSIntersectionType => s"${indent}${if (exported) "export " else ""}fun ${name}: ${Converter.convert(inter)}"
     case _ => throw new AssertionError("non-function type is not allowed.")
   }
 
-  def convert(tsType: TSType)(implicit indent: String = ""): String = tsType match {
+  def convert(tsType: TSType, exported: Boolean = false)(implicit indent: String = ""): String = tsType match {
     case TSPrimitiveType(typeName) => primitiveName(typeName)
     case TSReferenceType(name) => name
     case TSFunctionType(params, res, _) =>
@@ -51,9 +51,9 @@ object Converter {
     case TSEnumType => "int"
     case TSMemberType(base, _) => convert(base) // TODO: support private/protected members
     case TSInterfaceType(name, members, typeVars, parents) =>
-      convertRecord(s"trait $name", members, typeVars, parents, Map(), List())(indent)
+      convertRecord(s"trait $name", members, typeVars, parents, Map(), List(), exported)(indent)
     case TSClassType(name, members, statics, typeVars, parents, cons) =>
-      convertRecord(s"class $name", members, typeVars, parents, statics, cons)(indent)
+      convertRecord(s"class $name", members, typeVars, parents, statics, cons, exported)(indent)
     case TSSubstitutionType(base, applied) => s"${base}<${applied.map((app) => convert(app)).reduceLeft((res, s) => s"$res, $s")}>"
     case overload @ TSIgnoredOverload(base, _) => s"${convert(base)} ${overload.warning}"
     case TSParameterType(name, tp) => s"${name}: ${convert(tp)}"
@@ -66,13 +66,13 @@ object Converter {
   }
 
   private def convertRecord(typeName: String, members: Map[String, TSMemberType], typeVars: List[TSTypeParameter],
-    parents: List[TSType], statics: Map[String, TSMemberType], constructorList: List[TSType])(implicit indent: String) = {
+    parents: List[TSType], statics: Map[String, TSMemberType], constructorList: List[TSType], exported: Boolean)(implicit indent: String) = {
     val allRecs = members.toList.map((m) => m._2.modifier match {
       case Public =>
         if (typeName === "trait ") s"${escapeIdent(m._1)}: ${convert(m._2)},"
         else m._2.base match {
-          case _: TSFunctionType => s"${generateFunDeclaration(m._2.base, m._1)(indent + "  ")}\n"
-          case _: TSIgnoredOverload => s"${generateFunDeclaration(m._2.base, m._1)(indent + "  ")}\n"
+          case _: TSFunctionType => s"${generateFunDeclaration(m._2.base, m._1, false)(indent + "  ")}\n"
+          case _: TSIgnoredOverload => s"${generateFunDeclaration(m._2.base, m._1, false)(indent + "  ")}\n"
           case _ => s"${indent}  let ${escapeIdent(m._1)}: ${convert(m._2)}\n"
         }
       case _ => "" // TODO: deal with private/protected members
@@ -98,12 +98,13 @@ object Converter {
         if (constructorList.isEmpty) "()"
         else s"(${constructorList.map(p => s"${convert(p)("")}").reduceLeft((res, p) => s"$res, $p")})"
 
+      val exp = if (exported) "export " else ""
       val inheritance =
         if (parents.isEmpty) constructor
         else parents.foldLeft(s"$constructor extends ")((b, p) => s"$b${convert(p)}, ").dropRight(2)
-      if (typeVars.isEmpty) s"${indent}declare $typeName$inheritance $body"
+      if (typeVars.isEmpty) s"${indent}${exp}declare $typeName$inheritance $body"
       else
-        s"${indent}declare $typeName<${typeVars.map((tv) => tv.name).reduceLeft((p, s) => s"$p, $s")}>$inheritance $body" // TODO: add constraints
+        s"${indent}${exp}declare $typeName<${typeVars.map((tv) => tv.name).reduceLeft((p, s) => s"$p, $s")}>$inheritance $body" // TODO: add constraints
     }
   }
 }

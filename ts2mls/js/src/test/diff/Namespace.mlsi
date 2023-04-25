@@ -3,29 +3,29 @@
 :NoJS
 :AllowTypeErrors
 declare module N1 {
-  fun f(x: anything): number
+  export fun f(x: anything): number
   fun ff(y: anything): number
-  declare class C() {
+  export declare class C() {
     fun f(): unit
   }
   declare trait I() {
     fun f(): number
   }
-  declare module N2 {
-    fun fff(x: (false) | (true)): number
+  export declare module N2 {
+    export fun fff(x: (false) | (true)): number
     fun gg(c: N1.C): N1.C
     declare class BBB() extends N1.C {}
   }
 }
 declare module AA {
-  fun f(x: anything): string
-  declare class C() {
+  export fun f(x: anything): string
+  export declare class C() {
     fun f(): unit
   }
-  declare trait I() {
+  export declare trait I() {
     fun f(): number
   }
-  declare module N2 {
+  export declare module N2 {
   }
 }
 fun f1(x: N1.C): N1.C
@@ -47,8 +47,8 @@ fun f2(x: AA.C): AA.C
 //│ ║  l.17: 	    declare class BBB() extends N1.C {}
 //│ ╙──      	                                ^^^^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.25: 	  declare trait I() {
-//│ ║        	          ^^^^^^^^^^^
+//│ ║  l.25: 	  export declare trait I() {
+//│ ║        	                 ^^^^^^^^^^^
 //│ ║  l.26: 	    fun f(): number
 //│ ║        	^^^^^^^^^^^^^^^^^^^
 //│ ║  l.27: 	  }

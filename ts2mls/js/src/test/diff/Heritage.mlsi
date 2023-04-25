@@ -36,10 +36,10 @@ declare class OR<R>() extends O<R> {
   fun xx(x: R): R
 }
 declare module Five {
-  declare class ROTK() {
+  export declare class ROTK() {
     let wu: string
   }
-  declare class Y() extends Five.ROTK {}
+  export declare class Y() extends Five.ROTK {}
 }
 declare class Y() extends Five.ROTK {}
 //│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
@@ -86,8 +86,8 @@ declare class Y() extends Five.ROTK {}
 //│ ║  l.35: 	declare class OR<R>() extends O<R> {
 //│ ╙──      	                              ^^^^
 //│ ╔══[ERROR] Unsupported parent specification
-//│ ║  l.42: 	  declare class Y() extends Five.ROTK {}
-//│ ╙──      	                            ^^^^^^^^^
+//│ ║  l.42: 	  export declare class Y() extends Five.ROTK {}
+//│ ╙──      	                                   ^^^^^^^^^
 //│ ╔══[ERROR] Unsupported parent specification
 //│ ║  l.44: 	declare class Y() extends Five.ROTK {}
 //│ ╙──      	                          ^^^^^^^^^

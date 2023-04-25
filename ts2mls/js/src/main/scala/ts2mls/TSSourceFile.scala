@@ -12,10 +12,10 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
     val nodeObject = TSNodeObject(node)
     if (!nodeObject.isToken) {
       if (!nodeObject.symbol.isUndefined) // for functions/classes/interfaces
-        addNodeIntoNamespace(nodeObject, nodeObject.symbol.escapedName)(global)
+        addNodeIntoNamespace(nodeObject, nodeObject.symbol.escapedName, nodeObject.isExported)(global)
       else if (!nodeObject.declarationList.isUndefined) { // for variables
         val decNode = nodeObject.declarationList.declaration
-        addNodeIntoNamespace(decNode, decNode.symbol.escapedName)(global)
+        addNodeIntoNamespace(decNode, decNode.symbol.escapedName, decNode.isExported)(global)
       }
     }
   })
@@ -173,15 +173,16 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
         getTypeParameters(node), getHeritageList(node), getConstructorList(node.members))
     else TSInterfaceType(name, getInterfacePropertiesType(node.members), getTypeParameters(node), getHeritageList(node))
 
-  private def parseNamespaceLocals(map: TSSymbolMap)(implicit ns: TSNamespace) =
+  private def parseNamespaceLocals(map: TSSymbolMap, exports: TSSymbolMap)(implicit ns: TSNamespace) =
     map.foreach((sym) => {
       val node = sym.declaration
-      if (!node.isToken)
-        addNodeIntoNamespace(node, sym.escapedName, if (node.isFunctionLike) Some(sym.declarations) else None)
+      val name = sym.escapedName
+      if (!node.isToken) // TODO: export variables?
+        addNodeIntoNamespace(node, name, false /*exports.contains(name)*/, if (node.isFunctionLike) Some(sym.declarations) else None)
     })
 
   private def addFunctionIntoNamespace(fun: TSFunctionType, node: TSNodeObject, name: String)(implicit ns: TSNamespace) =
-    if (!ns.containsMember(name, false)) ns.put(name, fun)
+    if (!ns.containsMember(name, false)) ns.put(name, fun, node.isExported)
     else {
       val old = ns.get(name)
       val res = old match {
@@ -197,12 +198,12 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
         case _ => old
       }
       
-      ns.put(name, res)
+      ns.put(name, res, node.isExported)
     } 
 
   // overload functions in a sub-namespace need to provide an overload array
   // because the namespace merely exports symbols rather than node objects themselves
-  private def addNodeIntoNamespace(node: TSNodeObject, name: String, overload: Option[TSNodeArray] = None)(implicit ns: TSNamespace) =
+  private def addNodeIntoNamespace(node: TSNodeObject, name: String, exported: Boolean, overload: Option[TSNodeArray] = None)(implicit ns: TSNamespace) =
     if (node.isFunctionLike) overload match {
       case None =>
         addFunctionIntoNamespace(getFunctionType(node), node, name)
@@ -213,20 +214,19 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
       }
     }
     else if (node.isClassDeclaration)
-      ns.put(name, parseMembers(name, node, true))
+      ns.put(name, parseMembers(name, node, true), exported)
     else if (node.isInterfaceDeclaration)
-      ns.put(name, parseMembers(name, node, false))
+      ns.put(name, parseMembers(name, node, false), exported)
     else if (node.isTypeAliasDeclaration)
-      ns.put(name, TSTypeAlias(name, getTypeAlias(node.`type`), getTypeParameters(node)))
+      ns.put(name, TSTypeAlias(name, getTypeAlias(node.`type`), getTypeParameters(node)), exported)
     else if (node.isObjectLiteral)
-      ns.put(name, TSInterfaceType("", getObjectLiteralMembers(node.initializer.properties), List(), List()))
-    else if (node.isVariableDeclaration)
-      ns.put(name, getMemberType(node))
+      ns.put(name, TSInterfaceType("", getObjectLiteralMembers(node.initializer.properties), List(), List()), exported)
+    else if (node.isVariableDeclaration) ns.put(name, getMemberType(node), exported)
     else if (node.isNamespace)
       parseNamespace(node)
 
   private def parseNamespace(node: TSNodeObject)(implicit ns: TSNamespace): Unit =
-    parseNamespaceLocals(node.locals)(ns.derive(node.symbol.escapedName))
+    parseNamespaceLocals(node.locals, node.exports)(ns.derive(node.symbol.escapedName, node.isExported))
 }
 
 object TSSourceFile {

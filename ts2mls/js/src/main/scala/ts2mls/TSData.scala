@@ -68,6 +68,8 @@ class TSSymbolMap(map: js.Dynamic)(implicit checker: TSTypeChecker) extends TSAn
   def foreach(f: TSSymbolObject => Unit): Unit =
     if (!isUndefined)
       map.forEach({(s: js.Dynamic) => f(TSSymbolObject(s))})
+
+  def contains(name: String): Boolean = map.has(name)
 }
 
 object TSSymbolMap {

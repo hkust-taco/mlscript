@@ -9,7 +9,7 @@ let bar: false
 declare class FooBar() {}
 let fb: FooBar
 declare module ABC {
-  declare class DEF() {}
+  export declare class DEF() {}
 }
 let d: ABC.DEF
 declare module DD {
