@@ -162,6 +162,13 @@ class Scope(name: Str, enclosing: Opt[Scope], quasiquote: Bool = false) {
   def resolveValue(name: Str): Opt[RuntimeSymbol] =
     lexicalValueSymbols.get(name).orElse(enclosing.flatMap(_.resolveValue(name)))
 
+  def resolveValueQQ(name: Str): Opt[RuntimeSymbol] = {
+    if (quasiquote)
+      lexicalValueSymbols.get(name)
+    else 
+      lexicalValueSymbols.get(name).orElse(enclosing.flatMap(_.resolveValueQQ(name)))
+  }
+
   /**
     * Find the base class for a specific class.
     */

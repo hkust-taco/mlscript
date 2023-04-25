@@ -7,7 +7,6 @@ import scala.collection.mutable.ListBuffer
 import scala.collection.mutable.HashMap 
 import mlscript.{JSField, JSLit}
 import scala.collection.mutable.{Set => MutSet}
-import scala.Symbol
 
 class JSBackend(allowUnresolvedSymbols: Boolean) {
   /**
@@ -131,7 +130,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         case Var(nme) => translateVar(nme, true)
         case _ => translateTerm(trm)
       }
-      callee(args map { case (_, Fld(_, _, arg)) => translateTerm(arg)(scope) }: _*)
+      callee(args map { case (_, Fld(_, _, arg)) => translateTerm(arg) }: _*)
     case _ => throw CodeGenError(s"ill-formed application ${inspect(term)}")
   }
 
@@ -145,7 +144,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       val lamScope = scope.derive("Lam")
       val patterns = translateParams(params)(lamScope)
       JSArrowFn(patterns, lamScope.tempVars `with` translateTerm(body)(lamScope))
-    case t: App => translateApp(t)(scope)
+    case t: App => translateApp(t)
     case Rcd(fields) =>
       JSRecord(fields map { case (key, Fld(_, _, value)) =>
         key.name -> translateTerm(value)
@@ -502,26 +501,41 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
             polyfill.use(sym.feature, sym.runtimeName)
           val ident = JSIdent(sym.runtimeName)
           if (sym.feature === "error") ident() else JSArray(Ls(JSExpr("_"), ident)) 
-        case S(sym: ValueSymbol) => 
-          JSArray(Ls(
-            JSExpr("Var"),
-            JSIdent(sym.runtimeName)
-          )) 
-        case _ => // to handle ValueSymbol
-          if (!tracker.isDefinedVar(name)) 
-            tracker.addFreeVar(name)
-          JSArray(Ls(
-            JSExpr("Var"),
-            JSIdent(name)
-          ))   
+        case _ =>
+          scope.resolveValueQQ(name) match {
+            case S(sym: ValueSymbol) => // variable defined in quasiquote scope
+              JSArray(Ls(
+                JSExpr("Var"),
+                JSIdent(sym.runtimeName)
+              )) 
+            // TODO: check if substitution can be done here (ident -> [FreeVar, name])
+            case _ => // free variable for quasiquote
+              if (!tracker.isDefinedVar(name)) 
+                tracker.addFreeVar(name)
+              JSArray(Ls(
+                JSExpr("Var"),
+                JSIdent(name)
+              ))   
+          }
       }
-    case Lam(params, body) =>
+    case lambda @ Lam(params, body) =>
       val lamScope = scope.derive("Lam")
-      val patterns = translateParams(params)(lamScope)
-      val lambdaTerm = JSArrowFn(patterns, lamScope.tempVars `with` translateTerm(body)(lamScope))
+      val patterns = params match {
+        case Tup(elements) => elements map {case _ -> Fld(_, _, p) => translatePatternQQ(p)(lamScope)}
+        case _             => throw CodeGenError(s"term $params is not a valid parameter list")
+      }
+      val paramsList = lamScope.getAllRuntimeSymbols();
+      val bodySExpr = paramsList.foldLeft(translateQuoted(body)(lamScope))(
+        (sExpr, name) => {
+          val fParams = Ls(JSNamePattern(name))
+          val fBody = L(sExpr)
+          val fArgs = Ls(JSArray(Ls(JSExpr("FreeVar"), JSExpr(name))))
+          JSImmEvalFn(N, fParams, fBody, fArgs)
+        })
       JSArray(Ls(
-        JSExpr("_"),
-        lambdaTerm
+        JSExpr("Lam"),
+        JSArray(patterns),
+        bodySExpr
       ))
     // expand translateApp - except for case App(App(App(Var("if"), tst), con), alt) because could not generate example
     case App(App(Var(op), Tup((N -> Fld(_, _, lhs)) :: Nil)), Tup((N -> Fld(_, _, rhs)) :: Nil))
@@ -605,10 +619,9 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     case New(S(TypeName(className) -> Tup(args)), TypingUnit(Nil)) => throw CodeGenError("New #2") 
     case Quoted(body) => 
       val qqScope = scope.derive("Quoted", true)
-      val qqTracker = new FreeVarTracker
       JSArray(Ls(
         JSExpr("Quoted"),
-        translateQuotedTerm(body)(qqScope, qqTracker)
+        translateQuoted(body)(qqScope)
       ))
     case Unquoted(body) =>
       scope.getQuasiquoteOuterScope() match {
@@ -636,6 +649,22 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     case _ => throw CodeGenError(s"missing implementation: ${inspect(body)}")
   }
 
+  private def translatePatternQQ(t: Term)(implicit scope: Scope): JSExpr = t match {
+    case Var(name) => 
+      val runtimeName = scope.declareParameter(name)
+      JSArray(Ls(JSExpr("_"), JSExpr(name), JSExpr(runtimeName)))
+    case Rcd(fields) => 
+      JSRecord(fields map {
+        case (Var(nme), Fld(_, _, Var(als))) => 
+          val runtimeName = scope.declareParameter(als)
+          nme -> JSExpr(runtimeName)          
+        case (Var(nme), Fld(_, _, subTrm)) =>
+          nme -> translatePatternQQ(subTrm)
+      })
+    case Bra(_, trm) => translatePatternQQ(trm)
+    case Tup(fields) => JSArray(fields map { case (_, Fld(_, _, t)) => translatePatternQQ(t) })
+    case _ => throw CodeGenError(s"term ${inspect(t)} is not a valid pattern")
+  }
   
   /**
     * Declare symbols for types, traits and classes.

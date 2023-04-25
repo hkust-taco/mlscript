@@ -1,27 +1,85 @@
 :NewParser 
 
-// BUG
-code"let x = code"2"; y => code"${x}""
-//│ res: Code[anything -> Code[2, anything], anything]
+code"let x = code"2"; code"y => ${x} + 5""
+//│ res: Code[Code[anything -> int, anything\y], anything]
 //│    = [
 //│        'Let',
 //│        'x',
 //│        Symbol(x),
 //│        [ 'Quoted', [ '_', 2 ] ],
-//│        [ '_', [Function (anonymous)] ]
+//│        [ 'Quoted', [ 'Lam', [Array], [Array] ] ]
+//│      ]
+
+run(run(res))(0)
+//│ res: int
+//│    = 7
+
+code"let x = code"2"; code"${x}""
+//│ res: Code[Code[2, anything], anything]
+//│    = [
+//│        'Let',
+//│        'x',
+//│        Symbol(x),
+//│        [ 'Quoted', [ '_', 2 ] ],
+//│        [ 'Quoted', [ 'Unquoted', Symbol(x) ] ]
+//│      ]
+run(res)
+//│ res: Code[2, anything]
+//│    = [ 'Unquoted', [ '_', 2 ] ]
+run(res)
+//│ res: 2
+//│    = 2
+
+code"let x = code"2"; let y = code"3"; x"
+//│ res: Code[Code[2, anything], anything]
+//│    = [
+//│        'Let',
+//│        'x',
+//│        Symbol(x),
+//│        [ 'Quoted', [ '_', 2 ] ],
+//│        [
+//│          'Let',
+//│          'y',
+//│          Symbol(y),
+//│          [ 'Quoted', [Array] ],
+//│          [ 'Var', Symbol(x) ]
+//│        ]
+//│      ]
+run(res)
+//│ res: Code[2, anything]
+//│    = [ '_', 2 ]
+
+code"let y = code"2"; x => y"
+//│ res: Code[anything -> Code[2, anything], anything]
+//│    = [
+//│        'Let',
+//│        'y',
+//│        Symbol(y),
+//│        [ 'Quoted', [ '_', 2 ] ],
+//│        [ 'Lam', [ [Array] ], [ 'Var', Symbol(y) ] ]
 //│      ]
 
 run(res)(0)
 //│ res: Code[2, anything]
-//│    = [ 'Unquoted', Symbol(x) ]
+//│    = 2
 
+code"x => x"
+//│ res: Code['a -> 'a, anything]
+//│    = [ 'Lam', [ [ '_', 'x', 'x' ] ], [ 'Var', [ 'FreeVar', 'x' ] ] ]
+run(res)(0)
+//│ res: 0
+//│    = 0
 
 let y = code"1"
 code"""x => x + ${y}"""
 //│ y: Code[1, anything]
 //│  = [ '_', 1 ]
 //│ res: Code[int -> int, anything\x]
-//│    = [ '_', [Function (anonymous)] ]
+//│    = [
+//│        'Lam',
+//│        [ [ '_', 'x', 'x' ] ],
+//│        [ 'App', '+', [ 'Var', [Array] ], [ 'Unquoted', [Array] ] ]
+//│      ]
 
 run(res)(0)
 //│ res: int
@@ -32,7 +90,11 @@ code"""x => x + ${x}"""
 //│ x: Code[1, anything]
 //│  = [ '_', 1 ]
 //│ res: Code[int -> int, anything\x]
-//│    = [ '_', [Function (anonymous)] ]
+//│    = [
+//│        'Lam',
+//│        [ [ '_', 'x', 'x1' ] ],
+//│        [ 'App', '+', [ 'Var', [Array] ], [ 'Unquoted', [Array] ] ]
+//│      ]
 
 run(res)(0)
 //│ res: int
@@ -44,12 +106,11 @@ let x = code"2"
 
 code"""x => (let x = 1; x + ${x})"""
 //│ res: Code[anything -> (int,), anything\x]
-//│    = [ '_', [Function (anonymous)] ]
+//│    = [ 'Lam', [ [ '_', 'x', 'x2' ] ], [ 'Bra', [ 'Tup', [Array] ] ] ]
 
 run(res)("happy")
 //│ res: (int,)
 //│    = [ 3 ]
-
 
 code"let x = code"1"; code"let x = code"2"; ${x}""
 //│ res: Code[Code[1, anything\x], anything]
@@ -60,7 +121,6 @@ code"let x = code"1"; code"let x = code"2"; ${x}""
 //│        [ 'Quoted', [ '_', 1 ] ],
 //│        [ 'Quoted', [ 'Let', 'x', Symbol(x), [Array], [Array] ] ]
 //│      ]
-
 run(res)
 //│ res: Code[1, anything\x]
 //│    = [
@@ -70,13 +130,15 @@ run(res)
 //│        [ 'Quoted', [ '_', 2 ] ],
 //│        [ 'Unquoted', [ '_', 1 ] ]
 //│      ]
-
 run(res)
 //│ res: 1
 //│    = 1
 
+let x = code"1"
 code"let x1 = code"100"; let x2 = code"200"; code"let y = 100; ${x}""
-//│ res: Code[Code[2, anything\y], anything]
+//│ x: Code[1, anything]
+//│  = [ '_', 1 ]
+//│ res: Code[Code[1, anything\y], anything]
 //│    = [
 //│        'Let',
 //│        'x1',
@@ -90,24 +152,37 @@ code"let x1 = code"100"; let x2 = code"200"; code"let y = 100; ${x}""
 //│          [ 'Quoted', [Array] ]
 //│        ]
 //│      ]
-
 run(res)
-//│ res: Code[2, anything\y]
-//│    = [ 'Let', 'y', Symbol(y), [ '_', 100 ], [ 'Unquoted', [ '_', 2 ] ] ]
-
-run(res)
-//│ res: 2
-//│    = 2
-
-// equivalent to code"x => x"
-code"""x => code"${x}""""
-//│ res: Code[Code['a, 'b] -> Code['a, 'b], anything]
-//│    = [ '_', [Function (anonymous)] ]
-
-run(res)(code"1")
-//│ res: Code[1, anything]
-//│    = [ 'Unquoted', [ '_', 1 ] ]
-
+//│ res: Code[1, anything\y]
+//│    = [ 'Let', 'y', Symbol(y), [ '_', 100 ], [ 'Unquoted', [ '_', 1 ] ] ]
 run(res)
 //│ res: 1
 //│    = 1
+
+
+code"x => ${code"x + 1"}"
+//│ res: Code[anything -> int, {x: int}\x]
+//│    = [
+//│        'Lam',
+//│        [ [ '_', 'x', 'x3' ] ],
+//│        [ 'Unquoted', [ 'App', '+', [Array], [Array] ] ]
+//│      ]
+:e
+run(res)(1)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.171: 	run(res)(1)
+//│ ║         	^^^^^^^^
+//│ ╙── expression of type `anything` does not have field 'x'
+//│ res: error | int
+//│    = 2
+
+code"x => code"${x}""
+//│ res: Code[Code['a, 'b] -> Code['a, 'b], anything]
+//│    = [
+//│        'Lam',
+//│        [ [ '_', 'x', 'x3' ] ],
+//│        [ 'Quoted', [ 'Unquoted', [Array] ] ]
+//│      ]
+run(res)(code"1")
+//│ res: Code[1, anything]
+//│    = [ 'Unquoted', [ '_', 1 ] ]

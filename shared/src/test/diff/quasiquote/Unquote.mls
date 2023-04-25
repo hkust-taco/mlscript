@@ -189,7 +189,7 @@ y => code"[${code"y"}, ${code"y"}]"
 
 code"y => ${c}"
 //│ res: Code[anything -> ('a, 'a,), {y: 'a}\y]
-//│    = [ '_', [Function (anonymous)] ]
+//│    = [ 'Lam', [ [ '_', 'y', 'y' ] ], [ 'Unquoted', [ 'Bra', [Array] ] ] ]
 
 
 fun f(x, y) = [code"[${x}, ${y}]", x, y]
@@ -211,7 +211,7 @@ let built_in_binding_test = code"let f = x => x + 1; f(if true then 1 else 2)"
 //│                          'Let',
 //│                          'f',
 //│                          Symbol(f),
-//│                          [ '_', [Function (anonymous)] ],
+//│                          [ 'Lam', [ [Array] ], [ 'App', '+', [Array], [Array] ] ],
 //│                          [ 'App_Fun', [ 'Var', Symbol(f) ], [ 'Tup', [Array] ] ]
 //│                        ]
 
@@ -244,8 +244,9 @@ code"let x = 1; let z = 1; code"x + y""
 //│        'x',
 //│        Symbol(x),
 //│        [ '_', 1 ],
-//│        [ 'Let', 'z', Symbol(z), [ '_', 1 ], [ '_', [Array] ] ]
+//│        [ 'Let', 'z', Symbol(z), [ '_', 1 ], [ 'Quoted', [Array] ] ]
 //│      ]
+
 code"let z = 0;${code"z"}"
 //│ res: Code['a, {z: 'a}\z]
 //│    = [
@@ -287,4 +288,4 @@ code"y => (let y = 1; y + ${y})"
 //│ y: Code[2, anything]
 //│  = [ '_', 2 ]
 //│ res: Code[anything -> (int,), anything\y]
-//│    = [ '_', [Function (anonymous)] ]
+//│    = [ 'Lam', [ [ '_', 'y', 'y1' ] ], [ 'Bra', [ 'Tup', [Array] ] ] ]
