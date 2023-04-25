@@ -1,18 +1,10 @@
 :NewDefs
+:NoJS
 
-
-// TODO
-class Exp[type A]
-//│ ╔══[PARSE ERROR] Unexpected 'type' keyword here
-//│ ║  l.5: 	class Exp[type A]
-//│ ╙──     	          ^^^^
-//│ class Exp()
-
-// TODO
-class Lit(n: int) extends Exp[int]
-//│ ╔══[ERROR] class type arguments not yet supported
-//│ ║  l.12: 	class Lit(n: int) extends Exp[int]
-//│ ╙──      	                          ^^^
-//│ class Lit(n: int)
-
-
+// FIXME
+trait Expr[A]: LitInt | LitBool | Add | Cond
+class LitInt(n: int) extends Expr[int]
+class LitBool(b: bool) extends Expr[bool]
+class Add(x: Expr[int], y: Expr[int]) extends Expr[int]
+class Cond[T](p: Expr[bool], t: Expr[T], e: Expr[T]) extends Expr[T]
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: ‘T36' was not a type variable

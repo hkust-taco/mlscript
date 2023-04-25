@@ -743,14 +743,47 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     def inherit(parents: Ls[ParentSpec], superType: ST, tags: ST, members: Ls[NuMember])
                           : (ST, ST, Ls[NuMember]) =
                         parents match {
-                          case (p, v @ Var(trtName), targs, args) :: ps =>
-                            if (targs.nonEmpty) err(msg"trait type arguments not yet supported", p.toLoc)
+                          case (p, v @ Var(trtName), parTargs, args) :: ps =>
+                            // if (parTargs.nonEmpty) err(msg"trait type arguments not yet supported", p.toLoc)
                             if (args.nonEmpty) err(msg"trait arguments not yet supported", p.toLoc)
                             ctx.get(trtName) match {
-                              case S(lti: LazyTypeInfo) => lti.complete().freshen match {
-                                case trt: TypedNuTrt =>
-                                  inherit(ps, superType & trt.thisTy, tags & trt.selfTy, memberUn(members, trt.members.values.toList))
-                                case _ => 
+                              case S(lti: LazyTypeInfo) => 
+                                val info = lti.complete().freshen 
+                                info match {
+                                  case rawTrt: TypedNuTrt =>
+
+                                    implicit val freshened: MutMap[TV, ST] = MutMap.empty
+                                    implicit val shadows: Shadows = Shadows.empty
+
+                                    if (rawTrt.tparams.sizeCompare(parTargs.size) =/= 0)
+                                      err(msg"trait $trtName expects ${
+                                        rawTrt.tparams.size.toString} type parameter(s); got ${parTargs.size.toString}", Loc(v :: parTargs))
+                                      
+                                    rawTrt.tparams.lazyZip(parTargs).foreach { case ((tn, _tv, vi), targTy) =>
+
+                                      val targ = typeType(targTy)
+
+                                      freshened += _tv -> (targ match {
+                                        case tv: TypeVarOrRigidVar => tv
+                                        case _ =>
+                                          println(s"Assigning ${_tv} := $targ where ${targ.showBounds}")
+                                          val tv =
+                                            freshVar(_tv.prov, N, _tv.nameHint)(targ.level) // TODO safe not to set original?!
+                                            // freshVar(_tv.prov, S(_tv), _tv.nameHint)(targ.level)
+                                          println(s"Set ${tv} ~> ${_tv}")
+                                          assert(tv.assignedTo.isEmpty)
+                                          tv.assignedTo = S(targ)
+                                          // println(s"Assigned ${tv.assignedTo}")
+                                          tv
+                                      })
+
+                                    }
+
+                                    val trt = rawTrt.freshenAbove(info.level, rigidify = false)
+                                      .asInstanceOf[TypedNuTrt] // FIXME
+
+                                    inherit(ps, superType & trt.thisTy, tags & trt.selfTy, memberUn(members, trt.members.values.toList))
+                                  case _ => 
                                   err(msg"trait can only inherit traits", p.toLoc)
                                   (superType, tags, members)
                               }
@@ -955,7 +988,6 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                                     members.find(x => x.name == m.name) match {
                                       case S(mem: TypedNuTermDef) =>
                                         val memSign = mem.typeSignature
-                                        // TODO fix here
                                         val parSign = m.asInstanceOf[TypedNuTermDef].typeSignature
                                         println(s"checking overriding: $memSign <: $parSign")
                                         implicit val prov: TP = memSign.prov
@@ -990,7 +1022,6 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                               info match {
                                 case rawTrt: TypedNuTrt =>
                                   if (parArgs.nonEmpty) err(msg"trait parameters not yet supported", p.toLoc)
-                                  
                                   
                                   implicit val freshened: MutMap[TV, ST] = MutMap.empty
                                   implicit val shadows: Shadows = Shadows.empty

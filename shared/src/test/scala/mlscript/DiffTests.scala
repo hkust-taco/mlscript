@@ -502,10 +502,16 @@ class DiffTests
                 val indStr = "  " * ind
                 // ttu.entities.map(_.complete()(raise)).foreach {
                 ttu.entities.foreach {
+                  case p: typer.NuTypeParam =>
+                    output(s"${indStr}${p.name}: ${p.ty}")
                   case p: typer.NuParam =>
                     output(s"${indStr}${p.name}: ${p.ty}")
                   case tc: typer.TypedNuAls =>
                     output(s"${indStr}type ${tc.name} = ${tc.body}")
+                  case tt: typer.TypedNuTrt =>
+                    output(s"${indStr}trait ${tt.name}")
+                    output(s"${indStr}  this: ${tt.thisTy} ${tt.thisTy.showBounds
+                      .indentNewLines(indStr+"  |")}")
                   case tc: typer.TypedNuCls =>
                     output(s"${indStr}class ${tc.name}")
                     output(s"${indStr}  this: ${tc.thisTy} ${tc.thisTy.showBounds

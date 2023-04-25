@@ -357,9 +357,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           case CompletedTypeInfo(mem: TypedNuTypeDef) => S(mem.td.kind, mem.tparams.size)
           case ti: DelayedTypeInfo =>
             ti.decl match {
-              case NuTypeDef(k @ (Cls | Nms | Als), _, tps, _, _, _, _, _, _) =>
+              case NuTypeDef(k @ (Cls | Nms | Als | Trt), _, tps, _, _, _, _, _, _) =>
                 S(k, tps.size)
-              case NuTypeDef(k @ (Mxn | Trt), nme, tps, _, _, _, _, _, _) =>
+              case NuTypeDef(k @ (Mxn /* | Trt */), nme, tps, _, _, _, _, _, _) =>
                 err(msg"${k.str} ${nme.name} cannot be used as a type", loc)
                 S(k, tps.size)
               case fd: NuFunDef =>
