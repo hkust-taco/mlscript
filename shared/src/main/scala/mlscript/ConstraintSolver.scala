@@ -74,10 +74,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             N
         }
         
-      } else info.complete() match {
-        
-        case cls: TypedNuCls =>
-          cls.virtualMembers.get(fld.name) match {
+      } else {
+
+        def handle(virtualMembers: Map[Str, NuMember]): Opt[FieldType] =
+          virtualMembers.get(fld.name) match {
             case S(d: TypedNuFun) =>
               S(d.typeSignature.toUpper(provTODO))
             case S(p: NuParam) =>
@@ -89,22 +89,13 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             case N => N
           }
 
-        // TODO factor code with above!!
-        case trt: TypedNuTrt =>
-          trt.virtualMembers.get(fld.name) match {
-            case S(d: TypedNuFun) =>
-              S(d.typeSignature.toUpper(provTODO))
-            case S(p: NuParam) =>
-              S(p.ty)
-            case S(p: NuTypeParam) =>
-              S(p.ty)
-            case S(m) =>
-              S(err(msg"access to ${m.kind.str} member not yet supported", fld.toLoc).toUpper(noProv))
-            case N => N
-          }
-          
+        info.complete() match {
+        
+        case cls: TypedNuCls => handle(cls.virtualMembers)
+        case trt: TypedNuTrt => handle(trt.virtualMembers)
         case _ => ??? // TODO
       }
+    }
       
       println(s"Lookup ${info.decl.name}.${fld.name} : $raw where ${raw.fold("")(_.ub.showBounds)}")
       

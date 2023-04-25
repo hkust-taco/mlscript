@@ -821,3 +821,16 @@ class Ctb extends Tb {
 //│   let g: int
 //│   let p: false
 //│ }
+
+class G1[A](x: A)
+//│ class G1[A](x: A)
+
+// TODO
+class GI(x: int) extends G1[int]
+//│ ╔══[ERROR] class type arguments not yet supported
+//│ ║  l.829: 	class GI(x: int) extends G1[int]
+//│ ╙──       	                         ^^
+//│ ╔══[ERROR] class G1 expects 1 parameter(s); got 0
+//│ ║  l.829: 	class GI(x: int) extends G1[int]
+//│ ╙──       	                         ^^
+//│ class GI(x: int)
