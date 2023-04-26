@@ -29,7 +29,11 @@ code"x => x + 2"
 // in JS (bad): ["lambda", ["x"], ["+", ["ref", "x"]], 2]]
 // in JS (hygienic): const x_sym = Symbol("x"); ["lambda", [x_sym], ["+", x_sym], 2]]
 //│ res: Code[int -> int, anything]
-//│    = [ '_', [Function (anonymous)] ]
+//│    = [
+//│        'Lam',
+//│        [ [ '_', 'x', 'x' ] ],
+//│        [ 'App', '+', [ 'Var', [Array] ], [ '_', 2 ] ]
+//│      ]
 
 fun foo(x) =
   code"10 + x"
@@ -39,10 +43,10 @@ fun foo(x) =
 :e
 code"foo(123) + 1"
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.40: 	code"foo(123) + 1"
+//│ ║  l.44: 	code"foo(123) + 1"
 //│ ║        	     ^^^^^^^^^^
 //│ ╟── application of type `code & {Code#C :> {x: ?a}, Code#T <: ?b}` is not an instance of type `int`
-//│ ║  l.40: 	code"foo(123) + 1"
+//│ ║  l.44: 	code"foo(123) + 1"
 //│ ╙──      	     ^^^^^^^^
 //│ res: Code[error | int, anything]
 //│    = [
@@ -56,7 +60,7 @@ code"foo(123) + 1"
 :ge
 code"10 + ${qq_int}"
 //│ ╔══[ERROR] identifier not found: qq_int
-//│ ║  l.57: 	code"10 + ${qq_int}"
+//│ ║  l.61: 	code"10 + ${qq_int}"
 //│ ╙──      	            ^^^^^^
 //│ res: Code[int, anything]
 //│ Code generation encountered an error:
@@ -69,15 +73,19 @@ code"10 + ${qq_int}"
 // The inner code should have type Code<int, "x" | "y">
 code"x => y => 15 + ${   code"x + y"   }"
 //│ res: Code[anything -> anything -> int, {x: int, y: int}\x\y]
-//│    = [ '_', [Function (anonymous)] ]
+//│    = [
+//│        'Lam',
+//│        [ [ '_', 'x', 'x' ] ],
+//│        [ 'Lam', [ [Array] ], [ 'App', '+', [Array], [Array] ] ]
+//│      ]
 
 // FIXME
 qq_int : Code<int>
 //│ ╔══[ERROR] identifier not found: qq_int
-//│ ║  l.75: 	qq_int : Code<int>
+//│ ║  l.83: 	qq_int : Code<int>
 //│ ╙──      	^^^^^^
 //│ ╔══[ERROR] Wrong number of type arguments – expected 2, found 1
-//│ ║  l.75: 	qq_int : Code<int>
+//│ ║  l.83: 	qq_int : Code<int>
 //│ ╙──      	         ^^^^^^^^
 //│ res: Code[int, anything]
 //│ Code generation encountered an error:

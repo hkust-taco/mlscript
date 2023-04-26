@@ -26,7 +26,7 @@ run(res)
 //│        'Let',
 //│        'foo',
 //│        Symbol(foo),
-//│        [ '_', [Function (anonymous)] ],
+//│        [ 'Lam', [ [Array], [Array] ], [ 'App', '*', [Array], [Array] ] ],
 //│        [ 'App_Fun', [ 'Var', Symbol(foo) ], [ 'Tup', [Array] ] ]
 //│      ]
 //│ res: int

@@ -2,18 +2,18 @@
 
 
 :e
+:ge
 code"x => y => 100 + ${Const(x + y)}"
 //│ ╔══[ERROR] identifier not found: x
-//│ ║  l.5: 	code"x => y => 100 + ${Const(x + y)}"
+//│ ║  l.6: 	code"x => y => 100 + ${Const(x + y)}"
 //│ ╙──     	                             ^
 //│ ╔══[ERROR] identifier not found: y
-//│ ║  l.5: 	code"x => y => 100 + ${Const(x + y)}"
+//│ ║  l.6: 	code"x => y => 100 + ${Const(x + y)}"
 //│ ╙──     	                                 ^
 //│ res: Code[anything -> anything -> int, anything\x\y]
-//│    = [ '_', [Function (anonymous)] ]
-run(res)(1)(10)
-//│ res: int
-//│    = 111
+//│ Code generation encountered an error:
+//│   unresolved symbol x
+
 
 :e
 code"x => y => 100 + code"${Const(x + y)}""
@@ -22,11 +22,17 @@ code"x => y => 100 + code"${Const(x + y)}""
 //│ ║        	               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── expression of type `code & {Code#C :> ?a, Code#T <: ?b}` is not an instance of type `int`
 //│ res: Code[int -> int -> (error | int), anything]
-//│    = [ '_', [Function (anonymous)] ]
+//│    = [
+//│        'Lam',
+//│        [ [ '_', 'x', 'x' ] ],
+//│        [ 'Lam', [ [Array] ], [ 'App', '+', [Array], [Array] ] ]
+//│      ]
 
 
 code"x => code"${x}""
 //│ res: Code[Code['a, 'b] -> Code['a, 'b], anything]
-//│    = [ '_', [Function (anonymous)] ]
+//│    = [ 'Lam', [ [ '_', 'x', 'x' ] ], [ 'Quoted', [ 'Unquoted', [Array] ] ] ]
 
-
+run(res)(code"1")
+//│ res: Code[1, anything]
+//│    = [ 'Unquoted', [ '_', 1 ] ]
