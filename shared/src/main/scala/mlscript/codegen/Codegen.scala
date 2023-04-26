@@ -871,20 +871,23 @@ final case class JSQuasiquoteRunFunctionBody() extends JSStmt {
             // if a binder for the variable cannot be found, return the string name first
             if (name_value.has(s_expr[1][1])) {
               return name_value.get(s_expr[1][1]);
-            }
-            else {
+            } else {
               return s_expr[1][1];
             }
+          } else if (typeof s_expr[1] === "symbol") 
+            return symbol_value.get(s_expr[1]);
+          else {
+            return _run(s_expr[1]);
           }
-          return symbol_value.get(s_expr[1]);
         case "App": // ['App', 'binary_operator', translateQuoted(lhs), translateQuoted(rhs)]
           return eval(_run(s_expr[2]) + s_expr[1] + _run(s_expr[3]));
         case "App_Fun": // ['App_Fun', translateQuoted(callee), translateQuoted(params)]
-          if (s_expr[1][1] instanceof Function) {
-						return s_expr[1][1](..._run(s_expr[2]));
-					}
           let callee = _run(s_expr[1]);
-          return callee(..._run(s_expr[2]));
+          if (typeof callee == "string") {
+            return globalThis[callee](..._run(s_expr[2]));
+          } else {
+            return callee(..._run(s_expr[2]));
+          }
         case "Let": // ['Let', 'name_str', Symbol(name), translateQuoted(value), translateQuoted(body)]
           name_value.set(s_expr[1], _run(s_expr[3]));
           symbol_value.set(s_expr[2], _run(s_expr[3]));
@@ -895,7 +898,7 @@ final case class JSQuasiquoteRunFunctionBody() extends JSStmt {
           return s_expr[1].map(elem => _run(elem));
         case "Subs": // ['Subs', translateQuoted(arr), translateQuoted(idx)]
           return _run(s_expr[1])[_run(s_expr[2])];
-        case "Unquoted": // ['Unquoted', translateTerm(body)]
+        case "Unquoted": // ['Unquoted', translateTerm(body)] 
           return run(s_expr[1], contextToList());
         case "If": // ['If', translateQuoted(condition), translateQuoted(branch1), translateQuoted(branch2)]
           if (_run(s_expr[1])) { return _run(s_expr[2]); } else { return _run(s_expr[3]); }
@@ -903,24 +906,64 @@ final case class JSQuasiquoteRunFunctionBody() extends JSStmt {
           return _run(s_expr[1]);
         case "Quoted":
           return processNestedQQ(s_expr[1]);
+        case "Lam": 
+          let body_sexpr = processNestedQQ(s_expr[2]);
+          return function (...input) {
+            function formContext(paramList, input, context) {
+              if (paramList.length === 3 && paramList[0] == "_") {
+                context.push([paramList[1], input]);
+                context.push([paramList[2], input]);
+                return context;
+              }
+              for (let i = 0; i < paramList.length; i++) {
+                if (typeof paramList[i] === "string") {
+                  context.push([paramList[i], input[i]]);
+                } else if (Array.isArray(paramList[i])) {
+                  let result = formContext(paramList[i], input[i], []);
+                  context = context.concat(result);
+                } else { // Object {y: 'y'}
+                  for (const [key, value] of Object.entries(paramList[i])) {
+										let result = formContext(value, input[i][key], []);
+										context = context.concat(result);
+                  }
+                }
+              }
+              return context;
+            }
+
+            function putinFreeVar(s_expr, closure) {
+              let closureMap = new Map(closure);
+              if (Array.isArray(s_expr)){
+                if (s_expr[0] === "Unquoted" && s_expr[1][0] === "FreeVar") {
+                  return ["Unquoted", closureMap.get(s_expr[1][1])];
+                }
+                return s_expr.map(x => putinFreeVar(x));
+              } else {
+                return s_expr
+              }
+            }
+            
+					let context = formContext(s_expr[1], input, [contextToList()]);
+					let result = run(body_sexpr, context);
+					return putinFreeVar(result, context);
+          }
+	      
         default:
           throw Error("Encountered s-expression that is not handled");
       }
     }
 
     function processNestedQQ(s_expr) {
-      // go through the nested qq
-      // only replace [Unquoted, Symbol()]
-      if (!Array.isArray(s_expr)) 
-        return s_expr;
-      if (s_expr[0] == 'Unquoted' && typeof s_expr[1] == "symbol") {
-        return ['Unquoted', symbol_value.get(s_expr[1])];
+      if (typeof s_expr === "symbol") {
+        if (symbol_value.has(s_expr))
+          return symbol_value.get(s_expr);
+        else 
+          return s_expr;
+      } else if (Array.isArray(s_expr)){
+        return s_expr.map(x => processNestedQQ(x));
+      } else {
+        return s_expr
       }
-      let processed_sexpr = [];
-      for (elem of s_expr) {
-        processed_sexpr.push(processNestedQQ(elem));
-      }
-      return processed_sexpr;
     }
 
     return _run(s_expr);

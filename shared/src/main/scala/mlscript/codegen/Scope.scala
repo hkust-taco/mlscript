@@ -10,7 +10,7 @@ import mlscript.Term
 import mlscript.utils.{AnyOps, lastWords}
 import mlscript.JSField
 
-class Scope(name: Str, enclosing: Opt[Scope], quasiquote: Bool = false) {
+class Scope(name: Str, enclosing: Opt[Scope], quasiquote: Bool = false, inquasiquote: Bool = false) {
   private val lexicalTypeSymbols = scala.collection.mutable.HashMap[Str, TypeSymbol]()
   private val lexicalValueSymbols = scala.collection.mutable.HashMap[Str, RuntimeSymbol]()
   private val runtimeSymbols = scala.collection.mutable.HashSet[Str]()
@@ -79,18 +79,29 @@ class Scope(name: Str, enclosing: Opt[Scope], quasiquote: Bool = false) {
     // Replace ticks
     val realPrefix = Scope.replaceTicks(prefix)
     // Try just prefix.
-    // Check for existence in current scope and all parents to avoid shadowing by inner scopes
-    // The shadowing is a problem when unquoting in quasiquotes
-    if (!existsRuntimeSymbolAllScope(realPrefix) && !Symbol.isKeyword(realPrefix)) {
-      return realPrefix
-    }
-    // Try prefix with an integer.
-    for (i <- 1 to Int.MaxValue) {
-      val name = s"$realPrefix$i"
-      if (!existsRuntimeSymbolAllScope(name)) {
-        return name
+    if (inquasiquote) {
+      if (!existsRuntimeSymbolAllScope(realPrefix) && !Symbol.isKeyword(realPrefix)) {
+        return realPrefix
+      }
+        // Try prefix with an integer.
+      for (i <- 1 to Int.MaxValue) {
+        val name = s"$realPrefix$i"
+        if (!existsRuntimeSymbolAllScope(name)) 
+          return name
+      }
+    } 
+    else {
+      if (!runtimeSymbols.contains(realPrefix) && !Symbol.isKeyword(realPrefix)) 
+        return realPrefix
+        // Try prefix with an integer.
+      for (i <- 1 to Int.MaxValue) {
+        val name = s"$realPrefix$i"
+        if (!runtimeSymbols.contains(name)) {
+          return name
+        }
       }
     }
+
     // Give up.
     throw CodeGenError(
       if (realPrefix.isEmpty())
@@ -161,6 +172,13 @@ class Scope(name: Str, enclosing: Opt[Scope], quasiquote: Bool = false) {
 
   def resolveValue(name: Str): Opt[RuntimeSymbol] =
     lexicalValueSymbols.get(name).orElse(enclosing.flatMap(_.resolveValue(name)))
+
+  def resolveValueQQ(name: Str): Opt[RuntimeSymbol] = {
+    if (quasiquote)
+      lexicalValueSymbols.get(name)
+    else 
+      lexicalValueSymbols.get(name).orElse(enclosing.flatMap(_.resolveValueQQ(name)))
+  }
 
   /**
     * Find the base class for a specific class.
@@ -332,7 +350,7 @@ class Scope(name: Str, enclosing: Opt[Scope], quasiquote: Bool = false) {
   /**
     * Shorthands for deriving normal scopes.
     */
-  def derive(name: Str, quasiquote: Bool = false): Scope = new Scope(name, S(this), quasiquote)
+  def derive(name: Str, quasiquote: Bool = false, inquasiquote: Bool = false): Scope = new Scope(name, S(this), quasiquote, inquasiquote)
 
   
   def refreshRes(): Unit = {
