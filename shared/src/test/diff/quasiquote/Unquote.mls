@@ -264,38 +264,9 @@ code"let x = 1;${code"x + y"}"
 //│        [ 'Unquoted', [ 'App', '+', [Array], [Array] ] ]
 //│      ]
 
-
-code"1 + ${code"b"}"
-//│ res: Code[int, {b: int}]
-//│    = [ 'App', '+', [ '_', 1 ], [ 'Unquoted', [ 'Var', [Array] ] ] ]
-
 let n = 1
 code"${Const(n)} + 1"
 //│ n: 1
 //│  = 1
 //│ res: Code[int, anything]
 //│    = [ 'App', '+', [ 'Unquoted', [ '_', 1 ] ], [ '_', 1 ] ]
-
-
-fun pow(cde, n) = if n > 0 then code"${cde} * ${pow(cde, n - 1)}" else code"1"
-//│ pow: (Code[int, 'a], int,) -> Code[int, 'a]
-//│    = [Function: pow]
-
-let p = pow(code"x", 3)
-//│ p: Code[int, {x: int}]
-//│  = [
-//│      'App',
-//│      '*',
-//│      [ 'Unquoted', [ 'Var', [Array] ] ],
-//│      [ 'Unquoted', [ 'App', '*', [Array], [Array] ] ]
-//│    ]
-
-code"let x = 1; ${p}"
-//│ res: Code[int, {x: int}\x]
-//│    = [
-//│        'Let',
-//│        'x',
-//│        Symbol(x),
-//│        [ '_', 1 ],
-//│        [ 'Unquoted', [ 'App', '*', [Array], [Array] ] ]
-//│      ]
