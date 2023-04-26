@@ -923,7 +923,8 @@ final case class JSQuasiquoteRunFunctionBody() extends JSStmt {
                   context = context.concat(result);
                 } else { // Object {y: 'y'}
                   for (const [key, value] of Object.entries(paramList[i])) {
-                    context.push([value, input[i][key]]);
+										let result = formContext(value, input[i][key], []);
+										context = context.concat(result);
                   }
                 }
               }
@@ -942,7 +943,7 @@ final case class JSQuasiquoteRunFunctionBody() extends JSStmt {
               }
             }
             
-					let context = formContext(s_expr[1], input, [])
+					let context = formContext(s_expr[1], input, [contextToList()]);
 					let result = run(body_sexpr, context);
 					return putinFreeVar(result, context);
           }

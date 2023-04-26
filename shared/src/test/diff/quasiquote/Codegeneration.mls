@@ -452,3 +452,11 @@ run(c)
 //│ res: error | int
 //│ Runtime error:
 //│   ReferenceError: x is not defined
+
+code"{x: y} => y"
+//│ res: Code[{x: 'a} -> 'a, anything]
+//│    = [ 'Lam', [ { x: [Array] } ], [ 'Var', [ 'FreeVar', 'y' ] ] ]
+
+run(res)({x:1})
+//│ res: 1
+//│    = 1

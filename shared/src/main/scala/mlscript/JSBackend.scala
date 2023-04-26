@@ -247,7 +247,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     case New(_, TypingUnit(_)) =>
       throw CodeGenError("custom class body is not supported yet")
     case Quoted(body) =>
-      val qqScope = scope.derive("Quoted", true)
+      val qqScope = scope.derive("Quoted", true, true)
       translateQuoted(body)(qqScope)
     case Unquoted(body) =>
       // this case only happens without lexical/parse error when it is in a lambda in a quasiquote
@@ -519,7 +519,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
           }
       }
     case lambda @ Lam(params, body) =>
-      val lamScope = scope.derive("Lam")
+      val lamScope = scope.derive("Lam", false, true)
       val patterns = params match {
         case Tup(elements) => elements map {case _ -> Fld(_, _, p) => translatePatternQQ(p)(lamScope)}
         case _             => throw CodeGenError(s"term $params is not a valid parameter list")
@@ -570,7 +570,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     case Let(true, Var(name), _, _) => 
       throw new CodeGenError(s"recursive non-function definition $name is not supported")
     case Let(_, Var(name), value, body) => 
-      val letScope = scope.derive("Let")
+      val letScope = scope.derive("Let", false, true)
       val runtimeName = letScope.declareParameter(name)
       tracker.addDefinedVar(name)
       val s_expr = JSArray(Ls(
@@ -582,7 +582,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       ))
       JSImmEvalFn(None, Ls(JSNamePattern(runtimeName)), L(s_expr), Ls(JSLit(s"Symbol('${name}')")))
     case Blk(stmts) => 
-      val blkScope = scope.derive("Blk")
+      val blkScope = scope.derive("Blk", false, true)
       val flattened = stmts.iterator.flatMap(_.desugared._2).toList
       val s_expr_list = flattened.iterator.zipWithIndex.map {
         case (t: Term, index) => translateQuotedTerm(t)(blkScope, tracker)
@@ -618,7 +618,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     case New(N, TypingUnit(Nil)) => throw CodeGenError("New #1")
     case New(S(TypeName(className) -> Tup(args)), TypingUnit(Nil)) => throw CodeGenError("New #2") 
     case Quoted(body) => 
-      val qqScope = scope.derive("Quoted", true)
+      val qqScope = scope.derive("Quoted", true, true)
       JSArray(Ls(
         JSExpr("Quoted"),
         translateQuoted(body)(qqScope)
@@ -657,7 +657,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       JSRecord(fields map {
         case (Var(nme), Fld(_, _, Var(als))) => 
           val runtimeName = scope.declareParameter(als)
-          nme -> JSExpr(runtimeName)          
+          nme -> JSArray(Ls(JSExpr("_"), JSExpr(als), JSExpr(runtimeName)))          
         case (Var(nme), Fld(_, _, subTrm)) =>
           nme -> translatePatternQQ(subTrm)
       })

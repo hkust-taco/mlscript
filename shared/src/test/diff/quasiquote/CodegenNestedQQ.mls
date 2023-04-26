@@ -1,18 +1,18 @@
 :NewParser 
 
-code"let x = code"2"; code"y => ${x} + 5""
+code"let x = code"1"; code"y => ${x} + 1""
 //│ res: Code[Code[anything -> int, anything\y], anything]
 //│    = [
 //│        'Let',
 //│        'x',
 //│        Symbol(x),
-//│        [ 'Quoted', [ '_', 2 ] ],
+//│        [ 'Quoted', [ '_', 1 ] ],
 //│        [ 'Quoted', [ 'Lam', [Array], [Array] ] ]
 //│      ]
 
 run(run(res))(0)
 //│ res: int
-//│    = 7
+//│    = 2
 
 code"let x = code"2"; code"${x}""
 //│ res: Code[Code[2, anything], anything]
@@ -81,9 +81,9 @@ code"""x => x + ${y}"""
 //│        [ 'App', '+', [ 'Var', [Array] ], [ 'Unquoted', [Array] ] ]
 //│      ]
 
-run(res)(0)
+run(res)(3)
 //│ res: int
-//│    = 1
+//│    = 4
 
 let x = code"1"
 code"""x => x + ${x}"""
