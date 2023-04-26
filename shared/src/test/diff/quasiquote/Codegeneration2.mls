@@ -16,8 +16,6 @@ run(res)
 //│ res: ()
 //│    = []
 
-
-
 code"(1,)"
 run(res)
 //│ res: Code[(1,), anything]
@@ -47,7 +45,7 @@ run(res)
 :pe
 code"// Can I comment?"
 //│ ╔══[PARSE ERROR] Unmatched opening quasiquote
-//│ ║  l.48: 	code"// Can I comment?"
+//│ ║  l.46: 	code"// Can I comment?"
 //│ ╙──      	^^^^^
 
 code"[x: 1,]"
@@ -81,3 +79,7 @@ code"let x = {a: 100}; x .a"
 //│        [ 'Bra', [ 'Rcd', [Object] ] ],
 //│        [ 'Sel', [ 'Var', Symbol(x) ], 'a' ]
 //│      ]
+
+run(res)
+//│ res: 100
+//│    = 100

@@ -1,6 +1,5 @@
 :NewParser
 
-
 code"x"
 code"(x) => ${res}"
 //│ res: Code['a, {x: 'a}]
@@ -8,37 +7,9 @@ code"(x) => ${res}"
 //│ res: Code['a -> 'a, {x: 'a}\x]
 //│    = [ 'Lam', [ [ '_', 'x', 'x' ] ], [ 'Unquoted', [ 'Var', [Array] ] ] ]
 
-:d
-code"test"
-//│ 0. Typing term Quoted' test '
-//│ | 0. Typing term test
-//│ | 0. : α39
-//│ 0. : Code[α39,{test: α39}]
-//│ ⬤ Typed as: Code[α39,{test: α39}]
-//│  where: 
-//│ res: Code['a, {test: 'a}]
-//│    = [ 'Var', [ 'FreeVar', 'test' ] ]
-
-:d
 code"${res}"
-//│ 0. Typing term Quoted' Unquote' res ' '
-//│ | 0. Typing term Unquote' res '
-//│ | | 0. Typing term res
-//│ | | 0. : Code[α39,{test: α39}]
-//│ | | CONSTRAIN Code[α39,{test: α39}] <! Code[α44,α43]
-//│ | |   where 
-//│ | | C Code[α39,{test: α39}] <! Code[α44,α43]    (0)
-//│ | | | C α39 <! α44    (1)
-//│ | | | C α43 <! {test: α39}    (2)
-//│ | | failed to constrain test
-//│ | 0. : α44
-//│ 0. : Code[α44,α43]
-//│ ⬤ Typed as: Code[α44,α43]
-//│  where: 
-//│ 		α39 <: α44
-//│ 		α43 <: {test: α39}
-//│ res: Code['a, {test: 'a}]
-//│    = [ 'Unquoted', [ 'Var', [ 'FreeVar', 'test' ] ] ]
+//│ res: Code['a -> 'a, {x: 'a}\x]
+//│    = [ 'Unquoted', [ 'Lam', [ [Array] ], [ 'Unquoted', [Array] ] ] ]
 
 let a = code"x"
 let b = code"y"
@@ -173,16 +144,6 @@ let cde_w_mutli_unquote = code"${free_var2} + ${free_var1}"
 //│                        [ 'Unquoted', [ 'Let', 'x', Symbol(x), [Array], [Array] ] ]
 //│                      ]
 
-// FIXME
-c: Code<int, {}>
-//│ ╔══[ERROR] identifier not found: c
-//│ ║  l.177: 	c: Code<int, {}>
-//│ ╙──       	^
-//│ res: Code[int, anything]
-//│ Code generation encountered an error:
-//│   unresolved symbol c
-
-
 fun f(x, y) = code"[${x}, ${y}]"
 //│ f: (Code['a, 'b], Code['c, 'b],) -> Code[('a, 'c,), 'b]
 //│  = [Function: f]
@@ -212,7 +173,7 @@ code"let y = 1; ${cde_arr}"
 :e
 run(res)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.213: 	run(res)
+//│ ║  l.174: 	run(res)
 //│ ║         	^^^^^^^^
 //│ ╙── expression of type `anything` does not have field 'y'
 //│ res: (1, 1,) | error
@@ -260,7 +221,7 @@ code"f(0)"
 :ge
 code"${code"${code"${z}"}"}"
 //│ ╔══[ERROR] identifier not found: z
-//│ ║  l.261: 	code"${code"${code"${z}"}"}"
+//│ ║  l.222: 	code"${code"${code"${z}"}"}"
 //│ ╙──       	                     ^
 //│ res: Code[error, anything]
 //│ Code generation encountered an error:
@@ -284,14 +245,14 @@ code"let x = 1; let z = 1; code"x + y""
 //│        [ 'Let', 'z', Symbol(z), [ '_', 1 ], [ 'Quoted', [Array] ] ]
 //│      ]
 
-code"let z = 0;${code"z"}"
-//│ res: Code[0 | 'a, {z: 'a}\z]
+code"let z = 0;${code"z + 1"}"
+//│ res: Code[int, {z: int}\z]
 //│    = [
 //│        'Let',
 //│        'z',
 //│        Symbol(z),
 //│        [ '_', 0 ],
-//│        [ 'Unquoted', [ 'Var', [Array] ] ]
+//│        [ 'Unquoted', [ 'App', '+', [Array], [Array] ] ]
 //│      ]
 code"let x = 1;${code"x + y"}"
 //│ res: Code[int, {x: int, y: int}\x]

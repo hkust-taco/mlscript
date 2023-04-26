@@ -347,8 +347,7 @@ class DiffTests
             
             val origin = Origin(testName, globalStartLineNum, fph)
             val lexer = new NewLexer(origin, raise, dbg = mode.dbgParsing)
-            lexer.setPrinter(output)
-            
+
             val tokens = lexer.bracketedTokens
             
             if (mode.showParse || mode.dbgParsing || parseOnly)

@@ -940,7 +940,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           case Some(p) if ctx.outermostCtx =/= N =>
             val nest_ctx = ctx.nest.copy(inUnquoted = true)
 
-            val tc = freshVar(noProv)(0)
+            val tc = freshVar(noProv)
             val res = freshVar(prov)
             val body_type = typeTerm(body)(nest_ctx, raise, vars)
 

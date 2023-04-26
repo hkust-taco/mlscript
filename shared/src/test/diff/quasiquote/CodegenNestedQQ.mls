@@ -161,7 +161,7 @@ run(res)
 
 
 code"x => ${code"x + 1"}"
-//│ res: Code[anything -> int, {x: int}\x]
+//│ res: Code[int -> int, {x: int}\x]
 //│    = [
 //│        'Lam',
 //│        [ [ '_', 'x', 'x3' ] ],

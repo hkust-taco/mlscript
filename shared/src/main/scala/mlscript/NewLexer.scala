@@ -14,14 +14,6 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
   private val length = bytes.length
   type State = Int
 
-  type Printer = (String) => Unit
-
-  var print: Printer = println
-
-  def setPrinter(p: Printer): Unit = {
-    print = p
-  }
-  
   private val isOpChar = Set(
     '!', '#', '%', '&', '*', '+', '-', '/', ':', '<', '=', '>', '?', '@', '\\', '^', '|', '~' , '.',
     // ',', 

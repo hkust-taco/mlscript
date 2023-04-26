@@ -34,7 +34,7 @@ run(test(5, code"0"))
 //│ ║  l.32: 	run(test(5, code"0"))
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── expression of type `anything` does not have field 'x'
-//│ res: error
+//│ res: error | int
 //│    = 5
 
 
@@ -66,5 +66,5 @@ run(c)
 //│ ║  l.64: 	run(c)
 //│ ║        	^^^^^^
 //│ ╙── expression of type `anything` does not have field 'x'
-//│ res: error
+//│ res: error | int
 //│    = 5

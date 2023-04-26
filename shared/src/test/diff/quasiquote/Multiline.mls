@@ -12,9 +12,6 @@ code"let arr = [
 //│        [ 'Var', Symbol(arr) ]
 //│      ]
 
-
-// Do we want the difference with the test case below (semicolon or not)?
-
 code"let foo = (x, y) => x * y
 foo(
   2,
