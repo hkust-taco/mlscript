@@ -1,20 +1,21 @@
 :NewParser
+
 // basic test from meeting on Mar 10
 let c = code"x"
 //│ c: Code['a, {x: 'a}]
 //│  = [ 'Var', [ 'FreeVar', 'x' ] ]
 
 let r = code"x => ${c}"
-//│ r: Code[anything -> 'a, {x: 'a}\x]
+//│ r: Code['a -> 'a, {x: 'a}\x]
 //│  = [ 'Lam', [ [ '_', 'x', 'x' ] ], [ 'Unquoted', [ 'Var', [Array] ] ] ]
 
 :e
 run(r)(1)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.12: 	run(r)(1)
+//│ ║  l.13: 	run(r)(1)
 //│ ║        	^^^^^^
 //│ ╙── expression of type `anything` does not have field 'x'
-//│ res: error
+//│ res: 1 | error
 //│    = 1
 
 
@@ -184,14 +185,17 @@ let code_nested = code"let a = 1; let b = 2; ${code"a + b"}"
 :e
 run(code_nested)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.185: 	run(code_nested)
+//│ ║  l.186: 	run(code_nested)
 //│ ║         	^^^^^^^^^^^^^^^^
 //│ ╙── expression of type `anything` is not a record (expected a record with fields: a, b)
 //│ res: error | int
 //│    = 3
 
-code"let id = x => ${code"x"}; id(true)"
-//│ res: Code['a, {x: 'a}\x]
+let y = code"x"
+code"let id = x => ${y}; id(true)"
+//│ y: Code['a, {x: 'a}]
+//│  = [ 'Var', [ 'FreeVar', 'x' ] ]
+//│ res: Code[true | 'a, {x: 'a}\x]
 //│    = [
 //│        'Let',
 //│        'id',
@@ -203,20 +207,20 @@ code"let id = x => ${code"x"}; id(true)"
 :e
 run(res)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.204: 	run(res)
+//│ ║  l.208: 	run(res)
 //│ ║         	^^^^^^^^
 //│ ╙── expression of type `anything` does not have field 'x'
-//│ res: error
+//│ res: error | true
 //│    = true
 
 let free = code"x"
 //│ free: Code['a, {x: 'a}]
 //│     = [ 'Var', [ 'FreeVar', 'x' ] ]
 
-:e 
+:e
 code"let id = x => ${free}; id(3)"
 run(res)
-//│ res: Code['a, {x: 'a}\x]
+//│ res: Code[3 | 'a, {x: 'a}\x]
 //│    = [
 //│        'Let',
 //│        'id',
@@ -225,45 +229,44 @@ run(res)
 //│        [ 'App_Fun', [ 'Var', Symbol(id) ], [ 'Tup', [Array] ] ]
 //│      ]
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.218: 	run(res)
+//│ ║  l.222: 	run(res)
 //│ ║         	^^^^^^^^
 //│ ╙── expression of type `anything` does not have field 'x'
-//│ res: error
+//│ res: 3 | error
 //│    = 3
 
 :e
 let id_external = code"x => ${free}"
 run(id_external)
-//│ id_external: Code[anything -> 'a, {x: 'a}\x]
+//│ id_external: Code['a -> 'a, {x: 'a}\x]
 //│            = [ 'Lam', [ [ '_', 'x', 'x' ] ], [ 'Unquoted', [ 'Var', [Array] ] ] ]
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.236: 	run(id_external)
+//│ ║  l.240: 	run(id_external)
 //│ ║         	^^^^^^^^^^^^^^^^
 //│ ╙── expression of type `anything` does not have field 'x'
-//│ res: anything -> nothing | error
+//│ res: 'a -> 'a | error
 //│    = [Function (anonymous)]
 
 res(10)
-//│ res: error
+//│ res: 10 | error
 //│    = 10
 
 :e
 let id_internal = code"x => ${code"x"}"
 run(id_internal)(10)
-//│ id_internal: Code[anything -> 'a, {x: 'a}\x]
+//│ id_internal: Code['a -> 'a, {x: 'a}\x]
 //│            = [ 'Lam', [ [ '_', 'x', 'x' ] ], [ 'Unquoted', [ 'Var', [Array] ] ] ]
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.252: 	run(id_internal)(10)
+//│ ║  l.256: 	run(id_internal)(10)
 //│ ║         	^^^^^^^^^^^^^^^^
 //│ ╙── expression of type `anything` does not have field 'x'
-//│ res: error
+//│ res: 10 | error
 //│    = 10
 
 let free_y = code"y"
 //│ free_y: Code['a, {y: 'a}]
 //│       = [ 'Var', [ 'FreeVar', 'y' ] ]
 
-// evaluates to 108
 let use_free = code"let y = 3; ${code"let y = 5; ${code"let y = 100; ${free_y}"} + y"} + y"
 //│ use_free: Code[int, {y: int}\y]
 //│         = [
@@ -273,17 +276,18 @@ let use_free = code"let y = 3; ${code"let y = 5; ${code"let y = 100; ${free_y}"}
 //│             [ '_', 3 ],
 //│             [ 'App', '+', [ 'Unquoted', [Array] ], [ 'Var', Symbol(y) ] ]
 //│           ]
+
 :e
 run(use_free)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.277: 	run(use_free)
+//│ ║  l.281: 	run(use_free)
 //│ ║         	^^^^^^^^^^^^^
 //│ ╙── expression of type `anything` does not have field 'y'
 //│ res: error | int
 //│    = 108
 
 code"let z = x => ${let c = code"x + 1"; c}; z"
-//│ res: Code[anything -> 'a, {x: 'a}\c\x]
+//│ res: Code['a -> 'a, {x: 'a}\c\x]
 //│    = [
 //│        'Let',
 //│        'z',
@@ -291,13 +295,14 @@ code"let z = x => ${let c = code"x + 1"; c}; z"
 //│        [ 'Lam', [ [Array] ], [ 'Unquoted', [Array] ] ],
 //│        [ 'Var', Symbol(z) ]
 //│      ]
+
 :e
 run(res)(100)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.295: 	run(res)(100)
+//│ ║  l.300: 	run(res)(100)
 //│ ║         	^^^^^^^^
 //│ ╙── expression of type `anything` does not have field 'x'
-//│ res: error
+//│ res: 100 | error
 //│    = 101
 
 // Testing error messages for unquotes -> is it ok that we handle Unquote directly in translateTerm?
@@ -310,7 +315,7 @@ let qq = code"x"
 :ge
 let x = ${qq}
 //│ ╔══[ERROR] Unquotes should be enclosed with a quasiquote.
-//│ ║  l.311: 	let x = ${qq}
+//│ ║  l.316: 	let x = ${qq}
 //│ ╙──       	          ^^
 //│ x: error
 //│ Code generation encountered an error:
@@ -321,7 +326,7 @@ let x = ${qq}
 :ge
 let x2 = x => ${qq}
 //│ ╔══[ERROR] Unquotes should be enclosed with a quasiquote.
-//│ ║  l.322: 	let x2 = x => ${qq}
+//│ ║  l.327: 	let x2 = x => ${qq}
 //│ ╙──       	                ^^
 //│ x2: anything -> error
 //│ Code generation encountered an error:
@@ -334,16 +339,16 @@ let x3 = code"${qq}"
 
 // 4. In lambdas in quasiquotes - OK 
 let x4 = code"x => ${qq}"
-//│ x4: Code[anything -> 'a, {x: 'a}\x]
+//│ x4: Code['a -> 'a, {x: 'a}\x]
 //│   = [ 'Lam', [ [ '_', 'x', 'x' ] ], [ 'Unquoted', [ 'Var', [Array] ] ] ]
 
 :e
 run(x4)(5)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.341: 	run(x4)(5)
+//│ ║  l.346: 	run(x4)(5)
 //│ ║         	^^^^^^^
 //│ ╙── expression of type `anything` does not have field 'x'
-//│ res: error
+//│ res: 5 | error
 //│    = 5
 
 
@@ -418,7 +423,7 @@ let codeB = code"y + y"
 :pe
 let both = code"${codeA}; ${codeB}"
 //│ ╔══[PARSE ERROR] Unexpected ';' keyword here
-//│ ║  l.419: 	let both = code"${codeA}; ${codeB}"
+//│ ║  l.424: 	let both = code"${codeA}; ${codeB}"
 //│ ╙──       	                        ^
 //│ both: Code[2, anything]
 //│     = [
@@ -446,7 +451,7 @@ let c = code"${a} + ${b}"
 :e
 run(c)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.447: 	run(c)
+//│ ║  l.452: 	run(c)
 //│ ║         	^^^^^^
 //│ ╙── type `anything` does not have field 'x'
 //│ res: error | int
@@ -455,7 +460,7 @@ run(c)
 
 code"{x: y} => y"
 //│ res: Code[{x: 'a} -> 'a, anything]
-//│    = [ 'Lam', [ { x: [Array] } ], [ 'Var', [ 'FreeVar', 'y' ] ] ]
+//│    = [ 'Lam', [ { x: [Array] } ], [ 'Var', [ 'FreeVar', 'y1' ] ] ]
 
 run(res)({x:1})
 //│ res: 1

@@ -14,11 +14,10 @@ code"x => y => 100 + ${Const(x + y)}"
 //│ Code generation encountered an error:
 //│   unresolved symbol x
 
-
 :e
 code"x => y => 100 + code"${Const(x + y)}""
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.19: 	code"x => y => 100 + code"${Const(x + y)}""
+//│ ║  l.18: 	code"x => y => 100 + code"${Const(x + y)}""
 //│ ║        	               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── expression of type `code & {Code#C :> ?a, Code#T <: ?b}` is not an instance of type `int`
 //│ res: Code[int -> int -> (error | int), anything]

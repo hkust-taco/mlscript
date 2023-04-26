@@ -72,7 +72,7 @@ code"10 + ${qq_int}"
 
 // The inner code should have type Code<int, "x" | "y">
 code"x => y => 15 + ${   code"x + y"   }"
-//│ res: Code[anything -> anything -> int, {x: int, y: int}\x\y]
+//│ res: Code[int -> int -> int, {x: int, y: int}\x\y]
 //│    = [
 //│        'Lam',
 //│        [ [ '_', 'x', 'x' ] ],

@@ -916,6 +916,26 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
 
         TypeRef(TypeName("Code"), body_type :: ctx_type :: Nil)(noProv)
       case Unquoted(body) =>
+        def constrainFreeVarRequirement(ty: SimpleType): Unit = {
+          ty match {
+            case ComposedType(_, lhs, rhs) =>
+              constrainFreeVarRequirement(lhs)
+              constrainFreeVarRequirement(rhs)
+            case Without(bTy, _) => constrainFreeVarRequirement(bTy)
+            case RecordType(fields) => fields.foreach((entry) => {
+              ctx.get(entry._1.name, traversal = QuasiquoteTraversal(ctx.quasiquoteLvl)) match {
+                case S(VarSymbol(ty, _)) =>
+                  println(s"constraining ${entry._1.name}")
+                  val bounded_ty = ty.instantiate
+//                  con(entry._2.ub, bounded_ty, bounded_ty)
+                  con(bounded_ty, entry._2.ub, bounded_ty)
+                case _ => println(s"failed to constrain ${entry._1.name}")
+              }
+            })
+            case TypeVariable(_, _, upper, _) if upper.nonEmpty => constrainFreeVarRequirement(upper.head)
+            case _ => println(s"unhandled type: ${ty} - ${ty.getClass}")
+          }
+        }
         ctx.parent match {
           case Some(p) if ctx.outermostCtx =/= N =>
             val nest_ctx = ctx.nest.copy(inUnquoted = true)
@@ -928,7 +948,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             val tc_with_bounded = tc.without(outermost_ctx.outermostBoundedVarType.map(Var).toSortedSet)
             outermost_ctx.innerUnquoteContextRequirements.append(tc_with_bounded)
 
-            con(body_type, TypeRef(TypeName("Code"), Ls(res, tc))(noProv), res)
+            val res_ty = con(body_type, TypeRef(TypeName("Code"), Ls(res, tc))(noProv), res)
+
+            if (tc.upperBounds.nonEmpty)
+              constrainFreeVarRequirement(tc.upperBounds.head)
+
+            res_ty
           case _ => err("Unquotes should be enclosed with a quasiquote.", body.toLoc)(raise)
         }
     }
