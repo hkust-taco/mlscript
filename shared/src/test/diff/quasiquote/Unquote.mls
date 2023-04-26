@@ -275,15 +275,27 @@ code"${Const(n)} + 1"
 //│  = 1
 //│ res: Code[int, anything]
 //│    = [ 'App', '+', [ 'Unquoted', [ '_', 1 ] ], [ '_', 1 ] ]
-fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, code"${cde} + x")}" else cde
-//│ test: (int, Code[int | 'a, 'b & 'c] & 'd,) -> (Code[int | 'a, 'b\x & {x: int} & 'c] | 'd)
-//│   where
-//│     'b <: 'b\x & {x: int} & 'c
-//│     = [Function: test]
 
-let y = code"2"
-code"y => (let y = 1; y + ${y})"
-//│ y: Code[2, anything]
-//│  = [ '_', 2 ]
-//│ res: Code[anything -> (int,), anything\y]
-//│    = [ 'Lam', [ [ '_', 'y', 'y1' ] ], [ 'Bra', [ 'Tup', [Array] ] ] ]
+
+fun pow(cde, n) = if n > 0 then code"${cde} * ${pow(cde, n - 1)}" else code"1"
+//│ pow: (Code[int, 'a], int,) -> Code[int, 'a]
+//│    = [Function: pow]
+
+let p = pow(code"x", 3)
+//│ p: Code[int, {x: int}]
+//│  = [
+//│      'App',
+//│      '*',
+//│      [ 'Unquoted', [ 'Var', [Array] ] ],
+//│      [ 'Unquoted', [ 'App', '*', [Array], [Array] ] ]
+//│    ]
+
+code"let x = 1; ${p}"
+//│ res: Code[int, {x: int}\x]
+//│    = [
+//│        'Let',
+//│        'x',
+//│        Symbol(x),
+//│        [ '_', 1 ],
+//│        [ 'Unquoted', [ 'App', '*', [Array], [Array] ] ]
+//│      ]

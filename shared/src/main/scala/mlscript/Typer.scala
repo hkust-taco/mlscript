@@ -916,7 +916,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
 
         TypeRef(TypeName("Code"), body_type :: ctx_type :: Nil)(noProv)
       case Unquoted(body) =>
-        def constrainFreeVarRequirement(ty: SimpleType): Unit = {
+        def constrainFreeVarRequirement(ty: SimpleType)(implicit seen: MutSet[SimpleType] = MutSet.empty): Unit = {
+          if (seen.contains(ty))
+            return
+          seen += ty
           ty match {
             case ComposedType(_, lhs, rhs) =>
               constrainFreeVarRequirement(lhs)
@@ -925,15 +928,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             case RecordType(fields) => fields.foreach((entry) => {
               ctx.get(entry._1.name, traversal = QuasiquoteTraversal(ctx.quasiquoteLvl)) match {
                 case S(VarSymbol(ty, _)) =>
-                  println(s"constraining ${entry._1.name}")
                   val bounded_ty = ty.instantiate
-//                  con(entry._2.ub, bounded_ty, bounded_ty)
                   con(bounded_ty, entry._2.ub, bounded_ty)
-                case _ => println(s"failed to constrain ${entry._1.name}")
+                case _ =>
               }
             })
             case TypeVariable(_, _, upper, _) if upper.nonEmpty => constrainFreeVarRequirement(upper.head)
-            case _ => println(s"unhandled type: ${ty} - ${ty.getClass}")
+            case _ =>
           }
         }
         ctx.parent match {
