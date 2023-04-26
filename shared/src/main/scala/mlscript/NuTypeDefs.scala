@@ -909,12 +909,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                                   
                                   paramMems ++ bodyMems
                                 
-                                case trt: TypedNuTrt =>
-                                  Nil
-                                  
-                                case cls: TypedNuCls =>
-                                  // err(msg"Class inheritance is not supported yet (use mixins)", p.toLoc)
-                                  Nil
+                                case trt: TypedNuTrt => Nil   // handled in computeBaseClass
+                                case cls: TypedNuCls => Nil   // handled in computeBaseClass
                                 case als: TypedNuAls =>
                                   // TODO dealias first?
                                   err(msg"Cannot inherit from a type alias", p.toLoc)
@@ -976,17 +972,21 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     
                     // TODO report non-unit result/statements?
                     // TODO check overriding
-                    def computeBaseClass(parents: Ls[ParentSpec], members: Ls[NuMember], baseClass: Opt[Str]): Ls[NuMember] = 
+
+                    case class Pack(clsMem: Ls[NuMember], bsCls: Opt[Str], trtMem: Ls[NuMember], trtTyMem: Map[Str, NuMember])
+
+                    // compute base class and interfaces
+                    def computeBaseClass(parents: Ls[ParentSpec], pack: Pack): Pack = 
                       parents match {
                       case (p, v @ Var(parNme), parTargs, parArgs) :: ps =>
                         ctx.get(parNme) match {
                           case S(lti: LazyTypeInfo) =>
                             val info = lti.complete()
-                              info match {
+                            info match {
                                 case cls: TypedNuCls =>
                                   if (parTargs.nonEmpty) err(msg"class type arguments not yet supported", p.toLoc)
-                                  if (baseClass.isDefined) {
-                                    err(msg"cannot inherit from more than one base class: ${baseClass.get} and ${parNme}", v.toLoc)
+                                  if (pack.bsCls.isDefined) {
+                                    err(msg"cannot inherit from more than one base class: ${pack.bsCls.get} and ${parNme}", v.toLoc)
                                   }
                                   
                                   if (parArgs.sizeCompare(cls.params) =/= 0)
@@ -1001,8 +1001,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                                     NuParam(nme, FieldType(p.lb, a_ty)(provTODO), isType = false)(lvl)
                                   }
                                   val numem = paramMems ++ cls.members.values.toList
-                                  val res = members ++ numem.flatMap { m =>
-                                    members.find(x => x.name == m.name) match {
+                                  val res = pack.clsMem ++ numem.flatMap { m =>
+                                    pack.clsMem.find(x => x.name == m.name) match {
                                       case S(mem: TypedNuTermDef) =>
                                         val memSign = mem.typeSignature
                                         val parSign = m.asInstanceOf[TypedNuTermDef].typeSignature
@@ -1014,29 +1014,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                                     }
                                   }
 
-                                  computeBaseClass(ps, res , S(parNme))
+                                  computeBaseClass(ps, pack.copy(clsMem = res, bsCls = S(parNme)))
 
-                                case _ => computeBaseClass(ps, members, baseClass)
-                              }
-                          case _ => computeBaseClass(ps, members, baseClass)
-                        }
-                      case Nil => members
-                      }
-
-                    val clsMems = computeBaseClass(parentSpecs, ttu.entities, N)
-                    
-                    val impltdMems = baseMems ++ clsMems
-                    val mems = impltdMems.map(d => d.name -> d).toMap ++ typedSignatureMembers
-                    
-                    def computeInterface(parents: Ls[ParentSpec], annot: ST, members: Ls[NuMember], tMem: Map[Str, NuMember]): (ST, Ls[NuMember], Map[Str, NuMember]) = 
-                        parents match {
-                      case (p, v @ Var(parNme), parTargs, parArgs) :: ps =>
-                        // TODO find traits in `parents`; intersect their member types and self types
-                        ctx.get(parNme) match {
-                            case S(lti: LazyTypeInfo) =>
-                              val info = lti.complete()
-                              // TODO substitute type parameters in info
-                              info match {
                                 case rawTrt: TypedNuTrt =>
                                   if (parArgs.nonEmpty) err(msg"trait parameters not yet supported", p.toLoc)
                                   
@@ -1048,9 +1027,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                                       rawTrt.tparams.size.toString} type parameter(s); got ${parTargs.size.toString}", Loc(v :: parTargs))
                                   
                                   rawTrt.tparams.lazyZip(parTargs).foreach { case ((tn, _tv, vi), targTy) =>
-                                    
                                     val targ = typeType(targTy)
-                                    
                                     freshened += _tv -> (targ match {
                                       case tv: TypeVarOrRigidVar => tv
                                       case _ =>
@@ -1064,27 +1041,28 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                                         // println(s"Assigned ${tv.assignedTo}")
                                         tv
                                     })
-                                    
                                   }
                                   
                                   val trt = rawTrt.freshenAbove(info.level, rigidify = false)
                                     .asInstanceOf[TypedNuTrt] // FIXME
-                                  
-                                  computeInterface(ps, annot & trt.selfTy, memberUn(members, trt.members.values.toList), tMem ++ trt.typeMembers) // intersect members
-                                  
-                                case _ => computeInterface(ps, annot, members, tMem)
+                                
+                                  computeBaseClass(ps, pack.copy(
+                                    trtMem = memberUn(pack.trtMem, trt.members.values.toList),
+                                    trtTyMem = pack.trtTyMem ++ trt.typeMembers)
+                                  )
+                                
+                                case _ => computeBaseClass(ps, pack)
                               }
-                            case S(_) => 
-                              err("i don't know", p.toLoc)
-                              computeInterface(ps, annot, members, tMem)
-                            case N => 
-                              // err(msg"Could not find definition `${parNme}`", p.toLoc)
-                              computeInterface(ps, annot, members, tMem)
+                          case _ => computeBaseClass(ps, pack)
                         }
-                      case Nil => (annot, members, tMem)
-                    }
-                    val thisTag = TopType //clsNameToNomTag(td)(provTODO, ctx)
-                    val (_, ifaceMembers, ifaceTmem) = computeInterface(parentSpecs, thisTag, Nil, Map.empty)
+                      case Nil => pack
+                      }
+
+                    val Pack(clsMems, _, ifaceMembers, ifaceTmem) = 
+                      computeBaseClass(parentSpecs, Pack(ttu.entities, N, Nil, Map.empty))
+                    
+                    val impltdMems = baseMems ++ clsMems
+                    val mems = impltdMems.map(d => d.name -> d).toMap ++ typedSignatureMembers
 
                     // TODO type members of parent class
                     val tyMem = ifaceTmem  ++ tparams.map {

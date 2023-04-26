@@ -49,31 +49,9 @@ class Pair[L, R](lhs: L, rhs: R) extends Exp[A]
 //│ ║       	^^^^^^^^^^^^^^^
 //│ ║  l.9: 	}
 //│ ╙──     	^
-//│ ╔══[ERROR] Unhandled cyclic definition
-//│ ║  l.5: 	class Exp[A]: Pair | Lit {
-//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.6: 	  fun test = if this is
-//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.7: 	    Lit then 0
-//│ ║       	^^^^^^^^^^^^^^
-//│ ║  l.8: 	    Pair then 1
-//│ ║       	^^^^^^^^^^^^^^^
-//│ ║  l.9: 	}
-//│ ╙──     	^
 //│ ╔══[ERROR] Cannot inherit from a function
 //│ ║  l.12: 	class Pair[L, R](lhs: L, rhs: R) extends Exp[A]
 //│ ╙──      	                                         ^^^
-//│ ╔══[ERROR] Unhandled cyclic definition
-//│ ║  l.5: 	class Exp[A]: Pair | Lit {
-//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.6: 	  fun test = if this is
-//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.7: 	    Lit then 0
-//│ ║       	^^^^^^^^^^^^^^
-//│ ║  l.8: 	    Pair then 1
-//│ ║       	^^^^^^^^^^^^^^^
-//│ ║  l.9: 	}
-//│ ╙──     	^
 //│ ╔══[ERROR] Unhandled cyclic definition
 //│ ║  l.5: 	class Exp[A]: Pair | Lit {
 //│ ║       	^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -104,8 +82,8 @@ class Pair[L, R](lhs: L, rhs: R) extends Exp[A]
 :e // TODO
 Lit(0).test
 //│ ╔══[ERROR] Type `Lit` does not contain member `test`
-//│ ║  l.105: 	Lit(0).test
-//│ ╙──       	      ^^^^^
+//│ ║  l.83: 	Lit(0).test
+//│ ╙──      	      ^^^^^
 //│ error
 //│ res
 //│     = 0
@@ -125,7 +103,7 @@ fun f(e) = if e is
 fun f(e) = if e is
   Pair['a, 'b](l, r) then [l, r]
 //│ ╔══[ERROR] illegal pattern
-//│ ║  l.126: 	  Pair['a, 'b](l, r) then [l, r]
+//│ ║  l.104: 	  Pair['a, 'b](l, r) then [l, r]
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^
 //│ fun f: anything -> error
 //│ Code generation encountered an error:
@@ -138,10 +116,10 @@ fun f(e) = if e is
     fun f(x: a) = x
     f(l)
 //│ ╔══[ERROR] type identifier not found: a
-//│ ║  l.138: 	    fun f(x: a) = x
+//│ ║  l.116: 	    fun f(x: a) = x
 //│ ╙──       	             ^
 //│ ╔══[ERROR] identifier not found: l
-//│ ║  l.139: 	    f(l)
+//│ ║  l.117: 	    f(l)
 //│ ╙──       	      ^
 //│ fun f: Pair[anything, anything] -> error
 //│ Code generation encountered an error:
