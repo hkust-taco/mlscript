@@ -50,8 +50,8 @@ mixin Foo1 {
 //│     const outer = this;
 //│     return (class Foo1 extends base {
 //│       #foo0;
-//│       #foo1;
 //│       get foo0() { return this.#foo0; }
+//│       #foo1;
 //│       get foo1() { return this.#foo1; }
 //│       constructor(...rest) {
 //│         super(...rest);

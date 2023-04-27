@@ -19,8 +19,8 @@ class Lit(n: int)
 //│     if (this.#Add === undefined) {
 //│       class Add {
 //│         #lhs;
-//│         #rhs;
 //│         get lhs() { return this.#lhs; }
+//│         #rhs;
 //│         get rhs() { return this.#rhs; }
 //│         constructor(lhs, rhs) {
 //│           this.#lhs = lhs;
@@ -66,8 +66,8 @@ class Lit(n: int)
 //│ │ │       if (this.#Add === undefined) {
 //│ │ │         class Add {
 //│ │ │           #lhs;
-//│ │ │           #rhs;
 //│ │ │           get lhs() { return this.#lhs; }
+//│ │ │           #rhs;
 //│ │ │           get rhs() { return this.#rhs; }
 //│ │ │           constructor(lhs, rhs) {
 //│ │ │             this.#lhs = lhs;

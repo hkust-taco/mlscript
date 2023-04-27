@@ -1,0 +1,45 @@
+:NewParser
+:NewDefs
+
+:js
+class C(a: int) { let a = 1 }
+//│ class C(a: int) {
+//│   let a: 1
+//│ }
+//│ // Prelude
+//│ let res;
+//│ class TypingUnit {
+//│   #C;
+//│   constructor() {
+//│   }
+//│   get C() {
+//│     const outer = this;
+//│     if (this.#C === undefined) {
+//│       class C {
+//│         #a;
+//│         get a() { return this.#a; }
+//│         constructor(a) {
+//│           this.#a = a;
+//│           this.#a = 1;
+//│           const a1 = this.#a;
+//│         }
+//│       };
+//│       this.#C = ((a) => new C(a));
+//│       this.#C.class = C;
+//│     }
+//│     return this.#C;
+//│   }
+//│ }
+//│ const typing_unit = new TypingUnit;
+//│ globalThis.C = typing_unit.C;
+//│ // End of generated code
+
+// should return 1
+let a = C(2)
+a.a
+//│ let a: C
+//│ 1
+//│ a
+//│   = C {}
+//│ res
+//│     = 1

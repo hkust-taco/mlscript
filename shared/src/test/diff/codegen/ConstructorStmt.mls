@@ -212,8 +212,8 @@ class Baz {
 //│     if (this.#Baz === undefined) {
 //│       class Baz {
 //│         #x;
-//│         #y;
 //│         get x() { return this.#x; }
+//│         #y;
 //│         get y() { return this.#y; }
 //│         constructor() {
 //│           this.#x = 123;
