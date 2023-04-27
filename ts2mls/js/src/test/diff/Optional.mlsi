@@ -7,8 +7,8 @@ fun buildName2(firstName: string, lastName: (string) | (undefined)): string
 fun buildName3(firstName: string, lastName: MutArray<string>): string
 fun buildName4(firstName: string, lastName: MutArray<anything>): string
 declare trait SquareConfig() {
-  let color: (string) | (undefined)
-  let width: (number) | (undefined)
+  val color: (string) | (undefined)
+  val width: (number) | (undefined)
 }
 fun did(x: number, f: ((number) => number) | (undefined)): number
 fun getOrElse(arr: (MutArray<object>) | (undefined)): object
@@ -19,15 +19,15 @@ fun err(msg: ((number, string, )) | (undefined)): unit
 fun toStr(x: (((number) | (false)) | (true)) | (undefined)): string
 fun boo<T, U>(x: ((T) & (U)) | (undefined)): unit
 declare class B<T>() {
-  let b: T
+  val b: T
 }
 fun boom(b: (B<nothing>) | (undefined)): anything
 //│ ╔══[ERROR] traits are not yet supported
 //│ ║  l.9: 	declare trait SquareConfig() {
 //│ ║       	        ^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.10: 	  let color: (string) | (undefined)
+//│ ║  l.10: 	  val color: (string) | (undefined)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.11: 	  let width: (number) | (undefined)
+//│ ║  l.11: 	  val width: (number) | (undefined)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.12: 	}
 //│ ╙──      	^

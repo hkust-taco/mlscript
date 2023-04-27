@@ -14,7 +14,7 @@ fun ex<T, U>(x: T, y: U): (T, U, (T) & (U), )
 fun foo<T, U>(x: ((T) & (U), )): unit
 fun conv(x: {y: number,}): ({y: number,}, {z: string,}, )
 declare class A() {
-  let x: number
+  val x: number
 }
 declare class B() {}
 fun swap(x: (A, B, )): (B, A, )

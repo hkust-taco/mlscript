@@ -3,7 +3,7 @@
 :NoJS
 :AllowTypeErrors
 declare class Student(s: string, age: number) {
-  let name: string
+  val name: string
   fun isFriend(other: Student): (false) | (true)
   fun addScore(sub: string, score: number): unit
   fun getID(): number
@@ -16,7 +16,7 @@ declare class EZ() {
 }
 declare class Outer() {
   declare class Inner() {
-    let a: number
+    val a: number
   }
 }
 declare class TTT<T>() {

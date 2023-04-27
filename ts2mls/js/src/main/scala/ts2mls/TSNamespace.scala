@@ -39,30 +39,31 @@ class TSNamespace(name: String, parent: Option[TSNamespace], keepUnexportedVars:
   def containsMember(name: String, searchParent: Boolean = true): Boolean =
     if (parent.isEmpty) members.contains(name) else (members.contains(name) || (searchParent && parent.get.containsMember(name)))
 
+
+  private def expStr(exp: Boolean) = if (exp || keepUnexportedVars) "export " else ""
+
   def generate(writer: JSWriter, indent: String): Unit =
     order.toList.foreach((p) => p match {
       case Left(subName) => {
         val ss = subSpace(subName)
-        val exp = if (ss._2) "export " else ""
-        writer.writeln(s"${indent}${exp}declare module $subName {")
+        writer.writeln(s"${indent}${expStr(ss._2)}declare module $subName {")
         ss._1.generate(writer, indent + "  ")
         writer.writeln(s"$indent}")
       }
       case Right(name) => {
         val (mem, exp) = members(name)
         mem match {
-          case inter: TSIntersectionType if (exp || keepUnexportedVars) => // overloaded functions
-            writer.writeln(Converter.generateFunDeclaration(inter, name)(indent))
-          case f: TSFunctionType if (exp || keepUnexportedVars) =>
-            writer.writeln(Converter.generateFunDeclaration(f, name)(indent))
-          case overload: TSIgnoredOverload if (exp || keepUnexportedVars) =>
-            writer.writeln(Converter.generateFunDeclaration(overload, name)(indent))
+          case inter: TSIntersectionType => // overloaded functions
+            writer.writeln(Converter.generateFunDeclaration(inter, name, exp || keepUnexportedVars)(indent))
+          case f: TSFunctionType =>
+            writer.writeln(Converter.generateFunDeclaration(f, name, exp || keepUnexportedVars)(indent))
+          case overload: TSIgnoredOverload =>
+            writer.writeln(Converter.generateFunDeclaration(overload, name, exp || keepUnexportedVars)(indent))
           case _: TSClassType => writer.writeln(Converter.convert(mem, exp)(indent))
           case TSInterfaceType(name, _, _, _) if (name =/= "") =>
             writer.writeln(Converter.convert(mem, exp)(indent))
           case _: TSTypeAlias => writer.writeln(Converter.convert(mem, exp)(indent))
-          case _ if (exp || keepUnexportedVars) => writer.writeln(s"${indent}let $name: ${Converter.convert(mem)("")}")
-          case _ => () // if a variable/function is not exported, there is no need to add it into the interface file.
+          case _ => writer.writeln(s"${indent}${expStr(exp || keepUnexportedVars)}val $name: ${Converter.convert(mem)("")}")
         }
       }
     })

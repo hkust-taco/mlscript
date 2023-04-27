@@ -3,11 +3,11 @@
 :NoJS
 :AllowTypeErrors
 declare trait None() {
-  let _tag: "None"
+  val _tag: "None"
 }
 declare trait Some<A>() {
-  let _tag: "Some"
-  let value: A
+  val _tag: "Some"
+  val value: A
 }
 type Option<A> = (None) | (Some<A>)
 type Func = (number) => number
@@ -20,28 +20,29 @@ type SomeInterface = {x: number,y: number,}
 declare class ABC() {}
 type DEF = ABC
 type TP<A, B, C> = (A, B, C, )
-declare module NA {
+export declare module NA {
+  fun fb(b: string): unit
   type B = string
 }
 declare class NC() {
-  let b: string
+  val b: string
 }
 type G = ABC
-let none: {_tag: "None",}
+export val none: {_tag: "None",}
 fun some<A>(a: A): (None) | (Some<A>)
 //│ ╔══[ERROR] traits are not yet supported
 //│ ║  l.5: 	declare trait None() {
 //│ ║       	        ^^^^^^^^^^^^^^
-//│ ║  l.6: 	  let _tag: "None"
+//│ ║  l.6: 	  val _tag: "None"
 //│ ║       	^^^^^^^^^^^^^^^^^^
 //│ ║  l.7: 	}
 //│ ╙──     	^
 //│ ╔══[ERROR] traits are not yet supported
 //│ ║  l.8: 	declare trait Some<A>() {
 //│ ║       	        ^^^^^^^^^^^^^^^^^
-//│ ║  l.9: 	  let _tag: "Some"
+//│ ║  l.9: 	  val _tag: "Some"
 //│ ║       	^^^^^^^^^^^^^^^^^^
-//│ ║  l.10: 	  let value: A
+//│ ║  l.10: 	  val value: A
 //│ ║        	^^^^^^^^^^^^^^
 //│ ║  l.11: 	}
 //│ ╙──      	^
@@ -64,19 +65,19 @@ fun some<A>(a: A): (None) | (Some<A>)
 //│ ║  l.17: 	type I3 = (I1) & (I2)
 //│ ╙──      	                 ^^^^
 //│ ╔══[ERROR] Type parameters here are not yet supported in this position
-//│ ║  l.31: 	fun some<A>(a: A): (None) | (Some<A>)
+//│ ║  l.32: 	fun some<A>(a: A): (None) | (Some<A>)
 //│ ╙──      	         ^
 //│ ╔══[ERROR] type identifier not found: A
-//│ ║  l.31: 	fun some<A>(a: A): (None) | (Some<A>)
+//│ ║  l.32: 	fun some<A>(a: A): (None) | (Some<A>)
 //│ ╙──      	               ^
 //│ ╔══[ERROR] trait None cannot be used as a type
-//│ ║  l.31: 	fun some<A>(a: A): (None) | (Some<A>)
+//│ ║  l.32: 	fun some<A>(a: A): (None) | (Some<A>)
 //│ ╙──      	                   ^^^^^^
 //│ ╔══[ERROR] trait Some cannot be used as a type
-//│ ║  l.31: 	fun some<A>(a: A): (None) | (Some<A>)
+//│ ║  l.32: 	fun some<A>(a: A): (None) | (Some<A>)
 //│ ╙──      	                            ^^^^^^^^^
 //│ ╔══[ERROR] type identifier not found: A
-//│ ║  l.31: 	fun some<A>(a: A): (None) | (Some<A>)
+//│ ║  l.32: 	fun some<A>(a: A): (None) | (Some<A>)
 //│ ╙──      	                                  ^
 //│ trait None()
 //│ trait Some[A]()
@@ -93,6 +94,7 @@ fun some<A>(a: A): (None) | (Some<A>)
 //│ type TP[A, B, C] = (A, B, C,)
 //│ module NA() {
 //│   type B = string
+//│   fun fb: (b: string,) -> unit
 //│ }
 //│ class NC() {
 //│   let b: string

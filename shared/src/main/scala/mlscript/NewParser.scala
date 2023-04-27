@@ -403,7 +403,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
           case ModifierSet(mods, (KEYWORD(kwStr @ ("fun" | "val" | "let")), l0) :: c) => // TODO support rec?
             consume
             val (isDecl, mods2) = mods.handle("declare")
-            val ( isExported, mods3) = mods2.handle("export")
+            val (isExported, mods3) = mods2.handle("export")
             mods3.done
             val isLetRec = yeetSpaces match {
               case (KEYWORD("rec"), l1) :: _ if kwStr === "let" =>

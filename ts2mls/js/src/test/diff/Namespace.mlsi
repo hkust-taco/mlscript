@@ -2,8 +2,9 @@
 :NewDefs
 :NoJS
 :AllowTypeErrors
-declare module N1 {
+export declare module N1 {
   fun f(x: anything): number
+  fun ff(y: anything): number
   export declare class C() {
     fun f(): unit
   }
@@ -12,10 +13,11 @@ declare module N1 {
   }
   export declare module N2 {
     fun fff(x: (false) | (true)): number
+    fun gg(c: N1.C): N1.C
     declare class BBB() extends N1.C {}
   }
 }
-declare module AA {
+export declare module AA {
   fun f(x: anything): string
   export declare class C() {
     fun f(): unit
@@ -29,21 +31,27 @@ declare module AA {
 fun f1(x: N1.C): N1.C
 fun f2(x: AA.C): AA.C
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.10: 	  declare trait I() {
+//│ ║  l.11: 	  declare trait I() {
 //│ ║        	          ^^^^^^^^^^^
-//│ ║  l.11: 	    fun f(): number
+//│ ║  l.12: 	    fun f(): number
 //│ ║        	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.12: 	  }
+//│ ║  l.13: 	  }
 //│ ╙──      	^^^
+//│ ╔══[ERROR] Module `N1` is not supported yet.
+//│ ║  l.16: 	    fun gg(c: N1.C): N1.C
+//│ ╙──      	                ^^
+//│ ╔══[ERROR] Module `N1` is not supported yet.
+//│ ║  l.16: 	    fun gg(c: N1.C): N1.C
+//│ ╙──      	                       ^^
 //│ ╔══[ERROR] Unsupported parent specification
-//│ ║  l.15: 	    declare class BBB() extends N1.C {}
+//│ ║  l.17: 	    declare class BBB() extends N1.C {}
 //│ ╙──      	                                ^^^^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.23: 	  export declare trait I() {
+//│ ║  l.25: 	  export declare trait I() {
 //│ ║        	                 ^^^^^^^^^^^
-//│ ║  l.24: 	    fun f(): number
+//│ ║  l.26: 	    fun f(): number
 //│ ║        	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.25: 	  }
+//│ ║  l.27: 	  }
 //│ ╙──      	^^^
 //│ module N1() {
 //│   class C() {
@@ -53,8 +61,10 @@ fun f2(x: AA.C): AA.C
 //│   module N2() {
 //│     class BBB()
 //│     fun fff: (x: bool,) -> number
+//│     fun gg: (c: error,) -> error
 //│   }
 //│   fun f: (x: anything,) -> number
+//│   fun ff: (y: anything,) -> number
 //│ }
 //│ module AA() {
 //│   class C() {

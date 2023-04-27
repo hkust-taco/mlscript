@@ -3,7 +3,7 @@
 :NoJS
 :AllowTypeErrors
 declare trait IFoo() {
-  let a: string
+  val a: string
   fun b(x: number): number
   fun c(): (false) | (true)
   fun d(x: string): unit
@@ -17,22 +17,22 @@ declare trait IEvent() {
   fun callback(): (number) => unit
 }
 declare trait SearchFunc() {
-  let __call: Unsupported<"(source: string, subString: string): boolean;", "ts2mls/js/src/test/typescript/InterfaceMember.ts", 24, 22>
+  val __call: Unsupported<"(source: string, subString: string): boolean;", "ts2mls/js/src/test/typescript/InterfaceMember.ts", 24, 22>
 }
 declare trait StringArray() {
-  let __index: Unsupported<"[index: number]: string;", "ts2mls/js/src/test/typescript/InterfaceMember.ts", 28, 23>
+  val __index: Unsupported<"[index: number]: string;", "ts2mls/js/src/test/typescript/InterfaceMember.ts", 28, 23>
 }
 declare trait Counter() {
-  let __call: Unsupported<"(start: number): string;", "ts2mls/js/src/test/typescript/InterfaceMember.ts", 32, 19>
-  let interval: number
+  val __call: Unsupported<"(start: number): string;", "ts2mls/js/src/test/typescript/InterfaceMember.ts", 32, 19>
+  val interval: number
   fun reset(): unit
 }
 declare trait Simple() {
-  let a: number
+  val a: number
   fun b(x: (false) | (true)): string
 }
 declare trait Simple2<T>() {
-  let abc: T
+  val abc: T
 }
 declare trait Next() extends Simple {}
 declare trait TTT<T>() {
@@ -41,7 +41,7 @@ declare trait TTT<T>() {
 //│ ╔══[ERROR] traits are not yet supported
 //│ ║  l.5: 	declare trait IFoo() {
 //│ ║       	        ^^^^^^^^^^^^^^
-//│ ║  l.6: 	  let a: string
+//│ ║  l.6: 	  val a: string
 //│ ║       	^^^^^^^^^^^^^^^
 //│ ║  l.7: 	  fun b(x: number): number
 //│ ║       	^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -68,23 +68,23 @@ declare trait TTT<T>() {
 //│ ╔══[ERROR] traits are not yet supported
 //│ ║  l.19: 	declare trait SearchFunc() {
 //│ ║        	        ^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.20: 	  let __call: Unsupported<"(source: string, subString: string): boolean;", "ts2mls/js/src/test/typescript/InterfaceMember.ts", 24, 22>
+//│ ║  l.20: 	  val __call: Unsupported<"(source: string, subString: string): boolean;", "ts2mls/js/src/test/typescript/InterfaceMember.ts", 24, 22>
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.21: 	}
 //│ ╙──      	^
 //│ ╔══[ERROR] traits are not yet supported
 //│ ║  l.22: 	declare trait StringArray() {
 //│ ║        	        ^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.23: 	  let __index: Unsupported<"[index: number]: string;", "ts2mls/js/src/test/typescript/InterfaceMember.ts", 28, 23>
+//│ ║  l.23: 	  val __index: Unsupported<"[index: number]: string;", "ts2mls/js/src/test/typescript/InterfaceMember.ts", 28, 23>
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.24: 	}
 //│ ╙──      	^
 //│ ╔══[ERROR] traits are not yet supported
 //│ ║  l.25: 	declare trait Counter() {
 //│ ║        	        ^^^^^^^^^^^^^^^^^
-//│ ║  l.26: 	  let __call: Unsupported<"(start: number): string;", "ts2mls/js/src/test/typescript/InterfaceMember.ts", 32, 19>
+//│ ║  l.26: 	  val __call: Unsupported<"(start: number): string;", "ts2mls/js/src/test/typescript/InterfaceMember.ts", 32, 19>
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.27: 	  let interval: number
+//│ ║  l.27: 	  val interval: number
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.28: 	  fun reset(): unit
 //│ ║        	^^^^^^^^^^^^^^^^^^^
@@ -93,7 +93,7 @@ declare trait TTT<T>() {
 //│ ╔══[ERROR] traits are not yet supported
 //│ ║  l.30: 	declare trait Simple() {
 //│ ║        	        ^^^^^^^^^^^^^^^^
-//│ ║  l.31: 	  let a: number
+//│ ║  l.31: 	  val a: number
 //│ ║        	^^^^^^^^^^^^^^^
 //│ ║  l.32: 	  fun b(x: (false) | (true)): string
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -102,7 +102,7 @@ declare trait TTT<T>() {
 //│ ╔══[ERROR] traits are not yet supported
 //│ ║  l.34: 	declare trait Simple2<T>() {
 //│ ║        	        ^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.35: 	  let abc: T
+//│ ║  l.35: 	  val abc: T
 //│ ║        	^^^^^^^^^^^^
 //│ ║  l.36: 	}
 //│ ╙──      	^

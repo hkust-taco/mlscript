@@ -2,18 +2,19 @@
 :NewDefs
 :NoJS
 :AllowTypeErrors
-let URI: string
-let URI2: string
-let foo: number
-let bar: false
+export val URI: string
+export val URI2: string
+export val foo: number
+export val bar: false
 declare class FooBar() {}
-let fb: FooBar
-declare module ABC {
+export val fb: FooBar
+export declare module ABC {
   export declare class DEF() {}
 }
-let d: ABC.DEF
-declare module DD {
-  let foo: number
+export val d: ABC.DEF
+export declare module DD {
+  export val foo: number
+  val bar: number
 }
 //│ let URI: string
 //│ let URI2: string
@@ -26,5 +27,6 @@ declare module DD {
 //│ }
 //│ let d: DEF
 //│ module DD() {
+//│   let bar: number
 //│   let foo: number
 //│ }

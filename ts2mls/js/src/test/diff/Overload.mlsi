@@ -4,7 +4,7 @@
 :AllowTypeErrors
 fun f: ((number) => string) & ((string) => string)
 declare class M() {
-  let foo: ((number) => string) & ((string) => string)
+  val foo: ((number) => string) & ((string) => string)
 }
 fun app: (((string) => unit) => (number) => unit) & (((string) => unit) => (string) => unit)
 fun create: ((number) => unit => (false) | (true)) & (((false) | (true)) => unit => (false) | (true))
@@ -17,7 +17,7 @@ fun op: ((number) => ((number) | (undefined)) => unit) & ((number) => (((false) 
 fun swap: (((number, string, )) => (number, string, )) & (((string, number, )) => (number, string, ))
 fun u: ((((number) | (false)) | (true)) => string) & ((object) => string)
 fun doSome<T, U>(x: anything): unit /* warning: the overload of function doSome is not supported yet. */
-declare module XX {
+export declare module XX {
   fun f<T>(x: T, n: anything): string /* warning: the overload of function f is not supported yet. */
 }
 declare class WWW() {

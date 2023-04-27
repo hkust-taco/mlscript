@@ -2,8 +2,8 @@
 :NewDefs
 :NoJS
 :AllowTypeErrors
-let a: {a: "A",b: "B",}
-let num: {y: 114,}
+export val a: {a: "A",b: "B",}
+export val num: {y: 114,}
 fun foo(x: {xx: "X",}): {yy: "Y",}
 //│ let a: {a: "A", b: "B"}
 //│ let num: {y: 114}

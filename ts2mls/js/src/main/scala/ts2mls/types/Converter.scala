@@ -25,13 +25,13 @@ object Converter {
     else name
   }
 
-  def generateFunDeclaration(tsType: TSType, name: String)(implicit indent: String = ""): String = tsType match {
+  def generateFunDeclaration(tsType: TSType, name: String, exported: Boolean)(implicit indent: String = ""): String = tsType match {
     case TSFunctionType(params, res, typeVars) => {
       val pList = if (params.isEmpty) "" else params.map(p => s"${convert(p)("")}").reduceLeft((r, p) => s"$r, $p")
       val tpList = if (typeVars.isEmpty) "" else s"<${typeVars.map(p => convert(p)("")).reduceLeft((r, p) => s"$r, $p")}>"
       s"${indent}fun ${escapeIdent(name)}$tpList($pList): ${convert(res)("")}"
     }
-    case overload @ TSIgnoredOverload(base, _) => s"${generateFunDeclaration(base, name)} ${overload.warning}"
+    case overload @ TSIgnoredOverload(base, _) => s"${generateFunDeclaration(base, name, false)} ${overload.warning}"
     case inter: TSIntersectionType => s"${indent}fun ${name}: ${Converter.convert(inter)}"
     case _ => throw new AssertionError("non-function type is not allowed.")
   }
@@ -71,9 +71,9 @@ object Converter {
       case Public =>
         if (typeName === "trait ") s"${escapeIdent(m._1)}: ${convert(m._2)},"
         else m._2.base match {
-          case _: TSFunctionType => s"${generateFunDeclaration(m._2.base, m._1)(indent + "  ")}\n"
-          case _: TSIgnoredOverload => s"${generateFunDeclaration(m._2.base, m._1)(indent + "  ")}\n"
-          case _ => s"${indent}  let ${escapeIdent(m._1)}: ${convert(m._2)}\n"
+          case _: TSFunctionType => s"${generateFunDeclaration(m._2.base, m._1, false)(indent + "  ")}\n"
+          case _: TSIgnoredOverload => s"${generateFunDeclaration(m._2.base, m._1, false)(indent + "  ")}\n"
+          case _ => s"${indent}  val ${escapeIdent(m._1)}: ${convert(m._2)}\n"
         }
       case _ => "" // TODO: deal with private/protected members
     }) :::

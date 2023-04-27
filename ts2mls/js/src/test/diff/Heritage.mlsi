@@ -12,22 +12,22 @@ declare class C<T>() {
 }
 declare class D() extends C<number> {}
 declare trait Wu() {
-  let x: (false) | (true)
+  val x: (false) | (true)
 }
 declare class WuWu() extends Wu {
-  let y: (false) | (true)
+  val y: (false) | (true)
 }
 declare trait WuWuWu() extends WuWu {
-  let z: (false) | (true)
+  val z: (false) | (true)
 }
 declare trait Never() extends WuWuWu {
   fun w(): nothing
 }
 declare class VG<T>() {
-  let x: T
+  val x: T
 }
 declare class Home<T>() extends VG<string> {
-  let y: T
+  val y: T
 }
 declare trait O<I>() {
   fun xx(x: I): I
@@ -35,9 +35,9 @@ declare trait O<I>() {
 declare class OR<R>() extends O<R> {
   fun xx(x: R): R
 }
-declare module Five {
+export declare module Five {
   export declare class ROTK() {
-    let wu: string
+    val wu: string
   }
   export declare class Y() extends Five.ROTK {}
 }
@@ -51,7 +51,7 @@ declare class Y() extends Five.ROTK {}
 //│ ╔══[ERROR] traits are not yet supported
 //│ ║  l.14: 	declare trait Wu() {
 //│ ║        	        ^^^^^^^^^^^^
-//│ ║  l.15: 	  let x: (false) | (true)
+//│ ║  l.15: 	  val x: (false) | (true)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.16: 	}
 //│ ╙──      	^
@@ -61,7 +61,7 @@ declare class Y() extends Five.ROTK {}
 //│ ╔══[ERROR] traits are not yet supported
 //│ ║  l.20: 	declare trait WuWuWu() extends WuWu {
 //│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.21: 	  let z: (false) | (true)
+//│ ║  l.21: 	  val z: (false) | (true)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.22: 	}
 //│ ╙──      	^

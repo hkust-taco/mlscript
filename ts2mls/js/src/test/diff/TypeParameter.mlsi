@@ -15,11 +15,11 @@ fun getStringPrinter(): Printer<string>
 fun foo<T>(p: Printer<T>, x: T): T
 fun foo2<T>(p: Printer<T>, x: T): T
 declare class F<T>() {
-  let x: T
+  val x: T
   fun GG<U>(y: U): T
 }
 declare trait I<T>() {
-  let x: T
+  val x: T
   fun GG<U>(y: U): T
 }
 declare class FFF<T>() {
@@ -69,7 +69,7 @@ fun getFFF(): FFF<number>
 //│ ╔══[ERROR] traits are not yet supported
 //│ ║  l.21: 	declare trait I<T>() {
 //│ ║        	        ^^^^^^^^^^^^^^
-//│ ║  l.22: 	  let x: T
+//│ ║  l.22: 	  val x: T
 //│ ║        	^^^^^^^^^^
 //│ ║  l.23: 	  fun GG<U>(y: U): T
 //│ ║        	^^^^^^^^^^^^^^^^^^^^

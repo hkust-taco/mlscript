@@ -5,12 +5,12 @@
 export declare module Foo {
   fun Baz(aa: string): IBar
   declare trait IBar() {
-    let a: string
+    val a: string
   }
   export declare class Bar() extends IBar {
-    let a: string
+    val a: string
   }
-  let baz: IBar
+  export val baz: IBar
 }
 //│ ╔══[ERROR] type identifier not found: IBar
 //│ ║  l.6: 	  fun Baz(aa: string): IBar
@@ -18,7 +18,7 @@ export declare module Foo {
 //│ ╔══[ERROR] traits are not yet supported
 //│ ║  l.7: 	  declare trait IBar() {
 //│ ║       	          ^^^^^^^^^^^^^^
-//│ ║  l.8: 	    let a: string
+//│ ║  l.8: 	    val a: string
 //│ ║       	^^^^^^^^^^^^^^^^^
 //│ ║  l.9: 	  }
 //│ ╙──     	^^^
@@ -26,8 +26,8 @@ export declare module Foo {
 //│ ║  l.10: 	  export declare class Bar() extends IBar {
 //│ ╙──      	                                     ^^^^
 //│ ╔══[ERROR] trait IBar cannot be used as a type
-//│ ║  l.13: 	  let baz: IBar
-//│ ╙──      	           ^^^^
+//│ ║  l.13: 	  export val baz: IBar
+//│ ╙──      	                  ^^^^
 //│ module Foo() {
 //│   class Bar() {
 //│     let a: string

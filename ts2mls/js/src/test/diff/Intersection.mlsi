@@ -6,10 +6,10 @@ fun extend<T, U>(first: T, second: U): (T) & (U)
 fun foo<T, U>(x: (T) & (U)): unit
 fun over(f: ((number) => string) & ((object) => string)): string
 declare trait IA() {
-  let x: number
+  val x: number
 }
 declare trait IB() {
-  let y: number
+  val y: number
 }
 fun iii(x: (IA) & (IB)): (IA) & (IB)
 fun uu<U, V, T, P>(x: ((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P))): ((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P))
@@ -49,14 +49,14 @@ fun inter(c: (A) & (B)): (A) & (B)
 //│ ╔══[ERROR] traits are not yet supported
 //│ ║  l.8: 	declare trait IA() {
 //│ ║       	        ^^^^^^^^^^^^
-//│ ║  l.9: 	  let x: number
+//│ ║  l.9: 	  val x: number
 //│ ║       	^^^^^^^^^^^^^^^
 //│ ║  l.10: 	}
 //│ ╙──      	^
 //│ ╔══[ERROR] traits are not yet supported
 //│ ║  l.11: 	declare trait IB() {
 //│ ║        	        ^^^^^^^^^^^^
-//│ ║  l.12: 	  let y: number
+//│ ║  l.12: 	  val y: number
 //│ ║        	^^^^^^^^^^^^^^^
 //│ ║  l.13: 	}
 //│ ╙──      	^
