@@ -42,6 +42,7 @@ class ErrC1 extends Showable
 class ErrC2 extends Showable {
     fun toString = 114
 }
+class ErrC3(toString: string -> string) extends Showable
 //│ ╔══[ERROR] Member toString is declared in parent trait but not implemented
 //│ ║  l.41: 	class ErrC1 extends Showable
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -60,10 +61,21 @@ class ErrC2 extends Showable {
 //│ ╟── from signature of member toString:
 //│ ║  l.5: 	    fun toString: string
 //│ ╙──     	        ^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in function type:
+//│ ║  l.45: 	class ErrC3(toString: string -> string) extends Showable
+//│ ║        	                      ^^^^^^^^^^^^^^^^
+//│ ╟── type `string -> string` is not an instance of type `string`
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.5: 	    fun toString: string
+//│ ║       	                  ^^^^^^
+//│ ╟── from signature of member toString:
+//│ ║  l.5: 	    fun toString: string
+//│ ╙──     	        ^^^^^^^^^^^^^^^^
 //│ class ErrC1()
 //│ class ErrC2() {
 //│   fun toString: 114
 //│ }
+//│ class ErrC3(toString: string -> string)
 
 trait Stadt {
     let name: string
@@ -109,40 +121,40 @@ class Errcity(size: int) extends SizedStadt {
     fun bar = "hahaha"
 }
 //│ ╔══[ERROR] Type mismatch in definition of method bar:
-//│ ║  l.109: 	    fun bar = "hahaha"
+//│ ║  l.121: 	    fun bar = "hahaha"
 //│ ║         	        ^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"hahaha"` is not a function
-//│ ║  l.109: 	    fun bar = "hahaha"
+//│ ║  l.121: 	    fun bar = "hahaha"
 //│ ║         	              ^^^^^^^^
 //│ ╟── but it flows into definition of method bar with expected type `int -> int`
-//│ ║  l.109: 	    fun bar = "hahaha"
+//│ ║  l.121: 	    fun bar = "hahaha"
 //│ ║         	        ^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from function type:
-//│ ║  l.87: 	    fun bar: int -> int
+//│ ║  l.99: 	    fun bar: int -> int
 //│ ║        	             ^^^^^^^^^^
 //│ ╟── from signature of member bar:
-//│ ║  l.87: 	    fun bar: int -> int
+//│ ║  l.99: 	    fun bar: int -> int
 //│ ╙──      	        ^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Member foo is declared in parent trait but not implemented
-//│ ║  l.108: 	class Errcity(size: int) extends SizedStadt {
+//│ ║  l.120: 	class Errcity(size: int) extends SizedStadt {
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.109: 	    fun bar = "hahaha"
+//│ ║  l.121: 	    fun bar = "hahaha"
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.110: 	}
+//│ ║  l.122: 	}
 //│ ╙──       	^
 //│ ╔══[ERROR] Member name is declared in parent trait but not implemented
-//│ ║  l.108: 	class Errcity(size: int) extends SizedStadt {
+//│ ║  l.120: 	class Errcity(size: int) extends SizedStadt {
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.109: 	    fun bar = "hahaha"
+//│ ║  l.121: 	    fun bar = "hahaha"
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.110: 	}
+//│ ║  l.122: 	}
 //│ ╙──       	^
 //│ ╔══[ERROR] Type mismatch in type reference:
-//│ ║  l.108: 	class Errcity(size: int) extends SizedStadt {
+//│ ║  l.120: 	class Errcity(size: int) extends SizedStadt {
 //│ ║         	                    ^^^
 //│ ╟── type `int` does not match type `1 | 2 | 3`
 //│ ╟── Note: constraint arises from union type:
-//│ ║  l.86: 	    let size: 1 | 2 | 3
+//│ ║  l.98: 	    let size: 1 | 2 | 3
 //│ ╙──      	              ^^^^^^^^^
 //│ class Errcity(size: int) {
 //│   fun bar: "hahaha"
@@ -178,7 +190,7 @@ mixin Fooo {
 // FIXME
 class Dirtberg extends More, SizedStadt, Fooo {
     let name = "dirt"
-    fun size = 4
+    fun size = 4    // this should not check
 }
 //│ class Dirtberg() {
 //│   fun bar: int -> int

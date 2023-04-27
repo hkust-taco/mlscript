@@ -1064,7 +1064,6 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                                 case _ => computeBaseClass(ps, pack)
                               }
                           case _ => 
-                            err(msg"Could not find definition ${parNme}", p.toLoc)
                             computeBaseClass(ps, pack)
                         }
                       case Nil => pack
