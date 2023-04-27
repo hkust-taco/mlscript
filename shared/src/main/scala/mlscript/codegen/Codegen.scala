@@ -849,7 +849,7 @@ final case class JSQuasiquoteRunFunctionBody() extends JSStmt {
       context.forEach(context_pair => (typeof context_pair[0] == "symbol")? symbol_value .set(context_pair[0], context_pair[1]) : name_value.set(context_pair[0], context_pair[1]));
     }
     function contextToList() {
-      return Array.from(name_value).concat(Array.from(symbol_value));
+			return Array.from(name_value).concat(Array.from(symbol_value));
     }
     function _run(s_expr) {
       switch(s_expr[0]) {
@@ -860,9 +860,9 @@ final case class JSQuasiquoteRunFunctionBody() extends JSStmt {
         // expressions
         case "Rcd": // ['Rcd', {key -> translateQuoted(value)}]
           let rcd = {};
-          for ([key, value] of Object.entries(s_expr[1])) {
-            rcd[key] = _run(value);
-          }
+					for (entry of Object.entries(s_expr[1])) {
+						rcd[entry[0]] = _run(entry[1]);
+					}
           return rcd;
         case "Sel": // ['Sel', translateQuoted(receiver), 'name']
           return _run(s_expr[1])[s_expr[2]];
@@ -889,8 +889,9 @@ final case class JSQuasiquoteRunFunctionBody() extends JSStmt {
             return callee(..._run(s_expr[2]));
           }
         case "Let": // ['Let', 'name_str', Symbol(name), translateQuoted(value), translateQuoted(body)]
-          name_value.set(s_expr[1], _run(s_expr[3]));
-          symbol_value.set(s_expr[2], _run(s_expr[3]));
+          const value = _run(s_expr[3]);
+          name_value.set(s_expr[1], value);
+          symbol_value.set(s_expr[2], value);
           return _run(s_expr[4]);
         case "Bra": // ['Bra', translateQuoted(trm)]
           return _run(s_expr[1]);
@@ -906,29 +907,29 @@ final case class JSQuasiquoteRunFunctionBody() extends JSStmt {
           return _run(s_expr[1]);
         case "Quoted":
           return processNestedQQ(s_expr[1]);
-        case "Lam": 
-          let body_sexpr = processNestedQQ(s_expr[2]);
+        case "Lam": 	
+          let body_sexpr = processNestedQQ(s_expr[2]);	
           return function (...input) {
-            function formContext(paramList, input, context) {
+            function formContext(paramList, input, lambdaContext) {
               if (paramList.length === 3 && paramList[0] == "_") {
-                context.push([paramList[1], input]);
-                context.push([paramList[2], input]);
-                return context;
+                lambdaContext.push([paramList[1], input]);
+                lambdaContext.push([paramList[2], input]);
+                return lambdaContext;
               }
               for (let i = 0; i < paramList.length; i++) {
                 if (typeof paramList[i] === "string") {
-                  context.push([paramList[i], input[i]]);
+                  lambdaContext.push([paramList[i], input[i]]);
                 } else if (Array.isArray(paramList[i])) {
                   let result = formContext(paramList[i], input[i], []);
-                  context = context.concat(result);
+                  lambdaContext = lambdaContext.concat(result);
                 } else { // Object {y: 'y'}
                   for (const [key, value] of Object.entries(paramList[i])) {
 										let result = formContext(value, input[i][key], []);
-										context = context.concat(result);
+										lambdaContext = lambdaContext.concat(result);
                   }
                 }
               }
-              return context;
+              return lambdaContext;
             }
 
             function putinFreeVar(s_expr, closure) {
@@ -943,7 +944,7 @@ final case class JSQuasiquoteRunFunctionBody() extends JSStmt {
               }
             }
             
-					let context = formContext(s_expr[1], input, [contextToList()]);
+					let context = formContext(s_expr[1], input, contextToList());
 					let result = run(body_sexpr, context);
 					return putinFreeVar(result, context);
           }

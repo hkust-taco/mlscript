@@ -250,13 +250,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       val qqScope = scope.derive("Quoted", true, true)
       translateQuoted(body)(qqScope)
     case Unquoted(body) =>
-      // this case only happens without lexical/parse error when it is in a lambda in a quasiquote
-      val callee = translateVar("run", true) 
-      val context = scope.getAllRuntimeSymbols().map( name => JSArray(JSExpr(name) :: JSIdent(name) :: Nil))
-      scope.getQuasiquoteOuterScope() match {
-        case S(qqOuterScope: Scope) => callee(translateTerm(body)(qqOuterScope), JSArray(context))
-        case N => throw CodeGenError("unquote must be in quasiquote")
-      }
+      throw CodeGenError("unquote must be in quasiquote")
     case _: Bind | _: Test | If(_, _) | TyApp(_, _) | _: Splc =>
       throw CodeGenError(s"cannot generate code for term ${inspect(term)}")
   }
@@ -469,30 +463,9 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     }
   }
 
-  protected class FreeVarTracker(var free: MutSet[Str] = MutSet(), var defined: MutSet[Str] = MutSet()) {
-    def addFreeVar(name: Str): Bool = free add name
 
-    def addDefinedVar(name: Str): Bool = defined add name
 
-    def isDefinedVar(name: Str): Bool = defined contains name
-
-    def freeVarNameList: Ls[Str] = free.toList
-  }
-
-  protected def translateQuoted(body: Term)(implicit scope: Scope): JSExpr = {
-    val tracker = new FreeVarTracker
-    val sExpr = translateQuotedTerm(body)(scope, tracker)
-    val freeVarNameList = tracker.freeVarNameList
-    freeVarNameList.foldLeft(sExpr)(
-      (sExpr, name) => {
-        val fParams = Ls(JSNamePattern(name))
-        val fBody = L(sExpr)
-        val fArgs = Ls(JSArray(Ls(JSExpr("FreeVar"), JSExpr(name))))
-        JSImmEvalFn(N, fParams, fBody, fArgs)
-      })
-  }
-
-  protected def translateQuotedTerm(body: Term)(implicit scope: Scope, tracker: FreeVarTracker) : JSExpr = body match {
+  protected def translateQuoted(body: Term)(implicit scope: Scope) : JSExpr = body match {
     case Var(name) => // TODO: did not handle StubValueSymbol, ClassSymbol, TraitSymbol
       scope.resolveValue(name) match {
         case S(sym: BuiltinSymbol) => 
@@ -510,11 +483,9 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
               )) 
             // TODO: check if substitution can be done here (ident -> [FreeVar, name])
             case _ => // free variable for quasiquote
-              if (!tracker.isDefinedVar(name)) 
-                tracker.addFreeVar(name)
               JSArray(Ls(
                 JSExpr("Var"),
-                JSIdent(name)
+                JSArray(Ls(JSExpr("FreeVar"), JSExpr(name)))
               ))   
           }
       }
@@ -543,26 +514,26 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       JSArray(Ls(
         JSExpr("App"), 
         JSExpr(op), 
-        translateQuotedTerm(lhs), 
-        translateQuotedTerm(rhs)
+        translateQuoted(lhs), 
+        translateQuoted(rhs)
       ))
     case App(trm, params @ Tup(_)) =>
       JSArray(Ls(
         JSExpr("App_Fun"),
-        translateQuotedTerm(trm),
-        translateQuotedTerm(params)
+        translateQuoted(trm),
+        translateQuoted(params)
       ))
     case Rcd(fields) => 
       JSArray(Ls(
         JSExpr("Rcd"), 
         JSRecord(fields map { case (key, Fld(_, _, value)) => 
-          key.name -> translateQuotedTerm(value)
+          key.name -> translateQuoted(value)
         })
       ))
     case Sel(receiver, fieldName) => // TODO: no support for selecting class properties
       JSArray(Ls(
         JSExpr("Sel"),
-        translateQuotedTerm(receiver),
+        translateQuoted(receiver),
         JSExpr(fieldName.name)
       ))
     case Let(true, Var(name), Lam(args, body), expr) => 
@@ -572,20 +543,19 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     case Let(_, Var(name), value, body) => 
       val letScope = scope.derive("Let", false, true)
       val runtimeName = letScope.declareParameter(name)
-      tracker.addDefinedVar(name)
       val s_expr = JSArray(Ls(
         JSExpr("Let"),
         JSExpr(name),
         JSIdent(runtimeName),
-        translateQuotedTerm(value),
-        translateQuotedTerm(body)(letScope, tracker)
+        translateQuoted(value),
+        translateQuoted(body)(letScope)
       ))
       JSImmEvalFn(None, Ls(JSNamePattern(runtimeName)), L(s_expr), Ls(JSLit(s"Symbol('${name}')")))
     case Blk(stmts) => 
       val blkScope = scope.derive("Blk", false, true)
       val flattened = stmts.iterator.flatMap(_.desugared._2).toList
       val s_expr_list = flattened.iterator.zipWithIndex.map {
-        case (t: Term, index) => translateQuotedTerm(t)(blkScope, tracker)
+        case (t: Term, index) => translateQuoted(t)(blkScope)
         case (_: Def | _: TypeDef | _: NuFunDef /* | _: NuTypeDef */, _) =>
           throw CodeGenError("unsupported definitions in blocks")
       }.toList
@@ -601,10 +571,10 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     case Bra(_, trm) =>
       JSArray(Ls(
         JSExpr("Bra"),
-        translateQuotedTerm(trm)
+        translateQuoted(trm)
       ))
     case Tup(terms) => 
-      val js_array = JSArray(terms map { case (_, Fld(_, _, term)) => translateQuotedTerm(term) })
+      val js_array = JSArray(terms map { case (_, Fld(_, _, term)) => translateQuoted(term) })
       JSArray(Ls(
         JSExpr("Tup"),
         js_array
@@ -612,8 +582,8 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     case Subs(arr, idx) => 
       JSArray(Ls(
         JSExpr("Subs"),
-        translateQuotedTerm(arr),
-        translateQuotedTerm(idx)
+        translateQuoted(arr),
+        translateQuoted(idx)
       ))
     case New(N, TypingUnit(Nil)) => throw CodeGenError("New #1")
     case New(S(TypeName(className) -> Tup(args)), TypingUnit(Nil)) => throw CodeGenError("New #2") 
@@ -636,9 +606,9 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     case If(IfThen(condition, branch1), S(branch2)) =>
       JSArray(Ls(
         JSExpr("If"), 
-        translateQuotedTerm(condition), 
-        translateQuotedTerm(branch1), 
-        translateQuotedTerm(branch2)
+        translateQuoted(condition), 
+        translateQuoted(branch1), 
+        translateQuoted(branch2)
       ))
     case New(_, TypingUnit(_)) =>
       throw CodeGenError("custom class body is not supported yet")

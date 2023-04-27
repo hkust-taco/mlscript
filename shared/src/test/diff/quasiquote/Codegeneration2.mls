@@ -56,18 +56,47 @@ run(res)
 //│    = [ 1 ]
 
 // should be unresolved symbol error 
-:ge
 code"let x = {a: 100}; x . a"
 //│ res: Code['a, {.: {a: 100} -> 'b -> 'a, a: 'b}]
-//│ Syntax error:
-//│   Unexpected token '.'
+//│    = [
+//│        'Let',
+//│        'x',
+//│        Symbol(x),
+//│        [ 'Bra', [ 'Rcd', [Object] ] ],
+//│        [ 'App_Fun', [ 'App_Fun', [Array], [Array] ], [ 'Tup', [Array] ] ]
+//│      ]
+
+:re
+:e
+run(res)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.71: 	run(res)
+//│ ║        	^^^^^^^^
+//│ ╙── type `anything` is not a record (expected a record with fields: a, .)
+//│ res: error
+//│ Runtime error:
+//│   TypeError: globalThis[callee] is not a function
 
 // should be unresolved symbol error
-:ge
 code"let x = {a: 100}; x. a"
 //│ res: Code['a, {.: {a: 100} -> 'b -> 'a, a: 'b}]
-//│ Syntax error:
-//│   Unexpected token '.'
+//│    = [
+//│        'Let',
+//│        'x',
+//│        Symbol(x),
+//│        [ 'Bra', [ 'Rcd', [Object] ] ],
+//│        [ 'App_Fun', [ 'App_Fun', [Array], [Array] ], [ 'Tup', [Array] ] ]
+//│      ]
+:re
+:e
+run(res)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.92: 	run(res)
+//│ ║        	^^^^^^^^
+//│ ╙── type `anything` is not a record (expected a record with fields: a, .)
+//│ res: error
+//│ Runtime error:
+//│   TypeError: globalThis[callee] is not a function
 
 // should be ok
 code"let x = {a: 100}; x .a"
