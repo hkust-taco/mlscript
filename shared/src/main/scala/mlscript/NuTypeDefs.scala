@@ -759,7 +759,6 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                                 val info = lti.complete().freshen 
                                 info match {
                                   case rawTrt: TypedNuTrt =>
-
                                     implicit val freshened: MutMap[TV, ST] = MutMap.empty
                                     implicit val shadows: Shadows = Shadows.empty
 
@@ -797,16 +796,17 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                                       vMembers ++ trt.typeMembers
                                       )
                                   case _ => 
-                                  err(msg"trait can only inherit traits", p.toLoc)
-                                  (superType, tags, members, vMembers)
+                                    err(msg"trait can only inherit traits", p.toLoc)
+                                    (superType, tags, members, vMembers)
                               }
-                              case _ => (superType, tags, members, vMembers)
+                              case _ => 
+                                err(msg"Could not find definition `${trtName}`", p.toLoc)
+                                (superType, tags, members, vMembers)
                             }
                           case Nil => (superType, tags, members, vMembers)
                     }
 
                     val (thisType, tags, baseMems, baseVMems) =
-                      // ? is it really a good idea
                       inherit(parentSpecs, TopType/*TODO*/, trtNameToNomTag(td)(noProv, ctx), Nil, Map.empty)
                     
                     // val selfType = tags & sig_ty
@@ -1063,7 +1063,9 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                                 
                                 case _ => computeBaseClass(ps, pack)
                               }
-                          case _ => computeBaseClass(ps, pack)
+                          case _ => 
+                            err(msg"Could not find definition ${parNme}", p.toLoc)
+                            computeBaseClass(ps, pack)
                         }
                       case Nil => pack
                       }
@@ -1085,15 +1087,20 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                         case S(mem: TypedNuTermDef) =>
                           val memSign = mem.typeSignature
                           implicit val prov: TP = memSign.prov
+                          // println(s"checking interface mamber `${m.name}`")
                           constrain(memSign, m.asInstanceOf[TypedNuTermDef].typeSignature)
-                        case S(_) => ()
+                        case S(pm: NuParam) =>
+                          val pmSign = pm.typeSignature
+                          implicit val prov: TP = pmSign.prov
+                          constrain(pmSign, m.asInstanceOf[TypedNuTermDef].typeSignature)
+                        case S(_) => Nil
                         case N => 
                           err(msg"Member ${m.name} is declared in parent trait but not implemented", td.toLoc)
                       }
                     }
                     
                     TypedNuCls(outerCtx.lvl, td, ttu,
-                      tparams, typedParams, mems ++ ifaceMembers.map(d => d.name -> d).toMap,
+                      tparams, typedParams, mems /* ++ ifaceMembers.map(d => d.name -> d).toMap */,
                       // if (td.kind is Nms) TopType else thisTV
                       TopType,
                       // ifaceAnnot,
