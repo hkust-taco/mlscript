@@ -54,7 +54,9 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   
   case class NuParam(nme: Var, ty: FieldType, isType: Bool)(val level: Level) extends NuMember {
     def name: Str = nme.name
-    def kind: DeclKind = Val
+    def kind: DeclKind =
+      if (isType) Als // FIXME?
+      else Val
     def typeSignature: ST = ty.ub
     
     def freshenAbove(lim: Int, rigidify: Bool)
@@ -71,6 +73,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   }
   
   
+  /* 
   // TODO:
   case class NuTypeParam(nme: TN, ty: FieldType)(val level: Level) extends NuMember {
     def name: Str = nme.name
@@ -90,7 +93,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     
     def kind: DeclKind = Als // FIXME?
   }
-  
+  */
   
   sealed trait TypedNuDecl extends NuMember {
     def name: Str
@@ -756,7 +759,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                             if (args.nonEmpty) err(msg"trait arguments not yet supported", p.toLoc)
                             ctx.get(trtName) match {
                               case S(lti: LazyTypeInfo) => 
-                                val info = lti.complete().freshen 
+                                val info = lti.complete() 
                                 info match {
                                   case rawTrt: TypedNuTrt =>
                                     implicit val freshened: MutMap[TV, ST] = MutMap.empty
@@ -817,7 +820,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     val mems = typedSignatureMembers.toMap ++ trtMems.map(d => d.name -> d).toMap
                     val vmems = baseVMems ++ tparams.map {
                       case (nme @ TypeName(name), tv, _) => 
-                        td.nme.name+"#"+name -> NuTypeParam(nme, FieldType(S(tv), tv)(provTODO))(level)
+                        td.nme.name+"#"+name -> NuParam(nme.toVar, FieldType(S(tv), tv)(provTODO), true)(level)
                       }
 
                     TypedNuTrt(outerCtx.lvl, td, ttu, tparams, mems, thisType, None, selfType, inheritedTags, vmems) -> Nil
@@ -919,9 +922,9 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                                   // TODO first-class mixins/classes...
                                   err(msg"Cannot inherit from a parameter", p.toLoc)
                                   Nil
-                                case als: NuTypeParam =>
-                                  err(msg"Cannot inherit from a type parameter", p.toLoc)
-                                  Nil
+                                // case als: NuTypeParam =>
+                                //   err(msg"Cannot inherit from a type parameter", p.toLoc)
+                                //   Nil
                                 case cls: TypedNuFun =>
                                   err(msg"Cannot inherit from a function", p.toLoc)
                                   Nil
@@ -976,7 +979,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     case class Pack(clsMem: Ls[NuMember], bsCls: Opt[Str], trtMem: Ls[NuMember], trtTyMem: Map[Str, NuMember])
 
                     // compute base class and interfaces
-                    def computeBaseClass(parents: Ls[ParentSpec], pack: Pack): Pack = 
+                    def computeBaseClass(parents: Ls[ParentSpec], pack: Pack): Pack = // TODO rename
                       parents match {
                       case (p, v @ Var(parNme), parTargs, parArgs) :: ps =>
                         ctx.get(parNme) match {
@@ -1078,7 +1081,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     // TODO type members of parent class
                     val tyMem = ifaceTmem  ++ tparams.map {
                       case (nme @ TypeName(name), tv, _) => 
-                        td.nme.name+"#"+name -> NuTypeParam(nme, FieldType(S(tv), tv)(provTODO))(level)
+                        td.nme.name+"#"+name -> NuParam(nme.toVar, FieldType(S(tv), tv)(provTODO), true)(level)
                     } 
 
                     ifaceMembers.foreach { m =>

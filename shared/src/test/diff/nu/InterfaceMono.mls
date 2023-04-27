@@ -207,3 +207,94 @@ class Iceburg(name: string) extends RefinedStadt, More, Fooo
 //│   fun more: number -> bool
 //│   fun size: 1
 //│ }
+
+class A { fun x: int = 1 }
+//│ class A() {
+//│   fun x: int
+//│ }
+
+class B extends A { fun x = "A" }
+//│ ╔══[ERROR] Type mismatch in definition of method x:
+//│ ║  l.216: 	class B extends A { fun x = "A" }
+//│ ║         	                        ^^^^^^^
+//│ ╟── string literal of type `"A"` is not an instance of type `int`
+//│ ║  l.216: 	class B extends A { fun x = "A" }
+//│ ║         	                            ^^^
+//│ ╟── but it flows into definition of method x with expected type `int`
+//│ ║  l.216: 	class B extends A { fun x = "A" }
+//│ ║         	                        ^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.211: 	class A { fun x: int = 1 }
+//│ ║         	                 ^^^
+//│ ╟── from definition of method x:
+//│ ║  l.211: 	class A { fun x: int = 1 }
+//│ ╙──       	              ^^^^^^^^^^
+//│ class B() {
+//│   fun x: "A"
+//│ }
+
+class C1[A] { fun a: A = a }
+//│ class C1[A]() {
+//│   fun a: A
+//│ }
+
+// TODO
+class C2 extends C1[int] { fun a = 1 }
+//│ ╔══[ERROR] class type arguments not yet supported
+//│ ║  l.242: 	class C2 extends C1[int] { fun a = 1 }
+//│ ╙──       	                 ^^
+//│ ╔══[ERROR] Type mismatch in definition of method a:
+//│ ║  l.242: 	class C2 extends C1[int] { fun a = 1 }
+//│ ║         	                               ^^^^^
+//│ ╟── integer literal of type `1` does not match type `A`
+//│ ║  l.242: 	class C2 extends C1[int] { fun a = 1 }
+//│ ║         	                                   ^
+//│ ╟── but it flows into definition of method a with expected type `A`
+//│ ║  l.242: 	class C2 extends C1[int] { fun a = 1 }
+//│ ║         	                               ^^^^^
+//│ ╟── Note: constraint arises from definition of method a:
+//│ ║  l.236: 	class C1[A] { fun a: A = a }
+//│ ╙──       	                  ^^^^^^^^
+//│ class C2() {
+//│   fun a: 1
+//│ }
+
+// trait MyTrait[A] { type MyTrait#A = A; fun a: A = a }
+// freshen/subst
+// trait MyTrait[int] { type MyTrait#A = int; fun a: int = a }
+
+trait MyTrait[A] { fun a: A = a }
+//│ trait MyTrait[A]() {
+//│   fun a: A
+//│ }
+
+// :ns
+// :d
+// :ds
+class C extends MyTrait[int] { fun a = 1 }
+//│ class C() {
+//│   fun a: 1
+//│ }
+
+:e
+class C extends MyTrait[int] { fun a = false }
+//│ ╔══[ERROR] Type mismatch in definition of method a:
+//│ ║  l.412: 	class C extends MyTrait[int] { fun a = false }
+//│ ║         	                                   ^^^^^^^^^
+//│ ╟── reference of type `false` is not an instance of type `int`
+//│ ║  l.412: 	class C extends MyTrait[int] { fun a = false }
+//│ ║         	                                       ^^^^^
+//│ ╟── but it flows into definition of method a with expected type `int`
+//│ ║  l.412: 	class C extends MyTrait[int] { fun a = false }
+//│ ║         	                                   ^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.412: 	class C extends MyTrait[int] { fun a = false }
+//│ ║         	                        ^^^
+//│ ╟── from definition of method a:
+//│ ║  l.266: 	trait MyTrait[A] { fun a: A = a }
+//│ ╙──       	                       ^^^^^^^^
+//│ class C() {
+//│   fun a: false
+//│ }
+
+

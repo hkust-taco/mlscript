@@ -502,8 +502,8 @@ class DiffTests
                 val indStr = "  " * ind
                 // ttu.entities.map(_.complete()(raise)).foreach {
                 ttu.entities.foreach {
-                  case p: typer.NuTypeParam =>
-                    output(s"${indStr}${p.name}: ${p.ty}")
+                  // case p: typer.NuTypeParam =>
+                  //   output(s"${indStr}${p.name}: ${p.ty}")
                   case p: typer.NuParam =>
                     output(s"${indStr}${p.name}: ${p.ty}")
                   case tc: typer.TypedNuAls =>

@@ -82,8 +82,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               S(d.typeSignature.toUpper(provTODO))
             case S(p: NuParam) =>
               S(p.ty)
-            case S(p: NuTypeParam) =>
-              S(p.ty)
+            // case S(p: NuTypeParam) =>
+            //   S(p.ty)
             case S(m) =>
               S(err(msg"access to ${m.kind.str} member not yet supported", fld.toLoc).toUpper(noProv))
             case N => N

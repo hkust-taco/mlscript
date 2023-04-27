@@ -716,36 +716,20 @@ trait Base[A] { fun f: A -> A }
 //│ }
 
 class Der1 extends Base[int] { fun f(x) = x + 1 }
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: A353#
-//│ 	at: scala.collection.MapOps.default(Map.scala:274)
-//│ 	at: scala.collection.MapOps.default$(Map.scala:273)
-//│ 	at: scala.collection.AbstractMap.default(Map.scala:405)
-//│ 	at: scala.collection.MapOps.apply(Map.scala:176)
-//│ 	at: scala.collection.MapOps.apply$(Map.scala:175)
-//│ 	at: scala.collection.AbstractMap.apply(Map.scala:405)
-//│ 	at: mlscript.TypeSimplifier.process$1(TypeSimplifier.scala:59)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$removeIrrelevantBounds$5(TypeSimplifier.scala:39)
-//│ 	at: mlscript.NuTypeDefs$NuMember.$anonfun$map$1(NuTypeDefs.scala:44)
-//│ 	at: mlscript.NuTypeDefs$NuTypeParam.$anonfun$mapPol$4(NuTypeDefs.scala:85)
+//│ class Der1() {
+//│   fun f: int -> int
+//│ }
 
 class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (x, y) }
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: A367'#
-//│ 	at: scala.collection.MapOps.default(Map.scala:274)
-//│ 	at: scala.collection.MapOps.default$(Map.scala:273)
-//│ 	at: scala.collection.AbstractMap.default(Map.scala:405)
-//│ 	at: scala.collection.MapOps.apply(Map.scala:176)
-//│ 	at: scala.collection.MapOps.apply$(Map.scala:175)
-//│ 	at: scala.collection.AbstractMap.apply(Map.scala:405)
-//│ 	at: mlscript.TypeSimplifier.process$1(TypeSimplifier.scala:59)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$removeIrrelevantBounds$5(TypeSimplifier.scala:39)
-//│ 	at: mlscript.NuTypeDefs$NuMember.$anonfun$map$1(NuTypeDefs.scala:44)
-//│ 	at: mlscript.NuTypeDefs$NuTypeParam.$anonfun$mapPol$4(NuTypeDefs.scala:85)
+//│ class Der2[A, B]() {
+//│   fun f: forall 'a 'b. ('a, 'b,) -> ('a, 'b,)
+//│ }
 
 // TODO
 trait BInt extends Base[int] {
   fun f = error
 }
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: A377#
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: A385#
 
 trait BPar[T] extends Base[(int,T)]
 //│ trait BPar[T]() {
@@ -775,17 +759,9 @@ fb(bp, false)
 class CP extends BPar[int] {
   fun f(x) = (x._2, x._1)
 }
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: A383_431'#
-//│ 	at: scala.collection.MapOps.default(Map.scala:274)
-//│ 	at: scala.collection.MapOps.default$(Map.scala:273)
-//│ 	at: scala.collection.AbstractMap.default(Map.scala:405)
-//│ 	at: scala.collection.MapOps.apply(Map.scala:176)
-//│ 	at: scala.collection.MapOps.apply$(Map.scala:175)
-//│ 	at: scala.collection.AbstractMap.apply(Map.scala:405)
-//│ 	at: mlscript.TypeSimplifier.process$1(TypeSimplifier.scala:59)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$removeIrrelevantBounds$5(TypeSimplifier.scala:39)
-//│ 	at: mlscript.NuTypeDefs$NuMember.$anonfun$map$1(NuTypeDefs.scala:44)
-//│ 	at: mlscript.NuTypeDefs$NuTypeParam.$anonfun$mapPol$4(NuTypeDefs.scala:85)
+//│ class CP() {
+//│   fun f: forall 'a 'b. {_1: 'a, _2: 'b} -> ('b, 'a,)
+//│ }
 
 let cp1 = CP()
 //│ let cp1: CP
@@ -796,7 +772,7 @@ fb(cp1, 2)
 :e
 trait BErr1 extends Base
 //│ ╔══[ERROR] trait Base expects 1 type parameter(s); got 0
-//│ ║  l.797: 	trait BErr1 extends Base
+//│ ║  l.773: 	trait BErr1 extends Base
 //│ ╙──       	                    ^^^^
 //│ trait BErr1() {
 //│   fun f: 'A -> 'A
@@ -805,60 +781,42 @@ trait BErr1 extends Base
 :e
 class DerBad1 extends Base[int, int]
 //│ ╔══[ERROR] trait Base expects 1 type parameter(s); got 2
-//│ ║  l.806: 	class DerBad1 extends Base[int, int]
+//│ ║  l.782: 	class DerBad1 extends Base[int, int]
 //│ ╙──       	                      ^^^^^^^^^^^^^
 //│ ╔══[ERROR] Member f is declared in parent trait but not implemented
-//│ ║  l.806: 	class DerBad1 extends Base[int, int]
+//│ ║  l.782: 	class DerBad1 extends Base[int, int]
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: A458#
-//│ 	at: scala.collection.MapOps.default(Map.scala:274)
-//│ 	at: scala.collection.MapOps.default$(Map.scala:273)
-//│ 	at: scala.collection.AbstractMap.default(Map.scala:405)
-//│ 	at: scala.collection.MapOps.apply(Map.scala:176)
-//│ 	at: scala.collection.MapOps.apply$(Map.scala:175)
-//│ 	at: scala.collection.AbstractMap.apply(Map.scala:405)
-//│ 	at: mlscript.TypeSimplifier.process$1(TypeSimplifier.scala:59)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$removeIrrelevantBounds$5(TypeSimplifier.scala:39)
-//│ 	at: mlscript.NuTypeDefs$NuMember.$anonfun$map$1(NuTypeDefs.scala:44)
-//│ 	at: mlscript.NuTypeDefs$NuTypeParam.$anonfun$mapPol$4(NuTypeDefs.scala:85)
+//│ class DerBad1()
 
 :e
 class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
 //│ ╔══[ERROR] Type mismatch in definition of method f:
-//│ ║  l.826: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
+//│ ║  l.792: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
 //│ ║         	                                            ^^^^^^^^^^^^^^^^^^
 //│ ╟── reference of type `B` does not match type `A`
-//│ ║  l.826: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
+//│ ║  l.792: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
 //│ ║         	                                                         ^
 //│ ╟── Note: constraint arises from type parameter:
-//│ ║  l.826: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
+//│ ║  l.792: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
 //│ ║         	           ^
 //│ ╟── Note: type parameter B is defined at:
-//│ ║  l.826: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
+//│ ║  l.792: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
 //│ ╙──       	              ^
 //│ ╔══[ERROR] Type mismatch in definition of method f:
-//│ ║  l.826: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
+//│ ║  l.792: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
 //│ ║         	                                            ^^^^^^^^^^^^^^^^^^
 //│ ╟── reference of type `A` does not match type `B`
-//│ ║  l.826: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
+//│ ║  l.792: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
 //│ ║         	                                                            ^
 //│ ╟── Note: constraint arises from type parameter:
-//│ ║  l.826: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
+//│ ║  l.792: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
 //│ ║         	              ^
 //│ ╟── Note: type parameter A is defined at:
-//│ ║  l.826: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
+//│ ║  l.792: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
 //│ ╙──       	           ^
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: A467'#
-//│ 	at: scala.collection.MapOps.default(Map.scala:274)
-//│ 	at: scala.collection.MapOps.default$(Map.scala:273)
-//│ 	at: scala.collection.AbstractMap.default(Map.scala:405)
-//│ 	at: scala.collection.MapOps.apply(Map.scala:176)
-//│ 	at: scala.collection.MapOps.apply$(Map.scala:175)
-//│ 	at: scala.collection.AbstractMap.apply(Map.scala:405)
-//│ 	at: mlscript.TypeSimplifier.process$1(TypeSimplifier.scala:59)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$removeIrrelevantBounds$5(TypeSimplifier.scala:39)
-//│ 	at: mlscript.NuTypeDefs$NuMember.$anonfun$map$1(NuTypeDefs.scala:44)
-//│ 	at: mlscript.NuTypeDefs$NuTypeParam.$anonfun$mapPol$4(NuTypeDefs.scala:85)
+//│ class Der2[A, B]() {
+//│   fun f: forall 'a 'b. ('a, 'b,) -> ('b, 'a,)
+//│ }
 
 trait Ta[T] {
   let p: bool
@@ -898,17 +856,10 @@ class Ctb extends Tb {
   let p = false
   let g = 2
 }
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: T508#
-//│ 	at: scala.collection.MapOps.default(Map.scala:274)
-//│ 	at: scala.collection.MapOps.default$(Map.scala:273)
-//│ 	at: scala.collection.AbstractMap.default(Map.scala:405)
-//│ 	at: scala.collection.MapOps.apply(Map.scala:176)
-//│ 	at: scala.collection.MapOps.apply$(Map.scala:175)
-//│ 	at: scala.collection.AbstractMap.apply(Map.scala:405)
-//│ 	at: mlscript.TypeSimplifier.process$1(TypeSimplifier.scala:59)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$removeIrrelevantBounds$5(TypeSimplifier.scala:39)
-//│ 	at: mlscript.NuTypeDefs$NuMember.$anonfun$map$1(NuTypeDefs.scala:44)
-//│ 	at: mlscript.NuTypeDefs$NuTypeParam.$anonfun$mapPol$4(NuTypeDefs.scala:85)
+//│ class Ctb() {
+//│   let g: 2
+//│   let p: false
+//│ }
 
 class G1[A](x: A)
 //│ class G1[A](x: A)
@@ -916,17 +867,17 @@ class G1[A](x: A)
 // TODO
 class GI(x: int) extends G1[int]
 //│ ╔══[ERROR] class type arguments not yet supported
-//│ ║  l.917: 	class GI(x: int) extends G1[int]
+//│ ║  l.868: 	class GI(x: int) extends G1[int]
 //│ ╙──       	                         ^^
 //│ ╔══[ERROR] class G1 expects 1 parameter(s); got 0
-//│ ║  l.917: 	class GI(x: int) extends G1[int]
+//│ ║  l.868: 	class GI(x: int) extends G1[int]
 //│ ╙──       	                         ^^
 //│ ╔══[ERROR] Type mismatch in type reference:
-//│ ║  l.917: 	class GI(x: int) extends G1[int]
+//│ ║  l.868: 	class GI(x: int) extends G1[int]
 //│ ║         	            ^^^
 //│ ╟── type `int` does not match type `A`
 //│ ╟── Note: constraint arises from type parameter:
-//│ ║  l.913: 	class G1[A](x: A)
+//│ ║  l.864: 	class G1[A](x: A)
 //│ ╙──       	         ^
 //│ class GI(x: int)
 
@@ -940,11 +891,11 @@ trait Oz {
 :e
 class Fischl(age: bool) extends Oz
 //│ ╔══[ERROR] Type mismatch in type reference:
-//│ ║  l.941: 	class Fischl(age: bool) extends Oz
+//│ ║  l.892: 	class Fischl(age: bool) extends Oz
 //│ ║         	                  ^^^^
 //│ ╟── type `bool` is not an instance of type `int`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.934: 	  let age: int
+//│ ║  l.885: 	  let age: int
 //│ ╙──       	           ^^^
 //│ class Fischl(age: bool)
 
