@@ -1002,13 +1002,23 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                                   }
                                   val numem = paramMems ++ cls.members.values.toList
                                   val res = pack.clsMem ++ numem.flatMap { m =>
+                                    lazy val parSign = m match {
+                                          case nt: TypedNuTermDef => nt.typeSignature
+                                          case np: NuParam => np.typeSignature
+                                          case _ => ??? // probably no other cases
+                                        }
                                     pack.clsMem.find(x => x.name == m.name) match {
                                       case S(mem: TypedNuTermDef) =>
                                         val memSign = mem.typeSignature
-                                        val parSign = m.asInstanceOf[TypedNuTermDef].typeSignature
                                         println(s"checking overriding: $memSign <: $parSign")
                                         implicit val prov: TP = memSign.prov
                                         constrain(memSign, parSign)
+                                        Nil
+                                      case S(pm: NuParam) =>
+                                        val pmSign = pm.typeSignature
+                                        println(s"checking overriding: $pmSign <: $parSign")
+                                        implicit val prov: TP = pmSign.prov
+                                        constrain(pmSign, parSign)
                                         Nil
                                       case _ => m :: Nil
                                     }
@@ -1059,9 +1069,9 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       }
 
                     val Pack(clsMems, _, ifaceMembers, ifaceTmem) = 
-                      computeBaseClass(parentSpecs, Pack(ttu.entities, N, Nil, Map.empty))
+                      computeBaseClass(parentSpecs, Pack(baseMems ++ ttu.entities, N, Nil, Map.empty))
                     
-                    val impltdMems = baseMems ++ clsMems
+                    val impltdMems = clsMems
                     val mems = impltdMems.map(d => d.name -> d).toMap ++ typedSignatureMembers
 
                     // TODO type members of parent class

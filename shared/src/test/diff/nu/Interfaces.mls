@@ -637,7 +637,6 @@ class Ca(a: int) extends Oth {
 
 class Cx(a: 1 | 2, b: bool) extends Ca(a)
 //│ class Cx(a: 1 | 2, b: bool) {
-//│   let a: int
 //│   fun bar: bool -> bool
 //│   fun cool: int -> bool
 //│   fun foo: int
@@ -657,16 +656,64 @@ cx1: Ca
 
 class Bc1(foo: int)
 class Bc2(bar: bool)
+class Bc3 {
+  let baz : int
+}
 //│ class Bc1(foo: int)
 //│ class Bc2(bar: bool)
+//│ class Bc3() {
+//│   let baz: int
+//│ }
 
 :e
 class Bc12 extends Bc1(1), Bc2(true)
 //│ ╔══[ERROR] cannot inherit from more than one base class: Bc1 and Bc2
-//│ ║  l.664: 	class Bc12 extends Bc1(1), Bc2(true)
+//│ ║  l.669: 	class Bc12 extends Bc1(1), Bc2(true)
 //│ ╙──       	                           ^^^
 //│ class Bc12()
 
+class Bc02 extends Bc1(1:int) {
+  let foo = 2
+}
+//│ class Bc02() {
+//│   let foo: 2
+//│ }
+
+Bc02().foo
+//│ 2
+
+:e
+class Bc31(baz: bool) extends Bc3
+//│ ╔══[ERROR] Type mismatch in type reference:
+//│ ║  l.686: 	class Bc31(baz: bool) extends Bc3
+//│ ║         	                ^^^^
+//│ ╟── type `bool` is not an instance of type `int`
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.660: 	  let baz : int
+//│ ╙──       	            ^^^
+//│ class Bc31(baz: bool)
+
+:e
+class Bc11 extends Bc1(1) {
+  let foo = true
+}
+//│ ╔══[ERROR] Type mismatch in reference:
+//│ ║  l.698: 	  let foo = true
+//│ ║         	            ^^^^
+//│ ╟── reference of type `true` does not match type `1`
+//│ ╟── Note: constraint arises from integer literal:
+//│ ║  l.697: 	class Bc11 extends Bc1(1) {
+//│ ╙──       	                       ^
+//│ ╔══[ERROR] Type mismatch in reference:
+//│ ║  l.698: 	  let foo = true
+//│ ║         	            ^^^^
+//│ ╟── reference of type `true` is not an instance of type `int`
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.657: 	class Bc1(foo: int)
+//│ ╙──       	               ^^^
+//│ class Bc11() {
+//│   let foo: true
+//│ }
 
 
 trait Base[A] { fun f: A -> A }
@@ -688,7 +735,7 @@ class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (x, y) }
 trait BInt extends Base[int] {
   fun f = error
 }
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: A341#
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: A351#
 
 trait BPar[T] extends Base[(int,T)]
 //│ trait BPar[T]() {
@@ -731,7 +778,7 @@ fb(cp1, 2)
 :e
 trait BErr1 extends Base
 //│ ╔══[ERROR] trait Base expects 1 type parameter(s); got 0
-//│ ║  l.732: 	trait BErr1 extends Base
+//│ ║  l.779: 	trait BErr1 extends Base
 //│ ╙──       	                    ^^^^
 //│ trait BErr1() {
 //│   fun f: 'A -> 'A
@@ -740,10 +787,10 @@ trait BErr1 extends Base
 :e
 class DerBad1 extends Base[int, int]
 //│ ╔══[ERROR] trait Base expects 1 type parameter(s); got 2
-//│ ║  l.741: 	class DerBad1 extends Base[int, int]
+//│ ║  l.788: 	class DerBad1 extends Base[int, int]
 //│ ╙──       	                      ^^^^^^^^^^^^^
 //│ ╔══[ERROR] Member f is declared in parent trait but not implemented
-//│ ║  l.741: 	class DerBad1 extends Base[int, int]
+//│ ║  l.788: 	class DerBad1 extends Base[int, int]
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ class DerBad1() {
 //│   fun f: int -> int
@@ -752,28 +799,28 @@ class DerBad1 extends Base[int, int]
 :e
 class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
 //│ ╔══[ERROR] Type mismatch in definition of method f:
-//│ ║  l.753: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
+//│ ║  l.800: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
 //│ ║         	                                            ^^^^^^^^^^^^^^^^^^
 //│ ╟── reference of type `B` does not match type `A`
-//│ ║  l.753: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
+//│ ║  l.800: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
 //│ ║         	                                                         ^
 //│ ╟── Note: constraint arises from type parameter:
-//│ ║  l.753: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
+//│ ║  l.800: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
 //│ ║         	           ^
 //│ ╟── Note: type parameter B is defined at:
-//│ ║  l.753: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
+//│ ║  l.800: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
 //│ ╙──       	              ^
 //│ ╔══[ERROR] Type mismatch in definition of method f:
-//│ ║  l.753: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
+//│ ║  l.800: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
 //│ ║         	                                            ^^^^^^^^^^^^^^^^^^
 //│ ╟── reference of type `A` does not match type `B`
-//│ ║  l.753: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
+//│ ║  l.800: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
 //│ ║         	                                                            ^
 //│ ╟── Note: constraint arises from type parameter:
-//│ ║  l.753: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
+//│ ║  l.800: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
 //│ ║         	              ^
 //│ ╟── Note: type parameter A is defined at:
-//│ ║  l.753: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
+//│ ║  l.800: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
 //│ ╙──       	           ^
 //│ class Der2[A, B]() {
 //│   fun f: (A, B,) -> (A, B,)
@@ -828,9 +875,16 @@ class G1[A](x: A)
 // TODO
 class GI(x: int) extends G1[int]
 //│ ╔══[ERROR] class type arguments not yet supported
-//│ ║  l.829: 	class GI(x: int) extends G1[int]
+//│ ║  l.876: 	class GI(x: int) extends G1[int]
 //│ ╙──       	                         ^^
 //│ ╔══[ERROR] class G1 expects 1 parameter(s); got 0
-//│ ║  l.829: 	class GI(x: int) extends G1[int]
+//│ ║  l.876: 	class GI(x: int) extends G1[int]
 //│ ╙──       	                         ^^
+//│ ╔══[ERROR] Type mismatch in type reference:
+//│ ║  l.876: 	class GI(x: int) extends G1[int]
+//│ ║         	            ^^^
+//│ ╟── type `int` does not match type `A`
+//│ ╟── Note: constraint arises from type parameter:
+//│ ║  l.872: 	class G1[A](x: A)
+//│ ╙──       	         ^
 //│ class GI(x: int)
