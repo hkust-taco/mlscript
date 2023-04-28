@@ -12,5 +12,3 @@ class BigRoom extends Room[bool]("big")
 //│ class BigRoom() {
 //│   fun foo: (x: 'A,) -> 'A
 //│ }
-//│ where
-//│   'A := bool

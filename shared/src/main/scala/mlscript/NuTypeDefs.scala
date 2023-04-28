@@ -983,7 +983,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     case class Pack(clsMem: Ls[NuMember], bsCls: Opt[Str], trtMem: Ls[NuMember])
 
                     // compute base class and interfaces
-                    def computeBaseClass(parents: Ls[ParentSpec], pack: Pack): Pack = // TODO rename
+                    def computeBaseClassTrait(parents: Ls[ParentSpec], pack: Pack): Pack =
                       parents match {
                       case (p, v @ Var(parNme), parTargs, parArgs) :: ps =>
                         ctx.get(parNme) match {
@@ -996,8 +996,9 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                                     err(msg"cannot inherit from more than one base class: ${
                                       pack.bsCls.get} and ${parNme}", v.toLoc)
 
-                                  // val cls = rawCls 
-                                  val cls = refreshGen[TypedNuCls](info, v, parTargs)
+                                  val cls = rawCls 
+                                  // TODO: refreshing breaks overriding check
+                                  // val cls = refreshGen[TypedNuCls](info, v, parTargs)
                                   
                                   if (parArgs.sizeCompare(cls.params) =/= 0)
                                     err(msg"class $parNme expects ${
@@ -1034,26 +1035,26 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                                     }
                                   }
 
-                                  computeBaseClass(ps, pack.copy(clsMem = res, bsCls = S(parNme)))
+                                  computeBaseClassTrait(ps, pack.copy(clsMem = res, bsCls = S(parNme)))
 
                                 case rawTrt: TypedNuTrt =>
                                   if (parArgs.nonEmpty) err(msg"trait parameters not yet supported", p.toLoc)
                                   val trt = refreshGen[TypedNuTrt](info, v, parTargs) // FIXME
                                 
-                                  computeBaseClass(ps, pack.copy(
+                                  computeBaseClassTrait(ps, pack.copy(
                                     trtMem = memberUn(pack.trtMem, trt.members.values.toList)
                                     ))
                                 
-                                case _ => computeBaseClass(ps, pack)
+                                case _ => computeBaseClassTrait(ps, pack)
                               }
                           case _ => 
-                            computeBaseClass(ps, pack)
+                            computeBaseClassTrait(ps, pack)
                         }
                       case Nil => pack
                       }
 
                     val Pack(clsMems, _, ifaceMembers) = 
-                      computeBaseClass(parentSpecs, Pack(baseMems ++ ttu.entities, N, Nil))
+                      computeBaseClassTrait(parentSpecs, Pack(baseMems ++ ttu.entities, N, Nil))
                     
                     val impltdMems = clsMems
                     val mems = impltdMems.map(d => d.name -> d).toMap ++ typedSignatureMembers
