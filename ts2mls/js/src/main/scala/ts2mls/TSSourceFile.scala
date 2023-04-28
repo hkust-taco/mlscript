@@ -4,14 +4,19 @@ import scala.scalajs.js
 import js.DynamicImplicits._
 import types._
 import mlscript.utils._
+import scala.collection.mutable.ListBuffer
 
 class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSTypeChecker) {
   private val lineHelper = new TSLineStartsHelper(sf.getLineStarts())
+  private val importList = ListBuffer[String]()
 
   TypeScript.forEachChild(sf, (node: js.Dynamic) => {
     val nodeObject = TSNodeObject(node)
     if (!nodeObject.isToken) {
-      if (!nodeObject.symbol.isUndefined) // for functions/classes/interfaces
+      if (nodeObject.isImportDeclaration) {
+        parseImportDeclaration(nodeObject)
+      }
+      else if (!nodeObject.symbol.isUndefined) // for functions/classes/interfaces
         addNodeIntoNamespace(nodeObject, nodeObject.symbol.escapedName, nodeObject.isExported)(global)
       else if (!nodeObject.declarationList.isUndefined) { // for variables
         val decNode = nodeObject.declarationList.declaration
@@ -19,6 +24,16 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
       }
     }
   })
+
+  def getImportList: List[String] = importList.toList.distinct
+
+  private def parseImportDeclaration(node: TSNodeObject): Unit = {
+    // ignore `import "filename.ts"`
+    if (!node.importClause.isUndefined) {
+      importList += node.moduleSpecifier.text
+      // TODO: type alias for different `import`
+    }
+  }
 
   private def getSubstitutionArguments[T <: TSAny](args: TSArray[T]): List[TSType] =
     args.foldLeft(List[TSType]())((lst, arg) => arg match {

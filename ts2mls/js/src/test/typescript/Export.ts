@@ -15,3 +15,7 @@ export namespace Foo {
 
   export const baz = Baz("baz")
 }
+
+export default function id(x) {
+  return x;
+}

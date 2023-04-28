@@ -15,16 +15,29 @@ class TSProgram(filename: String, uesTopLevelModule: Boolean) {
   // check if file exists
   if (!program.fileExists(filename)) throw new Exception(s"file ${filename} doesn't exist.")
 
-  val globalNamespace = TSNamespace()
-  
-  // TODO: support multi-files correctly.
   implicit val checker = TSTypeChecker(program.getTypeChecker())
-  TSSourceFile(program.getSourceFile(filename), globalNamespace)
 
-  def generate(writer: JSWriter): Unit =
-    if (!uesTopLevelModule) globalNamespace.generate(writer, "")
+  // TODO: support multi-files correctly.
+  private val globalNamespace = TSNamespace()
+  private val entryFile = TSSourceFile(program.getSourceFile(filename), globalNamespace)
+  private val importList = entryFile.getImportList
+
+  import TSProgram._
+
+  def generate(workDir: String, targetPath: String): Unit = {
+    val moduleName = getModuleName(filename)
+    val relatedPath =
+      if (filename.startsWith(workDir)) filename.substring(workDir.length() + 1, filename.lastIndexOf('/') + 1)
+      else throw new AssertionError(s"wrong work dir $workDir")
+    var writer = JSWriter(s"$targetPath/$relatedPath/$moduleName.mlsi")
+    generate(writer)
+    writer.close()
+  }
+
+  private def generate(writer: JSWriter): Unit =
+    if (!uesTopLevelModule) globalNamespace.generate(writer, "") // will be imported directly and has no dependency
     else {
-      import TSProgram._
+      importList.foreach{f => writer.writeln(s"""import "${getModuleName(f)}.mlsi"""")}
       writer.writeln(s"export declare module ${getModuleName(filename)} {")
       globalNamespace.generate(writer, "  ")
       writer.writeln("}")
@@ -35,7 +48,7 @@ object TSProgram {
   def apply(filename: String, uesTopLevelModule: Boolean) = new TSProgram(filename, uesTopLevelModule)
 
   private def getModuleName(filename: String): String =
-    if (filename.lastIndexOf('.') > -1)
+    if (filename.endsWith(".d") || filename.endsWith(".ts"))
       getModuleName(filename.substring(filename.lastIndexOf('/') + 1, filename.lastIndexOf('.')))
     else
       filename.substring(filename.lastIndexOf('/') + 1)

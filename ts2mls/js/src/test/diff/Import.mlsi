@@ -1,0 +1,28 @@
+:NewParser
+:NewDefs
+:NoJS
+:AllowTypeErrors
+import "Dependency.mlsi"
+export declare module Import {
+  val t: number
+  val a: A
+  val b: A
+  val c: A
+  val d: number
+}
+//│ ╔══[ERROR] type identifier not found: A
+//│ ║  l.8: 	  val a: A
+//│ ╙──     	         ^
+//│ ╔══[ERROR] type identifier not found: A
+//│ ║  l.9: 	  val b: A
+//│ ╙──     	         ^
+//│ ╔══[ERROR] type identifier not found: A
+//│ ║  l.10: 	  val c: A
+//│ ╙──      	         ^
+//│ module Import() {
+//│   let a: error
+//│   let b: error
+//│   let c: error
+//│   let d: number
+//│   let t: number
+//│ }

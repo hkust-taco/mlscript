@@ -13,6 +13,7 @@ export declare module Export {
     }
     export val baz: IBar
   }
+  fun default(x: anything): anything
 }
 //│ ╔══[ERROR] type identifier not found: IBar
 //│ ║  l.7: 	    fun Baz(aa: string): IBar
@@ -42,4 +43,5 @@ export declare module Export {
 //│     trait IBar()
 //│     let baz: IBar
 //│   }
+//│   fun default: (x: anything,) -> anything
 //│ }

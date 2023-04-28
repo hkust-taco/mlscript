@@ -34,6 +34,8 @@ object TypeScript {
   def isInterfaceDeclaration(node: js.Dynamic) = ts.isInterfaceDeclaration(node)
   def isFunctionLike(node: js.Dynamic) = ts.isFunctionLike(node)
   def isModuleDeclaration(node: js.Dynamic) = ts.isModuleDeclaration(node)
+  def isImportDeclaration(node: js.Dynamic) = ts.isImportDeclaration(node)
+
   def isArrayTypeNode(node: js.Dynamic) = ts.isArrayTypeNode(node)
   def isTupleTypeNode(node: js.Dynamic) = ts.isTupleTypeNode(node)
   def isTypeAliasDeclaration(node: js.Dynamic) = ts.isTypeAliasDeclaration(node)
@@ -118,6 +120,7 @@ class TSNodeObject(node: js.Dynamic)(implicit checker: TSTypeChecker) extends TS
   lazy val isArrayTypeNode = TypeScript.isArrayTypeNode(node)
   lazy val isTupleTypeNode = TypeScript.isTupleTypeNode(node)
   lazy val isImplementationOfOverload = checker.isImplementationOfOverload(node)
+  lazy val isImportDeclaration = TypeScript.isImportDeclaration(node)
 
   // if a node has an initializer or is marked by a question notation it is optional
   // e.g. `function f(x?: int) {}`, we can use it directly: `f()`.
@@ -168,6 +171,9 @@ class TSNodeObject(node: js.Dynamic)(implicit checker: TSTypeChecker) extends TS
     if (parent.isUndefined) node.fileName.toString()
     else parent.filename
   lazy val pos = node.pos
+
+  lazy val moduleSpecifier = TSTokenObject(node.moduleSpecifier)
+  lazy val importClause = TSNodeObject(node.importClause)
 }
 
 object TSNodeObject {
