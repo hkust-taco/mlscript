@@ -627,6 +627,7 @@ trait LitImpl { self: Lit =>
 trait VarImpl { self: Var =>
   def isPatVar: Bool =
     (name.head.isLetter && name.head.isLower || name.head === '_' || name.head === '$') && name =/= "true" && name =/= "false"
+  def toVar: Var = this
   var uid: Opt[Int] = N
 }
 
