@@ -2,124 +2,146 @@
 :NewDefs
 :NoJS
 :AllowTypeErrors
-declare class A() {
-  fun foo(): unit
-}
-declare class B() extends A {}
-declare class C<T>() {
-  fun set(x: T): unit
-  fun get(): T
-}
-declare class D() extends C<number> {}
-declare trait Wu() {
-  val x: (false) | (true)
-}
-declare class WuWu() extends Wu {
-  val y: (false) | (true)
-}
-declare trait WuWuWu() extends WuWu {
-  val z: (false) | (true)
-}
-declare trait Never() extends WuWuWu {
-  fun w(): nothing
-}
-declare class VG<T>() {
-  val x: T
-}
-declare class Home<T>() extends VG<string> {
-  val y: T
-}
-declare trait O<I>() {
-  fun xx(x: I): I
-}
-declare class OR<R>() extends O<R> {
-  fun xx(x: R): R
-}
-export declare module Five {
-  export declare class ROTK() {
-    val wu: string
+export declare module Heritage {
+  class A() {
+    fun foo(): unit
   }
-  export declare class Y() extends Five.ROTK {}
+  class B() extends A {}
+  class C<T>() {
+    fun set(x: T): unit
+    fun get(): T
+  }
+  class D() extends C<number> {}
+  trait Wu() {
+    val x: (false) | (true)
+  }
+  class WuWu() extends Wu {
+    val y: (false) | (true)
+  }
+  trait WuWuWu() extends WuWu {
+    val z: (false) | (true)
+  }
+  trait Never() extends WuWuWu {
+    fun w(): nothing
+  }
+  class VG<T>() {
+    val x: T
+  }
+  class Home<T>() extends VG<string> {
+    val y: T
+  }
+  trait O<I>() {
+    fun xx(x: I): I
+  }
+  class OR<R>() extends O<R> {
+    fun xx(x: R): R
+  }
+  module Five {
+    export class ROTK() {
+      val wu: string
+    }
+    export class Y() extends Five.ROTK {}
+  }
+  class Y() extends Five.ROTK {}
 }
-declare class Y() extends Five.ROTK {}
+//│ ╔══[ERROR] Member foo is declared but not defined
+//│ ║  l.7: 	    fun foo(): unit
+//│ ╙──     	        ^^^
 //│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
-//│ ║  l.8: 	declare class B() extends A {}
-//│ ╙──     	                          ^
+//│ ║  l.9: 	  class B() extends A {}
+//│ ╙──     	                    ^
+//│ ╔══[ERROR] Member set is declared but not defined
+//│ ║  l.11: 	    fun set(x: T): unit
+//│ ╙──      	        ^^^
+//│ ╔══[ERROR] Member get is declared but not defined
+//│ ║  l.12: 	    fun get(): T
+//│ ╙──      	        ^^^
 //│ ╔══[ERROR] Unsupported parent specification
-//│ ║  l.13: 	declare class D() extends C<number> {}
-//│ ╙──      	                          ^^^^^^^^^
+//│ ║  l.14: 	  class D() extends C<number> {}
+//│ ╙──      	                    ^^^^^^^^^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.14: 	declare trait Wu() {
-//│ ║        	        ^^^^^^^^^^^^
-//│ ║  l.15: 	  val x: (false) | (true)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.16: 	}
-//│ ╙──      	^
+//│ ║  l.15: 	  trait Wu() {
+//│ ║        	  ^^^^^^^^^^^^
+//│ ║  l.16: 	    val x: (false) | (true)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.17: 	  }
+//│ ╙──      	^^^
 //│ ╔══[ERROR] Cannot inherit from a type alias
-//│ ║  l.17: 	declare class WuWu() extends Wu {
-//│ ╙──      	                             ^^
+//│ ║  l.18: 	  class WuWu() extends Wu {
+//│ ╙──      	                       ^^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.20: 	declare trait WuWuWu() extends WuWu {
-//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.21: 	  val z: (false) | (true)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.22: 	}
-//│ ╙──      	^
+//│ ║  l.21: 	  trait WuWuWu() extends WuWu {
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.22: 	    val z: (false) | (true)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.23: 	  }
+//│ ╙──      	^^^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.23: 	declare trait Never() extends WuWuWu {
-//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.24: 	  fun w(): nothing
-//│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ║  l.25: 	}
-//│ ╙──      	^
+//│ ║  l.24: 	  trait Never() extends WuWuWu {
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.25: 	    fun w(): nothing
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.26: 	  }
+//│ ╙──      	^^^
+//│ ╔══[ERROR] Member w is declared but not defined
+//│ ║  l.25: 	    fun w(): nothing
+//│ ╙──      	        ^
 //│ ╔══[ERROR] Unsupported parent specification
-//│ ║  l.29: 	declare class Home<T>() extends VG<string> {
-//│ ╙──      	                                ^^^^^^^^^^
+//│ ║  l.30: 	  class Home<T>() extends VG<string> {
+//│ ╙──      	                          ^^^^^^^^^^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.32: 	declare trait O<I>() {
-//│ ║        	        ^^^^^^^^^^^^^^
-//│ ║  l.33: 	  fun xx(x: I): I
-//│ ║        	^^^^^^^^^^^^^^^^^
-//│ ║  l.34: 	}
-//│ ╙──      	^
+//│ ║  l.33: 	  trait O<I>() {
+//│ ║        	  ^^^^^^^^^^^^^^
+//│ ║  l.34: 	    fun xx(x: I): I
+//│ ║        	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.35: 	  }
+//│ ╙──      	^^^
+//│ ╔══[ERROR] Member xx is declared but not defined
+//│ ║  l.34: 	    fun xx(x: I): I
+//│ ╙──      	        ^^
 //│ ╔══[ERROR] Unsupported parent specification
-//│ ║  l.35: 	declare class OR<R>() extends O<R> {
-//│ ╙──      	                              ^^^^
+//│ ║  l.36: 	  class OR<R>() extends O<R> {
+//│ ╙──      	                        ^^^^
+//│ ╔══[ERROR] Member xx is declared but not defined
+//│ ║  l.37: 	    fun xx(x: R): R
+//│ ╙──      	        ^^
 //│ ╔══[ERROR] Unsupported parent specification
-//│ ║  l.42: 	  export declare class Y() extends Five.ROTK {}
-//│ ╙──      	                                   ^^^^^^^^^
+//│ ║  l.43: 	    export class Y() extends Five.ROTK {}
+//│ ╙──      	                             ^^^^^^^^^
 //│ ╔══[ERROR] Unsupported parent specification
-//│ ║  l.44: 	declare class Y() extends Five.ROTK {}
-//│ ╙──      	                          ^^^^^^^^^
-//│ class A() {
-//│   fun foo: () -> unit
-//│ }
-//│ class B()
-//│ class C[T]() {
-//│   fun get: () -> T
-//│   fun set: (x: T,) -> unit
-//│ }
-//│ class D()
-//│ trait Wu()
-//│ class WuWu() {
-//│   let y: bool
-//│ }
-//│ trait WuWuWu()
-//│ trait Never()
-//│ class VG[T]() {
-//│   let x: T
-//│ }
-//│ class Home[T]() {
-//│   let y: T
-//│ }
-//│ trait O[I]()
-//│ class OR[R]() {
-//│   fun xx: (x: R,) -> R
-//│ }
-//│ module Five() {
-//│   class ROTK() {
-//│     let wu: string
+//│ ║  l.45: 	  class Y() extends Five.ROTK {}
+//│ ╙──      	                    ^^^^^^^^^
+//│ module Heritage() {
+//│   class A() {
+//│     fun foo: () -> unit
 //│   }
+//│   class B()
+//│   class C[T]() {
+//│     fun get: () -> T
+//│     fun set: (x: T,) -> unit
+//│   }
+//│   class D()
+//│   module Five() {
+//│     class ROTK() {
+//│       let wu: string
+//│     }
+//│     class Y()
+//│   }
+//│   class Home[T]() {
+//│     let y: T
+//│   }
+//│   trait Never()
+//│   trait O[I]()
+//│   class OR[R]() {
+//│     fun xx: (x: R,) -> R
+//│   }
+//│   class VG[T]() {
+//│     let x: T
+//│   }
+//│   trait Wu()
+//│   class WuWu() {
+//│     let y: bool
+//│   }
+//│   trait WuWuWu()
 //│   class Y()
 //│ }
-//│ class Y()

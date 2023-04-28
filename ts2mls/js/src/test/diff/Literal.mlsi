@@ -2,9 +2,13 @@
 :NewDefs
 :NoJS
 :AllowTypeErrors
-export val a: {a: "A",b: "B",}
-export val num: {y: 114,}
-fun foo(x: {xx: "X",}): {yy: "Y",}
-//│ let a: {a: "A", b: "B"}
-//│ let num: {y: 114}
-//│ fun foo: (x: {xx: "X"},) -> {yy: "Y"}
+export declare module Literal {
+  val a: {a: "A",b: "B",}
+  val num: {y: 114,}
+  fun foo(x: {xx: "X",}): {yy: "Y",}
+}
+//│ module Literal() {
+//│   let a: {a: "A", b: "B"}
+//│   fun foo: (x: {xx: "X"},) -> {yy: "Y"}
+//│   let num: {y: 114}
+//│ }

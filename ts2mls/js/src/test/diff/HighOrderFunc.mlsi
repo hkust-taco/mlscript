@@ -2,9 +2,13 @@
 :NewDefs
 :NoJS
 :AllowTypeErrors
-fun h1(inc: (number) => number, num: number): number
-fun h2(hint: string): unit => string
-fun h3(f: (number) => number, g: (number) => number): (number) => number
-//│ fun h1: (inc: number -> number, num: number,) -> number
-//│ fun h2: (hint: string,) -> unit -> string
-//│ fun h3: (f: number -> number, g: number -> number,) -> number -> number
+export declare module HighOrderFunc {
+  fun h1(inc: (number) => number, num: number): number
+  fun h2(hint: string): unit => string
+  fun h3(f: (number) => number, g: (number) => number): (number) => number
+}
+//│ module HighOrderFunc() {
+//│   fun h1: (inc: number -> number, num: number,) -> number
+//│   fun h2: (hint: string,) -> unit -> string
+//│   fun h3: (f: number -> number, g: number -> number,) -> number -> number
+//│ }

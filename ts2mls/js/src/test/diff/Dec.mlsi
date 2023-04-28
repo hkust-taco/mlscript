@@ -2,27 +2,34 @@
 :NewDefs
 :NoJS
 :AllowTypeErrors
-fun getName(id: (string) | (number)): string
-fun render(callback: (unit => unit) | (undefined)): string
-declare trait Get() {
-  val __call: Unsupported<"(id: string): string", "ts2mls/js/src/test/typescript/Dec.d.ts", 4, 22>
-}
-declare class Person(name: string, age: number) {
-  fun getName(id: number): string
-}
-export declare module OOO {
+export declare module Dec {
+  fun getName(id: (string) | (number)): string
+  fun render(callback: (unit => unit) | (undefined)): string
+  trait Get() {
+    val __call: Unsupported<"(id: string): string", "ts2mls/js/src/test/typescript/Dec.d.ts", 4, 22>
+  }
+  class Person(name: string, age: number) {
+    fun getName(id: number): string
+  }
+  module OOO {
+  }
 }
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.7: 	declare trait Get() {
-//│ ║       	        ^^^^^^^^^^^^^
-//│ ║  l.8: 	  val __call: Unsupported<"(id: string): string", "ts2mls/js/src/test/typescript/Dec.d.ts", 4, 22>
-//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.9: 	}
-//│ ╙──     	^
-//│ fun getName: (id: number | string,) -> string
-//│ fun render: (callback: unit -> unit | undefined,) -> string
-//│ trait Get()
-//│ class Person(name: string, age: number) {
-//│   fun getName: (id: number,) -> string
+//│ ║  l.8: 	  trait Get() {
+//│ ║       	  ^^^^^^^^^^^^^
+//│ ║  l.9: 	    val __call: Unsupported<"(id: string): string", "ts2mls/js/src/test/typescript/Dec.d.ts", 4, 22>
+//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.10: 	  }
+//│ ╙──      	^^^
+//│ ╔══[ERROR] Member getName is declared but not defined
+//│ ║  l.12: 	    fun getName(id: number): string
+//│ ╙──      	        ^^^^^^^
+//│ module Dec() {
+//│   trait Get()
+//│   module OOO()
+//│   class Person(name: string, age: number) {
+//│     fun getName: (id: number,) -> string
+//│   }
+//│   fun getName: (id: number | string,) -> string
+//│   fun render: (callback: unit -> unit | undefined,) -> string
 //│ }
-//│ module OOO()

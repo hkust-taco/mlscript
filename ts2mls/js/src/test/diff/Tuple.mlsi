@@ -2,65 +2,51 @@
 :NewDefs
 :NoJS
 :AllowTypeErrors
-fun key(x: (string, (false) | (true), )): string
-fun value(x: (string, (false) | (true), )): (false) | (true)
-fun third(x: (number, number, number, )): number
-fun vec2(x: number, y: number): (number, number, )
-fun twoFunctions(ff: ((number) => number, (number) => number, ), x: number): number
-fun tupleIt(x: string): (unit => string, )
-fun s(flag: (false) | (true)): ((string) | (number), ((number) | (false)) | (true), )
-fun s2(t: ((false) | (true), (string) | (number), )): (string) | (number)
-fun ex<T, U>(x: T, y: U): (T, U, (T) & (U), )
-fun foo<T, U>(x: ((T) & (U), )): unit
-fun conv(x: {y: number,}): ({y: number,}, {z: string,}, )
-declare class A() {
-  val x: number
+export declare module Tuple {
+  fun key(x: (string, (false) | (true), )): string
+  fun value(x: (string, (false) | (true), )): (false) | (true)
+  fun third(x: (number, number, number, )): number
+  fun vec2(x: number, y: number): (number, number, )
+  fun twoFunctions(ff: ((number) => number, (number) => number, ), x: number): number
+  fun tupleIt(x: string): (unit => string, )
+  fun s(flag: (false) | (true)): ((string) | (number), ((number) | (false)) | (true), )
+  fun s2(t: ((false) | (true), (string) | (number), )): (string) | (number)
+  fun ex<T, U>(x: T, y: U): (T, U, (T) & (U), )
+  fun foo<T, U>(x: ((T) & (U), )): unit
+  fun conv(x: {y: number,}): ({y: number,}, {z: string,}, )
+  class A() {
+    val x: number
+  }
+  class B() {}
+  fun swap(x: (A, B, )): (B, A, )
 }
-declare class B() {}
-fun swap(x: (A, B, )): (B, A, )
-//│ ╔══[ERROR] Type parameters here are not yet supported in this position
-//│ ║  l.13: 	fun ex<T, U>(x: T, y: U): (T, U, (T) & (U), )
-//│ ╙──      	       ^
-//│ ╔══[ERROR] type identifier not found: T
-//│ ║  l.13: 	fun ex<T, U>(x: T, y: U): (T, U, (T) & (U), )
-//│ ╙──      	                ^
-//│ ╔══[ERROR] type identifier not found: U
-//│ ║  l.13: 	fun ex<T, U>(x: T, y: U): (T, U, (T) & (U), )
-//│ ╙──      	                      ^
-//│ ╔══[ERROR] type identifier not found: T
-//│ ║  l.13: 	fun ex<T, U>(x: T, y: U): (T, U, (T) & (U), )
-//│ ╙──      	                           ^
-//│ ╔══[ERROR] type identifier not found: U
-//│ ║  l.13: 	fun ex<T, U>(x: T, y: U): (T, U, (T) & (U), )
-//│ ╙──      	                              ^
-//│ ╔══[ERROR] type identifier not found: T
-//│ ║  l.13: 	fun ex<T, U>(x: T, y: U): (T, U, (T) & (U), )
-//│ ╙──      	                                 ^^^
-//│ ╔══[ERROR] type identifier not found: U
-//│ ║  l.13: 	fun ex<T, U>(x: T, y: U): (T, U, (T) & (U), )
-//│ ╙──      	                                       ^^^
-//│ ╔══[ERROR] Type parameters here are not yet supported in this position
-//│ ║  l.14: 	fun foo<T, U>(x: ((T) & (U), )): unit
-//│ ╙──      	        ^
-//│ ╔══[ERROR] type identifier not found: T
-//│ ║  l.14: 	fun foo<T, U>(x: ((T) & (U), )): unit
-//│ ╙──      	                  ^^^
-//│ ╔══[ERROR] type identifier not found: U
-//│ ║  l.14: 	fun foo<T, U>(x: ((T) & (U), )): unit
-//│ ╙──      	                        ^^^
-//│ fun key: (x: (string, bool,),) -> string
-//│ fun value: (x: (string, bool,),) -> bool
-//│ fun third: (x: (number, number, number,),) -> number
-//│ fun vec2: (x: number, y: number,) -> (number, number,)
-//│ fun twoFunctions: (ff: (number -> number, number -> number,), x: number,) -> number
-//│ fun tupleIt: (x: string,) -> unit -> string
-//│ fun s: (flag: bool,) -> (number | string, false | number | true,)
-//│ fun s2: (t: (bool, number | string,),) -> (number | string)
-//│ fun ex: (x: error, y: error,) -> (error, error, error,)
-//│ fun foo: (x: error,) -> unit
-//│ fun conv: (x: {y: number},) -> ({y: number}, {z: string},)
-//│ class A() {
-//│   let x: number
+//│ ╔══[ERROR] type identifier not found: A
+//│ ║  l.21: 	  fun swap(x: (A, B, )): (B, A, )
+//│ ╙──      	               ^
+//│ ╔══[ERROR] type identifier not found: B
+//│ ║  l.21: 	  fun swap(x: (A, B, )): (B, A, )
+//│ ╙──      	                  ^
+//│ ╔══[ERROR] type identifier not found: B
+//│ ║  l.21: 	  fun swap(x: (A, B, )): (B, A, )
+//│ ╙──      	                          ^
+//│ ╔══[ERROR] type identifier not found: A
+//│ ║  l.21: 	  fun swap(x: (A, B, )): (B, A, )
+//│ ╙──      	                             ^
+//│ module Tuple() {
+//│   class A() {
+//│     let x: number
+//│   }
+//│   class B()
+//│   fun conv: (x: {y: number},) -> ({y: number}, {z: string},)
+//│   fun ex: forall 'T 'U. (x: 'T, y: 'U,) -> ('T, 'U, 'T & 'U,)
+//│   fun foo: (x: anything,) -> unit
+//│   fun key: (x: (string, bool,),) -> string
+//│   fun s: (flag: bool,) -> (number | string, false | number | true,)
+//│   fun s2: (t: (bool, number | string,),) -> (number | string)
+//│   fun swap: (x: (error, error,),) -> (error, error,)
+//│   fun third: (x: (number, number, number,),) -> number
+//│   fun tupleIt: (x: string,) -> unit -> string
+//│   fun twoFunctions: (ff: (number -> number, number -> number,), x: number,) -> number
+//│   fun value: (x: (string, bool,),) -> bool
+//│   fun vec2: (x: number, y: number,) -> (number, number,)
 //│ }
-//│ class B()
-//│ fun swap: (x: (A, B,),) -> (B, A,)

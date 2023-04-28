@@ -1,12 +1,13 @@
 package ts2mls
 
 import org.scalatest.funsuite.AnyFunSuite
+import scala.collection.immutable
 
 class TSTypeGenerationTest extends AnyFunSuite {
   import TSTypeGenerationTest._
 
   testsData.foreach((data) => test(data._2) {
-    val program = TSProgram(tsPath(data._1), true)
+    val program = TSProgram(tsPath(data._1), !directlyImportedSet.contains(data._1))
     var writer = JSWriter(diffPath(data._2))
     program.generate(writer)
     writer.close()
@@ -14,29 +15,32 @@ class TSTypeGenerationTest extends AnyFunSuite {
 }
 
 object TSTypeGenerationTest {
-  private def tsPath(filenames: Seq[String]) = filenames.map((fn) => s"ts2mls/js/src/test/typescript/$fn")
+  private def tsPath(filename: String) = s"ts2mls/js/src/test/typescript/$filename"
   private def diffPath(filename: String) = s"ts2mls/js/src/test/diff/$filename"
 
+  // TODO: do better?
   private val testsData = List(
-    (Seq("Array.ts"), "Array.mlsi"),
-    (Seq("BasicFunctions.ts"), "BasicFunctions.mlsi"),
-    (Seq("ClassMember.ts"), "ClassMember.mlsi"),
-    (Seq("Dec.d.ts"), "Dec.mlsi"),
-    (Seq("Enum.ts"), "Enum.mlsi"),
-    (Seq("ES5.d.ts"), "ES5.mlsi"),
-    (Seq("Export.ts"), "Export.mlsi"),
-    (Seq("Heritage.ts"), "Heritage.mlsi"),
-    (Seq("HighOrderFunc.ts"), "HighOrderFunc.mlsi"),
-    (Seq("InterfaceMember.ts"), "InterfaceMember.mlsi"),
-    (Seq("Intersection.ts"), "Intersection.mlsi"),
-    (Seq("Literal.ts"), "Literal.mlsi"),
-    (Seq("Namespace.ts"), "Namespace.mlsi"),
-    (Seq("Optional.ts"), "Optional.mlsi"),
-    (Seq("Overload.ts"), "Overload.mlsi"),
-    (Seq("Tuple.ts"), "Tuple.mlsi"),
-    (Seq("Type.ts"), "Type.mlsi"),
-    (Seq("TypeParameter.ts"), "TypeParameter.mlsi"),
-    (Seq("Union.ts"), "Union.mlsi"),
-    (Seq("Variables.ts"), "Variables.mlsi"),
+    ("Array.ts", "Array.mlsi"),
+    ("BasicFunctions.ts", "BasicFunctions.mlsi"),
+    ("ClassMember.ts", "ClassMember.mlsi"),
+    ("Dec.d.ts", "Dec.mlsi"),
+    ("Enum.ts", "Enum.mlsi"),
+    ("ES5.d.ts", "ES5.mlsi"),
+    ("Export.ts", "Export.mlsi"),
+    ("Heritage.ts", "Heritage.mlsi"),
+    ("HighOrderFunc.ts", "HighOrderFunc.mlsi"),
+    ("InterfaceMember.ts", "InterfaceMember.mlsi"),
+    ("Intersection.ts", "Intersection.mlsi"),
+    ("Literal.ts", "Literal.mlsi"),
+    ("Namespace.ts", "Namespace.mlsi"),
+    ("Optional.ts", "Optional.mlsi"),
+    ("Overload.ts", "Overload.mlsi"),
+    ("Tuple.ts", "Tuple.mlsi"),
+    ("Type.ts", "Type.mlsi"),
+    ("TypeParameter.ts", "TypeParameter.mlsi"),
+    ("Union.ts", "Union.mlsi"),
+    ("Variables.ts", "Variables.mlsi"),
   )
+
+  private val directlyImportedSet = Set[String]("ES5.d.ts")
 }

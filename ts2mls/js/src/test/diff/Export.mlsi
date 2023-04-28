@@ -2,37 +2,44 @@
 :NewDefs
 :NoJS
 :AllowTypeErrors
-export declare module Foo {
-  fun Baz(aa: string): IBar
-  declare trait IBar() {
-    val a: string
+export declare module Export {
+  export module Foo {
+    fun Baz(aa: string): IBar
+    trait IBar() {
+      val a: string
+    }
+    export class Bar() extends IBar {
+      val a: string
+    }
+    export val baz: IBar
   }
-  export declare class Bar() extends IBar {
-    val a: string
-  }
-  export val baz: IBar
 }
 //│ ╔══[ERROR] type identifier not found: IBar
-//│ ║  l.6: 	  fun Baz(aa: string): IBar
-//│ ╙──     	                       ^^^^
+//│ ║  l.7: 	    fun Baz(aa: string): IBar
+//│ ╙──     	                         ^^^^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.7: 	  declare trait IBar() {
-//│ ║       	          ^^^^^^^^^^^^^^
-//│ ║  l.8: 	    val a: string
-//│ ║       	^^^^^^^^^^^^^^^^^
-//│ ║  l.9: 	  }
-//│ ╙──     	^^^
+//│ ║  l.8: 	    trait IBar() {
+//│ ║       	    ^^^^^^^^^^^^^^
+//│ ║  l.9: 	      val a: string
+//│ ║       	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.10: 	    }
+//│ ╙──      	^^^^^
 //│ ╔══[ERROR] Cannot inherit from a type alias
-//│ ║  l.10: 	  export declare class Bar() extends IBar {
-//│ ╙──      	                                     ^^^^
+//│ ║  l.11: 	    export class Bar() extends IBar {
+//│ ╙──      	                               ^^^^
 //│ ╔══[ERROR] trait IBar cannot be used as a type
-//│ ║  l.13: 	  export val baz: IBar
-//│ ╙──      	                  ^^^^
-//│ module Foo() {
-//│   class Bar() {
-//│     let a: string
+//│ ║  l.14: 	    export val baz: IBar
+//│ ╙──      	                    ^^^^
+//│ ╔══[ERROR] Member Baz is declared but not defined
+//│ ║  l.7: 	    fun Baz(aa: string): IBar
+//│ ╙──     	        ^^^
+//│ module Export() {
+//│   module Foo() {
+//│     class Bar() {
+//│       let a: string
+//│     }
+//│     fun Baz: (aa: string,) -> error
+//│     trait IBar()
+//│     let baz: IBar
 //│   }
-//│   fun Baz: (aa: string,) -> error
-//│   trait IBar()
-//│   let baz: IBar
 //│ }

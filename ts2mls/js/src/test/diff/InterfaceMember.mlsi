@@ -2,129 +2,157 @@
 :NewDefs
 :NoJS
 :AllowTypeErrors
-declare trait IFoo() {
-  val a: string
-  fun b(x: number): number
-  fun c(): (false) | (true)
-  fun d(x: string): unit
-}
-declare trait II<T>() {
-  fun test(x: T): number
-}
-fun create(): {v: number,}
-fun get(x: {t: string,}): string
-declare trait IEvent() {
-  fun callback(): (number) => unit
-}
-declare trait SearchFunc() {
-  val __call: Unsupported<"(source: string, subString: string): boolean;", "ts2mls/js/src/test/typescript/InterfaceMember.ts", 24, 22>
-}
-declare trait StringArray() {
-  val __index: Unsupported<"[index: number]: string;", "ts2mls/js/src/test/typescript/InterfaceMember.ts", 28, 23>
-}
-declare trait Counter() {
-  val __call: Unsupported<"(start: number): string;", "ts2mls/js/src/test/typescript/InterfaceMember.ts", 32, 19>
-  val interval: number
-  fun reset(): unit
-}
-declare trait Simple() {
-  val a: number
-  fun b(x: (false) | (true)): string
-}
-declare trait Simple2<T>() {
-  val abc: T
-}
-declare trait Next() extends Simple {}
-declare trait TTT<T>() {
-  fun ttt(x: T): T
+export declare module InterfaceMember {
+  trait IFoo() {
+    val a: string
+    fun b(x: number): number
+    fun c(): (false) | (true)
+    fun d(x: string): unit
+  }
+  trait II<T>() {
+    fun test(x: T): number
+  }
+  fun create(): {v: number,}
+  fun get(x: {t: string,}): string
+  trait IEvent() {
+    fun callback(): (number) => unit
+  }
+  trait SearchFunc() {
+    val __call: Unsupported<"(source: string, subString: string): boolean;", "ts2mls/js/src/test/typescript/InterfaceMember.ts", 24, 22>
+  }
+  trait StringArray() {
+    val __index: Unsupported<"[index: number]: string;", "ts2mls/js/src/test/typescript/InterfaceMember.ts", 28, 23>
+  }
+  trait Counter() {
+    val __call: Unsupported<"(start: number): string;", "ts2mls/js/src/test/typescript/InterfaceMember.ts", 32, 19>
+    val interval: number
+    fun reset(): unit
+  }
+  trait Simple() {
+    val a: number
+    fun b(x: (false) | (true)): string
+  }
+  trait Simple2<T>() {
+    val abc: T
+  }
+  trait Next() extends Simple {}
+  trait TTT<T>() {
+    fun ttt(x: T): T
+  }
 }
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.5: 	declare trait IFoo() {
-//│ ║       	        ^^^^^^^^^^^^^^
-//│ ║  l.6: 	  val a: string
-//│ ║       	^^^^^^^^^^^^^^^
-//│ ║  l.7: 	  fun b(x: number): number
-//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.8: 	  fun c(): (false) | (true)
-//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.9: 	  fun d(x: string): unit
-//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.10: 	}
-//│ ╙──      	^
+//│ ║  l.6: 	  trait IFoo() {
+//│ ║       	  ^^^^^^^^^^^^^^
+//│ ║  l.7: 	    val a: string
+//│ ║       	^^^^^^^^^^^^^^^^^
+//│ ║  l.8: 	    fun b(x: number): number
+//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.9: 	    fun c(): (false) | (true)
+//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.10: 	    fun d(x: string): unit
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.11: 	  }
+//│ ╙──      	^^^
+//│ ╔══[ERROR] Member b is declared but not defined
+//│ ║  l.8: 	    fun b(x: number): number
+//│ ╙──     	        ^
+//│ ╔══[ERROR] Member c is declared but not defined
+//│ ║  l.9: 	    fun c(): (false) | (true)
+//│ ╙──     	        ^
+//│ ╔══[ERROR] Member d is declared but not defined
+//│ ║  l.10: 	    fun d(x: string): unit
+//│ ╙──      	        ^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.11: 	declare trait II<T>() {
-//│ ║        	        ^^^^^^^^^^^^^^^
-//│ ║  l.12: 	  fun test(x: T): number
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.13: 	}
-//│ ╙──      	^
+//│ ║  l.12: 	  trait II<T>() {
+//│ ║        	  ^^^^^^^^^^^^^^^
+//│ ║  l.13: 	    fun test(x: T): number
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.14: 	  }
+//│ ╙──      	^^^
+//│ ╔══[ERROR] Member test is declared but not defined
+//│ ║  l.13: 	    fun test(x: T): number
+//│ ╙──      	        ^^^^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.16: 	declare trait IEvent() {
-//│ ║        	        ^^^^^^^^^^^^^^^^
-//│ ║  l.17: 	  fun callback(): (number) => unit
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.18: 	}
-//│ ╙──      	^
-//│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.19: 	declare trait SearchFunc() {
-//│ ║        	        ^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.20: 	  val __call: Unsupported<"(source: string, subString: string): boolean;", "ts2mls/js/src/test/typescript/InterfaceMember.ts", 24, 22>
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.21: 	}
-//│ ╙──      	^
-//│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.22: 	declare trait StringArray() {
-//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.23: 	  val __index: Unsupported<"[index: number]: string;", "ts2mls/js/src/test/typescript/InterfaceMember.ts", 28, 23>
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.24: 	}
-//│ ╙──      	^
-//│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.25: 	declare trait Counter() {
-//│ ║        	        ^^^^^^^^^^^^^^^^^
-//│ ║  l.26: 	  val __call: Unsupported<"(start: number): string;", "ts2mls/js/src/test/typescript/InterfaceMember.ts", 32, 19>
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.27: 	  val interval: number
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.28: 	  fun reset(): unit
-//│ ║        	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.29: 	}
-//│ ╙──      	^
-//│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.30: 	declare trait Simple() {
-//│ ║        	        ^^^^^^^^^^^^^^^^
-//│ ║  l.31: 	  val a: number
-//│ ║        	^^^^^^^^^^^^^^^
-//│ ║  l.32: 	  fun b(x: (false) | (true)): string
+//│ ║  l.17: 	  trait IEvent() {
+//│ ║        	  ^^^^^^^^^^^^^^^^
+//│ ║  l.18: 	    fun callback(): (number) => unit
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.33: 	}
-//│ ╙──      	^
+//│ ║  l.19: 	  }
+//│ ╙──      	^^^
+//│ ╔══[ERROR] Member callback is declared but not defined
+//│ ║  l.18: 	    fun callback(): (number) => unit
+//│ ╙──      	        ^^^^^^^^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.34: 	declare trait Simple2<T>() {
-//│ ║        	        ^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.35: 	  val abc: T
-//│ ║        	^^^^^^^^^^^^
-//│ ║  l.36: 	}
-//│ ╙──      	^
+//│ ║  l.20: 	  trait SearchFunc() {
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.21: 	    val __call: Unsupported<"(source: string, subString: string): boolean;", "ts2mls/js/src/test/typescript/InterfaceMember.ts", 24, 22>
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.22: 	  }
+//│ ╙──      	^^^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.37: 	declare trait Next() extends Simple {}
-//│ ╙──      	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.23: 	  trait StringArray() {
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.24: 	    val __index: Unsupported<"[index: number]: string;", "ts2mls/js/src/test/typescript/InterfaceMember.ts", 28, 23>
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.25: 	  }
+//│ ╙──      	^^^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.38: 	declare trait TTT<T>() {
-//│ ║        	        ^^^^^^^^^^^^^^^^
-//│ ║  l.39: 	  fun ttt(x: T): T
-//│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ║  l.40: 	}
-//│ ╙──      	^
-//│ trait IFoo()
-//│ trait II[T]()
-//│ fun create: () -> {v: number}
-//│ fun get: (x: {t: string},) -> string
-//│ trait IEvent()
-//│ trait SearchFunc()
-//│ trait StringArray()
-//│ trait Counter()
-//│ trait Simple()
-//│ trait Simple2[T]()
-//│ trait Next()
-//│ trait TTT[T]()
+//│ ║  l.26: 	  trait Counter() {
+//│ ║        	  ^^^^^^^^^^^^^^^^^
+//│ ║  l.27: 	    val __call: Unsupported<"(start: number): string;", "ts2mls/js/src/test/typescript/InterfaceMember.ts", 32, 19>
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.28: 	    val interval: number
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.29: 	    fun reset(): unit
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.30: 	  }
+//│ ╙──      	^^^
+//│ ╔══[ERROR] Member reset is declared but not defined
+//│ ║  l.29: 	    fun reset(): unit
+//│ ╙──      	        ^^^^^
+//│ ╔══[ERROR] traits are not yet supported
+//│ ║  l.31: 	  trait Simple() {
+//│ ║        	  ^^^^^^^^^^^^^^^^
+//│ ║  l.32: 	    val a: number
+//│ ║        	^^^^^^^^^^^^^^^^^
+//│ ║  l.33: 	    fun b(x: (false) | (true)): string
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.34: 	  }
+//│ ╙──      	^^^
+//│ ╔══[ERROR] Member b is declared but not defined
+//│ ║  l.33: 	    fun b(x: (false) | (true)): string
+//│ ╙──      	        ^
+//│ ╔══[ERROR] traits are not yet supported
+//│ ║  l.35: 	  trait Simple2<T>() {
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.36: 	    val abc: T
+//│ ║        	^^^^^^^^^^^^^^
+//│ ║  l.37: 	  }
+//│ ╙──      	^^^
+//│ ╔══[ERROR] traits are not yet supported
+//│ ║  l.38: 	  trait Next() extends Simple {}
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] traits are not yet supported
+//│ ║  l.39: 	  trait TTT<T>() {
+//│ ║        	  ^^^^^^^^^^^^^^^^
+//│ ║  l.40: 	    fun ttt(x: T): T
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.41: 	  }
+//│ ╙──      	^^^
+//│ ╔══[ERROR] Member ttt is declared but not defined
+//│ ║  l.40: 	    fun ttt(x: T): T
+//│ ╙──      	        ^^^
+//│ module InterfaceMember() {
+//│   trait Counter()
+//│   trait IEvent()
+//│   trait IFoo()
+//│   trait II[T]()
+//│   trait Next()
+//│   trait SearchFunc()
+//│   trait Simple()
+//│   trait Simple2[T]()
+//│   trait StringArray()
+//│   trait TTT[T]()
+//│   fun create: () -> {v: number}
+//│   fun get: (x: {t: string},) -> string
+//│ }

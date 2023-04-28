@@ -2,67 +2,68 @@
 :NewDefs
 :NoJS
 :AllowTypeErrors
-fun buildName(firstName: string, lastName: (string) | (undefined)): string
-fun buildName2(firstName: string, lastName: (string) | (undefined)): string
-fun buildName3(firstName: string, lastName: MutArray<string>): string
-fun buildName4(firstName: string, lastName: MutArray<anything>): string
-declare trait SquareConfig() {
-  val color: (string) | (undefined)
-  val width: (number) | (undefined)
+export declare module Optional {
+  fun buildName(firstName: string, lastName: (string) | (undefined)): string
+  fun buildName2(firstName: string, lastName: (string) | (undefined)): string
+  fun buildName3(firstName: string, lastName: MutArray<string>): string
+  fun buildName4(firstName: string, lastName: MutArray<anything>): string
+  trait SquareConfig() {
+    val color: (string) | (undefined)
+    val width: (number) | (undefined)
+  }
+  fun did(x: number, f: ((number) => number) | (undefined)): number
+  fun getOrElse(arr: (MutArray<object>) | (undefined)): object
+  class ABC() {}
+  fun testABC(abc: (ABC) | (undefined)): unit
+  fun testSquareConfig(conf: (SquareConfig) | (undefined)): unit
+  fun err(msg: ((number, string, )) | (undefined)): unit
+  fun toStr(x: (((number) | (false)) | (true)) | (undefined)): string
+  fun boo<T, U>(x: ((T) & (U)) | (undefined)): unit
+  class B<T>() {
+    val b: T
+  }
+  fun boom(b: (B<nothing>) | (undefined)): anything
 }
-fun did(x: number, f: ((number) => number) | (undefined)): number
-fun getOrElse(arr: (MutArray<object>) | (undefined)): object
-declare class ABC() {}
-fun testABC(abc: (ABC) | (undefined)): unit
-fun testSquareConfig(conf: (SquareConfig) | (undefined)): unit
-fun err(msg: ((number, string, )) | (undefined)): unit
-fun toStr(x: (((number) | (false)) | (true)) | (undefined)): string
-fun boo<T, U>(x: ((T) & (U)) | (undefined)): unit
-declare class B<T>() {
-  val b: T
-}
-fun boom(b: (B<nothing>) | (undefined)): anything
+//│ ╔══[ERROR] type identifier not found: object
+//│ ║  l.15: 	  fun getOrElse(arr: (MutArray<object>) | (undefined)): object
+//│ ╙──      	                               ^^^^^^
+//│ ╔══[ERROR] type identifier not found: object
+//│ ║  l.15: 	  fun getOrElse(arr: (MutArray<object>) | (undefined)): object
+//│ ╙──      	                                                        ^^^^^^
+//│ ╔══[ERROR] type identifier not found: ABC
+//│ ║  l.17: 	  fun testABC(abc: (ABC) | (undefined)): unit
+//│ ╙──      	                   ^^^^^
+//│ ╔══[ERROR] type identifier not found: SquareConfig
+//│ ║  l.18: 	  fun testSquareConfig(conf: (SquareConfig) | (undefined)): unit
+//│ ╙──      	                             ^^^^^^^^^^^^^^
+//│ ╔══[ERROR] type identifier not found: B
+//│ ║  l.25: 	  fun boom(b: (B<nothing>) | (undefined)): anything
+//│ ╙──      	              ^^^^^^^^^^^^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.9: 	declare trait SquareConfig() {
-//│ ║       	        ^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.10: 	  val color: (string) | (undefined)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.11: 	  val width: (number) | (undefined)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.12: 	}
-//│ ╙──      	^
-//│ ╔══[ERROR] type identifier not found: object
-//│ ║  l.14: 	fun getOrElse(arr: (MutArray<object>) | (undefined)): object
-//│ ╙──      	                             ^^^^^^
-//│ ╔══[ERROR] type identifier not found: object
-//│ ║  l.14: 	fun getOrElse(arr: (MutArray<object>) | (undefined)): object
-//│ ╙──      	                                                      ^^^^^^
-//│ ╔══[ERROR] trait SquareConfig cannot be used as a type
-//│ ║  l.17: 	fun testSquareConfig(conf: (SquareConfig) | (undefined)): unit
-//│ ╙──      	                           ^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Type parameters here are not yet supported in this position
-//│ ║  l.20: 	fun boo<T, U>(x: ((T) & (U)) | (undefined)): unit
-//│ ╙──      	        ^
-//│ ╔══[ERROR] type identifier not found: T
-//│ ║  l.20: 	fun boo<T, U>(x: ((T) & (U)) | (undefined)): unit
-//│ ╙──      	                  ^^^
-//│ ╔══[ERROR] type identifier not found: U
-//│ ║  l.20: 	fun boo<T, U>(x: ((T) & (U)) | (undefined)): unit
-//│ ╙──      	                        ^^^
-//│ fun buildName: (firstName: string, lastName: string | undefined,) -> string
-//│ fun buildName2: (firstName: string, lastName: string | undefined,) -> string
-//│ fun buildName3: (firstName: string, lastName: MutArray[string],) -> string
-//│ fun buildName4: (firstName: string, lastName: MutArray[anything],) -> string
-//│ trait SquareConfig()
-//│ fun did: (x: number, f: number -> number | undefined,) -> number
-//│ fun getOrElse: (arr: MutArray[error] | undefined,) -> error
-//│ class ABC()
-//│ fun testABC: (abc: ABC | undefined,) -> unit
-//│ fun testSquareConfig: (conf: undefined | SquareConfig,) -> unit
-//│ fun err: (msg: (number, string,) | undefined,) -> unit
-//│ fun toStr: (x: false | number | true | undefined,) -> string
-//│ fun boo: (x: error | undefined,) -> unit
-//│ class B[T]() {
-//│   let b: T
+//│ ║  l.10: 	  trait SquareConfig() {
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.11: 	    val color: (string) | (undefined)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.12: 	    val width: (number) | (undefined)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.13: 	  }
+//│ ╙──      	^^^
+//│ module Optional() {
+//│   class ABC()
+//│   class B[T]() {
+//│     let b: T
+//│   }
+//│   trait SquareConfig()
+//│   fun boo: (x: anything,) -> unit
+//│   fun boom: (b: error | undefined,) -> anything
+//│   fun buildName: (firstName: string, lastName: string | undefined,) -> string
+//│   fun buildName2: (firstName: string, lastName: string | undefined,) -> string
+//│   fun buildName3: (firstName: string, lastName: MutArray[string],) -> string
+//│   fun buildName4: (firstName: string, lastName: MutArray[anything],) -> string
+//│   fun did: (x: number, f: number -> number | undefined,) -> number
+//│   fun err: (msg: (number, string,) | undefined,) -> unit
+//│   fun getOrElse: (arr: MutArray[error] | undefined,) -> error
+//│   fun testABC: (abc: error | undefined,) -> unit
+//│   fun testSquareConfig: (conf: error | undefined,) -> unit
+//│   fun toStr: (x: false | number | true | undefined,) -> string
 //│ }
-//│ fun boom: (b: B[nothing] | undefined,) -> anything

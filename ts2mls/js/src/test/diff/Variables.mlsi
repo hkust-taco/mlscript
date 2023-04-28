@@ -2,31 +2,35 @@
 :NewDefs
 :NoJS
 :AllowTypeErrors
-export val URI: string
-export val URI2: string
-export val foo: number
-export val bar: false
-declare class FooBar() {}
-export val fb: FooBar
-export declare module ABC {
-  export declare class DEF() {}
+export declare module Variables {
+  val URI: string
+  val URI2: string
+  val foo: number
+  val bar: false
+  class FooBar() {}
+  val fb: FooBar
+  module ABC {
+    export class DEF() {}
+  }
+  val d: ABC.DEF
+  module DD {
+    export val foo: number
+    val bar: number
+  }
 }
-export val d: ABC.DEF
-export declare module DD {
-  export val foo: number
-  val bar: number
-}
-//│ let URI: string
-//│ let URI2: string
-//│ let foo: number
-//│ let bar: false
-//│ class FooBar()
-//│ let fb: FooBar
-//│ module ABC() {
-//│   class DEF()
-//│ }
-//│ let d: DEF
-//│ module DD() {
-//│   let bar: number
+//│ module Variables() {
+//│   module ABC() {
+//│     class DEF()
+//│   }
+//│   module DD() {
+//│     let bar: number
+//│     let foo: number
+//│   }
+//│   class FooBar()
+//│   let URI: string
+//│   let URI2: string
+//│   let bar: false
+//│   let d: DEF
+//│   let fb: FooBar
 //│   let foo: number
 //│ }
