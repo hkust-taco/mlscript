@@ -789,7 +789,6 @@ abstract class TyperHelpers { Typer: Typer =>
               // cls.params.flatMap(p => childrenPolField(pol.invar)(p._2))
                 cls.params.flatMap(p => childrenPolField(PolMap.pos)(p._2)) ++
                 cls.members.valuesIterator.flatMap(childrenPolMem) ++
-                cls.typeMembers.valuesIterator.flatMap(childrenPolMem) ++
                 S(pol.contravar -> cls.thisTy) ++
                 S(pol.covar -> cls.instanceType)
             case cls: TypedNuTrt =>
@@ -882,7 +881,6 @@ abstract class TyperHelpers { Typer: Typer =>
             // cls.params.flatMap(p => childrenPolField(pol.invar)(p._2))
               cls.params.flatMap(p => p._2.lb.toList ::: p._2.ub :: Nil) ++
               cls.members.valuesIterator.flatMap(childrenMem) ++
-              cls.typeMembers.valuesIterator.flatMap(childrenMem) ++
               S(cls.thisTy) ++
               S(cls.instanceType)
         }
@@ -1174,13 +1172,13 @@ abstract class TyperHelpers { Typer: Typer =>
       case TypedNuAls(level, td, tparams, body) =>
         tparams.iterator.foreach(tp => apply(pol.invar)(tp._2))
         apply(pol)(body)
-      case TypedNuCls(level, td, ttu, tparams, params, members, thisTy, _, _, tms) =>
+      case TypedNuCls(level, td, ttu, tparams, params, members, thisTy, _, _) =>
         tparams.iterator.foreach(tp => apply(pol.invar)(tp._2))
         params.foreach(p => applyField(pol)(p._2))
         members.valuesIterator.foreach(applyMem(pol))
         // thisTy.foreach(apply(pol.invar)(_))
         apply(pol.contravar)(thisTy)
-      case TypedNuTrt(level, td, ttu, tparams, members, thisTy, sign, _, _, tms) => 
+      case TypedNuTrt(level, td, ttu, tparams, members, thisTy, sign, _, _) => 
         tparams.iterator.foreach(tp => apply(pol.invar)(tp._2))
         members.valuesIterator.foreach(applyMem(pol))
         // thisTy.foreach(apply(pol.invar)(_))

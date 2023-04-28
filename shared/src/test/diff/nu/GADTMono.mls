@@ -10,4 +10,11 @@ class Cond[T](p: Expr[bool], t: Expr[T], e: Expr[T]) extends Expr[T]
 class Pair[S, T](a: Expr[S], b: Expr[T]) extends Expr[(S, T)]
 class Fst[S, T](p: Expr[(S, T)]) extends Expr[S]
 class Snd[S, T](p: Expr[(S, T)]) extends Expr[T]
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: ‘T36' was not a type variable
+//│ trait Expr[A]()
+//│ class LitInt(n: int)
+//│ class LitBool(b: bool)
+//│ class Add(x: Expr[int], y: Expr[int])
+//│ class Cond[T](p: Expr[bool], t: Expr[T], e: Expr[T])
+//│ class Pair[S, T](a: Expr[S], b: Expr[T])
+//│ class Fst[S, T](p: Expr[(S, T,)])
+//│ class Snd[S, T](p: Expr[(S, T,)])

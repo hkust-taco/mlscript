@@ -1331,7 +1331,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             Option.when(!(TopType <:< thisTy))(go(thisTy)),
             mkTypingUnit(thisTy, members))(td.declareLoc)
         }
-      case TypedNuCls(level, td, ttu, tparams, params, members, thisTy, _, _, _) =>
+      case TypedNuCls(level, td, ttu, tparams, params, members, thisTy, _, _) =>
         ectx(tparams) |> { implicit ectx =>
           NuTypeDef(td.kind, td.nme, td.tparams,
             Tup(params.map(p => N -> Fld(false, false, Asc(p._1, go(p._2.ub))))),
@@ -1341,7 +1341,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             Option.when(!(TopType <:< thisTy))(go(thisTy)),
             mkTypingUnit(thisTy, members))(td.declareLoc)
           }
-      case TypedNuTrt(level, td, ttu, tparams, members, thisTy, sign, _, _, _ /* TODO */) => 
+      case TypedNuTrt(level, td, ttu, tparams, members, thisTy, sign, _, _) => 
         ectx(tparams) |> { implicit ectx =>
           NuTypeDef(td.kind, td.nme, td.tparams,
             Tup(Nil),

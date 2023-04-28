@@ -1,0 +1,16 @@
+:NewDefs
+:NoJS
+
+class Room[A](name: string) {
+    fun foo(x: A) = x
+}
+//│ class Room[A](name: string) {
+//│   fun foo: (x: A,) -> A
+//│ }
+
+class BigRoom extends Room[bool]("big")
+//│ class BigRoom() {
+//│   fun foo: (x: 'A,) -> 'A
+//│ }
+//│ where
+//│   'A := bool

@@ -20,9 +20,10 @@ class B { let a = "hi" }
 //│   let a: "hi"
 //│ }
 
+:e
 class C(a: int) extends B
 //│ ╔══[ERROR] Type mismatch in type reference:
-//│ ║  l.23: 	class C(a: int) extends B
+//│ ║  l.24: 	class C(a: int) extends B
 //│ ║        	           ^^^
 //│ ╟── type `int` does not match type `"hi"`
 //│ ╟── Note: constraint arises from string literal:
