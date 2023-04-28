@@ -238,18 +238,6 @@ class C1[A] { fun a: A = a }
 
 // TODO
 class C2 extends C1[int] { fun a = 1 }
-//│ ╔══[ERROR] Type mismatch in definition of method a:
-//│ ║  l.240: 	class C2 extends C1[int] { fun a = 1 }
-//│ ║         	                               ^^^^^
-//│ ╟── integer literal of type `1` does not match type `A`
-//│ ║  l.240: 	class C2 extends C1[int] { fun a = 1 }
-//│ ║         	                                   ^
-//│ ╟── but it flows into definition of method a with expected type `A`
-//│ ║  l.240: 	class C2 extends C1[int] { fun a = 1 }
-//│ ║         	                               ^^^^^
-//│ ╟── Note: constraint arises from definition of method a:
-//│ ║  l.234: 	class C1[A] { fun a: A = a }
-//│ ╙──       	                  ^^^^^^^^
 //│ class C2() {
 //│   fun a: 1
 //│ }
@@ -274,19 +262,19 @@ class C extends MyTrait[int] { fun a = 1 }
 :e
 class C extends MyTrait[int] { fun a = false }
 //│ ╔══[ERROR] Type mismatch in definition of method a:
-//│ ║  l.275: 	class C extends MyTrait[int] { fun a = false }
+//│ ║  l.263: 	class C extends MyTrait[int] { fun a = false }
 //│ ║         	                                   ^^^^^^^^^
 //│ ╟── reference of type `false` is not an instance of type `int`
-//│ ║  l.275: 	class C extends MyTrait[int] { fun a = false }
+//│ ║  l.263: 	class C extends MyTrait[int] { fun a = false }
 //│ ║         	                                       ^^^^^
 //│ ╟── but it flows into definition of method a with expected type `int`
-//│ ║  l.275: 	class C extends MyTrait[int] { fun a = false }
+//│ ║  l.263: 	class C extends MyTrait[int] { fun a = false }
 //│ ║         	                                   ^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.275: 	class C extends MyTrait[int] { fun a = false }
+//│ ║  l.263: 	class C extends MyTrait[int] { fun a = false }
 //│ ║         	                        ^^^
 //│ ╟── from signature of member a:
-//│ ║  l.261: 	trait MyTrait[A] { fun a: A }
+//│ ║  l.249: 	trait MyTrait[A] { fun a: A }
 //│ ╙──       	                       ^^^^
 //│ class C() {
 //│   fun a: false

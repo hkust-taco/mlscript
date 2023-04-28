@@ -12,3 +12,34 @@ class BigRoom extends Room[bool]("big")
 //│ class BigRoom() {
 //│   fun foo: (x: 'A,) -> 'A
 //│ }
+//│ where
+//│   'A := bool
+
+:e
+class WrongRoom extends Room[bool]("wrong") {
+    fun foo(x) = x + 1
+}
+//│ ╔══[ERROR] Type mismatch in definition of method foo:
+//│ ║  l.20: 	    fun foo(x) = x + 1
+//│ ║        	        ^^^^^^^^^^^^^^
+//│ ╟── type `bool` is not an instance of type `int`
+//│ ║  l.19: 	class WrongRoom extends Room[bool]("wrong") {
+//│ ║        	                             ^^^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.20: 	    fun foo(x) = x + 1
+//│ ╙──      	                 ^
+//│ ╔══[ERROR] Type mismatch in definition of method foo:
+//│ ║  l.20: 	    fun foo(x) = x + 1
+//│ ║        	        ^^^^^^^^^^^^^^
+//│ ╟── operator application of type `int` is not an instance of type `bool`
+//│ ║  l.20: 	    fun foo(x) = x + 1
+//│ ║        	                 ^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.19: 	class WrongRoom extends Room[bool]("wrong") {
+//│ ║        	                             ^^^^
+//│ ╟── from reference:
+//│ ║  l.5: 	    fun foo(x: A) = x
+//│ ╙──     	                    ^
+//│ class WrongRoom() {
+//│   fun foo: int -> int
+//│ }

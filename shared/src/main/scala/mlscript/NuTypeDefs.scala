@@ -980,7 +980,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     // TODO report non-unit result/statements?
                     // TODO check overriding
 
-                    case class Pack(clsMem: Ls[NuMember], bsCls: Opt[Str], trtMem: Ls[NuMember])
+                    case class Pack(clsMem: Ls[NuMember], bsCls: Opt[Str], bsMem: Ls[NuMember], trtMem: Ls[NuMember])
 
                     // compute base class and interfaces
                     def computeBaseClassTrait(parents: Ls[ParentSpec], pack: Pack): Pack =
@@ -996,9 +996,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                                     err(msg"cannot inherit from more than one base class: ${
                                       pack.bsCls.get} and ${parNme}", v.toLoc)
 
-                                  val cls = rawCls 
-                                  // TODO: refreshing breaks overriding check
-                                  // val cls = refreshGen[TypedNuCls](info, v, parTargs)
+                                  val cls = refreshGen[TypedNuCls](info, v, parTargs)
                                   
                                   if (parArgs.sizeCompare(cls.params) =/= 0)
                                     err(msg"class $parNme expects ${
@@ -1012,30 +1010,16 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                                     NuParam(nme, FieldType(p.lb, a_ty)(provTODO))(lvl)
                                   }
                                   val numem = paramMems ++ cls.members.values.toList
+
                                   val res = pack.clsMem ++ numem.flatMap { m =>
-                                    lazy val parSign = m match {
-                                          case nt: TypedNuTermDef => nt.typeSignature
-                                          case np: NuParam => np.typeSignature
-                                          case _ => ??? // probably no other cases
-                                        }
                                     pack.clsMem.find(x => x.name == m.name) match {
-                                      case S(mem: TypedNuTermDef) =>
-                                        val memSign = mem.typeSignature
-                                        println(s"checking overriding: $memSign <: $parSign")
-                                        implicit val prov: TP = memSign.prov
-                                        constrain(memSign, parSign)
-                                        Nil
-                                      case S(pm: NuParam) =>
-                                        val pmSign = pm.typeSignature
-                                        println(s"checking overriding: $pmSign <: $parSign")
-                                        implicit val prov: TP = pmSign.prov
-                                        constrain(pmSign, parSign)
-                                        Nil
+                                      case S(mem: TypedNuTermDef) => Nil
+                                      case S(pm: NuParam) => Nil
                                       case _ => m :: Nil
                                     }
                                   }
 
-                                  computeBaseClassTrait(ps, pack.copy(clsMem = res, bsCls = S(parNme)))
+                                  computeBaseClassTrait(ps, pack.copy(clsMem = res, bsCls = S(parNme), bsMem = cls.members.values.toList))
 
                                 case rawTrt: TypedNuTrt =>
                                   if (parArgs.nonEmpty) err(msg"trait parameters not yet supported", p.toLoc)
@@ -1053,25 +1037,29 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       case Nil => pack
                       }
 
-                    val Pack(clsMems, _, ifaceMembers) = 
-                      computeBaseClassTrait(parentSpecs, Pack(baseMems ++ ttu.entities, N, Nil))
+                    val Pack(clsMems, _, bsMembers, ifaceMembers) = 
+                      computeBaseClassTrait(parentSpecs, Pack(baseMems ++ ttu.entities, N, Nil, Nil))
                     
                     val impltdMems = clsMems
                     val mems = impltdMems.map(d => d.name -> d).toMap ++ typedSignatureMembers
 
-                    // TODO type members of parent class
-
-                    ifaceMembers.foreach { m =>
+                    // TODO: overriding check of parent class doesn't seem working
+                    (bsMembers ++ ifaceMembers).foreach { m =>
+                      lazy val parSign = m match {
+                                          case nt: TypedNuTermDef => nt.typeSignature
+                                          case np: NuParam => np.typeSignature
+                                          case _ => ??? // probably no other cases
+                                        }
                       impltdMems.find(x => x.name == m.name) match {
                         case S(mem: TypedNuTermDef) =>
                           val memSign = mem.typeSignature
                           implicit val prov: TP = memSign.prov
                           // println(s"checking interface mamber `${m.name}`")
-                          constrain(memSign, m.asInstanceOf[TypedNuTermDef].typeSignature)
+                          constrain(memSign, parSign)
                         case S(pm: NuParam) =>
                           val pmSign = pm.typeSignature
                           implicit val prov: TP = pmSign.prov
-                          constrain(pmSign, m.asInstanceOf[TypedNuTermDef].typeSignature)
+                          constrain(pmSign, parSign)
                         case S(_) => Nil
                         case N => 
                           err(msg"Member ${m.name} is declared in parent trait but not implemented", td.toLoc)

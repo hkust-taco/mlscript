@@ -21,24 +21,24 @@ trait Product[A, B] extends Into[A] {
 //│   let pair: (A, B,)
 //│ }
 
-class Int2(pair: (int, int)) extends Product[int, int] {
+class TwoInts(pair: (int, int)) extends Product[int, int] {
     fun into = pair._1 + pair._2
 }
-//│ class Int2(pair: (int, int,)) {
+//│ class TwoInts(pair: (int, int,)) {
 //│   fun into: int
 //│ }
 
-let i2 = Int2((1,2))
-//│ let i2: Int2
+let i2 = TwoInts((1,2))
+//│ let i2: TwoInts
 
 i2: Product[int, int]
-//│ ╔══[ERROR] Type `Int2` does not contain member `Product#A`
+//│ ╔══[ERROR] Type `TwoInts` does not contain member `Product#A`
 //│ ║  l.16: 	trait Product[A, B] extends Into[A] {
 //│ ╙──      	              ^
 //│ Product[int, int]
 
 i2: Into[int]
-//│ ╔══[ERROR] Type `Int2` does not contain member `Into#T`
+//│ ╔══[ERROR] Type `TwoInts` does not contain member `Into#T`
 //│ ║  l.4: 	trait Into[T] {
 //│ ╙──     	           ^
 //│ Into[int]
