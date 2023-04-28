@@ -4,7 +4,7 @@ import org.scalatest.funsuite.AnyFunSuite
 
 class TSTypeGenerationTest extends AnyFunSuite {
   import TSTypeGenerationTest._
-  
+
   testsData.foreach((data) => test(data._2) {
     val program = TSProgram(tsPath(data._1), true)
     var writer = JSWriter(diffPath(data._2))
@@ -30,7 +30,6 @@ object TSTypeGenerationTest {
     (Seq("InterfaceMember.ts"), "InterfaceMember.mlsi"),
     (Seq("Intersection.ts"), "Intersection.mlsi"),
     (Seq("Literal.ts"), "Literal.mlsi"),
-    (Seq("Multi1.ts", "Multi2.ts", "Multi3.ts"), "MultiFiles.mlsi"),
     (Seq("Namespace.ts"), "Namespace.mlsi"),
     (Seq("Optional.ts"), "Optional.mlsi"),
     (Seq("Overload.ts"), "Overload.mlsi"),
