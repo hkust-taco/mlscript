@@ -12,3 +12,4 @@ const a = new A();
 const b = new B();
 let c: C
 const d = D.default();
+const aa = new D.A();

@@ -35,6 +35,7 @@ object TypeScript {
   def isFunctionLike(node: js.Dynamic) = ts.isFunctionLike(node)
   def isModuleDeclaration(node: js.Dynamic) = ts.isModuleDeclaration(node)
   def isImportDeclaration(node: js.Dynamic) = ts.isImportDeclaration(node)
+  def isSourceFile(node: js.Dynamic) = ts.isSourceFile(node)
 
   def isArrayTypeNode(node: js.Dynamic) = ts.isArrayTypeNode(node)
   def isTupleTypeNode(node: js.Dynamic) = ts.isTupleTypeNode(node)
@@ -72,8 +73,8 @@ object TSTypeChecker {
 }
 
 class TSSymbolObject(sym: js.Dynamic)(implicit checker: TSTypeChecker) extends TSAny(sym) {
-  private lazy val parent = TSSymbolObject(sym.parent)
   private lazy val flags = sym.flags
+  lazy val parent = TSSymbolObject(sym.parent)
 
   // the first declaration of this symbol
   // if there is no overloading, there is only one declaration
@@ -85,12 +86,6 @@ class TSSymbolObject(sym: js.Dynamic)(implicit checker: TSTypeChecker) extends T
   lazy val `type` = TSTypeObject(sym.selectDynamic("type"))
 
   lazy val isOptionalMember = (flags & TypeScript.symbolFlagsOptional) > 0
-
-  // get the full name of the reference symbol
-  // e.g. class A extends B => class A extends SomeNamespace'B
-  lazy val fullName: String =
-    if (parent.isUndefined || !parent.declaration.isNamespace) escapedName
-    else s"${parent.fullName}.$escapedName"
 }
 
 object TSSymbolObject {
@@ -121,6 +116,7 @@ class TSNodeObject(node: js.Dynamic)(implicit checker: TSTypeChecker) extends TS
   lazy val isTupleTypeNode = TypeScript.isTupleTypeNode(node)
   lazy val isImplementationOfOverload = checker.isImplementationOfOverload(node)
   lazy val isImportDeclaration = TypeScript.isImportDeclaration(node)
+  lazy val isSourceFile = TypeScript.isSourceFile(node)
 
   // if a node has an initializer or is marked by a question notation it is optional
   // e.g. `function f(x?: int) {}`, we can use it directly: `f()`.
@@ -174,6 +170,7 @@ class TSNodeObject(node: js.Dynamic)(implicit checker: TSTypeChecker) extends TS
 
   lazy val moduleSpecifier = TSTokenObject(node.moduleSpecifier)
   lazy val importClause = TSNodeObject(node.importClause)
+  lazy val namedBindings = TSNodeObject(node.namedBindings)
 }
 
 object TSNodeObject {

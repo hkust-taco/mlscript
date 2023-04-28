@@ -4,18 +4,23 @@ import scala.scalajs.js
 import js.DynamicImplicits._
 import types._
 import mlscript.utils._
-import scala.collection.mutable.ListBuffer
+import scala.collection.mutable.{ListBuffer, HashMap}
 
 class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSTypeChecker) {
   private val lineHelper = new TSLineStartsHelper(sf.getLineStarts())
   private val importList = ListBuffer[String]()
+  private val moduleMap = HashMap[String, String]()
+  private val resolvedPath = sf.resolvedPath.toString()
+  private val originalFileName = sf.originalFileName.toString()
+  private val rootPath =
+    resolvedPath.substring(0, resolvedPath.length() - originalFileName.length()) +
+    originalFileName.substring(0, originalFileName.lastIndexOf("/") + 1)
 
   TypeScript.forEachChild(sf, (node: js.Dynamic) => {
     val nodeObject = TSNodeObject(node)
     if (!nodeObject.isToken) {
-      if (nodeObject.isImportDeclaration) {
+      if (nodeObject.isImportDeclaration)
         parseImportDeclaration(nodeObject)
-      }
       else if (!nodeObject.symbol.isUndefined) // for functions/classes/interfaces
         addNodeIntoNamespace(nodeObject, nodeObject.symbol.escapedName, nodeObject.isExported)(global)
       else if (!nodeObject.declarationList.isUndefined) { // for variables
@@ -31,6 +36,13 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
     // ignore `import "filename.ts"`
     if (!node.importClause.isUndefined) {
       importList += node.moduleSpecifier.text
+      if (!node.importClause.namedBindings.isUndefined && !node.importClause.namedBindings.name.isUndefined) {
+        val absPath =
+          if (node.moduleSpecifier.text.startsWith("./"))
+            rootPath + node.moduleSpecifier.text.substring(2)
+          else node.moduleSpecifier.text // TODO: node_module?
+        moduleMap.put(absPath, node.importClause.namedBindings.name.escapedText)
+      }
       // TODO: type alias for different `import`
     }
   }
@@ -40,6 +52,12 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
       case token: TSTokenObject => lst :+ getObjectType(token.typeNode)
       case tp: TSTypeObject => lst :+ getObjectType(tp)
     })
+
+  private def getSymbolFullname(sym: TSSymbolObject): String =
+    if (!sym.parent.isUndefined && sym.parent.declaration.isSourceFile)
+      s"${moduleMap(sym.parent.declaration.symbol.escapedName.replaceAll("\"", ""))}.${sym.escapedName}"
+    else if (sym.parent.isUndefined || !sym.parent.declaration.isNamespace) sym.escapedName
+    else s"${getSymbolFullname(sym.parent)}.${sym.escapedName}"
 
   private def getObjectType(obj: TSTypeObject): TSType =
     if (obj.isMapped) lineHelper.getPos(obj.pos) match {
@@ -54,7 +72,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
     else if (obj.isTypeParameterSubstitution) TSSubstitutionType(obj.symbol.escapedName, getSubstitutionArguments(obj.typeArguments))
     else if (obj.isObject)
       if (obj.isAnonymous) TSInterfaceType("", getAnonymousPropertiesType(obj.properties), List(), List())
-      else TSReferenceType(obj.symbol.fullName)
+      else TSReferenceType(getSymbolFullname(obj.symbol))
     else if (obj.isTypeParameter) TSTypeParameter(obj.symbol.escapedName)
     else if (obj.isConditionalType || obj.isIndexType || obj.isIndexedAccessType) lineHelper.getPos(obj.pos) match {
       case (line, column) => TSUnsupportedType(obj.toString(), obj.filename, line, column)

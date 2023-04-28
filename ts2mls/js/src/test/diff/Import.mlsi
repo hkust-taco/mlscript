@@ -5,24 +5,23 @@
 import "Dependency.mlsi"
 export declare module Import {
   val t: number
-  val a: A
-  val b: A
-  val c: A
+  val a: D.A
+  val b: D.A
+  val c: D.A
   val d: number
+  val aa: D.A
 }
-//│ ╔══[ERROR] type identifier not found: A
-//│ ║  l.8: 	  val a: A
+//│ ╔══[ERROR] type identifier not found: D
+//│ ║  l.8: 	  val a: D.A
 //│ ╙──     	         ^
-//│ ╔══[ERROR] type identifier not found: A
-//│ ║  l.9: 	  val b: A
-//│ ╙──     	         ^
-//│ ╔══[ERROR] type identifier not found: A
-//│ ║  l.10: 	  val c: A
-//│ ╙──      	         ^
-//│ module Import() {
-//│   let a: error
-//│   let b: error
-//│   let c: error
-//│   let d: number
-//│   let t: number
-//│ }
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:205)
+//│ 	at: mlscript.utils.package$.die(package.scala:204)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$lookupMember$1(ConstraintSolver.scala:34)
+//│ 	at: scala.collection.mutable.HashMap.getOrElse(HashMap.scala:436)
+//│ 	at: mlscript.ConstraintSolver.lookupMember(ConstraintSolver.scala:34)
+//│ 	at: mlscript.Typer.go$1(Typer.scala:490)
+//│ 	at: mlscript.Typer.$anonfun$typeType2$11(Typer.scala:503)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.Typer.rec$1(Typer.scala:547)
+//│ 	at: mlscript.Typer.$anonfun$typeType2$2(Typer.scala:548)
