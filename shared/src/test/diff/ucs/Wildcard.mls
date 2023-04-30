@@ -235,3 +235,29 @@ w6("42", "42")
 //│     = 0
 //│ res
 //│     = '42'
+
+// FIXME
+// Should report warnings.
+fun w7(x, f) =
+  if x is
+    _ and f(x) is
+      Some(v) then v
+      None then x
+    Left(x) then x + 1
+    Right(x) then x + 2
+//│ fun w7: forall 'a 'value. (Left[int] | Right[int] | 'a & ~#Left & ~#Right, 'a -> (None | Some['value]),) -> (int | 'value | 'a)
+
+// The results are wrong:
+w7(Left(99), _ => Some(0)) // => 0
+w7(Left(99), _ => None) // => Left(99)
+w7(Right(99), _ => Some(0)) // => 0
+w7(Right(99), _ => None) // => Right(99)
+//│ int
+//│ res
+//│     = 100
+//│ res
+//│     = 100
+//│ res
+//│     = 101
+//│ res
+//│     = 101
