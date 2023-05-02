@@ -2,10 +2,11 @@ package ts2mls
 
 import scala.collection.mutable.HashMap
 import mlscript.utils._
+import ts2mls.types.{TSTypeAlias, TSReferenceType}
 
 trait TSImport { self =>
   def resolveTypeAlias(name: String): Option[String] = self match {
-    case TSFullImport(_, alias) => Some(s"$alias.$name")
+    case TSFullImport(_, alias, _) => Some(s"$alias.$name")
     case TSSingleImport(_, items) =>
       items.collect {
         case (originalName, alias, _) if (originalName === name) =>
@@ -13,13 +14,32 @@ trait TSImport { self =>
       }.headOption
   }
 
-  def convertAlias: String = self match {
-    case _: TSImport => "" // TODO:
+  def convertAlias: List[(TSTypeAlias, Boolean)] = self match {
+    case TSFullImport(filename, alias, reExp) =>
+      val originalName = TSImport.getModuleName(filename)
+      if (originalName === alias) Nil
+      else (TSTypeAlias(alias, TSReferenceType(originalName), Nil), reExp) :: Nil
+    case TSSingleImport(filename, items) =>
+      val moduleName = TSImport.getModuleName(filename)
+      items.map {
+        case (originalName, Some(alias), reExp) =>
+          (TSTypeAlias(alias, TSReferenceType(s"$moduleName.$originalName"), Nil), reExp)
+        case (originalName, None, reExp) =>
+          (TSTypeAlias(originalName, TSReferenceType(s"$moduleName.$originalName"), Nil), reExp)
+      }
   }
 }
 
+object TSImport {
+  def getModuleName(filename: String): String =
+    if (filename.endsWith(".d") || filename.endsWith(".ts"))
+      getModuleName(filename.substring(filename.lastIndexOf('/') + 1, filename.lastIndexOf('.')))
+    else
+      filename.substring(filename.lastIndexOf('/') + 1)
+}
+
 // import * as alias from "filename"
-case class TSFullImport(filename: String, alias: String) extends TSImport
+case class TSFullImport(filename: String, alias: String, reExported: Boolean) extends TSImport
 // import { s1, s2 as a } from "filename"
 // export { s1, s2 as a } from "filename"
 case class TSSingleImport(filename: String, items: List[(String, Option[String], Boolean)]) extends TSImport
@@ -29,7 +49,7 @@ class TSImportList {
   private val fullList = new HashMap[String, TSFullImport]()
 
   def +=(imp: TSImport): Unit = imp match {
-    case imp @ TSFullImport(filename, _) => fullList.addOne((filename, imp))
+    case imp @ TSFullImport(filename, _, _) => fullList.addOne((filename, imp))
     case imp @ TSSingleImport(filename, items) =>
       if (singleList.contains(filename))
         singleList.update(filename, TSSingleImport(filename, singleList(filename).items ::: items)) 
@@ -50,9 +70,8 @@ class TSImportList {
     }
   }
 
-  def convertAlias: String = (
-    singleList.values.map(_.convertAlias).toList ::: fullList.values.map(_.convertAlias).toList
-  ).foldLeft("")((r, i) => s"$r\n$i")
+  def convertAlias: List[(TSTypeAlias, Boolean)] =
+    singleList.values.flatMap(_.convertAlias).toList ::: fullList.values.flatMap(_.convertAlias).toList
 
   def getFilelist: List[String] =
     (singleList.keys.toList ::: fullList.keys.toList).distinct

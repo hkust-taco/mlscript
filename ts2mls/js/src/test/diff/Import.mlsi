@@ -3,6 +3,10 @@
 :NoJS
 :AllowTypeErrors
 import "Dependency.mlsi"
+type A = Dependency.A
+type BB = Dependency.B
+type CC = Dependency.C
+type D = Dependency
 export declare module Import {
   val t: number
   val a: A
@@ -11,18 +15,9 @@ export declare module Import {
   val d: D.D
   val dd: number
 }
-//│ ╔══[ERROR] type identifier not found: A
-//│ ║  l.8: 	  val a: A
-//│ ╙──     	         ^
-//│ ╔══[ERROR] type identifier not found: BB
-//│ ║  l.9: 	  val b: BB
-//│ ╙──     	         ^^
-//│ ╔══[ERROR] type identifier not found: CC
-//│ ║  l.10: 	  val c: CC
-//│ ╙──      	         ^^
-//│ ╔══[ERROR] type identifier not found: D
-//│ ║  l.11: 	  val d: D.D
-//│ ╙──      	         ^
+//│ ╔══[ERROR] type identifier not found: Dependency
+//│ ║  l.6: 	type A = Dependency.A
+//│ ╙──     	         ^^^^^^^^^^
 //│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
 //│ 	at: mlscript.utils.package$.lastWords(package.scala:205)
 //│ 	at: mlscript.utils.package$.die(package.scala:204)

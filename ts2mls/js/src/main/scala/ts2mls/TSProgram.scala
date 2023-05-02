@@ -21,11 +21,10 @@ class TSProgram(filename: String, uesTopLevelModule: Boolean) {
   private val globalNamespace = TSNamespace()
   private val entryFile = TSSourceFile(program.getSourceFile(filename), globalNamespace)
   private val importList = entryFile.getImportList
-
-  import TSProgram._
+  private val importAlias = entryFile.getUnexportedAlias
 
   def generate(workDir: String, targetPath: String): Unit = {
-    val moduleName = getModuleName(filename)
+    val moduleName = TSImport.getModuleName(filename)
     val relatedPath =
       if (filename.startsWith(workDir)) filename.substring(workDir.length() + 1, filename.lastIndexOf('/') + 1)
       else throw new AssertionError(s"wrong work dir $workDir")
@@ -37,8 +36,9 @@ class TSProgram(filename: String, uesTopLevelModule: Boolean) {
   private def generate(writer: JSWriter): Unit =
     if (!uesTopLevelModule) globalNamespace.generate(writer, "") // will be imported directly and has no dependency
     else {
-      importList.foreach{f => writer.writeln(s"""import "${getModuleName(f)}.mlsi"""")}
-      writer.writeln(s"export declare module ${getModuleName(filename)} {")
+      importList.foreach{f => writer.writeln(s"""import "${TSImport.getModuleName(f)}.mlsi"""")}
+      importAlias.foreach{alias => writer.writeln(Converter.convert(alias, false)(""))}
+      writer.writeln(s"export declare module ${TSImport.getModuleName(filename)} {")
       globalNamespace.generate(writer, "  ")
       writer.writeln("}")
     }
@@ -46,10 +46,4 @@ class TSProgram(filename: String, uesTopLevelModule: Boolean) {
 
 object TSProgram {
   def apply(filename: String, uesTopLevelModule: Boolean) = new TSProgram(filename, uesTopLevelModule)
-
-  private def getModuleName(filename: String): String =
-    if (filename.endsWith(".d") || filename.endsWith(".ts"))
-      getModuleName(filename.substring(filename.lastIndexOf('/') + 1, filename.lastIndexOf('.')))
-    else
-      filename.substring(filename.lastIndexOf('/') + 1)
 }

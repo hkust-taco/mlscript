@@ -30,6 +30,13 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
   })
 
   def getImportList: List[String] = importList.getFilelist
+  def getUnexportedAlias: List[TSTypeAlias] =
+    importList.convertAlias.filter(p => p match {
+      case (alias @ TSTypeAlias(name, _, _), true) =>
+        global.put(name, alias, true, false)
+        false
+      case (_, false) => true
+    }).map(_._1)
 
   private def parseImportDeclaration(node: TSNodeObject): Unit = {
     // ignore `import "filename.ts"`
@@ -50,7 +57,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
           importList += TSSingleImport(absPath, list)
         }
         else if (!bindings.name.isUndefined) {
-          importList += TSFullImport(absPath, node.importClause.namedBindings.name.escapedText)
+          importList += TSFullImport(absPath, node.importClause.namedBindings.name.escapedText, false)
         }
       }
     }
