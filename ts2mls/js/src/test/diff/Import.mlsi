@@ -5,15 +5,24 @@
 import "Dependency.mlsi"
 export declare module Import {
   val t: number
-  val a: D.A
-  val b: D.A
-  val c: D.A
-  val d: number
-  val aa: D.A
+  val a: A
+  val b: BB
+  val c: CC
+  val d: D.D
+  val dd: number
 }
-//│ ╔══[ERROR] type identifier not found: D
-//│ ║  l.8: 	  val a: D.A
+//│ ╔══[ERROR] type identifier not found: A
+//│ ║  l.8: 	  val a: A
 //│ ╙──     	         ^
+//│ ╔══[ERROR] type identifier not found: BB
+//│ ║  l.9: 	  val b: BB
+//│ ╙──     	         ^^
+//│ ╔══[ERROR] type identifier not found: CC
+//│ ║  l.10: 	  val c: CC
+//│ ╙──      	         ^^
+//│ ╔══[ERROR] type identifier not found: D
+//│ ║  l.11: 	  val d: D.D
+//│ ╙──      	         ^
 //│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
 //│ 	at: mlscript.utils.package$.lastWords(package.scala:205)
 //│ 	at: mlscript.utils.package$.die(package.scala:204)

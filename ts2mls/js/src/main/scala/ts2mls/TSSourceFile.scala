@@ -34,14 +34,25 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
   private def parseImportDeclaration(node: TSNodeObject): Unit = {
     // ignore `import "filename.ts"`
     if (!node.importClause.isUndefined) {
-      if (!node.importClause.namedBindings.isUndefined && !node.importClause.namedBindings.name.isUndefined) {
+      val bindings = node.importClause.namedBindings
+      if (!bindings.isUndefined) {
         val absPath =
           if (node.moduleSpecifier.text.startsWith("./"))
             rootPath + node.moduleSpecifier.text.substring(2)
           else node.moduleSpecifier.text // TODO: node_module?
-        importList += TSFullImport(absPath, node.importClause.namedBindings.name.escapedText)
+        if (!bindings.elements.isUndefined) {
+          val list = bindings.elements.mapToList(ele =>
+            if (ele.propertyName.isUndefined) 
+              (ele.symbol.escapedName, None, false)
+            else
+              (ele.propertyName.escapedText, Some(ele.symbol.escapedName), false)
+          )
+          importList += TSSingleImport(absPath, list)
+        }
+        else if (!bindings.name.isUndefined) {
+          importList += TSFullImport(absPath, node.importClause.namedBindings.name.escapedText)
+        }
       }
-      // TODO: type alias for different `import`
     }
   }
 

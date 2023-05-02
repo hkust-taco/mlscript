@@ -30,6 +30,11 @@ abstract class TSArray[T <: TSAny](arr: js.Dynamic) extends TSAny(arr) {
       f(get(index))
       foreach(f, index + 1)
     }
+
+  def mapToList[U](f: T => U, index: Int = 0, res: List[U] = Nil): List[U] =
+    if (!isUndefined && index < length)
+      mapToList(f, index + 1, res :+ f(get(index)))
+    else res
 }
 
 class TSNodeArray(arr: js.Dynamic)(implicit checker: TSTypeChecker) extends TSArray[TSNodeObject](arr) {

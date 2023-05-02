@@ -171,6 +171,8 @@ class TSNodeObject(node: js.Dynamic)(implicit checker: TSTypeChecker) extends TS
   lazy val moduleSpecifier = TSTokenObject(node.moduleSpecifier)
   lazy val importClause = TSNodeObject(node.importClause)
   lazy val namedBindings = TSNodeObject(node.namedBindings)
+  lazy val elements = TSNodeArray(node.elements)
+  lazy val propertyName = TSIdentifierObject(node.propertyName)
 }
 
 object TSNodeObject {
