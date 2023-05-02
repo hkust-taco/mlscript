@@ -8,8 +8,7 @@ import scala.collection.mutable.{ListBuffer, HashMap}
 
 class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSTypeChecker) {
   private val lineHelper = new TSLineStartsHelper(sf.getLineStarts())
-  private val importList = ListBuffer[String]()
-  private val moduleMap = HashMap[String, String]()
+  private val importList = TSImportList()
   private val resolvedPath = sf.resolvedPath.toString()
   private val originalFileName = sf.originalFileName.toString()
   private val rootPath =
@@ -30,18 +29,17 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
     }
   })
 
-  def getImportList: List[String] = importList.toList.distinct
+  def getImportList: List[String] = importList.getFilelist
 
   private def parseImportDeclaration(node: TSNodeObject): Unit = {
     // ignore `import "filename.ts"`
     if (!node.importClause.isUndefined) {
-      importList += node.moduleSpecifier.text
       if (!node.importClause.namedBindings.isUndefined && !node.importClause.namedBindings.name.isUndefined) {
         val absPath =
           if (node.moduleSpecifier.text.startsWith("./"))
             rootPath + node.moduleSpecifier.text.substring(2)
           else node.moduleSpecifier.text // TODO: node_module?
-        moduleMap.put(absPath, node.importClause.namedBindings.name.escapedText)
+        importList += TSFullImport(absPath, node.importClause.namedBindings.name.escapedText)
       }
       // TODO: type alias for different `import`
     }
@@ -55,7 +53,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
 
   private def getSymbolFullname(sym: TSSymbolObject): String =
     if (!sym.parent.isUndefined && sym.parent.declaration.isSourceFile)
-      s"${moduleMap(sym.parent.declaration.symbol.escapedName.replaceAll("\"", ""))}.${sym.escapedName}"
+      importList.resolveTypeAlias(sym.parent.declaration.symbol.escapedName.replaceAll("\"", ""), sym.escapedName)
     else if (sym.parent.isUndefined || !sym.parent.declaration.isNamespace) sym.escapedName
     else s"${getSymbolFullname(sym.parent)}.${sym.escapedName}"
 
