@@ -21,7 +21,6 @@ class TSProgram(filename: String, uesTopLevelModule: Boolean) {
   private val globalNamespace = TSNamespace()
   private val entryFile = TSSourceFile(program.getSourceFile(filename), globalNamespace)
   private val importList = entryFile.getImportList
-  private val importAlias = entryFile.getUnexportedAlias
 
   def generate(workDir: String, targetPath: String): Unit = {
     val moduleName = TSImport.getModuleName(filename)
@@ -37,7 +36,6 @@ class TSProgram(filename: String, uesTopLevelModule: Boolean) {
     if (!uesTopLevelModule) globalNamespace.generate(writer, "") // will be imported directly and has no dependency
     else {
       importList.foreach{f => writer.writeln(s"""import "${TSImport.getModuleName(f)}.mlsi"""")}
-      importAlias.foreach{alias => writer.writeln(Converter.convert(alias, false)(""))}
       writer.writeln(s"export declare module ${TSImport.getModuleName(filename)} {")
       globalNamespace.generate(writer, "  ")
       writer.writeln("}")

@@ -3,20 +3,16 @@
 :NoJS
 :AllowTypeErrors
 import "Dependency.mlsi"
-type A = Dependency.A
-type BB = Dependency.B
-type CC = Dependency.C
-type D = Dependency
 export declare module Import {
   val t: number
-  val a: A
-  val b: BB
-  val c: CC
-  val d: D.D
+  val a: Dependency.A
+  val b: Dependency.B
+  val c: Dependency.C
+  val d: Dependency.D
   val dd: number
 }
 //│ ╔══[ERROR] type identifier not found: Dependency
-//│ ║  l.6: 	type A = Dependency.A
+//│ ║  l.8: 	  val a: Dependency.A
 //│ ╙──     	         ^^^^^^^^^^
 //│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
 //│ 	at: mlscript.utils.package$.lastWords(package.scala:205)

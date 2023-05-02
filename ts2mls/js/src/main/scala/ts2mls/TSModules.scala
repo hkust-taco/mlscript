@@ -6,27 +6,12 @@ import ts2mls.types.{TSTypeAlias, TSReferenceType}
 
 trait TSImport { self =>
   def resolveTypeAlias(name: String): Option[String] = self match {
-    case TSFullImport(_, alias, _) => Some(s"$alias.$name")
-    case TSSingleImport(_, items) =>
+    case TSFullImport(filename, _) => Some(s"${TSImport.getModuleName(filename)}.$name")
+    case TSSingleImport(filename, items) =>
       items.collect {
         case (originalName, alias, _) if (originalName === name) =>
-          alias.getOrElse(originalName)
+          s"${TSImport.getModuleName(filename)}.$name"
       }.headOption
-  }
-
-  def convertAlias: List[(TSTypeAlias, Boolean)] = self match {
-    case TSFullImport(filename, alias, reExp) =>
-      val originalName = TSImport.getModuleName(filename)
-      if (originalName === alias) Nil
-      else (TSTypeAlias(alias, TSReferenceType(originalName), Nil), reExp) :: Nil
-    case TSSingleImport(filename, items) =>
-      val moduleName = TSImport.getModuleName(filename)
-      items.map {
-        case (originalName, Some(alias), reExp) =>
-          (TSTypeAlias(alias, TSReferenceType(s"$moduleName.$originalName"), Nil), reExp)
-        case (originalName, None, reExp) =>
-          (TSTypeAlias(originalName, TSReferenceType(s"$moduleName.$originalName"), Nil), reExp)
-      }
   }
 }
 
@@ -39,7 +24,7 @@ object TSImport {
 }
 
 // import * as alias from "filename"
-case class TSFullImport(filename: String, alias: String, reExported: Boolean) extends TSImport
+case class TSFullImport(filename: String, reExported: Boolean) extends TSImport
 // import { s1, s2 as a } from "filename"
 // export { s1, s2 as a } from "filename"
 case class TSSingleImport(filename: String, items: List[(String, Option[String], Boolean)]) extends TSImport
@@ -49,7 +34,7 @@ class TSImportList {
   private val fullList = new HashMap[String, TSFullImport]()
 
   def +=(imp: TSImport): Unit = imp match {
-    case imp @ TSFullImport(filename, _, _) => fullList.addOne((filename, imp))
+    case imp @ TSFullImport(filename, _) => fullList.addOne((filename, imp))
     case imp @ TSSingleImport(filename, items) =>
       if (singleList.contains(filename))
         singleList.update(filename, TSSingleImport(filename, singleList(filename).items ::: items)) 
@@ -69,9 +54,6 @@ class TSImportList {
         fullAlias.getOrElse(throw new AssertionError(s"unresolved imported name $name at $modulePath."))
     }
   }
-
-  def convertAlias: List[(TSTypeAlias, Boolean)] =
-    singleList.values.flatMap(_.convertAlias).toList ::: fullList.values.flatMap(_.convertAlias).toList
 
   def getFilelist: List[String] =
     (singleList.keys.toList ::: fullList.keys.toList).distinct
