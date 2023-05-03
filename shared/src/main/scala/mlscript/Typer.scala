@@ -66,7 +66,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       lvl: Int,
       inPattern: Bool,
       tyDefs: Map[Str, TypeDef],
-      // tyDefs2: MutMap[Str, NuTypeDef],
       tyDefs2: MutMap[Str, DelayedTypeInfo],
       inRecursiveDef: Opt[Var], // TODO rm
       extrCtx: ExtrCtx,
@@ -259,6 +258,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     Map(
       "true" -> TrueType,
       "false" -> FalseType,
+      "NaN" -> DecType,
       "document" -> BotType,
       "window" -> BotType,
       "typeof" -> fun(singleTup(TopType), StrType)(noProv),
@@ -430,9 +430,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case Literal(lit) =>
         ClassTag(lit, lit.baseClasses)(tyTp(ty.toLoc, "literal type"))
       case TypeName("this") =>
-        ctx.env.getOrElse("this", err(msg"undeclared this" -> ty.toLoc :: Nil)) match {
-          case AbstractConstructor(_, _) => die
-          case VarSymbol(t: SimpleType, _) => t
+        ctx.env.get("this") match {
+          case S(AbstractConstructor(_, _)) => die
+          case S(VarSymbol(t: SimpleType, _)) => t
+          case N => err(msg"undeclared this" -> ty.toLoc :: Nil)
         }
       case tn @ TypeTag(name) => rec(TypeName(name.decapitalize)) // TODO rm this hack
       // case tn @ TypeTag(name) => rec(TypeName(name))

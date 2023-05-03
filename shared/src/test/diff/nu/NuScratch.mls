@@ -65,8 +65,6 @@ class C(a: int) { let a = 1 }
 //│ class C(a: int) {
 //│   let a: 1
 //│ }
-//│ Syntax error:
-//│   Identifier '#a' has already been declared
 
 class C(a: int) { fun a = 1 }
 //│ class C(a: int) {

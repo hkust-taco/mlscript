@@ -31,7 +31,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         (implicit ctx: Ctx, raise: Raise)
         : Either[Diagnostic, NuMember]
         = {
-    val info = ctx.tyDefs2(clsNme)
+    val info = ctx.tyDefs2.getOrElse(clsNme, die/*TODO*/)
     
     if (info.isComputing) {
       
@@ -184,7 +184,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     // (implicit raise: Raise, cctx: ConCtx, ctx: Ctx, shadows: Shadows)
     (implicit ctx: Ctx, raise: Raise)
     : TypedNuCls = {
-    val info = ctx.tyDefs2(clsNme)
+    val info = ctx.tyDefs2.getOrElse(clsNme, die/*TODO*/)
     
     info.complete() match {
       case td: TypedNuCls =>

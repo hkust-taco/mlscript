@@ -34,6 +34,7 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
     Ls(
       "true",
       "false",
+      "NaN",
       "id",
       "emptyArray",
       "succ",

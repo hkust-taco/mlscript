@@ -582,8 +582,8 @@ module H {
 //│           if (this.#J === undefined) {
 //│             class J {
 //│               #x;
-//│               #i;
 //│               get x() { return this.#x; }
+//│               #i;
 //│               get i() { return this.#i; }
 //│               constructor(x) {
 //│                 this.#x = x;
@@ -666,8 +666,8 @@ ij.incY
 //│       class I {
 //│         #J;
 //│         #x;
-//│         #y;
 //│         get x() { return this.#x; }
+//│         #y;
 //│         get y() { return this.#y; }
 //│         constructor(x) {
 //│           this.#x = x;
@@ -679,8 +679,8 @@ ij.incY
 //│           if (this.#J === undefined) {
 //│             class J {
 //│               #x;
-//│               #y;
 //│               get x() { return this.#x; }
+//│               #y;
 //│               get y() { return this.#y; }
 //│               constructor(x) {
 //│                 this.#x = x;
@@ -1111,8 +1111,8 @@ I(1).J(3).a
 //│       class I {
 //│         #J;
 //│         #x;
-//│         #y;
 //│         get x() { return this.#x; }
+//│         #y;
 //│         get y() { return this.#y; }
 //│         constructor(x) {
 //│           this.#x = x;
@@ -1124,8 +1124,8 @@ I(1).J(3).a
 //│           if (this.#J === undefined) {
 //│             class J {
 //│               #z;
-//│               #a;
 //│               get z() { return this.#z; }
+//│               #a;
 //│               get a() { return this.#a; }
 //│               constructor(z) {
 //│                 this.#z = z;
@@ -1364,8 +1364,8 @@ class Outer1(outer: int) {
 //│           if (this.#Outer2 === undefined) {
 //│             class Outer2 {
 //│               #x;
-//│               #outer;
 //│               get x() { return this.#x; }
+//│               #outer;
 //│               get outer() { return this.#outer; }
 //│               constructor(x) {
 //│                 this.#x = x;
