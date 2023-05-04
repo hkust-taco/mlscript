@@ -17,14 +17,14 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
 
   TypeScript.forEachChild(sf, (node: js.Dynamic) => {
     val nodeObject = TSNodeObject(node)
+    if (nodeObject.isImportDeclaration)
+      parseImportDeclaration(nodeObject.importClause, nodeObject.moduleSpecifier, false)
+  })
+
+  TypeScript.forEachChild(sf, (node: js.Dynamic) => {
+    val nodeObject = TSNodeObject(node)
     if (!nodeObject.isToken) {
-      if (nodeObject.isImportDeclaration)
-        parseImportDeclaration(nodeObject.importClause, nodeObject.moduleSpecifier, false)
-      else if (nodeObject.isExportDeclaration) {
-        if (!nodeObject.moduleSpecifier.isUndefined) // re-export
-          parseImportDeclaration(nodeObject.exportClause, nodeObject.moduleSpecifier, true)
-      }
-      else if (!nodeObject.symbol.isUndefined) // for functions/classes/interfaces
+      if (!nodeObject.symbol.isUndefined) // for functions/classes/interfaces
         addNodeIntoNamespace(nodeObject, nodeObject.symbol.escapedName, nodeObject.isExported)(global)
       else if (!nodeObject.declarationList.isUndefined) { // for variables
         val decNode = nodeObject.declarationList.declaration
@@ -33,7 +33,35 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
     }
   })
 
+  TypeScript.forEachChild(sf, (node: js.Dynamic) => {
+    val nodeObject = TSNodeObject(node)
+    if (nodeObject.isExportDeclaration) {
+      if (!nodeObject.moduleSpecifier.isUndefined) // re-export
+        parseImportDeclaration(nodeObject.exportClause, nodeObject.moduleSpecifier, true)
+      else
+        parseExportDeclaration(nodeObject.exportClause.elements)
+    }
+  })
+
   def getImportList: List[String] = importList.getFilelist
+
+  private def parseExportDeclaration(elements: TSNodeArray): Unit = {
+    def getReferedType(name: String): TSType = global.get(name) match {
+      case cls: TSClassType => TSReferenceType(cls.name)
+      case TSEnumType => TSEnumType
+      case itf: TSInterfaceType => TSReferenceType(itf.name)
+      case ref: TSReferenceType => ref
+      case _ => throw new AssertionError(s"unsupported export type $name.") // FIXME: functions and variables?
+    }
+    elements.foreach(ele =>
+      if (ele.propertyName.isUndefined)
+        global.export(ele.symbol.escapedName)
+      else {
+        val alias = ele.symbol.escapedName
+        global.put(alias, TSTypeAlias(alias, getReferedType(ele.propertyName.escapedText), Nil), true)
+      }
+    )
+  }
 
   private def parseImportDeclaration(clause: TSNodeObject, moduleSpecifier: TSTokenObject, exported: Boolean): Unit = {
     // ignore `import "filename.ts"`
@@ -52,14 +80,14 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
               (ele.propertyName.escapedText, Some(ele.symbol.escapedName))
           )
           val imp = TSSingleImport(absPath, list)
-          if (exported) imp.createAlias.foreach{
+          if (exported) imp.createAlias.foreach { // FIXME: functions and variables?
             case alias @ TSTypeAlias(name, _, _) => global.put(name, alias, true)
           }
           importList += imp
         }
         else if (!node.name.isUndefined) {
           val imp = TSFullImport(absPath, node.name.escapedText)
-          if (exported) imp.createAlias.foreach{
+          if (exported) imp.createAlias.foreach { // FIXME: functions and variables?
             case alias @ TSTypeAlias(name, _, _) => global.put(name, alias, true)
           }
           importList += imp

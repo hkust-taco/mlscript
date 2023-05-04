@@ -15,7 +15,8 @@ export declare module Export {
     export val baz: IBar
   }
   fun default(x: anything): anything
-  class E() {}
+  export class E() {}
+  export type F = E
   export type G = Dependency.B
   export type H = Dependency
 }
@@ -39,7 +40,7 @@ export declare module Export {
 //│ ║  l.8: 	    fun Baz(aa: string): IBar
 //│ ╙──     	        ^^^
 //│ ╔══[ERROR] type identifier not found: Dependency
-//│ ║  l.19: 	  export type G = Dependency.B
+//│ ║  l.20: 	  export type G = Dependency.B
 //│ ╙──      	                  ^^^^^^^^^^
 //│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
 //│ 	at: mlscript.utils.package$.lastWords(package.scala:205)

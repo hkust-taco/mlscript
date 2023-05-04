@@ -29,6 +29,12 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
     }
     else members.update(name, (tp, exported))
 
+  def export(name: String): Unit =
+    if (members.contains(name))
+      members.update(name, (members(name)._1, true))
+    else if (subSpace.contains(name))
+      subSpace.update(name, (subSpace(name)._1, true))
+
   def get(name: String): TSType =
     if (members.contains(name)) members(name)._1
     else if (!parent.isEmpty) parent.get.get(name)
