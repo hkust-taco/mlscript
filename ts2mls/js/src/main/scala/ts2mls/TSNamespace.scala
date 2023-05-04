@@ -22,10 +22,9 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
       sub
     }
 
-  def put(name: String, tp: TSType, exported: Boolean, append: Boolean = true): Unit =
+  def put(name: String, tp: TSType, exported: Boolean): Unit =
     if (!members.contains(name)) {
-      if (append) order += Right(name)
-      else Right(name) +: order
+      order += Right(name)
       members.put(name, (tp, exported))
     }
     else members.update(name, (tp, exported))

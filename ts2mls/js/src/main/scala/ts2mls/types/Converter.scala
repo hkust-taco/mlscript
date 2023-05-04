@@ -57,9 +57,11 @@ object Converter {
     case TSSubstitutionType(base, applied) => s"${base}<${applied.map((app) => convert(app)).reduceLeft((res, s) => s"$res, $s")}>"
     case overload @ TSIgnoredOverload(base, _) => s"${convert(base)} ${overload.warning}"
     case TSParameterType(name, tp) => s"${name}: ${convert(tp)}"
-    case TSTypeAlias(name, ori, tp) =>
-      if (tp.isEmpty) s"${indent}type $name = ${convert(ori)}"
-      else s"${indent}type $name<${tp.map(t => convert(t)).reduceLeft((s, t) => s"$s, $t")}> = ${convert(ori)}"
+    case TSTypeAlias(name, ori, tp) => {
+      val exp = if (exported) "export " else ""
+      if (tp.isEmpty) s"${indent}${exp}type $name = ${convert(ori)}"
+      else s"${indent}${exp}type $name<${tp.map(t => convert(t)).reduceLeft((s, t) => s"$s, $t")}> = ${convert(ori)}"
+    }
     case TSLiteralType(value, isString) => if (isString) s"\"$value\"" else value
     case TSUnsupportedType(code, filename, line, column) =>
       s"""Unsupported<"$code", "$filename", $line, $column>"""

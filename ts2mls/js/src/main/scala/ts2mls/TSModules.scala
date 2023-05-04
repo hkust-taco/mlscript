@@ -9,9 +9,18 @@ trait TSImport { self =>
     case TSFullImport(filename, _) => Some(s"${TSImport.getModuleName(filename)}.$name")
     case TSSingleImport(filename, items) =>
       items.collect {
-        case (originalName, alias, _) if (originalName === name) =>
+        case (originalName, _) if (originalName === name) =>
           s"${TSImport.getModuleName(filename)}.$name"
       }.headOption
+  }
+
+  def createAlias: List[TSTypeAlias] = self match {
+    case TSFullImport(filename, alias) =>
+      TSTypeAlias(alias, TSReferenceType(TSImport.getModuleName(filename)), Nil) :: Nil
+    case TSSingleImport(filename, items) =>
+      items.map{ case (name, alias) =>
+        TSTypeAlias(alias.getOrElse(name), TSReferenceType(s"${TSImport.getModuleName(filename)}.$name"), Nil)
+      }
   }
 }
 
@@ -24,10 +33,10 @@ object TSImport {
 }
 
 // import * as alias from "filename"
-case class TSFullImport(filename: String, reExported: Boolean) extends TSImport
+case class TSFullImport(filename: String, alias: String) extends TSImport
 // import { s1, s2 as a } from "filename"
 // export { s1, s2 as a } from "filename"
-case class TSSingleImport(filename: String, items: List[(String, Option[String], Boolean)]) extends TSImport
+case class TSSingleImport(filename: String, items: List[(String, Option[String])]) extends TSImport
 
 class TSImportList {
   private val singleList = new HashMap[String, TSSingleImport]()

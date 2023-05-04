@@ -19,3 +19,11 @@ export namespace Foo {
 export default function id(x) {
   return x;
 }
+
+class E {}
+
+export { E }
+export { E as F }
+export { B as G } from "./Dependency"
+export * as H from "./Dependency"
+

@@ -23,7 +23,7 @@ export declare module Type {
   type TP<A, B, C> = (A, B, C, )
   module NA {
     fun fb(b: string): unit
-    type B = string
+    export type B = string
   }
   class NC() {
     val b: string

@@ -2,6 +2,7 @@
 :NewDefs
 :NoJS
 :AllowTypeErrors
+import "Dependency.mlsi"
 export declare module Export {
   export module Foo {
     fun Baz(aa: string): IBar
@@ -14,34 +15,40 @@ export declare module Export {
     export val baz: IBar
   }
   fun default(x: anything): anything
+  class E() {}
+  export type G = Dependency.B
+  export type H = Dependency
 }
 //│ ╔══[ERROR] type identifier not found: IBar
-//│ ║  l.7: 	    fun Baz(aa: string): IBar
+//│ ║  l.8: 	    fun Baz(aa: string): IBar
 //│ ╙──     	                         ^^^^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.8: 	    trait IBar() {
+//│ ║  l.9: 	    trait IBar() {
 //│ ║       	    ^^^^^^^^^^^^^^
-//│ ║  l.9: 	      val a: string
-//│ ║       	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.10: 	    }
+//│ ║  l.10: 	      val a: string
+//│ ║        	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.11: 	    }
 //│ ╙──      	^^^^^
 //│ ╔══[ERROR] Cannot inherit from a type alias
-//│ ║  l.11: 	    export class Bar() extends IBar {
+//│ ║  l.12: 	    export class Bar() extends IBar {
 //│ ╙──      	                               ^^^^
 //│ ╔══[ERROR] trait IBar cannot be used as a type
-//│ ║  l.14: 	    export val baz: IBar
+//│ ║  l.15: 	    export val baz: IBar
 //│ ╙──      	                    ^^^^
 //│ ╔══[ERROR] Member Baz is declared but not defined
-//│ ║  l.7: 	    fun Baz(aa: string): IBar
+//│ ║  l.8: 	    fun Baz(aa: string): IBar
 //│ ╙──     	        ^^^
-//│ module Export() {
-//│   module Foo() {
-//│     class Bar() {
-//│       let a: string
-//│     }
-//│     fun Baz: (aa: string,) -> error
-//│     trait IBar()
-//│     let baz: IBar
-//│   }
-//│   fun default: (x: anything,) -> anything
-//│ }
+//│ ╔══[ERROR] type identifier not found: Dependency
+//│ ║  l.19: 	  export type G = Dependency.B
+//│ ╙──      	                  ^^^^^^^^^^
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:205)
+//│ 	at: mlscript.utils.package$.die(package.scala:204)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$lookupMember$1(ConstraintSolver.scala:34)
+//│ 	at: scala.collection.mutable.HashMap.getOrElse(HashMap.scala:436)
+//│ 	at: mlscript.ConstraintSolver.lookupMember(ConstraintSolver.scala:34)
+//│ 	at: mlscript.Typer.go$1(Typer.scala:490)
+//│ 	at: mlscript.Typer.$anonfun$typeType2$11(Typer.scala:503)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.Typer.rec$1(Typer.scala:547)
+//│ 	at: mlscript.Typer.$anonfun$typeType2$2(Typer.scala:548)

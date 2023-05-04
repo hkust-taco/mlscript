@@ -19,7 +19,11 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
     val nodeObject = TSNodeObject(node)
     if (!nodeObject.isToken) {
       if (nodeObject.isImportDeclaration)
-        parseImportDeclaration(nodeObject)
+        parseImportDeclaration(nodeObject.importClause, nodeObject.moduleSpecifier, false)
+      else if (nodeObject.isExportDeclaration) {
+        if (!nodeObject.moduleSpecifier.isUndefined) // re-export
+          parseImportDeclaration(nodeObject.exportClause, nodeObject.moduleSpecifier, true)
+      }
       else if (!nodeObject.symbol.isUndefined) // for functions/classes/interfaces
         addNodeIntoNamespace(nodeObject, nodeObject.symbol.escapedName, nodeObject.isExported)(global)
       else if (!nodeObject.declarationList.isUndefined) { // for variables
@@ -31,28 +35,38 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
 
   def getImportList: List[String] = importList.getFilelist
 
-  private def parseImportDeclaration(node: TSNodeObject): Unit = {
+  private def parseImportDeclaration(clause: TSNodeObject, moduleSpecifier: TSTokenObject, exported: Boolean): Unit = {
     // ignore `import "filename.ts"`
-    if (!node.importClause.isUndefined) {
-      val bindings = node.importClause.namedBindings
-      if (!bindings.isUndefined) {
-        val absPath =
-          if (node.moduleSpecifier.text.startsWith("./"))
-            rootPath + node.moduleSpecifier.text.substring(2)
-          else node.moduleSpecifier.text // TODO: node_module?
-        if (!bindings.elements.isUndefined) {
-          val list = bindings.elements.mapToList(ele =>
+    if (!clause.isUndefined) {
+      val bindings = clause.namedBindings
+      val absPath =
+        if (moduleSpecifier.text.startsWith("./"))
+          rootPath + moduleSpecifier.text.substring(2)
+        else moduleSpecifier.text // TODO: node_module?
+      def run(node: TSNodeObject): Unit =
+        if (!node.elements.isUndefined) {
+          val list = node.elements.mapToList(ele =>
             if (ele.propertyName.isUndefined) 
-              (ele.symbol.escapedName, None, false)
+              (ele.symbol.escapedName, None)
             else
-              (ele.propertyName.escapedText, Some(ele.symbol.escapedName), false)
+              (ele.propertyName.escapedText, Some(ele.symbol.escapedName))
           )
-          importList += TSSingleImport(absPath, list)
+          val imp = TSSingleImport(absPath, list)
+          if (exported) imp.createAlias.foreach{
+            case alias @ TSTypeAlias(name, _, _) => global.put(name, alias, true)
+          }
+          importList += imp
         }
-        else if (!bindings.name.isUndefined) {
-          importList += TSFullImport(absPath, false)
+        else if (!node.name.isUndefined) {
+          val imp = TSFullImport(absPath, node.name.escapedText)
+          if (exported) imp.createAlias.foreach{
+            case alias @ TSTypeAlias(name, _, _) => global.put(name, alias, true)
+          }
+          importList += imp
         }
-      }
+
+      if (!bindings.isUndefined) run(bindings)
+      else run(clause)
     }
   }
 

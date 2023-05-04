@@ -36,6 +36,7 @@ object TypeScript {
   def isModuleDeclaration(node: js.Dynamic) = ts.isModuleDeclaration(node)
   def isImportDeclaration(node: js.Dynamic) = ts.isImportDeclaration(node)
   def isSourceFile(node: js.Dynamic) = ts.isSourceFile(node)
+  def isExportDeclaration(node: js.Dynamic) = ts.isExportDeclaration(node)
 
   def isArrayTypeNode(node: js.Dynamic) = ts.isArrayTypeNode(node)
   def isTupleTypeNode(node: js.Dynamic) = ts.isTupleTypeNode(node)
@@ -117,6 +118,7 @@ class TSNodeObject(node: js.Dynamic)(implicit checker: TSTypeChecker) extends TS
   lazy val isImplementationOfOverload = checker.isImplementationOfOverload(node)
   lazy val isImportDeclaration = TypeScript.isImportDeclaration(node)
   lazy val isSourceFile = TypeScript.isSourceFile(node)
+  lazy val isExportDeclaration = TypeScript.isExportDeclaration(node)
 
   // if a node has an initializer or is marked by a question notation it is optional
   // e.g. `function f(x?: int) {}`, we can use it directly: `f()`.
@@ -173,6 +175,7 @@ class TSNodeObject(node: js.Dynamic)(implicit checker: TSTypeChecker) extends TS
   lazy val namedBindings = TSNodeObject(node.namedBindings)
   lazy val elements = TSNodeArray(node.elements)
   lazy val propertyName = TSIdentifierObject(node.propertyName)
+  lazy val exportClause = TSNodeObject(node.exportClause)
 }
 
 object TSNodeObject {
