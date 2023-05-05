@@ -1,0 +1,371 @@
+:NewParser
+:NewDefs
+
+:js
+module Test0 {
+  log("Hello!")
+}
+//│ module Test0()
+//│ // Prelude
+//│ function log(x) {
+//│   return console.info(x);
+//│ }
+//│ let res;
+//│ class TypingUnit {
+//│   #Test0;
+//│   constructor() {
+//│   }
+//│   get Test0() {
+//│     const outer = this;
+//│     if (this.#Test0 === undefined) {
+//│       class Test0 {
+//│         constructor() {
+//│           log("Hello!");
+//│         }
+//│       }
+//│       this.#Test0 = new Test0();
+//│       this.#Test0.class = Test0;
+//│     }
+//│     return this.#Test0;
+//│   }
+//│ }
+//│ const typing_unit = new TypingUnit;
+//│ globalThis.Test0 = typing_unit.Test0;
+//│ // End of generated code
+
+:js
+Test0
+//│ Test0
+//│ // Prelude
+//│ class TypingUnit1 {}
+//│ const typing_unit1 = new TypingUnit1;
+//│ // Query 1
+//│ res = Test0;
+//│ // End of generated code
+//│ res
+//│     = Test0 { class: [class Test0] }
+//│ // Output
+//│ Hello!
+
+:js
+Test0
+//│ Test0
+//│ // Prelude
+//│ class TypingUnit2 {}
+//│ const typing_unit2 = new TypingUnit2;
+//│ // Query 1
+//│ res = Test0;
+//│ // End of generated code
+//│ res
+//│     = Test0 { class: [class Test0] }
+
+:js
+class A(a: int) {
+  log(a)
+}
+//│ class A(a: int)
+//│ // Prelude
+//│ class TypingUnit3 {
+//│   #A;
+//│   constructor() {
+//│   }
+//│   get A() {
+//│     const outer = this;
+//│     if (this.#A === undefined) {
+//│       class A {
+//│         #a;
+//│         get a() { return this.#a; }
+//│         constructor(a) {
+//│           this.#a = a;
+//│           log(a);
+//│         }
+//│       };
+//│       this.#A = ((a) => new A(a));
+//│       this.#A.class = A;
+//│     }
+//│     return this.#A;
+//│   }
+//│ }
+//│ const typing_unit3 = new TypingUnit3;
+//│ globalThis.A = typing_unit3.A;
+//│ // End of generated code
+
+:js
+let aa = A(42)
+//│ let aa: A
+//│ // Prelude
+//│ class TypingUnit4 {}
+//│ const typing_unit4 = new TypingUnit4;
+//│ // Query 1
+//│ globalThis.aa = A(42);
+//│ // End of generated code
+//│ aa
+//│    = A {}
+//│ // Output
+//│ 42
+
+:js
+aa
+//│ A
+//│ // Prelude
+//│ class TypingUnit5 {}
+//│ const typing_unit5 = new TypingUnit5;
+//│ // Query 1
+//│ res = aa;
+//│ // End of generated code
+//│ res
+//│     = A {}
+
+:js
+let ab = A(0)
+//│ let ab: A
+//│ // Prelude
+//│ class TypingUnit6 {}
+//│ const typing_unit6 = new TypingUnit6;
+//│ // Query 1
+//│ globalThis.ab = A(0);
+//│ // End of generated code
+//│ ab
+//│    = A {}
+//│ // Output
+//│ 0
+
+:e
+:js
+class Foo {
+  this: { x: int }
+}
+//│ ╔══[ERROR] Class `Foo` does not contain member `x`
+//│ ║  l.136: 	  this: { x: int }
+//│ ╙──       	          ^
+//│ class Foo()
+//│ // Prelude
+//│ class TypingUnit7 {
+//│   #Foo;
+//│   constructor() {
+//│   }
+//│   get Foo() {
+//│     const outer = this;
+//│     if (this.#Foo === undefined) {
+//│       class Foo {};
+//│       this.#Foo = (() => new Foo());
+//│       this.#Foo.class = Foo;
+//│     }
+//│     return this.#Foo;
+//│   }
+//│ }
+//│ const typing_unit7 = new TypingUnit7;
+//│ globalThis.Foo = typing_unit7.Foo;
+//│ // End of generated code
+
+:e
+:js
+class Bar {
+  super: { x: int }
+}
+//│ ╔══[ERROR] Illegal use of `super`
+//│ ║  l.164: 	  super: { x: int }
+//│ ╙──       	  ^^^^^
+//│ ╔══[ERROR] Class `Bar` does not contain member `x`
+//│ ║  l.164: 	  super: { x: int }
+//│ ╙──       	           ^
+//│ class Bar()
+//│ // Prelude
+//│ class TypingUnit8 {
+//│   #Bar;
+//│   constructor() {
+//│   }
+//│   get Bar() {
+//│     const outer = this;
+//│     if (this.#Bar === undefined) {
+//│       class Bar {};
+//│       this.#Bar = (() => new Bar());
+//│       this.#Bar.class = Bar;
+//│     }
+//│     return this.#Bar;
+//│   }
+//│ }
+//│ const typing_unit8 = new TypingUnit8;
+//│ globalThis.Bar = typing_unit8.Bar;
+//│ // End of generated code
+
+:js
+class Baz {
+  let x = 123
+  log((1, x))
+  let y =
+    log((2, x))
+    x + 1
+  log((3, y))
+}
+//│ class Baz() {
+//│   let x: 123
+//│   let y: int
+//│ }
+//│ // Prelude
+//│ class TypingUnit9 {
+//│   #Baz;
+//│   constructor() {
+//│   }
+//│   get Baz() {
+//│     const outer = this;
+//│     if (this.#Baz === undefined) {
+//│       class Baz {
+//│         #x;
+//│         #y;
+//│         get x() { return this.#x; }
+//│         get y() { return this.#y; }
+//│         constructor() {
+//│           this.#x = 123;
+//│           const x = this.#x;
+//│           log([
+//│             1,
+//│             x
+//│           ]);
+//│           this.#y = (() => {
+//│             log([
+//│               2,
+//│               x
+//│             ]);
+//│             return x + 1;
+//│           })();
+//│           const y = this.#y;
+//│           log([
+//│             3,
+//│             y
+//│           ]);
+//│         }
+//│       };
+//│       this.#Baz = (() => new Baz());
+//│       this.#Baz.class = Baz;
+//│     }
+//│     return this.#Baz;
+//│   }
+//│ }
+//│ const typing_unit9 = new TypingUnit9;
+//│ globalThis.Baz = typing_unit9.Baz;
+//│ // End of generated code
+
+let baz = Baz()
+log((baz.x, baz.y))
+//│ let baz: Baz
+//│ unit
+//│ baz
+//│     = Baz {}
+//│ // Output
+//│ [ 1, 123 ]
+//│ [ 2, 123 ]
+//│ [ 3, 124 ]
+//│ res
+//│     = undefined
+//│ // Output
+//│ [ 123, 124 ]
+
+:js
+class Q() {
+  let q = 42
+  fun qq =
+    let f = (x: int) => {q: x + q}; f(1)
+}
+//│ class Q() {
+//│   let q: 42
+//│   fun qq: {q: int}
+//│ }
+//│ // Prelude
+//│ class TypingUnit11 {
+//│   #Q;
+//│   constructor() {
+//│   }
+//│   get Q() {
+//│     const outer = this;
+//│     if (this.#Q === undefined) {
+//│       class Q {
+//│         #q;
+//│         get q() { return this.#q; }
+//│         constructor() {
+//│           this.#q = 42;
+//│           const q = this.#q;
+//│         }
+//│         get qq() {
+//│           const self = this;
+//│           return ((() => {
+//│             let f = (x) => ({ q: x + self.q });
+//│             return f(1);
+//│           })());
+//│         }
+//│       };
+//│       this.#Q = (() => new Q());
+//│       this.#Q.class = Q;
+//│     }
+//│     return this.#Q;
+//│   }
+//│ }
+//│ const typing_unit11 = new TypingUnit11;
+//│ globalThis.Q = typing_unit11.Q;
+//│ // End of generated code
+
+let q = Q()
+q.qq.q
+//│ let q: Q
+//│ int
+//│ q
+//│   = Q {}
+//│ res
+//│     = 43
+
+:js
+class W() {
+  let x = 42
+  fun add(self: int) = x + self
+}
+//│ class W() {
+//│   fun add: (self: int,) -> int
+//│   let x: 42
+//│ }
+//│ // Prelude
+//│ class TypingUnit13 {
+//│   #W;
+//│   constructor() {
+//│   }
+//│   get W() {
+//│     const outer = this;
+//│     if (this.#W === undefined) {
+//│       class W {
+//│         #x;
+//│         get x() { return this.#x; }
+//│         constructor() {
+//│           this.#x = 42;
+//│           const x = this.#x;
+//│         }
+//│         add(self1) {
+//│           const self = this;
+//│           return self.x + self1;
+//│         }
+//│       };
+//│       this.#W = (() => new W());
+//│       this.#W.class = W;
+//│     }
+//│     return this.#W;
+//│   }
+//│ }
+//│ const typing_unit13 = new TypingUnit13;
+//│ globalThis.W = typing_unit13.W;
+//│ // End of generated code
+
+:js
+let www = W()
+www.add(42)
+//│ let www: W
+//│ int
+//│ // Prelude
+//│ class TypingUnit14 {}
+//│ const typing_unit14 = new TypingUnit14;
+//│ // Query 1
+//│ globalThis.www = W();
+//│ // Query 2
+//│ res = www.add(42);
+//│ // End of generated code
+//│ www
+//│     = W {}
+//│ res
+//│     = 84

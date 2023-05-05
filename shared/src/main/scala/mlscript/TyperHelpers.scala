@@ -1109,6 +1109,7 @@ abstract class TyperHelpers { Typer: Typer =>
       case NegType(n) => apply(pol.map(!_))(n)
       case ExtrType(_) => ()
       case ProxyType(und) => apply(pol)(und)
+      case SkolemTag(_, id) => apply(pol)(id)
       case _: TypeTag => ()
       case tr: TypeRef => tr.mapTargs(pol)(apply(_)(_)); ()
       case Without(b, ns) => apply(pol)(b)

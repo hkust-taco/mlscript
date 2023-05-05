@@ -922,7 +922,7 @@ class DiffTests
                   case _: TestCode => () // Impossible case.
                   case IllFormedCode(message) =>
                     totalCodeGenErrors += 1
-                    if (!mode.expectCodeGenErrors && !mode.fixme)
+                    if (!mode.expectCodeGenErrors && !mode.fixme && !mode.expectTypeErrors)
                       failures += blockLineNum
                     output("Code generation encountered an error:")
                     output(s"  ${message}")

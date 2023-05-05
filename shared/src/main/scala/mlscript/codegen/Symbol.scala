@@ -4,8 +4,9 @@ import mlscript.utils.shorthands._
 import mlscript.Type
 import mlscript.JSClassDecl
 import mlscript.MethodDef
-import mlscript.Term
+import mlscript.{Term, Statement}
 import mlscript.TypeName
+import mlscript.NuTypeDef
 
 sealed trait LexicalSymbol {
 
@@ -24,6 +25,14 @@ sealed trait RuntimeSymbol extends LexicalSymbol {
 sealed trait TypeSymbol extends LexicalSymbol {
   val params: Ls[Str]
   val body: Type
+}
+
+sealed trait NuTypeSymbol {
+  val isNested: Bool // is nested in another class/mixin/module
+  val methods: Ls[MethodDef[Left[Term, Type]]]
+  val ctor: Ls[Statement] // statements in the constructor
+  val nested: Ls[NuTypeDef] // nested class/mixin/module
+  val superParameters: Ls[Term] // parameters that need to be passed to the `super()`
 }
 
 sealed class ValueSymbol(val lexicalName: Str, val runtimeName: Str, val isByvalueRec: Option[Boolean], val isLam: Boolean) extends RuntimeSymbol {
@@ -85,52 +94,83 @@ final case class ClassSymbol(
   override def toString: Str = s"class $lexicalName ($runtimeName)"
 }
 
+sealed class NewClassMemberSymbol(
+  val lexicalName: Str,
+  val isByvalueRec: Option[Boolean],
+  val isLam: Boolean
+) extends RuntimeSymbol {
+  override def toString: Str = s"new class member $lexicalName"
+
+  // Class members should have fixed names determined by users
+  override def runtimeName: Str = lexicalName
+}
+
+object NewClassMemberSymbol {
+  def apply(lexicalName: Str, isByvalueRec: Option[Boolean], isLam: Boolean): NewClassMemberSymbol =
+    new NewClassMemberSymbol(lexicalName, isByvalueRec, isLam)
+}
+
 final case class NewClassSymbol(
     lexicalName: Str,
-    runtimeName: Str,
     params: Ls[Str],
     body: Type,
     methods: Ls[MethodDef[Left[Term, Type]]],
+    ctor: Ls[Statement],
+    superParameters: Ls[Term],
+    nested: Ls[NuTypeDef],
+    isNested: Bool
 ) extends TypeSymbol
-    with RuntimeSymbol with Ordered[NewClassSymbol] {
+    with RuntimeSymbol with NuTypeSymbol {
+  override def toString: Str = s"new class $lexicalName"
 
-  import scala.math.Ordered.orderingToOrdered
-
-  override def compare(that: NewClassSymbol): Int = lexicalName.compare(that.lexicalName)
-
-  override def toString: Str = s"new class $lexicalName ($runtimeName)"
+  // Classes should have fixed names determined by users
+  override def runtimeName: Str = lexicalName
 }
 
 final case class MixinSymbol(
     lexicalName: Str,
-    runtimeName: Str,
     params: Ls[Str],
     body: Type,
     methods: Ls[MethodDef[Left[Term, Type]]],
+    ctor: Ls[Statement],
+    nested: Ls[NuTypeDef],
+    isNested: Bool
 ) extends TypeSymbol
-    with RuntimeSymbol with Ordered[MixinSymbol] {
+    with RuntimeSymbol with NuTypeSymbol {
+  override def toString: Str = s"mixin $lexicalName"
 
-  import scala.math.Ordered.orderingToOrdered
+  // Mixins should have fixed names determined by users
+  override def runtimeName: Str = lexicalName
 
-  override def compare(that: MixinSymbol): Int = lexicalName.compare(that.lexicalName)
-
-  override def toString: Str = s"mixin $lexicalName ($runtimeName)"
+  // Mixins should pass `...rest` to the `super()`
+  // But the variable name is not sure when we create the symbol object
+  override val superParameters: Ls[Term] = Nil
 }
 
 final case class ModuleSymbol(
     lexicalName: Str,
-    runtimeName: Str,
     params: Ls[Str],
     body: Type,
     methods: Ls[MethodDef[Left[Term, Type]]],
+    ctor: Ls[Statement],
+    superParameters: Ls[Term],
+    nested: Ls[NuTypeDef],
+    isNested: Bool
 ) extends TypeSymbol
-    with RuntimeSymbol with Ordered[ModuleSymbol] {
+    with RuntimeSymbol with NuTypeSymbol {
+  override def toString: Str = s"module $lexicalName"
 
-  import scala.math.Ordered.orderingToOrdered
+  // Modules should have fixed names determined by users
+  override def runtimeName: Str = lexicalName
+}
 
-  override def compare(that: ModuleSymbol): Int = lexicalName.compare(that.lexicalName)
-
-  override def toString: Str = s"module $lexicalName ($runtimeName)"
+// capture runtime symbols in the outside module/class/mixin
+final case class CapturedSymbol(
+  outsiderSym: RuntimeSymbol,
+  actualSym: RuntimeSymbol
+) extends RuntimeSymbol {
+  override def lexicalName: Str = actualSym.lexicalName
+  override def runtimeName: Str = actualSym.runtimeName
 }
 
 final case class TraitSymbol(

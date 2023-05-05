@@ -30,19 +30,18 @@ mixin Test {
 
 :pe
 :e
-:ge
 fun f(override Pair(x, y), z) = x + y
 //│ ╔══[PARSE ERROR] Unsupported 'override' parameter list shape
-//│ ║  l.34: 	fun f(override Pair(x, y), z) = x + y
+//│ ║  l.33: 	fun f(override Pair(x, y), z) = x + y
 //│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Unsupported pattern shape:
-//│ ║  l.34: 	fun f(override Pair(x, y), z) = x + y
+//│ ║  l.33: 	fun f(override Pair(x, y), z) = x + y
 //│ ╙──      	               ^^^^^^^^^^
 //│ ╔══[ERROR] identifier not found: x
-//│ ║  l.34: 	fun f(override Pair(x, y), z) = x + y
+//│ ║  l.33: 	fun f(override Pair(x, y), z) = x + y
 //│ ╙──      	                                ^
 //│ ╔══[ERROR] identifier not found: y
-//│ ║  l.34: 	fun f(override Pair(x, y), z) = x + y
+//│ ║  l.33: 	fun f(override Pair(x, y), z) = x + y
 //│ ╙──      	                                    ^
 //│ fun f: (error, anything,) -> int
 //│ Code generation encountered an error:

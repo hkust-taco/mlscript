@@ -36,9 +36,9 @@ object PrettyPrinter:
       case Some(true) => "let'"
     }
     s"$st ${funDef.nme.name}"
-      + (if funDef.targs.isEmpty
+      + (if funDef.tparams.isEmpty
          then ""
-         else funDef.targs.map(_.name).mkString("[", ", ", "]"))
+         else funDef.tparams.map(_.name).mkString("[", ", ", "]"))
       + " = "
       + funDef.rhs.fold(_.toString, _.show)
 
@@ -46,7 +46,7 @@ object PrettyPrinter:
     s"${tyDef.kind.str} ${tyDef.nme.name}"
       + (if tyDef.tparams.isEmpty
          then ""
-         else tyDef.tparams.map(_.name).mkString("[", ",", "]"))
+         else tyDef.tparams.map(_._2.name).mkString("[", ",", "]"))
       + "(" + tyDef.params + ")"
       + (if tyDef.parents.isEmpty
          then ""

@@ -14,6 +14,11 @@ let a = A(42)
 //│ a
 //│   = A {}
 
+a.n
+//│ int
+//│ res
+//│     = 42
+
 
 fun f(x: A) = x.n
 //│ fun f: (x: A,) -> int
@@ -69,10 +74,10 @@ class Base0(n) {
   fun oops = this.my
 }
 //│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.65: 	class Base0(n) {
+//│ ║  l.70: 	class Base0(n) {
 //│ ╙──      	            ^
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.69: 	  fun oops = this.my
+//│ ║  l.74: 	  fun oops = this.my
 //│ ╙──      	                 ^^^
 //│ class Base0(n: error) {
 //│   fun me: Base0 & {n: error}
@@ -80,45 +85,35 @@ class Base0(n) {
 //│   fun my: error
 //│   fun oops: error
 //│ }
-//│ Code generation encountered an error:
-//│   unresolved symbol my
 
 // :d
 // Base0
 
-:re
 let b1 = Base0(42)
 //│ let b1: Base0
 //│ b1
-//│ Runtime error:
-//│   ReferenceError: Base0 is not defined
+//│    = Base0 {}
 
-:re
 let n1 = b1.n
 //│ let n1: error
 //│ n1
-//│ Runtime error:
-//│   ReferenceError: b1 is not defined
+//│    = 42
 
 // TODO
 n1 + 1
 //│ int
 //│ res
-//│ Runtime error:
-//│   ReferenceError: n1 is not defined
+//│     = 43
 
 
-:re
 let b2 = Base0("hi")
 let n2 = b2.n
 //│ let b2: Base0
 //│ let n2: error
 //│ b2
-//│ Runtime error:
-//│   ReferenceError: Base0 is not defined
+//│    = Base0 {}
 //│ n2
-//│ Runtime error:
-//│   ReferenceError: b2 is not defined
+//│    = 'hi'
 
 
 
@@ -147,12 +142,12 @@ class Base1(base: int) {
 Base1
 //│ (base: int,) -> Base1
 //│ res
-//│     = [Function (anonymous)] { class: [class Base11] }
+//│     = [Function (anonymous)] { class: [class Base1] }
 
 let b = Base1(1)
 //│ let b: Base1
 //│ b
-//│   = Base11 {}
+//│   = Base1 {}
 
 b.base
 //│ int
@@ -168,12 +163,12 @@ b.getBase1
 b.me
 //│ Base1 & {base: int}
 //│ res
-//│     = Base11 {}
+//│     = Base1 {}
 
 :e
 b.getBaseTypo
 //│ ╔══[ERROR] Class `Base1` does not contain member `getBaseTypo`
-//│ ║  l.174: 	b.getBaseTypo
+//│ ║  l.169: 	b.getBaseTypo
 //│ ╙──       	 ^^^^^^^^^^^^
 //│ error
 //│ res
@@ -183,7 +178,7 @@ b.getBaseTypo
 b : Base1
 //│ Base1
 //│ res
-//│     = Base11 {}
+//│     = Base1 {}
 
 
 class Rec(n: int) {

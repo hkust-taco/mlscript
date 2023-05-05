@@ -209,7 +209,11 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           Trav(PolMap.pos)(instanceType)
           
           // TODO check consistency with explicitVariances
-          store ++ tparams.iterator.collect { case (_, tv, S(vi)) => tv -> vi }
+          val res = store ++ tparams.iterator.collect { case (_, tv, S(vi)) => tv -> vi }
+          
+          _variances = S(res)
+          
+          res
         }(r => s"= $r")
       }
     }
@@ -507,7 +511,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     }
     lazy val typedSignatureMembers: Ls[Str -> TypedNuFun] =
       typedSignatures.iterator.map { case (fd, ty) =>
-        fd.nme.name -> TypedNuFun(level, fd, ty)
+        fd.nme.name -> TypedNuFun(level + 1, fd, ty)
       }.toList
     
     lazy val allFields: Set[Var] = decl match {
@@ -535,7 +539,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
       if (isComputing) {
         val ty = err(msg"Unhandled cyclic definition", decl.toLoc)
         // * Hacky: return a dummy decl to avoid possible infinite completion recursions
-        TypedNuFun(0, NuFunDef(N, decl.nameVar, Nil, R(Top)), ty)
+        TypedNuFun(0, NuFunDef(N, decl.nameVar, Nil, R(Top))(N), ty)
       }
       else trace(s"Completing ${decl.showDbg}") {
         println(s"Type params ${tparams.mkString(" ")}")
@@ -806,7 +810,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     case S(mem: NuParam) =>
                     case S(_) => ??? // TODO
                     case N =>
-                      err(msg"Member ${fd.nme.name} is declared but not defined", fd.nme.toLoc)
+                      if (!td.isDecl)
+                        err(msg"Member ${fd.nme.name} is declared but not defined", fd.nme.toLoc)
                   }
                 }
               }

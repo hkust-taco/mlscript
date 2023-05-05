@@ -150,6 +150,11 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
   
   
   private var _cur: Ls[TokLoc] = tokens
+  private var _modifiersCache: ModifierSet = ModifierSet.empty
+  def resetCur(newCur: Ls[TokLoc]): Unit = {
+    _cur = newCur
+    _modifiersCache = ModifierSet.empty
+  }
   
   private def summarizeCur =
     NewLexer.printTokens(_cur.take(5)) + (if (_cur.sizeIs > 5) "..." else "")
@@ -165,7 +170,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
   
   final def consume(implicit l: Line, n: Name): Unit = {
     if (dbg) printDbg(s"! ${n.value}\t\tconsumes ${NewLexer.printTokens(_cur.take(1))}    [at l.${l.value}]")
-    _cur = _cur.tailOption.getOrElse(Nil) // FIXME throw error if empty?
+    resetCur(_cur.tailOption.getOrElse(Nil)) // FIXME throw error if empty?
   }
   
   // TODO simplify logic – this is no longer used much
@@ -251,6 +256,40 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
       case R(ty) => ty
     }
   
+  case class ModifierSet(mods: Map[Str, Loc]) {
+    def handle(mod: Str): (Opt[Loc], ModifierSet) =
+      mods.get(mod) -> copy(mods = mods - mod)
+    def done: Unit = mods.foreach {
+      case (mod, loc) =>
+        err(msg"Unrecognized modifier `${mod}` in this position" -> S(loc) :: Nil)
+    }
+  }
+  object ModifierSet {
+    val empty: ModifierSet = ModifierSet(Map.empty)
+    private def go(acc: ModifierSet): ModifierSet = cur match {
+      case (KEYWORD(kw), l0) :: c if acc.mods.contains(kw) =>
+        err(msg"Repeated modifier `${kw}`" -> S(l0) :: Nil)
+        consume
+        yeetSpaces
+        go(acc)
+      case (KEYWORD("declare"), l0) :: c =>
+        consume
+        yeetSpaces
+        go(acc.copy(acc.mods + ("declare" -> l0)))
+      case _ if acc.mods.isEmpty => acc
+      case (KEYWORD("class" | "infce" | "trait" | "mixin" | "type" | "namespace" | "module" | "fun" | "val"), l0) :: _ =>
+        acc
+      case (tok, loc) :: _ =>
+        // TODO support indented blocks of modified declarations...
+        err(msg"Unexpected ${tok.describe} token after modifier${if (acc.mods.sizeIs > 1) "s" else ""}" -> S(loc) :: Nil)
+        acc
+    }
+    def unapply(__ : Ls[TokLoc]): S[ModifierSet -> Ls[TokLoc]] = {
+      val res = go(_modifiersCache)
+      _modifiersCache = res
+      S(res, _cur)
+    }
+  }
   final def block(implicit et: ExpectThen, fe: FoundErr): Ls[IfBody \/ Statement] =
     cur match {
       case Nil => Nil
@@ -258,8 +297,10 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
       case (SPACE, _) :: _ => consume; block
       case c =>
         val t = c match {
-          case (KEYWORD(k @ ("class" | "infce" | "trait" | "mixin" | "type" | "namespace" | "module")), l0) :: c =>
+          case ModifierSet(mods, (KEYWORD(k @ ("class" | "infce" | "trait" | "mixin" | "type" | "namespace" | "module")), l0) :: c) =>
             consume
+            val (isDecl, mods2) = mods.handle("declare")
+            mods2.done
             val kind = k match {
               case "class" => Cls
               case "trait" => Trt
@@ -329,12 +370,13 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
               case _ => Nil
             }
             val body = curlyTypingUnit
-            val res = NuTypeDef(kind, tn, tparams, params, sig, ps, N, N, body)
+            val res = NuTypeDef(kind, tn, tparams, params, sig, ps, N, N, body)(isDecl)
             R(res.withLoc(S(l0 ++ res.getLoc)))
           
-          // TODO make `fun` by-name and `let` by-value
-          case (KEYWORD(kwStr @ ("fun" | "let")), l0) :: c => // TODO support rec?
+          case ModifierSet(mods, (KEYWORD(kwStr @ ("fun" | "val" | "let")), l0) :: c) => // TODO support rec?
             consume
+            val (isDecl, mods2) = mods.handle("declare")
+            mods2.done
             val isLetRec = yeetSpaces match {
               case (KEYWORD("rec"), l1) :: _ if kwStr === "let" =>
                 consume
@@ -368,7 +410,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
               }
               val (ps, transformBody) = yeetSpaces match {
                 case (br @ BRACKETS(Round, Spaces(cons, (KEYWORD("override"), ovLoc) :: rest)), loc) :: rest2 =>
-                  _cur = BRACKETS(Round, rest)(br.innerLoc) -> loc :: rest2
+                  resetCur(BRACKETS(Round, rest)(br.innerLoc) -> loc :: rest2)
                   funParams match {
                     case ps @ Tup(N -> Fld(false, false, pat) :: Nil) :: Nil =>
                       val fv = freshVar
@@ -397,7 +439,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
                   val body = expr(0)
                   val newBody = transformBody.fold(body)(_(body))
                   val annotatedBody = asc.fold(newBody)(ty => Asc(newBody, ty))
-                  R(NuFunDef(isLetRec, v, tparams, L(ps.foldRight(annotatedBody)((i, acc) => Lam(i, acc)))))
+                  R(NuFunDef(isLetRec, v, tparams, L(ps.foldRight(annotatedBody)((i, acc) => Lam(i, acc))))(isDecl))
                 case c =>
                   asc match {
                     case S(ty) =>
@@ -405,14 +447,14 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
                       R(NuFunDef(isLetRec, v, tparams, R(PolyType(Nil, ps.foldRight(ty)((p, r) => Function(p.toType match {
                         case L(diag) => raise(diag); Top // TODO better
                         case R(tp) => tp
-                      }, r)))))) // TODO rm PolyType after FCP is merged
+                      }, r)))))(isDecl)) // TODO rm PolyType after FCP is merged
                     case N =>
                       // TODO dedup:
                       val (tkstr, loc) = c.headOption.fold(("end of input", lastLoc))(_.mapFirst(_.describe).mapSecond(some))
                       err((
                         msg"Expected ':' or '=' followed by a function body or signature; found ${tkstr} instead" -> loc :: Nil))
                       consume
-                      R(NuFunDef(isLetRec, v, Nil, L(ps.foldRight(errExpr: Term)((i, acc) => Lam(i, acc)))))
+                      R(NuFunDef(isLetRec, v, Nil, L(ps.foldRight(errExpr: Term)((i, acc) => Lam(i, acc))))(isDecl))
                   }
               }
             }
@@ -478,6 +520,9 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
       case (LITVAL(lit), l0) :: _ =>
         consume
         exprCont(lit.withLoc(S(l0)), prec, allowNewlines = false)
+      case (KEYWORD(kwStr @ ("undefined" | "null")), l0) :: _ =>
+        consume
+        exprCont(UnitLit(kwStr === "undefined").withLoc(S(l0)), prec, allowNewlines = false)
       case (IDENT(nme, false), l0) :: _ =>
         consume
         exprCont(Var(nme).withLoc(S(l0)), prec, allowNewlines = false)

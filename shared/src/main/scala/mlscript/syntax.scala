@@ -135,6 +135,7 @@ final case class Record(fields: Ls[Var -> Field])        extends Type
 final case class Tuple(fields: Ls[Opt[Var] -> Field])    extends Type
 final case class Recursive(uv: TypeVar, body: Type)      extends Type
 final case class AppliedType(base: TypeName, targs: List[Type]) extends Type with NamedType
+final case class Selection(base: Type, name: TypeName)   extends Type
 final case class Neg(base: Type)                         extends Type
 final case class Rem(base: Type, names: Ls[Var])         extends Type
 final case class Bounds(lb: Type, ub: Type)              extends Type
@@ -185,14 +186,14 @@ final case class NuTypeDef(
   superAnnot: Opt[Type],
   thisAnnot: Opt[Type],
   body: TypingUnit
-) extends NuDecl with Statement
+)(val declareLoc: Opt[Loc]) extends NuDecl with Statement
 
 final case class NuFunDef(
   isLetRec: Opt[Bool], // None means it's a `fun`, which is always recursive; Some means it's a `let`
   nme: Var,
   tparams: Ls[TypeName],
   rhs: Term \/ Type,
-) extends NuDecl with DesugaredStatement {
+)(val declareLoc: Opt[Loc]) extends NuDecl with DesugaredStatement {
   val body: Located = rhs.fold(identity, identity)
   def kind: DeclKind = Val
 }

@@ -74,23 +74,22 @@ fun bar<A> : A => A
 :pe
 :e
 :w
-:ge
 fun bar<A>: A => A
 //│ ╔══[PARSE ERROR] Unmatched opening angle bracket
-//│ ║  l.78: 	fun bar<A>: A => A
+//│ ║  l.77: 	fun bar<A>: A => A
 //│ ║        	       ^
 //│ ╙── Note that `<` without spaces around it is considered as an angle bracket and not as an operator
 //│ ╔══[PARSE ERROR] Unexpected 'fun' keyword in expression position
-//│ ║  l.78: 	fun bar<A>: A => A
+//│ ║  l.77: 	fun bar<A>: A => A
 //│ ╙──      	^^^
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.78: 	fun bar<A>: A => A
+//│ ║  l.77: 	fun bar<A>: A => A
 //│ ╙──      	    ^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Unsupported pattern shape:
-//│ ║  l.78: 	fun bar<A>: A => A
+//│ ║  l.77: 	fun bar<A>: A => A
 //│ ╙──      	        ^^^^^
 //│ ╔══[ERROR] identifier not found: A
-//│ ║  l.78: 	fun bar<A>: A => A
+//│ ║  l.77: 	fun bar<A>: A => A
 //│ ╙──      	                 ^
 //│ error -> error
 //│ Code generation encountered an error:
@@ -104,10 +103,10 @@ module Test {
   fun test<A>(x: A) = x
 }
 //│ ╔══[ERROR] Member foo is declared but not defined
-//│ ║  l.102: 	  fun foo: 'A => 'A
+//│ ║  l.101: 	  fun foo: 'A => 'A
 //│ ╙──       	      ^^^
 //│ ╔══[ERROR] Member bar is declared but not defined
-//│ ║  l.103: 	  fun bar: 'A
+//│ ║  l.102: 	  fun bar: 'A
 //│ ╙──       	      ^^^
 //│ module Test() {
 //│   fun bar: nothing

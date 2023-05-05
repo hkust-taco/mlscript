@@ -414,7 +414,7 @@ foo: R['a]
 //│ ╙──       	           ^^^^^^^^^^^
 //│ res: R['a]
 //│   where
-//│     'a :> error | number
+//│     'a :> number
 //│        <: int
 //│    = { get: 0, set: [Function: set] }
 
@@ -432,12 +432,12 @@ foo: R['a..'b]
 //│ ╟── from type bounds:
 //│ ║  l.388: 	def foo: R[int..number]
 //│ ╙──       	           ^^^^^^^^^^^
-//│ res: R['b | error | number]
+//│ res: R['b | number]
 //│    = { get: 0, set: [Function: set] }
 
 // * FIXME
 res.get
-//│ res: error | number
+//│ res: number
 //│    = 0
 
 type S[A] = { get: A; set: A -> () }
@@ -459,7 +459,7 @@ foo: S['a]
 //│ ╙──       	           ^^^^^^^^^^^
 //│ res: S['a]
 //│   where
-//│     'a :> error | number
+//│     'a :> number
 //│        <: int
 //│    = { get: 0, set: [Function: set] }
 
@@ -477,7 +477,7 @@ foo: S['a..'b]
 //│ ╟── from type bounds:
 //│ ║  l.388: 	def foo: R[int..number]
 //│ ╙──       	           ^^^^^^^^^^^
-//│ res: S['b | error | number]
+//│ res: S['b | number]
 //│    = { get: 0, set: [Function: set] }
 
 foo: { get: number; set: int -> () }
@@ -535,7 +535,7 @@ foo2: S['a]
 //│ ╙──       	                            ^^
 //│ res: S['a]
 //│   where
-//│     'a :> error | number
+//│     'a :> number
 //│        <: int
 //│    = { get: 0, set: [Function: set] }
 
@@ -553,7 +553,7 @@ foo2: S['a..'b]
 //│ ╟── from type variable:
 //│ ║  l.518: 	foo2 = foo: { get: 'a; set: 'b -> () }
 //│ ╙──       	                            ^^
-//│ res: S['b | error | number]
+//│ res: S['b | number]
 //│    = { get: 0, set: [Function: set] }
 
 

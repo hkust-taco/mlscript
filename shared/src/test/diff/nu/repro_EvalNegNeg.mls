@@ -1,0 +1,53 @@
+:NewDefs
+
+
+class Add<E>(lhs: E, rhs: E)
+class Lit(n: int)
+class Neg<A>(expr: A)
+//│ class Add[E](lhs: E, rhs: E)
+//│ class Lit(n: int)
+//│ class Neg[A](expr: A)
+
+
+// Note the inferred type because of current UCS limitation
+mixin EvalBase {
+  fun eval(e) =
+    if e is Neg(Neg(d)) then this.eval(d)
+    else if e is Neg(d) then 0 - this.eval(d)
+    else if e is
+      Lit(n) then n
+      Add(l, r) then this.eval(l) + this.eval(r)
+}
+//│ mixin EvalBase() {
+//│   this: {eval: 'expr -> 'a & ('expr0 | 'lhs) -> int}
+//│   fun eval: (Add['lhs] | Lit | Neg['expr0 & (Neg['expr] | ~#Neg)]) -> (int | 'a)
+//│ }
+
+// module TestLang extends EvalBase, EvalNeg
+module TestLang extends EvalBase
+//│ module TestLang() {
+//│   fun eval: 'a -> int
+//│ }
+//│ where
+//│   'a <: Add['a] | Lit | Neg['a & (Neg['a] | ~#Neg)]
+
+
+fun mk(n) = if n is
+  0 then Lit(0)
+  1 then Neg(mk(n))
+  _ then Add(mk(n), mk(n))
+//│ fun mk: forall 'E. anything -> 'E
+//│   where
+//│     'E :> Add['E] | Lit | Neg['E]
+
+// TODO support this in UCS
+:stats
+TestLang.eval(mk(0))
+//│ int
+//│ res
+//│     = 0
+//│ constrain calls  : 117
+//│ annoying  calls  : 32
+//│ subtyping calls  : 856
+
+

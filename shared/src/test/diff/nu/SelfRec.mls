@@ -2,7 +2,6 @@
 
 
 
-// TODO use available type signatures!
 class Foo1(x: int) {
   fun test = Foo1(1).x
 }
@@ -10,12 +9,11 @@ class Foo1(x: int) {
 //│   fun test: int
 //│ }
 
-// TODO
 class Foo2[A](x: A) {
   fun test = Foo2(1).x
 }
 //│ class Foo2[A](x: A) {
-//│   fun test: A
+//│   fun test: 1
 //│ }
 
 
@@ -53,10 +51,10 @@ class Foo4 {
   fun test = [Foo4.test]
 }
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.53: 	  fun test = [Foo4.test]
+//│ ║  l.51: 	  fun test = [Foo4.test]
 //│ ║        	              ^^^^^^^^^
 //│ ╟── reference of type `() -> #Foo4` does not have field 'test'
-//│ ║  l.53: 	  fun test = [Foo4.test]
+//│ ║  l.51: 	  fun test = [Foo4.test]
 //│ ╙──      	              ^^^^
 //│ class Foo4() {
 //│   fun test: (error,)
@@ -67,7 +65,7 @@ class Foo5(x: int) {
   fun test = [Foo5(5).test]
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.67: 	  fun test = [Foo5(5).test]
+//│ ║  l.65: 	  fun test = [Foo5(5).test]
 //│ ╙──      	                     ^^^^^
 //│ class Foo5(x: int) {
 //│   fun test: (error,)
@@ -80,13 +78,13 @@ class Foo6[A](x: A) {
   fun test3 = [Foo6([x]).test3]
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.78: 	  fun test1 = [Foo6(x).test1]
+//│ ║  l.76: 	  fun test1 = [Foo6(x).test1]
 //│ ╙──      	                      ^^^^^^
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.79: 	  fun test2 = [Foo6(123).test2]
+//│ ║  l.77: 	  fun test2 = [Foo6(123).test2]
 //│ ╙──      	                        ^^^^^^
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.80: 	  fun test3 = [Foo6([x]).test3]
+//│ ║  l.78: 	  fun test3 = [Foo6([x]).test3]
 //│ ╙──      	                        ^^^^^^
 //│ class Foo6[A](x: A) {
 //│   fun test1: (error,)
@@ -104,7 +102,7 @@ class Foo7[A](head: A, tail: Foo7[A] | N) {
     _ then tail.test1
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.104: 	    _ then tail.test1
+//│ ║  l.102: 	    _ then tail.test1
 //│ ╙──       	               ^^^^^^
 //│ class Foo7[A](head: A, tail: Foo7[A] | N) {
 //│   fun test1: A | error
@@ -145,7 +143,7 @@ class Foo8[A](x: A) {
     x
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.144: 	    let tmp = Foo8(y).test1(x)
+//│ ║  l.142: 	    let tmp = Foo8(y).test1(x)
 //│ ╙──       	                     ^^^^^^
 //│ class Foo8[A](x: A) {
 //│   fun test1: (y: anything,) -> A

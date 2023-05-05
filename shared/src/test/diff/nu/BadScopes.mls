@@ -2,11 +2,10 @@
 
 
 :e
-:ge
 mixin Foo(x: int)
 x
 //│ ╔══[ERROR] identifier not found: x
-//│ ║  l.7: 	x
+//│ ║  l.6: 	x
 //│ ╙──     	^
 //│ mixin Foo(x: int)
 //│ error
@@ -15,11 +14,10 @@ x
 
 
 :e
-:ge
 class Foo(x: int)
 x
 //│ ╔══[ERROR] identifier not found: x
-//│ ║  l.20: 	x
+//│ ║  l.18: 	x
 //│ ╙──      	^
 //│ class Foo(x: int)
 //│ error
@@ -31,9 +29,11 @@ x
 class Foo(x: int)
 class Bar { x }
 //│ ╔══[ERROR] identifier not found: x
-//│ ║  l.32: 	class Bar { x }
+//│ ║  l.30: 	class Bar { x }
 //│ ╙──      	            ^
 //│ class Foo(x: int)
 //│ class Bar()
+//│ Code generation encountered an error:
+//│   unresolved symbol x
 
 

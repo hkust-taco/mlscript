@@ -49,11 +49,10 @@ mixin EvalNegNeg {
 
 module TestLang extends EvalBase, EvalNeg, EvalNegNeg
 //│ module TestLang() {
-//│   fun eval: 'a -> int
+//│   fun eval: 'A -> int
 //│ }
 //│ where
-//│   'a <: Add['a] | Lit | Neg['A & (~#Neg | Neg['a])]
-//│   'A <: 'a
+//│   'A <: Add['A] | Lit | Neg['A & (~#Neg | Neg['A])]
 
 
 fun mk(n) = if n is

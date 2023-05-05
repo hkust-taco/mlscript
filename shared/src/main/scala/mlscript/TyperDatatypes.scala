@@ -507,10 +507,10 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
     }
     
     // * Bounds shoudl always be disregarded when `equatedTo` is defined, as they are then irrelevant:
-    def lowerBounds: List[SimpleType] = { require(assignedTo.isEmpty); _lowerBounds }
-    def upperBounds: List[SimpleType] = { require(assignedTo.isEmpty); _upperBounds }
-    def lowerBounds_=(bs: Ls[ST]): Unit = { require(assignedTo.isEmpty); _lowerBounds = bs }
-    def upperBounds_=(bs: Ls[ST]): Unit = { require(assignedTo.isEmpty); _upperBounds = bs }
+    def lowerBounds: List[SimpleType] = { require(assignedTo.isEmpty, this); _lowerBounds }
+    def upperBounds: List[SimpleType] = { require(assignedTo.isEmpty, this); _upperBounds }
+    def lowerBounds_=(bs: Ls[ST]): Unit = { require(assignedTo.isEmpty, this); _lowerBounds = bs }
+    def upperBounds_=(bs: Ls[ST]): Unit = { require(assignedTo.isEmpty, this); _upperBounds = bs }
     
     private val creationRun = currentConstrainingRun
     def original: TV =
