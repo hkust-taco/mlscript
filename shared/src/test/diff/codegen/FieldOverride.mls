@@ -1,0 +1,131 @@
+:NewParser
+:NewDefs
+
+:js
+class C(a: int) { let a = 1 }
+//│ class C(a: int) {
+//│   let a: 1
+//│ }
+//│ // Prelude
+//│ let res;
+//│ class TypingUnit {
+//│   #C;
+//│   constructor() {
+//│   }
+//│   get C() {
+//│     const outer = this;
+//│     if (this.#C === undefined) {
+//│       class C {
+//│         #a;
+//│         get a() { return this.#a; }
+//│         constructor(a) {
+//│           this.#a = a;
+//│           this.#a = 1;
+//│           const a1 = this.#a;
+//│         }
+//│       };
+//│       this.#C = ((a) => new C(a));
+//│       this.#C.class = C;
+//│     }
+//│     return this.#C;
+//│   }
+//│ }
+//│ const typing_unit = new TypingUnit;
+//│ globalThis.C = typing_unit.C;
+//│ // End of generated code
+
+// should return 1
+let a = C(2)
+a.a
+//│ let a: C
+//│ 1
+//│ a
+//│   = C {}
+//│ res
+//│     = 1
+
+:js
+class C2(a: int, b: int) {
+  let a = b + 1
+  let b = a + 1
+}
+//│ class C2(a: int, b: int) {
+//│   let a: int
+//│   let b: int
+//│ }
+//│ // Prelude
+//│ class TypingUnit2 {
+//│   #C2;
+//│   constructor() {
+//│   }
+//│   get C2() {
+//│     const outer = this;
+//│     if (this.#C2 === undefined) {
+//│       class C2 {
+//│         #a;
+//│         get a() { return this.#a; }
+//│         #b;
+//│         get b() { return this.#b; }
+//│         constructor(a, b) {
+//│           this.#a = a;
+//│           this.#b = b;
+//│           this.#a = b + 1;
+//│           const a1 = this.#a;
+//│           this.#b = a1 + 1;
+//│           const b1 = this.#b;
+//│         }
+//│       };
+//│       this.#C2 = ((a, b) => new C2(a, b));
+//│       this.#C2.class = C2;
+//│     }
+//│     return this.#C2;
+//│   }
+//│ }
+//│ const typing_unit2 = new TypingUnit2;
+//│ globalThis.C2 = typing_unit2.C2;
+//│ // End of generated code
+
+let c2 = C2(1, 2)
+c2.a
+c2.b
+//│ let c2: C2
+//│ int
+//│ c2
+//│    = C2 {}
+//│ res
+//│     = 3
+//│ res
+//│     = 4
+
+class C3(a: int) {
+  let a = 42
+  class C4(a: int) {
+    let a = 44
+  }
+}
+//│ class C3(a: int) {
+//│   class C4(a: int) {
+//│     let a: 44
+//│   }
+//│   let a: 42
+//│ }
+
+:e
+let c3 = C3(1)
+let c4 = c3.C4(2)
+c3.a
+c4.a
+//│ ╔══[ERROR] access to class member not yet supported
+//│ ║  l.115: 	let c4 = c3.C4(2)
+//│ ╙──       	           ^^^
+//│ let c3: C3
+//│ let c4: error
+//│ error
+//│ c3
+//│    = C3 {}
+//│ c4
+//│    = C4 {}
+//│ res
+//│     = 42
+//│ res
+//│     = 44
