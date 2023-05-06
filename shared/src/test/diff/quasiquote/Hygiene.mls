@@ -21,7 +21,7 @@ run(code_test)
 //│ res: int
 //│    = 111
 
-// Test 2: note that the free variable makes this unhygienic, which is intended 
+// Test 2: this is hygienic because the child Quoted is a descendant of the parent Quoted in the AST
 fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, code"${cde} + x")}" else cde
 //│ test: (int, Code[int | 'a, 'b & 'c] & 'd,) -> (Code[int | 'a, 'b\x & {x: int} & 'c] | 'd)
 //│   where
@@ -29,13 +29,13 @@ fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, code"${
 //│     = [Function: test]
 
 :e
-run(test(5, code"0"))
+run(test(3, code"0"))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.32: 	run(test(5, code"0"))
+//│ ║  l.32: 	run(test(3, code"0"))
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── expression of type `anything` does not have field 'x'
 //│ res: error | int
-//│    = 5
+//│    = 6
 
 
 // Test 3: note that the free variable makes this unhygienic, which is intended

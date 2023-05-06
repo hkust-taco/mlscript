@@ -892,9 +892,9 @@ final case class JSQuasiquoteRunFunctionBody() extends JSStmt {
           const value = _run(s_expr[3]);
           name_value.set(s_expr[1], value);
           symbol_value.set(s_expr[2], value);
-          return _run(s_expr[4]);
+          return run(s_expr[4], contextToList());
         case "Bra": // ['Bra', translateQuoted(trm)]
-          return _run(s_expr[1]);
+          return run(s_expr[1], contextToList());
         case "Tup": // ['Tup', [translateQuoted(...)...]
           return s_expr[1].map(elem => _run(elem));
         case "Subs": // ['Subs', translateQuoted(arr), translateQuoted(idx)]

@@ -116,7 +116,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     * Handle all possible cases of MLscript function applications. We extract
     * this method to prevent exhaustivity check from reaching recursion limit.
     */
-  protected def translateApp(term: App)(implicit scope: Scope): JSExpr = term match {
+  protected def translateApp(term: App)(implicit scope: Scope, freeVars: MutSet[Str], inUnquote: Bool): JSExpr = term match {
     // Binary expressions
     case App(App(Var(op), Tup((N -> Fld(_, _, lhs)) :: Nil)), Tup((N -> Fld(_, _, rhs)) :: Nil))
         if JSBinary.operators contains op =>
@@ -137,13 +137,13 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
   /**
     * Translate MLscript terms into JavaScript expressions.
     */
-  protected def translateTerm(term: Term)(implicit scope: Scope): JSExpr = term match {
+  protected def translateTerm(term: Term)(implicit scope: Scope, freeVars: MutSet[Str], inUnquote: Bool): JSExpr = term match {
     case _ if term.desugaredTerm.isDefined => translateTerm(term.desugaredTerm.getOrElse(die))
     case Var(name) => translateVar(name, false)
     case Lam(params, body) =>
       val lamScope = scope.derive("Lam")
       val patterns = translateParams(params)(lamScope)
-      JSArrowFn(patterns, lamScope.tempVars `with` translateTerm(body)(lamScope))
+      JSArrowFn(patterns, lamScope.tempVars `with` translateTerm(body)(lamScope, freeVars, inUnquote))
     case t: App => translateApp(t)
     case Rcd(fields) =>
       JSRecord(fields map { case (key, Fld(_, _, value)) =>
@@ -158,13 +158,13 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       val fn = {
         val fnScope = letScope.derive("Function")
         val params = translateParams(args)(fnScope)
-        val fnBody = fnScope.tempVars.`with`(translateTerm(body)(fnScope))
+        val fnBody = fnScope.tempVars.`with`(translateTerm(body)(fnScope, freeVars, inUnquote))
         JSFuncExpr(S(runtimeName), params, fnBody.fold(_.`return` :: Nil, identity))
       }
       JSImmEvalFn(
         N,
         JSNamePattern(runtimeName) :: Nil,
-        letScope.tempVars.`with`(translateTerm(expr)(letScope)),
+        letScope.tempVars.`with`(translateTerm(expr)(letScope, freeVars, inUnquote)),
         fn :: Nil
       )
     case Let(true, Var(name), _, _) =>
@@ -175,7 +175,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       JSImmEvalFn(
         N,
         JSNamePattern(runtimeName) :: Nil,
-        letScope.tempVars `with` translateTerm(body)(letScope),
+        letScope.tempVars `with` translateTerm(body)(letScope, freeVars, inUnquote),
         translateTerm(value) :: Nil
       )
     case Blk(stmts) =>
@@ -185,8 +185,8 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         N,
         Nil,
         R(blkScope.tempVars `with` (flattened.iterator.zipWithIndex.map {
-          case (t: Term, index) if index + 1 == flattened.length => translateTerm(t)(blkScope).`return`
-          case (t: Term, index)                                  => JSExprStmt(translateTerm(t)(blkScope))
+          case (t: Term, index) if index + 1 == flattened.length => translateTerm(t)(blkScope, freeVars, inUnquote).`return`
+          case (t: Term, index)                                  => JSExprStmt(translateTerm(t)(blkScope, freeVars, inUnquote))
           case (_: Def | _: TypeDef | _: NuFunDef /* | _: NuTypeDef */, _) =>
             throw CodeGenError("unsupported definitions in blocks")
         }.toList)),
@@ -248,7 +248,38 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       throw CodeGenError("custom class body is not supported yet")
     case Quoted(body) =>
       val qqScope = scope.derive("Quoted", true, true)
-      translateQuoted(body)(qqScope)
+      val qqFreeVars = MutSet[Str]()
+      val curInquote = inUnquote 
+      val res = translateQuoted(body)(qqScope, qqFreeVars)
+      if (inUnquote) {
+        val resolvedFreeVars = MutSet[Str]()
+        val resolvedRes = qqFreeVars.foldLeft(res)(
+          (res, name) => {
+            scope.resolveValueQQ(name) match {
+              case S(sym: ValueSymbol) =>
+                resolvedFreeVars add name
+                val fParams = Ls(JSNamePattern(name))
+                val fBody = L(res)
+                val fArgs = Ls(JSIdent(sym.runtimeName))
+                JSImmEvalFn(N, fParams, fBody, fArgs)
+              case _ => res
+            }
+          }
+        )
+        freeVars addAll (qqFreeVars diff resolvedFreeVars)
+        resolvedRes
+      }
+      else
+        qqFreeVars.foldLeft(res)(
+          (res, name) => {
+            val fParams = Ls(JSNamePattern(name))
+            val fBody = L(res)
+            val fArgs = Ls(
+                JSArray(Ls(JSExpr("FreeVar"), JSExpr(name)))
+              )
+            JSImmEvalFn(N, fParams, fBody, fArgs)
+          }
+        )
     case Unquoted(body) =>
       throw CodeGenError("unquote must be in quasiquote")
     case _: Bind | _: Test | If(_, _) | TyApp(_, _) | _: Splc =>
@@ -256,7 +287,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
   }
 
   private def translateCaseBranch(scrut: JSExpr, branch: CaseBranches)(implicit
-      scope: Scope
+      scope: Scope, freeVars: MutSet[Str], inUnquote: Bool
   ): JSExpr = branch match {
     case Case(pat, body, rest) =>
       translateCase(scrut, pat)(translateTerm(body), translateCaseBranch(scrut, rest))
@@ -295,7 +326,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
 
   protected def translateTraitDeclaration(
       traitSymbol: TraitSymbol
-  )(implicit scope: Scope): JSConstDecl = {
+  )(implicit scope: Scope, freeVars: MutSet[Str], inUnquote: Bool): JSConstDecl = {
     import JSCodeHelpers._
     val instance = id("instance")
     val bases = traitSymbol.body.collectTypeNames.flatMap { name =>
@@ -315,7 +346,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
           instance(name) := JSFuncExpr(
             N,
             methodParams,
-            `return`(translateTerm(body)(methodScope)) :: Nil
+            `return`(translateTerm(body)(methodScope, freeVars, inUnquote)) :: Nil
           )
         // Define getters for pure expressions.
         case term =>
@@ -328,7 +359,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
               "get" -> JSFuncExpr(
                 N,
                 Nil,
-                `return`(translateTerm(term)(getterScope)) :: Nil
+                `return`(translateTerm(term)(getterScope, freeVars, inUnquote)) :: Nil
               ) :: Nil
             )
           ).stmt
@@ -403,11 +434,11 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
   protected def translateClassDeclaration(
       classSymbol: ClassSymbol,
       baseClassSymbol: Opt[ClassSymbol]
-  )(implicit scope: Scope): JSClassDecl = {
+  )(implicit scope: Scope, freeVars: MutSet[Str], inUnquote: Bool): JSClassDecl = {
     // Translate class methods and getters.
     val classScope = scope.derive(s"class ${classSymbol.lexicalName}")
     val members = classSymbol.methods.map {
-      translateClassMember(_)(classScope)
+      translateClassMember(_)(classScope, freeVars, inUnquote)
     }
     // Collect class fields.
     val fields = classSymbol.body.collectFields ++
@@ -429,7 +460,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
    */
   private def translateClassMember(
       method: MethodDef[Left[Term, Type]],
-  )(implicit scope: Scope): JSClassMemberDecl = {
+  )(implicit scope: Scope, freeVars: MutSet[Str], inUnquote: Bool): JSClassMemberDecl = {
     val name = method.nme.name
     // Create the method/getter scope.
     val memberScope = method.rhs.value match {
@@ -447,7 +478,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         (N, term)
     }
     // Translate class member body.
-    val bodyResult = translateTerm(body)(memberScope).`return`
+    val bodyResult = translateTerm(body)(memberScope, freeVars, inUnquote).`return`
     // If `this` is accessed, add `const self = this`.
     val bodyStmts = if (visitedSymbols(selfSymbol)) {
       val thisDecl = JSConstDecl(selfSymbol.runtimeName, JSIdent("this"))
@@ -465,8 +496,8 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
 
 
 
-  protected def translateQuoted(body: Term)(implicit scope: Scope) : JSExpr = body match {
-    case Var(name) => // TODO: did not handle StubValueSymbol, ClassSymbol, TraitSymbol
+  protected def translateQuoted(body: Term)(implicit scope: Scope, freevars: MutSet[Str]) : JSExpr = body match {
+    case Var(name) => // did not handle StubValueSymbol, ClassSymbol, TraitSymbol
       scope.resolveValue(name) match {
         case S(sym: BuiltinSymbol) => 
           sym.accessed = true
@@ -481,11 +512,11 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
                 JSExpr("Var"),
                 JSIdent(sym.runtimeName)
               )) 
-            // TODO: check if substitution can be done here (ident -> [FreeVar, name])
             case _ => // free variable for quasiquote
+              freevars addOne name 
               JSArray(Ls(
                 JSExpr("Var"),
-                JSArray(Ls(JSExpr("FreeVar"), JSExpr(name)))
+                JSIdent(name)
               ))   
           }
       }
@@ -496,7 +527,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         case _             => throw CodeGenError(s"term $params is not a valid parameter list")
       }
       val paramsList = lamScope.getAllRuntimeSymbols();
-      val bodySExpr = paramsList.foldLeft(translateQuoted(body)(lamScope))(
+      val bodySExpr = paramsList.foldLeft(translateQuoted(body)(lamScope, freevars))(
         (sExpr, name) => {
           val fParams = Ls(JSNamePattern(name))
           val fBody = L(sExpr)
@@ -530,14 +561,14 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
           key.name -> translateQuoted(value)
         })
       ))
-    case Sel(receiver, fieldName) => // TODO: no support for selecting class properties
+    case Sel(receiver, fieldName) => // no support for selecting class properties
       JSArray(Ls(
         JSExpr("Sel"),
         translateQuoted(receiver),
         JSExpr(fieldName.name)
       ))
     case Let(true, Var(name), Lam(args, body), expr) => 
-      throw CodeGenError("Let with Function") // TODO: cannot generate example
+      throw CodeGenError("Let with Function") // cannot generate example
     case Let(true, Var(name), _, _) => 
       throw new CodeGenError(s"recursive non-function definition $name is not supported")
     case Let(_, Var(name), value, body) => 
@@ -548,14 +579,14 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         JSExpr(name),
         JSIdent(runtimeName),
         translateQuoted(value),
-        translateQuoted(body)(letScope)
+        translateQuoted(body)(letScope, freevars)
       ))
       JSImmEvalFn(None, Ls(JSNamePattern(runtimeName)), L(s_expr), Ls(JSLit(s"Symbol('${name}')")))
     case Blk(stmts) => 
       val blkScope = scope.derive("Blk", false, true)
       val flattened = stmts.iterator.flatMap(_.desugared._2).toList
       val s_expr_list = flattened.iterator.zipWithIndex.map {
-        case (t: Term, index) => translateQuoted(t)(blkScope)
+        case (t: Term, index) => translateQuoted(t)(blkScope, freevars)
         case (_: Def | _: TypeDef | _: NuFunDef /* | _: NuTypeDef */, _) =>
           throw CodeGenError("unsupported definitions in blocks")
       }.toList
@@ -589,19 +620,31 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     case New(S(TypeName(className) -> Tup(args)), TypingUnit(Nil)) => throw CodeGenError("New #2") 
     case Quoted(body) => 
       val qqScope = scope.derive("Quoted", true, true)
+      val nestedFreeVars = MutSet[Str]()
+      val nestedSexpr = translateQuoted(body)(qqScope, nestedFreeVars)
+      val res = nestedFreeVars.foldLeft(nestedSexpr)(
+        (sExpr, name) => {
+          val fParams = Ls(JSNamePattern(name))
+          val fBody = L(sExpr)
+          val fArgs = Ls(JSArray(Ls(JSExpr("Var"), JSArray(Ls(JSExpr("FreeVar"), JSExpr(name))))))
+          JSImmEvalFn(N, fParams, fBody, fArgs)
+        })
       JSArray(Ls(
         JSExpr("Quoted"),
-        translateQuoted(body)(qqScope)
+        res
       ))
     case Unquoted(body) =>
-      scope.getQuasiquoteOuterScope() match {
+      var childFreeVars = MutSet[Str]()
+      val child = scope.getQuasiquoteOuterScope() match {
         case S(qqOuterScope: Scope) 
           => JSArray(Ls(
                       JSExpr("Unquoted"),
-                      translateTerm(body)(qqOuterScope)
+                      translateTerm(body)(qqOuterScope, childFreeVars, true)
                     ))
         case N => throw CodeGenError("unquote must be in quasiquote")
       }
+      freevars addAll childFreeVars
+      child
       
     case If(IfThen(condition, branch1), S(branch2)) =>
       JSArray(Ls(
@@ -730,9 +773,9 @@ class JSWebBackend extends JSBackend(allowUnresolvedSymbols = true) {
 
     val (traitSymbols, classSymbols) = declareTypeDefs(typeDefs)
     val defStmts = 
-      traitSymbols.map { translateTraitDeclaration(_)(topLevelScope) } ++
+      traitSymbols.map { translateTraitDeclaration(_)(topLevelScope, MutSet[Str](), false) } ++
       sortClassSymbols(classSymbols).map { case (derived, base) =>
-        translateClassDeclaration(derived, base)(topLevelScope)
+        translateClassDeclaration(derived, base)(topLevelScope, MutSet[Str](), false)
       }.toList
 
     val resultsIdent = JSIdent(resultsName)
@@ -749,12 +792,12 @@ class JSWebBackend extends JSBackend(allowUnresolvedSymbols = true) {
             val (originalExpr, sym) = if (recursive) {
               val isByvalueRecIn = if (isByname) None else Some(true)
               val sym = topLevelScope.declareValue(name, isByvalueRecIn, body.isInstanceOf[Lam])
-              val translated = translateTerm(body)(topLevelScope)
+              val translated = translateTerm(body)(topLevelScope, MutSet[Str](), false)
               topLevelScope.unregisterSymbol(sym)
               val isByvalueRecOut = if (isByname) None else Some(false)
               (translated, topLevelScope.declareValue(name, isByvalueRecOut, body.isInstanceOf[Lam]))
             } else {
-              val translatedBody = translateTerm(body)(topLevelScope)
+              val translatedBody = translateTerm(body)(topLevelScope, MutSet[Str](), false)
               val isByvalueRec = if (isByname) None else Some(false)
               (translatedBody, topLevelScope.declareValue(name, isByvalueRec, body.isInstanceOf[Lam]))
             }
@@ -767,7 +810,7 @@ class JSWebBackend extends JSBackend(allowUnresolvedSymbols = true) {
           case term: Term =>
             topLevelScope.tempVars `with` JSInvoke(
               resultsIdent("push"),
-              translateTerm(term)(topLevelScope) :: Nil
+              translateTerm(term)(topLevelScope, MutSet[Str](), false) :: Nil
             ).stmt :: Nil
         })
     val epilogue = resultsIdent.member("map")(JSIdent(prettyPrinterName)).`return` :: Nil
@@ -804,9 +847,9 @@ class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
 
     val (traitSymbols, classSymbols) = declareTypeDefs(typeDefs)
     val defStmts = 
-      traitSymbols.map { translateTraitDeclaration(_)(topLevelScope) } ++
+      traitSymbols.map { translateTraitDeclaration(_)(topLevelScope, MutSet[Str](), false) } ++
       sortClassSymbols(classSymbols).map { case (derived, base) =>
-        translateClassDeclaration(derived, base)(topLevelScope)
+        translateClassDeclaration(derived, base)(topLevelScope, MutSet[Str](), false)
       }.toList
 
     val zeroWidthSpace = JSLit("\"\\u200B\"")
@@ -823,7 +866,7 @@ class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
           val isByvalueRecIn = if (isByname) None else Some(true)
           val sym = scope.declareValue(name, isByvalueRecIn, bodyIsLam)
           try {
-            val translated = translateTerm(body)
+            val translated = translateTerm(body)(scope, MutSet[Str](), false)
             scope.unregisterSymbol(sym)
             val isByvalueRecOut = if (isByname) None else Some(false)
             R((translated, scope.declareValue(name, isByvalueRecOut, bodyIsLam)))
@@ -838,7 +881,7 @@ class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
               throw e
           }
         } else {
-          (try R(translateTerm(body)) catch {
+          (try R(translateTerm(body)(scope, MutSet[Str](), false)) catch {
             case e: UnimplementedError =>
               scope.declareStubValue(name, e.symbol)
               L(e.getMessage())
@@ -869,7 +912,7 @@ class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
         JSTestBackend.EmptyQuery
       case term: Term =>
         try {
-          val body = translateTerm(term)(scope)
+          val body = translateTerm(term)(scope, MutSet[Str](), false)
           val res = JSTestBackend.CodeQuery(scope.tempVars.emit(), (resultIdent := body) :: Nil)
           scope.refreshRes()
           res
