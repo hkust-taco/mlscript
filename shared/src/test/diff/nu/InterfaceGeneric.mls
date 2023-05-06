@@ -31,12 +31,14 @@ class TwoInts(pair: (int, int)) extends Product[int, int] {
 let i2 = TwoInts((1,2))
 //│ let i2: TwoInts
 
+// FIXME
 i2: Product[int, int]
 //│ ╔══[ERROR] Type `TwoInts` does not contain member `Product#A`
 //│ ║  l.16: 	trait Product[A, B] extends Into[A] {
 //│ ╙──      	              ^
 //│ Product[int, int]
 
+// FIXME
 i2: Into[int]
 //│ ╔══[ERROR] Type `TwoInts` does not contain member `Into#T`
 //│ ║  l.4: 	trait Into[T] {

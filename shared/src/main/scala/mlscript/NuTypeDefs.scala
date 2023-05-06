@@ -1054,7 +1054,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                         case S(mem: TypedNuTermDef) =>
                           val memSign = mem.typeSignature
                           implicit val prov: TP = memSign.prov
-                          // println(s"checking interface mamber `${m.name}`")
+                          println(s"checking overriding `${m.name}`")
                           constrain(memSign, parSign)
                         case S(pm: NuParam) =>
                           val pmSign = pm.typeSignature
