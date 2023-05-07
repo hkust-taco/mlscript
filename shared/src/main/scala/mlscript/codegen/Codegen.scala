@@ -853,11 +853,8 @@ final case class JSQuasiquoteRunFunctionBody() extends JSStmt {
     }
     function _run(s_expr) {
       switch(s_expr[0]) {
-        // data
         case "_": 
           return s_expr[1];
-          
-        // expressions
         case "Rcd": // ['Rcd', {key -> translateQuoted(value)}]
           let rcd = {};
 					for (entry of Object.entries(s_expr[1])) {
@@ -868,7 +865,6 @@ final case class JSQuasiquoteRunFunctionBody() extends JSStmt {
           return _run(s_expr[1])[s_expr[2]];
         case "Var": // ['Var', ['FreeVar', 'name']] OR ['Var', Symbol(name)]
           if (Array.isArray(s_expr[1]) && s_expr[1][0] == "FreeVar") {
-            // if a binder for the variable cannot be found, return the string name first
             if (name_value.has(s_expr[1][1])) {
               return name_value.get(s_expr[1][1]);
             } else {
@@ -940,7 +936,7 @@ final case class JSQuasiquoteRunFunctionBody() extends JSStmt {
                 }
                 return s_expr.map(x => putinFreeVar(x));
               } else {
-                return s_expr
+                return s_expr;
               }
             }
             
@@ -948,22 +944,17 @@ final case class JSQuasiquoteRunFunctionBody() extends JSStmt {
 					let result = run(body_sexpr, context);
 					return putinFreeVar(result, context);
           }
-	      
         default:
           throw Error("Encountered s-expression that is not handled");
       }
     }
-
     function processNestedQQ(s_expr) {
-      if (typeof s_expr === "symbol") {
-        if (symbol_value.has(s_expr))
-          return symbol_value.get(s_expr);
-        else 
-          return s_expr;
+      if (typeof s_expr === "symbol" && symbol_value.get(s_expr)) {
+        return symbol_value.get(s_expr);
       } else if (Array.isArray(s_expr)){
         return s_expr.map(x => processNestedQQ(x));
       } else {
-        return s_expr
+        return s_expr;
       }
     }
 
