@@ -357,7 +357,6 @@ class Scope(name: Str, enclosing: Opt[Scope], quasiquote: Bool = false, inquasiq
     lexicalValueSymbols("res") = ValueSymbol("res", "res", Some(false), false)
   }
   
-  def getAllLexicalNames(): Ls[Str] = lexicalValueSymbols.keySet.toList
   def getAllRuntimeSymbols(): Ls[Str] = runtimeSymbols.toList
 
   def getQuasiquoteOuterScope(): Opt[Scope] = 

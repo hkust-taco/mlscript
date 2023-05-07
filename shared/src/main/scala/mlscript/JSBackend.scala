@@ -4,7 +4,6 @@ import mlscript.utils._, shorthands._, algorithms._
 import mlscript.codegen.Helpers._
 import mlscript.codegen._
 import scala.collection.mutable.ListBuffer
-import scala.collection.mutable.HashMap 
 import mlscript.{JSField, JSLit}
 import scala.collection.mutable.{Set => MutSet}
 
@@ -187,6 +186,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         R(blkScope.tempVars `with` (flattened.iterator.zipWithIndex.map {
           case (t: Term, index) if index + 1 == flattened.length => translateTerm(t)(blkScope, freeVars, inUnquote).`return`
           case (t: Term, index)                                  => JSExprStmt(translateTerm(t)(blkScope, freeVars, inUnquote))
+          // TODO: find out if we need to support this.
           case (_: Def | _: TypeDef | _: NuFunDef /* | _: NuTypeDef */, _) =>
             throw CodeGenError("unsupported definitions in blocks")
         }.toList)),
@@ -249,7 +249,6 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     case Quoted(body) =>
       val qqScope = scope.derive("Quoted", true, true)
       val qqFreeVars = MutSet[Str]()
-      val curInquote = inUnquote 
       val res = translateQuoted(body)(qqScope, qqFreeVars)
       if (inUnquote) {
         val resolvedFreeVars = MutSet[Str]()
@@ -493,8 +492,6 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       case N => JSClassGetter(name, bodyStmts)
     }
   }
-
-
 
   protected def translateQuoted(body: Term)(implicit scope: Scope, freevars: MutSet[Str]) : JSExpr = body match {
     case Var(name) => // did not handle StubValueSymbol, ClassSymbol, TraitSymbol

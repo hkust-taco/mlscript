@@ -48,7 +48,7 @@ fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, cde_tem
 //│     'b <: 'b\x & {x: int} & 'c
 //│     = [Function: test1]
 
-let c = test(3, code"2")
+let c = test(3, code"0")
 //│ c: Code[int, 'a]
 //│   where
 //│     'a <: 'a\x & {x: int}
@@ -67,4 +67,4 @@ run(c)
 //│ ║        	^^^^^^
 //│ ╙── expression of type `anything` does not have field 'x'
 //│ res: error | int
-//│    = 5
+//│    = 3
