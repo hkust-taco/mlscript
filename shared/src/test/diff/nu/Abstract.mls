@@ -7,14 +7,17 @@ abstract class Foo(x: int) {
 //│   fun f: (y: int,) -> int
 //│ }
 
+:re
 let foo = new Foo(42)
 //│ let foo: Foo
 //│ foo
-//│     = Foo {}
+//│ Runtime error:
+//│   ReferenceError: Foo is not defined
 
 // TODO reject
 // :e
 let bar = Foo(42)
 //│ let bar: Foo
 //│ bar
-//│     = Foo {}
+//│ Runtime error:
+//│   ReferenceError: Foo is not defined
