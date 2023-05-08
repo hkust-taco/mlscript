@@ -1,0 +1,19 @@
+:NewDefs
+
+abstract class Foo(x: int) {
+  fun f(y: int) = x + y
+}
+//│ class Foo(x: int) {
+//│   fun f: (y: int,) -> int
+//│ }
+
+let foo = new Foo(42)
+//│ let foo: Foo
+//│ foo
+//│     = Foo {}
+
+// TODO: reject
+let bar = Foo(42)
+//│ let bar: Foo
+//│ bar
+//│     = Foo {}

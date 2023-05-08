@@ -186,7 +186,7 @@ final case class NuTypeDef(
   superAnnot: Opt[Type],
   thisAnnot: Opt[Type],
   body: TypingUnit
-)(val declareLoc: Opt[Loc]) extends NuDecl with Statement
+)(val declareLoc: Opt[Loc], val abstractLoc: Opt[Loc]) extends NuDecl with Statement
 
 final case class NuFunDef(
   isLetRec: Opt[Bool], // None means it's a `fun`, which is always recursive; Some means it's a `let`
@@ -196,6 +196,7 @@ final case class NuFunDef(
 )(val declareLoc: Opt[Loc]) extends NuDecl with DesugaredStatement {
   val body: Located = rhs.fold(identity, identity)
   def kind: DeclKind = Val
+  val abstractLoc: Opt[Loc] = None
 }
 
 
