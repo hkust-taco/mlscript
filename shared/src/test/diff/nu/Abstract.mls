@@ -12,7 +12,8 @@ let foo = new Foo(42)
 //│ foo
 //│     = Foo {}
 
-// TODO: reject
+// TODO reject
+// :e
 let bar = Foo(42)
 //│ let bar: Foo
 //│ bar
