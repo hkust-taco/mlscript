@@ -15,6 +15,8 @@ object TypeScript {
     }
   }
 
+  private val resolver = g.require.resolve
+
   val typeFlagsEnumLike = ts.TypeFlags.EnumLike
   val typeFlagsObject = ts.TypeFlags.Object
   val typeFlagsTypeParameter = ts.TypeFlags.TypeParameter
@@ -52,6 +54,8 @@ object TypeScript {
   def forEachChild(root: js.Dynamic, func: js.Dynamic => Unit) = ts.forEachChild(root, func)
   def createProgram(filenames: Seq[String]) =
     ts.createProgram(filenames.toJSArray, js.Dictionary("maxNodeModuleJsDepth" -> 0, "target" -> ts.ScriptTarget.ES5, "module" -> ts.ModuleKind.CommonJS))
+
+  def resolveNodeModulePath(path: String): String = resolver(path).toString()
 }
 
 class TSTypeChecker(checker: js.Dynamic) {
