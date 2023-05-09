@@ -10,9 +10,12 @@ import mlscript.utils.shorthands._
 import scala.collection.mutable.{ListBuffer,Map => MutMap, Set => MutSet}
 import mlscript.codegen._
 import mlscript.{NewLexer, NewParser, ErrorReport, Origin, Diagnostic}
+import ts2mls.TSModuleResolver
 
 class Driver(options: DriverOptions) {
   import Driver._
+
+  private val moduleResolver = TSModuleResolver(options.path)
 
   private val typer =
     new mlscript.Typer(

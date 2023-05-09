@@ -108,5 +108,6 @@ lazy val driver = crossProject(JSPlatform, JVMPlatform).in(file("driver"))
     Compile / fastOptJS / artifactPath := baseDirectory.value / ".." / ".." / "bin" / "mlsc.js"
   )
   .dependsOn(mlscript % "compile->compile;test->test")
+  .dependsOn(ts2mls % "compile->compile;test->test")
 
 lazy val driverJS = driver.js
