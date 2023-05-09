@@ -118,12 +118,9 @@ class Driver(options: DriverOptions) {
     vars: Map[Str, typer.SimpleType],
     stack: List[String]
   ): Boolean = {
-    val beginIndex = filename.lastIndexOf("/")
-    val endIndex = filename.lastIndexOf(".")
-    val prefixName = filename.substring(beginIndex + 1, endIndex)
-    val path = filename.substring(0, beginIndex + 1)
-    val moduleName = prefixName.substring(prefixName.lastIndexOf("/") + 1)
-    val relatedPath = path.substring(options.path.length)
+    val moduleName = moduleResolver.getModuleName(filename)
+    val path = TSModuleResolver.dirname(filename)
+    val relatedPath = moduleResolver.getRelatedPath(path)
 
     readFile(filename) match {
       case Some(content) => {
@@ -134,7 +131,7 @@ class Driver(options: DriverOptions) {
             }
 
             val (cycleList, otherList) = depList.partitionMap { dep => {
-              val depFile = s"$path$dep"
+              val depFile = s"$path/$dep"
               if (depFile === filename)
                 throw ErrorReport(Ls((s"can not import $filename itself", None)), Diagnostic.Compilation)
               else if (stack.contains(depFile)) L(dep)
@@ -143,11 +140,11 @@ class Driver(options: DriverOptions) {
 
             val (cycleSigs, cycleRecomp) = cycleList.foldLeft((Ls[TypingUnit](), false))((r, dep) => r match {
               case (sigs, recomp) => {
-                val filename = s"$path$dep"
+                val filename = s"$path/$dep"
                 importedModule += filename
-                val prefixName = dep.substring(0, dep.lastIndexOf("."))
-                (sigs :+ extractSig(filename, prefixName),
-                  isInterfaceOutdate(filename, s"${options.outputDir}/.temp/$relatedPath/$prefixName.mlsi"))
+                val moduleName = moduleResolver.getModuleName(dep)
+                (sigs :+ extractSig(filename, moduleName),
+                  isInterfaceOutdate(filename, s"${options.outputDir}/.temp/$relatedPath/$moduleName.mlsi"))
               }
             })
             val needRecomp = otherList.foldLeft(cycleRecomp)((nr, dp) => nr || {
@@ -158,16 +155,16 @@ class Driver(options: DriverOptions) {
               var newCtx: Ctx = Ctx.init
               val newExtrCtx: Opt[typer.ExtrCtx] = N
               val newVars: Map[Str, typer.SimpleType] = Map.empty
-              val newFilename = s"$path$dp"
+              val newFilename = s"$path/$dp"
               importedModule += newFilename
               compile(newFilename, true)(newCtx, raise, newExtrCtx, newVars, stack :+ filename)
             })
 
-            if (options.force || needRecomp || isInterfaceOutdate(filename, s"${options.outputDir}/.temp/$relatedPath/$prefixName.mlsi")) {
+            if (options.force || needRecomp || isInterfaceOutdate(filename, s"${options.outputDir}/.temp/$relatedPath/$moduleName.mlsi")) {
               System.out.println(s"compiling $filename...")
-              def importModule(modulePath: String): Unit = {
-                val filename = s"${options.outputDir}/.temp/$modulePath.mlsi"
-                val moduleName = modulePath.substring(modulePath.lastIndexOf("/") + 1)
+              def importModule(mlsiPath: String): Unit = {
+                val filename = s"${options.outputDir}/.temp/$mlsiPath"
+                val moduleName = moduleResolver.getModuleName(mlsiPath)
                 readFile(filename) match {
                   case Some(content) => {
                     parse(filename, content) match {
@@ -175,7 +172,7 @@ class Driver(options: DriverOptions) {
                         val depList = imports.map {
                           case Import(path) => path
                         }
-                        depList.foreach(d => importModule(d.substring(0, d.lastIndexOf("."))))
+                        depList.foreach(d => importModule(moduleResolver.getMLSI(d)))
                         val tpd = typer.typeTypingUnit(TypingUnit(declarations, Nil), topLevel = true)
                         val sim = SimplifyPipeline(tpd, all = false)
                         val exp = typer.expandType(sim)
@@ -188,7 +185,7 @@ class Driver(options: DriverOptions) {
                 }
               }
 
-              otherList.foreach(d => importModule(d.substring(0, d.lastIndexOf("."))))
+              otherList.foreach(d => importModule(moduleResolver.getMLSI(d)))
               def generateInterface(moduleName: Option[String], tu: TypingUnit) = {
                 val tpd = typer.typeTypingUnit(tu, topLevel = true)
                 val sim = SimplifyPipeline(tpd, all = false)(ctx)
@@ -200,8 +197,8 @@ class Driver(options: DriverOptions) {
                 generateInterface(Some(moduleName), TypingUnit(definitions, Nil))
               val interfaces = otherList.map(s => Import(s"${s}i")).foldRight(expStr)((imp, itf) => s"$imp\n$itf")
 
-              writeFile(s"${options.outputDir}/.temp/$relatedPath", s"$prefixName.mlsi", interfaces)
-              generate(Pgrm(definitions), moduleName, imports, prefixName, s"${options.outputDir}/$relatedPath", exported || importedModule(filename))
+              writeFile(s"${options.outputDir}/.temp/$relatedPath", s"$moduleName.mlsi", interfaces)
+              generate(Pgrm(definitions), moduleName, imports, moduleName, s"${options.outputDir}/$relatedPath", exported || importedModule(filename))
               true
             }
             else false
