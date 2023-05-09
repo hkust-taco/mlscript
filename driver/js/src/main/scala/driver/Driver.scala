@@ -55,10 +55,11 @@ class Driver(options: DriverOptions) {
   def genPackageJson(): Unit =
     if (!fs.existsSync(s"${options.outputDir}/package.json")) {
       val content = """{ "type": "module" }""" // TODO: more settings?
-      writeFile(options.outputDir, "package.json", content)
+      writeFile(s"${options.outputDir}/package.json", content)
     }
 
-  private def parse(filename: String, content: String) = {
+  type ParseResult = (List[Statement], List[NuDecl], List[Import], Origin)
+  private def parse(filename: String, content: String): ParseResult = {
     import fastparse._
     import fastparse.Parsed.{Success, Failure}
 
@@ -97,16 +98,29 @@ class Driver(options: DriverOptions) {
       case _ => s"declare $content"
     }
 
+  private def parseAndRun[Res](filename: String, f: (ParseResult) => Res): Res = readFile(filename) match {
+    case Some(content) => f(parse(filename, content))
+    case _ =>
+      throw
+        ErrorReport(Ls((s"can not open file $filename", None)), Diagnostic.Compilation)
+  }
+
   private def extractSig(filename: String, moduleName: String): TypingUnit =
-    readFile(filename) match {
-      case Some(content) =>
-        parse(filename, content) match {
-          case (_, declarations, _, origin) => TypingUnit(
-            NuTypeDef(Nms, TypeName(moduleName), Nil, Tup(Nil), N, Nil, N, N, TypingUnit(declarations, Nil))(S(Loc(0, 1, origin)), N) :: Nil, Nil)
-        }
-      case None =>
-        throw ErrorReport(Ls((s"can not open file $filename", None)), Diagnostic.Compilation)
-    }
+    parseAndRun(filename, {
+      case (_, declarations, _, origin) => TypingUnit(
+        NuTypeDef(Nms, TypeName(moduleName), Nil, Tup(Nil), N, Nil, N, N, TypingUnit(declarations, Nil))(S(Loc(0, 1, origin)), N) :: Nil, Nil)
+    })
+
+  private def `type`(tu: TypingUnit)(
+    implicit ctx: Ctx,
+    raise: Raise,
+    extrCtx: Opt[typer.ExtrCtx],
+    vars: Map[Str, typer.SimpleType]
+  ) = {
+    val tpd = typer.typeTypingUnit(tu, topLevel = true)
+    val sim = SimplifyPipeline(tpd, all = false)
+    typer.expandType(sim)
+  }
 
   private def compile(
     filename: String,
@@ -121,108 +135,89 @@ class Driver(options: DriverOptions) {
     val moduleName = moduleResolver.getModuleName(filename)
     val path = TSModuleResolver.dirname(filename)
     val relatedPath = moduleResolver.getRelatedPath(path)
+    val mlsiFile = s"${options.outputDir}/.temp/$relatedPath/$moduleName.mlsi"
 
-    readFile(filename) match {
-      case Some(content) => {
-        parse(filename, content) match {
-          case (definitions, _, imports, _) => {
-            val depList = imports.map {
-              case Import(path) => path
-            }
-
-            val (cycleList, otherList) = depList.partitionMap { dep => {
-              val depFile = s"$path/$dep"
-              if (depFile === filename)
-                throw ErrorReport(Ls((s"can not import $filename itself", None)), Diagnostic.Compilation)
-              else if (stack.contains(depFile)) L(dep)
-              else R(dep)
-            } }
-
-            val (cycleSigs, cycleRecomp) = cycleList.foldLeft((Ls[TypingUnit](), false))((r, dep) => r match {
-              case (sigs, recomp) => {
-                val filename = s"$path/$dep"
-                importedModule += filename
-                val moduleName = moduleResolver.getModuleName(dep)
-                (sigs :+ extractSig(filename, moduleName),
-                  isInterfaceOutdate(filename, s"${options.outputDir}/.temp/$relatedPath/$moduleName.mlsi"))
-              }
-            })
-            val needRecomp = otherList.foldLeft(cycleRecomp)((nr, dp) => nr || {
-              // We need to create another new context when compiling other files
-              // e.g. A -> B, A -> C, B -> D, C -> D, -> means "depends on"
-              // If we forget to add `import "D.mls"` in C, we need to raise an error
-              // Keeping using the same environment would not.
-              var newCtx: Ctx = Ctx.init
-              val newExtrCtx: Opt[typer.ExtrCtx] = N
-              val newVars: Map[Str, typer.SimpleType] = Map.empty
-              val newFilename = s"$path/$dp"
-              importedModule += newFilename
-              compile(newFilename, true)(newCtx, raise, newExtrCtx, newVars, stack :+ filename)
-            })
-
-            if (options.force || needRecomp || isInterfaceOutdate(filename, s"${options.outputDir}/.temp/$relatedPath/$moduleName.mlsi")) {
-              System.out.println(s"compiling $filename...")
-              def importModule(mlsiPath: String): Unit = {
-                val filename = s"${options.outputDir}/.temp/$mlsiPath"
-                val moduleName = moduleResolver.getModuleName(mlsiPath)
-                readFile(filename) match {
-                  case Some(content) => {
-                    parse(filename, content) match {
-                      case (_, declarations, imports, _) => {
-                        val depList = imports.map {
-                          case Import(path) => path
-                        }
-                        depList.foreach(d => importModule(moduleResolver.getMLSI(d)))
-                        val tpd = typer.typeTypingUnit(TypingUnit(declarations, Nil), topLevel = true)
-                        val sim = SimplifyPipeline(tpd, all = false)
-                        val exp = typer.expandType(sim)
-                      }
-                    }
-                  }
-                  case _ =>
-                    throw
-                      ErrorReport(Ls((s"can not open file $filename", None)), Diagnostic.Compilation)
-                }
-              }
-
-              otherList.foreach(d => importModule(moduleResolver.getMLSI(d)))
-              def generateInterface(moduleName: Option[String], tu: TypingUnit) = {
-                val tpd = typer.typeTypingUnit(tu, topLevel = true)
-                val sim = SimplifyPipeline(tpd, all = false)(ctx)
-                val exp = typer.expandType(sim)(ctx)
-                packTopModule(moduleName, exp.showIn(ShowCtx.mk(exp :: Nil), 0))
-              }
-
-              val expStr = cycleSigs.foldLeft("")((s, tu) => s"$s${generateInterface(None, tu)}") +
-                generateInterface(Some(moduleName), TypingUnit(definitions, Nil))
-              val interfaces = otherList.map(s => Import(s"${s}i")).foldRight(expStr)((imp, itf) => s"$imp\n$itf")
-
-              writeFile(s"${options.outputDir}/.temp/$relatedPath", s"$moduleName.mlsi", interfaces)
-              generate(Pgrm(definitions), moduleName, imports, moduleName, s"${options.outputDir}/$relatedPath", exported || importedModule(filename))
-              true
-            }
-            else false
-          }
+    parseAndRun(filename, {
+      case (definitions, _, imports, _) => {
+        val depList = imports.map {
+          case Import(path) => path
         }
+
+        val (cycleList, otherList) = depList.partitionMap { dep => {
+          val depFile = s"$path/$dep"
+          if (depFile === filename)
+            throw ErrorReport(Ls((s"can not import $filename itself", None)), Diagnostic.Compilation)
+          else if (stack.contains(depFile)) L(depFile)
+          else R(dep)
+        } }
+
+        val (cycleSigs, cycleRecomp) = cycleList.foldLeft((Ls[TypingUnit](), false))((r, filename) => r match {
+          case (sigs, recomp) => {
+            importedModule += filename
+            val moduleName = moduleResolver.getModuleName(filename)
+            (sigs :+ extractSig(filename, moduleName),
+              isInterfaceOutdate(filename, mlsiFile))
+          }
+        })
+        val needRecomp = otherList.foldLeft(cycleRecomp)((nr, dp) => nr || {
+          // We need to create another new context when compiling other files
+          // e.g. A -> B, A -> C, B -> D, C -> D, -> means "depends on"
+          // If we forget to add `import "D.mls"` in C, we need to raise an error
+          // Keeping using the same environment would not.
+          var newCtx: Ctx = Ctx.init
+          val newExtrCtx: Opt[typer.ExtrCtx] = N
+          val newVars: Map[Str, typer.SimpleType] = Map.empty
+          val newFilename = s"$path/$dp"
+          importedModule += newFilename
+          compile(newFilename, true)(newCtx, raise, newExtrCtx, newVars, stack :+ filename)
+        })
+
+        if (options.force || needRecomp || isInterfaceOutdate(filename, mlsiFile)) {
+          System.out.println(s"compiling $filename...")
+          def importModule(mlsiPath: String): Unit = {
+            val filename = s"${options.outputDir}/.temp/$mlsiPath"
+            val moduleName = moduleResolver.getModuleName(mlsiPath)
+            parseAndRun(filename, {
+              case (_, declarations, imports, _) => {
+                val depList = imports.map {
+                  case Import(path) => path
+                }
+                depList.foreach(d => importModule(moduleResolver.getMLSI(d)))
+                `type`(TypingUnit(declarations, Nil))
+              }
+            })
+          }
+
+          otherList.foreach(d => importModule(moduleResolver.getMLSI(d)))
+          def generateInterface(moduleName: Option[String], tu: TypingUnit) = {
+            val exp = `type`(tu)
+            packTopModule(moduleName, exp.showIn(ShowCtx.mk(exp :: Nil), 0))
+          }
+
+          val expStr = cycleSigs.foldLeft("")((s, tu) => s"$s${generateInterface(None, tu)}") +
+            generateInterface(Some(moduleName), TypingUnit(definitions, Nil))
+          val interfaces = otherList.map(s => Import(moduleResolver.getMLSI(s))).foldRight(expStr)((imp, itf) => s"$imp\n$itf")
+
+          writeFile(mlsiFile, interfaces)
+          generate(Pgrm(definitions), s"${options.outputDir}/$relatedPath/$moduleName.js", imports, exported || importedModule(filename))
+          true
+        }
+        else false
       }
-      case _ =>
-        throw
-          ErrorReport(Ls((s"can not open file $filename", None)), Diagnostic.Compilation)
-    }
+    })
   }
 
   private def generate(
     program: Pgrm,
-    moduleName: String,
-    imports: Ls[Import],
     filename: String,
-    outputDir: String,
+    imports: Ls[Import],
     exported: Boolean
   ): Unit = try {
     val backend = new JSCompilerBackend()
+    val moduleName = moduleResolver.getModuleName(filename)
     val lines = backend(program, moduleName, imports, exported)
     val code = lines.mkString("", "\n", "\n")
-    writeFile(outputDir, s"$filename.js", code)
+    writeFile(filename, code)
   } catch {
       case CodeGenError(err) => report(ErrorReport(err, Nil, Diagnostic.Compilation))
     }
@@ -237,9 +232,10 @@ object Driver {
     if (!fs.existsSync(filename)) None
     else Some(fs.readFileSync(filename).toString)
 
-  private def writeFile(dir: String, filename: String, content: String) = {
+  private def writeFile(filename: String, content: String) = {
+    val dir = TSModuleResolver.dirname(filename)
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, js.Dictionary("recursive" -> true))
-    fs.writeFileSync(s"$dir/$filename", content)
+    fs.writeFileSync(filename, content)
   }
 
   private def getModificationTime(filename: String): String =
