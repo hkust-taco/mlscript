@@ -100,7 +100,8 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     }
 
   def record[p: P]: P[Rcd] = locate(P(
-      "{" ~/ (kw("mut").!.? ~ variable ~ "=" ~ term map L.apply).|(kw("mut").!.? ~ variable map R.apply).rep(sep = ";") ~ "}"
+      "{" ~/ (kw("mut").!.? ~ variable ~ "=" ~ term map L.apply).|(kw("mut").!.? ~
+        variable map R.apply).rep(sep = ";" | ",") ~ "}"
     ).map { fs => Rcd(fs.map{ 
         case L((mut, v, t)) => v -> Fld(mut.isDefined, false, t)
         case R(mut -> id) => id -> Fld(mut.isDefined, false, id) }.toList)})
