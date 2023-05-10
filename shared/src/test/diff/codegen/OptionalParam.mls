@@ -20,7 +20,7 @@ class A(x: int) {}
 //│           this.#x = x;
 //│         }
 //│       };
-//│       this.#A = ((x) => new A(x));
+//│       this.#A = ((x) => Object.freeze(new A(x)));
 //│       this.#A.class = A;
 //│     }
 //│     return this.#A;
@@ -42,7 +42,7 @@ class B {}
 //│     const outer = this;
 //│     if (this.#B === undefined) {
 //│       class B {};
-//│       this.#B = (() => new B());
+//│       this.#B = (() => Object.freeze(new B()));
 //│       this.#B.class = B;
 //│     }
 //│     return this.#B;

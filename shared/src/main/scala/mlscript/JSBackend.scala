@@ -651,19 +651,18 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     val outerStmt = JSConstDecl(outerSymbol.runtimeName, JSIdent("this"))
     val initList =
       if (classSymbol.needNew)
-        Ls(
-          JSExprStmt(JSClassExpr(classBody)),
-          JSExprStmt(JSAssignExpr(privateIdent, JSIdent(classSymbol.lexicalName)))
-        )
+        Ls(JSExprStmt(JSAssignExpr(privateIdent, JSIdent(classSymbol.lexicalName))))
       else
         Ls(
-          JSExprStmt(JSClassExpr(classBody)),
           JSExprStmt(JSAssignExpr(privateIdent,
-            JSArrowFn(constructor, L(JSInvoke(JSNew(JSIdent(classSymbol.lexicalName)), params))))),
+            JSArrowFn(constructor, L(
+              JSInvoke(JSIdent("Object").member("freeze"), Ls(JSInvoke(JSNew(JSIdent(classSymbol.lexicalName)), params)))
+            )))),
           JSExprStmt(JSAssignExpr(privateIdent.member("class"), JSIdent(classSymbol.lexicalName)))
         )
     JSClassGetter(classSymbol.lexicalName, R(outerStmt :: Ls(
-      JSIfStmt(JSBinary("===", privateIdent, JSIdent("undefined")), initList),
+      JSIfStmt(JSBinary("===", privateIdent, JSIdent("undefined")),
+        JSExprStmt(JSClassExpr(classBody)) :: initList),
       JSReturnStmt(S(privateIdent))
     )))
   }

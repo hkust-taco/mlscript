@@ -27,7 +27,7 @@ class Test(n: int) {
 //│           return outer.Test(n + 1);
 //│         }
 //│       };
-//│       this.#Test = ((n) => new Test(n));
+//│       this.#Test = ((n) => Object.freeze(new Test(n)));
 //│       this.#Test.class = Test;
 //│     }
 //│     return this.#Test;

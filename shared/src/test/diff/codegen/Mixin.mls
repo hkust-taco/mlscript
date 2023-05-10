@@ -27,7 +27,7 @@ class Lit(n: int)
 //│           this.#rhs = rhs;
 //│         }
 //│       };
-//│       this.#Add = ((lhs, rhs) => new Add(lhs, rhs));
+//│       this.#Add = ((lhs, rhs) => Object.freeze(new Add(lhs, rhs)));
 //│       this.#Add.class = Add;
 //│     }
 //│     return this.#Add;
@@ -42,7 +42,7 @@ class Lit(n: int)
 //│           this.#n = n;
 //│         }
 //│       };
-//│       this.#Lit = ((n) => new Lit(n));
+//│       this.#Lit = ((n) => Object.freeze(new Lit(n)));
 //│       this.#Lit.class = Lit;
 //│     }
 //│     return this.#Lit;
@@ -74,7 +74,7 @@ class Lit(n: int)
 //│ │ │             this.#rhs = rhs;
 //│ │ │           }
 //│ │ │         };
-//│ │ │         this.#Add = ((lhs, rhs) => new Add(lhs, rhs));
+//│ │ │         this.#Add = ((lhs, rhs) => Object.freeze(new Add(lhs, rhs)));
 //│ │ │         this.#Add.class = Add;
 //│ │ │       }
 //│ │ │       return this.#Add;
@@ -89,7 +89,7 @@ class Lit(n: int)
 //│ │ │             this.#n = n;
 //│ │ │           }
 //│ │ │         };
-//│ │ │         this.#Lit = ((n) => new Lit(n));
+//│ │ │         this.#Lit = ((n) => Object.freeze(new Lit(n)));
 //│ │ │         this.#Lit.class = Lit;
 //│ │ │       }
 //│ │ │       return this.#Lit;
@@ -188,7 +188,7 @@ class Neg<A>(expr: A)
 //│           this.#expr = expr;
 //│         }
 //│       };
-//│       this.#Neg = ((expr) => new Neg(expr));
+//│       this.#Neg = ((expr) => Object.freeze(new Neg(expr)));
 //│       this.#Neg.class = Neg;
 //│     }
 //│     return this.#Neg;
@@ -214,7 +214,7 @@ class Neg<A>(expr: A)
 //│ │ │             this.#expr = expr;
 //│ │ │           }
 //│ │ │         };
-//│ │ │         this.#Neg = ((expr) => new Neg(expr));
+//│ │ │         this.#Neg = ((expr) => Object.freeze(new Neg(expr)));
 //│ │ │         this.#Neg.class = Neg;
 //│ │ │       }
 //│ │ │       return this.#Neg;
