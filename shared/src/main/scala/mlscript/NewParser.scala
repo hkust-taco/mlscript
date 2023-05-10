@@ -223,6 +223,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
         errExpr
       case R(d: NuDecl) => d
       case R(e: Term) => e
+      case R(c: Constructor) => c
       case _ => ???
     }
     TypingUnit(es)
@@ -276,7 +277,13 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
         consume
         yeetSpaces
         go(acc.copy(acc.mods + ("declare" -> l0)))
+      case (KEYWORD("abstract"), l0) :: c =>
+        consume
+        yeetSpaces
+        go(acc.copy(acc.mods + ("abstract" -> l0)))
       case _ if acc.mods.isEmpty => acc
+      case (KEYWORD("constructor"), l0) :: _ =>
+        acc
       case (KEYWORD("class" | "infce" | "trait" | "mixin" | "type" | "namespace" | "module" | "fun" | "val"), l0) :: _ =>
         acc
       case (tok, loc) :: _ =>
@@ -297,10 +304,23 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
       case (SPACE, _) :: _ => consume; block
       case c =>
         val t = c match {
+          case ModifierSet(mods, (KEYWORD("constructor"), l0) :: c) =>
+            consume
+            val res = yeetSpaces match {
+              case (br @ BRACKETS(Round, toks), loc) :: _ =>
+                consume
+                val as = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented()) // TODO
+                Constructor(Tup(as).withLoc(S(loc)))
+              case _ =>
+                err(msg"Expect parameter list for the constructor" -> S(l0) :: Nil)
+                Constructor(Tup(Nil))
+            }
+            R(res.withLoc(S(l0 ++ res.getLoc)))
           case ModifierSet(mods, (KEYWORD(k @ ("class" | "infce" | "trait" | "mixin" | "type" | "namespace" | "module")), l0) :: c) =>
             consume
             val (isDecl, mods2) = mods.handle("declare")
-            mods2.done
+            val (isAbs, mods3) = mods2.handle("abstract")
+            mods3.done
             val kind = k match {
               case "class" => Cls
               case "trait" => Trt
@@ -338,12 +358,12 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
                 rec(toks, S(br.innerLoc), br.describe).concludeWith(_.maybeIndented((p, _) => p.typeParams))
               case _ => Nil
             }
-            val params = yeetSpaces match {
+            val (params, has_params) = yeetSpaces match {
               case (br @ BRACKETS(Round, toks), loc) :: _ =>
                 consume
                 val as = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented()) // TODO
-                Tup(as).withLoc(S(loc))
-              case _ => Tup(Nil)
+                (Tup(as).withLoc(S(loc)), true)
+              case _ => (Tup(Nil), false)
             }
             def otherParents: Ls[Term] = yeetSpaces match {
               case (COMMA, _) :: _ =>
@@ -369,8 +389,25 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
                 expr(0) :: otherParents
               case _ => Nil
             }
-            val body = curlyTypingUnit
-            val res = NuTypeDef(kind, tn, tparams, params, sig, ps, N, N, body)(isDecl)
+            val tu = curlyTypingUnit
+            val (ctor, body) = tu.entities.partition {
+              case _: Constructor => true
+              case _ => false
+            }
+
+            val (real_params, ctorLoc) =
+              if (ctor.length > 1) {
+                err(msg"more than one constructor" -> S(l0) :: Nil)
+                (Tup(Nil), N)
+              }
+              else ctor.headOption match {
+                case Some(ctor @ Constructor(tup)) =>
+                  if (has_params) err(msg"more than one constructor" -> S(l0) :: Nil)
+                  (tup, ctor.toLoc)
+                case _ => (params, N)
+              }
+
+            val res = NuTypeDef(kind, tn, tparams, real_params, sig, ps, N, N, TypingUnit(body))(isDecl, isAbs, ctorLoc)
             R(res.withLoc(S(l0 ++ res.getLoc)))
           
           case ModifierSet(mods, (KEYWORD(kwStr @ ("fun" | "val" | "let")), l0) :: c) => // TODO support rec?

@@ -52,37 +52,79 @@ class B {}
 //│ globalThis.B = typing_unit1.B;
 //│ // End of generated code
 
-// TODO
 :js
 class C {
   constructor(x: int)
+  fun f = x + 1
 }
-//│ ╔══[ERROR] identifier not found: constructor
-//│ ║  l.58: 	  constructor(x: int)
-//│ ╙──      	  ^^^^^^^^^^^
-//│ class C()
-//│ Code generation encountered an error:
-//│   unresolved symbol constructor
+//│ class C(x: int) {
+//│   fun f: int
+//│ }
+//│ // Prelude
+//│ class TypingUnit2 {
+//│   #C;
+//│   constructor() {
+//│   }
+//│   get C() {
+//│     const outer = this;
+//│     if (this.#C === undefined) {
+//│       class C {
+//│         #x;
+//│         get x() { return this.#x; }
+//│         constructor(x) {
+//│           this.#x = x;
+//│         }
+//│         get f() {
+//│           const x = this.#x;
+//│           return x + 1;
+//│         }
+//│       };
+//│       this.#C = C;
+//│     }
+//│     return this.#C;
+//│   }
+//│ }
+//│ const typing_unit2 = new TypingUnit2;
+//│ globalThis.C = typing_unit2.C;
+//│ // End of generated code
 
-// TODO
-:e
+let c = new C(1)
+c.x
+c.f
+//│ let c: C
+//│ int
+//│ c
+//│   = C {}
+//│ res
+//│     = 1
+//│ res
+//│     = 2
+
+:pe
 class D(x: int) {
   constructor(y: int)
 }
-//│ ╔══[ERROR] identifier not found: constructor
-//│ ║  l.70: 	  constructor(y: int)
-//│ ╙──      	  ^^^^^^^^^^^
-//│ class D(x: int)
-//│ Code generation encountered an error:
-//│   unresolved symbol constructor
+//│ ╔══[PARSE ERROR] more than one constructor
+//│ ║  l.104: 	class D(x: int) {
+//│ ╙──       	^^^^^
+//│ class D(y: int)
 
-// TODO
+:pe
+class E {
+  constructor(x: int)
+  constructor(y: int)
+}
+//│ ╔══[PARSE ERROR] more than one constructor
+//│ ║  l.113: 	class E {
+//│ ╙──       	^^^^^
+//│ class E()
+
+// TODO: better check?
 :e
 constructor(x: int)
-//│ ╔══[ERROR] identifier not found: constructor
-//│ ║  l.81: 	constructor(x: int)
-//│ ╙──      	^^^^^^^^^^^
-//│ error
+//│ ╔══[ERROR] constructor must be in a class.
+//│ ║  l.124: 	constructor(x: int)
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^
+//│ ()
 //│ Code generation encountered an error:
-//│   unresolved symbol constructor
-
+//│   unexpected constructor.

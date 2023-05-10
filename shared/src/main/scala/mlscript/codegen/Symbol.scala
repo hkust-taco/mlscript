@@ -33,6 +33,7 @@ sealed trait NuTypeSymbol {
   val ctor: Ls[Statement] // statements in the constructor
   val nested: Ls[NuTypeDef] // nested class/mixin/module
   val superParameters: Ls[Term] // parameters that need to be passed to the `super()`
+  val needNew: Bool
 }
 
 sealed class ValueSymbol(val lexicalName: Str, val runtimeName: Str, val isByvalueRec: Option[Boolean], val isLam: Boolean) extends RuntimeSymbol {
@@ -118,7 +119,8 @@ final case class NewClassSymbol(
     ctor: Ls[Statement],
     superParameters: Ls[Term],
     nested: Ls[NuTypeDef],
-    isNested: Bool
+    isNested: Bool,
+    needNew: Bool
 ) extends TypeSymbol
     with RuntimeSymbol with NuTypeSymbol {
   override def toString: Str = s"new class $lexicalName"
@@ -145,6 +147,7 @@ final case class MixinSymbol(
   // Mixins should pass `...rest` to the `super()`
   // But the variable name is not sure when we create the symbol object
   override val superParameters: Ls[Term] = Nil
+  val needNew: Bool = false
 }
 
 final case class ModuleSymbol(
@@ -162,6 +165,7 @@ final case class ModuleSymbol(
 
   // Modules should have fixed names determined by users
   override def runtimeName: Str = lexicalName
+  val needNew: Bool = false
 }
 
 // capture runtime symbols in the outside module/class/mixin

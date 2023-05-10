@@ -111,7 +111,8 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         val ident = JSIdent(sym.runtimeName)
         if (sym.isByvalueRec.isEmpty && !sym.isLam) ident() else ident
       case S(sym: NuTypeSymbol with RuntimeSymbol) =>
-        translateNuTypeSymbol(sym)
+        if (sym.needNew) JSNew(translateNuTypeSymbol(sym))
+        else translateNuTypeSymbol(sym)
       case S(sym: NewClassMemberSymbol) =>
         if (sym.isByvalueRec.getOrElse(false) && !sym.isLam) throw CodeGenError(s"unguarded recursive use of by-value binding $name")
         scope.resolveValue("this") match {
@@ -648,13 +649,21 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
 
     val privateIdent = JSIdent(s"this.#${classSymbol.lexicalName}")
     val outerStmt = JSConstDecl(outerSymbol.runtimeName, JSIdent("this"))
+    val initList =
+      if (classSymbol.needNew)
+        Ls(
+          JSExprStmt(JSClassExpr(classBody)),
+          JSExprStmt(JSAssignExpr(privateIdent, JSIdent(classSymbol.lexicalName)))
+        )
+      else
+        Ls(
+          JSExprStmt(JSClassExpr(classBody)),
+          JSExprStmt(JSAssignExpr(privateIdent,
+            JSArrowFn(constructor, L(JSInvoke(JSNew(JSIdent(classSymbol.lexicalName)), params))))),
+          JSExprStmt(JSAssignExpr(privateIdent.member("class"), JSIdent(classSymbol.lexicalName)))
+        )
     JSClassGetter(classSymbol.lexicalName, R(outerStmt :: Ls(
-      JSIfStmt(JSBinary("===", privateIdent, JSIdent("undefined")), Ls(
-        JSExprStmt(JSClassExpr(classBody)),
-        JSExprStmt(JSAssignExpr(privateIdent,
-          JSArrowFn(constructor, L(JSInvoke(JSNew(JSIdent(classSymbol.lexicalName)), params))))),
-        JSExprStmt(JSAssignExpr(privateIdent.member("class"), JSIdent(classSymbol.lexicalName)))
-      )),
+      JSIfStmt(JSBinary("===", privateIdent, JSIdent("undefined")), initList),
       JSReturnStmt(S(privateIdent))
     )))
   }
@@ -924,7 +933,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       case td @ NuTypeDef(Cls, TypeName(nme), tps, tup @ Tup(fs), sig, pars, sup, ths, unit) => {
         val (body, members, stmts, nested) = prepare(nme, fs, pars, unit)
         val sym =
-          NewClassSymbol(nme, tps map { _._2.name }, body, members, stmts, pars, nested, isNested).tap(scope.register)
+          NewClassSymbol(nme, tps map { _._2.name }, body, members, stmts, pars, nested, isNested, td.hasExtraCtor).tap(scope.register)
         if (!td.isDecl) classes += sym
       }
       case td @ NuTypeDef(Trt, TypeName(nme), tps, tup @ Tup(fs), sig, pars, sup, ths, unit) => {
@@ -1254,6 +1263,7 @@ class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
 
   private def generateNewDef(pgrm: Pgrm)(implicit scope: Scope, allowEscape: Bool): JSTestBackend.TestCode = {
     val (typeDefs, otherStmts) = pgrm.tops.partitionMap {
+      case _: Constructor => throw CodeGenError("unexpected constructor.")
       case ot: Terms => R(ot)
       case fd: NuFunDef => R(fd)
       case nd: NuTypeDef => L(nd)

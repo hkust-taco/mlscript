@@ -388,7 +388,11 @@ trait NuDeclImpl extends Located { self: NuDecl =>
   val body: Located
   def kind: DeclKind
   val declareLoc: Opt[Loc]
+  val abstractLoc: Opt[Loc]
+  val ctorLoc: Opt[Loc]
   def isDecl: Bool = declareLoc.nonEmpty
+  def isAbstract: Bool = abstractLoc.nonEmpty
+  def hasExtraCtor: Bool = ctorLoc.nonEmpty
   def declStr: Str = if (isDecl) "declare " else ""
   val nameVar: Var = self match {
     case td: NuTypeDef => td.nme.toVar
@@ -710,6 +714,9 @@ trait StatementImpl extends Located { self: Statement =>
   
   lazy val desugared = doDesugar
   private def doDesugar: Ls[Diagnostic] -> Ls[DesugaredStatement] = this match {
+    case ctor: Constructor =>
+      import Message._
+      (ErrorReport(msg"constructor must be in a class." -> ctor.toLoc :: Nil) :: Nil) -> Nil
     case l @ LetS(isrec, pat, rhs) =>
       val (diags, v, args) = desugDefnPattern(pat, Nil)
       diags -> (Def(isrec, v, L(args.foldRight(rhs)(Lam(_, _))), false).withLocOf(l) :: Nil) // TODO use v, not v.name
@@ -871,6 +878,7 @@ trait StatementImpl extends Located { self: Statement =>
     case Forall(ps, bod) => ps ::: bod :: Nil
     case Inst(bod) => bod :: Nil
     case Super() => Nil
+    case Constructor(lst) => lst :: Nil
     case NuTypeDef(k, nme, tps, ps, sig, pars, sup, ths, bod) =>
       nme :: tps.map(_._2) ::: ps :: pars ::: ths.toList ::: bod :: Nil
   }
@@ -880,6 +888,7 @@ trait StatementImpl extends Located { self: Statement =>
     case LetS(isRec, name, rhs) => s"let${if (isRec) " rec" else ""} $name = $rhs"
     case DatatypeDefn(head, body) => s"data type $head of $body"
     case DataDefn(head) => s"data $head"
+    case Constructor(lst) => s"constructor($lst)"
     case _: Term => super.toString
     case d: Decl => d.showDbg
     case d: NuDecl => d.showDbg

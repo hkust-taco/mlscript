@@ -1,0 +1,8 @@
+:NewDefs
+
+abstract class Foo(x: int) {
+  fun f(y: int) = x + y
+}
+//│ class Foo(x: int) {
+//│   fun f: (y: int,) -> int
+//│ }
