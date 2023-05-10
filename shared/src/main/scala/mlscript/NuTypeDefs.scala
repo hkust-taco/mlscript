@@ -27,11 +27,13 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     def kind: DeclKind
     def level: Level
     
+    protected def withLevel[R](k: Ctx => R)(implicit ctx: Ctx): R = k(ctx.copy(lvl = level + 1))
+    
     /** Used in inheritance processing, for parent types. */
     def freshen(implicit ctx: Ctx): NuMember = {
       implicit val freshened: MutMap[TV, ST] = MutMap.empty
       implicit val shadows: Shadows = Shadows.empty
-      ctx.copy(lvl = level + 1) |> { implicit ctx =>
+      withLevel { implicit ctx =>
         freshenAbove(level, rigidify = false)
       }
     }
@@ -118,7 +120,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     def decl: NuTypeDef
     def tparams: TyParams
     
-    override def freshenAbove(lim: Int, rigidify: Bool)(implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV,ST]): TypedNuTypeDef = 
+    override def freshenAbove(lim: Int, rigidify: Bool)(implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV,ST]): TypedNuTypeDef =  withLevel { implicit ctx =>
       this match {
         case m @ TypedNuMxn(td, thisTV, superTV, tparams, params, members, ttu) =>
           TypedNuMxn(td,
@@ -151,6 +153,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
             inheritedTags
             )
       }
+    }
     val td: NuTypeDef
     val prov: TP = TypeProvenance(td.toLoc, td.describe, isType = true)
     val level: Level
@@ -358,10 +361,10 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     
     def freshenAbove(lim: Int, rigidify: Bool)
           (implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV, ST])
-          : TypedNuFun = this match {
+          : TypedNuFun = withLevel { implicit ctx => this match {
       case TypedNuFun(level, fd, ty) =>
         TypedNuFun(level min ctx.lvl, fd, ty.freshenAbove(lim, rigidify))
-    }
+    }}
     
     def mapPol(pol: Opt[Bool], smart: Bool)(f: (Opt[Bool], SimpleType) => SimpleType)
           (implicit ctx: Ctx): TypedNuTermDef =
@@ -434,12 +437,31 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
       case decl: NuDecl => L(decl)
       case s => R(s)
     }
+    val funSigs = MutMap.empty[Str, NuFunDef]
     val implems = if (topLevel) decls else decls.filter {
-      case NuFunDef(N, nme, tparams, R(rhs)) => false // There will already be typed in DelayedTypeInfo
+      case fd @ NuFunDef(N, nme, tparams, R(rhs)) =>
+        funSigs.updateWith(nme.name) {
+          case S(s) =>
+            err(s"A type signature for '$nme' has already been given", fd.toLoc)
+            S(s)
+          case N => S(fd)
+        }
+        false // There will already be typed in DelayedTypeInfo
       case _ => true
     }
     val infos = implems.map {
-      case decl: NuDecl =>
+      case _decl: NuDecl =>
+        val decl = _decl match {
+          case fd: NuFunDef =>
+            assert(fd.signature.isEmpty)
+            funSigs.get(fd.nme.name) match {
+              case S(sig) =>
+                fd.copy()(fd.declareLoc, S(sig))
+              case _ =>
+                fd
+            }
+          case _ => _decl
+        }
         val lti = new DelayedTypeInfo(decl, implicitly)
         decl match {
           case td: NuTypeDef =>
@@ -448,7 +470,6 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
         }
         named.updateWith(decl.name) {
           case sv @ S(v) =>
-            // * TODO allow defining a previously given signature
             decl match {
               case NuFunDef(S(_), _, _, _) => ()
               case _ =>
@@ -670,47 +691,47 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     private lazy val thisTV: TV =
       freshVar(provTODO, N, S(decl.name.decapitalize))(lvl + 1)
 
-      def refreshGen[T <: PolyNuDecl](info: NuMember, v: Var, parTargs: Ls[Type]) : T = {
-        implicit val freshened: MutMap[TV, ST] = MutMap.empty
-        implicit val shadows: Shadows = Shadows.empty
+    def refreshGen[T <: PolyNuDecl](info: NuMember, v: Var, parTargs: Ls[Type]) : T = {
+      implicit val freshened: MutMap[TV, ST] = MutMap.empty
+      implicit val shadows: Shadows = Shadows.empty
 
-        val raw = info.asInstanceOf[T]
-        val rawName = v.name
+      val raw = info.asInstanceOf[T]
+      val rawName = v.name
 
-        if (raw.tparams.sizeCompare(parTargs.size) =/= 0)
-          err(msg"${if (raw.isInstanceOf[TypedNuTrt]) "trait" else "class"} $rawName expects ${
-            raw.tparams.size.toString} type parameter(s); got ${parTargs.size.toString}", Loc(v :: parTargs))
+      if (raw.tparams.sizeCompare(parTargs.size) =/= 0)
+        err(msg"${if (raw.isInstanceOf[TypedNuTrt]) "trait" else "class"} $rawName expects ${
+          raw.tparams.size.toString} type parameter(s); got ${parTargs.size.toString}", Loc(v :: parTargs))
 
-        raw.tparams.lazyZip(parTargs).foreach { case ((tn, _tv, vi), targTy) =>
-          val targ = typeType(targTy)
-          freshened += _tv -> (targ match {
-            case tv: TV => 
-              // TODO
-              println(s"Passing ${_tv} <=< ${tv}")
-              tv
-            case _ =>
-              println(s"Assigning ${_tv} := $targ where ${targ.showBounds}")
-              val tv =
-                freshVar(_tv.prov, N, _tv.nameHint)(targ.level) // TODO safe not to set original?!
-                // freshVar(_tv.prov, S(_tv), _tv.nameHint)(targ.level)
-              println(s"Set ${tv} ~> ${_tv}")
-              assert(tv.assignedTo.isEmpty)
-              tv.assignedTo = S(targ)
-              // println(s"Assigned ${tv.assignedTo}")
-              tv
-          })
-        
-        }
+      raw.tparams.lazyZip(parTargs).foreach { case ((tn, _tv, vi), targTy) =>
+        val targ = typeType(targTy)
+        freshened += _tv -> (targ match {
+          case tv: TV => 
+            // TODO
+            println(s"Passing ${_tv} <=< ${tv}")
+            tv
+          case _ =>
+            println(s"Assigning ${_tv} := $targ where ${targ.showBounds}")
+            val tv =
+              freshVar(_tv.prov, N, _tv.nameHint)(targ.level) // TODO safe not to set original?!
+              // freshVar(_tv.prov, S(_tv), _tv.nameHint)(targ.level)
+            println(s"Set ${tv} ~> ${_tv}")
+            assert(tv.assignedTo.isEmpty)
+            tv.assignedTo = S(targ)
+            // println(s"Assigned ${tv.assignedTo}")
+            tv
+        })
       
-        raw.freshenAbove(info.level, rigidify = false).asInstanceOf[T] // FIXME
       }
+    
+      raw.freshenAbove(info.level, rigidify = false).asInstanceOf[T] // FIXME
+    }
     
     
     def complete()(implicit raise: Raise): TypedNuDecl = result.getOrElse {
       if (isComputing) {
         val ty = err(msg"Unhandled cyclic definition", decl.toLoc)
         // * Hacky: return a dummy decl to avoid possible infinite completion recursions
-        TypedNuFun(0, NuFunDef(N, decl.nameVar, Nil, R(Top))(N), ty)
+        TypedNuFun(0, NuFunDef(N, decl.nameVar, Nil, R(Top))(N, N), ty)
       }
       else trace(s"Completing ${decl.showDbg}") {
         println(s"Type params ${tparams.mkString(" ")}")
@@ -722,7 +743,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
             case fd: NuFunDef =>
               def checkNoTyParams() =
                 if (fd.tparams.nonEmpty)
-                  err(msg"Type parameters here are not yet supported in this position",
+                  err(msg"Type parameters are not yet supported in this position",
                     fd.tparams.head.toLoc)
               val res_ty = fd.rhs match {
                 case R(PolyType(tps, ty)) =>
@@ -752,6 +773,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       // * In the future, we should type each mutual-recursion-component independently
                       // * and polymorphically wrt to external uses of them.
                       implicit val gl: GenLambdas = false
+                      val outer_ctx = ctx
                       val body_ty = ctx.nextLevel { implicit ctx: Ctx =>
                         // * Note: can't use `ctx.poly` instead of `ctx.nextLevel` because all the methods
                         // * in the current typing unit are quantified together.
@@ -760,7 +782,16 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                             originName = S(tn.name),
                             isType = true), N, S(tn.name))
                         } |> { implicit vars =>
-                          typeTerm(body)
+                          // * Only type methods polymorphically if they're at the top level or if
+                          // * they're annotated with a type signature.
+                          // * Otherwise, we get too much extrusion and cycle check failures
+                          // * especially in the context of open recursion and mixins.
+                          if (ctx.lvl === 1 || fd.signature.nonEmpty)
+                            typeTerm(body)
+                          else outer_ctx |> {
+                            println(s"Not typing polymorphicall (cf. not top level or not annotated)")
+                            println(typedSignatureMembers)
+                            implicit ctx: Ctx => typeTerm(body) }
                         }
                       }.withProv(TypeProvenance(fd.toLoc, s"definition of method ${fd.nme.name}"))
                       TypedNuFun(ctx.lvl, fd, body_ty)
@@ -890,7 +921,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                                 case mxn: TypedNuMxn =>
                                   if (mxnTargs.nonEmpty) err(msg"mixin type arguments not yet supported", p.toLoc)
                                   
-                                  println(s"Fresh $mxn")
+                                  // println(s"Fresh $mxn")
                                   
                                   assert(finalType.level === lvl)
                                   assert(mxn.superTV.level === lvl)
@@ -995,8 +1026,10 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                                   if (pack.bsCls.isDefined)
                                     err(msg"cannot inherit from more than one base class: ${
                                       pack.bsCls.get} and ${parNme}", v.toLoc)
-
+                                  
+                                  // println(s"Raw $rawCls")
                                   val cls = refreshGen[TypedNuCls](info, v, parTargs)
+                                  // println(s"Fresh $cls")
                                   
                                   if (parArgs.sizeCompare(cls.params) =/= 0)
                                     err(msg"class $parNme expects ${
@@ -1023,8 +1056,9 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
 
                                 case rawTrt: TypedNuTrt =>
                                   if (parArgs.nonEmpty) err(msg"trait parameters not yet supported", p.toLoc)
+                                  // println(s"Raw $rawTrt")
                                   val trt = refreshGen[TypedNuTrt](info, v, parTargs) // FIXME
-                                
+                                  // println(s"Fresh $trt")
                                   computeBaseClassTrait(ps, pack.copy(
                                     trtMem = memberUn(pack.trtMem, trt.members.values.toList)
                                     ))

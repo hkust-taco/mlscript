@@ -25,7 +25,7 @@ module Test<A> {
 //│   fun foo: A -> A
 //│   fun poly0: forall 'a. 'a -> 'a
 //│   fun poly1: forall 'a0. 'a0 -> 'a0
-//│   fun poly2: forall 'a1. 'a1 -> 'a1
+//│   fun poly2: 'a1 -> 'a1
 //│ }
 
 Test.foo
@@ -54,7 +54,7 @@ Test.poly1
 //│     = undefined
 
 Test.poly2
-//│ forall 'a. 'a -> 'a
+//│ 'a -> 'a
 //│ res
 //│     = [Function: id]
 
@@ -129,7 +129,7 @@ Test:  Test<'a>
 
 
 fun test(x) = if x is Test then x.foo
-//│ fun test: forall 'A. Test['A] -> 'A -> 'A
+//│ fun test: forall 'A 'A0. Test[in 'A | 'A0 out 'A] -> 'A0 -> ('A | 'A0)
 
 :e
 test(Test)

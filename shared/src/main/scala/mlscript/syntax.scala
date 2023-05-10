@@ -193,7 +193,7 @@ final case class NuFunDef(
   nme: Var,
   tparams: Ls[TypeName],
   rhs: Term \/ Type,
-)(val declareLoc: Opt[Loc]) extends NuDecl with DesugaredStatement {
+)(val declareLoc: Opt[Loc], val signature: Opt[NuFunDef]) extends NuDecl with DesugaredStatement {
   val body: Located = rhs.fold(identity, identity)
   def kind: DeclKind = Val
 }

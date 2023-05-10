@@ -1616,7 +1616,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         case Some(tv) => tv
         case None if rigidify && tv.level <= below =>
           // * Rigid type variables (ie, skolems) are encoded as SkolemTag-s
-          val rv = SkolemTag(lvl, freshVar(noProv, S(tv), tv.nameHint.orElse(S("_"))))(tv.prov)
+          val rv = SkolemTag(lvl, freshVar(noProv, S(tv), tv.nameHint/* .orElse(S("_"))*/))(tv.prov)
           println(s"New skolem: $tv ~> $rv")
           if (tv.lowerBounds.nonEmpty || tv.upperBounds.nonEmpty) { // TODO just add bounds to skolems! should lead to simpler constraints
             // The bounds of `tv` may be recursive (refer to `tv` itself),

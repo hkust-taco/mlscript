@@ -1,0 +1,66 @@
+:NewDefs
+
+
+class A {
+  
+  fun f = f(f)
+  
+  fun g : A
+  fun g = g(g) // * FIXME not using the signature
+  
+}
+//│ class A() {
+//│   fun f: nothing
+//│   fun g: A
+//│ }
+
+module A {
+  fun i(x) = x
+  fun f = f(f)
+  fun g(x) = x(x)
+  fun h = g(g)
+}
+//│ module A() {
+//│   fun f: nothing
+//│   fun g: 'a -> 'b
+//│   fun h: 'b
+//│   fun i: 'c -> 'c
+//│ }
+//│ where
+//│   'a := 'a -> 'b
+
+:ns
+A.i
+//│ 'i
+//│   where
+//│     'i :> 'a -> 'a
+//│ res
+//│     = [Function: i]
+
+:re
+:ns
+A.f
+//│ 'f
+//│ res
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded
+
+:ns
+A.g
+//│ 'g
+//│   where
+//│     'g :> 'a -> 'b
+//│     'a := 'a -> 'b
+//│     'b <: 'c
+//│ res
+//│     = [Function: g]
+
+:ns
+:re
+A.h
+//│ 'h
+//│ res
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded
+
+

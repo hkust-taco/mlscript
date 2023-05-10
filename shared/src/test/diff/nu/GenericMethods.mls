@@ -60,7 +60,7 @@ fun bar: forall 'A; 'A => 'A
 
 :e
 fun bar<A> : A => A
-//│ ╔══[ERROR] Type parameters here are not yet supported in this position
+//│ ╔══[ERROR] Type parameters are not yet supported in this position
 //│ ║  l.62: 	fun bar<A> : A => A
 //│ ╙──      	        ^
 //│ ╔══[ERROR] type identifier not found: A

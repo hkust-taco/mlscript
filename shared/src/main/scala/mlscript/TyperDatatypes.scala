@@ -551,7 +551,7 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
     override def toString: String =
       (trueOriginal match {
         case S(to) =>
-          assert(to.nameHint === nameHint)
+          assert(to.nameHint === nameHint, (to.nameHint, nameHint))
           to.mkStr + "_" + uid + showLevel(level)
         case N =>
           showProvOver(false)(mkStr + showLevel(level))

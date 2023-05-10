@@ -144,7 +144,7 @@ mixin Foo {
 }
 //│ mixin Foo() {
 //│   super: {base: int, misc: 'misc}
-//│   fun test: forall 'a. (int & 'a) -> (int, 'a, 'misc,)
+//│   fun test: (int & 'a) -> (int, 'a, 'misc,)
 //│ }
 
 :e
@@ -177,11 +177,11 @@ module Base1(base: int, misc: string) extends Foo
 //│ ║  l.143: 	  fun test(x) = [super.base + x, x, super.misc]
 //│ ╙──       	                 ^^^^^
 //│ module Base1(base: int, misc: string) {
-//│   fun test: (int & 'a) -> (int, 'a, nothing,)
+//│   fun test: forall 'a. (int & 'a) -> (int, 'a, nothing,)
 //│ }
 
 Base1.test
-//│ (int & 'a) -> (int, 'a, nothing,)
+//│ forall 'a. (int & 'a) -> (int, 'a, nothing,)
 //│ res
 //│     = [Function: test]
 
@@ -193,7 +193,7 @@ mixin WrapBase {
   fun wrap(x) = x
 }
 //│ mixin WrapBase() {
-//│   fun wrap: forall 'a. 'a -> 'a
+//│   fun wrap: 'a -> 'a
 //│   fun wrapA: (x: int,) -> int
 //│ }
 

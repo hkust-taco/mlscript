@@ -61,7 +61,7 @@ mixin EvalVar {
         Success(r) then r
 }
 //│ mixin EvalVar() {
-//│   fun eval: forall 'b. (List[{_1: string, _2: 'b}], Var,) -> ('b | Var)
+//│   fun eval: (List[{_1: string, _2: 'b}], Var,) -> ('b | Var)
 //│ }
 
 class Abs<A>(x: string, t: A)
@@ -96,48 +96,51 @@ mixin EvalLambda {
 }
 //│ mixin EvalLambda() {
 //│   super: {eval: ('b, 'c,) -> 'd}
-//│   this: {eval: ('b, 's,) -> ('e & 'f) & (List[in 'a out 'a | (string, 'f,)], 't,) -> 'd & (List[in 'a0 out 'a0 | 'a1 | (string, Var,)], 't0,) -> 'g}
-//│   fun eval: forall 'a2. (List['a2] & 'b, Abs['t0] | App['s & (Abs['t] | ~#Abs)] | 'c & ~#Abs & ~#App,) -> (Abs['g] | App['e | 'f] | 'd)
+//│   this: {eval: ('b, 's,) -> ('A & 'e) & (List[in 'a out 'a | (string, 'e,)], 't,) -> 'd & (List['a0], 't0,) -> 'A0}
+//│   fun eval: (List['a0] & 'b, Abs['t0] | App['s & (Abs['t] | ~#Abs)] | 'c & ~#Abs & ~#App,) -> (Abs['A0] | App['A] | 'd)
 //│ }
 //│ where
-//│   'a2 :> 'a0 | (string, Var,)
-//│       <: 'a1
+//│   'a0 :> (string, Var,)
 
 module Test1 extends EvalVar, EvalLambda
 //│ module Test1() {
-//│   fun eval: (List[{_1: string, _2: 'b}], 'a,) -> 'b
+//│   fun eval: forall 'a. (List[{_1: string, _2: 'b}], Abs['t] | App['A] | Var,) -> ('c | 'a)
 //│ }
 //│ where
-//│   'a <: Abs['a] | App['a & (Abs['a] | ~#Abs)] | Var
-//│   'b :> App['b] | Abs['b] | Var
+//│   't <: Abs['t] | App['A] | Var
+//│   'A <: Abs['t & (Abs['t] | App['A] | Var)] | Abs['t] & ~#Abs | App['A] | Var
+//│   'b :> Var | 'd
+//│   'd :> 'c | 'a
+//│   'c :> 'b | Var | 'a
+//│   'a :> App['d | 'c | 'a] | Abs['c | 'a]
 
 Test1.eval(Nil(), Var("a"))
-//│ ╔══[ERROR] Subtyping constraint of the form `?eval <: (?a, ?b,) -> ?c` took too many steps and ran out of fuel (5000)
-//│ ║  l.114: 	Test1.eval(Nil(), Var("a"))
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── Note: use flag `:ex` to see internal error info.
-//│ error
+//│ forall 'a. 'b | 'a | 'c
+//│   where
+//│     'b :> forall 'a. 'a | 'c
+//│     'a :> App[forall 'a. 'b | 'a | 'c] | Abs[forall 'a. 'b | 'a | 'c]
+//│     'c :> (forall 'a. Var | 'b | 'a) | Var
 
 Test1.eval(Nil(), Abs("b", Var("a")))
-//│ ╔══[ERROR] Subtyping constraint of the form `?eval <: (?a, ?b,) -> ?c` took too many steps and ran out of fuel (5000)
-//│ ║  l.121: 	Test1.eval(Nil(), Abs("b", Var("a")))
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── Note: use flag `:ex` to see internal error info.
-//│ error
+//│ forall 'a. 'b | 'a | 'c
+//│   where
+//│     'b :> forall 'a. 'a | 'c
+//│     'a :> App[forall 'a. 'b | 'a | 'c] | Abs[forall 'a. 'b | 'a | 'c]
+//│     'c :> (forall 'a. Var | 'b | 'a) | Var
 
 Test1.eval(Cons(("c", Var("d")), Nil()), App(Abs("b", Var("b")), Var("c")))
-//│ ╔══[ERROR] Subtyping constraint of the form `?eval <: (?a, ?b,) -> ?c` took too many steps and ran out of fuel (5000)
-//│ ║  l.128: 	Test1.eval(Cons(("c", Var("d")), Nil()), App(Abs("b", Var("b")), Var("c")))
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── Note: use flag `:ex` to see internal error info.
-//│ error
+//│ forall 'a. 'b | 'a | 'c
+//│   where
+//│     'b :> forall 'a. 'a | 'c
+//│     'a :> App[forall 'a. 'b | 'a | 'c] | Abs[forall 'a. 'b | 'a | 'c]
+//│     'c :> (forall 'a. Var | 'b | 'a) | Var
 
 Test1.eval(Cons(("c", Abs("d", Var("d"))), Nil()), App(Abs("b", Var("b")), Var("c")))
-//│ ╔══[ERROR] Subtyping constraint of the form `?eval <: (?a, ?b,) -> ?c` took too many steps and ran out of fuel (5000)
-//│ ║  l.135: 	Test1.eval(Cons(("c", Abs("d", Var("d"))), Nil()), App(Abs("b", Var("b")), Var("c")))
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── Note: use flag `:ex` to see internal error info.
-//│ error
+//│ forall 'a. 'b | 'a | 'c
+//│   where
+//│     'b :> forall 'a. 'a | 'c
+//│     'a :> App[forall 'a. 'b | 'a | 'c] | Abs[forall 'a. 'b | 'a | 'c]
+//│     'c :> (forall 'a. Abs[Var] | Var | 'b | 'a) | Var
 
 class Num(n: int)
 class Add<A>(l: A, r: A)
@@ -152,7 +155,7 @@ fun map_expr(f, v) =
     Num then v
     Add(l, r) then Add(f(l), f(r))
     Mul(l, r) then Mul(f(l), f(r))
-//│ fun map_expr: forall 'A 'l 'A0 'l0. ('l -> 'A0 & 'l0 -> 'A, Add['l] | Mul['l0] | Num | Var,) -> (Add['A0] | Mul['A] | Num | Var)
+//│ fun map_expr: forall 'l 'A 'l0 'A0. ('l -> 'A & 'l0 -> 'A0, Add['l] | Mul['l0] | Num | Var,) -> (Add['A] | Mul['A0] | Num | Var)
 
 mixin EvalExpr {
   fun eval(sub, v) =
@@ -167,16 +170,15 @@ mixin EvalExpr {
 //│ mixin EvalExpr() {
 //│   super: {eval: ('a, Var,) -> 'b}
 //│   this: {eval: ('a, 'c,) -> anything}
-//│   fun eval: forall 'd. ('a, 'd & (Add['c] | Mul['c] | Num | Var),) -> (Num | 'd | 'b)
+//│   fun eval: ('a, 'b & (Add['c] | Mul['c] | Num | Var),) -> (Num | 'b)
 //│ }
 
 module Test2 extends EvalVar, EvalExpr
 //│ module Test2() {
-//│   fun eval: (List[{_1: string, _2: 'b}], 'a,) -> ('b | Num | Var | 'a)
+//│   fun eval: forall 'a. (List[{_1: string, _2: 'b}], 'a & (Add['c] | Mul['c] | Num | Var),) -> ('b | Num | Var | 'a)
 //│ }
 //│ where
-//│   'a <: Add['c] | Mul['c] | Num | Var
-//│   'c <: 'a
+//│   'c <: Add['c] | Mul['c] | Num | Var
 
 Test2.eval(Nil(), Var("a"))
 //│ Num | Var
@@ -192,34 +194,39 @@ Test2.eval(Cons(("a", Abs("d", Var("d"))), Nil()), Add(Num(1), Var("a")))
 
 module Test3 extends EvalVar, EvalExpr, EvalLambda
 //│ module Test3() {
-//│   fun eval: (List[{_1: string, _2: 'b}], 'a,) -> 'b
+//│   fun eval: forall 'A 'a. (List[{_1: string, _2: 'b}], Abs['t] | App['A] | 'c & ~#Abs & ~#App,) -> ('d | 'a)
 //│ }
 //│ where
-//│   'b :> App['b] | Abs['b] | Num | Var | 'c
-//│   'c <: Add['d] | Mul['d] | Num | Var
-//│   'd <: 'a
-//│   'a <: Abs['a] | App['a & (Abs['a] | ~#Abs)] | 'c & ~#Abs & ~#App
+//│   'b :> Var | 'e
+//│   'e :> 'd | 'a
+//│   'd :> 'b | Num | Var | 'c | 'a
+//│   'a :> App['e | 'd | 'a] | Abs['d | 'a]
+//│   'c <: Add['f] | Mul['f] | Num | Var
+//│   'f <: Abs['t] | App['A] | 'c & ~#Abs & ~#App
+//│   't <: Abs['t] | App['A] | 'c & ~#Abs & ~#App
+//│   'A <: Abs['t & (Abs['t] | App['A] | 'c & ~#Abs & ~#App)] | Abs['t] & ~#Abs | App['A] | 'c & ~#Abs & ~#App
 
 Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Abs("a", Var("a")))
-//│ ╔══[ERROR] Subtyping constraint of the form `?eval <: (?a, ?b,) -> ?c` took too many steps and ran out of fuel (5000)
-//│ ║  l.203: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Abs("a", Var("a")))
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── Note: use flag `:ex` to see internal error info.
-//│ error
+//│ forall 'a. 'b | 'a | 'c
+//│   where
+//│     'b :> forall 'a. 'a | 'c
+//│     'a :> App[forall 'a. 'b | 'a | 'c] | Abs[forall 'a. 'b | 'a | 'c]
+//│     'c :> (forall 'a. Abs[Var] | Var | 'b | 'a) | Num | Var
 
 Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), App(Abs("a", Var("a")), Add(Num(1), Var("c"))))
-//│ ╔══[ERROR] Subtyping constraint of the form `?eval <: (?a, ?b,) -> ?c` took too many steps and ran out of fuel (5000)
-//│ ║  l.210: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), App(Abs("a", Var("a")), Add(Num(1), Var("c"))))
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── Note: use flag `:ex` to see internal error info.
-//│ error
+//│ forall 'a. 'b | 'a | 'c
+//│   where
+//│     'b :> forall 'a. 'a | 'c
+//│     'a :> App[forall 'a. 'b | 'a | 'c] | Abs[forall 'a. 'b | 'a | 'c]
+//│     'c :> (forall 'a. Abs[Var] | Var | 'b | 'a) | Add[Num | Var] | Num | Var
 
 module Test3 extends EvalVar, EvalLambda, EvalExpr
 //│ module Test3() {
-//│   fun eval: (List[{_1: string, _2: 'b}], 'a,) -> ('a | 'b)
+//│   fun eval: forall 'a. (List[{_1: string, _2: 'b}], 'a & (Add['c] | Mul['c] | Num | Var),) -> ('a | 'd)
 //│ }
 //│ where
-//│   'b :> Abs['b] | App['b] | Var | Num | 'a
-//│   'a <: Add['c] | Mul['c] | Num | Var
-//│   'c <: 'a
+//│   'c <: Add['c] | Mul['c] | Num | Var
+//│   'b :> Var | 'e
+//│   'e :> 'd
+//│   'd :> 'b | Abs[Num | 'd] | App[Num | 'e | 'd] | Num | Var
 

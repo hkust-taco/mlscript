@@ -295,9 +295,9 @@ mixin EvalNegNeg {
     else super.eval(e)
 }
 //│ mixin EvalNegNeg() {
-//│   super: {eval: (Neg['A] | 'a) -> 'b}
+//│   super: {eval: (Neg[nothing] | 'a) -> 'b}
 //│   this: {eval: 'expr -> 'b}
-//│   fun eval: (Neg['A & (~#Neg | Neg['expr])] | 'a & ~#Neg) -> 'b
+//│   fun eval: (Neg[Neg['expr] | ~Neg[anything]] | 'a & ~#Neg) -> 'b
 //│ }
 //│ // Prelude
 //│ class TypingUnit4 {
@@ -352,10 +352,10 @@ mixin EvalNegNeg {
 :ShowRepl
 module TestLang extends EvalBase, EvalNeg, EvalNegNeg
 //│ module TestLang() {
-//│   fun eval: 'A -> int
+//│   fun eval: 'a -> int
 //│ }
 //│ where
-//│   'A <: Add['A] | Lit | Neg['A & (~#Neg | Neg['A])]
+//│   'a <: Add['a] | Lit | Neg['a & (Neg['a] | ~#Neg)]
 //│ // Prelude
 //│ class TypingUnit5 {
 //│   #TestLang;

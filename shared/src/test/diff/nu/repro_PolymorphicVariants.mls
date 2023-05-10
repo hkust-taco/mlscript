@@ -25,8 +25,11 @@ mixin EvalLambda {
 //│   fun eval: (Cons['A] | Nil, Abs[anything],) -> nothing
 //│ }
 
-// FIXME type simplification bug: analyze2 does not traverse TVs witht he correct PolMap
+// Note: this used to crash becayse of a current type simplification bug: analyze2 does not traverse TVs witht he correct PolMap
+//  The original unreduced version in PolymorphicVariants.mls still crashes...
 // :ds
 module Test1 extends EvalLambda
-//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: x46_115' has no occurrences...
+//│ module Test1() {
+//│   fun eval: (Cons[anything] | Nil, Abs[anything],) -> nothing
+//│ }
 

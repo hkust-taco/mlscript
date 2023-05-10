@@ -61,8 +61,8 @@ class C {
   fun const(x) = id
 }
 //│ class C() {
-//│   fun const: forall 'a. anything -> 'a -> 'a
-//│   fun id: forall 'a. 'a -> 'a
+//│   fun const: anything -> 'a -> 'a
+//│   fun id: 'a -> 'a
 //│ }
 
 

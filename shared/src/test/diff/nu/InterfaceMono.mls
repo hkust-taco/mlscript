@@ -108,7 +108,7 @@ class Goodstatt(size: 1 | 2) extends RefinedStadt {
     fun foo(t) = if t && true then this.size else 0
 }
 //│ class Goodstatt(size: 1 | 2) {
-//│   fun bar: forall 'a. 'a -> 'a
+//│   fun bar: 'a -> 'a
 //│   fun foo: bool -> (0 | 1 | 2)
 //│   let name: "good"
 //│ }
@@ -172,7 +172,7 @@ mixin More {
     fun bar(x) = x
 }
 //│ mixin More() {
-//│   fun bar: forall 'a. 'a -> 'a
+//│   fun bar: 'a -> 'a
 //│   fun more: number -> bool
 //│   fun size: 1
 //│ }
@@ -190,7 +190,7 @@ class Dirtberg extends More, SizedStadt, Fooo {
     fun size = 4    // this should not check
 }
 //│ class Dirtberg() {
-//│   fun bar: int -> int
+//│   fun bar: forall 'a. 'a -> 'a
 //│   fun foo: anything -> 0
 //│   fun more: number -> bool
 //│   let name: "dirt"
@@ -199,7 +199,7 @@ class Dirtberg extends More, SizedStadt, Fooo {
 
 class Iceburg(name: string) extends RefinedStadt, More, Fooo
 //│ class Iceburg(name: string) {
-//│   fun bar: 'a -> 'a
+//│   fun bar: forall 'a. 'a -> 'a
 //│   fun foo: anything -> 0
 //│   fun more: number -> bool
 //│   fun size: 1
