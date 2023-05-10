@@ -790,11 +790,13 @@ abstract class TyperHelpers { Typer: Typer =>
                 cls.params.flatMap(p => childrenPolField(PolMap.pos)(p._2)) ++
                 cls.members.valuesIterator.flatMap(childrenPolMem) ++
                 S(pol.contravar -> cls.thisTy) ++
-                S(pol.covar -> cls.instanceType)
+                S(pol.covar -> cls.instanceType) ++
+                cls.parentTP.valuesIterator.flatMap(childrenPolMem)
             case cls: TypedNuTrt =>
               cls.tparams.iterator.map(pol.invar -> _._2) ++
                 cls.members.valuesIterator.flatMap(childrenPolMem) ++
-                S(pol.contravar -> cls.thisTy)
+                S(pol.contravar -> cls.thisTy) ++ 
+                cls.parentTP.valuesIterator.flatMap(childrenPolMem)
           }
           ents ::: tu.result.toList.map(pol -> _)
     }}
@@ -1172,16 +1174,18 @@ abstract class TyperHelpers { Typer: Typer =>
       case TypedNuAls(level, td, tparams, body) =>
         tparams.iterator.foreach(tp => apply(pol.invar)(tp._2))
         apply(pol)(body)
-      case TypedNuCls(level, td, ttu, tparams, params, members, thisTy, _, _) =>
+      case TypedNuCls(level, td, ttu, tparams, params, members, thisTy, _, _, pvms) =>
         tparams.iterator.foreach(tp => apply(pol.invar)(tp._2))
         params.foreach(p => applyField(pol)(p._2))
         members.valuesIterator.foreach(applyMem(pol))
+        pvms.valuesIterator.foreach(applyMem(pol))
         // thisTy.foreach(apply(pol.invar)(_))
         apply(pol.contravar)(thisTy)
-      case TypedNuTrt(level, td, ttu, tparams, members, thisTy, sign, _, _) => 
+      case TypedNuTrt(level, td, ttu, tparams, members, thisTy, sign, _, _, pvms) => 
         tparams.iterator.foreach(tp => apply(pol.invar)(tp._2))
         members.valuesIterator.foreach(applyMem(pol))
         // thisTy.foreach(apply(pol.invar)(_))
+        pvms.valuesIterator.foreach(applyMem(pol))
         apply(pol.contravar)(thisTy)
       case TypedNuMxn(td, thisTV, superTV, tparams, params, members, ttu) =>
         tparams.iterator.foreach(tp => apply(pol.invar)(tp._2))

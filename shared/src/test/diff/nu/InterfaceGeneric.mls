@@ -10,16 +10,20 @@ trait Into[T] {
 
 trait Nat extends Into[int]
 //│ trait Nat() {
-//│   fun into: int
+//│   fun into: 'T
 //│ }
+//│ where
+//│   'T := int
 
 trait Product[A, B] extends Into[A] {
     let pair: (A, B)
 }
 //│ trait Product[A, B]() {
-//│   fun into: A
+//│   fun into: 'T
 //│   let pair: (A, B,)
 //│ }
+//│ where
+//│   'T := A
 
 class TwoInts(pair: (int, int)) extends Product[int, int] {
     fun into = pair._1 + pair._2
@@ -31,18 +35,10 @@ class TwoInts(pair: (int, int)) extends Product[int, int] {
 let i2 = TwoInts((1,2))
 //│ let i2: TwoInts
 
-// FIXME
 i2: Product[int, int]
-//│ ╔══[ERROR] Type `TwoInts` does not contain member `Product#A`
-//│ ║  l.16: 	trait Product[A, B] extends Into[A] {
-//│ ╙──      	              ^
 //│ Product[int, int]
 
-// FIXME
 i2: Into[int]
-//│ ╔══[ERROR] Type `TwoInts` does not contain member `Into#T`
-//│ ║  l.4: 	trait Into[T] {
-//│ ╙──     	           ^
 //│ Into[int]
 
 i2.pair
@@ -51,3 +47,32 @@ i2.pair
 i2.into
 //│ int
 
+let p1: Product[int, int]
+//│ let p1: Product[int, int]
+
+:e
+p1: Product[bool, int]
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.54: 	p1: Product[bool, int]
+//│ ║        	^^
+//│ ╟── expression of type `int & ?A` is not an instance of type `bool`
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.54: 	p1: Product[bool, int]
+//│ ╙──      	            ^^^^
+//│ Product[bool, int]
+
+p1: Into[int]
+//│ Into[int]
+
+:e
+p1: Into[bool]
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.68: 	p1: Into[bool]
+//│ ║        	^^
+//│ ╟── type `int` is not an instance of type `bool`
+//│ ║  l.50: 	let p1: Product[int, int]
+//│ ║        	                ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.68: 	p1: Into[bool]
+//│ ╙──      	         ^^^^
+//│ Into[bool]
