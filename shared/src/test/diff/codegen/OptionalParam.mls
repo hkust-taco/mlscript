@@ -52,7 +52,7 @@ class B {}
 //│ globalThis.B = typing_unit1.B;
 //│ // End of generated code
 
-// TODO:
+// TODO
 :js
 class C {
   constructor(x: int)
@@ -64,7 +64,7 @@ class C {
 //│ Code generation encountered an error:
 //│   unresolved symbol constructor
 
-// TODO:
+// TODO
 :e
 class D(x: int) {
   constructor(y: int)
@@ -76,11 +76,11 @@ class D(x: int) {
 //│ Code generation encountered an error:
 //│   unresolved symbol constructor
 
-// TODO:
+// TODO
 :e
 constructor(x: int)
 //│ ╔══[ERROR] identifier not found: constructor
-//│ ║  l.75: 	constructor(x: int)
+//│ ║  l.81: 	constructor(x: int)
 //│ ╙──      	^^^^^^^^^^^
 //│ error
 //│ Code generation encountered an error:

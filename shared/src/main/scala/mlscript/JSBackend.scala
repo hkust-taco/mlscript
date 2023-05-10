@@ -111,10 +111,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         val ident = JSIdent(sym.runtimeName)
         if (sym.isByvalueRec.isEmpty && !sym.isLam) ident() else ident
       case S(sym: NuTypeSymbol with RuntimeSymbol) =>
-        if (sym.isAbstract)
-          JSNew(translateNuTypeSymbol(sym))
-        else
-          translateNuTypeSymbol(sym)
+        translateNuTypeSymbol(sym)
       case S(sym: NewClassMemberSymbol) =>
         if (sym.isByvalueRec.getOrElse(false) && !sym.isLam) throw CodeGenError(s"unguarded recursive use of by-value binding $name")
         scope.resolveValue("this") match {
@@ -927,7 +924,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       case td @ NuTypeDef(Cls, TypeName(nme), tps, tup @ Tup(fs), sig, pars, sup, ths, unit) => {
         val (body, members, stmts, nested) = prepare(nme, fs, pars, unit)
         val sym =
-          NewClassSymbol(nme, tps map { _._2.name }, body, members, stmts, pars, nested, isNested, td.isAbstract).tap(scope.register)
+          NewClassSymbol(nme, tps map { _._2.name }, body, members, stmts, pars, nested, isNested).tap(scope.register)
         if (!td.isDecl) classes += sym
       }
       case td @ NuTypeDef(Trt, TypeName(nme), tps, tup @ Tup(fs), sig, pars, sup, ths, unit) => {

@@ -276,10 +276,6 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
         consume
         yeetSpaces
         go(acc.copy(acc.mods + ("declare" -> l0)))
-      case (KEYWORD("abstract"), l0) :: c =>
-        consume
-        yeetSpaces
-        go(acc.copy(acc.mods + ("abstract" -> l0)))
       case _ if acc.mods.isEmpty => acc
       case (KEYWORD("class" | "infce" | "trait" | "mixin" | "type" | "namespace" | "module" | "fun" | "val"), l0) :: _ =>
         acc
@@ -304,8 +300,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
           case ModifierSet(mods, (KEYWORD(k @ ("class" | "infce" | "trait" | "mixin" | "type" | "namespace" | "module")), l0) :: c) =>
             consume
             val (isDecl, mods2) = mods.handle("declare")
-            val (isAbs, mods3) = mods2.handle("abstract")
-            mods3.done
+            mods2.done
             val kind = k match {
               case "class" => Cls
               case "trait" => Trt
@@ -375,7 +370,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
               case _ => Nil
             }
             val body = curlyTypingUnit
-            val res = NuTypeDef(kind, tn, tparams, params, sig, ps, N, N, body)(isDecl, isAbs)
+            val res = NuTypeDef(kind, tn, tparams, params, sig, ps, N, N, body)(isDecl)
             R(res.withLoc(S(l0 ++ res.getLoc)))
           
           case ModifierSet(mods, (KEYWORD(kwStr @ ("fun" | "val" | "let")), l0) :: c) => // TODO support rec?

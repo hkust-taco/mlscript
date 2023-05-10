@@ -281,8 +281,7 @@ object NewLexer {
     "in",
     "out",
     "null",
-    "undefined",
-    "abstract"
+    "undefined"
   )
   
   def printToken(tl: TokLoc): Str = tl match {
