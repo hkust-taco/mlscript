@@ -1,0 +1,146 @@
+:NewDefs
+
+
+module M {
+  fun id(x) = x
+}
+//│ module M() {
+//│   fun id: 'a -> 'a
+//│ }
+
+M.id
+//│ 'a -> 'a
+//│ res
+//│     = [Function: id]
+
+M.id(true)
+//│ true
+//│ res
+//│     = true
+
+M.id(0)
+//│ 0
+//│ res
+//│     = 0
+
+
+class C {
+  fun id1(x) = x
+  fun f = (id1(true), id1(0))
+  fun id2(x) = x
+}
+//│ class C() {
+//│   fun f: (0 | true | 'a, 0 | true | 'b,)
+//│   fun id1: ('b & 'a) -> (0 | true | 'a)
+//│   fun id2: 'c -> 'c
+//│ }
+
+// FIXME
+module M extends C {
+  fun g = (this.id2(true), this.id2(0))
+}
+//│ ╔══[ERROR] Type `#M` does not contain member `id2`
+//│ ║  l.40: 	  fun g = (this.id2(true), this.id2(0))
+//│ ╙──      	               ^^^^
+//│ ╔══[ERROR] Type `#M` does not contain member `id2`
+//│ ║  l.40: 	  fun g = (this.id2(true), this.id2(0))
+//│ ╙──      	                               ^^^^
+//│ module M() {
+//│   fun f: forall 'a 'b. (0 | true | 'a, 0 | true | 'b,)
+//│   fun g: (error, error,)
+//│   fun id1: forall 'a 'b. ('b & 'a) -> (0 | true | 'a)
+//│   fun id2: forall 'c. 'c -> 'c
+//│ }
+
+M.id1
+//│ forall 'a. 'a -> (0 | true | 'a)
+//│ res
+//│     = [Function: id1]
+
+M.id2
+//│ forall 'a. 'a -> 'a
+//│ res
+//│     = [Function: id2]
+
+M.f
+//│ (0 | true, 0 | true,)
+//│ res
+//│     = [ true, 0 ]
+
+M.g
+//│ (error, error,)
+//│ res
+//│     = [ true, 0 ]
+
+
+:e
+module M extends C {
+  fun id1 = succ
+}
+//│ ╔══[ERROR] Type mismatch in definition of method id1:
+//│ ║  l.78: 	  fun id1 = succ
+//│ ║        	      ^^^^^^^^^^
+//│ ╟── application of type `?a` does not match type `int | ~(?b & ?c)`
+//│ ║  l.29: 	  fun f = (id1(true), id1(0))
+//│ ╙──      	           ^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in definition of method id1:
+//│ ║  l.78: 	  fun id1 = succ
+//│ ║        	      ^^^^^^^^^^
+//│ ╟── type `int` does not match type `0 | true | ?a`
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.28: 	  fun id1(x) = x
+//│ ╙──      	               ^
+//│ module M() {
+//│   fun f: (0 | true, 0 | true,)
+//│   fun id1: int -> int
+//│   fun id2: forall 'a. 'a -> 'a
+//│ }
+
+M.id1
+//│ int -> int
+//│ res
+//│     = [Function: succ]
+
+
+(M : C).id1(false)
+//│ 0 | false | true
+//│ res
+//│     = 1
+
+
+// FIXME? parsing/semantics of this, currently treated as a named tuple...
+(M: C)
+//│ (M: () -> C,)
+//│ res
+//│     = [ [Function (anonymous)] { class: [class C] } ]
+
+
+
+module None
+//│ module None()
+
+// TODO parse
+// TODO reject; polymophism should be blocked by mutation from distributing/refreshing
+:pe
+:e
+module M {
+  mut val m = None
+  fun oops(x) = m := x
+}
+//│ ╔══[PARSE ERROR] Unexpected 'mut' keyword in expression position
+//│ ║  l.127: 	  mut val m = None
+//│ ╙──       	  ^^^
+//│ ╔══[PARSE ERROR] Unexpected 'val' keyword in expression position
+//│ ║  l.127: 	  mut val m = None
+//│ ╙──       	      ^^^
+//│ ╔══[PARSE ERROR] Unexpected '=' here
+//│ ║  l.127: 	  mut val m = None
+//│ ╙──       	            ^
+//│ ╔══[ERROR] identifier not found: m
+//│ ║  l.127: 	  mut val m = None
+//│ ╙──       	          ^
+//│ module M()
+//│ Code generation encountered an error:
+//│   unresolved symbol m
+
+
