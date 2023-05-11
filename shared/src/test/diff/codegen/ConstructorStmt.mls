@@ -148,8 +148,7 @@ class Foo {
 //│     const outer = this;
 //│     if (this.#Foo === undefined) {
 //│       class Foo {};
-//│       this.#Foo = (() => Object.freeze(new Foo()));
-//│       this.#Foo.class = Foo;
+//│       this.#Foo = Foo;
 //│     }
 //│     return this.#Foo;
 //│   }
@@ -164,10 +163,10 @@ class Bar {
   super: { x: int }
 }
 //│ ╔══[ERROR] Illegal use of `super`
-//│ ║  l.164: 	  super: { x: int }
+//│ ║  l.163: 	  super: { x: int }
 //│ ╙──       	  ^^^^^
 //│ ╔══[ERROR] Class `Bar` does not contain member `x`
-//│ ║  l.164: 	  super: { x: int }
+//│ ║  l.163: 	  super: { x: int }
 //│ ╙──       	           ^
 //│ class Bar()
 //│ // Prelude
@@ -179,8 +178,7 @@ class Bar {
 //│     const outer = this;
 //│     if (this.#Bar === undefined) {
 //│       class Bar {};
-//│       this.#Bar = (() => Object.freeze(new Bar()));
-//│       this.#Bar.class = Bar;
+//│       this.#Bar = Bar;
 //│     }
 //│     return this.#Bar;
 //│   }
@@ -236,8 +234,7 @@ class Baz {
 //│           ]);
 //│         }
 //│       };
-//│       this.#Baz = (() => Object.freeze(new Baz()));
-//│       this.#Baz.class = Baz;
+//│       this.#Baz = Baz;
 //│     }
 //│     return this.#Baz;
 //│   }

@@ -111,7 +111,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         val ident = JSIdent(sym.runtimeName)
         if (sym.isByvalueRec.isEmpty && !sym.isLam) ident() else ident
       case S(sym: NuTypeSymbol with RuntimeSymbol) =>
-        if (sym.needNew) JSNew(translateNuTypeSymbol(sym))
+        if (sym.needNew && isCallee) JSNew(translateNuTypeSymbol(sym))
         else translateNuTypeSymbol(sym)
       case S(sym: NewClassMemberSymbol) =>
         if (sym.isByvalueRec.getOrElse(false) && !sym.isLam) throw CodeGenError(s"unguarded recursive use of by-value binding $name")
@@ -324,11 +324,17 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
           JSBinary("===", scrut.member("constructor"), JSLit("String"))
         case Var(name) => scope.resolveValue(name) match {
           case S(sym: NewClassSymbol) =>
-            JSInstanceOf(scrut, translateVar(sym.lexicalName, false).member("class"))
+            if (sym.needNew)
+              JSInstanceOf(scrut, translateVar(sym.lexicalName, false))
+            else
+              JSInstanceOf(scrut, translateVar(sym.lexicalName, false).member("class"))
           case S(sym: ModuleSymbol) =>
             JSInstanceOf(scrut, translateVar(sym.lexicalName, false).member("class"))
-          case S(CapturedSymbol(out, cls: NewClassSymbol)) =>
-            JSInstanceOf(scrut, translateCapture(CapturedSymbol(out, cls)).member("class"))
+          case S(sym @ CapturedSymbol(out, cls: NewClassSymbol)) =>
+            if (cls.needNew)
+              JSInstanceOf(scrut, translateCapture(sym))
+            else
+              JSInstanceOf(scrut, translateCapture(sym).member("class"))
           case S(CapturedSymbol(out, mdl: ModuleSymbol)) =>
             JSInstanceOf(scrut, translateCapture(CapturedSymbol(out, mdl)).member("class"))
           case S(_: MixinSymbol) => throw new CodeGenError(s"cannot match mixin $name")
@@ -508,13 +514,18 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         val nd = translateNewTypeDefinition(sym, N, false)(localScope)
         val ctorMth = localScope.declareValue("ctor", Some(false), false).runtimeName
         val (constructor, params) = translateNewClassParameters(nd)
+        val initList =
+          if (sym.needNew)
+            Ls(JSReturnStmt(S(JSIdent(sym.lexicalName))))
+          else
+            Ls(
+              JSLetDecl.from(Ls(ctorMth)),
+              JSAssignExpr(JSIdent(ctorMth), JSArrowFn(constructor, L(JSInvoke(JSNew(JSIdent(sym.lexicalName)), params)))).stmt,
+              JSExprStmt(JSAssignExpr(JSIdent(ctorMth).member("class"), JSIdent(sym.lexicalName))),
+              JSReturnStmt(S(JSIdent(ctorMth)))
+            )
         JSConstDecl(sym.lexicalName, JSImmEvalFn(
-          N, Nil, R(Ls(
-            nd, JSLetDecl.from(Ls(ctorMth)),
-            JSAssignExpr(JSIdent(ctorMth), JSArrowFn(constructor, L(JSInvoke(JSNew(JSIdent(sym.lexicalName)), params)))).stmt,
-            JSExprStmt(JSAssignExpr(JSIdent(ctorMth).member("class"), JSIdent(sym.lexicalName))),
-            JSReturnStmt(S(JSIdent(ctorMth)))
-          )), Nil
+          N, Nil, R(nd :: initList), Nil
         ))
       case S(sym: MixinSymbol) =>
         val localScope = scope.derive(s"local ${sym.lexicalName}")
@@ -568,6 +579,8 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       val name = current match {
         case JSIdent(nme) => nme
         case JSInvoke(JSIdent(nme), _) => nme
+        case JSNew(JSIdent(nme)) => nme
+        case JSInvoke(JSNew(JSIdent(nme)), _) => nme 
         case f: JSField => f.property.name
         case JSInvoke(f: JSField, _) => f.property.name
         case _ => throw CodeGenError("unsupported parents.")
@@ -577,11 +590,17 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         case Some(CapturedSymbol(out, sym: MixinSymbol)) =>
           JSInvoke(translateCapture(CapturedSymbol(out, sym)), Ls(base))
         case Some(CapturedSymbol(out, sym: NuTypeSymbol)) if !mixinOnly =>
-          translateCapture(CapturedSymbol(out, sym)).member("class")
+          if (sym.needNew)
+            translateCapture(CapturedSymbol(out, sym))
+          else
+            translateCapture(CapturedSymbol(out, sym)).member("class")
         case Some(sym: MixinSymbol) =>
           JSInvoke(translateVar(name, false), Ls(base))
-        case Some(_: NuTypeSymbol) if !mixinOnly =>
-          translateVar(name, false).member("class")
+        case Some(sym: NuTypeSymbol) if !mixinOnly =>
+          if (sym.needNew)
+            translateVar(name, false)
+          else
+            translateVar(name, false).member("class")
         case _ => throw CodeGenError(s"unresolved parent $name.")
       }
     }

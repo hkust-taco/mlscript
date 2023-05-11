@@ -42,8 +42,7 @@ class B {}
 //│     const outer = this;
 //│     if (this.#B === undefined) {
 //│       class B {};
-//│       this.#B = (() => Object.freeze(new B()));
-//│       this.#B.class = B;
+//│       this.#B = B;
 //│     }
 //│     return this.#B;
 //│   }
@@ -105,7 +104,7 @@ class D(x: int) {
   constructor(y: int)
 }
 //│ ╔══[PARSE ERROR] more than one constructor
-//│ ║  l.104: 	class D(x: int) {
+//│ ║  l.103: 	class D(x: int) {
 //│ ╙──       	^^^^^
 //│ class D(y: int)
 
@@ -115,7 +114,7 @@ class E {
   constructor(y: int)
 }
 //│ ╔══[PARSE ERROR] more than one constructor
-//│ ║  l.113: 	class E {
+//│ ║  l.112: 	class E {
 //│ ╙──       	^^^^^
 //│ class E()
 
@@ -123,8 +122,248 @@ class E {
 :e
 constructor(x: int)
 //│ ╔══[ERROR] constructor must be in a class.
-//│ ║  l.124: 	constructor(x: int)
+//│ ║  l.123: 	constructor(x: int)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^
 //│ ()
 //│ Code generation encountered an error:
 //│   unexpected constructor.
+
+:e
+:js
+class F(x: int) extends C(x + 1) {}
+class G extends C(2) {}
+class H extends B {}
+//│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
+//│ ║  l.133: 	class F(x: int) extends C(x + 1) {}
+//│ ╙──       	                        ^^^^^^^^
+//│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
+//│ ║  l.134: 	class G extends C(2) {}
+//│ ╙──       	                ^^^^
+//│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
+//│ ║  l.135: 	class H extends B {}
+//│ ╙──       	                ^
+//│ class F(x: int)
+//│ class G()
+//│ class H()
+//│ // Prelude
+//│ class TypingUnit6 {
+//│   #F;
+//│   #G;
+//│   #H;
+//│   constructor() {
+//│   }
+//│   get F() {
+//│     const outer = this;
+//│     if (this.#F === undefined) {
+//│       class F extends C {
+//│         #x;
+//│         get x() { return this.#x; }
+//│         constructor(x) {
+//│           super(x + 1);
+//│           this.#x = x;
+//│         }
+//│       };
+//│       this.#F = ((x) => Object.freeze(new F(x)));
+//│       this.#F.class = F;
+//│     }
+//│     return this.#F;
+//│   }
+//│   get G() {
+//│     const outer = this;
+//│     if (this.#G === undefined) {
+//│       class G extends C {
+//│         constructor() {
+//│           super(2);
+//│         }
+//│       };
+//│       this.#G = G;
+//│     }
+//│     return this.#G;
+//│   }
+//│   get H() {
+//│     const outer = this;
+//│     if (this.#H === undefined) {
+//│       class H extends B {
+//│         constructor() {
+//│           super();
+//│         }
+//│       };
+//│       this.#H = H;
+//│     }
+//│     return this.#H;
+//│   }
+//│ }
+//│ const typing_unit6 = new TypingUnit6;
+//│ globalThis.F = typing_unit6.F;
+//│ globalThis.G = typing_unit6.G;
+//│ globalThis.H = typing_unit6.H;
+//│ // End of generated code
+
+:js
+fun f(c) =
+  if c is
+    F(x) then x
+    G() then 2
+    _ then 0
+//│ fun f: anything -> int
+//│ // Prelude
+//│ class TypingUnit7 {}
+//│ const typing_unit7 = new TypingUnit7;
+//│ // Query 1
+//│ globalThis.f = function f(c) {
+//│   return ((() => {
+//│     let a;
+//│     return a = c, a instanceof F.class ? ((x) => x)(c.x) : a instanceof G ? 2 : 0;
+//│   })());
+//│ };
+//│ // End of generated code
+
+f(F(12))
+f(new G())
+//│ int
+//│ res
+//│     = 12
+//│ res
+//│     = 2
+
+:js
+:e
+module I {
+  class J {
+    constructor(x: int)
+  }
+  module K {
+    class L extends J(0)
+  }
+}
+//│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
+//│ ║  l.236: 	    class L extends J(0)
+//│ ╙──       	                    ^^^^
+//│ module I() {
+//│   class J(x: int)
+//│   module K() {
+//│     class L()
+//│   }
+//│ }
+//│ // Prelude
+//│ class TypingUnit9 {
+//│   #I;
+//│   constructor() {
+//│   }
+//│   get I() {
+//│     const outer = this;
+//│     if (this.#I === undefined) {
+//│       class I {
+//│         #J;
+//│         #K;
+//│         constructor() {
+//│         }
+//│         get K() {
+//│           const outer1 = this;
+//│           if (this.#K === undefined) {
+//│             class K {
+//│               #L;
+//│               constructor() {
+//│               }
+//│               get L() {
+//│                 const outer2 = this;
+//│                 if (this.#L === undefined) {
+//│                   class L extends outer1.J {
+//│                     constructor() {
+//│                       super(0);
+//│                     }
+//│                   };
+//│                   this.#L = L;
+//│                 }
+//│                 return this.#L;
+//│               }
+//│             }
+//│             this.#K = new K();
+//│             this.#K.class = K;
+//│           }
+//│           return this.#K;
+//│         }
+//│         get J() {
+//│           const outer1 = this;
+//│           if (this.#J === undefined) {
+//│             class J {
+//│               #x;
+//│               get x() { return this.#x; }
+//│               constructor(x) {
+//│                 this.#x = x;
+//│               }
+//│             };
+//│             this.#J = J;
+//│           }
+//│           return this.#J;
+//│         }
+//│       }
+//│       this.#I = new I();
+//│       this.#I.class = I;
+//│     }
+//│     return this.#I;
+//│   }
+//│ }
+//│ const typing_unit9 = new TypingUnit9;
+//│ globalThis.I = typing_unit9.I;
+//│ // End of generated code
+
+:js
+fun g(x: int) =
+  class L {
+    constructor(y: int)
+    fun ll = x + y
+  }
+  L
+//│ fun g: (x: int,) -> (y: int,) -> L
+//│ // Prelude
+//│ class TypingUnit10 {}
+//│ const typing_unit10 = new TypingUnit10;
+//│ // Query 1
+//│ globalThis.g = function g(x) {
+//│   return ((() => {
+//│     const L = (() => {
+//│       class L {
+//│         #y;
+//│         get y() { return this.#y; }
+//│         constructor(y) {
+//│           this.#y = y;
+//│         }
+//│         get ll() {
+//│           const y = this.#y;
+//│           return x + y;
+//│         }
+//│       }
+//│       return L;
+//│     })();
+//│     return L;
+//│   })());
+//│ };
+//│ // End of generated code
+
+// FIXME
+:js
+let m = g(1)
+let n = new m(2)
+n.ll
+//│ let m: (y: int,) -> L
+//│ let n: L
+//│ int
+//│ // Prelude
+//│ class TypingUnit11 {}
+//│ const typing_unit11 = new TypingUnit11;
+//│ // Query 1
+//│ globalThis.m = g(1);
+//│ // Query 2
+//│ globalThis.n = m(2);
+//│ // Query 3
+//│ res = n.ll;
+//│ // End of generated code
+//│ m
+//│   = [class L]
+//│ n
+//│ Runtime error:
+//│   TypeError: Class constructor L cannot be invoked without 'new'
+//│ res
+//│ Runtime error:
+//│   ReferenceError: n is not defined

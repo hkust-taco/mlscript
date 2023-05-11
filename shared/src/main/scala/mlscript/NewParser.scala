@@ -404,7 +404,9 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
                 case Some(ctor @ Constructor(tup)) =>
                   if (has_params) err(msg"more than one constructor" -> S(l0) :: Nil)
                   (tup, ctor.toLoc)
-                case _ => (params, N)
+                case _ =>
+                  if (has_params) (params, N)
+                  else (Tup(Nil), tn.toLoc)
               }
 
             val res = NuTypeDef(kind, tn, tparams, real_params, sig, ps, N, N, TypingUnit(body))(isDecl, isAbs, ctorLoc)
