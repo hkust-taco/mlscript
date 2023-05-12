@@ -358,12 +358,12 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
                 rec(toks, S(br.innerLoc), br.describe).concludeWith(_.maybeIndented((p, _) => p.typeParams))
               case _ => Nil
             }
-            val (params, has_params) = yeetSpaces match {
+            val params = yeetSpaces match {
               case (br @ BRACKETS(Round, toks), loc) :: _ =>
                 consume
                 val as = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented()) // TODO
-                (Tup(as).withLoc(S(loc)), true)
-              case _ => (Tup(Nil), false)
+                S(Tup(as).withLoc(S(loc)))
+              case _ => N
             }
             def otherParents: Ls[Term] = yeetSpaces match {
               case (COMMA, _) :: _ =>
@@ -402,11 +402,10 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
               }
               else ctor.headOption match {
                 case Some(ctor @ Constructor(tup)) =>
-                  if (has_params) err(msg"more than one constructor" -> S(l0) :: Nil)
+                  if (params.isDefined) err(msg"more than one constructor" -> S(l0) :: Nil)
                   (tup, ctor.toLoc)
                 case _ =>
-                  if (has_params) (params, N)
-                  else (Tup(Nil), tn.toLoc)
+                  (params.getOrElse(Tup(Nil)), if (params.isDefined) N else tn.toLoc)
               }
 
             val res = NuTypeDef(kind, tn, tparams, real_params, sig, ps, N, N, TypingUnit(body))(isDecl, isAbs, ctorLoc)
