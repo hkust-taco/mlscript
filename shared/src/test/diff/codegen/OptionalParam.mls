@@ -341,7 +341,6 @@ fun g(x: int) =
 //│ };
 //│ // End of generated code
 
-// FIXME
 :js
 let m = g(1)
 let n = new m(2)
@@ -355,15 +354,24 @@ n.ll
 //│ // Query 1
 //│ globalThis.m = g(1);
 //│ // Query 2
-//│ globalThis.n = m(2);
+//│ globalThis.n = new m(2);
 //│ // Query 3
 //│ res = n.ll;
 //│ // End of generated code
 //│ m
 //│   = [class L]
 //│ n
-//│ Runtime error:
-//│   TypeError: Class constructor L cannot be invoked without 'new'
+//│   = L {}
 //│ res
+//│     = 3
+
+// TODO reject
+// :e
+:re
+class M()
+let mm = new M()
+//│ class M()
+//│ let mm: M
+//│ mm
 //│ Runtime error:
-//│   ReferenceError: n is not defined
+//│   TypeError: M is not a constructor

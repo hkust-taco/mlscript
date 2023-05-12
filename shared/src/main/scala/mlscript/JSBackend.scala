@@ -291,12 +291,9 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       throw CodeGenError(s"if expression was not desugared")
     case New(N, TypingUnit(Nil)) => JSRecord(Nil)
     case New(S(TypeName(className) -> Tup(args)), TypingUnit(Nil)) =>
-      val callee = scope.resolveValue(className) match {
-        case S(sym: NuTypeSymbol with RuntimeSymbol) =>
-          if (sym.needNew) JSNew(translateNuTypeSymbol(sym))
-          else throw CodeGenError(s"invalid `new` keyword in $className instantiation.")
-        case _ =>
-          translateVar(className, true)
+      val callee = translateVar(className, true) match {
+        case n: JSNew => n
+        case t => JSNew(t)
       }
       callee(args.map { case (_, Fld(_, _, arg)) => translateTerm(arg) }: _*)
     case New(_, TypingUnit(_)) =>
