@@ -1,25 +1,56 @@
 :NewParser
 
+:e
 code"x"
 code"(x) => ${res}"
-//│ res: Code['a, {x: 'a}]
+//│ ╔══[ERROR] Using free variables are not allowed in this version
+//│ ║  l.3: 	code"x"
+//│ ╙──     	     ^
+//│ res: code & {Code#T <: error}
 //│    = [ 'Var', [ 'FreeVar', 'x' ] ]
-//│ res: Code['a -> 'a, {x: 'a}\x]
+//│ res: code & {Code#T <: anything -> error}
 //│    = [ 'Lam', [ [ '_', 'x', 'x' ] ], [ 'Unquoted', [ 'Var', [Array] ] ] ]
 
-code"${res}"
-//│ res: Code['a -> 'a, {x: 'a}\x]
-//│    = [ 'Unquoted', [ 'Lam', [ [Array] ], [ 'Unquoted', [Array] ] ] ]
+:e
+code"x"
+code"let y = 1; ${res}"
+//│ ╔══[ERROR] Using free variables are not allowed in this version
+//│ ║  l.13: 	code"x"
+//│ ╙──      	     ^
+//│ res: code & {Code#T <: error}
+//│    = [ 'Var', [ 'FreeVar', 'x' ] ]
+//│ res: code & {Code#T <: error}
+//│    = [
+//│        'Let',
+//│        'y',
+//│        Symbol(y),
+//│        [ '_', 1 ],
+//│        [ 'Unquoted', [ 'Var', [Array] ] ]
+//│      ]
 
+:e
 let a = code"x"
 let b = code"y"
-//│ a: Code['a, {x: 'a}]
+//│ ╔══[ERROR] Using free variables are not allowed in this version
+//│ ║  l.29: 	let a = code"x"
+//│ ╙──      	             ^
+//│ a: code & {Code#T <: error}
 //│  = [ 'Var', [ 'FreeVar', 'x' ] ]
-//│ b: Code['a, {y: 'a}]
+//│ ╔══[ERROR] Using free variables are not allowed in this version
+//│ ║  l.30: 	let b = code"y"
+//│ ╙──      	             ^
+//│ b: code & {Code#T <: error}
 //│  = [ 'Var', [ 'FreeVar', 'y' ] ]
 
+:e
 code"a + a"
-//│ res: Code[int, {a: int}]
+//│ ╔══[ERROR] Using free variables are not allowed in this version
+//│ ║  l.42: 	code"a + a"
+//│ ╙──      	     ^
+//│ ╔══[ERROR] Using free variables are not allowed in this version
+//│ ║  l.42: 	code"a + a"
+//│ ╙──      	         ^
+//│ res: code & {Code#T <: int}
 //│    = [
 //│        'App',
 //│        '+',
@@ -28,7 +59,13 @@ code"a + a"
 //│      ]
 
 code"a + b"
-//│ res: Code[int, {a: int, b: int}]
+//│ ╔══[ERROR] Using free variables are not allowed in this version
+//│ ║  l.57: 	code"a + b"
+//│ ╙──      	     ^
+//│ ╔══[ERROR] Using free variables are not allowed in this version
+//│ ║  l.57: 	code"a + b"
+//│ ╙──      	         ^
+//│ res: code & {Code#T <: int}
 //│    = [
 //│        'App',
 //│        '+',
@@ -37,7 +74,10 @@ code"a + b"
 //│      ]
 
 code"x + (let x = 2; x * x)"
-//│ res: Code[int, {x: int}]
+//│ ╔══[ERROR] Using free variables are not allowed in this version
+//│ ║  l.72: 	code"x + (let x = 2; x * x)"
+//│ ╙──      	     ^
+//│ res: code & {Code#T <: int}
 //│    = [
 //│        'App',
 //│        '+',
@@ -57,13 +97,19 @@ let x = 1
 code"let x = 1
 ${a} + (let y = 1; ${b})
 "
-//│ a: Code['a, {x: 'a}]
+//│ ╔══[ERROR] Using free variables are not allowed in this version
+//│ ║  l.90: 	let a = code"x"
+//│ ╙──      	             ^
+//│ a: code & {Code#T <: error}
 //│  = [ 'Var', [ 'FreeVar', 'x' ] ]
-//│ b: Code['a, {y: 'a}]
+//│ ╔══[ERROR] Using free variables are not allowed in this version
+//│ ║  l.91: 	let b = code"y"
+//│ ╙──      	             ^
+//│ b: code & {Code#T <: error}
 //│  = [ 'Var', [ 'FreeVar', 'y' ] ]
 //│ x: 1
 //│  = 1
-//│ res: Code[int, {x: int}\x & {y: int}\x\y]
+//│ res: code & {Code#T <: int}
 //│    = [
 //│        'Let',
 //│        'x',
@@ -79,15 +125,21 @@ ${a} + (let y = 1; ${b})
 
 
 let cde = code"a"
-//│ cde: Code['a, {a: 'a}]
+//│ ╔══[ERROR] Using free variables are not allowed in this version
+//│ ║  l.123: 	let cde = code"a"
+//│ ╙──       	               ^
+//│ cde: code & {Code#T <: error}
 //│    = [ 'Var', [ 'FreeVar', 'a' ] ]
 
 let cde_w_unquote = code"${cde}"
-//│ cde_w_unquote: Code['a, {a: 'a}]
+//│ cde_w_unquote: code & {Code#T <: error}
 //│              = [ 'Unquoted', [ 'Var', [ 'FreeVar', 'a' ] ] ]
 
 let cde_w_free_vars = code"let x = 1; x + y"
-//│ cde_w_free_vars: Code[int, {y: int}]
+//│ ╔══[ERROR] Using free variables are not allowed in this version
+//│ ║  l.134: 	let cde_w_free_vars = code"let x = 1; x + y"
+//│ ╙──       	                                          ^
+//│ cde_w_free_vars: code & {Code#T <: int}
 //│                = [
 //│                    'Let',
 //│                    'x',
@@ -100,7 +152,7 @@ let cde_w_free_vars = code"let x = 1; x + y"
 
 
 let cde_w_unquote_w_free_vars = code"${cde_w_free_vars}"
-//│ cde_w_unquote_w_free_vars: Code[int, {y: int}]
+//│ cde_w_unquote_w_free_vars: code & {Code#T <: int}
 //│                          = [
 //│                              'Unquoted',
 //│                              [
@@ -114,13 +166,19 @@ let cde_w_unquote_w_free_vars = code"${cde_w_free_vars}"
 
 
 let cde_w_unquote_w_local_free_vars = code"[z, ${cde_w_unquote_w_free_vars}]"
-//│ cde_w_unquote_w_local_free_vars: Code[('a, int,), {y: int, z: 'a}]
+//│ ╔══[ERROR] Using free variables are not allowed in this version
+//│ ║  l.164: 	let cde_w_unquote_w_local_free_vars = code"[z, ${cde_w_unquote_w_free_vars}]"
+//│ ╙──       	                                            ^
+//│ cde_w_unquote_w_local_free_vars: code & {Code#T <: (error, int,)}
 //│                                = [ 'Bra', [ 'Tup', [ [Array], [Array] ] ] ]
 
 let free_var1 = code"let x = 1; x + y"
 let free_var2 = code"let i = 1; i + x"
 let cde_w_mutli_unquote = code"${free_var2} + ${free_var1}"
-//│ free_var1: Code[int, {y: int}]
+//│ ╔══[ERROR] Using free variables are not allowed in this version
+//│ ║  l.171: 	let free_var1 = code"let x = 1; x + y"
+//│ ╙──       	                                    ^
+//│ free_var1: code & {Code#T <: int}
 //│          = [
 //│              'Let',
 //│              'x',
@@ -128,7 +186,10 @@ let cde_w_mutli_unquote = code"${free_var2} + ${free_var1}"
 //│              [ '_', 1 ],
 //│              [ 'App', '+', [ 'Var', Symbol(x) ], [ 'Var', [Array] ] ]
 //│            ]
-//│ free_var2: Code[int, {x: int}]
+//│ ╔══[ERROR] Using free variables are not allowed in this version
+//│ ║  l.172: 	let free_var2 = code"let i = 1; i + x"
+//│ ╙──       	                                    ^
+//│ free_var2: code & {Code#T <: int}
 //│          = [
 //│              'Let',
 //│              'i',
@@ -136,7 +197,7 @@ let cde_w_mutli_unquote = code"${free_var2} + ${free_var1}"
 //│              [ '_', 1 ],
 //│              [ 'App', '+', [ 'Var', Symbol(i) ], [ 'Var', [Array] ] ]
 //│            ]
-//│ cde_w_mutli_unquote: Code[int, {x: int, y: int}]
+//│ cde_w_mutli_unquote: code & {Code#T <: int}
 //│                    = [
 //│                        'App',
 //│                        '+',
@@ -145,23 +206,32 @@ let cde_w_mutli_unquote = code"${free_var2} + ${free_var1}"
 //│                      ]
 
 fun f(x, y) = code"[${x}, ${y}]"
-//│ f: (Code['a, 'b], Code['c, 'b],) -> Code[('a, 'c,), 'b]
+//│ f: (code & {Code#T <: 'a}, code & {Code#T <: 'b},) -> (code & {Code#T <: ('a, 'b,)})
 //│  = [Function: f]
 
 let x = code"y"
-//│ x: Code['a, {y: 'a}]
+//│ ╔══[ERROR] Using free variables are not allowed in this version
+//│ ║  l.220: 	let x = code"y"
+//│ ╙──       	             ^
+//│ x: code & {Code#T <: error}
 //│  = [ 'Var', [ 'FreeVar', 'y' ] ]
 
 let c = f(x, x)
-//│ c: Code[('a, 'a,), {y: 'a}]
+//│ c: code & {Code#T <: (error, error,)}
 //│  = [ 'Bra', [ 'Tup', [ [Array], [Array] ] ] ]
 
 let cde_arr = code"[${code"y"}, ${code"y"}]"
-//│ cde_arr: Code[('a, 'a,), {y: 'a}]
+//│ ╔══[ERROR] Using free variables are not allowed in this version
+//│ ║  l.231: 	let cde_arr = code"[${code"y"}, ${code"y"}]"
+//│ ╙──       	                           ^
+//│ ╔══[ERROR] Using free variables are not allowed in this version
+//│ ║  l.231: 	let cde_arr = code"[${code"y"}, ${code"y"}]"
+//│ ╙──       	                                       ^
+//│ cde_arr: code & {Code#T <: (error, error,)}
 //│        = [ 'Bra', [ 'Tup', [ [Array], [Array] ] ] ]
 
 code"let y = 1; ${cde_arr}"
-//│ res: Code[(1 | 'a, 1 | 'a,), {y: 'a}\y]
+//│ res: code & {Code#T <: (error, error,)}
 //│    = [
 //│        'Let',
 //│        'y',
@@ -172,29 +242,34 @@ code"let y = 1; ${cde_arr}"
 
 :e
 run(res)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.174: 	run(res)
-//│ ║         	^^^^^^^^
-//│ ╙── expression of type `anything` does not have field 'y'
-//│ res: (1, 1,) | error
+//│ res: (error, error,)
 //│    = [ 1, 1 ]
 
 // CHECK THIS
 y => code"[${code"y"}, ${code"y"}]"
-//│ res: anything -> Code[('a, 'a,), {y: 'a}]
+//│ ╔══[ERROR] Using free variables are not allowed in this version
+//│ ║  l.257: 	y => code"[${code"y"}, ${code"y"}]"
+//│ ╙──       	                  ^
+//│ ╔══[ERROR] Using free variables are not allowed in this version
+//│ ║  l.257: 	y => code"[${code"y"}, ${code"y"}]"
+//│ ╙──       	                              ^
+//│ res: anything -> (code & {Code#T <: (error, error,)})
 //│    = [Function: res]
 
 code"y => ${c}"
-//│ res: Code['a -> ('a, 'a,), {y: 'a}\y]
+//│ res: code & {Code#T <: anything -> (error, error,)}
 //│    = [ 'Lam', [ [ '_', 'y', 'y' ] ], [ 'Unquoted', [ 'Bra', [Array] ] ] ]
 
 
 fun f(x, y) = [code"[${x}, ${y}]", x, y]
-//│ f: (Code['a, 'b] & 'c, Code['d, 'b] & 'e,) -> (Code[('a, 'd,), 'b], 'c, 'e,)
+//│ f: (code & {Code#T <: 'a} & 'b, code & {Code#T <: 'c} & 'd,) -> (code & {Code#T <: ('a, 'c,)}, 'b, 'd,)
 //│  = [Function: f1]
 
 let a: Code<int, {z: int}>
-//│ a: Code[int, {z: int}]
+//│ ╔══[ERROR] Wrong number of type arguments – expected 1, found 2
+//│ ║  l.282: 	let a: Code<int, {z: int}>
+//│ ╙──       	       ^^^^^^^^^^^^^^^^^^
+//│ a: code & {Code#T <: int}
 //│  = <missing implementation>
 
 
@@ -203,7 +278,7 @@ fun f(x) = x
 //│  = [Function: f2]
 
 let built_in_binding_test = code"let f = x => x + 1; f(if true then 1 else 2)"
-//│ built_in_binding_test: Code[int, anything]
+//│ built_in_binding_test: code & {Code#T <: int}
 //│                      = [
 //│                          'Let',
 //│                          'f',
@@ -214,29 +289,38 @@ let built_in_binding_test = code"let f = x => x + 1; f(if true then 1 else 2)"
 
 
 code"f(0)"
-//│ res: Code[0, anything]
+//│ ╔══[ERROR] Using free variables are not allowed in this version
+//│ ║  l.308: 	code"f(0)"
+//│ ╙──       	     ^
+//│ res: code & {Code#T <: error}
 //│    = [ 'App_Fun', [ 'Var', [ 'FreeVar', 'f' ] ], [ 'Tup', [ [Array] ] ] ]
 
 :e
 :ge
 code"${code"${code"${z}"}"}"
-//│ ╔══[ERROR] identifier not found: z
-//│ ║  l.222: 	code"${code"${code"${z}"}"}"
+//│ ╔══[ERROR] Using free variables are not allowed in this version
+//│ ║  l.317: 	code"${code"${code"${z}"}"}"
 //│ ╙──       	                     ^
-//│ res: Code[error, anything]
+//│ res: code & {Code#T <: error}
 //│ Code generation encountered an error:
 //│   unresolved symbol z
 
 let z = code"1"
 code"${code"${z}"}"
-//│ z: Code[1, anything]
+//│ z: code & {Code#T <: 1}
 //│  = [ '_', 1 ]
-//│ res: Code[1, anything]
+//│ res: code & {Code#T <: 1}
 //│    = [ 'Unquoted', [ 'Unquoted', [ '_', 1 ] ] ]
 
 
 code"let x = 1; let z = 1; code"x + y""
-//│ res: Code[Code[int, {x: int, y: int}], anything]
+//│ ╔══[ERROR] Using free variables are not allowed in this version
+//│ ║  l.333: 	code"let x = 1; let z = 1; code"x + y""
+//│ ╙──       	                                ^
+//│ ╔══[ERROR] Using free variables are not allowed in this version
+//│ ║  l.333: 	code"let x = 1; let z = 1; code"x + y""
+//│ ╙──       	                                    ^
+//│ res: code & {Code#T <: code & {Code#T <: int}}
 //│    = [
 //│        'Let',
 //│        'x',
@@ -246,7 +330,10 @@ code"let x = 1; let z = 1; code"x + y""
 //│      ]
 
 code"let z = 0;${code"z + 1"}"
-//│ res: Code[int, {z: int}\z]
+//│ ╔══[ERROR] Using free variables are not allowed in this version
+//│ ║  l.349: 	code"let z = 0;${code"z + 1"}"
+//│ ╙──       	                      ^
+//│ res: code & {Code#T <: int}
 //│    = [
 //│        'Let',
 //│        'z',
@@ -255,7 +342,13 @@ code"let z = 0;${code"z + 1"}"
 //│        [ 'Unquoted', [ 'App', '+', [Array], [Array] ] ]
 //│      ]
 code"let x = 1;${code"x + y"}"
-//│ res: Code[int, {x: int, y: int}\x]
+//│ ╔══[ERROR] Using free variables are not allowed in this version
+//│ ║  l.361: 	code"let x = 1;${code"x + y"}"
+//│ ╙──       	                      ^
+//│ ╔══[ERROR] Using free variables are not allowed in this version
+//│ ║  l.361: 	code"let x = 1;${code"x + y"}"
+//│ ╙──       	                          ^
+//│ res: code & {Code#T <: int}
 //│    = [
 //│        'Let',
 //│        'x',
@@ -268,5 +361,5 @@ let n = 1
 code"${Const(n)} + 1"
 //│ n: 1
 //│  = 1
-//│ res: Code[int, anything]
+//│ res: code & {Code#T <: int}
 //│    = [ 'App', '+', [ 'Unquoted', [ '_', 1 ] ], [ '_', 1 ] ]

@@ -1,7 +1,7 @@
 :NewParser 
 
 code"let x = code"1"; code"y => ${x} + 1""
-//│ res: Code[Code[anything -> int, anything\y], anything]
+//│ res: code & {Code#T <: code & {Code#T <: anything -> int}}
 //│    = [
 //│        'Let',
 //│        'x',
@@ -15,7 +15,7 @@ run(run(res))(0)
 //│    = 2
 
 code"let x = code"2"; code"${x}""
-//│ res: Code[Code[2, anything], anything]
+//│ res: code & {Code#T <: code & {Code#T <: 2}}
 //│    = [
 //│        'Let',
 //│        'x',
@@ -24,14 +24,14 @@ code"let x = code"2"; code"${x}""
 //│        [ 'Quoted', [ 'Unquoted', Symbol(x) ] ]
 //│      ]
 run(res)
-//│ res: Code[2, anything]
+//│ res: code & {Code#T <: 2}
 //│    = [ 'Unquoted', [ '_', 2 ] ]
 run(res)
 //│ res: 2
 //│    = 2
 
 code"let x = code"2"; let y = code"3"; x"
-//│ res: Code[Code[2, anything], anything]
+//│ res: code & {Code#T <: code & {Code#T <: 2}}
 //│    = [
 //│        'Let',
 //│        'x',
@@ -46,11 +46,11 @@ code"let x = code"2"; let y = code"3"; x"
 //│        ]
 //│      ]
 run(res)
-//│ res: Code[2, anything]
+//│ res: code & {Code#T <: 2}
 //│    = [ '_', 2 ]
 
 code"let y = code"2"; x => y"
-//│ res: Code[anything -> Code[2, anything], anything]
+//│ res: code & {Code#T <: anything -> (code & {Code#T <: 2})}
 //│    = [
 //│        'Let',
 //│        'y',
@@ -60,11 +60,11 @@ code"let y = code"2"; x => y"
 //│      ]
 
 run(res)(0)
-//│ res: Code[2, anything]
+//│ res: code & {Code#T <: 2}
 //│    = 2
 
 code"x => x"
-//│ res: Code['a -> 'a, anything]
+//│ res: code & {Code#T <: 'a -> 'a}
 //│    = [ 'Lam', [ [ '_', 'x', 'x' ] ], [ 'Var', [ 'FreeVar', 'x' ] ] ]
 run(res)(0)
 //│ res: 0
@@ -72,9 +72,9 @@ run(res)(0)
 
 let y = code"1"
 code"""x => x + ${y}"""
-//│ y: Code[1, anything]
+//│ y: code & {Code#T <: 1}
 //│  = [ '_', 1 ]
-//│ res: Code[int -> int, anything\x]
+//│ res: code & {Code#T <: int -> int}
 //│    = [
 //│        'Lam',
 //│        [ [ '_', 'x', 'x' ] ],
@@ -87,9 +87,9 @@ run(res)(3)
 
 let x = code"1"
 code"""x => x + ${x}"""
-//│ x: Code[1, anything]
+//│ x: code & {Code#T <: 1}
 //│  = [ '_', 1 ]
-//│ res: Code[int -> int, anything\x]
+//│ res: code & {Code#T <: int -> int}
 //│    = [
 //│        'Lam',
 //│        [ [ '_', 'x', 'x1' ] ],
@@ -101,11 +101,11 @@ run(res)(0)
 //│    = 1
 
 let x = code"2"
-//│ x: Code[2, anything]
+//│ x: code & {Code#T <: 2}
 //│  = [ '_', 2 ]
 
 code"""x => (let x = 1; x + ${x})"""
-//│ res: Code[anything -> (int,), anything\x]
+//│ res: code & {Code#T <: anything -> (int,)}
 //│    = [ 'Lam', [ [ '_', 'x', 'x2' ] ], [ 'Bra', [ 'Tup', [Array] ] ] ]
 
 run(res)("happy")
@@ -113,7 +113,7 @@ run(res)("happy")
 //│    = [ 3 ]
 
 code"let x = code"1"; code"let x = code"2"; ${x}""
-//│ res: Code[Code[1, anything\x], anything]
+//│ res: code & {Code#T <: code & {Code#T <: 1}}
 //│    = [
 //│        'Let',
 //│        'x',
@@ -122,7 +122,7 @@ code"let x = code"1"; code"let x = code"2"; ${x}""
 //│        [ 'Quoted', [ 'Let', 'x', Symbol(x), [Array], [Array] ] ]
 //│      ]
 run(res)
-//│ res: Code[1, anything\x]
+//│ res: code & {Code#T <: 1}
 //│    = [
 //│        'Let',
 //│        'x',
@@ -136,9 +136,9 @@ run(res)
 
 let x = code"1"
 code"let x1 = code"100"; let x2 = code"200"; code"let y = 100; ${x}""
-//│ x: Code[1, anything]
+//│ x: code & {Code#T <: 1}
 //│  = [ '_', 1 ]
-//│ res: Code[Code[1, anything\y], anything]
+//│ res: code & {Code#T <: code & {Code#T <: 1}}
 //│    = [
 //│        'Let',
 //│        'x1',
@@ -153,7 +153,7 @@ code"let x1 = code"100"; let x2 = code"200"; code"let y = 100; ${x}""
 //│        ]
 //│      ]
 run(res)
-//│ res: Code[1, anything\y]
+//│ res: code & {Code#T <: 1}
 //│    = [ 'Let', 'y', Symbol(y), [ '_', 100 ], [ 'Unquoted', [ '_', 1 ] ] ]
 run(res)
 //│ res: 1
@@ -161,7 +161,10 @@ run(res)
 
 
 code"x => ${code"x + 1"}"
-//│ res: Code[int -> int, {x: int}\x]
+//│ ╔══[ERROR] Using free variables are not allowed in this version
+//│ ║  l.172: 	code"x => ${code"x + 1"}"
+//│ ╙──       	                 ^
+//│ res: code & {Code#T <: anything -> int}
 //│    = [
 //│        'Lam',
 //│        [ [ '_', 'x', 'x3' ] ],
@@ -169,20 +172,16 @@ code"x => ${code"x + 1"}"
 //│      ]
 :e
 run(res)(1)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.171: 	run(res)(1)
-//│ ║         	^^^^^^^^
-//│ ╙── expression of type `anything` does not have field 'x'
-//│ res: error | int
+//│ res: int
 //│    = 2
 
 code"x => code"${x}""
-//│ res: Code[Code['a, 'b] -> Code['a, 'b], anything]
+//│ res: code & {Code#T <: (code & {Code#T <: 'a}) -> (code & {Code#T <: 'a})}
 //│    = [
 //│        'Lam',
 //│        [ [ '_', 'x', 'x3' ] ],
 //│        [ 'Quoted', [ 'Unquoted', [Array] ] ]
 //│      ]
 run(res)(code"1")
-//│ res: Code[1, anything]
+//│ res: code & {Code#T <: 1}
 //│    = [ 'Unquoted', [ '_', 1 ] ]

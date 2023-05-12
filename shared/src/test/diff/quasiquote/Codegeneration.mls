@@ -1,35 +1,30 @@
 :NewParser
 
 let c = code"x"
-//│ c: Code['a, {x: 'a}]
+//│ ╔══[ERROR] Using free variables are not allowed in this version
+//│ ║  l.3: 	let c = code"x"
+//│ ╙──     	             ^
+//│ c: code & {Code#T <: error}
 //│  = [ 'Var', [ 'FreeVar', 'x' ] ]
 
 :e
 run(c)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.8: 	run(c)
-//│ ║       	^^^^^^
-//│ ╙── type `anything` does not have field 'x'
 //│ res: error
 //│    = 'x'
 
 let r = code"x => ${c}"
-//│ r: Code['a -> 'a, {x: 'a}\x]
+//│ r: code & {Code#T <: anything -> error}
 //│  = [ 'Lam', [ [ '_', 'x', 'x' ] ], [ 'Unquoted', [ 'Var', [Array] ] ] ]
 
 :e
 run(r)(1)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.21: 	run(r)(1)
-//│ ║        	^^^^^^
-//│ ╙── expression of type `anything` does not have field 'x'
-//│ res: 1 | error
+//│ res: error
 //│    = 1
 
 
 // Bra, Rcd, Sel 
 let rcd = code"{x: 10, y: 100, z: 1000}.z"
-//│ rcd: Code[1000, anything]
+//│ rcd: code & {Code#T <: 1000}
 //│    = [ 'Sel', [ 'Bra', [ 'Rcd', [Object] ] ], 'z' ]
 
 run(rcd)
@@ -39,7 +34,7 @@ run(rcd)
 
 // Let, Var, App -> evaluates to 3
 let let_var = code"let y = 1; y + 1 * 2"
-//│ let_var: Code[int, anything]
+//│ let_var: code & {Code#T <: int}
 //│        = [
 //│            'Let',
 //│            'y',
@@ -63,7 +58,7 @@ fun id(x) = x
 //│   = [Function: id]
 
 let global_fun = code"id(4)"
-//│ global_fun: Code[4, anything]
+//│ global_fun: code & {Code#T <: 4}
 //│           = [ 'App_Fun', [ 'Var', [ 'FreeVar', 'id' ] ], [ 'Tup', [ [Array] ] ] ]
 
 run(global_fun)
@@ -71,7 +66,7 @@ run(global_fun)
 //│    = 4
 
 let local_fun = code"let plus1 = x => x + 1; plus1(if true then 1 else 2)"
-//│ local_fun: Code[int, anything]
+//│ local_fun: code & {Code#T <: int}
 //│          = [
 //│              'Let',
 //│              'plus1',
@@ -85,7 +80,7 @@ run(local_fun)
 //│    = 2
 
 code"let id = x => x; id(3)"
-//│ res: Code[3, anything]
+//│ res: code & {Code#T <: 3}
 //│    = [
 //│        'Let',
 //│        'id',
@@ -99,7 +94,7 @@ run(res)
 
 // Tup, Subs
 let tup = code"let x = 1; let y = 2; (x, y)[0]"
-//│ tup: Code[1 | 2 | undefined, anything]
+//│ tup: code & {Code#T <: 1 | 2 | undefined}
 //│    = [
 //│        'Let',
 //│        'x',
@@ -114,7 +109,7 @@ run(tup)
 
 // Quasiquote 
 let code_in_code = code"let x = code"1"; x"
-//│ code_in_code: Code[Code[1, anything], anything]
+//│ code_in_code: code & {Code#T <: code & {Code#T <: 1}}
 //│             = [
 //│                 'Let',
 //│                 'x',
@@ -124,12 +119,12 @@ let code_in_code = code"let x = code"1"; x"
 //│               ]
 
 run(code_in_code)
-//│ res: Code[1, anything]
+//│ res: code & {Code#T <: 1}
 //│    = [ '_', 1 ]
 
 // Unquoted - Const function
 let unquoted = code"let x = 3; ${Const(10)} * x"
-//│ unquoted: Code[int, anything\x]
+//│ unquoted: code & {Code#T <: int}
 //│         = [
 //│             'Let',
 //│             'x',
@@ -145,7 +140,7 @@ run(unquoted)
 // No obvious test for UnitLit
 
 let str_lit = code""" "hello" """
-//│ str_lit: Code["hello", anything]
+//│ str_lit: code & {Code#T <: "hello"}
 //│        = [ '_', 'hello' ]
 
 // free variables
@@ -153,12 +148,21 @@ let y = 1
 let free = code"y"
 //│ y: 1
 //│  = 1
-//│ free: Code['a, {y: 'a}]
+//│ ╔══[ERROR] Using free variables are not allowed in this version
+//│ ║  l.157: 	let free = code"y"
+//│ ╙──       	                ^
+//│ free: code & {Code#T <: error}
 //│     = [ 'Var', [ 'FreeVar', 'y' ] ]
 
 // Unquote - variable name for quasiquote
 let code_nested = code"let a = 1; let b = 2; ${code"a + b"}"
-//│ code_nested: Code[int, {a: int, b: int}\a\b]
+//│ ╔══[ERROR] Using free variables are not allowed in this version
+//│ ║  l.167: 	let code_nested = code"let a = 1; let b = 2; ${code"a + b"}"
+//│ ╙──       	                                                    ^
+//│ ╔══[ERROR] Using free variables are not allowed in this version
+//│ ║  l.167: 	let code_nested = code"let a = 1; let b = 2; ${code"a + b"}"
+//│ ╙──       	                                                        ^
+//│ code_nested: code & {Code#T <: int}
 //│            = [
 //│                'Let',
 //│                'a',
@@ -169,18 +173,17 @@ let code_nested = code"let a = 1; let b = 2; ${code"a + b"}"
 
 :e
 run(code_nested)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.171: 	run(code_nested)
-//│ ║         	^^^^^^^^^^^^^^^^
-//│ ╙── expression of type `anything` is not a record (expected a record with fields: a, b)
-//│ res: error | int
+//│ res: int
 //│    = 3
 
 let y = code"x"
 code"let id = x => ${y}; id(true)"
-//│ y: Code['a, {x: 'a}]
+//│ ╔══[ERROR] Using free variables are not allowed in this version
+//│ ║  l.188: 	let y = code"x"
+//│ ╙──       	             ^
+//│ y: code & {Code#T <: error}
 //│  = [ 'Var', [ 'FreeVar', 'x' ] ]
-//│ res: Code[true, {x: anything}\x]
+//│ res: code & {Code#T <: error}
 //│    = [
 //│        'Let',
 //│        'id',
@@ -191,20 +194,19 @@ code"let id = x => ${y}; id(true)"
 
 :e
 run(res)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.193: 	run(res)
-//│ ║         	^^^^^^^^
-//│ ╙── expression of type `anything` does not have field 'x'
-//│ res: error | true
+//│ res: error
 //│    = true
 
 // Hygiene
 let free_y = code"y"
-//│ free_y: Code['a, {y: 'a}]
+//│ ╔══[ERROR] Using free variables are not allowed in this version
+//│ ║  l.210: 	let free_y = code"y"
+//│ ╙──       	                  ^
+//│ free_y: code & {Code#T <: error}
 //│       = [ 'Var', [ 'FreeVar', 'y' ] ]
 
 let use_free = code"let y = 3; ${code"let y = 5; ${code"let y = 100; ${free_y}"} + y"} + y"
-//│ use_free: Code[int, {y: int}\y]
+//│ use_free: code & {Code#T <: int}
 //│         = [
 //│             'Let',
 //│             'y',
@@ -215,15 +217,14 @@ let use_free = code"let y = 3; ${code"let y = 5; ${code"let y = 100; ${free_y}"}
 
 :e
 run(use_free)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.217: 	run(use_free)
-//│ ║         	^^^^^^^^^^^^^
-//│ ╙── expression of type `anything` does not have field 'y'
-//│ res: error | int
+//│ res: int
 //│    = 108
 
 code"let z = x => ${let c = code"x + 1"; c}; z"
-//│ res: Code['a -> 'a, {x: anything}\c\x]
+//│ ╔══[ERROR] Using free variables are not allowed in this version
+//│ ║  l.232: 	code"let z = x => ${let c = code"x + 1"; c}; z"
+//│ ╙──       	                                 ^
+//│ res: code & {Code#T <: anything -> error}
 //│    = [
 //│        'Let',
 //│        'z',
@@ -234,11 +235,7 @@ code"let z = x => ${let c = code"x + 1"; c}; z"
 
 :e
 run(res)(100)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.236: 	run(res)(100)
-//│ ║         	^^^^^^^^
-//│ ╙── expression of type `anything` does not have field 'x'
-//│ res: 100 | error
+//│ res: error
 //│    = 101
 
 
@@ -258,12 +255,15 @@ fun f(x) = x
 //│  = [Function: f1]
 
 code"f(1)"
-//│ res: Code[1, anything]
+//│ ╔══[ERROR] Using free variables are not allowed in this version
+//│ ║  l.269: 	code"f(1)"
+//│ ╙──       	     ^
+//│ res: code & {Code#T <: error}
 //│    = [ 'App_Fun', [ 'Var', [ 'FreeVar', 'f' ] ], [ 'Tup', [ [Array] ] ] ]
 
 :re
 run(res)
-//│ res: 1
+//│ res: error
 //│ Runtime error:
 //│   TypeError: globalThis[callee] is not a function
 
@@ -287,21 +287,30 @@ class Foo(n)
 //│    = [Function: Foo1]
 
 code"Foo(1)"
-//│ res: Code[Foo & {n: 1}, anything]
+//│ ╔══[ERROR] Using free variables are not allowed in this version
+//│ ║  l.304: 	code"Foo(1)"
+//│ ╙──       	     ^^^
+//│ res: code & {Code#T <: error}
 //│    = [ 'App_Fun', [ 'Var', [ 'FreeVar', 'Foo' ] ], [ 'Tup', [ [Array] ] ] ]
 
 :re
 run(res)
-//│ res: Foo & {n: 1}
+//│ res: error
 //│ Runtime error:
 //│   TypeError: globalThis[callee] is not a function
 
 
 let codeA = code"let y = 2; y"
 let codeB = code"y + y"
-//│ codeA: Code[2, anything]
+//│ codeA: code & {Code#T <: 2}
 //│      = [ 'Let', 'y', Symbol(y), [ '_', 2 ], [ 'Var', Symbol(y) ] ]
-//│ codeB: Code[int, {y: int}]
+//│ ╔══[ERROR] Using free variables are not allowed in this version
+//│ ║  l.319: 	let codeB = code"y + y"
+//│ ╙──       	                 ^
+//│ ╔══[ERROR] Using free variables are not allowed in this version
+//│ ║  l.319: 	let codeB = code"y + y"
+//│ ╙──       	                     ^
+//│ codeB: code & {Code#T <: int}
 //│      = [
 //│          'App',
 //│          '+',
@@ -313,9 +322,9 @@ let codeB = code"y + y"
 :pe
 let both = code"${codeA}; ${codeB}"
 //│ ╔══[PARSE ERROR] Unexpected ';' keyword here
-//│ ║  l.314: 	let both = code"${codeA}; ${codeB}"
+//│ ║  l.338: 	let both = code"${codeA}; ${codeB}"
 //│ ╙──       	                        ^
-//│ both: Code[2, anything]
+//│ both: code & {Code#T <: 2}
 //│     = [
 //│         'Unquoted',
 //│         [ 'Let', 'y', Symbol(y), [ '_', 2 ], [ 'Var', Symbol(y) ] ]
@@ -324,11 +333,14 @@ let both = code"${codeA}; ${codeB}"
 let a = code"let x = 0; x"
 let b = code"x"
 let c = code"${a} + ${b}"
-//│ a: Code[0, anything]
+//│ a: code & {Code#T <: 0}
 //│  = [ 'Let', 'x', Symbol(x), [ '_', 0 ], [ 'Var', Symbol(x) ] ]
-//│ b: Code['a, {x: 'a}]
+//│ ╔══[ERROR] Using free variables are not allowed in this version
+//│ ║  l.349: 	let b = code"x"
+//│ ╙──       	             ^
+//│ b: code & {Code#T <: error}
 //│  = [ 'Var', [ 'FreeVar', 'x' ] ]
-//│ c: Code[int, {x: int}]
+//│ c: code & {Code#T <: int}
 //│  = [
 //│      'App',
 //│      '+',
@@ -337,16 +349,12 @@ let c = code"${a} + ${b}"
 //│    ]
 :e
 run(c)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.339: 	run(c)
-//│ ║         	^^^^^^
-//│ ╙── type `anything` does not have field 'x'
-//│ res: error | int
+//│ res: int
 //│ Runtime error:
 //│   ReferenceError: x is not defined
 
 code"{x: y} => y"
-//│ res: Code[{x: 'a} -> 'a, anything]
+//│ res: code & {Code#T <: {x: 'a} -> 'a}
 //│    = [ 'Lam', [ { x: [Array] } ], [ 'Var', [ 'FreeVar', 'y2' ] ] ]
 
 run(res)({x:1})

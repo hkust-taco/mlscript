@@ -1,41 +1,37 @@
 package mlscript
 
 import scala.collection.mutable
-import scala.collection.mutable.{HashMap, ListBuffer, Map => MutMap, Set => MutSet}
-import scala.collection.immutable.{SortedMap, SortedSet}
+import scala.collection.mutable.{Map => MutMap, Set => MutSet}
+import scala.collection.immutable.{SortedSet, SortedMap}
 import scala.util.chaining._
 import scala.annotation.tailrec
-import mlscript.utils._
-import shorthands._
+import mlscript.utils._, shorthands._
 import mlscript.Message._
 
-import scala.util.Random
-import scala.util.control.Breaks.break
-
-abstract class Traversal()
-// Searches everywhere
-final case class LinearTraversal() extends Traversal
-
-// Searches only outside a quasiquote
-final case class UnquoteTraversal(lvl: Int) extends Traversal
-
-// Searches only inside a quasiquote
-final case class QuasiquoteTraversal(lvl: Int) extends Traversal
-
-// uses only if you need to search a method definition (e.g. + - * /)
-// it has the same effect as `NormalSearchStrategy`
-final case class BuiltinTraversal() extends Traversal
-
 /** A class encapsulating type inference state.
- * It uses its own internal representation of types and type variables, using mutable data structures.
- * Inferred SimpleType values are then turned into CompactType values for simplification.
- * In order to turn the resulting CompactType into a mlscript.Type, we use `expandCompactType`.
+ *  It uses its own internal representation of types and type variables, using mutable data structures.
+ *  Inferred SimpleType values are then turned into CompactType values for simplification.
+ *  In order to turn the resulting CompactType into a mlscript.Type, we use `expandCompactType`.
  */
 class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   extends ucs.Desugarer with TypeSimplifier {
 
-  def funkyTuples: Bool = false
+  abstract class Traversal()
 
+  // Searches everywhere
+  final case class LinearTraversal() extends Traversal
+
+  // Searches only outside a quasiquote
+  final case class UnquoteTraversal(lvl: Int) extends Traversal
+
+  // Searches only inside a quasiquote
+  final case class QuasiquoteTraversal(lvl: Int) extends Traversal
+
+  // uses only if you need to search a method definition (e.g. + - * /)
+  // it has the same effect as `NormalSearchStrategy`
+  final case class BuiltinTraversal() extends Traversal
+
+  def funkyTuples: Bool = false
   def doFactorize: Bool = false
 
   var recordProvenances: Boolean = true
@@ -44,36 +40,29 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   type Binding = Str -> TypeScheme
   type Bindings = Map[Str, TypeScheme]
 
-  /** `env`: maps the names of all global and local bindings to their types
-   * Keys of `mthEnv`:
+  /**  `env`: maps the names of all global and local bindings to their types
+   *  Keys of `mthEnv`:
    * `L` represents the inferred types of method definitions. The first value is the parent name,
-   * and the second value is the method name.
+   *   and the second value is the method name.
    * `R` represents the actual method types.
-   * The first optional value is the parent name, with `N` representing implicit calls,
-   * and the second value is the method name.
-   * (See the case for `Sel` in `typeTerm` for documentation on explicit vs. implicit calls.)
+   *   The first optional value is the parent name, with `N` representing implicit calls,
+   *   and the second value is the method name.
+   *   (See the case for `Sel` in `typeTerm` for documentation on explicit vs. implicit calls.)
    * The public helper functions should be preferred for manipulating `mthEnv`
    */
   case class Ctx(
                   parent: Opt[Ctx],
                   env: MutMap[Str, TypeInfo],
                   mthEnv: MutMap[(Str, Str) \/ (Opt[Str], Str), MethodType],
-                  freeVarsEnv: MutMap[Str, TypeInfo],
                   lvl: Int,
                   inPattern: Bool,
                   tyDefs: Map[Str, TypeDef],
                   nuTyDefs: Map[Str, TypedNuTypeDef],
-                  quasiquoteLvl: Int, // > 0 means inside a quasiquote
+                  quasiquoteLvl: Int,
                   inUnquoted: Boolean,
-                  var outermostCtx: Opt[Ctx],
-                  var overridingTraversal: Opt[Traversal], // override once only, will set to N if the overrided strategy is used
-                  innerUnquoteContextRequirements: mutable.ListBuffer[SimpleType],
-                  outermostFreeVarType: MutMap[Str, SimpleType],
-                  outermostBoundedVarType: mutable.ListBuffer[Str]
+                  var outermostCtx: Opt[Ctx]
                 ) {
-
     def +=(b: Str -> TypeInfo): Unit = env += b
-
     def ++=(bs: IterableOnce[Str -> TypeInfo]): Unit = bs.iterator.foreach(+=)
 
     def inQQ: Bool = quasiquoteLvl > 0
@@ -84,73 +73,51 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           env.get(name) orElse parent.dlof(_.get(name, traversal))(N)
         case UnquoteTraversal(lvl) =>
           if (quasiquoteLvl < lvl) {
-            env.get(name) orElse freeVarsEnv.get(name) orElse parent.dlof(_.get(name, traversal))(N)
+            env.get(name) orElse parent.dlof(_.get(name, traversal))(N)
           } else
             parent.dlof(_.get(name, traversal))(N)
         case QuasiquoteTraversal(lvl) =>
           if (quasiquoteLvl === lvl) {
-            env.get(name) orElse freeVarsEnv.get(name) orElse parent.dlof(_.get(name, traversal))(N)
+            env.get(name) orElse parent.dlof(_.get(name, traversal))(N)
           } else
             parent.dlof(_.get(name, traversal))(N)
       }
     }
-
     def contains(name: Str): Bool = env.contains(name) || parent.exists(_.contains(name))
-
     def addMth(parent: Opt[Str], nme: Str, ty: MethodType): Unit = mthEnv += R(parent, nme) -> ty
-
     def addMthDefn(parent: Str, nme: Str, ty: MethodType): Unit = mthEnv += L(parent, nme) -> ty
-
     private def getMth(key: (Str, Str) \/ (Opt[Str], Str)): Opt[MethodType] =
       mthEnv.get(key) orElse parent.dlof(_.getMth(key))(N)
-
     def getMth(parent: Opt[Str], nme: Str): Opt[MethodType] = getMth(R(parent, nme))
-
     def getMthDefn(parent: Str, nme: Str): Opt[MethodType] = getMth(L(parent, nme))
-
     private def containsMth(key: (Str, Str) \/ (Opt[Str], Str)): Bool = mthEnv.contains(key) || parent.exists(_.containsMth(key))
-
     def containsMth(parent: Opt[Str], nme: Str): Bool = containsMth(R(parent, nme))
-
-    def nest: Ctx = copy(Some(this), MutMap.empty, MutMap.empty, MutMap.empty, outermostFreeVarType = MutMap.empty, outermostBoundedVarType = ListBuffer.empty)
-
+    def nest: Ctx = copy(Some(this), MutMap.empty, MutMap.empty)
     def nextLevel: Ctx = copy(lvl = lvl + 1)
-
     private val abcCache: MutMap[Str, Set[TypeName]] = MutMap.empty
-
     def allBaseClassesOf(name: Str): Set[TypeName] = abcCache.getOrElseUpdate(name,
       tyDefs.get(name).fold(Set.empty[TypeName])(_.allBaseClasses(this)(Set.empty)))
   }
-
   object Ctx {
     def init: Ctx = Ctx(
       parent = N,
       env = MutMap.from(builtinBindings.iterator.map(nt => nt._1 -> VarSymbol(nt._2, Var(nt._1)))),
       mthEnv = MutMap.empty,
-      freeVarsEnv = MutMap.empty,
       lvl = 0,
       inPattern = false,
       tyDefs = Map.from(builtinTypes.map(t => t.nme.name -> t)),
       nuTyDefs = Map.empty,
       quasiquoteLvl = 0,
       inUnquoted = false,
-      outermostCtx = None,
-      outermostFreeVarType = MutMap.empty,
-      outermostBoundedVarType = ListBuffer.empty,
-      innerUnquoteContextRequirements = ListBuffer.empty,
-      overridingTraversal = None
+      outermostCtx = N
     )
-
     val empty: Ctx = init
   }
-
   implicit def lvl(implicit ctx: Ctx): Int = ctx.lvl
 
   import TypeProvenance.{apply => tp}
-
   def ttp(trm: Term, desc: Str = ""): TypeProvenance =
     TypeProvenance(trm.toLoc, if (desc === "") trm.describe else desc)
-
   def originProv(loco: Opt[Loc], desc: Str, name: Str): TypeProvenance = {
     tp(loco, desc, S(name), isType = true)
     // ^ If we did not treat "origin provenances" differently,
@@ -164,9 +131,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   object NoProv extends TypeProvenance(N, "expression") {
     override def toString: Str = "[NO PROV]"
   }
-
   def noProv: TypeProvenance = NoProv
-
   def noTyProv: TypeProvenance = TypeProvenance(N, "type", isType = true)
 
   val TopType: ExtrType = ExtrType(false)(noTyProv)
@@ -178,6 +143,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   val IntType: ClassTag = ClassTag(Var("int"), Set.single(TypeName("number")))(noTyProv)
   val DecType: ClassTag = ClassTag(Var("number"), Set.empty)(noTyProv)
   val StrType: ClassTag = ClassTag(Var("string"), Set.empty)(noTyProv)
+
   val ErrTypeId: SimpleTerm = Var("error")
 
   // TODO rm this obsolete definition (was there for the old frontend)
@@ -197,39 +163,40 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       TypeDef(Als, TypeName("anything"), Nil, Nil, TopType, Nil, Nil, Set.empty, N, Nil) ::
       TypeDef(Als, TypeName("nothing"), Nil, Nil, BotType, Nil, Nil, Set.empty, N, Nil) ::
       TypeDef(Cls, TypeName("error"), Nil, Nil, TopType, Nil, Nil, Set.empty, N, Nil) ::
-      TypeDef(Cls, TypeName("unit"), Nil, Nil, TopType, Nil, Nil, Set.empty, N, Nil) :: {
-      val tv = freshVar(noTyProv)(1)
-      val tyDef = TypeDef(Als, TypeName("Array"), List(TypeName("A") -> tv), Nil,
-        ArrayType(FieldType(None, tv)(noTyProv))(noTyProv), Nil, Nil, Set.empty, N, Nil)
-      // * ^ Note that the `noTyProv` here is kind of a problem
-      // *    since we currently expand primitive types eagerly in DNFs.
-      // *  For instance, see `inn2 v1` in test `Yicong.mls`.
-      // *  We could instead treat these primitives like any other TypeRef,
-      // *    but that currently requires more simplifier work
-      // *    to get rid of things like `1 & int` and `T | nothing`.
-      tyDef.tvarVariances = S(MutMap(tv -> VarianceInfo.co))
-      tyDef
-    } :: {
-      val tv = freshVar(noTyProv)(1)
-      val tyDef = TypeDef(Als, TypeName("MutArray"), List(TypeName("A") -> tv), Nil,
-        ArrayType(FieldType(Some(tv), tv)(noTyProv))(noTyProv), Nil, Nil, Set.empty, N, Nil)
-      tyDef.tvarVariances = S(MutMap(tv -> VarianceInfo.in))
-      tyDef
-    } :: {
-      val tvT, tvC = freshVar(noProv)(1)
-      val td = TypeDef(Cls, TypeName("Code"), (TypeName("T"), tvT) :: (TypeName("C"), tvC) :: Nil, Nil, TopType, Nil, Nil, Set.empty, N, Nil)
-      td.tvarVariances = S(MutMap(tvT -> VarianceInfo.co, tvC -> VarianceInfo.contra))
-      td
-    } :: Nil
+      TypeDef(Cls, TypeName("unit"), Nil, Nil, TopType, Nil, Nil, Set.empty, N, Nil) ::
+      {
+        val tv = freshVar(noTyProv)(1)
+        val tyDef = TypeDef(Als, TypeName("Array"), List(TypeName("A") -> tv), Nil,
+          ArrayType(FieldType(None, tv)(noTyProv))(noTyProv), Nil, Nil, Set.empty, N, Nil)
+        // * ^ Note that the `noTyProv` here is kind of a problem
+        // *    since we currently expand primitive types eagerly in DNFs.
+        // *  For instance, see `inn2 v1` in test `Yicong.mls`.
+        // *  We could instead treat these primitives like any other TypeRef,
+        // *    but that currently requires more simplifier work
+        // *    to get rid of things like `1 & int` and `T | nothing`.
+        tyDef.tvarVariances = S(MutMap(tv -> VarianceInfo.co))
+        tyDef
+      } ::
+      {
+        val tv = freshVar(noTyProv)(1)
+        val tyDef = TypeDef(Als, TypeName("MutArray"), List(TypeName("A") -> tv), Nil,
+          ArrayType(FieldType(Some(tv), tv)(noTyProv))(noTyProv), Nil, Nil, Set.empty, N, Nil)
+        tyDef.tvarVariances = S(MutMap(tv -> VarianceInfo.in))
+        tyDef
+      } :: {
+        val tvT = freshVar(noProv)(1)
+        val td = TypeDef(Cls, TypeName("Code"), (TypeName("T"), tvT) :: Nil, Nil, TopType, Nil, Nil, Set.empty, N, Nil)
+        td.tvarVariances = S(MutMap(tvT -> VarianceInfo.co))
+        td
+      } :: Nil
+
   val primitiveTypes: Set[Str] =
-    builtinTypes.iterator.map(_.nme.name).flatMap(n => n.decapitalize :: n.capitalize :: Nil).toSet - "Code"
-
+    builtinTypes.iterator.map(_.nme.name).flatMap(n => n.decapitalize :: n.capitalize :: Nil).toSet
   def singleTup(ty: ST): ST =
-    if (funkyTuples) ty else TupleType((N, ty.toUpper(ty.prov)) :: Nil)(noProv)
-
+    if (funkyTuples) ty else TupleType((N, ty.toUpper(ty.prov) ) :: Nil)(noProv)
   val builtinBindings: Bindings = {
     val tv = freshVar(noProv)(1)
-    import FunctionType.{apply => fun}
+    import FunctionType.{ apply => fun }
     val intBinOpTy = fun(singleTup(IntType), fun(singleTup(IntType), IntType)(noProv))(noProv)
     val numberBinOpTy = fun(singleTup(DecType), fun(singleTup(DecType), DecType)(noProv))(noProv)
     val numberBinPred = fun(singleTup(DecType), fun(singleTup(DecType), BoolType)(noProv))(noProv)
@@ -290,10 +257,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       },
       "run" -> {
         val tv = freshVar(noProv)(1)
-        // val cv = freshVar(noProv)(1)
-        PolymorphicType(0, fun(singleTup(TypeRef(TypeName("Code"), tv :: TopType :: Nil)(noProv)), tv)(noProv))
+        PolymorphicType(0, fun(singleTup(TypeRef(TypeName("Code"), tv :: Nil)(noProv)), tv)(noProv))
       },
-      "Const" -> fun(singleTup(IntType), TypeRef(TypeName("Code"), IntType :: TopType :: Nil)(noProv))(noProv),
+      "Const" -> fun(singleTup(IntType), TypeRef(TypeName("Code"), IntType :: Nil)(noProv))(noProv),
     ) ++ primTypes ++ primTypes.map(p => "" + p._1.capitalize -> p._2) // TODO settle on naming convention...
   }
 
@@ -315,17 +281,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     trace(s"$lvl. Typing type $ty") {
       println(s"vars=$vars newDefsInfo=$newDefsInfo")
       val typeType2 = ()
-
       def typeNamed(loc: Opt[Loc], name: Str): (() => ST) \/ (TypeDefKind, Int) =
         newDefsInfo.get(name)
           .orElse(ctx.tyDefs.get(name).map(td => (td.kind, td.tparamsargs.size)))
           .toRight(() => err("type identifier not found: " + name, loc)(raise))
-
       val localVars = mutable.Map.empty[TypeVar, TypeVariable]
-
       def tyTp(loco: Opt[Loc], desc: Str, originName: Opt[Str] = N) =
         TypeProvenance(loco, desc, originName, isType = true)
-
       def rec(ty: Type)(implicit ctx: Ctx, recVars: Map[TypeVar, TypeVariable]): SimpleType = ty match {
         case Top => ExtrType(false)(tyTp(ty.toLoc, "top type"))
         case Bot => ExtrType(true)(tyTp(ty.toLoc, "bottom type"))
@@ -343,7 +305,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             FieldType(f.in.map(rec), rec(f.out))(tp(f.toLoc, "tuple field"))
           ))(tyTp(ty.toLoc, "tuple type"))
         case Splice(fields) =>
-          SpliceType(fields.map {
+          SpliceType(fields.map{
             case L(l) => {
               val t = rec(l)
               val res = ArrayType(freshVar(t.prov).toUpper(t.prov))(t.prov)
@@ -356,10 +318,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           })(tyTp(ty.toLoc, "splice type"))
         case Inter(lhs, rhs) => (if (simplify) rec(lhs) & (rec(rhs), _: TypeProvenance)
         else ComposedType(false, rec(lhs), rec(rhs)) _
-          ) (tyTp(ty.toLoc, "intersection type"))
+          )(tyTp(ty.toLoc, "intersection type"))
         case Union(lhs, rhs) => (if (simplify) rec(lhs) | (rec(rhs), _: TypeProvenance)
         else ComposedType(true, rec(lhs), rec(rhs)) _
-          ) (tyTp(ty.toLoc, "union type"))
+          )(tyTp(ty.toLoc, "union type"))
         case Neg(t) => NegType(rec(t))(tyTp(ty.toLoc, "type negation"))
         case Record(fs) =>
           val prov = tyTp(ty.toLoc, "record type")
@@ -379,8 +341,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         case WithExtension(b, r) => WithType(rec(b),
           RecordType(
             r.fields.map { case (n, f) => n -> FieldType(f.in.map(rec), rec(f.out))(
-              tyTp(App(n, Var("").withLocOf(f)).toCoveringLoc, "extension field"))
-            }
+              tyTp(App(n, Var("").withLocOf(f)).toCoveringLoc, "extension field")) }
           )(tyTp(r.toLoc, "extension record")))(tyTp(ty.toLoc, "extension type"))
         case Literal(lit) => ClassTag(lit, lit.baseClasses)(tyTp(ty.toLoc, "literal type"))
         case TypeName("this") =>
@@ -388,8 +349,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             case AbstractConstructor(_, _) => die
             case VarSymbol(t: TypeScheme, _) => t.instantiate
           }
-        case tn@TypeTag(name) => rec(TypeName(name.decapitalize))
-        case tn@TypeName(name) =>
+        case tn @ TypeTag(name) => rec(TypeName(name.decapitalize))
+        case tn @ TypeName(name) =>
           val tyLoc = ty.toLoc
           val tpr = tyTp(tyLoc, "type reference")
           vars.getOrElse(name, {
@@ -424,8 +385,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             case R((_, tpnum)) =>
               val realTargs = if (targs.size === tpnum) targs.map(rec) else {
                 err(msg"Wrong number of type arguments – expected ${tpnum.toString}, found ${
-                  targs.size.toString
-                }", ty.toLoc)(raise)
+                  targs.size.toString}", ty.toLoc)(raise)
                 (targs.iterator.map(rec) ++ Iterator.continually(freshVar(noProv))).take(tpnum).toList
               }
               TypeRef(base, realTargs)(prov)
@@ -446,7 +406,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           }
           res
       }
-
       (rec(ty)(ctx, Map.empty), localVars.values)
     }(r => s"=> ${r._1} | ${r._2.mkString(", ")}")
 
@@ -464,7 +423,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       nme.uid = S(nextUid)
       ctx += nme.name -> VarSymbol(ty_sch, nme)
       R(S(nme.name -> ty_sch))
-    case t@Tup(fs) if !allowPure => // Note: not sure this is still used!
+    case t @ Tup(fs) if !allowPure => // Note: not sure this is still used!
       val thing = fs match {
         case (S(_), _) :: Nil => "field"
         case Nil => "empty tuple"
@@ -504,7 +463,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         S(nme)
       )(lvl + 1)
       ctx += nme -> VarSymbol(e_ty, Var(nme))
-//      println(s"Adding $nme to ctx: $ctx")
       val ty = typeTerm(rhs)(ctx.nextLevel, raise, vars)
       constrain(ty, e_ty)(raise, TypeProvenance(rhs.toLoc, "binding of " + rhs.describe), ctx)
       e_ty
@@ -530,13 +488,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       v.name
     }
   }
-
   object ValidPatVar {
     def unapply(v: Var)(implicit ctx: Ctx, raise: Raise): Opt[Str] =
       if (ctx.inPattern && v.isPatVar) {
         ctx.parent.dlof(_.get(v.name))(N) |>? { case S(VarSymbol(ts: TypeScheme, _)) =>
-          ts.instantiate(0).unwrapProxies
-        } |>? {
+          ts.instantiate(0).unwrapProxies } |>? {
           case S(ClassTag(Var(v.name), _)) =>
             warn(msg"Variable name '${v.name}' already names a symbol in scope. " +
               s"If you want to refer to that symbol, you can use `scope.${v.name}`; " +
@@ -576,9 +532,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       }, prov, ctx)
       res
     }
-
     term match {
-      case v@Var("_") =>
+      case v @ Var("_") =>
         if (ctx.inPattern || funkyTuples) freshVar(tp(v.toLoc, "wildcard"))
         else err(msg"Widlcard in expression position.", v.toLoc)
       case Asc(trm, ty) =>
@@ -588,45 +543,32 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         if (ctx.inPattern)
           con(ty_ty, trm_ty, ty_ty) // In patterns, we actually _unify_ the pattern and ascribed type
         else ty_ty
-      case (v@ValidPatVar(nme)) =>
+      case (v @ ValidPatVar(nme)) =>
         val prov = tp(if (verboseConstraintProvenanceHints) v.toLoc else N, "variable")
         // Note: only look at ctx.env, and not the outer ones!
         ctx.env.get(nme).collect { case VarSymbol(ts, dv) => assert(v.uid.isDefined); v.uid = dv.uid; ts.instantiate }
           .getOrElse {
             val res = new TypeVariable(lvl, Nil, Nil)(prov)
             v.uid = S(nextUid)
-            ctx += nme -> VarSymbol(res, v) // adding this bounded variables
-            ctx.outermostCtx match {
-              case Some(outermost) if !outermost.outermostFreeVarType.contains(nme) =>
-                  outermost.outermostBoundedVarType.append(nme)
-              case _ =>
-            }
+            ctx += nme -> VarSymbol(res, v)
             res
           }
-      case v@ValidVar(name) =>
-        val traversal = ctx.overridingTraversal.getOrElse(
-          if (builtinBindings.contains(name))
-            BuiltinTraversal()
-          else if (ctx.inUnquoted)
-            UnquoteTraversal(ctx.quasiquoteLvl)
-          else if (ctx.inQQ)
-            QuasiquoteTraversal(ctx.quasiquoteLvl)
-          else
-            LinearTraversal()
-        )
-        ctx.overridingTraversal = N
+      case v @ ValidVar(name) =>
+        val traversal = if (builtinBindings.contains(name))
+          BuiltinTraversal()
+        else if (ctx.inUnquoted)
+          UnquoteTraversal(ctx.quasiquoteLvl)
+        else if (ctx.inQQ)
+          QuasiquoteTraversal(ctx.quasiquoteLvl)
+        else
+          LinearTraversal()
         val ty = ctx.get(name, traversal).fold(
-          if (ctx.inQQ && !ctx.inUnquoted) {
-            val res = new TypeVariable(lvl, Nil, Nil)(prov)
-            val sym = VarSymbol(res, v)
-            ctx.freeVarsEnv += name -> sym
-            val outermost = ctx.outermostCtx.get
-            outermost.outermostFreeVarType += (name -> res)
-
-            res
+          if (ctx.inQQ) {
+            err("Using free variables are not allowed in this version", term.toLoc): TypeScheme
           } else {
             err("identifier not found: " + name, term.toLoc): TypeScheme
-          }) {
+          }
+        ) {
           case AbstractConstructor(absMths, traitWithMths) =>
             val td = ctx.tyDefs(name)
             err((msg"Instantiation of an abstract type is forbidden" -> term.toLoc)
@@ -673,7 +615,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         typeTerms(tup :: Nil, false, Nil)
       case Tup(fs) =>
         TupleType(fs.map { case (n, Fld(mut, _, t)) =>
-          val tym = typeTerm(t)(ctx, raise, vars)
+          val tym = typeTerm(t)
           val fprov = tp(t.toLoc, (if (mut) "mutable " else "") + "tuple field")
           if (mut) {
             val res = freshVar(fprov, n.map(_.name))
@@ -698,7 +640,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             prov.copy(desc = "prohibited undefined element")) // TODO better reporting for this; the prov isn't actually used
         con(t_a, ArrayType(elemType.toUpper(tp(i.toLoc, "array element")))(prov), elemType) |
           TypeRef(TypeName("undefined"), Nil)(prov.copy(desc = "possibly-undefined array access"))
-      case Assign(s@Sel(r, f), rhs) =>
+      case Assign(s @ Sel(r, f), rhs) =>
         val o_ty = typeTerm(r)
         val sprov = tp(s.toLoc, "assigned selection")
         val fieldType = freshVar(sprov, Opt.when(!f.name.startsWith("_"))(f.name))
@@ -710,7 +652,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         )) :: Nil)(sprov), fieldType)
         val vl = typeTerm(rhs)
         con(vl, fieldType, UnitType.withProv(prov))
-      case Assign(s@Subs(a, i), rhs) =>
+      case Assign(s @ Subs(a, i), rhs) =>
         val a_ty = typeTerm(a)
         val sprov = tp(s.toLoc, "assigned array element")
         val elemType = freshVar(sprov)
@@ -726,7 +668,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         err(msg"Illegal assignment" -> prov.loco
           :: msg"cannot assign to ${lhs.describe}" -> lhs.toLoc :: Nil)
       case Splc(es) =>
-        SpliceType(es.map {
+        SpliceType(es.map{
           case L(l) => L({
             val t_l = typeTerm(l)
             val t_a = ArrayType(freshVar(prov).toUpper(prov))(prov)
@@ -734,23 +676,17 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           })
           case R(Fld(mt, sp, r)) => {
             val t = typeTerm(r)
-            if (mt) {
-              R(FieldType(Some(t), t)(t.prov))
-            } else {
-              R(t.toUpper(t.prov))
-            }
+            if (mt) { R(FieldType(Some(t), t)(t.prov)) } else {R(t.toUpper(t.prov))}
           }
         })(prov)
-      case Bra(false, trm: Blk) =>
-        typeTerm(trm)
-      case Bra(rcd, trm@(_: Tup | _: Blk)) if funkyTuples => typeTerms(trm :: Nil, rcd, Nil)
+      case Bra(false, trm: Blk) => typeTerm(trm)
+      case Bra(rcd, trm @ (_: Tup | _: Blk)) if funkyTuples => typeTerms(trm :: Nil, rcd, Nil)
       case Bra(_, trm) => typeTerm(trm)
       case Blk((s: Term) :: Nil) => typeTerm(s)
       case Blk(Nil) => UnitType.withProv(prov)
       case pat if ctx.inPattern =>
         err(msg"Unsupported pattern shape${
-          if (dbg) " (" + pat.getClass.toString + ")" else ""
-        }:", pat.toLoc)(raise)
+          if (dbg) " ("+pat.getClass.toString+")" else ""}:", pat.toLoc)(raise)
       case Lam(pat, body) =>
         val newCtx = ctx.nest
         val param_ty = typePattern(pat)(newCtx, raise, vars)
@@ -765,12 +701,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         term.desugaredTerm = S(desug)
         typeTerm(desug)
       case App(f, a) =>
-        // TODO: implement non-overriding approach to force search outside
-        f match {
-          case Var(_) => ctx.overridingTraversal = S(BuiltinTraversal())
-          case _ =>
-        }
-        println(s"Applying $f(${f.getClass}) to $a(${a.getClass})")
         val f_ty = typeTerm(f)
         val a_ty = typeTerm(a)
         val res = freshVar(prov)
@@ -799,7 +729,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             fieldName -> res.toUpper(tp(fieldName.toLoc, "field selector")) :: Nil)(prov)
           con(obj_ty, rcd_ty, res)
         }
-
         def mthCallOrSel(obj: Term, fieldName: Var) =
           (fieldName.name match {
             case s"$parent.$nme" => ctx.getMth(S(parent), nme) // explicit calls
@@ -819,12 +748,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
               val res = freshVar(prov)
               con(mth_ty.toPT.instantiate, FunctionType(singleTup(o_ty), res)(prov), res)
             case N =>
-              if (fieldName.name.isCapitalized) {
-                err(msg"Method ${fieldName.name} not found", term.toLoc)
-              }
+              if (fieldName.name.isCapitalized) err(msg"Method ${fieldName.name} not found", term.toLoc)
               else rcdSel(obj, fieldName) // TODO: no else?
           }
-
         obj match {
           case Var(name) if name.isCapitalized && ctx.tyDefs.isDefinedAt(name) => // explicit retrieval
             ctx.getMth(S(name), fieldName.name) match {
@@ -839,12 +765,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         val n_ty = typeLetRhs(isrec, nme.name, rhs)
         val newCtx = ctx.nest
         newCtx += nme.name -> VarSymbol(n_ty, nme)
-        ctx.outermostCtx match {
-          case Some(outermost) if !outermost.outermostFreeVarType.contains(nme.name) =>
-            outermost.outermostBoundedVarType.append(nme.name)
-          case _ =>
-        }
-
         typeTerm(bod)(newCtx, raise)
       // case Blk(s :: stmts) =>
       //   val (newCtx, ty) = typeStatement(s)
@@ -876,7 +796,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           case ((a_ty, tv), req) => a_ty & tv | req & a_ty.neg()
         }
         con(s_ty, req, cs_ty)
-      case iff@If(body, fallback) =>
+      case iff @ If(body, fallback) =>
         import mlscript.ucs._
         try {
           val caseTree = MutCaseOf.build(desugarIf(body, fallback))
@@ -895,66 +815,19 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case New(base, args) => ???
       case TyApp(_, _) => ??? // TODO
       case Quoted(body) =>
-        def toRecordEntry(e: (Str -> SimpleType)) = (Var(e._1), FieldType(N, e._2)(noProv))
-        val nested = ctx.nest
-        val nested_ctx = nested.copy(
+        val nested_ctx = ctx.nest.copy(
           quasiquoteLvl = ctx.quasiquoteLvl + 1,
-          inUnquoted = false,
-          innerUnquoteContextRequirements = ListBuffer.empty)
+          inUnquoted = false)
         nested_ctx.outermostCtx = Some(nested_ctx)
-
         val body_type = typeTerm(body)(nested_ctx, raise, vars)
-        val empty_rcd = RecordType(Nil)(NoProv)
-        val requirements = nested_ctx.innerUnquoteContextRequirements.toList
-        val unquote_requirement = requirements.fold(empty_rcd)(_ & _)
-
-        val free_vars = nested_ctx.outermostFreeVarType.toList.map(toRecordEntry)
-
-        val free_var_requirement = RecordType(free_vars)(NoProv)
-
-        val ctx_type = unquote_requirement & free_var_requirement
-
-        TypeRef(TypeName("Code"), body_type :: ctx_type :: Nil)(noProv)
+        TypeRef(TypeName("Code"), body_type :: Nil)(noProv)
       case Unquoted(body) =>
-        def constrainFreeVarRequirement(ty: SimpleType)(implicit seen: MutSet[SimpleType] = MutSet.empty): Unit = {
-          if (seen.contains(ty))
-            return
-          seen += ty
-          ty match {
-            case ComposedType(_, lhs, rhs) =>
-              constrainFreeVarRequirement(lhs)
-              constrainFreeVarRequirement(rhs)
-            case Without(bTy, _) => constrainFreeVarRequirement(bTy)
-            case RecordType(fields) => fields.foreach((entry) => {
-              ctx.get(entry._1.name, traversal = QuasiquoteTraversal(ctx.quasiquoteLvl)) match {
-                case S(VarSymbol(ty, _)) =>
-                  val bounded_ty = ty.instantiate
-                  con(bounded_ty, entry._2.ub, bounded_ty)
-                case _ =>
-              }
-            })
-            case TypeVariable(_, _, upper, _) if upper.nonEmpty => constrainFreeVarRequirement(upper.head)
-            case _ =>
-          }
-        }
         ctx.parent match {
           case Some(p) if ctx.outermostCtx =/= N =>
             val nest_ctx = ctx.nest.copy(inUnquoted = true)
-
-            val tc = freshVar(noProv)
-            val res = freshVar(prov)
             val body_type = typeTerm(body)(nest_ctx, raise, vars)
-
-            val outermost_ctx = ctx.outermostCtx.get
-            val tc_with_bounded = tc.without(outermost_ctx.outermostBoundedVarType.map(Var).toSortedSet)
-            outermost_ctx.innerUnquoteContextRequirements.append(tc_with_bounded)
-
-            val res_ty = con(body_type, TypeRef(TypeName("Code"), Ls(res, tc))(noProv), res)
-
-            if (tc.upperBounds.nonEmpty)
-              constrainFreeVarRequirement(tc.upperBounds.head)
-
-            res_ty
+            val res = freshVar(noProv)
+            con(body_type, TypeRef(TypeName("Code"), Ls(res))(noProv), res)
           case _ => err("Unquotes should be enclosed with a quasiquote.", body.toLoc)(raise)
         }
     }
@@ -1014,13 +887,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   def typeTerms(term: Ls[Statement], rcd: Bool, fields: List[Opt[Var] -> SimpleType])
                (implicit ctx: Ctx, raise: Raise, prov: TypeProvenance): SimpleType
   = term match {
-    case (trm@Var(nme)) :: sts if rcd => // field punning
+    case (trm @ Var(nme)) :: sts if rcd => // field punning
       typeTerms(Tup(S(trm) -> Fld(false, false, trm) :: Nil) :: sts, rcd, fields)
     case Blk(sts0) :: sts1 => typeTerms(sts0 ::: sts1, rcd, fields)
     case Tup(Nil) :: sts => typeTerms(sts, rcd, fields)
     case Tup((no, Fld(tmut, _, trm)) :: ofs) :: sts =>
       val ty = {
-        trm match {
+        trm match  {
           case Bra(false, t) if ctx.inPattern => // we use syntax `(x: (p))` to type `p` as a pattern and not a type...
             typePattern(t)
           case _ => ctx.copy(inPattern = ctx.inPattern && no.isEmpty) |> { implicit ctx => // TODO change this?
@@ -1039,7 +912,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           val prov = tp(trm.toLoc, "parameter type")
           val t_ty =
           // TODO in positive position, this should create a new VarType instead! (i.e., an existential)
-            new TypeVariable(lvl, Nil, Nil)(prov) //.tap(ctx += nme -> _)
+            new TypeVariable(lvl, Nil, Nil)(prov)//.tap(ctx += nme -> _)
 
           // constrain(ty, t_ty)(raise, prov)
           constrain(t_ty, ty)(raise, prov, ctx)
@@ -1129,8 +1002,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           AppliedType(TypeName("MutArray"), Bounds(f2.in.getOrElse(Bot), f2.out) :: Nil)
         case SpliceType(elems) => Splice(elems.map {
           case L(l) => L(go(l))
-          case R(v) => R(Field(v.lb.map(go(_)), go(v.ub)))
-        })
+          case R(v) => R(Field(v.lb.map(go(_)), go(v.ub))) })
         case NegType(t) => Neg(go(t))
         case ExtrType(true) => Bot
         case ExtrType(false) => Top
@@ -1148,8 +1020,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           case lit: Lit => Literal(lit)
         }
         case TypeRef(td, Nil) => td
-        case tr@TypeRef(td, targs) => AppliedType(td, tr.mapTargs(S(true)) {
-          case ta@((S(true), TopType) | (S(false), BotType)) => Bounds(Bot, Top)
+        case tr @ TypeRef(td, targs) => AppliedType(td, tr.mapTargs(S(true)) {
+          case ta @ ((S(true), TopType) | (S(false), BotType)) => Bounds(Bot, Top)
           case (_, ty) => go(ty)
         })
         case TypeBounds(lb, ub) => Bounds(go(lb), go(ub))
@@ -1164,7 +1036,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
 
 
   private var curUid: Int = 0
-
   def nextUid: Int = {
     val res = curUid
     curUid += 1
