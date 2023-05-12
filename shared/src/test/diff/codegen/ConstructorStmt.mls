@@ -188,7 +188,7 @@ class Bar {
 //│ // End of generated code
 
 :js
-class Baz {
+class Baz() {
   let x = 123
   log((1, x))
   let y =
@@ -234,7 +234,8 @@ class Baz {
 //│           ]);
 //│         }
 //│       };
-//│       this.#Baz = Baz;
+//│       this.#Baz = (() => Object.freeze(new Baz()));
+//│       this.#Baz.class = Baz;
 //│     }
 //│     return this.#Baz;
 //│   }

@@ -291,7 +291,7 @@ t.id
 
 
 :e
-class TestBad<A> {
+class TestBad<A>() {
   fun foo1(x: A) = x
   fun foo2(x: A) = x + 1
 }
@@ -302,7 +302,7 @@ class TestBad<A> {
 //│ ║  l.296: 	  fun foo2(x: A) = x + 1
 //│ ║         	                   ^
 //│ ╟── Note: type parameter A is defined at:
-//│ ║  l.294: 	class TestBad<A> {
+//│ ║  l.294: 	class TestBad<A>() {
 //│ ╙──       	              ^
 //│ class TestBad[A]() {
 //│   fun foo1: (x: A,) -> A

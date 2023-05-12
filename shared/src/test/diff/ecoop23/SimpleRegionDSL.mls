@@ -59,8 +59,8 @@ let circles = go(2, 1024)
 
 // ******************* Adding More Language Constructs *******************
 
-class Univ
-class Empty
+class Univ()
+class Empty()
 class Scale[Region](v: Vector, a: Region)
 //│ class Univ()
 //│ class Empty()
@@ -295,7 +295,7 @@ IsUnivIsEmpty.isEmpty(circles)
 //│ res
 //│     = false
 
-class Foo
+class Foo()
 IsUnivIsEmpty.isEmpty(Scale(Vector(1, 2), Intersect(Foo(), circles)))
 //│ class Foo()
 //│ bool

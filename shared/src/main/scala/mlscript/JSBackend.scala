@@ -111,8 +111,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         val ident = JSIdent(sym.runtimeName)
         if (sym.isByvalueRec.isEmpty && !sym.isLam) ident() else ident
       case S(sym: NuTypeSymbol with RuntimeSymbol) =>
-        if (sym.needNew && isCallee) JSNew(translateNuTypeSymbol(sym))
-        else translateNuTypeSymbol(sym)
+        translateNuTypeSymbol(sym)
       case S(sym: NewClassMemberSymbol) =>
         if (sym.isByvalueRec.getOrElse(false) && !sym.isLam) throw CodeGenError(s"unguarded recursive use of by-value binding $name")
         scope.resolveValue("this") match {
@@ -159,7 +158,11 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     // Function invocation
     case App(trm, Tup(args)) =>
       val callee = trm match {
-        case Var(nme) => translateVar(nme, true)
+        case Var(nme) => scope.resolveValue(nme) match {
+          case S(sym: NuTypeSymbol with RuntimeSymbol) =>
+            translateNuTypeSymbol(sym)
+          case _ => translateVar(nme, true)
+        }
         case _ => translateTerm(trm)
       }
       callee(args map { case (_, Fld(_, _, arg)) => translateTerm(arg) }: _*)
@@ -288,7 +291,13 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       throw CodeGenError(s"if expression was not desugared")
     case New(N, TypingUnit(Nil)) => JSRecord(Nil)
     case New(S(TypeName(className) -> Tup(args)), TypingUnit(Nil)) =>
-      val callee = translateVar(className, true)
+      val callee = scope.resolveValue(className) match {
+        case S(sym: NuTypeSymbol with RuntimeSymbol) =>
+          if (sym.needNew) JSNew(translateNuTypeSymbol(sym))
+          else throw CodeGenError(s"invalid `new` keyword in $className instantiation.")
+        case _ =>
+          translateVar(className, true)
+      }
       callee(args.map { case (_, Fld(_, _, arg)) => translateTerm(arg) }: _*)
     case New(_, TypingUnit(_)) =>
       throw CodeGenError("custom class body is not supported yet")

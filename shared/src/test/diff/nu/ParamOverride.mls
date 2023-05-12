@@ -38,7 +38,7 @@ mixin Derived1(n: int) {
 //│ }
 
 
-class Test0 extends Base1(1/2), Derived1(1)
+class Test0() extends Base1(1/2), Derived1(1)
 //│ class Test0() {
 //│   fun foo: (int, 1, number,)
 //│   fun original: number
