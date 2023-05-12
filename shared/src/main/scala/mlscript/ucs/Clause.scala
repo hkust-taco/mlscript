@@ -38,11 +38,11 @@ object Clause {
     override val scrutinee: Scrutinee,
     literal: SimpleTerm
   )(override val locations: Ls[Loc]) extends MatchClause {
-    override def toString(): String = s"«$scrutinee is $literal" + bindingsToString
+    override def toString: String = s"«$scrutinee is $literal" + bindingsToString
   }
 
   final case class MatchAny(override val scrutinee: Scrutinee)(override val locations: Ls[Loc]) extends MatchClause {
-    override def toString(): String = s"«$scrutinee is any" + bindingsToString
+    override def toString: String = s"«$scrutinee is any" + bindingsToString
   }
 
   final case class MatchClass(
@@ -50,7 +50,7 @@ object Clause {
     className: Var,
     fields: Ls[Str -> Var]
   )(override val locations: Ls[Loc]) extends MatchClause {
-    override def toString(): String = s"«$scrutinee is $className»" + bindingsToString
+    override def toString: String = s"«$scrutinee is $className»" + bindingsToString
   }
 
   final case class MatchTuple(
@@ -58,13 +58,13 @@ object Clause {
     arity: Int,
     fields: Ls[Str -> Var]
   )(override val locations: Ls[Loc]) extends Clause {
-    override def toString(): String = s"«$scrutinee is Tuple#$arity»" + bindingsToString
+    override def toString: String = s"«$scrutinee is Tuple#$arity»" + bindingsToString
   }
 
   final case class BooleanTest(test: Term)(
     override val locations: Ls[Loc]
   ) extends Clause {
-    override def toString(): String = s"«$test»" + bindingsToString
+    override def toString: String = s"«$test»" + bindingsToString
   }
 
   /**
@@ -73,6 +73,6 @@ object Clause {
   final case class Binding(name: Var, term: Term, isField: Bool)(
     override val locations: Ls[Loc]
   ) extends Clause {
-    override def toString(): String = s"«$name = $term»" + bindingsToString
+    override def toString: String = s"«$name = $term»" + bindingsToString
   }
 }

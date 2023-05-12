@@ -13,13 +13,13 @@ object LetBinding {
 
   object Kind {
     case object ScrutineeAlias extends Kind {
-      override def toString(): String = "scrutinee alias"
+      override def toString: String = "scrutinee alias"
     }
     case object FieldExtraction extends Kind {
-      override def toString(): String = "pattern destruction"
+      override def toString: String = "pattern destruction"
     }
     case object InterleavedLet extends Kind {
-      override def toString(): String = "interleaved let"
+      override def toString: String = "interleaved let"
     }
   }
 }

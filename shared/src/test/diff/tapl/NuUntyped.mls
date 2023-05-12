@@ -1,27 +1,6 @@
 :NewParser
 :NewDefs
 
-:escape
-// You can push debug messages to this magic array.
-let Array: { from: anything => { push: anything => anything, join: string => string } }
-let _Array = Array
-let logs: { push: anything => anything, join: string => string } = _Array.from([])
-let debug: anything => anything = x => logs.push(x)
-fun showDebug = logs.join("\n")
-//│ let Array: {from: anything -> {join: string -> string, push: anything -> anything}}
-//│ let _Array: {from: anything -> {join: string -> string, push: anything -> anything}}
-//│ let logs: {join: string -> string, push: anything -> anything}
-//│ let debug: anything -> anything
-//│ fun showDebug: string
-//│ Array
-//│       = <missing implementation>
-//│ _Array
-//│        = [Function: Array]
-//│ logs
-//│      = []
-//│ debug
-//│       = [Function: debug]
-
 fun concat2(a, b) = concat(a)(b)
 fun concat3(a, b, c) = concat2(a, concat2(b, c))
 fun concat4(a, b, c, d) = concat2(a, concat3(b, c, d))

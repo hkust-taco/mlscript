@@ -57,7 +57,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
     else (cur.reverseIterator.mkString, i)
 
   @tailrec final
-  def str(i: Int, escapeMode: Bool = false, cur: Ls[Char] = Nil): (Str, Int) =
+  def str(i: Int, escapeMode: Bool, cur: Ls[Char] = Nil): (Str, Int) =
     if (escapeMode)
       if (i < length)
         bytes(i) match {
@@ -106,7 +106,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
         lex(j, ind, next(j, COMMA))
       case '"' =>
         val j = i + 1
-        val (chars, k) = str(j)
+        val (chars, k) = str(j, false)
         val k2 = if (bytes.lift(k) === Some('"')) k + 1 else {
           pe(msg"unclosed quotation mark")
           k

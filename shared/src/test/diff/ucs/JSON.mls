@@ -2,43 +2,24 @@
 :NewDefs
 
 :escape
-// You can push debug messages to this magic array.
-let Array: { from: anything => { push: anything => anything, join: string => string } }
-let _Array = Array
-let logs: { push: anything => anything, join: string => string } = _Array.from([])
-let debug: anything => anything = x => logs.push(x)
-fun showDebug = logs.join("\n")
 // We need to use some native methods on `String`.
 let String: nothing
 let asNativeString: anything => { length: int, charCodeAt: int => int, charAt: int => string, slice: int => string } = String
 let StringInstance: { fromCharCode: int => string } = String
 // We will validate our implementation with the built-in `JSON.parse`.
 let JSON: { parse: string => anything, stringify: anything => string }
-//│ let Array: {from: anything -> {join: string -> string, push: anything -> anything}}
-//│ let _Array: {from: anything -> {join: string -> string, push: anything -> anything}}
-//│ let logs: {join: string -> string, push: anything -> anything}
-//│ let debug: anything -> anything
-//│ fun showDebug: string
 //│ let String: nothing
 //│ let asNativeString: anything -> {charAt: int -> string, charCodeAt: int -> int, length: int, slice: int -> string}
 //│ let StringInstance: {fromCharCode: int -> string}
 //│ let JSON: {parse: string -> anything, stringify: anything -> string}
-//│ Array
-//│       = <missing implementation>
-//│ _Array
-//│        = [Function: Array]
-//│ logs
-//│      = []
-//│ debug
-//│       = [Function: debug]
 //│ String
-//│        = [Function: showDebug]
+//│        = <missing implementation>
 //│ asNativeString
-//│                = <missing implementation>
+//│                = [Function: String]
 //│ StringInstance
 //│                = [Function: String]
 //│ JSON
-//│      = [Function: String]
+//│      = <missing implementation>
 
 JSON.parse("{ \"xs\": [1, 2, 3], \"yes\": true, \"no\": false, \"insane\": null }")
 //│ anything
@@ -123,10 +104,10 @@ fun listJoin(xs, sep) =
 //│ type List[A] = Cons[A] | Nil
 //│ module Nil()
 //│ class Cons[A](head: A, tail: List[A])
-//│ fun listConcat: forall 'A 'a 'A0. (Cons['A0] | Nil, List['A] & 'a,) -> (Cons['A] | 'a)
+//│ fun listConcat: forall 'A 'A0 'a. (Cons['A] | Nil, List['A0] & 'a,) -> (Cons['A0] | 'a)
 //│ fun listJoin: forall 'A1. (Cons['A1] | Nil, string,) -> string
 //│ where
-//│   'A0 <: 'A
+//│   'A <: 'A0
 
 type TreeMap[A] = Node[A] | Empty
 module Empty

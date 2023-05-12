@@ -9,7 +9,7 @@ import scala.annotation.tailrec
   * A `Conjunction` represents a list of `Clause`s.
   */
 final case class Conjunction(clauses: Ls[Clause], trailingBindings: Ls[LetBinding]) {
-  override def toString(): String =
+  override def toString: String =
     clauses.mkString("", " and ", "") + {
       (if (trailingBindings.isEmpty) "" else " ") +
         (trailingBindings match {

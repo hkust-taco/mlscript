@@ -765,48 +765,6 @@ class Desugarer extends TypeDefs { self: Typer =>
     }
   }(_ => s"[checkExhaustive] ${t.describe}")
 
-  // private def summarizePatterns(t: MutCaseOf)(implicit ctx: Ctx, raise: Raise): ExhaustivenessMap = traceUCS("[summarizePatterns]") {
-  //   val m = MutMap.empty[Str \/ Int, MutMap[Var, MutCase]]
-  //   def rec(t: MutCaseOf): Unit = traceUCS(s"[rec] ${t.describe}") {
-  //     t match {
-  //       case Consequent(term) => ()
-  //       case MissingCase => ()
-  //       case IfThenElse(_, whenTrue, whenFalse) =>
-  //         rec(whenTrue)
-  //         rec(whenFalse)
-  //       case Match(scrutinee, branches, default) =>
-  //         val key = getScurtineeKey(scrutinee)
-  //         val patternMap = m.getOrElseUpdate(key, MutMap.empty)
-  //         branches.foreach {
-  //           case mutCase @ MutCase.Literal(literal, consequent) =>
-  //             literal match {
-  //               case tof @ Var(n) if n === "true" || n === "false" =>
-  //                 if (!patternMap.contains(tof)) {
-  //                   patternMap += ((tof, mutCase))
-  //                 }
-  //               case _ => () // TODO: Summarize literals.
-  //             }
-  //             rec(consequent)
-  //           case mutCase @ MutCase.Constructor((className, _), consequent) =>
-  //             if (!patternMap.contains(className)) {
-  //               patternMap += ((className, mutCase))
-  //             }
-  //             rec(consequent)
-  //         }
-  //         default.foreach(rec)
-  //     }
-  //   }()
-  //   rec(t)
-  //   printlnUCS("Summarized patterns")
-  //   if (m.isEmpty)
-  //     printlnUCS("  <Empty>")
-  //   else
-  //     m.foreach { case (scrutinee, patterns) =>
-  //       printlnUCS(s"  * $scrutinee => " + patterns.keysIterator.mkString(", "))
-  //     }
-  //   Map.from(m.iterator.map { case (key, patternMap) => key -> Map.from(patternMap) })
-  // }(_ => "[summarizePatterns]")
-
   /**
     * Make a term from a mutable case tree.
     * This should be called after exhaustiveness checking.
@@ -993,17 +951,6 @@ class Desugarer extends TypeDefs { self: Typer =>
           className -> td.baseClasses.iterator.map(_.name).toList
         } |> Map.from
       Desugarer.transitiveClosure(superClassMap)
-      // ctx.tyDefs2
-      // val superClassMap = ctx.tyDefs2.iterator.map { case (className, dti) =>
-      //   className -> dti.decl.body
-      // } |> Map.from
-      // printlnUCS("• ctx.tyDefs")
-      // if (superClassMap.isEmpty)
-      //   printlnUCS("  * <Empty>")
-      // else
-      //   superClassMap.foreach { case (className, superClassNames) =>
-      //     printlnUCS(s"  * $className <- ${superClassNames.mkString(", ")}")
-      //   }
     }(_ => "[getClassHierarchy]")
 }
 
