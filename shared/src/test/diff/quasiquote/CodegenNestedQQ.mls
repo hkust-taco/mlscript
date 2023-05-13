@@ -159,7 +159,7 @@ run(res)
 //│ res: 1
 //│    = 1
 
-
+:e
 code"x => ${code"x + 1"}"
 //│ ╔══[ERROR] Using free variables are not allowed in this version
 //│ ║  l.163: 	code"x => ${code"x + 1"}"
@@ -170,7 +170,7 @@ code"x => ${code"x + 1"}"
 //│        [ [ '_', 'x', 'x3' ] ],
 //│        [ 'Unquoted', [ 'App', '+', [Array], [Array] ] ]
 //│      ]
-:e
+
 run(res)(1)
 //│ res: int
 //│    = 2

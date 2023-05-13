@@ -4,10 +4,10 @@
 :e
 :ge
 code"x => y => 100 + ${Const(x + y)}"
-//│ ╔══[ERROR] Using free variables are not allowed in this version
+//│ ╔══[ERROR] identifier not found: x
 //│ ║  l.6: 	code"x => y => 100 + ${Const(x + y)}"
 //│ ╙──     	                             ^
-//│ ╔══[ERROR] Using free variables are not allowed in this version
+//│ ╔══[ERROR] identifier not found: y
 //│ ║  l.6: 	code"x => y => 100 + ${Const(x + y)}"
 //│ ╙──     	                                 ^
 //│ res: code & {Code#T <: anything -> anything -> int}
