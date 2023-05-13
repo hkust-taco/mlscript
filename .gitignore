@@ -7,6 +7,3 @@ metals.sbt
 project/Dependencies.scala
 project/metals.sbt
 **.worksheet.sc
-.idea/
-.vscode/
-.DS_Store
