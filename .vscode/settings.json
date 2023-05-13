@@ -1,17 +1,17 @@
 {
-  "files.associations": {
-      "*.fun": "typescript",
-      "*.mls": "typescript"
-  },
-  "typescript.validate.enable": false,
-  "files.watcherExclude": {
-      "**/target": true
-  },
-  "[typescript]": {
-      "editor.quickSuggestions": {
-          "comments": "off",
-          "other": "off",
-          "strings": "off"
-      }
-  }
+    "files.associations": {
+        "*.fun": "typescript",
+        "*.mls": "typescript"
+    },
+    "typescript.validate.enable": false,
+    "files.watcherExclude": {
+        "**/target": true
+    },
+    "[typescript]": {
+        "editor.quickSuggestions": {
+            "comments": "off",
+            "other": "off",
+            "strings": "off"
+        }
+    }
 }
