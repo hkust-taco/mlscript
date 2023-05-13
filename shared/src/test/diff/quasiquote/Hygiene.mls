@@ -22,24 +22,25 @@ run(code_test)
 //│    = 111
 
 // Test 2: this is hygienic because the child Quoted is a descendant of the parent Quoted in the AST
+:e
 fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, code"${cde} + x")}" else cde
 //│ ╔══[ERROR] Using free variables are not allowed in this version
-//│ ║  l.25: 	fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, code"${cde} + x")}" else cde
+//│ ║  l.26: 	fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, code"${cde} + x")}" else cde
 //│ ╙──      	                                                                                       ^
 //│ test: (int, code & {Code#T <: int},) -> (code & {Code#T <: int})
 //│     = [Function: test]
 
-:e
 run(test(3, code"0"))
 //│ res: int
 //│    = 6
 
 
 // Test 3: note that the free variable makes this unhygienic, which is intended
+:e
 fun cde_template(cde) = code"${cde} + x"
 fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, cde_template(cde))}" else cde
 //│ ╔══[ERROR] Using free variables are not allowed in this version
-//│ ║  l.42: 	fun cde_template(cde) = code"${cde} + x"
+//│ ║  l.40: 	fun cde_template(cde) = code"${cde} + x"
 //│ ╙──      	                                      ^
 //│ cde_template: (code & {Code#T <: int}) -> (code & {Code#T <: int})
 //│             = [Function: cde_template]
@@ -56,7 +57,6 @@ let c = test(3, code"0")
 //│      [ 'Unquoted', [ 'Let', 'x', Symbol(x), [Array], [Array] ] ]
 //│    ]
 
-:e
 run(c)
 //│ res: int
 //│    = 3

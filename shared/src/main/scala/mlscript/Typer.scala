@@ -38,6 +38,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
 
   // uses only if you need to search for built-in methods
   final case class BuiltinTraversal() extends Traversal
+
+  var overiddingTraversal: Opt[Traversal] = N
   
   /**  `env`: maps the names of all global and local bindings to their types
     *  Keys of `mthEnv`:
@@ -57,7 +59,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       inPattern: Bool,
       tyDefs: Map[Str, TypeDef],
       nuTyDefs: Map[Str, TypedNuTypeDef],
+      quasiquoteLvl: Int,
+      inUnquoted: Bool,
+      var outermostCtx: Opt[Ctx],
   ) {
+
     def +=(b: Str -> TypeInfo): Unit = env += b
     def ++=(bs: IterableOnce[Str -> TypeInfo]): Unit = bs.iterator.foreach(+=)
     def inQQ: Bool = quasiquoteLvl > 0
@@ -405,9 +411,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   
   def typePattern(pat: Term)(implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType] = Map.empty): SimpleType =
     typeTerm(pat)(ctx.copy(inPattern = true), raise, vars)
-
-
-  def typeStatement(s: DesugaredStatement, allowPure: Bool)(implicit ctx: Ctx, raise: Raise): PolymorphicType \/ Opt[Binding] = s match {
+  
+  
+  def typeStatement(s: DesugaredStatement, allowPure: Bool)
+        (implicit ctx: Ctx, raise: Raise): PolymorphicType \/ Opt[Binding] = s match {
     case Def(false, Var("_"), L(rhs), isByname) => typeStatement(rhs, allowPure)
     case Def(isrec, nme, L(rhs), isByname) => // TODO reject R(..)
       if (nme.name === "_")
@@ -546,7 +553,25 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             res
           }
       case v @ ValidVar(name) =>
-        val ty = ctx.get(name).fold(err("identifier not found: " + name, term.toLoc): TypeScheme) {
+        val traversal = overiddingTraversal.getOrElse(
+          if (builtinBindings.contains(name))
+            BuiltinTraversal()
+          else if (ctx.inUnquoted)
+            UnquoteTraversal(ctx.quasiquoteLvl)
+          else if (ctx.inQQ)
+            QuasiquoteTraversal(ctx.quasiquoteLvl)
+          else
+            LinearTraversal()
+        )
+        // reset the overriding traversal method once applied to the get method
+        overiddingTraversal = N
+        val ty = ctx.get(name, traversal).fold(
+          if (ctx.inQQ) {
+            err("Using free variables are not allowed in this version", term.toLoc): TypeScheme
+          } else {
+            err("identifier not found: " + name, term.toLoc): TypeScheme
+          }
+        ) {
           case AbstractConstructor(absMths, traitWithMths) =>
             val td = ctx.tyDefs(name)
             err((msg"Instantiation of an abstract type is forbidden" -> term.toLoc)
@@ -679,6 +704,16 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         term.desugaredTerm = S(desug)
         typeTerm(desug)
       case App(f, a) =>
+        // Typically, identifiers are searched in the context of the quasiquote,
+        // but functions are other built-in operators are allowed to be referenced from the outside.
+        // Using overriding traversal will allow us to handle this edge case.
+        //
+        // Example: code"f(1)" -> App(Var(f), IntLit(1))
+        // ctx.get will find the function f even if f is not defined inside the quasiquote
+        f match {
+          case Var(_) if ctx.inQQ => overiddingTraversal = S(BuiltinTraversal())
+          case _ =>
+        }
         val f_ty = typeTerm(f)
         val a_ty = typeTerm(a)
         val res = freshVar(prov)
