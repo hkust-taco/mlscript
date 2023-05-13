@@ -177,7 +177,7 @@ run(code_nested)
 let y = code"x"
 code"let id = x => ${y}; id(true)"
 //│ ╔══[ERROR] Using free variables are not allowed in this version
-//│ ║  l.178: 	let y = code"x"
+//│ ║  l.177: 	let y = code"x"
 //│ ╙──       	             ^
 //│ y: code & {Code#T <: error}
 //│  = [ 'Var', [ 'FreeVar', 'x' ] ]
@@ -198,7 +198,7 @@ run(res)
 :e
 let free_y = code"y"
 //│ ╔══[ERROR] Using free variables are not allowed in this version
-//│ ║  l.201: 	let free_y = code"y"
+//│ ║  l.199: 	let free_y = code"y"
 //│ ╙──       	                  ^
 //│ free_y: code & {Code#T <: error}
 //│       = [ 'Var', [ 'FreeVar', 'y' ] ]
@@ -221,7 +221,7 @@ run(use_free)
 :e
 code"let z = x => ${let c = code"x + 1"; c}; z"
 //│ ╔══[ERROR] Using free variables are not allowed in this version
-//│ ║  l.224: 	code"let z = x => ${let c = code"x + 1"; c}; z"
+//│ ║  l.222: 	code"let z = x => ${let c = code"x + 1"; c}; z"
 //│ ╙──       	                                 ^
 //│ res: code & {Code#T <: anything -> error}
 //│    = [
@@ -282,7 +282,7 @@ class Foo(n)
 //│ Foo: 'n -> (Foo with {n: 'n})
 //│    = [Function: Foo1]
 
-:e
+
 code"Foo(1)"
 //│ res: code & {Code#T <: Foo & {n: 1}}
 //│    = [ 'App_Fun', [ 'Var', [ 'FreeVar', 'Foo' ] ], [ 'Tup', [ [Array] ] ] ]
@@ -300,10 +300,10 @@ let codeB = code"y + y"
 //│ codeA: code & {Code#T <: 2}
 //│      = [ 'Let', 'y', Symbol(y), [ '_', 2 ], [ 'Var', Symbol(y) ] ]
 //│ ╔══[ERROR] Using free variables are not allowed in this version
-//│ ║  l.301: 	let codeB = code"y + y"
+//│ ║  l.299: 	let codeB = code"y + y"
 //│ ╙──       	                 ^
 //│ ╔══[ERROR] Using free variables are not allowed in this version
-//│ ║  l.301: 	let codeB = code"y + y"
+//│ ║  l.299: 	let codeB = code"y + y"
 //│ ╙──       	                     ^
 //│ codeB: code & {Code#T <: int}
 //│      = [
@@ -317,7 +317,7 @@ let codeB = code"y + y"
 :pe
 let both = code"${codeA}; ${codeB}"
 //│ ╔══[PARSE ERROR] Unexpected ';' keyword here
-//│ ║  l.320: 	let both = code"${codeA}; ${codeB}"
+//│ ║  l.318: 	let both = code"${codeA}; ${codeB}"
 //│ ╙──       	                        ^
 //│ both: code & {Code#T <: 2}
 //│     = [
@@ -332,7 +332,7 @@ let c = code"${a} + ${b}"
 //│ a: code & {Code#T <: 0}
 //│  = [ 'Let', 'x', Symbol(x), [ '_', 0 ], [ 'Var', Symbol(x) ] ]
 //│ ╔══[ERROR] Using free variables are not allowed in this version
-//│ ║  l.332: 	let b = code"x"
+//│ ║  l.330: 	let b = code"x"
 //│ ╙──       	             ^
 //│ b: code & {Code#T <: error}
 //│  = [ 'Var', [ 'FreeVar', 'x' ] ]
@@ -343,7 +343,9 @@ let c = code"${a} + ${b}"
 //│      [ 'Unquoted', [ 'Let', 'x', Symbol(x), [Array], [Array] ] ],
 //│      [ 'Unquoted', [ 'Var', [Array] ] ]
 //│    ]
-:e
+
+
+:re
 run(c)
 //│ res: int
 //│ Runtime error:

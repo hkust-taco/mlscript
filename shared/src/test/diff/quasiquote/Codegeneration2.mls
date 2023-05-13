@@ -57,30 +57,28 @@ run(res)
 
 // should be unresolved symbol error 
 :ge
+:e
 code"let x = {a: 100}; x . a"
 //│ ╔══[ERROR] Using free variables are not allowed in this version
-//│ ║  l.60: 	code"let x = {a: 100}; x . a"
+//│ ║  l.61: 	code"let x = {a: 100}; x . a"
 //│ ╙──      	                         ^
 //│ ╔══[ERROR] Using free variables are not allowed in this version
-//│ ║  l.60: 	code"let x = {a: 100}; x . a"
+//│ ║  l.61: 	code"let x = {a: 100}; x . a"
 //│ ╙──      	                           ^
 //│ res: code & {Code#T <: error}
 //│ Syntax error:
 //│   Unexpected token '.'
 
 
-// should be unresolved symbol error
-:ge
-code"let x = {a: 100}; x. a"
-//│ ╔══[ERROR] Using free variables are not allowed in this version
-//│ ║  l.68: 	code"let x = {a: 100}; x. a"
-//│ ╙──      	                        ^
-//│ ╔══[ERROR] Using free variables are not allowed in this version
-//│ ║  l.68: 	code"let x = {a: 100}; x. a"
-//│ ╙──      	                          ^
-//│ res: code & {Code#T <: error}
-//│ Syntax error:
-//│   Unexpected token '.'
+code"let x = {a: 100}; x.a"
+//│ res: code & {Code#T <: 100}
+//│    = [
+//│        'Let',
+//│        'x',
+//│        Symbol(x),
+//│        [ 'Bra', [ 'Rcd', [Object] ] ],
+//│        [ 'Sel', [ 'Var', Symbol(x) ], 'a' ]
+//│      ]
 
 
 // should be ok

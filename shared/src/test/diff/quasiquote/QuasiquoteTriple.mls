@@ -34,7 +34,7 @@ code""""hello world""""
 
 :pe
 code""" "HKUST"
-//│ ╔══[PARSE ERROR] Unmatched opening quasiquote
+//│ ╔══[PARSE ERROR] Unmatched opening quasiquote triple
 //│ ║  l.36: 	code""" "HKUST"
 //│ ╙──      	^^^^^^^
 //│ res: "HKUST"

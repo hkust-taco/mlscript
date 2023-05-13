@@ -566,7 +566,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         // reset the overriding traversal method once applied to the get method
         overiddingTraversal = N
         val ty = ctx.get(name, traversal).fold(
-          if (ctx.inQQ) {
+          if (ctx.inQQ && !ctx.inUnquoted) {
             err("Using free variables are not allowed in this version", term.toLoc): TypeScheme
           } else {
             err("identifier not found: " + name, term.toLoc): TypeScheme
