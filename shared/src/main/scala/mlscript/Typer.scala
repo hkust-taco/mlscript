@@ -14,7 +14,16 @@ import mlscript.Message._
  *  In order to turn the resulting CompactType into a mlscript.Type, we use `expandCompactType`.
  */
 class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
-  extends ucs.Desugarer with TypeSimplifier {
+    extends ucs.Desugarer with TypeSimplifier {
+  
+  def funkyTuples: Bool = false
+  def doFactorize: Bool = false
+  
+  var recordProvenances: Boolean = true
+  
+  type Raise = Diagnostic => Unit
+  type Binding = Str -> TypeScheme
+  type Bindings = Map[Str, TypeScheme]
 
   abstract class Traversal()
 
@@ -27,46 +36,31 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   // Searches only inside a quasiquote
   final case class QuasiquoteTraversal(lvl: Int) extends Traversal
 
-  // uses only if you need to search a method definition (e.g. + - * /)
-  // it has the same effect as `NormalSearchStrategy`
+  // uses only if you need to search for built-in methods
   final case class BuiltinTraversal() extends Traversal
-
-  def funkyTuples: Bool = false
-  def doFactorize: Bool = false
-
-  var recordProvenances: Boolean = true
-
-  type Raise = Diagnostic => Unit
-  type Binding = Str -> TypeScheme
-  type Bindings = Map[Str, TypeScheme]
-
+  
   /**  `env`: maps the names of all global and local bindings to their types
-   *  Keys of `mthEnv`:
-   * `L` represents the inferred types of method definitions. The first value is the parent name,
-   *   and the second value is the method name.
-   * `R` represents the actual method types.
-   *   The first optional value is the parent name, with `N` representing implicit calls,
-   *   and the second value is the method name.
-   *   (See the case for `Sel` in `typeTerm` for documentation on explicit vs. implicit calls.)
-   * The public helper functions should be preferred for manipulating `mthEnv`
+    *  Keys of `mthEnv`:
+    * `L` represents the inferred types of method definitions. The first value is the parent name,
+    *   and the second value is the method name.
+    * `R` represents the actual method types.
+    *   The first optional value is the parent name, with `N` representing implicit calls,
+    *   and the second value is the method name.
+    *   (See the case for `Sel` in `typeTerm` for documentation on explicit vs. implicit calls.)
+    * The public helper functions should be preferred for manipulating `mthEnv`
    */
   case class Ctx(
-                  parent: Opt[Ctx],
-                  env: MutMap[Str, TypeInfo],
-                  mthEnv: MutMap[(Str, Str) \/ (Opt[Str], Str), MethodType],
-                  lvl: Int,
-                  inPattern: Bool,
-                  tyDefs: Map[Str, TypeDef],
-                  nuTyDefs: Map[Str, TypedNuTypeDef],
-                  quasiquoteLvl: Int,
-                  inUnquoted: Boolean,
-                  var outermostCtx: Opt[Ctx]
-                ) {
+      parent: Opt[Ctx],
+      env: MutMap[Str, TypeInfo],
+      mthEnv: MutMap[(Str, Str) \/ (Opt[Str], Str), MethodType],
+      lvl: Int,
+      inPattern: Bool,
+      tyDefs: Map[Str, TypeDef],
+      nuTyDefs: Map[Str, TypedNuTypeDef],
+  ) {
     def +=(b: Str -> TypeInfo): Unit = env += b
     def ++=(bs: IterableOnce[Str -> TypeInfo]): Unit = bs.iterator.foreach(+=)
-
     def inQQ: Bool = quasiquoteLvl > 0
-
     def get(name: Str, traversal: Traversal = LinearTraversal()): Opt[TypeInfo] = {
       traversal match {
         case LinearTraversal() | BuiltinTraversal() =>
@@ -114,7 +108,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     val empty: Ctx = init
   }
   implicit def lvl(implicit ctx: Ctx): Int = ctx.lvl
-
+  
   import TypeProvenance.{apply => tp}
   def ttp(trm: Term, desc: Str = ""): TypeProvenance =
     TypeProvenance(trm.toLoc, if (desc === "") trm.describe else desc)
@@ -124,16 +118,16 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     //    it would yields unnatural errors like:
       //│ ╟── expression of type `B` is not a function
       //│ ║  l.6: 	    method Map[B]: B -> A
-      //│ ║       
+      //│ ║       	               ^
     // So we should keep the info but not shadow the more relevant later provenances
   }
-
+  
   object NoProv extends TypeProvenance(N, "expression") {
     override def toString: Str = "[NO PROV]"
   }
   def noProv: TypeProvenance = NoProv
   def noTyProv: TypeProvenance = TypeProvenance(N, "type", isType = true)
-
+  
   val TopType: ExtrType = ExtrType(false)(noTyProv)
   val BotType: ExtrType = ExtrType(true)(noTyProv)
   val UnitType: ClassTag = ClassTag(Var("unit"), Set.empty)(noTyProv)
@@ -143,9 +137,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   val IntType: ClassTag = ClassTag(Var("int"), Set.single(TypeName("number")))(noTyProv)
   val DecType: ClassTag = ClassTag(Var("number"), Set.empty)(noTyProv)
   val StrType: ClassTag = ClassTag(Var("string"), Set.empty)(noTyProv)
-
+  
   val ErrTypeId: SimpleTerm = Var("error")
-
+  
   // TODO rm this obsolete definition (was there for the old frontend)
   private val primTypes =
     List("unit" -> UnitType, "bool" -> BoolType, "int" -> IntType, "number" -> DecType, "string" -> StrType,
@@ -174,8 +168,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         // *  We could instead treat these primitives like any other TypeRef,
         // *    but that currently requires more simplifier work
         // *    to get rid of things like `1 & int` and `T | nothing`.
-        tyDef.tvarVariances = S(MutMap(tv -> VarianceInfo.co))
-        tyDef
+      tyDef.tvarVariances = S(MutMap(tv -> VarianceInfo.co))
+      tyDef
     } ::
     {
       val tv = freshVar(noTyProv)(1)
@@ -188,8 +182,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       val td = TypeDef(Cls, TypeName("Code"), (TypeName("T"), tvT) :: Nil, Nil, TopType, Nil, Nil, Set.empty, N, Nil)
       td.tvarVariances = S(MutMap(tvT -> VarianceInfo.co))
       td
-    } :: Nil
-
+    } ::
+    Nil
   val primitiveTypes: Set[Str] =
     builtinTypes.iterator.map(_.nme.name).flatMap(n => n.decapitalize :: n.capitalize :: Nil).toSet
   def singleTup(ty: ST): ST =
@@ -262,8 +256,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       "Const" -> fun(singleTup(IntType), TypeRef(TypeName("Code"), IntType :: Nil)(noProv))(noProv),
     ) ++ primTypes ++ primTypes.map(p => "" + p._1.capitalize -> p._2) // TODO settle on naming convention...
   }
-
-
+  
+  
   /* Parameters `vars` and `newDefsInfo` are used for typing `TypeName`s.
    * If the key is found in `vars`, the type is typed as the associated value. Use case: type arguments.
    * If the key is found in `newDefsInfo`, the type is typed as a `TypeRef`, where the associated value
