@@ -13,7 +13,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
   val bytes: Array[Char] = origin.fph.blockStr.toArray
   private val length = bytes.length
   type State = Int
-
+  
   private val isOpChar = Set(
     '!', '#', '%', '&', '*', '+', '-', '/', ':', '<', '=', '>', '?', '@', '\\', '^', '|', '~' , '.',
     // ',', 
@@ -25,13 +25,13 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
     isIdentFirstChar(c) || isDigit(c) || c === '\''
   def isDigit(c: Char): Bool =
     c >= '0' && c <= '9'
-
+  
   private val isNonStickyKeywordChar = Set(
     ',',
     ':',
     ';',
   )
-
+  
   private val isSymKeyword = Set(
     "->",
     "=",
@@ -41,14 +41,14 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
     // "<",
     // ">",
   )
-
+  
   private val isAlphaOp = Set(
     "and",
     "or",
     "is",
     "as",
   )
-
+  
   @tailrec final
   /**
    * @param i intialial position on where you start getting the character
@@ -57,11 +57,6 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
   */
   def takeWhile(i: Int, cur: Ls[Char] = Nil)(pred: Char => Bool): (Str, Int) =
     if (i < length && pred(bytes(i))) takeWhile(i + 1, bytes(i) :: cur)(pred)
-    else (cur.reverseIterator.mkString, i)
-
-
-  def takeWhileIndex(i: Int, cur: Ls[Char] = Nil)(pred: Int => Bool): (Str, Int) =
-    if (i < length && pred(i)) takeWhileIndex(i + 1, bytes(i) :: cur)(pred)
     else (cur.reverseIterator.mkString, i)
 
   def loc(start: Int, end: Int): Loc = Loc(start, end, origin)
@@ -75,27 +70,16 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
       // @inline
     def go(j: Int, tok: Token)(implicit qqList: Ls[BracketKind]) = lex(j, ind, (tok, loc(i, j)) :: acc)
 
-    def isMatchSyntax(i: Int, syntax: Str): Bool = {
+    def matchSyntax(i: Int, syntax: Str): Bool = {
       i + syntax.length < length + 1 && bytes.slice(i, i + syntax.length).mkString === syntax
     }
-    def isQuasiquoteKeyword(i: Int): Boolean = {
-      val syntax = BracketKind.Quasiquote.beg.asInstanceOf[Str]
-      isMatchSyntax(i, syntax)
-    }
+    def isQuasiquoteOpening(i: Int): Bool = matchSyntax(i, BracketKind.Quasiquote.beg.toString)
 
-    def isQuasiquoteTripleKeyword(i: Int): Boolean = {
-      val syntax = BracketKind.QuasiquoteTriple.beg.asInstanceOf[Str]
-      isMatchSyntax(i, syntax)
-    }
-    def isUnquoteKey(i: Int): Boolean = {
-      val syntax = BracketKind.Unquote.beg.asInstanceOf[Str]
-      isMatchSyntax(i, syntax)
-    }
+    def isQuasiquoteTripleOpening(i: Int): Bool =  matchSyntax(i, BracketKind.QuasiquoteTriple.beg.toString)
 
-    def isTripleQuote(i: Int): Bool = {
-      val syntax = BracketKind.QuasiquoteTriple.end.asInstanceOf[Str]
-      isMatchSyntax(i, syntax)
-    }
+    def isUnquoteOpening(i: Int): Bool = matchSyntax(i, BracketKind.Unquote.beg.toString)
+
+    def isQuasiquoteTripleClosing(i: Int): Bool = matchSyntax(i, BracketKind.QuasiquoteTriple.end.toString)
 
     c match {
       case ' ' =>
@@ -104,22 +88,22 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
       case ',' =>
         val j = i + 1
         go(j, COMMA)
-      case 'c' if isQuasiquoteKeyword(i) || isQuasiquoteTripleKeyword(i) =>
-        val isTripleQuoteQQ = isQuasiquoteTripleKeyword(i)
+      case 'c' if isQuasiquoteOpening(i) || isQuasiquoteTripleOpening(i) =>
+        val isTripleQuoteQQ = isQuasiquoteTripleOpening(i)
         val bracket_kind = if (isTripleQuoteQQ)
           BracketKind.QuasiquoteTriple
         else
           BracketKind.Quasiquote
-        val len = bracket_kind.beg.asInstanceOf[Str].length
+        val len = bracket_kind.beg.toString.length
         go(i + len, OPEN_BRACKET(bracket_kind))(bracket_kind :: qqList)
-      case '$' if isUnquoteKey(i) =>
+      case '$' if isUnquoteOpening(i) =>
         go(i + 2, OPEN_BRACKET(BracketKind.Unquote))
       case '"' =>
         val j = i + 1
         val (chars, k) = takeWhile(j)(c => c =/= '"' && c =/= '\n')
         val isLexingTripleQQ = qqList.nonEmpty && qqList.head === BracketKind.QuasiquoteTriple
 
-        if (isLexingTripleQQ && isTripleQuote(i)) {
+        if (isLexingTripleQQ && isQuasiquoteTripleClosing(i)) {
           val syntax_length = BracketKind.QuasiquoteTriple.end.asInstanceOf[Str].length
           go(i + syntax_length, CLOSE_BRACKET(BracketKind.QuasiquoteTriple))(qqList.tail)
         } else if (!isLexingTripleQQ && qqList.nonEmpty) {
@@ -169,7 +153,8 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
               if (hasNewIndent) (INDENT, loc(j, k))
               else (NEWLINE, loc(i, k))
             } :: List.fill(droppedNum)((DEINDENT, loc(j-1, k))) ::: acc
-            else (NEWLINE, loc(i, k)) :: acc)
+            else (NEWLINE, loc(i, k)) :: acc
+          )
         }
       case _ if isIdentFirstChar(c) =>
         val (n, j) = takeWhile(i)(isIdentChar)
@@ -204,7 +189,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
   }
   
   
-  lazy val tokens: Ls[Token -> Loc] = lex(0, Nil, Nil) 
+  lazy val tokens: Ls[Token -> Loc] = lex(0, Nil, Nil)
   
   /** Converts the lexed tokens into structured tokens. */
   lazy val bracketedTokens: Ls[Stroken -> Loc] = {
