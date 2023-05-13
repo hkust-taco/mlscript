@@ -14,7 +14,7 @@ code""error code""
 //│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
 //│ ║  l.10: 	code""error code""
 //│ ╙──      	      ^^^^^
-//│ res: Code[undefined, anything]
+//│ res: code & {Code#T <: undefined}
 //│    = [ '_', undefined ]
 
 :pe
@@ -25,11 +25,11 @@ code""wrong example""
 //│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
 //│ ║  l.21: 	code""wrong example""
 //│ ╙──      	      ^^^^^
-//│ res: Code[undefined, anything]
+//│ res: code & {Code#T <: undefined}
 //│    = [ '_', undefined ]
 
 code""""hello world""""
-//│ res: Code["hello world", anything]
+//│ res: code & {Code#T <: "hello world"}
 //│    = [ '_', 'hello world' ]
 
 :pe

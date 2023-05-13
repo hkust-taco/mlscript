@@ -3,7 +3,7 @@
 // More specific checks from parser folder
 
 code"[]"
-//│ res: Code[(), anything]
+//│ res: code & {Code#T <: ()}
 //│    = [ 'Bra', [ 'Tup', [] ] ]
 run(res)
 //│ res: ()
@@ -11,21 +11,21 @@ run(res)
 
 code"()"
 run(res)
-//│ res: Code[(), anything]
+//│ res: code & {Code#T <: ()}
 //│    = [ 'Bra', [ 'Tup', [] ] ]
 //│ res: ()
 //│    = []
 
 code"(1,)"
 run(res)
-//│ res: Code[(1,), anything]
+//│ res: code & {Code#T <: (1,)}
 //│    = [ 'Bra', [ 'Tup', [ [Array] ] ] ]
 //│ res: (1,)
 //│    = [ 1 ]
 
 code"let f = (x, y, z) => x + y + x; f of 1,2,3"
 run(res)
-//│ res: Code[int, anything]
+//│ res: code & {Code#T <: int}
 //│    = [
 //│        'Let',
 //│        'f',
@@ -49,7 +49,7 @@ code"// Can I comment?"
 //│ ╙──      	^^^^^
 
 code"[x: 1,]"
-//│ res: Code[(x: 1,), anything]
+//│ res: code & {Code#T <: (x: 1,)}
 //│    = [ 'Bra', [ 'Tup', [ [Array] ] ] ]
 run(res)
 //│ res: (x: 1,)
@@ -58,7 +58,13 @@ run(res)
 // should be unresolved symbol error 
 :ge
 code"let x = {a: 100}; x . a"
-//│ res: Code['a, {.: {a: 100} -> 'b -> 'a, a: 'b}]
+//│ ╔══[ERROR] Using free variables are not allowed in this version
+//│ ║  l.60: 	code"let x = {a: 100}; x . a"
+//│ ╙──      	                         ^
+//│ ╔══[ERROR] Using free variables are not allowed in this version
+//│ ║  l.60: 	code"let x = {a: 100}; x . a"
+//│ ╙──      	                           ^
+//│ res: code & {Code#T <: error}
 //│ Syntax error:
 //│   Unexpected token '.'
 
@@ -66,14 +72,20 @@ code"let x = {a: 100}; x . a"
 // should be unresolved symbol error
 :ge
 code"let x = {a: 100}; x. a"
-//│ res: Code['a, {.: {a: 100} -> 'b -> 'a, a: 'b}]
+//│ ╔══[ERROR] Using free variables are not allowed in this version
+//│ ║  l.68: 	code"let x = {a: 100}; x. a"
+//│ ╙──      	                        ^
+//│ ╔══[ERROR] Using free variables are not allowed in this version
+//│ ║  l.68: 	code"let x = {a: 100}; x. a"
+//│ ╙──      	                          ^
+//│ res: code & {Code#T <: error}
 //│ Syntax error:
 //│   Unexpected token '.'
 
 
 // should be ok
 code"let x = {a: 100}; x .a"
-//│ res: Code[100, anything]
+//│ res: code & {Code#T <: 100}
 //│    = [
 //│        'Let',
 //│        'x',

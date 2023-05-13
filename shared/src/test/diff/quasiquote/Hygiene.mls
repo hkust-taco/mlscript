@@ -2,7 +2,7 @@
 
 // Test 1
 let code_test = code"let x0 = 1; let x1 = 10; let x2 = 100; x0 + x1 + x2"
-//│ code_test: Code[int, anything]
+//│ code_test: code & {Code#T <: int}
 //│          = [
 //│              'Let',
 //│              'x0',
@@ -23,35 +23,31 @@ run(code_test)
 
 // Test 2: this is hygienic because the child Quoted is a descendant of the parent Quoted in the AST
 fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, code"${cde} + x")}" else cde
-//│ test: (int, Code[int | 'a, 'b & 'c] & 'd,) -> (Code[int | 'a, 'b\x & {x: int} & 'c] | 'd)
-//│   where
-//│     'b <: 'b\x & {x: int} & 'c
+//│ ╔══[ERROR] Using free variables are not allowed in this version
+//│ ║  l.25: 	fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, code"${cde} + x")}" else cde
+//│ ╙──      	                                                                                       ^
+//│ test: (int, code & {Code#T <: int},) -> (code & {Code#T <: int})
 //│     = [Function: test]
 
 :e
 run(test(3, code"0"))
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.32: 	run(test(3, code"0"))
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── expression of type `anything` does not have field 'x'
-//│ res: error | int
+//│ res: int
 //│    = 6
 
 
 // Test 3: note that the free variable makes this unhygienic, which is intended
 fun cde_template(cde) = code"${cde} + x"
 fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, cde_template(cde))}" else cde
-//│ cde_template: Code[int, 'a] -> Code[int, {x: int} & 'a]
+//│ ╔══[ERROR] Using free variables are not allowed in this version
+//│ ║  l.42: 	fun cde_template(cde) = code"${cde} + x"
+//│ ╙──      	                                      ^
+//│ cde_template: (code & {Code#T <: int}) -> (code & {Code#T <: int})
 //│             = [Function: cde_template]
-//│ test: (int, Code[int | 'a, 'b & 'c] & 'd,) -> (Code[int | 'a, 'b\x & {x: int} & 'c] | 'd)
-//│   where
-//│     'b <: 'b\x & {x: int} & 'c
+//│ test: (int, code & {Code#T <: int},) -> (code & {Code#T <: int})
 //│     = [Function: test1]
 
 let c = test(3, code"0")
-//│ c: Code[int, 'a]
-//│   where
-//│     'a <: 'a\x & {x: int}
+//│ c: code & {Code#T <: int}
 //│  = [
 //│      'Let',
 //│      'x',
@@ -62,9 +58,5 @@ let c = test(3, code"0")
 
 :e
 run(c)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.64: 	run(c)
-//│ ║        	^^^^^^
-//│ ╙── expression of type `anything` does not have field 'x'
-//│ res: error | int
+//│ res: int
 //│    = 3

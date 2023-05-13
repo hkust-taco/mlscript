@@ -4,7 +4,7 @@
 code"x"
 code"(x) => ${res}"
 //│ ╔══[ERROR] Using free variables are not allowed in this version
-//│ ║  l.3: 	code"x"
+//│ ║  l.4: 	code"x"
 //│ ╙──     	     ^
 //│ res: code & {Code#T <: error}
 //│    = [ 'Var', [ 'FreeVar', 'x' ] ]
@@ -15,7 +15,7 @@ code"(x) => ${res}"
 code"x"
 code"let y = 1; ${res}"
 //│ ╔══[ERROR] Using free variables are not allowed in this version
-//│ ║  l.13: 	code"x"
+//│ ║  l.15: 	code"x"
 //│ ╙──      	     ^
 //│ res: code & {Code#T <: error}
 //│    = [ 'Var', [ 'FreeVar', 'x' ] ]
@@ -32,12 +32,12 @@ code"let y = 1; ${res}"
 let a = code"x"
 let b = code"y"
 //│ ╔══[ERROR] Using free variables are not allowed in this version
-//│ ║  l.29: 	let a = code"x"
+//│ ║  l.32: 	let a = code"x"
 //│ ╙──      	             ^
 //│ a: code & {Code#T <: error}
 //│  = [ 'Var', [ 'FreeVar', 'x' ] ]
 //│ ╔══[ERROR] Using free variables are not allowed in this version
-//│ ║  l.30: 	let b = code"y"
+//│ ║  l.33: 	let b = code"y"
 //│ ╙──      	             ^
 //│ b: code & {Code#T <: error}
 //│  = [ 'Var', [ 'FreeVar', 'y' ] ]
@@ -45,10 +45,10 @@ let b = code"y"
 :e
 code"a + a"
 //│ ╔══[ERROR] Using free variables are not allowed in this version
-//│ ║  l.42: 	code"a + a"
+//│ ║  l.46: 	code"a + a"
 //│ ╙──      	     ^
 //│ ╔══[ERROR] Using free variables are not allowed in this version
-//│ ║  l.42: 	code"a + a"
+//│ ║  l.46: 	code"a + a"
 //│ ╙──      	         ^
 //│ res: code & {Code#T <: int}
 //│    = [
@@ -60,10 +60,10 @@ code"a + a"
 
 code"a + b"
 //│ ╔══[ERROR] Using free variables are not allowed in this version
-//│ ║  l.57: 	code"a + b"
+//│ ║  l.61: 	code"a + b"
 //│ ╙──      	     ^
 //│ ╔══[ERROR] Using free variables are not allowed in this version
-//│ ║  l.57: 	code"a + b"
+//│ ║  l.61: 	code"a + b"
 //│ ╙──      	         ^
 //│ res: code & {Code#T <: int}
 //│    = [
@@ -75,7 +75,7 @@ code"a + b"
 
 code"x + (let x = 2; x * x)"
 //│ ╔══[ERROR] Using free variables are not allowed in this version
-//│ ║  l.72: 	code"x + (let x = 2; x * x)"
+//│ ║  l.76: 	code"x + (let x = 2; x * x)"
 //│ ╙──      	     ^
 //│ res: code & {Code#T <: int}
 //│    = [
@@ -98,12 +98,12 @@ code"let x = 1
 ${a} + (let y = 1; ${b})
 "
 //│ ╔══[ERROR] Using free variables are not allowed in this version
-//│ ║  l.90: 	let a = code"x"
+//│ ║  l.94: 	let a = code"x"
 //│ ╙──      	             ^
 //│ a: code & {Code#T <: error}
 //│  = [ 'Var', [ 'FreeVar', 'x' ] ]
 //│ ╔══[ERROR] Using free variables are not allowed in this version
-//│ ║  l.91: 	let b = code"y"
+//│ ║  l.95: 	let b = code"y"
 //│ ╙──      	             ^
 //│ b: code & {Code#T <: error}
 //│  = [ 'Var', [ 'FreeVar', 'y' ] ]
@@ -126,7 +126,7 @@ ${a} + (let y = 1; ${b})
 
 let cde = code"a"
 //│ ╔══[ERROR] Using free variables are not allowed in this version
-//│ ║  l.123: 	let cde = code"a"
+//│ ║  l.127: 	let cde = code"a"
 //│ ╙──       	               ^
 //│ cde: code & {Code#T <: error}
 //│    = [ 'Var', [ 'FreeVar', 'a' ] ]
@@ -137,7 +137,7 @@ let cde_w_unquote = code"${cde}"
 
 let cde_w_free_vars = code"let x = 1; x + y"
 //│ ╔══[ERROR] Using free variables are not allowed in this version
-//│ ║  l.134: 	let cde_w_free_vars = code"let x = 1; x + y"
+//│ ║  l.138: 	let cde_w_free_vars = code"let x = 1; x + y"
 //│ ╙──       	                                          ^
 //│ cde_w_free_vars: code & {Code#T <: int}
 //│                = [
@@ -167,7 +167,7 @@ let cde_w_unquote_w_free_vars = code"${cde_w_free_vars}"
 
 let cde_w_unquote_w_local_free_vars = code"[z, ${cde_w_unquote_w_free_vars}]"
 //│ ╔══[ERROR] Using free variables are not allowed in this version
-//│ ║  l.164: 	let cde_w_unquote_w_local_free_vars = code"[z, ${cde_w_unquote_w_free_vars}]"
+//│ ║  l.168: 	let cde_w_unquote_w_local_free_vars = code"[z, ${cde_w_unquote_w_free_vars}]"
 //│ ╙──       	                                            ^
 //│ cde_w_unquote_w_local_free_vars: code & {Code#T <: (error, int,)}
 //│                                = [ 'Bra', [ 'Tup', [ [Array], [Array] ] ] ]
@@ -176,7 +176,7 @@ let free_var1 = code"let x = 1; x + y"
 let free_var2 = code"let i = 1; i + x"
 let cde_w_mutli_unquote = code"${free_var2} + ${free_var1}"
 //│ ╔══[ERROR] Using free variables are not allowed in this version
-//│ ║  l.171: 	let free_var1 = code"let x = 1; x + y"
+//│ ║  l.175: 	let free_var1 = code"let x = 1; x + y"
 //│ ╙──       	                                    ^
 //│ free_var1: code & {Code#T <: int}
 //│          = [
@@ -187,7 +187,7 @@ let cde_w_mutli_unquote = code"${free_var2} + ${free_var1}"
 //│              [ 'App', '+', [ 'Var', Symbol(x) ], [ 'Var', [Array] ] ]
 //│            ]
 //│ ╔══[ERROR] Using free variables are not allowed in this version
-//│ ║  l.172: 	let free_var2 = code"let i = 1; i + x"
+//│ ║  l.176: 	let free_var2 = code"let i = 1; i + x"
 //│ ╙──       	                                    ^
 //│ free_var2: code & {Code#T <: int}
 //│          = [
@@ -211,7 +211,7 @@ fun f(x, y) = code"[${x}, ${y}]"
 
 let x = code"y"
 //│ ╔══[ERROR] Using free variables are not allowed in this version
-//│ ║  l.220: 	let x = code"y"
+//│ ║  l.212: 	let x = code"y"
 //│ ╙──       	             ^
 //│ x: code & {Code#T <: error}
 //│  = [ 'Var', [ 'FreeVar', 'y' ] ]
@@ -222,10 +222,10 @@ let c = f(x, x)
 
 let cde_arr = code"[${code"y"}, ${code"y"}]"
 //│ ╔══[ERROR] Using free variables are not allowed in this version
-//│ ║  l.231: 	let cde_arr = code"[${code"y"}, ${code"y"}]"
+//│ ║  l.223: 	let cde_arr = code"[${code"y"}, ${code"y"}]"
 //│ ╙──       	                           ^
 //│ ╔══[ERROR] Using free variables are not allowed in this version
-//│ ║  l.231: 	let cde_arr = code"[${code"y"}, ${code"y"}]"
+//│ ║  l.223: 	let cde_arr = code"[${code"y"}, ${code"y"}]"
 //│ ╙──       	                                       ^
 //│ cde_arr: code & {Code#T <: (error, error,)}
 //│        = [ 'Bra', [ 'Tup', [ [Array], [Array] ] ] ]
@@ -248,10 +248,10 @@ run(res)
 // CHECK THIS
 y => code"[${code"y"}, ${code"y"}]"
 //│ ╔══[ERROR] Using free variables are not allowed in this version
-//│ ║  l.257: 	y => code"[${code"y"}, ${code"y"}]"
+//│ ║  l.249: 	y => code"[${code"y"}, ${code"y"}]"
 //│ ╙──       	                  ^
 //│ ╔══[ERROR] Using free variables are not allowed in this version
-//│ ║  l.257: 	y => code"[${code"y"}, ${code"y"}]"
+//│ ║  l.249: 	y => code"[${code"y"}, ${code"y"}]"
 //│ ╙──       	                              ^
 //│ res: anything -> (code & {Code#T <: (error, error,)})
 //│    = [Function: res]
@@ -267,7 +267,7 @@ fun f(x, y) = [code"[${x}, ${y}]", x, y]
 
 let a: Code<int, {z: int}>
 //│ ╔══[ERROR] Wrong number of type arguments – expected 1, found 2
-//│ ║  l.282: 	let a: Code<int, {z: int}>
+//│ ║  l.268: 	let a: Code<int, {z: int}>
 //│ ╙──       	       ^^^^^^^^^^^^^^^^^^
 //│ a: code & {Code#T <: int}
 //│  = <missing implementation>
@@ -290,7 +290,7 @@ let built_in_binding_test = code"let f = x => x + 1; f(if true then 1 else 2)"
 
 code"f(0)"
 //│ ╔══[ERROR] Using free variables are not allowed in this version
-//│ ║  l.308: 	code"f(0)"
+//│ ║  l.291: 	code"f(0)"
 //│ ╙──       	     ^
 //│ res: code & {Code#T <: error}
 //│    = [ 'App_Fun', [ 'Var', [ 'FreeVar', 'f' ] ], [ 'Tup', [ [Array] ] ] ]
@@ -299,7 +299,7 @@ code"f(0)"
 :ge
 code"${code"${code"${z}"}"}"
 //│ ╔══[ERROR] Using free variables are not allowed in this version
-//│ ║  l.317: 	code"${code"${code"${z}"}"}"
+//│ ║  l.300: 	code"${code"${code"${z}"}"}"
 //│ ╙──       	                     ^
 //│ res: code & {Code#T <: error}
 //│ Code generation encountered an error:
@@ -315,10 +315,10 @@ code"${code"${z}"}"
 
 code"let x = 1; let z = 1; code"x + y""
 //│ ╔══[ERROR] Using free variables are not allowed in this version
-//│ ║  l.333: 	code"let x = 1; let z = 1; code"x + y""
+//│ ║  l.316: 	code"let x = 1; let z = 1; code"x + y""
 //│ ╙──       	                                ^
 //│ ╔══[ERROR] Using free variables are not allowed in this version
-//│ ║  l.333: 	code"let x = 1; let z = 1; code"x + y""
+//│ ║  l.316: 	code"let x = 1; let z = 1; code"x + y""
 //│ ╙──       	                                    ^
 //│ res: code & {Code#T <: code & {Code#T <: int}}
 //│    = [
@@ -331,7 +331,7 @@ code"let x = 1; let z = 1; code"x + y""
 
 code"let z = 0;${code"z + 1"}"
 //│ ╔══[ERROR] Using free variables are not allowed in this version
-//│ ║  l.349: 	code"let z = 0;${code"z + 1"}"
+//│ ║  l.332: 	code"let z = 0;${code"z + 1"}"
 //│ ╙──       	                      ^
 //│ res: code & {Code#T <: int}
 //│    = [
@@ -343,10 +343,10 @@ code"let z = 0;${code"z + 1"}"
 //│      ]
 code"let x = 1;${code"x + y"}"
 //│ ╔══[ERROR] Using free variables are not allowed in this version
-//│ ║  l.361: 	code"let x = 1;${code"x + y"}"
+//│ ║  l.344: 	code"let x = 1;${code"x + y"}"
 //│ ╙──       	                      ^
 //│ ╔══[ERROR] Using free variables are not allowed in this version
-//│ ║  l.361: 	code"let x = 1;${code"x + y"}"
+//│ ║  l.344: 	code"let x = 1;${code"x + y"}"
 //│ ╙──       	                          ^
 //│ res: code & {Code#T <: int}
 //│    = [

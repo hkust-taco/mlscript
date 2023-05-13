@@ -256,7 +256,7 @@ res.Swap
 //│    = undefined
 
 refin: Ref['a..'b] & Ref['c..'d]
-//│ res: Ref[in 'b & (int | string) | 'd & (int | string) out 'b & 'd]
+//│ res: Ref[in 'd & (int | string) | 'b & (int | string) out 'b & 'd]
 //│    = <no result>
 //│      refin is not implemented
 

@@ -162,7 +162,7 @@ run(res)
 
 code"x => ${code"x + 1"}"
 //│ ╔══[ERROR] Using free variables are not allowed in this version
-//│ ║  l.172: 	code"x => ${code"x + 1"}"
+//│ ║  l.163: 	code"x => ${code"x + 1"}"
 //│ ╙──       	                 ^
 //│ res: code & {Code#T <: anything -> int}
 //│    = [

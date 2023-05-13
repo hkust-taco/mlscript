@@ -3,7 +3,7 @@
 code"let arr = [
   1
 ]; arr"
-//│ res: Code[(1,), anything]
+//│ res: code & {Code#T <: (1,)}
 //│    = [
 //│        'Let',
 //│        'arr',
@@ -18,7 +18,7 @@ foo(
   3
 )"
 run(res)
-//│ res: Code[int, anything]
+//│ res: code & {Code#T <: int}
 //│    = [
 //│        'Let',
 //│        'foo',
@@ -37,7 +37,7 @@ then true
 else false
 "
 run(res)
-//│ res: Code[bool, anything]
+//│ res: code & {Code#T <: bool}
 //│    = [
 //│        'Let',
 //│        'a',
@@ -59,7 +59,7 @@ code"if 1 == 0
   else true
 "
 run(res)
-//│ res: Code[bool, anything]
+//│ res: code & {Code#T <: bool}
 //│    = [
 //│        'If',
 //│        [ 'App', '==', [ '_', 1 ], [ '_', 0 ] ],
@@ -74,7 +74,7 @@ then false
   else true
 "
 run(res)
-//│ res: Code[bool, anything]
+//│ res: code & {Code#T <: bool}
 //│    = [
 //│        'If',
 //│        [ 'App', '==', [ '_', 1 ], [ '_', 0 ] ],
@@ -91,7 +91,7 @@ code"{
 }
 "
 run(res)
-//│ res: Code[{x: 1, y: 2, z: 3}, anything]
+//│ res: code & {Code#T <: {x: 1, y: 2, z: 3}}
 //│    = [ 'Bra', [ 'Rcd', { x: [Array], y: [Array], z: [Array] } ] ]
 //│ res: {x: 1, y: 2, z: 3}
 //│    = { x: 1, y: 2, z: 3 }
@@ -104,7 +104,7 @@ x
   .a
 "
 run(res)
-//│ res: Code[100, anything]
+//│ res: code & {Code#T <: 100}
 //│    = [
 //│        'Let',
 //│        'x',

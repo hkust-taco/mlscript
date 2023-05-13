@@ -63,7 +63,7 @@ sealed abstract class BracketKind {
     case Angle => "angle bracket"
     case Indent => "indentation"
     case Quasiquote => "quasiquote"
-    case QuasiquoteTriple => "quasiquote"
+    case QuasiquoteTriple => "quasiquote triple"
     case Unquote => "unquote"
   }
 }
@@ -88,7 +88,6 @@ object BracketKind {
     case '‹' => Left(Angle)
     case '›' => Right(Angle)
     case '"' => Right(Quasiquote)
-//    case "\"\"\"" => Right(Quasiquote)
   }
   def unapply(str: String): Opt[Either[BracketKind, BracketKind]] = str |>? {
     case "code\"" => Left(Quasiquote)

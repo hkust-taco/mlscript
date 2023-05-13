@@ -4,13 +4,13 @@
 :e
 :ge
 code"x => y => 100 + ${Const(x + y)}"
-//│ ╔══[ERROR] identifier not found: x
+//│ ╔══[ERROR] Using free variables are not allowed in this version
 //│ ║  l.6: 	code"x => y => 100 + ${Const(x + y)}"
 //│ ╙──     	                             ^
-//│ ╔══[ERROR] identifier not found: y
+//│ ╔══[ERROR] Using free variables are not allowed in this version
 //│ ║  l.6: 	code"x => y => 100 + ${Const(x + y)}"
 //│ ╙──     	                                 ^
-//│ res: Code[anything -> anything -> int, anything\x\y]
+//│ res: code & {Code#T <: anything -> anything -> int}
 //│ Code generation encountered an error:
 //│   unresolved symbol x
 
@@ -19,8 +19,8 @@ code"x => y => 100 + code"${Const(x + y)}""
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.18: 	code"x => y => 100 + code"${Const(x + y)}""
 //│ ║        	               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── expression of type `code & {Code#C :> ?a, Code#T <: ?b}` is not an instance of type `int`
-//│ res: Code[int -> int -> (error | int), anything]
+//│ ╙── expression of type `code & {Code#T <: ?a}` is not an instance of type `int`
+//│ res: code & {Code#T <: int -> int -> (error | int)}
 //│    = [
 //│        'Lam',
 //│        [ [ '_', 'x', 'x' ] ],
@@ -29,9 +29,9 @@ code"x => y => 100 + code"${Const(x + y)}""
 
 
 code"x => code"${x}""
-//│ res: Code[Code['a, 'b] -> Code['a, 'b], anything]
+//│ res: code & {Code#T <: (code & {Code#T <: 'a}) -> (code & {Code#T <: 'a})}
 //│    = [ 'Lam', [ [ '_', 'x', 'x' ] ], [ 'Quoted', [ 'Unquoted', [Array] ] ] ]
 
 run(res)(code"1")
-//│ res: Code[1, anything]
+//│ res: code & {Code#T <: 1}
 //│    = [ 'Unquoted', [ '_', 1 ] ]
