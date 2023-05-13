@@ -705,7 +705,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         typeTerm(desug)
       case App(f, a) =>
         // Typically, identifiers are searched in the context of the quasiquote,
-        // but functions are other built-in operators are allowed to be referenced from the outside.
+        // but functions and other built-in operators are allowed to be referenced from the outside.
         // Using overriding traversal will allow us to handle this edge case.
         //
         // Example: code"f(1)" -> App(Var(f), IntLit(1))
