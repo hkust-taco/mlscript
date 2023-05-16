@@ -136,10 +136,10 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
       // })).mkString("\n")
       // })).mkString("", "\n", "\n")
       })).mkString
-    case NuTypeDef(kind @ Als, nme, tparams, params, sig, parents, sup, ths, body) =>
+    case NuTypeDef(kind @ Als, nme, tparams, params, ctor, plain, sig, parents, sup, ths, body) =>
       s"type ${nme.name}${tparams.map(_._2.showIn(ctx, 0)).mkStringOr(", ", "[", "]")} = ${
         sig.getOrElse(die).showIn(ctx, 0)}"
-    case NuTypeDef(kind, nme, tparams, params, sig, parents, sup, ths, body) =>
+    case NuTypeDef(kind, nme, tparams, params, ctor, plain, sig, parents, sup, ths, body) =>
       val bodyCtx = ctx.indent
       s"${kind.str} ${nme.name}${tparams.map(_._2.showIn(ctx, 0)).mkStringOr(", ", "[", "]")}(${
         params.fields.map {
@@ -177,7 +177,7 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
     case Constrained(b, bs, ws) => b :: bs.flatMap(c => c._1 :: c._2 :: Nil) ::: ws.flatMap(c => c.lb :: c.ub :: Nil)
     case Signature(xs, res) => xs ::: res.toList
     case NuFunDef(isLetRec, nme, targs, rhs) => targs ::: rhs.toOption.toList
-    case NuTypeDef(kind, nme, tparams, params, sig, parents, sup, ths, body) =>
+    case NuTypeDef(kind, nme, tparams, params, ctor, plain, sig, parents, sup, ths, body) =>
       // TODO improve this mess
       tparams.map(_._2) ::: params.fields.collect {
         case (_, Fld(_, _, Asc(_, ty))) => ty
@@ -389,10 +389,8 @@ trait NuDeclImpl extends Located { self: NuDecl =>
   def kind: DeclKind
   val declareLoc: Opt[Loc]
   val abstractLoc: Opt[Loc]
-  val ctorLoc: Opt[Loc]
   def isDecl: Bool = declareLoc.nonEmpty
   def isAbstract: Bool = abstractLoc.nonEmpty
-  def hasExtraCtor: Bool = ctorLoc.nonEmpty
   def declStr: Str = if (isDecl) "declare " else ""
   val nameVar: Var = self match {
     case td: NuTypeDef => td.nme.toVar
@@ -416,7 +414,7 @@ trait NuDeclImpl extends Located { self: NuDecl =>
     case NuFunDef(N, n, _, b) => s"fun $n"
     case NuFunDef(S(false), n, _, b) => s"let $n"
     case NuFunDef(S(true), n, _, b) => s"let rec $n"
-    case NuTypeDef(k, n, tps, sps, sig, parents, sup, ths, bod) =>
+    case NuTypeDef(k, n, tps, sps, ctor, plain, sig, parents, sup, ths, bod) =>
       s"${k.str} ${n.name}${if (tps.isEmpty) "" else tps.map(_._2.name).mkString("‹", ", ", "›")}(${
         // sps.mkString("(",",",")")
         sps})${sig.fold("")(": " + _.showDbg2)}${
@@ -734,9 +732,9 @@ trait StatementImpl extends Located { self: Statement =>
       (diags ::: diags2 ::: diags3) -> (TypeDef(Als, TypeName(v.name).withLocOf(v), targs,
           dataDefs.map(td => AppliedType(td.nme, td.tparams)).reduceOption(Union).getOrElse(Bot), Nil, Nil, Nil
         ).withLocOf(hd) :: cs)
-    case NuTypeDef(Nms, nme, tps, tup @ Tup(fs), sig, pars, sup, ths, unit) =>
+    case NuTypeDef(Nms, nme, tps, tup @ Tup(fs), ctor, plain, sig, pars, sup, ths, unit) =>
       ??? // TODO
-    case NuTypeDef(k @ Als, nme, tps, tup @ Tup(fs), sig, pars, sup, ths, unit) =>
+    case NuTypeDef(k @ Als, nme, tps, tup @ Tup(fs), ctor, plain, sig, pars, sup, ths, unit) =>
       // TODO properly check:
       require(fs.isEmpty, fs)
       require(pars.size === 0, pars)
@@ -744,7 +742,7 @@ trait StatementImpl extends Located { self: Statement =>
       require(ths.isEmpty, ths)
       require(unit.entities.isEmpty, unit)
       Nil -> (TypeDef(k, nme, tps.map(_._2), sig.get, Nil, Nil, Nil) :: Nil)
-    case NuTypeDef(k @ (Cls | Trt), nme, tps, tup @ Tup(fs), sig, pars, sup, ths, unit) =>
+    case NuTypeDef(k @ (Cls | Trt), nme, tps, tup @ Tup(fs), ctor, plain, sig, pars, sup, ths, unit) =>
       val diags = Buffer.empty[Diagnostic]
       def tt(trm: Term): Type = trm.toType match {
         case L(ds) => diags += ds; Top
@@ -879,7 +877,7 @@ trait StatementImpl extends Located { self: Statement =>
     case Inst(bod) => bod :: Nil
     case Super() => Nil
     case Constructor(lst) => lst :: Nil
-    case NuTypeDef(k, nme, tps, ps, sig, pars, sup, ths, bod) =>
+    case NuTypeDef(k, nme, tps, ps, ctor, plain, sig, pars, sup, ths, bod) =>
       nme :: tps.map(_._2) ::: ps :: pars ::: ths.toList ::: bod :: Nil
   }
   

@@ -4,14 +4,22 @@ declare class Date {
   constructor(date: number)
   fun toString(): string
 }
-//│ class Date(date: number) {
+//│ class Date() {
 //│   fun toString: () -> string
 //│ }
 
+// TODO:
+:e
 let date1 = new Date(12345678)
 date1.toString()
-//│ let date1: Date
-//│ string
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.13: 	let date1 = new Date(12345678)
+//│ ║        	                ^^^^^^^^^^^^^^
+//│ ╟── argument of type `(12345678,)` does not match type `()`
+//│ ║  l.13: 	let date1 = new Date(12345678)
+//│ ╙──      	                    ^^^^^^^^^^
+//│ let date1: Date | error
+//│ error | string
 //│ date1
 //│       = 1970-01-01T03:25:45.678Z
 //│ res

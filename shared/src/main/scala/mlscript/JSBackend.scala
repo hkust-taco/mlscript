@@ -942,26 +942,26 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     }
 
     typeDefs.foreach {
-      case td @ NuTypeDef(Mxn, TypeName(mxName), tps, tup @ Tup(fs), sig, pars, sup, ths, unit) => {
+      case td @ NuTypeDef(Mxn, TypeName(mxName), tps, tup @ Tup(fs), ctor, plain, sig, pars, sup, ths, unit) => {
         val (body, members, stmts, nested) = prepare(mxName, fs, pars, unit)
         val sym = MixinSymbol(mxName, tps map { _._2.name }, body, members, stmts, nested, isNested).tap(scope.register)
         if (!td.isDecl) mixins += sym
       }
-      case td @ NuTypeDef(Nms, TypeName(nme), tps, tup @ Tup(fs), sig, pars, sup, ths, unit) => {
+      case td @ NuTypeDef(Nms, TypeName(nme), tps, tup @ Tup(fs), ctor, plain, sig, pars, sup, ths, unit) => {
         val (body, members, stmts, nested) = prepare(nme, fs, pars, unit)
         val sym = ModuleSymbol(nme, tps map { _._2.name }, body, members, stmts, pars, nested, isNested).tap(scope.register)
         if (!td.isDecl) modules += sym
       }
-      case td @ NuTypeDef(Als, TypeName(nme), tps, _, sig, pars, _, _, _) => {
+      case td @ NuTypeDef(Als, TypeName(nme), tps, _, ctor, plain, sig, pars, _, _, _) => {
         scope.declareTypeAlias(nme, tps map { _._2.name }, sig.getOrElse(Top))
       }
-      case td @ NuTypeDef(Cls, TypeName(nme), tps, tup @ Tup(fs), sig, pars, sup, ths, unit) => {
+      case td @ NuTypeDef(Cls, TypeName(nme), tps, tup @ Tup(fs), ctor, plain, sig, pars, sup, ths, unit) => {
         val (body, members, stmts, nested) = prepare(nme, fs, pars, unit)
         val sym =
-          NewClassSymbol(nme, tps map { _._2.name }, body, members, stmts, pars, nested, isNested, td.hasExtraCtor).tap(scope.register)
+          NewClassSymbol(nme, tps map { _._2.name }, body, members, stmts, pars, nested, isNested, plain).tap(scope.register)
         if (!td.isDecl) classes += sym
       }
-      case td @ NuTypeDef(Trt, TypeName(nme), tps, tup @ Tup(fs), sig, pars, sup, ths, unit) => {
+      case td @ NuTypeDef(Trt, TypeName(nme), tps, tup @ Tup(fs), ctor, plain, sig, pars, sup, ths, unit) => {
         val (body, members, _, _) = prepare(nme, fs, pars, unit)
         val sym = scope.declareTrait(nme, tps map { _._2.name }, body, members)
         if (!td.isDecl) traits += sym

@@ -357,9 +357,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           case CompletedTypeInfo(mem: TypedNuTypeDef) => S(mem.td.kind, mem.tparams.size)
           case ti: DelayedTypeInfo =>
             ti.decl match {
-              case NuTypeDef(k @ (Cls | Nms | Als), _, tps, _, _, _, _, _, _) =>
+              case NuTypeDef(k @ (Cls | Nms | Als), _, tps, _, _, _, _, _, _, _, _) =>
                 S(k, tps.size)
-              case NuTypeDef(k @ (Mxn | Trt), nme, tps, _, _, _, _, _, _) =>
+              case NuTypeDef(k @ (Mxn | Trt), nme, tps, _, _, _, _, _, _, _, _) =>
                 err(msg"${k.str} ${nme.name} cannot be used as a type", loc)
                 S(k, tps.size)
               case fd: NuFunDef =>
@@ -1311,28 +1311,32 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     def goDecl(d: NuMember)(implicit ectx: ExpCtx): NuDecl = d match {
       case TypedNuAls(level, td, tparams, body) =>
         ectx(tparams) |> { implicit ectx =>
-          NuTypeDef(td.kind, td.nme, td.tparams, Tup(Nil), S(go(body)), Nil, N, N, TypingUnit(Nil))(
-            td.declareLoc, td.abstractLoc, td.ctorLoc)
+          NuTypeDef(td.kind, td.nme, td.tparams, Tup(Nil), N, td.isPlain, S(go(body)), Nil, N, N, TypingUnit(Nil))(
+            td.declareLoc, td.abstractLoc)
         }
       case TypedNuMxn(td, thisTy, superTy, tparams, params, members, ttu) =>
         ectx(tparams) |> { implicit ectx =>
           NuTypeDef(td.kind, td.nme, td.tparams,
             Tup(params.map(p => N -> Fld(false, false, Asc(p._1, go(p._2.ub))))),
+            N,//TODO
+            td.isPlain,
             N,
             Nil,//TODO
             Option.when(!(TopType <:< superTy))(go(superTy)),
             Option.when(!(TopType <:< thisTy))(go(thisTy)),
-            mkTypingUnit(thisTy, members))(td.declareLoc, td.abstractLoc, td.ctorLoc)
+            mkTypingUnit(thisTy, members))(td.declareLoc, td.abstractLoc)
         }
       case TypedNuCls(level, td, ttu, tparams, params, members, thisTy) =>
         ectx(tparams) |> { implicit ectx =>
           NuTypeDef(td.kind, td.nme, td.tparams,
             Tup(params.map(p => N -> Fld(false, false, Asc(p._1, go(p._2.ub))))),
+            td.ctor,
+            td.isPlain,
             N,//TODO
             Nil,//TODO
             N,//TODO
             Option.when(!(TopType <:< thisTy))(go(thisTy)),
-            mkTypingUnit(thisTy, members))(td.declareLoc, td.abstractLoc, td.ctorLoc)
+            mkTypingUnit(thisTy, members))(td.declareLoc, td.abstractLoc)
           }
       case tf @ TypedNuFun(level, fd, bodyTy) =>
         NuFunDef(fd.isLetRec, fd.nme, Nil, R(go(tf.typeSignature)))(fd.declareLoc)

@@ -390,25 +390,20 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
               case _ => Nil
             }
             val tu = curlyTypingUnit
-            val (ctor, body) = tu.entities.partition {
+            val (ctors: Ls[Constructor], body) = tu.entities.partition {
               case _: Constructor => true
               case _ => false
             }
 
-            val (real_params, ctorLoc) =
-              if (ctor.length > 1) {
-                err(msg"more than one constructor" -> S(l0) :: Nil)
-                (Tup(Nil), N)
+            val ctor =
+              if (ctors.length > 1) {
+                err(msg"A class may only have one constructor" -> S(l0) :: Nil)
+                N
               }
-              else ctor.headOption match {
-                case Some(ctor @ Constructor(tup)) =>
-                  if (params.isDefined) err(msg"more than one constructor" -> S(l0) :: Nil)
-                  (tup, ctor.toLoc)
-                case _ =>
-                  (params.getOrElse(Tup(Nil)), if (params.isDefined) N else tn.toLoc)
-              }
+              else ctors.headOption
 
-            val res = NuTypeDef(kind, tn, tparams, real_params, sig, ps, N, N, TypingUnit(body))(isDecl, isAbs, ctorLoc)
+            val res =
+              NuTypeDef(kind, tn, tparams, params.getOrElse(Tup(Nil)), ctor, params.isEmpty, sig, ps, N, N, TypingUnit(body))(isDecl, isAbs)
             R(res.withLoc(S(l0 ++ res.getLoc)))
           
           case ModifierSet(mods, (KEYWORD(kwStr @ ("fun" | "val" | "let")), l0) :: c) => // TODO support rec?

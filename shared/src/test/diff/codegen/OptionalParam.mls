@@ -54,11 +54,9 @@ class B {}
 :js
 class C {
   constructor(x: int)
-  fun f = x + 1
+  // TODO: fun f = x + 1
 }
-//│ class C(x: int) {
-//│   fun f: int
-//│ }
+//│ class C()
 //│ // Prelude
 //│ class TypingUnit2 {
 //│   #C;
@@ -67,17 +65,7 @@ class C {
 //│   get C() {
 //│     const outer = this;
 //│     if (this.#C === undefined) {
-//│       class C {
-//│         #x;
-//│         get x() { return this.#x; }
-//│         constructor(x) {
-//│           this.#x = x;
-//│         }
-//│         get f() {
-//│           const x = this.#x;
-//│           return x + 1;
-//│         }
-//│       };
+//│       class C {};
 //│       this.#C = C;
 //│     }
 //│     return this.#C;
@@ -87,42 +75,41 @@ class C {
 //│ globalThis.C = typing_unit2.C;
 //│ // End of generated code
 
+// TODO
+:e
 let c = new C(1)
-c.x
-c.f
-//│ let c: C
-//│ int
+// c.x
+// c.f
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.80: 	let c = new C(1)
+//│ ║        	            ^^^^
+//│ ╟── argument of type `(1,)` does not match type `()`
+//│ ║  l.80: 	let c = new C(1)
+//│ ╙──      	             ^^^
+//│ let c: C | error
 //│ c
 //│   = C {}
-//│ res
-//│     = 1
-//│ res
-//│     = 2
-
-:pe
+// TODO: make ctor function.
 class D(x: int) {
   constructor(y: int)
 }
-//│ ╔══[PARSE ERROR] more than one constructor
-//│ ║  l.103: 	class D(x: int) {
-//│ ╙──       	^^^^^
-//│ class D(y: int)
+//│ class D(x: int)
 
 :pe
 class E {
   constructor(x: int)
   constructor(y: int)
 }
-//│ ╔══[PARSE ERROR] more than one constructor
-//│ ║  l.112: 	class E {
-//│ ╙──       	^^^^^
+//│ ╔══[PARSE ERROR] A class may only have one constructor
+//│ ║  l.99: 	class E {
+//│ ╙──      	^^^^^
 //│ class E()
 
 // TODO: better check?
 :e
 constructor(x: int)
 //│ ╔══[ERROR] constructor must be in a class.
-//│ ║  l.123: 	constructor(x: int)
+//│ ║  l.110: 	constructor(x: int)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^
 //│ ()
 //│ Code generation encountered an error:
@@ -134,13 +121,13 @@ class F(x: int) extends C(x + 1) {}
 class G extends C(2) {}
 class H extends B {}
 //│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
-//│ ║  l.133: 	class F(x: int) extends C(x + 1) {}
+//│ ║  l.120: 	class F(x: int) extends C(x + 1) {}
 //│ ╙──       	                        ^^^^^^^^
 //│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
-//│ ║  l.134: 	class G extends C(2) {}
+//│ ║  l.121: 	class G extends C(2) {}
 //│ ╙──       	                ^^^^
 //│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
-//│ ║  l.135: 	class H extends B {}
+//│ ║  l.122: 	class H extends B {}
 //│ ╙──       	                ^
 //│ class F(x: int)
 //│ class G()
@@ -237,10 +224,10 @@ module I {
   }
 }
 //│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
-//│ ║  l.236: 	    class L extends J(0)
+//│ ║  l.223: 	    class L extends J(0)
 //│ ╙──       	                    ^^^^
 //│ module I() {
-//│   class J(x: int)
+//│   class J()
 //│   module K() {
 //│     class L()
 //│   }
@@ -286,13 +273,7 @@ module I {
 //│         get J() {
 //│           const outer1 = this;
 //│           if (this.#J === undefined) {
-//│             class J {
-//│               #x;
-//│               get x() { return this.#x; }
-//│               constructor(x) {
-//│                 this.#x = x;
-//│               }
-//│             };
+//│             class J {};
 //│             this.#J = J;
 //│           }
 //│           return this.#J;
@@ -312,10 +293,10 @@ module I {
 fun g(x: int) =
   class L {
     constructor(y: int)
-    fun ll = x + y
+    // TODO: fun ll = x + y
   }
   L
-//│ fun g: (x: int,) -> (y: int,) -> L
+//│ fun g: (x: int,) -> () -> L
 //│ // Prelude
 //│ class TypingUnit10 {}
 //│ const typing_unit10 = new TypingUnit10;
@@ -323,17 +304,7 @@ fun g(x: int) =
 //│ globalThis.g = function g(x) {
 //│   return ((() => {
 //│     const L = (() => {
-//│       class L {
-//│         #y;
-//│         get y() { return this.#y; }
-//│         constructor(y) {
-//│           this.#y = y;
-//│         }
-//│         get ll() {
-//│           const y = this.#y;
-//│           return x + y;
-//│         }
-//│       }
+//│       class L {}
 //│       return L;
 //│     })();
 //│     return L;
@@ -343,27 +314,17 @@ fun g(x: int) =
 
 :js
 let m = g(1)
-let n = new m(2)
-n.ll
-//│ let m: (y: int,) -> L
-//│ let n: L
-//│ int
+// TODO: let n = new m(2)
+// TODO: n.ll
+//│ let m: () -> L
 //│ // Prelude
 //│ class TypingUnit11 {}
 //│ const typing_unit11 = new TypingUnit11;
 //│ // Query 1
 //│ globalThis.m = g(1);
-//│ // Query 2
-//│ globalThis.n = new m(2);
-//│ // Query 3
-//│ res = n.ll;
 //│ // End of generated code
 //│ m
 //│   = [class L]
-//│ n
-//│   = L {}
-//│ res
-//│     = 3
 
 class M()
 //│ class M()

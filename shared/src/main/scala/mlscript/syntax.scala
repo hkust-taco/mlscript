@@ -182,12 +182,14 @@ final case class NuTypeDef(
   nme: TypeName,
   tparams: Ls[(Opt[VarianceInfo], TypeName)],
   params: Tup, // the specialized parameters for that type
+  ctor: Opt[Constructor],
+  isPlain: Bool,
   sig: Opt[Type],
   parents: Ls[Term],
   superAnnot: Opt[Type],
   thisAnnot: Opt[Type],
   body: TypingUnit
-)(val declareLoc: Opt[Loc], val abstractLoc: Opt[Loc], val ctorLoc: Opt[Loc])
+)(val declareLoc: Opt[Loc], val abstractLoc: Opt[Loc])
   extends NuDecl with Statement
 
 final case class NuFunDef(
@@ -199,7 +201,6 @@ final case class NuFunDef(
   val body: Located = rhs.fold(identity, identity)
   def kind: DeclKind = Val
   val abstractLoc: Opt[Loc] = None
-  val ctorLoc: Opt[Loc] = None
 }
 
 
