@@ -111,7 +111,8 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         val ident = JSIdent(sym.runtimeName)
         if (sym.isByvalueRec.isEmpty && !sym.isLam) ident() else ident
       case S(sym: NuTypeSymbol with RuntimeSymbol) =>
-        translateNuTypeSymbol(sym)
+        if (sym.isPlain || !isCallee) translateNuTypeSymbol(sym)
+        else translateNuTypeSymbol(sym).member("class")
       case S(sym: NewClassMemberSymbol) =>
         if (sym.isByvalueRec.getOrElse(false) && !sym.isLam) throw CodeGenError(s"unguarded recursive use of by-value binding $name")
         scope.resolveValue("this") match {
@@ -330,14 +331,14 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
           JSBinary("===", scrut.member("constructor"), JSLit("String"))
         case Var(name) => scope.resolveValue(name) match {
           case S(sym: NewClassSymbol) =>
-            if (sym.needNew)
+            if (sym.isPlain)
               JSInstanceOf(scrut, translateVar(sym.lexicalName, false))
             else
               JSInstanceOf(scrut, translateVar(sym.lexicalName, false).member("class"))
           case S(sym: ModuleSymbol) =>
             JSInstanceOf(scrut, translateVar(sym.lexicalName, false).member("class"))
           case S(sym @ CapturedSymbol(out, cls: NewClassSymbol)) =>
-            if (cls.needNew)
+            if (cls.isPlain)
               JSInstanceOf(scrut, translateCapture(sym))
             else
               JSInstanceOf(scrut, translateCapture(sym).member("class"))
@@ -521,7 +522,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         val ctorMth = localScope.declareValue("ctor", Some(false), false).runtimeName
         val (constructor, params) = translateNewClassParameters(nd)
         val initList =
-          if (sym.needNew)
+          if (sym.isPlain)
             Ls(JSReturnStmt(S(JSIdent(sym.lexicalName))))
           else
             Ls(
@@ -596,14 +597,14 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         case Some(CapturedSymbol(out, sym: MixinSymbol)) =>
           JSInvoke(translateCapture(CapturedSymbol(out, sym)), Ls(base))
         case Some(CapturedSymbol(out, sym: NuTypeSymbol)) if !mixinOnly =>
-          if (sym.needNew)
+          if (sym.isPlain)
             translateCapture(CapturedSymbol(out, sym))
           else
             translateCapture(CapturedSymbol(out, sym)).member("class")
         case Some(sym: MixinSymbol) =>
           JSInvoke(translateVar(name, false), Ls(base))
         case Some(sym: NuTypeSymbol) if !mixinOnly =>
-          if (sym.needNew)
+          if (sym.isPlain)
             translateVar(name, false)
           else
             translateVar(name, false).member("class")
@@ -675,7 +676,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     val privateIdent = JSIdent(s"this.#${classSymbol.lexicalName}")
     val outerStmt = JSConstDecl(outerSymbol.runtimeName, JSIdent("this"))
     val initList =
-      if (classSymbol.needNew)
+      if (classSymbol.isPlain)
         Ls(JSExprStmt(JSAssignExpr(privateIdent, JSIdent(classSymbol.lexicalName))))
       else
         Ls(

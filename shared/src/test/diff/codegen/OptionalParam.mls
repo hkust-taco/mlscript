@@ -365,13 +365,17 @@ n.ll
 //│ res
 //│     = 3
 
-// TODO reject
-// :e
-:re
 class M()
-let mm = new M()
 //│ class M()
+
+:js
+let mm = new M()
 //│ let mm: M
+//│ // Prelude
+//│ class TypingUnit13 {}
+//│ const typing_unit13 = new TypingUnit13;
+//│ // Query 1
+//│ globalThis.mm = new M.class();
+//│ // End of generated code
 //│ mm
-//│ Runtime error:
-//│   TypeError: M is not a constructor
+//│    = M {}
