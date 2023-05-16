@@ -1,5 +1,7 @@
 name: Scala CI
 
+on: push
+
 jobs:
   build:
 
