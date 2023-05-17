@@ -33,7 +33,8 @@ sealed trait NuTypeSymbol {
   val ctor: Ls[Statement] // statements in the constructor
   val nested: Ls[NuTypeDef] // nested class/mixin/module
   val superParameters: Ls[Term] // parameters that need to be passed to the `super()`
-  val isPlain: Bool
+  val isPlain: Bool // is this a plain class in JS
+  val ctorParams: Opt[Ls[Str]] // parameters in the constructor
 }
 
 sealed class ValueSymbol(val lexicalName: Str, val runtimeName: Str, val isByvalueRec: Option[Boolean], val isLam: Boolean) extends RuntimeSymbol {
@@ -114,6 +115,7 @@ object NewClassMemberSymbol {
 final case class NewClassSymbol(
     lexicalName: Str,
     params: Ls[Str],
+    ctorParams: Opt[Ls[Str]],
     body: Type,
     methods: Ls[MethodDef[Left[Term, Type]]],
     ctor: Ls[Statement],
@@ -148,6 +150,7 @@ final case class MixinSymbol(
   // But the variable name is not sure when we create the symbol object
   override val superParameters: Ls[Term] = Nil
   val isPlain: Bool = false
+  val ctorParams: Opt[Ls[Str]] = N
 }
 
 final case class ModuleSymbol(
@@ -166,6 +169,7 @@ final case class ModuleSymbol(
   // Modules should have fixed names determined by users
   override def runtimeName: Str = lexicalName
   val isPlain: Bool = false
+  val ctorParams: Opt[Ls[Str]] = N
 }
 
 // capture runtime symbols in the outside module/class/mixin

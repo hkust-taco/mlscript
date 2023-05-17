@@ -74,7 +74,7 @@ class C {
 //│ globalThis.C = typing_unit2.C;
 //│ // End of generated code
 
-// TODO
+// TODO: typing
 :e
 let c = new C(1)
 //│ ╔══[ERROR] Type mismatch in application:
@@ -86,7 +86,6 @@ let c = new C(1)
 //│ let c: C | error
 //│ c
 //│   = C {}
-
 
 :js
 class D(x: int) {
@@ -110,8 +109,9 @@ class D(x: int) {
 //│       class D {
 //│         #x;
 //│         get x() { return this.#x; }
-//│         constructor(x) {
-//│           this.#x = x;
+//│         constructor(y) {
+//│           this.#x = y + 1;
+//│           const x = this.#x;
 //│           log(x);
 //│         }
 //│       };
@@ -132,9 +132,9 @@ dd.x
 //│ dd
 //│    = D {}
 //│ // Output
-//│ 41
+//│ 42
 //│ res
-//│     = 41
+//│     = 42
 
 :pe
 class E {
@@ -332,14 +332,14 @@ module I {
 
 :js
 fun g(x: int) =
-  class L {
-    constructor(y: int) {
-      x = y + 1
+  class L(y: int) {
+    constructor(z: int) {
+      y = z + 1
     }
-    fun ll = x + 1
+    fun ll = x + y
   }
   L
-//│ fun g: (x: int,) -> () -> L
+//│ fun g: (x: int,) -> (y: int,) -> L
 //│ // Prelude
 //│ class TypingUnit11 {}
 //│ const typing_unit11 = new TypingUnit11;
@@ -348,50 +348,50 @@ fun g(x: int) =
 //│   return ((() => {
 //│     const L = (() => {
 //│       class L {
-//│         constructor() {
+//│         #y;
+//│         get y() { return this.#y; }
+//│         constructor(z) {
+//│           this.#y = z + 1;
+//│           const y = this.#y;
 //│         }
 //│         get ll() {
-//│           return x + 1;
+//│           const y = this.#y;
+//│           return x + y;
 //│         }
 //│       }
-//│       return L;
+//│       let ctor;
+//│       ctor = ((y) => new L(y));
+//│       ctor.class = L;
+//│       return ctor;
 //│     })();
 //│     return L;
 //│   })());
 //│ };
 //│ // End of generated code
 
-// TODO:
 :js
-:e
 let m = g(1)
-let n = new m(2)
+let n = m(2)
 n.ll
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.368: 	let n = new m(2)
-//│ ║         	            ^^^^
-//│ ╟── argument of type `(2,)` does not match type `()`
-//│ ║  l.368: 	let n = new m(2)
-//│ ╙──       	             ^^^
-//│ let m: () -> L
-//│ let n: L | error
-//│ error | int
+//│ let m: (y: int,) -> L
+//│ let n: L
+//│ int
 //│ // Prelude
 //│ class TypingUnit12 {}
 //│ const typing_unit12 = new TypingUnit12;
 //│ // Query 1
 //│ globalThis.m = g(1);
 //│ // Query 2
-//│ globalThis.n = new m(2);
+//│ globalThis.n = m(2);
 //│ // Query 3
 //│ res = n.ll;
 //│ // End of generated code
 //│ m
-//│   = [class L]
+//│   = [Function: ctor] { class: [class L] }
 //│ n
 //│   = L {}
 //│ res
-//│     = 2
+//│     = 4
 
 class M()
 //│ class M()
@@ -407,3 +407,31 @@ let mm = new M()
 //│ // End of generated code
 //│ mm
 //│    = M {}
+
+fun h(z: int) =
+  class N {
+    constructor(x: int) {
+      log(x + z)
+    }
+  }
+  N
+//│ fun h: (z: int,) -> () -> N
+
+// TODO: typing
+:e
+let hh = h(1)
+new hh(1)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.423: 	new hh(1)
+//│ ║         	    ^^^^^
+//│ ╟── argument of type `(1,)` does not match type `()`
+//│ ║  l.423: 	new hh(1)
+//│ ╙──       	      ^^^
+//│ let hh: () -> N
+//│ N | error
+//│ hh
+//│    = [class N]
+//│ res
+//│     = N {}
+//│ // Output
+//│ 2

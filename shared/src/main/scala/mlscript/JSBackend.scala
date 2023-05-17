@@ -301,6 +301,8 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       throw CodeGenError("custom class body is not supported yet")
     case Forall(_, bod) => translateTerm(bod)
     case TyApp(base, _) => translateTerm(base)
+    case Ass(Var(name), _) =>
+      throw CodeGenError(s"assignment of $name is not supported outside a constructor")
     case _: Bind | _: Test | If(_, _)  | _: Splc | _: Where =>
       throw CodeGenError(s"cannot generate code for term ${inspect(term)}")
   }
@@ -708,9 +710,16 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     val fields = sym.body.collectFields ++
       sym.body.collectTypeNames.flatMap(resolveTraitFields)
 
-    val ctorParams = fields.map { f =>
-      memberList += NewClassMemberSymbol(f, Some(false), false).tap(nuTypeScope.register)
-      constructorScope.declareValue(f, Some(false), false).runtimeName
+    val ctorParams = sym.ctorParams match {
+      case Some(lst) =>
+        lst.map { p =>
+          constructorScope.declareValue(p, Some(false), false).runtimeName
+        }
+      case _ =>
+        fields.map { f =>
+          memberList += NewClassMemberSymbol(f, Some(false), false).tap(nuTypeScope.register)
+          constructorScope.declareValue(f, Some(false), false).runtimeName
+        }
     }
 
     sym.methods.foreach {
@@ -768,6 +777,10 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
 
     val getters = new ListBuffer[Str]()
     val stmts = sym.ctor.flatMap {
+      case Ass(Var(name), rhs) => Ls(
+        JSAssignExpr(JSIdent(s"this.#$name"), translateTerm(rhs)(constructorScope)).stmt,
+        JSConstDecl(constructorScope.declareValue(name, S(false), false).runtimeName, JSIdent(s"this.#$name"))
+      )
       case s: Term => JSExprStmt(translateTerm(s)(constructorScope)) :: Nil
       case NuFunDef(_, Var(nme), _, Left(rhs)) => getters += nme; Ls[JSStmt](
         JSExprStmt(JSAssignExpr(JSIdent(s"this.#$nme"), translateTerm(rhs)(constructorScope))),
@@ -792,7 +805,8 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       members,
       traits,
       translateSelfDeclaration(selfSymbol) ::: tempDecs ::: stmts,
-      typeList.toList
+      typeList.toList,
+      sym.ctorParams.isDefined
     )
   }
 
@@ -956,9 +970,16 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         scope.declareTypeAlias(nme, tps map { _._2.name }, sig.getOrElse(Top))
       }
       case td @ NuTypeDef(Cls, TypeName(nme), tps, tup @ Tup(fs), ctor, plain, sig, pars, sup, ths, unit) => {
+        val (params, preStmts) = ctor match {
+          case S(Constructor(Tup(ls), stmts)) => (S(ls.map {
+            case (S(Var(nme)), _) => nme
+            case _ => throw CodeGenError(s"Unexpected constructor parameters in $nme.")
+          }), stmts)
+          case _ => (N, Nil)
+        }
         val (body, members, stmts, nested) = prepare(nme, fs, pars, unit)
         val sym =
-          NewClassSymbol(nme, tps map { _._2.name }, body, members, stmts, pars, nested, isNested, plain).tap(scope.register)
+          NewClassSymbol(nme, tps map { _._2.name }, params, body, members, preStmts ++ stmts, pars, nested, isNested, plain).tap(scope.register)
         if (!td.isDecl) classes += sym
       }
       case td @ NuTypeDef(Trt, TypeName(nme), tps, tup @ Tup(fs), ctor, plain, sig, pars, sup, ths, unit) => {
