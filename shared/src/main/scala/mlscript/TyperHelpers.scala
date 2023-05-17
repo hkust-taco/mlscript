@@ -1010,7 +1010,7 @@ abstract class TyperHelpers { Typer: Typer =>
           case S(td: TypedNuCls) =>
             assert(td.tparams.size === targs.size)
             clsNameToNomTag(td.decl)(provTODO, ctx) &
-              td.tags & 
+              td.selfTy & 
                 RecordType(info.tparams.lazyZip(targs).map {
                   case ((tn, tv, vi), ta) => // TODO use vi
                     val fldNme = td.nme.name + "#" + tn.name
@@ -1174,18 +1174,18 @@ abstract class TyperHelpers { Typer: Typer =>
       case TypedNuAls(level, td, tparams, body) =>
         tparams.iterator.foreach(tp => apply(pol.invar)(tp._2))
         apply(pol)(body)
-      case TypedNuCls(level, td, ttu, tparams, params, members, thisTy, _, _, pvms) =>
+      case TypedNuCls(level, td, ttu, tparams, params, members, thisTy, _, _, ptps) =>
         tparams.iterator.foreach(tp => apply(pol.invar)(tp._2))
         params.foreach(p => applyField(pol)(p._2))
         members.valuesIterator.foreach(applyMem(pol))
-        pvms.valuesIterator.foreach(applyMem(pol))
+        ptps.valuesIterator.foreach(applyMem(pol))
         // thisTy.foreach(apply(pol.invar)(_))
         apply(pol.contravar)(thisTy)
-      case TypedNuTrt(level, td, ttu, tparams, members, thisTy, sign, _, _, pvms) => 
+      case TypedNuTrt(level, td, ttu, tparams, members, thisTy, sign, _, _, ptps) => 
         tparams.iterator.foreach(tp => apply(pol.invar)(tp._2))
         members.valuesIterator.foreach(applyMem(pol))
         // thisTy.foreach(apply(pol.invar)(_))
-        pvms.valuesIterator.foreach(applyMem(pol))
+        ptps.valuesIterator.foreach(applyMem(pol))
         apply(pol.contravar)(thisTy)
       case TypedNuMxn(td, thisTV, superTV, tparams, params, members, ttu) =>
         tparams.iterator.foreach(tp => apply(pol.invar)(tp._2))
