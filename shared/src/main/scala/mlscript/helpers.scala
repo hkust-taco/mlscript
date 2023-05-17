@@ -545,6 +545,7 @@ trait TermImpl extends StatementImpl { self: Term =>
     case Forall(ps, bod) => s"forall ${ps.mkString(", ")}. ${bod}"
     case Inst(bod) => s"${bod.print(true)}!"
     case Super() => "super"
+    case Ass(lhs, rhs) => s"${lhs} = ${rhs}"
   }}
   
   def toTypeRaise(implicit raise: Raise): Type = toType match {
@@ -876,7 +877,8 @@ trait StatementImpl extends Located { self: Statement =>
     case Forall(ps, bod) => ps ::: bod :: Nil
     case Inst(bod) => bod :: Nil
     case Super() => Nil
-    case Constructor(lst) => lst :: Nil
+    case Constructor(params, body) => params :: body
+    case Ass(lhs, rhs) => lhs :: rhs :: Nil
     case NuTypeDef(k, nme, tps, ps, ctor, plain, sig, pars, sup, ths, bod) =>
       nme :: tps.map(_._2) ::: ps :: pars ::: ths.toList ::: bod :: Nil
   }
@@ -886,7 +888,7 @@ trait StatementImpl extends Located { self: Statement =>
     case LetS(isRec, name, rhs) => s"let${if (isRec) " rec" else ""} $name = $rhs"
     case DatatypeDefn(head, body) => s"data type $head of $body"
     case DataDefn(head) => s"data $head"
-    case Constructor(lst) => s"constructor($lst)"
+    case Constructor(params, _) => s"constructor($params)"
     case _: Term => super.toString
     case d: Decl => d.showDbg
     case d: NuDecl => d.showDbg

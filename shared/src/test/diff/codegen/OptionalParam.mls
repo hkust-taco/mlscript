@@ -54,7 +54,6 @@ class B {}
 :js
 class C {
   constructor(x: int)
-  // TODO: fun f = x + 1
 }
 //│ class C()
 //│ // Prelude
@@ -78,22 +77,64 @@ class C {
 // TODO
 :e
 let c = new C(1)
-// c.x
-// c.f
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.80: 	let c = new C(1)
+//│ ║  l.79: 	let c = new C(1)
 //│ ║        	            ^^^^
 //│ ╟── argument of type `(1,)` does not match type `()`
-//│ ║  l.80: 	let c = new C(1)
+//│ ║  l.79: 	let c = new C(1)
 //│ ╙──      	             ^^^
 //│ let c: C | error
 //│ c
 //│   = C {}
-// TODO: make ctor function.
+
+
+:js
 class D(x: int) {
-  constructor(y: int)
+  constructor(y: int) {
+    x = y + 1
+  }
+  log(x)
 }
 //│ class D(x: int)
+//│ // Prelude
+//│ function log(x) {
+//│   return console.info(x);
+//│ }
+//│ class TypingUnit4 {
+//│   #D;
+//│   constructor() {
+//│   }
+//│   get D() {
+//│     const outer = this;
+//│     if (this.#D === undefined) {
+//│       class D {
+//│         #x;
+//│         get x() { return this.#x; }
+//│         constructor(x) {
+//│           this.#x = x;
+//│           log(x);
+//│         }
+//│       };
+//│       this.#D = ((x) => Object.freeze(new D(x)));
+//│       this.#D.class = D;
+//│     }
+//│     return this.#D;
+//│   }
+//│ }
+//│ const typing_unit4 = new TypingUnit4;
+//│ globalThis.D = typing_unit4.D;
+//│ // End of generated code
+
+let dd = new D(41)
+dd.x
+//│ let dd: D
+//│ int
+//│ dd
+//│    = D {}
+//│ // Output
+//│ 41
+//│ res
+//│     = 41
 
 :pe
 class E {
@@ -101,15 +142,15 @@ class E {
   constructor(y: int)
 }
 //│ ╔══[PARSE ERROR] A class may only have one constructor
-//│ ║  l.99: 	class E {
-//│ ╙──      	^^^^^
+//│ ║  l.140: 	class E {
+//│ ╙──       	^^^^^
 //│ class E()
 
 // TODO: better check?
 :e
 constructor(x: int)
 //│ ╔══[ERROR] constructor must be in a class.
-//│ ║  l.110: 	constructor(x: int)
+//│ ║  l.151: 	constructor(x: int)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^
 //│ ()
 //│ Code generation encountered an error:
@@ -121,19 +162,19 @@ class F(x: int) extends C(x + 1) {}
 class G extends C(2) {}
 class H extends B {}
 //│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
-//│ ║  l.120: 	class F(x: int) extends C(x + 1) {}
+//│ ║  l.161: 	class F(x: int) extends C(x + 1) {}
 //│ ╙──       	                        ^^^^^^^^
 //│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
-//│ ║  l.121: 	class G extends C(2) {}
+//│ ║  l.162: 	class G extends C(2) {}
 //│ ╙──       	                ^^^^
 //│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
-//│ ║  l.122: 	class H extends B {}
+//│ ║  l.163: 	class H extends B {}
 //│ ╙──       	                ^
 //│ class F(x: int)
 //│ class G()
 //│ class H()
 //│ // Prelude
-//│ class TypingUnit6 {
+//│ class TypingUnit7 {
 //│   #F;
 //│   #G;
 //│   #H;
@@ -180,10 +221,10 @@ class H extends B {}
 //│     return this.#H;
 //│   }
 //│ }
-//│ const typing_unit6 = new TypingUnit6;
-//│ globalThis.F = typing_unit6.F;
-//│ globalThis.G = typing_unit6.G;
-//│ globalThis.H = typing_unit6.H;
+//│ const typing_unit7 = new TypingUnit7;
+//│ globalThis.F = typing_unit7.F;
+//│ globalThis.G = typing_unit7.G;
+//│ globalThis.H = typing_unit7.H;
 //│ // End of generated code
 
 :js
@@ -194,8 +235,8 @@ fun f(c) =
     _ then 0
 //│ fun f: anything -> int
 //│ // Prelude
-//│ class TypingUnit7 {}
-//│ const typing_unit7 = new TypingUnit7;
+//│ class TypingUnit8 {}
+//│ const typing_unit8 = new TypingUnit8;
 //│ // Query 1
 //│ globalThis.f = function f(c) {
 //│   return ((() => {
@@ -224,7 +265,7 @@ module I {
   }
 }
 //│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
-//│ ║  l.223: 	    class L extends J(0)
+//│ ║  l.264: 	    class L extends J(0)
 //│ ╙──       	                    ^^^^
 //│ module I() {
 //│   class J()
@@ -233,7 +274,7 @@ module I {
 //│   }
 //│ }
 //│ // Prelude
-//│ class TypingUnit9 {
+//│ class TypingUnit10 {
 //│   #I;
 //│   constructor() {
 //│   }
@@ -285,26 +326,34 @@ module I {
 //│     return this.#I;
 //│   }
 //│ }
-//│ const typing_unit9 = new TypingUnit9;
-//│ globalThis.I = typing_unit9.I;
+//│ const typing_unit10 = new TypingUnit10;
+//│ globalThis.I = typing_unit10.I;
 //│ // End of generated code
 
 :js
 fun g(x: int) =
   class L {
-    constructor(y: int)
-    // TODO: fun ll = x + y
+    constructor(y: int) {
+      x = y + 1
+    }
+    fun ll = x + 1
   }
   L
 //│ fun g: (x: int,) -> () -> L
 //│ // Prelude
-//│ class TypingUnit10 {}
-//│ const typing_unit10 = new TypingUnit10;
+//│ class TypingUnit11 {}
+//│ const typing_unit11 = new TypingUnit11;
 //│ // Query 1
 //│ globalThis.g = function g(x) {
 //│   return ((() => {
 //│     const L = (() => {
-//│       class L {}
+//│       class L {
+//│         constructor() {
+//│         }
+//│         get ll() {
+//│           return x + 1;
+//│         }
+//│       }
 //│       return L;
 //│     })();
 //│     return L;
@@ -312,19 +361,37 @@ fun g(x: int) =
 //│ };
 //│ // End of generated code
 
+// TODO:
 :js
+:e
 let m = g(1)
-// TODO: let n = new m(2)
-// TODO: n.ll
+let n = new m(2)
+n.ll
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.368: 	let n = new m(2)
+//│ ║         	            ^^^^
+//│ ╟── argument of type `(2,)` does not match type `()`
+//│ ║  l.368: 	let n = new m(2)
+//│ ╙──       	             ^^^
 //│ let m: () -> L
+//│ let n: L | error
+//│ error | int
 //│ // Prelude
-//│ class TypingUnit11 {}
-//│ const typing_unit11 = new TypingUnit11;
+//│ class TypingUnit12 {}
+//│ const typing_unit12 = new TypingUnit12;
 //│ // Query 1
 //│ globalThis.m = g(1);
+//│ // Query 2
+//│ globalThis.n = new m(2);
+//│ // Query 3
+//│ res = n.ll;
 //│ // End of generated code
 //│ m
 //│   = [class L]
+//│ n
+//│   = L {}
+//│ res
+//│     = 2
 
 class M()
 //│ class M()
@@ -333,8 +400,8 @@ class M()
 let mm = new M()
 //│ let mm: M
 //│ // Prelude
-//│ class TypingUnit13 {}
-//│ const typing_unit13 = new TypingUnit13;
+//│ class TypingUnit14 {}
+//│ const typing_unit14 = new TypingUnit14;
 //│ // Query 1
 //│ globalThis.mm = new M.class();
 //│ // End of generated code

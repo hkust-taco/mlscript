@@ -123,9 +123,6 @@ declare 42
 //│ ╔══[PARSE ERROR] Unexpected literal token after modifier
 //│ ║  l.119: 	declare 42
 //│ ╙──       	        ^^
-//│ ╔══[PARSE ERROR] Unexpected literal token after modifier
-//│ ║  l.119: 	declare 42
-//│ ╙──       	        ^^
 //│ 42
 //│ res
 //│     = 42

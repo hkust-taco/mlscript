@@ -282,8 +282,6 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
         yeetSpaces
         go(acc.copy(acc.mods + ("abstract" -> l0)))
       case _ if acc.mods.isEmpty => acc
-      case (KEYWORD("constructor"), l0) :: _ =>
-        acc
       case (KEYWORD("class" | "infce" | "trait" | "mixin" | "type" | "namespace" | "module" | "fun" | "val"), l0) :: _ =>
         acc
       case (tok, loc) :: _ =>
@@ -302,20 +300,25 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
       case Nil => Nil
       case (NEWLINE, _) :: _ => consume; block
       case (SPACE, _) :: _ => consume; block
+      case (KEYWORD("constructor"), l0) :: _ =>
+        consume
+        val res = yeetSpaces match {
+          case (br @ BRACKETS(Round, toks), loc) :: _ =>
+            consume
+            val as = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented()) // TODO
+            val body = curlyTypingUnit.entities
+            Constructor(Tup(as).withLoc(S(loc)), body)
+          case _ =>
+            err(msg"Expect parameter list for the constructor" -> S(l0) :: Nil)
+            Constructor(Tup(Nil), Nil)
+        }
+        val t = R(res.withLoc(S(l0 ++ res.getLoc)))
+        yeetSpaces match {
+          case (NEWLINE, _) :: _ => consume; t :: block
+          case _ => t :: Nil
+        }
       case c =>
         val t = c match {
-          case ModifierSet(mods, (KEYWORD("constructor"), l0) :: c) =>
-            consume
-            val res = yeetSpaces match {
-              case (br @ BRACKETS(Round, toks), loc) :: _ =>
-                consume
-                val as = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented()) // TODO
-                Constructor(Tup(as).withLoc(S(loc)))
-              case _ =>
-                err(msg"Expect parameter list for the constructor" -> S(l0) :: Nil)
-                Constructor(Tup(Nil))
-            }
-            R(res.withLoc(S(l0 ++ res.getLoc)))
           case ModifierSet(mods, (KEYWORD(k @ ("class" | "infce" | "trait" | "mixin" | "type" | "namespace" | "module")), l0) :: c) =>
             consume
             val (isDecl, mods2) = mods.handle("declare")
@@ -495,6 +498,12 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
             exprOrIf(0, allowSpace = false)
         }
         yeetSpaces match {
+          case (KEYWORD("="), l0) :: _ => t match {
+            case R(v: Var) =>
+              consume
+              R(Ass(v, expr(0))) :: block
+            case _ => t :: Nil
+          }
           case (KEYWORD(";"), _) :: _ => consume; t :: block
           case (NEWLINE, _) :: _ => consume; t :: block
           case _ => t :: Nil
