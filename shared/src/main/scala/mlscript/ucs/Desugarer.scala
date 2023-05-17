@@ -163,6 +163,9 @@ class Desugarer extends TypeDefs { self: Typer =>
       case classNameVar @ Var(className) =>
         ctx.tyDefs.get(className).orElse(ctx.get(className)) match {
           case S(ti: LazyTypeInfo) if (ti.kind is Cls) || (ti.kind is Nms) =>
+          case S(ti: LazyTypeInfo) if (ti.kind is Trt) => throw new DesugaringException({
+            msg"Cannot match on trait `$className`"
+          }, classNameVar.toLoc)
           case S(_: TypeDef) =>
           case _ => throw new DesugaringException({
             msg"Cannot find constructor `$className` in scope"

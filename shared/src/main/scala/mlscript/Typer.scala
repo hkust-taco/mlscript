@@ -359,7 +359,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             ti.decl match {
               case NuTypeDef(k @ (Cls | Nms | Als | Trt), _, tps, _, _, _, _, _, _) =>
                 S(k, tps.size)
-              case NuTypeDef(k @ (Mxn /* | Trt */), nme, tps, _, _, _, _, _, _) =>
+              case NuTypeDef(k @ Mxn, nme, tps, _, _, _, _, _, _) =>
                 err(msg"${k.str} ${nme.name} cannot be used as a type", loc)
                 S(k, tps.size)
               case fd: NuFunDef =>
@@ -1332,7 +1332,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             Option.when(!(TopType <:< thisTy))(go(thisTy)),
             mkTypingUnit(thisTy, members))(td.declareLoc)
         }
-      case TypedNuCls(level, td, ttu, tparams, params, members, thisTy, _, _, vms) =>
+      case TypedNuCls(level, td, ttu, tparams, params, members, thisTy, sfty, ihtags, ptps) =>
         ectx(tparams) |> { implicit ectx =>
           NuTypeDef(td.kind, td.nme, td.tparams,
             Tup(params.map(p => N -> Fld(false, false, Asc(p._1, go(p._2.ub))))),
@@ -1342,7 +1342,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             Option.when(!(TopType <:< thisTy))(go(thisTy)),
             mkTypingUnit(thisTy, members))(td.declareLoc)
           }
-      case TypedNuTrt(level, td, ttu, tparams, members, thisTy, sign, _, _, vms) => 
+      case TypedNuTrt(level, td, ttu, tparams, members, thisTy, sign, sfty, ihtags, ptps) => 
         ectx(tparams) |> { implicit ectx =>
           NuTypeDef(td.kind, td.nme, td.tparams,
             Tup(Nil),

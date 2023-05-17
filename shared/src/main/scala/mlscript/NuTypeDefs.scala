@@ -201,14 +201,14 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
         selfTy: ST,
         inheritedTags: Set[TypeName],
         parentTP: Map[Str, NuMember]
-      ) extends TypedNuTypeDef(Trt) with TypedNuTermDef with PolyNuDecl
+      ) extends TypedNuTypeDef(Trt) with PolyNuDecl
   {
     def decl: NuTypeDef = td
     def kind: DeclKind = td.kind
     def nme: TypeName = td.nme
     def name: Str = nme.name
     
-    def typeSignature: ST = typeSignatureOf(td, level, tparams, Nil, selfTy, inheritedTags)
+    // def typeSignature: ST = typeSignatureOf(td, level, tparams, Nil, selfTy, inheritedTags)
 
     lazy val virtualMembers: Map[Str, NuMember] = members ++ tparams.map {
                       case (nme @ TypeName(name), tv, _) => 
@@ -1123,7 +1123,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     }
                     
                     TypedNuCls(outerCtx.lvl, td, ttu,
-                      tparams, typedParams, mems /* ++ ifaceMembers.map(d => d.name -> d).toMap */,
+                      tparams, typedParams, mems,
                       // if (td.kind is Nms) TopType else thisTV
                       TopType,
                       TopType, // TODO selfTy: use signature

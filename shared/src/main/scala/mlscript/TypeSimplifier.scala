@@ -4,7 +4,6 @@ import scala.collection.mutable.{Map => MutMap, Set => MutSet, LinkedHashMap, Li
 import scala.collection.immutable.{SortedMap, SortedSet}
 import scala.util.chaining._
 import mlscript.utils._, shorthands._
-import scala.util.Try
 
 
 trait TypeSimplifier { self: Typer =>
