@@ -112,7 +112,6 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
   
   def clsNameToNomTag(td: NuTypeDef)(prov: TypeProvenance, ctx: Ctx): ClassTag = {
     require((td.kind is Cls) || (td.kind is Nms) || (td.kind is Trt), td.kind)
-    // YTODO: use ctx.tyDefs2 to get the lazy type info and the iags
     ClassTag(Var(td.nme.name),
         // ctx.allBaseClassesOf(td.nme.name)
         Set.single(TypeName("Eql")) // TODO superclasses
