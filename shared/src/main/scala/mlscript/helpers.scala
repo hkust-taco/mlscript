@@ -496,6 +496,7 @@ trait TermImpl extends StatementImpl { self: Term =>
       case Forall(_, _) => s"forall clause"
       case Inst(bod) => "explicit instantiation"
       case Super() => "super"
+      case Constructor(_, _) => "constructor"
     }
   }
   

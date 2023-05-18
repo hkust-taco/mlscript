@@ -223,7 +223,6 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
         errExpr
       case R(d: NuDecl) => d
       case R(e: Term) => e
-      case R(c: Constructor) => c
       case _ => ???
     }
     TypingUnit(es)
@@ -393,13 +392,13 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
               case _ => Nil
             }
             val tu = curlyTypingUnit
-            val (ctors: Ls[Constructor], body) = tu.entities.partition {
-              case _: Constructor => true
-              case _ => false
+            val (ctors, body) = tu.entities.partitionMap {
+              case c: Constructor => L(c)
+              case t => R(t)
             }
 
             val ctor =
-              if (ctors.length > 1) {
+              if (ctors.lengthIs > 1) {
                 err(msg"A class may only have one constructor" -> S(l0) :: Nil)
                 N
               }
