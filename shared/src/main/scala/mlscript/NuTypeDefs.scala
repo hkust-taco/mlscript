@@ -835,7 +835,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                                     val (trt, vm) = refreshGen[TypedNuTrt](info, v , parTargs)
                                     inherit(ps, 
                                       tags & trt.selfTy,
-                                      memberUn(members, trt.members.values.toList),
+                                      memberUnion(members, trt.members.values.toList),
                                       vms ++ vm ++ trt.parentTP   // with type members of parent class
                                       )
                                   case _ => 
@@ -856,8 +856,32 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     val selfType = sig_ty
                     
                     val ttu = typeTypingUnit(td.body, topLevel = false)
-                    val trtMems = baseMems ++ ttu.entities
-                    val mems = typedSignatureMembers.toMap ++ trtMems.map(d => d.name -> d).toMap
+                    val mems = 
+                      baseMems.map(d => d.name -> d).toMap ++ 
+                      typedSignatureMembers.toMap ++ 
+                      ttu.entities.map(d => d.name -> d).toMap
+
+                    // check trait overriding
+                    baseMems.foreach { m =>
+                      lazy val parSign = m match {
+                                          case nt: TypedNuTermDef => nt.typeSignature
+                                          case np: NuParam => np.typeSignature
+                                          case _ => ??? // probably no other cases
+                                        }
+                      (typedSignatureMembers.map(_._2) ++ ttu.entities).find(x => x.name == m.name) match {
+                        case S(mem: TypedNuTermDef) =>
+                          val memSign = mem.typeSignature
+                          implicit val prov: TP = memSign.prov
+                          println(s"checking overriding `${m.name}`")
+                          constrain(memSign, parSign)
+                        case S(pm: NuParam) =>
+                          val pmSign = pm.typeSignature
+                          implicit val prov: TP = pmSign.prov
+                          println(s"checking overriding `${m.name}`")
+                          constrain(pmSign, parSign)
+                        case _ => ()
+                      }
+                    }
 
                     TypedNuTrt(outerCtx.lvl, td, ttu, 
                       tparams, 
@@ -925,7 +949,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       bsMem: Ls[NuMember], 
                       trtMem: Ls[NuMember],
                       pTP: Map[Str, NuMember]
-                     )
+                    )
                     
                     def inherit(parents: Ls[ParentSpec], pack: Pack): Pack =
                         parents match {
@@ -986,7 +1010,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                                   val (trt, ptp) = refreshGen[TypedNuTrt](info, v, parTargs)
                                 
                                   inherit(ps, pack.copy(
-                                    trtMem = memberUn(pack.trtMem, trt.members.values.toList),
+                                    trtMem = memberUnion(pack.trtMem, trt.members.values.toList),
                                     pTP = pack.pTP ++ ptp ++ trt.parentTP
                                     ))
 
@@ -1062,14 +1086,22 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     ctx += "super" -> VarSymbol(thisType, Var("super"))
                     val ttu = typeTypingUnit(td.body, topLevel = false)
                     
-                    val cmems = baseMems ++ ttu.entities
+                    // local members overrides mixin members
+                    val cmems = ttu.entities ++ baseMems.flatMap { m =>
+                        ttu.entities.find(x => x.name == m.name) match {
+                          case S(mem: TypedNuTermDef) => Nil
+                          case S(pm: NuParam) => Nil
+                          case _ => m :: Nil
+                        }
+                    }
+                    // local members overrides parent members
                     val impltdMems = cmems ++ bsMembers.flatMap { m =>
-                                    cmems.find(x => x.name == m.name) match {
-                                      case S(mem: TypedNuTermDef) => Nil
-                                      case S(pm: NuParam) => Nil
-                                      case _ => m :: Nil
-                                    }
-                                  }
+                      cmems.find(x => x.name == m.name) match {
+                        case S(mem: TypedNuTermDef) => Nil
+                        case S(pm: NuParam) => Nil
+                        case _ => m :: Nil
+                      }
+                    }
                     val mems = impltdMems.map(d => d.name -> d).toMap ++ typedSignatureMembers
 
                     // overriding check for class/interface inheritance
@@ -1174,21 +1206,40 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     
   }
   
-  def memberUn(l: Ls[NuMember], r: Ls[NuMember])(implicit raise: Raise): Ls[NuMember] = {
+  // intersection of members
+  def memberUnion(l: Ls[NuMember], r: Ls[NuMember])(implicit raise: Raise): Ls[NuMember] = {
     val nms = Set.from(l.map(_.name) ++ r.map(_.name)).toList
-    nms.map {n => 
+    nms.flatMap {n => 
       (l.find(x => x.name == n), r.find(x => x.name == n)) match {
-        case (S(a: TypedNuFun), S(b: TypedNuFun)) 
-          if a.level == b.level 
-            && a.fd.isLetRec == b.fd.isLetRec 
-            && a.fd.nme == b.fd.nme
-            && a.fd.tparams == b.fd.tparams
-            // todo: check fd.rhs
-          =>
-            TypedNuFun(a.level, a.fd, a.bodyType & b.bodyType)
-        case (S(a), _) => a // for other cases, we take the first one (is it a good idea ?)
-        case (N, S(b)) => b
-        case (N, N) => lastWords("unreachable")
+        case (S(a: TypedNuFun), S(b: TypedNuFun)) =>
+          if (a.level != b.level)
+            err(msg"member ${a.name} has mismatch levels ${a.level.toString} and ${b.level.toString}", a.fd.toLoc)
+          if (a.fd.tparams != b.fd.tparams)
+            err(msg"method ${a.name} has different type parameter to${b.name}", a.fd.toLoc)
+          val fd = NuFunDef((a.fd.isLetRec, b.fd.isLetRec) match {
+            case (S(a), S(b)) => S(a || b)
+            case _ => N // if one is fun, then it will be fun
+          }, a.fd.nme, a.fd.tparams, a.fd.rhs)(a.fd.declareLoc, N)
+          println(s"united ${a.name}")
+          TypedNuFun(a.level, fd, a.bodyType & b.bodyType) :: Nil
+        case (S(a: NuParam), S(b: NuParam)) => 
+          if (a.level != b.level)
+            err(msg"member ${a.name} has mismatch levels ${a.level.toString} and ${b.level.toString}", N)
+          NuParam(a.nme, a.ty && b.ty)(a.level) :: Nil
+        case (S(a: NuParam), S(b: TypedNuFun)) => // not sure
+          if (a.level != b.level)
+            err(msg"member ${a.name} has mismatch levels ${a.level.toString} and ${b.level.toString}", N)
+          NuParam(a.nme, a.ty && FieldType(S(b.bodyType), b.bodyType)(b.bodyType.prov))(a.level) :: Nil
+        case (S(a: TypedNuFun), S(b: NuParam)) => // not sure
+          if (a.level != b.level)
+            err(msg"member ${a.name} has mismatch levels ${a.level.toString} and ${b.level.toString}", N)
+          NuParam(b.nme, FieldType(S(a.bodyType), a.bodyType)(a.bodyType.prov) && b.ty)(b.level) :: Nil
+        case (S(a), N) => a :: Nil
+        case (N, S(b)) => b :: Nil
+        case (S(a), S(b)) =>
+          err(msg"intersection of ${a.name} and ${b.name} is currently not supported", N)
+          Nil
+        case (N, N) => Nil
       }
     }
   }
