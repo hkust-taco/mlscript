@@ -6,7 +6,7 @@ import mlscript.utils.shorthands._
 import scala.collection.immutable.Set
 import scala.collection.mutable.{Set => MutSet, Buffer}
 
-case class LetBinding(val kind: LetBinding.Kind, val recursive: Bool, val name: Var, val term: Term)
+final case class LetBinding(val kind: LetBinding.Kind, val recursive: Bool, val name: Var, val term: Term)
 
 object LetBinding {
   sealed abstract class Kind
