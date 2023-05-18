@@ -308,7 +308,6 @@ fun typeTerm(t, ctx) =
 //│     'rhs0 <: FunctionType & {lhs: 'rhs0, rhs: 'rhs0} | PrimitiveType | ~FunctionType & ~PrimitiveType
 //│         = [Function: typeTerm]
 
-// FIXME
 fun showTypeTerm(t, ctx) =
   if typeTerm(t, ctx) is
     Ok(ty) then concat3(showTerm(t), " : ", showType(ty))
