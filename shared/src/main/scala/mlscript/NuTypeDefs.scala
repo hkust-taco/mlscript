@@ -917,124 +917,79 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     }
                     val tparamFields = tparamMems.map(p => p.nme.toVar -> p.ty)
                     assert(!typedParams.keys.exists(tparamFields.keys.toSet), ???)
-                    
-                    def inherit(parents: Ls[ParentSpec], superType: ST, members: Ls[NuMember])
-                          : (ST, Ls[NuMember]) =
-                        parents match {
-                      case (p, v @ Var(mxnNme), mxnTargs, mxnArgs) :: ps =>
-                        val newMembs = trace(s"${lvl}. Inheriting from $p") {
-                          ctx.get(mxnNme) match {
-                            case S(lti: LazyTypeInfo) =>
-                              
-                              lti.complete().freshen match {
-                                case mxn: TypedNuMxn =>
-                                  if (mxnTargs.nonEmpty) err(msg"mixin type arguments not yet supported", p.toLoc)
-                                  
-                                  // println(s"Fresh $mxn")
-                                  
-                                  assert(finalType.level === lvl)
-                                  assert(mxn.superTV.level === lvl)
-                                  assert(mxn.thisTV.level === lvl)
-                                  
-                                  constrain(superType, mxn.superTV)
-                                  constrain(finalType, mxn.thisTV)
-                                  
-                                  if (mxnArgs.sizeCompare(mxn.params) =/= 0)
-                                    err(msg"mixin $mxnNme expects ${
-                                      mxn.params.size.toString} parameter(s); got ${mxnArgs.size.toString}", Loc(v :: mxnArgs.unzip._2))
-                                  
-                                  val paramMems = mxn.params.lazyZip(mxnArgs).map { case (nme -> p, _ -> Fld(_, _, a)) => // TODO check name, mut, spec
-                                    implicit val genLambdas: GenLambdas = true
-                                    val a_ty = typeTerm(a)
-                                    p.lb.foreach(constrain(_, a_ty))
-                                    constrain(a_ty, p.ub)
-                                    NuParam(nme, FieldType(p.lb, a_ty)(provTODO))(lvl)
-                                  }
-                                  
-                                  // TODO check overriding
-                                  val bodyMems = mxn.ttu.entities
-                                  
-                                  paramMems ++ bodyMems
-                                
-                                case trt: TypedNuTrt => Nil   // handled in computeBaseClass
-                                case cls: TypedNuCls => Nil   // handled in computeBaseClass
-                                case als: TypedNuAls =>
-                                  // TODO dealias first?
-                                  err(msg"Cannot inherit from a type alias", p.toLoc)
-                                  Nil
-                                case als: NuParam =>
-                                  // TODO first-class mixins/classes...
-                                  err(msg"Cannot inherit from a parameter", p.toLoc)
-                                  Nil
-                                // case als: NuTypeParam =>
-                                //   err(msg"Cannot inherit from a type parameter", p.toLoc)
-                                //   Nil
-                                case cls: TypedNuFun =>
-                                  err(msg"Cannot inherit from a function", p.toLoc)
-                                  Nil
-                              }
-                            case S(_) =>
-                              err(msg"Cannot inherit from this", p.toLoc)
-                              Nil
-                            case N => 
-                              err(msg"Could not find definition `${mxnNme}`", p.toLoc)
-                              Nil
-                          }
-                        }()
-                        val newSuperType = WithType(
-                          superType,
-                          RecordType(
-                            newMembs.collect{
-                              case m: NuParam => m.nme.toVar -> m.ty
-                              case m: TypedNuFun => m.fd.nme -> m.typeSignature.toUpper(provTODO)
-                            }
-                          )(provTODO)
-                        )(provTODO)
-                        inherit(ps, newSuperType, members ++ newMembs)
-                      case Nil =>
-                        val thisType = WithType(superType, RecordType(typedParams)(ttp(td.params, isType = true)))(provTODO) &
-                          clsNameToNomTag(td)(provTODO, ctx) &
-                          RecordType(tparamFields)(TypeProvenance(Loc(td.tparams.map(_._2)), "type parameters", isType = true))
-                        trace(s"${lvl}. Finalizing inheritance with $thisType <: $finalType") {
-                          assert(finalType.level === lvl)
-                          constrain(thisType, finalType)
-                          members
-                        }()
-                        // println(s"${lvl}. Finalized inheritance with $superType ~> $thisType")
-                        (thisType, members)
-                    }
-                    
-                    // * We start from an empty super type.
-                    val baseType =
-                      RecordType(Nil)(TypeProvenance(Loc(td.parents).map(_.left), "Object"))
-                    
-                    val paramMems = typedParams.map(f => NuParam(f._1, f._2)(lvl))
-                    
-                    val (thisType, baseMems) =
-                      inherit(parentSpecs, baseType, tparamMems ++ paramMems)
-                    
-                    ctx += "super" -> VarSymbol(thisType, Var("super"))
-                    
-                    val ttu = typeTypingUnit(td.body, topLevel = false)
-                    
-                    // TODO report non-unit result/statements?
 
                     case class Pack(
+                      superType: ST,
                       clsMem: Ls[NuMember], 
                       bsCls: Opt[Str], 
                       bsMem: Ls[NuMember], 
                       trtMem: Ls[NuMember],
                       pTP: Map[Str, NuMember]
                      )
-
-                    // compute base class and interfaces
-                    def computeBaseClassTrait(parents: Ls[ParentSpec], pack: Pack): Pack =
-                      parents match {
+                    
+                    def inherit(parents: Ls[ParentSpec], pack: Pack): Pack =
+                        parents match {
                       case (p, v @ Var(parNme), parTargs, parArgs) :: ps =>
-                        ctx.get(parNme) match {
-                          case S(lti: LazyTypeInfo) =>
-                            val info = lti.complete()
-                            info match {
+                        trace(s"${lvl}. Inheriting from $p") {
+                          ctx.get(parNme) match {
+                            case S(lti: LazyTypeInfo) =>
+                              val info = lti.complete()
+                              info match {
+                                case rawMxn: TypedNuMxn =>
+                                  val mxn = rawMxn.freshen.asInstanceOf[TypedNuMxn]
+                                  val newMembs =  {
+                                    if (parTargs.nonEmpty) err(msg"mixin type arguments not yet supported", p.toLoc)
+                                    
+                                    // println(s"Fresh $mxn")
+                                    
+                                    assert(finalType.level === lvl)
+                                    assert(mxn.superTV.level === lvl)
+                                    assert(mxn.thisTV.level === lvl)
+                                    
+                                    constrain(pack.superType, mxn.superTV)
+                                    constrain(finalType, mxn.thisTV)
+                                    
+                                    if (parArgs.sizeCompare(mxn.params) =/= 0)
+                                      err(msg"mixin $parNme expects ${
+                                        mxn.params.size.toString} parameter(s); got ${parArgs.size.toString}", Loc(v :: parArgs.unzip._2))
+                                    
+                                    val paramMems = mxn.params.lazyZip(parArgs).map { case (nme -> p, _ -> Fld(_, _, a)) => // TODO check name, mut, spec
+                                      implicit val genLambdas: GenLambdas = true
+                                      val a_ty = typeTerm(a)
+                                      p.lb.foreach(constrain(_, a_ty))
+                                      constrain(a_ty, p.ub)
+                                      NuParam(nme, FieldType(p.lb, a_ty)(provTODO))(lvl)
+                                    }
+                                    
+                                    // TODO check overriding
+                                    val bodyMems = mxn.ttu.entities
+                                    
+                                    paramMems ++ bodyMems
+                                  }
+                                    
+                                  val newSuperType = WithType(
+                                      pack.superType,
+                                      RecordType(
+                                        newMembs.collect{
+                                          case m: NuParam => m.nme.toVar -> m.ty
+                                          case m: TypedNuFun => m.fd.nme -> m.typeSignature.toUpper(provTODO)
+                                        }
+                                      )(provTODO)
+                                    )(provTODO)
+                                  inherit(ps, pack.copy(
+                                    superType=newSuperType, 
+                                    clsMem=pack.clsMem ++ newMembs
+                                  ))
+                                
+                                case rawTrt: TypedNuTrt =>
+                                  if (parArgs.nonEmpty) err(msg"trait parameters not yet supported", p.toLoc)
+                                  val (trt, ptp) = refreshGen[TypedNuTrt](info, v, parTargs)
+                                
+                                  inherit(ps, pack.copy(
+                                    trtMem = memberUn(pack.trtMem, trt.members.values.toList),
+                                    pTP = pack.pTP ++ ptp ++ trt.parentTP
+                                    ))
+
                                 case rawCls: TypedNuCls =>
                                   if (pack.bsCls.isDefined)
                                     err(msg"cannot inherit from more than one base class: ${
@@ -1053,44 +1008,68 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                                     constrain(a_ty, p.ub)
                                     NuParam(nme, FieldType(p.lb, a_ty)(provTODO))(lvl)
                                   }
-                                  val numem = paramMems ++ cls.members.values.toList
+                                  inherit(ps, pack.copy(
+                                    bsCls = S(parNme), 
+                                    bsMem = paramMems ++ cls.members.values.toList, 
+                                    pTP = pack.pTP ++ ptp ++ cls.parentTP
+                                  ))
 
-                                  // parent class fields/methods
-                                  val res = pack.clsMem ++ numem.flatMap { m =>
-                                    pack.clsMem.find(x => x.name == m.name) match {
+                                case als: TypedNuAls =>
+                                  // TODO dealias first?
+                                  err(msg"Cannot inherit from a type alias", p.toLoc)
+                                  inherit(ps, pack)
+                                case als: NuParam =>
+                                  // TODO first-class mixins/classes...
+                                  err(msg"Cannot inherit from a parameter", p.toLoc)
+                                inherit(ps, pack)
+                                // case als: NuTypeParam =>
+                                //   err(msg"Cannot inherit from a type parameter", p.toLoc)
+                                //   Nil
+                                case cls: TypedNuFun =>
+                                  err(msg"Cannot inherit from a function", p.toLoc)
+                                inherit(ps, pack)
+                              }
+                            case S(_) =>
+                              err(msg"Cannot inherit from this", p.toLoc)
+                              inherit(ps, pack)
+                            case N => 
+                              err(msg"Could not find definition `${parNme}`", p.toLoc)
+                              inherit(ps, pack)
+                          }
+                        }()
+                      case Nil =>
+                        val thisType = WithType(pack.superType, RecordType(typedParams)(ttp(td.params, isType = true)))(provTODO) &
+                          clsNameToNomTag(td)(provTODO, ctx) &
+                          RecordType(tparamFields)(TypeProvenance(Loc(td.tparams.map(_._2)), "type parameters", isType = true))
+                        trace(s"${lvl}. Finalizing inheritance with $thisType <: $finalType") {
+                          assert(finalType.level === lvl)
+                          constrain(thisType, finalType)
+                          pack.clsMem
+                        }()
+                        // println(s"${lvl}. Finalized inheritance with $superType ~> $thisType")
+                        pack.copy(superType = thisType)
+                    }
+                    
+                    // * We start from an empty super type.
+                    val baseType =
+                      RecordType(Nil)(TypeProvenance(Loc(td.parents).map(_.left), "Object"))
+                    
+                    val paramMems = typedParams.map(f => NuParam(f._1, f._2)(lvl))
+                    
+                    val Pack(thisType, baseMems, _, bsMembers, ifaceMembers, ptps) =
+                      inherit(parentSpecs, Pack(baseType, tparamMems ++ paramMems, N, Nil, Nil, Map.empty))
+                      
+                    ctx += "super" -> VarSymbol(thisType, Var("super"))
+                    val ttu = typeTypingUnit(td.body, topLevel = false)
+                    
+                    val cmems = baseMems ++ ttu.entities
+                    val impltdMems = cmems ++ bsMembers.flatMap { m =>
+                                    cmems.find(x => x.name == m.name) match {
                                       case S(mem: TypedNuTermDef) => Nil
                                       case S(pm: NuParam) => Nil
                                       case _ => m :: Nil
                                     }
                                   }
-
-                                  computeBaseClassTrait(ps, pack.copy(
-                                    clsMem = res, 
-                                    bsCls = S(parNme), 
-                                    bsMem = cls.members.values.toList, 
-                                    pTP = pack.pTP ++ ptp ++ cls.parentTP
-                                  ))
-
-                                case rawTrt: TypedNuTrt =>
-                                  if (parArgs.nonEmpty) err(msg"trait parameters not yet supported", p.toLoc)
-                                  val (trt, ptp) = refreshGen[TypedNuTrt](info, v, parTargs)
-                                
-                                  computeBaseClassTrait(ps, pack.copy(
-                                    trtMem = memberUn(pack.trtMem, trt.members.values.toList),
-                                    pTP = pack.pTP ++ ptp ++ trt.parentTP
-                                    ))
-                                
-                                case _ => computeBaseClassTrait(ps, pack)
-                              }
-                          case _ => computeBaseClassTrait(ps, pack)
-                        }
-                      case Nil => pack
-                      }
-
-                    val Pack(clsMems, _, bsMembers, ifaceMembers, ptps) = 
-                      computeBaseClassTrait(parentSpecs, Pack(baseMems ++ ttu.entities, N, Nil, Nil, Map.empty))
-                    
-                    val impltdMems = clsMems
                     val mems = impltdMems.map(d => d.name -> d).toMap ++ typedSignatureMembers
 
                     // overriding check for class/interface inheritance
@@ -1199,7 +1178,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     val nms = Set.from(l.map(_.name) ++ r.map(_.name)).toList
     nms.map {n => 
       (l.find(x => x.name == n), r.find(x => x.name == n)) match {
-        case(S(a: TypedNuFun), S(b: TypedNuFun)) 
+        case (S(a: TypedNuFun), S(b: TypedNuFun)) 
           if a.level == b.level 
             && a.fd.isLetRec == b.fd.isLetRec 
             && a.fd.nme == b.fd.nme
@@ -1207,9 +1186,9 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
             // todo: check fd.rhs
           =>
             TypedNuFun(a.level, a.fd, a.bodyType & b.bodyType)
-        case(S(a), N) => a
-        case(N, S(b)) => b
-        case _ => lastWords("unreachable")
+        case (S(a), _) => a // for other cases, we take the first one (is it a good idea ?)
+        case (N, S(b)) => b
+        case (N, N) => lastWords("unreachable")
       }
     }
   }

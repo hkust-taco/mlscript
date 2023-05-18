@@ -236,7 +236,6 @@ class C1[A] { fun a: A = a }
 //│   fun a: A
 //│ }
 
-// TODO
 class C2 extends C1[int] { fun a = 1 }
 //│ class C2() {
 //│   fun a: 1
@@ -262,19 +261,19 @@ class C extends MyTrait[int] { fun a = 1 }
 :e
 class C extends MyTrait[int] { fun a = false }
 //│ ╔══[ERROR] Type mismatch in definition of method a:
-//│ ║  l.263: 	class C extends MyTrait[int] { fun a = false }
+//│ ║  l.262: 	class C extends MyTrait[int] { fun a = false }
 //│ ║         	                                   ^^^^^^^^^
 //│ ╟── reference of type `false` is not an instance of type `int`
-//│ ║  l.263: 	class C extends MyTrait[int] { fun a = false }
+//│ ║  l.262: 	class C extends MyTrait[int] { fun a = false }
 //│ ║         	                                       ^^^^^
 //│ ╟── but it flows into definition of method a with expected type `int`
-//│ ║  l.263: 	class C extends MyTrait[int] { fun a = false }
+//│ ║  l.262: 	class C extends MyTrait[int] { fun a = false }
 //│ ║         	                                   ^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.263: 	class C extends MyTrait[int] { fun a = false }
+//│ ║  l.262: 	class C extends MyTrait[int] { fun a = false }
 //│ ║         	                        ^^^
 //│ ╟── from signature of member a:
-//│ ║  l.249: 	trait MyTrait[A] { fun a: A }
+//│ ║  l.248: 	trait MyTrait[A] { fun a: A }
 //│ ╙──       	                       ^^^^
 //│ class C() {
 //│   fun a: false
