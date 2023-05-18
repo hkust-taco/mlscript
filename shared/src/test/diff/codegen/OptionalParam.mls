@@ -442,10 +442,10 @@ module O {
 mixin P {
   constructor(x: int)
 }
-//│ ╔══[ERROR] module constructor overriden is not supported
+//│ ╔══[ERROR] Explicit module constructors are not supported.
 //│ ║  l.440: 	  constructor(x: int)
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] mixin constructor overriden is not supported
+//│ ╔══[ERROR] Explicit mixin constructors are not supported.
 //│ ║  l.443: 	  constructor(x: int)
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^
 //│ module O()

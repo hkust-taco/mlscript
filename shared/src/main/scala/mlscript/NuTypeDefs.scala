@@ -605,7 +605,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
               ctx ++= signatures.map(nt => nt._1.name -> VarSymbol(nt._2, nt._1.nme))
 
               if (((td.kind is Nms) || (td.kind is Mxn)) && td.ctor.isDefined)
-                err(msg"${td.kind.str} constructor overriden is not supported",
+                err(msg"Explicit ${td.kind.str} constructors are not supported.",
                   td.ctor.fold[Opt[Loc]](N)(c => c.toLoc))
               
               val (res, funMembers) = td.kind match {
