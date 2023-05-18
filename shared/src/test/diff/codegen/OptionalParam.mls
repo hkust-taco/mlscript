@@ -146,11 +146,10 @@ class E {
 //│ ╙──       	^^^^^
 //│ class E()
 
-// TODO: better check?
 :e
 constructor(x: int)
 //│ ╔══[ERROR] constructor must be in a class.
-//│ ║  l.151: 	constructor(x: int)
+//│ ║  l.150: 	constructor(x: int)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^
 //│ ()
 //│ Code generation encountered an error:
@@ -162,13 +161,13 @@ class F(x: int) extends C(x + 1) {}
 class G extends C(2) {}
 class H extends B {}
 //│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
-//│ ║  l.161: 	class F(x: int) extends C(x + 1) {}
+//│ ║  l.160: 	class F(x: int) extends C(x + 1) {}
 //│ ╙──       	                        ^^^^^^^^
 //│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
-//│ ║  l.162: 	class G extends C(2) {}
+//│ ║  l.161: 	class G extends C(2) {}
 //│ ╙──       	                ^^^^
 //│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
-//│ ║  l.163: 	class H extends B {}
+//│ ║  l.162: 	class H extends B {}
 //│ ╙──       	                ^
 //│ class F(x: int)
 //│ class G()
@@ -265,7 +264,7 @@ module I {
   }
 }
 //│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
-//│ ║  l.264: 	    class L extends J(0)
+//│ ║  l.263: 	    class L extends J(0)
 //│ ╙──       	                    ^^^^
 //│ module I() {
 //│   class J()
@@ -422,10 +421,10 @@ fun h(z: int) =
 let hh = h(1)
 new hh(1)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.423: 	new hh(1)
+//│ ║  l.422: 	new hh(1)
 //│ ║         	    ^^^^^
 //│ ╟── argument of type `(1,)` does not match type `()`
-//│ ║  l.423: 	new hh(1)
+//│ ║  l.422: 	new hh(1)
 //│ ╙──       	      ^^^
 //│ let hh: () -> N
 //│ N | error
@@ -444,10 +443,10 @@ mixin P {
   constructor(x: int)
 }
 //│ ╔══[ERROR] module constructor overriden is not supported
-//│ ║  l.441: 	  constructor(x: int)
+//│ ║  l.440: 	  constructor(x: int)
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] mixin constructor overriden is not supported
-//│ ║  l.444: 	  constructor(x: int)
+//│ ║  l.443: 	  constructor(x: int)
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^
 //│ module O()
 //│ mixin P()
