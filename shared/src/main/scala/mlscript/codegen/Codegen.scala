@@ -842,7 +842,7 @@ final case class JSClassNewDecl(
     implements: Ls[Str],
     initStmts: Ls[JSStmt],
     nestedTypes: Ls[Str],
-    ctorOverrided: Bool
+    ctorOverridden: Bool
 ) extends JSStmt {
   def toSourceCode: SourceCode = {
     val constructor: SourceCode = {
@@ -871,9 +871,9 @@ final case class JSClassNewDecl(
         buffer += s"    $name.implement(this);"
       }
 
-      // if the default constructor is overrided, we generate the overrided version
+      // if the default constructor is overridden, we generate the overridden version
       // otherwise, generate based on the class fields
-      if (!ctorOverrided) {
+      if (!ctorOverridden) {
         assert(fields.length === ctorParams.length, s"fields and ctorParams have different size in class $name.")
         fields.lazyZip(ctorParams).foreach { (field, param) =>
           buffer += s"    this.#$field = $param;" // TODO: invalid name?

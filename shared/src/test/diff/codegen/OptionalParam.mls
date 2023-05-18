@@ -435,3 +435,19 @@ new hh(1)
 //│     = N {}
 //│ // Output
 //│ 2
+
+:e
+module O {
+  constructor(x: int)
+}
+mixin P {
+  constructor(x: int)
+}
+//│ ╔══[ERROR] module constructor overriden is not supported
+//│ ║  l.441: 	  constructor(x: int)
+//│ ╙──       	  ^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] mixin constructor overriden is not supported
+//│ ║  l.444: 	  constructor(x: int)
+//│ ╙──       	  ^^^^^^^^^^^^^^^^^^^
+//│ module O()
+//│ mixin P()

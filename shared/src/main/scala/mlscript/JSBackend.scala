@@ -68,7 +68,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       translatePattern(base)
     case Inst(bod) => translatePattern(bod)
     case _: Lam | _: App | _: Sel | _: Let | _: Blk | _: Bind | _: Test | _: With | _: CaseOf | _: Subs | _: Assign
-        | If(_, _) | New(_, _) | _: Splc | _: Forall | _: Where | _: Super =>
+        | If(_, _) | New(_, _) | _: Splc | _: Forall | _: Where | _: Super | _: Ass =>
       throw CodeGenError(s"term ${inspect(t)} is not a valid pattern")
   }
 
@@ -236,7 +236,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
           }
           case (nt: NuTypeDef, _) => translateLocalNewType(nt)(blkScope)
           // TODO: find out if we need to support this.
-          case (_: Def | _: TypeDef | _: NuFunDef | _: DataDefn | _: DatatypeDefn | _: LetS, _) =>
+          case (_: Def | _: TypeDef | _: NuFunDef | _: DataDefn | _: DatatypeDefn | _: LetS | _: Constructor, _) =>
             throw CodeGenError("unsupported definitions in blocks")
         }.toList)),
         Nil
@@ -710,17 +710,14 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     val fields = sym.body.collectFields ++
       sym.body.collectTypeNames.flatMap(resolveTraitFields)
 
-    val ctorParams = sym.ctorParams match {
-      case Some(lst) =>
-        lst.map { p =>
-          constructorScope.declareValue(p, Some(false), false).runtimeName
-        }
-      case _ =>
-        fields.map { f =>
+    val ctorParams = sym.ctorParams.fold(
+      fields.map { f =>
           memberList += NewClassMemberSymbol(f, Some(false), false).tap(nuTypeScope.register)
           constructorScope.declareValue(f, Some(false), false).runtimeName
         }
-    }
+      )(lst => lst.map { p =>
+          constructorScope.declareValue(p, Some(false), false).runtimeName
+        })
 
     sym.methods.foreach {
       case MethodDef(_, _, Var(nme), _, _) => memberList += NewClassMemberSymbol(nme, N, true).tap(nuTypeScope.register)
