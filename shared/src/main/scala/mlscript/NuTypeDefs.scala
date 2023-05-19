@@ -422,7 +422,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   
   
   
-  /** Type checks a typing unit, which is a sequence of possibly-nutually-recursive type and function definitions
+  /** Type checks a typing unit, which is a sequence of possibly-mutually-recursive type and function definitions
    *  interleaved with plain statements. */
   def typeTypingUnit(tu: TypingUnit, topLevel: Bool)
         (implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType]): TypedTypingUnit =
