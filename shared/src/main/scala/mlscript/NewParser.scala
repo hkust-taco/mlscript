@@ -223,6 +223,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
         errExpr
       case R(d: NuDecl) => d
       case R(e: Term) => e
+      case R(c: Constructor) => c
       case _ => ???
     }
     TypingUnit(es)

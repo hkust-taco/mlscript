@@ -81,7 +81,6 @@ final case class Where(body: Term, where: Ls[Statement])             extends Ter
 final case class Forall(params: Ls[TypeVar], body: Term)             extends Term
 final case class Inst(body: Term)                                    extends Term
 final case class Super()                                             extends Term
-final case class Constructor(params: Tup, body: Ls[Statement])       extends Term // constructor(...) { ... }
 final case class Ass(lhs: Var, rhs: Term)                            extends Term // x = y in constructors. TODO: make lhs term
 
 sealed abstract class IfBody extends IfBodyImpl
@@ -111,9 +110,10 @@ trait IdentifiedTerm
 sealed abstract class SimpleTerm extends Term with IdentifiedTerm with SimpleTermImpl
 
 sealed trait Statement extends StatementImpl
-final case class LetS(isRec: Bool, pat: Term, rhs: Term)  extends Statement
-final case class DataDefn(body: Term)                     extends Statement
-final case class DatatypeDefn(head: Term, body: Term)     extends Statement
+final case class LetS(isRec: Bool, pat: Term, rhs: Term)       extends Statement
+final case class DataDefn(body: Term)                          extends Statement
+final case class DatatypeDefn(head: Term, body: Term)          extends Statement
+final case class Constructor(params: Tup, body: Ls[Statement]) extends Statement // constructor(...) { ... }
 
 sealed trait DesugaredStatement extends Statement with DesugaredStatementImpl
 
