@@ -862,26 +862,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       ttu.entities.map(d => d.name -> d).toMap
 
                     // check trait overriding
-                    baseMems.foreach { m =>
-                      lazy val parSign = m match {
-                                          case nt: TypedNuTermDef => nt.typeSignature
-                                          case np: NuParam => np.typeSignature
-                                          case _ => ??? // probably no other cases
-                                        }
-                      (typedSignatureMembers.map(_._2) ++ ttu.entities).find(x => x.name == m.name) match {
-                        case S(mem: TypedNuTermDef) =>
-                          val memSign = mem.typeSignature
-                          implicit val prov: TP = memSign.prov
-                          println(s"checking overriding `${m.name}`")
-                          constrain(memSign, parSign)
-                        case S(pm: NuParam) =>
-                          val pmSign = pm.typeSignature
-                          implicit val prov: TP = pmSign.prov
-                          println(s"checking overriding `${m.name}`")
-                          constrain(pmSign, parSign)
-                        case _ => ()
-                      }
-                    }
+                    implCheck(baseMems, typedSignatureMembers.map(_._2) ++ ttu.entities, true)(td)
 
                     TypedNuTrt(outerCtx.lvl, td, ttu, 
                       tparams, 
@@ -1088,11 +1069,11 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     
                     // local members overrides mixin members
                     val cmems = ttu.entities ++ baseMems.flatMap { m =>
-                        ttu.entities.find(x => x.name == m.name) match {
-                          case S(mem: TypedNuTermDef) => Nil
-                          case S(pm: NuParam) => Nil
-                          case _ => m :: Nil
-                        }
+                      ttu.entities.find(x => x.name == m.name) match {
+                        case S(mem: TypedNuTermDef) => Nil
+                        case S(pm: NuParam) => Nil
+                        case _ => m :: Nil
+                      }
                     }
                     // local members overrides parent members
                     val impltdMems = cmems ++ bsMembers.flatMap { m =>
@@ -1105,27 +1086,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     val mems = impltdMems.map(d => d.name -> d).toMap ++ typedSignatureMembers
 
                     // overriding check for class/interface inheritance
-                    (bsMembers ++ ifaceMembers).foreach { m =>
-                      lazy val parSign = m match {
-                                          case nt: TypedNuTermDef => nt.typeSignature
-                                          case np: NuParam => np.typeSignature
-                                          case _ => ??? // probably no other cases
-                                        }
-                      impltdMems.find(x => x.name == m.name) match {
-                        case S(mem: TypedNuTermDef) =>
-                          val memSign = mem.typeSignature
-                          implicit val prov: TP = memSign.prov
-                          println(s"checking overriding `${m.name}`")
-                          constrain(memSign, parSign)
-                        case S(pm: NuParam) =>
-                          val pmSign = pm.typeSignature
-                          implicit val prov: TP = pmSign.prov
-                          constrain(pmSign, parSign)
-                        case S(_) => Nil
-                        case N => 
-                          err(msg"Member ${m.name} is declared in parent trait but not implemented", td.toLoc)
-                      }
-                    }
+                    implCheck(bsMembers ++ ifaceMembers, impltdMems, false)(td)
                     
                     TypedNuCls(outerCtx.lvl, td, ttu,
                       tparams, typedParams, mems,
@@ -1204,6 +1165,31 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     override def toString: String =
       s"${decl.name} ~> ${if (isComputing) "<computing>" else result.fold("<uncomputed>")(_.toString)}"
     
+  }
+
+  def implCheck(abst: Ls[NuMember], impl: Ls[NuMember], isTrt: Bool)(td: NuTypeDef)(implicit raise: Raise, ctx: Ctx) = {
+    abst.foreach { m =>
+      lazy val parSign = m match {
+        case nt: TypedNuTermDef => nt.typeSignature
+        case np: NuParam => np.typeSignature
+        case _ => ??? // probably no other cases
+      }
+      impl.find(x => x.name == m.name) match {
+        case S(mem: TypedNuTermDef) =>
+          val memSign = mem.typeSignature
+          implicit val prov: TP = memSign.prov
+          println(s"checking overriding `${m.name}`")
+          constrain(memSign, parSign)
+        case S(pm: NuParam) =>
+          val pmSign = pm.typeSignature
+          implicit val prov: TP = pmSign.prov
+          constrain(pmSign, parSign)
+        case S(_) => ()
+        case N => 
+          if (!isTrt)
+            err(msg"Member ${m.name} is declared in parent trait but not implemented", td.toLoc)
+      }
+    }
   }
   
   // intersection of members
