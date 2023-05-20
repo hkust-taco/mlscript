@@ -110,10 +110,10 @@ trait IdentifiedTerm
 sealed abstract class SimpleTerm extends Term with IdentifiedTerm with SimpleTermImpl
 
 sealed trait Statement extends StatementImpl
-final case class LetS(isRec: Bool, pat: Term, rhs: Term)       extends Statement
-final case class DataDefn(body: Term)                          extends Statement
-final case class DatatypeDefn(head: Term, body: Term)          extends Statement
-final case class Constructor(params: Tup, body: Ls[Statement]) extends Statement // constructor(...) { ... }
+final case class LetS(isRec: Bool, pat: Term, rhs: Term) extends Statement
+final case class DataDefn(body: Term)                    extends Statement
+final case class DatatypeDefn(head: Term, body: Term)    extends Statement
+final case class Constructor(params: Tup, body: Term)    extends Statement // constructor(...) { ... }
 
 sealed trait DesugaredStatement extends Statement with DesugaredStatementImpl
 

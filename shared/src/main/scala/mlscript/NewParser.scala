@@ -307,10 +307,10 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
             consume
             val as = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented()) // TODO
             val body = curlyTypingUnit.entities
-            Constructor(Tup(as).withLoc(S(loc)), body)
+            Constructor(Tup(as).withLoc(S(loc)), Blk(body))
           case _ =>
             err(msg"Expect parameter list for the constructor" -> S(l0) :: Nil)
-            Constructor(Tup(Nil), Nil)
+            Constructor(Tup(Nil), Blk(Nil))
         }
         val t = R(res.withLoc(S(l0 ++ res.getLoc)))
         yeetSpaces match {

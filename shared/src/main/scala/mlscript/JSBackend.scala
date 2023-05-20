@@ -968,7 +968,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       }
       case td @ NuTypeDef(Cls, TypeName(nme), tps, tup @ Tup(fs), ctor, plain, sig, pars, sup, ths, unit) => {
         val (params, preStmts) = ctor match {
-          case S(Constructor(Tup(ls), stmts)) => (S(ls.map {
+          case S(Constructor(Tup(ls), Blk(stmts))) => (S(ls.map {
             case (S(Var(nme)), _) => nme
             case _ => throw CodeGenError(s"Unexpected constructor parameters in $nme.")
           }), stmts)

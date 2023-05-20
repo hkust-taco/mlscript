@@ -877,7 +877,7 @@ trait StatementImpl extends Located { self: Statement =>
     case Forall(ps, bod) => ps ::: bod :: Nil
     case Inst(bod) => bod :: Nil
     case Super() => Nil
-    case Constructor(params, body) => params :: body
+    case Constructor(params, body) => params :: body :: Nil
     case Ass(lhs, rhs) => lhs :: rhs :: Nil
     case NuTypeDef(k, nme, tps, ps, ctor, plain, sig, pars, sup, ths, bod) =>
       nme :: tps.map(_._2) ::: ps :: pars ::: ths.toList ::: bod :: Nil
