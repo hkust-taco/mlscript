@@ -272,14 +272,14 @@ Test2.eval(Cons(("a", Abs("d", Var("d"))), Nil), Add(Num(1), Var("a")))
 :ns
 module Test3 extends EvalVar, EvalExpr, EvalLambda
 //│ module Test3() {
-//│   fun eval: forall 'A 'A0 'a 'b 'c. ('d, 'a,) -> ('e | 'b | 'c | 'f)
+//│   fun eval: forall 'a 'b 'A 'A0 'c. ('d, 'a,) -> ('e | 'c | 'b | 'f)
 //│ }
 //│ where
-//│   'c :> #Abs & {Abs#A = 'A1}
-//│   'b :> #App & {App#A = 'A2}
-//│   'a <: #App & {App#A <: 'A0} | (#Abs & {Abs#A <: 'A} | 'g & ~#Abs) & ~#App
-//│   'A <: 't
-//│   'A0 <: 't0 & 's
+//│   'b :> #Abs & {Abs#A = 'A1}
+//│   'c :> #App & {App#A = 'A2}
+//│   'a <: #App & {App#A <: 'A} | (#Abs & {Abs#A <: 'A0} | 'g & ~#Abs) & ~#App
+//│   'A0 <: 't
+//│   'A <: 't0 & 's
 //│   'd :> #Cons & {Cons#A = 'A3} | #Cons & {Cons#A = 'A4}
 //│      <: 'h & (Cons['A4] | Nil)
 //│   'h :> #Cons & {Cons#A = 'A3} | #Cons & {Cons#A = 'A4}
@@ -392,19 +392,19 @@ Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), App(Abs("a", Var("a")), Add(Num
 // * Incorrect version, for regression testing – EvalLambda should be mixed in after EvalExpr
 module Test3 extends EvalVar, EvalLambda, EvalExpr
 //│ module Test3() {
-//│   fun eval: forall 'a 'r 'b 'r0 'c 'l 'd 'A 'A0 'l0. ('e, 'd,) -> ('f | 'c | 'd | 'b)
+//│   fun eval: forall 'r 'r0 'a 'A 'b 'c 'l 'd 'A0 'l0. ('e, 'a,) -> ('f | 'd | 'a | 'b)
 //│ }
 //│ where
 //│   'b :> #Num
-//│   'c :> #Num
-//│   'd <: 'a
-//│   'a <: #Var | (#Num | (#Add & {Add#A <: 'A0} | #Mul & {Mul#A <: 'A} & ~#Add) & ~#Num) & ~#Var
-//│   'A <: 'r & 'l0
+//│   'd :> #Num
+//│   'a <: 'c
+//│   'c <: #Var | (#Num | (#Add & {Add#A <: 'A0} | #Mul & {Mul#A <: 'A} & ~#Add) & ~#Num) & ~#Var
+//│   'A <: 'r0 & 'l0
 //│   'l0 <: 'g
-//│   'r <: 'g
-//│   'A0 <: 'r0 & 'l
-//│   'l <: 'g
 //│   'r0 <: 'g
+//│   'A0 <: 'r & 'l
+//│   'l <: 'g
+//│   'r <: 'g
 //│   'e :> #Cons & {Cons#A = 'A1} | #Cons & {Cons#A = 'A2}
 //│      <: 'h
 //│   'h :> #Cons & {Cons#A = 'A1} | #Cons & {Cons#A = 'A2}

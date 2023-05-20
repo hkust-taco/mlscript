@@ -1,0 +1,53 @@
+:NewDefs
+
+
+class C1(x: int)
+//│ class C1(x: int)
+
+:e
+class C2(x: int) extends C1(y) {
+  val y = x
+}
+//│ ╔══[ERROR] identifier not found: y
+//│ ║  l.8: 	class C2(x: int) extends C1(y) {
+//│ ╙──     	                            ^
+//│ class C2(x: int) {
+//│   let y: int
+//│ }
+
+:e
+class C2 extends C1(y) {
+  val y: int
+}
+//│ ╔══[ERROR] identifier not found: y
+//│ ║  l.19: 	class C2 extends C1(y) {
+//│ ╙──      	                    ^
+//│ class C2() {
+//│   let y: int
+//│ }
+//│ Code generation encountered an error:
+//│   unresolved symbol y
+
+:e
+class C2 extends C1(this.y) {
+  val y: int
+}
+//│ ╔══[ERROR] identifier not found: this
+//│ ║  l.32: 	class C2 extends C1(this.y) {
+//│ ╙──      	                    ^^^^
+//│ class C2() {
+//│   let y: int
+//│ }
+
+
+class C1(x: C1)
+//│ class C1(x: C1)
+
+:e
+class C2 extends C1(this)
+//│ ╔══[ERROR] identifier not found: this
+//│ ║  l.47: 	class C2 extends C1(this)
+//│ ╙──      	                    ^^^^
+//│ class C2()
+
+

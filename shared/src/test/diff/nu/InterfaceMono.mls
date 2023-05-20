@@ -29,7 +29,7 @@ class What1(toString: string) extends Showable
 
 :e
 trait NoShow extends What1("hi")
-//│ ╔══[ERROR] trait can only inherit traits
+//│ ╔══[ERROR] trait can only inherit from traits
 //│ ║  l.31: 	trait NoShow extends What1("hi")
 //│ ╙──      	                     ^^^^^^^^^^^
 //│ trait NoShow()

@@ -104,3 +104,20 @@ class C1 { fun oops = this.x }
 //│ }
 
 
+:e
+class C { fun x: int }
+//│ ╔══[ERROR] Member x is declared but not defined
+//│ ║  l.108: 	class C { fun x: int }
+//│ ╙──       	              ^
+//│ class C() {
+//│   fun x: int
+//│ }
+
+// FIXME should error
+// :e
+class C { val x: int }
+//│ class C() {
+//│   let x: int
+//│ }
+
+

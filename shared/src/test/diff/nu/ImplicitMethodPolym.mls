@@ -2,26 +2,105 @@
 
 
 module M {
-  fun id(x) = x
+  fun id1(x) = x
 }
 //│ module M() {
-//│   fun id: 'a -> 'a
+//│   fun id1: 'a -> 'a
 //│ }
 
-M.id
+M.id1
 //│ 'a -> 'a
 //│ res
-//│     = [Function: id]
+//│     = [Function: id1]
 
-M.id(true)
+M.id1(true)
 //│ true
 //│ res
 //│     = true
 
-M.id(0)
+M.id1(0)
 //│ 0
 //│ res
 //│     = 0
+
+
+module M {
+  fun id1(x) = x
+  id1(0)
+}
+//│ module M() {
+//│   fun id1: 'a -> (0 | 'a)
+//│ }
+
+M.id1
+//│ 'a -> (0 | 'a)
+//│ res
+//│     = [Function: id1]
+
+// :d
+mixin Mx {
+  fun id1(x) = x
+}
+//│ mixin Mx() {
+//│   fun id1: 'a -> 'a
+//│ }
+
+// FIXME: inconsistency: order of freshening matters!! if TV freshened from thisTy, result is different
+// :d
+module M extends Mx {
+  val r = this.id1(0)
+}
+//│ module M() {
+//│   fun id1: forall 'a. 'a -> 'a
+//│   let r: 0
+//│ }
+
+// :d
+mixin Mx {
+  fun id1(x) = this.id2(x)
+}
+//│ mixin Mx() {
+//│   this: {id2: 'a -> 'b}
+//│   fun id1: 'a -> 'b
+//│ }
+
+:e
+module M extends Mx {
+  this.id1(0)
+}
+//│ ╔══[ERROR] Type `#M & {id1: ?a -> ?b}` does not contain member `id2`
+//│ ║  l.60: 	  fun id1(x) = this.id2(x)
+//│ ╙──      	                   ^^^^
+//│ module M() {
+//│   fun id1: anything -> error
+//│ }
+//│ Runtime error:
+//│   TypeError: self.id2 is not a function
+
+:e
+module M extends Mx {
+  fun id2(x) = (x, x)
+  this.id1(0)
+}
+//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ║  l.60: 	  fun id1(x) = this.id2(x)
+//│ ╙──      	                   ^^^^
+//│ module M() {
+//│   fun id1: anything -> error
+//│   fun id2: 'a -> ('a, 'a,)
+//│ }
+
+// :d
+module M extends Mx {
+  fun id2: 'a => ('a, 'a)
+  fun id2(x) = (x, x)
+  this.id1(0)
+}
+//│ module M() {
+//│   fun id1: 'a -> ('a | 0, 'a | 0,)
+//│   fun id2: forall 'a0. 'a0 -> ('a0, 'a0,)
+//│ }
+
 
 
 class C {
@@ -36,12 +115,13 @@ class C {
 //│ }
 
 // FIXME
+// :d
 module M extends C {
   this.id2(true)
 }
 //│ ╔══[ERROR] Type `#M` does not contain member `id2`
-//│ ║  l.40: 	  this.id2(true)
-//│ ╙──      	      ^^^^
+//│ ║  l.120: 	  this.id2(true)
+//│ ╙──       	      ^^^^
 //│ module M() {
 //│   fun f: forall 'a 'b. (0 | true | 'a, 0 | true | 'b,)
 //│   fun id1: forall 'a 'b. ('b & 'a) -> (0 | true | 'a)
@@ -53,11 +133,11 @@ module M extends C {
   fun g = (this.id2(true), this.id2(0))
 }
 //│ ╔══[ERROR] Type `#M` does not contain member `id2`
-//│ ║  l.53: 	  fun g = (this.id2(true), this.id2(0))
-//│ ╙──      	               ^^^^
+//│ ║  l.133: 	  fun g = (this.id2(true), this.id2(0))
+//│ ╙──       	               ^^^^
 //│ ╔══[ERROR] Type `#M` does not contain member `id2`
-//│ ║  l.53: 	  fun g = (this.id2(true), this.id2(0))
-//│ ╙──      	                               ^^^^
+//│ ║  l.133: 	  fun g = (this.id2(true), this.id2(0))
+//│ ╙──       	                               ^^^^
 //│ module M() {
 //│   fun f: forall 'a 'b. (0 | true | 'a, 0 | true | 'b,)
 //│   fun g: (error, error,)
@@ -91,18 +171,18 @@ module M extends C {
   fun id1 = succ
 }
 //│ ╔══[ERROR] Type mismatch in definition of method id1:
-//│ ║  l.91: 	  fun id1 = succ
-//│ ║        	      ^^^^^^^^^^
+//│ ║  l.171: 	  fun id1 = succ
+//│ ║         	      ^^^^^^^^^^
 //│ ╟── application of type `?a` does not match type `int | ~(?b & ?c)`
-//│ ║  l.29: 	  fun f = (id1(true), id1(0))
-//│ ╙──      	           ^^^^^^^^^
+//│ ║  l.108: 	  fun f = (id1(true), id1(0))
+//│ ╙──       	           ^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in definition of method id1:
-//│ ║  l.91: 	  fun id1 = succ
-//│ ║        	      ^^^^^^^^^^
+//│ ║  l.171: 	  fun id1 = succ
+//│ ║         	      ^^^^^^^^^^
 //│ ╟── type `int` does not match type `0 | true | ?a`
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.28: 	  fun id1(x) = x
-//│ ╙──      	               ^
+//│ ║  l.107: 	  fun id1(x) = x
+//│ ╙──       	               ^
 //│ module M() {
 //│   fun f: (0 | true, 0 | true,)
 //│   fun id1: int -> int
@@ -141,16 +221,16 @@ module M {
   fun oops(x) = m := x
 }
 //│ ╔══[PARSE ERROR] Unexpected 'mut' keyword in expression position
-//│ ║  l.140: 	  mut val m = None
+//│ ║  l.220: 	  mut val m = None
 //│ ╙──       	  ^^^
 //│ ╔══[PARSE ERROR] Unexpected 'val' keyword in expression position
-//│ ║  l.140: 	  mut val m = None
+//│ ║  l.220: 	  mut val m = None
 //│ ╙──       	      ^^^
 //│ ╔══[PARSE ERROR] Unexpected '=' here
-//│ ║  l.140: 	  mut val m = None
+//│ ║  l.220: 	  mut val m = None
 //│ ╙──       	            ^
 //│ ╔══[ERROR] identifier not found: m
-//│ ║  l.140: 	  mut val m = None
+//│ ║  l.220: 	  mut val m = None
 //│ ╙──       	          ^
 //│ module M()
 //│ Code generation encountered an error:

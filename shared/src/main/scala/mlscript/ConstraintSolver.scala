@@ -69,6 +69,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         info.typedFields.get(fld) match {
           case S(fty) => S(fty)
           case N =>
+            // TODO try to use `info.parentSpecs`?
             if (info.allFields.contains(fld)) // TODO don't report this if the field can be found somewhere else!
               foundRec = S(ErrorReport(msg"Indirectly-recursive member should have type annotation" -> fld.toLoc :: Nil))
             N
@@ -90,12 +91,12 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           }
 
         info.complete() match {
+          case cls: TypedNuCls => handle(cls.virtualMembers)
+          case trt: TypedNuTrt => handle(trt.virtualMembers)
+          case _ => ??? // TODO
+        }
         
-        case cls: TypedNuCls => handle(cls.virtualMembers)
-        case trt: TypedNuTrt => handle(trt.virtualMembers)
-        case _ => ??? // TODO
       }
-    }
       
       println(s"Lookup ${info.decl.name}.${fld.name} : $raw where ${raw.fold("")(_.ub.showBounds)}")
       
@@ -1635,12 +1636,13 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             println(s"$tv2 <: ${tv2.upperBounds}")
             tv2
           } else {
+            // NOTE: tv.level may be different from lvl; is that OK?
             freshened += tv -> rv
             rv
           }
         case None =>
           val v = freshVar(tv.prov, S(tv), tv.nameHint)(if (tv.level > below) tv.level else {
-            assert(lvl <= below, "this condition shoudl not be true for the result to be correct")
+            assert(lvl <= below, "this condition should be false for the result to be correct")
             lvl
           })
           freshened += tv -> v
