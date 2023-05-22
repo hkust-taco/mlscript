@@ -1,0 +1,58 @@
+:NewDefs
+
+mixin Test[A] {
+    fun bar: (A, A)
+    fun bar = (this.a, this.a)
+}
+//│ mixin Test[A]() {
+//│   this: {a: A}
+//│   fun bar: (A, A,)
+//│ }
+
+class A(a: int) extends Test
+//│ class A(a: int) {
+//│   fun bar: (int, int,)
+//│ }
+
+class P(p: int) { 
+    fun foo(x) = x + p 
+}
+//│ class P(p: int) {
+//│   fun foo: int -> int
+//│ }
+
+// FIXME
+class C1(a: int) extends P(a) { fun bar = this.foo(0) }
+//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ║  l.25: 	class C1(a: int) extends P(a) { fun bar = this.foo(0) }
+//│ ╙──      	                                              ^^^^
+//│ class C1(a: int) {
+//│   fun bar: error
+//│   fun foo: int -> int
+//│ }
+
+// FIXME
+class C2(a: int, b: int) extends P(a + b) {
+    fun foo(x) = x * this.p + a * b
+}
+//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ║  l.36: 	    fun foo(x) = x * this.p + a * b
+//│ ╙──      	                         ^^
+//│ class C2(a: int, b: int) {
+//│   fun foo: int -> int
+//│ }
+
+let c2 =  C2(1, 2)
+//│ let c2: C2
+//│ c2
+//│    = C2 {}
+
+c2.foo(2)
+//│ int
+//│ res
+//│     = 8
+
+c2.p
+//│ int
+//│ res
+//│     = 3
