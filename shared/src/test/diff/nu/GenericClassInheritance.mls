@@ -43,3 +43,17 @@ class WrongRoom extends Room[bool]("wrong") {
 //│ class WrongRoom() {
 //│   fun foo: int -> int
 //│ }
+
+mixin Test[A] {
+    fun bar: (A, A)
+    fun bar = (this.a, this.a)
+}
+//│ mixin Test[A]() {
+//│   this: {a: A}
+//│   fun bar: (A, A,)
+//│ }
+
+class A(a: int) extends Test
+//│ class A(a: int) {
+//│   fun bar: (int, int,)
+//│ }

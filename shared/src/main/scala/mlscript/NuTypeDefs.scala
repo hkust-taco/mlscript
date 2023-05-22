@@ -606,7 +606,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                   case rawMxn: TypedNuMxn =>
                     
                     // println(s"Raw $rawMxn")
-                    val (fr, ptp) = refreshGen(rawMxn, v, parTargs)
+                    val (fr, ptp) = refreshHelper(rawMxn, v, N) // type args inferred
                     implicit val frenshened: MutMap[TV,ST] = fr
                     implicit val shadows: Shadows = Shadows.empty
                     val mxn = rawMxn.freshenAbove(info.level, rigidify = false)
@@ -642,7 +642,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                   case rawTrt: TypedNuTrt =>
                     if (parArgs.nonEmpty) err(msg"trait parameters not yet supported", p.toLoc)
 
-                    val (fr, ptp) = refreshGen(rawTrt, v, parTargs)
+                    val (fr, ptp) = refreshHelper(rawTrt, v, S(parTargs))
                     implicit val frenshened: MutMap[TV,ST] = fr
                     implicit val shadows: Shadows = Shadows.empty
                     val trt = rawTrt.freshenAbove(info.level, rigidify = false)
@@ -651,7 +651,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     S((trt, paramMems, ptp ++ trt.parentTP, p.toLoc))
                     
                   case rawCls: TypedNuCls =>
-                    val (fr, ptp) = refreshGen(rawCls, v, parTargs)
+                    val (fr, ptp) = refreshHelper(rawCls, v, S(parTargs))
                     implicit val frenshened: MutMap[TV,ST] = fr
                     implicit val shadows: Shadows = Shadows.empty
                     val cls = rawCls.freshenAbove(info.level, rigidify = false)
@@ -834,16 +834,18 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     private lazy val thisTV: TV =
       freshVar(provTODO, N, S(decl.name.decapitalize))(lvl + 1)
 
-    // refresh trait/class
-    def refreshGen(raw: PolyNuDecl, v: Var, parTargs: Ls[Type]): (MutMap[TV, ST], Map[Str, NuParam]) = {
+    // refresh trait/class/mixin
+    def refreshHelper(raw: PolyNuDecl, v: Var, parTargs: Opt[Ls[Type]]): (MutMap[TV, ST], Map[Str, NuParam]) = {
       val freshened: MutMap[TV, ST] = MutMap.empty
       val rawName = v.name
 
-      if (raw.tparams.sizeCompare(parTargs.size) =/= 0)
-        err(msg"${raw.kind.str} $rawName expects ${
-          raw.tparams.size.toString} type parameter(s); got ${parTargs.size.toString}", Loc(v :: parTargs))
+      parTargs foreach { pta => 
+        if (raw.tparams.sizeCompare(pta.size) =/= 0)
+          err(msg"${raw.kind.str} $rawName expects ${
+            raw.tparams.size.toString} type parameter(s); got ${pta.size.toString}", Loc(v :: pta))
+      }
 
-      val parTP = raw.tparams.lazyZip(parTargs).map { case ((tn, _tv, vi), targTy) =>
+      val parTP = raw.tparams.lazyZip(parTargs.getOrElse(Nil)).map { case ((tn, _tv, vi), targTy) =>
         val targ = typeType(targTy)
         val tv = (targ match {
           case tv: TV => 
