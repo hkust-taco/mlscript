@@ -400,7 +400,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
 
             val ctor =
               if (ctors.lengthIs > 1) {
-                err(msg"A class may only have one constructor" -> S(l0) :: Nil)
+                err(msg"A class may only have at most one explicit constructor" -> S(l0) :: Nil)
                 N
               }
               else ctors.headOption
