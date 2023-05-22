@@ -74,14 +74,13 @@ class C {
 //│ globalThis.C = typing_unit2.C;
 //│ // End of generated code
 
-// TODO: typing
-:e
+:e // TODO: typing
 let c = new C(1)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.79: 	let c = new C(1)
+//│ ║  l.78: 	let c = new C(1)
 //│ ║        	            ^^^^
 //│ ╟── argument of type `(1,)` does not match type `()`
-//│ ║  l.79: 	let c = new C(1)
+//│ ║  l.78: 	let c = new C(1)
 //│ ╙──      	             ^^^
 //│ let c: C | error
 //│ c
@@ -142,14 +141,14 @@ class E {
   constructor(y: int)
 }
 //│ ╔══[PARSE ERROR] A class may only have one constructor
-//│ ║  l.140: 	class E {
+//│ ║  l.139: 	class E {
 //│ ╙──       	^^^^^
 //│ class E()
 
 :e
 constructor(x: int)
 //│ ╔══[ERROR] constructor must be in a class.
-//│ ║  l.150: 	constructor(x: int)
+//│ ║  l.149: 	constructor(x: int)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^
 //│ ()
 //│ Code generation encountered an error:
@@ -161,13 +160,13 @@ class F(x: int) extends C(x + 1) {}
 class G extends C(2) {}
 class H extends B {}
 //│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
-//│ ║  l.160: 	class F(x: int) extends C(x + 1) {}
+//│ ║  l.159: 	class F(x: int) extends C(x + 1) {}
 //│ ╙──       	                        ^^^^^^^^
 //│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
-//│ ║  l.161: 	class G extends C(2) {}
+//│ ║  l.160: 	class G extends C(2) {}
 //│ ╙──       	                ^^^^
 //│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
-//│ ║  l.162: 	class H extends B {}
+//│ ║  l.161: 	class H extends B {}
 //│ ╙──       	                ^
 //│ class F(x: int)
 //│ class G()
@@ -264,7 +263,7 @@ module I {
   }
 }
 //│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
-//│ ║  l.263: 	    class L extends J(0)
+//│ ║  l.262: 	    class L extends J(0)
 //│ ╙──       	                    ^^^^
 //│ module I() {
 //│   class J()
@@ -416,15 +415,14 @@ fun h(z: int) =
   N
 //│ fun h: (z: int,) -> () -> N
 
-// TODO: typing
-:e
+:e // TODO: typing
 let hh = h(1)
 new hh(1)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.422: 	new hh(1)
+//│ ║  l.420: 	new hh(1)
 //│ ║         	    ^^^^^
 //│ ╟── argument of type `(1,)` does not match type `()`
-//│ ║  l.422: 	new hh(1)
+//│ ║  l.420: 	new hh(1)
 //│ ╙──       	      ^^^
 //│ let hh: () -> N
 //│ N | error
@@ -443,10 +441,10 @@ mixin P {
   constructor(x: int)
 }
 //│ ╔══[ERROR] Explicit module constructors are not supported.
-//│ ║  l.440: 	  constructor(x: int)
+//│ ║  l.438: 	  constructor(x: int)
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Explicit mixin constructors are not supported.
-//│ ║  l.443: 	  constructor(x: int)
+//│ ║  l.441: 	  constructor(x: int)
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^
 //│ module O()
 //│ mixin P()
