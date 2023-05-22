@@ -62,11 +62,57 @@ c2.p
 class Test[A](x: A)
 //│ class Test[A](x: A)
 
-:e // TODO support
 class A(a: int) extends Test(a)
-//│ ╔══[ERROR] class Test expects 1 type parameter(s); got 0
-//│ ║  l.65: 	class A(a: int) extends Test(a)
-//│ ╙──      	                        ^^^^
 //│ class A(a: int)
 
+let a1 = A(1)
+//│ let a1: A
+//│ a1
+//│    = A {}
 
+a1: Test['x]
+//│ Test['x]
+//│   where
+//│     'x :> int
+//│ res
+//│     = A {}
+
+a1.x
+//│ int
+//│ res
+//│     = 1
+
+:NoJS
+trait Foo[A] {
+    fun foo[A](x: A): A
+}
+//│ trait Foo[A]() {
+//│   fun foo: forall 'A. (x: 'A,) -> 'A
+//│ }
+
+// FIXME
+class B extends Foo {
+    fun foo(x) = x + 1
+}
+//│ ╔══[ERROR] Type error in definition of method foo
+//│ ║  l.95: 	    fun foo(x) = x + 1
+//│ ║        	        ^^^^^^^^^^^^^^
+//│ ╟── type variable `A` leaks out of its scope
+//│ ║  l.87: 	    fun foo[A](x: A): A
+//│ ║        	            ^
+//│ ╟── into reference of type `int`
+//│ ║  l.95: 	    fun foo(x) = x + 1
+//│ ╙──      	                 ^
+//│ ╔══[ERROR] Type error in definition of method foo
+//│ ║  l.95: 	    fun foo(x) = x + 1
+//│ ║        	        ^^^^^^^^^^^^^^
+//│ ╟── type variable `A` leaks out of its scope
+//│ ║  l.95: 	    fun foo(x) = x + 1
+//│ ║        	                 ^^^^^
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this operator application:
+//│ ║  l.95: 	    fun foo(x) = x + 1
+//│ ╙──      	                 ^^^^^
+//│ class B() {
+//│   fun foo: int -> int
+//│ }

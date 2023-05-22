@@ -14,27 +14,65 @@ class BigRoom extends Room[bool]("big")
 //│ where
 //│   'A := bool
 
+// FIXME
+class InferredRoom extends Room("infer") {
+    fun foo(x) = x && true
+}
+//│ ╔══[ERROR] Type error in definition of method foo
+//│ ║  l.19: 	    fun foo(x) = x && true
+//│ ║        	        ^^^^^^^^^^^^^^^^^^
+//│ ╟── type variable `A` leaks out of its scope
+//│ ║  l.3: 	class Room[A](name: string) {
+//│ ║       	           ^
+//│ ╟── into reference of type `bool`
+//│ ║  l.19: 	    fun foo(x) = x && true
+//│ ╙──      	                 ^
+//│ ╔══[ERROR] Type error in definition of method foo
+//│ ║  l.19: 	    fun foo(x) = x && true
+//│ ║        	        ^^^^^^^^^^^^^^^^^^
+//│ ╟── type variable `A` leaks out of its scope
+//│ ║  l.19: 	    fun foo(x) = x && true
+//│ ║        	                 ^^^^^^^^^
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this operator application:
+//│ ║  l.19: 	    fun foo(x) = x && true
+//│ ╙──      	                 ^^^^^^^^^
+//│ class InferredRoom() {
+//│   fun foo: bool -> bool
+//│ }
+
+:e
+class TooManyRoom extends Room[int, string]("too many")
+//│ ╔══[ERROR] class Room expects 1 type parameter(s); got 2
+//│ ║  l.45: 	class TooManyRoom extends Room[int, string]("too many")
+//│ ╙──      	                          ^^^^^^^^^^^^^^^^
+//│ class TooManyRoom() {
+//│   fun foo: (x: 'A,) -> 'A
+//│ }
+//│ where
+//│   'A := int
+
 :e
 class WrongRoom extends Room[bool]("wrong") {
     fun foo(x) = x + 1
 }
 //│ ╔══[ERROR] Type mismatch in definition of method foo:
-//│ ║  l.19: 	    fun foo(x) = x + 1
+//│ ║  l.57: 	    fun foo(x) = x + 1
 //│ ║        	        ^^^^^^^^^^^^^^
 //│ ╟── type `bool` is not an instance of type `int`
-//│ ║  l.18: 	class WrongRoom extends Room[bool]("wrong") {
+//│ ║  l.56: 	class WrongRoom extends Room[bool]("wrong") {
 //│ ║        	                             ^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.19: 	    fun foo(x) = x + 1
+//│ ║  l.57: 	    fun foo(x) = x + 1
 //│ ╙──      	                 ^
 //│ ╔══[ERROR] Type mismatch in definition of method foo:
-//│ ║  l.19: 	    fun foo(x) = x + 1
+//│ ║  l.57: 	    fun foo(x) = x + 1
 //│ ║        	        ^^^^^^^^^^^^^^
 //│ ╟── operator application of type `int` is not an instance of type `bool`
-//│ ║  l.19: 	    fun foo(x) = x + 1
+//│ ║  l.57: 	    fun foo(x) = x + 1
 //│ ║        	                 ^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.18: 	class WrongRoom extends Room[bool]("wrong") {
+//│ ║  l.56: 	class WrongRoom extends Room[bool]("wrong") {
 //│ ║        	                             ^^^^
 //│ ╟── from reference:
 //│ ║  l.4: 	    fun foo(x: A) = x

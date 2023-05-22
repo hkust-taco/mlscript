@@ -633,7 +633,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                   case rawTrt: TypedNuTrt =>
                     if (parArgs.nonEmpty) err(msg"trait parameters not yet supported", p.toLoc)
 
-                    val (fr, ptp) = refreshHelper(rawTrt, v, S(parTargs))
+                    val (fr, ptp) = refreshHelper(rawTrt, v, if (parTargs.isEmpty) N else S(parTargs))  // infer ty args if not provided
                     implicit val frenshened: MutMap[TV,ST] = fr
                     implicit val shadows: Shadows = Shadows.empty
                     val trt = rawTrt.freshenAbove(info.level, rigidify = false)
@@ -642,7 +642,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     S((trt, paramMems, ptp ++ trt.parentTP, p.toLoc))
                     
                   case rawCls: TypedNuCls =>
-                    val (fr, ptp) = refreshHelper(rawCls, v, S(parTargs))
+                    val (fr, ptp) = refreshHelper(rawCls, v, if (parTargs.isEmpty) N else S(parTargs)) // infer ty args if not provided
                     implicit val frenshened: MutMap[TV,ST] = fr
                     implicit val shadows: Shadows = Shadows.empty
                     val cls = rawCls.freshenAbove(info.level, rigidify = false)
