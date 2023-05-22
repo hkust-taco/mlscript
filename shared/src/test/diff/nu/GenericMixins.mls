@@ -1,19 +1,99 @@
 :NewDefs
 
 
+
 // TODO support
-mixin BaseTest<A> {
+mixin BaseTest[A] {
   fun test(x: A) = x
 }
 //│ ╔══[ERROR] type identifier not found: A
-//│ ║  l.6: 	  fun test(x: A) = x
+//│ ║  l.7: 	  fun test(x: A) = x
 //│ ╙──     	              ^
 //│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: A28'
 
-mixin BaseTest<A>(x: A) {
+mixin BaseTest[A](x: A) {
   fun test = x
 }
 //│ mixin BaseTest[A](x: A) {
 //│   fun test: A
 //│ }
+
+
+
+mixin Test[A] {
+  fun foo: A -> A
+  fun foo = id
+  fun bar: (A -> A) -> (A -> A)
+  fun bar = id
+}
+//│ mixin Test[A]() {
+//│   fun bar: (A -> A) -> A -> A
+//│   fun foo: A -> A
+//│ }
+
+class C extends Test {
+  fun baz1 = this.foo(0)
+  fun baz2 = this.bar(this.foo)
+}
+//│ class C() {
+//│   fun bar: forall 'a. 'a -> 'a
+//│   fun baz1: 0
+//│   fun baz2: forall 'a. 'a -> 'a
+//│   fun foo: forall 'a. 'a -> 'a
+//│ }
+
+
+
+mixin Test[A] {
+  fun foo: A -> A
+  fun foo = id
+  fun bar: (A, A)
+  fun bar = (this.arg, this.arg)
+  fun baz = foo(this.arg)
+}
+//│ mixin Test[A]() {
+//│   this: {arg: A & 'a}
+//│   fun bar: (A, A,)
+//│   fun baz: 'a
+//│   fun foo: A -> A
+//│ }
+
+class C(arg: int) extends Test
+//│ class C(arg: int) {
+//│   fun bar: (int, int,)
+//│   fun baz: int
+//│   fun foo: forall 'a. 'a -> 'a
+//│ }
+
+:e // TODO support or produce better error (arg is not actually recursive)
+class C extends Test {
+  fun arg = 123
+}
+//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ║  l.52: 	  fun baz = foo(this.arg)
+//│ ╙──      	                    ^^^^
+//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ║  l.51: 	  fun bar = (this.arg, this.arg)
+//│ ╙──      	                           ^^^^
+//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ║  l.51: 	  fun bar = (this.arg, this.arg)
+//│ ╙──      	                 ^^^^
+//│ class C() {
+//│   fun arg: 123
+//│   fun bar: (error, error,)
+//│   fun baz: error
+//│   fun foo: forall 'a. 'a -> 'a
+//│ }
+
+class C extends Test {
+  fun arg: int
+  fun arg = 123
+}
+//│ class C() {
+//│   fun arg: int
+//│   fun bar: (int, int,)
+//│   fun baz: int
+//│   fun foo: forall 'a. 'a -> 'a
+//│ }
+
 

@@ -29,15 +29,6 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     
     protected def withLevel[R](k: Ctx => R)(implicit ctx: Ctx): R = k(ctx.copy(lvl = level + 1))
     
-    /** Used in inheritance processing, for parent types. */
-    def freshen(implicit ctx: Ctx): NuMember = {
-      implicit val freshened: MutMap[TV, ST] = MutMap.empty
-      implicit val shadows: Shadows = Shadows.empty
-      withLevel { implicit ctx =>
-        freshenAbove(level, rigidify = false)
-      }
-    }
-    
     def freshenAbove(lim: Int, rigidify: Bool)
           (implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV, ST])
           : NuMember
@@ -873,9 +864,6 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     
     def complete()(implicit raise: Raise): TypedNuDecl = result.getOrElse {
       if (isComputing) {
-        // val ty = err(msg"Unhandled cyclic definition", decl.toLoc)
-        // // * Hacky: return a dummy decl to avoid possible infinite completion recursions
-        // TypedNuFun(0, NuFunDef(N, decl.nameVar, Nil, R(Top))(N, N), ty)
         err(msg"Unhandled cyclic definition", decl.toLoc)
         TypedNuDummy(decl)
       }

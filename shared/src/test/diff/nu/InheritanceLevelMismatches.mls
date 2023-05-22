@@ -1,0 +1,41 @@
+:NewDefs
+
+:NoJS // TODO
+
+
+trait T1 { fun x: 0 | 1 }
+//│ trait T1() {
+//│   fun x: 0 | 1
+//│ }
+
+// FIXME
+module Foo {
+  trait T2 { fun x: 1 | 2 }
+  class C extends T1, T2 { fun x = 1 }
+}
+//│ ╔══[ERROR] member x has mismatch levels 1 and 2
+//│ ║  l.6: 	trait T1 { fun x: 0 | 1 }
+//│ ╙──     	               ^^^^^^^^
+//│ module Foo() {
+//│   class C() {
+//│     fun x: 1
+//│   }
+//│   trait T2() {
+//│     fun x: 1 | 2
+//│   }
+//│ }
+
+
+mixin Foo { fun f = this.x }
+//│ mixin Foo() {
+//│   this: {x: 'x}
+//│   fun f: 'x
+//│ }
+
+// FIXME
+module Bar {
+  class C extends Foo
+}
+//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed
+
+

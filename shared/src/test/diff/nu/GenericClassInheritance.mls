@@ -1,5 +1,4 @@
 :NewDefs
-:NoJS
 
 class Room[A](name: string) {
     fun foo(x: A) = x
@@ -20,40 +19,27 @@ class WrongRoom extends Room[bool]("wrong") {
     fun foo(x) = x + 1
 }
 //│ ╔══[ERROR] Type mismatch in definition of method foo:
-//│ ║  l.20: 	    fun foo(x) = x + 1
+//│ ║  l.19: 	    fun foo(x) = x + 1
 //│ ║        	        ^^^^^^^^^^^^^^
 //│ ╟── type `bool` is not an instance of type `int`
-//│ ║  l.19: 	class WrongRoom extends Room[bool]("wrong") {
+//│ ║  l.18: 	class WrongRoom extends Room[bool]("wrong") {
 //│ ║        	                             ^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.20: 	    fun foo(x) = x + 1
+//│ ║  l.19: 	    fun foo(x) = x + 1
 //│ ╙──      	                 ^
 //│ ╔══[ERROR] Type mismatch in definition of method foo:
-//│ ║  l.20: 	    fun foo(x) = x + 1
+//│ ║  l.19: 	    fun foo(x) = x + 1
 //│ ║        	        ^^^^^^^^^^^^^^
 //│ ╟── operator application of type `int` is not an instance of type `bool`
-//│ ║  l.20: 	    fun foo(x) = x + 1
+//│ ║  l.19: 	    fun foo(x) = x + 1
 //│ ║        	                 ^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.19: 	class WrongRoom extends Room[bool]("wrong") {
+//│ ║  l.18: 	class WrongRoom extends Room[bool]("wrong") {
 //│ ║        	                             ^^^^
 //│ ╟── from reference:
-//│ ║  l.5: 	    fun foo(x: A) = x
+//│ ║  l.4: 	    fun foo(x: A) = x
 //│ ╙──     	                    ^
 //│ class WrongRoom() {
 //│   fun foo: int -> int
 //│ }
 
-mixin Test[A] {
-    fun bar: (A, A)
-    fun bar = (this.a, this.a)
-}
-//│ mixin Test[A]() {
-//│   this: {a: A}
-//│   fun bar: (A, A,)
-//│ }
-
-class A(a: int) extends Test
-//│ class A(a: int) {
-//│   fun bar: (int, int,)
-//│ }
