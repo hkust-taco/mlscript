@@ -359,6 +359,24 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   }
   
   
+  /** Used when there was an error while tying a definition. */
+  case class TypedNuDummy(d: NuDecl) extends TypedNuDecl with TypedNuTermDef {
+    def level = MinLevel
+    def kind: DeclKind = Val
+    def name: Str = d.name
+    def typeSignature: ST = errType
+    def freshenAbove(lim: Int, rigidify: Bool)
+          (implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV, ST]) =
+      this
+    def mapPol(pol: Opt[Bool], smart: Bool)(f: (Opt[Bool], SimpleType) => SimpleType)
+          (implicit ctx: Ctx): TypedNuTermDef =
+      this
+    def mapPolMap(pol: PolMap)(f: (PolMap, SimpleType) => SimpleType)
+          (implicit ctx: Ctx): TypedNuTermDef =
+      this
+  }
+  
+  
   /** Note: the type `bodyType` is stored *without* its polymorphic wrapper! (unlike `typeSignature`) */
   case class TypedNuFun(level: Level, fd: NuFunDef, bodyType: ST) extends TypedNuDecl with TypedNuTermDef {
     def kind: DeclKind = Val
@@ -643,6 +661,9 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     err(msg"Cannot inherit from a function", p.toLoc)
                     N
                     
+                  case cls: TypedNuDummy =>
+                    N
+                    
                 }
               case S(_) =>
                 err(msg"Cannot inherit from this", p.toLoc)
@@ -836,9 +857,11 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     
     def complete()(implicit raise: Raise): TypedNuDecl = result.getOrElse {
       if (isComputing) {
-        val ty = err(msg"Unhandled cyclic definition", decl.toLoc)
-        // * Hacky: return a dummy decl to avoid possible infinite completion recursions
-        TypedNuFun(0, NuFunDef(N, decl.nameVar, Nil, R(Top))(N, N), ty)
+        // val ty = err(msg"Unhandled cyclic definition", decl.toLoc)
+        // // * Hacky: return a dummy decl to avoid possible infinite completion recursions
+        // TypedNuFun(0, NuFunDef(N, decl.nameVar, Nil, R(Top))(N, N), ty)
+        err(msg"Unhandled cyclic definition", decl.toLoc)
+        TypedNuDummy(decl)
       }
       else trace(s"Completing ${decl.showDbg}") {
         println(s"Type params ${tparams.mkString(" ")}")

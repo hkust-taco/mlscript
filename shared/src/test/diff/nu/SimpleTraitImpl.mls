@@ -269,9 +269,6 @@ class C2 extends T2[int]
 //│ ║         	^^^^^^^^^^^^^^^^
 //│ ║  l.263: 	}
 //│ ╙──       	^
-//│ ╔══[ERROR] Cannot inherit from a function
-//│ ║  l.264: 	class C2 extends T2[int]
-//│ ╙──       	                 ^^
 //│ ╔══[ERROR] Type `C2` does not contain member `x`
 //│ ║  l.262: 	  val r = C2().x
 //│ ╙──       	              ^^

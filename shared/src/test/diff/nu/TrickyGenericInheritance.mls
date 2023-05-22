@@ -81,9 +81,6 @@ class C2 extends T2['FigureItOut] {
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.71: 	}
 //│ ╙──      	^
-//│ ╔══[ERROR] Cannot inherit from a function
-//│ ║  l.72: 	class C2 extends T2['FigureItOut] {
-//│ ╙──      	                 ^^
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.70: 	  val r = C2().f(false)
 //│ ║        	          ^^^^^^^^^^^^^
@@ -110,19 +107,16 @@ class C2 extends T2['FigureItOut] {
   fun f(x: int) = x
 }
 //│ ╔══[ERROR] Unhandled cyclic definition
-//│ ║  l.105: 	trait T2[A] {
+//│ ║  l.102: 	trait T2[A] {
 //│ ║         	^^^^^^^^^^^^^
-//│ ║  l.106: 	  fun f: A -> A
+//│ ║  l.103: 	  fun f: A -> A
 //│ ║         	^^^^^^^^^^^^^^^
-//│ ║  l.107: 	  val r = (C2() : T2['X]).f(false)
+//│ ║  l.104: 	  val r = (C2() : T2['X]).f(false)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.108: 	}
+//│ ║  l.105: 	}
 //│ ╙──       	^
-//│ ╔══[ERROR] Cannot inherit from a function
-//│ ║  l.109: 	class C2 extends T2['FigureItOut] {
-//│ ╙──       	                 ^^
 //│ ╔══[ERROR] Type `C2` does not contain member `T2#A`
-//│ ║  l.105: 	trait T2[A] {
+//│ ║  l.102: 	trait T2[A] {
 //│ ╙──       	         ^
 //│ trait T2[A]() {
 //│   fun f: A -> A
@@ -135,7 +129,7 @@ class C2 extends T2['FigureItOut] {
 :e // FIXME
 C2() : T2['X]
 //│ ╔══[ERROR] Type `C2` does not contain member `T2#A`
-//│ ║  l.105: 	trait T2[A] {
+//│ ║  l.102: 	trait T2[A] {
 //│ ╙──       	         ^
 //│ T2['X]
 //│   where

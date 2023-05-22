@@ -1356,6 +1356,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         NuFunDef(fd.isLetRec, fd.nme, Nil, R(go(tf.typeSignature)))(fd.declareLoc, fd.signature)
       case p: NuParam =>
         ??? // TODO
+      case TypedNuDummy(d) =>
+        ??? // TODO
     }
     def goLike(ty: TypeLike)(implicit ectx: ExpCtx): mlscript.TypeLike = ty match {
       case ty: SimpleType =>

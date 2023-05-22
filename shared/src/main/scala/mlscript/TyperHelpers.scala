@@ -797,6 +797,8 @@ abstract class TyperHelpers { Typer: Typer =>
                 cls.members.valuesIterator.flatMap(childrenPolMem) ++
                 S(pol.contravar -> cls.thisTy) ++ 
                 cls.parentTP.valuesIterator.flatMap(childrenPolMem)
+            case prm: NuParam => childrenPolField(pol)(prm.ty)
+            case TypedNuDummy(d) => N
           }
           ents ::: tu.result.toList.map(pol -> _)
     }}
@@ -845,6 +847,7 @@ abstract class TyperHelpers { Typer: Typer =>
     private def childrenMem(m: NuMember): List[ST] = m match {
       case NuParam(nme, ty) => ty.lb.toList ::: ty.ub :: Nil
       case TypedNuFun(level, fd, ty) => ty :: Nil
+      case TypedNuDummy(d) => Nil
     }
     def children(includeBounds: Bool): List[SimpleType] = this match {
       case tv @ AssignedVariable(ty) => if (includeBounds) ty :: Nil else Nil
@@ -885,6 +888,7 @@ abstract class TyperHelpers { Typer: Typer =>
               cls.members.valuesIterator.flatMap(childrenMem) ++
               S(cls.thisTy) ++
               S(cls.instanceType)
+          case TypedNuDummy(d) => Nil
         }
         ents ::: tu.result.toList
     }
@@ -1195,6 +1199,7 @@ abstract class TyperHelpers { Typer: Typer =>
         apply(pol.contravar)(superTV)
       case NuParam(nme, ty) => applyField(pol)(ty)
       case TypedNuFun(level, fd, ty) => apply(pol)(ty)
+      case TypedNuDummy(d) => ()
       // case NuTypeParam(nme, ty) => applyField(pol)(ty)
     }
     def apply(pol: PolMap)(st: ST): Unit = st match {
