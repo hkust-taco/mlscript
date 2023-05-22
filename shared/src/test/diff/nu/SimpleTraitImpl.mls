@@ -236,3 +236,57 @@ class C2 extends T1, C1 { fun x = 1 }
 //│ }
 
 
+
+:e
+trait T2 { val r = 1(1) }
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.241: 	trait T2 { val r = 1(1) }
+//│ ║         	                   ^^^^
+//│ ╟── integer literal of type `1` is not a function
+//│ ║  l.241: 	trait T2 { val r = 1(1) }
+//│ ╙──       	                   ^
+//│ trait T2() {
+//│   let r: error
+//│ }
+
+:e // FIXME
+class C2 extends T2
+//│ ╔══[ERROR] Member r is declared in parent trait but not implemented
+//│ ║  l.253: 	class C2 extends T2
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^
+//│ class C2()
+
+
+:e
+trait T2[A] {
+  val r = C2().x
+}
+class C2 extends T2[int]
+//│ ╔══[ERROR] Unhandled cyclic definition
+//│ ║  l.261: 	trait T2[A] {
+//│ ║         	^^^^^^^^^^^^^
+//│ ║  l.262: 	  val r = C2().x
+//│ ║         	^^^^^^^^^^^^^^^^
+//│ ║  l.263: 	}
+//│ ╙──       	^
+//│ ╔══[ERROR] Cannot inherit from a function
+//│ ║  l.264: 	class C2 extends T2[int]
+//│ ╙──       	                 ^^
+//│ ╔══[ERROR] Type `C2` does not contain member `x`
+//│ ║  l.262: 	  val r = C2().x
+//│ ╙──       	              ^^
+//│ trait T2[A]() {
+//│   let r: error
+//│ }
+//│ class C2()
+
+:e // FIXME
+C2() : T2['X]
+//│ ╔══[ERROR] Type `C2` does not contain member `T2#A`
+//│ ║  l.261: 	trait T2[A] {
+//│ ╙──       	         ^
+//│ T2['X]
+//│   where
+//│     'X :> error
+
+

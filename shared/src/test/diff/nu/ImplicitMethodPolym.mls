@@ -45,8 +45,9 @@ mixin Mx {
 //│   fun id1: 'a -> 'a
 //│ }
 
-// FIXME: inconsistency: order of freshening matters!! if TV freshened from thisTy, result is different
-// :d
+// * Note: the order of freshening matters!
+// * if TV freshened transitively from traversing the `this` refinement at a lower ctx level,
+// * as in the case below, the result is different.
 module M extends Mx {
   val r = this.id1(0)
 }
@@ -55,7 +56,6 @@ module M extends Mx {
 //│   let r: 0
 //│ }
 
-// :d
 mixin Mx {
   fun id1(x) = this.id2(x)
 }
@@ -90,7 +90,7 @@ module M extends Mx {
 //│   fun id2: 'a -> ('a, 'a,)
 //│ }
 
-// :d
+// * Notice that `id1` is no longer generalized!
 module M extends Mx {
   fun id2: 'a => ('a, 'a)
   fun id2(x) = (x, x)
