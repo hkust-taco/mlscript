@@ -1,5 +1,6 @@
 :NewDefs
 
+
 mixin Test[A] {
     fun bar: (A, A)
     fun bar = (this.a, this.a)
@@ -21,22 +22,22 @@ class P(p: int) {
 //│   fun foo: int -> int
 //│ }
 
-// FIXME
+:e // FIXME
 class C1(a: int) extends P(a) { fun bar = this.foo(0) }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.25: 	class C1(a: int) extends P(a) { fun bar = this.foo(0) }
+//│ ║  l.26: 	class C1(a: int) extends P(a) { fun bar = this.foo(0) }
 //│ ╙──      	                                              ^^^^
 //│ class C1(a: int) {
 //│   fun bar: error
 //│   fun foo: int -> int
 //│ }
 
-// FIXME
+:e // FIXME
 class C2(a: int, b: int) extends P(a + b) {
     fun foo(x) = x * this.p + a * b
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.36: 	    fun foo(x) = x * this.p + a * b
+//│ ║  l.37: 	    fun foo(x) = x * this.p + a * b
 //│ ╙──      	                         ^^
 //│ class C2(a: int, b: int) {
 //│   fun foo: int -> int
@@ -56,3 +57,16 @@ c2.p
 //│ int
 //│ res
 //│     = 3
+
+
+class Test[A](x: A)
+//│ class Test[A](x: A)
+
+:e // TODO support
+class A(a: int) extends Test(a)
+//│ ╔══[ERROR] class Test expects 1 type parameter(s); got 0
+//│ ║  l.65: 	class A(a: int) extends Test(a)
+//│ ╙──      	                        ^^^^
+//│ class A(a: int)
+
+
