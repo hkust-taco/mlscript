@@ -119,6 +119,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     def nme: TypeName
     def decl: NuTypeDef
     def tparams: TyParams
+    def members: Map[Str, NuMember]
+    val allFields: Set[Var] = members.valuesIterator.map(_.name |> Var).toSet
     
     override def freshenAbove(lim: Int, rigidify: Bool)(implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV,ST]): TypedNuTypeDef =  withLevel { implicit ctx =>
       this match {
@@ -170,6 +172,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     def kind: DeclKind = td.kind
     def name: Str = nme.name
     def nme: mlscript.TypeName = td.nme
+    def members: Map[Str, NuMember] = Map.empty
     
     def mapPol(pol: Opt[Bool], smart: Bool)(f: (Opt[Bool], SimpleType) => SimpleType)
           (implicit ctx: Ctx): TypedNuDecl =
@@ -793,10 +796,9 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     
     lazy val allFields: Set[Var] = decl match {
       case td: NuTypeDef =>
-        // TODO also get fields from parents!
         (td.params.fields.iterator.flatMap(_._1) ++ td.body.entities.iterator.collect {
           case fd: NuFunDef => fd.nme
-        }).toSet
+        }).toSet ++ typedParents.flatMap(_._1.allFields)
       case _: NuFunDef => Set.empty
     }
     
