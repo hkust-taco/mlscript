@@ -255,6 +255,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     val intBinOpTy = fun(singleTup(IntType), fun(singleTup(IntType), IntType)(noProv))(noProv)
     val numberBinOpTy = fun(singleTup(DecType), fun(singleTup(DecType), DecType)(noProv))(noProv)
     val numberBinPred = fun(singleTup(DecType), fun(singleTup(DecType), BoolType)(noProv))(noProv)
+    val stringBinPred = fun(singleTup(StrType), fun(singleTup(StrType), BoolType)(noProv))(noProv)
     Map(
       "true" -> TrueType,
       "false" -> FalseType,
@@ -278,6 +279,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       "le" -> numberBinPred,
       "gt" -> numberBinPred,
       "ge" -> numberBinPred,
+      "slt" -> stringBinPred,
+      "sle" -> stringBinPred,
+      "sgt" -> stringBinPred,
+      "sge" -> stringBinPred,
       "length" -> fun(singleTup(StrType), IntType)(noProv),
       "concat" -> fun(singleTup(StrType), fun(singleTup(StrType), StrType)(noProv))(noProv),
       "eq" -> {
@@ -1062,19 +1067,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           case ((a_ty, tv), req) => a_ty & tv | req & a_ty.neg()
         }
         con(s_ty, req, cs_ty)
-      case iff @ If(body, fallback) =>
-        import mlscript.ucs._
-        try {
-          val caseTree = MutCaseOf.build(desugarIf(body, fallback))
-          println("The mutable CaseOf tree")
-          MutCaseOf.show(caseTree).foreach(println(_))
-          checkExhaustive(caseTree, N)(summarizePatterns(caseTree), ctx, raise)
-          val desugared = MutCaseOf.toTerm(caseTree)
-          println(s"Desugared term: ${desugared.print(false)}")
-          iff.desugaredTerm = S(desugared)
-          typeTerm(desugared)
-        } catch {
-          case e: DesugaringException => err(e.messages)
+      case elf: If =>
+        try typeTerm(desugarIf(elf)) catch {
+          case e: ucs.DesugaringException => err(e.messages)
         }
       case New(S((nmedTy, trm)), TypingUnit(Nil)) =>
         typeMonomorphicTerm(App(Var(nmedTy.base.name).withLocOf(nmedTy), trm))

@@ -28,30 +28,9 @@ fun filtermap(f, xs) = if xs is
     false then filtermap(f, ys)
     true then Cons(y, filtermap(f, ys))
     [true, z] then Cons(y, filtermap(f, ys))
-//│ ╔══[ERROR] identifier not found: ys
-//│ ║  l.27: 	  Cons(y, ys) and f(ys) is
-//│ ╙──      	                    ^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.27: 	  Cons(y, ys) and f(ys) is
-//│ ║        	                  ^^^^^^^^
-//│ ║  l.28: 	    false then filtermap(f, ys)
-//│ ║        	^^^^^^^^^
-//│ ╟── reference of type `false` is not an instance of type `number`
-//│ ║  l.28: 	    false then filtermap(f, ys)
-//│ ╙──      	    ^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.27: 	  Cons(y, ys) and f(ys) is
-//│ ║        	                  ^^^^^^^^
-//│ ║  l.28: 	    false then filtermap(f, ys)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.29: 	    true then Cons(y, filtermap(f, ys))
-//│ ║        	^^^^^^^^
-//│ ╟── reference of type `true` is not an instance of type `number`
-//│ ║  l.29: 	    true then Cons(y, filtermap(f, ys))
-//│ ╙──      	    ^^^^
 //│ ╔══[ERROR] type identifier not found: Tuple#2
 //│ ╙──
-//│ fun filtermap: ((Cons[nothing] | error | Nil) -> number & (Cons[nothing] | Nil) -> error, Cons[anything] | Nil,) -> (Cons[nothing] | Nil | error)
+//│ fun filtermap: ((Cons[nothing] | Nil) -> (error | false | true), Cons[anything] | Nil,) -> (Cons[nothing] | Nil | error)
 //│ Code generation encountered an error:
 //│   unknown match case: Tuple#2
 
@@ -70,6 +49,35 @@ fun filtermap(f, xs) = if xs is
     True then filtermap(f, ys)
     False then Cons(y, filtermap(f, ys))
     Pair(True, z) then Cons(z, filtermap(f, ys))
-//│ fun filtermap: forall 'head 'A. ('head -> (False | Pair[anything, 'A] | True), Cons['head & 'A] | Nil,) -> (Cons['A] | Nil)
+//│ fun filtermap: forall 'head 'A. ('head -> (False | Pair[True, 'A] | True), Cons['head & 'A] | Nil,) -> (Cons['A] | Nil)
 
+fun mkString(xs) =
+  if xs is
+    Nil then ""
+    Cons(x, xs') and xs' is
+      Nil then toString(x)
+      else concat(toString(x))(concat(", ")(mkString(xs')))
+//│ fun mkString: (Cons[anything] | Nil) -> string
 
+let list = Cons(1, Cons(2, Cons(3, Cons(4, Cons(5, Cons(6, Cons(7, Nil)))))))
+mkString of list
+//│ let list: Cons[1 | 2 | 3 | 4 | 5 | 6 | 7]
+//│ string
+//│ list
+//│      = Cons {}
+//│ res
+//│     = '1, 2, 3, 4, 5, 6, 7'
+
+mkString of filtermap(x => if x % 2 == 0 then True else False, list)
+mkString of filtermap(x => if x % 2 == 0 then False else True, list)
+mkString of filtermap(x => (if
+  x % 2 == 0 then False
+  x % 3 == 0 then Pair(True, x / 3)
+  else True), list)
+//│ string
+//│ res
+//│     = '1, 3, 5, 7'
+//│ res
+//│     = '2, 4, 6'
+//│ res
+//│     = '2, 1, 4, 6'

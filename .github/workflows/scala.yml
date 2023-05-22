@@ -4,7 +4,6 @@ on:
   push:
     branches: [ mlscript ]
   pull_request:
-    branches: [ mlscript ]
 
 jobs:
   build:

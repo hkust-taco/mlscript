@@ -19,8 +19,8 @@ mixin EvalBase {
       Add(l, r) then this.eval(l) + this.eval(r)
 }
 //│ mixin EvalBase() {
-//│   this: {eval: nothing -> 'a & 'lhs -> int}
-//│   fun eval: (Add['lhs] | Lit | Neg[nothing]) -> (int | 'a)
+//│   this: {eval: 'expr -> 'a & ('expr0 | 'lhs) -> int}
+//│   fun eval: (Add['lhs] | Lit | Neg['expr0 & (Neg['expr] | ~#Neg)]) -> (int | 'a)
 //│ }
 
 // module TestLang extends EvalBase, EvalNeg
@@ -29,34 +29,24 @@ module TestLang extends EvalBase
 //│   fun eval: 'a -> int
 //│ }
 //│ where
-//│   'a <: Add['a] | Lit | Neg[nothing]
+//│   'a <: Add['a] | Lit | Neg['a & (Neg['a] | ~#Neg)]
 
 
 fun mk(n) = if n is
   0 then Lit(0)
   1 then Neg(mk(n))
   _ then Add(mk(n), mk(n))
-//│ fun mk: forall 'E. number -> 'E
+//│ fun mk: forall 'E. anything -> 'E
 //│   where
 //│     'E :> Add['E] | Lit | Neg['E]
 
-// TODO support this in UCS
 :stats
 TestLang.eval(mk(0))
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.45: 	TestLang.eval(mk(0))
-//│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `Lit` does not match type `nothing`
-//│ ║  l.36: 	  0 then Lit(0)
-//│ ║        	         ^^^^^^
-//│ ╟── Note: type parameter A is defined at:
-//│ ║  l.6: 	class Neg<A>(expr: A)
-//│ ╙──     	          ^
-//│ error | int
+//│ int
 //│ res
 //│     = 0
-//│ constrain calls  : 242
-//│ annoying  calls  : 116
-//│ subtyping calls  : 4071
+//│ constrain calls  : 117
+//│ annoying  calls  : 32
+//│ subtyping calls  : 856
 
 

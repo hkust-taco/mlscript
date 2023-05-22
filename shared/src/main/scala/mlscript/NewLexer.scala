@@ -55,6 +55,34 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
   def takeWhile(i: Int, cur: Ls[Char] = Nil)(pred: Char => Bool): (Str, Int) =
     if (i < length && pred(bytes(i))) takeWhile(i + 1, bytes(i) :: cur)(pred)
     else (cur.reverseIterator.mkString, i)
+
+  @tailrec final
+  def str(i: Int, escapeMode: Bool, cur: Ls[Char] = Nil): (Str, Int) =
+    if (escapeMode)
+      if (i < length)
+        bytes(i) match {
+          case '"' => str(i + 1, false, '"' :: cur)
+          case 'n' => str(i + 1, false, '\n' :: cur)
+          case 't' => str(i + 1, false, '\t' :: cur)
+          case 'r' => str(i + 1, false, '\r' :: cur)
+          case ch =>
+            raise(WarningReport(msg"Found invalid escape character" -> S(loc(i, i + 1)) :: Nil, source = Lexing))
+            str(i + 1, false, ch :: cur)
+        }
+      else {
+        raise(ErrorReport(msg"Expect an escape character" -> S(loc(i, i + 1)) :: Nil, source = Lexing))
+        (cur.reverseIterator.mkString, i)
+      }
+    else {
+      if (i < length)
+        bytes(i) match {
+          case '\\' => str(i + 1, true, cur)
+          case '"' | '\n' => (cur.reverseIterator.mkString, i)
+          case ch => str(i + 1, false, ch :: cur)
+        }
+      else
+        (cur.reverseIterator.mkString, i)
+    }
   
   def loc(start: Int, end: Int): Loc = Loc(start, end, origin)
   
@@ -78,7 +106,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
         lex(j, ind, next(j, COMMA))
       case '"' =>
         val j = i + 1
-        val (chars, k) = takeWhile(j)(c => c =/= '"' && c =/= '\n')
+        val (chars, k) = str(j, false)
         val k2 = if (bytes.lift(k) === Some('"')) k + 1 else {
           pe(msg"unclosed quotation mark")
           k
@@ -135,14 +163,19 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
         // go(j, if (keywords.contains(n)) KEYWORD(n) else IDENT(n, isAlphaOp(n)))
         lex(j, ind, next(j, if (keywords.contains(n)) KEYWORD(n) else IDENT(n, isAlphaOp(n))))
       case _ if isOpChar(c) =>
-        val (n, j) = takeWhile(i)(isOpChar)
-        if (n === "." && j < length && isIdentFirstChar(bytes(j))) {
-          val (name, k) = takeWhile(j)(isIdentChar)
-          // go(k, SELECT(name))
-          lex(k, ind, next(k, SELECT(name)))
+        if (c === '-' && isDigit(bytes(i + 1))) {
+          val (str, j) = takeWhile(i + 1)(isDigit)
+          lex(j, ind, next(j, LITVAL(IntLit(-BigInt(str)))))
+        } else {
+          val (n, j) = takeWhile(i)(isOpChar)
+          if (n === "." && j < length && isIdentFirstChar(bytes(j))) {
+            val (name, k) = takeWhile(j)(isIdentChar)
+            // go(k, SELECT(name))
+            lex(k, ind, next(k, SELECT(name)))
+          }
+          // else go(j, if (isSymKeyword.contains(n)) KEYWORD(n) else IDENT(n, true))
+          else lex(j, ind, next(j, if (isSymKeyword.contains(n)) KEYWORD(n) else IDENT(n, true)))
         }
-        // else go(j, if (isSymKeyword.contains(n)) KEYWORD(n) else IDENT(n, true))
-        else lex(j, ind, next(j, if (isSymKeyword.contains(n)) KEYWORD(n) else IDENT(n, true)))
       case _ if isDigit(c) =>
         val (str, j) = takeWhile(i)(isDigit)
         // go(j, LITVAL(IntLit(BigInt(str))))
