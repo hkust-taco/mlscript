@@ -109,8 +109,6 @@ fun w3_1(x, f) =
 //│ ╙──       	                           ^
 //│ fun w3_1: forall 'a. ('a, 'a -> anything,) -> 0
 
-// FIXME
-// Accidentally found some code generator errors.
 w3_1(0, _ => true)
 w3_1(0, _ => false)
 //│ 0
@@ -123,7 +121,7 @@ w3_1(0, _ => false)
 fun w3_1_1(x, f) =
   if f(x) is a then a else 0
 //│ ╔══[WARNING] Found a redundant else branch
-//│ ║  l.124: 	  if f(x) is a then a else 0
+//│ ║  l.122: 	  if f(x) is a then a else 0
 //│ ╙──       	                           ^
 //│ fun w3_1_1: forall 'a 'b. ('a, 'a -> 'b,) -> 'b
 

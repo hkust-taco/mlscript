@@ -7,9 +7,18 @@ class Right[T](value: T)
 //│ class Left[T](value: T)
 //│ class Right[T](value: T)
 
-// FIXME unhygienic
+// FIXME unhygienic, the `x` in the second branch shadows parameter `x`
 fun foo(x) = if x is
   Some(Left(y)) then x
   Some(x) then x
 //│ fun foo: forall 'value. Some['value & (Left[anything] | ~#Left)] -> 'value
 
+foo(Some(Left(1)))
+//│ Left[1]
+//│ res
+//│     = Left {}
+
+foo(Some(2))
+//│ 2
+//│ res
+//│     = 2

@@ -37,7 +37,7 @@ fun h1(a) =
     a is None then 0
 //│ fun h1: forall 'leftValue. (None | Some[Right['leftValue]]) -> (0 | 'leftValue)
 
-// FIXME: This is the desugared version of the test case above.
+// This is the desugared version of the test case above.
 fun h1'(a) =
   if a is
     Some then
@@ -124,7 +124,7 @@ fun h2(a) =
 //│ Code generation encountered an error:
 //│   unresolved symbol y
 
-// FIXME
+// FIXME: Some results are wrong.
 fun h3(x, y, f, p) =
   if x is
     _ and f(x) is y and p(x) then y
@@ -142,7 +142,7 @@ h3("anything", "anything", _ => "not me", _ => false)
 //│ res
 //│     = 'should be me'
 
-// FIXME
+// FIXME: Some results are wrong.
 fun h4(x, y, p) =
   if x is
     y and p(x) then y
