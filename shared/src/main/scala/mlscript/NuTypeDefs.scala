@@ -1253,40 +1253,40 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   
   // intersection of members
   def memberUnion(l: Ls[NuMember], r: Ls[NuMember])(implicit raise: Raise): Ls[NuMember] = {
-    val nms = Set.from(l.map(_.name) ++ r.map(_.name)).toList
-    nms.flatMap {n => 
-      (l.find(x => x.name == n), r.find(x => x.name == n)) match {
-        case (S(a: TypedNuFun), S(b: TypedNuFun)) =>
+    def merge(ltm: NuMember, rtm: Option[NuMember]) = { 
+      (ltm, rtm) match {
+        case (a: TypedNuFun, S(b: TypedNuFun)) =>
           if (a.level != b.level)
             err(msg"member ${a.name} has mismatch levels ${a.level.toString} and ${b.level.toString}", a.fd.toLoc)
           if (a.fd.tparams != b.fd.tparams)
-            err(msg"method ${a.name} has different type parameter to${b.name}", a.fd.toLoc)
+            err(msg"method ${a.name} has mismatch type parameters", a.fd.toLoc)
           val fd = NuFunDef((a.fd.isLetRec, b.fd.isLetRec) match {
             case (S(a), S(b)) => S(a || b)
             case _ => N // if one is fun, then it will be fun
           }, a.fd.nme, a.fd.tparams, a.fd.rhs)(a.fd.declareLoc, N)
           println(s"united ${a.name}")
-          TypedNuFun(a.level, fd, a.bodyType & b.bodyType) :: Nil
-        case (S(a: NuParam), S(b: NuParam)) => 
+          S(TypedNuFun(a.level, fd, a.bodyType & b.bodyType))
+        case (a: NuParam, S(b: NuParam)) => 
           if (a.level != b.level)
             err(msg"member ${a.name} has mismatch levels ${a.level.toString} and ${b.level.toString}", N)
-          NuParam(a.nme, a.ty && b.ty)(a.level) :: Nil
-        case (S(a: NuParam), S(b: TypedNuFun)) => // not sure
+          S(NuParam(a.nme, a.ty && b.ty)(a.level))
+        case (a: NuParam, S(b: TypedNuFun)) => // not sure
           if (a.level != b.level)
             err(msg"member ${a.name} has mismatch levels ${a.level.toString} and ${b.level.toString}", N)
-          NuParam(a.nme, a.ty && FieldType(S(b.bodyType), b.bodyType)(b.bodyType.prov))(a.level) :: Nil
-        case (S(a: TypedNuFun), S(b: NuParam)) => // not sure
+          S(NuParam(a.nme, a.ty && FieldType(S(b.bodyType), b.bodyType)(b.bodyType.prov))(a.level))
+        case (a: TypedNuFun, S(b: NuParam)) => // not sure
           if (a.level != b.level)
             err(msg"member ${a.name} has mismatch levels ${a.level.toString} and ${b.level.toString}", N)
-          NuParam(b.nme, FieldType(S(a.bodyType), a.bodyType)(a.bodyType.prov) && b.ty)(b.level) :: Nil
-        case (S(a), N) => a :: Nil
-        case (N, S(b)) => b :: Nil
-        case (S(a), S(b)) =>
-          err(msg"intersection of ${a.name} and ${b.name} is currently not supported", N)
-          Nil
-        case (N, N) => Nil
+          S(NuParam(b.nme, FieldType(S(a.bodyType), a.bodyType)(a.bodyType.prov) && b.ty)(b.level))
+        case (a, N) => S(a)
+        case (a, S(b)) =>
+          err(msg"intersection of member ${a.name} is currently not supported", N)
+          N
       }
     }
+    l.foldLeft(r.map(d => d.name -> d).toMap) { case (acc, ltm) => 
+      acc.updatedWith(ltm.name)(merge(ltm, _))
+    }.values.toList
   }
   
 }
