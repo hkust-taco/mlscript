@@ -155,7 +155,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
             tags.freshenAbove(lim, rigidify),
             inheritedTags,
             pvms.mapValuesIter(_.freshenAbove(lim, rigidify)).toMap
-            )
+          )
       }
     }
     val td: NuTypeDef
@@ -826,34 +826,34 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           raw.tparams.size.toString} type parameter(s); got ${parTargs.size.toString}", Loc(v :: parTargs))
 
       val parTP = raw.tparams.lazyZip(parTargs).map { case ((tn, _tv, vi), targTy) =>
-          val targ = typeType(targTy)
-          val tv = (targ match {
-            case tv: TV => 
-              // TODO
-              println(s"Passing ${tn.name} :: ${_tv} <=< ${tv}")
-              tv
-            case _ =>
-              println(s"Assigning ${tn.name} :: ${_tv} := $targ where ${targ.showBounds}")
-              val tv =
-                freshVar(_tv.prov, N, _tv.nameHint)(targ.level) // TODO safe not to set original?!
-                // freshVar(_tv.prov, S(_tv), _tv.nameHint)(targ.level)
-              println(s"Set ${tv} ~> ${_tv}")
-              assert(tv.assignedTo.isEmpty)
-              tv.assignedTo = S(targ)
-              // println(s"Assigned ${tv.assignedTo}")
-              tv
-          })
-          freshened += _tv -> tv
-          tn -> tv
-        }
+        val targ = typeType(targTy)
+        val tv = (targ match {
+          case tv: TV => 
+            // TODO
+            println(s"Passing ${tn.name} :: ${_tv} <=< ${tv}")
+            tv
+          case _ =>
+            println(s"Assigning ${tn.name} :: ${_tv} := $targ where ${targ.showBounds}")
+            val tv =
+              freshVar(_tv.prov, N, _tv.nameHint)(targ.level) // TODO safe not to set original?!
+              // freshVar(_tv.prov, S(_tv), _tv.nameHint)(targ.level)
+            println(s"Set ${tv} ~> ${_tv}")
+            assert(tv.assignedTo.isEmpty)
+            tv.assignedTo = S(targ)
+            // println(s"Assigned ${tv.assignedTo}")
+            tv
+        })
+        freshened += _tv -> tv
+        tn -> tv
+      }
 
-        println(s"collected ${parTP}")
-      
-        raw.freshenAbove(info.level, rigidify = false).asInstanceOf[T] -> 
-          parTP.map {
-            case (nme, tv) => rawName+"#"+nme.name -> 
-              NuParam(nme, FieldType(S(tv), tv)(provTODO))(level) 
-          }.toMap
+      println(s"collected ${parTP}")
+    
+      raw.freshenAbove(info.level, rigidify = false).asInstanceOf[T] -> 
+        parTP.map {
+          case (nme, tv) => rawName+"#"+nme.name -> 
+            NuParam(nme, FieldType(S(tv), tv)(provTODO))(level) 
+        }.toMap
     }
     
     
@@ -1079,14 +1079,15 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                           inherit(ps, pack.copy(
                             trtMem = memberUnion(pack.trtMem, trt.members.values.toList),
                             pTP = pack.pTP ++ tpms
-                            ))
+                          ))
 
                         case cls: TypedNuCls =>
                           val parNme = cls.nme.name
                           
-                          if (pack.bsCls.isDefined)
+                          pack.bsCls.foreach { cls =>
                             err(msg"cannot inherit from more than one base class: ${
-                              pack.bsCls.get} and ${parNme}", loc)
+                              cls} and ${parNme}", loc)
+                          }
                           
                           inherit(ps, pack.copy(
                             bsCls = S(parNme), 
@@ -1233,7 +1234,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
         case np: NuParam => np.typeSignature
         case _ => ??? // probably no other cases
       }
-      impl.find(x => x.name == m.name) match {
+      impl.find(x => x.name === m.name) match {
         case S(mem: TypedNuTermDef) =>
           val memSign = mem.typeSignature
           implicit val prov: TP = memSign.prov
@@ -1256,9 +1257,9 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     def merge(ltm: NuMember, rtm: Option[NuMember]) = { 
       (ltm, rtm) match {
         case (a: TypedNuFun, S(b: TypedNuFun)) =>
-          if (a.level != b.level)
+          if (a.level =/= b.level)
             err(msg"member ${a.name} has mismatch levels ${a.level.toString} and ${b.level.toString}", a.fd.toLoc)
-          if (a.fd.tparams != b.fd.tparams)
+          if (a.fd.tparams =/= b.fd.tparams)
             err(msg"method ${a.name} has mismatch type parameters", a.fd.toLoc)
           val fd = NuFunDef((a.fd.isLetRec, b.fd.isLetRec) match {
             case (S(a), S(b)) => S(a || b)
@@ -1267,15 +1268,15 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           println(s"united ${a.name}")
           S(TypedNuFun(a.level, fd, a.bodyType & b.bodyType))
         case (a: NuParam, S(b: NuParam)) => 
-          if (a.level != b.level)
+          if (a.level =/= b.level)
             err(msg"member ${a.name} has mismatch levels ${a.level.toString} and ${b.level.toString}", N)
           S(NuParam(a.nme, a.ty && b.ty)(a.level))
         case (a: NuParam, S(b: TypedNuFun)) => // not sure
-          if (a.level != b.level)
+          if (a.level =/= b.level)
             err(msg"member ${a.name} has mismatch levels ${a.level.toString} and ${b.level.toString}", N)
           S(NuParam(a.nme, a.ty && FieldType(S(b.bodyType), b.bodyType)(b.bodyType.prov))(a.level))
         case (a: TypedNuFun, S(b: NuParam)) => // not sure
-          if (a.level != b.level)
+          if (a.level =/= b.level)
             err(msg"member ${a.name} has mismatch levels ${a.level.toString} and ${b.level.toString}", N)
           S(NuParam(b.nme, FieldType(S(a.bodyType), a.bodyType)(a.bodyType.prov) && b.ty)(b.level))
         case (a, N) => S(a)

@@ -684,16 +684,15 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                   }
               }
             case (LhsRefined(N, ts, r, trs), RhsBases(pts, N, trs2))  =>
-                println(s"tag checking ${ts} ${pts}")
-                if (pts.exists(p => ts.toList.flatMap {
-                  case TraitTag(n, h) => n :: h.toList.map(n => Var(n.name))
-                  case _ => Nil
-                }.contains(p.id)))
-                  println(s"OK $ts <: $pts")
-                else
-                reportError()
+              println(s"Tag checking ${ts} ${pts}")
+              if (pts.exists(p => ts.iterator.flatMap {
+                case TraitTag(n, h) => n :: h.toList.map(n => Var(n.name))
+                case _ => Nil
+              }.contains(p.id)))
+                println(s"OK $ts <: $pts")
+              else reportError()
             case (LhsRefined(N, ts, r, _), RhsBases(pts, S(L(_: FunctionType | _: ArrayBase)), _)) =>
-                  reportError()
+              reportError()
             case (LhsRefined(S(b: TupleType), ts, r, _), RhsBases(pts, S(L(ty: TupleType)), _))
               if b.fields.size === ty.fields.size =>
                 (b.fields.unzip._2 lazyZip ty.fields.unzip._2).foreach { (l, r) =>
