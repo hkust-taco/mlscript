@@ -140,7 +140,7 @@ class E {
   constructor(x: int)
   constructor(y: int)
 }
-//│ ╔══[PARSE ERROR] A class may only have one constructor
+//│ ╔══[PARSE ERROR] A class may only have at most one explicit constructor
 //│ ║  l.139: 	class E {
 //│ ╙──       	^^^^^
 //│ class E()
