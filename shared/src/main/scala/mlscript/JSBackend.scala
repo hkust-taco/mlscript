@@ -111,7 +111,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         val ident = JSIdent(sym.runtimeName)
         if (sym.isByvalueRec.isEmpty && !sym.isLam) ident() else ident
       case S(sym: NuTypeSymbol with RuntimeSymbol) =>
-        if (sym.isPlain || !isCallee) translateNuTypeSymbol(sym)
+        if (sym.isPlainJSClass || !isCallee) translateNuTypeSymbol(sym)
         else translateNuTypeSymbol(sym).member("class")
       case S(sym: NewClassMemberSymbol) =>
         if (sym.isByvalueRec.getOrElse(false) && !sym.isLam) throw CodeGenError(s"unguarded recursive use of by-value binding $name")
@@ -333,14 +333,14 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
           JSBinary("===", scrut.member("constructor"), JSLit("String"))
         case Var(name) => scope.resolveValue(name) match {
           case S(sym: NewClassSymbol) =>
-            if (sym.isPlain)
+            if (sym.isPlainJSClass)
               JSInstanceOf(scrut, translateVar(sym.lexicalName, false))
             else
               JSInstanceOf(scrut, translateVar(sym.lexicalName, false).member("class"))
           case S(sym: ModuleSymbol) =>
             JSInstanceOf(scrut, translateVar(sym.lexicalName, false).member("class"))
           case S(sym @ CapturedSymbol(out, cls: NewClassSymbol)) =>
-            if (cls.isPlain)
+            if (cls.isPlainJSClass)
               JSInstanceOf(scrut, translateCapture(sym))
             else
               JSInstanceOf(scrut, translateCapture(sym).member("class"))
@@ -524,7 +524,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         val ctorMth = localScope.declareValue("ctor", Some(false), false).runtimeName
         val (constructor, params) = translateNewClassParameters(nd)
         val initList =
-          if (sym.isPlain)
+          if (sym.isPlainJSClass)
             Ls(JSReturnStmt(S(JSIdent(sym.lexicalName))))
           else
             Ls(
@@ -599,14 +599,14 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         case Some(CapturedSymbol(out, sym: MixinSymbol)) =>
           JSInvoke(translateCapture(CapturedSymbol(out, sym)), Ls(base))
         case Some(CapturedSymbol(out, sym: NuTypeSymbol)) if !mixinOnly =>
-          if (sym.isPlain)
+          if (sym.isPlainJSClass)
             translateCapture(CapturedSymbol(out, sym))
           else
             translateCapture(CapturedSymbol(out, sym)).member("class")
         case Some(sym: MixinSymbol) =>
           JSInvoke(translateVar(name, false), Ls(base))
         case Some(sym: NuTypeSymbol) if !mixinOnly =>
-          if (sym.isPlain)
+          if (sym.isPlainJSClass)
             translateVar(name, false)
           else
             translateVar(name, false).member("class")
@@ -678,7 +678,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     val privateIdent = JSIdent(s"this.#${classSymbol.lexicalName}")
     val outerStmt = JSConstDecl(outerSymbol.runtimeName, JSIdent("this"))
     val initList =
-      if (classSymbol.isPlain)
+      if (classSymbol.isPlainJSClass)
         Ls(JSExprStmt(JSAssignExpr(privateIdent, JSIdent(classSymbol.lexicalName))))
       else
         Ls(
@@ -953,20 +953,20 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     }
 
     typeDefs.foreach {
-      case td @ NuTypeDef(Mxn, TypeName(mxName), tps, tup @ Tup(fs), ctor, plain, sig, pars, sup, ths, unit) => {
-        val (body, members, stmts, nested) = prepare(mxName, fs, pars, unit)
+      case td @ NuTypeDef(Mxn, TypeName(mxName), tps, tup, ctor, sig, pars, sup, ths, unit) => {
+        val (body, members, stmts, nested) = prepare(mxName, tup.getOrElse(Tup(Nil)).fields, pars, unit)
         val sym = MixinSymbol(mxName, tps map { _._2.name }, body, members, stmts, nested, isNested).tap(scope.register)
         if (!td.isDecl) mixins += sym
       }
-      case td @ NuTypeDef(Nms, TypeName(nme), tps, tup @ Tup(fs), ctor, plain, sig, pars, sup, ths, unit) => {
-        val (body, members, stmts, nested) = prepare(nme, fs, pars, unit)
+      case td @ NuTypeDef(Nms, TypeName(nme), tps, tup, ctor, sig, pars, sup, ths, unit) => {
+        val (body, members, stmts, nested) = prepare(nme, tup.getOrElse(Tup(Nil)).fields, pars, unit)
         val sym = ModuleSymbol(nme, tps map { _._2.name }, body, members, stmts, pars, nested, isNested).tap(scope.register)
         if (!td.isDecl) modules += sym
       }
-      case td @ NuTypeDef(Als, TypeName(nme), tps, _, ctor, plain, sig, pars, _, _, _) => {
+      case td @ NuTypeDef(Als, TypeName(nme), tps, _, ctor, sig, pars, _, _, _) => {
         scope.declareTypeAlias(nme, tps map { _._2.name }, sig.getOrElse(Top))
       }
-      case td @ NuTypeDef(Cls, TypeName(nme), tps, tup @ Tup(fs), ctor, plain, sig, pars, sup, ths, unit) => {
+      case td @ NuTypeDef(Cls, TypeName(nme), tps, tup, ctor, sig, pars, sup, ths, unit) => {
         val (params, preStmts) = ctor match {
           case S(Constructor(Tup(ls), Blk(stmts))) => (S(ls.map {
             case (S(Var(nme)), _) => nme
@@ -974,13 +974,13 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
           }), stmts)
           case _ => (N, Nil)
         }
-        val (body, members, stmts, nested) = prepare(nme, fs, pars, unit)
+        val (body, members, stmts, nested) = prepare(nme, tup.getOrElse(Tup(Nil)).fields, pars, unit)
         val sym =
-          NewClassSymbol(nme, tps map { _._2.name }, params, body, members, preStmts ++ stmts, pars, nested, isNested, plain).tap(scope.register)
+          NewClassSymbol(nme, tps map { _._2.name }, params, body, members, preStmts ++ stmts, pars, nested, isNested, td.isPlainJSClass).tap(scope.register)
         if (!td.isDecl) classes += sym
       }
-      case td @ NuTypeDef(Trt, TypeName(nme), tps, tup @ Tup(fs), ctor, plain, sig, pars, sup, ths, unit) => {
-        val (body, members, _, _) = prepare(nme, fs, pars, unit)
+      case td @ NuTypeDef(Trt, TypeName(nme), tps, tup, ctor, sig, pars, sup, ths, unit) => {
+        val (body, members, _, _) = prepare(nme, tup.getOrElse(Tup(Nil)).fields, pars, unit)
         val sym = scope.declareTrait(nme, tps map { _._2.name }, body, members)
         if (!td.isDecl) traits += sym
       }

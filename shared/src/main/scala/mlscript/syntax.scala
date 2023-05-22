@@ -182,16 +182,17 @@ final case class NuTypeDef(
   kind: TypeDefKind,
   nme: TypeName,
   tparams: Ls[(Opt[VarianceInfo], TypeName)],
-  params: Tup, // the specialized parameters for that type
+  params: Opt[Tup], // the specialized parameters for that type
   ctor: Opt[Constructor],
-  isPlain: Bool,
   sig: Opt[Type],
   parents: Ls[Term],
   superAnnot: Opt[Type],
   thisAnnot: Opt[Type],
   body: TypingUnit
 )(val declareLoc: Opt[Loc], val abstractLoc: Opt[Loc])
-  extends NuDecl with Statement
+  extends NuDecl with Statement {
+    def isPlainJSClass: Bool = params.isEmpty
+  }
 
 final case class NuFunDef(
   isLetRec: Opt[Bool], // None means it's a `fun`, which is always recursive; Some means it's a `let`
