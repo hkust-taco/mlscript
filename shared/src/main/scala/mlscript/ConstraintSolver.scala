@@ -93,6 +93,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         info.complete() match {
           case cls: TypedNuCls => handle(cls.virtualMembers)
           case trt: TypedNuTrt => handle(trt.virtualMembers)
+          case mxn: TypedNuMxn => handle(mxn.virtualMembers)
           case _ => ??? // TODO
         }
         

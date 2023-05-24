@@ -781,6 +781,7 @@ abstract class TyperHelpers { Typer: Typer =>
             case tf: TypedNuFun =>
               PolMap.pos -> tf.bodyType :: Nil
             case mxn: TypedNuMxn =>
+              mxn.tparams.iterator.map(pol.invar -> _._2) ++
               mxn.members.valuesIterator.flatMap(childrenPolMem) ++
                 S(pol.contravar -> mxn.superTV) ++
                 S(pol.contravar -> mxn.thisTV)
@@ -878,6 +879,7 @@ abstract class TyperHelpers { Typer: Typer =>
           case als: TypedNuAls =>
             als.tparams.iterator.map(_._2) ++ S(als.body)
           case mxn: TypedNuMxn =>
+            mxn.tparams.iterator.map(_._2) ++
             mxn.members.valuesIterator.flatMap(childrenMem) ++
               S(mxn.superTV) ++
               S(mxn.thisTV)
@@ -888,6 +890,11 @@ abstract class TyperHelpers { Typer: Typer =>
               cls.members.valuesIterator.flatMap(childrenMem) ++
               S(cls.thisTy) ++
               S(cls.instanceType)
+          case cls: TypedNuTrt =>
+            cls.tparams.iterator.map(_._2) ++
+            // cls.params.flatMap(p => childrenPolField(pol.invar)(p._2))
+              cls.members.valuesIterator.flatMap(childrenMem) ++
+              S(cls.thisTy)
           case TypedNuDummy(d) => Nil
         }
         ents ::: tu.result.toList

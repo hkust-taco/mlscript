@@ -6,10 +6,9 @@
 mixin BaseTest[A] {
   fun test(x: A) = x
 }
-//│ ╔══[ERROR] type identifier not found: A
-//│ ║  l.7: 	  fun test(x: A) = x
-//│ ╙──     	              ^
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: A28'
+//│ mixin BaseTest[A]() {
+//│   fun test: (x: A,) -> A
+//│ }
 
 mixin BaseTest[A](x: A) {
   fun test = x
@@ -70,13 +69,13 @@ class C extends Test {
   fun arg = 123
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.52: 	  fun baz = foo(this.arg)
+//│ ║  l.51: 	  fun baz = foo(this.arg)
 //│ ╙──      	                    ^^^^
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.51: 	  fun bar = (this.arg, this.arg)
+//│ ║  l.50: 	  fun bar = (this.arg, this.arg)
 //│ ╙──      	                           ^^^^
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.51: 	  fun bar = (this.arg, this.arg)
+//│ ║  l.50: 	  fun bar = (this.arg, this.arg)
 //│ ╙──      	                 ^^^^
 //│ class C() {
 //│   fun arg: 123

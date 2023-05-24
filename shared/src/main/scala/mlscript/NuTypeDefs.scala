@@ -337,6 +337,11 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     def nme: TypeName = td.nme
     def name: Str = nme.name
 
+    lazy val virtualMembers: Map[Str, NuMember] = members ++ tparams.map {
+                      case (nme @ TypeName(name), tv, _) => 
+                        td.nme.name+"#"+name -> NuParam(nme, FieldType(S(tv), tv)(provTODO))(level)
+                    } 
+
     def freshenAbove(lim: Int, rigidify: Bool)
           (implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV,ST])
           : TypedNuMxn = withLevel { implicit ctx =>
@@ -597,15 +602,13 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                   case rawMxn: TypedNuMxn =>
                     
                     // println(s"Raw $rawMxn")
-                    val (fr, ptp) = refreshHelper(rawMxn, v, N) // type args inferred
+                    val (fr, ptp) = refreshHelper(rawMxn, v, if (parTargs.isEmpty) N else S(parTargs)) // type args inferred
                     implicit val frenshened: MutMap[TV,ST] = fr
                     implicit val shadows: Shadows = Shadows.empty
                     val mxn = rawMxn.freshenAbove(info.level, rigidify = false)
                     // println(s"Fresh $mxn")
                     
-                    val newMembs =  {
-                      if (parTargs.nonEmpty) err(msg"mixin type arguments not yet supported", p.toLoc)
-                      
+                    val newMembs =  {                      
                       if (parArgs.sizeCompare(mxn.params) =/= 0)
                         err(msg"mixin $parNme expects ${
                           mxn.params.size.toString} parameter(s); got ${parArgs.size.toString}", Loc(v :: parArgs.unzip._2))
@@ -1164,8 +1167,6 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                   ctx.nest.nextLevel { implicit ctx =>
                     ctx ++= paramSymbols
                     val paramMems = typedParams.map(f => NuParam(f._1, f._2)(lvl))
-                    implicit val vars: Map[Str, SimpleType] =
-                      outerVars ++ Map.empty // TODO type params
                     val thisTV = freshVar(provTODO, N, S("this"))
                     val superTV = freshVar(provTODO, N, S("super"))
                     ctx += "this" -> VarSymbol(thisTV, Var("this"))
