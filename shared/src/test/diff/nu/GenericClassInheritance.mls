@@ -81,7 +81,6 @@ class WrongRoom extends Room[bool]("wrong") {
 //│   fun foo: int -> int
 //│ }
 
-// :d
 mixin M1[A] {
     fun f1(x: A): A = x
     fun f2(x: A): (A, A) = (x, x)
@@ -91,7 +90,6 @@ mixin M1[A] {
 //│   fun f2: (x: A,) -> (A, A,)
 //│ }
 
-// FIXME
 class A1 extends M1 {
     fun f1(x: int) = x
 }
@@ -106,9 +104,42 @@ class A2[S, T] extends M1[(S, T)]
 //│   fun f2: (x: (S, T,),) -> ((S, T,), (S, T,),)
 //│ }
 
-// FIXME
 class A3(f1: bool => bool) extends M1
 //│ class A3(f1: bool -> bool) {
 //│   fun f1: (x: 'A,) -> 'A
 //│   fun f2: (x: 'A,) -> ('A, 'A,)
+//│ }
+
+mixin M2[A] {
+    fun m: A = this.a
+}
+//│ mixin M2[A]() {
+//│   this: {a: A}
+//│   fun m: A
+//│ }
+
+class B1(a: int) extends M2[int]
+//│ class B1(a: int) {
+//│   fun m: int
+//│ }
+
+class B2[A](a: int => A) extends M2
+//│ class B2[A](a: int -> A) {
+//│   fun m: int -> A
+//│ }
+
+:e
+class E1(a: int) extends M2[bool]
+//│ ╔══[ERROR] Type mismatch in type declaration:
+//│ ║  l.132: 	class E1(a: int) extends M2[bool]
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `int` is not an instance of type `bool`
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.132: 	class E1(a: int) extends M2[bool]
+//│ ║         	                            ^^^^
+//│ ╟── from field selection:
+//│ ║  l.114: 	    fun m: A = this.a
+//│ ╙──       	               ^^^^^^
+//│ class E1(a: int) {
+//│   fun m: bool
 //│ }

@@ -15,6 +15,38 @@ class A(a: int) extends Test
 //│   fun bar: (int, int,)
 //│ }
 
+mixin Test2[S, T] {
+    fun x: (S, T)
+    fun x = (this.s, this.t)
+    fun fb: S => (S, S)
+    fun fb(h: S) = (this.s, h)
+}
+//│ mixin Test2[S, T]() {
+//│   this: {s: S, t: T}
+//│   fun fb: S -> (S, S,)
+//│   fun x: (S, T,)
+//│ }
+
+class A1[B](s: bool, t: B) extends Test2[bool, B]
+//│ class A1[B](s: bool, t: B) {
+//│   fun fb: (h: bool,) -> (bool, bool,)
+//│   fun x: (bool, B,)
+//│ }
+
+// TODO: Investigate type of fb
+class A2[A](s: A, t: int) extends Test2
+//│ class A2[A](s: A, t: int) {
+//│   fun fb: (h: 'S,) -> (A, A | 'S,)
+//│   fun x: (A, int,)
+//│ }
+
+// TODO: Investigate type of fb
+class A3(s: int, t: bool) extends Test2
+//│ class A3(s: int, t: bool) {
+//│   fun fb: (h: 'S,) -> (int, 'S | int,)
+//│   fun x: (int, bool,)
+//│ }
+
 class P(p: int) { 
     fun foo(x) = x + p 
 }
@@ -25,7 +57,7 @@ class P(p: int) {
 :e // FIXME
 class C1(a: int) extends P(a) { fun bar = this.foo(0) }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.26: 	class C1(a: int) extends P(a) { fun bar = this.foo(0) }
+//│ ║  l.58: 	class C1(a: int) extends P(a) { fun bar = this.foo(0) }
 //│ ╙──      	                                              ^^^^
 //│ class C1(a: int) {
 //│   fun bar: error
@@ -37,7 +69,7 @@ class C2(a: int, b: int) extends P(a + b) {
     fun foo(x) = x * this.p + a * b
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.37: 	    fun foo(x) = x * this.p + a * b
+//│ ║  l.69: 	    fun foo(x) = x * this.p + a * b
 //│ ╙──      	                         ^^
 //│ class C2(a: int, b: int) {
 //│   fun foo: int -> int
@@ -95,24 +127,24 @@ class B extends Foo {
     fun foo(x) = x + 1
 }
 //│ ╔══[ERROR] Type error in definition of method foo
-//│ ║  l.95: 	    fun foo(x) = x + 1
-//│ ║        	        ^^^^^^^^^^^^^^
+//│ ║  l.127: 	    fun foo(x) = x + 1
+//│ ║         	        ^^^^^^^^^^^^^^
 //│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.87: 	    fun foo[A](x: A): A
-//│ ║        	            ^
+//│ ║  l.119: 	    fun foo[A](x: A): A
+//│ ║         	            ^
 //│ ╟── into reference of type `int`
-//│ ║  l.95: 	    fun foo(x) = x + 1
-//│ ╙──      	                 ^
+//│ ║  l.127: 	    fun foo(x) = x + 1
+//│ ╙──       	                 ^
 //│ ╔══[ERROR] Type error in definition of method foo
-//│ ║  l.95: 	    fun foo(x) = x + 1
-//│ ║        	        ^^^^^^^^^^^^^^
+//│ ║  l.127: 	    fun foo(x) = x + 1
+//│ ║         	        ^^^^^^^^^^^^^^
 //│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.95: 	    fun foo(x) = x + 1
-//│ ║        	                 ^^^^^
+//│ ║  l.127: 	    fun foo(x) = x + 1
+//│ ║         	                 ^^^^^
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this operator application:
-//│ ║  l.95: 	    fun foo(x) = x + 1
-//│ ╙──      	                 ^^^^^
+//│ ║  l.127: 	    fun foo(x) = x + 1
+//│ ╙──       	                 ^^^^^
 //│ class B() {
 //│   fun foo: int -> int
 //│ }
