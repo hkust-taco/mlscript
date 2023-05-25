@@ -174,9 +174,9 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     def name: Str = nme.name
 
     lazy val virtualMembers: Map[Str, NuMember] = members ++ tparams.map {
-                      case (nme @ TypeName(name), tv, _) => 
-                        td.nme.name+"#"+name -> NuParam(nme, FieldType(S(tv), tv)(provTODO))(level)
-                    } ++ parentTP
+      case (nme @ TypeName(name), tv, _) => 
+        td.nme.name+"#"+name -> NuParam(nme, FieldType(S(tv), tv)(provTODO))(level)
+    } ++ parentTP
 
     def freshenAbove(lim: Int, rigidify: Bool)
           (implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV,ST])
@@ -236,9 +236,9 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     
     /** Includes class-name-coded type parameter fields. */
     lazy val virtualMembers: Map[Str, NuMember] = members ++ tparams.map {
-                      case (nme @ TypeName(name), tv, _) => 
-                        td.nme.name+"#"+name -> NuParam(nme, FieldType(S(tv), tv)(provTODO))(level)
-                    } ++ parentTP
+      case (nme @ TypeName(name), tv, _) => 
+        td.nme.name+"#"+name -> NuParam(nme, FieldType(S(tv), tv)(provTODO))(level)
+    } ++ parentTP
     
     // TODO
     // def checkVariances
@@ -338,9 +338,9 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     def name: Str = nme.name
 
     lazy val virtualMembers: Map[Str, NuMember] = members ++ tparams.map {
-                      case (nme @ TypeName(name), tv, _) => 
-                        td.nme.name+"#"+name -> NuParam(nme, FieldType(S(tv), tv)(provTODO))(level)
-                    } 
+      case (nme @ TypeName(name), tv, _) => 
+        td.nme.name+"#"+name -> NuParam(nme, FieldType(S(tv), tv)(provTODO))(level)
+    } 
 
     def freshenAbove(lim: Int, rigidify: Bool)
           (implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV,ST])

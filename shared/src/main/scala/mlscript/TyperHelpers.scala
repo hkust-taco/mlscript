@@ -793,11 +793,11 @@ abstract class TyperHelpers { Typer: Typer =>
                 S(pol.contravar -> cls.thisTy) ++
                 S(pol.covar -> cls.instanceType) ++
                 cls.parentTP.valuesIterator.flatMap(childrenPolMem)
-            case cls: TypedNuTrt =>
-              cls.tparams.iterator.map(pol.invar -> _._2) ++
-                cls.members.valuesIterator.flatMap(childrenPolMem) ++
-                S(pol.contravar -> cls.thisTy) ++ 
-                cls.parentTP.valuesIterator.flatMap(childrenPolMem)
+            case trt: TypedNuTrt =>
+              trt.tparams.iterator.map(pol.invar -> _._2) ++
+                trt.members.valuesIterator.flatMap(childrenPolMem) ++
+                S(pol.contravar -> trt.thisTy) ++ 
+                trt.parentTP.valuesIterator.flatMap(childrenPolMem)
             case prm: NuParam => childrenPolField(pol)(prm.ty)
             case TypedNuDummy(d) => N
           }
@@ -890,11 +890,11 @@ abstract class TyperHelpers { Typer: Typer =>
               cls.members.valuesIterator.flatMap(childrenMem) ++
               S(cls.thisTy) ++
               S(cls.instanceType)
-          case cls: TypedNuTrt =>
-            cls.tparams.iterator.map(_._2) ++
+          case trt: TypedNuTrt =>
+            trt.tparams.iterator.map(_._2) ++
             // cls.params.flatMap(p => childrenPolField(pol.invar)(p._2))
-              cls.members.valuesIterator.flatMap(childrenMem) ++
-              S(cls.thisTy)
+              trt.members.valuesIterator.flatMap(childrenMem) ++
+              S(trt.thisTy)
           case TypedNuDummy(d) => Nil
         }
         ents ::: tu.result.toList
