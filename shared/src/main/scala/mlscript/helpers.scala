@@ -739,7 +739,7 @@ trait StatementImpl extends Located { self: Statement =>
       ??? // TODO
     case NuTypeDef(k @ Als, nme, tps, tup, ctor, sig, pars, sup, ths, unit) =>
       // TODO properly check:
-      require(tup.getOrElse(Tup(Nil)).fields.isEmpty, tup)
+      require(tup.forall(tup => tup.fields.isEmpty), tup)
       require(pars.size === 0, pars)
       require(sig.isDefined)
       require(ths.isEmpty, ths)
@@ -884,7 +884,7 @@ trait StatementImpl extends Located { self: Statement =>
     case Constructor(params, body) => params :: body :: Nil
     case Ass(lhs, rhs) => lhs :: rhs :: Nil
     case NuTypeDef(k, nme, tps, ps, ctor, sig, pars, sup, ths, bod) =>
-      nme :: tps.map(_._2) ::: ps.getOrElse(Tup(Nil)) :: pars ::: ths.toList ::: bod :: Nil
+      nme :: tps.map(_._2) ::: ps.toList ::: pars ::: ths.toList ::: bod :: Nil
   }
   
   

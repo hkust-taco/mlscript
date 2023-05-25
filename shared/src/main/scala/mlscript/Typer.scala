@@ -1306,7 +1306,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     def goDecl(d: NuMember)(implicit ectx: ExpCtx): NuDecl = d match {
       case TypedNuAls(level, td, tparams, body) =>
         ectx(tparams) |> { implicit ectx =>
-          NuTypeDef(td.kind, td.nme, td.tparams, S(Tup(Nil)), N, S(go(body)), Nil, N, N, TypingUnit(Nil))(
+          NuTypeDef(td.kind, td.nme, td.tparams, N, N, S(go(body)), Nil, N, N, TypingUnit(Nil))(
             td.declareLoc, td.abstractLoc)
         }
       case TypedNuMxn(td, thisTy, superTy, tparams, params, members, ttu) =>
@@ -1323,7 +1323,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case TypedNuCls(level, td, ttu, tparams, params, members, thisTy) =>
         ectx(tparams) |> { implicit ectx =>
           NuTypeDef(td.kind, td.nme, td.tparams,
-            S(Tup(params.map(p => N -> Fld(false, false, Asc(p._1, go(p._2.ub)))))),
+            Opt.when(td.params.isDefined)(Tup(params.map(p => N -> Fld(false, false, Asc(p._1, go(p._2.ub)))))),
             td.ctor,
             N,//TODO
             Nil,//TODO
