@@ -11,7 +11,7 @@ if 1 is 1 then 1 else 0
 //│    = 1
 
 fun test(x) = if x is 1 then 0 else 1
-//│ test: number -> (0 | 1)
+//│ test: anything -> (0 | 1)
 //│     = [Function: test]
 
 // It should report duplicated branches.
@@ -19,8 +19,13 @@ fun test(x) = if x is 1 then 0 else 1
 fun testF(x) = if x is
   Foo(a) then a
   Foo(a) then a
-//│ ╔══[WARNING] duplicated branch
-//│ ╙──
+//│ ╔══[WARNING] Found a duplicated branch
+//│ ╟── This branch
+//│ ║  l.21: 	  Foo(a) then a
+//│ ║        	              ^
+//│ ╟── is subsumed by the branch here.
+//│ ║  l.20: 	  Foo(a) then a
+//│ ╙──      	              ^
 //│ testF: (Foo & {x: 'x}) -> 'x
 //│      = [Function: testF]
 
@@ -47,7 +52,7 @@ fun f(x) =
     Pair(1, 1) then "ones"
     Pair(y, 1) then x
     _          then "nah"
-//│ f: (Pair & {fst: number, snd: number} & 'a | ~Pair) -> ("nah" | "ones" | "zeros" | 'a)
+//│ f: (Pair & 'a | ~Pair) -> ("nah" | "ones" | "zeros" | 'a)
 //│  = [Function: f]
 
 class Z()
@@ -66,14 +71,14 @@ fun foo(x) = if x is
   Pair(Z(), Z()) then "zeros"
   Pair(O(), O()) then "ones"
 //│ ╔══[ERROR] The match is not exhaustive.
-//│ ║  l.65: 	fun foo(x) = if x is
+//│ ║  l.70: 	fun foo(x) = if x is
 //│ ║        	                ^^^^
 //│ ╟── The scrutinee at this position misses 1 case.
-//│ ║  l.66: 	  Pair(Z(), Z()) then "zeros"
+//│ ║  l.71: 	  Pair(Z(), Z()) then "zeros"
 //│ ║        	            ^^^
 //│ ╟── [Missing Case 1/1] `O`
 //│ ╟── It first appears here.
-//│ ║  l.67: 	  Pair(O(), O()) then "ones"
+//│ ║  l.72: 	  Pair(O(), O()) then "ones"
 //│ ╙──      	            ^^^
 //│ foo: anything -> error
 //│ Code generation encountered an error:
@@ -86,14 +91,14 @@ fun foo(x) = if x is
   (Z(), Z()) then "zeros"
   (O(), O()) then "ones"
 //│ ╔══[ERROR] The match is not exhaustive.
-//│ ║  l.85: 	fun foo(x) = if x is
+//│ ║  l.90: 	fun foo(x) = if x is
 //│ ║        	                ^^^^
 //│ ╟── The scrutinee at this position misses 1 case.
-//│ ║  l.86: 	  (Z(), Z()) then "zeros"
+//│ ║  l.91: 	  (Z(), Z()) then "zeros"
 //│ ║        	        ^^^
 //│ ╟── [Missing Case 1/1] `O`
 //│ ╟── It first appears here.
-//│ ║  l.87: 	  (O(), O()) then "ones"
+//│ ║  l.92: 	  (O(), O()) then "ones"
 //│ ╙──      	        ^^^
 //│ foo: anything -> error
 //│ Code generation encountered an error:
@@ -146,11 +151,9 @@ fun foo(x) = if x is
 //│ foo: (Pair & {fst: O | Z, snd: S & {pred: 'pred} | ~S}) -> ("???" | "zeros" | 'pred)
 //│    = [Function: foo5]
 
-:re
 foo(Pair(Z(), Z()))
 //│ res: "???" | "zeros"
-//│ Runtime error:
-//│   Error: non-exhaustive case expression
+//│    = '???'
 
 :e
 :ge
@@ -159,14 +162,14 @@ fun foo(x) = if x is
   Pair(O(), O()) then "ones"
   Pair(y, O()) then x
 //│ ╔══[ERROR] The match is not exhaustive.
-//│ ║  l.157: 	fun foo(x) = if x is
+//│ ║  l.160: 	fun foo(x) = if x is
 //│ ║         	                ^^^^
 //│ ╟── The scrutinee at this position misses 1 case.
-//│ ║  l.158: 	  Pair(Z(), Z()) then "zeros"
+//│ ║  l.161: 	  Pair(Z(), Z()) then "zeros"
 //│ ║         	            ^^^
 //│ ╟── [Missing Case 1/1] `Z`
 //│ ╟── It first appears here.
-//│ ║  l.158: 	  Pair(Z(), Z()) then "zeros"
+//│ ║  l.161: 	  Pair(Z(), Z()) then "zeros"
 //│ ╙──       	            ^^^
 //│ foo: anything -> error
 //│ Code generation encountered an error:
@@ -176,18 +179,9 @@ fun foo(x, y) = if x is Z() and y is O() then 0 else 1
 //│ foo: (anything, anything,) -> (0 | 1)
 //│    = [Function: foo7]
 
-:pe
-fun foo(x, y) = if x is
-  Z() and y is O() then 0 else 1
-//│ ╔══[PARSE ERROR] Unexpected 'else' keyword here
-//│ ║  l.181: 	  Z() and y is O() then 0 else 1
-//│ ╙──       	                          ^^^^
-//│ foo: (Z, O,) -> 0
-//│    = [Function: foo8]
-
 fun foo(x, y) =
   if x is
     Z() and y is O() then 0
     else 1
 //│ foo: (anything, anything,) -> (0 | 1)
-//│    = [Function: foo9]
+//│    = [Function: foo8]

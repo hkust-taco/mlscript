@@ -20,14 +20,10 @@ fun f(x, y) = if x ==
     _ then false
 //│ fun f: (number, number,) -> bool
 
-
-
-// TODO use real booleans
 module True
 module False
 //│ module True()
 //│ module False()
-
 
 :e
 :ge
@@ -35,16 +31,20 @@ fun f(x, y) = if x is
     True and y is True then true
     False and y is False then false
 //│ ╔══[ERROR] The match is not exhaustive.
-//│ ║  l.35: 	    True and y is True then true
+//│ ║  l.31: 	    True and y is True then true
 //│ ║        	             ^^^^^^^^^
 //│ ╟── The scrutinee at this position misses 1 case.
-//│ ║  l.35: 	    True and y is True then true
+//│ ║  l.31: 	    True and y is True then true
 //│ ║        	             ^
-//│ ╙── [Missing Case 1/1] `False`
+//│ ╟── [Missing Case 1/1] `False`
+//│ ╟── It first appears here.
+//│ ║  l.32: 	    False and y is False then false
+//│ ╙──      	                   ^^^^^
 //│ fun f: (anything, anything,) -> error
 //│ Code generation encountered an error:
 //│   if expression was not desugared
 
+// The base case.
 fun f(x, y) = if x is
     True and y is True then true
     False and y is False then false
@@ -52,59 +52,58 @@ fun f(x, y) = if x is
     False and y is True then true
 //│ fun f: (False | True, False | True,) -> bool
 
-// FIXME
+// Replace the `x is False` with `_`
 fun f(x, y) = if x is
     True and y is True then true
     False and y is False then false
     _ and y is
       True then true
       False then false
-//│ ╔══[ERROR] The match is not exhaustive.
-//│ ║  l.57: 	    True and y is True then true
-//│ ║        	             ^^^^^^^^^
-//│ ╟── The scrutinee at this position misses 1 case.
-//│ ║  l.57: 	    True and y is True then true
-//│ ║        	             ^
-//│ ╙── [Missing Case 1/1] `False`
-//│ fun f: (anything, anything,) -> error
-//│ Code generation encountered an error:
-//│   if expression was not desugared
+//│ fun f: (anything, False | True,) -> bool
 
-// TODO support `else if`
+f(True, True)
+f(True, False)
+f(False, True)
+f(False, False)
+//│ bool
+//│ res
+//│     = true
+//│ res
+//│     = false
+//│ res
+//│     = true
+//│ res
+//│     = false
+
+// Test with real booleans
+fun g(x, y) = if x is
+  true and y is true then true
+  false and y is false then false
+  _ and y is
+    true then true
+    false then false
+//│ fun g: (anything, bool,) -> bool
+
+// Chained UCS terms
 fun f(x, y) = if x is
     True and y is True then true
     False and y is False then false
   else if y is
     True then true
     False then false
-//│ ╔══[ERROR] The match is not exhaustive.
-//│ ║  l.75: 	    True and y is True then true
-//│ ║        	             ^^^^^^^^^
-//│ ╟── The scrutinee at this position misses 1 case.
-//│ ║  l.75: 	    True and y is True then true
-//│ ║        	             ^
-//│ ╙── [Missing Case 1/1] `False`
-//│ fun f: (anything, anything,) -> error
-//│ Code generation encountered an error:
-//│   if expression was not desugared
+//│ fun f: (anything, False | True,) -> bool
 
-// TODO support `else if`
 fun f(x, y) = if x is
     True and y is True then true
     False and y is False then false
   else if y is
     True and x is False then true
     False and x is True then false
-//│ ╔══[ERROR] The match is not exhaustive.
-//│ ║  l.93: 	    True and y is True then true
-//│ ║        	             ^^^^^^^^^
-//│ ╟── The scrutinee at this position misses 1 case.
-//│ ║  l.93: 	    True and y is True then true
-//│ ║        	             ^
-//│ ╙── [Missing Case 1/1] `False`
-//│ fun f: (anything, anything,) -> error
-//│ Code generation encountered an error:
-//│   if expression was not desugared
+//│ fun f: (False | True, False | True,) -> bool
 
-
-
+fun h(x, y, p) = if
+  x and p(x) then 0
+  y is
+    True then 1
+    False then 2
+//│ fun h: (anything, False | True, true -> anything,) -> (0 | 1 | 2)

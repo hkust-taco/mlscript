@@ -43,9 +43,9 @@ map(None(), inc)
 
 :e
 fun f(a, b) = if a and b then 0
-//│ ╔══[ERROR] The case when this is false is not handled: b
+//│ ╔══[ERROR] The case when this is false is not handled: a
 //│ ║  l.45: 	fun f(a, b) = if a and b then 0
-//│ ╙──      	                       ^
+//│ ╙──      	                 ^
 //│ f: (anything, anything,) -> error
 
 :e
@@ -55,4 +55,26 @@ fun f(x, y) =
 //│ ╔══[ERROR] The case when this is false is not handled: == (x,) (+ (y,) (7,),)
 //│ ║  l.54: 	  else if x == y + 7 then 0
 //│ ╙──      	          ^^^^^^^^^^
-//│ f: (number, int,) -> (0 | error)
+//│ f: (anything, anything,) -> error
+
+
+
+if 42 is n then n + 1
+//│ res: int
+
+:w
+if 42 is n then n + 1 else 0
+//│ ╔══[WARNING] Found a redundant else branch
+//│ ║  l.66: 	if 42 is n then n + 1 else 0
+//│ ╙──      	                           ^
+//│ res: int
+
+
+if Some(42) is Some(n) then n + 1
+//│ res: int
+
+// TODO warn useless `else`
+if Some(42) is Some(n) then n + 1 else 0
+//│ res: int
+
+

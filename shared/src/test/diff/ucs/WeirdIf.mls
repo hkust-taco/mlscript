@@ -6,24 +6,44 @@ if
   _ then 0
   else 0
 else 1
-//│ ╔══[WARNING] duplicated branch
-//│ ╙──
-//│ ╔══[WARNING] duplicated branch
-//│ ╙──
+//│ ╔══[WARNING] Found a duplicated branch
+//│ ╟── This branch
+//│ ║  l.7: 	  else 0
+//│ ║       	       ^
+//│ ╟── is subsumed by the branch here.
+//│ ║  l.6: 	  _ then 0
+//│ ╙──     	         ^
+//│ ╔══[WARNING] Found a duplicated branch
+//│ ╟── This branch
+//│ ║  l.8: 	else 1
+//│ ║       	     ^
+//│ ╟── is subsumed by the branch here.
+//│ ║  l.6: 	  _ then 0
+//│ ╙──     	         ^
 //│ res: 0
 //│    = 0
 
 :w
 if else 0 else 1
-//│ ╔══[WARNING] duplicated branch
-//│ ╙──
+//│ ╔══[WARNING] Found a duplicated branch
+//│ ╟── This branch
+//│ ║  l.27: 	if else 0 else 1
+//│ ║        	               ^
+//│ ╟── is subsumed by the branch here.
+//│ ║  l.27: 	if else 0 else 1
+//│ ╙──      	        ^
 //│ res: 0
 //│    = 0
 
 :w
 fun f(x) = if x is else 0 else 1
-//│ ╔══[WARNING] duplicated branch
-//│ ╙──
+//│ ╔══[WARNING] Found a duplicated branch
+//│ ╟── This branch
+//│ ║  l.39: 	fun f(x) = if x is else 0 else 1
+//│ ║        	                               ^
+//│ ╟── is subsumed by the branch here.
+//│ ║  l.39: 	fun f(x) = if x is else 0 else 1
+//│ ╙──      	                        ^
 //│ f: anything -> 0
 //│  = [Function: f]
 
@@ -36,7 +56,7 @@ fun f(x) = if x is else 0
 if true
   then 0
 //│ ╔══[ERROR] The case when this is false is not handled: true
-//│ ║  l.36: 	if true
+//│ ║  l.56: 	if true
 //│ ╙──      	   ^^^^
 //│ res: error
 //│ Code generation encountered an error:
@@ -50,23 +70,23 @@ fun f(x) =
   if x ==
     else "bruh"
 //│ ╔══[PARSE ERROR] Unexpected indented block in expression position
-//│ ║  l.51: 	    else "bruh"
+//│ ║  l.71: 	    else "bruh"
 //│ ╙──      	^^^^
 //│ ╔══[PARSE ERROR] Unexpected end of indented block; an expression was expected here
-//│ ║  l.51: 	    else "bruh"
+//│ ║  l.71: 	    else "bruh"
 //│ ╙──      	    ^
 //│ ╔══[PARSE ERROR] Expected 'then'/'else' clause; found operator application instead
-//│ ║  l.50: 	  if x ==
+//│ ║  l.70: 	  if x ==
 //│ ║        	     ^^^^
-//│ ║  l.51: 	    else "bruh"
+//│ ║  l.71: 	    else "bruh"
 //│ ║        	^^^^
 //│ ╟── Note: 'if' expression started here:
-//│ ║  l.50: 	  if x ==
+//│ ║  l.70: 	  if x ==
 //│ ╙──      	  ^^
 //│ ╔══[ERROR] The case when this is false is not handled: == (x,) (undefined,)
-//│ ║  l.50: 	  if x ==
+//│ ║  l.70: 	  if x ==
 //│ ║        	     ^^^^
-//│ ║  l.51: 	    else "bruh"
+//│ ║  l.71: 	    else "bruh"
 //│ ╙──      	^^^^
 //│ f: anything -> error
 //│ Code generation encountered an error:
@@ -79,20 +99,16 @@ fun f(x) =
 //│ f: anything -> "bruh"
 //│  = [Function: f3]
 
-:e
-:ge
-// Hmmmmmm, this one is valid but how to get it work?
 fun boolToStr(x) =
   if x is
     true then "yah"
     false then "nah"
-//│ ╔══[ERROR] The case when this is false is not handled: == (x,) (false,)
-//│ ║  l.86: 	  if x is
-//│ ║        	     ^^^^
-//│ ║  l.87: 	    true then "yah"
-//│ ║        	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.88: 	    false then "nah"
-//│ ╙──      	^^^^^^^^^
-//│ boolToStr: anything -> error
-//│ Code generation encountered an error:
-//│   if expression was not desugared
+//│ boolToStr: bool -> ("nah" | "yah")
+//│          = [Function: boolToStr]
+
+boolToStr of true
+boolToStr of false
+//│ res: "nah" | "yah"
+//│    = 'yah'
+//│ res: "nah" | "yah"
+//│    = 'nah'

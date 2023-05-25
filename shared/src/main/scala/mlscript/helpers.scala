@@ -218,7 +218,7 @@ trait TypeImpl extends Located { self: Type =>
     case _: Union | _: Function | _: Tuple | _: Recursive
         | _: Neg | _: Rem | _: Bounds | _: WithExtension | Top | Bot
         | _: Literal | _: TypeVar | _: AppliedType | _: TypeName 
-        | _: Constrained | _ : Splice | _: TypeTag | _: PolyType =>
+        | _: Constrained | _ : Splice | _: TypeTag | _: PolyType | _: Selection =>
       Nil
   }
 
@@ -232,7 +232,8 @@ trait TypeImpl extends Located { self: Type =>
     case Inter(lhs, rhs) => lhs.collectTypeNames ++ rhs.collectTypeNames
     case _: Union | _: Function | _: Record | _: Tuple | _: Recursive
         | _: Neg | _: Rem | _: Bounds | _: WithExtension | Top | Bot | _: PolyType
-        | _: Literal | _: TypeVar | _: Constrained | _ : Splice | _: TypeTag =>
+        | _: Literal | _: TypeVar | _: Constrained | _ : Splice | _: TypeTag
+        | _: Selection =>
       Nil
   }
 
@@ -245,7 +246,8 @@ trait TypeImpl extends Located { self: Type =>
     case Inter(ty1, ty2) => ty1.collectBodyFieldsAndTypes ++ ty2.collectBodyFieldsAndTypes
     case _: Union | _: Function | _: Tuple | _: Recursive
         | _: Neg | _: Rem | _: Bounds | _: WithExtension | Top | Bot | _: PolyType
-        | _: Literal | _: TypeVar | _: AppliedType | _: TypeName | _: Constrained | _ : Splice | _: TypeTag =>
+        | _: Literal | _: TypeVar | _: AppliedType | _: TypeName | _: Constrained | _ : Splice | _: TypeTag
+        | _: Selection =>
       Nil
   }
 }

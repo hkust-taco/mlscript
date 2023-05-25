@@ -1186,7 +1186,7 @@ fun main =
 //│ // Query 1
 //│ globalThis.main = function main() {
 //│   return ((() => {
-//│     let f = (x) => x == 0 === true ? 1 : g(x - 1);
+//│     let f = (x) => x === 0 ? 1 : g(x - 1);
 //│     let g = (x) => f(x);
 //│     return f;
 //│   })());
