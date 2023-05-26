@@ -600,10 +600,10 @@ trait TermImpl extends StatementImpl { self: Term =>
     // 
     case Sel(receiver, field) =>
       Selection(receiver.toType_!, TypeName(field.name).withLocOf(field))
-    case Sel(receiver, fieldName) => receiver match {
-      case Var(name) if !name.startsWith("`") => TypeName(s"$name.$fieldName")
-      case _ => throw new NotAType(this)
-    }
+    // case Sel(receiver, fieldName) => receiver match {
+    //   case Var(name) if !name.startsWith("`") => TypeName(s"$name.$fieldName")
+    //   case _ => throw new NotAType(this)
+    // }
     // TODO:
     // case Let(isRec, name, rhs, body) => ???
     // case Blk(stmts) => ???
@@ -737,6 +737,8 @@ trait StatementImpl extends Located { self: Statement =>
           dataDefs.map(td => AppliedType(td.nme, td.tparams)).reduceOption(Union).getOrElse(Bot), Nil, Nil, Nil
         ).withLocOf(hd) :: cs)
     case NuTypeDef(Nms, nme, tps, tup, ctor, sig, pars, sup, ths, unit) =>
+      ??? // TODO
+    case NuTypeDef(Mxn, nme, tps, tup, ctor, sig, pars, sup, ths, unit) =>
       ??? // TODO
     case NuTypeDef(k @ Als, nme, tps, tup, ctor, sig, pars, sup, ths, unit) =>
       // TODO properly check:

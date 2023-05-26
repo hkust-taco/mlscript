@@ -277,6 +277,9 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
                   case Als => 
                     err(msg"cannot inherit from a type alias", prov.loco)
                     false
+                  case Mxn =>
+                    err(msg"cannot inherit from a mixin", prov.loco)
+                    false
                 }
               case ComposedType(false, l, r) => checkParents(l) && checkParents(r)
               case ComposedType(true, l, r) =>
@@ -366,12 +369,14 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
                       PolymorphicType(MinLevel, FunctionType(
                         singleTup(tv), tv & nomTag & RecordType.mk(tparamTags)(noProv)
                       )(originProv(td.nme.toLoc, "trait constructor", td.nme.name)))
+                    case _ => ??? // TODO:
                   }
                   ctx += n.name -> VarSymbol(ctor, Var(n.name))
               }
               true
             }
             checkParents(td.bodyTy) && checkCycle(td.bodyTy)(Set.single(L(td.nme))) && checkAbstractAddCtors
+          case _ => ??? // TODO:
         }
         def checkRegular(ty: SimpleType)(implicit reached: Map[Str, Ls[SimpleType]]): Bool = ty match {
           case tr @ TypeRef(defn, targs) => reached.get(defn.name) match {

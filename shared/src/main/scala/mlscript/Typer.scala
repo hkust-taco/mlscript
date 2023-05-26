@@ -461,6 +461,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
                     msg"Type alias ${name.capitalize} cannot be used as a type tag", tyLoc)(raise)
                   case Nms => err(
                     msg"Namespaces ${name.capitalize} cannot be used as a type tag", tyLoc)(raise)
+                  case Mxn => err(
+                    msg"Mixin ${name.capitalize} cannot be used as a type tag", tyLoc)(raise)
                 }
                 case _ => e()
               }

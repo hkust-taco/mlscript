@@ -56,6 +56,8 @@ object Helpers {
     case Where(bod, sts) => s"Where(${inspect(bod)}, ...)"
     case Forall(ps, bod) => s"Forall($ps, ${inspect(bod)})"
     case Inst(bod) => s"Inst(${inspect(bod)})"
+    case Ass(lhs, rhs) => s"Ass(${inspect(lhs)}, ${inspect(rhs)})"
+    case Super() => "Super()"
   }
 
   def inspect(body: IfBody): Str = body match {

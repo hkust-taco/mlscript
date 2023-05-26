@@ -81,6 +81,7 @@ abstract class TyperHelpers { Typer: Typer =>
 
   def substLike(ty: TL, map: Map[SimpleType, SimpleType], substInMap: Bool): TL = ty match {
     case ty: ST => subst(ty, map, substInMap)
+    case _ => ??? // TODO
   }
   def subst(st: SimpleType, map: Map[SimpleType, SimpleType], substInMap: Bool = false)
         (implicit cache: MutMap[TypeVariable, SimpleType] = MutMap.empty): SimpleType =
@@ -790,6 +791,7 @@ abstract class TyperHelpers { Typer: Typer =>
                 cls.members.valuesIterator.flatMap(childrenPolMem) ++
                 S(pol.contravar -> cls.thisTy) ++
                 S(pol.covar -> cls.instanceType)
+            case _ => ??? // TODO:
           }
           ents ::: tu.result.toList.map(pol -> _)
     }}

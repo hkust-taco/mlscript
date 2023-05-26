@@ -288,6 +288,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
         // TODO support indented blocks of modified declarations...
         err(msg"Unexpected ${tok.describe} token after modifier${if (acc.mods.sizeIs > 1) "s" else ""}" -> S(loc) :: Nil)
         acc
+      case Nil =>
+        ??? // TODO:
     }
     def unapply(__ : Ls[TokLoc]): S[ModifierSet -> Ls[TokLoc]] = {
       val res = go(_modifiersCache)
