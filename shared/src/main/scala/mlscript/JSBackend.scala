@@ -596,6 +596,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       }
 
       scope.resolveValue(name) match {
+        case Some(CapturedSymbol(_, _: TraitSymbol)) => base // TODO:
         case Some(CapturedSymbol(out, sym: MixinSymbol)) =>
           JSInvoke(translateCapture(CapturedSymbol(out, sym)), Ls(base))
         case Some(CapturedSymbol(out, sym: NuTypeSymbol)) if !mixinOnly =>
@@ -603,6 +604,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
             translateCapture(CapturedSymbol(out, sym))
           else
             translateCapture(CapturedSymbol(out, sym)).member("class")
+        case Some(_: TraitSymbol) => base // TODO:
         case Some(sym: MixinSymbol) =>
           JSInvoke(translateVar(name, false), Ls(base))
         case Some(sym: NuTypeSymbol) if !mixinOnly =>
@@ -610,7 +612,8 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
             translateVar(name, false)
           else
             translateVar(name, false).member("class")
-        case _ => throw CodeGenError(s"unresolved parent $name.")
+        case Some(t) => throw CodeGenError(s"unexpected parent symbol $t.")
+        case N => throw CodeGenError(s"unresolved parent $name.")
       }
     }
 
