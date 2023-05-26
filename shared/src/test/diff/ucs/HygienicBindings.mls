@@ -4,7 +4,7 @@ type Option[out T] = None | Some[T]
 module None
 class Some[out T](value: T)
 //│ type Option[T] = Some[T] | None
-//│ module None()
+//│ module None
 //│ class Some[T](value: T)
 
 type Either[A, B] = Left[A] | Right[B]
@@ -18,7 +18,7 @@ type List[out A] = Nil | Cons[A]
 module Nil
 class Cons[out A](head: A, tail: List[A])
 //│ type List[A] = Cons[A] | Nil
-//│ module Nil()
+//│ module Nil
 //│ class Cons[A](head: A, tail: List[A])
 
 fun h0(a) =

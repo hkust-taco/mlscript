@@ -5,7 +5,7 @@
 module Test0 {
   log("Hello!")
 }
-//│ module Test0()
+//│ module Test0
 //│ // Prelude
 //│ function log(x) {
 //│   return console.info(x);
@@ -138,7 +138,7 @@ class Foo {
 //│ ╔══[ERROR] Class `Foo` does not contain member `x`
 //│ ║  l.136: 	  this: { x: int }
 //│ ╙──       	          ^
-//│ class Foo()
+//│ class Foo
 //│ // Prelude
 //│ class TypingUnit7 {
 //│   #Foo;
@@ -168,7 +168,7 @@ class Bar {
 //│ ╔══[ERROR] Class `Bar` does not contain member `x`
 //│ ║  l.163: 	  super: { x: int }
 //│ ╙──       	           ^
-//│ class Bar()
+//│ class Bar
 //│ // Prelude
 //│ class TypingUnit8 {
 //│   #Bar;

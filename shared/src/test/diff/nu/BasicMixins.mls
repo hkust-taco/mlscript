@@ -18,7 +18,7 @@ mixin BaseTest {
 
 
 module Base0 extends Base, BaseTest
-//│ module Base0() {
+//│ module Base0 {
 //│   let base: 42
 //│   fun test: 42
 //│ }
@@ -210,7 +210,7 @@ mixin Wrap {
 
 // :d
 module WrapBase1 extends WrapBase, Wrap
-//│ module WrapBase1() {
+//│ module WrapBase1 {
 //│   fun wrap: 'a -> ('a,)
 //│   fun wrapA: int -> (int,)
 //│ }
@@ -273,7 +273,7 @@ WrapBase1.wrapA("ok")
 
 
 module WrapBase2 extends WrapBase, Wrap, Wrap, Wrap
-//│ module WrapBase2() {
+//│ module WrapBase2 {
 //│   fun wrap: 'a -> ((('a,),),)
 //│   fun wrapA: int -> (((int,),),)
 //│ }

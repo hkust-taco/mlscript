@@ -2,7 +2,7 @@
 
 
 class Foo
-//│ class Foo()
+//│ class Foo
 
 fun foo(x) = if x is Foo then 0
 //│ fun foo: Foo -> 0
@@ -11,8 +11,8 @@ fun foo(x) = if x is Foo then 0
 module Bar {
   class Foo0
 }
-//│ module Bar() {
-//│   class Foo0()
+//│ module Bar {
+//│   class Foo0
 //│ }
 
 fun foo(x) = if x is Bar then 0
@@ -102,7 +102,7 @@ fun foo(x) = if x is foo() then 0
 
 module Nil
 class Cons[out A](head: A, tail: Cons[A] | Nil)
-//│ module Nil()
+//│ module Nil
 //│ class Cons[A](head: A, tail: Cons[A] | Nil)
 
 fun join(xs) =

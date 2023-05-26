@@ -6,7 +6,7 @@ declare class Date {
   fun toString(): string
   fun toLocaleString(locales: string | Array[string], options: anything): string
 }
-//│ class Date() {
+//│ class Date {
 //│   fun toLocaleString: (locales: Array[string] | string, options: anything,) -> string
 //│   fun toString: () -> string
 //│ }

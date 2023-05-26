@@ -8,7 +8,7 @@ module A {
     fun b = x + 1
   }
 }
-//│ module A() {
+//│ module A {
 //│   class B(x: int) {
 //│     fun b: int
 //│   }
@@ -177,7 +177,7 @@ module D {
   class E(x: int) {}
   fun createE(x: int) = E(x + 1)
 }
-//│ module D() {
+//│ module D {
 //│   class E(x: int)
 //│   fun createE: (x: int,) -> E
 //│ }
@@ -424,8 +424,8 @@ module G {
     }
   }
 }
-//│ module G() {
-//│   module H() {
+//│ module G {
+//│   module H {
 //│     class J(x: int) {
 //│       fun ii: (a: int,) -> I
 //│     }
@@ -543,7 +543,7 @@ module H {
     let i = I(x + 1)
   }
 }
-//│ module H() {
+//│ module H {
 //│   class I(x: int)
 //│   class J(x: int) {
 //│     let i: I
@@ -735,7 +735,7 @@ module J {
 //│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
 //│ ║  l.730: 	  class N(x: int) extends K(x + 2), L
 //│ ╙──       	                          ^^^^^^^^
-//│ module J() {
+//│ module J {
 //│   class K(x: int)
 //│   mixin L()
 //│   class M()
@@ -853,8 +853,8 @@ module K {
     }
   }
 }
-//│ module K() {
-//│   module L() {
+//│ module K {
+//│   module L {
 //│     class M() {
 //│       fun f: 42
 //│     }
@@ -888,10 +888,10 @@ module L {
 //│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
 //│ ║  l.884: 	      class P(y: int) extends M(y + 1) {}
 //│ ╙──       	                              ^^^^^^^^
-//│ module L() {
+//│ module L {
 //│   class M(x: int)
-//│   module N() {
-//│     module O() {
+//│   module N {
+//│     module O {
 //│       class P(y: int)
 //│     }
 //│   }
@@ -933,8 +933,8 @@ M.N.op(M.P())
 //│ ╔══[ERROR] access to class member not yet supported
 //│ ║  l.929: 	M.N.op(M.P())
 //│ ╙──       	        ^^
-//│ module M() {
-//│   module N() {
+//│ module M {
+//│   module N {
 //│     fun op: anything -> (0 | 1 | 2)
 //│   }
 //│   class O()
@@ -1021,8 +1021,8 @@ module N {
 //│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
 //│ ║  l.1017: 	    class P() extends Q
 //│ ╙──        	                      ^
-//│ module N() {
-//│   module O() {
+//│ module N {
+//│   module O {
 //│     class P()
 //│   }
 //│   class Q()
@@ -1341,8 +1341,8 @@ module Test {
   log(3)
   Foo
 }
-//│ module Test() {
-//│   module Foo()
+//│ module Test {
+//│   module Foo
 //│ }
 
 :js

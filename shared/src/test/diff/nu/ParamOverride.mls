@@ -68,7 +68,7 @@ t.foo
 module Test1 extends Base1(1/2), Derived1(1) {
   fun n = this.n
 }
-//│ module Test1() {
+//│ module Test1 {
 //│   fun foo: (int, 1, number,)
 //│   fun n: 1
 //│   fun original: number

@@ -141,13 +141,14 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
         sig.getOrElse(die).showIn(ctx, 0)}"
     case NuTypeDef(kind, nme, tparams, params, ctor, sig, parents, sup, ths, body) =>
       val bodyCtx = ctx.indent
-      s"${kind.str} ${nme.name}${tparams.map(_._2.showIn(ctx, 0)).mkStringOr(", ", "[", "]")}(${
-        params.getOrElse(Tup(Nil)).fields.map {
+      s"${kind.str} ${nme.name}${tparams.map(_._2.showIn(ctx, 0)).mkStringOr(", ", "[", "]")}${params match {
+        case S(Tup(fields)) => s"(${fields.map {
           case (N, Fld(_, _, Asc(v: Var, ty))) => v.name + ": " + ty.showIn(ctx, 0)
           case (N, _) => "???"
           case (S(nme), rhs) => nme.name
-        }.mkString(", ")
-      })${parents match {
+        }.mkString(", ")})"
+        case _ => ""
+      }}${parents match {
         case Nil => ""
         case ps => ps.mkString(", ") // TODO pp
       }}${if (body.entities.isEmpty && sup.isEmpty && ths.isEmpty) "" else

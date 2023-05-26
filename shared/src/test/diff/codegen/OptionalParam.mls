@@ -32,7 +32,7 @@ class A(x: int) {}
 
 :js
 class B {}
-//│ class B()
+//│ class B
 //│ // Prelude
 //│ class TypingUnit1 {
 //│   #B;
@@ -55,7 +55,7 @@ class B {}
 class C {
   constructor(x: int)
 }
-//│ class C()
+//│ class C
 //│ // Prelude
 //│ class TypingUnit2 {
 //│   #C;
@@ -143,7 +143,7 @@ class E {
 //│ ╔══[PARSE ERROR] A class may only have at most one explicit constructor
 //│ ║  l.139: 	class E {
 //│ ╙──       	^^^^^
-//│ class E()
+//│ class E
 
 :e
 constructor(x: int)
@@ -169,8 +169,8 @@ class H extends B {}
 //│ ║  l.161: 	class H extends B {}
 //│ ╙──       	                ^
 //│ class F(x: int)
-//│ class G()
-//│ class H()
+//│ class G
+//│ class H
 //│ // Prelude
 //│ class TypingUnit7 {
 //│   #F;
@@ -265,10 +265,10 @@ module I {
 //│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
 //│ ║  l.262: 	    class L extends J(0)
 //│ ╙──       	                    ^^^^
-//│ module I() {
-//│   class J()
-//│   module K() {
-//│     class L()
+//│ module I {
+//│   class J
+//│   module K {
+//│     class L
 //│   }
 //│ }
 //│ // Prelude
@@ -446,5 +446,5 @@ mixin P {
 //│ ╔══[ERROR] Explicit mixin constructors are not supported.
 //│ ║  l.441: 	  constructor(x: int)
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^
-//│ module O()
+//│ module O
 //│ mixin P()

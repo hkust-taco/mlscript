@@ -1,7 +1,7 @@
 :NewDefs
 
 module A
-//│ module A()
+//│ module A
 
 // This one is easy to fix but what about the next one?
 // The following example can better reveal the essence of the problem.

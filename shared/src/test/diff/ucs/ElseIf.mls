@@ -22,8 +22,8 @@ fun f(x, y) = if x ==
 
 module True
 module False
-//│ module True()
-//│ module False()
+//│ module True
+//│ module False
 
 :e
 :ge

@@ -17,7 +17,7 @@
 
 module Nil
 class Cons[out A](head: A, tail: Cons[A] | Nil)
-//│ module Nil()
+//│ module Nil
 //│ class Cons[A](head: A, tail: Cons[A] | Nil)
 
 
@@ -37,8 +37,8 @@ fun filtermap(f, xs) = if xs is
 
 module True
 module False
-//│ module True()
-//│ module False()
+//│ module True
+//│ module False
 
 class Pair[A, B](lhs: A, rhs: B)
 //│ class Pair[A, B](lhs: A, rhs: B)

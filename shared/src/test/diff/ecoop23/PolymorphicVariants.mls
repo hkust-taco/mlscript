@@ -8,7 +8,7 @@
 class Cons[out A](head: A, tail: Cons[A] | Nil)
 module Nil
 //│ class Cons[A](head: A, tail: Cons[A] | Nil)
-//│ module Nil()
+//│ module Nil
 
 let l = Cons(1, Nil)
 //│ let l: Cons[1]
@@ -80,7 +80,7 @@ mixin EvalLambda {
 // FIXME type simplification
 :ns
 module Test1 extends EvalVar, EvalLambda
-//│ module Test1() {
+//│ module Test1 {
 //│   fun eval: ('a, 'b,) -> ('c | 'd | 'e | 'f)
 //│ }
 //│ where
@@ -225,7 +225,7 @@ mixin EvalExpr {
 //│ }
 
 module Test2 extends EvalVar, EvalExpr
-//│ module Test2() {
+//│ module Test2 {
 //│   fun eval: (Cons[{_1: string, _2: 'result}] | Nil, 'a,) -> (Num | Var | 'result | 'a)
 //│ }
 //│ where
@@ -275,7 +275,7 @@ Test2.eval(Cons(("a", Abs("d", Var("d"))), Nil), Add(Num(1), Var("a")))
 // FIXME type simplification
 :ns
 module Test3 extends EvalVar, EvalExpr, EvalLambda
-//│ module Test3() {
+//│ module Test3 {
 //│   fun eval: ('a, 'b,) -> ('c | 'd | 'e | 'f)
 //│ }
 //│ where
@@ -412,7 +412,7 @@ Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), App(Abs("a", Var("a")), Add(Num
 :ns
 // * Incorrect version, for regression testing – EvalLambda should be mixed in after EvalExpr
 module Test3 extends EvalVar, EvalLambda, EvalExpr
-//│ module Test3() {
+//│ module Test3 {
 //│   fun eval: ('a, 'b,) -> ('c | 'd | 'b | 'e)
 //│ }
 //│ where

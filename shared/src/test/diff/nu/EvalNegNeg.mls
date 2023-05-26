@@ -48,7 +48,7 @@ mixin EvalNegNeg {
 
 
 module TestLang extends EvalBase, EvalNeg, EvalNegNeg
-//│ module TestLang() {
+//│ module TestLang {
 //│   fun eval: 'A -> int
 //│ }
 //│ where

@@ -2,7 +2,7 @@
 
 
 class C<A>
-//│ class C[A]()
+//│ class C[A]
 
 fun f(x) = if x is C then x
 //│ fun f: forall 'A. C['A] -> C['A]
@@ -108,7 +108,7 @@ module None {
   fun map(f) = None
   fun map_A(f: nothing -> anything) = None
 }
-//│ module None() {
+//│ module None {
 //│   fun get: nothing
 //│   fun map: anything -> None
 //│   fun map_A: (f: nothing -> anything,) -> None

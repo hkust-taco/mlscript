@@ -8,7 +8,7 @@ class List<A> {
 }
 let Nil: List<nothing>
 let Cons: (head: 'a, tail: List<'a>) => List<'a>
-//│ class List[A]() {
+//│ class List[A] {
 //│   fun match: forall 'res. (ifNil: () -> 'res, ifCons: ('res, List[A],) -> 'res,) -> 'res
 //│ }
 //│ let Nil: List[nothing]

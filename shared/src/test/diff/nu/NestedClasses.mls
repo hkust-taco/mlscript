@@ -26,8 +26,8 @@ c.NC0
 module M0 {
   class NC0
 }
-//│ module M0() {
-//│   class NC0()
+//│ module M0 {
+//│   class NC0
 //│ }
 
 :e
@@ -43,8 +43,8 @@ M0.NC0
 module M1 {
   module NM1
 }
-//│ module M1() {
-//│   module NM1()
+//│ module M1 {
+//│   module NM1
 //│ }
 
 :e

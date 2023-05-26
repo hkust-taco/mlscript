@@ -5,7 +5,7 @@
 class Cons[out A](head: A, tail: Cons[A] | Nil)
 module Nil
 //│ class Cons[A](head: A, tail: Cons[A] | Nil)
-//│ module Nil()
+//│ module Nil
 
 class Abs[A](x: string, t: A)
 class App[A](s: A, t: A)

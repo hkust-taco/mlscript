@@ -12,8 +12,8 @@ module M {
 //│ ╔══[ERROR] type identifier not found: A
 //│ ║  l.9: 	  fun a: A
 //│ ╙──     	         ^
-//│ module M() {
-//│   class A()
+//│ module M {
+//│   class A
 //│   fun a: error
 //│ }
 

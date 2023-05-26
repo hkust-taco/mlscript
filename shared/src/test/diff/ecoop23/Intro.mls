@@ -8,7 +8,7 @@
 class Some<A>(value: A)
 module None
 //│ class Some[A](value: A)
-//│ module None()
+//│ module None
 
 
 
@@ -92,7 +92,7 @@ class MyPoint(x: int, y: int, color: Color, parent: Some[MyPoint] | None)
 
 
 module CompareMyPoint extends ComparePoint, CompareColored, CompareNested
-//│ module CompareMyPoint() {
+//│ module CompareMyPoint {
 //│   fun compare: ('a, 'b,) -> bool
 //│ }
 //│ where

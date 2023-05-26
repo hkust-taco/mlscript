@@ -5,13 +5,13 @@ class Some[A](value: A)
 module None
 //│ type Option[A] = Some[A] | None
 //│ class Some[A](value: A)
-//│ module None()
+//│ module None
 
 type Tree[A] = Node[A] | Empty
 module Empty
 class Node[A](value: int, left: Tree[A], right: Tree[A])
 //│ type Tree[A] = Node[A] | Empty
-//│ module Empty()
+//│ module Empty
 //│ class Node[A](value: int, left: Tree[A], right: Tree[A])
 
 fun find(t, v) = if t is

@@ -13,7 +13,7 @@ mixin Test {
 //│ }
 
 module M extends Test
-//│ module M() {
+//│ module M {
 //│   class Foo(n: int)
 //│   let f: Foo
 //│ }

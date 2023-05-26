@@ -55,7 +55,7 @@ module None {
 //│ class Some[A](value: A) {
 //│   fun toString: () -> string
 //│ }
-//│ module None() {
+//│ module None {
 //│   fun toString: () -> "None"
 //│ }
 
@@ -64,7 +64,7 @@ class Cons[A](head: A, tail: List[A])
 module Nil
 //│ type List[A] = Cons[A] | Nil
 //│ class Cons[A](head: A, tail: List[A])
-//│ module Nil()
+//│ module Nil
 
 fun list1(x) = Cons(x, Nil)
 fun list2(x, y) = Cons(x, list1(y))

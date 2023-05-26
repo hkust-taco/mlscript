@@ -25,7 +25,7 @@ mixin EvalBase {
 
 // module TestLang extends EvalBase, EvalNeg
 module TestLang extends EvalBase
-//│ module TestLang() {
+//│ module TestLang {
 //│   fun eval: 'a -> int
 //│ }
 //│ where

@@ -32,7 +32,7 @@ class Pair[L, R](lhs: L, rhs: R) extends Exp[A]
 //│ ╟── reference of type `#Exp & {Exp#A = ?A}` does not match type `Lit | Pair[?L, ?R]`
 //│ ║  l.6: 	  fun test = if this is
 //│ ╙──     	                ^^^^
-//│ class Exp[A]() {
+//│ class Exp[A] {
 //│   fun test: 0 | 1
 //│ }
 //│ class Lit(n: int)
