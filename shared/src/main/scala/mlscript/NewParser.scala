@@ -849,11 +849,11 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
         }).withLoc(acc.toLoc.fold(some(loc))(_ ++ loc |> some))
         exprCont(res, prec, allowNewlines)
         
-      case (br @ BRACKETS(Square, toks), loc) :: _ => // * Currently unreachable because we match Square brackets as tparams
+      /*case (br @ BRACKETS(Square, toks), loc) :: _ => // * Currently unreachable because we match Square brackets as tparams
         consume
         val idx = rec(toks, S(br.innerLoc), "subscript").concludeWith(_.expr(0))
         val res = Subs(acc, idx.withLoc(S(loc)))
-        exprCont(res, prec, allowNewlines)
+        exprCont(res, prec, allowNewlines)*/
         
         case (br @ BRACKETS(Round, toks), loc) :: _ =>
           consume

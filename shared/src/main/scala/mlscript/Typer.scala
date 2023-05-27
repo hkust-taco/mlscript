@@ -439,6 +439,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           case S(AbstractConstructor(_, _)) => die
           case S(VarSymbol(t: SimpleType, _)) => t
           case N => err(msg"undeclared this" -> ty.toLoc :: Nil)
+          case _ => ??? // TODO
         }
       case tn @ TypeTag(name) => rec(TypeName(name.decapitalize)) // TODO rm this hack
       // case tn @ TypeTag(name) => rec(TypeName(name))
@@ -1108,6 +1109,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         if (!founPoly) warn(msg"Inferred type `${bod_ty.expPos}` of this ${
           bod_ty.prov.desc} cannot be instantiated", prov.loco)
         res
+      case _ => ??? // TODO
     }
   }(r => s"$lvl. : ${r}")
   

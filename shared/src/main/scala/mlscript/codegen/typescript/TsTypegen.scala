@@ -574,7 +574,7 @@ final class TsTypegenCodeBuilder {
         }.getOrElse(SourceCode(tvarName))
       case Constrained(base, tvbs, where) =>
         throw CodeGenError(s"Cannot generate type for `where` clause $tvbs $where")
-      case _: Splice | _: TypeTag | _: PolyType =>
+      case _: Splice | _: TypeTag | _: PolyType | _: Selection =>
         throw CodeGenError(s"Cannot yet generate type for: $mlType")
     }
   }
