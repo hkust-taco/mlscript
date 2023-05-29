@@ -2,7 +2,7 @@
 :NewDefs
 :NoJS
 :AllowTypeErrors
-export declare module Cycle1 {
+declare module Cycle1 {
   export class A {}
   val b: Cycle2.B
 }

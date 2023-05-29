@@ -55,7 +55,7 @@ class TSProgram(filename: String, uesTopLevelModule: Boolean) {
     })
     cycleList.foreach(imp => {
       val newFilename = toTSFile(imp)
-      writer.writeln(s"export declare module ${TSImport.getModuleName(imp.`import`, false)} {")
+      writer.writeln(s"declare module ${TSImport.getModuleName(imp.`import`, false)} {")
       cache(newFilename).generate(writer, "  ")
       writer.writeln("}")
     })
