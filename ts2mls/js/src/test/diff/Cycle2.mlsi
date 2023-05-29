@@ -1,0 +1,23 @@
+:NewParser
+:NewDefs
+:NoJS
+:AllowTypeErrors
+export declare module Cycle1 {
+  export class A {}
+  val b: Cycle2.B
+}
+export declare module Cycle2 {
+  export class B {}
+  val a: Cycle1.A
+}
+//│ ╔══[ERROR] Module `Cycle1` is not supported yet.
+//│ ║  l.11: 	  val a: Cycle1.A
+//│ ╙──      	               ^^
+//│ module Cycle1() {
+//│   class A()
+//│   let b: B
+//│ }
+//│ module Cycle2() {
+//│   class B()
+//│   let a: error
+//│ }

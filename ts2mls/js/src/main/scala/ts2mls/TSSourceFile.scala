@@ -43,7 +43,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
     }
   })
 
-  def getImportList: List[String] = importList.getFilelist
+  def getImportList: List[TSImport] = importList.getFilelist
 
   private def parseExportDeclaration(elements: TSNodeArray): Unit = {
     def getReferedType(name: String): TSType = global.get(name) match {
@@ -67,9 +67,10 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
     // ignore `import "filename.ts"`
     if (!clause.isUndefined) {
       val bindings = clause.namedBindings
+      val importName = moduleSpecifier.text
       val absPath =
-        if (moduleSpecifier.text.startsWith("./"))
-          rootPath + moduleSpecifier.text.substring(2)
+        if (TSModuleResolver.isLocal(moduleSpecifier.text))
+          TSModuleResolver.resolve(rootPath + importName)
         else moduleSpecifier.text // TODO: node_module?
       def run(node: TSNodeObject): Unit =
         if (!node.elements.isUndefined) {
@@ -79,14 +80,14 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
             else
               (ele.propertyName.escapedText, Some(ele.symbol.escapedName))
           )
-          val imp = TSSingleImport(absPath, list)
+          val imp = TSSingleImport(absPath, importName, list)
           if (exported) imp.createAlias.foreach { // FIXME: functions and variables?
             case alias @ TSTypeAlias(name, _, _) => global.put(name, alias, true)
           }
           importList += imp
         }
         else if (!node.name.isUndefined) {
-          val imp = TSFullImport(absPath, node.name.escapedText)
+          val imp = TSFullImport(absPath, importName, node.name.escapedText)
           if (exported) imp.createAlias.foreach { // FIXME: functions and variables?
             case alias @ TSTypeAlias(name, _, _) => global.put(name, alias, true)
           }

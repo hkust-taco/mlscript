@@ -20,6 +20,7 @@ object TSTypeGenerationTest {
     "Array.ts",
     "BasicFunctions.ts",
     "ClassMember.ts",
+    "Cycle1.ts",
     "Dec.d.ts",
     "Enum.ts",
     "ES5.d.ts",

@@ -2,7 +2,7 @@
 :NewDefs
 :NoJS
 :AllowTypeErrors
-import "Dependency.mlsi"
+import "./Dependency.mlsi"
 export declare module Export {
   export module Foo {
     fun Baz(aa: string): IBar

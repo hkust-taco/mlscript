@@ -2,18 +2,14 @@
 :NewDefs
 :NoJS
 :AllowTypeErrors
-import "./Dependency.mlsi"
-export declare module Import {
-  val t: number
-  val a: Dependency.A
-  val b: Dependency.B
-  val c: Dependency.C
-  val d: Dependency.D
-  val dd: number
+import "./Cycle2.mlsi"
+export declare module Cycle1 {
+  export class A {}
+  val b: Cycle2.B
 }
-//│ ╔══[ERROR] type identifier not found: Dependency
-//│ ║  l.8: 	  val a: Dependency.A
-//│ ╙──     	         ^^^^^^^^^^
+//│ ╔══[ERROR] type identifier not found: Cycle2
+//│ ║  l.8: 	  val b: Cycle2.B
+//│ ╙──     	         ^^^^^^
 //│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
 //│ 	at: mlscript.utils.package$.lastWords(package.scala:205)
 //│ 	at: mlscript.utils.package$.die(package.scala:204)
