@@ -1,0 +1,34 @@
+:NewParser
+:NewDefs
+:NoJS
+:AllowTypeErrors
+export declare module Dependency {
+  export class A {
+    val a: number
+  }
+  export class B {
+    val b: number
+  }
+  export class C {
+    val c: number
+  }
+  export class D {
+    val d: number
+  }
+  fun default(): number
+}
+//│ module Dependency() {
+//│   class A() {
+//│     let a: number
+//│   }
+//│   class B() {
+//│     let b: number
+//│   }
+//│   class C() {
+//│     let c: number
+//│   }
+//│   class D() {
+//│     let d: number
+//│   }
+//│   fun default: () -> number
+//│ }

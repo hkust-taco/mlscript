@@ -17,26 +17,34 @@ class TSProgram(filename: String, uesTopLevelModule: Boolean) {
 
   implicit val checker = TSTypeChecker(program.getTypeChecker())
 
-  // TODO: support multi-files correctly.
-  private val globalNamespace = TSNamespace()
-  private val entryFile = TSSourceFile(program.getSourceFile(filename), globalNamespace)
-  private val importList = entryFile.getImportList
+  def generate(workDir: String, targetPath: String): Unit = generate(filename, workDir, targetPath)
 
-  def generate(workDir: String, targetPath: String): Unit = {
+  def generate(filename: String, workDir: String, targetPath: String): Unit = {
+    val globalNamespace = TSNamespace()
+    val entryFile = TSSourceFile(program.getSourceFile(filename), globalNamespace)
+    val importList = entryFile.getImportList
+
     val moduleName = TSImport.getModuleName(filename)
     val relatedPath =
       if (filename.startsWith(workDir)) filename.substring(workDir.length() + 1, filename.lastIndexOf('/') + 1)
       else throw new AssertionError(s"wrong work dir $workDir")
     var writer = JSWriter(s"$targetPath/$relatedPath/$moduleName.mlsi")
-    generate(writer)
+    generate(writer, importList, globalNamespace, moduleName)
     writer.close()
+
+    importList.foreach(imp => {
+      val newFilename = // TODO: node_modules
+        if (!imp.endsWith(".ts")) s"$imp.ts"
+        else imp
+      generate(newFilename, TSModuleResolver.resolve(workDir), targetPath)
+    })
   }
 
-  private def generate(writer: JSWriter): Unit =
+  private def generate(writer: JSWriter, importList: List[String], globalNamespace: TSNamespace, moduleName: String): Unit =
     if (!uesTopLevelModule) globalNamespace.generate(writer, "") // will be imported directly and has no dependency
     else {
       importList.foreach{f => writer.writeln(s"""import "${TSImport.getModuleName(f)}.mlsi"""")}
-      writer.writeln(s"export declare module ${TSImport.getModuleName(filename)} {")
+      writer.writeln(s"export declare module $moduleName {")
       globalNamespace.generate(writer, "  ")
       writer.writeln("}")
     }
