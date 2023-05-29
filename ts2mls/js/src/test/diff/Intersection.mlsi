@@ -6,10 +6,10 @@ export declare module Intersection {
   fun extend<T, U>(first: T, second: U): (T) & (U)
   fun foo<T, U>(x: (T) & (U)): unit
   fun over(f: ((number) => string) & ((object) => string)): string
-  trait IA() {
+  trait IA {
     val x: number
   }
-  trait IB() {
+  trait IB {
     val y: number
   }
   fun iii(x: (IA) & (IB)): (IA) & (IB)
@@ -17,8 +17,8 @@ export declare module Intersection {
   fun iiii<U, T, V>(x: ((U) & (T)) & (V)): ((U) & (T)) & (V)
   fun arr<U, T>(a: (MutArray<U>) & (MutArray<T>)): (MutArray<U>) & (MutArray<T>)
   fun tt<U, T, V>(x: ((U, T, )) & ((V, V, ))): ((U, T, )) & ((V, V, ))
-  class A() {}
-  class B() {}
+  class A {}
+  class B {}
   fun inter(c: (A) & (B)): (A) & (B)
 }
 //│ ╔══[ERROR] type identifier not found: object
@@ -49,15 +49,15 @@ export declare module Intersection {
 //│ ║  l.22: 	  fun inter(c: (A) & (B)): (A) & (B)
 //│ ╙──      	                                 ^^^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.9: 	  trait IA() {
-//│ ║       	  ^^^^^^^^^^^^
+//│ ║  l.9: 	  trait IA {
+//│ ║       	  ^^^^^^^^^^
 //│ ║  l.10: 	    val x: number
 //│ ║        	^^^^^^^^^^^^^^^^^
 //│ ║  l.11: 	  }
 //│ ╙──      	^^^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.12: 	  trait IB() {
-//│ ║        	  ^^^^^^^^^^^^
+//│ ║  l.12: 	  trait IB {
+//│ ║        	  ^^^^^^^^^^
 //│ ║  l.13: 	    val y: number
 //│ ║        	^^^^^^^^^^^^^^^^^
 //│ ║  l.14: 	  }

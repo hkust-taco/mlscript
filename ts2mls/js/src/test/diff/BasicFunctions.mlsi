@@ -17,12 +17,12 @@ export declare module BasicFunctions {
   fun create(): object
   fun pa(x: number): number
   fun wtf(x: anything): unit
-  class Foooooo() {
+  class Foooooo {
     val ooooooo: number
   }
   fun inn(f: Foooooo): unit
   fun out1(): Foooooo
-  trait Barrrrrrrrr() {
+  trait Barrrrrrrrr {
     val rrrrrrr: number
   }
   fun inn2(b: Barrrrrrrrr): unit
@@ -44,8 +44,8 @@ export declare module BasicFunctions {
 //│ ║  l.29: 	  fun out2(): Barrrrrrrrr
 //│ ╙──      	              ^^^^^^^^^^^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.25: 	  trait Barrrrrrrrr() {
-//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.25: 	  trait Barrrrrrrrr {
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^
 //│ ║  l.26: 	    val rrrrrrr: number
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.27: 	  }

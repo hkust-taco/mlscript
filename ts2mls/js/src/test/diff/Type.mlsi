@@ -3,29 +3,29 @@
 :NoJS
 :AllowTypeErrors
 export declare module Type {
-  trait None() {
+  trait None {
     val _tag: "None"
   }
-  trait Some<A>() {
+  trait Some<A> {
     val _tag: "Some"
     val value: A
   }
   type Option<A> = (None) | (Some<A>)
   type Func = (number) => number
   type S2 = (string, string, )
-  trait I1() {}
-  trait I2() {}
+  trait I1 {}
+  trait I2 {}
   type I3 = (I1) & (I2)
   type StringArray = Array<string>
   type SomeInterface = {x: number,y: number,}
-  class ABC() {}
+  class ABC {}
   type DEF = ABC
   type TP<A, B, C> = (A, B, C, )
   module NA {
     fun fb(b: string): unit
     export type B = string
   }
-  class NC() {
+  class NC {
     val b: string
   }
   type G = ABC
@@ -39,15 +39,15 @@ export declare module Type {
 //│ ║  l.33: 	  fun some<A>(a: A): (None) | (Some<A>)
 //│ ╙──      	                              ^^^^^^^^^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.6: 	  trait None() {
-//│ ║       	  ^^^^^^^^^^^^^^
+//│ ║  l.6: 	  trait None {
+//│ ║       	  ^^^^^^^^^^^^
 //│ ║  l.7: 	    val _tag: "None"
 //│ ║       	^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.8: 	  }
 //│ ╙──     	^^^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.9: 	  trait Some<A>() {
-//│ ║       	  ^^^^^^^^^^^^^^^^^
+//│ ║  l.9: 	  trait Some<A> {
+//│ ║       	  ^^^^^^^^^^^^^^^
 //│ ║  l.10: 	    val _tag: "Some"
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.11: 	    val value: A
@@ -61,11 +61,11 @@ export declare module Type {
 //│ ║  l.13: 	  type Option<A> = (None) | (Some<A>)
 //│ ╙──      	                            ^^^^^^^^^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.16: 	  trait I1() {}
-//│ ╙──      	  ^^^^^^^^^^^^^
+//│ ║  l.16: 	  trait I1 {}
+//│ ╙──      	  ^^^^^^^^^^^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.17: 	  trait I2() {}
-//│ ╙──      	  ^^^^^^^^^^^^^
+//│ ║  l.17: 	  trait I2 {}
+//│ ╙──      	  ^^^^^^^^^^^
 //│ ╔══[ERROR] trait I1 cannot be used as a type
 //│ ║  l.18: 	  type I3 = (I1) & (I2)
 //│ ╙──      	            ^^^^

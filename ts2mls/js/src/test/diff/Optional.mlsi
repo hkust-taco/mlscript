@@ -7,19 +7,19 @@ export declare module Optional {
   fun buildName2(firstName: string, lastName: (string) | (undefined)): string
   fun buildName3(firstName: string, lastName: MutArray<string>): string
   fun buildName4(firstName: string, lastName: MutArray<anything>): string
-  trait SquareConfig() {
+  trait SquareConfig {
     val color: (string) | (undefined)
     val width: (number) | (undefined)
   }
   fun did(x: number, f: ((number) => number) | (undefined)): number
   fun getOrElse(arr: (MutArray<object>) | (undefined)): object
-  class ABC() {}
+  class ABC {}
   fun testABC(abc: (ABC) | (undefined)): unit
   fun testSquareConfig(conf: (SquareConfig) | (undefined)): unit
   fun err(msg: ((number, string, )) | (undefined)): unit
   fun toStr(x: (((number) | (false)) | (true)) | (undefined)): string
   fun boo<T, U>(x: ((T) & (U)) | (undefined)): unit
-  class B<T>() {
+  class B<T> {
     val b: T
   }
   fun boom(b: (B<nothing>) | (undefined)): anything
@@ -40,8 +40,8 @@ export declare module Optional {
 //│ ║  l.25: 	  fun boom(b: (B<nothing>) | (undefined)): anything
 //│ ╙──      	              ^^^^^^^^^^^^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.10: 	  trait SquareConfig() {
-//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.10: 	  trait SquareConfig {
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.11: 	    val color: (string) | (undefined)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.12: 	    val width: (number) | (undefined)

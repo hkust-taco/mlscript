@@ -6,24 +6,24 @@ export declare module Namespace {
   module N1 {
     fun f(x: anything): number
     fun ff(y: anything): number
-    export class C() {
+    export class C {
       fun f(): unit
     }
-    trait I() {
+    trait I {
       fun f(): number
     }
     export module N2 {
       fun fff(x: (false) | (true)): number
       fun gg(c: N1.C): N1.C
-      class BBB() extends N1.C {}
+      class BBB extends N1.C {}
     }
   }
   module AA {
     fun f(x: anything): string
-    export class C() {
+    export class C {
       fun f(): unit
     }
-    export trait I() {
+    export trait I {
       fun f(): number
     }
     export module N2 {
@@ -34,8 +34,8 @@ export declare module Namespace {
 //│ ║  l.10: 	      fun f(): unit
 //│ ╙──      	          ^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.12: 	    trait I() {
-//│ ║        	    ^^^^^^^^^^^
+//│ ║  l.12: 	    trait I {
+//│ ║        	    ^^^^^^^^^
 //│ ║  l.13: 	      fun f(): number
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.14: 	    }
@@ -50,8 +50,8 @@ export declare module Namespace {
 //│ ║  l.17: 	      fun gg(c: N1.C): N1.C
 //│ ╙──      	                         ^^
 //│ ╔══[ERROR] Unsupported parent specification
-//│ ║  l.18: 	      class BBB() extends N1.C {}
-//│ ╙──      	                          ^^^^
+//│ ║  l.18: 	      class BBB extends N1.C {}
+//│ ╙──      	                        ^^^^
 //│ ╔══[ERROR] Member fff is declared but not defined
 //│ ║  l.16: 	      fun fff(x: (false) | (true)): number
 //│ ╙──      	          ^^^
@@ -68,8 +68,8 @@ export declare module Namespace {
 //│ ║  l.24: 	      fun f(): unit
 //│ ╙──      	          ^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.26: 	    export trait I() {
-//│ ║        	           ^^^^^^^^^^^
+//│ ║  l.26: 	    export trait I {
+//│ ║        	           ^^^^^^^^^
 //│ ║  l.27: 	      fun f(): number
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.28: 	    }

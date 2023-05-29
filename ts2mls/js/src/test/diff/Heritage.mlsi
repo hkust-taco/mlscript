@@ -3,53 +3,53 @@
 :NoJS
 :AllowTypeErrors
 export declare module Heritage {
-  class A() {
+  class A {
     fun foo(): unit
   }
-  class B() extends A {}
-  class C<T>() {
+  class B extends A {}
+  class C<T> {
     fun set(x: T): unit
     fun get(): T
   }
-  class D() extends C<number> {}
-  trait Wu() {
+  class D extends C<number> {}
+  trait Wu {
     val x: (false) | (true)
   }
-  class WuWu() extends Wu {
+  class WuWu extends Wu {
     val y: (false) | (true)
   }
-  trait WuWuWu() extends WuWu {
+  trait WuWuWu extends WuWu {
     val z: (false) | (true)
   }
-  trait Never() extends WuWuWu {
+  trait Never extends WuWuWu {
     fun w(): nothing
   }
-  class VG<T>() {
+  class VG<T> {
     val x: T
   }
-  class Home<T>() extends VG<string> {
+  class Home<T> extends VG<string> {
     val y: T
   }
-  trait O<I>() {
+  trait O<I> {
     fun xx(x: I): I
   }
-  class OR<R>() extends O<R> {
+  class OR<R> extends O<R> {
     fun xx(x: R): R
   }
   module Five {
-    export class ROTK() {
+    export class ROTK {
       val wu: string
     }
-    export class Y() extends Five.ROTK {}
+    export class Y extends Five.ROTK {}
   }
-  class Y() extends Five.ROTK {}
+  class Y extends Five.ROTK {}
 }
 //│ ╔══[ERROR] Member foo is declared but not defined
 //│ ║  l.7: 	    fun foo(): unit
 //│ ╙──     	        ^^^
 //│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
-//│ ║  l.9: 	  class B() extends A {}
-//│ ╙──     	                    ^
+//│ ║  l.9: 	  class B extends A {}
+//│ ╙──     	                  ^
 //│ ╔══[ERROR] Member set is declared but not defined
 //│ ║  l.11: 	    fun set(x: T): unit
 //│ ╙──      	        ^^^
@@ -57,28 +57,28 @@ export declare module Heritage {
 //│ ║  l.12: 	    fun get(): T
 //│ ╙──      	        ^^^
 //│ ╔══[ERROR] Unsupported parent specification
-//│ ║  l.14: 	  class D() extends C<number> {}
-//│ ╙──      	                    ^^^^^^^^^
+//│ ║  l.14: 	  class D extends C<number> {}
+//│ ╙──      	                  ^^^^^^^^^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.15: 	  trait Wu() {
-//│ ║        	  ^^^^^^^^^^^^
+//│ ║  l.15: 	  trait Wu {
+//│ ║        	  ^^^^^^^^^^
 //│ ║  l.16: 	    val x: (false) | (true)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.17: 	  }
 //│ ╙──      	^^^
 //│ ╔══[ERROR] Cannot inherit from a type alias
-//│ ║  l.18: 	  class WuWu() extends Wu {
-//│ ╙──      	                       ^^
+//│ ║  l.18: 	  class WuWu extends Wu {
+//│ ╙──      	                     ^^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.21: 	  trait WuWuWu() extends WuWu {
-//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.21: 	  trait WuWuWu extends WuWu {
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.22: 	    val z: (false) | (true)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.23: 	  }
 //│ ╙──      	^^^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.24: 	  trait Never() extends WuWuWu {
-//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.24: 	  trait Never extends WuWuWu {
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.25: 	    fun w(): nothing
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.26: 	  }
@@ -87,11 +87,11 @@ export declare module Heritage {
 //│ ║  l.25: 	    fun w(): nothing
 //│ ╙──      	        ^
 //│ ╔══[ERROR] Unsupported parent specification
-//│ ║  l.30: 	  class Home<T>() extends VG<string> {
-//│ ╙──      	                          ^^^^^^^^^^
+//│ ║  l.30: 	  class Home<T> extends VG<string> {
+//│ ╙──      	                        ^^^^^^^^^^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.33: 	  trait O<I>() {
-//│ ║        	  ^^^^^^^^^^^^^^
+//│ ║  l.33: 	  trait O<I> {
+//│ ║        	  ^^^^^^^^^^^^
 //│ ║  l.34: 	    fun xx(x: I): I
 //│ ║        	^^^^^^^^^^^^^^^^^^^
 //│ ║  l.35: 	  }
@@ -100,17 +100,17 @@ export declare module Heritage {
 //│ ║  l.34: 	    fun xx(x: I): I
 //│ ╙──      	        ^^
 //│ ╔══[ERROR] Unsupported parent specification
-//│ ║  l.36: 	  class OR<R>() extends O<R> {
-//│ ╙──      	                        ^^^^
+//│ ║  l.36: 	  class OR<R> extends O<R> {
+//│ ╙──      	                      ^^^^
 //│ ╔══[ERROR] Member xx is declared but not defined
 //│ ║  l.37: 	    fun xx(x: R): R
 //│ ╙──      	        ^^
 //│ ╔══[ERROR] Unsupported parent specification
-//│ ║  l.43: 	    export class Y() extends Five.ROTK {}
-//│ ╙──      	                             ^^^^^^^^^
+//│ ║  l.43: 	    export class Y extends Five.ROTK {}
+//│ ╙──      	                           ^^^^^^^^^
 //│ ╔══[ERROR] Unsupported parent specification
-//│ ║  l.45: 	  class Y() extends Five.ROTK {}
-//│ ╙──      	                    ^^^^^^^^^
+//│ ║  l.45: 	  class Y extends Five.ROTK {}
+//│ ╙──      	                  ^^^^^^^^^
 //│ module Heritage() {
 //│   class A() {
 //│     fun foo: () -> unit

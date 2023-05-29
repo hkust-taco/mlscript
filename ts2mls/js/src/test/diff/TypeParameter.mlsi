@@ -4,26 +4,26 @@
 :AllowTypeErrors
 export declare module TypeParameter {
   fun inc<T>(x: T): number
-  class CC<T>() {
+  class CC<T> {
     fun print(s: T): unit
   }
   fun con<U, T>(t: T): U
-  class Printer<T>() {
+  class Printer<T> {
     fun print(t: T): unit
   }
   fun setStringPrinter(p: Printer<string>): unit
   fun getStringPrinter(): Printer<string>
   fun foo<T>(p: Printer<T>, x: T): T
   fun foo2<T>(p: Printer<T>, x: T): T
-  class F<T>() {
+  class F<T> {
     val x: T
     fun GG<U>(y: U): T
   }
-  trait I<T>() {
+  trait I<T> {
     val x: T
     fun GG<U>(y: U): T
   }
-  class FFF<T>() {
+  class FFF<T> {
     fun fff(x: T): unit
   }
   fun fff(p: FFF<string>, s: string): unit
@@ -57,8 +57,8 @@ export declare module TypeParameter {
 //│ ║  l.20: 	    fun GG<U>(y: U): T
 //│ ╙──      	        ^^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.22: 	  trait I<T>() {
-//│ ║        	  ^^^^^^^^^^^^^^
+//│ ║  l.22: 	  trait I<T> {
+//│ ║        	  ^^^^^^^^^^^^
 //│ ║  l.23: 	    val x: T
 //│ ║        	^^^^^^^^^^^^
 //│ ║  l.24: 	    fun GG<U>(y: U): T

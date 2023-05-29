@@ -6,16 +6,16 @@ import "Dependency.mlsi"
 export declare module Export {
   export module Foo {
     fun Baz(aa: string): IBar
-    trait IBar() {
+    trait IBar {
       val a: string
     }
-    export class Bar() extends IBar {
+    export class Bar extends IBar {
       val a: string
     }
     export val baz: IBar
   }
   fun default(x: anything): anything
-  export class E() {}
+  export class E {}
   export type F = E
   export type G = Dependency.B
   export type H = Dependency
@@ -24,15 +24,15 @@ export declare module Export {
 //│ ║  l.8: 	    fun Baz(aa: string): IBar
 //│ ╙──     	                         ^^^^
 //│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.9: 	    trait IBar() {
-//│ ║       	    ^^^^^^^^^^^^^^
+//│ ║  l.9: 	    trait IBar {
+//│ ║       	    ^^^^^^^^^^^^
 //│ ║  l.10: 	      val a: string
 //│ ║        	^^^^^^^^^^^^^^^^^^^
 //│ ║  l.11: 	    }
 //│ ╙──      	^^^^^
 //│ ╔══[ERROR] Cannot inherit from a type alias
-//│ ║  l.12: 	    export class Bar() extends IBar {
-//│ ╙──      	                               ^^^^
+//│ ║  l.12: 	    export class Bar extends IBar {
+//│ ╙──      	                             ^^^^
 //│ ╔══[ERROR] trait IBar cannot be used as a type
 //│ ║  l.15: 	    export val baz: IBar
 //│ ╙──      	                    ^^^^

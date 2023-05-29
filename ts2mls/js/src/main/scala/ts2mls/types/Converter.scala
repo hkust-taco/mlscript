@@ -87,23 +87,24 @@ object Converter {
         case _ => "" // TODO: deal with private/protected static members
       })
 
+    val ctor =
+      if (constructorList.isEmpty) ""
+      else
+        s"${indent}  constructor(${constructorList.map(p => s"${convert(p)("")}").reduceLeft((res, p) => s"$res, $p")})\n"
+
     val body = { // members without independent type parameters, translate them directly
-      val lst = allRecs.filter((s) => !s.isEmpty())
-      if (lst.isEmpty) "{}"
+      val lst = (ctor :: allRecs).filter((s) => !s.isEmpty())
+      if (lst.isEmpty) s"{}"
       else if (typeName === "trait ") s"{${lst.reduceLeft((bd, m) => s"$bd$m")}}"
       else s"{\n${lst.reduceLeft((bd, m) => s"$bd$m")}$indent}"
     }
     
     if (typeName === "trait ") body // anonymous interfaces
     else { // named interfaces and classes
-      val constructor =
-        if (constructorList.isEmpty) "()"
-        else s"(${constructorList.map(p => s"${convert(p)("")}").reduceLeft((res, p) => s"$res, $p")})"
-
       val exp = if (exported) "export " else ""
       val inheritance =
-        if (parents.isEmpty) constructor
-        else parents.foldLeft(s"$constructor extends ")((b, p) => s"$b${convert(p)}, ").dropRight(2)
+        if (parents.isEmpty) ""
+        else parents.foldLeft(s" extends ")((b, p) => s"$b${convert(p)}, ").dropRight(2)
       if (typeVars.isEmpty) s"${indent}${exp}$typeName$inheritance $body"
       else
         s"${indent}${exp}$typeName<${typeVars.map((tv) => tv.name).reduceLeft((p, s) => s"$p, $s")}>$inheritance $body" // TODO: add constraints
