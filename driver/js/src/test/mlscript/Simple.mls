@@ -1,4 +1,4 @@
-import "Opened.mls"
+import "./Opened.mls"
 
 mixin B { fun foo = this.n }
 

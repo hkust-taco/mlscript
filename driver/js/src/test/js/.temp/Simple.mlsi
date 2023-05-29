@@ -1,4 +1,4 @@
-import "Opened.mlsi"
+import "./Opened.mlsi"
 declare module Simple() {
   mixin B() {
     this: {n: 'n}

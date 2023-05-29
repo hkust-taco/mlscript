@@ -15,8 +15,6 @@ import ts2mls.TSModuleResolver
 class Driver(options: DriverOptions) {
   import Driver._
 
-  private val moduleResolver = TSModuleResolver(options.path)
-
   private val typer =
     new mlscript.Typer(
       dbg = false,
@@ -35,6 +33,8 @@ class Driver(options: DriverOptions) {
 
   private val importedModule = MutSet[String]()
 
+  import TSModuleResolver.normalize
+
   // Return true if success
   def execute: Boolean =
     try {
@@ -43,7 +43,7 @@ class Driver(options: DriverOptions) {
       implicit val extrCtx: Opt[typer.ExtrCtx] = N
       implicit val vars: Map[Str, typer.SimpleType] = Map.empty
       implicit val stack = List[String]()
-      compile(options.filename, false)
+      compile(FileInfo(options.path, options.filename), false)
       Driver.totalErrors == 0
     }
     catch {
@@ -123,7 +123,7 @@ class Driver(options: DriverOptions) {
   }
 
   private def compile(
-    filename: String,
+    file: FileInfo,
     exported: Boolean
   )(
     implicit ctx: Ctx,
@@ -132,31 +132,26 @@ class Driver(options: DriverOptions) {
     vars: Map[Str, typer.SimpleType],
     stack: List[String]
   ): Boolean = {
-    val moduleName = moduleResolver.getModuleName(filename)
-    val path = TSModuleResolver.dirname(filename)
-    val relatedPath = moduleResolver.getRelatedPath(path)
-    val mlsiFile = s"${options.outputDir}/.temp/$relatedPath/$moduleName.mlsi"
-
-    parseAndRun(filename, {
+    val mlsiFile = normalize(s"${options.outputDir}/${file.interfaceFilename}")
+    parseAndRun(file.filename, {
       case (definitions, _, imports, _) => {
         val depList = imports.map {
           case Import(path) => path
         }
 
         val (cycleList, otherList) = depList.partitionMap { dep => {
-          val depFile = s"$path/$dep"
-          if (depFile === filename)
-            throw ErrorReport(Ls((s"can not import $filename itself", None)), Diagnostic.Compilation)
-          else if (stack.contains(depFile)) L(depFile)
+          val depFile = file.`import`(dep)
+          if (depFile.filename === file.filename)
+            throw ErrorReport(Ls((s"can not import ${file.filename} itself", None)), Diagnostic.Compilation)
+          else if (stack.contains(depFile.filename)) L(depFile)
           else R(dep)
         } }
 
-        val (cycleSigs, cycleRecomp) = cycleList.foldLeft((Ls[TypingUnit](), false))((r, filename) => r match {
+        val (cycleSigs, cycleRecomp) = cycleList.foldLeft((Ls[TypingUnit](), false))((r, file) => r match {
           case (sigs, recomp) => {
-            importedModule += filename
-            val moduleName = moduleResolver.getModuleName(filename)
-            (sigs :+ extractSig(filename, moduleName),
-              isInterfaceOutdate(filename, mlsiFile))
+            importedModule += file.filename
+            (sigs :+ extractSig(file.filename, file.moduleName),
+              isInterfaceOutdate(file.filename, s"${options.outputDir}/${file.interfaceFilename}"))
           }
         })
         val needRecomp = otherList.foldLeft(cycleRecomp)((nr, dp) => nr || {
@@ -167,39 +162,42 @@ class Driver(options: DriverOptions) {
           var newCtx: Ctx = Ctx.init
           val newExtrCtx: Opt[typer.ExtrCtx] = N
           val newVars: Map[Str, typer.SimpleType] = Map.empty
-          val newFilename = s"$path/$dp"
-          importedModule += newFilename
-          compile(newFilename, true)(newCtx, raise, newExtrCtx, newVars, stack :+ filename)
+          val newFilename = file.`import`(dp)
+          importedModule += newFilename.filename
+          compile(newFilename, true)(newCtx, raise, newExtrCtx, newVars, stack :+ file.filename)
         })
 
-        if (options.force || needRecomp || isInterfaceOutdate(filename, mlsiFile)) {
-          System.out.println(s"compiling $filename...")
-          def importModule(mlsiPath: String): Unit = {
-            val filename = s"${options.outputDir}/.temp/$mlsiPath"
-            val moduleName = moduleResolver.getModuleName(mlsiPath)
+        if (options.force || needRecomp || isInterfaceOutdate(file.filename, mlsiFile)) {
+          System.out.println(s"compiling ${file.filename}...")
+          def importModule(file: FileInfo): Unit = {
+            val filename = s"${options.outputDir}/${file.interfaceFilename}"
             parseAndRun(filename, {
               case (_, declarations, imports, _) => {
                 val depList = imports.map {
                   case Import(path) => path
                 }
-                depList.foreach(d => importModule(moduleResolver.getMLSI(d)))
+                depList.foreach(d => importModule(file.`import`(d)))
                 `type`(TypingUnit(declarations, Nil))
               }
             })
           }
 
-          otherList.foreach(d => importModule(moduleResolver.getMLSI(d)))
+          otherList.foreach(d => importModule(file.`import`(d)))
           def generateInterface(moduleName: Option[String], tu: TypingUnit) = {
             val exp = `type`(tu)
             packTopModule(moduleName, exp.showIn(ShowCtx.mk(exp :: Nil), 0))
           }
 
           val expStr = cycleSigs.foldLeft("")((s, tu) => s"$s${generateInterface(None, tu)}") +
-            generateInterface(Some(moduleName), TypingUnit(definitions, Nil))
-          val interfaces = otherList.map(s => Import(moduleResolver.getMLSI(s))).foldRight(expStr)((imp, itf) => s"$imp\n$itf")
+            generateInterface(Some(file.moduleName), TypingUnit(definitions, Nil))
+          val interfaces = otherList.map(s => Import(FileInfo.importPath(s))).foldRight(expStr)((imp, itf) => s"$imp\n$itf")
 
           writeFile(mlsiFile, interfaces)
-          generate(Pgrm(definitions), s"${options.outputDir}/$relatedPath/$moduleName.js", imports, exported || importedModule(filename))
+          file.jsFilename match {
+            case Some(filename) =>
+              generate(Pgrm(definitions), s"${options.outputDir}/$filename", file.moduleName, imports, exported || importedModule(file.filename))
+            case _ => ()
+          }
           true
         }
         else false
@@ -210,11 +208,11 @@ class Driver(options: DriverOptions) {
   private def generate(
     program: Pgrm,
     filename: String,
+    moduleName: String,
     imports: Ls[Import],
     exported: Boolean
   ): Unit = try {
     val backend = new JSCompilerBackend()
-    val moduleName = moduleResolver.getModuleName(filename)
     val lines = backend(program, moduleName, imports, exported)
     val code = lines.mkString("", "\n", "\n")
     writeFile(filename, code)

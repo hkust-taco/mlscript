@@ -1,4 +1,4 @@
-import "A.mlsi"
+import "./A.mlsi"
 declare module B() {
   fun foo: error
 }

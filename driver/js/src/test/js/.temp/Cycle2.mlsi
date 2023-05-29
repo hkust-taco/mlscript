@@ -1,4 +1,4 @@
-import "Cycle1.mlsi"
+import "./Cycle1.mlsi"
 declare module Cycle2() {
   fun g: (x: int,) -> int
   unit

@@ -1,4 +1,4 @@
-import "B.mlsi"
+import "./B.mlsi"
 declare module C() {
   let a: error
   let b: error

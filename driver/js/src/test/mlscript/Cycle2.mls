@@ -1,4 +1,4 @@
-import "Cycle1.mls"
+import "./Cycle1.mls"
 
 fun g(x: int): int
 fun g(x: int): int = Cycle1.f(x)

@@ -1,4 +1,4 @@
-import "tools/Inc.mls"
+import "./tools/Inc.mls"
 
 fun hello(x: int) = log(("hello!", Inc.inc(x)))
 

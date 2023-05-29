@@ -46,7 +46,7 @@ object DriverDiffTests {
 
   private def entry(entryModule: String, expectError: Boolean = false) =
     TestOption(
-      s"${mlscriptPath}${entryModule}.mls",
+      s"./${entryModule}.mls",
       s"${jsPath}${entryModule}.js",
       s"${outputPath}${entryModule}.check",
       expectError
