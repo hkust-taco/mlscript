@@ -1,7 +1,3 @@
-:NewParser
-:NewDefs
-:NoJS
-:AllowTypeErrors
 export declare module Variables {
   val URI: string
   val URI2: string
@@ -18,19 +14,3 @@ export declare module Variables {
     val bar: number
   }
 }
-//│ module Variables() {
-//│   module ABC() {
-//│     class DEF()
-//│   }
-//│   module DD() {
-//│     let bar: number
-//│     let foo: number
-//│   }
-//│   class FooBar()
-//│   let URI: string
-//│   let URI2: string
-//│   let bar: false
-//│   let d: DEF
-//│   let fb: FooBar
-//│   let foo: number
-//│ }

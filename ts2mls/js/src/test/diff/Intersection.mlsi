@@ -1,7 +1,3 @@
-:NewParser
-:NewDefs
-:NoJS
-:AllowTypeErrors
 export declare module Intersection {
   fun extend<T, U>(first: T, second: U): (T) & (U)
   fun foo<T, U>(x: (T) & (U)): unit
@@ -21,59 +17,3 @@ export declare module Intersection {
   class B {}
   fun inter(c: (A) & (B)): (A) & (B)
 }
-//│ ╔══[ERROR] type identifier not found: object
-//│ ║  l.8: 	  fun over(f: ((number) => string) & ((object) => string)): string
-//│ ╙──     	                                      ^^^^^^^^
-//│ ╔══[ERROR] type identifier not found: IA
-//│ ║  l.15: 	  fun iii(x: (IA) & (IB)): (IA) & (IB)
-//│ ╙──      	             ^^^^
-//│ ╔══[ERROR] type identifier not found: IB
-//│ ║  l.15: 	  fun iii(x: (IA) & (IB)): (IA) & (IB)
-//│ ╙──      	                    ^^^^
-//│ ╔══[ERROR] type identifier not found: IA
-//│ ║  l.15: 	  fun iii(x: (IA) & (IB)): (IA) & (IB)
-//│ ╙──      	                           ^^^^
-//│ ╔══[ERROR] type identifier not found: IB
-//│ ║  l.15: 	  fun iii(x: (IA) & (IB)): (IA) & (IB)
-//│ ╙──      	                                  ^^^^
-//│ ╔══[ERROR] type identifier not found: A
-//│ ║  l.22: 	  fun inter(c: (A) & (B)): (A) & (B)
-//│ ╙──      	               ^^^
-//│ ╔══[ERROR] type identifier not found: B
-//│ ║  l.22: 	  fun inter(c: (A) & (B)): (A) & (B)
-//│ ╙──      	                     ^^^
-//│ ╔══[ERROR] type identifier not found: A
-//│ ║  l.22: 	  fun inter(c: (A) & (B)): (A) & (B)
-//│ ╙──      	                           ^^^
-//│ ╔══[ERROR] type identifier not found: B
-//│ ║  l.22: 	  fun inter(c: (A) & (B)): (A) & (B)
-//│ ╙──      	                                 ^^^
-//│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.9: 	  trait IA {
-//│ ║       	  ^^^^^^^^^^
-//│ ║  l.10: 	    val x: number
-//│ ║        	^^^^^^^^^^^^^^^^^
-//│ ║  l.11: 	  }
-//│ ╙──      	^^^
-//│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.12: 	  trait IB {
-//│ ║        	  ^^^^^^^^^^
-//│ ║  l.13: 	    val y: number
-//│ ║        	^^^^^^^^^^^^^^^^^
-//│ ║  l.14: 	  }
-//│ ╙──      	^^^
-//│ module Intersection() {
-//│   class A()
-//│   class B()
-//│   trait IA()
-//│   trait IB()
-//│   fun arr: forall 'T. (a: MutArray['T],) -> MutArray['T]
-//│   fun extend: forall 'T0 'U. (first: 'T0, second: 'U,) -> ('T0 & 'U)
-//│   fun foo: (x: anything,) -> unit
-//│   fun iii: (x: error,) -> error
-//│   fun iiii: forall 'U0. (x: 'U0,) -> 'U0
-//│   fun inter: (c: error,) -> error
-//│   fun over: (f: (error | number) -> string,) -> string
-//│   fun tt: forall 'U1 'V 'T1. (x: ('U1 & 'V, 'V & 'T1,),) -> ('U1 & 'V, 'V & 'T1,)
-//│   fun uu: (x: anything,) -> nothing
-//│ }

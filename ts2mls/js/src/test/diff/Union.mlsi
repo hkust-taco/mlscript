@@ -1,7 +1,3 @@
-:NewParser
-:NewDefs
-:NoJS
-:AllowTypeErrors
 export declare module Union {
   fun getString(x: (((string) | (number)) | (false)) | (true)): string
   fun test(x: (false) | (true)): (string) | (number)
@@ -11,12 +7,3 @@ export declare module Union {
   fun typeVar<T, U>(x: (T) | (U)): (T) | (U)
   fun uuuu(x: (((string) | (number)) | (false)) | (true)): (((string) | (number)) | (false)) | (true)
 }
-//│ module Union() {
-//│   fun get: (arr: MutArray[out number | string],) -> unit
-//│   fun get2: (t: (number | string, string,),) -> string
-//│   fun getString: (x: false | number | string | true,) -> string
-//│   fun run: (f: number -> (number | string),) -> anything
-//│   fun test: (x: bool,) -> (number | string)
-//│   fun typeVar: forall 'T. (x: 'T,) -> 'T
-//│   fun uuuu: (x: false | number | string | true,) -> (false | number | string | true)
-//│ }

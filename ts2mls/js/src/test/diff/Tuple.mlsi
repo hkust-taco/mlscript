@@ -1,7 +1,3 @@
-:NewParser
-:NewDefs
-:NoJS
-:AllowTypeErrors
 export declare module Tuple {
   fun key(x: (string, (false) | (true), )): string
   fun value(x: (string, (false) | (true), )): (false) | (true)
@@ -20,33 +16,3 @@ export declare module Tuple {
   class B {}
   fun swap(x: (A, B, )): (B, A, )
 }
-//│ ╔══[ERROR] type identifier not found: A
-//│ ║  l.21: 	  fun swap(x: (A, B, )): (B, A, )
-//│ ╙──      	               ^
-//│ ╔══[ERROR] type identifier not found: B
-//│ ║  l.21: 	  fun swap(x: (A, B, )): (B, A, )
-//│ ╙──      	                  ^
-//│ ╔══[ERROR] type identifier not found: B
-//│ ║  l.21: 	  fun swap(x: (A, B, )): (B, A, )
-//│ ╙──      	                          ^
-//│ ╔══[ERROR] type identifier not found: A
-//│ ║  l.21: 	  fun swap(x: (A, B, )): (B, A, )
-//│ ╙──      	                             ^
-//│ module Tuple() {
-//│   class A() {
-//│     let x: number
-//│   }
-//│   class B()
-//│   fun conv: (x: {y: number},) -> ({y: number}, {z: string},)
-//│   fun ex: forall 'T 'U. (x: 'T, y: 'U,) -> ('T, 'U, 'T & 'U,)
-//│   fun foo: (x: anything,) -> unit
-//│   fun key: (x: (string, bool,),) -> string
-//│   fun s: (flag: bool,) -> (number | string, false | number | true,)
-//│   fun s2: (t: (bool, number | string,),) -> (number | string)
-//│   fun swap: (x: (error, error,),) -> (error, error,)
-//│   fun third: (x: (number, number, number,),) -> number
-//│   fun tupleIt: (x: string,) -> unit -> string
-//│   fun twoFunctions: (ff: (number -> number, number -> number,), x: number,) -> number
-//│   fun value: (x: (string, bool,),) -> bool
-//│   fun vec2: (x: number, y: number,) -> (number, number,)
-//│ }

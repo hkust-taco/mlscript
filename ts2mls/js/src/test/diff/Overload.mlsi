@@ -1,7 +1,3 @@
-:NewParser
-:NewDefs
-:NoJS
-:AllowTypeErrors
 export declare module Overload {
   fun f: ((number) => string) & ((string) => string)
   class M {
@@ -26,48 +22,3 @@ export declare module Overload {
   }
   fun baz(): anything /* warning: the overload of function baz is not supported yet. */
 }
-//│ ╔══[ERROR] type identifier not found: object
-//│ ║  l.12: 	  fun g0: ((MutArray<string>) => string) & ((MutArray<object>) => string)
-//│ ╙──      	                                                      ^^^^^^
-//│ ╔══[ERROR] type identifier not found: object
-//│ ║  l.13: 	  fun db: ((number) => MutArray<number>) & ((object) => MutArray<number>)
-//│ ╙──      	                                            ^^^^^^^^
-//│ ╔══[ERROR] type identifier not found: M
-//│ ║  l.15: 	  fun id: ((M) => unit) & ((N) => unit)
-//│ ╙──      	           ^^^
-//│ ╔══[ERROR] type identifier not found: N
-//│ ║  l.15: 	  fun id: ((M) => unit) & ((N) => unit)
-//│ ╙──      	                           ^^^
-//│ ╔══[ERROR] type identifier not found: object
-//│ ║  l.19: 	  fun u: ((((number) | (false)) | (true)) => string) & ((object) => string)
-//│ ╙──      	                                                        ^^^^^^^^
-//│ ╔══[ERROR] Member f is declared but not defined
-//│ ║  l.22: 	    fun f<T>(x: T, n: anything): string /* warning: the overload of function f is not supported yet. */
-//│ ╙──      	        ^
-//│ ╔══[ERROR] Member F is declared but not defined
-//│ ║  l.25: 	    fun F<T>(x: T): anything /* warning: the overload of function F is not supported yet. */
-//│ ╙──      	        ^
-//│ module Overload() {
-//│   class M() {
-//│     let foo: (number | string) -> string
-//│   }
-//│   class N()
-//│   class WWW() {
-//│     fun F: (x: anything,) -> anything
-//│   }
-//│   module XX() {
-//│     fun f: (x: anything, n: anything,) -> string
-//│   }
-//│   fun app: (string -> unit) -> (number | string) -> unit
-//│   fun baz: () -> anything
-//│   fun create: (false | number | true) -> unit -> bool
-//│   fun db: (error | number) -> MutArray[number]
-//│   fun doSome: (x: anything,) -> unit
-//│   fun f: (number | string) -> string
-//│   fun g0: MutArray[out error | string] -> string
-//│   fun id: error -> unit
-//│   fun op: number -> (false | number | true | undefined) -> unit
-//│   fun swap: (number | string, number | string,) -> (number, string,)
-//│   fun tst: {z: false | number | true} -> {y: string}
-//│   fun u: (error | false | number | true) -> string
-//│ }

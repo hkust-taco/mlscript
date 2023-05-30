@@ -1,7 +1,3 @@
-:NewParser
-:NewDefs
-:NoJS
-:AllowTypeErrors
 export declare module ClassMember {
   class Student {
     constructor(s: string, age: number)
@@ -26,50 +22,3 @@ export declare module ClassMember {
     fun ttt2(x: T): T
   }
 }
-//│ ╔══[ERROR] identifier not found: constructor
-//│ ║  l.7: 	    constructor(s: string, age: number)
-//│ ╙──     	    ^^^^^^^^^^^
-//│ ╔══[ERROR] Member isFriend is declared but not defined
-//│ ║  l.9: 	    fun isFriend(other: Student): (false) | (true)
-//│ ╙──     	        ^^^^^^^^
-//│ ╔══[ERROR] Member addScore is declared but not defined
-//│ ║  l.10: 	    fun addScore(sub: string, score: number): unit
-//│ ╙──      	        ^^^^^^^^
-//│ ╔══[ERROR] Member getID is declared but not defined
-//│ ║  l.11: 	    fun getID(): number
-//│ ╙──      	        ^^^^^
-//│ ╔══[ERROR] Member bar is declared but not defined
-//│ ║  l.14: 	    fun bar(x: T): unit
-//│ ╙──      	        ^^^
-//│ ╔══[ERROR] Member inc is declared but not defined
-//│ ║  l.17: 	    fun inc(x: number): number
-//│ ╙──      	        ^^^
-//│ ╔══[ERROR] Member ttt is declared but not defined
-//│ ║  l.25: 	    fun ttt(x: T): T
-//│ ╙──      	        ^^^
-//│ ╔══[ERROR] Member ttt2 is declared but not defined
-//│ ║  l.26: 	    fun ttt2(x: T): T
-//│ ╙──      	        ^^^^
-//│ module ClassMember() {
-//│   class EZ() {
-//│     fun inc: (x: number,) -> number
-//│   }
-//│   class Foo[T]() {
-//│     fun bar: (x: T,) -> unit
-//│   }
-//│   class Outer() {
-//│     class Inner() {
-//│       let a: number
-//│     }
-//│   }
-//│   class Student() {
-//│     fun addScore: (sub: string, score: number,) -> unit
-//│     fun getID: () -> number
-//│     fun isFriend: (other: Student,) -> bool
-//│     let name: string
-//│   }
-//│   class TTT[T]() {
-//│     fun ttt: (x: T,) -> T
-//│     fun ttt2: (x: T,) -> T
-//│   }
-//│ }

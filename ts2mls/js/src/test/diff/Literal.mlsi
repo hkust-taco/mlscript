@@ -1,14 +1,5 @@
-:NewParser
-:NewDefs
-:NoJS
-:AllowTypeErrors
 export declare module Literal {
   val a: {a: "A",b: "B",}
   val num: {y: 114,}
   fun foo(x: {xx: "X",}): {yy: "Y",}
 }
-//│ module Literal() {
-//│   let a: {a: "A", b: "B"}
-//│   fun foo: (x: {xx: "X"},) -> {yy: "Y"}
-//│   let num: {y: 114}
-//│ }

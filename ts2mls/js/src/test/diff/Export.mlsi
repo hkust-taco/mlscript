@@ -1,7 +1,3 @@
-:NewParser
-:NewDefs
-:NoJS
-:AllowTypeErrors
 import "./Dependency.mlsi"
 export declare module Export {
   export module Foo {
@@ -20,43 +16,3 @@ export declare module Export {
   export val G = B
   export val H = Dependency
 }
-//│ ╔══[ERROR] type identifier not found: IBar
-//│ ║  l.8: 	    fun Baz(aa: string): IBar
-//│ ╙──     	                         ^^^^
-//│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.9: 	    trait IBar {
-//│ ║       	    ^^^^^^^^^^^^
-//│ ║  l.10: 	      val a: string
-//│ ║        	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.11: 	    }
-//│ ╙──      	^^^^^
-//│ ╔══[ERROR] Cannot inherit from a type alias
-//│ ║  l.12: 	    export class Bar extends IBar {
-//│ ╙──      	                             ^^^^
-//│ ╔══[ERROR] trait IBar cannot be used as a type
-//│ ║  l.15: 	    export val baz: IBar
-//│ ╙──      	                    ^^^^
-//│ ╔══[ERROR] Member Baz is declared but not defined
-//│ ║  l.8: 	    fun Baz(aa: string): IBar
-//│ ╙──     	        ^^^
-//│ ╔══[ERROR] identifier not found: B
-//│ ║  l.20: 	  export val G = B
-//│ ╙──      	                 ^
-//│ ╔══[ERROR] identifier not found: Dependency
-//│ ║  l.21: 	  export val H = Dependency
-//│ ╙──      	                 ^^^^^^^^^^
-//│ module Export() {
-//│   class E()
-//│   let F: () -> E
-//│   module Foo() {
-//│     class Bar() {
-//│       let a: string
-//│     }
-//│     fun Baz: (aa: string,) -> error
-//│     trait IBar()
-//│     let baz: IBar
-//│   }
-//│   let G: error
-//│   let H: error
-//│   fun default: (x: anything,) -> anything
-//│ }

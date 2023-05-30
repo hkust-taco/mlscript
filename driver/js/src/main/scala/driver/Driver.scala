@@ -38,6 +38,7 @@ class Driver(options: DriverOptions) {
   // Return true if success
   def execute: Boolean =
     try {
+      Driver.totalErrors = 0
       implicit var ctx: Ctx = Ctx.init
       implicit val raise: Raise = report
       implicit val extrCtx: Opt[typer.ExtrCtx] = N
@@ -132,7 +133,8 @@ class Driver(options: DriverOptions) {
     vars: Map[Str, typer.SimpleType],
     stack: List[String]
   ): Boolean = {
-    val mlsiFile = normalize(s"${options.outputDir}/${file.interfaceFilename}")
+    val mlsiFile = normalize(s"${options.path}/${file.interfaceFilename}")
+    if (file.filename.endsWith(".ts")) {} // TODO: invoke ts2mls
     parseAndRun(file.filename, {
       case (definitions, _, imports, _) => {
         val depList = imports.map {
@@ -151,7 +153,7 @@ class Driver(options: DriverOptions) {
           case (sigs, recomp) => {
             importedModule += file.filename
             (sigs :+ extractSig(file.filename, file.moduleName),
-              isInterfaceOutdate(file.filename, s"${options.outputDir}/${file.interfaceFilename}"))
+              isInterfaceOutdate(file.filename, s"${options.path}/${file.interfaceFilename}"))
           }
         })
         val needRecomp = otherList.foldLeft(cycleRecomp)((nr, dp) => nr || {
@@ -170,7 +172,7 @@ class Driver(options: DriverOptions) {
         if (options.force || needRecomp || isInterfaceOutdate(file.filename, mlsiFile)) {
           System.out.println(s"compiling ${file.filename}...")
           def importModule(file: FileInfo): Unit = {
-            val filename = s"${options.outputDir}/${file.interfaceFilename}"
+            val filename = s"${options.path}/${file.interfaceFilename}"
             parseAndRun(filename, {
               case (_, declarations, imports, _) => {
                 val depList = imports.map {
@@ -183,20 +185,22 @@ class Driver(options: DriverOptions) {
           }
 
           otherList.foreach(d => importModule(file.`import`(d)))
-          def generateInterface(moduleName: Option[String], tu: TypingUnit) = {
-            val exp = `type`(tu)
-            packTopModule(moduleName, exp.showIn(ShowCtx.mk(exp :: Nil), 0))
-          }
+          if (!file.filename.endsWith(".mlsi")) {
+            def generateInterface(moduleName: Option[String], tu: TypingUnit) = {
+              val exp = `type`(tu)
+              packTopModule(moduleName, exp.showIn(ShowCtx.mk(exp :: Nil), 0))
+            }
 
-          val expStr = cycleSigs.foldLeft("")((s, tu) => s"$s${generateInterface(None, tu)}") +
-            generateInterface(Some(file.moduleName), TypingUnit(definitions, Nil))
-          val interfaces = otherList.map(s => Import(FileInfo.importPath(s))).foldRight(expStr)((imp, itf) => s"$imp\n$itf")
+            val expStr = cycleSigs.foldLeft("")((s, tu) => s"$s${generateInterface(None, tu)}") +
+              generateInterface(Some(file.moduleName), TypingUnit(definitions, Nil))
+            val interfaces = otherList.map(s => Import(FileInfo.importPath(s))).foldRight(expStr)((imp, itf) => s"$imp\n$itf")
 
-          writeFile(mlsiFile, interfaces)
-          file.jsFilename match {
-            case Some(filename) =>
-              generate(Pgrm(definitions), s"${options.outputDir}/$filename", file.moduleName, imports, exported || importedModule(file.filename))
-            case _ => ()
+            writeFile(mlsiFile, interfaces)
+            file.jsFilename match {
+              case Some(filename) =>
+                generate(Pgrm(definitions), s"${options.outputDir}/$filename", file.moduleName, imports, exported || importedModule(file.filename))
+              case _ => ()
+            }
           }
           true
         }

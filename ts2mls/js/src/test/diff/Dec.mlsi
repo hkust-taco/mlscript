@@ -1,7 +1,3 @@
-:NewParser
-:NewDefs
-:NoJS
-:AllowTypeErrors
 export declare module Dec {
   fun getName(id: (string) | (number)): string
   fun render(callback: (unit => unit) | (undefined)): string
@@ -15,25 +11,3 @@ export declare module Dec {
   module OOO {
   }
 }
-//│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.8: 	  trait Get {
-//│ ║       	  ^^^^^^^^^^^
-//│ ║  l.9: 	    val __call: Unsupported<"(id: string): string", "ts2mls/js/src/test/typescript/Dec.d.ts", 4, 22>
-//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.10: 	  }
-//│ ╙──      	^^^
-//│ ╔══[ERROR] identifier not found: constructor
-//│ ║  l.12: 	    constructor(name: string, age: number)
-//│ ╙──      	    ^^^^^^^^^^^
-//│ ╔══[ERROR] Member getName is declared but not defined
-//│ ║  l.13: 	    fun getName(id: number): string
-//│ ╙──      	        ^^^^^^^
-//│ module Dec() {
-//│   trait Get()
-//│   module OOO()
-//│   class Person() {
-//│     fun getName: (id: number,) -> string
-//│   }
-//│   fun getName: (id: number | string,) -> string
-//│   fun render: (callback: unit -> unit | undefined,) -> string
-//│ }

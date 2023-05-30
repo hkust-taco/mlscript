@@ -1,7 +1,3 @@
-:NewParser
-:NewDefs
-:NoJS
-:AllowTypeErrors
 export declare module BasicFunctions {
   fun hello(): unit
   fun add(x: number, y: number): number
@@ -28,49 +24,3 @@ export declare module BasicFunctions {
   fun inn2(b: Barrrrrrrrr): unit
   fun out2(): Barrrrrrrrr
 }
-//│ ╔══[ERROR] type identifier not found: object
-//│ ║  l.17: 	  fun create(): object
-//│ ╙──      	                ^^^^^^
-//│ ╔══[ERROR] type identifier not found: Foooooo
-//│ ║  l.23: 	  fun inn(f: Foooooo): unit
-//│ ╙──      	             ^^^^^^^
-//│ ╔══[ERROR] type identifier not found: Foooooo
-//│ ║  l.24: 	  fun out1(): Foooooo
-//│ ╙──      	              ^^^^^^^
-//│ ╔══[ERROR] type identifier not found: Barrrrrrrrr
-//│ ║  l.28: 	  fun inn2(b: Barrrrrrrrr): unit
-//│ ╙──      	              ^^^^^^^^^^^
-//│ ╔══[ERROR] type identifier not found: Barrrrrrrrr
-//│ ║  l.29: 	  fun out2(): Barrrrrrrrr
-//│ ╙──      	              ^^^^^^^^^^^
-//│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.25: 	  trait Barrrrrrrrr {
-//│ ║        	  ^^^^^^^^^^^^^^^^^^^
-//│ ║  l.26: 	    val rrrrrrr: number
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.27: 	  }
-//│ ╙──      	^^^
-//│ module BasicFunctions() {
-//│   trait Barrrrrrrrr()
-//│   class Foooooo() {
-//│     let ooooooo: number
-//│   }
-//│   fun add: (x: number, y: number,) -> number
-//│   fun bar: () -> anything
-//│   fun create: () -> error
-//│   fun fail: () -> nothing
-//│   fun foo: () -> number
-//│   fun hello: () -> unit
-//│   fun id: (x: anything,) -> anything
-//│   fun inn: (f: error,) -> unit
-//│   fun inn2: (b: error,) -> unit
-//│   fun isnull: (x: anything,) -> bool
-//│   fun nu: (n: null,) -> null
-//│   fun odd: (x: number,) -> bool
-//│   fun out1: () -> error
-//│   fun out2: () -> error
-//│   fun pa: (x: number,) -> number
-//│   fun sub: (x: number, y: number,) -> number
-//│   fun un: (n: undefined,) -> undefined
-//│   fun wtf: (x: anything,) -> unit
-//│ }

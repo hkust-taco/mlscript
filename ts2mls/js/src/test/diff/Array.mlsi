@@ -1,7 +1,3 @@
-:NewParser
-:NewDefs
-:NoJS
-:AllowTypeErrors
 export declare module Array {
   fun first(x: MutArray<string>): string
   fun getZero3(): MutArray<number>
@@ -23,53 +19,3 @@ export declare module Array {
   fun ta(ts: MutArray<Temp<(false) | (true)>>): MutArray<Temp<(false) | (true)>>
   fun tat<T>(ts: MutArray<Temp<T>>): MutArray<Temp<T>>
 }
-//│ ╔══[ERROR] type identifier not found: C
-//│ ║  l.14: 	  fun doCs(c: MutArray<C>): MutArray<C>
-//│ ╙──      	                       ^
-//│ ╔══[ERROR] type identifier not found: C
-//│ ║  l.14: 	  fun doCs(c: MutArray<C>): MutArray<C>
-//│ ╙──      	                                     ^
-//│ ╔══[ERROR] type identifier not found: I
-//│ ║  l.15: 	  fun doIs(i: MutArray<I>): MutArray<I>
-//│ ╙──      	                       ^
-//│ ╔══[ERROR] type identifier not found: I
-//│ ║  l.15: 	  fun doIs(i: MutArray<I>): MutArray<I>
-//│ ╙──      	                                     ^
-//│ ╔══[ERROR] type identifier not found: Temp
-//│ ║  l.23: 	  fun ta(ts: MutArray<Temp<(false) | (true)>>): MutArray<Temp<(false) | (true)>>
-//│ ╙──      	                      ^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] type identifier not found: Temp
-//│ ║  l.23: 	  fun ta(ts: MutArray<Temp<(false) | (true)>>): MutArray<Temp<(false) | (true)>>
-//│ ╙──      	                                                         ^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] type identifier not found: Temp
-//│ ║  l.24: 	  fun tat<T>(ts: MutArray<Temp<T>>): MutArray<Temp<T>>
-//│ ╙──      	                          ^^^^^^
-//│ ╔══[ERROR] type identifier not found: Temp
-//│ ║  l.24: 	  fun tat<T>(ts: MutArray<Temp<T>>): MutArray<Temp<T>>
-//│ ╙──      	                                              ^^^^^^
-//│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.11: 	  trait I {
-//│ ║        	  ^^^^^^^^^
-//│ ║  l.12: 	    val i: number
-//│ ║        	^^^^^^^^^^^^^^^^^
-//│ ║  l.13: 	  }
-//│ ╙──      	^^^
-//│ module Array() {
-//│   class C()
-//│   trait I()
-//│   class Temp[T]() {
-//│     let x: T
-//│   }
-//│   fun clean: (x: MutArray[(string, number,)],) -> MutArray[(string, number,)]
-//│   fun doCs: (c: MutArray[error],) -> MutArray[error]
-//│   fun doEs: (e: MutArray[int],) -> MutArray[int]
-//│   fun doIs: (i: MutArray[error],) -> MutArray[error]
-//│   fun first: (x: MutArray[string],) -> string
-//│   fun first2: (fs: MutArray[number -> number],) -> number -> number
-//│   fun getZero3: () -> MutArray[number]
-//│   fun inter: forall 'U. (x: MutArray['U],) -> MutArray['U]
-//│   fun ta: (ts: MutArray[error],) -> MutArray[error]
-//│   fun tat: (ts: MutArray[error],) -> MutArray[error]
-//│   fun translate: forall 'U0 'T. (x: MutArray['T],) -> MutArray['U0]
-//│   fun uu: (x: MutArray[false | number | true],) -> MutArray[false | number | true]
-//│ }

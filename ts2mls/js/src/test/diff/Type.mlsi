@@ -1,7 +1,3 @@
-:NewParser
-:NewDefs
-:NoJS
-:AllowTypeErrors
 export declare module Type {
   trait None {
     val _tag: "None"
@@ -32,71 +28,3 @@ export declare module Type {
   val none: {_tag: "None",}
   fun some<A>(a: A): (None) | (Some<A>)
 }
-//│ ╔══[ERROR] type identifier not found: None
-//│ ║  l.33: 	  fun some<A>(a: A): (None) | (Some<A>)
-//│ ╙──      	                     ^^^^^^
-//│ ╔══[ERROR] type identifier not found: Some
-//│ ║  l.33: 	  fun some<A>(a: A): (None) | (Some<A>)
-//│ ╙──      	                              ^^^^^^^^^
-//│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.6: 	  trait None {
-//│ ║       	  ^^^^^^^^^^^^
-//│ ║  l.7: 	    val _tag: "None"
-//│ ║       	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.8: 	  }
-//│ ╙──     	^^^
-//│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.9: 	  trait Some<A> {
-//│ ║       	  ^^^^^^^^^^^^^^^
-//│ ║  l.10: 	    val _tag: "Some"
-//│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.11: 	    val value: A
-//│ ║        	^^^^^^^^^^^^^^^^
-//│ ║  l.12: 	  }
-//│ ╙──      	^^^
-//│ ╔══[ERROR] trait None cannot be used as a type
-//│ ║  l.13: 	  type Option<A> = (None) | (Some<A>)
-//│ ╙──      	                   ^^^^^^
-//│ ╔══[ERROR] trait Some cannot be used as a type
-//│ ║  l.13: 	  type Option<A> = (None) | (Some<A>)
-//│ ╙──      	                            ^^^^^^^^^
-//│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.16: 	  trait I1 {}
-//│ ╙──      	  ^^^^^^^^^^^
-//│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.17: 	  trait I2 {}
-//│ ╙──      	  ^^^^^^^^^^^
-//│ ╔══[ERROR] trait I1 cannot be used as a type
-//│ ║  l.18: 	  type I3 = (I1) & (I2)
-//│ ╙──      	            ^^^^
-//│ ╔══[ERROR] trait I2 cannot be used as a type
-//│ ║  l.18: 	  type I3 = (I1) & (I2)
-//│ ╙──      	                   ^^^^
-//│ ╔══[ERROR] Member fb is declared but not defined
-//│ ║  l.25: 	    fun fb(b: string): unit
-//│ ╙──      	        ^^
-//│ module Type() {
-//│   class ABC()
-//│   type DEF = ABC
-//│   type Func = number -> number
-//│   type G = ABC
-//│   trait I1()
-//│   trait I2()
-//│   type I3 = I1 & I2
-//│   module NA() {
-//│     type B = string
-//│     fun fb: (b: string,) -> unit
-//│   }
-//│   class NC() {
-//│     let b: string
-//│   }
-//│   trait None()
-//│   type Option[A] = None | Some[A]
-//│   type S2 = (string, string,)
-//│   trait Some[A]()
-//│   type SomeInterface = {x: number, y: number}
-//│   type StringArray = Array[string]
-//│   type TP[A, B, C] = (A, B, C,)
-//│   let none: {_tag: "None"}
-//│   fun some: (a: anything,) -> error
-//│ }

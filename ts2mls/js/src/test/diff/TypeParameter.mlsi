@@ -1,7 +1,3 @@
-:NewParser
-:NewDefs
-:NoJS
-:AllowTypeErrors
 export declare module TypeParameter {
   fun inc<T>(x: T): number
   class CC<T> {
@@ -29,69 +25,3 @@ export declare module TypeParameter {
   fun fff(p: FFF<string>, s: string): unit
   fun getFFF(): FFF<number>
 }
-//│ ╔══[ERROR] type identifier not found: Printer
-//│ ║  l.14: 	  fun setStringPrinter(p: Printer<string>): unit
-//│ ╙──      	                          ^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] type identifier not found: Printer
-//│ ║  l.15: 	  fun getStringPrinter(): Printer<string>
-//│ ╙──      	                          ^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] type identifier not found: Printer
-//│ ║  l.16: 	  fun foo<T>(p: Printer<T>, x: T): T
-//│ ╙──      	                ^^^^^^^^^^
-//│ ╔══[ERROR] type identifier not found: Printer
-//│ ║  l.17: 	  fun foo2<T>(p: Printer<T>, x: T): T
-//│ ╙──      	                 ^^^^^^^^^^
-//│ ╔══[ERROR] type identifier not found: FFF
-//│ ║  l.29: 	  fun fff(p: FFF<string>, s: string): unit
-//│ ╙──      	             ^^^^^^^^^^^
-//│ ╔══[ERROR] type identifier not found: FFF
-//│ ║  l.30: 	  fun getFFF(): FFF<number>
-//│ ╙──      	                ^^^^^^^^^^^
-//│ ╔══[ERROR] Member print is declared but not defined
-//│ ║  l.8: 	    fun print(s: T): unit
-//│ ╙──     	        ^^^^^
-//│ ╔══[ERROR] Member print is declared but not defined
-//│ ║  l.12: 	    fun print(t: T): unit
-//│ ╙──      	        ^^^^^
-//│ ╔══[ERROR] Member GG is declared but not defined
-//│ ║  l.20: 	    fun GG<U>(y: U): T
-//│ ╙──      	        ^^
-//│ ╔══[ERROR] traits are not yet supported
-//│ ║  l.22: 	  trait I<T> {
-//│ ║        	  ^^^^^^^^^^^^
-//│ ║  l.23: 	    val x: T
-//│ ║        	^^^^^^^^^^^^
-//│ ║  l.24: 	    fun GG<U>(y: U): T
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.25: 	  }
-//│ ╙──      	^^^
-//│ ╔══[ERROR] Member GG is declared but not defined
-//│ ║  l.24: 	    fun GG<U>(y: U): T
-//│ ╙──      	        ^^
-//│ ╔══[ERROR] Member fff is declared but not defined
-//│ ║  l.27: 	    fun fff(x: T): unit
-//│ ╙──      	        ^^^
-//│ module TypeParameter() {
-//│   class CC[T]() {
-//│     fun print: (s: T,) -> unit
-//│   }
-//│   class F[T]() {
-//│     fun GG: (y: anything,) -> T
-//│     let x: T
-//│   }
-//│   class FFF[T]() {
-//│     fun fff: (x: T,) -> unit
-//│   }
-//│   trait I[T]()
-//│   class Printer[T]() {
-//│     fun print: (t: T,) -> unit
-//│   }
-//│   fun con: (t: anything,) -> nothing
-//│   fun fff: (p: error, s: string,) -> unit
-//│   fun foo: forall 'T. (p: error, x: 'T,) -> 'T
-//│   fun foo2: forall 'T0. (p: error, x: 'T0,) -> 'T0
-//│   fun getFFF: () -> error
-//│   fun getStringPrinter: () -> error
-//│   fun inc: (x: anything,) -> number
-//│   fun setStringPrinter: (p: error,) -> unit
-//│ }
