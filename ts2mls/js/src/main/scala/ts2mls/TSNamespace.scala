@@ -13,6 +13,11 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
   // easier to check the output one by one
   private val order = ListBuffer.empty[Either[String, String]]
 
+  override def toString(): String = parent match {
+    case Some(parent) if !parent.toString().isEmpty() => s"${parent.toString()}.$name"
+    case _ => name
+  }
+
   def derive(name: String, exported: Boolean): TSNamespace =
     if (subSpace.contains(name)) subSpace(name)._1 // if the namespace has appeared in another file, just return it
     else {

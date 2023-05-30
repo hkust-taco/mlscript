@@ -36,7 +36,7 @@ export declare module Heritage {
     export class ROTK {
       val wu: string
     }
-    export class Y extends Five.ROTK {}
+    export class Y extends ROTK {}
   }
   class Y extends Five.ROTK {}
 }

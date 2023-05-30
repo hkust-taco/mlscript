@@ -90,19 +90,26 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
     }
   }
 
-  private def getSubstitutionArguments[T <: TSAny](args: TSArray[T]): List[TSType] =
+  private def getSubstitutionArguments[T <: TSAny](args: TSArray[T])(implicit ns: TSNamespace): List[TSType] =
     args.foldLeft(List[TSType]())((lst, arg) => arg match {
       case token: TSTokenObject => lst :+ getObjectType(token.typeNode)
       case tp: TSTypeObject => lst :+ getObjectType(tp)
     })
 
-  private def getSymbolFullname(sym: TSSymbolObject): String =
+  private def getSymbolFullname(sym: TSSymbolObject)(implicit ns: TSNamespace): String =
     if (!sym.parent.isUndefined && sym.parent.declaration.isSourceFile)
       importList.resolveTypeAlias(sym.parent.declaration.symbol.escapedName.replaceAll("\"", ""), sym.escapedName)
-    else if (sym.parent.isUndefined || !sym.parent.declaration.isNamespace) sym.escapedName
-    else s"${getSymbolFullname(sym.parent)}.${sym.escapedName}"
+    else if (sym.parent.isUndefined || !sym.parent.declaration.isNamespace)
+      sym.escapedName
+    else {
+      def simplify(symName: String, nsName: String): String =
+        if (symName.startsWith(nsName + ".")) symName.substring(nsName.length() + 1)
+        else if (nsName.lastIndexOf('.') > -1) simplify(symName, nsName.substring(0, nsName.lastIndexOf('.')))
+        else symName
+      simplify(s"${getSymbolFullname(sym.parent)}.${sym.escapedName}", ns.toString())
+    }
 
-  private def getObjectType(obj: TSTypeObject): TSType =
+  private def getObjectType(obj: TSTypeObject)(implicit ns: TSNamespace): TSType =
     if (obj.isMapped) lineHelper.getPos(obj.pos) match {
         case (line, column) => TSUnsupportedType(obj.toString(), obj.filename, line, column)
       }
@@ -123,7 +130,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
     else TSPrimitiveType(obj.intrinsicName)
 
   // the function `getMemberType` can't process function/tuple type alias correctly
-  private def getTypeAlias(tn: TSNodeObject): TSType =
+  private def getTypeAlias(tn: TSNodeObject)(implicit ns: TSNamespace): TSType =
     if (tn.isFunctionLike) getFunctionType(tn)
     else if (tn.isTupleTypeNode) TSTupleType(getTupleElements(tn.typeNode.typeArguments))
     else getObjectType(tn.typeNode) match {
@@ -134,17 +141,17 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
     }
 
   // parse string/numeric literal types. we need to add quotes if it is a string literal
-  private def getLiteralType(tp: TSNodeObject) =
+  private def getLiteralType(tp: TSNodeObject)(implicit ns: TSNamespace) =
     TSLiteralType(tp.literal.text, tp.literal.isStringLiteral)
 
   // parse object literal types
-  private def getObjectLiteralMembers(props: TSNodeArray) =
+  private def getObjectLiteralMembers(props: TSNodeArray)(implicit ns: TSNamespace) =
     props.foldLeft(Map[String, TSMemberType]())((mp, p) => {
       mp ++ Map(p.name.escapedText -> TSMemberType(TSLiteralType(p.initToken.text, p.initToken.isStringLiteral)))
     })
 
   // get the type of variables in classes/named interfaces/anonymous interfaces
-  private def getMemberType(node: TSNodeObject): TSType = {
+  private def getMemberType(node: TSNodeObject)(implicit ns: TSNamespace): TSType = {
     val res: TSType =
       if (node.isIndexSignature || node.isCallSignature || node.isConstructSignature)
         lineHelper.getPos(node.pos) match {
@@ -158,13 +165,13 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
     else res
   }
 
-  private def getTypeParameters(node: TSNodeObject): List[TSTypeParameter] =
+  private def getTypeParameters(node: TSNodeObject)(implicit ns: TSNamespace): List[TSTypeParameter] =
     node.typeParameters.foldLeft(List[TSTypeParameter]())((lst, tp) =>
       if (tp.constraint.isUndefined) lst :+ TSTypeParameter(tp.symbol.escapedName, None)
       else lst :+ TSTypeParameter(tp.symbol.escapedName, Some(getObjectType(tp.constraint.typeNode)))
     )
 
-  private def getFunctionType(node: TSNodeObject): TSFunctionType = {
+  private def getFunctionType(node: TSNodeObject)(implicit ns: TSNamespace): TSFunctionType = {
     val pList = node.parameters.foldLeft(List[TSParameterType]())((lst, p) => (
       // in typescript, you can use `this` to explicitly specifies the callee
       // but it never appears in the final javascript file
@@ -176,22 +183,22 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
     TSFunctionType(pList, getObjectType(node.returnType), getTypeParameters(node))
   }
 
-  private def getStructuralType(types: TSTypeArray, isUnion: Boolean): TSType =
+  private def getStructuralType(types: TSTypeArray, isUnion: Boolean)(implicit ns: TSNamespace): TSType =
     types.foldLeft[Option[TSType]](None)((prev, cur) => prev match {
       case None => Some(getObjectType(cur))
       case Some(p) =>
         if (isUnion) Some(TSUnionType(p, getObjectType(cur))) else Some(TSIntersectionType(p, getObjectType(cur)))
     }).get
 
-  private def getTupleElements(elements: TSTypeArray): List[TSType] =
+  private def getTupleElements(elements: TSTypeArray)(implicit ns: TSNamespace): List[TSType] =
     elements.foldLeft(List[TSType]())((lst, ele) => lst :+ getObjectType(ele))
 
-  private def getHeritageList(node: TSNodeObject): List[TSType] =
+  private def getHeritageList(node: TSNodeObject)(implicit ns: TSNamespace): List[TSType] =
     node.heritageClauses.foldLeftIndexed(List[TSType]())((lst, h, index) =>
       lst :+ getObjectType(h.types.get(index).typeNode)
     )
 
-  private def addMember(mem: TSType, node: TSNodeObject, name: String, others: Map[String, TSMemberType]): Map[String, TSMemberType] = mem match {
+  private def addMember(mem: TSType, node: TSNodeObject, name: String, others: Map[String, TSMemberType])(implicit ns: TSNamespace): Map[String, TSMemberType] = mem match {
     case func: TSFunctionType => {
       if (!others.contains(name)) others ++ Map(name -> TSMemberType(func, node.modifier))
       else { // deal with functions overloading
@@ -214,7 +221,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
     case _ => others ++ Map(name -> TSMemberType(mem, node.modifier))
   }
 
-  private def getClassMembersType(list: TSNodeArray, requireStatic: Boolean): Map[String, TSMemberType] =
+  private def getClassMembersType(list: TSNodeArray, requireStatic: Boolean)(implicit ns: TSNamespace): Map[String, TSMemberType] =
     list.foldLeft(Map[String, TSMemberType]())((mp, p) => {
       val name = p.symbol.escapedName
 
@@ -227,7 +234,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
       else mp
     })
 
-  private def getConstructorList(members: TSNodeArray): List[TSParameterType] =
+  private def getConstructorList(members: TSNodeArray)(implicit ns: TSNamespace): List[TSParameterType] =
     members.foldLeft(List[TSParameterType]())((lst, mem) => {
       val name = mem.symbol.escapedName
 
@@ -236,14 +243,14 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
         res :+ TSParameterType(p.symbol.escapedName, getMemberType(p)))
     })
 
-  private def getInterfacePropertiesType(list: TSNodeArray): Map[String, TSMemberType] =
+  private def getInterfacePropertiesType(list: TSNodeArray)(implicit ns: TSNamespace): Map[String, TSMemberType] =
     list.foldLeft(Map[String, TSMemberType]())((mp, p) => addMember(getMemberType(p), p, p.symbol.escapedName, mp))
 
-  private def getAnonymousPropertiesType(list: TSSymbolArray): Map[String, TSMemberType] =
+  private def getAnonymousPropertiesType(list: TSSymbolArray)(implicit ns: TSNamespace): Map[String, TSMemberType] =
     list.foldLeft(Map[String, TSMemberType]())((mp, p) =>
       mp ++ Map(p.escapedName -> TSMemberType(if (p.`type`.isUndefined) getMemberType(p.declaration) else getObjectType(p.`type`))))
 
-  private def parseMembers(name: String, node: TSNodeObject, isClass: Boolean): TSType =
+  private def parseMembers(name: String, node: TSNodeObject, isClass: Boolean)(implicit ns: TSNamespace): TSType =
     if (isClass)
       TSClassType(name, getClassMembersType(node.members, false), getClassMembersType(node.members, true),
         getTypeParameters(node), getHeritageList(node), getConstructorList(node.members))

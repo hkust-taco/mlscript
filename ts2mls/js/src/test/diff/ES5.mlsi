@@ -386,7 +386,7 @@ module Intl {
   }
   export trait Collator {
     fun compare(x: string, y: string): number
-    fun resolvedOptions(): Intl.ResolvedCollatorOptions
+    fun resolvedOptions(): ResolvedCollatorOptions
   }
   export trait NumberFormatOptions {
     val minimumSignificantDigits: (number) | (undefined)
@@ -414,7 +414,7 @@ module Intl {
   }
   export trait NumberFormat {
     fun format(value: number): string
-    fun resolvedOptions(): Intl.ResolvedNumberFormatOptions
+    fun resolvedOptions(): ResolvedNumberFormatOptions
   }
   export trait DateTimeFormatOptions {
     val minute: ((string) | (string)) | (undefined)
@@ -449,6 +449,6 @@ module Intl {
   }
   export trait DateTimeFormat {
     fun format(date: ((number) | (Date)) | (undefined)): string
-    fun resolvedOptions(): Intl.ResolvedDateTimeFormatOptions
+    fun resolvedOptions(): ResolvedDateTimeFormatOptions
   }
 }

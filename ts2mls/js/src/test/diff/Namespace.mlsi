@@ -10,8 +10,8 @@ export declare module Namespace {
     }
     export module N2 {
       fun fff(x: (false) | (true)): number
-      fun gg(c: N1.C): N1.C
-      class BBB extends N1.C {}
+      fun gg(c: C): C
+      class BBB extends C {}
     }
   }
   module AA {
