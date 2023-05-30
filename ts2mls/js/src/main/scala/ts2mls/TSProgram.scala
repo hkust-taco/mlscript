@@ -31,7 +31,8 @@ class TSProgram(filename: String, uesTopLevelModule: Boolean) {
 
     val moduleName = TSImport.getModuleName(filename, false)
     val relatedPath =
-      if (filename.startsWith(workDir)) filename.substring(workDir.length() + 1, filename.lastIndexOf('/') + 1)
+      if (filename.startsWith(workDir))
+        TSModuleResolver.relative(TSModuleResolver.resolve(workDir), TSModuleResolver.dirname(filename))
       else throw new AssertionError(s"wrong work dir $workDir")
 
     def toTSFile(filename: String) = // TODO: node_modules

@@ -910,9 +910,12 @@ final case class JSExport(moduleDecl: JSConstDecl) extends JSStmt {
     SourceCode(s"export ${moduleDecl.toSourceCode}")
 }
 
-final case class JSImport(name: Str, path: Str) extends JSStmt {
+final case class JSImport(name: Str, path: Str, fromTS: Bool) extends JSStmt {
   def toSourceCode: SourceCode =
-    SourceCode(s"import { $name } from \"$path\"\n")
+    if (fromTS)
+      SourceCode(s"import * as $name from \"$path\"\n")
+    else
+      SourceCode(s"import { $name } from \"$path\"\n")
 }
 
 final case class JSComment(text: Str) extends JSStmt {

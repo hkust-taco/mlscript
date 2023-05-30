@@ -10,7 +10,7 @@ import mlscript.utils.shorthands._
 import scala.collection.mutable.{ListBuffer,Map => MutMap, Set => MutSet}
 import mlscript.codegen._
 import mlscript.{NewLexer, NewParser, ErrorReport, Origin, Diagnostic}
-import ts2mls.TSModuleResolver
+import ts2mls.{TSModuleResolver, TSProgram}
 
 class Driver(options: DriverOptions) {
   import Driver._
@@ -134,7 +134,11 @@ class Driver(options: DriverOptions) {
     stack: List[String]
   ): Boolean = {
     val mlsiFile = normalize(s"${options.path}/${file.interfaceFilename}")
-    if (file.filename.endsWith(".ts")) {} // TODO: invoke ts2mls
+    if (file.filename.endsWith(".ts")) {
+      val tsprog = TSProgram(file.filename, true)
+      tsprog.generate(file.workDir, file.workDir)
+      return true
+    }
     parseAndRun(file.filename, {
       case (definitions, _, imports, _) => {
         val depList = imports.map {

@@ -63,6 +63,7 @@ object DriverDiffTests {
     entry("Cycle2"),
     entry("Self", true),
     entry("C", true),
+    entry("TS", true), // TODO: merge
     ts2mlsEntry("Array"),
     ts2mlsEntry("BasicFunctions"),
     ts2mlsEntry("ClassMember"),

@@ -1046,7 +1046,8 @@ class JSCompilerBackend extends JSBackend(allowUnresolvedSymbols = false) {
     case Import(path) =>
       JSImport(
         path.substring(path.lastIndexOf("/") + 1, path.lastIndexOf(".")),
-        path.substring(0, path.lastIndexOf(".")) + ".js" // TODO: node_modules
+        path.substring(0, path.lastIndexOf(".")) + ".js", // TODO: node_modules
+        path.endsWith(".ts")
       )
   }
 
