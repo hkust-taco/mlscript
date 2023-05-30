@@ -9,6 +9,7 @@ import scala.collection.mutable.{ListBuffer, HashMap}
 class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSTypeChecker) {
   private val lineHelper = new TSLineStartsHelper(sf.getLineStarts())
   private val importList = TSImportList()
+  private val reExportList = new ListBuffer[TSReExport]()
   private val resolvedPath = sf.resolvedPath.toString()
   private val originalFileName = sf.originalFileName.toString()
   private val rootPath =
@@ -44,21 +45,15 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
   })
 
   def getImportList: List[TSImport] = importList.getFilelist
+  def getReExportList: List[TSReExport] = reExportList.toList
 
   private def parseExportDeclaration(elements: TSNodeArray): Unit = {
-    def getReferedType(name: String): TSType = global.get(name) match {
-      case cls: TSClassType => TSReferenceType(cls.name)
-      case TSEnumType => TSEnumType
-      case itf: TSInterfaceType => TSReferenceType(itf.name)
-      case ref: TSReferenceType => ref
-      case _ => throw new AssertionError(s"unsupported export type $name.") // FIXME: functions and variables?
-    }
     elements.foreach(ele =>
       if (ele.propertyName.isUndefined)
         global.export(ele.symbol.escapedName)
       else {
         val alias = ele.symbol.escapedName
-        global.put(alias, TSTypeAlias(alias, getReferedType(ele.propertyName.escapedText), Nil), true)
+        global.getTop(ele.propertyName.escapedText).fold(())(tp => global.put(alias, TSRenamedType(alias, tp), true))
       }
     )
   }
@@ -81,16 +76,12 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
               (ele.propertyName.escapedText, Some(ele.symbol.escapedName))
           )
           val imp = TSSingleImport(absPath, importName, list)
-          if (exported) imp.createAlias.foreach { // FIXME: functions and variables?
-            case alias @ TSTypeAlias(name, _, _) => global.put(name, alias, true)
-          }
+          if (exported) imp.createAlias.foreach(re => reExportList += re) // re-export
           importList += imp
         }
         else if (!node.name.isUndefined) {
           val imp = TSFullImport(absPath, importName, node.name.escapedText)
-          if (exported) imp.createAlias.foreach { // FIXME: functions and variables?
-            case alias @ TSTypeAlias(name, _, _) => global.put(name, alias, true)
-          }
+          if (exported) imp.createAlias.foreach(re => reExportList += re) // re-export
           importList += imp
         }
 

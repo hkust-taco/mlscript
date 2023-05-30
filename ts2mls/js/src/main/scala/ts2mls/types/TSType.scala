@@ -45,5 +45,6 @@ case class TSIgnoredOverload(base: TSFunctionType, name: String) extends TSType 
 }
 
 case class TSTypeAlias(name: String, original: TSType, tp: List[TSType]) extends TSType
+case class TSRenamedType(name: String, original: TSType) extends TSType
 case class TSLiteralType(value: String, isString: Boolean) extends TSType
 case class TSUnsupportedType(code: String, filename: String, line: String, column: String) extends TSType

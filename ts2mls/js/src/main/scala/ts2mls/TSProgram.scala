@@ -25,6 +25,7 @@ class TSProgram(filename: String, uesTopLevelModule: Boolean) {
     val globalNamespace = TSNamespace()
     val sourceFile = TSSourceFile(program.getSourceFile(filename), globalNamespace)
     val importList = sourceFile.getImportList
+    val reExportList = sourceFile.getReExportList
     val absName = TSModuleResolver.resolve(filename)
     cache.addOne(absName, globalNamespace)
 
@@ -33,13 +34,13 @@ class TSProgram(filename: String, uesTopLevelModule: Boolean) {
       if (filename.startsWith(workDir)) filename.substring(workDir.length() + 1, filename.lastIndexOf('/') + 1)
       else throw new AssertionError(s"wrong work dir $workDir")
 
-    def toTSFile(imp: TSImport) = // TODO: node_modules
-      if (!imp.filename.endsWith(".ts")) s"${imp.filename}.ts"
-      else imp.filename
-    val (cycleList, otherList) = importList.partition(imp => stack.contains(toTSFile(imp)))
+    def toTSFile(filename: String) = // TODO: node_modules
+      if (!filename.endsWith(".ts")) s"$filename.ts"
+      else filename
+    val (cycleList, otherList) = importList.partition(imp => stack.contains(toTSFile(imp.filename)))
 
     otherList.foreach(imp => {
-      val newFilename = toTSFile(imp)
+      val newFilename = toTSFile(imp.filename)
       generate(newFilename, TSModuleResolver.resolve(workDir), targetPath)(absName :: stack)
     })
 
@@ -54,11 +55,24 @@ class TSProgram(filename: String, uesTopLevelModule: Boolean) {
       }
     })
     cycleList.foreach(imp => {
-      val newFilename = toTSFile(imp)
+      val newFilename = toTSFile(imp.filename)
       writer.writeln(s"declare module ${TSImport.getModuleName(imp.`import`, false)} {")
       cache(newFilename).generate(writer, "  ")
       writer.writeln("}")
     })
+
+    reExportList.foreach {
+      case TSReExport(alias, filename, memberName) =>
+        if (!cache.contains(toTSFile(filename)))
+          throw new AssertionError(s"unexpected re-export from ${toTSFile(filename)}")
+        else {
+          val ns = cache(toTSFile(filename))
+          val moduleName = TSImport.getModuleName(filename, false)
+          memberName.fold(
+            globalNamespace.put(alias, TSRenamedType(alias, TSReferenceType(moduleName)), true)
+          )(name => ns.getTop(name).fold[Unit](())(tp => globalNamespace.put(alias, TSRenamedType(alias, tp), true)))
+        }
+    }
 
     generate(writer, otherList, globalNamespace, moduleName)
 

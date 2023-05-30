@@ -65,6 +65,7 @@ object Converter {
     case TSLiteralType(value, isString) => if (isString) s"\"$value\"" else value
     case TSUnsupportedType(code, filename, line, column) =>
       s"""Unsupported<"$code", "$filename", $line, $column>"""
+    case tp => throw new AssertionError(s"unexpected type $tp.")
   }
 
   private def convertRecord(typeName: String, members: Map[String, TSMemberType], typeVars: List[TSTypeParameter],

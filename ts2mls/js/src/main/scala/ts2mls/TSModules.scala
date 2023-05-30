@@ -4,6 +4,8 @@ import scala.collection.mutable.HashMap
 import mlscript.utils._
 import ts2mls.types.{TSTypeAlias, TSReferenceType, Converter}
 
+final case class TSReExport(alias: String, filename: String, memberName: Option[String])
+
 trait TSImport { self =>
   val filename: String
   val `import`: String
@@ -17,12 +19,12 @@ trait TSImport { self =>
       }.headOption
   }
 
-  def createAlias: List[TSTypeAlias] = self match {
+  def createAlias: List[TSReExport] = self match {
     case TSFullImport(filename, _, alias) =>
-      TSTypeAlias(alias, TSReferenceType(TSImport.getModuleName(filename, false)), Nil) :: Nil
+      TSReExport(alias, filename, None) :: Nil
     case TSSingleImport(filename, _, items) =>
       items.map{ case (name, alias) =>
-        TSTypeAlias(alias.getOrElse(name), TSReferenceType(s"${TSImport.getModuleName(filename, false)}.$name"), Nil)
+        TSReExport(alias.getOrElse(name), filename, Some(name))
       }
   }
 

@@ -40,6 +40,16 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
     else if (!parent.isEmpty) parent.get.get(name)
     else throw new Exception(s"member $name not found.")
 
+  def getTop(name: String): Option[TSType] =
+    if (members.contains(name)) members(name)._1 match {
+      case cls: TSClassType => Some(TSReferenceType(cls.name))
+      case itf: TSInterfaceType => Some(TSReferenceType(itf.name))
+      case _: TSTypeAlias => None // type alias in ts would be erased.
+      case tp => Some(tp) // variables & functions
+    }
+    else if (subSpace.contains(name)) Some(TSReferenceType(name))
+    else None
+
   def containsMember(name: String, searchParent: Boolean = true): Boolean =
     if (parent.isEmpty) members.contains(name) else (members.contains(name) || (searchParent && parent.get.containsMember(name)))
 
@@ -67,6 +77,8 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
           case TSInterfaceType(name, _, _, _) if (name =/= "") =>
             writer.writeln(Converter.convert(mem, exp)(indent))
           case _: TSTypeAlias => writer.writeln(Converter.convert(mem, exp)(indent))
+          case TSRenamedType(name, original) if (exp) =>
+            writer.writeln(s"${indent}export val $name = ${Converter.convert(original)("")}")
           case _ => writer.writeln(s"${indent}${expStr(exp)}val $name: ${Converter.convert(mem)("")}")
         }
       }
