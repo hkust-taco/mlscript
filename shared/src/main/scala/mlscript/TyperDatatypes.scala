@@ -39,12 +39,14 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
   /** Some type information which may not yet be available. */
   sealed abstract class LazyTypeInfo extends TypeInfo {
     def complete()(implicit raise: Raise): NuMember
+    def isComputing: Bool
     def kind: DeclKind
   }
   
   /** A LazyTypeInfo whose typing has been completed. */
   case class CompletedTypeInfo(member: NuMember) extends LazyTypeInfo {
     def complete()(implicit raise: Raise): NuMember = member
+    def isComputing: Bool = false
     def kind: DeclKind = member.kind
   }
   

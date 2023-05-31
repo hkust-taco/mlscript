@@ -69,7 +69,6 @@ mixin Test3 { fun f(x) = if x is Foo then 1 }
 
 
 
-:e // TODO support
 mixin Test {
   class Lit(n: int)
   class Add<A>(lhs: A, rhs: A) {
@@ -78,22 +77,13 @@ mixin Test {
   fun size(x) = if x is
     Add(l, r) then this.size(l) + this.size(r)
 }
-//│ ╔══[ERROR] Unhandled cyclic definition
-//│ ║  l.75: 	  class Add<A>(lhs: A, rhs: A) {
-//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.76: 	    let cached = size(this)
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Illegal pattern `Add`
-//│ ║  l.79: 	    Add(l, r) then this.size(l) + this.size(r)
-//│ ╙──      	    ^^^
 //│ mixin Test() {
+//│   this: {size: 'lhs -> int}
 //│   class Add[A](lhs: A, rhs: A) {
-//│     let cached: error
+//│     let cached: int
 //│   }
 //│   class Lit(n: int)
-//│   fun size: anything -> error
+//│   fun size: Add['lhs] -> int
 //│ }
-//│ Code generation encountered an error:
-//│   if expression was not desugared
 
 

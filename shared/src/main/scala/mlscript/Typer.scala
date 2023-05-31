@@ -1143,7 +1143,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           (fv -> TopType :: Nil) -> typeTerm(b)
       }
     case Case(pat, bod, rest) =>
-      val (tagTy: ST, patTy: ST) = pat match {
+      val (tagTy, patTy) : (ST, ST) = pat match {
         case lit: Lit =>
           val t = ClassTag(lit, lit.baseClasses)(tp(pat.toLoc, "literal pattern"))
           t -> t
@@ -1156,13 +1156,26 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
                 return ((e -> e) :: Nil) -> e
               }
               ctx.get(nme) match {
-                case S(td: LazyTypeInfo) =>
-                  if ((td.kind isnt Cls) && (td.kind isnt Nms) && (td.kind isnt Trt))
+                case S(lti: LazyTypeInfo) =>
+                  if ((lti.kind isnt Cls) && (lti.kind isnt Nms) && (lti.kind isnt Trt))
                     err(msg"can only match on classes and traits", pat.toLoc)(raise)
-                  td.complete() match {
-                    case cls: TypedNuCls =>
-                      
-                      val tag = clsNameToNomTag(cls.td)(tp(pat.toLoc, "class pattern"), ctx)
+                  
+                  val prov = tp(pat.toLoc, "class pattern")
+                  
+                  lti match {
+                    case dti: DelayedTypeInfo =>
+                      val tag = clsNameToNomTag(dti.decl match { case decl: NuTypeDef => decl; case _ => die })(prov, ctx)
+                      val ty =
+                        RecordType.mk(dti.tparams.map {
+                          case (tn, tv, vi) =>
+                            val nv = freshVar(tv.prov, S(tv), tv.nameHint)
+                            (Var(nme+"#"+tn.name).withLocOf(tn),
+                              FieldType.mk(vi.getOrElse(VarianceInfo.in), nv, nv)(provTODO))
+                        })(provTODO)
+                      println(s"Match arm $nme: $tag & $ty")
+                      tag -> ty
+                    case CompletedTypeInfo(cls: TypedNuCls) =>
+                      val tag = clsNameToNomTag(cls.td)(prov, ctx)
                       val ty =
                         RecordType.mk(cls.tparams.map {
                           case (tn, tv, vi) =>
@@ -1172,9 +1185,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
                         })(provTODO)
                       println(s"Match arm $nme: $tag & $ty")
                       tag -> ty
-                      
-                    case _ => bail()
+                    case CompletedTypeInfo(_) => bail()
                   }
+                  
                 case _ =>
                   err("type identifier not found: " + nme, pat.toLoc)(raise)
                   bail()

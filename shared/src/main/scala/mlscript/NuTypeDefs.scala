@@ -1048,8 +1048,6 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     
                     ctx ++= paramSymbols
                     
-                    ctx += "this" -> VarSymbol(thisTV, Var("this"))
-                    
                     val sig_ty = td.sig.fold(TopType: ST)(typeTypeSignature)
                     
                     implicit val prov: TP =
@@ -1131,7 +1129,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       case Nil =>
                         val thisType = WithType(pack.superType, RecordType(typedParams)(ttp(td.params.getOrElse(Tup(Nil)), isType = true)))(provTODO) &
                           clsNameToNomTag(td)(provTODO, ctx) &
-                          RecordType(tparamFields)(TypeProvenance(Loc(td.tparams.map(_._2)), "type parameters", isType = true))
+                          RecordType(tparamFields)(TypeProvenance(Loc(td.tparams.map(_._2)), "type parameters", isType = true)) &
+                          sig_ty
                         
                         trace(s"${lvl}. Finalizing inheritance with $thisType <: $finalType") {
                           assert(finalType.level === lvl)
@@ -1152,6 +1151,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     val Pack(thisType, baseMems, _, bsMembers, ifaceMembers, ptps) =
                       inherit(typedParents, Pack(baseType, tparamMems ++ paramMems, N, Nil, Nil, Map.empty))
                     
+                    ctx += "this" -> VarSymbol(thisTV, Var("this"))
                     ctx += "super" -> VarSymbol(thisType, Var("super"))
                     val ttu = typeTypingUnit(td.body, topLevel = false)
                     

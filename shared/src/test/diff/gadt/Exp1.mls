@@ -1,56 +1,12 @@
 :NewDefs
 
 
-// FIXME
-class Exp[A]: Pair | Lit {
-  fun test = if this is
-    Lit then 0
-    Pair then 1
-}
+class Exp[A]: Pair | Lit
 class Lit(n: int) extends Exp[int]
-class Pair[L, R](lhs: L, rhs: R) extends Exp[A]
-//│ ╔══[ERROR] Unhandled cyclic definition
-//│ ║  l.5: 	class Exp[A]: Pair | Lit {
-//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.6: 	  fun test = if this is
-//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.7: 	    Lit then 0
-//│ ║       	^^^^^^^^^^^^^^
-//│ ║  l.8: 	    Pair then 1
-//│ ╙──     	^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Unhandled cyclic definition
-//│ ║  l.5: 	class Exp[A]: Pair | Lit {
-//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.6: 	  fun test = if this is
-//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.7: 	    Lit then 0
-//│ ║       	^^^^^^^^^^^^^^
-//│ ║  l.8: 	    Pair then 1
-//│ ╙──     	^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.6: 	  fun test = if this is
-//│ ║       	                ^^^^^^^
-//│ ║  l.7: 	    Lit then 0
-//│ ║       	^^^^^^^^^^^^^^
-//│ ║  l.8: 	    Pair then 1
-//│ ║       	^^^^^^^^^^^^^^^
-//│ ╟── reference of type `#Exp & {Exp#A = ?A}` does not match type `Lit | Pair[?L, ?R]`
-//│ ║  l.6: 	  fun test = if this is
-//│ ╙──     	                ^^^^
-//│ class Exp[A]: Lit | Pair[anything, anything] {
-//│   fun test: 0 | 1
-//│ }
+class Pair[L, R](lhs: L, rhs: R) extends Exp[(L, R)]
+//│ class Exp[A]: Lit | Pair[anything, anything]
 //│ class Lit(n: int)
 //│ class Pair[L, R](lhs: L, rhs: R)
-
-:e // TODO
-Lit(0).test
-//│ ╔══[ERROR] Type `Lit` does not contain member `test`
-//│ ║  l.47: 	Lit(0).test
-//│ ╙──      	      ^^^^^
-//│ error
-//│ res
-//│     = 0
 
 
 fun f(p: Pair['a, 'b]) = p.lhs
@@ -63,11 +19,22 @@ fun f(e) = if e is
 // f: (Exp['a] & Pair) -> 0
 
 
+fun f(e) = if e is
+  Pair(l, r) then [l, r]
+  Lit(n) then n
+//│ fun f: forall 'lhs 'rhs. (Lit | Pair['lhs, 'rhs]) -> (('lhs, 'rhs,) | int)
+
+(e: Exp['X]) => f(e)
+//│ (e: Exp['X],) -> ((??L, ??R,) | int)
+//│ res
+//│     = [Function: res]
+
+
 :e // TODO support
 fun f(e) = if e is
   Pair['a, 'b](l, r) then [l, r]
 //│ ╔══[ERROR] illegal pattern
-//│ ║  l.68: 	  Pair['a, 'b](l, r) then [l, r]
+//│ ║  l.35: 	  Pair['a, 'b](l, r) then [l, r]
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^
 //│ fun f: anything -> error
 //│ Code generation encountered an error:
@@ -80,10 +47,10 @@ fun f(e) = if e is
     fun f(x: a) = x
     f(l)
 //│ ╔══[ERROR] type identifier not found: a
-//│ ║  l.80: 	    fun f(x: a) = x
+//│ ║  l.47: 	    fun f(x: a) = x
 //│ ╙──      	             ^
 //│ ╔══[ERROR] identifier not found: l
-//│ ║  l.81: 	    f(l)
+//│ ║  l.48: 	    f(l)
 //│ ╙──      	      ^
 //│ fun f: Pair[anything, anything] -> error
 //│ Code generation encountered an error:
