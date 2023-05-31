@@ -81,7 +81,7 @@ final case class Where(body: Term, where: Ls[Statement])             extends Ter
 final case class Forall(params: Ls[TypeVar], body: Term)             extends Term
 final case class Inst(body: Term)                                    extends Term
 final case class Super()                                             extends Term
-final case class Ass(lhs: Var, rhs: Term)                            extends Term // x = y in constructors. TODO: make lhs term
+final case class Eqn(lhs: Var, rhs: Term)                            extends Term // equations such as x = y, notably used in constructors; TODO: make lhs a Term
 
 sealed abstract class IfBody extends IfBodyImpl
 // final case class IfTerm(expr: Term) extends IfBody // rm?

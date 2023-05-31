@@ -1108,7 +1108,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         if (!founPoly) warn(msg"Inferred type `${bod_ty.expPos}` of this ${
           bod_ty.prov.desc} cannot be instantiated", prov.loco)
         res
-      case Ass(lhs, rhs) =>
+      case Eqn(lhs, rhs) =>
         err(msg"Unexpected equation in this position", term.toLoc)
     }
   }(r => s"$lvl. : ${r}")

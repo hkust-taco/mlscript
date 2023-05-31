@@ -68,7 +68,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       translatePattern(base)
     case Inst(bod) => translatePattern(bod)
     case _: Lam | _: App | _: Sel | _: Let | _: Blk | _: Bind | _: Test | _: With | _: CaseOf | _: Subs | _: Assign
-        | If(_, _) | New(_, _) | _: Splc | _: Forall | _: Where | _: Super | _: Ass =>
+        | If(_, _) | New(_, _) | _: Splc | _: Forall | _: Where | _: Super | _: Eqn =>
       throw CodeGenError(s"term ${inspect(t)} is not a valid pattern")
   }
 
@@ -301,7 +301,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       throw CodeGenError("custom class body is not supported yet")
     case Forall(_, bod) => translateTerm(bod)
     case TyApp(base, _) => translateTerm(base)
-    case Ass(Var(name), _) =>
+    case Eqn(Var(name), _) =>
       throw CodeGenError(s"assignment of $name is not supported outside a constructor")
     case _: Bind | _: Test | If(_, _)  | _: Splc | _: Where =>
       throw CodeGenError(s"cannot generate code for term ${inspect(term)}")
@@ -777,7 +777,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
 
     val getters = new ListBuffer[Str]()
     val stmts = sym.ctor.flatMap {
-      case Ass(Var(name), rhs) => Ls(
+      case Eqn(Var(name), rhs) => Ls(
         JSAssignExpr(JSIdent(s"this.#$name"), translateTerm(rhs)(constructorScope)).stmt,
         JSConstDecl(constructorScope.declareValue(name, S(false), false).runtimeName, JSIdent(s"this.#$name"))
       )

@@ -405,7 +405,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
       val (bod2, ctx) = liftTerm(bod)
       val (sts2, ctx2) = liftEntities(sts)
       (Where(bod2, sts2), ctx2)
-    case _: Ass | _: Super => ??? // TODO
+    case _: Eqn | _: Super => ??? // TODO
   }
 
   //serves for lifting Tup(Some(_), Fld(_, _, trm)), where trm refers to a type

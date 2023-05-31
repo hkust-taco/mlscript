@@ -503,7 +503,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
           case (KEYWORD("="), l0) :: _ => t match {
             case R(v: Var) =>
               consume
-              R(Ass(v, expr(0))) :: block
+              R(Eqn(v, expr(0))) :: block
             case _ => t :: Nil
           }
           case (KEYWORD(";"), _) :: _ => consume; t :: block

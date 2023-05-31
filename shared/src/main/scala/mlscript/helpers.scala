@@ -499,7 +499,7 @@ trait TermImpl extends StatementImpl { self: Term =>
       case Forall(_, _) => s"forall clause"
       case Inst(bod) => "explicit instantiation"
       case Super() => "super"
-      case Ass(lhs, rhs) => "assign for ctor"
+      case Eqn(lhs, rhs) => "assign for ctor"
     }
   }
   
@@ -549,7 +549,7 @@ trait TermImpl extends StatementImpl { self: Term =>
     case Forall(ps, bod) => s"forall ${ps.mkString(", ")}. ${bod}"
     case Inst(bod) => s"${bod.print(true)}!"
     case Super() => "super"
-    case Ass(lhs, rhs) => s"${lhs} = ${rhs}"
+    case Eqn(lhs, rhs) => s"${lhs} = ${rhs}"
   }}
   
   def toTypeRaise(implicit raise: Raise): Type = toType match {
@@ -886,7 +886,7 @@ trait StatementImpl extends Located { self: Statement =>
     case Inst(bod) => bod :: Nil
     case Super() => Nil
     case Constructor(params, body) => params :: body :: Nil
-    case Ass(lhs, rhs) => lhs :: rhs :: Nil
+    case Eqn(lhs, rhs) => lhs :: rhs :: Nil
     case NuTypeDef(k, nme, tps, ps, ctor, sig, pars, sup, ths, bod) =>
       nme :: tps.map(_._2) ::: ps.toList ::: pars ::: ths.toList ::: bod :: Nil
   }
