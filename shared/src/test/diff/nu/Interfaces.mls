@@ -373,7 +373,7 @@ class D extends Test[int], Test[bool]
 trait Base: A | B
 class A extends Base
 class B extends Base
-//│ trait Base()
+//│ trait Base(): A | B
 //│ class A()
 //│ class B()
 
@@ -398,7 +398,7 @@ fun f(x: Base) = if x is
 trait Base: Foo | Bar
 class Foo[A](aa: (A, A)) extends Base
 class Bar[B](f: B => B) extends Base
-//│ trait Base()
+//│ trait Base(): Bar[?] | Foo[anything]
 //│ class Foo[A](aa: (A, A,))
 //│ class Bar[B](f: B -> B)
 

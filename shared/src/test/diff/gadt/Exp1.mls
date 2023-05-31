@@ -1,18 +1,14 @@
 :NewDefs
 
 
-// TODO enable class signatures
+// FIXME
 class Exp[A]: Pair | Lit {
   fun test = if this is
     Lit then 0
     Pair then 1
 }
-// TODO enable class inheritance
 class Lit(n: int) extends Exp[int]
 class Pair[L, R](lhs: L, rhs: R) extends Exp[A]
-//│ ╔══[ERROR] type signatures not yet supported for classes
-//│ ║  l.5: 	class Exp[A]: Pair | Lit {
-//│ ╙──     	              ^^^^^^^^^^
 //│ ╔══[ERROR] Unhandled cyclic definition
 //│ ║  l.5: 	class Exp[A]: Pair | Lit {
 //│ ║       	^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -45,7 +41,7 @@ class Pair[L, R](lhs: L, rhs: R) extends Exp[A]
 //│ ╟── reference of type `#Exp & {Exp#A = ?A}` does not match type `Lit | Pair[?L, ?R]`
 //│ ║  l.6: 	  fun test = if this is
 //│ ╙──     	                ^^^^
-//│ class Exp[A]() {
+//│ class Exp[A](): Lit | Pair[anything, anything] {
 //│   fun test: 0 | 1
 //│ }
 //│ class Lit(n: int)
@@ -54,7 +50,7 @@ class Pair[L, R](lhs: L, rhs: R) extends Exp[A]
 :e // TODO
 Lit(0).test
 //│ ╔══[ERROR] Type `Lit` does not contain member `test`
-//│ ║  l.55: 	Lit(0).test
+//│ ║  l.51: 	Lit(0).test
 //│ ╙──      	      ^^^^^
 //│ error
 //│ res
@@ -75,7 +71,7 @@ fun f(e) = if e is
 fun f(e) = if e is
   Pair['a, 'b](l, r) then [l, r]
 //│ ╔══[ERROR] illegal pattern
-//│ ║  l.76: 	  Pair['a, 'b](l, r) then [l, r]
+//│ ║  l.72: 	  Pair['a, 'b](l, r) then [l, r]
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^
 //│ fun f: anything -> error
 //│ Code generation encountered an error:
@@ -88,10 +84,10 @@ fun f(e) = if e is
     fun f(x: a) = x
     f(l)
 //│ ╔══[ERROR] type identifier not found: a
-//│ ║  l.88: 	    fun f(x: a) = x
+//│ ║  l.84: 	    fun f(x: a) = x
 //│ ╙──      	             ^
 //│ ╔══[ERROR] identifier not found: l
-//│ ║  l.89: 	    f(l)
+//│ ║  l.85: 	    f(l)
 //│ ╙──      	      ^
 //│ fun f: Pair[anything, anything] -> error
 //│ Code generation encountered an error:

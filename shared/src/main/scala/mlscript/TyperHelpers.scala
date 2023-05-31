@@ -1,6 +1,6 @@
 package mlscript
 
-import scala.collection.mutable.{Map => MutMap, Set => MutSet, LinkedHashMap, LinkedHashSet}
+import scala.collection.mutable.{Map => MutMap, SortedMap => MutSortMap, Set => MutSet, LinkedHashMap, LinkedHashSet}
 import scala.collection.immutable.{SortedMap, SortedSet}
 import scala.annotation.tailrec
 import mlscript.utils._, shorthands._
@@ -791,12 +791,14 @@ abstract class TyperHelpers { Typer: Typer =>
                 cls.params.flatMap(p => childrenPolField(PolMap.pos)(p._2)) ++
                 cls.members.valuesIterator.flatMap(childrenPolMem) ++
                 S(pol.contravar -> cls.thisTy) ++
+                S(pol.covar -> cls.sign) ++
                 S(pol.covar -> cls.instanceType) ++
                 cls.parentTP.valuesIterator.flatMap(childrenPolMem)
             case trt: TypedNuTrt =>
               trt.tparams.iterator.map(pol.invar -> _._2) ++
                 trt.members.valuesIterator.flatMap(childrenPolMem) ++
-                S(pol.contravar -> trt.thisTy) ++ 
+                S(pol.contravar -> trt.thisTy) ++
+                S(pol.covar -> trt.sign) ++
                 trt.parentTP.valuesIterator.flatMap(childrenPolMem)
             case prm: NuParam => childrenPolField(pol)(prm.ty)
             case TypedNuDummy(d) => N
@@ -885,16 +887,17 @@ abstract class TyperHelpers { Typer: Typer =>
               S(mxn.thisTV)
           case cls: TypedNuCls =>
             cls.tparams.iterator.map(_._2) ++
-            // cls.params.flatMap(p => childrenPolField(pol.invar)(p._2))
               cls.params.flatMap(p => p._2.lb.toList ::: p._2.ub :: Nil) ++
               cls.members.valuesIterator.flatMap(childrenMem) ++
               S(cls.thisTy) ++
+              S(cls.sign) ++
               S(cls.instanceType)
           case trt: TypedNuTrt =>
             trt.tparams.iterator.map(_._2) ++
-            // cls.params.flatMap(p => childrenPolField(pol.invar)(p._2))
               trt.members.valuesIterator.flatMap(childrenMem) ++
-              S(trt.thisTy)
+              S(trt.thisTy) ++
+              S(trt.sign) ++
+              trt.parentTP.valuesIterator.flatMap(childrenMem)
           case TypedNuDummy(d) => Nil
         }
         ents ::: tu.result.toList
@@ -1009,9 +1012,17 @@ abstract class TyperHelpers { Typer: Typer =>
             substSyntax(td.body)(td.tparams.lazyZip(targs).map {
               case (tp, ta) => SkolemTag(tp._2.level, tp._2)(noProv) -> ta
             }.toMap)
-          case S(td: TypedNuTrt) => 
+          case S(td: TypedNuTrt) =>
             assert(td.tparams.size === targs.size)
-            td.selfTy & 
+            // println(s"EXP ${td.sign}")
+            val (freshenMap, _) = refreshHelper2(td, Var(td.name).withLoc(prov.loco), S(targs)) // infer ty args if not provided
+            val freshSelf = {
+              implicit val freshened: MutMap[TV, ST] = freshenMap
+              implicit val shadows: Shadows = Shadows.empty
+              td.sign.freshenAbove(td.level, rigidify = false)
+            }
+            // println(s"Fresh $freshSelf")
+            freshSelf & 
               trtNameToNomTag(td.decl)(provTODO, ctx) &
               RecordType(info.tparams.lazyZip(targs).map {
                     case ((tn, tv, vi), ta) => // TODO use vi
@@ -1020,8 +1031,14 @@ abstract class TyperHelpers { Typer: Typer =>
                   })(provTODO)
           case S(td: TypedNuCls) =>
             assert(td.tparams.size === targs.size)
+            val (freshenMap, _) = refreshHelper2(td, Var(td.name).withLoc(prov.loco), S(targs)) // infer ty args if not provided
+            val freshSelf = {
+              implicit val freshened: MutMap[TV, ST] = freshenMap
+              implicit val shadows: Shadows = Shadows.empty
+              td.sign.freshenAbove(td.level, rigidify = false)
+            }
             clsNameToNomTag(td.decl)(provTODO, ctx) &
-              td.selfTy & 
+              freshSelf &
                 RecordType(info.tparams.lazyZip(targs).map {
                   case ((tn, tv, vi), ta) => // TODO use vi
                     val fldNme = td.nme.name + "#" + tn.name
@@ -1041,7 +1058,9 @@ abstract class TyperHelpers { Typer: Typer =>
                 // * Definition was not forced yet, which indicates an error (hopefully)
                 lastWords("cannot expand unforced type alias")
               case d =>
-                wat("unexpected declaration in type reference", d)
+                // * Other kinds of type defs are not allowed to be used as types
+                // *  (an error should have been reported earlier)
+                errType
             }
         }
     }.getOrElse {
@@ -1185,19 +1204,19 @@ abstract class TyperHelpers { Typer: Typer =>
       case TypedNuAls(level, td, tparams, body) =>
         tparams.iterator.foreach(tp => apply(pol.invar)(tp._2))
         apply(pol)(body)
-      case TypedNuCls(level, td, ttu, tparams, params, members, thisTy, _, _, ptps) =>
+      case TypedNuCls(level, td, ttu, tparams, params, members, thisTy, sign, _, ptps) =>
         tparams.iterator.foreach(tp => apply(pol.invar)(tp._2))
         params.foreach(p => applyField(pol)(p._2))
         members.valuesIterator.foreach(applyMem(pol))
-        ptps.valuesIterator.foreach(applyMem(pol))
-        // thisTy.foreach(apply(pol.invar)(_))
         apply(pol.contravar)(thisTy)
-      case TypedNuTrt(level, td, ttu, tparams, members, thisTy, sign, _, _, ptps) => 
+        apply(pol.contravar)(sign)
+        ptps.valuesIterator.foreach(applyMem(pol))
+      case TypedNuTrt(level, td, ttu, tparams, members, thisTy, sign, _, ptps) => 
         tparams.iterator.foreach(tp => apply(pol.invar)(tp._2))
         members.valuesIterator.foreach(applyMem(pol))
-        // thisTy.foreach(apply(pol.invar)(_))
-        ptps.valuesIterator.foreach(applyMem(pol))
         apply(pol.contravar)(thisTy)
+        apply(pol.covar)(sign)
+        ptps.valuesIterator.foreach(applyMem(pol))
       case TypedNuMxn(td, thisTV, superTV, tparams, params, members, ttu) =>
         tparams.iterator.foreach(tp => apply(pol.invar)(tp._2))
         params.foreach(p => applyField(pol)(p._2))

@@ -147,9 +147,9 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
           case (N, _) => "???"
           case (S(nme), rhs) => nme.name
         }.mkString(", ")
-      })${parents match {
+      })${sig.fold("")(": " + _.showIn(bodyCtx, 0))}${parents match {
         case Nil => ""
-        case ps => ps.mkString(", ") // TODO pp
+        case ps => "extends " + ps.mkString(", ") // TODO pp parent terms...
       }}${if (body.entities.isEmpty && sup.isEmpty && ths.isEmpty) "" else
         " {\n" + sup.fold("")(s"${bodyCtx.indStr}super: " + _.showIn(bodyCtx, 0) + "\n") +
         ths.fold("")(s"${bodyCtx.indStr}this: " + _.showIn(bodyCtx, 0) + "\n") +

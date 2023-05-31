@@ -350,20 +350,25 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     val typeType2 = ()
     // val outerCtxLvl = MinLevel + 1
     val outerCtxLvl = ctx.lvl
+    def checkKind(k: DeclKind, nme: Str, loc: Opt[Loc]): Unit = k match {
+      case Cls | Nms | Als | Trt => ()
+      case _ => err(msg"${k.str} ${nme} cannot be used as a type", loc); ()
+    }
     def typeNamed(loc: Opt[Loc], name: Str): (() => ST) \/ (TypeDefKind, Int) =
       newDefsInfo.get(name)
         .orElse(ctx.tyDefs.get(name).map(td => (td.kind, td.tparamsargs.size)))
         .orElse(ctx.get(name).flatMap {
-          case CompletedTypeInfo(mem: TypedNuTypeDef) => S(mem.td.kind, mem.tparams.size)
+          case CompletedTypeInfo(mem: TypedNuTypeDef) =>
+            checkKind(mem.decl.kind, mem.nme.name, loc)
+            S(mem.td.kind, mem.tparams.size)
           case ti: DelayedTypeInfo =>
+            checkKind(ti.decl.kind, ti.decl.name, loc)
             ti.decl match {
               case NuTypeDef(k @ (Cls | Nms | Als | Trt), _, tps, _, _, _, _, _, _) =>
                 S(k, tps.size)
               case NuTypeDef(k @ Mxn, nme, tps, _, _, _, _, _, _) =>
-                err(msg"${k.str} ${nme.name} cannot be used as a type", loc)
                 S(k, tps.size)
               case fd: NuFunDef =>
-                err(msg"function ${fd.nme.name} cannot be used as a type", loc)
                 N
             }
           case _ => N
@@ -432,7 +437,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case TypeName("this") =>
         ctx.env.get("this") match {
           case S(AbstractConstructor(_, _)) => die
-          case S(VarSymbol(t: SimpleType, _)) => t
+          case S(VarSymbol
+          (t: SimpleType, _)) => t
           case N => err(msg"undeclared this" -> ty.toLoc :: Nil)
         }
       case tn @ TypeTag(name) => rec(TypeName(name.decapitalize)) // TODO rm this hack
@@ -464,7 +470,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
                   case Als => err(
                     msg"Type alias ${name.capitalize} cannot be used as a type tag", tyLoc)(raise)
                   case Nms => err(
-                    msg"Namespaces ${name.capitalize} cannot be used as a type tag", tyLoc)(raise)
+                    msg"Module ${name.capitalize} cannot be used as a type tag", tyLoc)(raise)
+                  case Mxn => err(
+                    msg"Mixin ${name.capitalize} cannot be used as a type tag", tyLoc)(raise)
                 }
                 case _ => e()
               }
@@ -1327,26 +1335,26 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           NuTypeDef(td.kind, td.nme, td.tparams,
             Tup(params.map(p => N -> Fld(false, false, Asc(p._1, go(p._2.ub))))),
             N,
-            Nil,//TODO
+            Nil, // TODO mixin parents?
             Option.when(!(TopType <:< superTy))(go(superTy)),
             Option.when(!(TopType <:< thisTy))(go(thisTy)),
             mkTypingUnit(thisTy, members))(td.declareLoc)
         }
-      case TypedNuCls(level, td, ttu, tparams, params, members, thisTy, sfty, ihtags, ptps) =>
+      case TypedNuCls(level, td, ttu, tparams, params, members, thisTy, sign, ihtags, ptps) =>
         ectx(tparams) |> { implicit ectx =>
           NuTypeDef(td.kind, td.nme, td.tparams,
             Tup(params.map(p => N -> Fld(false, false, Asc(p._1, go(p._2.ub))))),
-            N,//TODO
+            Option.when(!(TopType <:< sign))(go(sign)),
             Nil,//TODO
             N,//TODO
             Option.when(!(TopType <:< thisTy))(go(thisTy)),
             mkTypingUnit(thisTy, members))(td.declareLoc)
           }
-      case TypedNuTrt(level, td, ttu, tparams, members, thisTy, sign, sfty, ihtags, ptps) => 
+      case TypedNuTrt(level, td, ttu, tparams, members, thisTy, sign, ihtags, ptps) => 
         ectx(tparams) |> { implicit ectx =>
           NuTypeDef(td.kind, td.nme, td.tparams,
             Tup(Nil),
-            N,//TODO
+            Option.when(!(TopType <:< sign))(go(sign)),
             Nil,//TODO
             N,//TODO
             Option.when(!(TopType <:< thisTy))(go(thisTy)),

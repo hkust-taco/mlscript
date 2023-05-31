@@ -132,7 +132,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           }
           
           freshened += _tv -> (targ match {
-            case tv: TypeVarOrRigidVar => tv
+            case tv: TypeVarOrRigidVar => println(s"Immediate $tv := $targ"); tv
             case _ =>
               println(s"Assigning ${_tv} := $targ where ${targ.showBounds}")
               val tv =
@@ -150,7 +150,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         raw.freshenAbove(info.level, rigidify = false)
       }
       
-      println(s"Fresh ${info.decl.name}.${fld.name} : $freshenedRaw where ${freshenedRaw.map(_.ub.showBounds)}")
+      println(s"Fresh[${info.level}] ${info.decl.name}.${fld.name} : $freshenedRaw where ${freshenedRaw.map(_.ub.showBounds)}")
       
       freshenedRaw
     }

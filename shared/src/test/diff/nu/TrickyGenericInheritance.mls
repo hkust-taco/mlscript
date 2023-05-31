@@ -52,9 +52,7 @@ c1.f
 //│     'X :> int
 //│        <: 'FigureItOut
 //│     'FigureItOut :> int
-//│                  <: 'X & 'X0 & int
-//│     'X0 :> int
-//│         <: 'FigureItOut
+//│                  <: 'X & int
 
 
 
@@ -69,22 +67,22 @@ class C2 extends T2['FigureItOut] {
   fun f(x: int) = x
 }
 //│ ╔══[ERROR] Unhandled cyclic definition
-//│ ║  l.64: 	trait T2[A] {
+//│ ║  l.62: 	trait T2[A] {
 //│ ║        	^^^^^^^^^^^^^
-//│ ║  l.65: 	  fun f: A -> A
+//│ ║  l.63: 	  fun f: A -> A
 //│ ║        	^^^^^^^^^^^^^^^
-//│ ║  l.66: 	  val r = C2().f(false)
+//│ ║  l.64: 	  val r = C2().f(false)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.67: 	}
+//│ ║  l.65: 	}
 //│ ╙──      	^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.66: 	  val r = C2().f(false)
+//│ ║  l.64: 	  val r = C2().f(false)
 //│ ║        	          ^^^^^^^^^^^^^
 //│ ╟── reference of type `false` is not an instance of type `int`
-//│ ║  l.66: 	  val r = C2().f(false)
+//│ ║  l.64: 	  val r = C2().f(false)
 //│ ║        	                 ^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.69: 	  fun f(x: int) = x
+//│ ║  l.67: 	  fun f(x: int) = x
 //│ ╙──      	           ^^^
 //│ trait T2[A]() {
 //│   fun f: A -> A
@@ -103,16 +101,16 @@ class C2 extends T2['FigureItOut] {
   fun f(x: int) = x
 }
 //│ ╔══[ERROR] Unhandled cyclic definition
-//│ ║  l.98: 	trait T2[A] {
+//│ ║  l.96: 	trait T2[A] {
 //│ ║        	^^^^^^^^^^^^^
-//│ ║  l.99: 	  fun f: A -> A
+//│ ║  l.97: 	  fun f: A -> A
 //│ ║        	^^^^^^^^^^^^^^^
-//│ ║  l.100: 	  val r = (C2() : T2['X]).f(false)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.101: 	}
-//│ ╙──       	^
+//│ ║  l.98: 	  val r = (C2() : T2['X]).f(false)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.99: 	}
+//│ ╙──      	^
 //│ ╔══[ERROR] Type `C2` does not contain member `T2#A`
-//│ ║  l.98: 	trait T2[A] {
+//│ ║  l.96: 	trait T2[A] {
 //│ ╙──      	         ^
 //│ trait T2[A]() {
 //│   fun f: A -> A
@@ -125,7 +123,7 @@ class C2 extends T2['FigureItOut] {
 :e // FIXME
 C2() : T2['X]
 //│ ╔══[ERROR] Type `C2` does not contain member `T2#A`
-//│ ║  l.98: 	trait T2[A] {
+//│ ║  l.96: 	trait T2[A] {
 //│ ╙──      	         ^
 //│ T2['X]
 //│   where
