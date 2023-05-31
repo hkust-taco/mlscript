@@ -405,6 +405,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
       val (bod2, ctx) = liftTerm(bod)
       val (sts2, ctx2) = liftEntities(sts)
       (Where(bod2, sts2), ctx2)
+    case _: Ass | _: Super => ??? // TODO
   }
 
   //serves for lifting Tup(Some(_), Fld(_, _, trm)), where trm refers to a type
@@ -534,13 +535,14 @@ class ClassLifter(logDebugMsg: Boolean = false) {
       val (body2, ctx) = liftType(body)
       PolyType(targs, body2) -> ctx
     case Top | Bot | _: Literal | _: TypeTag | _: TypeVar => target.asInstanceOf[Type] -> emptyCtx
+    case _: Selection => ??? // TODO
   }
   
 
   private def liftFunc(func: NuFunDef)(using ctx: LocalContext, cache: ClassCache, outer: Option[ClassInfoCache]): (NuFunDef, LocalContext) = {
     log(s"liftFunc $func under $ctx # $cache # $outer")
     val NuFunDef(rec, nm, tpVs, body) = func
-    body match{
+    body match {
       case Left(value) =>
         val ret = liftTerm(value)(using ctx.addV(nm).addT(tpVs))
         (func.copy(rhs = Left(ret._1))(None), ret._2)
@@ -551,6 +553,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
           case R(tv) => R(tv) -> emptyCtx
         }.unzip
         (func.copy(rhs = Right(PolyType(nTargs._1, nBody._1)))(None), nTargs._2.fold(nBody._2)(_ ++ _))
+      case _ => ??? // TODO
     }
   }
   

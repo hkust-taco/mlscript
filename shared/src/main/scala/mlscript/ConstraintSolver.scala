@@ -695,7 +695,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           err(msg"${cls.td.kind.str} `${cls.td.nme.name}` does not contain member `${fld.name}`",
             // ttp(fld))
             fld.toLoc).toUpper(noProv)
-        case _ => ??? // TODO:
+        case _ => ??? // TODO
       }
       println(s"Lookup ${cls.td.nme.name}.${fld.name} : $res where ${res.ub.showBounds}")
       res

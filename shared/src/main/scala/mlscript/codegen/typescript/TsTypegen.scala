@@ -81,7 +81,7 @@ final class TsTypegenCodeBuilder {
       case (classInfo: ClassSymbol) => addTypeGenClassDef(classInfo, methods)
       case (aliasInfo: TypeAliasSymbol) => addTypeGenTypeAlias(aliasInfo)
       case (traitInfo: TraitSymbol) => addTypegenTraitDef(traitInfo, methods)
-      case _ => ??? // TODO:
+      case _ => ??? // TODO
     }
   }
 

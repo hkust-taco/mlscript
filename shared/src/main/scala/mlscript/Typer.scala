@@ -436,10 +436,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         ClassTag(lit, lit.baseClasses)(tyTp(ty.toLoc, "literal type"))
       case TypeName("this") =>
         ctx.env.get("this") match {
-          case S(AbstractConstructor(_, _)) => die
+          case S(_: AbstractConstructor | _: LazyTypeInfo) => die
           case S(VarSymbol(t: SimpleType, _)) => t
-          case N => err(msg"undeclared this" -> ty.toLoc :: Nil)
-          case _ => ??? // TODO
+          case N => err(msg"undeclared `this`" -> ty.toLoc :: Nil)
         }
       case tn @ TypeTag(name) => rec(TypeName(name.decapitalize)) // TODO rm this hack
       // case tn @ TypeTag(name) => rec(TypeName(name))
@@ -1109,7 +1108,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         if (!founPoly) warn(msg"Inferred type `${bod_ty.expPos}` of this ${
           bod_ty.prov.desc} cannot be instantiated", prov.loco)
         res
-      case _ => ??? // TODO
+      case Ass(lhs, rhs) =>
+        err(msg"Unexpected equation in this position", term.toLoc)
     }
   }(r => s"$lvl. : ${r}")
   

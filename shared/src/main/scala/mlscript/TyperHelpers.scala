@@ -791,7 +791,7 @@ abstract class TyperHelpers { Typer: Typer =>
                 cls.members.valuesIterator.flatMap(childrenPolMem) ++
                 S(pol.contravar -> cls.thisTy) ++
                 S(pol.covar -> cls.instanceType)
-            case _ => ??? // TODO:
+            case _ => ??? // TODO
           }
           ents ::: tu.result.toList.map(pol -> _)
     }}
@@ -840,7 +840,7 @@ abstract class TyperHelpers { Typer: Typer =>
     private def childrenMem(m: NuMember): List[ST] = m match {
       case NuParam(nme, ty, isType) => ty.lb.toList ::: ty.ub :: Nil
       case TypedNuFun(level, fd, ty) => ty :: Nil
-      case _ => ??? // TODO:
+      case _ => ??? // TODO
     }
     def children(includeBounds: Bool): List[SimpleType] = this match {
       case tv @ AssignedVariable(ty) => if (includeBounds) ty :: Nil else Nil
@@ -881,7 +881,8 @@ abstract class TyperHelpers { Typer: Typer =>
               cls.members.valuesIterator.flatMap(childrenMem) ++
               S(cls.thisTy) ++
               S(cls.instanceType)
-          case _ => ??? // TODO:
+          case p: NuParam =>
+            p.ty.lb.toList ::: p.ty.ub :: Nil
         }
         ents ::: tu.result.toList
     }
