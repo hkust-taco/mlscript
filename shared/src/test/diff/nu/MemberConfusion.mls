@@ -12,7 +12,7 @@ class C(a: int) extends T
 //│ }
 
 class B { let a = "hi" }
-//│ class B() {
+//│ class B {
 //│   let a: "hi"
 //│ }
 
@@ -34,7 +34,7 @@ mixin M { let b = "hi" }
 //│ }
 
 class B { let a = 1 : int }
-//│ class B() {
+//│ class B {
 //│   let a: int
 //│ }
 

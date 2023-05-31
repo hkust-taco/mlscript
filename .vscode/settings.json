@@ -1,7 +1,6 @@
 {
     "files.associations": {
-        "*.fun": "typescript",
-        "*.mls": "scala"
+        "*.fun": "typescript"
     },
     "typescript.validate.enable": false,
     "files.watcherExclude": {

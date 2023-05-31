@@ -60,7 +60,7 @@ class C {
   fun id(x) = x
   fun const(x) = id
 }
-//│ class C() {
+//│ class C {
 //│   fun const: anything -> 'a -> 'a
 //│   fun id: 'a -> 'a
 //│ }

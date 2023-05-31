@@ -6,21 +6,21 @@
 trait T1[A] {
   fun f: A -> A
 }
-//│ trait T1[A]() {
+//│ trait T1[A] {
 //│   fun f: A -> A
 //│ }
 
 class C1 extends T1 {
   fun f(x: int) = x
 }
-//│ class C1() {
+//│ class C1 {
 //│   fun f: (x: int,) -> int
 //│ }
 
 class C1 extends T1['FigureItOut] {
   fun f(x: int) = x
 }
-//│ class C1() {
+//│ class C1 {
 //│   fun f: (x: int,) -> int
 //│ }
 
@@ -72,9 +72,7 @@ class C2 extends T2['FigureItOut] {
 //│ ║  l.63: 	  fun f: A -> A
 //│ ║        	^^^^^^^^^^^^^^^
 //│ ║  l.64: 	  val r = C2().f(false)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.65: 	}
-//│ ╙──      	^
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.64: 	  val r = C2().f(false)
 //│ ║        	          ^^^^^^^^^^^^^
@@ -84,11 +82,11 @@ class C2 extends T2['FigureItOut] {
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.67: 	  fun f(x: int) = x
 //│ ╙──      	           ^^^
-//│ trait T2[A]() {
+//│ trait T2[A] {
 //│   fun f: A -> A
 //│   let r: error | int
 //│ }
-//│ class C2() {
+//│ class C2 {
 //│   fun f: (x: int,) -> int
 //│ }
 
@@ -101,29 +99,27 @@ class C2 extends T2['FigureItOut] {
   fun f(x: int) = x
 }
 //│ ╔══[ERROR] Unhandled cyclic definition
-//│ ║  l.96: 	trait T2[A] {
+//│ ║  l.94: 	trait T2[A] {
 //│ ║        	^^^^^^^^^^^^^
-//│ ║  l.97: 	  fun f: A -> A
+//│ ║  l.95: 	  fun f: A -> A
 //│ ║        	^^^^^^^^^^^^^^^
-//│ ║  l.98: 	  val r = (C2() : T2['X]).f(false)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.99: 	}
-//│ ╙──      	^
+//│ ║  l.96: 	  val r = (C2() : T2['X]).f(false)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Type `C2` does not contain member `T2#A`
-//│ ║  l.96: 	trait T2[A] {
+//│ ║  l.94: 	trait T2[A] {
 //│ ╙──      	         ^
-//│ trait T2[A]() {
+//│ trait T2[A] {
 //│   fun f: A -> A
 //│   let r: error | false
 //│ }
-//│ class C2() {
+//│ class C2 {
 //│   fun f: (x: int,) -> int
 //│ }
 
 :e // FIXME
 C2() : T2['X]
 //│ ╔══[ERROR] Type `C2` does not contain member `T2#A`
-//│ ║  l.96: 	trait T2[A] {
+//│ ║  l.94: 	trait T2[A] {
 //│ ╙──      	         ^
 //│ T2['X]
 //│   where

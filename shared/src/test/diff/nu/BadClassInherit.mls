@@ -22,7 +22,7 @@ class C2 extends C1(y) {
 //│ ╔══[ERROR] identifier not found: y
 //│ ║  l.19: 	class C2 extends C1(y) {
 //│ ╙──      	                    ^
-//│ class C2() {
+//│ class C2 {
 //│   let y: int
 //│ }
 //│ Code generation encountered an error:
@@ -35,7 +35,7 @@ class C2 extends C1(this.y) {
 //│ ╔══[ERROR] identifier not found: this
 //│ ║  l.32: 	class C2 extends C1(this.y) {
 //│ ╙──      	                    ^^^^
-//│ class C2() {
+//│ class C2 {
 //│   let y: int
 //│ }
 
@@ -48,6 +48,6 @@ class C2 extends C1(this)
 //│ ╔══[ERROR] identifier not found: this
 //│ ║  l.47: 	class C2 extends C1(this)
 //│ ╙──      	                    ^^^^
-//│ class C2()
+//│ class C2
 
 

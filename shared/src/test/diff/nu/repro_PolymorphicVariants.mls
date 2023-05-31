@@ -5,7 +5,7 @@
 class Cons[out A](head: A, tail: Cons[A] | Nil)
 module Nil
 //│ class Cons[A](head: A, tail: Cons[A] | Nil)
-//│ module Nil()
+//│ module Nil
 
 class Abs[A](x: string, t: A)
 class App[A](s: A, t: A)
@@ -29,7 +29,7 @@ mixin EvalLambda {
 //  The original unreduced version in PolymorphicVariants.mls still crashes...
 // :ds
 module Test1 extends EvalLambda
-//│ module Test1() {
+//│ module Test1 {
 //│   fun eval: (Cons[anything] | Nil, Abs[anything],) -> nothing
 //│ }
 

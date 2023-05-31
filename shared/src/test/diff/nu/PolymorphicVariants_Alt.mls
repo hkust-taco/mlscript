@@ -17,7 +17,7 @@ class List<A> {
 }
 let Nil: () => List<'a>
 let Cons: (head: 'a, tail: List<'a>) => List<'a>
-//│ class List[A]() {
+//│ class List[A] {
 //│   fun match: forall 'res. (ifNil: () -> 'res, ifCons: (A, List[A],) -> 'res,) -> 'res
 //│ }
 //│ let Nil: forall 'a. () -> List['a]
@@ -25,7 +25,7 @@ let Cons: (head: 'a, tail: List<'a>) => List<'a>
 
 class NotFound
 class Success<A>(result: A)
-//│ class NotFound()
+//│ class NotFound
 //│ class Success[A](result: A)
 
 fun eq(l: string, r: string): bool
@@ -103,7 +103,7 @@ mixin EvalLambda {
 //│   'a0 :> (string, Var,)
 
 module Test1 extends EvalVar, EvalLambda
-//│ module Test1() {
+//│ module Test1 {
 //│   fun eval: forall 'a. (List[{_1: string, _2: 'b}], Abs['t] | App['A] | Var,) -> ('c | 'a)
 //│ }
 //│ where
@@ -174,7 +174,7 @@ mixin EvalExpr {
 //│ }
 
 module Test2 extends EvalVar, EvalExpr
-//│ module Test2() {
+//│ module Test2 {
 //│   fun eval: forall 'a. (List[{_1: string, _2: 'b}], 'a & (Add['c] | Mul['c] | Num | Var),) -> ('b | Num | Var | 'a)
 //│ }
 //│ where
@@ -193,7 +193,7 @@ Test2.eval(Cons(("a", Abs("d", Var("d"))), Nil()), Add(Num(1), Var("a")))
 //│ Abs[Var] | Add[Num | Var] | Num | Var
 
 module Test3 extends EvalVar, EvalExpr, EvalLambda
-//│ module Test3() {
+//│ module Test3 {
 //│   fun eval: forall 'A 'a. (List[{_1: string, _2: 'b}], Abs['t] | App['A] | 'c & ~#Abs & ~#App,) -> ('d | 'a)
 //│ }
 //│ where
@@ -221,7 +221,7 @@ Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), App(Abs("a", Var("a")), Add(N
 //│     'c :> (forall 'a. Abs[Var] | Var | 'b | 'a) | Add[Num | Var] | Num | Var
 
 module Test3 extends EvalVar, EvalLambda, EvalExpr
-//│ module Test3() {
+//│ module Test3 {
 //│   fun eval: forall 'a. (List[{_1: string, _2: 'b}], 'a & (Add['c] | Mul['c] | Num | Var),) -> ('a | 'd)
 //│ }
 //│ where

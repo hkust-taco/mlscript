@@ -25,7 +25,7 @@ mixin M1 {
 :re
 module C0 extends M0, M1
 C0.g
-//│ module C0() {
+//│ module C0 {
 //│   fun f: 42
 //│   fun g: {f: 42}
 //│ }
@@ -42,7 +42,7 @@ class Foo {
 //│ ╔══[ERROR] Illegal use of `super`
 //│ ║  l.40: 	  fun f = super
 //│ ╙──      	          ^^^^^
-//│ class Foo() {
+//│ class Foo {
 //│   fun f: Foo
 //│ }
 //│ Syntax error:

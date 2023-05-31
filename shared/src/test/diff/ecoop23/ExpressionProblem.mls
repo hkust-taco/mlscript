@@ -36,7 +36,7 @@ mixin EvalBase {
 
 
 module TestLang extends EvalBase
-//│ module TestLang() {
+//│ module TestLang {
 //│   fun eval: (Add['E] | Lit) -> int
 //│ }
 //│ where
@@ -74,7 +74,7 @@ module TestLang extends EvalNothing, EvalAddLit
 //│   this: {eval: 'lhs -> int}
 //│   fun eval: (Add['lhs] | Lit | 'a & ~#Add & ~#Lit) -> (int | 'b)
 //│ }
-//│ module TestLang() {
+//│ module TestLang {
 //│   fun eval: (Add['E] | Lit) -> int
 //│ }
 //│ where
@@ -115,7 +115,7 @@ mixin EvalNeg {
 
 
 module TestLang extends EvalBase, EvalNeg
-//│ module TestLang() {
+//│ module TestLang {
 //│   fun eval: (Neg['expr] | 'a & ~#Neg) -> int
 //│ }
 //│ where
@@ -192,7 +192,7 @@ mixin EvalNegNeg {
 //│ }
 
 module TestLang extends EvalBase, EvalNeg, EvalNegNeg
-//│ module TestLang() {
+//│ module TestLang {
 //│   fun eval: 'a -> int
 //│ }
 //│ where
@@ -202,7 +202,7 @@ fun mk(n) = if n is
   0 then Lit(0)
   1 then Neg(mk(n))
   _ then Add(mk(n), mk(n))
-//│ fun mk: forall 'E. number -> 'E
+//│ fun mk: forall 'E. anything -> 'E
 //│   where
 //│     'E :> Add['E] | Lit | Neg['E]
 

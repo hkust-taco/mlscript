@@ -771,7 +771,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     lazy val typedParams: Ls[Var -> FieldType] = ctx.nest.nextLevel { implicit ctx =>
       decl match {
         case td: NuTypeDef =>
-          td.params.fields.map {
+          td.params.getOrElse(Tup(Nil)).fields.map {
             case (S(nme), Fld(mut, spec, value)) =>
               assert(!mut && !spec, "TODO") // TODO
               value.toType match {
@@ -831,7 +831,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     
     lazy val allFields: Set[Var] = decl match {
       case td: NuTypeDef =>
-        (td.params.fields.iterator.flatMap(_._1) ++ td.body.entities.iterator.collect {
+        (td.params.getOrElse(Tup(Nil)).fields.iterator.flatMap(_._1) ++ td.body.entities.iterator.collect {
           case fd: NuFunDef => fd.nme
         }).toSet ++ typedParents.flatMap(_._1.allFields)
       case _: NuFunDef => Set.empty
@@ -937,6 +937,10 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
               
               val signatures = typedSignatures
               ctx ++= signatures.map(nt => nt._1.name -> VarSymbol(nt._2, nt._1.nme))
+
+              if (((td.kind is Nms) || (td.kind is Mxn)) && td.ctor.isDefined)
+                err(msg"Explicit ${td.kind.str} constructors are not supported.",
+                  td.ctor.fold[Opt[Loc]](N)(c => c.toLoc))
               
               // * To type signatures correctly, we need to deal with type unbound variables 'X,
               // * which should be treated as unknowns (extruded skolems).
@@ -970,7 +974,10 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
               val (res, funMembers) = td.kind match {
                 
                 case Trt =>
-                  if (td.params.fields.nonEmpty) err(msg"trait parameters are not yet supported", td.params.toLoc)
+                  td.params match {
+                    case S(ps) => err(msg"trait parameters are not yet supported", ps.toLoc)
+                    case _ =>
+                  }
                   
                   ctx.nest.nextLevel { implicit ctx =>
                     ctx ++= paramSymbols
@@ -1016,8 +1023,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                   
                 case Als =>
                   
-                  if (td.params.fields.nonEmpty)
-                    err(msg"type alias definitions cannot have value parameters" -> td.params.toLoc :: Nil)
+                  if (td.params.getOrElse(Tup(Nil)).fields.nonEmpty)
+                    err(msg"type alias definitions cannot have value parameters" -> td.params.getOrElse(Tup(Nil)).toLoc :: Nil)
                   if (td.parents.nonEmpty)
                     err(msg"type alias definitions cannot extend parents" -> Loc(td.parents) :: Nil)
                   
@@ -1122,7 +1129,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                         
                       }
                       case Nil =>
-                        val thisType = WithType(pack.superType, RecordType(typedParams)(ttp(td.params, isType = true)))(provTODO) &
+                        val thisType = WithType(pack.superType, RecordType(typedParams)(ttp(td.params.getOrElse(Tup(Nil)), isType = true)))(provTODO) &
                           clsNameToNomTag(td)(provTODO, ctx) &
                           RecordType(tparamFields)(TypeProvenance(Loc(td.tparams.map(_._2)), "type parameters", isType = true))
                         

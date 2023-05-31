@@ -3,13 +3,13 @@
 
 
 trait Foo[A] { fun x: A }
-//│ trait Foo[A]() {
+//│ trait Foo[A] {
 //│   fun x: A
 //│ }
 
 
 trait Base1: Foo
-//│ trait Base1(): #Foo
+//│ trait Base1: #Foo
 
 (b: Base1) => b.x
 //│ (b: Base1,) -> ??A
@@ -46,7 +46,7 @@ trait Base1: Foo
 
 
 trait Base1: Foo { val x: int }
-//│ trait Base1(): #Foo {
+//│ trait Base1: #Foo {
 //│   let x: int
 //│ }
 
@@ -55,7 +55,7 @@ trait Base1: Foo { val x: int }
 
 
 trait Base1: Foo[1 | 2] { val x: 0 | 1 }
-//│ trait Base1(): Foo[1 | 2] {
+//│ trait Base1: Foo[1 | 2] {
 //│   let x: 0 | 1
 //│ }
 
@@ -64,7 +64,7 @@ trait Base1: Foo[1 | 2] { val x: 0 | 1 }
 
 
 trait Base2: Foo['FigureItOut]
-//│ trait Base2(): Foo[in ??FigureItOut out ??FigureItOut0]
+//│ trait Base2: Foo[in ??FigureItOut out ??FigureItOut0]
 
 (b: Base2) => b.x
 //│ (b: Base2,) -> ??FigureItOut
@@ -82,7 +82,7 @@ trait Base2: Foo['FigureItOut]
 
 // TODO reject
 class Impl extends Base2
-//│ class Impl()
+//│ class Impl
 
 (x: Impl) => x : Base2
 //│ (x: Impl,) -> Base2
@@ -92,12 +92,12 @@ class Impl extends Base2, Foo
 //│ ╔══[ERROR] Member x is declared in parent trait but not implemented
 //│ ║  l.91: 	class Impl extends Base2, Foo
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ class Impl()
+//│ class Impl
 
 class Impl extends Base2, Foo {
   fun x = 1
 }
-//│ class Impl() {
+//│ class Impl {
 //│   fun x: 1
 //│ }
 
@@ -113,7 +113,7 @@ Impl() : Base2
 class Impl2 extends Base2, Foo[int] {
   fun x = 1
 }
-//│ class Impl2() {
+//│ class Impl2 {
 //│   fun x: 1
 //│ }
 
@@ -124,10 +124,10 @@ class Impl2 extends Base2, Foo[int] {
 
 trait Test1[A] { fun x: A }
 trait Test2[A]: Test1[(A, A)]
-//│ trait Test1[A]() {
+//│ trait Test1[A] {
 //│   fun x: A
 //│ }
-//│ trait Test2[A](): Test1[(A, A,)]
+//│ trait Test2[A]: Test1[(A, A,)]
 
 (t: Test2[int]) => t.x
 //│ (t: Test2[int],) -> (int, int,)

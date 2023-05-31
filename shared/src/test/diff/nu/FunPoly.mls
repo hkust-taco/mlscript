@@ -60,7 +60,7 @@ module Helper {
   fun id(x) = x
 }
 //│ fun test: (1, true,)
-//│ module Helper() {
+//│ module Helper {
 //│   fun id: 'a -> 'a
 //│ }
 

@@ -1,8 +1,8 @@
 :NewDefs
 
 
-class C0 {
-  class NC0
+class C0() {
+  class NC0()
 }
 //│ class C0() {
 //│   class NC0()
@@ -26,8 +26,8 @@ c.NC0
 module M0 {
   class NC0
 }
-//│ module M0() {
-//│   class NC0()
+//│ module M0 {
+//│   class NC0
 //│ }
 
 :e
@@ -37,14 +37,14 @@ M0.NC0
 //│ ╙──      	  ^^^^
 //│ error
 //│ res
-//│     = [Function (anonymous)] { class: [class NC0] }
+//│     = [class NC0]
 
 
 module M1 {
   module NM1
 }
-//│ module M1() {
-//│   module NM1()
+//│ module M1 {
+//│   module NM1
 //│ }
 
 :e

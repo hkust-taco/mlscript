@@ -48,7 +48,7 @@ mixin EvalNegNeg {
 
 
 module TestLang extends EvalBase, EvalNeg, EvalNegNeg
-//│ module TestLang() {
+//│ module TestLang {
 //│   fun eval: 'a -> int
 //│ }
 //│ where
@@ -59,7 +59,7 @@ fun mk(n) = if n is
   0 then Lit(3)
   1 then Neg(mk(n - 1))
   _ then Add(mk(n - 1), mk(n - 1))
-//│ fun mk: forall 'E. int -> 'E
+//│ fun mk: forall 'E. (0 | 1 | int & ~0 & ~1) -> 'E
 //│   where
 //│     'E :> Add['E] | Lit | Neg['E]
 

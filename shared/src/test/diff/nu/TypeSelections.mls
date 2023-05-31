@@ -6,7 +6,7 @@ module M {
   class C(n: int)
   fun mkC = C
 }
-//│ module M() {
+//│ module M {
 //│   class C(n: int)
 //│   type T = int -> int
 //│   fun mkC: (n: int,) -> C

@@ -81,6 +81,7 @@ final case class Where(body: Term, where: Ls[Statement])             extends Ter
 final case class Forall(params: Ls[TypeVar], body: Term)             extends Term
 final case class Inst(body: Term)                                    extends Term
 final case class Super()                                             extends Term
+final case class Eqn(lhs: Var, rhs: Term)                            extends Term // equations such as x = y, notably used in constructors; TODO: make lhs a Term
 
 sealed abstract class IfBody extends IfBodyImpl
 // final case class IfTerm(expr: Term) extends IfBody // rm?
@@ -109,9 +110,10 @@ trait IdentifiedTerm
 sealed abstract class SimpleTerm extends Term with IdentifiedTerm with SimpleTermImpl
 
 sealed trait Statement extends StatementImpl
-final case class LetS(isRec: Bool, pat: Term, rhs: Term)  extends Statement
-final case class DataDefn(body: Term)                     extends Statement
-final case class DatatypeDefn(head: Term, body: Term)     extends Statement
+final case class LetS(isRec: Bool, pat: Term, rhs: Term) extends Statement
+final case class DataDefn(body: Term)                    extends Statement
+final case class DatatypeDefn(head: Term, body: Term)    extends Statement
+final case class Constructor(params: Tup, body: Blk)    extends Statement // constructor(...) { ... }
 
 sealed trait DesugaredStatement extends Statement with DesugaredStatementImpl
 
@@ -180,13 +182,17 @@ final case class NuTypeDef(
   kind: TypeDefKind,
   nme: TypeName,
   tparams: Ls[(Opt[VarianceInfo], TypeName)],
-  params: Tup, // the specialized parameters for that type
+  params: Opt[Tup], // the specialized parameters for that type
+  ctor: Opt[Constructor],
   sig: Opt[Type],
   parents: Ls[Term],
   superAnnot: Opt[Type],
   thisAnnot: Opt[Type],
   body: TypingUnit
-)(val declareLoc: Opt[Loc]) extends NuDecl with Statement
+)(val declareLoc: Opt[Loc], val abstractLoc: Opt[Loc])
+  extends NuDecl with Statement {
+    def isPlainJSClass: Bool = params.isEmpty
+  }
 
 final case class NuFunDef(
   isLetRec: Opt[Bool], // None means it's a `fun`, which is always recursive; Some means it's a `let`
@@ -196,6 +202,7 @@ final case class NuFunDef(
 )(val declareLoc: Opt[Loc], val signature: Opt[NuFunDef]) extends NuDecl with DesugaredStatement {
   val body: Located = rhs.fold(identity, identity)
   def kind: DeclKind = Val
+  val abstractLoc: Opt[Loc] = None
 }
 
 

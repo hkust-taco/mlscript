@@ -27,7 +27,7 @@ class Lit(n: int)
 //│           this.#rhs = rhs;
 //│         }
 //│       };
-//│       this.#Add = ((lhs, rhs) => new Add(lhs, rhs));
+//│       this.#Add = ((lhs, rhs) => Object.freeze(new Add(lhs, rhs)));
 //│       this.#Add.class = Add;
 //│     }
 //│     return this.#Add;
@@ -42,7 +42,7 @@ class Lit(n: int)
 //│           this.#n = n;
 //│         }
 //│       };
-//│       this.#Lit = ((n) => new Lit(n));
+//│       this.#Lit = ((n) => Object.freeze(new Lit(n)));
 //│       this.#Lit.class = Lit;
 //│     }
 //│     return this.#Lit;
@@ -74,7 +74,7 @@ class Lit(n: int)
 //│ │ │             this.#rhs = rhs;
 //│ │ │           }
 //│ │ │         };
-//│ │ │         this.#Add = ((lhs, rhs) => new Add(lhs, rhs));
+//│ │ │         this.#Add = ((lhs, rhs) => Object.freeze(new Add(lhs, rhs)));
 //│ │ │         this.#Add.class = Add;
 //│ │ │       }
 //│ │ │       return this.#Add;
@@ -89,7 +89,7 @@ class Lit(n: int)
 //│ │ │             this.#n = n;
 //│ │ │           }
 //│ │ │         };
-//│ │ │         this.#Lit = ((n) => new Lit(n));
+//│ │ │         this.#Lit = ((n) => Object.freeze(new Lit(n)));
 //│ │ │         this.#Lit.class = Lit;
 //│ │ │       }
 //│ │ │       return this.#Lit;
@@ -188,7 +188,7 @@ class Neg<A>(expr: A)
 //│           this.#expr = expr;
 //│         }
 //│       };
-//│       this.#Neg = ((expr) => new Neg(expr));
+//│       this.#Neg = ((expr) => Object.freeze(new Neg(expr)));
 //│       this.#Neg.class = Neg;
 //│     }
 //│     return this.#Neg;
@@ -214,7 +214,7 @@ class Neg<A>(expr: A)
 //│ │ │             this.#expr = expr;
 //│ │ │           }
 //│ │ │         };
-//│ │ │         this.#Neg = ((expr) => new Neg(expr));
+//│ │ │         this.#Neg = ((expr) => Object.freeze(new Neg(expr)));
 //│ │ │         this.#Neg.class = Neg;
 //│ │ │       }
 //│ │ │       return this.#Neg;
@@ -351,7 +351,7 @@ mixin EvalNegNeg {
 :js
 :ShowRepl
 module TestLang extends EvalBase, EvalNeg, EvalNegNeg
-//│ module TestLang() {
+//│ module TestLang {
 //│   fun eval: 'a -> int
 //│ }
 //│ where
@@ -412,7 +412,7 @@ fun mk(n) = if n is
   1 then Neg(mk(n))
   _ then Add(mk(n), mk(n))
 TestLang.eval(mk(0))
-//│ fun mk: forall 'E. number -> 'E
+//│ fun mk: forall 'E. anything -> 'E
 //│ int
 //│ where
 //│   'E :> Add['E] | Lit | Neg['E]
@@ -421,7 +421,8 @@ TestLang.eval(mk(0))
 //│ const typing_unit6 = new TypingUnit6;
 //│ // Query 1
 //│ globalThis.mk = function mk(n) {
-//│   return n == 0 === true ? Lit(0) : n == 1 === true ? Neg(mk(n)) : Add(mk(n), mk(n));
+//│   let a;
+//│   return a = n, a === 0 ? Lit(0) : a === 1 ? Neg(mk(n)) : Add(mk(n), mk(n));
 //│ };
 //│ // Query 2
 //│ res = TestLang.eval(mk(0));
@@ -437,7 +438,8 @@ TestLang.eval(mk(0))
 //│ │ ├── Prelude: <empty>
 //│ │ ├── Code:
 //│ │ ├──   globalThis.mk = function mk(n) {
-//│ │ ├──     return n == 0 === true ? Lit(0) : n == 1 === true ? Neg(mk(n)) : Add(mk(n), mk(n));
+//│ │ ├──     let a;
+//│ │ ├──     return a = n, a === 0 ? Lit(0) : a === 1 ? Neg(mk(n)) : Add(mk(n), mk(n));
 //│ │ ├──   };
 //│ │ ├── Intermediate: [Function: mk]
 //│ │ └── Reply: [success] [Function: mk]
@@ -535,7 +537,7 @@ mixin Bazz(y: int)
 
 :js
 module Barr extends Fooo(0), Bazz(1)
-//│ module Barr() {
+//│ module Barr {
 //│   fun f: (int, 0,)
 //│ }
 //│ // Prelude
@@ -577,7 +579,7 @@ mixin Base {
   fun x = y
 }
 //│ ╔══[ERROR] identifier not found: y
-//│ ║  l.577: 	  fun x = y
+//│ ║  l.579: 	  fun x = y
 //│ ╙──       	          ^
 //│ mixin Base() {
 //│   fun x: error
@@ -588,7 +590,7 @@ mixin Base {
 
 :re
 module Test extends Base
-//│ module Test() {
+//│ module Test {
 //│   fun x: error
 //│ }
 //│ Runtime error:
@@ -604,7 +606,7 @@ mixin MC(c: int)
 
 :js
 module MM extends MA(1), MB(2, 3), MC(4)
-//│ module MM()
+//│ module MM
 //│ // Prelude
 //│ class TypingUnit22 {
 //│   #MM;

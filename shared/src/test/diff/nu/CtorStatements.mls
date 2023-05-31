@@ -12,7 +12,7 @@ log("Hello!")
 module Test0 {
   log("Hello!")
 }
-//│ module Test0()
+//│ module Test0
 
 Test0
 //│ Test0

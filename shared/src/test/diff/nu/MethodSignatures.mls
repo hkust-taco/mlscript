@@ -6,7 +6,7 @@ module Oops {
   fun a : int
   fun a = 2
 }
-//│ module Oops() {
+//│ module Oops {
 //│   fun a: int
 //│ }
 
@@ -17,7 +17,7 @@ module Oops {
 //│ ╔══[ERROR] Member a is declared but not defined
 //│ ║  l.15: 	  fun a : int
 //│ ╙──      	      ^
-//│ module Oops() {
+//│ module Oops {
 //│   fun a: int
 //│ }
 
@@ -30,7 +30,7 @@ module Oops {
 //│ ╔══[ERROR] A type signature for 'a' has already been given
 //│ ║  l.27: 	  fun a : string
 //│ ╙──      	      ^^^^^^^^^^
-//│ module Oops() {
+//│ module Oops {
 //│   fun a: string
 //│ }
 
@@ -54,7 +54,7 @@ module Oops {
 //│ ╟── from signature of member a:
 //│ ║  l.39: 	  fun a : int
 //│ ╙──      	      ^^^^^^^
-//│ module Oops() {
+//│ module Oops {
 //│   fun a: int
 //│ }
 
@@ -66,7 +66,7 @@ module Oops {
 //│ ╔══[ERROR] Refininition of a
 //│ ║  l.64: 	  fun a = 2
 //│ ╙──      	      ^^^^^
-//│ module Oops() {
+//│ module Oops {
 //│   fun a: 2
 //│ }
 
@@ -76,7 +76,7 @@ module Oops {
 module A {
   fun i(x) = x
 }
-//│ module A() {
+//│ module A {
 //│   fun i: 'a -> 'a
 //│ }
 
@@ -90,7 +90,7 @@ module A {
   fun j(x) = x
   
 }
-//│ module A() {
+//│ module A {
 //│   fun i: forall 'a. 'a -> 'a
 //│   fun j: forall 'b. 'b -> 'b
 //│ }
@@ -116,7 +116,7 @@ module A {
 //│ ╟── from signature of member i:
 //│ ║  l.101: 	  fun i : 'a
 //│ ╙──       	      ^^^^^^
-//│ module A() {
+//│ module A {
 //│   fun i: nothing
 //│ }
 
@@ -145,8 +145,8 @@ module M {
 //│ ╟── from signature of member a:
 //│ ║  l.130: 	  fun a: A
 //│ ╙──       	      ^^^^
-//│ module M() {
-//│   class A()
+//│ module M {
+//│   class A
 //│   fun a: A
 //│ }
 
@@ -156,7 +156,7 @@ module M {
   fun a: this.A
   fun a = 1
 }
-//│ ╔══[ERROR] undeclared this
+//│ ╔══[ERROR] undeclared `this`
 //│ ║  l.156: 	  fun a: this.A
 //│ ╙──       	         ^^^^
 //│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.

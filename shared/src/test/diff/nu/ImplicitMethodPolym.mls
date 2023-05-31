@@ -4,7 +4,7 @@
 module M {
   fun id1(x) = x
 }
-//│ module M() {
+//│ module M {
 //│   fun id1: 'a -> 'a
 //│ }
 
@@ -28,7 +28,7 @@ module M {
   fun id1(x) = x
   id1(0)
 }
-//│ module M() {
+//│ module M {
 //│   fun id1: 'a -> (0 | 'a)
 //│ }
 
@@ -51,7 +51,7 @@ mixin Mx {
 module M extends Mx {
   val r = this.id1(0)
 }
-//│ module M() {
+//│ module M {
 //│   fun id1: forall 'a. 'a -> 'a
 //│   let r: 0
 //│ }
@@ -71,7 +71,7 @@ module M extends Mx {
 //│ ╔══[ERROR] Type `#M & {id1: ?a -> ?b}` does not contain member `id2`
 //│ ║  l.60: 	  fun id1(x) = this.id2(x)
 //│ ╙──      	                   ^^^^
-//│ module M() {
+//│ module M {
 //│   fun id1: anything -> error
 //│ }
 //│ Runtime error:
@@ -85,7 +85,7 @@ module M extends Mx {
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
 //│ ║  l.60: 	  fun id1(x) = this.id2(x)
 //│ ╙──      	                   ^^^^
-//│ module M() {
+//│ module M {
 //│   fun id1: anything -> error
 //│   fun id2: 'a -> ('a, 'a,)
 //│ }
@@ -96,7 +96,7 @@ module M extends Mx {
   fun id2(x) = (x, x)
   this.id1(0)
 }
-//│ module M() {
+//│ module M {
 //│   fun id1: 'a -> ('a | 0, 'a | 0,)
 //│   fun id2: forall 'a0. 'a0 -> ('a0, 'a0,)
 //│ }
@@ -108,7 +108,7 @@ class C {
   fun f = (id1(true), id1(0))
   fun id2(x) = x
 }
-//│ class C() {
+//│ class C {
 //│   fun f: (0 | true | 'a, 0 | true | 'b,)
 //│   fun id1: ('b & 'a) -> (0 | true | 'a)
 //│   fun id2: 'c -> 'c
@@ -122,7 +122,7 @@ module M extends C {
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
 //│ ║  l.120: 	  this.id2(true)
 //│ ╙──       	      ^^^^
-//│ module M() {
+//│ module M {
 //│   fun f: forall 'a 'b. (0 | true | 'a, 0 | true | 'b,)
 //│   fun id1: forall 'a 'b. ('b & 'a) -> (0 | true | 'a)
 //│   fun id2: forall 'c. 'c -> 'c
@@ -138,7 +138,7 @@ module M extends C {
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
 //│ ║  l.133: 	  fun g = (this.id2(true), this.id2(0))
 //│ ╙──       	                               ^^^^
-//│ module M() {
+//│ module M {
 //│   fun f: forall 'a 'b. (0 | true | 'a, 0 | true | 'b,)
 //│   fun g: (error, error,)
 //│   fun id1: forall 'a 'b. ('b & 'a) -> (0 | true | 'a)
@@ -183,7 +183,7 @@ module M extends C {
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.107: 	  fun id1(x) = x
 //│ ╙──       	               ^
-//│ module M() {
+//│ module M {
 //│   fun f: (0 | true, 0 | true,)
 //│   fun id1: int -> int
 //│   fun id2: forall 'a. 'a -> 'a
@@ -205,12 +205,12 @@ M.id1
 (M: C)
 //│ (M: () -> C,)
 //│ res
-//│     = [ [Function (anonymous)] { class: [class C] } ]
+//│     = [ [class C] ]
 
 
 
 module None
-//│ module None()
+//│ module None
 
 // TODO parse
 // TODO reject; polymophism should be blocked by mutation from distributing/refreshing
@@ -226,14 +226,19 @@ module M {
 //│ ╔══[PARSE ERROR] Unexpected 'val' keyword in expression position
 //│ ║  l.220: 	  mut val m = None
 //│ ╙──       	      ^^^
-//│ ╔══[PARSE ERROR] Unexpected '=' here
-//│ ║  l.220: 	  mut val m = None
-//│ ╙──       	            ^
+//│ ╔══[ERROR] identifier not found: :=
+//│ ║  l.221: 	  fun oops(x) = m := x
+//│ ╙──       	                  ^^
 //│ ╔══[ERROR] identifier not found: m
+//│ ║  l.221: 	  fun oops(x) = m := x
+//│ ╙──       	                ^
+//│ ╔══[ERROR] Unexpected equation in this position
 //│ ║  l.220: 	  mut val m = None
-//│ ╙──       	          ^
-//│ module M()
+//│ ╙──       	          ^^^^^^^^
+//│ module M {
+//│   fun oops: anything -> error
+//│ }
 //│ Code generation encountered an error:
-//│   unresolved symbol m
+//│   unresolved symbol :=
 
 

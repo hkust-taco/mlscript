@@ -5,7 +5,7 @@
 module Test0 {
   log("Hello!")
 }
-//│ module Test0()
+//│ module Test0
 //│ // Prelude
 //│ function log(x) {
 //│   return console.info(x);
@@ -80,7 +80,7 @@ class A(a: int) {
 //│           log(a);
 //│         }
 //│       };
-//│       this.#A = ((a) => new A(a));
+//│       this.#A = ((a) => Object.freeze(new A(a)));
 //│       this.#A.class = A;
 //│     }
 //│     return this.#A;
@@ -138,7 +138,7 @@ class Foo {
 //│ ╔══[ERROR] Type `#Foo` does not contain member `x`
 //│ ║  l.136: 	  this: { x: int }
 //│ ╙──       	          ^
-//│ class Foo()
+//│ class Foo
 //│ // Prelude
 //│ class TypingUnit7 {
 //│   #Foo;
@@ -148,8 +148,7 @@ class Foo {
 //│     const outer = this;
 //│     if (this.#Foo === undefined) {
 //│       class Foo {};
-//│       this.#Foo = (() => new Foo());
-//│       this.#Foo.class = Foo;
+//│       this.#Foo = Foo;
 //│     }
 //│     return this.#Foo;
 //│   }
@@ -164,12 +163,12 @@ class Bar {
   super: { x: int }
 }
 //│ ╔══[ERROR] Illegal use of `super`
-//│ ║  l.164: 	  super: { x: int }
+//│ ║  l.163: 	  super: { x: int }
 //│ ╙──       	  ^^^^^
 //│ ╔══[ERROR] Type `#Bar` does not contain member `x`
-//│ ║  l.164: 	  super: { x: int }
+//│ ║  l.163: 	  super: { x: int }
 //│ ╙──       	           ^
-//│ class Bar()
+//│ class Bar
 //│ // Prelude
 //│ class TypingUnit8 {
 //│   #Bar;
@@ -179,8 +178,7 @@ class Bar {
 //│     const outer = this;
 //│     if (this.#Bar === undefined) {
 //│       class Bar {};
-//│       this.#Bar = (() => new Bar());
-//│       this.#Bar.class = Bar;
+//│       this.#Bar = Bar;
 //│     }
 //│     return this.#Bar;
 //│   }
@@ -190,7 +188,7 @@ class Bar {
 //│ // End of generated code
 
 :js
-class Baz {
+class Baz() {
   let x = 123
   log((1, x))
   let y =
@@ -236,7 +234,7 @@ class Baz {
 //│           ]);
 //│         }
 //│       };
-//│       this.#Baz = (() => new Baz());
+//│       this.#Baz = (() => Object.freeze(new Baz()));
 //│       this.#Baz.class = Baz;
 //│     }
 //│     return this.#Baz;
@@ -294,7 +292,7 @@ class Q() {
 //│           })());
 //│         }
 //│       };
-//│       this.#Q = (() => new Q());
+//│       this.#Q = (() => Object.freeze(new Q()));
 //│       this.#Q.class = Q;
 //│     }
 //│     return this.#Q;
@@ -342,7 +340,7 @@ class W() {
 //│           return self.x + self1;
 //│         }
 //│       };
-//│       this.#W = (() => new W());
+//│       this.#W = (() => Object.freeze(new W()));
 //│       this.#W.class = W;
 //│     }
 //│     return this.#W;

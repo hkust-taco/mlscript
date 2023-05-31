@@ -4,7 +4,7 @@
 
 
 trait T1 { fun x: 0 | 1 }
-//│ trait T1() {
+//│ trait T1 {
 //│   fun x: 0 | 1
 //│ }
 
@@ -12,11 +12,11 @@ module Foo {
   trait T2 { fun x: 1 | 2 }
   class C extends T1, T2 { fun x = 1 }
 }
-//│ module Foo() {
-//│   class C() {
+//│ module Foo {
+//│   class C {
 //│     fun x: 1
 //│   }
-//│   trait T2() {
+//│   trait T2 {
 //│     fun x: 1 | 2
 //│   }
 //│ }
@@ -31,7 +31,7 @@ mixin Foo { fun f = this.x }
 module Bar {
   class C(x: int) extends Foo
 }
-//│ module Bar() {
+//│ module Bar {
 //│   class C(x: int) {
 //│     fun f: int
 //│   }

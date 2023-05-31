@@ -6,10 +6,10 @@
 
 trait T1 { fun x: 0 | 1 }
 trait T2 { fun x: 1 | 2 }
-//│ trait T1() {
+//│ trait T1 {
 //│   fun x: 0 | 1
 //│ }
-//│ trait T2() {
+//│ trait T2 {
 //│   fun x: 1 | 2
 //│ }
 
@@ -18,7 +18,7 @@ class C1 { fun x: 0 | 2 }
 //│ ╔══[ERROR] Member x is declared but not defined
 //│ ║  l.17: 	class C1 { fun x: 0 | 2 }
 //│ ╙──      	               ^
-//│ class C1() {
+//│ class C1 {
 //│   fun x: 0 | 2
 //│ }
 
@@ -41,7 +41,7 @@ module M extends C1, T1 {
 //│ ╟── from signature of member x:
 //│ ║  l.7: 	trait T1 { fun x: 0 | 1 }
 //│ ╙──     	               ^^^^^^^^
-//│ module M() {
+//│ module M {
 //│   fun x: 2
 //│ }
 
@@ -62,7 +62,7 @@ class C2 extends C1, T1
 //│ ╟── from signature of member x:
 //│ ║  l.7: 	trait T1 { fun x: 0 | 1 }
 //│ ╙──     	               ^^^^^^^^
-//│ class C2() {
+//│ class C2 {
 //│   fun x: 0 | 2
 //│ }
 
@@ -70,12 +70,12 @@ class C2 extends C1, T1
 module M extends C2 {
   fun x = 2
 }
-//│ module M() {
+//│ module M {
 //│   fun x: 2
 //│ }
 
 class C1 { fun x: 0 | 2 = 0 }
-//│ class C1() {
+//│ class C1 {
 //│   fun x: 0 | 2
 //│ }
 
@@ -98,7 +98,7 @@ module M extends C1, T1
 //│ ╟── from signature of member x:
 //│ ║  l.7: 	trait T1 { fun x: 0 | 1 }
 //│ ╙──     	               ^^^^^^^^
-//│ module M() {
+//│ module M {
 //│   fun x: 0 | 2
 //│ }
 
@@ -119,7 +119,7 @@ module M extends T1, C1
 //│ ╟── from signature of member x:
 //│ ║  l.7: 	trait T1 { fun x: 0 | 1 }
 //│ ╙──     	               ^^^^^^^^
-//│ module M() {
+//│ module M {
 //│   fun x: 0 | 2
 //│ }
 
@@ -130,7 +130,7 @@ module M extends T1, T2, C1 {
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
 //│ ║  l.128: 	  fun x = this.x
 //│ ╙──       	              ^^
-//│ module M() {
+//│ module M {
 //│   fun x: error
 //│ }
 
@@ -154,7 +154,7 @@ module M extends T1, T2, C1 {
 //│ ╟── from signature of member x:
 //│ ║  l.8: 	trait T2 { fun x: 1 | 2 }
 //│ ╙──     	               ^^^^^^^^
-//│ module M() {
+//│ module M {
 //│   fun x: 0
 //│ }
 
@@ -162,7 +162,7 @@ module M extends C1, T2 {
   fun x: 2
   fun x = this.x
 }
-//│ module M() {
+//│ module M {
 //│   fun x: 2
 //│ }
 
@@ -173,13 +173,13 @@ class C2 extends T1
 //│ ╔══[ERROR] Member x is declared in parent trait but not implemented
 //│ ║  l.172: 	class C2 extends T1
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^
-//│ class C2()
+//│ class C2
 
 // TODO
 // abstract class C2 extends T1
 
 class C2 extends T1 { fun x = 1 }
-//│ class C2() {
+//│ class C2 {
 //│   fun x: 1
 //│ }
 
@@ -200,12 +200,12 @@ class C2 extends T1, T2 { fun x = 2 }
 //│ ╟── from signature of member x:
 //│ ║  l.7: 	trait T1 { fun x: 0 | 1 }
 //│ ╙──     	               ^^^^^^^^
-//│ class C2() {
+//│ class C2 {
 //│   fun x: 2
 //│ }
 
 class C2 extends T1, T2 { fun x = 1 }
-//│ class C2() {
+//│ class C2 {
 //│   fun x: 1
 //│ }
 
@@ -226,22 +226,22 @@ class C3 extends C2 { fun x = 111 }
 //│ ╟── from definition of method x:
 //│ ║  l.207: 	class C2 extends T1, T2 { fun x = 1 }
 //│ ╙──       	                              ^^^^^
-//│ class C3() {
+//│ class C3 {
 //│   fun x: 111
 //│ }
 
 class C3 extends C2 { fun x = 1 }
-//│ class C3() {
+//│ class C3 {
 //│   fun x: 1
 //│ }
 
 class C2 extends C1, T1 { fun x = 0 }
-//│ class C2() {
+//│ class C2 {
 //│   fun x: 0
 //│ }
 
 class C2 extends T1, C1 { fun x = 0 }
-//│ class C2() {
+//│ class C2 {
 //│   fun x: 0
 //│ }
 
@@ -262,7 +262,7 @@ class C2 extends C1, T1 { fun x = 1 }
 //│ ╟── from definition of method x:
 //│ ║  l.77: 	class C1 { fun x: 0 | 2 = 0 }
 //│ ╙──      	               ^^^^^^^^^^^^
-//│ class C2() {
+//│ class C2 {
 //│   fun x: 1
 //│ }
 
@@ -283,7 +283,7 @@ class C2 extends T1, C1 { fun x = 1 }
 //│ ╟── from definition of method x:
 //│ ║  l.77: 	class C1 { fun x: 0 | 2 = 0 }
 //│ ╙──      	               ^^^^^^^^^^^^
-//│ class C2() {
+//│ class C2 {
 //│   fun x: 1
 //│ }
 
@@ -297,7 +297,7 @@ trait T2 { val r = 1(1) }
 //│ ╟── integer literal of type `1` is not a function
 //│ ║  l.293: 	trait T2 { val r = 1(1) }
 //│ ╙──       	                   ^
-//│ trait T2() {
+//│ trait T2 {
 //│   let r: error
 //│ }
 
@@ -306,7 +306,7 @@ class C2 extends T2
 //│ ╔══[ERROR] Member r is declared in parent trait but not implemented
 //│ ║  l.305: 	class C2 extends T2
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^
-//│ class C2()
+//│ class C2
 
 
 :e
@@ -318,16 +318,14 @@ class C2 extends T2[int]
 //│ ║  l.313: 	trait T2[A] {
 //│ ║         	^^^^^^^^^^^^^
 //│ ║  l.314: 	  val r = C2().x
-//│ ║         	^^^^^^^^^^^^^^^^
-//│ ║  l.315: 	}
-//│ ╙──       	^
+//│ ╙──       	^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Type `C2` does not contain member `x`
 //│ ║  l.314: 	  val r = C2().x
 //│ ╙──       	              ^^
-//│ trait T2[A]() {
+//│ trait T2[A] {
 //│   let r: error
 //│ }
-//│ class C2()
+//│ class C2
 
 :e // FIXME
 C2() : T2['X]

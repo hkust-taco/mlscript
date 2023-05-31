@@ -81,6 +81,7 @@ abstract class TyperHelpers { Typer: Typer =>
 
   def substLike(ty: TL, map: Map[SimpleType, SimpleType], substInMap: Bool): TL = ty match {
     case ty: ST => subst(ty, map, substInMap)
+    case _ => ??? // TODO
   }
   def subst(st: SimpleType, map: Map[SimpleType, SimpleType], substInMap: Bool = false)
         (implicit cache: MutMap[TypeVariable, SimpleType] = MutMap.empty): SimpleType =
@@ -851,6 +852,7 @@ abstract class TyperHelpers { Typer: Typer =>
       case NuParam(nme, ty) => ty.lb.toList ::: ty.ub :: Nil
       case TypedNuFun(level, fd, ty) => ty :: Nil
       case TypedNuDummy(d) => Nil
+      case _ => ??? // TODO
     }
     def children(includeBounds: Bool): List[SimpleType] = this match {
       case tv @ AssignedVariable(ty) => if (includeBounds) ty :: Nil else Nil
@@ -898,6 +900,8 @@ abstract class TyperHelpers { Typer: Typer =>
               S(trt.thisTy) ++
               S(trt.sign) ++
               trt.parentTP.valuesIterator.flatMap(childrenMem)
+          case p: NuParam =>
+            p.ty.lb.toList ::: p.ty.ub :: Nil
           case TypedNuDummy(d) => Nil
         }
         ents ::: tu.result.toList

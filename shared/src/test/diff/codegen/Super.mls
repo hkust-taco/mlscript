@@ -67,7 +67,7 @@ mixin Foo1 {
 //│ // End of generated code
 
 module Test0 extends Foo0, Foo1
-//│ module Test0() {
+//│ module Test0 {
 //│   let foo0: 1
 //│   let foo1: 0
 //│ }
@@ -116,7 +116,7 @@ mixin Foo2 {
 :re
 :js
 module Test0 extends Foo2
-//│ module Test0() {
+//│ module Test0 {
 //│   fun foo2: anything
 //│ }
 //│ // Prelude
@@ -158,7 +158,7 @@ Test0.foo2
 class Foo extends Foo0 {
   fun foo0(n) = [super.foo0, super.foo0 + n]
 }
-//│ class Foo() {
+//│ class Foo {
 //│   fun foo0: int -> (0, int,)
 //│ }
 

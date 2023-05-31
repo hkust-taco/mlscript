@@ -8,7 +8,7 @@ class Room[A](name: string) {
 //│ }
 
 class BigRoom extends Room[bool]("big")
-//│ class BigRoom() {
+//│ class BigRoom {
 //│   fun foo: (x: 'A,) -> 'A
 //│ }
 //│ where
@@ -18,11 +18,11 @@ class BigRoom extends Room[bool]("big")
 class InferredRoom extends Room("infer") {
     fun foo(x) = x && true
 }
-//│ class InferredRoom() {
+//│ class InferredRoom {
 //│   fun foo: bool -> bool
 //│ }
 
-InferredRoom() : Room['X]
+(new InferredRoom) : Room['X]
 //│ Room[bool]
 //│ res
 //│     = InferredRoom {}
@@ -32,7 +32,7 @@ class TooManyRoom extends Room[int, string]("too many")
 //│ ╔══[ERROR] class Room expects 1 type parameter(s); got 2
 //│ ║  l.31: 	class TooManyRoom extends Room[int, string]("too many")
 //│ ╙──      	                          ^^^^^^^^^^^^^^^^
-//│ class TooManyRoom() {
+//│ class TooManyRoom {
 //│   fun foo: (x: 'A,) -> 'A
 //│ }
 //│ where
@@ -63,18 +63,18 @@ class WrongRoom extends Room[bool]("wrong") {
 //│ ╟── from reference:
 //│ ║  l.4: 	    fun foo(x: A) = x
 //│ ╙──     	                    ^
-//│ class WrongRoom() {
+//│ class WrongRoom {
 //│   fun foo: int -> int
 //│ }
 
 
 class C0[A] { val a: A }
-//│ class C0[A]() {
+//│ class C0[A] {
 //│   let a: A
 //│ }
 
 class C1[A] extends C0[A]
-//│ class C1[A]() {
+//│ class C1[A] {
 //│   let a: 'A
 //│ }
 //│ where
@@ -111,13 +111,13 @@ mixin M1[A] {
 class A1 extends M1 {
     fun f1(x: int) = x
 }
-//│ class A1() {
+//│ class A1 {
 //│   fun f1: (x: int,) -> int
 //│   fun f2: (x: 'A,) -> ('A, 'A,)
 //│ }
 
 class A2[S, T] extends M1[(S, T)]
-//│ class A2[S, T]() {
+//│ class A2[S, T] {
 //│   fun f1: (x: (S, T,),) -> (S, T,)
 //│   fun f2: (x: (S, T,),) -> ((S, T,), (S, T,),)
 //│ }

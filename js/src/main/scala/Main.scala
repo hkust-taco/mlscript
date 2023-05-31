@@ -134,7 +134,7 @@ object Main {
 
           val vars: Map[Str, typer.SimpleType] = Map.empty
           val tpd = typer.typeTypingUnit(tu, topLevel = true)(ctx.nest, raise, vars)
-
+          
           object SimplifyPipeline extends typer.SimplifyPipeline {
             def debugOutput(msg: => Str): Unit =
               // if (mode.dbgSimplif) output(msg)

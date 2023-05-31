@@ -19,36 +19,36 @@ mixin EvalBase {
       Add(l, r) then this.eval(l) + this.eval(r)
 }
 //│ mixin EvalBase() {
-//│   this: {eval: 'expr -> 'a & ('A | 'lhs) -> int}
-//│   fun eval: (Add['lhs] | Lit | Neg['A & (~#Neg | Neg['expr])]) -> (int | 'a)
+//│   this: {eval: 'expr -> 'a & ('expr0 | 'lhs) -> int}
+//│   fun eval: (Add['lhs] | Lit | Neg['expr0 & (Neg['expr] | ~#Neg)]) -> (int | 'a)
 //│ }
 
 // module TestLang extends EvalBase, EvalNeg
 module TestLang extends EvalBase
-//│ module TestLang() {
-//│   fun eval: forall 'E. (Add['E] | Lit | Neg['A]) -> int
+//│ module TestLang {
+//│   fun eval: forall 'E. (Add['E] | Lit | Neg['expr & (Neg['expr0] | ~#Neg)]) -> int
 //│ }
 //│ where
-//│   'E <: Add['E] | Lit | Neg['A]
-//│   'A <: Add['E] | Lit | Neg['A & (Add['E] | Lit | Neg['A])] | Neg['A] & ~#Neg
+//│   'E <: Add['E] | Lit | Neg['expr & (Neg['expr0] | ~#Neg)]
+//│   'expr <: Add['E] | Lit | Neg['expr & (Neg['expr0] | ~#Neg)]
+//│   'expr0 <: Add['E] | Lit | Neg['expr & (Neg['expr0] | ~#Neg)]
 
 
 fun mk(n) = if n is
   0 then Lit(0)
   1 then Neg(mk(n))
   _ then Add(mk(n), mk(n))
-//│ fun mk: forall 'E. number -> 'E
+//│ fun mk: forall 'E. anything -> 'E
 //│   where
 //│     'E :> Add['E] | Lit | Neg['E]
 
-// TODO support this in UCS
 :stats
 TestLang.eval(mk(0))
 //│ int
 //│ res
 //│     = 0
-//│ constrain calls  : 289
-//│ annoying  calls  : 163
-//│ subtyping calls  : 2353
+//│ constrain calls  : 374
+//│ annoying  calls  : 160
+//│ subtyping calls  : 4154
 
 

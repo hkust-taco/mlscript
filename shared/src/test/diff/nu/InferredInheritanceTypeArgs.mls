@@ -118,7 +118,7 @@ a1.x
 trait Foo[A] {
     fun foo[A](x: A): A
 }
-//│ trait Foo[A]() {
+//│ trait Foo[A] {
 //│   fun foo: forall 'A. (x: 'A,) -> 'A
 //│ }
 
@@ -145,6 +145,6 @@ class B extends Foo {
 //│ ╟── • this operator application:
 //│ ║  l.127: 	    fun foo(x) = x + 1
 //│ ╙──       	                 ^^^^^
-//│ class B() {
+//│ class B {
 //│   fun foo: int -> int
 //│ }

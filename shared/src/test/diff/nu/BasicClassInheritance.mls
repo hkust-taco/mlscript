@@ -2,7 +2,7 @@
 
 
 class A
-//│ class A()
+//│ class A
 
 // TODO
 class B(m: int) extends A

@@ -9,7 +9,7 @@ class A {
   fun g = g(g) // * FIXME not using the signature
   
 }
-//│ class A() {
+//│ class A {
 //│   fun f: nothing
 //│   fun g: A
 //│ }
@@ -20,7 +20,7 @@ module A {
   fun g(x) = x(x)
   fun h = g(g)
 }
-//│ module A() {
+//│ module A {
 //│   fun f: nothing
 //│   fun g: 'a -> 'b
 //│   fun h: 'b

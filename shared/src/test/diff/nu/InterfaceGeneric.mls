@@ -4,12 +4,12 @@
 trait Into[T] {
     fun into: T
 }
-//│ trait Into[T]() {
+//│ trait Into[T] {
 //│   fun into: T
 //│ }
 
 trait Nat extends Into[int]
-//│ trait Nat() {
+//│ trait Nat {
 //│   fun into: 'T
 //│ }
 //│ where
@@ -18,7 +18,7 @@ trait Nat extends Into[int]
 trait Product[A, B] extends Into[A] {
     let pair: (A, B)
 }
-//│ trait Product[A, B]() {
+//│ trait Product[A, B] {
 //│   fun into: 'T
 //│   let pair: (A, B,)
 //│ }
