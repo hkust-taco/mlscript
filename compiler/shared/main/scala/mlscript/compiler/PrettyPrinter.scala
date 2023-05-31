@@ -47,7 +47,7 @@ object PrettyPrinter:
       + (if tyDef.tparams.isEmpty
          then ""
          else tyDef.tparams.map(_._2.name).mkString("[", ",", "]"))
-      + "(" + tyDef.params.getOrElse(Tup(Nil)) + ")"
+      + tyDef.params.fold("")(params => s"($params)")
       + (if tyDef.parents.isEmpty
          then ""
          else ": " + tyDef.parents.map(_.toString).mkString(", "))
