@@ -54,7 +54,7 @@ mixin WithType {
 
 
 module Test0 extends Base, WithUid
-//│ module Test0() {
+//│ module Test0 {
 //│   fun getUid: {uid: 'uid, underlying: 'underlying} -> 'uid
 //│   fun rewrap: ({uid: 'uid0, underlying: 'underlying0 & 'underlying1}, 'underlying1 -> 'underlying0,) -> {uid: int | 'uid0, underlying: 'underlying0}
 //│   fun setUid: ({uid: 'uid0, underlying: 'underlying0 & 'underlying1}, uid: int,) -> {uid: int | 'uid0, underlying: 'underlying0}
@@ -62,7 +62,7 @@ module Test0 extends Base, WithUid
 //│ }
 
 module Test0 extends Base, WithUid, WithUid
-//│ module Test0() {
+//│ module Test0 {
 //│   fun getUid: {uid: anything, underlying: {uid: 'uid, underlying: 'underlying}} -> 'uid
 //│   fun rewrap: ({uid: 'uid0, underlying: {uid: 'uid1, underlying: 'underlying0 & 'underlying1} & 'underlying2}, 'underlying1 -> 'underlying0,) -> {uid: int | 'uid0, underlying: 'underlying2 | {uid: int | 'uid1, underlying: 'underlying0}}
 //│   fun setUid: ({uid: 'uid0, underlying: {uid: 'uid1, underlying: 'underlying0 & 'underlying1} & 'underlying2}, uid: int,) -> {uid: int | 'uid0, underlying: 'underlying2 | {uid: int | 'uid1, underlying: 'underlying0}}
@@ -71,7 +71,7 @@ module Test0 extends Base, WithUid, WithUid
 
 
 module Test1 extends Base, WithUid, WithType
-//│ module Test1() {
+//│ module Test1 {
 //│   fun getType: {uid: 'uid, underlying: {ty: 'ty, underlying: 'underlying}} -> 'ty
 //│   fun getUid: {uid: 'uid, underlying: {ty: 'ty, underlying: 'underlying}} -> 'uid
 //│   fun rewrap: ({uid: 'uid0, underlying: {ty: 'ty0, underlying: 'underlying0 & 'underlying1} & 'underlying2}, 'underlying1 -> 'underlying0,) -> {uid: int | 'uid0, underlying: 'underlying2 | {ty: Type | 'ty0, underlying: 'underlying0}}

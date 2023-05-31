@@ -27,7 +27,7 @@ class Lit(n: int)
 //│           this.#rhs = rhs;
 //│         }
 //│       };
-//│       this.#Add = ((lhs, rhs) => new Add(lhs, rhs));
+//│       this.#Add = ((lhs, rhs) => Object.freeze(new Add(lhs, rhs)));
 //│       this.#Add.class = Add;
 //│     }
 //│     return this.#Add;
@@ -42,7 +42,7 @@ class Lit(n: int)
 //│           this.#n = n;
 //│         }
 //│       };
-//│       this.#Lit = ((n) => new Lit(n));
+//│       this.#Lit = ((n) => Object.freeze(new Lit(n)));
 //│       this.#Lit.class = Lit;
 //│     }
 //│     return this.#Lit;
@@ -74,7 +74,7 @@ class Lit(n: int)
 //│ │ │             this.#rhs = rhs;
 //│ │ │           }
 //│ │ │         };
-//│ │ │         this.#Add = ((lhs, rhs) => new Add(lhs, rhs));
+//│ │ │         this.#Add = ((lhs, rhs) => Object.freeze(new Add(lhs, rhs)));
 //│ │ │         this.#Add.class = Add;
 //│ │ │       }
 //│ │ │       return this.#Add;
@@ -89,7 +89,7 @@ class Lit(n: int)
 //│ │ │             this.#n = n;
 //│ │ │           }
 //│ │ │         };
-//│ │ │         this.#Lit = ((n) => new Lit(n));
+//│ │ │         this.#Lit = ((n) => Object.freeze(new Lit(n)));
 //│ │ │         this.#Lit.class = Lit;
 //│ │ │       }
 //│ │ │       return this.#Lit;
@@ -188,7 +188,7 @@ class Neg<A>(expr: A)
 //│           this.#expr = expr;
 //│         }
 //│       };
-//│       this.#Neg = ((expr) => new Neg(expr));
+//│       this.#Neg = ((expr) => Object.freeze(new Neg(expr)));
 //│       this.#Neg.class = Neg;
 //│     }
 //│     return this.#Neg;
@@ -214,7 +214,7 @@ class Neg<A>(expr: A)
 //│ │ │             this.#expr = expr;
 //│ │ │           }
 //│ │ │         };
-//│ │ │         this.#Neg = ((expr) => new Neg(expr));
+//│ │ │         this.#Neg = ((expr) => Object.freeze(new Neg(expr)));
 //│ │ │         this.#Neg.class = Neg;
 //│ │ │       }
 //│ │ │       return this.#Neg;
@@ -351,7 +351,7 @@ mixin EvalNegNeg {
 :js
 :ShowRepl
 module TestLang extends EvalBase, EvalNeg, EvalNegNeg
-//│ module TestLang() {
+//│ module TestLang {
 //│   fun eval: 'A -> int
 //│ }
 //│ where
@@ -541,7 +541,7 @@ mixin Bazz(y: int)
 
 :js
 module Barr extends Fooo(0), Bazz(1)
-//│ module Barr() {
+//│ module Barr {
 //│   fun f: (int, 0,)
 //│ }
 //│ // Prelude
@@ -594,7 +594,7 @@ mixin Base {
 
 :re
 module Test extends Base
-//│ module Test() {
+//│ module Test {
 //│   fun x: error
 //│ }
 //│ Runtime error:
@@ -610,7 +610,7 @@ mixin MC(c: int)
 
 :js
 module MM extends MA(1), MB(2, 3), MC(4)
-//│ module MM()
+//│ module MM
 //│ // Prelude
 //│ class TypingUnit22 {
 //│   #MM;

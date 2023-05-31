@@ -58,7 +58,7 @@ class Node[A](value: int, left: Tree[A], right: Tree[A]) {
 //│ ║  l.49: 	    == value then true
 //│ ╙──      	^^^^^^^^^^^^
 //│ type Tree[A] = Node[A] | Empty
-//│ module Empty() {
+//│ module Empty {
 //│   fun contains: anything -> false
 //│ }
 //│ class Node[A](value: int, left: Tree[A], right: Tree[A]) {

@@ -123,6 +123,7 @@ trait TypeSimplifier { self: Typer =>
                       else if (contra) v -> FieldType(fty.lb.map(process(_, N)), TopType)(fty.prov) :: Nil
                       else  v -> default :: Nil
                   }
+                case S(_) => ??? // TODO:
                 case N =>
                   ??? // TODO use info.explicitVariances
               }

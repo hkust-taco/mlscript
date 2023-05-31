@@ -24,7 +24,7 @@ class C(a: int) { let a = 1 }
 //│           const a1 = this.#a;
 //│         }
 //│       };
-//│       this.#C = ((a) => new C(a));
+//│       this.#C = ((a) => Object.freeze(new C(a)));
 //│       this.#C.class = C;
 //│     }
 //│     return this.#C;
@@ -75,7 +75,7 @@ class C2(a: int, b: int) {
 //│           const b1 = this.#b;
 //│         }
 //│       };
-//│       this.#C2 = ((a, b) => new C2(a, b));
+//│       this.#C2 = ((a, b) => Object.freeze(new C2(a, b)));
 //│       this.#C2.class = C2;
 //│     }
 //│     return this.#C2;

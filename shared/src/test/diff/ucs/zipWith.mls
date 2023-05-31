@@ -12,7 +12,7 @@ module None {
   fun value = nothing
 }
 class Some[out A](value: A)
-//│ module None() {
+//│ module None {
 //│   fun value: nothing
 //│ }
 //│ class Some[A](value: A)
@@ -26,7 +26,7 @@ class Cons[out A](head: A, tail: List[A]) {
   fun toArray = [head, tail.toArray]
 }
 //│ type List[A] = Cons[A] | Nil
-//│ module Nil() {
+//│ module Nil {
 //│   fun toArray: ()
 //│ }
 //│ class Cons[A](head: A, tail: List[A]) {

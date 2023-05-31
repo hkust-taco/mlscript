@@ -5,7 +5,7 @@ type I = int
 //│ type I = int
 
 class CI1
-//│ class CI1()
+//│ class CI1
 
 // :e
 type AI1 = Array[int]

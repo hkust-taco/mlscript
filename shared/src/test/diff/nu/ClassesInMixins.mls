@@ -13,7 +13,7 @@ mixin Test {
 //│ }
 
 module M extends Test
-//│ module M() {
+//│ module M {
 //│   class Foo(n: int)
 //│   let f: Foo
 //│ }
@@ -71,9 +71,7 @@ mixin Test {
 //│ ║  l.64: 	  class Add<A>(lhs: A, rhs: A) {
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.65: 	    let cached = size(this)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.66: 	  }
-//│ ╙──      	^^^
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Illegal pattern `Add`
 //│ ║  l.68: 	    Add(l, r) then this.size(l) + this.size(r)
 //│ ╙──      	    ^^^

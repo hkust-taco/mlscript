@@ -214,6 +214,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
       }
       case (k @ Als, id, ts) => "=" ~ ty map (bod => TypeDef(k, id, ts, bod, Nil, Nil, Nil))
       case (k @ Nms, _, _) => throw new NotImplementedError("Namespaces are not supported yet.")
+      case (k @ Mxn, _, _) => throw new NotImplementedError("Mixins are not supported yet.")
     })
   def tyParams[p: P]: P[Ls[TypeName]] =
     ("[" ~ tyName.rep(0, ",") ~ "]").?.map(_.toList.flatten)

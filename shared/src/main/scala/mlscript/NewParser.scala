@@ -223,6 +223,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
         errExpr
       case R(d: NuDecl) => d
       case R(e: Term) => e
+      case R(c: Constructor) => c
       case _ => ???
     }
     TypingUnit(es)
@@ -276,6 +277,10 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
         consume
         yeetSpaces
         go(acc.copy(acc.mods + ("declare" -> l0)))
+      case (KEYWORD("abstract"), l0) :: c =>
+        consume
+        yeetSpaces
+        go(acc.copy(acc.mods + ("abstract" -> l0)))
       case _ if acc.mods.isEmpty => acc
       case (KEYWORD("class" | "infce" | "trait" | "mixin" | "type" | "namespace" | "module" | "fun" | "val"), l0) :: _ =>
         acc
@@ -283,6 +288,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
         // TODO support indented blocks of modified declarations...
         err(msg"Unexpected ${tok.describe} token after modifier${if (acc.mods.sizeIs > 1) "s" else ""}" -> S(loc) :: Nil)
         acc
+      case Nil =>
+        ??? // TODO:
     }
     def unapply(__ : Ls[TokLoc]): S[ModifierSet -> Ls[TokLoc]] = {
       val res = go(_modifiersCache)
@@ -295,12 +302,30 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
       case Nil => Nil
       case (NEWLINE, _) :: _ => consume; block
       case (SPACE, _) :: _ => consume; block
+      case (KEYWORD("constructor"), l0) :: _ =>
+        consume
+        val res = yeetSpaces match {
+          case (br @ BRACKETS(Round, toks), loc) :: _ =>
+            consume
+            val as = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented()) // TODO
+            val body = curlyTypingUnit.entities
+            Constructor(Tup(as).withLoc(S(loc)), Blk(body))
+          case _ =>
+            err(msg"Expect parameter list for the constructor" -> S(l0) :: Nil)
+            Constructor(Tup(Nil), Blk(Nil))
+        }
+        val t = R(res.withLoc(S(l0 ++ res.getLoc)))
+        yeetSpaces match {
+          case (NEWLINE, _) :: _ => consume; t :: block
+          case _ => t :: Nil
+        }
       case c =>
         val t = c match {
           case ModifierSet(mods, (KEYWORD(k @ ("class" | "infce" | "trait" | "mixin" | "type" | "namespace" | "module")), l0) :: c) =>
             consume
             val (isDecl, mods2) = mods.handle("declare")
-            mods2.done
+            val (isAbs, mods3) = mods2.handle("abstract")
+            mods3.done
             val kind = k match {
               case "class" => Cls
               case "trait" => Trt
@@ -342,8 +367,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
               case (br @ BRACKETS(Round, toks), loc) :: _ =>
                 consume
                 val as = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented()) // TODO
-                Tup(as).withLoc(S(loc))
-              case _ => Tup(Nil)
+                S(Tup(as).withLoc(S(loc)))
+              case _ => N
             }
             def otherParents: Ls[Term] = yeetSpaces match {
               case (COMMA, _) :: _ =>
@@ -369,8 +394,21 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
                 expr(0) :: otherParents
               case _ => Nil
             }
-            val body = curlyTypingUnit
-            val res = NuTypeDef(kind, tn, tparams, params, sig, ps, N, N, body)(isDecl)
+            val tu = curlyTypingUnit
+            val (ctors, body) = tu.entities.partitionMap {
+              case c: Constructor => L(c)
+              case t => R(t)
+            }
+
+            val ctor =
+              if (ctors.lengthIs > 1) {
+                err(msg"A class may only have at most one explicit constructor" -> S(l0) :: Nil)
+                N
+              }
+              else ctors.headOption
+
+            val res =
+              NuTypeDef(kind, tn, tparams, params, ctor, sig, ps, N, N, TypingUnit(body))(isDecl, isAbs)
             R(res.withLoc(S(l0 ++ res.getLoc)))
           
           case ModifierSet(mods, (KEYWORD(kwStr @ ("fun" | "val" | "let")), l0) :: c) => // TODO support rec?
@@ -462,6 +500,12 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
             exprOrIf(0, allowSpace = false)
         }
         yeetSpaces match {
+          case (KEYWORD("="), l0) :: _ => t match {
+            case R(v: Var) =>
+              consume
+              R(Eqn(v, expr(0))) :: block
+            case _ => t :: Nil
+          }
           case (KEYWORD(";"), _) :: _ => consume; t :: block
           case (NEWLINE, _) :: _ => consume; t :: block
           case _ => t :: Nil
@@ -805,11 +849,11 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
         }).withLoc(acc.toLoc.fold(some(loc))(_ ++ loc |> some))
         exprCont(res, prec, allowNewlines)
         
-      case (br @ BRACKETS(Square, toks), loc) :: _ => // * Currently unreachable because we match Square brackets as tparams
+      /*case (br @ BRACKETS(Square, toks), loc) :: _ => // * Currently unreachable because we match Square brackets as tparams
         consume
         val idx = rec(toks, S(br.innerLoc), "subscript").concludeWith(_.expr(0))
         val res = Subs(acc, idx.withLoc(S(loc)))
-        exprCont(res, prec, allowNewlines)
+        exprCont(res, prec, allowNewlines)*/
         
         case (br @ BRACKETS(Round, toks), loc) :: _ =>
           consume

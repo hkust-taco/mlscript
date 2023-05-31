@@ -85,7 +85,7 @@ type Option[A] = Some[A] | None
 module None
 class Some[A](value: A)
 //│ type Option[A] = Some[A] | None
-//│ module None()
+//│ module None
 //│ class Some[A](value: A)
 
 type List[A] = Cons[A] | Nil
@@ -102,7 +102,7 @@ fun listJoin(xs, sep) =
       Nil then toString(x)
       _ then concat3(toString(x), sep, listJoin(xs', sep))
 //│ type List[A] = Cons[A] | Nil
-//│ module Nil()
+//│ module Nil
 //│ class Cons[A](head: A, tail: List[A])
 //│ fun listConcat: forall 'A 'A0 'a. (Cons['A] | Nil, List['A0] & 'a,) -> (Cons['A0] | 'a)
 //│ fun listJoin: forall 'A1. (Cons['A1] | Nil, string,) -> string
@@ -132,7 +132,7 @@ fun traverse(t, f) =
     Node(key, value, left, right) then
       listConcat(traverse(left, f), Cons(f(key, value), traverse(right, f)))
 //│ type TreeMap[A] = Node[A] | Empty
-//│ module Empty()
+//│ module Empty
 //│ class Node[A](key: string, value: A, left: TreeMap[A], right: TreeMap[A])
 //│ fun insert: forall 'A. (Empty | Node['A], string, 'A,) -> Node['A]
 //│ fun find: forall 'A0. (Empty | Node['A0], string,) -> (None | Some['A0])
@@ -160,7 +160,7 @@ class JsonArray(elements: List[JsonValue]) {
   fun toString() = concat3("[", listJoin(elements, ", "), "]")
 }
 //│ type JsonValue = JsonArray | JsonBoolean | JsonNumber | JsonObject | JsonString | JsonNull
-//│ module JsonNull() {
+//│ module JsonNull {
 //│   fun toString: () -> "null"
 //│ }
 //│ class JsonBoolean(value: bool) {

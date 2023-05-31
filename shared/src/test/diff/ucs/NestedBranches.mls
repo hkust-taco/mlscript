@@ -9,10 +9,10 @@ module Nil
 class Cons[A](head: A, tail: Cons[A] | Nil)
 class Pair[A, B](fst: A, snd: B)
 //│ class Some[A](value: A)
-//│ module None()
+//│ module None
 //│ class Left[A](leftValue: A)
 //│ class Right[A](rightValue: A)
-//│ module Nil()
+//│ module Nil
 //│ class Cons[A](head: A, tail: Cons[A] | Nil)
 //│ class Pair[A, B](fst: A, snd: B)
 

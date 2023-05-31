@@ -315,6 +315,8 @@ object NewLexer {
     "out",
     "null",
     "undefined",
+    "abstract",
+    "constructor"
   )
   
   def printToken(tl: TokLoc): Str = tl match {

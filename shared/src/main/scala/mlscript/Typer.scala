@@ -362,9 +362,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           case CompletedTypeInfo(mem: TypedNuTypeDef) => S(mem.td.kind, mem.tparams.size)
           case ti: DelayedTypeInfo =>
             ti.decl match {
-              case NuTypeDef(k @ (Cls | Nms | Als), _, tps, _, _, _, _, _, _) =>
+              case NuTypeDef(k @ (Cls | Nms | Als), _, tps, _,  _, _, _, _, _, _) =>
                 S(k, tps.size)
-              case NuTypeDef(k @ (Mxn | Trt), nme, tps, _, _, _, _, _, _) =>
+              case NuTypeDef(k @ (Mxn | Trt), nme, tps,  _, _, _, _, _, _, _) =>
                 err(msg"${k.str} ${nme.name} cannot be used as a type", loc)
                 S(k, tps.size)
               case fd: NuFunDef =>
@@ -436,9 +436,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         ClassTag(lit, lit.baseClasses)(tyTp(ty.toLoc, "literal type"))
       case TypeName("this") =>
         ctx.env.get("this") match {
-          case S(AbstractConstructor(_, _)) => die
+          case S(_: AbstractConstructor | _: LazyTypeInfo) => die
           case S(VarSymbol(t: SimpleType, _)) => t
-          case N => err(msg"undeclared this" -> ty.toLoc :: Nil)
+          case N => err(msg"undeclared `this`" -> ty.toLoc :: Nil)
         }
       case tn @ TypeTag(name) => rec(TypeName(name.decapitalize)) // TODO rm this hack
       // case tn @ TypeTag(name) => rec(TypeName(name))
@@ -461,6 +461,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
                     msg"Type alias ${name.capitalize} cannot be used as a type tag", tyLoc)(raise)
                   case Nms => err(
                     msg"Namespaces ${name.capitalize} cannot be used as a type tag", tyLoc)(raise)
+                  case Mxn => err(
+                    msg"Mixin ${name.capitalize} cannot be used as a type tag", tyLoc)(raise)
                 }
                 case _ => e()
               }
@@ -1106,6 +1108,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         if (!founPoly) warn(msg"Inferred type `${bod_ty.expPos}` of this ${
           bod_ty.prov.desc} cannot be instantiated", prov.loco)
         res
+      case Eqn(lhs, rhs) =>
+        err(msg"Unexpected equation in this position", term.toLoc)
     }
   }(r => s"$lvl. : ${r}")
   
@@ -1306,27 +1310,30 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     def goDecl(d: NuMember)(implicit ectx: ExpCtx): NuDecl = d match {
       case TypedNuAls(level, td, tparams, body) =>
         ectx(tparams) |> { implicit ectx =>
-          NuTypeDef(td.kind, td.nme, td.tparams, Tup(Nil), S(go(body)), Nil, N, N, TypingUnit(Nil))(td.declareLoc)
+          NuTypeDef(td.kind, td.nme, td.tparams, N, N, S(go(body)), Nil, N, N, TypingUnit(Nil))(
+            td.declareLoc, td.abstractLoc)
         }
       case TypedNuMxn(td, thisTy, superTy, tparams, params, members, ttu) =>
         ectx(tparams) |> { implicit ectx =>
           NuTypeDef(td.kind, td.nme, td.tparams,
-            Tup(params.map(p => N -> Fld(false, false, Asc(p._1, go(p._2.ub))))),
+            S(Tup(params.map(p => N -> Fld(false, false, Asc(p._1, go(p._2.ub)))))),
+            N,//TODO
             N,
             Nil,//TODO
             Option.when(!(TopType <:< superTy))(go(superTy)),
             Option.when(!(TopType <:< thisTy))(go(thisTy)),
-            mkTypingUnit(thisTy, members))(td.declareLoc)
+            mkTypingUnit(thisTy, members))(td.declareLoc, td.abstractLoc)
         }
       case TypedNuCls(level, td, ttu, tparams, params, members, thisTy) =>
         ectx(tparams) |> { implicit ectx =>
           NuTypeDef(td.kind, td.nme, td.tparams,
-            Tup(params.map(p => N -> Fld(false, false, Asc(p._1, go(p._2.ub))))),
+            Opt.when(td.params.isDefined)(Tup(params.map(p => N -> Fld(false, false, Asc(p._1, go(p._2.ub)))))),
+            td.ctor,
             N,//TODO
             Nil,//TODO
             N,//TODO
             Option.when(!(TopType <:< thisTy))(go(thisTy)),
-            mkTypingUnit(thisTy, members))(td.declareLoc)
+            mkTypingUnit(thisTy, members))(td.declareLoc, td.abstractLoc)
           }
       case tf @ TypedNuFun(level, fd, bodyTy) =>
         NuFunDef(fd.isLetRec, fd.nme, Nil, R(go(tf.typeSignature)))(fd.declareLoc)

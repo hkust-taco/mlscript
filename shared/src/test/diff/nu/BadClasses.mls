@@ -10,14 +10,14 @@ class C0 extends M0
 //│ ╔══[ERROR] mixin M0 expects 1 parameters; got 0
 //│ ║  l.9: 	class C0 extends M0
 //│ ╙──     	                 ^^
-//│ class C0()
+//│ class C0
 
 :e
 class C0 extends M0(1, 2)
 //│ ╔══[ERROR] mixin M0 expects 1 parameters; got 2
 //│ ║  l.16: 	class C0 extends M0(1, 2)
 //│ ╙──      	                 ^^^^^^^
-//│ class C0()
+//│ class C0
 
 :e
 class C0 extends M0(true)
@@ -30,7 +30,7 @@ class C0 extends M0(true)
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.5: 	mixin M0(x: int)
 //│ ╙──     	            ^^^
-//│ class C0()
+//│ class C0
 
 
 // TODO catch this at typing (lack of `this`)
@@ -38,7 +38,7 @@ class Foo {
   fun foo = 0
   fun bar = foo
 }
-//│ class Foo() {
+//│ class Foo {
 //│   fun bar: 0
 //│   fun foo: 0
 //│ }
@@ -48,7 +48,7 @@ class Foo {
   let foo = 0
   fun bar = foo
 }
-//│ class Foo() {
+//│ class Foo {
 //│   fun bar: 0
 //│   let foo: 0
 //│ }
@@ -58,7 +58,7 @@ module Bar {
   fun hello = 0
   type I = int
 }
-//│ module Bar() {
+//│ module Bar {
 //│   type I = int
 //│   fun hello: 0
 //│ }
@@ -91,7 +91,7 @@ class Foo[A] { 42: A }
 //│ ╟── Note: constraint arises from type parameter:
 //│ ║  l.86: 	class Foo[A] { 42: A }
 //│ ╙──      	          ^
-//│ class Foo[A]()
+//│ class Foo[A]
 
 
 :e
@@ -99,7 +99,7 @@ class C1 { fun oops = this.x }
 //│ ╔══[ERROR] Class `C1` does not contain member `x`
 //│ ║  l.98: 	class C1 { fun oops = this.x }
 //│ ╙──      	                          ^^
-//│ class C1() {
+//│ class C1 {
 //│   fun oops: error
 //│ }
 

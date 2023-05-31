@@ -36,7 +36,7 @@ mixin EvalBase {
 
 
 module TestLang extends EvalBase
-//│ module TestLang() {
+//│ module TestLang {
 //│   fun eval: 'a -> int
 //│ }
 //│ where
@@ -74,7 +74,7 @@ module TestLang extends EvalNothing, EvalAddLit
 //│   this: {eval: 'lhs -> int}
 //│   fun eval: (Add['lhs] | Lit | 'a & ~#Add & ~#Lit) -> (int | 'b)
 //│ }
-//│ module TestLang() {
+//│ module TestLang {
 //│   fun eval: 'c -> int
 //│ }
 //│ where
@@ -115,7 +115,7 @@ mixin EvalNeg {
 
 
 module TestLang extends EvalBase, EvalNeg
-//│ module TestLang() {
+//│ module TestLang {
 //│   fun eval: 'a -> int
 //│ }
 //│ where
@@ -190,7 +190,7 @@ mixin EvalNegNeg {
 //│ }
 
 module TestLang extends EvalBase, EvalNeg, EvalNegNeg
-//│ module TestLang() {
+//│ module TestLang {
 //│   fun eval: 'A -> int
 //│ }
 //│ where

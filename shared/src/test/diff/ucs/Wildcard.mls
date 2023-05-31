@@ -5,7 +5,7 @@ type Option[T] = None | Some[T]
 module None
 class Some[T](value: T)
 //│ type Option[T] = Some[T] | None
-//│ module None()
+//│ module None
 //│ class Some[T](value: T)
 
 type Either[A, B] = Left[A] | Right[B]
@@ -175,10 +175,10 @@ w4(0, _ => false)
 //│ res
 //│     = 'r4'
 
-class Alpha
-class Beta
-class Gamma
-class Delta
+class Alpha()
+class Beta()
+class Gamma()
+class Delta()
 //│ class Alpha()
 //│ class Beta()
 //│ class Gamma()

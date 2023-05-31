@@ -12,8 +12,8 @@ module M {
 //│ ╔══[ERROR] type identifier not found: A
 //│ ║  l.9: 	  fun a: A
 //│ ╙──     	         ^
-//│ module M() {
-//│   class A()
+//│ module M {
+//│   class A
 //│   fun a: error
 //│ }
 
@@ -23,7 +23,7 @@ module M {
   fun a: this.A
   fun a = 1
 }
-//│ ╔══[ERROR] undeclared this
+//│ ╔══[ERROR] undeclared `this`
 //│ ║  l.23: 	  fun a: this.A
 //│ ╙──      	         ^^^^
 //│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.

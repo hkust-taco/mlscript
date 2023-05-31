@@ -36,7 +36,7 @@ type Test(n: int) = n
 //│ type Test = error
 
 class Base
-//│ class Base()
+//│ class Base
 
 :pe
 :e

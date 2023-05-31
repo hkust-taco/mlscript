@@ -59,8 +59,8 @@ let circles = go(2, 1024)
 
 // ******************* Adding More Language Constructs *******************
 
-class Univ
-class Empty
+class Univ()
+class Empty()
 class Scale[Region](v: Vector, a: Region)
 //│ class Univ()
 //│ class Empty()
@@ -81,7 +81,7 @@ mixin SizeExt {
 //│ }
 
 module TestSize extends SizeBase, SizeExt
-//│ module TestSize() {
+//│ module TestSize {
 //│   fun size: 'a -> int
 //│ }
 //│ where
@@ -124,7 +124,7 @@ mixin Contains {
 //│ }
 
 module TestContains extends Contains
-//│ module TestContains() {
+//│ module TestContains {
 //│   fun contains: ('a, {x: int, y: int},) -> bool
 //│ }
 //│ where
@@ -180,13 +180,13 @@ module SizeText extends Text
 //│ ╔══[ERROR] Module `SizeText` does not contain member `size`
 //│ ║  l.159: 	      Outside(a) then concat("outside a region of size ", toString(this.size(a)))
 //│ ╙──       	                                                                       ^^^^^
-//│ module SizeText() {
+//│ module SizeText {
 //│   fun text: (Circle | Intersect[anything] | Outside[anything] | Translate[anything] | Union[anything]) -> string
 //│ }
 
 // * Note: this inferred type got *much worse* after this commit (field access type refinement)
 module SizeText extends SizeBase, Text
-//│ module SizeText() {
+//│ module SizeText {
 //│   fun size: 'a -> int
 //│   fun text: (Circle | Intersect[Circle | Intersect['Region] | Outside['Region0] | Translate['Region1] | Union['Region2]] | Outside['a] | Translate[Circle | Intersect['Region] | Outside['Region0] | Translate['Region1] | Union['Region2]] | Union[Circle | Intersect['Region] | Outside['Region0] | Translate['Region1] | Union['Region2]]) -> string
 //│ }
@@ -250,7 +250,7 @@ mixin IsEmpty {
 //│ }
 
 module IsUnivIsEmpty extends IsUniv, IsEmpty
-//│ module IsUnivIsEmpty() {
+//│ module IsUnivIsEmpty {
 //│   fun isEmpty: 'a -> bool
 //│   fun isUniv: 'b -> bool
 //│ }
@@ -259,7 +259,7 @@ module IsUnivIsEmpty extends IsUniv, IsEmpty
 //│   'b <: Intersect['b] | Outside['a] | Scale['b] | Translate['b] | Union['b] | Univ | ~Intersect[anything] & ~Outside[anything] & ~Scale[anything] & ~Translate[anything] & ~Union[anything] & ~Univ
 
 module IsUnivIsEmpty extends IsEmpty, IsUniv
-//│ module IsUnivIsEmpty() {
+//│ module IsUnivIsEmpty {
 //│   fun isEmpty: 'a -> bool
 //│   fun isUniv: 'b -> bool
 //│ }
@@ -277,7 +277,7 @@ IsUnivIsEmpty.isEmpty(circles)
 //│ res
 //│     = false
 
-class Foo
+class Foo()
 IsUnivIsEmpty.isEmpty(Scale(Vector(1, 2), Intersect(Foo(), circles)))
 //│ class Foo()
 //│ bool
@@ -301,7 +301,7 @@ mixin Eliminate {
 //│ }
 
 module TestElim extends Eliminate
-//│ module TestElim() {
+//│ module TestElim {
 //│   fun eliminate: 'a -> 'b
 //│ }
 //│ where
@@ -344,7 +344,7 @@ TestElim.eliminate(mk(100))
 // *************************************************************************
 
 module Lang extends SizeBase, SizeExt, Contains, Text, IsUniv, IsEmpty, Eliminate
-//│ module Lang() {
+//│ module Lang {
 //│   fun contains: ('a, {x: int, y: int},) -> bool
 //│   fun eliminate: 'b -> 'c
 //│   fun isEmpty: 'd -> bool
