@@ -27,7 +27,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     def kind: DeclKind
     def level: Level
     
-    protected def withLevel[R](k: Ctx => R)(implicit ctx: Ctx): R = k(ctx.copy(lvl = level + 1))
+    protected def withLevel[R](k: Ctx => R)(implicit ctx: Ctx): R = k(ctx.copy(lvl = ctx.lvl + 1))
     
     def freshenAbove(lim: Int, rigidify: Bool)
           (implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV, ST])
@@ -56,7 +56,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     def freshenAbove(lim: Int, rigidify: Bool)
           (implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV, ST])
           : NuParam =
-      NuParam(nme, ty.freshenAbove(lim, rigidify))(level)
+      NuParam(nme, ty.freshenAbove(lim, rigidify))(ctx.lvl)
     
     def mapPol(pol: Opt[Bool], smart: Bool)(f: (Opt[Bool], SimpleType) => SimpleType)
           (implicit ctx: Ctx): NuMember =
@@ -75,7 +75,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     def freshenAbove(lim: Int, rigidify: Bool)
           (implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV, ST])
           : NuTypeParam =
-      NuTypeParam(nme, ty.freshenAbove(lim, rigidify))(level)
+      NuTypeParam(nme, ty.freshenAbove(lim, rigidify))(ctx.lvl)
       
     def mapPol(pol: Opt[Bool], smart: Bool)(f: (Opt[Bool], SimpleType) => SimpleType)
           (implicit ctx: Ctx): NuMember =
@@ -130,11 +130,11 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
 
     def freshenAbove(lim: Int, rigidify: Bool)
           (implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV,ST])
-          : TypedNuAls = withLevel { implicit ctx =>
-      TypedNuAls(level, td,
+          : TypedNuAls = { val outer = ctx; withLevel { implicit ctx =>
+      TypedNuAls(outer.lvl, td,
         tparams.map(tp => (tp._1, tp._2.freshenAbove(lim, rigidify).assertTV, tp._3)),
         body.freshenAbove(lim, rigidify))
-    }
+    }}
     
     def mapPol(pol: Opt[Bool], smart: Bool)(f: (Opt[Bool], SimpleType) => SimpleType)
           (implicit ctx: Ctx): TypedNuDecl =
@@ -179,8 +179,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
 
     def freshenAbove(lim: Int, rigidify: Bool)
           (implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV,ST])
-          : TypedNuTrt = withLevel { implicit ctx =>
-      TypedNuTrt(level, td, ttu.freshenAbove(lim, rigidify),
+          : TypedNuTrt = { val outer = ctx; withLevel { implicit ctx =>
+      TypedNuTrt(outer.lvl, td, ttu.freshenAbove(lim, rigidify),
         tparams.map(tp => (tp._1, tp._2.freshenAbove(lim, rigidify).assertTV, tp._3)),
         members.mapValuesIter(_.freshenAbove(lim, rigidify)).toMap,
         thisTy.freshenAbove(lim, rigidify),
@@ -188,7 +188,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
         inheritedTags,
         parentTP.mapValuesIter(_.freshenAbove(lim, rigidify)).toMap
       )
-    }
+    }}
     
     def mapPol(pol: Opt[Bool], smart: Bool)(f: (Opt[Bool], SimpleType) => SimpleType)
           (implicit ctx: Ctx): TypedNuTrt =
@@ -286,17 +286,27 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
 
     def freshenAbove(lim: Int, rigidify: Bool)
           (implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV,ST])
-          : TypedNuCls = withLevel { implicit ctx =>
-      TypedNuCls(level, td, ttu.freshenAbove(lim, rigidify),
-        tparams.map(tp => (tp._1, tp._2.freshenAbove(lim, rigidify).assertTV, tp._3)),
-        params.mapValues(_.freshenAbove(lim, rigidify)),
-        members.mapValuesIter(_.freshenAbove(lim, rigidify)).toMap,
-        thisTy.freshenAbove(lim, rigidify),
-        sign.freshenAbove(lim, rigidify),
-        inheritedTags,
-        parentTP.mapValuesIter(_.freshenAbove(lim, rigidify)).toMap
+          : TypedNuCls = { val outer = ctx; withLevel { implicit ctx =>
+      // TODO do we even need ttu?!
+      // * Make sure to freshen tparams frist – and notably, before ttu!
+      val tparams_ = tparams.map(tp => (tp._1, tp._2.freshenAbove(lim, rigidify).assertTV, tp._3))
+      val params_ = params.mapValues(_.freshenAbove(lim, rigidify))
+      val members_ = members.mapValuesIter(_.freshenAbove(lim, rigidify)).toMap
+      val thisTy_ = thisTy.freshenAbove(lim, rigidify)
+      val sign_ = sign.freshenAbove(lim, rigidify)
+      val inheritedTags_ = inheritedTags
+      val parentTP_ = parentTP.mapValuesIter(_.freshenAbove(lim, rigidify)).toMap
+      val ttu_ = ttu.freshenAbove(lim, rigidify)
+      TypedNuCls(outer.lvl, td, ttu_,
+        tparams_,
+        params_,
+        members_,
+        thisTy_,
+        sign_,
+        inheritedTags_,
+        parentTP_,
       )(this.instanceType.freshenAbove(lim, rigidify))
-    }
+    }}
     
     def mapPol(pol: Opt[Bool], smart: Bool)(f: (Opt[Bool], SimpleType) => SimpleType)
           (implicit ctx: Ctx): TypedNuTermDef =
@@ -324,12 +334,12 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   
   
   case class TypedNuMxn(
+        level: Level,
         td: NuTypeDef, thisTV: ST, superTV: ST,
         tparams: TyParams, params: Ls[Var -> FieldType],
         members: Map[Str, NuMember], ttu: TypedTypingUnit,
       ) extends TypedNuTypeDef(Mxn) with PolyNuDecl
   {
-    val level: Level = thisTV.level - 1 // TODO cleaner
     def decl: NuTypeDef = td
     def kind: DeclKind = td.kind
     def nme: TypeName = td.nme
@@ -339,11 +349,11 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
       case (nme @ TypeName(name), tv, _) => 
         td.nme.name+"#"+name -> NuParam(nme, FieldType(S(tv), tv)(provTODO))(level)
     } 
-
+    
     def freshenAbove(lim: Int, rigidify: Bool)
           (implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV,ST])
-          : TypedNuMxn = withLevel { implicit ctx =>
-      TypedNuMxn(td,
+          : TypedNuMxn = { val outer = ctx; withLevel { implicit ctx =>
+      TypedNuMxn(outer.lvl, td,
         thisTV.freshenAbove(lim, rigidify),
         superTV.freshenAbove(lim, rigidify),
         tparams.map(tp => (tp._1, tp._2.freshenAbove(lim, rigidify).assertTV, tp._3)),
@@ -351,17 +361,17 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
         members.mapValuesIter(_.freshenAbove(lim, rigidify)).toMap,
         ttu.freshenAbove(lim, rigidify)
       )
-    }
+    }}
     
     def mapPol(pol: Opt[Bool], smart: Bool)(f: (Opt[Bool], SimpleType) => SimpleType)
           (implicit ctx: Ctx): TypedNuMxn =
-      TypedNuMxn(td, f(pol.map(!_), thisTV), f(pol.map(!_), superTV),
+      TypedNuMxn(level, td, f(pol.map(!_), thisTV), f(pol.map(!_), superTV),
         tparams.map(tp => (tp._1, f(N, tp._2).asInstanceOf[TV], tp._3)),
         params.mapValues(_.update(t => f(pol.map(!_), t), t => f(pol, t))),
         members.mapValuesIter(_.mapPol(pol, smart)(f)).toMap, ttu)
     def mapPolMap(pol: PolMap)(f: (PolMap, SimpleType) => SimpleType)
           (implicit ctx: Ctx): TypedNuMxn =
-      TypedNuMxn(td, f(pol.contravar, thisTV), f(pol.contravar, superTV),
+      TypedNuMxn(level, td, f(pol.contravar, thisTV), f(pol.contravar, superTV),
         tparams.map(tp => (tp._1, f(pol.invar, tp._2).asInstanceOf[TV], tp._3)),
         params.mapValues(_.update(t => f(pol.contravar, t), t => f(pol, t))),
         members.mapValuesIter(_.mapPolMap(pol)(f)).toMap, ttu)
@@ -394,11 +404,11 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     
     def freshenAbove(lim: Int, rigidify: Bool)
           (implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV, ST])
-          : TypedNuFun = withLevel { implicit ctx => this match {
+          : TypedNuFun = { val outer = ctx; withLevel { implicit ctx => this match {
       case TypedNuFun(level, fd, ty) =>
-        TypedNuFun(level min ctx.lvl, fd, ty.freshenAbove(lim, rigidify))
+        TypedNuFun(outer.lvl, fd, ty.freshenAbove(lim, rigidify))
           // .tap(res => println(s"Freshen[$level,${ctx.lvl}] $this ~> $res"))
-    }}
+    }}}
     
     def mapPol(pol: Opt[Bool], smart: Bool)(f: (Opt[Bool], SimpleType) => SimpleType)
           (implicit ctx: Ctx): TypedNuTermDef =
@@ -421,9 +431,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     def freshenAbove(lim: Int, rigidify: Bool)
           (implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV, ST])
           : TypedTypingUnit =
-      TypedTypingUnit(entities.map(_.freshenAbove(lim, rigidify)//.asInstanceOf[TypedNuTermDef]
-        )
-        , result.map(_.freshenAbove(lim, rigidify)))
+      TypedTypingUnit(entities.map(_.freshenAbove(lim, rigidify)), result.map(_.freshenAbove(lim, rigidify)))
   }
   
   
@@ -601,9 +609,12 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     
                     // println(s"Raw $rawMxn")
                     val (fr, ptp) = refreshHelper(rawMxn, v, if (parTargs.isEmpty) N else S(parTargs)) // type args inferred
-                    implicit val frenshened: MutMap[TV,ST] = fr
-                    implicit val shadows: Shadows = Shadows.empty
-                    val mxn = rawMxn.freshenAbove(info.level, rigidify = false)
+                    val mxn = {
+                      implicit val frenshened: MutMap[TV,ST] = fr
+                      implicit val shadows: Shadows = Shadows.empty
+                      implicit val ctx: Ctx = outerCtx
+                      rawMxn.freshenAbove(info.level, rigidify = false)
+                    }
                     // println(s"Fresh $mxn")
                     
                     val newMembs =  {                      
@@ -635,19 +646,30 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     if (parArgs.nonEmpty) err(msg"trait arguments are not yet supported", p.toLoc)
 
                     val (fr, ptp) = refreshHelper(rawTrt, v, if (parTargs.isEmpty) N else S(parTargs))  // infer ty args if not provided
-                    implicit val frenshened: MutMap[TV,ST] = fr
-                    implicit val shadows: Shadows = Shadows.empty
-                    val trt = rawTrt.freshenAbove(info.level, rigidify = false)
+                    val trt = {
+                      implicit val frenshened: MutMap[TV,ST] = fr
+                      implicit val shadows: Shadows = Shadows.empty
+                      implicit val ctx: Ctx = outerCtx
+                      rawTrt.freshenAbove(info.level, rigidify = false)
+                    }
                     
                     val paramMems = Nil // * Maybe support trait params? (not sure)
                     S((trt, paramMems, ptp ++ trt.parentTP, p.toLoc))
                     
                   case rawCls: TypedNuCls =>
+                    
+                    println(s"Raw $rawCls")
+                    
                     val (fr, ptp) = refreshHelper(rawCls, v, if (parTargs.isEmpty) N else S(parTargs)) // infer ty args if not provided
-                    implicit val frenshened: MutMap[TV,ST] = fr
-                    implicit val shadows: Shadows = Shadows.empty
-                    val cls = rawCls.freshenAbove(info.level, rigidify = false)
-
+                    val cls = {
+                      implicit val frenshened: MutMap[TV,ST] = fr
+                      implicit val shadows: Shadows = Shadows.empty
+                      implicit val ctx: Ctx = outerCtx
+                      rawCls.freshenAbove(info.level, rigidify = false)
+                    }
+                    
+                    println(s"Fresh[${ctx.lvl}] $cls")
+                    
                     if (parArgs.sizeCompare(cls.params) =/= 0)
                       err(msg"class $parNme expects ${
                         cls.params.size.toString} parameter(s); got ${parArgs.size.toString}", Loc(v :: parArgs.unzip._2))
@@ -1159,6 +1181,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                 case Mxn =>
                   if (td.parents.nonEmpty)
                     err(msg"mixin definitions cannot yet extend parents" -> Loc(td.parents) :: Nil)
+                  val outer = ctx
                   ctx.nest.nextLevel { implicit ctx =>
                     ctx ++= paramSymbols
                     val paramMems = typedParams.map(f => NuParam(f._1, f._2)(lvl))
@@ -1169,7 +1192,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     val ttu = typeTypingUnit(td.body, topLevel = false)
                     val impltdMems = paramMems ++ ttu.entities
                     val mems = impltdMems.map(m => m.name -> m).toMap ++ typedSignatureMembers
-                    TypedNuMxn(td, thisTV, superTV, tparams, typedParams, mems, ttu) -> impltdMems
+                    TypedNuMxn(outer.lvl, td, thisTV, superTV, tparams, typedParams, mems, ttu) -> impltdMems
                   }
               }
               

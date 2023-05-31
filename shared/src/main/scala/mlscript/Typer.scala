@@ -1095,7 +1095,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         }
       case New(S((nmedTy, trm)), TypingUnit(Nil)) =>
         typeMonomorphicTerm(App(Var(nmedTy.base.name).withLocOf(nmedTy), trm))
-      case New(base, args) => ???
+      case New(base, args) => err(msg"Currently unsupported `new` syntax", term.toCoveringLoc)
       case TyApp(_, _) =>
         // ??? // TODO handle
         err(msg"Type application syntax is not yet supported", term.toLoc)
@@ -1167,19 +1167,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
                     case cls: TypedNuCls =>
                       
                       val tag = clsNameToNomTag(cls.td)(tp(pat.toLoc, "class pattern"), ctx)
-                      
-                      val fresh_cls = {
-                        implicit val freshened: MutMap[TV, ST] = MutMap.empty
-                        implicit val shadows: Shadows = Shadows.empty
-                        cls.freshenAbove(cls.level, rigidify = false).asInstanceOf[TypedNuCls]
-                      }
-                      
                       val ty =
-                        // RecordType.mk(fresh_cls.params)(provTODO) // TODO?!
-                        RecordType.mk(fresh_cls.tparams.map{
-                          case (tn, tv, vi) => // TODO use variances
+                        RecordType.mk(cls.tparams.map {
+                          case (tn, tv, vi) =>
+                            val nv = freshVar(tv.prov, S(tv), tv.nameHint)
                             (Var(nme+"#"+tn.name).withLocOf(tn),
-                              FieldType.mk(fresh_cls.varianceOf(tv), tv, tv)(provTODO))
+                              FieldType.mk(vi.getOrElse(cls.varianceOf(tv)), nv, nv)(provTODO))
                         })(provTODO)
                       println(s"Match arm $nme: $tag & $ty")
                       tag -> ty
@@ -1330,7 +1323,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         ectx(tparams) |> { implicit ectx =>
           NuTypeDef(td.kind, td.nme, td.tparams, Tup(Nil), S(go(body)), Nil, N, N, TypingUnit(Nil))(td.declareLoc)
         }
-      case TypedNuMxn(td, thisTy, superTy, tparams, params, members, ttu) =>
+      case TypedNuMxn(level, td, thisTy, superTy, tparams, params, members, ttu) =>
         ectx(tparams) |> { implicit ectx =>
           NuTypeDef(td.kind, td.nme, td.tparams,
             Tup(params.map(p => N -> Fld(false, false, Asc(p._1, go(p._2.ub))))),

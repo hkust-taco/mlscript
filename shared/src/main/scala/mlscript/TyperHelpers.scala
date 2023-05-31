@@ -1217,7 +1217,7 @@ abstract class TyperHelpers { Typer: Typer =>
         apply(pol.contravar)(thisTy)
         apply(pol.covar)(sign)
         ptps.valuesIterator.foreach(applyMem(pol))
-      case TypedNuMxn(td, thisTV, superTV, tparams, params, members, ttu) =>
+      case TypedNuMxn(level, td, thisTV, superTV, tparams, params, members, ttu) =>
         tparams.iterator.foreach(tp => apply(pol.invar)(tp._2))
         params.foreach(p => applyField(pol)(p._2))
         members.valuesIterator.foreach(applyMem(pol))

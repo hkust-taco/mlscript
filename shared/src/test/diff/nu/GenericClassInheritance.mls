@@ -14,37 +14,23 @@ class BigRoom extends Room[bool]("big")
 //│ where
 //│   'A := bool
 
-// FIXME
+// * Note that this essentially infers Room[Bool]
 class InferredRoom extends Room("infer") {
     fun foo(x) = x && true
 }
-//│ ╔══[ERROR] Type error in definition of method foo
-//│ ║  l.19: 	    fun foo(x) = x && true
-//│ ║        	        ^^^^^^^^^^^^^^^^^^
-//│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.3: 	class Room[A](name: string) {
-//│ ║       	           ^
-//│ ╟── into reference of type `bool`
-//│ ║  l.19: 	    fun foo(x) = x && true
-//│ ╙──      	                 ^
-//│ ╔══[ERROR] Type error in definition of method foo
-//│ ║  l.19: 	    fun foo(x) = x && true
-//│ ║        	        ^^^^^^^^^^^^^^^^^^
-//│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.19: 	    fun foo(x) = x && true
-//│ ║        	                 ^^^^^^^^^
-//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
-//│ ╟── • this operator application:
-//│ ║  l.19: 	    fun foo(x) = x && true
-//│ ╙──      	                 ^^^^^^^^^
 //│ class InferredRoom() {
 //│   fun foo: bool -> bool
 //│ }
 
+InferredRoom() : Room['X]
+//│ Room[bool]
+//│ res
+//│     = InferredRoom {}
+
 :e
 class TooManyRoom extends Room[int, string]("too many")
 //│ ╔══[ERROR] class Room expects 1 type parameter(s); got 2
-//│ ║  l.45: 	class TooManyRoom extends Room[int, string]("too many")
+//│ ║  l.31: 	class TooManyRoom extends Room[int, string]("too many")
 //│ ╙──      	                          ^^^^^^^^^^^^^^^^
 //│ class TooManyRoom() {
 //│   fun foo: (x: 'A,) -> 'A
@@ -57,22 +43,22 @@ class WrongRoom extends Room[bool]("wrong") {
     fun foo(x) = x + 1
 }
 //│ ╔══[ERROR] Type mismatch in definition of method foo:
-//│ ║  l.57: 	    fun foo(x) = x + 1
+//│ ║  l.43: 	    fun foo(x) = x + 1
 //│ ║        	        ^^^^^^^^^^^^^^
 //│ ╟── type `bool` is not an instance of type `int`
-//│ ║  l.56: 	class WrongRoom extends Room[bool]("wrong") {
+//│ ║  l.42: 	class WrongRoom extends Room[bool]("wrong") {
 //│ ║        	                             ^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.57: 	    fun foo(x) = x + 1
+//│ ║  l.43: 	    fun foo(x) = x + 1
 //│ ╙──      	                 ^
 //│ ╔══[ERROR] Type mismatch in definition of method foo:
-//│ ║  l.57: 	    fun foo(x) = x + 1
+//│ ║  l.43: 	    fun foo(x) = x + 1
 //│ ║        	        ^^^^^^^^^^^^^^
 //│ ╟── operator application of type `int` is not an instance of type `bool`
-//│ ║  l.57: 	    fun foo(x) = x + 1
+//│ ║  l.43: 	    fun foo(x) = x + 1
 //│ ║        	                 ^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.56: 	class WrongRoom extends Room[bool]("wrong") {
+//│ ║  l.42: 	class WrongRoom extends Room[bool]("wrong") {
 //│ ║        	                             ^^^^
 //│ ╟── from reference:
 //│ ║  l.4: 	    fun foo(x: A) = x
@@ -80,6 +66,38 @@ class WrongRoom extends Room[bool]("wrong") {
 //│ class WrongRoom() {
 //│   fun foo: int -> int
 //│ }
+
+
+class C0[A] { val a: A }
+//│ class C0[A]() {
+//│   let a: A
+//│ }
+
+class C1[A] extends C0[A]
+//│ class C1[A]() {
+//│   let a: 'A
+//│ }
+//│ where
+//│   'A := A
+
+:pe
+:e
+new C1 : C1[int]
+//│ ╔══[PARSE ERROR] Unexpected type ascription after `new` keyword
+//│ ║  l.85: 	new C1 : C1[int]
+//│ ╙──      	    ^^
+//│ ╔══[ERROR] Currently unsupported `new` syntax
+//│ ║  l.85: 	new C1 : C1[int]
+//│ ╙──      	^^^
+//│ error
+//│ res
+//│     = {}
+
+((new C1) : C1[int]) : C0['X]
+//│ C0[int]
+//│ res
+//│     = C1 {}
+
 
 mixin M1[A] {
     fun f1(x: A): A = x
@@ -131,14 +149,14 @@ class B2[A](a: int => A) extends M2
 :e
 class E1(a: int) extends M2[bool]
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.132: 	class E1(a: int) extends M2[bool]
+//│ ║  l.150: 	class E1(a: int) extends M2[bool]
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `int` is not an instance of type `bool`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.132: 	class E1(a: int) extends M2[bool]
+//│ ║  l.150: 	class E1(a: int) extends M2[bool]
 //│ ║         	                            ^^^^
 //│ ╟── from field selection:
-//│ ║  l.114: 	    fun m: A = this.a
+//│ ║  l.132: 	    fun m: A = this.a
 //│ ╙──       	               ^^^^^^
 //│ class E1(a: int) {
 //│   fun m: bool

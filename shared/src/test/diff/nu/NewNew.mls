@@ -42,35 +42,55 @@ let origin = Point[int](0, 0)
 //│ origin
 //│        = Point {}
 
-// FIXME
+// TODO
 let origin = new Point[int](0, 0)
 //│ ╔══[PARSE ERROR] Unexpected application after `new` keyword
 //│ ║  l.46: 	let origin = new Point[int](0, 0)
 //│ ╙──      	                 ^^^^^^^^^^^^^^^^
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ ╔══[ERROR] Currently unsupported `new` syntax
+//│ ║  l.46: 	let origin = new Point[int](0, 0)
+//│ ╙──      	             ^^^
+//│ let origin: error
+//│ origin
+//│        = {}
 
 
-// FIXME
+// TODO
 new {}
 //│ ╔══[PARSE ERROR] Unexpected record after `new` keyword
-//│ ║  l.54: 	new {}
+//│ ║  l.59: 	new {}
 //│ ╙──      	    ^^
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ ╔══[ERROR] Currently unsupported `new` syntax
+//│ ║  l.59: 	new {}
+//│ ╙──      	^^^
+//│ error
+//│ res
+//│     = {}
 
-// FIXME
+// TODO
 new
 //│ ╔══[PARSE ERROR] Unexpected end of input; an expression was expected here
-//│ ║  l.61: 	new
+//│ ║  l.71: 	new
 //│ ╙──      	   ^
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ ╔══[ERROR] Currently unsupported `new` syntax
+//│ ║  l.71: 	new
+//│ ╙──      	^^^
+//│ error
+//│ res
+//│     = {}
 
-// FIXME
+// TODO
 new
   x: 0
 //│ ╔══[PARSE ERROR] Unexpected type ascription after `new` keyword
-//│ ║  l.69: 	  x: 0
+//│ ║  l.84: 	  x: 0
 //│ ╙──      	  ^
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ ╔══[ERROR] Currently unsupported `new` syntax
+//│ ║  l.83: 	new
+//│ ╙──      	^^^
+//│ error
+//│ res
+//│     = {}
 
 
 
