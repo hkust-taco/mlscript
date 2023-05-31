@@ -1,7 +1,7 @@
 :NewDefs
 
 
-export class A
+export class A()
 //│ class A()
 
 
@@ -9,7 +9,7 @@ module M {
   export fun g = A()
   fun f = A()
 }
-//│ module M() {
+//│ module M {
 //│   fun f: A
 //│   fun g: A
 //│ }

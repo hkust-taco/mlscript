@@ -19,7 +19,7 @@ module Test<A> {
 //│ ╔══[ERROR] Member poly1 is declared but not defined
 //│ ║  l.10: 	  fun poly1: forall 'a; 'a -> 'a
 //│ ╙──      	      ^^^^^
-//│ module Test[A]() {
+//│ module Test[A] {
 //│   fun bar: A -> A
 //│   fun baz: (x: A,) -> A
 //│   fun foo: A -> A
@@ -147,7 +147,7 @@ test(Test)
 module Test<A> {
   fun foo = id
 }
-//│ module Test[A]() {
+//│ module Test[A] {
 //│   fun foo: forall 'a. 'a -> 'a
 //│ }
 
@@ -161,7 +161,7 @@ module Test<A> {
   fun foo: A => A
   fun foo = id
 }
-//│ module Test[A]() {
+//│ module Test[A] {
 //│   fun foo: A -> A
 //│ }
 

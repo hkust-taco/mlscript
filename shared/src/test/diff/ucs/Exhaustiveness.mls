@@ -1,15 +1,12 @@
-:NewParser
+:NewDefs
 :NoJS
 
 class A()
 class B()
 class C()
-//│ Defined class A
-//│ Defined class B
-//│ Defined class C
-//│ A: () -> A
-//│ B: () -> B
-//│ C: () -> C
+//│ class A()
+//│ class B()
+//│ class C()
 
 :e
 fun f(x, y) =
@@ -23,11 +20,47 @@ fun f(x, y) =
       x is
         A then 4
 //│ ╔══[ERROR] The match is not exhaustive.
-//│ ║  l.23: 	      x is
+//│ ║  l.20: 	      x is
 //│ ║        	      ^^^^
 //│ ╟── The scrutinee at this position misses 2 cases.
-//│ ║  l.23: 	      x is
+//│ ║  l.20: 	      x is
 //│ ║        	      ^
 //│ ╟── [Missing Case 1/2] `B`
-//│ ╙── [Missing Case 2/2] `C`
-//│ f: (anything, anything,) -> error
+//│ ╟── It first appears here.
+//│ ║  l.17: 	        B then 1
+//│ ║        	        ^
+//│ ╟── [Missing Case 2/2] `C`
+//│ ╟── It first appears here.
+//│ ║  l.18: 	        C then 2
+//│ ╙──      	        ^
+//│ fun f: (anything, anything,) -> error
+
+:e
+// These operators are uninterpreted. So, it's impossible to reason the
+// exhaustiveness without SMT solvers.
+type Tree[A] = Node[A] | Empty
+module Empty {
+  fun contains(wanted) = false
+}
+class Node[A](value: int, left: Tree[A], right: Tree[A]) {
+  fun contains(wanted) = if wanted
+    <= value then left.find(wanted)
+    >= value then right.find(wanted)
+    == value then true
+}
+//│ ╔══[ERROR] The case when this is false is not handled: == (wanted,) (value,)
+//│ ║  l.46: 	  fun contains(wanted) = if wanted
+//│ ║        	                            ^^^^^^
+//│ ║  l.47: 	    <= value then left.find(wanted)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.48: 	    >= value then right.find(wanted)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.49: 	    == value then true
+//│ ╙──      	^^^^^^^^^^^^
+//│ type Tree[A] = Node[A] | Empty
+//│ module Empty {
+//│   fun contains: anything -> false
+//│ }
+//│ class Node[A](value: int, left: Tree[A], right: Tree[A]) {
+//│   fun contains: anything -> error
+//│ }

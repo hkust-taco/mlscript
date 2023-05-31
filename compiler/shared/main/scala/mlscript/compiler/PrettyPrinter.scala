@@ -1,6 +1,6 @@
 package mlscript.compiler
 
-import mlscript.{TypingUnit, NuFunDef, NuTypeDef, Term}
+import mlscript.{TypingUnit, NuFunDef, NuTypeDef, Term, Tup}
 import mlscript.compiler.debug.DebugOutput
 
 // For pretty printing terms in debug output.
@@ -47,7 +47,7 @@ object PrettyPrinter:
       + (if tyDef.tparams.isEmpty
          then ""
          else tyDef.tparams.map(_._2.name).mkString("[", ",", "]"))
-      + "(" + tyDef.params + ")"
+      + tyDef.params.fold("")(params => s"($params)")
       + (if tyDef.parents.isEmpty
          then ""
          else ": " + tyDef.parents.map(_.toString).mkString(", "))

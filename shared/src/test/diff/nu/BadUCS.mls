@@ -2,7 +2,7 @@
 
 
 class Foo
-//│ class Foo()
+//│ class Foo
 
 fun foo(x) = if x is Foo then 0
 //│ fun foo: Foo -> 0
@@ -11,8 +11,8 @@ fun foo(x) = if x is Foo then 0
 module Bar {
   class Foo0
 }
-//│ module Bar() {
-//│   class Foo0()
+//│ module Bar {
+//│   class Foo0
 //│ }
 
 fun foo(x) = if x is Bar then 0
@@ -72,14 +72,8 @@ fun foo(x) = if x is M() then 0
 //│   if expression was not desugared
 
 
-:e
 fun foo0(x, y) = if x is y then 0
-//│ ╔══[ERROR] Cannot find constructor `y` in scope
-//│ ║  l.76: 	fun foo0(x, y) = if x is y then 0
-//│ ╙──      	                         ^
-//│ fun foo0: (anything, anything,) -> error
-//│ Code generation encountered an error:
-//│   if expression was not desugared
+//│ fun foo0: (anything, anything,) -> 0
 
 
 fun foo = 0
@@ -88,7 +82,7 @@ fun foo = 0
 :e
 fun foo0(x) = if x is foo() then 0
 //│ ╔══[ERROR] Illegal pattern `foo`
-//│ ║  l.89: 	fun foo0(x) = if x is foo() then 0
+//│ ║  l.83: 	fun foo0(x) = if x is foo() then 0
 //│ ╙──      	                      ^^^
 //│ fun foo0: anything -> error
 //│ Code generation encountered an error:
@@ -97,13 +91,23 @@ fun foo0(x) = if x is foo() then 0
 :e
 fun foo(x) = if x is foo() then 0
 //│ ╔══[ERROR] Unhandled cyclic definition
-//│ ║  l.98: 	fun foo(x) = if x is foo() then 0
+//│ ║  l.92: 	fun foo(x) = if x is foo() then 0
 //│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Illegal pattern `foo`
-//│ ║  l.98: 	fun foo(x) = if x is foo() then 0
+//│ ║  l.92: 	fun foo(x) = if x is foo() then 0
 //│ ╙──      	                     ^^^
 //│ fun foo: anything -> error
 //│ Code generation encountered an error:
 //│   if expression was not desugared
 
+module Nil
+class Cons[out A](head: A, tail: Cons[A] | Nil)
+//│ module Nil
+//│ class Cons[A](head: A, tail: Cons[A] | Nil)
 
+fun join(xs) =
+  if xs is
+    Nil then ""
+    Cons(x, Nil) then toString(x)
+    Cons(x, xs') then concat(toString(x))(concat(", ")(join(xs')))
+//│ fun join: (Cons[anything] | Nil) -> string

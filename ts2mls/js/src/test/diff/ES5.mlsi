@@ -32,7 +32,7 @@ trait Object {
   fun propertyIsEnumerable(v: ((string) | (number)) | (Symbol)): (false) | (true)
   fun valueOf(): Object
   fun toLocaleString(): string
-  val constructor: Function
+  val id"constructor": Function
   fun isPrototypeOf(v: Object): (false) | (true)
   fun toString(): string
 }

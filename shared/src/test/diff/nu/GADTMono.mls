@@ -6,7 +6,7 @@ class Exp[type A]
 //│ ╔══[PARSE ERROR] Unexpected 'type' keyword here
 //│ ║  l.5: 	class Exp[type A]
 //│ ╙──     	          ^^^^
-//│ class Exp()
+//│ class Exp
 
 // TODO
 class Lit(n: int) extends Exp[int]

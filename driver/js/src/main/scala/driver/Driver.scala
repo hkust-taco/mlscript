@@ -109,7 +109,7 @@ class Driver(options: DriverOptions) {
   private def extractSig(filename: String, moduleName: String): TypingUnit =
     parseAndRun(filename, {
       case (_, declarations, _, origin) => TypingUnit(
-        NuTypeDef(Nms, TypeName(moduleName), Nil, Tup(Nil), N, Nil, N, N, TypingUnit(declarations, Nil))(S(Loc(0, 1, origin)), N) :: Nil, Nil)
+        NuTypeDef(Nms, TypeName(moduleName), Nil, S(Tup(Nil)), N, N, Nil, N, N, TypingUnit(declarations, Nil))(S(Loc(0, 1, origin)), N, N) :: Nil, Nil)
     })
 
   private def `type`(tu: TypingUnit)(

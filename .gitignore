@@ -9,3 +9,4 @@ project/metals.sbt
 **.worksheet.sc
 mlsc.js
 mlsc.js.map
+.DS_Store

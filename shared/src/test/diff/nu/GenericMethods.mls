@@ -108,7 +108,7 @@ module Test {
 //│ ╔══[ERROR] Member bar is declared but not defined
 //│ ║  l.102: 	  fun bar: 'A
 //│ ╙──       	      ^^^
-//│ module Test() {
+//│ module Test {
 //│   fun bar: nothing
 //│   fun foo: forall 'A. 'A -> 'A
 //│   fun test: forall 'A0. (x: 'A0,) -> 'A0

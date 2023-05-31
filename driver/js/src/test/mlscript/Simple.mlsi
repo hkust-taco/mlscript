@@ -8,7 +8,7 @@ declare module Simple() {
     fun foo: int
   }
   let a: A
-  module C() {
+  module C {
     let b: 1
   }
   unit

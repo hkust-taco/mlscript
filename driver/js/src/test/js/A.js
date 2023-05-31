@@ -12,7 +12,7 @@ export const A = new class A {
           this.#x = x;
         }
       };
-      this.#Foo = ((x) => new Foo(x));
+      this.#Foo = ((x) => Object.freeze(new Foo(x)));
       this.#Foo.class = Foo;
     }
     return this.#Foo;

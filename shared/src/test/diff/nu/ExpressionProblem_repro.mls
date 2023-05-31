@@ -56,7 +56,7 @@ mixin EvalAdd {
 //│ }
 
 module TestLang extends EvalAdd
-//│ module TestLang() {
+//│ module TestLang {
 //│   fun eval: 'a -> nothing
 //│ }
 //│ where
@@ -82,7 +82,7 @@ mixin EvalBase {
 
 
 module TestLang extends EvalBase
-//│ module TestLang() {
+//│ module TestLang {
 //│   fun eval: 'a -> int
 //│ }
 //│ where
@@ -132,7 +132,7 @@ mixin EvalNeg {
 
 
 module TestLang extends EvalBase, EvalNeg
-//│ module TestLang() {
+//│ module TestLang {
 //│   fun eval: 'a -> int
 //│ }
 //│ where

@@ -67,10 +67,10 @@ id"id
 //│     = undefined
 
 class id"of"
-//│ class of()
+//│ class of
 
 :ge
 class id"class"
-//│ class class()
+//│ class class
 //│ Code generation encountered an error:
 //│   class is a reserved keyword in ECMAScript and can not be used as type name.

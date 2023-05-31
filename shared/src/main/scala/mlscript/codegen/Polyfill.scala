@@ -166,6 +166,12 @@ object Polyfill {
     buffer += BuiltinFunc("not", makeUnaryFunc("!"))
     buffer += BuiltinFunc("negate", makeUnaryFunc("-"))
     buffer += BuiltinFunc("eq", makeBinaryFunc("==="))
+    buffer += BuiltinFunc("ne", makeBinaryFunc("!=="))
+    buffer += BuiltinFunc("sgt", makeBinaryFunc(">"))
+    buffer += BuiltinFunc("slt", makeBinaryFunc("<"))
+    buffer += BuiltinFunc("sge", makeBinaryFunc(">="))
+    buffer += BuiltinFunc("sle", makeBinaryFunc("<="))
+    buffer += BuiltinFunc("eq", makeBinaryFunc("==="))
     buffer += BuiltinFunc("unit", makeUnaryFunc("undefined"))
     buffer += BuiltinFunc(
       "log", fn(_, param("x")) { `return` { id("console.info")(id("x")) } }

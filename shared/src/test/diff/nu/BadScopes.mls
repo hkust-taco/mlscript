@@ -32,7 +32,7 @@ class Bar { x }
 //│ ║  l.30: 	class Bar { x }
 //│ ╙──      	            ^
 //│ class Foo(x: int)
-//│ class Bar()
+//│ class Bar
 //│ Code generation encountered an error:
 //│   unresolved symbol x
 

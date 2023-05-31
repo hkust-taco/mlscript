@@ -102,10 +102,10 @@ module Test0_1 {
 module Test0_2 {
   fun b = 123
 }
-//│ module Test0_1() {
+//│ module Test0_1 {
 //│   fun a: 123
 //│ }
-//│ module Test0_2() {
+//│ module Test0_2 {
 //│   fun b: 123
 //│ }
 
@@ -118,7 +118,7 @@ class Test0_1 {
 class Test0_2() {
   fun b = 123
 }
-//│ class Test0_1() {
+//│ class Test0_1 {
 //│   fun a: 123
 //│ }
 //│ class Test0_2() {
@@ -136,10 +136,10 @@ module Test1_2 {
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
 //│ ║  l.134: 	  fun b = Test1_1.a
 //│ ╙──       	                 ^^
-//│ module Test1_1() {
+//│ module Test1_1 {
 //│   fun a: error
 //│ }
-//│ module Test1_2() {
+//│ module Test1_2 {
 //│   fun b: error
 //│ }
 
@@ -157,10 +157,10 @@ class Test1_2 {
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
 //│ ║  l.155: 	  fun b = Test1_1().a
 //│ ╙──       	                   ^^
-//│ class Test1_1() {
+//│ class Test1_1 {
 //│   fun a: error
 //│ }
-//│ class Test1_2() {
+//│ class Test1_2 {
 //│   fun b: error
 //│ }
 
@@ -180,13 +180,13 @@ module Test2_2 {
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
 //│ ║  l.177: 	  fun c = Test2_1.a
 //│ ╙──       	                 ^^
-//│ module Test2_1() {
+//│ module Test2_1 {
 //│   fun a: 123 | error
 //│   fun d: error
 //│   fun n: 456
 //│   fun t2: Test2_2
 //│ }
-//│ module Test2_2() {
+//│ module Test2_2 {
 //│   fun b: 123
 //│   fun c: error
 //│   fun e: error
@@ -215,7 +215,7 @@ module Test3 {
 //│ class Test2(n: int) {
 //│   fun inc: Test2
 //│ }
-//│ module Test3() {
+//│ module Test3 {
 //│   fun inc: (t: Test2,) -> Test2
 //│ }
 

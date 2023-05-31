@@ -1,0 +1,30 @@
+:NewDefs
+
+
+declare class Date {
+  constructor(date: number)
+  fun toString(): string
+  fun toLocaleString(locales: string | Array[string], options: anything): string
+}
+//│ class Date {
+//│   fun toLocaleString: (locales: Array[string] | string, options: anything,) -> string
+//│   fun toString: () -> string
+//│ }
+
+:e // TODO ctor typing
+let date1 = new Date(12345678)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.15: 	let date1 = new Date(12345678)
+//│ ║        	                ^^^^^^^^^^^^^^
+//│ ╟── argument of type `(12345678,)` does not match type `()`
+//│ ║  l.15: 	let date1 = new Date(12345678)
+//│ ╙──      	                    ^^^^^^^^^^
+//│ let date1: Date | error
+//│ date1
+//│       = 1970-01-01T03:25:45.678Z
+
+date1.toLocaleString("en-US", { timeZone: "America/New_York" })
+//│ error | string
+//│ res
+//│     = '12/31/1969, 10:25:45 PM'
+

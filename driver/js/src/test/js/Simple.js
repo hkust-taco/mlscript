@@ -49,7 +49,7 @@ const Simple = new class Simple {
           this.#n = n;
         }
       };
-      this.#A = ((n) => new A(n));
+      this.#A = ((n) => Object.freeze(new A(n)));
       this.#A.class = A;
     }
     return this.#A;

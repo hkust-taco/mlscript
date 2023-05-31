@@ -10,7 +10,7 @@ const TS = new class TS {
   $init() {
     this.#tspt = MyPrint.DatePrint;
     const tspt = this.#tspt;
-    this.#printer = tspt("love from ts");
+    this.#printer = new tspt("love from ts");
     const printer = this.#printer;
     printer.print("hello world!");
   }

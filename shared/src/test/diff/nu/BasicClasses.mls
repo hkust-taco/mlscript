@@ -60,7 +60,7 @@ class C {
   fun id(x) = x
   fun const(x) = id
 }
-//│ class C() {
+//│ class C {
 //│   fun const: forall 'a. anything -> 'a -> 'a
 //│   fun id: forall 'a. 'a -> 'a
 //│ }
