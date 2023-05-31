@@ -55,7 +55,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   def lookupField(mkType: () => ST, clsNme: Opt[Str], rfnt: Var => Opt[FieldType], tags: SortedSet[AbstractTag], fld: Var)
         (implicit ctx: Ctx, raise: Raise)
         : FieldType
-        = {
+        = trace(s"Looking up field ${fld.name} in $clsNme & ${tags} & {...}") {
     
     val fromRft = rfnt(fld)
     
@@ -64,39 +64,40 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     def getFieldType(info: DelayedTypeInfo): Opt[FieldType] = {
       
       // * The raw type of this member, with original references to the class' type variables/type parameters
-      val raw = if (info.isComputing) {
+      val raw = (if (info.isComputed) N else info.typedFields.get(fld)) match {
         
-        info.typedFields.get(fld) match {
-          case S(fty) => S(fty)
-          case N =>
-            // TODO try to use `info.parentSpecs`?
-            if (info.allFields.contains(fld)) // TODO don't report this if the field can be found somewhere else!
-              foundRec = S(ErrorReport(msg"Indirectly-recursive member should have type annotation" -> fld.toLoc :: Nil))
-            N
-        }
+        case S(fty) => S(fty)
         
-      } else {
-
-        def handle(virtualMembers: Map[Str, NuMember]): Opt[FieldType] =
-          virtualMembers.get(fld.name) match {
-            case S(d: TypedNuFun) =>
-              S(d.typeSignature.toUpper(provTODO))
-            case S(p: NuParam) =>
-              S(p.ty)
-            // case S(p: NuTypeParam) =>
-            //   S(p.ty)
-            case S(m) =>
-              S(err(msg"access to ${m.kind.str} member not yet supported", fld.toLoc).toUpper(noProv))
-            case N => N
+        case N if info.isComputing =>
+          
+          if (info.allFields.contains(fld)) // TODO don't report this if the field can be found somewhere else!
+            foundRec = S(ErrorReport(msg"Indirectly-recursive member should have type annotation" -> fld.toLoc :: Nil))
+          
+          N
+        
+        case N =>
+          
+          def handle(virtualMembers: Map[Str, NuMember]): Opt[FieldType] =
+            virtualMembers.get(fld.name) match {
+              case S(d: TypedNuFun) =>
+                S(d.typeSignature.toUpper(provTODO))
+              case S(p: NuParam) =>
+                S(p.ty)
+              // case S(p: NuTypeParam) =>
+              //   S(p.ty)
+              case S(m) =>
+                S(err(msg"access to ${m.kind.str} member not yet supported", fld.toLoc).toUpper(noProv))
+              case N => N
+            }
+          
+          info.complete() match {
+            case cls: TypedNuCls => handle(cls.virtualMembers)
+            case trt: TypedNuTrt => handle(trt.virtualMembers)
+            case mxn: TypedNuMxn => handle(mxn.virtualMembers)
+            case TypedNuDummy(d) => N
+            case _ => ??? // TODO
           }
-
-        info.complete() match {
-          case cls: TypedNuCls => handle(cls.virtualMembers)
-          case trt: TypedNuTrt => handle(trt.virtualMembers)
-          case mxn: TypedNuMxn => handle(mxn.virtualMembers)
-          case _ => ??? // TODO
-        }
-        
+          
       }
       
       println(s"Lookup ${info.decl.name}.${fld.name} : $raw where ${raw.fold("")(_.ub.showBounds)}")
@@ -178,7 +179,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         }
     }
     
-  }
+  }()
   
   
   // def lookupNuTypeDef(clsNme: Str, rfnt: Map[Var, FieldType])

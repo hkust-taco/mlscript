@@ -171,12 +171,12 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     def kind: DeclKind = td.kind
     def nme: TypeName = td.nme
     def name: Str = nme.name
-
+    
     lazy val virtualMembers: Map[Str, NuMember] = members ++ tparams.map {
       case (nme @ TypeName(name), tv, _) => 
         td.nme.name+"#"+name -> NuParam(nme, FieldType(S(tv), tv)(provTODO))(level)
     } ++ parentTP
-
+    
     def freshenAbove(lim: Int, rigidify: Bool)
           (implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV,ST])
           : TypedNuTrt = { val outer = ctx; withLevel { implicit ctx =>
@@ -562,6 +562,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     
     var isComputing: Bool = false // Replace by a Ctx entry?
     var result: Opt[TypedNuDecl] = N
+    def isComputed: Bool = result.isDefined
     
     val level: Level = ctx.lvl
     
@@ -572,8 +573,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     
     println(s"${ctx.lvl}. Created lazy type info for $decl")
 
-    type ParentSpec = (Term, Var, Ls[Type], Ls[Opt[Var] -> Fld])
-    val parentSpecs: Ls[ParentSpec] = decl match {
+    type ParentSpec = (Term, Var, LazyTypeInfo, Ls[Type], Ls[Opt[Var] -> Fld])
+    lazy val parentSpecs: Ls[ParentSpec] = decl match {
       case td: NuTypeDef => 
         td.parents.flatMap {
           case v @ Var(nme) =>
@@ -587,6 +588,18 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           case p =>
             err(msg"Unsupported parent specification", p.toLoc) // TODO
             N
+        }.flatMap {
+          case (p, v @ Var(parNme), parTargs, parArgs) =>
+            ctx.get(parNme) match {
+              case S(lti: LazyTypeInfo) =>
+                S((p, v, lti, parTargs, parArgs))
+              case S(_) =>
+                err(msg"Cannot inherit from this", p.toLoc)
+                N
+              case N => 
+                err(msg"Could not find definition `${parNme}`", p.toLoc)
+                N
+            }
         }
       case _ => Nil
     }
@@ -598,117 +611,108 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
       ctx ++= paramSymbols
       
       parentSpecs.flatMap {
-        case (p, v @ Var(parNme), parTargs, parArgs) =>
+        case (p, v @ Var(parNme), lti, parTargs, parArgs) =>
           trace(s"${lvl}. Typing parent spec $p") {
-            ctx.get(parNme) match {
-              case S(lti: LazyTypeInfo) =>
-                val info = lti.complete()
-                info match {
-                  
-                  case rawMxn: TypedNuMxn =>
-                    
-                    // println(s"Raw $rawMxn")
-                    val (fr, ptp) = refreshHelper(rawMxn, v, if (parTargs.isEmpty) N else S(parTargs)) // type args inferred
-                    val mxn = {
-                      implicit val frenshened: MutMap[TV,ST] = fr
-                      implicit val shadows: Shadows = Shadows.empty
-                      implicit val ctx: Ctx = outerCtx
-                      rawMxn.freshenAbove(info.level, rigidify = false)
-                    }
-                    // println(s"Fresh $mxn")
-                    
-                    val newMembs =  {                      
-                      if (parArgs.sizeCompare(mxn.params) =/= 0)
-                        err(msg"mixin $parNme expects ${
-                          mxn.params.size.toString} parameter(s); got ${parArgs.size.toString}", Loc(v :: parArgs.unzip._2))
-                      
-                      val paramMems = mxn.params.lazyZip(parArgs).map { case (nme -> p, _ -> Fld(_, _, a)) => // TODO check name, mut, spec
-                        implicit val genLambdas: GenLambdas = true
-                        val a_ty = typeTerm(a)
-                        p.lb.foreach(constrain(_, a_ty))
-                        constrain(a_ty, p.ub)
-                        NuParam(nme, FieldType(p.lb, a_ty)(provTODO))(lvl)
-                      }
-                      
-                      val bodyMems = mxn.ttu.entities // TODO Q: why not `mxn.members`?
-                      
-                      paramMems ++ bodyMems
-                      
-                    }
-                    println(s"Members $newMembs")
-                    
-                    S((mxn, newMembs, 
-                      Map.empty[Str, NuMember], // TODO add ptp here once we support explicit type args
-                      p.toLoc
-                    ))
-                    
-                  case rawTrt: TypedNuTrt =>
-                    if (parArgs.nonEmpty) err(msg"trait arguments are not yet supported", p.toLoc)
-
-                    val (fr, ptp) = refreshHelper(rawTrt, v, if (parTargs.isEmpty) N else S(parTargs))  // infer ty args if not provided
-                    val trt = {
-                      implicit val frenshened: MutMap[TV,ST] = fr
-                      implicit val shadows: Shadows = Shadows.empty
-                      implicit val ctx: Ctx = outerCtx
-                      rawTrt.freshenAbove(info.level, rigidify = false)
-                    }
-                    
-                    val paramMems = Nil // * Maybe support trait params? (not sure)
-                    S((trt, paramMems, ptp ++ trt.parentTP, p.toLoc))
-                    
-                  case rawCls: TypedNuCls =>
-                    
-                    println(s"Raw $rawCls")
-                    
-                    val (fr, ptp) = refreshHelper(rawCls, v, if (parTargs.isEmpty) N else S(parTargs)) // infer ty args if not provided
-                    val cls = {
-                      implicit val frenshened: MutMap[TV,ST] = fr
-                      implicit val shadows: Shadows = Shadows.empty
-                      implicit val ctx: Ctx = outerCtx
-                      rawCls.freshenAbove(info.level, rigidify = false)
-                    }
-                    
-                    println(s"Fresh[${ctx.lvl}] $cls")
-                    
-                    if (parArgs.sizeCompare(cls.params) =/= 0)
-                      err(msg"class $parNme expects ${
-                        cls.params.size.toString} parameter(s); got ${parArgs.size.toString}", Loc(v :: parArgs.unzip._2))
-                    
-                    val paramMems = cls.params.lazyZip(parArgs).map { case (nme -> p, _ -> Fld(_, _, a)) => // TODO check name, mut, spec
-                      implicit val genLambdas: GenLambdas = true
-                      val a_ty = typeTerm(a)
-                      p.lb.foreach(constrain(_, a_ty))
-                      constrain(a_ty, p.ub)
-                      NuParam(nme, FieldType(p.lb, a_ty)(provTODO))(lvl)
-                    }
-                    
-                    S((cls, paramMems, ptp ++ cls.parentTP, p.toLoc))
-                    
-                  case als: TypedNuAls =>
-                    // TODO dealias first?
-                    err(msg"Cannot inherit from a type alias", p.toLoc)
-                    N
-                  case als: NuParam =>
-                    // TODO first-class mixins/classes...
-                    err(msg"Cannot inherit from a parameter", p.toLoc)
-                    N
-                  // case als: NuTypeParam =>
-                  //   err(msg"Cannot inherit from a type parameter", p.toLoc)
-                  //   Nil
-                  case cls: TypedNuFun =>
-                    err(msg"Cannot inherit from a function", p.toLoc)
-                    N
-                    
-                  case cls: TypedNuDummy =>
-                    N
-                    
+            val info = lti.complete()
+            info match {
+              
+              case rawMxn: TypedNuMxn =>
+                
+                // println(s"Raw $rawMxn")
+                val (fr, ptp) = refreshHelper(rawMxn, v, if (parTargs.isEmpty) N else S(parTargs)) // type args inferred
+                val mxn = {
+                  implicit val frenshened: MutMap[TV,ST] = fr
+                  implicit val shadows: Shadows = Shadows.empty
+                  implicit val ctx: Ctx = outerCtx
+                  rawMxn.freshenAbove(info.level, rigidify = false)
                 }
-              case S(_) =>
-                err(msg"Cannot inherit from this", p.toLoc)
+                // println(s"Fresh $mxn")
+                
+                val newMembs =  {                      
+                  if (parArgs.sizeCompare(mxn.params) =/= 0)
+                    err(msg"mixin $parNme expects ${
+                      mxn.params.size.toString} parameter(s); got ${parArgs.size.toString}", Loc(v :: parArgs.unzip._2))
+                  
+                  val paramMems = mxn.params.lazyZip(parArgs).map { case (nme -> p, _ -> Fld(_, _, a)) => // TODO check name, mut, spec
+                    implicit val genLambdas: GenLambdas = true
+                    val a_ty = typeTerm(a)
+                    p.lb.foreach(constrain(_, a_ty))
+                    constrain(a_ty, p.ub)
+                    NuParam(nme, FieldType(p.lb, a_ty)(provTODO))(lvl)
+                  }
+                  
+                  val bodyMems = mxn.ttu.entities // TODO Q: why not `mxn.members`?
+                  
+                  paramMems ++ bodyMems
+                  
+                }
+                println(s"Members $newMembs")
+                
+                S((mxn, newMembs, 
+                  Map.empty[Str, NuMember], // TODO add ptp here once we support explicit type args
+                  p.toLoc
+                ))
+                
+              case rawTrt: TypedNuTrt =>
+                if (parArgs.nonEmpty) err(msg"trait arguments are not yet supported", p.toLoc)
+
+                val (fr, ptp) = refreshHelper(rawTrt, v, if (parTargs.isEmpty) N else S(parTargs))  // infer ty args if not provided
+                val trt = {
+                  implicit val frenshened: MutMap[TV,ST] = fr
+                  implicit val shadows: Shadows = Shadows.empty
+                  implicit val ctx: Ctx = outerCtx
+                  rawTrt.freshenAbove(info.level, rigidify = false)
+                }
+                
+                val paramMems = Nil // * Maybe support trait params? (not sure)
+                S((trt, paramMems, ptp ++ trt.parentTP, p.toLoc))
+                
+              case rawCls: TypedNuCls =>
+                
+                println(s"Raw $rawCls")
+                
+                val (fr, ptp) = refreshHelper(rawCls, v, if (parTargs.isEmpty) N else S(parTargs)) // infer ty args if not provided
+                val cls = {
+                  implicit val frenshened: MutMap[TV,ST] = fr
+                  implicit val shadows: Shadows = Shadows.empty
+                  implicit val ctx: Ctx = outerCtx
+                  rawCls.freshenAbove(info.level, rigidify = false)
+                }
+                
+                println(s"Fresh[${ctx.lvl}] $cls")
+                
+                if (parArgs.sizeCompare(cls.params) =/= 0)
+                  err(msg"class $parNme expects ${
+                    cls.params.size.toString} parameter(s); got ${parArgs.size.toString}", Loc(v :: parArgs.unzip._2))
+                
+                val paramMems = cls.params.lazyZip(parArgs).map { case (nme -> p, _ -> Fld(_, _, a)) => // TODO check name, mut, spec
+                  implicit val genLambdas: GenLambdas = true
+                  val a_ty = typeTerm(a)
+                  p.lb.foreach(constrain(_, a_ty))
+                  constrain(a_ty, p.ub)
+                  NuParam(nme, FieldType(p.lb, a_ty)(provTODO))(lvl)
+                }
+                
+                S((cls, paramMems, ptp ++ cls.parentTP, p.toLoc))
+                
+              case als: TypedNuAls =>
+                // TODO dealias first?
+                err(msg"Cannot inherit from a type alias", p.toLoc)
                 N
-              case N => 
-                err(msg"Could not find definition `${parNme}`", p.toLoc)
+              case als: NuParam =>
+                // TODO first-class mixins/classes...
+                err(msg"Cannot inherit from a parameter", p.toLoc)
                 N
+              // case als: NuTypeParam =>
+              //   err(msg"Cannot inherit from a type parameter", p.toLoc)
+              //   Nil
+              case cls: TypedNuFun =>
+                err(msg"Cannot inherit from a function", p.toLoc)
+                N
+                
+              case cls: TypedNuDummy =>
+                N
+                
             }
           }()
       }
@@ -719,23 +723,15 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     def lookupTags(parents: Ls[ParentSpec], tags: Set[TypeName]): Set[TypeName] = {
       parents match {
         case Nil => tags
-        case (p, Var(nm), _, _) :: ps =>
-          ctx.get(nm) match {
-          case S(lti: DelayedTypeInfo) => lti.kind match {
+        case (p, Var(nm), lti, _, _) :: ps => lti match {
+          case lti: DelayedTypeInfo => lti.kind match {
             case Trt | Cls | Nms =>  lookupTags(ps, Set.single(TypeName(nm)) union lti.inheritedTags union tags)
             case _ => lookupTags(ps, tags)
           }
-          case S(lti: CompletedTypeInfo) => lti.kind match {
-            case Trt => lookupTags(ps, 
-              Set.single(TypeName(nm)) union 
-              lti.member.asInstanceOf[TypedNuTrt].inheritedTags union 
-              tags)
-            case Cls | Nms => lookupTags(ps, 
-              Set.single(TypeName(nm)) union 
-              lti.member.asInstanceOf[TypedNuCls].inheritedTags union 
-              tags)
-            case _ => lookupTags(ps, tags)
-            }
+          case CompletedTypeInfo(trt: TypedNuTrt) =>
+            lookupTags(ps, Set.single(TypeName(nm)) union trt.inheritedTags union tags)
+          case CompletedTypeInfo(cls: TypedNuCls) =>
+            lookupTags(ps, Set.single(TypeName(nm)) union cls.inheritedTags union tags)
           case _ => lookupTags(ps, tags)
         }
       }
@@ -829,16 +825,26 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
         fd.nme.name -> TypedNuFun(level + 1, fd, ty)
       }.toList
     
+    lazy val inheritedFields: Set[Var] = decl match {
+      case td: NuTypeDef =>
+        parentSpecs.iterator.flatMap(_._3 match {
+          case dti: DelayedTypeInfo => dti.allFields
+          case CompletedTypeInfo(m: TypedNuTypeDef) => m.allFields
+          case _ => Set.empty}).toSet
+      case _: NuFunDef => Set.empty
+    }
+    
     lazy val allFields: Set[Var] = decl match {
       case td: NuTypeDef =>
         (td.params.getOrElse(Tup(Nil)).fields.iterator.flatMap(_._1) ++ td.body.entities.iterator.collect {
           case fd: NuFunDef => fd.nme
-        }).toSet ++ typedParents.flatMap(_._1.allFields)
+        }).toSet ++ inheritedFields
       case _: NuFunDef => Set.empty
     }
     
     lazy val typedFields: Map[Var, FieldType] =
-      typedParams.toMap ++ typedSignatures.iterator.map(fd_ty => fd_ty._1.nme -> fd_ty._2.toUpper(noProv))
+      (typedParams.toMap -- inheritedFields /* parameters can be overridden by inherited fields/methods */) ++
+        typedSignatures.iterator.map(fd_ty => fd_ty._1.nme -> fd_ty._2.toUpper(noProv))
     
     lazy val mutRecTV: TV = freshVar(
       TypeProvenance(decl.toLoc, decl.describe, S(decl.name), decl.isInstanceOf[NuTypeDef]),

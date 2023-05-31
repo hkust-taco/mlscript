@@ -991,7 +991,7 @@ abstract class TyperHelpers { Typer: Typer =>
       ctx.tyDefs2.get(defn.name).forall(info =>
         // * Object types do not need to be completed in order to be expanded
         info.kind.isInstanceOf[ObjDefKind]
-        || info.result.isDefined)
+        || info.isComputed)
     def expand(implicit ctx: Ctx, raise: Raise): SimpleType = {
       ctx.tyDefs2.get(defn.name) match {
         case S(info) =>
