@@ -335,7 +335,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   
   case class TypedNuMxn(
         level: Level,
-        td: NuTypeDef, thisTV: ST, superTV: ST,
+        td: NuTypeDef, thisTy: ST, superTy: ST,
         tparams: TyParams, params: Ls[Var -> FieldType],
         members: Map[Str, NuMember], ttu: TypedTypingUnit,
       ) extends TypedNuTypeDef(Mxn) with PolyNuDecl
@@ -354,8 +354,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           (implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV,ST])
           : TypedNuMxn = { val outer = ctx; withLevel { implicit ctx =>
       TypedNuMxn(outer.lvl, td,
-        thisTV.freshenAbove(lim, rigidify),
-        superTV.freshenAbove(lim, rigidify),
+        thisTy.freshenAbove(lim, rigidify),
+        superTy.freshenAbove(lim, rigidify),
         tparams.map(tp => (tp._1, tp._2.freshenAbove(lim, rigidify).assertTV, tp._3)),
         params.mapValues(_.freshenAbove(lim, rigidify)),
         members.mapValuesIter(_.freshenAbove(lim, rigidify)).toMap,
@@ -365,13 +365,13 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     
     def mapPol(pol: Opt[Bool], smart: Bool)(f: (Opt[Bool], SimpleType) => SimpleType)
           (implicit ctx: Ctx): TypedNuMxn =
-      TypedNuMxn(level, td, f(pol.map(!_), thisTV), f(pol.map(!_), superTV),
+      TypedNuMxn(level, td, f(pol.map(!_), thisTy), f(pol.map(!_), superTy),
         tparams.map(tp => (tp._1, f(N, tp._2).asInstanceOf[TV], tp._3)),
         params.mapValues(_.update(t => f(pol.map(!_), t), t => f(pol, t))),
         members.mapValuesIter(_.mapPol(pol, smart)(f)).toMap, ttu)
     def mapPolMap(pol: PolMap)(f: (PolMap, SimpleType) => SimpleType)
           (implicit ctx: Ctx): TypedNuMxn =
-      TypedNuMxn(level, td, f(pol.contravar, thisTV), f(pol.contravar, superTV),
+      TypedNuMxn(level, td, f(pol.contravar, thisTy), f(pol.contravar, superTy),
         tparams.map(tp => (tp._1, f(pol.invar, tp._2).asInstanceOf[TV], tp._3)),
         params.mapValues(_.update(t => f(pol.contravar, t), t => f(pol, t))),
         members.mapValuesIter(_.mapPolMap(pol)(f)).toMap, ttu)
@@ -1080,11 +1080,11 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                         case mxn: TypedNuMxn =>
                           
                           assert(finalType.level === lvl)
-                          assert(mxn.superTV.level === lvl)
-                          assert(mxn.thisTV.level === lvl)
+                          assert(mxn.superTy.level === lvl)
+                          assert(mxn.thisTy.level === lvl)
                           
-                          constrain(pack.superType, mxn.superTV)
-                          constrain(finalType, mxn.thisTV)
+                          constrain(pack.superType, mxn.superTy)
+                          constrain(finalType, mxn.thisTy)
                           
                           assert(tpms.isEmpty) // FIXME
                           

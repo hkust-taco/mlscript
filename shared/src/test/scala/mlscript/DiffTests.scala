@@ -500,7 +500,6 @@ class DiffTests
               
               def showTTU(ttu: typer.TypedTypingUnit, ind: Int): Unit = {
                 val indStr = "  " * ind
-                // ttu.entities.map(_.complete()(raise)).foreach {
                 ttu.entities.foreach {
                   // case p: typer.NuTypeParam =>
                   //   output(s"${indStr}${p.name}: ${p.ty}")
@@ -519,26 +518,25 @@ class DiffTests
                     showTTU(tc.ttu, ind + 1)
                   case tm: typer.TypedNuMxn =>
                     output(s"${indStr}mixin ${tm.name}")
-                    output(s"${indStr}  this: ${tm.thisTV} ${tm.thisTV.showBounds
+                    output(s"${indStr}  this: ${tm.thisTy} ${tm.thisTy.showBounds
                       .indentNewLines(indStr+"  |")}")
-                    output(s"${indStr}  super: ${tm.superTV} ${tm.superTV.showBounds
+                    output(s"${indStr}  super: ${tm.superTy} ${tm.superTy.showBounds
                       .indentNewLines(indStr+"  |")}")
-                    // tm.ttu.entities.foreach { }
                     showTTU(tm.ttu, ind + 1)
                   case tf: typer.TypedNuFun =>
-                    // val exp = getType(tf.ty)
                     output(s"${indStr}${tf.fd.isLetRec match {
                       case S(false) => "let"
                       case S(true) => "let rec"
                       case N => "fun"
                     }} ${tf.name}: ${tf.typeSignature} where ${tf.typeSignature.showBounds
                       .indentNewLines(indStr+"|")}")
+                  case typer.TypedNuDummy(d) =>
+                    output(s"${indStr}<dummy> ${d.name}")
                 }
               }
               if (mode.dbg || mode.explainErrors) {
                 output("======== TYPED ========")
                 showTTU(tpd, 0)
-                // output("res: " + tpd.result)
                 tpd.result.foreach { res_ty =>
                   output("res: " + tpd.result + " where " + res_ty.showBounds)
                 }

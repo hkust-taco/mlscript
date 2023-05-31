@@ -185,8 +185,12 @@ zipWith(pairup, Cons(0, Nil), Cons("0", Nil)).value.toArray
 //│ res
 //│     = [ [ 0, '0' ], [] ]
 
-zipWith(pairup, Cons(0, Cons(1, Nil)), Cons("0", Cons("1", Nil))).value.toArray
+let ls = zipWith(pairup, Cons(0, Cons(1, Nil)), Cons("0", Cons("1", Nil)))
+ls.value.toArray
+//│ let ls: None | Some[Cons[(0 | 1, "0" | "1",)] | Nil]
 //│ Array[anything]
+//│ ls
+//│    = Some {}
 //│ res
 //│     = [ [ 0, '0' ], [ [ 1, '1' ], [] ] ]
 
