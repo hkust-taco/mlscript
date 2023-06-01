@@ -505,7 +505,6 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
   protected def translateLocalNewType(typeDef: NuTypeDef)(implicit scope: Scope): JSConstDecl = {
     // TODO: support traitSymbols
     val (traitSymbols, classSymbols, mixinSymbols, moduleSymbols) = declareNewTypeDefs(typeDef :: Nil, false)
-    if (!traitSymbols.isEmpty) throw CodeGenError("traits are not supported yet.")
 
     val sym = classSymbols match {
       case s :: _ => S(s)
@@ -580,21 +579,16 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
   }
 
   private def translateParents(superFields: Ls[Term], constructorScope: Scope)(implicit scope: Scope): Opt[JSExpr] = {
-    val bases = superFields.map {
-      case App(lhs, _) => translateTerm(App(lhs, Tup(Ls())))(constructorScope)
-      case t => translateTerm(t)(constructorScope)
-    }
-
-    def translateParent(current: JSExpr, base: JSExpr, mixinOnly: Bool): JSExpr = {
-      val name = current match {
-        case JSIdent(nme) => nme
-        case JSInvoke(JSIdent(nme), _) => nme
-        case JSNew(JSIdent(nme)) => nme
-        case JSInvoke(JSNew(JSIdent(nme)), _) => nme 
-        case f: JSField => f.property.name
-        case JSInvoke(f: JSField, _) => f.property.name
+    def translateParent(current: Term, base: JSExpr, mixinOnly: Bool): JSExpr = {
+      def resolveName(term: Term): Str = term match {
+        case App(lhs, _) => resolveName(lhs)
+        case Var(name) => name
+        case Sel(_, Var(fieldName)) => fieldName
+        case TyApp(lhs, _) => resolveName(lhs)
         case _ => throw CodeGenError("unsupported parents.")
       }
+
+      val name = resolveName(current)
 
       scope.resolveValue(name) match {
         case Some(CapturedSymbol(_, _: TraitSymbol)) => base // TODO:
@@ -620,7 +614,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
 
     // for non-first parent classes, they must be mixins or we would get more than one parent classes,
     // which is not allowed in JS
-    bases match {
+    superFields match {
       case head :: tail => S(tail.foldLeft(
         translateParent(head, JSIdent("Object"), false)
       )((res, next) => translateParent(next, res, true)))
@@ -735,7 +729,6 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
 
     // TODO: support traitSymbols
     val (traitSymbols, classSymbols, mixinSymbols, moduleSymbols) = declareNewTypeDefs(sym.nested, true)(nuTypeScope)
-    if (!traitSymbols.isEmpty) throw CodeGenError("traits are not supported yet.")
 
     if (keepTopLevelScope) // also declare in the top level for diff tests
       declareNewTypeDefs(sym.nested, false)(topLevelScope)
