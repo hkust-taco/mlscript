@@ -1208,20 +1208,20 @@ abstract class TyperHelpers { Typer: Typer =>
       case TypedNuAls(level, td, tparams, body) =>
         tparams.iterator.foreach(tp => apply(pol.invar)(tp._2))
         apply(pol)(body)
-      case TypedNuCls(level, td, ttu, tparams, params, members, thisTy, sign, _, ptps) =>
+      case TypedNuCls(level, td, tparams, params, members, thisTy, sign, _, ptps) =>
         tparams.iterator.foreach(tp => apply(pol.invar)(tp._2))
         params.foreach(p => applyField(pol)(p._2))
         members.valuesIterator.foreach(applyMem(pol))
         apply(pol.contravar)(thisTy)
         apply(pol.contravar)(sign)
         ptps.valuesIterator.foreach(applyMem(pol))
-      case TypedNuTrt(level, td, ttu, tparams, members, thisTy, sign, _, ptps) => 
+      case TypedNuTrt(level, td, tparams, members, thisTy, sign, _, ptps) => 
         tparams.iterator.foreach(tp => apply(pol.invar)(tp._2))
         members.valuesIterator.foreach(applyMem(pol))
         apply(pol.contravar)(thisTy)
         apply(pol.covar)(sign)
         ptps.valuesIterator.foreach(applyMem(pol))
-      case TypedNuMxn(level, td, thisTy, superTy, tparams, params, members, ttu) =>
+      case TypedNuMxn(level, td, thisTy, superTy, tparams, params, members) =>
         tparams.iterator.foreach(tp => apply(pol.invar)(tp._2))
         params.foreach(p => applyField(pol)(p._2))
         members.valuesIterator.foreach(applyMem(pol))

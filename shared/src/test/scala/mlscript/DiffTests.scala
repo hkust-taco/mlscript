@@ -515,14 +515,14 @@ class DiffTests
                     output(s"${indStr}class ${tc.name}")
                     output(s"${indStr}  this: ${tc.thisTy} ${tc.thisTy.showBounds
                       .indentNewLines(indStr+"  |")}")
-                    showTTU(tc.ttu, ind + 1)
+                    // showTTU(tc.ttu, ind + 1)
                   case tm: typer.TypedNuMxn =>
                     output(s"${indStr}mixin ${tm.name}")
                     output(s"${indStr}  this: ${tm.thisTy} ${tm.thisTy.showBounds
                       .indentNewLines(indStr+"  |")}")
                     output(s"${indStr}  super: ${tm.superTy} ${tm.superTy.showBounds
                       .indentNewLines(indStr+"  |")}")
-                    showTTU(tm.ttu, ind + 1)
+                    // showTTU(tm.ttu, ind + 1)
                   case tf: typer.TypedNuFun =>
                     output(s"${indStr}${tf.fd.isLetRec match {
                       case S(false) => "let"

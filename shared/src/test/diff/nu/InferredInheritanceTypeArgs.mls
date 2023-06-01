@@ -29,22 +29,22 @@ mixin Test2[S, T] {
 
 class A1[B](s: bool, t: B) extends Test2[bool, B]
 //│ class A1[B](s: bool, t: B) {
-//│   fun fb: (h: bool,) -> (bool, bool,)
+//│   fun fb: bool -> (bool, bool,)
 //│   fun x: (bool, B,)
 //│ }
 
 // TODO: Investigate type of fb
 class A2[A](s: A, t: int) extends Test2
 //│ class A2[A](s: A, t: int) {
-//│   fun fb: (h: 'S,) -> (A, A | 'S,)
-//│   fun x: (A, int,)
+//│   fun fb: 'S -> (A | 'S, A | 'S,)
+//│   fun x: (A | 'S, int,)
 //│ }
 
 // TODO: Investigate type of fb
 class A3(s: int, t: bool) extends Test2
 //│ class A3(s: int, t: bool) {
-//│   fun fb: (h: 'S,) -> (int, 'S | int,)
-//│   fun x: (int, bool,)
+//│   fun fb: 'S -> ('S | int, 'S | int,)
+//│   fun x: ('S | int, bool,)
 //│ }
 
 class P(p: int) { 

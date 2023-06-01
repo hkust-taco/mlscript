@@ -1,0 +1,38 @@
+:NewDefs
+
+:NoJS // TODO
+
+
+trait T { fun x: int }
+mixin M(x: bool)
+//│ trait T {
+//│   fun x: int
+//│ }
+//│ mixin M(x: bool)
+
+:e
+class C extends T, M(false)
+//│ ╔══[ERROR] Type mismatch in reference:
+//│ ║  l.14: 	class C extends T, M(false)
+//│ ║        	                     ^^^^^
+//│ ╟── reference of type `false` is not an instance of type `int`
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.6: 	trait T { fun x: int }
+//│ ║       	                 ^^^
+//│ ╟── from signature of member x:
+//│ ║  l.6: 	trait T { fun x: int }
+//│ ╙──     	              ^^^^^^
+//│ class C
+
+
+trait T { fun x: int }
+mixin M(x: number)
+//│ trait T {
+//│   fun x: int
+//│ }
+//│ mixin M(x: number)
+
+class C extends T, M(0)
+//│ class C
+
+

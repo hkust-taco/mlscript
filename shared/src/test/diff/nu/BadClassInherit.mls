@@ -51,3 +51,34 @@ class C2 extends C1(this)
 //│ class C2
 
 
+class Foo { fun x: int = 1 }
+mixin M { fun x = false }
+//│ class Foo {
+//│   fun x: int
+//│ }
+//│ mixin M() {
+//│   fun x: false
+//│ }
+
+:e
+class Bar extends Foo, M
+//│ ╔══[ERROR] Type mismatch in definition of method x:
+//│ ║  l.55: 	mixin M { fun x = false }
+//│ ║        	              ^^^^^^^^^
+//│ ╟── reference of type `false` is not an instance of type `int`
+//│ ║  l.55: 	mixin M { fun x = false }
+//│ ║        	                  ^^^^^
+//│ ╟── but it flows into definition of method x with expected type `int`
+//│ ║  l.55: 	mixin M { fun x = false }
+//│ ║        	              ^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.54: 	class Foo { fun x: int = 1 }
+//│ ║        	                   ^^^
+//│ ╟── from definition of method x:
+//│ ║  l.54: 	class Foo { fun x: int = 1 }
+//│ ╙──      	                ^^^^^^^^^^
+//│ class Bar {
+//│   fun x: false
+//│ }
+
+
