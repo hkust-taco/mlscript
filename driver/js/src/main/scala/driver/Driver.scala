@@ -1,9 +1,6 @@
 package driver
 
 import scala.scalajs.js
-import js.Dynamic.{global => g}
-import js.DynamicImplicits._
-import js.JSConverters._
 import mlscript.utils._
 import mlscript._
 import mlscript.utils.shorthands._
@@ -14,6 +11,7 @@ import ts2mls.{TSModuleResolver, TSProgram}
 
 class Driver(options: DriverOptions) {
   import Driver._
+  import ts2mls.JSFileSystem._
 
   private val typer =
     new mlscript.Typer(
@@ -54,7 +52,7 @@ class Driver(options: DriverOptions) {
     }
   
   def genPackageJson(): Unit =
-    if (!fs.existsSync(s"${options.outputDir}/package.json")) {
+    if (exists(s"${options.outputDir}/package.json")) {
       val content = """{ "type": "module" }""" // TODO: more settings?
       writeFile(s"${options.outputDir}/package.json", content)
     }
@@ -134,9 +132,9 @@ class Driver(options: DriverOptions) {
     stack: List[String]
   ): Boolean = {
     val mlsiFile = normalize(s"${options.path}/${file.interfaceFilename}")
-    if (file.filename.endsWith(".ts")) {
-      val tsprog = TSProgram(file.filename, true)
-      tsprog.generate(file.workDir, file.workDir)
+    if (!file.filename.endsWith(".mls") && !file.filename.endsWith(".mlsi") ) {
+      val tsprog = TSProgram(s"${file.workDir}/${file.localFilename}", file.workDir, true, N) // TODO
+      tsprog.generate(file.workDir)
       return true
     }
     parseAndRun(file.filename, {
@@ -231,25 +229,6 @@ class Driver(options: DriverOptions) {
 
 object Driver {
   def apply(options: DriverOptions) = new Driver(options)
-
-  private val fs = g.require("fs") // must use fs module to manipulate files in JS
-
-  def readFile(filename: String) =
-    if (!fs.existsSync(filename)) None
-    else Some(fs.readFileSync(filename).toString)
-
-  private def writeFile(filename: String, content: String) = {
-    val dir = TSModuleResolver.dirname(filename)
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, js.Dictionary("recursive" -> true))
-    fs.writeFileSync(filename, content)
-  }
-
-  private def getModificationTime(filename: String): String =
-    if (!fs.existsSync(filename)) ""
-    else {
-      val state = fs.statSync(filename)
-      state.mtimeMs.toString
-    }
 
   private def report(msg: String): Unit =
     System.err.println(msg)

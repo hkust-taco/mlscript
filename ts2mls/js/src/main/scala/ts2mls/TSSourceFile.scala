@@ -6,15 +6,11 @@ import types._
 import mlscript.utils._
 import scala.collection.mutable.{ListBuffer, HashMap}
 
-class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSTypeChecker) {
+class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSTypeChecker, config: js.Dynamic) {
   private val lineHelper = new TSLineStartsHelper(sf.getLineStarts())
   private val importList = TSImportList()
   private val reExportList = new ListBuffer[TSReExport]()
   private val resolvedPath = sf.resolvedPath.toString()
-  private val originalFileName = sf.originalFileName.toString()
-  private val rootPath =
-    resolvedPath.substring(0, resolvedPath.length() - originalFileName.length()) +
-    originalFileName.substring(0, originalFileName.lastIndexOf("/") + 1)
 
   TypeScript.forEachChild(sf, (node: js.Dynamic) => {
     val nodeObject = TSNodeObject(node)
@@ -63,10 +59,9 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
     if (!clause.isUndefined) {
       val bindings = clause.namedBindings
       val importName = moduleSpecifier.text
-      val absPath =
-        if (TSModuleResolver.isLocal(moduleSpecifier.text))
-          TSModuleResolver.resolve(rootPath + importName)
-        else moduleSpecifier.text // TODO: node_module?
+      val fullPath = TypeScript.resolveModuleName(importName, resolvedPath, config).getOrElse(
+        throw new AssertionError(s"unexpected import $importName.")
+      )
       def run(node: TSNodeObject): Unit =
         if (!node.elements.isUndefined) {
           val list = node.elements.mapToList(ele =>
@@ -75,14 +70,14 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
             else
               (ele.propertyName.escapedText, Some(ele.symbol.escapedName))
           )
-          val imp = TSSingleImport(absPath, importName, list)
+          val imp = TSSingleImport(importName, list)
           if (exported) imp.createAlias.foreach(re => reExportList += re) // re-export
-          importList += imp
+          importList.add(fullPath, imp)
         }
         else if (!node.name.isUndefined) {
-          val imp = TSFullImport(absPath, importName, node.name.escapedText)
+          val imp = TSFullImport(importName, node.name.escapedText)
           if (exported) imp.createAlias.foreach(re => reExportList += re) // re-export
-          importList += imp
+          importList.add(fullPath, imp)
         }
 
       if (!bindings.isUndefined) run(bindings)
@@ -98,7 +93,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
 
   private def getSymbolFullname(sym: TSSymbolObject)(implicit ns: TSNamespace): String =
     if (!sym.parent.isUndefined && sym.parent.declaration.isSourceFile)
-      importList.resolveTypeAlias(sym.parent.declaration.symbol.escapedName.replaceAll("\"", ""), sym.escapedName)
+      importList.resolveTypeAlias(sym.parent.declaration.resolvedPath, sym.escapedName)
     else if (sym.parent.isUndefined || !sym.parent.declaration.isNamespace)
       sym.escapedName
     else {
@@ -313,6 +308,6 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
 }
 
 object TSSourceFile {
-  def apply(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSTypeChecker) =
+  def apply(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSTypeChecker, config: js.Dynamic) =
     new TSSourceFile(sf, global)
 }

@@ -4,47 +4,25 @@ import scala.scalajs.js
 import js.Dynamic.{global => g}
 import js.DynamicImplicits._
 import mlscript.utils._
+import scala.collection.mutable.StringBuilder
 
 class JSWriter(filename: String) {
-  import JSWriter._
-  
-  // Create an empty file if it does not exists.
-  if (!fs.existsSync(filename)) fs.writeFileSync(filename, "")
+  import JSFileSystem._
 
-  // r+: Open file for reading and writing. An exception occurs if the file does not exist.
-  // See https://nodejs.org/api/fs.html#file-system-flags to get more details.
-  private val out = fs.openSync(filename, "r+")
-  
-  private var fileSize = 0 // how many bytes we've written in the file
-  private var needTruncate = false
+  private val buffer = new StringBuilder()
 
-  // writeln(":NewParser\n:NewDefs\n:NoJS\n:AllowTypeErrors")
-
-  def writeln(str: String) = {
+  def writeln(str: String): Unit = {
     val strln = str + "\n"
-    val buffer = createBuffer(strln.length)
-    fs.readSync(out, buffer, 0, strln.length)
-    
-    // override when the content is different
-    if (strln =/= buffer.toString()) {
-      fs.writeSync(out, strln, fileSize) // `fileSize` is the offset from the beginning of the file
-      needTruncate = true // if the file has been modified, we need to truncate the file to keep it clean
-    }
-
-    fileSize += strln.length
+    buffer ++= strln
   }
 
-  def close() = {
-    if (needTruncate) fs.truncateSync(out, fileSize) // remove other content to keep the file from chaos
-
-    fs.closeSync(out)
+  def close(): Unit = {
+    val str = buffer.toString()
+    val origin = readFile(filename).getOrElse("")
+    if (str =/= origin) writeFile(filename, str)
   }
 }
 
 object JSWriter {
-  private val fs = g.require("fs") // must use fs module to manipulate files in JS
-
   def apply(filename: String) = new JSWriter(filename)
-
-  private def createBuffer(length: Int) = g.Buffer.alloc(length)
 }

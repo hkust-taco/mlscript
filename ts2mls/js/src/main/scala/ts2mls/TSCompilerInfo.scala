@@ -7,15 +7,34 @@ import js.JSConverters._
 import ts2mls.types._
 
 object TypeScript {
-  private val ts: js.Dynamic = try g.require("typescript") catch {
+  private def load(moduleName: String) = try g.require(moduleName) catch {
     case _ : Throwable => {
-      System.err.println("Cannot find typescript in the current directory. Please install by running \"npm install\".")
+      System.err.println(s"Cannot find $moduleName in the current directory. Please install by running \"npm install\".")
       val process = g.require("process")
       process.exit(-1)
     }
   }
 
+  private val ts: js.Dynamic = load("typescript")
+  private val json: js.Dynamic = load("json5")
+
   private val resolver = g.require.resolve
+
+  def parseOption(basePath: String, filename: Option[String]): js.Dynamic = {
+    val config = filename.fold[js.Any](js.Dictionary())(filename => {
+      val content = JSFileSystem.readFile(TSModuleResolver.normalize(s"$basePath/$filename")).getOrElse("")
+      json.parse(content)
+    })
+    val name = filename.getOrElse("tsconfig.json")
+    ts.parseJsonConfigFileContent(config, ts.sys, basePath, null, name)
+  }
+
+  def resolveModuleName(importName: String, containingName: String, config: js.Dynamic): Option[String] = {
+    val res = ts.resolveModuleName(importName, containingName, config, ts.sys)
+    if (!IsUndefined(res.resolvedModule) && !IsUndefined(res.resolvedModule.resolvedFileName))
+      Some(res.resolvedModule.resolvedFileName.toString())
+    else None
+  }
 
   val typeFlagsEnumLike = ts.TypeFlags.EnumLike
   val typeFlagsObject = ts.TypeFlags.Object
@@ -180,6 +199,7 @@ class TSNodeObject(node: js.Dynamic)(implicit checker: TSTypeChecker) extends TS
   lazy val elements = TSNodeArray(node.elements)
   lazy val propertyName = TSIdentifierObject(node.propertyName)
   lazy val exportClause = TSNodeObject(node.exportClause)
+  lazy val resolvedPath: String = node.resolvedPath.toString()
 }
 
 object TSNodeObject {

@@ -8,6 +8,7 @@ import mlscript.utils._, shorthands._
 
 class DriverDiffTests extends AnyFunSuite {
   import DriverDiffTests._
+  import ts2mls.JSFileSystem._
 
   testCases.foreach {
     case TestOption(filename, workDir, execution, expectError) => test(filename) {
@@ -21,7 +22,7 @@ class DriverDiffTests extends AnyFunSuite {
       if (!expectError) execution match {
         case Some((executionFile, outputFile)) =>
           val output = cp.execSync(s"node $executionFile").toString()
-          val original = Driver.readFile(outputFile).getOrElse("")
+          val original = readFile(outputFile).getOrElse("")
           if (original =/= output) fs.writeFileSync(outputFile, output)
         case None => ()
       }

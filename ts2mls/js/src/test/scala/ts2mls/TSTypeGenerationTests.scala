@@ -7,8 +7,13 @@ class TSTypeGenerationTest extends AnyFunSuite {
   import TSTypeGenerationTest._
 
   testsData.foreach((filename) => test(filename) {
-    val program = TSProgram(tsPath(filename), !directlyImportedSet.contains(filename))
-    program.generate("ts2mls/js/src/test/typescript", "ts2mls/js/src/test/diff")
+    val program = TSProgram(
+      tsPath(filename),
+      "ts2mls/js/src/test/typescript",
+      !directlyImportedSet.contains(filename),
+      None
+    )
+    program.generate("ts2mls/js/src/test/diff")
   })
 }
 
