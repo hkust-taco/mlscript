@@ -4,7 +4,8 @@ import ts2mls.{TSModuleResolver, TypeScript}
 
 final case class FileInfo(
   workDir: String, // work directory (related to compiler path)
-  localFilename: String // filename (related to work dir, or in node_modules)
+  localFilename: String, // filename (related to work dir, or in node_modules)
+  interfaceDir: String, // .mlsi file directory (related to output dir)
 ) {
   import TSModuleResolver.{normalize, isLocal, dirname, basename}
 
@@ -21,21 +22,21 @@ final case class FileInfo(
     else TypeScript.resolveNodeModulePath(localFilename)
 
   val interfaceFilename: String = // interface filename (related to output directory)
-    relatedPath.fold(s"node_modules/$localFilename")(path => s"${normalize(s"$path/$moduleName.mlsi")}")
+    relatedPath.fold(s"node_modules/$localFilename")(path => s"${normalize(s"$interfaceDir/$path/$moduleName.mlsi")}")
   
   val jsFilename: Option[String] =
     relatedPath.fold[Option[String]](None)(path => Some(normalize(s"$path/$moduleName.js")))
 
   val importPath: String =
-    relatedPath.fold(s"$moduleName.mlsi")(path => s"./${normalize(s"$path/$moduleName.mlsi")}")
+    relatedPath.fold(moduleName)(path => s"./${normalize(s"$interfaceDir/$path/$moduleName.mlsi")}")
   
   def `import`(path: String): FileInfo =
     if (isLocal(path))
       relatedPath match {
-        case Some(value) => FileInfo(workDir, s"./${normalize(s"$value/$path")}")
+        case Some(value) => FileInfo(workDir, s"./${normalize(s"$value/$path")}", interfaceDir)
         case _ => ??? // TODO:
       }
-    else FileInfo(workDir, path)
+    else FileInfo(workDir, path, interfaceDir)
 }
 
 object FileInfo {

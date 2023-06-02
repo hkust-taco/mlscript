@@ -1,0 +1,7 @@
+import "json5"
+
+class CompilerOptions(outDir: string)
+class TSConfig(compilerOptions: CompilerOptions)
+
+let config = json5.stringify(TSConfig(CompilerOptions("bar")))
+config

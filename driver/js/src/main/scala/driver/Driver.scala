@@ -42,7 +42,7 @@ class Driver(options: DriverOptions) {
       implicit val extrCtx: Opt[typer.ExtrCtx] = N
       implicit val vars: Map[Str, typer.SimpleType] = Map.empty
       implicit val stack = List[String]()
-      compile(FileInfo(options.path, options.filename), false)
+      compile(FileInfo(options.path, options.filename, options.interfaceDir), false)
       Driver.totalErrors == 0
     }
     catch {

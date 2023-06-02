@@ -6,8 +6,10 @@ import js.DynamicImplicits._
 import js.JSConverters._
 
 final case class DriverOptions(
-  val filename: String,
-  val path: String,
-  val outputDir: String,
-  val force: Boolean // force to recompile if it is true
+  filename: String,
+  path: String,
+  outputDir: String,
+  tsconfig: Option[String],
+  interfaceDir: String,
+  force: Boolean // force to recompile if it is true
 )

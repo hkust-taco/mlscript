@@ -11,8 +11,8 @@ class DriverDiffTests extends AnyFunSuite {
   import ts2mls.JSFileSystem._
 
   testCases.foreach {
-    case TestOption(filename, workDir, execution, expectError) => test(filename) {
-      val options = DriverOptions(filename, workDir, jsPath, forceCompiling)
+    case TestOption(filename, workDir, interfaceDir, execution, tsconfig, expectError) => test(filename) {
+      val options = DriverOptions(filename, workDir, jsPath, tsconfig, interfaceDir, forceCompiling)
       val driver = Driver(options)
       driver.genPackageJson()
       val success = driver.execute
@@ -35,36 +35,42 @@ object DriverDiffTests {
   // but we can ban it during CI
   private val forceCompiling = sys.env.get("CI").isEmpty
 
-  private val diffPath = "driver/js/src/test/"
+  private val diffPath = "driver/js/src/test/projects/"
   private val mlscriptPath = s"${diffPath}mlscript/"
   private val jsPath = s"${diffPath}js/"
-  private val outputPath = s"${diffPath}output/"
+  private val outputPath = s"${diffPath}../output/"
   private val ts2mlsPath = "ts2mls/js/src/test/diff"
 
   private case class TestOption(
     filename: String,
     workDir: String,
+    interfaceDir: String,
     execution: Option[(String, String)],
+    tsconfig: Option[String],
     expectError: Boolean
   )
 
-  private def entry(entryModule: String, expectError: Boolean = false) =
+  private def entry(entryModule: String, tsconfig: Option[String] = None, expectError: Boolean = false) =
     TestOption(
       s"./${entryModule}.mls",
       mlscriptPath,
+      ".interfaces",
       Some((s"${jsPath}${entryModule}.js", s"${outputPath}${entryModule}.check")),
+      tsconfig,
       expectError
     )
 
   private def ts2mlsEntry(entryModule: String, expectError: Boolean = false) =
-    TestOption(s"./${entryModule}.mlsi", ts2mlsPath, None, expectError)
+    TestOption(s"./${entryModule}.mlsi", ts2mlsPath, ".", None, None, expectError)
 
-  private val testCases = List(
+  private val testCases = List[TestOption](
     entry("Simple"),
     entry("Cycle2"),
-    entry("Self", true),
-    entry("C", true),
-    entry("TS", true), // TODO: merge
+    entry("Self", None, true),
+    entry("C", None, true),
+    // entry("TS", Some(s"$diffPath/tsconfig.json")), TODO
+    // entry("Output", Some(s"$diffPath/tsconfig.json")), TODO
+    // entry("Output2", Some(s"$diffPath/tsconfig.json")), TODO
     ts2mlsEntry("Array"),
     ts2mlsEntry("BasicFunctions"),
     ts2mlsEntry("ClassMember"),

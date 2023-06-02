@@ -1,4 +1,4 @@
-import "./MyPrint.ts"
+import "../ts/MyPrint.ts"
 
 let tspt = MyPrint.DatePrint
 let printer = new tspt("love from ts")
