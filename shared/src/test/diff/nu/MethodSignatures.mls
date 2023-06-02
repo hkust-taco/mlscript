@@ -14,9 +14,12 @@ module Oops {
 module Oops {
   fun a : int
 }
-//│ ╔══[ERROR] Member `a` is declared but not defined
+//│ ╔══[ERROR] Member `a` is declared in parent but not implemented in `Oops`
+//│ ║  l.14: 	module Oops {
+//│ ║        	       ^^^^
+//│ ╟── Declared here:
 //│ ║  l.15: 	  fun a : int
-//│ ╙──      	      ^
+//│ ╙──      	      ^^^^^^^
 //│ module Oops {
 //│   fun a: int
 //│ }
@@ -28,7 +31,7 @@ module Oops {
   fun a = a
 }
 //│ ╔══[ERROR] A type signature for 'a' was already given
-//│ ║  l.27: 	  fun a : string
+//│ ║  l.30: 	  fun a : string
 //│ ╙──      	      ^^^^^^^^^^
 //│ module Oops {
 //│   fun a: string
@@ -40,19 +43,19 @@ module Oops {
   fun a = false
 }
 //│ ╔══[ERROR] Type mismatch in definition of method a:
-//│ ║  l.40: 	  fun a = false
+//│ ║  l.43: 	  fun a = false
 //│ ║        	      ^^^^^^^^^
 //│ ╟── reference of type `false` is not an instance of type `int`
-//│ ║  l.40: 	  fun a = false
+//│ ║  l.43: 	  fun a = false
 //│ ║        	          ^^^^^
 //│ ╟── but it flows into definition of method a with expected type `int`
-//│ ║  l.40: 	  fun a = false
+//│ ║  l.43: 	  fun a = false
 //│ ║        	      ^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.39: 	  fun a : int
+//│ ║  l.42: 	  fun a : int
 //│ ║        	          ^^^
 //│ ╟── from signature of member `a`:
-//│ ║  l.39: 	  fun a : int
+//│ ║  l.42: 	  fun a : int
 //│ ╙──      	      ^^^^^^^
 //│ module Oops {
 //│   fun a: int
@@ -64,7 +67,7 @@ module Oops {
   fun a = 2
 }
 //│ ╔══[ERROR] Refininition of a
-//│ ║  l.64: 	  fun a = 2
+//│ ║  l.67: 	  fun a = 2
 //│ ╙──      	      ^^^^^
 //│ module Oops {
 //│   fun a: 1
@@ -102,19 +105,19 @@ module A {
   fun i(x) = x
 }
 //│ ╔══[ERROR] Type mismatch in definition of method i:
-//│ ║  l.102: 	  fun i(x) = x
+//│ ║  l.105: 	  fun i(x) = x
 //│ ║         	      ^^^^^^^^
 //│ ╟── function of type `?a -> ?a` does not match type `'a`
-//│ ║  l.102: 	  fun i(x) = x
+//│ ║  l.105: 	  fun i(x) = x
 //│ ║         	       ^^^^^^^
 //│ ╟── but it flows into definition of method i with expected type `'a`
-//│ ║  l.102: 	  fun i(x) = x
+//│ ║  l.105: 	  fun i(x) = x
 //│ ║         	      ^^^^^^^^
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.101: 	  fun i : 'a
+//│ ║  l.104: 	  fun i : 'a
 //│ ║         	          ^^
 //│ ╟── from signature of member `i`:
-//│ ║  l.101: 	  fun i : 'a
+//│ ║  l.104: 	  fun i : 'a
 //│ ╙──       	      ^^^^^^
 //│ module A {
 //│   fun i: nothing
@@ -131,19 +134,19 @@ module M {
   fun a = 1
 }
 //│ ╔══[ERROR] Type mismatch in definition of method a:
-//│ ║  l.131: 	  fun a = 1
+//│ ║  l.134: 	  fun a = 1
 //│ ║         	      ^^^^^
 //│ ╟── integer literal of type `1` is not an instance of type `A`
-//│ ║  l.131: 	  fun a = 1
+//│ ║  l.134: 	  fun a = 1
 //│ ║         	          ^
 //│ ╟── but it flows into definition of method a with expected type `A`
-//│ ║  l.131: 	  fun a = 1
+//│ ║  l.134: 	  fun a = 1
 //│ ║         	      ^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.130: 	  fun a: A
+//│ ║  l.133: 	  fun a: A
 //│ ║         	         ^
 //│ ╟── from signature of member `a`:
-//│ ║  l.130: 	  fun a: A
+//│ ║  l.133: 	  fun a: A
 //│ ╙──       	      ^^^^
 //│ module M {
 //│   class A
@@ -157,7 +160,7 @@ module M {
   fun a = 1
 }
 //│ ╔══[ERROR] undeclared `this`
-//│ ║  l.156: 	  fun a: this.A
+//│ ║  l.159: 	  fun a: this.A
 //│ ╙──       	         ^^^^
 //│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
 

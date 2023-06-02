@@ -89,14 +89,14 @@ class Impl extends Base2
 
 :e
 class Impl extends Base2, Foo
-//│ ╔══[ERROR] Member `x` is declared in parent but not implemented
+//│ ╔══[ERROR] Member `x` is declared in parent but not implemented in `Impl`
 //│ ║  l.91: 	class Impl extends Base2, Foo
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║        	      ^^^^
 //│ ╟── Declared here:
 //│ ║  l.5: 	trait Foo[A] { fun x: A }
 //│ ╙──     	                   ^^^^
 //│ class Impl extends Base2, Foo {
-//│   fun x: nothing
+//│   fun x: 'A
 //│ }
 
 class Impl extends Base2, Foo {

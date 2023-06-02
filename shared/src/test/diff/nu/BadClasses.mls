@@ -106,9 +106,12 @@ class C1 { fun oops = this.x }
 
 :e
 class C { fun x: int }
-//│ ╔══[ERROR] Member `x` is declared but not defined
+//│ ╔══[ERROR] Member `x` is declared in parent but not implemented in `C`
 //│ ║  l.108: 	class C { fun x: int }
-//│ ╙──       	              ^
+//│ ║         	      ^
+//│ ╟── Declared here:
+//│ ║  l.108: 	class C { fun x: int }
+//│ ╙──       	              ^^^^^^
 //│ class C {
 //│   fun x: int
 //│ }

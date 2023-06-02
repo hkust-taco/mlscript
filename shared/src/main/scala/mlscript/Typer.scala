@@ -802,14 +802,14 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             ti.member match {
               case ti: TypedNuFun =>
                 ti.typeSignature
+              case p: NuParam =>
+                p.typeSignature
               case ti: TypedNuCls =>
                 if (ti.decl.isAbstract)
                   err(msg"Class ${ti.nme} is abstract and cannot be instantiated", term.toLoc)
                 ti.typeSignature
               case ti: TypedNuDecl =>
                 err(msg"${ti.kind.str} ${ti.name} cannot be used in term position", prov.loco)
-              case p: NuParam =>
-                p.typeSignature
             }
           case ti: DelayedTypeInfo =>
             ti.typeSignature
@@ -1325,10 +1325,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     def mkTypingUnit(thisTy: ST, members: Map[Str, NuMember])(implicit ectx: ExpCtx): TypingUnit = {
       val sorted = members.toList.sortBy(_._1)
       TypingUnit(sorted.collect {
-        case (_, td: TypedNuDecl) => goDecl(td)
-        // case (_, td: TypedNuFun) => ???
-        // case (_, p: NuParam) => ???
-        // case _ => die
+        case (_, d: TypedNuFun) => goDecl(d)
+        case (_, d: TypedNuTypeDef) => goDecl(d)
       })
     }
     def goDecl(d: NuMember)(implicit ectx: ExpCtx): NuDecl = d match {

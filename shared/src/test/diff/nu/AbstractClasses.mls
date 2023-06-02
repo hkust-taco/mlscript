@@ -55,9 +55,9 @@ abstract class Bar extends Foo(1)
 :e
 module Baz extends Bar
 Baz.f(1)
-//│ ╔══[ERROR] Member `f` is declared in parent but not implemented
+//│ ╔══[ERROR] Member `f` is declared in parent but not implemented in `Baz`
 //│ ║  l.56: 	module Baz extends Bar
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║        	       ^^^
 //│ ╟── Declared here:
 //│ ║  l.29: 	  fun f: int -> int
 //│ ╙──      	      ^^^^^^^^^^^^^
@@ -89,9 +89,9 @@ trait T1 { fun x: int | bool }
 
 :e
 class C2 extends C1, T1
-//│ ╔══[ERROR] Member `x` is declared in parent but not implemented
+//│ ╔══[ERROR] Member `x` is declared in parent but not implemented in `C2`
 //│ ║  l.91: 	class C2 extends C1, T1
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║        	      ^^
 //│ ╟── Declared here:
 //│ ║  l.80: 	abstract class C1 { fun x: int | string }
 //│ ╙──      	                        ^^^^^^^^^^^^^^^
@@ -111,9 +111,9 @@ abstract class C2 extends C1, T1
 
 :e
 class C3 extends C2
-//│ ╔══[ERROR] Member `x` is declared in parent but not implemented
+//│ ╔══[ERROR] Member `x` is declared in parent but not implemented in `C3`
 //│ ║  l.113: 	class C3 extends C2
-//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║         	      ^^
 //│ ╟── Declared here:
 //│ ║  l.80: 	abstract class C1 { fun x: int | string }
 //│ ╙──      	                        ^^^^^^^^^^^^^^^

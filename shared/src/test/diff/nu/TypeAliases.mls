@@ -19,9 +19,6 @@ type AI3(n) = Array[int]
 //│ ╔══[ERROR] Type alias definitions cannot have value parameters
 //│ ║  l.18: 	type AI3(n) = Array[int]
 //│ ╙──      	        ^^^
-//│ ╔══[ERROR] Type alias parameters currently need type annotations
-//│ ║  l.18: 	type AI3(n) = Array[int]
-//│ ╙──      	         ^
 //│ type AI3 = Array[int]
 
 // :e

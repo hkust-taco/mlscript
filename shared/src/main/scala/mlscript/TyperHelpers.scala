@@ -1016,6 +1016,12 @@ abstract class TyperHelpers { Typer: Typer =>
     }
     def expandWith(paramTags: Bool)(implicit ctx: Ctx): SimpleType = //if (defn.name.isCapitalized) {
       ctx.tyDefs2.get(defn.name).map { info =>
+        lazy val mkTparamRcd = RecordType(info.tparams.lazyZip(targs).map {
+            case ((tn, tv, vi), ta) =>
+              val fldNme = defn.name + "#" + tn.name
+              // TODO also use computed variance info when available!
+              Var(fldNme).withLocOf(tn) -> FieldType.mk(vi.getOrElse(VarianceInfo.in), ta, ta)(provTODO)
+          })(provTODO)
         info.result match {
           case S(td: TypedNuAls) =>
             assert(td.tparams.size === targs.size)
@@ -1034,11 +1040,7 @@ abstract class TyperHelpers { Typer: Typer =>
             // println(s"Fresh $freshSelf")
             freshSelf & 
               trtNameToNomTag(td.decl)(provTODO, ctx) &
-              RecordType(info.tparams.lazyZip(targs).map {
-                    case ((tn, tv, vi), ta) => // TODO use vi
-                      val fldNme = td.nme.name + "#" + tn.name
-                      Var(fldNme).withLocOf(tn) -> FieldType(S(ta), ta)(provTODO)
-                  })(provTODO)
+              mkTparamRcd
           case S(td: TypedNuCls) =>
             assert(td.tparams.size === targs.size)
             val (freshenMap, _) = refreshHelper2(td, Var(td.name).withLoc(prov.loco), S(targs)) // infer ty args if not provided
@@ -1049,21 +1051,13 @@ abstract class TyperHelpers { Typer: Typer =>
             }
             clsNameToNomTag(td.decl)(provTODO, ctx) &
               freshSelf &
-                RecordType(info.tparams.lazyZip(targs).map {
-                  case ((tn, tv, vi), ta) => // TODO use vi
-                    val fldNme = td.nme.name + "#" + tn.name
-                    Var(fldNme).withLocOf(tn) -> FieldType(S(ta), ta)(provTODO)
-                })(provTODO)
-          case _ =>
+              mkTparamRcd
+          case _ => // * Case for when the type has not been completed yet
             info.decl match {
               case td: NuTypeDef if td.kind.isInstanceOf[ObjDefKind] =>
                 assert(td.tparams.size === targs.size)
                 clsNameToNomTag(td)(provTODO, ctx) &
-                  RecordType(info.tparams.lazyZip(targs).map {
-                    case ((tn, tv, vi), ta) => // TODO use vi
-                      val fldNme = td.nme.name + "#" + tn.name
-                      Var(fldNme).withLocOf(tn) -> FieldType(S(ta), ta)(provTODO)
-                  })(provTODO)
+                  mkTparamRcd
               case td: NuTypeDef if td.kind is Als =>
                 // * Definition was not forced yet, which indicates an error (hopefully)
                 lastWords("cannot expand unforced type alias")
