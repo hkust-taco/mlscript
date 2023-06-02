@@ -122,7 +122,7 @@ module M extends C {
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
 //│ ║  l.120: 	  this.id2(true)
 //│ ╙──       	      ^^^^
-//│ module M {
+//│ module M extends C {
 //│   fun f: forall 'a 'b. (0 | true | 'a, 0 | true | 'b,)
 //│   fun id1: forall 'a 'b. ('b & 'a) -> (0 | true | 'a)
 //│   fun id2: forall 'c. 'c -> 'c
@@ -138,7 +138,7 @@ module M extends C {
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
 //│ ║  l.133: 	  fun g = (this.id2(true), this.id2(0))
 //│ ╙──       	                               ^^^^
-//│ module M {
+//│ module M extends C {
 //│   fun f: forall 'a 'b. (0 | true | 'a, 0 | true | 'b,)
 //│   fun g: (error, error,)
 //│   fun id1: forall 'a 'b. ('b & 'a) -> (0 | true | 'a)
@@ -183,7 +183,7 @@ module M extends C {
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.107: 	  fun id1(x) = x
 //│ ╙──       	               ^
-//│ module M {
+//│ module M extends C {
 //│   fun f: (0 | true, 0 | true,)
 //│   fun id1: int -> int
 //│   fun id2: forall 'a. 'a -> 'a

@@ -14,7 +14,7 @@ module Oops {
 module Oops {
   fun a : int
 }
-//│ ╔══[ERROR] Member a is declared but not defined
+//│ ╔══[ERROR] Member `a` is declared but not defined
 //│ ║  l.15: 	  fun a : int
 //│ ╙──      	      ^
 //│ module Oops {
@@ -27,7 +27,7 @@ module Oops {
   fun a : string
   fun a = a
 }
-//│ ╔══[ERROR] A type signature for 'a' has already been given
+//│ ╔══[ERROR] A type signature for 'a' was already given
 //│ ║  l.27: 	  fun a : string
 //│ ╙──      	      ^^^^^^^^^^
 //│ module Oops {
@@ -51,7 +51,7 @@ module Oops {
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.39: 	  fun a : int
 //│ ║        	          ^^^
-//│ ╟── from signature of member a:
+//│ ╟── from signature of member `a`:
 //│ ║  l.39: 	  fun a : int
 //│ ╙──      	      ^^^^^^^
 //│ module Oops {
@@ -67,7 +67,7 @@ module Oops {
 //│ ║  l.64: 	  fun a = 2
 //│ ╙──      	      ^^^^^
 //│ module Oops {
-//│   fun a: 2
+//│   fun a: 1
 //│ }
 
 
@@ -113,7 +113,7 @@ module A {
 //│ ╟── Note: constraint arises from type variable:
 //│ ║  l.101: 	  fun i : 'a
 //│ ║         	          ^^
-//│ ╟── from signature of member i:
+//│ ╟── from signature of member `i`:
 //│ ║  l.101: 	  fun i : 'a
 //│ ╙──       	      ^^^^^^
 //│ module A {
@@ -142,7 +142,7 @@ module M {
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.130: 	  fun a: A
 //│ ║         	         ^
-//│ ╟── from signature of member a:
+//│ ╟── from signature of member `a`:
 //│ ║  l.130: 	  fun a: A
 //│ ╙──       	      ^^^^
 //│ module M {

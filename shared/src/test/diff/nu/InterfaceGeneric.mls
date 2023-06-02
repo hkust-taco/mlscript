@@ -9,7 +9,7 @@ trait Into[T] {
 //│ }
 
 trait Nat extends Into[int]
-//│ trait Nat {
+//│ trait Nat extends Into {
 //│   fun into: 'T
 //│ }
 //│ where
@@ -18,7 +18,7 @@ trait Nat extends Into[int]
 trait Product[A, B] extends Into[A] {
     let pair: (A, B)
 }
-//│ trait Product[A, B] {
+//│ trait Product[A, B] extends Into {
 //│   fun into: 'T
 //│   let pair: (A, B,)
 //│ }
@@ -28,7 +28,7 @@ trait Product[A, B] extends Into[A] {
 class TwoInts(pair: (int, int)) extends Product[int, int] {
     fun into = pair._1 + pair._2
 }
-//│ class TwoInts(pair: (int, int,)) {
+//│ class TwoInts(pair: (int, int,)) extends Into, Product {
 //│   fun into: int
 //│ }
 

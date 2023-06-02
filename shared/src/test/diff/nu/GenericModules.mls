@@ -10,13 +10,13 @@ module Test<A> {
   fun poly1: forall 'a; 'a -> 'a
   fun poly2: 'a -> 'a = id
 }
-//│ ╔══[ERROR] Member foo is declared but not defined
+//│ ╔══[ERROR] Member `foo` is declared but not defined
 //│ ║  l.6: 	  fun foo: A => A
 //│ ╙──     	      ^^^
-//│ ╔══[ERROR] Member poly0 is declared but not defined
+//│ ╔══[ERROR] Member `poly0` is declared but not defined
 //│ ║  l.9: 	  fun poly0: 'a -> 'a
 //│ ╙──     	      ^^^^^
-//│ ╔══[ERROR] Member poly1 is declared but not defined
+//│ ╔══[ERROR] Member `poly1` is declared but not defined
 //│ ║  l.10: 	  fun poly1: forall 'a; 'a -> 'a
 //│ ╙──      	      ^^^^^
 //│ module Test[A] {

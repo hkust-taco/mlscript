@@ -13,7 +13,7 @@ module Foo {
   class C extends T1, T2 { fun x = 1 }
 }
 //│ module Foo {
-//│   class C {
+//│   class C extends T1, T2 {
 //│     fun x: 1
 //│   }
 //│   trait T2 {

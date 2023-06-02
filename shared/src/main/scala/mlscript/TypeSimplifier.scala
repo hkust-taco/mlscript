@@ -301,8 +301,10 @@ trait TypeSimplifier { self: Typer =>
               =>
                 val clsTyNme = TypeName(clsNme)
                 val lti = ctx.tyDefs2(clsNme)
-                val defn = lti.result.getOrElse(die)
-                val cls = defn.asInstanceOf[TypedNuCls]
+                val cls = lti.result match {
+                  case S(r: TypedNuCls) => r
+                  case _ => die 
+                }
                 
                 val rcdMap  = rcd.fields.toMap
                 

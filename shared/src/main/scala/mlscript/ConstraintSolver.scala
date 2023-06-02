@@ -258,7 +258,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         // val res = td.freshenAbove(td.level + 1, rigidify = true).asInstanceOf[TypedNuCls]
         val res =
           // td.freshenAbove(td.level, rigidify = true).asInstanceOf[TypedNuCls]
-          td.freshenAbove(td.level, rigidify = false).asInstanceOf[TypedNuCls]
+          td.freshenAbove(td.level, rigidify = false)
         // println(res)
         // println(res.members.map(_._2.asInstanceOf[TypedNuFun].ty.showBounds))
         res
@@ -642,7 +642,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               val info = ctx.tyDefs2(nme)
               info.typedParams.foreach { p =>
                 val fty = lookupField(() => done_ls.toType(sort = true), S(nme), r.fields.toMap.get, ts, p._1)
-                rec(fldTy.lb.get, RecordType(p._1 -> TypeRef(TypeName("Eql"),
+                rec(fldTy.lb.getOrElse(die), RecordType(p._1 -> TypeRef(TypeName("Eql"),
                     fty.ub // FIXME check mutable?
                     :: Nil
                   )(provTODO).toUpper(provTODO) :: Nil)(provTODO), false)

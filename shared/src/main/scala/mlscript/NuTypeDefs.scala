@@ -25,7 +25,9 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   sealed trait NuMember {
     def name: Str
     def kind: DeclKind
+    def toLoc: Opt[Loc]
     def level: Level
+    def isImplemented: Bool
     
     protected def withLevel[R](k: Ctx => R)(implicit ctx: Ctx): R = k(ctx.copy(lvl = ctx.lvl + 1))
     
@@ -51,6 +53,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     def kind: DeclKind =
       if (isType) Als // FIXME?
       else Val
+    def toLoc: Opt[Loc] = nme.toLoc
+    def isImplemented: Bool = true
     def typeSignature: ST = ty.ub
     
     def freshenAbove(lim: Int, rigidify: Bool)
@@ -100,6 +104,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   }
   
   
+  // TODO rm?
   /** Those declarations that introduce term names in scope. */
   sealed trait TypedNuTermDef extends TypedNuDecl with AnyTypeDef {
     def typeSignature: ST
@@ -109,6 +114,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   sealed abstract class TypedNuTypeDef(kind: TypeDefKind) extends TypedNuDecl {
     def nme: TypeName
     def decl: NuTypeDef
+    def toLoc: Opt[Loc] = decl.toLoc
     def tparams: TyParams
     def members: Map[Str, NuMember]
     val allFields: Set[Var] = members.valuesIterator.map(_.name |> Var).toSet
@@ -127,7 +133,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     def name: Str = nme.name
     def nme: mlscript.TypeName = td.nme
     def members: Map[Str, NuMember] = Map.empty
-
+    def isImplemented: Bool = td.sig.isDefined
+    
     def freshenAbove(lim: Int, rigidify: Bool)
           (implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV,ST])
           : TypedNuAls = { val outer = ctx; withLevel { implicit ctx =>
@@ -140,14 +147,14 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           (implicit ctx: Ctx): TypedNuDecl =
         TypedNuAls(
           level, td,
-          tparams.map(tp => (tp._1, f(N, tp._2).asInstanceOf[TV], tp._3)),
+          tparams.map(tp => (tp._1, f(N, tp._2).assertTV, tp._3)),
           f(pol, body)
         )
     def mapPolMap(pol: PolMap)(f: (PolMap, SimpleType) => SimpleType)
           (implicit ctx: Ctx): TypedNuDecl =
         TypedNuAls(
           level, td,
-          tparams.map(tp => (tp._1, f(pol.invar, tp._2).asInstanceOf[TV], tp._3)),
+          tparams.map(tp => (tp._1, f(pol.invar, tp._2).assertTV, tp._3)),
           f(pol, body)
         )
   }
@@ -171,6 +178,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     def kind: DeclKind = td.kind
     def nme: TypeName = td.nme
     def name: Str = nme.name
+    def isImplemented: Bool = true
     
     lazy val virtualMembers: Map[Str, NuMember] = members ++ tparams.map {
       case (nme @ TypeName(name), tv, _) => 
@@ -193,7 +201,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     def mapPol(pol: Opt[Bool], smart: Bool)(f: (Opt[Bool], SimpleType) => SimpleType)
           (implicit ctx: Ctx): TypedNuTrt =
         TypedNuTrt(level, td,
-          tparams.map(tp => (tp._1, f(N, tp._2).asInstanceOf[TV], tp._3)),
+          tparams.map(tp => (tp._1, f(N, tp._2).assertTV, tp._3)),
           members.mapValuesIter(_.mapPol(pol, smart)(f)).toMap,
           f(pol.map(!_), thisTy),
           f(pol, sign),
@@ -203,7 +211,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     def mapPolMap(pol: PolMap)(f: (PolMap, SimpleType) => SimpleType)
           (implicit ctx: Ctx): TypedNuTrt =
         TypedNuTrt(level, td,
-          tparams.map(tp => (tp._1, f(pol.invar, tp._2).asInstanceOf[TV], tp._3)),
+          tparams.map(tp => (tp._1, f(pol.invar, tp._2).assertTV, tp._3)),
           members.mapValuesIter(_.mapPolMap(pol)(f)).toMap,
           f(pol.contravar, thisTy),
           f(pol, sign),
@@ -229,6 +237,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     def kind: DeclKind = td.kind
     def nme: TypeName = td.nme
     def name: Str = nme.name
+    def isImplemented: Bool = true
     
     def typeSignature: ST = typeSignatureOf(td, level, tparams, params, sign, inheritedTags)
     
@@ -301,7 +310,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     def mapPol(pol: Opt[Bool], smart: Bool)(f: (Opt[Bool], SimpleType) => SimpleType)
           (implicit ctx: Ctx): TypedNuTermDef =
         TypedNuCls(level, td,
-          tparams.map(tp => (tp._1, f(N, tp._2).asInstanceOf[TV], tp._3)),
+          tparams.map(tp => (tp._1, f(N, tp._2).assertTV, tp._3)),
           params.mapValues(_.update(t => f(pol.map(!_), t), t => f(pol, t))),
           members.mapValuesIter(_.mapPol(pol, smart)(f)).toMap,
           f(pol.map(!_), thisTy),
@@ -312,7 +321,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     def mapPolMap(pol: PolMap)(f: (PolMap, SimpleType) => SimpleType)
           (implicit ctx: Ctx): TypedNuTermDef =
         TypedNuCls(level, td,
-          tparams.map(tp => (tp._1, f(pol.invar, tp._2).asInstanceOf[TV], tp._3)),
+          tparams.map(tp => (tp._1, f(pol.invar, tp._2).assertTV, tp._3)),
           params.mapValues(_.update(t => f(pol.contravar, t), t => f(pol, t))),
           members.mapValuesIter(_.mapPolMap(pol)(f)).toMap,
           f(pol.contravar, thisTy),
@@ -334,6 +343,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     def kind: DeclKind = td.kind
     def nme: TypeName = td.nme
     def name: Str = nme.name
+    def isImplemented: Bool = true
 
     lazy val virtualMembers: Map[Str, NuMember] = members ++ tparams.map {
       case (nme @ TypeName(name), tv, _) => 
@@ -355,13 +365,13 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     def mapPol(pol: Opt[Bool], smart: Bool)(f: (Opt[Bool], SimpleType) => SimpleType)
           (implicit ctx: Ctx): TypedNuMxn =
       TypedNuMxn(level, td, f(pol.map(!_), thisTy), f(pol.map(!_), superTy),
-        tparams.map(tp => (tp._1, f(N, tp._2).asInstanceOf[TV], tp._3)),
+        tparams.map(tp => (tp._1, f(N, tp._2).assertTV, tp._3)),
         params.mapValues(_.update(t => f(pol.map(!_), t), t => f(pol, t))),
         members.mapValuesIter(_.mapPol(pol, smart)(f)).toMap)
     def mapPolMap(pol: PolMap)(f: (PolMap, SimpleType) => SimpleType)
           (implicit ctx: Ctx): TypedNuMxn =
       TypedNuMxn(level, td, f(pol.contravar, thisTy), f(pol.contravar, superTy),
-        tparams.map(tp => (tp._1, f(pol.invar, tp._2).asInstanceOf[TV], tp._3)),
+        tparams.map(tp => (tp._1, f(pol.invar, tp._2).assertTV, tp._3)),
         params.mapValues(_.update(t => f(pol.contravar, t), t => f(pol, t))),
         members.mapValuesIter(_.mapPolMap(pol)(f)).toMap)
   }
@@ -371,7 +381,9 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   case class TypedNuDummy(d: NuDecl) extends TypedNuDecl with TypedNuTermDef {
     def level = MinLevel
     def kind: DeclKind = Val
+    def toLoc: Opt[Loc] = N
     def name: Str = d.name
+    def isImplemented: Bool = true
     def typeSignature: ST = errType
     def freshenAbove(lim: Int, rigidify: Bool)
           (implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV, ST]) =
@@ -386,50 +398,55 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   
   
   /** Note: the type `bodyType` is stored *without* its polymorphic wrapper! (unlike `typeSignature`) */
-  case class TypedNuFun(level: Level, fd: NuFunDef, bodyType: ST) extends TypedNuDecl with TypedNuTermDef {
+  case class TypedNuFun(level: Level, fd: NuFunDef, bodyType: ST)(val isImplemented: Bool)
+      extends TypedNuDecl with TypedNuTermDef {
     def kind: DeclKind = Val
     def name: Str = fd.nme.name
+    def toLoc: Opt[Loc] = fd.toLoc
     lazy val typeSignature: ST = PolymorphicType.mk(level, bodyType)
     
     def freshenAbove(lim: Int, rigidify: Bool)
           (implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV, ST])
           : TypedNuFun = { val outer = ctx; withLevel { implicit ctx => this match {
       case TypedNuFun(level, fd, ty) =>
-        TypedNuFun(outer.lvl, fd, ty.freshenAbove(lim, rigidify))
+        TypedNuFun(outer.lvl, fd, ty.freshenAbove(lim, rigidify))(isImplemented)
           // .tap(res => println(s"Freshen[$level,${ctx.lvl}] $this ~> $res"))
     }}}
     
     def mapPol(pol: Opt[Bool], smart: Bool)(f: (Opt[Bool], SimpleType) => SimpleType)
           (implicit ctx: Ctx): TypedNuTermDef =
-      TypedNuFun(level, fd, f(pol, bodyType))
+      TypedNuFun(level, fd, f(pol, bodyType))(isImplemented)
     def mapPolMap(pol: PolMap)(f: (PolMap, SimpleType) => SimpleType)
           (implicit ctx: Ctx): TypedNuTermDef =
-      TypedNuFun(level, fd, f(pol, bodyType))
+      TypedNuFun(level, fd, f(pol, bodyType))(isImplemented)
   }
   
   
-  case class TypedTypingUnit(entities: Ls[NuMember], result: Opt[ST]) extends OtherTypeLike {
+  case class TypedTypingUnit(implementedMembers: Ls[NuMember], result: Opt[ST]) extends OtherTypeLike {
     def map(f: ST => ST)(implicit ctx: Ctx): TypedTypingUnit =
-      TypedTypingUnit(entities.map(_.map(f)), result.map(f))
+      TypedTypingUnit(implementedMembers.map(_.map(f)), result.map(f))
     def mapPol(pol: Opt[Bool], smart: Bool)(f: (Opt[Bool], SimpleType) => SimpleType)
           (implicit ctx: Ctx): TypedTypingUnit =
-      TypedTypingUnit(entities.map(_.mapPol(pol, smart)(f)), result.map(f(pol, _)))
+      TypedTypingUnit(implementedMembers.map(_.mapPol(pol, smart)(f)), result.map(f(pol, _)))
     def mapPolMap(pol: PolMap)(f: (PolMap, SimpleType) => SimpleType)
           (implicit ctx: Ctx): TypedTypingUnit =
-      TypedTypingUnit(entities.map(_.mapPolMap(pol)(f)), result.map(f(pol, _)))
+      TypedTypingUnit(implementedMembers.map(_.mapPolMap(pol)(f)), result.map(f(pol, _)))
     def freshenAbove(lim: Int, rigidify: Bool)
           (implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV, ST])
           : TypedTypingUnit =
-      TypedTypingUnit(entities.map(_.freshenAbove(lim, rigidify)), result.map(_.freshenAbove(lim, rigidify)))
+      TypedTypingUnit(implementedMembers.map(_.freshenAbove(lim, rigidify)), result.map(_.freshenAbove(lim, rigidify)))
   }
   
   
-  def typeSignatureOf(td: NuTypeDef, level: Level, tparams: TyParams, params: Params, selfTy: ST, ihtags: Set[TypeName]): ST = td.kind match {
+  // TODO check this is not misused
+  def typeSignatureOf(td: NuTypeDef, level: Level, tparams: TyParams, params: Params, selfTy: ST, ihtags: Set[TypeName])
+      : ST = td.kind match {
     case Nms =>
       ClassTag(Var(td.nme.name),
           ihtags + TN("Eql")  // Eql and ihtags (parent tags)
         )(provTODO)
     case Cls =>
+      // TODO deal with classes without parameter lists (ie needing `new`)
       PolymorphicType.mk(level,
         FunctionType(
           TupleType(params.mapKeys(some))(provTODO),
@@ -471,7 +488,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
       case fd @ NuFunDef(N, nme, tparams, R(rhs)) =>
         funSigs.updateWith(nme.name) {
           case S(s) =>
-            err(s"A type signature for '$nme' has already been given", fd.toLoc)
+            err(s"A type signature for '$nme' was already given", fd.toLoc)
             S(s)
           case N => S(fd)
         }
@@ -622,12 +639,13 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     err(msg"mixin $parNme expects ${
                       mxn.params.size.toString} parameter(s); got ${parArgs.size.toString}", Loc(v :: parArgs.unzip._2))
                   
-                  val paramMems = mxn.params.lazyZip(parArgs).map { case (nme -> p, _ -> Fld(_, _, a)) => // TODO check name, mut, spec
-                    implicit val genLambdas: GenLambdas = true
-                    val a_ty = typeTerm(a)
-                    p.lb.foreach(constrain(_, a_ty))
-                    constrain(a_ty, p.ub)
-                    NuParam(nme, FieldType(p.lb, a_ty)(provTODO))(lvl)
+                  val paramMems = mxn.params.lazyZip(parArgs).map {
+                    case (nme -> p, _ -> Fld(_, _, a)) => // TODO check name, mut, spec
+                      implicit val genLambdas: GenLambdas = true
+                      val a_ty = typeTerm(a)
+                      p.lb.foreach(constrain(_, a_ty))
+                      constrain(a_ty, p.ub)
+                      NuParam(nme, FieldType(p.lb, a_ty)(provTODO))(lvl)
                   }
                   
                   paramMems ++ mxn.members.valuesIterator
@@ -656,7 +674,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                 
               case rawCls: TypedNuCls =>
                 
-                println(s"Raw $rawCls")
+                // println(s"Raw $rawCls")
                 
                 val (fr, ptp) = refreshHelper(rawCls, v, if (parTargs.isEmpty) N else S(parTargs)) // infer ty args if not provided
                 val cls = {
@@ -666,7 +684,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                   rawCls.freshenAbove(info.level, rigidify = false)
                 }
                 
-                println(s"Fresh[${ctx.lvl}] $cls")
+                // println(s"Fresh[${ctx.lvl}] $cls")
                 
                 if (parArgs.sizeCompare(cls.params) =/= 0)
                   err(msg"class $parNme expects ${
@@ -767,7 +785,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
             case (N, Fld(mut, spec, nme: Var)) =>
               // assert(!mut && !spec, "TODO") // TODO
               // nme -> FieldType(N, freshVar(ttp(nme), N, S(nme.name)))(provTODO)
-              nme -> FieldType(N, err(msg"Class parameters currently need type annotations", nme.toLoc))(provTODO)
+              nme -> FieldType(N, err(msg"${td.kind.str.capitalize} parameters currently need type annotations",
+                nme.toLoc))(provTODO)
             case _ => ???
           }
         case fd: NuFunDef => Nil
@@ -777,15 +796,15 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     lazy val paramSymbols = typedParams.map(p => p._1.name -> VarSymbol(p._2.ub, p._1))
     
     // TODO also import signatures from base classes and mixins!
-    lazy val typedSignatures: Ls[(NuFunDef, ST)] = decl match {
+    lazy val (typedSignatures, funImplems) : (Ls[(NuFunDef, ST)], Ls[NuFunDef]) = decl match {
       case td: NuTypeDef => ctx.nest.nextLevel { implicit ctx =>
         val (signatures, rest) = td.body.entities.partitionMap {
-          case fd @ NuFunDef(N, nme, tparams, R(rhs)) =>
+          case fd @ NuFunDef(N | S(false), nme, tparams, R(rhs)) => // currently `val`s are encoded with `S(false)`
             L((fd, rhs))
           // TODO also pick up signature off implems with typed params/results
           case s => R(s)
         }
-        // TODO use `rest`
+        val implems = rest.collect { case fd @ NuFunDef(N | S(false), nme, tparams, L(rhs)) => fd }
         
         ctx ++= paramSymbols
         
@@ -798,19 +817,21 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
             } |> { implicit vars =>
               
               typeType(rhs).withProv(
-                TypeProvenance(Loc(rhs :: fd.nme :: fd.tparams), s"signature of member ${fd.nme.name}")
+                TypeProvenance(Loc(rhs :: fd.nme :: fd.tparams), s"signature of member `${fd.nme.name}`")
               )
               
             }
           })
-        }
+        } -> implems
       }
-      case _: NuFunDef => Nil
+      case _: NuFunDef => Nil -> Nil
     }
-    lazy val typedSignatureMembers: Ls[Str -> TypedNuFun] =
+    lazy val typedSignatureMembers: Ls[Str -> TypedNuFun] = {
+      val implemented = funImplems.iterator.map(_.nme.name).toSet
       typedSignatures.iterator.map { case (fd, ty) =>
-        fd.nme.name -> TypedNuFun(level + 1, fd, ty)
+        fd.nme.name -> TypedNuFun(level + 1, fd, ty)(implemented.contains(fd.nme.name))
       }.toList
+    }
     
     lazy val inheritedFields: Set[Var] = decl match {
       case td: NuTypeDef =>
@@ -875,9 +896,12 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                   checkNoTyParams()
                   val body_ty = ctx.poly { implicit ctx: Ctx =>
                     typeType(ty)(ctx, raise,
-                      vars = vars ++ tps.map(tp => tp.asInstanceOf[L[TN]].value.name -> freshVar(provTODO, N)(1)).toMap)
+                      vars = vars ++ tps.map {
+                          case L(tn) => tn.name -> freshVar(provTODO, N)(1)
+                          case _ => die
+                        }.toMap)
                   }
-                  TypedNuFun(ctx.lvl, fd, PolymorphicType(ctx.lvl, body_ty))
+                  TypedNuFun(ctx.lvl, fd, PolymorphicType(ctx.lvl, body_ty))(isImplemented = false)
                 case R(_) => die
                 case L(body) =>
                   fd.isLetRec match {
@@ -886,11 +910,11 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       implicit val gl: GenLambdas = true
                       TypedNuFun(ctx.lvl, fd, typeTerm(
                         Let(true, fd.nme, body, fd.nme)
-                      ))
+                      ))(isImplemented = true)
                     case S(false) => // * Let bindings
                       checkNoTyParams()
                       implicit val gl: GenLambdas = true
-                      TypedNuFun(ctx.lvl, fd, typeTerm(body))
+                      TypedNuFun(ctx.lvl, fd, typeTerm(body))(isImplemented = true)
                     case N =>
                       // * We don't type functions polymorphically from the point of view of a typing unit
                       // * to avoid cyclic-looking constraints due to the polymorphic recursion limitation,
@@ -913,13 +937,12 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                           // * especially in the context of open recursion and mixins.
                           if (ctx.lvl === 1 || fd.signature.nonEmpty)
                             typeTerm(body)
-                          else outer_ctx |> {
+                          else outer_ctx |> { implicit ctx: Ctx =>
                             println(s"Not typing polymorphicall (cf. not top level or not annotated)")
-                            println(typedSignatureMembers)
-                            implicit ctx: Ctx => typeTerm(body) }
+                            typeTerm(body) }
                         }
                       }.withProv(TypeProvenance(fd.toLoc, s"definition of method ${fd.nme.name}"))
-                      TypedNuFun(ctx.lvl, fd, body_ty)
+                      TypedNuFun(ctx.lvl, fd, body_ty)(isImplemented = true)
                   }
               }
               ctx.nextLevel { implicit ctx: Ctx => constrain(res_ty.bodyType, mutRecTV) }
@@ -928,11 +951,82 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
               
             case td: NuTypeDef =>
               
-              val signatures = typedSignatures
-              ctx ++= signatures.map(nt => nt._1.name -> VarSymbol(nt._2, nt._1.nme))
-
+              
+              def implemCheck(membersToImplem: Ls[NuMember], implems: Ls[NuMember]): Unit = {
+                
+                val implemsMap = MutMap.empty[Str, NuMember]
+                implems.foreach { m =>
+                  implemsMap.updateWith(m.name) {
+                    case S(_) =>
+                      err(msg"Duplicated `${m.name}` member definition in `${td.name}`", m.toLoc)
+                      N
+                    case N => S(m)
+                  }
+                }
+                
+                membersToImplem.foreach { m =>
+                  lazy val parSign = m match {
+                    case nt: TypedNuTermDef => nt.typeSignature
+                    case np: NuParam => np.typeSignature
+                    case _ => ??? // probably no other cases
+                  }
+                  implemsMap.get(m.name) match {
+                    case S(mem: TypedNuTermDef) =>
+                      val memSign = mem.typeSignature
+                      implicit val prov: TP = memSign.prov
+                      println(s"Checking overriding of `${m.name}`")
+                      constrain(memSign, parSign)
+                    case S(pm: NuParam) =>
+                      val pmSign = pm.typeSignature
+                      implicit val prov: TP = pmSign.prov
+                      constrain(pmSign, parSign)
+                    case S(_) => ()
+                    case N => 
+                      if (!td.isDecl && td.kind =/= Trt && !td.isAbstract)
+                        err(msg"Member `${m.name}` is declared in parent but not implemented" -> td.toLoc ::
+                          msg"Declared here:" -> m.toLoc ::
+                          Nil)
+                  }
+                }
+                
+              }
+              
+              
+              // intersection of members
+              def membersInter(l: Ls[NuMember], r: Ls[NuMember]): Ls[NuMember] = {
+                def merge(ltm: NuMember, rtm: Option[NuMember]) = {
+                  rtm.foreach(rtm => assert(rtm.level === ltm.level, (ltm.level, rtm.level)))
+                  (ltm, rtm) match {
+                    case (a: TypedNuFun, S(b: TypedNuFun)) =>
+                      assert(!(a.isImplemented && b.isImplemented))
+                      val fd = NuFunDef((a.fd.isLetRec, b.fd.isLetRec) match {
+                        case (S(a), S(b)) => S(a || b)
+                        case _ => N // if one is fun, then it will be fun
+                      }, a.fd.nme, a.fd.tparams, a.fd.rhs)(a.fd.declareLoc, N)
+                      S(TypedNuFun(a.level, fd, a.bodyType & b.bodyType)(a.isImplemented || b.isImplemented))
+                    case (a: NuParam, S(b: NuParam)) => 
+                      S(NuParam(a.nme, a.ty && b.ty)(a.level))
+                    case (a: NuParam, S(b: TypedNuFun)) =>
+                      S(TypedNuFun(a.level, b.fd, a.ty.ub & b.bodyType)(a.isImplemented || b.isImplemented))
+                    case (a: TypedNuFun, S(b: NuParam)) =>
+                      S(TypedNuFun(a.level, a.fd, b.ty.ub & a.bodyType)(a.isImplemented || b.isImplemented))
+                    case (a, N) => S(a)
+                    case (a, S(b)) =>
+                      err(msg"Intersection of ${a.kind.str} member and ${b.kind.str} members currently unsupported" -> td.toLoc
+                        :: msg"The ${a.kind.str} member is defined here:" -> a.toLoc
+                        :: msg"The ${b.kind.str} member is defined here:" -> b.toLoc
+                        :: Nil)
+                      N
+                  }
+                }
+                l.foldLeft(r.map(d => d.name -> d).toMap) { case (acc, ltm) => 
+                  acc.updatedWith(ltm.name)(merge(ltm, _))
+                }.values.toList
+              }
+              
+              
               if (((td.kind is Nms) || (td.kind is Mxn)) && td.ctor.isDefined)
-                err(msg"Explicit ${td.kind.str} constructors are not supported.",
+                err(msg"Explicit ${td.kind.str} constructors are not supported",
                   td.ctor.fold[Opt[Loc]](N)(c => c.toLoc))
               
               // * To type signatures correctly, we need to deal with type unbound variables 'X,
@@ -974,58 +1068,68 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                   
                   ctx.nest.nextLevel { implicit ctx =>
                     ctx ++= paramSymbols
+                    ctx ++= typedSignatures.map(nt => nt._1.name -> VarSymbol(nt._2, nt._1.nme))
                     ctx += "this" -> VarSymbol(thisTV, Var("this"))
                     
                     val sig_ty = td.sig.fold(TopType: ST)(typeTypeSignature)
                     
-                    def inherit(parents: Ls[TypedParentSpec], tags: ST, members: Ls[NuMember], vms: Map[Str, NuMember])
+                    def inherit(parents: Ls[TypedParentSpec], tags: ST, members: Ls[NuMember], tparamMembs: Map[Str, NuMember])
                           : (ST, Ls[NuMember], Map[Str, NuMember]) =
                         parents match {
                       case (trt: TypedNuTrt, newMembs, tpms, loc) :: ps =>
                         inherit(ps,
                           tags & trt.sign,
-                          memberUnion(members, trt.members.values.toList),
-                          vms ++ tpms   // with type members of parent class
+                          membersInter(members, trt.members.values.toList),
+                          tparamMembs ++ tpms   // with type members of parent class
                         )
                       case (_, _, _, loc) :: ps => 
-                        err(msg"trait can only inherit from traits", loc)
-                        inherit(ps, tags, members, vms)
-                      case Nil => (tags, members, vms)
+                        err(msg"A trait can only inherit from other traits", loc)
+                        inherit(ps, tags, members, tparamMembs)
+                      case Nil => (tags, members, tparamMembs)
                     }
-                    val (tags, baseMems, vms) =
+                    val (tags, trtMembers, tparamMembs) =
                       inherit(typedParents, trtNameToNomTag(td)(noProv, ctx), Nil, Map.empty)
                     
+                    td.body.entities.foreach {
+                      case fd @ NuFunDef(_, _, _, L(_)) =>
+                        err(msg"Method implementations in traits are not yet supported", fd.toLoc)
+                      case _ =>
+                    }
+                    
                     val ttu = typeTypingUnit(td.body, topLevel = false)
-                    val mems = 
-                      baseMems.map(d => d.name -> d).toMap ++ 
-                      typedSignatureMembers.toMap ++ 
-                      ttu.entities.map(d => d.name -> d).toMap
-
+                    
+                    val allMembers = (
+                      trtMembers.iterator.map(d => d.name -> d)
+                      ++ ttu.implementedMembers.map(d => d.name -> d)
+                      ++ typedSignatureMembers
+                    ).toMap
+                    
                     // check trait overriding
-                    implCheck(baseMems, typedSignatureMembers.map(_._2) ++ ttu.entities, true)(td)
-
+                    // implemCheck(trtMembers, typedSignatureMembers.map(_._2) ++ ttu.implementedMembers)
+                    implemCheck(trtMembers, typedSignatureMembers.map(_._2))
+                    
                     TypedNuTrt(outerCtx.lvl, td,
                       tparams,
-                      mems,
+                      allMembers,
                       TopType, // thisType (same as Cls)
                       sig_ty,
                       inheritedTags,
-                      vms
+                      tparamMembs
                     ) -> Nil
                   }
                   
                 case Als =>
                   
                   if (td.params.getOrElse(Tup(Nil)).fields.nonEmpty)
-                    err(msg"type alias definitions cannot have value parameters" -> td.params.getOrElse(Tup(Nil)).toLoc :: Nil)
+                    err(msg"Type alias definitions cannot have value parameters" -> td.params.getOrElse(Tup(Nil)).toLoc :: Nil)
                   if (td.parents.nonEmpty)
-                    err(msg"type alias definitions cannot extend parents" -> Loc(td.parents) :: Nil)
+                    err(msg"Type alias definitions cannot extend parents" -> Loc(td.parents) :: Nil)
                   
                   val body_ty = td.sig match {
                     case S(sig) =>
                       typeType(sig)
                     case N =>
-                      err(msg"type alias definition requires a right-hand side", td.toLoc)
+                      err(msg"Type alias definition requires a right-hand side", td.toLoc)
                   }
                   
                   TypedNuAls(outerCtx.lvl, td, tparams, body_ty) -> Nil
@@ -1040,6 +1144,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                         Loc(typedParams.iterator.map(_._1)))
                     
                     ctx ++= paramSymbols
+                    ctx ++= typedSignatures.map(nt => nt._1.name -> VarSymbol(nt._2, nt._1.nme))
                     
                     val sig_ty = td.sig.fold(TopType: ST)(typeTypeSignature)
                     
@@ -1057,11 +1162,11 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
 
                     case class Pack(
                       superType: ST,
-                      clsMem: Ls[NuMember], 
-                      bsCls: Opt[Str], 
-                      bsMem: Ls[NuMember], 
-                      trtMem: Ls[NuMember],
-                      pTP: Map[Str, NuMember]
+                      mxnMembers: Ls[NuMember], 
+                      baseClsNme: Opt[Str], 
+                      baseClsMembers: Ls[NuMember], 
+                      traitMembers: Ls[NuMember],
+                      tparamMembers: Map[Str, NuMember]
                     )
                     
                     def inherit(parents: Ls[TypedParentSpec], pack: Pack): Pack = parents match {
@@ -1082,7 +1187,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                           val newSuperType = WithType(
                               pack.superType,
                               RecordType(
-                                newMembs.collect{
+                                newMembs.collect {
                                   case m: NuParam => m.nme.toVar -> m.ty
                                   case m: TypedNuFun => m.fd.nme -> m.typeSignature.toUpper(provTODO)
                                 }
@@ -1090,29 +1195,30 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                             )(provTODO)
                           
                           inherit(ps, pack.copy(
-                            superType = newSuperType, 
-                            clsMem = pack.clsMem ++ newMembs // FIXME add `mxn.members.values.toList`?
+                            superType = newSuperType,
+                            // mxnMembers = pack.mxnMembers ++ newMembs // FIXME add `mxn.members.values.toList`?
+                            mxnMembers = newMembs ++ pack.mxnMembers
                           ))
                         
                         case trt: TypedNuTrt =>
                           
                           inherit(ps, pack.copy(
-                            trtMem = memberUnion(pack.trtMem, trt.members.values.toList),
-                            pTP = pack.pTP ++ tpms
+                            traitMembers = membersInter(pack.traitMembers, trt.members.valuesIterator.toList),
+                            tparamMembers = pack.tparamMembers ++ tpms
                           ))
 
                         case cls: TypedNuCls =>
                           val parNme = cls.nme.name
                           
-                          pack.bsCls.foreach { cls =>
+                          pack.baseClsNme.foreach { cls =>
                             err(msg"cannot inherit from more than one base class: ${
                               cls} and ${parNme}", loc)
                           }
                           
                           inherit(ps, pack.copy(
-                            bsCls = S(parNme), 
-                            bsMem = newMembs ++ cls.members.values.toList, 
-                            pTP = pack.pTP ++ tpms
+                            baseClsNme = S(parNme), 
+                            baseClsMembers = newMembs ++ cls.members.valuesIterator.toList, 
+                            tparamMembers = pack.tparamMembers ++ tpms
                           ))
                           
                         case als: TypedNuAls => // Should be rejected in `typedParents`
@@ -1128,7 +1234,6 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                         trace(s"${lvl}. Finalizing inheritance with $thisType <: $finalType") {
                           assert(finalType.level === lvl)
                           constrain(thisType, finalType)
-                          pack.clsMem
                         }()
                         
                         // println(s"${lvl}. Finalized inheritance with $superType ~> $thisType")
@@ -1141,56 +1246,89 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     
                     val paramMems = typedParams.map(f => NuParam(f._1, f._2)(lvl))
                     
-                    val Pack(thisType, baseMems, _, bsMembers, ifaceMembers, ptps) =
+                    val Pack(thisType, mxnMembers, _, baseClsMembers, traitMembers, tparamMembers) =
                       inherit(typedParents, Pack(baseType, tparamMems ++ paramMems, N, Nil, Nil, Map.empty))
                     
                     ctx += "this" -> VarSymbol(thisTV, Var("this"))
                     ctx += "super" -> VarSymbol(thisType, Var("super"))
                     val ttu = typeTypingUnit(td.body, topLevel = false)
                     
-                    // local members overrides mixin members
-                    val cmems = ttu.entities ++ baseMems.flatMap { m =>
-                      ttu.entities.find(x => x.name == m.name) match {
-                        case S(mem: TypedNuTermDef) => Nil
-                        case S(pm: NuParam) => Nil
-                        case _ => m :: Nil
-                      }
-                    }
-                    // local members overrides parent members
-                    val impltdMems = cmems ++ bsMembers.flatMap { m =>
-                      cmems.find(x => x.name == m.name) match {
-                        case S(mem: TypedNuTermDef) => Nil
-                        case S(pm: NuParam) => Nil
-                        case _ => m :: Nil
-                      }
-                    }
-                    val mems = impltdMems.map(d => d.name -> d).toMap ++ typedSignatureMembers
-
+                    
+                    // val impltdMems =
+                    //   // (baseClsMembers ++ mxnMembers ++ ttu.implementedMembers).distinctBy(_.name)
+                    //   (ttu.implementedMembers ++ mxnMembers ++ baseClsMembers).distinctBy(_.name)
+                    
+                    val memberNames = MutSet.empty[Str]
+                    
+                    // val definedMembers = ttu.implementedMembers
+                    // memberNames ++= definedMembers.map(_.name)
+                    // println(s"DM ${definedMembers}")
+                    
+                    val (baseClsImplemMembers, baseClsIfaceMembers) =
+                      baseClsMembers.partition(_.isImplemented)
+                    
+                    val impltdMems =
+                      (ttu.implementedMembers ++ mxnMembers ++ baseClsImplemMembers)
+                      .filter(m => memberNames.add(m.name)) // TODD distinctBy
+                    
+                    // println(ttu.implementedMembers)
+                    // println(impltdMems_old)
+                    // println(impltdMems)
+                    
                     // overriding check for class/interface inheritance
-                    implCheck(bsMembers ++ ifaceMembers, impltdMems, false)(td)
+                    // implCheck(baseClsMembers ++ traitMembers, impltdMems, td.isAbstract)(td)
+                    
+                    // implemCheck(baseClsMembers ::: traitMembers, impltdMems)
+                    val ifaceMembers = membersInter(baseClsMembers, traitMembers)
+                    implemCheck(ifaceMembers, impltdMems)
+                    
+                    
+                    val ifaceMembersMap = ifaceMembers.map(m => m.name -> m).toMap
+                    // * ^ Note: there isn't supposed to be any meaningful duplicates in `ifaceMembers`
+                    
+                    // * Check signatures provided in this class against imherited signatures
+                    typedSignatureMembers.foreach { case (nme, fun) =>
+                      ifaceMembersMap.get(nme) match {
+                        case Some(m: TypedNuFun) =>
+                          implicit val prov: TP =
+                            TypeProvenance(fun.toLoc, fun.fd.describe)
+                          constrain(fun.typeSignature, m.typeSignature)
+                        case Some(m) =>
+                          err(msg"Cannot override base ${m.kind.str} member `${nme}`", fun.fd.toLoc)
+                        case None =>
+                      }
+                    }
+                    
+                    
+                    val allMembers =
+                      (ifaceMembers ++ impltdMems).map(d => d.name -> d).toMap ++ typedSignatureMembers
+                    
+                    // // println(allMembers.map(m => (m._2, m._2.isImplemented)))
+                    // println(allMembers.values.map(m => (m, m.isImplemented)))
                     
                     TypedNuCls(outerCtx.lvl, td,
-                      tparams, typedParams, mems,
-                      // if (td.kind is Nms) TopType else thisTV
+                      tparams, typedParams, allMembers,
                       TopType,
                       sig_ty,
                       inheritedTags,
-                      ptps
+                      tparamMembers
                     )(thisType) -> impltdMems
                   }
+                  
                 case Mxn =>
                   if (td.parents.nonEmpty)
                     err(msg"mixin definitions cannot yet extend parents" -> Loc(td.parents) :: Nil)
                   val outer = ctx
                   ctx.nest.nextLevel { implicit ctx =>
                     ctx ++= paramSymbols
+                    ctx ++= typedSignatures.map(nt => nt._1.name -> VarSymbol(nt._2, nt._1.nme))
                     val paramMems = typedParams.map(f => NuParam(f._1, f._2)(lvl))
                     val thisTV = freshVar(provTODO, N, S("this"))
                     val superTV = freshVar(provTODO, N, S("super"))
                     ctx += "this" -> VarSymbol(thisTV, Var("this"))
                     ctx += "super" -> VarSymbol(superTV, Var("super"))
                     val ttu = typeTypingUnit(td.body, topLevel = false)
-                    val impltdMems = ttu.entities
+                    val impltdMems = ttu.implementedMembers
                     val mems = impltdMems.map(m => m.name -> m).toMap ++ typedSignatureMembers
                     TypedNuMxn(outer.lvl, td, thisTV, superTV, tparams, typedParams, mems) -> impltdMems
                   }
@@ -1199,7 +1337,6 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
               // TODO check member duplication? in mems or before?
               
               // * Check signatures
-              // val isAbstract = // TODO
               ctx.nextLevel { implicit ctx: Ctx => 
                 typedSignatures.foreach { case (fd, sign) =>
                   implicit val prov: TP = sign.prov
@@ -1211,8 +1348,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     case S(mem: NuParam) =>
                     case S(_) => ??? // TODO
                     case N =>
-                      if (!td.isDecl && td.kind != Trt)
-                        err(msg"Member ${fd.nme.name} is declared but not defined", fd.nme.toLoc)
+                      if (!td.isDecl && td.kind != Trt && !td.isAbstract)
+                        err(msg"Member `${fd.nme.name}` is declared but not defined", fd.nme.toLoc)
                   }
                 }
               }
@@ -1246,32 +1383,6 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
       s"${decl.name} ~> ${if (isComputing) "<computing>" else result.fold("<uncomputed>")(_.toString)}"
     
   }
-
-  private def implCheck(abst: Ls[NuMember], impl: Ls[NuMember], isTrt: Bool)(td: NuTypeDef)
-        (implicit raise: Raise, ctx: Ctx): Unit = {
-    abst.foreach { m =>
-      lazy val parSign = m match {
-        case nt: TypedNuTermDef => nt.typeSignature
-        case np: NuParam => np.typeSignature
-        case _ => ??? // probably no other cases
-      }
-      impl.find(x => x.name === m.name) match {
-        case S(mem: TypedNuTermDef) =>
-          val memSign = mem.typeSignature
-          implicit val prov: TP = memSign.prov
-          println(s"checking overriding `${m.name}`")
-          constrain(memSign, parSign)
-        case S(pm: NuParam) =>
-          val pmSign = pm.typeSignature
-          implicit val prov: TP = pmSign.prov
-          constrain(pmSign, parSign)
-        case S(_) => ()
-        case N => 
-          if (!isTrt)
-            err(msg"Member ${m.name} is declared in parent trait but not implemented", td.toLoc)
-      }
-    }
-  }
   
   def refreshHelper2(raw: PolyNuDecl, v: Var, parTargs: Opt[Ls[ST]])
         (implicit ctx: Ctx): (MutMap[TV, ST], Map[Str, NuParam]) = {
@@ -1298,44 +1409,6 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     }
     
     freshened -> parTP.toMap
-  }
-  
-  // intersection of members
-  def memberUnion(l: Ls[NuMember], r: Ls[NuMember])(implicit raise: Raise): Ls[NuMember] = {
-    def merge(ltm: NuMember, rtm: Option[NuMember]) = { 
-      (ltm, rtm) match {
-        case (a: TypedNuFun, S(b: TypedNuFun)) =>
-          if (a.level =/= b.level)
-            err(msg"member ${a.name} has mismatch levels ${a.level.toString} and ${b.level.toString}", a.fd.toLoc)
-          if (a.fd.tparams =/= b.fd.tparams)
-            err(msg"method ${a.name} has mismatch type parameters", a.fd.toLoc)
-          val fd = NuFunDef((a.fd.isLetRec, b.fd.isLetRec) match {
-            case (S(a), S(b)) => S(a || b)
-            case _ => N // if one is fun, then it will be fun
-          }, a.fd.nme, a.fd.tparams, a.fd.rhs)(a.fd.declareLoc, N)
-          println(s"united ${a.name}")
-          S(TypedNuFun(a.level, fd, a.bodyType & b.bodyType))
-        case (a: NuParam, S(b: NuParam)) => 
-          if (a.level =/= b.level)
-            err(msg"member ${a.name} has mismatch levels ${a.level.toString} and ${b.level.toString}", N)
-          S(NuParam(a.nme, a.ty && b.ty)(a.level))
-        case (a: NuParam, S(b: TypedNuFun)) => // not sure
-          if (a.level =/= b.level)
-            err(msg"member ${a.name} has mismatch levels ${a.level.toString} and ${b.level.toString}", N)
-          S(NuParam(a.nme, a.ty && FieldType(S(b.bodyType), b.bodyType)(b.bodyType.prov))(a.level))
-        case (a: TypedNuFun, S(b: NuParam)) => // not sure
-          if (a.level =/= b.level)
-            err(msg"member ${a.name} has mismatch levels ${a.level.toString} and ${b.level.toString}", N)
-          S(NuParam(b.nme, FieldType(S(a.bodyType), a.bodyType)(a.bodyType.prov) && b.ty)(b.level))
-        case (a, N) => S(a)
-        case (a, S(b)) =>
-          err(msg"intersection of member ${a.name} is currently not supported", N)
-          N
-      }
-    }
-    l.foldLeft(r.map(d => d.name -> d).toMap) { case (acc, ltm) => 
-      acc.updatedWith(ltm.name)(merge(ltm, _))
-    }.values.toList
   }
   
 }

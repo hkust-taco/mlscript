@@ -732,8 +732,8 @@ module J {
 //│ module J {
 //│   class K(x: int)
 //│   mixin L()
-//│   class M()
-//│   class N(x: int)
+//│   class M() extends K
+//│   class N(x: int) extends K
 //│ }
 //│ // Prelude
 //│ class TypingUnit14 {
@@ -882,7 +882,7 @@ module L {
 //│   class M(x: int)
 //│   module N {
 //│     module O {
-//│       class P(y: int)
+//│       class P(y: int) extends M
 //│     }
 //│   }
 //│ }
@@ -1009,7 +1009,7 @@ module N {
 }
 //│ module N {
 //│   module O {
-//│     class P()
+//│     class P() extends Q
 //│   }
 //│   class Q()
 //│ }

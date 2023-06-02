@@ -82,22 +82,27 @@ trait Base2: Foo['FigureItOut]
 
 // TODO reject
 class Impl extends Base2
-//│ class Impl
+//│ class Impl extends Base2
 
 (x: Impl) => x : Base2
 //│ (x: Impl,) -> Base2
 
 :e
 class Impl extends Base2, Foo
-//│ ╔══[ERROR] Member x is declared in parent trait but not implemented
+//│ ╔══[ERROR] Member `x` is declared in parent but not implemented
 //│ ║  l.91: 	class Impl extends Base2, Foo
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ class Impl
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Declared here:
+//│ ║  l.5: 	trait Foo[A] { fun x: A }
+//│ ╙──     	                   ^^^^
+//│ class Impl extends Base2, Foo {
+//│   fun x: nothing
+//│ }
 
 class Impl extends Base2, Foo {
   fun x = 1
 }
-//│ class Impl {
+//│ class Impl extends Base2, Foo {
 //│   fun x: 1
 //│ }
 
@@ -113,7 +118,7 @@ Impl() : Base2
 class Impl2 extends Base2, Foo[int] {
   fun x = 1
 }
-//│ class Impl2 {
+//│ class Impl2 extends Base2, Foo {
 //│   fun x: 1
 //│ }
 

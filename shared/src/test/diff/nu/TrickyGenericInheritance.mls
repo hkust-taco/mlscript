@@ -13,14 +13,14 @@ trait T1[A] {
 class C1 extends T1 {
   fun f(x: int) = x
 }
-//│ class C1 {
+//│ class C1 extends T1 {
 //│   fun f: (x: int,) -> int
 //│ }
 
 class C1 extends T1['FigureItOut] {
   fun f(x: int) = x
 }
-//│ class C1 {
+//│ class C1 extends T1 {
 //│   fun f: (x: int,) -> int
 //│ }
 
@@ -66,6 +66,9 @@ trait T2[A] {
 class C2 extends T2['FigureItOut] {
   fun f(x: int) = x
 }
+//│ ╔══[ERROR] Method implementations in traits are not yet supported
+//│ ║  l.64: 	  val r = C2().f(false)
+//│ ╙──      	      ^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Unhandled cyclic definition
 //│ ║  l.62: 	trait T2[A] {
 //│ ║        	^^^^^^^^^^^^^
@@ -86,7 +89,7 @@ class C2 extends T2['FigureItOut] {
 //│   fun f: A -> A
 //│   let r: error | int
 //│ }
-//│ class C2 {
+//│ class C2 extends T2 {
 //│   fun f: (x: int,) -> int
 //│ }
 
@@ -98,28 +101,31 @@ trait T2[A] {
 class C2 extends T2['FigureItOut] {
   fun f(x: int) = x
 }
+//│ ╔══[ERROR] Method implementations in traits are not yet supported
+//│ ║  l.99: 	  val r = (C2() : T2['X]).f(false)
+//│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Unhandled cyclic definition
-//│ ║  l.94: 	trait T2[A] {
+//│ ║  l.97: 	trait T2[A] {
 //│ ║        	^^^^^^^^^^^^^
-//│ ║  l.95: 	  fun f: A -> A
+//│ ║  l.98: 	  fun f: A -> A
 //│ ║        	^^^^^^^^^^^^^^^
-//│ ║  l.96: 	  val r = (C2() : T2['X]).f(false)
+//│ ║  l.99: 	  val r = (C2() : T2['X]).f(false)
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Type `C2` does not contain member `T2#A`
-//│ ║  l.94: 	trait T2[A] {
+//│ ║  l.97: 	trait T2[A] {
 //│ ╙──      	         ^
 //│ trait T2[A] {
 //│   fun f: A -> A
 //│   let r: error | false
 //│ }
-//│ class C2 {
+//│ class C2 extends T2 {
 //│   fun f: (x: int,) -> int
 //│ }
 
 :e // FIXME
 C2() : T2['X]
 //│ ╔══[ERROR] Type `C2` does not contain member `T2#A`
-//│ ║  l.94: 	trait T2[A] {
+//│ ║  l.97: 	trait T2[A] {
 //│ ╙──      	         ^
 //│ T2['X]
 //│   where

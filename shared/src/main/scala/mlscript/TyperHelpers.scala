@@ -252,6 +252,12 @@ abstract class TyperHelpers { Typer: Typer =>
   
   trait SimpleTypeImpl { self: SimpleType =>
     
+    // TODO eventually find a way of statically getting rid of those
+    def assertTV: TV = this match {
+      case tv: TV => tv
+      case _ => lastWords(s"$this was not a type variable")
+    }
+    
     def showProvOver(enabled: Bool)(str: Str): Str =
       if (enabled) str + prov.toString
       else str
@@ -775,7 +781,7 @@ abstract class TyperHelpers { Typer: Typer =>
           cs.flatMap(vbs => PolMap.pos -> vbs._1 :: PolMap.posAtNeg -> vbs._2 :: Nil) ::: pol -> bod :: Nil
         case OtherTypeLike(tu) =>
           // tu.entities.flatMap(_.childrenPol) ::: tu.result.toList
-          val ents = tu.entities.flatMap {
+          val ents = tu.implementedMembers.flatMap {
             case ta: TypedNuAls =>
               // Q: PolMap.neu or pol.invar?!
               ta.tparams.map(pol.invar -> _._2) ::: pol -> ta.body :: Nil
@@ -877,7 +883,7 @@ abstract class TyperHelpers { Typer: Typer =>
       case SpliceType(fs) => fs.flatMap{ case L(l) => l :: Nil case R(r) => r.lb.toList ::: r.ub :: Nil}
       case OtherTypeLike(tu) =>
         // tu.childrenPol(PolMap.neu).map(tp => tp._1)
-        val ents = tu.entities.flatMap {
+        val ents = tu.implementedMembers.flatMap {
           case tf: TypedNuFun =>
             tf.bodyType :: Nil
           case als: TypedNuAls =>
@@ -1201,7 +1207,7 @@ abstract class TyperHelpers { Typer: Typer =>
     def applyLike(pol: PolMap)(ty: TypeLike): Unit = ty match {
       case ty: ST => apply(pol)(ty)
       case OtherTypeLike(tu) =>
-        tu.entities.foreach(applyMem(pol))
+        tu.implementedMembers.foreach(applyMem(pol))
         tu.result.foreach(apply(pol))
     }
     def applyMem(pol: PolMap)(m: NuMember): Unit = m match {

@@ -5,8 +5,8 @@ class Exp[A]: Pair | Lit
 class Lit(n: int) extends Exp[int]
 class Pair[L, R](lhs: Exp[L], rhs: Exp[R]) extends Exp[(L, R)]
 //│ class Exp[A]: Lit | Pair[?, ?]
-//│ class Lit(n: int)
-//│ class Pair[L, R](lhs: Exp[L], rhs: Exp[R])
+//│ class Lit(n: int) extends Exp
+//│ class Pair[L, R](lhs: Exp[L], rhs: Exp[R]) extends Exp
 
 
 fun f(p: Pair['a, 'b]) = p.lhs

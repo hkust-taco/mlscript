@@ -500,7 +500,7 @@ class DiffTests
               
               def showTTU(ttu: typer.TypedTypingUnit, ind: Int): Unit = {
                 val indStr = "  " * ind
-                ttu.entities.foreach {
+                ttu.implementedMembers.foreach {
                   // case p: typer.NuTypeParam =>
                   //   output(s"${indStr}${p.name}: ${p.ty}")
                   case p: typer.NuParam =>

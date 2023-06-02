@@ -19,10 +19,10 @@ class C extends T, M(false)
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.6: 	trait T { fun x: int }
 //│ ║       	                 ^^^
-//│ ╟── from signature of member x:
+//│ ╟── from signature of member `x`:
 //│ ║  l.6: 	trait T { fun x: int }
 //│ ╙──     	              ^^^^^^
-//│ class C
+//│ class C extends T
 
 
 trait T { fun x: int }
@@ -33,6 +33,6 @@ mixin M(x: number)
 //│ mixin M(x: number)
 
 class C extends T, M(0)
-//│ class C
+//│ class C extends T
 
 

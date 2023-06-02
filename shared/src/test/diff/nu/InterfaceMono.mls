@@ -19,20 +19,20 @@ class Point(x: int, y: int) extends Showable {
     fun mlen = x + y
     fun toString = "I'm a point"
 }
-//│ class Point(x: int, y: int) {
+//│ class Point(x: int, y: int) extends Showable {
 //│   fun mlen: int
 //│   fun toString: "I'm a point"
 //│ }
 
 class What1(toString: string) extends Showable
-//│ class What1(toString: string)
+//│ class What1(toString: string) extends Showable
 
 :e
 trait NoShow extends What1("hi")
-//│ ╔══[ERROR] trait can only inherit from traits
+//│ ╔══[ERROR] A trait can only inherit from other traits
 //│ ║  l.31: 	trait NoShow extends What1("hi")
 //│ ╙──      	                     ^^^^^^^^^^^
-//│ trait NoShow
+//│ trait NoShow extends Showable, What1
 
 :e
 class ErrC1 extends Showable
@@ -40,9 +40,12 @@ class ErrC2 extends Showable {
     fun toString = 114
 }
 class ErrC3(toString: string -> string) extends Showable
-//│ ╔══[ERROR] Member toString is declared in parent trait but not implemented
+//│ ╔══[ERROR] Member `toString` is declared in parent but not implemented
 //│ ║  l.38: 	class ErrC1 extends Showable
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Declared here:
+//│ ║  l.5: 	    fun toString: string
+//│ ╙──     	        ^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in definition of method toString:
 //│ ║  l.40: 	    fun toString = 114
 //│ ║        	        ^^^^^^^^^^^^^^
@@ -55,7 +58,7 @@ class ErrC3(toString: string -> string) extends Showable
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.5: 	    fun toString: string
 //│ ║       	                  ^^^^^^
-//│ ╟── from signature of member toString:
+//│ ╟── from signature of member `toString`:
 //│ ║  l.5: 	    fun toString: string
 //│ ╙──     	        ^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in function type:
@@ -65,14 +68,16 @@ class ErrC3(toString: string -> string) extends Showable
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.5: 	    fun toString: string
 //│ ║       	                  ^^^^^^
-//│ ╟── from signature of member toString:
+//│ ╟── from signature of member `toString`:
 //│ ║  l.5: 	    fun toString: string
 //│ ╙──     	        ^^^^^^^^^^^^^^^^
-//│ class ErrC1
-//│ class ErrC2 {
+//│ class ErrC1 extends Showable {
+//│   fun toString: string
+//│ }
+//│ class ErrC2 extends Showable {
 //│   fun toString: 114
 //│ }
-//│ class ErrC3(toString: string -> string)
+//│ class ErrC3(toString: string -> string) extends Showable
 
 trait Stadt {
     let name: string
@@ -85,7 +90,7 @@ trait RefinedStadt extends Stadt {
     let size: int
     fun foo: bool -> int
 }
-//│ trait RefinedStadt {
+//│ trait RefinedStadt extends Stadt {
 //│   fun foo: bool -> int
 //│   let name: string
 //│   let size: int
@@ -95,7 +100,7 @@ trait SizedStadt extends RefinedStadt {
     let size: 1 | 2 | 3
     fun bar: int -> int
 }
-//│ trait SizedStadt {
+//│ trait SizedStadt extends RefinedStadt, Stadt {
 //│   fun bar: int -> int
 //│   fun foo: bool -> int
 //│   let name: string
@@ -107,7 +112,7 @@ class Goodstatt(size: 1 | 2) extends RefinedStadt {
     fun bar(x) = x
     fun foo(t) = if t && true then this.size else 0
 }
-//│ class Goodstatt(size: 1 | 2) {
+//│ class Goodstatt(size: 1 | 2) extends RefinedStadt, Stadt {
 //│   fun bar: 'a -> 'a
 //│   fun foo: bool -> (0 | 1 | 2)
 //│   let name: "good"
@@ -117,47 +122,58 @@ class Goodstatt(size: 1 | 2) extends RefinedStadt {
 class Errcity(size: int) extends SizedStadt {
     fun bar = "hahaha"
 }
-//│ ╔══[ERROR] Member name is declared in parent trait but not implemented
-//│ ║  l.117: 	class Errcity(size: int) extends SizedStadt {
+//│ ╔══[ERROR] Member `name` is declared in parent but not implemented
+//│ ║  l.122: 	class Errcity(size: int) extends SizedStadt {
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.118: 	    fun bar = "hahaha"
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Member foo is declared in parent trait but not implemented
-//│ ║  l.117: 	class Errcity(size: int) extends SizedStadt {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.118: 	    fun bar = "hahaha"
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.123: 	    fun bar = "hahaha"
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Declared here:
+//│ ║  l.83: 	    let name: string
+//│ ╙──      	        ^^^^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in type reference:
-//│ ║  l.117: 	class Errcity(size: int) extends SizedStadt {
+//│ ║  l.122: 	class Errcity(size: int) extends SizedStadt {
 //│ ║         	                    ^^^
 //│ ╟── type `int` does not match type `1 | 2 | 3`
 //│ ╟── Note: constraint arises from union type:
-//│ ║  l.95: 	    let size: 1 | 2 | 3
-//│ ╙──      	              ^^^^^^^^^
+//│ ║  l.100: 	    let size: 1 | 2 | 3
+//│ ║         	              ^^^^^^^^^
+//│ ╟── from signature of member `size`:
+//│ ║  l.100: 	    let size: 1 | 2 | 3
+//│ ╙──       	        ^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Member `foo` is declared in parent but not implemented
+//│ ║  l.122: 	class Errcity(size: int) extends SizedStadt {
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.123: 	    fun bar = "hahaha"
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Declared here:
+//│ ║  l.91: 	    fun foo: bool -> int
+//│ ╙──      	        ^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in definition of method bar:
-//│ ║  l.118: 	    fun bar = "hahaha"
+//│ ║  l.123: 	    fun bar = "hahaha"
 //│ ║         	        ^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"hahaha"` is not a function
-//│ ║  l.118: 	    fun bar = "hahaha"
+//│ ║  l.123: 	    fun bar = "hahaha"
 //│ ║         	              ^^^^^^^^
 //│ ╟── but it flows into definition of method bar with expected type `int -> int`
-//│ ║  l.118: 	    fun bar = "hahaha"
+//│ ║  l.123: 	    fun bar = "hahaha"
 //│ ║         	        ^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from function type:
-//│ ║  l.96: 	    fun bar: int -> int
-//│ ║        	             ^^^^^^^^^^
-//│ ╟── from signature of member bar:
-//│ ║  l.96: 	    fun bar: int -> int
-//│ ╙──      	        ^^^^^^^^^^^^^^^
-//│ class Errcity(size: int) {
+//│ ║  l.101: 	    fun bar: int -> int
+//│ ║         	             ^^^^^^^^^^
+//│ ╟── from signature of member `bar`:
+//│ ║  l.101: 	    fun bar: int -> int
+//│ ╙──       	        ^^^^^^^^^^^^^^^
+//│ class Errcity(size: int) extends RefinedStadt, SizedStadt, Stadt {
 //│   fun bar: "hahaha"
+//│   fun foo: bool -> int
+//│   let name: string
 //│ }
 
 module Omg extends Stadt {
     fun name = "omg!!!"
     fun cool(x) = x + x
 }
-//│ module Omg {
+//│ module Omg extends Stadt {
 //│   fun cool: int -> int
 //│   fun name: "omg!!!"
 //│ }
@@ -181,7 +197,7 @@ mixin Fooo {
 //│ }
 
 class Grassberg(name: "grass" | "GRASS") extends More, SizedStadt, Fooo
-//│ class Grassberg(name: "GRASS" | "grass") {
+//│ class Grassberg(name: "GRASS" | "grass") extends RefinedStadt, SizedStadt, Stadt {
 //│   fun bar: forall 'a. 'a -> 'a
 //│   fun foo: anything -> 0
 //│   fun more: number -> bool
@@ -194,18 +210,21 @@ class Dirtberg extends More, SizedStadt, Fooo {
     fun size = 4    // this should not check
 }
 //│ ╔══[ERROR] Type mismatch in definition of method size:
-//│ ║  l.194: 	    fun size = 4    // this should not check
+//│ ║  l.210: 	    fun size = 4    // this should not check
 //│ ║         	        ^^^^^^^^
 //│ ╟── integer literal of type `4` does not match type `1 | 2 | 3`
-//│ ║  l.194: 	    fun size = 4    // this should not check
+//│ ║  l.210: 	    fun size = 4    // this should not check
 //│ ║         	               ^
 //│ ╟── but it flows into definition of method size with expected type `1 | 2 | 3`
-//│ ║  l.194: 	    fun size = 4    // this should not check
+//│ ║  l.210: 	    fun size = 4    // this should not check
 //│ ║         	        ^^^^^^^^
 //│ ╟── Note: constraint arises from union type:
-//│ ║  l.95: 	    let size: 1 | 2 | 3
-//│ ╙──      	              ^^^^^^^^^
-//│ class Dirtberg {
+//│ ║  l.100: 	    let size: 1 | 2 | 3
+//│ ║         	              ^^^^^^^^^
+//│ ╟── from signature of member `size`:
+//│ ║  l.100: 	    let size: 1 | 2 | 3
+//│ ╙──       	        ^^^^^^^^^^^^^^^
+//│ class Dirtberg extends RefinedStadt, SizedStadt, Stadt {
 //│   fun bar: forall 'a. 'a -> 'a
 //│   fun foo: anything -> 0
 //│   fun more: number -> bool
@@ -214,7 +233,7 @@ class Dirtberg extends More, SizedStadt, Fooo {
 //│ }
 
 class Iceburg(name: string) extends RefinedStadt, More, Fooo
-//│ class Iceburg(name: string) {
+//│ class Iceburg(name: string) extends RefinedStadt, Stadt {
 //│   fun bar: forall 'a. 'a -> 'a
 //│   fun foo: anything -> 0
 //│   fun more: number -> bool
@@ -229,21 +248,21 @@ class A { fun x: int = 1 }
 :e
 class B extends A { fun x = "A" }
 //│ ╔══[ERROR] Type mismatch in definition of method x:
-//│ ║  l.230: 	class B extends A { fun x = "A" }
+//│ ║  l.249: 	class B extends A { fun x = "A" }
 //│ ║         	                        ^^^^^^^
 //│ ╟── string literal of type `"A"` is not an instance of type `int`
-//│ ║  l.230: 	class B extends A { fun x = "A" }
+//│ ║  l.249: 	class B extends A { fun x = "A" }
 //│ ║         	                            ^^^
 //│ ╟── but it flows into definition of method x with expected type `int`
-//│ ║  l.230: 	class B extends A { fun x = "A" }
+//│ ║  l.249: 	class B extends A { fun x = "A" }
 //│ ║         	                        ^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.224: 	class A { fun x: int = 1 }
+//│ ║  l.243: 	class A { fun x: int = 1 }
 //│ ║         	                 ^^^
 //│ ╟── from definition of method x:
-//│ ║  l.224: 	class A { fun x: int = 1 }
+//│ ║  l.243: 	class A { fun x: int = 1 }
 //│ ╙──       	              ^^^^^^^^^^
-//│ class B {
+//│ class B extends A {
 //│   fun x: "A"
 //│ }
 
@@ -253,7 +272,7 @@ class C1[A] { fun a: A = a }
 //│ }
 
 class C2 extends C1[int] { fun a = 1 }
-//│ class C2 {
+//│ class C2 extends C1 {
 //│   fun a: 1
 //│ }
 
@@ -270,28 +289,28 @@ trait MyTrait[A] { fun a: A }
 // :d
 // :ds
 class C extends MyTrait[int] { fun a = 1 }
-//│ class C {
+//│ class C extends MyTrait {
 //│   fun a: 1
 //│ }
 
 :e
 class C extends MyTrait[int] { fun a = false }
 //│ ╔══[ERROR] Type mismatch in definition of method a:
-//│ ║  l.278: 	class C extends MyTrait[int] { fun a = false }
+//│ ║  l.297: 	class C extends MyTrait[int] { fun a = false }
 //│ ║         	                                   ^^^^^^^^^
 //│ ╟── reference of type `false` is not an instance of type `int`
-//│ ║  l.278: 	class C extends MyTrait[int] { fun a = false }
+//│ ║  l.297: 	class C extends MyTrait[int] { fun a = false }
 //│ ║         	                                       ^^^^^
 //│ ╟── but it flows into definition of method a with expected type `int`
-//│ ║  l.278: 	class C extends MyTrait[int] { fun a = false }
+//│ ║  l.297: 	class C extends MyTrait[int] { fun a = false }
 //│ ║         	                                   ^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.278: 	class C extends MyTrait[int] { fun a = false }
+//│ ║  l.297: 	class C extends MyTrait[int] { fun a = false }
 //│ ║         	                        ^^^
-//│ ╟── from signature of member a:
-//│ ║  l.264: 	trait MyTrait[A] { fun a: A }
+//│ ╟── from signature of member `a`:
+//│ ║  l.283: 	trait MyTrait[A] { fun a: A }
 //│ ╙──       	                       ^^^^
-//│ class C {
+//│ class C extends MyTrait {
 //│   fun a: false
 //│ }
 
@@ -316,13 +335,13 @@ trait T2 {
 trait T4 extends T1, T2 {
     fun foo: 2
 }
-//│ trait T4 {
+//│ trait T4 extends T1, T2 {
 //│   fun bar: bool
 //│   fun foo: 2
 //│ }
 
 class C1(foo: 2, bar: true) extends T4
-//│ class C1(foo: 2, bar: true)
+//│ class C1(foo: 2, bar: true) extends T1, T2, T4
 
 :e
 class C3 extends T4{
@@ -330,21 +349,21 @@ class C3 extends T4{
     fun bar = false
 }
 //│ ╔══[ERROR] Type mismatch in definition of method foo:
-//│ ║  l.329: 	    fun foo = 3
+//│ ║  l.348: 	    fun foo = 3
 //│ ║         	        ^^^^^^^
 //│ ╟── integer literal of type `3` does not match type `2`
-//│ ║  l.329: 	    fun foo = 3
+//│ ║  l.348: 	    fun foo = 3
 //│ ║         	              ^
 //│ ╟── but it flows into definition of method foo with expected type `2`
-//│ ║  l.329: 	    fun foo = 3
+//│ ║  l.348: 	    fun foo = 3
 //│ ║         	        ^^^^^^^
 //│ ╟── Note: constraint arises from literal type:
-//│ ║  l.317: 	    fun foo: 2
+//│ ║  l.336: 	    fun foo: 2
 //│ ║         	             ^
-//│ ╟── from signature of member foo:
-//│ ║  l.317: 	    fun foo: 2
+//│ ╟── from signature of member `foo`:
+//│ ║  l.336: 	    fun foo: 2
 //│ ╙──       	        ^^^^^^
-//│ class C3 {
+//│ class C3 extends T1, T2, T4 {
 //│   fun bar: false
 //│   fun foo: 3
 //│ }
@@ -352,39 +371,47 @@ class C3 extends T4{
 :e
 class C2(foo: int, bar: string) extends T4
 //│ ╔══[ERROR] Type mismatch in type reference:
-//│ ║  l.353: 	class C2(foo: int, bar: string) extends T4
+//│ ║  l.372: 	class C2(foo: int, bar: string) extends T4
 //│ ║         	              ^^^
 //│ ╟── type `int` does not match type `2`
 //│ ╟── Note: constraint arises from literal type:
-//│ ║  l.317: 	    fun foo: 2
+//│ ║  l.336: 	    fun foo: 2
 //│ ║         	             ^
-//│ ╟── from signature of member foo:
-//│ ║  l.317: 	    fun foo: 2
+//│ ╟── from signature of member `foo`:
+//│ ║  l.336: 	    fun foo: 2
 //│ ╙──       	        ^^^^^^
 //│ ╔══[ERROR] Type mismatch in type reference:
-//│ ║  l.353: 	class C2(foo: int, bar: string) extends T4
+//│ ║  l.372: 	class C2(foo: int, bar: string) extends T4
 //│ ║         	                        ^^^^^^
 //│ ╟── type `string` does not match type `bool | int`
 //│ ╟── Note: constraint arises from union type:
-//│ ║  l.305: 	    let bar : int | bool
-//│ ╙──       	              ^^^^^^^^^^
-//│ class C2(foo: int, bar: string)
+//│ ║  l.324: 	    let bar : int | bool
+//│ ║         	              ^^^^^^^^^^
+//│ ╟── from signature of member `bar`:
+//│ ║  l.324: 	    let bar : int | bool
+//│ ╙──       	        ^^^^^^^^^^^^^^^^
+//│ class C2(foo: int, bar: string) extends T1, T2, T4
 
 :e
 trait T5 extends T4 {
     let foo: 4
 }
-//│ ╔══[ERROR] Type mismatch in literal type:
-//│ ║  l.375: 	    let foo: 4
-//│ ║         	             ^
+//│ ╔══[ERROR] Type mismatch in signature of member `foo`:
+//│ ║  l.397: 	    let foo: 4
+//│ ║         	        ^^^^^^
 //│ ╟── type `4` does not match type `2`
-//│ ╟── Note: constraint arises from literal type:
-//│ ║  l.317: 	    fun foo: 2
+//│ ║  l.397: 	    let foo: 4
 //│ ║         	             ^
-//│ ╟── from signature of member foo:
-//│ ║  l.317: 	    fun foo: 2
+//│ ╟── but it flows into signature of member `foo` with expected type `2`
+//│ ║  l.397: 	    let foo: 4
+//│ ║         	        ^^^^^^
+//│ ╟── Note: constraint arises from literal type:
+//│ ║  l.336: 	    fun foo: 2
+//│ ║         	             ^
+//│ ╟── from signature of member `foo`:
+//│ ║  l.336: 	    fun foo: 2
 //│ ╙──       	        ^^^^^^
-//│ trait T5 {
+//│ trait T5 extends T1, T2, T4 {
 //│   fun bar: bool
 //│   let foo: 4
 //│ }
@@ -393,21 +420,37 @@ trait T5 extends T4 {
 trait T3 extends T1, T2 {
     let foo: true
 }
-//│ ╔══[ERROR] Type mismatch in type reference:
-//│ ║  l.394: 	    let foo: true
-//│ ║         	             ^^^^
+//│ ╔══[ERROR] Type mismatch in signature of member `foo`:
+//│ ║  l.421: 	    let foo: true
+//│ ║         	        ^^^^^^^^^
 //│ ╟── type `true` does not match type `1 | 2 | 3`
-//│ ╟── Note: constraint arises from union type:
-//│ ║  l.300: 	    let foo : 1 | 2 | 3 
-//│ ╙──       	              ^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type reference:
-//│ ║  l.394: 	    let foo: true
+//│ ║  l.421: 	    let foo: true
 //│ ║         	             ^^^^
-//│ ╟── type `true` does not match type `2 | 3 | 4`
+//│ ╟── but it flows into signature of member `foo` with expected type `1 | 2 | 3`
+//│ ║  l.421: 	    let foo: true
+//│ ║         	        ^^^^^^^^^
 //│ ╟── Note: constraint arises from union type:
-//│ ║  l.304: 	    let foo : 2 | 3 | 4
-//│ ╙──       	              ^^^^^^^^^
-//│ trait T3 {
+//│ ║  l.319: 	    let foo : 1 | 2 | 3 
+//│ ║         	              ^^^^^^^^^
+//│ ╟── from signature of member `foo`:
+//│ ║  l.319: 	    let foo : 1 | 2 | 3 
+//│ ╙──       	        ^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in signature of member `foo`:
+//│ ║  l.421: 	    let foo: true
+//│ ║         	        ^^^^^^^^^
+//│ ╟── type `true` does not match type `2 | 3 | 4`
+//│ ║  l.421: 	    let foo: true
+//│ ║         	             ^^^^
+//│ ╟── but it flows into signature of member `foo` with expected type `2 | 3 | 4`
+//│ ║  l.421: 	    let foo: true
+//│ ║         	        ^^^^^^^^^
+//│ ╟── Note: constraint arises from union type:
+//│ ║  l.323: 	    let foo : 2 | 3 | 4
+//│ ║         	              ^^^^^^^^^
+//│ ╟── from signature of member `foo`:
+//│ ║  l.323: 	    let foo : 2 | 3 | 4
+//│ ╙──       	        ^^^^^^^^^^^^^^^
+//│ trait T3 extends T1, T2 {
 //│   fun bar: bool
 //│   let foo: true
 //│ }

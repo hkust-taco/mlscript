@@ -800,7 +800,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           case VarSymbol(ty, _) => ty
           case ti: CompletedTypeInfo =>
             ti.member match {
-              case ti: TypedNuTermDef =>
+              case ti: TypedNuFun =>
+                ti.typeSignature
+              case ti: TypedNuCls =>
+                if (ti.decl.isAbstract)
+                  err(msg"Class ${ti.nme} is abstract and cannot be instantiated", term.toLoc)
                 ti.typeSignature
               case ti: TypedNuDecl =>
                 err(msg"${ti.kind.str} ${ti.name} cannot be used in term position", prov.loco)
@@ -1350,7 +1354,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             Opt.when(td.params.isDefined)(Tup(params.map(p => N -> Fld(false, false, Asc(p._1, go(p._2.ub)))))),
             td.ctor,
             Option.when(!(TopType <:< sign))(go(sign)),
-            Nil,//TODO
+            ihtags.toList.sorted.map(_.toVar), // TODO provide targs/args
             N,//TODO
             Option.when(!(TopType <:< thisTy))(go(thisTy)),
             mkTypingUnit(thisTy, members))(td.declareLoc, td.abstractLoc)
@@ -1361,7 +1365,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             N,
             td.ctor,
             Option.when(!(TopType <:< sign))(go(sign)),
-            Nil,//TODO
+            ihtags.toList.sorted.map(_.toVar), // TODO provide targs/args
             N,//TODO
             Option.when(!(TopType <:< thisTy))(go(thisTy)),
             mkTypingUnit(thisTy, members))(td.declareLoc, td.abstractLoc)
@@ -1380,7 +1384,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         // else Constrained(res, bounds, Nil)
         res
       case OtherTypeLike(tu) =>
-        val mems = tu.entities.map(goDecl)
+        val mems = tu.implementedMembers.map(goDecl)
         Signature(mems, tu.result.map(go))
     }
     

@@ -59,7 +59,7 @@ class C1(a: int) extends P(a) { fun bar = this.foo(0) }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
 //│ ║  l.58: 	class C1(a: int) extends P(a) { fun bar = this.foo(0) }
 //│ ╙──      	                                              ^^^^
-//│ class C1(a: int) {
+//│ class C1(a: int) extends P {
 //│   fun bar: error
 //│   fun foo: int -> int
 //│ }
@@ -71,7 +71,7 @@ class C2(a: int, b: int) extends P(a + b) {
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
 //│ ║  l.69: 	    fun foo(x) = x * this.p + a * b
 //│ ╙──      	                         ^^
-//│ class C2(a: int, b: int) {
+//│ class C2(a: int, b: int) extends P {
 //│   fun foo: int -> int
 //│ }
 
@@ -95,7 +95,7 @@ class Test[A](x: A)
 //│ class Test[A](x: A)
 
 class A(a: int) extends Test(a)
-//│ class A(a: int)
+//│ class A(a: int) extends Test
 
 let a1 = A(1)
 //│ let a1: A
@@ -114,7 +114,9 @@ a1.x
 //│ res
 //│     = 1
 
-:NoJS
+
+:NoJS // TODO
+
 trait Foo[A] {
     fun foo[A](x: A): A
 }
@@ -122,29 +124,28 @@ trait Foo[A] {
 //│   fun foo: forall 'A. (x: 'A,) -> 'A
 //│ }
 
-// FIXME
+:e
 class B extends Foo {
     fun foo(x) = x + 1
 }
-//│ ╔══[ERROR] Type error in definition of method foo
-//│ ║  l.127: 	    fun foo(x) = x + 1
+//│ ╔══[ERROR] Type mismatch in definition of method foo:
+//│ ║  l.129: 	    fun foo(x) = x + 1
 //│ ║         	        ^^^^^^^^^^^^^^
-//│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.119: 	    fun foo[A](x: A): A
+//│ ╟── type `A` is not an instance of type `int`
+//│ ║  l.121: 	    fun foo[A](x: A): A
 //│ ║         	            ^
-//│ ╟── into reference of type `int`
-//│ ║  l.127: 	    fun foo(x) = x + 1
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.129: 	    fun foo(x) = x + 1
 //│ ╙──       	                 ^
-//│ ╔══[ERROR] Type error in definition of method foo
-//│ ║  l.127: 	    fun foo(x) = x + 1
+//│ ╔══[ERROR] Type mismatch in definition of method foo:
+//│ ║  l.129: 	    fun foo(x) = x + 1
 //│ ║         	        ^^^^^^^^^^^^^^
-//│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.127: 	    fun foo(x) = x + 1
+//│ ╟── operator application of type `int` does not match type `A`
+//│ ║  l.129: 	    fun foo(x) = x + 1
 //│ ║         	                 ^^^^^
-//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
-//│ ╟── • this operator application:
-//│ ║  l.127: 	    fun foo(x) = x + 1
-//│ ╙──       	                 ^^^^^
-//│ class B {
+//│ ╟── Note: constraint arises from method type parameter:
+//│ ║  l.121: 	    fun foo[A](x: A): A
+//│ ╙──       	            ^
+//│ class B extends Foo {
 //│   fun foo: int -> int
 //│ }

@@ -458,7 +458,7 @@ class Foo(x: int)
 
 
 class Bar(x: int, y: int) extends Foo(x + y)
-//│ class Bar(x: int, y: int)
+//│ class Bar(x: int, y: int) extends Foo
 
 
 mixin AA(a: int) {

@@ -145,7 +145,7 @@ module D extends C(0) {
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
 //│ ║  l.143: 	  this.foo(false)
 //│ ╙──       	      ^^^^
-//│ module D {
+//│ module D extends C {
 //│   fun bar: forall 'A. ('A | int, 'A | int,)
 //│   fun baz: int
 //│   fun foo: forall 'A. 'A -> ('A | int)

@@ -4,22 +4,31 @@
 class A
 //│ class A
 
-// TODO
 class B(m: int) extends A
-//│ class B(m: int)
+//│ class B(m: int) extends A
 
 
 class A(n: int)
 //│ class A(n: int)
 
-// TODO
-class B(m: int) extends A(n + 1)
-//│ ╔══[ERROR] identifier not found: n
-//│ ║  l.16: 	class B(m: int) extends A(n + 1)
-//│ ╙──      	                          ^
-//│ class B(m: int)
-//│ Code generation encountered an error:
-//│   unresolved symbol n
+class B(m: int) extends A(m + 1)
+//│ class B(m: int) extends A
 
+
+class A {
+  fun a1: int
+  fun a1 = 1
+  fun a2 = 2
+}
+//│ class A {
+//│   fun a1: int
+//│   fun a2: 2
+//│ }
+
+class B extends A
+//│ class B extends A {
+//│   fun a1: int
+//│   fun a2: 2
+//│ }
 
 

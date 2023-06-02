@@ -25,7 +25,7 @@ class C(a: int) extends B
 //│ ╟── Note: constraint arises from string literal:
 //│ ║  l.14: 	class B { let a = "hi" }
 //│ ╙──      	                  ^^^^
-//│ class C(a: int)
+//│ class C(a: int) extends B
 
 
 mixin M { let b = "hi" }
@@ -39,7 +39,7 @@ class B { let a = 1 : int }
 //│ }
 
 class C(a: int, b: int) extends B, M
-//│ class C(a: int, b: int) {
+//│ class C(a: int, b: int) extends B {
 //│   let b: "hi"
 //│ }
 
@@ -68,7 +68,7 @@ class C(a: int) { fun a = a }
 //│ }
 
 class C(a: int, b: int) extends B, M { let b = "hi" }
-//│ class C(a: int, b: int) {
+//│ class C(a: int, b: int) extends B {
 //│   let b: "hi"
 //│ }
 

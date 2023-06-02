@@ -51,10 +51,10 @@ class Pair(lhs: Exp, rhs: Exp) extends Exp
 //│ class Exp: Lit | Pair {
 //│   fun test: 0 | 1
 //│ }
-//│ class Lit(n: int) {
+//│ class Lit(n: int) extends Exp {
 //│   fun test: 0 | 1
 //│ }
-//│ class Pair(lhs: Exp, rhs: Exp) {
+//│ class Pair(lhs: Exp, rhs: Exp) extends Exp {
 //│   fun test: 0 | 1
 //│ }
 
@@ -69,10 +69,10 @@ class Pair(lhs: Exp, rhs: Exp) extends Exp
 //│ class Exp: Lit | Pair {
 //│   fun test: 0 | 1
 //│ }
-//│ class Lit(n: int) {
+//│ class Lit(n: int) extends Exp {
 //│   fun test: 0 | 1
 //│ }
-//│ class Pair(lhs: Exp, rhs: Exp) {
+//│ class Pair(lhs: Exp, rhs: Exp) extends Exp {
 //│   fun test: 0 | 1
 //│ }
 
@@ -99,10 +99,10 @@ class Pair(lhs: Exp, rhs: Exp) extends Exp
 //│ class Exp: Lit | Pair {
 //│   fun test: int
 //│ }
-//│ class Lit(n: int) {
+//│ class Lit(n: int) extends Exp {
 //│   fun test: int
 //│ }
-//│ class Pair(lhs: Exp, rhs: Exp) {
+//│ class Pair(lhs: Exp, rhs: Exp) extends Exp {
 //│   fun test: int
 //│ }
 
@@ -118,10 +118,10 @@ class Pair(lhs: Exp, rhs: Exp) extends Exp
 //│ class Exp: Lit | Pair {
 //│   fun test: int
 //│ }
-//│ class Lit(n: int) {
+//│ class Lit(n: int) extends Exp {
 //│   fun test: int
 //│ }
-//│ class Pair(lhs: Exp, rhs: Exp) {
+//│ class Pair(lhs: Exp, rhs: Exp) extends Exp {
 //│   fun test: int
 //│ }
 
@@ -156,10 +156,10 @@ class Pair[L, R](lhs: L, rhs: R) extends Exp[(L, R)]
 //│ class Exp[A]: Lit | Pair[anything, anything] {
 //│   fun test: 0 | 1
 //│ }
-//│ class Lit(n: int) {
+//│ class Lit(n: int) extends Exp {
 //│   fun test: 0 | 1
 //│ }
-//│ class Pair[L, R](lhs: L, rhs: R)
+//│ class Pair[L, R](lhs: L, rhs: R) extends Exp
 
 Lit(0).test
 //│ 0 | 1

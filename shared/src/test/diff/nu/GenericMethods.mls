@@ -102,10 +102,10 @@ module Test {
   fun bar: 'A
   fun test<A>(x: A) = x
 }
-//│ ╔══[ERROR] Member foo is declared but not defined
+//│ ╔══[ERROR] Member `foo` is declared but not defined
 //│ ║  l.101: 	  fun foo: 'A => 'A
 //│ ╙──       	      ^^^
-//│ ╔══[ERROR] Member bar is declared but not defined
+//│ ╔══[ERROR] Member `bar` is declared but not defined
 //│ ║  l.102: 	  fun bar: 'A
 //│ ╙──       	      ^^^
 //│ module Test {

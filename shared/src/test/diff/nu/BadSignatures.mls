@@ -1,0 +1,100 @@
+:NewDefs
+
+
+:e
+trait T {
+  fun x : int
+  fun x = false
+}
+//│ ╔══[ERROR] Method implementations in traits are not yet supported
+//│ ║  l.7: 	  fun x = false
+//│ ╙──     	      ^^^^^^^^^
+//│ trait T {
+//│   fun x: int
+//│ }
+//│ Code generation encountered an error:
+//│   traits are not supported yet.
+
+
+class A { fun x = 1 }
+//│ class A {
+//│   fun x: 1
+//│ }
+
+:e
+class B() extends A {
+  fun x: int
+}
+//│ ╔══[ERROR] Type mismatch in definition:
+//│ ║  l.26: 	  fun x: int
+//│ ║        	      ^^^^^^
+//│ ╟── type `int` does not match type `1`
+//│ ║  l.26: 	  fun x: int
+//│ ║        	         ^^^
+//│ ╟── but it flows into signature of member `x` with expected type `1`
+//│ ║  l.26: 	  fun x: int
+//│ ║        	      ^^^^^^
+//│ ╟── Note: constraint arises from integer literal:
+//│ ║  l.19: 	class A { fun x = 1 }
+//│ ║        	                  ^
+//│ ╟── from definition of method x:
+//│ ║  l.19: 	class A { fun x = 1 }
+//│ ╙──      	              ^^^^^
+//│ class B() extends A {
+//│   fun x: int
+//│ }
+
+B().x
+//│ int
+//│ res
+//│     = 1
+
+(B() : A).x
+//│ 1
+//│ res
+//│     = 1
+
+class C() extends B { fun x = 0 }
+//│ class C() extends A, B {
+//│   fun x: 0
+//│ }
+
+(C() : A).x
+//│ 1
+//│ res
+//│     = 0
+
+:e
+class B() extends A {
+  fun x: int
+  fun x = 1
+}
+//│ ╔══[ERROR] Type mismatch in definition:
+//│ ║  l.69: 	  fun x: int
+//│ ║        	      ^^^^^^
+//│ ╟── type `int` does not match type `1`
+//│ ║  l.69: 	  fun x: int
+//│ ║        	         ^^^
+//│ ╟── but it flows into signature of member `x` with expected type `1`
+//│ ║  l.69: 	  fun x: int
+//│ ║        	      ^^^^^^
+//│ ╟── Note: constraint arises from integer literal:
+//│ ║  l.19: 	class A { fun x = 1 }
+//│ ║        	                  ^
+//│ ╟── from definition of method x:
+//│ ║  l.19: 	class A { fun x = 1 }
+//│ ╙──      	              ^^^^^
+//│ class B() extends A {
+//│   fun x: int
+//│ }
+
+
+:e
+mixin M { fun x : int }
+//│ ╔══[ERROR] Member `x` is declared but not defined
+//│ ║  l.93: 	mixin M { fun x : int }
+//│ ╙──      	              ^
+//│ mixin M() {
+//│   fun x: int
+//│ }
+

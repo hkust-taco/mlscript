@@ -1,0 +1,153 @@
+:NewDefs
+
+:NoJS // TODO
+
+
+abstract class Foo(x: int) {
+  fun f(y: int) = x + y
+}
+//│ abstract class Foo(x: int) {
+//│   fun f: (y: int,) -> int
+//│ }
+
+:e
+Foo(1)
+//│ ╔══[ERROR] Class Foo is abstract and cannot be instantiated
+//│ ║  l.14: 	Foo(1)
+//│ ╙──      	^^^
+//│ Foo
+
+:e // TODO allow with `new` keyword
+new Foo(1)
+//│ ╔══[ERROR] Class Foo is abstract and cannot be instantiated
+//│ ║  l.21: 	new Foo(1)
+//│ ╙──      	    ^^^^^^
+//│ Foo
+
+
+abstract class Foo(x: int) {
+  fun f: int -> int
+}
+//│ abstract class Foo(x: int) {
+//│   fun f: int -> int
+//│ }
+
+:e
+Foo(1)
+//│ ╔══[ERROR] Class Foo is abstract and cannot be instantiated
+//│ ║  l.36: 	Foo(1)
+//│ ╙──      	^^^
+//│ Foo
+
+:e // TODO support
+new Foo(1) { fun f = id }
+//│ ╔══[ERROR] Currently unsupported `new` syntax
+//│ ║  l.43: 	new Foo(1) { fun f = id }
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ error
+
+
+abstract class Bar extends Foo(1)
+//│ abstract class Bar extends Foo {
+//│   fun f: int -> int
+//│ }
+
+:e
+module Baz extends Bar
+Baz.f(1)
+//│ ╔══[ERROR] Member `f` is declared in parent but not implemented
+//│ ║  l.56: 	module Baz extends Bar
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Declared here:
+//│ ║  l.29: 	  fun f: int -> int
+//│ ╙──      	      ^^^^^^^^^^^^^
+//│ module Baz extends Bar, Foo {
+//│   fun f: int -> int
+//│ }
+//│ int
+
+module Baz extends Bar {
+  fun f(x) = x + 1
+}
+Baz.f(1)
+//│ module Baz extends Bar, Foo {
+//│   fun f: int -> int
+//│ }
+//│ int
+
+
+
+abstract class C1 { fun x: int | string }
+//│ abstract class C1 {
+//│   fun x: int | string
+//│ }
+
+trait T1 { fun x: int | bool }
+//│ trait T1 {
+//│   fun x: bool | int
+//│ }
+
+:e
+class C2 extends C1, T1
+//│ ╔══[ERROR] Member `x` is declared in parent but not implemented
+//│ ║  l.91: 	class C2 extends C1, T1
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Declared here:
+//│ ║  l.80: 	abstract class C1 { fun x: int | string }
+//│ ╙──      	                        ^^^^^^^^^^^^^^^
+//│ class C2 extends C1, T1 {
+//│   fun x: int
+//│ }
+
+class C2 extends C1, T1 { fun x = 1 }
+//│ class C2 extends C1, T1 {
+//│   fun x: 1
+//│ }
+
+abstract class C2 extends C1, T1
+//│ abstract class C2 extends C1, T1 {
+//│   fun x: int
+//│ }
+
+:e
+class C3 extends C2
+//│ ╔══[ERROR] Member `x` is declared in parent but not implemented
+//│ ║  l.113: 	class C3 extends C2
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ╟── Declared here:
+//│ ║  l.80: 	abstract class C1 { fun x: int | string }
+//│ ╙──      	                        ^^^^^^^^^^^^^^^
+//│ class C3 extends C1, C2, T1 {
+//│   fun x: int
+//│ }
+
+class C3 extends C2 { fun x = 1 }
+//│ class C3 extends C1, C2, T1 {
+//│   fun x: 1
+//│ }
+
+
+
+abstract class C {
+  fun x : int
+  fun foo0 = x
+  fun foo1 = this.x
+}
+//│ abstract class C {
+//│   fun foo0: int
+//│   fun foo1: int
+//│   fun x: int
+//│ }
+
+class C {
+  val x : int
+  fun foo0 = x
+  fun foo1 = this.x
+}
+//│ class C {
+//│   fun foo0: int
+//│   fun foo1: int
+//│   let x: int
+//│ }
+
+

@@ -165,9 +165,9 @@ class H extends B {}
 //│ ╔══[ERROR] class C expects 0 parameter(s); got 1
 //│ ║  l.160: 	class G extends C(2) {}
 //│ ╙──       	                ^^^
-//│ class F(x: int)
-//│ class G
-//│ class H
+//│ class F(x: int) extends C
+//│ class G extends C
+//│ class H extends B
 //│ // Prelude
 //│ class TypingUnit7 {
 //│   #F;
@@ -265,7 +265,7 @@ module I {
 //│ module I {
 //│   class J
 //│   module K {
-//│     class L
+//│     class L extends J
 //│   }
 //│ }
 //│ // Prelude
@@ -437,10 +437,10 @@ module O {
 mixin P {
   constructor(x: int)
 }
-//│ ╔══[ERROR] Explicit module constructors are not supported.
+//│ ╔══[ERROR] Explicit module constructors are not supported
 //│ ║  l.435: 	  constructor(x: int)
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Explicit mixin constructors are not supported.
+//│ ╔══[ERROR] Explicit mixin constructors are not supported
 //│ ║  l.438: 	  constructor(x: int)
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^
 //│ module O
