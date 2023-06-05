@@ -26,20 +26,15 @@ fun fooo(x) =
 //│ ╙──      	             ^
 //│ fun fooo: error -> C
 
-
-
-:ge // FIXME; + re-enable JS in tests below
 fun foo = bar
 fun bar = foo
 //│ fun foo: nothing
 //│ fun bar: nothing
-//│ Code generation encountered an error:
-//│   unresolved symbol bar
-
-:NoJS // TODO
 
 foo(bar)
 //│ nothing
+//│ res
+//│     = [Function: bar]
 
 
 fun foo = {x: foo}
@@ -59,22 +54,30 @@ foo
 //│ forall 'foo. 'foo
 //│   where
 //│     'foo :> {x: {y: 'foo}}
+//│ res
+//│     = { x: [Function: bar1] }
 
 :ns
 foo
 //│ forall 'foo. {x: {y: 'foo}}
 //│   where
 //│     'foo :> {x: {y: 'foo}}
+//│ res
+//│     = { x: [Function: bar1] }
 
 foo.x
 //│ 'x
 //│   where
 //│     'x :> {y: {x: 'x}}
+//│ res
+//│     = [Function: bar1]
 
 foo.x.y
 //│ 'foo
 //│   where
 //│     'foo :> {x: {y: 'foo}}
+//│ res
+//│     = undefined
 
 
 fun foo(a) = {h: a, t: bar(a)}
@@ -91,6 +94,8 @@ foo
 //│     'c :> {h: 'a, t: 'c}
 //│     'a <: 'b
 //│     'b <: 'a
+//│ res
+//│     = [Function: foo3]
 
 
 fun foo(a) = {h1: a, t1: bar(a)}
@@ -118,6 +123,8 @@ module Test0_2 {
 
 Test0_1.a
 //│ 123
+//│ res
+//│     = 123
 
 class Test0_1 {
   fun a = Test0_2().b
@@ -141,7 +148,7 @@ module Test1_2 {
   fun b = Test1_1.a
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.141: 	  fun b = Test1_1.a
+//│ ║  l.148: 	  fun b = Test1_1.a
 //│ ╙──       	                 ^^
 //│ module Test1_1 {
 //│   fun a: error
@@ -150,8 +157,12 @@ module Test1_2 {
 //│   fun b: error
 //│ }
 
+:re
 Test1_1.a
 //│ error
+//│ res
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded
 
 
 :e
@@ -162,7 +173,7 @@ class Test1_2 {
   fun b = Test1_1().a
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.162: 	  fun b = Test1_1().a
+//│ ║  l.173: 	  fun b = Test1_1().a
 //│ ╙──       	                   ^^
 //│ class Test1_1 {
 //│   fun a: error
@@ -185,7 +196,7 @@ module Test2_2 {
   fun e = Test2_1.n
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.184: 	  fun c = Test2_1.a
+//│ ║  l.195: 	  fun c = Test2_1.a
 //│ ╙──       	                 ^^
 //│ module Test2_1 {
 //│   fun a: 123 | error
@@ -201,15 +212,23 @@ module Test2_2 {
 
 Test2_1.t2.b
 //│ 123
+//│ res
+//│     = 123
 
 Test2_1.a
 //│ 123 | error
+//│ res
+//│     = 123
 
 Test2_1.d
 //│ error
+//│ res
+//│     = 456
 
 Test2_1.n
 //│ 456
+//│ res
+//│     = 456
 
 module Test2_1 {
   fun t2 = Test2_2
@@ -238,15 +257,23 @@ module Test2_2 {
 
 Test2_1.t2.b
 //│ 123
+//│ res
+//│     = 123
 
 Test2_1.a
 //│ int
+//│ res
+//│     = 123
 
 Test2_1.d
 //│ int
+//│ res
+//│     = 456
 
 Test2_1.n
 //│ int
+//│ res
+//│     = 456
 
 
 class Test2(n: int) {
