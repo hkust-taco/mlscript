@@ -7,7 +7,7 @@ import mlscript.utils.shorthands._
 import scala.collection.mutable.{ListBuffer,Map => MutMap, Set => MutSet}
 import mlscript.codegen._
 import mlscript.{NewLexer, NewParser, ErrorReport, Origin, Diagnostic}
-import ts2mls.{TSModuleResolver, TSProgram}
+import ts2mls.{TSModuleResolver, TSProgram, TypeScript}
 
 class Driver(options: DriverOptions) {
   import Driver._
@@ -30,6 +30,7 @@ class Driver(options: DriverOptions) {
   }
 
   private val importedModule = MutSet[String]()
+  private val config = TypeScript.parseOption(options.path, options.tsconfig)
 
   import TSModuleResolver.normalize
 
@@ -121,6 +122,14 @@ class Driver(options: DriverOptions) {
     typer.expandType(sim)
   }
 
+  private def resolveTarget(file: FileInfo, imp: String) =
+    if ((imp.startsWith("./") || imp.startsWith("../")) && !imp.endsWith(".mls") && !imp.endsWith(".mlsi")) {
+      val tsPath = TypeScript.getOutputFileNames(s"${TSModuleResolver.dirname(file.filename)}/$imp", config)
+      val outputBase = TSModuleResolver.dirname(TSModuleResolver.normalize(s"${options.outputDir}${file.jsFilename}"))
+      TSModuleResolver.relative(outputBase, tsPath)
+    }
+    else imp
+
   private def compile(
     file: FileInfo,
     exported: Boolean
@@ -133,9 +142,9 @@ class Driver(options: DriverOptions) {
   ): Boolean = {
     val mlsiFile = normalize(s"${file.workDir}/${file.interfaceFilename}")
     if (!file.filename.endsWith(".mls") && !file.filename.endsWith(".mlsi") ) { // TypeScript
-      val tsprog = TSProgram(s"${file.workDir}/${file.localFilename}", file.workDir, true, N) // TODO
+      val tsprog = TSProgram(s"${file.workDir}/${file.localFilename}", file.workDir, true, options.tsconfig)
       tsprog.generate(s"${file.workDir}/${file.interfaceDir}")
-      return true
+      return true // TODO: check if we really need to re-compile
     }
     parseAndRun(file.filename, {
       case (definitions, _, imports, _) => {
@@ -198,11 +207,9 @@ class Driver(options: DriverOptions) {
             val interfaces = otherList.map(s => Import(FileInfo.importPath(s))).foldRight(expStr)((imp, itf) => s"$imp\n$itf")
 
             writeFile(mlsiFile, interfaces)
-            file.jsFilename match {
-              case Some(filename) =>
-                generate(Pgrm(definitions), s"${options.outputDir}/$filename", file.moduleName, imports, exported || importedModule(file.filename))
-              case _ => ()
-            }
+            generate(Pgrm(definitions), s"${options.outputDir}/${file.jsFilename}", file.moduleName, imports.map {
+              case Import(path) => Import(resolveTarget(file, path))
+            }, exported || importedModule(file.filename))
           }
           true
         }
@@ -221,7 +228,7 @@ class Driver(options: DriverOptions) {
     val backend = new JSCompilerBackend()
     val lines = backend(program, moduleName, imports, exported)
     val code = lines.mkString("", "\n", "\n")
-    writeFile(filename, code)
+    writeFile(filename, code) // TODO: diffTests
   } catch {
       case CodeGenError(err) => report(ErrorReport(err, Nil, Diagnostic.Compilation))
     }

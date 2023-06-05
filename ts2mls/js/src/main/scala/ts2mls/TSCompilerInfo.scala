@@ -36,6 +36,9 @@ object TypeScript {
     else None
   }
 
+  def getOutputFileNames(filename: String, config: js.Dynamic): String =
+    ts.getOutputFileNames(config, filename, false).toString()
+
   val typeFlagsEnumLike = ts.TypeFlags.EnumLike
   val typeFlagsObject = ts.TypeFlags.Object
   val typeFlagsTypeParameter = ts.TypeFlags.TypeParameter

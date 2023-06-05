@@ -24,8 +24,8 @@ final case class FileInfo(
   val interfaceFilename: String = // interface filename (related to output directory)
     relatedPath.fold(s"node_modules/$localFilename")(path => s"${normalize(s"$interfaceDir/$path/$moduleName.mlsi")}")
   
-  val jsFilename: Option[String] =
-    relatedPath.fold[Option[String]](None)(path => Some(normalize(s"$path/$moduleName.js")))
+  val jsFilename: String =
+    relatedPath.fold(moduleName)(path => normalize(s"$path/$moduleName.js"))
 
   val importPath: String =
     relatedPath.fold(moduleName)(path => s"./${normalize(s"$interfaceDir/$path/$moduleName.mlsi")}")
