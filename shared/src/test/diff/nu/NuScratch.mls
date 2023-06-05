@@ -1,2 +1,12 @@
 :NewDefs
 
+new Int
+//│ Int
+//│ Code generation encountered an error:
+//│   unresolved symbol Int
+
+module A extends Int
+//│ module A extends Int
+//│ Code generation encountered an error:
+//│   unresolved parent Int.
+
