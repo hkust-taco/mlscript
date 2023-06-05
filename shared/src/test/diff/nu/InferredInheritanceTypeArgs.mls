@@ -115,7 +115,6 @@ a1.x
 //│     = 1
 
 
-:NoJS // TODO
 
 
 trait Foo[A] { fun foo(x: A): A }
@@ -133,12 +132,18 @@ module B extends Foo { fun foo(x) = x }
 
 B : Foo['X]
 //│ Foo['X]
+//│ res
+//│     = B { class: [class B extends Object] }
 
 B.foo
 //│ 'a -> 'a
+//│ res
+//│     = [Function: foo]
 
 B.foo(1)
 //│ 1
+//│ res
+//│     = 1
 
 module B extends Foo { fun foo(x) = x + 1 }
 //│ module B extends Foo {
@@ -147,16 +152,20 @@ module B extends Foo { fun foo(x) = x + 1 }
 
 B : Foo['X]
 //│ Foo[int]
+//│ res
+//│     = B { class: [class B extends Object] }
 
 B.foo
 //│ int -> int
+//│ res
+//│     = [Function: foo]
 
 
 // * TODO: when 
 :pe
 trait Foo[type A] { fun foo(x: A): A }
 //│ ╔══[PARSE ERROR] Unexpected 'type' keyword here
-//│ ║  l.157: 	trait Foo[type A] { fun foo(x: A): A }
+//│ ║  l.166: 	trait Foo[type A] { fun foo(x: A): A }
 //│ ╙──       	          ^^^^
 //│ trait Foo {
 //│   fun foo: (x: A,) -> A
@@ -178,14 +187,20 @@ class Bar[B](a: B) extends Foo { fun foo(x) = x }
 
 let b = Bar(123)
 //│ let b: Bar[123]
+//│ b
+//│   = Bar {}
 
 b : Foo['X]
 //│ Foo['X]
 //│   where
 //│     'X :> 123
+//│ res
+//│     = Bar {}
 
 b.foo
 //│ 'a -> (123 | 'a)
+//│ res
+//│     = [Function: foo]
 
 
 // * Note the shadowed type variable `A` in `foo`
@@ -197,17 +212,17 @@ trait Foo[A] { fun foo[A](x: A): A }
 :e // FIXME
 class B extends Foo { fun foo(x) = x }
 //│ ╔══[ERROR] Type error in definition of method foo
-//│ ║  l.198: 	class B extends Foo { fun foo(x) = x }
+//│ ║  l.213: 	class B extends Foo { fun foo(x) = x }
 //│ ║         	                          ^^^^^^^^^^
 //│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.198: 	class B extends Foo { fun foo(x) = x }
+//│ ║  l.213: 	class B extends Foo { fun foo(x) = x }
 //│ ║         	                                   ^
 //│ ╟── back into type variable `A`
-//│ ║  l.192: 	trait Foo[A] { fun foo[A](x: A): A }
+//│ ║  l.207: 	trait Foo[A] { fun foo[A](x: A): A }
 //│ ║         	                       ^
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this reference:
-//│ ║  l.198: 	class B extends Foo { fun foo(x) = x }
+//│ ║  l.213: 	class B extends Foo { fun foo(x) = x }
 //│ ╙──       	                                   ^
 //│ class B extends Foo {
 //│   fun foo: (??A & 'a) -> (??A0 | 'a)
@@ -216,23 +231,23 @@ class B extends Foo { fun foo(x) = x }
 :e
 class B extends Foo { fun foo(x) = x + 1 }
 //│ ╔══[ERROR] Type error in definition of method foo
-//│ ║  l.217: 	class B extends Foo { fun foo(x) = x + 1 }
+//│ ║  l.232: 	class B extends Foo { fun foo(x) = x + 1 }
 //│ ║         	                          ^^^^^^^^^^^^^^
 //│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.192: 	trait Foo[A] { fun foo[A](x: A): A }
+//│ ║  l.207: 	trait Foo[A] { fun foo[A](x: A): A }
 //│ ║         	                       ^
 //│ ╟── into reference of type `int`
-//│ ║  l.217: 	class B extends Foo { fun foo(x) = x + 1 }
+//│ ║  l.232: 	class B extends Foo { fun foo(x) = x + 1 }
 //│ ╙──       	                                   ^
 //│ ╔══[ERROR] Type error in definition of method foo
-//│ ║  l.217: 	class B extends Foo { fun foo(x) = x + 1 }
+//│ ║  l.232: 	class B extends Foo { fun foo(x) = x + 1 }
 //│ ║         	                          ^^^^^^^^^^^^^^
 //│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.217: 	class B extends Foo { fun foo(x) = x + 1 }
+//│ ║  l.232: 	class B extends Foo { fun foo(x) = x + 1 }
 //│ ║         	                                   ^^^^^
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this operator application:
-//│ ║  l.217: 	class B extends Foo { fun foo(x) = x + 1 }
+//│ ║  l.232: 	class B extends Foo { fun foo(x) = x + 1 }
 //│ ╙──       	                                   ^^^^^
 //│ class B extends Foo {
 //│   fun foo: int -> int

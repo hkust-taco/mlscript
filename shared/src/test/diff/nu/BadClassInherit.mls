@@ -128,7 +128,6 @@ class Bar extends Foo, M
 //│ }
 
 
-:NoJS // TODO
 
 class A { class X { fun f = 1 } }
 trait B { class X { fun g = 1 } }
@@ -146,19 +145,19 @@ trait B { class X { fun g = 1 } }
 :e
 class C extends A, B
 //│ ╔══[ERROR] Class member `X` cannot override class member of the same name declared in parent
-//│ ║  l.147: 	class C extends A, B
+//│ ║  l.146: 	class C extends A, B
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Declared here:
-//│ ║  l.134: 	trait B { class X { fun g = 1 } }
+//│ ║  l.133: 	trait B { class X { fun g = 1 } }
 //│ ╙──       	          ^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Intersection of class member and class members currently unsupported
-//│ ║  l.147: 	class C extends A, B
+//│ ║  l.146: 	class C extends A, B
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── The class member is defined here:
-//│ ║  l.133: 	class A { class X { fun f = 1 } }
+//│ ║  l.132: 	class A { class X { fun f = 1 } }
 //│ ║         	          ^^^^^^^^^^^^^^^^^^^
 //│ ╟── The class member is defined here:
-//│ ║  l.134: 	trait B { class X { fun g = 1 } }
+//│ ║  l.133: 	trait B { class X { fun g = 1 } }
 //│ ╙──       	          ^^^^^^^^^^^^^^^^^^^
 //│ class C extends A, B {
 //│   class X {
@@ -171,12 +170,12 @@ class C extends A {
   class X { fun g = 1 }
 }
 //│ ╔══[ERROR] Class member `X` cannot override class member of the same name declared in parent
-//│ ║  l.170: 	class C extends A {
+//│ ║  l.169: 	class C extends A {
 //│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.171: 	  class X { fun g = 1 }
+//│ ║  l.170: 	  class X { fun g = 1 }
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Declared here:
-//│ ║  l.133: 	class A { class X { fun f = 1 } }
+//│ ║  l.132: 	class A { class X { fun f = 1 } }
 //│ ╙──       	          ^^^^^^^^^^^^^^^^^^^
 //│ class C extends A {
 //│   class X {

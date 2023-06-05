@@ -1,6 +1,5 @@
 :NewDefs
 
-:NoJS // TODO
 
 
 abstract class Foo(x: int) {
@@ -13,16 +12,20 @@ abstract class Foo(x: int) {
 :e
 Foo(1)
 //│ ╔══[ERROR] Class Foo is abstract and cannot be instantiated
-//│ ║  l.14: 	Foo(1)
+//│ ║  l.13: 	Foo(1)
 //│ ╙──      	^^^
 //│ Foo
+//│ res
+//│     = Foo {}
 
 :e // TODO allow with `new` keyword
 new Foo(1)
 //│ ╔══[ERROR] Class Foo is abstract and cannot be instantiated
-//│ ║  l.21: 	new Foo(1)
+//│ ║  l.22: 	new Foo(1)
 //│ ╙──      	    ^^^^^^
 //│ Foo
+//│ res
+//│     = Foo {}
 
 
 abstract class Foo(x: int) {
@@ -35,16 +38,20 @@ abstract class Foo(x: int) {
 :e
 Foo(1)
 //│ ╔══[ERROR] Class Foo is abstract and cannot be instantiated
-//│ ║  l.36: 	Foo(1)
+//│ ║  l.39: 	Foo(1)
 //│ ╙──      	^^^
 //│ Foo
+//│ res
+//│     = Foo {}
 
 :e // TODO support
 new Foo(1) { fun f = id }
 //│ ╔══[ERROR] Currently unsupported `new` syntax
-//│ ║  l.43: 	new Foo(1) { fun f = id }
+//│ ║  l.48: 	new Foo(1) { fun f = id }
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ error
+//│ Code generation encountered an error:
+//│   custom class body is not supported yet
 
 
 abstract class Bar extends Foo(1)
@@ -56,15 +63,18 @@ abstract class Bar extends Foo(1)
 module Baz extends Bar
 Baz.f(1)
 //│ ╔══[ERROR] Member `f` is declared in parent but not implemented in `Baz`
-//│ ║  l.56: 	module Baz extends Bar
+//│ ║  l.63: 	module Baz extends Bar
 //│ ║        	       ^^^
 //│ ╟── Declared here:
-//│ ║  l.29: 	  fun f: int -> int
+//│ ║  l.32: 	  fun f: int -> int
 //│ ╙──      	      ^^^^^^^^^^^^^
 //│ module Baz extends Bar, Foo {
 //│   fun f: int -> int
 //│ }
 //│ int
+//│ res
+//│ Runtime error:
+//│   TypeError: Baz.f is not a function
 
 module Baz extends Bar {
   fun f(x) = x + 1
@@ -74,6 +84,8 @@ Baz.f(1)
 //│   fun f: int -> int
 //│ }
 //│ int
+//│ res
+//│     = 2
 
 
 
@@ -90,10 +102,10 @@ trait T1 { fun x: int | bool }
 :e
 class C2 extends C1, T1
 //│ ╔══[ERROR] Member `x` is declared in parent but not implemented in `C2`
-//│ ║  l.91: 	class C2 extends C1, T1
-//│ ║        	      ^^
+//│ ║  l.103: 	class C2 extends C1, T1
+//│ ║         	      ^^
 //│ ╟── Declared here:
-//│ ║  l.80: 	abstract class C1 { fun x: int | string }
+//│ ║  l.92: 	abstract class C1 { fun x: int | string }
 //│ ╙──      	                        ^^^^^^^^^^^^^^^
 //│ class C2 extends C1, T1 {
 //│   fun x: int
@@ -112,10 +124,10 @@ abstract class C2 extends C1, T1
 :e
 class C3 extends C2
 //│ ╔══[ERROR] Member `x` is declared in parent but not implemented in `C3`
-//│ ║  l.113: 	class C3 extends C2
+//│ ║  l.125: 	class C3 extends C2
 //│ ║         	      ^^
 //│ ╟── Declared here:
-//│ ║  l.80: 	abstract class C1 { fun x: int | string }
+//│ ║  l.92: 	abstract class C1 { fun x: int | string }
 //│ ╙──      	                        ^^^^^^^^^^^^^^^
 //│ class C3 extends C1, C2, T1 {
 //│   fun x: int
@@ -128,6 +140,7 @@ class C3 extends C2 { fun x = 1 }
 
 
 
+:ge // TODO report this as a type error
 abstract class C {
   fun x : int
   fun foo0 = x
@@ -138,7 +151,10 @@ abstract class C {
 //│   fun foo1: int
 //│   fun x: int
 //│ }
+//│ Code generation encountered an error:
+//│   unresolved symbol x
 
+:ge // TODO report this as a type error
 class C {
   val x : int
   fun foo0 = x
@@ -149,5 +165,7 @@ class C {
 //│   fun foo1: int
 //│   let x: int
 //│ }
+//│ Code generation encountered an error:
+//│   unresolved symbol x
 
 
