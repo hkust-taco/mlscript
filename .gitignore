@@ -10,3 +10,4 @@ project/metals.sbt
 mlsc.js
 mlsc.js.map
 .DS_Store
+!driver/js/src/test/projects/.interfaces/node_modules

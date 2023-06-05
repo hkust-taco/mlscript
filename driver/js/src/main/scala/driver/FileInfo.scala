@@ -22,7 +22,7 @@ final case class FileInfo(
     else TypeScript.resolveNodeModulePath(localFilename)
 
   val interfaceFilename: String = // interface filename (related to output directory)
-    relatedPath.fold(s"node_modules/$localFilename")(path => s"${normalize(s"$interfaceDir/$path/$moduleName.mlsi")}")
+    relatedPath.fold(s"$interfaceDir/node_modules/$moduleName/$moduleName.mlsi")(path => s"${normalize(s"$interfaceDir/$path/$moduleName.mlsi")}")
   
   val jsFilename: String =
     relatedPath.fold(moduleName)(path => normalize(s"$path/$moduleName.js"))

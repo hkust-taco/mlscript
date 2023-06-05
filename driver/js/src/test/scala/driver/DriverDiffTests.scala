@@ -68,8 +68,8 @@ object DriverDiffTests {
     entry("Self", expectError = true),
     entry("C", expectError = true),
     entry("TS", Some("./tsconfig.json"), true), // TODO: type members
-    // entry("Output", Some(s"$diffPath/tsconfig.json")), TODO
-    // entry("Output2", Some(s"$diffPath/tsconfig.json")), TODO
+    entry("Output", Some("./tsconfig.json")),
+    // entry("Output2", Some("./tsconfig.json")),
     ts2mlsEntry("Array"),
     ts2mlsEntry("BasicFunctions"),
     ts2mlsEntry("ClassMember"),

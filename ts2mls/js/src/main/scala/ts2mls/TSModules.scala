@@ -37,7 +37,7 @@ trait TSImport { self =>
 
 object TSImport {
   def getModuleName(filename: String, requirePrefix: Boolean): String =
-    if (filename.endsWith(".d") || filename.endsWith(".ts"))
+    if (filename.endsWith(".d") || filename.endsWith(".ts") || filename.endsWith(".mls") || filename.endsWith(".mlsi"))
       getModuleName(filename.substring(filename.lastIndexOf('/') + 1, filename.lastIndexOf('.')), requirePrefix)
     else if (!requirePrefix)
       filename.substring(filename.lastIndexOf('/') + 1)

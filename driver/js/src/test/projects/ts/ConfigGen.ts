@@ -1,4 +1,4 @@
-import { stringify } from "json5";
+import json5 from "json5";
 
 export function generate(outDir: string) {
   const json = {
@@ -7,5 +7,5 @@ export function generate(outDir: string) {
     }
   }
 
-  return stringify(json);
+  return json5.stringify(json);
 }

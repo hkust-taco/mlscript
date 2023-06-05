@@ -11,26 +11,30 @@ import scala.collection.mutable.{HashSet, HashMap}
 // for es5.d.ts, we only need to translate everything
 // and it will be imported without top-level module before we compile other files
 class TSProgram(filename: String, workDir: String, uesTopLevelModule: Boolean, tsconfig: Option[String]) {
-  private val program = TypeScript.createProgram(Seq(filename))
+  private val fullname = TSModuleResolver.normalize(s"$workDir/$filename")
+  private val program = TypeScript.createProgram(Seq(fullname))
   private val cache = new HashMap[String, TSNamespace]()
   private implicit val configContent = TypeScript.parseOption(workDir, tsconfig)
 
   // check if file exists
-  if (!program.fileExists(filename)) throw new Exception(s"file ${filename} doesn't exist.")
+  if (!program.fileExists(fullname)) throw new Exception(s"file ${fullname} doesn't exist.")
 
   private implicit val checker = TSTypeChecker(program.getTypeChecker())
 
-  def generate(targetPath: String): Unit =
-    generate(TSModuleResolver.resolve(filename), targetPath)(Nil)
+  private def resolveTarget(filename: String) = {
+    val moduleName = TSImport.getModuleName(filename, false)
+    Option.when(!TSModuleResolver.isLocal(filename))(s"node_modules/$moduleName/$moduleName.mlsi")
+  }
 
-  private def generate(filename: String, targetPath: String)(implicit stack: List[String]): Unit = {
+  def generate(targetPath: String): Unit =
+    generate(TSModuleResolver.resolve(fullname), targetPath, resolveTarget(filename))(Nil)
+
+  private def generate(filename: String, targetPath: String, outputOverride: Option[String])(implicit stack: List[String]): Unit = {
     val globalNamespace = TSNamespace()
     val sourceFile = TSSourceFile(program.getSourceFile(filename), globalNamespace)
     val importList = sourceFile.getImportList
     val reExportList = sourceFile.getReExportList
     cache.addOne(filename, globalNamespace)
-
-    val moduleName = TSImport.getModuleName(filename, false)
     val relatedPath = TSModuleResolver.relative(workDir, TSModuleResolver.dirname(filename))
 
     def resolve(imp: String) = TypeScript.resolveModuleName(imp, filename, configContent).getOrElse("")
@@ -39,10 +43,16 @@ class TSProgram(filename: String, workDir: String, uesTopLevelModule: Boolean, t
       importList.partition(imp => stack.contains(resolve(imp.filename)))
 
     otherList.foreach(imp => {
-      generate(resolve(imp.filename), targetPath)(filename :: stack)
+      generate(resolve(imp.filename), targetPath, resolveTarget(imp.filename))(filename :: stack)
     })
 
-    var writer = JSWriter(s"$targetPath/$relatedPath/$moduleName.mlsi")
+    val (moduleName, outputFilename) = outputOverride match {
+      case Some(output) => (TSImport.getModuleName(output, false), output)
+      case _ =>
+        val moduleName = TSImport.getModuleName(filename, false)
+        (moduleName, s"$relatedPath/$moduleName.mlsi")
+    }
+    var writer = JSWriter(s"$targetPath/$outputFilename")
     val imported = new HashSet[String]()
     
     otherList.foreach(imp => {
@@ -73,7 +83,6 @@ class TSProgram(filename: String, workDir: String, uesTopLevelModule: Boolean, t
     }
 
     generate(writer, globalNamespace, moduleName)
-
     writer.close()
   }
 

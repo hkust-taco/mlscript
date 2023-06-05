@@ -8,7 +8,7 @@ class TSTypeGenerationTest extends AnyFunSuite {
 
   testsData.foreach((filename) => test(filename) {
     val program = TSProgram(
-      tsPath(filename),
+      filename,
       "ts2mls/js/src/test/typescript",
       !directlyImportedSet.contains(filename),
       None
@@ -18,9 +18,6 @@ class TSTypeGenerationTest extends AnyFunSuite {
 }
 
 object TSTypeGenerationTest {
-  private def tsPath(filename: String) = s"ts2mls/js/src/test/typescript/$filename"
-  private def diffPath(filename: String) = s"ts2mls/js/src/test/diff/$filename"
-
   private val testsData = List(
     "Array.ts",
     "BasicFunctions.ts",

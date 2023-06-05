@@ -142,7 +142,7 @@ class Driver(options: DriverOptions) {
   ): Boolean = {
     val mlsiFile = normalize(s"${file.workDir}/${file.interfaceFilename}")
     if (!file.filename.endsWith(".mls") && !file.filename.endsWith(".mlsi") ) { // TypeScript
-      val tsprog = TSProgram(s"${file.workDir}/${file.localFilename}", file.workDir, true, options.tsconfig)
+      val tsprog = TSProgram(file.localFilename, file.workDir, true, options.tsconfig)
       tsprog.generate(s"${file.workDir}/${file.interfaceDir}")
       return true // TODO: check if we really need to re-compile
     }
@@ -196,7 +196,7 @@ class Driver(options: DriverOptions) {
           }
 
           otherList.foreach(d => importModule(file.`import`(d)))
-          if (!file.filename.endsWith(".mlsi")) {
+          if (file.filename.endsWith(".mls")) {
             def generateInterface(moduleName: Option[String], tu: TypingUnit) = {
               val exp = `type`(tu)
               packTopModule(moduleName, exp.showIn(ShowCtx.mk(exp :: Nil), 0))

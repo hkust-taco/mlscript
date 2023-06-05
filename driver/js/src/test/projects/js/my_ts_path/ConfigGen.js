@@ -1,9 +1,9 @@
-import { stringify } from "json5";
+import json5 from "json5";
 export function generate(outDir) {
     const json = {
         "compilerOptions": {
             "outDir": outDir
         }
     };
-    return stringify(json);
+    return json5.stringify(json);
 }
