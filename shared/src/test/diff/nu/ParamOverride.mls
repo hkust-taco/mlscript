@@ -11,7 +11,7 @@ class Derived0(n: int) extends Base
 //│ ╙──     	                               ^^^^
 //│ class Derived0(n: int)
 //│ Code generation encountered an error:
-//│   unresolved symbol Base
+//│   unresolved parent Base.
 
 
 mixin Base1(n: number) {

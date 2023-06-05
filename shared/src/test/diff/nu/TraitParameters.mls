@@ -7,7 +7,5 @@ trait Base1(x: int)
 //│ ║  l.5: 	trait Base1(x: int)
 //│ ╙──     	           ^^^^^^^^
 //│ trait Base1
-//│ Code generation encountered an error:
-//│   traits are not supported yet.
 
 
