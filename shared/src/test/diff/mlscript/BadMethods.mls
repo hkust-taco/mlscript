@@ -355,9 +355,17 @@ class Class2B: Class2A[int] & Trait2A[string]
 //│ Defined class Class2A[+A]
 //│ Declared Class2A.MtdA: Class2A['A] -> 'A
 //│ Defined trait Trait2A[+B]
-//│ Declared Trait2A.MtdA: Trait2A['B] -> 'B
-//│ Defined class Class2B
-//│ Defined Class2B.MtdA: Class2B -> "ok"
+//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
+//│ 	at: scala.Predef$.require(Predef.scala:324)
+//│ 	at: mlscript.TypeDefs.clsNameToNomTag(TypeDefs.scala:122)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mkTag$1(TyperHelpers.scala:1093)
+//│ 	at: scala.Option.getOrElse(Option.scala:201)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag$(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.mkTag(TyperDatatypes.scala:363)
+//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:707)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$106(TypeSimplifier.scala:464)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
 
 
 :e
@@ -367,7 +375,7 @@ type Type3A = Class3A[string]
 class Class3B: Type3A
     method MtdA = 1
 //│ ╔══[ERROR] cannot inherit from a type alias
-//│ ║  l.367: 	class Class3B: Type3A
+//│ ║  l.375: 	class Class3B: Type3A
 //│ ╙──       	      ^^^^^^^^^^^^^^^
 //│ Defined class Class3A[+A]
 //│ Declared Class3A.MtdA: Class3A['A] -> 'A
@@ -377,7 +385,7 @@ class Class3B: Type3A
 :e
 Oops.M
 //│ ╔══[ERROR] Method M not found
-//│ ║  l.378: 	Oops.M
+//│ ║  l.386: 	Oops.M
 //│ ╙──       	^^^^^^
 //│ res: error
 
@@ -392,25 +400,25 @@ class Test4A
 class Test4B: Test4A
     method Mth4A: int
 //│ ╔══[ERROR] Type mismatch in inherited method definition:
-//│ ║  l.387: 	    method Mth4A = true
+//│ ║  l.395: 	    method Mth4A = true
 //│ ║         	           ^^^^^^^^^^^^
 //│ ╟── reference of type `true` is not an instance of type `int`
-//│ ║  l.387: 	    method Mth4A = true
+//│ ║  l.395: 	    method Mth4A = true
 //│ ║         	                   ^^^^
 //│ ╟── but it flows into inherited method definition with expected type `int`
-//│ ║  l.387: 	    method Mth4A = true
+//│ ║  l.395: 	    method Mth4A = true
 //│ ║         	           ^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.393: 	    method Mth4A: int
+//│ ║  l.401: 	    method Mth4A: int
 //│ ║         	                  ^^^
 //│ ╟── from method declaration:
-//│ ║  l.393: 	    method Mth4A: int
+//│ ║  l.401: 	    method Mth4A: int
 //│ ╙──       	           ^^^^^^^^^^
 //│ ╔══[ERROR] Overriding method Test4A.Mth4A without an overriding definition is not allowed.
-//│ ║  l.393: 	    method Mth4A: int
+//│ ║  l.401: 	    method Mth4A: int
 //│ ║         	           ^^^^^^^^^^
 //│ ╟── Note: method definition inherited from
-//│ ║  l.387: 	    method Mth4A = true
+//│ ║  l.395: 	    method Mth4A = true
 //│ ╙──       	           ^^^^^^^^^^^^
 //│ Defined class Test4B
 //│ Declared Test4B.Mth4A: Test4B -> int
@@ -428,19 +436,19 @@ class Test5A
 class Test5B: Test5A
     method Mth5A = 43
 //│ ╔══[ERROR] Type mismatch in method definition:
-//│ ║  l.429: 	    method Mth5A = 43
+//│ ║  l.437: 	    method Mth5A = 43
 //│ ║         	           ^^^^^^^^^^
 //│ ╟── integer literal of type `43` does not match type `42`
-//│ ║  l.429: 	    method Mth5A = 43
+//│ ║  l.437: 	    method Mth5A = 43
 //│ ║         	                   ^^
 //│ ╟── but it flows into method definition with expected type `42`
-//│ ║  l.429: 	    method Mth5A = 43
+//│ ║  l.437: 	    method Mth5A = 43
 //│ ║         	           ^^^^^^^^^^
 //│ ╟── Note: constraint arises from literal type:
-//│ ║  l.427: 	    method Mth5A: 42
+//│ ║  l.435: 	    method Mth5A: 42
 //│ ║         	                  ^^
 //│ ╟── from inherited method declaration:
-//│ ║  l.427: 	    method Mth5A: 42
+//│ ║  l.435: 	    method Mth5A: 42
 //│ ╙──       	           ^^^^^^^^^
 //│ Defined class Test5A
 //│ Declared Test5A.Mth5A: Test5A -> 42
@@ -458,51 +466,60 @@ class Test6C: Test6A[int] & Test6B
 //│ Declared Test6A.Mth6A: Test6A['A] -> 'A
 //│ Declared Test6A.Mth6B: Test6A['A] -> ('A -> 'B) -> 'B
 //│ Defined trait Test6B
-//│ Declared Test6B.Mth6A: Test6B -> bool
-//│ Defined class Test6C
+//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
+//│ 	at: scala.Predef$.require(Predef.scala:324)
+//│ 	at: mlscript.TypeDefs.clsNameToNomTag(TypeDefs.scala:122)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mkTag$1(TyperHelpers.scala:1093)
+//│ 	at: scala.Option.getOrElse(Option.scala:201)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag$(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.mkTag(TyperDatatypes.scala:363)
+//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:707)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$106(TypeSimplifier.scala:464)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
 
 :e
 Test6A
 //│ ╔══[ERROR] Instantiation of an abstract type is forbidden
-//│ ║  l.465: 	Test6A
+//│ ║  l.482: 	Test6A
 //│ ║         	^^^^^^
 //│ ╟── Note that class Test6A is abstract:
-//│ ║  l.451: 	class Test6A[A]
+//│ ║  l.459: 	class Test6A[A]
 //│ ║         	      ^^^^^^^^
 //│ ╟── Hint: method Mth6A is abstract
-//│ ║  l.452: 	    method Mth6A: A
+//│ ║  l.460: 	    method Mth6A: A
 //│ ║         	           ^^^^^^^^
 //│ ╟── Hint: method Mth6B is abstract
-//│ ║  l.453: 	    method Mth6B[B]: (A -> B) -> B
+//│ ║  l.461: 	    method Mth6B[B]: (A -> B) -> B
 //│ ╙──       	           ^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: error
 
 :e
 Test6B
 //│ ╔══[ERROR] Instantiation of an abstract type is forbidden
-//│ ║  l.481: 	Test6B
+//│ ║  l.498: 	Test6B
 //│ ║         	^^^^^^
 //│ ╟── Note that trait Test6B is abstract:
-//│ ║  l.454: 	trait Test6B
+//│ ║  l.462: 	trait Test6B
 //│ ║         	      ^^^^^^
 //│ ╟── Hint: method Mth6A is abstract
-//│ ║  l.455: 	    method Mth6A: bool
+//│ ║  l.463: 	    method Mth6A: bool
 //│ ╙──       	           ^^^^^^^^^^^
 //│ res: error
 
 :e
 Test6C
 //│ ╔══[ERROR] Instantiation of an abstract type is forbidden
-//│ ║  l.494: 	Test6C
+//│ ║  l.511: 	Test6C
 //│ ║         	^^^^^^
 //│ ╟── Note that class Test6C is abstract:
-//│ ║  l.456: 	class Test6C: Test6A[int] & Test6B
+//│ ║  l.464: 	class Test6C: Test6A[int] & Test6B
 //│ ║         	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Hint: method Mth6B is abstract
-//│ ║  l.453: 	    method Mth6B[B]: (A -> B) -> B
+//│ ║  l.461: 	    method Mth6B[B]: (A -> B) -> B
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Hint: method Mth6A is abstract
-//│ ║  l.456: 	class Test6C: Test6A[int] & Test6B
+//│ ║  l.464: 	class Test6C: Test6A[int] & Test6B
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: error
 
@@ -515,33 +532,33 @@ class Dup[A, A]: { x: A }
         B]: (A -> B) -> B
     method MthDup f = f this.x
 //│ ╔══[ERROR] Multiple declarations of type parameter A in class definition
-//│ ║  l.513: 	class Dup[A, A]: { x: A }
+//│ ║  l.530: 	class Dup[A, A]: { x: A }
 //│ ║         	      ^^^^^^^^^^^^^^^^^^^
 //│ ╟── Declared at
-//│ ║  l.513: 	class Dup[A, A]: { x: A }
+//│ ║  l.530: 	class Dup[A, A]: { x: A }
 //│ ║         	          ^
 //│ ╟── Declared at
-//│ ║  l.513: 	class Dup[A, A]: { x: A }
+//│ ║  l.530: 	class Dup[A, A]: { x: A }
 //│ ╙──       	             ^
 //│ ╔══[ERROR] Multiple declarations of type parameter B in method declaration
-//│ ║  l.514: 	    method MthDup[B, C, // random comment
+//│ ║  l.531: 	    method MthDup[B, C, // random comment
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.515: 	        B]: (A -> B) -> B
+//│ ║  l.532: 	        B]: (A -> B) -> B
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Declared at
-//│ ║  l.514: 	    method MthDup[B, C, // random comment
+//│ ║  l.531: 	    method MthDup[B, C, // random comment
 //│ ║         	                  ^
 //│ ╟── Declared at
-//│ ║  l.515: 	        B]: (A -> B) -> B
+//│ ║  l.532: 	        B]: (A -> B) -> B
 //│ ╙──       	        ^
 //│ Defined class Dup[±A, +A]
 //│ Declared Dup.MthDup: Dup[?, 'A] -> ('A -> 'B) -> 'B
 //│ Defined Dup.MthDup: Dup[?, 'A] -> ('A -> 'a) -> 'a
 //│ ╔══[WARNING] Type definition Dup has bivariant type parameters:
-//│ ║  l.513: 	class Dup[A, A]: { x: A }
+//│ ║  l.530: 	class Dup[A, A]: { x: A }
 //│ ║         	      ^^^
 //│ ╟── A is irrelevant and may be removed
-//│ ║  l.513: 	class Dup[A, A]: { x: A }
+//│ ║  l.530: 	class Dup[A, A]: { x: A }
 //│ ╙──       	          ^
 
 t = Dup { x = 42 }
@@ -557,13 +574,13 @@ t : Dup[bool, int]
 :stats
 t : Dup[int, bool]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.558: 	t : Dup[int, bool]
+//│ ║  l.575: 	t : Dup[int, bool]
 //│ ║         	^
 //│ ╟── integer literal of type `42` is not an instance of type `bool`
-//│ ║  l.547: 	t = Dup { x = 42 }
+//│ ║  l.564: 	t = Dup { x = 42 }
 //│ ║         	              ^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.558: 	t : Dup[int, bool]
+//│ ║  l.575: 	t : Dup[int, bool]
 //│ ╙──       	             ^^^^
 //│ res: Dup[?, bool]
 //│ constrain calls  : 30
@@ -594,7 +611,7 @@ class B: { x: int }
   method F1: int
   method F1 = 1
 //│ ╔══[ERROR] Method F1 not found
-//│ ║  l.592: 	  method Nope = this.Yes.F1
+//│ ║  l.609: 	  method Nope = this.Yes.F1
 //│ ╙──       	                ^^^^^^^^^^^
 //│ Defined class A
 //│ Defined A.Yes: A -> (B & {x: 1})
@@ -611,40 +628,59 @@ trait E
 class H: D & E
   method G = 2
 //│ ╔══[ERROR] Overriding method D.G without explicit declaration is not allowed.
-//│ ║  l.612: 	  method G = 2
+//│ ║  l.629: 	  method G = 2
 //│ ║         	         ^^^^^
 //│ ╟── Note: method definition inherited from
-//│ ║  l.608: 	  method G = 1
+//│ ║  l.625: 	  method G = 1
 //│ ╙──       	         ^^^^^
 //│ ╔══[ERROR] Type mismatch in method definition:
-//│ ║  l.612: 	  method G = 2
+//│ ║  l.629: 	  method G = 2
 //│ ║         	         ^^^^^
 //│ ╟── integer literal of type `2` does not match type `1`
-//│ ║  l.612: 	  method G = 2
+//│ ║  l.629: 	  method G = 2
 //│ ║         	             ^
 //│ ╟── but it flows into method definition with expected type `1`
-//│ ║  l.612: 	  method G = 2
+//│ ║  l.629: 	  method G = 2
 //│ ║         	         ^^^^^
 //│ ╟── Note: constraint arises from integer literal:
-//│ ║  l.608: 	  method G = 1
+//│ ║  l.625: 	  method G = 1
 //│ ║         	             ^
 //│ ╟── from inherited method definition:
-//│ ║  l.608: 	  method G = 1
+//│ ║  l.625: 	  method G = 1
 //│ ╙──       	         ^^^^^
 //│ Defined trait D
-//│ Defined D.G: D -> 1
-//│ Defined trait E
-//│ Declared E.G: E -> int
-//│ Defined class H
-//│ Defined H.G: H -> 2
+//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
+//│ 	at: scala.Predef$.require(Predef.scala:324)
+//│ 	at: mlscript.TypeDefs.clsNameToNomTag(TypeDefs.scala:122)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mkTag$1(TyperHelpers.scala:1093)
+//│ 	at: scala.Option.getOrElse(Option.scala:201)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag$(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.mkTag(TyperDatatypes.scala:363)
+//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:707)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$106(TypeSimplifier.scala:464)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
 
 h = H{}
 //│ h: H
 
 d = h: D
-//│ d: D
+//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
+//│ 	at: scala.Predef$.require(Predef.scala:324)
+//│ 	at: mlscript.TypeDefs.clsNameToNomTag(TypeDefs.scala:122)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mkTag$1(TyperHelpers.scala:1093)
+//│ 	at: scala.Option.getOrElse(Option.scala:201)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag$(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.mkTag(TyperDatatypes.scala:363)
+//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:707)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$106(TypeSimplifier.scala:464)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
 
 d.(D.G)
+//│ ╔══[ERROR] identifier not found: d
+//│ ║  l.680: 	d.(D.G)
+//│ ╙──       	^
 //│ res: 1
 
 ((H{}): D).(D.G)
@@ -657,25 +693,32 @@ trait E2
   method G2: bool
 class H2: D2 & E2
 //│ ╔══[ERROR] Type mismatch in inherited method definition:
-//│ ║  l.655: 	  method G2 = 1
+//│ ║  l.691: 	  method G2 = 1
 //│ ║         	         ^^^^^^
 //│ ╟── integer literal of type `1` is not an instance of type `bool`
-//│ ║  l.655: 	  method G2 = 1
+//│ ║  l.691: 	  method G2 = 1
 //│ ║         	              ^
 //│ ╟── but it flows into inherited method definition with expected type `bool`
-//│ ║  l.655: 	  method G2 = 1
+//│ ║  l.691: 	  method G2 = 1
 //│ ║         	         ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.657: 	  method G2: bool
+//│ ║  l.693: 	  method G2: bool
 //│ ║         	             ^^^^
 //│ ╟── from inherited method declaration:
-//│ ║  l.657: 	  method G2: bool
+//│ ║  l.693: 	  method G2: bool
 //│ ╙──       	         ^^^^^^^^
 //│ Defined trait D2
-//│ Defined D2.G2: D2 -> 1
-//│ Defined trait E2
-//│ Declared E2.G2: E2 -> bool
-//│ Defined class H2
+//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
+//│ 	at: scala.Predef$.require(Predef.scala:324)
+//│ 	at: mlscript.TypeDefs.clsNameToNomTag(TypeDefs.scala:122)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mkTag$1(TyperHelpers.scala:1093)
+//│ 	at: scala.Option.getOrElse(Option.scala:201)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag$(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.mkTag(TyperDatatypes.scala:363)
+//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:707)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$106(TypeSimplifier.scala:464)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
 
 
 
@@ -687,23 +730,29 @@ trait Test7B
   method Mth7A: int
   method Mth7A = 43
 //│ Defined trait Test7A
-//│ Declared Test7A.Mth7A: Test7A -> int
-//│ Defined Test7A.Mth7A: Test7A -> 42
-//│ Defined trait Test7B
-//│ Declared Test7B.Mth7A: Test7B -> int
-//│ Defined Test7B.Mth7A: Test7B -> 43
+//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
+//│ 	at: scala.Predef$.require(Predef.scala:324)
+//│ 	at: mlscript.TypeDefs.clsNameToNomTag(TypeDefs.scala:122)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mkTag$1(TyperHelpers.scala:1093)
+//│ 	at: scala.Option.getOrElse(Option.scala:201)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag$(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.mkTag(TyperDatatypes.scala:363)
+//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:707)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$106(TypeSimplifier.scala:464)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
 
 :e
 class Test7C: Test7A & Test7B
 //│ ╔══[ERROR] An overriding method definition must be given when inheriting from multiple method definitions
-//│ ║  l.697: 	class Test7C: Test7A & Test7B
+//│ ║  l.746: 	class Test7C: Test7A & Test7B
 //│ ║         	      ^^^^^^
 //│ ╟── Definitions of method Mth7A inherited from:
 //│ ╟── • Test7A
-//│ ║  l.685: 	  method Mth7A = 42
+//│ ║  l.728: 	  method Mth7A = 42
 //│ ║         	         ^^^^^^^^^^
 //│ ╟── • Test7B
-//│ ║  l.688: 	  method Mth7A = 43
+//│ ║  l.731: 	  method Mth7A = 43
 //│ ╙──       	         ^^^^^^^^^^
 //│ Defined class Test7C
 
@@ -719,14 +768,14 @@ class Test7D: Test7A & Test7B
 class Test7E: Test7C
   method Mth7A = 0
 //│ ╔══[ERROR] An overriding method definition must be given when inheriting from multiple method definitions
-//│ ║  l.697: 	class Test7C: Test7A & Test7B
+//│ ║  l.746: 	class Test7C: Test7A & Test7B
 //│ ║         	      ^^^^^^
 //│ ╟── Definitions of method Mth7A inherited from:
 //│ ╟── • Test7A
-//│ ║  l.685: 	  method Mth7A = 42
+//│ ║  l.728: 	  method Mth7A = 42
 //│ ║         	         ^^^^^^^^^^
 //│ ╟── • Test7B
-//│ ║  l.688: 	  method Mth7A = 43
+//│ ║  l.731: 	  method Mth7A = 43
 //│ ╙──       	         ^^^^^^^^^^
 //│ Defined class Test7E
 //│ Defined Test7E.Mth7A: Test7E -> 0
@@ -734,29 +783,39 @@ class Test7E: Test7C
 trait Test7F
   method Mth7A = 0
 //│ Defined trait Test7F
-//│ Defined Test7F.Mth7A: Test7F -> 0
+//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
+//│ 	at: scala.Predef$.require(Predef.scala:324)
+//│ 	at: mlscript.TypeDefs.clsNameToNomTag(TypeDefs.scala:122)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mkTag$1(TyperHelpers.scala:1093)
+//│ 	at: scala.Option.getOrElse(Option.scala:201)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag$(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.mkTag(TyperDatatypes.scala:363)
+//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:707)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$106(TypeSimplifier.scala:464)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
 
 :e
 class Test7G: Test7C & Test7F
 //│ ╔══[ERROR] An overriding method definition must be given when inheriting from multiple method definitions
-//│ ║  l.697: 	class Test7C: Test7A & Test7B
+//│ ║  l.746: 	class Test7C: Test7A & Test7B
 //│ ║         	      ^^^^^^
 //│ ╟── Definitions of method Mth7A inherited from:
 //│ ╟── • Test7A
-//│ ║  l.685: 	  method Mth7A = 42
+//│ ║  l.728: 	  method Mth7A = 42
 //│ ║         	         ^^^^^^^^^^
 //│ ╟── • Test7B
-//│ ║  l.688: 	  method Mth7A = 43
+//│ ║  l.731: 	  method Mth7A = 43
 //│ ╙──       	         ^^^^^^^^^^
 //│ ╔══[ERROR] An overriding method definition must be given when inheriting from multiple method definitions
-//│ ║  l.740: 	class Test7G: Test7C & Test7F
+//│ ║  l.799: 	class Test7G: Test7C & Test7F
 //│ ║         	      ^^^^^^
 //│ ╟── Definitions of method Mth7A inherited from:
 //│ ╟── • Test7C
-//│ ║  l.697: 	class Test7C: Test7A & Test7B
+//│ ║  l.746: 	class Test7C: Test7A & Test7B
 //│ ║         	      ^^^^^^
 //│ ╟── • Test7F
-//│ ║  l.735: 	  method Mth7A = 0
+//│ ║  l.784: 	  method Mth7A = 0
 //│ ╙──       	         ^^^^^^^^^
 //│ Defined class Test7G
 
@@ -774,10 +833,10 @@ class Test8A
 class Test8B: Test8A
     method F: 1
 //│ ╔══[ERROR] Overriding method Test8A.F without an overriding definition is not allowed.
-//│ ║  l.775: 	    method F: 1
+//│ ║  l.834: 	    method F: 1
 //│ ║         	           ^^^^
 //│ ╟── Note: method definition inherited from
-//│ ║  l.768: 	    method F = 1
+//│ ║  l.827: 	    method F = 1
 //│ ╙──       	           ^^^^^
 //│ Defined class Test8B
 //│ Declared Test8B.F: Test8B -> 1
@@ -795,10 +854,10 @@ class Test8C[A]
 class Test8D: Test8C[int]
     method F: int
 //│ ╔══[ERROR] Overriding method Test8C.F without an overriding definition is not allowed.
-//│ ║  l.796: 	    method F: int
+//│ ║  l.855: 	    method F: int
 //│ ║         	           ^^^^^^
 //│ ╟── Note: method definition inherited from
-//│ ║  l.787: 	    method F = error
+//│ ║  l.846: 	    method F = error
 //│ ╙──       	           ^^^^^^^^^
 //│ Defined class Test8D
 //│ Declared Test8D.F: Test8D -> int
@@ -815,40 +874,40 @@ class Test9B: Test9A[int]
     method Mth9A : Test9A[int] -> int
     method Mth9A = this.x
 //│ ╔══[ERROR] Overriding method Test9A.Mth9A without explicit declaration is not allowed.
-//│ ║  l.815: 	    method Mth9A : Test9A[int] -> int
+//│ ║  l.874: 	    method Mth9A : Test9A[int] -> int
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: method definition inherited from
-//│ ║  l.810: 	    method Mth9A = this.x
+//│ ║  l.869: 	    method Mth9A = this.x
 //│ ╙──       	           ^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in method declaration:
-//│ ║  l.815: 	    method Mth9A : Test9A[int] -> int
+//│ ║  l.874: 	    method Mth9A : Test9A[int] -> int
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Test9A[int] -> int` does not match type `int | ?x`
-//│ ║  l.815: 	    method Mth9A : Test9A[int] -> int
+//│ ║  l.874: 	    method Mth9A : Test9A[int] -> int
 //│ ║         	                   ^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into method declaration with expected type `int | ?x`
-//│ ║  l.815: 	    method Mth9A : Test9A[int] -> int
+//│ ║  l.874: 	    method Mth9A : Test9A[int] -> int
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.810: 	    method Mth9A = this.x
+//│ ║  l.869: 	    method Mth9A = this.x
 //│ ║         	                   ^^^^^^
 //│ ╟── from inherited method definition:
-//│ ║  l.810: 	    method Mth9A = this.x
+//│ ║  l.869: 	    method Mth9A = this.x
 //│ ╙──       	           ^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in method definition:
-//│ ║  l.816: 	    method Mth9A = this.x
+//│ ║  l.875: 	    method Mth9A = this.x
 //│ ║         	           ^^^^^^^^^^^^^^
 //│ ╟── type `int` is not a function
-//│ ║  l.814: 	class Test9B: Test9A[int]
+//│ ║  l.873: 	class Test9B: Test9A[int]
 //│ ║         	                     ^^^
 //│ ╟── but it flows into field selection with expected type `Test9A[int] -> int`
-//│ ║  l.816: 	    method Mth9A = this.x
+//│ ║  l.875: 	    method Mth9A = this.x
 //│ ║         	                   ^^^^^^
 //│ ╟── Note: constraint arises from function type:
-//│ ║  l.815: 	    method Mth9A : Test9A[int] -> int
+//│ ║  l.874: 	    method Mth9A : Test9A[int] -> int
 //│ ║         	                   ^^^^^^^^^^^^^^^^^^
 //│ ╟── from method declaration:
-//│ ║  l.815: 	    method Mth9A : Test9A[int] -> int
+//│ ║  l.874: 	    method Mth9A : Test9A[int] -> int
 //│ ╙──       	           ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ Defined class Test9B
 //│ Declared Test9B.Mth9A: Test9B -> Test9A[int] -> int
@@ -858,15 +917,15 @@ class Test9B: Test9A[int]
 :NoJS
 error.(Test9B.Mth9A): nothing
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.859: 	error.(Test9B.Mth9A): nothing
+//│ ║  l.918: 	error.(Test9B.Mth9A): nothing
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Test9A[int] -> int` does not match type `nothing`
-//│ ║  l.815: 	    method Mth9A : Test9A[int] -> int
+//│ ║  l.874: 	    method Mth9A : Test9A[int] -> int
 //│ ║         	                   ^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into field selection with expected type `nothing`
-//│ ║  l.859: 	error.(Test9B.Mth9A): nothing
+//│ ║  l.918: 	error.(Test9B.Mth9A): nothing
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.859: 	error.(Test9B.Mth9A): nothing
+//│ ║  l.918: 	error.(Test9B.Mth9A): nothing
 //│ ╙──       	                      ^^^^^^^
 //│ res: nothing

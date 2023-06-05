@@ -8,93 +8,58 @@
 trait T0
   method Foo: int
 //│ Defined trait T0
-//│ Declared T0.Foo: T0 -> int
-//│ // Prelude
-//│ const T0 = function () {
-//│   const tag = Symbol();
-//│   return ({
-//│     implement: function implement(instance) {
-//│       if (tag in instance) {
-//│         return;
-//│       }
-//│       Object.defineProperty(instance, tag, { value: {} });
-//│     },
-//│     build: function build(instance) {
-//│       if (typeof instance !== "object") {
-//│         instance = Object.assign(instance, {});
-//│       }
-//│       this.implement(instance);
-//│       return instance;
-//│     },
-//│     is: function is(x) {
-//│       return typeof x === "object" && x !== null && tag in x;
-//│     }
-//│   });
-//│ }();
-//│ // End of generated code
+//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
+//│ 	at: scala.Predef$.require(Predef.scala:324)
+//│ 	at: mlscript.TypeDefs.clsNameToNomTag(TypeDefs.scala:122)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mkTag$1(TyperHelpers.scala:1093)
+//│ 	at: scala.Option.getOrElse(Option.scala:201)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag$(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.mkTag(TyperDatatypes.scala:363)
+//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:707)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$106(TypeSimplifier.scala:464)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
 
 def foo x = x.Foo
-//│ foo: T0 -> int
-//│    = [Function: foo]
+//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
+//│ 	at: scala.Predef$.require(Predef.scala:324)
+//│ 	at: mlscript.TypeDefs.clsNameToNomTag(TypeDefs.scala:122)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mkTag$1(TyperHelpers.scala:1093)
+//│ 	at: scala.Option.getOrElse(Option.scala:201)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag$(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.mkTag(TyperDatatypes.scala:363)
+//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:707)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$106(TypeSimplifier.scala:464)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
 
 :js
 trait T1
   method Foo = 1
 //│ Defined trait T1
-//│ Defined T1.Foo: T1 -> 1
-//│ // Prelude
-//│ const T1 = function () {
-//│   const tag = Symbol();
-//│   return ({
-//│     implement: function implement(instance) {
-//│       if (tag in instance) {
-//│         return;
-//│       }
-//│       Object.defineProperty(instance, tag, { value: {} });
-//│       if (!("Foo" in instance)) {
-//│         Object.defineProperty(instance, "Foo", {
-//│           get: function () {
-//│             return 1;
-//│           }
-//│         });
-//│       }
-//│     },
-//│     build: function build(instance) {
-//│       if (typeof instance !== "object") {
-//│         instance = Object.assign(instance, {});
-//│       }
-//│       this.implement(instance);
-//│       return instance;
-//│     },
-//│     is: function is(x) {
-//│       return typeof x === "object" && x !== null && tag in x;
-//│     }
-//│   });
-//│ }();
-//│ // End of generated code
+//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
+//│ 	at: scala.Predef$.require(Predef.scala:324)
+//│ 	at: mlscript.TypeDefs.clsNameToNomTag(TypeDefs.scala:122)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mkTag$1(TyperHelpers.scala:1093)
+//│ 	at: scala.Option.getOrElse(Option.scala:201)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag$(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.mkTag(TyperDatatypes.scala:363)
+//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:707)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$106(TypeSimplifier.scala:464)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
 
 :js
 class A: T0
 //│ Defined class A
-//│ // Prelude
-//│ class A {
-//│   constructor(fields) {
-//│     T0.implement(this);
-//│   }
-//│ }
-//│ // End of generated code
+//│ Code generation encountered an error:
+//│   undeclared type name T0 when resolving base classes
 
 :js
 class B: A & T1
 //│ Defined class B
-//│ // Prelude
-//│ class B extends A {
-//│   constructor(fields) {
-//│     super(fields);
-//│     T1.implement(this);
-//│   }
-//│ }
-//│ // End of generated code
+//│ Code generation encountered an error:
+//│   undeclared type name T1 when resolving base classes
 
 :e
 :js
@@ -103,42 +68,47 @@ a = A{}
 //│ globalThis.a = new A({});
 //│ // End of generated code
 //│ ╔══[ERROR] Instantiation of an abstract type is forbidden
-//│ ║  l.101: 	a = A{}
-//│ ║         	    ^
+//│ ║  l.66: 	a = A{}
+//│ ║        	    ^
 //│ ╟── Note that class A is abstract:
-//│ ║  l.77: 	class A: T0
+//│ ║  l.53: 	class A: T0
 //│ ║        	      ^^^^^
 //│ ╟── Hint: method Foo is abstract
 //│ ║  l.9: 	  method Foo: int
 //│ ╙──     	         ^^^^^^^^
 //│ a: error
-//│  = A {}
+//│ Runtime error:
+//│   ReferenceError: A is not defined
 
 foo a
-//│ res: int
-//│    = undefined
+//│ ╔══[ERROR] identifier not found: foo
+//│ ║  l.83: 	foo a
+//│ ╙──      	^^^
+//│ res: error
+//│ Code generation encountered an error:
+//│   unresolved symbol foo
 
 // Note: calling convention not yet supported in JS
 a.(A.Foo)
 //│ res: int
-//│    = undefined
+//│ Runtime error:
+//│   ReferenceError: a is not defined
 
 :js
 b = B{}
 foo b
-//│ // Query 1
-//│ globalThis.b = new B({});
-//│ // Query 2
-//│ res = foo(b);
-//│ // End of generated code
 //│ b: B
-//│  = B {}
-//│ res: int
-//│    = 1
+//│ ╔══[ERROR] identifier not found: foo
+//│ ║  l.99: 	foo b
+//│ ╙──      	^^^
+//│ res: error
+//│ Code generation encountered an error:
+//│   unresolved symbol foo
 
 b.(A.Foo)
 //│ res: int
-//│    = undefined
+//│ Runtime error:
+//│   ReferenceError: b is not defined
 
 :e
 type Id[X] = X
@@ -151,16 +121,16 @@ class BBB: AAA
   method F: int
   method G: 'a -> 'a
 //│ ╔══[ERROR] Overriding method AAA.F without an overriding definition is not allowed.
-//│ ║  l.151: 	  method F: int
+//│ ║  l.121: 	  method F: int
 //│ ║         	         ^^^^^^
 //│ ╟── Note: method definition inherited from
-//│ ║  l.147: 	  method F = 1
+//│ ║  l.117: 	  method F = 1
 //│ ╙──       	         ^^^^^
 //│ ╔══[ERROR] Overriding method AAA.G without an overriding definition is not allowed.
-//│ ║  l.152: 	  method G: 'a -> 'a
+//│ ║  l.122: 	  method G: 'a -> 'a
 //│ ║         	         ^^^^^^^^^^^
 //│ ╟── Note: method definition inherited from
-//│ ║  l.149: 	  method G x = x
+//│ ║  l.119: 	  method G x = x
 //│ ╙──       	         ^^^^^^^
 //│ Defined type alias Id[+X]
 //│ Defined class AAA
@@ -179,32 +149,40 @@ trait T4
   method Foo: 0 | 1
 class C: T3 & T4
 //│ Defined trait T3
-//│ Declared T3.Foo: T3 -> (1 | 2)
-//│ Defined trait T4
-//│ Declared T4.Foo: T4 -> (0 | 1)
-//│ Defined class C
+//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
+//│ 	at: scala.Predef$.require(Predef.scala:324)
+//│ 	at: mlscript.TypeDefs.clsNameToNomTag(TypeDefs.scala:122)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mkTag$1(TyperHelpers.scala:1093)
+//│ 	at: scala.Option.getOrElse(Option.scala:201)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag$(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.mkTag(TyperDatatypes.scala:363)
+//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:707)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$106(TypeSimplifier.scala:464)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
 
 C.Foo
 //│ res: C -> 1
-//│    = undefined
+//│ Code generation encountered an error:
+//│   unresolved symbol C
 
 :e
 fun x -> x.Foo
 //│ ╔══[ERROR] Implicit call to method Foo is forbidden because it is ambiguous.
-//│ ║  l.192: 	fun x -> x.Foo
+//│ ║  l.170: 	fun x -> x.Foo
 //│ ║         	         ^^^^^
 //│ ╟── Unrelated methods named Foo are defined by:
 //│ ╟── • trait T0
 //│ ║  l.8: 	trait T0
 //│ ║       	      ^^
 //│ ╟── • trait T1
-//│ ║  l.41: 	trait T1
+//│ ║  l.37: 	trait T1
 //│ ║        	      ^^
 //│ ╟── • trait T3
-//│ ║  l.176: 	trait T3
+//│ ║  l.146: 	trait T3
 //│ ║         	      ^^
 //│ ╟── • trait T4
-//│ ║  l.178: 	trait T4
+//│ ║  l.148: 	trait T4
 //│ ╙──       	      ^^
 //│ res: anything -> error
 //│    = [Function: res]

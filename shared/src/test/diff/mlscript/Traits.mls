@@ -34,17 +34,25 @@ D
 
 :re
 error: A & B
-//│ res: A & B
-//│ Runtime error:
-//│   Error: unexpected runtime error
+//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
+//│ 	at: scala.Predef$.require(Predef.scala:324)
+//│ 	at: mlscript.TypeDefs.clsNameToNomTag(TypeDefs.scala:122)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mkTag$1(TyperHelpers.scala:1093)
+//│ 	at: scala.Option.getOrElse(Option.scala:201)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag$(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.mkTag(TyperDatatypes.scala:363)
+//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:707)
+//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:698)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$106(TypeSimplifier.scala:464)
 
 :e
 dv = D{}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.42: 	dv = D{}
+//│ ║  l.50: 	dv = D{}
 //│ ║        	     ^^^
 //│ ╟── record literal of type `anything` is not a record (expected a record with fields: y, x)
-//│ ║  l.42: 	dv = D{}
+//│ ║  l.50: 	dv = D{}
 //│ ╙──      	      ^^
 //│ dv: D & {x: nothing, y: nothing} | error
 //│   = D { x: undefined, y: undefined }
@@ -56,37 +64,46 @@ dv = D { x = 0; y = "hello" }
 :e
 dv: nothing
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.57: 	dv: nothing
+//│ ║  l.65: 	dv: nothing
 //│ ║        	^^
 //│ ╟── application of type `D with {x: ?x, y: ?y}` does not match type `nothing`
-//│ ║  l.52: 	dv = D { x = 0; y = "hello" }
+//│ ║  l.60: 	dv = D { x = 0; y = "hello" }
 //│ ║        	     ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `nothing`
-//│ ║  l.57: 	dv: nothing
+//│ ║  l.65: 	dv: nothing
 //│ ║        	^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.57: 	dv: nothing
+//│ ║  l.65: 	dv: nothing
 //│ ╙──      	    ^^^^^^^
 //│ res: nothing
 //│    = D { x: 0, y: 'hello' }
 
 dv: A & B
-//│ res: A & B
-//│    = D { x: 0, y: 'hello' }
+//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
+//│ 	at: scala.Predef$.require(Predef.scala:324)
+//│ 	at: mlscript.TypeDefs.clsNameToNomTag(TypeDefs.scala:122)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mkTag$1(TyperHelpers.scala:1093)
+//│ 	at: scala.Option.getOrElse(Option.scala:201)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag$(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.mkTag(TyperDatatypes.scala:363)
+//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:707)
+//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:698)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$106(TypeSimplifier.scala:464)
 
 :e
 dv: A & B: nothing
-//│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.78: 	dv: A & B: nothing
-//│ ║        	^^
-//│ ╟── type `A & B` does not match type `nothing`
-//│ ║  l.78: 	dv: A & B: nothing
-//│ ║        	    ^^^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.78: 	dv: A & B: nothing
-//│ ╙──      	           ^^^^^^^
-//│ res: nothing
-//│    = D { x: 0, y: 'hello' }
+//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
+//│ 	at: scala.Predef$.require(Predef.scala:324)
+//│ 	at: mlscript.TypeDefs.clsNameToNomTag(TypeDefs.scala:122)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mkTag$1(TyperHelpers.scala:1093)
+//│ 	at: scala.Option.getOrElse(Option.scala:201)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag$(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.mkTag(TyperDatatypes.scala:363)
+//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:707)
+//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:698)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$106(TypeSimplifier.scala:464)
 
 
 trait Indirect: C
@@ -98,11 +115,11 @@ class E: Indirect
 :e
 E{}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.99: 	E{}
-//│ ║        	^^^
+//│ ║  l.116: 	E{}
+//│ ║         	^^^
 //│ ╟── record literal of type `anything` does not have field 'x'
-//│ ║  l.99: 	E{}
-//│ ╙──      	 ^^
+//│ ║  l.116: 	E{}
+//│ ╙──       	 ^^
 //│ res: E & {x: nothing} | error
 //│    = E {}
 
@@ -120,19 +137,19 @@ trait T1: C & A
 :e
 def t = T1 (A { x = 1 })
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.121: 	def t = T1 (A { x = 1 })
+//│ ║  l.138: 	def t = T1 (A { x = 1 })
 //│ ║         	        ^^^^^^^^^^^^^^^^
 //│ ╟── record literal of type `{x: 1}` does not match type `C | ~#A`
-//│ ║  l.121: 	def t = T1 (A { x = 1 })
+//│ ║  l.138: 	def t = T1 (A { x = 1 })
 //│ ║         	              ^^^^^^^^^
 //│ ╟── but it flows into application with expected type `C | ~#A`
-//│ ║  l.121: 	def t = T1 (A { x = 1 })
+//│ ║  l.138: 	def t = T1 (A { x = 1 })
 //│ ║         	            ^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.117: 	trait T1: C & A
+//│ ║  l.134: 	trait T1: C & A
 //│ ║         	          ^
 //│ ╟── from intersection type:
-//│ ║  l.117: 	trait T1: C & A
+//│ ║  l.134: 	trait T1: C & A
 //│ ╙──       	          ^^^^^
 //│ t: error | {x: 1} & #A & #T1
 //│  = [Function: t]
@@ -155,10 +172,10 @@ class C1: B & T1 & { y: "hi" | "hello" }
 :e
 c1 = C1 { }
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.156: 	c1 = C1 { }
+//│ ║  l.173: 	c1 = C1 { }
 //│ ║         	     ^^^^^^
 //│ ╟── record literal of type `anything` is not a record (expected a record with fields: y, x)
-//│ ║  l.156: 	c1 = C1 { }
+//│ ║  l.173: 	c1 = C1 { }
 //│ ╙──       	        ^^^
 //│ c1: C1 & {x: nothing, y: nothing} | error
 //│   = C1 { y: undefined, x: undefined }
@@ -168,12 +185,30 @@ c1 = C1 { x = 1; y = "hi" }
 //│   = C1 { y: 'hi', x: 1 }
 
 c1: T1
-//│ res: T1
-//│    = C1 { y: 'hi', x: 1 }
+//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
+//│ 	at: scala.Predef$.require(Predef.scala:324)
+//│ 	at: mlscript.TypeDefs.clsNameToNomTag(TypeDefs.scala:122)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mkTag$1(TyperHelpers.scala:1093)
+//│ 	at: scala.Option.getOrElse(Option.scala:201)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag$(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.mkTag(TyperDatatypes.scala:363)
+//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:707)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$106(TypeSimplifier.scala:464)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
 
 c1: A
-//│ res: A
-//│    = C1 { y: 'hi', x: 1 }
+//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
+//│ 	at: scala.Predef$.require(Predef.scala:324)
+//│ 	at: mlscript.TypeDefs.clsNameToNomTag(TypeDefs.scala:122)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mkTag$1(TyperHelpers.scala:1093)
+//│ 	at: scala.Option.getOrElse(Option.scala:201)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag$(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.mkTag(TyperDatatypes.scala:363)
+//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:707)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$106(TypeSimplifier.scala:464)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
 
 c1.x
 c1.y

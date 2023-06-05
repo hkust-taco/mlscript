@@ -78,33 +78,9 @@ let i2 = TwoInts((1,2))
 //│ let i2: TwoInts | error
 
 i2: Product[int, int]
-//│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.80: 	i2: Product[int, int]
-//│ ║        	^^
-//│ ╟── application of type `TwoInts` is not an instance of type `Product`
-//│ ║  l.68: 	let i2 = TwoInts((1,2))
-//│ ║        	         ^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `#Product`
-//│ ║  l.80: 	i2: Product[int, int]
-//│ ║        	^^
-//│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.80: 	i2: Product[int, int]
-//│ ╙──      	    ^^^^^^^^^^^^^^^^^
 //│ Product[int, int]
 
 i2: Into[int]
-//│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.95: 	i2: Into[int]
-//│ ║        	^^
-//│ ╟── application of type `TwoInts` is not an instance of type `Into`
-//│ ║  l.68: 	let i2 = TwoInts((1,2))
-//│ ║        	         ^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `#Into`
-//│ ║  l.95: 	i2: Into[int]
-//│ ║        	^^
-//│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.95: 	i2: Into[int]
-//│ ╙──      	    ^^^^^^^^^
 //│ Into[int]
 
 i2.pair
@@ -119,12 +95,12 @@ let p1: Product[int, int]
 :e
 p1: Product[bool, int]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.120: 	p1: Product[bool, int]
-//│ ║         	^^
+//│ ║  l.96: 	p1: Product[bool, int]
+//│ ║        	^^
 //│ ╟── expression of type `int & ?A` is not an instance of type `bool`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.120: 	p1: Product[bool, int]
-//│ ╙──       	            ^^^^
+//│ ║  l.96: 	p1: Product[bool, int]
+//│ ╙──      	            ^^^^
 //│ Product[bool, int]
 
 p1: Into[int]
@@ -133,12 +109,12 @@ p1: Into[int]
 :e
 p1: Into[bool]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.134: 	p1: Into[bool]
+//│ ║  l.110: 	p1: Into[bool]
 //│ ║         	^^
 //│ ╟── type `int` is not an instance of type `bool`
-//│ ║  l.116: 	let p1: Product[int, int]
-//│ ║         	                ^^^
+//│ ║  l.92: 	let p1: Product[int, int]
+//│ ║        	                ^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.134: 	p1: Into[bool]
+//│ ║  l.110: 	p1: Into[bool]
 //│ ╙──       	         ^^^^
 //│ Into[bool]

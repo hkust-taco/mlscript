@@ -141,34 +141,39 @@ class C3: { default: string } & ~MyTrait[anything]
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 def strawman: C2 & ~MyTrait[anything]
-//│ strawman: C2 & ~MyTrait[?]
-//│         = <missing implementation>
+//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
+//│ 	at: scala.Predef$.require(Predef.scala:324)
+//│ 	at: mlscript.TypeDefs.clsNameToNomTag(TypeDefs.scala:122)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mkTag$1(TyperHelpers.scala:1093)
+//│ 	at: scala.Option.getOrElse(Option.scala:201)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag$(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.mkTag(TyperDatatypes.scala:363)
+//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:707)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$106(TypeSimplifier.scala:464)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
 
 test2 strawman
 //│ res: string
-//│    = <no result>
-//│      strawman is not implemented
+//│ Code generation encountered an error:
+//│   unresolved symbol strawman
 
 strawman: C2
 //│ res: C2
-//│    = <no result>
-//│      strawman is not implemented
+//│ Code generation encountered an error:
+//│   unresolved symbol strawman
 
 :e
 strawman: ~{ value: anything }
-//│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.158: 	strawman: ~{ value: anything }
-//│ ║         	^^^^^^^^
-//│ ╟── type `C2 & ~MyTrait[?]` does not match type `~{value: anything}`
-//│ ║  l.143: 	def strawman: C2 & ~MyTrait[anything]
-//│ ║         	              ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `~{value: anything}`
-//│ ║  l.158: 	strawman: ~{ value: anything }
-//│ ║         	^^^^^^^^
-//│ ╟── Note: constraint arises from type negation:
-//│ ║  l.158: 	strawman: ~{ value: anything }
-//│ ╙──       	          ^^^^^^^^^^^^^^^^^^^^
-//│ res: nothing
-//│    = <no result>
-//│      strawman is not implemented
+//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
+//│ 	at: scala.Predef$.require(Predef.scala:324)
+//│ 	at: mlscript.TypeDefs.clsNameToNomTag(TypeDefs.scala:122)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mkTag$1(TyperHelpers.scala:1093)
+//│ 	at: scala.Option.getOrElse(Option.scala:201)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag$(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.mkTag(TyperDatatypes.scala:363)
+//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:707)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$106(TypeSimplifier.scala:464)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
 

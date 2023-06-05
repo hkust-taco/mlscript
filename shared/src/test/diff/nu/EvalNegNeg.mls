@@ -61,31 +61,7 @@ fun mk(n) = if n is
   0 then Lit(3)
   1 then Neg(mk(n - 1))
   _ then Add(mk(n - 1), mk(n - 1))
-//│ ╔══[ERROR] Type mismatch in definition:
-//│ ║  l.60: 	fun mk(n) = if n is
-//│ ║        	    ^^^^^^^^^^^^^^^
-//│ ║  l.61: 	  0 then Lit(3)
-//│ ║        	^^^^^^^^^^^^^^^
-//│ ║  l.62: 	  1 then Neg(mk(n - 1))
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.63: 	  _ then Add(mk(n - 1), mk(n - 1))
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── operator application of type `Int` is not an instance of type `Object`
-//│ ║  l.63: 	  _ then Add(mk(n - 1), mk(n - 1))
-//│ ║        	                           ^^^^^
-//│ ╟── Note: constraint arises from `case` expression:
-//│ ║  l.60: 	fun mk(n) = if n is
-//│ ║        	               ^^^^
-//│ ║  l.61: 	  0 then Lit(3)
-//│ ║        	^^^^^^^^^^^^^^^^
-//│ ║  l.62: 	  1 then Neg(mk(n - 1))
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.63: 	  _ then Add(mk(n - 1), mk(n - 1))
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── from reference:
-//│ ║  l.60: 	fun mk(n) = if n is
-//│ ╙──      	               ^
-//│ fun mk: forall 'E. (0 | 1) -> 'E
+//│ fun mk: forall 'E. (0 | 1 | Int & ~0 & ~1) -> 'E
 //│   where
 //│     'E :> Add['E] | Lit | Neg['E]
 

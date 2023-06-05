@@ -7,79 +7,92 @@ trait S0[A]
   method Foo0: A -> A
 trait T0[B]: S0[B]
 //│ Defined trait S0[=A]
-//│ Declared S0.Foo0: S0['A] -> 'A -> 'A
-//│ Defined trait T0[=B]
+//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
+//│ 	at: scala.Predef$.require(Predef.scala:324)
+//│ 	at: mlscript.TypeDefs.clsNameToNomTag(TypeDefs.scala:122)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mkTag$1(TyperHelpers.scala:1093)
+//│ 	at: scala.Option.getOrElse(Option.scala:201)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag$(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.mkTag(TyperDatatypes.scala:363)
+//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:707)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$106(TypeSimplifier.scala:464)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
 
 :e
 class A0: S0[int] & T0[string]
 (A0{}).Foo0
 //│ ╔══[ERROR] Type mismatch in type definition:
-//│ ║  l.14: 	class A0: S0[int] & T0[string]
+//│ ║  l.23: 	class A0: S0[int] & T0[string]
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `int` is not an instance of `string`
-//│ ║  l.14: 	class A0: S0[int] & T0[string]
+//│ ║  l.23: 	class A0: S0[int] & T0[string]
 //│ ║        	             ^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.14: 	class A0: S0[int] & T0[string]
+//│ ║  l.23: 	class A0: S0[int] & T0[string]
 //│ ╙──      	                       ^^^^^^
 //│ ╔══[ERROR] Type mismatch in type definition:
-//│ ║  l.14: 	class A0: S0[int] & T0[string]
+//│ ║  l.23: 	class A0: S0[int] & T0[string]
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `string` is not an instance of `int`
-//│ ║  l.14: 	class A0: S0[int] & T0[string]
+//│ ║  l.23: 	class A0: S0[int] & T0[string]
 //│ ║        	                       ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.14: 	class A0: S0[int] & T0[string]
+//│ ║  l.23: 	class A0: S0[int] & T0[string]
 //│ ╙──      	             ^^^
 //│ Defined class A0
 //│ ╔══[ERROR] Instantiation of an abstract type is forbidden
-//│ ║  l.15: 	(A0{}).Foo0
+//│ ║  l.24: 	(A0{}).Foo0
 //│ ║        	 ^^
 //│ ╟── Note that class A0 is abstract:
-//│ ║  l.14: 	class A0: S0[int] & T0[string]
+//│ ║  l.23: 	class A0: S0[int] & T0[string]
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Hint: method Foo0 is abstract
-//│ ║  l.14: 	class A0: S0[int] & T0[string]
+//│ ║  l.23: 	class A0: S0[int] & T0[string]
 //│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: 'A -> 'A
-//│    = undefined
+//│ Code generation encountered an error:
+//│   undeclared type name S0 when resolving base classes
 
 :e
 class A0_2: S0[int] & T0[string]
   method Foo0 x = 1
 //│ ╔══[ERROR] Type mismatch in type definition:
-//│ ║  l.48: 	class A0_2: S0[int] & T0[string]
+//│ ║  l.58: 	class A0_2: S0[int] & T0[string]
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `int` is not an instance of `string`
-//│ ║  l.48: 	class A0_2: S0[int] & T0[string]
+//│ ║  l.58: 	class A0_2: S0[int] & T0[string]
 //│ ║        	               ^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.48: 	class A0_2: S0[int] & T0[string]
+//│ ║  l.58: 	class A0_2: S0[int] & T0[string]
 //│ ╙──      	                         ^^^^^^
 //│ ╔══[ERROR] Type mismatch in type definition:
-//│ ║  l.48: 	class A0_2: S0[int] & T0[string]
+//│ ║  l.58: 	class A0_2: S0[int] & T0[string]
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `string` is not an instance of `int`
-//│ ║  l.48: 	class A0_2: S0[int] & T0[string]
+//│ ║  l.58: 	class A0_2: S0[int] & T0[string]
 //│ ║        	                         ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.48: 	class A0_2: S0[int] & T0[string]
+//│ ║  l.58: 	class A0_2: S0[int] & T0[string]
 //│ ╙──      	               ^^^
 //│ ╔══[ERROR] Type mismatch in method definition:
-//│ ║  l.49: 	  method Foo0 x = 1
+//│ ║  l.59: 	  method Foo0 x = 1
 //│ ║        	         ^^^^^^^^^^
 //│ ╟── integer literal of type `1` is not an instance of type `string`
-//│ ║  l.49: 	  method Foo0 x = 1
+//│ ║  l.59: 	  method Foo0 x = 1
 //│ ║        	                  ^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.48: 	class A0_2: S0[int] & T0[string]
+//│ ║  l.58: 	class A0_2: S0[int] & T0[string]
 //│ ╙──      	                         ^^^^^^
 //│ Defined class A0_2
 //│ Defined A0_2.Foo0: A0_2 -> anything -> 1
+//│ Code generation encountered an error:
+//│   undeclared type name S0 when resolving base classes
 
 (A0_2{}).Foo0
 //│ res: ('A & (int | string)) -> 'A
-//│    = [Function: Foo0]
+//│ Runtime error:
+//│   ReferenceError: A0_2 is not defined
 
 
 // ———
@@ -88,78 +101,102 @@ class A0_2: S0[int] & T0[string]
 trait R1[A]
   method Foo1: A -> A
 //│ Defined trait R1[=A]
-//│ Declared R1.Foo1: R1['A] -> 'A -> 'A
+//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
+//│ 	at: scala.Predef$.require(Predef.scala:324)
+//│ 	at: mlscript.TypeDefs.clsNameToNomTag(TypeDefs.scala:122)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mkTag$1(TyperHelpers.scala:1093)
+//│ 	at: scala.Option.getOrElse(Option.scala:201)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag$(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.mkTag(TyperDatatypes.scala:363)
+//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:707)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$106(TypeSimplifier.scala:464)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
 
 trait S1: R1[int]
   method Foo1 x = 1
 trait T1: R1[string]
   method Foo1 x = "a"
 //│ Defined trait S1
-//│ Defined S1.Foo1: S1 -> anything -> 1
-//│ Defined trait T1
-//│ Defined T1.Foo1: T1 -> anything -> "a"
+//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
+//│ 	at: scala.Predef$.require(Predef.scala:324)
+//│ 	at: mlscript.TypeDefs.clsNameToNomTag(TypeDefs.scala:122)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mkTag$1(TyperHelpers.scala:1093)
+//│ 	at: scala.Option.getOrElse(Option.scala:201)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag$(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.mkTag(TyperDatatypes.scala:363)
+//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:707)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$106(TypeSimplifier.scala:464)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
 
 :e
 class A1: S1 & T1
 //│ ╔══[ERROR] Type mismatch in type definition:
-//│ ║  l.103: 	class A1: S1 & T1
+//│ ║  l.134: 	class A1: S1 & T1
 //│ ║         	      ^^^^^^^^^^^
 //│ ╟── type `int` is not an instance of `string`
-//│ ║  l.93: 	trait S1: R1[int]
-//│ ║        	             ^^^
+//│ ║  l.116: 	trait S1: R1[int]
+//│ ║         	             ^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.95: 	trait T1: R1[string]
-//│ ╙──      	             ^^^^^^
+//│ ║  l.118: 	trait T1: R1[string]
+//│ ╙──       	             ^^^^^^
 //│ ╔══[ERROR] Type mismatch in type definition:
-//│ ║  l.103: 	class A1: S1 & T1
+//│ ║  l.134: 	class A1: S1 & T1
 //│ ║         	      ^^^^^^^^^^^
 //│ ╟── type `string` is not an instance of `int`
-//│ ║  l.95: 	trait T1: R1[string]
-//│ ║        	             ^^^^^^
+//│ ║  l.118: 	trait T1: R1[string]
+//│ ║         	             ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.93: 	trait S1: R1[int]
-//│ ╙──      	             ^^^
+//│ ║  l.116: 	trait S1: R1[int]
+//│ ╙──       	             ^^^
 //│ ╔══[ERROR] An overriding method definition must be given when inheriting from multiple method definitions
-//│ ║  l.103: 	class A1: S1 & T1
+//│ ║  l.134: 	class A1: S1 & T1
 //│ ║         	      ^^
 //│ ╟── Definitions of method Foo1 inherited from:
 //│ ╟── • S1
-//│ ║  l.94: 	  method Foo1 x = 1
-//│ ║        	         ^^^^^^^^^^
+//│ ║  l.117: 	  method Foo1 x = 1
+//│ ║         	         ^^^^^^^^^^
 //│ ╟── • T1
-//│ ║  l.96: 	  method Foo1 x = "a"
-//│ ╙──      	         ^^^^^^^^^^^^
+//│ ║  l.119: 	  method Foo1 x = "a"
+//│ ╙──       	         ^^^^^^^^^^^^
 //│ Defined class A1
+//│ Code generation encountered an error:
+//│   undeclared type name S1 when resolving base classes
 
 a1 = A1{}
 //│ a1: A1
-//│   = A1 { Foo1: [Function (anonymous)] }
+//│ Runtime error:
+//│   ReferenceError: A1 is not defined
 
 a1.Foo1
 //│ res: ('A & (int | string)) -> 'A
-//│    = [Function (anonymous)]
+//│ Runtime error:
+//│   ReferenceError: a1 is not defined
 
 a1: S1
 a1: R1[int]
 a1: R1[string]
 a1: R1['_]
-//│ res: S1
-//│    = A1 { Foo1: [Function (anonymous)] }
-//│ res: R1[int]
-//│    = A1 { Foo1: [Function (anonymous)] }
-//│ res: R1[string]
-//│    = A1 { Foo1: [Function (anonymous)] }
-//│ res: R1['_]
-//│   where
-//│     '_ <: int | string
-//│    = A1 { Foo1: [Function (anonymous)] }
+//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
+//│ 	at: scala.Predef$.require(Predef.scala:324)
+//│ 	at: mlscript.TypeDefs.clsNameToNomTag(TypeDefs.scala:122)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mkTag$1(TyperHelpers.scala:1093)
+//│ 	at: scala.Option.getOrElse(Option.scala:201)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag$(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.mkTag(TyperDatatypes.scala:363)
+//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:707)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$106(TypeSimplifier.scala:464)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
 
 :ns
 a1: R1['_]
 //│ res: R1['_]
 //│   where
 //│     '_ <: int | string
-//│    = A1 { Foo1: [Function (anonymous)] }
+//│ Runtime error:
+//│   ReferenceError: a1 is not defined
 
 
 :e
@@ -167,45 +204,33 @@ a1: R1['_]
 class A1_2: S1 & T1
   method Foo1 = error
 //│ ╔══[ERROR] Type mismatch in type definition:
-//│ ║  l.167: 	class A1_2: S1 & T1
+//│ ║  l.204: 	class A1_2: S1 & T1
 //│ ║         	      ^^^^^^^^^^^^^
 //│ ╟── type `int` is not an instance of `string`
-//│ ║  l.93: 	trait S1: R1[int]
-//│ ║        	             ^^^
+//│ ║  l.116: 	trait S1: R1[int]
+//│ ║         	             ^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.95: 	trait T1: R1[string]
-//│ ╙──      	             ^^^^^^
+//│ ║  l.118: 	trait T1: R1[string]
+//│ ╙──       	             ^^^^^^
 //│ ╔══[ERROR] Type mismatch in type definition:
-//│ ║  l.167: 	class A1_2: S1 & T1
+//│ ║  l.204: 	class A1_2: S1 & T1
 //│ ║         	      ^^^^^^^^^^^^^
 //│ ╟── type `string` is not an instance of `int`
-//│ ║  l.95: 	trait T1: R1[string]
-//│ ║        	             ^^^^^^
+//│ ║  l.118: 	trait T1: R1[string]
+//│ ║         	             ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.93: 	trait S1: R1[int]
-//│ ╙──      	             ^^^
+//│ ║  l.116: 	trait S1: R1[int]
+//│ ╙──       	             ^^^
 //│ Defined class A1_2
 //│ Defined A1_2.Foo1: A1_2 -> nothing
-//│ // Prelude
-//│ function error() {
-//│   throw new Error("unexpected runtime error");
-//│ }
-//│ class A1_2 {
-//│   constructor(fields) {
-//│     S1.implement(this);
-//│     T1.implement(this);
-//│   }
-//│   get Foo1() {
-//│     return error();
-//│   }
-//│ }
-//│ // End of generated code
+//│ Code generation encountered an error:
+//│   undeclared type name S1 when resolving base classes
 
 :re
 (A1_2{}).Foo1
 //│ res: ('A & (int | string)) -> 'A
 //│ Runtime error:
-//│   Error: unexpected runtime error
+//│   ReferenceError: A1_2 is not defined
 
 
 f = 0
@@ -226,30 +251,60 @@ class C0[A]: S0[A]
   method Foo0 = id
 //│ Defined class C0[=A]
 //│ Defined C0.Foo0: C0['A] -> 'a -> 'a
+//│ Code generation encountered an error:
+//│   undeclared type name S0 when resolving base classes
 
 def s0: S0['a] -> S0['a]
-//│ s0: S0['a] -> S0['a]
-//│   = <missing implementation>
+//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
+//│ 	at: scala.Predef$.require(Predef.scala:324)
+//│ 	at: mlscript.TypeDefs.clsNameToNomTag(TypeDefs.scala:122)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mkTag$1(TyperHelpers.scala:1093)
+//│ 	at: scala.Option.getOrElse(Option.scala:201)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag$(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.mkTag(TyperDatatypes.scala:363)
+//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:707)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$106(TypeSimplifier.scala:464)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
 
 s0 (C0{})
-//│ res: S0['a]
-//│    = <no result>
-//│      s0 is not implemented
+//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
+//│ 	at: scala.Predef$.require(Predef.scala:324)
+//│ 	at: mlscript.TypeDefs.clsNameToNomTag(TypeDefs.scala:122)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mkTag$1(TyperHelpers.scala:1093)
+//│ 	at: scala.Option.getOrElse(Option.scala:201)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag$(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.mkTag(TyperDatatypes.scala:363)
+//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:707)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$106(TypeSimplifier.scala:464)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
 
 def s0: S0[?] -> S0[?]
-//│ s0: S0[?] -> S0[?]
-//│   = <missing implementation>
+//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
+//│ 	at: scala.Predef$.require(Predef.scala:324)
+//│ 	at: mlscript.TypeDefs.clsNameToNomTag(TypeDefs.scala:122)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mkTag$1(TyperHelpers.scala:1093)
+//│ 	at: scala.Option.getOrElse(Option.scala:201)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag$(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.mkTag(TyperDatatypes.scala:363)
+//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:707)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$106(TypeSimplifier.scala:464)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
 
 :e
 s0 (C0{})
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.244: 	s0 (C0{})
-//│ ║         	^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.239: 	def s0: S0[?] -> S0[?]
-//│ ╙──       	           ^
-//│ res: error | S0[?]
-//│    = <no result>
-//│      s0 is not implemented
+//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
+//│ 	at: scala.Predef$.require(Predef.scala:324)
+//│ 	at: mlscript.TypeDefs.clsNameToNomTag(TypeDefs.scala:122)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mkTag$1(TyperHelpers.scala:1093)
+//│ 	at: scala.Option.getOrElse(Option.scala:201)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag$(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.mkTag(TyperDatatypes.scala:363)
+//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:707)
+//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:698)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$106(TypeSimplifier.scala:464)
 
 

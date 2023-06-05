@@ -156,11 +156,29 @@ t.x
 //│    = 1
 
 t = s: S
-//│ t: S
-//│  = { x: 1 }
+//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
+//│ 	at: scala.Predef$.require(Predef.scala:324)
+//│ 	at: mlscript.TypeDefs.clsNameToNomTag(TypeDefs.scala:122)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mkTag$1(TyperHelpers.scala:1093)
+//│ 	at: scala.Option.getOrElse(Option.scala:201)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag$(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.mkTag(TyperDatatypes.scala:363)
+//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:707)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$106(TypeSimplifier.scala:464)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
 
 t.x
-//│ res: int
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.171: 	t.x
+//│ ║         	^^^
+//│ ╟── type `#S` does not have field 'x'
+//│ ║  l.140: 	t = s: s
+//│ ║         	       ^
+//│ ╟── but it flows into reference with expected type `{x: ?x}`
+//│ ║  l.171: 	t.x
+//│ ╙──       	^
+//│ res: error
 //│    = 1
 
 
@@ -169,63 +187,77 @@ trait Lol
 class Hey
   method Foo = "oops"
 //│ Defined trait Lol
-//│ Defined Lol.Foo: Lol -> 1
-//│ Defined class Hey
-//│ Defined Hey.Foo: Hey -> "oops"
+//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
+//│ 	at: scala.Predef$.require(Predef.scala:324)
+//│ 	at: mlscript.TypeDefs.clsNameToNomTag(TypeDefs.scala:122)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mkTag$1(TyperHelpers.scala:1093)
+//│ 	at: scala.Option.getOrElse(Option.scala:201)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag$(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.mkTag(TyperDatatypes.scala:363)
+//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:707)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$106(TypeSimplifier.scala:464)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
 
 :e
 class H: Lol & Hey
 //│ ╔══[ERROR] An overriding method definition must be given when inheriting from multiple method definitions
-//│ ║  l.177: 	class H: Lol & Hey
+//│ ║  l.203: 	class H: Lol & Hey
 //│ ║         	      ^
 //│ ╟── Definitions of method Foo inherited from:
 //│ ╟── • Lol
-//│ ║  l.168: 	  method Foo = 1
+//│ ║  l.186: 	  method Foo = 1
 //│ ║         	         ^^^^^^^
 //│ ╟── • Hey
-//│ ║  l.170: 	  method Foo = "oops"
+//│ ║  l.188: 	  method Foo = "oops"
 //│ ╙──       	         ^^^^^^^^^^^^
 //│ Defined class H
+//│ Code generation encountered an error:
+//│   undeclared type name Lol when resolving base classes
 
 
 // Forbid trait constructors when the trait contains method defs as well:
 
 h = Hey{}
 //│ h: Hey
-//│  = Hey {}
+//│ Code generation encountered an error:
+//│   unresolved symbol Hey
 
 :e
 l = Lol h
 //│ ╔══[ERROR] Instantiation of an abstract type is forbidden
-//│ ║  l.198: 	l = Lol h
+//│ ║  l.227: 	l = Lol h
 //│ ║         	    ^^^
 //│ ╟── Note that traits with methods are always considered abstract
-//│ ║  l.167: 	trait Lol
+//│ ║  l.185: 	trait Lol
 //│ ╙──       	      ^^^
 //│ l: error
-//│  = Hey {}
+//│ Code generation encountered an error:
+//│   unresolved symbol Lol
 
 :e
 e = Lol
 e
 //│ ╔══[ERROR] Instantiation of an abstract type is forbidden
-//│ ║  l.209: 	e = Lol
+//│ ║  l.239: 	e = Lol
 //│ ║         	    ^^^
 //│ ╟── Note that traits with methods are always considered abstract
-//│ ║  l.167: 	trait Lol
+//│ ║  l.185: 	trait Lol
 //│ ╙──       	      ^^^
 //│ e: error
-//│  = [Function: build]
 //│ res: error
-//│    = [Function: build]
+//│ Code generation encountered an error:
+//│   unresolved symbol Lol
 
 l.(Lol.Foo)
 //│ res: 1
-//│    = undefined
+//│ Code generation encountered an error:
+//│   unresolved symbol l
 
 l.(Hey.Foo)
 //│ res: "oops"
-//│    = undefined
+//│ Code generation encountered an error:
+//│   unresolved symbol l
 
 
 trait Lol2: Lol
@@ -234,10 +266,10 @@ trait Lol2: Lol
 :e
 Lol2
 //│ ╔══[ERROR] Instantiation of an abstract type is forbidden
-//│ ║  l.235: 	Lol2
+//│ ║  l.267: 	Lol2
 //│ ║         	^^^^
 //│ ╟── Note that traits with methods are always considered abstract
-//│ ║  l.231: 	trait Lol2: Lol
+//│ ║  l.263: 	trait Lol2: Lol
 //│ ╙──       	      ^^^^^^^^^
 //│ res: error
 //│    = [Function: build]

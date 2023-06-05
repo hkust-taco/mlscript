@@ -221,9 +221,17 @@ class Class1B: Class1A["a" | "b"] & Trait1A["b" | "c"]
 //│ Defined class Class1A[+A]
 //│ Declared Class1A.MtdA: Class1A['A] -> 'A
 //│ Defined trait Trait1A[+B]
-//│ Declared Trait1A.MtdA: Trait1A['B] -> 'B
-//│ Defined class Class1B
-//│ Defined Class1B.MtdA: Class1B -> "b"
+//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
+//│ 	at: scala.Predef$.require(Predef.scala:324)
+//│ 	at: mlscript.TypeDefs.clsNameToNomTag(TypeDefs.scala:122)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mkTag$1(TyperHelpers.scala:1093)
+//│ 	at: scala.Option.getOrElse(Option.scala:201)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag$(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.mkTag(TyperDatatypes.scala:363)
+//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:707)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$106(TypeSimplifier.scala:464)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
 
 
 trait Trait2A[A]
@@ -235,13 +243,17 @@ class Class2C: Class2B[int, bool]
     method MtdA = 42
     method MtdB = true
 //│ Defined trait Trait2A[+A]
-//│ Declared Trait2A.MtdB: Trait2A['A] -> 'A
-//│ Defined class Class2B[+A, +B]
-//│ Declared Class2B.MtdA: Class2B['A, ?] -> 'A
-//│ Declared Class2B.MtdB: Class2B[?, 'B] -> 'B
-//│ Defined class Class2C
-//│ Defined Class2C.MtdA: Class2C -> 42
-//│ Defined Class2C.MtdB: Class2C -> true
+//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
+//│ 	at: scala.Predef$.require(Predef.scala:324)
+//│ 	at: mlscript.TypeDefs.clsNameToNomTag(TypeDefs.scala:122)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mkTag$1(TyperHelpers.scala:1093)
+//│ 	at: scala.Option.getOrElse(Option.scala:201)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag$(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.mkTag(TyperDatatypes.scala:363)
+//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:707)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$106(TypeSimplifier.scala:464)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
 
 
 :e
@@ -249,23 +261,25 @@ class Class3C: Class2C
     method MtdA = 42
     method MtdB = 42
 //│ ╔══[ERROR] Type mismatch in method definition:
-//│ ║  l.250: 	    method MtdB = 42
+//│ ║  l.262: 	    method MtdB = 42
 //│ ║         	           ^^^^^^^^^
 //│ ╟── integer literal of type `42` is not an instance of type `bool`
-//│ ║  l.250: 	    method MtdB = 42
+//│ ║  l.262: 	    method MtdB = 42
 //│ ║         	                  ^^
 //│ ╟── but it flows into method definition with expected type `bool`
-//│ ║  l.250: 	    method MtdB = 42
+//│ ║  l.262: 	    method MtdB = 42
 //│ ║         	           ^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.234: 	class Class2C: Class2B[int, bool]
+//│ ║  l.242: 	class Class2C: Class2B[int, bool]
 //│ ║         	                            ^^^^
 //│ ╟── from inherited method declaration:
-//│ ║  l.233: 	    method MtdB: B
+//│ ║  l.241: 	    method MtdB: B
 //│ ╙──       	           ^^^^^^^
 //│ Defined class Class3C
 //│ Defined Class3C.MtdA: Class3C -> 42
 //│ Defined Class3C.MtdB: Class3C -> 42
+//│ Code generation encountered an error:
+//│   undeclared type name Class2C when resolving base classes
 
 type Id[T] = T
 class Test1[A]: { x: A }
@@ -283,10 +297,10 @@ class Test2[B]: Test1[Id[B]] & { x: B }
 class Test3A: Test1['a -> 'a]
 Test3A.F
 //│ ╔══[ERROR] cannot inherit from a polymorphic type
-//│ ║  l.283: 	class Test3A: Test1['a -> 'a]
+//│ ║  l.297: 	class Test3A: Test1['a -> 'a]
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] identifier not found: Test3A
-//│ ║  l.284: 	Test3A.F
+//│ ║  l.298: 	Test3A.F
 //│ ╙──       	^^^^^^
 //│ res: nothing
 //│    = undefined
@@ -301,10 +315,10 @@ Test3A.F
 class Test3B: Test1['a -> 'a] & { x: 'a }
 Test3B.F
 //│ ╔══[ERROR] cannot inherit from a polymorphic type
-//│ ║  l.301: 	class Test3B: Test1['a -> 'a] & { x: 'a }
+//│ ║  l.315: 	class Test3B: Test1['a -> 'a] & { x: 'a }
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] identifier not found: Test3B
-//│ ║  l.302: 	Test3B.F
+//│ ║  l.316: 	Test3B.F
 //│ ╙──       	^^^^^^
 //│ res: nothing
 //│    = undefined
@@ -315,10 +329,10 @@ Test3B.F
 class Test4A[A]: { x: A }
     method Mth4A[A]: A
 //│ ╔══[WARNING] Method type parameter A
-//│ ║  l.315: 	class Test4A[A]: { x: A }
+//│ ║  l.329: 	class Test4A[A]: { x: A }
 //│ ║         	             ^
 //│ ╟── shadows class type parameter A
-//│ ║  l.316: 	    method Mth4A[A]: A
+//│ ║  l.330: 	    method Mth4A[A]: A
 //│ ╙──       	                 ^
 //│ Defined class Test4A[+A]
 //│ Declared Test4A.Mth4A: Test4A[?] -> nothing
@@ -339,14 +353,22 @@ trait E
   method G: int
 class H: D & E
 //│ Defined trait D
-//│ Defined D.G: D -> 1
-//│ Defined trait E
-//│ Declared E.G: E -> int
-//│ Defined class H
+//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
+//│ 	at: scala.Predef$.require(Predef.scala:324)
+//│ 	at: mlscript.TypeDefs.clsNameToNomTag(TypeDefs.scala:122)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mkTag$1(TyperHelpers.scala:1093)
+//│ 	at: scala.Option.getOrElse(Option.scala:201)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag$(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.mkTag(TyperDatatypes.scala:363)
+//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:707)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$106(TypeSimplifier.scala:464)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
 
 ((H{}): D).(D.G)
 //│ res: 1
-//│    = undefined
+//│ Code generation encountered an error:
+//│   unresolved symbol H
 
 
 
@@ -358,10 +380,22 @@ class Fee
 trait Fee2
     method F: 2 | 3
 //│ Defined trait Fee2
-//│ Declared Fee2.F: Fee2 -> (2 | 3)
+//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
+//│ 	at: scala.Predef$.require(Predef.scala:324)
+//│ 	at: mlscript.TypeDefs.clsNameToNomTag(TypeDefs.scala:122)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mkTag$1(TyperHelpers.scala:1093)
+//│ 	at: scala.Option.getOrElse(Option.scala:201)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag$(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.mkTag(TyperDatatypes.scala:363)
+//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:707)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$106(TypeSimplifier.scala:464)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
 
 class Ber: Fee & Fee2
 //│ Defined class Ber
+//│ Code generation encountered an error:
+//│   undeclared type name Fee2 when resolving base classes
 
 Ber.F
 //│ res: Ber -> 2
@@ -370,13 +404,13 @@ Ber.F
 :e
 Ber
 //│ ╔══[ERROR] Instantiation of an abstract type is forbidden
-//│ ║  l.371: 	Ber
+//│ ║  l.405: 	Ber
 //│ ║         	^^^
 //│ ╟── Note that class Ber is abstract:
-//│ ║  l.363: 	class Ber: Fee & Fee2
+//│ ║  l.395: 	class Ber: Fee & Fee2
 //│ ║         	      ^^^^^^^^^^^^^^^
 //│ ╟── Hint: method F is abstract
-//│ ║  l.363: 	class Ber: Fee & Fee2
+//│ ║  l.395: 	class Ber: Fee & Fee2
 //│ ╙──       	      ^^^^^^^^^^^^^^^
 //│ res: error
 //│    = [Function: res]
@@ -393,19 +427,33 @@ class Test5A[A]: { a: A }
 trait Test5B: { tag: int }
     method Mth5B = this.tag
 //│ Defined trait Test5B
-//│ Defined Test5B.Mth5B: Test5B -> int
+//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
+//│ 	at: scala.Predef$.require(Predef.scala:324)
+//│ 	at: mlscript.TypeDefs.clsNameToNomTag(TypeDefs.scala:122)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mkTag$1(TyperHelpers.scala:1093)
+//│ 	at: scala.Option.getOrElse(Option.scala:201)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag$(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.mkTag(TyperDatatypes.scala:363)
+//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:707)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$106(TypeSimplifier.scala:464)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
 
 
 class Test5C[A]: Test5A[A] & Test5B
     method Mth5A f = case this.Mth5B of { 0 -> f this.a | _ -> f this.a }
 //│ Defined class Test5C[+A]
 //│ Defined Test5C.Mth5A: Test5C['A] -> ('A -> 'a) -> 'a
+//│ Code generation encountered an error:
+//│   undeclared type name Test5B when resolving base classes
 
 
 class Test5D: Test5A[int] & Test5B
     method Mth5A f = case this.Mth5B of { 0 -> f this.a | _ -> f this.Mth5B }
 //│ Defined class Test5D
 //│ Defined Test5D.Mth5A: Test5D -> (int -> 'a) -> 'a
+//│ Code generation encountered an error:
+//│   undeclared type name Test5B when resolving base classes
 
 
 
@@ -430,15 +478,36 @@ trait Test7A
     method Mth7A: int
     method Mth7A = 0
 //│ Defined trait Test7A
-//│ Declared Test7A.Mth7A: Test7A -> int
-//│ Defined Test7A.Mth7A: Test7A -> 0
+//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
+//│ 	at: scala.Predef$.require(Predef.scala:324)
+//│ 	at: mlscript.TypeDefs.clsNameToNomTag(TypeDefs.scala:122)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mkTag$1(TyperHelpers.scala:1093)
+//│ 	at: scala.Option.getOrElse(Option.scala:201)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag$(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.mkTag(TyperDatatypes.scala:363)
+//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:707)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$106(TypeSimplifier.scala:464)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
 
 trait Test7B
     method Mth7A: int
 //│ Defined trait Test7B
-//│ Declared Test7B.Mth7A: Test7B -> int
+//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
+//│ 	at: scala.Predef$.require(Predef.scala:324)
+//│ 	at: mlscript.TypeDefs.clsNameToNomTag(TypeDefs.scala:122)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mkTag$1(TyperHelpers.scala:1093)
+//│ 	at: scala.Option.getOrElse(Option.scala:201)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag$(TyperHelpers.scala:1091)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.mkTag(TyperDatatypes.scala:363)
+//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:707)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$106(TypeSimplifier.scala:464)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
 
 class Test7C: Test7A & Test7B
     method Mth7A = 42
 //│ Defined class Test7C
 //│ Defined Test7C.Mth7A: Test7C -> 42
+//│ Code generation encountered an error:
+//│   undeclared type name Test7A when resolving base classes
