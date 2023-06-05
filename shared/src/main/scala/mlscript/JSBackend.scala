@@ -1330,24 +1330,29 @@ class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
       (zeroWidthSpace + JSIdent("e") + zeroWidthSpace).log() :: Nil
     )
 
-    val fwdFuns = otherStmts.map {
-      case fd @ NuFunDef(isLetRec, Var(nme), _, L(_)) if (isLetRec.isEmpty || isLetRec.getOrElse(false)) =>
-        val recursive = isLetRec.getOrElse(true)
+    otherStmts.foreach {
+      case fd @ NuFunDef(isLetRec, Var(nme), _, L(rhs)) if (isLetRec.isEmpty || isLetRec.getOrElse(false)) =>
         val isByname = isLetRec.isEmpty
         val isByvalueRecIn = if (isByname) None else Some(true)
-        S(scope.declareValue(nme, isByvalueRecIn, true))
-      case _ => N
+        scope.declareValue(nme, isByvalueRecIn, rhs match {
+          case _: Lam => true
+          case _ => false
+        })
+      case _ => ()
     }
 
     // Generate statements.
-    val queries = otherStmts.iterator.zip(fwdFuns.iterator).map {
-      case (NuFunDef(isLetRec, nme @ Var(name), tys, rhs @ L(body)), fwdSym) =>
+    val queries = otherStmts.map {
+      case NuFunDef(isLetRec, nme @ Var(name), tys, rhs @ L(body)) =>
         val recursive = isLetRec.getOrElse(true)
         val isByname = isLetRec.isEmpty
         val bodyIsLam = body match { case _: Lam => true case _ => false }
         (if (recursive) {
           val isByvalueRecIn = if (isByname) None else Some(true)
-          val sym = fwdSym.getOrElse(scope.declareValue(name, isByvalueRecIn, bodyIsLam))
+          val sym = scope.resolveValue(name) match {
+            case Some(s: ValueSymbol) => s
+            case _ => scope.declareValue(name, isByvalueRecIn, bodyIsLam)
+          }
           try {
             val translated = translateTerm(body)
             scope.unregisterSymbol(sym)
@@ -1390,10 +1395,10 @@ class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
             )
           case L(reason) => JSTestBackend.AbortedQuery(reason)
         }
-      case (fd @ NuFunDef(isLetRec, Var(name), tys, R(ty)), _) =>
+      case fd @ NuFunDef(isLetRec, Var(name), tys, R(ty)) =>
         scope.declareStubValue(name)(allowEscape || fd.isDecl)
         JSTestBackend.EmptyQuery
-      case (term: Term, _) =>
+      case term: Term =>
         try {
           val body = translateTerm(term)(scope)
           val res = JSTestBackend.CodeQuery(scope.tempVars.emit(), (resultIdent := body) :: Nil)
@@ -1403,9 +1408,9 @@ class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
           case e: UnimplementedError => JSTestBackend.AbortedQuery(e.getMessage())
           case e: Throwable          => throw e
         }
-      case (_: Def, _) | (_: TypeDef, _) =>
+      case _: Def | _: TypeDef =>
         throw CodeGenError("Def and TypeDef are not supported in NewDef files.")
-    }.toList
+    }
 
     // If this is the first time, insert the declaration of `res`.
     var prelude: Ls[JSStmt] = Ls(moduleDecl, insDecl) ::: includes

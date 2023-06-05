@@ -31,10 +31,12 @@ fun bar = foo
 //│ fun foo: nothing
 //│ fun bar: nothing
 
+:re
 foo(bar)
 //│ nothing
 //│ res
-//│     = [Function: bar]
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded
 
 
 fun foo = {x: foo}
@@ -50,34 +52,42 @@ fun bar = {y: foo}
 //│ where
 //│   'foo :> {x: {y: 'foo}}
 
+:re
 foo
 //│ forall 'foo. 'foo
 //│   where
 //│     'foo :> {x: {y: 'foo}}
 //│ res
-//│     = { x: [Function: bar1] }
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded
 
 :ns
+:re
 foo
 //│ forall 'foo. {x: {y: 'foo}}
 //│   where
 //│     'foo :> {x: {y: 'foo}}
 //│ res
-//│     = { x: [Function: bar1] }
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded
 
+:re
 foo.x
 //│ 'x
 //│   where
 //│     'x :> {y: {x: 'x}}
 //│ res
-//│     = [Function: bar1]
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded
 
+:re
 foo.x.y
 //│ 'foo
 //│   where
 //│     'foo :> {x: {y: 'foo}}
 //│ res
-//│     = undefined
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded
 
 
 fun foo(a) = {h: a, t: bar(a)}
@@ -148,7 +158,7 @@ module Test1_2 {
   fun b = Test1_1.a
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.148: 	  fun b = Test1_1.a
+//│ ║  l.158: 	  fun b = Test1_1.a
 //│ ╙──       	                 ^^
 //│ module Test1_1 {
 //│   fun a: error
@@ -173,7 +183,7 @@ class Test1_2 {
   fun b = Test1_1().a
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.173: 	  fun b = Test1_1().a
+//│ ║  l.183: 	  fun b = Test1_1().a
 //│ ╙──       	                   ^^
 //│ class Test1_1 {
 //│   fun a: error
@@ -196,7 +206,7 @@ module Test2_2 {
   fun e = Test2_1.n
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.195: 	  fun c = Test2_1.a
+//│ ║  l.205: 	  fun c = Test2_1.a
 //│ ╙──       	                 ^^
 //│ module Test2_1 {
 //│   fun a: 123 | error

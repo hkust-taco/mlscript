@@ -63,22 +63,13 @@ f()
 //│   RangeError: Maximum call stack size exceeded
 
 // TODO (for later) this should be rejected by the type checker
-:re
+:ge
 :js
 let rec f =
   f
 //│ let rec f: nothing
-//│ // Prelude
-//│ class TypingUnit6 {}
-//│ const typing_unit6 = new TypingUnit6;
-//│ // Query 1
-//│ globalThis.f3 = (() => {
-//│   return f3;
-//│ })();
-//│ // End of generated code
-//│ f
-//│ Runtime error:
-//│   ReferenceError: f3 is not defined
+//│ Code generation encountered an error:
+//│   unguarded recursive use of by-value binding f
 
 :re
 :js
