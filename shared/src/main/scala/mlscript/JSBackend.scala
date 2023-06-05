@@ -1330,6 +1330,15 @@ class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
       (zeroWidthSpace + JSIdent("e") + zeroWidthSpace).log() :: Nil
     )
 
+    otherStmts.foreach {
+      case fd @ NuFunDef(isLetRec, Var(nme), _, L(body)) if (isLetRec.isEmpty || isLetRec.getOrElse(false)) =>
+        val isByname = isLetRec.isEmpty
+        val isByvalueRecIn = if (isByname) None else Some(true)
+        val bodyIsLam = body match { case _: Lam => true case _ => false }
+        scope.declareValue(nme, isByvalueRecIn, bodyIsLam)
+      case _ => ()
+    }
+
     // Generate statements.
     val queries = otherStmts.map {
       case NuFunDef(isLetRec, nme @ Var(name), tys, rhs @ L(body)) =>
@@ -1338,7 +1347,10 @@ class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
         val bodyIsLam = body match { case _: Lam => true case _ => false }
         (if (recursive) {
           val isByvalueRecIn = if (isByname) None else Some(true)
-          val sym = scope.declareValue(name, isByvalueRecIn, bodyIsLam)
+          val sym = scope.resolveValue(name) match {
+            case Some(s: ValueSymbol) => s
+            case _ => scope.declareValue(name, isByvalueRecIn, bodyIsLam)
+          }
           try {
             val translated = translateTerm(body)
             scope.unregisterSymbol(sym)
