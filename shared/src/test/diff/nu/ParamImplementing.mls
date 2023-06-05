@@ -2,23 +2,14 @@
 
 
 trait T { fun x: Int }
-mixin M(x: bool)
+mixin M(x: Bool)
 //│ trait T {
 //│   fun x: Int
 //│ }
-//│ mixin M(x: bool)
+//│ mixin M(x: Bool)
 
 :e
 class C extends T, M(false)
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.12: 	class C extends T, M(false)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── reference of type `False` is not an instance of type `bool`
-//│ ║  l.12: 	class C extends T, M(false)
-//│ ║        	                     ^^^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.5: 	mixin M(x: bool)
-//│ ╙──     	           ^^^^
 //│ ╔══[ERROR] Type mismatch in reference:
 //│ ║  l.12: 	class C extends T, M(false)
 //│ ║        	                     ^^^^^

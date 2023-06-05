@@ -458,25 +458,8 @@ TestLang.eval(mk(0))
 class Foo(x: Int)
 //│ class Foo(x: Int)
 
-
-<<<<<<<
-:e
 class Bar(x: Int, y: Int) extends Foo(x + y)
-//│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
-//│ ║  l.461: 	class Bar(x: Int, y: Int) extends Foo(x + y)
-//│ ╙──       	                                  ^^^^^^^^^^
-//│ class Bar(x: Int, y: Int)
-||||||| 99d688be
-:e
-class Bar(x: int, y: int) extends Foo(x + y)
-//│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
-//│ ║  l.459: 	class Bar(x: int, y: int) extends Foo(x + y)
-//│ ╙──       	                                  ^^^^^^^^^^
-//│ class Bar(x: int, y: int)
-=======
-class Bar(x: int, y: int) extends Foo(x + y)
-//│ class Bar(x: int, y: int) extends Foo
->>>>>>>
+//│ class Bar(x: Int, y: Int) extends Foo
 
 
 mixin AA(a: Int) {
@@ -503,7 +486,7 @@ mixin Fooo(x: Int) { fun f = [x, this.x] }
 //│   fun f: (Int, 'x,)
 //│ }
 //│ // Prelude
-//│ class TypingUnit13 {
+//│ class TypingUnit14 {
 //│   constructor() {
 //│   }
 //│   Fooo(base) {
@@ -526,15 +509,15 @@ mixin Fooo(x: Int) { fun f = [x, this.x] }
 //│     });
 //│   }
 //│ }
-//│ const typing_unit13 = new TypingUnit13;
-//│ globalThis.Fooo = typing_unit13.Fooo;
+//│ const typing_unit14 = new TypingUnit14;
+//│ globalThis.Fooo = typing_unit14.Fooo;
 //│ // End of generated code
 
 :js
 mixin Bazz(y: Int)
 //│ mixin Bazz(y: Int)
 //│ // Prelude
-//│ class TypingUnit14 {
+//│ class TypingUnit15 {
 //│   constructor() {
 //│   }
 //│   Bazz(base) {
@@ -549,8 +532,8 @@ mixin Bazz(y: Int)
 //│     });
 //│   }
 //│ }
-//│ const typing_unit14 = new TypingUnit14;
-//│ globalThis.Bazz = typing_unit14.Bazz;
+//│ const typing_unit15 = new TypingUnit15;
+//│ globalThis.Bazz = typing_unit15.Bazz;
 //│ // End of generated code
 
 :js
@@ -559,7 +542,7 @@ module Barr extends Fooo(0), Bazz(1)
 //│   fun f: (Int, 0,)
 //│ }
 //│ // Prelude
-//│ class TypingUnit15 {
+//│ class TypingUnit16 {
 //│   #Barr;
 //│   constructor() {
 //│   }
@@ -577,8 +560,8 @@ module Barr extends Fooo(0), Bazz(1)
 //│     return this.#Barr;
 //│   }
 //│ }
-//│ const typing_unit15 = new TypingUnit15;
-//│ globalThis.Barr = typing_unit15.Barr;
+//│ const typing_unit16 = new TypingUnit16;
+//│ globalThis.Barr = typing_unit16.Barr;
 //│ // End of generated code
 
 Barr.x
@@ -597,7 +580,7 @@ mixin Base {
   fun x = y
 }
 //│ ╔══[ERROR] identifier not found: y
-//│ ║  l.597: 	  fun x = y
+//│ ║  l.580: 	  fun x = y
 //│ ╙──       	          ^
 //│ mixin Base() {
 //│   fun x: error
@@ -626,7 +609,7 @@ mixin MC(c: Int)
 module MM extends MA(1), MB(2, 3), MC(4)
 //│ module MM
 //│ // Prelude
-//│ class TypingUnit21 {
+//│ class TypingUnit22 {
 //│   #MM;
 //│   constructor() {
 //│   }
@@ -644,8 +627,8 @@ module MM extends MA(1), MB(2, 3), MC(4)
 //│     return this.#MM;
 //│   }
 //│ }
-//│ const typing_unit21 = new TypingUnit21;
-//│ globalThis.MM = typing_unit21.MM;
+//│ const typing_unit22 = new TypingUnit22;
+//│ globalThis.MM = typing_unit22.MM;
 //│ // End of generated code
 
 MM.a

@@ -8,7 +8,7 @@
 // FIXME:
 //  - simplification problem or constraInt bug: `'result :> anything <: Num`
 //  - constraining loop with unannotated `list_assoc` ascription
-//  - still a number of quite ugly types
+//  - still a Num of quite ugly types
 
 
 class List<A> {

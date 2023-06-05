@@ -51,26 +51,20 @@ let p1: Product[Int, Int]
 //│ let p1: Product[Int, Int]
 
 :e
-p1: Product[bool, Int]
+p1: Product[Bool, Int]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.54: 	p1: Product[bool, Int]
+//│ ║  l.54: 	p1: Product[Bool, Int]
 //│ ║        	^^
-//│ ╟── expression of type `Int & ?A` is not an instance of type `bool`
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.54: 	p1: Product[bool, Int]
-//│ ╙──      	            ^^^^
-//│ Product[bool, Int]
+//│ ╙── expression of type `Int & ?A` is not an instance of type `Bool`
+//│ Product[Bool, Int]
 
 p1: Into[Int]
 //│ Into[Int]
 
 :e
-p1: Into[bool]
+p1: Into[Bool]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.68: 	p1: Into[bool]
+//│ ║  l.65: 	p1: Into[Bool]
 //│ ║        	^^
-//│ ╟── expression of type `Int` is not an instance of type `bool`
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.68: 	p1: Into[bool]
-//│ ╙──      	         ^^^^
-//│ Into[bool]
+//│ ╙── expression of type `Int` is not an instance of type `Bool`
+//│ Into[Bool]

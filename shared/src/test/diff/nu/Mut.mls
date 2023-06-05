@@ -19,9 +19,10 @@ let v1: {mut Int}
 //│ v1
 //│    = <missing implementation>
 
+:e
 let v1 = {mut Int: 0}
 //│ ╔══[ERROR] Field identifiers must start with a small letter
-//│ ║  l.22: 	let v1 = {mut Int: 0}
+//│ ║  l.23: 	let v1 = {mut Int: 0}
 //│ ╙──      	                   ^
 //│ let v1: {Int = 'Int}
 //│   where
@@ -45,7 +46,7 @@ let v1: {mut x: Int}
 :pe
 let v1 = {mut 1}
 //│ ╔══[PARSE ERROR] Record field should have a name
-//│ ║  l.46: 	let v1 = {mut 1}
+//│ ║  l.47: 	let v1 = {mut 1}
 //│ ╙──      	              ^
 //│ let v1: {mut <error>: '<error>}
 //│   where
@@ -64,7 +65,7 @@ let v1 = {mut x: 1}
 :pe
 v1.x = 1
 //│ ╔══[PARSE ERROR] Expected end of input; found '=' instead
-//│ ║  l.65: 	v1.x = 1
+//│ ║  l.66: 	v1.x = 1
 //│ ╙──      	     ^
 //│ 1
 //│ res
@@ -75,7 +76,7 @@ v1.x = 1
 :ng
 v1.x <- 1
 //│ ╔══[ERROR] identifier not found: <-
-//│ ║  l.76: 	v1.x <- 1
+//│ ║  l.77: 	v1.x <- 1
 //│ ╙──      	     ^^
 //│ error
 

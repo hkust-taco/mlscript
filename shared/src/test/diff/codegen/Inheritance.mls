@@ -1,3 +1,4 @@
+
 :js
 trait X: { x: int }
 class Y: X
@@ -242,31 +243,18 @@ checkS p && checkR p && checkQ p && checkP p
 trait Foo
   method Foo = 1
 //│ Defined trait Foo
-//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
-//│ 	at: scala.Predef$.require(Predef.scala:324)
-//│ 	at: mlscript.TypeDefs.clsNameToNomTag(TypeDefs.scala:122)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mkTag$1(TyperHelpers.scala:1093)
-//│ 	at: scala.Option.getOrElse(Option.scala:201)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag(TyperHelpers.scala:1091)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag$(TyperHelpers.scala:1091)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.mkTag(TyperDatatypes.scala:363)
-//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:707)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$106(TypeSimplifier.scala:464)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ Defined Foo.Foo: Foo -> 1
 
 class Bar: Foo
 //│ Defined class Bar
-//│ Code generation encountered an error:
-//│   undeclared type name Foo when resolving base classes
 
 // `Foo` should not appear.
 bar = Bar{}
 //│ bar: Bar
-//│ Runtime error:
-//│   ReferenceError: Bar is not defined
+//│    = Bar {}
 
 // But it is actually there.
 bar.Foo
 //│ res: 1
-//│ Runtime error:
-//│   ReferenceError: bar is not defined
+//│    = 1
+

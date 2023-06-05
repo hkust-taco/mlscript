@@ -27,10 +27,10 @@ mixin Test2[S, T] {
 //│   fun x: (S, T,)
 //│ }
 
-class A1[B](s: bool, t: B) extends Test2[bool, B]
-//│ class A1[B](s: bool, t: B) {
-//│   fun fb: bool -> (bool, bool,)
-//│   fun x: (bool, B,)
+class A1[B](s: Bool, t: B) extends Test2[Bool, B]
+//│ class A1[B](s: Bool, t: B) {
+//│   fun fb: Bool -> (Bool, Bool,)
+//│   fun x: (Bool, B,)
 //│ }
 
 // TODO: Investigate type of fb
@@ -41,10 +41,10 @@ class A2[A](s: A, t: Int) extends Test2
 //│ }
 
 // TODO: Investigate type of fb
-class A3(s: Int, t: bool) extends Test2
-//│ class A3(s: Int, t: bool) {
+class A3(s: Int, t: Bool) extends Test2
+//│ class A3(s: Int, t: Bool) {
 //│   fun fb: 'S -> (Int | 'S, Int | 'S,)
-//│   fun x: (Int | 'S, bool,)
+//│   fun x: (Int | 'S, Bool,)
 //│ }
 
 class P(p: Int) { 

@@ -36,7 +36,7 @@ let x = NaN
 //│ x
 //│   = NaN
 
-// TODO polymorphic number operations
+// TODO polymorphic Num operations
 x + 1
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.40: 	x + 1
@@ -50,4 +50,15 @@ x + 1
 //│ Int | error
 //│ res
 //│     = NaN
+
+
+true : Bool
+//│ Bool
+//│ res
+//│     = true
+
+true : Bool | Str
+//│ Bool | Str
+//│ res
+//│     = true
 

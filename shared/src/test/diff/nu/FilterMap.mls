@@ -3,9 +3,9 @@
 
 // * From https://arxiv.org/abs/2302.12783
 
-// 1 -spec filtermap ( fun (( T ) -> boolean ()) , [ T ]) -> [ T ]
+// 1 -spec filtermap ( fun (( T ) -> Boolean ()) , [ T ]) -> [ T ]
 // 2 ; ( fun (( T ) -> { true , U } | false ) , [ T ]) -> [ U ]
-// 3 ; ( fun (( T ) -> { true , U } | boolean ()) , [ T ]) -> [ T | U ].
+// 3 ; ( fun (( T ) -> { true , U } | Boolean ()) , [ T ]) -> [ T | U ].
 // 4 filtermap ( _F , []) -> [];
 // 5 filtermap (F , [ X | XS ]) ->
 // 6 case F ( X ) of

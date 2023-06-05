@@ -94,9 +94,9 @@ abstract class C1 { fun x: Int | string }
 //│   fun x: Int | string
 //│ }
 
-trait T1 { fun x: Int | bool }
+trait T1 { fun x: Int | Bool }
 //│ trait T1 {
-//│   fun x: Int | bool
+//│   fun x: Bool | Int
 //│ }
 
 :e

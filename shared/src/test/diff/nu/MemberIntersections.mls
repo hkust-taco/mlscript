@@ -70,9 +70,9 @@ trait S3 extends S1, T1
 //│ }
 
 
-class C1(x: Int | bool)
+class C1(x: Int | Bool)
 trait T1 { val x: Int | string }
-//│ class C1(x: Int | bool)
+//│ class C1(x: Bool | Int)
 //│ trait T1 {
 //│   let x: Int | string
 //│ }
@@ -85,15 +85,6 @@ C2().x : 0
 
 :e
 class C2 extends C1(false), T1
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.87: 	class C2 extends C1(false), T1
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── reference of type `False` does not match type `Int | bool`
-//│ ║  l.87: 	class C2 extends C1(false), T1
-//│ ║        	                    ^^^^^
-//│ ╟── Note: constraint arises from union type:
-//│ ║  l.73: 	class C1(x: Int | bool)
-//│ ╙──      	            ^^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in reference:
 //│ ║  l.87: 	class C2 extends C1(false), T1
 //│ ║        	                    ^^^^^
@@ -109,16 +100,16 @@ class C2 extends C1(false), T1
 :e
 class C2 extends C1("oops"), T1
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.110: 	class C2 extends C1("oops"), T1
+//│ ║  l.101: 	class C2 extends C1("oops"), T1
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── string literal of type `"oops"` does not match type `Int | bool`
-//│ ║  l.110: 	class C2 extends C1("oops"), T1
+//│ ╟── string literal of type `"oops"` does not match type `Bool | Int`
+//│ ║  l.101: 	class C2 extends C1("oops"), T1
 //│ ║         	                    ^^^^^^
 //│ ╟── Note: constraint arises from union type:
-//│ ║  l.73: 	class C1(x: Int | bool)
+//│ ║  l.73: 	class C1(x: Int | Bool)
 //│ ╙──      	            ^^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in string literal:
-//│ ║  l.110: 	class C2 extends C1("oops"), T1
+//│ ║  l.101: 	class C2 extends C1("oops"), T1
 //│ ║         	                    ^^^^^^
 //│ ╟── string literal of type `"oops"` does not match type `Int | string`
 //│ ╟── Note: constraint arises from union type:

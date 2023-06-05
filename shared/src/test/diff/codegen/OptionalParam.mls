@@ -2,8 +2,8 @@
 :NewDefs
 
 :js
-class A(x: int) {}
-//│ class A(x: int)
+class A(x: Int) {}
+//│ class A(x: Int)
 //│ // Prelude
 //│ let res;
 //│ class TypingUnit {
@@ -53,7 +53,7 @@ class B {}
 
 :js
 class C {
-  constructor(x: int)
+  constructor(x: Int)
 }
 //│ class C
 //│ // Prelude
@@ -87,13 +87,13 @@ let c = new C(1)
 //│   = C {}
 
 :js
-class D(x: int) {
-  constructor(y: int) {
+class D(x: Int) {
+  constructor(y: Int) {
     x = y + 1
   }
   log(x)
 }
-//│ class D(x: int)
+//│ class D(x: Int)
 //│ // Prelude
 //│ function log(x) {
 //│   return console.info(x);
@@ -126,17 +126,8 @@ class D(x: int) {
 
 let dd = new D(41)
 dd.x
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.127: 	let dd = new D(41)
-//│ ║         	             ^^^^^
-//│ ╟── integer literal of type `41` is not an instance of type `int`
-//│ ║  l.127: 	let dd = new D(41)
-//│ ║         	               ^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.90: 	class D(x: int) {
-//│ ╙──      	           ^^^
-//│ let dd: D | error
-//│ error | int
+//│ let dd: D
+//│ Int
 //│ dd
 //│    = D {}
 //│ // Output
@@ -146,18 +137,18 @@ dd.x
 
 :pe
 class E {
-  constructor(x: int)
-  constructor(y: int)
+  constructor(x: Int)
+  constructor(y: Int)
 }
 //│ ╔══[PARSE ERROR] A class may only have at most one explicit constructor
-//│ ║  l.148: 	class E {
+//│ ║  l.139: 	class E {
 //│ ╙──       	^^^^^
 //│ class E
 
 :e
-constructor(x: int)
+constructor(x: Int)
 //│ ╔══[ERROR] constructor must be in a class.
-//│ ║  l.158: 	constructor(x: int)
+//│ ║  l.149: 	constructor(x: Int)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^
 //│ ()
 //│ Code generation encountered an error:
@@ -165,16 +156,16 @@ constructor(x: int)
 
 :e
 :js
-class F(x: int) extends C(x + 1) {}
+class F(x: Int) extends C(x + 1) {}
 class G extends C(2) {}
 class H extends B {}
 //│ ╔══[ERROR] class C expects 0 parameter(s); got 1
-//│ ║  l.168: 	class F(x: int) extends C(x + 1) {}
+//│ ║  l.159: 	class F(x: Int) extends C(x + 1) {}
 //│ ╙──       	                        ^^^^^^^
 //│ ╔══[ERROR] class C expects 0 parameter(s); got 1
-//│ ║  l.169: 	class G extends C(2) {}
+//│ ║  l.160: 	class G extends C(2) {}
 //│ ╙──       	                ^^^
-//│ class F(x: int) extends C
+//│ class F(x: Int) extends C
 //│ class G extends C
 //│ class H extends B
 //│ // Prelude
@@ -237,7 +228,7 @@ fun f(c) =
     F(x) then x
     G() then 2
     _ then 0
-//│ fun f: #Object -> (0 | 2 | int)
+//│ fun f: #Object -> Int
 //│ // Prelude
 //│ class TypingUnit8 {}
 //│ const typing_unit8 = new TypingUnit8;
@@ -252,16 +243,7 @@ fun f(c) =
 
 f(F(12))
 f(new G())
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.253: 	f(F(12))
-//│ ║         	  ^^^^^
-//│ ╟── integer literal of type `12` is not an instance of type `int`
-//│ ║  l.253: 	f(F(12))
-//│ ║         	    ^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.168: 	class F(x: int) extends C(x + 1) {}
-//│ ╙──       	           ^^^
-//│ 0 | 2 | int
+//│ Int
 //│ res
 //│     = 12
 //│ res
@@ -271,14 +253,14 @@ f(new G())
 :e
 module I {
   class J {
-    constructor(x: int)
+    constructor(x: Int)
   }
   module K {
     class L extends J(0)
   }
 }
 //│ ╔══[ERROR] class J expects 0 parameter(s); got 1
-//│ ║  l.277: 	    class L extends J(0)
+//│ ║  l.259: 	    class L extends J(0)
 //│ ╙──       	                    ^^^
 //│ module I {
 //│   class J
@@ -344,33 +326,15 @@ module I {
 //│ // End of generated code
 
 :js
-fun g(x: int) =
-  class L(y: int) {
-    constructor(z: int) {
+fun g(x: Int) =
+  class L(y: Int) {
+    constructor(z: Int) {
       y = z + 1
     }
     fun ll = x + y
   }
   L
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.352: 	    fun ll = x + y
-//│ ║         	             ^^^
-//│ ╟── type `int` is not an instance of type `Int`
-//│ ║  l.347: 	fun g(x: int) =
-//│ ║         	         ^^^
-//│ ╟── but it flows into reference with expected type `Int`
-//│ ║  l.352: 	    fun ll = x + y
-//│ ╙──       	             ^
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.352: 	    fun ll = x + y
-//│ ║         	             ^^^^^
-//│ ╟── type `int` is not an instance of type `Int`
-//│ ║  l.348: 	  class L(y: int) {
-//│ ║         	             ^^^
-//│ ╟── but it flows into reference with expected type `Int`
-//│ ║  l.352: 	    fun ll = x + y
-//│ ╙──       	                 ^
-//│ fun g: (x: int,) -> (y: int,) -> L
+//│ fun g: (x: Int,) -> (y: Int,) -> L
 //│ // Prelude
 //│ class TypingUnit11 {}
 //│ const typing_unit11 = new TypingUnit11;
@@ -404,27 +368,9 @@ fun g(x: int) =
 let m = g(1)
 let n = m(2)
 n.ll
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.404: 	let m = g(1)
-//│ ║         	        ^^^^
-//│ ╟── integer literal of type `1` is not an instance of type `int`
-//│ ║  l.404: 	let m = g(1)
-//│ ║         	          ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.347: 	fun g(x: int) =
-//│ ╙──       	         ^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.405: 	let n = m(2)
-//│ ║         	        ^^^^
-//│ ╟── integer literal of type `2` is not an instance of type `int`
-//│ ║  l.405: 	let n = m(2)
-//│ ║         	          ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.348: 	  class L(y: int) {
-//│ ╙──       	             ^^^
-//│ let m: (y: int,) -> L | error
-//│ let n: L | error
-//│ Int | error
+//│ let m: (y: Int,) -> L
+//│ let n: L
+//│ Int
 //│ // Prelude
 //│ class TypingUnit12 {}
 //│ const typing_unit12 = new TypingUnit12;
@@ -457,34 +403,25 @@ let mm = new M()
 //│ mm
 //│    = M {}
 
-fun h(z: int) =
+fun h(z: Int) =
   class N {
-    constructor(x: int) {
+    constructor(x: Int) {
       log(x + z)
     }
   }
   N
-//│ fun h: (z: int,) -> () -> N
+//│ fun h: (z: Int,) -> () -> N
 
 :e // TODO: typing
 let hh = h(1)
 new hh(1)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.470: 	let hh = h(1)
-//│ ║         	         ^^^^
-//│ ╟── integer literal of type `1` is not an instance of type `int`
-//│ ║  l.470: 	let hh = h(1)
-//│ ║         	           ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.460: 	fun h(z: int) =
-//│ ╙──       	         ^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.471: 	new hh(1)
+//│ ║  l.417: 	new hh(1)
 //│ ║         	    ^^^^^
 //│ ╟── argument of type `(1,)` does not match type `()`
-//│ ║  l.471: 	new hh(1)
+//│ ║  l.417: 	new hh(1)
 //│ ╙──       	      ^^^
-//│ let hh: () -> N | error
+//│ let hh: () -> N
 //│ N | error
 //│ hh
 //│    = [class N]
@@ -495,16 +432,16 @@ new hh(1)
 
 :e
 module O {
-  constructor(x: int)
+  constructor(x: Int)
 }
 mixin P {
-  constructor(x: int)
+  constructor(x: Int)
 }
 //│ ╔══[ERROR] Explicit module constructors are not supported
-//│ ║  l.498: 	  constructor(x: int)
+//│ ║  l.435: 	  constructor(x: Int)
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Explicit mixin constructors are not supported
-//│ ║  l.501: 	  constructor(x: int)
+//│ ║  l.438: 	  constructor(x: Int)
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^
 //│ module O
 //│ mixin P()

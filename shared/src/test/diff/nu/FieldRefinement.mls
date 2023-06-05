@@ -11,8 +11,8 @@ class Foo(x: Int) {
 //│   fun baz: 1 | 2
 //│ }
 
-let foo: Foo & { x: 0 | 1, bar: 0 | 1, baz: 0 | 1, y: bool }
-//│ let foo: Foo & {y: bool, bar: 0 | 1, baz: 0 | 1, x: 0 | 1}
+let foo: Foo & { x: 0 | 1, bar: 0 | 1, baz: 0 | 1, y: Bool }
+//│ let foo: Foo & {y: Bool, bar: 0 | 1, baz: 0 | 1, x: 0 | 1}
 
 foo.x
 //│ 0 | 1
@@ -24,11 +24,11 @@ foo.baz
 //│ 1
 
 foo.y
-//│ bool
+//│ Bool
 
 :e
 foo.z
-//│ ╔══[ERROR] Type `Foo & {y: bool, bar: 0 | 1, baz: 0 | 1, x: 0 | 1}` does not contain member `z`
+//│ ╔══[ERROR] Type `Foo & {y: Bool, bar: 0 | 1, baz: 0 | 1, x: 0 | 1}` does not contain member `z`
 //│ ║  l.30: 	foo.z
 //│ ╙──      	   ^^
 //│ error

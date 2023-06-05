@@ -91,22 +91,13 @@ test1(n)
 //│     = true
 
 
-let n: number
-//│ let n: number
+let n: Num
+//│ let n: Num
 //│ n
 //│   = <missing implementation>
 
 test1(n)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.99: 	test1(n)
-//│ ║        	^^^^^^^^
-//│ ╟── type `number` is not an instance of type `Num`
-//│ ║  l.94: 	let n: number
-//│ ║        	       ^^^^^^
-//│ ╟── but it flows into reference with expected type `#Num`
-//│ ║  l.99: 	test1(n)
-//│ ╙──      	      ^
-//│ Bool | error
+//│ Bool
 //│ res
 //│     = <no result>
 //│       n is not implemented
@@ -161,10 +152,10 @@ x => test2(x, d)
 :e
 test2(1, "oops")
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.162: 	test2(1, "oops")
+//│ ║  l.153: 	test2(1, "oops")
 //│ ║         	^^^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"oops"` is not an instance of type `Num`
-//│ ║  l.162: 	test2(1, "oops")
+//│ ║  l.153: 	test2(1, "oops")
 //│ ║         	         ^^^^^^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.53: 	  x === y
@@ -176,10 +167,10 @@ test2(1, "oops")
 :e
 test2("oops", 1)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.177: 	test2("oops", 1)
+//│ ║  l.168: 	test2("oops", 1)
 //│ ║         	^^^^^^^^^^^^^^^^
 //│ ╟── integer literal of type `1` is not an instance of type `Str`
-//│ ║  l.177: 	test2("oops", 1)
+//│ ║  l.168: 	test2("oops", 1)
 //│ ║         	              ^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.53: 	  x === y
@@ -191,7 +182,7 @@ test2("oops", 1)
 :e
 test2(1, {})
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.192: 	test2(1, {})
+//│ ║  l.183: 	test2(1, {})
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── record literal of type `anything` is not an instance of type `Num`
 //│ ╟── Note: constraint arises from reference:
@@ -204,7 +195,7 @@ test2(1, {})
 :e
 test2({}, 1)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.205: 	test2({}, 1)
+//│ ║  l.196: 	test2({}, 1)
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── record literal of type `anything` is not an instance of type `Eql`
 //│ ╟── Note: constraint arises from reference:
@@ -217,7 +208,7 @@ test2({}, 1)
 :e
 test2({}, {})
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.218: 	test2({}, {})
+//│ ║  l.209: 	test2({}, {})
 //│ ║         	^^^^^^^^^^^^^
 //│ ╟── record literal of type `anything` is not an instance of type `Eql`
 //│ ╟── Note: constraint arises from reference:
