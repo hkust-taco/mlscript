@@ -1,0 +1,6 @@
+import "../ts/MyPrint.mlsi"
+declare module TS() {
+  let tspt: error
+  let printer: error
+  error
+}

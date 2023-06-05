@@ -2,24 +2,24 @@ export declare module Namespace {
   module N1 {
     fun f(x: anything): number
     fun ff(y: anything): number
-    export class C {
+    export declare class C {
       fun f(): unit
     }
-    trait I {
+    declare trait I {
       fun f(): number
     }
     export module N2 {
       fun fff(x: (false) | (true)): number
       fun gg(c: C): C
-      class BBB extends C {}
+      declare class BBB extends C {}
     }
   }
   module AA {
     fun f(x: anything): string
-    export class C {
+    export declare class C {
       fun f(): unit
     }
-    export trait I {
+    export declare trait I {
       fun f(): number
     }
     export module N2 {

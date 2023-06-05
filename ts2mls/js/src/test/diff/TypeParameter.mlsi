@@ -1,25 +1,25 @@
 export declare module TypeParameter {
   fun inc<T>(x: T): number
-  class CC<T> {
+  declare class CC<T> {
     fun print(s: T): unit
   }
   fun con<U, T>(t: T): U
-  class Printer<T> {
+  declare class Printer<T> {
     fun print(t: T): unit
   }
   fun setStringPrinter(p: Printer<string>): unit
   fun getStringPrinter(): Printer<string>
   fun foo<T>(p: Printer<T>, x: T): T
   fun foo2<T>(p: Printer<T>, x: T): T
-  class F<T> {
+  declare class F<T> {
     val x: T
     fun GG<U>(y: U): T
   }
-  trait I<T> {
+  declare trait I<T> {
     val x: T
     fun GG<U>(y: U): T
   }
-  class FFF<T> {
+  declare class FFF<T> {
     fun fff(x: T): unit
   }
   fun fff(p: FFF<string>, s: string): unit

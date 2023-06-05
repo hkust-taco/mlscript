@@ -10,9 +10,9 @@ export declare module Tuple {
   fun ex<T, U>(x: T, y: U): (T, U, (T) & (U), )
   fun foo<T, U>(x: ((T) & (U), )): unit
   fun conv(x: {y: number,}): ({y: number,}, {z: string,}, )
-  class A {
+  declare class A {
     val x: number
   }
-  class B {}
+  declare class B {}
   fun swap(x: (A, B, )): (B, A, )
 }

@@ -1,27 +1,27 @@
 export declare module Type {
-  trait None {
+  declare trait None {
     val _tag: "None"
   }
-  trait Some<A> {
+  declare trait Some<A> {
     val _tag: "Some"
     val value: A
   }
   type Option<A> = (None) | (Some<A>)
   type Func = (number) => number
   type S2 = (string, string, )
-  trait I1 {}
-  trait I2 {}
+  declare trait I1 {}
+  declare trait I2 {}
   type I3 = (I1) & (I2)
   type StringArray = Array<string>
   type SomeInterface = {x: number,y: number,}
-  class ABC {}
+  declare class ABC {}
   type DEF = ABC
   type TP<A, B, C> = (A, B, C, )
   module NA {
     fun fb(b: string): unit
     export type B = string
   }
-  class NC {
+  declare class NC {
     val b: string
   }
   type G = ABC

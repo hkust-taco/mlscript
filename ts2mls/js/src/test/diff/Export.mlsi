@@ -2,16 +2,16 @@ import "./Dependency.mlsi"
 export declare module Export {
   export module Foo {
     fun Baz(aa: string): IBar
-    trait IBar {
+    declare trait IBar {
       val a: string
     }
-    export class Bar extends IBar {
+    export declare class Bar extends IBar {
       val a: string
     }
     export val baz: IBar
   }
   fun default(x: anything): anything
-  export class E {}
+  export declare class E {}
   export val F = E
   export val G = B
   export val H = Dependency

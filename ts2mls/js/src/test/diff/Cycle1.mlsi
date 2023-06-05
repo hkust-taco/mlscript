@@ -1,5 +1,5 @@
 import "./Cycle2.mlsi"
 export declare module Cycle1 {
-  export class A {}
+  export declare class A {}
   val b: Cycle2.B
 }

@@ -3,10 +3,10 @@ export declare module Variables {
   val URI2: string
   val foo: number
   val bar: false
-  class FooBar {}
+  declare class FooBar {}
   val fb: FooBar
   module ABC {
-    export class DEF {}
+    export declare class DEF {}
   }
   val d: ABC.DEF
   module DD {

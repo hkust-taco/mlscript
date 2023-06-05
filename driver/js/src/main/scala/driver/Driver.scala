@@ -52,7 +52,7 @@ class Driver(options: DriverOptions) {
     }
   
   def genPackageJson(): Unit =
-    if (exists(s"${options.outputDir}/package.json")) {
+    if (!exists(s"${options.outputDir}/package.json")) {
       val content = """{ "type": "module" }""" // TODO: more settings?
       writeFile(s"${options.outputDir}/package.json", content)
     }
@@ -131,10 +131,10 @@ class Driver(options: DriverOptions) {
     vars: Map[Str, typer.SimpleType],
     stack: List[String]
   ): Boolean = {
-    val mlsiFile = normalize(s"${options.path}/${file.interfaceFilename}")
-    if (!file.filename.endsWith(".mls") && !file.filename.endsWith(".mlsi") ) {
+    val mlsiFile = normalize(s"${file.workDir}/${file.interfaceFilename}")
+    if (!file.filename.endsWith(".mls") && !file.filename.endsWith(".mlsi") ) { // TypeScript
       val tsprog = TSProgram(s"${file.workDir}/${file.localFilename}", file.workDir, true, N) // TODO
-      tsprog.generate(file.workDir)
+      tsprog.generate(s"${file.workDir}/${file.interfaceDir}")
       return true
     }
     parseAndRun(file.filename, {

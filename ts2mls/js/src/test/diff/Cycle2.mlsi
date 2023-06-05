@@ -1,8 +1,8 @@
 declare module Cycle1 {
-  export class A {}
+  export declare class A {}
   val b: Cycle2.B
 }
 export declare module Cycle2 {
-  export class B {}
+  export declare class B {}
   val a: Cycle1.A
 }

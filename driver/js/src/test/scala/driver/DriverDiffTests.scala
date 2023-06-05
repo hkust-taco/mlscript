@@ -36,7 +36,6 @@ object DriverDiffTests {
   private val forceCompiling = sys.env.get("CI").isEmpty
 
   private val diffPath = "driver/js/src/test/projects/"
-  private val mlscriptPath = s"${diffPath}mlscript/"
   private val jsPath = s"${diffPath}js/"
   private val outputPath = s"${diffPath}../output/"
   private val ts2mlsPath = "ts2mls/js/src/test/diff"
@@ -52,10 +51,10 @@ object DriverDiffTests {
 
   private def entry(entryModule: String, tsconfig: Option[String] = None, expectError: Boolean = false) =
     TestOption(
-      s"./${entryModule}.mls",
-      mlscriptPath,
+      s"./mlscript/${entryModule}.mls",
+      diffPath,
       ".interfaces",
-      Some((s"${jsPath}${entryModule}.js", s"${outputPath}${entryModule}.check")),
+      Some((s"${jsPath}mlscript/${entryModule}.js", s"${outputPath}${entryModule}.check")),
       tsconfig,
       expectError
     )
@@ -66,9 +65,9 @@ object DriverDiffTests {
   private val testCases = List[TestOption](
     entry("Simple"),
     entry("Cycle2"),
-    entry("Self", None, true),
-    entry("C", None, true),
-    // entry("TS", Some(s"$diffPath/tsconfig.json")), TODO
+    entry("Self", expectError = true),
+    entry("C", expectError = true),
+    entry("TS", Some(s"$diffPath/tsconfig.json"), true), // TODO: type members
     // entry("Output", Some(s"$diffPath/tsconfig.json")), TODO
     // entry("Output2", Some(s"$diffPath/tsconfig.json")), TODO
     ts2mlsEntry("Array"),

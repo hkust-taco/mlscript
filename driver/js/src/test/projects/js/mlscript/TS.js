@@ -1,4 +1,4 @@
-import * as MyPrint from "./MyPrint.js"
+import * as MyPrint from "../ts/MyPrint.js"
 
 const TS = new class TS {
   #tspt;

@@ -1,13 +1,13 @@
 export declare module Overload {
   fun f: ((number) => string) & ((string) => string)
-  class M {
+  declare class M {
     val foo: ((number) => string) & ((string) => string)
   }
   fun app: (((string) => unit) => (number) => unit) & (((string) => unit) => (string) => unit)
   fun create: ((number) => unit => (false) | (true)) & (((false) | (true)) => unit => (false) | (true))
   fun g0: ((MutArray<string>) => string) & ((MutArray<object>) => string)
   fun db: ((number) => MutArray<number>) & ((object) => MutArray<number>)
-  class N {}
+  declare class N {}
   fun id: ((M) => unit) & ((N) => unit)
   fun tst: (({z: number,}) => {y: string,}) & (({z: (false) | (true),}) => {y: string,})
   fun op: ((number) => ((number) | (undefined)) => unit) & ((number) => (((false) | (true)) | (undefined)) => unit)
@@ -17,7 +17,7 @@ export declare module Overload {
   module XX {
     fun f<T>(x: T, n: anything): string /* warning: the overload of function f is not supported yet. */
   }
-  class WWW {
+  declare class WWW {
     fun F<T>(x: T): anything /* warning: the overload of function F is not supported yet. */
   }
   fun baz(): anything /* warning: the overload of function baz is not supported yet. */

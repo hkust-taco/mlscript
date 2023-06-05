@@ -1,5 +1,5 @@
 export declare module MyPrint {
-  export class DatePrint {
+  export declare class DatePrint {
     constructor(p: string)
     fun print(msg: string): unit
   }

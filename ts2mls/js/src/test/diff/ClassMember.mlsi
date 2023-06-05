@@ -1,23 +1,23 @@
 export declare module ClassMember {
-  class Student {
+  declare class Student {
     constructor(s: string, age: number)
     val name: string
     fun isFriend(other: Student): (false) | (true)
     fun addScore(sub: string, score: number): unit
     fun getID(): number
   }
-  class Foo<T> {
+  declare class Foo<T> {
     fun bar(x: T): unit
   }
-  class EZ {
+  declare class EZ {
     fun inc(x: number): number
   }
-  class Outer {
-    class Inner {
+  declare class Outer {
+    declare class Inner {
       val a: number
     }
   }
-  class TTT<T> {
+  declare class TTT<T> {
     fun ttt(x: T): T
     fun ttt2(x: T): T
   }

@@ -1,14 +1,14 @@
 export declare module Dependency {
-  export class A {
+  export declare class A {
     val a: number
   }
-  export class B {
+  export declare class B {
     val b: number
   }
-  export class C {
+  export declare class C {
     val c: number
   }
-  export class D {
+  export declare class D {
     val d: number
   }
   fun default(): number

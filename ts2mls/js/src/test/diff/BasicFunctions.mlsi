@@ -13,12 +13,12 @@ export declare module BasicFunctions {
   fun create(): object
   fun pa(x: number): number
   fun wtf(x: anything): unit
-  class Foooooo {
+  declare class Foooooo {
     val ooooooo: number
   }
   fun inn(f: Foooooo): unit
   fun out1(): Foooooo
-  trait Barrrrrrrrr {
+  declare trait Barrrrrrrrr {
     val rrrrrrr: number
   }
   fun inn2(b: Barrrrrrrrr): unit
