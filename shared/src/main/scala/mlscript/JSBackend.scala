@@ -1331,13 +1331,11 @@ class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
     )
 
     otherStmts.foreach {
-      case fd @ NuFunDef(isLetRec, Var(nme), _, L(rhs)) if (isLetRec.isEmpty || isLetRec.getOrElse(false)) =>
+      case fd @ NuFunDef(isLetRec, Var(nme), _, L(body)) if (isLetRec.isEmpty || isLetRec.getOrElse(false)) =>
         val isByname = isLetRec.isEmpty
         val isByvalueRecIn = if (isByname) None else Some(true)
-        scope.declareValue(nme, isByvalueRecIn, rhs match {
-          case _: Lam => true
-          case _ => false
-        })
+        val bodyIsLam = body match { case _: Lam => true case _ => false }
+        scope.declareValue(nme, isByvalueRecIn, bodyIsLam)
       case _ => ()
     }
 
