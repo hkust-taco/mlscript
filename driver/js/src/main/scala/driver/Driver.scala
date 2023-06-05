@@ -142,7 +142,8 @@ class Driver(options: DriverOptions) {
   ): Boolean = {
     val mlsiFile = normalize(s"${file.workDir}/${file.interfaceFilename}")
     if (!file.filename.endsWith(".mls") && !file.filename.endsWith(".mlsi") ) { // TypeScript
-      val tsprog = TSProgram(file.localFilename, file.workDir, true, options.tsconfig)
+      val tsprog =
+         TSProgram(if (!file.isNodeModule) file.localFilename else file.filename, file.workDir, true, options.tsconfig)
       tsprog.generate(s"${file.workDir}/${file.interfaceDir}")
       return true // TODO: check if we really need to re-compile
     }

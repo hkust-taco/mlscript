@@ -11,13 +11,16 @@ import scala.collection.mutable.{HashSet, HashMap}
 // for es5.d.ts, we only need to translate everything
 // and it will be imported without top-level module before we compile other files
 class TSProgram(filename: String, workDir: String, uesTopLevelModule: Boolean, tsconfig: Option[String]) {
-  private val fullname = TSModuleResolver.normalize(s"$workDir/$filename")
+  private implicit val configContent = TypeScript.parseOption(workDir, tsconfig)
+  private val fullname =
+    if (JSFileSystem.exists(s"$workDir/$filename")) s"$workDir/$filename"
+    else TypeScript.resolveModuleName(filename, "", configContent) match {
+      case Some(path) => path
+      case _ => throw new Exception(s"file $workDir/$filename doesn't exist.")
+    }
+
   private val program = TypeScript.createProgram(Seq(fullname))
   private val cache = new HashMap[String, TSNamespace]()
-  private implicit val configContent = TypeScript.parseOption(workDir, tsconfig)
-
-  // check if file exists
-  if (!program.fileExists(fullname)) throw new Exception(s"file ${fullname} doesn't exist.")
 
   private implicit val checker = TSTypeChecker(program.getTypeChecker())
 

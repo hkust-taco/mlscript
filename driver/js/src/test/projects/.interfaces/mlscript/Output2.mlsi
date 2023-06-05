@@ -1,0 +1,7 @@
+import "json5.mlsi"
+declare module Output2() {
+  class CompilerOptions(outDir: string)
+  class TSConfig(compilerOptions: CompilerOptions)
+  let config: error
+  unit
+}

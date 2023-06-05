@@ -18,8 +18,6 @@ object TypeScript {
   private val ts: js.Dynamic = load("typescript")
   private val json: js.Dynamic = load("json5")
 
-  private val resolver = g.require.resolve
-
   def parseOption(basePath: String, filename: Option[String]): js.Dynamic = {
     val config = filename.fold[js.Any](js.Dictionary())(filename => {
       val content = JSFileSystem.readFile(TSModuleResolver.normalize(s"$basePath/$filename")).getOrElse("")
@@ -81,8 +79,6 @@ object TypeScript {
       "module" -> ts.ModuleKind.CommonJS,
       "esModuleInterop" -> true
     ))
-
-  def resolveNodeModulePath(path: String): String = resolver(path).toString()
 }
 
 class TSTypeChecker(checker: js.Dynamic) {

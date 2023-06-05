@@ -1092,9 +1092,10 @@ class JSCompilerBackend extends JSBackend(allowUnresolvedSymbols = false) {
 
   private def translateImport(imp: Import) = imp match {
     case Import(path) =>
+      val last = path.lastIndexOf(".")
       JSImport(
-        path.substring(path.lastIndexOf("/") + 1, path.lastIndexOf(".")),
-        path.substring(0, path.lastIndexOf(".")) + ".js", // TODO: node_modules
+        path.substring(path.lastIndexOf("/") + 1, if (last < 0) path.length() else last),
+        path.substring(0, if (last < 0) path.length() else last) + (if (last < 0) "" else ".js"),
         !path.endsWith(".mls") && !path.endsWith(".mlsi")
       )
   }
@@ -1102,7 +1103,8 @@ class JSCompilerBackend extends JSBackend(allowUnresolvedSymbols = false) {
   def apply(pgrm: Pgrm, topModuleName: Str, imports: Ls[Import], exported: Bool): Ls[Str] = {
     imports.flatMap {
       case imp @ Import(path) =>
-        val moduleName = path.substring(path.lastIndexOf("/") + 1, path.lastIndexOf("."))
+        val last = path.lastIndexOf(".")
+        val moduleName = path.substring(path.lastIndexOf("/") + 1, if (last < 0) path.length() else last)
         topLevelScope.declareValue(moduleName, Some(false), false)
         translateImport(imp).toSourceCode.toLines
     } ::: generateNewDef(pgrm, topModuleName, exported)
