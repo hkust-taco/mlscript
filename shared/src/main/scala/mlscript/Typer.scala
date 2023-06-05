@@ -194,6 +194,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
   val UnitType: ClassTag = ClassTag(Var("unit"), semp)(noTyProv)
   
   val BoolType: ClassTag = ClassTag(Var(if (newDefs) "Bool" else "bool"), if (newDefs) sing(TN("Object")) + TN("Eql") else semp)(noTyProv)
+  // val BoolType: ST = if (newDefs) TypeRef(TN("Bool"), Nil)(noProv) else ClassTag(Var("bool"), semp)(noTyProv) // TODO?
+  
   val TrueType: ClassTag = ClassTag(Var(if (newDefs) "True" else "true"), if (newDefs) sing(TN("Bool")) + TN("Object") + TN("Eql") else sing(TN("bool")))(noTyProv)
   val FalseType: ClassTag = ClassTag(Var(if (newDefs) "False" else "false"), if (newDefs) sing(TN("Bool")) + TN("Object") + TN("Eql") else sing(TN("bool")))(noTyProv)
   
@@ -218,8 +220,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
     NuTypeDef(Cls, TN("Object"), Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, N),
     NuTypeDef(Cls, TN("Int"), Nil, N, N, N, Var("Num") :: Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
     NuTypeDef(Cls, TN("Str"), Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
-    NuTypeDef(Cls, TN("Bool"), Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
+    NuTypeDef(Cls, TN("Bool"), Nil, N, N, S(Union(TN("True"), TN("False"))), Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
     NuTypeDef(Cls, TN("Num"), Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
+    NuTypeDef(Nms, TN("True"), Nil, N, N, N, Var("Bool") :: Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
+    NuTypeDef(Nms, TN("False"), Nil, N, N, N, Var("Bool") :: Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
   )
   val builtinTypes: Ls[TypeDef] =
     // TypeDef(Cls, TN("Object"), Nil, TopType, Nil, Nil, sing(TN("Eql")), N, Nil) ::
@@ -277,6 +281,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
     Map(
       "true" -> TrueType,
       "false" -> FalseType,
+      // "True" -> TrueType,
+      // "False" -> FalseType,
+      "True" -> TypeRef(TN("True"), Nil)(noProv),
+      "False" -> TypeRef(TN("False"), Nil)(noProv),
       "NaN" -> DecType,
       "document" -> BotType,
       "window" -> BotType,

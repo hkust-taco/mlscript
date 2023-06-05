@@ -1,5 +1,15 @@
 :NewDefs
 
+Int
+//│ () -> Int
+//│ Code generation encountered an error:
+//│   unresolved symbol Int
+
+Int()
+//│ Int
+//│ Code generation encountered an error:
+//│   unresolved symbol Int
+
 new Int
 //│ Int
 //│ Code generation encountered an error:
