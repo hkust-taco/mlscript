@@ -1,5 +1,4 @@
 :NewDefs
-:NoJS
 
 
 mixin BaseTest(x: int) {
@@ -13,8 +12,8 @@ mixin BaseTest(x: int) {
 mixin BaseTest(x) {
   fun test = x
 }
-//│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.13: 	mixin BaseTest(x) {
+//│ ╔══[ERROR] Mixin parameters currently need type annotations
+//│ ║  l.12: 	mixin BaseTest(x) {
 //│ ╙──      	               ^
 //│ mixin BaseTest(x: error) {
 //│   fun test: error

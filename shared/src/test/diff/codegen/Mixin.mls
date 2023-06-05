@@ -295,9 +295,9 @@ mixin EvalNegNeg {
     else super.eval(e)
 }
 //│ mixin EvalNegNeg() {
-//│   super: {eval: (Neg['A] | 'a) -> 'b}
+//│   super: {eval: (Neg[nothing] | 'a) -> 'b}
 //│   this: {eval: 'expr -> 'b}
-//│   fun eval: (Neg['A & (~#Neg | Neg['expr])] | 'a & ~#Neg) -> 'b
+//│   fun eval: (Neg[Neg['expr] | ~Neg[anything]] | 'a & ~#Neg) -> 'b
 //│ }
 //│ // Prelude
 //│ class TypingUnit4 {
@@ -352,10 +352,10 @@ mixin EvalNegNeg {
 :ShowRepl
 module TestLang extends EvalBase, EvalNeg, EvalNegNeg
 //│ module TestLang {
-//│   fun eval: 'A -> int
+//│   fun eval: 'a -> int
 //│ }
 //│ where
-//│   'A <: Add['A] | Lit | Neg['A & (~#Neg | Neg['A])]
+//│   'a <: Add['a] | Lit | Neg['a & (Neg['a] | ~#Neg)]
 //│ // Prelude
 //│ class TypingUnit5 {
 //│   #TestLang;
@@ -457,12 +457,8 @@ class Foo(x: int)
 //│ class Foo(x: int)
 
 
-:e
 class Bar(x: int, y: int) extends Foo(x + y)
-//│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
-//│ ║  l.461: 	class Bar(x: int, y: int) extends Foo(x + y)
-//│ ╙──       	                                  ^^^^^^^^^^
-//│ class Bar(x: int, y: int)
+//│ class Bar(x: int, y: int) extends Foo
 
 
 mixin AA(a: int) {
@@ -583,7 +579,7 @@ mixin Base {
   fun x = y
 }
 //│ ╔══[ERROR] identifier not found: y
-//│ ║  l.583: 	  fun x = y
+//│ ║  l.579: 	  fun x = y
 //│ ╙──       	          ^
 //│ mixin Base() {
 //│   fun x: error

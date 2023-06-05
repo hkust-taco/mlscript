@@ -1,0 +1,75 @@
+:NewDefs
+
+
+mixin T { fun a = "hi" }
+//│ mixin T() {
+//│   fun a: "hi"
+//│ }
+
+class C(a: int) extends T
+//│ class C(a: int) {
+//│   fun a: "hi"
+//│ }
+
+class B { let a = "hi" }
+//│ class B {
+//│   let a: "hi"
+//│ }
+
+:e
+class C(a: int) extends B
+//│ ╔══[ERROR] Type mismatch in type reference:
+//│ ║  l.20: 	class C(a: int) extends B
+//│ ║        	           ^^^
+//│ ╟── type `int` does not match type `"hi"`
+//│ ╟── Note: constraint arises from string literal:
+//│ ║  l.14: 	class B { let a = "hi" }
+//│ ╙──      	                  ^^^^
+//│ class C(a: int) extends B
+
+
+mixin M { let b = "hi" }
+//│ mixin M() {
+//│   let b: "hi"
+//│ }
+
+class B { let a = 1 : int }
+//│ class B {
+//│   let a: int
+//│ }
+
+class C(a: int, b: int) extends B, M
+//│ class C(a: int, b: int) extends B {
+//│   let b: "hi"
+//│ }
+
+let c = C(2, 3)
+(c.a, c.b)
+//│ let c: C
+//│ (int, "hi",)
+//│ c
+//│   = C {}
+//│ res
+//│     = [ 2, 3 ]
+
+class C(a: int) { let a = 1 }
+//│ class C(a: int) {
+//│   let a: 1
+//│ }
+
+class C(a: int) { fun a = 1 }
+//│ class C(a: int) {
+//│   fun a: 1
+//│ }
+
+class C(a: int) { fun a = a }
+//│ class C(a: int) {
+//│   fun a: nothing
+//│ }
+
+class C(a: int, b: int) extends B, M { let b = "hi" }
+//│ class C(a: int, b: int) extends B {
+//│   let b: "hi"
+//│ }
+
+

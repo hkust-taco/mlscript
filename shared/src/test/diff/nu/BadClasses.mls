@@ -7,14 +7,14 @@ mixin M0(x: int)
 
 :e
 class C0 extends M0
-//│ ╔══[ERROR] mixin M0 expects 1 parameters; got 0
+//│ ╔══[ERROR] mixin M0 expects 1 parameter(s); got 0
 //│ ║  l.9: 	class C0 extends M0
 //│ ╙──     	                 ^^
 //│ class C0
 
 :e
 class C0 extends M0(1, 2)
-//│ ╔══[ERROR] mixin M0 expects 1 parameters; got 2
+//│ ╔══[ERROR] mixin M0 expects 1 parameter(s); got 2
 //│ ║  l.16: 	class C0 extends M0(1, 2)
 //│ ╙──      	                 ^^^^^^^
 //│ class C0
@@ -96,11 +96,31 @@ class Foo[A] { 42: A }
 
 :e
 class C1 { fun oops = this.x }
-//│ ╔══[ERROR] Class `C1` does not contain member `x`
+//│ ╔══[ERROR] Type `#C1` does not contain member `x`
 //│ ║  l.98: 	class C1 { fun oops = this.x }
 //│ ╙──      	                          ^^
 //│ class C1 {
 //│   fun oops: error
+//│ }
+
+
+:e
+class C { fun x: int }
+//│ ╔══[ERROR] Member `x` is declared in parent but not implemented in `C`
+//│ ║  l.108: 	class C { fun x: int }
+//│ ║         	      ^
+//│ ╟── Declared here:
+//│ ║  l.108: 	class C { fun x: int }
+//│ ╙──       	              ^^^^^^
+//│ class C {
+//│   fun x: int
+//│ }
+
+// FIXME should error
+// :e
+class C { val x: int }
+//│ class C {
+//│   let x: int
 //│ }
 
 

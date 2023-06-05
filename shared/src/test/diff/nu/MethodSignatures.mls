@@ -1,6 +1,130 @@
 :NewDefs
 
 
+
+module Oops {
+  fun a : int
+  fun a = 2
+}
+//│ module Oops {
+//│   fun a: int
+//│ }
+
+:e
+module Oops {
+  fun a : int
+}
+//│ ╔══[ERROR] Member `a` is declared in parent but not implemented in `Oops`
+//│ ║  l.14: 	module Oops {
+//│ ║        	       ^^^^
+//│ ╟── Declared here:
+//│ ║  l.15: 	  fun a : int
+//│ ╙──      	      ^^^^^^^
+//│ module Oops {
+//│   fun a: int
+//│ }
+
+:e
+module Oops {
+  fun a : int
+  fun a : string
+  fun a = a
+}
+//│ ╔══[ERROR] A type signature for 'a' was already given
+//│ ║  l.30: 	  fun a : string
+//│ ╙──      	      ^^^^^^^^^^
+//│ module Oops {
+//│   fun a: string
+//│ }
+
+:e
+module Oops {
+  fun a : int
+  fun a = false
+}
+//│ ╔══[ERROR] Type mismatch in definition of method a:
+//│ ║  l.43: 	  fun a = false
+//│ ║        	      ^^^^^^^^^
+//│ ╟── reference of type `false` is not an instance of type `int`
+//│ ║  l.43: 	  fun a = false
+//│ ║        	          ^^^^^
+//│ ╟── but it flows into definition of method a with expected type `int`
+//│ ║  l.43: 	  fun a = false
+//│ ║        	      ^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.42: 	  fun a : int
+//│ ║        	          ^^^
+//│ ╟── from signature of member `a`:
+//│ ║  l.42: 	  fun a : int
+//│ ╙──      	      ^^^^^^^
+//│ module Oops {
+//│   fun a: int
+//│ }
+
+:e
+module Oops {
+  fun a = 1
+  fun a = 2
+}
+//│ ╔══[ERROR] Refininition of a
+//│ ║  l.67: 	  fun a = 2
+//│ ╙──      	      ^^^^^
+//│ module Oops {
+//│   fun a: 1
+//│ }
+
+
+
+// * Without a type signature, the method's inferred type is not generalized
+module A {
+  fun i(x) = x
+}
+//│ module A {
+//│   fun i: 'a -> 'a
+//│ }
+
+// * With a type signature, it is generalized and checked against the signature
+module A {
+  
+  fun i: forall 'a; 'a -> 'a
+  fun i(x) = x
+  
+  fun j: 'b -> 'b
+  fun j(x) = x
+  
+}
+//│ module A {
+//│   fun i: forall 'a. 'a -> 'a
+//│   fun j: forall 'b. 'b -> 'b
+//│ }
+
+
+:e
+module A {
+  fun i : 'a
+  fun i(x) = x
+}
+//│ ╔══[ERROR] Type mismatch in definition of method i:
+//│ ║  l.105: 	  fun i(x) = x
+//│ ║         	      ^^^^^^^^
+//│ ╟── function of type `?a -> ?a` does not match type `'a`
+//│ ║  l.105: 	  fun i(x) = x
+//│ ║         	       ^^^^^^^
+//│ ╟── but it flows into definition of method i with expected type `'a`
+//│ ║  l.105: 	  fun i(x) = x
+//│ ║         	      ^^^^^^^^
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.104: 	  fun i : 'a
+//│ ║         	          ^^
+//│ ╟── from signature of member `i`:
+//│ ║  l.104: 	  fun i : 'a
+//│ ╙──       	      ^^^^^^
+//│ module A {
+//│   fun i: nothing
+//│ }
+
+
+
 // FIXME currently type signatures are typed too early (not in the context where the other defns live)
 // We need to move all the typing unit setup to lazy type info prelude
 // :d
@@ -9,12 +133,24 @@ module M {
   fun a: A
   fun a = 1
 }
-//│ ╔══[ERROR] type identifier not found: A
-//│ ║  l.9: 	  fun a: A
-//│ ╙──     	         ^
+//│ ╔══[ERROR] Type mismatch in definition of method a:
+//│ ║  l.134: 	  fun a = 1
+//│ ║         	      ^^^^^
+//│ ╟── integer literal of type `1` is not an instance of type `A`
+//│ ║  l.134: 	  fun a = 1
+//│ ║         	          ^
+//│ ╟── but it flows into definition of method a with expected type `A`
+//│ ║  l.134: 	  fun a = 1
+//│ ║         	      ^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.133: 	  fun a: A
+//│ ║         	         ^
+//│ ╟── from signature of member `a`:
+//│ ║  l.133: 	  fun a: A
+//│ ╙──       	      ^^^^
 //│ module M {
 //│   class A
-//│   fun a: error
+//│   fun a: A
 //│ }
 
 // FIXME similar
@@ -24,8 +160,8 @@ module M {
   fun a = 1
 }
 //│ ╔══[ERROR] undeclared `this`
-//│ ║  l.23: 	  fun a: this.A
-//│ ╙──      	         ^^^^
+//│ ║  l.159: 	  fun a: this.A
+//│ ╙──       	         ^^^^
 //│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
 
 // FIXME similar

@@ -1,0 +1,11 @@
+:NewDefs
+
+
+:e
+trait Base1(x: int)
+//│ ╔══[ERROR] trait parameters are not yet supported
+//│ ║  l.5: 	trait Base1(x: int)
+//│ ╙──     	           ^^^^^^^^
+//│ trait Base1
+
+

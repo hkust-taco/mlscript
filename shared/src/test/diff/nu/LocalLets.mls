@@ -1,24 +1,20 @@
-:NewParser
+:NewDefs
 
 
-// FIXME
 let f =
   let tmp = "ok"
   123
-//│ ╔══[ERROR] Illegal position for this definition statement.
-//│ ║  l.6: 	  let tmp = "ok"
-//│ ╙──     	      ^^^^^^^^^^
-//│ f: 123
-//│  = 123
+//│ let f: 123
+//│ f
+//│   = 123
 
 
-// TODO allow
 let x : int | string
 let x = 1
-//│ x: int | string
-//│  = <missing implementation>
-//│ 1
-//│   <:  x:
-//│ int | string
-//│  = 1
+//│ let x: int | string
+//│ let x: 1
+//│ x
+//│   = <missing implementation>
+//│ x
+//│   = 1
 

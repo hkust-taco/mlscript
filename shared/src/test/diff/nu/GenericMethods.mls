@@ -60,7 +60,7 @@ fun bar: forall 'A; 'A => 'A
 
 :e
 fun bar<A> : A => A
-//│ ╔══[ERROR] Type parameters here are not yet supported in this position
+//│ ╔══[ERROR] Type parameters are not yet supported in this position
 //│ ║  l.62: 	fun bar<A> : A => A
 //│ ╙──      	        ^
 //│ ╔══[ERROR] type identifier not found: A
@@ -102,12 +102,18 @@ module Test {
   fun bar: 'A
   fun test<A>(x: A) = x
 }
-//│ ╔══[ERROR] Member foo is declared but not defined
+//│ ╔══[ERROR] Member `foo` is declared in parent but not implemented in `Test`
+//│ ║  l.100: 	module Test {
+//│ ║         	       ^^^^
+//│ ╟── Declared here:
 //│ ║  l.101: 	  fun foo: 'A => 'A
-//│ ╙──       	      ^^^
-//│ ╔══[ERROR] Member bar is declared but not defined
+//│ ╙──       	      ^^^^^^^^^^^^^
+//│ ╔══[ERROR] Member `bar` is declared in parent but not implemented in `Test`
+//│ ║  l.100: 	module Test {
+//│ ║         	       ^^^^
+//│ ╟── Declared here:
 //│ ║  l.102: 	  fun bar: 'A
-//│ ╙──       	      ^^^
+//│ ╙──       	      ^^^^^^^
 //│ module Test {
 //│   fun bar: nothing
 //│   fun foo: forall 'A. 'A -> 'A

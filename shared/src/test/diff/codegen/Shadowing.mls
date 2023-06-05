@@ -1,0 +1,23 @@
+:NewDefs
+
+
+:js
+x =>
+  x =>
+    x + 1
+//│ anything -> int -> int
+//│ // Prelude
+//│ let res;
+//│ class TypingUnit {}
+//│ const typing_unit = new TypingUnit;
+//│ // Query 1
+//│ res = ((x) => (() => {
+//│   return ((x) => (() => {
+//│     return x + 1;
+//│   })());
+//│ })());
+//│ // End of generated code
+//│ res
+//│     = [Function: res]
+
+

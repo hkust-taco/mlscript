@@ -185,8 +185,12 @@ zipWith(pairup, Cons(0, Nil), Cons("0", Nil)).value.toArray
 //│ res
 //│     = [ [ 0, '0' ], [] ]
 
-zipWith(pairup, Cons(0, Cons(1, Nil)), Cons("0", Cons("1", Nil))).value.toArray
+let ls = zipWith(pairup, Cons(0, Cons(1, Nil)), Cons("0", Cons("1", Nil)))
+ls.value.toArray
+//│ let ls: None | Some[Cons[(0 | 1, "0" | "1",)] | Nil]
 //│ Array[anything]
+//│ ls
+//│    = Some {}
 //│ res
 //│     = [ [ 0, '0' ], [ [ 1, '1' ], [] ] ]
 
@@ -196,7 +200,7 @@ fun zipWith_wrong2(f, xs, ys) =
   if xs is Cons(x, xs) and ys is Cons(y, ys) and zipWith_wrong2(f, xs, ys) is Some(tail) then Cons(Some(f(x, y)), tail)
   else if xs is Nil and ys is Nil then Some(Nil)
   else None
-//│ fun zipWith_wrong2: forall 'head 'head0 'A. (('head, 'head0,) -> 'A, Cons['head] | ~Cons[anything], Cons['head0] | ~Cons[anything],) -> (Cons[Some['A]] | None | Some[Nil])
+//│ fun zipWith_wrong2: forall 'A 'head 'head0. (('head, 'head0,) -> 'A, Cons['head] | ~Cons[anything], Cons['head0] | ~Cons[anything],) -> (Cons[Some['A]] | None | Some[Nil])
 
 // * No type error! The definition and use are well-typed...
 zipWith_wrong2(pairup, Cons(0, Cons(1, Nil)), Cons("0", Cons("1", Nil)))

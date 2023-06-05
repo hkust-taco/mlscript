@@ -1,4 +1,4 @@
-:NewParser
+:NewDefs
 :NoJS
 
 // FIXME: Interleaved let bindings are not implemented in `IfOpsApp`.
@@ -15,3 +15,4 @@ fun tt(x) =
     let y = 0
     is B() then "B"
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+

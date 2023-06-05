@@ -1,4 +1,3 @@
-:NewParser
 :NewDefs
 
 
@@ -16,7 +15,7 @@ let l = Cons(1, Nil)
 //│   = Cons {}
 
 class NotFound()
-class Success[A](result: A)
+class Success[out A](result: A)
 //│ class NotFound()
 //│ class Success[A](result: A)
 
@@ -41,7 +40,7 @@ mixin EvalVar {
         Success(r) then r
 }
 //│ mixin EvalVar() {
-//│   fun eval: forall 'result. (Cons[{_1: string, _2: 'result}] | Nil, Var,) -> (Var | 'result)
+//│   fun eval: (Cons[{_1: string, _2: 'A}] | Nil, Var,) -> ('A | Var)
 //│ }
 
 class Abs[A](x: string, t: A)
@@ -73,123 +72,54 @@ mixin EvalLambda {
 }
 //│ mixin EvalLambda() {
 //│   super: {eval: ('a, 'b,) -> 'c}
-//│   this: {eval: ('a, 's,) -> ('d & 'e) & (Cons[(string, 'e,)], 't,) -> 'c & (Cons[(string, Var,) | 'A], 't0,) -> 'f}
-//│   fun eval: ('a & (Cons['A] | Nil), Abs['t0] | App['s & (Abs['t] | ~#Abs)] | 'b & ~#Abs & ~#App,) -> (Abs['f] | App['d | 'e] | 'c)
+//│   this: {eval: ('a, 's,) -> ('A & 'd) & (Cons[(string, 'd,)], 't,) -> 'c & (Cons[(string, Var,) | 'A0], 't0,) -> 'A1}
+//│   fun eval: ('a & (Cons['A0] | Nil), Abs['t0] | App['s & (Abs['t] | ~#Abs)] | 'b & ~#Abs & ~#App,) -> (Abs['A1] | App['A] | 'c)
 //│ }
 
-// FIXME type simplification
-:ns
 module Test1 extends EvalVar, EvalLambda
 //│ module Test1 {
-//│   fun eval: ('a, 'b,) -> ('c | 'd | 'e | 'f)
+//│   fun eval: forall 'a. (Cons[{_1: string, _2: 'A}] | Nil, Abs['t] | App['A0] | Var,) -> ('b | 'a)
 //│ }
 //│ where
-//│   'b <: #App & {App#A <: 'A} | (#Abs & {Abs#A <: 'A0} | 'g & ~#Abs) & ~#App
-//│   'g <: 'h
-//│   'h <: 'i
-//│   'i <: #Var
-//│   'A0 <: 't
-//│   't <: 't0
-//│   't0 <: 'b
-//│   'A <: 't1 & 's
-//│   's <: (#Abs & {Abs#A <: 'A1} | 'j & ~#Abs) & 's0
-//│   's0 <: 'b
-//│   'A1 <: 't2
-//│   't2 <: 't3
-//│   't3 <: 'b
-//│   't1 <: 't4
-//│   't4 <: 'b
-//│   'a :> #Cons & {Cons#A :> 'A2 <: 'A3} | #Cons & {Cons#A :> 'A4 <: 'A5}
-//│      <: 'k & (Cons['A6] | Nil) & 'l & 'm
-//│   'm :> #Cons & {Cons#A :> 'A2 <: 'A3} | #Cons & {Cons#A :> 'A4 <: 'A5}
-//│      <: 'a
-//│   'l :> #Cons & {Cons#A :> 'A2 <: 'A3} | #Cons & {Cons#A :> 'A4 <: 'A5}
-//│      <: 'a
-//│   'A6 :> 'A3 & 'A7 | 'A5 & 'A8 | 'A4 | ('x, 'n,)
-//│       <: ('A2 | 'A7) & ('A4 | 'A8) & 'A5
-//│   'A8 := in 'A4 out 'A5
-//│   'k :> #Cons & {Cons#A :> 'A2 <: 'A3} | #Cons & {Cons#A :> 'A4 <: 'A5}
-//│      <: 'o
-//│   'o :> #Cons & {Cons#A :> 'A2 <: 'A3} | #Cons & {Cons#A :> 'A4 <: 'A5}
-//│      <: 'p
-//│   'p :> #Cons & {Cons#A :> 'A2 <: 'A3} | #Cons & {Cons#A :> 'A4 <: 'A5} | Cons['A9] | Nil
-//│      <: #Cons & {Cons#A <: 'A10} | #Nil & ~#Cons
-//│   'A9 := out 'A10
-//│   'A10 :> 'A3 & 'A11 | 'A5 & 'A12
-//│        <: 'head
-//│   'head :> 'A3 & 'A11 | 'A5 & 'A12
-//│         <: {_2: 'q} & {_1: 'r}
-//│   'A12 := in 'A4 out 'A5
-//│   'A11 := in 'A2 out 'A3
-//│   'A5 :> 'A3 & 'A7 | 'A4 | ('x0, 'u,)
-//│       <: 'A2 & {_1: 'r} & {_2: 'q}
-//│   'A2 :> ('x1, 'v,) & {_2: 'v, _1: 'x1} | ('x0, 'u,) & {_2: 'u, _1: 'x0} | ('x0, 'u,) | ('x, 'n,) & {_2: 'n, _1: 'x} | ('x1, 'v,) | 'A3 & 'A7
-//│       <: 'A4 & {_1: 'r} & {_2: 'q}
-//│   'A3 :> 'A2 | ('x1, 'v,)
-//│       <: 'A4 & {_1: 'r} & {_2: 'q}
-//│   'A4 :> ('x1, 'v,) & {_2: 'v, _1: 'x1} | ('x0, 'u,) & {_2: 'u, _1: 'x0} | ('x0, 'u,) | 'A3 & 'A7 | ('x1, 'v,) | ('x, 'n,) & {_2: 'n, _1: 'x}
-//│       <: ('A2 | 'A7) & 'A2 & {_1: 'r} & {_2: 'q}
-//│   'A7 := in 'A2 out 'A3
-//│   'n :> #Var
-//│      <: 'u
-//│   'x :> string
-//│      <: 'x0
-//│   'u :> #Var
-//│      <: 'q
-//│   'x0 :> string
-//│       <: 'r
-//│   'v :> 'w
-//│      <: 'q
-//│   'w :> 'c | 'd | 'e | 'f
-//│      <: 'q
-//│   'q :> 'c | 'd | 'e | 'f | #Var
-//│      <: 'A13
-//│   'A13 :> 'c | 'd | 'e | 'f | #Var
-//│        <: 'A14
-//│   'A14 :> 'c | 'd | 'e | 'f | #Var
-//│        <: 'result
-//│   'c :> 'y
-//│   'y :> 'c | 'd | 'e | 'f
-//│   'd :> #App & {App#A = 'A15}
-//│   'A15 :> 'w | 'z
-//│   'z :> 'c | 'd | 'e | 'f
-//│   'e :> #Abs & {Abs#A = 'A16}
-//│   'A16 :> 'a1
-//│   'a1 :> 'c | 'd | 'e | 'f
-//│   'f :> 'b1
-//│   'b1 :> #Var | 'result
-//│   'result :> 'c | 'd | 'e | 'f | #Var
-//│   'x1 :> string
-//│       <: 'r
-//│   'r :> string
-//│      <: 'c1
-//│   'c1 := string
+//│   't <: Abs['t] | App['A0] | Var
+//│   'A0 <: Abs['t & (Abs['t] | App['A0] | Var)] | Abs['t] & ~#Abs | App['A0] | Var
+//│   'A :> 'b | 'a
+//│   'b :> 'A | Var | 'a
+//│   'a :> App['b | 'a] | Abs['b | 'a]
 
 Test1.eval(Nil, Var("a"))
-//│ 'a
+//│ forall 'a. 'b | 'a | 'c
 //│   where
-//│     'a :> App['a] | Abs['a] | Var
+//│     'b :> forall 'a. 'a | 'c
+//│     'a :> App[forall 'a. 'b | 'a | 'c] | Abs[forall 'a. 'b | 'a | 'c]
+//│     'c :> (forall 'a. Var | 'b | 'a) | Var
 //│ res
 //│     = Var {}
 
 Test1.eval(Nil, Abs("b", Var("a")))
-//│ 'a
+//│ forall 'a. 'b | 'a | 'c
 //│   where
-//│     'a :> App['a] | Abs['a] | Var
+//│     'b :> forall 'a. 'a | 'c
+//│     'a :> App[forall 'a. 'b | 'a | 'c] | Abs[forall 'a. 'b | 'a | 'c]
+//│     'c :> (forall 'a. Var | 'b | 'a) | Var
 //│ res
 //│     = Abs {}
 
 Test1.eval(Cons(("c", Var("d")), Nil), App(Abs("b", Var("b")), Var("c")))
-//│ 'a
+//│ forall 'a. 'b | 'a | 'c
 //│   where
-//│     'a :> App['a] | Abs['a] | Var
+//│     'b :> forall 'a. 'a | 'c
+//│     'a :> App[forall 'a. 'b | 'a | 'c] | Abs[forall 'a. 'b | 'a | 'c]
+//│     'c :> (forall 'a. Var | 'b | 'a) | Var
 //│ res
 //│     = Var {}
 
 Test1.eval(Cons(("c", Abs("d", Var("d"))), Nil), App(Abs("b", Var("b")), Var("c")))
-//│ 'a
+//│ forall 'a. 'b | 'a | 'c
 //│   where
-//│     'a :> App['a] | Abs['a] | Abs[Var] | Var
+//│     'b :> forall 'a. 'a | 'c
+//│     'a :> App[forall 'a. 'b | 'a | 'c] | Abs[forall 'a. 'b | 'a | 'c]
+//│     'c :> (forall 'a. Abs[Var] | Var | 'b | 'a) | Var
 //│ res
 //│     = Var {}
 
@@ -206,7 +136,7 @@ fun map_expr(f, v) =
     Num then v
     Add(l, r) then Add(f(l), f(r))
     Mul(l, r) then Mul(f(l), f(r))
-//│ fun map_expr: forall 'A 'l 'A0 'l0. ('l -> 'A0 & 'l0 -> 'A, Add['l] | Mul['l0] | Num | Var,) -> (Add['A0] | Mul['A] | Num | Var)
+//│ fun map_expr: forall 'l 'A 'l0 'A0. ('l -> 'A & 'l0 -> 'A0, Add['l] | Mul['l0] | Num | Var,) -> (Add['A] | Mul['A0] | Num | Var)
 
 mixin EvalExpr {
   fun eval(sub, v) =
@@ -221,16 +151,15 @@ mixin EvalExpr {
 //│ mixin EvalExpr() {
 //│   super: {eval: ('a, Var,) -> 'b}
 //│   this: {eval: ('a, 'c,) -> anything}
-//│   fun eval: forall 'd. ('a, 'd & (Add['c] | Mul['c] | Num | Var),) -> (Num | 'd | 'b)
+//│   fun eval: ('a, 'b & (Add['c] | Mul['c] | Num | Var),) -> (Num | 'b)
 //│ }
 
 module Test2 extends EvalVar, EvalExpr
 //│ module Test2 {
-//│   fun eval: (Cons[{_1: string, _2: 'result}] | Nil, 'a,) -> (Num | Var | 'result | 'a)
+//│   fun eval: forall 'a. (Cons[{_1: string, _2: 'A}] | Nil, 'a & (Add['b] | Mul['b] | Num | Var),) -> ('A | Num | Var | 'a)
 //│ }
 //│ where
-//│   'a <: Add['b] | Mul['b] | Num | Var
-//│   'b <: 'a
+//│   'b <: Add['b] | Mul['b] | Num | Var
 
 Test2.eval(Nil, Var("a"))
 //│ Num | Var
@@ -251,16 +180,16 @@ Test2.eval(Cons(("a", Num(1)), Nil), Var("a"))
 :e
 Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.252: 	Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
+//│ ║  l.181: 	Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Abs[?A]` does not match type `Add[?A0] | Mul[?A1] | Num | Var`
-//│ ║  l.252: 	Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
+//│ ║  l.181: 	Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ ║         	                                                 ^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.204: 	  if v is
+//│ ║  l.134: 	  if v is
 //│ ║         	     ^
 //│ ╟── from reference:
-//│ ║  l.214: 	    let vv = map_expr(eta, v)
+//│ ║  l.144: 	    let vv = map_expr(eta, v)
 //│ ╙──       	                           ^
 //│ Abs[Var] | Num | Var | error
 //│ res
@@ -272,270 +201,67 @@ Test2.eval(Cons(("a", Abs("d", Var("d"))), Nil), Add(Num(1), Var("a")))
 //│ res
 //│     = Add {}
 
-// FIXME type simplification
-:ns
 module Test3 extends EvalVar, EvalExpr, EvalLambda
 //│ module Test3 {
-//│   fun eval: ('a, 'b,) -> ('c | 'd | 'e | 'f)
+//│   fun eval: forall 'A 'a. (Cons[{_1: string, _2: 'A0}] | Nil, Abs['t] | App['A] | 'b & ~#Abs & ~#App,) -> ('c | 'a)
 //│ }
 //│ where
-//│   'a :> #Cons & {Cons#A :> 'A <: 'A0} | #Cons & {Cons#A :> 'A1 <: 'A2}
-//│      <: 'g & (Cons['A3] | Nil) & 'h & 'i
-//│   'i :> #Cons & {Cons#A :> 'A <: 'A0} | #Cons & {Cons#A :> 'A1 <: 'A2}
-//│      <: 'a
-//│   'h :> #Cons & {Cons#A :> 'A <: 'A0} | #Cons & {Cons#A :> 'A1 <: 'A2}
-//│      <: 'a
-//│   'A3 :> 'A0 & 'A4 | 'A2 & 'A5 | 'A1 | ('x, 'j,)
-//│       <: ('A | 'A4) & ('A1 | 'A5) & 'A2
-//│   'A5 := in 'A1 out 'A2
-//│   'g :> #Cons & {Cons#A :> 'A <: 'A0} | #Cons & {Cons#A :> 'A1 <: 'A2}
-//│      <: 'k
-//│   'k :> #Cons & {Cons#A :> 'A <: 'A0} | #Cons & {Cons#A :> 'A1 <: 'A2}
-//│      <: 'm & 'n
-//│   'n :> #Cons & {Cons#A :> 'A <: 'A0} | #Cons & {Cons#A :> 'A1 <: 'A2}
-//│      <: 'a
-//│   'm :> #Cons & {Cons#A :> 'A <: 'A0} | #Cons & {Cons#A :> 'A1 <: 'A2}
-//│      <: 'o
-//│   'o :> #Cons & {Cons#A :> 'A <: 'A0} | #Cons & {Cons#A :> 'A1 <: 'A2}
-//│      <: 'p
-//│   'p :> #Cons & {Cons#A :> 'A <: 'A0} | #Cons & {Cons#A :> 'A1 <: 'A2} | Cons['A6] | Nil
-//│      <: #Cons & {Cons#A <: 'A7} | #Nil & ~#Cons
-//│   'A6 := out 'A7
-//│   'A7 :> 'A0 & 'A8 | 'A2 & 'A9
-//│       <: 'head
-//│   'head :> 'A0 & 'A8 | 'A2 & 'A9
-//│         <: {_2: 'q} & {_1: 'u}
-//│   'A9 := in 'A1 out 'A2
-//│   'A8 := in 'A out 'A0
-//│   'A2 :> 'A0 & 'A4 | 'A1 | ('x0, 'v,)
-//│       <: 'A & {_1: 'u} & {_2: 'q}
-//│   'A :> ('x1, 'w,) & {_2: 'w, _1: 'x1} | ('x0, 'v,) & {_2: 'v, _1: 'x0} | ('x0, 'v,) | ('x, 'j,) & {_2: 'j, _1: 'x} | ('x1, 'w,) | 'A0 & 'A4
-//│      <: 'A1 & {_1: 'u} & {_2: 'q}
-//│   'A0 :> 'A | ('x1, 'w,)
-//│       <: 'A1 & {_1: 'u} & {_2: 'q}
-//│   'A1 :> ('x1, 'w,) & {_2: 'w, _1: 'x1} | ('x0, 'v,) & {_2: 'v, _1: 'x0} | ('x0, 'v,) | 'A0 & 'A4 | ('x1, 'w,) | ('x, 'j,) & {_2: 'j, _1: 'x}
-//│       <: ('A | 'A4) & 'A & {_1: 'u} & {_2: 'q}
-//│   'A4 := in 'A out 'A0
-//│   'j :> #Var
-//│      <: 'v
-//│   'x :> string
-//│      <: 'x0
-//│   'v :> #Var
-//│      <: 'q
-//│   'x0 :> string
-//│       <: 'u
-//│   'w :> 'y
-//│      <: 'q
-//│   'y :> 'c | 'd | 'e | 'f
-//│      <: 'q
-//│   'q :> 'c | 'd | 'e | 'f | #Var
-//│      <: 'A10
-//│   'A10 :> 'c | 'd | 'e | 'f | #Var
-//│        <: 'A11
-//│   'A11 :> 'c | 'd | 'e | 'f | #Var
-//│        <: 'result
-//│   'c :> 'z
-//│      <: (#Num | 'a1 & ~#Num) & (#Num | 'b1 & ~#Num) & (#Num | 'c1 & ~#Num) & (#Num | 'd1 & ~#Num)
-//│   'z :> 'c | 'd | 'e | 'f
-//│      <: (#Num | 'a1 & ~#Num) & (#Num | 'b1 & ~#Num) & (#Num | 'c1 & ~#Num) & (#Num | 'd1 & ~#Num)
-//│   'd :> #App & {App#A = 'A12}
-//│      <: (#Num | 'a1 & ~#Num) & (#Num | 'b1 & ~#Num) & (#Num | 'c1 & ~#Num) & (#Num | 'd1 & ~#Num)
-//│   'A12 :> 'y | 'e1
-//│   'e1 :> 'c | 'd | 'e | 'f
-//│   'e :> #Abs & {Abs#A = 'A13}
-//│      <: (#Num | 'a1 & ~#Num) & (#Num | 'b1 & ~#Num) & (#Num | 'c1 & ~#Num) & (#Num | 'd1 & ~#Num)
-//│   'A13 :> 'f1
-//│   'f1 :> 'c | 'd | 'e | 'f
-//│   'f :> 'g1
-//│      <: (#Num | 'a1 & ~#Num) & (#Num | 'b1 & ~#Num) & (#Num | 'c1 & ~#Num) & (#Num | 'd1 & ~#Num)
-//│   'g1 :> 'h1 | 'i1 | 'j1 | 'k1
-//│       <: (#Num | 'a1 & ~#Num) & (#Num | 'b1 & ~#Num) & (#Num | 'c1 & ~#Num) & (#Num | 'd1 & ~#Num)
-//│   'k1 :> #Num
-//│       <: (#Num | 'a1 & ~#Num) & (#Num | 'b1 & ~#Num) & (#Num | 'c1 & ~#Num) & (#Num | 'd1 & ~#Num)
-//│   'j1 <: (#Num | 'a1 & ~#Num) & (#Num | 'b1 & ~#Num) & (#Num | 'c1 & ~#Num) & (#Num | 'd1 & ~#Num) & 'l1
-//│   'l1 <: #Var | (#Num | (#Add & {Add#A <: 'A14} | #Mul & {Mul#A <: 'A15} & ~#Add) & ~#Num) & ~#Var
-//│   'A15 <: 'r & 'l
-//│   'l <: 'm1
-//│   'r <: 'm1
-//│   'A14 <: 'r0 & 'l0
-//│   'l0 <: 'm1
-//│   'r0 <: 'm1
-//│   'm1 <: 'n1
-//│   'n1 <: 'b
-//│   'b <: #App & {App#A <: 'A16} | (#Abs & {Abs#A <: 'A17} | 'o1 & ~#Abs) & ~#App
-//│   'o1 <: 'p1
-//│   'p1 <: 'j1
-//│   'A17 <: 't
-//│   't <: 't0
-//│   't0 <: 'b
-//│   'A16 <: 't1 & 's
-//│   's <: (#Abs & {Abs#A <: 'A18} | 'q1 & ~#Abs) & 's0
-//│   's0 <: 'b
-//│   'A18 <: 't2
-//│   't2 <: 't3
-//│   't3 <: 'b
-//│   't1 <: 't4
-//│   't4 <: 'b
-//│   'i1 :> #Num
-//│       <: (#Num | 'a1 & ~#Num) & (#Num | 'b1 & ~#Num) & (#Num | 'c1 & ~#Num) & (#Num | 'd1 & ~#Num)
-//│   'h1 :> 'r1
-//│       <: (#Num | 'a1 & ~#Num) & (#Num | 'b1 & ~#Num) & (#Num | 'c1 & ~#Num) & (#Num | 'd1 & ~#Num)
-//│   'r1 :> #Var | 'result
-//│       <: (#Num | 'a1 & ~#Num) & (#Num | 'b1 & ~#Num) & (#Num | 'c1 & ~#Num) & (#Num | 'd1 & ~#Num)
-//│   'result :> 'c | 'd | 'e | 'f | #Var
-//│           <: (#Num | 'a1 & ~#Num) & (#Num | 'b1 & ~#Num) & (#Num | 'c1 & ~#Num) & (#Num | 'd1 & ~#Num)
-//│   'd1 :> #Var | #Abs & {Abs#A = 'A13} | #App & {App#A = 'A12}
-//│   'c1 :> #Var | #Abs & {Abs#A = 'A13} | #App & {App#A = 'A12}
-//│   'b1 :> #Var | #Abs & {Abs#A = 'A13} | #App & {App#A = 'A12}
-//│   'a1 :> #Var | #Abs & {Abs#A = 'A13} | #App & {App#A = 'A12}
-//│   'x1 :> string
-//│       <: 'u
-//│   'u :> string
-//│      <: 's1
-//│   's1 := string
+//│   'A0 :> 'c | 'a
+//│   'c :> 'A0 | Num | Var | 'b | 'a
+//│   'a :> App['c | 'a] | Abs['c | 'a]
+//│   'b <: Add['d] | Mul['d] | Num | Var
+//│   'd <: Abs['t] | App['A] | 'b & ~#Abs & ~#App
+//│   't <: Abs['t] | App['A] | 'b & ~#Abs & ~#App
+//│   'A <: Abs['t & (Abs['t] | App['A] | 'b & ~#Abs & ~#App)] | Abs['t] & ~#Abs | App['A] | 'b & ~#Abs & ~#App
 
 Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
-//│ 'a
+//│ forall 'a. 'b | 'a | 'c
 //│   where
-//│     'a :> Abs['a] | Abs[Var] | Num | Var | App['a]
+//│     'b :> forall 'a. 'a | 'c
+//│     'a :> App[forall 'a. 'b | 'a | 'c] | Abs[forall 'a. 'b | 'a | 'c]
+//│     'c :> (forall 'a. Abs[Var] | Var | 'b | 'a) | Num | Var
 //│ res
 //│     = Abs {}
 
 Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), App(Abs("a", Var("a")), Add(Num(1), Var("c"))))
-//│ 'a
+//│ forall 'a. 'b | 'a | 'c
 //│   where
-//│     'a :> App['a] | Abs['a] | Abs[Var] | Add[Num | Var] | Num | Var
+//│     'b :> forall 'a. 'a | 'c
+//│     'a :> App[forall 'a. 'b | 'a | 'c] | Abs[forall 'a. 'b | 'a | 'c]
+//│     'c :> (forall 'a. Abs[Var] | Var | 'b | 'a) | Add[Num | Var] | Num | Var
 //│ res
 //│     = Var {}
 
-// FIXME type simplification
-:ns
 // * Incorrect version, for regression testing – EvalLambda should be mixed in after EvalExpr
 module Test3 extends EvalVar, EvalLambda, EvalExpr
 //│ module Test3 {
-//│   fun eval: ('a, 'b,) -> ('c | 'd | 'b | 'e)
+//│   fun eval: forall 'a. (Cons[{_1: string, _2: 'A}] | Nil, 'a & (Add['b] | Mul['b] | Num | Var),) -> ('a | 'c)
 //│ }
 //│ where
-//│   'a :> #Cons & {Cons#A :> 'A <: 'A0} | #Cons & {Cons#A :> 'A1 <: 'A2}
-//│      <: 'f & 'g
-//│   'g :> #Cons & {Cons#A :> 'A <: 'A0} | #Cons & {Cons#A :> 'A1 <: 'A2}
-//│      <: 'a
-//│   'f :> #Cons & {Cons#A :> 'A <: 'A0} | #Cons & {Cons#A :> 'A1 <: 'A2}
-//│      <: 'h
-//│   'h :> #Cons & {Cons#A :> 'A <: 'A0} | #Cons & {Cons#A :> 'A1 <: 'A2}
-//│      <: 'i & (Cons['A3] | Nil) & 'j & 'k
-//│   'k :> #Cons & {Cons#A :> 'A <: 'A0} | #Cons & {Cons#A :> 'A1 <: 'A2}
-//│      <: 'a
-//│   'j :> #Cons & {Cons#A :> 'A <: 'A0} | #Cons & {Cons#A :> 'A1 <: 'A2}
-//│      <: 'a
-//│   'A3 :> 'A0 & 'A4 | 'A2 & 'A5 | 'A1 | ('x, 'm,)
-//│       <: ('A | 'A4) & ('A1 | 'A5) & 'A2
-//│   'A5 := in 'A1 out 'A2
-//│   'i :> #Cons & {Cons#A :> 'A <: 'A0} | #Cons & {Cons#A :> 'A1 <: 'A2}
-//│      <: 'n
-//│   'n :> #Cons & {Cons#A :> 'A <: 'A0} | #Cons & {Cons#A :> 'A1 <: 'A2}
-//│      <: 'o
-//│   'o :> #Cons & {Cons#A :> 'A <: 'A0} | #Cons & {Cons#A :> 'A1 <: 'A2} | Cons['A6] | Nil
-//│      <: #Cons & {Cons#A <: 'A7} | #Nil & ~#Cons
-//│   'A6 := out 'A7
-//│   'A7 :> 'A0 & 'A8 | 'A2 & 'A9
-//│       <: 'head
-//│   'head :> 'A0 & 'A8 | 'A2 & 'A9
-//│         <: {_2: 'p} & {_1: 'q}
-//│   'A9 := in 'A1 out 'A2
-//│   'A8 := in 'A out 'A0
-//│   'A2 :> 'A0 & 'A4 | 'A1 | ('x0, 's,)
-//│       <: 'A & {_1: 'q} & {_2: 'p}
-//│   'A :> ('x1, 't,) & {_2: 't, _1: 'x1} | ('x0, 's,) & {_2: 's, _1: 'x0} | ('x0, 's,) | ('x, 'm,) & {_2: 'm, _1: 'x} | ('x1, 't,) | 'A0 & 'A4
-//│      <: 'A1 & {_1: 'q} & {_2: 'p}
-//│   'A0 :> 'A | ('x1, 't,)
-//│       <: 'A1 & {_1: 'q} & {_2: 'p}
-//│   'A1 :> ('x1, 't,) & {_2: 't, _1: 'x1} | ('x0, 's,) & {_2: 's, _1: 'x0} | ('x0, 's,) | 'A0 & 'A4 | ('x1, 't,) | ('x, 'm,) & {_2: 'm, _1: 'x}
-//│       <: ('A | 'A4) & 'A & {_1: 'q} & {_2: 'p}
-//│   'A4 := in 'A out 'A0
-//│   'm :> #Var
-//│      <: 's
-//│   'x :> string
-//│      <: 'x0
-//│   's :> #Var
-//│      <: 'p
-//│   'x0 :> string
-//│       <: 'q
-//│   't :> 'u
-//│      <: 'p
-//│   'u :> 'c | 'd | 'b | 'e
-//│      <: 'p
-//│   'p :> 'c | 'd | 'b | 'e | #Var
-//│      <: 'A10
-//│   'A10 :> 'c | 'd | 'b | 'e | #Var
-//│        <: 'A11
-//│   'A11 :> 'c | 'd | 'b | 'e | #Var
-//│        <: 'result
-//│   'c :> 'v
-//│      <: (#Num | 'w & ~#Num) & (#Num | 'y & ~#Num) & (#Num | 'z & ~#Num) & (#Num | 'a1 & ~#Num)
-//│   'v :> 'b1 | 'c1 | 'd1 | 'e1
-//│      <: (#Num | 'w & ~#Num) & (#Num | 'y & ~#Num) & (#Num | 'z & ~#Num) & (#Num | 'a1 & ~#Num)
-//│   'e1 :> 'f1
-//│       <: (#Num | 'w & ~#Num) & (#Num | 'y & ~#Num) & (#Num | 'z & ~#Num) & (#Num | 'a1 & ~#Num)
-//│   'f1 :> #Var | 'result
-//│       <: (#Num | 'w & ~#Num) & (#Num | 'y & ~#Num) & (#Num | 'z & ~#Num) & (#Num | 'a1 & ~#Num)
-//│   'result :> 'c | 'd | 'b | 'e | #Var
-//│           <: (#Num | 'w & ~#Num) & (#Num | 'y & ~#Num) & (#Num | 'z & ~#Num) & (#Num | 'a1 & ~#Num)
-//│   'd1 :> #Abs & {Abs#A = 'A12}
-//│       <: (#Num | 'w & ~#Num) & (#Num | 'y & ~#Num) & (#Num | 'z & ~#Num) & (#Num | 'a1 & ~#Num)
-//│   'c1 :> #App & {App#A = 'A13}
-//│       <: (#Num | 'w & ~#Num) & (#Num | 'y & ~#Num) & (#Num | 'z & ~#Num) & (#Num | 'a1 & ~#Num)
-//│   'b1 :> 'g1
-//│       <: (#Num | 'w & ~#Num) & (#Num | 'y & ~#Num) & (#Num | 'z & ~#Num) & (#Num | 'a1 & ~#Num)
-//│   'g1 :> 'c | 'd | 'b | 'e
-//│       <: (#Num | 'w & ~#Num) & (#Num | 'y & ~#Num) & (#Num | 'z & ~#Num) & (#Num | 'a1 & ~#Num)
-//│   'd :> #Num
-//│      <: (#Num | 'w & ~#Num) & (#Num | 'y & ~#Num) & (#Num | 'z & ~#Num) & (#Num | 'a1 & ~#Num)
-//│   'w :> #Var | #Abs & {Abs#A = 'A12} | #App & {App#A = 'A13}
-//│   'A12 :> 'h1
-//│   'h1 :> 'c | 'd | 'b | 'e
-//│   'b <: (#Num | 'w & ~#Num) & (#Num | 'y & ~#Num) & (#Num | 'z & ~#Num) & (#Num | 'a1 & ~#Num) & 'i1
-//│   'i1 <: #Var | (#Num | (#Add & {Add#A <: 'A14} | #Mul & {Mul#A <: 'A15} & ~#Add) & ~#Num) & ~#Var
-//│   'A15 <: 'r & 'l
-//│   'l <: 'j1
-//│   'r <: 'j1
-//│   'A14 <: 'r0 & 'l0
-//│   'l0 <: 'j1
-//│   'r0 <: 'j1
-//│   'j1 <: 'k1
-//│   'k1 <: 'b
-//│   'y :> #Var | #Abs & {Abs#A = 'A12} | #App & {App#A = 'A13}
-//│   'A13 :> 'u | 'l1
-//│   'l1 :> 'c | 'd | 'b | 'e
-//│   'e :> #Num
-//│      <: (#Num | 'w & ~#Num) & (#Num | 'y & ~#Num) & (#Num | 'z & ~#Num) & (#Num | 'a1 & ~#Num)
-//│   'a1 :> #Var | #Abs & {Abs#A = 'A12} | #App & {App#A = 'A13}
-//│   'z :> #Var | #Abs & {Abs#A = 'A12} | #App & {App#A = 'A13}
-//│   'x1 :> string
-//│       <: 'q
-//│   'q :> string
-//│      <: 'm1
-//│   'm1 := string
+//│   'b <: Add['b] | Mul['b] | Num | Var
+//│   'A :> 'c
+//│   'c :> 'A | Abs[Num | 'c] | App[Num | 'c] | Num | Var
 
 // * Because EvalExpr does not dispatch lambdas to super and map_expr only
 // * handles exprs
 :e
 Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.523: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
+//│ ║  l.248: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Abs[?A]` does not match type `Add[?A0] | Mul[?A1] | Num | Var`
-//│ ║  l.523: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
+//│ ║  l.248: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ ║         	                                                 ^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.204: 	  if v is
+//│ ║  l.134: 	  if v is
 //│ ║         	     ^
 //│ ╟── from reference:
-//│ ║  l.214: 	    let vv = map_expr(eta, v)
+//│ ║  l.144: 	    let vv = map_expr(eta, v)
 //│ ╙──       	                           ^
 //│ error | 'a
 //│   where
-//│     'a :> Abs['a] | App['a] | Var | Abs[Var] | Num
+//│     'a :> Abs[Var] | Num | Var | Abs['a] | App['a]
 //│ res
 //│ Runtime error:
 //│   Error: non-exhaustive case expression
+

@@ -16,10 +16,7 @@ type AI2 = Array<int>
 
 :e
 type AI3(n) = Array[int]
-//│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.18: 	type AI3(n) = Array[int]
-//│ ╙──      	         ^
-//│ ╔══[ERROR] type alias definitions cannot have value parameters
+//│ ╔══[ERROR] Type alias definitions cannot have value parameters
 //│ ║  l.18: 	type AI3(n) = Array[int]
 //│ ╙──      	        ^^^
 //│ type AI3 = Array[int]

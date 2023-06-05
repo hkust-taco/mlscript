@@ -26,10 +26,12 @@ mixin EvalBase {
 // module TestLang extends EvalBase, EvalNeg
 module TestLang extends EvalBase
 //│ module TestLang {
-//│   fun eval: 'a -> int
+//│   fun eval: forall 'E. (Add['E] | Lit | Neg['expr & (Neg['expr0] | ~#Neg)]) -> int
 //│ }
 //│ where
-//│   'a <: Add['a] | Lit | Neg['a & (Neg['a] | ~#Neg)]
+//│   'E <: Add['E] | Lit | Neg['expr & (Neg['expr0] | ~#Neg)]
+//│   'expr <: Add['E] | Lit | Neg['expr & (Neg['expr0] | ~#Neg)]
+//│   'expr0 <: Add['E] | Lit | Neg['expr & (Neg['expr0] | ~#Neg)]
 
 
 fun mk(n) = if n is
@@ -45,8 +47,8 @@ TestLang.eval(mk(0))
 //│ int
 //│ res
 //│     = 0
-//│ constrain calls  : 117
-//│ annoying  calls  : 32
-//│ subtyping calls  : 856
+//│ constrain calls  : 374
+//│ annoying  calls  : 160
+//│ subtyping calls  : 4154
 
 
