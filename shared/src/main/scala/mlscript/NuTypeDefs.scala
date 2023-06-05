@@ -442,8 +442,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
         FunctionType(
           TupleType(params.mapKeys(some))(provTODO),
           ClassTag(Var(td.nme.name),
-            // TODO base classes
-            Set.single(TN("Object")) + TN("Eql")
+            ihtags + TN("Object") + TN("Eql")
           )(provTODO) & RecordType.mk(
             tparams.map { case (tn, tv, vi) => // TODO use vi
               Var(td.nme.name + "#" + tn.name).withLocOf(tn) -> FieldType(S(tv), tv)(provTODO) }
@@ -726,13 +725,14 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
         case (p, Var(nm), lti, _, _) :: ps => lti match {
           case lti: DelayedTypeInfo => lti.kind match {
             case Trt | Cls | Nms =>  lookupTags(ps, Set.single(TypeName(nm)) union lti.inheritedTags union tags)
-            case _ => lookupTags(ps, tags)
+            case Val | Mxn | Als => lookupTags(ps, tags)
           }
           case CompletedTypeInfo(trt: TypedNuTrt) =>
             lookupTags(ps, Set.single(TypeName(nm)) union trt.inheritedTags union tags)
           case CompletedTypeInfo(cls: TypedNuCls) =>
             lookupTags(ps, Set.single(TypeName(nm)) union cls.inheritedTags union tags)
-          case _ => lookupTags(ps, tags)
+          case CompletedTypeInfo(_: NuParam | _: TypedNuFun | _: TypedNuAls | _: TypedNuMxn | _: TypedNuDummy) =>
+            lookupTags(ps, tags)
         }
       }
     }

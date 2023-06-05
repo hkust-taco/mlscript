@@ -2,97 +2,52 @@
 
 
 
-abstract class Foo(x: int) {
-  fun f(y: int) = x + y
+abstract class Foo(x: Int) {
+  fun f(y: Int) = x + y
 }
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.6: 	  fun f(y: int) = x + y
-//│ ║       	                  ^^^
-//│ ╟── type `int` is not an instance of type `Int`
-//│ ║  l.5: 	abstract class Foo(x: int) {
-//│ ║       	                      ^^^
-//│ ╟── but it flows into reference with expected type `Int`
-//│ ║  l.6: 	  fun f(y: int) = x + y
-//│ ╙──     	                  ^
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.6: 	  fun f(y: int) = x + y
-//│ ║       	                  ^^^^^
-//│ ╟── type `int` is not an instance of type `Int`
-//│ ║  l.6: 	  fun f(y: int) = x + y
-//│ ║       	           ^^^
-//│ ╟── but it flows into reference with expected type `Int`
-//│ ║  l.6: 	  fun f(y: int) = x + y
-//│ ╙──     	                      ^
-//│ abstract class Foo(x: int) {
-//│   fun f: (y: int,) -> (Int | error)
+//│ abstract class Foo(x: Int) {
+//│   fun f: (y: Int,) -> Int
 //│ }
 
 :e
 Foo(1)
 //│ ╔══[ERROR] Class Foo is abstract and cannot be instantiated
-//│ ║  l.31: 	Foo(1)
+//│ ║  l.13: 	Foo(1)
 //│ ╙──      	^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.31: 	Foo(1)
-//│ ║        	^^^^^^
-//│ ╟── integer literal of type `1` is not an instance of type `int`
-//│ ║  l.31: 	Foo(1)
-//│ ║        	    ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.5: 	abstract class Foo(x: int) {
-//│ ╙──     	                      ^^^
-//│ Foo | error
+//│ Foo
 //│ res
 //│     = Foo {}
 
 :e // TODO allow with `new` keyword
 new Foo(1)
 //│ ╔══[ERROR] Class Foo is abstract and cannot be instantiated
-//│ ║  l.49: 	new Foo(1)
+//│ ║  l.22: 	new Foo(1)
 //│ ╙──      	    ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.49: 	new Foo(1)
-//│ ║        	    ^^^^^^
-//│ ╟── integer literal of type `1` is not an instance of type `int`
-//│ ║  l.49: 	new Foo(1)
-//│ ║        	        ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.5: 	abstract class Foo(x: int) {
-//│ ╙──     	                      ^^^
-//│ Foo | error
+//│ Foo
 //│ res
 //│     = Foo {}
 
 
-abstract class Foo(x: int) {
-  fun f: int -> int
+abstract class Foo(x: Int) {
+  fun f: Int -> Int
 }
-//│ abstract class Foo(x: int) {
-//│   fun f: int -> int
+//│ abstract class Foo(x: Int) {
+//│   fun f: Int -> Int
 //│ }
 
 :e
 Foo(1)
 //│ ╔══[ERROR] Class Foo is abstract and cannot be instantiated
-//│ ║  l.75: 	Foo(1)
+//│ ║  l.39: 	Foo(1)
 //│ ╙──      	^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.75: 	Foo(1)
-//│ ║        	^^^^^^
-//│ ╟── integer literal of type `1` is not an instance of type `int`
-//│ ║  l.75: 	Foo(1)
-//│ ║        	    ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.67: 	abstract class Foo(x: int) {
-//│ ╙──      	                      ^^^
-//│ Foo | error
+//│ Foo
 //│ res
 //│     = Foo {}
 
 :e // TODO support
 new Foo(1) { fun f = id }
 //│ ╔══[ERROR] Currently unsupported `new` syntax
-//│ ║  l.93: 	new Foo(1) { fun f = id }
+//│ ║  l.48: 	new Foo(1) { fun f = id }
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ error
 //│ Code generation encountered an error:
@@ -100,41 +55,23 @@ new Foo(1) { fun f = id }
 
 
 abstract class Bar extends Foo(1)
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.102: 	abstract class Bar extends Foo(1)
-//│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── integer literal of type `1` is not an instance of type `int`
-//│ ║  l.102: 	abstract class Bar extends Foo(1)
-//│ ║         	                               ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.67: 	abstract class Foo(x: int) {
-//│ ╙──      	                      ^^^
 //│ abstract class Bar extends Foo {
-//│   fun f: int -> int
+//│   fun f: Int -> Int
 //│ }
 
 :e
 module Baz extends Bar
 Baz.f(1)
 //│ ╔══[ERROR] Member `f` is declared in parent but not implemented in `Baz`
-//│ ║  l.117: 	module Baz extends Bar
-//│ ║         	       ^^^
+//│ ║  l.63: 	module Baz extends Bar
+//│ ║        	       ^^^
 //│ ╟── Declared here:
-//│ ║  l.68: 	  fun f: int -> int
+//│ ║  l.32: 	  fun f: Int -> Int
 //│ ╙──      	      ^^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.118: 	Baz.f(1)
-//│ ║         	^^^^^^^^
-//│ ╟── integer literal of type `1` is not an instance of type `int`
-//│ ║  l.118: 	Baz.f(1)
-//│ ║         	      ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.68: 	  fun f: int -> int
-//│ ╙──      	         ^^^
 //│ module Baz extends Bar, Foo {
-//│   fun f: int -> int
+//│   fun f: Int -> Int
 //│ }
-//│ error | int
+//│ Int
 //│ res
 //│ Runtime error:
 //│   TypeError: Baz.f is not a function
@@ -143,24 +80,6 @@ module Baz extends Bar {
   fun f(x) = x + 1
 }
 Baz.f(1)
-//│ ╔══[ERROR] Type mismatch in definition of method f:
-//│ ║  l.143: 	  fun f(x) = x + 1
-//│ ║         	      ^^^^^^^^^^^^
-//│ ╟── type `int` is not an instance of type `Int`
-//│ ║  l.68: 	  fun f: int -> int
-//│ ║        	         ^^^
-//│ ╟── Note: constraint arises from reference:
-//│ ║  l.143: 	  fun f(x) = x + 1
-//│ ╙──       	             ^
-//│ ╔══[ERROR] Type mismatch in definition of method f:
-//│ ║  l.143: 	  fun f(x) = x + 1
-//│ ║         	      ^^^^^^^^^^^^
-//│ ╟── operator application of type `Int` is not an instance of type `int`
-//│ ║  l.143: 	  fun f(x) = x + 1
-//│ ║         	             ^^^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.68: 	  fun f: int -> int
-//│ ╙──      	                ^^^
 //│ module Baz extends Bar, Foo {
 //│   fun f: Int -> Int
 //│ }
@@ -170,111 +89,51 @@ Baz.f(1)
 
 
 
-abstract class C1 { fun x: int | string }
+abstract class C1 { fun x: Int | string }
 //│ abstract class C1 {
-//│   fun x: int | string
+//│   fun x: Int | string
 //│ }
 
-trait T1 { fun x: int | bool }
+trait T1 { fun x: Int | bool }
 //│ trait T1 {
-//│   fun x: bool | int
+//│   fun x: Int | bool
 //│ }
 
 :e
 class C2 extends C1, T1
 //│ ╔══[ERROR] Member `x` is declared in parent but not implemented in `C2`
-//│ ║  l.184: 	class C2 extends C1, T1
+//│ ║  l.103: 	class C2 extends C1, T1
 //│ ║         	      ^^
 //│ ╟── Declared here:
-//│ ║  l.173: 	abstract class C1 { fun x: int | string }
-//│ ╙──       	                        ^^^^^^^^^^^^^^^
+//│ ║  l.92: 	abstract class C1 { fun x: Int | string }
+//│ ╙──      	                        ^^^^^^^^^^^^^^^
 //│ class C2 extends C1, T1 {
-//│   fun x: int
+//│   fun x: Int
 //│ }
 
 class C2 extends C1, T1 { fun x = 1 }
-//│ ╔══[ERROR] Type mismatch in definition of method x:
-//│ ║  l.195: 	class C2 extends C1, T1 { fun x = 1 }
-//│ ║         	                              ^^^^^
-//│ ╟── integer literal of type `1` does not match type `int | string`
-//│ ║  l.195: 	class C2 extends C1, T1 { fun x = 1 }
-//│ ║         	                                  ^
-//│ ╟── but it flows into definition of method x with expected type `int | string`
-//│ ║  l.195: 	class C2 extends C1, T1 { fun x = 1 }
-//│ ║         	                              ^^^^^
-//│ ╟── Note: constraint arises from union type:
-//│ ║  l.173: 	abstract class C1 { fun x: int | string }
-//│ ║         	                           ^^^^^^^^^^^^
-//│ ╟── from signature of member `x`:
-//│ ║  l.173: 	abstract class C1 { fun x: int | string }
-//│ ╙──       	                        ^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in definition of method x:
-//│ ║  l.195: 	class C2 extends C1, T1 { fun x = 1 }
-//│ ║         	                              ^^^^^
-//│ ╟── integer literal of type `1` does not match type `bool | int`
-//│ ║  l.195: 	class C2 extends C1, T1 { fun x = 1 }
-//│ ║         	                                  ^
-//│ ╟── but it flows into definition of method x with expected type `bool | int`
-//│ ║  l.195: 	class C2 extends C1, T1 { fun x = 1 }
-//│ ║         	                              ^^^^^
-//│ ╟── Note: constraint arises from union type:
-//│ ║  l.178: 	trait T1 { fun x: int | bool }
-//│ ║         	                  ^^^^^^^^^^
-//│ ╟── from signature of member `x`:
-//│ ║  l.178: 	trait T1 { fun x: int | bool }
-//│ ╙──       	               ^^^^^^^^^^^^^
 //│ class C2 extends C1, T1 {
 //│   fun x: 1
 //│ }
 
 abstract class C2 extends C1, T1
 //│ abstract class C2 extends C1, T1 {
-//│   fun x: int
+//│   fun x: Int
 //│ }
 
 :e
 class C3 extends C2
 //│ ╔══[ERROR] Member `x` is declared in parent but not implemented in `C3`
-//│ ║  l.236: 	class C3 extends C2
+//│ ║  l.125: 	class C3 extends C2
 //│ ║         	      ^^
 //│ ╟── Declared here:
-//│ ║  l.173: 	abstract class C1 { fun x: int | string }
-//│ ╙──       	                        ^^^^^^^^^^^^^^^
+//│ ║  l.92: 	abstract class C1 { fun x: Int | string }
+//│ ╙──      	                        ^^^^^^^^^^^^^^^
 //│ class C3 extends C1, C2, T1 {
-//│   fun x: int
+//│   fun x: Int
 //│ }
 
 class C3 extends C2 { fun x = 1 }
-//│ ╔══[ERROR] Type mismatch in definition of method x:
-//│ ║  l.247: 	class C3 extends C2 { fun x = 1 }
-//│ ║         	                          ^^^^^
-//│ ╟── integer literal of type `1` does not match type `int | string`
-//│ ║  l.247: 	class C3 extends C2 { fun x = 1 }
-//│ ║         	                              ^
-//│ ╟── but it flows into definition of method x with expected type `int | string`
-//│ ║  l.247: 	class C3 extends C2 { fun x = 1 }
-//│ ║         	                          ^^^^^
-//│ ╟── Note: constraint arises from union type:
-//│ ║  l.173: 	abstract class C1 { fun x: int | string }
-//│ ║         	                           ^^^^^^^^^^^^
-//│ ╟── from signature of member `x`:
-//│ ║  l.173: 	abstract class C1 { fun x: int | string }
-//│ ╙──       	                        ^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in definition of method x:
-//│ ║  l.247: 	class C3 extends C2 { fun x = 1 }
-//│ ║         	                          ^^^^^
-//│ ╟── integer literal of type `1` does not match type `bool | int`
-//│ ║  l.247: 	class C3 extends C2 { fun x = 1 }
-//│ ║         	                              ^
-//│ ╟── but it flows into definition of method x with expected type `bool | int`
-//│ ║  l.247: 	class C3 extends C2 { fun x = 1 }
-//│ ║         	                          ^^^^^
-//│ ╟── Note: constraint arises from union type:
-//│ ║  l.178: 	trait T1 { fun x: int | bool }
-//│ ║         	                  ^^^^^^^^^^
-//│ ╟── from signature of member `x`:
-//│ ║  l.178: 	trait T1 { fun x: int | bool }
-//│ ╙──       	               ^^^^^^^^^^^^^
 //│ class C3 extends C1, C2, T1 {
 //│   fun x: 1
 //│ }
@@ -283,28 +142,28 @@ class C3 extends C2 { fun x = 1 }
 
 :ge // TODO report this as a type error
 abstract class C {
-  fun x : int
+  fun x : Int
   fun foo0 = x
   fun foo1 = this.x
 }
 //│ abstract class C {
-//│   fun foo0: int
-//│   fun foo1: int
-//│   fun x: int
+//│   fun foo0: Int
+//│   fun foo1: Int
+//│   fun x: Int
 //│ }
 //│ Code generation encountered an error:
 //│   unresolved symbol x
 
 :ge // TODO report this as a type error
 class C {
-  val x : int
+  val x : Int
   fun foo0 = x
   fun foo1 = this.x
 }
 //│ class C {
-//│   fun foo0: int
-//│   fun foo1: int
-//│   let x: int
+//│   fun foo0: Int
+//│   fun foo1: Int
+//│   let x: Int
 //│ }
 //│ Code generation encountered an error:
 //│   unresolved symbol x

@@ -1,57 +1,30 @@
 :NewDefs
 
 
-class Foo(x: int)
-//│ class Foo(x: int)
+class Foo(x: Int)
+//│ class Foo(x: Int)
 
 
 
-class Bar(x: int, y: int) extends Foo(x + y)
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.9: 	class Bar(x: int, y: int) extends Foo(x + y)
-//│ ║       	                                      ^^^
-//│ ╟── type `int` is not an instance of type `Int`
-//│ ║  l.9: 	class Bar(x: int, y: int) extends Foo(x + y)
-//│ ║       	             ^^^
-//│ ╟── but it flows into reference with expected type `Int`
-//│ ║  l.9: 	class Bar(x: int, y: int) extends Foo(x + y)
-//│ ╙──     	                                      ^
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.9: 	class Bar(x: int, y: int) extends Foo(x + y)
-//│ ║       	                                      ^^^^^
-//│ ╟── type `int` is not an instance of type `Int`
-//│ ║  l.9: 	class Bar(x: int, y: int) extends Foo(x + y)
-//│ ║       	                     ^^^
-//│ ╟── but it flows into reference with expected type `Int`
-//│ ║  l.9: 	class Bar(x: int, y: int) extends Foo(x + y)
-//│ ╙──     	                                          ^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.9: 	class Bar(x: int, y: int) extends Foo(x + y)
-//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── operator application of type `Int` is not an instance of type `int`
-//│ ║  l.9: 	class Bar(x: int, y: int) extends Foo(x + y)
-//│ ║       	                                      ^^^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.4: 	class Foo(x: int)
-//│ ╙──     	             ^^^
-//│ class Bar(x: int, y: int) extends Foo
+class Bar(x: Int, y: Int) extends Foo(x + y)
+//│ class Bar(x: Int, y: Int) extends Foo
 
 
-mixin AA(a: int) {
+mixin AA(a: Int) {
 }
-//│ mixin AA(a: int)
+//│ mixin AA(a: Int)
 
 mixin BB {}
 //│ mixin BB()
 
 
-class C(x: int) extends BB
-//│ class C(x: int)
+class C(x: Int) extends BB
+//│ class C(x: Int)
 
-class D(x: int) extends AA(x)
-//│ class D(x: int)
+class D(x: Int) extends AA(x)
+//│ class D(x: Int)
 
-class E(x: int) extends BB, AA(x)
-//│ class E(x: int)
+class E(x: Int) extends BB, AA(x)
+//│ class E(x: Int)
 
 

@@ -198,7 +198,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
   val FalseType: ClassTag = ClassTag(Var(if (newDefs) "False" else "false"), if (newDefs) sing(TN("Bool")) + TN("Object") + TN("Eql") else sing(TN("bool")))(noTyProv)
   
   val ObjType: ClassTag = ClassTag(Var("Object"), sing(TN("Eql")))(noTyProv)
-  val IntType: ClassTag = ClassTag(Var(if (newDefs) "Int" else "int"), if (newDefs) sing(TN("Num")) + TN("Eql") else sing(TN("number")))(noTyProv)
+  val IntType: ClassTag = ClassTag(Var(if (newDefs) "Int" else "int"), if (newDefs) sing(TN("Num")) + TN("Object") + TN("Eql") else sing(TN("number")))(noTyProv)
   val DecType: ClassTag = ClassTag(Var(if (newDefs) "Num" else "number"), if (newDefs) sing(TN("Eql")) else semp)(noTyProv)
   val StrType: ClassTag = ClassTag(Var(if (newDefs) "Str" else "string"), if (newDefs) sing(TN("Eql")) else semp)(noTyProv)
   // val IntType: ST = TypeRef(TN("int"), Nil)(noTyProv)
@@ -216,7 +216,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
   
   val nuBuiltinTypes: Ls[NuTypeDef] = Ls(
     NuTypeDef(Cls, TN("Object"), Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, N),
-    NuTypeDef(Cls, TN("Int"), Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
+    NuTypeDef(Cls, TN("Int"), Nil, N, N, N, Var("Num") :: Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
     NuTypeDef(Cls, TN("Str"), Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
     NuTypeDef(Cls, TN("Bool"), Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
     NuTypeDef(Cls, TN("Num"), Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
