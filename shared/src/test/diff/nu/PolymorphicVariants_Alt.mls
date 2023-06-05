@@ -6,7 +6,7 @@
 // * This time with a List class.
 
 // FIXME:
-//  - simplification problem or constraint bug: `'result :> anything <: Num`
+//  - simplification problem or constraInt bug: `'result :> anything <: Num`
 //  - constraining loop with unannotated `list_assoc` ascription
 //  - still a number of quite ugly types
 
@@ -75,8 +75,8 @@ fun incr(x: {a: Int}): unit
 fun gensym(): Str
 //│ fun gensym: () -> Str
 
-fun int_to_string(x: Int): Str
-//│ fun int_to_string: (x: Int,) -> Str
+fun Int_to_string(x: Int): Str
+//│ fun Int_to_string: (x: Int,) -> Str
 
 mixin EvalLambda {
   fun eval(sub, v) =

@@ -11,10 +11,10 @@ class Foo(): {} {
 //│   fun x: 0
 //│ }
 
-class Foo(): { x: int } {
+class Foo(): { x: Int } {
   fun x = 0
 }
-//│ class Foo(): {x: int} {
+//│ class Foo(): {x: Int} {
 //│   fun x: 0
 //│ }
 

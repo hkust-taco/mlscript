@@ -5,41 +5,41 @@
 class Foo[out A](x: A)
 //│ class Foo[A](x: A)
 
-fun foo(x: Foo[int]): Foo[number] = x
-//│ fun foo: (x: Foo[int],) -> Foo[number]
+fun foo(x: Foo[Int]): Foo[Num] = x
+//│ fun foo: (x: Foo[Int],) -> Foo[Num]
 
 :e
-fun foo(x: Foo[number]): Foo[int] = x
+fun foo(x: Foo[Num]): Foo[Int] = x
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.12: 	fun foo(x: Foo[number]): Foo[int] = x
-//│ ║        	                                    ^
-//│ ╟── type `number` is not an instance of `int`
-//│ ║  l.12: 	fun foo(x: Foo[number]): Foo[int] = x
-//│ ║        	               ^^^^^^
+//│ ║  l.12: 	fun foo(x: Foo[Num]): Foo[Int] = x
+//│ ║        	                                 ^
+//│ ╟── type `Num` is not an instance of `Int`
+//│ ║  l.12: 	fun foo(x: Foo[Num]): Foo[Int] = x
+//│ ║        	               ^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.12: 	fun foo(x: Foo[number]): Foo[int] = x
-//│ ╙──      	                             ^^^
-//│ fun foo: (x: Foo[number],) -> Foo[int]
+//│ ║  l.12: 	fun foo(x: Foo[Num]): Foo[Int] = x
+//│ ╙──      	                          ^^^
+//│ fun foo: (x: Foo[Num],) -> Foo[Int]
 
 
-class Foo[in A](x: A -> int)
-//│ class Foo[A](x: A -> int)
+class Foo[in A](x: A -> Int)
+//│ class Foo[A](x: A -> Int)
 
-fun foo(x: Foo[number]): Foo[int] = x
-//│ fun foo: (x: Foo[number],) -> Foo[int]
+fun foo(x: Foo[Num]): Foo[Int] = x
+//│ fun foo: (x: Foo[Num],) -> Foo[Int]
 
 :e
-fun foo(x: Foo[int]): Foo[number] = x
+fun foo(x: Foo[Int]): Foo[Num] = x
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.32: 	fun foo(x: Foo[int]): Foo[number] = x
-//│ ║        	                                    ^
-//│ ╟── type `number` is not an instance of `int`
-//│ ║  l.32: 	fun foo(x: Foo[int]): Foo[number] = x
-//│ ║        	                          ^^^^^^
+//│ ║  l.32: 	fun foo(x: Foo[Int]): Foo[Num] = x
+//│ ║        	                                 ^
+//│ ╟── type `Num` is not an instance of `Int`
+//│ ║  l.32: 	fun foo(x: Foo[Int]): Foo[Num] = x
+//│ ║        	                          ^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.32: 	fun foo(x: Foo[int]): Foo[number] = x
+//│ ║  l.32: 	fun foo(x: Foo[Int]): Foo[Num] = x
 //│ ╙──      	               ^^^
-//│ fun foo: (x: Foo[int],) -> Foo[number]
+//│ fun foo: (x: Foo[Int],) -> Foo[Num]
 
 
 
@@ -52,8 +52,8 @@ class Oops0[in A](x: A)
 //│ class Oops0[A](x: A)
 
 // :e // TODO check variance annotations!
-class Oops0[out A](x: A -> int)
-//│ class Oops0[A](x: A -> int)
+class Oops0[out A](x: A -> Int)
+//│ class Oops0[A](x: A -> Int)
 
 let o = Oops0(id)
 //│ let o: Oops0[nothing]
@@ -63,46 +63,34 @@ let o = Oops0(id)
 // * What happens is `Oops9{ A = nothing..'? }` is inferred for `o` (consistent with `A`'s covariance),
 // *  so all negative occurrences of `o.A` are viewed as `nothing` from the outside.
 o.x
-//│ int -> int
+//│ Int -> Int
 //│ res
 //│     = [Function: id]
 
-// * Similarly, `Oops0[int]` here will expand to the equivalent `Oops0{ A = nothing..int }`
-(o : Oops0[int]).x
-//│ nothing -> int
+// * Similarly, `Oops0[Int]` here will expand to the equivalent `Oops0{ A = nothing..Int }`
+(o : Oops0[Int]).x
+//│ nothing -> Int
 //│ res
 //│     = [Function: id]
 
 :e
 o.x(123)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.77: 	o.x(123)
-//│ ║        	^^^^^^^^
-//│ ╟── integer literal of type `123` is not an instance of type `int`
-//│ ║  l.77: 	o.x(123)
-//│ ║        	    ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.55: 	class Oops0[out A](x: A -> int)
-//│ ║        	                           ^^^
-//│ ╟── Note: type parameter A is defined at:
-//│ ║  l.55: 	class Oops0[out A](x: A -> int)
-//│ ╙──      	                ^
-//│ error | int
+//│ Int
 //│ res
 //│     = 123
 
 :e
-(o : Oops0[int]).x(123)
+(o : Oops0[Int]).x(123)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.95: 	(o : Oops0[int]).x(123)
+//│ ║  l.83: 	(o : Oops0[Int]).x(123)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── integer literal of type `123` does not match type `nothing`
-//│ ║  l.95: 	(o : Oops0[int]).x(123)
+//│ ║  l.83: 	(o : Oops0[Int]).x(123)
 //│ ║        	                   ^^^
 //│ ╟── Note: type parameter A is defined at:
-//│ ║  l.55: 	class Oops0[out A](x: A -> int)
+//│ ║  l.55: 	class Oops0[out A](x: A -> Int)
 //│ ╙──      	                ^
-//│ error | int
+//│ Int | error
 //│ res
 //│     = 123
 

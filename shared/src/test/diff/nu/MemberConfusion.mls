@@ -6,8 +6,8 @@ mixin T { fun a = "hi" }
 //│   fun a: "hi"
 //│ }
 
-class C(a: int) extends T
-//│ class C(a: int) {
+class C(a: Int) extends T
+//│ class C(a: Int) {
 //│   fun a: "hi"
 //│ }
 
@@ -17,15 +17,15 @@ class B { let a = "hi" }
 //│ }
 
 :e
-class C(a: int) extends B
+class C(a: Int) extends B
 //│ ╔══[ERROR] Type mismatch in type reference:
-//│ ║  l.20: 	class C(a: int) extends B
+//│ ║  l.20: 	class C(a: Int) extends B
 //│ ║        	           ^^^
-//│ ╟── type `int` does not match type `"hi"`
+//│ ╟── type `Int` does not match type `"hi"`
 //│ ╟── Note: constraint arises from string literal:
 //│ ║  l.14: 	class B { let a = "hi" }
 //│ ╙──      	                  ^^^^
-//│ class C(a: int) extends B
+//│ class C(a: Int) extends B
 
 
 mixin M { let b = "hi" }
@@ -33,58 +33,42 @@ mixin M { let b = "hi" }
 //│   let b: "hi"
 //│ }
 
-class B { let a = 1 : int }
-//│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.36: 	class B { let a = 1 : int }
-//│ ║        	                  ^
-//│ ╟── integer literal of type `1` is not an instance of type `int`
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.36: 	class B { let a = 1 : int }
-//│ ╙──      	                      ^^^
+class B { let a = 1 : Int }
 //│ class B {
-//│   let a: int
+//│   let a: Int
 //│ }
 
-class C(a: int, b: int) extends B, M
-//│ class C(a: int, b: int) extends B {
+class C(a: Int, b: Int) extends B, M
+//│ class C(a: Int, b: Int) extends B {
 //│   let b: "hi"
 //│ }
 
 let c = C(2, 3)
 (c.a, c.b)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.53: 	let c = C(2, 3)
-//│ ║        	        ^^^^^^^
-//│ ╟── integer literal of type `2` is not an instance of type `int`
-//│ ║  l.53: 	let c = C(2, 3)
-//│ ║        	          ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.48: 	class C(a: int, b: int) extends B, M
-//│ ╙──      	           ^^^
-//│ let c: C | error
-//│ (error | int, "hi" | error,)
+//│ let c: C
+//│ (Int, "hi",)
 //│ c
 //│   = C {}
 //│ res
 //│     = [ 2, 3 ]
 
-class C(a: int) { let a = 1 }
-//│ class C(a: int) {
+class C(a: Int) { let a = 1 }
+//│ class C(a: Int) {
 //│   let a: 1
 //│ }
 
-class C(a: int) { fun a = 1 }
-//│ class C(a: int) {
+class C(a: Int) { fun a = 1 }
+//│ class C(a: Int) {
 //│   fun a: 1
 //│ }
 
-class C(a: int) { fun a = a }
-//│ class C(a: int) {
+class C(a: Int) { fun a = a }
+//│ class C(a: Int) {
 //│   fun a: nothing
 //│ }
 
-class C(a: int, b: int) extends B, M { let b = "hi" }
-//│ class C(a: int, b: int) extends B {
+class C(a: Int, b: Int) extends B, M { let b = "hi" }
+//│ class C(a: Int, b: Int) extends B {
 //│   let b: "hi"
 //│ }
 

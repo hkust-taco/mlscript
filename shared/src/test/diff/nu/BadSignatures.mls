@@ -68,13 +68,13 @@ class B() extends A {
   fun x = 1
 }
 //│ ╔══[ERROR] Type mismatch in signature of member `x`:
-//│ ║  l.82: 	  fun x: Int
+//│ ║  l.67: 	  fun x: Int
 //│ ║        	      ^^^^^^
 //│ ╟── type `Int` does not match type `1`
-//│ ║  l.82: 	  fun x: Int
+//│ ║  l.67: 	  fun x: Int
 //│ ║        	         ^^^
 //│ ╟── but it flows into signature of member `x` with expected type `1`
-//│ ║  l.82: 	  fun x: Int
+//│ ║  l.67: 	  fun x: Int
 //│ ║        	      ^^^^^^
 //│ ╟── Note: constraint arises from integer literal:
 //│ ║  l.17: 	class A { fun x = 1 }
@@ -90,11 +90,11 @@ class B() extends A {
 :e
 mixin M { fun x : Int }
 //│ ╔══[ERROR] Member `x` is declared in parent but not implemented in `M`
-//│ ║  l.121: 	mixin M { fun x : Int }
-//│ ║         	      ^
+//│ ║  l.91: 	mixin M { fun x : Int }
+//│ ║        	      ^
 //│ ╟── Declared here:
-//│ ║  l.121: 	mixin M { fun x : Int }
-//│ ╙──       	              ^^^^^^^
+//│ ║  l.91: 	mixin M { fun x : Int }
+//│ ╙──      	              ^^^^^^^
 //│ mixin M() {
 //│   fun x: Int
 //│ }

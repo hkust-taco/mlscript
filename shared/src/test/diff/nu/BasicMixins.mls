@@ -121,14 +121,14 @@ class Base2(x) extends BaseOf(x + 1), BaseTest
 //│ }
 
 :e
-class Base1(x: int): BaseTest
+class Base1(x: Int): BaseTest
 //│ ╔══[ERROR] mixin BaseTest cannot be used as a type
-//│ ║  l.124: 	class Base1(x: int): BaseTest
+//│ ║  l.124: 	class Base1(x: Int): BaseTest
 //│ ╙──       	                     ^^^^^^^^
-//│ class Base1(x: int): BaseTest
+//│ class Base1(x: Int): BaseTest
 
 Base1
-//│ (x: int,) -> Base1
+//│ (x: Int,) -> Base1
 //│ res
 //│     = [Function (anonymous)] { class: [class Base1] }
 

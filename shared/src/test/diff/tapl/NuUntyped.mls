@@ -20,11 +20,11 @@ fun par(a) = concat3("(", a, ")")
 
 :escape
 let String: nothing
-let makeString: anything => { length: int, charCodeAt: int => int } = String
-let StringInstance: { fromCharCode: int => string } = String
+let makeString: anything => { length: Int, charCodeAt: Int => Int } = String
+let StringInstance: { fromCharCode: Int => Str } = String
 //│ let String: nothing
-//│ let makeString: anything -> {charCodeAt: int -> int, length: int}
-//│ let StringInstance: {fromCharCode: int -> string}
+//│ let makeString: anything -> {charCodeAt: Int -> Int, length: Int}
+//│ let StringInstance: {fromCharCode: Int -> Str}
 //│ String
 //│        = <missing implementation>
 //│ makeString
@@ -34,13 +34,13 @@ let StringInstance: { fromCharCode: int => string } = String
 
 
 let anythingToString = toString
-fun fromCharCode(n: int) = StringInstance.fromCharCode(n)
-fun stringCharCodeAt(s: string, i) = makeString(s).charCodeAt(i)
-fun stringLength(s: string) = makeString(s).length
+fun fromCharCode(n: Int) = StringInstance.fromCharCode(n)
+fun stringCharCodeAt(s: Str, i) = makeString(s).charCodeAt(i)
+fun stringLength(s: Str) = makeString(s).length
 //│ let anythingToString: anything -> #Str
-//│ fun fromCharCode: (n: int,) -> string
-//│ fun stringCharCodeAt: (s: string, int,) -> int
-//│ fun stringLength: (s: string,) -> int
+//│ fun fromCharCode: (n: Int,) -> Str
+//│ fun stringCharCodeAt: (s: Str, Int,) -> Int
+//│ fun stringLength: (s: Str,) -> Int
 //│ anythingToString
 //│                  = [Function: toString]
 
@@ -138,11 +138,11 @@ listJoin(list3("x", "y", "z"), ", ")
 //│     = 'x, y, z'
 
 type Term = Var | Abs | App
-class Var(name: string)
+class Var(name: Str)
 class Abs(lhs: Var, rhs: Term)
 class App(lhs: Term, rhs: Term)
 //│ type Term = Abs | App | Var
-//│ class Var(name: string)
+//│ class Var(name: Str)
 //│ class Abs(lhs: Var, rhs: Term)
 //│ class App(lhs: Term, rhs: Term)
 
@@ -159,78 +159,6 @@ showTerm(Var("x"))
 showTerm(Abs(Var("x"), Var("y")))
 showTerm(App(Var("x"), Var("y")))
 showTerm(App(Abs(Var("x"), Var("y")), Var("z")))
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.158: 	showTerm(Var("x"))
-//│ ║         	         ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.158: 	showTerm(Var("x"))
-//│ ║         	             ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.159: 	showTerm(Abs(Var("x"), Var("y")))
-//│ ║         	             ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.159: 	showTerm(Abs(Var("x"), Var("y")))
-//│ ║         	                 ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.159: 	showTerm(Abs(Var("x"), Var("y")))
-//│ ║         	                       ^^^^^^^^
-//│ ╟── string literal of type `"y"` is not an instance of type `string`
-//│ ║  l.159: 	showTerm(Abs(Var("x"), Var("y")))
-//│ ║         	                           ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.160: 	showTerm(App(Var("x"), Var("y")))
-//│ ║         	             ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.160: 	showTerm(App(Var("x"), Var("y")))
-//│ ║         	                 ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.160: 	showTerm(App(Var("x"), Var("y")))
-//│ ║         	                       ^^^^^^^^
-//│ ╟── string literal of type `"y"` is not an instance of type `string`
-//│ ║  l.160: 	showTerm(App(Var("x"), Var("y")))
-//│ ║         	                           ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.161: 	showTerm(App(Abs(Var("x"), Var("y")), Var("z")))
-//│ ║         	                 ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.161: 	showTerm(App(Abs(Var("x"), Var("y")), Var("z")))
-//│ ║         	                     ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.161: 	showTerm(App(Abs(Var("x"), Var("y")), Var("z")))
-//│ ║         	                           ^^^^^^^^
-//│ ╟── string literal of type `"y"` is not an instance of type `string`
-//│ ║  l.161: 	showTerm(App(Abs(Var("x"), Var("y")), Var("z")))
-//│ ║         	                               ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.161: 	showTerm(App(Abs(Var("x"), Var("y")), Var("z")))
-//│ ║         	                                      ^^^^^^^^
-//│ ╟── string literal of type `"z"` is not an instance of type `string`
-//│ ║  l.161: 	showTerm(App(Abs(Var("x"), Var("y")), Var("z")))
-//│ ║         	                                          ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
 //│ #Str
 //│ res
 //│     = 'x'
@@ -251,51 +179,6 @@ fun isValue(t) =
 isValue(Var("x"))
 isValue(Abs(Var("x"), Var("y")))
 isValue(App(Var("x"), Var("y")))
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.251: 	isValue(Var("x"))
-//│ ║         	        ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.251: 	isValue(Var("x"))
-//│ ║         	            ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.252: 	isValue(Abs(Var("x"), Var("y")))
-//│ ║         	            ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.252: 	isValue(Abs(Var("x"), Var("y")))
-//│ ║         	                ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.252: 	isValue(Abs(Var("x"), Var("y")))
-//│ ║         	                      ^^^^^^^^
-//│ ╟── string literal of type `"y"` is not an instance of type `string`
-//│ ║  l.252: 	isValue(Abs(Var("x"), Var("y")))
-//│ ║         	                          ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.253: 	isValue(App(Var("x"), Var("y")))
-//│ ║         	            ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.253: 	isValue(App(Var("x"), Var("y")))
-//│ ║         	                ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.253: 	isValue(App(Var("x"), Var("y")))
-//│ ║         	                      ^^^^^^^^
-//│ ╟── string literal of type `"y"` is not an instance of type `string`
-//│ ║  l.253: 	isValue(App(Var("x"), Var("y")))
-//│ ║         	                          ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
 //│ False | True
 //│ res
 //│     = true
@@ -330,240 +213,6 @@ showHasFree(App(Abs(Var("x"), Var("x")), Var("x")), "x")
 showHasFree(App(Abs(Var("x"), Var("x")), Var("x")), "y")
 showHasFree(App(Abs(Var("x"), Var("x")), Var("y")), "y")
 showHasFree(App(Abs(Var("x"), Var("x")), Var("x")), "y")
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.321: 	showHasFree(Var("x"), "x")
-//│ ║         	            ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.321: 	showHasFree(Var("x"), "x")
-//│ ║         	                ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.322: 	showHasFree(Var("x"), "y")
-//│ ║         	            ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.322: 	showHasFree(Var("x"), "y")
-//│ ║         	                ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.323: 	showHasFree(Abs(Var("x"), Var("x")), "x")
-//│ ║         	                ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.323: 	showHasFree(Abs(Var("x"), Var("x")), "x")
-//│ ║         	                    ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.323: 	showHasFree(Abs(Var("x"), Var("x")), "x")
-//│ ║         	                          ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.323: 	showHasFree(Abs(Var("x"), Var("x")), "x")
-//│ ║         	                              ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.324: 	showHasFree(Abs(Var("x"), Var("x")), "y")
-//│ ║         	                ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.324: 	showHasFree(Abs(Var("x"), Var("x")), "y")
-//│ ║         	                    ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.324: 	showHasFree(Abs(Var("x"), Var("x")), "y")
-//│ ║         	                          ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.324: 	showHasFree(Abs(Var("x"), Var("x")), "y")
-//│ ║         	                              ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.325: 	showHasFree(Abs(Var("x"), Var("y")), "x")
-//│ ║         	                ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.325: 	showHasFree(Abs(Var("x"), Var("y")), "x")
-//│ ║         	                    ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.325: 	showHasFree(Abs(Var("x"), Var("y")), "x")
-//│ ║         	                          ^^^^^^^^
-//│ ╟── string literal of type `"y"` is not an instance of type `string`
-//│ ║  l.325: 	showHasFree(Abs(Var("x"), Var("y")), "x")
-//│ ║         	                              ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.326: 	showHasFree(Abs(Var("x"), Var("y")), "y")
-//│ ║         	                ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.326: 	showHasFree(Abs(Var("x"), Var("y")), "y")
-//│ ║         	                    ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.326: 	showHasFree(Abs(Var("x"), Var("y")), "y")
-//│ ║         	                          ^^^^^^^^
-//│ ╟── string literal of type `"y"` is not an instance of type `string`
-//│ ║  l.326: 	showHasFree(Abs(Var("x"), Var("y")), "y")
-//│ ║         	                              ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.327: 	showHasFree(App(Var("x"), Var("y")), "x")
-//│ ║         	                ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.327: 	showHasFree(App(Var("x"), Var("y")), "x")
-//│ ║         	                    ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.327: 	showHasFree(App(Var("x"), Var("y")), "x")
-//│ ║         	                          ^^^^^^^^
-//│ ╟── string literal of type `"y"` is not an instance of type `string`
-//│ ║  l.327: 	showHasFree(App(Var("x"), Var("y")), "x")
-//│ ║         	                              ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.328: 	showHasFree(App(Var("x"), Var("y")), "y")
-//│ ║         	                ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.328: 	showHasFree(App(Var("x"), Var("y")), "y")
-//│ ║         	                    ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.328: 	showHasFree(App(Var("x"), Var("y")), "y")
-//│ ║         	                          ^^^^^^^^
-//│ ╟── string literal of type `"y"` is not an instance of type `string`
-//│ ║  l.328: 	showHasFree(App(Var("x"), Var("y")), "y")
-//│ ║         	                              ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.329: 	showHasFree(App(Abs(Var("x"), Var("x")), Var("x")), "x")
-//│ ║         	                    ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.329: 	showHasFree(App(Abs(Var("x"), Var("x")), Var("x")), "x")
-//│ ║         	                        ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.329: 	showHasFree(App(Abs(Var("x"), Var("x")), Var("x")), "x")
-//│ ║         	                              ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.329: 	showHasFree(App(Abs(Var("x"), Var("x")), Var("x")), "x")
-//│ ║         	                                  ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.329: 	showHasFree(App(Abs(Var("x"), Var("x")), Var("x")), "x")
-//│ ║         	                                         ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.329: 	showHasFree(App(Abs(Var("x"), Var("x")), Var("x")), "x")
-//│ ║         	                                             ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.330: 	showHasFree(App(Abs(Var("x"), Var("x")), Var("x")), "y")
-//│ ║         	                    ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.330: 	showHasFree(App(Abs(Var("x"), Var("x")), Var("x")), "y")
-//│ ║         	                        ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.330: 	showHasFree(App(Abs(Var("x"), Var("x")), Var("x")), "y")
-//│ ║         	                              ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.330: 	showHasFree(App(Abs(Var("x"), Var("x")), Var("x")), "y")
-//│ ║         	                                  ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.330: 	showHasFree(App(Abs(Var("x"), Var("x")), Var("x")), "y")
-//│ ║         	                                         ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.330: 	showHasFree(App(Abs(Var("x"), Var("x")), Var("x")), "y")
-//│ ║         	                                             ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.331: 	showHasFree(App(Abs(Var("x"), Var("x")), Var("y")), "y")
-//│ ║         	                    ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.331: 	showHasFree(App(Abs(Var("x"), Var("x")), Var("y")), "y")
-//│ ║         	                        ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.331: 	showHasFree(App(Abs(Var("x"), Var("x")), Var("y")), "y")
-//│ ║         	                              ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.331: 	showHasFree(App(Abs(Var("x"), Var("x")), Var("y")), "y")
-//│ ║         	                                  ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.331: 	showHasFree(App(Abs(Var("x"), Var("x")), Var("y")), "y")
-//│ ║         	                                         ^^^^^^^^
-//│ ╟── string literal of type `"y"` is not an instance of type `string`
-//│ ║  l.331: 	showHasFree(App(Abs(Var("x"), Var("x")), Var("y")), "y")
-//│ ║         	                                             ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.332: 	showHasFree(App(Abs(Var("x"), Var("x")), Var("x")), "y")
-//│ ║         	                    ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.332: 	showHasFree(App(Abs(Var("x"), Var("x")), Var("x")), "y")
-//│ ║         	                        ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.332: 	showHasFree(App(Abs(Var("x"), Var("x")), Var("x")), "y")
-//│ ║         	                              ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.332: 	showHasFree(App(Abs(Var("x"), Var("x")), Var("x")), "y")
-//│ ║         	                                  ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.332: 	showHasFree(App(Abs(Var("x"), Var("x")), Var("x")), "y")
-//│ ║         	                                         ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.332: 	showHasFree(App(Abs(Var("x"), Var("x")), Var("x")), "y")
-//│ ║         	                                             ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
 //│ #Str
 //│ res
 //│     = 'x has free variable x'
@@ -597,7 +246,7 @@ fun fv(t) =
     App(lhs, rhs) then listConcat(fv(lhs), fv(rhs))
 //│ fun fv: forall 'A. (Abs | App | Var) -> (Cons['A] | Nil)
 //│   where
-//│     'A :> string
+//│     'A :> Str
 
 fun showFv(t) =
   concat2(showTerm(t), if fv(t) is
@@ -611,96 +260,6 @@ showFv(Abs(Var("x"), Var("x")))
 showFv(Abs(Var("x"), Var("y")))
 showFv(App(Var("x"), Var("y")))
 showFv(App(Abs(Var("x"), Var("x")), Var("x")))
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.609: 	showFv(Var("x"))
-//│ ║         	       ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.609: 	showFv(Var("x"))
-//│ ║         	           ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.610: 	showFv(Abs(Var("x"), Var("x")))
-//│ ║         	           ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.610: 	showFv(Abs(Var("x"), Var("x")))
-//│ ║         	               ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.610: 	showFv(Abs(Var("x"), Var("x")))
-//│ ║         	                     ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.610: 	showFv(Abs(Var("x"), Var("x")))
-//│ ║         	                         ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.611: 	showFv(Abs(Var("x"), Var("y")))
-//│ ║         	           ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.611: 	showFv(Abs(Var("x"), Var("y")))
-//│ ║         	               ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.611: 	showFv(Abs(Var("x"), Var("y")))
-//│ ║         	                     ^^^^^^^^
-//│ ╟── string literal of type `"y"` is not an instance of type `string`
-//│ ║  l.611: 	showFv(Abs(Var("x"), Var("y")))
-//│ ║         	                         ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.612: 	showFv(App(Var("x"), Var("y")))
-//│ ║         	           ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.612: 	showFv(App(Var("x"), Var("y")))
-//│ ║         	               ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.612: 	showFv(App(Var("x"), Var("y")))
-//│ ║         	                     ^^^^^^^^
-//│ ╟── string literal of type `"y"` is not an instance of type `string`
-//│ ║  l.612: 	showFv(App(Var("x"), Var("y")))
-//│ ║         	                         ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.613: 	showFv(App(Abs(Var("x"), Var("x")), Var("x")))
-//│ ║         	               ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.613: 	showFv(App(Abs(Var("x"), Var("x")), Var("x")))
-//│ ║         	                   ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.613: 	showFv(App(Abs(Var("x"), Var("x")), Var("x")))
-//│ ║         	                         ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.613: 	showFv(App(Abs(Var("x"), Var("x")), Var("x")))
-//│ ║         	                             ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.613: 	showFv(App(Abs(Var("x"), Var("x")), Var("x")))
-//│ ║         	                                    ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.613: 	showFv(App(Abs(Var("x"), Var("x")), Var("x")))
-//│ ║         	                                        ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
 //│ #Str
 //│ res
 //│     = 'x has free variables: x'
@@ -721,99 +280,13 @@ fun tryNextAlphabet(initialCode, currentCode, freeNames) =
     let name = fromCharCode(currentCode)
     listContains(freeNames, name) then tryNextAlphabet(initialCode, currentCode + 1, freeNames)
     _ then Some(name)
-//│ ╔══[ERROR] Type mismatch in definition:
-//│ ║  l.716: 	fun tryNextAlphabet(initialCode, currentCode, freeNames) =
-//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.717: 	  if
-//│ ║         	^^^^^
-//│ ║  l.718: 	    currentCode
-//│ ║         	^^^^^^^^^^^^^^^
-//│ ║  l.719: 	      > 122 then tryNextAlphabet(initialCode, 97, freeNames)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.720: 	      == initialCode then None
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.721: 	    let name = fromCharCode(currentCode)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.722: 	    listContains(freeNames, name) then tryNextAlphabet(initialCode, currentCode + 1, freeNames)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.723: 	    _ then Some(name)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── operator application of type `Int` is not an instance of type `int`
-//│ ║  l.722: 	    listContains(freeNames, name) then tryNextAlphabet(initialCode, currentCode + 1, freeNames)
-//│ ║         	                                                                    ^^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.37: 	fun fromCharCode(n: int) = StringInstance.fromCharCode(n)
-//│ ║        	                    ^^^
-//│ ╟── from reference:
-//│ ║  l.721: 	    let name = fromCharCode(currentCode)
-//│ ╙──       	                            ^^^^^^^^^^^
-//│ fun tryNextAlphabet: forall 'A. (#Num, nothing, Cons['A] | Nil,) -> (None | Some[string])
+//│ fun tryNextAlphabet: forall 'A. (#Num, Int, Cons['A] | Nil,) -> (None | Some[Str])
 
 toString(tryNextAlphabet(97, 97, list1("a")))
 toString(tryNextAlphabet(97, 98, list1("a")))
 toString(tryNextAlphabet(97, 98, list2("a", "b")))
 toString(tryNextAlphabet(121, 122, list1("y")))
 toString(tryNextAlphabet(121, 122, list2("y", "z")))
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.752: 	toString(tryNextAlphabet(97, 97, list1("a")))
-//│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── integer literal of type `97` is not an instance of type `int`
-//│ ║  l.752: 	toString(tryNextAlphabet(97, 97, list1("a")))
-//│ ║         	                             ^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.37: 	fun fromCharCode(n: int) = StringInstance.fromCharCode(n)
-//│ ║        	                    ^^^
-//│ ╟── from reference:
-//│ ║  l.721: 	    let name = fromCharCode(currentCode)
-//│ ╙──       	                            ^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.753: 	toString(tryNextAlphabet(97, 98, list1("a")))
-//│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── integer literal of type `98` is not an instance of type `int`
-//│ ║  l.753: 	toString(tryNextAlphabet(97, 98, list1("a")))
-//│ ║         	                             ^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.37: 	fun fromCharCode(n: int) = StringInstance.fromCharCode(n)
-//│ ║        	                    ^^^
-//│ ╟── from reference:
-//│ ║  l.721: 	    let name = fromCharCode(currentCode)
-//│ ╙──       	                            ^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.754: 	toString(tryNextAlphabet(97, 98, list2("a", "b")))
-//│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── integer literal of type `98` is not an instance of type `int`
-//│ ║  l.754: 	toString(tryNextAlphabet(97, 98, list2("a", "b")))
-//│ ║         	                             ^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.37: 	fun fromCharCode(n: int) = StringInstance.fromCharCode(n)
-//│ ║        	                    ^^^
-//│ ╟── from reference:
-//│ ║  l.721: 	    let name = fromCharCode(currentCode)
-//│ ╙──       	                            ^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.755: 	toString(tryNextAlphabet(121, 122, list1("y")))
-//│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── integer literal of type `122` is not an instance of type `int`
-//│ ║  l.755: 	toString(tryNextAlphabet(121, 122, list1("y")))
-//│ ║         	                              ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.37: 	fun fromCharCode(n: int) = StringInstance.fromCharCode(n)
-//│ ║        	                    ^^^
-//│ ╟── from reference:
-//│ ║  l.721: 	    let name = fromCharCode(currentCode)
-//│ ╙──       	                            ^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.756: 	toString(tryNextAlphabet(121, 122, list2("y", "z")))
-//│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── integer literal of type `122` is not an instance of type `int`
-//│ ║  l.756: 	toString(tryNextAlphabet(121, 122, list2("y", "z")))
-//│ ║         	                              ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.37: 	fun fromCharCode(n: int) = StringInstance.fromCharCode(n)
-//│ ║        	                    ^^^
-//│ ╟── from reference:
-//│ ║  l.721: 	    let name = fromCharCode(currentCode)
-//│ ╙──       	                            ^^^^^^^^^^^
 //│ #Str
 //│ res
 //│     = 'None'
@@ -842,66 +315,12 @@ fun findFreshName(name, freeNames) =
       tryNextAlphabet(charCode, charCode + 1, freeNames) is
         Some(newName) then newName
     _ then tryAppendDigits(name, 0, freeNames)
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.840: 	    stringLength(name) == 1 and
-//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `int` is not an instance of type `Num`
-//│ ║  l.23: 	let makeString: anything => { length: int, charCodeAt: int => int } = String
-//│ ║        	                                      ^^^
-//│ ╟── but it flows into application with expected type `#Num`
-//│ ║  l.840: 	    stringLength(name) == 1 and
-//│ ╙──       	    ^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.841: 	      let charCode = stringCharCodeAt(name, 0)
-//│ ║         	                     ^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── integer literal of type `0` is not an instance of type `int`
-//│ ║  l.841: 	      let charCode = stringCharCodeAt(name, 0)
-//│ ║         	                                            ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.23: 	let makeString: anything => { length: int, charCodeAt: int => int } = String
-//│ ║        	                                                       ^^^
-//│ ╟── from reference:
-//│ ║  l.38: 	fun stringCharCodeAt(s: string, i) = makeString(s).charCodeAt(i)
-//│ ╙──      	                                                              ^
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.842: 	      tryNextAlphabet(charCode, charCode + 1, freeNames) is
-//│ ║         	                                ^^^^^^^^^^
-//│ ╟── type `int` is not an instance of type `Int`
-//│ ║  l.23: 	let makeString: anything => { length: int, charCodeAt: int => int } = String
-//│ ║        	                                                              ^^^
-//│ ╟── but it flows into reference with expected type `Int`
-//│ ║  l.842: 	      tryNextAlphabet(charCode, charCode + 1, freeNames) is
-//│ ╙──       	                                ^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.842: 	      tryNextAlphabet(charCode, charCode + 1, freeNames) is
-//│ ║         	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `int` is not an instance of type `Num`
-//│ ║  l.23: 	let makeString: anything => { length: int, charCodeAt: int => int } = String
-//│ ║        	                                                              ^^^
-//│ ╟── but it flows into reference with expected type `#Num`
-//│ ║  l.842: 	      tryNextAlphabet(charCode, charCode + 1, freeNames) is
-//│ ║         	                      ^^^^^^^^
-//│ ╟── Note: constraint arises from reference:
-//│ ║  l.720: 	      == initialCode then None
-//│ ╙──       	         ^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.841: 	      let charCode = stringCharCodeAt(name, 0)
-//│ ║         	                     ^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── integer literal of type `0` is not an instance of type `int`
-//│ ║  l.841: 	      let charCode = stringCharCodeAt(name, 0)
-//│ ║         	                                            ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.23: 	let makeString: anything => { length: int, charCodeAt: int => int } = String
-//│ ║        	                                                       ^^^
-//│ ╟── from reference:
-//│ ║  l.38: 	fun stringCharCodeAt(s: string, i) = makeString(s).charCodeAt(i)
-//│ ╙──      	                                                              ^
-//│ fun findFreshName: forall 'A 'A0 'A1. (nothing, Cons[in 'A | 'A0 | 'A1 out 'A & 'A0 & 'A1] | Nil,) -> (#Str | string)
+//│ fun findFreshName: forall 'A 'A0 'A1. (Str, Cons[in 'A | 'A0 | 'A1 out 'A & 'A0 & 'A1] | Nil,) -> #Str
 
 // Find a fresh name to replace `name` that does not conflict with any bound
 // variables in the `body`.
 fun freshName(name, body) = findFreshName(name, fv(body))
-//│ fun freshName: (nothing, Abs | App | Var,) -> (#Str | string)
+//│ fun freshName: (Str, Abs | App | Var,) -> #Str
 
 fun subst(t, n, v) =
   if t is
@@ -912,33 +331,6 @@ fun subst(t, n, v) =
       _ then Abs(Var(name), subst(body, n, v))
     App(lhs, rhs) then App(subst(lhs, n, v), subst(rhs, n, v))
     _ then t
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.910: 	      hasFree(v, name) and freshName(name, body) is newName then
-//│ ║         	                           ^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `string` is not an instance of type `Str`
-//│ ║  l.141: 	class Var(name: string)
-//│ ║         	                ^^^^^^
-//│ ╟── but it flows into reference with expected type `#Str`
-//│ ║  l.910: 	      hasFree(v, name) and freshName(name, body) is newName then
-//│ ║         	                                     ^^^^
-//│ ╟── Note: constraint arises from reference:
-//│ ║  l.4: 	fun concat2(a, b) = concat(a)(b)
-//│ ║       	                           ^
-//│ ╟── from reference:
-//│ ║  l.903: 	fun freshName(name, body) = findFreshName(name, fv(body))
-//│ ╙──       	                                          ^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.911: 	        subst(Abs(Var(newName), subst(body, name, Var(newName))), n, v)
-//│ ║         	                  ^^^^^^^^^^^^
-//│ ╟── application of type `#Str` is not an instance of type `string`
-//│ ║  l.4: 	fun concat2(a, b) = concat(a)(b)
-//│ ║       	                    ^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `string`
-//│ ║  l.911: 	        subst(Abs(Var(newName), subst(body, name, Var(newName))), n, v)
-//│ ║         	                      ^^^^^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
 //│ fun subst: forall 'a. (Abs | App | Term & #Object & 'a & ~#Abs & ~#App & ~#Var | Var, anything, Term & #Object & 'a,) -> (Abs | App | Var | 'a)
 
 fun showSubst(t, n, v) =
@@ -951,222 +343,6 @@ showSubst(App(Var("x"), Var("y")), "x", Abs(Var("x"), Var("x")))
 showSubst(App(Abs(Var("x"), Var("x")), Var("x")), "x", Abs(Var("y"), Var("y")))
 showSubst(Abs(Var("x"), App(Var("x"), Var("y"))), "y", Var("x"))
 showSubst(Abs(Var("z"), Abs(Var("x"), App(Var("z"), App(Var("x"), Var("y"))))), "y", Var("x"))
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.948: 	showSubst(Var("x"), "x", Var("y"))
-//│ ║         	          ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.948: 	showSubst(Var("x"), "x", Var("y"))
-//│ ║         	              ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.948: 	showSubst(Var("x"), "x", Var("y"))
-//│ ║         	                         ^^^^^^^^
-//│ ╟── string literal of type `"y"` is not an instance of type `string`
-//│ ║  l.948: 	showSubst(Var("x"), "x", Var("y"))
-//│ ║         	                             ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.949: 	showSubst(Abs(Var("x"), Var("x")), "x", Var("z"))
-//│ ║         	              ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.949: 	showSubst(Abs(Var("x"), Var("x")), "x", Var("z"))
-//│ ║         	                  ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.949: 	showSubst(Abs(Var("x"), Var("x")), "x", Var("z"))
-//│ ║         	                        ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.949: 	showSubst(Abs(Var("x"), Var("x")), "x", Var("z"))
-//│ ║         	                            ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.949: 	showSubst(Abs(Var("x"), Var("x")), "x", Var("z"))
-//│ ║         	                                        ^^^^^^^^
-//│ ╟── string literal of type `"z"` is not an instance of type `string`
-//│ ║  l.949: 	showSubst(Abs(Var("x"), Var("x")), "x", Var("z"))
-//│ ║         	                                            ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.950: 	showSubst(App(Var("x"), Var("y")), "x", Abs(Var("x"), Var("x")))
-//│ ║         	              ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.950: 	showSubst(App(Var("x"), Var("y")), "x", Abs(Var("x"), Var("x")))
-//│ ║         	                  ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.950: 	showSubst(App(Var("x"), Var("y")), "x", Abs(Var("x"), Var("x")))
-//│ ║         	                        ^^^^^^^^
-//│ ╟── string literal of type `"y"` is not an instance of type `string`
-//│ ║  l.950: 	showSubst(App(Var("x"), Var("y")), "x", Abs(Var("x"), Var("x")))
-//│ ║         	                            ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.950: 	showSubst(App(Var("x"), Var("y")), "x", Abs(Var("x"), Var("x")))
-//│ ║         	                                            ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.950: 	showSubst(App(Var("x"), Var("y")), "x", Abs(Var("x"), Var("x")))
-//│ ║         	                                                ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.950: 	showSubst(App(Var("x"), Var("y")), "x", Abs(Var("x"), Var("x")))
-//│ ║         	                                                      ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.950: 	showSubst(App(Var("x"), Var("y")), "x", Abs(Var("x"), Var("x")))
-//│ ║         	                                                          ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.951: 	showSubst(App(Abs(Var("x"), Var("x")), Var("x")), "x", Abs(Var("y"), Var("y")))
-//│ ║         	                  ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.951: 	showSubst(App(Abs(Var("x"), Var("x")), Var("x")), "x", Abs(Var("y"), Var("y")))
-//│ ║         	                      ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.951: 	showSubst(App(Abs(Var("x"), Var("x")), Var("x")), "x", Abs(Var("y"), Var("y")))
-//│ ║         	                            ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.951: 	showSubst(App(Abs(Var("x"), Var("x")), Var("x")), "x", Abs(Var("y"), Var("y")))
-//│ ║         	                                ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.951: 	showSubst(App(Abs(Var("x"), Var("x")), Var("x")), "x", Abs(Var("y"), Var("y")))
-//│ ║         	                                       ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.951: 	showSubst(App(Abs(Var("x"), Var("x")), Var("x")), "x", Abs(Var("y"), Var("y")))
-//│ ║         	                                           ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.951: 	showSubst(App(Abs(Var("x"), Var("x")), Var("x")), "x", Abs(Var("y"), Var("y")))
-//│ ║         	                                                           ^^^^^^^^
-//│ ╟── string literal of type `"y"` is not an instance of type `string`
-//│ ║  l.951: 	showSubst(App(Abs(Var("x"), Var("x")), Var("x")), "x", Abs(Var("y"), Var("y")))
-//│ ║         	                                                               ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.951: 	showSubst(App(Abs(Var("x"), Var("x")), Var("x")), "x", Abs(Var("y"), Var("y")))
-//│ ║         	                                                                     ^^^^^^^^
-//│ ╟── string literal of type `"y"` is not an instance of type `string`
-//│ ║  l.951: 	showSubst(App(Abs(Var("x"), Var("x")), Var("x")), "x", Abs(Var("y"), Var("y")))
-//│ ║         	                                                                         ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.952: 	showSubst(Abs(Var("x"), App(Var("x"), Var("y"))), "y", Var("x"))
-//│ ║         	              ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.952: 	showSubst(Abs(Var("x"), App(Var("x"), Var("y"))), "y", Var("x"))
-//│ ║         	                  ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.952: 	showSubst(Abs(Var("x"), App(Var("x"), Var("y"))), "y", Var("x"))
-//│ ║         	                            ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.952: 	showSubst(Abs(Var("x"), App(Var("x"), Var("y"))), "y", Var("x"))
-//│ ║         	                                ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.952: 	showSubst(Abs(Var("x"), App(Var("x"), Var("y"))), "y", Var("x"))
-//│ ║         	                                      ^^^^^^^^
-//│ ╟── string literal of type `"y"` is not an instance of type `string`
-//│ ║  l.952: 	showSubst(Abs(Var("x"), App(Var("x"), Var("y"))), "y", Var("x"))
-//│ ║         	                                          ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.952: 	showSubst(Abs(Var("x"), App(Var("x"), Var("y"))), "y", Var("x"))
-//│ ║         	                                                       ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.952: 	showSubst(Abs(Var("x"), App(Var("x"), Var("y"))), "y", Var("x"))
-//│ ║         	                                                           ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.953: 	showSubst(Abs(Var("z"), Abs(Var("x"), App(Var("z"), App(Var("x"), Var("y"))))), "y", Var("x"))
-//│ ║         	              ^^^^^^^^
-//│ ╟── string literal of type `"z"` is not an instance of type `string`
-//│ ║  l.953: 	showSubst(Abs(Var("z"), Abs(Var("x"), App(Var("z"), App(Var("x"), Var("y"))))), "y", Var("x"))
-//│ ║         	                  ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.953: 	showSubst(Abs(Var("z"), Abs(Var("x"), App(Var("z"), App(Var("x"), Var("y"))))), "y", Var("x"))
-//│ ║         	                            ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.953: 	showSubst(Abs(Var("z"), Abs(Var("x"), App(Var("z"), App(Var("x"), Var("y"))))), "y", Var("x"))
-//│ ║         	                                ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.953: 	showSubst(Abs(Var("z"), Abs(Var("x"), App(Var("z"), App(Var("x"), Var("y"))))), "y", Var("x"))
-//│ ║         	                                          ^^^^^^^^
-//│ ╟── string literal of type `"z"` is not an instance of type `string`
-//│ ║  l.953: 	showSubst(Abs(Var("z"), Abs(Var("x"), App(Var("z"), App(Var("x"), Var("y"))))), "y", Var("x"))
-//│ ║         	                                              ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.953: 	showSubst(Abs(Var("z"), Abs(Var("x"), App(Var("z"), App(Var("x"), Var("y"))))), "y", Var("x"))
-//│ ║         	                                                        ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.953: 	showSubst(Abs(Var("z"), Abs(Var("x"), App(Var("z"), App(Var("x"), Var("y"))))), "y", Var("x"))
-//│ ║         	                                                            ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.953: 	showSubst(Abs(Var("z"), Abs(Var("x"), App(Var("z"), App(Var("x"), Var("y"))))), "y", Var("x"))
-//│ ║         	                                                                  ^^^^^^^^
-//│ ╟── string literal of type `"y"` is not an instance of type `string`
-//│ ║  l.953: 	showSubst(Abs(Var("z"), Abs(Var("x"), App(Var("z"), App(Var("x"), Var("y"))))), "y", Var("x"))
-//│ ║         	                                                                      ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.953: 	showSubst(Abs(Var("z"), Abs(Var("x"), App(Var("z"), App(Var("x"), Var("y"))))), "y", Var("x"))
-//│ ║         	                                                                                     ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.953: 	showSubst(Abs(Var("z"), Abs(Var("x"), App(Var("z"), App(Var("x"), Var("y"))))), "y", Var("x"))
-//│ ║         	                                                                                         ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
 //│ #Str
 //│ res
 //│     = 'x [x / y] => y'
@@ -1222,114 +398,6 @@ toString of stepByValue of Abs(Var("x"), Var("y"))
 toString of stepByValue of App(Var("x"), Var("y"))
 toString of stepByValue of App(Abs(Var("x"), Var("x")), Var("x"))
 toString of stepByValue of App(Abs(Var("x"), Var("x")), Abs(Var("y"), Var("y")))
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1220: 	toString of stepByValue of Var("x")
-//│ ║          	                           ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.1220: 	toString of stepByValue of Var("x")
-//│ ║          	                               ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1221: 	toString of stepByValue of Abs(Var("x"), Var("y"))
-//│ ║          	                               ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.1221: 	toString of stepByValue of Abs(Var("x"), Var("y"))
-//│ ║          	                                   ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1221: 	toString of stepByValue of Abs(Var("x"), Var("y"))
-//│ ║          	                                         ^^^^^^^^
-//│ ╟── string literal of type `"y"` is not an instance of type `string`
-//│ ║  l.1221: 	toString of stepByValue of Abs(Var("x"), Var("y"))
-//│ ║          	                                             ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1222: 	toString of stepByValue of App(Var("x"), Var("y"))
-//│ ║          	                               ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.1222: 	toString of stepByValue of App(Var("x"), Var("y"))
-//│ ║          	                                   ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1222: 	toString of stepByValue of App(Var("x"), Var("y"))
-//│ ║          	                                         ^^^^^^^^
-//│ ╟── string literal of type `"y"` is not an instance of type `string`
-//│ ║  l.1222: 	toString of stepByValue of App(Var("x"), Var("y"))
-//│ ║          	                                             ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1223: 	toString of stepByValue of App(Abs(Var("x"), Var("x")), Var("x"))
-//│ ║          	                                   ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.1223: 	toString of stepByValue of App(Abs(Var("x"), Var("x")), Var("x"))
-//│ ║          	                                       ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1223: 	toString of stepByValue of App(Abs(Var("x"), Var("x")), Var("x"))
-//│ ║          	                                             ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.1223: 	toString of stepByValue of App(Abs(Var("x"), Var("x")), Var("x"))
-//│ ║          	                                                 ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1223: 	toString of stepByValue of App(Abs(Var("x"), Var("x")), Var("x"))
-//│ ║          	                                                        ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.1223: 	toString of stepByValue of App(Abs(Var("x"), Var("x")), Var("x"))
-//│ ║          	                                                            ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1224: 	toString of stepByValue of App(Abs(Var("x"), Var("x")), Abs(Var("y"), Var("y")))
-//│ ║          	                                   ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.1224: 	toString of stepByValue of App(Abs(Var("x"), Var("x")), Abs(Var("y"), Var("y")))
-//│ ║          	                                       ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1224: 	toString of stepByValue of App(Abs(Var("x"), Var("x")), Abs(Var("y"), Var("y")))
-//│ ║          	                                             ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.1224: 	toString of stepByValue of App(Abs(Var("x"), Var("x")), Abs(Var("y"), Var("y")))
-//│ ║          	                                                 ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1224: 	toString of stepByValue of App(Abs(Var("x"), Var("x")), Abs(Var("y"), Var("y")))
-//│ ║          	                                                            ^^^^^^^^
-//│ ╟── string literal of type `"y"` is not an instance of type `string`
-//│ ║  l.1224: 	toString of stepByValue of App(Abs(Var("x"), Var("x")), Abs(Var("y"), Var("y")))
-//│ ║          	                                                                ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1224: 	toString of stepByValue of App(Abs(Var("x"), Var("x")), Abs(Var("y"), Var("y")))
-//│ ║          	                                                                      ^^^^^^^^
-//│ ╟── string literal of type `"y"` is not an instance of type `string`
-//│ ║  l.1224: 	toString of stepByValue of App(Abs(Var("x"), Var("x")), Abs(Var("y"), Var("y")))
-//│ ║          	                                                                          ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
 //│ #Str
 //│ res
 //│     = 'Stuck: x in x'
@@ -1356,132 +424,6 @@ toString of stepByValue of one
 let succ = Abs(Var("n"), Abs(Var("f"), Abs(Var("x"), App(Var("f"), App(App(Var("n"), Var("f")), Var("x"))))))
 toString of stepByValue of succ
 toString of stepByValue of App(succ, zero)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1352: 	let zero = Abs(Var("f"), Abs(Var("x"), Var("x")))
-//│ ║          	               ^^^^^^^^
-//│ ╟── string literal of type `"f"` is not an instance of type `string`
-//│ ║  l.1352: 	let zero = Abs(Var("f"), Abs(Var("x"), Var("x")))
-//│ ║          	                   ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1352: 	let zero = Abs(Var("f"), Abs(Var("x"), Var("x")))
-//│ ║          	                             ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.1352: 	let zero = Abs(Var("f"), Abs(Var("x"), Var("x")))
-//│ ║          	                                 ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1352: 	let zero = Abs(Var("f"), Abs(Var("x"), Var("x")))
-//│ ║          	                                       ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.1352: 	let zero = Abs(Var("f"), Abs(Var("x"), Var("x")))
-//│ ║          	                                           ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1353: 	let one = Abs(Var("f"), Abs(Var("x"), App(Var("f"), Var("x"))))
-//│ ║          	              ^^^^^^^^
-//│ ╟── string literal of type `"f"` is not an instance of type `string`
-//│ ║  l.1353: 	let one = Abs(Var("f"), Abs(Var("x"), App(Var("f"), Var("x"))))
-//│ ║          	                  ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1353: 	let one = Abs(Var("f"), Abs(Var("x"), App(Var("f"), Var("x"))))
-//│ ║          	                            ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.1353: 	let one = Abs(Var("f"), Abs(Var("x"), App(Var("f"), Var("x"))))
-//│ ║          	                                ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1353: 	let one = Abs(Var("f"), Abs(Var("x"), App(Var("f"), Var("x"))))
-//│ ║          	                                          ^^^^^^^^
-//│ ╟── string literal of type `"f"` is not an instance of type `string`
-//│ ║  l.1353: 	let one = Abs(Var("f"), Abs(Var("x"), App(Var("f"), Var("x"))))
-//│ ║          	                                              ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1353: 	let one = Abs(Var("f"), Abs(Var("x"), App(Var("f"), Var("x"))))
-//│ ║          	                                                    ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.1353: 	let one = Abs(Var("f"), Abs(Var("x"), App(Var("f"), Var("x"))))
-//│ ║          	                                                        ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1356: 	let succ = Abs(Var("n"), Abs(Var("f"), Abs(Var("x"), App(Var("f"), App(App(Var("n"), Var("f")), Var("x"))))))
-//│ ║          	               ^^^^^^^^
-//│ ╟── string literal of type `"n"` is not an instance of type `string`
-//│ ║  l.1356: 	let succ = Abs(Var("n"), Abs(Var("f"), Abs(Var("x"), App(Var("f"), App(App(Var("n"), Var("f")), Var("x"))))))
-//│ ║          	                   ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1356: 	let succ = Abs(Var("n"), Abs(Var("f"), Abs(Var("x"), App(Var("f"), App(App(Var("n"), Var("f")), Var("x"))))))
-//│ ║          	                             ^^^^^^^^
-//│ ╟── string literal of type `"f"` is not an instance of type `string`
-//│ ║  l.1356: 	let succ = Abs(Var("n"), Abs(Var("f"), Abs(Var("x"), App(Var("f"), App(App(Var("n"), Var("f")), Var("x"))))))
-//│ ║          	                                 ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1356: 	let succ = Abs(Var("n"), Abs(Var("f"), Abs(Var("x"), App(Var("f"), App(App(Var("n"), Var("f")), Var("x"))))))
-//│ ║          	                                           ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.1356: 	let succ = Abs(Var("n"), Abs(Var("f"), Abs(Var("x"), App(Var("f"), App(App(Var("n"), Var("f")), Var("x"))))))
-//│ ║          	                                               ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1356: 	let succ = Abs(Var("n"), Abs(Var("f"), Abs(Var("x"), App(Var("f"), App(App(Var("n"), Var("f")), Var("x"))))))
-//│ ║          	                                                         ^^^^^^^^
-//│ ╟── string literal of type `"f"` is not an instance of type `string`
-//│ ║  l.1356: 	let succ = Abs(Var("n"), Abs(Var("f"), Abs(Var("x"), App(Var("f"), App(App(Var("n"), Var("f")), Var("x"))))))
-//│ ║          	                                                             ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1356: 	let succ = Abs(Var("n"), Abs(Var("f"), Abs(Var("x"), App(Var("f"), App(App(Var("n"), Var("f")), Var("x"))))))
-//│ ║          	                                                                           ^^^^^^^^
-//│ ╟── string literal of type `"n"` is not an instance of type `string`
-//│ ║  l.1356: 	let succ = Abs(Var("n"), Abs(Var("f"), Abs(Var("x"), App(Var("f"), App(App(Var("n"), Var("f")), Var("x"))))))
-//│ ║          	                                                                               ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1356: 	let succ = Abs(Var("n"), Abs(Var("f"), Abs(Var("x"), App(Var("f"), App(App(Var("n"), Var("f")), Var("x"))))))
-//│ ║          	                                                                                     ^^^^^^^^
-//│ ╟── string literal of type `"f"` is not an instance of type `string`
-//│ ║  l.1356: 	let succ = Abs(Var("n"), Abs(Var("f"), Abs(Var("x"), App(Var("f"), App(App(Var("n"), Var("f")), Var("x"))))))
-//│ ║          	                                                                                         ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1356: 	let succ = Abs(Var("n"), Abs(Var("f"), Abs(Var("x"), App(Var("f"), App(App(Var("n"), Var("f")), Var("x"))))))
-//│ ║          	                                                                                                ^^^^^^^^
-//│ ╟── string literal of type `"x"` is not an instance of type `string`
-//│ ║  l.1356: 	let succ = Abs(Var("n"), Abs(Var("f"), Abs(Var("x"), App(Var("f"), App(App(Var("n"), Var("f")), Var("x"))))))
-//│ ║          	                                                                                                    ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	class Var(name: string)
-//│ ╙──       	                ^^^^^^
 //│ let zero: Abs
 //│ let one: Abs
 //│ let succ: Abs

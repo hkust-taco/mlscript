@@ -9,9 +9,9 @@ let f =
 //│   = 123
 
 
-let x : int | string
+let x : Int | string
 let x = 1
-//│ let x: int | string
+//│ let x: Int | string
 //│ let x: 1
 //│ x
 //│   = <missing implementation>

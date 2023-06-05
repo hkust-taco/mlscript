@@ -2,119 +2,75 @@
 :NoJS
 
 trait Into[T] {
-    fun into: T
+    fun Into: T
 }
 //│ trait Into[T] {
-//│   fun into: T
+//│   fun Into: T
 //│ }
 
-trait Nat extends Into[int]
+trait Nat extends Into[Int]
 //│ trait Nat extends Into {
-//│   fun into: 'T
+//│   fun Into: 'T
 //│ }
 //│ where
-//│   'T := int
+//│   'T := Int
 
 trait Product[A, B] extends Into[A] {
     let pair: (A, B)
 }
 //│ trait Product[A, B] extends Into {
-//│   fun into: 'T
+//│   fun Into: 'T
 //│   let pair: (A, B,)
 //│ }
 //│ where
 //│   'T := A
 
-class TwoInts(pair: (int, int)) extends Product[int, int] {
-    fun into = pair._1 + pair._2
+class TwoInts(pair: (Int, Int)) extends Product[Int, Int] {
+    fun Into = pair._1 + pair._2
 }
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.29: 	    fun into = pair._1 + pair._2
-//│ ║        	               ^^^^^^^^^
-//│ ╟── type `int` is not an instance of type `Int`
-//│ ║  l.28: 	class TwoInts(pair: (int, int)) extends Product[int, int] {
-//│ ║        	                     ^^^
-//│ ╟── but it flows into field selection with expected type `Int`
-//│ ║  l.29: 	    fun into = pair._1 + pair._2
-//│ ╙──      	               ^^^^^^^
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.29: 	    fun into = pair._1 + pair._2
-//│ ║        	               ^^^^^^^^^^^^^^^^^
-//│ ╟── type `int` is not an instance of type `Int`
-//│ ║  l.28: 	class TwoInts(pair: (int, int)) extends Product[int, int] {
-//│ ║        	                          ^^^
-//│ ╟── but it flows into field selection with expected type `Int`
-//│ ║  l.29: 	    fun into = pair._1 + pair._2
-//│ ╙──      	                         ^^^^^^^
-//│ ╔══[ERROR] Type mismatch in definition of method into:
-//│ ║  l.29: 	    fun into = pair._1 + pair._2
-//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── operator application of type `Int` is not an instance of type `int`
-//│ ║  l.29: 	    fun into = pair._1 + pair._2
-//│ ║        	               ^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into definition of method into with expected type `int`
-//│ ║  l.29: 	    fun into = pair._1 + pair._2
-//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.28: 	class TwoInts(pair: (int, int)) extends Product[int, int] {
-//│ ║        	                                                ^^^
-//│ ╟── from signature of member `into`:
-//│ ║  l.5: 	    fun into: T
-//│ ╙──     	        ^^^^^^^
-//│ class TwoInts(pair: (int, int,)) extends Into, Product {
-//│   fun into: Int | error
+//│ class TwoInts(pair: (Int, Int,)) extends Into, Product {
+//│   fun Into: Int
 //│ }
 
 let i2 = TwoInts((1,2))
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.68: 	let i2 = TwoInts((1,2))
-//│ ║        	         ^^^^^^^^^^^^^^
-//│ ╟── integer literal of type `1` is not an instance of type `int`
-//│ ║  l.68: 	let i2 = TwoInts((1,2))
-//│ ║        	                  ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.28: 	class TwoInts(pair: (int, int)) extends Product[int, int] {
-//│ ╙──      	                     ^^^
-//│ let i2: TwoInts | error
+//│ let i2: TwoInts
 
-i2: Product[int, int]
-//│ Product[int, int]
+i2: Product[Int, Int]
+//│ Product[Int, Int]
 
-i2: Into[int]
-//│ Into[int]
+i2: Into[Int]
+//│ Into[Int]
 
 i2.pair
-//│ (int, int,) | error
+//│ (Int, Int,)
 
-i2.into
-//│ Int | error
+i2.Into
+//│ Int
 
-let p1: Product[int, int]
-//│ let p1: Product[int, int]
+let p1: Product[Int, Int]
+//│ let p1: Product[Int, Int]
 
 :e
-p1: Product[bool, int]
+p1: Product[bool, Int]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.96: 	p1: Product[bool, int]
+//│ ║  l.54: 	p1: Product[bool, Int]
 //│ ║        	^^
-//│ ╟── expression of type `int & ?A` is not an instance of type `bool`
+//│ ╟── expression of type `Int & ?A` is not an instance of type `bool`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.96: 	p1: Product[bool, int]
+//│ ║  l.54: 	p1: Product[bool, Int]
 //│ ╙──      	            ^^^^
-//│ Product[bool, int]
+//│ Product[bool, Int]
 
-p1: Into[int]
-//│ Into[int]
+p1: Into[Int]
+//│ Into[Int]
 
 :e
 p1: Into[bool]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.110: 	p1: Into[bool]
-//│ ║         	^^
-//│ ╟── type `int` is not an instance of type `bool`
-//│ ║  l.92: 	let p1: Product[int, int]
-//│ ║        	                ^^^
+//│ ║  l.68: 	p1: Into[bool]
+//│ ║        	^^
+//│ ╟── expression of type `Int` is not an instance of type `bool`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.110: 	p1: Into[bool]
-//│ ╙──       	         ^^^^
+//│ ║  l.68: 	p1: Into[bool]
+//│ ╙──      	         ^^^^
 //│ Into[bool]

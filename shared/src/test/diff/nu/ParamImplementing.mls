@@ -1,10 +1,10 @@
 :NewDefs
 
 
-trait T { fun x: int }
+trait T { fun x: Int }
 mixin M(x: bool)
 //│ trait T {
-//│   fun x: int
+//│   fun x: Int
 //│ }
 //│ mixin M(x: bool)
 
@@ -22,43 +22,24 @@ class C extends T, M(false)
 //│ ╔══[ERROR] Type mismatch in reference:
 //│ ║  l.12: 	class C extends T, M(false)
 //│ ║        	                     ^^^^^
-//│ ╟── reference of type `False` is not an instance of type `int`
+//│ ╟── reference of type `False` is not an instance of type `Int`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.4: 	trait T { fun x: int }
+//│ ║  l.4: 	trait T { fun x: Int }
 //│ ║       	                 ^^^
 //│ ╟── from signature of member `x`:
-//│ ║  l.4: 	trait T { fun x: int }
+//│ ║  l.4: 	trait T { fun x: Int }
 //│ ╙──     	              ^^^^^^
 //│ class C extends T
 
 
-trait T { fun x: int }
-mixin M(x: number)
+trait T { fun x: Int }
+mixin M(x: Num)
 //│ trait T {
-//│   fun x: int
+//│   fun x: Int
 //│ }
-//│ mixin M(x: number)
+//│ mixin M(x: Num)
 
 class C extends T, M(0)
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.42: 	class C extends T, M(0)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── integer literal of type `0` is not an instance of type `number`
-//│ ║  l.42: 	class C extends T, M(0)
-//│ ║        	                     ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.36: 	mixin M(x: number)
-//│ ╙──      	           ^^^^^^
-//│ ╔══[ERROR] Type mismatch in integer literal:
-//│ ║  l.42: 	class C extends T, M(0)
-//│ ║        	                     ^
-//│ ╟── integer literal of type `0` is not an instance of type `int`
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.35: 	trait T { fun x: int }
-//│ ║        	                 ^^^
-//│ ╟── from signature of member `x`:
-//│ ║  l.35: 	trait T { fun x: int }
-//│ ╙──      	              ^^^^^^
 //│ class C extends T
 
 

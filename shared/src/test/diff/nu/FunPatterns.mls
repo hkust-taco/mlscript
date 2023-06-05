@@ -14,8 +14,8 @@ fun f3([(x, y,),],) = x + y
 //│ fun f3: (Int, Int,) -> Int
 
 
-class Pair(lhs: int, rhs: int)
-//│ class Pair(lhs: int, rhs: int)
+class Pair(lhs: Int, rhs: Int)
+//│ class Pair(lhs: Int, rhs: Int)
 
 // TODO
 fun f(Pair(x, y)) = x + y

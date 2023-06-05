@@ -2,8 +2,8 @@
 
 
 
-mixin M0(x: int)
-//│ mixin M0(x: int)
+mixin M0(x: Int)
+//│ mixin M0(x: Int)
 
 :e
 class C0 extends M0
@@ -17,27 +17,18 @@ class C0 extends M0(1, 2)
 //│ ╔══[ERROR] mixin M0 expects 1 parameter(s); got 2
 //│ ║  l.16: 	class C0 extends M0(1, 2)
 //│ ╙──      	                 ^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.16: 	class C0 extends M0(1, 2)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── integer literal of type `1` is not an instance of type `int`
-//│ ║  l.16: 	class C0 extends M0(1, 2)
-//│ ║        	                    ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.5: 	mixin M0(x: int)
-//│ ╙──     	            ^^^
 //│ class C0
 
 :e
 class C0 extends M0(true)
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.32: 	class C0 extends M0(true)
+//│ ║  l.23: 	class C0 extends M0(true)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── reference of type `True` is not an instance of type `int`
-//│ ║  l.32: 	class C0 extends M0(true)
+//│ ╟── reference of type `True` is not an instance of type `Int`
+//│ ║  l.23: 	class C0 extends M0(true)
 //│ ║        	                    ^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.5: 	mixin M0(x: int)
+//│ ║  l.5: 	mixin M0(x: Int)
 //│ ╙──     	            ^^^
 //│ class C0
 
@@ -65,17 +56,17 @@ class Foo {
 
 module Bar {
   fun hello = 0
-  type I = int
+  type I = Int
 }
 //│ module Bar {
-//│   type I = int
+//│   type I = Int
 //│   fun hello: 0
 //│ }
 
 :e
 hello
 //│ ╔══[ERROR] identifier not found: hello
-//│ ║  l.76: 	hello
+//│ ║  l.67: 	hello
 //│ ╙──      	^^^^^
 //│ error
 //│ Code generation encountered an error:
@@ -84,7 +75,7 @@ hello
 :e
 1 : I
 //│ ╔══[ERROR] type identifier not found: I
-//│ ║  l.85: 	1 : I
+//│ ║  l.76: 	1 : I
 //│ ╙──      	    ^
 //│ error
 //│ res
@@ -94,11 +85,11 @@ hello
 :e
 class Foo[A] { 42: A }
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.95: 	class Foo[A] { 42: A }
+//│ ║  l.86: 	class Foo[A] { 42: A }
 //│ ║        	               ^^
 //│ ╟── integer literal of type `42` does not match type `A`
 //│ ╟── Note: constraint arises from type parameter:
-//│ ║  l.95: 	class Foo[A] { 42: A }
+//│ ║  l.86: 	class Foo[A] { 42: A }
 //│ ╙──      	          ^
 //│ class Foo[A]
 
@@ -106,30 +97,30 @@ class Foo[A] { 42: A }
 :e
 class C1 { fun oops = this.x }
 //│ ╔══[ERROR] Type `#C1` does not contain member `x`
-//│ ║  l.107: 	class C1 { fun oops = this.x }
-//│ ╙──       	                          ^^
+//│ ║  l.98: 	class C1 { fun oops = this.x }
+//│ ╙──      	                          ^^
 //│ class C1 {
 //│   fun oops: error
 //│ }
 
 
 :e
-class C { fun x: int }
+class C { fun x: Int }
 //│ ╔══[ERROR] Member `x` is declared in parent but not implemented in `C`
-//│ ║  l.117: 	class C { fun x: int }
+//│ ║  l.108: 	class C { fun x: Int }
 //│ ║         	      ^
 //│ ╟── Declared here:
-//│ ║  l.117: 	class C { fun x: int }
+//│ ║  l.108: 	class C { fun x: Int }
 //│ ╙──       	              ^^^^^^
 //│ class C {
-//│   fun x: int
+//│   fun x: Int
 //│ }
 
 // FIXME should error
 // :e
-class C { val x: int }
+class C { val x: Int }
 //│ class C {
-//│   let x: int
+//│   let x: Int
 //│ }
 
 

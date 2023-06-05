@@ -17,7 +17,7 @@ fun x: forall 'a; 'a -> 'a = succ
 //│ ╙──     	              ^^
 //│ fun x: forall 'a. 'a -> 'a
 
-fun x: [int -> int,] = [id : forall 'a; 'a -> 'a,]
-//│ fun x: (int -> int,)
+fun x: [Int -> Int,] = [id : forall 'a; 'a -> 'a,]
+//│ fun x: (Int -> Int,)
 
 

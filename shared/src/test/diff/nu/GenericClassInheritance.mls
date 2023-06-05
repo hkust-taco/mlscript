@@ -1,43 +1,23 @@
 :NewDefs
 
-class Room[A](name: string) {
+class Room[A](name: Str) {
     fun foo(x: A) = x
 }
-//│ class Room[A](name: string) {
+//│ class Room[A](name: Str) {
 //│   fun foo: (x: A,) -> A
 //│ }
 
-class BigRoom extends Room[bool]("big")
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.10: 	class BigRoom extends Room[bool]("big")
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── string literal of type `"big"` is not an instance of type `string`
-//│ ║  l.10: 	class BigRoom extends Room[bool]("big")
-//│ ║        	                                 ^^^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.3: 	class Room[A](name: string) {
-//│ ╙──     	                    ^^^^^^
+class BigRoom extends Room[Bool]("big")
 //│ class BigRoom extends Room {
 //│   fun foo: (x: 'A,) -> 'A
 //│ }
 //│ where
-//│   'A := bool
+//│   'A := Bool
 
 // * Note that this essentially infers Room[Bool]
 class InferredRoom extends Room("infer") {
     fun foo(x) = x && true
 }
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.27: 	class InferredRoom extends Room("infer") {
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.28: 	    fun foo(x) = x && true
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── string literal of type `"infer"` is not an instance of type `string`
-//│ ║  l.27: 	class InferredRoom extends Room("infer") {
-//│ ║        	                                ^^^^^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.3: 	class Room[A](name: string) {
-//│ ╙──     	                    ^^^^^^
 //│ class InferredRoom extends Room {
 //│   fun foo: Bool -> Bool
 //│ }
@@ -48,57 +28,37 @@ class InferredRoom extends Room("infer") {
 //│     = InferredRoom {}
 
 :e
-class TooManyRoom extends Room[int, string]("too many")
+class TooManyRoom extends Room[Int, Str]("too many")
 //│ ╔══[ERROR] class Room expects 1 type parameter(s); got 2
-//│ ║  l.51: 	class TooManyRoom extends Room[int, string]("too many")
-//│ ╙──      	                          ^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.51: 	class TooManyRoom extends Room[int, string]("too many")
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── string literal of type `"too many"` is not an instance of type `string`
-//│ ║  l.51: 	class TooManyRoom extends Room[int, string]("too many")
-//│ ║        	                                            ^^^^^^^^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.3: 	class Room[A](name: string) {
-//│ ╙──     	                    ^^^^^^
+//│ ║  l.31: 	class TooManyRoom extends Room[Int, Str]("too many")
+//│ ╙──      	                          ^^^^^^^^^^^^^
 //│ class TooManyRoom extends Room {
 //│   fun foo: (x: 'A,) -> 'A
 //│ }
 //│ where
-//│   'A := int
+//│   'A := Int
 
 :e
-class WrongRoom extends Room[bool]("wrong") {
+class WrongRoom extends Room[Bool]("wrong") {
     fun foo(x) = x + 1
 }
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.71: 	class WrongRoom extends Room[bool]("wrong") {
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.72: 	    fun foo(x) = x + 1
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── string literal of type `"wrong"` is not an instance of type `string`
-//│ ║  l.71: 	class WrongRoom extends Room[bool]("wrong") {
-//│ ║        	                                   ^^^^^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.3: 	class Room[A](name: string) {
-//│ ╙──     	                    ^^^^^^
 //│ ╔══[ERROR] Type mismatch in definition of method foo:
-//│ ║  l.72: 	    fun foo(x) = x + 1
+//│ ║  l.43: 	    fun foo(x) = x + 1
 //│ ║        	        ^^^^^^^^^^^^^^
-//│ ╟── type `bool` is not an instance of type `Int`
-//│ ║  l.71: 	class WrongRoom extends Room[bool]("wrong") {
+//│ ╟── type `Bool` is not an instance of type `Int`
+//│ ║  l.42: 	class WrongRoom extends Room[Bool]("wrong") {
 //│ ║        	                             ^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.72: 	    fun foo(x) = x + 1
+//│ ║  l.43: 	    fun foo(x) = x + 1
 //│ ╙──      	                 ^
 //│ ╔══[ERROR] Type mismatch in definition of method foo:
-//│ ║  l.72: 	    fun foo(x) = x + 1
+//│ ║  l.43: 	    fun foo(x) = x + 1
 //│ ║        	        ^^^^^^^^^^^^^^
-//│ ╟── operator application of type `Int` is not an instance of type `bool`
-//│ ║  l.72: 	    fun foo(x) = x + 1
+//│ ╟── operator application of type `Int` is not an instance of type `Bool`
+//│ ║  l.43: 	    fun foo(x) = x + 1
 //│ ║        	                 ^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.71: 	class WrongRoom extends Room[bool]("wrong") {
+//│ ║  l.42: 	class WrongRoom extends Room[Bool]("wrong") {
 //│ ║        	                             ^^^^
 //│ ╟── from reference:
 //│ ║  l.4: 	    fun foo(x: A) = x
@@ -120,19 +80,19 @@ class C1[A] extends C0[A] { val a = a }
 
 :pe
 :e
-new C1 : C1[int]
+new C1 : C1[Int]
 //│ ╔══[PARSE ERROR] Unexpected type ascription after `new` keyword
-//│ ║  l.123: 	new C1 : C1[int]
-//│ ╙──       	    ^^
+//│ ║  l.83: 	new C1 : C1[Int]
+//│ ╙──      	    ^^
 //│ ╔══[ERROR] Currently unsupported `new` syntax
-//│ ║  l.123: 	new C1 : C1[int]
-//│ ╙──       	^^^
+//│ ║  l.83: 	new C1 : C1[Int]
+//│ ╙──      	^^^
 //│ error
 //│ res
 //│     = {}
 
-((new C1) : C1[int]) : C0['X]
-//│ C0[int]
+((new C1) : C1[Int]) : C0['X]
+//│ C0[Int]
 //│ res
 //│     = C1 {}
 
@@ -152,10 +112,10 @@ mixin M1[A] {
 //│ }
 
 class A1 extends M1 {
-    fun f1(x: int) = x
+    fun f1(x: Int) = x
 }
 //│ class A1 {
-//│   fun f1: (x: int,) -> int
+//│   fun f1: (x: Int,) -> Int
 //│   fun f2: (x: 'A,) -> ('A, 'A,)
 //│ }
 
@@ -165,8 +125,8 @@ class A2[S, T] extends M1[(S, T)]
 //│   fun f2: (x: (S, T,),) -> ((S, T,), (S, T,),)
 //│ }
 
-class A3(f1: bool => bool) extends M1
-//│ class A3(f1: bool -> bool) {
+class A3(f1: Bool => Bool) extends M1
+//│ class A3(f1: Bool -> Bool) {
 //│   fun f1: (x: 'A,) -> 'A
 //│   fun f2: (x: 'A,) -> ('A, 'A,)
 //│ }
@@ -179,28 +139,28 @@ mixin M2[A] {
 //│   fun m: A
 //│ }
 
-class B1(a: int) extends M2[int]
-//│ class B1(a: int) {
-//│   fun m: int
+class B1(a: Int) extends M2[Int]
+//│ class B1(a: Int) {
+//│   fun m: Int
 //│ }
 
-class B2[A](a: int => A) extends M2
-//│ class B2[A](a: int -> A) {
-//│   fun m: int -> A
+class B2[A](a: Int => A) extends M2
+//│ class B2[A](a: Int -> A) {
+//│   fun m: Int -> A
 //│ }
 
 :e
-class E1(a: int) extends M2[bool]
+class E1(a: Int) extends M2[Bool]
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.193: 	class E1(a: int) extends M2[bool]
+//│ ║  l.153: 	class E1(a: Int) extends M2[Bool]
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `int` is not an instance of type `bool`
+//│ ╟── expression of type `Int` is not an instance of type `Bool`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.193: 	class E1(a: int) extends M2[bool]
+//│ ║  l.153: 	class E1(a: Int) extends M2[Bool]
 //│ ║         	                            ^^^^
 //│ ╟── from field selection:
-//│ ║  l.175: 	    fun m: A = this.a
+//│ ║  l.135: 	    fun m: A = this.a
 //│ ╙──       	               ^^^^^^
-//│ class E1(a: int) {
-//│   fun m: bool
+//│ class E1(a: Int) {
+//│   fun m: Bool
 //│ }

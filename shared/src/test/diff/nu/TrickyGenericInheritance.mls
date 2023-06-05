@@ -10,17 +10,17 @@ trait T1[A] {
 //│ }
 
 class C1 extends T1 {
-  fun f(x: int) = x
+  fun f(x: Int) = x
 }
 //│ class C1 extends T1 {
-//│   fun f: (x: int,) -> int
+//│   fun f: (x: Int,) -> Int
 //│ }
 
 class C1 extends T1['FigureItOut] {
-  fun f(x: int) = x
+  fun f(x: Int) = x
 }
 //│ class C1 extends T1 {
-//│   fun f: (x: int,) -> int
+//│   fun f: (x: Int,) -> Int
 //│ }
 
 let c1 = new C1
@@ -29,7 +29,7 @@ let c1 = new C1
 //│    = C1 {}
 
 c1.f
-//│ (x: int,) -> int
+//│ (x: Int,) -> Int
 //│ res
 //│     = [Function: f]
 
@@ -39,7 +39,7 @@ c1.f
 //│     = [Function: f]
 
 (c1 : T1['X]).f
-//│ int -> int
+//│ Int -> Int
 //│ res
 //│     = [Function: f]
 
@@ -58,10 +58,10 @@ c1.f
 //│   where
 //│     'f :> 'A -> 'A
 //│     'A := 'X
-//│     'X :> int
+//│     'X :> Int
 //│        <: 'FigureItOut
-//│     'FigureItOut :> int
-//│                  <: 'X & int
+//│     'FigureItOut :> Int
+//│                  <: 'X & Int
 //│ res
 //│     = [Function: f]
 
@@ -75,7 +75,7 @@ trait T2[A] {
   val r = C2().f(false)
 }
 class C2 extends T2['FigureItOut] {
-  fun f(x: int) = x
+  fun f(x: Int) = x
 }
 //│ ╔══[ERROR] Method implementations in traits are not yet supported
 //│ ║  l.75: 	  val r = C2().f(false)
@@ -90,18 +90,18 @@ class C2 extends T2['FigureItOut] {
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.75: 	  val r = C2().f(false)
 //│ ║        	          ^^^^^^^^^^^^^
-//│ ╟── reference of type `False` is not an instance of type `int`
+//│ ╟── reference of type `False` is not an instance of type `Int`
 //│ ║  l.75: 	  val r = C2().f(false)
 //│ ║        	                 ^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.78: 	  fun f(x: int) = x
+//│ ║  l.78: 	  fun f(x: Int) = x
 //│ ╙──      	           ^^^
 //│ trait T2[A] {
 //│   fun f: A -> A
-//│   let r: error | int
+//│   let r: Int | error
 //│ }
 //│ class C2 extends T2 {
-//│   fun f: (x: int,) -> int
+//│   fun f: (x: Int,) -> Int
 //│ }
 
 :e
@@ -110,7 +110,7 @@ trait T2[A] {
   val r = (C2() : T2['X]).f(false)
 }
 class C2 extends T2['FigureItOut] {
-  fun f(x: int) = x
+  fun f(x: Int) = x
 }
 //│ ╔══[ERROR] Method implementations in traits are not yet supported
 //│ ║  l.110: 	  val r = (C2() : T2['X]).f(false)
@@ -130,7 +130,7 @@ class C2 extends T2['FigureItOut] {
 //│   let r: False | error
 //│ }
 //│ class C2 extends T2 {
-//│   fun f: (x: int,) -> int
+//│   fun f: (x: Int,) -> Int
 //│ }
 
 :e // FIXME
