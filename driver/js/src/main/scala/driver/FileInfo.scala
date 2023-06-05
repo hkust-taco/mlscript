@@ -36,7 +36,7 @@ final case class FileInfo(
     if (isLocal(path))
       relatedPath match {
         case Some(value) => FileInfo(workDir, s"./${normalize(s"$value/$path")}", interfaceDir)
-        case _ => ??? // TODO:
+        case _ => FileInfo(workDir, s"./node_modules/$moduleName/$path", interfaceDir)
       }
     else FileInfo(workDir, path, interfaceDir)
 }

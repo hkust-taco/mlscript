@@ -42,19 +42,27 @@ class TSProgram(filename: String, workDir: String, uesTopLevelModule: Boolean, t
 
     def resolve(imp: String) = TypeScript.resolveModuleName(imp, filename, configContent).getOrElse("")
 
-    val (cycleList, otherList) =
-      importList.partition(imp => stack.contains(resolve(imp.filename)))
-
-    otherList.foreach(imp => {
-      generate(resolve(imp.filename), targetPath, resolveTarget(imp.filename))(filename :: stack)
-    })
-
     val (moduleName, outputFilename) = outputOverride match {
       case Some(output) => (TSImport.getModuleName(output, false), output)
       case _ =>
         val moduleName = TSImport.getModuleName(filename, false)
         (moduleName, s"$relatedPath/$moduleName.mlsi")
     }
+
+    val (cycleList, otherList) =
+      importList.partition(imp => stack.contains(resolve(imp.filename)))
+
+    otherList.foreach(imp => {
+      generate(resolve(imp.filename), targetPath, outputOverride match {
+        case Some(filename) =>
+          val moduleName = TSImport.getModuleName(imp.filename, false)
+          val dir = TSModuleResolver.dirname(filename)
+          val rel = TSModuleResolver.dirname(imp.filename)
+          Some(TSModuleResolver.normalize(s"$dir/$rel/$moduleName.mlsi"))
+        case _ => resolveTarget(imp.filename)
+      })(filename :: stack)
+    })
+
     var writer = JSWriter(s"$targetPath/$outputFilename")
     val imported = new HashSet[String]()
     

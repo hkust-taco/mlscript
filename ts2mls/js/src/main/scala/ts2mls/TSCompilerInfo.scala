@@ -59,6 +59,7 @@ object TypeScript {
   def isImportDeclaration(node: js.Dynamic) = ts.isImportDeclaration(node)
   def isSourceFile(node: js.Dynamic) = ts.isSourceFile(node)
   def isExportDeclaration(node: js.Dynamic) = ts.isExportDeclaration(node)
+  def isImportEqualsDeclaration(node: js.Dynamic) = ts.isImportEqualsDeclaration(node)
 
   def isArrayTypeNode(node: js.Dynamic) = ts.isArrayTypeNode(node)
   def isTupleTypeNode(node: js.Dynamic) = ts.isTupleTypeNode(node)
@@ -144,6 +145,7 @@ class TSNodeObject(node: js.Dynamic)(implicit checker: TSTypeChecker) extends TS
   lazy val isTupleTypeNode = TypeScript.isTupleTypeNode(node)
   lazy val isImplementationOfOverload = checker.isImplementationOfOverload(node)
   lazy val isImportDeclaration = TypeScript.isImportDeclaration(node)
+  lazy val isRequire = TypeScript.isImportEqualsDeclaration(node)
   lazy val isSourceFile = TypeScript.isSourceFile(node)
   lazy val isExportDeclaration = TypeScript.isExportDeclaration(node)
 
@@ -204,6 +206,8 @@ class TSNodeObject(node: js.Dynamic)(implicit checker: TSTypeChecker) extends TS
   lazy val propertyName = TSIdentifierObject(node.propertyName)
   lazy val exportClause = TSNodeObject(node.exportClause)
   lazy val resolvedPath: String = node.resolvedPath.toString()
+  lazy val moduleReference = TSNodeObject(node.moduleReference)
+  lazy val expression = TSTokenObject(node.expression)
 }
 
 object TSNodeObject {

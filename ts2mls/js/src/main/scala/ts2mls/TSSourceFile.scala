@@ -14,7 +14,9 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
 
   TypeScript.forEachChild(sf, (node: js.Dynamic) => {
     val nodeObject = TSNodeObject(node)
-    if (nodeObject.isImportDeclaration)
+    if (nodeObject.isRequire)
+      parseRequire(nodeObject)
+    else if (nodeObject.isImportDeclaration)
       parseImportDeclaration(nodeObject.importClause, nodeObject.moduleSpecifier, false)
   })
 
@@ -42,6 +44,19 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
 
   def getImportList: List[TSImport] = importList.getFilelist
   def getReExportList: List[TSReExport] = reExportList.toList
+
+  private def parseRequire(req: TSNodeObject): Unit = {
+    val localName = req.moduleReference.expression.text
+    val fullname = TypeScript.resolveModuleName(localName, resolvedPath, config) match {
+      case Some(name) => name
+      case _ => throw new AssertionError(s"unexpected required module $localName")
+    }
+    val moduleName = TSImport.getModuleName(fullname, false)
+    val varName = req.name.escapedText
+    val imp = TSSingleImport(localName, List((varName, None)))
+    importList.add(fullname, imp)
+    global.put(varName, TSRenamedType(varName, TSReferenceType(s"$moduleName.$varName")), false)
+  }
 
   private def parseExportDeclaration(elements: TSNodeArray): Unit = {
     elements.foreach(ele =>
