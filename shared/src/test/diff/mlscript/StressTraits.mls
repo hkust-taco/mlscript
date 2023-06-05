@@ -39,65 +39,71 @@ def foo x = case x of {
 :stats
 def arg: A[int]
 foo arg
-//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
-//│ 	at: scala.Predef$.require(Predef.scala:324)
-//│ 	at: mlscript.TypeDefs.clsNameToNomTag(TypeDefs.scala:122)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mkTag$1(TyperHelpers.scala:1093)
-//│ 	at: scala.Option.getOrElse(Option.scala:201)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag(TyperHelpers.scala:1091)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag$(TyperHelpers.scala:1091)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.mkTag(TyperDatatypes.scala:363)
-//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:707)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$106(TypeSimplifier.scala:464)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ arg: A[int]
+//│ res: int
+//│ constrain calls  : 20
+//│ annoying  calls  : 9
+//│ subtyping calls  : 672
 
 :stats
 :e
 def arg: A[int] | B[int]
 foo arg
-//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
-//│ 	at: scala.Predef$.require(Predef.scala:324)
-//│ 	at: mlscript.TypeDefs.clsNameToNomTag(TypeDefs.scala:122)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mkTag$1(TyperHelpers.scala:1093)
-//│ 	at: scala.Option.getOrElse(Option.scala:201)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag(TyperHelpers.scala:1091)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag$(TyperHelpers.scala:1091)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.mkTag(TyperDatatypes.scala:363)
-//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:707)
-//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:698)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$106(TypeSimplifier.scala:464)
+//│ arg: A[int] | B[int]
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.51: 	foo arg
+//│ ║        	^^^^^^^
+//│ ╟── expression of type `#B & ({fB: int} & #A | {fB: int} & ~?a)` does not have field 'fA'
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.22: 	  | A -> x.fA
+//│ ║        	         ^^^^
+//│ ╟── from refined scrutinee:
+//│ ║  l.21: 	def foo x = case x of {
+//│ ╙──      	                 ^
+//│ res: error | int
+//│ constrain calls  : 39
+//│ annoying  calls  : 31
+//│ subtyping calls  : 1529
 
 :stats
 :e
 def arg: A[int] | B[int] | C[int]
 foo arg
-//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
-//│ 	at: scala.Predef$.require(Predef.scala:324)
-//│ 	at: mlscript.TypeDefs.clsNameToNomTag(TypeDefs.scala:122)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mkTag$1(TyperHelpers.scala:1093)
-//│ 	at: scala.Option.getOrElse(Option.scala:201)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag(TyperHelpers.scala:1091)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag$(TyperHelpers.scala:1091)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.mkTag(TyperDatatypes.scala:363)
-//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:707)
-//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:698)
-//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:698)
+//│ arg: A[int] | B[int] | C[int]
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.71: 	foo arg
+//│ ║        	^^^^^^^
+//│ ╟── expression of type `#B & ({fB: int} & #A | {fB: int} & ~?a)` does not have field 'fA'
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.22: 	  | A -> x.fA
+//│ ║        	         ^^^^
+//│ ╟── from refined scrutinee:
+//│ ║  l.21: 	def foo x = case x of {
+//│ ╙──      	                 ^
+//│ res: error | int
+//│ constrain calls  : 71
+//│ annoying  calls  : 90
+//│ subtyping calls  : 4279
 
 :stats
 :e
 def arg: A[int] | B[int] | D[int]
 foo arg
-//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
-//│ 	at: scala.Predef$.require(Predef.scala:324)
-//│ 	at: mlscript.TypeDefs.clsNameToNomTag(TypeDefs.scala:122)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mkTag$1(TyperHelpers.scala:1093)
-//│ 	at: scala.Option.getOrElse(Option.scala:201)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag(TyperHelpers.scala:1091)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag$(TyperHelpers.scala:1091)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.mkTag(TyperDatatypes.scala:363)
-//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:707)
-//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:698)
-//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:698)
+//│ arg: A[int] | B[int] | D[int]
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.91: 	foo arg
+//│ ║        	^^^^^^^
+//│ ╟── expression of type `#B & ({fB: int} & #A | {fB: int} & ~?a)` does not have field 'fA'
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.22: 	  | A -> x.fA
+//│ ║        	         ^^^^
+//│ ╟── from refined scrutinee:
+//│ ║  l.21: 	def foo x = case x of {
+//│ ╙──      	                 ^
+//│ res: error
+//│ constrain calls  : 94
+//│ annoying  calls  : 216
+//│ subtyping calls  : 17272
 
 
 // ====== 2 ====== //
@@ -110,17 +116,22 @@ def foo x = case x of {
   }
 def arg: A[int] | B[int]
 foo arg
-//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
-//│ 	at: scala.Predef$.require(Predef.scala:324)
-//│ 	at: mlscript.TypeDefs.clsNameToNomTag(TypeDefs.scala:122)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mkTag$1(TyperHelpers.scala:1093)
-//│ 	at: scala.Option.getOrElse(Option.scala:201)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag(TyperHelpers.scala:1091)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag$(TyperHelpers.scala:1091)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.mkTag(TyperDatatypes.scala:363)
-//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:707)
-//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:698)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$106(TypeSimplifier.scala:464)
+//│ foo: ({fA: 'fA} & #A | {fB: 'fA} & #B & ~#A) -> 'fA
+//│ arg: A[int] | B[int]
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.118: 	foo arg
+//│ ║         	^^^^^^^
+//│ ╟── expression of type `#B & ({fB: int} & #A | {fB: int} & ~?a)` does not have field 'fA'
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.114: 	  | A -> x.fA
+//│ ║         	         ^^^^
+//│ ╟── from refined scrutinee:
+//│ ║  l.113: 	def foo x = case x of {
+//│ ╙──       	                 ^
+//│ res: error | int
+//│ constrain calls  : 47
+//│ annoying  calls  : 31
+//│ subtyping calls  : 512
 
 
 // ====== 3 ====== //
@@ -134,17 +145,22 @@ def foo x = case x of {
   }
 def arg: A[int] | B[int] | C[int]
 foo arg
-//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
-//│ 	at: scala.Predef$.require(Predef.scala:324)
-//│ 	at: mlscript.TypeDefs.clsNameToNomTag(TypeDefs.scala:122)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mkTag$1(TyperHelpers.scala:1093)
-//│ 	at: scala.Option.getOrElse(Option.scala:201)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag(TyperHelpers.scala:1091)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag$(TyperHelpers.scala:1091)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.mkTag(TyperDatatypes.scala:363)
-//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:707)
-//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:698)
-//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:698)
+//│ foo: ({fA: 'fA} & #A | ~#A & ({fB: 'fA} & #B | {fC: 'fA} & #C & ~#B)) -> 'fA
+//│ arg: A[int] | B[int] | C[int]
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.147: 	foo arg
+//│ ║         	^^^^^^^
+//│ ╟── expression of type `#B & ({fB: int} & #A | {fB: int} & ~?a)` does not have field 'fA'
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.142: 	  | A -> x.fA
+//│ ║         	         ^^^^
+//│ ╟── from refined scrutinee:
+//│ ║  l.141: 	def foo x = case x of {
+//│ ╙──       	                 ^
+//│ res: error | int
+//│ constrain calls  : 82
+//│ annoying  calls  : 90
+//│ subtyping calls  : 2903
 
 
 // ====== 4 ====== //
@@ -159,30 +175,35 @@ def foo x = case x of {
   }
 def arg: A[int] | B[int] | C[int] | D[int]
 foo arg
-//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
-//│ 	at: scala.Predef$.require(Predef.scala:324)
-//│ 	at: mlscript.TypeDefs.clsNameToNomTag(TypeDefs.scala:122)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mkTag$1(TyperHelpers.scala:1093)
-//│ 	at: scala.Option.getOrElse(Option.scala:201)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag(TyperHelpers.scala:1091)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag$(TyperHelpers.scala:1091)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.mkTag(TyperDatatypes.scala:363)
-//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:707)
-//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:698)
-//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:698)
+//│ foo: ({fA: 'fA} & #A | ~#A & ({fB: 'fA} & #B | ~#B & ({fC: 'fA} & #C | {fD: 'fA} & #D & ~#C))) -> 'fA
+//│ arg: A[int] | B[int] | C[int] | D[int]
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.177: 	foo arg
+//│ ║         	^^^^^^^
+//│ ╟── expression of type `#B & ({fB: int} & #A | {fB: int} & ~?a)` does not have field 'fA'
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.171: 	  | A -> x.fA
+//│ ║         	         ^^^^
+//│ ╟── from refined scrutinee:
+//│ ║  l.170: 	def foo x = case x of {
+//│ ╙──       	                 ^
+//│ res: error
+//│ constrain calls  : 102
+//│ annoying  calls  : 131
+//│ subtyping calls  : 3933
 
 :stats
 :e
 foo (arg with { x = 1} with { y = 2 })
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.176: 	foo (arg with { x = 1} with { y = 2 })
+//│ ║  l.197: 	foo (arg with { x = 1} with { y = 2 })
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `#B & ({fB: int, x: 1, y: 2} & #A | {fB: int, x: 1, y: 2} & ~?a)` does not have field 'fA'
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.155: 	  | A -> x.fA
+//│ ║  l.171: 	  | A -> x.fA
 //│ ║         	         ^^^^
 //│ ╟── from refined scrutinee:
-//│ ║  l.154: 	def foo x = case x of {
+//│ ║  l.170: 	def foo x = case x of {
 //│ ╙──       	                 ^
 //│ res: error
 //│ constrain calls  : 77
@@ -193,14 +214,14 @@ foo (arg with { x = 1} with { y = 2 })
 :e
 foo (arg with { x = 1; y = 2; z = 3 })
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.194: 	foo (arg with { x = 1; y = 2; z = 3 })
+//│ ║  l.215: 	foo (arg with { x = 1; y = 2; z = 3 })
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `#B & ({fB: int, x: 1, y: 2, z: 3} & #A | {fB: int, x: 1, y: 2, z: 3} & ~?a)` does not have field 'fA'
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.155: 	  | A -> x.fA
+//│ ║  l.171: 	  | A -> x.fA
 //│ ║         	         ^^^^
 //│ ╟── from refined scrutinee:
-//│ ║  l.154: 	def foo x = case x of {
+//│ ║  l.170: 	def foo x = case x of {
 //│ ╙──       	                 ^
 //│ res: error
 //│ constrain calls  : 77
@@ -221,17 +242,22 @@ def foo x = case x of {
   }
 def arg: A[int] | B[int] | C[int] | D[int] | E[int]
 foo arg
-//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
-//│ 	at: scala.Predef$.require(Predef.scala:324)
-//│ 	at: mlscript.TypeDefs.clsNameToNomTag(TypeDefs.scala:122)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mkTag$1(TyperHelpers.scala:1093)
-//│ 	at: scala.Option.getOrElse(Option.scala:201)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag(TyperHelpers.scala:1091)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag$(TyperHelpers.scala:1091)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.mkTag(TyperDatatypes.scala:363)
-//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:707)
-//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:698)
-//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:698)
+//│ foo: ({fA: 'fA} & #A | ~#A & ({fB: 'fA} & #B | ~#B & ({fC: 'fA} & #C | ~#C & ({fD: 'fA} & #D | {fE: 'fA} & #E & ~#D)))) -> 'fA
+//│ arg: A[int] | B[int] | C[int] | D[int] | E[int]
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.244: 	foo arg
+//│ ║         	^^^^^^^
+//│ ╟── expression of type `#B & ({fB: int} & #A | {fB: int} & ~?a)` does not have field 'fA'
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.237: 	  | A -> x.fA
+//│ ║         	         ^^^^
+//│ ╟── from refined scrutinee:
+//│ ║  l.236: 	def foo x = case x of {
+//│ ╙──       	                 ^
+//│ res: error
+//│ constrain calls  : 106
+//│ annoying  calls  : 131
+//│ subtyping calls  : 4348
 
 
 // ====== 6 ====== //
@@ -248,17 +274,22 @@ def foo x = case x of {
   }
 def arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int]
 foo arg
-//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
-//│ 	at: scala.Predef$.require(Predef.scala:324)
-//│ 	at: mlscript.TypeDefs.clsNameToNomTag(TypeDefs.scala:122)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mkTag$1(TyperHelpers.scala:1093)
-//│ 	at: scala.Option.getOrElse(Option.scala:201)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag(TyperHelpers.scala:1091)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag$(TyperHelpers.scala:1091)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.mkTag(TyperDatatypes.scala:363)
-//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:707)
-//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:698)
-//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:698)
+//│ foo: ({fA: 'fA} & #A | ~#A & ({fB: 'fA} & #B | ~#B & ({fC: 'fA} & #C | ~#C & ({fD: 'fA} & #D | ~#D & ({fE: 'fA} & #E | {fF: 'fA} & #F & ~#E))))) -> 'fA
+//│ arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int]
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.276: 	foo arg
+//│ ║         	^^^^^^^
+//│ ╟── expression of type `#B & ({fB: int} & #A | {fB: int} & ~?a)` does not have field 'fA'
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.268: 	  | A -> x.fA
+//│ ║         	         ^^^^
+//│ ╟── from refined scrutinee:
+//│ ║  l.267: 	def foo x = case x of {
+//│ ╙──       	                 ^
+//│ res: error
+//│ constrain calls  : 110
+//│ annoying  calls  : 131
+//│ subtyping calls  : 4893
 
 
 // ====== 7 ====== //
@@ -276,17 +307,22 @@ def foo x = case x of {
   }
 def arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int] | G[int]
 foo arg
-//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
-//│ 	at: scala.Predef$.require(Predef.scala:324)
-//│ 	at: mlscript.TypeDefs.clsNameToNomTag(TypeDefs.scala:122)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mkTag$1(TyperHelpers.scala:1093)
-//│ 	at: scala.Option.getOrElse(Option.scala:201)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag(TyperHelpers.scala:1091)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag$(TyperHelpers.scala:1091)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.mkTag(TyperDatatypes.scala:363)
-//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:707)
-//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:698)
-//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:698)
+//│ foo: ({fA: 'fA} & #A | ~#A & ({fB: 'fA} & #B | ~#B & ({fC: 'fA} & #C | ~#C & ({fD: 'fA} & #D | ~#D & ({fE: 'fA} & #E | ~#E & ({fF: 'fA} & #F | {fG: 'fA} & #G & ~#F)))))) -> 'fA
+//│ arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int] | G[int]
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.309: 	foo arg
+//│ ║         	^^^^^^^
+//│ ╟── expression of type `#B & ({fB: int} & #A | {fB: int} & ~?a)` does not have field 'fA'
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.300: 	  | A -> x.fA
+//│ ║         	         ^^^^
+//│ ╟── from refined scrutinee:
+//│ ║  l.299: 	def foo x = case x of {
+//│ ╙──       	                 ^
+//│ res: error
+//│ constrain calls  : 114
+//│ annoying  calls  : 131
+//│ subtyping calls  : 5589
 
 def foo_manual: ({fA: 'a} & a | {fB: 'a} & b & ~a | {fC: 'a} & c & ~a & ~b | {fD: 'a} & d & ~a & ~b & ~c | {fE: 'a} & e & ~a & ~b & ~c & ~d | {fF: 'a} & f & ~a & ~b & ~c & ~d & ~e | {fG: 'a} & g & ~a & ~b & ~c & ~d & ~e & ~f) -> 'a
 //│ foo_manual: ({fA: 'a} & #A | ~#A & ({fB: 'a} & #B | ~#B & ({fC: 'a} & #C | ~#C & ({fD: 'a} & #D | ~#D & ({fE: 'a} & #E | ~#E & ({fF: 'a} & #F | {fG: 'a} & #G & ~#F)))))) -> 'a
@@ -295,16 +331,16 @@ def foo_manual: ({fA: 'a} & a | {fB: 'a} & b & ~a | {fC: 'a} & c & ~a & ~b | {fD
 :e
 foo_manual arg
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.296: 	foo_manual arg
+//│ ║  l.332: 	foo_manual arg
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╟── type `{fB: int} & #B` does not match type `{fA: 'a} & #A | ~#A & ({fB: 'a} & #B | ~#B & ({fC: 'a} & #C | ~#C & ({fD: 'a} & #D | ~#D & ({fE: 'a} & #E | ~#E & ({fF: 'a} & #F | {fG: 'a} & #G & ~#F)))))`
-//│ ║  l.277: 	def arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int] | G[int]
+//│ ║  l.308: 	def arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int] | G[int]
 //│ ║         	                  ^^^^^^
 //│ ╟── but it flows into reference with expected type `{fA: 'a0} & #A | ~#A & ({fB: 'a0} & #B | ~#B & ({fC: 'a0} & #C | ~#C & ({fD: 'a0} & #D | ~#D & ({fE: 'a0} & #E | ~#E & ({fF: 'a0} & #F | {fG: 'a0} & #G & ~#F)))))`
-//│ ║  l.296: 	foo_manual arg
+//│ ║  l.332: 	foo_manual arg
 //│ ║         	           ^^^
 //│ ╟── Note: constraint arises from union type:
-//│ ║  l.291: 	def foo_manual: ({fA: 'a} & a | {fB: 'a} & b & ~a | {fC: 'a} & c & ~a & ~b | {fD: 'a} & d & ~a & ~b & ~c | {fE: 'a} & e & ~a & ~b & ~c & ~d | {fF: 'a} & f & ~a & ~b & ~c & ~d & ~e | {fG: 'a} & g & ~a & ~b & ~c & ~d & ~e & ~f) -> 'a
+//│ ║  l.327: 	def foo_manual: ({fA: 'a} & a | {fB: 'a} & b & ~a | {fC: 'a} & c & ~a & ~b | {fD: 'a} & d & ~a & ~b & ~c | {fE: 'a} & e & ~a & ~b & ~c & ~d | {fF: 'a} & f & ~a & ~b & ~c & ~d & ~e | {fG: 'a} & g & ~a & ~b & ~c & ~d & ~e & ~f) -> 'a
 //│ ╙──       	                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: error
 //│ constrain calls  : 24
@@ -337,16 +373,21 @@ def foo x = case x of {
   }
 def arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int] | G[int] | H[int]
 foo arg
-//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
-//│ 	at: scala.Predef$.require(Predef.scala:324)
-//│ 	at: mlscript.TypeDefs.clsNameToNomTag(TypeDefs.scala:122)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mkTag$1(TyperHelpers.scala:1093)
-//│ 	at: scala.Option.getOrElse(Option.scala:201)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag(TyperHelpers.scala:1091)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag$(TyperHelpers.scala:1091)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.mkTag(TyperDatatypes.scala:363)
-//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:707)
-//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:698)
-//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:698)
+//│ foo: ({fA: 'fA} & #A | ~#A & ({fB: 'fA} & #B | ~#B & ({fC: 'fA} & #C | ~#C & ({fD: 'fA} & #D | ~#D & ({fE: 'fA} & #E | ~#E & ({fF: 'fA} & #F | ~#F & ({fG: 'fA} & #G | {fH: 'fA} & #H & ~#G))))))) -> 'fA
+//│ arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int] | G[int] | H[int]
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.375: 	foo arg
+//│ ║         	^^^^^^^
+//│ ╟── expression of type `#B & ({fB: int} & #A | {fB: int} & ~?a)` does not have field 'fA'
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.365: 	  | A -> x.fA
+//│ ║         	         ^^^^
+//│ ╟── from refined scrutinee:
+//│ ║  l.364: 	def foo x = case x of {
+//│ ╙──       	                 ^
+//│ res: error
+//│ constrain calls  : 118
+//│ annoying  calls  : 131
+//│ subtyping calls  : 6457
 
 

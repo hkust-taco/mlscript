@@ -44,17 +44,10 @@ t1 = T1 t2
 
 t1: T1
 t1: T2
-//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
-//│ 	at: scala.Predef$.require(Predef.scala:324)
-//│ 	at: mlscript.TypeDefs.clsNameToNomTag(TypeDefs.scala:122)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mkTag$1(TyperHelpers.scala:1093)
-//│ 	at: scala.Option.getOrElse(Option.scala:201)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag(TyperHelpers.scala:1091)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag$(TyperHelpers.scala:1091)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.mkTag(TyperDatatypes.scala:363)
-//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:707)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$106(TypeSimplifier.scala:464)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ res: T1
+//│    = [Number: 1]
+//│ res: T2
+//│    = [Number: 1]
 
 
 class C1[A]: { a: A }
@@ -101,11 +94,11 @@ def f: ((1,2)&t1 | (3,4)&t2) -> anything
 :e
 f ((true,false))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.102: 	f ((true,false))
-//│ ║         	^^^^^^^^^^^^^^^^
+//│ ║  l.95: 	f ((true,false))
+//│ ║        	^^^^^^^^^^^^^^^^
 //│ ╟── reference of type `true` does not match type `1 | 3`
-//│ ║  l.102: 	f ((true,false))
-//│ ╙──       	    ^^^^
+//│ ║  l.95: 	f ((true,false))
+//│ ╙──      	    ^^^^
 //│ res: error
 //│    = <no result>
 //│      f is not implemented
@@ -113,13 +106,13 @@ f ((true,false))
 :e
 fun (x, y) -> f ((x,y))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.114: 	fun (x, y) -> f ((x,y))
+//│ ║  l.107: 	fun (x, y) -> f ((x,y))
 //│ ║         	              ^^^^^^^^^
 //│ ╟── tuple literal of type `(?a, ?b,)` does not match type `(1, 2,) & #T1 | (3, 4,) & #T2`
-//│ ║  l.114: 	fun (x, y) -> f ((x,y))
+//│ ║  l.107: 	fun (x, y) -> f ((x,y))
 //│ ║         	                 ^^^^^
 //│ ╟── Note: constraint arises from union type:
-//│ ║  l.97: 	def f: ((1,2)&t1 | (3,4)&t2) -> anything
+//│ ║  l.90: 	def f: ((1,2)&t1 | (3,4)&t2) -> anything
 //│ ╙──      	       ^^^^^^^^^^^^^^^^^^^^^
 //│ res: (nothing, nothing,) -> anything
 //│    = <no result>
@@ -190,10 +183,10 @@ def h f = (f (1,2,false), f (1,true))
 :e
 h (fun x -> x[0])
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.191: 	h (fun x -> x[0])
+//│ ║  l.184: 	h (fun x -> x[0])
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── argument list of type `(1, true,)` does not match type `(?a,)`
-//│ ║  l.186: 	def h f = (f (1,2,false), f (1,true))
+//│ ║  l.179: 	def h f = (f (1,2,false), f (1,true))
 //│ ╙──       	                            ^^^^^^^^
 //│ res: (undefined, undefined,) | error
 //│    = [ undefined, undefined ]
@@ -201,13 +194,13 @@ h (fun x -> x[0])
 :e
 h (fun (x, y) -> x)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.202: 	h (fun (x, y) -> x)
+//│ ║  l.195: 	h (fun (x, y) -> x)
 //│ ║         	^^^^^^^^^^^^^^^^^^^
 //│ ╟── argument list of type `(1, 2, false,)` does not match type `(?a, ?b,)`
-//│ ║  l.186: 	def h f = (f (1,2,false), f (1,true))
+//│ ║  l.179: 	def h f = (f (1,2,false), f (1,true))
 //│ ║         	             ^^^^^^^^^^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.202: 	h (fun (x, y) -> x)
+//│ ║  l.195: 	h (fun (x, y) -> x)
 //│ ╙──       	       ^^^^^^
 //│ res: (nothing, 1,) | error
 //│    = [ 1, 1 ]
@@ -238,30 +231,30 @@ fx ((a,b,c)) = a + b + c
 fx q1
 fx q2
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.238: 	fx q1
+//│ ║  l.231: 	fx q1
 //│ ║         	^^^^^
 //│ ╟── tuple literal of type `(1, 1, 1, 1,)` does not match type `(?a, ?b, ?c,)`
-//│ ║  l.227: 	q1 = (1,1,1,1)
+//│ ║  l.220: 	q1 = (1,1,1,1)
 //│ ║         	     ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `(?d, ?e, ?f,)`
-//│ ║  l.238: 	fx q1
+//│ ║  l.231: 	fx q1
 //│ ║         	   ^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.229: 	fx ((a,b,c)) = a + b + c
+//│ ║  l.222: 	fx ((a,b,c)) = a + b + c
 //│ ╙──       	    ^^^^^^^
 //│ res: error | int
 //│    = 3
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.239: 	fx q2
+//│ ║  l.232: 	fx q2
 //│ ║         	^^^^^
 //│ ╟── tuple literal of type `(1, 1,)` does not match type `(?a, ?b, ?c,)`
-//│ ║  l.228: 	q2 = (1,1)
+//│ ║  l.221: 	q2 = (1,1)
 //│ ║         	     ^^^^^
 //│ ╟── but it flows into reference with expected type `(?d, ?e, ?f,)`
-//│ ║  l.239: 	fx q2
+//│ ║  l.232: 	fx q2
 //│ ║         	   ^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.229: 	fx ((a,b,c)) = a + b + c
+//│ ║  l.222: 	fx ((a,b,c)) = a + b + c
 //│ ╙──       	    ^^^^^^^
 //│ res: error | int
 //│    = NaN
@@ -291,13 +284,13 @@ sum t2
 //│ t2: (1, 1, 2, true,)
 //│   = [ 1, 1, 2, true ]
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.290: 	sum t2
+//│ ║  l.283: 	sum t2
 //│ ║         	^^^^^^
 //│ ╟── reference of type `true` is not an instance of type `int`
-//│ ║  l.289: 	t2 = (1,1,2,true)
+//│ ║  l.282: 	t2 = (1,1,2,true)
 //│ ║         	            ^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.277: 	def sum: Array[int] -> int
+//│ ║  l.270: 	def sum: Array[int] -> int
 //│ ╙──       	               ^^^
 //│ res: error | int
 //│    = <no result>
@@ -344,23 +337,23 @@ a1._2
 //│   <:  a1:
 //│ Array[int]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.339: 	a1 = (1,2,true,'hello')
+//│ ║  l.332: 	a1 = (1,2,true,'hello')
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── reference of type `true` is not an instance of type `int`
-//│ ║  l.339: 	a1 = (1,2,true,'hello')
+//│ ║  l.332: 	a1 = (1,2,true,'hello')
 //│ ║         	          ^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.338: 	def a1: Array[int]
+//│ ║  l.331: 	def a1: Array[int]
 //│ ╙──       	              ^^^
 //│   = [ 1, 2, true, 'hello' ]
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.340: 	a1._2
+//│ ║  l.333: 	a1._2
 //│ ║         	^^^^^
 //│ ╟── type `Array[int]` does not have field '_2'
-//│ ║  l.338: 	def a1: Array[int]
+//│ ║  l.331: 	def a1: Array[int]
 //│ ║         	        ^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{_2: ?a}`
-//│ ║  l.340: 	a1._2
+//│ ║  l.333: 	a1._2
 //│ ╙──       	^^
 //│ res: error
 //│    = undefined
@@ -407,13 +400,13 @@ append2 ((mut 1, mut 2, mut false)) ((mut (), mut 'hi'))
 :e
 append2 ((mut 1, mut 2, mut false)) ((mut (), 'hi'))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.408: 	append2 ((mut 1, mut 2, mut false)) ((mut (), 'hi'))
+//│ ║  l.401: 	append2 ((mut 1, mut 2, mut false)) ((mut (), 'hi'))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── tuple literal of type `(mut ?a, "hi",)` does not match type `MutArray['bb]`
-//│ ║  l.408: 	append2 ((mut 1, mut 2, mut false)) ((mut (), 'hi'))
+//│ ║  l.401: 	append2 ((mut 1, mut 2, mut false)) ((mut (), 'hi'))
 //│ ║         	                                     ^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.391: 	def append2: MutArray['aa] -> MutArray['bb] -> MutArray['aa | 'bb]
+//│ ║  l.384: 	def append2: MutArray['aa] -> MutArray['bb] -> MutArray['aa | 'bb]
 //│ ╙──       	                              ^^^^^^^^^^^^^
 //│ res: MutArray['aa | 'bb] | error
 //│   where
@@ -428,33 +421,28 @@ append2 ((mut 1, mut 2, mut false)) ((mut (), 'hi'))
 
 def ta: T1 & Array[int]
 ta = T1 a123
-//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
-//│ 	at: scala.Predef$.require(Predef.scala:324)
-//│ 	at: mlscript.TypeDefs.clsNameToNomTag(TypeDefs.scala:122)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mkTag$1(TyperHelpers.scala:1093)
-//│ 	at: scala.Option.getOrElse(Option.scala:201)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag(TyperHelpers.scala:1091)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag$(TyperHelpers.scala:1091)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.mkTag(TyperDatatypes.scala:363)
-//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:707)
-//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:698)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$106(TypeSimplifier.scala:464)
+//│ ta: nothing
+//│   = <missing implementation>
+//│ Array[int] & #T1
+//│   <:  ta:
+//│ nothing
+//│   = [ 1, 2, 3 ]
 
 def tb: T2 & Array[int]
 tb = T2 ((1,2,3))
 def tba: (T2 & Array[int | bool]) -> (T2 & int)
 tba tb
-//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
-//│ 	at: scala.Predef$.require(Predef.scala:324)
-//│ 	at: mlscript.TypeDefs.clsNameToNomTag(TypeDefs.scala:122)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mkTag$1(TyperHelpers.scala:1093)
-//│ 	at: scala.Option.getOrElse(Option.scala:201)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag(TyperHelpers.scala:1091)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag$(TyperHelpers.scala:1091)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.mkTag(TyperDatatypes.scala:363)
-//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:707)
-//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:698)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$106(TypeSimplifier.scala:464)
+//│ tb: nothing
+//│   = <missing implementation>
+//│ (1, 2, 3,) & #T2
+//│   <:  tb:
+//│ nothing
+//│   = [ 1, 2, 3 ]
+//│ tba: nothing -> nothing
+//│    = <missing implementation>
+//│ res: nothing
+//│    = <no result>
+//│      tba is not implemented
 
 def k: (true, false, 3) & Array[int | true]
 def k2: Array[1 | 2 | 3] & (true, 'hi', 2, 3)
@@ -468,32 +456,29 @@ gett1 ta (T1 123)
 def gt: (T1 & Array[int | bool]) -> Array[int]
 gt ta
 def tg: ((T1 & Array[int]) | (T2 & Array[bool])) -> (T1 | T2)
-//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
-//│ 	at: scala.Predef$.require(Predef.scala:324)
-//│ 	at: mlscript.TypeDefs.clsNameToNomTag(TypeDefs.scala:122)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mkTag$1(TyperHelpers.scala:1093)
-//│ 	at: scala.Option.getOrElse(Option.scala:201)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag(TyperHelpers.scala:1091)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag$(TyperHelpers.scala:1091)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.mkTag(TyperDatatypes.scala:363)
-//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:707)
-//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:698)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$106(TypeSimplifier.scala:464)
+//│ gett1: (#T1 & 'a | ~#T1) -> 'a -> 'a
+//│      = [Function: gett1]
+//│ res: #T1 & (123 | Array[int])
+//│    = [ 1, 2, 3 ]
+//│ gt: nothing -> Array[int]
+//│   = <missing implementation>
+//│ res: Array[int]
+//│    = <no result>
+//│      gt is not implemented
+//│ tg: nothing -> (T1 | T2)
+//│   = <missing implementation>
 
 gett1 ta (T1 123)
 tg (T1 ((1,2,3,4)))
 tg (T2 ((true,false,false)))
 //│ res: #T1 & (123 | Array[int])
-//│ ╔══[ERROR] identifier not found: tg
-//│ ║  l.484: 	tg (T1 ((1,2,3,4)))
-//│ ╙──       	^^
-//│ res: error
-//│ ╔══[ERROR] identifier not found: tg
-//│ ║  l.485: 	tg (T2 ((true,false,false)))
-//│ ╙──       	^^
-//│ res: error
-//│ Code generation encountered an error:
-//│   unresolved symbol gett1
+//│    = [ 1, 2, 3 ]
+//│ res: T1 | T2
+//│    = <no result>
+//│      tg is not implemented
+//│ res: T1 | T2
+//│    = <no result>
+//│      tg is not implemented
 
 def fst ((a, b)) = a
 def snd ((a, b)) = b
@@ -528,31 +513,31 @@ iarr = intersect ((1,2,3,false)) ((1,5,true,'hi',false))
 fst iarr
 snd (T1 ((1,2,3)))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.528: 	fst iarr
+//│ ║  l.513: 	fst iarr
 //│ ║         	^^^^^^^^
 //│ ╟── type `Array['a & 'b]` is not a 2-element tuple
-//│ ║  l.519: 	def intersect: Array['a] -> Array['b] -> Array['a & 'b]
+//│ ║  l.504: 	def intersect: Array['a] -> Array['b] -> Array['a & 'b]
 //│ ║         	                                         ^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `(?a, ?b,)`
-//│ ║  l.528: 	fst iarr
+//│ ║  l.513: 	fst iarr
 //│ ║         	    ^^^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.498: 	def fst ((a, b)) = a
+//│ ║  l.483: 	def fst ((a, b)) = a
 //│ ╙──       	         ^^^^^^
 //│ res: error
 //│    = <no result>
 //│      iarr and intersect are not implemented
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.529: 	snd (T1 ((1,2,3)))
+//│ ║  l.514: 	snd (T1 ((1,2,3)))
 //│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── tuple literal of type `(1, 2, 3,)` does not match type `(?a, ?b,) | ~#T1`
-//│ ║  l.529: 	snd (T1 ((1,2,3)))
+//│ ║  l.514: 	snd (T1 ((1,2,3)))
 //│ ║         	         ^^^^^^^
 //│ ╟── but it flows into application with expected type `(?a, ?b,) | ~#T1`
-//│ ║  l.529: 	snd (T1 ((1,2,3)))
+//│ ║  l.514: 	snd (T1 ((1,2,3)))
 //│ ║         	     ^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.499: 	def snd ((a, b)) = b
+//│ ║  l.484: 	def snd ((a, b)) = b
 //│ ╙──       	         ^^^^^^
 //│ res: error
 //│    = 2
@@ -566,47 +551,68 @@ inn (v2 with {y= T1 ((1,2,3))})
 def v3: Array[Array[(int, true)]]
 r1 = inn2 (T2 v3)
 inn (T1 (T2 v3))
-//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
-//│ 	at: scala.Predef$.require(Predef.scala:324)
-//│ 	at: mlscript.TypeDefs.clsNameToNomTag(TypeDefs.scala:122)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mkTag$1(TyperHelpers.scala:1093)
-//│ 	at: scala.Option.getOrElse(Option.scala:201)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag(TyperHelpers.scala:1091)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag$(TyperHelpers.scala:1091)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.mkTag(TyperDatatypes.scala:363)
-//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:707)
-//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:698)
-//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:698)
+//│ v1: (1, 2, true,) & #T1 & #T2
+//│   = [ 1, 2, true ]
+//│ v2: (1, 2, true,) & {x: (1, 2, true,) & #T1 & #T2} & #T1 & #T2
+//│   = [ 1, 2, true, x: [ 1, 2, true ] ]
+//│ inn: nothing -> nothing
+//│    = <missing implementation>
+//│ inn2: nothing -> Array[nothing]
+//│     = <missing implementation>
+//│ res: 1 | 2 | true
+//│    = <no result>
+//│      inn is not implemented
+//│ res: 1 | 2 | true
+//│    = <no result>
+//│      inn is not implemented
+//│ v3: Array[Array[(int, true,)]]
+//│   = <missing implementation>
+//│ r1: Array[nothing]
+//│   = <no result>
+//│     inn2 is not implemented
+//│ res: Array[(int, true,)]
+//│    = <no result>
+//│      inn is not implemented
 
 v3: Array[Array[Array[int | bool]]]
 inn2 (T2 r1)
-//│ ╔══[ERROR] identifier not found: v3
-//│ ║  l.581: 	v3: Array[Array[Array[int | bool]]]
-//│ ╙──       	^^
 //│ res: Array[Array[Array[bool | int]]]
-//│ ╔══[ERROR] identifier not found: inn2
-//│ ║  l.582: 	inn2 (T2 r1)
-//│ ╙──       	^^^^
-//│ ╔══[ERROR] identifier not found: r1
-//│ ║  l.582: 	inn2 (T2 r1)
-//│ ╙──       	         ^^
-//│ res: error
-//│ Code generation encountered an error:
-//│   unresolved symbol v3
+//│    = <no result>
+//│      v3 is not implemented
+//│ res: Array[nothing]
+//│    = <no result>
+//│      inn2 is not implemented
 
 :e
 inn (T1 v3)
 inn2 v1
-//│ ╔══[ERROR] identifier not found: v3
-//│ ║  l.598: 	inn (T1 v3)
-//│ ╙──       	        ^^
-//│ res: nothing
-//│ ╔══[ERROR] identifier not found: inn2
-//│ ║  l.599: 	inn2 v1
-//│ ╙──       	^^^^
-//│ res: error
-//│ Code generation encountered an error:
-//│   unresolved symbol inn
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.587: 	inn (T1 v3)
+//│ ║         	^^^^^^^^^^^
+//│ ╟── type `Array[Array[(int, true,)]]` does not match type `#T2 | ~#T1`
+//│ ║  l.551: 	def v3: Array[Array[(int, true)]]
+//│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `#T2 | ~#T1`
+//│ ║  l.587: 	inn (T1 v3)
+//│ ║         	        ^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.547: 	def inn: (T1 & T2 & Array['a]) -> 'a
+//│ ║         	               ^^
+//│ ╟── from intersection type:
+//│ ║  l.547: 	def inn: (T1 & T2 & Array['a]) -> 'a
+//│ ╙──       	         ^^^^^^^^^^^^^^^^^^^^^
+//│ res: Array[(int, true,)] | error
+//│    = <no result>
+//│      inn is not implemented
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.588: 	inn2 v1
+//│ ║         	^^^^^^^
+//│ ╟── integer literal of type `1` does not match type `Array['a]`
+//│ ║  l.545: 	v1 = T1 (T2 ((1,2,true)))
+//│ ╙──       	              ^
+//│ res: Array[nothing] | error
+//│    = <no result>
+//│      inn2 is not implemented
 
 def ra: ('a, 'a) as 'a
 ra: Array[Array['a]] as 'a
@@ -636,16 +642,16 @@ ra: (Array['a], Array['a]) as 'a
 ra: ('a, 'a, 'a) as 'a
 ra: (Array['a], Array['a], Array['a]) as 'a
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.636: 	ra: ('a, 'a, 'a) as 'a
+//│ ║  l.642: 	ra: ('a, 'a, 'a) as 'a
 //│ ║         	^^
 //│ ╟── type `('a, 'a,)` does not match type `('a0, 'a0, 'a0,)`
-//│ ║  l.611: 	def ra: ('a, 'a) as 'a
+//│ ║  l.617: 	def ra: ('a, 'a) as 'a
 //│ ║         	        ^^^^^^^^
 //│ ╟── but it flows into reference with expected type `('a1, 'a1, 'a1,)`
-//│ ║  l.636: 	ra: ('a, 'a, 'a) as 'a
+//│ ║  l.642: 	ra: ('a, 'a, 'a) as 'a
 //│ ║         	^^
 //│ ╟── Note: constraint arises from tuple type:
-//│ ║  l.636: 	ra: ('a, 'a, 'a) as 'a
+//│ ║  l.642: 	ra: ('a, 'a, 'a) as 'a
 //│ ╙──       	    ^^^^^^^^^^^^
 //│ res: 'a
 //│   where
@@ -653,16 +659,16 @@ ra: (Array['a], Array['a], Array['a]) as 'a
 //│    = <no result>
 //│      ra is not implemented
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.637: 	ra: (Array['a], Array['a], Array['a]) as 'a
+//│ ║  l.643: 	ra: (Array['a], Array['a], Array['a]) as 'a
 //│ ║         	^^
 //│ ╟── type `('a, 'a,)` does not match type `(Array['a0], Array['a0], Array['a0],)`
-//│ ║  l.611: 	def ra: ('a, 'a) as 'a
+//│ ║  l.617: 	def ra: ('a, 'a) as 'a
 //│ ║         	        ^^^^^^^^
 //│ ╟── but it flows into reference with expected type `(Array['a1], Array['a1], Array['a1],)`
-//│ ║  l.637: 	ra: (Array['a], Array['a], Array['a]) as 'a
+//│ ║  l.643: 	ra: (Array['a], Array['a], Array['a]) as 'a
 //│ ║         	^^
 //│ ╟── Note: constraint arises from tuple type:
-//│ ║  l.637: 	ra: (Array['a], Array['a], Array['a]) as 'a
+//│ ║  l.643: 	ra: (Array['a], Array['a], Array['a]) as 'a
 //│ ╙──       	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: 'a
 //│   where
@@ -680,19 +686,19 @@ tktup ((1,2,3,true))
 :e
 tktup a123
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.681: 	tktup a123
+//│ ║  l.687: 	tktup a123
 //│ ║         	^^^^^^^^^^
 //│ ╟── type `Array[int]` does not have field '_3'
-//│ ║  l.369: 	def a123: Array[int]
+//│ ║  l.362: 	def a123: Array[int]
 //│ ║         	          ^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{_3: ?a}`
-//│ ║  l.681: 	tktup a123
+//│ ║  l.687: 	tktup a123
 //│ ║         	      ^^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.673: 	def tktup t = (t._2, t._3)
+//│ ║  l.679: 	def tktup t = (t._2, t._3)
 //│ ║         	                     ^^^^
 //│ ╟── from reference:
-//│ ║  l.673: 	def tktup t = (t._2, t._3)
+//│ ║  l.679: 	def tktup t = (t._2, t._3)
 //│ ╙──       	                     ^
 //│ res: (nothing, nothing,) | error
 //│    = [ undefined, undefined ]
@@ -726,26 +732,30 @@ ta3 = ((1,2,3), "hello", false)
 ta3[1-2]
 (1,2,3)[4]
 //│ ta1: (2, 3, 4, 5,)
+//│    = [ 2, 3, 4, 5 ]
 //│ res: 2 | 3 | 4 | 5 | undefined
+//│    = 3
 //│ ta2: ((1, 2, 4,), (true, false,),)
+//│    = [ [ 1, 2, 4 ], [ true, false ] ]
 //│ res: false | int | null | true | undefined
+//│    = null
 //│ ta3: ((1, 2, 3,), "hello", false,)
+//│    = [ [ 1, 2, 3 ], 'hello', false ]
 //│ res: "hello" | (1, 2, 3,) | false | undefined
+//│    = undefined
 //│ res: 1 | 2 | 3 | undefined
-//│ Code generation encountered an error:
-//│   unresolved symbol ta
+//│    = undefined
 
 :e
 ((defined ta2[0])[1+4], ta[1])[0]
 //│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.739: 	((defined ta2[0])[1+4], ta[1])[0]
+//│ ║  l.750: 	((defined ta2[0])[1+4], ta[1])[0]
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── possibly-undefined array access of type `undefined` does not match type `~undefined`
-//│ ║  l.739: 	((defined ta2[0])[1+4], ta[1])[0]
+//│ ║  l.750: 	((defined ta2[0])[1+4], ta[1])[0]
 //│ ╙──       	 ^^^^^^^^^^^^^^^^^^^^^
 //│ res: error | false | int | true | undefined
-//│ Code generation encountered an error:
-//│   unresolved symbol ta
+//│    = undefined
 
 :e
 def ge x = x + 1
@@ -754,54 +764,58 @@ true[false]
 4["hello"]
 ge[2]
 //│ ge: int -> int
+//│   = [Function: ge]
 //│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.752: 	ta3[ge 3][ge (1+2)]
+//│ ║  l.762: 	ta3[ge 3][ge (1+2)]
 //│ ║         	^^^^^^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"hello"` does not match type `Array[?a]`
-//│ ║  l.725: 	ta3 = ((1,2,3), "hello", false)
+//│ ║  l.731: 	ta3 = ((1,2,3), "hello", false)
 //│ ║         	                ^^^^^^^
 //│ ╟── but it flows into array access with expected type `Array[?b]`
-//│ ║  l.752: 	ta3[ge 3][ge (1+2)]
+//│ ║  l.762: 	ta3[ge 3][ge (1+2)]
 //│ ╙──       	^^^^^^^^^
 //│ res: 1 | 2 | 3 | error | undefined
+//│ Runtime error:
+//│   TypeError: Cannot read properties of undefined (reading '4')
 //│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.753: 	true[false]
+//│ ║  l.763: 	true[false]
 //│ ║         	^^^^^^^^^^^
 //│ ╟── reference of type `false` is not an instance of type `int`
-//│ ║  l.753: 	true[false]
+//│ ║  l.763: 	true[false]
 //│ ╙──       	     ^^^^^
 //│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.753: 	true[false]
+//│ ║  l.763: 	true[false]
 //│ ║         	^^^^^^^^^^^
 //│ ╟── reference of type `true` does not match type `Array[?a]`
-//│ ║  l.753: 	true[false]
+//│ ║  l.763: 	true[false]
 //│ ╙──       	^^^^
 //│ res: error | undefined
+//│    = undefined
 //│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.754: 	4["hello"]
+//│ ║  l.764: 	4["hello"]
 //│ ║         	^^^^^^^^^^
 //│ ╟── string literal of type `"hello"` is not an instance of type `int`
-//│ ║  l.754: 	4["hello"]
+//│ ║  l.764: 	4["hello"]
 //│ ╙──       	  ^^^^^^^
 //│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.754: 	4["hello"]
+//│ ║  l.764: 	4["hello"]
 //│ ║         	^^^^^^^^^^
 //│ ╟── integer literal of type `4` does not match type `Array[?a]`
-//│ ║  l.754: 	4["hello"]
+//│ ║  l.764: 	4["hello"]
 //│ ╙──       	^
 //│ res: error | undefined
+//│    = undefined
 //│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.755: 	ge[2]
+//│ ║  l.765: 	ge[2]
 //│ ║         	^^^^^
 //│ ╟── function of type `?a -> (forall ?b. ?b)` does not match type `Array[?c]`
-//│ ║  l.751: 	def ge x = x + 1
+//│ ║  l.761: 	def ge x = x + 1
 //│ ║         	       ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `Array[?d]`
-//│ ║  l.755: 	ge[2]
+//│ ║  l.765: 	ge[2]
 //│ ╙──       	^^
 //│ res: error | undefined
-//│ Code generation encountered an error:
-//│   unresolved symbol ta3
+//│    = undefined
 
 def mkarr: 'a -> Array['a]
 def mkarr x = (x,x,x,x,x)
@@ -825,21 +839,21 @@ mkarr (1,true,"hi")[0]
 mkarr 3 [  1]
 mk1[2  ]
 //│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.825: 	mkarr 3 [  1]
+//│ ║  l.839: 	mkarr 3 [  1]
 //│ ║         	      ^^^^^^^
 //│ ╟── integer literal of type `3` does not match type `Array[?a]`
-//│ ║  l.825: 	mkarr 3 [  1]
+//│ ║  l.839: 	mkarr 3 [  1]
 //│ ╙──       	      ^
 //│ res: Array[error | undefined]
 //│    = [ undefined, undefined, undefined, undefined, undefined ]
 //│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.826: 	mk1[2  ]
+//│ ║  l.840: 	mk1[2  ]
 //│ ║         	^^^^^^^^
 //│ ╟── integer literal of type `6` does not match type `Array[?a]`
-//│ ║  l.808: 	mk1 = defined (mkarr 6)[ 0]
+//│ ║  l.822: 	mk1 = defined (mkarr 6)[ 0]
 //│ ║         	                     ^
 //│ ╟── but it flows into reference with expected type `Array[?b]`
-//│ ║  l.826: 	mk1[2  ]
+//│ ║  l.840: 	mk1[2  ]
 //│ ╙──       	^^^
 //│ res: error | undefined
 //│    = undefined
@@ -889,13 +903,13 @@ dup (defined ara[1])._1 (defined (defined arb[10])[8])._2 + 1
 :e
 (1,2,3)._1[1]
 //│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.890: 	(1,2,3)._1[1]
+//│ ║  l.904: 	(1,2,3)._1[1]
 //│ ║         	^^^^^^^^^^^^^
 //│ ╟── integer literal of type `1` does not match type `Array[?a]`
-//│ ║  l.890: 	(1,2,3)._1[1]
+//│ ║  l.904: 	(1,2,3)._1[1]
 //│ ║         	 ^
 //│ ╟── but it flows into field selection with expected type `Array[?b]`
-//│ ║  l.890: 	(1,2,3)._1[1]
+//│ ║  l.904: 	(1,2,3)._1[1]
 //│ ╙──       	^^^^^^^^^^
 //│ res: error | undefined
 //│ Runtime error:

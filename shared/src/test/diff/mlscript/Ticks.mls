@@ -28,17 +28,30 @@ f' + 2
 trait Foo'[T']
   method Bar': T' -> T'
 //│ Defined trait Foo'[=T']
-//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
-//│ 	at: scala.Predef$.require(Predef.scala:324)
-//│ 	at: mlscript.TypeDefs.clsNameToNomTag(TypeDefs.scala:122)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mkTag$1(TyperHelpers.scala:1093)
-//│ 	at: scala.Option.getOrElse(Option.scala:201)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag(TyperHelpers.scala:1091)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag$(TyperHelpers.scala:1091)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.mkTag(TyperDatatypes.scala:363)
-//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:707)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$106(TypeSimplifier.scala:464)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ Declared Foo'.Bar': Foo'['T'] -> 'T' -> 'T'
+//│ // Prelude
+//│ const Foo$ = function () {
+//│   const tag = Symbol();
+//│   return ({
+//│     implement: function implement(instance) {
+//│       if (tag in instance) {
+//│         return;
+//│       }
+//│       Object.defineProperty(instance, tag, { value: {} });
+//│     },
+//│     build: function build(instance) {
+//│       if (typeof instance !== "object") {
+//│         instance = Object.assign(instance, {});
+//│       }
+//│       this.implement(instance);
+//│       return instance;
+//│     },
+//│     is: function is(x) {
+//│       return typeof x === "object" && x !== null && tag in x;
+//│     }
+//│   });
+//│ }();
+//│ // End of generated code
 
 :js
 class A'[B'] : {x': B'}
@@ -121,8 +134,14 @@ class None': {}
 :js
 class CC': None' & Foo'[anything]
 //│ Defined class CC'
-//│ Code generation encountered an error:
-//│   undeclared type name Foo' when resolving base classes
+//│ // Prelude
+//│ class CC$ extends None$ {
+//│   constructor(fields) {
+//│     super(fields);
+//│     Foo$.implement(this);
+//│   }
+//│ }
+//│ // End of generated code
 
 :js
 class TT' : { a': int }
@@ -246,17 +265,52 @@ trait T : {x': int}
   method P' y' = this.x' + y'
   method Q ((y', {z'})) = this.x' + y' + z'
 //│ Defined trait T
-//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
-//│ 	at: scala.Predef$.require(Predef.scala:324)
-//│ 	at: mlscript.TypeDefs.clsNameToNomTag(TypeDefs.scala:122)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mkTag$1(TyperHelpers.scala:1093)
-//│ 	at: scala.Option.getOrElse(Option.scala:201)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag(TyperHelpers.scala:1091)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag$(TyperHelpers.scala:1091)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.mkTag(TyperDatatypes.scala:363)
-//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:707)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$106(TypeSimplifier.scala:464)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ Defined T.N': T -> int
+//│ Defined T.P': T -> int -> int
+//│ Defined T.Q: T -> (int, {z': int},) -> int
+//│ // Prelude
+//│ const T = function () {
+//│   const tag = Symbol();
+//│   return ({
+//│     implement: function implement(instance) {
+//│       if (tag in instance) {
+//│         return;
+//│       }
+//│       Object.defineProperty(instance, tag, { value: {} });
+//│       if (!("N'" in instance)) {
+//│         Object.defineProperty(instance, "N'", {
+//│           get: function () {
+//│             return this1["x'"];
+//│           }
+//│         });
+//│       }
+//│       if (!("P'" in instance)) {
+//│         instance["P'"] = function (y$) {
+//│           return this1["x'"] + y$;
+//│         };
+//│       }
+//│       if (!("Q" in instance)) {
+//│         instance.Q = function ([
+//│           y$,
+//│           { "z'": z$ }
+//│         ]) {
+//│           return this1["x'"] + y$ + z$;
+//│         };
+//│       }
+//│     },
+//│     build: function build(instance) {
+//│       if (typeof instance !== "object") {
+//│         instance = Object.assign(instance, {});
+//│       }
+//│       this.implement(instance);
+//│       return instance;
+//│     },
+//│     is: function is(x) {
+//│       return typeof x === "object" && x !== null && tag in x;
+//│     }
+//│   });
+//│ }();
+//│ // End of generated code
 
 :js
 let f' = fun x -> x + 1 in f' 2

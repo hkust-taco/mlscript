@@ -223,21 +223,13 @@ trait T: { x: int }
 //│ Defined trait T
 
 def t: T
-//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
-//│ 	at: scala.Predef$.require(Predef.scala:324)
-//│ 	at: mlscript.TypeDefs.clsNameToNomTag(TypeDefs.scala:122)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mkTag$1(TyperHelpers.scala:1093)
-//│ 	at: scala.Option.getOrElse(Option.scala:201)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag(TyperHelpers.scala:1091)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag$(TyperHelpers.scala:1091)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.mkTag(TyperDatatypes.scala:363)
-//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:707)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$106(TypeSimplifier.scala:464)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ t: T
+//│  = <missing implementation>
 
 t.x
 //│ res: int
-//│    = 1
+//│    = <no result>
+//│      t is not implemented
 
 rcd = { x = 1 }
 //│ rcd: {x: 1}
@@ -319,13 +311,13 @@ a2.x
 :e
 a2._1
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.320: 	a2._1
+//│ ║  l.312: 	a2._1
 //│ ║         	^^^^^
 //│ ╟── type `Array['a]` does not match type `{_1: ?a} | ~{_2: true, x: "haha"}`
-//│ ║  l.297: 	def rep5: 'a -> Array['a]
+//│ ║  l.289: 	def rep5: 'a -> Array['a]
 //│ ║         	                ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{_1: ?a} | ~{_2: true, x: "haha"}`
-//│ ║  l.320: 	a2._1
+//│ ║  l.312: 	a2._1
 //│ ╙──       	^^
 //│ res: error
 //│    = undefined
@@ -405,14 +397,7 @@ def p1: T | Array[bool] | (int, string) | (true, 3)
 def p2: T | (string, bool) | Array[int] | (2, 4)
 def pf t = (t[1], t._1)
 pf((1,2,3))
-//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
-//│ 	at: scala.Predef$.require(Predef.scala:324)
-//│ 	at: mlscript.TypeDefs.clsNameToNomTag(TypeDefs.scala:122)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mkTag$1(TyperHelpers.scala:1093)
-//│ 	at: scala.Option.getOrElse(Option.scala:201)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag(TyperHelpers.scala:1091)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.mkTag$(TyperHelpers.scala:1091)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.mkTag(TyperDatatypes.scala:363)
-//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:707)
-//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:698)
-//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:698)
+//│ p1: Array[bool | int | string] | T
+//│ p2: Array[bool | int | string] | T
+//│ pf: (Array['a & ~undefined] & {_1: 'b}) -> (undefined | 'a, 'b,)
+//│ res: (1 | 2 | 3 | undefined, 1,)

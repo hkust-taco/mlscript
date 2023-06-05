@@ -23,8 +23,8 @@ Dummy.introspect
 //│     = 'duh!'
 
 
-class Funny: int { fun test = this + 1 }
-//│ class Funny: int {
+class Funny: Int { fun test = this + 1 }
+//│ class Funny: Int {
 //│   fun test: Int
 //│ }
 
@@ -46,12 +46,12 @@ class Exp: Pair | Lit {
     Lit then 0
     Pair then 1
 }
-class Lit(n: int) extends Exp
+class Lit(n: Int) extends Exp
 class Pair(lhs: Exp, rhs: Exp) extends Exp
 //│ class Exp: Lit | Pair {
 //│   fun test: 0 | 1
 //│ }
-//│ class Lit(n: int) extends Exp {
+//│ class Lit(n: Int) extends Exp {
 //│   fun test: 0 | 1
 //│ }
 //│ class Pair(lhs: Exp, rhs: Exp) extends Exp {
@@ -64,12 +64,12 @@ class Exp: Pair | Lit {
     Lit then 0
     Pair(l, r) then 1
 }
-class Lit(n: int) extends Exp
+class Lit(n: Int) extends Exp
 class Pair(lhs: Exp, rhs: Exp) extends Exp
 //│ class Exp: Lit | Pair {
 //│   fun test: 0 | 1
 //│ }
-//│ class Lit(n: int) extends Exp {
+//│ class Lit(n: Int) extends Exp {
 //│   fun test: 0 | 1
 //│ }
 //│ class Pair(lhs: Exp, rhs: Exp) extends Exp {
@@ -77,24 +77,6 @@ class Pair(lhs: Exp, rhs: Exp) extends Exp
 //│ }
 
 Pair(Lit(1), Lit(2)).test
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.79: 	Pair(Lit(1), Lit(2)).test
-//│ ║        	     ^^^^^^
-//│ ╟── integer literal of type `1` is not an instance of type `int`
-//│ ║  l.79: 	Pair(Lit(1), Lit(2)).test
-//│ ║        	         ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.67: 	class Lit(n: int) extends Exp
-//│ ╙──      	             ^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.79: 	Pair(Lit(1), Lit(2)).test
-//│ ║        	             ^^^^^^
-//│ ╟── integer literal of type `2` is not an instance of type `int`
-//│ ║  l.79: 	Pair(Lit(1), Lit(2)).test
-//│ ║        	                 ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.67: 	class Lit(n: int) extends Exp
-//│ ╙──      	             ^^^
 //│ 0 | 1
 //│ res
 //│     = 1
@@ -106,18 +88,18 @@ class Exp: Pair | Lit {
     Lit then 0
     Pair(l, r) then l.test + r.test
 }
-class Lit(n: int) extends Exp
+class Lit(n: Int) extends Exp
 class Pair(lhs: Exp, rhs: Exp) extends Exp
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.107: 	    Pair(l, r) then l.test + r.test
-//│ ╙──       	                     ^^^^^
+//│ ║  l.89: 	    Pair(l, r) then l.test + r.test
+//│ ╙──      	                     ^^^^^
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.107: 	    Pair(l, r) then l.test + r.test
-//│ ╙──       	                              ^^^^^
+//│ ║  l.89: 	    Pair(l, r) then l.test + r.test
+//│ ╙──      	                              ^^^^^
 //│ class Exp: Lit | Pair {
 //│   fun test: Int
 //│ }
-//│ class Lit(n: int) extends Exp {
+//│ class Lit(n: Int) extends Exp {
 //│   fun test: Int
 //│ }
 //│ class Pair(lhs: Exp, rhs: Exp) extends Exp {
@@ -126,85 +108,21 @@ class Pair(lhs: Exp, rhs: Exp) extends Exp
 
 
 class Exp: Pair | Lit {
-  fun test : int
+  fun test : Int
   fun test = if this is
     Lit then 0
     Pair(l, r) then l.test + r.test
 }
-class Lit(n: int) extends Exp
+class Lit(n: Int) extends Exp
 class Pair(lhs: Exp, rhs: Exp) extends Exp
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.132: 	    Pair(l, r) then l.test + r.test
-//│ ║         	                    ^^^^^^^^
-//│ ╟── type `int` is not an instance of type `Int`
-//│ ║  l.129: 	  fun test : int
-//│ ║         	             ^^^
-//│ ╟── but it flows into field selection with expected type `Int`
-//│ ║  l.132: 	    Pair(l, r) then l.test + r.test
-//│ ╙──       	                    ^^^^^^
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.132: 	    Pair(l, r) then l.test + r.test
-//│ ║         	                    ^^^^^^^^^^^^^^^
-//│ ╟── type `int` is not an instance of type `Int`
-//│ ║  l.129: 	  fun test : int
-//│ ║         	             ^^^
-//│ ╟── but it flows into field selection with expected type `Int`
-//│ ║  l.132: 	    Pair(l, r) then l.test + r.test
-//│ ╙──       	                             ^^^^^^
-//│ ╔══[ERROR] Type mismatch in definition of method test:
-//│ ║  l.130: 	  fun test = if this is
-//│ ║         	      ^^^^^^^^^^^^^^^^^
-//│ ║  l.131: 	    Lit then 0
-//│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.132: 	    Pair(l, r) then l.test + r.test
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── integer literal of type `0` is not an instance of type `int`
-//│ ║  l.131: 	    Lit then 0
-//│ ║         	             ^
-//│ ╟── but it flows into definition of method test with expected type `int`
-//│ ║  l.130: 	  fun test = if this is
-//│ ║         	      ^^^^^^^^^^^^^^^^^
-//│ ║  l.131: 	    Lit then 0
-//│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.132: 	    Pair(l, r) then l.test + r.test
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.129: 	  fun test : int
-//│ ║         	             ^^^
-//│ ╟── from signature of member `test`:
-//│ ║  l.129: 	  fun test : int
-//│ ╙──       	      ^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in definition of method test:
-//│ ║  l.130: 	  fun test = if this is
-//│ ║         	      ^^^^^^^^^^^^^^^^^
-//│ ║  l.131: 	    Lit then 0
-//│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.132: 	    Pair(l, r) then l.test + r.test
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── operator application of type `Int` is not an instance of type `int`
-//│ ║  l.132: 	    Pair(l, r) then l.test + r.test
-//│ ║         	                    ^^^^^^^^^^^^^^^
-//│ ╟── but it flows into definition of method test with expected type `int`
-//│ ║  l.130: 	  fun test = if this is
-//│ ║         	      ^^^^^^^^^^^^^^^^^
-//│ ║  l.131: 	    Lit then 0
-//│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.132: 	    Pair(l, r) then l.test + r.test
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.129: 	  fun test : int
-//│ ║         	             ^^^
-//│ ╟── from signature of member `test`:
-//│ ║  l.129: 	  fun test : int
-//│ ╙──       	      ^^^^^^^^^^
 //│ class Exp: Lit | Pair {
-//│   fun test: int
+//│   fun test: Int
 //│ }
-//│ class Lit(n: int) extends Exp {
-//│   fun test: int
+//│ class Lit(n: Int) extends Exp {
+//│   fun test: Int
 //│ }
 //│ class Pair(lhs: Exp, rhs: Exp) extends Exp {
-//│   fun test: int
+//│   fun test: Int
 //│ }
 
 
@@ -214,46 +132,37 @@ class Exp[A]: Pair | Lit {
     Lit then 0
     Pair then 1
 }
-class Lit(n: int) extends Exp[int]
+class Lit(n: Int) extends Exp[Int]
 class Pair[L, R](lhs: L, rhs: R) extends Exp[(L, R)]
 //│ ╔══[ERROR] Unhandled cyclic definition
-//│ ║  l.212: 	class Exp[A]: Pair | Lit {
+//│ ║  l.130: 	class Exp[A]: Pair | Lit {
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.213: 	  fun test = if this is
+//│ ║  l.131: 	  fun test = if this is
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.214: 	    Lit then 0
+//│ ║  l.132: 	    Lit then 0
 //│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.215: 	    Pair then 1
+//│ ║  l.133: 	    Pair then 1
 //│ ╙──       	^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Type error in `case` expression
-//│ ║  l.213: 	  fun test = if this is
+//│ ║  l.131: 	  fun test = if this is
 //│ ║         	                ^^^^^^^
-//│ ║  l.214: 	    Lit then 0
+//│ ║  l.132: 	    Lit then 0
 //│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.215: 	    Pair then 1
+//│ ║  l.133: 	    Pair then 1
 //│ ║         	^^^^^^^^^^^^^^^
 //│ ╟── type variable `L` leaks out of its scope
-//│ ║  l.218: 	class Pair[L, R](lhs: L, rhs: R) extends Exp[(L, R)]
+//│ ║  l.136: 	class Pair[L, R](lhs: L, rhs: R) extends Exp[(L, R)]
 //│ ╙──       	           ^
 //│ class Exp[A]: Lit | Pair[anything, anything] {
 //│   fun test: 0 | 1
 //│ }
-//│ class Lit(n: int) extends Exp {
+//│ class Lit(n: Int) extends Exp {
 //│   fun test: 0 | 1
 //│ }
 //│ class Pair[L, R](lhs: L, rhs: R) extends Exp
 
 Lit(0).test
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.246: 	Lit(0).test
-//│ ║         	^^^^^^
-//│ ╟── integer literal of type `0` is not an instance of type `int`
-//│ ║  l.246: 	Lit(0).test
-//│ ║         	    ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.217: 	class Lit(n: int) extends Exp[int]
-//│ ╙──       	             ^^^
-//│ 0 | 1 | error
+//│ 0 | 1
 //│ res
 //│     = 0
 
