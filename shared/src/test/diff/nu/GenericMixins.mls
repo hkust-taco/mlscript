@@ -1,19 +1,246 @@
 :NewDefs
 
 
+
 // TODO support
-mixin BaseTest<A> {
+mixin BaseTest[A] {
   fun test(x: A) = x
 }
-//│ ╔══[ERROR] type identifier not found: A
-//│ ║  l.6: 	  fun test(x: A) = x
-//│ ╙──     	              ^
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: A28'
+//│ mixin BaseTest[A]() {
+//│   fun test: (x: A,) -> A
+//│ }
 
-mixin BaseTest<A>(x: A) {
+mixin BaseTest[A](x: A) {
   fun test = x
 }
 //│ mixin BaseTest[A](x: A) {
 //│   fun test: A
 //│ }
+
+
+
+mixin Test[A] {
+  fun foo: A -> A
+  fun foo = id
+  fun bar: (A -> A) -> (A -> A)
+  fun bar = id
+}
+//│ mixin Test[A]() {
+//│   fun bar: (A -> A) -> A -> A
+//│   fun foo: A -> A
+//│ }
+
+module C extends Test {
+  fun baz1 = this.foo(0)
+  fun baz2 = this.bar(this.foo)
+}
+//│ module C {
+//│   fun bar: ((0 | 'A) -> 'A) -> 'A -> (0 | 'A)
+//│   fun baz1: 0 | 'A
+//│   fun baz2: 'A -> (0 | 'A)
+//│   fun foo: 'A -> (0 | 'A)
+//│ }
+
+C.baz1
+//│ 0
+//│ res
+//│     = 0
+
+C.foo(1)
+//│ 0 | 1
+//│ res
+//│     = 1
+
+C.foo(false)
+//│ 0 | False
+//│ res
+//│     = false
+
+module C extends Test[int] {
+  fun baz1 = this.foo(0)
+  fun baz2 = this.bar(this.foo)
+}
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.60: 	  fun baz1 = this.foo(0)
+//│ ║        	             ^^^^^^^^^^^
+//│ ╟── integer literal of type `0` is not an instance of type `int`
+//│ ║  l.60: 	  fun baz1 = this.foo(0)
+//│ ║        	                      ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.59: 	module C extends Test[int] {
+//│ ║        	                      ^^^
+//│ ╟── Note: type parameter A is defined at:
+//│ ║  l.22: 	mixin Test[A] {
+//│ ╙──      	           ^
+//│ module C {
+//│   fun bar: (int -> int) -> int -> int
+//│   fun baz1: error | int
+//│   fun baz2: int -> int
+//│   fun foo: int -> int
+//│ }
+
+C.baz1
+//│ error | int
+//│ res
+//│     = 0
+
+C.foo(1)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.87: 	C.foo(1)
+//│ ║        	^^^^^^^^
+//│ ╟── integer literal of type `1` is not an instance of type `int`
+//│ ║  l.87: 	C.foo(1)
+//│ ║        	      ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.59: 	module C extends Test[int] {
+//│ ║        	                      ^^^
+//│ ╟── Note: type parameter A is defined at:
+//│ ║  l.22: 	mixin Test[A] {
+//│ ╙──      	           ^
+//│ error | int
+//│ res
+//│     = 1
+
+:e
+C.foo(false)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.105: 	C.foo(false)
+//│ ║         	^^^^^^^^^^^^
+//│ ╟── reference of type `False` is not an instance of type `int`
+//│ ║  l.105: 	C.foo(false)
+//│ ║         	      ^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.59: 	module C extends Test[int] {
+//│ ║        	                      ^^^
+//│ ╟── Note: type parameter A is defined at:
+//│ ║  l.22: 	mixin Test[A] {
+//│ ╙──      	           ^
+//│ error | int
+//│ res
+//│     = false
+
+class C[A] extends Test[Array[A]] {
+  fun baz1 = this.foo([])
+  fun baz2 = this.bar(this.foo)
+}
+//│ class C[A] {
+//│   fun bar: (Array[A] -> Array[A]) -> Array[A] -> Array[A]
+//│   fun baz1: Array[A]
+//│   fun baz2: Array[A] -> Array[A]
+//│   fun foo: Array[A] -> Array[A]
+//│ }
+
+
+
+mixin Test[A] {
+  fun foo: A -> A
+  fun foo = id
+  fun bar: (A, A)
+  fun bar = (this.arg, this.arg)
+  fun baz = foo(this.arg)
+}
+//│ mixin Test[A]() {
+//│   this: {arg: A & 'a}
+//│   fun bar: (A, A,)
+//│   fun baz: 'a
+//│   fun foo: A -> A
+//│ }
+
+class C(arg: int) extends Test
+//│ class C(arg: int) {
+//│   fun bar: ('A | int, 'A | int,)
+//│   fun baz: int
+//│   fun foo: 'A -> ('A | int)
+//│ }
+
+let c = C(1)
+[c.foo(false), c.bar]
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.156: 	let c = C(1)
+//│ ║         	        ^^^^
+//│ ╟── integer literal of type `1` is not an instance of type `int`
+//│ ║  l.156: 	let c = C(1)
+//│ ║         	          ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.149: 	class C(arg: int) extends Test
+//│ ╙──       	             ^^^
+//│ let c: C | error
+//│ (False | error | int, (int, int,) | error,)
+//│ c
+//│   = C {}
+//│ res
+//│     = [ false, [ 1, 1 ] ]
+
+:e // FIXME
+module D extends C(0) {
+  this.foo(false)
+}
+//│ ╔══[ERROR] Type mismatch in type declaration:
+//│ ║  l.175: 	module D extends C(0) {
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.176: 	  this.foo(false)
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ╟── integer literal of type `0` is not an instance of type `int`
+//│ ║  l.175: 	module D extends C(0) {
+//│ ║         	                   ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.149: 	class C(arg: int) extends Test
+//│ ╙──       	             ^^^
+//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ║  l.176: 	  this.foo(false)
+//│ ╙──       	      ^^^^
+//│ module D extends C {
+//│   fun bar: forall 'A. ('A | int, 'A | int,)
+//│   fun baz: int
+//│   fun foo: forall 'A. 'A -> ('A | int)
+//│ }
+
+:e // TODO support or produce better error (arg is not actually recursive)
+class C extends Test { // it also fails with Test[int]...
+  fun arg = 123
+}
+//│ ╔══[ERROR] Type `#C & {bar: (?A, ?A,), baz: ?a, foo: ?A -> ?A}` does not contain member `arg`
+//│ ║  l.140: 	  fun baz = foo(this.arg)
+//│ ╙──       	                    ^^^^
+//│ ╔══[ERROR] Type `#C & {bar: (?A, ?A,), baz: ?a, foo: ?A -> ?A}` does not contain member `arg`
+//│ ║  l.139: 	  fun bar = (this.arg, this.arg)
+//│ ╙──       	                           ^^^^
+//│ ╔══[ERROR] Type `#C & {bar: (?A, ?A,), baz: ?a, foo: ?A -> ?A}` does not contain member `arg`
+//│ ║  l.139: 	  fun bar = (this.arg, this.arg)
+//│ ╙──       	                 ^^^^
+//│ ╔══[ERROR] Illegal position for this definition statement.
+//│ ║  l.200: 	  fun arg = 123
+//│ ╙──       	      ^^^^^^^^^
+//│ class C {
+//│   fun bar: ('A | error, 'A | error,)
+//│   fun baz: error
+//│   fun foo: 'A -> ('A | error)
+//│ }
+
+class C extends Test {
+  fun arg: int
+  fun arg = 123
+}
+//│ ╔══[ERROR] Type mismatch in definition of method arg:
+//│ ║  l.222: 	  fun arg = 123
+//│ ║         	      ^^^^^^^^^
+//│ ╟── integer literal of type `123` is not an instance of type `int`
+//│ ║  l.222: 	  fun arg = 123
+//│ ║         	            ^^^
+//│ ╟── but it flows into definition of method arg with expected type `int`
+//│ ║  l.222: 	  fun arg = 123
+//│ ║         	      ^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.221: 	  fun arg: int
+//│ ║         	           ^^^
+//│ ╟── from signature of member `arg`:
+//│ ║  l.221: 	  fun arg: int
+//│ ╙──       	      ^^^^^^^^
+//│ class C {
+//│   fun arg: int
+//│   fun bar: ('A | int, 'A | int,)
+//│   fun baz: int
+//│   fun foo: 'A -> ('A | int)
+//│ }
+
 

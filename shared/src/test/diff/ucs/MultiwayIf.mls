@@ -10,7 +10,6 @@ fun f(x) =
 //│  = [Function: f]
 
 
-// FIXME
 fun f(x) =
   if
     x > 0  and
@@ -18,22 +17,31 @@ fun f(x) =
       _           then false
     x == 0 then true
     _      then false
-//│ ╔══[WARNING] Found a duplicated else branch
-//│ ║  l.20: 	    _      then false
-//│ ║        	                ^^^^^
-//│ ╟── The first else branch was declared here.
-//│ ║  l.18: 	      _           then false
-//│ ╙──      	                       ^^^^^
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.17: 	      x % 2 === 0 then true
+//│ ║  l.16: 	      x % 2 === 0 then true
 //│ ║        	      ^^^^^^^^^
 //│ ╟── operator application of type `int` is not an instance of type `Eql`
-//│ ║  l.17: 	      x % 2 === 0 then true
+//│ ║  l.16: 	      x % 2 === 0 then true
 //│ ╙──      	      ^^^^^
 //│ f: int -> bool
 //│  = [Function: f1]
 
-// FIXME
+f(0)
+f(2)
+f(3)
+f(0 - 1)
+f(0 - 2)
+//│ res: bool
+//│    = true
+//│ res: bool
+//│    = true
+//│ res: bool
+//│    = false
+//│ res: bool
+//│    = false
+//│ res: bool
+//│    = false
+
 fun f(x) =
   if
     x > 0  and
@@ -41,19 +49,24 @@ fun f(x) =
       else false
     x == 0 then true
   else false
-//│ ╔══[WARNING] Found a duplicated else branch
-//│ ║  l.43: 	  else false
-//│ ║        	       ^^^^^
-//│ ╟── The first else branch was declared here.
-//│ ║  l.41: 	      else false
-//│ ╙──      	           ^^^^^
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.40: 	      x % 2 === 0 then true
+//│ ║  l.48: 	      x % 2 === 0 then true
 //│ ║        	      ^^^^^^^^^
 //│ ╟── operator application of type `int` is not an instance of type `Eql`
-//│ ║  l.40: 	      x % 2 === 0 then true
+//│ ║  l.48: 	      x % 2 === 0 then true
 //│ ╙──      	      ^^^^^
 //│ f: int -> bool
 //│  = [Function: f2]
 
-
+f(0)
+f(2)
+f(1)
+f(0 - 1)
+//│ res: bool
+//│    = true
+//│ res: bool
+//│    = true
+//│ res: bool
+//│    = false
+//│ res: bool
+//│    = false

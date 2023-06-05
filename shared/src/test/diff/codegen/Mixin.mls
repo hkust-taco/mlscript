@@ -19,15 +19,15 @@ class Lit(n: Int)
 //│     if (this.#Add === undefined) {
 //│       class Add {
 //│         #lhs;
-//│         #rhs;
 //│         get lhs() { return this.#lhs; }
+//│         #rhs;
 //│         get rhs() { return this.#rhs; }
 //│         constructor(lhs, rhs) {
 //│           this.#lhs = lhs;
 //│           this.#rhs = rhs;
 //│         }
 //│       };
-//│       this.#Add = ((lhs, rhs) => new Add(lhs, rhs));
+//│       this.#Add = ((lhs, rhs) => Object.freeze(new Add(lhs, rhs)));
 //│       this.#Add.class = Add;
 //│     }
 //│     return this.#Add;
@@ -42,7 +42,7 @@ class Lit(n: Int)
 //│           this.#n = n;
 //│         }
 //│       };
-//│       this.#Lit = ((n) => new Lit(n));
+//│       this.#Lit = ((n) => Object.freeze(new Lit(n)));
 //│       this.#Lit.class = Lit;
 //│     }
 //│     return this.#Lit;
@@ -66,15 +66,15 @@ class Lit(n: Int)
 //│ │ │       if (this.#Add === undefined) {
 //│ │ │         class Add {
 //│ │ │           #lhs;
-//│ │ │           #rhs;
 //│ │ │           get lhs() { return this.#lhs; }
+//│ │ │           #rhs;
 //│ │ │           get rhs() { return this.#rhs; }
 //│ │ │           constructor(lhs, rhs) {
 //│ │ │             this.#lhs = lhs;
 //│ │ │             this.#rhs = rhs;
 //│ │ │           }
 //│ │ │         };
-//│ │ │         this.#Add = ((lhs, rhs) => new Add(lhs, rhs));
+//│ │ │         this.#Add = ((lhs, rhs) => Object.freeze(new Add(lhs, rhs)));
 //│ │ │         this.#Add.class = Add;
 //│ │ │       }
 //│ │ │       return this.#Add;
@@ -89,7 +89,7 @@ class Lit(n: Int)
 //│ │ │             this.#n = n;
 //│ │ │           }
 //│ │ │         };
-//│ │ │         this.#Lit = ((n) => new Lit(n));
+//│ │ │         this.#Lit = ((n) => Object.freeze(new Lit(n)));
 //│ │ │         this.#Lit.class = Lit;
 //│ │ │       }
 //│ │ │       return this.#Lit;
@@ -188,7 +188,7 @@ class Neg<A>(expr: A)
 //│           this.#expr = expr;
 //│         }
 //│       };
-//│       this.#Neg = ((expr) => new Neg(expr));
+//│       this.#Neg = ((expr) => Object.freeze(new Neg(expr)));
 //│       this.#Neg.class = Neg;
 //│     }
 //│     return this.#Neg;
@@ -214,7 +214,7 @@ class Neg<A>(expr: A)
 //│ │ │             this.#expr = expr;
 //│ │ │           }
 //│ │ │         };
-//│ │ │         this.#Neg = ((expr) => new Neg(expr));
+//│ │ │         this.#Neg = ((expr) => Object.freeze(new Neg(expr)));
 //│ │ │         this.#Neg.class = Neg;
 //│ │ │       }
 //│ │ │       return this.#Neg;
@@ -295,9 +295,9 @@ mixin EvalNegNeg {
     else super.eval(e)
 }
 //│ mixin EvalNegNeg() {
-//│   super: {eval: (Neg['A] | 'a) -> 'b}
+//│   super: {eval: (Neg[nothing] | 'a) -> 'b}
 //│   this: {eval: 'expr -> 'b}
-//│   fun eval: (Neg['A & (Neg['expr] | #Object & ~#Neg)] | #Object & 'a & ~#Neg) -> 'b
+//│   fun eval: (Neg[Neg['expr] | #Object & ~#Neg] | #Object & 'a & ~#Neg) -> 'b
 //│ }
 //│ // Prelude
 //│ class TypingUnit4 {
@@ -351,7 +351,7 @@ mixin EvalNegNeg {
 :js
 :ShowRepl
 module TestLang extends EvalBase, EvalNeg, EvalNegNeg
-//│ module TestLang() {
+//│ module TestLang {
 //│   fun eval: 'a -> Int
 //│ }
 //│ where
@@ -414,7 +414,7 @@ fun mk(n) = if n is
   1 then Neg(mk(n))
   _ then Add(mk(n), mk(n))
 TestLang.eval(mk(0))
-//│ fun mk: forall 'E. #Num -> 'E
+//│ fun mk: forall 'E. #Object -> 'E
 //│ Int
 //│ where
 //│   'E :> Add['E] | Lit | Neg['E]
@@ -423,7 +423,8 @@ TestLang.eval(mk(0))
 //│ const typing_unit6 = new TypingUnit6;
 //│ // Query 1
 //│ globalThis.mk = function mk(n) {
-//│   return n == 0 === true ? Lit(0) : n == 1 === true ? Neg(mk(n)) : Add(mk(n), mk(n));
+//│   let a;
+//│   return a = n, a === 0 ? Lit(0) : a === 1 ? Neg(mk(n)) : Add(mk(n), mk(n));
 //│ };
 //│ // Query 2
 //│ res = TestLang.eval(mk(0));
@@ -439,7 +440,8 @@ TestLang.eval(mk(0))
 //│ │ ├── Prelude: <empty>
 //│ │ ├── Code:
 //│ │ ├──   globalThis.mk = function mk(n) {
-//│ │ ├──     return n == 0 === true ? Lit(0) : n == 1 === true ? Neg(mk(n)) : Add(mk(n), mk(n));
+//│ │ ├──     let a;
+//│ │ ├──     return a = n, a === 0 ? Lit(0) : a === 1 ? Neg(mk(n)) : Add(mk(n), mk(n));
 //│ │ ├──   };
 //│ │ ├── Intermediate: [Function: mk]
 //│ │ └── Reply: [success] [Function: mk]
@@ -457,12 +459,24 @@ class Foo(x: Int)
 //│ class Foo(x: Int)
 
 
+<<<<<<<
 :e
 class Bar(x: Int, y: Int) extends Foo(x + y)
 //│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
 //│ ║  l.461: 	class Bar(x: Int, y: Int) extends Foo(x + y)
 //│ ╙──       	                                  ^^^^^^^^^^
 //│ class Bar(x: Int, y: Int)
+||||||| 99d688be
+:e
+class Bar(x: int, y: int) extends Foo(x + y)
+//│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
+//│ ║  l.459: 	class Bar(x: int, y: int) extends Foo(x + y)
+//│ ╙──       	                                  ^^^^^^^^^^
+//│ class Bar(x: int, y: int)
+=======
+class Bar(x: int, y: int) extends Foo(x + y)
+//│ class Bar(x: int, y: int) extends Foo
+>>>>>>>
 
 
 mixin AA(a: Int) {
@@ -489,7 +503,7 @@ mixin Fooo(x: Int) { fun f = [x, this.x] }
 //│   fun f: (Int, 'x,)
 //│ }
 //│ // Prelude
-//│ class TypingUnit14 {
+//│ class TypingUnit13 {
 //│   constructor() {
 //│   }
 //│   Fooo(base) {
@@ -512,15 +526,15 @@ mixin Fooo(x: Int) { fun f = [x, this.x] }
 //│     });
 //│   }
 //│ }
-//│ const typing_unit14 = new TypingUnit14;
-//│ globalThis.Fooo = typing_unit14.Fooo;
+//│ const typing_unit13 = new TypingUnit13;
+//│ globalThis.Fooo = typing_unit13.Fooo;
 //│ // End of generated code
 
 :js
 mixin Bazz(y: Int)
 //│ mixin Bazz(y: Int)
 //│ // Prelude
-//│ class TypingUnit15 {
+//│ class TypingUnit14 {
 //│   constructor() {
 //│   }
 //│   Bazz(base) {
@@ -535,17 +549,17 @@ mixin Bazz(y: Int)
 //│     });
 //│   }
 //│ }
-//│ const typing_unit15 = new TypingUnit15;
-//│ globalThis.Bazz = typing_unit15.Bazz;
+//│ const typing_unit14 = new TypingUnit14;
+//│ globalThis.Bazz = typing_unit14.Bazz;
 //│ // End of generated code
 
 :js
 module Barr extends Fooo(0), Bazz(1)
-//│ module Barr() {
+//│ module Barr {
 //│   fun f: (Int, 0,)
 //│ }
 //│ // Prelude
-//│ class TypingUnit16 {
+//│ class TypingUnit15 {
 //│   #Barr;
 //│   constructor() {
 //│   }
@@ -563,8 +577,8 @@ module Barr extends Fooo(0), Bazz(1)
 //│     return this.#Barr;
 //│   }
 //│ }
-//│ const typing_unit16 = new TypingUnit16;
-//│ globalThis.Barr = typing_unit16.Barr;
+//│ const typing_unit15 = new TypingUnit15;
+//│ globalThis.Barr = typing_unit15.Barr;
 //│ // End of generated code
 
 Barr.x
@@ -583,7 +597,7 @@ mixin Base {
   fun x = y
 }
 //│ ╔══[ERROR] identifier not found: y
-//│ ║  l.583: 	  fun x = y
+//│ ║  l.597: 	  fun x = y
 //│ ╙──       	          ^
 //│ mixin Base() {
 //│   fun x: error
@@ -594,7 +608,7 @@ mixin Base {
 
 :re
 module Test extends Base
-//│ module Test() {
+//│ module Test {
 //│   fun x: error
 //│ }
 //│ Runtime error:
@@ -610,9 +624,9 @@ mixin MC(c: Int)
 
 :js
 module MM extends MA(1), MB(2, 3), MC(4)
-//│ module MM()
+//│ module MM
 //│ // Prelude
-//│ class TypingUnit22 {
+//│ class TypingUnit21 {
 //│   #MM;
 //│   constructor() {
 //│   }
@@ -630,8 +644,8 @@ module MM extends MA(1), MB(2, 3), MC(4)
 //│     return this.#MM;
 //│   }
 //│ }
-//│ const typing_unit22 = new TypingUnit22;
-//│ globalThis.MM = typing_unit22.MM;
+//│ const typing_unit21 = new TypingUnit21;
+//│ globalThis.MM = typing_unit21.MM;
 //│ // End of generated code
 
 MM.a

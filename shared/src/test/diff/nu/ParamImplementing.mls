@@ -1,0 +1,64 @@
+:NewDefs
+
+
+trait T { fun x: int }
+mixin M(x: bool)
+//│ trait T {
+//│   fun x: int
+//│ }
+//│ mixin M(x: bool)
+
+:e
+class C extends T, M(false)
+//│ ╔══[ERROR] Type mismatch in type declaration:
+//│ ║  l.12: 	class C extends T, M(false)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── reference of type `False` is not an instance of type `bool`
+//│ ║  l.12: 	class C extends T, M(false)
+//│ ║        	                     ^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.5: 	mixin M(x: bool)
+//│ ╙──     	           ^^^^
+//│ ╔══[ERROR] Type mismatch in reference:
+//│ ║  l.12: 	class C extends T, M(false)
+//│ ║        	                     ^^^^^
+//│ ╟── reference of type `False` is not an instance of type `int`
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.4: 	trait T { fun x: int }
+//│ ║       	                 ^^^
+//│ ╟── from signature of member `x`:
+//│ ║  l.4: 	trait T { fun x: int }
+//│ ╙──     	              ^^^^^^
+//│ class C extends T
+
+
+trait T { fun x: int }
+mixin M(x: number)
+//│ trait T {
+//│   fun x: int
+//│ }
+//│ mixin M(x: number)
+
+class C extends T, M(0)
+//│ ╔══[ERROR] Type mismatch in type declaration:
+//│ ║  l.42: 	class C extends T, M(0)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── integer literal of type `0` is not an instance of type `number`
+//│ ║  l.42: 	class C extends T, M(0)
+//│ ║        	                     ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.36: 	mixin M(x: number)
+//│ ╙──      	           ^^^^^^
+//│ ╔══[ERROR] Type mismatch in integer literal:
+//│ ║  l.42: 	class C extends T, M(0)
+//│ ║        	                     ^
+//│ ╟── integer literal of type `0` is not an instance of type `int`
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.35: 	trait T { fun x: int }
+//│ ║        	                 ^^^
+//│ ╟── from signature of member `x`:
+//│ ║  l.35: 	trait T { fun x: int }
+//│ ╙──      	              ^^^^^^
+//│ class C extends T
+
+

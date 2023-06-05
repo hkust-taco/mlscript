@@ -81,6 +81,7 @@ final class TsTypegenCodeBuilder {
       case (classInfo: ClassSymbol) => addTypeGenClassDef(classInfo, methods)
       case (aliasInfo: TypeAliasSymbol) => addTypeGenTypeAlias(aliasInfo)
       case (traitInfo: TraitSymbol) => addTypegenTraitDef(traitInfo, methods)
+      case _ => ??? // TODO
     }
   }
 
@@ -573,7 +574,7 @@ final class TsTypegenCodeBuilder {
         }.getOrElse(SourceCode(tvarName))
       case Constrained(base, tvbs, where) =>
         throw CodeGenError(s"Cannot generate type for `where` clause $tvbs $where")
-      case _: Splice | _: TypeTag | _: PolyType =>
+      case _: Splice | _: TypeTag | _: PolyType | _: Selection =>
         throw CodeGenError(s"Cannot yet generate type for: $mlType")
     }
   }

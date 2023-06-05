@@ -1,0 +1,39 @@
+:NewDefs
+:NoJS
+
+// FIXME
+type Tree[A] = Node[A] | Empty
+module Empty {
+  fun contains(wanted) = false
+}
+class Node[A](value: int, left: Tree[A], right: Tree[A]) {
+  fun contains(wanted) = if wanted
+    <= value then left.find(wanted)
+    >= value then right.find(wanted)
+    else true
+}
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+
+// FIXME
+type Tree[A] = Node[A] | Empty
+module Empty {
+  fun contains(wanted) = false
+}
+class Node[A](value: int, left: Tree[A], right: Tree[A]) {
+  fun contains(wanted) = if wanted
+    <= value then left.find(wanted)
+    >= value then right.find(wanted)
+    _ true
+}
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+
+// FIXME
+fun foo(x, y) = if x is
+  Z() and y is O() then 0 else 1
+//│ ╔══[PARSE ERROR] Unexpected 'else' keyword here
+//│ ║  l.32: 	  Z() and y is O() then 0 else 1
+//│ ╙──      	                          ^^^^
+//│ ╔══[ERROR] Illegal pattern `Z`
+//│ ║  l.32: 	  Z() and y is O() then 0 else 1
+//│ ╙──      	  ^
+//│ fun foo: (anything, anything,) -> error

@@ -68,3 +68,16 @@ fun f(p) =
 //│ ╙──
 //│ f: (None | Some) -> (0 | error)
 
+class Union(a, b)
+//│ Defined class Union
+//│ Union: ('a, 'b,) -> (Union & {a: 'a, b: 'b})
+
+// Name conflict between the scrutinee and the positionals.
+// Desugar result: let tmp13 = x in case tmp13 of { Union => let x = (tmp13).a in let y = (tmp13).b in x }
+fun hmm(x) =
+  if x is Union(x, y) then x
+//│ hmm: (Union & {a: 'a}) -> 'a
+
+hmm(Union(1, 2))
+//│ res: 1
+

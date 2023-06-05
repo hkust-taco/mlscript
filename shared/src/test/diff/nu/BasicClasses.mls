@@ -60,9 +60,9 @@ class C {
   fun id(x) = x
   fun const(x) = id
 }
-//│ class C() {
-//│   fun const: forall 'a. anything -> 'a -> 'a
-//│   fun id: forall 'a. 'a -> 'a
+//│ class C {
+//│   fun const: anything -> 'a -> 'a
+//│   fun id: 'a -> 'a
 //│ }
 
 
@@ -167,7 +167,7 @@ b.me
 
 :e
 b.getBaseTypo
-//│ ╔══[ERROR] Class `Base1` does not contain member `getBaseTypo`
+//│ ╔══[ERROR] Type `Base1` does not contain member `getBaseTypo`
 //│ ║  l.169: 	b.getBaseTypo
 //│ ╙──       	 ^^^^^^^^^^^^
 //│ error

@@ -111,23 +111,29 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
     Var(clsNme.name + "#" + tparamNme.name)
   
   def clsNameToNomTag(td: NuTypeDef)(prov: TypeProvenance, ctx: Ctx): ClassTag = {
-    require((td.kind is Cls) || (td.kind is Nms), td.kind)
+    require((td.kind is Cls) || (td.kind is Nms) || (td.kind is Trt), td.kind)
     ClassTag(Var(td.nme.name),
         // ctx.allBaseClassesOf(td.nme.name)
-        Set.single(TypeName("Object")) + TypeName("Eql") // TODO superclasses
+        Set.single(TN("Object")) + TN("Eql") // TODO superclasses
+          | ctx.tyDefs2.get(td.nme.name).map(_.inheritedTags).getOrElse(Set.empty)
       )(prov)
   }
   def clsNameToNomTag(td: TypeDef)(prov: TypeProvenance, ctx: Ctx): ClassTag = {
     require(td.kind is Cls)
     if (newDefs && td.kind.str.isCapitalized) ClassTag(Var(td.nme.name),
       // ctx.allBaseClassesOf(td.nme.name))(prov)
-      Set.single(TypeName("Eql")) + TypeName("Eql") // TODO superclasses
+      Set.single(TN("Object")) + TN("Eql") // TODO superclasses
+        | ctx.tyDefs2.get(td.nme.name).map(_.inheritedTags).getOrElse(Set.empty)
       )(prov)
     else ClassTag(Var(td.nme.name), ctx.allBaseClassesOf(td.nme.name))(prov)
   }
   def trtNameToNomTag(td: TypeDef)(prov: TypeProvenance, ctx: Ctx): TraitTag = {
     require(td.kind is Trt)
-    TraitTag(Var(td.nme.name))(prov)
+    TraitTag(Var(td.nme.name), Set.empty)(prov)
+  }
+  def trtNameToNomTag(td: NuTypeDef)(prov: TypeProvenance, ctx: Ctx): TraitTag = {
+    require(td.kind is Trt)
+    TraitTag(Var(td.nme.name), ctx.tyDefs2.get(td.nme.name).map(_.inheritedTags).getOrElse(Set.empty))(prov)
   }
   
   def baseClassesOf(tyd: mlscript.TypeDef): Set[TypeName] =
@@ -277,6 +283,9 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
                   case Als => 
                     err(msg"cannot inherit from a type alias", prov.loco)
                     false
+                  case Mxn =>
+                    err(msg"cannot inherit from a mixin", prov.loco)
+                    false
                 }
               case ComposedType(false, l, r) => checkParents(l) && checkParents(r)
               case ComposedType(true, l, r) =>
@@ -366,12 +375,14 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
                       PolymorphicType(MinLevel, FunctionType(
                         singleTup(tv), tv & nomTag & RecordType.mk(tparamTags)(noProv)
                       )(originProv(td.nme.toLoc, "trait constructor", td.nme.name)))
+                    case _ => ??? // TODO
                   }
                   ctx += n.name -> VarSymbol(ctor, Var(n.name))
               }
               true
             }
             checkParents(td.bodyTy) && checkCycle(td.bodyTy)(Set.single(L(td.nme))) && checkAbstractAddCtors
+          case _ => ??? // TODO
         }
         def checkRegular(ty: SimpleType)(implicit reached: Map[Str, Ls[SimpleType]]): Bool = ty match {
           case tr @ TypeRef(defn, targs) => reached.get(defn.name) match {
@@ -528,7 +539,7 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
             case _ => Nil
           }
           def go(md: MethodDef[_ <: Term \/ Type]): (Str, MethodType) = {
-            val thisTag = TraitTag(Var("this"))(noProv) // or Skolem?!
+            val thisTag = TraitTag(Var("this"), Set.empty)(noProv) // or Skolem?!
             // val thisTag = SkolemTag(thisCtx.lvl/*TODO correct?*/, Var("this"))(noProv)
             val thisTy = thisTag & tr
             thisCtx += "this" -> VarSymbol(thisTy, Var("this"))
@@ -562,7 +573,7 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
             }
             rhs.fold(_ => defined, _ => declared) += nme.name -> nme.toLoc
             val dummyTargs2 = tparams.map(p =>
-              TraitTag(Var(p.name))(originProv(p.toLoc, "method type parameter", p.name))) // FIXME or Skolem?!
+              TraitTag(Var(p.name), Set.empty)(originProv(p.toLoc, "method type parameter", p.name))) // FIXME or Skolem?!
             val targsMap2 = targsMap ++ tparams.iterator.map(_.name).zip(dummyTargs2).toMap
             val reverseRigid2 = reverseRigid ++ dummyTargs2.map(t => t ->
               freshVar(t.prov, N, S(t.id.idStr))(thisCtx.lvl + 1)) +

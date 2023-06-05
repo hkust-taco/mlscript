@@ -5,7 +5,7 @@ type I = Int
 //│ type I = Int
 
 class CI1
-//│ class CI1()
+//│ class CI1
 
 // :e
 type AI1 = Array[Int]
@@ -15,14 +15,25 @@ type AI2 = Array<Int>
 //│ type AI2 = Array[Int]
 
 :e
+<<<<<<<
 type AI3(n) = Array[Int]
 //│ ╔══[ERROR] Class parameters currently need type annotations
 //│ ║  l.18: 	type AI3(n) = Array[Int]
 //│ ╙──      	         ^
 //│ ╔══[ERROR] type alias definitions cannot have value parameters
 //│ ║  l.18: 	type AI3(n) = Array[Int]
-//│ ╙──      	        ^^^
-//│ type AI3 = Array[Int]
+||||||| 99d688be
+type AI3(n) = Array[int]
+//│ ╔══[ERROR] Class parameters currently need type annotations
+//│ ║  l.18: 	type AI3(n) = Array[int]
+//│ ╙──      	         ^
+//│ ╔══[ERROR] type alias definitions cannot have value parameters
+//│ ║  l.18: 	type AI3(n) = Array[int]
+=======
+type AI3(n) = Array[int]
+//│ ╔══[ERROR] Type alias definitions cannot have value parameters
+//│ ║  l.18: 	type AI3(n) = Array[int]
+>>>>>>>
 
 // :e
 type AI3[A] = Array<A>

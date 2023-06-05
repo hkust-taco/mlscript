@@ -1,6 +1,6 @@
 package mlscript
 
-import scala.collection.mutable.{Map => MutMap, Set => MutSet, LinkedHashMap, LinkedHashSet}
+import scala.collection.mutable.{Map => MutMap, SortedMap => MutSortMap, Set => MutSet, LinkedHashMap, LinkedHashSet}
 import scala.collection.immutable.{SortedMap, SortedSet}
 import scala.annotation.tailrec
 import mlscript.utils._, shorthands._
@@ -81,6 +81,7 @@ abstract class TyperHelpers { Typer: Typer =>
 
   def substLike(ty: TL, map: Map[SimpleType, SimpleType], substInMap: Bool): TL = ty match {
     case ty: ST => subst(ty, map, substInMap)
+    case _ => ??? // TODO
   }
   def subst(st: SimpleType, map: Map[SimpleType, SimpleType], substInMap: Bool = false)
         (implicit cache: MutMap[TypeVariable, SimpleType] = MutMap.empty): SimpleType =
@@ -250,6 +251,12 @@ abstract class TyperHelpers { Typer: Typer =>
   
   
   trait SimpleTypeImpl { self: SimpleType =>
+    
+    // TODO eventually find a way of statically getting rid of those
+    def assertTV: TV = this match {
+      case tv: TV => tv
+      case _ => lastWords(s"$this was not a type variable")
+    }
     
     def showProvOver(enabled: Bool)(str: Str): Str =
       if (enabled) str + prov.toString
@@ -742,9 +749,10 @@ abstract class TyperHelpers { Typer: Typer =>
       def childrenPolField(pol: PolMap)(fld: FieldType): List[PolMap -> SimpleType] =
         fld.lb.map(pol.contravar -> _).toList ::: pol.covar -> fld.ub :: Nil
       def childrenPolMem(m: NuMember): List[PolMap -> SimpleType] = m match {
-        case NuParam(nme, ty, isType) => childrenPolField(PolMap.pos)(ty) // TODO invariant when mutable
+        case NuParam(nme, ty) => childrenPolField(PolMap.pos)(ty) // TODO invariant when mutable
         case TypedNuFun(level, fd, ty) => pol -> ty :: Nil
         case td: TypedNuDecl => TypedTypingUnit(td :: Nil, N).childrenPol(pol: PolMap) // TODO refactor
+        // case NuTypeParam(nme, ty) => childrenPolField(PolMap.pos)(ty)
       }
       this match {
         case tv @ AssignedVariable(ty) =>
@@ -773,23 +781,34 @@ abstract class TyperHelpers { Typer: Typer =>
           cs.flatMap(vbs => PolMap.pos -> vbs._1 :: PolMap.posAtNeg -> vbs._2 :: Nil) ::: pol -> bod :: Nil
         case OtherTypeLike(tu) =>
           // tu.entities.flatMap(_.childrenPol) ::: tu.result.toList
-          val ents = tu.entities.flatMap {
+          val ents = tu.implementedMembers.flatMap {
             case ta: TypedNuAls =>
               // Q: PolMap.neu or pol.invar?!
               ta.tparams.map(pol.invar -> _._2) ::: pol -> ta.body :: Nil
             case tf: TypedNuFun =>
               PolMap.pos -> tf.bodyType :: Nil
             case mxn: TypedNuMxn =>
+              mxn.tparams.iterator.map(pol.invar -> _._2) ++
               mxn.members.valuesIterator.flatMap(childrenPolMem) ++
-                S(pol.contravar -> mxn.superTV) ++
-                S(pol.contravar -> mxn.thisTV)
+                S(pol.contravar -> mxn.superTy) ++
+                S(pol.contravar -> mxn.thisTy)
             case cls: TypedNuCls =>
               cls.tparams.iterator.map(pol.invar -> _._2) ++
               // cls.params.flatMap(p => childrenPolField(pol.invar)(p._2))
                 cls.params.flatMap(p => childrenPolField(PolMap.pos)(p._2)) ++
                 cls.members.valuesIterator.flatMap(childrenPolMem) ++
                 S(pol.contravar -> cls.thisTy) ++
-                S(pol.covar -> cls.instanceType)
+                S(pol.covar -> cls.sign) ++
+                S(pol.covar -> cls.instanceType) ++
+                cls.parentTP.valuesIterator.flatMap(childrenPolMem)
+            case trt: TypedNuTrt =>
+              trt.tparams.iterator.map(pol.invar -> _._2) ++
+                trt.members.valuesIterator.flatMap(childrenPolMem) ++
+                S(pol.contravar -> trt.thisTy) ++
+                S(pol.covar -> trt.sign) ++
+                trt.parentTP.valuesIterator.flatMap(childrenPolMem)
+            case prm: NuParam => childrenPolField(pol)(prm.ty)
+            case TypedNuDummy(d) => N
           }
           ents ::: tu.result.toList.map(pol -> _)
     }}
@@ -836,8 +855,10 @@ abstract class TyperHelpers { Typer: Typer =>
     }
     
     private def childrenMem(m: NuMember): List[ST] = m match {
-      case NuParam(nme, ty, isType) => ty.lb.toList ::: ty.ub :: Nil
+      case NuParam(nme, ty) => ty.lb.toList ::: ty.ub :: Nil
       case TypedNuFun(level, fd, ty) => ty :: Nil
+      case TypedNuDummy(d) => Nil
+      case _ => ??? // TODO
     }
     def children(includeBounds: Bool): List[SimpleType] = this match {
       case tv @ AssignedVariable(ty) => if (includeBounds) ty :: Nil else Nil
@@ -862,22 +883,32 @@ abstract class TyperHelpers { Typer: Typer =>
       case SpliceType(fs) => fs.flatMap{ case L(l) => l :: Nil case R(r) => r.lb.toList ::: r.ub :: Nil}
       case OtherTypeLike(tu) =>
         // tu.childrenPol(PolMap.neu).map(tp => tp._1)
-        val ents = tu.entities.flatMap {
+        val ents = tu.implementedMembers.flatMap {
           case tf: TypedNuFun =>
             tf.bodyType :: Nil
           case als: TypedNuAls =>
             als.tparams.iterator.map(_._2) ++ S(als.body)
           case mxn: TypedNuMxn =>
+            mxn.tparams.iterator.map(_._2) ++
             mxn.members.valuesIterator.flatMap(childrenMem) ++
-              S(mxn.superTV) ++
-              S(mxn.thisTV)
+              S(mxn.superTy) ++
+              S(mxn.thisTy)
           case cls: TypedNuCls =>
             cls.tparams.iterator.map(_._2) ++
-            // cls.params.flatMap(p => childrenPolField(pol.invar)(p._2))
               cls.params.flatMap(p => p._2.lb.toList ::: p._2.ub :: Nil) ++
               cls.members.valuesIterator.flatMap(childrenMem) ++
               S(cls.thisTy) ++
+              S(cls.sign) ++
               S(cls.instanceType)
+          case trt: TypedNuTrt =>
+            trt.tparams.iterator.map(_._2) ++
+              trt.members.valuesIterator.flatMap(childrenMem) ++
+              S(trt.thisTy) ++
+              S(trt.sign) ++
+              trt.parentTP.valuesIterator.flatMap(childrenMem)
+          case p: NuParam =>
+            p.ty.lb.toList ::: p.ty.ub :: Nil
+          case TypedNuDummy(d) => Nil
         }
         ents ::: tu.result.toList
     }
@@ -966,7 +997,7 @@ abstract class TyperHelpers { Typer: Typer =>
       ctx.tyDefs2.get(defn.name).forall(info =>
         // * Object types do not need to be completed in order to be expanded
         info.kind.isInstanceOf[ObjDefKind]
-        || info.result.isDefined)
+        || info.isComputed)
     def expand(implicit ctx: Ctx, raise: Raise): SimpleType = {
       ctx.tyDefs2.get(defn.name) match {
         case S(info) =>
@@ -985,27 +1016,55 @@ abstract class TyperHelpers { Typer: Typer =>
     }
     def expandWith(paramTags: Bool)(implicit ctx: Ctx): SimpleType = //if (defn.name.isCapitalized) {
       ctx.tyDefs2.get(defn.name).map { info =>
+        lazy val mkTparamRcd = RecordType(info.tparams.lazyZip(targs).map {
+            case ((tn, tv, vi), ta) =>
+              val fldNme = defn.name + "#" + tn.name
+              // TODO also use computed variance info when available!
+              Var(fldNme).withLocOf(tn) -> FieldType.mk(vi.getOrElse(VarianceInfo.in), ta, ta)(provTODO)
+          })(provTODO)
         info.result match {
           case S(td: TypedNuAls) =>
             assert(td.tparams.size === targs.size)
             substSyntax(td.body)(td.tparams.lazyZip(targs).map {
               case (tp, ta) => SkolemTag(tp._2.level, tp._2)(noProv) -> ta
             }.toMap)
-          case _ =>
+          case S(td: TypedNuTrt) =>
+            assert(td.tparams.size === targs.size)
+            // println(s"EXP ${td.sign}")
+            val (freshenMap, _) = refreshHelper2(td, Var(td.name).withLoc(prov.loco), S(targs)) // infer ty args if not provided
+            val freshSelf = {
+              implicit val freshened: MutMap[TV, ST] = freshenMap
+              implicit val shadows: Shadows = Shadows.empty
+              td.sign.freshenAbove(td.level, rigidify = false)
+            }
+            // println(s"Fresh $freshSelf")
+            freshSelf & 
+              trtNameToNomTag(td.decl)(provTODO, ctx) &
+              mkTparamRcd
+          case S(td: TypedNuCls) =>
+            assert(td.tparams.size === targs.size)
+            val (freshenMap, _) = refreshHelper2(td, Var(td.name).withLoc(prov.loco), S(targs)) // infer ty args if not provided
+            val freshSelf = {
+              implicit val freshened: MutMap[TV, ST] = freshenMap
+              implicit val shadows: Shadows = Shadows.empty
+              td.sign.freshenAbove(td.level, rigidify = false)
+            }
+            clsNameToNomTag(td.decl)(provTODO, ctx) &
+              freshSelf &
+              mkTparamRcd
+          case _ => // * Case for when the type has not been completed yet
             info.decl match {
               case td: NuTypeDef if td.kind.isInstanceOf[ObjDefKind] =>
                 assert(td.tparams.size === targs.size)
                 clsNameToNomTag(td)(provTODO, ctx) &
-                  RecordType(info.tparams.lazyZip(targs).map {
-                    case ((tn, tv, vi), ta) => // TODO use vi
-                      val fldNme = td.nme.name + "#" + tn.name
-                      Var(fldNme).withLocOf(tn) -> FieldType(S(ta), ta)(provTODO)
-                  })(provTODO)
+                  mkTparamRcd
               case td: NuTypeDef if td.kind is Als =>
                 // * Definition was not forced yet, which indicates an error (hopefully)
                 lastWords("cannot expand unforced type alias")
               case d =>
-                wat("unexpected declaration in type reference", d)
+                // * Other kinds of type defs are not allowed to be used as types
+                // *  (an error should have been reported earlier)
+                errType
             }
         }
     }.getOrElse {
@@ -1142,27 +1201,36 @@ abstract class TyperHelpers { Typer: Typer =>
     def applyLike(pol: PolMap)(ty: TypeLike): Unit = ty match {
       case ty: ST => apply(pol)(ty)
       case OtherTypeLike(tu) =>
-        tu.entities.foreach(applyMem(pol))
+        tu.implementedMembers.foreach(applyMem(pol))
         tu.result.foreach(apply(pol))
     }
     def applyMem(pol: PolMap)(m: NuMember): Unit = m match {
       case TypedNuAls(level, td, tparams, body) =>
         tparams.iterator.foreach(tp => apply(pol.invar)(tp._2))
         apply(pol)(body)
-      case TypedNuCls(level, td, ttu, tparams, params, members, thisTy) =>
+      case TypedNuCls(level, td, tparams, params, members, thisTy, sign, _, ptps) =>
         tparams.iterator.foreach(tp => apply(pol.invar)(tp._2))
         params.foreach(p => applyField(pol)(p._2))
         members.valuesIterator.foreach(applyMem(pol))
-        // thisTy.foreach(apply(pol.invar)(_))
         apply(pol.contravar)(thisTy)
-      case TypedNuMxn(td, thisTV, superTV, tparams, params, members, ttu) =>
+        apply(pol.contravar)(sign)
+        ptps.valuesIterator.foreach(applyMem(pol))
+      case TypedNuTrt(level, td, tparams, members, thisTy, sign, _, ptps) => 
+        tparams.iterator.foreach(tp => apply(pol.invar)(tp._2))
+        members.valuesIterator.foreach(applyMem(pol))
+        apply(pol.contravar)(thisTy)
+        apply(pol.covar)(sign)
+        ptps.valuesIterator.foreach(applyMem(pol))
+      case TypedNuMxn(level, td, thisTy, superTy, tparams, params, members) =>
         tparams.iterator.foreach(tp => apply(pol.invar)(tp._2))
         params.foreach(p => applyField(pol)(p._2))
         members.valuesIterator.foreach(applyMem(pol))
-        apply(pol.contravar)(thisTV)
-        apply(pol.contravar)(superTV)
-      case NuParam(nme, ty, isType) => applyField(pol)(ty)
+        apply(pol.contravar)(thisTy)
+        apply(pol.contravar)(superTy)
+      case NuParam(nme, ty) => applyField(pol)(ty)
       case TypedNuFun(level, fd, ty) => apply(pol)(ty)
+      case TypedNuDummy(d) => ()
+      // case NuTypeParam(nme, ty) => applyField(pol)(ty)
     }
     def apply(pol: PolMap)(st: ST): Unit = st match {
       case tv @ AssignedVariable(ty) => apply(pol)(ty)

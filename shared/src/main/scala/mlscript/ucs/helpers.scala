@@ -84,34 +84,17 @@ object helpers {
     * @param bindings a list of bindings, 
     * @param body the final body
     */
-  def mkBindings(bindings: Ls[(Bool, Var, Term)], body: Term, defs: Set[Var]): Term = {
-    def rec(bindings: Ls[(Bool, Var, Term)], defs: Set[Var]): Term =
+  def mkBindings(bindings: Ls[LetBinding], body: Term, defs: Set[Var]): Term = {
+    def rec(bindings: Ls[LetBinding], defs: Set[Var]): Term =
       bindings match {
         case Nil => body
-        case (head @ (isRec, nameVar, value)) :: tail =>
-          if (defs.contains(head._2)) {
+        case LetBinding(_, isRec, nameVar, value) :: tail =>
+          if (defs.contains(nameVar)) {
             rec(tail, defs)
           } else {
-            Let(isRec, nameVar, value, rec(tail, defs + head._2))
+            Let(isRec, nameVar, value, rec(tail, defs + nameVar))
           }
       }
     rec(bindings, defs)
-  }
-
-  /**
-    * Generate a chain of field selection to the given scrutinee.
-    *
-    * @param scrutinee the pattern matching scrutinee
-    * @param fields a list of pairs from field names to binding names
-    * @param body the final body
-    */
-  def mkLetFromFields(scrutinee: Scrutinee, fields: Ls[Str -> Var], body: Term): Term = {
-    def rec(fields: Ls[Str -> Var]): Term =
-      fields match {
-        case Nil => body
-        case (field -> (aliasVar @ Var(alias))) :: tail =>
-          Let(false, aliasVar, Sel(scrutinee.reference, Var(field)).desugaredFrom(scrutinee.term), rec(tail))
-      }
-    rec(fields)
   }
 }

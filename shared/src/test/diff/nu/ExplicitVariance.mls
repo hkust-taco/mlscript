@@ -42,6 +42,11 @@ fun foo(x: Foo[int]): Foo[number] = x
 //│ fun foo: (x: Foo[int],) -> Foo[number]
 
 
+
+// * Note that not checking variance annotations is actually sound in MLscript,
+// *  but can be surprising for users, who will find type errors at the use sites.
+
+
 // :e // TODO check variance annotations!
 class Oops0[in A](x: A)
 //│ class Oops0[A](x: A)
@@ -49,5 +54,116 @@ class Oops0[in A](x: A)
 // :e // TODO check variance annotations!
 class Oops0[out A](x: A -> int)
 //│ class Oops0[A](x: A -> int)
+
+let o = Oops0(id)
+//│ let o: Oops0[nothing]
+//│ o
+//│   = Oops0 {}
+
+// * What happens is `Oops9{ A = nothing..'? }` is inferred for `o` (consistent with `A`'s covariance),
+// *  so all negative occurrences of `o.A` are viewed as `nothing` from the outside.
+o.x
+//│ int -> int
+//│ res
+//│     = [Function: id]
+
+// * Similarly, `Oops0[int]` here will expand to the equivalent `Oops0{ A = nothing..int }`
+(o : Oops0[int]).x
+//│ nothing -> int
+//│ res
+//│     = [Function: id]
+
+:e
+o.x(123)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.77: 	o.x(123)
+//│ ║        	^^^^^^^^
+//│ ╟── integer literal of type `123` is not an instance of type `int`
+//│ ║  l.77: 	o.x(123)
+//│ ║        	    ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.55: 	class Oops0[out A](x: A -> int)
+//│ ║        	                           ^^^
+//│ ╟── Note: type parameter A is defined at:
+//│ ║  l.55: 	class Oops0[out A](x: A -> int)
+//│ ╙──      	                ^
+//│ error | int
+//│ res
+//│     = 123
+
+:e
+(o : Oops0[int]).x(123)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.95: 	(o : Oops0[int]).x(123)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── integer literal of type `123` does not match type `nothing`
+//│ ║  l.95: 	(o : Oops0[int]).x(123)
+//│ ║        	                   ^^^
+//│ ╟── Note: type parameter A is defined at:
+//│ ║  l.55: 	class Oops0[out A](x: A -> int)
+//│ ╙──      	                ^
+//│ error | int
+//│ res
+//│     = 123
+
+
+class Oops1[out A](x: A -> A, y: A)
+//│ class Oops1[A](x: A -> A, y: A)
+
+let o = Oops1(id, 123)
+//│ let o: Oops1[123]
+//│ o
+//│   = Oops1 {}
+
+o.x
+//│ 'A -> (123 | 'A)
+//│ res
+//│     = [Function: id]
+
+:e
+o.x(123)
+//│ 123
+//│ res
+//│     = 123
+
+:re
+o.x(error) + 1
+//│ Int
+//│ res
+//│ Runtime error:
+//│   Error: unexpected runtime error
+
+
+class Oops2[out A](x: A -> A, y: A)
+//│ class Oops2[A](x: A -> A, y: A)
+
+let o = Oops2(id, 123)
+//│ let o: Oops2[123]
+//│ o
+//│   = Oops2 {}
+
+o.x
+//│ 'A -> (123 | 'A)
+//│ res
+//│     = [Function: id]
+
+:e
+o.x(123)
+//│ 123
+//│ res
+//│     = 123
+
+:e // * We will be able to make this work later, through `o.x : o.A -> o.A` and `o.y : o.A`
+o.x(o.y)
+//│ 123
+//│ res
+//│     = 123
+
+:re
+o.x(error) + 1
+//│ Int
+//│ res
+//│ Runtime error:
+//│   Error: unexpected runtime error
 
 

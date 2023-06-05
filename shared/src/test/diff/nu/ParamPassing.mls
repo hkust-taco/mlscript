@@ -5,12 +5,36 @@ class Foo(x: int)
 //│ class Foo(x: int)
 
 
-:e
+
 class Bar(x: int, y: int) extends Foo(x + y)
-//│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
+//│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.9: 	class Bar(x: int, y: int) extends Foo(x + y)
-//│ ╙──     	                                  ^^^^^^^^^^
-//│ class Bar(x: int, y: int)
+//│ ║       	                                      ^^^
+//│ ╟── type `int` is not an instance of type `Int`
+//│ ║  l.9: 	class Bar(x: int, y: int) extends Foo(x + y)
+//│ ║       	             ^^^
+//│ ╟── but it flows into reference with expected type `Int`
+//│ ║  l.9: 	class Bar(x: int, y: int) extends Foo(x + y)
+//│ ╙──     	                                      ^
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.9: 	class Bar(x: int, y: int) extends Foo(x + y)
+//│ ║       	                                      ^^^^^
+//│ ╟── type `int` is not an instance of type `Int`
+//│ ║  l.9: 	class Bar(x: int, y: int) extends Foo(x + y)
+//│ ║       	                     ^^^
+//│ ╟── but it flows into reference with expected type `Int`
+//│ ║  l.9: 	class Bar(x: int, y: int) extends Foo(x + y)
+//│ ╙──     	                                          ^
+//│ ╔══[ERROR] Type mismatch in type declaration:
+//│ ║  l.9: 	class Bar(x: int, y: int) extends Foo(x + y)
+//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── operator application of type `Int` is not an instance of type `int`
+//│ ║  l.9: 	class Bar(x: int, y: int) extends Foo(x + y)
+//│ ║       	                                      ^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.4: 	class Foo(x: int)
+//│ ╙──     	             ^^^
+//│ class Bar(x: int, y: int) extends Foo
 
 
 mixin AA(a: int) {

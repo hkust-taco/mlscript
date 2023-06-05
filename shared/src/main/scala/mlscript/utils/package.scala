@@ -56,6 +56,8 @@ package object utils {
       val ite = self.iterator
       if (ite.nonEmpty) ite.mkString(start, sep, end) else els
     }
+    def lnIndent(pre: String = "\t"): Str =
+      self.iterator.map("\n" + _.toString.indent(pre)).mkString
     def collectLast[B](f: Paf[A, B]): Opt[B] = self.iterator.collect(f).foldLeft[Opt[B]](N)((_, a) => S(a))
     def toSortedSet(implicit ord: Ordering[A]): SortedSet[A] =
       SortedSet.from(self)

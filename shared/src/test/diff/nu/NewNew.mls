@@ -1,0 +1,114 @@
+:NewDefs
+
+
+class Foo(x: int)
+//│ class Foo(x: int)
+
+let f = Foo(1)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.7: 	let f = Foo(1)
+//│ ║       	        ^^^^^^
+//│ ╟── integer literal of type `1` is not an instance of type `int`
+//│ ║  l.7: 	let f = Foo(1)
+//│ ║       	            ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.4: 	class Foo(x: int)
+//│ ╙──     	             ^^^
+//│ let f: Foo | error
+//│ f
+//│   = Foo {}
+
+let f = new Foo(1)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.21: 	let f = new Foo(1)
+//│ ║        	            ^^^^^^
+//│ ╟── integer literal of type `1` is not an instance of type `int`
+//│ ║  l.21: 	let f = new Foo(1)
+//│ ║        	                ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.4: 	class Foo(x: int)
+//│ ╙──     	             ^^^
+//│ let f: Foo | error
+//│ f
+//│   = Foo {}
+
+if f is Foo then 1 else 0
+//│ 0 | 1
+//│ res
+//│     = 1
+
+if f is Foo(a) then a else 0
+//│ 0 | int
+//│ res
+//│     = 1
+
+
+class Point[A](x: A, y: A)
+//│ class Point[A](x: A, y: A)
+
+let origin = new Point(0, 0)
+//│ let origin: Point[0]
+//│ origin
+//│        = Point {}
+
+// TODO
+let origin = Point[int](0, 0)
+//│ ╔══[ERROR] Type application syntax is not yet supported
+//│ ║  l.55: 	let origin = Point[int](0, 0)
+//│ ╙──      	             ^^^^^^^^^^
+//│ let origin: error
+//│ origin
+//│        = Point {}
+
+// TODO
+let origin = new Point[int](0, 0)
+//│ ╔══[PARSE ERROR] Unexpected application after `new` keyword
+//│ ║  l.64: 	let origin = new Point[int](0, 0)
+//│ ╙──      	                 ^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Currently unsupported `new` syntax
+//│ ║  l.64: 	let origin = new Point[int](0, 0)
+//│ ╙──      	             ^^^
+//│ let origin: error
+//│ origin
+//│        = {}
+
+
+// TODO
+new {}
+//│ ╔══[PARSE ERROR] Unexpected record after `new` keyword
+//│ ║  l.77: 	new {}
+//│ ╙──      	    ^^
+//│ ╔══[ERROR] Currently unsupported `new` syntax
+//│ ║  l.77: 	new {}
+//│ ╙──      	^^^
+//│ error
+//│ res
+//│     = {}
+
+// TODO
+new
+//│ ╔══[PARSE ERROR] Unexpected end of input; an expression was expected here
+//│ ║  l.89: 	new
+//│ ╙──      	   ^
+//│ ╔══[ERROR] Currently unsupported `new` syntax
+//│ ║  l.89: 	new
+//│ ╙──      	^^^
+//│ error
+//│ res
+//│     = {}
+
+// TODO
+new
+  x: 0
+//│ ╔══[PARSE ERROR] Unexpected type ascription after `new` keyword
+//│ ║  l.102: 	  x: 0
+//│ ╙──       	  ^
+//│ ╔══[ERROR] Currently unsupported `new` syntax
+//│ ║  l.101: 	new
+//│ ╙──       	^^^
+//│ error
+//│ res
+//│     = {}
+
+
+

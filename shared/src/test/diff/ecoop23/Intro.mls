@@ -7,7 +7,7 @@
 class Some<A>(value: A)
 module None
 //│ class Some[A](value: A)
-//│ module None()
+//│ module None
 
 
 
@@ -16,7 +16,7 @@ mixin ComparePoint {
     (lhs.x === rhs.x) && (lhs.y === rhs.y)
 }
 //│ mixin ComparePoint() {
-//│   fun compare: forall 'a 'b. ({x: Eql['a], y: Eql['b]}, {x: 'a, y: 'b},) -> Bool
+//│   fun compare: ({x: Eql['a], y: Eql['b]}, {x: 'a, y: 'b},) -> Bool
 //│ }
 
 
@@ -39,7 +39,7 @@ mixin CompareColored {
 }
 //│ mixin CompareColored() {
 //│   super: {compare: ('a, 'b,) -> Bool}
-//│   fun compare: forall 'color. ({color: {equals: 'color -> Bool}} & 'a, {color: 'color} & 'b,) -> Bool
+//│   fun compare: ({color: {equals: 'color -> Bool}} & 'a, {color: 'color} & 'b,) -> Bool
 //│ }
 
 
@@ -91,7 +91,7 @@ class MyPoint(x: Int, y: Int, color: Color, parent: Some[MyPoint] | None)
 
 
 module CompareMyPoint extends ComparePoint, CompareColored, CompareNested
-//│ module CompareMyPoint() {
+//│ module CompareMyPoint {
 //│   fun compare: ('a, 'b,) -> Bool
 //│ }
 //│ where

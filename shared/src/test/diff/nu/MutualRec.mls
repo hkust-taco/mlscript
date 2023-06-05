@@ -1,5 +1,4 @@
 :NewDefs
-:NoJS // TODO
 
 
 
@@ -7,28 +6,37 @@ class Foo()
 123
 //│ class Foo()
 //│ 123
+//│ res
+//│     = 123
 
 Foo
 //│ () -> Foo
+//│ res
+//│     = [Function (anonymous)] { class: [class Foo] }
 
 // TODO
 fun fooo(x) =
   class C(y, z)
   C(0, x)
 //│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.16: 	  class C(y, z)
+//│ ║  l.19: 	  class C(y, z)
 //│ ╙──      	          ^
 //│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.16: 	  class C(y, z)
+//│ ║  l.19: 	  class C(y, z)
 //│ ╙──      	             ^
 //│ fun fooo: error -> C
 
 
 
+:ge // FIXME; + re-enable JS in tests below
 fun foo = bar
 fun bar = foo
 //│ fun foo: nothing
 //│ fun bar: nothing
+//│ Code generation encountered an error:
+//│   unresolved symbol bar
+
+:NoJS // TODO
 
 foo(bar)
 //│ nothing
@@ -47,7 +55,6 @@ fun bar = {y: foo}
 //│ where
 //│   'foo :> {x: {y: 'foo}}
 
-// FIXME pretty-printing?
 foo
 //│ forall 'foo. 'foo
 //│   where
@@ -102,10 +109,10 @@ module Test0_1 {
 module Test0_2 {
   fun b = 123
 }
-//│ module Test0_1() {
+//│ module Test0_1 {
 //│   fun a: 123
 //│ }
-//│ module Test0_2() {
+//│ module Test0_2 {
 //│   fun b: 123
 //│ }
 
@@ -118,7 +125,7 @@ class Test0_1 {
 class Test0_2() {
   fun b = 123
 }
-//│ class Test0_1() {
+//│ class Test0_1 {
 //│   fun a: 123
 //│ }
 //│ class Test0_2() {
@@ -134,12 +141,12 @@ module Test1_2 {
   fun b = Test1_1.a
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.134: 	  fun b = Test1_1.a
+//│ ║  l.141: 	  fun b = Test1_1.a
 //│ ╙──       	                 ^^
-//│ module Test1_1() {
+//│ module Test1_1 {
 //│   fun a: error
 //│ }
-//│ module Test1_2() {
+//│ module Test1_2 {
 //│   fun b: error
 //│ }
 
@@ -155,17 +162,17 @@ class Test1_2 {
   fun b = Test1_1().a
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.155: 	  fun b = Test1_1().a
+//│ ║  l.162: 	  fun b = Test1_1().a
 //│ ╙──       	                   ^^
-//│ class Test1_1() {
+//│ class Test1_1 {
 //│   fun a: error
 //│ }
-//│ class Test1_2() {
+//│ class Test1_2 {
 //│   fun b: error
 //│ }
 
 
-// TODO check TV hygiene
+:e
 module Test2_1 {
   fun t2 = Test2_2
   fun a = Test2_2.b
@@ -178,15 +185,15 @@ module Test2_2 {
   fun e = Test2_1.n
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.177: 	  fun c = Test2_1.a
+//│ ║  l.184: 	  fun c = Test2_1.a
 //│ ╙──       	                 ^^
-//│ module Test2_1() {
+//│ module Test2_1 {
 //│   fun a: 123 | error
 //│   fun d: error
 //│   fun n: 456
 //│   fun t2: Test2_2
 //│ }
-//│ module Test2_2() {
+//│ module Test2_2 {
 //│   fun b: 123
 //│   fun c: error
 //│   fun e: error
@@ -198,14 +205,80 @@ Test2_1.t2.b
 Test2_1.a
 //│ 123 | error
 
-// FIXME
 Test2_1.d
 //│ error
 
 Test2_1.n
 //│ 456
 
-// TODO leverage type annotation to find type
+module Test2_1 {
+  fun t2 = Test2_2
+  fun a: int
+  fun a = Test2_2.b
+  fun d = Test2_2.e
+  fun n: int
+  fun n = 456
+}
+module Test2_2 {
+  fun b = 123
+  fun c = Test2_1.a
+  fun e = Test2_1.n
+}
+//│ ╔══[ERROR] Type mismatch in definition of method a:
+//│ ║  l.217: 	  fun a = Test2_2.b
+//│ ║         	      ^^^^^^^^^^^^^
+//│ ╟── integer literal of type `123` is not an instance of type `int`
+//│ ║  l.223: 	  fun b = 123
+//│ ║         	          ^^^
+//│ ╟── but it flows into field selection with expected type `int`
+//│ ║  l.217: 	  fun a = Test2_2.b
+//│ ║         	          ^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.216: 	  fun a: int
+//│ ║         	         ^^^
+//│ ╟── from signature of member `a`:
+//│ ║  l.216: 	  fun a: int
+//│ ╙──       	      ^^^^^^
+//│ ╔══[ERROR] Type mismatch in definition of method n:
+//│ ║  l.220: 	  fun n = 456
+//│ ║         	      ^^^^^^^
+//│ ╟── integer literal of type `456` is not an instance of type `int`
+//│ ║  l.220: 	  fun n = 456
+//│ ║         	          ^^^
+//│ ╟── but it flows into definition of method n with expected type `int`
+//│ ║  l.220: 	  fun n = 456
+//│ ║         	      ^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.219: 	  fun n: int
+//│ ║         	         ^^^
+//│ ╟── from signature of member `n`:
+//│ ║  l.219: 	  fun n: int
+//│ ╙──       	      ^^^^^^
+//│ module Test2_1 {
+//│   fun a: int
+//│   fun d: int
+//│   fun n: int
+//│   fun t2: Test2_2
+//│ }
+//│ module Test2_2 {
+//│   fun b: 123
+//│   fun c: int
+//│   fun e: int
+//│ }
+
+Test2_1.t2.b
+//│ 123
+
+Test2_1.a
+//│ int
+
+Test2_1.d
+//│ int
+
+Test2_1.n
+//│ int
+
+
 class Test2(n: int) {
   fun inc = Test3.inc(this)
 }
@@ -213,18 +286,18 @@ module Test3 {
   fun inc(t: Test2) = Test2(t.n + 1)
 }
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.213: 	  fun inc(t: Test2) = Test2(t.n + 1)
+//│ ║  l.286: 	  fun inc(t: Test2) = Test2(t.n + 1)
 //│ ║         	                            ^^^^^
 //│ ╟── type `int` is not an instance of type `Int`
-//│ ║  l.209: 	class Test2(n: int) {
+//│ ║  l.282: 	class Test2(n: int) {
 //│ ║         	               ^^^
 //│ ╟── but it flows into field selection with expected type `Int`
-//│ ║  l.213: 	  fun inc(t: Test2) = Test2(t.n + 1)
+//│ ║  l.286: 	  fun inc(t: Test2) = Test2(t.n + 1)
 //│ ╙──       	                            ^^^
 //│ class Test2(n: int) {
 //│   fun inc: Test2 | error
 //│ }
-//│ module Test3() {
+//│ module Test3 {
 //│   fun inc: (t: Test2,) -> (Test2 | error)
 //│ }
 

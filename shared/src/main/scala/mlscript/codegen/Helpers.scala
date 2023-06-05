@@ -56,6 +56,8 @@ object Helpers {
     case Where(bod, sts) => s"Where(${inspect(bod)}, ...)"
     case Forall(ps, bod) => s"Forall($ps, ${inspect(bod)})"
     case Inst(bod) => s"Inst(${inspect(bod)})"
+    case Eqn(lhs, rhs) => s"Ass(${inspect(lhs)}, ${inspect(rhs)})"
+    case Super() => "Super()"
   }
 
   def inspect(body: IfBody): Str = body match {
@@ -85,9 +87,9 @@ object Helpers {
         s"NuFunDef(${lt}, ${nme.name}, ${targs.mkString("[", ", ", "]")}, ${inspect(term)})"
       case NuFunDef(lt, nme, targs, R(ty)) =>
         s"NuFunDef(${lt}, ${nme.name}, ${targs.mkString("[", ", ", "]")}, $ty)"
-      case NuTypeDef(kind, nme, tparams, params, sig, parents, sup, ths, body) =>
+      case NuTypeDef(kind, nme, tparams, params, ctor, sig, parents, sup, ths, body) =>
         s"NuTypeDef(${kind.str}, ${nme.name}, ${tparams.mkString("(", ", ", ")")}, ${
-          inspect(params)}, ${parents.map(inspect).mkString("(", ", ", ")")}, $sup, $ths, ${inspect(body)})"
+          inspect(params.getOrElse(Tup(Nil)))}, ${parents.map(inspect).mkString("(", ", ", ")")}, $sup, $ths, ${inspect(body)})"
       case others => others.toString()
     }
     .mkString("TypingUnit(", ", ", ")")

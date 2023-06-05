@@ -11,7 +11,7 @@ class Derived0(n: Int) extends Base
 //│ ╙──     	                               ^^^^
 //│ class Derived0(n: Int)
 //│ Code generation encountered an error:
-//│   unresolved symbol Base
+//│   unresolved parent Base.
 
 
 mixin Base1(n: Num) {
@@ -38,7 +38,7 @@ mixin Derived1(n: Int) {
 //│ }
 
 
-class Test0 extends Base1(1/2), Derived1(1)
+class Test0() extends Base1(1/2), Derived1(1)
 //│ class Test0() {
 //│   fun foo: (Int, 1, #Num,)
 //│   fun original: Num
@@ -68,7 +68,7 @@ t.foo
 module Test1 extends Base1(1/2), Derived1(1) {
   fun n = this.n
 }
-//│ module Test1() {
+//│ module Test1 {
 //│   fun foo: (Int, 1, #Num,)
 //│   fun n: 1
 //│   fun original: Num

@@ -47,7 +47,7 @@ typeof(cls)
 mixin Base
 //│ mixin Base()
 
-class Derived extends Base
+class Derived() extends Base
 //│ class Derived()
 
 // * Strangely, we now get `{ class: [Function: Derived] }`

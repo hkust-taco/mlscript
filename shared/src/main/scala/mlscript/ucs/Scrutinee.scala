@@ -6,7 +6,7 @@ import mlscript.utils.shorthands._
 
 // The point is to remember where the scrutinee comes from.
 // Is it from nested patterns? Or is it from a `IfBody`?
-final case class Scrutinee(local: Opt[Var], term: Term)(val matchRootLoc: Opt[Loc]) {
+final case class Scrutinee(var local: Opt[Var], term: Term)(val matchRootLoc: Opt[Loc]) {
   def reference: SimpleTerm = local.getOrElse(term match {
     case term: SimpleTerm => term
     case _ => lastWords("`term` must be a `SimpleTerm` when `local` is empty")
@@ -18,7 +18,9 @@ final case class Scrutinee(local: Opt[Var], term: Term)(val matchRootLoc: Opt[Lo
     *
     * @return `Some` if the scrutinee is localized, otherwise, `None`.
     */
-  def asBinding: Opt[(Bool, Var, Term)] = local.map((false, _, term))
+  def asBinding: Opt[LetBinding] = local.map {
+    LetBinding(LetBinding.Kind.ScrutineeAlias, false, _, term)
+  }
 
   override def toString: String =
     (local match {

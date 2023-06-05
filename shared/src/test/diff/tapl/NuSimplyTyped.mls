@@ -1,0 +1,825 @@
+:NewParser
+:NewDefs
+
+let str = toString
+fun concat2(a, b) = concat(a)(b)
+fun concat3(a, b, c) = concat2(a, concat2(b, c))
+fun concat4(a, b, c, d) = concat2(a, concat3(b, c, d))
+fun concat5(a, b, c, d, e) = concat2(a, concat4(b, c, d, e))
+fun concat6(a, b, c, d, e, f) = concat2(a, concat5(b, c, d, e, f))
+fun concat7(a, b, c, d, e, f, g) = concat2(a, concat6(b, c, d, e, f, g))
+fun concat8(a, b, c, d, e, f, g, h) = concat2(a, concat7(b, c, d, e, f, g, h))
+fun par(a) = concat3("(", a, ")")
+//│ let str: anything -> #Str
+//│ fun concat2: (#Str, #Str,) -> #Str
+//│ fun concat3: (#Str, #Str, #Str,) -> #Str
+//│ fun concat4: (#Str, #Str, #Str, #Str,) -> #Str
+//│ fun concat5: (#Str, #Str, #Str, #Str, #Str,) -> #Str
+//│ fun concat6: (#Str, #Str, #Str, #Str, #Str, #Str,) -> #Str
+//│ fun concat7: (#Str, #Str, #Str, #Str, #Str, #Str, #Str,) -> #Str
+//│ fun concat8: (#Str, #Str, #Str, #Str, #Str, #Str, #Str, #Str,) -> #Str
+//│ fun par: #Str -> #Str
+//│ str
+//│     = [Function: toString]
+
+type Option[A] = Some[A] | None
+class Some[A](value: A)
+module None
+//│ type Option[A] = Some[A] | None
+//│ class Some[A](value: A)
+//│ module None
+
+type Result[A, B] = Ok[A] | Err[B]
+class Ok[A](value: A)
+class Err[A](message: A)
+//│ type Result[A, B] = Err[B] | Ok[A]
+//│ class Ok[A](value: A)
+//│ class Err[A](message: A)
+
+type Type = FunctionType | PrimitiveType
+class PrimitiveType(name: string)
+class FunctionType(lhs: Type, rhs: Type)
+//│ type Type = FunctionType | PrimitiveType
+//│ class PrimitiveType(name: string)
+//│ class FunctionType(lhs: Type, rhs: Type)
+
+// Helpers.
+fun _f(lhs, rhs) = FunctionType(lhs, rhs)
+fun _t(name) = PrimitiveType(name)
+//│ fun _f: (Type, Type,) -> FunctionType
+//│ fun _t: string -> PrimitiveType
+
+type Term = Lit | Var | Abs | App
+class Lit(tag: string, ty: Type)
+class Var(name: string)
+class Abs(lhs: Var, lty: Type, rhs: Term)
+class App(lhs: Term, rhs: Term)
+// class App(lhs: Term, rhs: Term): Term
+//│ type Term = Abs | App | Lit | Var
+//│ class Lit(tag: string, ty: Type)
+//│ class Var(name: string)
+//│ class Abs(lhs: Var, lty: Type, rhs: Term)
+//│ class App(lhs: Term, rhs: Term)
+
+type TreeMap[A] = Node[A] | Empty
+class Node[A](key: string, value: A, left: TreeMap[A], right: TreeMap[A])
+module Empty
+//│ type TreeMap[A] = Node[A] | Empty
+//│ class Node[A](key: string, value: A, left: TreeMap[A], right: TreeMap[A])
+//│ module Empty
+
+fun insert(t, k, v) =
+  if t is
+    Node(k', _, l, r) and
+      slt(k)(k') then Node(k', v, insert(l, k, v), r)
+      sgt(k)(k') then Node(k', v, l, insert(r, k, v))
+      _ then Node(k, v, l, r)
+    Empty then Node(k, v, Empty, Empty)
+fun find(t, k) =
+  if t is
+    Node(k', v, l, r) and
+      slt(k)(k') then find(l, k)
+      sgt(k)(k') then find(r, k)
+      _ then Some(v)
+    Empty then None
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.74: 	      slt(k)(k') then Node(k', v, insert(l, k, v), r)
+//│ ║        	      ^^^^^^^^^^
+//│ ╟── type `string` is not an instance of type `Str`
+//│ ║  l.65: 	class Node[A](key: string, value: A, left: TreeMap[A], right: TreeMap[A])
+//│ ║        	                   ^^^^^^
+//│ ╟── but it flows into reference with expected type `#Str`
+//│ ║  l.74: 	      slt(k)(k') then Node(k', v, insert(l, k, v), r)
+//│ ╙──      	             ^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.81: 	      slt(k)(k') then find(l, k)
+//│ ║        	      ^^^^^^^^^^
+//│ ╟── type `string` is not an instance of type `Str`
+//│ ║  l.65: 	class Node[A](key: string, value: A, left: TreeMap[A], right: TreeMap[A])
+//│ ║        	                   ^^^^^^
+//│ ╟── but it flows into reference with expected type `#Str`
+//│ ║  l.81: 	      slt(k)(k') then find(l, k)
+//│ ╙──      	             ^^
+//│ fun insert: forall 'A. (Empty | Node['A], nothing, 'A,) -> Node['A]
+//│ fun find: forall 'A0. (Empty | Node['A0], #Str,) -> (None | Some['A0])
+
+fun showType(ty) =
+  if ty is
+    FunctionType(PrimitiveType(name), rhs) then concat3(name, " -> ", showType(rhs))
+    FunctionType(lhs, rhs) then concat4("(", showType(lhs), ") -> ", showType(rhs))
+    PrimitiveType(name) then name
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.108: 	    FunctionType(PrimitiveType(name), rhs) then concat3(name, " -> ", showType(rhs))
+//│ ║         	                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `string` is not an instance of type `Str`
+//│ ║  l.40: 	class PrimitiveType(name: string)
+//│ ║        	                          ^^^^^^
+//│ ╟── but it flows into reference with expected type `#Str`
+//│ ║  l.108: 	    FunctionType(PrimitiveType(name), rhs) then concat3(name, " -> ", showType(rhs))
+//│ ║         	                                                        ^^^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.5: 	fun concat2(a, b) = concat(a)(b)
+//│ ║       	                           ^
+//│ ╟── from reference:
+//│ ║  l.6: 	fun concat3(a, b, c) = concat2(a, concat2(b, c))
+//│ ╙──     	                               ^
+//│ ╔══[ERROR] Type mismatch in definition:
+//│ ║  l.106: 	fun showType(ty) =
+//│ ║         	    ^^^^^^^^^^^^^^
+//│ ║  l.107: 	  if ty is
+//│ ║         	^^^^^^^^^^
+//│ ║  l.108: 	    FunctionType(PrimitiveType(name), rhs) then concat3(name, " -> ", showType(rhs))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.109: 	    FunctionType(lhs, rhs) then concat4("(", showType(lhs), ") -> ", showType(rhs))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.110: 	    PrimitiveType(name) then name
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `string` is not an instance of type `Str`
+//│ ║  l.40: 	class PrimitiveType(name: string)
+//│ ║        	                          ^^^^^^
+//│ ╟── but it flows into reference with expected type `#Str`
+//│ ║  l.107: 	  if ty is
+//│ ║         	     ^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.5: 	fun concat2(a, b) = concat(a)(b)
+//│ ║       	                              ^
+//│ ╟── from application:
+//│ ║  l.109: 	    FunctionType(lhs, rhs) then concat4("(", showType(lhs), ") -> ", showType(rhs))
+//│ ╙──       	                                                                     ^^^^^^^^^^^^^
+//│ fun showType: (FunctionType | PrimitiveType) -> (#Str | error | string)
+
+showType(_t("int"))
+showType(_f(_t("int"), _t("bool")))
+showType(_f(_f(_t("int"), _t("bool")), _t("bool")))
+showType(_f(_t("bool"), _f(_t("int"), _t("bool"))))
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.151: 	showType(_t("int"))
+//│ ║         	         ^^^^^^^^^
+//│ ╟── string literal of type `"int"` is not an instance of type `string`
+//│ ║  l.151: 	showType(_t("int"))
+//│ ║         	            ^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.40: 	class PrimitiveType(name: string)
+//│ ║        	                          ^^^^^^
+//│ ╟── from reference:
+//│ ║  l.48: 	fun _t(name) = PrimitiveType(name)
+//│ ╙──      	                             ^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.152: 	showType(_f(_t("int"), _t("bool")))
+//│ ║         	            ^^^^^^^^^
+//│ ╟── string literal of type `"int"` is not an instance of type `string`
+//│ ║  l.152: 	showType(_f(_t("int"), _t("bool")))
+//│ ║         	               ^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.40: 	class PrimitiveType(name: string)
+//│ ║        	                          ^^^^^^
+//│ ╟── from reference:
+//│ ║  l.48: 	fun _t(name) = PrimitiveType(name)
+//│ ╙──      	                             ^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.152: 	showType(_f(_t("int"), _t("bool")))
+//│ ║         	                       ^^^^^^^^^^
+//│ ╟── string literal of type `"bool"` is not an instance of type `string`
+//│ ║  l.152: 	showType(_f(_t("int"), _t("bool")))
+//│ ║         	                          ^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.40: 	class PrimitiveType(name: string)
+//│ ║        	                          ^^^^^^
+//│ ╟── from reference:
+//│ ║  l.48: 	fun _t(name) = PrimitiveType(name)
+//│ ╙──      	                             ^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.153: 	showType(_f(_f(_t("int"), _t("bool")), _t("bool")))
+//│ ║         	               ^^^^^^^^^
+//│ ╟── string literal of type `"int"` is not an instance of type `string`
+//│ ║  l.153: 	showType(_f(_f(_t("int"), _t("bool")), _t("bool")))
+//│ ║         	                  ^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.40: 	class PrimitiveType(name: string)
+//│ ║        	                          ^^^^^^
+//│ ╟── from reference:
+//│ ║  l.48: 	fun _t(name) = PrimitiveType(name)
+//│ ╙──      	                             ^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.153: 	showType(_f(_f(_t("int"), _t("bool")), _t("bool")))
+//│ ║         	                          ^^^^^^^^^^
+//│ ╟── string literal of type `"bool"` is not an instance of type `string`
+//│ ║  l.153: 	showType(_f(_f(_t("int"), _t("bool")), _t("bool")))
+//│ ║         	                             ^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.40: 	class PrimitiveType(name: string)
+//│ ║        	                          ^^^^^^
+//│ ╟── from reference:
+//│ ║  l.48: 	fun _t(name) = PrimitiveType(name)
+//│ ╙──      	                             ^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.153: 	showType(_f(_f(_t("int"), _t("bool")), _t("bool")))
+//│ ║         	                                       ^^^^^^^^^^
+//│ ╟── string literal of type `"bool"` is not an instance of type `string`
+//│ ║  l.153: 	showType(_f(_f(_t("int"), _t("bool")), _t("bool")))
+//│ ║         	                                          ^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.40: 	class PrimitiveType(name: string)
+//│ ║        	                          ^^^^^^
+//│ ╟── from reference:
+//│ ║  l.48: 	fun _t(name) = PrimitiveType(name)
+//│ ╙──      	                             ^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.154: 	showType(_f(_t("bool"), _f(_t("int"), _t("bool"))))
+//│ ║         	            ^^^^^^^^^^
+//│ ╟── string literal of type `"bool"` is not an instance of type `string`
+//│ ║  l.154: 	showType(_f(_t("bool"), _f(_t("int"), _t("bool"))))
+//│ ║         	               ^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.40: 	class PrimitiveType(name: string)
+//│ ║        	                          ^^^^^^
+//│ ╟── from reference:
+//│ ║  l.48: 	fun _t(name) = PrimitiveType(name)
+//│ ╙──      	                             ^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.154: 	showType(_f(_t("bool"), _f(_t("int"), _t("bool"))))
+//│ ║         	                           ^^^^^^^^^
+//│ ╟── string literal of type `"int"` is not an instance of type `string`
+//│ ║  l.154: 	showType(_f(_t("bool"), _f(_t("int"), _t("bool"))))
+//│ ║         	                              ^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.40: 	class PrimitiveType(name: string)
+//│ ║        	                          ^^^^^^
+//│ ╟── from reference:
+//│ ║  l.48: 	fun _t(name) = PrimitiveType(name)
+//│ ╙──      	                             ^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.154: 	showType(_f(_t("bool"), _f(_t("int"), _t("bool"))))
+//│ ║         	                                      ^^^^^^^^^^
+//│ ╟── string literal of type `"bool"` is not an instance of type `string`
+//│ ║  l.154: 	showType(_f(_t("bool"), _f(_t("int"), _t("bool"))))
+//│ ║         	                                         ^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.40: 	class PrimitiveType(name: string)
+//│ ║        	                          ^^^^^^
+//│ ╟── from reference:
+//│ ║  l.48: 	fun _t(name) = PrimitiveType(name)
+//│ ╙──      	                             ^^^^
+//│ #Str | error | string
+//│ res
+//│     = 'int'
+//│ res
+//│     = 'int -> bool'
+//│ res
+//│     = '(int -> bool) -> bool'
+//│ res
+//│     = 'bool -> int -> bool'
+
+fun typeEqual(t1, t2) =
+  if
+    t1 is PrimitiveType(name1) and t2 is PrimitiveType(name2) then eq(name1)(name2)
+    t1 is FunctionType(lhs1, rhs1) and t2 is FunctionType(lhs2, rhs2) then
+      typeEqual(lhs1, lhs2) and typeEqual(rhs1, rhs2)
+    _ then false
+//│ fun typeEqual: (#Object, #Object,) -> Bool
+
+fun showTerm(t) =
+  if t is
+    Lit(tag, _) then toString(tag)
+    Var(name) then toString(name)
+    Abs(lhs, ty, rhs) then concat6("&", showTerm(lhs), ": ", showType(ty), " => ", showTerm(rhs))
+    App(Abs(lhs0, ty, lhs1), rhs) then
+      concat5("((", showTerm(Abs(lhs0, ty, rhs)), ") ", showTerm(rhs), ")")
+    App(lhs, rhs) then par(concat3(showTerm(lhs), " ", showTerm(rhs)))
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.285: 	    Abs(lhs, ty, rhs) then concat6("&", showTerm(lhs), ": ", showType(ty), " => ", showTerm(rhs))
+//│ ║         	                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `string` is not an instance of type `Str`
+//│ ║  l.40: 	class PrimitiveType(name: string)
+//│ ║        	                          ^^^^^^
+//│ ╟── but it flows into application with expected type `#Str`
+//│ ║  l.285: 	    Abs(lhs, ty, rhs) then concat6("&", showTerm(lhs), ": ", showType(ty), " => ", showTerm(rhs))
+//│ ║         	                                                             ^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.5: 	fun concat2(a, b) = concat(a)(b)
+//│ ║       	                           ^
+//│ ╟── from reference:
+//│ ║  l.9: 	fun concat6(a, b, c, d, e, f) = concat2(a, concat5(b, c, d, e, f))
+//│ ╙──     	                                                         ^
+//│ fun showTerm: (Abs | App | Lit | Var) -> (#Str | error)
+
+showTerm(Var("x"))
+showTerm(Abs(Var("x"), _t("int"), Var("y")))
+showTerm(App(Var("x"), Var("y")))
+showTerm(App(Abs(Var("x"), _t("int"), Var("y")), Var("z")))
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.306: 	showTerm(Var("x"))
+//│ ║         	         ^^^^^^^^
+//│ ╟── string literal of type `"x"` is not an instance of type `string`
+//│ ║  l.306: 	showTerm(Var("x"))
+//│ ║         	             ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.54: 	class Var(name: string)
+//│ ╙──      	                ^^^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.307: 	showTerm(Abs(Var("x"), _t("int"), Var("y")))
+//│ ║         	             ^^^^^^^^
+//│ ╟── string literal of type `"x"` is not an instance of type `string`
+//│ ║  l.307: 	showTerm(Abs(Var("x"), _t("int"), Var("y")))
+//│ ║         	                 ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.54: 	class Var(name: string)
+//│ ╙──      	                ^^^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.307: 	showTerm(Abs(Var("x"), _t("int"), Var("y")))
+//│ ║         	                       ^^^^^^^^^
+//│ ╟── string literal of type `"int"` is not an instance of type `string`
+//│ ║  l.307: 	showTerm(Abs(Var("x"), _t("int"), Var("y")))
+//│ ║         	                          ^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.40: 	class PrimitiveType(name: string)
+//│ ║        	                          ^^^^^^
+//│ ╟── from reference:
+//│ ║  l.48: 	fun _t(name) = PrimitiveType(name)
+//│ ╙──      	                             ^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.307: 	showTerm(Abs(Var("x"), _t("int"), Var("y")))
+//│ ║         	                                  ^^^^^^^^
+//│ ╟── string literal of type `"y"` is not an instance of type `string`
+//│ ║  l.307: 	showTerm(Abs(Var("x"), _t("int"), Var("y")))
+//│ ║         	                                      ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.54: 	class Var(name: string)
+//│ ╙──      	                ^^^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.308: 	showTerm(App(Var("x"), Var("y")))
+//│ ║         	             ^^^^^^^^
+//│ ╟── string literal of type `"x"` is not an instance of type `string`
+//│ ║  l.308: 	showTerm(App(Var("x"), Var("y")))
+//│ ║         	                 ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.54: 	class Var(name: string)
+//│ ╙──      	                ^^^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.308: 	showTerm(App(Var("x"), Var("y")))
+//│ ║         	                       ^^^^^^^^
+//│ ╟── string literal of type `"y"` is not an instance of type `string`
+//│ ║  l.308: 	showTerm(App(Var("x"), Var("y")))
+//│ ║         	                           ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.54: 	class Var(name: string)
+//│ ╙──      	                ^^^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.309: 	showTerm(App(Abs(Var("x"), _t("int"), Var("y")), Var("z")))
+//│ ║         	                 ^^^^^^^^
+//│ ╟── string literal of type `"x"` is not an instance of type `string`
+//│ ║  l.309: 	showTerm(App(Abs(Var("x"), _t("int"), Var("y")), Var("z")))
+//│ ║         	                     ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.54: 	class Var(name: string)
+//│ ╙──      	                ^^^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.309: 	showTerm(App(Abs(Var("x"), _t("int"), Var("y")), Var("z")))
+//│ ║         	                           ^^^^^^^^^
+//│ ╟── string literal of type `"int"` is not an instance of type `string`
+//│ ║  l.309: 	showTerm(App(Abs(Var("x"), _t("int"), Var("y")), Var("z")))
+//│ ║         	                              ^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.40: 	class PrimitiveType(name: string)
+//│ ║        	                          ^^^^^^
+//│ ╟── from reference:
+//│ ║  l.48: 	fun _t(name) = PrimitiveType(name)
+//│ ╙──      	                             ^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.309: 	showTerm(App(Abs(Var("x"), _t("int"), Var("y")), Var("z")))
+//│ ║         	                                      ^^^^^^^^
+//│ ╟── string literal of type `"y"` is not an instance of type `string`
+//│ ║  l.309: 	showTerm(App(Abs(Var("x"), _t("int"), Var("y")), Var("z")))
+//│ ║         	                                          ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.54: 	class Var(name: string)
+//│ ╙──      	                ^^^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.309: 	showTerm(App(Abs(Var("x"), _t("int"), Var("y")), Var("z")))
+//│ ║         	                                                 ^^^^^^^^
+//│ ╟── string literal of type `"z"` is not an instance of type `string`
+//│ ║  l.309: 	showTerm(App(Abs(Var("x"), _t("int"), Var("y")), Var("z")))
+//│ ║         	                                                     ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.54: 	class Var(name: string)
+//│ ╙──      	                ^^^^^^
+//│ #Str | error
+//│ res
+//│     = 'x'
+//│ res
+//│     = '&x: int => y'
+//│ res
+//│     = '(x y)'
+//│ res
+//│     = '((&x: int => z) z)'
+
+// Removing the return type annotation causes stack overflow.
+fun typeTerm(t: Term, ctx: TreeMap[Type]): Result[Type, string] =
+  if t is
+    Lit(_, ty) then Ok(ty)
+    Var(name) and find(ctx, name) is
+      Some(ty) then Ok(ty)
+      None then Err(concat3("unbound variable `", name, "`"))
+    Abs(Var(name), ty, body) and typeTerm(body, insert(ctx, name, ty)) is
+      Ok(resTy) then Ok(FunctionType(ty, resTy))
+      Err(message) then Err(message)
+    App(lhs, rhs) and typeTerm(lhs, ctx) is
+      Ok(FunctionType(pTy, resTy)) and typeTerm(rhs, ctx) is
+        Ok(aTy) and
+          typeEqual(pTy, aTy) then Ok(resTy)
+          else Err(concat5("expect the argument to be of type `", showType(pTy), "` but found `", showType(aTy), "`"))
+        Err(message) then Err(message)
+      Ok(PrimitiveType(name)) then Err(concat3("cannot apply primitive type `", name, "`"))
+      Err(message) then Err(message)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.420: 	    Var(name) and find(ctx, name) is
+//│ ║         	                  ^^^^^^^^^^^^^^^
+//│ ╟── type `string` is not an instance of type `Str`
+//│ ║  l.54: 	class Var(name: string)
+//│ ║        	                ^^^^^^
+//│ ╟── but it flows into reference with expected type `#Str`
+//│ ║  l.420: 	    Var(name) and find(ctx, name) is
+//│ ║         	                            ^^^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.81: 	      slt(k)(k') then find(l, k)
+//│ ╙──      	          ^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.422: 	      None then Err(concat3("unbound variable `", name, "`"))
+//│ ║         	                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `string` is not an instance of type `Str`
+//│ ║  l.54: 	class Var(name: string)
+//│ ║        	                ^^^^^^
+//│ ╟── but it flows into reference with expected type `#Str`
+//│ ║  l.422: 	      None then Err(concat3("unbound variable `", name, "`"))
+//│ ║         	                                                  ^^^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.5: 	fun concat2(a, b) = concat(a)(b)
+//│ ║       	                           ^
+//│ ╟── from reference:
+//│ ║  l.6: 	fun concat3(a, b, c) = concat2(a, concat2(b, c))
+//│ ╙──     	                                          ^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.423: 	    Abs(Var(name), ty, body) and typeTerm(body, insert(ctx, name, ty)) is
+//│ ║         	                                                ^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `string` is not an instance of type `Str`
+//│ ║  l.54: 	class Var(name: string)
+//│ ║        	                ^^^^^^
+//│ ╟── but it flows into reference with expected type `#Str`
+//│ ║  l.423: 	    Abs(Var(name), ty, body) and typeTerm(body, insert(ctx, name, ty)) is
+//│ ║         	                                                            ^^^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.74: 	      slt(k)(k') then Node(k', v, insert(l, k, v), r)
+//│ ╙──      	          ^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.430: 	          else Err(concat5("expect the argument to be of type `", showType(pTy), "` but found `", showType(aTy), "`"))
+//│ ║         	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `string` is not an instance of type `Str`
+//│ ║  l.40: 	class PrimitiveType(name: string)
+//│ ║        	                          ^^^^^^
+//│ ╟── but it flows into application with expected type `#Str`
+//│ ║  l.430: 	          else Err(concat5("expect the argument to be of type `", showType(pTy), "` but found `", showType(aTy), "`"))
+//│ ║         	                                                                  ^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.5: 	fun concat2(a, b) = concat(a)(b)
+//│ ║       	                           ^
+//│ ╟── from reference:
+//│ ║  l.8: 	fun concat5(a, b, c, d, e) = concat2(a, concat4(b, c, d, e))
+//│ ╙──     	                                                ^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.432: 	      Ok(PrimitiveType(name)) then Err(concat3("cannot apply primitive type `", name, "`"))
+//│ ║         	                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `string` is not an instance of type `Str`
+//│ ║  l.40: 	class PrimitiveType(name: string)
+//│ ║        	                          ^^^^^^
+//│ ╟── but it flows into reference with expected type `#Str`
+//│ ║  l.432: 	      Ok(PrimitiveType(name)) then Err(concat3("cannot apply primitive type `", name, "`"))
+//│ ║         	                                                                                ^^^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.5: 	fun concat2(a, b) = concat(a)(b)
+//│ ║       	                           ^
+//│ ╟── from reference:
+//│ ║  l.6: 	fun concat3(a, b, c) = concat2(a, concat2(b, c))
+//│ ╙──     	                                          ^
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.418: 	  if t is
+//│ ║         	     ^^^^
+//│ ║  l.419: 	    Lit(_, ty) then Ok(ty)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.420: 	    Var(name) and find(ctx, name) is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.421: 	      Some(ty) then Ok(ty)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.422: 	      None then Err(concat3("unbound variable `", name, "`"))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.423: 	    Abs(Var(name), ty, body) and typeTerm(body, insert(ctx, name, ty)) is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.424: 	      Ok(resTy) then Ok(FunctionType(ty, resTy))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.425: 	      Err(message) then Err(message)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.426: 	    App(lhs, rhs) and typeTerm(lhs, ctx) is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.427: 	      Ok(FunctionType(pTy, resTy)) and typeTerm(rhs, ctx) is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.428: 	        Ok(aTy) and
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.429: 	          typeEqual(pTy, aTy) then Ok(resTy)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.430: 	          else Err(concat5("expect the argument to be of type `", showType(pTy), "` but found `", showType(aTy), "`"))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.431: 	        Err(message) then Err(message)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.432: 	      Ok(PrimitiveType(name)) then Err(concat3("cannot apply primitive type `", name, "`"))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.433: 	      Err(message) then Err(message)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── application of type `#Str` is not an instance of type `string`
+//│ ║  l.5: 	fun concat2(a, b) = concat(a)(b)
+//│ ║       	                    ^^^^^^^^^^^^
+//│ ╟── but it flows into application with expected type `string`
+//│ ║  l.422: 	      None then Err(concat3("unbound variable `", name, "`"))
+//│ ║         	                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.417: 	fun typeTerm(t: Term, ctx: TreeMap[Type]): Result[Type, string] =
+//│ ╙──       	                                                        ^^^^^^
+//│ fun typeTerm: (t: Term, ctx: TreeMap[Type],) -> Result[Type, string]
+
+fun showTypeTerm(t, ctx) =
+  if typeTerm(t, ctx) is
+    Ok(ty) then concat3(showTerm(t), " : ", showType(ty))
+    Err(message) then concat2("Type error: ", message)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.549: 	    Ok(ty) then concat3(showTerm(t), " : ", showType(ty))
+//│ ║         	                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `string` is not an instance of type `Str`
+//│ ║  l.40: 	class PrimitiveType(name: string)
+//│ ║        	                          ^^^^^^
+//│ ╟── but it flows into application with expected type `#Str`
+//│ ║  l.549: 	    Ok(ty) then concat3(showTerm(t), " : ", showType(ty))
+//│ ║         	                                            ^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.5: 	fun concat2(a, b) = concat(a)(b)
+//│ ║       	                              ^
+//│ ╟── from reference:
+//│ ║  l.6: 	fun concat3(a, b, c) = concat2(a, concat2(b, c))
+//│ ╙──     	                                             ^
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.548: 	  if typeTerm(t, ctx) is
+//│ ║         	     ^^^^^^^^^^^^^^^^^^^
+//│ ║  l.549: 	    Ok(ty) then concat3(showTerm(t), " : ", showType(ty))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.550: 	    Err(message) then concat2("Type error: ", message)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `string & ?A` is not an instance of type `Str`
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.5: 	fun concat2(a, b) = concat(a)(b)
+//│ ║       	                              ^
+//│ ╟── from application:
+//│ ║  l.548: 	  if typeTerm(t, ctx) is
+//│ ║         	     ^^^^^^^^^^^^^^^^
+//│ ╟── Note: type parameter A is defined at:
+//│ ║  l.34: 	class Err[A](message: A)
+//│ ╙──      	          ^
+//│ fun showTypeTerm: (Term, TreeMap[Type],) -> (#Str | error)
+
+showTypeTerm(Var("x"), Empty)
+showTypeTerm(Abs(Var("x"), _t("int"), Var("x")), Empty)
+showTypeTerm(App(Var("f"), Lit("0", _t("int"))), insert(Empty, "f", _f(_t("int"), _t("int"))))
+showTypeTerm(App(Var("f"), Lit("0.2", _t("float"))), insert(Empty, "f", _f(_t("int"), _t("int"))))
+showTypeTerm(App(Var("f"), Lit("0", _t("int"))), insert(Empty, "f", _t("string")))
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.585: 	showTypeTerm(Var("x"), Empty)
+//│ ║         	             ^^^^^^^^
+//│ ╟── string literal of type `"x"` is not an instance of type `string`
+//│ ║  l.585: 	showTypeTerm(Var("x"), Empty)
+//│ ║         	                 ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.54: 	class Var(name: string)
+//│ ╙──      	                ^^^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.586: 	showTypeTerm(Abs(Var("x"), _t("int"), Var("x")), Empty)
+//│ ║         	                 ^^^^^^^^
+//│ ╟── string literal of type `"x"` is not an instance of type `string`
+//│ ║  l.586: 	showTypeTerm(Abs(Var("x"), _t("int"), Var("x")), Empty)
+//│ ║         	                     ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.54: 	class Var(name: string)
+//│ ╙──      	                ^^^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.586: 	showTypeTerm(Abs(Var("x"), _t("int"), Var("x")), Empty)
+//│ ║         	                           ^^^^^^^^^
+//│ ╟── string literal of type `"int"` is not an instance of type `string`
+//│ ║  l.586: 	showTypeTerm(Abs(Var("x"), _t("int"), Var("x")), Empty)
+//│ ║         	                              ^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.40: 	class PrimitiveType(name: string)
+//│ ║        	                          ^^^^^^
+//│ ╟── from reference:
+//│ ║  l.48: 	fun _t(name) = PrimitiveType(name)
+//│ ╙──      	                             ^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.586: 	showTypeTerm(Abs(Var("x"), _t("int"), Var("x")), Empty)
+//│ ║         	                                      ^^^^^^^^
+//│ ╟── string literal of type `"x"` is not an instance of type `string`
+//│ ║  l.586: 	showTypeTerm(Abs(Var("x"), _t("int"), Var("x")), Empty)
+//│ ║         	                                          ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.54: 	class Var(name: string)
+//│ ╙──      	                ^^^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.587: 	showTypeTerm(App(Var("f"), Lit("0", _t("int"))), insert(Empty, "f", _f(_t("int"), _t("int"))))
+//│ ║         	                 ^^^^^^^^
+//│ ╟── string literal of type `"f"` is not an instance of type `string`
+//│ ║  l.587: 	showTypeTerm(App(Var("f"), Lit("0", _t("int"))), insert(Empty, "f", _f(_t("int"), _t("int"))))
+//│ ║         	                     ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.54: 	class Var(name: string)
+//│ ╙──      	                ^^^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.587: 	showTypeTerm(App(Var("f"), Lit("0", _t("int"))), insert(Empty, "f", _f(_t("int"), _t("int"))))
+//│ ║         	                                    ^^^^^^^^^
+//│ ╟── string literal of type `"int"` is not an instance of type `string`
+//│ ║  l.587: 	showTypeTerm(App(Var("f"), Lit("0", _t("int"))), insert(Empty, "f", _f(_t("int"), _t("int"))))
+//│ ║         	                                       ^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.40: 	class PrimitiveType(name: string)
+//│ ║        	                          ^^^^^^
+//│ ╟── from reference:
+//│ ║  l.48: 	fun _t(name) = PrimitiveType(name)
+//│ ╙──      	                             ^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.587: 	showTypeTerm(App(Var("f"), Lit("0", _t("int"))), insert(Empty, "f", _f(_t("int"), _t("int"))))
+//│ ║         	                           ^^^^^^^^^^^^^^^^^^^
+//│ ╟── string literal of type `"0"` is not an instance of type `string`
+//│ ║  l.587: 	showTypeTerm(App(Var("f"), Lit("0", _t("int"))), insert(Empty, "f", _f(_t("int"), _t("int"))))
+//│ ║         	                               ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.53: 	class Lit(tag: string, ty: Type)
+//│ ╙──      	               ^^^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.587: 	showTypeTerm(App(Var("f"), Lit("0", _t("int"))), insert(Empty, "f", _f(_t("int"), _t("int"))))
+//│ ║         	                                                                       ^^^^^^^^^
+//│ ╟── string literal of type `"int"` is not an instance of type `string`
+//│ ║  l.587: 	showTypeTerm(App(Var("f"), Lit("0", _t("int"))), insert(Empty, "f", _f(_t("int"), _t("int"))))
+//│ ║         	                                                                          ^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.40: 	class PrimitiveType(name: string)
+//│ ║        	                          ^^^^^^
+//│ ╟── from reference:
+//│ ║  l.48: 	fun _t(name) = PrimitiveType(name)
+//│ ╙──      	                             ^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.587: 	showTypeTerm(App(Var("f"), Lit("0", _t("int"))), insert(Empty, "f", _f(_t("int"), _t("int"))))
+//│ ║         	                                                                                  ^^^^^^^^^
+//│ ╟── string literal of type `"int"` is not an instance of type `string`
+//│ ║  l.587: 	showTypeTerm(App(Var("f"), Lit("0", _t("int"))), insert(Empty, "f", _f(_t("int"), _t("int"))))
+//│ ║         	                                                                                     ^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.40: 	class PrimitiveType(name: string)
+//│ ║        	                          ^^^^^^
+//│ ╟── from reference:
+//│ ║  l.48: 	fun _t(name) = PrimitiveType(name)
+//│ ╙──      	                             ^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.587: 	showTypeTerm(App(Var("f"), Lit("0", _t("int"))), insert(Empty, "f", _f(_t("int"), _t("int"))))
+//│ ║         	                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── string literal of type `"f"` is not an instance of type `string`
+//│ ║  l.587: 	showTypeTerm(App(Var("f"), Lit("0", _t("int"))), insert(Empty, "f", _f(_t("int"), _t("int"))))
+//│ ║         	                                                               ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.65: 	class Node[A](key: string, value: A, left: TreeMap[A], right: TreeMap[A])
+//│ ║        	                   ^^^^^^
+//│ ╟── from reference:
+//│ ║  l.77: 	    Empty then Node(k, v, Empty, Empty)
+//│ ╙──      	                    ^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.588: 	showTypeTerm(App(Var("f"), Lit("0.2", _t("float"))), insert(Empty, "f", _f(_t("int"), _t("int"))))
+//│ ║         	                 ^^^^^^^^
+//│ ╟── string literal of type `"f"` is not an instance of type `string`
+//│ ║  l.588: 	showTypeTerm(App(Var("f"), Lit("0.2", _t("float"))), insert(Empty, "f", _f(_t("int"), _t("int"))))
+//│ ║         	                     ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.54: 	class Var(name: string)
+//│ ╙──      	                ^^^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.588: 	showTypeTerm(App(Var("f"), Lit("0.2", _t("float"))), insert(Empty, "f", _f(_t("int"), _t("int"))))
+//│ ║         	                                      ^^^^^^^^^^^
+//│ ╟── string literal of type `"float"` is not an instance of type `string`
+//│ ║  l.588: 	showTypeTerm(App(Var("f"), Lit("0.2", _t("float"))), insert(Empty, "f", _f(_t("int"), _t("int"))))
+//│ ║         	                                         ^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.40: 	class PrimitiveType(name: string)
+//│ ║        	                          ^^^^^^
+//│ ╟── from reference:
+//│ ║  l.48: 	fun _t(name) = PrimitiveType(name)
+//│ ╙──      	                             ^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.588: 	showTypeTerm(App(Var("f"), Lit("0.2", _t("float"))), insert(Empty, "f", _f(_t("int"), _t("int"))))
+//│ ║         	                           ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── string literal of type `"0.2"` is not an instance of type `string`
+//│ ║  l.588: 	showTypeTerm(App(Var("f"), Lit("0.2", _t("float"))), insert(Empty, "f", _f(_t("int"), _t("int"))))
+//│ ║         	                               ^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.53: 	class Lit(tag: string, ty: Type)
+//│ ╙──      	               ^^^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.588: 	showTypeTerm(App(Var("f"), Lit("0.2", _t("float"))), insert(Empty, "f", _f(_t("int"), _t("int"))))
+//│ ║         	                                                                           ^^^^^^^^^
+//│ ╟── string literal of type `"int"` is not an instance of type `string`
+//│ ║  l.588: 	showTypeTerm(App(Var("f"), Lit("0.2", _t("float"))), insert(Empty, "f", _f(_t("int"), _t("int"))))
+//│ ║         	                                                                              ^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.40: 	class PrimitiveType(name: string)
+//│ ║        	                          ^^^^^^
+//│ ╟── from reference:
+//│ ║  l.48: 	fun _t(name) = PrimitiveType(name)
+//│ ╙──      	                             ^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.588: 	showTypeTerm(App(Var("f"), Lit("0.2", _t("float"))), insert(Empty, "f", _f(_t("int"), _t("int"))))
+//│ ║         	                                                                                      ^^^^^^^^^
+//│ ╟── string literal of type `"int"` is not an instance of type `string`
+//│ ║  l.588: 	showTypeTerm(App(Var("f"), Lit("0.2", _t("float"))), insert(Empty, "f", _f(_t("int"), _t("int"))))
+//│ ║         	                                                                                         ^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.40: 	class PrimitiveType(name: string)
+//│ ║        	                          ^^^^^^
+//│ ╟── from reference:
+//│ ║  l.48: 	fun _t(name) = PrimitiveType(name)
+//│ ╙──      	                             ^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.588: 	showTypeTerm(App(Var("f"), Lit("0.2", _t("float"))), insert(Empty, "f", _f(_t("int"), _t("int"))))
+//│ ║         	                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── string literal of type `"f"` is not an instance of type `string`
+//│ ║  l.588: 	showTypeTerm(App(Var("f"), Lit("0.2", _t("float"))), insert(Empty, "f", _f(_t("int"), _t("int"))))
+//│ ║         	                                                                   ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.65: 	class Node[A](key: string, value: A, left: TreeMap[A], right: TreeMap[A])
+//│ ║        	                   ^^^^^^
+//│ ╟── from reference:
+//│ ║  l.77: 	    Empty then Node(k, v, Empty, Empty)
+//│ ╙──      	                    ^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.589: 	showTypeTerm(App(Var("f"), Lit("0", _t("int"))), insert(Empty, "f", _t("string")))
+//│ ║         	                 ^^^^^^^^
+//│ ╟── string literal of type `"f"` is not an instance of type `string`
+//│ ║  l.589: 	showTypeTerm(App(Var("f"), Lit("0", _t("int"))), insert(Empty, "f", _t("string")))
+//│ ║         	                     ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.54: 	class Var(name: string)
+//│ ╙──      	                ^^^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.589: 	showTypeTerm(App(Var("f"), Lit("0", _t("int"))), insert(Empty, "f", _t("string")))
+//│ ║         	                                    ^^^^^^^^^
+//│ ╟── string literal of type `"int"` is not an instance of type `string`
+//│ ║  l.589: 	showTypeTerm(App(Var("f"), Lit("0", _t("int"))), insert(Empty, "f", _t("string")))
+//│ ║         	                                       ^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.40: 	class PrimitiveType(name: string)
+//│ ║        	                          ^^^^^^
+//│ ╟── from reference:
+//│ ║  l.48: 	fun _t(name) = PrimitiveType(name)
+//│ ╙──      	                             ^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.589: 	showTypeTerm(App(Var("f"), Lit("0", _t("int"))), insert(Empty, "f", _t("string")))
+//│ ║         	                           ^^^^^^^^^^^^^^^^^^^
+//│ ╟── string literal of type `"0"` is not an instance of type `string`
+//│ ║  l.589: 	showTypeTerm(App(Var("f"), Lit("0", _t("int"))), insert(Empty, "f", _t("string")))
+//│ ║         	                               ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.53: 	class Lit(tag: string, ty: Type)
+//│ ╙──      	               ^^^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.589: 	showTypeTerm(App(Var("f"), Lit("0", _t("int"))), insert(Empty, "f", _t("string")))
+//│ ║         	                                                                    ^^^^^^^^^^^^
+//│ ╟── string literal of type `"string"` is not an instance of type `string`
+//│ ║  l.589: 	showTypeTerm(App(Var("f"), Lit("0", _t("int"))), insert(Empty, "f", _t("string")))
+//│ ║         	                                                                       ^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.40: 	class PrimitiveType(name: string)
+//│ ║        	                          ^^^^^^
+//│ ╟── from reference:
+//│ ║  l.48: 	fun _t(name) = PrimitiveType(name)
+//│ ╙──      	                             ^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.589: 	showTypeTerm(App(Var("f"), Lit("0", _t("int"))), insert(Empty, "f", _t("string")))
+//│ ║         	                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── string literal of type `"f"` is not an instance of type `string`
+//│ ║  l.589: 	showTypeTerm(App(Var("f"), Lit("0", _t("int"))), insert(Empty, "f", _t("string")))
+//│ ║         	                                                               ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.65: 	class Node[A](key: string, value: A, left: TreeMap[A], right: TreeMap[A])
+//│ ║        	                   ^^^^^^
+//│ ╟── from reference:
+//│ ║  l.77: 	    Empty then Node(k, v, Empty, Empty)
+//│ ╙──      	                    ^
+//│ #Str | error
+//│ res
+//│     = 'Type error: unbound variable `x`'
+//│ res
+//│     = '&x: int => x : int -> int'
+//│ res
+//│     = '(f 0) : int'
+//│ res
+//│     = 'Type error: expect the argument to be of type `int` but found `float`'
+//│ res
+//│     = 'Type error: cannot apply primitive type `string`'

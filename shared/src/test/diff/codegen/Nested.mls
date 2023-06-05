@@ -8,7 +8,7 @@ module A {
     fun b = x + 1
   }
 }
-//│ module A() {
+//│ module A {
 //│   class B(x: Int) {
 //│     fun b: Int
 //│   }
@@ -45,7 +45,7 @@ module A {
 //│                 return x + 1;
 //│               }
 //│             };
-//│             this.#B = ((x) => new B(x));
+//│             this.#B = ((x) => Object.freeze(new B(x)));
 //│             this.#B.class = B;
 //│           }
 //│           return this.#B;
@@ -177,7 +177,7 @@ module D {
   class E(x: Int) {}
   fun createE(x: Int) = E(x + 1)
 }
-//│ module D() {
+//│ module D {
 //│   class E(x: Int)
 //│   fun createE: (x: Int,) -> E
 //│ }
@@ -207,7 +207,7 @@ module D {
 //│                 this.#x = x;
 //│               }
 //│             };
-//│             this.#E = ((x) => new E(x));
+//│             this.#E = ((x) => Object.freeze(new E(x)));
 //│             this.#E.class = E;
 //│           }
 //│           return this.#E;
@@ -301,19 +301,19 @@ class E(x: Int) {
 //│                       return outer1.x + outer2.y + z;
 //│                     }
 //│                   };
-//│                   this.#G = ((z) => new G(z));
+//│                   this.#G = ((z) => Object.freeze(new G(z)));
 //│                   this.#G.class = G;
 //│                 }
 //│                 return this.#G;
 //│               }
 //│             };
-//│             this.#F = ((y) => new F(y));
+//│             this.#F = ((y) => Object.freeze(new F(y)));
 //│             this.#F.class = F;
 //│           }
 //│           return this.#F;
 //│         }
 //│       };
-//│       this.#E = ((x) => new E(x));
+//│       this.#E = ((x) => Object.freeze(new E(x)));
 //│       this.#E.class = E;
 //│     }
 //│     return this.#E;
@@ -397,13 +397,13 @@ class F() {
 //│                 const x1 = this.#x1;
 //│               }
 //│             };
-//│             this.#G = (() => new G());
+//│             this.#G = (() => Object.freeze(new G()));
 //│             this.#G.class = G;
 //│           }
 //│           return this.#G;
 //│         }
 //│       };
-//│       this.#F = (() => new F());
+//│       this.#F = (() => Object.freeze(new F()));
 //│       this.#F.class = F;
 //│     }
 //│     return this.#F;
@@ -424,8 +424,8 @@ module G {
     }
   }
 }
-//│ module G() {
-//│   module H() {
+//│ module G {
+//│   module H {
 //│     class J(x: Int) {
 //│       fun ii: (a: Int,) -> I
 //│     }
@@ -470,7 +470,7 @@ module G {
 //│                       return outer1.I(x + a);
 //│                     }
 //│                   };
-//│                   this.#J = ((x) => new J(x));
+//│                   this.#J = ((x) => Object.freeze(new J(x)));
 //│                   this.#J.class = J;
 //│                 }
 //│                 return this.#J;
@@ -491,7 +491,7 @@ module G {
 //│                 this.#x = x;
 //│               }
 //│             };
-//│             this.#I = ((x) => new I(x));
+//│             this.#I = ((x) => Object.freeze(new I(x)));
 //│             this.#I.class = I;
 //│           }
 //│           return this.#I;
@@ -543,7 +543,7 @@ module H {
     let i = I(x + 1)
   }
 }
-//│ module H() {
+//│ module H {
 //│   class I(x: Int)
 //│   class J(x: Int) {
 //│     let i: I
@@ -572,7 +572,7 @@ module H {
 //│                 this.#x = x;
 //│               }
 //│             };
-//│             this.#I = ((x) => new I(x));
+//│             this.#I = ((x) => Object.freeze(new I(x)));
 //│             this.#I.class = I;
 //│           }
 //│           return this.#I;
@@ -582,8 +582,8 @@ module H {
 //│           if (this.#J === undefined) {
 //│             class J {
 //│               #x;
-//│               #i;
 //│               get x() { return this.#x; }
+//│               #i;
 //│               get i() { return this.#i; }
 //│               constructor(x) {
 //│                 this.#x = x;
@@ -591,7 +591,7 @@ module H {
 //│                 const i = this.#i;
 //│               }
 //│             };
-//│             this.#J = ((x) => new J(x));
+//│             this.#J = ((x) => Object.freeze(new J(x)));
 //│             this.#J.class = J;
 //│           }
 //│           return this.#J;
@@ -666,8 +666,8 @@ ij.incY
 //│       class I {
 //│         #J;
 //│         #x;
-//│         #y;
 //│         get x() { return this.#x; }
+//│         #y;
 //│         get y() { return this.#y; }
 //│         constructor(x) {
 //│           this.#x = x;
@@ -679,8 +679,8 @@ ij.incY
 //│           if (this.#J === undefined) {
 //│             class J {
 //│               #x;
-//│               #y;
 //│               get x() { return this.#x; }
+//│               #y;
 //│               get y() { return this.#y; }
 //│               constructor(x) {
 //│                 this.#x = x;
@@ -693,13 +693,13 @@ ij.incY
 //│                 return self.y + 1;
 //│               }
 //│             };
-//│             this.#J = ((x) => new J(x));
+//│             this.#J = ((x) => Object.freeze(new J(x)));
 //│             this.#J.class = J;
 //│           }
 //│           return this.#J;
 //│         }
 //│       };
-//│       this.#I = ((x) => new I(x));
+//│       this.#I = ((x) => Object.freeze(new I(x)));
 //│       this.#I.class = I;
 //│     }
 //│     return this.#I;
@@ -721,7 +721,7 @@ ij.incY
 //│ res
 //│     = 3
 
-:e
+
 :js
 module J {
   class K(x: Int) {}
@@ -729,17 +729,11 @@ module J {
   class M() extends K(1) {}
   class N(x: Int) extends K(x + 2), L
 }
-//│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
-//│ ║  l.729: 	  class M() extends K(1) {}
-//│ ╙──       	                    ^^^^
-//│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
-//│ ║  l.730: 	  class N(x: Int) extends K(x + 2), L
-//│ ╙──       	                          ^^^^^^^^
-//│ module J() {
+//│ module J {
 //│   class K(x: Int)
 //│   mixin L()
-//│   class M()
-//│   class N(x: Int)
+//│   class M() extends K
+//│   class N(x: Int) extends K
 //│ }
 //│ // Prelude
 //│ class TypingUnit14 {
@@ -773,7 +767,7 @@ module J {
 //│                 this.#x = x;
 //│               }
 //│             };
-//│             this.#K = ((x) => new K(x));
+//│             this.#K = ((x) => Object.freeze(new K(x)));
 //│             this.#K.class = K;
 //│           }
 //│           return this.#K;
@@ -786,7 +780,7 @@ module J {
 //│                 super(1);
 //│               }
 //│             };
-//│             this.#M = (() => new M());
+//│             this.#M = (() => Object.freeze(new M()));
 //│             this.#M.class = M;
 //│           }
 //│           return this.#M;
@@ -802,7 +796,7 @@ module J {
 //│                 this.#x = x;
 //│               }
 //│             };
-//│             this.#N = ((x) => new N(x));
+//│             this.#N = ((x) => Object.freeze(new N(x)));
 //│             this.#N.class = N;
 //│           }
 //│           return this.#N;
@@ -823,10 +817,10 @@ module J {
 let m = J.M()
 let n = J.N(2)
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.823: 	let m = J.M()
+//│ ║  l.817: 	let m = J.M()
 //│ ╙──       	         ^^
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.824: 	let n = J.N(2)
+//│ ║  l.818: 	let n = J.N(2)
 //│ ╙──       	         ^^
 //│ let m: error
 //│ let n: error
@@ -853,8 +847,8 @@ module K {
     }
   }
 }
-//│ module K() {
-//│   module L() {
+//│ module K {
+//│   module L {
 //│     class M() {
 //│       fun f: 42
 //│     }
@@ -867,7 +861,7 @@ module K {
 let m = K.L.M()
 m.f
 //│ ╔══[ERROR] access to module member not yet supported
-//│ ║  l.867: 	let m = K.L.M()
+//│ ║  l.861: 	let m = K.L.M()
 //│ ╙──       	         ^^
 //│ let m: error
 //│ error
@@ -876,7 +870,6 @@ m.f
 //│ res
 //│     = 42
 
-:e
 module L {
   class M(x: Int) {}
   module N {
@@ -885,14 +878,11 @@ module L {
     }
   }
 }
-//│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
-//│ ║  l.884: 	      class P(y: Int) extends M(y + 1) {}
-//│ ╙──       	                              ^^^^^^^^
-//│ module L() {
+//│ module L {
 //│   class M(x: Int)
-//│   module N() {
-//│     module O() {
-//│       class P(y: Int)
+//│   module N {
+//│     module O {
+//│       class P(y: Int) extends M
 //│     }
 //│   }
 //│ }
@@ -901,7 +891,7 @@ module L {
 let op = L.N.O.P(0)
 op.x
 //│ ╔══[ERROR] access to module member not yet supported
-//│ ║  l.901: 	let op = L.N.O.P(0)
+//│ ║  l.891: 	let op = L.N.O.P(0)
 //│ ╙──       	          ^^
 //│ let op: error
 //│ error
@@ -928,13 +918,13 @@ module M {
 }
 M.N.op(M.P())
 //│ ╔══[ERROR] access to module member not yet supported
-//│ ║  l.929: 	M.N.op(M.P())
+//│ ║  l.919: 	M.N.op(M.P())
 //│ ╙──       	 ^^
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.929: 	M.N.op(M.P())
+//│ ║  l.919: 	M.N.op(M.P())
 //│ ╙──       	        ^^
-//│ module M() {
-//│   module N() {
+//│ module M {
+//│   module N {
 //│     fun op: #Object -> (0 | 1 | 2)
 //│   }
 //│   class O()
@@ -981,7 +971,7 @@ M.N.op(M.P())
 //│           const outer1 = this;
 //│           if (this.#O === undefined) {
 //│             class O {};
-//│             this.#O = (() => new O());
+//│             this.#O = (() => Object.freeze(new O()));
 //│             this.#O.class = O;
 //│           }
 //│           return this.#O;
@@ -990,7 +980,7 @@ M.N.op(M.P())
 //│           const outer1 = this;
 //│           if (this.#P === undefined) {
 //│             class P {};
-//│             this.#P = (() => new P());
+//│             this.#P = (() => Object.freeze(new P()));
 //│             this.#P.class = P;
 //│           }
 //│           return this.#P;
@@ -1010,7 +1000,6 @@ M.N.op(M.P())
 //│ res
 //│     = 1
 
-:e
 :js
 module N {
   module O {
@@ -1018,12 +1007,9 @@ module N {
   }
   class Q()
 }
-//│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
-//│ ║  l.1017: 	    class P() extends Q
-//│ ╙──        	                      ^
-//│ module N() {
-//│   module O() {
-//│     class P()
+//│ module N {
+//│   module O {
+//│     class P() extends Q
 //│   }
 //│   class Q()
 //│ }
@@ -1055,7 +1041,7 @@ module N {
 //│                       super();
 //│                     }
 //│                   };
-//│                   this.#P = (() => new P());
+//│                   this.#P = (() => Object.freeze(new P()));
 //│                   this.#P.class = P;
 //│                 }
 //│                 return this.#P;
@@ -1070,7 +1056,7 @@ module N {
 //│           const outer1 = this;
 //│           if (this.#Q === undefined) {
 //│             class Q {};
-//│             this.#Q = (() => new Q());
+//│             this.#Q = (() => Object.freeze(new Q()));
 //│             this.#Q.class = Q;
 //│           }
 //│           return this.#Q;
@@ -1089,7 +1075,7 @@ module N {
 :e
 N.O.P()
 //│ ╔══[ERROR] access to module member not yet supported
-//│ ║  l.1090: 	N.O.P()
+//│ ║  l.1076: 	N.O.P()
 //│ ╙──        	 ^^
 //│ error
 //│ res
@@ -1105,7 +1091,7 @@ class I(x: Int) {
 }
 I(1).J(3).a
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.1106: 	I(1).J(3).a
+//│ ║  l.1092: 	I(1).J(3).a
 //│ ╙──        	    ^^
 //│ class I(x: Int) {
 //│   class J(z: Int) {
@@ -1125,8 +1111,8 @@ I(1).J(3).a
 //│       class I {
 //│         #J;
 //│         #x;
-//│         #y;
 //│         get x() { return this.#x; }
+//│         #y;
 //│         get y() { return this.#y; }
 //│         constructor(x) {
 //│           this.#x = x;
@@ -1138,8 +1124,8 @@ I(1).J(3).a
 //│           if (this.#J === undefined) {
 //│             class J {
 //│               #z;
-//│               #a;
 //│               get z() { return this.#z; }
+//│               #a;
 //│               get a() { return this.#a; }
 //│               constructor(z) {
 //│                 this.#z = z;
@@ -1151,13 +1137,13 @@ I(1).J(3).a
 //│                 const a = this.#a;
 //│               }
 //│             };
-//│             this.#J = ((z) => new J(z));
+//│             this.#J = ((z) => Object.freeze(new J(z)));
 //│             this.#J.class = J;
 //│           }
 //│           return this.#J;
 //│         }
 //│       };
-//│       this.#I = ((x) => new I(x));
+//│       this.#I = ((x) => Object.freeze(new I(x)));
 //│       this.#I.class = I;
 //│     }
 //│     return this.#I;
@@ -1179,15 +1165,6 @@ fun main =
     else g(x - 1)
   fun g(x: Int): Int = f(x)
   f
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1177: 	  fun f(x: Int): Int = if x is
-//│ ║          	                          ^
-//│ ╟── type `Int` is not an instance of type `Num`
-//│ ║  l.1177: 	  fun f(x: Int): Int = if x is
-//│ ║          	           ^^^
-//│ ╟── but it flows into reference with expected type `#Num`
-//│ ║  l.1177: 	  fun f(x: Int): Int = if x is
-//│ ╙──        	                          ^
 //│ fun main: (x: Int,) -> Int
 //│ // Prelude
 //│ class TypingUnit24 {}
@@ -1195,7 +1172,7 @@ fun main =
 //│ // Query 1
 //│ globalThis.main = function main() {
 //│   return ((() => {
-//│     let f = (x) => x == 0 === true ? 1 : g(x - 1);
+//│     let f = (x) => x === 0 ? 1 : g(x - 1);
 //│     let g = (x) => f(x);
 //│     return f;
 //│   })());
@@ -1350,8 +1327,8 @@ module Test {
   log(3)
   Foo
 }
-//│ module Test() {
-//│   module Foo()
+//│ module Test {
+//│   module Foo
 //│ }
 
 :js
@@ -1387,8 +1364,8 @@ class Outer1(outer: Int) {
 //│           if (this.#Outer2 === undefined) {
 //│             class Outer2 {
 //│               #x;
-//│               #outer;
 //│               get x() { return this.#x; }
+//│               #outer;
 //│               get outer() { return this.#outer; }
 //│               constructor(x) {
 //│                 this.#x = x;
@@ -1396,13 +1373,13 @@ class Outer1(outer: Int) {
 //│                 const outer2 = this.#outer;
 //│               }
 //│             };
-//│             this.#Outer2 = ((x) => new Outer2(x));
+//│             this.#Outer2 = ((x) => Object.freeze(new Outer2(x)));
 //│             this.#Outer2.class = Outer2;
 //│           }
 //│           return this.#Outer2;
 //│         }
 //│       };
-//│       this.#Outer1 = ((outer) => new Outer1(outer));
+//│       this.#Outer1 = ((outer) => Object.freeze(new Outer1(outer)));
 //│       this.#Outer1.class = Outer1;
 //│     }
 //│     return this.#Outer1;

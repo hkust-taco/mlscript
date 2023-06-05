@@ -4,17 +4,18 @@
 
 class A
 class B
-//│ class A()
-//│ class B()
+//│ class A
+//│ class B
 
 let a: Object = A()
 //│ let a: Object
 //│ a
-//│   = A {}
+//│ Runtime error:
+//│   TypeError: Class constructor A cannot be invoked without 'new'
 
 
 module M
-//│ module M()
+//│ module M
 
 M: Object
 //│ Object
@@ -33,38 +34,38 @@ fun foo(x) = if x is A then true else false
 :e
 fun foo(x: anything) = if x is A then true
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.34: 	fun foo(x: anything) = if x is A then true
+//│ ║  l.35: 	fun foo(x: anything) = if x is A then true
 //│ ║        	                          ^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` is not an instance of type `Object`
-//│ ║  l.34: 	fun foo(x: anything) = if x is A then true
+//│ ║  l.35: 	fun foo(x: anything) = if x is A then true
 //│ ║        	           ^^^^^^^^
 //│ ╟── but it flows into reference with expected type `#Object`
-//│ ║  l.34: 	fun foo(x: anything) = if x is A then true
+//│ ║  l.35: 	fun foo(x: anything) = if x is A then true
 //│ ╙──      	                          ^
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.34: 	fun foo(x: anything) = if x is A then true
+//│ ║  l.35: 	fun foo(x: anything) = if x is A then true
 //│ ║        	                          ^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` is not an instance of type `A`
-//│ ║  l.34: 	fun foo(x: anything) = if x is A then true
+//│ ║  l.35: 	fun foo(x: anything) = if x is A then true
 //│ ║        	           ^^^^^^^^
 //│ ╟── but it flows into reference with expected type `A`
-//│ ║  l.34: 	fun foo(x: anything) = if x is A then true
+//│ ║  l.35: 	fun foo(x: anything) = if x is A then true
 //│ ║        	                          ^
 //│ ╟── Note: constraint arises from class pattern:
-//│ ║  l.34: 	fun foo(x: anything) = if x is A then true
+//│ ║  l.35: 	fun foo(x: anything) = if x is A then true
 //│ ╙──      	                               ^
 //│ fun foo: (x: anything,) -> True
 
 :e
 fun foo(x: anything) = if x is A then true else false
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.59: 	fun foo(x: anything) = if x is A then true else false
+//│ ║  l.60: 	fun foo(x: anything) = if x is A then true else false
 //│ ║        	                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` is not an instance of type `Object`
-//│ ║  l.59: 	fun foo(x: anything) = if x is A then true else false
+//│ ║  l.60: 	fun foo(x: anything) = if x is A then true else false
 //│ ║        	           ^^^^^^^^
 //│ ╟── but it flows into reference with expected type `#Object`
-//│ ║  l.59: 	fun foo(x: anything) = if x is A then true else false
+//│ ║  l.60: 	fun foo(x: anything) = if x is A then true else false
 //│ ╙──      	                          ^
 //│ fun foo: (x: anything,) -> (False | True)
 
@@ -77,13 +78,13 @@ fun foo(x: Object) = if x is A then true else false
 // :e
 fun foo = forall 'a; (x: 'a) => if x is A then true else false
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.78: 	fun foo = forall 'a; (x: 'a) => if x is A then true else false
+//│ ║  l.79: 	fun foo = forall 'a; (x: 'a) => if x is A then true else false
 //│ ║        	                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── rigid type variable of type `'a` is not an instance of type `Object`
-//│ ║  l.78: 	fun foo = forall 'a; (x: 'a) => if x is A then true else false
+//│ ║  l.79: 	fun foo = forall 'a; (x: 'a) => if x is A then true else false
 //│ ║        	                 ^^
 //│ ╟── but it flows into reference with expected type `#Object`
-//│ ║  l.78: 	fun foo = forall 'a; (x: 'a) => if x is A then true else false
+//│ ║  l.79: 	fun foo = forall 'a; (x: 'a) => if x is A then true else false
 //│ ╙──      	                                   ^
 //│ fun foo: (x: anything,) -> (False | True)
 
@@ -105,24 +106,19 @@ Object()
 
 // TODO
 class B extends Object
-//│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
-//│ ║  l.107: 	class B extends Object
-//│ ╙──       	                ^^^^^^
-//│ class B()
+//│ class B extends Object
 //│ Code generation encountered an error:
-//│   unresolved symbol Object
+//│   unresolved parent Object.
 
 // TODO
 class C extends A
-//│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
-//│ ║  l.116: 	class C extends A
-//│ ╙──       	                ^
-//│ class C()
+//│ class C extends A
 
 let o: Object = C()
 //│ let o: Object
 //│ o
-//│   = C {}
+//│ Runtime error:
+//│   TypeError: Class constructor C cannot be invoked without 'new'
 
 fun foo(x) = if x is
   A then true
@@ -138,7 +134,8 @@ foo(0)
 foo(o)
 //│ False | True
 //│ res
-//│     = true
+//│ Runtime error:
+//│   ReferenceError: o is not defined
 
 
 (0 : Int) : Object

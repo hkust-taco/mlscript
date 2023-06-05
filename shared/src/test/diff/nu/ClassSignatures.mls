@@ -1,22 +1,47 @@
 :NewDefs
 
 
-// TODO
 class Foo(): {}
-//│ ╔══[ERROR] type signatures not yet supported for classes
-//│ ║  l.5: 	class Foo(): {}
-//│ ╙──     	             ^^
 //│ class Foo()
 
-// TODO
 class Foo(): {} {
   fun x = 0
 }
-//│ ╔══[ERROR] type signatures not yet supported for classes
-//│ ║  l.12: 	class Foo(): {} {
-//│ ╙──      	             ^^
 //│ class Foo() {
 //│   fun x: 0
 //│ }
 
+class Foo(): { x: int } {
+  fun x = 0
+}
+//│ class Foo(): {x: int} {
+//│   fun x: 0
+//│ }
+
+class Foo(): { x: 'FigureItOut } {
+  fun x = 0
+}
+//│ class Foo(): {x: ??FigureItOut} {
+//│   fun x: 0
+//│ }
+
+:e
+not(Foo().x)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.29: 	not(Foo().x)
+//│ ║        	^^^^^^^^^^^^
+//│ ╟── integer literal of type `0` is not an instance of type `Bool`
+//│ ║  l.22: 	  fun x = 0
+//│ ║        	          ^
+//│ ╟── but it flows into field selection with expected type `Bool`
+//│ ║  l.29: 	not(Foo().x)
+//│ ╙──      	    ^^^^^^^
+//│ Bool | error
+//│ res
+//│     = true
+
+(f: Foo) => f.x
+//│ (f: Foo,) -> (0 & ??FigureItOut)
+//│ res
+//│     = [Function: res]
 

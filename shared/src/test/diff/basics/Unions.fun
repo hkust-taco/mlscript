@@ -101,19 +101,10 @@ f (0 as Int)
 //│ ║  l.9: 	let f(x) = x as 0 | 1
 //│ ╙──     	           ^
 //│ res: 0 | 1 | error
-//│ ╔══[ERROR] Type mismatch in 'as' binding:
-//│ ║  l.24: 	f (0 as Int)
-//│ ║        	   ^^^^^^^^
-//│ ╟── integer literal of type `0` is not a function
-//│ ║  l.24: 	f (0 as Int)
-//│ ║        	   ^
-//│ ╟── Note: constraint arises from reference:
-//│ ║  l.24: 	f (0 as Int)
-//│ ╙──      	        ^^^
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.24: 	f (0 as Int)
 //│ ║        	^^^^^^^^^^^^
-//│ ╟── reference of type `() -> Int` does not match type `0 | 1`
+//│ ╟── reference of type `int` does not match type `0 | 1`
 //│ ║  l.24: 	f (0 as Int)
 //│ ║        	        ^^^
 //│ ╟── but it flows into argument with expected type `0 | 1`
@@ -163,10 +154,10 @@ bar(0, 1)
 :e
 bar(2, 2)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.164: 	bar(2, 2)
+//│ ║  l.155: 	bar(2, 2)
 //│ ║         	^^^^^^^^^
 //│ ╟── integer literal of type `2` does not match type `0 | 1`
-//│ ║  l.164: 	bar(2, 2)
+//│ ║  l.155: 	bar(2, 2)
 //│ ╙──       	    ^
 //│ res: 2 | error
 
@@ -190,13 +181,13 @@ f 1
 :e
 f 2
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.191: 	f 2
+//│ ║  l.182: 	f 2
 //│ ║         	^^^
 //│ ╟── integer literal of type `2` does not match type `0 | 1`
-//│ ║  l.191: 	f 2
+//│ ║  l.182: 	f 2
 //│ ║         	  ^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.182: 	let f x = bar(x, x)
+//│ ║  l.173: 	let f x = bar(x, x)
 //│ ╙──       	              ^
 //│ res: 2 | error
 
@@ -236,19 +227,19 @@ let baz(r: (0, 0) | _) = if r._1 < 1 then r._1 else r._2
 :e
 baz(0)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.237: 	baz(0)
+//│ ║  l.228: 	baz(0)
 //│ ║         	^^^^^^
 //│ ╟── integer literal of type `0` does not have field '_2'
-//│ ║  l.237: 	baz(0)
+//│ ║  l.228: 	baz(0)
 //│ ║         	    ^
 //│ ╟── but it flows into argument with expected type `{_2: ?a}`
-//│ ║  l.237: 	baz(0)
+//│ ║  l.228: 	baz(0)
 //│ ║         	   ^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.233: 	let baz(r: (0, 0) | _) = if r._1 < 1 then r._1 else r._2
+//│ ║  l.224: 	let baz(r: (0, 0) | _) = if r._1 < 1 then r._1 else r._2
 //│ ║         	                                                     ^^^
 //│ ╟── from binding:
-//│ ║  l.233: 	let baz(r: (0, 0) | _) = if r._1 < 1 then r._1 else r._2
+//│ ║  l.224: 	let baz(r: (0, 0) | _) = if r._1 < 1 then r._1 else r._2
 //│ ╙──       	        ^^^^^^^^^^^^^
 //│ res: error
 
@@ -276,19 +267,19 @@ let baz(r: (0, 0) | (1, _)) = if r._1 < 1 then r._1 else r._2
 baz(0)
 baz(0, 1)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.276: 	baz(0)
+//│ ║  l.267: 	baz(0)
 //│ ║         	^^^^^^
 //│ ╟── integer literal of type `0` does not have field '_2'
-//│ ║  l.276: 	baz(0)
+//│ ║  l.267: 	baz(0)
 //│ ║         	    ^
 //│ ╟── but it flows into argument with expected type `{_2: ?a}`
-//│ ║  l.276: 	baz(0)
+//│ ║  l.267: 	baz(0)
 //│ ║         	   ^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.272: 	let baz(r: (0, 0) | (1, _)) = if r._1 < 1 then r._1 else r._2
+//│ ║  l.263: 	let baz(r: (0, 0) | (1, _)) = if r._1 < 1 then r._1 else r._2
 //│ ║         	                                                          ^^^
 //│ ╟── from binding:
-//│ ║  l.272: 	let baz(r: (0, 0) | (1, _)) = if r._1 < 1 then r._1 else r._2
+//│ ║  l.263: 	let baz(r: (0, 0) | (1, _)) = if r._1 < 1 then r._1 else r._2
 //│ ╙──       	        ^^^^^^^^^^^^^^^^^^
 //│ res: error
 //│ res: 0 | 1

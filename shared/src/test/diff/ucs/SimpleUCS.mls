@@ -297,7 +297,6 @@ fun g(a, b) =
 //│ g: (int, None | Some & {value: int},) -> int
 //│  = [Function: g1]
 
-// TODO: Fix the NaN.
 g(5, None())
 g(5, Some(7))
 g(0 - 5, None())
@@ -307,7 +306,7 @@ g(0 - 5, Some(9))
 //│ res: int
 //│    = 35
 //│ res: int
-//│    = NaN
+//│    = 25
 //│ res: int
 //│    = 4
 
@@ -355,7 +354,7 @@ fun f(x) =
     0 ::
       Nil() then "oh"
 //│ ╔══[ERROR] Cannot find operator `::` in the context
-//│ ║  l.355: 	    0 ::
+//│ ║  l.354: 	    0 ::
 //│ ╙──       	      ^^
 //│ f: anything -> error
 //│ Code generation encountered an error:

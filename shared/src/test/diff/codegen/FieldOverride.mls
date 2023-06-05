@@ -1,0 +1,158 @@
+:NewParser
+:NewDefs
+
+:js
+class C(a: int) { let a = 1 }
+//│ class C(a: int) {
+//│   let a: 1
+//│ }
+//│ // Prelude
+//│ let res;
+//│ class TypingUnit {
+//│   #C;
+//│   constructor() {
+//│   }
+//│   get C() {
+//│     const outer = this;
+//│     if (this.#C === undefined) {
+//│       class C {
+//│         #a;
+//│         get a() { return this.#a; }
+//│         constructor(a) {
+//│           this.#a = a;
+//│           this.#a = 1;
+//│           const a1 = this.#a;
+//│         }
+//│       };
+//│       this.#C = ((a) => Object.freeze(new C(a)));
+//│       this.#C.class = C;
+//│     }
+//│     return this.#C;
+//│   }
+//│ }
+//│ const typing_unit = new TypingUnit;
+//│ globalThis.C = typing_unit.C;
+//│ // End of generated code
+
+// should return 1
+let a = C(2)
+a.a
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.38: 	let a = C(2)
+//│ ║        	        ^^^^
+//│ ╟── integer literal of type `2` is not an instance of type `int`
+//│ ║  l.38: 	let a = C(2)
+//│ ║        	          ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.5: 	class C(a: int) { let a = 1 }
+//│ ╙──     	           ^^^
+//│ let a: C | error
+//│ 1 | error
+//│ a
+//│   = C {}
+//│ res
+//│     = 1
+
+:js
+class C2(a: int, b: int) {
+  let a = b + 1
+  let b = a + 1
+}
+//│ class C2(a: int, b: int) {
+//│   let a: Int
+//│   let b: Int
+//│ }
+//│ // Prelude
+//│ class TypingUnit2 {
+//│   #C2;
+//│   constructor() {
+//│   }
+//│   get C2() {
+//│     const outer = this;
+//│     if (this.#C2 === undefined) {
+//│       class C2 {
+//│         #a;
+//│         get a() { return this.#a; }
+//│         #b;
+//│         get b() { return this.#b; }
+//│         constructor(a, b) {
+//│           this.#a = a;
+//│           this.#b = b;
+//│           this.#a = b + 1;
+//│           const a1 = this.#a;
+//│           this.#b = a1 + 1;
+//│           const b1 = this.#b;
+//│         }
+//│       };
+//│       this.#C2 = ((a, b) => Object.freeze(new C2(a, b)));
+//│       this.#C2.class = C2;
+//│     }
+//│     return this.#C2;
+//│   }
+//│ }
+//│ const typing_unit2 = new TypingUnit2;
+//│ globalThis.C2 = typing_unit2.C2;
+//│ // End of generated code
+
+let c2 = C2(1, 2)
+c2.a
+c2.b
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.97: 	let c2 = C2(1, 2)
+//│ ║        	         ^^^^^^^^
+//│ ╟── integer literal of type `1` is not an instance of type `int`
+//│ ║  l.97: 	let c2 = C2(1, 2)
+//│ ║        	            ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.57: 	class C2(a: int, b: int) {
+//│ ╙──      	            ^^^
+//│ let c2: C2 | error
+//│ Int | error
+//│ c2
+//│    = C2 {}
+//│ res
+//│     = 3
+//│ res
+//│     = 4
+
+class C3(a: int) {
+  let a = 42
+  class C4(a: int) {
+    let a = 44
+  }
+}
+//│ class C3(a: int) {
+//│   class C4(a: int) {
+//│     let a: 44
+//│   }
+//│   let a: 42
+//│ }
+
+:e
+let c3 = C3(1)
+let c4 = c3.C4(2)
+c3.a
+c4.a
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.132: 	let c3 = C3(1)
+//│ ║         	         ^^^^^
+//│ ╟── integer literal of type `1` is not an instance of type `int`
+//│ ║  l.132: 	let c3 = C3(1)
+//│ ║         	            ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.118: 	class C3(a: int) {
+//│ ╙──       	            ^^^
+//│ ╔══[ERROR] access to class member not yet supported
+//│ ║  l.133: 	let c4 = c3.C4(2)
+//│ ╙──       	           ^^^
+//│ let c3: C3 | error
+//│ let c4: error
+//│ error
+//│ c3
+//│    = C3 {}
+//│ c4
+//│    = C4 {}
+//│ res
+//│     = 42
+//│ res
+//│     = 44

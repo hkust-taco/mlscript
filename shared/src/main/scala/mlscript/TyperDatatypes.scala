@@ -404,12 +404,7 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
     override def toString = showProvOver(false)(id.idStr+s"<${parents.map(_.name).mkString(",")}>")
   }
   
-  sealed trait TypeVarOrRigidVar extends SimpleType {
-    def assertTV: TV = this match {
-      case tv: TV => tv
-      case _ => lastWords(s"$this was not a type variable")
-    }
-  }
+  sealed trait TypeVarOrRigidVar extends SimpleType
   
   sealed trait ObjectTag extends TypeTag {
     val id: SimpleTerm
@@ -418,7 +413,7 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
   
   sealed abstract class AbstractTag extends BaseTypeOrTag with TypeTag with Factorizable
   
-  case class TraitTag(id: Var)(val prov: TypeProvenance) extends AbstractTag with ObjectTag {
+  case class TraitTag(id: Var, parents: Set[TypeName])(val prov: TypeProvenance) extends AbstractTag with ObjectTag {
     def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level = MinLevel
     def level: Level = MinLevel
   }
@@ -551,7 +546,7 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
     override def toString: String =
       (trueOriginal match {
         case S(to) =>
-          assert(to.nameHint === nameHint)
+          assert(to.nameHint === nameHint, (to.nameHint, nameHint))
           to.mkStr + "_" + uid + showLevel(level)
         case N =>
           showProvOver(false)(mkStr + showLevel(level))

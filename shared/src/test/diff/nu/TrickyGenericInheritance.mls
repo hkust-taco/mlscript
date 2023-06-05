@@ -1,0 +1,204 @@
+:NewDefs
+
+
+
+trait T1[A] {
+  fun f: A -> A
+}
+//│ trait T1[A] {
+//│   fun f: A -> A
+//│ }
+
+class C1 extends T1 {
+  fun f(x: int) = x
+}
+//│ class C1 extends T1 {
+//│   fun f: (x: int,) -> int
+//│ }
+
+class C1 extends T1['FigureItOut] {
+  fun f(x: int) = x
+}
+//│ class C1 extends T1 {
+//│   fun f: (x: int,) -> int
+//│ }
+
+let c1 = new C1
+//│ let c1: C1
+//│ c1
+//│    = C1 {}
+
+c1.f
+//│ (x: int,) -> int
+//│ res
+//│     = [Function: f]
+
+(c1 : T1).f
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.36: 	(c1 : T1).f
+//│ ║        	 ^^
+//│ ╟── application of type `C1` is not an instance of type `T1`
+//│ ║  l.26: 	let c1 = new C1
+//│ ║        	             ^^
+//│ ╟── but it flows into reference with expected type `#T1`
+//│ ║  l.36: 	(c1 : T1).f
+//│ ║        	 ^^
+//│ ╟── Note: constraint arises from class tag:
+//│ ║  l.36: 	(c1 : T1).f
+//│ ╙──      	      ^^
+//│ (??A & 'A) -> ('A | ??A0)
+//│ res
+//│     = [Function: f]
+
+(c1 : T1['X]).f
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.53: 	(c1 : T1['X]).f
+//│ ║        	 ^^
+//│ ╟── application of type `C1` is not an instance of type `T1`
+//│ ║  l.26: 	let c1 = new C1
+//│ ║        	             ^^
+//│ ╟── but it flows into reference with expected type `#T1`
+//│ ║  l.53: 	(c1 : T1['X]).f
+//│ ║        	 ^^
+//│ ╟── Note: constraint arises from applied type reference:
+//│ ║  l.53: 	(c1 : T1['X]).f
+//│ ╙──      	      ^^^^^^
+//│ int -> int
+//│ res
+//│     = [Function: f]
+
+:ns
+(c1 : T1).f
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.71: 	(c1 : T1).f
+//│ ║        	 ^^
+//│ ╟── application of type `C1` is not an instance of type `T1`
+//│ ║  l.26: 	let c1 = new C1
+//│ ║        	             ^^
+//│ ╟── but it flows into reference with expected type `#T1`
+//│ ║  l.71: 	(c1 : T1).f
+//│ ║        	 ^^
+//│ ╟── Note: constraint arises from class tag:
+//│ ║  l.71: 	(c1 : T1).f
+//│ ╙──      	      ^^
+//│ 'f
+//│   where
+//│     'f :> 'A -> 'A
+//│     'A := in ??A out ??A0
+//│ res
+//│     = [Function: f]
+
+:ns
+(c1 : T1['X]).f
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.92: 	(c1 : T1['X]).f
+//│ ║        	 ^^
+//│ ╟── application of type `C1` is not an instance of type `T1`
+//│ ║  l.26: 	let c1 = new C1
+//│ ║        	             ^^
+//│ ╟── but it flows into reference with expected type `#T1`
+//│ ║  l.92: 	(c1 : T1['X]).f
+//│ ║        	 ^^
+//│ ╟── Note: constraint arises from applied type reference:
+//│ ║  l.92: 	(c1 : T1['X]).f
+//│ ╙──      	      ^^^^^^
+//│ 'f
+//│   where
+//│     'f :> 'A -> 'A
+//│     'A := 'X
+//│     'X :> int
+//│        <: 'FigureItOut
+//│     'FigureItOut :> int
+//│                  <: 'X & int
+//│ res
+//│     = [Function: f]
+
+
+
+// * The more tricky case:
+
+:e
+trait T2[A] {
+  fun f: A -> A
+  val r = C2().f(false)
+}
+class C2 extends T2['FigureItOut] {
+  fun f(x: int) = x
+}
+//│ ╔══[ERROR] Method implementations in traits are not yet supported
+//│ ║  l.123: 	  val r = C2().f(false)
+//│ ╙──       	      ^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Unhandled cyclic definition
+//│ ║  l.121: 	trait T2[A] {
+//│ ║         	^^^^^^^^^^^^^
+//│ ║  l.122: 	  fun f: A -> A
+//│ ║         	^^^^^^^^^^^^^^^
+//│ ║  l.123: 	  val r = C2().f(false)
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.123: 	  val r = C2().f(false)
+//│ ║         	          ^^^^^^^^^^^^^
+//│ ╟── reference of type `False` is not an instance of type `int`
+//│ ║  l.123: 	  val r = C2().f(false)
+//│ ║         	                 ^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.126: 	  fun f(x: int) = x
+//│ ╙──       	           ^^^
+//│ trait T2[A] {
+//│   fun f: A -> A
+//│   let r: error | int
+//│ }
+//│ class C2 extends T2 {
+//│   fun f: (x: int,) -> int
+//│ }
+
+:e
+trait T2[A] {
+  fun f: A -> A
+  val r = (C2() : T2['X]).f(false)
+}
+class C2 extends T2['FigureItOut] {
+  fun f(x: int) = x
+}
+//│ ╔══[ERROR] Method implementations in traits are not yet supported
+//│ ║  l.158: 	  val r = (C2() : T2['X]).f(false)
+//│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.158: 	  val r = (C2() : T2['X]).f(false)
+//│ ║         	           ^^^^
+//│ ╟── application of type `#C2` is not an instance of type `T2`
+//│ ╟── Note: constraint arises from applied type reference:
+//│ ║  l.158: 	  val r = (C2() : T2['X]).f(false)
+//│ ╙──       	                  ^^^^^^
+//│ ╔══[ERROR] Unhandled cyclic definition
+//│ ║  l.156: 	trait T2[A] {
+//│ ║         	^^^^^^^^^^^^^
+//│ ║  l.157: 	  fun f: A -> A
+//│ ║         	^^^^^^^^^^^^^^^
+//│ ║  l.158: 	  val r = (C2() : T2['X]).f(false)
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ trait T2[A] {
+//│   fun f: A -> A
+//│   let r: False | error
+//│ }
+//│ class C2 extends T2 {
+//│   fun f: (x: int,) -> int
+//│ }
+
+:e // FIXME
+C2() : T2['X]
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.189: 	C2() : T2['X]
+//│ ║         	^^^^
+//│ ╟── application of type `C2` is not an instance of type `T2`
+//│ ╟── Note: constraint arises from applied type reference:
+//│ ║  l.189: 	C2() : T2['X]
+//│ ╙──       	       ^^^^^^
+//│ T2['X]
+//│   where
+//│     'X :> error
+//│ res
+//│ Runtime error:
+//│   TypeError: Class constructor C2 cannot be invoked without 'new'
+
+

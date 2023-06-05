@@ -841,7 +841,8 @@ final case class JSClassNewDecl(
     methods: Ls[JSClassMemberDecl],
     implements: Ls[Str],
     initStmts: Ls[JSStmt],
-    nestedTypes: Ls[Str]
+    nestedTypes: Ls[Str],
+    ctorOverridden: Bool
 ) extends JSStmt {
   def toSourceCode: SourceCode = {
     val constructor: SourceCode = {
@@ -854,10 +855,10 @@ final case class JSClassNewDecl(
         if (s.isEmpty) s"${p._1}"
         else s"${p._1}, $s")
       nestedTypes.foreach(t => buffer += s"  #$t;")
-      if (!privateMem.isEmpty) {
-        privateMem.foreach(f => buffer += s"  #${f};")
-        privateMem.foreach(f => buffer += s"  get ${f}() { return this.#${f}; }")
-      }
+      privateMem.distinct.foreach(f => {
+        buffer += s"  #${f};"
+        buffer += s"  get ${f}() { return this.#${f}; }"
+      })
       buffer += s"  constructor($params) {"
       if (`extends`.isDefined) {
         val sf = superFields.iterator.zipWithIndex.foldLeft("")((res, p) =>
@@ -870,10 +871,15 @@ final case class JSClassNewDecl(
         buffer += s"    $name.implement(this);"
       }
 
-      assert(fields.length === ctorParams.length, s"fields and ctorParams have different size in class $name.")
-      fields.lazyZip(ctorParams).foreach { (field, param) =>
-        buffer += s"    this.#$field = $param;" // TODO: invalid name?
+      // if the default constructor is overridden, we generate the overridden version
+      // otherwise, generate based on the class fields
+      if (!ctorOverridden) {
+        assert(fields.length === ctorParams.length, s"fields and ctorParams have different size in class $name.")
+        fields.lazyZip(ctorParams).foreach { (field, param) =>
+          buffer += s"    this.#$field = $param;" // TODO: invalid name?
+        }
       }
+
       initStmts.foreach { s =>
         s.toSourceCode.indented.indented.toString.split("\n").foreach {
           line => buffer += line

@@ -1,4 +1,3 @@
-:NewParser
 :NewDefs
 
 
@@ -36,16 +35,16 @@ mixin EvalBase {
 
 
 module TestLang extends EvalBase
-//│ module TestLang() {
-//│   fun eval: 'a -> Int
+//│ module TestLang {
+//│   fun eval: (Add['E] | Lit) -> Int
 //│ }
 //│ where
-//│   'a <: Add['a] | Lit
+//│   'E <: Add['E] | Lit
 
 TestLang.eval
-//│ 'a -> Int
+//│ (Add['E] | Lit) -> Int
 //│   where
-//│     'a <: Add['a] | Lit
+//│     'E <: Add['E] | Lit
 //│ res
 //│     = [Function: eval]
 
@@ -74,16 +73,16 @@ module TestLang extends EvalNothing, EvalAddLit
 //│   this: {eval: 'lhs -> Int}
 //│   fun eval: (Add['lhs] | Lit | #Object & 'a & ~#Add & ~#Lit) -> (Int | 'b)
 //│ }
-//│ module TestLang() {
-//│   fun eval: 'c -> Int
+//│ module TestLang {
+//│   fun eval: (Add['E] | Lit) -> Int
 //│ }
 //│ where
-//│   'c <: Add['c] | Lit
+//│   'E <: Add['E] | Lit
 
 TestLang.eval
-//│ 'a -> Int
+//│ (Add['E] | Lit) -> Int
 //│   where
-//│     'a <: Add['a] | Lit
+//│     'E <: Add['E] | Lit
 //│ res
 //│     = [Function: eval]
 
@@ -115,16 +114,18 @@ mixin EvalNeg {
 
 
 module TestLang extends EvalBase, EvalNeg
-//│ module TestLang() {
-//│   fun eval: 'a -> Int
+//│ module TestLang {
+//│   fun eval: (Neg['expr] | #Object & 'a & ~#Neg) -> Int
 //│ }
 //│ where
-//│   'a <: Add['a] | Lit | Neg['a]
+//│   'expr <: Neg['expr] | #Object & 'a & ~#Neg
+//│   'a <: Add[Neg['expr] | #Object & 'a & ~#Neg] | Lit
 
 TestLang.eval
-//│ 'a -> Int
+//│ (Neg['expr] | #Object & 'a & ~#Neg) -> Int
 //│   where
-//│     'a <: Add['a] | Lit | Neg['a]
+//│     'expr <: Neg['expr] | #Object & 'a & ~#Neg
+//│     'a <: Add[Neg['expr] | #Object & 'a & ~#Neg] | Lit
 //│ res
 //│     = [Function: eval]
 
@@ -174,9 +175,9 @@ mixin EvalNegNeg_0 {
     // else super.eval(e)
 }
 //│ mixin EvalNegNeg_0() {
-//│   super: {eval: (Neg['A] | 'a) -> 'b}
+//│   super: {eval: (Neg[nothing] | 'a) -> 'b}
 //│   this: {eval: 'expr -> 'b}
-//│   fun eval: (Neg['A & (Neg['expr] | #Object & ~#Neg)] | #Object & 'a & ~#Neg) -> 'b
+//│   fun eval: (Neg[Neg['expr] | #Object & ~#Neg] | #Object & 'a & ~#Neg) -> 'b
 //│ }
 
 // * Concise alternative, usign syntax sugar:
@@ -184,13 +185,13 @@ mixin EvalNegNeg {
   fun eval(override Neg(Neg(d))) = this.eval(d)
 }
 //│ mixin EvalNegNeg() {
-//│   super: {eval: (Neg['A] | 'a) -> 'b}
+//│   super: {eval: (Neg[nothing] | 'a) -> 'b}
 //│   this: {eval: 'expr -> 'b}
-//│   fun eval: (Neg['A & (Neg['expr] | #Object & ~#Neg)] | #Object & 'a & ~#Neg) -> 'b
+//│   fun eval: (Neg[Neg['expr] | #Object & ~#Neg] | #Object & 'a & ~#Neg) -> 'b
 //│ }
 
 module TestLang extends EvalBase, EvalNeg, EvalNegNeg
-//│ module TestLang() {
+//│ module TestLang {
 //│   fun eval: 'a -> Int
 //│ }
 //│ where
@@ -202,7 +203,7 @@ fun mk(n) = if n is
   0 then Lit(0)
   1 then Neg(mk(n))
   _ then Add(mk(n), mk(n))
-//│ fun mk: forall 'E. #Num -> 'E
+//│ fun mk: forall 'E. #Object -> 'E
 //│   where
 //│     'E :> Add['E] | Lit | Neg['E]
 

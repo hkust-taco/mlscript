@@ -19,44 +19,36 @@ mixin EvalBase {
       Add(l, r) then this.eval(l) + this.eval(r)
 }
 //│ mixin EvalBase() {
-//│   this: {eval: nothing -> 'a & 'lhs -> Int}
-//│   fun eval: (Add['lhs] | Lit | Neg[nothing]) -> (Int | 'a)
+//│   this: {eval: 'expr -> 'a & ('expr0 | 'lhs) -> Int}
+//│   fun eval: (Add['lhs] | Lit | Neg['expr0 & (Neg['expr] | #Object & ~#Neg)]) -> (Int | 'a)
 //│ }
 
 // module TestLang extends EvalBase, EvalNeg
 module TestLang extends EvalBase
-//│ module TestLang() {
-//│   fun eval: 'a -> Int
+//│ module TestLang {
+//│   fun eval: forall 'E. (Add['E] | Lit | Neg['expr & (Neg['expr0] | #Object & ~#Neg)]) -> Int
 //│ }
 //│ where
-//│   'a <: Add['a] | Lit | Neg[nothing]
+//│   'E <: Add['E] | Lit | Neg['expr & (Neg['expr0] | #Object & ~#Neg)]
+//│   'expr <: Add['E] | Lit | Neg['expr & (Neg['expr0] | #Object & ~#Neg)]
+//│   'expr0 <: Add['E] | Lit | Neg['expr & (Neg['expr0] | #Object & ~#Neg)]
 
 
 fun mk(n) = if n is
   0 then Lit(0)
   1 then Neg(mk(n))
   _ then Add(mk(n), mk(n))
-//│ fun mk: forall 'E. #Num -> 'E
+//│ fun mk: forall 'E. #Object -> 'E
 //│   where
 //│     'E :> Add['E] | Lit | Neg['E]
 
-// TODO support this in UCS
 :stats
 TestLang.eval(mk(0))
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.45: 	TestLang.eval(mk(0))
-//│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `Lit` does not match type `nothing`
-//│ ║  l.36: 	  0 then Lit(0)
-//│ ║        	         ^^^^^^
-//│ ╟── Note: type parameter A is defined at:
-//│ ║  l.6: 	class Neg<A>(expr: A)
-//│ ╙──     	          ^
-//│ error | Int
+//│ Int
 //│ res
 //│     = 0
-//│ constrain calls  : 304
-//│ annoying  calls  : 116
-//│ subtyping calls  : 4486
+//│ constrain calls  : 440
+//│ annoying  calls  : 160
+//│ subtyping calls  : 4647
 
 

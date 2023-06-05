@@ -1,0 +1,209 @@
+:NewDefs
+
+
+class C1(x: int)
+//│ class C1(x: int)
+
+:e
+class C2(x: int) extends C1(y) {
+  val y = x
+}
+//│ ╔══[ERROR] identifier not found: y
+//│ ║  l.8: 	class C2(x: int) extends C1(y) {
+//│ ╙──     	                            ^
+//│ class C2(x: int) extends C1 {
+//│   let y: int
+//│ }
+
+:e
+class C2 extends C1(y) {
+  val y: int
+}
+//│ ╔══[ERROR] identifier not found: y
+//│ ║  l.19: 	class C2 extends C1(y) {
+//│ ╙──      	                    ^
+//│ class C2 extends C1 {
+//│   let y: int
+//│ }
+//│ Code generation encountered an error:
+//│   unresolved symbol y
+
+:e
+class C2 extends C1(this.y) {
+  val y: int
+}
+//│ ╔══[ERROR] identifier not found: this
+//│ ║  l.32: 	class C2 extends C1(this.y) {
+//│ ╙──      	                    ^^^^
+//│ class C2 extends C1 {
+//│   let y: int
+//│ }
+
+
+class C1(x: C1)
+//│ class C1(x: C1)
+
+:e
+class C2 extends C1(this)
+//│ ╔══[ERROR] identifier not found: this
+//│ ║  l.47: 	class C2 extends C1(this)
+//│ ╙──      	                    ^^^^
+//│ class C2 extends C1
+
+
+class Foo { fun x: int = 1 }
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.54: 	class Foo { fun x: int = 1 }
+//│ ║        	                         ^
+//│ ╟── integer literal of type `1` is not an instance of type `int`
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.54: 	class Foo { fun x: int = 1 }
+//│ ╙──      	                   ^^^
+//│ class Foo {
+//│   fun x: int
+//│ }
+
+:e
+class Bar extends Foo { fun x = false }
+//│ ╔══[ERROR] Type mismatch in definition of method x:
+//│ ║  l.67: 	class Bar extends Foo { fun x = false }
+//│ ║        	                            ^^^^^^^^^
+//│ ╟── reference of type `False` is not an instance of type `int`
+//│ ║  l.67: 	class Bar extends Foo { fun x = false }
+//│ ║        	                                ^^^^^
+//│ ╟── but it flows into definition of method x with expected type `int`
+//│ ║  l.67: 	class Bar extends Foo { fun x = false }
+//│ ║        	                            ^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.54: 	class Foo { fun x: int = 1 }
+//│ ║        	                   ^^^
+//│ ╟── from definition of method x:
+//│ ║  l.54: 	class Foo { fun x: int = 1 }
+//│ ╙──      	                ^^^^^^^^^^
+//│ class Bar extends Foo {
+//│   fun x: False
+//│ }
+
+:e
+class Bar extends Foo {
+  fun x: bool
+  fun x = false
+}
+//│ ╔══[ERROR] Type mismatch in definition of method x:
+//│ ║  l.90: 	  fun x = false
+//│ ║        	      ^^^^^^^^^
+//│ ╟── reference of type `False` is not an instance of type `bool`
+//│ ║  l.90: 	  fun x = false
+//│ ║        	          ^^^^^
+//│ ╟── but it flows into definition of method x with expected type `bool`
+//│ ║  l.90: 	  fun x = false
+//│ ║        	      ^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.89: 	  fun x: bool
+//│ ║        	         ^^^^
+//│ ╟── from signature of member `x`:
+//│ ║  l.89: 	  fun x: bool
+//│ ╙──      	      ^^^^^^^
+//│ ╔══[ERROR] Type mismatch in signature of member `x`:
+//│ ║  l.89: 	  fun x: bool
+//│ ║        	      ^^^^^^^
+//│ ╟── type `bool` is not an instance of `int`
+//│ ║  l.89: 	  fun x: bool
+//│ ║        	         ^^^^
+//│ ╟── but it flows into signature of member `x` with expected type `int`
+//│ ║  l.89: 	  fun x: bool
+//│ ║        	      ^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.54: 	class Foo { fun x: int = 1 }
+//│ ║        	                   ^^^
+//│ ╟── from definition of method x:
+//│ ║  l.54: 	class Foo { fun x: int = 1 }
+//│ ╙──      	                ^^^^^^^^^^
+//│ class Bar extends Foo {
+//│   fun x: bool
+//│ }
+
+mixin M { fun x = false }
+//│ mixin M() {
+//│   fun x: False
+//│ }
+
+:e
+class Bar extends Foo, M
+//│ ╔══[ERROR] Type mismatch in definition of method x:
+//│ ║  l.126: 	mixin M { fun x = false }
+//│ ║         	              ^^^^^^^^^
+//│ ╟── reference of type `False` is not an instance of type `int`
+//│ ║  l.126: 	mixin M { fun x = false }
+//│ ║         	                  ^^^^^
+//│ ╟── but it flows into definition of method x with expected type `int`
+//│ ║  l.126: 	mixin M { fun x = false }
+//│ ║         	              ^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.54: 	class Foo { fun x: int = 1 }
+//│ ║        	                   ^^^
+//│ ╟── from definition of method x:
+//│ ║  l.54: 	class Foo { fun x: int = 1 }
+//│ ╙──      	                ^^^^^^^^^^
+//│ class Bar extends Foo {
+//│   fun x: False
+//│ }
+
+
+
+class A { class X { fun f = 1 } }
+trait B { class X { fun g = 1 } }
+//│ class A {
+//│   class X {
+//│     fun f: 1
+//│   }
+//│ }
+//│ trait B {
+//│   class X {
+//│     fun g: 1
+//│   }
+//│ }
+
+:e
+class C extends A, B
+//│ ╔══[ERROR] Class member `X` cannot override class member of the same name declared in parent
+//│ ║  l.168: 	class C extends A, B
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Declared here:
+//│ ║  l.155: 	trait B { class X { fun g = 1 } }
+//│ ╙──       	          ^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Intersection of class member and class members currently unsupported
+//│ ║  l.168: 	class C extends A, B
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The class member is defined here:
+//│ ║  l.154: 	class A { class X { fun f = 1 } }
+//│ ║         	          ^^^^^^^^^^^^^^^^^^^
+//│ ╟── The class member is defined here:
+//│ ║  l.155: 	trait B { class X { fun g = 1 } }
+//│ ╙──       	          ^^^^^^^^^^^^^^^^^^^
+//│ class C extends A, B {
+//│   class X {
+//│     fun f: 1
+//│   }
+//│ }
+
+:e
+class C extends A {
+  class X { fun g = 1 }
+}
+//│ ╔══[ERROR] Class member `X` cannot override class member of the same name declared in parent
+//│ ║  l.191: 	class C extends A {
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.192: 	  class X { fun g = 1 }
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Declared here:
+//│ ║  l.154: 	class A { class X { fun f = 1 } }
+//│ ╙──       	          ^^^^^^^^^^^^^^^^^^^
+//│ class C extends A {
+//│   class X {
+//│     fun g: 1
+//│   }
+//│ }
+
+
+

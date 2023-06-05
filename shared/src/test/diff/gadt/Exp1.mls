@@ -1,14 +1,14 @@
 :NewDefs
 
 
-// TODO enable class signatures
-class Exp[A]: Pair | Lit {
-  fun test = if this is
-    Lit then 0
-    Pair then 1
-}
-// TODO enable class inheritance
+class Exp[A]: Pair | Lit
 class Lit(n: int) extends Exp[int]
+//│ ╔══[ERROR] type identifier not found: Pair
+//│ ║  l.4: 	class Exp[A]: Pair | Lit
+//│ ╙──     	              ^^^^
+//│ class Exp[A]: Lit | error
+//│ class Lit(n: int) extends Exp
+<<<<<<<
 class Pair[L, R](lhs: L, rhs: R) extends Exp[A]
 //│ ╔══[ERROR] Type Pair takes parameters
 //│ ║  l.5: 	class Exp[A]: Pair | Lit {
@@ -55,24 +55,92 @@ Lit(0).test
 //│ error
 //│ res
 //│     = 0
+||||||| 99d688be
+class Pair[L, R](lhs: L, rhs: R) extends Exp[A]
+//│ ╔══[ERROR] Type Pair takes parameters
+//│ ║  l.5: 	class Exp[A]: Pair | Lit {
+//│ ╙──     	              ^^^^
+//│ ╔══[ERROR] type signatures not yet supported for classes
+//│ ║  l.5: 	class Exp[A]: Pair | Lit {
+//│ ╙──     	              ^^^^^^^^^^
+//│ ╔══[ERROR] Unsupported parent specification
+//│ ║  l.11: 	class Lit(n: int) extends Exp[int]
+//│ ╙──      	                          ^^^^^^^^
+//│ ╔══[ERROR] Unsupported parent specification
+//│ ║  l.12: 	class Pair[L, R](lhs: L, rhs: R) extends Exp[A]
+//│ ╙──      	                                         ^^^^^^
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.6: 	  fun test = if this is
+//│ ║       	                ^^^^^^^
+//│ ║  l.7: 	    Lit then 0
+//│ ║       	^^^^^^^^^^^^^^
+//│ ║  l.8: 	    Pair then 1
+//│ ║       	^^^^^^^^^^^^^^^
+//│ ╟── reference of type `#Exp & {Exp#A = ?A}` does not match type `Lit | Pair[?L, ?R]`
+//│ ║  l.6: 	  fun test = if this is
+//│ ╙──     	                ^^^^
+//│ class Exp[A]() {
+//│   fun test: 0 | 1
+//│ }
+//│ class Lit(n: int)
+//│ class Pair[L, R](lhs: L, rhs: R)
+
+:e // TODO
+Lit(0).test
+//│ ╔══[ERROR] Class `Lit` does not contain member `test`
+//│ ║  l.42: 	Lit(0).test
+//│ ╙──      	      ^^^^^
+//│ error
+//│ res
+//│     = 0
+=======
+class Pair[L, R](lhs: L, rhs: R) extends Exp[(L, R)]
+//│ class Exp[A]: Lit | Pair[anything, anything]
+//│ class Lit(n: int) extends Exp
+//│ class Pair[L, R](lhs: L, rhs: R) extends Exp
+>>>>>>>
 
 
 fun f(p: Pair['a, 'b]) = p.lhs
-//│ fun f: forall 'a 'b. (p: Pair['a, 'b],) -> 'a
+//│ ╔══[ERROR] type identifier not found: Pair
+//│ ║  l.104: 	fun f(p: Pair['a, 'b]) = p.lhs
+//│ ╙──       	         ^^^^^^^^^^^^
+//│ fun f: (p: error,) -> error
 
 
 fun f(e) = if e is
   Pair(l, r) then [l, r]
-//│ fun f: forall 'lhs 'rhs. Pair['lhs, 'rhs] -> ('lhs, 'rhs,)
+//│ ╔══[ERROR] Illegal pattern `Pair`
+//│ ║  l.112: 	  Pair(l, r) then [l, r]
+//│ ╙──       	  ^^^^
+//│ fun f: anything -> error
+//│ Code generation encountered an error:
+//│   if expression was not desugared
 // f: (Exp['a] & Pair) -> 0
+
+
+fun f(e) = if e is
+  Pair(l, r) then [l, r]
+  Lit(n) then n
+//│ ╔══[ERROR] Illegal pattern `Pair`
+//│ ║  l.123: 	  Pair(l, r) then [l, r]
+//│ ╙──       	  ^^^^
+//│ fun f: anything -> error
+//│ Code generation encountered an error:
+//│   if expression was not desugared
+
+(e: Exp['X]) => f(e)
+//│ (e: Exp['X],) -> error
+//│ res
+//│     = [Function: res]
 
 
 :e // TODO support
 fun f(e) = if e is
   Pair['a, 'b](l, r) then [l, r]
 //│ ╔══[ERROR] illegal pattern
-//│ ║  l.72: 	  Pair['a, 'b](l, r) then [l, r]
-//│ ╙──      	  ^^^^^^^^^^^^^^^^^^
+//│ ║  l.140: 	  Pair['a, 'b](l, r) then [l, r]
+//│ ╙──       	  ^^^^^^^^^^^^^^^^^^
 //│ fun f: anything -> error
 //│ Code generation encountered an error:
 //│   if expression was not desugared
@@ -83,15 +151,12 @@ fun f(e) = if e is
   Pair(l: a, r) then
     fun f(x: a) = x
     f(l)
-//│ ╔══[ERROR] type identifier not found: a
-//│ ║  l.84: 	    fun f(x: a) = x
-//│ ╙──      	             ^
-//│ ╔══[ERROR] identifier not found: l
-//│ ║  l.85: 	    f(l)
-//│ ╙──      	      ^
-//│ fun f: Pair[anything, anything] -> error
+//│ ╔══[ERROR] Illegal pattern `Pair`
+//│ ║  l.151: 	  Pair(l: a, r) then
+//│ ╙──       	  ^^^^
+//│ fun f: anything -> error
 //│ Code generation encountered an error:
-//│   unresolved symbol l
+//│   if expression was not desugared
 // fun f: forall 'lhs 'rhs. Pair['lhs, 'rhs] -> ('lhs, 'rhs,)
 
 

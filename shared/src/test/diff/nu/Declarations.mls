@@ -20,7 +20,7 @@ atob(str)
 declare module console {
   fun error: Str -> unit
 }
-//│ module console() {
+//│ declare module console {
 //│   fun error: Str -> unit
 //│ }
 
@@ -33,7 +33,7 @@ console.error("hello")
 
 :e
 console.log("hello")
-//│ ╔══[ERROR] Module `console` does not contain member `log`
+//│ ╔══[ERROR] Type `console` does not contain member `log`
 //│ ║  l.35: 	console.log("hello")
 //│ ╙──      	       ^^^^
 //│ error
@@ -45,7 +45,7 @@ console.log("hello")
 declare module Foo {
   fun foo: Int
 }
-//│ module Foo() {
+//│ declare module Foo {
 //│   fun foo: Int
 //│ }
 
@@ -70,7 +70,7 @@ declare type A = Int
 declare class Sanitizer {
   fun sanitizeFor(element: Str, input: Str): Str
 }
-//│ class Sanitizer() {
+//│ declare class Sanitizer {
 //│   fun sanitizeFor: (element: Str, input: Str,) -> Str
 //│ }
 
@@ -94,8 +94,8 @@ declare module Buffer {
   // fun from1(a: Array[Int]): this.Buffer2 = from1(a) // FIXME
   // fun from2(a: Array[Int]): Buffer.Buffer2 = from2(a) // FIXME
 }
-//│ module Buffer() {
-//│   class Buffer2() {
+//│ declare module Buffer {
+//│   class Buffer2 {
 //│     let length: Int
 //│   }
 //│   fun bar: Int

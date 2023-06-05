@@ -27,7 +27,7 @@ class Test(n: Int) {
 //│           return outer.Test(n + 1);
 //│         }
 //│       };
-//│       this.#Test = ((n) => new Test(n));
+//│       this.#Test = ((n) => Object.freeze(new Test(n)));
 //│       this.#Test.class = Test;
 //│     }
 //│     return this.#Test;
@@ -51,7 +51,7 @@ module Test3 {
 //│ class Test2(n: Int) {
 //│   fun inc: Test2
 //│ }
-//│ module Test3() {
+//│ module Test3 {
 //│   fun inc: Int -> Test2
 //│ }
 
@@ -87,7 +87,7 @@ module Foo {
   fun f = C0()
   class C0()
 }
-//│ module Foo() {
+//│ module Foo {
 //│   class C0()
 //│   fun f: C0
 //│ }
@@ -109,7 +109,7 @@ module M1 extends M0(123) {
   fun m = "m"
   fun bar = "bar"
 }
-//│ module M1() {
+//│ module M1 {
 //│   fun bar: "bar"
 //│   fun foo: (Int, Int, Int,)
 //│   fun m: "m"
@@ -138,7 +138,7 @@ module M2 {
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
 //│ ║  l.135: 	    fun bar(x) = x + y + this.m
 //│ ╙──       	                             ^^
-//│ module M2() {
+//│ module M2 {
 //│   fun foo: Int -> Int
 //│   let m: 100
 //│ }

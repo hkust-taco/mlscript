@@ -60,8 +60,8 @@ module Helper {
   fun id(x) = x
 }
 //│ fun test: (1, True,)
-//│ module Helper() {
-//│   fun id: forall 'a. 'a -> 'a
+//│ module Helper {
+//│   fun id: 'a -> 'a
 //│ }
 
 

@@ -41,14 +41,14 @@ mixin EvalNegNeg {
     else super.eval(e)
 }
 //│ mixin EvalNegNeg() {
-//│   super: {eval: (Neg['A] | 'a) -> 'b}
+//│   super: {eval: (Neg[nothing] | 'a) -> 'b}
 //│   this: {eval: 'expr -> 'b}
-//│   fun eval: (Neg['A & (Neg['expr] | #Object & ~#Neg)] | #Object & 'a & ~#Neg) -> 'b
+//│   fun eval: (Neg[Neg['expr] | #Object & ~#Neg] | #Object & 'a & ~#Neg) -> 'b
 //│ }
 
 
 module TestLang extends EvalBase, EvalNeg, EvalNegNeg
-//│ module TestLang() {
+//│ module TestLang {
 //│   fun eval: 'a -> Int
 //│ }
 //│ where
@@ -58,13 +58,44 @@ module TestLang extends EvalBase, EvalNeg, EvalNegNeg
 
 
 fun mk(n) = if n is
-  0 then Lit(0)
-  1 then Neg(mk(n))
-  _ then Add(mk(n), mk(n))
+  0 then Lit(3)
+  1 then Neg(mk(n - 1))
+  _ then Add(mk(n - 1), mk(n - 1))
+//│ ╔══[ERROR] Type mismatch in definition:
+//│ ║  l.60: 	fun mk(n) = if n is
+//│ ║        	    ^^^^^^^^^^^^^^^
+//│ ║  l.61: 	  0 then Lit(3)
+//│ ║        	^^^^^^^^^^^^^^^
+//│ ║  l.62: 	  1 then Neg(mk(n - 1))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.63: 	  _ then Add(mk(n - 1), mk(n - 1))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── operator application of type `Int` is not an instance of type `Object`
+//│ ║  l.63: 	  _ then Add(mk(n - 1), mk(n - 1))
+//│ ║        	                           ^^^^^
+//│ ╟── Note: constraint arises from `case` expression:
+//│ ║  l.60: 	fun mk(n) = if n is
+//│ ║        	               ^^^^
+//│ ║  l.61: 	  0 then Lit(3)
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ║  l.62: 	  1 then Neg(mk(n - 1))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.63: 	  _ then Add(mk(n - 1), mk(n - 1))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── from reference:
+//│ ║  l.60: 	fun mk(n) = if n is
+//│ ╙──      	               ^
+//│ fun mk: forall 'E. (0 | 1) -> 'E
+//│   where
+//│     'E :> Add['E] | Lit | Neg['E]
+
 TestLang.eval(mk(0))
-//│ fun mk: forall 'E. #Num -> 'E
 //│ Int
-//│ where
-//│   'E :> Add['E] | Lit | Neg['E]
 //│ res
-//│     = [Function: mk]
+//│     = 3
+
+TestLang.eval(mk(11))
+//│ Int
+//│ res
+//│     = -3072
+
