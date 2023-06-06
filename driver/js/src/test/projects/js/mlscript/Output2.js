@@ -4,8 +4,6 @@ function log(x) {
   return console.info(x);
 }
 const Output2 = new class Output2 {
-  #CompilerOptions;
-  #TSConfig;
   #config;
   get config() { return this.#config; }
   constructor() {
@@ -16,36 +14,6 @@ const Output2 = new class Output2 {
       let config = { compilerOptions: options };
       return json5.stringify(config);
     })());
-  }
-  get CompilerOptions() {
-    const outer = this;
-    if (this.#CompilerOptions === undefined) {
-      class CompilerOptions {
-        #outDir;
-        get outDir() { return this.#outDir; }
-        constructor(outDir) {
-          this.#outDir = outDir;
-        }
-      };
-      this.#CompilerOptions = ((outDir) => Object.freeze(new CompilerOptions(outDir)));
-      this.#CompilerOptions.class = CompilerOptions;
-    }
-    return this.#CompilerOptions;
-  }
-  get TSConfig() {
-    const outer = this;
-    if (this.#TSConfig === undefined) {
-      class TSConfig {
-        #compilerOptions;
-        get compilerOptions() { return this.#compilerOptions; }
-        constructor(compilerOptions) {
-          this.#compilerOptions = compilerOptions;
-        }
-      };
-      this.#TSConfig = ((compilerOptions) => Object.freeze(new TSConfig(compilerOptions)));
-      this.#TSConfig.class = TSConfig;
-    }
-    return this.#TSConfig;
   }
   $init() {
     const self = this;
