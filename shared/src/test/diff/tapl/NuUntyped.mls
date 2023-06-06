@@ -315,7 +315,7 @@ fun findFreshName(name, freeNames) =
       tryNextAlphabet(charCode, charCode + 1, freeNames) is
         Some(newName) then newName
     _ then tryAppendDigits(name, 0, freeNames)
-//│ fun findFreshName: forall 'A 'A0 'A1. (string, Cons[in 'A | 'A0 | 'A1 out 'A & 'A0 & 'A1] | Nil,) -> string
+//│ fun findFreshName: forall 'A 'A0 'A1. (string, Cons[in 'A1 | 'A | 'A0 out 'A1 & 'A & 'A0] | Nil,) -> string
 
 // Find a fresh name to replace `name` that does not conflict with any bound
 // variables in the `body`.

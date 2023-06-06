@@ -1,4 +1,3 @@
-:NewParser
 :NewDefs
 
 
@@ -86,7 +85,7 @@ mixin Foo2 {
   fun foo2 = super
 }
 //│ ╔══[ERROR] Illegal use of `super`
-//│ ║  l.86: 	  fun foo2 = super
+//│ ║  l.85: 	  fun foo2 = super
 //│ ╙──      	             ^^^^^
 //│ mixin Foo2() {
 //│   super: 'super

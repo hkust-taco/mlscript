@@ -1,0 +1,171 @@
+:NewDefs
+
+
+
+trait Foo[A] { fun x: A }
+//│ trait Foo[A] {
+//│   fun x: A
+//│ }
+
+
+trait Base1: Foo
+//│ trait Base1: #Foo
+
+(b: Base1) => b.x
+//│ (b: Base1,) -> ??A
+//│ res
+//│     = [Function: res]
+
+(b: Base1) => b : Foo
+//│ (b: Base1,) -> #Foo
+//│ res
+//│     = [Function: res]
+
+:e
+(b: Base1) => b : Foo['X]
+//│ ╔══[ERROR] Type error in type ascription
+//│ ║  l.25: 	(b: Base1) => b : Foo['X]
+//│ ║        	              ^
+//│ ╟── type variable `A` leaks out of its scope
+//│ ║  l.25: 	(b: Base1) => b : Foo['X]
+//│ ║        	                      ^^
+//│ ╟── back into type variable `A`
+//│ ║  l.5: 	trait Foo[A] { fun x: A }
+//│ ╙──     	          ^
+//│ (b: Base1,) -> Foo['X]
+//│   where
+//│     'X :> ??A
+//│        <: ??A0
+//│ res
+//│     = [Function: res]
+
+:e
+1 : Foo[int]
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.43: 	1 : Foo[int]
+//│ ║        	^
+//│ ╟── integer literal of type `1` is not an instance of type `Foo`
+//│ ╟── Note: constraint arises from applied type reference:
+//│ ║  l.43: 	1 : Foo[int]
+//│ ╙──      	    ^^^^^^^^
+//│ Foo[int]
+//│ res
+//│     = 1
+
+
+trait Base1: Foo { val x: int }
+//│ trait Base1: #Foo {
+//│   let x: int
+//│ }
+
+(b: Base1) => b.x
+//│ (b: Base1,) -> (int & ??A)
+//│ res
+//│     = [Function: res]
+
+
+trait Base1: Foo[1 | 2] { val x: 0 | 1 }
+//│ trait Base1: Foo[1 | 2] {
+//│   let x: 0 | 1
+//│ }
+
+(b: Base1) => b.x
+//│ (b: Base1,) -> 1
+//│ res
+//│     = [Function: res]
+
+
+trait Base2: Foo['FigureItOut]
+//│ trait Base2: Foo[in ??FigureItOut out ??FigureItOut0]
+
+(b: Base2) => b.x
+//│ (b: Base2,) -> ??FigureItOut
+//│ res
+//│     = [Function: res]
+
+(b: Base1) => b : Foo
+//│ (b: Base1,) -> #Foo
+//│ res
+//│     = [Function: res]
+
+// :e
+(b: Base2) => b : Foo['X]
+//│ (b: Base2,) -> Foo['X]
+//│   where
+//│     'X :> ??FigureItOut
+//│        <: ??FigureItOut0
+//│ res
+//│     = [Function: res]
+
+
+// TODO reject
+class Impl extends Base2
+//│ class Impl extends Base2
+
+(x: Impl) => x : Base2
+//│ (x: Impl,) -> Base2
+//│ res
+//│     = [Function: res]
+
+:e
+class Impl() extends Base2, Foo
+//│ ╔══[ERROR] Member `x` is declared in parent but not implemented in `Impl`
+//│ ║  l.111: 	class Impl() extends Base2, Foo
+//│ ║         	      ^^^^
+//│ ╟── Declared here:
+//│ ║  l.5: 	trait Foo[A] { fun x: A }
+//│ ╙──     	                   ^^^^
+//│ class Impl() extends Base2, Foo {
+//│   fun x: 'A
+//│ }
+
+class Impl() extends Base2, Foo {
+  fun x = 1
+}
+//│ class Impl() extends Base2, Foo {
+//│   fun x: 1
+//│ }
+
+Impl().x
+//│ 1
+//│ res
+//│     = 1
+
+Impl() : Base2
+//│ Base2
+//│ res
+//│     = Impl {}
+
+(Impl() : Base2).x
+//│ ??FigureItOut
+//│ res
+//│     = 1
+
+class Impl2() extends Base2, Foo[int] {
+  fun x = 1
+}
+//│ class Impl2() extends Base2, Foo {
+//│   fun x: 1
+//│ }
+
+(Impl2() : Base2).x
+//│ ??FigureItOut
+//│ res
+//│     = 1
+
+
+
+trait Test1[A] { fun x: A }
+trait Test2[A]: Test1[(A, A)]
+//│ trait Test1[A] {
+//│   fun x: A
+//│ }
+//│ trait Test2[A]: Test1[(A, A,)]
+
+(t: Test2[int]) => t.x
+//│ (t: Test2[int],) -> (int, int,)
+//│ res
+//│     = [Function: res]
+
+
+

@@ -41,28 +41,35 @@ mixin EvalNegNeg {
     else super.eval(e)
 }
 //│ mixin EvalNegNeg() {
-//│   super: {eval: (Neg['A] | 'a) -> 'b}
+//│   super: {eval: (Neg[nothing] | 'a) -> 'b}
 //│   this: {eval: 'expr -> 'b}
-//│   fun eval: (Neg['A & (~#Neg | Neg['expr])] | 'a & ~#Neg) -> 'b
+//│   fun eval: (Neg[Neg['expr] | ~Neg[anything]] | 'a & ~#Neg) -> 'b
 //│ }
 
 
 module TestLang extends EvalBase, EvalNeg, EvalNegNeg
 //│ module TestLang {
-//│   fun eval: 'A -> int
+//│   fun eval: 'a -> int
 //│ }
 //│ where
-//│   'A <: Add['A] | Lit | Neg['A & (~#Neg | Neg['A])]
+//│   'a <: Add['a] | Lit | Neg['a & (Neg['a] | ~#Neg)]
 
 
 fun mk(n) = if n is
-  0 then Lit(0)
-  1 then Neg(mk(n))
-  _ then Add(mk(n), mk(n))
+  0 then Lit(3)
+  1 then Neg(mk(n - 1))
+  _ then Add(mk(n - 1), mk(n - 1))
+//│ fun mk: forall 'E. (0 | 1 | int & ~0 & ~1) -> 'E
+//│   where
+//│     'E :> Add['E] | Lit | Neg['E]
+
 TestLang.eval(mk(0))
-//│ fun mk: forall 'E. anything -> 'E
 //│ int
-//│ where
-//│   'E :> Add['E] | Lit | Neg['E]
 //│ res
-//│     = [Function: mk]
+//│     = 3
+
+TestLang.eval(mk(11))
+//│ int
+//│ res
+//│     = -3072
+

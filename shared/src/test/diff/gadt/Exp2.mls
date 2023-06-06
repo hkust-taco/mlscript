@@ -1,0 +1,78 @@
+:NewDefs
+
+
+class Exp[A]: Pair | Lit
+class Lit(n: int) extends Exp[int]
+class Pair[L, R](lhs: Exp[L], rhs: Exp[R]) extends Exp[(L, R)]
+//│ class Exp[A]: Lit | Pair[?, ?]
+//│ class Lit(n: int) extends Exp
+//│ class Pair[L, R](lhs: Exp[L], rhs: Exp[R]) extends Exp
+
+
+fun f(p: Pair['a, 'b]) = p.lhs
+//│ fun f: forall 'L 'a 'b. (p: Pair['a, 'b],) -> Exp['L]
+//│   where
+//│     'L := 'a
+
+
+fun f(e) = if e is
+  Pair(l, r) then [l, r]
+//│ fun f: forall 'L 'R. Pair['L, 'R] -> (Exp['L], Exp['R],)
+// f: (Exp['a] & Pair) -> 0
+
+
+fun f(e) = if e is
+  Pair(l, r) then [l, r]
+  Lit(n) then n
+//│ fun f: forall 'L 'R. (Lit | Pair['L, 'R]) -> ((Exp['L], Exp['R],) | int)
+
+:e
+(e: Exp['X]) => f(e)
+//│ ╔══[ERROR] Type error in application
+//│ ║  l.30: 	(e: Exp['X]) => f(e)
+//│ ║        	                ^^^^
+//│ ╟── type variable `L` leaks out of its scope
+//│ ║  l.6: 	class Pair[L, R](lhs: Exp[L], rhs: Exp[R]) extends Exp[(L, R)]
+//│ ╙──     	           ^
+//│ (e: Exp['X],) -> ((Exp['L], Exp['R],) | error | int)
+//│   where
+//│     'R :> ??R
+//│        <: ??R0
+//│     'L :> ??L
+//│        <: ??L0
+//│ res
+//│     = [Function: res]
+
+
+:e
+fun f(e) = if e is
+  Pair(l, r) then f(l) + f(r)
+  Lit(n) then n
+//│ ╔══[ERROR] Type error in definition
+//│ ║  l.48: 	fun f(e) = if e is
+//│ ║        	    ^^^^^^^^^^^^^^
+//│ ║  l.49: 	  Pair(l, r) then f(l) + f(r)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.50: 	  Lit(n) then n
+//│ ║        	^^^^^^^^^^^^^^^
+//│ ╟── type variable `L` leaks out of its scope
+//│ ║  l.6: 	class Pair[L, R](lhs: Exp[L], rhs: Exp[R]) extends Exp[(L, R)]
+//│ ╙──     	           ^
+//│ ╔══[ERROR] Type error in definition
+//│ ║  l.48: 	fun f(e) = if e is
+//│ ║        	    ^^^^^^^^^^^^^^
+//│ ║  l.49: 	  Pair(l, r) then f(l) + f(r)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.50: 	  Lit(n) then n
+//│ ║        	^^^^^^^^^^^^^^^
+//│ ╟── type variable `R` leaks out of its scope
+//│ ║  l.6: 	class Pair[L, R](lhs: Exp[L], rhs: Exp[R]) extends Exp[(L, R)]
+//│ ╙──     	              ^
+//│ fun f: forall 'L 'R. (Lit | Pair['L, 'R]) -> int
+//│   where
+//│     'R :> ??R
+//│        <: ??R0
+//│     'L :> ??L
+//│        <: ??L0
+
+

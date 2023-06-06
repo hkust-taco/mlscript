@@ -1,0 +1,96 @@
+:NewDefs
+
+
+class Foo(x: int)
+//│ class Foo(x: int)
+
+let f = Foo(1)
+//│ let f: Foo
+//│ f
+//│   = Foo {}
+
+let f = new Foo(1)
+//│ let f: Foo
+//│ f
+//│   = Foo {}
+
+if f is Foo then 1 else 0
+//│ 0 | 1
+//│ res
+//│     = 1
+
+if f is Foo(a) then a else 0
+//│ int
+//│ res
+//│     = 1
+
+
+class Point[A](x: A, y: A)
+//│ class Point[A](x: A, y: A)
+
+let origin = new Point(0, 0)
+//│ let origin: Point[0]
+//│ origin
+//│        = Point {}
+
+// TODO
+let origin = Point[int](0, 0)
+//│ ╔══[ERROR] Type application syntax is not yet supported
+//│ ║  l.37: 	let origin = Point[int](0, 0)
+//│ ╙──      	             ^^^^^^^^^^
+//│ let origin: error
+//│ origin
+//│        = Point {}
+
+// TODO
+let origin = new Point[int](0, 0)
+//│ ╔══[PARSE ERROR] Unexpected application after `new` keyword
+//│ ║  l.46: 	let origin = new Point[int](0, 0)
+//│ ╙──      	                 ^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Currently unsupported `new` syntax
+//│ ║  l.46: 	let origin = new Point[int](0, 0)
+//│ ╙──      	             ^^^
+//│ let origin: error
+//│ origin
+//│        = {}
+
+
+// TODO
+new {}
+//│ ╔══[PARSE ERROR] Unexpected record after `new` keyword
+//│ ║  l.59: 	new {}
+//│ ╙──      	    ^^
+//│ ╔══[ERROR] Currently unsupported `new` syntax
+//│ ║  l.59: 	new {}
+//│ ╙──      	^^^
+//│ error
+//│ res
+//│     = {}
+
+// TODO
+new
+//│ ╔══[PARSE ERROR] Unexpected end of input; an expression was expected here
+//│ ║  l.71: 	new
+//│ ╙──      	   ^
+//│ ╔══[ERROR] Currently unsupported `new` syntax
+//│ ║  l.71: 	new
+//│ ╙──      	^^^
+//│ error
+//│ res
+//│     = {}
+
+// TODO
+new
+  x: 0
+//│ ╔══[PARSE ERROR] Unexpected type ascription after `new` keyword
+//│ ║  l.84: 	  x: 0
+//│ ╙──      	  ^
+//│ ╔══[ERROR] Currently unsupported `new` syntax
+//│ ║  l.83: 	new
+//│ ╙──      	^^^
+//│ error
+//│ res
+//│     = {}
+
+
+

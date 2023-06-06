@@ -43,7 +43,7 @@ final case class MethodDef[RHS <: Term \/ Type](
   val children: Ls[Located] = nme :: body :: Nil
 }
 
-sealed trait NameRef extends Located { val name: Str }
+sealed trait NameRef extends Located { val name: Str; def toVar: Var }
 
 sealed abstract class DeclKind(val str: Str)
 case object Val extends DeclKind("value")
@@ -200,8 +200,7 @@ final case class NuFunDef(
   nme: Var,
   tparams: Ls[TypeName],
   rhs: Term \/ Type,
-)(val declareLoc: Opt[Loc], val exportLoc: Opt[Loc])
-  extends NuDecl with DesugaredStatement {
+)(val declareLoc: Opt[Loc], val exportLoc: Opt[Loc], val signature: Opt[NuFunDef]) extends NuDecl with DesugaredStatement {
   val body: Located = rhs.fold(identity, identity)
   def kind: DeclKind = Val
   val abstractLoc: Opt[Loc] = None

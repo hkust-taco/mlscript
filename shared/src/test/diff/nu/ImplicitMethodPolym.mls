@@ -1,0 +1,244 @@
+:NewDefs
+
+
+module M {
+  fun id1(x) = x
+}
+//│ module M {
+//│   fun id1: 'a -> 'a
+//│ }
+
+M.id1
+//│ 'a -> 'a
+//│ res
+//│     = [Function: id1]
+
+M.id1(true)
+//│ true
+//│ res
+//│     = true
+
+M.id1(0)
+//│ 0
+//│ res
+//│     = 0
+
+
+module M {
+  fun id1(x) = x
+  id1(0)
+}
+//│ module M {
+//│   fun id1: 'a -> (0 | 'a)
+//│ }
+
+M.id1
+//│ 'a -> (0 | 'a)
+//│ res
+//│     = [Function: id1]
+
+// :d
+mixin Mx {
+  fun id1(x) = x
+}
+//│ mixin Mx() {
+//│   fun id1: 'a -> 'a
+//│ }
+
+// * Note: the order of freshening matters!
+// * if TV freshened transitively from traversing the `this` refinement at a lower ctx level,
+// * as in the case below, the result is different.
+module M extends Mx {
+  val r = this.id1(0)
+}
+//│ module M {
+//│   fun id1: forall 'a. 'a -> 'a
+//│   let r: 0
+//│ }
+
+mixin Mx {
+  fun id1(x) = this.id2(x)
+}
+//│ mixin Mx() {
+//│   this: {id2: 'a -> 'b}
+//│   fun id1: 'a -> 'b
+//│ }
+
+:e
+module M extends Mx {
+  this.id1(0)
+}
+//│ ╔══[ERROR] Type `#M & {id1: ?a -> ?b}` does not contain member `id2`
+//│ ║  l.60: 	  fun id1(x) = this.id2(x)
+//│ ╙──      	                   ^^^^
+//│ module M {
+//│   fun id1: anything -> error
+//│ }
+//│ Runtime error:
+//│   TypeError: self.id2 is not a function
+
+:e
+module M extends Mx {
+  fun id2(x) = (x, x)
+  this.id1(0)
+}
+//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ║  l.60: 	  fun id1(x) = this.id2(x)
+//│ ╙──      	                   ^^^^
+//│ module M {
+//│   fun id1: anything -> error
+//│   fun id2: 'a -> ('a, 'a,)
+//│ }
+
+// * Notice that `id1` is no longer generalized!
+module M extends Mx {
+  fun id2: 'a => ('a, 'a)
+  fun id2(x) = (x, x)
+  this.id1(0)
+}
+//│ module M {
+//│   fun id1: 'a -> ('a | 0, 'a | 0,)
+//│   fun id2: forall 'a0. 'a0 -> ('a0, 'a0,)
+//│ }
+
+
+
+class C {
+  fun id1(x) = x
+  fun f = (id1(true), id1(0))
+  fun id2(x) = x
+}
+//│ class C {
+//│   fun f: (0 | true | 'a, 0 | true | 'b,)
+//│   fun id1: ('b & 'a) -> (0 | true | 'a)
+//│   fun id2: 'c -> 'c
+//│ }
+
+// TODO support
+// :d
+module M extends C {
+  this.id2(true)
+}
+//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ║  l.120: 	  this.id2(true)
+//│ ╙──       	      ^^^^
+//│ module M extends C {
+//│   fun f: forall 'a 'b. (0 | true | 'a, 0 | true | 'b,)
+//│   fun id1: forall 'a 'b. ('b & 'a) -> (0 | true | 'a)
+//│   fun id2: forall 'c. 'c -> 'c
+//│ }
+
+// TODO support
+module M extends C {
+  fun g = (this.id2(true), this.id2(0))
+}
+//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ║  l.133: 	  fun g = (this.id2(true), this.id2(0))
+//│ ╙──       	               ^^^^
+//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ║  l.133: 	  fun g = (this.id2(true), this.id2(0))
+//│ ╙──       	                               ^^^^
+//│ module M extends C {
+//│   fun f: forall 'a 'b. (0 | true | 'a, 0 | true | 'b,)
+//│   fun g: (error, error,)
+//│   fun id1: forall 'a 'b. ('b & 'a) -> (0 | true | 'a)
+//│   fun id2: forall 'c. 'c -> 'c
+//│ }
+
+M.id1
+//│ forall 'a. 'a -> (0 | true | 'a)
+//│ res
+//│     = [Function: id1]
+
+M.id2
+//│ forall 'a. 'a -> 'a
+//│ res
+//│     = [Function: id2]
+
+M.f
+//│ (0 | true, 0 | true,)
+//│ res
+//│     = [ true, 0 ]
+
+M.g
+//│ (error, error,)
+//│ res
+//│     = [ true, 0 ]
+
+
+:e
+module M extends C {
+  fun id1 = succ
+}
+//│ ╔══[ERROR] Type mismatch in definition of method id1:
+//│ ║  l.171: 	  fun id1 = succ
+//│ ║         	      ^^^^^^^^^^
+//│ ╟── application of type `?a` does not match type `int | ~(?b & ?c)`
+//│ ║  l.108: 	  fun f = (id1(true), id1(0))
+//│ ╙──       	           ^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in definition of method id1:
+//│ ║  l.171: 	  fun id1 = succ
+//│ ║         	      ^^^^^^^^^^
+//│ ╟── type `int` does not match type `0 | true | ?a`
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.107: 	  fun id1(x) = x
+//│ ╙──       	               ^
+//│ module M extends C {
+//│   fun f: (0 | true, 0 | true,)
+//│   fun id1: int -> int
+//│   fun id2: forall 'a. 'a -> 'a
+//│ }
+
+M.id1
+//│ int -> int
+//│ res
+//│     = [Function: succ]
+
+
+(M : C).id1(false)
+//│ 0 | false | true
+//│ res
+//│     = 1
+
+
+// FIXME? parsing/semantics of this, currently treated as a named tuple...
+(M: C)
+//│ (M: () -> C,)
+//│ res
+//│     = [ [class C] ]
+
+
+
+module None
+//│ module None
+
+// TODO parse
+// TODO reject; polymophism should be blocked by mutation from distributing/refreshing
+:pe
+:e
+module M {
+  mut val m = None
+  fun oops(x) = m := x
+}
+//│ ╔══[PARSE ERROR] Unexpected 'mut' keyword in expression position
+//│ ║  l.220: 	  mut val m = None
+//│ ╙──       	  ^^^
+//│ ╔══[PARSE ERROR] Unexpected 'val' keyword in expression position
+//│ ║  l.220: 	  mut val m = None
+//│ ╙──       	      ^^^
+//│ ╔══[ERROR] identifier not found: :=
+//│ ║  l.221: 	  fun oops(x) = m := x
+//│ ╙──       	                  ^^
+//│ ╔══[ERROR] identifier not found: m
+//│ ║  l.221: 	  fun oops(x) = m := x
+//│ ╙──       	                ^
+//│ ╔══[ERROR] Unexpected equation in this position
+//│ ║  l.220: 	  mut val m = None
+//│ ╙──       	          ^^^^^^^^
+//│ module M {
+//│   fun oops: anything -> error
+//│ }
+//│ Code generation encountered an error:
+//│   unresolved symbol :=
+
+

@@ -1,5 +1,4 @@
 :NewDefs
-:NoJS
 
 
 class Union<Region>(a: Region, b: Region)
@@ -12,4 +11,5 @@ fun hmm(x) =
 fun hmm(x) =
   if x is Union(z, y) then x
 //│ fun hmm: forall 'Region. Union['Region] -> Union['Region]
+
 

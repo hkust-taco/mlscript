@@ -95,7 +95,7 @@ class Driver(options: DriverOptions) {
         s"declare module $moduleName() {\n" +
           content.splitSane('\n').toIndexedSeq.filter(!_.isEmpty()).map(line => s"  $line").reduceLeft(_ + "\n" + _) +
         "\n}\n"
-      case _ => s"declare $content"
+      case _ => content
     }
 
   private def parseAndRun[Res](filename: String, f: (ParseResult) => Res): Res = readFile(filename) match {

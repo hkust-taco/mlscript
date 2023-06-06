@@ -1,4 +1,3 @@
-:NewParser
 :NewDefs
 
 
@@ -17,7 +16,7 @@ mixin ComparePoint {
     (lhs.x === rhs.x) && (lhs.y === rhs.y)
 }
 //│ mixin ComparePoint() {
-//│   fun compare: forall 'a 'b. ({x: Eql['a], y: Eql['b]}, {x: 'a, y: 'b},) -> bool
+//│   fun compare: ({x: Eql['a], y: Eql['b]}, {x: 'a, y: 'b},) -> bool
 //│ }
 
 
@@ -40,7 +39,7 @@ mixin CompareColored {
 }
 //│ mixin CompareColored() {
 //│   super: {compare: ('a, 'b,) -> bool}
-//│   fun compare: forall 'color. ({color: {equals: 'color -> bool}} & 'a, {color: 'color} & 'b,) -> bool
+//│   fun compare: ({color: {equals: 'color -> bool}} & 'a, {color: 'color} & 'b,) -> bool
 //│ }
 
 

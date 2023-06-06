@@ -159,18 +159,15 @@ constructor(x: int)
 class F(x: int) extends C(x + 1) {}
 class G extends C(2) {}
 class H extends B {}
-//│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
+//│ ╔══[ERROR] class C expects 0 parameter(s); got 1
 //│ ║  l.159: 	class F(x: int) extends C(x + 1) {}
-//│ ╙──       	                        ^^^^^^^^
-//│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
+//│ ╙──       	                        ^^^^^^^
+//│ ╔══[ERROR] class C expects 0 parameter(s); got 1
 //│ ║  l.160: 	class G extends C(2) {}
-//│ ╙──       	                ^^^^
-//│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
-//│ ║  l.161: 	class H extends B {}
-//│ ╙──       	                ^
-//│ class F(x: int)
-//│ class G
-//│ class H
+//│ ╙──       	                ^^^
+//│ class F(x: int) extends C
+//│ class G extends C
+//│ class H extends B
 //│ // Prelude
 //│ class TypingUnit7 {
 //│   #F;
@@ -262,13 +259,13 @@ module I {
     class L extends J(0)
   }
 }
-//│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
-//│ ║  l.262: 	    class L extends J(0)
-//│ ╙──       	                    ^^^^
+//│ ╔══[ERROR] class J expects 0 parameter(s); got 1
+//│ ║  l.259: 	    class L extends J(0)
+//│ ╙──       	                    ^^^
 //│ module I {
 //│   class J
 //│   module K {
-//│     class L
+//│     class L extends J
 //│   }
 //│ }
 //│ // Prelude
@@ -419,10 +416,10 @@ fun h(z: int) =
 let hh = h(1)
 new hh(1)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.420: 	new hh(1)
+//│ ║  l.417: 	new hh(1)
 //│ ║         	    ^^^^^
 //│ ╟── argument of type `(1,)` does not match type `()`
-//│ ║  l.420: 	new hh(1)
+//│ ║  l.417: 	new hh(1)
 //│ ╙──       	      ^^^
 //│ let hh: () -> N
 //│ N | error
@@ -440,11 +437,11 @@ module O {
 mixin P {
   constructor(x: int)
 }
-//│ ╔══[ERROR] Explicit module constructors are not supported.
-//│ ║  l.438: 	  constructor(x: int)
+//│ ╔══[ERROR] Explicit module constructors are not supported
+//│ ║  l.435: 	  constructor(x: int)
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Explicit mixin constructors are not supported.
-//│ ║  l.441: 	  constructor(x: int)
+//│ ╔══[ERROR] Explicit mixin constructors are not supported
+//│ ║  l.438: 	  constructor(x: int)
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^
 //│ module O
 //│ mixin P()

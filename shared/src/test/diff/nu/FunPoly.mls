@@ -61,7 +61,7 @@ module Helper {
 }
 //│ fun test: (1, true,)
 //│ module Helper {
-//│   fun id: forall 'a. 'a -> 'a
+//│   fun id: 'a -> 'a
 //│ }
 
 

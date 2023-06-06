@@ -121,19 +121,35 @@ class Base2(x) extends BaseOf(x + 1), BaseTest
 //│ }
 
 :e
-class Base1(x): BaseTest
-//│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.124: 	class Base1(x): BaseTest
-//│ ╙──       	            ^
-//│ ╔══[ERROR] type signatures not yet supported for classes
-//│ ║  l.124: 	class Base1(x): BaseTest
-//│ ╙──       	                ^^^^^^^^
-//│ class Base1(x: error)
+class Base1(x: int): BaseTest
+//│ ╔══[ERROR] mixin BaseTest cannot be used as a type
+//│ ║  l.124: 	class Base1(x: int): BaseTest
+//│ ╙──       	                     ^^^^^^^^
+//│ class Base1(x: int): BaseTest
 
 Base1
-//│ (x: error,) -> Base1
+//│ (x: int,) -> (Base1 & BaseTest)
 //│ res
 //│     = [Function (anonymous)] { class: [class Base1] }
+
+:e
+1 : BaseTest
+//│ ╔══[ERROR] mixin BaseTest cannot be used as a type
+//│ ║  l.136: 	1 : BaseTest
+//│ ╙──       	    ^^^^^^^^
+//│ BaseTest
+//│ res
+//│     = 1
+
+:e
+error : BaseTest
+//│ ╔══[ERROR] mixin BaseTest cannot be used as a type
+//│ ║  l.145: 	error : BaseTest
+//│ ╙──       	        ^^^^^^^^
+//│ BaseTest
+//│ res
+//│ Runtime error:
+//│   Error: unexpected runtime error
 
 
 // :ns
@@ -142,44 +158,44 @@ mixin Foo {
 }
 //│ mixin Foo() {
 //│   super: {base: int, misc: 'misc}
-//│   fun test: forall 'a. (int & 'a) -> (int, 'a, 'misc,)
+//│   fun test: (int & 'a) -> (int, 'a, 'misc,)
 //│ }
 
 :e
 module Base1(base: int, misc: string) extends Foo
 //│ ╔══[ERROR] module parameters are not supported
-//│ ║  l.149: 	module Base1(base: int, misc: string) extends Foo
+//│ ║  l.165: 	module Base1(base: int, misc: string) extends Foo
 //│ ╙──       	             ^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.149: 	module Base1(base: int, misc: string) extends Foo
+//│ ║  l.165: 	module Base1(base: int, misc: string) extends Foo
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Object of type `anything` does not have field 'misc'
-//│ ║  l.149: 	module Base1(base: int, misc: string) extends Foo
+//│ ║  l.165: 	module Base1(base: int, misc: string) extends Foo
 //│ ║         	                                              ^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.141: 	  fun test(x) = [super.base + x, x, super.misc]
+//│ ║  l.157: 	  fun test(x) = [super.base + x, x, super.misc]
 //│ ║         	                                    ^^^^^^^^^^
 //│ ╟── from reference:
-//│ ║  l.141: 	  fun test(x) = [super.base + x, x, super.misc]
+//│ ║  l.157: 	  fun test(x) = [super.base + x, x, super.misc]
 //│ ╙──       	                                    ^^^^^
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.149: 	module Base1(base: int, misc: string) extends Foo
+//│ ║  l.165: 	module Base1(base: int, misc: string) extends Foo
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Object of type `anything` does not have field 'base'
-//│ ║  l.149: 	module Base1(base: int, misc: string) extends Foo
+//│ ║  l.165: 	module Base1(base: int, misc: string) extends Foo
 //│ ║         	                                              ^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.141: 	  fun test(x) = [super.base + x, x, super.misc]
+//│ ║  l.157: 	  fun test(x) = [super.base + x, x, super.misc]
 //│ ║         	                 ^^^^^^^^^^
 //│ ╟── from reference:
-//│ ║  l.141: 	  fun test(x) = [super.base + x, x, super.misc]
+//│ ║  l.157: 	  fun test(x) = [super.base + x, x, super.misc]
 //│ ╙──       	                 ^^^^^
 //│ module Base1(base: int, misc: string) {
-//│   fun test: (int & 'a) -> (int, 'a, nothing,)
+//│   fun test: forall 'a. (int & 'a) -> (int, 'a, nothing,)
 //│ }
 
 Base1.test
-//│ (int & 'a) -> (int, 'a, nothing,)
+//│ forall 'a. (int & 'a) -> (int, 'a, nothing,)
 //│ res
 //│     = [Function: test]
 
@@ -191,7 +207,7 @@ mixin WrapBase {
   fun wrap(x) = x
 }
 //│ mixin WrapBase() {
-//│   fun wrap: forall 'a. 'a -> 'a
+//│   fun wrap: 'a -> 'a
 //│   fun wrapA: (x: int,) -> int
 //│ }
 
@@ -255,16 +271,16 @@ WrapBase1.wrapA(1)
 :e
 WrapBase1.wrapA("ok")
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.256: 	WrapBase1.wrapA("ok")
+//│ ║  l.272: 	WrapBase1.wrapA("ok")
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"ok"` is not an instance of type `int`
-//│ ║  l.256: 	WrapBase1.wrapA("ok")
+//│ ║  l.272: 	WrapBase1.wrapA("ok")
 //│ ║         	                ^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.190: 	  fun wrapA(x: int) = x : int
+//│ ║  l.206: 	  fun wrapA(x: int) = x : int
 //│ ║         	               ^^^
 //│ ╟── from reference:
-//│ ║  l.200: 	  fun wrapA(x) = [super.wrapA(x)]
+//│ ║  l.216: 	  fun wrapA(x) = [super.wrapA(x)]
 //│ ╙──       	                              ^
 //│ (int,) | error
 //│ res

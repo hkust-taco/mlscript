@@ -211,7 +211,7 @@ trait TypeSimplifier { self: Typer =>
             }
             
             val traitPrefixes =
-              tts.iterator.collect{ case TraitTag(Var(tagNme)) => tagNme.capitalize }.toSet
+              tts.iterator.collect{ case TraitTag(Var(tagNme), _) => tagNme.capitalize }.toSet
             
             bo match {
               case S(cls @ ClassTag(Var(tagNme), ps))
@@ -301,8 +301,10 @@ trait TypeSimplifier { self: Typer =>
               =>
                 val clsTyNme = TypeName(clsNme)
                 val lti = ctx.tyDefs2(clsNme)
-                val defn = lti.result.getOrElse(die)
-                val cls = defn.asInstanceOf[TypedNuCls]
+                val cls = lti.result match {
+                  case S(r: TypedNuCls) => r
+                  case _ => die 
+                }
                 
                 val rcdMap  = rcd.fields.toMap
                 
@@ -1179,7 +1181,7 @@ trait TypeSimplifier { self: Typer =>
                           (fields1.size === fields2.size || nope) && fields1.map(_._2).lazyZip(fields2.map(_._2)).forall(unifyF)
                         case (FunctionType(lhs1, rhs1), FunctionType(lhs2, rhs2)) => unify(lhs1, lhs2) && unify(rhs1, rhs2)
                         case (Without(base1, names1), Without(base2, names2)) => unify(base1, base2) && (names1 === names2 || nope)
-                        case (TraitTag(id1), TraitTag(id2)) => id1 === id2 || nope
+                        case (TraitTag(id1, _), TraitTag(id2, _)) => id1 === id2 || nope
                         case (SkolemTag(l1, id1), SkolemTag(l2, id2)) => l1 === l2 && id1 === id2 || nope
                         case (ExtrType(pol1), ExtrType(pol2)) => pol1 === pol2 || nope
                         case (TypeBounds(lb1, ub1), TypeBounds(lb2, ub2)) =>

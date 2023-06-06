@@ -1,0 +1,184 @@
+:NewDefs
+
+
+
+
+trait Foo[A] { fun foo: A }
+//│ trait Foo[A] {
+//│   fun foo: A
+//│ }
+
+module Bar extends Foo[int | bool], Foo[int | string] {
+  fun foo = 123
+}
+//│ module Bar extends Foo {
+//│   fun foo: 123
+//│ }
+
+Bar.foo
+//│ 123
+//│ res
+//│     = 123
+
+Bar : Foo['X]
+//│ Foo['X]
+//│   where
+//│     'X := int | string
+//│ res
+//│     = Bar { class: [class Bar extends Object] }
+
+(Bar : Foo['X]).foo
+//│ int | string
+//│ res
+//│     = 123
+
+
+trait Foo[A] { fun foo: A; fun bar: A -> A }
+//│ trait Foo[A] {
+//│   fun bar: A -> A
+//│   fun foo: A
+//│ }
+
+module Bar extends Foo[int | bool], Foo[int | string] {
+  fun foo = 123
+  fun bar = id
+}
+//│ module Bar extends Foo {
+//│   fun bar: forall 'a. 'a -> 'a
+//│   fun foo: 123
+//│ }
+
+Bar.bar
+//│ forall 'a. 'a -> 'a
+//│ res
+//│     = [Function: id]
+
+Bar : Foo['X]
+//│ Foo['X]
+//│   where
+//│     'X := int | string
+//│ res
+//│     = Bar { class: [class Bar extends Object] }
+
+
+trait T1 extends Foo[int | bool]
+//│ trait T1 extends Foo {
+//│   fun bar: 'A -> 'A
+//│   fun foo: 'A
+//│ }
+//│ where
+//│   'A := bool | int
+
+module Bar extends T1, Foo[int | string] {
+  fun foo = 123
+  fun bar = id
+}
+//│ module Bar extends Foo, T1 {
+//│   fun bar: forall 'a. 'a -> 'a
+//│   fun foo: 123
+//│ }
+
+(Bar : Foo['X]).foo
+//│ int | string
+//│ res
+//│     = 123
+
+(Bar : Foo['X]).bar
+//│ ('A & (int | string)) -> ('A | int | string)
+//│ res
+//│     = [Function: id]
+
+(Bar : T1).foo
+//│ bool | int
+//│ res
+//│     = 123
+
+let f = (Bar : T1).bar
+f(true)
+//│ let f: ('A & (bool | int)) -> ('A | bool | int)
+//│ bool | int
+//│ f
+//│   = [Function: id]
+//│ res
+//│     = true
+
+:e
+module Bar extends T1, Foo[int | string] {
+  fun foo = 123
+  fun bar(x) = x + 1
+}
+//│ ╔══[ERROR] Type mismatch in definition of method bar:
+//│ ║  l.108: 	  fun bar(x) = x + 1
+//│ ║         	      ^^^^^^^^^^^^^^
+//│ ╟── type `bool` is not an instance of type `int`
+//│ ║  l.64: 	trait T1 extends Foo[int | bool]
+//│ ║        	                           ^^^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.108: 	  fun bar(x) = x + 1
+//│ ╙──       	               ^
+//│ ╔══[ERROR] Type mismatch in definition of method bar:
+//│ ║  l.108: 	  fun bar(x) = x + 1
+//│ ║         	      ^^^^^^^^^^^^^^
+//│ ╟── type `string` is not an instance of type `int`
+//│ ║  l.106: 	module Bar extends T1, Foo[int | string] {
+//│ ║         	                                 ^^^^^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.108: 	  fun bar(x) = x + 1
+//│ ╙──       	               ^
+//│ module Bar extends Foo, T1 {
+//│   fun bar: int -> int
+//│   fun foo: 123
+//│ }
+
+
+trait Base[A] { fun foo: A; fun bar: A -> A }
+trait Derived1[A] extends Base[A]
+trait Derived2 extends Base[(int | string, int | string)]
+//│ trait Base[A] {
+//│   fun bar: A -> A
+//│   fun foo: A
+//│ }
+//│ trait Derived1[A] extends Base {
+//│   fun bar: 'A -> 'A
+//│   fun foo: 'A
+//│ }
+//│ trait Derived2 extends Base {
+//│   fun bar: 'A0 -> 'A0
+//│   fun foo: 'A0
+//│ }
+//│ where
+//│   'A0 := (int | string, int | string,)
+//│   'A := A
+
+class Final extends Derived1[(int, int)], Derived2 {
+  fun foo = (123, 456)
+  fun bar([x, y]) = [error, error]
+}
+//│ class Final extends Base, Derived1, Derived2 {
+//│   fun bar: (anything, anything,) -> (nothing, nothing,)
+//│   fun foo: (123, 456,)
+//│ }
+
+:e
+class Final extends Derived1[(int, int)], Derived2 {
+  fun foo = (123, 456)
+  fun bar([x, y]) = [y, x]
+}
+//│ ╔══[ERROR] Type mismatch in definition of method bar:
+//│ ║  l.165: 	  fun bar([x, y]) = [y, x]
+//│ ║         	      ^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `string` is not an instance of `int`
+//│ ║  l.136: 	trait Derived2 extends Base[(int | string, int | string)]
+//│ ║         	                                   ^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.163: 	class Final extends Derived1[(int, int)], Derived2 {
+//│ ║         	                                   ^^^
+//│ ╟── from reference:
+//│ ║  l.165: 	  fun bar([x, y]) = [y, x]
+//│ ╙──       	                        ^
+//│ class Final extends Base, Derived1, Derived2 {
+//│   fun bar: (int, int,) -> (int | string, int | string,)
+//│   fun foo: (123, 456,)
+//│ }
+
+

@@ -90,9 +90,6 @@ fun foo0(x) = if x is foo() then 0
 
 :e
 fun foo(x) = if x is foo() then 0
-//│ ╔══[ERROR] Unhandled cyclic definition
-//│ ║  l.92: 	fun foo(x) = if x is foo() then 0
-//│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Illegal pattern `foo`
 //│ ║  l.92: 	fun foo(x) = if x is foo() then 0
 //│ ╙──      	                     ^^^
