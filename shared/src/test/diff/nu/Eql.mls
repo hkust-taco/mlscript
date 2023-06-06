@@ -30,7 +30,16 @@ x === 1
 
 :e
 x === x
-//│ Bool
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.32: 	x === x
+//│ ║        	^^^^^^^
+//│ ╟── type `Eql[Int]` does not match type `?A | Int`
+//│ ║  l.4: 	let x: Eql[Int]
+//│ ║       	       ^^^^^^^^
+//│ ╟── but it flows into reference with expected type `?A0 | Int`
+//│ ║  l.32: 	x === x
+//│ ╙──      	      ^
+//│ Bool | error
 //│ res
 //│     = <no result>
 //│       x is not implemented
@@ -64,6 +73,22 @@ test1(1)
 //│ Bool
 //│ res
 //│     = true
+
+:e
+test1(x)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.78: 	test1(x)
+//│ ║        	^^^^^^^^
+//│ ╟── type `Eql[Int]` does not match type `?A | Int`
+//│ ║  l.4: 	let x: Eql[Int]
+//│ ║       	       ^^^^^^^^
+//│ ╟── but it flows into reference with expected type `?A0 | Int`
+//│ ║  l.78: 	test1(x)
+//│ ╙──      	      ^
+//│ Bool | error
+//│ res
+//│     = <no result>
+//│       x is not implemented
 
 
 let n: Int = 1
@@ -143,13 +168,13 @@ x => test2(x, d)
 :e
 test2(1, "oops")
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.144: 	test2(1, "oops")
+//│ ║  l.169: 	test2(1, "oops")
 //│ ║         	^^^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"oops"` is not an instance of type `Num`
-//│ ║  l.144: 	test2(1, "oops")
+//│ ║  l.169: 	test2(1, "oops")
 //│ ║         	         ^^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.44: 	  x === y
+//│ ║  l.53: 	  x === y
 //│ ╙──      	        ^
 //│ Bool | error
 //│ res
@@ -158,13 +183,13 @@ test2(1, "oops")
 :e
 test2("oops", 1)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.159: 	test2("oops", 1)
+//│ ║  l.184: 	test2("oops", 1)
 //│ ║         	^^^^^^^^^^^^^^^^
 //│ ╟── integer literal of type `1` is not an instance of type `Str`
-//│ ║  l.159: 	test2("oops", 1)
+//│ ║  l.184: 	test2("oops", 1)
 //│ ║         	              ^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.44: 	  x === y
+//│ ║  l.53: 	  x === y
 //│ ╙──      	        ^
 //│ Bool | error
 //│ res
@@ -173,11 +198,11 @@ test2("oops", 1)
 :e
 test2(1, {})
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.174: 	test2(1, {})
+//│ ║  l.199: 	test2(1, {})
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── record literal of type `anything` is not an instance of type `Num`
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.44: 	  x === y
+//│ ║  l.53: 	  x === y
 //│ ╙──      	        ^
 //│ Bool | error
 //│ res
@@ -186,11 +211,11 @@ test2(1, {})
 :e
 test2({}, 1)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.187: 	test2({}, 1)
+//│ ║  l.212: 	test2({}, 1)
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── record literal of type `anything` is not an instance of type `Eql`
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.44: 	  x === y
+//│ ║  l.53: 	  x === y
 //│ ╙──      	  ^
 //│ Bool | error
 //│ res
@@ -199,11 +224,11 @@ test2({}, 1)
 :e
 test2({}, {})
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.200: 	test2({}, {})
+//│ ║  l.225: 	test2({}, {})
 //│ ║         	^^^^^^^^^^^^^
 //│ ╟── record literal of type `anything` is not an instance of type `Eql`
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.44: 	  x === y
+//│ ║  l.53: 	  x === y
 //│ ╙──      	  ^
 //│ Bool | error
 //│ res

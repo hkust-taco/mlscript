@@ -40,7 +40,7 @@ fun f(e) = if e is
 fun f(e) = if e is
   Pair(l, r) then [l, r]
   Lit(n) then n
-//│ fun f: forall 'lhs 'rhs. (Lit | Pair['lhs, 'rhs]) -> (('lhs, 'rhs,) | int)
+//│ fun f: forall 'rhs 'lhs. (Lit | Pair['lhs, 'rhs]) -> (('lhs, 'rhs,) | int)
 
 (e: Exp['X]) => f(e)
 //│ (e: Exp['X],) -> ((??L, ??R,) | int)

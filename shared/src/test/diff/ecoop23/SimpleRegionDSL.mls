@@ -171,16 +171,16 @@ mixin Text {
 
 :e
 module SizeText extends Text
-//│ ╔══[ERROR] Type `#SizeText & {text: forall ?a ?b ?c ?d ?e ?f. ?e -> (?d | ?f | ?c | ?a | ?b)}` does not contain member `size`
+//│ ╔══[ERROR] Type `#SizeText & {text: forall ?a ?b ?c ?d ?e ?f. ?d -> (?e | ?a | ?b | ?c | ?f)}` does not contain member `size`
 //│ ║  l.165: 	      Translate then concat("a translated region of size ", toString(this.size(e)))
 //│ ╙──       	                                                                         ^^^^^
-//│ ╔══[ERROR] Type `#SizeText & {text: forall ?a ?b ?c ?d ?e ?f. ?c -> (?d | ?b | ?a | ?f | ?e)}` does not contain member `size`
+//│ ╔══[ERROR] Type `#SizeText & {text: forall ?a ?b ?c ?d ?e ?f. ?d -> (?b | ?f | ?e | ?c | ?a)}` does not contain member `size`
 //│ ║  l.164: 	      Intersect then concat("the intersection of two regions of size ", toString(this.size(e)))
 //│ ╙──       	                                                                                     ^^^^^
-//│ ╔══[ERROR] Type `#SizeText & {text: forall ?a ?b ?c ?d ?e ?f. ?b -> (?a | ?c | ?d | ?e | ?f)}` does not contain member `size`
+//│ ╔══[ERROR] Type `#SizeText & {text: forall ?a ?b ?c ?d ?e ?f. ?b -> (?e | ?f | ?a | ?c | ?d)}` does not contain member `size`
 //│ ║  l.163: 	      Union then concat("the union of two regions of size ", toString(this.size(e)))
 //│ ╙──       	                                                                          ^^^^^
-//│ ╔══[ERROR] Type `#SizeText & {text: forall ?a ?b ?c ?d ?e ?f. ?b -> (?e | ?d | ?c | ?a | ?f)}` does not contain member `size`
+//│ ╔══[ERROR] Type `#SizeText & {text: forall ?a ?b ?c ?d ?e ?f. ?e -> (?b | ?a | ?f | ?d | ?c)}` does not contain member `size`
 //│ ║  l.162: 	      Outside(a) then concat("outside a region of size ", toString(this.size(a)))
 //│ ╙──       	                                                                       ^^^^^
 //│ module SizeText {
@@ -253,20 +253,20 @@ mixin IsEmpty {
 
 module IsUnivIsEmpty extends IsUniv, IsEmpty
 //│ module IsUnivIsEmpty {
-//│   fun isEmpty: forall 'Region 'Region0. (Intersect['Region] | Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~#Univ | Outside['a] | Scale['a0] | Translate['a1] | Union['Region0] | Univ) -> (Bool | 'b)
+//│   fun isEmpty: forall 'Region 'Region0. (Intersect['Region0] | Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~#Univ | Outside['a] | Scale['a0] | Translate['a1] | Union['Region] | Univ) -> (Bool | 'b)
 //│   fun isUniv: forall 'Region1 'Region2. (Intersect['Region2] | Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~#Univ | Outside['a2] | Scale['a3] | Translate['a4] | Union['Region1] | Univ) -> (Bool | 'b)
 //│ }
 //│ where
-//│   'Region <: Intersect['Region] | Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~#Univ | Outside['a] | Scale['a0] | Translate['a1] | Union['Region0] | Univ
+//│   'Region0 <: Intersect['Region0] | Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~#Univ | Outside['a] | Scale['a0] | Translate['a1] | Union['Region] | Univ
 //│   'a <: Intersect['Region2] | Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~#Univ | Outside['a2] | Scale['a3] | Translate['a4] | Union['Region1] | Univ
 //│   'Region2 <: Intersect['Region2] | Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~#Univ | Outside['a2] | Scale['a3] | Translate['a4] | Union['Region1] | Univ
 //│   'a3 <: Intersect['Region2] | Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~#Univ | Outside['a2] | Scale['a3] | Translate['a4] | Union['Region1] | Univ
 //│   'a4 <: Intersect['Region2] | Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~#Univ | Outside['a2] | Scale['a3] | Translate['a4] | Union['Region1] | Univ
 //│   'Region1 <: Intersect['Region2] | Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~#Univ | Outside['a2] | Scale['a3] | Translate['a4] | Union['Region1] | Univ
-//│   'a2 <: Intersect['Region] | Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~#Univ | Outside['a] | Scale['a0] | Translate['a1] | Union['Region0] | Univ
-//│   'a0 <: Intersect['Region] | Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~#Univ | Outside['a] | Scale['a0] | Translate['a1] | Union['Region0] | Univ
-//│   'a1 <: Intersect['Region] | Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~#Univ | Outside['a] | Scale['a0] | Translate['a1] | Union['Region0] | Univ
-//│   'Region0 <: Intersect['Region] | Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~#Univ | Outside['a] | Scale['a0] | Translate['a1] | Union['Region0] | Univ
+//│   'a2 <: Intersect['Region0] | Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~#Univ | Outside['a] | Scale['a0] | Translate['a1] | Union['Region] | Univ
+//│   'a0 <: Intersect['Region0] | Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~#Univ | Outside['a] | Scale['a0] | Translate['a1] | Union['Region] | Univ
+//│   'a1 <: Intersect['Region0] | Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~#Univ | Outside['a] | Scale['a0] | Translate['a1] | Union['Region] | Univ
+//│   'Region <: Intersect['Region0] | Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~#Univ | Outside['a] | Scale['a0] | Translate['a1] | Union['Region] | Univ
 
 module IsUnivIsEmpty extends IsEmpty, IsUniv
 //│ module IsUnivIsEmpty {
@@ -336,7 +336,7 @@ TestElim.eliminate(Outside(Outside(Univ())))
 //│ forall 'a. 'b | 'a
 //│   where
 //│     'b :> forall 'a. Univ | 'a
-//│     'a :> Outside[forall 'a. Univ | 'b | 'a] | Union[forall 'a. 'b | 'a] | Intersect[forall 'a. 'b | 'a] | Translate[forall 'a. 'b | 'a] | Scale[forall 'a. 'b | 'a]
+//│     'a :> Outside[forall 'a. Univ | 'b | 'a] | Scale[forall 'a. 'b | 'a] | Union[forall 'a. 'b | 'a] | Intersect[forall 'a. 'b | 'a] | Translate[forall 'a. 'b | 'a]
 //│ res
 //│     = Univ {}
 
@@ -375,7 +375,7 @@ module Lang extends SizeBase, SizeExt, Contains, Text, IsUniv, IsEmpty, Eliminat
 //│   fun contains: forall 'Region 'Region0. (Circle | Intersect['Region] | Outside['a] | Translate['a0] | Union['Region0], {x: Int, y: Int},) -> Bool
 //│   fun eliminate: forall 'Region1 'b 'Region2 'c. (Intersect['Region2] | Object & 'b & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union | Outside['a1 & (Object & ~#Outside | Outside['a2])] | Scale['a3] | Translate['a4] | Union['Region1]) -> ('d | 'c | 'b)
 //│   fun isEmpty: forall 'Region3 'Region4. (Intersect['Region4] | Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~#Univ | Outside['a5] | Scale['a6] | Translate['a7] | Union['Region3] | Univ) -> (Bool | 'e)
-//│   fun isUniv: forall 'Region5 'Region6. (Intersect['Region6] | Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~#Univ | Outside['a8] | Scale['a9] | Translate['a10] | Union['Region5] | Univ) -> (Bool | 'e)
+//│   fun isUniv: forall 'Region5 'Region6. (Intersect['Region5] | Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~#Univ | Outside['a8] | Scale['a9] | Translate['a10] | Union['Region6] | Univ) -> (Bool | 'e)
 //│   fun size: (Empty | Object & 'f & ~#Empty & ~#Scale & ~#Univ | Scale['a11] | Univ) -> Int
 //│   fun text: (Circle | Intersect[Empty | Object & 'f & ~#Empty & ~#Scale & ~#Univ | Scale['a11] | Univ] | Outside[Empty | Object & 'f & ~#Empty & ~#Scale & ~#Univ | Scale['a11] | Univ] | Translate[Empty | Object & 'f & ~#Empty & ~#Scale & ~#Univ | Scale['a11] | Univ] | Union[Empty | Object & 'f & ~#Empty & ~#Scale & ~#Univ | Scale['a11] | Univ]) -> Str
 //│ }
@@ -383,11 +383,11 @@ module Lang extends SizeBase, SizeExt, Contains, Text, IsUniv, IsEmpty, Eliminat
 //│   'f <: Circle | Intersect[Empty | Object & 'f & ~#Empty & ~#Scale & ~#Univ | Scale['a11] | Univ] | Outside[Empty | Object & 'f & ~#Empty & ~#Scale & ~#Univ | Scale['a11] | Univ] | Translate[Empty | Object & 'f & ~#Empty & ~#Scale & ~#Univ | Scale['a11] | Univ] | Union[Empty | Object & 'f & ~#Empty & ~#Scale & ~#Univ | Scale['a11] | Univ]
 //│   'a11 <: Empty | Object & 'f & ~#Empty & ~#Scale & ~#Univ | Scale['a11] | Univ
 //│   'Region4 <: Intersect['Region4] | Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~#Univ | Outside['a5] | Scale['a6] | Translate['a7] | Union['Region3] | Univ
-//│   'a5 <: Intersect['Region6] | Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~#Univ | Outside['a8] | Scale['a9] | Translate['a10] | Union['Region5] | Univ
-//│   'Region6 <: Intersect['Region6] | Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~#Univ | Outside['a8] | Scale['a9] | Translate['a10] | Union['Region5] | Univ
-//│   'a9 <: Intersect['Region6] | Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~#Univ | Outside['a8] | Scale['a9] | Translate['a10] | Union['Region5] | Univ
-//│   'a10 <: Intersect['Region6] | Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~#Univ | Outside['a8] | Scale['a9] | Translate['a10] | Union['Region5] | Univ
-//│   'Region5 <: Intersect['Region6] | Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~#Univ | Outside['a8] | Scale['a9] | Translate['a10] | Union['Region5] | Univ
+//│   'a5 <: Intersect['Region5] | Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~#Univ | Outside['a8] | Scale['a9] | Translate['a10] | Union['Region6] | Univ
+//│   'Region5 <: Intersect['Region5] | Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~#Univ | Outside['a8] | Scale['a9] | Translate['a10] | Union['Region6] | Univ
+//│   'a9 <: Intersect['Region5] | Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~#Univ | Outside['a8] | Scale['a9] | Translate['a10] | Union['Region6] | Univ
+//│   'a10 <: Intersect['Region5] | Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~#Univ | Outside['a8] | Scale['a9] | Translate['a10] | Union['Region6] | Univ
+//│   'Region6 <: Intersect['Region5] | Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~#Univ | Outside['a8] | Scale['a9] | Translate['a10] | Union['Region6] | Univ
 //│   'a8 <: Intersect['Region4] | Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~#Univ | Outside['a5] | Scale['a6] | Translate['a7] | Union['Region3] | Univ
 //│   'a6 <: Intersect['Region4] | Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~#Univ | Outside['a5] | Scale['a6] | Translate['a7] | Union['Region3] | Univ
 //│   'a7 <: Intersect['Region4] | Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~#Univ | Outside['a5] | Scale['a6] | Translate['a7] | Union['Region3] | Univ
