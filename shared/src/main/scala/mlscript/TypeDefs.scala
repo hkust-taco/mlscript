@@ -111,7 +111,7 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
     Var(clsNme.name + "#" + tparamNme.name)
   
   def clsNameToNomTag(td: NuTypeDef)(prov: TypeProvenance, ctx: Ctx): ClassTag = {
-    require((td.kind is Cls) || (td.kind is Nms), td.kind)
+    require((td.kind is Cls) || (td.kind is Mod), td.kind)
     ClassTag(Var(td.nme.name),
         if(newDefs)
           Set.single(TN("Object"))
@@ -120,7 +120,7 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
       )(prov)
   }
   def clsNameToNomTag(td: TypeDef)(prov: TypeProvenance, ctx: Ctx): ClassTag = {
-    require((td.kind is Cls) || (td.kind is Nms), td.kind)
+    require((td.kind is Cls) || (td.kind is Mod), td.kind)
     if (newDefs && td.kind.str.isCapitalized) ClassTag(Var(td.nme.name),
         if(newDefs)
           Set.single(TN("Object"))
@@ -257,8 +257,8 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
         // }()
         val rightParents = td.kind match {
           case Als => checkCycle(td.bodyTy)(Set.single(L(td.nme)))
-          case Nms =>
-            err(msg"a namespace cannot inherit from others", prov.loco)
+          case Mod =>
+            err(msg"modules cannot inherit from other types", prov.loco)
             false
           case k: ObjDefKind =>
             val parentsClasses = MutSet.empty[TypeRef]
@@ -279,8 +279,8 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
                     } else
                       checkParents(tr.expand)
                   case Trt => checkParents(tr.expand)
-                  case Nms =>
-                    err(msg"cannot inherit from a namespace", prov.loco)
+                  case Mod =>
+                    err(msg"cannot inherit from a module", prov.loco)
                     false
                   case Als => 
                     err(msg"cannot inherit from a type alias", prov.loco)

@@ -32,3 +32,21 @@ class B extends A
 //│ }
 
 
+// * Interestingly, we can currently inherit from modules...
+
+module C { fun test = 0 }
+//│ module C {
+//│   fun test: 0
+//│ }
+
+class D() extends C
+//│ class D() extends C {
+//│   fun test: 0
+//│ }
+
+D().test
+//│ 0
+//│ res
+//│     = 0
+
+

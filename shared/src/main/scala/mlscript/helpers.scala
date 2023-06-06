@@ -746,7 +746,7 @@ trait StatementImpl extends Located { self: Statement =>
       (diags ::: diags2 ::: diags3) -> (TypeDef(Als, TypeName(v.name).withLocOf(v), targs,
           dataDefs.map(td => AppliedType(td.nme, td.tparams)).reduceOption(Union).getOrElse(Bot), Nil, Nil, Nil
         ).withLocOf(hd) :: cs)
-    case NuTypeDef(Nms, nme, tps, tup, ctor, sig, pars, sup, ths, unit) =>
+    case NuTypeDef(Mod, nme, tps, tup, ctor, sig, pars, sup, ths, unit) =>
       ??? // TODO
     case NuTypeDef(Mxn, nme, tps, tup, ctor, sig, pars, sup, ths, unit) =>
       ??? // TODO

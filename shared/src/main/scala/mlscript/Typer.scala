@@ -229,8 +229,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
     NuTypeDef(Cls, TN("Num"), Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
     NuTypeDef(Cls, TN("Int"), Nil, N, N, N, Var("Num") :: Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
     NuTypeDef(Cls, TN("Bool"), Nil, N, N, S(Union(TN("true"), TN("false"))), Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
-    NuTypeDef(Nms, TN("true"), Nil, N, N, N, Var("Bool") :: Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
-    NuTypeDef(Nms, TN("false"), Nil, N, N, N, Var("Bool") :: Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
+    NuTypeDef(Mod, TN("true"), Nil, N, N, N, Var("Bool") :: Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
+    NuTypeDef(Mod, TN("false"), Nil, N, N, N, Var("Bool") :: Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
     NuTypeDef(Cls, TN("Str"), Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
   )
   val builtinTypes: Ls[TypeDef] =
@@ -382,7 +382,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
     // val outerCtxLvl = MinLevel + 1
     val outerCtxLvl = ctx.lvl
     def checkKind(k: DeclKind, nme: Str, loc: Opt[Loc]): Unit = k match {
-      case Cls | Nms | Als | Trt => ()
+      case Cls | Mod | Als | Trt => ()
       case _ => err(msg"${k.str} ${nme} cannot be used as a type", loc); ()
     }
     def typeNamed(loc: Opt[Loc], name: Str): (() => ST) \/ (TypeDefKind, Int) =
@@ -395,7 +395,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
           case ti: DelayedTypeInfo =>
             checkKind(ti.decl.kind, ti.decl.name, loc)
             ti.decl match {
-              case NuTypeDef(k @ (Cls | Nms | Als | Trt), _, tps, _,  _, _, _, _, _, _) =>
+              case NuTypeDef(k @ (Cls | Mod | Als | Trt), _, tps, _,  _, _, _, _, _, _) =>
                 S(k, tps.size)
               case NuTypeDef(k @ Mxn, nme, tps,  _, _, _, _, _, _, _) =>
                 S(k, tps.size)
@@ -484,7 +484,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
               else ctx.tyDefs2.get(name) match {
                 case S(lti) =>
                   lti.decl match {
-                    case NuTypeDef(Cls | Nms, _, _, _, _, _, _, _, _, _) =>
+                    case NuTypeDef(Cls | Mod, _, _, _, _, _, _, _, _, _) =>
                       clsNameToNomTag(ctx.tyDefs2(name).decl.asInstanceOf[NuTypeDef])(tyTp(tyLoc, "class tag"), ctx)
                     case NuTypeDef(Trt, _, _, _, _, _, _, _, _, _) =>
                       trtNameToNomTag(ctx.tyDefs2(name).decl.asInstanceOf[NuTypeDef])(tyTp(tyLoc, "class tag"), ctx)
@@ -500,7 +500,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
                   case Trt => trtNameToNomTag(td)(tyTp(tyLoc, "trait tag"), ctx)
                   case Als => err(
                     msg"Type alias ${name.capitalize} cannot be used as a type tag", tyLoc)(raise)
-                  case Nms => err(
+                  case Mod => err(
                     msg"Module ${name.capitalize} cannot be used as a type tag", tyLoc)(raise)
                   case Mxn => err(
                     msg"Mixin ${name.capitalize} cannot be used as a type tag", tyLoc)(raise)
@@ -1190,7 +1190,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
               }
               ctx.get(nme) match {
                 case S(lti: LazyTypeInfo) =>
-                  if ((lti.kind isnt Cls) && (lti.kind isnt Nms) && (lti.kind isnt Trt))
+                  if ((lti.kind isnt Cls) && (lti.kind isnt Mod) && (lti.kind isnt Trt))
                     err(msg"can only match on classes and traits", pat.toLoc)(raise)
                   
                   val prov = tp(pat.toLoc, "class pattern")
@@ -1227,7 +1227,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
               }
             case Some(td) =>
               td.kind match {
-                case Als | Nms | Mxn => val t = err(msg"can only match on classes and traits", pat.toLoc)(raise); t -> t
+                case Als | Mod | Mxn => val t = err(msg"can only match on classes and traits", pat.toLoc)(raise); t -> t
                 case Cls => val t = clsNameToNomTag(td)(tp(pat.toLoc, "class pattern"), ctx); t -> t
                 case Trt => val t = trtNameToNomTag(td)(tp(pat.toLoc, "trait pattern"), ctx); t -> t
               }

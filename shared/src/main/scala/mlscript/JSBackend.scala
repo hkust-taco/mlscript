@@ -903,7 +903,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       case TypeDef(Cls, TypeName(name), tparams, baseType, _, members, _) =>
         classes += topLevelScope.declareClass(name, tparams map { _.name }, baseType, members)
       case TypeDef(Mxn, _, _, _, _, _, _) => throw CodeGenError("Mixins are not supported yet.")
-      case TypeDef(Nms, _, _, _, _, _, _) => throw CodeGenError("Namespaces are not supported yet.")
+      case TypeDef(Mod, _, _, _, _, _, _) => throw CodeGenError("Namespaces are not supported yet.")
     }
     (traits.toList, classes.toList)
   }
@@ -954,7 +954,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         val sym = MixinSymbol(mxName, tps map { _._2.name }, body, members, stmts, nested, isNested).tap(scope.register)
         if (!td.isDecl) mixins += sym
       }
-      case td @ NuTypeDef(Nms, TypeName(nme), tps, tup, ctor, sig, pars, sup, ths, unit) => {
+      case td @ NuTypeDef(Mod, TypeName(nme), tps, tup, ctor, sig, pars, sup, ths, unit) => {
         val (body, members, stmts, nested) = prepare(nme, tup.getOrElse(Tup(Nil)).fields, pars, unit)
         val sym = ModuleSymbol(nme, tps map { _._2.name }, body, members, stmts, pars, nested, isNested).tap(scope.register)
         if (!td.isDecl) modules += sym

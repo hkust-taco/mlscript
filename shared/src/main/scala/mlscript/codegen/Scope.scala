@@ -4,7 +4,7 @@ import mlscript.utils.shorthands._
 import mlscript.{JSStmt, JSExpr, JSLetDecl}
 import mlscript.Type
 import scala.reflect.ClassTag
-import mlscript.{TypeName, Top, Bot, TypeDef, Als, Trt, Cls, Nms, Mxn}
+import mlscript.{TypeName, Top, Bot, TypeDef, Als, Trt, Cls, Mod, Mxn}
 import mlscript.{MethodDef, Var}
 import mlscript.{Term, Statement, Record}
 import mlscript.utils.{AnyOps, lastWords}
@@ -235,7 +235,7 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
       declareClass(name, tparams map { _.name }, baseType, members)
     case TypeDef(Mxn, _, _, _, _, _, _) =>
       throw CodeGenError("Mixins are not supported yet.")
-    case TypeDef(Nms, _, _, _, _, _, _) =>
+    case TypeDef(Mod, _, _, _, _, _, _) =>
       throw CodeGenError("Namespaces are not supported yet.")
   }
 

@@ -432,7 +432,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   // TODO check this is not misused
   def typeSignatureOf(td: NuTypeDef, level: Level, tparams: TyParams, params: Params, selfTy: ST, ihtags: Set[TypeName])
       : ST = td.kind match {
-    case Nms =>
+    case Mod =>
       ClassTag(Var(td.nme.name),
           ihtags + TN("Object")
         )(provTODO)
@@ -732,7 +732,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
         case Nil => tags
         case (p, Var(nm), lti, _, _) :: ps => lti match {
           case lti: DelayedTypeInfo => lti.kind match {
-            case Trt | Cls | Nms =>  lookupTags(ps, Set.single(TypeName(nm)) union lti.inheritedTags union tags)
+            case Trt | Cls | Mod =>  lookupTags(ps, Set.single(TypeName(nm)) union lti.inheritedTags union tags)
             case Val | Mxn | Als => lookupTags(ps, tags)
           }
           case CompletedTypeInfo(trt: TypedNuTrt) =>
@@ -1046,7 +1046,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
               }
               
               
-              if (((td.kind is Nms) || (td.kind is Mxn)) && td.ctor.isDefined)
+              if (((td.kind is Mod) || (td.kind is Mxn)) && td.ctor.isDefined)
                 err(msg"Explicit ${td.kind.str} constructors are not supported",
                   td.ctor.fold[Opt[Loc]](N)(c => c.toLoc))
               
@@ -1161,11 +1161,11 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                   
                   TypedNuAls(outerCtx.lvl, td, tparams, body_ty)
                   
-                case Cls | Nms =>
+                case Cls | Mod =>
                   
                   ctx.nest.nextLevel { implicit ctx =>
                     
-                    if ((td.kind is Nms) && typedParams.nonEmpty)
+                    if ((td.kind is Mod) && typedParams.nonEmpty)
                       // * Can we do better? (Memoization semantics?)
                       err(msg"${td.kind.str} parameters are not supported",
                         Loc(typedParams.iterator.map(_._1)))

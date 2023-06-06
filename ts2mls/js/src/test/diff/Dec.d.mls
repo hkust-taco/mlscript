@@ -8,7 +8,7 @@ trait Get() {
 class Person(name: string, age: number) {
   fun getName(id: number): string
 }
-namespace OOO {
+module OOO {
 }
-//│ |#fun| |getName|(|id|#:| |(|string|)| ||| |(|number|)|)|#:| |string|↵|#fun| |render|(|callback|#:| |(|unit| |=>| |unit|)| ||| |(|#undefined|)|)|#:| |string|↵|#trait| |Get|(||)| |{|→|#fun| |__call|(|id|#:| |string|)|#:| |string|←|↵|}|↵|#class| |Person|(|name|#:| |string|,| |age|#:| |number|)| |{|→|#fun| |getName|(|id|#:| |number|)|#:| |string|←|↵|}|↵|#namespace| |OOO| |{|↵|}|
+//│ |#fun| |getName|(|id|#:| |(|string|)| ||| |(|number|)|)|#:| |string|↵|#fun| |render|(|callback|#:| |(|unit| |=>| |unit|)| ||| |(|#undefined|)|)|#:| |string|↵|#trait| |Get|(||)| |{|→|#fun| |__call|(|id|#:| |string|)|#:| |string|←|↵|}|↵|#class| |Person|(|name|#:| |string|,| |age|#:| |number|)| |{|→|#fun| |getName|(|id|#:| |number|)|#:| |string|←|↵|}|↵|#module| |OOO| |{|↵|}|
 //│ Parsed: {fun getName: (id: string | number,) -> string; fun render: (callback: unit -> unit | undefined,) -> string; trait Get() {fun __call: (id: string,) -> string}; class Person(name: string, age: number,) {fun getName: (id: number,) -> string}; module OOO() {}}

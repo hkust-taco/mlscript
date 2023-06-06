@@ -321,7 +321,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
         }
       case c =>
         val t = c match {
-          case ModifierSet(mods, (KEYWORD(k @ ("class" | "infce" | "trait" | "mixin" | "type" | "namespace" | "module")), l0) :: c) =>
+          case ModifierSet(mods, (KEYWORD(k @ ("class" | "infce" | "trait" | "mixin" | "type" | "module")), l0) :: c) =>
             consume
             val (isDecl, mods2) = mods.handle("declare")
             val (isAbs, mods3) = mods2.handle("abstract")
@@ -331,7 +331,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
               case "trait" => Trt
               case "mixin" => Mxn
               case "type" => Als
-              case "namespace" | "module" => Nms
+              case "module" => Mod
               case _ => die
             }
             val (tn, success) = yeetSpaces match {

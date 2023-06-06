@@ -1085,7 +1085,7 @@ abstract class TyperHelpers { Typer: Typer =>
         else TopType
       subst(td.kind match {
         case Als => td.bodyTy
-        case Nms => throw new NotImplementedError("Namespaces are not supported yet.")
+        case Mod => throw new NotImplementedError("Namespaces are not supported yet.")
         case Cls => clsNameToNomTag(td)(prov, ctx) & td.bodyTy & tparamTags
         case Trt => trtNameToNomTag(td)(prov, ctx) & td.bodyTy & tparamTags
         case Mxn => lastWords("mixins cannot be used as types")
@@ -1095,13 +1095,13 @@ abstract class TyperHelpers { Typer: Typer =>
     def expansionFallback(implicit ctx: Ctx): Opt[ST] = mkClsTag
     def mkClsTag(implicit ctx: Ctx): Opt[ClassTag] = tag.getOrElse {
       val res = ctx.tyDefs.get(defn.name) match {
-        case S(td: TypeDef) if (td.kind is Cls) || (td.kind is Nms) =>
+        case S(td: TypeDef) if (td.kind is Cls) || (td.kind is Mod) =>
           S(clsNameToNomTag(td)(noProv, ctx))
         case S(td: TypeDef) if td.kind is Trt =>
           N
         case _ => ctx.tyDefs2.get(defn.name) match {
           case S(lti) => lti.decl match {
-            case td: NuTypeDef if (td.kind is Cls) || (td.kind is Nms) =>
+            case td: NuTypeDef if (td.kind is Cls) || (td.kind is Mod) =>
               S(clsNameToNomTag(td)(noProv, ctx))
             case _ => N
           }
