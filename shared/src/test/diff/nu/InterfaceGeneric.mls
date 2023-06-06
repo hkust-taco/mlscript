@@ -56,7 +56,7 @@ p1: Product[Bool, Int]
 //│ ║  l.54: 	p1: Product[Bool, Int]
 //│ ║        	^^
 //│ ╙── expression of type `Int & ?A` is not an instance of type `Bool`
-//│ Product[in Bool out Bool, Int]
+//│ Product[Bool, Int]
 
 p1: Into[Int]
 //│ Into[Int]
@@ -67,4 +67,4 @@ p1: Into[Bool]
 //│ ║  l.65: 	p1: Into[Bool]
 //│ ║        	^^
 //│ ╙── expression of type `Int` is not an instance of type `Bool`
-//│ Into[in Bool out Bool]
+//│ Into[Bool]

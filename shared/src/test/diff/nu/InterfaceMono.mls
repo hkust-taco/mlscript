@@ -320,11 +320,11 @@ trait T2 {
     let bar : Int | Bool
 }
 //│ trait T1 {
-//│   fun bar: Bool | Str
+//│   fun bar: Str | false | true
 //│   let foo: 1 | 2 | 3
 //│ }
 //│ trait T2 {
-//│   let bar: Bool | Int
+//│   let bar: Int | false | true
 //│   let foo: 2 | 3 | 4
 //│ }
 
@@ -379,7 +379,7 @@ class C2(foo: Int, bar: Str) extends T4
 //│ ╔══[ERROR] Type mismatch in type reference:
 //│ ║  l.368: 	class C2(foo: Int, bar: Str) extends T4
 //│ ║         	                        ^^^
-//│ ╟── type `Str` does not match type `Bool & ?a | Int`
+//│ ╟── type `Str` does not match type `Bool | Int`
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.320: 	    let bar : Int | Bool
 //│ ║         	              ^^^^^^^^^^

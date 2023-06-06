@@ -12,7 +12,7 @@ class BigRoom extends Room[Bool]("big")
 //│   fun foo: (x: 'A,) -> 'A
 //│ }
 //│ where
-//│   'A := in Bool out Bool
+//│   'A := Bool
 
 // * Note that this essentially infers Room[Bool]
 class InferredRoom extends Room("infer") {
@@ -45,7 +45,7 @@ class WrongRoom extends Room[Bool]("wrong") {
 //│ ╔══[ERROR] Type mismatch in definition of method foo:
 //│ ║  l.43: 	    fun foo(x) = x + 1
 //│ ║        	        ^^^^^^^^^^^^^^
-//│ ╟── type `true` does not match type `Int | ~Bool`
+//│ ╟── type `Bool` is not an instance of type `Int`
 //│ ║  l.42: 	class WrongRoom extends Room[Bool]("wrong") {
 //│ ║        	                             ^^^^
 //│ ╟── Note: constraint arises from reference:
@@ -54,7 +54,7 @@ class WrongRoom extends Room[Bool]("wrong") {
 //│ ╔══[ERROR] Type mismatch in definition of method foo:
 //│ ║  l.43: 	    fun foo(x) = x + 1
 //│ ║        	        ^^^^^^^^^^^^^^
-//│ ╟── type `false` does not match type `Int | ~Bool`
+//│ ╟── type `Bool` is not an instance of type `Int`
 //│ ║  l.42: 	class WrongRoom extends Room[Bool]("wrong") {
 //│ ║        	                             ^^^^
 //│ ╟── Note: constraint arises from reference:

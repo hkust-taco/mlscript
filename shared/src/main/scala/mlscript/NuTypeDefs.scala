@@ -1068,7 +1068,17 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                 // *      as this check will already have been performed generally when typing class T,
                 // *      but this would happen if we instead expanded into a type equivalent to #S & T...
                 constrain(ty, res)
-                res
+                // res
+                // assert(res.lowerBounds.sizeCompare(1) === 0)
+                // // TypeBounds.mk(res.lowerBounds.head, TopType)
+                // TypeBounds.mk(TopType, res.lowerBounds.head)
+                // * Retrieve the extruded lower bound.
+                // * Note that there should be only one, and in particular it should not be recursive,
+                // * since the variable is never shared outside this scope.
+                res.lowerBounds match {
+                  case lb :: Nil => TypeBounds.mk(TopType, lb)
+                  case _ => die
+                }
               }
               
               td.kind match {

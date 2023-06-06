@@ -1016,7 +1016,6 @@ abstract class TyperHelpers { Typer: Typer =>
     }
     def expandWith(paramTags: Bool)(implicit ctx: Ctx): SimpleType = //if (defn.name.isCapitalized) {
       ctx.tyDefs2.get(defn.name).map { info =>
-        println(s"???")
         lazy val mkTparamRcd = RecordType(info.tparams.lazyZip(targs).map {
             case ((tn, tv, vi), ta) =>
               val fldNme = defn.name + "#" + tn.name
@@ -1043,7 +1042,6 @@ abstract class TyperHelpers { Typer: Typer =>
               trtNameToNomTag(td.decl)(provTODO, ctx) &
               mkTparamRcd
           case S(td: TypedNuCls) =>
-            println(s"?!!")
             assert(td.tparams.size === targs.size)
             val (freshenMap, _) = refreshHelper2(td, Var(td.name).withLoc(prov.loco), S(targs)) // infer ty args if not provided
             val freshSelf = {
@@ -1058,7 +1056,6 @@ abstract class TyperHelpers { Typer: Typer =>
             info.decl match {
               case td: NuTypeDef if td.kind.isInstanceOf[ObjDefKind] =>
                 // TODO in the future, add the self signature to DelayedTypeInfo and use it here
-                println(s"!!! ${td}")
                 assert(td.tparams.size === targs.size)
                 clsNameToNomTag(td)(provTODO, ctx) &
                   mkTparamRcd

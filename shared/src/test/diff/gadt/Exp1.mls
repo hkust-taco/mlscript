@@ -33,7 +33,7 @@ fun f(p: Pair['a, 'b]) = p.lhs
 
 fun f(e) = if e is
   Pair(l, r) then [l, r]
-//│ fun f: forall 'rhs 'lhs. Pair['lhs, 'rhs] -> ('lhs, 'rhs,)
+//│ fun f: forall 'lhs 'rhs. Pair['lhs, 'rhs] -> ('lhs, 'rhs,)
 // f: (Exp['a] & Pair) -> 0
 
 

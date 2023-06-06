@@ -58,7 +58,7 @@ true : Bool
 //│     = true
 
 true : Bool | Str
-//│ Bool | Str
+//│ Str | false | true
 //│ res
 //│     = true
 

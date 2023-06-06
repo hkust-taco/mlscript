@@ -85,7 +85,7 @@ class Bar extends Foo {
 //│ ╔══[ERROR] Type mismatch in signature of member `x`:
 //│ ║  l.82: 	  fun x: Bool
 //│ ║        	      ^^^^^^^
-//│ ╟── type `Bool & ?a` is not an instance of `Int`
+//│ ╟── type `Bool` is not an instance of `Int`
 //│ ║  l.82: 	  fun x: Bool
 //│ ║        	         ^^^^
 //│ ╟── but it flows into signature of member `x` with expected type `Int`

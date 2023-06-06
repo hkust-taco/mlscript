@@ -123,7 +123,7 @@ fun w3_1_1(x, f) =
 //│ ╔══[WARNING] Found a redundant else branch
 //│ ║  l.122: 	  if f(x) is a then a else 0
 //│ ╙──       	                           ^
-//│ fun w3_1_1: forall 'a 'b. ('b, 'b -> 'a,) -> 'a
+//│ fun w3_1_1: forall 'a 'b. ('a, 'a -> 'b,) -> 'b
 
 w3_1_1(0, x => x)
 w3_1_1(0, x => x + 1)

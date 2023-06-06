@@ -67,7 +67,7 @@ trait T1 extends Foo[Int | Bool]
 //│   fun foo: 'A
 //│ }
 //│ where
-//│   'A := in Bool | Int out Bool | Int
+//│   'A := in Bool | Int out Int | false | true
 
 module Bar extends T1, Foo[Int | Str] {
   fun foo = 123
@@ -89,14 +89,14 @@ module Bar extends T1, Foo[Int | Str] {
 //│     = [Function: id]
 
 (Bar : T1).foo
-//│ Bool | Int
+//│ Int | false | true
 //│ res
 //│     = 123
 
 let f = (Bar : T1).bar
 f(true)
-//│ let f: ('A & (Bool | Int)) -> ('A | Bool | Int)
-//│ Bool | Int
+//│ let f: ('A & (Bool | Int)) -> ('A | Int | false | true)
+//│ Int | false | true
 //│ f
 //│   = [Function: id]
 //│ res
@@ -110,7 +110,7 @@ module Bar extends T1, Foo[Int | Str] {
 //│ ╔══[ERROR] Type mismatch in definition of method bar:
 //│ ║  l.108: 	  fun bar(x) = x + 1
 //│ ║         	      ^^^^^^^^^^^^^^
-//│ ╟── type `true` does not match type `Int | ~Bool`
+//│ ╟── type `Bool` is not an instance of type `Int`
 //│ ║  l.64: 	trait T1 extends Foo[Int | Bool]
 //│ ║        	                           ^^^^
 //│ ╟── Note: constraint arises from reference:
@@ -119,7 +119,7 @@ module Bar extends T1, Foo[Int | Str] {
 //│ ╔══[ERROR] Type mismatch in definition of method bar:
 //│ ║  l.108: 	  fun bar(x) = x + 1
 //│ ║         	      ^^^^^^^^^^^^^^
-//│ ╟── type `false` does not match type `Int | ~Bool`
+//│ ╟── type `Bool` is not an instance of type `Int`
 //│ ║  l.64: 	trait T1 extends Foo[Int | Bool]
 //│ ║        	                           ^^^^
 //│ ╟── Note: constraint arises from reference:

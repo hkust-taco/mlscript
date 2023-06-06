@@ -2,23 +2,17 @@
 
 
 trait T { fun x: Int }
+//│ trait T {
+//│   fun x: Int
+//│ }
+
 mixin M(x: Bool)
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: α36_50
-//│ 	at: scala.collection.MapOps.default(Map.scala:274)
-//│ 	at: scala.collection.MapOps.default$(Map.scala:273)
-//│ 	at: scala.collection.AbstractMap.default(Map.scala:405)
-//│ 	at: scala.collection.MapOps.apply(Map.scala:176)
-//│ 	at: scala.collection.MapOps.apply$(Map.scala:175)
-//│ 	at: scala.collection.AbstractMap.apply(Map.scala:405)
-//│ 	at: mlscript.TypeSimplifier.process$1(TypeSimplifier.scala:70)
-//│ 	at: mlscript.TypeSimplifier.process$1(TypeSimplifier.scala:87)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$removeIrrelevantBounds$5(TypeSimplifier.scala:38)
-//│ 	at: mlscript.NuTypeDefs$NuMember.$anonfun$map$1(NuTypeDefs.scala:44)
+//│ mixin M(x: Bool)
 
 :e
 class C extends T, M(false)
 //│ ╔══[ERROR] Type mismatch in reference:
-//│ ║  l.19: 	class C extends T, M(false)
+//│ ║  l.13: 	class C extends T, M(false)
 //│ ║        	                     ^^^^^
 //│ ╟── reference of type `false` is not an instance of type `Int`
 //│ ╟── Note: constraint arises from type reference:
@@ -28,8 +22,6 @@ class C extends T, M(false)
 //│ ║  l.4: 	trait T { fun x: Int }
 //│ ╙──     	              ^^^^^^
 //│ class C extends T
-//│ Code generation encountered an error:
-//│   unresolved parent T.
 
 
 trait T { fun x: Int }
