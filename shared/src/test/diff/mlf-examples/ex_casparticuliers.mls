@@ -523,14 +523,14 @@ def succ (n: ChurchInt) = fun f -> fun x -> f (n f x)
 def succ' n = fun f -> fun x -> f (n f x)
 //│ succ_ty: ChurchInt -> ChurchInt
 //│        = <missing implementation>
-//│ succ: ChurchInt -> (forall 'b. 'b -> (forall 'c 'a. 'a -> 'c
+//│ succ: ChurchInt -> (forall 'b. 'b -> (forall 'a 'c. 'a -> 'c
 //│   where
 //│     'b <: 'a -> 'a & 'a -> 'c))
 //│     = [Function: succ1]
-//│ succ': 'a -> (forall 'b. 'b -> (forall 'c 'd 'e. 'c -> 'e
+//│ succ': 'a -> (forall 'b. 'b -> (forall 'c 'd 'e. 'e -> 'd
 //│   where
-//│     'a <: 'b -> 'c -> 'd
-//│     'b <: 'd -> 'e))
+//│     'b <: 'c -> 'd
+//│     'a <: 'b -> 'e -> 'c))
 //│      = [Function: succ$1]
 
 // * Note: without constrained types we wouldn't get the principal type of succ'
@@ -546,10 +546,10 @@ succ_ty = succ
 // * Still requires distributivity even with CT
 :e
 succ_ty = succ'
-//│ 'a -> (forall 'b. 'b -> (forall 'c 'd 'e. 'c -> 'e
+//│ 'a -> (forall 'b. 'b -> (forall 'c 'd 'e. 'e -> 'd
 //│   where
-//│     'b <: 'd -> 'e
-//│     'a <: 'b -> 'c -> 'd))
+//│     'a <: 'b -> 'e -> 'c
+//│     'b <: 'c -> 'd))
 //│   <:  succ_ty:
 //│ ChurchInt -> ChurchInt
 //│ ╔══[ERROR] Type error in def definition
@@ -573,33 +573,33 @@ succ_ty = succ'
 succ_ty = succ'
 //│ 'a -> 'b -> ('c -> 'd
 //│   where
-//│     'a <: 'b -> 'c -> 'e
-//│     'b <: 'e -> 'd)
+//│     'b <: 'e -> 'd
+//│     'a <: 'b -> 'c -> 'e)
 //│   <:  succ_ty:
 //│ ChurchInt -> ChurchInt
 //│        = [Function: succ$1]
 :DontDistributeForalls
 
 succ'
-//│ res: 'a -> (forall 'b. 'b -> (forall 'c 'd 'e. 'c -> 'e
+//│ res: 'a -> (forall 'b. 'b -> (forall 'c 'd 'e. 'e -> 'd
 //│   where
-//│     'a <: 'b -> 'c -> 'd
-//│     'b <: 'd -> 'e))
+//│     'a <: 'b -> 'e -> 'c
+//│     'b <: 'c -> 'd))
 //│    = [Function: succ$1]
 
 // :e // * Error delayed by inconsistent constrained types
 succ' {}
-//│ res: 'a -> (forall 'b 'c 'd. 'c -> 'b
+//│ res: 'a -> (forall 'b 'c 'd. 'd -> 'c
 //│   where
-//│     anything <: 'a -> 'c -> 'd
-//│     'a <: 'd -> 'b)
+//│     'a <: 'b -> 'c
+//│     anything <: 'a -> 'd -> 'b)
 //│    = [Function (anonymous)]
 
 // :e // * Error delayed by inconsistent constrained types
 succ' {} {}
 //│ res: 'a -> 'b
 //│   where
-//│     anything <: anything -> 'a -> 'c & 'c -> 'b
+//│     anything <: 'c -> 'b & anything -> 'a -> 'c
 //│    = [Function (anonymous)]
 
 :e
@@ -609,10 +609,10 @@ succ' {} {} {}
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╟── record literal of type `anything` is not a function
 //│ ║  l.606: 	succ' {} {} {}
-//│ ║         	      ^^
+//│ ║         	         ^^
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.523: 	def succ' n = fun f -> fun x -> f (n f x)
-//│ ╙──       	                                   ^^^
+//│ ╙──       	                                ^^^^^^^^^
 //│ res: error
 //│ Runtime error:
 //│   TypeError: n is not a function

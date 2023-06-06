@@ -195,7 +195,7 @@ Test2.eval(Cons(("a", Abs("d", Var("d"))), Nil()), Add(Num(1), Var("a")))
 
 module Test3 extends EvalVar, EvalExpr, EvalLambda
 //│ module Test3 {
-//│   fun eval: forall 'a 'A. (List[{_1: Str, _2: 'b}], Abs['t] | App['A] | Object & 'c & ~#Abs & ~#App,) -> ('d | 'a)
+//│   fun eval: forall 'A 'a. (List[{_1: Str, _2: 'b}], Abs['t] | App['A] | Object & 'c & ~#Abs & ~#App,) -> ('d | 'a)
 //│ }
 //│ where
 //│   'b :> Var | 'e

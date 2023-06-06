@@ -234,15 +234,22 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
     // NuTypeDef(Nms, TN("False"), Nil, N, N, N, Var("Bool") :: Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
     NuTypeDef(Nms, TN("true"), Nil, N, N, N, Var("Bool") :: Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
     NuTypeDef(Nms, TN("false"), Nil, N, N, N, Var("Bool") :: Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
+    NuTypeDef(Cls, TN("Eql"), (S(VarianceInfo.contra), TN("A")) :: Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
   )
   val builtinTypes: Ls[TypeDef] =
     // TypeDef(Cls, TN("Object"), Nil, TopType, Nil, Nil, sing(TN("Eql")), N, Nil) ::
-    TypeDef(Cls, TN("int"), Nil, TopType, Nil, Nil, sing(TN("number")) + TN("Eql"), N, Nil) ::
-    TypeDef(Cls, TN("number"), Nil, TopType, Nil, Nil, sing(TN("Eql")), N, Nil) ::
-    TypeDef(Cls, TN("bool"), Nil, TopType, Nil, Nil, sing(TN("Eql")), N, Nil) ::
-    TypeDef(Cls, TN("true"), Nil, TopType, Nil, Nil, sing(TN("bool")) + TN("Eql"), N, Nil) ::
-    TypeDef(Cls, TN("false"), Nil, TopType, Nil, Nil, sing(TN("bool")) + TN("Eql"), N, Nil) ::
-    TypeDef(Cls, TN("string"), Nil, TopType, Nil, Nil, sing(TN("Eql")), N, Nil) ::
+    // TypeDef(Cls, TN("int"), Nil, TopType, Nil, Nil, sing(TN("number")) + TN("Eql"), N, Nil) ::
+    TypeDef(Cls, TN("int"), Nil, TopType, Nil, Nil, sing(TN("number")), N, Nil) ::
+    // TypeDef(Cls, TN("number"), Nil, TopType, Nil, Nil, sing(TN("Eql")), N, Nil) ::
+    TypeDef(Cls, TN("number"), Nil, TopType, Nil, Nil, semp, N, Nil) ::
+    // TypeDef(Cls, TN("bool"), Nil, TopType, Nil, Nil, sing(TN("Eql")), N, Nil) ::
+    TypeDef(Cls, TN("bool"), Nil, TopType, Nil, Nil, semp, N, Nil) ::
+    // TypeDef(Cls, TN("true"), Nil, TopType, Nil, Nil, sing(TN("bool")) + TN("Eql"), N, Nil) ::
+    TypeDef(Cls, TN("true"), Nil, TopType, Nil, Nil, sing(TN("bool")), N, Nil) ::
+    // TypeDef(Cls, TN("false"), Nil, TopType, Nil, Nil, sing(TN("bool")) + TN("Eql"), N, Nil) ::
+    TypeDef(Cls, TN("false"), Nil, TopType, Nil, Nil, sing(TN("bool")), N, Nil) ::
+    // TypeDef(Cls, TN("string"), Nil, TopType, Nil, Nil, sing(TN("Eql")), N, Nil) ::
+    TypeDef(Cls, TN("string"), Nil, TopType, Nil, Nil, semp, N, Nil) ::
     TypeDef(Als, TN("undefined"), Nil, ClassTag(UnitLit(true), semp)(noProv), Nil, Nil, semp, N, Nil) ::
     TypeDef(Als, TN("null"), Nil, ClassTag(UnitLit(false), semp)(noProv), Nil, Nil, semp, N, Nil) ::
     TypeDef(Als, TN("anything"), Nil, TopType, Nil, Nil, semp, N, Nil) ::
@@ -269,16 +276,17 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
       tyDef.tvarVariances = S(MutMap(tv -> VarianceInfo.in))
       tyDef
     } ::
-    {
-      val tv = freshVar(noTyProv, N)(1)
-      val tyDef = TypeDef(Cls, TN("Eql"), List(TN("A") -> tv),
-        TopType, Nil, Nil, semp, N, Nil)
-      tyDef.tvarVariances = S(MutMap(tv -> VarianceInfo.contra))
-      tyDef
-    } ::
+    // {
+    //   val tv = freshVar(noTyProv, N)(1)
+    //   val tyDef = TypeDef(Cls, TN("Eql"), List(TN("A") -> tv),
+    //     TopType, Nil, Nil, semp, N, Nil)
+    //   tyDef.tvarVariances = S(MutMap(tv -> VarianceInfo.contra))
+    //   tyDef
+    // } ::
     Nil
   val primitiveTypes: Set[Str] =
-    builtinTypes.iterator.map(_.nme.name).flatMap(n => n.decapitalize :: n.capitalize :: Nil).toSet - "Eql"
+    builtinTypes.iterator.map(_.nme.name).flatMap(n => n.decapitalize :: n.capitalize :: Nil).toSet
+    // - "Eql"
   def singleTup(ty: ST): ST =
     if (funkyTuples) ty else TupleType((N, ty.toUpper(ty.prov) ) :: Nil)(noProv)
   val builtinBindings: Bindings = {
