@@ -121,10 +121,9 @@ object Main {
           val typer = new mlscript.Typer(
             dbg = false,
             verbose = false,
-            explainErrors = false
-          ) {
-            newDefs = true
-          }
+            explainErrors = false,
+            newDefs = true,
+          )
           
           import typer._
 
