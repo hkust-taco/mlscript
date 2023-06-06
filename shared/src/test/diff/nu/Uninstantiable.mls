@@ -1,23 +1,33 @@
 :NewDefs
 
 
-// FIXME forbid statically
+:e
 Int
+//│ ╔══[ERROR] Class Int is abstract and cannot be instantiated
+//│ ║  l.5: 	Int
+//│ ╙──     	^^^
 //│ () -> Int
 //│ Code generation encountered an error:
 //│   unresolved symbol Int
 
-// FIXME forbid statically
+:e
 Int()
+//│ ╔══[ERROR] Class Int is abstract and cannot be instantiated
+//│ ║  l.14: 	Int()
+//│ ╙──      	^^^
 //│ Int
 //│ Code generation encountered an error:
 //│   unresolved symbol Int
 
-// FIXME forbid statically
+:e
 new Int
+//│ ╔══[ERROR] Class Int is abstract and cannot be instantiated
+//│ ║  l.23: 	new Int
+//│ ╙──      	    ^^^
 //│ Int
 //│ Code generation encountered an error:
 //│   unresolved symbol Int
+
 
 // FIXME forbid statically
 module A extends Int

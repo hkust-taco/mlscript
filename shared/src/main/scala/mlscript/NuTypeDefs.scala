@@ -429,7 +429,6 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   }
   
   
-  // TODO check this is not misused
   def typeSignatureOf(td: NuTypeDef, level: Level, tparams: TyParams, params: Params, selfTy: ST, ihtags: Set[TypeName])
       : ST = td.kind match {
     case Mod =>
@@ -437,7 +436,6 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           ihtags + TN("Object")
         )(provTODO)
     case Cls =>
-      // TODO deal with classes without parameter lists (ie needing `new`)
       PolymorphicType.mk(level,
         FunctionType(
           TupleType(params.mapKeys(some))(provTODO),

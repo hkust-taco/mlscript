@@ -229,8 +229,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
     NuTypeDef(Cls, TN("Num"), Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
     NuTypeDef(Cls, TN("Int"), Nil, N, N, N, Var("Num") :: Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
     NuTypeDef(Cls, TN("Bool"), Nil, N, N, S(Union(TN("true"), TN("false"))), Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
-    NuTypeDef(Mod, TN("true"), Nil, N, N, N, Var("Bool") :: Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
-    NuTypeDef(Mod, TN("false"), Nil, N, N, N, Var("Bool") :: Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
+    NuTypeDef(Mod, TN("true"), Nil, N, N, N, Var("Bool") :: Nil, N, N, TypingUnit(Nil))(N, N),
+    NuTypeDef(Mod, TN("false"), Nil, N, N, N, Var("Bool") :: Nil, N, N, TypingUnit(Nil))(N, N),
     NuTypeDef(Cls, TN("Str"), Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
   )
   val builtinTypes: Ls[TypeDef] =
@@ -825,21 +825,28 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
               )
             )
           case VarSymbol(ty, _) => ty
-          case ti: CompletedTypeInfo =>
-            ti.member match {
-              case ti: TypedNuFun =>
+          case lti: LazyTypeInfo =>
+            // TODO deal with classes without parameter lists (ie needing `new`)
+            def checkNotAbstract(decl: NuDecl) =
+              if (decl.isAbstract)
+                err(msg"Class ${decl.name} is abstract and cannot be instantiated", term.toLoc)
+            lti match {
+              case ti: CompletedTypeInfo =>
+                ti.member match {
+                  case ti: TypedNuFun =>
+                    ti.typeSignature
+                  case p: NuParam =>
+                    p.typeSignature
+                  case ti: TypedNuCls =>
+                    checkNotAbstract(ti.decl)
+                    ti.typeSignature
+                  case ti: TypedNuDecl =>
+                    err(msg"${ti.kind.str} ${ti.name} cannot be used in term position", prov.loco)
+                }
+              case ti: DelayedTypeInfo =>
+                checkNotAbstract(ti.decl)
                 ti.typeSignature
-              case p: NuParam =>
-                p.typeSignature
-              case ti: TypedNuCls =>
-                if (ti.decl.isAbstract)
-                  err(msg"Class ${ti.nme} is abstract and cannot be instantiated", term.toLoc)
-                ti.typeSignature
-              case ti: TypedNuDecl =>
-                err(msg"${ti.kind.str} ${ti.name} cannot be used in term position", prov.loco)
             }
-          case ti: DelayedTypeInfo =>
-            ti.typeSignature
         }
         mkProxy(ty, prov)
         // ^ TODO maybe use a description passed in param?
