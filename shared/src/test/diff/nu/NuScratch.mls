@@ -1,22 +1,3 @@
 :NewDefs
 
-Int
-//│ () -> Int
-//│ Code generation encountered an error:
-//│   unresolved symbol Int
-
-Int()
-//│ Int
-//│ Code generation encountered an error:
-//│   unresolved symbol Int
-
-new Int
-//│ Int
-//│ Code generation encountered an error:
-//│   unresolved symbol Int
-
-module A extends Int
-//│ module A extends Int, Num
-//│ Code generation encountered an error:
-//│   unresolved parent Int.
 
