@@ -51,6 +51,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     
   }
   
+  
   /** Note: `mkType` is just for reporting errors. */
   def lookupField(mkType: () => ST, clsNme: Opt[Str], rfnt: Var => Opt[FieldType], tags: SortedSet[AbstractTag], fld: Var)
         (implicit ctx: Ctx, raise: Raise)
@@ -83,8 +84,6 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                 S(d.typeSignature.toUpper(provTODO))
               case S(p: NuParam) =>
                 S(p.ty)
-              // case S(p: NuTypeParam) =>
-              //   S(p.ty)
               case S(m) =>
                 S(err(msg"access to ${m.kind.str} member not yet supported", fld.toLoc).toUpper(noProv))
               case N => N
@@ -103,8 +102,6 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       println(s"Lookup ${info.decl.name}.${fld.name} : $raw where ${raw.fold("")(_.ub.showBounds)}")
       
       val freshenedRaw = raw.map { raw =>
-        
-        // TODO dedup with below logic from `lookupNuTypeDef`
         
         implicit val freshened: MutMap[TV, ST] = MutMap.empty
         implicit val shadows: Shadows = Shadows.empty
@@ -136,13 +133,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             case tv: TypeVarOrRigidVar => println(s"Immediate $tv := $targ"); tv
             case _ =>
               println(s"Assigning ${_tv} := $targ where ${targ.showBounds}")
-              val tv =
-                freshVar(_tv.prov, N, _tv.nameHint)(targ.level) // TODO safe not to set original?!
-                // freshVar(_tv.prov, S(_tv), _tv.nameHint)(targ.level)
+              val tv = freshVar(_tv.prov, S(_tv), _tv.nameHint)(targ.level)
               println(s"Set ${tv} ~> ${_tv}")
               assert(tv.assignedTo.isEmpty)
               tv.assignedTo = S(targ)
-              // println(s"Assigned ${tv.assignedTo}")
               tv
           })
           
@@ -180,91 +174,6 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     }
     
   }()
-  
-  
-  // def lookupNuTypeDef(clsNme: Str, rfnt: Map[Var, FieldType])
-  def lookupNuTypeDef(clsNme: Str, rfnt: Var => Opt[FieldType])
-    // (implicit raise: Raise, cctx: ConCtx, ctx: Ctx, shadows: Shadows)
-    (implicit ctx: Ctx, raise: Raise)
-    : TypedNuCls = {
-    val info = ctx.tyDefs2.getOrElse(clsNme, die/*TODO*/)
-    
-    info.complete() match {
-      case td: TypedNuCls =>
-        implicit val freshened: MutMap[TV, ST] = MutMap.empty
-        implicit val shadows: Shadows = Shadows.empty
-        // freshened ++= td.tparams.map(tp => tp._2 -> TopType)
-        
-        // /* 
-        td.tparams.foreach { case (tn, _tv, vi) =>
-          // val tv = freshVar(_tv.prov, S(_tv), _tv.nameHint)
-          val targ = rfnt(Var(td.nme.name + "#" + tn.name)) match {
-            case S(fty) =>
-              TypeBounds(
-                fty.lb.getOrElse(BotType),
-                fty.ub,
-              )(_tv.prov)
-            case N =>
-              // FIXME type bounds are kind of wrong for this
-              TypeBounds(
-                // _tv.lowerBounds.foldLeft(BotType: ST)(_ | _),
-                // _tv.upperBounds.foldLeft(TopType: ST)(_ & _),
-                _tv.lowerBounds.foldLeft(
-                  Extruded(false, SkolemTag(_tv.level, _tv)(provTODO))(provTODO, Nil): ST
-                  // ^ TODO provide extrusion reason?
-                )(_ | _),
-                _tv.upperBounds.foldLeft(
-                  Extruded(true, SkolemTag(_tv.level, _tv)(provTODO))(provTODO, Nil): ST
-                  // ^ TODO provide extrusion reason?
-                )(_ & _),
-              )(_tv.prov)
-          }
-          // println(s"Assigning ${_tv} ~> $tv := $targ where ${
-          //   targ.ub.showBounds}${targ.showBounds}")
-          //   // targ.ub.showBounds}${targ.lb.fold("")(_.showBounds)}")
-          println(s"Assigning ${_tv} := $targ where ${targ.showBounds}")
-          val tv =
-            freshVar(_tv.prov, N, _tv.nameHint)(targ.level) // TODO safe not to set original?!
-            // freshVar(_tv.prov, S(_tv), _tv.nameHint)(targ.level) // TODO safe not to set original?!
-          println(s"Set ${_tv} ~> $tv")
-          assert(tv.assignedTo.isEmpty)
-          tv.assignedTo = S(targ)
-          // println(s"Assigned ${tv.assignedTo}")
-          freshened += _tv -> tv
-        }
-        // */
-        /* 
-        td.tparams.foreach { case (tn, tv) =>
-          assert(tv.assignedTo.isEmpty)
-          val targ = rfnt.get(Var(td.nme.name + "#" + tn.name)) match {
-            case S(fty) =>
-              TypeBounds(
-                fty.lb.getOrElse(BotType),
-                fty.ub,
-              )(tv.prov)
-            case N =>
-              // FIXME type bounds are kind of wrong for this
-              TypeBounds(
-                tv.lowerBounds.foldLeft(BotType: ST)(_ | _),
-                tv.upperBounds.foldLeft(TopType: ST)(_ & _),
-              )(tv.prov)
-          }
-          println(s"Type param $tv := ${targ}")
-          freshened += tv -> targ
-        }
-        */
-        
-        // println(td)
-        // val res = td.freshenAbove(td.level + 1, rigidify = true).asInstanceOf[TypedNuCls]
-        val res =
-          // td.freshenAbove(td.level, rigidify = true).asInstanceOf[TypedNuCls]
-          td.freshenAbove(td.level, rigidify = false)
-        // println(res)
-        // println(res.members.map(_._2.asInstanceOf[TypedNuFun].ty.showBounds))
-        res
-      case _ => ???
-    }
-  }
   
   
   type ShadowSet = Set[ST -> ST]
@@ -646,15 +555,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                   )(provTODO).toUpper(provTODO) :: Nil)(provTODO), false)
               }
             } else {
-              // val lti = ctx.tyDefs2(nme)
-              // if (lti.isComputing)
-              //   annoying(Nil, LhsRefined(N, ts, r, trs0), Nil, done_rs) // TODO maybe pick a parent class here instead?
-              // else {
-                // val fty = lookupNuTypeDefField(lookupNuTypeDef(nme, r.fields.toMap.get), fldNme)
-                val fty = lookupField(() => done_ls.toType(sort = true), S(nme), r.fields.toMap.get, ts, fldNme)
-                rec(fty.ub, fldTy.ub, false)
-                recLb(fldTy, fty)
-              // }
+              val fty = lookupField(() => done_ls.toType(sort = true), S(nme), r.fields.toMap.get, ts, fldNme)
+              rec(fty.ub, fldTy.ub, false)
+              recLb(fldTy, fty)
             }
             case (LhsRefined(S(pt: ClassTag), ts, r, trs), RhsBases(pts, bf, trs2)) =>
               println(s"class checking $pt $pts")
@@ -716,26 +619,6 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           
       }
     }()
-    
-    /* 
-    def lookupNuTypeDefField(cls: TypedNuCls, fld: Var): FieldType = {
-      // println(fld.name, cls.members)
-      // println(s"Looking up $fld in ${cls.td.nme}")
-      val res = cls.members.get(fld.name) match {
-        case S(d: TypedNuFun) =>
-          d.typeSignature.toUpper(provTODO)
-        case S(p: NuParam) =>
-          p.ty
-        case N =>
-          err(msg"${cls.td.kind.str} `${cls.td.nme.name}` does not contain member `${fld.name}`",
-            // ttp(fld))
-            fld.toLoc).toUpper(noProv)
-        case _ => ??? // TODO
-      }
-      println(s"Lookup ${cls.td.nme.name}.${fld.name} : $res where ${res.ub.showBounds}")
-      res
-    }
-    */
     
     /** Helper function to constrain Field lower bounds. */
     def recLb(lhs: FieldType, rhs: FieldType)
