@@ -17,7 +17,7 @@ x === 1
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.16: 	1 === x
 //│ ║        	^^^^^^^
-//│ ╟── type `Eql[Int]` is not an instance of type `Num`
+//│ ╟── type `#Eql` is not an instance of type `Num`
 //│ ║  l.4: 	let x: Eql[Int]
 //│ ║       	       ^^^^^^^^
 //│ ╟── but it flows into reference with expected type `Num`
@@ -33,7 +33,7 @@ x === x
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.32: 	x === x
 //│ ║        	^^^^^^^
-//│ ╟── type `Eql[Int]` does not match type `?A | Int`
+//│ ╟── type `#Eql` does not match type `?A | Int`
 //│ ║  l.4: 	let x: Eql[Int]
 //│ ║       	       ^^^^^^^^
 //│ ╟── but it flows into reference with expected type `?A0 | Int`
@@ -79,7 +79,7 @@ test1(x)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.78: 	test1(x)
 //│ ║        	^^^^^^^^
-//│ ╟── type `Eql[Int]` does not match type `?A | Int`
+//│ ╟── type `#Eql` does not match type `?A | Int`
 //│ ║  l.4: 	let x: Eql[Int]
 //│ ║       	       ^^^^^^^^
 //│ ╟── but it flows into reference with expected type `?A0 | Int`

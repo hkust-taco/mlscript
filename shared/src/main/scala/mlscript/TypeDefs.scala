@@ -111,19 +111,19 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
     Var(clsNme.name + "#" + tparamNme.name)
   
   def clsNameToNomTag(td: NuTypeDef)(prov: TypeProvenance, ctx: Ctx): ClassTag = {
-    require((td.kind is Cls) || (td.kind is Nms) || (td.kind is Trt), td.kind)
+    require((td.kind is Cls) || (td.kind is Nms), td.kind)
     ClassTag(Var(td.nme.name),
         if(newDefs)
-          Set.single(TN("Object")) + TN("Eql")
+          Set.single(TN("Object"))
             | ctx.tyDefs2.get(td.nme.name).map(_.inheritedTags).getOrElse(Set.empty)
         else ctx.allBaseClassesOf(td.nme.name)
       )(prov)
   }
   def clsNameToNomTag(td: TypeDef)(prov: TypeProvenance, ctx: Ctx): ClassTag = {
-    require((td.kind is Cls) || (td.kind is Nms) || (td.kind is Trt), td.kind)
+    require((td.kind is Cls) || (td.kind is Nms), td.kind)
     if (newDefs && td.kind.str.isCapitalized) ClassTag(Var(td.nme.name),
         if(newDefs)
-          Set.single(TN("Object")) + TN("Eql")
+          Set.single(TN("Object"))
             | ctx.tyDefs2.get(td.nme.name).map(_.inheritedTags).getOrElse(Set.empty)
         else ctx.allBaseClassesOf(td.nme.name)
       )(prov)

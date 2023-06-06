@@ -1054,10 +1054,14 @@ abstract class TyperHelpers { Typer: Typer =>
               mkTparamRcd
           case _ => // * Case for when the type has not been completed yet
             info.decl match {
-              case td: NuTypeDef if td.kind.isInstanceOf[ObjDefKind] =>
+              case td: NuTypeDef if td.kind.isInstanceOf[ClsLikeKind] =>
                 // TODO in the future, add the self signature to DelayedTypeInfo and use it here
                 assert(td.tparams.size === targs.size)
                 clsNameToNomTag(td)(provTODO, ctx) &
+                  mkTparamRcd
+              case td: NuTypeDef if td.kind is Trt =>
+                assert(td.tparams.size === targs.size)
+                trtNameToNomTag(td)(provTODO, ctx) &
                   mkTparamRcd
               case td: NuTypeDef if td.kind is Als =>
                 // * Definition was not forced yet, which indicates an error (hopefully)

@@ -105,44 +105,44 @@ class C2 extends T2['FigureItOut] {
 //│ }
 
 :e
-trait T2[A] {
+trait T3[A] {
   fun f: A -> A
-  val r = (C2() : T2['X]).f(false)
+  val r = (C3() : T3['X]).f(false)
 }
-class C2 extends T2['FigureItOut] {
+class C3 extends T3['FigureItOut] {
   fun f(x: Int) = x
 }
 //│ ╔══[ERROR] Method implementations in traits are not yet supported
-//│ ║  l.110: 	  val r = (C2() : T2['X]).f(false)
+//│ ║  l.110: 	  val r = (C3() : T3['X]).f(false)
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Unhandled cyclic definition
-//│ ║  l.108: 	trait T2[A] {
+//│ ║  l.108: 	trait T3[A] {
 //│ ║         	^^^^^^^^^^^^^
 //│ ║  l.109: 	  fun f: A -> A
 //│ ║         	^^^^^^^^^^^^^^^
-//│ ║  l.110: 	  val r = (C2() : T2['X]).f(false)
+//│ ║  l.110: 	  val r = (C3() : T3['X]).f(false)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Type `C2` does not contain member `T2#A`
-//│ ║  l.108: 	trait T2[A] {
+//│ ╔══[ERROR] Type `C3` does not contain member `T3#A`
+//│ ║  l.108: 	trait T3[A] {
 //│ ╙──       	         ^
-//│ trait T2[A] {
+//│ trait T3[A] {
 //│   fun f: A -> A
 //│   let r: error | false
 //│ }
-//│ class C2 extends T2 {
+//│ class C3 extends T3 {
 //│   fun f: (x: Int,) -> Int
 //│ }
 
 :e // FIXME
-C2() : T2['X]
-//│ ╔══[ERROR] Type `C2` does not contain member `T2#A`
-//│ ║  l.108: 	trait T2[A] {
+C3() : T3['X]
+//│ ╔══[ERROR] Type `C3` does not contain member `T3#A`
+//│ ║  l.108: 	trait T3[A] {
 //│ ╙──       	         ^
-//│ T2['X]
+//│ T3['X]
 //│   where
 //│     'X :> error
 //│ res
 //│ Runtime error:
-//│   TypeError: Class constructor C2 cannot be invoked without 'new'
+//│   TypeError: Class constructor C3 cannot be invoked without 'new'
 
 

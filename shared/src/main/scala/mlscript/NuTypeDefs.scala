@@ -434,7 +434,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
       : ST = td.kind match {
     case Nms =>
       ClassTag(Var(td.nme.name),
-          ihtags + TN("Object") + TN("Eql")
+          ihtags + TN("Object")
         )(provTODO)
     case Cls =>
       // TODO deal with classes without parameter lists (ie needing `new`)
@@ -442,7 +442,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
         FunctionType(
           TupleType(params.mapKeys(some))(provTODO),
           ClassTag(Var(td.nme.name),
-            ihtags + TN("Object") + TN("Eql")
+            ihtags + TN("Object")
           )(provTODO) & RecordType.mk(
             // * ^ Note: we used to include the self type here (& selfTy),
             // *  but it doesn't seem to be needed – if the class has a constructor,

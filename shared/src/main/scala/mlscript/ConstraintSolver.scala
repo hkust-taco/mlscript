@@ -613,7 +613,13 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               rec(f0, f1, true)
             case (LhsRefined(S(f: FunctionType), ts, r, trs), RhsBases(pts, _, _)) =>
               annoying(Nil, LhsRefined(N, ts, r, trs), Nil, done_rs)
-              
+            
+            // * Note: We could avoid the need for this rule by adding `Eql` to *all* class tag parent sets,
+            // *  but I chose not to for performance reasons (better keep parent sets small).
+            case (LhsRefined(S(ct: ClassTag), ts, r, trs0),
+                  RhsBases(ots, _, trs)) if EqlTag in ots =>
+              println(s"OK ~ magic Eql ~")
+            
             // * These deal with the implicit Eql type member in primitive types.
             // * (Originally I added this to all such types,
             // *  but it requires not expanding primitive type refs,

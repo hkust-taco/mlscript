@@ -19,6 +19,7 @@ package object utils {
     /** An alternative to === when in ScalaTest, which shadows our === */
     def =:=(other: A): Bool = self == other
     def in(xs: A => Bool): Bool = xs(self)
+    def in(xs: Seq[_ >: A]): Bool = xs.exists(_ === self)
   }
   
   implicit class StringOps(private val self: String) extends AnyVal {

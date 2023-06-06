@@ -632,9 +632,9 @@ trait LitImpl { self: Lit =>
     case _: UnitLit => Set.empty
   }
   def baseClassesNu: Set[TypeName] = this match {
-    case _: IntLit => Set.single(TypeName("Int")) + TypeName("Num") + TypeName("Object") + TypeName("Eql")
-    case _: StrLit => Set.single(TypeName("Str")) + TypeName("Object") + TypeName("Eql")
-    case _: DecLit => Set.single(TypeName("Num")) + TypeName("Object") + TypeName("Eql")
+    case _: IntLit => Set.single(TypeName("Int")) + TypeName("Num") + TypeName("Object")
+    case _: StrLit => Set.single(TypeName("Str")) + TypeName("Object")
+    case _: DecLit => Set.single(TypeName("Num")) + TypeName("Object")
     case _: UnitLit => Set.empty
   }
 }
