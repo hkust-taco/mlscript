@@ -2,7 +2,7 @@
 
 
 log("Hello!")
-//│ unit
+//│ undefined
 //│ res
 //│     = undefined
 //│ // Output

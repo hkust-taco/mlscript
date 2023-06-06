@@ -28,13 +28,36 @@ foo
 //│ res
 //│     = [Function: foo1]
 
+
+// FIXME: returns a thunk
+fun main =
+  log("Hello")
+main
+//│ fun main: undefined
+//│ undefined
+//│ res
+//│     = [Function: main]
+
+fun main =
+  log("Hello")
+//│ fun main: undefined
+
+main
+//│ undefined
+//│ res
+//│     = undefined
+//│ // Output
+//│ Hello
+
+
 fun main =
   mixin B { log(1) }
   log(0)
   module M extends B
   log(2)
 main
-//│ fun main: unit
-//│ unit
+//│ fun main: undefined
+//│ undefined
 //│ res
-//│     = [Function: main]
+//│     = [Function: main2]
+

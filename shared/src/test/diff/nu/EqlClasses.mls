@@ -68,7 +68,7 @@ p === { fst: 1, snd: 2 }
 //│ ╟── record literal of type `{fst: 1, snd: 2}` is not an instance of type `Eql`
 //│ ║  l.64: 	{ fst: 1, snd: 2 } === p
 //│ ╙──      	       ^^^^^^^^^
-//│ Bool | error
+//│ error | false | true
 //│ res
 //│     = false
 
@@ -91,7 +91,7 @@ x => { a: 0 } === x
 //│ ╟── record literal of type `{a: 0}` is not an instance of type `Eql`
 //│ ║  l.87: 	x => { a: 0 } === x
 //│ ╙──      	          ^
-//│ anything -> (Bool | error)
+//│ anything -> (error | false | true)
 //│ res
 //│ Syntax error:
 //│   Unexpected token '==='
@@ -116,7 +116,7 @@ q === q
 //│ ╟── integer literal of type `1` is not an instance of type `Str`
 //│ ║  l.106: 	let q = Pair(1, "oops")
 //│ ╙──       	             ^
-//│ Bool | error
+//│ error | false | true
 //│ res
 //│     = true
 

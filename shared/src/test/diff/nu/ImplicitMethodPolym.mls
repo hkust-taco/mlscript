@@ -179,7 +179,7 @@ module M extends C {
 //│ ╔══[ERROR] Type mismatch in definition of method id1:
 //│ ║  l.171: 	  fun id1 = succ
 //│ ║         	      ^^^^^^^^^^
-//│ ╟── type `Int` does not match type `0 | true | ?a`
+//│ ╟── expression of type `Int` does not match type `0 | true | ?a`
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.107: 	  fun id1(x) = x
 //│ ╙──       	               ^

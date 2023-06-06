@@ -88,7 +88,7 @@ Test.foo(error) + 1
 //│ ╟── type variable `A` leaks out of its scope
 //│ ║  l.84: 	Test.foo(error) + 1
 //│ ║        	^^^^^^^^^^^^^^^
-//│ ╙── into type `Int`
+//│ ╙── into expression of type `Int`
 //│ Int | error
 //│ res
 //│ Runtime error:

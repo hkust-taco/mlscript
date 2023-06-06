@@ -75,7 +75,7 @@ fun f(e) = if e is
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.50: 	  Lit(n) then n
 //│ ║        	^^^^^^^^^^^^^^^
-//│ ╟── type `int` is not an instance of type `Int`
+//│ ╟── type `int` is not an instance of `Int`
 //│ ║  l.5: 	class Lit(n: int) extends Exp[int]
 //│ ║       	             ^^^
 //│ ╟── but it flows into reference with expected type `Int`

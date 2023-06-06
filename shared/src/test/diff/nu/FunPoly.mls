@@ -49,7 +49,7 @@ not(id(true))
 //│ ╟── but it flows into application with expected type `Bool`
 //│ ║  l.42: 	not(id(true))
 //│ ╙──      	    ^^^^^^^^
-//│ Bool | error
+//│ error | false | true
 //│ res
 //│     = false
 

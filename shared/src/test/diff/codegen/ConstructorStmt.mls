@@ -247,7 +247,7 @@ class Baz() {
 let baz = Baz()
 log((baz.x, baz.y))
 //│ let baz: Baz
-//│ unit
+//│ undefined
 //│ baz
 //│     = Baz {}
 //│ // Output

@@ -88,45 +88,5 @@ fun eval[A](e: Expr[A]): A =
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.6: 	class Add(x: Expr[Int], y: Expr[Int]) extends Expr[Int]
 //│ ╙──     	                                ^^^
-//│ ╔══[ERROR] Type mismatch in definition:
-//│ ║  l.53: 	fun eval[A](e: Expr[A]): A =
-//│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.54: 	    if 
-//│ ║        	^^^^^^^
-//│ ║  l.55: 	        e is LitInt(n) then n
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.56: 	        e is LitBool(b) then b
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.57: 	        e is Add(x, y) then eval(x) + eval(y)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `Bool` is not an instance of type `Int`
-//│ ║  l.5: 	class LitBool(b: Bool) extends Expr[Bool]
-//│ ║       	                 ^^^^
-//│ ╟── but it flows into reference with expected type `Int`
-//│ ║  l.55: 	        e is LitInt(n) then n
-//│ ║        	        ^
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.57: 	        e is Add(x, y) then eval(x) + eval(y)
-//│ ╙──      	                                      ^^^^^^^
-//│ ╔══[ERROR] Type mismatch in definition:
-//│ ║  l.53: 	fun eval[A](e: Expr[A]): A =
-//│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.54: 	    if 
-//│ ║        	^^^^^^^
-//│ ║  l.55: 	        e is LitInt(n) then n
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.56: 	        e is LitBool(b) then b
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.57: 	        e is Add(x, y) then eval(x) + eval(y)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `Bool` is not an instance of type `Int`
-//│ ║  l.5: 	class LitBool(b: Bool) extends Expr[Bool]
-//│ ║       	                 ^^^^
-//│ ╟── but it flows into reference with expected type `Int`
-//│ ║  l.55: 	        e is LitInt(n) then n
-//│ ║        	        ^
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.57: 	        e is Add(x, y) then eval(x) + eval(y)
-//│ ╙──      	                                      ^^^^^^^
 //│ fun eval: (e: Expr[out Int | false | true],) -> (Int | false | true)
 

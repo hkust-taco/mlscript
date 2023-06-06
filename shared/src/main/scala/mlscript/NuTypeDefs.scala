@@ -444,6 +444,9 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           ClassTag(Var(td.nme.name),
             ihtags + TN("Object") + TN("Eql")
           )(provTODO) & RecordType.mk(
+            // * ^ Note: we used to include the self type here (& selfTy),
+            // *  but it doesn't seem to be needed – if the class has a constructor,
+            // *  then surely it satisfies the self type (once we check it).
             tparams.map { case (tn, tv, vi) =>
               // TODO also use computed variance info when available!
               Var(td.nme.name + "#" + tn.name).withLocOf(tn) ->
@@ -1073,10 +1076,6 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                 // *      as this check will already have been performed generally when typing class T,
                 // *      but this would happen if we instead expanded into a type equivalent to #S & T...
                 constrain(ty, res)
-                // res
-                // assert(res.lowerBounds.sizeCompare(1) === 0)
-                // // TypeBounds.mk(res.lowerBounds.head, TopType)
-                // TypeBounds.mk(TopType, res.lowerBounds.head)
                 // * Retrieve the extruded lower bound.
                 // * Note that there should be only one, and in particular it should not be recursive,
                 // * since the variable is never shared outside this scope.

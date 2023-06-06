@@ -24,8 +24,8 @@ Dummy.introspect
 
 
 class Funny: Int { fun test = this + 1 }
-//│ class Funny: Int {
-//│   fun test: Int
+//│ class Funny: Int | 'a {
+//│   fun test: Int | 'a
 //│ }
 
 :e

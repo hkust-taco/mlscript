@@ -616,18 +616,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               
             // * These deal with the implicit Eql type member in primitive types.
             // * (Originally I added this to all such types,
-            // *  but it requires not expanding primitive type refs
+            // *  but it requires not expanding primitive type refs,
             // *  which causes regressions in simplification
             // *  because we don't yet simplify unexpanded type refs...)
-            // case (LhsRefined(S(ct @ ClassTag(Var(nme @ ("int" | "number" | "string" | "bool")), _)), ts, r, trs0),
-            //       RhsBases(ots, S(R(RhsField(Var("Eql#A"), fldTy))), trs)) =>
-            //   ???
-            //   nme match {
-            //     case "int" | "number" => rec(fldTy.lb.getOrElse(TopType), DecType, false)
-            //     case "string" => rec(fldTy.lb.getOrElse(TopType), StrType, false)
-            //     case "bool" => rec(fldTy.lb.getOrElse(TopType), BoolType, false)
-            //     case _ => die
-            //   }
             case (LhsRefined(S(ct @ ClassTag(lit: Lit, _)), ts, r, trs0),
                   RhsBases(ots, S(R(RhsField(Var("Eql#A"), fldTy))), trs)) =>
               lit match {

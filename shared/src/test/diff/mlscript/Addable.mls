@@ -9,10 +9,10 @@ class Numb: Addable[Numb] & { val: int }
 //│ Defined class Numb
 //│ Defined Numb.Add: Numb -> {val: int} -> Numb
 
-class Str: Addable[Str] & { val: string }
-  method Add that = Str { val = concat this.val that.val }
-//│ Defined class Str
-//│ Defined Str.Add: Str -> {val: string} -> Str
+class Stri: Addable[Stri] & { val: string }
+  method Add that = Stri { val = concat this.val that.val }
+//│ Defined class Stri
+//│ Defined Stri.Add: Stri -> {val: string} -> Stri
 
 n = Numb { val = 1 }
 //│ n: Numb & {val: 1}
@@ -36,17 +36,17 @@ addTwo n n
 //│ res: Numb
 //│    = Numb { val: 2 }
 
-s = Str { val = "hey" }
-//│ s: Str & {val: "hey"}
-//│  = Str { val: 'hey' }
+s = Stri { val = "hey" }
+//│ s: Stri & {val: "hey"}
+//│  = Stri { val: 'hey' }
 
 s.Add s
-//│ res: Str
-//│    = Str { val: 'heyhey' }
+//│ res: Stri
+//│    = Stri { val: 'heyhey' }
 
 addTwo s s
-//│ res: Str
-//│    = Str { val: 'heyhey' }
+//│ res: Stri
+//│    = Stri { val: 'heyhey' }
 
 
 
@@ -69,8 +69,8 @@ addNTimes n 12
 //│    = Numb { val: 12 }
 
 addNTimes s 5
-//│ res: Str
-//│    = Str { val: 'heyheyheyheyhey' }
+//│ res: Stri
+//│    = Stri { val: 'heyheyheyheyhey' }
 
 
 
@@ -139,15 +139,15 @@ addTwo s n
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	addTwo s n
 //│ ║        	^^^^^^^^^^
-//│ ╟── application of type `Numb & {val: ?val}` is not an instance of type `Str`
+//│ ╟── application of type `Numb & {val: ?val}` is not an instance of type `Stri`
 //│ ║  l.17: 	n = Numb { val = 1 }
 //│ ║        	    ^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `Str`
+//│ ╟── but it flows into reference with expected type `Stri`
 //│ ║  l.+1: 	addTwo s n
 //│ ║        	         ^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.12: 	class Str: Addable[Str] & { val: string }
-//│ ║        	                   ^^^
+//│ ║  l.12: 	class Stri: Addable[Stri] & { val: string }
+//│ ║        	                    ^^^^
 //│ ╟── from reference:
 //│ ║  l.30: 	def addTwo a0 a1 = a0.Add a1
 //│ ╙──      	                          ^^

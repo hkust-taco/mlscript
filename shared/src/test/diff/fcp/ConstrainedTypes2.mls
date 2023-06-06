@@ -108,8 +108,8 @@ def test extr x =
   in f 0
 //│ test: ((forall 'a 'b 'c. 'a -> (anything -> 'c
 //│   where
-//│     'd <: 'b -> 'c
-//│     'a <: 0 -> 'b)) -> anything) -> 'd -> (anything -> 'e
+//│     'a <: 0 -> 'b
+//│     'd <: 'b -> 'c)) -> anything) -> 'd -> (anything -> 'e
 //│   where
 //│     0 <: 0 -> 'f
 //│     'd <: 'f -> 'e)
@@ -128,8 +128,8 @@ test 0
 //│ ╙──       	             ^^^^^^
 //│ res: 'a -> (anything -> 'b
 //│   where
-//│     0 <: 0 -> 'c
-//│     'a <: 'c -> 'b) | error
+//│     'a <: 'c -> 'b
+//│     0 <: 0 -> 'c) | error
 //│    = [Function (anonymous)]
 
 def test extr x =

@@ -110,7 +110,7 @@ module Bar extends T1, Foo[Int | Str] {
 //│ ╔══[ERROR] Type mismatch in definition of method bar:
 //│ ║  l.108: 	  fun bar(x) = x + 1
 //│ ║         	      ^^^^^^^^^^^^^^
-//│ ╟── type `Bool` is not an instance of type `Int`
+//│ ╟── type `Bool` is not an instance of `Int`
 //│ ║  l.64: 	trait T1 extends Foo[Int | Bool]
 //│ ║        	                           ^^^^
 //│ ╟── Note: constraint arises from reference:
@@ -119,16 +119,7 @@ module Bar extends T1, Foo[Int | Str] {
 //│ ╔══[ERROR] Type mismatch in definition of method bar:
 //│ ║  l.108: 	  fun bar(x) = x + 1
 //│ ║         	      ^^^^^^^^^^^^^^
-//│ ╟── type `Bool` is not an instance of type `Int`
-//│ ║  l.64: 	trait T1 extends Foo[Int | Bool]
-//│ ║        	                           ^^^^
-//│ ╟── Note: constraint arises from reference:
-//│ ║  l.108: 	  fun bar(x) = x + 1
-//│ ╙──       	               ^
-//│ ╔══[ERROR] Type mismatch in definition of method bar:
-//│ ║  l.108: 	  fun bar(x) = x + 1
-//│ ║         	      ^^^^^^^^^^^^^^
-//│ ╟── type `Str` is not an instance of type `Int`
+//│ ╟── type `Str` is not an instance of `Int`
 //│ ║  l.106: 	module Bar extends T1, Foo[Int | Str] {
 //│ ║         	                                 ^^^
 //│ ╟── Note: constraint arises from reference:
@@ -174,16 +165,16 @@ class Final extends Derived1[(Int, Int)], Derived2 {
   fun bar([x, y]) = [y, x]
 }
 //│ ╔══[ERROR] Type mismatch in definition of method bar:
-//│ ║  l.174: 	  fun bar([x, y]) = [y, x]
+//│ ║  l.165: 	  fun bar([x, y]) = [y, x]
 //│ ║         	      ^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Str` is not an instance of `Int`
-//│ ║  l.145: 	trait Derived2 extends Base[(Int | Str, Int | Str)]
+//│ ║  l.136: 	trait Derived2 extends Base[(Int | Str, Int | Str)]
 //│ ║         	                                   ^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.172: 	class Final extends Derived1[(Int, Int)], Derived2 {
+//│ ║  l.163: 	class Final extends Derived1[(Int, Int)], Derived2 {
 //│ ║         	                                   ^^^
 //│ ╟── from reference:
-//│ ║  l.174: 	  fun bar([x, y]) = [y, x]
+//│ ║  l.165: 	  fun bar([x, y]) = [y, x]
 //│ ╙──       	                        ^
 //│ class Final extends Base, Derived1, Derived2 {
 //│   fun bar: (Int, Int,) -> (Int | Str, Int | Str,)

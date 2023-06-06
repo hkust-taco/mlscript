@@ -59,8 +59,6 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
       fs.map(nt => s"${nt._2.mutStr}${nt._1.fold("")(_.name + ": ")}${showField(nt._2, ctx)},").mkString("(", " ", ")")
     case Union(TypeName("true"), TypeName("false")) | Union(TypeName("false"), TypeName("true")) =>
       TypeName("bool").showIn(ctx, 0)
-    // case Union(TypeName("True"), TypeName("False")) | Union(TypeName("False"), TypeName("True")) =>
-    //   TypeName("Bool").showIn(ctx, 0)
     // case Union(l, r) => parensIf(l.showIn(ctx, 20) + " | " + r.showIn(ctx, 20), outerPrec > 20)
     // case Inter(l, r) => parensIf(l.showIn(ctx, 25) + " & " + r.showIn(ctx, 25), outerPrec > 25)
     case c: Composed =>
@@ -627,10 +625,10 @@ trait TermImpl extends StatementImpl { self: Term =>
 private class NotAType(val trm: Statement) extends Throwable
 
 trait LitImpl { self: Lit =>
-  def baseClassesOld: Set[TypeName] = this match { // TODO rm Eql
-    case _: IntLit => Set.single(TypeName("int")) + TypeName("number") + TypeName("Eql")
-    case _: StrLit => Set.single(TypeName("string")) + TypeName("Eql")
-    case _: DecLit => Set.single(TypeName("number")) + TypeName("Eql")
+  def baseClassesOld: Set[TypeName] = this match {
+    case _: IntLit => Set.single(TypeName("int")) + TypeName("number")
+    case _: StrLit => Set.single(TypeName("string"))
+    case _: DecLit => Set.single(TypeName("number"))
     case _: UnitLit => Set.empty
   }
   def baseClassesNu: Set[TypeName] = this match {
