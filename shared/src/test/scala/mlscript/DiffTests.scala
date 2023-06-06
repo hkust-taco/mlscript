@@ -120,14 +120,14 @@ class DiffTests
     def outputSourceCode(code: SourceCode) = code.lines.foreach{line => out.println(outputMarker + line.toString())}
     val allStatements = mutable.Buffer.empty[DesugaredStatement]
     var newDefs = false
-    // def outerNewDefs = newDefs
     trait MyTyper extends Typer { var ctx: Ctx }
-    lazy val typer = new Typer(dbg = false, verbose = false, explainErrors = false, newDefs = newDefs) with MyTyper {
-      var ctx: Ctx = Ctx.init
-      override def funkyTuples = file.ext =:= "fun"
-      // override def emitDbg(str: String): Unit = if (stdout) System.out.println(str) else output(str)
-      override def emitDbg(str: String): Unit = output(str)
-    }
+    lazy val typer =
+      new Typer(dbg = false, verbose = false, explainErrors = false, newDefs = newDefs) with MyTyper {
+        var ctx: Ctx = Ctx.init
+        override def funkyTuples = file.ext =:= "fun"
+        // override def emitDbg(str: String): Unit = if (stdout) System.out.println(str) else output(str)
+        override def emitDbg(str: String): Unit = output(str)
+      }
     def ctx = typer.ctx
     var declared: Map[Str, typer.ST] = Map.empty
     val failures = mutable.Buffer.empty[Int]

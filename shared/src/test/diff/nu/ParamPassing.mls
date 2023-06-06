@@ -5,9 +5,9 @@ class Foo(x: Int)
 //│ class Foo(x: Int)
 
 
-
 class Bar(x: Int, y: Int) extends Foo(x + y)
 //│ class Bar(x: Int, y: Int) extends Foo
+
 
 
 mixin AA(a: Int) {

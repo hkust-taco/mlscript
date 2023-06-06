@@ -2,29 +2,11 @@
 
 
 class Exp[A]: Pair | Lit
-class Lit(n: int) extends Exp[int]
+class Lit(n: Int) extends Exp[Int]
 class Pair[L, R](lhs: L, rhs: R) extends Exp[(L, R)]
 //│ class Exp[A]: Lit | Pair[anything, anything]
-//│ class Lit(n: int) extends Exp
+//│ class Lit(n: Int) extends Exp
 //│ class Pair[L, R](lhs: L, rhs: R) extends Exp
-
-:e // TODO
-Lit(0).test
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.12: 	Lit(0).test
-//│ ║        	^^^^^^
-//│ ╟── integer literal of type `0` is not an instance of type `int`
-//│ ║  l.12: 	Lit(0).test
-//│ ║        	    ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.5: 	class Lit(n: int) extends Exp[int]
-//│ ╙──     	             ^^^
-//│ ╔══[ERROR] Type `Lit` does not contain member `test`
-//│ ║  l.12: 	Lit(0).test
-//│ ╙──      	      ^^^^^
-//│ error
-//│ res
-//│     = undefined
 
 
 fun f(p: Pair['a, 'b]) = p.lhs
@@ -40,10 +22,10 @@ fun f(e) = if e is
 fun f(e) = if e is
   Pair(l, r) then [l, r]
   Lit(n) then n
-//│ fun f: forall 'rhs 'lhs. (Lit | Pair['lhs, 'rhs]) -> (('lhs, 'rhs,) | int)
+//│ fun f: forall 'lhs 'rhs. (Lit | Pair['lhs, 'rhs]) -> (('lhs, 'rhs,) | Int)
 
 (e: Exp['X]) => f(e)
-//│ (e: Exp['X],) -> ((??L, ??R,) | int)
+//│ (e: Exp['X],) -> ((??L, ??R,) | Int)
 //│ res
 //│     = [Function: res]
 
@@ -52,7 +34,7 @@ fun f(e) = if e is
 fun f(e) = if e is
   Pair['a, 'b](l, r) then [l, r]
 //│ ╔══[ERROR] illegal pattern
-//│ ║  l.53: 	  Pair['a, 'b](l, r) then [l, r]
+//│ ║  l.35: 	  Pair['a, 'b](l, r) then [l, r]
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^
 //│ fun f: anything -> error
 //│ Code generation encountered an error:
@@ -65,10 +47,10 @@ fun f(e) = if e is
     fun f(x: a) = x
     f(l)
 //│ ╔══[ERROR] type identifier not found: a
-//│ ║  l.65: 	    fun f(x: a) = x
+//│ ║  l.47: 	    fun f(x: a) = x
 //│ ╙──      	             ^
 //│ ╔══[ERROR] identifier not found: l
-//│ ║  l.66: 	    f(l)
+//│ ║  l.48: 	    f(l)
 //│ ╙──      	      ^
 //│ fun f: Pair[anything, anything] -> error
 //│ Code generation encountered an error:
