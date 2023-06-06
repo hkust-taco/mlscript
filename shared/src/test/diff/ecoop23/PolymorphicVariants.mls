@@ -122,20 +122,20 @@ Test1.eval(Cons(("c", Abs("d", Var("d"))), Nil), App(Abs("b", Var("b")), Var("c"
 //│ res
 //│     = Var {}
 
-class Num(n: Int)
+class Numb(n: Int)
 class Add[A](l: A, r: A)
 class Mul[A](l: A, r: A)
-//│ class Num(n: Int)
+//│ class Numb(n: Int)
 //│ class Add[A](l: A, r: A)
 //│ class Mul[A](l: A, r: A)
 
 fun map_expr(f, v) =
   if v is
     Var then v
-    Num then v
+    Numb then v
     Add(l, r) then Add(f(l), f(r))
     Mul(l, r) then Mul(f(l), f(r))
-//│ fun map_expr: forall 'l 'A 'l0 'A0. ('l -> 'A & 'l0 -> 'A0, Add['l] | Mul['l0] | Num | Var,) -> (Add['A] | Mul['A0] | Num | Var)
+//│ fun map_expr: forall 'l 'A 'l0 'A0. ('l -> 'A & 'l0 -> 'A0, Add['l] | Mul['l0] | Numb | Var,) -> (Add['A] | Mul['A0] | Numb | Var)
 
 mixin EvalExpr {
   fun eval(sub, v) =
@@ -143,35 +143,35 @@ mixin EvalExpr {
     let vv = map_expr(eta, v)
     if vv is
       Var then super.eval(sub, vv)
-      Add(Num(l), Num(r)) then Num(l + r)
-      Mul(Num(l), Num(r)) then Num(l * r)
+      Add(Numb(l), Numb(r)) then Numb(l + r)
+      Mul(Numb(l), Numb(r)) then Numb(l * r)
     else v
 }
 //│ mixin EvalExpr() {
 //│   super: {eval: ('a, Var,) -> 'b}
 //│   this: {eval: ('a, 'c,) -> Object}
-//│   fun eval: ('a, 'b & (Add['c] | Mul['c] | Num | Var),) -> (Num | 'b)
+//│   fun eval: ('a, 'b & (Add['c] | Mul['c] | Numb | Var),) -> (Numb | 'b)
 //│ }
 
 module Test2 extends EvalVar, EvalExpr
 //│ module Test2 {
-//│   fun eval: forall 'a. (Cons[{_1: anything, _2: Object & 'result}] | Nil, 'a & (Add['b] | Mul['b] | Num | Var),) -> (Num | Var | 'result | 'a)
+//│   fun eval: forall 'a. (Cons[{_1: anything, _2: Object & 'result}] | Nil, 'a & (Add['b] | Mul['b] | Numb | Var),) -> (Numb | Var | 'result | 'a)
 //│ }
 //│ where
-//│   'b <: Add['b] | Mul['b] | Num | Var
+//│   'b <: Add['b] | Mul['b] | Numb | Var
 
 Test2.eval(Nil, Var("a"))
-//│ Num | Var
+//│ Numb | Var
 //│ res
 //│     = Var {}
 
 Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil), Var("a"))
-//│ Abs[Var] | Num | Var
+//│ Abs[Var] | Numb | Var
 //│ res
 //│     = Var {}
 
-Test2.eval(Cons(("a", Num(1)), Nil), Var("a"))
-//│ Num | Var
+Test2.eval(Cons(("a", Numb(1)), Nil), Var("a"))
+//│ Numb | Var
 //│ res
 //│     = Var {}
 
@@ -181,7 +181,7 @@ Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.180: 	Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `Abs[?A]` does not match type `Add[?A0] | Mul[?A1] | Num | Var`
+//│ ╟── application of type `Abs[?A]` does not match type `Add[?A0] | Mul[?A1] | Numb | Var`
 //│ ║  l.180: 	Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ ║         	                                                 ^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
@@ -190,13 +190,13 @@ Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ ╟── from reference:
 //│ ║  l.143: 	    let vv = map_expr(eta, v)
 //│ ╙──       	                           ^
-//│ Abs[Var] | Num | Var | error
+//│ Abs[Var] | Numb | Var | error
 //│ res
 //│ Runtime error:
 //│   Error: non-exhaustive case expression
 
-Test2.eval(Cons(("a", Abs("d", Var("d"))), Nil), Add(Num(1), Var("a")))
-//│ Abs[Var] | Add[Num | Var] | Num | Var
+Test2.eval(Cons(("a", Abs("d", Var("d"))), Nil), Add(Numb(1), Var("a")))
+//│ Abs[Var] | Add[Numb | Var] | Numb | Var
 //│ res
 //│     = Add {}
 
@@ -207,9 +207,9 @@ module Test3 extends EvalVar, EvalExpr, EvalLambda
 //│ where
 //│   'result :> 'c | 'a
 //│           <: Object
-//│   'c :> Num | Var | 'result | 'b | 'a
+//│   'c :> Numb | Var | 'result | 'b | 'a
 //│   'a :> App['c | 'a] | Abs['c | 'a]
-//│   'b <: Add['d] | Mul['d] | Num | Var
+//│   'b <: Add['d] | Mul['d] | Numb | Var
 //│   'd <: Abs['t] | App['A] | Object & 'b & ~#Abs & ~#App
 //│   't <: Abs['t] | App['A] | Object & 'b & ~#Abs & ~#App
 //│   'A <: Abs['t & (Abs['t] | App['A] | Object & 'b & ~#Abs & ~#App)] | Abs['t] & ~#Abs | App['A] | Object & 'b & ~#Abs & ~#App
@@ -219,29 +219,29 @@ Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│   where
 //│     'b :> forall 'a. 'a | 'c
 //│     'a :> App[forall 'a. 'b | 'a | 'c] | Abs[forall 'a. 'b | 'a | 'c]
-//│     'c :> Abs[Var] | Num | Var | 'b
+//│     'c :> Abs[Var] | Numb | Var | 'b
 //│ res
 //│     = Abs {}
 
-Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), App(Abs("a", Var("a")), Add(Num(1), Var("c"))))
+Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), App(Abs("a", Var("a")), Add(Numb(1), Var("c"))))
 //│ forall 'a. 'b | 'a | 'c
 //│   where
 //│     'b :> forall 'a. 'a | 'c
 //│     'a :> App[forall 'a. 'b | 'a | 'c] | Abs[forall 'a. 'b | 'a | 'c]
-//│     'c :> Abs[Var] | Add[Num | Var] | Num | Var | 'b
+//│     'c :> Abs[Var] | Add[Numb | Var] | Numb | Var | 'b
 //│ res
 //│     = Var {}
 
 // * Incorrect version, for regression testing – EvalLambda should be mixed in after EvalExpr
 module Test3 extends EvalVar, EvalLambda, EvalExpr
 //│ module Test3 {
-//│   fun eval: forall 'a. (Cons[{_1: anything, _2: 'result}] | Nil, 'a & (Add['b] | Mul['b] | Num | Var),) -> ('a | 'c)
+//│   fun eval: forall 'a. (Cons[{_1: anything, _2: 'result}] | Nil, 'a & (Add['b] | Mul['b] | Numb | Var),) -> ('a | 'c)
 //│ }
 //│ where
-//│   'b <: Add['b] | Mul['b] | Num | Var
+//│   'b <: Add['b] | Mul['b] | Numb | Var
 //│   'result :> 'c
 //│           <: Object
-//│   'c :> Abs[Num | 'c] | App[Num | 'c] | Num | Var | 'result
+//│   'c :> Abs[Numb | 'c] | App[Numb | 'c] | Numb | Var | 'result
 
 // * Because EvalExpr does not dispatch lambdas to super and map_expr only
 // * handles exprs
@@ -250,7 +250,7 @@ Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.249: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `Abs[?A]` does not match type `Add[?A0] | Mul[?A1] | Num | Var`
+//│ ╟── application of type `Abs[?A]` does not match type `Add[?A0] | Mul[?A1] | Numb | Var`
 //│ ║  l.249: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ ║         	                                                 ^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
@@ -261,7 +261,7 @@ Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ ╙──       	                           ^
 //│ Abs[Var] | error | 'a
 //│   where
-//│     'a :> Abs[Num | 'a] | App[Num | 'a] | Num | Var
+//│     'a :> Abs[Numb | 'a] | App[Numb | 'a] | Numb | Var
 //│ res
 //│ Runtime error:
 //│   Error: non-exhaustive case expression

@@ -497,7 +497,10 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
               case _ =>
                 fd
             }
-          case _ => _decl
+          case td: NuTypeDef =>
+            if (td.nme.name in reservedTypeNames)
+              err(msg"Type name '${td.nme.name}' is reserved", td.toLoc)
+            td
         }
         val lti = new DelayedTypeInfo(decl, implicitly)
         decl match {

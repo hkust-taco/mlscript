@@ -2,15 +2,15 @@
 class Integer: { value: int; addOne: Integer -> Integer }
 //│ Defined class Integer
 
-class Num: Integer & { addOne: Num -> Num }
-//│ Defined class Num
+class Numb: Integer & { addOne: Numb -> Numb }
+//│ Defined class Numb
 
 class Str: { value: string; addOne: Str -> Str }
 //│ Defined class Str
 
 addOne1 x = case x of {
   | Integer -> x.addOne x
-  | Num -> x.addOne x
+  | Numb -> x.addOne x
   }
 //│ addOne1: ((Integer\value with {addOne: 'a -> 'b}) & 'a) -> 'b
 //│        = [Function: addOne1]
@@ -232,7 +232,7 @@ addOne1 (Str { value = ""; addOne = error })
 
 addOne2 x = case x of {
   | Integer -> x.addOne x
-  | Num -> x.addOne x
+  | Numb -> x.addOne x
   | Str -> x.addOne x
   }
 //│ addOne2: ((Integer\value with {addOne: 'a -> 'b}) & 'a | (Str\value with {addOne: 'c -> 'b}) & 'c) -> 'b

@@ -285,8 +285,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
     // } ::
     Nil
   val primitiveTypes: Set[Str] =
-    builtinTypes.iterator.map(_.nme.name).flatMap(n => n.decapitalize :: n.capitalize :: Nil).toSet
-    // - "Eql"
+    builtinTypes.iterator.map(_.nme.name).flatMap(n => n.decapitalize :: n.capitalize :: Nil).toSet +
+      "Object" + "Num"
+  val reservedTypeNames: Set[Str] = primitiveTypes + "Eql"
   def singleTup(ty: ST): ST =
     if (funkyTuples) ty else TupleType((N, ty.toUpper(ty.prov) ) :: Nil)(noProv)
   val builtinBindings: Bindings = {
@@ -713,11 +714,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
   }
   
   // TODO also prevent rebinding of "not"
-  val reservedNames: Set[Str] = Set("|", "&", "~", ",", "neg", "and", "or", "is")
+  val reservedVarNames: Set[Str] = Set("|", "&", "~", ",", "neg", "and", "or", "is")
   
   object ValidVar {
     def unapply(v: Var)(implicit raise: Raise): S[Str] = S {
-      if (reservedNames(v.name))
+      if (reservedVarNames(v.name))
         err(s"Illegal use of reserved operator: " + v.name,
           v.toLoc)(raise)
       v.name

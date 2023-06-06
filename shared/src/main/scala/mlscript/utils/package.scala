@@ -12,12 +12,13 @@ package object utils {
     "org.wartremover.warts.Equals",
     "org.wartremover.warts.AsInstanceOf"))
   implicit final class AnyOps[A](self: A) {
-    def ===(other: A): Boolean = self == other
-    def =/=(other: A): Boolean = self != other
-    def is(other: AnyRef): Boolean = self.asInstanceOf[AnyRef] eq other
-    def isnt(other: AnyRef): Boolean = !(self.asInstanceOf[AnyRef] eq other)
+    def ===(other: A): Bool = self == other
+    def =/=(other: A): Bool = self != other
+    def is(other: AnyRef): Bool = self.asInstanceOf[AnyRef] eq other
+    def isnt(other: AnyRef): Bool = !(self.asInstanceOf[AnyRef] eq other)
     /** An alternative to === when in ScalaTest, which shadows our === */
-    def =:=(other: A): Boolean = self == other
+    def =:=(other: A): Bool = self == other
+    def in(xs: A => Bool): Bool = xs(self)
   }
   
   implicit class StringOps(private val self: String) extends AnyVal {

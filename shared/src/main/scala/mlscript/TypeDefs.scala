@@ -185,7 +185,7 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
         err(msg"Type names must start with a capital letter", td0.nme.toLoc)
         td0.copy(nme = td0.nme.copy(n).withLocOf(td0.nme)).withLocOf(td0)
       }
-      if (primitiveTypes.contains(n)) {
+      if (reservedTypeNames.contains(n)) {
         err(msg"Type name '$n' is reserved.", td.nme.toLoc)
       }
       td.tparams.groupBy(_.name).foreach { case s -> tps if tps.sizeIs > 1 => err(
