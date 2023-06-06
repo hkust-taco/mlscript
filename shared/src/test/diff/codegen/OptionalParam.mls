@@ -228,7 +228,7 @@ fun f(c) =
     F(x) then x
     G() then 2
     _ then 0
-//│ fun f: #Object -> Int
+//│ fun f: Object -> Int
 //│ // Prelude
 //│ class TypingUnit8 {}
 //│ const typing_unit8 = new TypingUnit8;

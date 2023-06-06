@@ -52,7 +52,7 @@ class ErrC3(toString: Str -> Str) extends Showable
 //│ ╟── integer literal of type `114` is not an instance of type `Str`
 //│ ║  l.40: 	    fun toString = 114
 //│ ║        	                   ^^^
-//│ ╟── but it flows into definition of method toString with expected type `#Str`
+//│ ╟── but it flows into definition of method toString with expected type `Str`
 //│ ║  l.40: 	    fun toString = 114
 //│ ║        	        ^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -181,7 +181,7 @@ mixin More {
 }
 //│ mixin More() {
 //│   fun bar: 'a -> 'a
-//│   fun more: #Num -> Bool
+//│   fun more: Num -> Bool
 //│   fun size: 1
 //│ }
 
@@ -196,7 +196,7 @@ class Grassberg(name: "grass" | "GRASS") extends More, SizedStadt, Fooo
 //│ class Grassberg(name: "GRASS" | "grass") extends RefinedStadt, SizedStadt, Stadt {
 //│   fun bar: forall 'a. 'a -> 'a
 //│   fun foo: anything -> 0
-//│   fun more: #Num -> Bool
+//│   fun more: Num -> Bool
 //│   fun size: 1
 //│ }
 
@@ -223,7 +223,7 @@ class Dirtberg extends More, SizedStadt, Fooo {
 //│ class Dirtberg extends RefinedStadt, SizedStadt, Stadt {
 //│   fun bar: forall 'a. 'a -> 'a
 //│   fun foo: anything -> 0
-//│   fun more: #Num -> Bool
+//│   fun more: Num -> Bool
 //│   let name: "dirt"
 //│   fun size: 4
 //│ }
@@ -232,7 +232,7 @@ class Iceburg(name: Str) extends RefinedStadt, More, Fooo
 //│ class Iceburg(name: Str) extends RefinedStadt, Stadt {
 //│   fun bar: forall 'a. 'a -> 'a
 //│   fun foo: anything -> 0
-//│   fun more: #Num -> Bool
+//│   fun more: Num -> Bool
 //│   fun size: 1
 //│ }
 
@@ -379,7 +379,7 @@ class C2(foo: Int, bar: Str) extends T4
 //│ ╔══[ERROR] Type mismatch in type reference:
 //│ ║  l.368: 	class C2(foo: Int, bar: Str) extends T4
 //│ ║         	                        ^^^
-//│ ╟── type `#Str` does not match type `Bool | Int`
+//│ ╟── type `Str` does not match type `Bool & ?a | Int`
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.320: 	    let bar : Int | Bool
 //│ ║         	              ^^^^^^^^^^

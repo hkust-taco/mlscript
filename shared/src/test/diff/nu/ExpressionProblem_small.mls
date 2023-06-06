@@ -35,26 +35,26 @@ mixin EvalNeg {
 //│ mixin EvalAddLit() {
 //│   super: {eval: 'a -> 'b}
 //│   this: {eval: 'lhs -> Int}
-//│   fun eval: (Add['lhs] | Lit | #Object & 'a & ~#Add & ~#Lit) -> (Int | 'b)
+//│   fun eval: (Add['lhs] | Lit | Object & 'a & ~#Add & ~#Lit) -> (Int | 'b)
 //│ }
 //│ mixin EvalNeg() {
 //│   super: {eval: 'c -> 'd}
 //│   this: {eval: 'expr -> Int}
-//│   fun eval: (Neg['expr] | #Object & 'c & ~#Neg) -> (Int | 'd)
+//│   fun eval: (Neg['expr] | Object & 'c & ~#Neg) -> (Int | 'd)
 //│ }
 
 module TestLang extends EvalNothing, EvalAddLit, EvalNeg
 //│ module TestLang {
-//│   fun eval: (Neg['expr] | #Object & 'a & ~#Neg) -> Int
+//│   fun eval: (Neg['expr] | Object & 'a & ~#Neg) -> Int
 //│ }
 //│ where
-//│   'expr <: Neg['expr] | #Object & 'a & ~#Neg
-//│   'a <: Add[Neg['expr] | #Object & 'a & ~#Neg] | Lit
+//│   'expr <: Neg['expr] | Object & 'a & ~#Neg
+//│   'a <: Add[Neg['expr] | Object & 'a & ~#Neg] | Lit
 
 TestLang.eval
-//│ (Neg['expr] | #Object & 'a & ~#Neg) -> Int
+//│ (Neg['expr] | Object & 'a & ~#Neg) -> Int
 //│   where
-//│     'expr <: Neg['expr] | #Object & 'a & ~#Neg
-//│     'a <: Add[Neg['expr] | #Object & 'a & ~#Neg] | Lit
+//│     'expr <: Neg['expr] | Object & 'a & ~#Neg
+//│     'a <: Add[Neg['expr] | Object & 'a & ~#Neg] | Lit
 
 

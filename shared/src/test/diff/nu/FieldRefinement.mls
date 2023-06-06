@@ -28,7 +28,7 @@ foo.y
 
 :e
 foo.z
-//│ ╔══[ERROR] Type `Foo & {y: Bool, bar: 0 | 1, baz: 0 | 1, x: 0 | 1}` does not contain member `z`
+//│ ╔══[ERROR] Type `Foo & {y: Bool & ?a, bar: 0 | 1, baz: 0 | 1, x: 0 | 1}` does not contain member `z`
 //│ ║  l.30: 	foo.z
 //│ ╙──      	   ^^
 //│ error

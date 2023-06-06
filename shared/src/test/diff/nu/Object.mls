@@ -27,7 +27,7 @@ fun foo(x) = if x is A then true
 //│ fun foo: A -> true
 
 fun foo(x) = if x is A then true else false
-//│ fun foo: #Object -> Bool
+//│ fun foo: Object -> Bool
 
 
 :e
@@ -38,7 +38,7 @@ fun foo(x: anything) = if x is A then true
 //│ ╟── type `anything` is not an instance of type `Object`
 //│ ║  l.34: 	fun foo(x: anything) = if x is A then true
 //│ ║        	           ^^^^^^^^
-//│ ╟── but it flows into reference with expected type `#Object`
+//│ ╟── but it flows into reference with expected type `Object`
 //│ ║  l.34: 	fun foo(x: anything) = if x is A then true
 //│ ╙──      	                          ^
 //│ ╔══[ERROR] Type mismatch in `case` expression:
@@ -63,7 +63,7 @@ fun foo(x: anything) = if x is A then true else false
 //│ ╟── type `anything` is not an instance of type `Object`
 //│ ║  l.59: 	fun foo(x: anything) = if x is A then true else false
 //│ ║        	           ^^^^^^^^
-//│ ╟── but it flows into reference with expected type `#Object`
+//│ ╟── but it flows into reference with expected type `Object`
 //│ ║  l.59: 	fun foo(x: anything) = if x is A then true else false
 //│ ╙──      	                          ^
 //│ fun foo: (x: anything,) -> Bool
@@ -82,7 +82,7 @@ fun foo = forall 'a; (x: 'a) => if x is A then true else false
 //│ ╟── rigid type variable of type `'a` is not an instance of type `Object`
 //│ ║  l.78: 	fun foo = forall 'a; (x: 'a) => if x is A then true else false
 //│ ║        	                 ^^
-//│ ╟── but it flows into reference with expected type `#Object`
+//│ ╟── but it flows into reference with expected type `Object`
 //│ ║  l.78: 	fun foo = forall 'a; (x: 'a) => if x is A then true else false
 //│ ╙──      	                                   ^
 //│ fun foo: (x: anything,) -> Bool
@@ -91,13 +91,13 @@ fun foo = forall 'a; (x: 'a) => if x is A then true else false
 
 :ge
 Object
-//│ () -> #Object
+//│ () -> Object
 //│ Code generation encountered an error:
 //│   unresolved symbol Object
 
 :ge
 Object()
-//│ #Object
+//│ Object
 //│ Code generation encountered an error:
 //│   unresolved symbol Object
 

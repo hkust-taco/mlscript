@@ -20,7 +20,7 @@ x === 1
 //│ ╟── type `#Eql & {Eql#A :> Int}` is not an instance of type `Num`
 //│ ║  l.4: 	let x: Eql[Int]
 //│ ║       	       ^^^^^^^^
-//│ ╟── but it flows into reference with expected type `#Num`
+//│ ╟── but it flows into reference with expected type `Num`
 //│ ║  l.16: 	1 === x
 //│ ╙──      	      ^
 //│ Bool | error
@@ -55,7 +55,7 @@ fun test2(x, y) =
 
 
 1 : Eql['a]
-//│ Eql[#Num]
+//│ Eql[Num]
 //│ res
 //│     = 1
 
@@ -103,7 +103,7 @@ test1(n)
 //│       n is not implemented
 
 let d = 1/2
-//│ let d: #Num
+//│ let d: Num
 //│ d
 //│   = 0.5
 
@@ -129,7 +129,7 @@ test2(0, d)
 //│     = false
 
 x => test2(0, x)
-//│ #Num -> Bool
+//│ Num -> Bool
 //│ res
 //│     = [Function: res]
 
@@ -144,7 +144,7 @@ x => test2(d, x)
 //│     = [Function: res]
 
 x => test2(x, d)
-//│ Eql[#Num] -> Bool
+//│ Eql[Num] -> Bool
 //│ res
 //│     = [Function: res]
 

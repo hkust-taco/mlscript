@@ -29,6 +29,6 @@ fun con: Str => Str => Str
 //│ fun con: Str -> Str -> Str
 
 fun con = concat
-//│ fun con: #Str -> #Str -> #Str
+//│ fun con: Str -> Str -> Str
 
 

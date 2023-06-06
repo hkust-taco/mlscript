@@ -59,7 +59,7 @@ fun f(x, y) = if x is
     _ and y is
       True then true
       False then false
-//│ fun f: (#Object, False | True,) -> Bool
+//│ fun f: (Object, False | True,) -> Bool
 
 f(True, True)
 f(True, False)
@@ -82,7 +82,7 @@ fun g(x, y) = if x is
   _ and y is
     true then true
     false then false
-//│ fun g: (#Object, nothing,) -> Bool
+//│ fun g: (Object, nothing,) -> Bool
 
 // Chained UCS terms
 fun f(x, y) = if x is
@@ -91,7 +91,7 @@ fun f(x, y) = if x is
   else if y is
     True then true
     False then false
-//│ fun f: (#Object, False | True,) -> Bool
+//│ fun f: (Object, False | True,) -> Bool
 
 fun f(x, y) = if x is
     True and y is True then true
@@ -106,4 +106,4 @@ fun h(x, y, p) = if
   y is
     True then 1
     False then 2
-//│ fun h: (#Object, False | True, true -> #Object,) -> (0 | 1 | 2)
+//│ fun h: (Object, False | True, true -> Object,) -> (0 | 1 | 2)

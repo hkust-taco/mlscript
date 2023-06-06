@@ -925,11 +925,11 @@ M.N.op(M.P())
 //│ ╙──       	        ^^
 //│ module M {
 //│   module N {
-//│     fun op: #Object -> (0 | 1 | 2)
+//│     fun op: Object -> (0 | 1 | 2)
 //│   }
 //│   class O()
 //│   class P()
-//│   fun op: #Object -> (0 | 1 | 2)
+//│   fun op: Object -> (0 | 1 | 2)
 //│ }
 //│ error
 //│ // Prelude

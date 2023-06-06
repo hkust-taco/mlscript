@@ -155,13 +155,18 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
       inRecursiveDef = N,
       MutMap.empty,
     )
-    def init: Ctx = if (!newDefs) initBase else initBase.copy(
-      tyDefs2 = MutMap.from(nuBuiltinTypes.map { t =>
-        val lti = new DelayedTypeInfo(t, Map.empty)(initBase, e => lastWords(e.theMsg))
-        initBase.env += t.nme.name -> lti
-        t.nme.name -> lti
-      }),
-    )
+    def init: Ctx = if (!newDefs) initBase else {
+      val res = initBase.copy(
+        tyDefs2 = MutMap.from(nuBuiltinTypes.map { t =>
+          val lti = new DelayedTypeInfo(t, Map.empty)(initBase, e => lastWords(e.theMsg))
+          initBase.env += t.nme.name -> lti
+          t.nme.name -> lti
+        }),
+      )
+      implicit val raise: Raise = throw _
+      res.tyDefs2.valuesIterator.foreach(_.complete())
+      res
+    }
     val empty: Ctx = init
   }
   implicit def lvl(implicit ctx: Ctx): Int = ctx.lvl
@@ -222,7 +227,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
     NuTypeDef(Cls, TN("Object"), Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, N),
     NuTypeDef(Cls, TN("Int"), Nil, N, N, N, Var("Num") :: Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
     NuTypeDef(Cls, TN("Str"), Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
-    NuTypeDef(Cls, TN("Bool"), Nil, N, N, S(Union(TN("True"), TN("False"))), Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
+    // NuTypeDef(Cls, TN("Bool"), Nil, N, N, S(Union(TN("True"), TN("False"))), Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
+    NuTypeDef(Cls, TN("Bool"), Nil, N, N, S(Union(TN("true"), TN("false"))), Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
     NuTypeDef(Cls, TN("Num"), Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
     // NuTypeDef(Nms, TN("True"), Nil, N, N, N, Var("Bool") :: Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
     // NuTypeDef(Nms, TN("False"), Nil, N, N, N, Var("Bool") :: Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),

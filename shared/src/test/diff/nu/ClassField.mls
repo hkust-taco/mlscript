@@ -11,7 +11,7 @@ Foo
 //│     = [Function (anonymous)] { class: [class Foo] }
 
 typeof(Foo)
-//│ #Str
+//│ Str
 //│ res
 //│     = 'function'
 
@@ -21,7 +21,7 @@ let f = Foo(123)
 //│   = Foo {}
 
 typeof(f)
-//│ #Str
+//│ Str
 //│ res
 //│     = 'object'
 
@@ -38,7 +38,7 @@ let cls = Foo.class
 //│     = [class Foo]
 
 typeof(cls)
-//│ #Str
+//│ Str
 //│ res
 //│     = 'function'
 
@@ -69,7 +69,7 @@ let cls = Derived.class
 //│     = [Function: Derived]
 
 typeof(cls)
-//│ #Str
+//│ Str
 //│ res
 //│     = 'function'
 

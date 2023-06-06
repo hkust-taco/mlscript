@@ -832,7 +832,7 @@ class Bc31(baz: Bool) extends Bc3
 //│ ╔══[ERROR] Type mismatch in type reference:
 //│ ║  l.831: 	class Bc31(baz: Bool) extends Bc3
 //│ ║         	                ^^^^
-//│ ╟── type `Bool` is not an instance of `Int`
+//│ ╟── type `Bool & ?a` is not an instance of `Int`
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.801: 	  let baz : Int
 //│ ║         	            ^^^
@@ -893,14 +893,14 @@ trait BPar[T] extends Base[(Int,T)]
 let bi: BInt
 let bp: BPar[Bool]
 //│ let bi: BInt
-//│ let bp: BPar[Bool]
+//│ let bp: BPar[in Bool out Bool]
 //│ bi
 //│    = <missing implementation>
 //│ bp
 //│    = <missing implementation>
 
 bp: Base[(Int, Bool)]
-//│ Base[(Int, Bool,)]
+//│ Base[in (Int, Bool,) out (Int, Bool,)]
 //│ res
 //│     = <no result>
 //│       bp is not implemented
@@ -910,7 +910,7 @@ bp: Base[(Int, Int)]
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.909: 	bp: Base[(Int, Int)]
 //│ ║         	^^
-//│ ╙── expression of type `Bool` is not an instance of type `Int`
+//│ ╙── expression of type `true` does not match type `Int | ~Bool`
 //│ Base[(Int, Int,)]
 //│ res
 //│     = <no result>
@@ -923,7 +923,7 @@ bi.f(1)
 //│       bi is not implemented
 
 bp.f
-//│ ((Int, Bool,) & 'A) -> ((Int, Bool,) | 'A)
+//│ ((Int, Bool & 'T,) & 'A) -> ((Int, 'T | false | true,) | 'A)
 //│ res
 //│     = <no result>
 //│       bp is not implemented
@@ -1094,7 +1094,7 @@ class Fischl(age: Bool) extends Oz
 //│ ╔══[ERROR] Type mismatch in type reference:
 //│ ║  l.1093: 	class Fischl(age: Bool) extends Oz
 //│ ║          	                  ^^^^
-//│ ╟── type `Bool` is not an instance of `Int`
+//│ ╟── type `Bool & ?a` is not an instance of `Int`
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.1086: 	  let age: Int
 //│ ║          	           ^^^
@@ -1150,7 +1150,7 @@ class Ohhh(x: Bool) extends Ha
 //│ ╔══[ERROR] Type mismatch in type reference:
 //│ ║  l.1149: 	class Ohhh(x: Bool) extends Ha
 //│ ║          	              ^^^^
-//│ ╟── type `Bool` is not an instance of `Int`
+//│ ╟── type `Bool & ?a` is not an instance of `Int`
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.1140: 	class Ha { let x: Int = 1 }
 //│ ╙──        	                  ^^^
@@ -1173,7 +1173,7 @@ let g21 = G2(false)
 //│     = G2 {}
 
 g21: G1[Bool, Int]
-//│ G1[Bool, Int]
+//│ G1[in Bool out Bool, Int]
 //│ res
 //│     = G2 {}
 
@@ -1183,6 +1183,6 @@ g21.a
 //│     = false
 
 g21: TA[Bool]
-//│ TA[Bool]
+//│ TA[in Bool out Bool]
 //│ res
 //│     = G2 {}

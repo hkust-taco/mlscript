@@ -10,7 +10,7 @@ class Pair[L, R](lhs: Exp[L], rhs: Exp[R]) extends Exp[(L, R)]
 
 
 fun f(p: Pair['a, 'b]) = p.lhs
-//│ fun f: forall 'L 'a 'b. (p: Pair['a, 'b],) -> Exp['L]
+//│ fun f: forall 'a 'b 'L. (p: Pair['a, 'b],) -> Exp['L]
 //│   where
 //│     'L := 'a
 

@@ -23,13 +23,13 @@ fun w1(x, e_0, e_1) =
       Left(Some(lv)) then concat("Left of Some of ")(toString(lv))
       _ and e_1 is y_1 and x is
         Right(Some(rv)) then concat("Right of Some of ")(toString(rv))
-//│ fun w1: (Left[None | Some[anything]] | Right[None | Some[anything]], anything, anything,) -> #Str
+//│ fun w1: (Left[None | Some[anything]] | Right[None | Some[anything]], anything, anything,) -> Str
 
 w1(Left(None), "a", "b")
 w1(Right(None), "a", "b")
 w1(Left(Some(0)), "a", "b")
 w1(Right(Some(0)), "a", "b")
-//│ #Str
+//│ Str
 //│ res
 //│     = 'Left of None'
 //│ res
@@ -45,7 +45,7 @@ fun w2(x, p) =
     _ and p(x) then 2
     None then 3
     _ then 4
-//│ fun w2: forall 'a. (None | #Object & 'a & ~#None & ~#Some | Some[anything], (None | 'a) -> #Object,) -> (1 | 2 | 3 | 4)
+//│ fun w2: forall 'a. (None | Object & 'a & ~#None & ~#Some | Some[anything], (None | 'a) -> Object,) -> (1 | 2 | 3 | 4)
 
 w2(Some(0), x => true)
 w2(None, x => true)
@@ -66,13 +66,13 @@ fun w3(x, p) = if x is
   Some(xv) then concat("r2: ")(toString(xv))
   None then "r3"
   _ then "r4"
-//│ fun w3: forall 'a. (None | #Object & 'a & ~#None & ~#Some | Some[anything], (None | Some[nothing] | 'a) -> #Object,) -> #Str
+//│ fun w3: forall 'a. (None | Object & 'a & ~#None & ~#Some | Some[anything], (None | Some[nothing] | 'a) -> Object,) -> Str
 
 // Expect "r1"
 w3(0, _ => true)
 w3(None, _ => true)
 w3(Some(0), _ => true)
-//│ #Str
+//│ Str
 //│ res
 //│     = 'r1'
 //│ res
@@ -82,19 +82,19 @@ w3(Some(0), _ => true)
 
 // Expect "r2"
 w3(Some(0), _ => false)
-//│ #Str
+//│ Str
 //│ res
 //│     = 'r2: 0'
 
 // Expect "r3"
 w3(None, _ => false)
-//│ #Str
+//│ Str
 //│ res
 //│     = 'r3'
 
 // Expect "r4"
 w3(0, _ => false)
-//│ #Str
+//│ Str
 //│ res
 //│     = 'r4'
 
@@ -123,7 +123,7 @@ fun w3_1_1(x, f) =
 //│ ╔══[WARNING] Found a redundant else branch
 //│ ║  l.122: 	  if f(x) is a then a else 0
 //│ ╙──       	                           ^
-//│ fun w3_1_1: forall 'a 'b. ('a, 'a -> 'b,) -> 'b
+//│ fun w3_1_1: forall 'a 'b. ('b, 'b -> 'a,) -> 'a
 
 w3_1_1(0, x => x)
 w3_1_1(0, x => x + 1)
@@ -142,14 +142,14 @@ fun w4(x, p) = if x is
   Some(xv) then concat("r2: ")(toString(xv))
   None then "r3"
   _ then "r4"
-//│ fun w4: forall 'a. (None | #Object & 'a & ~#None & ~#Some | Some[anything], (None | Some[nothing] | 'a) -> #Object,) -> #Str
+//│ fun w4: forall 'a. (None | Object & 'a & ~#None & ~#Some | Some[anything], (None | Some[nothing] | 'a) -> Object,) -> Str
 
 
 // Expect "r1"
 w4(0, _ => true)
 w4(None, _ => true)
 w4(Some(0), _ => true)
-//│ #Str
+//│ Str
 //│ res
 //│     = 'r1'
 //│ res
@@ -159,19 +159,19 @@ w4(Some(0), _ => true)
 
 // Expect "r2"
 w4(Some(0), _ => false)
-//│ #Str
+//│ Str
 //│ res
 //│     = 'r2: 0'
 
 // Expect "r3"
 w4(None, _ => false)
-//│ #Str
+//│ Str
 //│ res
 //│     = 'r3'
 
 // Expect "r4"
 w4(0, _ => false)
-//│ #Str
+//│ Str
 //│ res
 //│     = 'r4'
 
@@ -196,7 +196,7 @@ fun w5(y) =
         _ and y is
           Delta then "delta"
           _ then "unknown"
-//│ fun w5: #Object -> ("alpha" | "beta" | "delta" | "gamma" | "unknown")
+//│ fun w5: Object -> ("alpha" | "beta" | "delta" | "gamma" | "unknown")
 
 w5(0)
 w5(Alpha())
@@ -221,7 +221,7 @@ fun w6(x, y) =
       Some(z) then z
       None then 0
     else x
-//│ fun w6: forall 'value. ('value, #Object & ~#Some | Some['value],) -> (0 | 'value)
+//│ fun w6: forall 'value. ('value, Object & ~#Some | Some['value],) -> (0 | 'value)
 
 w6("42", Some(42))
 w6("42", None)
@@ -243,7 +243,7 @@ fun w7(x, f) =
       None then x
     Left(x) then x + 1
     Right(x) then x + 2
-//│ fun w7: forall 'a 'value. (Left[Int] | #Object & 'a & ~#Left & ~#Right | Right[Int], 'a -> (None | Some['value]),) -> (Int | 'value | 'a)
+//│ fun w7: forall 'a 'value. (Left[Int] | Object & 'a & ~#Left & ~#Right | Right[Int], 'a -> (None | Some['value]),) -> (Int | 'value | 'a)
 
 // The results are wrong:
 w7(Left(99), _ => Some(0)) // => 0

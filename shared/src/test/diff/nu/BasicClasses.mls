@@ -27,7 +27,7 @@ fun f(x: A) = if x is A then x.n
 //│ fun f: (x: A,) -> Int
 
 fun f(x: A | 'b) = if x is A then x.n else 0
-//│ fun f: (x: #Object,) -> Int
+//│ fun f: (x: Object,) -> Int
 
 
 fun f(x) = x.n
@@ -47,7 +47,7 @@ f(a)
 //│     = 42
 
 fun f(x) = if x is A then x.n else 0
-//│ fun f: #Object -> Int
+//│ fun f: Object -> Int
 
 f(a)
 //│ Int

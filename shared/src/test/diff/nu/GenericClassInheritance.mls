@@ -12,7 +12,7 @@ class BigRoom extends Room[Bool]("big")
 //│   fun foo: (x: 'A,) -> 'A
 //│ }
 //│ where
-//│   'A := Bool
+//│   'A := in Bool out Bool
 
 // * Note that this essentially infers Room[Bool]
 class InferredRoom extends Room("infer") {
@@ -45,7 +45,16 @@ class WrongRoom extends Room[Bool]("wrong") {
 //│ ╔══[ERROR] Type mismatch in definition of method foo:
 //│ ║  l.43: 	    fun foo(x) = x + 1
 //│ ║        	        ^^^^^^^^^^^^^^
-//│ ╟── type `Bool` is not an instance of type `Int`
+//│ ╟── type `true` does not match type `Int | ~Bool`
+//│ ║  l.42: 	class WrongRoom extends Room[Bool]("wrong") {
+//│ ║        	                             ^^^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.43: 	    fun foo(x) = x + 1
+//│ ╙──      	                 ^
+//│ ╔══[ERROR] Type mismatch in definition of method foo:
+//│ ║  l.43: 	    fun foo(x) = x + 1
+//│ ║        	        ^^^^^^^^^^^^^^
+//│ ╟── type `false` does not match type `Int | ~Bool`
 //│ ║  l.42: 	class WrongRoom extends Room[Bool]("wrong") {
 //│ ║        	                             ^^^^
 //│ ╟── Note: constraint arises from reference:
@@ -82,10 +91,10 @@ class C1[A] extends C0[A] { val a = a }
 :e
 new C1 : C1[Int]
 //│ ╔══[PARSE ERROR] Unexpected type ascription after `new` keyword
-//│ ║  l.83: 	new C1 : C1[Int]
+//│ ║  l.92: 	new C1 : C1[Int]
 //│ ╙──      	    ^^
 //│ ╔══[ERROR] Currently unsupported `new` syntax
-//│ ║  l.83: 	new C1 : C1[Int]
+//│ ║  l.92: 	new C1 : C1[Int]
 //│ ╙──      	^^^
 //│ error
 //│ res
@@ -152,14 +161,14 @@ class B2[A](a: Int => A) extends M2
 :e
 class E1(a: Int) extends M2[Bool]
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.153: 	class E1(a: Int) extends M2[Bool]
+//│ ║  l.162: 	class E1(a: Int) extends M2[Bool]
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `Int` is not an instance of type `Bool`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.153: 	class E1(a: Int) extends M2[Bool]
+//│ ║  l.162: 	class E1(a: Int) extends M2[Bool]
 //│ ║         	                            ^^^^
 //│ ╟── from field selection:
-//│ ║  l.135: 	    fun m: A = this.a
+//│ ║  l.144: 	    fun m: A = this.a
 //│ ╙──       	               ^^^^^^
 //│ class E1(a: Int) {
 //│   fun m: Bool

@@ -102,7 +102,7 @@ class C2 extends C1("oops"), T1
 //│ ╔══[ERROR] Type mismatch in type declaration:
 //│ ║  l.101: 	class C2 extends C1("oops"), T1
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── string literal of type `"oops"` does not match type `Bool | Int`
+//│ ╟── string literal of type `"oops"` does not match type `Bool & ?a | Int`
 //│ ║  l.101: 	class C2 extends C1("oops"), T1
 //│ ║         	                    ^^^^^^
 //│ ╟── Note: constraint arises from union type:

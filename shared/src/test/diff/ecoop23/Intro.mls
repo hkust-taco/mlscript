@@ -71,7 +71,7 @@ mixin CompareNested {
 //│ mixin CompareNested() {
 //│   super: {compare: ('a, 'b,) -> Bool}
 //│   this: {compare: ('value, 'value0,) -> Bool}
-//│   fun compare: ({parent: #Object & ~#Some | Some['value]} & 'a, {parent: #Object & ~#Some | Some['value0]} & 'b,) -> Bool
+//│   fun compare: ({parent: Object & ~#Some | Some['value]} & 'a, {parent: Object & ~#Some | Some['value0]} & 'b,) -> Bool
 //│ }
 
 // * Alternatively:
@@ -95,8 +95,8 @@ module CompareMyPoint extends ComparePoint, CompareColored, CompareNested
 //│   fun compare: ('a, 'b,) -> Bool
 //│ }
 //│ where
-//│   'b <: {color: 'color, parent: #Object & ~#Some | Some['b], x: 'c, y: 'd}
-//│   'a <: {color: {equals: 'color -> Bool}, parent: #Object & ~#Some | Some['a], x: Eql['c], y: Eql['d]}
+//│   'b <: {color: 'color, parent: Object & ~#Some | Some['b], x: 'c, y: 'd}
+//│   'a <: {color: {equals: 'color -> Bool}, parent: Object & ~#Some | Some['a], x: Eql['c], y: Eql['d]}
 
 
 let p0 = MyPoint(0, 0, Red, None)

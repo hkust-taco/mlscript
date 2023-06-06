@@ -127,23 +127,23 @@ mixin EvalNeg {
 //│ mixin EvalNeg() {
 //│   super: {eval: 'a -> 'b}
 //│   this: {eval: 'expr -> Int}
-//│   fun eval: (Neg['expr] | #Object & 'a & ~#Neg) -> (Int | 'b)
+//│   fun eval: (Neg['expr] | Object & 'a & ~#Neg) -> (Int | 'b)
 //│ }
 
 
 module TestLang extends EvalBase, EvalNeg
 //│ module TestLang {
-//│   fun eval: (Neg['expr] | #Object & 'a & ~#Neg) -> Int
+//│   fun eval: (Neg['expr] | Object & 'a & ~#Neg) -> Int
 //│ }
 //│ where
-//│   'expr <: Neg['expr] | #Object & 'a & ~#Neg
-//│   'a <: Add[Neg['expr] | #Object & 'a & ~#Neg] | Lit
+//│   'expr <: Neg['expr] | Object & 'a & ~#Neg
+//│   'a <: Add[Neg['expr] | Object & 'a & ~#Neg] | Lit
 
 TestLang.eval
-//│ (Neg['expr] | #Object & 'a & ~#Neg) -> Int
+//│ (Neg['expr] | Object & 'a & ~#Neg) -> Int
 //│   where
-//│     'expr <: Neg['expr] | #Object & 'a & ~#Neg
-//│     'a <: Add[Neg['expr] | #Object & 'a & ~#Neg] | Lit
+//│     'expr <: Neg['expr] | Object & 'a & ~#Neg
+//│     'a <: Add[Neg['expr] | Object & 'a & ~#Neg] | Lit
 
 
 TestLang.eval(add11)
