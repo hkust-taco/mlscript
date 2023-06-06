@@ -3,17 +3,17 @@
 
 
 mixin Test {
-  class Foo(n: int)
+  class Foo(n: Int)
   let f = Foo(123)
 }
 //│ mixin Test() {
-//│   class Foo(n: int)
+//│   class Foo(n: Int)
 //│   let f: Foo
 //│ }
 
 module M extends Test
 //│ module M {
-//│   class Foo(n: int)
+//│   class Foo(n: Int)
 //│   let f: Foo
 //│ }
 
@@ -23,7 +23,7 @@ M.f
 //│     = Foo {}
 
 M.f.n
-//│ int
+//│ Int
 //│ res
 //│     = 123
 
@@ -70,7 +70,7 @@ mixin Test3 { fun f(x) = if x is Foo then 1 }
 
 
 mixin Test {
-  class Lit(n: int)
+  class Lit(n: Int)
   class Add<A>(lhs: A, rhs: A) {
     let cached = size(this)
   }
@@ -78,12 +78,12 @@ mixin Test {
     Add(l, r) then this.size(l) + this.size(r)
 }
 //│ mixin Test() {
-//│   this: {size: 'lhs -> int}
+//│   this: {size: 'lhs -> Int}
 //│   class Add[A](lhs: A, rhs: A) {
-//│     let cached: int
+//│     let cached: Int
 //│   }
-//│   class Lit(n: int)
-//│   fun size: Add['lhs] -> int
+//│   class Lit(n: Int)
+//│   fun size: Add['lhs] -> Int
 //│ }
 
 

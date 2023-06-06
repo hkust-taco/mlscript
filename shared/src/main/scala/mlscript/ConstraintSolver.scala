@@ -613,20 +613,18 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               rec(f0, f1, true)
             case (LhsRefined(S(f: FunctionType), ts, r, trs), RhsBases(pts, _, _)) =>
               annoying(Nil, LhsRefined(N, ts, r, trs), Nil, done_rs)
-              
+            
+            // * Note: We could avoid the need for this rule by adding `Eql` to *all* class tag parent sets,
+            // *  but I chose not to for performance reasons (better keep parent sets small).
+            case (LhsRefined(S(ct: ClassTag), ts, r, trs0),
+                  RhsBases(ots, _, trs)) if EqlTag in ots =>
+              println(s"OK ~ magic Eql ~")
+            
             // * These deal with the implicit Eql type member in primitive types.
             // * (Originally I added this to all such types,
-            // *  but it requires not expanding primitive type refs
+            // *  but it requires not expanding primitive type refs,
             // *  which causes regressions in simplification
             // *  because we don't yet simplify unexpanded type refs...)
-            case (LhsRefined(S(ct @ ClassTag(Var(nme @ ("int" | "number" | "string" | "bool")), _)), ts, r, trs0),
-                  RhsBases(ots, S(R(RhsField(Var("Eql#A"), fldTy))), trs)) =>
-              nme match {
-                case "int" | "number" => rec(fldTy.lb.getOrElse(TopType), DecType, false)
-                case "string" => rec(fldTy.lb.getOrElse(TopType), StrType, false)
-                case "bool" => rec(fldTy.lb.getOrElse(TopType), BoolType, false)
-                case _ => die
-              }
             case (LhsRefined(S(ct @ ClassTag(lit: Lit, _)), ts, r, trs0),
                   RhsBases(ots, S(R(RhsField(Var("Eql#A"), fldTy))), trs)) =>
               lit match {
@@ -638,7 +636,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             // * This deals with the implicit Eql type member for user-defined classes.
             case (LhsRefined(S(ClassTag(Var(nme), _)), ts, r, trs0),
                   RhsBases(ots, S(R(RhsField(fldNme, fldTy))), trs))
-            if ctx.tyDefs2.contains(nme) => if (newDefs && fldNme.name === "Eql#A") {
+            if ctx.tyDefs2.contains(nme) => if (newDefs && nme =/= "Eql" && fldNme.name === "Eql#A") {
               val info = ctx.tyDefs2(nme)
               info.typedParams.foreach { p =>
                 val fty = lookupField(() => done_ls.toType(sort = true), S(nme), r.fields.toMap.get, ts, p._1)
@@ -1058,7 +1056,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                   }
               }
             } else {
-              (tr1.mkTag, tr2.mkTag) match {
+              (tr1.mkClsTag, tr2.mkClsTag) match {
                 case (S(tag1), S(tag2)) if !(tag1 <:< tag2) =>
                   reportError()
                 case _ =>

@@ -30,10 +30,10 @@ fun bar(c) = if c is
     C(y) then y + 1
     B    then 0
   else 1
-//│ fun bar: (C[int] | ~C[anything]) -> int
+//│ fun bar: (C[Int] | Object & ~#C) -> Int
 
 bar(c)
-//│ int
+//│ Int
 //│ res
 //│     = 124
 
@@ -42,7 +42,7 @@ bar(C(true))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.41: 	bar(C(true))
 //│ ║        	^^^^^^^^^^^^
-//│ ╟── reference of type `true` is not an instance of type `int`
+//│ ╟── reference of type `true` is not an instance of type `Int`
 //│ ║  l.41: 	bar(C(true))
 //│ ║        	      ^^^^
 //│ ╟── Note: constraint arises from reference:
@@ -54,7 +54,7 @@ bar(C(true))
 //│ ╟── Note: type parameter A is defined at:
 //│ ║  l.4: 	class C[A](x: A) {
 //│ ╙──     	        ^
-//│ error | int
+//│ Int | error
 //│ res
 //│     = 2
 

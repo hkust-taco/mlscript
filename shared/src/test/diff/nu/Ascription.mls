@@ -1,38 +1,38 @@
 :NewDefs
 
-1: int
-//│ int
+1: Int
+//│ Int
 //│ res
 //│     = 1
 
-1 : int
-//│ int
+1 : Int
+//│ Int
 //│ res
 //│     = 1
 
 // TODO?
 :e
-1 : int : int
+1 : Int : Int
 //│ ╔══[ERROR] not a recognized type
-//│ ║  l.15: 	1 : int : int
+//│ ║  l.15: 	1 : Int : Int
 //│ ╙──      	    ^^^
 //│ anything
 //│ res
 //│     = 1
 
-fun foo(x: int) = x + 1
-//│ fun foo: (x: int,) -> int
+fun foo(x: Int) = x + 1
+//│ fun foo: (x: Int,) -> Int
 
-fun foo(x : int) = x + 1
-//│ fun foo: int -> int
+fun foo(x : Int) = x + 1
+//│ fun foo: Int -> Int
 
-foo(123 : int) : int
-//│ int
+foo(123 : Int) : Int
+//│ Int
 //│ res
 //│     = 124
 
-foo(123:int):int
-//│ int
+foo(123:Int):Int
+//│ Int
 //│ res
 //│     = 124
 

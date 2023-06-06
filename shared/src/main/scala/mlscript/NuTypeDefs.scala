@@ -434,7 +434,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
       : ST = td.kind match {
     case Nms =>
       ClassTag(Var(td.nme.name),
-          ihtags + TN("Eql")  // Eql and ihtags (parent tags)
+          ihtags + TN("Object")
         )(provTODO)
     case Cls =>
       // TODO deal with classes without parameter lists (ie needing `new`)
@@ -442,8 +442,11 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
         FunctionType(
           TupleType(params.mapKeys(some))(provTODO),
           ClassTag(Var(td.nme.name),
-            ihtags + TN("Eql") // Eql and ihtags (parent tags)
-          )(provTODO) & selfTy & RecordType.mk(
+            ihtags + TN("Object")
+          )(provTODO) & RecordType.mk(
+            // * ^ Note: we used to include the self type here (& selfTy),
+            // *  but it doesn't seem to be needed – if the class has a constructor,
+            // *  then surely it satisfies the self type (once we check it).
             tparams.map { case (tn, tv, vi) =>
               // TODO also use computed variance info when available!
               Var(td.nme.name + "#" + tn.name).withLocOf(tn) ->
@@ -499,7 +502,10 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
               case _ =>
                 fd
             }
-          case _ => _decl
+          case td: NuTypeDef =>
+            if (td.nme.name in reservedTypeNames)
+              err(msg"Type name '${td.nme.name}' is reserved", td.toLoc)
+            td
         }
         val lti = new DelayedTypeInfo(decl, implicitly)
         decl match {
@@ -727,13 +733,14 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
         case (p, Var(nm), lti, _, _) :: ps => lti match {
           case lti: DelayedTypeInfo => lti.kind match {
             case Trt | Cls | Nms =>  lookupTags(ps, Set.single(TypeName(nm)) union lti.inheritedTags union tags)
-            case _ => lookupTags(ps, tags)
+            case Val | Mxn | Als => lookupTags(ps, tags)
           }
           case CompletedTypeInfo(trt: TypedNuTrt) =>
             lookupTags(ps, Set.single(TypeName(nm)) union trt.inheritedTags union tags)
           case CompletedTypeInfo(cls: TypedNuCls) =>
             lookupTags(ps, Set.single(TypeName(nm)) union cls.inheritedTags union tags)
-          case _ => lookupTags(ps, tags)
+          case CompletedTypeInfo(_: NuParam | _: TypedNuFun | _: TypedNuAls | _: TypedNuMxn | _: TypedNuDummy) =>
+            lookupTags(ps, tags)
         }
       }
     }
@@ -1069,7 +1076,13 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                 // *      as this check will already have been performed generally when typing class T,
                 // *      but this would happen if we instead expanded into a type equivalent to #S & T...
                 constrain(ty, res)
-                res
+                // * Retrieve the extruded lower bound.
+                // * Note that there should be only one, and in particular it should not be recursive,
+                // * since the variable is never shared outside this scope.
+                res.lowerBounds match {
+                  case lb :: Nil => TypeBounds.mk(TopType, lb)
+                  case _ => die
+                }
               }
               
               td.kind match {

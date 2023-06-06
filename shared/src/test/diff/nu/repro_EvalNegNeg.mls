@@ -2,10 +2,10 @@
 
 
 class Add<E>(lhs: E, rhs: E)
-class Lit(n: int)
+class Lit(n: Int)
 class Neg<A>(expr: A)
 //│ class Add[E](lhs: E, rhs: E)
-//│ class Lit(n: int)
+//│ class Lit(n: Int)
 //│ class Neg[A](expr: A)
 
 
@@ -19,36 +19,36 @@ mixin EvalBase {
       Add(l, r) then this.eval(l) + this.eval(r)
 }
 //│ mixin EvalBase() {
-//│   this: {eval: 'expr -> 'a & ('expr0 | 'lhs) -> int}
-//│   fun eval: (Add['lhs] | Lit | Neg['expr0 & (Neg['expr] | ~#Neg)]) -> (int | 'a)
+//│   this: {eval: 'expr -> 'a & ('expr0 | 'lhs) -> Int}
+//│   fun eval: (Add['lhs] | Lit | Neg['expr0 & (Neg['expr] | Object & ~#Neg)]) -> (Int | 'a)
 //│ }
 
 // module TestLang extends EvalBase, EvalNeg
 module TestLang extends EvalBase
 //│ module TestLang {
-//│   fun eval: forall 'E. (Add['E] | Lit | Neg['expr & (Neg['expr0] | ~#Neg)]) -> int
+//│   fun eval: forall 'E. (Add['E] | Lit | Neg['expr & (Neg['expr0] | Object & ~#Neg)]) -> Int
 //│ }
 //│ where
-//│   'E <: Add['E] | Lit | Neg['expr & (Neg['expr0] | ~#Neg)]
-//│   'expr <: Add['E] | Lit | Neg['expr & (Neg['expr0] | ~#Neg)]
-//│   'expr0 <: Add['E] | Lit | Neg['expr & (Neg['expr0] | ~#Neg)]
+//│   'E <: Add['E] | Lit | Neg['expr & (Neg['expr0] | Object & ~#Neg)]
+//│   'expr <: Add['E] | Lit | Neg['expr & (Neg['expr0] | Object & ~#Neg)]
+//│   'expr0 <: Add['E] | Lit | Neg['expr & (Neg['expr0] | Object & ~#Neg)]
 
 
 fun mk(n) = if n is
   0 then Lit(0)
   1 then Neg(mk(n))
   _ then Add(mk(n), mk(n))
-//│ fun mk: forall 'E. anything -> 'E
+//│ fun mk: forall 'E. Object -> 'E
 //│   where
 //│     'E :> Add['E] | Lit | Neg['E]
 
 :stats
 TestLang.eval(mk(0))
-//│ int
+//│ Int
 //│ res
 //│     = 0
-//│ constrain calls  : 374
+//│ constrain calls  : 441
 //│ annoying  calls  : 160
-//│ subtyping calls  : 4154
+//│ subtyping calls  : 4646
 
 

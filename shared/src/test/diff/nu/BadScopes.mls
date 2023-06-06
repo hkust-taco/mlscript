@@ -2,36 +2,36 @@
 
 
 :e
-mixin Foo(x: int)
+mixin Foo(x: Int)
 x
 //│ ╔══[ERROR] identifier not found: x
 //│ ║  l.6: 	x
 //│ ╙──     	^
-//│ mixin Foo(x: int)
+//│ mixin Foo(x: Int)
 //│ error
 //│ Code generation encountered an error:
 //│   unresolved symbol x
 
 
 :e
-class Foo(x: int)
+class Foo(x: Int)
 x
 //│ ╔══[ERROR] identifier not found: x
 //│ ║  l.18: 	x
 //│ ╙──      	^
-//│ class Foo(x: int)
+//│ class Foo(x: Int)
 //│ error
 //│ Code generation encountered an error:
 //│   unresolved symbol x
 
 
 :e
-class Foo(x: int)
+class Foo(x: Int)
 class Bar { x }
 //│ ╔══[ERROR] identifier not found: x
 //│ ║  l.30: 	class Bar { x }
 //│ ╙──      	            ^
-//│ class Foo(x: int)
+//│ class Foo(x: Int)
 //│ class Bar
 //│ Code generation encountered an error:
 //│   unresolved symbol x

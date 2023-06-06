@@ -107,4 +107,4 @@ fun join(xs) =
     Nil then ""
     Cons(x, Nil) then toString(x)
     Cons(x, xs') then concat(toString(x))(concat(", ")(join(xs')))
-//│ fun join: (Cons[anything] | Nil) -> string
+//│ fun join: (Cons[anything] | Nil) -> Str

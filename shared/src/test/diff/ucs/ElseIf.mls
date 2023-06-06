@@ -3,69 +3,69 @@
 
 
 
-fun f(x, y) = if x ==
+fun f(x, y) = if x ===
     0 then true
     1 then false
-  else if y ==
+  else if y ===
     0 then true
     1 then false
   else false
-//│ fun f: (number, number,) -> bool
+//│ fun f: (Eql[nothing], Eql[nothing],) -> Bool
 
-fun f(x, y) = if x ==
+fun f(x, y) = if x ===
     0 then true
     1 then false
-  else if y ==
+  else if y ===
     0 then true
     _ then false
-//│ fun f: (number, number,) -> bool
+//│ fun f: (Eql[nothing], Eql[0],) -> Bool
 
-module True
-module False
-//│ module True
-//│ module False
+module Tru
+module Fals
+//│ module Tru
+//│ module Fals
 
 :e
 :ge
 fun f(x, y) = if x is
-    True and y is True then true
-    False and y is False then false
+    Tru and y is Tru then true
+    Fals and y is Fals then false
 //│ ╔══[ERROR] The match is not exhaustive.
-//│ ║  l.31: 	    True and y is True then true
-//│ ║        	             ^^^^^^^^^
+//│ ║  l.31: 	    Tru and y is Tru then true
+//│ ║        	            ^^^^^^^^
 //│ ╟── The scrutinee at this position misses 1 case.
-//│ ║  l.31: 	    True and y is True then true
-//│ ║        	             ^
-//│ ╟── [Missing Case 1/1] `False`
+//│ ║  l.31: 	    Tru and y is Tru then true
+//│ ║        	            ^
+//│ ╟── [Missing Case 1/1] `Fals`
 //│ ╟── It first appears here.
-//│ ║  l.32: 	    False and y is False then false
-//│ ╙──      	                   ^^^^^
+//│ ║  l.32: 	    Fals and y is Fals then false
+//│ ╙──      	                  ^^^^
 //│ fun f: (anything, anything,) -> error
 //│ Code generation encountered an error:
 //│   if expression was not desugared
 
 // The base case.
 fun f(x, y) = if x is
-    True and y is True then true
-    False and y is False then false
-    True and y is False then true
-    False and y is True then true
-//│ fun f: (False | True, False | True,) -> bool
+    Tru and y is Tru then true
+    Fals and y is Fals then false
+    Tru and y is Fals then true
+    Fals and y is Tru then true
+//│ fun f: (Fals | Tru, Fals | Tru,) -> Bool
 
-// Replace the `x is False` with `_`
+// Replace the `x is Fals` with `_`
 fun f(x, y) = if x is
-    True and y is True then true
-    False and y is False then false
+    Tru and y is Tru then true
+    Fals and y is Fals then false
     _ and y is
-      True then true
-      False then false
-//│ fun f: (anything, False | True,) -> bool
+      Tru then true
+      Fals then false
+//│ fun f: (Object, Fals | Tru,) -> Bool
 
-f(True, True)
-f(True, False)
-f(False, True)
-f(False, False)
-//│ bool
+f(Tru, Tru)
+f(Tru, Fals)
+f(Fals, Tru)
+f(Fals, Fals)
+//│ Bool
 //│ res
 //│     = true
 //│ res
@@ -82,28 +82,28 @@ fun g(x, y) = if x is
   _ and y is
     true then true
     false then false
-//│ fun g: (anything, bool,) -> bool
+//│ fun g: (Object, nothing,) -> Bool
 
 // Chained UCS terms
 fun f(x, y) = if x is
-    True and y is True then true
-    False and y is False then false
+    Tru and y is Tru then true
+    Fals and y is Fals then false
   else if y is
-    True then true
-    False then false
-//│ fun f: (anything, False | True,) -> bool
+    Tru then true
+    Fals then false
+//│ fun f: (Object, Fals | Tru,) -> Bool
 
 fun f(x, y) = if x is
-    True and y is True then true
-    False and y is False then false
+    Tru and y is Tru then true
+    Fals and y is Fals then false
   else if y is
-    True and x is False then true
-    False and x is True then false
-//│ fun f: (False | True, False | True,) -> bool
+    Tru and x is Fals then true
+    Fals and x is Tru then false
+//│ fun f: (Fals | Tru, Fals | Tru,) -> Bool
 
 fun h(x, y, p) = if
   x and p(x) then 0
   y is
-    True then 1
-    False then 2
-//│ fun h: (anything, False | True, true -> anything,) -> (0 | 1 | 2)
+    Tru then 1
+    Fals then 2
+//│ fun h: (Object, Fals | Tru, true -> Object,) -> (0 | 1 | 2)

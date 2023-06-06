@@ -111,19 +111,21 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
     Var(clsNme.name + "#" + tparamNme.name)
   
   def clsNameToNomTag(td: NuTypeDef)(prov: TypeProvenance, ctx: Ctx): ClassTag = {
-    require((td.kind is Cls) || (td.kind is Nms) || (td.kind is Trt), td.kind)
+    require((td.kind is Cls) || (td.kind is Nms), td.kind)
     ClassTag(Var(td.nme.name),
-        // ctx.allBaseClassesOf(td.nme.name)
-        Set.single(TypeName("Eql")) // TODO superclasses
-          | ctx.tyDefs2.get(td.nme.name).map(_.inheritedTags).getOrElse(Set.empty)
+        if(newDefs)
+          Set.single(TN("Object"))
+            | ctx.tyDefs2.get(td.nme.name).map(_.inheritedTags).getOrElse(Set.empty)
+        else ctx.allBaseClassesOf(td.nme.name)
       )(prov)
   }
   def clsNameToNomTag(td: TypeDef)(prov: TypeProvenance, ctx: Ctx): ClassTag = {
-    require(td.kind is Cls)
+    require((td.kind is Cls) || (td.kind is Nms), td.kind)
     if (newDefs && td.kind.str.isCapitalized) ClassTag(Var(td.nme.name),
-      // ctx.allBaseClassesOf(td.nme.name))(prov)
-      Set.single(TypeName("Eql")) // TODO superclasses
-        | ctx.tyDefs2.get(td.nme.name).map(_.inheritedTags).getOrElse(Set.empty)
+        if(newDefs)
+          Set.single(TN("Object"))
+            | ctx.tyDefs2.get(td.nme.name).map(_.inheritedTags).getOrElse(Set.empty)
+        else ctx.allBaseClassesOf(td.nme.name)
       )(prov)
     else ClassTag(Var(td.nme.name), ctx.allBaseClassesOf(td.nme.name))(prov)
   }
@@ -185,7 +187,7 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
         err(msg"Type names must start with a capital letter", td0.nme.toLoc)
         td0.copy(nme = td0.nme.copy(n).withLocOf(td0.nme)).withLocOf(td0)
       }
-      if (primitiveTypes.contains(n)) {
+      if (reservedTypeNames.contains(n)) {
         err(msg"Type name '$n' is reserved.", td.nme.toLoc)
       }
       td.tparams.groupBy(_.name).foreach { case s -> tps if tps.sizeIs > 1 => err(

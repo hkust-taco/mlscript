@@ -4,13 +4,13 @@
 :js
 module A {
   let a = 42
-  class B(x: int) {
+  class B(x: Int) {
     fun b = x + 1
   }
 }
 //│ module A {
-//│   class B(x: int) {
-//│     fun b: int
+//│   class B(x: Int) {
+//│     fun b: Int
 //│   }
 //│   let a: 42
 //│ }
@@ -85,12 +85,12 @@ bb.b
 
 
 :e
-class B(x: int) {
+class B(x: Int) {
   let outer = 42
-  class C(y: int) {
+  class C(y: Int) {
     let outer1 = outer + outer
   }
-  class D(outer: int)
+  class D(outer: Int)
 }
 let b = B(1)
 b.outer
@@ -104,11 +104,11 @@ d.outer
 //│ ╔══[ERROR] access to class member not yet supported
 //│ ║  l.99: 	let d = b.D(1)
 //│ ╙──      	         ^^
-//│ class B(x: int) {
-//│   class C(y: int) {
-//│     let outer1: int
+//│ class B(x: Int) {
+//│   class C(y: Int) {
+//│     let outer1: Int
 //│   }
-//│   class D(outer: int)
+//│   class D(outer: Int)
 //│   let outer: 42
 //│ }
 //│ let b: B
@@ -174,12 +174,12 @@ mixin C() {
 
 :js
 module D {
-  class E(x: int) {}
-  fun createE(x: int) = E(x + 1)
+  class E(x: Int) {}
+  fun createE(x: Int) = E(x + 1)
 }
 //│ module D {
-//│   class E(x: int)
-//│   fun createE: (x: int,) -> E
+//│   class E(x: Int)
+//│   fun createE: (x: Int,) -> E
 //│ }
 //│ // Prelude
 //│ class TypingUnit4 {
@@ -227,7 +227,7 @@ module D {
 let ee = D.createE(42)
 ee.x
 //│ let ee: E
-//│ int
+//│ Int
 //│ // Prelude
 //│ class TypingUnit5 {}
 //│ const typing_unit5 = new TypingUnit5;
@@ -242,20 +242,20 @@ ee.x
 //│     = 43
 
 :js
-class E(x: int) {
-  class F(y: int) {
+class E(x: Int) {
+  class F(y: Int) {
     fun sum = x + y
-    class G(z: int) {
+    class G(z: Int) {
       fun sum = x + y + z
     }
   }
 }
-//│ class E(x: int) {
-//│   class F(y: int) {
-//│     class G(z: int) {
-//│       fun sum: int
+//│ class E(x: Int) {
+//│   class F(y: Int) {
+//│     class G(z: Int) {
+//│       fun sum: Int
 //│     }
-//│     fun sum: int
+//│     fun sum: Int
 //│   }
 //│ }
 //│ // Prelude
@@ -366,7 +366,7 @@ class F() {
 }
 //│ class F() {
 //│   class G() {
-//│     let x1: int
+//│     let x1: Int
 //│   }
 //│   let x: 42
 //│ }
@@ -416,22 +416,22 @@ class F() {
 
 :js
 module G {
-  class I(x: int) {}
+  class I(x: Int) {}
   module H {
-    fun i1(x: int) = I(x + 1)
-    class J(x: int) {
-      fun ii(a: int) = I(x + a)
+    fun i1(x: Int) = I(x + 1)
+    class J(x: Int) {
+      fun ii(a: Int) = I(x + a)
     }
   }
 }
 //│ module G {
 //│   module H {
-//│     class J(x: int) {
-//│       fun ii: (a: int,) -> I
+//│     class J(x: Int) {
+//│       fun ii: (a: Int,) -> I
 //│     }
-//│     fun i1: (x: int,) -> I
+//│     fun i1: (x: Int,) -> I
 //│   }
-//│   class I(x: int)
+//│   class I(x: Int)
 //│ }
 //│ // Prelude
 //│ class TypingUnit9 {
@@ -538,14 +538,14 @@ i.x
 
 :js
 module H {
-  class I(x: int)
-  class J(x: int) {
+  class I(x: Int)
+  class J(x: Int) {
     let i = I(x + 1)
   }
 }
 //│ module H {
-//│   class I(x: int)
-//│   class J(x: int) {
+//│   class I(x: Int)
+//│   class J(x: Int) {
 //│     let i: I
 //│   }
 //│ }
@@ -632,9 +632,9 @@ j.i.x
 
 :js
 :e
-class I(x: int) {
+class I(x: Int) {
   let y = x + 1
-  class J(x: int) {
+  class J(x: Int) {
     let y = x + 2
     fun incY = y + 1
   }
@@ -645,12 +645,12 @@ ij.incY
 //│ ╔══[ERROR] access to class member not yet supported
 //│ ║  l.643: 	let ij = i.J(0)
 //│ ╙──       	          ^^
-//│ class I(x: int) {
-//│   class J(x: int) {
-//│     fun incY: int
-//│     let y: int
+//│ class I(x: Int) {
+//│   class J(x: Int) {
+//│     fun incY: Int
+//│     let y: Int
 //│   }
-//│   let y: int
+//│   let y: Int
 //│ }
 //│ let i: I
 //│ let ij: error
@@ -724,16 +724,16 @@ ij.incY
 
 :js
 module J {
-  class K(x: int) {}
+  class K(x: Int) {}
   mixin L() {}
   class M() extends K(1) {}
-  class N(x: int) extends K(x + 2), L
+  class N(x: Int) extends K(x + 2), L
 }
 //│ module J {
-//│   class K(x: int)
+//│   class K(x: Int)
 //│   mixin L()
 //│   class M() extends K
-//│   class N(x: int) extends K
+//│   class N(x: Int) extends K
 //│ }
 //│ // Prelude
 //│ class TypingUnit14 {
@@ -871,18 +871,18 @@ m.f
 //│     = 42
 
 module L {
-  class M(x: int) {}
+  class M(x: Int) {}
   module N {
     module O {
-      class P(y: int) extends M(y + 1) {}
+      class P(y: Int) extends M(y + 1) {}
     }
   }
 }
 //│ module L {
-//│   class M(x: int)
+//│   class M(x: Int)
 //│   module N {
 //│     module O {
-//│       class P(y: int) extends M
+//│       class P(y: Int) extends M
 //│     }
 //│   }
 //│ }
@@ -925,11 +925,11 @@ M.N.op(M.P())
 //│ ╙──       	        ^^
 //│ module M {
 //│   module N {
-//│     fun op: anything -> (0 | 1 | 2)
+//│     fun op: Object -> (0 | 1 | 2)
 //│   }
 //│   class O()
 //│   class P()
-//│   fun op: anything -> (0 | 1 | 2)
+//│   fun op: Object -> (0 | 1 | 2)
 //│ }
 //│ error
 //│ // Prelude
@@ -1083,9 +1083,9 @@ N.O.P()
 
 :js
 :e
-class I(x: int) {
+class I(x: Int) {
   let y = x + 1
-  class J(z: int) {
+  class J(z: Int) {
     let a = [x, y, z] 
   }
 }
@@ -1093,11 +1093,11 @@ I(1).J(3).a
 //│ ╔══[ERROR] access to class member not yet supported
 //│ ║  l.1092: 	I(1).J(3).a
 //│ ╙──        	    ^^
-//│ class I(x: int) {
-//│   class J(z: int) {
-//│     let a: (int, int, int,)
+//│ class I(x: Int) {
+//│   class J(z: Int) {
+//│     let a: (Int, Int, Int,)
 //│   }
-//│   let y: int
+//│   let y: Int
 //│ }
 //│ error
 //│ // Prelude
@@ -1160,12 +1160,12 @@ I(1).J(3).a
 
 :js
 fun main =
-  fun f(x: int): int = if x is
+  fun f(x: Int): Int = if x is
     0 then 1
     else g(x - 1)
-  fun g(x: int): int = f(x)
+  fun g(x: Int): Int = f(x)
   f
-//│ fun main: (x: int,) -> int
+//│ fun main: (x: Int,) -> Int
 //│ // Prelude
 //│ class TypingUnit24 {}
 //│ const typing_unit24 = new TypingUnit24;
@@ -1181,7 +1181,7 @@ fun main =
 
 :js
 fun mian =
-  class A(x: int)
+  class A(x: Int)
   mixin B()
   module C
   A(42)
@@ -1227,10 +1227,10 @@ fun mian =
 :js
 fun mian =
   mixin B()
-  class A(x: int) extends B
+  class A(x: Int) extends B
   module C extends B
   [A, C]
-//│ fun mian: ((x: int,) -> A, C,)
+//│ fun mian: ((x: Int,) -> A, C,)
 //│ // Prelude
 //│ class TypingUnit26 {}
 //│ const typing_unit26 = new TypingUnit26;
@@ -1281,10 +1281,10 @@ fun mian =
 fun main(arg) =
   let x = arg + 1
   fun foo(y) = x + y
-  class C(u: int) { fun z = [foo(u), bar] }
+  class C(u: Int) { fun z = [foo(u), bar] }
   fun bar = x
   C(123)
-//│ fun main: int -> C
+//│ fun main: Int -> C
 //│ // Prelude
 //│ class TypingUnit27 {}
 //│ const typing_unit27 = new TypingUnit27;
@@ -1332,15 +1332,15 @@ module Test {
 //│ }
 
 :js
-class Outer1(outer: int) {
+class Outer1(outer: Int) {
   log(outer)
-  class Outer2(x: int) {
+  class Outer2(x: Int) {
     let outer = x + 1
   }
 }
-//│ class Outer1(outer: int) {
-//│   class Outer2(x: int) {
-//│     let outer: int
+//│ class Outer1(outer: Int) {
+//│   class Outer2(x: Int) {
+//│     let outer: Int
 //│   }
 //│ }
 //│ // Prelude

@@ -129,7 +129,7 @@ b = error: Baa
 
 
 def build_ = fun g -> g (fun x -> fun xs -> Cons (x, xs)) Nil
-//│ build_: ((forall 'b. 'b -> (forall 'tail 'a. (List['a] & 'tail) -> (Cons['a | 'b] with {head: 'b, tail: 'tail}))) -> Nil -> 'c) -> 'c
+//│ build_: ((forall 'b. 'b -> (forall 'a 'tail. (List['a] & 'tail) -> (Cons['a | 'b] with {head: 'b, tail: 'tail}))) -> Nil -> 'c) -> 'c
 //│       = [Function: build_]
 
 :e // * Expected: List is a structural equirecursive types and recursive types are disabled
@@ -423,7 +423,7 @@ def k: int -> Baa -> Baa
 
 :e
 def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
-//│ int -> Baa -> (forall 'a 'b. (int -> 'b -> 'a) -> 'b -> 'a)
+//│ int -> Baa -> (forall 'a 'b. (int -> 'a -> 'b) -> 'a -> 'b)
 //│   <:  k:
 //│ int -> Baa -> Baa
 //│ ╔══[ERROR] Type mismatch in def definition:

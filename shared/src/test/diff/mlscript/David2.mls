@@ -2,15 +2,15 @@
 class Integer: { value: int; addOne: Integer -> Integer }
 //│ Defined class Integer
 
-class Num: Integer & { addOne: Num -> Num }
-//│ Defined class Num
+class Numb: Integer & { addOne: Numb -> Numb }
+//│ Defined class Numb
 
-class Str: { value: string; addOne: Str -> Str }
-//│ Defined class Str
+class Stri: { value: string; addOne: Stri -> Stri }
+//│ Defined class Stri
 
 addOne1 x = case x of {
   | Integer -> x.addOne x
-  | Num -> x.addOne x
+  | Numb -> x.addOne x
   }
 //│ addOne1: ((Integer\value with {addOne: 'a -> 'b}) & 'a) -> 'b
 //│        = [Function: addOne1]
@@ -215,13 +215,13 @@ def mkIntegerPrecise3 = mkInteger
 
 
 :e
-addOne1 (Str { value = ""; addOne = error })
+addOne1 (Stri { value = ""; addOne = error })
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.218: 	addOne1 (Str { value = ""; addOne = error })
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `Str & {addOne: ?addOne, value: ?value}` does not match type `Integer & ?a`
-//│ ║  l.218: 	addOne1 (Str { value = ""; addOne = error })
-//│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.218: 	addOne1 (Stri { value = ""; addOne = error })
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── application of type `Stri & {addOne: ?addOne, value: ?value}` does not match type `Integer & ?a`
+//│ ║  l.218: 	addOne1 (Stri { value = ""; addOne = error })
+//│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.11: 	addOne1 x = case x of {
 //│ ╙──      	                 ^
@@ -232,10 +232,10 @@ addOne1 (Str { value = ""; addOne = error })
 
 addOne2 x = case x of {
   | Integer -> x.addOne x
-  | Num -> x.addOne x
-  | Str -> x.addOne x
+  | Numb -> x.addOne x
+  | Stri -> x.addOne x
   }
-//│ addOne2: ((Integer\value with {addOne: 'a -> 'b}) & 'a | (Str\value with {addOne: 'c -> 'b}) & 'c) -> 'b
+//│ addOne2: ((Integer\value with {addOne: 'a -> 'b}) & 'a | (Stri\value with {addOne: 'c -> 'b}) & 'c) -> 'b
 //│        = [Function: addOne2]
 
 addOne2 (mkIntegerPrecise 42)
@@ -243,35 +243,35 @@ addOne2 (mkIntegerPrecise 42)
 //│    = Integer { value: 43, addOne: [Function: addOne] }
 
 :re
-addOne2 (Str { value = ""; addOne = error })
+addOne2 (Stri { value = ""; addOne = error })
 //│ res: nothing
 //│ Runtime error:
 //│   Error: unexpected runtime error
 
-def mkStr: string -> Str
-rec def mkStr value = Str { value; addOne = fun s -> mkStr (concat s.value "1") }
-//│ mkStr: string -> Str
+def mkStr: string -> Stri
+rec def mkStr value = Stri { value; addOne = fun s -> mkStr (concat s.value "1") }
+//│ mkStr: string -> Stri
 //│      = <missing implementation>
 //│ string -> 'a
 //│   where
-//│     'a :> Str with {addOne: {value: string} -> 'a}
+//│     'a :> Stri with {addOne: {value: string} -> 'a}
 //│   <:  mkStr:
-//│ string -> Str
+//│ string -> Stri
 //│      = [Function: mkStr]
 
 addOne2 (mkStr "hello")
-//│ res: Str
-//│    = Str { value: 'hello1', addOne: [Function: addOne] }
+//│ res: Stri
+//│    = Stri { value: 'hello1', addOne: [Function: addOne] }
 
 union = if true then mkIntegerPrecise 42 else mkStr "hello"
-//│ union: Integer & {value: 42} | Str
+//│ union: Integer & {value: 42} | Stri
 //│      = Integer { value: 42, addOne: [Function: addOne] }
 
 union2 = addOne2 union
-//│ union2: Integer | Str
+//│ union2: Integer | Stri
 //│       = Integer { value: 43, addOne: [Function: addOne] }
 
 addOne2 union2
-//│ res: Integer | Str
+//│ res: Integer | Stri
 //│    = Integer { value: 44, addOne: [Function: addOne] }
 

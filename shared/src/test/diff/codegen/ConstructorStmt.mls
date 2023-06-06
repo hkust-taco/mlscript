@@ -60,10 +60,10 @@ Test0
 //│     = Test0 { class: [class Test0] }
 
 :js
-class A(a: int) {
+class A(a: Int) {
   log(a)
 }
-//│ class A(a: int)
+//│ class A(a: Int)
 //│ // Prelude
 //│ class TypingUnit3 {
 //│   #A;
@@ -133,10 +133,10 @@ let ab = A(0)
 :e
 :js
 class Foo {
-  this: { x: int }
+  this: { x: Int }
 }
 //│ ╔══[ERROR] Type `#Foo` does not contain member `x`
-//│ ║  l.136: 	  this: { x: int }
+//│ ║  l.136: 	  this: { x: Int }
 //│ ╙──       	          ^
 //│ class Foo
 //│ // Prelude
@@ -160,13 +160,13 @@ class Foo {
 :e
 :js
 class Bar {
-  super: { x: int }
+  super: { x: Int }
 }
 //│ ╔══[ERROR] Illegal use of `super`
-//│ ║  l.163: 	  super: { x: int }
+//│ ║  l.163: 	  super: { x: Int }
 //│ ╙──       	  ^^^^^
 //│ ╔══[ERROR] Type `#Bar` does not contain member `x`
-//│ ║  l.163: 	  super: { x: int }
+//│ ║  l.163: 	  super: { x: Int }
 //│ ╙──       	           ^
 //│ class Bar
 //│ // Prelude
@@ -198,7 +198,7 @@ class Baz() {
 }
 //│ class Baz() {
 //│   let x: 123
-//│   let y: int
+//│   let y: Int
 //│ }
 //│ // Prelude
 //│ class TypingUnit9 {
@@ -247,7 +247,7 @@ class Baz() {
 let baz = Baz()
 log((baz.x, baz.y))
 //│ let baz: Baz
-//│ unit
+//│ undefined
 //│ baz
 //│     = Baz {}
 //│ // Output
@@ -263,11 +263,11 @@ log((baz.x, baz.y))
 class Q() {
   let q = 42
   fun qq =
-    let f = (x: int) => {q: x + q}; f(1)
+    let f = (x: Int) => {q: x + q}; f(1)
 }
 //│ class Q() {
 //│   let q: 42
-//│   fun qq: {q: int}
+//│   fun qq: {q: Int}
 //│ }
 //│ // Prelude
 //│ class TypingUnit11 {
@@ -305,7 +305,7 @@ class Q() {
 let q = Q()
 q.qq.q
 //│ let q: Q
-//│ int
+//│ Int
 //│ q
 //│   = Q {}
 //│ res
@@ -314,10 +314,10 @@ q.qq.q
 :js
 class W() {
   let x = 42
-  fun add(self: int) = x + self
+  fun add(self: Int) = x + self
 }
 //│ class W() {
-//│   fun add: (self: int,) -> int
+//│   fun add: (self: Int,) -> Int
 //│   let x: 42
 //│ }
 //│ // Prelude
@@ -354,7 +354,7 @@ class W() {
 let www = W()
 www.add(42)
 //│ let www: W
-//│ int
+//│ Int
 //│ // Prelude
 //│ class TypingUnit14 {}
 //│ const typing_unit14 = new TypingUnit14;

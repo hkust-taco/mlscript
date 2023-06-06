@@ -88,25 +88,25 @@ Test.foo(error) + 1
 //│ ╟── type variable `A` leaks out of its scope
 //│ ║  l.84: 	Test.foo(error) + 1
 //│ ║        	^^^^^^^^^^^^^^^
-//│ ╙── into type `int`
-//│ error | int
+//│ ╙── into expression of type `Int`
+//│ Int | error
 //│ res
 //│ Runtime error:
 //│   Error: unexpected runtime error
 
 :e
-Test<int> .foo
+Test<Int> .foo
 //│ ╔══[ERROR] Type application syntax is not yet supported
-//│ ║  l.98: 	Test<int> .foo
+//│ ║  l.98: 	Test<Int> .foo
 //│ ╙──      	^^^^^^^^^
 //│ error
 //│ res
 //│     = undefined
 
 :e
-(Test<int>).foo
+(Test<Int>).foo
 //│ ╔══[ERROR] Type application syntax is not yet supported
-//│ ║  l.107: 	(Test<int>).foo
+//│ ║  l.107: 	(Test<Int>).foo
 //│ ╙──       	 ^^^^^^^^^
 //│ error
 //│ res

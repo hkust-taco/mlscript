@@ -76,7 +76,7 @@ def mem[a]: a -> List[a] -> bool
 
 :RecursiveTypes // needed for this recursive def
 rec def mem x l = match_list l false (fun head -> fun tail -> if eq head x then true else mem x tail)
-//│ anything -> List[?] -> bool
+//│ anything -> List[?] -> Bool
 //│   <:  mem:
 //│ anything -> List[?] -> bool
 :NoRecursiveTypes

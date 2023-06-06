@@ -29,11 +29,11 @@ mixin Foo { fun f = this.x }
 //│ }
 
 module Bar {
-  class C(x: int) extends Foo
+  class C(x: Int) extends Foo
 }
 //│ module Bar {
-//│   class C(x: int) {
-//│     fun f: int
+//│   class C(x: Int) {
+//│     fun f: Int
 //│   }
 //│ }
 

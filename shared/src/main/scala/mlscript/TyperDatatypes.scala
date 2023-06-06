@@ -360,6 +360,7 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
   }
   
   type TR = TypeRef
+  val TR: TypeRef.type = TypeRef
   case class TypeRef(defn: TypeName, targs: Ls[SimpleType])(val prov: TypeProvenance) extends SimpleType with TypeRefImpl {
     def level: Level = targs.iterator.map(_.level).maxOption.getOrElse(0)
     def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level = targs.iterator.map(_.levelBelow(ub)).maxOption.getOrElse(MinLevel)

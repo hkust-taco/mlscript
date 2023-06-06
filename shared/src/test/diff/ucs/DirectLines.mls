@@ -22,7 +22,7 @@ class None: Option
 //│     = [Function: None1]
 
 fun isValid(x) = if x then false else true
-//│ isValid: anything -> bool
+//│ isValid: anything -> Bool
 //│        = [Function: isValid]
 
 fun f(x, allowNone) =

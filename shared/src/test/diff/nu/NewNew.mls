@@ -1,8 +1,8 @@
 :NewDefs
 
 
-class Foo(x: int)
-//│ class Foo(x: int)
+class Foo(x: Int)
+//│ class Foo(x: Int)
 
 let f = Foo(1)
 //│ let f: Foo
@@ -20,35 +20,35 @@ if f is Foo then 1 else 0
 //│     = 1
 
 if f is Foo(a) then a else 0
-//│ int
+//│ Int
 //│ res
 //│     = 1
 
 
-class Point[A](x: A, y: A)
-//│ class Point[A](x: A, y: A)
+class PoInt[A](x: A, y: A)
+//│ class PoInt[A](x: A, y: A)
 
-let origin = new Point(0, 0)
-//│ let origin: Point[0]
+let origin = new PoInt(0, 0)
+//│ let origin: PoInt[0]
 //│ origin
-//│        = Point {}
+//│        = PoInt {}
 
 // TODO
-let origin = Point[int](0, 0)
+let origin = PoInt[Int](0, 0)
 //│ ╔══[ERROR] Type application syntax is not yet supported
-//│ ║  l.37: 	let origin = Point[int](0, 0)
+//│ ║  l.37: 	let origin = PoInt[Int](0, 0)
 //│ ╙──      	             ^^^^^^^^^^
 //│ let origin: error
 //│ origin
-//│        = Point {}
+//│        = PoInt {}
 
 // TODO
-let origin = new Point[int](0, 0)
+let origin = new PoInt[Int](0, 0)
 //│ ╔══[PARSE ERROR] Unexpected application after `new` keyword
-//│ ║  l.46: 	let origin = new Point[int](0, 0)
+//│ ║  l.46: 	let origin = new PoInt[Int](0, 0)
 //│ ╙──      	                 ^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Currently unsupported `new` syntax
-//│ ║  l.46: 	let origin = new Point[int](0, 0)
+//│ ║  l.46: 	let origin = new PoInt[Int](0, 0)
 //│ ╙──      	             ^^^
 //│ let origin: error
 //│ origin

@@ -71,8 +71,11 @@ foo = Foo
 
 
 
+:e
 1 : #Eql
-//│ res: Eql[?]
+//│ ╔══[ERROR] type identifier not found: eql
+//│ ╙──
+//│ res: error
 //│    = 1
 
 

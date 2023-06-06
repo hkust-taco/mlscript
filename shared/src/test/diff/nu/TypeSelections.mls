@@ -2,18 +2,18 @@
 
 
 module M {
-  type T = int -> int
-  class C(n: int)
+  type T = Int -> Int
+  class C(n: Int)
   fun mkC = C
 }
 //│ module M {
-//│   class C(n: int)
-//│   type T = int -> int
-//│   fun mkC: (n: int,) -> C
+//│   class C(n: Int)
+//│   type T = Int -> Int
+//│   fun mkC: (n: Int,) -> C
 //│ }
 
 let x: M.T = id
-//│ let x: int -> int
+//│ let x: Int -> Int
 //│ x
 //│   = [Function: id]
 

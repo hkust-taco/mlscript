@@ -18,10 +18,10 @@ atob(str)
 
 
 declare module console {
-  fun error: string -> unit
+  fun error: Str -> unit
 }
 //│ declare module console {
-//│   fun error: string -> unit
+//│   fun error: Str -> unit
 //│ }
 
 console.error("hello")
@@ -43,22 +43,22 @@ console.log("hello")
 
 
 declare module Foo {
-  fun foo: int
+  fun foo: Int
 }
 //│ declare module Foo {
-//│   fun foo: int
+//│   fun foo: Int
 //│ }
 
 :re
 Foo.foo
-//│ int
+//│ Int
 //│ res
 //│ Runtime error:
 //│   ReferenceError: Foo is not defined
 
 
-declare type A = int
-//│ type A = int
+declare type A = Int
+//│ type A = Int
 
 42 : A
 //│ A
@@ -68,10 +68,10 @@ declare type A = int
 
 
 declare class Sanitizer {
-  fun sanitizeFor(element: string, input: string): string
+  fun sanitizeFor(element: Str, input: Str): Str
 }
 //│ declare class Sanitizer {
-//│   fun sanitizeFor: (element: string, input: string,) -> string
+//│   fun sanitizeFor: (element: Str, input: Str,) -> Str
 //│ }
 
 :re
@@ -87,19 +87,19 @@ let s = Sanitizer()
 // :d
 declare module Buffer {
   class Buffer2 {
-    val length: int
+    val length: Int
   }
-  fun bar: int
-  fun from(a: Array[int]): Buffer2 = from(a)
-  // fun from1(a: Array[int]): this.Buffer2 = from1(a) // FIXME
-  // fun from2(a: Array[int]): Buffer.Buffer2 = from2(a) // FIXME
+  fun bar: Int
+  fun from(a: Array[Int]): Buffer2 = from(a)
+  // fun from1(a: Array[Int]): this.Buffer2 = from1(a) // FIXME
+  // fun from2(a: Array[Int]): Buffer.Buffer2 = from2(a) // FIXME
 }
 //│ declare module Buffer {
 //│   class Buffer2 {
-//│     let length: int
+//│     let length: Int
 //│   }
-//│   fun bar: int
-//│   fun from: (a: Array[int],) -> Buffer2
+//│   fun bar: Int
+//│   fun from: (a: Array[Int],) -> Buffer2
 //│ }
 
 let b = Buffer.from([0, 1, 2])
@@ -108,7 +108,7 @@ let b = Buffer.from([0, 1, 2])
 //│   = <Buffer 00 01 02>
 
 b.length
-//│ int
+//│ Int
 //│ res
 //│     = 3
 

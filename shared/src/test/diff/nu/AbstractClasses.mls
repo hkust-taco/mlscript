@@ -2,11 +2,11 @@
 
 
 
-abstract class Foo(x: int) {
-  fun f(y: int) = x + y
+abstract class Foo(x: Int) {
+  fun f(y: Int) = x + y
 }
-//│ abstract class Foo(x: int) {
-//│   fun f: (y: int,) -> int
+//│ abstract class Foo(x: Int) {
+//│   fun f: (y: Int,) -> Int
 //│ }
 
 :e
@@ -28,11 +28,11 @@ new Foo(1)
 //│     = Foo {}
 
 
-abstract class Foo(x: int) {
-  fun f: int -> int
+abstract class Foo(x: Int) {
+  fun f: Int -> Int
 }
-//│ abstract class Foo(x: int) {
-//│   fun f: int -> int
+//│ abstract class Foo(x: Int) {
+//│   fun f: Int -> Int
 //│ }
 
 :e
@@ -56,7 +56,7 @@ new Foo(1) { fun f = id }
 
 abstract class Bar extends Foo(1)
 //│ abstract class Bar extends Foo {
-//│   fun f: int -> int
+//│   fun f: Int -> Int
 //│ }
 
 :e
@@ -66,12 +66,12 @@ Baz.f(1)
 //│ ║  l.63: 	module Baz extends Bar
 //│ ║        	       ^^^
 //│ ╟── Declared here:
-//│ ║  l.32: 	  fun f: int -> int
+//│ ║  l.32: 	  fun f: Int -> Int
 //│ ╙──      	      ^^^^^^^^^^^^^
 //│ module Baz extends Bar, Foo {
-//│   fun f: int -> int
+//│   fun f: Int -> Int
 //│ }
-//│ int
+//│ Int
 //│ res
 //│ Runtime error:
 //│   TypeError: Baz.f is not a function
@@ -81,22 +81,22 @@ module Baz extends Bar {
 }
 Baz.f(1)
 //│ module Baz extends Bar, Foo {
-//│   fun f: int -> int
+//│   fun f: Int -> Int
 //│ }
-//│ int
+//│ Int
 //│ res
 //│     = 2
 
 
 
-abstract class C1 { fun x: int | string }
+abstract class C1 { fun x: Int | string }
 //│ abstract class C1 {
-//│   fun x: int | string
+//│   fun x: Int | string
 //│ }
 
-trait T1 { fun x: int | bool }
+trait T1 { fun x: Int | Bool }
 //│ trait T1 {
-//│   fun x: bool | int
+//│   fun x: Int | false | true
 //│ }
 
 :e
@@ -105,10 +105,10 @@ class C2 extends C1, T1
 //│ ║  l.103: 	class C2 extends C1, T1
 //│ ║         	      ^^
 //│ ╟── Declared here:
-//│ ║  l.92: 	abstract class C1 { fun x: int | string }
+//│ ║  l.92: 	abstract class C1 { fun x: Int | string }
 //│ ╙──      	                        ^^^^^^^^^^^^^^^
 //│ class C2 extends C1, T1 {
-//│   fun x: int
+//│   fun x: Int
 //│ }
 
 class C2 extends C1, T1 { fun x = 1 }
@@ -118,7 +118,7 @@ class C2 extends C1, T1 { fun x = 1 }
 
 abstract class C2 extends C1, T1
 //│ abstract class C2 extends C1, T1 {
-//│   fun x: int
+//│   fun x: Int
 //│ }
 
 :e
@@ -127,10 +127,10 @@ class C3 extends C2
 //│ ║  l.125: 	class C3 extends C2
 //│ ║         	      ^^
 //│ ╟── Declared here:
-//│ ║  l.92: 	abstract class C1 { fun x: int | string }
+//│ ║  l.92: 	abstract class C1 { fun x: Int | string }
 //│ ╙──      	                        ^^^^^^^^^^^^^^^
 //│ class C3 extends C1, C2, T1 {
-//│   fun x: int
+//│   fun x: Int
 //│ }
 
 class C3 extends C2 { fun x = 1 }
@@ -142,28 +142,28 @@ class C3 extends C2 { fun x = 1 }
 
 :ge // TODO report this as a type error
 abstract class C {
-  fun x : int
+  fun x : Int
   fun foo0 = x
   fun foo1 = this.x
 }
 //│ abstract class C {
-//│   fun foo0: int
-//│   fun foo1: int
-//│   fun x: int
+//│   fun foo0: Int
+//│   fun foo1: Int
+//│   fun x: Int
 //│ }
 //│ Code generation encountered an error:
 //│   unresolved symbol x
 
 :ge // TODO report this as a type error
 class C {
-  val x : int
+  val x : Int
   fun foo0 = x
   fun foo1 = this.x
 }
 //│ class C {
-//│   fun foo0: int
-//│   fun foo1: int
-//│   let x: int
+//│   fun foo0: Int
+//│   fun foo1: Int
+//│   let x: Int
 //│ }
 //│ Code generation encountered an error:
 //│   unresolved symbol x

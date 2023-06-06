@@ -163,7 +163,7 @@ def c: 'a -> C6['a]
 //│ c: 'a -> C6['a]
 
 rec def c6 a = C6{ a = c5 (c6 a) }
-//│ c6: anything -> (C6['A] with {a: forall 'a 'A0 'A1. 'a})
+//│ c6: anything -> (C6['A] with {a: forall 'A0 'A1 'a. 'a})
 //│   where
 //│     'a :> C5['A0] with {a: C2['A1] with {a: 'a}}
 //│     'A1 :> C5['A0] | 'a
@@ -180,7 +180,7 @@ c = c6
 //│ 'a -> C6['a]
 //│ constrain calls  : 70
 //│ annoying  calls  : 34
-//│ subtyping calls  : 417
+//│ subtyping calls  : 423
 
 
 // Reproduction of an issue found while trying out TypeRef ctor typing:
@@ -286,16 +286,16 @@ def append ls elem = L { h = elem; t = S { v = ls } }
 
 :ns
 append
-//│ res: forall 'a 'h 'b 'c 'T 't 'v 'T0. 'a -> 'c -> 'b
+//│ res: forall 't 'T 'v 'h 'T0 'a 'b 'c. 'a -> 'c -> 'b
 //│   where
-//│     'b :> #L & {h: 'h, t: 't, L#T = 'T0}
-//│     't :> #S & {v: 'v, S#T = 'T}
-//│        <: O[L['T0]]
+//│     'b :> #L & {h: 'h, t: 't, L#T = 'T}
+//│     't :> #S & {v: 'v, S#T = 'T0}
+//│        <: O[L['T]]
 //│     'c <: 'h
-//│     'h <: 'T0
+//│     'h <: 'T
 //│     'a <: 'v
-//│     'v <: L['T0] & 'T
-//│     'T := L['T0]
+//│     'v <: L['T] & 'T0
+//│     'T0 := L['T]
 
 append error
 //│ res: ('h & 'T) -> (L['T] with {h: 'h, t: S[L['T]] & {v: nothing}})

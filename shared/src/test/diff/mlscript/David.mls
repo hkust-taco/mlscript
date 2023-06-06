@@ -124,14 +124,14 @@ addOneS "Two"
 // Attempt 1:
 
 def isInt = fun x -> case x of { int -> true | string -> false }
-//│ isInt: (int | string) -> bool
+//│ isInt: (int | string) -> Bool
 //│      = [Function: isInt1]
 
 isInt 1
 isInt "Two"
-//│ res: bool
+//│ res: Bool
 //│    = true
-//│ res: bool
+//│ res: Bool
 //│    = false
 
 def addOne = fun x -> if isInt x then addOneI x else addOneS x

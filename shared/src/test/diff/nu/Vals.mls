@@ -4,7 +4,7 @@
 val a = 1
 val b = a + 1
 //│ let a: 1
-//│ let b: int
+//│ let b: Int
 //│ a
 //│   = 1
 //│ b
@@ -15,7 +15,7 @@ val b = a + 1
 :ge
 val c = d + 1
 val d = 1
-//│ let c: int
+//│ let c: Int
 //│ let d: 1
 //│ Code generation encountered an error:
 //│   unresolved symbol d

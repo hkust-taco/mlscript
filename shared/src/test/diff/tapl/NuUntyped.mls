@@ -9,22 +9,22 @@ fun concat6(a, b, c, d, e, f) = concat2(a, concat5(b, c, d, e, f))
 fun concat7(a, b, c, d, e, f, g) = concat2(a, concat6(b, c, d, e, f, g))
 fun concat8(a, b, c, d, e, f, g, h) = concat2(a, concat7(b, c, d, e, f, g, h))
 fun par(a) = concat3("(", a, ")")
-//│ fun concat2: (string, string,) -> string
-//│ fun concat3: (string, string, string,) -> string
-//│ fun concat4: (string, string, string, string,) -> string
-//│ fun concat5: (string, string, string, string, string,) -> string
-//│ fun concat6: (string, string, string, string, string, string,) -> string
-//│ fun concat7: (string, string, string, string, string, string, string,) -> string
-//│ fun concat8: (string, string, string, string, string, string, string, string,) -> string
-//│ fun par: string -> string
+//│ fun concat2: (Str, Str,) -> Str
+//│ fun concat3: (Str, Str, Str,) -> Str
+//│ fun concat4: (Str, Str, Str, Str,) -> Str
+//│ fun concat5: (Str, Str, Str, Str, Str,) -> Str
+//│ fun concat6: (Str, Str, Str, Str, Str, Str,) -> Str
+//│ fun concat7: (Str, Str, Str, Str, Str, Str, Str,) -> Str
+//│ fun concat8: (Str, Str, Str, Str, Str, Str, Str, Str,) -> Str
+//│ fun par: Str -> Str
 
 :escape
 let String: nothing
-let makeString: anything => { length: int, charCodeAt: int => int } = String
-let StringInstance: { fromCharCode: int => string } = String
+let makeString: anything => { length: Int, charCodeAt: Int => Int } = String
+let StringInstance: { fromCharCode: Int => Str } = String
 //│ let String: nothing
-//│ let makeString: anything -> {charCodeAt: int -> int, length: int}
-//│ let StringInstance: {fromCharCode: int -> string}
+//│ let makeString: anything -> {charCodeAt: Int -> Int, length: Int}
+//│ let StringInstance: {fromCharCode: Int -> Str}
 //│ String
 //│        = <missing implementation>
 //│ makeString
@@ -34,13 +34,13 @@ let StringInstance: { fromCharCode: int => string } = String
 
 
 let anythingToString = toString
-fun fromCharCode(n: int) = StringInstance.fromCharCode(n)
-fun stringCharCodeAt(s: string, i) = makeString(s).charCodeAt(i)
-fun stringLength(s: string) = makeString(s).length
-//│ let anythingToString: anything -> string
-//│ fun fromCharCode: (n: int,) -> string
-//│ fun stringCharCodeAt: (s: string, int,) -> int
-//│ fun stringLength: (s: string,) -> int
+fun fromCharCode(n: Int) = StringInstance.fromCharCode(n)
+fun stringCharCodeAt(s: Str, i) = makeString(s).charCodeAt(i)
+fun stringLength(s: Str) = makeString(s).length
+//│ let anythingToString: anything -> Str
+//│ fun fromCharCode: (n: Int,) -> Str
+//│ fun stringCharCodeAt: (s: Str, Int,) -> Int
+//│ fun stringLength: (s: Str,) -> Int
 //│ anythingToString
 //│                  = [Function: toString]
 
@@ -51,9 +51,9 @@ class Some[A](value: A) {
 module None {
   fun toString() = "None"
 }
-//│ type Option[A] = Some[A] | None
+//│ type Option[A] = None | Some[A]
 //│ class Some[A](value: A) {
-//│   fun toString: () -> string
+//│   fun toString: () -> Str
 //│ }
 //│ module None {
 //│   fun toString: () -> "None"
@@ -89,7 +89,7 @@ fun findFirst(list, p) =
     Cons(x, xs) and
       p(x) then Some(x)
       else findFirst(xs, p)
-//│ fun findFirst: forall 'A. (Cons['A] | Nil, 'A -> anything,) -> (None | Some['A])
+//│ fun findFirst: forall 'A. (Cons['A] | Nil, 'A -> Object,) -> (None | Some['A])
 
 fun listConcat(xs, ys) =
   if xs is
@@ -105,7 +105,7 @@ fun listContains(xs, x) =
     Cons(x', xs') and
       eq(x)(x') then true
       _ then listContains(xs', x)
-//│ fun listContains: forall 'A. (Cons['A] | Nil, anything,) -> bool
+//│ fun listContains: forall 'A. (Cons['A] | Nil, anything,) -> Bool
 
 // Remove all occurrences of x from xs.
 fun listWithout(xs, x) =
@@ -130,19 +130,19 @@ fun listJoin(xs, sep) =
     Cons(x, xs') and xs' is
       Nil then toString(x)
       _ then concat3(toString(x), sep, listJoin(xs', sep))
-//│ fun listJoin: forall 'A. (Cons['A] | Nil, string,) -> string
+//│ fun listJoin: forall 'A. (Cons['A] | Nil, Str,) -> Str
 
 listJoin(list3("x", "y", "z"), ", ")
-//│ string
+//│ Str
 //│ res
 //│     = 'x, y, z'
 
 type Term = Var | Abs | App
-class Var(name: string)
+class Var(name: Str)
 class Abs(lhs: Var, rhs: Term)
 class App(lhs: Term, rhs: Term)
 //│ type Term = Abs | App | Var
-//│ class Var(name: string)
+//│ class Var(name: Str)
 //│ class Abs(lhs: Var, rhs: Term)
 //│ class App(lhs: Term, rhs: Term)
 
@@ -153,13 +153,13 @@ fun showTerm(t) =
     App(Abs(lhs0, lhs1), rhs) then
       concat8("((", "&", showTerm(lhs0), ". ", showTerm(lhs1), ") ", showTerm(rhs), ")")
     App(lhs, rhs) then par(concat3(showTerm(lhs), " ", showTerm(rhs)))
-//│ fun showTerm: (Abs | App | Var) -> string
+//│ fun showTerm: (Abs | App | Var) -> Str
 
 showTerm(Var("x"))
 showTerm(Abs(Var("x"), Var("y")))
 showTerm(App(Var("x"), Var("y")))
 showTerm(App(Abs(Var("x"), Var("y")), Var("z")))
-//│ string
+//│ Str
 //│ res
 //│     = 'x'
 //│ res
@@ -174,12 +174,12 @@ fun isValue(t) =
     Var then true
     Abs then true
     App then false
-//│ fun isValue: (Abs | App | Var) -> bool
+//│ fun isValue: (Abs | App | Var) -> Bool
 
 isValue(Var("x"))
 isValue(Abs(Var("x"), Var("y")))
 isValue(App(Var("x"), Var("y")))
-//│ bool
+//│ Bool
 //│ res
 //│     = true
 //│ res
@@ -195,11 +195,11 @@ fun hasFree(t, n) =
     Abs(Var(name), body) then hasFree(body, n)
     App(lhs, rhs) then hasFree(lhs, n) || hasFree(rhs, n)
     _ then false
-//│ fun hasFree: (anything, anything,) -> bool
+//│ fun hasFree: (Object, anything,) -> Bool
 
 fun showHasFree(t, n) =
   concat4(showTerm(t), if hasFree(t, n) then " has " else " DOES NOT have ", "free variable ", n)
-//│ fun showHasFree: (Abs | App | Var, string,) -> string
+//│ fun showHasFree: (Abs | App | Var, Str,) -> Str
 
 showHasFree(Var("x"), "x")
 showHasFree(Var("x"), "y")
@@ -213,7 +213,7 @@ showHasFree(App(Abs(Var("x"), Var("x")), Var("x")), "x")
 showHasFree(App(Abs(Var("x"), Var("x")), Var("x")), "y")
 showHasFree(App(Abs(Var("x"), Var("x")), Var("y")), "y")
 showHasFree(App(Abs(Var("x"), Var("x")), Var("x")), "y")
-//│ string
+//│ Str
 //│ res
 //│     = 'x has free variable x'
 //│ res
@@ -246,21 +246,21 @@ fun fv(t) =
     App(lhs, rhs) then listConcat(fv(lhs), fv(rhs))
 //│ fun fv: forall 'A. (Abs | App | Var) -> (Cons['A] | Nil)
 //│   where
-//│     'A :> string
+//│     'A :> Str
 
 fun showFv(t) =
   concat2(showTerm(t), if fv(t) is
     Nil then " DOES NOT have free variables"
     _ then concat2(" has free variables: ", listJoin(fv(t), ", "))
   )
-//│ fun showFv: (Abs | App | Var) -> string
+//│ fun showFv: (Abs | App | Var) -> Str
 
 showFv(Var("x"))
 showFv(Abs(Var("x"), Var("x")))
 showFv(Abs(Var("x"), Var("y")))
 showFv(App(Var("x"), Var("y")))
 showFv(App(Abs(Var("x"), Var("x")), Var("x")))
-//│ string
+//│ Str
 //│ res
 //│     = 'x has free variables: x'
 //│ res
@@ -280,14 +280,14 @@ fun tryNextAlphabet(initialCode, currentCode, freeNames) =
     let name = fromCharCode(currentCode)
     listContains(freeNames, name) then tryNextAlphabet(initialCode, currentCode + 1, freeNames)
     _ then Some(name)
-//│ fun tryNextAlphabet: forall 'A. (number, int, Cons['A] | Nil,) -> (None | Some[string])
+//│ fun tryNextAlphabet: forall 'A. (Num, Int, Cons['A] | Nil,) -> (None | Some[Str])
 
 toString(tryNextAlphabet(97, 97, list1("a")))
 toString(tryNextAlphabet(97, 98, list1("a")))
 toString(tryNextAlphabet(97, 98, list2("a", "b")))
 toString(tryNextAlphabet(121, 122, list1("y")))
 toString(tryNextAlphabet(121, 122, list2("y", "z")))
-//│ string
+//│ Str
 //│ res
 //│     = 'None'
 //│ res
@@ -305,7 +305,7 @@ fun tryAppendDigits(name, index, freeNames) =
     listContains(freeNames, currentName) then
       tryAppendDigits(name, index + 1, freeNames)
     _ then currentName
-//│ fun tryAppendDigits: forall 'A. (string, int, Cons['A] | Nil,) -> string
+//│ fun tryAppendDigits: forall 'A. (Str, Int, Cons['A] | Nil,) -> Str
 
 // Note: some weird behavior here... Just try the commented code.
 fun findFreshName(name, freeNames) =
@@ -315,12 +315,12 @@ fun findFreshName(name, freeNames) =
       tryNextAlphabet(charCode, charCode + 1, freeNames) is
         Some(newName) then newName
     _ then tryAppendDigits(name, 0, freeNames)
-//│ fun findFreshName: forall 'A 'A0 'A1. (string, Cons[in 'A1 | 'A | 'A0 out 'A1 & 'A & 'A0] | Nil,) -> string
+//│ fun findFreshName: forall 'A 'A0 'A1. (Str, Cons[in 'A | 'A0 | 'A1 out 'A & 'A0 & 'A1] | Nil,) -> Str
 
 // Find a fresh name to replace `name` that does not conflict with any bound
 // variables in the `body`.
 fun freshName(name, body) = findFreshName(name, fv(body))
-//│ fun freshName: (string, Abs | App | Var,) -> string
+//│ fun freshName: (Str, Abs | App | Var,) -> Str
 
 fun subst(t, n, v) =
   if t is
@@ -331,11 +331,11 @@ fun subst(t, n, v) =
       _ then Abs(Var(name), subst(body, n, v))
     App(lhs, rhs) then App(subst(lhs, n, v), subst(rhs, n, v))
     _ then t
-//│ fun subst: forall 'a. (Abs | App | Var | Term & 'a & ~#Abs & ~#App & ~#Var, anything, Term & 'a,) -> (Abs | App | Var | 'a)
+//│ fun subst: forall 'a. (Abs | App | Term & Object & 'a & ~#Abs & ~#App & ~#Var | Var, anything, Term & Object & 'a,) -> (Abs | App | Var | 'a)
 
 fun showSubst(t, n, v) =
   concat8(showTerm(t), " [", n, " / ", showTerm(v), "]", " => ", showTerm(subst(t, n, v)))
-//│ fun showSubst: (Abs | App | Var, string, Abs & Term | App & Term | Var & Term,) -> string
+//│ fun showSubst: (Abs | App | Var, Str, Abs & Term | App & Term | Var & Term,) -> Str
 
 showSubst(Var("x"), "x", Var("y"))
 showSubst(Abs(Var("x"), Var("x")), "x", Var("z"))
@@ -343,7 +343,7 @@ showSubst(App(Var("x"), Var("y")), "x", Abs(Var("x"), Var("x")))
 showSubst(App(Abs(Var("x"), Var("x")), Var("x")), "x", Abs(Var("y"), Var("y")))
 showSubst(Abs(Var("x"), App(Var("x"), Var("y"))), "y", Var("x"))
 showSubst(Abs(Var("z"), Abs(Var("x"), App(Var("z"), App(Var("x"), Var("y"))))), "y", Var("x"))
-//│ string
+//│ Str
 //│ res
 //│     = 'x [x / y] => y'
 //│ res
@@ -369,13 +369,13 @@ class Stepped(from: Term, to: Term) {
 }
 //│ type Result = Normal | Stepped | Stuck
 //│ class Normal(term: Term) {
-//│   fun toString: () -> string
+//│   fun toString: () -> Str
 //│ }
 //│ class Stuck(term: Term, part: Term) {
-//│   fun toString: () -> string
+//│   fun toString: () -> Str
 //│ }
 //│ class Stepped(from: Term, to: Term) {
-//│   fun toString: () -> string
+//│   fun toString: () -> Str
 //│ }
 
 fun stepByValue(t) =
@@ -398,7 +398,7 @@ toString of stepByValue of Abs(Var("x"), Var("y"))
 toString of stepByValue of App(Var("x"), Var("y"))
 toString of stepByValue of App(Abs(Var("x"), Var("x")), Var("x"))
 toString of stepByValue of App(Abs(Var("x"), Var("x")), Abs(Var("y"), Var("y")))
-//│ string
+//│ Str
 //│ res
 //│     = 'Stuck: x in x'
 //│ res
@@ -427,7 +427,7 @@ toString of stepByValue of App(succ, zero)
 //│ let zero: Abs
 //│ let one: Abs
 //│ let succ: Abs
-//│ string
+//│ Str
 //│ zero
 //│      = Abs {}
 //│ one
@@ -445,7 +445,7 @@ toString of stepByValue of App(succ, zero)
 
 toString of evalByValue of App(succ, App(succ, zero))
 toString of evalByValue of App(succ, App(succ, App(succ, App(succ, zero))))
-//│ string
+//│ Str
 //│ res
 //│     = 'Normal form: &f. &x. (f (((&f. &x. (f (((&f. &x. x) f) x))) f) x))'
 //│ res
@@ -457,4 +457,4 @@ fun equalTerm(a, b) =
     Abs(la, ra) and b is Abs(lb, rb) then equalTerm(la, lb) && equalTerm(ra, rb)
     App(la, ra) and b is App(lb, rb) then equalTerm(la, lb) && equalTerm(ra, rb)
     _ then false
-//│ fun equalTerm: (anything, anything,) -> bool
+//│ fun equalTerm: (Object, Object,) -> Bool

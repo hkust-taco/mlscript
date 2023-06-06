@@ -11,10 +11,10 @@ class Foo(): {} {
 //│   fun x: 0
 //│ }
 
-class Foo(): { x: int } {
+class Foo(): { x: Int } {
   fun x = 0
 }
-//│ class Foo(): {x: int} {
+//│ class Foo(): {x: Int} {
 //│   fun x: 0
 //│ }
 
@@ -30,10 +30,13 @@ not(Foo().x)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.29: 	not(Foo().x)
 //│ ║        	^^^^^^^^^^^^
-//│ ╟── field selection of type `0 & ??FigureItOut` is not an instance of type `bool`
+//│ ╟── integer literal of type `0` is not an instance of type `Bool`
+//│ ║  l.22: 	  fun x = 0
+//│ ║        	          ^
+//│ ╟── but it flows into field selection with expected type `Bool`
 //│ ║  l.29: 	not(Foo().x)
 //│ ╙──      	    ^^^^^^^
-//│ bool | error
+//│ error | false | true
 //│ res
 //│     = true
 
@@ -41,4 +44,53 @@ not(Foo().x)
 //│ (f: Foo,) -> (0 & ??FigureItOut)
 //│ res
 //│     = [Function: res]
+
+
+trait B
+//│ trait B
+
+// :e // TODO check classes against their signatures
+class A(): B
+//│ class A(): B
+
+:e
+A() : B
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.57: 	A() : B
+//│ ║        	^^^
+//│ ╟── application of type `A` is not an instance of type `B`
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.57: 	A() : B
+//│ ╙──      	      ^
+//│ B
+//│ res
+//│     = A {}
+
+abstract class A(): B
+//│ abstract class A(): B
+
+:e
+A() : B
+//│ ╔══[ERROR] Class A is abstract and cannot be instantiated
+//│ ║  l.73: 	A() : B
+//│ ╙──      	^
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.73: 	A() : B
+//│ ║        	^^^
+//│ ╟── application of type `A` is not an instance of type `B`
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.73: 	A() : B
+//│ ╙──      	      ^
+//│ B
+//│ res
+//│     = A {}
+
+module C extends A, B
+//│ module C extends A, B
+
+C : B
+//│ B
+//│ res
+//│     = C { class: [class C extends A] }
+
 

@@ -2,8 +2,8 @@
 :NewDefs
 
 :js
-class C(a: int) { let a = 1 }
-//│ class C(a: int) {
+class C(a: Int) { let a = 1 }
+//│ class C(a: Int) {
 //│   let a: 1
 //│ }
 //│ // Prelude
@@ -45,13 +45,13 @@ a.a
 //│     = 1
 
 :js
-class C2(a: int, b: int) {
+class C2(a: Int, b: Int) {
   let a = b + 1
   let b = a + 1
 }
-//│ class C2(a: int, b: int) {
-//│   let a: int
-//│   let b: int
+//│ class C2(a: Int, b: Int) {
+//│   let a: Int
+//│   let b: Int
 //│ }
 //│ // Prelude
 //│ class TypingUnit2 {
@@ -89,7 +89,7 @@ let c2 = C2(1, 2)
 c2.a
 c2.b
 //│ let c2: C2
-//│ int
+//│ Int
 //│ c2
 //│    = C2 {}
 //│ res
@@ -97,14 +97,14 @@ c2.b
 //│ res
 //│     = 4
 
-class C3(a: int) {
+class C3(a: Int) {
   let a = 42
-  class C4(a: int) {
+  class C4(a: Int) {
     let a = 44
   }
 }
-//│ class C3(a: int) {
-//│   class C4(a: int) {
+//│ class C3(a: Int) {
+//│   class C4(a: Int) {
 //│     let a: 44
 //│   }
 //│   let a: 42

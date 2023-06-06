@@ -3,14 +3,14 @@
 
 :e
 trait T {
-  fun x : int
+  fun x : Int
   fun x = false
 }
 //│ ╔══[ERROR] Method implementations in traits are not yet supported
 //│ ║  l.7: 	  fun x = false
 //│ ╙──     	      ^^^^^^^^^
 //│ trait T {
-//│   fun x: int
+//│   fun x: Int
 //│ }
 
 
@@ -21,16 +21,16 @@ class A { fun x = 1 }
 
 :e
 class B() extends A {
-  fun x: int
+  fun x: Int
 }
 //│ ╔══[ERROR] Type mismatch in signature of member `x`:
-//│ ║  l.24: 	  fun x: int
+//│ ║  l.24: 	  fun x: Int
 //│ ║        	      ^^^^^^
-//│ ╟── type `int` does not match type `1`
-//│ ║  l.24: 	  fun x: int
+//│ ╟── type `Int` does not match type `1`
+//│ ║  l.24: 	  fun x: Int
 //│ ║        	         ^^^
 //│ ╟── but it flows into signature of member `x` with expected type `1`
-//│ ║  l.24: 	  fun x: int
+//│ ║  l.24: 	  fun x: Int
 //│ ║        	      ^^^^^^
 //│ ╟── Note: constraint arises from integer literal:
 //│ ║  l.17: 	class A { fun x = 1 }
@@ -39,11 +39,11 @@ class B() extends A {
 //│ ║  l.17: 	class A { fun x = 1 }
 //│ ╙──      	              ^^^^^
 //│ class B() extends A {
-//│   fun x: int
+//│   fun x: Int
 //│ }
 
 B().x
-//│ int
+//│ Int
 //│ res
 //│     = 1
 
@@ -64,17 +64,17 @@ class C() extends B { fun x = 0 }
 
 :e
 class B() extends A {
-  fun x: int
+  fun x: Int
   fun x = 1
 }
 //│ ╔══[ERROR] Type mismatch in signature of member `x`:
-//│ ║  l.67: 	  fun x: int
+//│ ║  l.67: 	  fun x: Int
 //│ ║        	      ^^^^^^
-//│ ╟── type `int` does not match type `1`
-//│ ║  l.67: 	  fun x: int
+//│ ╟── type `Int` does not match type `1`
+//│ ║  l.67: 	  fun x: Int
 //│ ║        	         ^^^
 //│ ╟── but it flows into signature of member `x` with expected type `1`
-//│ ║  l.67: 	  fun x: int
+//│ ║  l.67: 	  fun x: Int
 //│ ║        	      ^^^^^^
 //│ ╟── Note: constraint arises from integer literal:
 //│ ║  l.17: 	class A { fun x = 1 }
@@ -83,19 +83,19 @@ class B() extends A {
 //│ ║  l.17: 	class A { fun x = 1 }
 //│ ╙──      	              ^^^^^
 //│ class B() extends A {
-//│   fun x: int
+//│   fun x: Int
 //│ }
 
 
 :e
-mixin M { fun x : int }
+mixin M { fun x : Int }
 //│ ╔══[ERROR] Member `x` is declared in parent but not implemented in `M`
-//│ ║  l.91: 	mixin M { fun x : int }
+//│ ║  l.91: 	mixin M { fun x : Int }
 //│ ║        	      ^
 //│ ╟── Declared here:
-//│ ║  l.91: 	mixin M { fun x : int }
+//│ ║  l.91: 	mixin M { fun x : Int }
 //│ ╙──      	              ^^^^^^^
 //│ mixin M() {
-//│   fun x: int
+//│   fun x: Int
 //│ }
 

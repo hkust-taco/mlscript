@@ -40,26 +40,26 @@ trait Base1: Foo
 //│     = [Function: res]
 
 :e
-1 : Foo[int]
+1 : Foo[Int]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.43: 	1 : Foo[int]
+//│ ║  l.43: 	1 : Foo[Int]
 //│ ║        	^
 //│ ╟── integer literal of type `1` is not an instance of type `Foo`
 //│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.43: 	1 : Foo[int]
+//│ ║  l.43: 	1 : Foo[Int]
 //│ ╙──      	    ^^^^^^^^
-//│ Foo[int]
+//│ Foo[Int]
 //│ res
 //│     = 1
 
 
-trait Base1: Foo { val x: int }
+trait Base1: Foo { val x: Int }
 //│ trait Base1: #Foo {
-//│   let x: int
+//│   let x: Int
 //│ }
 
 (b: Base1) => b.x
-//│ (b: Base1,) -> (int & ??A)
+//│ (b: Base1,) -> (Int & ??A)
 //│ res
 //│     = [Function: res]
 
@@ -141,7 +141,7 @@ Impl() : Base2
 //│ res
 //│     = 1
 
-class Impl2() extends Base2, Foo[int] {
+class Impl2() extends Base2, Foo[Int] {
   fun x = 1
 }
 //│ class Impl2() extends Base2, Foo {
@@ -162,8 +162,8 @@ trait Test2[A]: Test1[(A, A)]
 //│ }
 //│ trait Test2[A]: Test1[(A, A,)]
 
-(t: Test2[int]) => t.x
-//│ (t: Test2[int],) -> (int, int,)
+(t: Test2[Int]) => t.x
+//│ (t: Test2[Int],) -> (Int, Int,)
 //│ res
 //│     = [Function: res]
 

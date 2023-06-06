@@ -4,30 +4,30 @@
 class A
 //│ class A
 
-class B(m: int) extends A
-//│ class B(m: int) extends A
+class B(m: Int) extends A
+//│ class B(m: Int) extends A
 
 
-class A(n: int)
-//│ class A(n: int)
+class A(n: Int)
+//│ class A(n: Int)
 
-class B(m: int) extends A(m + 1)
-//│ class B(m: int) extends A
+class B(m: Int) extends A(m + 1)
+//│ class B(m: Int) extends A
 
 
 class A {
-  fun a1: int
+  fun a1: Int
   fun a1 = 1
   fun a2 = 2
 }
 //│ class A {
-//│   fun a1: int
+//│   fun a1: Int
 //│   fun a2: 2
 //│ }
 
 class B extends A
 //│ class B extends A {
-//│   fun a1: int
+//│   fun a1: Int
 //│   fun a2: 2
 //│ }
 

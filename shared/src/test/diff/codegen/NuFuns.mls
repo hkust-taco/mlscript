@@ -5,7 +5,7 @@
 fun foo =
   fun bar(x) = x + 1
   bar(10)
-//│ fun foo: int
+//│ fun foo: Int
 //│ // Prelude
 //│ let res;
 //│ class TypingUnit {}
@@ -20,13 +20,35 @@ fun foo =
 //│ // End of generated code
 
 fun foo =
-  class C(a: int) { fun bar(x) = a + x + 1 }
+  class C(a: Int) { fun bar(x) = a + x + 1 }
   C(100).bar(10)
 foo
-//│ fun foo: int
-//│ int
+//│ fun foo: Int
+//│ Int
 //│ res
 //│     = [Function: foo1]
+
+
+// FIXME: returns a thunk
+fun main =
+  log("Hello")
+main
+//│ fun main: undefined
+//│ undefined
+//│ res
+//│     = [Function: main]
+
+fun main =
+  log("Hello")
+//│ fun main: undefined
+
+main
+//│ undefined
+//│ res
+//│     = undefined
+//│ // Output
+//│ Hello
+
 
 fun main =
   mixin B { log(1) }
@@ -34,7 +56,8 @@ fun main =
   module M extends B
   log(2)
 main
-//│ fun main: unit
-//│ unit
+//│ fun main: undefined
+//│ undefined
 //│ res
-//│     = [Function: main]
+//│     = [Function: main2]
+

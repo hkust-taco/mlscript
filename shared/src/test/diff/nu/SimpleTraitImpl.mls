@@ -341,7 +341,7 @@ class C2 extends T2
 trait T3[A] {
   val r = C2().x
 }
-class C2 extends T3[int]
+class C2 extends T3[Int]
 //│ ╔══[ERROR] Method implementations in traits are not yet supported
 //│ ║  l.342: 	  val r = C2().x
 //│ ╙──       	      ^^^^^^^^^^
@@ -367,13 +367,13 @@ C2() : T3['X]
 //│   where
 //│     'X :> error
 
-class C3 extends T3[int]
+class C3 extends T3[Int]
 //│ class C3 extends T3 {
 //│   let r: error
 //│ }
 
 C3() : T3['X]
-//│ T3[int]
+//│ T3[Int]
 
 
 
@@ -414,7 +414,7 @@ class B extends Foo { fun foo(x) = x + 1 }
 //│ ╟── type variable `'A` leaks out of its scope
 //│ ║  l.380: 	trait Foo { fun foo: forall 'A; (x: 'A) -> 'A }
 //│ ║         	                                    ^^
-//│ ╟── into reference of type `int`
+//│ ╟── into reference of type `Int`
 //│ ║  l.410: 	class B extends Foo { fun foo(x) = x + 1 }
 //│ ╙──       	                                   ^
 //│ ╔══[ERROR] Type error in definition of method foo
@@ -428,7 +428,7 @@ class B extends Foo { fun foo(x) = x + 1 }
 //│ ║  l.410: 	class B extends Foo { fun foo(x) = x + 1 }
 //│ ╙──       	                                   ^^^^^
 //│ class B extends Foo {
-//│   fun foo: int -> int
+//│   fun foo: Int -> Int
 //│ }
 
 

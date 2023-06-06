@@ -1,8 +1,8 @@
 :NewDefs
 
 
-class Foo(x: int)
-//│ class Foo(x: int)
+class Foo(x: Int)
+//│ class Foo(x: Int)
 
 Foo(1)
 //│ Foo

@@ -24,7 +24,7 @@ fun f(a, b) = if a is Some(av)
     then av + bv
 //│ |#fun| |f|(|a|,| |b|)| |#=| |#if| |a| |is| |Some|(|av|)|→|and| |b| |is| |Some|(|bv|)|↵|#then| |av| |+| |bv|←|
 //│ Parsed: fun f = (a, b,) => if a is Some (av,) ‹· and (is (b,) (Some (bv,),)) then + (av,) (bv,)›;
-//│ fun f: (Some[int], Some[int],) -> int
+//│ fun f: (Some[Int], Some[Int],) -> Int
 
 // TODO
 :p

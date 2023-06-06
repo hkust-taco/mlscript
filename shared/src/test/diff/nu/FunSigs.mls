@@ -1,8 +1,8 @@
 :NewDefs
 
 
-fun log(msg: string): unit
-//│ fun log: (msg: string,) -> unit
+fun log(msg: Str): unit
+//│ fun log: (msg: Str,) -> unit
 
 let f =
   log("ok")
@@ -12,11 +12,11 @@ let f =
 //│   = <no result>
 //│     log is not implemented
 
-fun log: string -> unit
-//│ fun log: string -> unit
+fun log: Str -> unit
+//│ fun log: Str -> unit
 
-fun log: string => unit
-//│ fun log: string -> unit
+fun log: Str => unit
+//│ fun log: Str -> unit
 
 log("ok")
 //│ unit
@@ -25,10 +25,10 @@ log("ok")
 //│       log is not implemented
 
 
-fun con: string => string => string
-//│ fun con: string -> string -> string
+fun con: Str => Str => Str
+//│ fun con: Str -> Str -> Str
 
 fun con = concat
-//│ fun con: string -> string -> string
+//│ fun con: Str -> Str -> Str
 
 

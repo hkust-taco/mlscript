@@ -1,13 +1,13 @@
 :NewDefs
 
 
-let x: Eql[int]
-//│ let x: Eql[int]
+let x: Eql[Int]
+//│ let x: Eql[Int]
 //│ x
 //│   = <missing implementation>
 
 x === 1
-//│ bool
+//│ Bool
 //│ res
 //│     = <no result>
 //│       x is not implemented
@@ -17,13 +17,13 @@ x === 1
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.16: 	1 === x
 //│ ║        	^^^^^^^
-//│ ╟── type `#Eql & {Eql#A :> int}` is not an instance of type `number`
-//│ ║  l.4: 	let x: Eql[int]
+//│ ╟── type `#Eql` is not an instance of type `Num`
+//│ ║  l.4: 	let x: Eql[Int]
 //│ ║       	       ^^^^^^^^
-//│ ╟── but it flows into reference with expected type `number`
+//│ ╟── but it flows into reference with expected type `Num`
 //│ ║  l.16: 	1 === x
 //│ ╙──      	      ^
-//│ bool | error
+//│ error | false | true
 //│ res
 //│     = <no result>
 //│       x is not implemented
@@ -33,16 +33,13 @@ x === x
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.32: 	x === x
 //│ ║        	^^^^^^^
-//│ ╟── type `#Eql & {Eql#A :> int}` is not an instance of type `int`
-//│ ║  l.4: 	let x: Eql[int]
+//│ ╟── type `#Eql` does not match type `?A | Int`
+//│ ║  l.4: 	let x: Eql[Int]
 //│ ║       	       ^^^^^^^^
-//│ ╟── but it flows into reference with expected type `int`
+//│ ╟── but it flows into reference with expected type `?A0 | Int`
 //│ ║  l.32: 	x === x
-//│ ║        	      ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.4: 	let x: Eql[int]
-//│ ╙──     	           ^^^
-//│ bool | error
+//│ ╙──      	      ^
+//│ error | false | true
 //│ res
 //│     = <no result>
 //│       x is not implemented
@@ -50,20 +47,20 @@ x === x
 
 fun test1(x) =
   x === x
-//│ fun test1: forall 'a. (Eql['a] & 'a) -> bool
+//│ fun test1: forall 'a. (Eql['a] & 'a) -> Bool
 
 fun test2(x, y) =
   x === y
-//│ fun test2: forall 'a. (Eql['a], 'a,) -> bool
+//│ fun test2: forall 'a. (Eql['a], 'a,) -> Bool
 
 
 1 : Eql['a]
-//│ Eql[number]
+//│ Eql[Num]
 //│ res
 //│     = 1
 
-1 : Eql[int]
-//│ Eql[int]
+1 : Eql[Int]
+//│ Eql[Int]
 //│ res
 //│     = 1
 
@@ -73,81 +70,97 @@ fun test2(x, y) =
 //│     = 1
 
 test1(1)
-//│ bool
+//│ Bool
 //│ res
 //│     = true
 
+:e
+test1(x)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.78: 	test1(x)
+//│ ║        	^^^^^^^^
+//│ ╟── type `#Eql` does not match type `?A | Int`
+//│ ║  l.4: 	let x: Eql[Int]
+//│ ║       	       ^^^^^^^^
+//│ ╟── but it flows into reference with expected type `?A0 | Int`
+//│ ║  l.78: 	test1(x)
+//│ ╙──      	      ^
+//│ error | false | true
+//│ res
+//│     = <no result>
+//│       x is not implemented
 
-let n: int = 1
-//│ let n: int
+
+let n: Int = 1
+//│ let n: Int
 //│ n
 //│   = 1
 
 n : Eql['a]
-//│ Eql[number]
+//│ Eql[anything]
 //│ res
 //│     = 1
 
 test1(n)
-//│ bool
+//│ Bool
 //│ res
 //│     = true
 
 
-let n: number
-//│ let n: number
+let n: Num
+//│ let n: Num
 //│ n
 //│   = <missing implementation>
 
 test1(n)
-//│ bool
+//│ Bool
 //│ res
 //│     = <no result>
 //│       n is not implemented
 
 let d = 1/2
-//│ let d: number
+//│ let d: Num
 //│ d
 //│   = 0.5
 
 test1(d)
-//│ bool
+//│ Bool
 //│ res
 //│     = true
 
 test1("hello")
-//│ bool
+//│ Bool
 //│ res
 //│     = true
 
 
 test2(0, 1)
-//│ bool
+//│ Bool
 //│ res
 //│     = false
 
 test2(0, d)
-//│ bool
+//│ Bool
 //│ res
 //│     = false
 
 x => test2(0, x)
-//│ number -> bool
+//│ Num -> Bool
 //│ res
 //│     = [Function: res]
 
 x => test2(x, 0)
-//│ Eql[0] -> bool
+//│ Eql[0] -> Bool
 //│ res
 //│     = [Function: res]
 
 x => test2(d, x)
-//│ number -> bool
+//│ anything -> Bool
 //│ res
 //│     = [Function: res]
 
 x => test2(x, d)
-//│ Eql[number] -> bool
+//│ Eql[Num] -> Bool
 //│ res
 //│     = [Function: res]
 
@@ -155,69 +168,69 @@ x => test2(x, d)
 :e
 test2(1, "oops")
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.156: 	test2(1, "oops")
+//│ ║  l.169: 	test2(1, "oops")
 //│ ║         	^^^^^^^^^^^^^^^^
-//│ ╟── string literal of type `"oops"` is not an instance of type `number`
-//│ ║  l.156: 	test2(1, "oops")
+//│ ╟── string literal of type `"oops"` is not an instance of type `Num`
+//│ ║  l.169: 	test2(1, "oops")
 //│ ║         	         ^^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.56: 	  x === y
+//│ ║  l.53: 	  x === y
 //│ ╙──      	        ^
-//│ bool | error
+//│ error | false | true
 //│ res
 //│     = false
 
 :e
 test2("oops", 1)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.171: 	test2("oops", 1)
+//│ ║  l.184: 	test2("oops", 1)
 //│ ║         	^^^^^^^^^^^^^^^^
-//│ ╟── integer literal of type `1` is not an instance of type `string`
-//│ ║  l.171: 	test2("oops", 1)
+//│ ╟── integer literal of type `1` is not an instance of type `Str`
+//│ ║  l.184: 	test2("oops", 1)
 //│ ║         	              ^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.56: 	  x === y
+//│ ║  l.53: 	  x === y
 //│ ╙──      	        ^
-//│ bool | error
+//│ error | false | true
 //│ res
 //│     = false
 
 :e
 test2(1, {})
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.186: 	test2(1, {})
+//│ ║  l.199: 	test2(1, {})
 //│ ║         	^^^^^^^^^^^^
-//│ ╟── record literal of type `anything` is not an instance of type `number`
+//│ ╟── record literal of type `anything` is not an instance of type `Num`
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.56: 	  x === y
+//│ ║  l.53: 	  x === y
 //│ ╙──      	        ^
-//│ bool | error
+//│ error | false | true
 //│ res
 //│     = false
 
 :e
 test2({}, 1)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.199: 	test2({}, 1)
+//│ ║  l.212: 	test2({}, 1)
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── record literal of type `anything` is not an instance of type `Eql`
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.56: 	  x === y
+//│ ║  l.53: 	  x === y
 //│ ╙──      	  ^
-//│ bool | error
+//│ error | false | true
 //│ res
 //│     = false
 
 :e
 test2({}, {})
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.212: 	test2({}, {})
+//│ ║  l.225: 	test2({}, {})
 //│ ║         	^^^^^^^^^^^^^
 //│ ╟── record literal of type `anything` is not an instance of type `Eql`
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.56: 	  x === y
+//│ ║  l.53: 	  x === y
 //│ ╙──      	  ^
-//│ bool | error
+//│ error | false | true
 //│ res
 //│     = false
 

@@ -113,7 +113,7 @@ fun listContains(xs, x) =
     Cons(x', xs') and
       eq(x)(x') then true
       _ then listContains(xs', x)
-//│ listContains: ('tail, anything,) -> bool
+//│ listContains: ('tail, anything,) -> Bool
 //│   where
 //│     'tail <: Cons & {tail: 'tail} | Nil
 //│             = [Function: listContains]
@@ -192,17 +192,17 @@ fun isValue(t) =
     Var then true
     Abs then true
     App then false
-//│ isValue: (Abs | App | Var) -> bool
+//│ isValue: (Abs | App | Var) -> Bool
 //│        = [Function: isValue]
 
 isValue(Var("x"))
 isValue(Abs(Var("x"), Var("y")))
 isValue(App(Var("x"), Var("y")))
-//│ res: bool
+//│ res: Bool
 //│    = true
-//│ res: bool
+//│ res: Bool
 //│    = true
-//│ res: bool
+//│ res: Bool
 //│    = false
 
 fun hasFree(t, n) =
@@ -396,13 +396,13 @@ fun showSubst(t, n, v) =
 //│   where
 //│     'rhs3 <: Abs & {rhs: 'rhs3} | App & {lhs: 'rhs3, rhs: 'rhs3} | Var | ~Abs & ~App & ~Var
 //│     'rhs0 <: Abs & 'a | App & 'b | Var & 'c | 'd & ~#Abs & ~#App & ~#Var
-//│     'a <: 'lhs & 'rhs2 & 'rhs1 & (Abs & {lhs: Var & {name: string} | ~Var, rhs: 'rhs0 & 'rhs1} | App & {lhs: Var & {name: string} | ~Var, rhs: 'rhs0 & 'rhs1} & 'b | Var & {lhs: Var & {name: string} | ~Var, rhs: 'rhs0 & 'rhs1} & 'c | {lhs: Var & {name: string} | ~Var, rhs: 'rhs0 & 'rhs1} & 'd & ~#Abs & ~#App & ~#Var)
-//│     'c <: 'lhs & 'rhs2 & 'rhs1 & (Abs & {name: anything} & 'a | App & {name: anything} & 'b | Var | {name: anything} & 'd & ~#Abs & ~#App & ~#Var)
-//│     'd <: 'lhs & 'rhs2 & 'rhs1 & (Abs & 'a | App & 'b | Var & 'c | ~#Abs & ~#App & ~#Var)
+//│     'a <: 'rhs2 & 'rhs1 & 'lhs & (Abs & {lhs: Var & {name: string} | ~Var, rhs: 'rhs0 & 'rhs1} | App & {lhs: Var & {name: string} | ~Var, rhs: 'rhs0 & 'rhs1} & 'b | Var & {lhs: Var & {name: string} | ~Var, rhs: 'rhs0 & 'rhs1} & 'c | {lhs: Var & {name: string} | ~Var, rhs: 'rhs0 & 'rhs1} & 'd & ~#Abs & ~#App & ~#Var)
+//│     'c <: 'rhs2 & 'rhs1 & 'lhs & (Abs & {name: anything} & 'a | App & {name: anything} & 'b | Var | {name: anything} & 'd & ~#Abs & ~#App & ~#Var)
+//│     'd <: 'rhs2 & 'rhs1 & 'lhs & (Abs & 'a | App & 'b | Var & 'c | ~#Abs & ~#App & ~#Var)
 //│     'b <: {lhs: 'rhs0, rhs: 'rhs0}
 //│     'rhs1 <: Abs & {lhs: Var, rhs: 'rhs1} | App & {lhs: 'rhs1, rhs: 'rhs1} | Var
-//│     'lhs <: Abs & {lhs: 'rhs2, rhs: 'rhs2} | ~Abs
 //│     'rhs2 <: Abs & {lhs: 'rhs2, rhs: 'rhs2} | App & {lhs: 'lhs & 'rhs2, rhs: 'rhs2} | Var
+//│     'lhs <: Abs & {lhs: 'rhs2, rhs: 'rhs2} | ~Abs
 //│     'rhs <: Abs & {lhs: 'rhs, rhs: 'rhs} | App & {lhs: 'rhs & (Abs & {lhs: 'rhs, rhs: 'rhs} | ~#Abs), rhs: 'rhs} | Var
 //│          = [Function: showSubst]
 

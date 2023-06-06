@@ -2,21 +2,21 @@
 
 
 :e
-module A(x: int) { fun y = x }
+module A(x: Int) { fun y = x }
 //│ ╔══[ERROR] module parameters are not supported
-//│ ║  l.5: 	module A(x: int) { fun y = x }
+//│ ║  l.5: 	module A(x: Int) { fun y = x }
 //│ ╙──     	         ^
-//│ module A(x: int) {
-//│   fun y: int
+//│ module A(x: Int) {
+//│   fun y: Int
 //│ }
 
 A.x
-//│ int
+//│ Int
 //│ res
 //│     = undefined
 
 A.y
-//│ int
+//│ Int
 //│ res
 //│     = undefined
 

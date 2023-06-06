@@ -119,30 +119,30 @@ rec def find table key =
 
 :ns
 find
-//│ res: forall 'a 'a0 'b 'c 'val 'd 'e 'a1 'f 'find 'g 'h 'i 'j 'k 'l 'a2. 'find
+//│ res: forall 'b 'a 'c 'a0 'd 'e 'f 'g 'val 'h 'i 'j 'k 'find 'a1 'a2 'l. 'find
 //│   where
-//│     'find := 'b -> 'h -> 'g
+//│     'find := 'l -> 'h -> 'g
 //│     'g :> (forall 'm. 'm) | (forall 'n. 'n)
-//│        <: 'd
-//│     'd :> (forall 'm. 'm) | (forall 'n. 'n)
 //│        <: 'k
 //│     'k :> (forall 'm. 'm) | (forall 'n. 'n)
-//│        <: 'e
-//│     'e :> (forall 'm. 'm) | (forall 'n. 'n)
+//│        <: 'b
+//│     'b :> (forall 'm. 'm) | (forall 'n. 'n)
+//│        <: 'd
+//│     'd :> (forall 'm. 'm) | (forall 'n. 'n)
 //│        <: 'i
 //│     'i :> (forall 'm. 'm) | (forall 'n. 'n)
 //│        <: 'g
 //│     'n :> #None
-//│     'm :> #Some & {val: 'val, Some#a = 'a0}
+//│     'm :> #Some & {val: 'val, Some#a = 'a2}
 //│     'h <: 'c
-//│     'b :> List['a]
-//│        <: List['a] & List['a2] & List['a1]
-//│     'a <: 'a1 & 'a2
-//│     'a2 <: {_2: 'f} & {_1: 'j}
+//│     'l :> List['a1]
+//│        <: List['a1] & List['a] & List['a0]
+//│     'a1 <: 'a0 & 'a
+//│     'a <: {_2: 'f} & {_1: 'j}
 //│     'j <: 'c
-//│     'f <: 'l
-//│     'l <: 'val
-//│     'val <: 'a0
+//│     'f <: 'e
+//│     'e <: 'val
+//│     'val <: 'a2
 //│    = [Function: find1]
 
 :ng
@@ -218,7 +218,7 @@ table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
 //│      = Nil {}
 //│ table: List[("one", forall 'a 'b. ('a -> 'b) -> 'a -> 'b,)]
 //│      = Cons { head: [ 'one', [Function (anonymous)] ], tail: Nil {} }
-//│ table: List[("one" | "two", forall 'a 'b 'c. ('a -> 'b & 'b -> 'c & 'a -> 'c) -> 'a -> 'c,)]
+//│ table: List[("one" | "two", forall 'a 'b 'c. ('b -> 'c & 'c -> 'a & 'b -> 'a) -> 'b -> 'a,)]
 //│      = Cons {
 //│          head: [ 'two', [Function (anonymous)] ],
 //│          tail: Cons { head: [ 'one', [Function (anonymous)] ], tail: Nil {} }
