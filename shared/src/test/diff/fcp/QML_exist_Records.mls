@@ -478,7 +478,7 @@ ssb (fun arr ->
     let r2 = arr.update (arr.init true) 1 false
     in (arr.sub r2 0, arr.sub r2 1)
   )
-//│ res: (bool, bool,)
+//│ res: (Bool, Bool,)
 //│    = [ false, false ]
 
 

@@ -9,24 +9,24 @@ class Pair(fst, snd)
 
 
 Pair(0, 1) is Pair
-//│ res: bool
+//│ res: Bool
 //│    = true
 
 Pair(0, 1) is Pair(a, b)
-//│ res: bool
+//│ res: Bool
 //│    = true
 
 Pair(0, 1) is Pair(0, _)
-//│ res: bool
+//│ res: Bool
 //│    = true
 
 if Pair(0, 1) is Pair(a, b) then true else false
-//│ res: bool
+//│ res: Bool
 //│    = true
 
 
 fun foo(x) = x is Pair(a, b)
-//│ foo: anything -> bool
+//│ foo: anything -> Bool
 //│    = [Function: foo]
 
 

@@ -61,7 +61,7 @@ class Bar extends Foo { fun x = false }
 //│ ╔══[ERROR] Type mismatch in definition of method x:
 //│ ║  l.60: 	class Bar extends Foo { fun x = false }
 //│ ║        	                            ^^^^^^^^^
-//│ ╟── reference of type `False` is not an instance of type `Int`
+//│ ╟── reference of type `false` is not an instance of type `Int`
 //│ ║  l.60: 	class Bar extends Foo { fun x = false }
 //│ ║        	                                ^^^^^
 //│ ╟── but it flows into definition of method x with expected type `Int`
@@ -74,7 +74,7 @@ class Bar extends Foo { fun x = false }
 //│ ║  l.54: 	class Foo { fun x: Int = 1 }
 //│ ╙──      	                ^^^^^^^^^^
 //│ class Bar extends Foo {
-//│   fun x: False
+//│   fun x: false
 //│ }
 
 :e
@@ -103,7 +103,7 @@ class Bar extends Foo {
 
 mixin M { fun x = false }
 //│ mixin M() {
-//│   fun x: False
+//│   fun x: false
 //│ }
 
 :e
@@ -111,7 +111,7 @@ class Bar extends Foo, M
 //│ ╔══[ERROR] Type mismatch in definition of method x:
 //│ ║  l.104: 	mixin M { fun x = false }
 //│ ║         	              ^^^^^^^^^
-//│ ╟── reference of type `False` is not an instance of type `Int`
+//│ ╟── reference of type `false` is not an instance of type `Int`
 //│ ║  l.104: 	mixin M { fun x = false }
 //│ ║         	                  ^^^^^
 //│ ╟── but it flows into definition of method x with expected type `Int`
@@ -124,7 +124,7 @@ class Bar extends Foo, M
 //│ ║  l.54: 	class Foo { fun x: Int = 1 }
 //│ ╙──      	                ^^^^^^^^^^
 //│ class Bar extends Foo {
-//│   fun x: False
+//│   fun x: false
 //│ }
 
 

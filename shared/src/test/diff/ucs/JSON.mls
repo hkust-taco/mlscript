@@ -49,12 +49,12 @@ fun isWhiteSpace(ch) =
     10 then true // linefeed
     32 then true // space
     _ then false
-//│ fun isWhiteSpace: anything -> (False | True)
+//│ fun isWhiteSpace: anything -> Bool
 
 fun isDigit(ch) =
   let n = firstCharCode of ch
   if 48 <= n and n <= 57 then true else false
-//│ fun isDigit: anything -> (False | True)
+//│ fun isDigit: anything -> Bool
 
 fun isAlphabet(ch) =
   let n = firstCharCode of ch
@@ -62,7 +62,7 @@ fun isAlphabet(ch) =
     90  and n >= 65 then true
     122 and n >= 97 then true
     else false
-//│ fun isAlphabet: anything -> (False | True)
+//│ fun isAlphabet: anything -> Bool
 
 fun concat2(a, b) = concat(a)(b)
 fun concat3(a, b, c) = concat2(a, concat2(b, c))

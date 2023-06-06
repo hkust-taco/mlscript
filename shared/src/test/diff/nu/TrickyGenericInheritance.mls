@@ -90,7 +90,7 @@ class C2 extends T2['FigureItOut] {
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.75: 	  val r = C2().f(false)
 //│ ║        	          ^^^^^^^^^^^^^
-//│ ╟── reference of type `False` is not an instance of type `Int`
+//│ ╟── reference of type `false` is not an instance of type `Int`
 //│ ║  l.75: 	  val r = C2().f(false)
 //│ ║        	                 ^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -127,7 +127,7 @@ class C2 extends T2['FigureItOut] {
 //│ ╙──       	         ^
 //│ trait T2[A] {
 //│   fun f: A -> A
-//│   let r: False | error
+//│   let r: error | false
 //│ }
 //│ class C2 extends T2 {
 //│   fun f: (x: Int,) -> Int

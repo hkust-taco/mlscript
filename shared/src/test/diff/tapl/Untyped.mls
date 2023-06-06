@@ -113,7 +113,7 @@ fun listContains(xs, x) =
     Cons(x', xs') and
       eq(x)(x') then true
       _ then listContains(xs', x)
-//│ listContains: ('tail, anything,) -> bool
+//│ listContains: ('tail, anything,) -> Bool
 //│   where
 //│     'tail <: Cons & {tail: 'tail} | Nil
 //│             = [Function: listContains]
@@ -192,17 +192,17 @@ fun isValue(t) =
     Var then true
     Abs then true
     App then false
-//│ isValue: (Abs | App | Var) -> bool
+//│ isValue: (Abs | App | Var) -> Bool
 //│        = [Function: isValue]
 
 isValue(Var("x"))
 isValue(Abs(Var("x"), Var("y")))
 isValue(App(Var("x"), Var("y")))
-//│ res: bool
+//│ res: Bool
 //│    = true
-//│ res: bool
+//│ res: Bool
 //│    = true
-//│ res: bool
+//│ res: Bool
 //│    = false
 
 fun hasFree(t, n) =

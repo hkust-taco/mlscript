@@ -3,7 +3,7 @@ def absImpl lt x =
   case lt of
     { true -> x
     | false -> 0 - x }
-//│ absImpl: bool -> int -> int
+//│ absImpl: Bool -> int -> int
 //│        = [Function: absImpl]
 
 // * TODO support this
@@ -29,6 +29,6 @@ def abs x =
 def neg b = case b of
   { true -> false
   | false -> true }
-//│ neg: bool -> bool
+//│ neg: Bool -> Bool
 //│    = [Function: neg]
 

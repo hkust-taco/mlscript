@@ -279,7 +279,7 @@ sb (fun arr ->
     let r2 = arr.Update (arr.Init true) 1 false
     in (arr.Sub r2 0, arr.Sub r2 1)
   )
-//│ res: (bool, bool,)
+//│ res: (Bool, Bool,)
 //│    = [ false, false ]
 
 
@@ -473,7 +473,7 @@ ssb (fun arr ->
     let r2 = arr.Update (arr.Init true) 1 false
     in (arr.Sub r2 0, arr.Sub r2 1)
   )
-//│ res: (bool, bool,)
+//│ res: (Bool, Bool,)
 //│    = [ true, false ]
 
 

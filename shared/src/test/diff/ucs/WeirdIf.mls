@@ -106,25 +106,7 @@ fun boolToStr(x) =
 
 boolToStr of true
 boolToStr of false
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.107: 	boolToStr of true
-//│ ║         	^^^^^^^^^^^^^^^^^
-//│ ╟── reference of type `True` does not match type `bool`
-//│ ║  l.107: 	boolToStr of true
-//│ ║         	             ^^^^
-//│ ╟── Note: constraint arises from reference:
-//│ ║  l.102: 	  if x is
-//│ ╙──       	     ^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.108: 	boolToStr of false
-//│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ╟── reference of type `False` does not match type `bool`
-//│ ║  l.108: 	boolToStr of false
-//│ ║         	             ^^^^^
-//│ ╟── Note: constraint arises from reference:
-//│ ║  l.102: 	  if x is
-//│ ╙──       	     ^
-//│ "nah" | "yah" | error
+//│ "nah" | "yah"
 //│ res
 //│     = 'yah'
 //│ res

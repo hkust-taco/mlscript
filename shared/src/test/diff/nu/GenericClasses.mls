@@ -231,7 +231,7 @@ Test(1)
 //│     = Test {}
 
 Test(true)
-//│ Test[True]
+//│ Test[true]
 //│ res
 //│     = Test {}
 
@@ -268,14 +268,14 @@ let t = Test(1)
 //│   = Test {}
 
 t.foo1(true)
-//│ 1 | True
+//│ 1 | true
 //│ res
 //│     = true
 
 t : Test<'a>
 //│ Test['a]
 //│   where
-//│     'a :> 1 | True
+//│     'a :> 1 | true
 //│ res
 //│     = Test {}
 
@@ -285,7 +285,7 @@ t.id
 //│     = [Function: id]
 
 [t.id(1), t.id(true)]
-//│ (1, True,)
+//│ (1, true,)
 //│ res
 //│     = [ 1, true ]
 
@@ -336,7 +336,7 @@ t.foo1
 //│     = [Function: foo1]
 
 [t.foo1(0), t.foo1(true)]
-//│ (0, True,)
+//│ (0, true,)
 //│ res
 //│     = [ 0, true ]
 

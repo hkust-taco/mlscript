@@ -140,7 +140,7 @@ Cons.HeadOption l
 //│   TypeError: (intermediate value).HeadOption is not a function
 //│ constrain calls  : 70
 //│ annoying  calls  : 31
-//│ subtyping calls  : 258
+//│ subtyping calls  : 262
 
 :stats
 o = l.(Cons.HeadOption)
@@ -148,7 +148,7 @@ o = l.(Cons.HeadOption)
 //│  = undefined
 //│ constrain calls  : 68
 //│ annoying  calls  : 31
-//│ subtyping calls  : 245
+//│ subtyping calls  : 249
 
 o = l.(Cons.HeadOption)
 //│ o: Some[0 | 1]

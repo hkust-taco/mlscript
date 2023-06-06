@@ -59,7 +59,7 @@ class Node[A](value: int, left: Tree[A], right: Tree[A]) {
 //│ ╙──      	^^^^^^^^^^^^
 //│ type Tree[A] = Node[A] | Empty
 //│ module Empty {
-//│   fun contains: anything -> False
+//│   fun contains: anything -> false
 //│ }
 //│ class Node[A](value: int, left: Tree[A], right: Tree[A]) {
 //│   fun contains: anything -> error

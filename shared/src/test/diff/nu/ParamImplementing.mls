@@ -13,7 +13,7 @@ class C extends T, M(false)
 //│ ╔══[ERROR] Type mismatch in reference:
 //│ ║  l.12: 	class C extends T, M(false)
 //│ ║        	                     ^^^^^
-//│ ╟── reference of type `False` is not an instance of type `Int`
+//│ ╟── reference of type `false` is not an instance of type `Int`
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.4: 	trait T { fun x: Int }
 //│ ║       	                 ^^^

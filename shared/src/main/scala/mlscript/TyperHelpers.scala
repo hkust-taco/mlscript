@@ -1057,7 +1057,8 @@ abstract class TyperHelpers { Typer: Typer =>
           case _ => // * Case for when the type has not been completed yet
             info.decl match {
               case td: NuTypeDef if td.kind.isInstanceOf[ObjDefKind] =>
-                println(s"!!!")
+                // TODO in the future, add the self signature to DelayedTypeInfo and use it here
+                println(s"!!! ${td}")
                 assert(td.tparams.size === targs.size)
                 clsNameToNomTag(td)(provTODO, ctx) &
                   mkTparamRcd

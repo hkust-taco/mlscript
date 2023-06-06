@@ -196,8 +196,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
   val BoolType: ClassTag = ClassTag(Var(if (newDefs) "Bool" else "bool"), if (newDefs) sing(TN("Object")) + TN("Eql") else semp)(noTyProv)
   // val BoolType: ST = if (newDefs) TypeRef(TN("Bool"), Nil)(noProv) else ClassTag(Var("bool"), semp)(noTyProv) // TODO?
   
-  val TrueType: ClassTag = ClassTag(Var(if (newDefs) "True" else "true"), if (newDefs) sing(TN("Bool")) + TN("Object") + TN("Eql") else sing(TN("bool")))(noTyProv)
-  val FalseType: ClassTag = ClassTag(Var(if (newDefs) "False" else "false"), if (newDefs) sing(TN("Bool")) + TN("Object") + TN("Eql") else sing(TN("bool")))(noTyProv)
+  // val TrueType: ClassTag = ClassTag(Var(if (newDefs) "True" else "true"), if (newDefs) sing(TN("Bool")) + TN("Object") + TN("Eql") else sing(TN("bool")))(noTyProv)
+  // val FalseType: ClassTag = ClassTag(Var(if (newDefs) "False" else "false"), if (newDefs) sing(TN("Bool")) + TN("Object") + TN("Eql") else sing(TN("bool")))(noTyProv)
+  val TrueType: ClassTag = ClassTag(Var("true"), if (newDefs) sing(TN("Bool")) + TN("Object") + TN("Eql") else sing(TN("bool")))(noTyProv)
+  val FalseType: ClassTag = ClassTag(Var("false"), if (newDefs) sing(TN("Bool")) + TN("Object") + TN("Eql") else sing(TN("bool")))(noTyProv)
   
   val ObjType: ClassTag = ClassTag(Var("Object"), sing(TN("Eql")))(noTyProv)
   val IntType: ClassTag = ClassTag(Var(if (newDefs) "Int" else "int"), if (newDefs) sing(TN("Num")) + TN("Object") + TN("Eql") else sing(TN("number")))(noTyProv)
@@ -222,8 +224,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
     NuTypeDef(Cls, TN("Str"), Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
     NuTypeDef(Cls, TN("Bool"), Nil, N, N, S(Union(TN("True"), TN("False"))), Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
     NuTypeDef(Cls, TN("Num"), Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
-    NuTypeDef(Nms, TN("True"), Nil, N, N, N, Var("Bool") :: Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
-    NuTypeDef(Nms, TN("False"), Nil, N, N, N, Var("Bool") :: Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
+    // NuTypeDef(Nms, TN("True"), Nil, N, N, N, Var("Bool") :: Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
+    // NuTypeDef(Nms, TN("False"), Nil, N, N, N, Var("Bool") :: Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
+    NuTypeDef(Nms, TN("true"), Nil, N, N, N, Var("Bool") :: Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
+    NuTypeDef(Nms, TN("false"), Nil, N, N, N, Var("Bool") :: Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
   )
   val builtinTypes: Ls[TypeDef] =
     // TypeDef(Cls, TN("Object"), Nil, TopType, Nil, Nil, sing(TN("Eql")), N, Nil) ::
@@ -1435,7 +1439,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
           nv
         })
         case FunctionType(l, r) => Function(go(l), go(r))
-        case ComposedType(true, l, r) => Union(go(l), go(r))
+        case ct @ ComposedType(true, l, r) =>
+          if (ct >:< (TrueType | FalseType)) TN("Bool")
+          else Union(go(l), go(r))
         case ComposedType(false, l, r) => Inter(go(l), go(r))
         case RecordType(fs) => Record(fs.mapValues(field))
         case TupleType(fs) => Tuple(fs.mapValues(field))

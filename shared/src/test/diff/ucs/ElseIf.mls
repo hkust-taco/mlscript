@@ -3,22 +3,22 @@
 
 
 
-fun f(x, y) = if x ==
+fun f(x, y) = if x ===
     0 then true
     1 then false
-  else if y ==
+  else if y ===
     0 then true
     1 then false
   else false
-//│ fun f: (#Num, #Num,) -> (False | True)
+//│ fun f: (Eql[0 | 1], Eql[0 | 1],) -> Bool
 
-fun f(x, y) = if x ==
+fun f(x, y) = if x ===
     0 then true
     1 then false
-  else if y ==
+  else if y ===
     0 then true
     _ then false
-//│ fun f: (#Num, #Num,) -> (False | True)
+//│ fun f: (Eql[0 | 1], Eql[0],) -> Bool
 
 module True
 module False
@@ -50,7 +50,7 @@ fun f(x, y) = if x is
     False and y is False then false
     True and y is False then true
     False and y is True then true
-//│ fun f: (False | True, False | True,) -> (False | True)
+//│ fun f: (False | True, False | True,) -> Bool
 
 // Replace the `x is False` with `_`
 fun f(x, y) = if x is
@@ -59,13 +59,13 @@ fun f(x, y) = if x is
     _ and y is
       True then true
       False then false
-//│ fun f: (#Object, False | True,) -> (False | True)
+//│ fun f: (#Object, False | True,) -> Bool
 
 f(True, True)
 f(True, False)
 f(False, True)
 f(False, False)
-//│ False | True
+//│ Bool
 //│ res
 //│     = true
 //│ res
@@ -82,7 +82,7 @@ fun g(x, y) = if x is
   _ and y is
     true then true
     false then false
-//│ fun g: (#Object, nothing,) -> (False | True)
+//│ fun g: (#Object, nothing,) -> Bool
 
 // Chained UCS terms
 fun f(x, y) = if x is
@@ -91,7 +91,7 @@ fun f(x, y) = if x is
   else if y is
     True then true
     False then false
-//│ fun f: (#Object, False | True,) -> (False | True)
+//│ fun f: (#Object, False | True,) -> Bool
 
 fun f(x, y) = if x is
     True and y is True then true
@@ -99,7 +99,7 @@ fun f(x, y) = if x is
   else if y is
     True and x is False then true
     False and x is True then false
-//│ fun f: (False | True, False | True,) -> (False | True)
+//│ fun f: (False | True, False | True,) -> Bool
 
 fun h(x, y, p) = if
   x and p(x) then 0

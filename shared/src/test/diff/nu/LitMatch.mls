@@ -1,38 +1,35 @@
 :NewDefs
 
 
-False : Bool
+false : Bool
 //│ Bool
 //│ res
-//│ Runtime error:
-//│   ReferenceError: False is not defined
+//│     = false
 
 // FIXME parsing!
-let b = True | False : Bool
+let b = true | false : Bool
 //│ let b: (Bool,)
 //│ b
-//│ Runtime error:
-//│   ReferenceError: True is not defined
+//│   = 1
 
-let b = False : Bool
+let b = false : Bool
 //│ let b: Bool
 //│ b
-//│ Runtime error:
-//│   ReferenceError: False is not defined
+//│   = false
 
 :d
-b : True | False
-//│ 0. Typing TypingUnit(List(b : Bool))
+b : true | false
+//│ 0. Typing TypingUnit(List(b : bool))
 //│ | Typing unit statements
-//│ | | 0. Typing term b : Bool
+//│ | | 0. Typing term b : bool
 //│ | | | 0. Typing term b
 //│ | | | 0. : Bool
-//│ | | | Typing type Union(TypeName(True),TypeName(False))
+//│ | | | Typing type Union(TypeName(true),TypeName(false))
 //│ | | | | vars=Map() newDefsInfo=Map()
-//│ | | | | 0. type Union(TypeName(True),TypeName(False))
-//│ | | | | | 0. type TypeName(True)
+//│ | | | | 0. type Union(TypeName(true),TypeName(false))
+//│ | | | | | 0. type TypeName(true)
 //│ | | | | | => True
-//│ | | | | | 0. type TypeName(False)
+//│ | | | | | 0. type TypeName(false)
 //│ | | | | | => False
 //│ | | | | => (True | False)
 //│ | | | => (True | False) ——— 
@@ -40,46 +37,46 @@ b : True | False
 //│ | | |   where 
 //│ | | | 0. C Bool <! (True | False)    (0)
 //│ | | | | ???
-//│ | | | | !!!
+//│ | | | | !!! class Bool(): True | False {}
 //│ | | | | ???
-//│ | | | | !!!
+//│ | | | | !!! module true(): Bool {}
 //│ | | | | ???
-//│ | | | | !!!
+//│ | | | | !!! class Bool(): True | False {}
 //│ | | | | ???
-//│ | | | | !!!
+//│ | | | | !!! module false(): Bool {}
 //│ | | | | ???
-//│ | | | | !!!
+//│ | | | | !!! class Bool(): True | False {}
 //│ | | | | 0. C Bool<Object,Eql> <! (True | False)    (2)
 //│ | | | | | ???
-//│ | | | | | !!!
+//│ | | | | | !!! module true(): Bool {}
 //│ | | | | | ???
-//│ | | | | | !!!
+//│ | | | | | !!! module false(): Bool {}
 //│ | | | | | ???
-//│ | | | | | !!!
+//│ | | | | | !!! module true(): Bool {}
 //│ | | | | | ???
-//│ | | | | | !!!
-//│ | | | | | 0. ARGH  DNF(0, Bool<Object,Eql>{})  <!  DNF(0, True<Object,Eql,Bool>{} | False<Object,Eql,Bool>{})
+//│ | | | | | !!! module false(): Bool {}
+//│ | | | | | 0. ARGH  DNF(0, Bool<Object,Eql>{})  <!  DNF(0, true<Object,Eql,Bool>{} | false<Object,Eql,Bool>{})
 //│ | | | | | | DNF DISCHARGE CONSTRAINTS
-//│ | | | | | | Consider Bool<Object,Eql>{} <: DNF(0, True<Object,Eql,Bool>{} | False<Object,Eql,Bool>{})
-//│ | | | | | | Possible: List(True<Object,Eql,Bool>{}, False<Object,Eql,Bool>{})
-//│ | | | | | | 0. A  Bool<Object,Eql>{}  %  List()  <!  List(True<Object,Eql,Bool>, False<Object,Eql,Bool>)  %  ⊥
-//│ | | | | | | | 0. A  Bool<Object,Eql>{}  %  List()  <!  List(False<Object,Eql,Bool>)  %  True<Object,Eql,Bool>
-//│ | | | | | | | | 0. A  Bool<Object,Eql>{}  %  List()  <!  List()  %  False<Object,Eql,Bool>|True<Object,Eql,Bool>
-//│ | | | | | | | | | class checking Bool<Object,Eql> List(False<Object,Eql,Bool>, True<Object,Eql,Bool>)
+//│ | | | | | | Consider Bool<Object,Eql>{} <: DNF(0, true<Object,Eql,Bool>{} | false<Object,Eql,Bool>{})
+//│ | | | | | | Possible: List(true<Object,Eql,Bool>{}, false<Object,Eql,Bool>{})
+//│ | | | | | | 0. A  Bool<Object,Eql>{}  %  List()  <!  List(true<Object,Eql,Bool>, false<Object,Eql,Bool>)  %  ⊥
+//│ | | | | | | | 0. A  Bool<Object,Eql>{}  %  List()  <!  List(false<Object,Eql,Bool>)  %  true<Object,Eql,Bool>
+//│ | | | | | | | | 0. A  Bool<Object,Eql>{}  %  List()  <!  List()  %  false<Object,Eql,Bool>|true<Object,Eql,Bool>
+//│ | | | | | | | | | class checking Bool<Object,Eql> List(false<Object,Eql,Bool>, true<Object,Eql,Bool>)
 //│ | | | | | | | | | 0. A  {}  %  List()  <!  List()  %  
 //│ | | | | | | | | | | CONSTRAINT FAILURE: Bool<Object,Eql> <: (True | False)
 //│ | | | | | | | | | | allVarPols: 
 //│ | | | | | | | | | | normLike[-] (True | False)
 //│ | | | | | | | | | | | norm[-] (True | False)
 //│ | | | | | | | | | | | | ???
-//│ | | | | | | | | | | | | !!!
+//│ | | | | | | | | | | | | !!! module true(): Bool {}
 //│ | | | | | | | | | | | | ???
-//│ | | | | | | | | | | | | !!!
-//│ | | | | | | | | | | | | DNF: DNF(0, True<Object,Eql,Bool>{} | False<Object,Eql,Bool>{})
-//│ | | | | | | | | | | | | factorize? False<Object,Eql,Bool> | True<Object,Eql,Bool>
+//│ | | | | | | | | | | | | !!! module false(): Bool {}
+//│ | | | | | | | | | | | | DNF: DNF(0, true<Object,Eql,Bool>{} | false<Object,Eql,Bool>{})
+//│ | | | | | | | | | | | | factorize? false<Object,Eql,Bool> | true<Object,Eql,Bool>
 //│ | | | | | | | | | | | | | Factors 
-//│ | | | | | | | | | | | | yes: (False<Object,Eql,Bool> | True<Object,Eql,Bool>)
-//│ | | | | | | | | | | | ~> (False<Object,Eql,Bool> | True<Object,Eql,Bool>)
+//│ | | | | | | | | | | | | yes: (false<Object,Eql,Bool> | true<Object,Eql,Bool>)
+//│ | | | | | | | | | | | ~> (false<Object,Eql,Bool> | true<Object,Eql,Bool>)
 //│ | | | | | | | | | | allVarPols: 
 //│ | | | | | | | | | | normLike[+] Bool<Object,Eql>
 //│ | | | | | | | | | | | norm[+] Bool<Object,Eql>
@@ -89,17 +86,17 @@ b : True | False
 //│ | | | | | | | | | |   where 
 //│ | | | | | | | | | | 0. C error<> <! (True | False)    (0)
 //│ | | | | | | | | | | | ???
-//│ | | | | | | | | | | | !!!
+//│ | | | | | | | | | | | !!! module true(): Bool {}
 //│ | | | | | | | | | | | ???
-//│ | | | | | | | | | | | !!!
+//│ | | | | | | | | | | | !!! module false(): Bool {}
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.24: 	b : True | False
+//│ ║  l.21: 	b : true | false
 //│ ║        	^
 //│ ╟── type `Bool` does not match type `Bool`
-//│ ║  l.17: 	let b = False : Bool
+//│ ║  l.15: 	let b = false : Bool
 //│ ║        	                ^^^^
 //│ ╟── Note: constraint arises from union type:
-//│ ║  l.24: 	b : True | False
+//│ ║  l.21: 	b : true | false
 //│ ╙──      	    ^^^^^^^^^^^^
 //│ | | 0. : (True | False)
 //│ | : Some((True | False))
@@ -107,13 +104,12 @@ b : True | False
 //│ res: Some((True | False)) where 
 //│ Bool
 //│ res
-//│ Runtime error:
-//│   ReferenceError: b1 is not defined
+//│     = false
 
-if False is False then 0
+if false is false then 0
 //│ 0
-//│ Code generation encountered an error:
-//│   unknown match case: False
+//│ res
+//│     = 0
 
 fun foo(x) = if x is
   false then 0

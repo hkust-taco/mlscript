@@ -88,7 +88,7 @@ class C2 extends C1(false), T1
 //│ ╔══[ERROR] Type mismatch in reference:
 //│ ║  l.87: 	class C2 extends C1(false), T1
 //│ ║        	                    ^^^^^
-//│ ╟── reference of type `False` does not match type `Int | string`
+//│ ╟── reference of type `false` does not match type `Int | string`
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.74: 	trait T1 { val x: Int | string }
 //│ ║        	                  ^^^^^^^^^^^^

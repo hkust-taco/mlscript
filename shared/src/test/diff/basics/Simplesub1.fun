@@ -134,7 +134,7 @@ f => { x: f 42, y: 123 }.y
 //│ res: (42 -> anything) -> 123
 
 if true then { a: 1, b: true } else { b: false, c: 42 }
-//│ res: {b: bool}
+//│ res: {b: Bool}
 
 :e
 { a: 123, b: true }.c

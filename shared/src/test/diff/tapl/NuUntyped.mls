@@ -105,7 +105,7 @@ fun listContains(xs, x) =
     Cons(x', xs') and
       eq(x)(x') then true
       _ then listContains(xs', x)
-//│ fun listContains: forall 'A. (Cons['A] | Nil, anything,) -> (False | True)
+//│ fun listContains: forall 'A. (Cons['A] | Nil, anything,) -> Bool
 
 // Remove all occurrences of x from xs.
 fun listWithout(xs, x) =
@@ -174,12 +174,12 @@ fun isValue(t) =
     Var then true
     Abs then true
     App then false
-//│ fun isValue: (Abs | App | Var) -> (False | True)
+//│ fun isValue: (Abs | App | Var) -> Bool
 
 isValue(Var("x"))
 isValue(Abs(Var("x"), Var("y")))
 isValue(App(Var("x"), Var("y")))
-//│ False | True
+//│ Bool
 //│ res
 //│     = true
 //│ res

@@ -52,7 +52,7 @@ C.foo(1)
 //│     = 1
 
 C.foo(false)
-//│ 0 | False
+//│ 0 | false
 //│ res
 //│     = false
 
@@ -82,7 +82,7 @@ C.foo(false)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.81: 	C.foo(false)
 //│ ║        	^^^^^^^^^^^^
-//│ ╟── reference of type `False` is not an instance of type `Int`
+//│ ╟── reference of type `false` is not an instance of type `Int`
 //│ ║  l.81: 	C.foo(false)
 //│ ║        	      ^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -132,7 +132,7 @@ class C(arg: Int) extends Test
 let c = C(1)
 [c.foo(false), c.bar]
 //│ let c: C
-//│ (False | Int, (Int, Int,),)
+//│ (Int | false, (Int, Int,),)
 //│ c
 //│   = C {}
 //│ res
