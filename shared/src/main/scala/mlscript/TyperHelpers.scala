@@ -1088,13 +1088,17 @@ abstract class TyperHelpers { Typer: Typer =>
       }, td.targs.lazyZip(targs).toMap) //.withProv(prov)
     } //tap { res => println(s"Expand $this => $res") }
     private var tag: Opt[Opt[ClassTag]] = N
-    def expansionFallback(implicit ctx: Ctx): Opt[ST] = mkTag
-    def mkTag(implicit ctx: Ctx): Opt[ClassTag] = tag.getOrElse {
+    def expansionFallback(implicit ctx: Ctx): Opt[ST] = mkClsTag
+    def mkClsTag(implicit ctx: Ctx): Opt[ClassTag] = tag.getOrElse {
       val res = ctx.tyDefs.get(defn.name) match {
-        case S(td: TypeDef) if (td.kind is Cls) || (td.kind is Trt) || (td.kind is Nms) => S(clsNameToNomTag(td)(noProv, ctx))
+        case S(td: TypeDef) if (td.kind is Cls) || (td.kind is Nms) =>
+          S(clsNameToNomTag(td)(noProv, ctx))
+        case S(td: TypeDef) if td.kind is Trt =>
+          N
         case _ => ctx.tyDefs2.get(defn.name) match {
           case S(lti) => lti.decl match {
-            case td: NuTypeDef if td.kind is Cls => S(clsNameToNomTag(td)(noProv, ctx))
+            case td: NuTypeDef if (td.kind is Cls) || (td.kind is Nms) =>
+              S(clsNameToNomTag(td)(noProv, ctx))
             case _ => N
           }
           case _ => N

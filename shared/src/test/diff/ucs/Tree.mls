@@ -3,14 +3,14 @@
 type Option[A] = Some[A] | None
 class Some[A](value: A)
 module None
-//│ type Option[A] = Some[A] | None
+//│ type Option[A] = None | Some[A]
 //│ class Some[A](value: A)
 //│ module None
 
 type Tree[A] = Node[A] | Empty
 module Empty
 class Node[A](value: Int, left: Tree[A], right: Tree[A])
-//│ type Tree[A] = Node[A] | Empty
+//│ type Tree[A] = Empty | Node[A]
 //│ module Empty
 //│ class Node[A](value: Int, left: Tree[A], right: Tree[A])
 

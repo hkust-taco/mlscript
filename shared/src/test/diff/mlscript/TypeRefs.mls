@@ -14,7 +14,7 @@ type Baz[A] = Bar[A -> A]
 //│ Defined type alias Baz[=A]
 
 def foo: Foo[int] & Bar[int] & Baz[string]
-//│ foo: nothing
+//│ foo: Foo[int] & Bar[int] & Baz[string]
 
 foo: Foo['res]
 //│ res: Foo[int]

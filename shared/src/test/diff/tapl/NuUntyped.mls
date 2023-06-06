@@ -51,7 +51,7 @@ class Some[A](value: A) {
 module None {
   fun toString() = "None"
 }
-//│ type Option[A] = Some[A] | None
+//│ type Option[A] = None | Some[A]
 //│ class Some[A](value: A) {
 //│   fun toString: () -> Str
 //│ }

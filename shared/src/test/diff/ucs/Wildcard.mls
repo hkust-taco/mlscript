@@ -4,7 +4,7 @@
 type Option[T] = None | Some[T]
 module None
 class Some[T](value: T)
-//│ type Option[T] = Some[T] | None
+//│ type Option[T] = None | Some[T]
 //│ module None
 //│ class Some[T](value: T)
 

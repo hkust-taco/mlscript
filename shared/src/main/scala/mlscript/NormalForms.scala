@@ -200,7 +200,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
           TypeRef(that.defn, newTargs)(that.prov)
         })
         val res = LhsRefined(b, ts, rt, trs2)
-        that.mkTag.fold(S(res): Opt[LhsNf])(res & (_, pol))
+        that.mkClsTag.fold(S(res): Opt[LhsNf])(res & (_, pol))
     }
     def & (that: LhsNf, pol: Bool)(implicit ctx: Ctx, etf: ExpandTupleFields): Opt[LhsNf] = (this, that) match {
       case (_, LhsTop) => S(this)
@@ -704,7 +704,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       case tr @ TypeRef(defn, targs) =>
         // * TODO later: when proper TypeRef-based simplif. is implemented, can remove this special case
         if (preserveTypeRefs && !primitiveTypes.contains(defn.name) || !tr.canExpand) {
-          of(polymLvl, cons, LhsRefined(tr.mkTag, ssEmp, RecordType.empty, SortedMap(defn -> tr)))
+          of(polymLvl, cons, LhsRefined(tr.mkClsTag, ssEmp, RecordType.empty, SortedMap(defn -> tr)))
         } else mk(polymLvl, cons, tr.expandOrCrash, pol)
       case TypeBounds(lb, ub) => mk(polymLvl, cons, if (pol) ub else lb, pol)
       case PolymorphicType(lvl, bod) => mk(lvl, cons, bod, pol)

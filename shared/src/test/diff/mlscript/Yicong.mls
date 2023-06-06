@@ -421,26 +421,26 @@ append2 ((mut 1, mut 2, mut false)) ((mut (), 'hi'))
 
 def ta: T1 & Array[int]
 ta = T1 a123
-//│ ta: nothing
+//│ ta: T1 & Array[int]
 //│   = <missing implementation>
 //│ Array[int] & #T1
 //│   <:  ta:
-//│ nothing
+//│ T1 & Array[int]
 //│   = [ 1, 2, 3 ]
 
 def tb: T2 & Array[int]
 tb = T2 ((1,2,3))
 def tba: (T2 & Array[int | bool]) -> (T2 & int)
 tba tb
-//│ tb: nothing
+//│ tb: T2 & Array[int]
 //│   = <missing implementation>
 //│ (1, 2, 3,) & #T2
 //│   <:  tb:
-//│ nothing
+//│ T2 & Array[int]
 //│   = [ 1, 2, 3 ]
-//│ tba: nothing -> nothing
+//│ tba: (T2 & Array[bool | int]) -> (T2 & int)
 //│    = <missing implementation>
-//│ res: nothing
+//│ res: T2 & int
 //│    = <no result>
 //│      tba is not implemented
 
@@ -460,12 +460,12 @@ def tg: ((T1 & Array[int]) | (T2 & Array[bool])) -> (T1 | T2)
 //│      = [Function: gett1]
 //│ res: #T1 & (123 | Array[int])
 //│    = [ 1, 2, 3 ]
-//│ gt: nothing -> Array[int]
+//│ gt: (T1 & Array[bool | int]) -> Array[int]
 //│   = <missing implementation>
 //│ res: Array[int]
 //│    = <no result>
 //│      gt is not implemented
-//│ tg: nothing -> (T1 | T2)
+//│ tg: (T2 & Array[bool] | T1 & Array[int]) -> (T1 | T2)
 //│   = <missing implementation>
 
 gett1 ta (T1 123)
@@ -555,9 +555,9 @@ inn (T1 (T2 v3))
 //│   = [ 1, 2, true ]
 //│ v2: (1, 2, true,) & {x: (1, 2, true,) & #T1 & #T2} & #T1 & #T2
 //│   = [ 1, 2, true, x: [ 1, 2, true ] ]
-//│ inn: nothing -> nothing
+//│ inn: (T1 & T2 & Array['a]) -> 'a
 //│    = <missing implementation>
-//│ inn2: nothing -> Array[nothing]
+//│ inn2: (T2 & Array[Array['a]]) -> Array[T1 & 'a]
 //│     = <missing implementation>
 //│ res: 1 | 2 | true
 //│    = <no result>
@@ -567,7 +567,7 @@ inn (T1 (T2 v3))
 //│      inn is not implemented
 //│ v3: Array[Array[(int, true,)]]
 //│   = <missing implementation>
-//│ r1: Array[nothing]
+//│ r1: Array[T1 & (int, true,)]
 //│   = <no result>
 //│     inn2 is not implemented
 //│ res: Array[(int, true,)]
@@ -579,7 +579,7 @@ inn2 (T2 r1)
 //│ res: Array[Array[Array[bool | int]]]
 //│    = <no result>
 //│      v3 is not implemented
-//│ res: Array[nothing]
+//│ res: Array[T1 & int | T1 & true]
 //│    = <no result>
 //│      inn2 is not implemented
 

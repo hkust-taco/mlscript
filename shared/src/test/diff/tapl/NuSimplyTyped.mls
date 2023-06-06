@@ -25,7 +25,7 @@ fun par(a) = concat3("(", a, ")")
 type Option[A] = Some[A] | None
 class Some[A](value: A)
 module None
-//│ type Option[A] = Some[A] | None
+//│ type Option[A] = None | Some[A]
 //│ class Some[A](value: A)
 //│ module None
 
@@ -64,7 +64,7 @@ class App(lhs: Term, rhs: Term)
 type TreeMap[A] = Node[A] | Empty
 class Node[A](key: Str, value: A, left: TreeMap[A], right: TreeMap[A])
 module Empty
-//│ type TreeMap[A] = Node[A] | Empty
+//│ type TreeMap[A] = Empty | Node[A]
 //│ class Node[A](key: Str, value: A, left: TreeMap[A], right: TreeMap[A])
 //│ module Empty
 

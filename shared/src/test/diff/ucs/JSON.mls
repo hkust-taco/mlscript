@@ -84,7 +84,7 @@ fun par(a) = concat3("(", a, ")")
 type Option[A] = Some[A] | None
 module None
 class Some[A](value: A)
-//│ type Option[A] = Some[A] | None
+//│ type Option[A] = None | Some[A]
 //│ module None
 //│ class Some[A](value: A)
 
@@ -131,7 +131,7 @@ fun traverse(t, f) =
     Empty then Nil
     Node(key, value, left, right) then
       listConcat(traverse(left, f), Cons(f(key, value), traverse(right, f)))
-//│ type TreeMap[A] = Node[A] | Empty
+//│ type TreeMap[A] = Empty | Node[A]
 //│ module Empty
 //│ class Node[A](key: Str, value: A, left: TreeMap[A], right: TreeMap[A])
 //│ fun insert: forall 'A. (Empty | Node['A], Str, 'A,) -> Node['A]
@@ -159,7 +159,7 @@ class JsonObject(entries: TreeMap[JsonValue]) {
 class JsonArray(elements: List[JsonValue]) {
   fun toString() = concat3("[", listJoin(elements, ", "), "]")
 }
-//│ type JsonValue = JsonArray | JsonBoolean | JsonNumber | JsonObject | JsonString | JsonNull
+//│ type JsonValue = JsonArray | JsonBoolean | JsonNull | JsonNumber | JsonObject | JsonString
 //│ module JsonNull {
 //│   fun toString: () -> "null"
 //│ }

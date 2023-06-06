@@ -87,7 +87,7 @@ mixin CompareNested {
 
 
 class MyPoint(x: Int, y: Int, color: Color, parent: Some[MyPoint] | None)
-//│ class MyPoint(x: Int, y: Int, color: Color, parent: Some[MyPoint] | None)
+//│ class MyPoint(x: Int, y: Int, color: Color, parent: None | Some[MyPoint])
 
 
 module CompareMyPoint extends ComparePoint, CompareColored, CompareNested

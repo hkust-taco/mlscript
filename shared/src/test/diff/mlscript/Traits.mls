@@ -34,7 +34,7 @@ D
 
 :re
 error: A & B
-//│ res: nothing
+//│ res: A & B
 //│ Runtime error:
 //│   Error: unexpected runtime error
 
@@ -71,7 +71,7 @@ dv: nothing
 //│    = D { x: 0, y: 'hello' }
 
 dv: A & B
-//│ res: nothing
+//│ res: A & B
 //│    = D { x: 0, y: 'hello' }
 
 :e
@@ -79,7 +79,7 @@ dv: A & B: nothing
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.78: 	dv: A & B: nothing
 //│ ║        	^^
-//│ ╟── type `nothing` does not match type `nothing`
+//│ ╟── type `A & B` does not match type `nothing`
 //│ ║  l.78: 	dv: A & B: nothing
 //│ ║        	    ^^^^^
 //│ ╟── Note: constraint arises from type reference:

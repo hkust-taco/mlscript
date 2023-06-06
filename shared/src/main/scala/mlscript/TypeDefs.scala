@@ -113,17 +113,19 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
   def clsNameToNomTag(td: NuTypeDef)(prov: TypeProvenance, ctx: Ctx): ClassTag = {
     require((td.kind is Cls) || (td.kind is Nms) || (td.kind is Trt), td.kind)
     ClassTag(Var(td.nme.name),
-        // ctx.allBaseClassesOf(td.nme.name)
-        Set.single(TN("Object")) + TN("Eql") // TODO superclasses
-          | ctx.tyDefs2.get(td.nme.name).map(_.inheritedTags).getOrElse(Set.empty)
+        if(newDefs)
+          Set.single(TN("Object")) + TN("Eql")
+            | ctx.tyDefs2.get(td.nme.name).map(_.inheritedTags).getOrElse(Set.empty)
+        else ctx.allBaseClassesOf(td.nme.name)
       )(prov)
   }
   def clsNameToNomTag(td: TypeDef)(prov: TypeProvenance, ctx: Ctx): ClassTag = {
     require((td.kind is Cls) || (td.kind is Nms) || (td.kind is Trt), td.kind)
     if (newDefs && td.kind.str.isCapitalized) ClassTag(Var(td.nme.name),
-      // ctx.allBaseClassesOf(td.nme.name))(prov)
-      Set.single(TN("Object")) + TN("Eql") // TODO superclasses
-        | ctx.tyDefs2.get(td.nme.name).map(_.inheritedTags).getOrElse(Set.empty)
+        if(newDefs)
+          Set.single(TN("Object")) + TN("Eql")
+            | ctx.tyDefs2.get(td.nme.name).map(_.inheritedTags).getOrElse(Set.empty)
+        else ctx.allBaseClassesOf(td.nme.name)
       )(prov)
     else ClassTag(Var(td.nme.name), ctx.allBaseClassesOf(td.nme.name))(prov)
   }

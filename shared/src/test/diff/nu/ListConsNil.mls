@@ -17,7 +17,7 @@ module Nil
 let test0: Cons[Int] & List[Num]
 let test1: Nil & List[Int]
 //│ let test0: Cons[Int] & List[Num]
-//│ let test1: List[Int] & Nil
+//│ let test1: Nil & List[Int]
 
 
 
