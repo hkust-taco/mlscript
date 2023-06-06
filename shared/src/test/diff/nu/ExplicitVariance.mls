@@ -63,7 +63,7 @@ let o = Oops0(id)
 // * What happens is `Oops9{ A = nothing..'? }` is inferred for `o` (consistent with `A`'s covariance),
 // *  so all negative occurrences of `o.A` are viewed as `nothing` from the outside.
 o.x
-//│ Int -> Int
+//│ nothing -> Int
 //│ res
 //│     = [Function: id]
 
@@ -75,17 +75,26 @@ o.x
 
 :e
 o.x(123)
-//│ Int
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.77: 	o.x(123)
+//│ ║        	^^^^^^^^
+//│ ╟── integer literal of type `123` does not match type `nothing`
+//│ ║  l.77: 	o.x(123)
+//│ ║        	    ^^^
+//│ ╟── Note: type parameter A is defined at:
+//│ ║  l.55: 	class Oops0[out A](x: A -> Int)
+//│ ╙──      	                ^
+//│ Int | error
 //│ res
 //│     = 123
 
 :e
 (o : Oops0[Int]).x(123)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.83: 	(o : Oops0[Int]).x(123)
+//│ ║  l.92: 	(o : Oops0[Int]).x(123)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── integer literal of type `123` does not match type `nothing`
-//│ ║  l.83: 	(o : Oops0[Int]).x(123)
+//│ ║  l.92: 	(o : Oops0[Int]).x(123)
 //│ ║        	                   ^^^
 //│ ╟── Note: type parameter A is defined at:
 //│ ║  l.55: 	class Oops0[out A](x: A -> Int)
@@ -104,13 +113,22 @@ let o = Oops1(id, 123)
 //│   = Oops1 {}
 
 o.x
-//│ 'A -> (123 | 'A)
+//│ nothing -> 123
 //│ res
 //│     = [Function: id]
 
 :e
 o.x(123)
-//│ 123
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.121: 	o.x(123)
+//│ ║         	^^^^^^^^
+//│ ╟── integer literal of type `123` does not match type `nothing`
+//│ ║  l.121: 	o.x(123)
+//│ ║         	    ^^^
+//│ ╟── Note: type parameter A is defined at:
+//│ ║  l.107: 	class Oops1[out A](x: A -> A, y: A)
+//│ ╙──       	                ^
+//│ 123 | error
 //│ res
 //│     = 123
 
@@ -131,19 +149,40 @@ let o = Oops2(id, 123)
 //│   = Oops2 {}
 
 o.x
-//│ 'A -> (123 | 'A)
+//│ nothing -> 123
 //│ res
 //│     = [Function: id]
 
 :e
 o.x(123)
-//│ 123
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.157: 	o.x(123)
+//│ ║         	^^^^^^^^
+//│ ╟── integer literal of type `123` does not match type `nothing`
+//│ ║  l.157: 	o.x(123)
+//│ ║         	    ^^^
+//│ ╟── Note: type parameter A is defined at:
+//│ ║  l.143: 	class Oops2[out A](x: A -> A, y: A)
+//│ ╙──       	                ^
+//│ 123 | error
 //│ res
 //│     = 123
 
 :e // * We will be able to make this work later, through `o.x : o.A -> o.A` and `o.y : o.A`
 o.x(o.y)
-//│ 123
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.172: 	o.x(o.y)
+//│ ║         	^^^^^^^^
+//│ ╟── integer literal of type `123` does not match type `nothing`
+//│ ║  l.146: 	let o = Oops2(id, 123)
+//│ ║         	                  ^^^
+//│ ╟── but it flows into field selection with expected type `nothing`
+//│ ║  l.172: 	o.x(o.y)
+//│ ║         	    ^^^
+//│ ╟── Note: type parameter A is defined at:
+//│ ║  l.143: 	class Oops2[out A](x: A -> A, y: A)
+//│ ╙──       	                ^
+//│ 123 | error
 //│ res
 //│     = 123
 

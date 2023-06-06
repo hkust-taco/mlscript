@@ -444,8 +444,10 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           ClassTag(Var(td.nme.name),
             ihtags + TN("Object") + TN("Eql")
           )(provTODO) & RecordType.mk(
-            tparams.map { case (tn, tv, vi) => // TODO use vi
-              Var(td.nme.name + "#" + tn.name).withLocOf(tn) -> FieldType(S(tv), tv)(provTODO) }
+            tparams.map { case (tn, tv, vi) =>
+              // TODO also use computed variance info when available!
+              Var(td.nme.name + "#" + tn.name).withLocOf(tn) ->
+                FieldType.mk(vi.getOrElse(VarianceInfo.in), tv, tv)(provTODO) }
           )(provTODO)
         )(provTODO)
       )
