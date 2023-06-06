@@ -8,10 +8,12 @@ import scala.collection.mutable.{ListBuffer,Map => MutMap, Set => MutSet}
 import mlscript.codegen._
 import mlscript.{NewLexer, NewParser, ErrorReport, Origin, Diagnostic}
 import ts2mls.{TSModuleResolver, TSProgram, TypeScript}
+import ts2mls.JSFileSystem
 
 class Driver(options: DriverOptions) {
   import Driver._
   import ts2mls.JSFileSystem._
+  import JSCompilerBackend.ModuleType
 
   private val typer =
     new mlscript.Typer(
@@ -32,7 +34,26 @@ class Driver(options: DriverOptions) {
   private val importedModule = MutSet[String]()
   private val config = TypeScript.parseOption(options.path, options.tsconfig)
 
-  import TSModuleResolver.normalize
+  import TSModuleResolver.{normalize, isLocal, dirname}
+
+  private def checkESModule(filename: String) =
+    if (filename.endsWith(".mls")) None
+    else if (isLocal(filename))
+      Some(TypeScript.isESModule(config, false))
+    else {
+      val fullname = TypeScript.resolveModuleName(filename, "", config).getOrElse("node_modules/")
+      def find(path: String): Boolean = {
+        val dir = dirname(path)
+        val pack = s"$dir/package.json"
+        if (JSFileSystem.exists(pack)) {
+          val config = TypeScript.parsePackage(pack)
+          TypeScript.isESModule(config, true)
+        }
+        else if (dir.endsWith("node_modules/")) false // TODO: throw?
+        else find(dir)
+      }
+      Some(find(fullname))
+    }
 
   // Return true if success
   def execute: Boolean =
@@ -209,7 +230,9 @@ class Driver(options: DriverOptions) {
 
             writeFile(mlsiFile, interfaces)
             generate(Pgrm(definitions), s"${options.outputDir}/${file.jsFilename}", file.moduleName, imports.map {
-              case Import(path) => Import(resolveTarget(file, path))
+              case Import(path) => new Import(resolveTarget(file, path)) with ModuleType {
+                val isESModule = checkESModule(path)
+              }
             }, exported || importedModule(file.filename))
           }
           true
@@ -223,7 +246,7 @@ class Driver(options: DriverOptions) {
     program: Pgrm,
     filename: String,
     moduleName: String,
-    imports: Ls[Import],
+    imports: Ls[Import with ModuleType],
     exported: Boolean
   ): Unit = try {
     val backend = new JSCompilerBackend()

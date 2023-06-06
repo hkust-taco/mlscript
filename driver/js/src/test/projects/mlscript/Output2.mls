@@ -3,5 +3,10 @@ import "json5"
 class CompilerOptions(outDir: string)
 class TSConfig(compilerOptions: CompilerOptions)
 
-let config = json5.stringify(TSConfig(CompilerOptions("bar")))
+fun createConfig(path: string) =
+  let options = { outDir: path }
+  let config = { compilerOptions: options }
+  json5.stringify(config)
+
+let config = createConfig("bar")
 log(config)

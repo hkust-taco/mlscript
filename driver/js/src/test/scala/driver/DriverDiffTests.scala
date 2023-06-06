@@ -69,7 +69,7 @@ object DriverDiffTests {
     entry("C", expectError = true),
     entry("TS", Some("./tsconfig.json"), true), // TODO: type members
     entry("Output", Some("./tsconfig.json")),
-    entry("Output2", Some("./tsconfig.json"), true), // TODO: Fix type and commonJS
+    entry("Output2", Some("./tsconfig.json")),
     ts2mlsEntry("Array"),
     ts2mlsEntry("BasicFunctions"),
     ts2mlsEntry("ClassMember"),

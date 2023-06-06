@@ -1090,24 +1090,33 @@ class JSCompilerBackend extends JSBackend(allowUnresolvedSymbols = false) {
     SourceCode.fromStmts(polyfill.emit() ++ ins).toLines
   }
 
-  private def translateImport(imp: Import) = imp match {
-    case Import(path) =>
-      val last = path.lastIndexOf(".")
-      JSImport(
-        path.substring(path.lastIndexOf("/") + 1, if (last < 0) path.length() else last),
-        path.substring(0, if (last < 0) path.length() else last) + (if (last < 0) "" else ".js"),
-        !path.endsWith(".mls") && !path.endsWith(".mlsi")
-      )
+  import JSCompilerBackend.ModuleType
+
+  private def translateImport(imp: Import with ModuleType) = {
+    val path = imp.path
+    val last = path.lastIndexOf(".")
+    JSImport(
+      path.substring(path.lastIndexOf("/") + 1, if (last < 0) path.length() else last),
+      path.substring(0, if (last < 0) path.length() else last) + (if (last < 0) "" else ".js"),
+      imp.isESModule
+    )
   }
 
-  def apply(pgrm: Pgrm, topModuleName: Str, imports: Ls[Import], exported: Bool): Ls[Str] = {
-    imports.flatMap {
-      case imp @ Import(path) =>
-        val last = path.lastIndexOf(".")
+  def apply(pgrm: Pgrm, topModuleName: Str, imports: Ls[Import with ModuleType], exported: Bool): Ls[Str] = {
+    imports.flatMap (imp => {
+      val path = imp.path
+      val last = path.lastIndexOf(".")
         val moduleName = path.substring(path.lastIndexOf("/") + 1, if (last < 0) path.length() else last)
         topLevelScope.declareValue(moduleName, Some(false), false)
-        translateImport(imp).toSourceCode.toLines
-    } ::: generateNewDef(pgrm, topModuleName, exported)
+        translateImport(imp).toSourceCode.toLines 
+    }) ::: generateNewDef(pgrm, topModuleName, exported)
+  }
+}
+
+object JSCompilerBackend {
+   // N -> mls module, S(true) -> ES module, S(false) -> CommonJS module
+  trait ModuleType {
+    val isESModule: Opt[Bool]
   }
 }
 

@@ -5,6 +5,7 @@ import js.Dynamic.{global => g}
 import js.DynamicImplicits._
 import js.JSConverters._
 import ts2mls.types._
+import mlscript.utils._
 
 object TypeScript {
   private def load(moduleName: String) = try g.require(moduleName) catch {
@@ -18,6 +19,7 @@ object TypeScript {
   private val ts: js.Dynamic = load("typescript")
   private val json: js.Dynamic = load("json5")
 
+  // tsconfig.json
   def parseOption(basePath: String, filename: Option[String]): js.Dynamic = {
     val config = filename.fold[js.Any](js.Dictionary())(filename => {
       val content = JSFileSystem.readFile(TSModuleResolver.normalize(s"$basePath/$filename")).getOrElse("")
@@ -25,6 +27,12 @@ object TypeScript {
     })
     val name = filename.getOrElse("tsconfig.json")
     ts.parseJsonConfigFileContent(config, ts.sys, basePath, null, name)
+  }
+
+  // package.json
+  def parsePackage(path: String): js.Dynamic = {
+    val content = JSFileSystem.readFile(TSModuleResolver.normalize(path)).getOrElse("")
+    json.parse(content)
   }
 
   def resolveModuleName(importName: String, containingName: String, config: js.Dynamic): Option[String] = {
@@ -80,6 +88,26 @@ object TypeScript {
       "module" -> ts.ModuleKind.CommonJS,
       "esModuleInterop" -> true
     ))
+
+  def isESModule(config: js.Dynamic, isJS: Boolean): Boolean =
+    if (isJS) {
+      val tp = config.selectDynamic("type")
+      if (IsUndefined(tp)) false
+      else tp.toString() === "module"
+    }
+    else {
+      val raw = config.selectDynamic("raw")
+      if (IsUndefined(raw)) false
+      else {
+        val opt = raw.selectDynamic("compilerOptions")
+        if (IsUndefined(opt)) false
+        else {
+          val mdl = opt.selectDynamic("module")
+          if (IsUndefined(mdl)) false
+          else mdl.toString() =/= "CommonJS"
+        }
+      }
+    }
 }
 
 class TSTypeChecker(checker: js.Dynamic) {

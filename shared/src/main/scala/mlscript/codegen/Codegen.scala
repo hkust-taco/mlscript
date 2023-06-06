@@ -916,12 +916,14 @@ final case class JSExport(moduleDecl: JSConstDecl) extends JSStmt {
     SourceCode(s"export ${moduleDecl.toSourceCode}")
 }
 
-final case class JSImport(name: Str, path: Str, fromTS: Bool) extends JSStmt {
+// None: mls module, Some(true): ES module, Some(false): common JS module
+final case class JSImport(name: Str, path: Str, isESModule: Opt[Bool]) extends JSStmt {
   def toSourceCode: SourceCode =
-    if (fromTS)
-      SourceCode(s"import * as $name from \"$path\"\n")
-    else
-      SourceCode(s"import { $name } from \"$path\"\n")
+    isESModule match {
+      case N => SourceCode(s"import { $name } from \"$path\"\n")
+      case S(true) => SourceCode(s"import * as $name from \"$path\"\n")
+      case S(false) => SourceCode(s"import $name from \"$path\"\n")
+    } 
 }
 
 final case class JSComment(text: Str) extends JSStmt {

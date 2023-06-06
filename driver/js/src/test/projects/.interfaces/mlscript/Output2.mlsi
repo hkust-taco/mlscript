@@ -2,6 +2,7 @@ import "json5.mlsi"
 declare module Output2() {
   class CompilerOptions(outDir: string)
   class TSConfig(compilerOptions: CompilerOptions)
+  fun createConfig: (path: string,) -> nothing
   let config: nothing
   unit
 }
