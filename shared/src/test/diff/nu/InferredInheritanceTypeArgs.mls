@@ -10,9 +10,9 @@ mixin Test[A] {
 //│   fun bar: (A, A,)
 //│ }
 
-class A(a: int) extends Test
-//│ class A(a: int) {
-//│   fun bar: (int, int,)
+class A(a: Int) extends Test
+//│ class A(a: Int) {
+//│   fun bar: (Int, Int,)
 //│ }
 
 mixin Test2[S, T] {
@@ -27,52 +27,52 @@ mixin Test2[S, T] {
 //│   fun x: (S, T,)
 //│ }
 
-class A1[B](s: bool, t: B) extends Test2[bool, B]
-//│ class A1[B](s: bool, t: B) {
-//│   fun fb: bool -> (bool, bool,)
-//│   fun x: (bool, B,)
+class A1[B](s: Bool, t: B) extends Test2[Bool, B]
+//│ class A1[B](s: Bool, t: B) {
+//│   fun fb: (Bool & 'S) -> ('S | false | true, 'S | false | true,)
+//│   fun x: ('S | false | true, B,)
 //│ }
 
 // TODO: Investigate type of fb
-class A2[A](s: A, t: int) extends Test2
-//│ class A2[A](s: A, t: int) {
+class A2[A](s: A, t: Int) extends Test2
+//│ class A2[A](s: A, t: Int) {
 //│   fun fb: 'S -> (A | 'S, A | 'S,)
-//│   fun x: (A | 'S, int,)
+//│   fun x: (A | 'S, Int,)
 //│ }
 
 // TODO: Investigate type of fb
-class A3(s: int, t: bool) extends Test2
-//│ class A3(s: int, t: bool) {
-//│   fun fb: 'S -> ('S | int, 'S | int,)
-//│   fun x: ('S | int, bool,)
+class A3(s: Int, t: Bool) extends Test2
+//│ class A3(s: Int, t: Bool) {
+//│   fun fb: 'S -> (Int | 'S, Int | 'S,)
+//│   fun x: (Int | 'S, Bool,)
 //│ }
 
-class P(p: int) { 
+class P(p: Int) { 
     fun foo(x) = x + p 
 }
-//│ class P(p: int) {
-//│   fun foo: int -> int
+//│ class P(p: Int) {
+//│   fun foo: Int -> Int
 //│ }
 
 :e // FIXME
-class C1(a: int) extends P(a) { fun bar = this.foo(0) }
+class C1(a: Int) extends P(a) { fun bar = this.foo(0) }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.58: 	class C1(a: int) extends P(a) { fun bar = this.foo(0) }
+//│ ║  l.58: 	class C1(a: Int) extends P(a) { fun bar = this.foo(0) }
 //│ ╙──      	                                              ^^^^
-//│ class C1(a: int) extends P {
+//│ class C1(a: Int) extends P {
 //│   fun bar: error
-//│   fun foo: int -> int
+//│   fun foo: Int -> Int
 //│ }
 
 :e // FIXME
-class C2(a: int, b: int) extends P(a + b) {
+class C2(a: Int, b: Int) extends P(a + b) {
     fun foo(x) = x * this.p + a * b
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
 //│ ║  l.69: 	    fun foo(x) = x * this.p + a * b
 //│ ╙──      	                         ^^
-//│ class C2(a: int, b: int) extends P {
-//│   fun foo: int -> int
+//│ class C2(a: Int, b: Int) extends P {
+//│   fun foo: Int -> Int
 //│ }
 
 let c2 =  C2(1, 2)
@@ -81,12 +81,12 @@ let c2 =  C2(1, 2)
 //│    = C2 {}
 
 c2.foo(2)
-//│ int
+//│ Int
 //│ res
 //│     = 8
 
 c2.p
-//│ int
+//│ Int
 //│ res
 //│     = 3
 
@@ -94,8 +94,8 @@ c2.p
 class Test[A](x: A)
 //│ class Test[A](x: A)
 
-class A(a: int) extends Test(a)
-//│ class A(a: int) extends Test
+class A(a: Int) extends Test(a)
+//│ class A(a: Int) extends Test
 
 let a1 = A(1)
 //│ let a1: A
@@ -105,12 +105,12 @@ let a1 = A(1)
 a1: Test['x]
 //│ Test['x]
 //│   where
-//│     'x :> int
+//│     'x :> Int
 //│ res
 //│     = A {}
 
 a1.x
-//│ int
+//│ Int
 //│ res
 //│     = 1
 
@@ -147,16 +147,16 @@ B.foo(1)
 
 module B extends Foo { fun foo(x) = x + 1 }
 //│ module B extends Foo {
-//│   fun foo: int -> int
+//│   fun foo: Int -> Int
 //│ }
 
 B : Foo['X]
-//│ Foo[int]
+//│ Foo[Int]
 //│ res
 //│     = B { class: [class B extends Object] }
 
 B.foo
-//│ int -> int
+//│ Int -> Int
 //│ res
 //│     = [Function: foo]
 
@@ -236,7 +236,7 @@ class B extends Foo { fun foo(x) = x + 1 }
 //│ ╟── type variable `A` leaks out of its scope
 //│ ║  l.207: 	trait Foo[A] { fun foo[A](x: A): A }
 //│ ║         	                       ^
-//│ ╟── into reference of type `int`
+//│ ╟── into reference of type `Int`
 //│ ║  l.232: 	class B extends Foo { fun foo(x) = x + 1 }
 //│ ╙──       	                                   ^
 //│ ╔══[ERROR] Type error in definition of method foo
@@ -250,6 +250,6 @@ class B extends Foo { fun foo(x) = x + 1 }
 //│ ║  l.232: 	class B extends Foo { fun foo(x) = x + 1 }
 //│ ╙──       	                                   ^^^^^
 //│ class B extends Foo {
-//│   fun foo: int -> int
+//│   fun foo: Int -> Int
 //│ }
 

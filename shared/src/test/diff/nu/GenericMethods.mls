@@ -10,9 +10,9 @@ foo1(42)
 //│     = 42
 
 :e
-foo1[int](42)
+foo1[Int](42)
 //│ ╔══[ERROR] Type application syntax is not yet supported
-//│ ║  l.13: 	foo1[int](42)
+//│ ║  l.13: 	foo1[Int](42)
 //│ ╙──      	^^^^^^^^^
 //│ error
 //│ res
@@ -28,9 +28,9 @@ foo2(42)
 //│     = 42
 
 :e
-foo2<int>(42)
+foo2<Int>(42)
 //│ ╔══[ERROR] Type application syntax is not yet supported
-//│ ║  l.31: 	foo2<int>(42)
+//│ ║  l.31: 	foo2<Int>(42)
 //│ ╙──      	^^^^^^^^^
 //│ error
 //│ res
@@ -46,9 +46,9 @@ foo3(42)
 //│     = 42
 
 :e
-foo3[int](42)
+foo3[Int](42)
 //│ ╔══[ERROR] Type application syntax is not yet supported
-//│ ║  l.49: 	foo3[int](42)
+//│ ║  l.49: 	foo3[Int](42)
 //│ ╙──      	^^^^^^^^^
 //│ error
 //│ res

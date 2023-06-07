@@ -1,17 +1,17 @@
 :NewDefs
 
 let id"of" = 42
-fun id"fun"(x: int) = x + 1
-fun id"declare"(id"if": int) = id"of" + id"if"
+fun id"fun"(x: Int) = x + 1
+fun id"declare"(id"if": Int) = id"of" + id"if"
 //│ let of: 42
-//│ fun fun: (x: int,) -> int
-//│ fun declare: (if: int,) -> int
+//│ fun fun: (x: Int,) -> Int
+//│ fun declare: (if: Int,) -> Int
 //│ of
 //│    = 42
 
 id"fun"(id"of")
 id"declare"(id"of")
-//│ int
+//│ Int
 //│ res
 //│     = 43
 //│ res
@@ -20,23 +20,23 @@ id"declare"(id"of")
 let id"if" = 1
 id"if" + 1
 //│ let if: 1
-//│ int
+//│ Int
 //│ if
 //│    = 1
 //│ res
 //│     = 2
 
 
-class Foo(id"class": int) {
-  fun id"mixin"(x: int) = id"class" + x
+class Foo(id"class": Int) {
+  fun id"mixin"(x: Int) = id"class" + x
 }
 let foo = Foo(2)
 foo.id"mixin"(3)
-//│ class Foo(class: int) {
-//│   fun mixin: (x: int,) -> int
+//│ class Foo(class: Int) {
+//│   fun mixin: (x: Int,) -> Int
 //│ }
 //│ let foo: Foo
-//│ int
+//│ Int
 //│ foo
 //│     = Foo {}
 //│ res

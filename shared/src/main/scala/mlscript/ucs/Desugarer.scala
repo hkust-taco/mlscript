@@ -224,7 +224,7 @@ class Desugarer extends TypeDefs { self: Typer =>
       // x is A
       case classNameVar @ Var(className) =>
         ctx.tyDefs.get(className).orElse(ctx.get(className)) match {
-          case S(ti: LazyTypeInfo) if (ti.kind is Cls) || (ti.kind is Nms) =>
+          case S(ti: LazyTypeInfo) if (ti.kind is Cls) || (ti.kind is Mod) =>
           case S(ti: LazyTypeInfo) if (ti.kind is Trt) => throw new DesugaringException({
             msg"Cannot match on trait `$className`"
           }, classNameVar.toLoc)

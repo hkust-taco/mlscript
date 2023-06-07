@@ -812,7 +812,7 @@ def a = fun f -> f id
 //│            = [Function: church_succ]
 //│ f: Sa -> Sid
 //│  = [Function: f]
-//│ f_: ((forall 'a 'b. ('b -> 'a & 'b) -> 'a) -> 'c & (forall 'd 'e. ((forall 'f. anything -> 'f -> 'f) -> 'd -> anything) -> 'd -> 'e -> 'e) -> anything) -> 'c
+//│ f_: ((forall 'a 'b. ('a -> 'b & 'a) -> 'b) -> 'c & (forall 'd 'e. ((forall 'f. anything -> 'f -> 'f) -> 'd -> anything) -> 'd -> 'e -> 'e) -> anything) -> 'c
 //│   = [Function: f_]
 //│ a: ((forall 'a. 'a -> 'a) -> 'b) -> 'b
 //│  = [Function: a]

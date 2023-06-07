@@ -2,10 +2,10 @@
 
 
 class Exp[A]: Pair | Lit
-class Lit(n: int) extends Exp[int]
+class Lit(n: Int) extends Exp[Int]
 class Pair[L, R](lhs: L, rhs: R) extends Exp[(L, R)]
 //│ class Exp[A]: Lit | Pair[anything, anything]
-//│ class Lit(n: int) extends Exp
+//│ class Lit(n: Int) extends Exp
 //│ class Pair[L, R](lhs: L, rhs: R) extends Exp
 
 
@@ -22,10 +22,10 @@ fun f(e) = if e is
 fun f(e) = if e is
   Pair(l, r) then [l, r]
   Lit(n) then n
-//│ fun f: forall 'lhs 'rhs. (Lit | Pair['lhs, 'rhs]) -> (('lhs, 'rhs,) | int)
+//│ fun f: forall 'lhs 'rhs. (Lit | Pair['lhs, 'rhs]) -> (('lhs, 'rhs,) | Int)
 
 (e: Exp['X]) => f(e)
-//│ (e: Exp['X],) -> ((??L, ??R,) | int)
+//│ (e: Exp['X],) -> ((??L, ??R,) | Int)
 //│ res
 //│     = [Function: res]
 

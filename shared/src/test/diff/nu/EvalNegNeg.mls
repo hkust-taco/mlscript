@@ -2,20 +2,20 @@
 
 
 class Add<E>(lhs: E, rhs: E)
-class Lit(n: int)
+class Lit(n: Int)
 //│ class Add[E](lhs: E, rhs: E)
-//│ class Lit(n: int)
+//│ class Lit(n: Int)
 
 
 mixin EvalBase {
   fun eval(e) =
     if e is
-      Lit(n) then n: int
+      Lit(n) then n: Int
       Add(l, r) then this.eval(l) + this.eval(r)
 }
 //│ mixin EvalBase() {
-//│   this: {eval: 'lhs -> int}
-//│   fun eval: (Add['lhs] | Lit) -> int
+//│   this: {eval: 'lhs -> Int}
+//│   fun eval: (Add['lhs] | Lit) -> Int
 //│ }
 
 
@@ -30,8 +30,8 @@ mixin EvalNeg {
 }
 //│ mixin EvalNeg() {
 //│   super: {eval: 'a -> 'b}
-//│   this: {eval: 'expr -> int}
-//│   fun eval: (Neg['expr] | 'a & ~#Neg) -> (int | 'b)
+//│   this: {eval: 'expr -> Int}
+//│   fun eval: (Neg['expr] | Object & 'a & ~#Neg) -> (Int | 'b)
 //│ }
 
 
@@ -43,33 +43,35 @@ mixin EvalNegNeg {
 //│ mixin EvalNegNeg() {
 //│   super: {eval: (Neg[nothing] | 'a) -> 'b}
 //│   this: {eval: 'expr -> 'b}
-//│   fun eval: (Neg[Neg['expr] | ~Neg[anything]] | 'a & ~#Neg) -> 'b
+//│   fun eval: (Neg[Neg['expr] | Object & ~#Neg] | Object & 'a & ~#Neg) -> 'b
 //│ }
 
 
 module TestLang extends EvalBase, EvalNeg, EvalNegNeg
 //│ module TestLang {
-//│   fun eval: 'a -> int
+//│   fun eval: 'a -> Int
 //│ }
 //│ where
-//│   'a <: Add['a] | Lit | Neg['a & (Neg['a] | ~#Neg)]
+//│   'a <: Neg['A] | Object & 'b & ~#Neg
+//│   'A <: Neg['a & 'A] | Neg['A] & ~#Neg | Object & 'b & ~#Neg
+//│   'b <: Add['a] | Lit | Neg['a]
 
 
 fun mk(n) = if n is
   0 then Lit(3)
   1 then Neg(mk(n - 1))
   _ then Add(mk(n - 1), mk(n - 1))
-//│ fun mk: forall 'E. (0 | 1 | int & ~0 & ~1) -> 'E
+//│ fun mk: forall 'E. (0 | 1 | Int & ~0 & ~1) -> 'E
 //│   where
 //│     'E :> Add['E] | Lit | Neg['E]
 
 TestLang.eval(mk(0))
-//│ int
+//│ Int
 //│ res
 //│     = 3
 
 TestLang.eval(mk(11))
-//│ int
+//│ Int
 //│ res
 //│     = -3072
 

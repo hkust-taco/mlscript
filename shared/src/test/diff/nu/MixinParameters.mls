@@ -1,11 +1,11 @@
 :NewDefs
 
 
-mixin BaseTest(x: int) {
+mixin BaseTest(x: Int) {
   fun test = x
 }
-//│ mixin BaseTest(x: int) {
-//│   fun test: int
+//│ mixin BaseTest(x: Int) {
+//│   fun test: Int
 //│ }
 
 // TODO

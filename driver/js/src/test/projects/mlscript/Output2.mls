@@ -1,6 +1,6 @@
 import "json5"
 
-fun createConfig(path: string) =
+fun createConfig(path: Str) =
   let options = { outDir: path }
   let config = { compilerOptions: options }
   json5.stringify(config)

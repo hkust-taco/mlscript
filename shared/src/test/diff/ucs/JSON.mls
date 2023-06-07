@@ -4,14 +4,14 @@
 :escape
 // We need to use some native methods on `String`.
 let String: nothing
-let asNativeString: anything => { length: int, charCodeAt: int => int, charAt: int => string, slice: int => string } = String
-let StringInstance: { fromCharCode: int => string } = String
+let asNativeString: anything => { length: Int, charCodeAt: Int => Int, charAt: Int => Str, slice: Int => Str } = String
+let StringInstance: { fromCharCode: Int => Str } = String
 // We will validate our implementation with the built-in `JSON.parse`.
-let JSON: { parse: string => anything, stringify: anything => string }
+let JSON: { parse: Str => anything, stringify: anything => Str }
 //│ let String: nothing
-//│ let asNativeString: anything -> {charAt: int -> string, charCodeAt: int -> int, length: int, slice: int -> string}
-//│ let StringInstance: {fromCharCode: int -> string}
-//│ let JSON: {parse: string -> anything, stringify: anything -> string}
+//│ let asNativeString: anything -> {charAt: Int -> Str, charCodeAt: Int -> Int, length: Int, slice: Int -> Str}
+//│ let StringInstance: {fromCharCode: Int -> Str}
+//│ let JSON: {parse: Str -> anything, stringify: anything -> Str}
 //│ String
 //│        = <missing implementation>
 //│ asNativeString
@@ -33,13 +33,13 @@ fun getCharAtIndex(s, i) = asNativeString(s).charAt(i)
 fun strlen(s) = asNativeString(s).length
 fun stringHead(s) = asNativeString(s).charAt(0)
 fun stringTail(s) = asNativeString(s).slice(1)
-//│ let getStringOf: anything -> string
-//│ fun fromCharCode: int -> string
-//│ fun firstCharCode: anything -> int
-//│ fun getCharAtIndex: (anything, int,) -> string
-//│ fun strlen: anything -> int
-//│ fun stringHead: anything -> string
-//│ fun stringTail: anything -> string
+//│ let getStringOf: anything -> Str
+//│ fun fromCharCode: Int -> Str
+//│ fun firstCharCode: anything -> Int
+//│ fun getCharAtIndex: (anything, Int,) -> Str
+//│ fun strlen: anything -> Int
+//│ fun stringHead: anything -> Str
+//│ fun stringTail: anything -> Str
 //│ getStringOf
 //│             = [Function: toString]
 
@@ -49,12 +49,12 @@ fun isWhiteSpace(ch) =
     10 then true // linefeed
     32 then true // space
     _ then false
-//│ fun isWhiteSpace: anything -> bool
+//│ fun isWhiteSpace: anything -> Bool
 
 fun isDigit(ch) =
   let n = firstCharCode of ch
   if 48 <= n and n <= 57 then true else false
-//│ fun isDigit: anything -> bool
+//│ fun isDigit: anything -> Bool
 
 fun isAlphabet(ch) =
   let n = firstCharCode of ch
@@ -62,7 +62,7 @@ fun isAlphabet(ch) =
     90  and n >= 65 then true
     122 and n >= 97 then true
     else false
-//│ fun isAlphabet: anything -> bool
+//│ fun isAlphabet: anything -> Bool
 
 fun concat2(a, b) = concat(a)(b)
 fun concat3(a, b, c) = concat2(a, concat2(b, c))
@@ -72,19 +72,19 @@ fun concat6(a, b, c, d, e, f) = concat2(a, concat5(b, c, d, e, f))
 fun concat7(a, b, c, d, e, f, g) = concat2(a, concat6(b, c, d, e, f, g))
 fun concat8(a, b, c, d, e, f, g, h) = concat2(a, concat7(b, c, d, e, f, g, h))
 fun par(a) = concat3("(", a, ")")
-//│ fun concat2: (string, string,) -> string
-//│ fun concat3: (string, string, string,) -> string
-//│ fun concat4: (string, string, string, string,) -> string
-//│ fun concat5: (string, string, string, string, string,) -> string
-//│ fun concat6: (string, string, string, string, string, string,) -> string
-//│ fun concat7: (string, string, string, string, string, string, string,) -> string
-//│ fun concat8: (string, string, string, string, string, string, string, string,) -> string
-//│ fun par: string -> string
+//│ fun concat2: (Str, Str,) -> Str
+//│ fun concat3: (Str, Str, Str,) -> Str
+//│ fun concat4: (Str, Str, Str, Str,) -> Str
+//│ fun concat5: (Str, Str, Str, Str, Str,) -> Str
+//│ fun concat6: (Str, Str, Str, Str, Str, Str,) -> Str
+//│ fun concat7: (Str, Str, Str, Str, Str, Str, Str,) -> Str
+//│ fun concat8: (Str, Str, Str, Str, Str, Str, Str, Str,) -> Str
+//│ fun par: Str -> Str
 
 type Option[A] = Some[A] | None
 module None
 class Some[A](value: A)
-//│ type Option[A] = Some[A] | None
+//│ type Option[A] = None | Some[A]
 //│ module None
 //│ class Some[A](value: A)
 
@@ -105,13 +105,13 @@ fun listJoin(xs, sep) =
 //│ module Nil
 //│ class Cons[A](head: A, tail: List[A])
 //│ fun listConcat: forall 'A 'A0 'a. (Cons['A] | Nil, List['A0] & 'a,) -> (Cons['A0] | 'a)
-//│ fun listJoin: forall 'A1. (Cons['A1] | Nil, string,) -> string
+//│ fun listJoin: forall 'A1. (Cons['A1] | Nil, Str,) -> Str
 //│ where
 //│   'A <: 'A0
 
 type TreeMap[A] = Node[A] | Empty
 module Empty
-class Node[A](key: string, value: A, left: TreeMap[A], right: TreeMap[A])
+class Node[A](key: Str, value: A, left: TreeMap[A], right: TreeMap[A])
 fun insert(t, k, v) =
   if t is
     Node(k', _, l, r) and
@@ -131,24 +131,24 @@ fun traverse(t, f) =
     Empty then Nil
     Node(key, value, left, right) then
       listConcat(traverse(left, f), Cons(f(key, value), traverse(right, f)))
-//│ type TreeMap[A] = Node[A] | Empty
+//│ type TreeMap[A] = Empty | Node[A]
 //│ module Empty
-//│ class Node[A](key: string, value: A, left: TreeMap[A], right: TreeMap[A])
-//│ fun insert: forall 'A. (Empty | Node['A], string, 'A,) -> Node['A]
-//│ fun find: forall 'A0. (Empty | Node['A0], string,) -> (None | Some['A0])
-//│ fun traverse: forall 'A1 'A2. (Empty | Node['A1], (string, 'A1,) -> 'A2,) -> (Cons['A2] | Nil)
+//│ class Node[A](key: Str, value: A, left: TreeMap[A], right: TreeMap[A])
+//│ fun insert: forall 'A. (Empty | Node['A], Str, 'A,) -> Node['A]
+//│ fun find: forall 'A0. (Empty | Node['A0], Str,) -> (None | Some['A0])
+//│ fun traverse: forall 'A1 'A2. (Empty | Node['A1], (Str, 'A1,) -> 'A2,) -> (Cons['A2] | Nil)
 
 type JsonValue = JsonNull | JsonNumber | JsonString | JsonBoolean | JsonObject | JsonArray
 module JsonNull {
   fun toString() = "null"
 }
-class JsonBoolean(value: bool) {
+class JsonBoolean(value: Bool) {
   fun toString() = getStringOf(value)
 }
-class JsonNumber(value: number) {
+class JsonNumber(value: Num) {
   fun toString() = getStringOf(value)
 }
-class JsonString(value: string) {
+class JsonString(value: Str) {
   fun toString() = JSON.stringify(value)
 }
 class JsonObject(entries: TreeMap[JsonValue]) {
@@ -159,24 +159,24 @@ class JsonObject(entries: TreeMap[JsonValue]) {
 class JsonArray(elements: List[JsonValue]) {
   fun toString() = concat3("[", listJoin(elements, ", "), "]")
 }
-//│ type JsonValue = JsonArray | JsonBoolean | JsonNumber | JsonObject | JsonString | JsonNull
+//│ type JsonValue = JsonArray | JsonBoolean | JsonNull | JsonNumber | JsonObject | JsonString
 //│ module JsonNull {
 //│   fun toString: () -> "null"
 //│ }
-//│ class JsonBoolean(value: bool) {
-//│   fun toString: () -> string
+//│ class JsonBoolean(value: Bool) {
+//│   fun toString: () -> Str
 //│ }
-//│ class JsonNumber(value: number) {
-//│   fun toString: () -> string
+//│ class JsonNumber(value: Num) {
+//│   fun toString: () -> Str
 //│ }
-//│ class JsonString(value: string) {
-//│   fun toString: () -> string
+//│ class JsonString(value: Str) {
+//│   fun toString: () -> Str
 //│ }
 //│ class JsonObject(entries: TreeMap[JsonValue]) {
-//│   fun toString: () -> string
+//│   fun toString: () -> Str
 //│ }
 //│ class JsonArray(elements: List[JsonValue]) {
-//│   fun toString: () -> string
+//│   fun toString: () -> Str
 //│ }
 
 toString of JsonNull
@@ -187,7 +187,7 @@ toString of JsonArray of Nil
 toString of JsonArray of Cons(JsonNumber(0), Cons(JsonNull, Cons(JsonNumber(1), Nil)))
 toString of JsonObject of Empty
 toString of JsonObject of insert(Empty, "hello", JsonString("world"))
-//│ string
+//│ Str
 //│ res
 //│     = 'null'
 //│ res
@@ -205,8 +205,8 @@ toString of JsonObject of insert(Empty, "hello", JsonString("world"))
 //│ res
 //│     = '{ hello: "world" }'
 
-class Scanner(source: string, at: int) {
-  fun peek: Option[string] =
+class Scanner(source: Str, at: Int) {
+  fun peek: Option[Str] =
     if at < strlen(source) then Some(getCharAtIndex(source, at)) else None
   fun advance: Scanner =
     if at < strlen(source) then Scanner(source, at + 1) else this
@@ -217,26 +217,26 @@ fun skipWhiteSpace(s: Scanner) =
     skipWhiteSpace(s.advance)
   else
     s
-//│ class Scanner(source: string, at: int) {
+//│ class Scanner(source: Str, at: Int) {
 //│   fun advance: Scanner
-//│   fun peek: Option[string]
+//│   fun peek: Option[Str]
 //│ }
-//│ fun scan: string -> Scanner
+//│ fun scan: Str -> Scanner
 //│ fun skipWhiteSpace: (s: Scanner,) -> Scanner
 
 type ParseResult[T] = ParseSuccess[T] | ParseFailure
 class ParseSuccess[T](value: T, scanner: Scanner) {
   fun toString() = concat2("Success: ", getStringOf(value))
 }
-class ParseFailure(message: string, scanner: Scanner) {
+class ParseFailure(message: Str, scanner: Scanner) {
   fun toString() = concat4("Failure at ", getStringOf(scanner.at), ": ", message)
 }
 //│ type ParseResult[T] = ParseFailure | ParseSuccess[T]
 //│ class ParseSuccess[T](value: T, scanner: Scanner) {
-//│   fun toString: () -> string
+//│   fun toString: () -> Str
 //│ }
-//│ class ParseFailure(message: string, scanner: Scanner) {
-//│   fun toString: () -> string
+//│ class ParseFailure(message: Str, scanner: Scanner) {
+//│   fun toString: () -> Str
 //│ }
 
 fun expect(scanner, ch) =
@@ -245,7 +245,7 @@ fun expect(scanner, ch) =
       eq(ch)(ch') then ParseSuccess((), scanner.advance)
       else ParseFailure(concat4("expect '", ch, "' but found ", ch'), scanner)
     None then ParseFailure(concat3("expect '", ch, "' but found EOF"), scanner)
-//│ fun expect: (Scanner & {advance: Scanner}, string,) -> (ParseFailure | ParseSuccess[()])
+//│ fun expect: (Scanner & {advance: Scanner}, Str,) -> (ParseFailure | ParseSuccess[()])
 
 fun expectWord(scanner, word, result) =
   if
@@ -260,7 +260,7 @@ fun expectWord(scanner, word, result) =
         ParseFailure(concat3("there should not be other alphabets after\"", word, "\""), scanner)
       else
         ParseSuccess(result, scanner)
-//│ fun expectWord: forall 'T. (Scanner & {peek: anything, advance: Scanner}, string, 'T,) -> (ParseFailure | ParseSuccess['T])
+//│ fun expectWord: forall 'T. (Scanner & {peek: Object & ~#Some | Some[anything], advance: Scanner}, Str, 'T,) -> (ParseFailure | ParseSuccess['T])
 
 // If we put this function together with the next block, there will be type
 // mismatch errors.
@@ -270,7 +270,7 @@ fun parseMatched(scanner, closingSymbol, parse, fn) =
       ParseSuccess(_, scanner) then ParseSuccess(fn(outcome), scanner)
       ParseFailure(message, scanner) then ParseFailure(message, scanner)
     ParseFailure(message, scanner) then ParseFailure(message, scanner)
-//│ fun parseMatched: forall 'advance 'value 'T. ({advance: 'advance}, string, 'advance -> (ParseFailure | ParseSuccess['value]), 'value -> 'T,) -> (ParseFailure | ParseSuccess['T])
+//│ fun parseMatched: forall 'advance 'value 'T. ({advance: 'advance}, Str, 'advance -> (ParseFailure | ParseSuccess['value]), 'value -> 'T,) -> (ParseFailure | ParseSuccess['T])
 
 :ng
 fun parseEntries(scanner): ParseResult[TreeMap[JsonValue]] = error
@@ -287,7 +287,7 @@ fun parseElements(scanner): ParseResult[List[JsonValue]] =
           _ then ParseFailure("expect ']' or ',' instead of EOF", scanner')
         ParseFailure(m, s) then ParseFailure(m, s)
     None then ParseFailure("unexpected EOF", scanner)
-fun parseStringContent(scanner): ParseResult[string] = error
+fun parseStringContent(scanner): ParseResult[Str] = error
 fun parseNumber(scanner): ParseResult[JsonNumber] = error
 fun parse(scanner) =
   let scanner' = skipWhiteSpace(scanner)
@@ -305,7 +305,7 @@ fun parse(scanner) =
         ParseFailure(concat3("unrecognized character '", ch, "'"), scanner)
 //│ fun parseEntries: anything -> ParseResult[TreeMap[JsonValue]]
 //│ fun parseElements: Scanner -> ParseResult[List[JsonValue]]
-//│ fun parseStringContent: anything -> ParseResult[string]
+//│ fun parseStringContent: anything -> ParseResult[Str]
 //│ fun parseNumber: anything -> ParseResult[JsonNumber]
 //│ fun parse: Scanner -> (ParseFailure | ParseSuccess[JsonArray | JsonBoolean | JsonNull | JsonObject | JsonString] | ParseResult[JsonNumber])
 
@@ -314,4 +314,4 @@ toString of parse of scan of "    true"
 toString of parse of scan of "  false"
 toString of parse of scan of "  null"
 toString of parse of scan of "[null]"
-//│ string
+//│ Str

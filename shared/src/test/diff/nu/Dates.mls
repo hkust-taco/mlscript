@@ -2,13 +2,13 @@
 
 
 declare class Date {
-  constructor(date: number)
-  fun toString(): string
-  fun toLocaleString(locales: string | Array[string], options: anything): string
+  constructor(date: Num)
+  fun toString(): Str
+  fun toLocaleString(locales: Str | Array[Str], options: anything): Str
 }
 //│ declare class Date {
-//│   fun toLocaleString: (locales: Array[string] | string, options: anything,) -> string
-//│   fun toString: () -> string
+//│   fun toLocaleString: (locales: Array[Str] | Str, options: anything,) -> Str
+//│   fun toString: () -> Str
 //│ }
 
 :e // TODO ctor typing
@@ -24,7 +24,7 @@ let date1 = new Date(12345678)
 //│       = 1970-01-01T03:25:45.678Z
 
 date1.toLocaleString("en-US", { timeZone: "America/New_York" })
-//│ error | string
+//│ Str | error
 //│ res
 //│     = '12/31/1969, 10:25:45 PM'
 

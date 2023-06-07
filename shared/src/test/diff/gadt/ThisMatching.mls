@@ -23,9 +23,9 @@ Dummy.introspect
 //│     = 'duh!'
 
 
-class Funny: int { fun test = this + 1 }
-//│ class Funny: int {
-//│   fun test: int
+class Funny: Int { fun test = this + 1 }
+//│ class Funny: Int | 'a {
+//│   fun test: Int | 'a
 //│ }
 
 :e
@@ -33,11 +33,11 @@ class Unfunny { fun test = this + 1 }
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.32: 	class Unfunny { fun test = this + 1 }
 //│ ║        	                           ^^^^^^
-//│ ╟── reference of type `#Unfunny` is not an instance of type `int`
+//│ ╟── reference of type `#Unfunny` is not an instance of type `Int`
 //│ ║  l.32: 	class Unfunny { fun test = this + 1 }
 //│ ╙──      	                           ^^^^
 //│ class Unfunny {
-//│   fun test: error | int
+//│   fun test: Int | error
 //│ }
 
 
@@ -46,12 +46,12 @@ class Exp: Pair | Lit {
     Lit then 0
     Pair then 1
 }
-class Lit(n: int) extends Exp
+class Lit(n: Int) extends Exp
 class Pair(lhs: Exp, rhs: Exp) extends Exp
 //│ class Exp: Lit | Pair {
 //│   fun test: 0 | 1
 //│ }
-//│ class Lit(n: int) extends Exp {
+//│ class Lit(n: Int) extends Exp {
 //│   fun test: 0 | 1
 //│ }
 //│ class Pair(lhs: Exp, rhs: Exp) extends Exp {
@@ -64,12 +64,12 @@ class Exp: Pair | Lit {
     Lit then 0
     Pair(l, r) then 1
 }
-class Lit(n: int) extends Exp
+class Lit(n: Int) extends Exp
 class Pair(lhs: Exp, rhs: Exp) extends Exp
 //│ class Exp: Lit | Pair {
 //│   fun test: 0 | 1
 //│ }
-//│ class Lit(n: int) extends Exp {
+//│ class Lit(n: Int) extends Exp {
 //│   fun test: 0 | 1
 //│ }
 //│ class Pair(lhs: Exp, rhs: Exp) extends Exp {
@@ -88,7 +88,7 @@ class Exp: Pair | Lit {
     Lit then 0
     Pair(l, r) then l.test + r.test
 }
-class Lit(n: int) extends Exp
+class Lit(n: Int) extends Exp
 class Pair(lhs: Exp, rhs: Exp) extends Exp
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
 //│ ║  l.89: 	    Pair(l, r) then l.test + r.test
@@ -97,32 +97,32 @@ class Pair(lhs: Exp, rhs: Exp) extends Exp
 //│ ║  l.89: 	    Pair(l, r) then l.test + r.test
 //│ ╙──      	                              ^^^^^
 //│ class Exp: Lit | Pair {
-//│   fun test: int
+//│   fun test: Int
 //│ }
-//│ class Lit(n: int) extends Exp {
-//│   fun test: int
+//│ class Lit(n: Int) extends Exp {
+//│   fun test: Int
 //│ }
 //│ class Pair(lhs: Exp, rhs: Exp) extends Exp {
-//│   fun test: int
+//│   fun test: Int
 //│ }
 
 
 class Exp: Pair | Lit {
-  fun test : int
+  fun test : Int
   fun test = if this is
     Lit then 0
     Pair(l, r) then l.test + r.test
 }
-class Lit(n: int) extends Exp
+class Lit(n: Int) extends Exp
 class Pair(lhs: Exp, rhs: Exp) extends Exp
 //│ class Exp: Lit | Pair {
-//│   fun test: int
+//│   fun test: Int
 //│ }
-//│ class Lit(n: int) extends Exp {
-//│   fun test: int
+//│ class Lit(n: Int) extends Exp {
+//│   fun test: Int
 //│ }
 //│ class Pair(lhs: Exp, rhs: Exp) extends Exp {
-//│   fun test: int
+//│   fun test: Int
 //│ }
 
 
@@ -132,7 +132,7 @@ class Exp[A]: Pair | Lit {
     Lit then 0
     Pair then 1
 }
-class Lit(n: int) extends Exp[int]
+class Lit(n: Int) extends Exp[Int]
 class Pair[L, R](lhs: L, rhs: R) extends Exp[(L, R)]
 //│ ╔══[ERROR] Unhandled cyclic definition
 //│ ║  l.130: 	class Exp[A]: Pair | Lit {
@@ -156,7 +156,7 @@ class Pair[L, R](lhs: L, rhs: R) extends Exp[(L, R)]
 //│ class Exp[A]: Lit | Pair[anything, anything] {
 //│   fun test: 0 | 1
 //│ }
-//│ class Lit(n: int) extends Exp {
+//│ class Lit(n: Int) extends Exp {
 //│   fun test: 0 | 1
 //│ }
 //│ class Pair[L, R](lhs: L, rhs: R) extends Exp

@@ -1,5 +1,5 @@
 import "./tools/Inc.mlsi"
 declare module Opened() {
-  fun hello: (x: int,) -> unit
-  unit
+  fun hello: (x: Int,) -> undefined
+  undefined
 }

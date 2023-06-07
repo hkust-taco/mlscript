@@ -14,10 +14,10 @@ module Nil
 // TODO should better simplify these types (reduce the List refinement)
 
 :ng
-let test0: Cons[int] & List[number]
-let test1: Nil & List[int]
-//│ let test0: Cons[int] & List[number]
-//│ let test1: List[int] & Nil
+let test0: Cons[Int] & List[Num]
+let test1: Nil & List[Int]
+//│ let test0: Cons[Int] & List[Num]
+//│ let test1: Nil & List[Int]
 
 
 

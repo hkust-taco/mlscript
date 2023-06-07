@@ -7,7 +7,7 @@
 //│     = 1
 
 2 + 2
-//│ int
+//│ Int
 //│ res
 //│     = 4
 
@@ -17,13 +17,13 @@ let r = { x: 1 }
 //│   = { x: 1 }
 
 r.x + 1
-//│ int
+//│ Int
 //│ res
 //│     = 2
 
 
 x => x + 1
-//│ int -> int
+//│ Int -> Int
 //│ res
 //│     = [Function: res]
 
@@ -45,12 +45,12 @@ f({y: 1})
 
 
 let f = (x, y) => x + y
-//│ let f: (int, int,) -> int
+//│ let f: (Int, Int,) -> Int
 //│ f
 //│   = [Function: f2]
 
 f(1, 2)
-//│ int
+//│ Int
 //│ res
 //│     = 3
 
@@ -65,14 +65,14 @@ f([1, 2])
 //│ ╟── Note: constraint arises from tuple literal:
 //│ ║  l.47: 	let f = (x, y) => x + y
 //│ ╙──      	         ^^^^
-//│ error | int
+//│ Int | error
 //│ res
 //│     = '1,2undefined'
 
 
 
 let f = ((x, y)) => x + y
-//│ let f: (int, int,) -> int
+//│ let f: (Int, Int,) -> Int
 //│ f
 //│   = [Function: f3]
 
@@ -84,7 +84,7 @@ f(1, 2)
 //│ ╟── argument list of type `(1, 2,)` does not match type `((?a, ?b,),)`
 //│ ║  l.80: 	f(1, 2)
 //│ ╙──      	 ^^^^^^
-//│ error | int
+//│ Int | error
 //│ res
 //│ Runtime error:
 //│   TypeError: number 1 is not iterable (cannot read property Symbol(Symbol.iterator))
@@ -92,34 +92,34 @@ f(1, 2)
 
 
 f((1, 2))
-//│ int
+//│ Int
 //│ res
 //│     = 3
 
 f([1, 2])
-//│ int
+//│ Int
 //│ res
 //│     = 3
 
 let f = (((x, y))) => x + y
-//│ let f: (int, int,) -> int
+//│ let f: (Int, Int,) -> Int
 //│ f
 //│   = [Function: f4]
 
 // TODO parse as tuple arg!
 let f = [x, y] => x + y
-//│ let f: (int, int,) -> int
+//│ let f: (Int, Int,) -> Int
 //│ f
 //│   = [Function: f5]
 
 f(1, 2)
-//│ int
+//│ Int
 //│ res
 //│     = 3
 
 // TODO...
 let f = [[[x, y]]] => x + y
-//│ let f: (int, int,) -> int
+//│ let f: (Int, Int,) -> Int
 //│ f
 //│   = [Function: f6]
 

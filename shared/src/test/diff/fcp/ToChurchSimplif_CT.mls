@@ -197,9 +197,9 @@ rec def to_ch n =
 
 :e
 to_church = to_ch
-//│ int -> (forall 'a. 'a -> (forall 'b 'c. 'b -> 'c
+//│ int -> (forall 'a. 'a -> (forall 'b 'c. 'c -> 'b
 //│   where
-//│     forall 'M. ('M -> 'M) -> 'M -> 'M <: 'a -> 'b -> 'c) | ChurchInt)
+//│     forall 'M. ('M -> 'M) -> 'M -> 'M <: 'a -> 'c -> 'b) | ChurchInt)
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Type error in def definition
@@ -236,9 +236,9 @@ def to_ch n =
 
 :e // * Since "sound extrusion"
 to_church = to_ch
-//│ int -> (forall 'a. 'a -> (forall 'b 'a 'c 'd. ('c & 'b) -> ('b | 'd)
+//│ int -> (forall 'a. 'a -> (forall 'a 'b 'c 'd. ('b & 'd) -> ('d | 'c)
 //│   where
-//│     forall 'M. ('M -> 'M) -> 'M -> 'M <: 'a -> 'c -> 'd))
+//│     forall 'M. ('M -> 'M) -> 'M -> 'M <: 'a -> 'b -> 'c))
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Type error in def definition
@@ -541,9 +541,9 @@ to_church = to_ch
 //│   where
 //│     'd <: 'a -> 'b -> 'c)
 //│ where
-//│   'd :> forall 'e 'f 'g 'h. 'g -> (('f & 'h) -> ('f | 'e)
+//│   'd :> forall 'e 'f 'g 'h. 'e -> (('h & 'f) -> ('h | 'g)
 //│     where
-//│       'd <: 'g -> 'h -> 'e)
+//│       'd <: 'e -> 'f -> 'g)
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Subtyping constraint of the form `forall ?to_ch. ?to_ch <: int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)` exceeded recursion depth limit (250)

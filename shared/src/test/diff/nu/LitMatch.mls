@@ -1,0 +1,39 @@
+:NewDefs
+
+
+false : Bool
+//│ Bool
+//│ res
+//│     = false
+
+// FIXME parsing!
+let b = true | false : Bool
+//│ let b: (Bool,)
+//│ b
+//│   = 1
+
+let b = false : Bool
+//│ let b: Bool
+//│ b
+//│   = false
+
+b : true | false
+//│ Bool
+//│ res
+//│     = false
+
+if false is false then 0
+//│ 0
+//│ res
+//│     = 0
+
+fun foo(x) = if x is
+  false then 0
+//│ fun foo: nothing -> 0
+
+fun foo(x) = if x is
+  false then 0
+  true  then 1
+//│ fun foo: nothing -> (0 | 1)
+
+

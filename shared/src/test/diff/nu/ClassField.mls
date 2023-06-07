@@ -2,16 +2,16 @@
 
 
 
-class Foo(x: int)
-//│ class Foo(x: int)
+class Foo(x: Int)
+//│ class Foo(x: Int)
 
 Foo
-//│ (x: int,) -> Foo
+//│ (x: Int,) -> Foo
 //│ res
 //│     = [Function (anonymous)] { class: [class Foo] }
 
 typeof(Foo)
-//│ string
+//│ Str
 //│ res
 //│     = 'function'
 
@@ -21,7 +21,7 @@ let f = Foo(123)
 //│   = Foo {}
 
 typeof(f)
-//│ string
+//│ Str
 //│ res
 //│     = 'object'
 
@@ -30,7 +30,7 @@ let cls = Foo.class
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.29: 	let cls = Foo.class
 //│ ║        	          ^^^^^^^^^
-//│ ╟── reference of type `(x: int,) -> Foo` does not have field 'class'
+//│ ╟── reference of type `(x: Int,) -> Foo` does not have field 'class'
 //│ ║  l.29: 	let cls = Foo.class
 //│ ╙──      	          ^^^
 //│ let cls: error
@@ -38,7 +38,7 @@ let cls = Foo.class
 //│     = [class Foo]
 
 typeof(cls)
-//│ string
+//│ Str
 //│ res
 //│     = 'function'
 
@@ -69,7 +69,7 @@ let cls = Derived.class
 //│     = [Function: Derived]
 
 typeof(cls)
-//│ string
+//│ Str
 //│ res
 //│     = 'function'
 

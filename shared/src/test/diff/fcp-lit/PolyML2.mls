@@ -26,7 +26,7 @@ rec def mem x l = case l of
   { Nil -> false
   | Cons -> if eq l.head x then true else mem x l.tail
   }
-//│ mem: anything -> 'a -> bool
+//│ mem: anything -> 'a -> Bool
 //│   where
 //│     'a <: (Cons[?] with {tail: 'a}) | Nil
 
@@ -46,11 +46,11 @@ class Collection[a]: { l: List[a] }
   method Mem x = mem x this.l
   method Fold f x = fold_left f x this.l
 //│ Defined class Collection[+a]
-//│ Defined Collection.Mem: Collection[?] -> anything -> bool
+//│ Defined Collection.Mem: Collection[?] -> anything -> Bool
 //│ Defined Collection.Fold: Collection['a] -> ('b -> 'a -> 'b) -> 'b -> 'b
 
 def coll_mem c x = c.Mem x
-//│ coll_mem: Collection[?] -> anything -> bool
+//│ coll_mem: Collection[?] -> anything -> Bool
 
 // typo in the paper? it was `fun x -> fun y -> ...`
 def simple_and_double c =

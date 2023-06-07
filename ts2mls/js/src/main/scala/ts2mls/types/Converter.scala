@@ -4,16 +4,16 @@ import mlscript.utils._
 
 object Converter {
   private val primitiveName = Map[String, String](
-    "boolean" -> "bool",
-    "number" -> "number",
-    "string" -> "string",
+    "boolean" -> "Bool",
+    "number" -> "Num",
+    "string" -> "Str",
     "any" -> "anything",
     "unknown" -> "anything",
     "void" -> "unit",
     "null" -> "null",
     "undefined" -> "undefined",
     "never" -> "nothing",
-    "object" -> "object",
+    "object" -> "Object",
     "true" -> "true",
     "false" -> "false",
     "symbol" -> "Symbol"
@@ -48,7 +48,7 @@ object Converter {
     case TSTypeParameter(name, _) => name // constraints should be translated where the type parameters were created rather than be used
     case TSTupleType(lst) => s"(${lst.foldLeft("")((p, t) => s"$p${convert(t)}, ")})"
     case TSArrayType(element) => s"MutArray<${convert(element)}>"
-    case TSEnumType => "int"
+    case TSEnumType => "Int"
     case TSMemberType(base, _) => convert(base) // TODO: support private/protected members
     case TSInterfaceType(name, members, typeVars, parents) =>
       convertRecord(s"trait $name", members, typeVars, parents, Map(), List(), exported)(indent)

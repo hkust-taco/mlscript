@@ -19,10 +19,9 @@ class Driver(options: DriverOptions) {
     new mlscript.Typer(
       dbg = false,
       verbose = false,
-      explainErrors = false
-    ) {
+      explainErrors = false,
       newDefs = true
-    }
+    )
 
   import typer._
 
@@ -129,7 +128,7 @@ class Driver(options: DriverOptions) {
   private def extractSig(filename: String, moduleName: String): TypingUnit =
     parseAndRun(filename, {
       case (_, declarations, _, origin) => TypingUnit(
-        NuTypeDef(Nms, TypeName(moduleName), Nil, S(Tup(Nil)), N, N, Nil, N, N, TypingUnit(declarations, Nil))(S(Loc(0, 1, origin)), N, N) :: Nil, Nil)
+        NuTypeDef(Mod, TypeName(moduleName), Nil, S(Tup(Nil)), N, N, Nil, N, N, TypingUnit(declarations, Nil))(S(Loc(0, 1, origin)), N, N) :: Nil, Nil)
     })
 
   private def `type`(tu: TypingUnit)(

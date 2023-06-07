@@ -49,11 +49,12 @@ sealed abstract class DeclKind(val str: Str)
 case object Val extends DeclKind("value")
 sealed abstract class TypeDefKind(str: Str) extends DeclKind(str)
 sealed trait ObjDefKind
-case object Cls extends TypeDefKind("class") with ObjDefKind
+sealed trait ClsLikeKind extends ObjDefKind
+case object Cls extends TypeDefKind("class") with ClsLikeKind
 case object Trt extends TypeDefKind("trait") with ObjDefKind
 case object Mxn extends TypeDefKind("mixin")
 case object Als extends TypeDefKind("type alias")
-case object Nms extends TypeDefKind("module") with ObjDefKind
+case object Mod extends TypeDefKind("module") with ClsLikeKind
 
 sealed abstract class Term                                           extends Terms with TermImpl
 sealed abstract class Lit                                            extends SimpleTerm with LitImpl

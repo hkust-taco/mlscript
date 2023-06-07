@@ -456,7 +456,7 @@ def DNE_to_EM dne =
   dne (fun not_em -> not_em (Right { v = fun a -> not_em (Left { v = a }) }))
 //│ DNE_to_EM: ((forall 'a 'b. ((Right & {v: forall 'v 'c. 'v -> 'c
 //│   where
-//│     'a <: (Left with {v: 'v}) -> 'c}) -> 'b & 'a) -> 'b) -> 'd) -> 'd
+//│     'b <: (Left with {v: 'v}) -> 'c}) -> 'a & 'b) -> 'a) -> 'd) -> 'd
 
 :e // * Still needs distrib! (after "sound extrusion")
 DNE_to_EM: DNE -> EM

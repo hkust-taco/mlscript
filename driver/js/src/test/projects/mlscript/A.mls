@@ -1,1 +1,1 @@
-class Foo(x: int) {}
+class Foo(x: Int) {}

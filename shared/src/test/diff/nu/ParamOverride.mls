@@ -1,47 +1,47 @@
 :NewDefs
 
 
-class Base0(n: number)
-//│ class Base0(n: number)
+class Base0(n: Num)
+//│ class Base0(n: Num)
 
 // TODO
-class Derived0(n: int) extends Base
+class Derived0(n: Int) extends Base
 //│ ╔══[ERROR] Could not find definition `Base`
-//│ ║  l.8: 	class Derived0(n: int) extends Base
+//│ ║  l.8: 	class Derived0(n: Int) extends Base
 //│ ╙──     	                               ^^^^
-//│ class Derived0(n: int)
+//│ class Derived0(n: Int)
 //│ Code generation encountered an error:
 //│   unresolved parent Base.
 
 
-mixin Base1(n: number) {
+mixin Base1(n: Num) {
   fun original = n
 }
-//│ mixin Base1(n: number) {
-//│   fun original: number
+//│ mixin Base1(n: Num) {
+//│   fun original: Num
 //│ }
 
 :e
-mixin DerivedBad(n: int) extends Base
+mixin DerivedBad(n: Int) extends Base
 //│ ╔══[ERROR] mixin definitions cannot yet extend parents
-//│ ║  l.25: 	mixin DerivedBad(n: int) extends Base
+//│ ║  l.25: 	mixin DerivedBad(n: Int) extends Base
 //│ ╙──      	                                 ^^^^
-//│ mixin DerivedBad(n: int)
+//│ mixin DerivedBad(n: Int)
 
-mixin Derived1(n: int) {
+mixin Derived1(n: Int) {
   fun foo = [n, this.n, super.n]
 }
-//│ mixin Derived1(n: int) {
+//│ mixin Derived1(n: Int) {
 //│   super: {n: 'n}
 //│   this: {n: 'n0}
-//│   fun foo: (int, 'n0, 'n,)
+//│   fun foo: (Int, 'n0, 'n,)
 //│ }
 
 
 class Test0() extends Base1(1/2), Derived1(1)
 //│ class Test0() {
-//│   fun foo: (int, 1, number,)
-//│   fun original: number
+//│   fun foo: (Int, 1, Num,)
+//│   fun original: Num
 //│ }
 
 let t = Test0()
@@ -55,12 +55,12 @@ t.n
 //│     = 1
 
 t.original
-//│ number
+//│ Num
 //│ res
 //│     = 0.5
 
 t.foo
-//│ (int, 1, number,)
+//│ (Int, 1, Num,)
 //│ res
 //│     = [ 1, 1, 0.5 ]
 
@@ -69,9 +69,9 @@ module Test1 extends Base1(1/2), Derived1(1) {
   fun n = this.n
 }
 //│ module Test1 {
-//│   fun foo: (int, 1, number,)
+//│   fun foo: (Int, 1, Num,)
 //│   fun n: 1
-//│   fun original: number
+//│   fun original: Num
 //│ }
 
 :re
@@ -82,31 +82,31 @@ Test1.n
 //│   RangeError: Maximum call stack size exceeded
 
 
-class Test2(n: string) extends Base1(1/2), Derived1(1) {
+class Test2(n: Str) extends Base1(1/2), Derived1(1) {
   fun bar = [this.foo, n, this.n, this.original]
 }
-//│ class Test2(n: string) {
-//│   fun bar: ((int, string, number,), string, string, number,)
-//│   fun foo: (int, string, number,)
-//│   fun original: number
+//│ class Test2(n: Str) {
+//│   fun bar: ((Int, Str, Num,), Str, Str, Num,)
+//│   fun foo: (Int, Str, Num,)
+//│   fun original: Num
 //│ }
 
 Test2("test").bar
-//│ ((int, string, number,), string, string, number,)
+//│ ((Int, Str, Num,), Str, Str, Num,)
 //│ res
 //│     = [ [ 1, 'test', 0.5 ], 'test', 'test', 0.5 ]
 
 
-class Test3(n: string) extends Base1(1/2), Derived1(length(n)) {
+class Test3(n: Str) extends Base1(1/2), Derived1(length(n)) {
   fun foo = [super.foo, n, this.original]
 }
-//│ class Test3(n: string) {
-//│   fun foo: ((int, string, number,), string, number,)
-//│   fun original: number
+//│ class Test3(n: Str) {
+//│   fun foo: ((Int, Str, Num,), Str, Num,)
+//│   fun original: Num
 //│ }
 
 Test3("test").foo
-//│ ((int, string, number,), string, number,)
+//│ ((Int, Str, Num,), Str, Num,)
 //│ res
 //│     = [ [ 4, 'test', 0.5 ], 'test', 0.5 ]
 

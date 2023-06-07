@@ -2,8 +2,8 @@
 
 
 
-class Pair(lhs: int, rhs: int)
-//│ class Pair(lhs: int, rhs: int)
+class Pair(lhs: Int, rhs: Int)
+//│ class Pair(lhs: Int, rhs: Int)
 
 
 :p
@@ -14,7 +14,7 @@ fun f(override Pair(x, y)) = x + y
 //│ ╔══[ERROR] identifier not found: super
 //│ ║  l.11: 	fun f(override Pair(x, y)) = x + y
 //│ ╙──      	      ^^^^^^^^
-//│ fun f: anything -> (error | int)
+//│ fun f: Object -> (Int | error)
 //│ Syntax error:
 //│   'super' keyword unexpected here
 
@@ -24,7 +24,7 @@ mixin Test {
 }
 //│ mixin Test() {
 //│   super: {f: 'a -> 'b}
-//│   fun f: (Pair | 'a & ~#Pair) -> (int | 'b)
+//│   fun f: (Object & 'a & ~#Pair | Pair) -> (Int | 'b)
 //│ }
 
 
@@ -43,13 +43,13 @@ fun f(override Pair(x, y), z) = x + y
 //│ ╔══[ERROR] identifier not found: y
 //│ ║  l.33: 	fun f(override Pair(x, y), z) = x + y
 //│ ╙──      	                                    ^
-//│ fun f: (error, anything,) -> int
+//│ fun f: (error, anything,) -> Int
 //│ Code generation encountered an error:
 //│   term App(Var(Pair), Tup(_: Var(x), _: Var(y))) is not a valid pattern
 
 
 // TODO
 // :pe
-// fun f(override Pair(x, y)): int
+// fun f(override Pair(x, y)): Int
 
 

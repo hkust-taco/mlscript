@@ -11,7 +11,7 @@ class Right[T](value: T)
 fun foo(x) = if x is
   Some(Left(y)) then x
   Some(x) then x
-//│ fun foo: forall 'value. Some['value & (Left[anything] | ~#Left)] -> 'value
+//│ fun foo: forall 'value. Some['value & (Left[anything] | Object & ~#Left)] -> 'value
 
 foo(Some(Left(1)))
 //│ Left[1]

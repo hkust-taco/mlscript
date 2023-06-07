@@ -10,22 +10,22 @@ fun concat6(a, b, c, d, e, f) = concat2(a, concat5(b, c, d, e, f))
 fun concat7(a, b, c, d, e, f, g) = concat2(a, concat6(b, c, d, e, f, g))
 fun concat8(a, b, c, d, e, f, g, h) = concat2(a, concat7(b, c, d, e, f, g, h))
 fun par(a) = concat3("(", a, ")")
-//│ let str: anything -> string
-//│ fun concat2: (string, string,) -> string
-//│ fun concat3: (string, string, string,) -> string
-//│ fun concat4: (string, string, string, string,) -> string
-//│ fun concat5: (string, string, string, string, string,) -> string
-//│ fun concat6: (string, string, string, string, string, string,) -> string
-//│ fun concat7: (string, string, string, string, string, string, string,) -> string
-//│ fun concat8: (string, string, string, string, string, string, string, string,) -> string
-//│ fun par: string -> string
+//│ let str: anything -> Str
+//│ fun concat2: (Str, Str,) -> Str
+//│ fun concat3: (Str, Str, Str,) -> Str
+//│ fun concat4: (Str, Str, Str, Str,) -> Str
+//│ fun concat5: (Str, Str, Str, Str, Str,) -> Str
+//│ fun concat6: (Str, Str, Str, Str, Str, Str,) -> Str
+//│ fun concat7: (Str, Str, Str, Str, Str, Str, Str,) -> Str
+//│ fun concat8: (Str, Str, Str, Str, Str, Str, Str, Str,) -> Str
+//│ fun par: Str -> Str
 //│ str
 //│     = [Function: toString]
 
 type Option[A] = Some[A] | None
 class Some[A](value: A)
 module None
-//│ type Option[A] = Some[A] | None
+//│ type Option[A] = None | Some[A]
 //│ class Some[A](value: A)
 //│ module None
 
@@ -37,35 +37,35 @@ class Err[A](message: A)
 //│ class Err[A](message: A)
 
 type Type = FunctionType | PrimitiveType
-class PrimitiveType(name: string)
+class PrimitiveType(name: Str)
 class FunctionType(lhs: Type, rhs: Type)
 //│ type Type = FunctionType | PrimitiveType
-//│ class PrimitiveType(name: string)
+//│ class PrimitiveType(name: Str)
 //│ class FunctionType(lhs: Type, rhs: Type)
 
 // Helpers.
 fun _f(lhs, rhs) = FunctionType(lhs, rhs)
 fun _t(name) = PrimitiveType(name)
 //│ fun _f: (Type, Type,) -> FunctionType
-//│ fun _t: string -> PrimitiveType
+//│ fun _t: Str -> PrimitiveType
 
 type Term = Lit | Var | Abs | App
-class Lit(tag: string, ty: Type)
-class Var(name: string)
+class Lit(tag: Str, ty: Type)
+class Var(name: Str)
 class Abs(lhs: Var, lty: Type, rhs: Term)
 class App(lhs: Term, rhs: Term)
 // class App(lhs: Term, rhs: Term): Term
 //│ type Term = Abs | App | Lit | Var
-//│ class Lit(tag: string, ty: Type)
-//│ class Var(name: string)
+//│ class Lit(tag: Str, ty: Type)
+//│ class Var(name: Str)
 //│ class Abs(lhs: Var, lty: Type, rhs: Term)
 //│ class App(lhs: Term, rhs: Term)
 
 type TreeMap[A] = Node[A] | Empty
-class Node[A](key: string, value: A, left: TreeMap[A], right: TreeMap[A])
+class Node[A](key: Str, value: A, left: TreeMap[A], right: TreeMap[A])
 module Empty
-//│ type TreeMap[A] = Node[A] | Empty
-//│ class Node[A](key: string, value: A, left: TreeMap[A], right: TreeMap[A])
+//│ type TreeMap[A] = Empty | Node[A]
+//│ class Node[A](key: Str, value: A, left: TreeMap[A], right: TreeMap[A])
 //│ module Empty
 
 fun insert(t, k, v) =
@@ -82,21 +82,21 @@ fun find(t, k) =
       sgt(k)(k') then find(r, k)
       _ then Some(v)
     Empty then None
-//│ fun insert: forall 'A. (Empty | Node['A], string, 'A,) -> Node['A]
-//│ fun find: forall 'A0. (Empty | Node['A0], string,) -> (None | Some['A0])
+//│ fun insert: forall 'A. (Empty | Node['A], Str, 'A,) -> Node['A]
+//│ fun find: forall 'A0. (Empty | Node['A0], Str,) -> (None | Some['A0])
 
 fun showType(ty) =
   if ty is
     FunctionType(PrimitiveType(name), rhs) then concat3(name, " -> ", showType(rhs))
     FunctionType(lhs, rhs) then concat4("(", showType(lhs), ") -> ", showType(rhs))
     PrimitiveType(name) then name
-//│ fun showType: (FunctionType | PrimitiveType) -> string
+//│ fun showType: (FunctionType | PrimitiveType) -> Str
 
 showType(_t("int"))
 showType(_f(_t("int"), _t("bool")))
 showType(_f(_f(_t("int"), _t("bool")), _t("bool")))
 showType(_f(_t("bool"), _f(_t("int"), _t("bool"))))
-//│ string
+//│ Str
 //│ res
 //│     = 'int'
 //│ res
@@ -112,7 +112,7 @@ fun typeEqual(t1, t2) =
     t1 is FunctionType(lhs1, rhs1) and t2 is FunctionType(lhs2, rhs2) then
       typeEqual(lhs1, lhs2) and typeEqual(rhs1, rhs2)
     _ then false
-//│ fun typeEqual: (anything, anything,) -> bool
+//│ fun typeEqual: (Object, Object,) -> Bool
 
 fun showTerm(t) =
   if t is
@@ -122,13 +122,13 @@ fun showTerm(t) =
     App(Abs(lhs0, ty, lhs1), rhs) then
       concat5("((", showTerm(Abs(lhs0, ty, rhs)), ") ", showTerm(rhs), ")")
     App(lhs, rhs) then par(concat3(showTerm(lhs), " ", showTerm(rhs)))
-//│ fun showTerm: (Abs | App | Lit | Var) -> string
+//│ fun showTerm: (Abs | App | Lit | Var) -> Str
 
 showTerm(Var("x"))
 showTerm(Abs(Var("x"), _t("int"), Var("y")))
 showTerm(App(Var("x"), Var("y")))
 showTerm(App(Abs(Var("x"), _t("int"), Var("y")), Var("z")))
-//│ string
+//│ Str
 //│ res
 //│     = 'x'
 //│ res
@@ -139,7 +139,7 @@ showTerm(App(Abs(Var("x"), _t("int"), Var("y")), Var("z")))
 //│     = '((&x: int => z) z)'
 
 // Removing the return type annotation causes stack overflow.
-fun typeTerm(t: Term, ctx: TreeMap[Type]): Result[Type, string] =
+fun typeTerm(t: Term, ctx: TreeMap[Type]): Result[Type, Str] =
   if t is
     Lit(_, ty) then Ok(ty)
     Var(name) and find(ctx, name) is
@@ -156,20 +156,20 @@ fun typeTerm(t: Term, ctx: TreeMap[Type]): Result[Type, string] =
         Err(message) then Err(message)
       Ok(PrimitiveType(name)) then Err(concat3("cannot apply primitive type `", name, "`"))
       Err(message) then Err(message)
-//│ fun typeTerm: (t: Term, ctx: TreeMap[Type],) -> Result[Type, string]
+//│ fun typeTerm: (t: Term, ctx: TreeMap[Type],) -> Result[Type, Str]
 
 fun showTypeTerm(t, ctx) =
   if typeTerm(t, ctx) is
     Ok(ty) then concat3(showTerm(t), " : ", showType(ty))
     Err(message) then concat2("Type error: ", message)
-//│ fun showTypeTerm: (Term, TreeMap[Type],) -> string
+//│ fun showTypeTerm: (Term, TreeMap[Type],) -> Str
 
 showTypeTerm(Var("x"), Empty)
 showTypeTerm(Abs(Var("x"), _t("int"), Var("x")), Empty)
 showTypeTerm(App(Var("f"), Lit("0", _t("int"))), insert(Empty, "f", _f(_t("int"), _t("int"))))
 showTypeTerm(App(Var("f"), Lit("0.2", _t("float"))), insert(Empty, "f", _f(_t("int"), _t("int"))))
-showTypeTerm(App(Var("f"), Lit("0", _t("int"))), insert(Empty, "f", _t("string")))
-//│ string
+showTypeTerm(App(Var("f"), Lit("0", _t("int"))), insert(Empty, "f", _t("Str")))
+//│ Str
 //│ res
 //│     = 'Type error: unbound variable `x`'
 //│ res
@@ -179,4 +179,4 @@ showTypeTerm(App(Var("f"), Lit("0", _t("int"))), insert(Empty, "f", _t("string")
 //│ res
 //│     = 'Type error: expect the argument to be of type `int` but found `float`'
 //│ res
-//│     = 'Type error: cannot apply primitive type `string`'
+//│     = 'Type error: cannot apply primitive type `Str`'

@@ -18,22 +18,22 @@ mixin WithUid {
   fun unwrap(x) = super.unwrap(x).underlying
   fun rewrap(x, f) = super.rewrap(x, y => { underlying: f(y.underlying), uid: y.uid })
   fun getUid(x) = super.unwrap(x).uid
-  fun setUid(x, uid: int) = super.rewrap(x, y => {
+  fun setUid(x, uid: Int) = super.rewrap(x, y => {
     underlying: y.underlying,
     uid
   })
 }
 //│ mixin WithUid() {
-//│   super: {rewrap: ('a, forall 'uid. {uid: 'uid, underlying: 'underlying} -> {uid: 'uid, underlying: 'b},) -> 'c & ('d, forall 'underlying0. {underlying: 'underlying0} -> {uid: int, underlying: 'underlying0},) -> 'e, unwrap: 'f -> {underlying: 'underlying1} & 'g -> {uid: 'uid0}}
+//│   super: {rewrap: ('a, forall 'uid. {uid: 'uid, underlying: 'underlying} -> {uid: 'uid, underlying: 'b},) -> 'c & ('d, forall 'underlying0. {underlying: 'underlying0} -> {uid: Int, underlying: 'underlying0},) -> 'e, unwrap: 'f -> {underlying: 'underlying1} & 'g -> {uid: 'uid0}}
 //│   fun getUid: 'g -> 'uid0
 //│   fun rewrap: ('a, 'underlying -> 'b,) -> 'c
-//│   fun setUid: ('d, uid: int,) -> 'e
+//│   fun setUid: ('d, uid: Int,) -> 'e
 //│   fun unwrap: 'f -> 'underlying1
 //│ }
 
 
-class Type(name: string)
-//│ class Type(name: string)
+class Type(name: Str)
+//│ class Type(name: Str)
 
 mixin WithType {
   fun unwrap(x) = super.unwrap(x).underlying
@@ -57,15 +57,15 @@ module Test0 extends Base, WithUid
 //│ module Test0 {
 //│   fun getUid: {uid: 'uid} -> 'uid
 //│   fun rewrap: ({uid: 'uid0, underlying: 'underlying}, 'underlying -> 'a,) -> {uid: 'uid0, underlying: 'a}
-//│   fun setUid: ({underlying: 'underlying0}, uid: int,) -> {uid: int, underlying: 'underlying0}
+//│   fun setUid: ({underlying: 'underlying0}, uid: Int,) -> {uid: Int, underlying: 'underlying0}
 //│   fun unwrap: {underlying: 'underlying1} -> 'underlying1
 //│ }
 
 module Test0 extends Base, WithUid, WithUid
 //│ module Test0 {
 //│   fun getUid: {underlying: {uid: 'uid, underlying: 'underlying}} -> 'uid
-//│   fun rewrap: ({uid: 'uid0, underlying: {uid: 'uid1, underlying: 'underlying0 & 'underlying1}}, 'underlying1 -> 'underlying0,) -> {uid: 'uid0, underlying: {uid: int | 'uid1, underlying: 'underlying0}}
-//│   fun setUid: ({uid: 'uid0, underlying: {uid: 'uid1, underlying: 'underlying0 & 'underlying1}}, uid: int,) -> {uid: 'uid0, underlying: {uid: int | 'uid1, underlying: 'underlying0}}
+//│   fun rewrap: ({uid: 'uid0, underlying: {uid: 'uid1, underlying: 'underlying0 & 'underlying1}}, 'underlying1 -> 'underlying0,) -> {uid: 'uid0, underlying: {uid: Int | 'uid1, underlying: 'underlying0}}
+//│   fun setUid: ({uid: 'uid0, underlying: {uid: 'uid1, underlying: 'underlying0 & 'underlying1}}, uid: Int,) -> {uid: 'uid0, underlying: {uid: Int | 'uid1, underlying: 'underlying0}}
 //│   fun unwrap: {underlying: {uid: 'uid, underlying: 'underlying}} -> 'underlying
 //│ }
 
@@ -76,7 +76,7 @@ module Test1 extends Base, WithUid, WithType
 //│   fun getUid: {uid: 'uid} -> 'uid
 //│   fun rewrap: ({uid: 'uid0, underlying: {ty: 'ty0, underlying: 'underlying0 & 'underlying1}}, 'underlying1 -> 'underlying0,) -> {uid: 'uid0, underlying: {ty: Type | 'ty0, underlying: 'underlying0}}
 //│   fun setType: ({uid: 'uid0, underlying: {ty: 'ty0, underlying: 'underlying0 & 'underlying1}}, ty: Type,) -> {uid: 'uid0, underlying: {ty: Type | 'ty0, underlying: 'underlying0}}
-//│   fun setUid: ({underlying: 'underlying2}, uid: int,) -> {uid: int, underlying: 'underlying2}
+//│   fun setUid: ({underlying: 'underlying2}, uid: Int,) -> {uid: Int, underlying: 'underlying2}
 //│   fun unwrap: {underlying: {ty: 'ty, underlying: 'underlying}} -> 'underlying
 //│ }
 
@@ -108,17 +108,17 @@ Test1.getUid(a)
 //│     = 0
 
 Test1.setUid(a, 1)
-//│ {uid: int, underlying: {ty: Type, underlying: 42}}
+//│ {uid: Int, underlying: {ty: Type, underlying: 42}}
 //│ res
 //│     = { underlying: { ty: Type {}, underlying: 42 }, uid: 1 }
 
 Test1.getType(a).name
-//│ string
+//│ Str
 //│ res
 //│     = 'A'
 
 a.underlying.ty.name
-//│ string
+//│ Str
 //│ res
 //│     = 'A'
 
@@ -128,12 +128,12 @@ let b = Test1.setType(a, Type("B"))
 //│   = { underlying: { underlying: 42, ty: Type {} }, uid: 0 }
 
 Test1.getType(b).name
-//│ string
+//│ Str
 //│ res
 //│     = 'B'
 
 b.underlying.ty.name
-//│ string
+//│ Str
 //│ res
 //│     = 'B'
 

@@ -2,8 +2,8 @@
 
 
 
-mixin M0(x: int)
-//│ mixin M0(x: int)
+mixin M0(x: Int)
+//│ mixin M0(x: Int)
 
 :e
 class C0 extends M0
@@ -24,11 +24,11 @@ class C0 extends M0(true)
 //│ ╔══[ERROR] Type mismatch in type declaration:
 //│ ║  l.23: 	class C0 extends M0(true)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── reference of type `true` is not an instance of type `int`
+//│ ╟── reference of type `true` is not an instance of type `Int`
 //│ ║  l.23: 	class C0 extends M0(true)
 //│ ║        	                    ^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.5: 	mixin M0(x: int)
+//│ ║  l.5: 	mixin M0(x: Int)
 //│ ╙──     	            ^^^
 //│ class C0
 
@@ -56,10 +56,10 @@ class Foo {
 
 module Bar {
   fun hello = 0
-  type I = int
+  type I = Int
 }
 //│ module Bar {
-//│   type I = int
+//│   type I = Int
 //│   fun hello: 0
 //│ }
 
@@ -105,22 +105,22 @@ class C1 { fun oops = this.x }
 
 
 :e
-class C { fun x: int }
+class C { fun x: Int }
 //│ ╔══[ERROR] Member `x` is declared in parent but not implemented in `C`
-//│ ║  l.108: 	class C { fun x: int }
+//│ ║  l.108: 	class C { fun x: Int }
 //│ ║         	      ^
 //│ ╟── Declared here:
-//│ ║  l.108: 	class C { fun x: int }
+//│ ║  l.108: 	class C { fun x: Int }
 //│ ╙──       	              ^^^^^^
 //│ class C {
-//│   fun x: int
+//│   fun x: Int
 //│ }
 
 // FIXME should error
 // :e
-class C { val x: int }
+class C { val x: Int }
 //│ class C {
-//│   let x: int
+//│   let x: Int
 //│ }
 
 

@@ -3,30 +3,30 @@
 
 
 module Oops {
-  fun a : int
+  fun a : Int
   fun a = 2
 }
 //│ module Oops {
-//│   fun a: int
+//│   fun a: Int
 //│ }
 
 :e
 module Oops {
-  fun a : int
+  fun a : Int
 }
 //│ ╔══[ERROR] Member `a` is declared in parent but not implemented in `Oops`
 //│ ║  l.14: 	module Oops {
 //│ ║        	       ^^^^
 //│ ╟── Declared here:
-//│ ║  l.15: 	  fun a : int
+//│ ║  l.15: 	  fun a : Int
 //│ ╙──      	      ^^^^^^^
 //│ module Oops {
-//│   fun a: int
+//│   fun a: Int
 //│ }
 
 :e
 module Oops {
-  fun a : int
+  fun a : Int
   fun a : string
   fun a = a
 }
@@ -39,26 +39,26 @@ module Oops {
 
 :e
 module Oops {
-  fun a : int
+  fun a : Int
   fun a = false
 }
 //│ ╔══[ERROR] Type mismatch in definition of method a:
 //│ ║  l.43: 	  fun a = false
 //│ ║        	      ^^^^^^^^^
-//│ ╟── reference of type `false` is not an instance of type `int`
+//│ ╟── reference of type `false` is not an instance of type `Int`
 //│ ║  l.43: 	  fun a = false
 //│ ║        	          ^^^^^
-//│ ╟── but it flows into definition of method a with expected type `int`
+//│ ╟── but it flows into definition of method a with expected type `Int`
 //│ ║  l.43: 	  fun a = false
 //│ ║        	      ^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.42: 	  fun a : int
+//│ ║  l.42: 	  fun a : Int
 //│ ║        	          ^^^
 //│ ╟── from signature of member `a`:
-//│ ║  l.42: 	  fun a : int
+//│ ║  l.42: 	  fun a : Int
 //│ ╙──      	      ^^^^^^^
 //│ module Oops {
-//│   fun a: int
+//│   fun a: Int
 //│ }
 
 :e

@@ -6,7 +6,7 @@ module Mod
 //│ module Mod
 
 Mod === Mod
-//│ bool
+//│ Bool
 //│ res
 //│     = true
 
@@ -15,16 +15,16 @@ class Cls1()
 //│ class Cls1()
 
 Cls1() === Cls1()
-//│ bool
+//│ Bool
 //│ res
 //│     = false
 
 
-class Cls2(x: int)
-//│ class Cls2(x: int)
+class Cls2(x: Int)
+//│ class Cls2(x: Int)
 
 Cls2(0) === Cls2(1)
-//│ bool
+//│ Bool
 //│ res
 //│     = false
 
@@ -40,23 +40,23 @@ let p = Pair(1, 2)
 //│   = Pair {}
 
 p === p
-//│ bool
+//│ Bool
 //│ res
 //│     = true
 
 
 x => p === x
-//│ {fst: Eql[1 | 2], snd: Eql[1 | 2]} -> bool
+//│ {fst: Eql[1 | 2], snd: Eql[1 | 2]} -> Bool
 //│ res
 //│     = [Function: res]
 
 x => x === p
-//│ Eql[Pair[1 | 2]] -> bool
+//│ Eql[Pair[1 | 2]] -> Bool
 //│ res
 //│     = [Function: res]
 
 p === { fst: 1, snd: 2 }
-//│ bool
+//│ Bool
 //│ res
 //│     = false
 
@@ -68,7 +68,7 @@ p === { fst: 1, snd: 2 }
 //│ ╟── record literal of type `{fst: 1, snd: 2}` is not an instance of type `Eql`
 //│ ║  l.64: 	{ fst: 1, snd: 2 } === p
 //│ ╙──      	       ^^^^^^^^^
-//│ bool | error
+//│ error | false | true
 //│ res
 //│     = false
 
@@ -77,8 +77,8 @@ let r = {x: 42, y: y => y}
 //│ r
 //│   = { x: 42, y: [Function: y] }
 
-r : {x: int}
-//│ {x: int}
+r : {x: Int}
+//│ {x: Int}
 //│ res
 //│     = { x: 42, y: [Function: y] }
 
@@ -91,13 +91,13 @@ x => { a: 0 } === x
 //│ ╟── record literal of type `{a: 0}` is not an instance of type `Eql`
 //│ ║  l.87: 	x => { a: 0 } === x
 //│ ╙──      	          ^
-//│ anything -> (bool | error)
+//│ anything -> (error | false | true)
 //│ res
 //│ Syntax error:
 //│   Unexpected token '==='
 
 x => x === { a: 0 }
-//│ Eql[{a: 0}] -> bool
+//│ Eql[{a: 0}] -> Bool
 //│ res
 //│     = [Function: res]
 
@@ -113,10 +113,10 @@ q === q
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.112: 	q === q
 //│ ║         	^^^^^^^
-//│ ╟── integer literal of type `1` is not an instance of type `string`
+//│ ╟── integer literal of type `1` is not an instance of type `Str`
 //│ ║  l.106: 	let q = Pair(1, "oops")
 //│ ╙──       	             ^
-//│ bool | error
+//│ error | false | true
 //│ res
 //│     = true
 
@@ -130,7 +130,7 @@ let q = Pair2(1, "oops")
 //│   = Pair2 {}
 
 q === q
-//│ bool
+//│ Bool
 //│ res
 //│     = true
 

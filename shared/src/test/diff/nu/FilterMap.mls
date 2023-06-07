@@ -3,9 +3,9 @@
 
 // * From https://arxiv.org/abs/2302.12783
 
-// 1 -spec filtermap ( fun (( T ) -> boolean ()) , [ T ]) -> [ T ]
+// 1 -spec filtermap ( fun (( T ) -> Boolean ()) , [ T ]) -> [ T ]
 // 2 ; ( fun (( T ) -> { true , U } | false ) , [ T ]) -> [ U ]
-// 3 ; ( fun (( T ) -> { true , U } | boolean ()) , [ T ]) -> [ T | U ].
+// 3 ; ( fun (( T ) -> { true , U } | Boolean ()) , [ T ]) -> [ T | U ].
 // 4 filtermap ( _F , []) -> [];
 // 5 filtermap (F , [ X | XS ]) ->
 // 6 case F ( X ) of
@@ -30,15 +30,15 @@ fun filtermap(f, xs) = if xs is
     [true, z] then Cons(y, filtermap(f, ys))
 //│ ╔══[ERROR] type identifier not found: Tuple#2
 //│ ╙──
-//│ fun filtermap: ((Cons[nothing] | Nil) -> (error | false | true), Cons[anything] | Nil,) -> (Cons[nothing] | Nil | error)
+//│ fun filtermap: ((Cons[nothing] | Nil) -> nothing, Cons[anything] | Nil,) -> (Cons[nothing] | Nil | error)
 //│ Code generation encountered an error:
 //│   unknown match case: Tuple#2
 
 
-module True
-module False
-//│ module True
-//│ module False
+module Tru
+module Fals
+//│ module Tru
+//│ module Fals
 
 class Pair[A, B](lhs: A, rhs: B)
 //│ class Pair[A, B](lhs: A, rhs: B)
@@ -46,10 +46,10 @@ class Pair[A, B](lhs: A, rhs: B)
 fun filtermap(f, xs) = if xs is
   Nil then Nil
   Cons(y, ys) then if f(y) is
-    True then filtermap(f, ys)
-    False then Cons(y, filtermap(f, ys))
-    Pair(True, z) then Cons(z, filtermap(f, ys))
-//│ fun filtermap: forall 'head 'A. ('head -> (False | Pair[True, 'A] | True), Cons['head & 'A] | Nil,) -> (Cons['A] | Nil)
+    Tru then filtermap(f, ys)
+    Fals then Cons(y, filtermap(f, ys))
+    Pair(Tru, z) then Cons(z, filtermap(f, ys))
+//│ fun filtermap: forall 'head 'A. ('head -> (Fals | Pair[Tru, 'A] | Tru), Cons['head & 'A] | Nil,) -> (Cons['A] | Nil)
 
 fun mkString(xs) =
   if xs is
@@ -57,24 +57,24 @@ fun mkString(xs) =
     Cons(x, xs') and xs' is
       Nil then toString(x)
       else concat(toString(x))(concat(", ")(mkString(xs')))
-//│ fun mkString: (Cons[anything] | Nil) -> string
+//│ fun mkString: (Cons[anything] | Nil) -> Str
 
 let list = Cons(1, Cons(2, Cons(3, Cons(4, Cons(5, Cons(6, Cons(7, Nil)))))))
 mkString of list
 //│ let list: Cons[1 | 2 | 3 | 4 | 5 | 6 | 7]
-//│ string
+//│ Str
 //│ list
 //│      = Cons {}
 //│ res
 //│     = '1, 2, 3, 4, 5, 6, 7'
 
-mkString of filtermap(x => if x % 2 == 0 then True else False, list)
-mkString of filtermap(x => if x % 2 == 0 then False else True, list)
+mkString of filtermap(x => if x % 2 == 0 then Tru else Fals, list)
+mkString of filtermap(x => if x % 2 == 0 then Fals else Tru, list)
 mkString of filtermap(x => (if
-  x % 2 == 0 then False
-  x % 3 == 0 then Pair(True, x / 3)
-  else True), list)
-//│ string
+  x % 2 == 0 then Fals
+  x % 3 == 0 then Pair(Tru, x / 3)
+  else Tru), list)
+//│ Str
 //│ res
 //│     = '1, 3, 5, 7'
 //│ res

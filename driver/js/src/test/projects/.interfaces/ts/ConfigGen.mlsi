@@ -1,4 +1,4 @@
 import "json5.mlsi"
 export declare module ConfigGen {
-  fun generate(outDir: string): string
+  fun generate(outDir: Str): Str
 }

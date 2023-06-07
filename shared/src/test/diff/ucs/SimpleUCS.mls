@@ -193,7 +193,7 @@ fun f(x, y) =
 //│   if expression was not desugared
 
 fun isValid(x) = if x then false else true
-//│ isValid: anything -> bool
+//│ isValid: anything -> Bool
 //│        = [Function: isValid]
 
 fun f(x, allowNone) =

@@ -18,11 +18,11 @@ class Foo { fun test = this.x }
 
 
 :e
-class Foo(n: int) { fun test = this.x }
-//│ ╔══[ERROR] Type `#Foo & {n: int}` does not contain member `x`
-//│ ║  l.21: 	class Foo(n: int) { fun test = this.x }
+class Foo(n: Int) { fun test = this.x }
+//│ ╔══[ERROR] Type `#Foo & {n: Int}` does not contain member `x`
+//│ ║  l.21: 	class Foo(n: Int) { fun test = this.x }
 //│ ╙──      	                                   ^^
-//│ class Foo(n: int) {
+//│ class Foo(n: Int) {
 //│   fun test: error
 //│ }
 
@@ -51,12 +51,12 @@ class Foo {
 
 // TODO
 // * All on one line:
-class Test { this: { x: int}; fun test = this.x }
+class Test { this: { x: Int}; fun test = this.x }
 //│ ╔══[ERROR] Type `#Test` does not contain member `x`
-//│ ║  l.54: 	class Test { this: { x: int}; fun test = this.x }
+//│ ║  l.54: 	class Test { this: { x: Int}; fun test = this.x }
 //│ ╙──      	                                             ^^
 //│ ╔══[ERROR] Type `#Test` does not contain member `x`
-//│ ║  l.54: 	class Test { this: { x: int}; fun test = this.x }
+//│ ║  l.54: 	class Test { this: { x: Int}; fun test = this.x }
 //│ ╙──      	                     ^
 //│ class Test {
 //│   fun test: error

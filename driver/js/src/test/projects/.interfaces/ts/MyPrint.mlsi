@@ -1,6 +1,6 @@
 export declare module MyPrint {
   export declare class DatePrint {
-    constructor(p: string)
-    fun print(msg: string): unit
+    constructor(p: Str)
+    fun print(msg: Str): unit
   }
 }

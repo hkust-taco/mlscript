@@ -628,10 +628,16 @@ trait TermImpl extends StatementImpl { self: Term =>
 private class NotAType(val trm: Statement) extends Throwable
 
 trait LitImpl { self: Lit =>
-  def baseClasses: Set[TypeName] = this match {
-    case _: IntLit => Set.single(TypeName("int")) + TypeName("number") + TypeName("Eql")
-    case _: StrLit => Set.single(TypeName("string")) + TypeName("Eql")
-    case _: DecLit => Set.single(TypeName("number")) + TypeName("Eql")
+  def baseClassesOld: Set[TypeName] = this match {
+    case _: IntLit => Set.single(TypeName("int")) + TypeName("number")
+    case _: StrLit => Set.single(TypeName("string"))
+    case _: DecLit => Set.single(TypeName("number"))
+    case _: UnitLit => Set.empty
+  }
+  def baseClassesNu: Set[TypeName] = this match {
+    case _: IntLit => Set.single(TypeName("Int")) + TypeName("Num") + TypeName("Object")
+    case _: StrLit => Set.single(TypeName("Str")) + TypeName("Object")
+    case _: DecLit => Set.single(TypeName("Num")) + TypeName("Object")
     case _: UnitLit => Set.empty
   }
 }
@@ -743,7 +749,7 @@ trait StatementImpl extends Located { self: Statement =>
       (diags ::: diags2 ::: diags3) -> (TypeDef(Als, TypeName(v.name).withLocOf(v), targs,
           dataDefs.map(td => AppliedType(td.nme, td.tparams)).reduceOption(Union).getOrElse(Bot), Nil, Nil, Nil
         ).withLocOf(hd) :: cs)
-    case NuTypeDef(Nms, nme, tps, tup, ctor, sig, pars, sup, ths, unit) =>
+    case NuTypeDef(Mod, nme, tps, tup, ctor, sig, pars, sup, ths, unit) =>
       ??? // TODO
     case NuTypeDef(Mxn, nme, tps, tup, ctor, sig, pars, sup, ths, unit) =>
       ??? // TODO

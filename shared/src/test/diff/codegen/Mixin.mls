@@ -4,9 +4,9 @@
 :js
 :ShowRepl
 class Add<E>(lhs: E, rhs: E)
-class Lit(n: int)
+class Lit(n: Int)
 //│ class Add[E](lhs: E, rhs: E)
-//│ class Lit(n: int)
+//│ class Lit(n: Int)
 //│ // Prelude
 //│ let res;
 //│ class TypingUnit {
@@ -107,12 +107,12 @@ class Lit(n: int)
 mixin EvalBase {
   fun eval(e) =
     if e is
-      Lit(n) then n: int
+      Lit(n) then n: Int
       Add(l, r) then this.eval(l) + this.eval(r)
 }
 //│ mixin EvalBase() {
-//│   this: {eval: 'lhs -> int}
-//│   fun eval: (Add['lhs] | Lit) -> int
+//│   this: {eval: 'lhs -> Int}
+//│   fun eval: (Add['lhs] | Lit) -> Int
 //│ }
 //│ // Prelude
 //│ class TypingUnit1 {
@@ -235,8 +235,8 @@ mixin EvalNeg {
 }
 //│ mixin EvalNeg() {
 //│   super: {eval: 'a -> 'b}
-//│   this: {eval: 'expr -> int}
-//│   fun eval: (Neg['expr] | 'a & ~#Neg) -> (int | 'b)
+//│   this: {eval: 'expr -> Int}
+//│   fun eval: (Neg['expr] | Object & 'a & ~#Neg) -> (Int | 'b)
 //│ }
 //│ // Prelude
 //│ class TypingUnit3 {
@@ -297,7 +297,7 @@ mixin EvalNegNeg {
 //│ mixin EvalNegNeg() {
 //│   super: {eval: (Neg[nothing] | 'a) -> 'b}
 //│   this: {eval: 'expr -> 'b}
-//│   fun eval: (Neg[Neg['expr] | ~Neg[anything]] | 'a & ~#Neg) -> 'b
+//│   fun eval: (Neg[Neg['expr] | Object & ~#Neg] | Object & 'a & ~#Neg) -> 'b
 //│ }
 //│ // Prelude
 //│ class TypingUnit4 {
@@ -352,10 +352,12 @@ mixin EvalNegNeg {
 :ShowRepl
 module TestLang extends EvalBase, EvalNeg, EvalNegNeg
 //│ module TestLang {
-//│   fun eval: 'a -> int
+//│   fun eval: 'a -> Int
 //│ }
 //│ where
-//│   'a <: Add['a] | Lit | Neg['a & (Neg['a] | ~#Neg)]
+//│   'a <: Neg['A] | Object & 'b & ~#Neg
+//│   'A <: Neg['a & 'A] | Neg['A] & ~#Neg | Object & 'b & ~#Neg
+//│   'b <: Add['a] | Lit | Neg['a]
 //│ // Prelude
 //│ class TypingUnit5 {
 //│   #TestLang;
@@ -412,8 +414,8 @@ fun mk(n) = if n is
   1 then Neg(mk(n))
   _ then Add(mk(n), mk(n))
 TestLang.eval(mk(0))
-//│ fun mk: forall 'E. anything -> 'E
-//│ int
+//│ fun mk: forall 'E. Object -> 'E
+//│ Int
 //│ where
 //│   'E :> Add['E] | Lit | Neg['E]
 //│ // Prelude
@@ -427,7 +429,7 @@ TestLang.eval(mk(0))
 //│ // Query 2
 //│ res = TestLang.eval(mk(0));
 //│ // End of generated code
-//│ ┌ Block at Mixin.mls:410
+//│ ┌ Block at Mixin.mls:412
 //│ ├─┬ Prelude
 //│ │ ├── Code
 //│ │ │   class TypingUnit6 {}
@@ -453,36 +455,35 @@ TestLang.eval(mk(0))
 //│     = [Function: mk]
 
 
-class Foo(x: int)
-//│ class Foo(x: int)
+class Foo(x: Int)
+//│ class Foo(x: Int)
+
+class Bar(x: Int, y: Int) extends Foo(x + y)
+//│ class Bar(x: Int, y: Int) extends Foo
 
 
-class Bar(x: int, y: int) extends Foo(x + y)
-//│ class Bar(x: int, y: int) extends Foo
-
-
-mixin AA(a: int) {
+mixin AA(a: Int) {
 }
-//│ mixin AA(a: int)
+//│ mixin AA(a: Int)
 
 mixin BB {}
 //│ mixin BB()
 
 
-class C(x: int) extends BB
-//│ class C(x: int)
+class C(x: Int) extends BB
+//│ class C(x: Int)
 
-class D(x: int) extends AA(x)
-//│ class D(x: int)
+class D(x: Int) extends AA(x)
+//│ class D(x: Int)
 
-class E(x: int) extends BB, AA(x)
-//│ class E(x: int)
+class E(x: Int) extends BB, AA(x)
+//│ class E(x: Int)
 
 :js
-mixin Fooo(x: int) { fun f = [x, this.x] }
-//│ mixin Fooo(x: int) {
+mixin Fooo(x: Int) { fun f = [x, this.x] }
+//│ mixin Fooo(x: Int) {
 //│   this: {x: 'x}
-//│   fun f: (int, 'x,)
+//│   fun f: (Int, 'x,)
 //│ }
 //│ // Prelude
 //│ class TypingUnit14 {
@@ -513,8 +514,8 @@ mixin Fooo(x: int) { fun f = [x, this.x] }
 //│ // End of generated code
 
 :js
-mixin Bazz(y: int)
-//│ mixin Bazz(y: int)
+mixin Bazz(y: Int)
+//│ mixin Bazz(y: Int)
 //│ // Prelude
 //│ class TypingUnit15 {
 //│   constructor() {
@@ -538,7 +539,7 @@ mixin Bazz(y: int)
 :js
 module Barr extends Fooo(0), Bazz(1)
 //│ module Barr {
-//│   fun f: (int, 0,)
+//│   fun f: (Int, 0,)
 //│ }
 //│ // Prelude
 //│ class TypingUnit16 {
@@ -579,7 +580,7 @@ mixin Base {
   fun x = y
 }
 //│ ╔══[ERROR] identifier not found: y
-//│ ║  l.579: 	  fun x = y
+//│ ║  l.580: 	  fun x = y
 //│ ╙──       	          ^
 //│ mixin Base() {
 //│   fun x: error
@@ -597,12 +598,12 @@ module Test extends Base
 //│   ReferenceError: Base is not defined
 
 
-mixin MA(a: int)
-mixin MB(b1: int, b2: int)
-mixin MC(c: int)
-//│ mixin MA(a: int)
-//│ mixin MB(b1: int, b2: int)
-//│ mixin MC(c: int)
+mixin MA(a: Int)
+mixin MB(b1: Int, b2: Int)
+mixin MC(c: Int)
+//│ mixin MA(a: Int)
+//│ mixin MB(b1: Int, b2: Int)
+//│ mixin MC(c: Int)
 
 :js
 module MM extends MA(1), MB(2, 3), MC(4)

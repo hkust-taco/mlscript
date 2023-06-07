@@ -244,10 +244,10 @@ Test2_1.n
 
 module Test2_1 {
   fun t2 = Test2_2
-  fun a: int
+  fun a: Int
   fun a = Test2_2.b
   fun d = Test2_2.e
-  fun n: int
+  fun n: Int
   fun n = 456
 }
 module Test2_2 {
@@ -256,15 +256,15 @@ module Test2_2 {
   fun e = Test2_1.n
 }
 //│ module Test2_1 {
-//│   fun a: int
-//│   fun d: int
-//│   fun n: int
+//│   fun a: Int
+//│   fun d: Int
+//│   fun n: Int
 //│   fun t2: Test2_2
 //│ }
 //│ module Test2_2 {
 //│   fun b: 123
-//│   fun c: int
-//│   fun e: int
+//│   fun c: Int
+//│   fun e: Int
 //│ }
 
 Test2_1.t2.b
@@ -273,28 +273,28 @@ Test2_1.t2.b
 //│     = 123
 
 Test2_1.a
-//│ int
+//│ Int
 //│ res
 //│     = 123
 
 Test2_1.d
-//│ int
+//│ Int
 //│ res
 //│     = 456
 
 Test2_1.n
-//│ int
+//│ Int
 //│ res
 //│     = 456
 
 
-class Test2(n: int) {
+class Test2(n: Int) {
   fun inc = Test3.inc(this)
 }
 module Test3 {
   fun inc(t: Test2) = Test2(t.n + 1)
 }
-//│ class Test2(n: int) {
+//│ class Test2(n: Int) {
 //│   fun inc: Test2
 //│ }
 //│ module Test3 {

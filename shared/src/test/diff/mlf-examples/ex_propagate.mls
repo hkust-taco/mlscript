@@ -38,7 +38,7 @@ fun x -> ((fun y -> y y) : 'a -> Sid)
 fun x_ -> (fun y -> y y)
 //│ res: anything -> ('a -> Sid & 'a) -> Sid
 //│    = [Function: res]
-//│ res: anything -> (forall 'a 'b. ('a -> 'b & 'a) -> 'b)
+//│ res: anything -> (forall 'a 'b. ('b -> 'a & 'b) -> 'a)
 //│    = [Function: res]
 
 // let (delta:sid -> sid) = fun x -> x x

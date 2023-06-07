@@ -56,24 +56,24 @@ C.foo(false)
 //│ res
 //│     = false
 
-module C extends Test[int] {
+module C extends Test[Int] {
   fun baz1 = this.foo(0)
   fun baz2 = this.bar(this.foo)
 }
 //│ module C {
-//│   fun bar: (int -> int) -> int -> int
-//│   fun baz1: int
-//│   fun baz2: int -> int
-//│   fun foo: int -> int
+//│   fun bar: (Int -> Int) -> Int -> Int
+//│   fun baz1: Int
+//│   fun baz2: Int -> Int
+//│   fun foo: Int -> Int
 //│ }
 
 C.baz1
-//│ int
+//│ Int
 //│ res
 //│     = 0
 
 C.foo(1)
-//│ int
+//│ Int
 //│ res
 //│     = 1
 
@@ -82,16 +82,16 @@ C.foo(false)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.81: 	C.foo(false)
 //│ ║        	^^^^^^^^^^^^
-//│ ╟── reference of type `false` is not an instance of type `int`
+//│ ╟── reference of type `false` is not an instance of type `Int`
 //│ ║  l.81: 	C.foo(false)
 //│ ║        	      ^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.59: 	module C extends Test[int] {
+//│ ║  l.59: 	module C extends Test[Int] {
 //│ ║        	                      ^^^
 //│ ╟── Note: type parameter A is defined at:
 //│ ║  l.22: 	mixin Test[A] {
 //│ ╙──      	           ^
-//│ error | int
+//│ Int | error
 //│ res
 //│     = false
 
@@ -122,17 +122,17 @@ mixin Test[A] {
 //│   fun foo: A -> A
 //│ }
 
-class C(arg: int) extends Test
-//│ class C(arg: int) {
-//│   fun bar: ('A | int, 'A | int,)
-//│   fun baz: int
-//│   fun foo: 'A -> ('A | int)
+class C(arg: Int) extends Test
+//│ class C(arg: Int) {
+//│   fun bar: ('A | Int, 'A | Int,)
+//│   fun baz: Int
+//│   fun foo: 'A -> ('A | Int)
 //│ }
 
 let c = C(1)
 [c.foo(false), c.bar]
 //│ let c: C
-//│ (false | int, (int, int,),)
+//│ (Int | false, (Int, Int,),)
 //│ c
 //│   = C {}
 //│ res
@@ -146,13 +146,13 @@ module D extends C(0) {
 //│ ║  l.143: 	  this.foo(false)
 //│ ╙──       	      ^^^^
 //│ module D extends C {
-//│   fun bar: forall 'A. ('A | int, 'A | int,)
-//│   fun baz: int
-//│   fun foo: forall 'A. 'A -> ('A | int)
+//│   fun bar: forall 'A. ('A | Int, 'A | Int,)
+//│   fun baz: Int
+//│   fun foo: forall 'A. 'A -> ('A | Int)
 //│ }
 
 :e // TODO support or produce better error (arg is not actually recursive)
-class C extends Test { // it also fails with Test[int]...
+class C extends Test { // it also fails with Test[Int]...
   fun arg = 123
 }
 //│ ╔══[ERROR] Type `#C & {bar: (?A, ?A,), baz: ?a, foo: ?A -> ?A}` does not contain member `arg`
@@ -174,14 +174,14 @@ class C extends Test { // it also fails with Test[int]...
 //│ }
 
 class C extends Test {
-  fun arg: int
+  fun arg: Int
   fun arg = 123
 }
 //│ class C {
-//│   fun arg: int
-//│   fun bar: ('A | int, 'A | int,)
-//│   fun baz: int
-//│   fun foo: 'A -> ('A | int)
+//│   fun arg: Int
+//│   fun bar: ('A | Int, 'A | Int,)
+//│   fun baz: Int
+//│   fun foo: 'A -> ('A | Int)
 //│ }
 
 
