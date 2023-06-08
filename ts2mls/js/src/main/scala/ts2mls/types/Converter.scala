@@ -40,9 +40,8 @@ object Converter {
     case TSPrimitiveType(typeName) => primitiveName(typeName)
     case TSReferenceType(name) => name
     case TSFunctionType(params, res, _) =>
-      if (params.length == 0) s"${primitiveName("void")} => ${convert(res)}"
-      else
-        params.foldRight(convert(res))((p, f) => s"(${convert(p.tp)}) => $f")
+      val pList = if (params.isEmpty) "" else params.map(p => s"${convert(p)("")}").reduceLeft((r, p) => s"$r, $p")
+      s"($pList) => ${convert(res)}"
     case TSUnionType(lhs, rhs) => s"(${convert(lhs)}) | (${convert(rhs)})"
     case TSIntersectionType(lhs, rhs) => s"(${convert(lhs)}) & (${convert(rhs)})"
     case TSTypeParameter(name, _) => name // constraints should be translated where the type parameters were created rather than be used

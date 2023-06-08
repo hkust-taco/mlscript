@@ -1,454 +1,456 @@
-val NaN: number
-val Infinity: number
-fun eval(x: string): anything
-fun parseInt(string: string, radix: (number) | (undefined)): number
-fun parseFloat(string: string): number
-fun isNaN(number: number): (false) | (true)
-fun isFinite(number: number): (false) | (true)
-fun decodeURI(encodedURI: string): string
-fun decodeURIComponent(encodedURIComponent: string): string
-fun encodeURI(uri: string): string
-fun encodeURIComponent(uriComponent: (((string) | (number)) | (false)) | (true)): string
-fun escape(string: string): string
-fun unescape(string: string): string
-declare trait Symbol {
-  fun toString(): string
-  fun valueOf(): Symbol
-}
-type PropertyKey = ((string) | (number)) | (Symbol)
-declare trait PropertyDescriptor {
-  val configurable: ((false) | (true)) | (undefined)
-  val set: ((anything) => unit) | (undefined)
-  val enumerable: ((false) | (true)) | (undefined)
-  val get: (unit => anything) | (undefined)
-  val writable: ((false) | (true)) | (undefined)
-  val value: (anything) | (undefined)
-}
-declare trait PropertyDescriptorMap {
-  val __index: Unsupported<"[key: PropertyKey]: PropertyDescriptor;", "ts2mls/js/src/test/typescript/ES5.d.ts", 101, 33>
-}
-declare trait Object {
-  fun hasOwnProperty(v: ((string) | (number)) | (Symbol)): (false) | (true)
-  fun propertyIsEnumerable(v: ((string) | (number)) | (Symbol)): (false) | (true)
-  fun valueOf(): Object
-  fun toLocaleString(): string
-  val id"constructor": Function
-  fun isPrototypeOf(v: Object): (false) | (true)
-  fun toString(): string
-}
-declare trait ObjectConstructor {
-  val __call: Unsupported<"(value: any): any;", "ts2mls/js/src/test/typescript/ES5.d.ts", 139, 12>
-  fun getOwnPropertyNames(o: anything): MutArray<string>
-  fun isFrozen(o: anything): (false) | (true)
-  fun getPrototypeOf(o: anything): anything
-  fun defineProperty<T>(o: T, p: ((string) | (number)) | (Symbol), attributes: (PropertyDescriptor) & (ThisType<anything>)): T
-  val prototype: Object
-  fun isSealed(o: anything): (false) | (true)
-  fun defineProperties<T>(o: T, properties: (PropertyDescriptorMap) & (ThisType<anything>)): T
-  fun preventExtensions<T>(o: T): T
-  val create: ((object) => anything) & ((object) => ((PropertyDescriptorMap) & (ThisType<anything>)) => anything)
-  fun freeze<T>(o: T): __type /* warning: the overload of function freeze is not supported yet. */
-  val __new: Unsupported<"new(value?: any): Object;", "ts2mls/js/src/test/typescript/ES5.d.ts", 137, 29>
-  fun getOwnPropertyDescriptor(o: anything, p: ((string) | (number)) | (Symbol)): PropertyDescriptor
-  fun seal<T>(o: T): T
-  fun keys(o: object): MutArray<string>
-  fun isExtensible(o: anything): (false) | (true)
-}
-val Function: FunctionConstructor
-declare trait FunctionConstructor {
-  val __new: Unsupported<"new(...args: string[]): Function;", "ts2mls/js/src/test/typescript/ES5.d.ts", 292, 31>
-  val __call: Unsupported<"(...args: string[]): Function;", "ts2mls/js/src/test/typescript/ES5.d.ts", 297, 37>
-  val prototype: Function
-}
-type ThisParameterType<T> = Unsupported<"T extends (this: infer U, ...args: never) => any ? U : unknown", "ts2mls/js/src/test/typescript/ES5.d.ts", 307, 27>
-type OmitThisParameter<T> = Unsupported<"unknown extends ThisParameterType<T> ? T : T extends (...args: infer A) => infer R ? (...args: A) => R : T", "ts2mls/js/src/test/typescript/ES5.d.ts", 312, 27>
-declare trait CallableFunction extends Function {
-  fun apply<T, A, R>(thisArg: T, args: A): R /* warning: the overload of function apply is not supported yet. */
-  fun call<T, A, R>(thisArg: T, args: A): R
-  fun bind<T, AX, R>(thisArg: T, args: MutArray<AX>): (MutArray<AX>) => R /* warning: the overload of function bind is not supported yet. */
-}
-declare trait NewableFunction extends Function {
-  fun apply<T, A>(thisArg: T, args: A): unit /* warning: the overload of function apply is not supported yet. */
-  fun call<T, A>(thisArg: T, args: A): unit
-  fun bind<AX, R>(thisArg: anything, args: MutArray<AX>): (MutArray<AX>) => R /* warning: the overload of function bind is not supported yet. */
-}
-declare trait IArguments {
-  val __index: Unsupported<"[index: number]: any;", "ts2mls/js/src/test/typescript/ES5.d.ts", 374, 22>
-  val length: number
-  val callee: Function
-}
-declare trait String {
-  fun localeCompare(that: string, locales: ((string) | (MutArray<string>)) | (undefined), options: (Intl.CollatorOptions) | (undefined)): number
-}
-declare trait StringConstructor {
-  val __new: Unsupported<"new(value?: any): String;", "ts2mls/js/src/test/typescript/ES5.d.ts", 504, 29>
-  val __call: Unsupported<"(value?: any): string;", "ts2mls/js/src/test/typescript/ES5.d.ts", 505, 29>
-  val prototype: String
-  fun fromCharCode(codes: MutArray<number>): string
-}
-val Boolean: BooleanConstructor
-declare trait BooleanConstructor {
-  val __new: Unsupported<"new(value?: any): Boolean;", "ts2mls/js/src/test/typescript/ES5.d.ts", 521, 30>
-  val __call: Unsupported<"<T>(value?: T): boolean;", "ts2mls/js/src/test/typescript/ES5.d.ts", 522, 30>
-  val prototype: Boolean
-}
-declare trait Number {
-  fun toLocaleString(locales: ((string) | (MutArray<string>)) | (undefined), options: (Intl.NumberFormatOptions) | (undefined)): string
-}
-declare trait NumberConstructor {
-  val __call: Unsupported<"(value?: any): number;", "ts2mls/js/src/test/typescript/ES5.d.ts", 559, 29>
-  val NaN: number
-  val MIN_VALUE: number
-  val __new: Unsupported<"new(value?: any): Number;", "ts2mls/js/src/test/typescript/ES5.d.ts", 558, 29>
-  val NEGATIVE_INFINITY: number
-  val POSITIVE_INFINITY: number
-  val MAX_VALUE: number
-  val prototype: Number
-}
-declare trait TemplateStringsArray extends ReadonlyArray<string> {
-  val raw: ReadonlyArray<string>
-}
-declare trait ImportMeta {}
-declare trait ImportCallOptions {
-  val assert: (ImportAssertions) | (undefined)
-}
-declare trait ImportAssertions {
-  val __index: Unsupported<"[key: string]: string;", "ts2mls/js/src/test/typescript/ES5.d.ts", 617, 28>
-}
-val Math: Math
-declare trait Date {
-  fun toLocaleString(locales: ((string) | (MutArray<string>)) | (undefined), options: (Intl.DateTimeFormatOptions) | (undefined)): string
-  fun toLocaleDateString(locales: ((string) | (MutArray<string>)) | (undefined), options: (Intl.DateTimeFormatOptions) | (undefined)): string
-  fun toLocaleTimeString(locales: ((string) | (MutArray<string>)) | (undefined), options: (Intl.DateTimeFormatOptions) | (undefined)): string
-}
-declare trait DateConstructor {
-  val __call: Unsupported<"(): string;", "ts2mls/js/src/test/typescript/ES5.d.ts", 899, 128>
-  fun UTC(year: number, monthIndex: number, date: (number) | (undefined), hours: (number) | (undefined), minutes: (number) | (undefined), seconds: (number) | (undefined), ms: (number) | (undefined)): number
-  val __new: Unsupported<"new(year: number, monthIndex: number, date?: number, hours?: number, minutes?: number, seconds?: number, ms?: number): Date;", "ts2mls/js/src/test/typescript/ES5.d.ts", 888, 38>
-  fun now(): number
-  fun parse(s: string): number
-  val prototype: Date
-}
-declare trait RegExp {
-  fun test(string: string): (false) | (true)
-  val multiline: (false) | (true)
-  val source: string
-  fun compile(pattern: string, flags: (string) | (undefined)): RegExp
-  val global: (false) | (true)
-  val lastIndex: number
-  val ignoreCase: (false) | (true)
-  fun exec(string: string): RegExpExecArray
-}
-val Error: ErrorConstructor
-declare trait ErrorConstructor {
-  val __new: Unsupported<"new(message?: string): Error;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1044, 28>
-  val __call: Unsupported<"(message?: string): Error;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1045, 33>
-  val prototype: Error
-}
-val EvalError: EvalErrorConstructor
-declare trait EvalErrorConstructor extends ErrorConstructor {
-  val __new: Unsupported<"new(message?: string): EvalError;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1055, 57>
-  val __call: Unsupported<"(message?: string): EvalError;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1056, 37>
-  val prototype: EvalError
-}
-val RangeError: RangeErrorConstructor
-declare trait RangeErrorConstructor extends ErrorConstructor {
-  val __new: Unsupported<"new(message?: string): RangeError;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1066, 58>
-  val __call: Unsupported<"(message?: string): RangeError;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1067, 38>
-  val prototype: RangeError
-}
-val ReferenceError: ReferenceErrorConstructor
-declare trait ReferenceErrorConstructor extends ErrorConstructor {
-  val __new: Unsupported<"new(message?: string): ReferenceError;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1077, 62>
-  val __call: Unsupported<"(message?: string): ReferenceError;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1078, 42>
-  val prototype: ReferenceError
-}
-val SyntaxError: SyntaxErrorConstructor
-declare trait SyntaxErrorConstructor extends ErrorConstructor {
-  val __new: Unsupported<"new(message?: string): SyntaxError;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1088, 59>
-  val __call: Unsupported<"(message?: string): SyntaxError;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1089, 39>
-  val prototype: SyntaxError
-}
-val TypeError: TypeErrorConstructor
-declare trait TypeErrorConstructor extends ErrorConstructor {
-  val __new: Unsupported<"new(message?: string): TypeError;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1099, 57>
-  val __call: Unsupported<"(message?: string): TypeError;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1100, 37>
-  val prototype: TypeError
-}
-val URIError: URIErrorConstructor
-declare trait URIErrorConstructor extends ErrorConstructor {
-  val __new: Unsupported<"new(message?: string): URIError;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1110, 56>
-  val __call: Unsupported<"(message?: string): URIError;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1111, 36>
-  val prototype: URIError
-}
-val JSON: JSON
-declare trait ReadonlyArray<T> {
-  fun lastIndexOf(searchElement: T, fromIndex: (number) | (undefined)): number
-  fun every(predicate: (T) => (number) => (ReadonlyArray<T>) => anything, thisArg: (anything) | (undefined)): (false) | (true) /* warning: the overload of function every is not supported yet. */
-  fun forEach(callbackfn: (T) => (number) => (ReadonlyArray<T>) => unit, thisArg: (anything) | (undefined)): unit
-  fun filter(predicate: (T) => (number) => (ReadonlyArray<T>) => anything, thisArg: (anything) | (undefined)): MutArray<T> /* warning: the overload of function filter is not supported yet. */
-  val __index: Unsupported<"readonly [n: number]: T;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1274, 136>
-  fun reduceRight<U>(callbackfn: (U) => (T) => (number) => (ReadonlyArray<T>) => U, initialValue: U): U /* warning: the overload of function reduceRight is not supported yet. */
-  fun join(separator: (string) | (undefined)): string
-  fun map<U>(callbackfn: (T) => (number) => (ReadonlyArray<T>) => U, thisArg: (anything) | (undefined)): MutArray<U>
-  val concat: ((MutArray<ConcatArray<T>>) => MutArray<T>) & ((MutArray<(T) | (ConcatArray<T>)>) => MutArray<T>)
-  fun toLocaleString(): string
-  fun slice(start: (number) | (undefined), end: (number) | (undefined)): MutArray<T>
-  fun reduce<U>(callbackfn: (U) => (T) => (number) => (ReadonlyArray<T>) => U, initialValue: U): U /* warning: the overload of function reduce is not supported yet. */
-  fun toString(): string
-  val length: number
-  fun some(predicate: (T) => (number) => (ReadonlyArray<T>) => anything, thisArg: (anything) | (undefined)): (false) | (true)
-  fun indexOf(searchElement: T, fromIndex: (number) | (undefined)): number
-}
-declare trait ConcatArray<T> {
-  val length: number
-  val __index: Unsupported<"readonly [n: number]: T;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1280, 28>
-  fun join(separator: (string) | (undefined)): string
-  fun slice(start: (number) | (undefined), end: (number) | (undefined)): MutArray<T>
-}
-val Array: ArrayConstructor
-declare trait ArrayConstructor {
-  val __new: Unsupported<"new <T>(...items: T[]): T[];", "ts2mls/js/src/test/typescript/ES5.d.ts", 1472, 38>
-  val __call: Unsupported<"<T>(...items: T[]): T[];", "ts2mls/js/src/test/typescript/ES5.d.ts", 1475, 34>
-  fun isArray(arg: anything): (false) | (true)
-  val prototype: MutArray<anything>
-}
-declare trait TypedPropertyDescriptor<T> {
-  val configurable: ((false) | (true)) | (undefined)
-  val set: ((T) => unit) | (undefined)
-  val enumerable: ((false) | (true)) | (undefined)
-  val get: (unit => T) | (undefined)
-  val writable: ((false) | (true)) | (undefined)
-  val value: (T) | (undefined)
-}
-type PromiseConstructorLike = ((((T) | (PromiseLike<T>)) => unit) => (((anything) | (undefined)) => unit) => unit) => PromiseLike<T>
-type Awaited<T> = Unsupported<"T extends null | undefined ? T : // special case for `null | undefined` when not in `--strictNullChecks` mode         T extends object & { then(onfulfilled: infer F, ...args: infer _): any } ? // `await` only unwraps object types with a callable `then`. Non-object types are not unwrapped             F extends ((value: infer V, ...args: infer _) => any) ? // if the argument to `then` is callable, extracts the first argument                 Awaited<V> : // recursively unwrap the value                 never : // the argument to `then` was not callable         T", "ts2mls/js/src/test/typescript/ES5.d.ts", 1527, 17>
-declare trait ArrayLike<T> {
-  val length: number
-  val __index: Unsupported<"readonly [n: number]: T;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1536, 28>
-}
-type Partial<T> = Unsupported<"{     [P in keyof T]?: T[P]; }", "ts2mls/js/src/test/typescript/ES5.d.ts", 1543, 17>
-type Required<T> = Unsupported<"{     [P in keyof T]-?: T[P]; }", "ts2mls/js/src/test/typescript/ES5.d.ts", 1550, 18>
-type Readonly<T> = Unsupported<"{     readonly [P in keyof T]: T[P]; }", "ts2mls/js/src/test/typescript/ES5.d.ts", 1557, 18>
-type Pick<T, K> = Unsupported<"{     [P in K]: T[P]; }", "ts2mls/js/src/test/typescript/ES5.d.ts", 1564, 33>
-type Record<K, T> = Unsupported<"{     [P in K]: T; }", "ts2mls/js/src/test/typescript/ES5.d.ts", 1571, 37>
-type Exclude<T, U> = Unsupported<"T extends U ? never : T", "ts2mls/js/src/test/typescript/ES5.d.ts", 1578, 20>
-type Extract<T, U> = Unsupported<"T extends U ? T : never", "ts2mls/js/src/test/typescript/ES5.d.ts", 1583, 20>
-type Omit<T, K> = __type
-type NonNullable<T> = (T) & ({})
-type Parameters<T> = Unsupported<"T extends (...args: infer P) => any ? P : never", "ts2mls/js/src/test/typescript/ES5.d.ts", 1598, 50>
-type ConstructorParameters<T> = Unsupported<"T extends abstract new (...args: infer P) => any ? P : never", "ts2mls/js/src/test/typescript/ES5.d.ts", 1603, 74>
-type ReturnType<T> = Unsupported<"T extends (...args: any) => infer R ? R : any", "ts2mls/js/src/test/typescript/ES5.d.ts", 1608, 50>
-type InstanceType<T> = Unsupported<"T extends abstract new (...args: any) => infer R ? R : any", "ts2mls/js/src/test/typescript/ES5.d.ts", 1613, 65>
-type Uppercase<S> = Unsupported<"intrinsic", "ts2mls/js/src/test/typescript/ES5.d.ts", 1618, 34>
-type Lowercase<S> = Unsupported<"intrinsic", "ts2mls/js/src/test/typescript/ES5.d.ts", 1623, 34>
-type Capitalize<S> = Unsupported<"intrinsic", "ts2mls/js/src/test/typescript/ES5.d.ts", 1628, 35>
-type Uncapitalize<S> = Unsupported<"intrinsic", "ts2mls/js/src/test/typescript/ES5.d.ts", 1633, 37>
-declare trait ThisType<T> {}
-val ArrayBuffer: ArrayBufferConstructor
-declare trait ArrayBufferTypes {
-  val ArrayBuffer: ArrayBuffer
-}
-type ArrayBufferLike = ArrayBuffer
-declare trait ArrayBufferConstructor {
-  val prototype: ArrayBuffer
-  val __new: Unsupported<"new(byteLength: number): ArrayBuffer;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1667, 36>
-  fun isView(arg: anything): (false) | (true)
-}
-declare trait ArrayBufferView {
-  val buffer: ArrayBuffer
-  val byteLength: number
-  val byteOffset: number
-}
-val DataView: DataViewConstructor
-declare trait DataViewConstructor {
-  val prototype: DataView
-  val __new: Unsupported<"new(buffer: ArrayBufferLike, byteOffset?: number, byteLength?: number): DataView;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1819, 33>
-}
-val Int8Array: Int8ArrayConstructor
-declare trait Int8ArrayConstructor {
-  val __new: Unsupported<"new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Int8Array;", "ts2mls/js/src/test/typescript/ES5.d.ts", 2074, 63>
-  fun from<T>(arrayLike: ArrayLike<T>, mapfn: (T) => (number) => number, thisArg: (anything) | (undefined)): Int8Array /* warning: the overload of function from is not supported yet. */
-  val prototype: Int8Array
-  fun id"of"(items: MutArray<number>): Int8Array
-  val BYTES_PER_ELEMENT: number
-}
-declare trait Uint8Array {
-  fun valueOf(): Uint8Array
-  fun lastIndexOf(searchElement: number, fromIndex: (number) | (undefined)): number
-  fun every(predicate: (number) => (number) => (Uint8Array) => anything, thisArg: (anything) | (undefined)): (false) | (true)
-  fun set(array: ArrayLike<number>, offset: (number) | (undefined)): unit
-  fun toLocaleString(): string
-  val __index: Unsupported<"[index: number]: number;", "ts2mls/js/src/test/typescript/ES5.d.ts", 2349, 26>
-  fun reduceRight<U>(callbackfn: (U) => (number) => (number) => (Uint8Array) => U, initialValue: U): U /* warning: the overload of function reduceRight is not supported yet. */
-  fun fill(value: number, start: (number) | (undefined), end: (number) | (undefined)): Uint8Array
-  fun sort(compareFn: ((number) => (number) => number) | (undefined)): Uint8Array
-  val BYTES_PER_ELEMENT: number
-  fun copyWithin(target: number, start: (number) | (undefined), end: (number) | (undefined)): Uint8Array
-  fun find(predicate: (number) => (number) => (Uint8Array) => (false) | (true), thisArg: (anything) | (undefined)): number
-  fun subarray(begin: (number) | (undefined), end: (number) | (undefined)): Uint8Array
-  fun join(separator: (string) | (undefined)): string
-  fun map(callbackfn: (number) => (number) => (Uint8Array) => number, thisArg: (anything) | (undefined)): Uint8Array
-  fun forEach(callbackfn: (number) => (number) => (Uint8Array) => unit, thisArg: (anything) | (undefined)): unit
-  val buffer: ArrayBuffer
-  fun findIndex(predicate: (number) => (number) => (Uint8Array) => (false) | (true), thisArg: (anything) | (undefined)): number
-  fun reverse(): Uint8Array
-  fun filter(predicate: (number) => (number) => (Uint8Array) => anything, thisArg: (anything) | (undefined)): Uint8Array
-  fun slice(start: (number) | (undefined), end: (number) | (undefined)): Uint8Array
-  val byteLength: number
-  fun reduce<U>(callbackfn: (U) => (number) => (number) => (Uint8Array) => U, initialValue: U): U /* warning: the overload of function reduce is not supported yet. */
-  fun toString(): string
-  val length: number
-  fun some(predicate: (number) => (number) => (Uint8Array) => anything, thisArg: (anything) | (undefined)): (false) | (true)
-  fun indexOf(searchElement: number, fromIndex: (number) | (undefined)): number
-  val byteOffset: number
-}
-declare trait Uint8ArrayConstructor {
-  val __new: Unsupported<"new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Uint8Array;", "ts2mls/js/src/test/typescript/ES5.d.ts", 2357, 64>
-  fun from<T>(arrayLike: ArrayLike<T>, mapfn: (T) => (number) => number, thisArg: (anything) | (undefined)): Uint8Array /* warning: the overload of function from is not supported yet. */
-  val prototype: Uint8Array
-  fun id"of"(items: MutArray<number>): Uint8Array
-  val BYTES_PER_ELEMENT: number
-}
-val Uint8ClampedArray: Uint8ClampedArrayConstructor
-declare trait Uint8ClampedArrayConstructor {
-  val __new: Unsupported<"new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Uint8ClampedArray;", "ts2mls/js/src/test/typescript/ES5.d.ts", 2639, 71>
-  fun from<T>(arrayLike: ArrayLike<T>, mapfn: (T) => (number) => number, thisArg: (anything) | (undefined)): Uint8ClampedArray /* warning: the overload of function from is not supported yet. */
-  val prototype: Uint8ClampedArray
-  fun id"of"(items: MutArray<number>): Uint8ClampedArray
-  val BYTES_PER_ELEMENT: number
-}
-val Int16Array: Int16ArrayConstructor
-declare trait Int16ArrayConstructor {
-  val __new: Unsupported<"new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Int16Array;", "ts2mls/js/src/test/typescript/ES5.d.ts", 2919, 64>
-  fun from<T>(arrayLike: ArrayLike<T>, mapfn: (T) => (number) => number, thisArg: (anything) | (undefined)): Int16Array /* warning: the overload of function from is not supported yet. */
-  val prototype: Int16Array
-  fun id"of"(items: MutArray<number>): Int16Array
-  val BYTES_PER_ELEMENT: number
-}
-val Uint16Array: Uint16ArrayConstructor
-declare trait Uint16ArrayConstructor {
-  val __new: Unsupported<"new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Uint16Array;", "ts2mls/js/src/test/typescript/ES5.d.ts", 3202, 65>
-  fun from<T>(arrayLike: ArrayLike<T>, mapfn: (T) => (number) => number, thisArg: (anything) | (undefined)): Uint16Array /* warning: the overload of function from is not supported yet. */
-  val prototype: Uint16Array
-  fun id"of"(items: MutArray<number>): Uint16Array
-  val BYTES_PER_ELEMENT: number
-}
-val Int32Array: Int32ArrayConstructor
-declare trait Int32ArrayConstructor {
-  val __new: Unsupported<"new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Int32Array;", "ts2mls/js/src/test/typescript/ES5.d.ts", 3485, 64>
-  fun from<T>(arrayLike: ArrayLike<T>, mapfn: (T) => (number) => number, thisArg: (anything) | (undefined)): Int32Array /* warning: the overload of function from is not supported yet. */
-  val prototype: Int32Array
-  fun id"of"(items: MutArray<number>): Int32Array
-  val BYTES_PER_ELEMENT: number
-}
-val Uint32Array: Uint32ArrayConstructor
-declare trait Uint32ArrayConstructor {
-  val __new: Unsupported<"new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Uint32Array;", "ts2mls/js/src/test/typescript/ES5.d.ts", 3766, 65>
-  fun from<T>(arrayLike: ArrayLike<T>, mapfn: (T) => (number) => number, thisArg: (anything) | (undefined)): Uint32Array /* warning: the overload of function from is not supported yet. */
-  val prototype: Uint32Array
-  fun id"of"(items: MutArray<number>): Uint32Array
-  val BYTES_PER_ELEMENT: number
-}
-val Float32Array: Float32ArrayConstructor
-declare trait Float32ArrayConstructor {
-  val __new: Unsupported<"new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Float32Array;", "ts2mls/js/src/test/typescript/ES5.d.ts", 4048, 66>
-  fun from<T>(arrayLike: ArrayLike<T>, mapfn: (T) => (number) => number, thisArg: (anything) | (undefined)): Float32Array /* warning: the overload of function from is not supported yet. */
-  val prototype: Float32Array
-  fun id"of"(items: MutArray<number>): Float32Array
-  val BYTES_PER_ELEMENT: number
-}
-val Float64Array: Float64ArrayConstructor
-declare trait Float64ArrayConstructor {
-  val __new: Unsupported<"new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Float64Array;", "ts2mls/js/src/test/typescript/ES5.d.ts", 4322, 66>
-  fun from<T>(arrayLike: ArrayLike<T>, mapfn: (T) => (number) => number, thisArg: (anything) | (undefined)): Float64Array /* warning: the overload of function from is not supported yet. */
-  val prototype: Float64Array
-  fun id"of"(items: MutArray<number>): Float64Array
-  val BYTES_PER_ELEMENT: number
-}
-module Intl {
-  export declare trait CollatorOptions {
-    val sensitivity: (string) | (undefined)
-    val ignorePunctuation: ((false) | (true)) | (undefined)
-    val usage: (string) | (undefined)
-    val localeMatcher: (string) | (undefined)
-    val numeric: ((false) | (true)) | (undefined)
-    val caseFirst: (string) | (undefined)
+export declare module ES5 {
+  val NaN: Num
+  val Infinity: Num
+  fun eval(x: Str): anything
+  fun parseInt(string: Str, radix: (Num) | (undefined)): Num
+  fun parseFloat(string: Str): Num
+  fun isNaN(number: Num): (false) | (true)
+  fun isFinite(number: Num): (false) | (true)
+  fun decodeURI(encodedURI: Str): Str
+  fun decodeURIComponent(encodedURIComponent: Str): Str
+  fun encodeURI(uri: Str): Str
+  fun encodeURIComponent(uriComponent: (((Str) | (Num)) | (false)) | (true)): Str
+  fun escape(string: Str): Str
+  fun unescape(string: Str): Str
+  declare trait Symbol {
+    fun toString(): Str
+    fun valueOf(): Symbol
   }
-  export declare trait ResolvedCollatorOptions {
-    val sensitivity: string
-    val ignorePunctuation: (false) | (true)
-    val usage: string
-    val locale: string
-    val numeric: (false) | (true)
-    val caseFirst: string
-    val collation: string
+  type PropertyKey = ((Str) | (Num)) | (Symbol)
+  declare trait PropertyDescriptor {
+    val configurable: ((false) | (true)) | (undefined)
+    val set: ((v: anything) => unit) | (undefined)
+    val enumerable: ((false) | (true)) | (undefined)
+    val get: (() => anything) | (undefined)
+    val writable: ((false) | (true)) | (undefined)
+    val value: (anything) | (undefined)
   }
-  export declare trait Collator {
-    fun compare(x: string, y: string): number
-    fun resolvedOptions(): ResolvedCollatorOptions
+  declare trait PropertyDescriptorMap {
+    val __index: Unsupported<"[key: PropertyKey]: PropertyDescriptor;", "ts2mls/js/src/test/typescript/ES5.d.ts", 101, 33>
   }
-  export declare trait NumberFormatOptions {
-    val minimumSignificantDigits: (number) | (undefined)
-    val useGrouping: ((false) | (true)) | (undefined)
-    val style: (string) | (undefined)
-    val localeMatcher: (string) | (undefined)
-    val currency: (string) | (undefined)
-    val minimumIntegerDigits: (number) | (undefined)
-    val maximumFractionDigits: (number) | (undefined)
-    val currencySign: (string) | (undefined)
-    val maximumSignificantDigits: (number) | (undefined)
-    val minimumFractionDigits: (number) | (undefined)
+  declare trait Object {
+    fun hasOwnProperty(v: ((Str) | (Num)) | (Symbol)): (false) | (true)
+    fun propertyIsEnumerable(v: ((Str) | (Num)) | (Symbol)): (false) | (true)
+    fun valueOf(): Object
+    fun toLocaleString(): Str
+    val id"constructor": Function
+    fun isPrototypeOf(v: Object): (false) | (true)
+    fun toString(): Str
   }
-  export declare trait ResolvedNumberFormatOptions {
-    val numberingSystem: string
-    val minimumSignificantDigits: (number) | (undefined)
-    val useGrouping: (false) | (true)
-    val style: string
-    val locale: string
-    val currency: (string) | (undefined)
-    val minimumIntegerDigits: number
-    val maximumFractionDigits: number
-    val maximumSignificantDigits: (number) | (undefined)
-    val minimumFractionDigits: number
+  declare trait ObjectConstructor {
+    val __call: Unsupported<"(value: any): any;", "ts2mls/js/src/test/typescript/ES5.d.ts", 139, 12>
+    fun getOwnPropertyNames(o: anything): MutArray<Str>
+    fun isFrozen(o: anything): (false) | (true)
+    fun getPrototypeOf(o: anything): anything
+    fun defineProperty<T>(o: T, p: ((Str) | (Num)) | (Symbol), attributes: (PropertyDescriptor) & (ThisType<anything>)): T
+    val prototype: Object
+    fun isSealed(o: anything): (false) | (true)
+    fun defineProperties<T>(o: T, properties: (PropertyDescriptorMap) & (ThisType<anything>)): T
+    fun preventExtensions<T>(o: T): T
+    val create: ((o: Object) => anything) & ((o: Object, properties: (PropertyDescriptorMap) & (ThisType<anything>)) => anything)
+    fun freeze<T>(o: T): __type /* warning: the overload of function freeze is not supported yet. */
+    val __new: Unsupported<"new(value?: any): Object;", "ts2mls/js/src/test/typescript/ES5.d.ts", 137, 29>
+    fun getOwnPropertyDescriptor(o: anything, p: ((Str) | (Num)) | (Symbol)): PropertyDescriptor
+    fun seal<T>(o: T): T
+    fun keys(o: Object): MutArray<Str>
+    fun isExtensible(o: anything): (false) | (true)
   }
-  export declare trait NumberFormat {
-    fun format(value: number): string
-    fun resolvedOptions(): ResolvedNumberFormatOptions
+  val Function: FunctionConstructor
+  declare trait FunctionConstructor {
+    val __new: Unsupported<"new(...args: string[]): Function;", "ts2mls/js/src/test/typescript/ES5.d.ts", 292, 31>
+    val __call: Unsupported<"(...args: string[]): Function;", "ts2mls/js/src/test/typescript/ES5.d.ts", 297, 37>
+    val prototype: Function
   }
-  export declare trait DateTimeFormatOptions {
-    val minute: ((string) | (string)) | (undefined)
-    val year: ((string) | (string)) | (undefined)
-    val hour: ((string) | (string)) | (undefined)
-    val hour12: ((false) | (true)) | (undefined)
-    val weekday: (((string) | (string)) | (string)) | (undefined)
-    val formatMatcher: ((string) | (string)) | (undefined)
-    val day: ((string) | (string)) | (undefined)
-    val timeZone: (string) | (undefined)
-    val month: (((((string) | (string)) | (string)) | (string)) | (string)) | (undefined)
-    val second: ((string) | (string)) | (undefined)
-    val localeMatcher: ((string) | (string)) | (undefined)
-    val timeZoneName: ((((((string) | (string)) | (string)) | (string)) | (string)) | (string)) | (undefined)
-    val era: (((string) | (string)) | (string)) | (undefined)
+  type ThisParameterType<T> = Unsupported<"T extends (this: infer U, ...args: never) => any ? U : unknown", "ts2mls/js/src/test/typescript/ES5.d.ts", 307, 27>
+  type OmitThisParameter<T> = Unsupported<"unknown extends ThisParameterType<T> ? T : T extends (...args: infer A) => infer R ? (...args: A) => R : T", "ts2mls/js/src/test/typescript/ES5.d.ts", 312, 27>
+  declare trait CallableFunction extends Function {
+    fun apply<T, A, R>(thisArg: T, args: A): R /* warning: the overload of function apply is not supported yet. */
+    fun call<T, A, R>(thisArg: T, args: A): R
+    fun bind<T, AX, R>(thisArg: T, args: MutArray<AX>): (args: MutArray<AX>) => R /* warning: the overload of function bind is not supported yet. */
   }
-  export declare trait ResolvedDateTimeFormatOptions {
-    val numberingSystem: string
-    val minute: (string) | (undefined)
-    val year: (string) | (undefined)
-    val hour: (string) | (undefined)
-    val second: (string) | (undefined)
-    val hour12: ((false) | (true)) | (undefined)
-    val weekday: (string) | (undefined)
-    val day: (string) | (undefined)
-    val timeZone: string
-    val month: (string) | (undefined)
-    val locale: string
-    val calendar: string
-    val timeZoneName: (string) | (undefined)
-    val era: (string) | (undefined)
+  declare trait NewableFunction extends Function {
+    fun apply<T, A>(thisArg: T, args: A): unit /* warning: the overload of function apply is not supported yet. */
+    fun call<T, A>(thisArg: T, args: A): unit
+    fun bind<AX, R>(thisArg: anything, args: MutArray<AX>): (args: MutArray<AX>) => R /* warning: the overload of function bind is not supported yet. */
   }
-  export declare trait DateTimeFormat {
-    fun format(date: ((number) | (Date)) | (undefined)): string
-    fun resolvedOptions(): ResolvedDateTimeFormatOptions
+  declare trait IArguments {
+    val __index: Unsupported<"[index: number]: any;", "ts2mls/js/src/test/typescript/ES5.d.ts", 374, 22>
+    val length: Num
+    val callee: Function
+  }
+  declare trait String {
+    fun localeCompare(that: Str, locales: ((Str) | (MutArray<Str>)) | (undefined), options: (Intl.CollatorOptions) | (undefined)): Num
+  }
+  declare trait StringConstructor {
+    val __new: Unsupported<"new(value?: any): String;", "ts2mls/js/src/test/typescript/ES5.d.ts", 504, 29>
+    val __call: Unsupported<"(value?: any): string;", "ts2mls/js/src/test/typescript/ES5.d.ts", 505, 29>
+    val prototype: String
+    fun fromCharCode(codes: MutArray<Num>): Str
+  }
+  val Boolean: BooleanConstructor
+  declare trait BooleanConstructor {
+    val __new: Unsupported<"new(value?: any): Boolean;", "ts2mls/js/src/test/typescript/ES5.d.ts", 521, 30>
+    val __call: Unsupported<"<T>(value?: T): boolean;", "ts2mls/js/src/test/typescript/ES5.d.ts", 522, 30>
+    val prototype: Boolean
+  }
+  declare trait Number {
+    fun toLocaleString(locales: ((Str) | (MutArray<Str>)) | (undefined), options: (Intl.NumberFormatOptions) | (undefined)): Str
+  }
+  declare trait NumberConstructor {
+    val __call: Unsupported<"(value?: any): number;", "ts2mls/js/src/test/typescript/ES5.d.ts", 559, 29>
+    val NaN: Num
+    val MIN_VALUE: Num
+    val __new: Unsupported<"new(value?: any): Number;", "ts2mls/js/src/test/typescript/ES5.d.ts", 558, 29>
+    val NEGATIVE_INFINITY: Num
+    val POSITIVE_INFINITY: Num
+    val MAX_VALUE: Num
+    val prototype: Number
+  }
+  declare trait TemplateStringsArray extends ReadonlyArray<Str> {
+    val raw: ReadonlyArray<Str>
+  }
+  declare trait ImportMeta {}
+  declare trait ImportCallOptions {
+    val assert: (ImportAssertions) | (undefined)
+  }
+  declare trait ImportAssertions {
+    val __index: Unsupported<"[key: string]: string;", "ts2mls/js/src/test/typescript/ES5.d.ts", 617, 28>
+  }
+  val Math: Math
+  declare trait Date {
+    fun toLocaleString(locales: ((Str) | (MutArray<Str>)) | (undefined), options: (Intl.DateTimeFormatOptions) | (undefined)): Str
+    fun toLocaleDateString(locales: ((Str) | (MutArray<Str>)) | (undefined), options: (Intl.DateTimeFormatOptions) | (undefined)): Str
+    fun toLocaleTimeString(locales: ((Str) | (MutArray<Str>)) | (undefined), options: (Intl.DateTimeFormatOptions) | (undefined)): Str
+  }
+  declare trait DateConstructor {
+    val __call: Unsupported<"(): string;", "ts2mls/js/src/test/typescript/ES5.d.ts", 899, 128>
+    fun UTC(year: Num, monthIndex: Num, date: (Num) | (undefined), hours: (Num) | (undefined), minutes: (Num) | (undefined), seconds: (Num) | (undefined), ms: (Num) | (undefined)): Num
+    val __new: Unsupported<"new(year: number, monthIndex: number, date?: number, hours?: number, minutes?: number, seconds?: number, ms?: number): Date;", "ts2mls/js/src/test/typescript/ES5.d.ts", 888, 38>
+    fun now(): Num
+    fun parse(s: Str): Num
+    val prototype: Date
+  }
+  declare trait RegExp {
+    fun test(string: Str): (false) | (true)
+    val multiline: (false) | (true)
+    val source: Str
+    fun compile(pattern: Str, flags: (Str) | (undefined)): RegExp
+    val global: (false) | (true)
+    val lastIndex: Num
+    val ignoreCase: (false) | (true)
+    fun exec(string: Str): RegExpExecArray
+  }
+  val Error: ErrorConstructor
+  declare trait ErrorConstructor {
+    val __new: Unsupported<"new(message?: string): Error;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1044, 28>
+    val __call: Unsupported<"(message?: string): Error;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1045, 33>
+    val prototype: Error
+  }
+  val EvalError: EvalErrorConstructor
+  declare trait EvalErrorConstructor extends ErrorConstructor {
+    val __new: Unsupported<"new(message?: string): EvalError;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1055, 57>
+    val __call: Unsupported<"(message?: string): EvalError;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1056, 37>
+    val prototype: EvalError
+  }
+  val RangeError: RangeErrorConstructor
+  declare trait RangeErrorConstructor extends ErrorConstructor {
+    val __new: Unsupported<"new(message?: string): RangeError;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1066, 58>
+    val __call: Unsupported<"(message?: string): RangeError;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1067, 38>
+    val prototype: RangeError
+  }
+  val ReferenceError: ReferenceErrorConstructor
+  declare trait ReferenceErrorConstructor extends ErrorConstructor {
+    val __new: Unsupported<"new(message?: string): ReferenceError;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1077, 62>
+    val __call: Unsupported<"(message?: string): ReferenceError;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1078, 42>
+    val prototype: ReferenceError
+  }
+  val SyntaxError: SyntaxErrorConstructor
+  declare trait SyntaxErrorConstructor extends ErrorConstructor {
+    val __new: Unsupported<"new(message?: string): SyntaxError;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1088, 59>
+    val __call: Unsupported<"(message?: string): SyntaxError;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1089, 39>
+    val prototype: SyntaxError
+  }
+  val TypeError: TypeErrorConstructor
+  declare trait TypeErrorConstructor extends ErrorConstructor {
+    val __new: Unsupported<"new(message?: string): TypeError;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1099, 57>
+    val __call: Unsupported<"(message?: string): TypeError;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1100, 37>
+    val prototype: TypeError
+  }
+  val URIError: URIErrorConstructor
+  declare trait URIErrorConstructor extends ErrorConstructor {
+    val __new: Unsupported<"new(message?: string): URIError;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1110, 56>
+    val __call: Unsupported<"(message?: string): URIError;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1111, 36>
+    val prototype: URIError
+  }
+  val JSON: JSON
+  declare trait ReadonlyArray<T> {
+    fun lastIndexOf(searchElement: T, fromIndex: (Num) | (undefined)): Num
+    fun every(predicate: (value: T, index: Num, array: ReadonlyArray<T>) => anything, thisArg: (anything) | (undefined)): (false) | (true) /* warning: the overload of function every is not supported yet. */
+    fun forEach(callbackfn: (value: T, index: Num, array: ReadonlyArray<T>) => unit, thisArg: (anything) | (undefined)): unit
+    fun filter(predicate: (value: T, index: Num, array: ReadonlyArray<T>) => anything, thisArg: (anything) | (undefined)): MutArray<T> /* warning: the overload of function filter is not supported yet. */
+    val __index: Unsupported<"readonly [n: number]: T;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1274, 136>
+    fun reduceRight<U>(callbackfn: (previousValue: U, currentValue: T, currentIndex: Num, array: ReadonlyArray<T>) => U, initialValue: U): U /* warning: the overload of function reduceRight is not supported yet. */
+    fun join(separator: (Str) | (undefined)): Str
+    fun map<U>(callbackfn: (value: T, index: Num, array: ReadonlyArray<T>) => U, thisArg: (anything) | (undefined)): MutArray<U>
+    val concat: ((items: MutArray<ConcatArray<T>>) => MutArray<T>) & ((items: MutArray<(T) | (ConcatArray<T>)>) => MutArray<T>)
+    fun toLocaleString(): Str
+    fun slice(start: (Num) | (undefined), end: (Num) | (undefined)): MutArray<T>
+    fun reduce<U>(callbackfn: (previousValue: U, currentValue: T, currentIndex: Num, array: ReadonlyArray<T>) => U, initialValue: U): U /* warning: the overload of function reduce is not supported yet. */
+    fun toString(): Str
+    val length: Num
+    fun some(predicate: (value: T, index: Num, array: ReadonlyArray<T>) => anything, thisArg: (anything) | (undefined)): (false) | (true)
+    fun indexOf(searchElement: T, fromIndex: (Num) | (undefined)): Num
+  }
+  declare trait ConcatArray<T> {
+    val length: Num
+    val __index: Unsupported<"readonly [n: number]: T;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1280, 28>
+    fun join(separator: (Str) | (undefined)): Str
+    fun slice(start: (Num) | (undefined), end: (Num) | (undefined)): MutArray<T>
+  }
+  val Array: ArrayConstructor
+  declare trait ArrayConstructor {
+    val __new: Unsupported<"new <T>(...items: T[]): T[];", "ts2mls/js/src/test/typescript/ES5.d.ts", 1472, 38>
+    val __call: Unsupported<"<T>(...items: T[]): T[];", "ts2mls/js/src/test/typescript/ES5.d.ts", 1475, 34>
+    fun isArray(arg: anything): (false) | (true)
+    val prototype: MutArray<anything>
+  }
+  declare trait TypedPropertyDescriptor<T> {
+    val configurable: ((false) | (true)) | (undefined)
+    val set: ((value: T) => unit) | (undefined)
+    val enumerable: ((false) | (true)) | (undefined)
+    val get: (() => T) | (undefined)
+    val writable: ((false) | (true)) | (undefined)
+    val value: (T) | (undefined)
+  }
+  type PromiseConstructorLike = (executor: (resolve: (value: (T) | (PromiseLike<T>)) => unit, reject: (reason: (anything) | (undefined)) => unit) => unit) => PromiseLike<T>
+  type Awaited<T> = Unsupported<"T extends null | undefined ? T : // special case for `null | undefined` when not in `--strictNullChecks` mode         T extends object & { then(onfulfilled: infer F, ...args: infer _): any } ? // `await` only unwraps object types with a callable `then`. Non-object types are not unwrapped             F extends ((value: infer V, ...args: infer _) => any) ? // if the argument to `then` is callable, extracts the first argument                 Awaited<V> : // recursively unwrap the value                 never : // the argument to `then` was not callable         T", "ts2mls/js/src/test/typescript/ES5.d.ts", 1527, 17>
+  declare trait ArrayLike<T> {
+    val length: Num
+    val __index: Unsupported<"readonly [n: number]: T;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1536, 28>
+  }
+  type Partial<T> = Unsupported<"{     [P in keyof T]?: T[P]; }", "ts2mls/js/src/test/typescript/ES5.d.ts", 1543, 17>
+  type Required<T> = Unsupported<"{     [P in keyof T]-?: T[P]; }", "ts2mls/js/src/test/typescript/ES5.d.ts", 1550, 18>
+  type Readonly<T> = Unsupported<"{     readonly [P in keyof T]: T[P]; }", "ts2mls/js/src/test/typescript/ES5.d.ts", 1557, 18>
+  type Pick<T, K> = Unsupported<"{     [P in K]: T[P]; }", "ts2mls/js/src/test/typescript/ES5.d.ts", 1564, 33>
+  type Record<K, T> = Unsupported<"{     [P in K]: T; }", "ts2mls/js/src/test/typescript/ES5.d.ts", 1571, 37>
+  type Exclude<T, U> = Unsupported<"T extends U ? never : T", "ts2mls/js/src/test/typescript/ES5.d.ts", 1578, 20>
+  type Extract<T, U> = Unsupported<"T extends U ? T : never", "ts2mls/js/src/test/typescript/ES5.d.ts", 1583, 20>
+  type Omit<T, K> = __type
+  type NonNullable<T> = (T) & ({})
+  type Parameters<T> = Unsupported<"T extends (...args: infer P) => any ? P : never", "ts2mls/js/src/test/typescript/ES5.d.ts", 1598, 50>
+  type ConstructorParameters<T> = Unsupported<"T extends abstract new (...args: infer P) => any ? P : never", "ts2mls/js/src/test/typescript/ES5.d.ts", 1603, 74>
+  type ReturnType<T> = Unsupported<"T extends (...args: any) => infer R ? R : any", "ts2mls/js/src/test/typescript/ES5.d.ts", 1608, 50>
+  type InstanceType<T> = Unsupported<"T extends abstract new (...args: any) => infer R ? R : any", "ts2mls/js/src/test/typescript/ES5.d.ts", 1613, 65>
+  type Uppercase<S> = Unsupported<"intrinsic", "ts2mls/js/src/test/typescript/ES5.d.ts", 1618, 34>
+  type Lowercase<S> = Unsupported<"intrinsic", "ts2mls/js/src/test/typescript/ES5.d.ts", 1623, 34>
+  type Capitalize<S> = Unsupported<"intrinsic", "ts2mls/js/src/test/typescript/ES5.d.ts", 1628, 35>
+  type Uncapitalize<S> = Unsupported<"intrinsic", "ts2mls/js/src/test/typescript/ES5.d.ts", 1633, 37>
+  declare trait ThisType<T> {}
+  val ArrayBuffer: ArrayBufferConstructor
+  declare trait ArrayBufferTypes {
+    val ArrayBuffer: ArrayBuffer
+  }
+  type ArrayBufferLike = ArrayBuffer
+  declare trait ArrayBufferConstructor {
+    val prototype: ArrayBuffer
+    val __new: Unsupported<"new(byteLength: number): ArrayBuffer;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1667, 36>
+    fun isView(arg: anything): (false) | (true)
+  }
+  declare trait ArrayBufferView {
+    val buffer: ArrayBuffer
+    val byteLength: Num
+    val byteOffset: Num
+  }
+  val DataView: DataViewConstructor
+  declare trait DataViewConstructor {
+    val prototype: DataView
+    val __new: Unsupported<"new(buffer: ArrayBufferLike, byteOffset?: number, byteLength?: number): DataView;", "ts2mls/js/src/test/typescript/ES5.d.ts", 1819, 33>
+  }
+  val Int8Array: Int8ArrayConstructor
+  declare trait Int8ArrayConstructor {
+    val __new: Unsupported<"new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Int8Array;", "ts2mls/js/src/test/typescript/ES5.d.ts", 2074, 63>
+    fun from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: Num) => Num, thisArg: (anything) | (undefined)): Int8Array /* warning: the overload of function from is not supported yet. */
+    val prototype: Int8Array
+    fun id"of"(items: MutArray<Num>): Int8Array
+    val BYTES_PER_ELEMENT: Num
+  }
+  declare trait Uint8Array {
+    fun valueOf(): Uint8Array
+    fun lastIndexOf(searchElement: Num, fromIndex: (Num) | (undefined)): Num
+    fun every(predicate: (value: Num, index: Num, array: Uint8Array) => anything, thisArg: (anything) | (undefined)): (false) | (true)
+    fun set(array: ArrayLike<Num>, offset: (Num) | (undefined)): unit
+    fun toLocaleString(): Str
+    val __index: Unsupported<"[index: number]: number;", "ts2mls/js/src/test/typescript/ES5.d.ts", 2349, 26>
+    fun reduceRight<U>(callbackfn: (previousValue: U, currentValue: Num, currentIndex: Num, array: Uint8Array) => U, initialValue: U): U /* warning: the overload of function reduceRight is not supported yet. */
+    fun fill(value: Num, start: (Num) | (undefined), end: (Num) | (undefined)): Uint8Array
+    fun sort(compareFn: ((a: Num, b: Num) => Num) | (undefined)): Uint8Array
+    val BYTES_PER_ELEMENT: Num
+    fun copyWithin(target: Num, start: (Num) | (undefined), end: (Num) | (undefined)): Uint8Array
+    fun find(predicate: (value: Num, index: Num, obj: Uint8Array) => (false) | (true), thisArg: (anything) | (undefined)): Num
+    fun subarray(begin: (Num) | (undefined), end: (Num) | (undefined)): Uint8Array
+    fun join(separator: (Str) | (undefined)): Str
+    fun map(callbackfn: (value: Num, index: Num, array: Uint8Array) => Num, thisArg: (anything) | (undefined)): Uint8Array
+    fun forEach(callbackfn: (value: Num, index: Num, array: Uint8Array) => unit, thisArg: (anything) | (undefined)): unit
+    val buffer: ArrayBuffer
+    fun findIndex(predicate: (value: Num, index: Num, obj: Uint8Array) => (false) | (true), thisArg: (anything) | (undefined)): Num
+    fun reverse(): Uint8Array
+    fun filter(predicate: (value: Num, index: Num, array: Uint8Array) => anything, thisArg: (anything) | (undefined)): Uint8Array
+    fun slice(start: (Num) | (undefined), end: (Num) | (undefined)): Uint8Array
+    val byteLength: Num
+    fun reduce<U>(callbackfn: (previousValue: U, currentValue: Num, currentIndex: Num, array: Uint8Array) => U, initialValue: U): U /* warning: the overload of function reduce is not supported yet. */
+    fun toString(): Str
+    val length: Num
+    fun some(predicate: (value: Num, index: Num, array: Uint8Array) => anything, thisArg: (anything) | (undefined)): (false) | (true)
+    fun indexOf(searchElement: Num, fromIndex: (Num) | (undefined)): Num
+    val byteOffset: Num
+  }
+  declare trait Uint8ArrayConstructor {
+    val __new: Unsupported<"new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Uint8Array;", "ts2mls/js/src/test/typescript/ES5.d.ts", 2357, 64>
+    fun from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: Num) => Num, thisArg: (anything) | (undefined)): Uint8Array /* warning: the overload of function from is not supported yet. */
+    val prototype: Uint8Array
+    fun id"of"(items: MutArray<Num>): Uint8Array
+    val BYTES_PER_ELEMENT: Num
+  }
+  val Uint8ClampedArray: Uint8ClampedArrayConstructor
+  declare trait Uint8ClampedArrayConstructor {
+    val __new: Unsupported<"new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Uint8ClampedArray;", "ts2mls/js/src/test/typescript/ES5.d.ts", 2639, 71>
+    fun from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: Num) => Num, thisArg: (anything) | (undefined)): Uint8ClampedArray /* warning: the overload of function from is not supported yet. */
+    val prototype: Uint8ClampedArray
+    fun id"of"(items: MutArray<Num>): Uint8ClampedArray
+    val BYTES_PER_ELEMENT: Num
+  }
+  val Int16Array: Int16ArrayConstructor
+  declare trait Int16ArrayConstructor {
+    val __new: Unsupported<"new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Int16Array;", "ts2mls/js/src/test/typescript/ES5.d.ts", 2919, 64>
+    fun from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: Num) => Num, thisArg: (anything) | (undefined)): Int16Array /* warning: the overload of function from is not supported yet. */
+    val prototype: Int16Array
+    fun id"of"(items: MutArray<Num>): Int16Array
+    val BYTES_PER_ELEMENT: Num
+  }
+  val Uint16Array: Uint16ArrayConstructor
+  declare trait Uint16ArrayConstructor {
+    val __new: Unsupported<"new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Uint16Array;", "ts2mls/js/src/test/typescript/ES5.d.ts", 3202, 65>
+    fun from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: Num) => Num, thisArg: (anything) | (undefined)): Uint16Array /* warning: the overload of function from is not supported yet. */
+    val prototype: Uint16Array
+    fun id"of"(items: MutArray<Num>): Uint16Array
+    val BYTES_PER_ELEMENT: Num
+  }
+  val Int32Array: Int32ArrayConstructor
+  declare trait Int32ArrayConstructor {
+    val __new: Unsupported<"new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Int32Array;", "ts2mls/js/src/test/typescript/ES5.d.ts", 3485, 64>
+    fun from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: Num) => Num, thisArg: (anything) | (undefined)): Int32Array /* warning: the overload of function from is not supported yet. */
+    val prototype: Int32Array
+    fun id"of"(items: MutArray<Num>): Int32Array
+    val BYTES_PER_ELEMENT: Num
+  }
+  val Uint32Array: Uint32ArrayConstructor
+  declare trait Uint32ArrayConstructor {
+    val __new: Unsupported<"new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Uint32Array;", "ts2mls/js/src/test/typescript/ES5.d.ts", 3766, 65>
+    fun from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: Num) => Num, thisArg: (anything) | (undefined)): Uint32Array /* warning: the overload of function from is not supported yet. */
+    val prototype: Uint32Array
+    fun id"of"(items: MutArray<Num>): Uint32Array
+    val BYTES_PER_ELEMENT: Num
+  }
+  val Float32Array: Float32ArrayConstructor
+  declare trait Float32ArrayConstructor {
+    val __new: Unsupported<"new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Float32Array;", "ts2mls/js/src/test/typescript/ES5.d.ts", 4048, 66>
+    fun from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: Num) => Num, thisArg: (anything) | (undefined)): Float32Array /* warning: the overload of function from is not supported yet. */
+    val prototype: Float32Array
+    fun id"of"(items: MutArray<Num>): Float32Array
+    val BYTES_PER_ELEMENT: Num
+  }
+  val Float64Array: Float64ArrayConstructor
+  declare trait Float64ArrayConstructor {
+    val __new: Unsupported<"new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Float64Array;", "ts2mls/js/src/test/typescript/ES5.d.ts", 4322, 66>
+    fun from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: Num) => Num, thisArg: (anything) | (undefined)): Float64Array /* warning: the overload of function from is not supported yet. */
+    val prototype: Float64Array
+    fun id"of"(items: MutArray<Num>): Float64Array
+    val BYTES_PER_ELEMENT: Num
+  }
+  module Intl {
+    export declare trait CollatorOptions {
+      val sensitivity: (Str) | (undefined)
+      val ignorePunctuation: ((false) | (true)) | (undefined)
+      val usage: (Str) | (undefined)
+      val localeMatcher: (Str) | (undefined)
+      val numeric: ((false) | (true)) | (undefined)
+      val caseFirst: (Str) | (undefined)
+    }
+    export declare trait ResolvedCollatorOptions {
+      val sensitivity: Str
+      val ignorePunctuation: (false) | (true)
+      val usage: Str
+      val locale: Str
+      val numeric: (false) | (true)
+      val caseFirst: Str
+      val collation: Str
+    }
+    export declare trait Collator {
+      fun compare(x: Str, y: Str): Num
+      fun resolvedOptions(): ResolvedCollatorOptions
+    }
+    export declare trait NumberFormatOptions {
+      val minimumSignificantDigits: (Num) | (undefined)
+      val useGrouping: ((false) | (true)) | (undefined)
+      val style: (Str) | (undefined)
+      val localeMatcher: (Str) | (undefined)
+      val currency: (Str) | (undefined)
+      val minimumIntegerDigits: (Num) | (undefined)
+      val maximumFractionDigits: (Num) | (undefined)
+      val currencySign: (Str) | (undefined)
+      val maximumSignificantDigits: (Num) | (undefined)
+      val minimumFractionDigits: (Num) | (undefined)
+    }
+    export declare trait ResolvedNumberFormatOptions {
+      val numberingSystem: Str
+      val minimumSignificantDigits: (Num) | (undefined)
+      val useGrouping: (false) | (true)
+      val style: Str
+      val locale: Str
+      val currency: (Str) | (undefined)
+      val minimumIntegerDigits: Num
+      val maximumFractionDigits: Num
+      val maximumSignificantDigits: (Num) | (undefined)
+      val minimumFractionDigits: Num
+    }
+    export declare trait NumberFormat {
+      fun format(value: Num): Str
+      fun resolvedOptions(): ResolvedNumberFormatOptions
+    }
+    export declare trait DateTimeFormatOptions {
+      val minute: ((Str) | (Str)) | (undefined)
+      val year: ((Str) | (Str)) | (undefined)
+      val hour: ((Str) | (Str)) | (undefined)
+      val hour12: ((false) | (true)) | (undefined)
+      val weekday: (((Str) | (Str)) | (Str)) | (undefined)
+      val formatMatcher: ((Str) | (Str)) | (undefined)
+      val day: ((Str) | (Str)) | (undefined)
+      val timeZone: (Str) | (undefined)
+      val month: (((((Str) | (Str)) | (Str)) | (Str)) | (Str)) | (undefined)
+      val second: ((Str) | (Str)) | (undefined)
+      val localeMatcher: ((Str) | (Str)) | (undefined)
+      val timeZoneName: ((((((Str) | (Str)) | (Str)) | (Str)) | (Str)) | (Str)) | (undefined)
+      val era: (((Str) | (Str)) | (Str)) | (undefined)
+    }
+    export declare trait ResolvedDateTimeFormatOptions {
+      val numberingSystem: Str
+      val minute: (Str) | (undefined)
+      val year: (Str) | (undefined)
+      val hour: (Str) | (undefined)
+      val second: (Str) | (undefined)
+      val hour12: ((false) | (true)) | (undefined)
+      val weekday: (Str) | (undefined)
+      val day: (Str) | (undefined)
+      val timeZone: Str
+      val month: (Str) | (undefined)
+      val locale: Str
+      val calendar: Str
+      val timeZoneName: (Str) | (undefined)
+      val era: (Str) | (undefined)
+    }
+    export declare trait DateTimeFormat {
+      fun format(date: ((Num) | (Date)) | (undefined)): Str
+      fun resolvedOptions(): ResolvedDateTimeFormatOptions
+    }
   }
 }

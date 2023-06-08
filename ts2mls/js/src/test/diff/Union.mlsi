@@ -1,9 +1,9 @@
 export declare module Union {
-  fun getString(x: (((string) | (number)) | (false)) | (true)): string
-  fun test(x: (false) | (true)): (string) | (number)
-  fun run(f: ((number) => number) | ((number) => string)): anything
-  fun get(arr: (MutArray<number>) | (MutArray<string>)): unit
-  fun get2(t: ((string, string, )) | ((number, string, ))): string
+  fun getString(x: (((Str) | (Num)) | (false)) | (true)): Str
+  fun test(x: (false) | (true)): (Str) | (Num)
+  fun run(f: ((x: Num) => Num) | ((x: Num) => Str)): anything
+  fun get(arr: (MutArray<Num>) | (MutArray<Str>)): unit
+  fun get2(t: ((Str, Str, )) | ((Num, Str, ))): Str
   fun typeVar<T, U>(x: (T) | (U)): (T) | (U)
-  fun uuuu(x: (((string) | (number)) | (false)) | (true)): (((string) | (number)) | (false)) | (true)
+  fun uuuu(x: (((Str) | (Num)) | (false)) | (true)): (((Str) | (Num)) | (false)) | (true)
 }

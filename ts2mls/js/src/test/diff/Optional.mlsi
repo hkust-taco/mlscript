@@ -1,19 +1,19 @@
 export declare module Optional {
-  fun buildName(firstName: string, lastName: (string) | (undefined)): string
-  fun buildName2(firstName: string, lastName: (string) | (undefined)): string
-  fun buildName3(firstName: string, lastName: MutArray<string>): string
-  fun buildName4(firstName: string, lastName: MutArray<anything>): string
+  fun buildName(firstName: Str, lastName: (Str) | (undefined)): Str
+  fun buildName2(firstName: Str, lastName: (Str) | (undefined)): Str
+  fun buildName3(firstName: Str, lastName: MutArray<Str>): Str
+  fun buildName4(firstName: Str, lastName: MutArray<anything>): Str
   declare trait SquareConfig {
-    val color: (string) | (undefined)
-    val width: (number) | (undefined)
+    val color: (Str) | (undefined)
+    val width: (Num) | (undefined)
   }
-  fun did(x: number, f: ((number) => number) | (undefined)): number
-  fun getOrElse(arr: (MutArray<object>) | (undefined)): object
+  fun did(x: Num, f: ((x: Num) => Num) | (undefined)): Num
+  fun getOrElse(arr: (MutArray<Object>) | (undefined)): Object
   declare class ABC {}
   fun testABC(abc: (ABC) | (undefined)): unit
   fun testSquareConfig(conf: (SquareConfig) | (undefined)): unit
-  fun err(msg: ((number, string, )) | (undefined)): unit
-  fun toStr(x: (((number) | (false)) | (true)) | (undefined)): string
+  fun err(msg: ((Num, Str, )) | (undefined)): unit
+  fun toStr(x: (((Num) | (false)) | (true)) | (undefined)): Str
   fun boo<T, U>(x: ((T) & (U)) | (undefined)): unit
   declare class B<T> {
     val b: T

@@ -1,5 +1,5 @@
 export declare module TypeParameter {
-  fun inc<T>(x: T): number
+  fun inc<T>(x: T): Num
   declare class CC<T> {
     fun print(s: T): unit
   }
@@ -7,8 +7,8 @@ export declare module TypeParameter {
   declare class Printer<T> {
     fun print(t: T): unit
   }
-  fun setStringPrinter(p: Printer<string>): unit
-  fun getStringPrinter(): Printer<string>
+  fun setStringPrinter(p: Printer<Str>): unit
+  fun getStringPrinter(): Printer<Str>
   fun foo<T>(p: Printer<T>, x: T): T
   fun foo2<T>(p: Printer<T>, x: T): T
   declare class F<T> {
@@ -22,6 +22,6 @@ export declare module TypeParameter {
   declare class FFF<T> {
     fun fff(x: T): unit
   }
-  fun fff(p: FFF<string>, s: string): unit
-  fun getFFF(): FFF<number>
+  fun fff(p: FFF<Str>, s: Str): unit
+  fun getFFF(): FFF<Num>
 }

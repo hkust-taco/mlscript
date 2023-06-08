@@ -7,22 +7,22 @@ export declare module Type {
     val value: A
   }
   type Option<A> = (None) | (Some<A>)
-  type Func = (number) => number
-  type S2 = (string, string, )
+  type Func = (x: Num) => Num
+  type S2 = (Str, Str, )
   declare trait I1 {}
   declare trait I2 {}
   type I3 = (I1) & (I2)
-  type StringArray = Array<string>
-  type SomeInterface = {x: number,y: number,}
+  type StringArray = Array<Str>
+  type SomeInterface = {x: Num,y: Num,}
   declare class ABC {}
   type DEF = ABC
   type TP<A, B, C> = (A, B, C, )
   module NA {
-    fun fb(b: string): unit
-    export type B = string
+    fun fb(b: Str): unit
+    export type B = Str
   }
   declare class NC {
-    val b: string
+    val b: Str
   }
   type G = ABC
   val none: {_tag: "None",}

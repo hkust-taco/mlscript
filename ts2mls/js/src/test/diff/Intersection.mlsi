@@ -1,12 +1,12 @@
 export declare module Intersection {
   fun extend<T, U>(first: T, second: U): (T) & (U)
   fun foo<T, U>(x: (T) & (U)): unit
-  fun over(f: ((number) => string) & ((object) => string)): string
+  fun over(f: ((x: Num) => Str) & ((x: Object) => Str)): Str
   declare trait IA {
-    val x: number
+    val x: Num
   }
   declare trait IB {
-    val y: number
+    val y: Num
   }
   fun iii(x: (IA) & (IB)): (IA) & (IB)
   fun uu<U, V, T, P>(x: ((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P))): ((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P))

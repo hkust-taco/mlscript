@@ -1,25 +1,25 @@
 export declare module BasicFunctions {
   fun hello(): unit
-  fun add(x: number, y: number): number
-  fun sub(x: number, y: number): number
-  fun foo(): number
+  fun add(x: Num, y: Num): Num
+  fun sub(x: Num, y: Num): Num
+  fun foo(): Num
   fun id(x: anything): anything
-  fun odd(x: number): (false) | (true)
+  fun odd(x: Num): (false) | (true)
   fun isnull(x: anything): (false) | (true)
   fun bar(): anything
   fun nu(n: null): null
   fun un(n: undefined): undefined
   fun fail(): nothing
-  fun create(): object
-  fun pa(x: number): number
+  fun create(): Object
+  fun pa(x: Num): Num
   fun wtf(x: anything): unit
   declare class Foooooo {
-    val ooooooo: number
+    val ooooooo: Num
   }
   fun inn(f: Foooooo): unit
   fun out1(): Foooooo
   declare trait Barrrrrrrrr {
-    val rrrrrrr: number
+    val rrrrrrr: Num
   }
   fun inn2(b: Barrrrrrrrr): unit
   fun out2(): Barrrrrrrrr

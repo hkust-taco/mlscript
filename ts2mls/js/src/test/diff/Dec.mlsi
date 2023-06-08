@@ -1,12 +1,12 @@
 export declare module Dec {
-  fun getName(id: (string) | (number)): string
-  fun render(callback: (unit => unit) | (undefined)): string
+  fun getName(id: (Str) | (Num)): Str
+  fun render(callback: (() => unit) | (undefined)): Str
   declare trait Get {
     val __call: Unsupported<"(id: string): string", "ts2mls/js/src/test/typescript/Dec.d.ts", 4, 22>
   }
   declare class Person {
-    constructor(name: string, age: number)
-    fun getName(id: number): string
+    constructor(name: Str, age: Num)
+    fun getName(id: Num): Str
   }
   module OOO {
   }

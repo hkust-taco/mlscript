@@ -1,7 +1,7 @@
 export declare module Variables {
-  val URI: string
-  val URI2: string
-  val foo: number
+  val URI: Str
+  val URI2: Str
+  val foo: Num
   val bar: false
   declare class FooBar {}
   val fb: FooBar
@@ -10,7 +10,7 @@ export declare module Variables {
   }
   val d: ABC.DEF
   module DD {
-    export val foo: number
-    val bar: number
+    export val foo: Num
+    val bar: Num
   }
 }

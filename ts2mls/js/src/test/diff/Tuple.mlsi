@@ -1,17 +1,17 @@
 export declare module Tuple {
-  fun key(x: (string, (false) | (true), )): string
-  fun value(x: (string, (false) | (true), )): (false) | (true)
-  fun third(x: (number, number, number, )): number
-  fun vec2(x: number, y: number): (number, number, )
-  fun twoFunctions(ff: ((number) => number, (number) => number, ), x: number): number
-  fun tupleIt(x: string): (unit => string, )
-  fun s(flag: (false) | (true)): ((string) | (number), ((number) | (false)) | (true), )
-  fun s2(t: ((false) | (true), (string) | (number), )): (string) | (number)
+  fun key(x: (Str, (false) | (true), )): Str
+  fun value(x: (Str, (false) | (true), )): (false) | (true)
+  fun third(x: (Num, Num, Num, )): Num
+  fun vec2(x: Num, y: Num): (Num, Num, )
+  fun twoFunctions(ff: ((x: Num) => Num, (x: Num) => Num, ), x: Num): Num
+  fun tupleIt(x: Str): (() => Str, )
+  fun s(flag: (false) | (true)): ((Str) | (Num), ((Num) | (false)) | (true), )
+  fun s2(t: ((false) | (true), (Str) | (Num), )): (Str) | (Num)
   fun ex<T, U>(x: T, y: U): (T, U, (T) & (U), )
   fun foo<T, U>(x: ((T) & (U), )): unit
-  fun conv(x: {y: number,}): ({y: number,}, {z: string,}, )
+  fun conv(x: {y: Num,}): ({y: Num,}, {z: Str,}, )
   declare class A {
-    val x: number
+    val x: Num
   }
   declare class B {}
   fun swap(x: (A, B, )): (B, A, )

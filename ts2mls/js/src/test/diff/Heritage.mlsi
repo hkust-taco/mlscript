@@ -7,7 +7,7 @@ export declare module Heritage {
     fun set(x: T): unit
     fun get(): T
   }
-  declare class D extends C<number> {}
+  declare class D extends C<Num> {}
   declare trait Wu {
     val x: (false) | (true)
   }
@@ -23,7 +23,7 @@ export declare module Heritage {
   declare class VG<T> {
     val x: T
   }
-  declare class Home<T> extends VG<string> {
+  declare class Home<T> extends VG<Str> {
     val y: T
   }
   declare trait O<I> {
@@ -34,7 +34,7 @@ export declare module Heritage {
   }
   module Five {
     export declare class ROTK {
-      val wu: string
+      val wu: Str
     }
     export declare class Y extends ROTK {}
   }

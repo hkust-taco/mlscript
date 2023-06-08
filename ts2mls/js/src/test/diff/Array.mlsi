@@ -1,18 +1,18 @@
 export declare module Array {
-  fun first(x: MutArray<string>): string
-  fun getZero3(): MutArray<number>
-  fun first2(fs: MutArray<(number) => number>): (number) => number
-  fun doEs(e: MutArray<int>): MutArray<int>
+  fun first(x: MutArray<Str>): Str
+  fun getZero3(): MutArray<Num>
+  fun first2(fs: MutArray<(x: Num) => Num>): (x: Num) => Num
+  fun doEs(e: MutArray<Int>): MutArray<Int>
   declare class C {}
   declare trait I {
-    val i: number
+    val i: Num
   }
   fun doCs(c: MutArray<C>): MutArray<C>
   fun doIs(i: MutArray<I>): MutArray<I>
   fun inter<U, T>(x: MutArray<(U) & (T)>): MutArray<(U) & (T)>
-  fun clean(x: MutArray<(string, number, )>): MutArray<(string, number, )>
+  fun clean(x: MutArray<(Str, Num, )>): MutArray<(Str, Num, )>
   fun translate<T, U>(x: MutArray<T>): MutArray<U>
-  fun uu(x: MutArray<((number) | (false)) | (true)>): MutArray<((number) | (false)) | (true)>
+  fun uu(x: MutArray<((Num) | (false)) | (true)>): MutArray<((Num) | (false)) | (true)>
   declare class Temp<T> {
     val x: T
   }

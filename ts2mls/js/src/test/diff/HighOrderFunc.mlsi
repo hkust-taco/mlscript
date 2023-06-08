@@ -1,5 +1,5 @@
 export declare module HighOrderFunc {
-  fun h1(inc: (number) => number, num: number): number
-  fun h2(hint: string): unit => string
-  fun h3(f: (number) => number, g: (number) => number): (number) => number
+  fun h1(inc: (n: Num) => Num, num: Num): Num
+  fun h2(hint: Str): () => Str
+  fun h3(f: (x: Num) => Num, g: (x: Num) => Num): (x: Num) => Num
 }

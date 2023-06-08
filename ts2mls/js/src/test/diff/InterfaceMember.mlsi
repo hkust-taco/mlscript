@@ -1,17 +1,17 @@
 export declare module InterfaceMember {
   declare trait IFoo {
-    val a: string
-    fun b(x: number): number
+    val a: Str
+    fun b(x: Num): Num
     fun c(): (false) | (true)
-    fun d(x: string): unit
+    fun d(x: Str): unit
   }
   declare trait II<T> {
-    fun test(x: T): number
+    fun test(x: T): Num
   }
-  fun create(): {v: number,}
-  fun get(x: {t: string,}): string
+  fun create(): {v: Num,}
+  fun get(x: {t: Str,}): Str
   declare trait IEvent {
-    fun callback(): (number) => unit
+    fun callback(): (x: Num) => unit
   }
   declare trait SearchFunc {
     val __call: Unsupported<"(source: string, subString: string): boolean;", "ts2mls/js/src/test/typescript/InterfaceMember.ts", 24, 22>
@@ -21,12 +21,12 @@ export declare module InterfaceMember {
   }
   declare trait Counter {
     val __call: Unsupported<"(start: number): string;", "ts2mls/js/src/test/typescript/InterfaceMember.ts", 32, 19>
-    val interval: number
+    val interval: Num
     fun reset(): unit
   }
   declare trait Simple {
-    val a: number
-    fun b(x: (false) | (true)): string
+    val a: Num
+    fun b(x: (false) | (true)): Str
   }
   declare trait Simple2<T> {
     val abc: T
