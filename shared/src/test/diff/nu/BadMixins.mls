@@ -10,7 +10,7 @@ M0
 //│ mixin M0()
 //│ error
 //│ res
-//│     = [Function: M0]
+//│     = [Function (anonymous)]
 
 :e
 M0
@@ -19,5 +19,5 @@ M0
 //│ ╙──      	^^
 //│ error
 //│ res
-//│     = [Function: M0]
+//│     = [Function (anonymous)]
 

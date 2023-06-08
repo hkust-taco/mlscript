@@ -137,7 +137,7 @@ mixin EvalBase {
 //│   }
 //│ }
 //│ const typing_unit1 = new TypingUnit1;
-//│ globalThis.EvalBase = typing_unit1.EvalBase;
+//│ globalThis.EvalBase = ((base) => typing_unit1.EvalBase(base));
 //│ // End of generated code
 //│ ┌ Block at Mixin.mls:107
 //│ ├─┬ Prelude
@@ -164,9 +164,9 @@ mixin EvalBase {
 //│ │ │     }
 //│ │ │   }
 //│ │ │   const typing_unit1 = new TypingUnit1;
-//│ │ │   globalThis.EvalBase = typing_unit1.EvalBase;
+//│ │ │   globalThis.EvalBase = ((base) => typing_unit1.EvalBase(base));
 //│ │ └── Reply
-//│ │     [Function: EvalBase]
+//│ │     [Function (anonymous)]
 //│ └── No queries
 
 :js
@@ -258,7 +258,7 @@ mixin EvalNeg {
 //│   }
 //│ }
 //│ const typing_unit3 = new TypingUnit3;
-//│ globalThis.EvalNeg = typing_unit3.EvalNeg;
+//│ globalThis.EvalNeg = ((base) => typing_unit3.EvalNeg(base));
 //│ // End of generated code
 //│ ┌ Block at Mixin.mls:231
 //│ ├─┬ Prelude
@@ -282,9 +282,9 @@ mixin EvalNeg {
 //│ │ │     }
 //│ │ │   }
 //│ │ │   const typing_unit3 = new TypingUnit3;
-//│ │ │   globalThis.EvalNeg = typing_unit3.EvalNeg;
+//│ │ │   globalThis.EvalNeg = ((base) => typing_unit3.EvalNeg(base));
 //│ │ └── Reply
-//│ │     [Function: EvalNeg]
+//│ │     [Function (anonymous)]
 //│ └── No queries
 
 :js
@@ -319,7 +319,7 @@ mixin EvalNegNeg {
 //│   }
 //│ }
 //│ const typing_unit4 = new TypingUnit4;
-//│ globalThis.EvalNegNeg = typing_unit4.EvalNegNeg;
+//│ globalThis.EvalNegNeg = ((base) => typing_unit4.EvalNegNeg(base));
 //│ // End of generated code
 //│ ┌ Block at Mixin.mls:292
 //│ ├─┬ Prelude
@@ -343,9 +343,9 @@ mixin EvalNegNeg {
 //│ │ │     }
 //│ │ │   }
 //│ │ │   const typing_unit4 = new TypingUnit4;
-//│ │ │   globalThis.EvalNegNeg = typing_unit4.EvalNegNeg;
+//│ │ │   globalThis.EvalNegNeg = ((base) => typing_unit4.EvalNegNeg(base));
 //│ │ └── Reply
-//│ │     [Function: EvalNegNeg]
+//│ │     [Function (anonymous)]
 //│ └── No queries
 
 :js
@@ -510,7 +510,7 @@ mixin Fooo(x: Int) { fun f = [x, this.x] }
 //│   }
 //│ }
 //│ const typing_unit14 = new TypingUnit14;
-//│ globalThis.Fooo = typing_unit14.Fooo;
+//│ globalThis.Fooo = ((base) => typing_unit14.Fooo(base));
 //│ // End of generated code
 
 :js
@@ -533,7 +533,7 @@ mixin Bazz(y: Int)
 //│   }
 //│ }
 //│ const typing_unit15 = new TypingUnit15;
-//│ globalThis.Bazz = typing_unit15.Bazz;
+//│ globalThis.Bazz = ((base) => typing_unit15.Bazz(base));
 //│ // End of generated code
 
 :js

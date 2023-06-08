@@ -28,7 +28,7 @@ mixin Foo0 {
 //│   }
 //│ }
 //│ const typing_unit = new TypingUnit;
-//│ globalThis.Foo0 = typing_unit.Foo0;
+//│ globalThis.Foo0 = ((base) => typing_unit.Foo0(base));
 //│ // End of generated code
 
 :js
@@ -63,7 +63,7 @@ mixin Foo1 {
 //│   }
 //│ }
 //│ const typing_unit1 = new TypingUnit1;
-//│ globalThis.Foo1 = typing_unit1.Foo1;
+//│ globalThis.Foo1 = ((base) => typing_unit1.Foo1(base));
 //│ // End of generated code
 
 module Test0 extends Foo0, Foo1
@@ -108,7 +108,7 @@ mixin Foo2 {
 //│   }
 //│ }
 //│ const typing_unit4 = new TypingUnit4;
-//│ globalThis.Foo2 = typing_unit4.Foo2;
+//│ globalThis.Foo2 = ((base) => typing_unit4.Foo2(base));
 //│ // End of generated code
 //│ Syntax error:
 //│   'super' keyword unexpected here
