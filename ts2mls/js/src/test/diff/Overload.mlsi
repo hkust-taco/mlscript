@@ -10,7 +10,7 @@ export declare module Overload {
   declare class N {}
   fun id: ((x: M) => unit) & ((x: N) => unit)
   fun tst: ((x: {z: Num,}) => {y: Str,}) & ((x: {z: (false) | (true),}) => {y: Str,})
-  fun op: ((x: Num, y: (Num) | (undefined)) => unit) & ((x: Num, y: ((false) | (true)) | (undefined)) => unit)
+  fun op: ((((x: Num) => unit) & ((x: Num, y: Num) => unit)) & ((x: Num) => unit)) & ((x: Num, y: (false) | (true)) => unit)
   fun swap: ((x: (Num, Str, )) => (Num, Str, )) & ((x: (Str, Num, )) => (Num, Str, ))
   fun u: ((x: ((Num) | (false)) | (true)) => Str) & ((x: Object) => Str)
   fun doSome<T, U>(x: anything): unit /* warning: the overload of function doSome is not supported yet. */

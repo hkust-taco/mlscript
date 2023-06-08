@@ -124,7 +124,11 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
         case (line, column) => TSUnsupportedType(obj.toString(), obj.filename, line, column)
       }
     else if (obj.isEnumType) TSEnumType
-    else if (obj.isFunctionLike) getFunctionType(obj.symbol.declaration)
+    else if (obj.isFunctionLike) getFunctionType(obj.symbol.declaration) match {
+      case head :: Nil => head
+      case head :: tail => tail.foldLeft[TSType](head)((res, f) => TSIntersectionType(res, f))
+      case Nil => throw new AssertionError("empty function type.")
+    }
     else if (obj.isTupleType) TSTupleType(getTupleElements(obj.typeArguments))
     else if (obj.isUnionType) getStructuralType(obj.types, true)
     else if (obj.isIntersectionType) getStructuralType(obj.types, false)
@@ -141,7 +145,11 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
 
   // the function `getMemberType` can't process function/tuple type alias correctly
   private def getTypeAlias(tn: TSNodeObject)(implicit ns: TSNamespace): TSType =
-    if (tn.isFunctionLike) getFunctionType(tn)
+    if (tn.isFunctionLike) getFunctionType(tn) match {
+      case head :: Nil => head
+      case head :: tail => tail.foldLeft[TSType](head)((res, f) => TSIntersectionType(res, f))
+      case Nil => throw new AssertionError("empty function type.")
+    }
     else if (tn.isTupleTypeNode) TSTupleType(getTupleElements(tn.typeNode.typeArguments))
     else getObjectType(tn.typeNode) match {
       case TSPrimitiveType("intrinsic") => lineHelper.getPos(tn.pos) match {
@@ -167,7 +175,11 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
         lineHelper.getPos(node.pos) match {
           case (line, column) => TSUnsupportedType(node.toString(), node.filename, line, column)
         }
-      else if (node.isFunctionLike) getFunctionType(node)
+      else if (node.isFunctionLike) getFunctionType(node) match {
+        case head :: Nil => head
+        case head :: tail => tail.foldLeft[TSType](head)((res, f) => TSIntersectionType(res, f))
+        case Nil => throw new AssertionError("empty function type.")
+      }
       else if (node.`type`.isUndefined) getObjectType(node.typeAtLocation)
       else if (node.`type`.isLiteralTypeNode) getLiteralType(node.`type`)
       else getObjectType(node.`type`.typeNode)
@@ -181,17 +193,26 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
       else lst :+ TSTypeParameter(tp.symbol.escapedName, Some(getObjectType(tp.constraint.typeNode)))
     )
 
-  private def getFunctionType(node: TSNodeObject)(implicit ns: TSNamespace): TSFunctionType = {
-    val pList = node.parameters.foldLeft(List[TSParameterType]())((lst, p) => (
+  private def getFunctionType(node: TSNodeObject)(implicit ns: TSNamespace): List[TSFunctionType] = {
+    val res = getObjectType(node.returnType)
+    val tv = getTypeParameters(node)
+    node.parameters.foldLeft(TSFunctionType(Nil, res, tv) :: Nil)((funs, p) => (
       // in typescript, you can use `this` to explicitly specifies the callee
       // but it never appears in the final javascript file
-      if (p.symbol.escapedName === "this") lst
-      else if (p.isOptionalParameter)
-        lst :+ TSParameterType(p.symbol.escapedName, TSUnionType(getObjectType(p.symbolType), TSPrimitiveType("undefined")))
-      else lst :+ TSParameterType(p.symbol.escapedName, getObjectType(p.symbolType)))
+      if (p.symbol.escapedName === "this") funs
+      else if (p.isOptionalParameter) funs.lastOption match {
+        case Some(TSFunctionType(params, res, tv)) =>
+          funs :+ TSFunctionType(params :+ TSParameterType(p.symbol.escapedName, getObjectType(p.symbolType)), res, tv)
+        case _ => throw new AssertionError("empty function type.")
+      }
+      else funs.headOption match {
+        case Some(TSFunctionType(params, res, tv)) =>
+          TSFunctionType(params :+ TSParameterType(p.symbol.escapedName, getObjectType(p.symbolType)), res, tv) :: Nil
+        case _ => throw new AssertionError("empty function type.")
+      })
     )
-    TSFunctionType(pList, getObjectType(node.returnType), getTypeParameters(node))
   }
+    
 
   private def getStructuralType(types: TSTypeArray, isUnion: Boolean)(implicit ns: TSNamespace): TSType =
     types.foldLeft[Option[TSType]](None)((prev, cur) => prev match {
@@ -299,10 +320,10 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
   private def addNodeIntoNamespace(node: TSNodeObject, name: String, exported: Boolean, overload: Option[TSNodeArray] = None)(implicit ns: TSNamespace) =
     if (node.isFunctionLike) overload match {
       case None =>
-        addFunctionIntoNamespace(getFunctionType(node), node, name)
+        getFunctionType(node).foreach(addFunctionIntoNamespace(_, node, name))
       case Some(decs) => {
         decs.foreach((d) =>
-          addFunctionIntoNamespace(getFunctionType(d), d, name)
+          getFunctionType(d).foreach(addFunctionIntoNamespace(_, d, name))
         )
       }
     }

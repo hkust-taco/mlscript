@@ -1,22 +1,22 @@
 export declare module Optional {
-  fun buildName(firstName: Str, lastName: (Str) | (undefined)): Str
-  fun buildName2(firstName: Str, lastName: (Str) | (undefined)): Str
+  fun buildName: ((firstName: Str) => Str) & ((firstName: Str, lastName: Str) => Str)
+  fun buildName2: ((firstName: Str) => Str) & ((firstName: Str, lastName: Str) => Str)
   fun buildName3(firstName: Str, lastName: MutArray<Str>): Str
   fun buildName4(firstName: Str, lastName: MutArray<anything>): Str
   declare trait SquareConfig {
     val color: (Str) | (undefined)
     val width: (Num) | (undefined)
   }
-  fun did(x: Num, f: ((x: Num) => Num) | (undefined)): Num
-  fun getOrElse(arr: (MutArray<Object>) | (undefined)): Object
+  fun did: ((x: Num) => Num) & ((x: Num, f: (x: Num) => Num) => Num)
+  fun getOrElse: (() => Object) & ((arr: MutArray<Object>) => Object)
   declare class ABC {}
-  fun testABC(abc: (ABC) | (undefined)): unit
-  fun testSquareConfig(conf: (SquareConfig) | (undefined)): unit
-  fun err(msg: ((Num, Str, )) | (undefined)): unit
-  fun toStr(x: (((Num) | (false)) | (true)) | (undefined)): Str
-  fun boo<T, U>(x: ((T) & (U)) | (undefined)): unit
+  fun testABC: (() => unit) & ((abc: ABC) => unit)
+  fun testSquareConfig: (() => unit) & ((conf: SquareConfig) => unit)
+  fun err: (() => unit) & ((msg: (Num, Str, )) => unit)
+  fun toStr: (() => Str) & ((x: ((Num) | (false)) | (true)) => Str)
+  fun boo<T, U>(x: (T) & (U)): unit /* warning: the overload of function boo is not supported yet. */
   declare class B<T> {
     val b: T
   }
-  fun boom(b: (B<nothing>) | (undefined)): anything
+  fun boom: (() => anything) & ((b: B<nothing>) => anything)
 }

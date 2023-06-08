@@ -1,6 +1,6 @@
 export declare module Dec {
   fun getName(id: (Str) | (Num)): Str
-  fun render(callback: (() => unit) | (undefined)): Str
+  fun render: (() => Str) & ((callback: () => unit) => Str)
   declare trait Get {
     val __call: Unsupported<"(id: string): string", "ts2mls/js/src/test/typescript/Dec.d.ts", 4, 22>
   }
