@@ -733,7 +733,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       case MethodDef(_, _, Var(nme), _, _) => memberList += NewClassMemberSymbol(nme, N, true).tap(nuTypeScope.register)
     }
     sym.ctor.foreach {
-      case NuFunDef(rec, Var(nme), _, _) => memberList += NewClassMemberSymbol(nme, rec, false).tap(nuTypeScope.register)
+      case nd @ NuFunDef(rec, Var(nme), _, _) if nd.genField => memberList += NewClassMemberSymbol(nme, rec, false).tap(nuTypeScope.register)
       case _ => ()
     }
 
@@ -788,10 +788,17 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         JSConstDecl(constructorScope.declareValue(name, S(false), false).runtimeName, JSIdent(s"this.#$name"))
       )
       case s: Term => JSExprStmt(translateTerm(s)(constructorScope)) :: Nil
-      case NuFunDef(_, Var(nme), _, Left(rhs)) => getters += nme; Ls[JSStmt](
-        JSExprStmt(JSAssignExpr(JSIdent(s"this.#$nme"), translateTerm(rhs)(constructorScope))),
-        JSConstDecl(constructorScope.declareValue(nme, S(false), false).runtimeName, JSIdent(s"this.#$nme"))
-      )
+      case nd @ NuFunDef(_, Var(nme), _, Left(rhs)) =>
+        if (nd.genField) {
+          getters += nme
+          Ls[JSStmt](
+            JSExprStmt(JSAssignExpr(JSIdent(s"this.#$nme"), translateTerm(rhs)(constructorScope))),
+            JSConstDecl(constructorScope.declareValue(nme, S(false), false).runtimeName, JSIdent(s"this.#$nme"))
+          )
+        }
+        else
+          JSConstDecl(constructorScope.declareValue(nme, S(false), false).runtimeName,
+            translateTerm(rhs)(constructorScope)) :: Nil
       case _ => Nil
     }
 

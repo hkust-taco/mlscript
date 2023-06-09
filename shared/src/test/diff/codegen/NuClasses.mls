@@ -94,7 +94,7 @@ module Foo {
 
 
 mixin M0(n: Int) {
-  let m = n // this refers to specifically the `n` we had in parameter, not necessarily this.n
+  val m = n // this refers to specifically the `n` we had in parameter, not necessarily this.n
   fun bar = m
   fun foo = [n, m, bar] // should this be the same as `[this.n, this.m, this.bar]`?
 }
@@ -151,11 +151,8 @@ module M2 {
 //│     const outer = this;
 //│     if (this.#M2 === undefined) {
 //│       class M2 {
-//│         #m;
-//│         get m() { return this.#m; }
 //│         constructor() {
-//│           this.#m = 100;
-//│           const m = this.#m;
+//│           const m = 100;
 //│         }
 //│         foo(y) {
 //│           const self = this;
@@ -178,5 +175,5 @@ module M2 {
 M2.foo(1)
 //│ Int
 //│ res
-//│     = 111
+//│     = NaN
 

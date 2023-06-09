@@ -4,7 +4,7 @@
 
 mixin Test {
   class Foo(n: Int)
-  let f = Foo(123)
+  val f = Foo(123)
 }
 //│ mixin Test() {
 //│   class Foo(n: Int)

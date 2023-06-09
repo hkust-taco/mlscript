@@ -1,0 +1,71 @@
+:NewDefs
+
+:js
+class A(x0: Int) {
+  let x1 = x0 + 1
+  log([x1])
+  let x2 = x1 + 1
+  log([x1, x2])
+  val x3 = x2 + 1
+}
+//│ class A(x0: Int) {
+//│   let x1: Int
+//│   let x2: Int
+//│   let x3: Int
+//│ }
+//│ // Prelude
+//│ function log(x) {
+//│   return console.info(x);
+//│ }
+//│ let res;
+//│ class TypingUnit {
+//│   #A;
+//│   constructor() {
+//│   }
+//│   get A() {
+//│     const outer = this;
+//│     if (this.#A === undefined) {
+//│       class A {
+//│         #x0;
+//│         get x0() { return this.#x0; }
+//│         #x3;
+//│         get x3() { return this.#x3; }
+//│         constructor(x0) {
+//│           this.#x0 = x0;
+//│           const x1 = x0 + 1;
+//│           log([x1]);
+//│           const x2 = x1 + 1;
+//│           log([
+//│             x1,
+//│             x2
+//│           ]);
+//│           this.#x3 = x2 + 1;
+//│           const x3 = this.#x3;
+//│         }
+//│       };
+//│       this.#A = ((x0) => Object.freeze(new A(x0)));
+//│       this.#A.class = A;
+//│     }
+//│     return this.#A;
+//│   }
+//│ }
+//│ const typing_unit = new TypingUnit;
+//│ globalThis.A = typing_unit.A;
+//│ // End of generated code
+
+// FIXME: should be rejected
+A(0).x1
+//│ Int
+//│ res
+//│     = undefined
+//│ // Output
+//│ [ 1 ]
+//│ [ 1, 2 ]
+
+A(1).x3
+//│ Int
+//│ res
+//│     = 4
+//│ // Output
+//│ [ 2 ]
+//│ [ 2, 3 ]

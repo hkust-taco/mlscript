@@ -834,7 +834,7 @@ class Bc02() extends Bc1(1:Int) {
 Bc02().foo
 //│ 2
 //│ res
-//│     = 2
+//│     = 1
 
 :e
 class Bc31(baz: Bool) extends Bc3

@@ -209,25 +209,19 @@ class Baz() {
 //│     const outer = this;
 //│     if (this.#Baz === undefined) {
 //│       class Baz {
-//│         #x;
-//│         get x() { return this.#x; }
-//│         #y;
-//│         get y() { return this.#y; }
 //│         constructor() {
-//│           this.#x = 123;
-//│           const x = this.#x;
+//│           const x = 123;
 //│           log([
 //│             1,
 //│             x
 //│           ]);
-//│           this.#y = (() => {
+//│           const y = (() => {
 //│             log([
 //│               2,
 //│               x
 //│             ]);
 //│             return x + 1;
 //│           })();
-//│           const y = this.#y;
 //│           log([
 //│             3,
 //│             y
@@ -257,11 +251,11 @@ log((baz.x, baz.y))
 //│ res
 //│     = undefined
 //│ // Output
-//│ [ 123, 124 ]
+//│ [ undefined, undefined ]
 
 :js
 class Q() {
-  let q = 42
+  val q = 42
   fun qq =
     let f = (x: Int) => {q: x + q}; f(1)
 }
@@ -313,7 +307,7 @@ q.qq.q
 
 :js
 class W() {
-  let x = 42
+  val x = 42
   fun add(self: Int) = x + self
 }
 //│ class W() {

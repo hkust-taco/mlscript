@@ -17,12 +17,9 @@ mixin Foo0 {
 //│   Foo0(base) {
 //│     const outer = this;
 //│     return (class Foo0 extends base {
-//│       #foo0;
-//│       get foo0() { return this.#foo0; }
 //│       constructor(...rest) {
 //│         super(...rest);
-//│         this.#foo0 = 0;
-//│         const foo0 = this.#foo0;
+//│         const foo0 = 0;
 //│       }
 //│     });
 //│   }
@@ -48,16 +45,10 @@ mixin Foo1 {
 //│   Foo1(base) {
 //│     const outer = this;
 //│     return (class Foo1 extends base {
-//│       #foo0;
-//│       get foo0() { return this.#foo0; }
-//│       #foo1;
-//│       get foo1() { return this.#foo1; }
 //│       constructor(...rest) {
 //│         super(...rest);
-//│         this.#foo0 = 1;
-//│         const foo0 = this.#foo0;
-//│         this.#foo1 = super.foo0;
-//│         const foo1 = this.#foo1;
+//│         const foo0 = 1;
+//│         const foo1 = super.foo0;
 //│       }
 //│     });
 //│   }
@@ -75,7 +66,7 @@ module Test0 extends Foo0, Foo1
 [Test0.foo0, Test0.foo1]
 //│ (1, 0,)
 //│ res
-//│     = [ 1, 0 ]
+//│     = [ undefined, undefined ]
 
 
 :ShowRepl
@@ -85,7 +76,7 @@ mixin Foo2 {
   fun foo2 = super
 }
 //│ ╔══[ERROR] Illegal use of `super`
-//│ ║  l.85: 	  fun foo2 = super
+//│ ║  l.76: 	  fun foo2 = super
 //│ ╙──      	             ^^^^^
 //│ mixin Foo2() {
 //│   super: 'super

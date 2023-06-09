@@ -25,11 +25,8 @@ module A {
 //│     if (this.#A === undefined) {
 //│       class A {
 //│         #B;
-//│         #a;
-//│         get a() { return this.#a; }
 //│         constructor() {
-//│           this.#a = 42;
-//│           const a = this.#a;
+//│           const a = 42;
 //│         }
 //│         get B() {
 //│           const outer1 = this;
@@ -66,7 +63,7 @@ module A {
 let bb = A.B(A.a)
 bb.b
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.66: 	let bb = A.B(A.a)
+//│ ║  l.63: 	let bb = A.B(A.a)
 //│ ╙──      	          ^^
 //│ let bb: error
 //│ error
@@ -81,7 +78,7 @@ bb.b
 //│ bb
 //│    = B {}
 //│ res
-//│     = 43
+//│     = NaN
 
 
 :e
@@ -99,10 +96,10 @@ c.outer1
 let d = b.D(1)
 d.outer
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.97: 	let c = b.C(1)
+//│ ║  l.94: 	let c = b.C(1)
 //│ ╙──      	         ^^
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.99: 	let d = b.D(1)
+//│ ║  l.96: 	let d = b.D(1)
 //│ ╙──      	         ^^
 //│ class B(x: Int) {
 //│   class C(y: Int) {
@@ -118,11 +115,11 @@ d.outer
 //│ b
 //│   = B {}
 //│ res
-//│     = 42
+//│     = undefined
 //│ c
 //│   = C {}
 //│ res
-//│     = 84
+//│     = undefined
 //│ d
 //│   = D {}
 //│ res
@@ -330,7 +327,7 @@ let fff = es.F(2)
 let gg = fff.G(3)
 gg.sum
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.329: 	let fff = es.F(2)
+//│ ║  l.326: 	let fff = es.F(2)
 //│ ╙──       	            ^^
 //│ let es: E
 //│ let fff: error
@@ -359,7 +356,7 @@ gg.sum
 
 :js
 class F() {
-  let x = 42
+  val x = 42
   class G() {
     let x1 = x + 1
   }
@@ -390,11 +387,8 @@ class F() {
 //│           const outer1 = this;
 //│           if (this.#G === undefined) {
 //│             class G {
-//│               #x1;
-//│               get x1() { return this.#x1; }
 //│               constructor() {
-//│                 this.#x1 = outer1.x + 1;
-//│                 const x1 = this.#x1;
+//│                 const x1 = outer1.x + 1;
 //│               }
 //│             };
 //│             this.#G = (() => Object.freeze(new G()));
@@ -514,7 +508,7 @@ let jj = G.H.J(42)
 let i = jj.ii(2)
 i.x
 //│ ╔══[ERROR] access to module member not yet supported
-//│ ║  l.513: 	let jj = G.H.J(42)
+//│ ║  l.507: 	let jj = G.H.J(42)
 //│ ╙──       	          ^^
 //│ let jj: error
 //│ let i: error
@@ -583,12 +577,9 @@ module H {
 //│             class J {
 //│               #x;
 //│               get x() { return this.#x; }
-//│               #i;
-//│               get i() { return this.#i; }
 //│               constructor(x) {
 //│                 this.#x = x;
-//│                 this.#i = outer1.I(x + 1);
-//│                 const i = this.#i;
+//│                 const i = outer1.I(x + 1);
 //│               }
 //│             };
 //│             this.#J = ((x) => Object.freeze(new J(x)));
@@ -613,7 +604,7 @@ module H {
 let j = H.J(42)
 j.i.x
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.613: 	let j = H.J(42)
+//│ ║  l.604: 	let j = H.J(42)
 //│ ╙──       	         ^^
 //│ let j: error
 //│ error
@@ -628,7 +619,8 @@ j.i.x
 //│ j
 //│   = J {}
 //│ res
-//│     = 43
+//│ Runtime error:
+//│   TypeError: Cannot read properties of undefined (reading 'x')
 
 :js
 :e
@@ -643,7 +635,7 @@ let i = I(1)
 let ij = i.J(0)
 ij.incY
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.643: 	let ij = i.J(0)
+//│ ║  l.635: 	let ij = i.J(0)
 //│ ╙──       	          ^^
 //│ class I(x: Int) {
 //│   class J(x: Int) {
@@ -655,71 +647,8 @@ ij.incY
 //│ let i: I
 //│ let ij: error
 //│ error
-//│ // Prelude
-//│ class TypingUnit13 {
-//│   #I;
-//│   constructor() {
-//│   }
-//│   get I() {
-//│     const outer = this;
-//│     if (this.#I === undefined) {
-//│       class I {
-//│         #J;
-//│         #x;
-//│         get x() { return this.#x; }
-//│         #y;
-//│         get y() { return this.#y; }
-//│         constructor(x) {
-//│           this.#x = x;
-//│           this.#y = x + 1;
-//│           const y = this.#y;
-//│         }
-//│         get J() {
-//│           const outer1 = this;
-//│           if (this.#J === undefined) {
-//│             class J {
-//│               #x;
-//│               get x() { return this.#x; }
-//│               #y;
-//│               get y() { return this.#y; }
-//│               constructor(x) {
-//│                 this.#x = x;
-//│                 this.#y = x + 2;
-//│                 const y = this.#y;
-//│               }
-//│               get incY() {
-//│                 const x = this.#x;
-//│                 const self = this;
-//│                 return self.y + 1;
-//│               }
-//│             };
-//│             this.#J = ((x) => Object.freeze(new J(x)));
-//│             this.#J.class = J;
-//│           }
-//│           return this.#J;
-//│         }
-//│       };
-//│       this.#I = ((x) => Object.freeze(new I(x)));
-//│       this.#I.class = I;
-//│     }
-//│     return this.#I;
-//│   }
-//│ }
-//│ const typing_unit13 = new TypingUnit13;
-//│ globalThis.I = typing_unit13.I;
-//│ // Query 1
-//│ globalThis.i1 = I(1);
-//│ // Query 2
-//│ globalThis.ij = i1.J(0);
-//│ // Query 3
-//│ res = ij.incY;
-//│ // End of generated code
-//│ i
-//│   = I {}
-//│ ij
-//│    = J {}
-//│ res
-//│     = 3
+//│ Code generation encountered an error:
+//│   unresolved symbol y
 
 
 :js
@@ -817,10 +746,10 @@ module J {
 let m = J.M()
 let n = J.N(2)
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.817: 	let m = J.M()
+//│ ║  l.746: 	let m = J.M()
 //│ ╙──       	         ^^
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.818: 	let n = J.N(2)
+//│ ║  l.747: 	let n = J.N(2)
 //│ ╙──       	         ^^
 //│ let m: error
 //│ let n: error
@@ -839,9 +768,9 @@ let n = J.N(2)
 
 
 module K {
-  let x = 1
+  val x = 1
   module L {
-    let x = 42
+    val x = 42
     class M() {
       fun f = x
     }
@@ -861,7 +790,7 @@ module K {
 let m = K.L.M()
 m.f
 //│ ╔══[ERROR] access to module member not yet supported
-//│ ║  l.861: 	let m = K.L.M()
+//│ ║  l.790: 	let m = K.L.M()
 //│ ╙──       	         ^^
 //│ let m: error
 //│ error
@@ -891,7 +820,7 @@ module L {
 let op = L.N.O.P(0)
 op.x
 //│ ╔══[ERROR] access to module member not yet supported
-//│ ║  l.891: 	let op = L.N.O.P(0)
+//│ ║  l.820: 	let op = L.N.O.P(0)
 //│ ╙──       	          ^^
 //│ let op: error
 //│ error
@@ -918,10 +847,10 @@ module M {
 }
 M.N.op(M.P())
 //│ ╔══[ERROR] access to module member not yet supported
-//│ ║  l.919: 	M.N.op(M.P())
+//│ ║  l.848: 	M.N.op(M.P())
 //│ ╙──       	 ^^
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.919: 	M.N.op(M.P())
+//│ ║  l.848: 	M.N.op(M.P())
 //│ ╙──       	        ^^
 //│ module M {
 //│   module N {
@@ -1075,7 +1004,7 @@ module N {
 :e
 N.O.P()
 //│ ╔══[ERROR] access to module member not yet supported
-//│ ║  l.1076: 	N.O.P()
+//│ ║  l.1005: 	N.O.P()
 //│ ╙──        	 ^^
 //│ error
 //│ res
@@ -1091,7 +1020,7 @@ class I(x: Int) {
 }
 I(1).J(3).a
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.1092: 	I(1).J(3).a
+//│ ║  l.1021: 	I(1).J(3).a
 //│ ╙──        	    ^^
 //│ class I(x: Int) {
 //│   class J(z: Int) {
@@ -1100,62 +1029,8 @@ I(1).J(3).a
 //│   let y: Int
 //│ }
 //│ error
-//│ // Prelude
-//│ class TypingUnit23 {
-//│   #I;
-//│   constructor() {
-//│   }
-//│   get I() {
-//│     const outer = this;
-//│     if (this.#I === undefined) {
-//│       class I {
-//│         #J;
-//│         #x;
-//│         get x() { return this.#x; }
-//│         #y;
-//│         get y() { return this.#y; }
-//│         constructor(x) {
-//│           this.#x = x;
-//│           this.#y = x + 1;
-//│           const y = this.#y;
-//│         }
-//│         get J() {
-//│           const outer1 = this;
-//│           if (this.#J === undefined) {
-//│             class J {
-//│               #z;
-//│               get z() { return this.#z; }
-//│               #a;
-//│               get a() { return this.#a; }
-//│               constructor(z) {
-//│                 this.#z = z;
-//│                 this.#a = [
-//│                   outer1.x,
-//│                   outer1.y,
-//│                   z
-//│                 ];
-//│                 const a = this.#a;
-//│               }
-//│             };
-//│             this.#J = ((z) => Object.freeze(new J(z)));
-//│             this.#J.class = J;
-//│           }
-//│           return this.#J;
-//│         }
-//│       };
-//│       this.#I = ((x) => Object.freeze(new I(x)));
-//│       this.#I.class = I;
-//│     }
-//│     return this.#I;
-//│   }
-//│ }
-//│ const typing_unit23 = new TypingUnit23;
-//│ globalThis.I = typing_unit23.I;
-//│ // Query 1
-//│ res = I(1).J(3).a;
-//│ // End of generated code
-//│ res
-//│     = [ 1, 2, 3 ]
+//│ Code generation encountered an error:
+//│   unresolved symbol y
 
 
 :js
@@ -1365,12 +1240,9 @@ class Outer1(outer: Int) {
 //│             class Outer2 {
 //│               #x;
 //│               get x() { return this.#x; }
-//│               #outer;
-//│               get outer() { return this.#outer; }
 //│               constructor(x) {
 //│                 this.#x = x;
-//│                 this.#outer = x + 1;
-//│                 const outer2 = this.#outer;
+//│                 const outer2 = x + 1;
 //│               }
 //│             };
 //│             this.#Outer2 = ((x) => Object.freeze(new Outer2(x)));

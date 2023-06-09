@@ -31,7 +31,7 @@ Base0
 Base0.test
 //│ 42
 //│ res
-//│     = 42
+//│     = undefined
 
 
 :e
