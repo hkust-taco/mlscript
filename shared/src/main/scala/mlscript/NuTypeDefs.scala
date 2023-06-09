@@ -245,17 +245,20 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
         case S(res) => res
         case N => trace(s"Computing variances of ${this.name}") {
           val store = VarianceStore.empty
+          val traversed = MutSet.empty[Pol -> TV]
+          
           object Trav extends Traverser2.InvariantFields {
             override def apply(pol: PolMap)(ty: ST): Unit =
                 trace(s"Trav($pol)($ty)") {
                 ty match {
-              case tv: TypeVariable =>
+              case tv: TypeVariable => if (traversed.add(pol(tv) -> tv)) {
                 store(tv) = store.getOrElse(tv, VarianceInfo.bi) && (pol(tv) match {
                   case S(true) => VarianceInfo.co
                   case S(false) => VarianceInfo.contra
                   case N => VarianceInfo.in
                 })
                 super.apply(pol)(ty)
+              }
               case ty @ RecordType(fs) =>
                 // Ignore type param members such as `C#A` in `{C#A: mut A30'..A30'}`
                 super.apply(pol)(RecordType(fs.filterNot(_._1.name.contains('#')))(ty.prov))
@@ -1335,6 +1338,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       inheritedTags,
                       tparamMembers
                     )(thisType)
+                      .tap(_.variances) // * Force variance computation
                   }
                   
                 case Mxn =>

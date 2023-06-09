@@ -38,17 +38,17 @@ module Test<A> {
 //│ }
 
 Test.foo
-//│ (??A & 'A) -> ('A | ??A0)
+//│ ??A -> ??A0
 //│ res
 //│     = undefined
 
 Test.bar
-//│ (??A & 'A) -> ('A | ??A0)
+//│ ??A -> ??A0
 //│ res
 //│     = [Function: id]
 
 Test.baz
-//│ (x: ??A & 'A,) -> ('A | ??A0)
+//│ (x: ??A,) -> ??A0
 //│ res
 //│     = [Function: baz]
 
@@ -175,7 +175,7 @@ module Test<A> {
 //│ }
 
 Test.foo
-//│ (??A & 'A) -> ('A | ??A0)
+//│ ??A -> ??A0
 //│ res
 //│     = [Function: id]
 

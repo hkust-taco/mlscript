@@ -93,7 +93,7 @@ fun zipWith_wrong(f, xs, ys) =
   if  xs is Cons(x, xs)
     and ys is Cons(y, ys) and zipWith_wrong(f, xs, ys) is Some(tail) then Some(Cons(f(x, y), tail))
   else None
-//│ fun zipWith_wrong: forall 'head 'head0 'A. (('head, 'head0,) -> 'A, Cons['head] | Object & ~#Cons, Cons['head0] | Object & ~#Cons,) -> (None | Some[Cons['A]])
+//│ fun zipWith_wrong: forall 'A 'head 'head0. (('head, 'head0,) -> 'A, Cons['head] | Object & ~#Cons, Cons['head0] | Object & ~#Cons,) -> (None | Some[Cons['A]])
 
 // * Notice the result is wrong (duh)
 zipWith_wrong(pairup, Nil, Nil)
@@ -108,7 +108,7 @@ fun zipWith(f, xs, ys) =
     Cons(x, xs) and ys is Cons(y, ys) and zipWith(f, xs, ys) is Some(tail) then Some(Cons(f(x, y), tail))
     Nil and ys is Nil then Some(Nil)
   else None
-//│ fun zipWith: forall 'head 'A 'head0. (('head0, 'head,) -> 'A, Cons['head0] | Object & ~#Cons, Cons['head] | Object & ~#Cons,) -> (None | Some[Cons['A] | Nil])
+//│ fun zipWith: forall 'head 'head0 'A. (('head, 'head0,) -> 'A, Cons['head] | Object & ~#Cons, Cons['head0] | Object & ~#Cons,) -> (None | Some[Cons['A] | Nil])
 
 zipWith(pairup, Cons(0, Nil), Cons("0", Nil)).value.toArray
 //│ Array[anything]

@@ -43,8 +43,8 @@ fun foo(x: Foo[Int]): Foo[Num] = x
 
 
 
-// * Note that not checking variance annotations is actually sound in MLscript,
-// *  but can be surprising for users, who will find type errors at the use sites.
+// * Note that not checking variance annotations can actually be made sound in MLscript,
+// *  but this would be surprising for users, who would find type errors at the definition's use sites.
 
 
 // :e // TODO check variance annotations!
@@ -60,46 +60,30 @@ let o = Oops0(id)
 //│ o
 //│   = Oops0 {}
 
-// * What happens is `Oops9{ A = nothing..'? }` is inferred for `o` (consistent with `A`'s covariance),
-// *  so all negative occurrences of `o.A` are viewed as `nothing` from the outside.
+// * What used to happens is `Oops9{ A = nothing..'? }` was inferred for `o` (consistent with `A`'s covariance),
+// *  so all negative occurrences of `o.A` were viewed as `nothing` from the outside, resulting in `o.x : nothing -> Int`
+// * No lomnger the case since I simplified substitution for variant type arguments, to improve inferred type simplification.
 o.x
-//│ nothing -> Int
+//│ Int -> Int
 //│ res
 //│     = [Function: id]
 
-// * Similarly, `Oops0[Int]` here will expand to the equivalent `Oops0{ A = nothing..Int }`
+// * Similarly, `Oops0[Int]` here used to expand to the equivalent `Oops0{ A = nothing..Int }`, giving `(o : Oops0[Int]).x : nothing -> Int`
 (o : Oops0[Int]).x
-//│ nothing -> Int
+//│ Int -> Int
 //│ res
 //│     = [Function: id]
 
-:e
+// * So code like this no longer reports an error:
+// :e
 o.x(123)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.77: 	o.x(123)
-//│ ║        	^^^^^^^^
-//│ ╟── integer literal of type `123` does not match type `nothing`
-//│ ║  l.77: 	o.x(123)
-//│ ║        	    ^^^
-//│ ╟── Note: type parameter A is defined at:
-//│ ║  l.55: 	class Oops0[out A](x: A -> Int)
-//│ ╙──      	                ^
-//│ Int | error
+//│ Int
 //│ res
 //│     = 123
 
-:e
+// :e
 (o : Oops0[Int]).x(123)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.92: 	(o : Oops0[Int]).x(123)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── integer literal of type `123` does not match type `nothing`
-//│ ║  l.92: 	(o : Oops0[Int]).x(123)
-//│ ║        	                   ^^^
-//│ ╟── Note: type parameter A is defined at:
-//│ ║  l.55: 	class Oops0[out A](x: A -> Int)
-//│ ╙──      	                ^
-//│ Int | error
+//│ Int
 //│ res
 //│     = 123
 
@@ -113,22 +97,13 @@ let o = Oops1(id, 123)
 //│   = Oops1 {}
 
 o.x
-//│ nothing -> 123
+//│ 'A -> (123 | 'A)
 //│ res
 //│     = [Function: id]
 
-:e
+// :e
 o.x(123)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.121: 	o.x(123)
-//│ ║         	^^^^^^^^
-//│ ╟── integer literal of type `123` does not match type `nothing`
-//│ ║  l.121: 	o.x(123)
-//│ ║         	    ^^^
-//│ ╟── Note: type parameter A is defined at:
-//│ ║  l.107: 	class Oops1[out A](x: A -> A, y: A)
-//│ ╙──       	                ^
-//│ 123 | error
+//│ 123
 //│ res
 //│     = 123
 
@@ -149,40 +124,19 @@ let o = Oops2(id, 123)
 //│   = Oops2 {}
 
 o.x
-//│ nothing -> 123
+//│ 'A -> (123 | 'A)
 //│ res
 //│     = [Function: id]
 
-:e
+// :e
 o.x(123)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.157: 	o.x(123)
-//│ ║         	^^^^^^^^
-//│ ╟── integer literal of type `123` does not match type `nothing`
-//│ ║  l.157: 	o.x(123)
-//│ ║         	    ^^^
-//│ ╟── Note: type parameter A is defined at:
-//│ ║  l.143: 	class Oops2[out A](x: A -> A, y: A)
-//│ ╙──       	                ^
-//│ 123 | error
+//│ 123
 //│ res
 //│     = 123
 
-:e // * We will be able to make this work later, through `o.x : o.A -> o.A` and `o.y : o.A`
+// :e // * We will be able to make this work later, through `o.x : o.A -> o.A` and `o.y : o.A`
 o.x(o.y)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.172: 	o.x(o.y)
-//│ ║         	^^^^^^^^
-//│ ╟── integer literal of type `123` does not match type `nothing`
-//│ ║  l.146: 	let o = Oops2(id, 123)
-//│ ║         	                  ^^^
-//│ ╟── but it flows into field selection with expected type `nothing`
-//│ ║  l.172: 	o.x(o.y)
-//│ ║         	    ^^^
-//│ ╟── Note: type parameter A is defined at:
-//│ ║  l.143: 	class Oops2[out A](x: A -> A, y: A)
-//│ ╙──       	                ^
-//│ 123 | error
+//│ 123
 //│ res
 //│     = 123
 

@@ -22,7 +22,7 @@ x: List<anything>
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.21: 	x: List<anything>
 //│ ║        	^
-//│ ╙── expression of type `anything` does not match type `Int`
+//│ ╙── expression of type `anything` is not an instance of type `Int`
 //│ List[anything]
 
 

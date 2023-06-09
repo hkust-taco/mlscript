@@ -55,7 +55,7 @@ p1: Product[Bool, Int]
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.54: 	p1: Product[Bool, Int]
 //│ ║        	^^
-//│ ╙── expression of type `Int & ?A` is not an instance of type `Bool`
+//│ ╙── expression of type `Int` is not an instance of type `Bool`
 //│ Product[Bool, Int]
 
 p1: Into[Int]

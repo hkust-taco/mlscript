@@ -10,9 +10,7 @@ class Pair[L, R](lhs: Exp[L], rhs: Exp[R]) extends Exp[(L, R)]
 
 
 fun f(p: Pair['a, 'b]) = p.lhs
-//│ fun f: forall 'a 'b 'L. (p: Pair['a, 'b],) -> Exp['L]
-//│   where
-//│     'L := 'a
+//│ fun f: forall 'a 'b. (p: Pair['a, 'b],) -> Exp['a]
 
 
 fun f(e) = if e is
@@ -29,7 +27,7 @@ fun f(e) = if e is
 :e
 (e: Exp['X]) => f(e)
 //│ ╔══[ERROR] Type error in application
-//│ ║  l.30: 	(e: Exp['X]) => f(e)
+//│ ║  l.28: 	(e: Exp['X]) => f(e)
 //│ ║        	                ^^^^
 //│ ╟── type variable `L` leaks out of its scope
 //│ ║  l.6: 	class Pair[L, R](lhs: Exp[L], rhs: Exp[R]) extends Exp[(L, R)]
@@ -49,21 +47,21 @@ fun f(e) = if e is
   Pair(l, r) then f(l) + f(r)
   Lit(n) then n
 //│ ╔══[ERROR] Type error in definition
-//│ ║  l.48: 	fun f(e) = if e is
+//│ ║  l.46: 	fun f(e) = if e is
 //│ ║        	    ^^^^^^^^^^^^^^
-//│ ║  l.49: 	  Pair(l, r) then f(l) + f(r)
+//│ ║  l.47: 	  Pair(l, r) then f(l) + f(r)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.50: 	  Lit(n) then n
+//│ ║  l.48: 	  Lit(n) then n
 //│ ║        	^^^^^^^^^^^^^^^
 //│ ╟── type variable `L` leaks out of its scope
 //│ ║  l.6: 	class Pair[L, R](lhs: Exp[L], rhs: Exp[R]) extends Exp[(L, R)]
 //│ ╙──     	           ^
 //│ ╔══[ERROR] Type error in definition
-//│ ║  l.48: 	fun f(e) = if e is
+//│ ║  l.46: 	fun f(e) = if e is
 //│ ║        	    ^^^^^^^^^^^^^^
-//│ ║  l.49: 	  Pair(l, r) then f(l) + f(r)
+//│ ║  l.47: 	  Pair(l, r) then f(l) + f(r)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.50: 	  Lit(n) then n
+//│ ║  l.48: 	  Lit(n) then n
 //│ ║        	^^^^^^^^^^^^^^^
 //│ ╟── type variable `R` leaks out of its scope
 //│ ║  l.6: 	class Pair[L, R](lhs: Exp[L], rhs: Exp[R]) extends Exp[(L, R)]

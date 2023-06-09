@@ -491,6 +491,9 @@ trait TypeSimplifier { self: Typer =>
   def simplifyType(st: TypeLike, pol: Opt[Bool] = S(true), removePolarVars: Bool = true, inlineBounds: Bool = true)(implicit ctx: Ctx): TypeLike = {
     
     
+    // * There are two main analyses, which are quite subtle.
+    // * TODO: add assertion to check that their results are consistent!
+    
     
     // * * Analysis 1: count number of TV occurrences at each polarity
     // *  and find whether they're used in invariant positions
@@ -518,13 +521,17 @@ trait TypeSimplifier { self: Typer =>
             }
             tv.assignedTo match {
               case S(ty) =>
-                if (pol.base =/= S(false))
-                  analyzed1.setAndIfUnset(tv -> true) { apply(pol)(ty) }
-                if (pol.base =/= S(true))
-                  analyzed1.setAndIfUnset(tv -> false) { apply(pol.contravar)(ty) }
-                // * Note: in principle this should also do it,
-                // *  but it currently leads to a couple worse-looking simplified types:
-                // analyzed1.setAndIfUnset(tv -> true) { apply(pol)(ty) }
+                // * This is quite subtle!
+                // * We should traverse assigned type variables as though they weren't there,
+                // * but they may appear in their own assignment,
+                // * so we still need to check they haven't been traversed yet.
+                // * Moreover, traversing them at different polarities may produce different results
+                // * (think of `'A# -> 'A#` where 'A# := 'X`),
+                // * so we should remember the traversal polarity in the cache.
+                // * Thanks to the invariant that the assignment shouldn't have a higher level than
+                // * the type variable itself, I think it is fine to never re-traverse the assignment
+                // * at the same polarity *even though the polmap may be different*.
+                analyzed1.setAndIfUnset(tv -> pol(tv).getOrElse(false)) { apply(pol)(ty) }
               case N =>
                 if (pol(tv) =/= S(false))
                   analyzed1.setAndIfUnset(tv -> true) { tv.lowerBounds.foreach(apply(pol.at(tv.level, true))) }
@@ -548,7 +555,7 @@ trait TypeSimplifier { self: Typer =>
     
     // * * Analysis 2: find the polar co-occurrences of each TV
     
-    // * TODO what about negatively quantified vars? the notion of co-occurrence would be reversed (wrt unions/inters)
+    // * Note: for negatively quantified vars, the notion of co-occurrence is reversed (wrt unions/inters)...
     
     val coOccurrences: MutMap[(Bool, TypeVariable), MutSet[SimpleType]] = LinkedHashMap.empty
     
@@ -730,7 +737,16 @@ trait TypeSimplifier { self: Typer =>
     // val allVars = st.getVars
     val allVars = analyzed1.iterator.map(_._1).toSortedSet
     
-    var recVars = MutSet.from(allVars.iterator.filter(_.isRecursive_$))
+    def computeRecVars =
+      allVars.iterator.filter(v => !varSubst.contains(v) && (
+        v.isRecursive_$
+        // * Note: a more precise version could be the following,
+        // * but it doesn't seem to change anything in our test suite, so I left if commented for now:
+        // // * Only consider recursive those variables that recursive in their *reachable* bounds:
+        // occNums.contains(true -> v) && v.isPosRecursive_$ || occNums.contains(false -> v) && v.isNegRecursive_$
+      )).toSet
+    
+    var recVars = computeRecVars
     
     println(s"[vars] ${allVars}")
     println(s"[rec] ${recVars}")
@@ -890,7 +906,7 @@ trait TypeSimplifier { self: Typer =>
     // * applying the var substitution and simplifying some things on the fly.
     
     // * The recursive vars may have changed due to the previous phase!
-    recVars = MutSet.from(allVars.iterator.filter(v => !varSubst.contains(v) && v.isRecursive_$))
+    recVars = computeRecVars
     println(s"[rec] ${recVars}")
     
     val renewals = MutMap.empty[TypeVariable, TypeVariable]
@@ -962,25 +978,27 @@ trait TypeSimplifier { self: Typer =>
             pol(tv) match {
               case S(p) if inlineBounds && !occursInvariantly(tv) && !recVars.contains(tv) =>
                 // * Inline the bounds of non-rec non-invar-occ type variables
-                println(s"Inlining bounds of $tv (~> $res) ${printPol(p)}")
+                println(s"Inlining [${printPol(p)}] bounds of $tv (~> $res)")
                 // if (p) mergeTransform(true, pol, tv, Set.single(tv), canDistribForall) | res
                 // else mergeTransform(false, pol.contravar, tv, Set.single(tv), canDistribForall) & res
                 if (p) mergeTransform(true, pol, tv, Set.single(tv), canDistribForall) | res
                 else mergeTransform(false, pol, tv, Set.single(tv), canDistribForall) & res
-              case _ if (!wasDefined) =>
+              case poltv if (!wasDefined) =>
                 def setBounds = {
-                  trace(s"Setting bounds of $res...") {
+                  trace(s"Setting [±] bounds of $res... (failing ${printPol(poltv)}, inlineBounds $inlineBounds, !occursInvariantly ${!occursInvariantly(tv)}, !recVars.contains(tv) ${!recVars.contains(tv)})") {
                     tv.assignedTo match {
                       case S(ty) =>
                         res.assignedTo = S(transform(ty, pol.invar, semp, canDistribForall))
                       case N =>
-                        res.lowerBounds = tv.lowerBounds.map(transform(_, pol.at(tv.level, true), Set.single(tv)))
-                        res.upperBounds = tv.upperBounds.map(transform(_, pol.at(tv.level, false), Set.single(tv)))
+                        if (occNums.contains(true -> tv))
+                          res.lowerBounds = tv.lowerBounds.map(transform(_, pol.at(tv.level, true), Set.single(tv)))
+                        if (occNums.contains(false -> tv))
+                          res.upperBounds = tv.upperBounds.map(transform(_, pol.at(tv.level, false), Set.single(tv)))
                     }
                     res
                   }()
                 }
-                pol(tv) match {
+                poltv match {
                   case polo @ S(p)
                     if coOccurrences.get(!p -> tv).isEmpty // * If tv is polar...
                     && tv.assignedTo.isEmpty // TODO handle?
@@ -1229,6 +1247,9 @@ trait TypeSimplifier { self: Typer =>
     
     def apply(st: TypeLike, all: Bool = true)(implicit ctx: Ctx): TypeLike = {
       var cur = st
+      
+      debugOutput(s"⬤ Initial: ${cur}")
+      debugOutput(s" where: ${cur.showBounds}")
       
       cur = removeIrrelevantBounds(cur, inPlace = false)
       debugOutput(s"⬤ Cleaned up: ${cur}")

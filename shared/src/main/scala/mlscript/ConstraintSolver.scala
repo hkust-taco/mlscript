@@ -108,13 +108,16 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         
         info.tparams.foreach { case (tn, _tv, vi) =>
           val targ = rfnt(Var(info.decl.name + "#" + tn.name)) match {
+            // * TODO to avoid infinite recursion due to ever-expanding type args,
+            // *  we should set the shadows of the targ to be the same as that of the parameter it replaces... 
+            case S(fty) if vi === S(VarianceInfo.co) => fty.ub
+            case S(fty) if vi === S(VarianceInfo.contra) => fty.lb.getOrElse(BotType)
             case S(fty) =>
               TypeBounds.mk(
                 fty.lb.getOrElse(BotType),
                 fty.ub,
               )
             case N =>
-              // FIXME type bounds are kind of wrong for this
               TypeBounds(
                 // _tv.lowerBounds.foldLeft(BotType: ST)(_ | _),
                 // _tv.upperBounds.foldLeft(TopType: ST)(_ & _),
@@ -128,18 +131,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                 )(_ & _),
               )(_tv.prov)
           }
-          
-          freshened += _tv -> (targ match {
-            case tv: TypeVarOrRigidVar => println(s"Immediate $tv := $targ"); tv
-            case _ =>
-              println(s"Assigning ${_tv} := $targ where ${targ.showBounds}")
-              val tv = freshVar(_tv.prov, S(_tv), _tv.nameHint)(targ.level)
-              println(s"Set ${tv} ~> ${_tv}")
-              assert(tv.assignedTo.isEmpty)
-              tv.assignedTo = S(targ)
-              tv
-          })
-          
+          freshened += _tv -> targ
         }
         
         raw.freshenAbove(info.level, rigidify = false)

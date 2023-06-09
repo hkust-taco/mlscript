@@ -79,9 +79,12 @@ abstract class TyperHelpers { Typer: Typer =>
   def subst(ts: PolymorphicType, map: Map[SimpleType, SimpleType]): PolymorphicType = 
     PolymorphicType(ts.polymLevel, subst(ts.body, map))
 
-  def substLike(ty: TL, map: Map[SimpleType, SimpleType], substInMap: Bool): TL = ty match {
+  def substLike(ty: TL, map: Map[SimpleType, SimpleType], substInMap: Bool)(implicit ctx: Ctx): TL = ty match {
     case ty: ST => subst(ty, map, substInMap)
-    case _ => ??? // TODO
+    case OtherTypeLike(ot) =>
+      TypedTypingUnit(
+        ot.implementedMembers.map(_.map(subst(_, map, substInMap))),
+        ot.result.map(subst(_, map, substInMap)))
   }
   def subst(st: SimpleType, map: Map[SimpleType, SimpleType], substInMap: Bool = false)
         (implicit cache: MutMap[TypeVariable, SimpleType] = MutMap.empty): SimpleType =
@@ -758,8 +761,9 @@ abstract class TyperHelpers { Typer: Typer =>
         case tv @ AssignedVariable(ty) =>
           pol -> ty :: Nil
         case tv: TypeVariable =>
-          (if (pol(tv) =/= S(false)) tv.lowerBounds.map(pol.at(tv.level, true) -> _) else Nil) :::
-          (if (pol(tv) =/= S(true)) tv.upperBounds.map(pol.at(tv.level, false) -> _) else Nil)
+          val poltv = pol(tv)
+          (if (poltv =/= S(false)) tv.lowerBounds.map(pol.at(tv.level, true) -> _) else Nil) :::
+          (if (poltv =/= S(true)) tv.upperBounds.map(pol.at(tv.level, false) -> _) else Nil)
         case FunctionType(l, r) => pol.contravar -> l :: pol.covar -> r :: Nil
         case Overload(as) => as.map(pol -> _)
         case ComposedType(_, l, r) => pol -> l :: pol -> r :: Nil
@@ -1244,8 +1248,9 @@ abstract class TyperHelpers { Typer: Typer =>
     def apply(pol: PolMap)(st: ST): Unit = st match {
       case tv @ AssignedVariable(ty) => apply(pol)(ty)
       case tv: TypeVariable =>
-        if (pol(tv) =/= S(false)) tv.lowerBounds.foreach(apply(pol.at(tv.level, true)))
-        if (pol(tv) =/= S(true)) tv.upperBounds.foreach(apply(pol.at(tv.level, false)))
+        val poltv = pol(tv)
+        if (poltv =/= S(false)) tv.lowerBounds.foreach(apply(pol.at(tv.level, true)))
+        if (poltv =/= S(true)) tv.upperBounds.foreach(apply(pol.at(tv.level, false)))
       case FunctionType(l, r) => apply(pol.contravar)(l); apply(pol)(r)
       case Overload(as) => as.foreach(apply(pol))
       case ComposedType(_, l, r) => apply(pol)(l); apply(pol)(r)
