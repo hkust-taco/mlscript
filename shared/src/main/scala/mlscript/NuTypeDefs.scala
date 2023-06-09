@@ -1218,7 +1218,14 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                               RecordType(
                                 newMembs.collect {
                                   case m: NuParam => m.nme.toVar -> m.ty
-                                  case m: TypedNuFun => m.fd.nme -> m.typeSignature.toUpper(provTODO)
+                                  case m: TypedNuFun =>
+                                    // val ty = m.typeSignature
+                                    // * ^ Note: this also works and is more precise (some types made more specific),
+                                    // *    but it causes duplication of recursive type structures
+                                    // *    in typical SuperOOP mixin compositions, so it's better to be less precise
+                                    // *    but simpler/more efficient/more concise here.
+                                    val ty = m.bodyType
+                                    m.fd.nme -> ty.toUpper(provTODO)
                                 }
                               )(provTODO)
                             )(provTODO)
