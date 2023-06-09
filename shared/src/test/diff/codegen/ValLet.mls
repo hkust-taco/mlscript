@@ -69,3 +69,21 @@ A(1).x3
 //│ // Output
 //│ [ 2 ]
 //│ [ 2, 3 ]
+
+class B(x: Int, val y: Int)
+//│ class B(x: Int, y: Int)
+
+// FIXME: should be rejected
+B(0, 0).x
+//│ Int
+//│ res
+//│     = 0
+
+B(0, 0).y
+//│ Int
+//│ res
+//│     = 0
+
+// TODO: shoud be rejected?
+fun f(val x: Int) = x + 1
+//│ fun f: (x: Int,) -> Int
