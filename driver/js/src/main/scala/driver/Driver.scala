@@ -9,6 +9,7 @@ import mlscript.codegen._
 import mlscript.{NewLexer, NewParser, ErrorReport, Origin, Diagnostic}
 import ts2mls.{TSModuleResolver, TSProgram, TypeScript}
 import ts2mls.JSFileSystem
+import ts2mls.JSWriter
 
 class Driver(options: DriverOptions) {
   import Driver._
@@ -75,7 +76,7 @@ class Driver(options: DriverOptions) {
   def genPackageJson(): Unit =
     if (!exists(s"${options.outputDir}/package.json")) {
       val content = """{ "type": "module" }""" // TODO: more settings?
-      writeFile(s"${options.outputDir}/package.json", content)
+      saveToFile(s"${options.outputDir}/package.json", content)
     }
 
   type ParseResult = (List[Statement], List[NuDecl], List[Import], Origin)
@@ -227,7 +228,7 @@ class Driver(options: DriverOptions) {
               generateInterface(Some(file.moduleName), TypingUnit(definitions, Nil))
             val interfaces = otherList.map(s => Import(FileInfo.importPath(s))).foldRight(expStr)((imp, itf) => s"$imp\n$itf")
 
-            writeFile(mlsiFile, interfaces)
+            saveToFile(mlsiFile, interfaces)
             generate(Pgrm(definitions), s"${options.outputDir}/${file.jsFilename}", file.moduleName, imports.map {
               case Import(path) => new Import(resolveTarget(file, path)) with ModuleType {
                 val isESModule = checkESModule(path)
@@ -251,7 +252,7 @@ class Driver(options: DriverOptions) {
     val backend = new JSCompilerBackend()
     val lines = backend(program, moduleName, imports, exported)
     val code = lines.mkString("", "\n", "\n")
-    writeFile(filename, code) // TODO: diffTests
+    saveToFile(filename, code)
   } catch {
       case CodeGenError(err) => report(ErrorReport(err, Nil, Diagnostic.Compilation))
     }
@@ -264,6 +265,12 @@ object Driver {
     System.err.println(msg)
 
   private var totalErrors = 0
+
+  private def saveToFile(filename: String, content: String) = {
+    val writer = JSWriter(filename)
+    writer.write(content)
+    writer.close()
+  }
   
   // TODO factor with duplicated logic in DiffTests
   private def report(diag: Diagnostic): Unit = {

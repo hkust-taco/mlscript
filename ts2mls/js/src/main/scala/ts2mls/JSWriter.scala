@@ -16,6 +16,8 @@ class JSWriter(filename: String) {
     buffer ++= strln
   }
 
+  def write(str: String): Unit = buffer ++= str
+
   def close(): Unit = {
     val str = buffer.toString()
     val origin = readFile(filename).getOrElse("")
