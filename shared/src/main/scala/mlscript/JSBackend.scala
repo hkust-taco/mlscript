@@ -541,7 +541,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     sym match {
       case S(sym: NewClassSymbol) =>
         val localScope = scope.derive(s"local ${sym.lexicalName}")
-        val nd = translateNewTypeDefinition(sym, N, false)(localScope)
+        val nd = translateNewTypeDefinition(sym, N, true, false)(localScope)
         val ctorMth = localScope.declareValue("ctor", Some(false), false).runtimeName
         val (constructor, params) = translateNewClassParameters(nd)
         val initList =
@@ -560,7 +560,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       case S(sym: MixinSymbol) =>
         val localScope = scope.derive(s"local ${sym.lexicalName}")
         val base = localScope.declareValue("base", Some(false), false)
-        val nd = translateNewTypeDefinition(sym, S(base), false)(localScope)
+        val nd = translateNewTypeDefinition(sym, S(base), false, false)(localScope)
         JSConstDecl(sym.lexicalName, JSArrowFn(
           Ls(JSNamePattern(base.runtimeName)), R(Ls(
             JSReturnStmt(S(JSClassExpr(nd)))
@@ -568,7 +568,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         ))
       case S(sym: ModuleSymbol) =>
         val localScope = scope.derive(s"local ${sym.lexicalName}")
-        val nd = translateNewTypeDefinition(sym, N, false)(localScope)
+        val nd = translateNewTypeDefinition(sym, N, false, false)(localScope)
         val ins = localScope.declareValue("ins", Some(false), false).runtimeName
         JSConstDecl(sym.lexicalName, JSImmEvalFn(
           N, Nil, R(Ls(
@@ -591,7 +591,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     val outerSymbol = getterScope.declareOuterSymbol()
     siblingsMembers.foreach(getterScope.captureSymbol(outerSymbol, _))
 
-    val classBody = translateNewTypeDefinition(mixinSymbol, S(base), false)(getterScope)
+    val classBody = translateNewTypeDefinition(mixinSymbol, S(base), false, false)(getterScope)
     JSClassMethod(mixinSymbol.lexicalName, Ls(JSNamePattern(base.runtimeName)),
       R((JSConstDecl(outerSymbol.runtimeName, JSIdent("this")) :: Nil) ::: Ls(
         JSReturnStmt(S(JSClassExpr(classBody)))
@@ -647,7 +647,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     moduleSymbol: ModuleSymbol,
     keepTopLevelScope: Bool
   )(implicit scope: Scope): JSClassNewDecl =
-    translateNewTypeDefinition(moduleSymbol, N, keepTopLevelScope)
+    translateNewTypeDefinition(moduleSymbol, N, false, keepTopLevelScope)
 
   protected def translateModuleDeclaration(
       moduleSymbol: ModuleSymbol,
@@ -657,7 +657,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     val outerSymbol = getterScope.declareOuterSymbol()
     siblingsMembers.foreach(getterScope.captureSymbol(outerSymbol, _))
 
-    val decl = translateNewTypeDefinition(moduleSymbol, N, false)(getterScope)
+    val decl = translateNewTypeDefinition(moduleSymbol, N, false, false)(getterScope)
     val privateIdent = JSIdent(s"this.#${moduleSymbol.lexicalName}")
     JSClassGetter(moduleSymbol.lexicalName, R((JSConstDecl(outerSymbol.runtimeName, JSIdent("this")) :: Nil) :::
       Ls(
@@ -691,7 +691,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     siblingsMembers.foreach(getterScope.captureSymbol(outerSymbol, _))
 
     val classBody =
-      translateNewTypeDefinition(classSymbol, N, false)(getterScope)
+      translateNewTypeDefinition(classSymbol, N, true, false)(getterScope)
     val (constructor, params) = translateNewClassParameters(classBody)
 
     val privateIdent = JSIdent(s"this.#${classSymbol.lexicalName}")
@@ -717,6 +717,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
   protected def translateNewTypeDefinition(
     sym: TypeSymbol with RuntimeSymbol with NuTypeSymbol,
     baseSym: Opt[ValueSymbol],
+    requireUnapply: Bool,
     keepTopLevelScope: Bool
   )(implicit scope: Scope): JSClassNewDecl = {
     val nuTypeScope = scope.derive(sym.toString)
@@ -845,7 +846,8 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       traits,
       translateSelfDeclaration(selfSymbol) ::: tempDecs ::: stmts,
       typeList.toList,
-      sym.ctorParams.isDefined
+      sym.ctorParams.isDefined,
+      requireUnapply && !sym.isPlainJSClass
     )
   }
 

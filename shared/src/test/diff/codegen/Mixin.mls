@@ -22,6 +22,7 @@ class Lit(n: Int)
 //│         get lhs() { return this.#lhs; }
 //│         #rhs;
 //│         get rhs() { return this.#rhs; }
+//│         static $unapply(self) { return [self.#lhs, self.#rhs, ] }
 //│         constructor(lhs, rhs) {
 //│           this.#lhs = lhs;
 //│           this.#rhs = rhs;
@@ -38,6 +39,7 @@ class Lit(n: Int)
 //│       class Lit {
 //│         #n;
 //│         get n() { return this.#n; }
+//│         static $unapply(self) { return [self.#n, ] }
 //│         constructor(n) {
 //│           this.#n = n;
 //│         }
@@ -69,6 +71,7 @@ class Lit(n: Int)
 //│ │ │           get lhs() { return this.#lhs; }
 //│ │ │           #rhs;
 //│ │ │           get rhs() { return this.#rhs; }
+//│ │ │           static $unapply(self) { return [self.#lhs, self.#rhs, ] }
 //│ │ │           constructor(lhs, rhs) {
 //│ │ │             this.#lhs = lhs;
 //│ │ │             this.#rhs = rhs;
@@ -85,6 +88,7 @@ class Lit(n: Int)
 //│ │ │         class Lit {
 //│ │ │           #n;
 //│ │ │           get n() { return this.#n; }
+//│ │ │           static $unapply(self) { return [self.#n, ] }
 //│ │ │           constructor(n) {
 //│ │ │             this.#n = n;
 //│ │ │           }
@@ -139,7 +143,7 @@ mixin EvalBase {
 //│ const typing_unit1 = new TypingUnit1;
 //│ globalThis.EvalBase = ((base) => typing_unit1.EvalBase(base));
 //│ // End of generated code
-//│ ┌ Block at Mixin.mls:107
+//│ ┌ Block at Mixin.mls:111
 //│ ├─┬ Prelude
 //│ │ ├── Code
 //│ │ │   class TypingUnit1 {
@@ -184,6 +188,7 @@ class Neg<A>(expr: A)
 //│       class Neg {
 //│         #expr;
 //│         get expr() { return this.#expr; }
+//│         static $unapply(self) { return [self.#expr, ] }
 //│         constructor(expr) {
 //│           this.#expr = expr;
 //│         }
@@ -197,7 +202,7 @@ class Neg<A>(expr: A)
 //│ const typing_unit2 = new TypingUnit2;
 //│ globalThis.Neg = typing_unit2.Neg;
 //│ // End of generated code
-//│ ┌ Block at Mixin.mls:174
+//│ ┌ Block at Mixin.mls:178
 //│ ├─┬ Prelude
 //│ │ ├── Code
 //│ │ │   class TypingUnit2 {
@@ -210,6 +215,7 @@ class Neg<A>(expr: A)
 //│ │ │         class Neg {
 //│ │ │           #expr;
 //│ │ │           get expr() { return this.#expr; }
+//│ │ │           static $unapply(self) { return [self.#expr, ] }
 //│ │ │           constructor(expr) {
 //│ │ │             this.#expr = expr;
 //│ │ │           }
@@ -260,7 +266,7 @@ mixin EvalNeg {
 //│ const typing_unit3 = new TypingUnit3;
 //│ globalThis.EvalNeg = ((base) => typing_unit3.EvalNeg(base));
 //│ // End of generated code
-//│ ┌ Block at Mixin.mls:231
+//│ ┌ Block at Mixin.mls:237
 //│ ├─┬ Prelude
 //│ │ ├── Code
 //│ │ │   class TypingUnit3 {
@@ -321,7 +327,7 @@ mixin EvalNegNeg {
 //│ const typing_unit4 = new TypingUnit4;
 //│ globalThis.EvalNegNeg = ((base) => typing_unit4.EvalNegNeg(base));
 //│ // End of generated code
-//│ ┌ Block at Mixin.mls:292
+//│ ┌ Block at Mixin.mls:298
 //│ ├─┬ Prelude
 //│ │ ├── Code
 //│ │ │   class TypingUnit4 {
@@ -380,7 +386,7 @@ module TestLang extends EvalBase, EvalNeg, EvalNegNeg
 //│ const typing_unit5 = new TypingUnit5;
 //│ globalThis.TestLang = typing_unit5.TestLang;
 //│ // End of generated code
-//│ ┌ Block at Mixin.mls:353
+//│ ┌ Block at Mixin.mls:359
 //│ ├─┬ Prelude
 //│ │ ├── Code
 //│ │ │   class TypingUnit5 {
@@ -429,7 +435,7 @@ TestLang.eval(mk(0))
 //│ // Query 2
 //│ res = TestLang.eval(mk(0));
 //│ // End of generated code
-//│ ┌ Block at Mixin.mls:412
+//│ ┌ Block at Mixin.mls:418
 //│ ├─┬ Prelude
 //│ │ ├── Code
 //│ │ │   class TypingUnit6 {}
@@ -580,7 +586,7 @@ mixin Base {
   fun x = y
 }
 //│ ╔══[ERROR] identifier not found: y
-//│ ║  l.580: 	  fun x = y
+//│ ║  l.586: 	  fun x = y
 //│ ╙──       	          ^
 //│ mixin Base() {
 //│   fun x: error

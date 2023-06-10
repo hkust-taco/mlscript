@@ -18,6 +18,7 @@ class C(a: Int) { let a = 1 }
 //│       class C {
 //│         #a;
 //│         get a() { return this.#a; }
+//│         static $unapply(self) { return [self.#a, ] }
 //│         constructor(a) {
 //│           this.#a = a;
 //│           const a1 = 1;
@@ -65,6 +66,7 @@ class C2(a: Int, b: Int) {
 //│         get a() { return this.#a; }
 //│         #b;
 //│         get b() { return this.#b; }
+//│         static $unapply(self) { return [self.#a, self.#b, ] }
 //│         constructor(a, b) {
 //│           this.#a = a;
 //│           this.#b = b;
@@ -113,7 +115,7 @@ let c4 = c3.C4(2)
 c3.a
 c4.a
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.112: 	let c4 = c3.C4(2)
+//│ ║  l.114: 	let c4 = c3.C4(2)
 //│ ╙──       	           ^^^
 //│ let c3: C3
 //│ let c4: error

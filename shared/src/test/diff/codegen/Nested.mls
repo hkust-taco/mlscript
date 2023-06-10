@@ -34,6 +34,7 @@ module A {
 //│             class B {
 //│               #x;
 //│               get x() { return this.#x; }
+//│               static $unapply(self) { return [self.#x, ] }
 //│               constructor(x) {
 //│                 this.#x = x;
 //│               }
@@ -63,7 +64,7 @@ module A {
 let bb = A.B(A.a)
 bb.b
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.63: 	let bb = A.B(A.a)
+//│ ║  l.64: 	let bb = A.B(A.a)
 //│ ╙──      	          ^^
 //│ let bb: error
 //│ error
@@ -96,10 +97,10 @@ c.outer1
 let d = b.D(1)
 d.outer
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.94: 	let c = b.C(1)
+//│ ║  l.95: 	let c = b.C(1)
 //│ ╙──      	         ^^
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.96: 	let d = b.D(1)
+//│ ║  l.97: 	let d = b.D(1)
 //│ ╙──      	         ^^
 //│ class B(x: Int) {
 //│   class C(y: Int) {
@@ -200,6 +201,7 @@ module D {
 //│             class E {
 //│               #x;
 //│               get x() { return this.#x; }
+//│               static $unapply(self) { return [self.#x, ] }
 //│               constructor(x) {
 //│                 this.#x = x;
 //│               }
@@ -267,6 +269,7 @@ class E(x: Int) {
 //│         #F;
 //│         #x;
 //│         get x() { return this.#x; }
+//│         static $unapply(self) { return [self.#x, ] }
 //│         constructor(x) {
 //│           this.#x = x;
 //│         }
@@ -277,6 +280,7 @@ class E(x: Int) {
 //│               #G;
 //│               #y;
 //│               get y() { return this.#y; }
+//│               static $unapply(self) { return [self.#y, ] }
 //│               constructor(y) {
 //│                 this.#y = y;
 //│               }
@@ -290,6 +294,7 @@ class E(x: Int) {
 //│                   class G {
 //│                     #z;
 //│                     get z() { return this.#z; }
+//│                     static $unapply(self) { return [self.#z, ] }
 //│                     constructor(z) {
 //│                       this.#z = z;
 //│                     }
@@ -327,7 +332,7 @@ let fff = es.F(2)
 let gg = fff.G(3)
 gg.sum
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.326: 	let fff = es.F(2)
+//│ ║  l.331: 	let fff = es.F(2)
 //│ ╙──       	            ^^
 //│ let es: E
 //│ let fff: error
@@ -379,6 +384,7 @@ class F() {
 //│         #G;
 //│         #x;
 //│         get x() { return this.#x; }
+//│         static $unapply(self) { return [] }
 //│         constructor() {
 //│           this.#x = 42;
 //│           const x = this.#x;
@@ -387,6 +393,7 @@ class F() {
 //│           const outer1 = this;
 //│           if (this.#G === undefined) {
 //│             class G {
+//│               static $unapply(self) { return [] }
 //│               constructor() {
 //│                 const x1 = outer1.x + 1;
 //│               }
@@ -456,6 +463,7 @@ module G {
 //│                   class J {
 //│                     #x;
 //│                     get x() { return this.#x; }
+//│                     static $unapply(self) { return [self.#x, ] }
 //│                     constructor(x) {
 //│                       this.#x = x;
 //│                     }
@@ -481,6 +489,7 @@ module G {
 //│             class I {
 //│               #x;
 //│               get x() { return this.#x; }
+//│               static $unapply(self) { return [self.#x, ] }
 //│               constructor(x) {
 //│                 this.#x = x;
 //│               }
@@ -508,7 +517,7 @@ let jj = G.H.J(42)
 let i = jj.ii(2)
 i.x
 //│ ╔══[ERROR] access to module member not yet supported
-//│ ║  l.507: 	let jj = G.H.J(42)
+//│ ║  l.516: 	let jj = G.H.J(42)
 //│ ╙──       	          ^^
 //│ let jj: error
 //│ let i: error
@@ -562,6 +571,7 @@ module H {
 //│             class I {
 //│               #x;
 //│               get x() { return this.#x; }
+//│               static $unapply(self) { return [self.#x, ] }
 //│               constructor(x) {
 //│                 this.#x = x;
 //│               }
@@ -577,6 +587,7 @@ module H {
 //│             class J {
 //│               #x;
 //│               get x() { return this.#x; }
+//│               static $unapply(self) { return [self.#x, ] }
 //│               constructor(x) {
 //│                 this.#x = x;
 //│                 const i = outer1.I(x + 1);
@@ -604,7 +615,7 @@ module H {
 let j = H.J(42)
 j.i.x
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.604: 	let j = H.J(42)
+//│ ║  l.615: 	let j = H.J(42)
 //│ ╙──       	         ^^
 //│ let j: error
 //│ error
@@ -635,7 +646,7 @@ let i = I(1)
 let ij = i.J(0)
 ij.incY
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.635: 	let ij = i.J(0)
+//│ ║  l.646: 	let ij = i.J(0)
 //│ ╙──       	          ^^
 //│ class I(x: Int) {
 //│   class J(x: Int) {
@@ -659,6 +670,7 @@ ij.incY
 //│         #J;
 //│         #x;
 //│         get x() { return this.#x; }
+//│         static $unapply(self) { return [self.#x, ] }
 //│         constructor(x) {
 //│           this.#x = x;
 //│           const y = x + 1;
@@ -670,6 +682,7 @@ ij.incY
 //│               #y;
 //│               #x;
 //│               get x() { return this.#x; }
+//│               static $unapply(self) { return [self.#x, ] }
 //│               constructor(x) {
 //│                 this.#x = x;
 //│                 this.#y = x + 2;
@@ -751,6 +764,7 @@ module J {
 //│             class K {
 //│               #x;
 //│               get x() { return this.#x; }
+//│               static $unapply(self) { return [self.#x, ] }
 //│               constructor(x) {
 //│                 this.#x = x;
 //│               }
@@ -764,6 +778,7 @@ module J {
 //│           const outer1 = this;
 //│           if (this.#M === undefined) {
 //│             class M extends outer1.K.class {
+//│               static $unapply(self) { return [] }
 //│               constructor() {
 //│                 super(1);
 //│               }
@@ -779,6 +794,7 @@ module J {
 //│             class N extends outer1.L(outer1.K.class) {
 //│               #x;
 //│               get x() { return this.#x; }
+//│               static $unapply(self) { return [self.#x, ] }
 //│               constructor(x) {
 //│                 super(x + 2);
 //│                 this.#x = x;
@@ -805,10 +821,10 @@ module J {
 let m = J.M()
 let n = J.N(2)
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.805: 	let m = J.M()
+//│ ║  l.821: 	let m = J.M()
 //│ ╙──       	         ^^
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.806: 	let n = J.N(2)
+//│ ║  l.822: 	let n = J.N(2)
 //│ ╙──       	         ^^
 //│ let m: error
 //│ let n: error
@@ -849,7 +865,7 @@ module K {
 let m = K.L.M()
 m.f
 //│ ╔══[ERROR] access to module member not yet supported
-//│ ║  l.849: 	let m = K.L.M()
+//│ ║  l.865: 	let m = K.L.M()
 //│ ╙──       	         ^^
 //│ let m: error
 //│ error
@@ -879,7 +895,7 @@ module L {
 let op = L.N.O.P(0)
 op.x
 //│ ╔══[ERROR] access to module member not yet supported
-//│ ║  l.879: 	let op = L.N.O.P(0)
+//│ ║  l.895: 	let op = L.N.O.P(0)
 //│ ╙──       	          ^^
 //│ let op: error
 //│ error
@@ -906,10 +922,10 @@ module M {
 }
 M.N.op(M.P())
 //│ ╔══[ERROR] access to module member not yet supported
-//│ ║  l.907: 	M.N.op(M.P())
+//│ ║  l.923: 	M.N.op(M.P())
 //│ ╙──       	 ^^
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.907: 	M.N.op(M.P())
+//│ ║  l.923: 	M.N.op(M.P())
 //│ ╙──       	        ^^
 //│ module M {
 //│   module N {
@@ -1025,6 +1041,7 @@ module N {
 //│                 const outer2 = this;
 //│                 if (this.#P === undefined) {
 //│                   class P extends outer1.Q.class {
+//│                     static $unapply(self) { return [] }
 //│                     constructor() {
 //│                       super();
 //│                     }
@@ -1063,7 +1080,7 @@ module N {
 :e
 N.O.P()
 //│ ╔══[ERROR] access to module member not yet supported
-//│ ║  l.1064: 	N.O.P()
+//│ ║  l.1081: 	N.O.P()
 //│ ╙──        	 ^^
 //│ error
 //│ res
@@ -1079,7 +1096,7 @@ class I(x: Int) {
 }
 I(1).J(3).a
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.1080: 	I(1).J(3).a
+//│ ║  l.1097: 	I(1).J(3).a
 //│ ╙──        	    ^^
 //│ class I(x: Int) {
 //│   class J(z: Int) {
@@ -1101,6 +1118,7 @@ I(1).J(3).a
 //│         #y;
 //│         #x;
 //│         get x() { return this.#x; }
+//│         static $unapply(self) { return [self.#x, ] }
 //│         constructor(x) {
 //│           this.#x = x;
 //│           this.#y = x + 1;
@@ -1114,6 +1132,7 @@ I(1).J(3).a
 //│               get z() { return this.#z; }
 //│               #a;
 //│               get a() { return this.#a; }
+//│               static $unapply(self) { return [self.#z, ] }
 //│               constructor(z) {
 //│                 this.#z = z;
 //│                 this.#a = [
@@ -1183,6 +1202,7 @@ fun mian =
 //│       class A {
 //│         #x;
 //│         get x() { return this.#x; }
+//│         static $unapply(self) { return [self.#x, ] }
 //│         constructor(x) {
 //│           this.#x = x;
 //│         }
@@ -1235,6 +1255,7 @@ fun mian =
 //│       class A extends B(Object) {
 //│         #x;
 //│         get x() { return this.#x; }
+//│         static $unapply(self) { return [self.#x, ] }
 //│         constructor(x) {
 //│           super();
 //│           this.#x = x;
@@ -1284,6 +1305,7 @@ fun main(arg) =
 //│       class C {
 //│         #u;
 //│         get u() { return this.#u; }
+//│         static $unapply(self) { return [self.#u, ] }
 //│         constructor(u) {
 //│           this.#u = u;
 //│         }
@@ -1342,6 +1364,7 @@ class Outer1(outer: Int) {
 //│         #Outer2;
 //│         #outer;
 //│         get outer() { return this.#outer; }
+//│         static $unapply(self) { return [self.#outer, ] }
 //│         constructor(outer1) {
 //│           this.#outer = outer1;
 //│           log(outer1);
@@ -1352,6 +1375,7 @@ class Outer1(outer: Int) {
 //│             class Outer2 {
 //│               #x;
 //│               get x() { return this.#x; }
+//│               static $unapply(self) { return [self.#x, ] }
 //│               constructor(x) {
 //│                 this.#x = x;
 //│                 const outer2 = x + 1;

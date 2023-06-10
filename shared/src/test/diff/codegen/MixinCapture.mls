@@ -39,6 +39,7 @@ mixin EvalAddLit {
 //│       class Lit {
 //│         #n;
 //│         get n() { return this.#n; }
+//│         static $unapply(self) { return [self.#n, ] }
 //│         constructor(n) {
 //│           this.#n = n;
 //│         }

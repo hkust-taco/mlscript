@@ -843,7 +843,8 @@ final case class JSClassNewDecl(
     implements: Ls[Str],
     initStmts: Ls[JSStmt],
     nestedTypes: Ls[Str],
-    ctorOverridden: Bool
+    ctorOverridden: Bool,
+    requireUnapply: Bool
 ) extends JSStmt {
   def toSourceCode: SourceCode = {
     val constructor: SourceCode = {
@@ -863,6 +864,10 @@ final case class JSClassNewDecl(
         buffer += s"  #${f};"
         buffer += s"  get ${f}() { return this.#${f}; }"
       })
+      if (requireUnapply) {
+        val list = fields.foldLeft("")((r, f) => s"${r}self.#$f, ")
+        buffer += s"  static $$unapply(self) { return [$list] }"
+      }
       buffer += s"  constructor($params) {"
       if (`extends`.isDefined) {
         val sf = superFields.iterator.zipWithIndex.foldLeft("")((res, p) =>
