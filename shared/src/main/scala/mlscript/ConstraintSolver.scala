@@ -488,13 +488,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             case (LhsRefined(_, ts, _, trs), RhsBases(pts, _, _)) if ts.exists(pts.contains) => ()
             
             case (LhsRefined(bo, ts, r, trs), _) if trs.nonEmpty =>
-              annoying(trs.valuesIterator.flatMap { tr =>
-                  if (tr.canExpand) S(tr.expand)
-                  else {
-                    println(s"cannot expand type reference ${tr}; falling back")
-                    tr.expansionFallback
-                  }
-                }.toList, LhsRefined(bo, ts, r, SortedMap.empty), Nil, done_rs)
+              annoying(trs.valuesIterator.map { tr => tr.expand }.toList,
+                LhsRefined(bo, ts, r, SortedMap.empty), Nil, done_rs)
             
             case (_, RhsBases(pts, bf, trs)) if trs.nonEmpty =>
               annoying(Nil, done_ls, trs.valuesIterator.map(_.expand).toList, RhsBases(pts, bf, SortedMap.empty))
@@ -945,11 +940,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             // * but can incur vast amounts of unnecessary constraining in the context of recursive types!
             ()
           case (_, tr: TypeRef) =>
-            if (tr.canExpand) rec(lhs, tr.expand, true)
-            else {
-              println(s"cannot expand type reference ${tr}; falling back")
-              rec(lhs, tr.expansionFallback.getOrElse(TopType), true)
-            }
+            rec(lhs, tr.expand, true)
           
           case (ClassTag(ErrTypeId, _), _) => ()
           case (_, ClassTag(ErrTypeId, _)) => ()
