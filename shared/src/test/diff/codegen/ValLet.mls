@@ -70,6 +70,53 @@ A(1).x3
 //│ [ 2 ]
 //│ [ 2, 3 ]
 
+:js
+class AA() {
+  let x = 42
+  let no = 0
+  fun f(y: Int) = x + y
+}
+AA().f(0)
+//│ class AA() {
+//│   fun f: (y: Int,) -> Int
+//│   let no: 0
+//│   let x: 42
+//│ }
+//│ Int
+//│ // Prelude
+//│ class TypingUnit3 {
+//│   #AA;
+//│   constructor() {
+//│   }
+//│   get AA() {
+//│     const outer = this;
+//│     if (this.#AA === undefined) {
+//│       class AA {
+//│         #x;
+//│         constructor() {
+//│           this.#x = 42;
+//│           const x = this.#x;
+//│           const no = 0;
+//│         }
+//│         f(y) {
+//│           const self = this;
+//│           return self.#x + y;
+//│         }
+//│       };
+//│       this.#AA = (() => Object.freeze(new AA()));
+//│       this.#AA.class = AA;
+//│     }
+//│     return this.#AA;
+//│   }
+//│ }
+//│ const typing_unit3 = new TypingUnit3;
+//│ globalThis.AA = typing_unit3.AA;
+//│ // Query 1
+//│ res = AA().f(0);
+//│ // End of generated code
+//│ res
+//│     = 42
+
 class B(x: Int, val y: Int)
 //│ class B(x: Int, y: Int)
 

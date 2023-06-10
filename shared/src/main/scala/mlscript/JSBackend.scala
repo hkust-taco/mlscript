@@ -89,8 +89,15 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         case _ => throw CodeGenError(s"unexpected NuType symbol ${sym.runtimeName}")
       }
 
-  protected def translateCapture(sym: CapturedSymbol): JSExpr =
-    JSIdent(sym.outsiderSym.runtimeName).member(sym.actualSym.lexicalName)
+  protected def translateCapture(sym: CapturedSymbol): JSExpr = {
+    visitedSymbols += sym.actualSym
+    sym.actualSym match {
+      case NewClassMemberSymbol(name, _, _, isPrivate) if isPrivate =>
+        JSIdent(s"${sym.outsiderSym.runtimeName}.#$name")
+      case _ =>
+        JSIdent(sym.outsiderSym.runtimeName).member(sym.actualSym.lexicalName)
+    }
+  }
 
   protected def translateVar(name: Str, isCallee: Bool)(implicit scope: Scope): JSExpr =
     scope.resolveValue(name) match {
@@ -115,10 +122,12 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         else translateNuTypeSymbol(sym).member("class")
       case S(sym: NewClassMemberSymbol) =>
         if (sym.isByvalueRec.getOrElse(false) && !sym.isLam) throw CodeGenError(s"unguarded recursive use of by-value binding $name")
+        visitedSymbols += sym
         scope.resolveValue("this") match {
           case Some(selfSymbol) =>
             visitedSymbols += selfSymbol
-            val ident = JSIdent(selfSymbol.runtimeName).member(sym.runtimeName)
+            val ident = if (sym.isPrivate) JSIdent(s"${selfSymbol.runtimeName}.#${sym.runtimeName}")
+                        else JSIdent(selfSymbol.runtimeName).member(sym.runtimeName)
             if (sym.isByvalueRec.isEmpty && !sym.isLam) ident() else ident
           case _ => throw CodeGenError(s"unexpected new class member $name")
         }
@@ -722,7 +731,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
 
     val ctorParams = sym.ctorParams.fold(
       fields.map { f =>
-          memberList += NewClassMemberSymbol(f, Some(false), false).tap(nuTypeScope.register)
+          memberList += NewClassMemberSymbol(f, Some(false), false, false).tap(nuTypeScope.register)
           constructorScope.declareValue(f, Some(false), false).runtimeName
         }
       )(lst => lst.map { p =>
@@ -730,10 +739,11 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         })
 
     sym.methods.foreach {
-      case MethodDef(_, _, Var(nme), _, _) => memberList += NewClassMemberSymbol(nme, N, true).tap(nuTypeScope.register)
+      case MethodDef(_, _, Var(nme), _, _) => memberList += NewClassMemberSymbol(nme, N, true, false).tap(nuTypeScope.register)
     }
     sym.ctor.foreach {
-      case nd @ NuFunDef(rec, Var(nme), _, _) if nd.genField => memberList += NewClassMemberSymbol(nme, rec, false).tap(nuTypeScope.register)
+      case nd @ NuFunDef(rec, Var(nme), _, _) =>
+        memberList += NewClassMemberSymbol(nme, rec, false, !nd.genField).tap(nuTypeScope.register)
       case _ => ()
     }
 
@@ -782,6 +792,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       }.flatMap(_.reverse).reverse, N)
 
     val getters = new ListBuffer[Str]()
+    val privateMems = new ListBuffer[Str]()
     val stmts = sym.ctor.flatMap {
       case Eqn(Var(name), rhs) => Ls(
         JSAssignExpr(JSIdent(s"this.#$name"), translateTerm(rhs)(constructorScope)).stmt,
@@ -796,9 +807,23 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
             JSConstDecl(constructorScope.declareValue(nme, S(false), false).runtimeName, JSIdent(s"this.#$nme"))
           )
         }
-        else
-          JSConstDecl(constructorScope.declareValue(nme, S(false), false).runtimeName,
-            translateTerm(rhs)(constructorScope)) :: Nil
+        else {
+          val sym = nuTypeScope.resolveValue(nme) match {
+            case Some(sym: NewClassMemberSymbol) => sym
+            case _ => throw new AssertionError(s"error when handling $nme")
+          }
+          if (visitedSymbols.contains(sym)) {
+            privateMems += nme
+            visitedSymbols -= sym
+            Ls[JSStmt](
+              JSExprStmt(JSAssignExpr(JSIdent(s"this.#$nme"), translateTerm(rhs)(constructorScope))),
+              JSConstDecl(constructorScope.declareValue(nme, S(false), false).runtimeName, JSIdent(s"this.#$nme"))
+            )
+          }
+          else
+            JSConstDecl(constructorScope.declareValue(nme, S(false), false).runtimeName,
+              translateTerm(rhs)(constructorScope)) :: Nil
+        }
       case _ => Nil
     }
 
@@ -811,6 +836,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       sym.lexicalName,
       fields,
       fields ::: getters.toList,
+      privateMems.toList,
       base,
       superParameters,
       ctorParams,

@@ -52,8 +52,6 @@ class Foo {
 //│   fun bar: 0
 //│   let foo: 0
 //│ }
-//│ Code generation encountered an error:
-//│   unresolved symbol foo
 
 
 module Bar {
@@ -68,7 +66,7 @@ module Bar {
 :e
 hello
 //│ ╔══[ERROR] identifier not found: hello
-//│ ║  l.69: 	hello
+//│ ║  l.67: 	hello
 //│ ╙──      	^^^^^
 //│ error
 //│ Code generation encountered an error:
@@ -77,7 +75,7 @@ hello
 :e
 1 : I
 //│ ╔══[ERROR] type identifier not found: I
-//│ ║  l.78: 	1 : I
+//│ ║  l.76: 	1 : I
 //│ ╙──      	    ^
 //│ error
 //│ res
@@ -87,11 +85,11 @@ hello
 :e
 class Foo[A] { 42: A }
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.88: 	class Foo[A] { 42: A }
+//│ ║  l.86: 	class Foo[A] { 42: A }
 //│ ║        	               ^^
 //│ ╟── integer literal of type `42` does not match type `A`
 //│ ╟── Note: constraint arises from type parameter:
-//│ ║  l.88: 	class Foo[A] { 42: A }
+//│ ║  l.86: 	class Foo[A] { 42: A }
 //│ ╙──      	          ^
 //│ class Foo[A]
 
@@ -99,8 +97,8 @@ class Foo[A] { 42: A }
 :e
 class C1 { fun oops = this.x }
 //│ ╔══[ERROR] Type `#C1` does not contain member `x`
-//│ ║  l.100: 	class C1 { fun oops = this.x }
-//│ ╙──       	                          ^^
+//│ ║  l.98: 	class C1 { fun oops = this.x }
+//│ ╙──      	                          ^^
 //│ class C1 {
 //│   fun oops: error
 //│ }
@@ -109,10 +107,10 @@ class C1 { fun oops = this.x }
 :e
 class C { fun x: Int }
 //│ ╔══[ERROR] Member `x` is declared in parent but not implemented in `C`
-//│ ║  l.110: 	class C { fun x: Int }
+//│ ║  l.108: 	class C { fun x: Int }
 //│ ║         	      ^
 //│ ╟── Declared here:
-//│ ║  l.110: 	class C { fun x: Int }
+//│ ║  l.108: 	class C { fun x: Int }
 //│ ╙──       	              ^^^^^^
 //│ class C {
 //│   fun x: Int

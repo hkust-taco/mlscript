@@ -647,8 +647,67 @@ ij.incY
 //│ let i: I
 //│ let ij: error
 //│ error
-//│ Code generation encountered an error:
-//│   unresolved symbol y
+//│ // Prelude
+//│ class TypingUnit13 {
+//│   #I;
+//│   constructor() {
+//│   }
+//│   get I() {
+//│     const outer = this;
+//│     if (this.#I === undefined) {
+//│       class I {
+//│         #J;
+//│         #x;
+//│         get x() { return this.#x; }
+//│         constructor(x) {
+//│           this.#x = x;
+//│           const y = x + 1;
+//│         }
+//│         get J() {
+//│           const outer1 = this;
+//│           if (this.#J === undefined) {
+//│             class J {
+//│               #y;
+//│               #x;
+//│               get x() { return this.#x; }
+//│               constructor(x) {
+//│                 this.#x = x;
+//│                 this.#y = x + 2;
+//│                 const y = this.#y;
+//│               }
+//│               get incY() {
+//│                 const x = this.#x;
+//│                 const self = this;
+//│                 return self.#y + 1;
+//│               }
+//│             };
+//│             this.#J = ((x) => Object.freeze(new J(x)));
+//│             this.#J.class = J;
+//│           }
+//│           return this.#J;
+//│         }
+//│       };
+//│       this.#I = ((x) => Object.freeze(new I(x)));
+//│       this.#I.class = I;
+//│     }
+//│     return this.#I;
+//│   }
+//│ }
+//│ const typing_unit13 = new TypingUnit13;
+//│ globalThis.I = typing_unit13.I;
+//│ // Query 1
+//│ globalThis.i1 = I(1);
+//│ // Query 2
+//│ globalThis.ij = i1.J(0);
+//│ // Query 3
+//│ res = ij.incY;
+//│ // End of generated code
+//│ i
+//│   = I {}
+//│ ij
+//│    = J {}
+//│ res
+//│     = 3
 
 
 :js
@@ -746,10 +805,10 @@ module J {
 let m = J.M()
 let n = J.N(2)
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.746: 	let m = J.M()
+//│ ║  l.805: 	let m = J.M()
 //│ ╙──       	         ^^
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.747: 	let n = J.N(2)
+//│ ║  l.806: 	let n = J.N(2)
 //│ ╙──       	         ^^
 //│ let m: error
 //│ let n: error
@@ -790,7 +849,7 @@ module K {
 let m = K.L.M()
 m.f
 //│ ╔══[ERROR] access to module member not yet supported
-//│ ║  l.790: 	let m = K.L.M()
+//│ ║  l.849: 	let m = K.L.M()
 //│ ╙──       	         ^^
 //│ let m: error
 //│ error
@@ -820,7 +879,7 @@ module L {
 let op = L.N.O.P(0)
 op.x
 //│ ╔══[ERROR] access to module member not yet supported
-//│ ║  l.820: 	let op = L.N.O.P(0)
+//│ ║  l.879: 	let op = L.N.O.P(0)
 //│ ╙──       	          ^^
 //│ let op: error
 //│ error
@@ -847,10 +906,10 @@ module M {
 }
 M.N.op(M.P())
 //│ ╔══[ERROR] access to module member not yet supported
-//│ ║  l.848: 	M.N.op(M.P())
+//│ ║  l.907: 	M.N.op(M.P())
 //│ ╙──       	 ^^
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.848: 	M.N.op(M.P())
+//│ ║  l.907: 	M.N.op(M.P())
 //│ ╙──       	        ^^
 //│ module M {
 //│   module N {
@@ -1004,7 +1063,7 @@ module N {
 :e
 N.O.P()
 //│ ╔══[ERROR] access to module member not yet supported
-//│ ║  l.1005: 	N.O.P()
+//│ ║  l.1064: 	N.O.P()
 //│ ╙──        	 ^^
 //│ error
 //│ res
@@ -1015,12 +1074,12 @@ N.O.P()
 class I(x: Int) {
   let y = x + 1
   class J(z: Int) {
-    let a = [x, y, z] 
+    val a = [x, y, z] 
   }
 }
 I(1).J(3).a
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.1021: 	I(1).J(3).a
+//│ ║  l.1080: 	I(1).J(3).a
 //│ ╙──        	    ^^
 //│ class I(x: Int) {
 //│   class J(z: Int) {
@@ -1029,8 +1088,61 @@ I(1).J(3).a
 //│   let y: Int
 //│ }
 //│ error
-//│ Code generation encountered an error:
-//│   unresolved symbol y
+//│ // Prelude
+//│ class TypingUnit23 {
+//│   #I;
+//│   constructor() {
+//│   }
+//│   get I() {
+//│     const outer = this;
+//│     if (this.#I === undefined) {
+//│       class I {
+//│         #J;
+//│         #y;
+//│         #x;
+//│         get x() { return this.#x; }
+//│         constructor(x) {
+//│           this.#x = x;
+//│           this.#y = x + 1;
+//│           const y = this.#y;
+//│         }
+//│         get J() {
+//│           const outer1 = this;
+//│           if (this.#J === undefined) {
+//│             class J {
+//│               #z;
+//│               get z() { return this.#z; }
+//│               #a;
+//│               get a() { return this.#a; }
+//│               constructor(z) {
+//│                 this.#z = z;
+//│                 this.#a = [
+//│                   outer1.x,
+//│                   outer1.#y,
+//│                   z
+//│                 ];
+//│                 const a = this.#a;
+//│               }
+//│             };
+//│             this.#J = ((z) => Object.freeze(new J(z)));
+//│             this.#J.class = J;
+//│           }
+//│           return this.#J;
+//│         }
+//│       };
+//│       this.#I = ((x) => Object.freeze(new I(x)));
+//│       this.#I.class = I;
+//│     }
+//│     return this.#I;
+//│   }
+//│ }
+//│ const typing_unit23 = new TypingUnit23;
+//│ globalThis.I = typing_unit23.I;
+//│ // Query 1
+//│ res = I(1).J(3).a;
+//│ // End of generated code
+//│ res
+//│     = [ 1, 2, 3 ]
 
 
 :js

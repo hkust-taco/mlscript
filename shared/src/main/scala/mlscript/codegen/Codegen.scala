@@ -833,7 +833,8 @@ final case class JSClassDecl(
 final case class JSClassNewDecl(
     name: Str,
     fields: Ls[Str],
-    privateMem: Ls[Str],
+    accessors: Ls[Str],
+    privateMems: Ls[Str],
     `extends`: Opt[JSExpr],
     superFields: Ls[JSExpr],
     ctorParams: Ls[Str],
@@ -855,7 +856,10 @@ final case class JSClassNewDecl(
         if (s.isEmpty) s"${p._1}"
         else s"${p._1}, $s")
       nestedTypes.foreach(t => buffer += s"  #$t;")
-      privateMem.distinct.foreach(f => {
+      privateMems.distinct.foreach(f => {
+        buffer += s"  #${f};"
+      })
+      accessors.distinct.foreach(f => {
         buffer += s"  #${f};"
         buffer += s"  get ${f}() { return this.#${f}; }"
       })
