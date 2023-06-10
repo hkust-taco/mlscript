@@ -84,7 +84,7 @@ module Bar extends T1, Foo[Int | Str] {
 //│     = 123
 
 (Bar : Foo['X]).bar
-//│ ('A & (Int | Str)) -> ('A | Int | Str)
+//│ ('X & (Int | Str)) -> ('X | Int | Str)
 //│ res
 //│     = [Function: id]
 

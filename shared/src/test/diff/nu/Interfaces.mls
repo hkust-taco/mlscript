@@ -932,7 +932,7 @@ bi.f(1)
 //│       bi is not implemented
 
 bp.f
-//│ ((Int, Bool & 'T,) & 'A) -> ((Int, 'T | false | true,) | 'A)
+//│ ((Int, Bool,) & 'A) -> ((Int, Bool,) | 'A)
 //│ res
 //│     = <no result>
 //│       bp is not implemented

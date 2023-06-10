@@ -502,6 +502,19 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     }
     else Nil
 
+  
+  protected def addNuTypeToGlobalThis(typeDef: NuTypeDef, moduleName: Str) = {
+    import JSCodeHelpers._
+    typeDef match {
+      case NuTypeDef(Mxn, TypeName(nme), _, _, _, _, _, _, _, _) =>
+        JSAssignExpr(id("globalThis").member(nme), JSArrowFn(param("base") :: Nil, L(
+          JSInvoke(id(moduleName).member(nme), id("base") :: Nil)
+        ))).stmt
+      case NuTypeDef(_, TypeName(nme), _, _, _, _, _, _, _, _) =>
+        JSAssignExpr(id("globalThis").member(nme), id(moduleName).member(nme)).stmt
+    }
+  }
+
   protected def translateLocalNewType(typeDef: NuTypeDef)(implicit scope: Scope): JSConstDecl = {
     // TODO: support traitSymbols
     val (traitSymbols, classSymbols, mixinSymbols, moduleSymbols) = declareNewTypeDefs(typeDef :: Nil, false)
@@ -1191,13 +1204,7 @@ class JSWebBackend extends JSBackend(allowUnresolvedSymbols = true) {
     val insDecl =
       JSConstDecl(moduleIns.runtimeName, JSNew(JSIdent(topModule.runtimeName)))
 
-    def include(typeName: Str, moduleName: Str) =
-      JSExprStmt(JSAssignExpr(JSField(JSIdent("globalThis"), typeName), JSField(JSIdent(moduleName), typeName)))
-    val includes =
-      typeDefs.filter(!_.isDecl).map {
-        case nu: NuTypeDef =>
-          include(nu.nme.name, moduleIns.runtimeName)
-      }
+    val includes = typeDefs.filter(!_.isDecl).map(addNuTypeToGlobalThis(_, moduleIns.runtimeName))
 
     val resultsIdent = JSIdent(resultsName)
     val resultNames = ListBuffer[Str]()
@@ -1389,13 +1396,7 @@ class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
     val insDecl =
       JSConstDecl(moduleIns.runtimeName, JSNew(JSIdent(topModule.runtimeName)))
 
-    def include(typeName: Str, moduleName: Str) =
-      JSExprStmt(JSAssignExpr(JSField(JSIdent("globalThis"), typeName), JSField(JSIdent(moduleName), typeName)))
-    val includes =
-      typeDefs.filter(!_.isDecl).map {
-        case nu: NuTypeDef =>
-          include(nu.nme.name, moduleIns.runtimeName)
-      }
+    val includes = typeDefs.filter(!_.isDecl).map(addNuTypeToGlobalThis(_, moduleIns.runtimeName))
 
     val zeroWidthSpace = JSLit("\"\\u200B\"")
     val catchClause = JSCatchClause(

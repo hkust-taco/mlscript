@@ -515,15 +515,6 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
     private lazy val trueOriginal: Opt[TV] =
       originalTV.flatMap(_.trueOriginal.orElse(originalTV))
     
-    override def freshenAbove(lim: Int, rigidify: Bool)
-        (implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV, ST])
-        : TypeVarOrRigidVar =
-      super.freshenAbove(lim, rigidify) match {
-        case tv: TypeVarOrRigidVar =>
-          tv // * Note that type variables can be refreshed as rigid variables (trait tags)
-        case _ => die
-      }
-    
     def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level =
       if (level <= ub) level else {
         if (cache(this)) MinLevel else {
@@ -554,10 +545,15 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
       }) + (if (assignedTo.isDefined) "#" else "")
     private[mlscript] def mkStr = nameHint.getOrElse("α") + uid
     
-    def isRecursive_$(implicit ctx: Ctx) : Bool = (lbRecOccs_$, ubRecOccs_$) match {
-      case (S(N | S(true)), _) | (_, S(N | S(false))) => true
+    final def isRecursive_$(implicit ctx: Ctx) : Bool = isPosRecursive_$ || isNegRecursive_$
+    final def isPosRecursive_$(implicit ctx: Ctx) : Bool = lbRecOccs_$ match {
+      case S(N | S(true)) => true
       case _ => false
-    } 
+    }
+    final def isNegRecursive_$(implicit ctx: Ctx) : Bool = ubRecOccs_$ match {
+      case S(N | S(false)) => true
+      case _ => false
+    }
     /** None: not recursive in this bound; Some(Some(pol)): polarly-recursive; Some(None): nonpolarly-recursive.
       * Note that if we have something like 'a :> Bot <: 'a -> Top, 'a is not truly recursive
       *   and its bounds can actually be inlined. */

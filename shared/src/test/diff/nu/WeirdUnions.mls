@@ -1,0 +1,60 @@
+:NewDefs
+
+
+
+// * There are strange parsing quirks here
+
+fun f: Str | [Str, Int]
+//│ fun f: Array[Int | Str] & {_1: Str}
+
+// * ^ parses as:
+
+fun f: [Str] | [Str, Int]
+//│ fun f: Array[Int | Str] & {_1: Str}
+
+fun f: (Str | [Str, Int])
+//│ fun f: Array[Int | Str] & {_1: Str}
+
+fun f: Str | (Str, Int)
+//│ fun f: Array[Int | Str] & {_1: Str}
+
+
+fun f: Str | ([Str, Int])
+//│ fun f: (Str, Int,) | Str
+
+fun f: Str | ((Str, Int))
+//│ fun f: (Str, Int,) | Str
+
+
+
+// * This type merges the input tuples, resulting in the union seen above:
+fun f: (Str => Str) & ((Str, Int) => Str)
+//│ fun f: (Array[Int | Str] & {_1: Str}) -> Str
+
+f("abc", "abc")
+//│ Str
+//│ res
+//│     = <no result>
+//│       f is not implemented
+
+
+// * Note: the merge doesn't happen when the result type is different...
+fun f: (Str => Str) & ((Str, Int) => Int)
+//│ fun f: Str -> Str & (Str, Int,) -> Int
+
+// * ...resulting in approximation at call sites (we don't handle overloading)
+:e
+f("abc", "abc")
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.47: 	f("abc", "abc")
+//│ ║        	^^^^^^^^^^^^^^^
+//│ ╟── argument list of type `("abc", "abc",)` does not match type `nothing`
+//│ ║  l.47: 	f("abc", "abc")
+//│ ╙──      	 ^^^^^^^^^^^^^^
+//│ Int | Str | error
+//│ res
+//│     = <no result>
+//│       f is not implemented
+
+
+

@@ -169,7 +169,7 @@ mixin C() {
 //│   }
 //│ }
 //│ const typing_unit3 = new TypingUnit3;
-//│ globalThis.C = typing_unit3.C;
+//│ globalThis.C = ((base) => typing_unit3.C(base));
 //│ // End of generated code
 
 :js

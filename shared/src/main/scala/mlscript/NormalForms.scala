@@ -402,9 +402,9 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       (vars.iterator ++ nvars).map(_.levelBelow(ub)).++(Iterator(lnf.levelBelow(ub), rnf.levelBelow(ub))).max
     def freshenAbove(lim: Int, rigidify: Bool)(implicit ctx: Ctx, freshened: MutMap[TV, ST], shadows: Shadows): Conjunct = {
       val (vars2, tags2) = vars.toBuffer[TV].partitionMap(
-        _.freshenAbove(lim, rigidify) match { case tv: TV => L(tv); case tt: AbstractTag => R(tt) })
+        _.freshenAbove(lim, rigidify) match { case tv: TV => L(tv); case tt: AbstractTag => R(tt); case _ => die })
       val (nvars2, ntags2) = nvars.toBuffer[TV].partitionMap(
-        _.freshenAbove(lim, rigidify) match { case tv: TV => L(tv); case tt: AbstractTag => R(tt) })
+        _.freshenAbove(lim, rigidify) match { case tv: TV => L(tv); case tt: AbstractTag => R(tt); case _ => die })
       Conjunct(
         tags2.foldLeft(lnf.freshenAbove(lim, rigidify))(_ & _), vars2.toSortedSet,
         ntags2.foldLeft(rnf.freshenAbove(lim, rigidify))(_ | _), nvars2.toSortedSet)

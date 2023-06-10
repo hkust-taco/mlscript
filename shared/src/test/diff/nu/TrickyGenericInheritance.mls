@@ -34,7 +34,7 @@ c1.f
 //│     = [Function: f]
 
 (c1 : T1).f
-//│ (??A & 'A) -> ('A | ??A0)
+//│ ??A -> ??A0
 //│ res
 //│     = [Function: f]
 
@@ -47,8 +47,7 @@ c1.f
 (c1 : T1).f
 //│ 'f
 //│   where
-//│     'f :> 'A -> 'A
-//│     'A := in ??A out ??A0
+//│     'f :> in ??A out ??A0 -> in ??A out ??A0
 //│ res
 //│     = [Function: f]
 
@@ -56,14 +55,31 @@ c1.f
 (c1 : T1['X]).f
 //│ 'f
 //│   where
-//│     'f :> 'A -> 'A
-//│     'A := 'X
+//│     'f :> 'X -> 'X
 //│     'X :> Int
 //│        <: 'FigureItOut
 //│     'FigureItOut :> Int
 //│                  <: 'X & Int
 //│ res
 //│     = [Function: f]
+
+:e
+(c1 : T1['X]).f(false)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.67: 	(c1 : T1['X]).f(false)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── reference of type `false` is not an instance of type `Int`
+//│ ║  l.67: 	(c1 : T1['X]).f(false)
+//│ ║        	                ^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.20: 	  fun f(x: Int) = x
+//│ ║        	           ^^^
+//│ ╟── from type variable:
+//│ ║  l.67: 	(c1 : T1['X]).f(false)
+//│ ╙──      	         ^^
+//│ Int | error | false
+//│ res
+//│     = false
 
 
 
@@ -78,23 +94,23 @@ class C2 extends T2['FigureItOut] {
   fun f(x: Int) = x
 }
 //│ ╔══[ERROR] Method implementations in traits are not yet supported
-//│ ║  l.75: 	  val r = C2().f(false)
+//│ ║  l.91: 	  val r = C2().f(false)
 //│ ╙──      	      ^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Unhandled cyclic definition
-//│ ║  l.73: 	trait T2[A] {
+//│ ║  l.89: 	trait T2[A] {
 //│ ║        	^^^^^^^^^^^^^
-//│ ║  l.74: 	  fun f: A -> A
+//│ ║  l.90: 	  fun f: A -> A
 //│ ║        	^^^^^^^^^^^^^^^
-//│ ║  l.75: 	  val r = C2().f(false)
+//│ ║  l.91: 	  val r = C2().f(false)
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.75: 	  val r = C2().f(false)
+//│ ║  l.91: 	  val r = C2().f(false)
 //│ ║        	          ^^^^^^^^^^^^^
 //│ ╟── reference of type `false` is not an instance of type `Int`
-//│ ║  l.75: 	  val r = C2().f(false)
+//│ ║  l.91: 	  val r = C2().f(false)
 //│ ║        	                 ^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.78: 	  fun f(x: Int) = x
+//│ ║  l.94: 	  fun f(x: Int) = x
 //│ ╙──      	           ^^^
 //│ trait T2[A] {
 //│   fun f: A -> A
@@ -113,17 +129,17 @@ class C3 extends T3['FigureItOut] {
   fun f(x: Int) = x
 }
 //│ ╔══[ERROR] Method implementations in traits are not yet supported
-//│ ║  l.110: 	  val r = (C3() : T3['X]).f(false)
+//│ ║  l.126: 	  val r = (C3() : T3['X]).f(false)
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Unhandled cyclic definition
-//│ ║  l.108: 	trait T3[A] {
+//│ ║  l.124: 	trait T3[A] {
 //│ ║         	^^^^^^^^^^^^^
-//│ ║  l.109: 	  fun f: A -> A
+//│ ║  l.125: 	  fun f: A -> A
 //│ ║         	^^^^^^^^^^^^^^^
-//│ ║  l.110: 	  val r = (C3() : T3['X]).f(false)
+//│ ║  l.126: 	  val r = (C3() : T3['X]).f(false)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Type `C3` does not contain member `T3#A`
-//│ ║  l.108: 	trait T3[A] {
+//│ ║  l.124: 	trait T3[A] {
 //│ ╙──       	         ^
 //│ trait T3[A] {
 //│   fun f: A -> A
@@ -136,7 +152,7 @@ class C3 extends T3['FigureItOut] {
 :e // FIXME
 C3() : T3['X]
 //│ ╔══[ERROR] Type `C3` does not contain member `T3#A`
-//│ ║  l.108: 	trait T3[A] {
+//│ ║  l.124: 	trait T3[A] {
 //│ ╙──       	         ^
 //│ T3['X]
 //│   where

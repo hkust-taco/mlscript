@@ -55,29 +55,29 @@ mixin WithType {
 
 module Test0 extends Base, WithUid
 //│ module Test0 {
-//│   fun getUid: {uid: 'uid} -> 'uid
-//│   fun rewrap: ({uid: 'uid0, underlying: 'underlying}, 'underlying -> 'a,) -> {uid: 'uid0, underlying: 'a}
-//│   fun setUid: ({underlying: 'underlying0}, uid: Int,) -> {uid: Int, underlying: 'underlying0}
-//│   fun unwrap: {underlying: 'underlying1} -> 'underlying1
+//│   fun getUid: {uid: 'uid, underlying: 'underlying} -> 'uid
+//│   fun rewrap: ({uid: 'uid0, underlying: 'underlying0 & 'underlying1}, 'underlying1 -> 'underlying0,) -> {uid: Int | 'uid0, underlying: 'underlying0}
+//│   fun setUid: ({uid: 'uid0, underlying: 'underlying0 & 'underlying1}, uid: Int,) -> {uid: Int | 'uid0, underlying: 'underlying0}
+//│   fun unwrap: {uid: 'uid, underlying: 'underlying} -> 'underlying
 //│ }
 
 module Test0 extends Base, WithUid, WithUid
 //│ module Test0 {
-//│   fun getUid: {underlying: {uid: 'uid, underlying: 'underlying}} -> 'uid
-//│   fun rewrap: ({uid: 'uid0, underlying: {uid: 'uid1, underlying: 'underlying0 & 'underlying1}}, 'underlying1 -> 'underlying0,) -> {uid: 'uid0, underlying: {uid: Int | 'uid1, underlying: 'underlying0}}
-//│   fun setUid: ({uid: 'uid0, underlying: {uid: 'uid1, underlying: 'underlying0 & 'underlying1}}, uid: Int,) -> {uid: 'uid0, underlying: {uid: Int | 'uid1, underlying: 'underlying0}}
-//│   fun unwrap: {underlying: {uid: 'uid, underlying: 'underlying}} -> 'underlying
+//│   fun getUid: {uid: anything, underlying: {uid: 'uid, underlying: 'underlying}} -> 'uid
+//│   fun rewrap: ({uid: 'uid0, underlying: {uid: 'uid1, underlying: 'underlying0 & 'underlying1} & 'underlying2}, 'underlying1 -> 'underlying0,) -> {uid: Int | 'uid0, underlying: 'underlying2 | {uid: Int | 'uid1, underlying: 'underlying0}}
+//│   fun setUid: ({uid: 'uid0, underlying: {uid: 'uid1, underlying: 'underlying0 & 'underlying1} & 'underlying2}, uid: Int,) -> {uid: Int | 'uid0, underlying: 'underlying2 | {uid: Int | 'uid1, underlying: 'underlying0}}
+//│   fun unwrap: {uid: anything, underlying: {uid: 'uid, underlying: 'underlying}} -> 'underlying
 //│ }
 
 
 module Test1 extends Base, WithUid, WithType
 //│ module Test1 {
-//│   fun getType: {underlying: {ty: 'ty, underlying: 'underlying}} -> 'ty
-//│   fun getUid: {uid: 'uid} -> 'uid
-//│   fun rewrap: ({uid: 'uid0, underlying: {ty: 'ty0, underlying: 'underlying0 & 'underlying1}}, 'underlying1 -> 'underlying0,) -> {uid: 'uid0, underlying: {ty: Type | 'ty0, underlying: 'underlying0}}
-//│   fun setType: ({uid: 'uid0, underlying: {ty: 'ty0, underlying: 'underlying0 & 'underlying1}}, ty: Type,) -> {uid: 'uid0, underlying: {ty: Type | 'ty0, underlying: 'underlying0}}
-//│   fun setUid: ({underlying: 'underlying2}, uid: Int,) -> {uid: Int, underlying: 'underlying2}
-//│   fun unwrap: {underlying: {ty: 'ty, underlying: 'underlying}} -> 'underlying
+//│   fun getType: {uid: 'uid, underlying: {ty: 'ty, underlying: 'underlying}} -> 'ty
+//│   fun getUid: {uid: 'uid, underlying: {ty: 'ty, underlying: 'underlying}} -> 'uid
+//│   fun rewrap: ({uid: 'uid0, underlying: {ty: 'ty0, underlying: 'underlying0 & 'underlying1} & 'underlying2}, 'underlying1 -> 'underlying0,) -> {uid: Int | 'uid0, underlying: 'underlying2 | {ty: Type | 'ty0, underlying: 'underlying0}}
+//│   fun setType: ({uid: 'uid0, underlying: {ty: 'ty0, underlying: 'underlying0 & 'underlying1} & 'underlying2}, ty: Type,) -> {uid: Int | 'uid0, underlying: 'underlying2 | {ty: Type | 'ty0, underlying: 'underlying0}}
+//│   fun setUid: ({uid: 'uid0, underlying: {ty: 'ty0, underlying: 'underlying0 & 'underlying1} & 'underlying2}, uid: Int,) -> {uid: Int | 'uid0, underlying: 'underlying2 | {ty: Type | 'ty0, underlying: 'underlying0}}
+//│   fun unwrap: {uid: 'uid, underlying: {ty: 'ty, underlying: 'underlying}} -> 'underlying
 //│ }
 
 let uid = 0
@@ -123,7 +123,7 @@ a.underlying.ty.name
 //│     = 'A'
 
 let b = Test1.setType(a, Type("B"))
-//│ let b: {uid: 0, underlying: {ty: Type, underlying: 42}}
+//│ let b: {uid: Int, underlying: {ty: Type, underlying: 42}}
 //│ b
 //│   = { underlying: { underlying: 42, ty: Type {} }, uid: 0 }
 

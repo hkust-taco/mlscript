@@ -1,0 +1,23 @@
+:NewDefs
+:NoJS
+
+
+class Add[E](lhs: E)
+val add11 = Add(add11)
+module EvalAddLit {
+  fun eval(e: Add['A]) =
+    if e is Add then eval(e.lhs)
+}
+let res = EvalAddLit.eval(add11)
+//│ class Add[E](lhs: E)
+//│ let add11: 'E
+//│ module EvalAddLit {
+//│   fun eval: (e: 'lhs,) -> nothing
+//│ }
+//│ let res: nothing
+//│ where
+//│   'lhs <: Add['A]
+//│   'A <: 'lhs
+//│   'E :> Add['E]
+
+

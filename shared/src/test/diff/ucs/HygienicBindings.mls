@@ -133,7 +133,7 @@ fun h3(x, y, f, p) =
 h3("anything", "not me", _ => "should be me", _ => true)
 h3(None, "should be me", _ => "not me", _ => false)
 h3("anything", "anything", _ => "not me", _ => false)
-//│ fun h3: forall 'a 'b. (None | Object & 'b & ~#None, 'a, (None | 'b) -> anything, (None | 'b) -> Object,) -> ("anyway" | 'a)
+//│ fun h3: forall 'a 'b. (None | Object & 'a & ~#None, 'b, (None | 'a) -> anything, (None | 'a) -> Object,) -> ("anyway" | 'b)
 //│ "anything" | "anyway"
 //│ res
 //│     = [Function: h3]
