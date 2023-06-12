@@ -80,7 +80,7 @@ module A {
   fun i(x) = x
 }
 //│ module A {
-//│   fun i: 'a -> 'a
+//│   fun i: forall 'a. 'a -> 'a
 //│ }
 
 // * With a type signature, it is generalized and checked against the signature

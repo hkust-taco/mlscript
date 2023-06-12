@@ -387,46 +387,34 @@ class B extends Foo { fun foo = error }
 //│   fun foo: nothing
 //│ }
 
-:e // FIXME
 class B extends Foo { fun foo(x) = x }
-//│ ╔══[ERROR] Type error in definition of method foo
-//│ ║  l.391: 	class B extends Foo { fun foo(x) = x }
-//│ ║         	                          ^^^^^^^^^^
-//│ ╟── type variable `'A` leaks out of its scope
-//│ ║  l.380: 	trait Foo { fun foo: forall 'A; (x: 'A) -> 'A }
-//│ ║         	                                    ^^
-//│ ╟── back into type variable `'A`
-//│ ║  l.380: 	trait Foo { fun foo: forall 'A; (x: 'A) -> 'A }
-//│ ║         	                                           ^^
-//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
-//│ ╟── • this reference:
-//│ ║  l.391: 	class B extends Foo { fun foo(x) = x }
-//│ ╙──       	                                   ^
 //│ class B extends Foo {
-//│   fun foo: (??A & 'a) -> (??A0 | 'a)
+//│   fun foo: forall 'a. 'a -> 'a
 //│ }
 
-:e // FIXME
+:e
 class B extends Foo { fun foo(x) = x + 1 }
-//│ ╔══[ERROR] Type error in definition of method foo
-//│ ║  l.410: 	class B extends Foo { fun foo(x) = x + 1 }
+//│ ╔══[ERROR] Type mismatch in definition of method foo:
+//│ ║  l.396: 	class B extends Foo { fun foo(x) = x + 1 }
 //│ ║         	                          ^^^^^^^^^^^^^^
-//│ ╟── type variable `'A` leaks out of its scope
+//│ ╟── type `'A` is not an instance of type `Int`
 //│ ║  l.380: 	trait Foo { fun foo: forall 'A; (x: 'A) -> 'A }
 //│ ║         	                                    ^^
-//│ ╟── into reference of type `Int`
-//│ ║  l.410: 	class B extends Foo { fun foo(x) = x + 1 }
-//│ ╙──       	                                   ^
-//│ ╔══[ERROR] Type error in definition of method foo
-//│ ║  l.410: 	class B extends Foo { fun foo(x) = x + 1 }
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.396: 	class B extends Foo { fun foo(x) = x + 1 }
+//│ ║         	                                   ^
+//│ ╟── Note: quantified type variable 'A is defined at:
+//│ ║  l.380: 	trait Foo { fun foo: forall 'A; (x: 'A) -> 'A }
+//│ ╙──       	                            ^^
+//│ ╔══[ERROR] Type mismatch in definition of method foo:
+//│ ║  l.396: 	class B extends Foo { fun foo(x) = x + 1 }
 //│ ║         	                          ^^^^^^^^^^^^^^
-//│ ╟── type variable `'A` leaks out of its scope
-//│ ║  l.410: 	class B extends Foo { fun foo(x) = x + 1 }
+//│ ╟── operator application of type `Int` does not match type `'A`
+//│ ║  l.396: 	class B extends Foo { fun foo(x) = x + 1 }
 //│ ║         	                                   ^^^^^
-//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
-//│ ╟── • this operator application:
-//│ ║  l.410: 	class B extends Foo { fun foo(x) = x + 1 }
-//│ ╙──       	                                   ^^^^^
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.380: 	trait Foo { fun foo: forall 'A; (x: 'A) -> 'A }
+//│ ╙──       	                                           ^^
 //│ class B extends Foo {
 //│   fun foo: Int -> Int
 //│ }

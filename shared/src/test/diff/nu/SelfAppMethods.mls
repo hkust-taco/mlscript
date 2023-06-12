@@ -14,26 +14,45 @@ class A {
 //│   fun g: A
 //│ }
 
+:e
 module A {
   fun i(x) = x
   fun f = f(f)
   fun g(x) = x(x)
   fun h = g(g)
 }
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
+//│ ║  l.22: 	  fun h = g(g)
+//│ ║        	          ^^^^
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ module A {
 //│   fun f: nothing
-//│   fun g: 'a -> 'b
-//│   fun h: 'b
-//│   fun i: 'c -> 'c
+//│   fun g: forall 'a 'b. ('a -> 'b & 'a) -> 'b
+//│   fun h: error
+//│   fun i: forall 'c. 'c -> 'c
+//│ }
+
+// * Note this permutation works: currently we generalize check functions in the source code order...
+module A {
+  fun i(x) = x
+  fun f = f(f)
+  fun h = g(g)
+  fun g(x) = x(x)
+}
+//│ module A {
+//│   fun f: nothing
+//│   fun g: forall 'a 'b. 'b -> 'a
+//│   fun h: forall 'a. 'a
+//│   fun i: forall 'c. 'c -> 'c
 //│ }
 //│ where
-//│   'a := 'a -> 'b
+//│   'b := 'b -> 'a
 
 :ns
 A.i
 //│ 'i
 //│   where
-//│     'i :> 'a -> 'a
+//│     'i :> forall 'a. 'a -> 'a
 //│ res
 //│     = [Function: i]
 
@@ -41,6 +60,10 @@ A.i
 :ns
 A.f
 //│ 'f
+//│   where
+//│     'f :> forall 'a 'f0. 'a
+//│     'a <: 'f0
+//│     'f0 <: 'f0 -> 'a
 //│ res
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded
@@ -49,9 +72,10 @@ A.f
 A.g
 //│ 'g
 //│   where
-//│     'g :> 'a -> 'b
+//│     'g :> forall 'a 'b 'c 'h. 'a -> 'b
 //│     'a := 'a -> 'b
 //│     'b <: 'c
+//│     'c <: 'h
 //│ res
 //│     = [Function: g]
 
@@ -59,6 +83,9 @@ A.g
 :re
 A.h
 //│ 'h
+//│   where
+//│     'h :> forall 'a 'h0. 'a
+//│     'a <: 'h0
 //│ res
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded

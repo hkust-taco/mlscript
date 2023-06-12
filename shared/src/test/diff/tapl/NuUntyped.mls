@@ -75,13 +75,13 @@ fun list6(x, y, z, w, v, u) = Cons(x, list5(y, z, w, v, u))
 fun list7(x, y, z, w, v, u, t) = Cons(x, list6(y, z, w, v, u, t))
 fun list8(x, y, z, w, v, u, t, s) = Cons(x, list7(y, z, w, v, u, t, s))
 //│ fun list1: forall 'A. 'A -> Cons['A]
-//│ fun list2: forall 'A. ('A, 'A,) -> Cons['A]
-//│ fun list3: forall 'A. ('A, 'A, 'A,) -> Cons['A]
-//│ fun list4: forall 'A. ('A, 'A, 'A, 'A,) -> Cons['A]
-//│ fun list5: forall 'A. ('A, 'A, 'A, 'A, 'A,) -> Cons['A]
-//│ fun list6: forall 'A. ('A, 'A, 'A, 'A, 'A, 'A,) -> Cons['A]
-//│ fun list7: forall 'A. ('A, 'A, 'A, 'A, 'A, 'A, 'A,) -> Cons['A]
-//│ fun list8: forall 'A. ('A, 'A, 'A, 'A, 'A, 'A, 'A, 'A,) -> Cons['A]
+//│ fun list2: forall 'A0. ('A0, 'A0,) -> Cons['A0]
+//│ fun list3: forall 'A1. ('A1, 'A1, 'A1,) -> Cons['A1]
+//│ fun list4: forall 'A2. ('A2, 'A2, 'A2, 'A2,) -> Cons['A2]
+//│ fun list5: forall 'A3. ('A3, 'A3, 'A3, 'A3, 'A3,) -> Cons['A3]
+//│ fun list6: forall 'A4. ('A4, 'A4, 'A4, 'A4, 'A4, 'A4,) -> Cons['A4]
+//│ fun list7: forall 'A5. ('A5, 'A5, 'A5, 'A5, 'A5, 'A5, 'A5,) -> Cons['A5]
+//│ fun list8: forall 'A6. ('A6, 'A6, 'A6, 'A6, 'A6, 'A6, 'A6, 'A6,) -> Cons['A6]
 
 fun findFirst(list, p) =
   if list is

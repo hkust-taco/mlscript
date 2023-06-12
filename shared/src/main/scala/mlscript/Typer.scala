@@ -1089,9 +1089,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
       // case Blk(s :: stmts) =>
       //   val (newCtx, ty) = typeStatement(s)
       //   typeTerm(Blk(stmts))(newCtx, lvl, raise)
-      case Blk(stmts) =>
+      case b @ Blk(stmts) =>
         if (newDefs) {
-          val ttu = typeTypingUnit(TypingUnit(stmts), topLevel = false)
+          val ttu = typeTypingUnit(TypingUnit(stmts), S(b))
           // TODO check unused defs
           ttu.result.getOrElse(UnitType)
         } else typeTerms(stmts, false, Nil)(ctx.nest, raise, prov, vars, genLambdas)
@@ -1405,7 +1405,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
             mkTypingUnit(thisTy, members))(td.declareLoc, td.abstractLoc)
           }
       case tf @ TypedNuFun(level, fd, bodyTy) =>
-        NuFunDef(fd.isLetRec, fd.nme, Nil, R(go(tf.typeSignature)))(fd.declareLoc, fd.signature)
+        NuFunDef(fd.isLetRec, fd.nme, Nil, R(go(tf.typeSignature)))(fd.declareLoc, fd.signature, fd.outer)
       case p: NuParam =>
         ??? // TODO
       case TypedNuDummy(d) =>

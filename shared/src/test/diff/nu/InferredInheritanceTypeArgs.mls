@@ -127,7 +127,7 @@ trait Foo[A] { fun foo(x: A): A }
 // * it can be instantiated to any type by downstream callers of the methods!
 module B extends Foo { fun foo(x) = x }
 //│ module B extends Foo {
-//│   fun foo: 'A -> 'A
+//│   fun foo: forall 'a. 'a -> 'a
 //│ }
 
 B : Foo['X]
@@ -136,7 +136,7 @@ B : Foo['X]
 //│     = B { class: [class B extends Object] }
 
 B.foo
-//│ 'a -> 'a
+//│ forall 'a. 'a -> 'a
 //│ res
 //│     = [Function: foo]
 
@@ -180,10 +180,8 @@ trait Foo[A] { fun a: A; fun foo(x: A): A }
 
 class Bar[B](a: B) extends Foo { fun foo(x) = x }
 //│ class Bar[B](a: B) extends Foo {
-//│   fun foo: 'A -> 'A
+//│   fun foo: forall 'a. 'a -> 'a
 //│ }
-//│ where
-//│   'A :> B
 
 let b = Bar(123)
 //│ let b: Bar[123]
@@ -198,7 +196,7 @@ b : Foo['X]
 //│     = Bar {}
 
 b.foo
-//│ 'a -> (123 | 'a)
+//│ forall 'a. 'a -> 'a
 //│ res
 //│     = [Function: foo]
 
@@ -209,46 +207,31 @@ trait Foo[A] { fun foo[A](x: A): A }
 //│   fun foo: forall 'A. (x: 'A,) -> 'A
 //│ }
 
-:e // FIXME
 class B extends Foo { fun foo(x) = x }
-//│ ╔══[ERROR] Type error in definition of method foo
-//│ ║  l.213: 	class B extends Foo { fun foo(x) = x }
-//│ ║         	                          ^^^^^^^^^^
-//│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.213: 	class B extends Foo { fun foo(x) = x }
-//│ ║         	                                   ^
-//│ ╟── back into type variable `A`
-//│ ║  l.207: 	trait Foo[A] { fun foo[A](x: A): A }
-//│ ║         	                       ^
-//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
-//│ ╟── • this reference:
-//│ ║  l.213: 	class B extends Foo { fun foo(x) = x }
-//│ ╙──       	                                   ^
 //│ class B extends Foo {
-//│   fun foo: (??A & 'a) -> (??A0 | 'a)
+//│   fun foo: forall 'a. 'a -> 'a
 //│ }
 
 :e
 class B extends Foo { fun foo(x) = x + 1 }
-//│ ╔══[ERROR] Type error in definition of method foo
-//│ ║  l.232: 	class B extends Foo { fun foo(x) = x + 1 }
+//│ ╔══[ERROR] Type mismatch in definition of method foo:
+//│ ║  l.216: 	class B extends Foo { fun foo(x) = x + 1 }
 //│ ║         	                          ^^^^^^^^^^^^^^
-//│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.207: 	trait Foo[A] { fun foo[A](x: A): A }
+//│ ╟── type `A` is not an instance of type `Int`
+//│ ║  l.205: 	trait Foo[A] { fun foo[A](x: A): A }
 //│ ║         	                       ^
-//│ ╟── into reference of type `Int`
-//│ ║  l.232: 	class B extends Foo { fun foo(x) = x + 1 }
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.216: 	class B extends Foo { fun foo(x) = x + 1 }
 //│ ╙──       	                                   ^
-//│ ╔══[ERROR] Type error in definition of method foo
-//│ ║  l.232: 	class B extends Foo { fun foo(x) = x + 1 }
+//│ ╔══[ERROR] Type mismatch in definition of method foo:
+//│ ║  l.216: 	class B extends Foo { fun foo(x) = x + 1 }
 //│ ║         	                          ^^^^^^^^^^^^^^
-//│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.232: 	class B extends Foo { fun foo(x) = x + 1 }
+//│ ╟── operator application of type `Int` does not match type `A`
+//│ ║  l.216: 	class B extends Foo { fun foo(x) = x + 1 }
 //│ ║         	                                   ^^^^^
-//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
-//│ ╟── • this operator application:
-//│ ║  l.232: 	class B extends Foo { fun foo(x) = x + 1 }
-//│ ╙──       	                                   ^^^^^
+//│ ╟── Note: constraint arises from method type parameter:
+//│ ║  l.205: 	trait Foo[A] { fun foo[A](x: A): A }
+//│ ╙──       	                       ^
 //│ class B extends Foo {
 //│   fun foo: Int -> Int
 //│ }

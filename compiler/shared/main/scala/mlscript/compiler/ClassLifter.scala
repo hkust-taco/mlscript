@@ -545,14 +545,15 @@ class ClassLifter(logDebugMsg: Boolean = false) {
     body match {
       case Left(value) =>
         val ret = liftTerm(value)(using ctx.addV(nm).addT(tpVs))
-        (func.copy(rhs = Left(ret._1))(func.declareLoc, func.signature), ret._2)
+        (func.copy(rhs = Left(ret._1))(func.declareLoc, func.signature, func.outer), ret._2)
       case Right(PolyType(targs, body)) =>
         val nBody = liftType(body)(using ctx.addT(tpVs))
         val nTargs = targs.map {
           case L(tp) => liftTypeName(tp)(using ctx.addT(tpVs)).mapFirst(Left.apply)
           case R(tv) => R(tv) -> emptyCtx
         }.unzip
-        (func.copy(rhs = Right(PolyType(nTargs._1, nBody._1)))(func.declareLoc, func.signature), nTargs._2.fold(nBody._2)(_ ++ _))
+        (func.copy(rhs = Right(PolyType(nTargs._1, nBody._1)))(func.declareLoc, func.signature, func.outer),
+          nTargs._2.fold(nBody._2)(_ ++ _))
       case _ => ??? // TODO
     }
   }
