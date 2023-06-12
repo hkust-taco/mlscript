@@ -254,8 +254,16 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     case CaseOf(trm, Wildcard(default)) =>
       JSCommaExpr(translateTerm(trm) :: translateTerm(default) :: Nil)
     // Pattern match with two branches -> tenary operator
-    case CaseOf(trm, Case(tst, csq, Wildcard(alt))) =>
-      translateCase(translateTerm(trm), tst)(scope)(translateTerm(csq), translateTerm(alt))
+    case CaseOf(trm, cs @ Case(tst, csq, Wildcard(alt))) => tst match {
+      case Var(tp) => scope.resolveValue(tp) match {
+        case S(_: NuTypeSymbol) | S(CapturedSymbol(_, _: NuTypeSymbol)) =>
+          translateCaseBranch(translateTerm(trm), cs)
+        case _ =>
+          translateCase(translateTerm(trm), tst)(scope)(translateTerm(csq), translateTerm(alt))
+      }
+      case _ =>
+        translateCase(translateTerm(trm), tst)(scope)(translateTerm(csq), translateTerm(alt))
+    }
     // Pattern match with more branches -> chain of ternary expressions with cache
     case CaseOf(trm, cases) =>
       val arg = translateTerm(trm)
@@ -320,8 +328,45 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       scope: Scope
   ): JSExpr = branch match {
     case Case(pat, body, rest) =>
-      translateCase(scrut, pat)(scope)(translateTerm(body), translateCaseBranch(scrut, rest))
-    case Wildcard(body) => translateTerm(body)
+      pat match {
+        case Var(tp) => scope.resolveValue(tp) match {
+          case S(_: NuTypeSymbol) | S(CapturedSymbol(_, _: NuTypeSymbol)) =>
+            def uncurry(term: Term)(implicit scope: Scope): JSExpr = term match {
+              case Let(false, Var(alias), Sel(_, Var(name)), body) => body match {
+                case Let(false, _, _: Sel, _) =>
+                  val letScope = scope.derive(s"Let")
+                  val runtimeName = letScope.declareParameter(alias)
+                  uncurry(body)(letScope) match {
+                    case JSInvoke(JSArrowFn(JSObjectPattern(fields) :: Nil, body), arguments) =>
+                      JSInvoke(JSArrowFn(JSObjectPattern(
+                        (if (runtimeName === name) name -> N else name -> S(JSNamePattern(runtimeName))) :: fields
+                      ) :: Nil, body), arguments)
+                    case t =>
+                      JSInvoke(JSArrowFn(JSObjectPattern(
+                        (if (runtimeName === name) name -> N else name -> S(JSNamePattern(runtimeName))) :: Nil
+                      ) :: Nil, L(t)), JSInvoke(JSIdent(s"$tp.class.$$unapply"), scrut :: Nil) :: Nil)
+                  }
+                case _ =>
+                  val letScope = scope.derive(s"Let")
+                  val runtimeName = letScope.declareParameter(alias)
+                  JSInvoke(
+                    JSArrowFn(JSObjectPattern(
+                      (if (runtimeName === name) name -> N else name -> S(JSNamePattern(runtimeName))) :: Nil
+                    ) :: Nil, letScope.tempVars `with` translateTerm(body)(letScope)),
+                    JSInvoke(JSIdent(s"$tp.class.$$unapply"), scrut :: Nil) :: Nil
+                  )
+              }
+              case _ => translateTerm(term)
+            }
+            translateCase(scrut, pat)(scope)(uncurry(body), translateCaseBranch(scrut, rest))
+          case _ =>
+            translateCase(scrut, pat)(scope)(translateTerm(body), translateCaseBranch(scrut, rest))
+        }
+        case _ =>
+          translateCase(scrut, pat)(scope)(translateTerm(body), translateCaseBranch(scrut, rest))
+      }
+    case Wildcard(body) =>
+      translateTerm(body)
     case NoCases        => JSImmEvalFn(N, Nil, R(JSInvoke(
       JSNew(JSIdent("Error")),
       JSExpr("non-exhaustive case expression") :: Nil
