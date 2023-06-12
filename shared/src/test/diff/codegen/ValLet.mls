@@ -30,7 +30,7 @@ class A(x0: Int) {
 //│         get x0() { return this.#x0; }
 //│         #x3;
 //│         get x3() { return this.#x3; }
-//│         static $unapply(self) { return {x0: self.#x0, } }
+//│         static $unapply(self) { return [self.#x0, ] }
 //│         constructor(x0) {
 //│           this.#x0 = x0;
 //│           const x1 = x0 + 1;
@@ -94,7 +94,7 @@ AA().f(0)
 //│     if (this.#AA === undefined) {
 //│       class AA {
 //│         #x;
-//│         static $unapply(self) { return {} }
+//│         static $unapply(self) { return [] }
 //│         constructor() {
 //│           this.#x = 42;
 //│           const x = this.#x;

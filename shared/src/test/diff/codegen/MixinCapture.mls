@@ -26,7 +26,7 @@ mixin EvalAddLit {
 //│       eval(e) {
 //│         return ((() => {
 //│           let a;
-//│           return (a = e, a instanceof outer.Lit.class ? (({ n }) => n)(Lit.class.$unapply(a)) : (() => {
+//│           return (a = e, a instanceof outer.Lit.class ? (([n]) => n)(Lit.class.$unapply(a)) : (() => {
 //│             throw new Error("non-exhaustive case expression");
 //│           })());
 //│         })());
@@ -39,7 +39,7 @@ mixin EvalAddLit {
 //│       class Lit {
 //│         #n;
 //│         get n() { return this.#n; }
-//│         static $unapply(self) { return {n: self.#n, } }
+//│         static $unapply(self) { return [self.#n, ] }
 //│         constructor(n) {
 //│           this.#n = n;
 //│         }

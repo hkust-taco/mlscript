@@ -34,19 +34,22 @@ fun sum(v) =
 //│ globalThis.sum = function sum(v) {
 //│   return ((() => {
 //│     let a;
-//│     return (a = v, a instanceof V0.class ? 0 : a instanceof V1.class ? (({ x: a }) => a)(V1.class.$unapply(a)) : a instanceof V2.class ? (({
-//│       x: a,
-//│       y: b
-//│     }) => a + b)(V2.class.$unapply(a)) : a instanceof Pos.class ? (({ x }) => x > 0 === true ? x : -1)(Pos.class.$unapply(a)) : a instanceof V22.class ? (({
-//│       c1: tmp0,
-//│       c2: tmp1
-//│     }) => tmp0 instanceof V2.class ? (({
-//│       x: x1,
-//│       y: y1
-//│     }) => tmp1 instanceof V2.class ? (({
-//│       x: x2,
-//│       y: y2
-//│     }) => x1 + y1 + x2 + y2)(V2.class.$unapply(tmp1)) : -1)(V2.class.$unapply(tmp0)) : -1)(V22.class.$unapply(a)) : a instanceof Half.class ? (({ valid: x }) => x)(Half.class.$unapply(a)) : a instanceof None.class ? 0 : -1);
+//│     return (a = v, a instanceof V0.class ? 0 : a instanceof V1.class ? (([a]) => a)(V1.class.$unapply(a)) : a instanceof V2.class ? (([
+//│       a,
+//│       b
+//│     ]) => a + b)(V2.class.$unapply(a)) : a instanceof Pos.class ? (([x]) => x > 0 === true ? x : -1)(Pos.class.$unapply(a)) : a instanceof V22.class ? (([
+//│       tmp0,
+//│       tmp1
+//│     ]) => tmp0 instanceof V2.class ? (([
+//│       x1,
+//│       y1
+//│     ]) => tmp1 instanceof V2.class ? (([
+//│       x2,
+//│       y2
+//│     ]) => x1 + y1 + x2 + y2)(V2.class.$unapply(tmp1)) : -1)(V2.class.$unapply(tmp0)) : -1)(V22.class.$unapply(a)) : a instanceof Half.class ? (([
+//│       $0,
+//│       x
+//│     ]) => x)(Half.class.$unapply(a)) : a instanceof None.class ? 0 : -1);
 //│   })());
 //│ };
 //│ // End of generated code
@@ -96,10 +99,7 @@ fun get1(s) =
 //│ globalThis.get1 = function get1(s) {
 //│   return ((() => {
 //│     let a;
-//│     return (a = s, a instanceof Some.class ? (({
-//│       value: tmp2,
-//│       value: y
-//│     }) => tmp2 instanceof V1.class ? (({ x }) => x)(V1.class.$unapply(tmp2)) : y)(Some.class.$unapply(a)) : (() => {
+//│     return (a = s, a instanceof Some.class ? (([tmp2]) => (([y]) => tmp2 instanceof V1.class ? (([x]) => x)(V1.class.$unapply(tmp2)) : y)(Some.class.$unapply(a)))(Some.class.$unapply(a)) : (() => {
 //│       throw new Error("non-exhaustive case expression");
 //│     })());
 //│   })());
@@ -113,3 +113,43 @@ get1(Some(V0()))
 //│     = 1
 //│ res
 //│     = V0 {}
+
+let s2 = Some(1)
+//│ let s2: Some[1]
+//│ s2
+//│    = Some {}
+
+:js
+fun foo(s) =
+  if s is
+    Some(t) then let b = s2.value; b + t.x
+    _ then 0  
+//│ fun foo: (Object & ~#Some | Some[{x: Int}]) -> Int
+//│ // Prelude
+//│ class TypingUnit7 {}
+//│ const typing_unit7 = new TypingUnit7;
+//│ // Query 1
+//│ globalThis.foo = function foo(s) {
+//│   return ((() => {
+//│     return (s instanceof Some.class ? (([t]) => (() => {
+//│       return ((b) => b + t.x)(s2.value);
+//│     })())(Some.class.$unapply(s)) : 0);
+//│   })());
+//│ };
+//│ // End of generated code
+
+foo(Some(V1(12)))
+//│ Int
+//│ res
+//│     = 13
+
+fun bar(s) =
+  if s is
+    Some(_) then let b = s2.value; b + 1
+    _ then 0
+//│ fun bar: (Object & ~#Some | Some[anything]) -> Int
+
+bar(Some(V1(12)))
+//│ Int
+//│ res
+//│     = 2

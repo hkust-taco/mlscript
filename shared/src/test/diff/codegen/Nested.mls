@@ -34,7 +34,7 @@ module A {
 //│             class B {
 //│               #x;
 //│               get x() { return this.#x; }
-//│               static $unapply(self) { return {x: self.#x, } }
+//│               static $unapply(self) { return [self.#x, ] }
 //│               constructor(x) {
 //│                 this.#x = x;
 //│               }
@@ -201,7 +201,7 @@ module D {
 //│             class E {
 //│               #x;
 //│               get x() { return this.#x; }
-//│               static $unapply(self) { return {x: self.#x, } }
+//│               static $unapply(self) { return [self.#x, ] }
 //│               constructor(x) {
 //│                 this.#x = x;
 //│               }
@@ -269,7 +269,7 @@ class E(x: Int) {
 //│         #F;
 //│         #x;
 //│         get x() { return this.#x; }
-//│         static $unapply(self) { return {x: self.#x, } }
+//│         static $unapply(self) { return [self.#x, ] }
 //│         constructor(x) {
 //│           this.#x = x;
 //│         }
@@ -280,7 +280,7 @@ class E(x: Int) {
 //│               #G;
 //│               #y;
 //│               get y() { return this.#y; }
-//│               static $unapply(self) { return {y: self.#y, } }
+//│               static $unapply(self) { return [self.#y, ] }
 //│               constructor(y) {
 //│                 this.#y = y;
 //│               }
@@ -294,7 +294,7 @@ class E(x: Int) {
 //│                   class G {
 //│                     #z;
 //│                     get z() { return this.#z; }
-//│                     static $unapply(self) { return {z: self.#z, } }
+//│                     static $unapply(self) { return [self.#z, ] }
 //│                     constructor(z) {
 //│                       this.#z = z;
 //│                     }
@@ -384,7 +384,7 @@ class F() {
 //│         #G;
 //│         #x;
 //│         get x() { return this.#x; }
-//│         static $unapply(self) { return {} }
+//│         static $unapply(self) { return [] }
 //│         constructor() {
 //│           this.#x = 42;
 //│           const x = this.#x;
@@ -393,7 +393,7 @@ class F() {
 //│           const outer1 = this;
 //│           if (this.#G === undefined) {
 //│             class G {
-//│               static $unapply(self) { return {} }
+//│               static $unapply(self) { return [] }
 //│               constructor() {
 //│                 const x1 = outer1.x + 1;
 //│               }
@@ -463,7 +463,7 @@ module G {
 //│                   class J {
 //│                     #x;
 //│                     get x() { return this.#x; }
-//│                     static $unapply(self) { return {x: self.#x, } }
+//│                     static $unapply(self) { return [self.#x, ] }
 //│                     constructor(x) {
 //│                       this.#x = x;
 //│                     }
@@ -489,7 +489,7 @@ module G {
 //│             class I {
 //│               #x;
 //│               get x() { return this.#x; }
-//│               static $unapply(self) { return {x: self.#x, } }
+//│               static $unapply(self) { return [self.#x, ] }
 //│               constructor(x) {
 //│                 this.#x = x;
 //│               }
@@ -571,7 +571,7 @@ module H {
 //│             class I {
 //│               #x;
 //│               get x() { return this.#x; }
-//│               static $unapply(self) { return {x: self.#x, } }
+//│               static $unapply(self) { return [self.#x, ] }
 //│               constructor(x) {
 //│                 this.#x = x;
 //│               }
@@ -587,7 +587,7 @@ module H {
 //│             class J {
 //│               #x;
 //│               get x() { return this.#x; }
-//│               static $unapply(self) { return {x: self.#x, } }
+//│               static $unapply(self) { return [self.#x, ] }
 //│               constructor(x) {
 //│                 this.#x = x;
 //│                 const i = outer1.I(x + 1);
@@ -670,7 +670,7 @@ ij.incY
 //│         #J;
 //│         #x;
 //│         get x() { return this.#x; }
-//│         static $unapply(self) { return {x: self.#x, } }
+//│         static $unapply(self) { return [self.#x, ] }
 //│         constructor(x) {
 //│           this.#x = x;
 //│           const y = x + 1;
@@ -682,7 +682,7 @@ ij.incY
 //│               #y;
 //│               #x;
 //│               get x() { return this.#x; }
-//│               static $unapply(self) { return {x: self.#x, } }
+//│               static $unapply(self) { return [self.#x, ] }
 //│               constructor(x) {
 //│                 this.#x = x;
 //│                 this.#y = x + 2;
@@ -764,7 +764,7 @@ module J {
 //│             class K {
 //│               #x;
 //│               get x() { return this.#x; }
-//│               static $unapply(self) { return {x: self.#x, } }
+//│               static $unapply(self) { return [self.#x, ] }
 //│               constructor(x) {
 //│                 this.#x = x;
 //│               }
@@ -778,7 +778,7 @@ module J {
 //│           const outer1 = this;
 //│           if (this.#M === undefined) {
 //│             class M extends outer1.K.class {
-//│               static $unapply(self) { return {} }
+//│               static $unapply(self) { return [] }
 //│               constructor() {
 //│                 super(1);
 //│               }
@@ -794,7 +794,7 @@ module J {
 //│             class N extends outer1.L(outer1.K.class) {
 //│               #x;
 //│               get x() { return this.#x; }
-//│               static $unapply(self) { return {x: self.#x, } }
+//│               static $unapply(self) { return [self.#x, ] }
 //│               constructor(x) {
 //│                 super(x + 2);
 //│                 this.#x = x;
@@ -975,7 +975,7 @@ M.N.op(M.P())
 //│           const outer1 = this;
 //│           if (this.#O === undefined) {
 //│             class O {
-//│               static $unapply(self) { return {} }
+//│               static $unapply(self) { return [] }
 //│               constructor() {
 //│               }
 //│             };
@@ -988,7 +988,7 @@ M.N.op(M.P())
 //│           const outer1 = this;
 //│           if (this.#P === undefined) {
 //│             class P {
-//│               static $unapply(self) { return {} }
+//│               static $unapply(self) { return [] }
 //│               constructor() {
 //│               }
 //│             };
@@ -1049,7 +1049,7 @@ module N {
 //│                 const outer2 = this;
 //│                 if (this.#P === undefined) {
 //│                   class P extends outer1.Q.class {
-//│                     static $unapply(self) { return {} }
+//│                     static $unapply(self) { return [] }
 //│                     constructor() {
 //│                       super();
 //│                     }
@@ -1069,7 +1069,7 @@ module N {
 //│           const outer1 = this;
 //│           if (this.#Q === undefined) {
 //│             class Q {
-//│               static $unapply(self) { return {} }
+//│               static $unapply(self) { return [] }
 //│               constructor() {
 //│               }
 //│             };
@@ -1130,7 +1130,7 @@ I(1).J(3).a
 //│         #y;
 //│         #x;
 //│         get x() { return this.#x; }
-//│         static $unapply(self) { return {x: self.#x, } }
+//│         static $unapply(self) { return [self.#x, ] }
 //│         constructor(x) {
 //│           this.#x = x;
 //│           this.#y = x + 1;
@@ -1144,7 +1144,7 @@ I(1).J(3).a
 //│               get z() { return this.#z; }
 //│               #a;
 //│               get a() { return this.#a; }
-//│               static $unapply(self) { return {z: self.#z, } }
+//│               static $unapply(self) { return [self.#z, ] }
 //│               constructor(z) {
 //│                 this.#z = z;
 //│                 this.#a = [
@@ -1214,7 +1214,7 @@ fun mian =
 //│       class A {
 //│         #x;
 //│         get x() { return this.#x; }
-//│         static $unapply(self) { return {x: self.#x, } }
+//│         static $unapply(self) { return [self.#x, ] }
 //│         constructor(x) {
 //│           this.#x = x;
 //│         }
@@ -1267,7 +1267,7 @@ fun mian =
 //│       class A extends B(Object) {
 //│         #x;
 //│         get x() { return this.#x; }
-//│         static $unapply(self) { return {x: self.#x, } }
+//│         static $unapply(self) { return [self.#x, ] }
 //│         constructor(x) {
 //│           super();
 //│           this.#x = x;
@@ -1317,7 +1317,7 @@ fun main(arg) =
 //│       class C {
 //│         #u;
 //│         get u() { return this.#u; }
-//│         static $unapply(self) { return {u: self.#u, } }
+//│         static $unapply(self) { return [self.#u, ] }
 //│         constructor(u) {
 //│           this.#u = u;
 //│         }
@@ -1376,7 +1376,7 @@ class Outer1(outer: Int) {
 //│         #Outer2;
 //│         #outer;
 //│         get outer() { return this.#outer; }
-//│         static $unapply(self) { return {outer: self.#outer, } }
+//│         static $unapply(self) { return [self.#outer, ] }
 //│         constructor(outer1) {
 //│           this.#outer = outer1;
 //│           log(outer1);
@@ -1387,7 +1387,7 @@ class Outer1(outer: Int) {
 //│             class Outer2 {
 //│               #x;
 //│               get x() { return this.#x; }
-//│               static $unapply(self) { return {x: self.#x, } }
+//│               static $unapply(self) { return [self.#x, ] }
 //│               constructor(x) {
 //│                 this.#x = x;
 //│                 const outer2 = x + 1;

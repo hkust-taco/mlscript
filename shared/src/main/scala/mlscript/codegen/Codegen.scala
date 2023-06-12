@@ -865,8 +865,8 @@ final case class JSClassNewDecl(
         buffer += s"  get ${f}() { return this.#${f}; }"
       })
       if (requireUnapply) {
-        val list = fields.foldLeft("")((r, f) => s"${r}$f: self.#$f, ")
-        buffer += s"  static $$unapply(self) { return {$list} }"
+        val list = fields.foldLeft("")((r, f) => s"${r}self.#$f, ")
+        buffer += s"  static $$unapply(self) { return [$list] }"
       }
       buffer += s"  constructor($params) {"
       if (`extends`.isDefined) {

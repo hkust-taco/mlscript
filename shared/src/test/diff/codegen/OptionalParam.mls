@@ -16,7 +16,7 @@ class A(x: Int) {}
 //│       class A {
 //│         #x;
 //│         get x() { return this.#x; }
-//│         static $unapply(self) { return {x: self.#x, } }
+//│         static $unapply(self) { return [self.#x, ] }
 //│         constructor(x) {
 //│           this.#x = x;
 //│         }
@@ -109,7 +109,7 @@ class D(x: Int) {
 //│       class D {
 //│         #x;
 //│         get x() { return this.#x; }
-//│         static $unapply(self) { return {x: self.#x, } }
+//│         static $unapply(self) { return [self.#x, ] }
 //│         constructor(y) {
 //│           this.#x = y + 1;
 //│           const x = this.#x;
@@ -183,7 +183,7 @@ class H extends B {}
 //│       class F extends C {
 //│         #x;
 //│         get x() { return this.#x; }
-//│         static $unapply(self) { return {x: self.#x, } }
+//│         static $unapply(self) { return [self.#x, ] }
 //│         constructor(x) {
 //│           super(x + 1);
 //│           this.#x = x;
@@ -239,7 +239,7 @@ fun f(c) =
 //│ globalThis.f = function f(c) {
 //│   return ((() => {
 //│     let a;
-//│     return a = c, a instanceof F.class ? (({ x }) => x)(F.class.$unapply(a)) : a instanceof G ? 2 : 0;
+//│     return a = c, a instanceof F.class ? (([x]) => x)(F.class.$unapply(a)) : a instanceof G ? 2 : 0;
 //│   })());
 //│ };
 //│ // End of generated code
@@ -348,7 +348,7 @@ fun g(x: Int) =
 //│       class L {
 //│         #y;
 //│         get y() { return this.#y; }
-//│         static $unapply(self) { return {y: self.#y, } }
+//│         static $unapply(self) { return [self.#y, ] }
 //│         constructor(z) {
 //│           this.#y = z + 1;
 //│           const y = this.#y;

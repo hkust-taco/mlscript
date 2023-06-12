@@ -22,7 +22,7 @@ class Lit(n: Int)
 //│         get lhs() { return this.#lhs; }
 //│         #rhs;
 //│         get rhs() { return this.#rhs; }
-//│         static $unapply(self) { return {lhs: self.#lhs, rhs: self.#rhs, } }
+//│         static $unapply(self) { return [self.#lhs, self.#rhs, ] }
 //│         constructor(lhs, rhs) {
 //│           this.#lhs = lhs;
 //│           this.#rhs = rhs;
@@ -39,7 +39,7 @@ class Lit(n: Int)
 //│       class Lit {
 //│         #n;
 //│         get n() { return this.#n; }
-//│         static $unapply(self) { return {n: self.#n, } }
+//│         static $unapply(self) { return [self.#n, ] }
 //│         constructor(n) {
 //│           this.#n = n;
 //│         }
@@ -71,7 +71,7 @@ class Lit(n: Int)
 //│ │ │           get lhs() { return this.#lhs; }
 //│ │ │           #rhs;
 //│ │ │           get rhs() { return this.#rhs; }
-//│ │ │           static $unapply(self) { return {lhs: self.#lhs, rhs: self.#rhs, } }
+//│ │ │           static $unapply(self) { return [self.#lhs, self.#rhs, ] }
 //│ │ │           constructor(lhs, rhs) {
 //│ │ │             this.#lhs = lhs;
 //│ │ │             this.#rhs = rhs;
@@ -88,7 +88,7 @@ class Lit(n: Int)
 //│ │ │         class Lit {
 //│ │ │           #n;
 //│ │ │           get n() { return this.#n; }
-//│ │ │           static $unapply(self) { return {n: self.#n, } }
+//│ │ │           static $unapply(self) { return [self.#n, ] }
 //│ │ │           constructor(n) {
 //│ │ │             this.#n = n;
 //│ │ │           }
@@ -132,10 +132,10 @@ mixin EvalBase {
 //│         const self = this;
 //│         return ((() => {
 //│           let a;
-//│           return (a = e, a instanceof Lit.class ? (({ n }) => n)(Lit.class.$unapply(a)) : a instanceof Add.class ? (({
-//│             lhs: l,
-//│             rhs: r
-//│           }) => self.eval(l) + self.eval(r))(Add.class.$unapply(a)) : (() => {
+//│           return (a = e, a instanceof Lit.class ? (([n]) => n)(Lit.class.$unapply(a)) : a instanceof Add.class ? (([
+//│             l,
+//│             r
+//│           ]) => self.eval(l) + self.eval(r))(Add.class.$unapply(a)) : (() => {
 //│             throw new Error("non-exhaustive case expression");
 //│           })());
 //│         })());
@@ -162,10 +162,10 @@ mixin EvalBase {
 //│ │ │           const self = this;
 //│ │ │           return ((() => {
 //│ │ │             let a;
-//│ │ │             return (a = e, a instanceof Lit.class ? (({ n }) => n)(Lit.class.$unapply(a)) : a instanceof Add.class ? (({
-//│ │ │               lhs: l,
-//│ │ │               rhs: r
-//│ │ │             }) => self.eval(l) + self.eval(r))(Add.class.$unapply(a)) : (() => {
+//│ │ │             return (a = e, a instanceof Lit.class ? (([n]) => n)(Lit.class.$unapply(a)) : a instanceof Add.class ? (([
+//│ │ │               l,
+//│ │ │               r
+//│ │ │             ]) => self.eval(l) + self.eval(r))(Add.class.$unapply(a)) : (() => {
 //│ │ │               throw new Error("non-exhaustive case expression");
 //│ │ │             })());
 //│ │ │           })());
@@ -194,7 +194,7 @@ class Neg<A>(expr: A)
 //│       class Neg {
 //│         #expr;
 //│         get expr() { return this.#expr; }
-//│         static $unapply(self) { return {expr: self.#expr, } }
+//│         static $unapply(self) { return [self.#expr, ] }
 //│         constructor(expr) {
 //│           this.#expr = expr;
 //│         }
@@ -221,7 +221,7 @@ class Neg<A>(expr: A)
 //│ │ │         class Neg {
 //│ │ │           #expr;
 //│ │ │           get expr() { return this.#expr; }
-//│ │ │           static $unapply(self) { return {expr: self.#expr, } }
+//│ │ │           static $unapply(self) { return [self.#expr, ] }
 //│ │ │           constructor(expr) {
 //│ │ │             this.#expr = expr;
 //│ │ │           }
@@ -263,7 +263,7 @@ mixin EvalNeg {
 //│       eval(e) {
 //│         const self = this;
 //│         return ((() => {
-//│           return e instanceof Neg.class ? (({ expr: d }) => 0 - self.eval(d))(Neg.class.$unapply(e)) : super.eval(e);
+//│           return e instanceof Neg.class ? (([d]) => 0 - self.eval(d))(Neg.class.$unapply(e)) : super.eval(e);
 //│         })());
 //│       }
 //│     });
@@ -287,7 +287,7 @@ mixin EvalNeg {
 //│ │ │         eval(e) {
 //│ │ │           const self = this;
 //│ │ │           return ((() => {
-//│ │ │             return e instanceof Neg.class ? (({ expr: d }) => 0 - self.eval(d))(Neg.class.$unapply(e)) : super.eval(e);
+//│ │ │             return e instanceof Neg.class ? (([d]) => 0 - self.eval(d))(Neg.class.$unapply(e)) : super.eval(e);
 //│ │ │           })());
 //│ │ │         }
 //│ │ │       });
@@ -324,7 +324,7 @@ mixin EvalNegNeg {
 //│       eval(e) {
 //│         const self = this;
 //│         return ((() => {
-//│           return e instanceof Neg.class ? (({ expr: tmp0 }) => tmp0 instanceof Neg.class ? (({ expr: d }) => self.eval(d))(Neg.class.$unapply(tmp0)) : super.eval(e))(Neg.class.$unapply(e)) : super.eval(e);
+//│           return e instanceof Neg.class ? (([tmp0]) => tmp0 instanceof Neg.class ? (([d]) => self.eval(d))(Neg.class.$unapply(tmp0)) : super.eval(e))(Neg.class.$unapply(e)) : super.eval(e);
 //│         })());
 //│       }
 //│     });
@@ -348,7 +348,7 @@ mixin EvalNegNeg {
 //│ │ │         eval(e) {
 //│ │ │           const self = this;
 //│ │ │           return ((() => {
-//│ │ │             return e instanceof Neg.class ? (({ expr: tmp0 }) => tmp0 instanceof Neg.class ? (({ expr: d }) => self.eval(d))(Neg.class.$unapply(tmp0)) : super.eval(e))(Neg.class.$unapply(e)) : super.eval(e);
+//│ │ │             return e instanceof Neg.class ? (([tmp0]) => tmp0 instanceof Neg.class ? (([d]) => self.eval(d))(Neg.class.$unapply(tmp0)) : super.eval(e))(Neg.class.$unapply(e)) : super.eval(e);
 //│ │ │           })());
 //│ │ │         }
 //│ │ │       });

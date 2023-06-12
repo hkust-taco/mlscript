@@ -329,39 +329,47 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
   ): JSExpr = branch match {
     case Case(pat, body, rest) =>
       pat match {
-        case Var(tp) => scope.resolveValue(tp) match {
-          case S(_: NuTypeSymbol) | S(CapturedSymbol(_, _: NuTypeSymbol)) =>
-            def uncurry(term: Term)(implicit scope: Scope): JSExpr = term match {
-              case Let(false, Var(alias), Sel(_, Var(name)), body) => body match {
-                case Let(false, _, _: Sel, _) =>
+        case Var(tp) =>
+          def uncurry(term: Term, prev: Int = -1)(implicit scope: Scope, matchingList: Ls[Str]): JSExpr = term match {
+            case Let(false, Var(alias), Sel(rev1, Var(name)), body) =>
+              val pos = matchingList.indexOf(name)
+              val placeholders = List.range(prev + 1, pos).map(i => JSNamePattern(s"$$$i"))
+              body match {
+                case Let(false, _, Sel(rev2, Var(name2)), _) if (rev1 === rev2 && matchingList.indexOf(name2) > matchingList.indexOf(name)) =>
                   val letScope = scope.derive(s"Let")
                   val runtimeName = letScope.declareParameter(alias)
-                  uncurry(body)(letScope) match {
-                    case JSInvoke(JSArrowFn(JSObjectPattern(fields) :: Nil, body), arguments) =>
-                      JSInvoke(JSArrowFn(JSObjectPattern(
-                        (if (runtimeName === name) name -> N else name -> S(JSNamePattern(runtimeName))) :: fields
-                      ) :: Nil, body), arguments)
-                    case t =>
-                      JSInvoke(JSArrowFn(JSObjectPattern(
-                        (if (runtimeName === name) name -> N else name -> S(JSNamePattern(runtimeName))) :: Nil
-                      ) :: Nil, L(t)), JSInvoke(JSIdent(s"$tp.class.$$unapply"), scrut :: Nil) :: Nil)
+                  uncurry(body, pos)(letScope, matchingList) match {
+                    case JSInvoke(JSArrowFn(JSArrayPattern(tail) :: Nil, body), arguments) =>
+                      val patterns = placeholders :+ JSNamePattern(runtimeName)
+                      JSInvoke(JSArrowFn(JSArrayPattern(patterns ++ tail) :: Nil, body), arguments)
+                    case t => throw new AssertionError(s"unexpected error when handling $branch.")
                   }
+                case Let(false, _, Sel(rev2, Var(name2)), _) if (rev1 === rev2) =>
+                  val letScope = scope.derive(s"Let")
+                  val patterns = JSNamePattern(letScope.declareParameter(alias))
+                  JSInvoke(
+                    JSArrowFn(JSArrayPattern(patterns :: Nil) :: Nil, letScope.tempVars `with` uncurry(body, -1)(letScope, matchingList)),
+                    JSInvoke(JSIdent(s"$tp.class.$$unapply"), scrut :: Nil) :: Nil
+                  )
                 case _ =>
                   val letScope = scope.derive(s"Let")
                   val runtimeName = letScope.declareParameter(alias)
+                  val patterns = placeholders :+ JSNamePattern(runtimeName)
                   JSInvoke(
-                    JSArrowFn(JSObjectPattern(
-                      (if (runtimeName === name) name -> N else name -> S(JSNamePattern(runtimeName))) :: Nil
-                    ) :: Nil, letScope.tempVars `with` translateTerm(body)(letScope)),
+                    JSArrowFn(JSArrayPattern(patterns) :: Nil, letScope.tempVars `with` translateTerm(body)(letScope)),
                     JSInvoke(JSIdent(s"$tp.class.$$unapply"), scrut :: Nil) :: Nil
                   )
               }
-              case _ => translateTerm(term)
-            }
-            translateCase(scrut, pat)(scope)(uncurry(body), translateCaseBranch(scrut, rest))
-          case _ =>
-            translateCase(scrut, pat)(scope)(translateTerm(body), translateCaseBranch(scrut, rest))
-        }
+            case _ => translateTerm(term)
+          }
+          scope.resolveValue(tp) match {
+            case S(sym: NuTypeSymbol) if (!sym.isPlainJSClass) =>
+              translateCase(scrut, pat)(scope)(uncurry(body)(scope, sym.matchingFields), translateCaseBranch(scrut, rest))
+            case S(CapturedSymbol(_, sym: NuTypeSymbol)) if (!sym.isPlainJSClass) =>
+              translateCase(scrut, pat)(scope)(uncurry(body)(scope, sym.matchingFields), translateCaseBranch(scrut, rest))
+            case _ =>
+              translateCase(scrut, pat)(scope)(translateTerm(body), translateCaseBranch(scrut, rest))
+          }
         case _ =>
           translateCase(scrut, pat)(scope)(translateTerm(body), translateCaseBranch(scrut, rest))
       }
@@ -772,7 +780,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     val memberList = ListBuffer[RuntimeSymbol]() // pass to the getter of nested types
     val typeList = ListBuffer[Str]()
 
-    val fields = sym.body.collectFields ++
+    val fields = sym.matchingFields ++
       sym.body.collectTypeNames.flatMap(resolveTraitFields)
 
     val ctorParams = sym.ctorParams.fold(

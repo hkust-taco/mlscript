@@ -75,7 +75,7 @@ class A(a: Int) {
 //│       class A {
 //│         #a;
 //│         get a() { return this.#a; }
-//│         static $unapply(self) { return {a: self.#a, } }
+//│         static $unapply(self) { return [self.#a, ] }
 //│         constructor(a) {
 //│           this.#a = a;
 //│           log(a);
@@ -210,7 +210,7 @@ class Baz() {
 //│     const outer = this;
 //│     if (this.#Baz === undefined) {
 //│       class Baz {
-//│         static $unapply(self) { return {} }
+//│         static $unapply(self) { return [] }
 //│         constructor() {
 //│           const x = 123;
 //│           log([
@@ -276,7 +276,7 @@ class Q() {
 //│       class Q {
 //│         #q;
 //│         get q() { return this.#q; }
-//│         static $unapply(self) { return {} }
+//│         static $unapply(self) { return [] }
 //│         constructor() {
 //│           this.#q = 42;
 //│           const q = this.#q;
@@ -328,7 +328,7 @@ class W() {
 //│       class W {
 //│         #x;
 //│         get x() { return this.#x; }
-//│         static $unapply(self) { return {} }
+//│         static $unapply(self) { return [] }
 //│         constructor() {
 //│           this.#x = 42;
 //│           const x = this.#x;

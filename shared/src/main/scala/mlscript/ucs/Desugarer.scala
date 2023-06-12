@@ -787,7 +787,10 @@ class Desugarer extends TypeDefs { self: Typer =>
           printlnUCS(s"• Constructor pattern: $className(${fields.iterator.map(x => s"${x._1} -> ${x._2}").mkString(", ")})")
           // TODO: expand bindings here
           val consequent = rec(cases)(defs ++ fields.iterator.map(_._2))
-          Case(className, mkLetFromFields(scrutinee, fields.toList, consequent), rec2(next))
+          Case(className, mkLetFromFields(scrutinee, fields.toList, consequent match {
+            case _: Let => Blk(consequent :: Nil)
+            case _ => consequent
+          }), rec2(next))
         case MutCase.Literal(literal, cases) :: next =>
           printlnUCS(s"• Literal pattern: $literal")
           Case(literal, rec(cases), rec2(next))
