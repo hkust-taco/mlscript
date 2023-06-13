@@ -165,8 +165,7 @@ class Driver(options: DriverOptions) {
     if (!file.filename.endsWith(".mls") && !file.filename.endsWith(".mlsi") ) { // TypeScript
       val tsprog =
          TSProgram(if (!file.isNodeModule) file.localFilename else file.filename, file.workDir, true, options.tsconfig)
-      tsprog.generate(s"${file.workDir}/${file.interfaceDir}")
-      return true // TODO: check if we really need to re-compile
+      return tsprog.generate(s"${file.workDir}/${file.interfaceDir}")
     }
     parseAndRun(file.filename, {
       case (definitions, _, imports, _) => {

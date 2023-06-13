@@ -29,11 +29,11 @@ class TSProgram(filename: String, workDir: String, uesTopLevelModule: Boolean, t
     Option.when(!TSModuleResolver.isLocal(filename))(s"node_modules/$moduleName/$moduleName.mlsi")
   }
 
-  def generate(targetPath: String): Unit =
+  def generate(targetPath: String): Boolean =
     generate(TSModuleResolver.resolve(fullname), targetPath, resolveTarget(filename))(Nil)
 
-  private def generate(filename: String, targetPath: String, outputOverride: Option[String])(implicit stack: List[String]): Unit = {
-    if (filename.endsWith(".js")) return // if users need to reuse js libs, they need to wrap them with ts signatures.
+  private def generate(filename: String, targetPath: String, outputOverride: Option[String])(implicit stack: List[String]): Boolean = {
+    if (filename.endsWith(".js")) return false // if users need to reuse js libs, they need to wrap them with ts signatures.
     
     val globalNamespace = TSNamespace()
     val sourceFile = TSSourceFile(program.getSourceFile(filename), globalNamespace)

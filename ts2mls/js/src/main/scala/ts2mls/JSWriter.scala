@@ -18,10 +18,12 @@ class JSWriter(filename: String) {
 
   def write(str: String): Unit = buffer ++= str
 
-  def close(): Unit = {
+  def close(): Boolean = {
     val str = buffer.toString()
     val origin = readFile(filename).getOrElse("")
-    if (str =/= origin) writeFile(filename, str)
+    val updated = str =/= origin
+    if (updated) writeFile(filename, str)
+    updated
   }
 }
 
