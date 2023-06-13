@@ -1,0 +1,7 @@
+import "fp-ts/MeetSemilattice"
+
+class MyPartialOrder extends BoundedMeetSemilattice.BoundedMeetSemilattice {
+  // TODO: implement
+}
+
+let order = new MyPartialOrder()

@@ -21,7 +21,7 @@ final case class FileInfo(
   // full filename (related to compiler path, or in node_modules)
   lazy val filename: String =
     if (!isNodeModule) normalize(s"./$workDir/$localFilename")
-    else moduleName
+    else localFilename
 
   val interfaceFilename: String = // interface filename (related to output directory)
     relatedPath.fold(s"$interfaceDir/node_modules/$moduleName/$moduleName.mlsi")(path => s"${normalize(s"$interfaceDir/$path/$moduleName.mlsi")}")

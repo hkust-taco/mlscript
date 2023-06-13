@@ -71,6 +71,7 @@ object DriverDiffTests {
     entry("Output", Some("./tsconfig.json")),
     entry("Output2", Some("./tsconfig.json")),
     entry("MLS2TheMax", Some("./tsconfig.json")),
+    entry("MyPartialOrder", Some("./tsconfig.json"), true), // TODO: type traits in modules
     ts2mlsEntry("Array"),
     ts2mlsEntry("BasicFunctions"),
     ts2mlsEntry("ClassMember"),

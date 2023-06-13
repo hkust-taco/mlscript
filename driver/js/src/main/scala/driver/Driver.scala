@@ -72,6 +72,9 @@ class Driver(options: DriverOptions) {
       case err: Diagnostic =>
         report(err)
         false
+      case _ : Throwable =>
+        report("unexpected error")
+        false
     }
   
   def genPackageJson(): Unit =

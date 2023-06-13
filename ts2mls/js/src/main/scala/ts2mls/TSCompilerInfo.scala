@@ -18,6 +18,7 @@ object TypeScript {
 
   private val ts: js.Dynamic = load("typescript")
   private val json: js.Dynamic = load("json5")
+  private val sys: js.Dynamic = ts.sys
 
   // tsconfig.json
   def parseOption(basePath: String, filename: Option[String]): js.Dynamic = {
@@ -26,7 +27,7 @@ object TypeScript {
       json.parse(content)
     })
     val name = filename.getOrElse("tsconfig.json")
-    ts.parseJsonConfigFileContent(config, ts.sys, basePath, null, name)
+    ts.parseJsonConfigFileContent(config, sys, basePath, null, name)
   }
 
   // package.json
@@ -36,7 +37,7 @@ object TypeScript {
   }
 
   def resolveModuleName(importName: String, containingName: String, config: js.Dynamic): Option[String] = {
-    val res = ts.resolveModuleName(importName, containingName, config, ts.sys)
+    val res = ts.resolveModuleName(importName, containingName, config, sys)
     if (!IsUndefined(res.resolvedModule) && !IsUndefined(res.resolvedModule.resolvedFileName))
       Some(res.resolvedModule.resolvedFileName.toString())
     else None
