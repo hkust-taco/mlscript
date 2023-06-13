@@ -1078,6 +1078,22 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
 }
 
 class JSCompilerBackend extends JSBackend(allowUnresolvedSymbols = false) {
+  def declareJSBuiltin(pgrm: Pgrm): Unit = {
+    val (typeDefs, otherStmts) = pgrm.tops.partitionMap {
+      case ot: Terms => R(ot)
+      case fd: NuFunDef => R(fd)
+      case nd: NuTypeDef => L(nd)
+      case _ => die
+    }
+
+    declareNewTypeDefs(typeDefs, true)(topLevelScope)
+    otherStmts.foreach {
+      case NuFunDef(_, Var(name), _, _) =>
+        topLevelScope.declareStubValue(name)(true)
+      case _ => ()
+    }
+  }
+
   private def generateNewDef(pgrm: Pgrm, topModuleName: Str, exported: Bool): Ls[Str] = {
     val (typeDefs, otherStmts) = pgrm.tops.partitionMap {
       case ot: Terms => R(ot)

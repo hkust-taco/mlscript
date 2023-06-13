@@ -2,7 +2,11 @@ import "../ts/ReadLine.mlsi"
 import "./tools/Concat.mlsi"
 declare module MLS2TheMax() {
   fun ask: (question: Str,) -> Str
+  class Some[A](value: A)
+  class None()
+  fun parse: (s: Str,) -> (None | Some[Num])
   class Game(name: Str) {
+    fun check: (x: Num,) -> unit
     fun loop: unit
     let number: 4
     fun shouldContinue: unit

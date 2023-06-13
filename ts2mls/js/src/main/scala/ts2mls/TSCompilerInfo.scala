@@ -236,6 +236,7 @@ class TSNodeObject(node: js.Dynamic)(implicit checker: TSTypeChecker) extends TS
   lazy val resolvedPath: String = node.resolvedPath.toString()
   lazy val moduleReference = TSNodeObject(node.moduleReference)
   lazy val expression = TSTokenObject(node.expression)
+  lazy val isVarParam = !IsUndefined(node.dotDotDotToken)
 }
 
 object TSNodeObject {

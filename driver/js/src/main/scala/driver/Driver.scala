@@ -64,6 +64,7 @@ class Driver(options: DriverOptions) {
       implicit val extrCtx: Opt[typer.ExtrCtx] = N
       implicit val vars: Map[Str, typer.SimpleType] = Map.empty
       implicit val stack = List[String]()
+      initTyper
       compile(FileInfo(options.path, options.filename, options.interfaceDir), false)
       Driver.totalErrors == 0
     }
@@ -143,6 +144,17 @@ class Driver(options: DriverOptions) {
     typer.expandType(sim)
   }
 
+  private lazy val jsBuiltinDecs = Driver.jsBuiltinPaths.map(path => parseAndRun(path, {
+    case (_, declarations, _, _) => declarations
+  }))
+
+  private def initTyper(
+    implicit ctx: Ctx,
+    raise: Raise,
+    extrCtx: Opt[typer.ExtrCtx],
+    vars: Map[Str, typer.SimpleType]
+  ) = jsBuiltinDecs.foreach(lst => `type`(TypingUnit(lst, Nil)))
+
   private def resolveTarget(file: FileInfo, imp: String) =
     if ((imp.startsWith("./") || imp.startsWith("../")) && !imp.endsWith(".mls") && !imp.endsWith(".mlsi")) {
       val tsPath = TypeScript.getOutputFileNames(s"${TSModuleResolver.dirname(file.filename)}/$imp", config)
@@ -196,6 +208,7 @@ class Driver(options: DriverOptions) {
           var newCtx: Ctx = Ctx.init
           val newExtrCtx: Opt[typer.ExtrCtx] = N
           val newVars: Map[Str, typer.SimpleType] = Map.empty
+          initTyper
           val newFilename = file.`import`(dp)
           importedModule += newFilename.filename
           compile(newFilename, true)(newCtx, raise, newExtrCtx, newVars, stack :+ file.filename)
@@ -249,6 +262,7 @@ class Driver(options: DriverOptions) {
     exported: Boolean
   ): Unit = try {
     val backend = new JSCompilerBackend()
+    jsBuiltinDecs.foreach(lst => backend.declareJSBuiltin(Pgrm(lst)))
     val lines = backend(program, moduleName, imports, exported)
     val code = lines.mkString("", "\n", "\n")
     saveToFile(filename, code)
@@ -259,6 +273,11 @@ class Driver(options: DriverOptions) {
 
 object Driver {
   def apply(options: DriverOptions) = new Driver(options)
+
+  private val jsBuiltinPaths = List(
+    "./ts2mls/js/src/test/diff/ES5.mlsi",
+    "./ts2mls/js/src/test/diff/Dom.mlsi"
+  )
 
   private def report(msg: String): Unit =
     System.err.println(msg)
@@ -276,13 +295,13 @@ object Driver {
     val sctx = Message.mkCtx(diag.allMsgs.iterator.map(_._1), "?")
     val headStr = diag match {
       case ErrorReport(msg, loco, src) =>
+        totalErrors += 1
         src match {
           case Diagnostic.Lexing =>
             s"╔══[LEXICAL ERROR] "
           case Diagnostic.Parsing =>
             s"╔══[PARSE ERROR] "
           case _ => // TODO customize too
-              totalErrors += 1
             s"╔══[ERROR] "
         }
       case WarningReport(msg, loco, src) =>

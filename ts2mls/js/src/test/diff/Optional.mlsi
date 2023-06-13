@@ -1,8 +1,8 @@
 export declare module Optional {
   fun buildName: ((firstName: Str) => Str) & ((firstName: Str, lastName: Str) => Str)
   fun buildName2: ((firstName: Str) => Str) & ((firstName: Str, lastName: Str) => Str)
-  fun buildName3(firstName: Str, lastName: MutArray<Str>): Str
-  fun buildName4(firstName: Str, lastName: MutArray<anything>): Str
+  fun buildName3(firstName: Str, lastName: Str): Str
+  fun buildName4(firstName: Str, lastName: anything): Str
   declare trait SquareConfig {
     val color: (Str) | (undefined)
     val width: (Num) | (undefined)

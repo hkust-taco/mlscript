@@ -24,6 +24,7 @@ object TSTypeGenerationTest {
     "./ClassMember.ts",
     "./Cycle1.ts",
     "./Dec.d.ts",
+    "./Dom.d.ts",
     "./Enum.ts",
     "./ES5.d.ts",
     "./Export.ts",
@@ -43,5 +44,5 @@ object TSTypeGenerationTest {
     "./Variables.ts",
   )
 
-  private val directlyImportedSet = Set[String]("./ES5.d.ts")
+  private val directlyImportedSet = Set[String]("./ES5.d.ts", "./Dom.d.ts")
 }

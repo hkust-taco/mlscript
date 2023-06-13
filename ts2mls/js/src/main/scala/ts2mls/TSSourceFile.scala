@@ -196,18 +196,24 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
   private def getFunctionType(node: TSNodeObject)(implicit ns: TSNamespace): List[TSFunctionType] = {
     val res = getObjectType(node.returnType)
     val tv = getTypeParameters(node)
+    def eraseVarParam(tp: TSType, erase: Boolean) = tp match {
+      case TSArrayType(eleType) if (erase) => eleType
+      case _ => tp
+    }
     node.parameters.foldLeft(TSFunctionType(Nil, res, tv) :: Nil)((funs, p) => (
       // in typescript, you can use `this` to explicitly specifies the callee
       // but it never appears in the final javascript file
       if (p.symbol.escapedName === "this") funs
       else if (p.isOptionalParameter) funs.lastOption match {
         case Some(TSFunctionType(params, res, tv)) =>
-          funs :+ TSFunctionType(params :+ TSParameterType(p.symbol.escapedName, getObjectType(p.symbolType)), res, tv)
+          funs :+ TSFunctionType(params :+
+            TSParameterType(p.symbol.escapedName, eraseVarParam(getObjectType(p.symbolType), p.isVarParam)), res, tv)
         case _ => throw new AssertionError("empty function type.")
       }
       else funs.headOption match {
         case Some(TSFunctionType(params, res, tv)) =>
-          TSFunctionType(params :+ TSParameterType(p.symbol.escapedName, getObjectType(p.symbolType)), res, tv) :: Nil
+          TSFunctionType(params :+
+            TSParameterType(p.symbol.escapedName, eraseVarParam(getObjectType(p.symbolType), p.isVarParam)), res, tv) :: Nil
         case _ => throw new AssertionError("empty function type.")
       })
     )

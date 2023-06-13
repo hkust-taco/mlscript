@@ -2,8 +2,17 @@ import "../ts/ReadLine.ts"
 import "./tools/Concat.mls"
 
 fun ask(question: Str) =
-  ReadLine.putStrLn(question)
+  console.log(question)
   ReadLine.getStrLn()
+
+class Some<A>(value: A)
+class None()
+
+fun parse(s: Str) =
+  let i = parseInt(s)
+  if
+    isNaN(i) then None()
+    _ then Some(i)
 
 class Game(name: Str) {
   let number = 4 // fixed, or we can not apply diff test
@@ -12,19 +21,24 @@ class Game(name: Str) {
     let ans = ask("Do you want to continue?")
     if
       ans === "y" then loop
-      _ then ReadLine.putStrLn("Bye!")
+      _ then console.log("Bye!")
+
+  fun check(x: Num) =
+    if
+      x == number then console.log(Concat.concat2("You guessed right, ", name))
+      _ then console.log(Concat.concat2("You guessed wrong, ", name))
 
   fun loop =
     let guess = ask(Concat.concat3("Dear ", name, ", please guess a number from 1 to 5"))
-    if
-      ReadLine.parse(guess) == number then ReadLine.putStrLn(Concat.concat2("You guessed right, ", name))
-      _ then ReadLine.putStrLn(Concat.concat2("You guessed wrong, ", name))
+    if parse(guess) is
+      Some(i) then check(i)
+      _ then console.log("Not a number!")
     shouldContinue
 }
 
 fun main =
   let name = ask("What is your name?")
-  ReadLine.putStrLn(Concat.concat3("Hello, ", name, " welcome to the game!"))
+  console.log(Concat.concat3("Hello, ", name, " welcome to the game!"))
   Game(name).loop
 
 main
