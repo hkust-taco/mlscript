@@ -34,7 +34,7 @@ module Test<A> {
 //│   fun foo: A -> A
 //│   fun poly0: forall 'a. 'a -> 'a
 //│   fun poly1: forall 'a0. 'a0 -> 'a0
-//│   fun poly2: 'a1 -> 'a1
+//│   fun poly2: forall 'a1. 'a1 -> 'a1
 //│ }
 
 Test.foo
@@ -63,7 +63,7 @@ Test.poly1
 //│     = undefined
 
 Test.poly2
-//│ 'a -> 'a
+//│ forall 'a. 'a -> 'a
 //│ res
 //│     = [Function: id]
 

@@ -159,25 +159,12 @@ class Final extends Derived1[(Int, Int)], Derived2 {
 //│   fun foo: (123, 456,)
 //│ }
 
-:e
 class Final extends Derived1[(Int, Int)], Derived2 {
   fun foo = (123, 456)
   fun bar([x, y]) = [y, x]
 }
-//│ ╔══[ERROR] Type mismatch in definition of method bar:
-//│ ║  l.165: 	  fun bar([x, y]) = [y, x]
-//│ ║         	      ^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `Str` is not an instance of `Int`
-//│ ║  l.136: 	trait Derived2 extends Base[(Int | Str, Int | Str)]
-//│ ║         	                                   ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.163: 	class Final extends Derived1[(Int, Int)], Derived2 {
-//│ ║         	                                   ^^^
-//│ ╟── from reference:
-//│ ║  l.165: 	  fun bar([x, y]) = [y, x]
-//│ ╙──       	                        ^
 //│ class Final extends Base, Derived1, Derived2 {
-//│   fun bar: (Int, Int,) -> (Int | Str, Int | Str,)
+//│   fun bar: forall 'a 'b. ('a, 'b,) -> ('b, 'a,)
 //│   fun foo: (123, 456,)
 //│ }
 

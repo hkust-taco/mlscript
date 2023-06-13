@@ -45,7 +45,9 @@ final case class MethodDef[RHS <: Term \/ Type](
 
 sealed trait NameRef extends Located { val name: Str; def toVar: Var }
 
-sealed abstract class DeclKind(val str: Str)
+sealed abstract class OuterKind(val str: Str)
+case object Block extends OuterKind("block")
+sealed abstract class DeclKind(str: Str) extends OuterKind(str)
 case object Val extends DeclKind("value")
 sealed abstract class TypeDefKind(str: Str) extends DeclKind(str)
 sealed trait ObjDefKind
@@ -65,7 +67,7 @@ final case class Tup(fields: Ls[Opt[Var] -> Fld])                    extends Ter
 final case class Rcd(fields: Ls[Var -> Fld])                         extends Term
 final case class Sel(receiver: Term, fieldName: Var)                 extends Term
 final case class Let(isRec: Bool, name: Var, rhs: Term, body: Term)  extends Term
-final case class Blk(stmts: Ls[Statement])                           extends Term with BlkImpl
+final case class Blk(stmts: Ls[Statement])                           extends Term with BlkImpl with Outer
 final case class Bra(rcd: Bool, trm: Term)                           extends Term
 final case class Asc(trm: Term, ty: Type)                            extends Term
 final case class Bind(lhs: Term, rhs: Term)                          extends Term
@@ -180,6 +182,8 @@ final case class Signature(members: Ls[NuDecl], result: Opt[Type]) extends TypeL
 
 sealed abstract class NuDecl extends TypeLike with Statement with NuDeclImpl
 
+sealed trait Outer { def kind: OuterKind }
+
 final case class NuTypeDef(
   kind: TypeDefKind,
   nme: TypeName,
@@ -192,7 +196,7 @@ final case class NuTypeDef(
   thisAnnot: Opt[Type],
   body: TypingUnit
 )(val declareLoc: Opt[Loc], val exportLoc: Opt[Loc], val abstractLoc: Opt[Loc])
-  extends NuDecl with Statement {
+  extends NuDecl with Statement with Outer {
     def isPlainJSClass: Bool = params.isEmpty
   }
 
@@ -201,7 +205,7 @@ final case class NuFunDef(
   nme: Var,
   tparams: Ls[TypeName],
   rhs: Term \/ Type,
-)(val declareLoc: Opt[Loc], val exportLoc: Opt[Loc], val signature: Opt[NuFunDef]) extends NuDecl with DesugaredStatement {
+)(val declareLoc: Opt[Loc], val exportLoc: Opt[Loc], val signature: Opt[NuFunDef], val outer: Opt[Outer]) extends NuDecl with DesugaredStatement {
   val body: Located = rhs.fold(identity, identity)
   def kind: DeclKind = Val
   val abstractLoc: Opt[Loc] = None

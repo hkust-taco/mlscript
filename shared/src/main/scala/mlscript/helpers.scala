@@ -918,6 +918,7 @@ trait StatementImpl extends Located { self: Statement =>
 }
 
 trait BlkImpl { self: Blk =>
+  def kind: Block.type = Block
   
   def flatten: Blk = Blk(stmts.flatMap {
     case b: Blk => b.flatten.stmts

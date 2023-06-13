@@ -9,25 +9,20 @@
   <h1>ML<sub>script</sub> online demonstration</h1>
   <div id="content">
     <textarea id="mlscript-input" class="panel" spellcheck="false">
-class Left[A]: { value: A }
-def Left value = Left{ value }
+type List[A] = Cons[A] | Nil
 
-class Right[A]: { value: A }
-def Right value = Right{ value }
+class Cons[out A](head: A, tail: List[A])
+module Nil { fun size = 0 }
 
-def test x = case x of
-  { Left -> x.value
-  | Right -> "nope"
-  }
+fun map(f, xs) = if xs is
+  Cons(h, t) then Cons(f(h), map(f, t))
+  Nil        then Nil
 
-def tmp = test (if true then Left 1 else Right 2)
+let c = Cons(id, Cons(([x, y]) => [y, x], Nil))
 
-case tmp of { int -> tmp | string -> 0 }
+let m1 = map(f => f([0, 1]), c)
 
-def f: (int & 'a) -> (int & 'a) -> 'a
-def f a b = if gt a b then a else b
-
-f 1 2
+let m2 = map(f => f([true, false]), c)
 </textarea>
 <!-- let rec recursive_monster = fun x ->
   { thing = x;

@@ -121,10 +121,9 @@ object Main {
           val typer = new mlscript.Typer(
             dbg = false,
             verbose = false,
-            explainErrors = false
-          ) {
-            newDefs = true
-          }
+            explainErrors = false,
+            newDefs = true,
+          )
           
           import typer._
 
@@ -133,7 +132,7 @@ object Main {
           implicit val extrCtx: Opt[typer.ExtrCtx] = N
 
           val vars: Map[Str, typer.SimpleType] = Map.empty
-          val tpd = typer.typeTypingUnit(tu, topLevel = true)(ctx.nest, raise, vars)
+          val tpd = typer.typeTypingUnit(tu, N)(ctx.nest, raise, vars)
           
           object SimplifyPipeline extends typer.SimplifyPipeline {
             def debugOutput(msg: => Str): Unit =

@@ -51,8 +51,8 @@ class Some<A>(value: A) {
 }
 //│ class Some[A](value: A) {
 //│   fun get: A
-//│   fun map: (A -> 'A) -> Some['A]
-//│   fun map_A: (A -> 'A0) -> Some['A0]
+//│   fun map: forall 'A. (A -> 'A) -> Some['A]
+//│   fun map_A: forall 'A0. (A -> 'A0) -> Some['A0]
 //│   fun toArray: (A,)
 //│ }
 
@@ -80,7 +80,7 @@ s.toArray
 
 
 s.map
-//│ (1 -> 'A) -> Some['A]
+//│ forall 'A. (1 -> 'A) -> Some['A]
 //│ res
 //│     = [Function: map]
 
@@ -91,7 +91,7 @@ s.map(succ)
 
 
 s.map_A
-//│ (1 -> 'A) -> Some['A]
+//│ forall 'A. (1 -> 'A) -> Some['A]
 //│ res
 //│     = [Function: map_A]
 
@@ -244,7 +244,7 @@ class Test<A>(n: A) {
 //│ class Test[A](n: A) {
 //│   fun foo: A
 //│   fun foo1: (x: A,) -> A
-//│   fun id: 'a -> 'a
+//│   fun id: forall 'a. 'a -> 'a
 //│ }
 
 Test(1)
@@ -280,7 +280,7 @@ t : Test<'a>
 //│     = Test {}
 
 t.id
-//│ 'a -> 'a
+//│ forall 'a. 'a -> 'a
 //│ res
 //│     = [Function: id]
 

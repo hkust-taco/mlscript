@@ -10,7 +10,7 @@
   <div id="content">
     <textarea id="mlscript-input" class="panel" spellcheck="false">
 class Add[E](lhs: E, rhs: E)
-class Lit(n: int)
+class Lit(n: Int)
 class Neg[E](expr: E)
 
 let add11 = Add(Lit(1), Lit(2))
@@ -55,7 +55,7 @@ let res2 = TestLang2.eval(add2negadd11)
   <div class="panel">
 class Some[A](value: A)<br/>
 <br/>
-mixin Foo { fun foo: int = 1 }<br/>
+mixin Foo { fun foo: Int = 1 }<br/>
 mixin Bar { fun foo = Some(super.foo) }<br/>
 module ClsFoo extends Foo, Bar, Bar<br/>
 <br/>
@@ -81,7 +81,7 @@ mixin CompareNested {<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;else rhs.parent is None<br/>
 }<br/>
 <br/>
-class MyPoint(x: int, y: int, color: string, parent: Some[MyPoint] | None)<br/>
+class MyPoint(x: Int, y: Int, color: Str, parent: Some[MyPoint] | None)<br/>
 <br/>
 module CompareMyPoint extends ComparePoint, CompareColored, CompareNested<br/>
 <br/>

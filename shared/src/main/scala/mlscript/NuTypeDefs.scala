@@ -463,10 +463,12 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   
   /** Type checks a typing unit, which is a sequence of possibly-mutually-recursive type and function definitions
    *  interleaved with plain statements. */
-  def typeTypingUnit(tu: TypingUnit, topLevel: Bool)
+  def typeTypingUnit(tu: TypingUnit, outer: Opt[Outer])
         (implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType]): TypedTypingUnit =
       trace(s"${ctx.lvl}. Typing $tu")
   {
+    val topLevel: Bool = outer.isEmpty
+    
     // println(s"vars ${vars}")
     
     val named = mutable.Map.empty[Str, LazyTypeInfo]
@@ -499,9 +501,9 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
             assert(fd.signature.isEmpty)
             funSigs.get(fd.nme.name) match {
               case S(sig) =>
-                fd.copy()(fd.declareLoc, fd.exportLoc, S(sig))
+                fd.copy()(fd.declareLoc, fd.exportLoc, S(sig), outer)
               case _ =>
-                fd
+                fd.copy()(fd.declareLoc, fd.exportLoc, fd.signature, outer)
             }
           case td: NuTypeDef =>
             if (td.nme.name in reservedTypeNames)
@@ -530,7 +532,14 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     ctx ++= infos
     
     // * Complete typing of block definitions and add results to context
-    val completedInfos = infos.mapValues(_.complete() |> (res => CompletedTypeInfo(res)))
+    val completedInfos = infos.mapValues(_.complete() match {
+      case res: TypedNuFun =>
+        // * Generalize functions as they are typed.
+        // * Note: eventually we'll want to first reorder their typing topologically so as to maximize polymorphism.
+        ctx += res.name -> VarSymbol(res.typeSignature, res.fd.nme)
+        CompletedTypeInfo(res)
+      case res => CompletedTypeInfo(res)
+    })
     ctx ++= completedInfos
     
     // * Type the block statements
@@ -939,7 +948,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                           // * they're annotated with a type signature.
                           // * Otherwise, we get too much extrusion and cycle check failures
                           // * especially in the context of open recursion and mixins.
-                          if (ctx.lvl === 1 || fd.signature.nonEmpty)
+                          if (ctx.lvl === 1 || fd.signature.nonEmpty || fd.outer.exists(_.kind isnt Mxn))
                             typeTerm(body)
                           else outer_ctx |> { implicit ctx: Ctx =>
                             println(s"Not typing polymorphicall (cf. not top level or not annotated)")
@@ -1024,7 +1033,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       val fd = NuFunDef((a.fd.isLetRec, b.fd.isLetRec) match {
                         case (S(a), S(b)) => S(a || b)
                         case _ => N // if one is fun, then it will be fun
-                      }, a.fd.nme, a.fd.tparams, a.fd.rhs)(a.fd.declareLoc, a.fd.exportLoc, N)
+                      }, a.fd.nme, a.fd.tparams, a.fd.rhs)(a.fd.declareLoc, a.fd.exportLoc, N, a.fd.outer orElse b.fd.outer)
                       S(TypedNuFun(a.level, fd, a.bodyType & b.bodyType)(a.isImplemented || b.isImplemented))
                     case (a: NuParam, S(b: NuParam)) => 
                       S(NuParam(a.nme, a.ty && b.ty)(a.level))
@@ -1125,7 +1134,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       case _ =>
                     }
                     
-                    val ttu = typeTypingUnit(td.body, topLevel = false)
+                    val ttu = typeTypingUnit(td.body, S(td))
                     
                     val allMembers = (
                       trtMembers.iterator.map(d => d.name -> d)
@@ -1288,7 +1297,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     
                     ctx += "this" -> VarSymbol(thisTV, Var("this"))
                     ctx += "super" -> VarSymbol(thisType, Var("super"))
-                    val ttu = typeTypingUnit(td.body, topLevel = false)
+                    val ttu = typeTypingUnit(td.body, S(td))
                     
                     val (baseClsImplemMembers, baseClsIfaceMembers) =
                       baseClsMembers.partition(_.isImplemented)
@@ -1360,7 +1369,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     val superTV = freshVar(provTODO, N, S("super"))
                     ctx += "this" -> VarSymbol(thisTV, Var("this"))
                     ctx += "super" -> VarSymbol(superTV, Var("super"))
-                    val ttu = typeTypingUnit(td.body, topLevel = false)
+                    val ttu = typeTypingUnit(td.body, S(td))
                     val impltdMems = ttu.implementedMembers
                     val signs = typedSignatureMembers.map(_._2)
                     overrideCheck(impltdMems, signs)

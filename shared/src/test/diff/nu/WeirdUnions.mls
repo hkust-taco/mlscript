@@ -58,3 +58,16 @@ f("abc", "abc")
 
 
 
+// * Mismatched argument list sizes yields surprising results:
+if true then id else [x, y] => [y, x]
+//│ nothing -> (nothing, nothing,)
+//│ res
+//│     = [Function: id]
+
+// * Note: the correct version:
+if true then id else ([x, y]) => [y, x]
+//│ forall 'a. (('b, 'c,) & 'a) -> (('c, 'b,) | 'a)
+//│ res
+//│     = [Function: id]
+
+

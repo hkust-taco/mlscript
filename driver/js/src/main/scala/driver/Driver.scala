@@ -138,7 +138,7 @@ class Driver(options: DriverOptions) {
     extrCtx: Opt[typer.ExtrCtx],
     vars: Map[Str, typer.SimpleType]
   ) = {
-    val tpd = typer.typeTypingUnit(tu, topLevel = true)
+    val tpd = typer.typeTypingUnit(tu, N)
     val sim = SimplifyPipeline(tpd, all = false)
     typer.expandType(sim)
   }

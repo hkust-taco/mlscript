@@ -113,7 +113,7 @@ class Goodstatt(size: 1 | 2) extends RefinedStadt {
     fun foo(t) = if t && true then this.size else 0
 }
 //│ class Goodstatt(size: 1 | 2) extends RefinedStadt, Stadt {
-//│   fun bar: 'a -> 'a
+//│   fun bar: forall 'a. 'a -> 'a
 //│   fun foo: Bool -> (0 | 1 | 2)
 //│   let name: "good"
 //│ }

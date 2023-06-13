@@ -3,11 +3,18 @@
 
 
 type List[out A] = Cons[A] | Nil
-class Cons[out A](head: A, tail: List[A])
-module Nil
+class Cons[out A](head: A, tail: List[A]) {
+  fun size : Int
+  fun size = 1 + tail.size
+}
+module Nil { fun size = 0 }
 //│ type List[A] = Cons[A] | Nil
-//│ class Cons[A](head: A, tail: List[A])
-//│ module Nil
+//│ class Cons[A](head: A, tail: List[A]) {
+//│   fun size: Int
+//│ }
+//│ module Nil {
+//│   fun size: 0
+//│ }
 
 
 
