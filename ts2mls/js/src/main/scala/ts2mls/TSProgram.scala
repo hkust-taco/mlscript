@@ -33,6 +33,8 @@ class TSProgram(filename: String, workDir: String, uesTopLevelModule: Boolean, t
     generate(TSModuleResolver.resolve(fullname), targetPath, resolveTarget(filename))(Nil)
 
   private def generate(filename: String, targetPath: String, outputOverride: Option[String])(implicit stack: List[String]): Unit = {
+    if (filename.endsWith(".js")) return // if users need to reuse js libs, they need to wrap them with ts signatures.
+    
     val globalNamespace = TSNamespace()
     val sourceFile = TSSourceFile(program.getSourceFile(filename), globalNamespace)
     val importList = sourceFile.getImportList
@@ -68,7 +70,7 @@ class TSProgram(filename: String, workDir: String, uesTopLevelModule: Boolean, t
     
     otherList.foreach(imp => {
       val name = TSImport.getModuleName(imp.filename, true)
-      if (!imported(name)) {
+      if (!imported(name) && !resolve(imp.filename).endsWith(".js")) {
         imported += name
         writer.writeln(s"""import "$name.mlsi"""")
       }

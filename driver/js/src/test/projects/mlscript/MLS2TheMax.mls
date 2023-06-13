@@ -1,0 +1,30 @@
+import "../ts/ReadLine.ts"
+import "./tools/Concat.mls"
+
+fun ask(question: Str) =
+  ReadLine.putStrLn(question)
+  ReadLine.getStrLn()
+
+class Game(name: Str) {
+  let number = 4 // fixed, or we can not apply diff test
+
+  fun shouldContinue =
+    let ans = ask("Do you want to continue?")
+    if
+      ans === "y" then loop
+      _ then ReadLine.putStrLn("Bye!")
+
+  fun loop =
+    let guess = ask(Concat.concat3("Dear ", name, ", please guess a number from 1 to 5"))
+    if
+      ReadLine.parse(guess) == number then ReadLine.putStrLn(Concat.concat2("You guessed right, ", name))
+      _ then ReadLine.putStrLn(Concat.concat2("You guessed wrong, ", name))
+    shouldContinue
+}
+
+fun main =
+  let name = ask("What is your name?")
+  ReadLine.putStrLn(Concat.concat3("Hello, ", name, " welcome to the game!"))
+  Game(name).loop
+
+main

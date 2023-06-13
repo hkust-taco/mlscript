@@ -189,7 +189,7 @@ class Driver(options: DriverOptions) {
               isInterfaceOutdate(file.filename, s"${options.path}/${file.interfaceFilename}"))
           }
         })
-        val needRecomp = otherList.foldLeft(cycleRecomp)((nr, dp) => nr || {
+        val needRecomp = otherList.foldLeft(cycleRecomp)((nr, dp) => {
           // We need to create another new context when compiling other files
           // e.g. A -> B, A -> C, B -> D, C -> D, -> means "depends on"
           // If we forget to add `import "D.mls"` in C, we need to raise an error
@@ -200,7 +200,7 @@ class Driver(options: DriverOptions) {
           val newFilename = file.`import`(dp)
           importedModule += newFilename.filename
           compile(newFilename, true)(newCtx, raise, newExtrCtx, newVars, stack :+ file.filename)
-        })
+        } || nr)
 
         if (options.force || needRecomp || isInterfaceOutdate(file.filename, mlsiFile)) {
           System.out.println(s"compiling ${file.filename}...")
@@ -221,7 +221,7 @@ class Driver(options: DriverOptions) {
           if (file.filename.endsWith(".mls")) {
             def generateInterface(moduleName: Option[String], tu: TypingUnit) = {
               val exp = `type`(tu)
-              packTopModule(moduleName, exp.showIn(ShowCtx.mk(exp :: Nil), 0))
+              packTopModule(moduleName, exp.show)
             }
 
             val expStr = cycleSigs.foldLeft("")((s, tu) => s"$s${generateInterface(None, tu)}") +

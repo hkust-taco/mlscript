@@ -1,0 +1,7 @@
+export declare module ReadLine {
+  val lines: MutArray<Str>
+  val i: Num
+  fun getStrLn(): Str
+  fun putStrLn(str: Str): unit
+  fun parse(s: Str): Num
+}

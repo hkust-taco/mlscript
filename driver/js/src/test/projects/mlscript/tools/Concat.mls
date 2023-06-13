@@ -1,0 +1,2 @@
+export fun concat2(s1, s2) = concat(s1)(s2)
+export fun concat3(s1, s2, s3) = concat2(concat2(s1, s2), s3)

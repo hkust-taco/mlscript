@@ -70,6 +70,7 @@ object DriverDiffTests {
     entry("TS", Some("./tsconfig.json"), true), // TODO: type members
     entry("Output", Some("./tsconfig.json")),
     entry("Output2", Some("./tsconfig.json")),
+    entry("MLS2TheMax", Some("./tsconfig.json")),
     ts2mlsEntry("Array"),
     ts2mlsEntry("BasicFunctions"),
     ts2mlsEntry("ClassMember"),
