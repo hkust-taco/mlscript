@@ -33,7 +33,7 @@ class Driver(options: DriverOptions) {
   }
 
   private val importedModule = MutSet[String]()
-  private val config = TypeScript.parseOption(options.path, options.tsconfig)
+  private implicit val config = TypeScript.parseOption(options.path, options.tsconfig)
 
   import TSPathResolver.{normalize, isLocal, dirname}
 

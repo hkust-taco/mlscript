@@ -1,5 +1,6 @@
 package driver
 
+import scala.scalajs.js
 import ts2mls.{TypeScript, TSImport}
 import ts2mls.TSPathResolver
 
@@ -8,7 +9,7 @@ final case class FileInfo(
   localFilename: String, // filename (related to work dir, or in node_modules)
   interfaceDir: String, // .mlsi file directory (related to output dir)
 ) {
-  import TSPathResolver.{normalize, isLocal, dirname, basename}
+  import TSPathResolver.{normalize, isLocal, dirname, basename, extname}
 
   val relatedPath: Option[String] = // related path (related to work dir, or none if it is in node_modules)
     if (isLocal(localFilename)) Some(normalize(dirname(localFilename)))
@@ -22,22 +23,28 @@ final case class FileInfo(
   // full filename (related to compiler path, or in node_modules)
   lazy val filename: String =
     if (!isNodeModule) normalize(s"./$workDir/$localFilename")
-    else localFilename
+    else localFilename.replace(extname(localFilename), "")
 
-  val interfaceFilename: String = // interface filename (related to output directory)
+  private def resolveNodeModule(implicit config: js.Dynamic) =
+    if (!isNodeModule) throw new AssertionError(s"$filename is not a node module")
+    else TypeScript.resolveModuleName(filename, "", config).getOrElse(
+      throw new AssertionError(s"can not find node module $filename")
+    )
+
+  def interfaceFilename(implicit config: js.Dynamic): String = // interface filename (related to output directory)
     relatedPath.fold(
-      s"$interfaceDir/${TSImport.createInterfaceForNode(localFilename)}"
+      s"$interfaceDir/${dirname(TSImport.createInterfaceForNode(resolveNodeModule))}/${moduleName}.mlsi"
     )(path => s"${normalize(s"$interfaceDir/$path/$moduleName.mlsi")}")
   
   val jsFilename: String =
     relatedPath.fold(moduleName)(path => normalize(s"$path/$moduleName.js"))
 
-  def `import`(path: String): FileInfo =
+  def `import`(path: String)(implicit config: js.Dynamic): FileInfo =
     if (isLocal(path))
       relatedPath match {
         case Some(value) => FileInfo(workDir, s"./${normalize(s"$value/$path")}", interfaceDir)
         case _ =>
-          val currentPath = TSPathResolver.dirname(TSImport.createInterfaceForNode(localFilename))
+          val currentPath = dirname(TSImport.createInterfaceForNode(resolveNodeModule))
           FileInfo(workDir, s"./$currentPath/$path", interfaceDir)
       }
     else FileInfo(workDir, path, interfaceDir)

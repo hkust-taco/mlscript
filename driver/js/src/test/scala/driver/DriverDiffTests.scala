@@ -75,7 +75,7 @@ object DriverDiffTests {
     ts2mlsEntry("Array"),
     ts2mlsEntry("BasicFunctions"),
     ts2mlsEntry("ClassMember"),
-    ts2mlsEntry("Cycle1", true), // TODO: ???
+    ts2mlsEntry("Cycle1", true), // TODO: Module `Cycle1` is not supported yet.
     ts2mlsEntry("Dec"),
     ts2mlsEntry("Enum"),
     ts2mlsEntry("ES5"),

@@ -37,12 +37,15 @@ trait TSImport { self =>
 }
 
 object TSImport {
-  def createInterfaceForNode(path: String): String = {
-    val moduleName = TSPathResolver.basename(path)
-    val topLevelModule =
-      if (path.contains("/")) path.substring(0, path.indexOf("/"))
-      else moduleName
-    s"node_modules/$topLevelModule/$moduleName.mlsi"
+  def createInterfaceForNode(fullpath: String): String = {
+    import TSPathResolver.{basename, dirname}
+    val moduleName = basename(fullpath)
+    val dir = dirname(fullpath)
+    val nodeName = "node_modules"
+    val related =
+      if (dir.contains(nodeName)) dir.substring(dir.lastIndexOf(nodeName) + nodeName.length())
+      else throw new AssertionError(s"$fullpath is not related to $nodeName.")
+    s"$nodeName/$related/$moduleName.mlsi"
   }
 }
 

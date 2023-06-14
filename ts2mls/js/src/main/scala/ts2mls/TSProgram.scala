@@ -45,12 +45,13 @@ class TSProgram(filename: String, workDir: String, uesTopLevelModule: Boolean, t
     val (cycleList, otherList) =
       importList.partition(imp => stack.contains(`import`(imp.filename)))
 
-    otherList.foreach(imp =>
-      generate(`import`(imp.filename),
+    otherList.foreach(imp => {
+      val fullname = `import`(imp.filename)
+      generate(fullname,
         if (isLocal(imp.filename)) normalize(s"${dirname(outputFilename)}/${basename(imp.filename)}.mlsi")
-        else TSImport.createInterfaceForNode(imp.filename)
+        else TSImport.createInterfaceForNode(fullname)
       )(filename :: stack)
-    )
+    })
 
     var writer = JSWriter(outputFilename)
     val imported = new HashSet[String]()
