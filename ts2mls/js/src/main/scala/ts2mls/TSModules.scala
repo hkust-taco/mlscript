@@ -10,11 +10,11 @@ trait TSImport { self =>
   val filename: String
 
   def resolveTypeAlias(name: String): Option[String] = self match {
-    case TSFullImport(filename, _) => Some(s"${TSImport.getModuleName(filename, false)}.$name")
+    case TSFullImport(filename, _) => Some(s"${TSModuleResolver.basename(filename)}.$name")
     case TSSingleImport(filename, items) =>
       items.collect {
         case (originalName, _) if (originalName === name) =>
-          s"${TSImport.getModuleName(filename, false)}.$name"
+          s"${TSModuleResolver.basename(filename)}.$name"
       }.headOption
   }
 
@@ -36,12 +36,13 @@ trait TSImport { self =>
 }
 
 object TSImport {
-  def getModuleName(filename: String, requirePrefix: Boolean): String =
-    if (filename.endsWith(".d") || filename.endsWith(".ts") || filename.endsWith(".mls") || filename.endsWith(".mlsi"))
-      getModuleName(filename.substring(filename.lastIndexOf('/') + 1, filename.lastIndexOf('.')), requirePrefix)
-    else if (!requirePrefix)
-      filename.substring(filename.lastIndexOf('/') + 1)
-    else filename
+  def createInterfaceForNode(path: String): String = {
+    val moduleName = TSModuleResolver.basename(path)
+    val topLevelModule =
+      if (path.contains("/")) path.substring(0, path.indexOf("/"))
+      else moduleName
+    s"node_modules/$topLevelModule/$moduleName.mlsi"
+  }
 }
 
 // import * as alias from "filename"

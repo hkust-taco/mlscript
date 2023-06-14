@@ -72,8 +72,8 @@ class Driver(options: DriverOptions) {
       case err: Diagnostic =>
         report(err)
         false
-      case _ : Throwable =>
-        report("unexpected error")
+      case t : Throwable =>
+        report(s"unexpected error: ${t.toString()}")
         false
     }
   
@@ -179,8 +179,8 @@ class Driver(options: DriverOptions) {
     val mlsiFile = normalize(s"${file.workDir}/${file.interfaceFilename}")
     if (!file.filename.endsWith(".mls") && !file.filename.endsWith(".mlsi") ) { // TypeScript
       val tsprog =
-         TSProgram(if (!file.isNodeModule) file.localFilename else file.filename, file.workDir, true, options.tsconfig)
-      return tsprog.generate(s"${file.workDir}/${file.interfaceDir}")
+         TSProgram(file.localFilename, file.workDir, true, options.tsconfig)
+      return tsprog.generate(mlsiFile)
     }
     parseAndRun(file.filename, {
       case (definitions, _, imports, _) => {

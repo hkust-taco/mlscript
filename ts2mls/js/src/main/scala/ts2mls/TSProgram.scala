@@ -24,71 +24,57 @@ class TSProgram(filename: String, workDir: String, uesTopLevelModule: Boolean, t
 
   private implicit val checker = TSTypeChecker(program.getTypeChecker())
 
-  private def resolveTarget(filename: String) = {
-    val moduleName = TSImport.getModuleName(filename, false)
-    Option.when(!TSModuleResolver.isLocal(filename))(s"node_modules/$moduleName/$moduleName.mlsi")
-  }
+  import TSModuleResolver.{basename, extname, isLocal, resolve, dirname, relative, normalize}
 
-  def generate(targetPath: String): Boolean =
-    generate(TSModuleResolver.resolve(fullname), targetPath, resolveTarget(filename))(Nil)
+  def generate(outputFilename: String): Boolean =
+    generate(resolve(fullname), outputFilename)(Nil)
 
-  private def generate(filename: String, targetPath: String, outputOverride: Option[String])(implicit stack: List[String]): Boolean = {
-    if (filename.endsWith(".js")) return false // if users need to reuse js libs, they need to wrap them with ts signatures.
-    
+  private def generate(filename: String, outputFilename: String)(implicit stack: List[String]): Boolean = { 
     val globalNamespace = TSNamespace()
     val sourceFile = TSSourceFile(program.getSourceFile(filename), globalNamespace)
     val importList = sourceFile.getImportList
     val reExportList = sourceFile.getReExportList
     cache.addOne(filename, globalNamespace)
-    val relatedPath = TSModuleResolver.relative(workDir, TSModuleResolver.dirname(filename))
+    val relatedPath = relative(workDir, dirname(filename))
 
-    def resolve(imp: String) = TypeScript.resolveModuleName(imp, filename, configContent).getOrElse("")
+    def `import`(imp: String) = TypeScript.resolveModuleName(imp, filename, configContent).getOrElse("")
 
-    val (moduleName, outputFilename) = outputOverride match {
-      case Some(output) => (TSImport.getModuleName(output, false), output)
-      case _ =>
-        val moduleName = TSImport.getModuleName(filename, false)
-        (moduleName, s"$relatedPath/$moduleName.mlsi")
-    }
+    val moduleName = basename(filename)
 
     val (cycleList, otherList) =
-      importList.partition(imp => stack.contains(resolve(imp.filename)))
+      importList.partition(imp => stack.contains(`import`(imp.filename)))
 
-    otherList.foreach(imp => {
-      generate(resolve(imp.filename), targetPath, outputOverride match {
-        case Some(filename) =>
-          val moduleName = TSImport.getModuleName(imp.filename, false)
-          val dir = TSModuleResolver.dirname(filename)
-          val rel = TSModuleResolver.dirname(imp.filename)
-          Some(TSModuleResolver.normalize(s"$dir/$rel/$moduleName.mlsi"))
-        case _ => resolveTarget(imp.filename)
-      })(filename :: stack)
-    })
+    otherList.foreach(imp =>
+      generate(`import`(imp.filename),
+        if (isLocal(imp.filename)) normalize(s"${dirname(outputFilename)}/${basename(imp.filename)}.mlsi")
+        else TSImport.createInterfaceForNode(imp.filename)
+      )(filename :: stack)
+    )
 
-    var writer = JSWriter(s"$targetPath/$outputFilename")
+    var writer = JSWriter(outputFilename)
     val imported = new HashSet[String]()
     
     otherList.foreach(imp => {
-      val name = TSImport.getModuleName(imp.filename, true)
-      if (!imported(name) && !resolve(imp.filename).endsWith(".js")) {
+      val name = imp.filename.replace(extname(imp.filename), "")
+      if (!imported(name)) {
         imported += name
         writer.writeln(s"""import "$name.mlsi"""")
       }
     })
     cycleList.foreach(imp => {
-      writer.writeln(s"declare module ${TSImport.getModuleName(imp.filename, false)} {")
-      cache(resolve(imp.filename)).generate(writer, "  ")
+      writer.writeln(s"declare module ${basename(imp.filename)} {")
+      cache(`import`(imp.filename)).generate(writer, "  ")
       writer.writeln("}")
     })
 
     reExportList.foreach {
       case TSReExport(alias, imp, memberName) =>
-        val absName = resolve(imp)
+        val absName = `import`(imp)
         if (!cache.contains(absName))
           throw new AssertionError(s"unexpected re-export from ${imp}")
         else {
           val ns = cache(absName)
-          val moduleName = TSImport.getModuleName(absName, false)
+          val moduleName = basename(absName)
           memberName.fold(
             globalNamespace.put(alias, TSRenamedType(alias, TSReferenceType(moduleName)), true)
           )(name => ns.getTop(name).fold[Unit](())(tp => globalNamespace.put(alias, TSRenamedType(alias, tp), true)))

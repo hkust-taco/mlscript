@@ -25,4 +25,6 @@ export declare module Namespace {
     export module N2 {
     }
   }
+  fun f1(x: N1.C): N1.C
+  fun f2(x: AA.C): AA.C
 }

@@ -1,6 +1,6 @@
-import "fp-ts/MeetSemilattice"
+import "fp-ts/BoundedMeetSemilattice"
 
-class MyPartialOrder extends BoundedMeetSemilattice.BoundedMeetSemilattice {
+class MyPartialOrder extends BoundedMeetSemilattice.BoundedMeetSemilattice<Int> {
   // TODO: implement
 }
 

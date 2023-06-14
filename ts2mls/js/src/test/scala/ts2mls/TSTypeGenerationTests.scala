@@ -2,6 +2,7 @@ package ts2mls
 
 import org.scalatest.funsuite.AnyFunSuite
 import scala.collection.immutable
+import TSModuleResolver.basename
 
 class TSTypeGenerationTest extends AnyFunSuite {
   import TSTypeGenerationTest._
@@ -13,7 +14,7 @@ class TSTypeGenerationTest extends AnyFunSuite {
       !directlyImportedSet.contains(filename),
       None
     )
-    program.generate("ts2mls/js/src/test/diff")
+    program.generate(s"ts2mls/js/src/test/diff/${basename(filename)}.mlsi")
   })
 }
 

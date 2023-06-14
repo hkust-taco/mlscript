@@ -15,8 +15,9 @@ object TSModuleResolver {
   def normalize(path: String): String = np.normalize(path).toString()
 
   def relative(from: String, to: String) = np.relative(from, to).toString()
-  def extname(path: String) = np.extname(path).toString()
+  def extname(path: String) =
+    if (path.endsWith(".d.ts")) ".d.ts"
+    else np.extname(path).toString()
   def basename(filename: String) =
-    if (filename.contains(".d.ts")) np.basename(filename, ".d.ts").toString()
-    else np.basename(filename, extname(filename)).toString()
+    np.basename(filename, extname(filename)).toString()
 }

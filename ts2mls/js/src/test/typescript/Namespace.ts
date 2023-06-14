@@ -44,11 +44,10 @@ namespace AA {
   export namespace N2 {}
 }
 
-// TODO: support
-// function f1(x: N1.C): N1.C {
-//   return x;
-// }
+function f1(x: N1.C): N1.C {
+  return x;
+}
 
-// function f2(x: AA.C): AA.C {
-//   return x;
-// }
+function f2(x: AA.C): AA.C {
+  return x;
+}

@@ -47,11 +47,10 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
 
   private def parseRequire(req: TSNodeObject): Unit = {
     val localName = req.moduleReference.expression.text
-    val fullname = TypeScript.resolveModuleName(localName, resolvedPath, config) match {
-      case Some(name) => name
-      case _ => throw new AssertionError(s"unexpected required module $localName")
-    }
-    val moduleName = TSImport.getModuleName(fullname, false)
+    val fullname = TypeScript.resolveModuleName(localName, resolvedPath, config).getOrElse(
+      throw new AssertionError(s"unexpected required module $localName")
+    )
+    val moduleName = TSModuleResolver.basename(fullname)
     val varName = req.name.escapedText
     val imp = TSSingleImport(localName, List((varName, None)))
     importList.add(fullname, imp)
@@ -196,7 +195,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
   private def getFunctionType(node: TSNodeObject)(implicit ns: TSNamespace): List[TSFunctionType] = {
     val res = getObjectType(node.returnType)
     val tv = getTypeParameters(node)
-    def eraseVarParam(tp: TSType, erase: Boolean) = tp match {
+    def eraseVarParam(tp: TSType, erase: Boolean) = tp match { // TODO: support ... soon
       case TSArrayType(eleType) if (erase) => eleType
       case _ => tp
     }

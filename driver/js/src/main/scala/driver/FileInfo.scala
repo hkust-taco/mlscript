@@ -1,6 +1,6 @@
 package driver
 
-import ts2mls.{TSModuleResolver, TypeScript}
+import ts2mls.{TSModuleResolver, TypeScript, TSImport}
 
 final case class FileInfo(
   workDir: String, // work directory (related to compiler path)
@@ -24,19 +24,20 @@ final case class FileInfo(
     else localFilename
 
   val interfaceFilename: String = // interface filename (related to output directory)
-    relatedPath.fold(s"$interfaceDir/node_modules/$moduleName/$moduleName.mlsi")(path => s"${normalize(s"$interfaceDir/$path/$moduleName.mlsi")}")
+    relatedPath.fold(
+      s"$interfaceDir/${TSImport.createInterfaceForNode(localFilename)}"
+    )(path => s"${normalize(s"$interfaceDir/$path/$moduleName.mlsi")}")
   
   val jsFilename: String =
     relatedPath.fold(moduleName)(path => normalize(s"$path/$moduleName.js"))
 
-  val importPath: String =
-    relatedPath.fold(moduleName)(path => s"./${normalize(s"$interfaceDir/$path/$moduleName.mlsi")}")
-  
   def `import`(path: String): FileInfo =
     if (isLocal(path))
       relatedPath match {
         case Some(value) => FileInfo(workDir, s"./${normalize(s"$value/$path")}", interfaceDir)
-        case _ => FileInfo(workDir, s"./node_modules/$moduleName/$path", interfaceDir)
+        case _ =>
+          val currentPath = TSModuleResolver.dirname(TSImport.createInterfaceForNode(localFilename))
+          FileInfo(workDir, s"./$currentPath/$path", interfaceDir)
       }
     else FileInfo(workDir, path, interfaceDir)
 }
