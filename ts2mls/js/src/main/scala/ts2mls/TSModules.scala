@@ -3,6 +3,7 @@ package ts2mls
 import scala.collection.mutable.HashMap
 import mlscript.utils._
 import ts2mls.types.{TSTypeAlias, TSReferenceType, Converter}
+import ts2mls.TSPathResolver
 
 final case class TSReExport(alias: String, filename: String, memberName: Option[String])
 
@@ -10,11 +11,11 @@ trait TSImport { self =>
   val filename: String
 
   def resolveTypeAlias(name: String): Option[String] = self match {
-    case TSFullImport(filename, _) => Some(s"${TSModuleResolver.basename(filename)}.$name")
+    case TSFullImport(filename, _) => Some(s"${TSPathResolver.basename(filename)}.$name")
     case TSSingleImport(filename, items) =>
       items.collect {
         case (originalName, _) if (originalName === name) =>
-          s"${TSModuleResolver.basename(filename)}.$name"
+          s"${TSPathResolver.basename(filename)}.$name"
       }.headOption
   }
 
@@ -37,7 +38,7 @@ trait TSImport { self =>
 
 object TSImport {
   def createInterfaceForNode(path: String): String = {
-    val moduleName = TSModuleResolver.basename(path)
+    val moduleName = TSPathResolver.basename(path)
     val topLevelModule =
       if (path.contains("/")) path.substring(0, path.indexOf("/"))
       else moduleName

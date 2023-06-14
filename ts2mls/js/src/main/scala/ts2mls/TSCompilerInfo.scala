@@ -6,6 +6,7 @@ import js.DynamicImplicits._
 import js.JSConverters._
 import ts2mls.types._
 import mlscript.utils._
+import ts2mls.TSPathResolver
 
 object TypeScript {
   private def load(moduleName: String) = try g.require(moduleName) catch {
@@ -23,7 +24,7 @@ object TypeScript {
   // tsconfig.json
   def parseOption(basePath: String, filename: Option[String]): js.Dynamic = {
     val config = filename.fold[js.Any](js.Dictionary())(filename => {
-      val content = JSFileSystem.readFile(TSModuleResolver.normalize(s"$basePath/$filename")).getOrElse("")
+      val content = JSFileSystem.readFile(TSPathResolver.normalize(s"$basePath/$filename")).getOrElse("")
       json.parse(content)
     })
     val name = filename.getOrElse("tsconfig.json")
@@ -32,7 +33,7 @@ object TypeScript {
 
   // package.json
   def parsePackage(path: String): js.Dynamic = {
-    val content = JSFileSystem.readFile(TSModuleResolver.normalize(path)).getOrElse("")
+    val content = JSFileSystem.readFile(TSPathResolver.normalize(path)).getOrElse("")
     json.parse(content)
   }
 

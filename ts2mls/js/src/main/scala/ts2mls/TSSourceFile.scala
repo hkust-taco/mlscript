@@ -5,6 +5,7 @@ import js.DynamicImplicits._
 import types._
 import mlscript.utils._
 import scala.collection.mutable.{ListBuffer, HashMap}
+import ts2mls.TSPathResolver
 
 class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSTypeChecker, config: js.Dynamic) {
   private val lineHelper = new TSLineStartsHelper(sf.getLineStarts())
@@ -50,7 +51,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
     val fullname = TypeScript.resolveModuleName(localName, resolvedPath, config).getOrElse(
       throw new AssertionError(s"unexpected required module $localName")
     )
-    val moduleName = TSModuleResolver.basename(fullname)
+    val moduleName = TSPathResolver.basename(fullname)
     val varName = req.name.escapedText
     val imp = TSSingleImport(localName, List((varName, None)))
     importList.add(fullname, imp)

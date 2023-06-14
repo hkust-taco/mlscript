@@ -4,6 +4,7 @@ import scala.scalajs.js
 import js.Dynamic.{global => g}
 import js.DynamicImplicits._
 import js.JSConverters._
+import ts2mls.TSPathResolver
 
 object JSFileSystem {
   private val fs = g.require("fs") // must use fs module to manipulate files in JS
@@ -15,7 +16,7 @@ object JSFileSystem {
     else Some(fs.readFileSync(filename).toString)
 
   def writeFile(filename: String, content: String): Unit = {
-    val dir = TSModuleResolver.dirname(filename)
+    val dir = TSPathResolver.dirname(filename)
     if (!exists(dir)) fs.mkdirSync(dir, js.Dictionary("recursive" -> true))
     fs.writeFileSync(filename, content)
   }

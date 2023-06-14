@@ -4,6 +4,7 @@ import scala.scalajs.js
 import js.DynamicImplicits._
 import ts2mls.types._
 import scala.collection.mutable.{HashSet, HashMap}
+import ts2mls.TSPathResolver
 
 // for general ts, we still consider that there is a top-level module
 // and in mls we will import ts file like this:
@@ -24,7 +25,7 @@ class TSProgram(filename: String, workDir: String, uesTopLevelModule: Boolean, t
 
   private implicit val checker = TSTypeChecker(program.getTypeChecker())
 
-  import TSModuleResolver.{basename, extname, isLocal, resolve, dirname, relative, normalize}
+  import TSPathResolver.{basename, extname, isLocal, resolve, dirname, relative, normalize}
 
   def generate(outputFilename: String): Boolean =
     generate(resolve(fullname), outputFilename)(Nil)

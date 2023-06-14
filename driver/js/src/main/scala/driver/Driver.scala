@@ -7,7 +7,8 @@ import mlscript.utils.shorthands._
 import scala.collection.mutable.{ListBuffer,Map => MutMap, Set => MutSet}
 import mlscript.codegen._
 import mlscript.{NewLexer, NewParser, ErrorReport, Origin, Diagnostic}
-import ts2mls.{TSModuleResolver, TSProgram, TypeScript}
+import ts2mls.{TSProgram, TypeScript}
+import ts2mls.TSPathResolver
 import ts2mls.JSFileSystem
 import ts2mls.JSWriter
 
@@ -34,7 +35,7 @@ class Driver(options: DriverOptions) {
   private val importedModule = MutSet[String]()
   private val config = TypeScript.parseOption(options.path, options.tsconfig)
 
-  import TSModuleResolver.{normalize, isLocal, dirname}
+  import TSPathResolver.{normalize, isLocal, dirname}
 
   private def checkESModule(filename: String) =
     if (filename.endsWith(".mls")) None
@@ -160,9 +161,9 @@ class Driver(options: DriverOptions) {
 
   private def resolveTarget(file: FileInfo, imp: String) =
     if ((imp.startsWith("./") || imp.startsWith("../")) && !imp.endsWith(".mls") && !imp.endsWith(".mlsi")) {
-      val tsPath = TypeScript.getOutputFileNames(s"${TSModuleResolver.dirname(file.filename)}/$imp", config)
-      val outputBase = TSModuleResolver.dirname(TSModuleResolver.normalize(s"${options.outputDir}${file.jsFilename}"))
-      TSModuleResolver.relative(outputBase, tsPath)
+      val tsPath = TypeScript.getOutputFileNames(s"${TSPathResolver.dirname(file.filename)}/$imp", config)
+      val outputBase = TSPathResolver.dirname(TSPathResolver.normalize(s"${options.outputDir}${file.jsFilename}"))
+      TSPathResolver.relative(outputBase, tsPath)
     }
     else imp
 

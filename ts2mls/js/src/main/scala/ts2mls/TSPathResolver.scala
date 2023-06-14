@@ -5,7 +5,7 @@ import js.Dynamic.{global => g}
 import js.DynamicImplicits._
 import js.JSConverters._
 
-object TSModuleResolver {
+object TSPathResolver {
   private val np: js.Dynamic = g.require("path") // built-in node module
 
   def resolve(path: String): String = np.resolve(path).toString()
