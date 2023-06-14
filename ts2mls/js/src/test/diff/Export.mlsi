@@ -1,7 +1,7 @@
 import "./Dependency.mlsi"
 export declare module Export {
   export module Foo {
-    fun Baz(aa: Str): IBar
+    export fun Baz(aa: Str): IBar
     declare trait IBar {
       val a: Str
     }

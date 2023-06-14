@@ -1,6 +1,6 @@
 export declare module Namespace {
   module N1 {
-    fun f(x: anything): Num
+    export fun f(x: anything): Num
     fun ff(y: anything): Num
     export declare class C {
       fun f(): unit
@@ -9,13 +9,13 @@ export declare module Namespace {
       fun f(): Num
     }
     export module N2 {
-      fun fff(x: (false) | (true)): Num
+      export fun fff(x: (false) | (true)): Num
       fun gg(c: C): C
       declare class BBB extends C {}
     }
   }
   module AA {
-    fun f(x: anything): Str
+    export fun f(x: anything): Str
     export declare class C {
       fun f(): unit
     }

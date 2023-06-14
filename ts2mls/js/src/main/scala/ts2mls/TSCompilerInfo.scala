@@ -70,6 +70,7 @@ object TypeScript {
   def isSourceFile(node: js.Dynamic) = ts.isSourceFile(node)
   def isExportDeclaration(node: js.Dynamic) = ts.isExportDeclaration(node)
   def isImportEqualsDeclaration(node: js.Dynamic) = ts.isImportEqualsDeclaration(node)
+  def isExportAssignment(node: js.Dynamic) = ts.isExportAssignment(node)
 
   def isArrayTypeNode(node: js.Dynamic) = ts.isArrayTypeNode(node)
   def isTupleTypeNode(node: js.Dynamic) = ts.isTupleTypeNode(node)
@@ -178,6 +179,7 @@ class TSNodeObject(node: js.Dynamic)(implicit checker: TSTypeChecker) extends TS
   lazy val isRequire = TypeScript.isImportEqualsDeclaration(node)
   lazy val isSourceFile = TypeScript.isSourceFile(node)
   lazy val isExportDeclaration = TypeScript.isExportDeclaration(node)
+  lazy val isExportAssignment = TypeScript.isExportAssignment(node)
 
   // if a node has an initializer or is marked by a question notation it is optional
   // e.g. `function f(x?: int) {}`, we can use it directly: `f()`.
@@ -238,6 +240,7 @@ class TSNodeObject(node: js.Dynamic)(implicit checker: TSTypeChecker) extends TS
   lazy val resolvedPath: String = node.resolvedPath.toString()
   lazy val moduleReference = TSNodeObject(node.moduleReference)
   lazy val expression = TSTokenObject(node.expression)
+  lazy val idExpression = TSIdentifierObject(node.expression)
   lazy val isVarParam = !IsUndefined(node.dotDotDotToken)
 }
 

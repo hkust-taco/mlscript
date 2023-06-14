@@ -41,6 +41,10 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
       else
         parseExportDeclaration(nodeObject.exportClause.elements)
     }
+    else if (nodeObject.isExportAssignment) {
+      val name = nodeObject.idExpression.escapedText
+      global.export(name)
+    }
   })
 
   def getImportList: List[TSImport] = importList.getFilelist

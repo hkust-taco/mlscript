@@ -29,10 +29,13 @@ object Converter {
     case TSFunctionType(params, res, typeVars) => {
       val pList = if (params.isEmpty) "" else params.map(p => s"${convert(p)("")}").reduceLeft((r, p) => s"$r, $p")
       val tpList = if (typeVars.isEmpty) "" else s"<${typeVars.map(p => convert(p)("")).reduceLeft((r, p) => s"$r, $p")}>"
-      s"${indent}fun ${escapeIdent(name)}$tpList($pList): ${convert(res)("")}"
+      val exp = if (exported) "export " else ""
+      s"${indent}${exp}fun ${escapeIdent(name)}$tpList($pList): ${convert(res)("")}"
     }
     case overload @ TSIgnoredOverload(base, _) => s"${generateFunDeclaration(base, name, false)} ${overload.warning}"
-    case inter: TSIntersectionType => s"${indent}fun ${name}: ${Converter.convert(inter)}"
+    case inter: TSIntersectionType =>
+      val exp = if (exported) "export " else ""
+      s"${indent}${exp}fun ${name}: ${Converter.convert(inter)}"
     case _ => throw new AssertionError("non-function type is not allowed.")
   }
 
