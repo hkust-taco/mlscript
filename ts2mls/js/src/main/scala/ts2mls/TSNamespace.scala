@@ -65,7 +65,7 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
     order.toList.foreach((p) => p match {
       case Left(subName) => {
         val ss = subSpace(subName)
-        writer.writeln(s"${indent}${expStr(ss._2)}module $subName {")
+        writer.writeln(s"${indent}${expStr(ss._2)}module ${Converter.escapeIdent(subName)} {")
         ss._1.generate(writer, indent + "  ")
         writer.writeln(s"$indent}")
       }
@@ -83,8 +83,8 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
             writer.writeln(Converter.convert(mem, exp)(indent))
           case _: TSTypeAlias => writer.writeln(Converter.convert(mem, exp)(indent))
           case TSRenamedType(name, original) if (exp) =>
-            writer.writeln(s"${indent}export val $name = ${Converter.convert(original)("")}")
-          case _ => writer.writeln(s"${indent}${expStr(exp)}val $name: ${Converter.convert(mem)("")}")
+            writer.writeln(s"${indent}export val ${Converter.escapeIdent(name)} = ${Converter.convert(original)("")}")
+          case _ => writer.writeln(s"${indent}${expStr(exp)}val ${Converter.escapeIdent(name)}: ${Converter.convert(mem)("")}")
         }
       }
     })

@@ -79,6 +79,7 @@ object DriverDiffTests {
     ts2mlsEntry("Dec"),
     ts2mlsEntry("Enum"),
     ts2mlsEntry("ES5"),
+    ts2mlsEntry("Escape"),
     ts2mlsEntry("Export"),
     ts2mlsEntry("Heritage"),
     ts2mlsEntry("HighOrderFunc"),

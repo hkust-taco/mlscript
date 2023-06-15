@@ -64,7 +64,7 @@ class TSProgram(filename: String, workDir: String, uesTopLevelModule: Boolean, t
       }
     })
     cycleList.foreach(imp => {
-      writer.writeln(s"declare module ${basename(imp.filename)} {")
+      writer.writeln(s"declare module ${Converter.escapeIdent(basename(imp.filename))} {")
       cache(`import`(imp.filename)).generate(writer, "  ")
       writer.writeln("}")
     })
@@ -90,7 +90,7 @@ class TSProgram(filename: String, workDir: String, uesTopLevelModule: Boolean, t
   private def generate(writer: JSWriter, globalNamespace: TSNamespace, moduleName: String): Unit =
     if (!uesTopLevelModule) globalNamespace.generate(writer, "") // will be imported directly and has no dependency
     else {
-      writer.writeln(s"export declare module $moduleName {")
+      writer.writeln(s"export declare module ${Converter.escapeIdent(moduleName)} {")
       globalNamespace.generate(writer, "  ")
       writer.writeln("}")
     }

@@ -19,7 +19,7 @@ object Converter {
     "symbol" -> "Symbol"
   )
 
-  private def escapeIdent(name: String) = {
+  def escapeIdent(name: String) = {
     import mlscript.NewLexer
     if (NewLexer.keywords(name)) s"""id"$name""""
     else name
@@ -35,7 +35,7 @@ object Converter {
     case overload @ TSIgnoredOverload(base, _) => s"${generateFunDeclaration(base, name, false)} ${overload.warning}"
     case inter: TSIntersectionType =>
       val exp = if (exported) "export " else ""
-      s"${indent}${exp}fun ${name}: ${Converter.convert(inter)}"
+      s"${indent}${exp}fun ${escapeIdent(name)}: ${Converter.convert(inter)}"
     case _ => throw new AssertionError("non-function type is not allowed.")
   }
 
@@ -53,16 +53,16 @@ object Converter {
     case TSEnumType => "Int"
     case TSMemberType(base, _) => convert(base) // TODO: support private/protected members
     case TSInterfaceType(name, members, typeVars, parents) =>
-      convertRecord(s"trait $name", members, typeVars, parents, Map(), List(), exported)(indent)
+      convertRecord(s"trait ${escapeIdent(name)}", members, typeVars, parents, Map(), List(), exported)(indent)
     case TSClassType(name, members, statics, typeVars, parents, cons) =>
-      convertRecord(s"class $name", members, typeVars, parents, statics, cons, exported)(indent)
+      convertRecord(s"class ${escapeIdent(name)}", members, typeVars, parents, statics, cons, exported)(indent)
     case TSSubstitutionType(base, applied) => s"${base}<${applied.map((app) => convert(app)).reduceLeft((res, s) => s"$res, $s")}>"
     case overload @ TSIgnoredOverload(base, _) => s"${convert(base)} ${overload.warning}"
-    case TSParameterType(name, tp) => s"${name}: ${convert(tp)}"
+    case TSParameterType(name, tp) => s"${escapeIdent(name)}: ${convert(tp)}"
     case TSTypeAlias(name, ori, tp) => {
       val exp = if (exported) "export " else ""
-      if (tp.isEmpty) s"${indent}${exp}type $name = ${convert(ori)}"
-      else s"${indent}${exp}type $name<${tp.map(t => convert(t)).reduceLeft((s, t) => s"$s, $t")}> = ${convert(ori)}"
+      if (tp.isEmpty) s"${indent}${exp}type ${escapeIdent(name)} = ${convert(ori)}"
+      else s"${indent}${exp}type ${escapeIdent(name)}<${tp.map(t => convert(t)).reduceLeft((s, t) => s"$s, $t")}> = ${convert(ori)}"
     }
     case TSLiteralType(value, isString) => if (isString) s"\"$value\"" else value
     case TSUnsupportedType(code, filename, line, column) =>

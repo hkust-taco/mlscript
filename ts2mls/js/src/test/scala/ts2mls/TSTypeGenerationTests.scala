@@ -29,6 +29,7 @@ object TSTypeGenerationTest {
     "./Dom.d.ts",
     "./Enum.ts",
     "./ES5.d.ts",
+    "./Escape.ts",
     "./Export.ts",
     "./Heritage.ts",
     "./HighOrderFunc.ts",
