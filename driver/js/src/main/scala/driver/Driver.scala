@@ -185,9 +185,7 @@ class Driver(options: DriverOptions) {
     }
     parseAndRun(file.filename, {
       case (definitions, _, imports, _) => {
-        val depList = imports.map {
-          case Import(path) => path
-        }
+        val depList = imports.map(_.path)
 
         val (cycleList, otherList) = depList.partitionMap { dep => {
           val depFile = file.`import`(dep)
@@ -224,9 +222,7 @@ class Driver(options: DriverOptions) {
             val filename = s"${options.path}/${file.interfaceFilename}"
             parseAndRun(filename, {
               case (_, declarations, imports, _) => {
-                val depList = imports.map {
-                  case Import(path) => path
-                }
+                val depList = imports.map(_.path)
                 depList.foreach(d => importModule(file.`import`(d)))
                 `type`(TypingUnit(declarations, Nil))
               }
@@ -245,11 +241,11 @@ class Driver(options: DriverOptions) {
             val interfaces = otherList.map(s => Import(FileInfo.importPath(s))).foldRight(expStr)((imp, itf) => s"$imp\n$itf")
 
             saveToFile(mlsiFile, interfaces)
-            generate(Pgrm(definitions), s"${options.outputDir}/${file.jsFilename}", file.moduleName, imports.map {
-              case Import(path) => new Import(resolveTarget(file, path)) with ModuleType {
+            generate(Pgrm(definitions), s"${options.outputDir}/${file.jsFilename}", file.moduleName, imports.map(
+              imp => new Import(resolveTarget(file, imp.path)) with ModuleType {
                 val isESModule = checkESModule(path)
               }
-            }, exported || importedModule(file.filename))
+            ), exported || importedModule(file.filename))
           }
           true
         }

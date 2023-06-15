@@ -236,7 +236,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
           }
           case (nt: NuTypeDef, _) => translateLocalNewType(nt)(blkScope)
           // TODO: find out if we need to support this.
-          case (_: Def | _: TypeDef | _: NuFunDef | _: DataDefn | _: DatatypeDefn | _: LetS | _: Constructor, _) =>
+          case (_: Def | _: TypeDef | _: NuFunDef | _: DataDefn | _: DatatypeDefn | _: LetS | _: Constructor | _: Import, _) =>
             throw CodeGenError("unsupported definitions in blocks")
         }.toList)),
         Nil
@@ -1211,7 +1211,7 @@ class JSWebBackend extends JSBackend(allowUnresolvedSymbols = true) {
       case fd: NuFunDef => R(fd)
       case nd: NuTypeDef => L(nd)
       case _ => die
-    }
+   }
 
     // don't pass `otherStmts` to the top-level module, because we need to execute them one by one later
     val topModule = topLevelScope.declareTopModule("TypingUnit", Nil, typeDefs, true)

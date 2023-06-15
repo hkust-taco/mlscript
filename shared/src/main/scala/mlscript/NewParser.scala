@@ -217,9 +217,9 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
   
   final def typingUnit: TypingUnit = {
     val ts = block(false, false)
-    val (es, dp) = ts.partition{
-      case R(imp: Import) => false
-      case _ => true
+    val (es, dp) = ts.partitionMap {
+      case R(imp: Import) => R(imp)
+      case s => L(s)
     } match {
       case (es, dp) =>
         (es.map {
@@ -230,9 +230,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
           case R(e: Term) => e
           case R(c: Constructor) => c
           case _ => ???
-        }, dp.map {
-          case R(imp: Import) => imp
-        })
+        }, dp)
     }
     TypingUnit(es, dp)
   }

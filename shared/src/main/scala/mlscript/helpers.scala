@@ -736,6 +736,9 @@ trait StatementImpl extends Located { self: Statement =>
     case ctor: Constructor =>
       import Message._
       (ErrorReport(msg"constructor must be in a class." -> ctor.toLoc :: Nil) :: Nil) -> Nil
+    case imp: Import =>
+      import Message._
+      (ErrorReport(msg"unexpected import statement." -> imp.toLoc :: Nil) :: Nil) -> Nil
     case l @ LetS(isrec, pat, rhs) =>
       val (diags, v, args) = desugDefnPattern(pat, Nil)
       diags -> (Def(isrec, v, L(args.foldRight(rhs)(Lam(_, _))), false).withLocOf(l) :: Nil) // TODO use v, not v.name
@@ -917,7 +920,7 @@ trait StatementImpl extends Located { self: Statement =>
     case _: Term => super.toString
     case d: Decl => d.showDbg
     case d: NuDecl => d.showDbg
-    case Import(path) => s"""import "$path""""
+    case imp: Import => s"""import "${imp.path}""""
   }
 }
 
