@@ -69,7 +69,7 @@ object DriverDiffTests {
     entry("C", expectError = true),
     entry("TS", Some("./tsconfig.json"), true), // TODO: type members
     entry("Output", Some("./tsconfig.json")),
-    entry("Output2", Some("./tsconfig.json"), true), // TODO: ???
+    entry("Output2", Some("./tsconfig.json")),
     entry("MLS2TheMax", Some("./tsconfig.json")),
     entry("MyPartialOrder", Some("./tsconfig.json"), true), // TODO: type traits in modules
     ts2mlsEntry("Array"),

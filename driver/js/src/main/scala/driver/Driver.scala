@@ -181,7 +181,7 @@ class Driver(options: DriverOptions) {
     if (!file.filename.endsWith(".mls") && !file.filename.endsWith(".mlsi") ) { // TypeScript
       val tsprog =
          TSProgram(file.localFilename, file.workDir, true, options.tsconfig)
-      return tsprog.generate(mlsiFile)
+      return tsprog.generate(Some(file.moduleName), mlsiFile)
     }
     parseAndRun(file.filename, {
       case (definitions, _, imports, _) => {

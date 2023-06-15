@@ -27,10 +27,10 @@ class TSProgram(filename: String, workDir: String, uesTopLevelModule: Boolean, t
 
   import TSPathResolver.{basename, extname, isLocal, resolve, dirname, relative, normalize}
 
-  def generate(outputFilename: String): Boolean =
-    generate(resolve(fullname), outputFilename)(Nil)
+  def generate(module: Option[String], outputFilename: String): Boolean =
+    generate(resolve(fullname), module, outputFilename)(Nil)
 
-  private def generate(filename: String, outputFilename: String)(implicit stack: List[String]): Boolean = { 
+  private def generate(filename: String, module: Option[String], outputFilename: String)(implicit stack: List[String]): Boolean = { 
     val globalNamespace = TSNamespace()
     val sourceFile = TSSourceFile(program.getSourceFile(filename), globalNamespace)
     val importList = sourceFile.getImportList
@@ -40,14 +40,14 @@ class TSProgram(filename: String, workDir: String, uesTopLevelModule: Boolean, t
 
     def `import`(imp: String) = TypeScript.resolveModuleName(imp, filename, configContent).getOrElse("")
 
-    val moduleName = basename(filename)
+    val moduleName = module.getOrElse(basename(filename))
 
     val (cycleList, otherList) =
       importList.partition(imp => stack.contains(`import`(imp.filename)))
 
     otherList.foreach(imp => {
       val fullname = `import`(imp.filename)
-      generate(fullname,
+      generate(fullname, None,
         if (isLocal(imp.filename)) normalize(s"${dirname(outputFilename)}/${basename(imp.filename)}.mlsi")
         else TSImport.createInterfaceForNode(fullname)
       )(filename :: stack)

@@ -15,7 +15,7 @@ class TSTypeGenerationTest extends AnyFunSuite {
       !directlyImportedSet.contains(filename),
       None
     )
-    program.generate(s"ts2mls/js/src/test/diff/${basename(filename)}.mlsi")
+    program.generate(None, s"ts2mls/js/src/test/diff/${basename(filename)}.mlsi")
   })
 }
 
