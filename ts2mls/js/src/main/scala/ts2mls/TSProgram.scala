@@ -11,67 +11,63 @@ import ts2mls.TSPathResolver
 // import * as TopLevelModuleName from "filename"
 // for es5.d.ts, we only need to translate everything
 // and it will be imported without top-level module before we compile other files
-class TSProgram(filename: String, workDir: String, uesTopLevelModule: Boolean, tsconfig: Option[String]) {
-  private implicit val configContent = TypeScript.parseOption(workDir, tsconfig)
-  private val fullname =
-    if (JSFileSystem.exists(s"$workDir/$filename")) s"$workDir/$filename"
-    else TypeScript.resolveModuleName(filename, "", configContent) match {
-      case Some(path) => path
-      case _ => throw new Exception(s"file $workDir/$filename doesn't exist.")
-    }
-
-  private val program = TypeScript.createProgram(Seq(fullname))
+class TSProgram(file: FileInfo, uesTopLevelModule: Boolean, tsconfig: Option[String]) {
+  private implicit val configContent = TypeScript.parseOption(file.workDir, tsconfig)
+  private val program = TypeScript.createProgram(Seq(
+    if (file.isNodeModule) file.resolve
+    else file.filename
+  ))
   private val cache = new HashMap[String, TSNamespace]()
-
   private implicit val checker = TSTypeChecker(program.getTypeChecker())
 
   import TSPathResolver.{basename, extname, isLocal, resolve, dirname, relative, normalize}
 
-  def generate(module: Option[String], outputFilename: String): Boolean =
-    generate(resolve(fullname), module, outputFilename)(Nil)
+  def generate: Boolean = generate(file)(Nil)
 
-  private def generate(filename: String, module: Option[String], outputFilename: String)(implicit stack: List[String]): Boolean = { 
+  private def generate(file: FileInfo)(implicit stack: List[String]): Boolean = {
+    val filename = file.resolve
     val globalNamespace = TSNamespace()
-    val sourceFile = TSSourceFile(program.getSourceFile(filename), globalNamespace)
+    val sfObj = program.getSourceFileByPath(filename)
+    val sourceFile =
+      if (IsUndefined(sfObj)) throw new Exception(s"can not load source file $filename.")
+      else TSSourceFile(sfObj, globalNamespace)
     val importList = sourceFile.getImportList
     val reExportList = sourceFile.getReExportList
     cache.addOne(filename, globalNamespace)
-    val relatedPath = relative(workDir, dirname(filename))
+    val relatedPath = relative(file.workDir, dirname(filename))
 
-    def `import`(imp: String) = TypeScript.resolveModuleName(imp, filename, configContent).getOrElse("")
-
-    val moduleName = module.getOrElse(basename(filename))
+    val moduleName = file.moduleName
 
     val (cycleList, otherList) =
-      importList.partition(imp => stack.contains(`import`(imp.filename)))
+      importList.partitionMap(imp => {
+        val newFile = file.`import`(imp.filename)
+        if (stack.contains(newFile.resolve)) Left(newFile)
+        else Right(newFile)
+      })
 
     otherList.foreach(imp => {
-      val fullname = `import`(imp.filename)
-      generate(fullname, None,
-        if (isLocal(imp.filename)) normalize(s"${dirname(outputFilename)}/${basename(imp.filename)}.mlsi")
-        else TSImport.createInterfaceForNode(fullname)
-      )(filename :: stack)
+      generate(imp)(filename :: stack)
     })
 
-    var writer = JSWriter(outputFilename)
+    var writer = JSWriter(s"${file.workDir}/${file.interfaceFilename}")
     val imported = new HashSet[String]()
     
     otherList.foreach(imp => {
-      val name = imp.filename.replace(extname(imp.filename), "")
+      val name = imp.importedMlsi
       if (!imported(name)) {
         imported += name
-        writer.writeln(s"""import "$name.mlsi"""")
+        writer.writeln(s"""import "$name"""")
       }
     })
     cycleList.foreach(imp => {
-      writer.writeln(s"declare module ${Converter.escapeIdent(basename(imp.filename))} {")
-      cache(`import`(imp.filename)).generate(writer, "  ")
+      writer.writeln(s"declare module ${Converter.escapeIdent(imp.moduleName)} {")
+      cache(imp.resolve).generate(writer, "  ")
       writer.writeln("}")
     })
 
     reExportList.foreach {
       case TSReExport(alias, imp, memberName) =>
-        val absName = `import`(imp)
+        val absName = file.`import`(imp).resolve
         if (!cache.contains(absName))
           throw new AssertionError(s"unexpected re-export from ${imp}")
         else {
@@ -97,6 +93,6 @@ class TSProgram(filename: String, workDir: String, uesTopLevelModule: Boolean, t
 }
 
 object TSProgram {
-  def apply(filename: String, workDir: String, uesTopLevelModule: Boolean, tsconfig: Option[String]) =
-    new TSProgram(filename, workDir, uesTopLevelModule, tsconfig)
+  def apply(file: FileInfo, uesTopLevelModule: Boolean, tsconfig: Option[String]) =
+    new TSProgram(file, uesTopLevelModule, tsconfig)
 }

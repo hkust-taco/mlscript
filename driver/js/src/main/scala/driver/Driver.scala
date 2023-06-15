@@ -7,10 +7,7 @@ import mlscript.utils.shorthands._
 import scala.collection.mutable.{ListBuffer,Map => MutMap, Set => MutSet}
 import mlscript.codegen._
 import mlscript.{NewLexer, NewParser, ErrorReport, Origin, Diagnostic}
-import ts2mls.{TSProgram, TypeScript}
-import ts2mls.TSPathResolver
-import ts2mls.JSFileSystem
-import ts2mls.JSWriter
+import ts2mls.{TSProgram, TypeScript, TSPathResolver, JSFileSystem, JSWriter, FileInfo}
 
 class Driver(options: DriverOptions) {
   import Driver._
@@ -42,7 +39,7 @@ class Driver(options: DriverOptions) {
     else if (isLocal(filename))
       Some(TypeScript.isESModule(config, false))
     else {
-      val fullname = TypeScript.resolveModuleName(filename, "", config).getOrElse("node_modules/")
+      val fullname = TypeScript.resolveModuleName(filename, "", config)
       def find(path: String): Boolean = {
         val dir = dirname(path)
         val pack = s"$dir/package.json"
@@ -50,7 +47,7 @@ class Driver(options: DriverOptions) {
           val config = TypeScript.parsePackage(pack)
           TypeScript.isESModule(config, true)
         }
-        else if (dir.endsWith("node_modules/")) false // TODO: throw?
+        else if (dir === "." || dir === "/") false
         else find(dir)
       }
       Some(find(fullname))
@@ -180,8 +177,8 @@ class Driver(options: DriverOptions) {
     val mlsiFile = normalize(s"${file.workDir}/${file.interfaceFilename}")
     if (!file.filename.endsWith(".mls") && !file.filename.endsWith(".mlsi") ) { // TypeScript
       val tsprog =
-         TSProgram(file.localFilename, file.workDir, true, options.tsconfig)
-      return tsprog.generate(Some(file.moduleName), mlsiFile)
+         TSProgram(file, true, options.tsconfig)
+      return tsprog.generate
     }
     parseAndRun(file.filename, {
       case (definitions, _, imports, _) => {

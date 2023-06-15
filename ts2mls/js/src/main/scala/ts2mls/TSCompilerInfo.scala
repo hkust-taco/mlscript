@@ -37,11 +37,12 @@ object TypeScript {
     json.parse(content)
   }
 
-  def resolveModuleName(importName: String, containingName: String, config: js.Dynamic): Option[String] = {
+  def resolveModuleName(importName: String, containingName: String, config: js.Dynamic): String = {
     val res = ts.resolveModuleName(importName, containingName, config, sys)
     if (!IsUndefined(res.resolvedModule) && !IsUndefined(res.resolvedModule.resolvedFileName))
-      Some(res.resolvedModule.resolvedFileName.toString())
-    else None
+      res.resolvedModule.resolvedFileName.toString()
+    else
+      throw new Exception(s"can not resolve module $importName in $containingName.")
   }
 
   def getOutputFileNames(filename: String, config: js.Dynamic): String =
@@ -88,7 +89,7 @@ object TypeScript {
     ts.createProgram(filenames.toJSArray, js.Dictionary(
       "maxNodeModuleJsDepth" -> 0,
       "target" -> ts.ScriptTarget.ES5,
-      "module" -> ts.ModuleKind.CommonJS,
+      "module" -> ts.ModuleKind.ES5,
       "esModuleInterop" -> true
     ))
 

@@ -52,9 +52,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
 
   private def parseRequire(req: TSNodeObject): Unit = {
     val localName = req.moduleReference.expression.text
-    val fullname = TypeScript.resolveModuleName(localName, resolvedPath, config).getOrElse(
-      throw new AssertionError(s"unexpected required module $localName")
-    )
+    val fullname = TypeScript.resolveModuleName(localName, resolvedPath, config)
     val moduleName = TSPathResolver.basename(fullname)
     val varName = req.name.escapedText
     val imp = TSSingleImport(localName, List((varName, None)))
@@ -78,9 +76,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
     if (!clause.isUndefined) {
       val bindings = clause.namedBindings
       val importName = moduleSpecifier.text
-      val fullPath = TypeScript.resolveModuleName(importName, resolvedPath, config).getOrElse(
-        throw new AssertionError(s"unexpected import $importName.")
-      )
+      val fullPath = TypeScript.resolveModuleName(importName, resolvedPath, config)
       def run(node: TSNodeObject): Unit =
         if (!node.elements.isUndefined) {
           val list = node.elements.mapToList(ele =>
@@ -125,7 +121,8 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
 
   private def getObjectType(obj: TSTypeObject)(implicit ns: TSNamespace): TSType =
     if (obj.isMapped) lineHelper.getPos(obj.pos) match {
-        case (line, column) => TSUnsupportedType(obj.toString(), obj.filename, line, column)
+        case (line, column) =>
+          TSUnsupportedType(obj.toString(), TSPathResolver.basenameWithExt(obj.filename), line, column)
       }
     else if (obj.isEnumType) TSEnumType
     else if (obj.isFunctionLike) getFunctionType(obj.symbol.declaration) match {
@@ -143,7 +140,8 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
       else TSReferenceType(getSymbolFullname(obj.symbol))
     else if (obj.isTypeParameter) TSTypeParameter(obj.symbol.escapedName)
     else if (obj.isConditionalType || obj.isIndexType || obj.isIndexedAccessType) lineHelper.getPos(obj.pos) match {
-      case (line, column) => TSUnsupportedType(obj.toString(), obj.filename, line, column)
+      case (line, column) =>
+        TSUnsupportedType(obj.toString(), TSPathResolver.basenameWithExt(obj.filename), line, column)
     }
     else TSPrimitiveType(obj.intrinsicName)
 
@@ -157,7 +155,8 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
     else if (tn.isTupleTypeNode) TSTupleType(getTupleElements(tn.typeNode.typeArguments))
     else getObjectType(tn.typeNode) match {
       case TSPrimitiveType("intrinsic") => lineHelper.getPos(tn.pos) match {
-        case (line, column) => TSUnsupportedType(tn.toString(), tn.filename, line, column)
+        case (line, column) =>
+          TSUnsupportedType(tn.toString(), TSPathResolver.basenameWithExt(tn.filename), line, column)
       }
       case t => t
     }
@@ -177,7 +176,8 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
     val res: TSType =
       if (node.isIndexSignature || node.isCallSignature || node.isConstructSignature)
         lineHelper.getPos(node.pos) match {
-          case (line, column) => TSUnsupportedType(node.toString(), node.filename, line, column)
+          case (line, column) =>
+            TSUnsupportedType(node.toString(), TSPathResolver.basenameWithExt(node.filename), line, column)
         }
       else if (node.isFunctionLike) getFunctionType(node) match {
         case head :: Nil => head

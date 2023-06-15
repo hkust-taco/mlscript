@@ -20,4 +20,5 @@ object TSPathResolver {
     else np.extname(path).toString()
   def basename(filename: String) =
     np.basename(filename, extname(filename)).toString()
+  def basenameWithExt(filename: String) = np.basename(filename).toString()
 }

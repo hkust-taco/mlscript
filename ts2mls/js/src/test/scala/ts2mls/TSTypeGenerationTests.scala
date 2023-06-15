@@ -10,12 +10,11 @@ class TSTypeGenerationTest extends AnyFunSuite {
 
   testsData.foreach((filename) => test(filename) {
     val program = TSProgram(
-      filename,
-      "./ts2mls/js/src/test/typescript",
+      FileInfo("./ts2mls/js/src/test/typescript", filename, "../diff/"),
       !directlyImportedSet.contains(filename),
       None
     )
-    program.generate(None, s"ts2mls/js/src/test/diff/${basename(filename)}.mlsi")
+    program.generate
   })
 }
 
