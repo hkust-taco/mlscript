@@ -52,7 +52,7 @@ f(0)
 //│ |#class| |A|(|y|)|{||}|↵|#let| |f| |#=| |x| |=>| |#new| |A|(|0|)|{|#fun| |bar| |#=| |x|+|y|}|↵|f|(|0|)|
 //│ Parsed: {class A(y,) {}; let f = (x,) => new A(0,) {fun bar = + (x,) (y,)}; f (0,)}
 //│ Parsed:
-//│ TypingUnit(NuTypeDef(class, A, (), Tup(_: Var(y)), (), None, None, TypingUnit()), NuFunDef(Some(false), f, [], Lam(Tup(_: Var(x)), New(Some((TypeName(A),0,)), TypingUnit(List(fun bar = + (x,) (y,)),List())))), App(Var(f), Tup(_: IntLit(0))))
+//│ TypingUnit(NuTypeDef(class, A, (), Tup(_: Var(y)), (), None, None, TypingUnit()), NuFunDef(Some(false), f, [], Lam(Tup(_: Var(x)), New(Some((TypeName(A),0,)), TypingUnit(List(fun bar = + (x,) (y,)))))), App(Var(f), Tup(_: IntLit(0))))
 //│ Lifted:
 //│ TypingUnit {
 //│   class A$1(y,) {}
