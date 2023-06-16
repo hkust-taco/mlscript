@@ -2,4 +2,4 @@ import "./B.mls"
 
 let a = B.foo
 let b = A.Foo(0) // not allowed, unless we import "A.mls"
-log(a.x)
+console.log(a.x)

@@ -266,6 +266,8 @@ class Driver(options: DriverOptions) {
     saveToFile(filename, code)
   } catch {
       case CodeGenError(err) => report(ErrorReport(err, Nil, Diagnostic.Compilation), options.ignoreTypeError)
+      case t : Throwable =>
+        report(s"unexpected error: ${t.toString()}")
     }
 }
 
