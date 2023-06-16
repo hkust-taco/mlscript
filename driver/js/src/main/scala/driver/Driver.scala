@@ -12,7 +12,7 @@ import ts2mls.{TSProgram, TypeScript, TSPathResolver, JSFileSystem, JSWriter, Fi
 class Driver(options: DriverOptions) {
   import Driver._
   import ts2mls.JSFileSystem._
-  import JSCompilerBackend.ModuleType
+  import JSDriverBackend.ModuleType
 
   private val typer =
     new mlscript.Typer(
@@ -259,7 +259,7 @@ class Driver(options: DriverOptions) {
     imports: Ls[Import with ModuleType],
     exported: Boolean
   ): Unit = try {
-    val backend = new JSCompilerBackend()
+    val backend = new JSDriverBackend()
     jsBuiltinDecs.foreach(lst => backend.declareJSBuiltin(Pgrm(lst)))
     val lines = backend(program, moduleName, imports, exported)
     val code = lines.mkString("", "\n", "\n")
