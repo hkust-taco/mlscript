@@ -293,15 +293,25 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
     def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level = MinLevel
     override def toString = if (pol) "⊥" else "⊤"
   }
+
+  sealed abstract class UnusableLike extends AbstractTag
   
   /** Represents a type variable skolem that was extruded outsdie its polym level.
     * The goal is to retain precise information to produce good errors,
     * but still have this be functionally equivalent to `ExtrType(pol)`. */
-  case class Extruded(pol: Bool, underlying: SkolemTag)(val prov: TypeProvenance, val reason: Ls[Ls[ST]]) extends AbstractTag with TypeVarOrRigidVar {
+  case class Extruded(pol: Bool, underlying: SkolemTag)(val prov: TypeProvenance, val reason: Ls[Ls[ST]]) extends UnusableLike with TypeVarOrRigidVar {
     val level: Level = MinLevel
     val id = underlying.id
     def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level = 0
     override def toString = if (pol) s"⊥(${underlying})" else s"⊤(${underlying})"
+  }
+
+  // TODO: implement Unsupported
+  case class Unsupported(underlying: SkolemTag)(val prov: TypeProvenance) extends UnusableLike {
+    val level: Level = MinLevel
+    val id = underlying.id
+    def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level = 0
+    override def toString = ""
   }
   
   /** Polarity `pol` being `true` means union; `false` means intersection. */
