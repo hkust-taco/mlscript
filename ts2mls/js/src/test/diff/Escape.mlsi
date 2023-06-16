@@ -7,8 +7,8 @@ export declare module Escape {
   }
   fun id"mixin"(id"module": Str): unit
   val id"forall": Num
-  module id"trait" {
-    module id"of" {
+  declare module id"trait" {
+    declare module id"of" {
     }
   }
 }

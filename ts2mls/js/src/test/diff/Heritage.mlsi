@@ -32,7 +32,7 @@ export declare module Heritage {
   declare class OR[R] extends O[R] {
     fun xx(x: R): R
   }
-  module Five {
+  declare module Five {
     export declare class ROTK {
       val wu: Str
     }

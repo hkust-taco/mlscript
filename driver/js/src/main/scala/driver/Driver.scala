@@ -58,7 +58,7 @@ class Driver(options: DriverOptions) {
     try {
       Driver.totalErrors = 0
       implicit var ctx: Ctx = Ctx.init
-      implicit val raise: Raise = report
+      implicit val raise: Raise = (diag: Diagnostic) => report(diag, options.ignoreTypeError)
       implicit val extrCtx: Opt[typer.ExtrCtx] = N
       implicit val vars: Map[Str, typer.SimpleType] = Map.empty
       implicit val stack = List[String]()
@@ -68,7 +68,7 @@ class Driver(options: DriverOptions) {
     }
     catch {
       case err: Diagnostic =>
-        report(err)
+        report(err, options.ignoreTypeError)
         false
       case t : Throwable =>
         report(s"unexpected error: ${t.toString()}")
@@ -77,7 +77,7 @@ class Driver(options: DriverOptions) {
   
   def genPackageJson(): Unit =
     if (!exists(s"${options.outputDir}/package.json")) {
-      val content = """{ "type": "module" }""" // TODO: more settings?
+      val content = "{ 'type': 'module' }\n" // TODO: more settings?
       saveToFile(s"${options.outputDir}/package.json", content)
     }
 
@@ -181,7 +181,7 @@ class Driver(options: DriverOptions) {
       return tsprog.generate
     }
     parseAndRun(file.filename, {
-      case (definitions, _, imports, _) => {
+      case (definitions, declarations, imports, _) => {
         val depList = imports.map(_.path)
 
         val (cycleList, otherList) = depList.partitionMap { dep => {
@@ -244,6 +244,7 @@ class Driver(options: DriverOptions) {
               }
             ), exported || importedModule(file.filename))
           }
+          else `type`(TypingUnit(declarations, Nil))
           true
         }
         else false
@@ -264,7 +265,7 @@ class Driver(options: DriverOptions) {
     val code = lines.mkString("", "\n", "\n")
     saveToFile(filename, code)
   } catch {
-      case CodeGenError(err) => report(ErrorReport(err, Nil, Diagnostic.Compilation))
+      case CodeGenError(err) => report(ErrorReport(err, Nil, Diagnostic.Compilation), options.ignoreTypeError)
     }
 }
 
@@ -288,17 +289,19 @@ object Driver {
   }
   
   // TODO factor with duplicated logic in DiffTests
-  private def report(diag: Diagnostic): Unit = {
+  private def report(diag: Diagnostic, ignoreTypeError: Boolean): Unit = {
     val sctx = Message.mkCtx(diag.allMsgs.iterator.map(_._1), "?")
     val headStr = diag match {
       case ErrorReport(msg, loco, src) =>
-        totalErrors += 1
         src match {
           case Diagnostic.Lexing =>
+            totalErrors += 1
             s"╔══[LEXICAL ERROR] "
           case Diagnostic.Parsing =>
+            totalErrors += 1
             s"╔══[PARSE ERROR] "
-          case _ => // TODO customize too
+          case _ =>
+            if (!ignoreTypeError) totalErrors += 1
             s"╔══[ERROR] "
         }
       case WarningReport(msg, loco, src) =>

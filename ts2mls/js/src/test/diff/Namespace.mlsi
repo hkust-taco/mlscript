@@ -1,5 +1,5 @@
 export declare module Namespace {
-  module N1 {
+  declare module N1 {
     export fun f(x: anything): Num
     fun ff(y: anything): Num
     export declare class C {
@@ -8,13 +8,13 @@ export declare module Namespace {
     declare trait I {
       fun f(): Num
     }
-    export module N2 {
+    export declare module N2 {
       export fun fff(x: (false) | (true)): Num
       fun gg(c: C): C
       declare class BBB extends C {}
     }
   }
-  module AA {
+  declare module AA {
     export fun f(x: anything): Str
     export declare class C {
       fun f(): unit
@@ -22,7 +22,7 @@ export declare module Namespace {
     export declare trait I {
       fun f(): Num
     }
-    export module N2 {
+    export declare module N2 {
     }
   }
   fun f1(x: N1.C): N1.C

@@ -17,7 +17,7 @@ export declare module Type {
   declare class ABC {}
   type DEF = ABC
   type TP[A, B, C] = (A, B, C, )
-  module NA {
+  declare module NA {
     fun fb(b: Str): unit
     export type B = Str
   }

@@ -8,6 +8,6 @@ export declare module Dec {
     constructor(name: Str, age: Num)
     fun getName(id: Num): Str
   }
-  module OOO {
+  declare module OOO {
   }
 }

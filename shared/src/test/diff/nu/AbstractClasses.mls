@@ -167,5 +167,3 @@ class C {
 //│ }
 //│ Code generation encountered an error:
 //│   unresolved symbol x
-
-

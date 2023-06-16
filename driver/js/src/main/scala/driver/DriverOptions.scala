@@ -11,5 +11,6 @@ final case class DriverOptions(
   outputDir: String,
   tsconfig: Option[String],
   interfaceDir: String,
+  ignoreTypeError: Boolean,
   force: Boolean // force to recompile if it is true
 )

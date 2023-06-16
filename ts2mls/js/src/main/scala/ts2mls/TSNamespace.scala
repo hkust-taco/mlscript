@@ -68,7 +68,7 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
     order.toList.foreach((p) => p match {
       case Left(subName) => {
         val ss = subSpace(subName)
-        writer.writeln(s"${indent}${expStr(ss._2)}module ${Converter.escapeIdent(subName)} {")
+        writer.writeln(s"${indent}${expStr(ss._2)}declare module ${Converter.escapeIdent(subName)} {")
         ss._1.generate(writer, indent + "  ")
         writer.writeln(s"$indent}")
       }

@@ -14,7 +14,7 @@ export declare module Overload {
   fun swap(x: anything): MutArray[anything] /* warning: the overload of function swap is not supported yet. */
   fun u(x: anything): Str /* warning: the overload of function u is not supported yet. */
   fun doSome[T, U](x: anything): nothing /* warning: the overload of function doSome is not supported yet. */
-  module XX {
+  declare module XX {
     export fun f[T](x: T, n: anything): Str /* warning: the overload of function f is not supported yet. */
   }
   declare class WWW {

@@ -5,11 +5,11 @@ export declare module Variables {
   val bar: false
   declare class FooBar {}
   val fb: FooBar
-  module ABC {
+  declare module ABC {
     export declare class DEF {}
   }
   val d: ABC.DEF
-  module DD {
+  declare module DD {
     export val foo: Num
     val bar: Num
   }
