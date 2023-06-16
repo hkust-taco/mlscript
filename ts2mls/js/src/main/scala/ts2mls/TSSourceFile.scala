@@ -43,7 +43,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
     }
     else if (nodeObject.isExportAssignment) {
       val name = nodeObject.idExpression.escapedText
-      global.export(name)
+      global.`export`(name)
     }
   })
 
@@ -63,7 +63,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
   private def parseExportDeclaration(elements: TSNodeArray): Unit = {
     elements.foreach(ele =>
       if (ele.propertyName.isUndefined)
-        global.export(ele.symbol.escapedName)
+        global.`export`(ele.symbol.escapedName)
       else {
         val alias = ele.symbol.escapedName
         global.getTop(ele.propertyName.escapedText).fold(())(tp => global.put(alias, TSRenamedType(alias, tp), true))

@@ -6,7 +6,7 @@ export declare module ClassMember {
     fun addScore(sub: Str, score: Num): unit
     fun getID(): Num
   }
-  declare class Foo<T> {
+  declare class Foo[T] {
     fun bar(x: T): unit
   }
   declare class EZ {
@@ -17,7 +17,7 @@ export declare module ClassMember {
       val a: Num
     }
   }
-  declare class TTT<T> {
+  declare class TTT[T] {
     fun ttt(x: T): T
     fun ttt2(x: T): T
   }

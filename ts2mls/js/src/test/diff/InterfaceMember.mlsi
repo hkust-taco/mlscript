@@ -5,7 +5,7 @@ export declare module InterfaceMember {
     fun c(): (false) | (true)
     fun d(x: Str): unit
   }
-  declare trait II<T> {
+  declare trait II[T] {
     fun test(x: T): Num
   }
   fun create(): {v: Num,}
@@ -14,13 +14,13 @@ export declare module InterfaceMember {
     fun callback(): (x: Num) => unit
   }
   declare trait SearchFunc {
-    val __call: Unsupported<"(source: string, subString: string): boolean;", "InterfaceMember.ts", 24, 22>
+    val __call: Unsupported["(source: string, subString: string): boolean;", "InterfaceMember.ts", 24, 22]
   }
   declare trait StringArray {
-    val __index: Unsupported<"[index: number]: string;", "InterfaceMember.ts", 28, 23>
+    val __index: Unsupported["[index: number]: string;", "InterfaceMember.ts", 28, 23]
   }
   declare trait Counter {
-    val __call: Unsupported<"(start: number): string;", "InterfaceMember.ts", 32, 19>
+    val __call: Unsupported["(start: number): string;", "InterfaceMember.ts", 32, 19]
     val interval: Num
     fun reset(): unit
   }
@@ -28,11 +28,11 @@ export declare module InterfaceMember {
     val a: Num
     fun b(x: (false) | (true)): Str
   }
-  declare trait Simple2<T> {
+  declare trait Simple2[T] {
     val abc: T
   }
   declare trait Next extends Simple {}
-  declare trait TTT<T> {
+  declare trait TTT[T] {
     fun ttt(x: T): T
   }
 }

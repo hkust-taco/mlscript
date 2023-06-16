@@ -34,7 +34,7 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
     }
     else members.update(name, (tp, exported))
 
-  def export(name: String): Unit =
+  def `export`(name: String): Unit =
     if (members.contains(name))
       members.update(name, (members(name)._1, true))
     else if (subSpace.contains(name))

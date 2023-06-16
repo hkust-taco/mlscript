@@ -5,20 +5,20 @@ export declare module Overload {
   }
   fun app: ((f: (x: Str) => unit, x: Num) => unit) & ((f: (x: Str) => unit, x: Str) => unit)
   fun create: ((x: Num) => () => (false) | (true)) & ((x: (false) | (true)) => () => (false) | (true))
-  fun g0: ((x: MutArray<Str>) => Str) & ((x: MutArray<Object>) => Str)
-  fun db: ((x: Num) => MutArray<Num>) & ((x: Object) => MutArray<Num>)
+  fun g0: ((x: MutArray[Str]) => Str) & ((x: MutArray[Object]) => Str)
+  fun db: ((x: Num) => MutArray[Num]) & ((x: Object) => MutArray[Num])
   declare class N {}
   fun id: ((x: M) => unit) & ((x: N) => unit)
   fun tst: ((x: {z: Num,}) => {y: Str,}) & ((x: {z: (false) | (true),}) => {y: Str,})
   fun op: ((((x: Num) => unit) & ((x: Num, y: Num) => unit)) & ((x: Num) => unit)) & ((x: Num, y: (false) | (true)) => unit)
   fun swap: ((x: (Num, Str, )) => (Num, Str, )) & ((x: (Str, Num, )) => (Num, Str, ))
   fun u: ((x: ((Num) | (false)) | (true)) => Str) & ((x: Object) => Str)
-  fun doSome<T, U>(x: anything): unit /* warning: the overload of function doSome is not supported yet. */
+  fun doSome[T, U](x: anything): unit /* warning: the overload of function doSome is not supported yet. */
   module XX {
-    fun f<T>(x: T, n: anything): Str /* warning: the overload of function f is not supported yet. */
+    fun f[T](x: T, n: anything): Str /* warning: the overload of function f is not supported yet. */
   }
   declare class WWW {
-    fun F<T>(x: T): anything /* warning: the overload of function F is not supported yet. */
+    fun F[T](x: T): anything /* warning: the overload of function F is not supported yet. */
   }
   fun baz(): anything /* warning: the overload of function baz is not supported yet. */
 }

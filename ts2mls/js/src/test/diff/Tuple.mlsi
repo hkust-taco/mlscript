@@ -7,8 +7,8 @@ export declare module Tuple {
   fun tupleIt(x: Str): (() => Str, )
   fun s(flag: (false) | (true)): ((Str) | (Num), ((Num) | (false)) | (true), )
   fun s2(t: ((false) | (true), (Str) | (Num), )): (Str) | (Num)
-  fun ex<T, U>(x: T, y: U): (T, U, (T) & (U), )
-  fun foo<T, U>(x: ((T) & (U), )): unit
+  fun ex[T, U](x: T, y: U): (T, U, (T) & (U), )
+  fun foo[T, U](x: ((T) & (U), )): unit
   fun conv(x: {y: Num,}): ({y: Num,}, {z: Str,}, )
   declare class A {
     val x: Num

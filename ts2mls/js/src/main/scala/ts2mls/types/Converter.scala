@@ -28,7 +28,7 @@ object Converter {
   def generateFunDeclaration(tsType: TSType, name: String, exported: Boolean)(implicit indent: String = ""): String = tsType match {
     case TSFunctionType(params, res, typeVars) => {
       val pList = if (params.isEmpty) "" else params.map(p => s"${convert(p)("")}").reduceLeft((r, p) => s"$r, $p")
-      val tpList = if (typeVars.isEmpty) "" else s"<${typeVars.map(p => convert(p)("")).reduceLeft((r, p) => s"$r, $p")}>"
+      val tpList = if (typeVars.isEmpty) "" else s"[${typeVars.map(p => convert(p)("")).reduceLeft((r, p) => s"$r, $p")}]"
       val exp = if (exported) "export " else ""
       s"${indent}${exp}fun ${escapeIdent(name)}$tpList($pList): ${convert(res)("")}"
     }
@@ -49,24 +49,24 @@ object Converter {
     case TSIntersectionType(lhs, rhs) => s"(${convert(lhs)}) & (${convert(rhs)})"
     case TSTypeParameter(name, _) => name // constraints should be translated where the type parameters were created rather than be used
     case TSTupleType(lst) => s"(${lst.foldLeft("")((p, t) => s"$p${convert(t)}, ")})"
-    case TSArrayType(element) => s"MutArray<${convert(element)}>"
+    case TSArrayType(element) => s"MutArray[${convert(element)}]"
     case TSEnumType => "Int"
     case TSMemberType(base, _) => convert(base) // TODO: support private/protected members
     case TSInterfaceType(name, members, typeVars, parents) =>
       convertRecord(s"trait ${escapeIdent(name)}", members, typeVars, parents, Map(), List(), exported)(indent)
     case TSClassType(name, members, statics, typeVars, parents, cons) =>
       convertRecord(s"class ${escapeIdent(name)}", members, typeVars, parents, statics, cons, exported)(indent)
-    case TSSubstitutionType(base, applied) => s"${base}<${applied.map((app) => convert(app)).reduceLeft((res, s) => s"$res, $s")}>"
+    case TSSubstitutionType(base, applied) => s"${base}[${applied.map((app) => convert(app)).reduceLeft((res, s) => s"$res, $s")}]"
     case overload @ TSIgnoredOverload(base, _) => s"${convert(base)} ${overload.warning}"
     case TSParameterType(name, tp) => s"${escapeIdent(name)}: ${convert(tp)}"
     case TSTypeAlias(name, ori, tp) => {
       val exp = if (exported) "export " else ""
       if (tp.isEmpty) s"${indent}${exp}type ${escapeIdent(name)} = ${convert(ori)}"
-      else s"${indent}${exp}type ${escapeIdent(name)}<${tp.map(t => convert(t)).reduceLeft((s, t) => s"$s, $t")}> = ${convert(ori)}"
+      else s"${indent}${exp}type ${escapeIdent(name)}[${tp.map(t => convert(t)).reduceLeft((s, t) => s"$s, $t")}] = ${convert(ori)}"
     }
     case TSLiteralType(value, isString) => if (isString) s"\"$value\"" else value
     case TSUnsupportedType(code, filename, line, column) =>
-      s"""Unsupported<"$code", "$filename", $line, $column>"""
+      s"""Unsupported["$code", "$filename", $line, $column]"""
     case tp => throw new AssertionError(s"unexpected type $tp.")
   }
 
@@ -110,7 +110,7 @@ object Converter {
         else parents.foldLeft(s" extends ")((b, p) => s"$b${convert(p)}, ").dropRight(2)
       if (typeVars.isEmpty) s"${indent}${exp}declare $typeName$inheritance $body"
       else
-        s"${indent}${exp}declare $typeName<${typeVars.map((tv) => tv.name).reduceLeft((p, s) => s"$p, $s")}>$inheritance $body" // TODO: add constraints
+        s"${indent}${exp}declare $typeName[${typeVars.map((tv) => tv.name).reduceLeft((p, s) => s"$p, $s")}]$inheritance $body" // TODO: add constraints
     }
   }
 }

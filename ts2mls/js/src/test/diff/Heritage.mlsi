@@ -3,11 +3,11 @@ export declare module Heritage {
     fun foo(): unit
   }
   declare class B extends A {}
-  declare class C<T> {
+  declare class C[T] {
     fun set(x: T): unit
     fun get(): T
   }
-  declare class D extends C<Num> {}
+  declare class D extends C[Num] {}
   declare trait Wu {
     val x: (false) | (true)
   }
@@ -20,16 +20,16 @@ export declare module Heritage {
   declare trait Never extends WuWuWu {
     fun w(): nothing
   }
-  declare class VG<T> {
+  declare class VG[T] {
     val x: T
   }
-  declare class Home<T> extends VG<Str> {
+  declare class Home[T] extends VG[Str] {
     val y: T
   }
-  declare trait O<I> {
+  declare trait O[I] {
     fun xx(x: I): I
   }
-  declare class OR<R> extends O<R> {
+  declare class OR[R] extends O[R] {
     fun xx(x: R): R
   }
   module Five {

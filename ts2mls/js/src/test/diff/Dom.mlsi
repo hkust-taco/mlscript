@@ -12,7 +12,7 @@ declare trait Console {
   fun timeLog(data: anything): unit
   val time: (() => unit) & ((label: Str) => unit)
   fun group(data: anything): unit
-  val table: ((() => unit) & ((tabularData: anything) => unit)) & ((tabularData: anything, properties: MutArray<Str>) => unit)
+  val table: ((() => unit) & ((tabularData: anything) => unit)) & ((tabularData: anything, properties: MutArray[Str]) => unit)
   fun trace(data: anything): unit
   fun warn(data: anything): unit
   fun groupCollapsed(data: anything): unit

@@ -8,15 +8,15 @@ export declare module Optional {
     val width: (Num) | (undefined)
   }
   fun did: ((x: Num) => Num) & ((x: Num, f: (x: Num) => Num) => Num)
-  fun getOrElse: (() => Object) & ((arr: MutArray<Object>) => Object)
+  fun getOrElse: (() => Object) & ((arr: MutArray[Object]) => Object)
   declare class ABC {}
   fun testABC: (() => unit) & ((abc: ABC) => unit)
   fun testSquareConfig: (() => unit) & ((conf: SquareConfig) => unit)
   fun err: (() => unit) & ((msg: (Num, Str, )) => unit)
   fun toStr: (() => Str) & ((x: ((Num) | (false)) | (true)) => Str)
-  fun boo<T, U>(x: (T) & (U)): unit /* warning: the overload of function boo is not supported yet. */
-  declare class B<T> {
+  fun boo[T, U](x: (T) & (U)): unit /* warning: the overload of function boo is not supported yet. */
+  declare class B[T] {
     val b: T
   }
-  fun boom: (() => anything) & ((b: B<nothing>) => anything)
+  fun boom: (() => anything) & ((b: B[nothing]) => anything)
 }
