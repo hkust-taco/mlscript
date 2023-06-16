@@ -10,7 +10,7 @@ class M {
   foo(x: number): string;
   foo(x: string): string;
 
-  foo(x) {
+  foo(x): string {
     return x.toString();
   }
 }
@@ -25,21 +25,21 @@ function app(f, x): void {
 function create(x: number): () => boolean;
 function create(x: boolean): () => boolean;
 
-function create(x) {
+function create(x): () => boolean {
   return function() { return x == 0; }
 }
 
 function g0(x: string[]): string;
 function g0(x: object[]): string;
 
-function g0(x) {
+function g0(x): string {
   return x[0].toString();
 }
 
 function db(x: number): number[];
 function db(x: object): number[];
 
-function db(x) {
+function db(x): number[] {
   return [0, 1];
 }
 
@@ -53,16 +53,16 @@ function id(x) {}
 function tst(x: {z: number}): {y: string};
 function tst(x: {z: boolean}): {y: string};
 
-function tst(x) {
+function tst(x): {y: string} {
   return {y: x.z.toString()}
 }
 
 function op(x: number, y?: number): void;
 function op(x: number, y?: boolean): void;
 
-function op(x, y) {}
+function op(x, y): void {}
 
-function swap(x: [number, string]): [number, string];
+function swap(x: [number, string]): [string, number];
 function swap(x: [string, number]): [number, string];
 
 function swap(x) {
@@ -72,14 +72,14 @@ function swap(x) {
 function u(x: number | boolean): string;
 function u(x: object): string;
 
-function u(x) {
+function u(x): string {
   return x.toString();
 }
 
 function doSome<T, U>(x: T & U): never;
 function doSome<T, U>(x: string): never;
 
-function doSome<T, U>(x) {
+function doSome<T, U>(x): never {
   while (true);
 }
 
@@ -87,7 +87,7 @@ namespace XX {
   export function f<T>(x: T, n: number): string;
   export function f<T>(x: T, n: boolean): string;
 
-  export function f<T>(x: T, n) {
+  export function f<T>(x: T, n): string {
     return "";
   }
 }
@@ -96,7 +96,7 @@ class WWW {
   F<T>(x: string): T;
   F<T>(x: number): T;
 
-  F<T>(x: T) {
+  F<T>(x: T): T {
     return null;
   }
 }

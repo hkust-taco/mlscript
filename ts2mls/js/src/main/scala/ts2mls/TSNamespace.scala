@@ -40,10 +40,13 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
     else if (subSpace.contains(name))
       subSpace.update(name, (subSpace(name)._1, true))
 
+  def exported(name: String): Boolean =
+    if (members.contains(name)) members(name)._2
+    else throw new Exception(s"member $name not found.")
+
   def get(name: String): TSType =
     if (members.contains(name)) members(name)._1
-    else if (!parent.isEmpty) parent.get.get(name)
-    else throw new Exception(s"member $name not found.")
+    else parent.fold(throw new Exception(s"member $name not found."))(p => p.get(name))
 
   def getTop(name: String): Option[TSType] =
     if (members.contains(name)) members(name)._1 match {

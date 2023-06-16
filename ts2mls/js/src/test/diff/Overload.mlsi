@@ -1,24 +1,24 @@
 export declare module Overload {
-  fun f: ((x: Num) => Str) & ((x: Str) => Str)
+  fun f(x: anything): Str /* warning: the overload of function f is not supported yet. */
   declare class M {
-    val foo: ((x: Num) => Str) & ((x: Str) => Str)
+    fun foo(x: anything): Str /* warning: the overload of function foo is not supported yet. */
   }
-  fun app: ((f: (x: Str) => unit, x: Num) => unit) & ((f: (x: Str) => unit, x: Str) => unit)
-  fun create: ((x: Num) => () => (false) | (true)) & ((x: (false) | (true)) => () => (false) | (true))
-  fun g0: ((x: MutArray[Str]) => Str) & ((x: MutArray[Object]) => Str)
-  fun db: ((x: Num) => MutArray[Num]) & ((x: Object) => MutArray[Num])
+  fun app(f: anything, x: anything): unit /* warning: the overload of function app is not supported yet. */
+  fun create(x: anything): () => (false) | (true) /* warning: the overload of function create is not supported yet. */
+  fun g0(x: anything): Str /* warning: the overload of function g0 is not supported yet. */
+  fun db(x: anything): MutArray[Num] /* warning: the overload of function db is not supported yet. */
   declare class N {}
-  fun id: ((x: M) => unit) & ((x: N) => unit)
-  fun tst: ((x: {z: Num,}) => {y: Str,}) & ((x: {z: (false) | (true),}) => {y: Str,})
-  fun op: ((((x: Num) => unit) & ((x: Num, y: Num) => unit)) & ((x: Num) => unit)) & ((x: Num, y: (false) | (true)) => unit)
-  fun swap: ((x: (Num, Str, )) => (Num, Str, )) & ((x: (Str, Num, )) => (Num, Str, ))
-  fun u: ((x: ((Num) | (false)) | (true)) => Str) & ((x: Object) => Str)
-  fun doSome[T, U](x: anything): unit /* warning: the overload of function doSome is not supported yet. */
+  fun id(x: anything): unit /* warning: the overload of function id is not supported yet. */
+  fun tst(x: anything): {y: Str,} /* warning: the overload of function tst is not supported yet. */
+  fun op(x: anything, y: anything): unit /* warning: the overload of function op is not supported yet. */
+  fun swap(x: anything): MutArray[anything] /* warning: the overload of function swap is not supported yet. */
+  fun u(x: anything): Str /* warning: the overload of function u is not supported yet. */
+  fun doSome[T, U](x: anything): nothing /* warning: the overload of function doSome is not supported yet. */
   module XX {
-    fun f[T](x: T, n: anything): Str /* warning: the overload of function f is not supported yet. */
+    export fun f[T](x: T, n: anything): Str /* warning: the overload of function f is not supported yet. */
   }
   declare class WWW {
-    fun F[T](x: T): anything /* warning: the overload of function F is not supported yet. */
+    fun F[T](x: T): T /* warning: the overload of function F is not supported yet. */
   }
   fun baz(): anything /* warning: the overload of function baz is not supported yet. */
 }

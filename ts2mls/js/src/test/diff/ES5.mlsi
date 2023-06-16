@@ -1,7 +1,7 @@
 val NaN: Num
 val Infinity: Num
 fun eval(x: Str): anything
-fun parseInt: ((string: Str) => Num) & ((string: Str, radix: Num) => Num)
+fun parseInt(string: Str, radix: (Num) | (undefined)): Num
 fun parseFloat(string: Str): Num
 fun isNaN(number: Num): (false) | (true)
 fun isFinite(number: Num): (false) | (true)
@@ -25,10 +25,10 @@ declare trait PropertyDescriptor {
   val value: (anything) | (undefined)
 }
 declare trait Function {
-  fun bind(thisArg: anything, argArray: anything): anything
-  val apply: ((thisArg: anything) => anything) & ((thisArg: anything, argArray: anything) => anything)
+  fun bind(thisArg: anything, argArray: (anything) | (MutArray[anything])): anything
+  fun apply(thisArg: anything, argArray: (anything) | (undefined)): anything
   val prototype: anything
-  fun call(thisArg: anything, argArray: anything): anything
+  fun call(thisArg: anything, argArray: (anything) | (MutArray[anything])): anything
   fun toString(): Str
   val length: Num
   val caller: Function
@@ -41,7 +41,7 @@ declare trait Math {
   fun random(): Num
   fun asin(x: Num): Num
   val LOG2E: Num
-  fun min(values: Num): Num
+  fun min(values: (Num) | (MutArray[Num])): Num
   fun cos(x: Num): Num
   val LOG10E: Num
   val PI: Num
@@ -56,7 +56,7 @@ declare trait Math {
   fun atan(x: Num): Num
   fun pow(x: Num, y: Num): Num
   fun ceil(x: Num): Num
-  fun max(values: Num): Num
+  fun max(values: (Num) | (MutArray[Num])): Num
   fun atan2(y: Num, x: Num): Num
   fun sqrt(x: Num): Num
   fun tan(x: Num): Num
@@ -74,31 +74,31 @@ declare trait Date {
   fun getDate(): Num
   fun getUTCDate(): Num
   fun setDate(date: Num): Num
-  val setFullYear: (((year: Num) => Num) & ((year: Num, month: Num) => Num)) & ((year: Num, month: Num, date: Num) => Num)
+  fun setFullYear(year: Num, month: (Num) | (undefined), date: (Num) | (undefined)): Num
   fun getMinutes(): Num
   fun getFullYear(): Num
   fun setUTCDate(date: Num): Num
-  val setMinutes: (((min: Num) => Num) & ((min: Num, sec: Num) => Num)) & ((min: Num, sec: Num, ms: Num) => Num)
+  fun setMinutes(min: Num, sec: (Num) | (undefined), ms: (Num) | (undefined)): Num
   fun setTime(time: Num): Num
   fun toUTCString(): Str
   fun toLocaleDateString(): Str
-  val setUTCMonth: ((month: Num) => Num) & ((month: Num, date: Num) => Num)
-  val setUTCFullYear: (((year: Num) => Num) & ((year: Num, month: Num) => Num)) & ((year: Num, month: Num, date: Num) => Num)
-  val setHours: ((((hours: Num) => Num) & ((hours: Num, min: Num) => Num)) & ((hours: Num, min: Num, sec: Num) => Num)) & ((hours: Num, min: Num, sec: Num, ms: Num) => Num)
+  fun setUTCMonth(month: Num, date: (Num) | (undefined)): Num
+  fun setUTCFullYear(year: Num, month: (Num) | (undefined), date: (Num) | (undefined)): Num
+  fun setHours(hours: Num, min: (Num) | (undefined), sec: (Num) | (undefined), ms: (Num) | (undefined)): Num
   fun getTime(): Num
-  val setSeconds: ((sec: Num) => Num) & ((sec: Num, ms: Num) => Num)
-  val setUTCSeconds: ((sec: Num) => Num) & ((sec: Num, ms: Num) => Num)
+  fun setSeconds(sec: Num, ms: (Num) | (undefined)): Num
+  fun setUTCSeconds(sec: Num, ms: (Num) | (undefined)): Num
   fun getUTCFullYear(): Num
   fun getUTCHours(): Num
   fun getUTCDay(): Num
-  val setUTCMinutes: (((min: Num) => Num) & ((min: Num, sec: Num) => Num)) & ((min: Num, sec: Num, ms: Num) => Num)
+  fun setUTCMinutes(min: Num, sec: (Num) | (undefined), ms: (Num) | (undefined)): Num
   fun getHours(): Num
   fun toISOString(): Str
   fun toTimeString(): Str
   fun setUTCMilliseconds(ms: Num): Num
   fun getUTCSeconds(): Num
   fun getMilliseconds(): Num
-  val setMonth: ((month: Num) => Num) & ((month: Num, date: Num) => Num)
+  fun setMonth(month: Num, date: (Num) | (undefined)): Num
   fun getDay(): Num
   fun toLocaleTimeString(): Str
   fun getSeconds(): Num
@@ -107,6 +107,6 @@ declare trait Date {
   fun toString(): Str
   fun getMonth(): Num
   fun getTimezoneOffset(): Num
-  val setUTCHours: ((((hours: Num) => Num) & ((hours: Num, min: Num) => Num)) & ((hours: Num, min: Num, sec: Num) => Num)) & ((hours: Num, min: Num, sec: Num, ms: Num) => Num)
-  val toJSON: (() => Str) & ((key: anything) => Str)
+  fun setUTCHours(hours: Num, min: (Num) | (undefined), sec: (Num) | (undefined), ms: (Num) | (undefined)): Num
+  fun toJSON(key: (anything) | (undefined)): Str
 }

@@ -1,23 +1,23 @@
 declare trait Console {
-  fun assert(data: anything): unit
-  val count: (() => unit) & ((label: Str) => unit)
-  val timeEnd: (() => unit) & ((label: Str) => unit)
+  fun assert(condition: ((false) | (true)) | (undefined), data: (anything) | (MutArray[anything])): unit
+  fun count(label: (Str) | (undefined)): unit
+  fun timeEnd(label: (Str) | (undefined)): unit
   fun clear(): unit
-  val timeStamp: (() => unit) & ((label: Str) => unit)
-  fun info(data: anything): unit
-  fun debug(data: anything): unit
-  val countReset: (() => unit) & ((label: Str) => unit)
-  val dir: ((() => unit) & ((item: anything) => unit)) & ((item: anything, options: anything) => unit)
-  fun error(data: anything): unit
-  fun timeLog(data: anything): unit
-  val time: (() => unit) & ((label: Str) => unit)
-  fun group(data: anything): unit
-  val table: ((() => unit) & ((tabularData: anything) => unit)) & ((tabularData: anything, properties: MutArray[Str]) => unit)
-  fun trace(data: anything): unit
-  fun warn(data: anything): unit
-  fun groupCollapsed(data: anything): unit
-  fun dirxml(data: anything): unit
-  fun log(data: anything): unit
+  fun timeStamp(label: (Str) | (undefined)): unit
+  fun info(data: (anything) | (MutArray[anything])): unit
+  fun debug(data: (anything) | (MutArray[anything])): unit
+  fun countReset(label: (Str) | (undefined)): unit
+  fun dir(item: (anything) | (undefined), options: (anything) | (undefined)): unit
+  fun error(data: (anything) | (MutArray[anything])): unit
+  fun timeLog(label: (Str) | (undefined), data: (anything) | (MutArray[anything])): unit
+  fun time(label: (Str) | (undefined)): unit
+  fun group(data: (anything) | (MutArray[anything])): unit
+  fun table(tabularData: (anything) | (undefined), properties: (MutArray[Str]) | (undefined)): unit
+  fun trace(data: (anything) | (MutArray[anything])): unit
+  fun warn(data: (anything) | (MutArray[anything])): unit
+  fun groupCollapsed(data: (anything) | (MutArray[anything])): unit
+  fun dirxml(data: (anything) | (MutArray[anything])): unit
+  fun log(data: (anything) | (MutArray[anything])): unit
   fun groupEnd(): unit
 }
 val console: Console

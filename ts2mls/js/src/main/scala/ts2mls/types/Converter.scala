@@ -32,10 +32,7 @@ object Converter {
       val exp = if (exported) "export " else ""
       s"${indent}${exp}fun ${escapeIdent(name)}$tpList($pList): ${convert(res)("")}"
     }
-    case overload @ TSIgnoredOverload(base, _) => s"${generateFunDeclaration(base, name, false)} ${overload.warning}"
-    case inter: TSIntersectionType =>
-      val exp = if (exported) "export " else ""
-      s"${indent}${exp}fun ${escapeIdent(name)}: ${Converter.convert(inter)}"
+    case overload @ TSIgnoredOverload(base, _) => s"${generateFunDeclaration(base, name, exported)} ${overload.warning}"
     case _ => throw new AssertionError("non-function type is not allowed.")
   }
 

@@ -9,7 +9,7 @@ class Some<A>(value: A)
 class None()
 
 fun parse(s: Str) =
-  let i = parseInt(s)
+  let i = parseInt(s, undefined)
   if
     isNaN(i) then None()
     _ then Some(i)

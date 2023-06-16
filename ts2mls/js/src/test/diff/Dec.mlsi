@@ -1,6 +1,6 @@
 export declare module Dec {
   fun getName(id: (Str) | (Num)): Str
-  fun render: (() => Str) & ((callback: () => unit) => Str)
+  fun render(callback: (() => unit) | (undefined)): Str
   declare trait Get {
     val __call: Unsupported["(id: string): string", "Dec.d.ts", 4, 22]
   }

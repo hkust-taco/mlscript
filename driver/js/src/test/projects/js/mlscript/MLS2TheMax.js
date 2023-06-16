@@ -17,7 +17,7 @@ const MLS2TheMax = new class MLS2TheMax {
   parse(s) {
     const self = this;
     return ((() => {
-      let i = parseInt(s);
+      let i = parseInt(s, undefined);
       return isNaN(i) === true ? self.None() : self.Some(i);
     })());
   }
