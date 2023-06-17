@@ -73,7 +73,7 @@ object DriverDiffTests {
     entry("Simple"),
     entry("Cycle2"),
     entry("Self", expectError = true),
-    entry("C", expectError = true),
+    entry("C", ignoreTypeError = true, expectError = true),
     entry("TS", Some("./tsconfig.json"), ignoreTypeError = true), // TODO: type members
     entry("Output", Some("./tsconfig.json")),
     entry("Output2", Some("./tsconfig.json")),

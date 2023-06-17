@@ -265,7 +265,9 @@ class Driver(options: DriverOptions) {
     val code = lines.mkString("", "\n", "\n")
     saveToFile(filename, code)
   } catch {
-      case CodeGenError(err) => report(ErrorReport(err, Nil, Diagnostic.Compilation), options.ignoreTypeError)
+      case CodeGenError(err) =>
+        totalErrors += 1
+        report(s"codegen error: $err")
       case t : Throwable =>
         report(s"unexpected error: ${t.toString()}")
     }
