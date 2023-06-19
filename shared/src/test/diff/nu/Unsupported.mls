@@ -1,16 +1,57 @@
 :NewDefs
 
-// TODO
-:e
-declare fun call: $Unsupported["(source: string, subString: string): boolean;", "Invoker.ts", 31, 54]
-//│ ╔══[ERROR] type identifier not found: $Unsupported
-//│ ║  l.5: 	declare fun call: $Unsupported["(source: string, subString: string): boolean;", "Invoker.ts", 31, 54]
-//│ ╙──     	                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ fun call: error
+declare class Foo() {
+  val index: $Unsupported["(id: string): string;", "Invoker.ts", 11, 4]
+  val x = 42
+}
+//│ declare class Foo() {
+//│   let index: nothing
+//│   let x: 42
+//│ }
 
-// TODO
+declare fun call: $Unsupported["(source: string, subString: string): boolean;", "Invoker.ts", 31, 54]
+//│ fun call: nothing
+
+:re
+let foo = Foo()
+//│ let foo: Foo
+//│ foo
+//│ Runtime error:
+//│   ReferenceError: Foo is not defined
+
+:re
+foo.x // ok! 42 is supported!
+//│ 42
+//│ res
+//│ Runtime error:
+//│   ReferenceError: foo is not defined
+
+:e
+:re
+foo.index("abc")
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.31: 	foo.index("abc")
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ╟── signature of member `index` of type `nothing` (TypeScript type "(id: string): string;" at Invoker.ts, 11, 4) is not supported
+//│ ║  l.4: 	  val index: $Unsupported["(id: string): string;", "Invoker.ts", 11, 4]
+//│ ║       	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into field selection with expected type `"abc" -> ?a`
+//│ ║  l.31: 	foo.index("abc")
+//│ ╙──      	^^^^^^^^^
+//│ error
+//│ res
+//│ Runtime error:
+//│   ReferenceError: foo is not defined
+
+:e
 :re
 call()
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.48: 	call()
+//│ ║        	^^^^^^
+//│ ╟── reference of type `nothing` (TypeScript type "(source: string, subString: string): boolean;" at Invoker.ts, 31, 54) is not supported
+//│ ║  l.48: 	call()
+//│ ╙──      	^^^^
 //│ error
 //│ res
 //│ Runtime error:

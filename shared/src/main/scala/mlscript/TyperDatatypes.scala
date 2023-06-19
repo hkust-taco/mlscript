@@ -306,12 +306,12 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
     override def toString = if (pol) s"⊥(${underlying})" else s"⊤(${underlying})"
   }
 
-  // TODO: implement Unsupported
-  case class Unsupported(id: Var, tp: Str, file: Str, line: Int, col: Int)(val prov: TypeProvenance) extends UnusableLike {
+  case class Unsupported(tp: Str, file: Str, line: BigInt, col: BigInt)(val prov: TypeProvenance) extends UnusableLike {
+    val id = StrLit(showTSType)
     val level: Level = MinLevel
     def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level = 0
-    override def toString = s"Unsupported(${id.name}: $showTSType)"
-    def showTSType: Str = s"$tp at $file, $line, $col"
+    override def toString = s"Unsupported($showTSType)"
+    def showTSType: Str = s"\"$tp\" at $file, $line, $col"
   }
   
   /** Polarity `pol` being `true` means union; `false` means intersection. */

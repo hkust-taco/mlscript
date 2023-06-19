@@ -1040,7 +1040,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       
       def doesntMatch(ty: SimpleType) = msg"does not match type `${ty.expNeg}`"
       def doesntHaveField(n: Str) = msg"does not have field '$n'"
-      def doesntSupport(uns: Unsupported) = msg"does not support TypeScript type ${uns.showTSType} "
+      def doesntSupport(uns: Unsupported) = msg"(TypeScript type ${uns.showTSType}) is not supported"
       
       val lhsChain: List[ST] = cctx._1
       val rhsChain: List[ST] = cctx._2
