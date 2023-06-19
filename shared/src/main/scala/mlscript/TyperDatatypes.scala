@@ -307,11 +307,11 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
   }
 
   // TODO: implement Unsupported
-  case class Unsupported(underlying: SkolemTag)(val prov: TypeProvenance) extends UnusableLike {
+  case class Unsupported(id: Var, tp: Str, file: Str, line: Int, col: Int)(val prov: TypeProvenance) extends UnusableLike {
     val level: Level = MinLevel
-    val id = underlying.id
     def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level = 0
-    override def toString = ""
+    override def toString = s"Unsupported(${id.name}: $showTSType)"
+    def showTSType: Str = s"$tp at $file, $line, $col"
   }
   
   /** Polarity `pol` being `true` means union; `false` means intersection. */
@@ -389,9 +389,10 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
       case (obj1: ObjectTag, obj2: ObjectTag) => obj1.id compare obj2.id
       case (SkolemTag(_, id1), SkolemTag(_, id2)) => id1 compare id2
       case (Extruded(_, id1), Extruded(_, id2)) => id1 compare id2
+      case (uns1: Unsupported, uns2: Unsupported) => uns1.id compare uns2.id
       case (_: ObjectTag, _) => 0
       case (_: SkolemTag, _) => 1
-      case (_: Extruded, _) => 2
+      case (_: UnusableLike, _) => 2
     }
   }
   

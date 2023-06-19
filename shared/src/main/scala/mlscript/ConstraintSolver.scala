@@ -1040,6 +1040,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       
       def doesntMatch(ty: SimpleType) = msg"does not match type `${ty.expNeg}`"
       def doesntHaveField(n: Str) = msg"does not have field '$n'"
+      def doesntSupport(uns: Unsupported) = msg"does not support TypeScript type ${uns.showTSType} "
       
       val lhsChain: List[ST] = cctx._1
       val rhsChain: List[ST] = cctx._2
@@ -1166,6 +1167,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                 }
               )
           return raise(ErrorReport(msgs ::: mk_constraintProvenanceHints))
+        case (lhs: Unsupported, _) => doesntSupport(lhs)
+        case (_, rhs: Unsupported) => doesntSupport(rhs)
         case (_: TV | _: ProxyType, _) => doesntMatch(rhs)
         case (RecordType(fs0), RecordType(fs1)) =>
           (fs1.map(_._1).toSet -- fs0.map(_._1).toSet)
@@ -1337,7 +1340,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             new Extruded(!pol, tt)(
               tt.prov.copy(desc = "extruded type variable reference"), reason)
         } else ty
-      case _: ClassTag | _: TraitTag | _: Extruded => ty
+      case _: ClassTag | _: TraitTag | _: UnusableLike => ty
       case tr @ TypeRef(d, ts) =>
         TypeRef(d, tr.mapTargs(S(pol)) {
           case (N, targ) =>
@@ -1544,7 +1547,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case p @ ProxyType(und) => freshen(und)
       case SkolemTag(level, id) if level > above && level <= below =>
         freshen(id)
-      case _: ClassTag | _: TraitTag | _: SkolemTag | _: Extruded => ty
+      case _: ClassTag | _: TraitTag | _: SkolemTag | _: UnusableLike => ty
       case w @ Without(b, ns) => Without(freshen(b), ns)(w.prov)
       case tr @ TypeRef(d, ts) => TypeRef(d, ts.map(freshen(_)))(tr.prov)
       case pt @ PolymorphicType(polyLvl, bod) if pt.level <= above => pt // is this really useful?

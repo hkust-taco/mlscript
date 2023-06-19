@@ -1,0 +1,17 @@
+:NewDefs
+
+// TODO
+:e
+declare fun call: $Unsupported["(source: string, subString: string): boolean;", "Invoker.ts", 31, 54]
+//│ ╔══[ERROR] type identifier not found: $Unsupported
+//│ ║  l.5: 	declare fun call: $Unsupported["(source: string, subString: string): boolean;", "Invoker.ts", 31, 54]
+//│ ╙──     	                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ fun call: error
+
+// TODO
+:re
+call()
+//│ error
+//│ res
+//│ Runtime error:
+//│   ReferenceError: call is not defined

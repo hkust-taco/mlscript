@@ -1479,6 +1479,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
           }
         case ex @ Extruded(p, SkolemTag(_, tv)) =>
           if (p) tv.asPosExtrudedTypeVar else tv.asNegExtrudedTypeVar
+        case _: Unsupported => Bot // TODO: do we need pol?
         case TypeRef(td, Nil) => td
         case tr @ TypeRef(td, targs) => AppliedType(td, tr.mapTargs(S(true)) {
           case ta @ ((S(true), TopType) | (S(false), BotType)) => Bounds(Bot, Top)
