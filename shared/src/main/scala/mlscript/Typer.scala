@@ -515,10 +515,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
               (outerCtxLvl)) // * Type variables not explicily bound are assigned the widest (the outer context's) level
           ).withProv(tyTp(ty.toLoc, "type variable"))
       })
-      case app @ AppliedType(base, targs) if (base.name === "$Unsupported") => targs match {
+      case app @ AppliedType(base, targs) if (base.name === "unsupported") => targs match {
         case Literal(StrLit(tp)) :: Literal(StrLit(file)) :: Literal(IntLit(line)) :: Literal(IntLit(col)) :: Nil =>
           Unsupported(tp, file, line, col)(noProv)
-        case _ => err(msg"$$Unsupported type information missing", app.toLoc)(raise)
+        case _ => err(msg"unsupported type information missing", app.toLoc)(raise)
       }
       case AppliedType(base, targs) =>
         val prov = tyTp(ty.toLoc, "applied type reference")

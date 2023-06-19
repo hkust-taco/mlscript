@@ -1,7 +1,7 @@
 :NewDefs
 
 declare class Foo() {
-  val index: $Unsupported["(id: string): string;", "Invoker.ts", 11, 4]
+  val index: unsupported["(id: string): string;", "Invoker.ts", 11, 4]
   val x = 42
 }
 //│ declare class Foo() {
@@ -9,7 +9,7 @@ declare class Foo() {
 //│   let x: 42
 //│ }
 
-declare fun call: $Unsupported["(source: string, subString: string): boolean;", "Invoker.ts", 31, 54]
+declare fun call: unsupported["(source: string, subString: string): boolean;", "Invoker.ts", 31, 54]
 //│ fun call: nothing
 
 :re
@@ -33,8 +33,8 @@ foo.index("abc")
 //│ ║  l.31: 	foo.index("abc")
 //│ ║        	^^^^^^^^^^^^^^^^
 //│ ╟── signature of member `index` of type `nothing` (TypeScript type "(id: string): string;" at Invoker.ts, 11, 4) is not supported
-//│ ║  l.4: 	  val index: $Unsupported["(id: string): string;", "Invoker.ts", 11, 4]
-//│ ║       	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.4: 	  val index: unsupported["(id: string): string;", "Invoker.ts", 11, 4]
+//│ ║       	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into field selection with expected type `"abc" -> ?a`
 //│ ║  l.31: 	foo.index("abc")
 //│ ╙──      	^^^^^^^^^

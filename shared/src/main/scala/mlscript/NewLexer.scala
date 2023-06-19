@@ -120,13 +120,6 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
         }
         // go(k2, LITVAL(StrLit(chars)))
         lex(k2, ind, next(k2, LITVAL(StrLit(chars))))
-      case '$' =>
-        val (n, j) = takeWhile(i + 1)(isIdentChar)
-        if (n === "Unsupported") lex(j, ind, next(j, IDENT("$Unsupported", false)))
-        else {
-          pe(msg"unexpected character $$")
-          lex(i + 1, ind, next(i + 1, ERROR))
-        }
       case '/' if bytes.lift(i + 1).contains('/') =>
         val j = i + 2
         val (txt, k) =
@@ -339,7 +332,8 @@ object NewLexer {
     "null",
     "undefined",
     "abstract",
-    "constructor"
+    "constructor",
+    "unsupported"
   )
   
   def printToken(tl: TokLoc): Str = tl match {
