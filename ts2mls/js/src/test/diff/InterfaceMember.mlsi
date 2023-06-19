@@ -14,13 +14,13 @@ export declare module InterfaceMember {
     fun callback(): (x: Num) => unit
   }
   declare trait SearchFunc {
-    val __call: Unsupported["(source: string, subString: string): boolean;", "InterfaceMember.ts", 24, 22]
+    val __call: unsupported["(source: string, subString: string): boolean;", "InterfaceMember.ts", 24, 22]
   }
   declare trait StringArray {
-    val __index: Unsupported["[index: number]: string;", "InterfaceMember.ts", 28, 23]
+    val __index: unsupported["[index: number]: string;", "InterfaceMember.ts", 28, 23]
   }
   declare trait Counter {
-    val __call: Unsupported["(start: number): string;", "InterfaceMember.ts", 32, 19]
+    val __call: unsupported["(start: number): string;", "InterfaceMember.ts", 32, 19]
     val interval: Num
     fun reset(): unit
   }
