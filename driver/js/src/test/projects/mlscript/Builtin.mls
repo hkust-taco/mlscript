@@ -1,0 +1,7 @@
+let s: Str = "abc"
+let n: Num = 42
+
+console.log(s.charAt(1))
+console.log(s.indexOf("c", undefined))
+console.log(String.fromCharCode(64))
+console.log(n.toString(8))

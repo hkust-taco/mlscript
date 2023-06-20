@@ -134,13 +134,13 @@ class Driver(options: DriverOptions) {
         NuTypeDef(Mod, TypeName(moduleName), Nil, S(Tup(Nil)), N, N, Nil, N, N, TypingUnit(declarations, Nil))(S(Loc(0, 1, origin)), N, N) :: Nil, Nil)
     })
 
-  private def `type`(tu: TypingUnit)(
+  private def `type`(tu: TypingUnit, usingES5: Boolean)(
     implicit ctx: Ctx,
     raise: Raise,
     extrCtx: Opt[typer.ExtrCtx],
     vars: Map[Str, typer.SimpleType]
   ) = {
-    val tpd = typer.typeTypingUnit(tu, N)
+    val tpd = typer.typeTypingUnit(tu, N, usingES5)
     val sim = SimplifyPipeline(tpd, all = false)
     typer.expandType(sim)
   }
@@ -154,7 +154,7 @@ class Driver(options: DriverOptions) {
     raise: Raise,
     extrCtx: Opt[typer.ExtrCtx],
     vars: Map[Str, typer.SimpleType]
-  ) = jsBuiltinDecs.foreach(lst => `type`(TypingUnit(lst, Nil)))
+  ) = jsBuiltinDecs.foreach(lst => `type`(TypingUnit(lst, Nil), true))
 
   private def resolveTarget(file: FileInfo, imp: String) =
     if ((imp.startsWith("./") || imp.startsWith("../")) && !imp.endsWith(".mls") && !imp.endsWith(".mlsi")) {
@@ -221,7 +221,7 @@ class Driver(options: DriverOptions) {
               case (_, declarations, imports, _) => {
                 val depList = imports.map(_.path)
                 depList.foreach(d => importModule(file.`import`(d)))
-                `type`(TypingUnit(declarations, Nil))
+                `type`(TypingUnit(declarations, Nil), false)
               }
             })
           }
@@ -229,7 +229,7 @@ class Driver(options: DriverOptions) {
           otherList.foreach(d => importModule(file.`import`(d)))
           if (file.filename.endsWith(".mls")) {
             def generateInterface(moduleName: Option[String], tu: TypingUnit) = {
-              val exp = `type`(tu)
+              val exp = `type`(tu, false)
               packTopModule(moduleName, exp.show)
             }
 
@@ -244,7 +244,7 @@ class Driver(options: DriverOptions) {
               }
             ), exported || importedModule(file.filename))
           }
-          else `type`(TypingUnit(declarations, Nil))
+          else `type`(TypingUnit(declarations, Nil), false)
           true
         }
         else false

@@ -1,0 +1,5 @@
+declare module Builtin() {
+  let s: Str
+  let n: Num
+  unit
+}

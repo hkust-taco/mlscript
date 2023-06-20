@@ -27,6 +27,33 @@ declare trait PropertyDescriptor {
 declare trait PropertyDescriptorMap {
   val __index: unsupported["[key: PropertyKey]: PropertyDescriptor;", "ES5.d.ts", 101, 33]
 }
+declare trait Object {
+  fun hasOwnProperty(v: ((Str) | (Num)) | (Symbol)): (false) | (true)
+  fun propertyIsEnumerable(v: ((Str) | (Num)) | (Symbol)): (false) | (true)
+  fun valueOf(): Object
+  fun toLocaleString(): Str
+  val id"constructor": Function
+  fun isPrototypeOf(v: Object): (false) | (true)
+  fun toString(): Str
+}
+declare trait ObjectConstructor {
+  val __call: unsupported["(value: any): any;", "ES5.d.ts", 139, 12]
+  fun getOwnPropertyNames(o: anything): MutArray[Str]
+  fun isFrozen(o: anything): (false) | (true)
+  fun getPrototypeOf(o: anything): anything
+  fun defineProperty[T](o: T, p: ((Str) | (Num)) | (Symbol), attributes: (PropertyDescriptor) & (ThisType[anything])): T
+  val prototype: Object
+  fun isSealed(o: anything): (false) | (true)
+  fun defineProperties[T](o: T, properties: (PropertyDescriptorMap) & (ThisType[anything])): T
+  fun preventExtensions[T](o: T): T
+  fun create(o: Object, properties: (PropertyDescriptorMap) & (ThisType[anything])): anything /* warning: the overload of function create is not supported yet. */
+  fun freeze[T](f: T): T
+  val __new: unsupported["new(value?: any): Object;", "ES5.d.ts", 137, 29]
+  fun getOwnPropertyDescriptor(o: anything, p: ((Str) | (Num)) | (Symbol)): PropertyDescriptor
+  fun seal[T](o: T): T
+  fun keys(o: Object): MutArray[Str]
+  fun isExtensible(o: anything): (false) | (true)
+}
 declare trait Function {
   fun bind(thisArg: anything, argArray: (anything) | (MutArray[anything])): anything
   fun apply(thisArg: anything, argArray: (anything) | (undefined)): anything
@@ -49,6 +76,33 @@ declare trait IArguments {
   val length: Num
   val callee: Function
 }
+declare trait Str {
+  fun valueOf(): Str
+  fun toLocaleUpperCase(locales: ((Str) | (MutArray[Str])) | (undefined)): Str
+  fun lastIndexOf(searchString: Str, position: (Num) | (undefined)): Num
+  fun localeCompare(that: Str): Num
+  fun toLocaleLowerCase(locales: ((Str) | (MutArray[Str])) | (undefined)): Str
+  fun toUpperCase(): Str
+  fun indexOf(searchString: Str, position: (Num) | (undefined)): Num
+  fun charAt(pos: Num): Str
+  fun toLowerCase(): Str
+  fun concat(strings: (Str) | (MutArray[Str])): Str
+  val __index: unsupported["readonly [index: number]: string;", "ES5.d.ts", 499, 22]
+  fun charCodeAt(index: Num): Num
+  fun slice(start: (Num) | (undefined), end: (Num) | (undefined)): Str
+  fun substr(from: Num, length: (Num) | (undefined)): Str
+  fun toString(): Str
+  val length: Num
+  fun substring(start: Num, end: (Num) | (undefined)): Str
+  fun trim(): Str
+}
+declare trait StringConstructor {
+  val __new: unsupported["new(value?: any): Str;", "ES5.d.ts", 504, 29]
+  val __call: unsupported["(value?: any): string;", "ES5.d.ts", 505, 26]
+  val prototype: Str
+  fun fromCharCode(codes: (Num) | (MutArray[Num])): Str
+}
+val String: StringConstructor
 declare trait Boolean {
   fun valueOf(): (false) | (true)
 }
@@ -56,6 +110,23 @@ declare trait BooleanConstructor {
   val __new: unsupported["new(value?: any): Boolean;", "ES5.d.ts", 521, 30]
   val __call: unsupported["<T>(value?: T): boolean;", "ES5.d.ts", 522, 30]
   val prototype: Boolean
+}
+declare trait Num {
+  fun toExponential(fractionDigits: (Num) | (undefined)): Str
+  fun valueOf(): Num
+  fun toString(radix: (Num) | (undefined)): Str
+  fun toFixed(fractionDigits: (Num) | (undefined)): Str
+  fun toPrecision(precision: (Num) | (undefined)): Str
+}
+declare trait NumberConstructor {
+  val __call: unsupported["(value?: any): number;", "ES5.d.ts", 559, 26]
+  val NaN: Num
+  val MIN_VALUE: Num
+  val __new: unsupported["new(value?: any): Num;", "ES5.d.ts", 558, 29]
+  val NEGATIVE_INFINITY: Num
+  val POSITIVE_INFINITY: Num
+  val MAX_VALUE: Num
+  val prototype: Num
 }
 declare trait TemplateStringsArray extends ReadonlyArray[Str] {
   val raw: ReadonlyArray[Str]
@@ -148,6 +219,22 @@ declare trait DateConstructor {
   fun parse(s: Str): Num
   val prototype: Date
 }
+declare trait Error {
+  val name: Str
+  val message: Str
+  val stack: (Str) | (undefined)
+}
+declare trait ErrorConstructor {
+  val __new: unsupported["new(message?: string): Error;", "ES5.d.ts", 1044, 28]
+  val __call: unsupported["(message?: string): Error;", "ES5.d.ts", 1045, 33]
+  val prototype: Error
+}
+declare trait EvalError extends Error {}
+declare trait RangeError extends Error {}
+declare trait ReferenceError extends Error {}
+declare trait SyntaxError extends Error {}
+declare trait TypeError extends Error {}
+declare trait URIError extends Error {}
 declare trait JSON {
   fun parse(text: Str, reviver: ((key: Str, value: anything) => anything) | (undefined)): anything
   fun stringify(value: anything, replacer: (MutArray[(Str) | (Num)]) | (undefined), space: ((Str) | (Num)) | (undefined)): Str /* warning: the overload of function stringify is not supported yet. */
@@ -176,6 +263,38 @@ declare trait ConcatArray[T] {
   fun join(separator: (Str) | (undefined)): Str
   fun slice(start: (Num) | (undefined), end: (Num) | (undefined)): MutArray[T]
 }
+declare trait MutArray[T] {
+  fun lastIndexOf(searchElement: T, fromIndex: (Num) | (undefined)): Num
+  fun every(predicate: (value: T, index: Num, array: MutArray[T]) => anything, thisArg: (anything) | (undefined)): (false) | (true) /* warning: the overload of function every is not supported yet. */
+  fun push(items: (T) | (MutArray[T])): Num
+  fun forEach(callbackfn: (value: T, index: Num, array: MutArray[T]) => unit, thisArg: (anything) | (undefined)): unit
+  fun reduceRight[U](callbackfn: (previousValue: U, currentValue: T, currentIndex: Num, array: MutArray[T]) => U, initialValue: U): U /* warning: the overload of function reduceRight is not supported yet. */
+  fun unshift(items: (T) | (MutArray[T])): Num
+  fun sort(compareFn: ((a: T, b: T) => Num) | (undefined)): MutArray
+  fun join(separator: (Str) | (undefined)): Str
+  fun map[U](callbackfn: (value: T, index: Num, array: MutArray[T]) => U, thisArg: (anything) | (undefined)): MutArray[U]
+  fun pop(): T
+  fun shift(): T
+  fun concat(items: ((T) | (ConcatArray[T])) | (MutArray[(T) | (ConcatArray[T])])): MutArray[T] /* warning: the overload of function concat is not supported yet. */
+  fun toLocaleString(): Str
+  fun reverse(): MutArray[T]
+  fun filter(predicate: (value: T, index: Num, array: MutArray[T]) => anything, thisArg: (anything) | (undefined)): MutArray[T] /* warning: the overload of function filter is not supported yet. */
+  val __index: unsupported["[n: number]: T;", "ES5.d.ts", 1465, 127]
+  fun splice(start: Num, deleteCount: Num, items: (T) | (MutArray[T])): MutArray[T] /* warning: the overload of function splice is not supported yet. */
+  fun slice(start: (Num) | (undefined), end: (Num) | (undefined)): MutArray[T]
+  fun reduce[U](callbackfn: (previousValue: U, currentValue: T, currentIndex: Num, array: MutArray[T]) => U, initialValue: U): U /* warning: the overload of function reduce is not supported yet. */
+  fun toString(): Str
+  val length: Num
+  fun some(predicate: (value: T, index: Num, array: MutArray[T]) => anything, thisArg: (anything) | (undefined)): (false) | (true)
+  fun indexOf(searchElement: T, fromIndex: (Num) | (undefined)): Num
+}
+declare trait ArrayConstructor {
+  val __new: unsupported["new <T>(...items: T[]): T[];", "ES5.d.ts", 1472, 38]
+  val __call: unsupported["<T>(...items: T[]): T[];", "ES5.d.ts", 1475, 34]
+  fun isArray(arg: anything): (false) | (true)
+  val prototype: MutArray[anything]
+}
+val Array: ArrayConstructor
 declare trait TypedPropertyDescriptor[T] {
   val configurable: ((false) | (true)) | (undefined)
   val set: ((value: T) => unit) | (undefined)

@@ -463,7 +463,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   
   /** Type checks a typing unit, which is a sequence of possibly-mutually-recursive type and function definitions
    *  interleaved with plain statements. */
-  def typeTypingUnit(tu: TypingUnit, outer: Opt[Outer])
+  def typeTypingUnit(tu: TypingUnit, outer: Opt[Outer], usingES5: Bool = false)
         (implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType]): TypedTypingUnit =
       trace(s"${ctx.lvl}. Typing $tu")
   {
@@ -506,7 +506,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                 fd.copy()(fd.declareLoc, fd.exportLoc, fd.signature, outer)
             }
           case td: NuTypeDef =>
-            if (td.nme.name in reservedTypeNames)
+            if ((td.nme.name in reservedTypeNames) && !usingES5)
               err(msg"Type name '${td.nme.name}' is reserved", td.toLoc)
             td
         }
