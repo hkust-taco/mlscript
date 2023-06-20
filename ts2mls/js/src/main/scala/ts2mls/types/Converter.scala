@@ -16,12 +16,14 @@ object Converter {
     "object" -> "Object",
     "true" -> "true",
     "false" -> "false",
-    "symbol" -> "Symbol"
+    "symbol" -> "Symbol",
+    "error" -> "error"
   )
 
   def escapeIdent(name: String) = {
     import mlscript.NewLexer
-    if (NewLexer.keywords(name) || name.contains("$") || (!name.isEmpty() && name(0) >= '0' && name(0) <= '9'))
+    if (NewLexer.keywords(name) || NewLexer.alpahOp(name) || name.contains("$") ||
+      (!name.isEmpty() && name(0) >= '0' && name(0) <= '9'))
       s"""id"$name""""
     else name
   }

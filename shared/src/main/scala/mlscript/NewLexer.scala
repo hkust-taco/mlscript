@@ -43,13 +43,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
     // ">",
   )
   
-  private val isAlphaOp = Set(
-    "with",
-    "and",
-    "or",
-    "is",
-    "as",
-  )
+  private val isAlphaOp = alpahOp
   
   @tailrec final
   def takeWhile(i: Int, cur: Ls[Char] = Nil)(pred: Char => Bool): (Str, Int) =
@@ -334,6 +328,14 @@ object NewLexer {
     "abstract",
     "constructor",
     "unsupported"
+  )
+
+  val alpahOp: Set[Str] = Set(
+    "with",
+    "and",
+    "or",
+    "is",
+    "as",
   )
   
   def printToken(tl: TokLoc): Str = tl match {
