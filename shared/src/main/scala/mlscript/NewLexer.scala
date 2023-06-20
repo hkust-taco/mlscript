@@ -97,7 +97,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
     def next(j: Int, tok: Token) = (tok, loc(i, j)) :: acc
     def isIdentEscape(i: Int): Bool = i + 2 < length && bytes(i) === 'i' && bytes(i + 1) === 'd' && bytes(i + 2) === '"'
     def takeIdentFromEscape(i: Int, ctor: Str => Token) = {
-      val (n, j) = takeWhile(i + 3)(isIdentChar)
+      val (n, j) = takeWhile(i + 3)(_ != '"')
       if (j < length && bytes(j) === '"') (ctor(n), j + 1)
       else { pe(msg"unfinished identifier escape"); (ERROR, j + 1) }
     }

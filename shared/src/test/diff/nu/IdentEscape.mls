@@ -74,3 +74,8 @@ class id"class"
 //│ class class
 //│ Code generation encountered an error:
 //│   class is a reserved keyword in ECMAScript and can not be used as type name.
+
+let id"$4" = 4
+//│ let $4: 4
+//│ $4
+//│    = 4

@@ -21,7 +21,8 @@ object Converter {
 
   def escapeIdent(name: String) = {
     import mlscript.NewLexer
-    if (NewLexer.keywords(name)) s"""id"$name""""
+    if (NewLexer.keywords(name) || name.contains("$") || (!name.isEmpty() && name(0) >= '0' && name(0) <= '9'))
+      s"""id"$name""""
     else name
   }
 

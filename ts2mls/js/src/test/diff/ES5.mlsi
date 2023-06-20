@@ -24,6 +24,9 @@ declare trait PropertyDescriptor {
   val writable: ((false) | (true)) | (undefined)
   val value: (anything) | (undefined)
 }
+declare trait PropertyDescriptorMap {
+  val __index: unsupported["[key: PropertyKey]: PropertyDescriptor;", "ES5.d.ts", 101, 33]
+}
 declare trait Function {
   fun bind(thisArg: anything, argArray: (anything) | (MutArray[anything])): anything
   fun apply(thisArg: anything, argArray: (anything) | (undefined)): anything
@@ -34,8 +37,35 @@ declare trait Function {
   val caller: Function
   val arguments: anything
 }
+declare trait FunctionConstructor {
+  val __new: unsupported["new(...args: string[]): Function;", "ES5.d.ts", 292, 31]
+  val __call: unsupported["(...args: string[]): Function;", "ES5.d.ts", 297, 37]
+  val prototype: Function
+}
+type ThisParameterType[T] = unsupported["T extends (this: infer U, ...args: never) => any ? U : unknown", "ES5.d.ts", 307, 27]
+type OmitThisParameter[T] = unsupported["unknown extends ThisParameterType<T> ? T : T extends (...args: infer A) => infer R ? (...args: A) => R : T", "ES5.d.ts", 312, 27]
+declare trait IArguments {
+  val __index: unsupported["[index: number]: any;", "ES5.d.ts", 374, 22]
+  val length: Num
+  val callee: Function
+}
 declare trait Boolean {
   fun valueOf(): (false) | (true)
+}
+declare trait BooleanConstructor {
+  val __new: unsupported["new(value?: any): Boolean;", "ES5.d.ts", 521, 30]
+  val __call: unsupported["<T>(value?: T): boolean;", "ES5.d.ts", 522, 30]
+  val prototype: Boolean
+}
+declare trait TemplateStringsArray extends ReadonlyArray[Str] {
+  val raw: ReadonlyArray[Str]
+}
+declare trait ImportMeta {}
+declare trait ImportCallOptions {
+  val assert: (ImportAssertions) | (undefined)
+}
+declare trait ImportAssertions {
+  val __index: unsupported["[key: string]: string;", "ES5.d.ts", 617, 28]
 }
 declare trait Math {
   fun random(): Num
@@ -109,4 +139,438 @@ declare trait Date {
   fun getTimezoneOffset(): Num
   fun setUTCHours(hours: Num, min: (Num) | (undefined), sec: (Num) | (undefined), ms: (Num) | (undefined)): Num
   fun toJSON(key: (anything) | (undefined)): Str
+}
+declare trait DateConstructor {
+  val __call: unsupported["(): string;", "ES5.d.ts", 899, 128]
+  fun UTC(year: Num, monthIndex: Num, date: (Num) | (undefined), hours: (Num) | (undefined), minutes: (Num) | (undefined), seconds: (Num) | (undefined), ms: (Num) | (undefined)): Num
+  val __new: unsupported["new(year: number, monthIndex: number, date?: number, hours?: number, minutes?: number, seconds?: number, ms?: number): Date;", "ES5.d.ts", 888, 38]
+  fun now(): Num
+  fun parse(s: Str): Num
+  val prototype: Date
+}
+declare trait JSON {
+  fun parse(text: Str, reviver: ((key: Str, value: anything) => anything) | (undefined)): anything
+  fun stringify(value: anything, replacer: (MutArray[(Str) | (Num)]) | (undefined), space: ((Str) | (Num)) | (undefined)): Str /* warning: the overload of function stringify is not supported yet. */
+}
+declare trait ReadonlyArray[T] {
+  fun lastIndexOf(searchElement: T, fromIndex: (Num) | (undefined)): Num
+  fun every(predicate: (value: T, index: Num, array: ReadonlyArray[T]) => anything, thisArg: (anything) | (undefined)): (false) | (true) /* warning: the overload of function every is not supported yet. */
+  fun forEach(callbackfn: (value: T, index: Num, array: ReadonlyArray[T]) => unit, thisArg: (anything) | (undefined)): unit
+  fun filter(predicate: (value: T, index: Num, array: ReadonlyArray[T]) => anything, thisArg: (anything) | (undefined)): MutArray[T] /* warning: the overload of function filter is not supported yet. */
+  val __index: unsupported["readonly [n: number]: T;", "ES5.d.ts", 1274, 136]
+  fun reduceRight[U](callbackfn: (previousValue: U, currentValue: T, currentIndex: Num, array: ReadonlyArray[T]) => U, initialValue: U): U /* warning: the overload of function reduceRight is not supported yet. */
+  fun join(separator: (Str) | (undefined)): Str
+  fun map[U](callbackfn: (value: T, index: Num, array: ReadonlyArray[T]) => U, thisArg: (anything) | (undefined)): MutArray[U]
+  fun concat(items: ((T) | (ConcatArray[T])) | (MutArray[(T) | (ConcatArray[T])])): MutArray[T] /* warning: the overload of function concat is not supported yet. */
+  fun toLocaleString(): Str
+  fun slice(start: (Num) | (undefined), end: (Num) | (undefined)): MutArray[T]
+  fun reduce[U](callbackfn: (previousValue: U, currentValue: T, currentIndex: Num, array: ReadonlyArray[T]) => U, initialValue: U): U /* warning: the overload of function reduce is not supported yet. */
+  fun toString(): Str
+  val length: Num
+  fun some(predicate: (value: T, index: Num, array: ReadonlyArray[T]) => anything, thisArg: (anything) | (undefined)): (false) | (true)
+  fun indexOf(searchElement: T, fromIndex: (Num) | (undefined)): Num
+}
+declare trait ConcatArray[T] {
+  val length: Num
+  val __index: unsupported["readonly [n: number]: T;", "ES5.d.ts", 1280, 28]
+  fun join(separator: (Str) | (undefined)): Str
+  fun slice(start: (Num) | (undefined), end: (Num) | (undefined)): MutArray[T]
+}
+declare trait TypedPropertyDescriptor[T] {
+  val configurable: ((false) | (true)) | (undefined)
+  val set: ((value: T) => unit) | (undefined)
+  val enumerable: ((false) | (true)) | (undefined)
+  val get: (() => T) | (undefined)
+  val writable: ((false) | (true)) | (undefined)
+  val value: (T) | (undefined)
+}
+type PromiseConstructorLike = (executor: (resolve: (value: (T) | (PromiseLike[T])) => unit, reject: (reason: (anything) | (undefined)) => unit) => unit) => PromiseLike[T]
+declare trait PromiseLike[T] {
+  fun id"then"[TResult1, TResult2](onfulfilled: ((value: T) => (TResult1) | (PromiseLike[TResult1])) | (undefined), onrejected: ((reason: anything) => (TResult2) | (PromiseLike[TResult2])) | (undefined)): PromiseLike[(TResult1) | (TResult2)]
+}
+declare trait Promise[T] {
+  fun id"then"[TResult1, TResult2](onfulfilled: ((value: T) => (TResult1) | (PromiseLike[TResult1])) | (undefined), onrejected: ((reason: anything) => (TResult2) | (PromiseLike[TResult2])) | (undefined)): Promise[(TResult1) | (TResult2)]
+  fun catch[TResult](onrejected: ((reason: anything) => (TResult) | (PromiseLike[TResult])) | (undefined)): Promise[(T) | (TResult)]
+}
+type Awaited[T] = unsupported["T extends null | undefined ? T : // special case for `null | undefined` when not in `--strictNullChecks` mode         T extends object & { then(onfulfilled: infer F, ...args: infer _): any } ? // `await` only unwraps object types with a callable `then`. Non-object types are not unwrapped             F extends ((value: infer V, ...args: infer _) => any) ? // if the argument to `then` is callable, extracts the first argument                 Awaited<V> : // recursively unwrap the value                 never : // the argument to `then` was not callable         T", "ES5.d.ts", 1527, 17]
+declare trait ArrayLike[T] {
+  val length: Num
+  val __index: unsupported["readonly [n: number]: T;", "ES5.d.ts", 1536, 28]
+}
+type Partial[T] = unsupported["{     [P in keyof T]?: T[P]; }", "ES5.d.ts", 1543, 17]
+type Required[T] = unsupported["{     [P in keyof T]-?: T[P]; }", "ES5.d.ts", 1550, 18]
+type Readonly[T] = unsupported["{     readonly [P in keyof T]: T[P]; }", "ES5.d.ts", 1557, 18]
+type Pick[T, K] = unsupported["{     [P in K]: T[P]; }", "ES5.d.ts", 1564, 33]
+type Record[K, T] = unsupported["{     [P in K]: T; }", "ES5.d.ts", 1571, 37]
+type Exclude[T, U] = unsupported["T extends U ? never : T", "ES5.d.ts", 1578, 20]
+type Extract[T, U] = unsupported["T extends U ? T : never", "ES5.d.ts", 1583, 20]
+type Omit[T, K] = __type
+type NonNullable[T] = (T) & ({})
+type Parameters[T] = unsupported["T extends (...args: infer P) => any ? P : never", "ES5.d.ts", 1598, 50]
+type ConstructorParameters[T] = unsupported["T extends abstract new (...args: infer P) => any ? P : never", "ES5.d.ts", 1603, 74]
+type ReturnType[T] = unsupported["T extends (...args: any) => infer R ? R : any", "ES5.d.ts", 1608, 50]
+type InstanceType[T] = unsupported["T extends abstract new (...args: any) => infer R ? R : any", "ES5.d.ts", 1613, 65]
+type Uppercase[S] = unsupported["intrinsic", "ES5.d.ts", 1618, 34]
+type Lowercase[S] = unsupported["intrinsic", "ES5.d.ts", 1623, 34]
+type Capitalize[S] = unsupported["intrinsic", "ES5.d.ts", 1628, 35]
+type Uncapitalize[S] = unsupported["intrinsic", "ES5.d.ts", 1633, 37]
+declare trait ThisType[T] {}
+declare trait ArrayBuffer {
+  val byteLength: Num
+  fun slice(begin: Num, end: (Num) | (undefined)): ArrayBuffer
+}
+declare trait Int8Array {
+  fun valueOf(): Int8Array
+  fun lastIndexOf(searchElement: Num, fromIndex: (Num) | (undefined)): Num
+  fun every(predicate: (value: Num, index: Num, array: Int8Array) => anything, thisArg: (anything) | (undefined)): (false) | (true)
+  fun set(array: ArrayLike[Num], offset: (Num) | (undefined)): unit
+  fun toLocaleString(): Str
+  val __index: unsupported["[index: number]: number;", "ES5.d.ts", 2067, 25]
+  fun reduceRight[U](callbackfn: (previousValue: U, currentValue: Num, currentIndex: Num, array: Int8Array) => U, initialValue: U): U /* warning: the overload of function reduceRight is not supported yet. */
+  fun fill(value: Num, start: (Num) | (undefined), end: (Num) | (undefined)): Int8Array
+  fun sort(compareFn: ((a: Num, b: Num) => Num) | (undefined)): Int8Array
+  val BYTES_PER_ELEMENT: Num
+  fun copyWithin(target: Num, start: (Num) | (undefined), end: (Num) | (undefined)): Int8Array
+  fun find(predicate: (value: Num, index: Num, obj: Int8Array) => (false) | (true), thisArg: (anything) | (undefined)): Num
+  fun subarray(begin: (Num) | (undefined), end: (Num) | (undefined)): Int8Array
+  fun join(separator: (Str) | (undefined)): Str
+  fun map(callbackfn: (value: Num, index: Num, array: Int8Array) => Num, thisArg: (anything) | (undefined)): Int8Array
+  fun forEach(callbackfn: (value: Num, index: Num, array: Int8Array) => unit, thisArg: (anything) | (undefined)): unit
+  val buffer: ArrayBuffer
+  fun findIndex(predicate: (value: Num, index: Num, obj: Int8Array) => (false) | (true), thisArg: (anything) | (undefined)): Num
+  fun reverse(): Int8Array
+  fun filter(predicate: (value: Num, index: Num, array: Int8Array) => anything, thisArg: (anything) | (undefined)): Int8Array
+  fun slice(start: (Num) | (undefined), end: (Num) | (undefined)): Int8Array
+  val byteLength: Num
+  fun reduce[U](callbackfn: (previousValue: U, currentValue: Num, currentIndex: Num, array: Int8Array) => U, initialValue: U): U /* warning: the overload of function reduce is not supported yet. */
+  fun toString(): Str
+  val length: Num
+  fun some(predicate: (value: Num, index: Num, array: Int8Array) => anything, thisArg: (anything) | (undefined)): (false) | (true)
+  fun indexOf(searchElement: Num, fromIndex: (Num) | (undefined)): Num
+  val byteOffset: Num
+}
+declare trait Uint8Array {
+  fun valueOf(): Uint8Array
+  fun lastIndexOf(searchElement: Num, fromIndex: (Num) | (undefined)): Num
+  fun every(predicate: (value: Num, index: Num, array: Uint8Array) => anything, thisArg: (anything) | (undefined)): (false) | (true)
+  fun set(array: ArrayLike[Num], offset: (Num) | (undefined)): unit
+  fun toLocaleString(): Str
+  val __index: unsupported["[index: number]: number;", "ES5.d.ts", 2349, 26]
+  fun reduceRight[U](callbackfn: (previousValue: U, currentValue: Num, currentIndex: Num, array: Uint8Array) => U, initialValue: U): U /* warning: the overload of function reduceRight is not supported yet. */
+  fun fill(value: Num, start: (Num) | (undefined), end: (Num) | (undefined)): Uint8Array
+  fun sort(compareFn: ((a: Num, b: Num) => Num) | (undefined)): Uint8Array
+  val BYTES_PER_ELEMENT: Num
+  fun copyWithin(target: Num, start: (Num) | (undefined), end: (Num) | (undefined)): Uint8Array
+  fun find(predicate: (value: Num, index: Num, obj: Uint8Array) => (false) | (true), thisArg: (anything) | (undefined)): Num
+  fun subarray(begin: (Num) | (undefined), end: (Num) | (undefined)): Uint8Array
+  fun join(separator: (Str) | (undefined)): Str
+  fun map(callbackfn: (value: Num, index: Num, array: Uint8Array) => Num, thisArg: (anything) | (undefined)): Uint8Array
+  fun forEach(callbackfn: (value: Num, index: Num, array: Uint8Array) => unit, thisArg: (anything) | (undefined)): unit
+  val buffer: ArrayBuffer
+  fun findIndex(predicate: (value: Num, index: Num, obj: Uint8Array) => (false) | (true), thisArg: (anything) | (undefined)): Num
+  fun reverse(): Uint8Array
+  fun filter(predicate: (value: Num, index: Num, array: Uint8Array) => anything, thisArg: (anything) | (undefined)): Uint8Array
+  fun slice(start: (Num) | (undefined), end: (Num) | (undefined)): Uint8Array
+  val byteLength: Num
+  fun reduce[U](callbackfn: (previousValue: U, currentValue: Num, currentIndex: Num, array: Uint8Array) => U, initialValue: U): U /* warning: the overload of function reduce is not supported yet. */
+  fun toString(): Str
+  val length: Num
+  fun some(predicate: (value: Num, index: Num, array: Uint8Array) => anything, thisArg: (anything) | (undefined)): (false) | (true)
+  fun indexOf(searchElement: Num, fromIndex: (Num) | (undefined)): Num
+  val byteOffset: Num
+}
+declare trait Uint8ClampedArray {
+  fun valueOf(): Uint8ClampedArray
+  fun lastIndexOf(searchElement: Num, fromIndex: (Num) | (undefined)): Num
+  fun every(predicate: (value: Num, index: Num, array: Uint8ClampedArray) => anything, thisArg: (anything) | (undefined)): (false) | (true)
+  fun set(array: ArrayLike[Num], offset: (Num) | (undefined)): unit
+  fun toLocaleString(): Str
+  val __index: unsupported["[index: number]: number;", "ES5.d.ts", 2631, 33]
+  fun reduceRight[U](callbackfn: (previousValue: U, currentValue: Num, currentIndex: Num, array: Uint8ClampedArray) => U, initialValue: U): U /* warning: the overload of function reduceRight is not supported yet. */
+  fun fill(value: Num, start: (Num) | (undefined), end: (Num) | (undefined)): Uint8ClampedArray
+  fun sort(compareFn: ((a: Num, b: Num) => Num) | (undefined)): Uint8ClampedArray
+  val BYTES_PER_ELEMENT: Num
+  fun copyWithin(target: Num, start: (Num) | (undefined), end: (Num) | (undefined)): Uint8ClampedArray
+  fun find(predicate: (value: Num, index: Num, obj: Uint8ClampedArray) => (false) | (true), thisArg: (anything) | (undefined)): Num
+  fun subarray(begin: (Num) | (undefined), end: (Num) | (undefined)): Uint8ClampedArray
+  fun join(separator: (Str) | (undefined)): Str
+  fun map(callbackfn: (value: Num, index: Num, array: Uint8ClampedArray) => Num, thisArg: (anything) | (undefined)): Uint8ClampedArray
+  fun forEach(callbackfn: (value: Num, index: Num, array: Uint8ClampedArray) => unit, thisArg: (anything) | (undefined)): unit
+  val buffer: ArrayBuffer
+  fun findIndex(predicate: (value: Num, index: Num, obj: Uint8ClampedArray) => (false) | (true), thisArg: (anything) | (undefined)): Num
+  fun reverse(): Uint8ClampedArray
+  fun filter(predicate: (value: Num, index: Num, array: Uint8ClampedArray) => anything, thisArg: (anything) | (undefined)): Uint8ClampedArray
+  fun slice(start: (Num) | (undefined), end: (Num) | (undefined)): Uint8ClampedArray
+  val byteLength: Num
+  fun reduce[U](callbackfn: (previousValue: U, currentValue: Num, currentIndex: Num, array: Uint8ClampedArray) => U, initialValue: U): U /* warning: the overload of function reduce is not supported yet. */
+  fun toString(): Str
+  val length: Num
+  fun some(predicate: (value: Num, index: Num, array: Uint8ClampedArray) => anything, thisArg: (anything) | (undefined)): (false) | (true)
+  fun indexOf(searchElement: Num, fromIndex: (Num) | (undefined)): Num
+  val byteOffset: Num
+}
+declare trait Int16Array {
+  fun valueOf(): Int16Array
+  fun lastIndexOf(searchElement: Num, fromIndex: (Num) | (undefined)): Num
+  fun every(predicate: (value: Num, index: Num, array: Int16Array) => anything, thisArg: (anything) | (undefined)): (false) | (true)
+  fun set(array: ArrayLike[Num], offset: (Num) | (undefined)): unit
+  fun toLocaleString(): Str
+  val __index: unsupported["[index: number]: number;", "ES5.d.ts", 2911, 26]
+  fun reduceRight[U](callbackfn: (previousValue: U, currentValue: Num, currentIndex: Num, array: Int16Array) => U, initialValue: U): U /* warning: the overload of function reduceRight is not supported yet. */
+  fun fill(value: Num, start: (Num) | (undefined), end: (Num) | (undefined)): Int16Array
+  fun sort(compareFn: ((a: Num, b: Num) => Num) | (undefined)): Int16Array
+  val BYTES_PER_ELEMENT: Num
+  fun copyWithin(target: Num, start: (Num) | (undefined), end: (Num) | (undefined)): Int16Array
+  fun find(predicate: (value: Num, index: Num, obj: Int16Array) => (false) | (true), thisArg: (anything) | (undefined)): Num
+  fun subarray(begin: (Num) | (undefined), end: (Num) | (undefined)): Int16Array
+  fun join(separator: (Str) | (undefined)): Str
+  fun map(callbackfn: (value: Num, index: Num, array: Int16Array) => Num, thisArg: (anything) | (undefined)): Int16Array
+  fun forEach(callbackfn: (value: Num, index: Num, array: Int16Array) => unit, thisArg: (anything) | (undefined)): unit
+  val buffer: ArrayBuffer
+  fun findIndex(predicate: (value: Num, index: Num, obj: Int16Array) => (false) | (true), thisArg: (anything) | (undefined)): Num
+  fun reverse(): Int16Array
+  fun filter(predicate: (value: Num, index: Num, array: Int16Array) => anything, thisArg: (anything) | (undefined)): Int16Array
+  fun slice(start: (Num) | (undefined), end: (Num) | (undefined)): Int16Array
+  val byteLength: Num
+  fun reduce[U](callbackfn: (previousValue: U, currentValue: Num, currentIndex: Num, array: Int16Array) => U, initialValue: U): U /* warning: the overload of function reduce is not supported yet. */
+  fun toString(): Str
+  val length: Num
+  fun some(predicate: (value: Num, index: Num, array: Int16Array) => anything, thisArg: (anything) | (undefined)): (false) | (true)
+  fun indexOf(searchElement: Num, fromIndex: (Num) | (undefined)): Num
+  val byteOffset: Num
+}
+declare trait Uint16Array {
+  fun valueOf(): Uint16Array
+  fun lastIndexOf(searchElement: Num, fromIndex: (Num) | (undefined)): Num
+  fun every(predicate: (value: Num, index: Num, array: Uint16Array) => anything, thisArg: (anything) | (undefined)): (false) | (true)
+  fun set(array: ArrayLike[Num], offset: (Num) | (undefined)): unit
+  fun toLocaleString(): Str
+  val __index: unsupported["[index: number]: number;", "ES5.d.ts", 3194, 27]
+  fun reduceRight[U](callbackfn: (previousValue: U, currentValue: Num, currentIndex: Num, array: Uint16Array) => U, initialValue: U): U /* warning: the overload of function reduceRight is not supported yet. */
+  fun fill(value: Num, start: (Num) | (undefined), end: (Num) | (undefined)): Uint16Array
+  fun sort(compareFn: ((a: Num, b: Num) => Num) | (undefined)): Uint16Array
+  val BYTES_PER_ELEMENT: Num
+  fun copyWithin(target: Num, start: (Num) | (undefined), end: (Num) | (undefined)): Uint16Array
+  fun find(predicate: (value: Num, index: Num, obj: Uint16Array) => (false) | (true), thisArg: (anything) | (undefined)): Num
+  fun subarray(begin: (Num) | (undefined), end: (Num) | (undefined)): Uint16Array
+  fun join(separator: (Str) | (undefined)): Str
+  fun map(callbackfn: (value: Num, index: Num, array: Uint16Array) => Num, thisArg: (anything) | (undefined)): Uint16Array
+  fun forEach(callbackfn: (value: Num, index: Num, array: Uint16Array) => unit, thisArg: (anything) | (undefined)): unit
+  val buffer: ArrayBuffer
+  fun findIndex(predicate: (value: Num, index: Num, obj: Uint16Array) => (false) | (true), thisArg: (anything) | (undefined)): Num
+  fun reverse(): Uint16Array
+  fun filter(predicate: (value: Num, index: Num, array: Uint16Array) => anything, thisArg: (anything) | (undefined)): Uint16Array
+  fun slice(start: (Num) | (undefined), end: (Num) | (undefined)): Uint16Array
+  val byteLength: Num
+  fun reduce[U](callbackfn: (previousValue: U, currentValue: Num, currentIndex: Num, array: Uint16Array) => U, initialValue: U): U /* warning: the overload of function reduce is not supported yet. */
+  fun toString(): Str
+  val length: Num
+  fun some(predicate: (value: Num, index: Num, array: Uint16Array) => anything, thisArg: (anything) | (undefined)): (false) | (true)
+  fun indexOf(searchElement: Num, fromIndex: (Num) | (undefined)): Num
+  val byteOffset: Num
+}
+declare trait Int32Array {
+  fun valueOf(): Int32Array
+  fun lastIndexOf(searchElement: Num, fromIndex: (Num) | (undefined)): Num
+  fun every(predicate: (value: Num, index: Num, array: Int32Array) => anything, thisArg: (anything) | (undefined)): (false) | (true)
+  fun set(array: ArrayLike[Num], offset: (Num) | (undefined)): unit
+  fun toLocaleString(): Str
+  val __index: unsupported["[index: number]: number;", "ES5.d.ts", 3477, 26]
+  fun reduceRight[U](callbackfn: (previousValue: U, currentValue: Num, currentIndex: Num, array: Int32Array) => U, initialValue: U): U /* warning: the overload of function reduceRight is not supported yet. */
+  fun fill(value: Num, start: (Num) | (undefined), end: (Num) | (undefined)): Int32Array
+  fun sort(compareFn: ((a: Num, b: Num) => Num) | (undefined)): Int32Array
+  val BYTES_PER_ELEMENT: Num
+  fun copyWithin(target: Num, start: (Num) | (undefined), end: (Num) | (undefined)): Int32Array
+  fun find(predicate: (value: Num, index: Num, obj: Int32Array) => (false) | (true), thisArg: (anything) | (undefined)): Num
+  fun subarray(begin: (Num) | (undefined), end: (Num) | (undefined)): Int32Array
+  fun join(separator: (Str) | (undefined)): Str
+  fun map(callbackfn: (value: Num, index: Num, array: Int32Array) => Num, thisArg: (anything) | (undefined)): Int32Array
+  fun forEach(callbackfn: (value: Num, index: Num, array: Int32Array) => unit, thisArg: (anything) | (undefined)): unit
+  val buffer: ArrayBuffer
+  fun findIndex(predicate: (value: Num, index: Num, obj: Int32Array) => (false) | (true), thisArg: (anything) | (undefined)): Num
+  fun reverse(): Int32Array
+  fun filter(predicate: (value: Num, index: Num, array: Int32Array) => anything, thisArg: (anything) | (undefined)): Int32Array
+  fun slice(start: (Num) | (undefined), end: (Num) | (undefined)): Int32Array
+  val byteLength: Num
+  fun reduce[U](callbackfn: (previousValue: U, currentValue: Num, currentIndex: Num, array: Int32Array) => U, initialValue: U): U /* warning: the overload of function reduce is not supported yet. */
+  fun toString(): Str
+  val length: Num
+  fun some(predicate: (value: Num, index: Num, array: Int32Array) => anything, thisArg: (anything) | (undefined)): (false) | (true)
+  fun indexOf(searchElement: Num, fromIndex: (Num) | (undefined)): Num
+  val byteOffset: Num
+}
+declare trait Uint32Array {
+  fun valueOf(): Uint32Array
+  fun lastIndexOf(searchElement: Num, fromIndex: (Num) | (undefined)): Num
+  fun every(predicate: (value: Num, index: Num, array: Uint32Array) => anything, thisArg: (anything) | (undefined)): (false) | (true)
+  fun set(array: ArrayLike[Num], offset: (Num) | (undefined)): unit
+  fun toLocaleString(): Str
+  val __index: unsupported["[index: number]: number;", "ES5.d.ts", 3758, 27]
+  fun reduceRight[U](callbackfn: (previousValue: U, currentValue: Num, currentIndex: Num, array: Uint32Array) => U, initialValue: U): U /* warning: the overload of function reduceRight is not supported yet. */
+  fun fill(value: Num, start: (Num) | (undefined), end: (Num) | (undefined)): Uint32Array
+  fun sort(compareFn: ((a: Num, b: Num) => Num) | (undefined)): Uint32Array
+  val BYTES_PER_ELEMENT: Num
+  fun copyWithin(target: Num, start: (Num) | (undefined), end: (Num) | (undefined)): Uint32Array
+  fun find(predicate: (value: Num, index: Num, obj: Uint32Array) => (false) | (true), thisArg: (anything) | (undefined)): Num
+  fun subarray(begin: (Num) | (undefined), end: (Num) | (undefined)): Uint32Array
+  fun join(separator: (Str) | (undefined)): Str
+  fun map(callbackfn: (value: Num, index: Num, array: Uint32Array) => Num, thisArg: (anything) | (undefined)): Uint32Array
+  fun forEach(callbackfn: (value: Num, index: Num, array: Uint32Array) => unit, thisArg: (anything) | (undefined)): unit
+  val buffer: ArrayBuffer
+  fun findIndex(predicate: (value: Num, index: Num, obj: Uint32Array) => (false) | (true), thisArg: (anything) | (undefined)): Num
+  fun reverse(): Uint32Array
+  fun filter(predicate: (value: Num, index: Num, array: Uint32Array) => anything, thisArg: (anything) | (undefined)): Uint32Array
+  fun slice(start: (Num) | (undefined), end: (Num) | (undefined)): Uint32Array
+  val byteLength: Num
+  fun reduce[U](callbackfn: (previousValue: U, currentValue: Num, currentIndex: Num, array: Uint32Array) => U, initialValue: U): U /* warning: the overload of function reduce is not supported yet. */
+  fun toString(): Str
+  val length: Num
+  fun some(predicate: (value: Num, index: Num, array: Uint32Array) => anything, thisArg: (anything) | (undefined)): (false) | (true)
+  fun indexOf(searchElement: Num, fromIndex: (Num) | (undefined)): Num
+  val byteOffset: Num
+}
+declare trait Float32Array {
+  fun valueOf(): Float32Array
+  fun lastIndexOf(searchElement: Num, fromIndex: (Num) | (undefined)): Num
+  fun every(predicate: (value: Num, index: Num, array: Float32Array) => anything, thisArg: (anything) | (undefined)): (false) | (true)
+  fun set(array: ArrayLike[Num], offset: (Num) | (undefined)): unit
+  fun toLocaleString(): Str
+  val __index: unsupported["[index: number]: number;", "ES5.d.ts", 4040, 28]
+  fun reduceRight[U](callbackfn: (previousValue: U, currentValue: Num, currentIndex: Num, array: Float32Array) => U, initialValue: U): U /* warning: the overload of function reduceRight is not supported yet. */
+  fun fill(value: Num, start: (Num) | (undefined), end: (Num) | (undefined)): Float32Array
+  fun sort(compareFn: ((a: Num, b: Num) => Num) | (undefined)): Float32Array
+  val BYTES_PER_ELEMENT: Num
+  fun copyWithin(target: Num, start: (Num) | (undefined), end: (Num) | (undefined)): Float32Array
+  fun find(predicate: (value: Num, index: Num, obj: Float32Array) => (false) | (true), thisArg: (anything) | (undefined)): Num
+  fun subarray(begin: (Num) | (undefined), end: (Num) | (undefined)): Float32Array
+  fun join(separator: (Str) | (undefined)): Str
+  fun map(callbackfn: (value: Num, index: Num, array: Float32Array) => Num, thisArg: (anything) | (undefined)): Float32Array
+  fun forEach(callbackfn: (value: Num, index: Num, array: Float32Array) => unit, thisArg: (anything) | (undefined)): unit
+  val buffer: ArrayBuffer
+  fun findIndex(predicate: (value: Num, index: Num, obj: Float32Array) => (false) | (true), thisArg: (anything) | (undefined)): Num
+  fun reverse(): Float32Array
+  fun filter(predicate: (value: Num, index: Num, array: Float32Array) => anything, thisArg: (anything) | (undefined)): Float32Array
+  fun slice(start: (Num) | (undefined), end: (Num) | (undefined)): Float32Array
+  val byteLength: Num
+  fun reduce[U](callbackfn: (previousValue: U, currentValue: Num, currentIndex: Num, array: Float32Array) => U, initialValue: U): U /* warning: the overload of function reduce is not supported yet. */
+  fun toString(): Str
+  val length: Num
+  fun some(predicate: (value: Num, index: Num, array: Float32Array) => anything, thisArg: (anything) | (undefined)): (false) | (true)
+  fun indexOf(searchElement: Num, fromIndex: (Num) | (undefined)): Num
+  val byteOffset: Num
+}
+declare trait Float64Array {
+  fun valueOf(): Float64Array
+  fun lastIndexOf(searchElement: Num, fromIndex: (Num) | (undefined)): Num
+  fun every(predicate: (value: Num, index: Num, array: Float64Array) => anything, thisArg: (anything) | (undefined)): (false) | (true)
+  fun set(array: ArrayLike[Num], offset: (Num) | (undefined)): unit
+  val __index: unsupported["[index: number]: number;", "ES5.d.ts", 4314, 28]
+  fun reduceRight[U](callbackfn: (previousValue: U, currentValue: Num, currentIndex: Num, array: Float64Array) => U, initialValue: U): U /* warning: the overload of function reduceRight is not supported yet. */
+  fun fill(value: Num, start: (Num) | (undefined), end: (Num) | (undefined)): Float64Array
+  fun sort(compareFn: ((a: Num, b: Num) => Num) | (undefined)): Float64Array
+  val BYTES_PER_ELEMENT: Num
+  fun copyWithin(target: Num, start: (Num) | (undefined), end: (Num) | (undefined)): Float64Array
+  fun find(predicate: (value: Num, index: Num, obj: Float64Array) => (false) | (true), thisArg: (anything) | (undefined)): Num
+  fun subarray(begin: (Num) | (undefined), end: (Num) | (undefined)): Float64Array
+  fun join(separator: (Str) | (undefined)): Str
+  fun map(callbackfn: (value: Num, index: Num, array: Float64Array) => Num, thisArg: (anything) | (undefined)): Float64Array
+  fun forEach(callbackfn: (value: Num, index: Num, array: Float64Array) => unit, thisArg: (anything) | (undefined)): unit
+  val buffer: ArrayBuffer
+  fun findIndex(predicate: (value: Num, index: Num, obj: Float64Array) => (false) | (true), thisArg: (anything) | (undefined)): Num
+  fun reverse(): Float64Array
+  fun filter(predicate: (value: Num, index: Num, array: Float64Array) => anything, thisArg: (anything) | (undefined)): Float64Array
+  fun slice(start: (Num) | (undefined), end: (Num) | (undefined)): Float64Array
+  val byteLength: Num
+  fun reduce[U](callbackfn: (previousValue: U, currentValue: Num, currentIndex: Num, array: Float64Array) => U, initialValue: U): U /* warning: the overload of function reduce is not supported yet. */
+  fun toString(): Str
+  val length: Num
+  fun some(predicate: (value: Num, index: Num, array: Float64Array) => anything, thisArg: (anything) | (undefined)): (false) | (true)
+  fun indexOf(searchElement: Num, fromIndex: (Num) | (undefined)): Num
+  val byteOffset: Num
+}
+declare module Intl {
+  export declare trait CollatorOptions {
+    val sensitivity: (Str) | (undefined)
+    val ignorePunctuation: ((false) | (true)) | (undefined)
+    val usage: (Str) | (undefined)
+    val localeMatcher: (Str) | (undefined)
+    val numeric: ((false) | (true)) | (undefined)
+    val caseFirst: (Str) | (undefined)
+  }
+  export declare trait ResolvedCollatorOptions {
+    val sensitivity: Str
+    val ignorePunctuation: (false) | (true)
+    val usage: Str
+    val locale: Str
+    val numeric: (false) | (true)
+    val caseFirst: Str
+    val collation: Str
+  }
+  export declare trait Collator {
+    fun compare(x: Str, y: Str): Num
+    fun resolvedOptions(): ResolvedCollatorOptions
+  }
+  export declare trait NumberFormatOptions {
+    val minimumSignificantDigits: (Num) | (undefined)
+    val useGrouping: ((false) | (true)) | (undefined)
+    val style: (Str) | (undefined)
+    val localeMatcher: (Str) | (undefined)
+    val currency: (Str) | (undefined)
+    val minimumIntegerDigits: (Num) | (undefined)
+    val maximumFractionDigits: (Num) | (undefined)
+    val currencySign: (Str) | (undefined)
+    val maximumSignificantDigits: (Num) | (undefined)
+    val minimumFractionDigits: (Num) | (undefined)
+  }
+  export declare trait ResolvedNumberFormatOptions {
+    val numberingSystem: Str
+    val minimumSignificantDigits: (Num) | (undefined)
+    val useGrouping: (false) | (true)
+    val style: Str
+    val locale: Str
+    val currency: (Str) | (undefined)
+    val minimumIntegerDigits: Num
+    val maximumFractionDigits: Num
+    val maximumSignificantDigits: (Num) | (undefined)
+    val minimumFractionDigits: Num
+  }
+  export declare trait NumberFormat {
+    fun format(value: Num): Str
+    fun resolvedOptions(): ResolvedNumberFormatOptions
+  }
+  export declare trait DateTimeFormatOptions {
+    val minute: ((Str) | (Str)) | (undefined)
+    val year: ((Str) | (Str)) | (undefined)
+    val hour: ((Str) | (Str)) | (undefined)
+    val hour12: ((false) | (true)) | (undefined)
+    val weekday: (((Str) | (Str)) | (Str)) | (undefined)
+    val formatMatcher: ((Str) | (Str)) | (undefined)
+    val day: ((Str) | (Str)) | (undefined)
+    val timeZone: (Str) | (undefined)
+    val month: (((((Str) | (Str)) | (Str)) | (Str)) | (Str)) | (undefined)
+    val second: ((Str) | (Str)) | (undefined)
+    val localeMatcher: ((Str) | (Str)) | (undefined)
+    val timeZoneName: ((((((Str) | (Str)) | (Str)) | (Str)) | (Str)) | (Str)) | (undefined)
+    val era: (((Str) | (Str)) | (Str)) | (undefined)
+  }
+  export declare trait ResolvedDateTimeFormatOptions {
+    val numberingSystem: Str
+    val minute: (Str) | (undefined)
+    val year: (Str) | (undefined)
+    val hour: (Str) | (undefined)
+    val second: (Str) | (undefined)
+    val hour12: ((false) | (true)) | (undefined)
+    val weekday: (Str) | (undefined)
+    val day: (Str) | (undefined)
+    val timeZone: Str
+    val month: (Str) | (undefined)
+    val locale: Str
+    val calendar: Str
+    val timeZoneName: (Str) | (undefined)
+    val era: (Str) | (undefined)
+  }
+  export declare trait DateTimeFormat {
+    fun format(date: ((Num) | (Date)) | (undefined)): Str
+    fun resolvedOptions(): ResolvedDateTimeFormatOptions
+  }
 }
