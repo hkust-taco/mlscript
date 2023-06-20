@@ -102,7 +102,7 @@ interface PropertyDescriptorMap {
     [key: PropertyKey]: PropertyDescriptor;
 }
 
-interface Object {
+class Object {
     /** The initial value of Object.prototype.constructor is the standard built-in Object constructor. */
     constructor: Function;
 
@@ -377,7 +377,7 @@ interface IArguments {
     callee: Function;
 }
 
-interface Str {
+class Str extends Object {
     /** Returns a string representation of a string. */
     toString(): string;
 
@@ -513,20 +513,20 @@ interface StringConstructor {
 //  */
 declare var String: StringConstructor;
 
-interface Boolean {
+class Bool {
     /** Returns the primitive value of the specified object. */
     valueOf(): boolean;
 }
 
 interface BooleanConstructor {
-    new(value?: any): Boolean;
+    new(value?: any): Bool;
     <T>(value?: T): boolean;
-    readonly prototype: Boolean;
+    readonly prototype: Bool;
 }
 
-// declare var Boolean: BooleanConstructor;
+declare var Boolean: BooleanConstructor;
 
-interface Num {
+class Num {
     /**
      * Returns a string representation of an object.
      * @param radix Specifies a radix for converting numeric values to strings. This value is only used for numbers.
@@ -586,7 +586,7 @@ interface NumberConstructor {
 }
 
 // /** An object that represents a number of any kind. All JavaScript numbers are 64-bit floating-point numbers. */
-// declare var Number: NumberConstructor;
+declare var Number: NumberConstructor;
 
 interface TemplateStringsArray extends ReadonlyArray<string> {
     readonly raw: readonly string[];

@@ -14,6 +14,8 @@ const Builtin = new class Builtin {
     console.log(s.indexOf("c", undefined));
     console.log(String.fromCharCode(64));
     console.log(n.toString(8));
+    console.log(Number["MAX_VALUE"]);
+    console.log(s.hasOwnProperty("foo"));
   }
 };
 Builtin.$init();

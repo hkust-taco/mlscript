@@ -77,7 +77,7 @@ object DriverDiffTests {
     entry("TS", Some("./tsconfig.json"), ignoreTypeError = true), // TODO: type members
     entry("Output", Some("./tsconfig.json")),
     entry("Output2", Some("./tsconfig.json")),
-    entry("MLS2TheMax", Some("./tsconfig.json"), ignoreTypeError = true), // TODO: type mismatch???
+    entry("MLS2TheMax", Some("./tsconfig.json")),
     entry("MyPartialOrder", Some("./tsconfig.json"), expectError = true), // TODO: type traits in modules
     entry("Builtin"),
     ts2mlsEntry("Array", ignoreTypeError = true),

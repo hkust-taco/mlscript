@@ -27,12 +27,11 @@ declare trait PropertyDescriptor {
 declare trait PropertyDescriptorMap {
   val __index: unsupported["[key: PropertyKey]: PropertyDescriptor;", "ES5.d.ts", 101, 33]
 }
-declare trait Object {
+declare class Object {
   fun hasOwnProperty(v: ((Str) | (Num)) | (Symbol)): (false) | (true)
   fun propertyIsEnumerable(v: ((Str) | (Num)) | (Symbol)): (false) | (true)
   fun valueOf(): Object
   fun toLocaleString(): Str
-  val id"constructor": Function
   fun isPrototypeOf(v: Object): (false) | (true)
   fun toString(): Str
 }
@@ -76,7 +75,7 @@ declare trait IArguments {
   val length: Num
   val callee: Function
 }
-declare trait Str {
+declare class Str extends Object {
   fun valueOf(): Str
   fun toLocaleUpperCase(locales: ((Str) | (MutArray[Str])) | (undefined)): Str
   fun lastIndexOf(searchString: Str, position: (Num) | (undefined)): Num
@@ -103,15 +102,16 @@ declare trait StringConstructor {
   fun fromCharCode(codes: (Num) | (MutArray[Num])): Str
 }
 val String: StringConstructor
-declare trait Boolean {
+declare class Bool {
   fun valueOf(): (false) | (true)
 }
 declare trait BooleanConstructor {
-  val __new: unsupported["new(value?: any): Boolean;", "ES5.d.ts", 521, 30]
-  val __call: unsupported["<T>(value?: T): boolean;", "ES5.d.ts", 522, 30]
-  val prototype: Boolean
+  val __new: unsupported["new(value?: any): Bool;", "ES5.d.ts", 521, 30]
+  val __call: unsupported["<T>(value?: T): boolean;", "ES5.d.ts", 522, 27]
+  val prototype: Bool
 }
-declare trait Num {
+val Boolean: BooleanConstructor
+declare class Num {
   fun toExponential(fractionDigits: (Num) | (undefined)): Str
   fun valueOf(): Num
   fun toString(radix: (Num) | (undefined)): Str
@@ -128,6 +128,7 @@ declare trait NumberConstructor {
   val MAX_VALUE: Num
   val prototype: Num
 }
+val Number: NumberConstructor
 declare trait TemplateStringsArray extends ReadonlyArray[Str] {
   val raw: ReadonlyArray[Str]
 }
