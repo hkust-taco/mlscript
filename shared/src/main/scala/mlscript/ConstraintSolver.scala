@@ -551,7 +551,13 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               if (pts.contains(pt) || pts.exists(p => pt.parentsST.contains(p.id)))
                 println(s"OK  $pt  <:  ${pts.mkString(" | ")}")
               // else f.fold(reportError())(f => annoying(Nil, done_ls, Nil, f))
-              else annoying(Nil, LhsRefined(N, ts, r, trs), Nil, RhsBases(Nil, bf, trs2))
+              else annoying(pt.id match {
+                  case _: IntLit => IntType :: Nil
+                  case _: DecLit => DecType :: Nil
+                  case _: StrLit => StrType :: Nil
+                  case _: UnitLit => Nil
+                  case _: Var => Nil
+                }, LhsRefined(N, ts, r, trs), Nil, RhsBases(Nil, bf, trs2))
             case (lr @ LhsRefined(bo, ts, r, _), rf @ RhsField(n, t2)) =>
               // Reuse the case implemented below:  (this shortcut adds a few more annoying calls in stats)
               annoying(Nil, lr, Nil, RhsBases(Nil, S(R(rf)), SortedMap.empty))
