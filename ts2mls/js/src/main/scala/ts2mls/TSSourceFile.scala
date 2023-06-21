@@ -132,7 +132,15 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
     else if (obj.isArrayType) TSArrayType(getObjectType(obj.elementTypeOfArray))
     else if (obj.isTypeParameterSubstitution) TSSubstitutionType(obj.symbol.escapedName, getSubstitutionArguments(obj.typeArguments))
     else if (obj.isObject)
-      if (obj.isAnonymous) TSInterfaceType("", getAnonymousPropertiesType(obj.properties), List(), List())
+      if (obj.isAnonymous) {
+        val props = getAnonymousPropertiesType(obj.properties)
+        if (!props.exists{ case (name, _) if (!name.isEmpty()) => Character.isUpperCase(name(0)); case _ => false})
+          TSInterfaceType("", props, List(), List())
+        else lineHelper.getPos(obj.pos) match {
+          case (line, column) =>
+            TSUnsupportedType(obj.toString(), TSPathResolver.basenameWithExt(obj.filename), line, column)
+        }
+      }
       else TSReferenceType(getSymbolFullname(obj.symbol))
     else if (obj.isTypeParameter) TSTypeParameter(obj.symbol.escapedName)
     else if (obj.isConditionalType || obj.isIndexType || obj.isIndexedAccessType) lineHelper.getPos(obj.pos) match {

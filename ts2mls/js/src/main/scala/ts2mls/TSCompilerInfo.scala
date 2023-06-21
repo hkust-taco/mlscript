@@ -147,6 +147,7 @@ class TSSymbolObject(sym: js.Dynamic)(implicit checker: TSTypeChecker) extends T
   lazy val `type` = TSTypeObject(sym.selectDynamic("type"))
 
   lazy val isOptionalMember = (flags & TypeScript.symbolFlagsOptional) > 0
+  lazy val valueDeclaration = TSNodeObject(sym.valueDeclaration)
 }
 
 object TSSymbolObject {
@@ -226,7 +227,8 @@ class TSNodeObject(node: js.Dynamic)(implicit checker: TSTypeChecker) extends TS
   lazy val name = TSIdentifierObject(node.name)
 
   // TODO: multiline string support
-  override def toString(): String = node.getText().toString().replaceAll("\n", " ")
+  override def toString(): String =
+    if (IsUndefined(node)) "" else node.getText().toString().replaceAll("\n", " ")
   lazy val filename: String =
     if (parent.isUndefined) node.fileName.toString()
     else parent.filename
@@ -272,6 +274,8 @@ class TSTypeObject(obj: js.Dynamic)(implicit checker: TSTypeChecker) extends TSA
   private lazy val baseType = TSTypeObject(checker.getBaseType(obj))
   private lazy val root =
     if (!IsUndefined(obj.root)) TSNodeObject(obj.root.node)
+    else if (!symbol.isUndefined && !symbol.valueDeclaration.isUndefined)
+      `type`.symbol.valueDeclaration
     else if (!`type`.isUndefined && !`type`.symbol.isUndefined && !`type`.symbol.declaration.isUndefined)
       `type`.symbol.declaration
     else TSNodeObject(obj.declaration)
@@ -304,8 +308,8 @@ class TSTypeObject(obj: js.Dynamic)(implicit checker: TSTypeChecker) extends TSA
   lazy val isIndexedAccessType = flags == TypeScript.typeFlagsIndexedAccess
 
   override def toString(): String = root.toString()
-  lazy val filename = root.filename
-  lazy val pos = root.pos
+  lazy val filename = if (root.isUndefined) "" else root.filename
+  lazy val pos = if (root.isUndefined) g.undefined else root.pos
 }
 
 object TSTypeObject {

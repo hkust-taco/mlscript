@@ -216,7 +216,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
   */
   
   final def typingUnit: TypingUnit = {
-    val ts = block(false, false)
+    val ts = block(Nil)(false, false)
     val (es, dp) = ts.partitionMap {
       case R(imp: Import) => R(imp)
       case s => L(s)
@@ -307,11 +307,12 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
       S(res, _cur)
     }
   }
-  final def block(implicit et: ExpectThen, fe: FoundErr): Ls[IfBody \/ Statement] =
+  
+  final def block(prev: Ls[IfBody \/ Statement])(implicit et: ExpectThen, fe: FoundErr): Ls[IfBody \/ Statement] =
     cur match {
-      case Nil => Nil
-      case (NEWLINE, _) :: _ => consume; block
-      case (SPACE, _) :: _ => consume; block
+      case Nil => prev
+      case (NEWLINE, _) :: _ => consume; block(prev)
+      case (SPACE, _) :: _ => consume; block(prev)
       case (KEYWORD("constructor"), l0) :: _ =>
         consume
         val res = yeetSpaces match {
@@ -326,8 +327,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
         }
         val t = R(res.withLoc(S(l0 ++ res.getLoc)))
         yeetSpaces match {
-          case (NEWLINE, _) :: _ => consume; t :: block
-          case _ => t :: Nil
+          case (NEWLINE, _) :: _ => consume; block(prev :+ t)
+          case _ => prev :+ t
         }
       case c =>
         val t = c match {
@@ -529,12 +530,12 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
           case (KEYWORD("="), l0) :: _ => t match {
             case R(v: Var) =>
               consume
-              R(Eqn(v, expr(0))) :: block
-            case _ => t :: Nil
+              block(prev :+ R(Eqn(v, expr(0))))
+            case _ => prev :+ t
           }
-          case (KEYWORD(";"), _) :: _ => consume; t :: block
-          case (NEWLINE, _) :: _ => consume; t :: block
-          case _ => t :: Nil
+          case (KEYWORD(";"), _) :: _ => consume; block(prev :+ t)
+          case (NEWLINE, _) :: _ => consume; block(prev :+ t)
+          case _ => prev :+ t
         }
     }
   
@@ -584,7 +585,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
         case _ => true
       }) =>
         consume
-        val ts = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.block)
+        val ts = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.block(Nil))
         val es = ts.map { case L(t) => return L(IfBlock(ts)); case R(e) => e }
         R(Blk(es))
       case (LITVAL(lit), l0) :: _ =>

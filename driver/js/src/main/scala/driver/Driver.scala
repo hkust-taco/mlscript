@@ -72,6 +72,7 @@ class Driver(options: DriverOptions) {
         false
       case t : Throwable =>
         report(s"unexpected error: ${t.toString()}")
+        t.printStackTrace()
         false
     }
   
@@ -270,6 +271,7 @@ class Driver(options: DriverOptions) {
         report(s"codegen error: $err")
       case t : Throwable =>
         report(s"unexpected error: ${t.toString()}")
+        t.printStackTrace()
     }
 }
 
