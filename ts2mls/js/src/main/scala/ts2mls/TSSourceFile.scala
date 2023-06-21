@@ -228,7 +228,16 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
         others.removed(name) ++ Map(name -> TSMemberType(res, node.modifier))
       }
     }
-    case _ => others ++ Map(name -> TSMemberType(mem, node.modifier))
+    case _ => mem match {
+      case TSReferenceType(ref) if name === ref => lineHelper.getPos(node.pos) match {
+        case (line, column) =>
+          others ++ Map(name -> TSMemberType(
+            TSUnsupportedType(node.toString(), TSPathResolver.basenameWithExt(node.filename), line, column),
+            node.modifier
+          ))
+      }
+      case _ => others ++ Map(name -> TSMemberType(mem, node.modifier))
+    }
   }
 
   private def getClassMembersType(list: TSNodeArray, requireStatic: Boolean)(implicit ns: TSNamespace): Map[String, TSMemberType] =

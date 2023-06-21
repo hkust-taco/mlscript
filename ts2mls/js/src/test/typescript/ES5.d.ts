@@ -1654,170 +1654,170 @@ interface ArrayBuffer {
     slice(begin: number, end?: number): ArrayBuffer;
 }
 
-// /**
-//  * Allowed ArrayBuffer types for the buffer of an ArrayBufferView and related Typed Arrays.
-//  */
-// interface ArrayBufferTypes {
-//     ArrayBuffer: ArrayBuffer;
-// }
-// type ArrayBufferLike = ArrayBufferTypes[keyof ArrayBufferTypes];
+/**
+ * Allowed ArrayBuffer types for the buffer of an ArrayBufferView and related Typed Arrays.
+ */
+interface ArrayBufferTypes {
+    ArrayBuffer: ArrayBuffer;
+}
+type ArrayBufferLike = ArrayBufferTypes[keyof ArrayBufferTypes];
 
-// interface ArrayBufferConstructor {
-//     readonly prototype: ArrayBuffer;
-//     new(byteLength: number): ArrayBuffer;
-//     isView(arg: any): arg is ArrayBufferView;
-// }
+interface ArrayBufferConstructor {
+    readonly prototype: ArrayBuffer;
+    new(byteLength: number): ArrayBuffer;
+    isView(arg: any): arg is ArrayBufferView;
+}
 // declare var ArrayBuffer: ArrayBufferConstructor;
 
-// interface ArrayBufferView {
-//     /**
-//      * The ArrayBuffer instance referenced by the array.
-//      */
-//     buffer: ArrayBufferLike;
+interface ArrayBufferView {
+    /**
+     * The ArrayBuffer instance referenced by the array.
+     */
+    buffer: ArrayBufferLike;
 
-//     /**
-//      * The length in bytes of the array.
-//      */
-//     byteLength: number;
+    /**
+     * The length in bytes of the array.
+     */
+    byteLength: number;
 
-//     /**
-//      * The offset in bytes of the array.
-//      */
-//     byteOffset: number;
-// }
+    /**
+     * The offset in bytes of the array.
+     */
+    byteOffset: number;
+}
 
-// interface DataView {
-//     readonly buffer: ArrayBuffer;
-//     readonly byteLength: number;
-//     readonly byteOffset: number;
-//     /**
-//      * Gets the Float32 value at the specified byte offset from the start of the view. There is
-//      * no alignment constraint; multi-byte values may be fetched from any offset.
-//      * @param byteOffset The place in the buffer at which the value should be retrieved.
-//      * @param littleEndian If false or undefined, a big-endian value should be read.
-//      */
-//     getFloat32(byteOffset: number, littleEndian?: boolean): number;
+interface DataView {
+    readonly buffer: ArrayBuffer;
+    readonly byteLength: number;
+    readonly byteOffset: number;
+    /**
+     * Gets the Float32 value at the specified byte offset from the start of the view. There is
+     * no alignment constraint; multi-byte values may be fetched from any offset.
+     * @param byteOffset The place in the buffer at which the value should be retrieved.
+     * @param littleEndian If false or undefined, a big-endian value should be read.
+     */
+    getFloat32(byteOffset: number, littleEndian?: boolean): number;
 
-//     /**
-//      * Gets the Float64 value at the specified byte offset from the start of the view. There is
-//      * no alignment constraint; multi-byte values may be fetched from any offset.
-//      * @param byteOffset The place in the buffer at which the value should be retrieved.
-//      * @param littleEndian If false or undefined, a big-endian value should be read.
-//      */
-//     getFloat64(byteOffset: number, littleEndian?: boolean): number;
+    /**
+     * Gets the Float64 value at the specified byte offset from the start of the view. There is
+     * no alignment constraint; multi-byte values may be fetched from any offset.
+     * @param byteOffset The place in the buffer at which the value should be retrieved.
+     * @param littleEndian If false or undefined, a big-endian value should be read.
+     */
+    getFloat64(byteOffset: number, littleEndian?: boolean): number;
 
-//     /**
-//      * Gets the Int8 value at the specified byte offset from the start of the view. There is
-//      * no alignment constraint; multi-byte values may be fetched from any offset.
-//      * @param byteOffset The place in the buffer at which the value should be retrieved.
-//      */
-//     getInt8(byteOffset: number): number;
+    /**
+     * Gets the Int8 value at the specified byte offset from the start of the view. There is
+     * no alignment constraint; multi-byte values may be fetched from any offset.
+     * @param byteOffset The place in the buffer at which the value should be retrieved.
+     */
+    getInt8(byteOffset: number): number;
 
-//     /**
-//      * Gets the Int16 value at the specified byte offset from the start of the view. There is
-//      * no alignment constraint; multi-byte values may be fetched from any offset.
-//      * @param byteOffset The place in the buffer at which the value should be retrieved.
-//      * @param littleEndian If false or undefined, a big-endian value should be read.
-//      */
-//     getInt16(byteOffset: number, littleEndian?: boolean): number;
-//     /**
-//      * Gets the Int32 value at the specified byte offset from the start of the view. There is
-//      * no alignment constraint; multi-byte values may be fetched from any offset.
-//      * @param byteOffset The place in the buffer at which the value should be retrieved.
-//      * @param littleEndian If false or undefined, a big-endian value should be read.
-//      */
-//     getInt32(byteOffset: number, littleEndian?: boolean): number;
+    /**
+     * Gets the Int16 value at the specified byte offset from the start of the view. There is
+     * no alignment constraint; multi-byte values may be fetched from any offset.
+     * @param byteOffset The place in the buffer at which the value should be retrieved.
+     * @param littleEndian If false or undefined, a big-endian value should be read.
+     */
+    getInt16(byteOffset: number, littleEndian?: boolean): number;
+    /**
+     * Gets the Int32 value at the specified byte offset from the start of the view. There is
+     * no alignment constraint; multi-byte values may be fetched from any offset.
+     * @param byteOffset The place in the buffer at which the value should be retrieved.
+     * @param littleEndian If false or undefined, a big-endian value should be read.
+     */
+    getInt32(byteOffset: number, littleEndian?: boolean): number;
 
-//     /**
-//      * Gets the Uint8 value at the specified byte offset from the start of the view. There is
-//      * no alignment constraint; multi-byte values may be fetched from any offset.
-//      * @param byteOffset The place in the buffer at which the value should be retrieved.
-//      */
-//     getUint8(byteOffset: number): number;
+    /**
+     * Gets the Uint8 value at the specified byte offset from the start of the view. There is
+     * no alignment constraint; multi-byte values may be fetched from any offset.
+     * @param byteOffset The place in the buffer at which the value should be retrieved.
+     */
+    getUint8(byteOffset: number): number;
 
-//     /**
-//      * Gets the Uint16 value at the specified byte offset from the start of the view. There is
-//      * no alignment constraint; multi-byte values may be fetched from any offset.
-//      * @param byteOffset The place in the buffer at which the value should be retrieved.
-//      * @param littleEndian If false or undefined, a big-endian value should be read.
-//      */
-//     getUint16(byteOffset: number, littleEndian?: boolean): number;
+    /**
+     * Gets the Uint16 value at the specified byte offset from the start of the view. There is
+     * no alignment constraint; multi-byte values may be fetched from any offset.
+     * @param byteOffset The place in the buffer at which the value should be retrieved.
+     * @param littleEndian If false or undefined, a big-endian value should be read.
+     */
+    getUint16(byteOffset: number, littleEndian?: boolean): number;
 
-//     /**
-//      * Gets the Uint32 value at the specified byte offset from the start of the view. There is
-//      * no alignment constraint; multi-byte values may be fetched from any offset.
-//      * @param byteOffset The place in the buffer at which the value should be retrieved.
-//      * @param littleEndian If false or undefined, a big-endian value should be read.
-//      */
-//     getUint32(byteOffset: number, littleEndian?: boolean): number;
+    /**
+     * Gets the Uint32 value at the specified byte offset from the start of the view. There is
+     * no alignment constraint; multi-byte values may be fetched from any offset.
+     * @param byteOffset The place in the buffer at which the value should be retrieved.
+     * @param littleEndian If false or undefined, a big-endian value should be read.
+     */
+    getUint32(byteOffset: number, littleEndian?: boolean): number;
 
-//     /**
-//      * Stores an Float32 value at the specified byte offset from the start of the view.
-//      * @param byteOffset The place in the buffer at which the value should be set.
-//      * @param value The value to set.
-//      * @param littleEndian If false or undefined, a big-endian value should be written.
-//      */
-//     setFloat32(byteOffset: number, value: number, littleEndian?: boolean): void;
+    /**
+     * Stores an Float32 value at the specified byte offset from the start of the view.
+     * @param byteOffset The place in the buffer at which the value should be set.
+     * @param value The value to set.
+     * @param littleEndian If false or undefined, a big-endian value should be written.
+     */
+    setFloat32(byteOffset: number, value: number, littleEndian?: boolean): void;
 
-//     /**
-//      * Stores an Float64 value at the specified byte offset from the start of the view.
-//      * @param byteOffset The place in the buffer at which the value should be set.
-//      * @param value The value to set.
-//      * @param littleEndian If false or undefined, a big-endian value should be written.
-//      */
-//     setFloat64(byteOffset: number, value: number, littleEndian?: boolean): void;
+    /**
+     * Stores an Float64 value at the specified byte offset from the start of the view.
+     * @param byteOffset The place in the buffer at which the value should be set.
+     * @param value The value to set.
+     * @param littleEndian If false or undefined, a big-endian value should be written.
+     */
+    setFloat64(byteOffset: number, value: number, littleEndian?: boolean): void;
 
-//     /**
-//      * Stores an Int8 value at the specified byte offset from the start of the view.
-//      * @param byteOffset The place in the buffer at which the value should be set.
-//      * @param value The value to set.
-//      */
-//     setInt8(byteOffset: number, value: number): void;
+    /**
+     * Stores an Int8 value at the specified byte offset from the start of the view.
+     * @param byteOffset The place in the buffer at which the value should be set.
+     * @param value The value to set.
+     */
+    setInt8(byteOffset: number, value: number): void;
 
-//     /**
-//      * Stores an Int16 value at the specified byte offset from the start of the view.
-//      * @param byteOffset The place in the buffer at which the value should be set.
-//      * @param value The value to set.
-//      * @param littleEndian If false or undefined, a big-endian value should be written.
-//      */
-//     setInt16(byteOffset: number, value: number, littleEndian?: boolean): void;
+    /**
+     * Stores an Int16 value at the specified byte offset from the start of the view.
+     * @param byteOffset The place in the buffer at which the value should be set.
+     * @param value The value to set.
+     * @param littleEndian If false or undefined, a big-endian value should be written.
+     */
+    setInt16(byteOffset: number, value: number, littleEndian?: boolean): void;
 
-//     /**
-//      * Stores an Int32 value at the specified byte offset from the start of the view.
-//      * @param byteOffset The place in the buffer at which the value should be set.
-//      * @param value The value to set.
-//      * @param littleEndian If false or undefined, a big-endian value should be written.
-//      */
-//     setInt32(byteOffset: number, value: number, littleEndian?: boolean): void;
+    /**
+     * Stores an Int32 value at the specified byte offset from the start of the view.
+     * @param byteOffset The place in the buffer at which the value should be set.
+     * @param value The value to set.
+     * @param littleEndian If false or undefined, a big-endian value should be written.
+     */
+    setInt32(byteOffset: number, value: number, littleEndian?: boolean): void;
 
-//     /**
-//      * Stores an Uint8 value at the specified byte offset from the start of the view.
-//      * @param byteOffset The place in the buffer at which the value should be set.
-//      * @param value The value to set.
-//      */
-//     setUint8(byteOffset: number, value: number): void;
+    /**
+     * Stores an Uint8 value at the specified byte offset from the start of the view.
+     * @param byteOffset The place in the buffer at which the value should be set.
+     * @param value The value to set.
+     */
+    setUint8(byteOffset: number, value: number): void;
 
-//     /**
-//      * Stores an Uint16 value at the specified byte offset from the start of the view.
-//      * @param byteOffset The place in the buffer at which the value should be set.
-//      * @param value The value to set.
-//      * @param littleEndian If false or undefined, a big-endian value should be written.
-//      */
-//     setUint16(byteOffset: number, value: number, littleEndian?: boolean): void;
+    /**
+     * Stores an Uint16 value at the specified byte offset from the start of the view.
+     * @param byteOffset The place in the buffer at which the value should be set.
+     * @param value The value to set.
+     * @param littleEndian If false or undefined, a big-endian value should be written.
+     */
+    setUint16(byteOffset: number, value: number, littleEndian?: boolean): void;
 
-//     /**
-//      * Stores an Uint32 value at the specified byte offset from the start of the view.
-//      * @param byteOffset The place in the buffer at which the value should be set.
-//      * @param value The value to set.
-//      * @param littleEndian If false or undefined, a big-endian value should be written.
-//      */
-//     setUint32(byteOffset: number, value: number, littleEndian?: boolean): void;
-// }
+    /**
+     * Stores an Uint32 value at the specified byte offset from the start of the view.
+     * @param byteOffset The place in the buffer at which the value should be set.
+     * @param value The value to set.
+     * @param littleEndian If false or undefined, a big-endian value should be written.
+     */
+    setUint32(byteOffset: number, value: number, littleEndian?: boolean): void;
+}
 
-// interface DataViewConstructor {
-//     readonly prototype: DataView;
-//     new(buffer: ArrayBufferLike, byteOffset?: number, byteLength?: number): DataView;
-// }
+interface DataViewConstructor {
+    readonly prototype: DataView;
+    new(buffer: ArrayBufferLike, byteOffset?: number, byteLength?: number): DataView;
+}
 // declare var DataView: DataViewConstructor;
 
 /**
@@ -2067,39 +2067,39 @@ interface Int8Array {
 
     [index: number]: number;
 }
-// interface Int8ArrayConstructor {
-//     readonly prototype: Int8Array;
-//     new(length: number): Int8Array;
-//     new(array: ArrayLike<number> | ArrayBufferLike): Int8Array;
-//     new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Int8Array;
+interface Int8ArrayConstructor {
+    readonly prototype: Int8Array;
+    new(length: number): Int8Array;
+    new(array: ArrayLike<number> | ArrayBufferLike): Int8Array;
+    new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Int8Array;
 
-//     /**
-//      * The size in bytes of each element in the array.
-//      */
-//     readonly BYTES_PER_ELEMENT: number;
+    /**
+     * The size in bytes of each element in the array.
+     */
+    readonly BYTES_PER_ELEMENT: number;
 
-//     /**
-//      * Returns a new array from a set of elements.
-//      * @param items A set of elements to include in the new array object.
-//      */
-//     of(...items: number[]): Int8Array;
+    /**
+     * Returns a new array from a set of elements.
+     * @param items A set of elements to include in the new array object.
+     */
+    of(...items: number[]): Int8Array;
 
-//     /**
-//      * Creates an array from an array-like or iterable object.
-//      * @param arrayLike An array-like or iterable object to convert to an array.
-//      */
-//     from(arrayLike: ArrayLike<number>): Int8Array;
+    /**
+     * Creates an array from an array-like or iterable object.
+     * @param arrayLike An array-like or iterable object to convert to an array.
+     */
+    from(arrayLike: ArrayLike<number>): Int8Array;
 
-//     /**
-//      * Creates an array from an array-like or iterable object.
-//      * @param arrayLike An array-like or iterable object to convert to an array.
-//      * @param mapfn A mapping function to call on every element of the array.
-//      * @param thisArg Value of 'this' used to invoke the mapfn.
-//      */
-//     from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: number) => number, thisArg?: any): Int8Array;
+    /**
+     * Creates an array from an array-like or iterable object.
+     * @param arrayLike An array-like or iterable object to convert to an array.
+     * @param mapfn A mapping function to call on every element of the array.
+     * @param thisArg Value of 'this' used to invoke the mapfn.
+     */
+    from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: number) => number, thisArg?: any): Int8Array;
 
 
-// }
+}
 // declare var Int8Array: Int8ArrayConstructor;
 
 /**
@@ -2350,39 +2350,39 @@ interface Uint8Array {
     [index: number]: number;
 }
 
-// interface Uint8ArrayConstructor {
-//     readonly prototype: Uint8Array;
-//     new(length: number): Uint8Array;
-//     new(array: ArrayLike<number> | ArrayBufferLike): Uint8Array;
-//     new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Uint8Array;
+interface Uint8ArrayConstructor {
+    readonly prototype: Uint8Array;
+    new(length: number): Uint8Array;
+    new(array: ArrayLike<number> | ArrayBufferLike): Uint8Array;
+    new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Uint8Array;
 
-//     /**
-//      * The size in bytes of each element in the array.
-//      */
-//     readonly BYTES_PER_ELEMENT: number;
+    /**
+     * The size in bytes of each element in the array.
+     */
+    readonly BYTES_PER_ELEMENT: number;
 
-//     /**
-//      * Returns a new array from a set of elements.
-//      * @param items A set of elements to include in the new array object.
-//      */
-//     of(...items: number[]): Uint8Array;
+    /**
+     * Returns a new array from a set of elements.
+     * @param items A set of elements to include in the new array object.
+     */
+    of(...items: number[]): Uint8Array;
 
-//     /**
-//      * Creates an array from an array-like or iterable object.
-//      * @param arrayLike An array-like or iterable object to convert to an array.
-//      */
-//     from(arrayLike: ArrayLike<number>): Uint8Array;
+    /**
+     * Creates an array from an array-like or iterable object.
+     * @param arrayLike An array-like or iterable object to convert to an array.
+     */
+    from(arrayLike: ArrayLike<number>): Uint8Array;
 
-//     /**
-//      * Creates an array from an array-like or iterable object.
-//      * @param arrayLike An array-like or iterable object to convert to an array.
-//      * @param mapfn A mapping function to call on every element of the array.
-//      * @param thisArg Value of 'this' used to invoke the mapfn.
-//      */
-//     from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: number) => number, thisArg?: any): Uint8Array;
+    /**
+     * Creates an array from an array-like or iterable object.
+     * @param arrayLike An array-like or iterable object to convert to an array.
+     * @param mapfn A mapping function to call on every element of the array.
+     * @param thisArg Value of 'this' used to invoke the mapfn.
+     */
+    from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: number) => number, thisArg?: any): Uint8Array;
 
-// }
-// // declare var Uint8Array: Uint8ArrayConstructor;
+}
+// declare var Uint8Array: Uint8ArrayConstructor;
 
 /**
  * A typed array of 8-bit unsigned integer (clamped) values. The contents are initialized to 0.
@@ -2632,37 +2632,37 @@ interface Uint8ClampedArray {
     [index: number]: number;
 }
 
-// interface Uint8ClampedArrayConstructor {
-//     readonly prototype: Uint8ClampedArray;
-//     new(length: number): Uint8ClampedArray;
-//     new(array: ArrayLike<number> | ArrayBufferLike): Uint8ClampedArray;
-//     new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Uint8ClampedArray;
+interface Uint8ClampedArrayConstructor {
+    readonly prototype: Uint8ClampedArray;
+    new(length: number): Uint8ClampedArray;
+    new(array: ArrayLike<number> | ArrayBufferLike): Uint8ClampedArray;
+    new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Uint8ClampedArray;
 
-//     /**
-//      * The size in bytes of each element in the array.
-//      */
-//     readonly BYTES_PER_ELEMENT: number;
+    /**
+     * The size in bytes of each element in the array.
+     */
+    readonly BYTES_PER_ELEMENT: number;
 
-//     /**
-//      * Returns a new array from a set of elements.
-//      * @param items A set of elements to include in the new array object.
-//      */
-//     of(...items: number[]): Uint8ClampedArray;
+    /**
+     * Returns a new array from a set of elements.
+     * @param items A set of elements to include in the new array object.
+     */
+    of(...items: number[]): Uint8ClampedArray;
 
-//     /**
-//      * Creates an array from an array-like or iterable object.
-//      * @param arrayLike An array-like or iterable object to convert to an array.
-//      */
-//     from(arrayLike: ArrayLike<number>): Uint8ClampedArray;
+    /**
+     * Creates an array from an array-like or iterable object.
+     * @param arrayLike An array-like or iterable object to convert to an array.
+     */
+    from(arrayLike: ArrayLike<number>): Uint8ClampedArray;
 
-//     /**
-//      * Creates an array from an array-like or iterable object.
-//      * @param arrayLike An array-like or iterable object to convert to an array.
-//      * @param mapfn A mapping function to call on every element of the array.
-//      * @param thisArg Value of 'this' used to invoke the mapfn.
-//      */
-//     from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: number) => number, thisArg?: any): Uint8ClampedArray;
-// }
+    /**
+     * Creates an array from an array-like or iterable object.
+     * @param arrayLike An array-like or iterable object to convert to an array.
+     * @param mapfn A mapping function to call on every element of the array.
+     * @param thisArg Value of 'this' used to invoke the mapfn.
+     */
+    from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: number) => number, thisArg?: any): Uint8ClampedArray;
+}
 // declare var Uint8ClampedArray: Uint8ClampedArrayConstructor;
 
 /**
@@ -2912,39 +2912,39 @@ interface Int16Array {
     [index: number]: number;
 }
 
-// interface Int16ArrayConstructor {
-//     readonly prototype: Int16Array;
-//     new(length: number): Int16Array;
-//     new(array: ArrayLike<number> | ArrayBufferLike): Int16Array;
-//     new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Int16Array;
+interface Int16ArrayConstructor {
+    readonly prototype: Int16Array;
+    new(length: number): Int16Array;
+    new(array: ArrayLike<number> | ArrayBufferLike): Int16Array;
+    new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Int16Array;
 
-//     /**
-//      * The size in bytes of each element in the array.
-//      */
-//     readonly BYTES_PER_ELEMENT: number;
+    /**
+     * The size in bytes of each element in the array.
+     */
+    readonly BYTES_PER_ELEMENT: number;
 
-//     /**
-//      * Returns a new array from a set of elements.
-//      * @param items A set of elements to include in the new array object.
-//      */
-//     of(...items: number[]): Int16Array;
+    /**
+     * Returns a new array from a set of elements.
+     * @param items A set of elements to include in the new array object.
+     */
+    of(...items: number[]): Int16Array;
 
-//     /**
-//      * Creates an array from an array-like or iterable object.
-//      * @param arrayLike An array-like or iterable object to convert to an array.
-//      */
-//     from(arrayLike: ArrayLike<number>): Int16Array;
+    /**
+     * Creates an array from an array-like or iterable object.
+     * @param arrayLike An array-like or iterable object to convert to an array.
+     */
+    from(arrayLike: ArrayLike<number>): Int16Array;
 
-//     /**
-//      * Creates an array from an array-like or iterable object.
-//      * @param arrayLike An array-like or iterable object to convert to an array.
-//      * @param mapfn A mapping function to call on every element of the array.
-//      * @param thisArg Value of 'this' used to invoke the mapfn.
-//      */
-//     from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: number) => number, thisArg?: any): Int16Array;
+    /**
+     * Creates an array from an array-like or iterable object.
+     * @param arrayLike An array-like or iterable object to convert to an array.
+     * @param mapfn A mapping function to call on every element of the array.
+     * @param thisArg Value of 'this' used to invoke the mapfn.
+     */
+    from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: number) => number, thisArg?: any): Int16Array;
 
 
-// }
+}
 // declare var Int16Array: Int16ArrayConstructor;
 
 /**
@@ -3195,39 +3195,39 @@ interface Uint16Array {
     [index: number]: number;
 }
 
-// interface Uint16ArrayConstructor {
-//     readonly prototype: Uint16Array;
-//     new(length: number): Uint16Array;
-//     new(array: ArrayLike<number> | ArrayBufferLike): Uint16Array;
-//     new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Uint16Array;
+interface Uint16ArrayConstructor {
+    readonly prototype: Uint16Array;
+    new(length: number): Uint16Array;
+    new(array: ArrayLike<number> | ArrayBufferLike): Uint16Array;
+    new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Uint16Array;
 
-//     /**
-//      * The size in bytes of each element in the array.
-//      */
-//     readonly BYTES_PER_ELEMENT: number;
+    /**
+     * The size in bytes of each element in the array.
+     */
+    readonly BYTES_PER_ELEMENT: number;
 
-//     /**
-//      * Returns a new array from a set of elements.
-//      * @param items A set of elements to include in the new array object.
-//      */
-//     of(...items: number[]): Uint16Array;
+    /**
+     * Returns a new array from a set of elements.
+     * @param items A set of elements to include in the new array object.
+     */
+    of(...items: number[]): Uint16Array;
 
-//     /**
-//      * Creates an array from an array-like or iterable object.
-//      * @param arrayLike An array-like or iterable object to convert to an array.
-//      */
-//     from(arrayLike: ArrayLike<number>): Uint16Array;
+    /**
+     * Creates an array from an array-like or iterable object.
+     * @param arrayLike An array-like or iterable object to convert to an array.
+     */
+    from(arrayLike: ArrayLike<number>): Uint16Array;
 
-//     /**
-//      * Creates an array from an array-like or iterable object.
-//      * @param arrayLike An array-like or iterable object to convert to an array.
-//      * @param mapfn A mapping function to call on every element of the array.
-//      * @param thisArg Value of 'this' used to invoke the mapfn.
-//      */
-//     from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: number) => number, thisArg?: any): Uint16Array;
+    /**
+     * Creates an array from an array-like or iterable object.
+     * @param arrayLike An array-like or iterable object to convert to an array.
+     * @param mapfn A mapping function to call on every element of the array.
+     * @param thisArg Value of 'this' used to invoke the mapfn.
+     */
+    from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: number) => number, thisArg?: any): Uint16Array;
 
 
-// }
+}
 // declare var Uint16Array: Uint16ArrayConstructor;
 
 /**
@@ -3478,38 +3478,38 @@ interface Int32Array {
     [index: number]: number;
 }
 
-// interface Int32ArrayConstructor {
-//     readonly prototype: Int32Array;
-//     new(length: number): Int32Array;
-//     new(array: ArrayLike<number> | ArrayBufferLike): Int32Array;
-//     new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Int32Array;
+interface Int32ArrayConstructor {
+    readonly prototype: Int32Array;
+    new(length: number): Int32Array;
+    new(array: ArrayLike<number> | ArrayBufferLike): Int32Array;
+    new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Int32Array;
 
-//     /**
-//      * The size in bytes of each element in the array.
-//      */
-//     readonly BYTES_PER_ELEMENT: number;
+    /**
+     * The size in bytes of each element in the array.
+     */
+    readonly BYTES_PER_ELEMENT: number;
 
-//     /**
-//      * Returns a new array from a set of elements.
-//      * @param items A set of elements to include in the new array object.
-//      */
-//     of(...items: number[]): Int32Array;
+    /**
+     * Returns a new array from a set of elements.
+     * @param items A set of elements to include in the new array object.
+     */
+    of(...items: number[]): Int32Array;
 
-//     /**
-//      * Creates an array from an array-like or iterable object.
-//      * @param arrayLike An array-like or iterable object to convert to an array.
-//      */
-//     from(arrayLike: ArrayLike<number>): Int32Array;
+    /**
+     * Creates an array from an array-like or iterable object.
+     * @param arrayLike An array-like or iterable object to convert to an array.
+     */
+    from(arrayLike: ArrayLike<number>): Int32Array;
 
-//     /**
-//      * Creates an array from an array-like or iterable object.
-//      * @param arrayLike An array-like or iterable object to convert to an array.
-//      * @param mapfn A mapping function to call on every element of the array.
-//      * @param thisArg Value of 'this' used to invoke the mapfn.
-//      */
-//     from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: number) => number, thisArg?: any): Int32Array;
+    /**
+     * Creates an array from an array-like or iterable object.
+     * @param arrayLike An array-like or iterable object to convert to an array.
+     * @param mapfn A mapping function to call on every element of the array.
+     * @param thisArg Value of 'this' used to invoke the mapfn.
+     */
+    from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: number) => number, thisArg?: any): Int32Array;
 
-// }
+}
 // declare var Int32Array: Int32ArrayConstructor;
 
 /**
@@ -3759,38 +3759,38 @@ interface Uint32Array {
     [index: number]: number;
 }
 
-// interface Uint32ArrayConstructor {
-//     readonly prototype: Uint32Array;
-//     new(length: number): Uint32Array;
-//     new(array: ArrayLike<number> | ArrayBufferLike): Uint32Array;
-//     new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Uint32Array;
+interface Uint32ArrayConstructor {
+    readonly prototype: Uint32Array;
+    new(length: number): Uint32Array;
+    new(array: ArrayLike<number> | ArrayBufferLike): Uint32Array;
+    new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Uint32Array;
 
-//     /**
-//      * The size in bytes of each element in the array.
-//      */
-//     readonly BYTES_PER_ELEMENT: number;
+    /**
+     * The size in bytes of each element in the array.
+     */
+    readonly BYTES_PER_ELEMENT: number;
 
-//     /**
-//      * Returns a new array from a set of elements.
-//      * @param items A set of elements to include in the new array object.
-//      */
-//     of(...items: number[]): Uint32Array;
+    /**
+     * Returns a new array from a set of elements.
+     * @param items A set of elements to include in the new array object.
+     */
+    of(...items: number[]): Uint32Array;
 
-//     /**
-//      * Creates an array from an array-like or iterable object.
-//      * @param arrayLike An array-like or iterable object to convert to an array.
-//      */
-//     from(arrayLike: ArrayLike<number>): Uint32Array;
+    /**
+     * Creates an array from an array-like or iterable object.
+     * @param arrayLike An array-like or iterable object to convert to an array.
+     */
+    from(arrayLike: ArrayLike<number>): Uint32Array;
 
-//     /**
-//      * Creates an array from an array-like or iterable object.
-//      * @param arrayLike An array-like or iterable object to convert to an array.
-//      * @param mapfn A mapping function to call on every element of the array.
-//      * @param thisArg Value of 'this' used to invoke the mapfn.
-//      */
-//     from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: number) => number, thisArg?: any): Uint32Array;
+    /**
+     * Creates an array from an array-like or iterable object.
+     * @param arrayLike An array-like or iterable object to convert to an array.
+     * @param mapfn A mapping function to call on every element of the array.
+     * @param thisArg Value of 'this' used to invoke the mapfn.
+     */
+    from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: number) => number, thisArg?: any): Uint32Array;
 
-// }
+}
 // declare var Uint32Array: Uint32ArrayConstructor;
 
 /**
@@ -4041,39 +4041,39 @@ interface Float32Array {
     [index: number]: number;
 }
 
-// interface Float32ArrayConstructor {
-//     readonly prototype: Float32Array;
-//     new(length: number): Float32Array;
-//     new(array: ArrayLike<number> | ArrayBufferLike): Float32Array;
-//     new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Float32Array;
+interface Float32ArrayConstructor {
+    readonly prototype: Float32Array;
+    new(length: number): Float32Array;
+    new(array: ArrayLike<number> | ArrayBufferLike): Float32Array;
+    new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Float32Array;
 
-//     /**
-//      * The size in bytes of each element in the array.
-//      */
-//     readonly BYTES_PER_ELEMENT: number;
+    /**
+     * The size in bytes of each element in the array.
+     */
+    readonly BYTES_PER_ELEMENT: number;
 
-//     /**
-//      * Returns a new array from a set of elements.
-//      * @param items A set of elements to include in the new array object.
-//      */
-//     of(...items: number[]): Float32Array;
+    /**
+     * Returns a new array from a set of elements.
+     * @param items A set of elements to include in the new array object.
+     */
+    of(...items: number[]): Float32Array;
 
-//     /**
-//      * Creates an array from an array-like or iterable object.
-//      * @param arrayLike An array-like or iterable object to convert to an array.
-//      */
-//     from(arrayLike: ArrayLike<number>): Float32Array;
+    /**
+     * Creates an array from an array-like or iterable object.
+     * @param arrayLike An array-like or iterable object to convert to an array.
+     */
+    from(arrayLike: ArrayLike<number>): Float32Array;
 
-//     /**
-//      * Creates an array from an array-like or iterable object.
-//      * @param arrayLike An array-like or iterable object to convert to an array.
-//      * @param mapfn A mapping function to call on every element of the array.
-//      * @param thisArg Value of 'this' used to invoke the mapfn.
-//      */
-//     from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: number) => number, thisArg?: any): Float32Array;
+    /**
+     * Creates an array from an array-like or iterable object.
+     * @param arrayLike An array-like or iterable object to convert to an array.
+     * @param mapfn A mapping function to call on every element of the array.
+     * @param thisArg Value of 'this' used to invoke the mapfn.
+     */
+    from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: number) => number, thisArg?: any): Float32Array;
 
 
-// }
+}
 // declare var Float32Array: Float32ArrayConstructor;
 
 /**
@@ -4315,38 +4315,38 @@ interface Float64Array {
     [index: number]: number;
 }
 
-// interface Float64ArrayConstructor {
-//     readonly prototype: Float64Array;
-//     new(length: number): Float64Array;
-//     new(array: ArrayLike<number> | ArrayBufferLike): Float64Array;
-//     new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Float64Array;
+interface Float64ArrayConstructor {
+    readonly prototype: Float64Array;
+    new(length: number): Float64Array;
+    new(array: ArrayLike<number> | ArrayBufferLike): Float64Array;
+    new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Float64Array;
 
-//     /**
-//      * The size in bytes of each element in the array.
-//      */
-//     readonly BYTES_PER_ELEMENT: number;
+    /**
+     * The size in bytes of each element in the array.
+     */
+    readonly BYTES_PER_ELEMENT: number;
 
-//     /**
-//      * Returns a new array from a set of elements.
-//      * @param items A set of elements to include in the new array object.
-//      */
-//     of(...items: number[]): Float64Array;
+    /**
+     * Returns a new array from a set of elements.
+     * @param items A set of elements to include in the new array object.
+     */
+    of(...items: number[]): Float64Array;
 
-//     /**
-//      * Creates an array from an array-like or iterable object.
-//      * @param arrayLike An array-like or iterable object to convert to an array.
-//      */
-//     from(arrayLike: ArrayLike<number>): Float64Array;
+    /**
+     * Creates an array from an array-like or iterable object.
+     * @param arrayLike An array-like or iterable object to convert to an array.
+     */
+    from(arrayLike: ArrayLike<number>): Float64Array;
 
-//     /**
-//      * Creates an array from an array-like or iterable object.
-//      * @param arrayLike An array-like or iterable object to convert to an array.
-//      * @param mapfn A mapping function to call on every element of the array.
-//      * @param thisArg Value of 'this' used to invoke the mapfn.
-//      */
-//     from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: number) => number, thisArg?: any): Float64Array;
+    /**
+     * Creates an array from an array-like or iterable object.
+     * @param arrayLike An array-like or iterable object to convert to an array.
+     * @param mapfn A mapping function to call on every element of the array.
+     * @param thisArg Value of 'this' used to invoke the mapfn.
+     */
+    from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: number) => number, thisArg?: any): Float64Array;
 
-// }
+}
 // declare var Float64Array: Float64ArrayConstructor;
 
 /////////////////////////////

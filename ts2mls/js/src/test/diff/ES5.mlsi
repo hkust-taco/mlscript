@@ -397,6 +397,45 @@ declare trait ArrayBuffer {
   val byteLength: Num
   fun slice(args0: Num, args1: (Num) | (undefined)): ArrayBuffer
 }
+declare trait ArrayBufferTypes {
+  val ArrayBuffer: unsupported["ArrayBuffer: ArrayBuffer;", "ES5.d.ts", 1660, 28]
+}
+type ArrayBufferLike = ArrayBuffer
+declare trait ArrayBufferConstructor {
+  val prototype: ArrayBuffer
+  val __new: unsupported["new(byteLength: number): ArrayBuffer;", "ES5.d.ts", 1666, 36]
+  fun isView(args0: anything): (false) | (true)
+}
+declare trait ArrayBufferView {
+  val buffer: ArrayBuffer
+  val byteLength: Num
+  val byteOffset: Num
+}
+declare trait DataView {
+  fun setInt32(args0: Num, args1: Num, args2: ((false) | (true)) | (undefined)): unit
+  fun setUint32(args0: Num, args1: Num, args2: ((false) | (true)) | (undefined)): unit
+  fun setFloat64(args0: Num, args1: Num, args2: ((false) | (true)) | (undefined)): unit
+  fun getInt8(args0: Num): Num
+  val buffer: ArrayBuffer
+  fun setInt16(args0: Num, args1: Num, args2: ((false) | (true)) | (undefined)): unit
+  fun getUint8(args0: Num): Num
+  val byteLength: Num
+  fun getFloat64(args0: Num, args1: ((false) | (true)) | (undefined)): Num
+  fun getFloat32(args0: Num, args1: ((false) | (true)) | (undefined)): Num
+  fun getUint16(args0: Num, args1: ((false) | (true)) | (undefined)): Num
+  fun setInt8(args0: Num, args1: Num): unit
+  fun setUint16(args0: Num, args1: Num, args2: ((false) | (true)) | (undefined)): unit
+  fun setFloat32(args0: Num, args1: Num, args2: ((false) | (true)) | (undefined)): unit
+  fun getUint32(args0: Num, args1: ((false) | (true)) | (undefined)): Num
+  fun getInt32(args0: Num, args1: ((false) | (true)) | (undefined)): Num
+  fun getInt16(args0: Num, args1: ((false) | (true)) | (undefined)): Num
+  fun setUint8(args0: Num, args1: Num): unit
+  val byteOffset: Num
+}
+declare trait DataViewConstructor {
+  val prototype: DataView
+  val __new: unsupported["new(buffer: ArrayBufferLike, byteOffset?: number, byteLength?: number): DataView;", "ES5.d.ts", 1818, 33]
+}
 declare trait Int8Array {
   fun valueOf(): Int8Array
   fun lastIndexOf(args0: Num, args1: (Num) | (undefined)): Num
@@ -426,6 +465,13 @@ declare trait Int8Array {
   fun some(args0: (value: Num, index: Num, array: Int8Array) => anything, args1: (anything) | (undefined)): (false) | (true)
   fun indexOf(args0: Num, args1: (Num) | (undefined)): Num
   val byteOffset: Num
+}
+declare trait Int8ArrayConstructor {
+  val __new: unsupported["new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Int8Array;", "ES5.d.ts", 2073, 63]
+  fun from[T](args0: ArrayLike[T], args1: (v: T, k: Num) => Num, args2: (anything) | (undefined)): Int8Array /* warning: the overload of function from is not supported yet. */
+  val prototype: Int8Array
+  fun id"of"(args0: (Num) | (MutArray[Num])): Int8Array
+  val BYTES_PER_ELEMENT: Num
 }
 declare trait Uint8Array {
   fun valueOf(): Uint8Array
@@ -457,6 +503,13 @@ declare trait Uint8Array {
   fun indexOf(args0: Num, args1: (Num) | (undefined)): Num
   val byteOffset: Num
 }
+declare trait Uint8ArrayConstructor {
+  val __new: unsupported["new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Uint8Array;", "ES5.d.ts", 2356, 64]
+  fun from[T](args0: ArrayLike[T], args1: (v: T, k: Num) => Num, args2: (anything) | (undefined)): Uint8Array /* warning: the overload of function from is not supported yet. */
+  val prototype: Uint8Array
+  fun id"of"(args0: (Num) | (MutArray[Num])): Uint8Array
+  val BYTES_PER_ELEMENT: Num
+}
 declare trait Uint8ClampedArray {
   fun valueOf(): Uint8ClampedArray
   fun lastIndexOf(args0: Num, args1: (Num) | (undefined)): Num
@@ -486,6 +539,13 @@ declare trait Uint8ClampedArray {
   fun some(args0: (value: Num, index: Num, array: Uint8ClampedArray) => anything, args1: (anything) | (undefined)): (false) | (true)
   fun indexOf(args0: Num, args1: (Num) | (undefined)): Num
   val byteOffset: Num
+}
+declare trait Uint8ClampedArrayConstructor {
+  val __new: unsupported["new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Uint8ClampedArray;", "ES5.d.ts", 2638, 71]
+  fun from[T](args0: ArrayLike[T], args1: (v: T, k: Num) => Num, args2: (anything) | (undefined)): Uint8ClampedArray /* warning: the overload of function from is not supported yet. */
+  val prototype: Uint8ClampedArray
+  fun id"of"(args0: (Num) | (MutArray[Num])): Uint8ClampedArray
+  val BYTES_PER_ELEMENT: Num
 }
 declare trait Int16Array {
   fun valueOf(): Int16Array
@@ -517,6 +577,13 @@ declare trait Int16Array {
   fun indexOf(args0: Num, args1: (Num) | (undefined)): Num
   val byteOffset: Num
 }
+declare trait Int16ArrayConstructor {
+  val __new: unsupported["new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Int16Array;", "ES5.d.ts", 2918, 64]
+  fun from[T](args0: ArrayLike[T], args1: (v: T, k: Num) => Num, args2: (anything) | (undefined)): Int16Array /* warning: the overload of function from is not supported yet. */
+  val prototype: Int16Array
+  fun id"of"(args0: (Num) | (MutArray[Num])): Int16Array
+  val BYTES_PER_ELEMENT: Num
+}
 declare trait Uint16Array {
   fun valueOf(): Uint16Array
   fun lastIndexOf(args0: Num, args1: (Num) | (undefined)): Num
@@ -546,6 +613,13 @@ declare trait Uint16Array {
   fun some(args0: (value: Num, index: Num, array: Uint16Array) => anything, args1: (anything) | (undefined)): (false) | (true)
   fun indexOf(args0: Num, args1: (Num) | (undefined)): Num
   val byteOffset: Num
+}
+declare trait Uint16ArrayConstructor {
+  val __new: unsupported["new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Uint16Array;", "ES5.d.ts", 3201, 65]
+  fun from[T](args0: ArrayLike[T], args1: (v: T, k: Num) => Num, args2: (anything) | (undefined)): Uint16Array /* warning: the overload of function from is not supported yet. */
+  val prototype: Uint16Array
+  fun id"of"(args0: (Num) | (MutArray[Num])): Uint16Array
+  val BYTES_PER_ELEMENT: Num
 }
 declare trait Int32Array {
   fun valueOf(): Int32Array
@@ -577,6 +651,13 @@ declare trait Int32Array {
   fun indexOf(args0: Num, args1: (Num) | (undefined)): Num
   val byteOffset: Num
 }
+declare trait Int32ArrayConstructor {
+  val __new: unsupported["new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Int32Array;", "ES5.d.ts", 3484, 64]
+  fun from[T](args0: ArrayLike[T], args1: (v: T, k: Num) => Num, args2: (anything) | (undefined)): Int32Array /* warning: the overload of function from is not supported yet. */
+  val prototype: Int32Array
+  fun id"of"(args0: (Num) | (MutArray[Num])): Int32Array
+  val BYTES_PER_ELEMENT: Num
+}
 declare trait Uint32Array {
   fun valueOf(): Uint32Array
   fun lastIndexOf(args0: Num, args1: (Num) | (undefined)): Num
@@ -606,6 +687,13 @@ declare trait Uint32Array {
   fun some(args0: (value: Num, index: Num, array: Uint32Array) => anything, args1: (anything) | (undefined)): (false) | (true)
   fun indexOf(args0: Num, args1: (Num) | (undefined)): Num
   val byteOffset: Num
+}
+declare trait Uint32ArrayConstructor {
+  val __new: unsupported["new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Uint32Array;", "ES5.d.ts", 3765, 65]
+  fun from[T](args0: ArrayLike[T], args1: (v: T, k: Num) => Num, args2: (anything) | (undefined)): Uint32Array /* warning: the overload of function from is not supported yet. */
+  val prototype: Uint32Array
+  fun id"of"(args0: (Num) | (MutArray[Num])): Uint32Array
+  val BYTES_PER_ELEMENT: Num
 }
 declare trait Float32Array {
   fun valueOf(): Float32Array
@@ -637,6 +725,13 @@ declare trait Float32Array {
   fun indexOf(args0: Num, args1: (Num) | (undefined)): Num
   val byteOffset: Num
 }
+declare trait Float32ArrayConstructor {
+  val __new: unsupported["new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Float32Array;", "ES5.d.ts", 4047, 66]
+  fun from[T](args0: ArrayLike[T], args1: (v: T, k: Num) => Num, args2: (anything) | (undefined)): Float32Array /* warning: the overload of function from is not supported yet. */
+  val prototype: Float32Array
+  fun id"of"(args0: (Num) | (MutArray[Num])): Float32Array
+  val BYTES_PER_ELEMENT: Num
+}
 declare trait Float64Array {
   fun valueOf(): Float64Array
   fun lastIndexOf(args0: Num, args1: (Num) | (undefined)): Num
@@ -665,6 +760,13 @@ declare trait Float64Array {
   fun some(args0: (value: Num, index: Num, array: Float64Array) => anything, args1: (anything) | (undefined)): (false) | (true)
   fun indexOf(args0: Num, args1: (Num) | (undefined)): Num
   val byteOffset: Num
+}
+declare trait Float64ArrayConstructor {
+  val __new: unsupported["new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Float64Array;", "ES5.d.ts", 4321, 66]
+  fun from[T](args0: ArrayLike[T], args1: (v: T, k: Num) => Num, args2: (anything) | (undefined)): Float64Array /* warning: the overload of function from is not supported yet. */
+  val prototype: Float64Array
+  fun id"of"(args0: (Num) | (MutArray[Num])): Float64Array
+  val BYTES_PER_ELEMENT: Num
 }
 declare module Intl {
   export declare trait CollatorOptions {
