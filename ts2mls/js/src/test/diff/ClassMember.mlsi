@@ -2,15 +2,15 @@ export declare module ClassMember {
   declare class Student {
     constructor(s: Str, age: Num)
     val name: Str
-    fun isFriend(other: Student): (false) | (true)
-    fun addScore(sub: Str, score: Num): unit
+    fun isFriend(args0: Student): (false) | (true)
+    fun addScore(args0: Str, args1: Num): unit
     fun getID(): Num
   }
   declare class Foo[T] {
-    fun bar(x: T): unit
+    fun bar(args0: T): unit
   }
   declare class EZ {
-    fun inc(x: Num): Num
+    fun inc(args0: Num): Num
   }
   declare class Outer {
     declare class Inner {
@@ -18,7 +18,7 @@ export declare module ClassMember {
     }
   }
   declare class TTT[T] {
-    fun ttt(x: T): T
+    fun ttt(args0: T): T
     fun ttt2(x: T): T
   }
 }

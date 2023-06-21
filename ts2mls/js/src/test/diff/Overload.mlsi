@@ -1,7 +1,7 @@
 export declare module Overload {
   fun f(x: anything): Str /* warning: the overload of function f is not supported yet. */
   declare class M {
-    fun foo(x: anything): Str /* warning: the overload of function foo is not supported yet. */
+    fun foo(args0: anything): Str /* warning: the overload of function foo is not supported yet. */
   }
   fun app(f: anything, x: anything): unit /* warning: the overload of function app is not supported yet. */
   fun create(x: anything): () => (false) | (true) /* warning: the overload of function create is not supported yet. */
@@ -18,7 +18,7 @@ export declare module Overload {
     export fun f[T](x: T, n: anything): Str /* warning: the overload of function f is not supported yet. */
   }
   declare class WWW {
-    fun F[T](x: T): T /* warning: the overload of function F is not supported yet. */
+    fun F[T](args0: T): T /* warning: the overload of function F is not supported yet. */
   }
   fun baz(): anything /* warning: the overload of function baz is not supported yet. */
 }

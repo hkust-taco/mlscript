@@ -1,23 +1,23 @@
 declare trait Console {
-  fun assert(condition: ((false) | (true)) | (undefined), data: (anything) | (MutArray[anything])): unit
-  fun count(label: (Str) | (undefined)): unit
-  fun timeEnd(label: (Str) | (undefined)): unit
+  fun assert(args0: ((false) | (true)) | (undefined), args1: (anything) | (MutArray[anything])): unit
+  fun count(args0: (Str) | (undefined)): unit
+  fun timeEnd(args0: (Str) | (undefined)): unit
   fun clear(): unit
-  fun timeStamp(label: (Str) | (undefined)): unit
-  fun info(data: (anything) | (MutArray[anything])): unit
-  fun debug(data: (anything) | (MutArray[anything])): unit
-  fun countReset(label: (Str) | (undefined)): unit
-  fun dir(item: (anything) | (undefined), options: (anything) | (undefined)): unit
-  fun error(data: (anything) | (MutArray[anything])): unit
-  fun timeLog(label: (Str) | (undefined), data: (anything) | (MutArray[anything])): unit
-  fun time(label: (Str) | (undefined)): unit
-  fun group(data: (anything) | (MutArray[anything])): unit
-  fun table(tabularData: (anything) | (undefined), properties: (MutArray[Str]) | (undefined)): unit
-  fun trace(data: (anything) | (MutArray[anything])): unit
-  fun warn(data: (anything) | (MutArray[anything])): unit
-  fun groupCollapsed(data: (anything) | (MutArray[anything])): unit
-  fun dirxml(data: (anything) | (MutArray[anything])): unit
-  fun log(data: (anything) | (MutArray[anything])): unit
+  fun timeStamp(args0: (Str) | (undefined)): unit
+  fun info(args0: (anything) | (MutArray[anything])): unit
+  fun debug(args0: (anything) | (MutArray[anything])): unit
+  fun countReset(args0: (Str) | (undefined)): unit
+  fun dir(args0: (anything) | (undefined), args1: (anything) | (undefined)): unit
+  fun error(args0: (anything) | (MutArray[anything])): unit
+  fun timeLog(args0: (Str) | (undefined), args1: (anything) | (MutArray[anything])): unit
+  fun time(args0: (Str) | (undefined)): unit
+  fun group(args0: (anything) | (MutArray[anything])): unit
+  fun table(args0: (anything) | (undefined), args1: (MutArray[Str]) | (undefined)): unit
+  fun trace(args0: (anything) | (MutArray[anything])): unit
+  fun warn(args0: (anything) | (MutArray[anything])): unit
+  fun groupCollapsed(args0: (anything) | (MutArray[anything])): unit
+  fun dirxml(args0: (anything) | (MutArray[anything])): unit
+  fun log(args0: (anything) | (MutArray[anything])): unit
   fun groupEnd(): unit
 }
 val console: Console

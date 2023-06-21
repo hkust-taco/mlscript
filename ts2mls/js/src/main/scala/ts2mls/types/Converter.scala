@@ -28,9 +28,15 @@ object Converter {
     else name
   }
 
+  private def generateFunParamsList(params: List[TSParameterType]) =
+    if (params.isEmpty) ""
+    else params.iterator.zipWithIndex.map{ 
+      case (tp, i) => convert(tp)("")
+    }.reduceLeft((r, p) => s"$r, $p")
+
   def generateFunDeclaration(tsType: TSType, name: String, exported: Boolean)(implicit indent: String = ""): String = tsType match {
     case TSFunctionType(params, res, typeVars) => {
-      val pList = if (params.isEmpty) "" else params.map(p => s"${convert(p)("")}").reduceLeft((r, p) => s"$r, $p")
+      val pList = generateFunParamsList(params)
       val tpList = if (typeVars.isEmpty) "" else s"[${typeVars.map(p => convert(p)("")).reduceLeft((r, p) => s"$r, $p")}]"
       val exp = if (exported) "export " else ""
       s"${indent}${exp}fun ${escapeIdent(name)}$tpList($pList): ${convert(res)("")}"
@@ -43,7 +49,7 @@ object Converter {
     case TSPrimitiveType(typeName) => primitiveName(typeName)
     case TSReferenceType(name) => name
     case TSFunctionType(params, res, _) =>
-      val pList = if (params.isEmpty) "" else params.map(p => s"${convert(p)("")}").reduceLeft((r, p) => s"$r, $p")
+      val pList = generateFunParamsList(params)
       s"($pList) => ${convert(res)}"
     case TSUnionType(lhs, rhs) => s"(${convert(lhs)}) | (${convert(rhs)})"
     case TSIntersectionType(lhs, rhs) => s"(${convert(lhs)}) & (${convert(rhs)})"

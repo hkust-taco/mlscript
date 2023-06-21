@@ -4,7 +4,7 @@ export declare module Heritage {
   }
   declare class B extends A {}
   declare class C[T] {
-    fun set(x: T): unit
+    fun set(args0: T): unit
     fun get(): T
   }
   declare class D extends C[Num] {}
@@ -30,7 +30,7 @@ export declare module Heritage {
     fun xx(x: I): I
   }
   declare class OR[R] extends O[R] {
-    fun xx(x: R): R
+    fun xx(args0: R): R
   }
   declare module Five {
     export declare class ROTK {

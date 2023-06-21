@@ -13,7 +13,7 @@ case class TSPrimitiveType(typeName: String) extends TSType
 case class TSReferenceType(name: String) extends TSType
 case object TSEnumType extends TSType
 case class TSTupleType(types: List[TSType]) extends TSType
-case class TSFunctionType(params: List[TSParameterType], res: TSType, val typeVars: List[TSTypeParameter]) extends TSType
+case class TSFunctionType(params: List[TSParameterType], res: TSType, typeVars: List[TSTypeParameter]) extends TSType
 case class TSArrayType(eleType: TSType) extends TSType
 case class TSSubstitutionType(base: String, applied: List[TSType]) extends TSType
 

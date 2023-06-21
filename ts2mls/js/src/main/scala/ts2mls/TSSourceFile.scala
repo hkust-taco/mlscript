@@ -125,7 +125,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
           TSUnsupportedType(obj.toString(), TSPathResolver.basenameWithExt(obj.filename), line, column)
       }
     else if (obj.isEnumType) TSEnumType
-    else if (obj.isFunctionLike) getFunctionType(obj.symbol.declaration)
+    else if (obj.isFunctionLike) getFunctionType(obj.symbol.declaration, true)
     else if (obj.isTupleType) TSTupleType(getTupleElements(obj.typeArguments))
     else if (obj.isUnionType) getStructuralType(obj.types, true)
     else if (obj.isIntersectionType) getStructuralType(obj.types, false)
@@ -143,7 +143,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
 
   // the function `getMemberType` can't process function/tuple type alias correctly
   private def getTypeAlias(tn: TSNodeObject)(implicit ns: TSNamespace): TSType =
-    if (tn.isFunctionLike) getFunctionType(tn)
+    if (tn.isFunctionLike) getFunctionType(tn, true)
     else if (tn.isTupleTypeNode) TSTupleType(getTupleElements(tn.typeNode.typeArguments))
     else getObjectType(tn.typeNode) match {
       case TSPrimitiveType("intrinsic") => lineHelper.getPos(tn.pos) match {
@@ -171,7 +171,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
           case (line, column) =>
             TSUnsupportedType(node.toString(), TSPathResolver.basenameWithExt(node.filename), line, column)
         }
-      else if (node.isFunctionLike) getFunctionType(node)
+      else if (node.isFunctionLike) getFunctionType(node, false) // erase name to avoid name clash when overriding methods in ts
       else if (node.`type`.isUndefined) getObjectType(node.typeAtLocation)
       else if (node.`type`.isLiteralTypeNode) getLiteralType(node.`type`)
       else getObjectType(node.`type`.typeNode)
@@ -185,19 +185,22 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
       else lst :+ TSTypeParameter(tp.symbol.escapedName, Some(getObjectType(tp.constraint.typeNode)))
     )
 
-  private def getFunctionType(node: TSNodeObject)(implicit ns: TSNamespace): TSFunctionType = {
+  private def getFunctionType(node: TSNodeObject, keepNames: Boolean)(implicit ns: TSNamespace): TSFunctionType = {
     def eraseVarParam(tp: TSType, erase: Boolean) = tp match { // TODO: support ... soon
       case arr @ TSArrayType(eleType) if erase => TSUnionType(eleType, arr)
       case _ => tp
     }
 
-    val pList = node.parameters.foldLeft(List[TSParameterType]())((lst, p) => (
+    val pList = node.parameters.foldLeft(List[TSParameterType]())((lst, p) => {
+      // erase name to avoid name clash when overriding methods in ts
+      val name = if (keepNames) p.symbol.escapedName else s"args${lst.length}"
       // in typescript, you can use `this` to explicitly specifies the callee
       // but it never appears in the final javascript file
       if (p.symbol.escapedName === "this") lst
       else if (p.isOptionalParameter) // TODO: support optinal and default value soon
-        lst :+ TSParameterType(p.symbol.escapedName, TSUnionType(getObjectType(p.symbolType), TSPrimitiveType("undefined")))
-      else lst :+ TSParameterType(p.symbol.escapedName, eraseVarParam(getObjectType(p.symbolType), p.isVarParam))))
+        lst :+ TSParameterType(name, TSUnionType(getObjectType(p.symbolType), TSPrimitiveType("undefined")))
+      else lst :+ TSParameterType(name, eraseVarParam(getObjectType(p.symbolType), p.isVarParam))
+    })
     TSFunctionType(pList, getObjectType(node.returnType), getTypeParameters(node))
   }
     
@@ -280,8 +283,8 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
   // because the namespace merely exports symbols rather than node objects themselves
   private def addNodeIntoNamespace(node: TSNodeObject, name: String, exported: Boolean, overload: Option[TSNodeArray] = None)(implicit ns: TSNamespace) =
     if (node.isFunctionLike) overload.fold(
-      addFunctionIntoNamespace(getFunctionType(node), node, name)
-    )(decs => decs.foreach(d => addFunctionIntoNamespace(getFunctionType(d), d, name)))
+      addFunctionIntoNamespace(getFunctionType(node, true), node, name)
+    )(decs => decs.foreach(d => addFunctionIntoNamespace(getFunctionType(d, true), d, name)))
     else if (node.isClassDeclaration)
       ns.put(name, parseMembers(name, node, true), exported)
     else if (node.isInterfaceDeclaration)
