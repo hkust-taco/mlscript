@@ -310,7 +310,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
   
   final def block(prev: Ls[IfBody \/ Statement])(implicit et: ExpectThen, fe: FoundErr): Ls[IfBody \/ Statement] =
     cur match {
-      case Nil => prev
+      case Nil => prev.reverse
       case (NEWLINE, _) :: _ => consume; block(prev)
       case (SPACE, _) :: _ => consume; block(prev)
       case (KEYWORD("constructor"), l0) :: _ =>
@@ -327,8 +327,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
         }
         val t = R(res.withLoc(S(l0 ++ res.getLoc)))
         yeetSpaces match {
-          case (NEWLINE, _) :: _ => consume; block(prev :+ t)
-          case _ => prev :+ t
+          case (NEWLINE, _) :: _ => consume; block(t :: prev)
+          case _ => (t :: prev).reverse
         }
       case c =>
         val t = c match {
@@ -530,12 +530,12 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
           case (KEYWORD("="), l0) :: _ => t match {
             case R(v: Var) =>
               consume
-              block(prev :+ R(Eqn(v, expr(0))))
-            case _ => prev :+ t
+              block(R(Eqn(v, expr(0))) :: prev)
+            case _ => (t :: prev).reverse
           }
-          case (KEYWORD(";"), _) :: _ => consume; block(prev :+ t)
-          case (NEWLINE, _) :: _ => consume; block(prev :+ t)
-          case _ => prev :+ t
+          case (KEYWORD(";"), _) :: _ => consume; block(t :: prev)
+          case (NEWLINE, _) :: _ => consume; block(t :: prev)
+          case _ => (t :: prev).reverse
         }
     }
   
