@@ -376,7 +376,7 @@ interface IArguments {
     callee: Function;
 }
 
-class Str extends Object {
+interface String {
     /** Returns a string representation of a string. */
     toString(): string;
 
@@ -501,9 +501,9 @@ class Str extends Object {
 }
 
 interface StringConstructor {
-    new(value?: any): Str;
+    new(value?: any): String;
     (value?: any): string;
-    readonly prototype: Str;
+    readonly prototype: String;
     fromCharCode(...codes: number[]): string;
 }
 
@@ -525,7 +525,7 @@ interface BooleanConstructor {
 
 declare var Boolean: BooleanConstructor;
 
-class Num {
+interface Number {
     /**
      * Returns a string representation of an object.
      * @param radix Specifies a radix for converting numeric values to strings. This value is only used for numbers.
@@ -555,9 +555,9 @@ class Num {
 }
 
 interface NumberConstructor {
-    new(value?: any): Num;
+    new(value?: any): Number;
     (value?: any): number;
-    readonly prototype: Num;
+    readonly prototype: Number;
 
     /** The largest number that can be represented in JavaScript. Equal to approximately 1.79E+308. */
     readonly MAX_VALUE: number;
@@ -1050,68 +1050,68 @@ declare var Error: ErrorConstructor;
 interface EvalError extends Error {
 }
 
-// interface EvalErrorConstructor extends ErrorConstructor {
-//     new(message?: string): EvalError;
-//     (message?: string): EvalError;
-//     readonly prototype: EvalError;
-// }
+interface EvalErrorConstructor extends ErrorConstructor {
+    new(message?: string): EvalError;
+    (message?: string): EvalError;
+    readonly prototype: EvalError;
+}
 
-// declare var EvalError: EvalErrorConstructor;
+declare var EvalError: EvalErrorConstructor;
 
 interface RangeError extends Error {
 }
 
-// interface RangeErrorConstructor extends ErrorConstructor {
-//     new(message?: string): RangeError;
-//     (message?: string): RangeError;
-//     readonly prototype: RangeError;
-// }
+interface RangeErrorConstructor extends ErrorConstructor {
+    new(message?: string): RangeError;
+    (message?: string): RangeError;
+    readonly prototype: RangeError;
+}
 
-// declare var RangeError: RangeErrorConstructor;
+declare var RangeError: RangeErrorConstructor;
 
 interface ReferenceError extends Error {
 }
 
-// interface ReferenceErrorConstructor extends ErrorConstructor {
-//     new(message?: string): ReferenceError;
-//     (message?: string): ReferenceError;
-//     readonly prototype: ReferenceError;
-// }
+interface ReferenceErrorConstructor extends ErrorConstructor {
+    new(message?: string): ReferenceError;
+    (message?: string): ReferenceError;
+    readonly prototype: ReferenceError;
+}
 
-// declare var ReferenceError: ReferenceErrorConstructor;
+declare var ReferenceError: ReferenceErrorConstructor;
 
 interface SyntaxError extends Error {
 }
 
-// interface SyntaxErrorConstructor extends ErrorConstructor {
-//     new(message?: string): SyntaxError;
-//     (message?: string): SyntaxError;
-//     readonly prototype: SyntaxError;
-// }
+interface SyntaxErrorConstructor extends ErrorConstructor {
+    new(message?: string): SyntaxError;
+    (message?: string): SyntaxError;
+    readonly prototype: SyntaxError;
+}
 
-// declare var SyntaxError: SyntaxErrorConstructor;
+declare var SyntaxError: SyntaxErrorConstructor;
 
 interface TypeError extends Error {
 }
 
-// interface TypeErrorConstructor extends ErrorConstructor {
-//     new(message?: string): TypeError;
-//     (message?: string): TypeError;
-//     readonly prototype: TypeError;
-// }
+interface TypeErrorConstructor extends ErrorConstructor {
+    new(message?: string): TypeError;
+    (message?: string): TypeError;
+    readonly prototype: TypeError;
+}
 
-// declare var TypeError: TypeErrorConstructor;
+declare var TypeError: TypeErrorConstructor;
 
 interface URIError extends Error {
 }
 
-// interface URIErrorConstructor extends ErrorConstructor {
-//     new(message?: string): URIError;
-//     (message?: string): URIError;
-//     readonly prototype: URIError;
-// }
+interface URIErrorConstructor extends ErrorConstructor {
+    new(message?: string): URIError;
+    (message?: string): URIError;
+    readonly prototype: URIError;
+}
 
-// declare var URIError: URIErrorConstructor;
+declare var URIError: URIErrorConstructor;
 
 interface JSON {
     /**

@@ -44,9 +44,26 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
     if (members.contains(name)) members(name)._2
     else throw new Exception(s"member $name not found.")
 
+  private def getNS(name: String): TSNamespace =
+    if (subSpace.contains(name)) subSpace(name)._1
+    else parent.fold(throw new Exception(s"namespace $name not found."))(p => p.getNS(name))
+
   def get(name: String): TSType =
     if (members.contains(name)) members(name)._1
     else parent.fold(throw new Exception(s"member $name not found."))(p => p.get(name))
+
+  def get(names: List[String]): TSType = names match {
+    case head :: Nil => get(head)
+    case head :: tails =>
+      def run(ns: TSNamespace, list: List[String]): TSType =
+        list match {
+          case head :: Nil => ns.members(head)._1
+          case head :: tails => run(ns.subSpace(name)._1, tails)
+          case _ => throw new Exception(s"member ${names.mkString(".")} not found.")
+        }
+      run(getNS(head), tails)
+    case _ => throw new Exception(s"member ${names.mkString(".")} not found.")
+  }
 
   def getTop(name: String): Option[TSType] =
     if (members.contains(name)) members(name)._1 match {

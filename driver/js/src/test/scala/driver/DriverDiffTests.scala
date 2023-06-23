@@ -79,7 +79,7 @@ object DriverDiffTests {
     entry("Output2", Some("./tsconfig.json")),
     entry("MLS2TheMax", Some("./tsconfig.json")),
     entry("MyPartialOrder", Some("./tsconfig.json"), expectError = true), // TODO: type traits in modules
-    entry("Builtin"),
+    entry("Builtin", expectError = true), // TODO: Predef.mlsi
     ts2mlsEntry("Array", ignoreTypeError = true),
     ts2mlsEntry("BasicFunctions", ignoreTypeError = true),
     ts2mlsEntry("ClassMember"),

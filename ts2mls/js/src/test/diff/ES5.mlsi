@@ -68,8 +68,8 @@ declare trait FunctionConstructor {
   val __call: unsupported["(...args: string[]): Function;", "ES5.d.ts", 296, 37]
   val prototype: Function
 }
-type ThisParameterType[T] = unsupported["T extends (this: infer U, ...args: never) => any ? U : unknown", "ES5.d.ts", 306, 27]
-type OmitThisParameter[T] = unsupported["unknown extends ThisParameterType<T> ? T : T extends (...args: infer A) => infer R ? (...args: A) => R : T", "ES5.d.ts", 311, 27]
+type ThisParameterType = unsupported["type ThisParameterType<T> = T extends (this: infer U, ...args: never) => any ? U : unknown;", "ES5.d.ts", 301, 42]
+type OmitThisParameter = unsupported["type OmitThisParameter<T> = unknown extends ThisParameterType<T> ? T : T extends (...args: infer A) => infer R ? (...args: A) => R : T;", "ES5.d.ts", 306, 91]
 declare trait CallableFunction extends Function {
   fun apply[T, A, R](args0: T, args1: A): R /* warning: the overload of function apply is not supported yet. */
   fun call[T, A, R](args0: T, args1: A): R
@@ -85,7 +85,7 @@ declare trait IArguments {
   val length: Num
   val callee: Function
 }
-declare class Str extends Object {
+declare trait String {
   fun replace(args0: (Str) | (RegExp), args1: (substring: Str, args: (anything) | (MutArray[anything])) => Str): Str /* warning: the overload of function replace is not supported yet. */
   fun valueOf(): Str
   fun toLocaleUpperCase(args0: ((Str) | (MutArray[Str])) | (undefined)): Str
@@ -110,12 +110,11 @@ declare class Str extends Object {
   fun charAt(args0: Num): Str
 }
 declare trait StringConstructor {
-  val __new: unsupported["new(value?: any): Str;", "ES5.d.ts", 503, 29]
-  val __call: unsupported["(value?: any): string;", "ES5.d.ts", 504, 26]
-  val prototype: Str
+  val __new: unsupported["new(value?: any): String;", "ES5.d.ts", 503, 29]
+  val __call: unsupported["(value?: any): string;", "ES5.d.ts", 504, 29]
+  val prototype: String
   fun fromCharCode(args0: (Num) | (MutArray[Num])): Str
 }
-val String: StringConstructor
 declare class Bool {
   fun valueOf(): (false) | (true)
 }
@@ -125,7 +124,7 @@ declare trait BooleanConstructor {
   val prototype: Bool
 }
 val Boolean: BooleanConstructor
-declare class Num {
+declare trait Number {
   fun toExponential(args0: (Num) | (undefined)): Str
   fun valueOf(): Num
   fun toString(args0: (Num) | (undefined)): Str
@@ -133,16 +132,15 @@ declare class Num {
   fun toPrecision(args0: (Num) | (undefined)): Str
 }
 declare trait NumberConstructor {
-  val __call: unsupported["(value?: any): number;", "ES5.d.ts", 558, 26]
+  val __call: unsupported["(value?: any): number;", "ES5.d.ts", 558, 29]
   val NaN: Num
   val MIN_VALUE: Num
-  val __new: unsupported["new(value?: any): Num;", "ES5.d.ts", 557, 29]
+  val __new: unsupported["new(value?: any): Number;", "ES5.d.ts", 557, 29]
   val NEGATIVE_INFINITY: Num
   val POSITIVE_INFINITY: Num
   val MAX_VALUE: Num
-  val prototype: Num
+  val prototype: Number
 }
-val Number: NumberConstructor
 declare trait TemplateStringsArray extends ReadonlyArray[Str] {
   val raw: ReadonlyArray[Str]
 }
@@ -289,11 +287,17 @@ declare trait ErrorConstructor {
   val prototype: Error
 }
 declare trait EvalError extends Error {}
+val EvalErrorConstructor: unsupported["interface EvalErrorConstructor extends ErrorConstructor {     new(message?: string): EvalError;     (message?: string): EvalError;     readonly prototype: EvalError; }", "ES5.d.ts", 1051, 1]
 declare trait RangeError extends Error {}
+val RangeErrorConstructor: unsupported["interface RangeErrorConstructor extends ErrorConstructor {     new(message?: string): RangeError;     (message?: string): RangeError;     readonly prototype: RangeError; }", "ES5.d.ts", 1062, 1]
 declare trait ReferenceError extends Error {}
+val ReferenceErrorConstructor: unsupported["interface ReferenceErrorConstructor extends ErrorConstructor {     new(message?: string): ReferenceError;     (message?: string): ReferenceError;     readonly prototype: ReferenceError; }", "ES5.d.ts", 1073, 1]
 declare trait SyntaxError extends Error {}
+val SyntaxErrorConstructor: unsupported["interface SyntaxErrorConstructor extends ErrorConstructor {     new(message?: string): SyntaxError;     (message?: string): SyntaxError;     readonly prototype: SyntaxError; }", "ES5.d.ts", 1084, 1]
 declare trait TypeError extends Error {}
+val TypeErrorConstructor: unsupported["interface TypeErrorConstructor extends ErrorConstructor {     new(message?: string): TypeError;     (message?: string): TypeError;     readonly prototype: TypeError; }", "ES5.d.ts", 1095, 1]
 declare trait URIError extends Error {}
+val URIErrorConstructor: unsupported["interface URIErrorConstructor extends ErrorConstructor {     new(message?: string): URIError;     (message?: string): URIError;     readonly prototype: URIError; }", "ES5.d.ts", 1106, 1]
 declare trait JSON {
   fun parse(args0: Str, args1: ((key: Str, value: anything) => anything) | (undefined)): anything
   fun stringify(args0: anything, args1: (MutArray[(Str) | (Num)]) | (undefined), args2: ((Str) | (Num)) | (undefined)): Str /* warning: the overload of function stringify is not supported yet. */
@@ -370,28 +374,28 @@ declare trait Promise[T] {
   fun id"then"[TResult1, TResult2](args0: ((value: T) => (TResult1) | (PromiseLike[TResult1])) | (undefined), args1: ((reason: anything) => (TResult2) | (PromiseLike[TResult2])) | (undefined)): Promise[(TResult1) | (TResult2)]
   fun catch[TResult](args0: ((reason: anything) => (TResult) | (PromiseLike[TResult])) | (undefined)): Promise[(T) | (TResult)]
 }
-type Awaited[T] = unsupported["T extends null | undefined ? T : // special case for `null | undefined` when not in `--strictNullChecks` mode         T extends object & { then(onfulfilled: infer F, ...args: infer _): any } ? // `await` only unwraps object types with a callable `then`. Non-object types are not unwrapped             F extends ((value: infer V, ...args: infer _) => any) ? // if the argument to `then` is callable, extracts the first argument                 Awaited<V> : // recursively unwrap the value                 never : // the argument to `then` was not callable         T", "ES5.d.ts", 1525, 17]
+type Awaited = unsupported["type Awaited<T> =     T extends null | undefined ? T : // special case for `null | undefined` when not in `--strictNullChecks` mode         T extends object & { then(onfulfilled: infer F, ...args: infer _): any } ? // `await` only unwraps object types with a callable `then`. Non-object types are not unwrapped             F extends ((value: infer V, ...args: infer _) => any) ? // if the argument to `then` is callable, extracts the first argument                 Awaited<V> : // recursively unwrap the value                 never : // the argument to `then` was not callable         T;", "ES5.d.ts", 1520, 1]
 declare trait ArrayLike[T] {
   val length: Num
   val __index: unsupported["readonly [n: number]: T;", "ES5.d.ts", 1534, 28]
 }
-type Partial[T] = unsupported["{     [P in keyof T]?: T[P]; }", "ES5.d.ts", 1541, 17]
-type Required[T] = unsupported["{     [P in keyof T]-?: T[P]; }", "ES5.d.ts", 1548, 18]
-type Readonly[T] = unsupported["{     readonly [P in keyof T]: T[P]; }", "ES5.d.ts", 1555, 18]
-type Pick[T, K] = unsupported["{     [P in K]: T[P]; }", "ES5.d.ts", 1562, 33]
-type Record[K, T] = unsupported["{     [P in K]: T; }", "ES5.d.ts", 1569, 37]
-type Exclude[T, U] = unsupported["T extends U ? never : T", "ES5.d.ts", 1576, 20]
-type Extract[T, U] = unsupported["T extends U ? T : never", "ES5.d.ts", 1581, 20]
+type Partial = unsupported["type Partial<T> = {     [P in keyof T]?: T[P]; };", "ES5.d.ts", 1536, 1]
+type Required = unsupported["type Required<T> = {     [P in keyof T]-?: T[P]; };", "ES5.d.ts", 1543, 2]
+type Readonly = unsupported["type Readonly<T> = {     readonly [P in keyof T]: T[P]; };", "ES5.d.ts", 1550, 2]
+type Pick = unsupported["type Pick<T, K extends keyof T> = {     [P in K]: T[P]; };", "ES5.d.ts", 1557, 2]
+type Record = unsupported["type Record<K extends keyof any, T> = {     [P in K]: T; };", "ES5.d.ts", 1564, 2]
+type Exclude = unsupported["type Exclude<T, U> = T extends U ? never : T;", "ES5.d.ts", 1571, 2]
+type Extract = unsupported["type Extract<T, U> = T extends U ? T : never;", "ES5.d.ts", 1576, 45]
 type Omit[T, K] = __type
 type NonNullable[T] = (T) & ({})
-type Parameters[T] = unsupported["T extends (...args: infer P) => any ? P : never", "ES5.d.ts", 1596, 50]
-type ConstructorParameters[T] = unsupported["T extends abstract new (...args: infer P) => any ? P : never", "ES5.d.ts", 1601, 74]
-type ReturnType[T] = unsupported["T extends (...args: any) => infer R ? R : any", "ES5.d.ts", 1606, 50]
-type InstanceType[T] = unsupported["T extends abstract new (...args: any) => infer R ? R : any", "ES5.d.ts", 1611, 65]
-type Uppercase[S] = unsupported["intrinsic", "ES5.d.ts", 1616, 34]
-type Lowercase[S] = unsupported["intrinsic", "ES5.d.ts", 1621, 34]
-type Capitalize[S] = unsupported["intrinsic", "ES5.d.ts", 1626, 35]
-type Uncapitalize[S] = unsupported["intrinsic", "ES5.d.ts", 1631, 37]
+type Parameters = unsupported["type Parameters<T extends (...args: any) => any> = T extends (...args: infer P) => any ? P : never;", "ES5.d.ts", 1591, 29]
+type ConstructorParameters = unsupported["type ConstructorParameters<T extends abstract new (...args: any) => any> = T extends abstract new (...args: infer P) => any ? P : never;", "ES5.d.ts", 1596, 99]
+type ReturnType = unsupported["type ReturnType<T extends (...args: any) => any> = T extends (...args: any) => infer R ? R : any;", "ES5.d.ts", 1601, 136]
+type InstanceType = unsupported["type InstanceType<T extends abstract new (...args: any) => any> = T extends abstract new (...args: any) => infer R ? R : any;", "ES5.d.ts", 1606, 97]
+type Uppercase = unsupported["type Uppercase<S extends string> = intrinsic;", "ES5.d.ts", 1611, 125]
+type Lowercase = unsupported["type Lowercase<S extends string> = intrinsic;", "ES5.d.ts", 1616, 45]
+type Capitalize = unsupported["type Capitalize<S extends string> = intrinsic;", "ES5.d.ts", 1621, 45]
+type Uncapitalize = unsupported["type Uncapitalize<S extends string> = intrinsic;", "ES5.d.ts", 1626, 46]
 declare trait ThisType[T] {}
 declare trait ArrayBuffer {
   val byteLength: Num

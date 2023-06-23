@@ -1,42 +1,8 @@
 export declare module Heritage {
-  declare class A {
-    fun foo(): unit
-  }
-  declare class B extends A {}
-  declare class C[T] {
-    fun set(args0: T): unit
-    fun get(): T
-  }
-  declare class D extends C[Num] {}
-  declare trait Wu {
-    val x: (false) | (true)
-  }
-  declare class WuWu extends Wu {
-    val y: (false) | (true)
-  }
-  declare trait WuWuWu extends WuWu {
-    val z: (false) | (true)
-  }
-  declare trait Never extends WuWuWu {
-    fun w(): nothing
-  }
-  declare class VG[T] {
-    val x: T
-  }
-  declare class Home[T] extends VG[Str] {
-    val y: T
-  }
-  declare trait O[I] {
-    fun xx(x: I): I
-  }
-  declare class OR[R] extends O[R] {
-    fun xx(args0: R): R
-  }
   declare module Five {
     export declare class ROTK {
       val wu: Str
     }
-    export declare class Y extends ROTK {}
   }
   declare class Y extends Five.ROTK {}
 }

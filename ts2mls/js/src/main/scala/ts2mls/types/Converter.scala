@@ -62,7 +62,7 @@ object Converter {
       convertRecord(s"trait ${escapeIdent(name)}", members, typeVars, parents, Map(), List(), exported)(indent)
     case TSClassType(name, members, statics, typeVars, parents, cons) =>
       convertRecord(s"class ${escapeIdent(name)}", members, typeVars, parents, statics, cons, exported)(indent)
-    case TSSubstitutionType(base, applied) => s"${base}[${applied.map((app) => convert(app)).reduceLeft((res, s) => s"$res, $s")}]"
+    case TSSubstitutionType(TSReferenceType(base), applied) => s"${base}[${applied.map((app) => convert(app)).reduceLeft((res, s) => s"$res, $s")}]"
     case overload @ TSIgnoredOverload(base, _) => s"${convert(base)} ${overload.warning}"
     case TSParameterType(name, tp) => s"${escapeIdent(name)}: ${convert(tp)}"
     case TSTypeAlias(name, ori, tp) => {
