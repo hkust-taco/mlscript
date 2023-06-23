@@ -191,7 +191,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
       else if (node.`type`.isLiteralTypeNode) getLiteralType(node.`type`)
       else getObjectType(node.`type`.typeNode)
     if (res.unsupported) markUnsupported(node)
-    if (node.symbol.isOptionalMember) TSUnionType(res, TSPrimitiveType("undefined"))
+    else if (node.symbol.isOptionalMember) TSUnionType(res, TSPrimitiveType("undefined"))
     else res
   }
 

@@ -46,7 +46,7 @@ declare trait ObjectConstructor {
   fun defineProperties[T](args0: T, args1: (PropertyDescriptorMap) & (ThisType[anything])): T
   fun preventExtensions[T](args0: T): T
   fun create(args0: Object, args1: (PropertyDescriptorMap) & (ThisType[anything])): anything /* warning: the overload of function create is not supported yet. */
-  fun freeze[T](args0: T): T
+  val freeze: unsupported["freeze<T>(o: T): Readonly<T>;", "ES5.d.ts", 210, 143]
   val __new: unsupported["new(value?: any): Object;", "ES5.d.ts", 137, 29]
   fun getOwnPropertyDescriptor(args0: anything, args1: ((Str) | (Num)) | (Symbol)): PropertyDescriptor
   fun seal[T](args0: T): T
@@ -386,7 +386,7 @@ type Pick = unsupported["type Pick<T, K extends keyof T> = {     [P in K]: T[P];
 type Record = unsupported["type Record<K extends keyof any, T> = {     [P in K]: T; };", "ES5.d.ts", 1564, 2]
 type Exclude = unsupported["type Exclude<T, U> = T extends U ? never : T;", "ES5.d.ts", 1571, 2]
 type Extract = unsupported["type Extract<T, U> = T extends U ? T : never;", "ES5.d.ts", 1576, 45]
-type Omit[T, K] = __type
+type Omit = unsupported["type Omit<T, K extends keyof any> = Pick<T, Exclude<keyof T, K>>;", "ES5.d.ts", 1581, 45]
 type NonNullable[T] = (T) & ({})
 type Parameters = unsupported["type Parameters<T extends (...args: any) => any> = T extends (...args: infer P) => any ? P : never;", "ES5.d.ts", 1591, 29]
 type ConstructorParameters = unsupported["type ConstructorParameters<T extends abstract new (...args: any) => any> = T extends abstract new (...args: infer P) => any ? P : never;", "ES5.d.ts", 1596, 99]

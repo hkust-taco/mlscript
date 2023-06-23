@@ -270,7 +270,7 @@ object TSTokenObject {
 
 class TSTypeObject(obj: js.Dynamic)(implicit checker: TSTypeChecker) extends TSAny(obj) {
   private lazy val flags = obj.flags
-  private lazy val objectFlags = if (IsUndefined(obj.objectFlags)) 0 else obj.objectFlags
+  private lazy val objectFlags: js.Dynamic = if (IsUndefined(obj.objectFlags)) 0 else obj.objectFlags
   private lazy val baseType = TSTypeObject(checker.getBaseType(obj))
 
   lazy val symbol = TSSymbolObject(obj.symbol)
@@ -291,8 +291,8 @@ class TSTypeObject(obj: js.Dynamic)(implicit checker: TSTypeChecker) extends TSA
   lazy val isUnionType = obj.isUnion()
   lazy val isIntersectionType = obj.isIntersection()
   lazy val isFunctionLike = node.isFunctionLike
-  lazy val isAnonymous = objectFlags == TypeScript.objectFlagsAnonymous
-  lazy val isMapped = objectFlags == TypeScript.objectFlagsMapped // mapping a type to another by using `keyof` and so on
+  lazy val isAnonymous = (objectFlags & TypeScript.objectFlagsAnonymous) > 0
+  lazy val isMapped = (objectFlags & TypeScript.objectFlagsMapped) > 0 // mapping a type to another by using `keyof` and so on
   lazy val isTypeParameter = flags == TypeScript.typeFlagsTypeParameter
   lazy val isObject = flags == TypeScript.typeFlagsObject
   lazy val isTypeParameterSubstitution = isObject && typeArguments.length > 0
