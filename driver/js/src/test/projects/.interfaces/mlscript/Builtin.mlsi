@@ -1,5 +1,5 @@
 declare module Builtin() {
-  let s: Str
+  let s: "abc"
   let n: Num
   unit
 }

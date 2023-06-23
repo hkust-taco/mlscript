@@ -280,7 +280,8 @@ object Driver {
 
   private val jsBuiltinPaths = List(
     "./ts2mls/js/src/test/diff/ES5.mlsi",
-    "./ts2mls/js/src/test/diff/Dom.mlsi"
+    "./ts2mls/js/src/test/diff/Dom.mlsi",
+    "./driver/js/src/test/predefs/Predef.mlsi"
   )
 
   private def report(msg: String): Unit =

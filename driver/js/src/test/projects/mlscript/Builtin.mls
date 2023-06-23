@@ -1,4 +1,4 @@
-let s: Str = "abc"
+let s = "abc"
 let n: Num = 42
 
 console.log(s.charAt(1))
@@ -7,3 +7,4 @@ console.log(String.fromCharCode(64))
 console.log(n.toString(8))
 console.log(Number.MAX_VALUE)
 console.log(s.hasOwnProperty("foo"))
+console.log(Math.PI)

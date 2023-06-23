@@ -1,0 +1,134 @@
+// Re-declare some types in es5
+
+declare type PropertyKey = Str | Num | Symbol
+
+declare class Object {
+  fun toString(): Str
+  fun toLocaleString(): Str
+  fun valueOf(): Str
+  fun hasOwnProperty(v: PropertyKey): Bool
+  fun isPrototypeOf(v: Object): Bool
+  fun propertyIsEnumerable(v: PropertyKey): Bool
+}
+
+declare class Str extends Object {
+  fun toString(): Str
+  fun charAt(pos: Num): Str
+  fun charCodeAt(index: Num): Num
+  fun concat(strings: Str | Array[Str]): Str
+  fun indexOf(searchString: Str, position: Num | undefined): Num
+  fun lastIndexOf(searchString: Str, position: Num | undefined): Num
+  fun localeCompare(that: Str): Num
+  fun match(regexp: Str | RegExp): RegExpMatchArray | null
+  fun replace(searchValue: Str | RegExp, replaceValue: Str): Str
+  fun search(regexp: Str | RegExp): Num
+  fun slice(start: Num | undefined, end: Num | undefined): Str
+  fun split(separator: Str | RegExp, limit: Num | undefined): Array[Str]
+  fun substring(start: Num, end: Num | undefined): Str
+  fun toLowerCase(): Str
+  fun toLocaleLowerCase(locales: Str | Array[Str] | undefined): Str
+  fun toUpperCase(): Str
+  fun toLocaleUpperCase(locales: Str | Array[Str] | undefined): Str
+  fun trim(): Str
+  val length: Num
+}
+
+declare module String {
+  fun fromCharCode(codes: Num | Array[Num]): Str
+}
+
+declare class Num {
+  fun toString(radix: Num | undefined): Str
+  fun toFixed(fractionDigits: Num | undefined): Str
+  fun toExponential(fractionDigits: Num | undefined): Str
+  fun toPrecision(precision: Num | undefined): Str
+}
+
+declare module Number {
+  val MAX_VALUE: Num
+  val MIN_VALUE: Num
+  val NaN: Num
+  val NEGATIVE_INFINITY: Num
+  val POSITIVE_INFINITY: Num
+}
+
+declare module Math {
+  val E: Num
+  val LN10: Num
+  val LN2: Num
+  val LOG2E: Num
+  val LOG10E: Num
+  val PI: Num
+  val SQRT1_2: Num
+  val SQRT2: Num
+  fun abs(x: Num): Num
+  fun acos(x: Num): Num
+  fun asin(x: Num): Num
+  fun atan(x: Num): Num
+  fun atan2(y: Num, x: Num): Num
+  fun ceil(x: Num): Num
+  fun cos(x: Num): Num
+  fun exp(x: Num): Num
+  fun floor(x: Num): Num
+  fun log(x: Num): Num
+  fun max(values: Num | Array[Num]): Num
+  fun min(values: Num | Array[Num]): Num
+  fun pow(x: Num, y: Num): Num
+  fun random(): Num
+  fun round(x: Num): Num
+  fun sin(x: Num): Num
+  fun sqrt(x: Num): Num
+  fun tan(x: Num): Num
+}
+
+class Date {
+  constructor(value: Num | Str | undefined)
+  toString(): Str
+  toDateString(): Str
+  toTimeString(): Str
+  toLocaleString(): Str
+  toLocaleDateString(): Str
+  toLocaleTimeString(): Str
+  valueOf(): Num
+  getTime(): Num
+  getFullYear(): Num
+  getUTCFullYear(): Num
+  getMonth(): Num
+  getUTCMonth(): Num
+  getDate(): Num
+  getUTCDate(): Num
+  getDay(): Num
+  getUTCDay(): Num
+  getHours(): Num
+  getUTCHours(): Num
+  getMinutes(): Num
+  getUTCMinutes(): Num
+  getSeconds(): Num
+  getUTCSeconds(): Num
+  getMilliseconds(): Num
+  getUTCMilliseconds(): Num
+  getTimezoneOffset(): Num
+  setTime(time: Num): Num
+  setMilliseconds(ms: Num): Num
+  setUTCMilliseconds(ms: Num): Num
+  setSeconds(sec: Num, ms: Num | undefined): Num
+  setUTCSeconds(sec: Num, ms: Num | undefined): Num
+  setMinutes(min: Num, sec: Num | undefined, ms: Num | undefined): Num
+  setUTCMinutes(min: Num, sec: Num | undefined, ms: Num | undefined): Num
+  setHours(hours: Num, min: Num | undefined, sec: Num | undefined, ms: Num | undefined): Num
+  setUTCHours(hours: Num, min: Num | undefined, sec: Num | undefined, ms: Num | undefined): Num
+  setDate(date: Num): Num
+  setUTCDate(date: Num): Num
+  setMonth(month: Num, date: Num): Num
+  setUTCMonth(month: Num, date: Num | undefined): Num
+  setFullYear(year: Num, month: Num | undefined, date: Num | undefined): Num
+  setUTCFullYear(year: Num, month: Num | undefined, date: Num | undefined): Num
+  toUTCString(): Str
+  toISOString(): Str
+  toJSON(key: anything | undefined): Str
+}
+
+declare module JSON {
+  fun parse(text: Str, reviver: ((this: anything, key: Str, value: anything) => anything) | undefined): anything
+  fun stringify(value: anything, replacer: Array[(Num | Str)] | null, space: Str | Num | undefined): Str
+}
