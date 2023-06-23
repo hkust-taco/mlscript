@@ -246,11 +246,10 @@ interface ObjectConstructor {
     keys(o: object): string[];
 }
 
-// TODO: name clash?
 /**
  * Provides functionality common to all JavaScript objects.
  */
-// declare var Object: ObjectConstructor;
+declare var Object: ObjectConstructor;
 
 /**
  * Creates a new function.
@@ -299,7 +298,7 @@ interface FunctionConstructor {
     readonly prototype: Function;
 }
 
-// declare var Function: FunctionConstructor;
+declare var Function: FunctionConstructor;
 
 /**
  * Extracts the type of the 'this' parameter of a function type, or 'unknown' if the function type has no 'this' parameter.
@@ -508,9 +507,9 @@ interface StringConstructor {
     fromCharCode(...codes: number[]): string;
 }
 
-// /**
-//  * Allows manipulation and formatting of text strings and determination and location of substrings within strings.
-//  */
+/**
+ * Allows manipulation and formatting of text strings and determination and location of substrings within strings.
+ */
 declare var String: StringConstructor;
 
 class Bool {
@@ -585,7 +584,7 @@ interface NumberConstructor {
     readonly POSITIVE_INFINITY: number;
 }
 
-// /** An object that represents a number of any kind. All JavaScript numbers are 64-bit floating-point numbers. */
+/** An object that represents a number of any kind. All JavaScript numbers are 64-bit floating-point numbers. */
 declare var Number: NumberConstructor;
 
 interface TemplateStringsArray extends ReadonlyArray<string> {
@@ -727,7 +726,7 @@ interface Math {
     tan(x: number): number;
 }
 /** An intrinsic object that provides basic mathematics functionality and constants. */
-// declare var Math: Math;
+declare var Math: Math;
 
 /** Enables basic storage and retrieval of dates and times. */
 interface Date {
@@ -919,7 +918,7 @@ interface DateConstructor {
     now(): number;
 }
 
-// declare var Date: DateConstructor;
+declare var Date: DateConstructor;
 
 interface RegExpMatchArray extends MutArray<string> {
     /**
@@ -1032,7 +1031,7 @@ interface RegExpConstructor {
     "$'": string;
 }
 
-// // declare var RegExp: RegExpConstructor;
+declare var RegExp: RegExpConstructor;
 
 interface Error {
     name: string;
@@ -1046,7 +1045,7 @@ interface ErrorConstructor {
     readonly prototype: Error;
 }
 
-// declare var Error: ErrorConstructor;
+declare var Error: ErrorConstructor;
 
 interface EvalError extends Error {
 }
@@ -1141,7 +1140,7 @@ interface JSON {
 /**
  * An intrinsic object that provides functions to convert JavaScript values to and from the JavaScript Object Notation (JSON) format.
  */
-// declare var JSON: JSON;
+declare var JSON: JSON;
 
 
 /////////////////////////////
@@ -1667,7 +1666,7 @@ interface ArrayBufferConstructor {
     new(byteLength: number): ArrayBuffer;
     isView(arg: any): arg is ArrayBufferView;
 }
-// declare var ArrayBuffer: ArrayBufferConstructor;
+declare var ArrayBuffer: ArrayBufferConstructor;
 
 interface ArrayBufferView {
     /**
@@ -1818,7 +1817,7 @@ interface DataViewConstructor {
     readonly prototype: DataView;
     new(buffer: ArrayBufferLike, byteOffset?: number, byteLength?: number): DataView;
 }
-// declare var DataView: DataViewConstructor;
+declare var DataView: DataViewConstructor;
 
 /**
  * A typed array of 8-bit integer values. The contents are initialized to 0. If the requested
@@ -2100,7 +2099,7 @@ interface Int8ArrayConstructor {
 
 
 }
-// declare var Int8Array: Int8ArrayConstructor;
+declare var Int8Array: Int8ArrayConstructor;
 
 /**
  * A typed array of 8-bit unsigned integer values. The contents are initialized to 0. If the
@@ -2382,7 +2381,7 @@ interface Uint8ArrayConstructor {
     from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: number) => number, thisArg?: any): Uint8Array;
 
 }
-// declare var Uint8Array: Uint8ArrayConstructor;
+declare var Uint8Array: Uint8ArrayConstructor;
 
 /**
  * A typed array of 8-bit unsigned integer (clamped) values. The contents are initialized to 0.
@@ -2663,7 +2662,7 @@ interface Uint8ClampedArrayConstructor {
      */
     from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: number) => number, thisArg?: any): Uint8ClampedArray;
 }
-// declare var Uint8ClampedArray: Uint8ClampedArrayConstructor;
+declare var Uint8ClampedArray: Uint8ClampedArrayConstructor;
 
 /**
  * A typed array of 16-bit signed integer values. The contents are initialized to 0. If the
@@ -2945,7 +2944,7 @@ interface Int16ArrayConstructor {
 
 
 }
-// declare var Int16Array: Int16ArrayConstructor;
+declare var Int16Array: Int16ArrayConstructor;
 
 /**
  * A typed array of 16-bit unsigned integer values. The contents are initialized to 0. If the
@@ -3228,7 +3227,7 @@ interface Uint16ArrayConstructor {
 
 
 }
-// declare var Uint16Array: Uint16ArrayConstructor;
+declare var Uint16Array: Uint16ArrayConstructor;
 
 /**
  * A typed array of 32-bit signed integer values. The contents are initialized to 0. If the
@@ -3510,7 +3509,7 @@ interface Int32ArrayConstructor {
     from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: number) => number, thisArg?: any): Int32Array;
 
 }
-// declare var Int32Array: Int32ArrayConstructor;
+declare var Int32Array: Int32ArrayConstructor;
 
 /**
  * A typed array of 32-bit unsigned integer values. The contents are initialized to 0. If the
@@ -3791,7 +3790,7 @@ interface Uint32ArrayConstructor {
     from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: number) => number, thisArg?: any): Uint32Array;
 
 }
-// declare var Uint32Array: Uint32ArrayConstructor;
+declare var Uint32Array: Uint32ArrayConstructor;
 
 /**
  * A typed array of 32-bit float values. The contents are initialized to 0. If the requested number
@@ -4074,7 +4073,7 @@ interface Float32ArrayConstructor {
 
 
 }
-// declare var Float32Array: Float32ArrayConstructor;
+declare var Float32Array: Float32ArrayConstructor;
 
 /**
  * A typed array of 64-bit float values. The contents are initialized to 0. If the requested
@@ -4347,7 +4346,7 @@ interface Float64ArrayConstructor {
     from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: number) => number, thisArg?: any): Float64Array;
 
 }
-// declare var Float64Array: Float64ArrayConstructor;
+declare var Float64Array: Float64ArrayConstructor;
 
 /////////////////////////////
 /// ECMAScript Internationalization API
@@ -4465,43 +4464,43 @@ declare namespace Intl {
     };
 }
 
-// interface String {
-//     /**
-//      * Determines whether two strings are equivalent in the current or specified locale.
-//      * @param that String to compare to target string
-//      * @param locales A locale string or array of locale strings that contain one or more language or locale tags. If you include more than one locale string, list them in descending order of priority so that the first entry is the preferred locale. If you omit this parameter, the default locale of the JavaScript runtime is used. This parameter must conform to BCP 47 standards; see the Intl.Collator object for details.
-//      * @param options An object that contains one or more properties that specify comparison options. see the Intl.Collator object for details.
-//      */
-//     localeCompare(that: string, locales?: string | string[], options?: Intl.CollatorOptions): number;
-// }
+interface String {
+    /**
+     * Determines whether two strings are equivalent in the current or specified locale.
+     * @param that String to compare to target string
+     * @param locales A locale string or array of locale strings that contain one or more language or locale tags. If you include more than one locale string, list them in descending order of priority so that the first entry is the preferred locale. If you omit this parameter, the default locale of the JavaScript runtime is used. This parameter must conform to BCP 47 standards; see the Intl.Collator object for details.
+     * @param options An object that contains one or more properties that specify comparison options. see the Intl.Collator object for details.
+     */
+    localeCompare(that: string, locales?: string | string[], options?: Intl.CollatorOptions): number;
+}
 
-// interface Number {
-//     /**
-//      * Converts a number to a string by using the current or specified locale.
-//      * @param locales A locale string or array of locale strings that contain one or more language or locale tags. If you include more than one locale string, list them in descending order of priority so that the first entry is the preferred locale. If you omit this parameter, the default locale of the JavaScript runtime is used.
-//      * @param options An object that contains one or more properties that specify comparison options.
-//      */
-//     toLocaleString(locales?: string | string[], options?: Intl.NumberFormatOptions): string;
-// }
+interface Number {
+    /**
+     * Converts a number to a string by using the current or specified locale.
+     * @param locales A locale string or array of locale strings that contain one or more language or locale tags. If you include more than one locale string, list them in descending order of priority so that the first entry is the preferred locale. If you omit this parameter, the default locale of the JavaScript runtime is used.
+     * @param options An object that contains one or more properties that specify comparison options.
+     */
+    toLocaleString(locales?: string | string[], options?: Intl.NumberFormatOptions): string;
+}
 
-// interface Date {
-//     /**
-//      * Converts a date and time to a string by using the current or specified locale.
-//      * @param locales A locale string or array of locale strings that contain one or more language or locale tags. If you include more than one locale string, list them in descending order of priority so that the first entry is the preferred locale. If you omit this parameter, the default locale of the JavaScript runtime is used.
-//      * @param options An object that contains one or more properties that specify comparison options.
-//      */
-//     toLocaleString(locales?: string | string[], options?: Intl.DateTimeFormatOptions): string;
-//     /**
-//      * Converts a date to a string by using the current or specified locale.
-//      * @param locales A locale string or array of locale strings that contain one or more language or locale tags. If you include more than one locale string, list them in descending order of priority so that the first entry is the preferred locale. If you omit this parameter, the default locale of the JavaScript runtime is used.
-//      * @param options An object that contains one or more properties that specify comparison options.
-//      */
-//     toLocaleDateString(locales?: string | string[], options?: Intl.DateTimeFormatOptions): string;
+interface Date {
+    /**
+     * Converts a date and time to a string by using the current or specified locale.
+     * @param locales A locale string or array of locale strings that contain one or more language or locale tags. If you include more than one locale string, list them in descending order of priority so that the first entry is the preferred locale. If you omit this parameter, the default locale of the JavaScript runtime is used.
+     * @param options An object that contains one or more properties that specify comparison options.
+     */
+    toLocaleString(locales?: string | string[], options?: Intl.DateTimeFormatOptions): string;
+    /**
+     * Converts a date to a string by using the current or specified locale.
+     * @param locales A locale string or array of locale strings that contain one or more language or locale tags. If you include more than one locale string, list them in descending order of priority so that the first entry is the preferred locale. If you omit this parameter, the default locale of the JavaScript runtime is used.
+     * @param options An object that contains one or more properties that specify comparison options.
+     */
+    toLocaleDateString(locales?: string | string[], options?: Intl.DateTimeFormatOptions): string;
 
-//     /**
-//      * Converts a time to a string by using the current or specified locale.
-//      * @param locales A locale string or array of locale strings that contain one or more language or locale tags. If you include more than one locale string, list them in descending order of priority so that the first entry is the preferred locale. If you omit this parameter, the default locale of the JavaScript runtime is used.
-//      * @param options An object that contains one or more properties that specify comparison options.
-//      */
-//     toLocaleTimeString(locales?: string | string[], options?: Intl.DateTimeFormatOptions): string;
-// }
+    /**
+     * Converts a time to a string by using the current or specified locale.
+     * @param locales A locale string or array of locale strings that contain one or more language or locale tags. If you include more than one locale string, list them in descending order of priority so that the first entry is the preferred locale. If you omit this parameter, the default locale of the JavaScript runtime is used.
+     * @param options An object that contains one or more properties that specify comparison options.
+     */
+    toLocaleTimeString(locales?: string | string[], options?: Intl.DateTimeFormatOptions): string;
+}

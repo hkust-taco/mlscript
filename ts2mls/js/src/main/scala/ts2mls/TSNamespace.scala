@@ -27,12 +27,12 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
       sub
     }
 
-  def put(name: String, tp: TSType, exported: Boolean): Unit =
+  def put(name: String, tp: TSType, exported: Boolean, overrided: Boolean): Unit =
     if (!members.contains(name)) {
       order += Right(name)
       members.put(name, (tp, exported))
     }
-    else members.update(name, (tp, exported))
+    else if (overrided) members.update(name, (tp, exported))
 
   def `export`(name: String): Unit =
     if (members.contains(name))

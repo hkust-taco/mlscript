@@ -57,7 +57,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
     val varName = req.name.escapedText
     val imp = TSSingleImport(localName, List((varName, None)))
     importList.add(fullname, imp)
-    global.put(varName, TSRenamedType(varName, TSReferenceType(s"$moduleName.$varName")), false)
+    global.put(varName, TSRenamedType(varName, TSReferenceType(s"$moduleName.$varName")), false, false)
   }
 
   private def parseExportDeclaration(elements: TSNodeArray): Unit = {
@@ -66,7 +66,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
         global.`export`(ele.symbol.escapedName)
       else {
         val alias = ele.symbol.escapedName
-        global.getTop(ele.propertyName.escapedText).fold(())(tp => global.put(alias, TSRenamedType(alias, tp), true))
+        global.getTop(ele.propertyName.escapedText).fold(())(tp => global.put(alias, TSRenamedType(alias, tp), true, false))
       }
     )
   }
@@ -292,9 +292,9 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
     })
 
   private def addFunctionIntoNamespace(fun: TSFunctionType, node: TSNodeObject, name: String)(implicit ns: TSNamespace) =
-    if (!ns.containsMember(name, false)) ns.put(name, fun, node.isExported)
+    if (!ns.containsMember(name, false)) ns.put(name, fun, node.isExported, false)
     else
-      ns.put(name, TSIgnoredOverload(fun, name), node.isExported || ns.exported(name)) // the implementation is always after declarations
+      ns.put(name, TSIgnoredOverload(fun, name), node.isExported || ns.exported(name), true) // the implementation is always after declarations
 
   // overload functions in a sub-namespace need to provide an overload array
   // because the namespace merely exports symbols rather than node objects themselves
@@ -303,14 +303,14 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
       addFunctionIntoNamespace(getFunctionType(node, true), node, name)
     )(decs => decs.foreach(d => addFunctionIntoNamespace(getFunctionType(d, true), d, name)))
     else if (node.isClassDeclaration)
-      ns.put(name, parseMembers(name, node, true), exported)
+      ns.put(name, parseMembers(name, node, true), exported, false)
     else if (node.isInterfaceDeclaration)
-      ns.put(name, parseMembers(name, node, false), exported)
+      ns.put(name, parseMembers(name, node, false), exported, false)
     else if (node.isTypeAliasDeclaration)
-      ns.put(name, TSTypeAlias(name, getTypeAlias(node.`type`), getTypeParameters(node)), exported)
+      ns.put(name, TSTypeAlias(name, getTypeAlias(node.`type`), getTypeParameters(node)), exported, false)
     else if (node.isObjectLiteral)
-      ns.put(name, TSInterfaceType("", getObjectLiteralMembers(node.initializer.properties), List(), List()), exported)
-    else if (node.isVariableDeclaration) ns.put(name, getMemberType(node), exported)
+      ns.put(name, TSInterfaceType("", getObjectLiteralMembers(node.initializer.properties), List(), List()), exported, false)
+    else if (node.isVariableDeclaration) ns.put(name, getMemberType(node), exported, false)
     else if (node.isNamespace)
       parseNamespace(node)
 
