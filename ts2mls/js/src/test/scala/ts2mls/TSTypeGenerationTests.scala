@@ -20,7 +20,6 @@ class TSTypeGenerationTest extends AnyFunSuite {
 
 object TSTypeGenerationTest {
   private val testsData = List(
-    "./Array.ts",
     "./BasicFunctions.ts",
     "./ClassMember.ts",
     "./Cycle1.ts",
@@ -39,6 +38,7 @@ object TSTypeGenerationTest {
     "./Namespace.ts",
     "./Optional.ts",
     "./Overload.ts",
+    "./TSArray.ts",
     "./Tuple.ts",
     "./Type.ts",
     "./TypeParameter.ts",

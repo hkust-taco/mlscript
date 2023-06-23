@@ -80,10 +80,9 @@ object DriverDiffTests {
     entry("MLS2TheMax", Some("./tsconfig.json")),
     entry("MyPartialOrder", Some("./tsconfig.json"), expectError = true), // TODO: type traits in modules
     entry("Builtin", expectError = true), // TODO: Predef.mlsi
-    ts2mlsEntry("Array", ignoreTypeError = true),
     ts2mlsEntry("BasicFunctions", ignoreTypeError = true),
     ts2mlsEntry("ClassMember"),
-    ts2mlsEntry("Cycle1", expectError = true),
+    ts2mlsEntry("Cycle1", ignoreTypeError = true),
     ts2mlsEntry("Dec", ignoreTypeError = true),
     ts2mlsEntry("Enum"),
     ts2mlsEntry("Escape"),
@@ -97,6 +96,7 @@ object DriverDiffTests {
     ts2mlsEntry("Namespace", expectError = true),
     ts2mlsEntry("Optional", ignoreTypeError = true),
     ts2mlsEntry("Overload", ignoreTypeError = true),
+    ts2mlsEntry("TSArray", ignoreTypeError = true),
     ts2mlsEntry("Tuple", ignoreTypeError = true),
     ts2mlsEntry("Type", ignoreTypeError = true),
     ts2mlsEntry("TypeParameter", ignoreTypeError = true),

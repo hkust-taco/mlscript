@@ -1,4 +1,4 @@
-export declare module Array {
+export declare module TSArray {
   fun first(x: MutArray[Str]): Str
   fun getZero3(): MutArray[Num]
   fun first2(fs: MutArray[(x: Num) => Num]): (x: Num) => Num
