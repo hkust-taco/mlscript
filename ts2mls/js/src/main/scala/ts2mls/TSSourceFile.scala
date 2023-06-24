@@ -71,9 +71,16 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
     val fullname = TypeScript.resolveModuleName(localName, resolvedPath, config)
     val moduleName = TSPathResolver.basename(fullname)
     val varName = req.name.escapedText
-    val imp = TSSingleImport(localName, List((varName, None)))
-    importList.add(fullname, imp)
-    global.put(varName, TSRenamedType(varName, TSReferenceType(s"$moduleName.$varName")), false, false)
+    if (req.hasmoduleReference) {
+      val imp = TSFullImport(localName, varName)
+      importList.add(fullname, imp)
+      global.put(varName, TSRenamedType(varName, TSReferenceType(s"$moduleName")), false, false)
+    }
+    else {
+      val imp = TSSingleImport(localName, List((varName, None)))
+      importList.add(fullname, imp)
+      global.put(varName, TSRenamedType(varName, TSReferenceType(s"$moduleName.$varName")), false, false)
+    }
   }
 
   private def parseExportDeclaration(elements: TSNodeArray): Unit = {
@@ -164,7 +171,10 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
 
   // the function `getMemberType` can't process function/tuple type alias correctly
   private def getTypeAlias(tn: TSNodeObject)(implicit ns: TSNamespace): TSType =
-    if (tn.isFunctionLike) getFunctionType(tn, true)
+    if (tn.isFunctionLike) {
+      if (tn.typeParameters.isUndefined) getFunctionType(tn, true)
+      else markUnsupported(tn) // type parameters in lambda functions are not supported
+    }
     else if (tn.isTupleTypeNode) TSTupleType(getTupleElements(tn.typeNode.typeArguments))
     else getObjectType(tn.typeNode) match {
       case TSPrimitiveType("intrinsic") => markUnsupported(tn)
@@ -352,12 +362,14 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
       case TSClassType(name, members, statics, typeVars, _, constructor) =>
         val cls = TSClassType(name, members, statics, typeVars, getHeritageList(node, members.keySet), constructor)
         ns.put(name, if (cls.unsupported) markUnsupported(node) else cls, ns.exported(name), true)
+      case t if (t.unsupported) => () // ignore types that have been marked as unsupported.
       case _ => throw new AssertionError(s"$name is not a class")
     }
     else if (node.isInterfaceDeclaration) ns.get(name) match {
       case TSInterfaceType(name, members, typeVars, parents) =>
         val itf = TSInterfaceType(name, members, typeVars, getHeritageList(node, members.keySet))
         ns.put(name, if (itf.unsupported) markUnsupported(node) else itf, ns.exported(name), true)
+      case t if (t.unsupported) => () // ignore types that have been marked as unsupported.
       case _ => throw new AssertionError(s"$name is not an interface")
     }
     else if (node.isNamespace) {

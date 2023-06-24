@@ -228,7 +228,7 @@ class TSNodeObject(node: js.Dynamic)(implicit checker: TSTypeChecker) extends TS
 
   // TODO: multiline string support
   override def toString(): String =
-    if (IsUndefined(node)) "" else node.getText().toString().replaceAll("\n", " ")
+    if (IsUndefined(node)) "" else node.getText().toString().replaceAll("\n", " ").replaceAll("\"", "'")
   lazy val filename: String =
     if (parent.isUndefined) node.fileName.toString()
     else parent.filename
@@ -245,6 +245,7 @@ class TSNodeObject(node: js.Dynamic)(implicit checker: TSTypeChecker) extends TS
   lazy val expression = TSTokenObject(node.expression)
   lazy val idExpression = TSIdentifierObject(node.expression)
   lazy val isVarParam = !IsUndefined(node.dotDotDotToken)
+  lazy val hasmoduleReference = !IsUndefined(node.moduleReference)
 }
 
 object TSNodeObject {

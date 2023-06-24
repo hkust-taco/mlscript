@@ -102,8 +102,8 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
           case TSInterfaceType(name, _, _, _) if (name =/= "") =>
             writer.writeln(Converter.convert(mem, exp)(indent))
           case _: TSTypeAlias => writer.writeln(Converter.convert(mem, exp)(indent))
-          case TSRenamedType(name, original) if (exp) =>
-            writer.writeln(s"${indent}export val ${Converter.escapeIdent(name)} = ${Converter.convert(original)("")}")
+          case TSRenamedType(name, original) =>
+            writer.writeln(s"${indent}${if (exp) "export " else ""}val ${Converter.escapeIdent(name)} = ${Converter.convert(original)("")}")
           case _ => writer.writeln(s"${indent}${expStr(exp)}val ${Converter.escapeIdent(name)}: ${Converter.convert(mem)("")}")
         }
       }
