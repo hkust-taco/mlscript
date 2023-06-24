@@ -920,7 +920,7 @@ interface DateConstructor {
 
 declare var Date: DateConstructor;
 
-interface RegExpMatchArray extends MutArray<string> {
+interface RegExpMatchArray extends Array<string> {
     /**
      * The index of the search at which the result was found.
      */
@@ -935,7 +935,7 @@ interface RegExpMatchArray extends MutArray<string> {
     0: string;
 }
 
-interface RegExpExecArray extends MutArray<string> {
+interface RegExpExecArray extends Array<string> {
     /**
      * The index of the search at which the result was found.
      */
@@ -1281,7 +1281,7 @@ interface ConcatArray<T> {
     slice(start?: number, end?: number): T[];
 }
 
-interface MutArray<T> {
+interface Array<T> {
     /**
      * Gets or sets the length of the array. This is a number one higher than the highest index in the array.
      */

@@ -232,12 +232,12 @@ declare trait DateConstructor {
   fun parse(args0: Str): Num
   val prototype: Date
 }
-declare trait RegExpMatchArray extends MutArray[Str] {
+declare trait RegExpMatchArray extends Array[Str] {
   val index: (Num) | (undefined)
   val input: (Str) | (undefined)
   val id"0": Str
 }
-declare trait RegExpExecArray extends MutArray[Str] {
+declare trait RegExpExecArray extends Array[Str] {
   val index: Num
   val input: Str
   val id"0": Str
@@ -326,14 +326,14 @@ declare trait ConcatArray[T] {
   fun join(args0: (Str) | (undefined)): Str
   fun slice(args0: (Num) | (undefined), args1: (Num) | (undefined)): MutArray[T]
 }
-declare trait MutArray[T] {
+declare trait Array[T] {
   fun lastIndexOf(args0: T, args1: (Num) | (undefined)): Num
   fun every(args0: (value: T, index: Num, array: MutArray[T]) => anything, args1: (anything) | (undefined)): (false) | (true) /* warning: the overload of function every is not supported yet. */
   fun push(args0: (T) | (MutArray[T])): Num
   fun forEach(args0: (value: T, index: Num, array: MutArray[T]) => unit, args1: (anything) | (undefined)): unit
   fun reduceRight[U](args0: (previousValue: U, currentValue: T, currentIndex: Num, array: MutArray[T]) => U, args1: U): U /* warning: the overload of function reduceRight is not supported yet. */
   fun unshift(args0: (T) | (MutArray[T])): Num
-  fun sort(args0: ((a: T, b: T) => Num) | (undefined)): MutArray
+  fun sort(args0: ((a: T, b: T) => Num) | (undefined)): Array
   fun join(args0: (Str) | (undefined)): Str
   fun map[U](args0: (value: T, index: Num, array: MutArray[T]) => U, args1: (anything) | (undefined)): MutArray[U]
   fun pop(): T
@@ -357,7 +357,6 @@ declare trait ArrayConstructor {
   fun isArray(args0: anything): (false) | (true)
   val prototype: MutArray[anything]
 }
-val Array: ArrayConstructor
 declare trait TypedPropertyDescriptor[T] {
   val configurable: ((false) | (true)) | (undefined)
   val set: ((value: T) => unit) | (undefined)

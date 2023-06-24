@@ -244,6 +244,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
         case t => ref
       }
       lst :+ (getObjectType(h.types.get(index).typeNode) match {
+        case TSArrayType(ele) => TSSubstitutionType(TSReferenceType("Array"), ele :: Nil)
         case ref: TSReferenceType => run(ref)
         case TSSubstitutionType(base, app) => run(base) match {
           case ref: TSReferenceType => TSSubstitutionType(ref, app)
