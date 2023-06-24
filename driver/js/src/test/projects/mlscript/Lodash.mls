@@ -1,0 +1,4 @@
+import "lodash/fp"
+
+fun inc(x: Int) = x + 1
+console.log(fp.map(inc)([1, 2, 3]))

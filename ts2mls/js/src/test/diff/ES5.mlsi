@@ -365,7 +365,7 @@ declare trait TypedPropertyDescriptor[T] {
   val writable: ((false) | (true)) | (undefined)
   val value: (T) | (undefined)
 }
-type PromiseConstructorLike = (executor: (resolve: (value: (T) | (PromiseLike[T])) => unit, reject: (reason: (anything) | (undefined)) => unit) => unit) => PromiseLike[T]
+type PromiseConstructorLike = unsupported["declare type PromiseConstructorLike = new <T>(executor: (resolve: (value: T | PromiseLike<T>) => void, reject: (reason?: any) => void) => void) => PromiseLike<T>;", "ES5.d.ts", 1488, 1]
 declare trait PromiseLike[T] {
   fun id"then"[TResult1, TResult2](args0: ((value: T) => (TResult1) | (PromiseLike[TResult1])) | (undefined), args1: ((reason: anything) => (TResult2) | (PromiseLike[TResult2])) | (undefined)): PromiseLike[(TResult1) | (TResult2)]
 }

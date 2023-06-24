@@ -34,12 +34,12 @@ class Driver(options: DriverOptions) {
 
   import TSPathResolver.{normalize, isLocal, dirname}
 
-  private def checkESModule(filename: String) =
+  private def checkESModule(filename: String, from: String) =
     if (filename.endsWith(".mls")) None
     else if (isLocal(filename))
       Some(TypeScript.isESModule(config, false))
     else {
-      val fullname = TypeScript.resolveModuleName(filename, "", config)
+      val fullname = TypeScript.resolveModuleName(filename, from, config)
       def find(path: String): Boolean = {
         val dir = dirname(path)
         val pack = s"$dir/package.json"
@@ -241,7 +241,7 @@ class Driver(options: DriverOptions) {
             saveToFile(mlsiFile, interfaces)
             generate(Pgrm(definitions), s"${options.outputDir}/${file.jsFilename}", file.moduleName, imports.map(
               imp => new Import(resolveTarget(file, imp.path)) with ModuleType {
-                val isESModule = checkESModule(path)
+                val isESModule = checkESModule(path, TSPathResolver.resolve(file.filename))
               }
             ), exported || importedModule(file.filename))
           }

@@ -1,7 +1,9 @@
 {
   "dependencies": {
+    "@types/lodash": "^4.14.195",
     "fp-ts": "^2.16.0",
-    "json5": "^2.2.3"
+    "json5": "^2.2.3",
+    "lodash": "^4.17.21"
   },
   "module": "es2015"
 }
