@@ -271,6 +271,7 @@ class Driver(options: DriverOptions) {
         totalErrors += 1
         report(s"codegen error: $err")
       case t : Throwable =>
+        totalErrors += 1
         report(s"unexpected error: ${t.toString()}")
         t.printStackTrace()
     }
