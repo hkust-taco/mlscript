@@ -917,12 +917,14 @@ final case class JSExport(moduleDecl: JSConstDecl) extends JSStmt {
 }
 
 // None: mls module, Some(true): ES module, Some(false): common JS module
-final case class JSImport(name: Str, path: Str, isESModule: Opt[Bool]) extends JSStmt {
+final case class JSImport(name: Str, path: Str, isESModule: Opt[Bool], genRequire: Bool) extends JSStmt {
   def toSourceCode: SourceCode =
     isESModule match {
       case N => SourceCode(s"import { $name } from \"$path\"\n")
       case S(true) => SourceCode(s"import * as $name from \"$path\"\n")
-      case S(false) => SourceCode(s"import $name from \"$path\"\n")
+      case S(false) =>
+        if (genRequire) SourceCode(s"const $name = require(\"$path\")\n")
+        else SourceCode(s"import $name from \"$path\"\n")
     } 
 }
 

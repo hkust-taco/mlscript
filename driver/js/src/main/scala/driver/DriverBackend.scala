@@ -48,23 +48,23 @@ class JSDriverBackend extends JSBackend(allowUnresolvedSymbols = false) {
 
   import JSDriverBackend.ModuleType
 
-  private def translateImport(imp: Import with ModuleType) = {
+  private def translateImport(imp: Import with ModuleType, commonJS: Bool) = {
     val path = imp.path
     val last = path.lastIndexOf(".")
     JSImport(
       path.substring(path.lastIndexOf("/") + 1, if (last < 0) path.length() else last),
       path.substring(0, if (last < 0) path.length() else last) + (if (last < 0) "" else ".js"),
-      imp.isESModule
+      imp.isESModule, commonJS
     )
   }
 
-  def apply(pgrm: Pgrm, topModuleName: Str, imports: Ls[Import with ModuleType], exported: Bool): Ls[Str] = {
+  def apply(pgrm: Pgrm, topModuleName: Str, imports: Ls[Import with ModuleType], exported: Bool, commonJS: Bool): Ls[Str] = {
     imports.flatMap (imp => {
       val path = imp.path
       val last = path.lastIndexOf(".")
         val moduleName = path.substring(path.lastIndexOf("/") + 1, if (last < 0) path.length() else last)
         topLevelScope.declareValue(moduleName, Some(false), false)
-        translateImport(imp).toSourceCode.toLines 
+        translateImport(imp, commonJS).toSourceCode.toLines 
     }) ::: generateNewDef(pgrm, topModuleName, exported)
   }
 }

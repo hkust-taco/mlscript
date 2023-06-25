@@ -11,6 +11,7 @@ final case class DriverOptions(
   outputDir: String,
   tsconfig: Option[String],
   interfaceDir: String,
+  commonJS: Boolean, // generate common js or es5
   ignoreTypeError: Boolean,
   force: Boolean // force to recompile if it is true
 )

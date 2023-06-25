@@ -76,11 +76,12 @@ class Driver(options: DriverOptions) {
         false
     }
   
-  def genPackageJson(): Unit =
-    if (!exists(s"${options.outputDir}/package.json")) {
-      val content = "{ 'type': 'module' }\n" // TODO: more settings?
-      saveToFile(s"${options.outputDir}/package.json", content)
-    }
+  def genPackageJson(): Unit = {
+    val content = // TODO: more settings?
+      if (!options.commonJS) "{ \"type\": \"module\" }\n"
+      else "{ \"type\": \"commonjs\" }\n"
+    saveToFile(s"${options.outputDir}/package.json", content)
+  }
 
   type ParseResult = (List[Statement], List[NuDecl], List[Import], Origin)
   private def parse(filename: String, content: String): ParseResult = {
@@ -262,7 +263,7 @@ class Driver(options: DriverOptions) {
   ): Unit = try {
     val backend = new JSDriverBackend()
     jsBuiltinDecs.foreach(lst => backend.declareJSBuiltin(Pgrm(lst)))
-    val lines = backend(program, moduleName, imports, exported)
+    val lines = backend(program, moduleName, imports, exported, options.commonJS)
     val code = lines.mkString("", "\n", "\n")
     saveToFile(filename, code)
   } catch {

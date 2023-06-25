@@ -1,4 +1,4 @@
-import fp from "lodash/fp"
+const fp = require("lodash/fp")
 
 const Lodash = new class Lodash {
   constructor() {

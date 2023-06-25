@@ -11,10 +11,11 @@ class DriverDiffTests extends AnyFunSuite {
   import ts2mls.JSFileSystem._
 
   testCases.foreach {
-    case TestOption(filename, workDir, interfaceDir, execution, tsconfig, ignoreTypeError, expectError) => test(filename) {
-      val options = DriverOptions(filename, workDir, jsPath, tsconfig, interfaceDir, ignoreTypeError, forceCompiling)
+    case TestOption(filename, workDir, outputDir, interfaceDir, cjs, execution, tsconfig, ignoreTypeError, expectError) => test(filename) {
+      val options =
+        DriverOptions(filename, workDir, outputDir, tsconfig, interfaceDir, cjs, ignoreTypeError, forceCompiling)
       val driver = Driver(options)
-      driver.genPackageJson()
+      if (!outputDir.isEmpty()) driver.genPackageJson()
       val success = driver.execute
 
       assert(success != expectError, s"failed when compiling $filename.")
@@ -35,22 +36,26 @@ object DriverDiffTests {
   // but we can ban it during CI
   private val forceCompiling = sys.env.get("CI").isEmpty
 
-  private val diffPath = "driver/js/src/test/projects/"
-  private val jsPath = s"${diffPath}js/"
-  private val outputPath = s"${diffPath}../output/"
+  private val esDiffPath = "driver/js/src/test/esprojects/"
+  private val cjsDiffPath = "driver/js/src/test/cjsprojects/"
+  private val esJsPath = s"${esDiffPath}js/"
+  private val cjsJsPath = s"${cjsDiffPath}js/"
+  private val outputPath = s"${esDiffPath}../output/"
   private val ts2mlsPath = "ts2mls/js/src/test/diff"
 
   private case class TestOption(
     filename: String,
     workDir: String,
+    outputDir: String,
     interfaceDir: String,
+    commonJS: Boolean,
     execution: Option[(String, String)],
     tsconfig: Option[String],
     ignoreTypeError: Boolean,
     expectError: Boolean
   )
 
-  private def entry(
+  private def cjsEntry(
     entryModule: String,
     tsconfig: Option[String] = None,
     ignoreTypeError: Boolean = false,
@@ -58,29 +63,49 @@ object DriverDiffTests {
   ) =
     TestOption(
       s"./mlscript/${entryModule}.mls",
-      diffPath,
+      cjsDiffPath,
+      cjsJsPath,
       ".interfaces",
-      Some((s"${jsPath}mlscript/${entryModule}.js", s"${outputPath}${entryModule}.check")),
+      true,
+      Some((s"${cjsJsPath}mlscript/${entryModule}.js", s"${outputPath}${entryModule}.check")),
+      tsconfig,
+      ignoreTypeError,
+      expectError
+    )
+
+  private def esEntry(
+    entryModule: String,
+    tsconfig: Option[String] = None,
+    ignoreTypeError: Boolean = false,
+    expectError: Boolean = false
+  ) =
+    TestOption(
+      s"./mlscript/${entryModule}.mls",
+      esDiffPath,
+      esJsPath,
+      ".interfaces",
+      false,
+      Some((s"${esJsPath}mlscript/${entryModule}.js", s"${outputPath}${entryModule}.check")),
       tsconfig,
       ignoreTypeError,
       expectError
     )
 
   private def ts2mlsEntry(entryModule: String, ignoreTypeError: Boolean = false, expectError: Boolean = false) =
-    TestOption(s"./${entryModule}.mlsi", ts2mlsPath, ".", None, None, ignoreTypeError, expectError)
+    TestOption(s"./${entryModule}.mlsi", ts2mlsPath, "", ".", false, None, None, ignoreTypeError, expectError)
 
   private val testCases = List[TestOption](
-    entry("Simple"),
-    entry("Cycle2"),
-    entry("Self", expectError = true),
-    entry("C", ignoreTypeError = true, expectError = true),
-    entry("TS", Some("./tsconfig.json"), ignoreTypeError = true), // TODO: type members
-    entry("Output", Some("./tsconfig.json")),
-    entry("Output2", Some("./tsconfig.json")),
-    entry("MLS2TheMax", Some("./tsconfig.json")),
-    entry("MyPartialOrder", Some("./tsconfig.json"), expectError = true), // TODO: type traits in modules
-    entry("Lodash", Some("./tsconfig.json"), expectError = true), // TODO: generate correct import and check typing
-    entry("Builtin"),
+    esEntry("Simple"),
+    esEntry("Cycle2"),
+    esEntry("Self", expectError = true),
+    esEntry("C", ignoreTypeError = true, expectError = true),
+    esEntry("TS", Some("./tsconfig.json"), ignoreTypeError = true), // TODO: type members
+    esEntry("Output", Some("./tsconfig.json")),
+    esEntry("Output2", Some("./tsconfig.json")),
+    esEntry("MLS2TheMax", Some("./tsconfig.json")),
+    esEntry("MyPartialOrder", Some("./tsconfig.json"), expectError = true), // TODO: type traits in modules
+    cjsEntry("Lodash", Some("./tsconfig.json"), expectError = true), // TODO: generate correct import and check typing
+    esEntry("Builtin"),
     ts2mlsEntry("BasicFunctions", ignoreTypeError = true),
     ts2mlsEntry("ClassMember"),
     ts2mlsEntry("Cycle1", ignoreTypeError = true),
