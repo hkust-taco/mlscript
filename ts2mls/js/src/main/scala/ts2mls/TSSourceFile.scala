@@ -156,7 +156,8 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
     else if (obj.isUnionType) getStructuralType(obj.types, true)
     else if (obj.isIntersectionType) getStructuralType(obj.types, false)
     else if (obj.isArrayType) TSArrayType(getObjectType(obj.elementTypeOfArray))
-    else if (obj.isTypeParameterSubstitution) TSSubstitutionType(TSReferenceType(obj.symbol.escapedName), getSubstitutionArguments(obj.typeArguments))
+    else if (obj.isTypeParameterSubstitution)
+      TSSubstitutionType(TSReferenceType(getSymbolFullname(obj.symbol)), getSubstitutionArguments(obj.typeArguments))
     else if (obj.isObject)
       if (obj.isAnonymous) {
         val props = getAnonymousPropertiesType(obj.properties)
