@@ -104,7 +104,7 @@ object DriverDiffTests {
     esEntry("Output2", Some("./tsconfig.json")),
     esEntry("MLS2TheMax", Some("./tsconfig.json")),
     esEntry("MyPartialOrder", Some("./tsconfig.json"), expectError = true), // TODO: type traits in modules
-    cjsEntry("Lodash", Some("./tsconfig.json"), ignoreTypeError = true), // TODO: typing
+    cjsEntry("Lodash", Some("./tsconfig.json"), ignoreTypeError = true), // TODO: module member selection
     esEntry("Builtin"),
     ts2mlsEntry("BasicFunctions", ignoreTypeError = true),
     ts2mlsEntry("ClassMember"),

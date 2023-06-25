@@ -148,6 +148,7 @@ class TSSymbolObject(sym: js.Dynamic)(implicit checker: TSTypeChecker) extends T
 
   lazy val isOptionalMember = (flags & TypeScript.symbolFlagsOptional) > 0
   lazy val valueDeclaration = TSNodeObject(sym.valueDeclaration)
+  lazy val isMerged = !IsUndefined(sym.mergeId)
 }
 
 object TSSymbolObject {
@@ -156,7 +157,7 @@ object TSSymbolObject {
 
 class TSNodeObject(node: js.Dynamic)(implicit checker: TSTypeChecker) extends TSAny(node) {
   private lazy val modifiers = TSTokenArray(node.modifiers)
-  private lazy val parent = TSNodeObject(node.parent)
+  lazy val parent = TSNodeObject(node.parent)
 
   lazy val isToken = TypeScript.isToken(node)
   lazy val isClassDeclaration = TypeScript.isClassDeclaration(node)

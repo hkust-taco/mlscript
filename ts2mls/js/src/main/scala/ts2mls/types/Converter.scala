@@ -17,7 +17,8 @@ object Converter {
     "true" -> "true",
     "false" -> "false",
     "symbol" -> "Symbol",
-    "error" -> "error"
+    "error" -> "error",
+    "bigint" -> "Num"
   )
 
   def escapeIdent(name: String) = {

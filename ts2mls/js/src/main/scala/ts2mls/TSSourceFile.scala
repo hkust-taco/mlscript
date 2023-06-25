@@ -13,6 +13,8 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
   private val reExportList = new ListBuffer[TSReExport]()
   private val resolvedPath = sf.resolvedPath.toString()
 
+  val referencedFiles = sf.referencedFiles.map((x: js.Dynamic) => x.fileName.toString())
+
   // parse import
   TypeScript.forEachChild(sf, (node: js.Dynamic) => {
     val nodeObject = TSNodeObject(node)
@@ -35,18 +37,12 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
     }
   })
 
-  // handle parents
-  TypeScript.forEachChild(sf, (node: js.Dynamic) => {
-    val nodeObject = TSNodeObject(node)
-    if (!nodeObject.isToken) {
-      if (!nodeObject.symbol.isUndefined) // for functions/classes/interfaces
+  def postProcess: Unit = // handle parents
+    TypeScript.forEachChild(sf, (node: js.Dynamic) => {
+      val nodeObject = TSNodeObject(node)
+      if (!nodeObject.isToken && !nodeObject.symbol.isUndefined)
         handleParents(nodeObject, nodeObject.symbol.escapedName)(global)
-      else if (!nodeObject.declarationList.isUndefined) { // for variables
-        val decNode = nodeObject.declarationList.declaration
-        handleParents(decNode, decNode.symbol.escapedName)(global)
-      }
-    }
-  })
+    })
 
   // check export
   TypeScript.forEachChild(sf, (node: js.Dynamic) => {
@@ -132,9 +128,19 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
   private def getSymbolFullname(sym: TSSymbolObject)(implicit ns: TSNamespace): String =
     if (!sym.parent.isUndefined && sym.parent.declaration.isSourceFile)
       importList.resolveTypeAlias(sym.parent.declaration.resolvedPath, sym.escapedName)
-    else if (sym.parent.isUndefined || !sym.parent.declaration.isNamespace) {
+    else if (!sym.parent.isUndefined && sym.parent.isMerged && sym.parent.escapedName === "_") {
+      def findDecFile(node: TSNodeObject): String =
+        if (node.parent.isUndefined) ""
+        else if (node.parent.isSourceFile) node.parent.resolvedPath
+        else findDecFile(node.parent)
+      val filename = findDecFile(sym.declaration)
+      if (filename === resolvedPath) sym.escapedName
+      else importList.resolveTypeAlias(filename, sym.escapedName)
+    }
+    else if (sym.parent.isUndefined) {
       val name = sym.escapedName
       if (name.contains("\"")) TSPathResolver.basename(name.substring(1, name.length() - 1))
+      else if (name === "_") "" // for UMD
       else name
     }
     else {
@@ -142,7 +148,8 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
         if (symName.startsWith(nsName + ".")) symName.substring(nsName.length() + 1)
         else if (nsName.lastIndexOf('.') > -1) simplify(symName, nsName.substring(0, nsName.lastIndexOf('.')))
         else symName
-      simplify(s"${getSymbolFullname(sym.parent)}.${sym.escapedName}", ns.toString())
+      val p = getSymbolFullname(sym.parent)
+      simplify(s"${if (p.isEmpty()) "" else s"$p."}${sym.escapedName}", ns.toString())
     }
 
   private def markUnsupported(node: TSNodeObject): TSUnsupportedType =
@@ -366,30 +373,43 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
 
   private def handleParents(node: TSNodeObject, name: String)(implicit ns: TSNamespace): Unit =
     if (node.isClassDeclaration) ns.get(name) match {
-      case TSClassType(name, members, statics, typeVars, _, constructor) =>
-        val cls = TSClassType(name, members, statics, typeVars, getHeritageList(node, members.keySet), constructor)
-        ns.put(name, if (cls.unsupported) markUnsupported(node) else cls, ns.exported(name), true)
+      case TSClassType(_, members, statics, typeVars, _, constructor) =>
+        val list = getHeritageList(node, members.keySet)
+        if (!list.isEmpty) {
+          val cls = TSClassType(name, members, statics, typeVars, list, constructor)
+          ns.put(name, if (cls.unsupported) markUnsupported(node) else cls, ns.exported(name), true)
+        }
       case t if (t.unsupported) => () // ignore types that have been marked as unsupported.
       case _ => throw new AssertionError(s"$name is not a class")
     }
     else if (node.isInterfaceDeclaration) ns.get(name) match {
-      case TSInterfaceType(name, members, typeVars, parents) =>
-        val itf = TSInterfaceType(name, members, typeVars, getHeritageList(node, members.keySet))
-        ns.put(name, if (itf.unsupported) markUnsupported(node) else itf, ns.exported(name), true)
+      case TSInterfaceType(_, members, typeVars, parents) =>
+        val list = getHeritageList(node, members.keySet)
+        if (!list.isEmpty) {
+          val itf = TSInterfaceType(name, members, typeVars, getHeritageList(node, members.keySet))
+          ns.put(name, if (itf.unsupported) markUnsupported(node) else itf, ns.exported(name), true)
+        }
       case t if (t.unsupported) => () // ignore types that have been marked as unsupported.
       case _ => throw new AssertionError(s"$name is not an interface")
     }
     else if (node.isNamespace) {
-      val sub = ns.derive(node.symbol.escapedName, false)
-      node.locals.foreach((sym) => {
-        val node = sym.declaration
-        val name = sym.escapedName
-        if (!node.isToken) handleParents(node, name)(sub)
-      })
+      val name = node.symbol.escapedName
+
+      if (!name.contains("\"")) {
+        val sub = ns.derive(name, false)
+        node.locals.foreach((sym) => {
+          val node = sym.declaration
+          val name = sym.escapedName
+          if (!node.isToken) handleParents(node, name)(sub)
+        })
+      }
     }
 
-  private def parseNamespace(node: TSNodeObject)(implicit ns: TSNamespace): Unit =
-    parseNamespaceLocals(node.locals, node.exports)(ns.derive(node.symbol.escapedName, node.isExported))
+  private def parseNamespace(node: TSNodeObject)(implicit ns: TSNamespace): Unit = {
+    val name = node.symbol.escapedName
+    parseNamespaceLocals(node.locals, node.exports)(if (name.contains("\"")) ns else ns.derive(name, node.isExported))
+  }
+    
 }
 
 object TSSourceFile {

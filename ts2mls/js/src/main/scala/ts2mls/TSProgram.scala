@@ -22,11 +22,11 @@ class TSProgram(file: FileInfo, uesTopLevelModule: Boolean, tsconfig: Option[Str
 
   import TSPathResolver.{basename, extname, isLocal, resolve, dirname, relative, normalize}
 
-  def generate: Boolean = generate(file)(Nil)
+  def generate: Boolean = generate(file, None)(Nil)
 
-  private def generate(file: FileInfo)(implicit stack: List[String]): Boolean = {
+  private def generate(file: FileInfo, ns: Option[TSNamespace])(implicit stack: List[String]): Boolean = {
     val filename = file.resolve
-    val globalNamespace = TSNamespace()
+    val globalNamespace = ns.getOrElse(TSNamespace(!uesTopLevelModule))
     val sfObj = program.getSourceFileByPath(filename)
     val sourceFile =
       if (IsUndefined(sfObj)) throw new Exception(s"can not load source file $filename.")
@@ -46,7 +46,7 @@ class TSProgram(file: FileInfo, uesTopLevelModule: Boolean, tsconfig: Option[Str
       })
 
     otherList.foreach(imp => {
-      generate(imp)(filename :: stack)
+      generate(imp, None)(filename :: stack)
     })
 
     var writer = JSWriter(s"${file.workDir}/${file.interfaceFilename}")
@@ -60,9 +60,11 @@ class TSProgram(file: FileInfo, uesTopLevelModule: Boolean, tsconfig: Option[Str
       }
     })
     cycleList.foreach(imp => {
-      writer.writeln(s"declare module ${Converter.escapeIdent(imp.moduleName)} {")
-      cache(imp.resolve).generate(writer, "  ")
-      writer.writeln("}")
+      if (ns.isEmpty || stack.indexOf(filename) > 0) {
+        writer.writeln(s"declare module ${Converter.escapeIdent(imp.moduleName)} {")
+        cache(imp.resolve).generate(writer, "  ")
+        writer.writeln("}")
+      }
     })
 
     reExportList.foreach {
@@ -79,8 +81,16 @@ class TSProgram(file: FileInfo, uesTopLevelModule: Boolean, tsconfig: Option[Str
         }
     }
 
-    generate(writer, globalNamespace, moduleName)
-    writer.close()
+    sourceFile.referencedFiles.forEach((s: js.Dynamic) => {
+      generate(file.`import`(s.toString()), Some(globalNamespace))(filename :: stack)
+    })
+
+    sourceFile.postProcess
+    if (ns.isEmpty) {
+      generate(writer, globalNamespace, moduleName)
+      writer.close()
+    }
+    else false
   }
 
   private def generate(writer: JSWriter, globalNamespace: TSNamespace, moduleName: String): Unit =

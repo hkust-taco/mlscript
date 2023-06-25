@@ -4,7 +4,7 @@ import scala.collection.mutable.{HashMap, ListBuffer}
 import types._
 import mlscript.utils._
 
-class TSNamespace(name: String, parent: Option[TSNamespace]) {
+class TSNamespace(name: String, parent: Option[TSNamespace], allowReservedTypes: Boolean) {
   // name -> (namespace/type, export)
   private val subSpace = HashMap[String, (TSNamespace, Boolean)]()
   private val members = HashMap[String, (TSType, Boolean)]()
@@ -25,7 +25,7 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
   def derive(name: String, exported: Boolean): TSNamespace =
     if (subSpace.contains(name)) subSpace(name)._1 // if the namespace has appeared in another file, just return it
     else {
-      val sub = new TSNamespace(name, Some(this)) // not a top level module!
+      val sub = new TSNamespace(name, Some(this), allowReservedTypes) // not a top level module!
       subSpace.put(name, (sub, exported))
       order += Left(name)
       sub
@@ -37,6 +37,18 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
       members.put(name, (tp, exported))
     }
     else if (overrided) members.update(name, (tp, exported))
+    else (members(name), tp) match {
+      case ((cls: TSClassType, exp), itf: TSInterfaceType) =>
+        members.update(name, (TSClassType(
+          name, cls.members ++ itf.members, cls.statics, cls.typeVars,
+          cls.parents, cls.constructor
+        ), exported || exp))
+      case ((itf1: TSInterfaceType, exp), itf2: TSInterfaceType) =>
+        members.update(name, (TSInterfaceType(
+          name, itf1.members ++ itf2.members, itf1.typeVars, itf1.parents
+        ), exported || exp))
+      case _ => ()
+    }
 
   def `export`(name: String): Unit =
     if (members.contains(name))
@@ -54,7 +66,7 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
 
   def get(name: String): TSType =
     if (members.contains(name)) members(name)._1
-    else parent.fold(throw new Exception(s"member $name not found."))(p => p.get(name))
+    else parent.fold[TSType](TSReferenceType(name))(p => p.get(name)) // default in es5
 
   def get(names: List[String]): TSType = names match {
     case head :: Nil => get(head)
@@ -84,6 +96,13 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
 
 
   private def expStr(exp: Boolean) = if (exp) "export " else ""
+  private val typer =
+    new mlscript.Typer(
+      dbg = false,
+      verbose = false,
+      explainErrors = false,
+      newDefs = true
+    )
 
   private def generateInOrder(order: List[Either[String, String]], writer: JSWriter, indent: String) =
     order.toList.foreach((p) => p match {
@@ -93,7 +112,9 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
         ss._1.generate(writer, indent + "  ")
         writer.writeln(s"$indent}")
       case Right(name) =>
-        if (subSpace.contains(name)) writer.writeln(s"$indent// WARNING: namespace $name has been declared")
+        if (typer.reservedTypeNames.contains(name) && !allowReservedTypes)
+          writer.writeln(s"$indent// WARNING: type $name is reserved")
+        else if (subSpace.contains(name)) writer.writeln(s"$indent// WARNING: namespace $name has been declared")
         else {
           val (mem, exp) = members(name)
           mem match {
@@ -123,7 +144,7 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
         }
         generateInOrder(order.toList.filter{
           case Left(value) => value =/= name
-          case Right(value) => value =/= name
+          case Right(value) => value =/= name && value =/= itf
         }, writer, indent)
         ns.generate(writer, indent)
       case _ => generateInOrder(order.toList, writer, indent)
@@ -139,5 +160,5 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
 }
 
 object TSNamespace {
-  def apply() = new TSNamespace("", None) // global namespace
+  def apply(allowReservedTypes: Boolean) = new TSNamespace("", None, allowReservedTypes) // global namespace
 }
