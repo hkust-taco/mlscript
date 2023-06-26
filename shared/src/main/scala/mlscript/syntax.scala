@@ -12,7 +12,7 @@ final case class Def(rec: Bool, nme: Var, rhs: Term \/ PolyType, isByname: Bool)
   val body: Located = rhs.fold(identity, identity)
 }
 
-case class AdtInfo(alsName: TypeName, paramPos: Ls[Int])
+final case class AdtInfo(alsName: TypeName, paramPos: Ls[Int])
 
 final case class TypeDef(
   kind: TypeDefKind,

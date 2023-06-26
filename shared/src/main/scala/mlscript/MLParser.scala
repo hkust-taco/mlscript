@@ -353,6 +353,10 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
           (Set(tparam), appType)
       }
 
+  def adtTyForall[p: P]: P[(Set[TypeName], Type)] = P( (kw("forall") ~/ tyVar.rep ~ "." ~ adtTyFun).map {
+    case (vars, ty) => (Set.empty[TypeName], PolyType(vars.map(R(_)).toList, ty._2))
+  } | adtTyFun )
+
   def adtTyFun[p: P]: P[(Set[TypeName], Type)] =
     (adtTyExpr | ("(" ~/ adtTyExpr ~ ")")).rep(1, "->")
       .map {
@@ -370,7 +374,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     * Can return TypeName or a Tuple or a Function
     */
   def adtTyAlias[p: P]: P[(Set[TypeName], Type)] =
-    (adtTyFun | ("(" ~/ adtTyFun ~ ")")).rep(1, "*")
+    (adtTyForall | ("(" ~/ adtTyForall ~ ")")).rep(1, "*")
       .map {
         case Seq(t) => t
         case parts =>
@@ -471,12 +475,12 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
       case Cls => {
         tyDef.body match {
           case Record(Nil) =>
-            val funAppTy = PolyType(alsParams, alsTy)
+            val funAppTy = PolyType(alsParams.map(L.apply), alsTy)
             val fun = Def(false, Var(tyDef.nme.name), R(funAppTy), true).withLocOf(tyDef.nme)
             S(fun)
           case Record(fields) =>
             val funArg = Tuple(fields.map(tup => N -> tup._2))
-            val funTy = PolyType(alsParams, Function(funArg, alsTy))
+            val funTy = PolyType(alsParams.map(L.apply), Function(funArg, alsTy))
             val fun = Def(false, Var(tyDef.nme.name), R(funTy), true).withLocOf(tyDef.nme)
             S(fun)
           case _ => N

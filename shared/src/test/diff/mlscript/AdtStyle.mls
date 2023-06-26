@@ -49,11 +49,14 @@ typeadt Stmt = Skip | Assign of string * Exp
 //│ Assign: (string, Exp,) -> Stmt
 //│       = <missing implementation>
 
-typeadt FCPoly = ('a -> 'a) List
+typeadt 'a Poly = ('a -> 'a) List
+//│ Defined type alias Poly[='a]
+
+typeadt FCPoly = (forall 'a. 'a -> 'a) List
 //│ ╔══[ERROR] type identifier not found: 'a
-//│ ║  l.52: 	typeadt FCPoly = ('a -> 'a) List
-//│ ╙──      	                  ^^
+//│ ║  l.55: 	typeadt FCPoly = (forall 'a. 'a -> 'a) List
+//│ ╙──      	                             ^^
 //│ ╔══[ERROR] type identifier not found: 'a
-//│ ║  l.52: 	typeadt FCPoly = ('a -> 'a) List
-//│ ╙──      	                        ^^
+//│ ║  l.55: 	typeadt FCPoly = (forall 'a. 'a -> 'a) List
+//│ ╙──      	                                   ^^
 //│ Defined type alias FCPoly
