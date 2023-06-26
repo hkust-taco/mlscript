@@ -67,6 +67,12 @@ class TSImportList {
       else singleList.addOne((fullPath, imp))
   }
 
+  def remove(fullPath: String): Unit = {
+    singleList.remove(fullPath)
+    fullList.remove(fullPath)
+    ()
+  }
+
   def resolveTypeAlias(modulePath: String, name: String): String = {
     val singleAlias =
       if (singleList.contains(modulePath)) singleList(modulePath).resolveTypeAlias(name)
@@ -77,7 +83,7 @@ class TSImportList {
         val fullAlias =
           if (fullList.contains(modulePath)) fullList(modulePath).resolveTypeAlias(name)
           else None
-        fullAlias.getOrElse(throw new AssertionError(s"unresolved imported name $name at $modulePath."))
+        fullAlias.getOrElse(name) // cjs modules have no prefix
     }
   }
 

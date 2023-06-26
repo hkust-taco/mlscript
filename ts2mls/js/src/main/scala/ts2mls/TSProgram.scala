@@ -26,17 +26,16 @@ class TSProgram(file: FileInfo, uesTopLevelModule: Boolean, tsconfig: Option[Str
 
   private def generate(file: FileInfo, ns: Option[TSNamespace])(implicit stack: List[String]): Boolean = {
     val filename = file.resolve
+    val moduleName = file.moduleName
     val globalNamespace = ns.getOrElse(TSNamespace(!uesTopLevelModule))
     val sfObj = program.getSourceFileByPath(filename)
     val sourceFile =
       if (IsUndefined(sfObj)) throw new Exception(s"can not load source file $filename.")
-      else TSSourceFile(sfObj, globalNamespace)
+      else TSSourceFile(sfObj, globalNamespace, moduleName)
     val importList = sourceFile.getImportList
     val reExportList = sourceFile.getReExportList
     cache.addOne(filename, globalNamespace)
     val relatedPath = relative(file.workDir, dirname(filename))
-
-    val moduleName = file.moduleName
 
     val (cycleList, otherList) =
       importList.partitionMap(imp => {
@@ -82,19 +81,19 @@ class TSProgram(file: FileInfo, uesTopLevelModule: Boolean, tsconfig: Option[Str
     }
 
     sourceFile.referencedFiles.forEach((s: js.Dynamic) => {
-      generate(file.`import`(s.toString()), Some(globalNamespace))(filename :: stack)
+      generate(file.`import`(s.toString()), sourceFile.getUMDModule)(filename :: stack)
     })
 
     sourceFile.postProcess
     if (ns.isEmpty) {
-      generate(writer, globalNamespace, moduleName)
+      generate(writer, globalNamespace, moduleName, globalNamespace.isCommonJS)
       writer.close()
     }
     else false
   }
 
-  private def generate(writer: JSWriter, globalNamespace: TSNamespace, moduleName: String): Unit =
-    if (!uesTopLevelModule) globalNamespace.generate(writer, "") // will be imported directly and has no dependency
+  private def generate(writer: JSWriter, globalNamespace: TSNamespace, moduleName: String, commonJS: Boolean): Unit =
+    if (!uesTopLevelModule || commonJS) globalNamespace.generate(writer, "")
     else {
       writer.writeln(s"export declare module ${Converter.escapeIdent(moduleName)} {")
       globalNamespace.generate(writer, "  ")

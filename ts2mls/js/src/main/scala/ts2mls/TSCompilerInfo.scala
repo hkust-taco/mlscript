@@ -71,6 +71,7 @@ object TypeScript {
   def isExportDeclaration(node: js.Dynamic) = ts.isExportDeclaration(node)
   def isImportEqualsDeclaration(node: js.Dynamic) = ts.isImportEqualsDeclaration(node)
   def isExportAssignment(node: js.Dynamic) = ts.isExportAssignment(node)
+  def isNamespaceExportDeclaration(node: js.Dynamic) = ts.isNamespaceExportDeclaration(node)
 
   def isArrayTypeNode(node: js.Dynamic) = ts.isArrayTypeNode(node)
   def isTupleTypeNode(node: js.Dynamic) = ts.isTupleTypeNode(node)
@@ -182,6 +183,7 @@ class TSNodeObject(node: js.Dynamic)(implicit checker: TSTypeChecker) extends TS
   lazy val isSourceFile = TypeScript.isSourceFile(node)
   lazy val isExportDeclaration = TypeScript.isExportDeclaration(node)
   lazy val isExportAssignment = TypeScript.isExportAssignment(node)
+  lazy val exportedAsNamespace = TypeScript.isNamespaceExportDeclaration(node)
 
   // if a node has an initializer or is marked by a question notation it is optional
   // e.g. `function f(x?: int) {}`, we can use it directly: `f()`.

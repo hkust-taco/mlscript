@@ -7,13 +7,16 @@ import mlscript.utils._
 import scala.collection.mutable.{ListBuffer, HashMap}
 import ts2mls.TSPathResolver
 
-class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSTypeChecker, config: js.Dynamic) {
+class TSSourceFile(sf: js.Dynamic, global: TSNamespace, topName: String)(implicit checker: TSTypeChecker, config: js.Dynamic) {
   private val lineHelper = new TSLineStartsHelper(sf.getLineStarts())
   private val importList = TSImportList()
   private val reExportList = new ListBuffer[TSReExport]()
   private val resolvedPath = sf.resolvedPath.toString()
+  private var umdModuleName: Option[String] = None
 
   val referencedFiles = sf.referencedFiles.map((x: js.Dynamic) => x.fileName.toString())
+  def getUMDModule: Option[TSNamespace] =
+    umdModuleName.fold[Option[TSNamespace] ](Some(global))(name => Some(global.derive(name, false)))
 
   // parse import
   TypeScript.forEachChild(sf, (node: js.Dynamic) => {
@@ -37,13 +40,6 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
     }
   })
 
-  def postProcess: Unit = // handle parents
-    TypeScript.forEachChild(sf, (node: js.Dynamic) => {
-      val nodeObject = TSNodeObject(node)
-      if (!nodeObject.isToken && !nodeObject.symbol.isUndefined)
-        handleParents(nodeObject, nodeObject.symbol.escapedName)(global)
-    })
-
   // check export
   TypeScript.forEachChild(sf, (node: js.Dynamic) => {
     val nodeObject = TSNodeObject(node)
@@ -55,9 +51,18 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
     }
     else if (nodeObject.isExportAssignment) {
       val name = nodeObject.idExpression.escapedText
-      global.`export`(name)
+      global.renameExport(name, topName)
     }
+    else if (nodeObject.exportedAsNamespace)
+      umdModuleName = Some(nodeObject.symbol.escapedName)
   })
+
+  def postProcess: Unit = // handle parents
+    TypeScript.forEachChild(sf, (node: js.Dynamic) => {
+      val nodeObject = TSNodeObject(node)
+      if (!nodeObject.isToken && !nodeObject.symbol.isUndefined)
+        handleParents(nodeObject, nodeObject.symbol.escapedName)(global)
+    })
 
   def getImportList: List[TSImport] = importList.getFilelist
   def getReExportList: List[TSReExport] = reExportList.toList
@@ -415,12 +420,16 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
 
   private def parseNamespace(node: TSNodeObject)(implicit ns: TSNamespace): Unit = {
     val name = node.symbol.escapedName
-    parseNamespaceLocals(node.locals, node.exports)(if (name.contains("\"")) ns else ns.derive(name, node.isExported))
+    if (name.contains("\"")) { // Ambient Modules
+      val fullname = TypeScript.resolveModuleName(name.substring(1, name.length() - 1), resolvedPath, config)
+      importList.remove(fullname)
+      parseNamespaceLocals(node.locals, node.exports)
+    }
+    else parseNamespaceLocals(node.locals, node.exports)(ns.derive(name, node.isExported))
   }
-    
 }
 
 object TSSourceFile {
-  def apply(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSTypeChecker, config: js.Dynamic) =
-    new TSSourceFile(sf, global)
+  def apply(sf: js.Dynamic, global: TSNamespace, topName: String)(implicit checker: TSTypeChecker, config: js.Dynamic) =
+    new TSSourceFile(sf, global, topName)
 }

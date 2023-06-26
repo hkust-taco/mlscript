@@ -8,14 +8,13 @@ class TSNamespace(name: String, parent: Option[TSNamespace], allowReservedTypes:
   // name -> (namespace/type, export)
   private val subSpace = HashMap[String, (TSNamespace, Boolean)]()
   private val members = HashMap[String, (TSType, Boolean)]()
-  private lazy val umd =
-    members.keys.find(name => subSpace.contains(name)).fold[Option[String]](None)(
-      name => Option.when(members(name)._2)(name)
-    )
+  private val cjsExport = HashMap[String, String]()
 
   // write down the order of members
   // easier to check the output one by one
   private val order = ListBuffer.empty[Either[String, String]]
+
+  def isCommonJS = !cjsExport.isEmpty
 
   override def toString(): String = parent match {
     case Some(parent) if !parent.toString().isEmpty() => s"${parent.toString()}.$name"
@@ -55,6 +54,17 @@ class TSNamespace(name: String, parent: Option[TSNamespace], allowReservedTypes:
       members.update(name, (members(name)._1, true))
     else if (subSpace.contains(name))
       subSpace.update(name, (subSpace(name)._1, true))
+
+  def renameExport(from: String, to: String): Unit =
+    if (members.contains(from)) {
+      cjsExport.put(from, to)
+      members.update(from, (members(from)._1, true))
+    }
+    else if (subSpace.contains(from)) {
+      cjsExport.put(from, to)
+      subSpace.update(from, (subSpace(from)._1, true))
+    }
+    else throw new Exception(s"member $from not found.")
 
   def exported(name: String): Boolean =
     if (members.contains(name)) members(name)._2
@@ -104,59 +114,66 @@ class TSNamespace(name: String, parent: Option[TSNamespace], allowReservedTypes:
       newDefs = true
     )
 
-  private def generateInOrder(order: List[Either[String, String]], writer: JSWriter, indent: String) =
-    order.toList.foreach((p) => p match {
-      case Left(subName) =>
-        val ss = subSpace(subName)
-        writer.writeln(s"${indent}${expStr(ss._2)}declare module ${Converter.escapeIdent(subName)} {")
-        ss._1.generate(writer, indent + "  ")
-        writer.writeln(s"$indent}")
-      case Right(name) =>
-        if (typer.reservedTypeNames.contains(name) && !allowReservedTypes)
-          writer.writeln(s"$indent// WARNING: type $name is reserved")
-        else if (subSpace.contains(name)) writer.writeln(s"$indent// WARNING: namespace $name has been declared")
-        else {
-          val (mem, exp) = members(name)
-          mem match {
-            case inter: TSIntersectionType => // overloaded functions
-              writer.writeln(Converter.generateFunDeclaration(inter, name, exp)(indent))
-            case f: TSFunctionType =>
-              writer.writeln(Converter.generateFunDeclaration(f, name, exp)(indent))
-            case overload: TSIgnoredOverload =>
-              writer.writeln(Converter.generateFunDeclaration(overload, name, exp)(indent))
-            case _: TSClassType => writer.writeln(Converter.convert(mem, exp)(indent))
-            case TSInterfaceType(name, _, _, _, _) if (name =/= "") =>
-              writer.writeln(Converter.convert(mem, exp)(indent))
-            case _: TSTypeAlias => writer.writeln(Converter.convert(mem, exp)(indent))
-            case TSRenamedType(name, original) =>
-              writer.writeln(s"${indent}${expStr(exp)}val ${Converter.escapeIdent(name)} = ${Converter.convert(original)("")}")
-            case _ => writer.writeln(s"${indent}${expStr(exp)}val ${Converter.escapeIdent(name)}: ${Converter.convert(mem)("")}")
-          }
-        }
-    })
+  private def generateNS(name: String, writer: JSWriter, indent: String): Unit = {
+    val ss = subSpace(name)
+    val realName = cjsExport.getOrElse(name, name)
+    val exp = expStr(realName =/= name || ss._2)
+    writer.writeln(s"${indent}${exp}declare module ${Converter.escapeIdent(realName)} {")
+    ss._1.generate(writer, indent + "  ")
+    writer.writeln(s"$indent}")
+  }
 
-  private def generateUMD(name: String, writer: JSWriter, indent: String)(implicit ns: TSNamespace) = members(name)._1 match {
-    case TSReferenceType(realType) => ns.get(realType) match {
-      case TSInterfaceType(itf, members, _, _, _) =>
-        members.foreach{
-          case (name, TSMemberType(tp, _)) =>
-              writer.writeln(s"${indent}export val ${Converter.escapeIdent(name)}: ${Converter.convert(tp, false)("")}")
-        }
-        generateInOrder(order.toList.filter{
-          case Left(value) => value =/= name
-          case Right(value) => value =/= name && value =/= itf
-        }, writer, indent)
-        ns.generate(writer, indent)
-      case _ => generateInOrder(order.toList, writer, indent)
+  private def merge(name: String, writer: JSWriter, indent: String): Unit = {
+    (members(name), subSpace(name)._1) match {
+      case ((TSReferenceType(realType), exp), ns) => ns.get(realType) match {
+        case TSInterfaceType(itf, members, _, _, _) =>
+          ns.subSpace.mapValuesInPlace {
+            case (_, (ns, _)) => (ns, false)
+          }
+          ns.members.mapValuesInPlace {
+            case (_, (mem, _)) => (mem, false)
+          }
+          members.foreach{
+            case (name, TSMemberType(tp, _)) =>
+              ns.put(name, tp, true, true)
+          }
+        case _ => () // if merging is not supported, do nothing
+      }
+      case _ => () // if merging is not supported, do nothing
     }
-    case _ => generateInOrder(order.toList, writer, indent)
+    generateNS(name, writer, indent)
   }
 
   def generate(writer: JSWriter, indent: String): Unit =
-    umd match {
-      case Some(name) => generateUMD(name, writer, indent)(subSpace(name)._1)
-      case _ => generateInOrder(order.toList, writer, indent)
-    }
+    order.toList.foreach((p) => p match {
+      case Left(subName) if (!members.contains(subName)) =>
+        generateNS(subName, writer, indent)
+      case Right(name) =>
+        if (typer.reservedTypeNames.contains(name) && !allowReservedTypes)
+          writer.writeln(s"$indent// WARNING: type $name is reserved")
+        else if (subSpace.contains(name))
+          merge(name, writer, indent)
+        else {
+          val (mem, exp) = members(name)
+          val realName = cjsExport.getOrElse(name, name)
+          mem match {
+            case inter: TSIntersectionType => // overloaded functions
+              writer.writeln(Converter.generateFunDeclaration(inter, realName, !cjsExport.isEmpty, exp)(indent))
+            case f: TSFunctionType =>
+              writer.writeln(Converter.generateFunDeclaration(f, realName, !cjsExport.isEmpty, exp)(indent))
+            case overload: TSIgnoredOverload =>
+              writer.writeln(Converter.generateFunDeclaration(overload, realName, !cjsExport.isEmpty, exp)(indent))
+            case _: TSClassType => writer.writeln(Converter.convert(mem, exp)(indent))
+            case TSInterfaceType(name, _, _, _, _) if (name =/= "") => // TODO: rename?
+              writer.writeln(Converter.convert(mem, exp)(indent))
+            case _: TSTypeAlias => writer.writeln(Converter.convert(mem, exp)(indent))
+            case TSRenamedType(name, original) =>
+              writer.writeln(s"${indent}${expStr(exp)}val ${Converter.escapeIdent(realName)} = ${Converter.convert(original)("")}")
+            case _ => writer.writeln(s"${indent}${expStr(exp)}val ${Converter.escapeIdent(realName)}: ${Converter.convert(mem)("")}")
+          }
+        }
+      case _ => ()
+    })
 }
 
 object TSNamespace {

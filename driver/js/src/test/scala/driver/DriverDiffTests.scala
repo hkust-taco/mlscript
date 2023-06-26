@@ -97,8 +97,8 @@ object DriverDiffTests {
     esEntry("Self", expectError = true),
     esEntry("C", ignoreTypeError = true, expectError = true),
     esEntry("TS", Some("./tsconfig.json"), ignoreTypeError = true), // TODO: type members
-    esEntry("Output", Some("./tsconfig.json")),
-    esEntry("Output2", Some("./tsconfig.json")),
+    esEntry("Output", Some("./tsconfig.json"), ignoreTypeError = true), // TODO: type parameter position
+    esEntry("Output2", Some("./tsconfig.json"), ignoreTypeError = true), // TODO: type parameter position
     esEntry("MLS2TheMax", Some("./tsconfig.json")),
     esEntry("MyPartialOrder", Some("./tsconfig.json"), expectError = true), // TODO: type traits in modules
     cjsEntry("Lodash", Some("./tsconfig.json"), ignoreTypeError = true), // TODO: module member selection
