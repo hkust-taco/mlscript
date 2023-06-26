@@ -36,11 +36,8 @@ object DriverDiffTests {
   // but we can ban it during CI
   private val forceCompiling = sys.env.get("CI").isEmpty
 
-  private val esDiffPath = "driver/js/src/test/esprojects/"
-  private val cjsDiffPath = "driver/js/src/test/cjsprojects/"
-  private val esJsPath = s"${esDiffPath}js/"
-  private val cjsJsPath = s"${cjsDiffPath}js/"
-  private val outputPath = s"${esDiffPath}../output/"
+  private val diffPath = "driver/js/src/test/"
+  private val outputPath = s"${diffPath}output/"
   private val ts2mlsPath = "ts2mls/js/src/test/diff"
 
   private case class TestOption(
@@ -55,41 +52,41 @@ object DriverDiffTests {
     expectError: Boolean
   )
 
+  private def driverEntry(
+    entryModule: String,
+    tsconfig: Option[String],
+    workDir: String,
+    jsPath: String,
+    ignoreTypeError: Boolean,
+    expectError: Boolean,
+    commonJS: Boolean
+  ) = TestOption(
+      s"./mlscript/${entryModule}.mls",
+      workDir,
+      jsPath,
+      ".interfaces",
+      commonJS,
+      Some((s"${jsPath}mlscript/${entryModule}.js", s"${outputPath}${entryModule}.check")),
+      tsconfig,
+      ignoreTypeError,
+      expectError
+    )
+
   private def cjsEntry(
     entryModule: String,
     tsconfig: Option[String] = None,
     ignoreTypeError: Boolean = false,
     expectError: Boolean = false
-  ) =
-    TestOption(
-      s"./mlscript/${entryModule}.mls",
-      cjsDiffPath,
-      cjsJsPath,
-      ".interfaces",
-      true,
-      Some((s"${cjsJsPath}mlscript/${entryModule}.js", s"${outputPath}${entryModule}.check")),
-      tsconfig,
-      ignoreTypeError,
-      expectError
-    )
+  ) = driverEntry(entryModule, tsconfig, s"${diffPath}cjsprojects/",
+    s"${diffPath}cjsprojects/js/", ignoreTypeError, expectError, true)
 
   private def esEntry(
     entryModule: String,
     tsconfig: Option[String] = None,
     ignoreTypeError: Boolean = false,
     expectError: Boolean = false
-  ) =
-    TestOption(
-      s"./mlscript/${entryModule}.mls",
-      esDiffPath,
-      esJsPath,
-      ".interfaces",
-      false,
-      Some((s"${esJsPath}mlscript/${entryModule}.js", s"${outputPath}${entryModule}.check")),
-      tsconfig,
-      ignoreTypeError,
-      expectError
-    )
+  ) = driverEntry(entryModule, tsconfig, s"${diffPath}esprojects/",
+    s"${diffPath}esprojects/js/", ignoreTypeError, expectError, false)
 
   private def ts2mlsEntry(entryModule: String, ignoreTypeError: Boolean = false, expectError: Boolean = false) =
     TestOption(s"./${entryModule}.mlsi", ts2mlsPath, "", ".", false, None, None, ignoreTypeError, expectError)

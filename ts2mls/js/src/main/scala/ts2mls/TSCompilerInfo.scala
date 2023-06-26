@@ -6,7 +6,6 @@ import js.DynamicImplicits._
 import js.JSConverters._
 import ts2mls.types._
 import mlscript.utils._
-import ts2mls.TSPathResolver
 
 object TypeScript {
   private def load(moduleName: String) = try g.require(moduleName) catch {

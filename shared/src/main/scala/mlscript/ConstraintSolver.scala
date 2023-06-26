@@ -34,6 +34,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     val info = ctx.tyDefs2.getOrElse(clsNme, die/*TODO*/)
     
     if (info.isComputing) {
+
       L(ErrorReport(
         msg"${info.decl.kind.str.capitalize} `${info.decl.name}` is not supported yet." -> fld.toLoc :: Nil))
       

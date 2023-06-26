@@ -13,7 +13,7 @@ final case class FileInfo(
 ) {
   import TSPathResolver.{normalize, isLocal, dirname, basename, extname}
 
-  val relatedPath: Option[String] = // related path (related to work dir, or none if it is in node_modules)
+  val relatedPath: Option[String] =
     if (isLocal(localFilename)) Some(normalize(dirname(localFilename)))
     else None
 
@@ -55,7 +55,7 @@ final case class FileInfo(
     if (isLocal(path))
       relatedPath match {
         case Some(value) =>
-          if (path.endsWith(".mls") || path.endsWith(".mlsi"))
+          if (TSPathResolver.isMLScirpt(path))
             FileInfo(workDir, s"./${normalize(s"$value/$path")}", interfaceDir, Some(resolve))
           else {
             val res = TypeScript.resolveModuleName(s"./${dirname(path)}/${basename(path)}", resolve, config)
@@ -70,8 +70,10 @@ final case class FileInfo(
 }
 
 object FileInfo {
-  def importPath(filename: String): String =
-    if (filename.endsWith(".mls") || filename.endsWith(".ts"))
-      filename.replace(TSPathResolver.extname(filename), ".mlsi")
+  def importPath(filename: String): String = {
+    val ext = TSPathResolver.extname(filename)
+    if (!ext.isEmpty())
+      filename.replace(ext, ".mlsi")
     else filename + ".mlsi"
+  }
 }
