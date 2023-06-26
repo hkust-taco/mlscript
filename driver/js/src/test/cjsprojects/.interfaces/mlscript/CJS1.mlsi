@@ -1,0 +1,4 @@
+import "./CJS2.mlsi"
+declare module CJS1() {
+  unit
+}

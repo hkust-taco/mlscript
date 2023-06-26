@@ -1,0 +1,3 @@
+declare module CJS2() {
+  fun add: (x: Int, y: Int,) -> Int
+}

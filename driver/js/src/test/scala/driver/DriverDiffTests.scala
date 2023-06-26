@@ -106,6 +106,7 @@ object DriverDiffTests {
     esEntry("MyPartialOrder", Some("./tsconfig.json"), expectError = true), // TODO: type traits in modules
     cjsEntry("Lodash", Some("./tsconfig.json"), ignoreTypeError = true), // TODO: module member selection
     esEntry("Builtin"),
+    cjsEntry("CJS1"),
     ts2mlsEntry("BasicFunctions", ignoreTypeError = true),
     ts2mlsEntry("ClassMember"),
     ts2mlsEntry("Cycle1", ignoreTypeError = true),

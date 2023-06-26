@@ -911,9 +911,11 @@ final case class JSClassNewDecl(
   private val fieldsSet = collection.immutable.HashSet.from(fields)
 }
 
-final case class JSExport(moduleDecl: JSConstDecl) extends JSStmt {
-  def toSourceCode: SourceCode =
-    SourceCode(s"export ${moduleDecl.toSourceCode}")
+final case class JSExport(module: JSConstDecl \/ JSIdent) extends JSStmt {
+  def toSourceCode: SourceCode = module match {
+    case L(dec) => SourceCode(s"export ${dec.toSourceCode}")
+    case R(name) => SourceCode(s"module.exports = ${name.toSourceCode};")
+  }
 }
 
 // None: mls module, Some(true): ES module, Some(false): common JS module

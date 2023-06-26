@@ -23,7 +23,7 @@ class JSDriverBackend extends JSBackend(allowUnresolvedSymbols = false) {
     }
   }
 
-  private def generateNewDef(pgrm: Pgrm, topModuleName: Str, exported: Bool): Ls[Str] = {
+  private def generateNewDef(pgrm: Pgrm, topModuleName: Str, exported: Bool, commonJS: Bool): Ls[Str] = {
     val (typeDefs, otherStmts) = pgrm.tops.partitionMap {
       case ot: Terms => R(ot)
       case fd: NuFunDef => R(fd)
@@ -41,7 +41,10 @@ class JSDriverBackend extends JSBackend(allowUnresolvedSymbols = false) {
     val insDecl = JSConstDecl(topModuleName, JSNew(JSClassExpr(moduleDecl)))
 
     val ins =
-      if (exported) JSExport(insDecl) :: invoke :: Nil
+      if (exported) {
+        if (commonJS) insDecl :: invoke :: JSExport(R(JSIdent(topModuleName))) :: Nil
+        else JSExport(L(insDecl)) :: invoke :: Nil
+      }
       else insDecl :: invoke :: Nil
 
     SourceCode.fromStmts(polyfill.emit() ++ ins).toLines
@@ -62,7 +65,7 @@ class JSDriverBackend extends JSBackend(allowUnresolvedSymbols = false) {
     imports.flatMap (imp => {
       topLevelScope.declareValue(TSPathResolver.basename(imp.path), Some(false), false)
       translateImport(imp, commonJS).toSourceCode.toLines 
-    }) ::: generateNewDef(pgrm, topModuleName, exported)
+    }) ::: generateNewDef(pgrm, topModuleName, exported, commonJS)
   }
 }
 
