@@ -36,7 +36,6 @@ class TSNamespace(name: String, parent: Option[TSNamespace], allowReservedTypes:
       order += Right(name)
       members.put(name, (tp, exported))
     }
-    else if (overrided) members.update(name, (tp, exported))
     else (members(name), tp) match {
       case ((cls: TSClassType, exp), itf: TSInterfaceType) =>
         members.update(name, (TSClassType(
@@ -45,9 +44,10 @@ class TSNamespace(name: String, parent: Option[TSNamespace], allowReservedTypes:
         ), exported || exp))
       case ((itf1: TSInterfaceType, exp), itf2: TSInterfaceType) =>
         members.update(name, (TSInterfaceType(
-          name, itf1.members ++ itf2.members, itf1.typeVars, itf1.parents
+          name, itf1.members ++ itf2.members, itf1.typeVars, itf1.parents,
+          itf1.callSignature.fold(itf2.callSignature)(cs => Some(cs))
         ), exported || exp))
-      case _ => ()
+      case _ => if (overrided) members.update(name, (tp, exported))
     }
 
   def `export`(name: String): Unit =
@@ -125,7 +125,7 @@ class TSNamespace(name: String, parent: Option[TSNamespace], allowReservedTypes:
             case overload: TSIgnoredOverload =>
               writer.writeln(Converter.generateFunDeclaration(overload, name, exp)(indent))
             case _: TSClassType => writer.writeln(Converter.convert(mem, exp)(indent))
-            case TSInterfaceType(name, _, _, _) if (name =/= "") =>
+            case TSInterfaceType(name, _, _, _, _) if (name =/= "") =>
               writer.writeln(Converter.convert(mem, exp)(indent))
             case _: TSTypeAlias => writer.writeln(Converter.convert(mem, exp)(indent))
             case TSRenamedType(name, original) =>
@@ -137,7 +137,7 @@ class TSNamespace(name: String, parent: Option[TSNamespace], allowReservedTypes:
 
   private def generateUMD(name: String, writer: JSWriter, indent: String)(implicit ns: TSNamespace) = members(name)._1 match {
     case TSReferenceType(realType) => ns.get(realType) match {
-      case TSInterfaceType(itf, members, _, _) =>
+      case TSInterfaceType(itf, members, _, _, _) =>
         members.foreach{
           case (name, TSMemberType(tp, _)) =>
               writer.writeln(s"${indent}export val ${Converter.escapeIdent(name)}: ${Converter.convert(tp, false)("")}")

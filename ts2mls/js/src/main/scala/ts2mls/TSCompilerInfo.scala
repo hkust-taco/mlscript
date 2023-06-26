@@ -275,6 +275,7 @@ class TSTypeObject(obj: js.Dynamic)(implicit checker: TSTypeChecker) extends TSA
   private lazy val baseType = TSTypeObject(checker.getBaseType(obj))
 
   lazy val symbol = TSSymbolObject(obj.symbol)
+  lazy val aliasSymbol = TSSymbolObject(obj.aliasSymbol)
   lazy val typeArguments = TSTypeArray(checker.getTypeArguments(obj))
   lazy val intrinsicName: String =
     if (!IsUndefined(obj.intrinsicName)) obj.intrinsicName.toString

@@ -13,14 +13,11 @@ export declare module InterfaceMember {
   declare trait IEvent {
     fun callback(): (x: Num) => unit
   }
-  declare trait SearchFunc {
-    val __call: unsupported["(source: string, subString: string): boolean;", "InterfaceMember.ts", 24, 22]
-  }
+  declare trait SearchFunc: (args0: Str, args1: Str) => (false) | (true) {}
   declare trait StringArray {
     val __index: unsupported["[index: number]: string;", "InterfaceMember.ts", 28, 23]
   }
-  declare trait Counter {
-    val __call: unsupported["(start: number): string;", "InterfaceMember.ts", 32, 19]
+  declare trait Counter: (args0: Num) => Str {
     val interval: Num
     fun reset(): unit
   }
@@ -31,7 +28,7 @@ export declare module InterfaceMember {
   declare trait Simple2[T] {
     val abc: T
   }
-  declare trait Next extends Simple {}
+  declare trait Next {}
   declare trait TTT[T] {
     fun ttt(x: T): T
   }

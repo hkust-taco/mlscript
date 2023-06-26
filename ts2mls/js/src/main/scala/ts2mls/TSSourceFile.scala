@@ -167,7 +167,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
     else if (obj.isIntersectionType) getStructuralType(obj.types, false)
     else if (obj.isArrayType) TSArrayType(getObjectType(obj.elementTypeOfArray))
     else if (obj.isTypeParameterSubstitution) {
-      val baseName = getSymbolFullname(obj.symbol)
+      val baseName = getSymbolFullname(if (obj.symbol.isUndefined) obj.aliasSymbol else obj.symbol)
       if (baseName.contains(".")) TSPartialUnsupportedType // A.B<C> is not supported in mlscript
       else TSSubstitutionType(TSReferenceType(baseName), getSubstitutionArguments(obj.typeArguments))
     }
@@ -175,7 +175,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
       if (obj.isAnonymous) {
         val props = getAnonymousPropertiesType(obj.properties)
         if (!props.exists{ case (name, _) if (!name.isEmpty()) => Character.isUpperCase(name(0)); case _ => false})
-          TSInterfaceType("", props, List(), List())
+          TSInterfaceType("", props, List(), List(), None)
         else TSPartialUnsupportedType
       }
       else TSReferenceType(getSymbolFullname(obj.symbol))
@@ -208,7 +208,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
   // get the type of variables in classes/named interfaces/anonymous interfaces
   private def getMemberType(node: TSNodeObject)(implicit ns: TSNamespace): TSType = {
     val res: TSType =
-      if (node.isIndexSignature || node.isCallSignature || node.isConstructSignature)
+      if (node.isIndexSignature || node.isConstructSignature)
         markUnsupported(node)
       else if (node.isFunctionLike) getFunctionType(node, false) // erase name to avoid name clash when overriding methods in ts
       else if (node.`type`.isUndefined) getObjectType(node.typeAtLocation)
@@ -320,7 +320,8 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
     })
 
   private def getInterfacePropertiesType(list: TSNodeArray)(implicit ns: TSNamespace): Map[String, TSMemberType] =
-    list.foldLeft(Map[String, TSMemberType]())((mp, p) => addMember(getMemberType(p), p, p.symbol.escapedName, mp))
+    list.foldLeft(Map[String, TSMemberType]())((mp, p) =>
+      if (p.isCallSignature) mp else addMember(getMemberType(p), p, p.symbol.escapedName, mp))
 
   private def getAnonymousPropertiesType(list: TSSymbolArray)(implicit ns: TSNamespace): Map[String, TSMemberType] =
     list.foldLeft(Map[String, TSMemberType]())((mp, p) =>
@@ -331,9 +332,16 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
       if (isClass)
         TSClassType(name, getClassMembersType(node.members, false), getClassMembersType(node.members, true),
           getTypeParameters(node), Nil, getConstructorList(node.members))
-      else TSInterfaceType(name, getInterfacePropertiesType(node.members), getTypeParameters(node), Nil)
+      else
+        TSInterfaceType(name, getInterfacePropertiesType(node.members), getTypeParameters(node), Nil, parseCallSignature(node.members))
     if (res.unsupported) markUnsupported(node) else res
   }
+
+  private def parseCallSignature(list: TSNodeArray)(implicit ns: TSNamespace) =
+    list.foldLeft[Option[TSFunctionType]](None)((cs, node) =>
+      if (node.isCallSignature) Some(getFunctionType(node, false))
+      else cs
+    )
 
   private def parseNamespaceLocals(map: TSSymbolMap, exports: TSSymbolMap)(implicit ns: TSNamespace) =
     map.foreach((sym) => {
@@ -364,7 +372,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
       ns.put(name, if (alias.unsupported) TSTypeAlias(name, markUnsupported(node), Nil) else alias, exported, false)
     }
     else if (node.isObjectLiteral) {
-      val obj = TSInterfaceType("", getObjectLiteralMembers(node.initializer.properties), List(), List())
+      val obj = TSInterfaceType("", getObjectLiteralMembers(node.initializer.properties), List(), List(), None)
       ns.put(name, if (obj.unsupported) markUnsupported(node) else obj, exported, false)
     }
     else if (node.isVariableDeclaration) ns.put(name, getMemberType(node), exported, false)
@@ -383,10 +391,10 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
       case _ => throw new AssertionError(s"$name is not a class")
     }
     else if (node.isInterfaceDeclaration) ns.get(name) match {
-      case TSInterfaceType(_, members, typeVars, parents) =>
+      case TSInterfaceType(_, members, typeVars, parents, cs) =>
         val list = getHeritageList(node, members.keySet)
         if (!list.isEmpty) {
-          val itf = TSInterfaceType(name, members, typeVars, getHeritageList(node, members.keySet))
+          val itf = TSInterfaceType(name, members, typeVars, getHeritageList(node, members.keySet), cs)
           ns.put(name, if (itf.unsupported) markUnsupported(node) else itf, ns.exported(name), true)
         }
       case t if (t.unsupported) => () // ignore types that have been marked as unsupported.

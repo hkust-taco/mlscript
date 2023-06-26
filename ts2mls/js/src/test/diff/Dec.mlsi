@@ -1,9 +1,7 @@
 export declare module Dec {
   fun getName(id: (Str) | (Num)): Str
   fun render(callback: (() => unit) | (undefined)): Str
-  declare trait Get {
-    val __call: unsupported["(id: string): string", "Dec.d.ts", 4, 22]
-  }
+  declare trait Get: (args0: Str) => Str {}
   declare class Person {
     constructor(name: Str, age: Num)
     fun getName(args0: Num): Str

@@ -66,13 +66,15 @@ case class TSInterfaceType(
   members: Map[String, TSMemberType],
   typeVars: List[TSTypeParameter],
   parents: List[TSType],
+  callSignature: Option[TSFunctionType]
 ) extends TSType {
     override val unsupported: Boolean =
-    typeVars.foldLeft(false)((r, t) => r || t.unsupported) || parents.foldLeft(false)((r, t) => t match {
-      case cls: TSClassType => cls.members.values.foldLeft(r || cls.unsupported)((r, t) => r || t.unsupported)
-      case itf: TSInterfaceType => itf.members.values.foldLeft(r || itf.unsupported)((r, t) => r || t.unsupported)
-      case _ => r || t.unsupported
-    })
+    typeVars.foldLeft(callSignature.fold(false)(cs => cs.unsupported))((r, t) => r || t.unsupported) ||
+      parents.foldLeft(false)((r, t) => t match {
+        case cls: TSClassType => cls.members.values.foldLeft(r || cls.unsupported)((r, t) => r || t.unsupported)
+        case itf: TSInterfaceType => itf.members.values.foldLeft(r || itf.unsupported)((r, t) => r || t.unsupported)
+        case _ => r || t.unsupported
+      })
 }
 
 sealed abstract class TSStructuralType(lhs: TSType, rhs: TSType, notion: String) extends TSType {

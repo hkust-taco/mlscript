@@ -59,8 +59,14 @@ object Converter {
     case TSArrayType(element) => s"MutArray[${convert(element)}]"
     case TSEnumType => "Int"
     case TSMemberType(base, _) => convert(base) // TODO: support private/protected members
-    case TSInterfaceType(name, members, typeVars, parents) =>
-      convertRecord(s"trait ${escapeIdent(name)}", members, typeVars, parents, Map(), List(), exported)(indent)
+    case TSInterfaceType(name, members, typeVars, parents, callSignature) =>
+      callSignature match {
+        case Some(cs) if cs.typeVars.isEmpty =>
+          val prefix = if (exported) s"${indent}export declare " else s"${indent}declare "
+          val tp = if (typeVars.isEmpty) "" else s"[${typeVars.map((tv) => tv.name).reduceLeft((p, s) => s"$p, $s")}]"
+          s"${prefix}trait ${escapeIdent(name)}$tp: ${convert(cs)} ${convertRecord("", members, Nil, Nil, Map(), List(), false)(indent)}"
+        case _ => convertRecord(s"trait ${escapeIdent(name)}", members, typeVars, parents, Map(), List(), exported)(indent)
+      }
     case TSClassType(name, members, statics, typeVars, parents, cons) =>
       convertRecord(s"class ${escapeIdent(name)}", members, typeVars, parents, statics, cons, exported)(indent)
     case TSSubstitutionType(TSReferenceType(base), applied) => s"${base}[${applied.map((app) => convert(app)).reduceLeft((res, s) => s"$res, $s")}]"
@@ -109,7 +115,7 @@ object Converter {
       else s"{\n${lst.reduceLeft((bd, m) => s"$bd$m")}$indent}"
     }
     
-    if (typeName === "trait ") body // anonymous interfaces
+    if (typeName.isEmpty() || typeName === "trait ") body // anonymous interfaces
     else { // named interfaces and classes
       val exp = if (exported) "export " else ""
       val inheritance =
