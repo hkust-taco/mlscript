@@ -12,6 +12,8 @@ object TSPathResolver {
   def dirname(filename: String): String = np.dirname(filename).toString()
   def isLocal(path: String): Boolean =
     path.startsWith("./") || path.startsWith("/") || path.startsWith("../")
+  def isMLScirpt(path: String): Boolean =
+    path.endsWith(".mls") || path.endsWith(".mlsi")
   def normalize(path: String): String = np.normalize(path).toString()
 
   def relative(from: String, to: String) = np.relative(from, to).toString()

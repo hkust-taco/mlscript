@@ -4,6 +4,7 @@ import mlscript._
 import mlscript.codegen._
 import mlscript.utils._, shorthands._, algorithms._
 import mlscript.codegen.Helpers._
+import ts2mls.TSPathResolver
 
 class JSDriverBackend extends JSBackend(allowUnresolvedSymbols = false) {
   def declareJSBuiltin(pgrm: Pgrm): Unit = {
@@ -50,21 +51,17 @@ class JSDriverBackend extends JSBackend(allowUnresolvedSymbols = false) {
 
   private def translateImport(imp: Import with ModuleType, commonJS: Bool) = {
     val path = imp.path
-    val last = path.lastIndexOf(".")
+    val ext = TSPathResolver.extname(path)
     JSImport(
-      path.substring(path.lastIndexOf("/") + 1, if (last < 0) path.length() else last),
-      path.substring(0, if (last < 0) path.length() else last) + (if (last < 0) "" else ".js"),
+      TSPathResolver.basename(path), if (ext.isEmpty()) path else path.replace(ext, ".js"),
       imp.isESModule, commonJS
     )
   }
 
   def apply(pgrm: Pgrm, topModuleName: Str, imports: Ls[Import with ModuleType], exported: Bool, commonJS: Bool): Ls[Str] = {
     imports.flatMap (imp => {
-      val path = imp.path
-      val last = path.lastIndexOf(".")
-        val moduleName = path.substring(path.lastIndexOf("/") + 1, if (last < 0) path.length() else last)
-        topLevelScope.declareValue(moduleName, Some(false), false)
-        translateImport(imp, commonJS).toSourceCode.toLines 
+      topLevelScope.declareValue(TSPathResolver.basename(imp.path), Some(false), false)
+      translateImport(imp, commonJS).toSourceCode.toLines 
     }) ::: generateNewDef(pgrm, topModuleName, exported)
   }
 }

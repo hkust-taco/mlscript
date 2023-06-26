@@ -11,7 +11,7 @@ import ts2mls.{TSProgram, TypeScript, TSPathResolver, JSFileSystem, JSWriter, Fi
 
 class Driver(options: DriverOptions) {
   import Driver._
-  import ts2mls.JSFileSystem._
+  import JSFileSystem._
   import JSDriverBackend.ModuleType
 
   private val typer =
@@ -32,13 +32,13 @@ class Driver(options: DriverOptions) {
   private val importedModule = MutSet[String]()
   private implicit val config = TypeScript.parseOption(options.path, options.tsconfig)
 
-  import TSPathResolver.{normalize, isLocal, dirname}
+  import TSPathResolver.{normalize, isLocal, isMLScirpt, dirname}
 
   private def checkESModule(filename: String, from: String) =
-    if (filename.endsWith(".mls")) None
-    else if (isLocal(filename))
+    if (isMLScirpt(filename)) None
+    else if (isLocal(filename)) // local files: check tsconfig.json
       Some(TypeScript.isESModule(config, false))
-    else {
+    else { // node_modules: find package.json to get the module type
       val fullname = TypeScript.resolveModuleName(filename, from, config)
       def find(path: String): Boolean = {
         val dir = dirname(path)
@@ -47,7 +47,7 @@ class Driver(options: DriverOptions) {
           val config = TypeScript.parsePackage(pack)
           TypeScript.isESModule(config, true)
         }
-        else if (dir === "." || dir === "/") false
+        else if (dir.isEmpty || dir === "." || dir === "/") false // not found: default is commonjs
         else find(dir)
       }
       Some(find(fullname))
@@ -115,13 +115,11 @@ class Driver(options: DriverOptions) {
   }
 
   private def packTopModule(moduleName: Option[String], content: String) =
-    moduleName match {
-      case Some(moduleName) =>
-        s"declare module $moduleName() {\n" +
+    moduleName.fold(content)(moduleName =>
+      s"declare module $moduleName() {\n" +
           content.splitSane('\n').toIndexedSeq.filter(!_.isEmpty()).map(line => s"  $line").reduceLeft(_ + "\n" + _) +
         "\n}\n"
-      case _ => content
-    }
+    )
 
   private def parseAndRun[Res](filename: String, f: (ParseResult) => Res): Res = readFile(filename) match {
     case Some(content) => f(parse(filename, content))
@@ -136,13 +134,14 @@ class Driver(options: DriverOptions) {
         NuTypeDef(Mod, TypeName(moduleName), Nil, S(Tup(Nil)), N, N, Nil, N, N, TypingUnit(declarations, Nil))(S(Loc(0, 1, origin)), N, N) :: Nil, Nil)
     })
 
-  private def `type`(tu: TypingUnit, usingES5: Boolean)(
+  // if the current file is es5.mlsi, we allow overriding builtin type(like String and Object)
+  private def `type`(tu: TypingUnit, isES5: Boolean)(
     implicit ctx: Ctx,
     raise: Raise,
     extrCtx: Opt[typer.ExtrCtx],
     vars: Map[Str, typer.SimpleType]
   ) = {
-    val tpd = typer.typeTypingUnit(tu, N, usingES5)
+    val tpd = typer.typeTypingUnit(tu, N, isES5)
     val sim = SimplifyPipeline(tpd, all = false)
     typer.expandType(sim)
   }
@@ -158,14 +157,16 @@ class Driver(options: DriverOptions) {
     vars: Map[Str, typer.SimpleType]
   ) = jsBuiltinDecs.foreach(lst => `type`(TypingUnit(lst, Nil), true))
 
-  private def resolveTarget(file: FileInfo, imp: String) =
-    if ((imp.startsWith("./") || imp.startsWith("../")) && !imp.endsWith(".mls") && !imp.endsWith(".mlsi")) {
+  // translate mlscirpt import paths into js import paths
+  private def resolveImportPath(file: FileInfo, imp: String) =
+    if (isLocal(imp) && !isMLScirpt(imp)) { // local ts files: locate by checking tsconfig.json
       val tsPath = TypeScript.getOutputFileNames(s"${TSPathResolver.dirname(file.filename)}/$imp", config)
       val outputBase = TSPathResolver.dirname(TSPathResolver.normalize(s"${options.outputDir}${file.jsFilename}"))
       TSPathResolver.relative(outputBase, tsPath)
     }
-    else imp
+    else imp // mlscript & node_module: use the original name
 
+  // return true if this file is recompiled.
   private def compile(
     file: FileInfo,
     exported: Boolean
@@ -177,7 +178,7 @@ class Driver(options: DriverOptions) {
     stack: List[String]
   ): Boolean = {
     val mlsiFile = normalize(s"${file.workDir}/${file.interfaceFilename}")
-    if (!file.filename.endsWith(".mls") && !file.filename.endsWith(".mlsi") ) { // TypeScript
+    if (!isMLScirpt(file.filename)) { // TypeScript
       val tsprog =
          TSProgram(file, true, options.tsconfig)
       return tsprog.generate
@@ -198,7 +199,7 @@ class Driver(options: DriverOptions) {
           case (sigs, recomp) => {
             importedModule += file.filename
             (sigs :+ extractSig(file.filename, file.moduleName),
-              isInterfaceOutdate(file.filename, s"${options.path}/${file.interfaceFilename}"))
+              recomp || isInterfaceOutdate(file.filename, s"${options.path}/${file.interfaceFilename}"))
           }
         })
         val needRecomp = otherList.foldLeft(cycleRecomp)((nr, dp) => {
@@ -217,39 +218,30 @@ class Driver(options: DriverOptions) {
 
         if (options.force || needRecomp || isInterfaceOutdate(file.filename, mlsiFile)) {
           System.out.println(s"compiling ${file.filename}...")
-          def importModule(file: FileInfo): Unit = {
-            val filename = s"${options.path}/${file.interfaceFilename}"
-            parseAndRun(filename, {
-              case (_, declarations, imports, _) => {
-                val depList = imports.map(_.path)
-                depList.foreach(d => importModule(file.`import`(d)))
+          def importModule(file: FileInfo): Unit =
+            parseAndRun(s"${options.path}/${file.interfaceFilename}", {
+              case (_, declarations, imports, _) =>
+                imports.foreach(d => importModule(file.`import`(d.path)))
                 `type`(TypingUnit(declarations, Nil), false)
-              }
             })
-          }
 
           otherList.foreach(d => importModule(file.`import`(d)))
-          if (file.filename.endsWith(".mls")) {
-            def generateInterface(moduleName: Option[String], tu: TypingUnit) = {
-              val exp = `type`(tu, false)
-              packTopModule(moduleName, exp.show)
-            }
-
-            val expStr = cycleSigs.foldLeft("")((s, tu) => s"$s${generateInterface(None, tu)}") +
-              generateInterface(Some(file.moduleName), TypingUnit(definitions, Nil))
+          if (file.filename.endsWith(".mls")) { // only generate js/mlsi files for mls files
+            val expStr = cycleSigs.foldLeft("")((s, tu) => s"$s${`type`(tu, false).show}") +
+              packTopModule(Some(file.moduleName), `type`(TypingUnit(definitions, Nil), false).show)
             val interfaces = otherList.map(s => Import(FileInfo.importPath(s))).foldRight(expStr)((imp, itf) => s"$imp\n$itf")
 
             saveToFile(mlsiFile, interfaces)
             generate(Pgrm(definitions), s"${options.outputDir}/${file.jsFilename}", file.moduleName, imports.map(
-              imp => new Import(resolveTarget(file, imp.path)) with ModuleType {
+              imp => new Import(resolveImportPath(file, imp.path)) with ModuleType {
                 val isESModule = checkESModule(path, TSPathResolver.resolve(file.filename))
               }
             ), exported || importedModule(file.filename))
           }
-          else `type`(TypingUnit(declarations, Nil), false)
+          else `type`(TypingUnit(declarations, Nil), false) // for ts/mlsi files, we only check interface files
           true
         }
-        else false
+        else false // no need to recompile
       }
     })
   }
@@ -296,7 +288,7 @@ object Driver {
     writer.write(content)
     writer.close()
   }
-  
+
   // TODO factor with duplicated logic in DiffTests
   private def report(diag: Diagnostic, ignoreTypeError: Boolean): Unit = {
     val sctx = Message.mkCtx(diag.allMsgs.iterator.map(_._1), "?")
