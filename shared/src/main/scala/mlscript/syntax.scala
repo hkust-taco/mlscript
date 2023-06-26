@@ -11,6 +11,9 @@ sealed abstract class Decl extends DesugaredStatement with DeclImpl
 final case class Def(rec: Bool, nme: Var, rhs: Term \/ PolyType, isByname: Bool) extends Decl with Terms {
   val body: Located = rhs.fold(identity, identity)
 }
+
+case class AdtInfo(alsName: TypeName, paramPos: Ls[Int])
+
 final case class TypeDef(
   kind: TypeDefKind,
   nme: TypeName,
@@ -19,7 +22,9 @@ final case class TypeDef(
   mthDecls: List[MethodDef[Right[Term, Type]]],
   mthDefs: List[MethodDef[Left[Term, Type]]],
   positionals: Ls[Var],
-) extends Decl
+) extends Decl {
+  var adtInfo: Opt[AdtInfo] = N
+}
 
 /**
   * Method type can be a definition or a declaration based

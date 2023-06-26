@@ -1,0 +1,59 @@
+typeadt ('a, 'b) Either = Left of 'a | Right of 'b
+//│ Defined type alias Either[+'a, +'b]
+//│ Defined class Left[+'a]
+//│ Defined class Right[+'b]
+//│ Left: 'a -> Either['a, nothing]
+//│     = <missing implementation>
+//│ Right: 'a -> Either[nothing, 'a]
+//│      = <missing implementation>
+
+typeadt 'a List = Cons of 'a * 'a List | Nil
+//│ Defined type alias List[+'a]
+//│ Defined class Cons[+'a]
+//│ Defined class Nil
+//│ Cons: ('a, List['a],) -> List['a]
+//│     = <missing implementation>
+//│ Nil: List[nothing]
+//│    = <missing implementation>
+
+typeadt Heap = (string * int) List
+typeadt HeapVar = HeapInt of int | HeapV of Heap
+typeadt Exp = EInt of int | Var of string | Plus of Exp * Exp | Times of Exp * Exp
+typeadt Stmt = Skip | Assign of string * Exp
+//│ Defined type alias Heap
+//│ Defined type alias HeapVar
+//│ Defined class HeapInt
+//│ Defined class HeapV
+//│ Defined type alias Exp
+//│ Defined class EInt
+//│ Defined class Var
+//│ Defined class Plus
+//│ Defined class Times
+//│ Defined type alias Stmt
+//│ Defined class Skip
+//│ Defined class Assign
+//│ HeapInt: int -> HeapVar
+//│        = <missing implementation>
+//│ HeapV: Heap -> HeapVar
+//│      = <missing implementation>
+//│ EInt: int -> Exp
+//│     = <missing implementation>
+//│ Var: string -> Exp
+//│    = <missing implementation>
+//│ Plus: (Exp, Exp,) -> Exp
+//│     = <missing implementation>
+//│ Times: (Exp, Exp,) -> Exp
+//│      = <missing implementation>
+//│ Skip: Stmt
+//│     = <missing implementation>
+//│ Assign: (string, Exp,) -> Stmt
+//│       = <missing implementation>
+
+typeadt FCPoly = ('a -> 'a) List
+//│ ╔══[ERROR] type identifier not found: 'a
+//│ ║  l.52: 	typeadt FCPoly = ('a -> 'a) List
+//│ ╙──      	                  ^^
+//│ ╔══[ERROR] type identifier not found: 'a
+//│ ║  l.52: 	typeadt FCPoly = ('a -> 'a) List
+//│ ╙──      	                        ^^
+//│ Defined type alias FCPoly
