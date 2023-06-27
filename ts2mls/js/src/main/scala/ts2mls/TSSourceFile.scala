@@ -31,8 +31,12 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace, topName: String)(implici
   TypeScript.forEachChild(sf, (node: js.Dynamic) => {
     val nodeObject = TSNodeObject(node)
     if (!nodeObject.isToken) {
-      if (!nodeObject.symbol.isUndefined) // for functions/classes/interfaces
-        addNodeIntoNamespace(nodeObject, nodeObject.symbol.escapedName, nodeObject.isExported)(global)
+      if (!nodeObject.symbol.isUndefined) { // for functions
+        if (nodeObject.isFunctionLike)
+          addFunctionIntoNamespace(nodeObject.symbol, nodeObject, nodeObject.symbol.escapedName)(global)
+        else // for classes/interfaces/namespace
+          addNodeIntoNamespace(nodeObject, nodeObject.symbol.escapedName, nodeObject.isExported)(global)
+      }
       else if (!nodeObject.declarationList.isUndefined) { // for variables
         val decNode = nodeObject.declarationList.declaration
         addNodeIntoNamespace(decNode, decNode.symbol.escapedName, decNode.isExported)(global)
@@ -352,23 +356,26 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace, topName: String)(implici
     map.foreach((sym) => {
       val node = sym.declaration
       val name = sym.escapedName
-      if (!node.isToken)
-        addNodeIntoNamespace(node, name, exports.contains(name), if (node.isFunctionLike) Some(sym.declarations) else None)
+      if (node.isFunctionLike) addFunctionIntoNamespace(sym, node, name)
+      else if (!node.isToken)
+        sym.declarations.foreach(dec =>
+          addNodeIntoNamespace(dec, name, exports.contains(name))
+        )
     })
 
-  private def addFunctionIntoNamespace(fun: TSFunctionType, node: TSNodeObject, name: String)(implicit ns: TSNamespace) =
-    if (fun.unsupported) ns.put(name, markUnsupported(node), node.isExported, false)
-    else if (!ns.containsMember(name, false)) ns.put(name, fun, node.isExported, false)
-    else
-      ns.put(name, TSIgnoredOverload(fun, name), node.isExported || ns.exported(name), true) // the implementation is always after declarations
+  private def addFunctionIntoNamespace(sym: TSSymbolObject, node: TSNodeObject, name: String)(implicit ns: TSNamespace) =
+    sym.declarations.foreach(d => {
+      val fun = getFunctionType(d, true)
+      if (fun.unsupported) ns.put(name, markUnsupported(node), node.isExported, false)
+      else if (!ns.containsMember(name, false)) ns.put(name, fun, node.isExported, false)
+      else
+        ns.put(name, TSIgnoredOverload(fun, name), node.isExported || ns.exported(name), true) // the implementation is always after declarations
+    })
 
   // overload functions in a sub-namespace need to provide an overload array
   // because the namespace merely exports symbols rather than node objects themselves
-  private def addNodeIntoNamespace(node: TSNodeObject, name: String, exported: Boolean, overload: Option[TSNodeArray] = None)(implicit ns: TSNamespace) =
-    if (node.isFunctionLike) overload.fold(
-      addFunctionIntoNamespace(getFunctionType(node, true), node, name)
-    )(decs => decs.foreach(d => addFunctionIntoNamespace(getFunctionType(d, true), d, name)))
-    else if (node.isClassDeclaration)
+  private def addNodeIntoNamespace(node: TSNodeObject, name: String, exported: Boolean)(implicit ns: TSNamespace) =
+    if (node.isClassDeclaration)
       ns.put(name, parseMembers(name, node, true), exported, false)
     else if (node.isInterfaceDeclaration)
       ns.put(name, parseMembers(name, node, false), exported, false)
