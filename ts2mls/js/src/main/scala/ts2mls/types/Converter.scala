@@ -62,16 +62,11 @@ object Converter {
     case TSArrayType(element) => s"MutArray[${convert(element)}]"
     case TSEnumType => "Int"
     case TSMemberType(base, _) => convert(base) // TODO: support private/protected members
-    case TSInterfaceType(name, members, typeVars, parents, callSignature) =>
-      callSignature match {
-        case Some(cs) =>
-          val prefix = if (exported) s"${indent}export declare " else s"${indent}declare "
-          val tp = if (typeVars.isEmpty) "" else s"[${typeVars.map((tv) => tv.name).reduceLeft((p, s) => s"$p, $s")}]"
-          s"${prefix}trait ${escapeIdent(name)}$tp: ${convert(cs)} ${convertRecord("", members, Nil, Nil, Map(), List(), false)(indent)}"
-        case _ => convertRecord(s"trait ${escapeIdent(name)}", members, typeVars, parents, Map(), List(), exported)(indent)
-      }
-    case TSClassType(name, members, statics, typeVars, parents, cons) =>
-      convertRecord(s"class ${escapeIdent(name)}", members, typeVars, parents, statics, cons, exported)(indent)
+    case itf: TSInterfaceType =>
+      if (itf.name.isEmpty()) convertRecord(itf.members, Nil, Nil, Map(), Nil, true) // anonymous interfaces
+      else convertClassOrInterface(Right(itf), exported)
+    case cls: TSClassType =>
+      convertClassOrInterface(Left(cls), exported)
     case TSSubstitutionType(TSReferenceType(base), applied) => s"${base}[${applied.map((app) => convert(app)).reduceLeft((res, s) => s"$res, $s")}]"
     case overload @ TSIgnoredOverload(base, _) => s"${convert(base)} ${overload.warning}"
     case TSParameterType(name, tp) => s"${escapeIdent(name)}: ${convert(tp)}"
@@ -86,11 +81,40 @@ object Converter {
     case tp => throw new AssertionError(s"unexpected type $tp.")
   }
 
-  private def convertRecord(typeName: String, members: Map[String, TSMemberType], typeVars: List[TSTypeParameter],
-    parents: List[TSType], statics: Map[String, TSMemberType], constructorList: List[TSType], exported: Boolean)(implicit indent: String) = {
+  private def convertClassOrInterface(tp: Either[TSClassType, TSInterfaceType], exported: Boolean)(implicit indent: String) = {
+    val exp = if (exported) "export " else ""
+    def combineWithTypeVars(body: String, parents: List[TSType], typeName: String, typeVars: List[TSTypeParameter]) = {
+      val inheritance =
+        if (parents.isEmpty) ""
+        else parents.foldLeft(s" extends ")((b, p) => s"$b${convert(p)}, ").dropRight(2)
+      if (typeVars.isEmpty) s"${indent}${exp}declare $typeName$inheritance $body"
+      else
+        s"${indent}${exp}declare $typeName[${typeVars.map(convert(_)).reduceLeft((p, s) => s"$p, $s")}]$inheritance $body" // TODO: add constraints
+    }
+    tp match {
+      case Left(TSClassType(name, members, statics, typeVars, parents, cons)) =>
+        val body = convertRecord(members, typeVars, parents, statics, cons, false)
+        val typeName = s"class ${escapeIdent(name)}"
+        combineWithTypeVars(body, parents, typeName, typeVars)
+      case Right(TSInterfaceType(name, members, typeVars, parents, callSignature)) =>
+        callSignature match {
+          case Some(cs) =>
+            val prefix = s"${indent}${exp}declare "
+            val tp = if (typeVars.isEmpty) "" else s"[${typeVars.map((tv) => tv.name).reduceLeft((p, s) => s"$p, $s")}]"
+            s"${prefix}trait ${escapeIdent(name)}$tp: ${convert(cs)} ${convertRecord(members, Nil, Nil, Map(), List(), false)}"
+          case _ =>
+            val body = convertRecord(members, typeVars, parents, Map(), List(), false)
+            val typeName = s"trait ${escapeIdent(name)}"
+            combineWithTypeVars(body, parents, typeName, typeVars)
+        }
+    }
+  }
+
+  private def convertRecord(members: Map[String, TSMemberType], typeVars: List[TSTypeParameter], parents: List[TSType],
+    statics: Map[String, TSMemberType], constructorList: List[TSType], anonymous: Boolean)(implicit indent: String) = {
     val allRecs = members.toList.map((m) => m._2.modifier match {
       case Public =>
-        if (typeName === "trait ") s"${escapeIdent(m._1)}: ${convert(m._2)},"
+        if (anonymous) s"${escapeIdent(m._1)}: ${convert(m._2)},"
         else m._2.base match {
           case _: TSFunctionType => s"${generateFunDeclaration(m._2.base, m._1, false, false)(indent + "  ")}\n"
           case _: TSIgnoredOverload => s"${generateFunDeclaration(m._2.base, m._1, false, false)(indent + "  ")}\n"
@@ -111,22 +135,9 @@ object Converter {
       else
         s"${indent}  constructor(${constructorList.map(p => s"${convert(p)("")}").reduceLeft((res, p) => s"$res, $p")})\n"
 
-    val body = { // members without independent type parameters, translate them directly
-      val lst = (ctor :: allRecs).filter((s) => !s.isEmpty())
-      if (lst.isEmpty) s"{}"
-      else if (typeName === "trait ") s"{${lst.reduceLeft((bd, m) => s"$bd$m")}}"
-      else s"{\n${lst.reduceLeft((bd, m) => s"$bd$m")}$indent}"
-    }
-    
-    if (typeName.isEmpty() || typeName === "trait ") body // anonymous interfaces
-    else { // named interfaces and classes
-      val exp = if (exported) "export " else ""
-      val inheritance =
-        if (parents.isEmpty) ""
-        else parents.foldLeft(s" extends ")((b, p) => s"$b${convert(p)}, ").dropRight(2)
-      if (typeVars.isEmpty) s"${indent}${exp}declare $typeName$inheritance $body"
-      else
-        s"${indent}${exp}declare $typeName[${typeVars.map(convert(_)).reduceLeft((p, s) => s"$p, $s")}]$inheritance $body" // TODO: add constraints
-    }
+    val lst = (ctor :: allRecs).filter((s) => !s.isEmpty())
+    if (lst.isEmpty) s"{}"
+    else if (anonymous) s"{${lst.reduceLeft((bd, m) => s"$bd$m")}}"
+    else s"{\n${lst.reduceLeft((bd, m) => s"$bd$m")}$indent}"
   }
 }
