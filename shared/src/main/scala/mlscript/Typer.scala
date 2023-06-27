@@ -1131,7 +1131,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
         try typeTerm(desugarIf(elf)) catch {
           case e: ucs.DesugaringException => err(e.messages)
         }
-      case New(S((nmedTy, trm)), TypingUnit(Nil, _)) =>
+      case New(S((nmedTy, trm)), TypingUnit(Nil)) =>
         typeMonomorphicTerm(App(Var(nmedTy.base.name).withLocOf(nmedTy), trm))
       case New(base, args) => err(msg"Currently unsupported `new` syntax", term.toCoveringLoc)
       case TyApp(_, _) =>

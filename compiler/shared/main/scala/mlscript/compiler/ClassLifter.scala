@@ -371,7 +371,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
       val nTs = targs.map(liftType).unzip
       (TyApp(ret._1, nTs._1), nTs._2.fold(ret._2)(_ ++ _))
     case With(trm, fields) => ???
-    case New(Some((t: TypeName, prm: Tup)), TypingUnit(Nil, _)) =>
+    case New(Some((t: TypeName, prm: Tup)), TypingUnit(Nil)) =>
       val ret = liftConstr(t, prm)
       (New(Some((ret._1, ret._2)), TypingUnit(Nil)), ret._3)
     case New(Some((t: TypeName, prm: Tup)), tu) =>

@@ -290,14 +290,14 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     case Inst(bod) => translateTerm(bod)
     case iff: If =>
       throw CodeGenError(s"if expression was not desugared")
-    case New(N, TypingUnit(Nil, _)) => JSRecord(Nil)
-    case New(S(TypeName(className) -> Tup(args)), TypingUnit(Nil, _)) =>
+    case New(N, TypingUnit(Nil)) => JSRecord(Nil)
+    case New(S(TypeName(className) -> Tup(args)), TypingUnit(Nil)) =>
       val callee = translateVar(className, true) match {
         case n: JSNew => n
         case t => JSNew(t)
       }
       callee(args.map { case (_, Fld(_, _, arg)) => translateTerm(arg) }: _*)
-    case New(_, TypingUnit(_, _)) =>
+    case New(_, TypingUnit(_)) =>
       throw CodeGenError("custom class body is not supported yet")
     case Forall(_, bod) => translateTerm(bod)
     case TyApp(base, _) => translateTerm(base)

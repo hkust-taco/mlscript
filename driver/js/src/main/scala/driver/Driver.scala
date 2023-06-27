@@ -98,14 +98,14 @@ class Driver(options: DriverOptions) {
       def doPrintDbg(msg: => String): Unit = if (dbg) println(msg)
     }
 
-    val tu = parser.parseAll(parser.typingUnit)
+    val (tu, depList) = parser.parseAll(parser.tuWithImports)
     val (definitions, declarations) = tu.entities.partitionMap {
       case nt: NuTypeDef if (nt.isDecl) => Right(nt)
       case nf @ NuFunDef(_, _, _, Right(_)) => Right(nf)
       case t => Left(t)
     }
 
-    (definitions, declarations, tu.depList, origin)
+    (definitions, declarations, depList, origin)
   }
 
   private def isInterfaceOutdate(origin: String, inter: String): Boolean = {
@@ -131,7 +131,7 @@ class Driver(options: DriverOptions) {
   private def extractSig(filename: String, moduleName: String): TypingUnit =
     parseAndRun(filename, {
       case (_, declarations, _, origin) => TypingUnit(
-        NuTypeDef(Mod, TypeName(moduleName), Nil, S(Tup(Nil)), N, N, Nil, N, N, TypingUnit(declarations, Nil))(S(Loc(0, 1, origin)), N, N) :: Nil, Nil)
+        NuTypeDef(Mod, TypeName(moduleName), Nil, S(Tup(Nil)), N, N, Nil, N, N, TypingUnit(declarations))(S(Loc(0, 1, origin)), N, N) :: Nil)
     })
 
   // if the current file is es5.mlsi, we allow overriding builtin type(like String and Object)
@@ -155,7 +155,7 @@ class Driver(options: DriverOptions) {
     raise: Raise,
     extrCtx: Opt[typer.ExtrCtx],
     vars: Map[Str, typer.SimpleType]
-  ) = jsBuiltinDecs.foreach(lst => `type`(TypingUnit(lst, Nil), true))
+  ) = jsBuiltinDecs.foreach(lst => `type`(TypingUnit(lst), true))
 
   // translate mlscirpt import paths into js import paths
   private def resolveImportPath(file: FileInfo, imp: String) =
@@ -222,13 +222,13 @@ class Driver(options: DriverOptions) {
             parseAndRun(s"${options.path}/${file.interfaceFilename}", {
               case (_, declarations, imports, _) =>
                 imports.foreach(d => importModule(file.`import`(d.path)))
-                `type`(TypingUnit(declarations, Nil), false)
+                `type`(TypingUnit(declarations), false)
             })
 
           otherList.foreach(d => importModule(file.`import`(d)))
           if (file.filename.endsWith(".mls")) { // only generate js/mlsi files for mls files
             val expStr = cycleSigs.foldLeft("")((s, tu) => s"$s${`type`(tu, false).show}") +
-              packTopModule(Some(file.moduleName), `type`(TypingUnit(definitions, Nil), false).show)
+              packTopModule(Some(file.moduleName), `type`(TypingUnit(definitions), false).show)
             val interfaces = otherList.map(s => Import(FileInfo.importPath(s))).foldRight(expStr)((imp, itf) => s"$imp\n$itf")
 
             saveToFile(mlsiFile, interfaces)
@@ -238,7 +238,7 @@ class Driver(options: DriverOptions) {
               }
             ), exported || importedModule(file.filename))
           }
-          else `type`(TypingUnit(declarations, Nil), false) // for ts/mlsi files, we only check interface files
+          else `type`(TypingUnit(declarations), false) // for ts/mlsi files, we only check interface files
           true
         }
         else false // no need to recompile

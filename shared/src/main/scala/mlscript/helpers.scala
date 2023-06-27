@@ -435,10 +435,6 @@ trait TypingUnitImpl extends Located { self: TypingUnit =>
     case _ => die
   }.mkString("{", "; ", "}")
   lazy val children: List[Located] = entities
-
-  override def toString(): String =
-    if (depList.isEmpty) s"TypingUnit(${entities.toString()})"
-    else s"TypingUnit(${entities.toString()}, ${depList.toString()})"
 }
 
 trait TypeNameImpl extends Ordered[TypeName] { self: TypeName =>

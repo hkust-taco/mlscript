@@ -215,7 +215,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
   }
   */
   
-  final def typingUnit: TypingUnit = {
+  final def tuWithImports: (TypingUnit, Ls[Import]) = {
     val ts = block(Nil)(false, false)
     val (es, dp) = ts.partitionMap {
       case R(imp: Import) => R(imp)
@@ -232,7 +232,21 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
           case _ => ???
         }, dp)
     }
-    TypingUnit(es, dp)
+    (TypingUnit(es), dp)
+  }
+  
+  final def typingUnit: TypingUnit = {
+    val ts = block(Nil)(false, false)
+    val es = ts.map {
+      case L(t) =>
+        err(msg"Unexpected 'then'/'else' clause" -> t.toLoc :: Nil)
+        errExpr
+      case R(d: NuDecl) => d
+      case R(e: Term) => e
+      case R(c: Constructor) => c
+      case _ => ???
+    }
+    TypingUnit(es)
   }
   final def typingUnitMaybeIndented(implicit fe: FoundErr): TypingUnit = yeetSpaces match {
     case (br @ BRACKETS(Indent, toks), _) :: _ =>
