@@ -9,13 +9,13 @@ export declare module TSArray {
   }
   fun doCs(c: MutArray[C]): MutArray[C]
   fun doIs(i: MutArray[I]): MutArray[I]
-  fun inter[U, T](x: MutArray[(U) & (T)]): MutArray[(U) & (T)]
+  fun inter['U, 'T](x: MutArray[('U) & ('T)]): MutArray[('U) & ('T)]
   fun clean(x: MutArray[(Str, Num, )]): MutArray[(Str, Num, )]
-  fun translate[T, U](x: MutArray[T]): MutArray[U]
+  fun translate['T, 'U](x: MutArray['T]): MutArray['U]
   fun uu(x: MutArray[((Num) | (false)) | (true)]): MutArray[((Num) | (false)) | (true)]
-  declare class Temp[T] {
-    val x: T
+  declare class Temp['T] {
+    val x: 'T
   }
   fun ta(ts: MutArray[Temp[(false) | (true)]]): MutArray[Temp[(false) | (true)]]
-  fun tat[T](ts: MutArray[Temp[T]]): MutArray[Temp[T]]
+  fun tat['T](ts: MutArray[Temp['T]]): MutArray[Temp['T]]
 }

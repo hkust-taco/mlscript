@@ -1,27 +1,29 @@
 export declare module TypeParameter {
-  fun inc[T](x: T): Num
-  declare class CC[T] {
-    fun print(args0: T): unit
+  fun inc['T](x: 'T): Num
+  declare class CC['T] {
+    fun print(args0: 'T): unit
   }
-  fun con[U, T](t: T): U
-  declare class Printer[T] {
-    fun print(args0: T): unit
+  fun con['U, 'T](t: 'T): 'U
+  declare class Printer['T] {
+    fun print(args0: 'T): unit
   }
   fun setStringPrinter(p: Printer[Str]): unit
   fun getStringPrinter(): Printer[Str]
-  fun foo[T](p: Printer[T], x: T): T
-  fun foo2[T](p: Printer[T], x: T): T
-  declare class F[T] {
-    val x: T
-    fun GG[U](args0: U): T
+  fun foo['T](p: Printer['T], x: 'T): 'T
+  fun foo2['T](p: Printer['T], x: 'T): 'T
+  declare class F['T] {
+    val x: 'T
+    fun GG['U](args0: 'U): 'T
   }
-  declare trait I[T] {
-    val x: T
-    fun GG[U](args0: U): T
+  declare trait I['T] {
+    val x: 'T
+    fun GG['U](args0: 'U): 'T
   }
-  declare class FFF[T] {
-    fun fff(args0: T): unit
+  declare class FFF['T] {
+    fun fff(args0: 'T): unit
   }
   fun fff(p: FFF[Str], s: Str): unit
   fun getFFF(): FFF[Num]
+  type PolyToString = forall 'T; (x: 'T) => Str
+  type PolyID = forall 'T; (x: 'T) => 'T
 }

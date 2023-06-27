@@ -13,12 +13,12 @@ export declare module Overload {
   fun op(x: anything, y: anything): unit /* warning: the overload of function op is not supported yet. */
   fun swap(x: anything): MutArray[anything] /* warning: the overload of function swap is not supported yet. */
   fun u(x: anything): Str /* warning: the overload of function u is not supported yet. */
-  fun doSome[T, U](x: anything): nothing /* warning: the overload of function doSome is not supported yet. */
+  fun doSome['T, 'U](x: anything): nothing /* warning: the overload of function doSome is not supported yet. */
   declare module XX {
-    export fun f[T](x: T, n: anything): Str /* warning: the overload of function f is not supported yet. */
+    export fun f['T](x: 'T, n: anything): Str /* warning: the overload of function f is not supported yet. */
   }
   declare class WWW {
-    fun F[T](args0: T): T /* warning: the overload of function F is not supported yet. */
+    fun F['T](args0: 'T): 'T /* warning: the overload of function F is not supported yet. */
   }
   fun baz(): anything /* warning: the overload of function baz is not supported yet. */
 }

@@ -194,10 +194,8 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace, topName: String)(implici
 
   // the function `getMemberType` can't process function/tuple type alias correctly
   private def getTypeAlias(tn: TSNodeObject)(implicit ns: TSNamespace): TSType =
-    if (tn.isFunctionLike) {
-      if (tn.typeParameters.isUndefined) getFunctionType(tn, true)
-      else markUnsupported(tn) // type parameters in lambda functions are not supported
-    }
+    if (tn.isFunctionLike)
+      getFunctionType(tn, true)
     else if (tn.isTupleTypeNode) TSTupleType(getTupleElements(tn.typeNode.typeArguments))
     else getObjectType(tn.typeNode) match {
       case TSPrimitiveType("intrinsic") => markUnsupported(tn)

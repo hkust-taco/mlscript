@@ -2,11 +2,11 @@ export declare module Type {
   declare trait None {
     val _tag: "None"
   }
-  declare trait Some[A] {
+  declare trait Some['A] {
     val _tag: "Some"
-    val value: A
+    val value: 'A
   }
-  type Option[A] = (None) | (Some[A])
+  type Option['A] = (None) | (Some['A])
   type Func = (x: Num) => Num
   type S2 = (Str, Str, )
   declare trait I1 {}
@@ -16,7 +16,7 @@ export declare module Type {
   type SomeInterface = {x: Num,y: Num,}
   declare class ABC {}
   type DEF = ABC
-  type TP[A, B, C] = (A, B, C, )
+  type TP['A, 'B, 'C] = ('A, 'B, 'C, )
   declare module NA {
     fun fb(b: Str): unit
     export type B = Str
@@ -26,5 +26,5 @@ export declare module Type {
   }
   type G = ABC
   val none: {_tag: "None",}
-  fun some[A](a: A): (None) | (Some[A])
+  fun some['A](a: 'A): (None) | (Some['A])
 }

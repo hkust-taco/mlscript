@@ -14,9 +14,9 @@ export declare module Optional {
   fun testSquareConfig(conf: (SquareConfig) | (undefined)): unit
   fun err(msg: ((Num, Str, )) | (undefined)): unit
   fun toStr(x: (((Num) | (false)) | (true)) | (undefined)): Str
-  fun boo[T, U](x: ((T) & (U)) | (undefined)): unit
-  declare class B[T] {
-    val b: T
+  fun boo['T, 'U](x: (('T) & ('U)) | (undefined)): unit
+  declare class B['T] {
+    val b: 'T
   }
   fun boom(b: (B[nothing]) | (undefined)): anything
 }

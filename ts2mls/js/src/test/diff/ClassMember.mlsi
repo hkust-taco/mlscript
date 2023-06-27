@@ -6,8 +6,8 @@ export declare module ClassMember {
     fun addScore(args0: Str, args1: Num): unit
     fun getID(): Num
   }
-  declare class Foo[T] {
-    fun bar(args0: T): unit
+  declare class Foo['T] {
+    fun bar(args0: 'T): unit
   }
   declare class EZ {
     fun inc(args0: Num): Num
@@ -17,8 +17,8 @@ export declare module ClassMember {
       val a: Num
     }
   }
-  declare class TTT[T] {
-    fun ttt(args0: T): T
-    fun ttt2(x: T): T
+  declare class TTT['T] {
+    fun ttt(args0: 'T): 'T
+    fun ttt2(x: 'T): 'T
   }
 }

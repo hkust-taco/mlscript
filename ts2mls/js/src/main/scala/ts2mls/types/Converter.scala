@@ -50,19 +50,21 @@ object Converter {
   def convert(tsType: TSType, exported: Boolean = false)(implicit indent: String = ""): String = tsType match {
     case TSPrimitiveType(typeName) => primitiveName(typeName)
     case TSReferenceType(name) => name
-    case TSFunctionType(params, res, _) =>
+    case TSFunctionType(params, res, typeVars) =>
+      val tpNames = typeVars.map(_.name)
+      val tpList = tpNames.foldLeft("")((res, tp) => s"${res}forall '$tp; ")
       val pList = generateFunParamsList(params)
-      s"($pList) => ${convert(res)}"
+      s"$tpList($pList) => ${convert(res)}"
     case TSUnionType(lhs, rhs) => s"(${convert(lhs)}) | (${convert(rhs)})"
     case TSIntersectionType(lhs, rhs) => s"(${convert(lhs)}) & (${convert(rhs)})"
-    case TSTypeParameter(name, _) => name // constraints should be translated where the type parameters were created rather than be used
+    case TSTypeParameter(name, _) => s"'$name" // constraints should be translated where the type parameters were created rather than be used
     case TSTupleType(lst) => s"(${lst.foldLeft("")((p, t) => s"$p${convert(t)}, ")})"
     case TSArrayType(element) => s"MutArray[${convert(element)}]"
     case TSEnumType => "Int"
     case TSMemberType(base, _) => convert(base) // TODO: support private/protected members
     case TSInterfaceType(name, members, typeVars, parents, callSignature) =>
       callSignature match {
-        case Some(cs) if cs.typeVars.isEmpty =>
+        case Some(cs) =>
           val prefix = if (exported) s"${indent}export declare " else s"${indent}declare "
           val tp = if (typeVars.isEmpty) "" else s"[${typeVars.map((tv) => tv.name).reduceLeft((p, s) => s"$p, $s")}]"
           s"${prefix}trait ${escapeIdent(name)}$tp: ${convert(cs)} ${convertRecord("", members, Nil, Nil, Map(), List(), false)(indent)}"
@@ -124,7 +126,7 @@ object Converter {
         else parents.foldLeft(s" extends ")((b, p) => s"$b${convert(p)}, ").dropRight(2)
       if (typeVars.isEmpty) s"${indent}${exp}declare $typeName$inheritance $body"
       else
-        s"${indent}${exp}declare $typeName[${typeVars.map((tv) => tv.name).reduceLeft((p, s) => s"$p, $s")}]$inheritance $body" // TODO: add constraints
+        s"${indent}${exp}declare $typeName[${typeVars.map(convert(_)).reduceLeft((p, s) => s"$p, $s")}]$inheritance $body" // TODO: add constraints
     }
   }
 }
