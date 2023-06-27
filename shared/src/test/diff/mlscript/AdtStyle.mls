@@ -1,25 +1,35 @@
-typeadt ('a, 'b) Either = Left of 'a | Right of 'b
-//│ Defined type alias Either[+'a, +'b]
-//│ Defined class Left[+'a]
-//│ Defined class Right[+'b]
+datatype Either[A, B] = Left[A] of {_0: A} || Right[B] of {_0: B}
+// datatype Either[A, B] = Left[A] of {left: A} | Right[B] of {right: B}
+//│ Defined type alias Either[+A, +B]
+//│ Defined class Left[+A]
+//│ Defined class Right[+B]
 //│ Left: 'a -> Either['a, nothing]
 //│     = <missing implementation>
 //│ Right: 'a -> Either[nothing, 'a]
 //│      = <missing implementation>
 
-typeadt 'a List = Cons of 'a * 'a List | Nil
-//│ Defined type alias List[+'a]
-//│ Defined class Cons[+'a]
+datatype List[A] = Cons[A] of {head: A; tail: List[A]} || Nil
+//│ Defined type alias List[+A]
+//│ Defined class Cons[+A]
 //│ Defined class Nil
 //│ Cons: ('a, List['a],) -> List['a]
 //│     = <missing implementation>
 //│ Nil: List[nothing]
 //│    = <missing implementation>
 
-typeadt Heap = (string * int) List
-typeadt HeapVar = HeapInt of int | HeapV of Heap
-typeadt Exp = EInt of int | Var of string | Plus of Exp * Exp | Times of Exp * Exp
-typeadt Stmt = Skip | Assign of string * Exp
+type Heap = List[(string, int)]
+datatype HeapVar = HeapInt of {_0: int} || HeapV of {_0: Heap}
+datatype Exp = EInt of int || Var of string || Plus of (Exp, Exp) || Times of (Exp, Exp)
+datatype Stmt = Skip || Assign of (string, Exp)
+//│ ╔══[ERROR] cannot inherit from a tuple type
+//│ ║  l.22: 	datatype Exp = EInt of int || Var of string || Plus of (Exp, Exp) || Times of (Exp, Exp)
+//│ ╙──      	                                               ^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] cannot inherit from a tuple type
+//│ ║  l.22: 	datatype Exp = EInt of int || Var of string || Plus of (Exp, Exp) || Times of (Exp, Exp)
+//│ ╙──      	                                                                     ^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] cannot inherit from a tuple type
+//│ ║  l.23: 	datatype Stmt = Skip || Assign of (string, Exp)
+//│ ╙──      	                        ^^^^^^^^^^^^^^^^^^^^^^^
 //│ Defined type alias Heap
 //│ Defined type alias HeapVar
 //│ Defined class HeapInt
@@ -27,36 +37,38 @@ typeadt Stmt = Skip | Assign of string * Exp
 //│ Defined type alias Exp
 //│ Defined class EInt
 //│ Defined class Var
-//│ Defined class Plus
-//│ Defined class Times
 //│ Defined type alias Stmt
 //│ Defined class Skip
-//│ Defined class Assign
 //│ HeapInt: int -> HeapVar
-//│        = <missing implementation>
 //│ HeapV: Heap -> HeapVar
-//│      = <missing implementation>
-//│ EInt: int -> Exp
-//│     = <missing implementation>
-//│ Var: string -> Exp
-//│    = <missing implementation>
-//│ Plus: (Exp, Exp,) -> Exp
-//│     = <missing implementation>
-//│ Times: (Exp, Exp,) -> Exp
-//│      = <missing implementation>
 //│ Skip: Stmt
-//│     = <missing implementation>
-//│ Assign: (string, Exp,) -> Stmt
-//│       = <missing implementation>
+//│ Code generation encountered an error:
+//│   cannot inherit from type alias int
 
-typeadt 'a Poly = ('a -> 'a) List
-//│ Defined type alias Poly[='a]
+datatype Poly[A] = PolyList[A] of List[A -> A]
+//│ ╔══[ERROR] cannot inherit from a type alias
+//│ ║  l.48: 	datatype Poly[A] = PolyList[A] of List[A -> A]
+//│ ╙──      	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ Defined type alias Poly[±A]
+//│ ╔══[WARNING] Type definition Poly has bivariant type parameters:
+//│ ║  l.48: 	datatype Poly[A] = PolyList[A] of List[A -> A]
+//│ ║        	         ^^^^
+//│ ╟── A is irrelevant and may be removed
+//│ ║  l.48: 	datatype Poly[A] = PolyList[A] of List[A -> A]
+//│ ╙──      	              ^
+//│ Code generation encountered an error:
+//│   cannot inherit from type alias List
 
-typeadt FCPoly = (forall 'a. 'a -> 'a) List
-//│ ╔══[ERROR] type identifier not found: 'a
-//│ ║  l.55: 	typeadt FCPoly = (forall 'a. 'a -> 'a) List
-//│ ╙──      	                             ^^
-//│ ╔══[ERROR] type identifier not found: 'a
-//│ ║  l.55: 	typeadt FCPoly = (forall 'a. 'a -> 'a) List
-//│ ╙──      	                                   ^^
-//│ Defined type alias FCPoly
+datatype FCPoly[A] = FCPolyList[A] of List[forall 'a. A -> A]
+//│ ╔══[ERROR] cannot inherit from a type alias
+//│ ║  l.62: 	datatype FCPoly[A] = FCPolyList[A] of List[forall 'a. A -> A]
+//│ ╙──      	                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ Defined type alias FCPoly[±A]
+//│ ╔══[WARNING] Type definition FCPoly has bivariant type parameters:
+//│ ║  l.62: 	datatype FCPoly[A] = FCPolyList[A] of List[forall 'a. A -> A]
+//│ ║        	         ^^^^^^
+//│ ╟── A is irrelevant and may be removed
+//│ ║  l.62: 	datatype FCPoly[A] = FCPolyList[A] of List[forall 'a. A -> A]
+//│ ╙──      	                ^
+//│ Code generation encountered an error:
+//│   cannot inherit from type alias List

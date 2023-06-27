@@ -14,7 +14,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     "def", "class", "trait", "type", "method", "mut",
     "let", "rec", "in", "fun", "with", "undefined", "null",
     "if", "then", "else", "match", "case", "of", "forall",
-    "typeadt")
+    "datatype")
   def kw[p: P](s: String) = s ~~ !(letter | digit | "_" | "'")
   
   // NOTE: due to bug in fastparse, the parameter should be by-name!
@@ -294,8 +294,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   })
   def litTy[p: P]: P[Type] = P( lit.map(l => Literal(l).withLocOf(l)) )
   
-  def toplvl[p: P]: P[Ls[Statement]] =
-      P(adtTyDecl) | P( defDecl | tyDecl | termOrAssign ).map(_ :: Nil)
+  def toplvl[p: P]: P[Ls[Statement]] = P(adtTyDecl) | P( defDecl | tyDecl | termOrAssign ).map(_ :: Nil)
   def pgrm[p: P]: P[Pgrm] = P( (";".rep ~ toplvl ~ topLevelSep.rep).rep.map(_.toList.flatten) ~ End ).map(Pgrm)
   def topLevelSep[p: P]: P[Unit] = ";"
   
@@ -310,99 +309,6 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   /// ADT types
   ///////////////////////////////////////////////////////
 
-  // Param defined like 'a
-  def adtTyParam[p: P]: P[TypeName] = locate(P(("'" ~~ lowercase.!).map(param =>
-    TypeName("'" + param)
-  )))
-
-  // Params defined like ('a, 'b) or 'a
-  def adtTyParams[p: P]: P[Ls[TypeName]] =
-    adtTyParam.map(_ :: Nil) |
-      ("(" ~ adtTyParam.rep(0, ",") ~ ")").?.map(_.toList.flatten)
-
-  def adtTyExpr[p: P]: P[(Set[TypeName], Type)] =
-    // multiple type parameters applied to a type
-    ("(" ~ adtTyAlias.rep(1, ",") ~ ")" ~ tyName.?).map {
-      case (Seq(), N) => throw new Exception("Ocaml type expression without any parameters or types is not allowed")
-      case (Seq(t), N) => t
-      // cases where the type is a tuple like
-      // Class of ('a, 'b)
-      case (parts, N) =>
-        val tparams = parts.flatMap(_._1).toSet
-        val tupBody = Tuple(parts.map(part => (N, Field(N, part._2))).toList)
-        (tparams, tupBody)
-      // cases where the type is applied to type parameters or no parameters
-      // int
-      // int list
-      // (int, string) tup2
-      case (Seq(), S(t)) => (Set.empty[TypeName], t)
-      case (parts, S(t)) =>
-        val tparams = parts.flatMap(_._1).toSet
-        val args = parts.map(_._2).toList
-        (tparams, AppliedType(t, args))
-    } |
-      // type name or variable optionally applied to a type
-      ((tyName.map(L.apply) | adtTyParam.map(R.apply)) ~ tyName.rep()).map {
-        case (L(tname), Seq()) => (Set.empty[TypeName], tname)
-        case (R(tparam), Seq()) => (Set(tparam), tparam)
-        case (L(tparam), types) =>
-          val appType = types.foldLeft(tparam: Type) { case (appType, t) => AppliedType(t, appType :: Nil) }
-          (Set.empty[TypeName], appType)
-        case (R(tparam), types) =>
-          val appType = types.foldLeft(tparam: Type) { case (appType, t) => AppliedType(t, appType :: Nil) }
-          (Set(tparam), appType)
-      }
-
-  def adtTyForall[p: P]: P[(Set[TypeName], Type)] = P( (kw("forall") ~/ tyVar.rep ~ "." ~ adtTyFun).map {
-    case (vars, ty) => (Set.empty[TypeName], PolyType(vars.map(R(_)).toList, ty._2))
-  } | adtTyFun )
-
-  def adtTyFun[p: P]: P[(Set[TypeName], Type)] =
-    (adtTyExpr | ("(" ~/ adtTyExpr ~ ")")).rep(1, "->")
-      .map {
-        case Seq(t) => t
-        case parts =>
-          val tparams = parts.flatMap(_._1).toSet
-          val funBody = parts.init.map(_._2).foldRight(parts.last._2) {
-            case (arg, ret) => Function(toParamsTy(arg), ret)
-          }
-          (tparams, funBody)
-      }
-
-  /** Type alias body made of parts in a product type. each part can be a type
-    * or a function.
-    * Can return TypeName or a Tuple or a Function
-    */
-  def adtTyAlias[p: P]: P[(Set[TypeName], Type)] =
-    (adtTyForall | ("(" ~/ adtTyForall ~ ")")).rep(1, "*")
-      .map {
-        case Seq(t) => t
-        case parts =>
-          val tparams = parts.flatMap(_._1).toSet
-          val tupBody = Tuple(parts.map(part => (N, Field(N, part._2))).toList)
-          (tparams, tupBody)
-      }
-
-  /** data constructor body
-    * type 'a, 'b tup = Tup of ['a * 'b] => ('a, 'b)
-    * type 'a, 'b tup = Tup of ['a list * 'b] => (List['a], 'b)
-    * type 'a, 'b tup = Tup of ['a * 'b list] => ('a, List['b])
-    * type 'a, 'b tup = Tup of [('a * 'b) list] => (List[('a, 'b)])
-    */
-  def adtCtorBody[p: P]: P[(Set[TypeName], Record)] =
-    adtTyExpr.rep(1, "*")
-      .map {
-        case Seq((tparams, tbody)) =>
-          val rcdBody = Record(Var("_0") -> Field(N, tbody) :: Nil)
-          (tparams, rcdBody)
-        case parts =>
-          val tparams = parts.flatMap(_._1).toSet
-          val rcdBody = parts.zipWithIndex.map {
-            case (t, i) => Var(s"_$i") -> Field(N, t._2)
-          }.toList
-          (tparams, Record(rcdBody))
-      }
-
   def ctorName[p: P]: P[TypeName] =
     locate(P(uppercase ~~ (letter | digit | "_" | "'").repX).!.filter(!keywords(_)).map(TypeName))
 
@@ -410,26 +316,26 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     * type 'a, 'b tup = [Tup of 'a * 'b]
     */
   def adtCtorDecl[p: P]: P[TypeDef] =
-    P((ctorName ~ ("of" ~/ adtCtorBody).?).map {
-      case (id, Some((params, body))) =>
+    P((ctorName ~ tyParams ~ (kw("of") ~/ tyNoAs).?).map {
+      // pattern matching using positionals is only allowed for Record types
+      case (id, params, S(body: Record)) =>
         val positionals = body.fields.map(_._1)
-        TypeDef(Cls, id, params.toList, body, Nil, Nil, positionals)
-      case (id, None) => TypeDef(Cls, id, Nil, Record(Ls.empty), Nil, Nil, Nil)
+        TypeDef(Cls, id, params, body, Nil, Nil, positionals)
+      case (id, params, S(body: Tuple)) =>
+        val positionals = body.fields.zipWithIndex.map(tup => Var(tup._2.toString))
+        TypeDef(Cls, id, params, body, Nil, Nil, positionals)
+      case (id, params, S(body)) =>
+        TypeDef(Cls, id, params, body, Nil, Nil, Nil)
+      case (id, _, None) => TypeDef(Cls, id, Nil, Record(Ls.empty), Nil, Nil, Nil)
     })
 
-  // https://v2.ocaml.org/manual/typedecl.html#ss:typedefs
-  // TODO: handle record style type representation
-  // type 'a lst = [Null | Cons of 'a * 'a lst]
-  def adtDataCtor[p: P]: P[List[TypeDef]] = adtCtorDecl.rep(1, "|").map(_.toList)
+  def adtDataCtor[p: P]: P[List[TypeDef]] = adtCtorDecl.rep(1, "||").map(_.toList)
 
   def adtTyDecl[p: P]: P[Ls[Statement]] =
-    P((kw("typeadt") ~ adtTyParams ~ ctorName ~ "=" ~/
-      // either a sum type with data constructors or a type alias
-      (adtDataCtor.map(L.apply) | adtTyAlias.map(R.apply))
-      ).map {
+    P((kw("datatype") ~ ctorName ~ tyParams ~ "=" ~/ adtDataCtor).map {
       // parsed data constructors create classes and helper functions
       // create an alias for the type itself
-      case (tparams, alsName, L(bodies)) =>
+      case (alsName, tparams, bodies) =>
         val paramSet = tparams.toSet
         val bodyUpdateAdtInfo = bodies.map(tyDef => {
           val paramMapIndex = tyDef.tparams.filter(paramSet(_)).map(elem => tparams.zipWithIndex.filter(_._1 == elem).head._2)
@@ -451,9 +357,6 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
         val als = TypeDef(Als, alsName, tparams, aliasBody, Nil, Nil, Nil)
         als.adtInfo = S(AdtInfo(alsName, Nil))
         als :: bodyUpdateAdtInfo ::: helpers
-      // a type name, variable or applied type as alias
-      case (tparams, tname, R((_, t))) =>
-        TypeDef(Als, tname, tparams, t, Nil, Nil, Nil) :: Nil
     })
 
   // create a helper function for a class constructor
