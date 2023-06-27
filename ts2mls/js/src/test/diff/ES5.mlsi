@@ -783,6 +783,7 @@ declare module Intl {
   export declare trait Collator {
     fun compare(args0: Str, args1: Str): Num
     fun resolvedOptions(): ResolvedCollatorOptions
+    fun supportedLocalesOf(args0: (Str) | (MutArray[Str]), args1: (CollatorOptions) | (undefined)): MutArray[Str]
   }
   export declare trait NumberFormatOptions {
     val minimumSignificantDigits: (Num) | (undefined)
@@ -811,6 +812,8 @@ declare module Intl {
   export declare trait NumberFormat {
     fun format(args0: Num): Str
     fun resolvedOptions(): ResolvedNumberFormatOptions
+    fun supportedLocalesOf(args0: (Str) | (MutArray[Str]), args1: (NumberFormatOptions) | (undefined)): MutArray[Str]
+    val prototype: NumberFormat
   }
   export declare trait DateTimeFormatOptions {
     val minute: ((Str) | (Str)) | (undefined)
@@ -846,5 +849,7 @@ declare module Intl {
   export declare trait DateTimeFormat {
     fun format(args0: ((Num) | (Date)) | (undefined)): Str
     fun resolvedOptions(): ResolvedDateTimeFormatOptions
+    fun supportedLocalesOf(args0: (Str) | (MutArray[Str]), args1: (DateTimeFormatOptions) | (undefined)): MutArray[Str]
+    val prototype: DateTimeFormat
   }
 }
