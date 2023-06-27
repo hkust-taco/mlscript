@@ -13,6 +13,6 @@ export declare module Export {
   fun default(x: anything): anything
   export declare class E {}
   export val F = E
-  export val G = B
+  export val G = Dependency.B
   export val H = Dependency
 }

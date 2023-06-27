@@ -4,14 +4,14 @@ import scala.scalajs.js
 import js.DynamicImplicits._
 import types._
 import mlscript.utils._
-import scala.collection.mutable.{ListBuffer, HashMap}
+import scala.collection.mutable.ListBuffer
 
 class TSSourceFile(sf: js.Dynamic, global: TSNamespace, topName: String)(implicit checker: TSTypeChecker, config: js.Dynamic) {
   private val lineHelper = new TSLineStartsHelper(sf.getLineStarts())
   private val importList = TSImportList()
   private val reExportList = new ListBuffer[TSReExport]()
   private val resolvedPath = sf.resolvedPath.toString()
-  private var umdModuleName: Option[String] = None
+  private var umdModuleName: Option[String] = None // `export as namespace` in ts
 
   val referencedFiles = sf.referencedFiles.map((x: js.Dynamic) => x.fileName.toString())
   def getUMDModule: Option[TSNamespace] =
@@ -43,17 +43,12 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace, topName: String)(implici
     }
   })
 
-  // handle parents
+  // handle parents & export
   TypeScript.forEachChild(sf, (node: js.Dynamic) => {
     val nodeObject = TSNodeObject(node)
     if (!nodeObject.isToken && !nodeObject.symbol.isUndefined)
       handleParents(nodeObject, nodeObject.symbol.escapedName)(global)
-  })
-
-  // check export
-  TypeScript.forEachChild(sf, (node: js.Dynamic) => {
-    val nodeObject = TSNodeObject(node)
-    if (nodeObject.isExportDeclaration) {
+    else if (nodeObject.isExportDeclaration) {
       if (!nodeObject.moduleSpecifier.isUndefined) // re-export
         parseImportDeclaration(nodeObject.exportClause, nodeObject.moduleSpecifier, true)
       else // ES modules
@@ -89,10 +84,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace, topName: String)(implici
     elements.foreach(ele =>
       if (ele.propertyName.isUndefined)
         global.`export`(ele.symbol.escapedName)
-      else {
-        val alias = ele.symbol.escapedName
-        global.getTop(ele.propertyName.escapedText).fold(())(tp => global.put(alias, TSRenamedType(alias, tp), true, false))
-      }
+      else global.exportWithAlias(ele.propertyName.escapedText, ele.symbol.escapedName)
     )
   }
 
@@ -189,7 +181,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace, topName: String)(implici
     else if (obj.isArrayType) TSArrayType(getObjectType(obj.elementTypeOfArray))
     else if (obj.isTypeParameterSubstitution) {
       val baseName = getSymbolFullname(if (obj.symbol.isUndefined) obj.aliasSymbol else obj.symbol)
-      if (baseName.contains(".")) TSNoInfoUnsupported // A.B<C> is not supported in mlscript
+      if (baseName.contains(".")) TSNoInfoUnsupported // A.B<C> is not supported in mlscript so far
       else TSSubstitutionType(TSReferenceType(baseName), getSubstitutionArguments(obj.typeArguments))
     }
     else if (obj.isObject)

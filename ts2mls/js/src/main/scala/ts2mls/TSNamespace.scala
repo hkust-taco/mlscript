@@ -92,19 +92,17 @@ class TSNamespace(name: String, parent: Option[TSNamespace], allowReservedTypes:
     case _ => throw new Exception(s"member ${names.mkString(".")} not found.")
   }
 
-  def getTop(name: String): Option[TSType] =
+  def exportWithAlias(name: String, alias: String): Unit =
     if (members.contains(name)) members(name)._1 match {
-      case cls: TSClassType => Some(TSReferenceType(cls.name))
-      case itf: TSInterfaceType => Some(TSReferenceType(itf.name))
+      case _: TSClassType => put(alias, TSRenamedType(alias, TSReferenceType(name)), true, false)
+      case _: TSInterfaceType => put(alias, TSRenamedType(alias, TSReferenceType(name)), true, false)
       case _: TSTypeAlias => None // type alias in ts would be erased.
-      case tp => Some(tp) // variables & functions
+      case tp => put(alias, TSRenamedType(alias, tp), true, false) // variables & functions
     }
-    else if (subSpace.contains(name)) Some(TSReferenceType(name))
-    else None
+    else if (subSpace.contains(name)) put(alias, TSRenamedType(alias, TSReferenceType(name)), true, false)
 
   def containsMember(name: String, searchParent: Boolean = true): Boolean =
     if (parent.isEmpty) members.contains(name) else (members.contains(name) || (searchParent && parent.get.containsMember(name)))
-
 
   private def expStr(exp: Boolean) = if (exp) "export " else ""
   private val typer =

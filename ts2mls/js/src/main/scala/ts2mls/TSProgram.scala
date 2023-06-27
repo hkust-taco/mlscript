@@ -76,7 +76,7 @@ class TSProgram(file: FileInfo, uesTopLevelModule: Boolean, tsconfig: Option[Str
           val moduleName = basename(absName)
           memberName.fold(
             globalNamespace.put(alias, TSRenamedType(alias, TSReferenceType(moduleName)), true, false)
-          )(name => ns.getTop(name).fold[Unit](())(tp => globalNamespace.put(alias, TSRenamedType(alias, tp), true, false)))
+          )(name => globalNamespace.put(alias, TSRenamedType(alias, TSReferenceType(s"$moduleName.$name")), true, false))
         }
     }
 
