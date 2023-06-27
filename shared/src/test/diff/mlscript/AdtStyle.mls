@@ -45,30 +45,14 @@ datatype Stmt = Skip || Assign of (string, Exp)
 //│ Code generation encountered an error:
 //│   cannot inherit from type alias int
 
-datatype Poly[A] = PolyList[A] of List[A -> A]
-//│ ╔══[ERROR] cannot inherit from a type alias
-//│ ║  l.48: 	datatype Poly[A] = PolyList[A] of List[A -> A]
-//│ ╙──      	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ Defined type alias Poly[±A]
-//│ ╔══[WARNING] Type definition Poly has bivariant type parameters:
-//│ ║  l.48: 	datatype Poly[A] = PolyList[A] of List[A -> A]
-//│ ║        	         ^^^^
-//│ ╟── A is irrelevant and may be removed
-//│ ║  l.48: 	datatype Poly[A] = PolyList[A] of List[A -> A]
-//│ ╙──      	              ^
-//│ Code generation encountered an error:
-//│   cannot inherit from type alias List
+datatype Poly[A] = PolyList[A] of {_0: List[A -> A]}
+//│ Defined type alias Poly[=A]
+//│ Defined class PolyList[=A]
+//│ PolyList: List['a -> 'a] -> Poly['a]
+//│         = <missing implementation>
 
-datatype FCPoly[A] = FCPolyList[A] of List[forall 'a. A -> A]
-//│ ╔══[ERROR] cannot inherit from a type alias
-//│ ║  l.62: 	datatype FCPoly[A] = FCPolyList[A] of List[forall 'a. A -> A]
-//│ ╙──      	                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ Defined type alias FCPoly[±A]
-//│ ╔══[WARNING] Type definition FCPoly has bivariant type parameters:
-//│ ║  l.62: 	datatype FCPoly[A] = FCPolyList[A] of List[forall 'a. A -> A]
-//│ ║        	         ^^^^^^
-//│ ╟── A is irrelevant and may be removed
-//│ ║  l.62: 	datatype FCPoly[A] = FCPolyList[A] of List[forall 'a. A -> A]
-//│ ╙──      	                ^
-//│ Code generation encountered an error:
-//│   cannot inherit from type alias List
+datatype FCPoly = FCPolyList of {_0: List[forall 'a. 'a -> 'a]}
+//│ Defined type alias FCPoly
+//│ Defined class FCPolyList
+//│ FCPolyList: List[forall 'a. 'a -> 'a] -> FCPoly
+//│           = <missing implementation>

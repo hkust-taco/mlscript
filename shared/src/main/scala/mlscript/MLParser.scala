@@ -14,7 +14,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     "def", "class", "trait", "type", "method", "mut",
     "let", "rec", "in", "fun", "with", "undefined", "null",
     "if", "then", "else", "match", "case", "of", "forall",
-    "datatype")
+    "datatype", "match")
   def kw[p: P](s: String) = s ~~ !(letter | digit | "_" | "'")
   
   // NOTE: due to bug in fastparse, the parameter should be by-name!
