@@ -1,9 +1,6 @@
 package ts2mls
 
 import org.scalatest.funsuite.AnyFunSuite
-import scala.collection.immutable
-import TSPathResolver.basename
-import ts2mls.TSPathResolver
 
 class TSTypeGenerationTest extends AnyFunSuite {
   import TSTypeGenerationTest._

@@ -1,7 +1,5 @@
 package ts2mls.types
 
-import ts2mls.TSNamespace
-
 sealed abstract class TSAccessModifier
 case object Public extends TSAccessModifier
 case object Private extends TSAccessModifier
@@ -12,20 +10,20 @@ sealed abstract class TSType {
 }
 
 // record both parameter's name and parameter's type
-case class TSParameterType(name: String, val tp: TSType) extends TSType {
+case class TSParameterType(name: String, tp: TSType) extends TSType {
   override val unsupported: Boolean = tp.unsupported
 }
-case class TSMemberType(val base: TSType, val modifier: TSAccessModifier = Public) extends TSType {
+case class TSMemberType(base: TSType, modifier: TSAccessModifier = Public) extends TSType {
   override val unsupported: Boolean = base.unsupported
 }
 
-case class TSTypeParameter(val name: String, constraint: Option[TSType] = None) extends TSType {
+case class TSTypeParameter(name: String, constraint: Option[TSType] = None) extends TSType {
   override val unsupported: Boolean = constraint.fold(false)(c => c.unsupported)
 }
 
 case class TSPrimitiveType(typeName: String) extends TSType
 case class TSReferenceType(name: String) extends TSType {
-  val names = if (name.contains(".")) name.split("\\.").toList else name :: Nil
+  val nameList = if (name.contains(".")) name.split("\\.").toList else name :: Nil
 }
 case object TSEnumType extends TSType
 case class TSTupleType(types: List[TSType]) extends TSType {
@@ -104,6 +102,6 @@ case class TSLiteralType(value: String, isString: Boolean) extends TSType
 case class TSUnsupportedType(code: String, filename: String, line: String, column: String) extends TSType {
   override val unsupported: Boolean = true
 }
-object TSPartialUnsupportedType extends TSType {
+object TSNoInfoUnsupported extends TSType { // unsupported type without code and location information
   override val unsupported: Boolean = true
 }

@@ -34,7 +34,7 @@ class DriverDiffTests extends AnyFunSuite {
 object DriverDiffTests {
   // For local environment, we may change the driver so forcing compiling is necessary
   // but we can ban it during CI
-  private val forceCompiling = sys.env.get("CI").isEmpty
+  private val forceCompiling = true
 
   private val diffPath = "driver/js/src/test/"
   private val outputPath = s"${diffPath}output/"

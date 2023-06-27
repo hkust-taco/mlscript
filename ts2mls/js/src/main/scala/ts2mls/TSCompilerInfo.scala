@@ -248,6 +248,9 @@ class TSNodeObject(node: js.Dynamic)(implicit checker: TSTypeChecker) extends TS
   lazy val idExpression = TSIdentifierObject(node.expression)
   lazy val isVarParam = !IsUndefined(node.dotDotDotToken)
   lazy val hasmoduleReference = !IsUndefined(node.moduleReference)
+  lazy val moduleAugmentation =
+    if (IsUndefined(node.moduleAugmentations)) TSTokenObject(g.undefined)
+    else TSTokenObject(node.moduleAugmentations.selectDynamic("0"))
 }
 
 object TSNodeObject {

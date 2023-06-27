@@ -126,7 +126,7 @@ class TSNamespace(name: String, parent: Option[TSNamespace], allowReservedTypes:
 
   private def merge(name: String, writer: JSWriter, indent: String): Unit = {
     (members(name), subSpace(name)._1) match {
-      case ((TSReferenceType(realType), exp), ns) => ns.get(realType) match {
+      case ((ref: TSReferenceType, exp), ns) => get(ref.nameList) match {
         case TSInterfaceType(itf, members, _, _, _) =>
           ns.subSpace.mapValuesInPlace {
             case (_, (ns, _)) => (ns, false)
@@ -138,9 +138,11 @@ class TSNamespace(name: String, parent: Option[TSNamespace], allowReservedTypes:
             case (name, TSMemberType(tp, _)) =>
               ns.put(name, tp, true, true)
           }
-        case _ => () // if merging is not supported, do nothing
+        case _ =>
+          writer.writeln(s"$indent// WARNING: duplicate $name") // if merging is not supported, do nothing
       }
-      case _ => () // if merging is not supported, do nothing
+      case _ =>
+        writer.writeln(s"$indent// WARNING: duplicate $name") // if merging is not supported, do nothing
     }
     generateNS(name, writer, indent)
   }

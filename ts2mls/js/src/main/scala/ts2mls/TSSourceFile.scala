@@ -5,7 +5,6 @@ import js.DynamicImplicits._
 import types._
 import mlscript.utils._
 import scala.collection.mutable.{ListBuffer, HashMap}
-import ts2mls.TSPathResolver
 
 class TSSourceFile(sf: js.Dynamic, global: TSNamespace, topName: String)(implicit checker: TSTypeChecker, config: js.Dynamic) {
   private val lineHelper = new TSLineStartsHelper(sf.getLineStarts())
@@ -16,7 +15,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace, topName: String)(implici
 
   val referencedFiles = sf.referencedFiles.map((x: js.Dynamic) => x.fileName.toString())
   def getUMDModule: Option[TSNamespace] =
-    umdModuleName.fold[Option[TSNamespace] ](Some(global))(name => Some(global.derive(name, false)))
+    umdModuleName.fold[Option[TSNamespace]](Some(global))(name => Some(global.derive(name, false)))
 
   // parse import
   TypeScript.forEachChild(sf, (node: js.Dynamic) => {
@@ -44,29 +43,27 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace, topName: String)(implici
     }
   })
 
+  // handle parents
+  TypeScript.forEachChild(sf, (node: js.Dynamic) => {
+    val nodeObject = TSNodeObject(node)
+    if (!nodeObject.isToken && !nodeObject.symbol.isUndefined)
+      handleParents(nodeObject, nodeObject.symbol.escapedName)(global)
+  })
+
   // check export
   TypeScript.forEachChild(sf, (node: js.Dynamic) => {
     val nodeObject = TSNodeObject(node)
     if (nodeObject.isExportDeclaration) {
       if (!nodeObject.moduleSpecifier.isUndefined) // re-export
         parseImportDeclaration(nodeObject.exportClause, nodeObject.moduleSpecifier, true)
-      else
+      else // ES modules
         parseExportDeclaration(nodeObject.exportClause.elements)
     }
-    else if (nodeObject.isExportAssignment) {
-      val name = nodeObject.idExpression.escapedText
-      global.renameExport(name, topName)
-    }
-    else if (nodeObject.exportedAsNamespace)
+    else if (nodeObject.isExportAssignment) // commonJS
+      global.renameExport(nodeObject.idExpression.escapedText, topName)
+    else if (nodeObject.exportedAsNamespace) // UMD
       umdModuleName = Some(nodeObject.symbol.escapedName)
   })
-
-  def postProcess: Unit = // handle parents
-    TypeScript.forEachChild(sf, (node: js.Dynamic) => {
-      val nodeObject = TSNodeObject(node)
-      if (!nodeObject.isToken && !nodeObject.symbol.isUndefined)
-        handleParents(nodeObject, nodeObject.symbol.escapedName)(global)
-    })
 
   def getImportList: List[TSImport] = importList.getFilelist
   def getReExportList: List[TSReExport] = reExportList.toList
@@ -134,32 +131,47 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace, topName: String)(implici
       case tp: TSTypeObject => lst :+ getObjectType(tp)
     })
 
-  private def getSymbolFullname(sym: TSSymbolObject)(implicit ns: TSNamespace): String =
+  private def getSymbolFullname(sym: TSSymbolObject)(implicit ns: TSNamespace): String = {
+    def simplify(symName: String, nsName: String): String =
+      if (symName.startsWith(nsName + ".")) symName.substring(nsName.length() + 1)
+      else if (nsName.lastIndexOf('.') > -1) simplify(symName, nsName.substring(0, nsName.lastIndexOf('.')))
+      else symName
     if (!sym.parent.isUndefined && sym.parent.declaration.isSourceFile)
       importList.resolveTypeAlias(sym.parent.declaration.resolvedPath, sym.escapedName)
-    else if (!sym.parent.isUndefined && sym.parent.isMerged && sym.parent.escapedName === "_") {
+    else if (!sym.parent.isUndefined && sym.parent.isMerged) {
       def findDecFile(node: TSNodeObject): String =
         if (node.parent.isUndefined) ""
-        else if (node.parent.isSourceFile) node.parent.resolvedPath
+        else if (node.parent.isSourceFile) {
+          if (node.parent.moduleAugmentation.isUndefined)
+            node.parent.resolvedPath
+          else {
+            val base = node.parent.resolvedPath
+            val rel = node.parent.moduleAugmentation.text
+            if (TSPathResolver.isLocal(rel)) TypeScript.resolveModuleName(rel, base, config)
+            else base
+          }
+        }
         else findDecFile(node.parent)
-      val filename = findDecFile(sym.declaration)
-      if (filename === resolvedPath) sym.escapedName
-      else importList.resolveTypeAlias(filename, sym.escapedName)
+      val filename = sym.declarations.foldLeft[Option[String]](None)((filename, dec) => filename match {
+        case filename: Some[String] => filename
+        case _ =>
+          val res = findDecFile(dec)
+          Option.when((res === resolvedPath) || importList.contains(res))(res)
+      })
+      filename.fold(sym.escapedName)(filename => // not found: this file is referenced by `///`. directly use the name is safe
+        if (filename === resolvedPath) // in the same file
+          simplify(s"${getSymbolFullname(sym.parent)}.${sym.escapedName}", ns.toString())
+        else importList.resolveTypeAlias(filename, sym.escapedName) // in an imported file
+      )
     }
     else if (sym.parent.isUndefined) {
       val name = sym.escapedName
       if (name.contains("\"")) TSPathResolver.basename(name.substring(1, name.length() - 1))
-      else if (name === "_") "" // for UMD
       else name
     }
-    else {
-      def simplify(symName: String, nsName: String): String =
-        if (symName.startsWith(nsName + ".")) symName.substring(nsName.length() + 1)
-        else if (nsName.lastIndexOf('.') > -1) simplify(symName, nsName.substring(0, nsName.lastIndexOf('.')))
-        else symName
-      val p = getSymbolFullname(sym.parent)
-      simplify(s"${if (p.isEmpty()) "" else s"$p."}${sym.escapedName}", ns.toString())
-    }
+    else
+      simplify(s"${getSymbolFullname(sym.parent)}.${sym.escapedName}", ns.toString())
+  }
 
   private def markUnsupported(node: TSNodeObject): TSUnsupportedType =
     lineHelper.getPos(node.pos) match {
@@ -168,7 +180,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace, topName: String)(implici
     }
 
   private def getObjectType(obj: TSTypeObject)(implicit ns: TSNamespace): TSType =
-    if (obj.isMapped) TSPartialUnsupportedType
+    if (obj.isMapped) TSNoInfoUnsupported
     else if (obj.isEnumType) TSEnumType
     else if (obj.isFunctionLike) getFunctionType(obj.symbol.declaration, true)
     else if (obj.isTupleType) TSTupleType(getTupleElements(obj.typeArguments))
@@ -177,7 +189,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace, topName: String)(implici
     else if (obj.isArrayType) TSArrayType(getObjectType(obj.elementTypeOfArray))
     else if (obj.isTypeParameterSubstitution) {
       val baseName = getSymbolFullname(if (obj.symbol.isUndefined) obj.aliasSymbol else obj.symbol)
-      if (baseName.contains(".")) TSPartialUnsupportedType // A.B<C> is not supported in mlscript
+      if (baseName.contains(".")) TSNoInfoUnsupported // A.B<C> is not supported in mlscript
       else TSSubstitutionType(TSReferenceType(baseName), getSubstitutionArguments(obj.typeArguments))
     }
     else if (obj.isObject)
@@ -185,11 +197,11 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace, topName: String)(implici
         val props = getAnonymousPropertiesType(obj.properties)
         if (!props.exists{ case (name, _) if (!name.isEmpty()) => Character.isUpperCase(name(0)); case _ => false})
           TSInterfaceType("", props, List(), List(), None)
-        else TSPartialUnsupportedType
+        else TSNoInfoUnsupported
       }
       else TSReferenceType(getSymbolFullname(obj.symbol))
     else if (obj.isTypeParameter) TSTypeParameter(obj.symbol.escapedName)
-    else if (obj.isConditionalType || obj.isIndexType || obj.isIndexedAccessType) TSPartialUnsupportedType
+    else if (obj.isConditionalType || obj.isIndexType || obj.isIndexedAccessType) TSNoInfoUnsupported
     else TSPrimitiveType(obj.intrinsicName)
 
   // the function `getMemberType` can't process function/tuple type alias correctly
@@ -264,14 +276,14 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace, topName: String)(implici
 
   private def getHeritageList(node: TSNodeObject, members: Set[String])(implicit ns: TSNamespace): List[TSType] =
     node.heritageClauses.foldLeftIndexed(List[TSType]())((lst, h, index) => {
-      def run(ref: TSReferenceType) = ns.get(ref.names) match {
+      def run(ref: TSReferenceType) = ns.get(ref.nameList) match {
         case itf: TSInterfaceType
           if (itf.members.foldLeft(itf.unsupported)((r, t) => r || (t._2.base.unsupported && members(t._1)))) =>
-            TSPartialUnsupportedType
+            TSNoInfoUnsupported
         case cls: TSClassType
           if (cls.members.foldLeft(cls.unsupported)((r, t) => r || (t._2.base.unsupported && members(t._1)))) =>
-            TSPartialUnsupportedType
-        case t if (t.unsupported) => TSPartialUnsupportedType
+            TSNoInfoUnsupported
+        case t if (t.unsupported) => TSNoInfoUnsupported
         case t => ref
       }
       lst :+ (getObjectType(h.types.get(index).typeNode) match {

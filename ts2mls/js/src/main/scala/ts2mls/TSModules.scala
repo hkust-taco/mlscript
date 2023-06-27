@@ -83,9 +83,12 @@ class TSImportList {
         val fullAlias =
           if (fullList.contains(modulePath)) fullList(modulePath).resolveTypeAlias(name)
           else None
-        fullAlias.getOrElse(name) // cjs modules have no prefix
+        fullAlias.getOrElse(throw new Exception(s"$name is not found at $modulePath"))
     }
   }
+
+  def contains(modulePath: String): Boolean =
+    singleList.contains(modulePath) || fullList.contains(modulePath)
 
   def getFilelist: List[TSImport] =
     (singleList.values.toList ::: fullList.values.toList)

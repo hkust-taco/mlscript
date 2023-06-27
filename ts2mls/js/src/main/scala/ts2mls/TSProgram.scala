@@ -24,10 +24,10 @@ class TSProgram(file: FileInfo, uesTopLevelModule: Boolean, tsconfig: Option[Str
 
   def generate: Boolean = generate(file, None)(Nil)
 
-  private def generate(file: FileInfo, ns: Option[TSNamespace])(implicit stack: List[String]): Boolean = {
+  private def generate(file: FileInfo, ambientNS: Option[TSNamespace])(implicit stack: List[String]): Boolean = {
     val filename = file.resolve
     val moduleName = file.moduleName
-    val globalNamespace = ns.getOrElse(TSNamespace(!uesTopLevelModule))
+    val globalNamespace = ambientNS.getOrElse(TSNamespace(!uesTopLevelModule))
     val sfObj = program.getSourceFileByPath(filename)
     val sourceFile =
       if (IsUndefined(sfObj)) throw new Exception(s"can not load source file $filename.")
@@ -59,7 +59,7 @@ class TSProgram(file: FileInfo, uesTopLevelModule: Boolean, tsconfig: Option[Str
       }
     })
     cycleList.foreach(imp => {
-      if (ns.isEmpty || stack.indexOf(filename) > 0) {
+      if (ambientNS.isEmpty || stack.indexOf(filename) > 0) {
         writer.writeln(s"declare module ${Converter.escapeIdent(imp.moduleName)} {")
         cache(imp.resolve).generate(writer, "  ")
         writer.writeln("}")
@@ -84,8 +84,7 @@ class TSProgram(file: FileInfo, uesTopLevelModule: Boolean, tsconfig: Option[Str
       generate(file.`import`(s.toString()), sourceFile.getUMDModule)(filename :: stack)
     })
 
-    sourceFile.postProcess
-    if (ns.isEmpty) {
+    if (ambientNS.isEmpty) {
       generate(writer, globalNamespace, moduleName, globalNamespace.isCommonJS)
       writer.close()
     }
