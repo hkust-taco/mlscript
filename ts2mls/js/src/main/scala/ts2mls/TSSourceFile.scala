@@ -401,10 +401,10 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace, topName: String)(implici
       case _ => throw new AssertionError(s"$name is not a class")
     }
     else if (node.isInterfaceDeclaration) ns.get(name) match {
-      case TSInterfaceType(_, members, typeVars, parents, cs) =>
+      case TSInterfaceType(_, members, typeVars, _, cs) =>
         val list = getHeritageList(node, members.keySet)
         if (!list.isEmpty) {
-          val itf = TSInterfaceType(name, members, typeVars, getHeritageList(node, members.keySet), cs)
+          val itf = TSInterfaceType(name, members, typeVars, list, cs)
           ns.put(name, if (itf.unsupported) markUnsupported(node) else itf, ns.exported(name), true)
         }
       case t if (t.unsupported) => () // ignore types that have been marked as unsupported.

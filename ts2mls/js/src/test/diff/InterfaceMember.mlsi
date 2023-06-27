@@ -28,7 +28,7 @@ export declare module InterfaceMember {
   declare trait Simple2['T] {
     val abc: 'T
   }
-  declare trait Next {}
+  declare trait Next extends Simple {}
   declare trait TTT['T] {
     fun ttt(x: 'T): 'T
   }

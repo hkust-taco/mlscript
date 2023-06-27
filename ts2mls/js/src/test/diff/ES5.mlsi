@@ -68,12 +68,12 @@ declare trait FunctionConstructor: (args0: (Str) | (MutArray[Str])) => Function 
 }
 type ThisParameterType = unsupported["type ThisParameterType<T> = T extends (this: infer U, ...args: never) => any ? U : unknown;", "ES5.d.ts", 301, 42]
 type OmitThisParameter = unsupported["type OmitThisParameter<T> = unknown extends ThisParameterType<T> ? T : T extends (...args: infer A) => infer R ? (...args: A) => R : T;", "ES5.d.ts", 306, 91]
-declare trait CallableFunction {
+declare trait CallableFunction extends Function {
   fun apply['T, 'A, 'R](args0: 'T, args1: 'A): 'R /* warning: the overload of function apply is not supported yet. */
   fun call['T, 'A, 'R](args0: 'T, args1: 'A): 'R
   fun bind['T, 'AX, 'R](args0: 'T, args1: ('AX) | (MutArray['AX])): (args: ('AX) | (MutArray['AX])) => 'R /* warning: the overload of function bind is not supported yet. */
 }
-declare trait NewableFunction {
+declare trait NewableFunction extends Function {
   fun apply['T, 'A](args0: 'T, args1: 'A): unit /* warning: the overload of function apply is not supported yet. */
   fun call['T, 'A](args0: 'T, args1: 'A): unit
   fun bind['AX, 'R](args0: anything, args1: ('AX) | (MutArray['AX])): (args: ('AX) | (MutArray['AX])) => 'R /* warning: the overload of function bind is not supported yet. */
@@ -136,7 +136,7 @@ declare trait NumberConstructor: (args0: (anything) | (undefined)) => Num {
   val MAX_VALUE: Num
   val prototype: Number
 }
-declare trait TemplateStringsArray {
+declare trait TemplateStringsArray extends ReadonlyArray[Str] {
   val raw: ReadonlyArray[Str]
 }
 declare trait ImportMeta {}
@@ -226,12 +226,12 @@ declare trait DateConstructor: () => Str {
   fun parse(args0: Str): Num
   val prototype: Date
 }
-declare trait RegExpMatchArray {
+declare trait RegExpMatchArray extends Array[Str] {
   val index: (Num) | (undefined)
   val input: (Str) | (undefined)
   val id"0": Str
 }
-declare trait RegExpExecArray {
+declare trait RegExpExecArray extends Array[Str] {
   val index: Num
   val input: Str
   val id"0": Str
@@ -278,17 +278,17 @@ declare trait ErrorConstructor: (args0: (Str) | (undefined)) => Error {
   val __new: unsupported["new(message?: string): Error;", "ES5.d.ts", 1042, 28]
   val prototype: Error
 }
-declare trait EvalError {}
+declare trait EvalError extends Error {}
 val EvalErrorConstructor: unsupported["interface EvalErrorConstructor extends ErrorConstructor {     new(message?: string): EvalError;     (message?: string): EvalError;     readonly prototype: EvalError; }", "ES5.d.ts", 1051, 1]
-declare trait RangeError {}
+declare trait RangeError extends Error {}
 val RangeErrorConstructor: unsupported["interface RangeErrorConstructor extends ErrorConstructor {     new(message?: string): RangeError;     (message?: string): RangeError;     readonly prototype: RangeError; }", "ES5.d.ts", 1062, 1]
-declare trait ReferenceError {}
+declare trait ReferenceError extends Error {}
 val ReferenceErrorConstructor: unsupported["interface ReferenceErrorConstructor extends ErrorConstructor {     new(message?: string): ReferenceError;     (message?: string): ReferenceError;     readonly prototype: ReferenceError; }", "ES5.d.ts", 1073, 1]
-declare trait SyntaxError {}
+declare trait SyntaxError extends Error {}
 val SyntaxErrorConstructor: unsupported["interface SyntaxErrorConstructor extends ErrorConstructor {     new(message?: string): SyntaxError;     (message?: string): SyntaxError;     readonly prototype: SyntaxError; }", "ES5.d.ts", 1084, 1]
-declare trait TypeError {}
+declare trait TypeError extends Error {}
 val TypeErrorConstructor: unsupported["interface TypeErrorConstructor extends ErrorConstructor {     new(message?: string): TypeError;     (message?: string): TypeError;     readonly prototype: TypeError; }", "ES5.d.ts", 1095, 1]
-declare trait URIError {}
+declare trait URIError extends Error {}
 val URIErrorConstructor: unsupported["interface URIErrorConstructor extends ErrorConstructor {     new(message?: string): URIError;     (message?: string): URIError;     readonly prototype: URIError; }", "ES5.d.ts", 1106, 1]
 declare trait JSON {
   fun parse(args0: Str, args1: ((key: Str, value: anything) => anything) | (undefined)): anything

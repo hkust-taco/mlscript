@@ -35,6 +35,7 @@ class TSNamespace(name: String, parent: Option[TSNamespace], allowReservedTypes:
       order += Right(name)
       members.put(name, (tp, exported))
     }
+    else if (overrided) members.update(name, (tp, exported))
     else (members(name), tp) match {
       case ((cls: TSClassType, exp), itf: TSInterfaceType) =>
         members.update(name, (TSClassType(
@@ -46,7 +47,7 @@ class TSNamespace(name: String, parent: Option[TSNamespace], allowReservedTypes:
           name, itf1.members ++ itf2.members, itf1.typeVars, itf1.parents,
           itf1.callSignature.fold(itf2.callSignature)(cs => Some(cs))
         ), exported || exp))
-      case _ => if (overrided) members.update(name, (tp, exported))
+      case _ => ()
     }
 
   def `export`(name: String): Unit =
