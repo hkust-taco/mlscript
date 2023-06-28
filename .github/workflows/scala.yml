@@ -21,6 +21,12 @@ jobs:
         node-version: '17.x'
     - name: Install TypeScript
       run: npm ci
+    - name: Install test libraries for es projects
+      working-directory: ./driver/js/src/test/esprojects
+      run: npm ci
+    - name: Install test libraries for cjs projects
+      working-directory: ./driver/js/src/test/cjsprojects
+      run: npm ci
     - name: Run tests
       run: sbt test
     - name: Check no changes
