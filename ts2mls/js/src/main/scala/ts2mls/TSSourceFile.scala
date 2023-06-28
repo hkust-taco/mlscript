@@ -46,9 +46,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace, topName: String)(implici
   // handle parents & export
   TypeScript.forEachChild(sf, (node: js.Dynamic) => {
     val nodeObject = TSNodeObject(node)
-    if (!nodeObject.isToken && !nodeObject.symbol.isUndefined)
-      handleParents(nodeObject, nodeObject.symbol.escapedName)(global)
-    else if (nodeObject.isExportDeclaration) {
+    if (nodeObject.isExportDeclaration) {
       if (!nodeObject.moduleSpecifier.isUndefined) // re-export
         parseImportDeclaration(nodeObject.exportClause, nodeObject.moduleSpecifier, true)
       else // ES modules
@@ -266,25 +264,10 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace, topName: String)(implici
   private def getTupleElements(elements: TSTypeArray)(implicit ns: TSNamespace): List[TSType] =
     elements.foldLeft(List[TSType]())((lst, ele) => lst :+ getObjectType(ele))
 
-  private def getHeritageList(node: TSNodeObject, members: Set[String])(implicit ns: TSNamespace): List[TSType] =
+  private def getHeritageList(node: TSNodeObject)(implicit ns: TSNamespace): List[TSType] =
     node.heritageClauses.foldLeftIndexed(List[TSType]())((lst, h, index) => {
-      def run(ref: TSReferenceType) = ns.get(ref.nameList) match {
-        case itf: TSInterfaceType
-          if (itf.members.foldLeft(itf.unsupported)((r, t) => r || (t._2.base.unsupported && members(t._1)))) =>
-            TSNoInfoUnsupported
-        case cls: TSClassType
-          if (cls.members.foldLeft(cls.unsupported)((r, t) => r || (t._2.base.unsupported && members(t._1)))) =>
-            TSNoInfoUnsupported
-        case t if (t.unsupported) => TSNoInfoUnsupported
-        case t => ref
-      }
       lst :+ (getObjectType(h.types.get(index).typeNode) match {
         case TSArrayType(ele) => TSSubstitutionType(TSReferenceType("Array"), ele :: Nil)
-        case ref: TSReferenceType => run(ref)
-        case TSSubstitutionType(base, app) => run(base) match {
-          case ref: TSReferenceType => TSSubstitutionType(ref, app)
-          case t => t
-        }
         case t => t
       })
     })
@@ -342,9 +325,10 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace, topName: String)(implici
     val res = // do not handle parents here. we have not had enough information so far.
       if (isClass)
         TSClassType(name, getClassMembersType(node.members, false), getClassMembersType(node.members, true),
-          getTypeParameters(node), Nil, getConstructorList(node.members))
+          getTypeParameters(node), getHeritageList(node), getConstructorList(node.members))
       else
-        TSInterfaceType(name, getInterfacePropertiesType(node.members), getTypeParameters(node), Nil, parseCallSignature(node.members))
+        TSInterfaceType(name, getInterfacePropertiesType(node.members), getTypeParameters(node),
+          getHeritageList(node), parseCallSignature(node.members))
     if (res.unsupported) markUnsupported(node) else res
   }
 
@@ -392,40 +376,6 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace, topName: String)(implici
     else if (node.isVariableDeclaration) ns.put(name, getMemberType(node), exported, false)
     else if (node.isNamespace)
       parseNamespace(node)
-
-  private def handleParents(node: TSNodeObject, name: String)(implicit ns: TSNamespace): Unit =
-    if (node.isClassDeclaration) ns.get(name) match {
-      case TSClassType(_, members, statics, typeVars, _, constructor) =>
-        val list = getHeritageList(node, members.keySet)
-        if (!list.isEmpty) {
-          val cls = TSClassType(name, members, statics, typeVars, list, constructor)
-          ns.put(name, if (cls.unsupported) markUnsupported(node) else cls, ns.exported(name), true)
-        }
-      case t if (t.unsupported) => () // ignore types that have been marked as unsupported.
-      case _ => throw new AssertionError(s"$name is not a class")
-    }
-    else if (node.isInterfaceDeclaration) ns.get(name) match {
-      case TSInterfaceType(_, members, typeVars, _, cs) =>
-        val list = getHeritageList(node, members.keySet)
-        if (!list.isEmpty) {
-          val itf = TSInterfaceType(name, members, typeVars, list, cs)
-          ns.put(name, if (itf.unsupported) markUnsupported(node) else itf, ns.exported(name), true)
-        }
-      case t if (t.unsupported) => () // ignore types that have been marked as unsupported.
-      case _ => throw new AssertionError(s"$name is not an interface")
-    }
-    else if (node.isNamespace) {
-      val name = node.symbol.escapedName
-
-      if (!name.contains("\"")) {
-        val sub = ns.derive(name, false)
-        node.locals.foreach((sym) => {
-          val node = sym.declaration
-          val name = sym.escapedName
-          if (!node.isToken) handleParents(node, name)(sub)
-        })
-      }
-    }
 
   private def parseNamespace(node: TSNodeObject)(implicit ns: TSNamespace): Unit = {
     val name = node.symbol.escapedName

@@ -83,10 +83,11 @@ object Converter {
 
   private def convertClassOrInterface(tp: Either[TSClassType, TSInterfaceType], exported: Boolean)(implicit indent: String) = {
     val exp = if (exported) "export " else ""
+    def convertParents(parents: List[TSType]) =
+      if (parents.isEmpty) ""
+      else parents.foldLeft(s" extends ")((b, p) => s"$b${convert(p)}, ").dropRight(2)
     def combineWithTypeVars(body: String, parents: List[TSType], typeName: String, typeVars: List[TSTypeParameter]) = {
-      val inheritance =
-        if (parents.isEmpty) ""
-        else parents.foldLeft(s" extends ")((b, p) => s"$b${convert(p)}, ").dropRight(2)
+      val inheritance = convertParents(parents)
       if (typeVars.isEmpty) s"${indent}${exp}declare $typeName$inheritance $body"
       else
         s"${indent}${exp}declare $typeName[${typeVars.map(convert(_)).reduceLeft((p, s) => s"$p, $s")}]$inheritance $body" // TODO: add constraints
@@ -100,8 +101,9 @@ object Converter {
         callSignature match {
           case Some(cs) =>
             val prefix = s"${indent}${exp}declare "
+            val inheritance = convertParents(parents)
             val tp = if (typeVars.isEmpty) "" else s"[${typeVars.map((tv) => tv.name).reduceLeft((p, s) => s"$p, $s")}]"
-            s"${prefix}trait ${escapeIdent(name)}$tp: ${convert(cs)} ${convertRecord(members, Nil, Nil, Map(), List(), false)}"
+            s"${prefix}trait ${escapeIdent(name)}$tp: ${convert(cs)}$inheritance ${convertRecord(members, Nil, Nil, Map(), List(), false)}"
           case _ =>
             val body = convertRecord(members, typeVars, parents, Map(), List(), false)
             val typeName = s"trait ${escapeIdent(name)}"
