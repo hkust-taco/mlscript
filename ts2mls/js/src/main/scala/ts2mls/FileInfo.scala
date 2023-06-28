@@ -28,15 +28,29 @@ final case class FileInfo(
     else if (nodeModulesNested) localFilename
     else localFilename.replace(extname(localFilename), "")
 
-  lazy val importedMlsi: String =
-    FileInfo.importPath(
-      if (!isNodeModule) localFilename
-      else if (nodeModulesNested) {
-        val p = dirname(TSImport.createInterfaceForNode(parent.getOrElse(workDir)))
-        s"./${normalize(TSPathResolver.relative(p, localFilename))}"
+  def translateImportToInterface(file: FileInfo)(implicit config: js.Dynamic): String = {
+    val importedPath =
+      if (!file.isNodeModule) {
+        val rel = normalize(TSPathResolver.relative(dirname(localFilename), file.localFilename))
+        if (isLocal(rel)) rel else s"./$rel"
       }
-      else filename
-    )
+      else if (file.nodeModulesNested) { // node_modules, but relatoive path
+        val p = dirname(TSImport.createInterfaceForNode(resolve))
+        val rel = normalize(TSPathResolver.relative(p, file.localFilename))
+        if (isLocal(rel)) rel else s"./$rel"
+      }
+      else
+        file.localFilename
+    val ext = TSPathResolver.extname(importedPath)
+    if (!ext.isEmpty())
+      importedPath.replace(ext, ".mlsi")
+    else importedPath + ".mlsi"
+  }
+
+  def translateImportToInterface(path: String)(implicit config: js.Dynamic): String = {
+    val file = `import`(path)
+    translateImportToInterface(file)
+  }
 
   def resolve(implicit config: js.Dynamic) =
     if (isNodeModule && !nodeModulesNested) TypeScript.resolveModuleName(filename, parent.getOrElse(""), config)
@@ -67,13 +81,4 @@ final case class FileInfo(
           FileInfo(workDir, s"./$currentPath/$path", interfaceDir, Some(resolve), true)
       }
     else FileInfo(workDir, path, interfaceDir, Some(resolve))
-}
-
-object FileInfo {
-  def importPath(filename: String): String = {
-    val ext = TSPathResolver.extname(filename)
-    if (!ext.isEmpty())
-      filename.replace(ext, ".mlsi")
-    else filename + ".mlsi"
-  }
 }

@@ -104,8 +104,7 @@ class TSNamespace(name: String, parent: Option[TSNamespace], allowReservedTypes:
   def containsMember(name: String, searchParent: Boolean = true): Boolean =
     if (parent.isEmpty) members.contains(name) else (members.contains(name) || (searchParent && parent.get.containsMember(name)))
 
-  private def expStr(exp: Boolean) = if (exp) "export " else ""
-  private val typer =
+  private lazy val typer =
     new mlscript.Typer(
       dbg = false,
       verbose = false,
@@ -116,7 +115,7 @@ class TSNamespace(name: String, parent: Option[TSNamespace], allowReservedTypes:
   private def generateNS(name: String, writer: JSWriter, indent: String): Unit = {
     val ss = subSpace(name)
     val realName = cjsExport.getOrElse(name, name)
-    val exp = expStr(realName =/= name || ss._2)
+    val exp = Converter.genExport(realName =/= name || ss._2)
     writer.writeln(s"${indent}${exp}declare module ${Converter.escapeIdent(realName)} {")
     ss._1.generate(writer, indent + "  ")
     writer.writeln(s"$indent}")
@@ -169,8 +168,8 @@ class TSNamespace(name: String, parent: Option[TSNamespace], allowReservedTypes:
               writer.writeln(Converter.convert(mem, exp)(indent))
             case _: TSTypeAlias => writer.writeln(Converter.convert(mem, exp)(indent))
             case TSRenamedType(name, original) =>
-              writer.writeln(s"${indent}${expStr(exp)}val ${Converter.escapeIdent(realName)} = ${Converter.convert(original)("")}")
-            case _ => writer.writeln(s"${indent}${expStr(exp)}val ${Converter.escapeIdent(realName)}: ${Converter.convert(mem)("")}")
+              writer.writeln(s"${indent}${Converter.genExport(exp)}val ${Converter.escapeIdent(realName)} = ${Converter.convert(original)("")}")
+            case _ => writer.writeln(s"${indent}${Converter.genExport(exp)}val ${Converter.escapeIdent(realName)}: ${Converter.convert(mem)("")}")
           }
         }
       case _ => ()

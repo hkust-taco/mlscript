@@ -21,10 +21,10 @@ object JSFileSystem {
     fs.writeFileSync(filename, content)
   }
 
-  def getModificationTime(filename: String): String =
-    if (!exists(filename)) ""
+  def getModificationTime(filename: String): Double =
+    if (!exists(filename)) 0.0
     else {
       val state = fs.statSync(filename)
-      state.mtimeMs.toString
+      state.mtimeMs.asInstanceOf[Double]
     }
 }

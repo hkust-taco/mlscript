@@ -317,65 +317,21 @@ class DiffTests
         // report errors and warnings
         def report(diags: Ls[mlscript.Diagnostic], output: Str => Unit = output): Unit = {
           diags.foreach { diag =>
-            val sctx = Message.mkCtx(diag.allMsgs.iterator.map(_._1), "?")
-            val headStr = diag match {
+            diag match {
               case ErrorReport(msg, loco, src) =>
                 src match {
                   case Diagnostic.Lexing =>
                     totalParseErrors += 1
-                    s"╔══[LEXICAL ERROR] "
                   case Diagnostic.Parsing =>
                     totalParseErrors += 1
-                    s"╔══[PARSE ERROR] "
                   case _ => // TODO customize too
                     totalTypeErrors += 1
-                    s"╔══[ERROR] "
                 }
               case WarningReport(msg, loco, src) =>
                 totalWarnings += 1
-                s"╔══[WARNING] "
             }
-            val lastMsgNum = diag.allMsgs.size - 1
-            var globalLineNum = blockLineNum  // solely used for reporting useful test failure messages
-            diag.allMsgs.zipWithIndex.foreach { case ((msg, loco), msgNum) =>
-              val isLast = msgNum =:= lastMsgNum
-              val msgStr = msg.showIn(sctx)
-              if (msgNum =:= 0) output(headStr + msgStr)
-              else output(s"${if (isLast && loco.isEmpty) "╙──" else "╟──"} ${msgStr}")
-              if (loco.isEmpty && diag.allMsgs.size =:= 1) output("╙──")
-              loco.foreach { loc =>
-                val (startLineNum, startLineStr, startLineCol) =
-                  loc.origin.fph.getLineColAt(loc.spanStart)
-                if (globalLineNum =:= 0) globalLineNum += startLineNum - 1
-                val (endLineNum, endLineStr, endLineCol) =
-                  loc.origin.fph.getLineColAt(loc.spanEnd)
-                var l = startLineNum
-                var c = startLineCol
-                while (l <= endLineNum) {
-                  val globalLineNum = loc.origin.startLineNum + l - 1
-                  val relativeLineNum = globalLineNum - blockLineNum + 1
-                  val shownLineNum =
-                    if (showRelativeLineNums && relativeLineNum > 0) s"l.+$relativeLineNum"
-                    else "l." + globalLineNum
-                  val prepre = "║  "
-                  val pre = s"$shownLineNum: "
-                  val curLine = loc.origin.fph.lines(l - 1)
-                  output(prepre + pre + "\t" + curLine)
-                  val tickBuilder = new StringBuilder()
-                  tickBuilder ++= (
-                    (if (isLast && l =:= endLineNum) "╙──" else prepre)
-                    + " " * pre.length + "\t" + " " * (c - 1))
-                  val lastCol = if (l =:= endLineNum) endLineCol else curLine.length + 1
-                  while (c < lastCol) { tickBuilder += ('^'); c += 1 }
-                  if (c =:= startLineCol) tickBuilder += ('^')
-                  output(tickBuilder.toString)
-                  c = 1
-                  l += 1
-                }
-              }
-            }
-            if (diag.allMsgs.isEmpty) output("╙──")
-            
+            val globalLineNum = blockLineNum
+            Diagnostic.report(diag, output, blockLineNum, showRelativeLineNums)
             if (!mode.fixme) {
               if (!allowTypeErrors
                   && !mode.expectTypeErrors && diag.isInstanceOf[ErrorReport] && diag.source =:= Diagnostic.Typing)

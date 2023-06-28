@@ -27,13 +27,6 @@ trait TSImport { self =>
         TSReExport(alias.getOrElse(name), filename, Some(name))
       }
   }
-
-  def generate(ns: TSNamespace, writer: JSWriter): Unit = self match {
-    case _: TSFullImport => ns.generate(writer, "  ")
-    case TSSingleImport(_, items) => items.foreach((pair) => pair match {
-      case (name, _) => writer.writeln(Converter.convert(ns.get(name), true)("  "))
-    })
-  }
 }
 
 object TSImport {

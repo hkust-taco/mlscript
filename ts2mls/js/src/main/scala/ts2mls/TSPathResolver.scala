@@ -18,7 +18,7 @@ object TSPathResolver {
 
   def relative(from: String, to: String) = np.relative(from, to).toString()
   def extname(path: String) =
-    if (path.endsWith(".d.ts")) ".d.ts"
+    if (path.endsWith(".d.ts")) ".d.ts" // `filename.d.ts`'s extname is `.ts` by default
     else np.extname(path).toString()
   def basename(filename: String) =
     np.basename(filename, extname(filename)).toString()

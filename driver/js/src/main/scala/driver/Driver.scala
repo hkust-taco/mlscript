@@ -8,6 +8,7 @@ import scala.collection.mutable.{ListBuffer,Map => MutMap, Set => MutSet}
 import mlscript.codegen._
 import mlscript.{NewLexer, NewParser, ErrorReport, Origin, Diagnostic}
 import ts2mls.{TSProgram, TypeScript, TSPathResolver, JSFileSystem, JSWriter, FileInfo}
+import ts2mls.IsUndefined
 
 class Driver(options: DriverOptions) {
   import Driver._
@@ -111,7 +112,7 @@ class Driver(options: DriverOptions) {
   private def isInterfaceOutdate(origin: String, inter: String): Boolean = {
     val mtime = getModificationTime(origin)
     val imtime = getModificationTime(inter)
-    imtime.isEmpty || mtime.compareTo(imtime) >= 0
+    mtime >= imtime
   }
 
   private def packTopModule(moduleName: Option[String], content: String) =
@@ -158,7 +159,7 @@ class Driver(options: DriverOptions) {
   ) = jsBuiltinDecs.foreach(lst => `type`(TypingUnit(lst), true))
 
   // translate mlscirpt import paths into js import paths
-  private def resolveImportPath(file: FileInfo, imp: String) =
+  private def resolveJSPath(file: FileInfo, imp: String) =
     if (isLocal(imp) && !isMLScirpt(imp)) { // local ts files: locate by checking tsconfig.json
       val tsPath = TypeScript.getOutputFileNames(s"${TSPathResolver.dirname(file.filename)}/$imp", config)
       val outputBase = TSPathResolver.dirname(TSPathResolver.normalize(s"${options.outputDir}${file.jsFilename}"))
@@ -229,11 +230,11 @@ class Driver(options: DriverOptions) {
           if (file.filename.endsWith(".mls")) { // only generate js/mlsi files for mls files
             val expStr = cycleSigs.foldLeft("")((s, tu) => s"$s${`type`(tu, false).show}") +
               packTopModule(Some(file.moduleName), `type`(TypingUnit(definitions), false).show)
-            val interfaces = otherList.map(s => Import(FileInfo.importPath(s))).foldRight(expStr)((imp, itf) => s"$imp\n$itf")
+            val interfaces = otherList.map(s => Import(file.translateImportToInterface(s))).foldRight(expStr)((imp, itf) => s"$imp\n$itf")
 
             saveToFile(mlsiFile, interfaces)
             generate(Pgrm(definitions), s"${options.outputDir}/${file.jsFilename}", file.moduleName, imports.map(
-              imp => new Import(resolveImportPath(file, imp.path)) with ModuleType {
+              imp => new Import(resolveJSPath(file, imp.path)) with ModuleType {
                 val isESModule = checkESModule(path, TSPathResolver.resolve(file.filename))
               }
             ), exported || importedModule(file.filename))
@@ -289,60 +290,19 @@ object Driver {
     writer.close()
   }
 
-  // TODO factor with duplicated logic in DiffTests
   private def report(diag: Diagnostic, ignoreTypeError: Boolean): Unit = {
-    val sctx = Message.mkCtx(diag.allMsgs.iterator.map(_._1), "?")
-    val headStr = diag match {
+    diag match {
       case ErrorReport(msg, loco, src) =>
         src match {
           case Diagnostic.Lexing =>
             totalErrors += 1
-            s"╔══[LEXICAL ERROR] "
           case Diagnostic.Parsing =>
             totalErrors += 1
-            s"╔══[PARSE ERROR] "
           case _ =>
             if (!ignoreTypeError) totalErrors += 1
-            s"╔══[ERROR] "
         }
-      case WarningReport(msg, loco, src) =>
-        s"╔══[WARNING] "
+      case WarningReport(msg, loco, src) => ()
     }
-    val lastMsgNum = diag.allMsgs.size - 1
-    diag.allMsgs.zipWithIndex.foreach { case ((msg, loco), msgNum) =>
-      val isLast = msgNum =:= lastMsgNum
-      val msgStr = msg.showIn(sctx)
-      if (msgNum =:= 0) report(headStr + msgStr)
-      else report(s"${if (isLast && loco.isEmpty) "╙──" else "╟──"} ${msgStr}")
-      if (loco.isEmpty && diag.allMsgs.size =:= 1) report("╙──")
-      loco.foreach { loc =>
-        val (startLineNum, startLineStr, startLineCol) =
-          loc.origin.fph.getLineColAt(loc.spanStart)
-        val (endLineNum, endLineStr, endLineCol) =
-          loc.origin.fph.getLineColAt(loc.spanEnd)
-        var l = startLineNum
-        var c = startLineCol
-        while (l <= endLineNum) {
-          val globalLineNum = loc.origin.startLineNum + l - 1
-          val shownLineNum = "l." + globalLineNum
-          val prepre = "║  "
-          val pre = s"$shownLineNum: "
-          val curLine = loc.origin.fph.lines(l - 1)
-          report(prepre + pre + "\t" + curLine)
-          val tickBuilder = new StringBuilder()
-          tickBuilder ++= (
-            (if (isLast && l =:= endLineNum) "╙──" else prepre)
-            + " " * pre.length + "\t" + " " * (c - 1))
-          val lastCol = if (l =:= endLineNum) endLineCol else curLine.length + 1
-          while (c < lastCol) { tickBuilder += ('^'); c += 1 }
-          if (c =:= startLineCol) tickBuilder += ('^')
-          report(tickBuilder.toString)
-          c = 1
-          l += 1
-        }
-      }
-    }
-    if (diag.allMsgs.isEmpty) report("╙──")
-    ()
+    Diagnostic.report(diag, report, 0, false)
   }
 }

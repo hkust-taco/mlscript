@@ -28,6 +28,8 @@ object Converter {
       s"""id"$name""""
     else name
   }
+  
+  def genExport(exported: Boolean) = if (exported) "export " else ""
 
   private def generateFunParamsList(params: List[TSParameterType]) =
     if (params.isEmpty) ""
@@ -39,9 +41,8 @@ object Converter {
     case TSFunctionType(params, res, typeVars) => {
       val pList = generateFunParamsList(params)
       val tpList = if (typeVars.isEmpty) "" else s"[${typeVars.map(p => convert(p)("")).reduceLeft((r, p) => s"$r, $p")}]"
-      val exp = if (exported) "export " else ""
       val dec = if (declared) "declare " else ""
-      s"${indent}${exp}${dec}fun ${escapeIdent(name)}$tpList($pList): ${convert(res)("")}"
+      s"${indent}${genExport(exported)}${dec}fun ${escapeIdent(name)}$tpList($pList): ${convert(res)("")}"
     }
     case overload @ TSIgnoredOverload(base, _) => s"${generateFunDeclaration(base, name, declared, exported)} ${overload.warning}"
     case _ => throw new AssertionError("non-function type is not allowed.")
@@ -71,9 +72,8 @@ object Converter {
     case overload @ TSIgnoredOverload(base, _) => s"${convert(base)} ${overload.warning}"
     case TSParameterType(name, tp) => s"${escapeIdent(name)}: ${convert(tp)}"
     case TSTypeAlias(name, ori, tp) => {
-      val exp = if (exported) "export " else ""
-      if (tp.isEmpty) s"${indent}${exp}type ${escapeIdent(name)} = ${convert(ori)}"
-      else s"${indent}${exp}type ${escapeIdent(name)}[${tp.map(t => convert(t)).reduceLeft((s, t) => s"$s, $t")}] = ${convert(ori)}"
+      if (tp.isEmpty) s"${indent}${genExport(exported)}type ${escapeIdent(name)} = ${convert(ori)}"
+      else s"${indent}${genExport(exported)}type ${escapeIdent(name)}[${tp.map(t => convert(t)).reduceLeft((s, t) => s"$s, $t")}] = ${convert(ori)}"
     }
     case TSLiteralType(value, isString) => if (isString) s"\"$value\"" else value
     case TSUnsupportedType(code, filename, line, column) =>
@@ -82,7 +82,7 @@ object Converter {
   }
 
   private def convertClassOrInterface(tp: Either[TSClassType, TSInterfaceType], exported: Boolean)(implicit indent: String) = {
-    val exp = if (exported) "export " else ""
+    val exp = genExport(exported)
     def convertParents(parents: List[TSType]) =
       if (parents.isEmpty) ""
       else parents.foldLeft(s" extends ")((b, p) => s"$b${convert(p)}, ").dropRight(2)

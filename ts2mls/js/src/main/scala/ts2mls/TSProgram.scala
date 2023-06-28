@@ -4,7 +4,6 @@ import scala.scalajs.js
 import js.DynamicImplicits._
 import ts2mls.types._
 import scala.collection.mutable.{HashSet, HashMap}
-import ts2mls.TSPathResolver
 
 // for general ts, we still consider that there is a top-level module
 // and in mls we will import ts file like this:
@@ -52,7 +51,7 @@ class TSProgram(file: FileInfo, uesTopLevelModule: Boolean, tsconfig: Option[Str
     val imported = new HashSet[String]()
     
     otherList.foreach(imp => {
-      val name = imp.importedMlsi
+      val name = file.translateImportToInterface(imp)
       if (!imported(name)) {
         imported += name
         writer.writeln(s"""import "$name"""")

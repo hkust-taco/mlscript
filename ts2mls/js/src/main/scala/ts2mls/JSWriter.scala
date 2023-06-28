@@ -1,7 +1,6 @@
 package ts2mls
 
 import scala.scalajs.js
-import js.Dynamic.{global => g}
 import js.DynamicImplicits._
 import mlscript.utils._
 import scala.collection.mutable.StringBuilder

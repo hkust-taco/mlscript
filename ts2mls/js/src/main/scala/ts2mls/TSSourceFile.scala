@@ -122,13 +122,13 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace, topName: String)(implici
     })
 
   private def getSymbolFullname(sym: TSSymbolObject)(implicit ns: TSNamespace): String = {
-    def simplify(symName: String, nsName: String): String =
+    def simplify(symName: String, nsName: String): String = // remove unnecessary namespaces prefixes
       if (symName.startsWith(nsName + ".")) symName.substring(nsName.length() + 1)
       else if (nsName.lastIndexOf('.') > -1) simplify(symName, nsName.substring(0, nsName.lastIndexOf('.')))
       else symName
-    if (!sym.parent.isUndefined && sym.parent.declaration.isSourceFile)
+    if (!sym.parent.isUndefined && sym.parent.declaration.isSourceFile) // imported from another file
       importList.resolveTypeAlias(sym.parent.declaration.resolvedPath, sym.escapedName)
-    else if (!sym.parent.isUndefined && sym.parent.isMerged) {
+    else if (!sym.parent.isUndefined && sym.parent.isMerged) { // merged with other declarations
       def findDecFile(node: TSNodeObject): String =
         if (node.parent.isUndefined) ""
         else if (node.parent.isSourceFile) {
@@ -154,7 +154,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace, topName: String)(implici
         else importList.resolveTypeAlias(filename, sym.escapedName) // in an imported file
       )
     }
-    else if (sym.parent.isUndefined) {
+    else if (sym.parent.isUndefined) { // already top-level symbol
       val name = sym.escapedName
       if (name.contains("\"")) TSPathResolver.basename(name.substring(1, name.length() - 1))
       else name
@@ -185,6 +185,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace, topName: String)(implici
     else if (obj.isObject)
       if (obj.isAnonymous) {
         val props = getAnonymousPropertiesType(obj.properties)
+        // upper case field names are not supported in records in mlscript so far
         if (!props.exists{ case (name, _) if (!name.isEmpty()) => Character.isUpperCase(name(0)); case _ => false})
           TSInterfaceType("", props, List(), List(), None)
         else TSNoInfoUnsupported
@@ -215,18 +216,19 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace, topName: String)(implici
     })
 
   // get the type of variables in classes/named interfaces/anonymous interfaces
-  private def getMemberType(node: TSNodeObject)(implicit ns: TSNamespace): TSType = {
-    val res: TSType =
-      if (node.isIndexSignature || node.isConstructSignature)
-        markUnsupported(node)
-      else if (node.isFunctionLike) getFunctionType(node, false) // erase name to avoid name clash when overriding methods in ts
-      else if (node.`type`.isUndefined) getObjectType(node.typeAtLocation)
-      else if (node.`type`.isLiteralTypeNode) getLiteralType(node.`type`)
-      else getObjectType(node.`type`.typeNode)
-    if (res.unsupported) markUnsupported(node)
-    else if (node.symbol.isOptionalMember) TSUnionType(res, TSPrimitiveType("undefined"))
-    else res
-  }
+  private def getMemberType(node: TSNodeObject)(implicit ns: TSNamespace): TSType =
+    if (node.isIndexSignature || node.isConstructSignature)
+      markUnsupported(node)
+    else {
+      val res =
+        if (node.isFunctionLike) getFunctionType(node, false) // erase name to avoid name clash when overriding methods in ts
+        else if (node.`type`.isUndefined) getObjectType(node.typeAtLocation)
+        else if (node.`type`.isLiteralTypeNode) getLiteralType(node.`type`)
+        else getObjectType(node.`type`.typeNode)
+      if (res.unsupported) markUnsupported(node)
+      else if (node.symbol.isOptionalMember) TSUnionType(res, TSPrimitiveType("undefined"))
+      else res
+    }
 
   private def getTypeParameters(node: TSNodeObject)(implicit ns: TSNamespace): List[TSTypeParameter] =
     node.typeParameters.foldLeft(List[TSTypeParameter]())((lst, tp) =>
