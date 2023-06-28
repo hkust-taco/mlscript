@@ -34,7 +34,7 @@ class DriverDiffTests extends AnyFunSuite {
 object DriverDiffTests {
   // For local environment, we may change the driver so forcing compiling is necessary
   // but we can ban it during CI
-  private val forceCompiling = true
+  private val forceCompiling = !sys.env.get("CI").isDefined
 
   private val diffPath = "driver/js/src/test/"
   private val outputPath = s"${diffPath}output/"
@@ -95,26 +95,26 @@ object DriverDiffTests {
     esEntry("Simple"),
     esEntry("Cycle2"),
     esEntry("Self", expectError = true),
-    esEntry("C", ignoreTypeError = true, expectError = true),
+    esEntry("C", expectError = true),
     esEntry("TS", Some("./tsconfig.json"), ignoreTypeError = true), // TODO: type members
     esEntry("Output", Some("./tsconfig.json"), ignoreTypeError = true), // TODO: type parameter position
     esEntry("Output2", Some("./tsconfig.json"), ignoreTypeError = true), // TODO: type parameter position
     esEntry("MLS2TheMax", Some("./tsconfig.json")),
     esEntry("MyPartialOrder", Some("./tsconfig.json"), expectError = true), // TODO: type traits in modules
-    cjsEntry("Lodash", Some("./tsconfig.json"), ignoreTypeError = true), // TODO: module member selection
+    cjsEntry("Lodash", Some("./tsconfig.json"), ignoreTypeError = true), // TODO: module member selection/trait types
     esEntry("Builtin"),
     cjsEntry("CJS1"),
     ts2mlsEntry("BasicFunctions", ignoreTypeError = true),
     ts2mlsEntry("ClassMember"),
     ts2mlsEntry("Cycle1", ignoreTypeError = true),
-    ts2mlsEntry("Dec", ignoreTypeError = true),
+    ts2mlsEntry("Dec"),
     ts2mlsEntry("Enum"),
     ts2mlsEntry("Escape"),
     ts2mlsEntry("Export", ignoreTypeError = true),
     ts2mlsEntry("Heritage", ignoreTypeError = true),
     ts2mlsEntry("HighOrderFunc"),
     ts2mlsEntry("Import"),
-    ts2mlsEntry("InterfaceMember", ignoreTypeError = true),
+    ts2mlsEntry("InterfaceMember"),
     ts2mlsEntry("Intersection", ignoreTypeError = true),
     ts2mlsEntry("Literal"),
     ts2mlsEntry("Namespace", expectError = true),
