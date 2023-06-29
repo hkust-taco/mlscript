@@ -36,7 +36,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     if (info.isComputing) {
 
       L(ErrorReport(
-        msg"${info.decl.kind.str.capitalize} `${info.decl.name}` is not supported yet." -> fld.toLoc :: Nil))
+        // TODO improve
+        msg"${info.decl.kind.str.capitalize} `${info.decl.name}` has a cyclic type dependency that is not supported yet." -> fld.toLoc :: Nil))
       
     } else info.complete() match {
       
