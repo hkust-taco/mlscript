@@ -28,6 +28,6 @@ jobs:
       working-directory: ./driver/js/src/test/cjsprojects
       run: npm ci
     - name: Run tests
-      run: sbt test
+      run: sbt test -J-XX:+UseG1GC
     - name: Check no changes
       run: git diff-files -p --exit-code

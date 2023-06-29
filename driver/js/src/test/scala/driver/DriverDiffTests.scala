@@ -13,7 +13,7 @@ class DriverDiffTests extends AnyFunSuite {
   testCases.foreach {
     case TestOption(filename, workDir, outputDir, interfaceDir, cjs, execution, tsconfig, ignoreTypeError, expectError) => test(filename) {
       val options =
-        DriverOptions(filename, workDir, outputDir, tsconfig, interfaceDir, cjs, ignoreTypeError, forceCompiling)
+        DriverOptions(filename, workDir, outputDir, tsconfig, interfaceDir, cjs, ignoreTypeError, expectError, forceCompiling)
       val driver = Driver(options)
       if (!outputDir.isEmpty()) driver.genPackageJson()
       val success = driver.execute

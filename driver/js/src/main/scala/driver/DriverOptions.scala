@@ -13,5 +13,6 @@ final case class DriverOptions(
   interfaceDir: String,
   commonJS: Boolean, // generate common js or es5
   ignoreTypeError: Boolean, // ignore type errors for test
+  expectError: Boolean, // the test should raise errors
   force: Boolean // force to recompile if it is true
 )

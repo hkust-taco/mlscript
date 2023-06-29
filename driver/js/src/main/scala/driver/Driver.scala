@@ -59,7 +59,7 @@ class Driver(options: DriverOptions) {
     try {
       Driver.totalErrors = 0
       implicit var ctx: Ctx = Ctx.init
-      implicit val raise: Raise = (diag: Diagnostic) => report(diag, options.ignoreTypeError)
+      implicit val raise: Raise = (diag: Diagnostic) => report(diag, options.ignoreTypeError, options.expectError)
       implicit val extrCtx: Opt[typer.ExtrCtx] = N
       implicit val vars: Map[Str, typer.SimpleType] = Map.empty
       implicit val stack = List[String]()
@@ -69,10 +69,10 @@ class Driver(options: DriverOptions) {
     }
     catch {
       case err: Diagnostic =>
-        report(err, options.ignoreTypeError)
+        report(err, options.ignoreTypeError, options.expectError)
         false
       case t : Throwable =>
-        report(s"unexpected error: ${t.toString()}")
+        printErr(s"unexpected error: ${t.toString()}", options.expectError || options.ignoreTypeError)
         t.printStackTrace()
         false
     }
@@ -262,10 +262,10 @@ class Driver(options: DriverOptions) {
   } catch {
       case CodeGenError(err) =>
         totalErrors += 1
-        report(s"codegen error: $err")
+        printErr(s"codegen error: $err", options.ignoreTypeError || options.expectError)
       case t : Throwable =>
         totalErrors += 1
-        report(s"unexpected error: ${t.toString()}")
+        printErr(s"unexpected error: ${t.toString()}", options.ignoreTypeError || options.expectError)
         t.printStackTrace()
     }
 }
@@ -279,8 +279,10 @@ object Driver {
     "./driver/js/src/test/predefs/Predef.mlsi"
   )
 
-  private def report(msg: String): Unit =
-    System.err.println(msg)
+  // avoid writing to stderr if the error is expected
+  private def printErr(msg: String, expectError: Boolean): Unit =
+    if (expectError) System.out.println(msg)
+    else System.err.println(msg)
 
   private var totalErrors = 0
 
@@ -290,7 +292,7 @@ object Driver {
     writer.close()
   }
 
-  private def report(diag: Diagnostic, ignoreTypeError: Boolean): Unit = {
+  private def report(diag: Diagnostic, ignoreTypeError: Boolean, expectError: Boolean): Unit = {
     diag match {
       case ErrorReport(msg, loco, src) =>
         src match {
@@ -303,6 +305,6 @@ object Driver {
         }
       case WarningReport(msg, loco, src) => ()
     }
-    Diagnostic.report(diag, report, 0, false)
+    Diagnostic.report(diag, (msg: String) => printErr(msg, expectError), 0, false)
   }
 }
