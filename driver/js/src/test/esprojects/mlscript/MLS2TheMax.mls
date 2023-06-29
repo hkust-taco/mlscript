@@ -5,14 +5,14 @@ fun ask(question: Str) =
   console.log(question)
   ReadLine.getStrLn()
 
-class Some<A>(value: A)
-class None()
+class Some[A](value: A)
+module None
 
 fun parse(s: Str) =
   let i = parseInt(s, undefined)
-  if
-    isNaN(i) then None()
-    _ then Some(i)
+  if isNaN(i)
+    then None
+    else Some(i)
 
 class Game(name: Str) {
   let number = 4 // fixed, or we can not apply diff test

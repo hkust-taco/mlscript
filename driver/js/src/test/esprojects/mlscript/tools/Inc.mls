@@ -1,1 +1,1 @@
-fun inc(x: Int) = x + 1
+export fun inc(x: Int) = x + 1

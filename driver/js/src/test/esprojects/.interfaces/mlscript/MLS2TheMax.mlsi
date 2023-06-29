@@ -3,7 +3,7 @@ import "./tools/Concat.mlsi"
 declare module MLS2TheMax() {
   fun ask: (question: Str,) -> Str
   class Some[A](value: A)
-  class None()
+  module None
   fun parse: (s: Str,) -> (None | Some[Num])
   class Game(name: Str) {
     fun check: (x: Num,) -> unit

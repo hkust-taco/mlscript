@@ -4,8 +4,8 @@ import { Concat } from "./tools/Concat.js"
 
 const MLS2TheMax = new class MLS2TheMax {
   #Some;
-  #None;
   #Game;
+  #None;
   constructor() {
   }
   ask(question) {
@@ -18,7 +18,7 @@ const MLS2TheMax = new class MLS2TheMax {
     const self = this;
     return ((() => {
       let i = parseInt(s, undefined);
-      return isNaN(i) === true ? self.None() : self.Some(i);
+      return isNaN(i) === true ? self.None : self.Some(i);
     })());
   }
   get main() {
@@ -28,6 +28,15 @@ const MLS2TheMax = new class MLS2TheMax {
       console.log(Concat.concat3("Hello, ", name, " welcome to the game!"));
       return self.Game(name).loop;
     })());
+  }
+  get None() {
+    const outer = this;
+    if (this.#None === undefined) {
+      class None {}
+      this.#None = new None();
+      this.#None.class = None;
+    }
+    return this.#None;
   }
   get Some() {
     const outer = this;
@@ -43,15 +52,6 @@ const MLS2TheMax = new class MLS2TheMax {
       this.#Some.class = Some;
     }
     return this.#Some;
-  }
-  get None() {
-    const outer = this;
-    if (this.#None === undefined) {
-      class None {};
-      this.#None = (() => Object.freeze(new None()));
-      this.#None.class = None;
-    }
-    return this.#None;
   }
   get Game() {
     const outer = this;
