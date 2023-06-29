@@ -170,7 +170,7 @@ module M {
   fun a: M.A
   fun a = 1
 }
-//│ ╔══[ERROR] Module `M` is not supported yet.
+//│ ╔══[ERROR] Module `M` has a cyclic type dependency that is not supported yet.
 //│ ║  l.170: 	  fun a: M.A
 //│ ╙──       	          ^^
 //│ module M {
