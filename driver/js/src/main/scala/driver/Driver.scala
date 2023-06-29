@@ -305,6 +305,6 @@ object Driver {
         }
       case WarningReport(msg, loco, src) => ()
     }
-    Diagnostic.report(diag, (msg: String) => printErr(msg, expectError), 0, false)
+    Diagnostic.report(diag, (msg: String) => printErr(msg, expectError || ignoreTypeError), 0, false)
   }
 }
