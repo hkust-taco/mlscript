@@ -23,21 +23,22 @@ object Diagnostic {
   case object Compilation extends Source
   case object Runtime     extends Source
   
-  def report(diag: Diagnostic, output: Str => Unit, blockLineNum: Int, showRelativeLineNums: Bool): Unit = {
+  def report(diag: Diagnostic, output: Str => Unit, blockLineNum: Int, showRelativeLineNums: Bool, expected: Bool): Unit = {
     val sctx = Message.mkCtx(diag.allMsgs.iterator.map(_._1), "?")
-    val headStr = diag match {
-      case ErrorReport(msg, loco, src) =>
-        src match {
-          case Diagnostic.Lexing =>
-            s"╔══[LEXICAL ERROR] "
-          case Diagnostic.Parsing =>
-            s"╔══[PARSE ERROR] "
-          case _ => // TODO customize too
-            s"╔══[ERROR] "
-        }
-      case WarningReport(msg, loco, src) =>
-        s"╔══[WARNING] "
-    }
+    val headStr = if (expected) s"╔══[EXPECTED] " else
+      diag match {
+        case ErrorReport(msg, loco, src) =>
+          src match {
+            case Diagnostic.Lexing =>
+              s"╔══[LEXICAL ERROR] "
+            case Diagnostic.Parsing =>
+              s"╔══[PARSE ERROR] "
+            case _ => // TODO customize too
+              s"╔══[ERROR] "
+          }
+        case WarningReport(msg, loco, src) =>
+          s"╔══[WARNING] "
+      }
     val lastMsgNum = diag.allMsgs.size - 1
     var globalLineNum = blockLineNum  // solely used for reporting useful test failure messages
     diag.allMsgs.zipWithIndex.foreach { case ((msg, loco), msgNum) =>

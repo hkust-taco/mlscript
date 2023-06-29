@@ -72,7 +72,7 @@ class Driver(options: DriverOptions) {
         report(err, options.ignoreTypeError, options.expectError)
         false
       case t : Throwable =>
-        printErr(s"unexpected error: ${t.toString()}", options.expectError || options.ignoreTypeError)
+        printErr(s"unexpected error: ${t.toString()}")
         t.printStackTrace()
         false
     }
@@ -262,10 +262,10 @@ class Driver(options: DriverOptions) {
   } catch {
       case CodeGenError(err) =>
         totalErrors += 1
-        printErr(s"codegen error: $err", options.ignoreTypeError || options.expectError)
+        printErr(s"codegen error: $err")
       case t : Throwable =>
         totalErrors += 1
-        printErr(s"unexpected error: ${t.toString()}", options.ignoreTypeError || options.expectError)
+        printErr(s"unexpected error: ${t.toString()}")
         t.printStackTrace()
     }
 }
@@ -279,10 +279,8 @@ object Driver {
     "./driver/js/src/test/predefs/Predef.mlsi"
   )
 
-  // avoid writing to stderr if the error is expected
-  private def printErr(msg: String, expectError: Boolean): Unit =
-    if (expectError) System.out.println(msg)
-    else System.err.println(msg)
+  private def printErr(msg: String): Unit =
+    System.err.println(msg)
 
   private var totalErrors = 0
 
@@ -305,6 +303,6 @@ object Driver {
         }
       case WarningReport(msg, loco, src) => ()
     }
-    Diagnostic.report(diag, (msg: String) => printErr(msg, expectError || ignoreTypeError), 0, false)
+    Diagnostic.report(diag, printErr, 0, false, ignoreTypeError || expectError)
   }
 }
