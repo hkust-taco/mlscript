@@ -12,7 +12,7 @@ final case class Def(rec: Bool, nme: Var, rhs: Term \/ PolyType, isByname: Bool)
   val body: Located = rhs.fold(identity, identity)
 }
 
-final case class AdtInfo(alsName: TypeName, paramPos: Ls[Int])
+final case class AdtInfo(ctorName: TypeName, paramPos: Ls[Int])
 
 final case class TypeDef(
   kind: TypeDefKind,
@@ -23,7 +23,7 @@ final case class TypeDef(
   mthDefs: List[MethodDef[Left[Term, Type]]],
   positionals: Ls[Var],
 ) extends Decl {
-  var adtInfo: Opt[AdtInfo] = N
+  var adtInfo: Ls[AdtInfo] = Nil
 }
 
 /**

@@ -1,58 +1,48 @@
-datatype Either[A, B] = Left[A] of {_0: A} || Right[B] of {_0: B}
-// datatype Either[A, B] = Left[A] of {left: A} | Right[B] of {right: B}
+datatype Either[A, B] = Left[A](A,) || Right[B](B,)
 //│ Defined type alias Either[+A, +B]
-//│ Defined class Left[+A]
-//│ Defined class Right[+B]
 //│ Left: 'a -> Either['a, nothing]
 //│     = <missing implementation>
 //│ Right: 'a -> Either[nothing, 'a]
 //│      = <missing implementation>
 
-datatype List[A] = Cons[A] of {head: A; tail: List[A]} || Nil
+datatype List[A] = Cons[A](A, List[A]) || Nil
 //│ Defined type alias List[+A]
-//│ Defined class Cons[+A]
-//│ Defined class Nil
 //│ Cons: ('a, List['a],) -> List['a]
 //│     = <missing implementation>
 //│ Nil: List[nothing]
 //│    = <missing implementation>
 
 type Heap = List[(string, int)]
-datatype HeapVar = HeapInt of {_0: int} || HeapV of {_0: Heap}
-datatype Exp = EInt of int || Var of string || Plus of (Exp, Exp) || Times of (Exp, Exp)
-datatype Stmt = Skip || Assign of (string, Exp)
-//│ ╔══[ERROR] cannot inherit from a tuple type
-//│ ║  l.22: 	datatype Exp = EInt of int || Var of string || Plus of (Exp, Exp) || Times of (Exp, Exp)
-//│ ╙──      	                                               ^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] cannot inherit from a tuple type
-//│ ║  l.22: 	datatype Exp = EInt of int || Var of string || Plus of (Exp, Exp) || Times of (Exp, Exp)
-//│ ╙──      	                                                                     ^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] cannot inherit from a tuple type
-//│ ║  l.23: 	datatype Stmt = Skip || Assign of (string, Exp)
-//│ ╙──      	                        ^^^^^^^^^^^^^^^^^^^^^^^
+datatype HeapVar = HeapInt(int,) || HeapV(Heap,)
+datatype Exp = EInt(int,) || Var(string,) || Plus(Exp, Exp) || Times(Exp, Exp)
+datatype Stmt = Skip || Assign(string, Exp)
 //│ Defined type alias Heap
 //│ Defined type alias HeapVar
-//│ Defined class HeapInt
-//│ Defined class HeapV
 //│ Defined type alias Exp
-//│ Defined class EInt
-//│ Defined class Var
 //│ Defined type alias Stmt
-//│ Defined class Skip
 //│ HeapInt: int -> HeapVar
+//│        = <missing implementation>
 //│ HeapV: Heap -> HeapVar
+//│      = <missing implementation>
+//│ EInt: int -> Exp
+//│     = <missing implementation>
+//│ Var: string -> Exp
+//│    = <missing implementation>
+//│ Plus: (Exp, Exp,) -> Exp
+//│     = <missing implementation>
+//│ Times: (Exp, Exp,) -> Exp
+//│      = <missing implementation>
 //│ Skip: Stmt
-//│ Code generation encountered an error:
-//│   cannot inherit from type alias int
+//│     = <missing implementation>
+//│ Assign: (string, Exp,) -> Stmt
+//│       = <missing implementation>
 
-datatype Poly[A] = PolyList[A] of {_0: List[A -> A]}
+datatype Poly[A] = PolyList[A](List[A -> A],)
 //│ Defined type alias Poly[=A]
-//│ Defined class PolyList[=A]
 //│ PolyList: List['a -> 'a] -> Poly['a]
 //│         = <missing implementation>
 
-datatype FCPoly = FCPolyList of {_0: List[forall 'a. 'a -> 'a]}
+datatype FCPoly = FCPolyList(List[forall 'a. 'a -> 'a],)
 //│ Defined type alias FCPoly
-//│ Defined class FCPolyList
 //│ FCPolyList: List[forall 'a. 'a -> 'a] -> FCPoly
 //│           = <missing implementation>
