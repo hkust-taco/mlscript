@@ -11,9 +11,9 @@ class DriverDiffTests extends AnyFunSuite {
   import ts2mls.JSFileSystem._
 
   testCases.foreach {
-    case TestOption(filename, workDir, outputDir, interfaceDir, cjs, execution, tsconfig, ignoreTypeError, expectError) => test(filename) {
+    case TestOption(filename, workDir, outputDir, interfaceDir, cjs, execution, tsconfig, expectTypeError, expectError) => test(filename) {
       val options =
-        DriverOptions(filename, workDir, outputDir, tsconfig, interfaceDir, cjs, ignoreTypeError, expectError, forceCompiling)
+        DriverOptions(filename, workDir, outputDir, tsconfig, interfaceDir, cjs, expectTypeError, expectError, forceCompiling)
       val driver = Driver(options)
       if (!outputDir.isEmpty()) driver.genPackageJson()
       val success = driver.execute
@@ -32,9 +32,7 @@ class DriverDiffTests extends AnyFunSuite {
 }
 
 object DriverDiffTests {
-  // For local environment, we may change the driver so forcing compiling is necessary
-  // but we can ban it during CI
-  private val forceCompiling = !sys.env.get("CI").isDefined
+  private val forceCompiling = true // TODO: check based on git
 
   private val diffPath = "driver/js/src/test/"
   private val outputPath = s"${diffPath}output/"
@@ -48,7 +46,7 @@ object DriverDiffTests {
     commonJS: Boolean,
     execution: Option[(String, String)],
     tsconfig: Option[String],
-    ignoreTypeError: Boolean,
+    expectTypeError: Boolean,
     expectError: Boolean
   )
 
@@ -57,7 +55,7 @@ object DriverDiffTests {
     tsconfig: Option[String],
     workDir: String,
     jsPath: String,
-    ignoreTypeError: Boolean,
+    expectTypeError: Boolean,
     expectError: Boolean,
     commonJS: Boolean
   ) = TestOption(
@@ -68,62 +66,62 @@ object DriverDiffTests {
       commonJS,
       Some((s"${jsPath}mlscript/${entryModule}.js", s"${outputPath}${entryModule}.check")),
       tsconfig,
-      ignoreTypeError,
+      expectTypeError,
       expectError
     )
 
   private def cjsEntry(
     entryModule: String,
     tsconfig: Option[String] = None,
-    ignoreTypeError: Boolean = false,
+    expectTypeError: Boolean = false,
     expectError: Boolean = false
   ) = driverEntry(entryModule, tsconfig, s"${diffPath}cjsprojects/",
-    s"${diffPath}cjsprojects/js/", ignoreTypeError, expectError, true)
+    s"${diffPath}cjsprojects/js/", expectTypeError, expectError, true)
 
   private def esEntry(
     entryModule: String,
     tsconfig: Option[String] = None,
-    ignoreTypeError: Boolean = false,
+    expectTypeError: Boolean = false,
     expectError: Boolean = false
   ) = driverEntry(entryModule, tsconfig, s"${diffPath}esprojects/",
-    s"${diffPath}esprojects/js/", ignoreTypeError, expectError, false)
+    s"${diffPath}esprojects/js/", expectTypeError, expectError, false)
 
-  private def ts2mlsEntry(entryModule: String, ignoreTypeError: Boolean = false, expectError: Boolean = false) =
-    TestOption(s"./${entryModule}.mlsi", ts2mlsPath, "", ".", false, None, None, ignoreTypeError, expectError)
+  private def ts2mlsEntry(entryModule: String, expectTypeError: Boolean = false, expectError: Boolean = false) =
+    TestOption(s"./${entryModule}.mlsi", ts2mlsPath, "", ".", false, None, None, expectTypeError, expectError)
 
   private val testCases = List[TestOption](
     esEntry("Simple"),
     esEntry("Cycle2"),
     esEntry("Self", expectError = true),
     esEntry("C", expectError = true),
-    esEntry("TS", Some("./tsconfig.json"), ignoreTypeError = true), // TODO: type members
-    esEntry("Output", Some("./tsconfig.json"), ignoreTypeError = true), // TODO: type parameter position
-    esEntry("Output2", Some("./tsconfig.json"), ignoreTypeError = true), // TODO: type parameter position
+    esEntry("TS", Some("./tsconfig.json"), expectTypeError = true), // TODO: type members
+    esEntry("Output", Some("./tsconfig.json"), expectTypeError = true), // TODO: type parameter position
+    esEntry("Output2", Some("./tsconfig.json"), expectTypeError = true), // TODO: type parameter position
     esEntry("MLS2TheMax", Some("./tsconfig.json")),
     esEntry("MyPartialOrder", Some("./tsconfig.json"), expectError = true), // TODO: type traits in modules
-    cjsEntry("Lodash", Some("./tsconfig.json"), ignoreTypeError = true), // TODO: module member selection/trait types
+    cjsEntry("Lodash", Some("./tsconfig.json"), expectTypeError = true), // TODO: module member selection/trait types
     esEntry("Builtin"),
     cjsEntry("CJS1"),
-    ts2mlsEntry("BasicFunctions", ignoreTypeError = true),
+    ts2mlsEntry("BasicFunctions", expectTypeError = true),
     ts2mlsEntry("ClassMember"),
-    ts2mlsEntry("Cycle1", ignoreTypeError = true),
+    ts2mlsEntry("Cycle1", expectTypeError = true),
     ts2mlsEntry("Dec"),
     ts2mlsEntry("Enum"),
     ts2mlsEntry("Escape"),
-    ts2mlsEntry("Export", ignoreTypeError = true),
-    ts2mlsEntry("Heritage", ignoreTypeError = true),
+    ts2mlsEntry("Export", expectTypeError = true),
+    ts2mlsEntry("Heritage", expectTypeError = true),
     ts2mlsEntry("HighOrderFunc"),
     ts2mlsEntry("Import"),
     ts2mlsEntry("InterfaceMember"),
-    ts2mlsEntry("Intersection", ignoreTypeError = true),
+    ts2mlsEntry("Intersection", expectTypeError = true),
     ts2mlsEntry("Literal"),
     ts2mlsEntry("Namespace", expectError = true),
-    ts2mlsEntry("Optional", ignoreTypeError = true),
-    ts2mlsEntry("Overload", ignoreTypeError = true),
-    ts2mlsEntry("TSArray", ignoreTypeError = true),
-    ts2mlsEntry("Tuple", ignoreTypeError = true),
-    ts2mlsEntry("Type", ignoreTypeError = true),
-    ts2mlsEntry("TypeParameter", ignoreTypeError = true),
+    ts2mlsEntry("Optional", expectTypeError = true),
+    ts2mlsEntry("Overload", expectTypeError = true),
+    ts2mlsEntry("TSArray", expectTypeError = true),
+    ts2mlsEntry("Tuple", expectTypeError = true),
+    ts2mlsEntry("Type", expectTypeError = true),
+    ts2mlsEntry("TypeParameter", expectTypeError = true),
     ts2mlsEntry("Union"),
     ts2mlsEntry("Variables", expectError = true),
   )

@@ -766,7 +766,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (_, TypeBounds(lb, ub)) => rec(lhs, lb, true)
           case (p @ ProvType(und), _) => rec(und, rhs, true)
           case (_, p @ ProvType(und)) => rec(lhs, und, true)
-          case (_: TypeTag, _: TypeTag) if lhs === rhs => ()
+          case (_: TypeTag, _: TypeTag) if lhs === rhs => () // required to allow signature overriding checks in declarations
           case (lhs: Unsupported, rhs: Unsupported) => ()
           case (NegType(lhs), NegType(rhs)) => rec(rhs, lhs, true)
           
