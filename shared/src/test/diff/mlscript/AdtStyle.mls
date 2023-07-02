@@ -1,16 +1,14 @@
+:NoJS
+
 datatype Either[A, B] = Left[A](A,) || Right[B](B,)
 //│ Defined type alias Either[+A, +B]
 //│ Left: 'a -> Either['a, nothing]
-//│     = <missing implementation>
 //│ Right: 'a -> Either[nothing, 'a]
-//│      = <missing implementation>
 
 datatype List[A] = Cons[A](A, List[A]) || Nil
 //│ Defined type alias List[+A]
 //│ Cons: ('a, List['a],) -> List['a]
-//│     = <missing implementation>
 //│ Nil: List[nothing]
-//│    = <missing implementation>
 
 type Heap = List[(string, int)]
 datatype HeapVar = HeapInt(int,) || HeapV(Heap,)
@@ -21,28 +19,48 @@ datatype Stmt = Skip || Assign(string, Exp)
 //│ Defined type alias Exp
 //│ Defined type alias Stmt
 //│ HeapInt: int -> HeapVar
-//│        = <missing implementation>
 //│ HeapV: Heap -> HeapVar
-//│      = <missing implementation>
 //│ EInt: int -> Exp
-//│     = <missing implementation>
 //│ Var: string -> Exp
-//│    = <missing implementation>
 //│ Plus: (Exp, Exp,) -> Exp
-//│     = <missing implementation>
 //│ Times: (Exp, Exp,) -> Exp
-//│      = <missing implementation>
 //│ Skip: Stmt
-//│     = <missing implementation>
 //│ Assign: (string, Exp,) -> Stmt
-//│       = <missing implementation>
 
 datatype Poly[A] = PolyList[A](List[A -> A],)
 //│ Defined type alias Poly[=A]
 //│ PolyList: List['a -> 'a] -> Poly['a]
-//│         = <missing implementation>
 
 datatype FCPoly = FCPolyList(List[forall 'a. 'a -> 'a],)
 //│ Defined type alias FCPoly
 //│ FCPolyList: List[forall 'a. 'a -> 'a] -> FCPoly
-//│           = <missing implementation>
+
+
+fun x ->
+  match x with
+   | Cons(a, b) -> b
+   | Nil -> Nil
+//│ res: (List[?] & 'a) -> (List[nothing] | 'a)
+
+:e
+fun x ->
+  match x with
+   | Cons(1, b) -> Cons(0, b)
+   | Cons(a, b) -> b
+   | Nil -> Nil
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.48: 	   | Cons(1, b) -> Cons(0, b)
+//│ ║        	                   ^^^^^^^^^^
+//│ ╟── integer literal of type `0` does not match type `1`
+//│ ║  l.48: 	   | Cons(1, b) -> Cons(0, b)
+//│ ║        	                        ^
+//│ ╟── Note: constraint arises from integer literal:
+//│ ║  l.48: 	   | Cons(1, b) -> Cons(0, b)
+//│ ╙──      	          ^
+//│ res: (List[?] & 'a) -> (error | List[0] | 'a)
+
+fun x ->
+  match x with
+   | EInt(v,) -> v
+   | _ -> 0
+//│ res: Exp -> int

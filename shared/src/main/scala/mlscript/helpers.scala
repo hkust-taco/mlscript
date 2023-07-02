@@ -812,6 +812,38 @@ object MatchCase {
   final case class BooleanTest(test: Term) extends MatchCase
 }
 
+//////////////////////////////
+// ADT style pattern matching
+//////////////////////////////
+trait MatchWithImpl { self: AdtMatchWith =>
+
+}
+trait AdtMatchArmImpl extends Located { self: AdtMatchArm =>
+
+  def children: List[Located] = this match {
+    case AdtMatchPat(p, t) => p :: t :: Nil
+    case AdtMatchElse(t) => t :: Nil
+  }
+
+  override def toString: String = this match {
+    case AdtMatchPat(pat, trm) => s"($pat) then $trm"
+    case AdtMatchElse(trm) => s"else $trm"
+  }
+
+  def topLevelCtors: Opt[Var] = this match {
+    case AdtMatchPat(v: Var, _) => S(v)
+    case AdtMatchPat(App(v: Var, _), _) => S(v)
+    case AdtMatchPat(tup@Tup(fs), _) => fs.length match {
+      case 1 => S(Var("Tup1").withLoc(tup.toLoc))
+      case 2 => S(Var("Tup2").withLoc(tup.toLoc))
+      case 3 => S(Var("Tup3").withLoc(tup.toLoc))
+      case _ => lastWords(s"Unsupported tuple length in match pattern: ${this}")
+    }
+    case AdtMatchElse(_) => N
+    case _ => N
+  }
+}
+
 trait IfBodyImpl extends Located { self: IfBody =>
 
   def children: List[Located] = this match {

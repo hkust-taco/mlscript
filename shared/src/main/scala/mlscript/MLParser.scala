@@ -47,7 +47,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     case (pat, S(bod)) => LetS(false, pat, bod)
   }
 
-  def term[p: P]: P[Term] = P(let | fun | ite | forall | withsAsc | _match)
+  def term[p: P]: P[Term] = P(let | fun | ite | forall | withsAsc | _match | adtMatchWith)
   
   def forall[p: P]: P[Term] = P( (kw("forall") ~/ tyVar.rep ~ "." ~ term).map {
     case (vars, ty) => Forall(vars.toList, ty)
@@ -363,7 +363,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
       case params => AppliedType(alsName, params)
     }).withLocOf(tyDef)
     tyDef.kind match {
-      case Cls => {
+      case Cls =>
         tyDef.body match {
           case Tuple(Nil) =>
             val funAppTy = PolyType(alsParams.map(L.apply), alsTy)
@@ -375,10 +375,39 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
             S(fun)
           case _ => N
         }
-      }
       case _ => N
     }
   }
+
+  ///////////////////////////////////////////////////////
+  /// ADT match with
+  ///////////////////////////////////////////////////////
+
+  def adtMatchWith[p: P]: P[AdtMatchWith] =
+    locate(P(kw("match") ~/ term ~ "with" ~ "|".? ~ matchArms).map {
+      case (expr, arms) => AdtMatchWith(expr, arms)
+    })
+
+  def matchArms[p: P]: P[Ls[AdtMatchArm]] = P(
+    (
+      ("_" ~ "->" ~ term).map(AdtMatchElse(_) :: Nil)
+        // In ocaml Tup _ -> desugars to Tup(_, _) -> i.e. matching the constructor
+        // but ignoring the values. In UCS this is represented by matching on
+        // just the data constructor Tup ->
+        | (variable ~ "_" ~ "->" ~ term ~ matchArms2).map {
+        case (t, b, rest) =>
+          AdtMatchPat(t, b) :: rest
+      }
+        | (term ~ "->" ~ term ~ matchArms2).map {
+        case (t, b, rest) =>
+          AdtMatchPat(t, b) :: rest
+      }
+      ).?.map {
+      case None => Ls.empty
+      case Some(b) => b
+    })
+
+  def matchArms2[p: P]: P[Ls[AdtMatchArm]] = ("|" ~ matchArms).?.map(_.getOrElse(Ls.empty))
 }
 object MLParser {
   
