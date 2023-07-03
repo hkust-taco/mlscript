@@ -23,7 +23,7 @@ final case class TypeDef(
   mthDefs: List[MethodDef[Left[Term, Type]]],
   positionals: Ls[Var],
 ) extends Decl {
-  var adtInfo: Ls[AdtInfo] = Nil
+  var adtInfo: Opt[AdtInfo] = N
 }
 
 /**
@@ -81,13 +81,11 @@ final case class Where(body: Term, where: Ls[Statement])             extends Ter
 final case class Forall(params: Ls[TypeVar], body: Term)             extends Term
 final case class Inst(body: Term)                                    extends Term
 
-final case class AdtMatchWith(cond: Term, arms: Ls[AdtMatchArm])       extends Term {
+final case class AdtMatchWith(cond: Term, arms: Ls[AdtMatchPat])       extends Term {
   override def describe: Str = "adt match expression"
 }
 
-sealed abstract class AdtMatchArm extends AdtMatchArmImpl
-final case class AdtMatchPat(pat: Term, rhs: Term) extends AdtMatchArm
-final case class AdtMatchElse(expr: Term) extends AdtMatchArm
+final case class AdtMatchPat(pat: Term, rhs: Term) extends AdtMatchPatImpl
 
 sealed abstract class IfBody extends IfBodyImpl
 // final case class IfTerm(expr: Term) extends IfBody // rm?

@@ -984,7 +984,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
 
         // the assumed shape of an IfBody is a List[IfThen, IfThen, IfElse] with an optional IfElse at the end
         arms.foreach {
-          case AdtMatchElse(expr) => con(typeTerm(expr), ret_ty, ret_ty)
           case AdtMatchPat(Var("_"), rhs) => con(typeTerm(rhs), ret_ty, ret_ty)
           // Cases where the pattern is a single variable term
           // it can introduce a new pattern variable or it can be a constructor
@@ -994,9 +993,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           case AdtMatchPat(v@Var(name), rhs) =>
             println(s"type pattern $v with loc: ${v.toLoc}")
             // update context with variables
-            ctx.get(name).flatMap {
-              case VarSymbol(PolymorphicType(_, FunctionType(tup: TupleType, TypeRef(alsName, _))), _)
-                if ctx.tyDefs.get(alsName.name).exists(_.kind === Als) => S(alsName)
+            ctx.tyDefs.get(name).flatMap {
+              case TypeDef(Cls, _, _, RecordType(Nil), _, _, _, _, _, S(adtData)) => S(adtData)
               case _ => N
             }.fold {
               // `case x -> expr` catch all with a new variable in the context
@@ -1009,7 +1007,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             } {
               // `case End -> expr` or `case false -> expr` or `case [] -> expr`
               // where case is a variant of an adt with no type arguments
-              case alsName =>
+              case AdtInfo(alsName, _) =>
                 // get adt from cache or initialize a new one with fresh vars
                 // this is so that all case expressions can share
                 // the same type variables for the adt
@@ -1031,14 +1029,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             println(s"fields $fs")
             val tupArgs = alsCache.getOrElseUpdate("Tup" + fs.length.toString, fs.map(_ => freshVar(noProv, N)))
 
-            // initialize new tuple and fields with type variables and appropriate provenances
-            val newTargs = tupArgs.zip(fs).zipWithIndex.map {
-              case ((tvar, (_, fld)), i) => tvar.withProv(TypeProvenance(fld.value.toLoc, s"${i} element of tuple"))
-            }
-            val fld_ty = newTargs.map(elem => N -> FieldType(N, elem)(elem.prov))
+            val fld_ty = tupArgs.map(elem => N -> FieldType(N, elem)(elem.prov))
             val caseAdtTyp = TypeProvenance(tup.toLoc, "pattern")
             val adt_ty = TupleType(fld_ty)(caseAdtTyp)
               .withProv(TypeProvenance(cond.toLoc, "match `condition`"))
+            con(cond_ty, adt_ty, adt_ty)
 
             // constrain tuple fields or add names to context
             // add any vars to nested context pattern
@@ -1047,17 +1042,16 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
               // case (x, y)
               case ((_, Fld(_, _, argTerm: Var)), fieldIdx) =>
                 println(s"Typing $argTerm field $fieldIdx in tup")
-                val fieldType = newTargs(fieldIdx)
+                val fieldType = tupArgs(fieldIdx)
                 println(s"Field $argTerm : $fieldType")
                 nestCtx += argTerm.name -> VarSymbol(fieldType, argTerm)
               // case (0, 1)
               case ((_, Fld(_, _, argTerm)), fieldIdx) =>
-                val fieldType = newTargs(fieldIdx)
+                val fieldType = tupArgs(fieldIdx)
                 val argTy = typeTerm(argTerm)
                 con(fieldType, argTy, fieldType)
             }
 
-            con(cond_ty, adt_ty, adt_ty)
             nestCtx |> { implicit ctx =>
               con(typeTerm(rhs), ret_ty, ret_ty)
             }
@@ -1067,15 +1061,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             println(s"Typing case ($ctorNme)")
 
             // find the alias type returned by constructor
-            val (args, alsDef) = ctx.get(ctorNme).flatMap {
-              case VarSymbol(FunctionType(args, TypeRef(alsName, _)), _)
-                // from the constructor function get the returned alias type
-                // lookup the context to find the type definition for this alias type
-              => ctx.tyDefs.get(alsName.name).filter(_.kind === Als).map(alsDef => (args, alsDef))
-              case VarSymbol(PolymorphicType(_, FunctionType(args, TypeRef(alsName, _))), _)
-                // from the constructor function get the returned alias type
-                // lookup the context to find the type definition for this alias type
-                => ctx.tyDefs.get(alsName.name).filter(_.kind === Als).map(alsDef => (args, alsDef))
+            val (body, tparams, AdtInfo(alsName, paramPos)) = ctx.tyDefs.get(ctorNme).flatMap {
+              case TypeDef(Cls, _, tparamsargs, body: RecordType, _, _, _, _, _, S(adtInfo)) => S(body, tparamsargs, adtInfo)
               case _ => N
             }.getOrElse(lastWords(s"$ctorNme cannot be pattern matched"))
 
@@ -1083,18 +1070,21 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             // this is so that all case expressions can share
             // the same type variables for the adt
             val newTargs = alsCache.getOrElseUpdate(
-              alsDef.nme.name,
-              ctx.tyDefs.getOrElse(alsDef.nme.name, lastWords(s"Could not find ${alsDef.nme}"))
+              alsName.name,
+              ctx.tyDefs.getOrElse(alsName.name, lastWords(s"Could not find $alsName"))
                 .targs.map(tv => freshVar(tv.prov, N, tv.nameHint))
             )
             val caseAdtTyp = TypeProvenance(caseAdt.toLoc, "pattern")
-            val newAlsTy = TypeRef(alsDef.nme, newTargs)(caseAdtTyp)
+            val newAlsTy = TypeRef(alsName, newTargs)(caseAdtTyp)
             con(cond_ty, newAlsTy, cond_ty)
             println(s"adt_ty $newAlsTy")
 
-            val argFields = args match {
-              case tup: TupleType => tup.fields.map(_._2.ub)
-              case t => t :: Nil
+            val mapping: Map[ST, ST] = tparams.zip(paramPos).map {
+              case ((_, tvar), i) => (tvar, newAlsTy.targs(i))
+            }.toMap
+            val argFields = subst(body, mapping) match {
+              case RecordType(fields) => fields.map(_._2.ub)
+              case ty => ty :: Nil
             }
             val patArgFields = patArgs.fields.map(_._2.value)
 

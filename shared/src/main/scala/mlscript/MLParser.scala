@@ -319,8 +319,9 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     P((ctorName ~ tyParams ~ parTy.?).map {
       case (id, params, S(body: Tuple)) =>
         val positionals = body.fields.zipWithIndex.map { case (_, i) => Var("_"+(i+1)) }
-        TypeDef(Cls, id, params, body, Nil, Nil, positionals)
-      case (id, _, None) => TypeDef(Cls, id, Nil, Tuple(Ls.empty), Nil, Nil, Nil)
+        val rcdBody = Record(positionals.zip(body.fields.map(_._2)))
+        TypeDef(Cls, id, params, rcdBody, Nil, Nil, positionals)
+      case (id, _, None) => TypeDef(Cls, id, Nil, Record(Ls.empty), Nil, Nil, Nil)
       case t => throw new Exception(s"Unable to handle case $t")
     })
 
@@ -334,17 +335,17 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
         val paramSet = tparams.toSet
         bodies.foreach(tyDef => {
           val paramMapIndex = tyDef.tparams.filter(paramSet(_)).map(elem => tparams.zipWithIndex.filter(_._1 == elem).head._2)
-          tyDef.adtInfo = AdtInfo(alsName, paramMapIndex) :: Nil
+          tyDef.adtInfo = S(AdtInfo(alsName, paramMapIndex))
         })
         val aliasBody = bodies.foldLeft[Type](bodies.head.body) {
           case (union, tdef) => Union(tdef.body, union)
         }
         val constructors = bodies.flatMap(cls => adtTyConstructors(cls, alsName, tparams))
         val als = TypeDef(Als, alsName, tparams, aliasBody, Nil, Nil, Nil)
-        als.adtInfo = bodies.flatMap(tdef => tdef.adtInfo.headOption.map(_.copy(ctorName = tdef.nme)))
+        als.adtInfo = S(AdtInfo(alsName, Nil))
         // Don't add type definitions for the bodies
         // only use their constructors
-        als :: constructors
+        als :: bodies ::: constructors
     })
 
   // create a helper function for a class constructor
@@ -365,12 +366,12 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     tyDef.kind match {
       case Cls =>
         tyDef.body match {
-          case Tuple(Nil) =>
+          case Record(Nil) =>
             val funAppTy = PolyType(alsParams.map(L.apply), alsTy)
             val fun = Def(false, Var(tyDef.nme.name), R(funAppTy), true).withLocOf(tyDef.nme)
             S(fun)
-          case tup: Tuple =>
-            val funTy = PolyType(alsParams.map(L.apply), Function(tup, alsTy))
+          case Record(fields) =>
+            val funTy = PolyType(alsParams.map(L.apply), Function(Tuple(fields.map(N -> _._2)), alsTy))
             val fun = Def(false, Var(tyDef.nme.name), R(funTy), true).withLocOf(tyDef.nme)
             S(fun)
           case _ => N
@@ -388,15 +389,15 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
       case (expr, arms) => AdtMatchWith(expr, arms)
     })
 
-  def matchArms[p: P]: P[Ls[AdtMatchArm]] = P(
+  def matchArms[p: P]: P[Ls[AdtMatchPat]] = P(
     (
-      ("_" ~ "->" ~ term).map(AdtMatchElse(_) :: Nil)
+      ("_" ~ "->" ~ term).map(AdtMatchPat(Var("_"), _) :: Nil)
         // In ocaml Tup _ -> desugars to Tup(_, _) -> i.e. matching the constructor
         // but ignoring the values. In UCS this is represented by matching on
         // just the data constructor Tup ->
         | (variable ~ "_" ~ "->" ~ term ~ matchArms2).map {
         case (t, b, rest) =>
-          AdtMatchPat(t, b) :: rest
+          AdtMatchPat(mkApp(t, Var("_")), b) :: rest
       }
         | (term ~ "->" ~ term ~ matchArms2).map {
         case (t, b, rest) =>
@@ -407,7 +408,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
       case Some(b) => b
     })
 
-  def matchArms2[p: P]: P[Ls[AdtMatchArm]] = ("|" ~ matchArms).?.map(_.getOrElse(Ls.empty))
+  def matchArms2[p: P]: P[Ls[AdtMatchPat]] = ("|" ~ matchArms).?.map(_.getOrElse(Ls.empty))
 }
 object MLParser {
   

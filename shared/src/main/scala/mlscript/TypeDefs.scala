@@ -36,6 +36,11 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
     baseClasses: Set[TypeName],
     toLoc: Opt[Loc],
     positionals: Ls[Str],
+    // maps a class to it's adt by name and maps params to adt param by position
+    // for e.g. in type 'a, 'b either = Left of 'a | Right of 'b
+    // Right will have an adtData = S((TypeName("either"), List(1)))
+    // indicating that it's adt is either and it's param is the 1th param of either
+    adtData: Opt[AdtInfo] = N
   ) {
     def allBaseClasses(ctx: Ctx)(implicit traversed: Set[TypeName]): Set[TypeName] =
       baseClasses.map(v => TypeName(v.name.decapitalize)) ++
@@ -181,7 +186,7 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
           val bodyTy =
             typePolyType(td.body, simplify = false)(ctx, raise, tparamsargs.map(_.name -> _).toMap, newDefsInfo)
           val td1 = TypeDef(td.kind, td.nme, tparamsargs.toList, bodyTy,
-            td.mthDecls, td.mthDefs, baseClassesOf(td), td.toLoc, td.positionals.map(_.name))
+            td.mthDecls, td.mthDefs, baseClassesOf(td), td.toLoc, td.positionals.map(_.name), td.adtInfo)
           allDefs += n -> td1
           S(td1)
       }
@@ -738,7 +743,7 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
       val visitedSet: MutSet[Bool -> TypeVariable] = MutSet()
       varianceUpdated = false;
       tyDefs.foreach {
-        case t @ TypeDef(k, nme, _, body, mthDecls, mthDefs, _, _, _) =>
+        case t @ TypeDef(k, nme, _, body, mthDecls, mthDefs, _, _, _, _) =>
           trace(s"${k.str} ${nme.name}  ${
                 t.tvarVariances.getOrElse(die).iterator.map(kv => s"${kv._2} ${kv._1}").mkString("  ")}") {
             updateVariance(body, VarianceInfo.co)(t, visitedSet)

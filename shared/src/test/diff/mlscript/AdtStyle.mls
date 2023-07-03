@@ -2,11 +2,16 @@
 
 datatype Either[A, B] = Left[A](A,) || Right[B](B,)
 //│ Defined type alias Either[+A, +B]
+//│ Defined class Left[+A]
+//│ Defined class Right[+B]
 //│ Left: 'a -> Either['a, nothing]
 //│ Right: 'a -> Either[nothing, 'a]
 
-datatype List[A] = Cons[A](A, List[A]) || Nil
+
+datatype List[A] = Cons[A](A, List[A]) || Nil[A]
 //│ Defined type alias List[+A]
+//│ Defined class Cons[+A]
+//│ Defined class Nil
 //│ Cons: ('a, List['a],) -> List['a]
 //│ Nil: List[nothing]
 
@@ -16,8 +21,16 @@ datatype Exp = EInt(int,) || Var(string,) || Plus(Exp, Exp) || Times(Exp, Exp)
 datatype Stmt = Skip || Assign(string, Exp)
 //│ Defined type alias Heap
 //│ Defined type alias HeapVar
+//│ Defined class HeapInt
+//│ Defined class HeapV
 //│ Defined type alias Exp
+//│ Defined class EInt
+//│ Defined class Var
+//│ Defined class Plus
+//│ Defined class Times
 //│ Defined type alias Stmt
+//│ Defined class Skip
+//│ Defined class Assign
 //│ HeapInt: int -> HeapVar
 //│ HeapV: Heap -> HeapVar
 //│ EInt: int -> Exp
@@ -29,10 +42,12 @@ datatype Stmt = Skip || Assign(string, Exp)
 
 datatype Poly[A] = PolyList[A](List[A -> A],)
 //│ Defined type alias Poly[=A]
+//│ Defined class PolyList[=A]
 //│ PolyList: List['a -> 'a] -> Poly['a]
 
 datatype FCPoly = FCPolyList(List[forall 'a. 'a -> 'a],)
 //│ Defined type alias FCPoly
+//│ Defined class FCPolyList
 //│ FCPolyList: List[forall 'a. 'a -> 'a] -> FCPoly
 
 
@@ -40,27 +55,30 @@ fun x ->
   match x with
    | Cons(a, b) -> b
    | Nil -> Nil
-//│ res: (List[?] & 'a) -> (List[nothing] | 'a)
+//│ res: List['A] -> List['A]
 
-:e
 fun x ->
   match x with
    | Cons(1, b) -> Cons(0, b)
    | Cons(a, b) -> b
    | Nil -> Nil
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.48: 	   | Cons(1, b) -> Cons(0, b)
-//│ ║        	                   ^^^^^^^^^^
-//│ ╟── integer literal of type `0` does not match type `1`
-//│ ║  l.48: 	   | Cons(1, b) -> Cons(0, b)
-//│ ║        	                        ^
-//│ ╟── Note: constraint arises from integer literal:
-//│ ║  l.48: 	   | Cons(1, b) -> Cons(0, b)
-//│ ╙──      	          ^
-//│ res: (List[?] & 'a) -> (error | List[0] | 'a)
+//│ res: List[1 & 'a] -> List[0 | 'a]
 
 fun x ->
   match x with
    | EInt(v,) -> v
    | _ -> 0
 //│ res: Exp -> int
+
+fun x ->
+  match x with
+   | (1, 2, 3) -> 6
+   | (x, y, 3,) -> x + y
+   | _ -> 0
+//│ res: (1, 2, 3,) -> int
+
+fun (x, y) ->
+  match (x, y) with
+   | (1, 2) -> 3
+   | _ -> 0
+//│ res: (1, 2,) -> (0 | 3)
