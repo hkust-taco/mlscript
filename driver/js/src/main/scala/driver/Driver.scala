@@ -36,7 +36,7 @@ class Driver(options: DriverOptions) {
       println(msg)
   }
 
-  // errors in imported files should be printed in their own files to avoid redundant
+  // errors in imported files should be printed in their own files to avoid redundancy
   private val noRedundantRaise = (diag: Diagnostic) => ()
 
   private val importedModule = MutSet[String]()
