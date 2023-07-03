@@ -135,7 +135,7 @@ class Driver(options: DriverOptions) {
     case Some(content) => f(parse(filename, content))
     case _ =>
       throw
-        ErrorReport(Ls((s"can not open file $filename", None)), Diagnostic.Compilation)
+        ErrorReport(Ls((s"Cannot open file $filename", None)), Diagnostic.Compilation)
   }
 
   private def extractSig(filename: String, moduleName: String): TypingUnit =
@@ -237,7 +237,7 @@ class Driver(options: DriverOptions) {
           val depFile = file.`import`(dep)
           if (depFile.filename === file.filename) {
             totalErrors += 1
-            mlsiWriter.writeErr(s"can not import ${file.filename} itself")
+            mlsiWriter.writeErr(s"Cannot import ${file.filename} from itself")
             false
           }
           else true
