@@ -5,11 +5,7 @@ import js.DynamicImplicits._
 import js.JSConverters._
 
 abstract class TSAny(v: js.Dynamic) {
-  val isUndefined: Boolean = IsUndefined(v)
-}
-
-object IsUndefined {
-  def apply(v: js.Dynamic): Boolean = js.isUndefined(v)
+  val isUndefined: Boolean = js.isUndefined(v)
 }
 
 // array for information object in tsc
@@ -85,7 +81,7 @@ class TSLineStartsHelper(arr: js.Dynamic) extends TSAny(arr) {
   if (isUndefined) throw new AssertionError("can not read line starts from the source file.")
 
   // line, column in string
-  def getPos(pos: js.Dynamic): (String, String) = if (IsUndefined(pos)) ("-1", "-1") else {
+  def getPos(pos: js.Dynamic): (String, String) = if (js.isUndefined(pos)) ("-1", "-1") else {
     val len = arr.length
     def run(index: Int): (String, String) =
       if (index >= len) throw new AssertionError(s"invalid pos parameter $pos.")

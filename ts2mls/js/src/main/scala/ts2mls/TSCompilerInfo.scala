@@ -6,6 +6,7 @@ import js.DynamicImplicits._
 import js.JSConverters._
 import ts2mls.types._
 import mlscript.utils._
+import js.isUndefined
 
 object TypeScript {
   private def load(moduleName: String) = try g.require(moduleName) catch {
@@ -19,6 +20,9 @@ object TypeScript {
   private val ts: js.Dynamic = load("typescript")
   private val json: js.Dynamic = load("json5")
   private val sys: js.Dynamic = ts.sys
+  private val process: js.Dynamic = g.require("process")
+
+  lazy val isLinux: Boolean = process.platform.toString().toLowerCase === "linux"
 
   // tsconfig.json
   def parseOption(basePath: String, filename: Option[String]): js.Dynamic = {
@@ -38,7 +42,7 @@ object TypeScript {
 
   def resolveModuleName(importName: String, containingName: String, config: js.Dynamic): String = {
     val res = ts.resolveModuleName(importName, containingName, config, sys)
-    if (!IsUndefined(res.resolvedModule) && !IsUndefined(res.resolvedModule.resolvedFileName))
+    if (!isUndefined(res.resolvedModule) && !isUndefined(res.resolvedModule.resolvedFileName))
       res.resolvedModule.resolvedFileName.toString()
     else
       throw new Exception(s"can not resolve module $importName in $containingName.")
@@ -96,18 +100,18 @@ object TypeScript {
   def isESModule(config: js.Dynamic, isJS: Boolean): Boolean =
     if (isJS) {
       val tp = config.selectDynamic("type")
-      if (IsUndefined(tp)) false
+      if (isUndefined(tp)) false
       else tp.toString() === "module"
     }
     else {
       val raw = config.selectDynamic("raw")
-      if (IsUndefined(raw)) false
+      if (isUndefined(raw)) false
       else {
         val opt = raw.selectDynamic("compilerOptions")
-        if (IsUndefined(opt)) false
+        if (isUndefined(opt)) false
         else {
           val mdl = opt.selectDynamic("module")
-          if (IsUndefined(mdl)) false
+          if (isUndefined(mdl)) false
           else mdl.toString() =/= "CommonJS"
         }
       }
@@ -148,7 +152,7 @@ class TSSymbolObject(sym: js.Dynamic)(implicit checker: TSTypeChecker) extends T
 
   lazy val isOptionalMember = (flags & TypeScript.symbolFlagsOptional) > 0
   lazy val valueDeclaration = TSNodeObject(sym.valueDeclaration)
-  lazy val isMerged = !IsUndefined(sym.mergeId)
+  lazy val isMerged = !js.isUndefined(sym.mergeId)
 }
 
 object TSSymbolObject {
@@ -230,7 +234,7 @@ class TSNodeObject(node: js.Dynamic)(implicit checker: TSTypeChecker) extends TS
 
   // TODO: multiline string support
   override def toString(): String =
-    if (IsUndefined(node)) "" else node.getText().toString().replaceAll("\n", " ").replaceAll("\"", "'")
+    if (js.isUndefined(node)) "" else node.getText().toString().replaceAll("\n", " ").replaceAll("\"", "'")
   lazy val filename: String =
     if (parent.isUndefined) node.fileName.toString()
     else parent.filename
@@ -246,10 +250,10 @@ class TSNodeObject(node: js.Dynamic)(implicit checker: TSTypeChecker) extends TS
   lazy val moduleReference = TSNodeObject(node.moduleReference)
   lazy val expression = TSTokenObject(node.expression)
   lazy val idExpression = TSIdentifierObject(node.expression)
-  lazy val isVarParam = !IsUndefined(node.dotDotDotToken)
-  lazy val hasmoduleReference = !IsUndefined(node.moduleReference)
+  lazy val isVarParam = !js.isUndefined(node.dotDotDotToken)
+  lazy val hasmoduleReference = !js.isUndefined(node.moduleReference)
   lazy val moduleAugmentation =
-    if (IsUndefined(node.moduleAugmentations)) TSTokenObject(g.undefined)
+    if (js.isUndefined(node.moduleAugmentations)) TSTokenObject(g.undefined)
     else TSTokenObject(node.moduleAugmentations.selectDynamic("0"))
 }
 
@@ -276,14 +280,14 @@ object TSTokenObject {
 
 class TSTypeObject(obj: js.Dynamic)(implicit checker: TSTypeChecker) extends TSAny(obj) {
   private lazy val flags = obj.flags
-  private lazy val objectFlags: js.Dynamic = if (IsUndefined(obj.objectFlags)) 0 else obj.objectFlags
+  private lazy val objectFlags: js.Dynamic = if (js.isUndefined(obj.objectFlags)) 0 else obj.objectFlags
   private lazy val baseType = TSTypeObject(checker.getBaseType(obj))
 
   lazy val symbol = TSSymbolObject(obj.symbol)
   lazy val aliasSymbol = TSSymbolObject(obj.aliasSymbol)
   lazy val typeArguments = TSTypeArray(checker.getTypeArguments(obj))
   lazy val intrinsicName: String =
-    if (!IsUndefined(obj.intrinsicName)) obj.intrinsicName.toString
+    if (!js.isUndefined(obj.intrinsicName)) obj.intrinsicName.toString
     else baseType.intrinsicName
 
   lazy val `type` = TSTypeObject(obj.selectDynamic("type"))

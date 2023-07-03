@@ -8,7 +8,6 @@ import scala.collection.mutable.{ListBuffer,Map => MutMap, Set => MutSet}
 import mlscript.codegen._
 import mlscript.{NewLexer, NewParser, ErrorReport, Origin, Diagnostic}
 import ts2mls.{TSProgram, TypeScript, TSPathResolver, JSFileSystem, JSWriter, FileInfo}
-import ts2mls.IsUndefined
 
 class Driver(options: DriverOptions) {
   import Driver._
