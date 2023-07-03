@@ -386,3 +386,23 @@ fun g(x, y) =
     0
 //│ g: (int, int,) -> int
 //│  = [Function: g2]
+
+
+fun test(x) = if x then 0 else "oops"
+//│ test: anything -> ("oops" | 0)
+//│     = [Function: test]
+
+test(true)
+test(false)
+test(0)
+test(1)
+//│ res: "oops" | 0
+//│    = 0
+//│ res: "oops" | 0
+//│    = 'oops'
+//│ res: "oops" | 0
+//│    = 'oops'
+//│ res: "oops" | 0
+//│    = 'oops'
+
+
