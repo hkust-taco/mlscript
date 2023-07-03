@@ -86,8 +86,8 @@ object DriverDiffTests {
   ) = driverEntry(entryModule, tsconfig, s"${diffPath}esprojects/",
     s"${diffPath}esprojects/js/", expectTypeError, expectError, false)
 
-  private def ts2mlsEntry(entryModule: String, expectTypeError: Boolean = false, expectError: Boolean = false) =
-    TestOption(s"./${entryModule}.mlsi", ts2mlsPath, "", ".", false, None, None, expectTypeError, expectError)
+  private def ts2mlsEntry(entryFile: String, expectTypeError: Boolean = false, expectError: Boolean = false) =
+    TestOption(s"./${entryFile}", "ts2mls/js/src/test/typescript", "", "../diff", false, None, None, expectTypeError, expectError)
 
   private val testCases = List[TestOption](
     esEntry("Simple"),
@@ -102,28 +102,28 @@ object DriverDiffTests {
     cjsEntry("Lodash", Some("./tsconfig.json"), expectTypeError = true), // TODO: module member selection/trait types
     esEntry("Builtin"),
     cjsEntry("CJS1"),
-    ts2mlsEntry("BasicFunctions", expectTypeError = true),
-    ts2mlsEntry("ClassMember"),
-    ts2mlsEntry("Cycle1", expectTypeError = true),
-    ts2mlsEntry("Dec"),
-    ts2mlsEntry("Enum"),
-    ts2mlsEntry("Escape"),
-    ts2mlsEntry("Export", expectTypeError = true),
-    ts2mlsEntry("Heritage", expectTypeError = true),
-    ts2mlsEntry("HighOrderFunc"),
-    ts2mlsEntry("Import"),
-    ts2mlsEntry("InterfaceMember"),
-    ts2mlsEntry("Intersection", expectTypeError = true),
-    ts2mlsEntry("Literal"),
-    ts2mlsEntry("Namespace", expectError = true),
-    ts2mlsEntry("Optional", expectTypeError = true),
-    ts2mlsEntry("Overload", expectTypeError = true),
-    ts2mlsEntry("TSArray", expectTypeError = true),
-    ts2mlsEntry("Tuple", expectTypeError = true),
-    ts2mlsEntry("Type", expectTypeError = true),
-    ts2mlsEntry("TypeParameter", expectTypeError = true),
-    ts2mlsEntry("Union"),
-    ts2mlsEntry("Variables", expectError = true),
+    ts2mlsEntry("BasicFunctions.ts", expectTypeError = true),
+    ts2mlsEntry("ClassMember.ts"),
+    ts2mlsEntry("Cycle1.ts", expectTypeError = true),
+    ts2mlsEntry("Dec.d.ts"),
+    ts2mlsEntry("Enum.ts"),
+    ts2mlsEntry("Escape.ts"),
+    ts2mlsEntry("Export.ts", expectTypeError = true),
+    ts2mlsEntry("Heritage.ts", expectTypeError = true),
+    ts2mlsEntry("HighOrderFunc.ts"),
+    ts2mlsEntry("Import.ts"),
+    ts2mlsEntry("InterfaceMember.ts"),
+    ts2mlsEntry("Intersection.ts", expectTypeError = true),
+    ts2mlsEntry("Literal.ts"),
+    ts2mlsEntry("Namespace.ts"),
+    ts2mlsEntry("Optional.ts", expectTypeError = true),
+    ts2mlsEntry("Overload.ts", expectTypeError = true),
+    ts2mlsEntry("TSArray.ts", expectTypeError = true),
+    ts2mlsEntry("Tuple.ts", expectTypeError = true),
+    ts2mlsEntry("Type.ts", expectTypeError = true),
+    ts2mlsEntry("TypeParameter.ts", expectTypeError = true),
+    ts2mlsEntry("Union.ts"),
+    ts2mlsEntry("Variables.ts"),
   )
 
   private val cp = g.require("child_process")
