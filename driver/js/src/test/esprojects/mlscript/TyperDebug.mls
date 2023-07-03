@@ -1,0 +1,6 @@
+// :d
+class A(x: Int) {
+  fun add(y: Int) = x + y
+}
+let aa = A(42)
+console.log(aa.add(6))

@@ -102,6 +102,7 @@ object DriverDiffTests {
     cjsEntry("Lodash", Some("./tsconfig.json"), expectTypeError = true), // TODO: module member selection/trait types
     esEntry("Builtin"),
     cjsEntry("CJS1"),
+    esEntry("TyperDebug"),
     ts2mlsEntry("BasicFunctions.ts", expectTypeError = true),
     ts2mlsEntry("ClassMember.ts"),
     ts2mlsEntry("Cycle1.ts", expectTypeError = true),

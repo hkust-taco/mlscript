@@ -15,13 +15,19 @@ class Driver(options: DriverOptions) {
   import JSFileSystem._
   import JSDriverBackend.ModuleType
 
+  private var dbgWriter: Option[JSWriter] = None
+  private def printDbg(msg: String) =
+    dbgWriter.fold(println(msg))(writer => writer.writeDbg(msg))
+
   private val typer =
     new mlscript.Typer(
       dbg = false,
       verbose = false,
       explainErrors = false,
       newDefs = true
-    )
+    ) {
+      override def emitDbg(str: String): Unit = printDbg(str)
+    }
 
   import typer._
 
@@ -89,6 +95,10 @@ class Driver(options: DriverOptions) {
     import fastparse.Parsed.{Success, Failure}
 
     val lines = content.splitSane('\n').toIndexedSeq
+    lines.headOption match {
+      case S(head) => typer.dbg = head.startsWith("//") && head.endsWith(":d")
+      case _ => typer.dbg = false
+    }
     val fph = new mlscript.FastParseHelpers(content, lines)
     val origin = Origin(filename, 1, fph)
     val lexer = new NewLexer(origin, throw _, dbg = false)
@@ -268,8 +278,12 @@ class Driver(options: DriverOptions) {
           }
           if (file.filename.endsWith(".mls")) { // only generate js/mlsi files for mls files
             val expStr = try {
-              cycleSigs.foldLeft("")((s, tu) => s"$s${`type`(tu, false).show}") +
-              packTopModule(Some(file.moduleName), `type`(TypingUnit(definitions), false).show)
+              cycleSigs.foldLeft("")((s, tu) => s"$s${`type`(tu, false).show}") + {
+                dbgWriter = Some(mlsiWriter);
+                val res = packTopModule(Some(file.moduleName), `type`(TypingUnit(definitions), false).show);
+                dbgWriter = None
+                res
+              }
             }
             catch {
               case t : Throwable =>
