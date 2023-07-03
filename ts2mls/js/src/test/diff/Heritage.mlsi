@@ -6,3 +6,6 @@ export declare module Heritage {
   }
   declare class Y extends Five.ROTK {}
 }
+//| ╔══[ERROR] Unsupported parent specification
+//| ║  l.7: 	  declare class Y extends Five.ROTK {}
+//| ╙──     	                          ^^^^^^^^^

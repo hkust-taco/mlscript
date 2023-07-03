@@ -331,7 +331,7 @@ class DiffTests
                 totalWarnings += 1
             }
             val globalLineNum = blockLineNum
-            Diagnostic.report(diag, output, blockLineNum, showRelativeLineNums, false)
+            Diagnostic.report(diag, output, blockLineNum, showRelativeLineNums)
             if (!mode.fixme) {
               if (!allowTypeErrors
                   && !mode.expectTypeErrors && diag.isInstanceOf[ErrorReport] && diag.source =:= Diagnostic.Typing)

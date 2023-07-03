@@ -20,3 +20,12 @@ export declare module Optional {
   }
   fun boom(b: (B[nothing]) | (undefined)): anything
 }
+//| ╔══[ERROR] type identifier not found: ABC
+//| ║  l.13: 	  fun testABC(abc: (ABC) | (undefined)): unit
+//| ╙──      	                   ^^^^^
+//| ╔══[ERROR] type identifier not found: SquareConfig
+//| ║  l.14: 	  fun testSquareConfig(conf: (SquareConfig) | (undefined)): unit
+//| ╙──      	                             ^^^^^^^^^^^^^^
+//| ╔══[ERROR] type identifier not found: B
+//| ║  l.21: 	  fun boom(b: (B[nothing]) | (undefined)): anything
+//| ╙──      	              ^^^^^^^^^^^^

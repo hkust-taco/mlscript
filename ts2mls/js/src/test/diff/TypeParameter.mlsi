@@ -27,3 +27,21 @@ export declare module TypeParameter {
   type PolyToString = forall 'T; (x: 'T) => Str
   type PolyID = forall 'T; (x: 'T) => 'T
 }
+//| ╔══[ERROR] type identifier not found: Printer
+//| ║  l.10: 	  fun setStringPrinter(p: Printer[Str]): unit
+//| ╙──      	                          ^^^^^^^^^^^^
+//| ╔══[ERROR] type identifier not found: Printer
+//| ║  l.11: 	  fun getStringPrinter(): Printer[Str]
+//| ╙──      	                          ^^^^^^^^^^^^
+//| ╔══[ERROR] type identifier not found: Printer
+//| ║  l.12: 	  fun foo['T](p: Printer['T], x: 'T): 'T
+//| ╙──      	                 ^^^^^^^^^^^
+//| ╔══[ERROR] type identifier not found: Printer
+//| ║  l.13: 	  fun foo2['T](p: Printer['T], x: 'T): 'T
+//| ╙──      	                  ^^^^^^^^^^^
+//| ╔══[ERROR] type identifier not found: FFF
+//| ║  l.25: 	  fun fff(p: FFF[Str], s: Str): unit
+//| ╙──      	             ^^^^^^^^
+//| ╔══[ERROR] type identifier not found: FFF
+//| ║  l.26: 	  fun getFFF(): FFF[Num]
+//| ╙──      	                ^^^^^^^^

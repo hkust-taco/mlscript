@@ -28,3 +28,9 @@ export declare module Type {
   val none: {_tag: "None",}
   fun some['A](a: 'A): (None) | (Some['A])
 }
+//| ╔══[ERROR] type identifier not found: None
+//| ║  l.29: 	  fun some['A](a: 'A): (None) | (Some['A])
+//| ╙──      	                       ^^^^^^
+//| ╔══[ERROR] type identifier not found: Some
+//| ║  l.29: 	  fun some['A](a: 'A): (None) | (Some['A])
+//| ╙──      	                                ^^^^^^^^^^

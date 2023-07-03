@@ -16,3 +16,15 @@ export declare module Tuple {
   declare class B {}
   fun swap(x: (A, B, )): (B, A, )
 }
+//| ╔══[ERROR] type identifier not found: A
+//| ║  l.17: 	  fun swap(x: (A, B, )): (B, A, )
+//| ╙──      	               ^
+//| ╔══[ERROR] type identifier not found: B
+//| ║  l.17: 	  fun swap(x: (A, B, )): (B, A, )
+//| ╙──      	                  ^
+//| ╔══[ERROR] type identifier not found: B
+//| ║  l.17: 	  fun swap(x: (A, B, )): (B, A, )
+//| ╙──      	                          ^
+//| ╔══[ERROR] type identifier not found: A
+//| ║  l.17: 	  fun swap(x: (A, B, )): (B, A, )
+//| ╙──      	                             ^

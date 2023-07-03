@@ -2,3 +2,6 @@ import "./A.mlsi"
 declare module B() {
   fun foo: error
 }
+//| ╔══[ERROR] access to class member not yet supported
+//| ║  l.4: 	export fun foo = A.Foo(12)
+//| ╙──     	                  ^^^^

@@ -24,3 +24,15 @@ export declare module BasicFunctions {
   fun inn2(b: Barrrrrrrrr): unit
   fun out2(): Barrrrrrrrr
 }
+//| ╔══[ERROR] type identifier not found: Foooooo
+//| ║  l.19: 	  fun inn(f: Foooooo): unit
+//| ╙──      	             ^^^^^^^
+//| ╔══[ERROR] type identifier not found: Foooooo
+//| ║  l.20: 	  fun out1(): Foooooo
+//| ╙──      	              ^^^^^^^
+//| ╔══[ERROR] type identifier not found: Barrrrrrrrr
+//| ║  l.24: 	  fun inn2(b: Barrrrrrrrr): unit
+//| ╙──      	              ^^^^^^^^^^^
+//| ╔══[ERROR] type identifier not found: Barrrrrrrrr
+//| ║  l.25: 	  fun out2(): Barrrrrrrrr
+//| ╙──      	              ^^^^^^^^^^^

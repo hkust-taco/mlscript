@@ -30,6 +30,9 @@ class Driver(options: DriverOptions) {
       println(msg)
   }
 
+  // errors in imported files should be printed in their own files to avoid redundant
+  private val noRedundantRaise = (diag: Diagnostic) => ()
+
   private val importedModule = MutSet[String]()
   private implicit val config = TypeScript.parseOption(options.path, options.tsconfig)
 
@@ -59,7 +62,7 @@ class Driver(options: DriverOptions) {
     try {
       Driver.totalErrors = 0
       implicit var ctx: Ctx = Ctx.init
-      implicit val raise: Raise = (diag: Diagnostic) => report(diag, options.ignoreTypeError, options.expectError)
+      implicit val raise: Raise = (diag: Diagnostic) => report(diag, options.expectTypeError, options.expectError)
       implicit val extrCtx: Opt[typer.ExtrCtx] = N
       implicit val vars: Map[Str, typer.SimpleType] = Map.empty
       implicit val stack = List[String]()
@@ -68,15 +71,11 @@ class Driver(options: DriverOptions) {
       Driver.totalErrors == 0
     }
     catch {
-      case err: Diagnostic =>
-        report(err, options.ignoreTypeError, options.expectError)
-        false
-      case t : Throwable =>
-        printErr(s"unexpected error: ${t.toString()}")
-        t.printStackTrace()
+      case err: Diagnostic => // we can not find a file to store the error message. print on the screen
+        report(err, options.expectTypeError, options.expectError)
         false
     }
-  
+
   def genPackageJson(): Unit = {
     val content = // TODO: more settings?
       if (!options.commonJS) "{ \"type\": \"module\" }\n"
@@ -151,6 +150,27 @@ class Driver(options: DriverOptions) {
     case (_, declarations, _, _) => declarations
   }))
 
+  private def checkTSInterface(file: FileInfo, writer: JSWriter): Unit = parse(file.filename, writer.getContent) match {
+    case (_, declarations, imports, origin) =>
+      var ctx: Ctx = Ctx.init
+      val extrCtx: Opt[typer.ExtrCtx] = N
+      val vars: Map[Str, typer.SimpleType] = Map.empty
+      initTyper(ctx, noRedundantRaise, extrCtx, vars)
+      val reportRaise = (diag: Diagnostic) =>
+        Diagnostic.report(diag, (s: String) => writer.writeErr(s), 0, false)
+      val tu = TypingUnit(declarations)
+      try {
+        imports.foreach(d => importModule(file.`import`(d.path))(ctx, extrCtx, vars))
+        `type`(tu, false)(ctx, reportRaise, extrCtx, vars)
+      }
+      catch {
+        case t : Throwable =>
+          if (!options.expectTypeError) totalErrors += 1
+          writer.writeErr(t.toString())
+          ()
+      }
+  }
+
   private def initTyper(
     implicit ctx: Ctx,
     raise: Raise,
@@ -167,32 +187,53 @@ class Driver(options: DriverOptions) {
     }
     else imp // mlscript & node_module: use the original name
 
+  private def importModule(file: FileInfo)(
+    implicit ctx: Ctx,
+    extrCtx: Opt[typer.ExtrCtx],
+    vars: Map[Str, typer.SimpleType]
+  ): Unit =
+    parseAndRun(s"${options.path}/${file.interfaceFilename}", {
+      case (_, declarations, imports, _) =>
+        imports.foreach(d => importModule(file.`import`(d.path)))
+        `type`(TypingUnit(declarations), false)(ctx, noRedundantRaise, extrCtx, vars)
+  })
+
   // return true if this file is recompiled.
   private def compile(
     file: FileInfo,
     exported: Boolean
   )(
     implicit ctx: Ctx,
-    raise: Raise,
     extrCtx: Opt[typer.ExtrCtx],
     vars: Map[Str, typer.SimpleType],
     stack: List[String]
   ): Boolean = {
-    val mlsiFile = normalize(s"${file.workDir}/${file.interfaceFilename}")
     if (!isMLScirpt(file.filename)) { // TypeScript
+      System.out.println(s"generating interface for ${file.filename}...")
       val tsprog =
-         TSProgram(file, true, options.tsconfig)
+         TSProgram(file, true, options.tsconfig, checkTSInterface)
       return tsprog.generate
     }
+
+    val mlsiFile = normalize(s"${file.workDir}/${file.interfaceFilename}")
+    val mlsiWriter = JSWriter(mlsiFile)
+    implicit val raise: Raise = (diag: Diagnostic) =>
+      Diagnostic.report(diag, (s: String) => mlsiWriter.writeErr(s), 0, false)
     parseAndRun(file.filename, {
       case (definitions, declarations, imports, _) => {
         val depList = imports.map(_.path)
 
-        val (cycleList, otherList) = depList.partitionMap { dep => {
+        val (cycleList, otherList) = depList.filter(dep => {
           val depFile = file.`import`(dep)
-          if (depFile.filename === file.filename)
-            throw ErrorReport(Ls((s"can not import ${file.filename} itself", None)), Diagnostic.Compilation)
-          else if (stack.contains(depFile.filename)) L(depFile)
+          if (depFile.filename === file.filename) {
+            totalErrors += 1
+            mlsiWriter.writeErr(s"can not import ${file.filename} itself")
+            false
+          }
+          else true
+        }).partitionMap { dep => {
+          val depFile = file.`import`(dep)
+          if (stack.contains(depFile.filename)) L(depFile)
           else R(dep)
         } }
 
@@ -214,32 +255,48 @@ class Driver(options: DriverOptions) {
           initTyper
           val newFilename = file.`import`(dp)
           importedModule += newFilename.filename
-          compile(newFilename, true)(newCtx, raise, newExtrCtx, newVars, stack :+ file.filename)
+          compile(newFilename, true)(newCtx, newExtrCtx, newVars, stack :+ file.filename)
         } || nr)
 
         if (options.force || needRecomp || isInterfaceOutdate(file.filename, mlsiFile)) {
           System.out.println(s"compiling ${file.filename}...")
-          def importModule(file: FileInfo): Unit =
-            parseAndRun(s"${options.path}/${file.interfaceFilename}", {
-              case (_, declarations, imports, _) =>
-                imports.foreach(d => importModule(file.`import`(d.path)))
-                `type`(TypingUnit(declarations), false)
-            })
-
-          otherList.foreach(d => importModule(file.`import`(d)))
+          try { otherList.foreach(d => importModule(file.`import`(d))) }
+          catch {
+            case t : Throwable =>
+              if (!options.expectTypeError) totalErrors += 1
+              mlsiWriter.writeErr(t.toString())
+          }
           if (file.filename.endsWith(".mls")) { // only generate js/mlsi files for mls files
-            val expStr = cycleSigs.foldLeft("")((s, tu) => s"$s${`type`(tu, false).show}") +
+            val expStr = try {
+              cycleSigs.foldLeft("")((s, tu) => s"$s${`type`(tu, false).show}") +
               packTopModule(Some(file.moduleName), `type`(TypingUnit(definitions), false).show)
+            }
+            catch {
+              case t : Throwable =>
+                if (!options.expectTypeError) totalErrors += 1
+                mlsiWriter.writeErr(t.toString())
+                ""
+            }
             val interfaces = otherList.map(s => Import(file.translateImportToInterface(s))).foldRight(expStr)((imp, itf) => s"$imp\n$itf")
 
-            saveToFile(mlsiFile, interfaces)
-            generate(Pgrm(definitions), s"${options.outputDir}/${file.jsFilename}", file.moduleName, imports.map(
-              imp => new Import(resolveJSPath(file, imp.path)) with ModuleType {
-                val isESModule = checkESModule(path, TSPathResolver.resolve(file.filename))
-              }
-            ), exported || importedModule(file.filename))
+            mlsiWriter.write(interfaces)
+            mlsiWriter.close()
+            if (totalErrors == 0)
+              generate(Pgrm(definitions), s"${options.outputDir}/${file.jsFilename}", file.moduleName, imports.map(
+                imp => new Import(resolveJSPath(file, imp.path)) with ModuleType {
+                  val isESModule = checkESModule(path, TSPathResolver.resolve(file.filename))
+                }
+              ), exported || importedModule(file.filename))
           }
-          else `type`(TypingUnit(declarations), false) // for ts/mlsi files, we only check interface files
+          else try {
+            `type`(TypingUnit(declarations), false) // for ts/mlsi files, we only check interface files
+          }
+          catch {
+            case t : Throwable =>
+              if (!options.expectTypeError) totalErrors += 1
+              mlsiWriter.writeErr(t.toString())
+              ""
+          }
           true
         }
         else false // no need to recompile
@@ -262,11 +319,10 @@ class Driver(options: DriverOptions) {
   } catch {
       case CodeGenError(err) =>
         totalErrors += 1
-        printErr(s"codegen error: $err")
+        saveToFile(filename, s"//| codegen error: $err")
       case t : Throwable =>
         totalErrors += 1
-        printErr(s"unexpected error: ${t.toString()}")
-        t.printStackTrace()
+        saveToFile(filename, s"//| unexpected error: ${t.toString()}")
     }
 }
 
@@ -290,7 +346,7 @@ object Driver {
     writer.close()
   }
 
-  private def report(diag: Diagnostic, ignoreTypeError: Boolean, expectError: Boolean): Unit = {
+  private def report(diag: Diagnostic, expectTypeError: Boolean, expectError: Boolean): Unit = {
     diag match {
       case ErrorReport(msg, loco, src) =>
         src match {
@@ -299,10 +355,10 @@ object Driver {
           case Diagnostic.Parsing =>
             totalErrors += 1
           case _ =>
-            if (!ignoreTypeError) totalErrors += 1
+            if (!expectTypeError) totalErrors += 1
         }
       case WarningReport(msg, loco, src) => ()
     }
-    Diagnostic.report(diag, printErr, 0, false, ignoreTypeError || expectError)
+    Diagnostic.report(diag, printErr, 0, false)
   }
 }

@@ -28,3 +28,7 @@ export declare module Namespace {
   fun f1(x: N1.C): N1.C
   fun f2(x: AA.C): AA.C
 }
+//| ╔══[ERROR] type identifier not found: N1
+//| ║  l.28: 	  fun f1(x: N1.C): N1.C
+//| ╙──      	            ^^
+//| java.lang.Exception: Internal Error: Program reached and unexpected state.

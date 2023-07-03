@@ -16,3 +16,12 @@ export declare module Export {
   export val G = Dependency.B
   export val H = Dependency
 }
+//| ╔══[ERROR] type identifier not found: IBar
+//| ║  l.4: 	    export fun Baz(aa: Str): IBar
+//| ╙──     	                             ^^^^
+//| ╔══[ERROR] type identifier not found: IBar
+//| ║  l.11: 	    export val baz: IBar
+//| ╙──      	                    ^^^^
+//| ╔══[ERROR] access to class member not yet supported
+//| ║  l.16: 	  export val G = Dependency.B
+//| ╙──      	                           ^^

@@ -23,9 +23,9 @@ object Diagnostic {
   case object Compilation extends Source
   case object Runtime     extends Source
   
-  def report(diag: Diagnostic, output: Str => Unit, blockLineNum: Int, showRelativeLineNums: Bool, expected: Bool): Unit = {
+  def report(diag: Diagnostic, output: Str => Unit, blockLineNum: Int, showRelativeLineNums: Bool): Unit = {
     val sctx = Message.mkCtx(diag.allMsgs.iterator.map(_._1), "?")
-    val headStr = if (expected) s"╔══[EXPECTED] " else
+    val headStr =
       diag match {
         case ErrorReport(msg, loco, src) =>
           src match {

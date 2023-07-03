@@ -10,7 +10,7 @@ import scala.collection.mutable.{HashSet, HashMap}
 // import * as TopLevelModuleName from "filename"
 // for es5.d.ts, we only need to translate everything
 // and it will be imported without top-level module before we compile other files
-class TSProgram(file: FileInfo, uesTopLevelModule: Boolean, tsconfig: Option[String]) {
+class TSProgram(file: FileInfo, uesTopLevelModule: Boolean, tsconfig: Option[String], typer: (FileInfo, JSWriter) => Unit) {
   private implicit val configContent = TypeScript.parseOption(file.workDir, tsconfig)
   private val program = TypeScript.createProgram(Seq(
     if (file.isNodeModule) file.resolve
@@ -85,6 +85,7 @@ class TSProgram(file: FileInfo, uesTopLevelModule: Boolean, tsconfig: Option[Str
 
     if (ambientNS.isEmpty) {
       generate(writer, globalNamespace, moduleName, globalNamespace.isCommonJS)
+      typer(file, writer)
       writer.close()
     }
     else false
@@ -100,6 +101,6 @@ class TSProgram(file: FileInfo, uesTopLevelModule: Boolean, tsconfig: Option[Str
 }
 
 object TSProgram {
-  def apply(file: FileInfo, uesTopLevelModule: Boolean, tsconfig: Option[String]) =
-    new TSProgram(file, uesTopLevelModule, tsconfig)
+  def apply(file: FileInfo, uesTopLevelModule: Boolean, tsconfig: Option[String], typer: (FileInfo, JSWriter) => Unit) =
+    new TSProgram(file, uesTopLevelModule, tsconfig, typer)
 }

@@ -14,3 +14,10 @@ export declare module Variables {
     val bar: Num
   }
 }
+//| ╔══[ERROR] type identifier not found: FooBar
+//| ║  l.7: 	  val fb: FooBar
+//| ╙──     	          ^^^^^^
+//| ╔══[ERROR] type identifier not found: ABC
+//| ║  l.11: 	  val d: ABC.DEF
+//| ╙──      	         ^^^
+//| java.lang.Exception: Internal Error: Program reached and unexpected state.

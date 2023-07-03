@@ -115,7 +115,7 @@ object DriverDiffTests {
     ts2mlsEntry("InterfaceMember.ts"),
     ts2mlsEntry("Intersection.ts", expectTypeError = true),
     ts2mlsEntry("Literal.ts"),
-    ts2mlsEntry("Namespace.ts"),
+    ts2mlsEntry("Namespace.ts", expectError = true),
     ts2mlsEntry("Optional.ts", expectTypeError = true),
     ts2mlsEntry("Overload.ts", expectTypeError = true),
     ts2mlsEntry("TSArray.ts", expectTypeError = true),
@@ -123,7 +123,7 @@ object DriverDiffTests {
     ts2mlsEntry("Type.ts", expectTypeError = true),
     ts2mlsEntry("TypeParameter.ts", expectTypeError = true),
     ts2mlsEntry("Union.ts"),
-    ts2mlsEntry("Variables.ts"),
+    ts2mlsEntry("Variables.ts", expectError = true),
   )
 
   private val cp = g.require("child_process")

@@ -4,3 +4,6 @@ declare module TS() {
   let printer: error
   error
 }
+//| ╔══[ERROR] access to class member not yet supported
+//| ║  l.3: 	let tspt = MyPrint.DatePrint
+//| ╙──     	                  ^^^^^^^^^^
