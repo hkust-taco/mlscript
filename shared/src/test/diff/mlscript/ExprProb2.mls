@@ -23,7 +23,7 @@ def eval1 eval1 e = case e of {
 //│      = [Function: eval1]
 //│ constrain calls  : 36
 //│ annoying  calls  : 0
-//│ subtyping calls  : 193
+//│ subtyping calls  : 184
 
 :stats
 :js
@@ -45,7 +45,7 @@ def eval1f eval1 e = case e of {
 //│       = [Function: eval1f]
 //│ constrain calls  : 32
 //│ annoying  calls  : 0
-//│ subtyping calls  : 170
+//│ subtyping calls  : 164
 
 
 e1 = add (lit 1) (add (lit 2) (lit 3))
@@ -162,7 +162,7 @@ eval2_fixed_2 e1
 //│    = 6
 //│ constrain calls  : 348
 //│ annoying  calls  : 140
-//│ subtyping calls  : 2921
+//│ subtyping calls  : 2748
 
 :stats
 eval2_fixed_2 e2
@@ -170,7 +170,7 @@ eval2_fixed_2 e2
 //│    = -5
 //│ constrain calls  : 835
 //│ annoying  calls  : 345
-//│ subtyping calls  : 8060
+//│ subtyping calls  : 7637
 
 
 
@@ -312,7 +312,7 @@ def eval2_broken eval2 e = case e of {
   | Nega -> e.arg
   | _ -> eval1 eval2 e
   }
-//│ eval2_broken: ('a -> 'lhs -> int & 'a) -> (Add[?] & {lhs: 'lhs, rhs: 'lhs} | (Lit with {val: 'arg}) | Nega[?] & {arg: 'arg}) -> ('arg | int)
+//│ eval2_broken: ('a -> 'lhs -> int & 'a) -> (Add[?] & {lhs: 'lhs, rhs: 'lhs} | (Lit with {val: 'arg}) | Nega[?] & {arg: 'arg}) -> (int | 'arg)
 
 :e
 eval2_broken eval2_broken! e2

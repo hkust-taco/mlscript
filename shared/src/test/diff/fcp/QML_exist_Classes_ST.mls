@@ -272,7 +272,7 @@ sb (fun arr1 -> sb (fun arr2 -> arr2.Update (arr1.Init true)))
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.252: 	sb (fun arr1 -> sb (fun arr2 -> arr2.Update (arr1.Init true)))
 //│ ╙──       	                                             ^^^^^^^^^^^^^^
-//│ res: int -> anything -> (??Rep | ??Rep0) | error
+//│ res: error | int -> anything -> (??Rep | ??Rep0)
 //│    = [Function (anonymous)]
 
 sb (fun arr ->

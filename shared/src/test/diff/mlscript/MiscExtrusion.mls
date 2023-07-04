@@ -69,7 +69,7 @@ alsoPrintSize id
 //│ ╟── • this application:
 //│ ║  l.54: 	  mapExpr(fun e -> let tmp = print e in f e)
 //│ ╙──      	                                        ^^^
-//│ res: Program -> Program | error
+//│ res: error | Program -> Program
 
 def alsoPrintSize (f: forall 'a. Expr['a] -> Expr['a]) =
   mapExpr(fun e -> let tmp = print e in f e)
@@ -108,7 +108,7 @@ alsoPrintSizeCo id
 //│ ╟── • this application:
 //│ ║  l.93: 	  mapExprCo(fun e -> let tmp = printCo e in f e)
 //│ ╙──      	                                            ^^^
-//│ res: Program -> Program | error
+//│ res: error | Program -> Program
 
 def alsoPrintSizeCo (f: forall 'a. Expr['a] -> Expr['a]) =
   mapExpr(fun e -> let tmp = print e in f e)

@@ -29,8 +29,8 @@ mixin Test2[S, T] {
 
 class A1[B](s: Bool, t: B) extends Test2[Bool, B]
 //│ class A1[B](s: Bool, t: B) {
-//│   fun fb: (Bool & 'S) -> ('S | false | true, 'S | false | true,)
-//│   fun x: ('S | false | true, B,)
+//│   fun fb: (Bool & 'S) -> (Bool | 'S, Bool | 'S,)
+//│   fun x: (Bool | 'S, B,)
 //│ }
 
 // TODO: Investigate type of fb

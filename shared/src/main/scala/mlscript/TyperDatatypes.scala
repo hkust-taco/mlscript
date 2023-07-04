@@ -387,7 +387,6 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
   
   case class ClassTag(id: SimpleTerm, parents: Set[TypeName])(val prov: TypeProvenance)
       extends BaseType with TypeTag with ObjectTag {
-    lazy val parentsST = parents.iterator.map(tn => Var(tn.name)).toSet[IdentifiedTerm]
     def glb(that: ClassTag): Opt[ClassTag] =
       if (that.id === this.id) S(this)
       else if (that.parentsST.contains(this.id)) S(that)
@@ -402,14 +401,15 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
     def level: Level = MinLevel
     def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level = MinLevel
     def freshenAboveImpl(lim: Int, rigidify: Bool)(implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV, ST]): this.type = this
-    override def toString = showProvOver(false)(id.idStr+s"<${parents.map(_.name).mkString(",")}>")
   }
   
   sealed trait TypeVarOrRigidVar extends SimpleType
   
   sealed trait ObjectTag extends TypeTag {
     val id: SimpleTerm
-    override def toString = "#" + id.idStr
+    val parents: Set[TypeName]
+    lazy val parentsST = parents.iterator.map(tn => Var(tn.name)).toSet[IdentifiedTerm]
+    override def toString = "#" + showProvOver(false)(id.idStr+s"<${parents.map(_.name).mkString(",")}>")
   }
   
   sealed abstract class AbstractTag extends BaseTypeOrTag with TypeTag with Factorizable

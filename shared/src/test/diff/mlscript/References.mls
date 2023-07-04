@@ -209,7 +209,7 @@ swap ri rn
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.86: 	ri = r : Ref[int]
 //│ ╙──      	             ^^^
-//│ res: (unit, unit,) | error
+//│ res: error | (unit, unit,)
 //│    = [ [], [] ]
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.202: 	swap ri rn
@@ -226,7 +226,7 @@ swap ri rn
 //│ ╟── Note: class type parameter A is defined at:
 //│ ║  l.3: 	class Ref[A]
 //│ ╙──     	          ^
-//│ res: (unit, unit,) | error
+//│ res: error | (unit, unit,)
 //│    = [ [], [] ]
 
 
@@ -330,7 +330,7 @@ refun.Swap
 //│ ╟── Note: class type parameter A is defined at:
 //│ ║  l.3: 	class Ref[A]
 //│ ╙──     	          ^
-//│ res: nothing -> (int | string) | error
+//│ res: error | nothing -> (int | string)
 //│    = <no result>
 //│      refun is not implemented
 

@@ -490,7 +490,7 @@ let b: Base = f
 //│   = Foo {}
 
 if b is Foo(a) then a else 0
-//│ (??A, ??A,) | 0
+//│ 0 | (??A, ??A,)
 //│ res
 //│     = [ 1, 2 ]
 
@@ -502,7 +502,7 @@ if b is Bar(f) then f else 0
 //│ ╟── type variable `B` leaks out of its scope
 //│ ║  l.472: 	class Bar[B](f: B => B) extends Base
 //│ ╙──       	          ^
-//│ (??B & 'B) -> ('B | ??B0) | 0
+//│ 0 | (??B & 'B) -> ('B | ??B0)
 //│ res
 //│     = 0
 

@@ -50,7 +50,7 @@ bar foo
 //│ ║  l.48: 	bar foo
 //│ ║        	^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
-//│ res: () | error
+//│ res: error | ()
 //│    = <no result>
 //│      bar is not implemented
 

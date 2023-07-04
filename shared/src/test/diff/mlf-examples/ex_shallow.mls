@@ -260,7 +260,7 @@ def a0' = a2' a1'
 //│ ╟── • this reference:
 //│ ║  l.15: 	def id x = x
 //│ ╙──      	           ^
-//│ a0': anything -> ('a -> 'b & 'c -> 'd & 'd -> 'a) -> 'c -> 'b | error
+//│ a0': error | anything -> ('a -> 'b & 'c -> 'd & 'd -> 'a) -> 'c -> 'b
 //│    = [Function: a0$]
 
 :e
@@ -269,7 +269,7 @@ def a0'_ = a2'_ a1'
 //│ ║  l.267: 	def a0'_ = a2'_ a1'
 //│ ║         	           ^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
-//│ a0'_: anything -> ('a -> 'b & 'c -> 'd & 'd -> 'a) -> 'c -> 'b | error
+//│ a0'_: error | anything -> ('a -> 'b & 'c -> 'd & 'd -> 'a) -> 'c -> 'b
 //│     = [Function: a0$_]
 
 :RecursiveTypes
@@ -410,7 +410,7 @@ def a0' = a2' a1'
 //│ ╟── • this reference:
 //│ ║  l.377: 	def a0' = a2' a1'
 //│ ╙──       	          ^^^
-//│ a0': anything -> 'a | error
+//│ a0': error | anything -> 'a
 //│   where
 //│     forall 'b 'c 'd 'e. ('b -> 'c -> 'd) -> ('d -> 'e & 'b) -> 'c -> 'e <: (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> 'a
 //│    = [Function: a0$1]
@@ -421,7 +421,7 @@ def a0'_ = a2'_ a1'
 //│ ║  l.419: 	def a0'_ = a2'_ a1'
 //│ ║         	           ^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
-//│ a0'_: anything -> 'a | error
+//│ a0'_: error | anything -> 'a
 //│   where
 //│     forall 'b 'c 'd 'e. ('e -> 'b -> 'c) -> ('c -> 'd & 'e) -> 'b -> 'd <: (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> 'a
 //│     = [Function: a0$_2]

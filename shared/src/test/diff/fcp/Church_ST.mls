@@ -547,7 +547,7 @@ sz1 = sz 1
 //│ ╟── from reference:
 //│ ║  l.272: 	def s n f x = f (n f x)
 //│ ╙──       	              ^
-//│ sz1: anything -> nothing | error
+//│ sz1: error | anything -> nothing
 //│    = [Function (anonymous)]
 
 :re

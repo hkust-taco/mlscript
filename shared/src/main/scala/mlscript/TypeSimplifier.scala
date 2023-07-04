@@ -160,7 +160,13 @@ trait TypeSimplifier { self: Typer =>
   
   
   /** Transform the type recursively, putting everything in Disjunctive Normal Forms and reconstructing class types
-    * from their structural components. */
+    * from their structural components.
+    * Note that performing this _in place_ is not fully correct,
+    *   as this will lead us to assume TV bounds while simplifying the TV bounds themselves!
+    *     – see [test:T3] –
+    *   However, I think this only manifests in contrived manually-constructed corner cases like 
+    *   unguarded recursive types such as `C['a] | 'a as 'a`.
+    */
   def normalizeTypes_!(st: TypeLike, pol: Opt[Bool] = S(true))(implicit ctx: Ctx): TypeLike =
   {
     val _ctx = ctx
@@ -357,22 +363,6 @@ trait TypeSimplifier { self: Typer =>
                 
                 val rcd2Fields  = rcd2.fields.unzip._1.toSet
                 
-                // // * Which fields were NOT part of the original type,
-                // // *  and should therefore be excluded from the reconstructed TypeRef:
-                // val removedFields = clsFields.keysIterator
-                //   .filterNot(field => field.name.isCapitalized || rcd2Fields.contains(field)).toSortedSet
-                // val withoutType = if (removedFields.isEmpty) typeRef
-                //   else typeRef.without(removedFields)
-                
-                // // * Whether we need a `with` (which overrides field types)
-                // // *  as opposed to simply an intersection (which refines them):
-                // val needsWith = !rcd2.fields.forall {
-                //   case (field, fty) =>
-                //     clsFields.get(field).forall(cf => fty <:< cf || rcdMap.get(field).exists(_ <:< cf))
-                // }
-                // val withType = if (needsWith) if (cleanedRcd.fields.isEmpty) withoutType
-                //   else WithType(withoutType, cleanedRcd.sorted)(noProv) else typeRef & cleanedRcd.sorted
-                
                 val withTraits = tts.toArray.sorted // TODO also filter out tts that are inherited by the class
                   .foldLeft(typeRef & cleanedRcd: ST)(_ & _)
                 
@@ -463,9 +453,13 @@ trait TypeSimplifier { self: Typer =>
       pol match {
         case S(p) => helper(DNF.mk(MaxLevel, Nil, ty, p)(ctx, ptr = true, etf = false), pol, canDistribForall)
         case N =>
-          val dnf1 = DNF.mk(MaxLevel, Nil, ty, false)(ctx, ptr = true, etf = false)
-          val dnf2 = DNF.mk(MaxLevel, Nil, ty, true)(ctx, ptr = true, etf = false)
-          TypeBounds.mk(helper(dnf1, S(false), canDistribForall), helper(dnf2, S(true), canDistribForall))
+          if (!ty.mentionsTypeBounds)
+            helper(DNF.mk(MaxLevel, Nil, ty, true)(ctx, ptr = true, etf = false), N, canDistribForall)
+          else {
+            val dnf1 = DNF.mk(MaxLevel, Nil, ty, false)(ctx, ptr = true, etf = false)
+            val dnf2 = DNF.mk(MaxLevel, Nil, ty, true)(ctx, ptr = true, etf = false)
+            TypeBounds.mk(helper(dnf1, S(false), canDistribForall), helper(dnf2, S(true), canDistribForall))
+          }
       }
     }(r => s"~> $r")
     

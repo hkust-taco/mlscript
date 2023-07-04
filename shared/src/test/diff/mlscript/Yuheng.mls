@@ -137,7 +137,7 @@ rec def eval(e) = case e of
 eval (IntLit { value = 1 })
 //│ res: 'a
 //│   where
-//│     'a :> ('a, 'a,) | 1
+//│     'a :> 1 | ('a, 'a,)
 //│    = 1
 
 eval (Pair {
@@ -145,7 +145,7 @@ eval (Pair {
   rhs = IntLit { value = 2 } })
 //│ res: 'a
 //│   where
-//│     'a :> ('a, 'a,) | 1 | 2
+//│     'a :> 1 | 2 | ('a, 'a,)
 //│    = [ 1, 2 ]
 
 p = Pair {
@@ -162,7 +162,7 @@ p = Pair {
 ep = eval p
 //│ ep: 'a
 //│   where
-//│     'a :> ('a, 'a,) | 1 | 2 | 3
+//│     'a :> 1 | 2 | 3 | ('a, 'a,)
 //│   = [ 1, [ 2, 3 ] ]
 
 
@@ -231,7 +231,7 @@ ep[0]
 //│ ╙──      	^^
 //│ res: error | undefined | 'a
 //│   where
-//│     'a :> ('a, 'a,) | 1 | 2 | 3
+//│     'a :> 1 | 2 | 3 | ('a, 'a,)
 
 
 eval (Pair {
@@ -258,7 +258,7 @@ eval (Pair {
 //│ ╙──      	                                   ^^^
 //│ res: 'a
 //│   where
-//│     'a :> ('a, 'a,) | 1 | (Pair[?, ?] with {lhs: IntLit & {value: 2}, rhs: IntLit & {value: 3}})
+//│     'a :> 1 | (Pair[?, ?] with {lhs: IntLit & {value: 2}, rhs: IntLit & {value: 3}}) | ('a, 'a,)
 
 
 p = Pair2 {

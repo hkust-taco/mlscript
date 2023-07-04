@@ -11,7 +11,7 @@ def z = x + y
 // common values
 //│ res: {a: "hello", b: "world"}
 //│ res: int
-//│ res: {b: 'b} -> 'b | 1
+//│ res: 1 | {b: 'b} -> 'b
 //│ x: 1
 //│ y: 2
 //│ z: int
@@ -19,7 +19,7 @@ def z = x + y
 //│ // start ts
 //│ export declare const res: {readonly a: "hello", readonly b: "world"}
 //│ export declare const res: int
-//│ export declare const res<b>: ((arg: {readonly b: b}) => b) | 1
+//│ export declare const res<b>: 1 | ((arg: {readonly b: b}) => b)
 //│ export declare const x: 1
 //│ export declare const y: 2
 //│ export declare const z: int

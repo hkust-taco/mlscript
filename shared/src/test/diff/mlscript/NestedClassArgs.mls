@@ -23,10 +23,15 @@ def c: C['a] as 'a
 //│   where
 //│     'a := C['a]
 
+// * [test:T3] What happens here is we use `factorize` to simplify the union,
+// * which uses the fact that `C['a] <: 'a` to reduce `C['a] | 'a` to `'a`...
+// * which is obviously NOT valid when that union we're processing is itself the definition of `'a`!
+// * So we will need to be more careful about simplifying types, so as not to assume bounds
+// * we are in the process of simplifying. This could be done by NOT simplifying things in place.
 def c: C['a] | 'a as 'a
 //│ c: 'a
 //│   where
-//│     'a := 'a | C['a]
+//│     'a := 'a
 
 def c: C[C['a]] as 'a
 //│ c: 'a
@@ -180,7 +185,7 @@ c = c6
 //│ 'a -> C6['a]
 //│ constrain calls  : 70
 //│ annoying  calls  : 34
-//│ subtyping calls  : 423
+//│ subtyping calls  : 408
 
 
 // Reproduction of an issue found while trying out TypeRef ctor typing:
@@ -251,23 +256,23 @@ s2 = S{v=S{v=1}}:O[O['_]]
 L{h=error;t=s1}
 L{h=error;t=s2}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.251: 	L{h=error;t=s1}
+//│ ║  l.256: 	L{h=error;t=s1}
 //│ ║         	^^^^^^^^^^^^^^^
 //│ ╟── integer literal of type `1` is not an instance of type `L`
-//│ ║  l.241: 	s1 = S{v=1}:O['_]
+//│ ║  l.246: 	s1 = S{v=1}:O['_]
 //│ ║         	         ^
 //│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.229: 	class L[T]: { h: T; t: O[L[T]] }
+//│ ║  l.234: 	class L[T]: { h: T; t: O[L[T]] }
 //│ ╙──       	                         ^^^^
 //│ res: error
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.252: 	L{h=error;t=s2}
+//│ ║  l.257: 	L{h=error;t=s2}
 //│ ║         	^^^^^^^^^^^^^^^
 //│ ╟── type `S['_]` is not an instance of type `L`
-//│ ║  l.228: 	type O[T] = S[T] | N
+//│ ║  l.233: 	type O[T] = S[T] | N
 //│ ║         	            ^^^^
 //│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.229: 	class L[T]: { h: T; t: O[L[T]] }
+//│ ║  l.234: 	class L[T]: { h: T; t: O[L[T]] }
 //│ ╙──       	                         ^^^^
 //│ res: error
 
@@ -327,16 +332,16 @@ append_ty_2 = append
 //│   <:  append_ty_2:
 //│ (L['T] & 'v & 'T0) -> ('T & 'h) -> (L['T] with {h: 'h, t: S['T0] with {v: 'v}})
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.325: 	append_ty_2 = append
+//│ ║  l.330: 	append_ty_2 = append
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `'T0` is not an instance of type `L`
-//│ ║  l.318: 	def append_ty_2: (L['T] & 'v & 'T0) -> ('T & 'h) -> (L['T] & {h: 'h; t: S['T0] & {v: 'v}})
+//│ ║  l.323: 	def append_ty_2: (L['T] & 'v & 'T0) -> ('T & 'h) -> (L['T] & {h: 'h; t: S['T0] & {v: 'v}})
 //│ ║         	                                                                          ^^^
 //│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.229: 	class L[T]: { h: T; t: O[L[T]] }
+//│ ║  l.234: 	class L[T]: { h: T; t: O[L[T]] }
 //│ ║         	                         ^^^^
 //│ ╟── Note: class type parameter T is defined at:
-//│ ║  l.225: 	class S[T]: { v: T }
+//│ ║  l.230: 	class S[T]: { v: T }
 //│ ╙──       	        ^
 
 append_ty = append_ty_2
@@ -350,13 +355,13 @@ append_ty_2 = append_ty
 //│   <:  append_ty_2:
 //│ (L['T] & 'v & 'T0) -> ('T & 'h) -> (L['T] with {h: 'h, t: S['T0] with {v: 'v}})
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.348: 	append_ty_2 = append_ty
+//│ ║  l.353: 	append_ty_2 = append_ty
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `'T0` is not an instance of type `L`
-//│ ║  l.318: 	def append_ty_2: (L['T] & 'v & 'T0) -> ('T & 'h) -> (L['T] & {h: 'h; t: S['T0] & {v: 'v}})
+//│ ║  l.323: 	def append_ty_2: (L['T] & 'v & 'T0) -> ('T & 'h) -> (L['T] & {h: 'h; t: S['T0] & {v: 'v}})
 //│ ║         	                                                                          ^^^
 //│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.304: 	def append_ty: (L['T] & 'v) -> ('T & 'h) -> (L['T] & {h: 'h; t: S[L['T]] & {v: 'v}})
+//│ ║  l.309: 	def append_ty: (L['T] & 'v) -> ('T & 'h) -> (L['T] & {h: 'h; t: S[L['T]] & {v: 'v}})
 //│ ╙──       	                                                                  ^^^^^
 
 

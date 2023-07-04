@@ -643,7 +643,7 @@ test arg2
 //│ ╟── from field selection:
 //│ ║  l.328: 	  x.prop
 //│ ╙──       	   ^^^^^
-//│ res: 'a -> (int | 'a) | error
+//│ res: error | 'a -> (int | 'a)
 
 let mkArg = a => {prop: a}
 h / mkArg 1

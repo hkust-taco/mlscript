@@ -1164,7 +1164,7 @@ c_i5_ = c_add_ c_i3_ c_i2_
 //│      = [Function (anonymous)]
 //│ constrain calls  : 175
 //│ annoying  calls  : 0
-//│ subtyping calls  : 666
+//│ subtyping calls  : 656
 
 :stats
 :e
@@ -1173,13 +1173,13 @@ c_i10_ = c_mul_ c_i5_ c_i2_
 //│ ║  l.1171: 	c_i10_ = c_mul_ c_i5_ c_i2_
 //│ ║          	         ^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
-//│ c_i10_: ('a -> ('b & 'c & 'd & 'e & 'f & 'g & 'h & 'i) & 'j -> 'a & 'k -> 'j & 'l -> 'k & 'm -> 'l & 'n -> 'm & 'o -> 'n & 'p -> 'o & 'q -> 'p & 'r -> 'q & (forall 's. ('a -> ('b & 'c & 'd & 'e & 'f & 'g & 'h & 'i) & 'j -> 'a & 'k -> 'j & 'l -> 'k & 'm -> 'l & 'n -> 'm & 'o -> 'n & 'p -> 'o & 's -> 'p & 't & 'u & 'v & 'w & 'x & 'y) -> 's -> 'h | 'z) -> ('a1 & 'b1) & (forall 'c1. ('a -> ('b & 'c & 'd & 'e & 'f & 'g & 'h & 'i) & 'j -> 'a & 'k -> 'j & 'l -> 'k & 'm -> 'l & 'n -> 'm & 'o -> 'n & 'c1 -> 'o & 'u & 'v & 'w & 'x & 'y) -> 'c1 -> 'g | 'd1) -> ('e1 -> 'q -> 'i & 'z) & (forall 'f1. ('a -> ('b & 'c & 'd & 'e & 'f & 'g & 'h & 'i) & 'j -> 'a & 'k -> 'j & 'l -> 'k & 'm -> 'l & 'n -> 'm & 'f1 -> 'n & 'v & 'w & 'x & 'y) -> 'f1 -> 'f | 'g1) -> ('t -> 'p -> ('h & 'i) & 'd1) & (forall 'h1. ('a -> ('b & 'c & 'd & 'e & 'f & 'g & 'h & 'i) & 'j -> 'a & 'k -> 'j & 'l -> 'k & 'm -> 'l & 'h1 -> 'm & 'w & 'x & 'y) -> 'h1 -> 'e | 'i1) -> ('u -> 'o -> ('g & 'h & 'i) & 'g1) & (forall 'j1. ('a -> ('b & 'c & 'd & 'e & 'f & 'g & 'h & 'i) & 'j -> 'a & 'k -> 'j & 'l -> 'k & 'j1 -> 'l & 'x & 'y) -> 'j1 -> 'd | 'k1) -> ('v -> 'n -> ('f & 'g & 'h & 'i) & 'i1) & (forall 'l1. ('a -> ('b & 'c & 'd & 'e & 'f & 'g & 'h & 'i) & 'j -> 'a & 'k -> 'j & 'l1 -> 'k & 'y) -> 'l1 -> 'c | 'm1) -> ('w -> 'm -> ('e & 'f & 'g & 'h & 'i) & 'k1) & (forall 'n1. ('a -> ('b & 'c & 'd & 'e & 'f & 'g & 'h & 'i) & 'j -> 'a & 'n1 -> 'j) -> 'n1 -> 'b | 'o1) -> ('x -> 'l -> ('d & 'e & 'f & 'g & 'h & 'i) & 'm1) & 'p1 -> ('y -> 'k -> ('c & 'd & 'e & 'f & 'g & 'h & 'i) & 'o1) & 'e1 & 't & 'u & 'v & 'w & 'x & 'y) -> ('r & 'p1) -> (forall 'r. ('a -> ('b & 'c & 'd & 'e & 'f & 'g & 'h & 'i) & 'j -> 'a & 'k -> 'j & 'l -> 'k & 'm -> 'l & 'n -> 'm & 'o -> 'n & 'p -> 'o & 'q -> 'p & 'r -> 'q & 'e1 & 't & 'u & 'v & 'w & 'x & 'y) -> 'r -> 'i | 'i | 'a1) | error
+//│ c_i10_: error | ('a -> ('b & 'c & 'd & 'e & 'f & 'g & 'h & 'i) & 'j -> 'a & 'k -> 'j & 'l -> 'k & 'm -> 'l & 'n -> 'm & 'o -> 'n & 'p -> 'o & 'q -> 'p & 'r -> 'q & (forall 's. ('a -> ('b & 'c & 'd & 'e & 'f & 'g & 'h & 'i) & 'j -> 'a & 'k -> 'j & 'l -> 'k & 'm -> 'l & 'n -> 'm & 'o -> 'n & 'p -> 'o & 's -> 'p & 't & 'u & 'v & 'w & 'x & 'y) -> 's -> 'h | 'z) -> ('a1 & 'b1) & (forall 'c1. ('a -> ('b & 'c & 'd & 'e & 'f & 'g & 'h & 'i) & 'j -> 'a & 'k -> 'j & 'l -> 'k & 'm -> 'l & 'n -> 'm & 'o -> 'n & 'c1 -> 'o & 'u & 'v & 'w & 'x & 'y) -> 'c1 -> 'g | 'd1) -> ('e1 -> 'q -> 'i & 'z) & (forall 'f1. ('a -> ('b & 'c & 'd & 'e & 'f & 'g & 'h & 'i) & 'j -> 'a & 'k -> 'j & 'l -> 'k & 'm -> 'l & 'n -> 'm & 'f1 -> 'n & 'v & 'w & 'x & 'y) -> 'f1 -> 'f | 'g1) -> ('t -> 'p -> ('h & 'i) & 'd1) & (forall 'h1. ('a -> ('b & 'c & 'd & 'e & 'f & 'g & 'h & 'i) & 'j -> 'a & 'k -> 'j & 'l -> 'k & 'm -> 'l & 'h1 -> 'm & 'w & 'x & 'y) -> 'h1 -> 'e | 'i1) -> ('u -> 'o -> ('g & 'h & 'i) & 'g1) & (forall 'j1. ('a -> ('b & 'c & 'd & 'e & 'f & 'g & 'h & 'i) & 'j -> 'a & 'k -> 'j & 'l -> 'k & 'j1 -> 'l & 'x & 'y) -> 'j1 -> 'd | 'k1) -> ('v -> 'n -> ('f & 'g & 'h & 'i) & 'i1) & (forall 'l1. ('a -> ('b & 'c & 'd & 'e & 'f & 'g & 'h & 'i) & 'j -> 'a & 'k -> 'j & 'l1 -> 'k & 'y) -> 'l1 -> 'c | 'm1) -> ('w -> 'm -> ('e & 'f & 'g & 'h & 'i) & 'k1) & (forall 'n1. ('a -> ('b & 'c & 'd & 'e & 'f & 'g & 'h & 'i) & 'j -> 'a & 'n1 -> 'j) -> 'n1 -> 'b | 'o1) -> ('x -> 'l -> ('d & 'e & 'f & 'g & 'h & 'i) & 'm1) & 'p1 -> ('y -> 'k -> ('c & 'd & 'e & 'f & 'g & 'h & 'i) & 'o1) & 'e1 & 't & 'u & 'v & 'w & 'x & 'y) -> ('r & 'p1) -> (forall 'r. ('a -> ('b & 'c & 'd & 'e & 'f & 'g & 'h & 'i) & 'j -> 'a & 'k -> 'j & 'l -> 'k & 'm -> 'l & 'n -> 'm & 'o -> 'n & 'p -> 'o & 'q -> 'p & 'r -> 'q & 'e1 & 't & 'u & 'v & 'w & 'x & 'y) -> 'r -> 'i | 'i | 'a1)
 //│   where
 //│     'b1 <: (forall 'q1 'r1 's1. ('q1 -> 'r1 -> 's1) -> (forall 't1. ('t1 -> 'r1 & 'q1) -> 't1 -> 's1)) -> (forall 'u1 'v1 'w1. ('u1 -> 'v1 & 'w1 -> 'u1) -> 'w1 -> 'v1) -> 'b1
 //│       = [Function (anonymous)]
 //│ constrain calls  : 1756
 //│ annoying  calls  : 0
-//│ subtyping calls  : 15895
+//│ subtyping calls  : 15284
 :stats
 // * This one works:
 c_i10_ = c_mul c_i5_ c_i2_
@@ -1187,7 +1187,7 @@ c_i10_ = c_mul c_i5_ c_i2_
 //│       = [Function (anonymous)]
 //│ constrain calls  : 706
 //│ annoying  calls  : 0
-//│ subtyping calls  : 5075
+//│ subtyping calls  : 5073
 
 // * Ouchie (cf stats)
 :stats
@@ -1196,7 +1196,7 @@ c_i9_ = c_pred_ c_i10_
 //│      = [Function (anonymous)]
 //│ constrain calls  : 1903
 //│ annoying  calls  : 0
-//│ subtyping calls  : 15745
+//│ subtyping calls  : 15734
 
 :stats
 :e
@@ -1205,11 +1205,11 @@ c_99_ = c_add_ (c_mul_ c_i9_ c_i10_) c_i9_
 //│ ║  l.1203: 	c_99_ = c_add_ (c_mul_ c_i9_ c_i10_) c_i9_
 //│ ║          	                ^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
-//│ c_99_: ('a -> anything & 'b -> 'c & 'a -> 'b & 'a -> 'd & 'c -> 'c & 'd -> 'd) -> 'a -> error | error
+//│ c_99_: error | ('a -> anything & 'b -> 'c & 'a -> 'b & 'a -> 'd & 'c -> 'c & 'd -> 'd) -> 'a -> error
 //│      = [Function (anonymous)]
 //│ constrain calls  : 3427
 //│ annoying  calls  : 0
-//│ subtyping calls  : 27287
+//│ subtyping calls  : 27268
 :stats
 // * Works again:
 c_99_ = c_add_ (c_mul c_i9_ c_i10_) c_i9_
@@ -1217,7 +1217,7 @@ c_99_ = c_add_ (c_mul c_i9_ c_i10_) c_i9_
 //│      = [Function (anonymous)]
 //│ constrain calls  : 2732
 //│ annoying  calls  : 0
-//│ subtyping calls  : 29582
+//│ subtyping calls  : 29466
 
 // * Ouchie++
 :stats
@@ -1227,7 +1227,7 @@ c_98_ = c_pred_ c_99_
 //│      = [Function (anonymous)]
 //│ constrain calls  : 13601
 //│ annoying  calls  : 0
-//│ subtyping calls  : 132357
+//│ subtyping calls  : 131897
 :ResetFuel
 
 

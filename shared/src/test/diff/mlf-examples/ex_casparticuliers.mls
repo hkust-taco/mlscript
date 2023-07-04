@@ -86,7 +86,7 @@ succ' {}
 //│ ╟── from reference:
 //│ ║  l.47: 	def succ' n = fun f -> fun x -> f (n f x)
 //│ ╙──      	                                   ^
-//│ res: (nothing -> 'a) -> anything -> 'a | error
+//│ res: error | (nothing -> 'a) -> anything -> 'a
 //│    = [Function (anonymous)]
 
 :e
@@ -115,7 +115,7 @@ succ' {} {}
 //│ ╟── from reference:
 //│ ║  l.47: 	def succ' n = fun f -> fun x -> f (n f x)
 //│ ╙──      	                                ^
-//│ res: anything -> nothing | error
+//│ res: error | anything -> nothing
 //│    = [Function (anonymous)]
 
 :e

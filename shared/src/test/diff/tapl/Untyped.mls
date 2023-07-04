@@ -382,7 +382,7 @@ fun subst(t, n, v) =
 //│        <: 'rhs1 & (Abs & {lhs: Var & {name: 'name} | ~Var, rhs: 'rhs & 'rhs1} | App & {lhs: Var & {name: 'name} | ~Var, rhs: 'rhs & 'rhs1} & 'b | Var & {lhs: Var & {name: 'name} | ~Var, rhs: 'rhs & 'rhs1} & 'c | {lhs: Var & {name: 'name} | ~Var, rhs: 'rhs & 'rhs1} & 'd & ~#Abs & ~#App & ~#Var)
 //│     'rhs0 :> Var & {name: string} | 'c | 'a | 'd | (forall 'e. 'e) | App & {lhs: 'rhs0, rhs: 'rhs0}
 //│     'e :> Abs & {lhs: Var & {name: 'name}, rhs: 'rhs0}
-//│     'name := string
+//│     'name <: string
 //│     'c :> Var & {name: string}
 //│        <: 'rhs1 & (Abs & {name: anything} & 'a | App & {name: anything} & 'b | Var | {name: anything} & 'd & ~#Abs & ~#App & ~#Var)
 //│     'd <: 'rhs1 & (Abs & 'a | App & 'b | Var & 'c | ~#Abs & ~#App & ~#Var)
@@ -443,7 +443,7 @@ fun stepByValue(t) =
 //│        <: 'rhs1 & (Abs & {lhs: Var & {name: 'name} | ~Var, rhs: 'rhs2} | App & {lhs: Var & {name: 'name} | ~Var, rhs: 'rhs2} & 'c | Var & {lhs: Var & {name: 'name} | ~Var, rhs: 'rhs2} & 'd | {lhs: Var & {name: 'name} | ~Var, rhs: 'rhs2} & 'e & ~#Abs & ~#App & ~#Var)
 //│     'value0 :> Var & {name: string} | 'rhs | 'd | 'b | 'e | (forall 'f. 'f) | App & {lhs: 'value0, rhs: 'value0}
 //│     'f :> Abs & {lhs: Var & {name: 'name}, rhs: 'value0}
-//│     'name := string
+//│     'name <: string
 //│     'd :> Var & {name: string}
 //│        <: 'rhs1 & (Abs & {name: anything} & 'b | App & {name: anything} & 'c | Var | {name: anything} & 'e & ~#Abs & ~#App & ~#Var)
 //│     'e <: 'rhs1 & (Abs & 'b | App & 'c | Var & 'd | ~#Abs & ~#App & ~#Var)

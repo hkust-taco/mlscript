@@ -188,7 +188,7 @@ h (fun x -> x[0])
 //│ ╟── argument list of type `(1, true,)` does not match type `(?a,)`
 //│ ║  l.179: 	def h f = (f (1,2,false), f (1,true))
 //│ ╙──       	                            ^^^^^^^^
-//│ res: (undefined, undefined,) | error
+//│ res: error | (undefined, undefined,)
 //│    = [ undefined, undefined ]
 
 :e
@@ -202,7 +202,7 @@ h (fun (x, y) -> x)
 //│ ╟── Note: constraint arises from tuple literal:
 //│ ║  l.195: 	h (fun (x, y) -> x)
 //│ ╙──       	       ^^^^^^
-//│ res: (nothing, 1,) | error
+//│ res: error | (nothing, 1,)
 //│    = [ 1, 1 ]
 
 def h f = (f ((1,2,false)), f ((1,true)))
@@ -377,7 +377,7 @@ def append: Array['a] -> Array['b] -> Array['a | 'b]
 append ((1,2,false)) (((), 'hi'))
 //│ append: Array['a] -> Array['a] -> Array['a]
 //│       = <missing implementation>
-//│ res: Array["hi" | () | 1 | 2 | false]
+//│ res: Array["hi" | 1 | 2 | false | ()]
 //│    = <no result>
 //│      append is not implemented
 
@@ -408,7 +408,7 @@ append2 ((mut 1, mut 2, mut false)) ((mut (), 'hi'))
 //│ ╟── Note: constraint arises from applied type reference:
 //│ ║  l.384: 	def append2: MutArray['aa] -> MutArray['bb] -> MutArray['aa | 'bb]
 //│ ╙──       	                              ^^^^^^^^^^^^^
-//│ res: MutArray['aa | 'bb] | error
+//│ res: error | MutArray['aa | 'bb]
 //│   where
 //│     'bb :> "hi" | ()
 //│     'aa :> 'a
@@ -601,7 +601,7 @@ inn2 v1
 //│ ╟── from intersection type:
 //│ ║  l.547: 	def inn: (T1 & T2 & Array['a]) -> 'a
 //│ ╙──       	         ^^^^^^^^^^^^^^^^^^^^^
-//│ res: Array[(int, true,)] | error
+//│ res: error | Array[(int, true,)]
 //│    = <no result>
 //│      inn is not implemented
 //│ ╔══[ERROR] Type mismatch in application:
@@ -610,7 +610,7 @@ inn2 v1
 //│ ╟── integer literal of type `1` does not match type `Array['a]`
 //│ ║  l.545: 	v1 = T1 (T2 ((1,2,true)))
 //│ ╙──       	              ^
-//│ res: Array[nothing] | error
+//│ res: error | Array[nothing]
 //│    = <no result>
 //│      inn2 is not implemented
 
@@ -700,7 +700,7 @@ tktup a123
 //│ ╟── from reference:
 //│ ║  l.679: 	def tktup t = (t._2, t._3)
 //│ ╙──       	                     ^
-//│ res: (nothing, nothing,) | error
+//│ res: error | (nothing, nothing,)
 //│    = [ undefined, undefined ]
 
 
@@ -741,7 +741,7 @@ ta3[1-2]
 //│    = null
 //│ ta3: ((1, 2, 3,), "hello", false,)
 //│    = [ [ 1, 2, 3 ], 'hello', false ]
-//│ res: "hello" | (1, 2, 3,) | false | undefined
+//│ res: "hello" | false | undefined | (1, 2, 3,)
 //│    = undefined
 //│ res: 1 | 2 | 3 | undefined
 //│    = undefined
