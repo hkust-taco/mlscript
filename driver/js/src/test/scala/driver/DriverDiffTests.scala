@@ -20,7 +20,7 @@ class DriverDiffTests extends AnyFunSuite {
         if (!outputDir.isEmpty()) driver.genPackageJson()
         val success = driver.execute
 
-        assert(success != expectError, s"failed when compiling $filename.")
+        assert(success, s"failed when compiling $filename.")
 
         if (!expectError) execution match {
           case Some((executionFile, outputFile)) =>
@@ -110,27 +110,27 @@ object DriverDiffTests {
     ts2mlsEntry("InterfaceMember.ts"),
     ts2mlsEntry("Intersection.ts", expectTypeError = true),
     ts2mlsEntry("Literal.ts"),
-    ts2mlsEntry("Namespace.ts", expectError = true),
+    ts2mlsEntry("Namespace.ts", expectTypeError = true),
     ts2mlsEntry("Optional.ts", expectTypeError = true),
-    ts2mlsEntry("Overload.ts", expectTypeError = true),
+    ts2mlsEntry("Overload.ts"),
     ts2mlsEntry("TSArray.ts", expectTypeError = true),
     ts2mlsEntry("Tuple.ts", expectTypeError = true),
     ts2mlsEntry("Type.ts", expectTypeError = true),
     ts2mlsEntry("TypeParameter.ts", expectTypeError = true),
     ts2mlsEntry("Union.ts"),
-    ts2mlsEntry("Variables.ts", expectError = true),
+    ts2mlsEntry("Variables.ts", expectTypeError = true),
   )
 
   private val esCases = List(
     esEntry("Simple"),
     esEntry("Cycle2"),
     esEntry("Self", expectError = true),
-    esEntry("C", expectError = true),
+    esEntry("C", expectError = true, expectTypeError = true),
     esEntry("TS", Some("./tsconfig.json"), expectTypeError = true), // TODO: type members
     esEntry("Output", Some("./tsconfig.json"), expectTypeError = true), // TODO: type parameter position
     esEntry("Output2", Some("./tsconfig.json"), expectTypeError = true), // TODO: type parameter position
     esEntry("MLS2TheMax", Some("./tsconfig.json")),
-    esEntry("MyPartialOrder", Some("./tsconfig.json"), expectError = true), // TODO: type traits in modules
+    esEntry("MyPartialOrder", Some("./tsconfig.json"), expectError = true, expectTypeError = true), // TODO: type traits in modules
     esEntry("Builtin"),
     esEntry("TyperDebug"),
   )

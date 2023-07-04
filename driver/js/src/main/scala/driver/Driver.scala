@@ -37,11 +37,15 @@ class Driver(options: DriverOptions) {
 
   // errors in imported files should be printed in their own files to avoid redundancy
   private val noRedundantRaise = (diag: Diagnostic) => ()
+  private val noRedundantOutput = (s: String) => ()
 
   private val importedModule = MutSet[String]()
   private implicit val config = TypeScript.parseOption(options.path, options.tsconfig)
 
   import TSPathResolver.{normalize, isLocal, isMLScirpt, dirname}
+
+  private def expected =
+    ((Driver.totalErrors > 0) == options.expectError) && ((Driver.totalTypeErrors > 0) == options.expectTypeError)
 
   private def checkESModule(filename: String, from: String) =
     if (isMLScirpt(filename)) None
@@ -66,19 +70,20 @@ class Driver(options: DriverOptions) {
   def execute: Boolean =
     try {
       Driver.totalErrors = 0
+      Driver.totalTypeErrors = 0
       implicit var ctx: Ctx = Ctx.init
-      implicit val raise: Raise = (diag: Diagnostic) => report(diag, options.expectTypeError, options.expectError)
+      implicit val raise: Raise = (diag: Diagnostic) => report(diag, printErr)
       implicit val extrCtx: Opt[typer.ExtrCtx] = N
       implicit val vars: Map[Str, typer.SimpleType] = Map.empty
       implicit val stack = List[String]()
       initTyper
       compile(FileInfo(options.path, options.filename, options.interfaceDir), false)
-      Driver.totalErrors == 0
+      expected
     }
     catch {
       case err: Diagnostic => // we can not find a file to store the error message. print on the screen
-        report(err, options.expectTypeError, options.expectError)
-        false
+        report(err, printErr)
+        options.expectError
     }
 
   def genPackageJson(): Unit = {
@@ -144,15 +149,20 @@ class Driver(options: DriverOptions) {
     })
 
   // if the current file is es5.mlsi, we allow overriding builtin type(like String and Object)
-  private def `type`(tu: TypingUnit, isES5: Boolean)(
+  private def `type`(tu: TypingUnit, isES5: Boolean, errOutput: String => Unit)(
     implicit ctx: Ctx,
     raise: Raise,
     extrCtx: Opt[typer.ExtrCtx],
     vars: Map[Str, typer.SimpleType]
-  ) = {
+  ) = try {
     val tpd = typer.typeTypingUnit(tu, N, isES5)
     val sim = SimplifyPipeline(tpd, all = false)
     typer.expandType(sim)
+  } catch {
+    case t: Throwable =>
+      totalTypeErrors += 1
+      errOutput(t.toString())
+      mlscript.Bot
   }
 
   private lazy val jsBuiltinDecs = Driver.jsBuiltinPaths.map(path => parseAndRun(path, {
@@ -165,19 +175,10 @@ class Driver(options: DriverOptions) {
       val extrCtx: Opt[typer.ExtrCtx] = N
       val vars: Map[Str, typer.SimpleType] = Map.empty
       initTyper(ctx, noRedundantRaise, extrCtx, vars)
-      val reportRaise = (diag: Diagnostic) =>
-        Diagnostic.report(diag, (s: String) => writer.writeErr(s), 0, false)
+      val reportRaise = (diag: Diagnostic) => report(diag, writer.writeErr)
       val tu = TypingUnit(declarations)
-      try {
-        imports.foreach(d => importModule(file.`import`(d.path))(ctx, extrCtx, vars))
-        `type`(tu, false)(ctx, reportRaise, extrCtx, vars)
-      }
-      catch {
-        case t : Throwable =>
-          if (!options.expectTypeError) totalErrors += 1
-          writer.writeErr(t.toString())
-          ()
-      }
+      imports.foreach(d => importModule(file.`import`(d.path))(ctx, extrCtx, vars))
+      `type`(tu, false, writer.writeErr)(ctx, reportRaise, extrCtx, vars)
   }
 
   private def initTyper(
@@ -185,7 +186,7 @@ class Driver(options: DriverOptions) {
     raise: Raise,
     extrCtx: Opt[typer.ExtrCtx],
     vars: Map[Str, typer.SimpleType]
-  ) = jsBuiltinDecs.foreach(lst => `type`(TypingUnit(lst), true))
+  ) = jsBuiltinDecs.foreach(lst => `type`(TypingUnit(lst), true, printErr))
 
   // translate mlscirpt import paths into js import paths
   private def resolveJSPath(file: FileInfo, imp: String) =
@@ -204,7 +205,7 @@ class Driver(options: DriverOptions) {
     parseAndRun(s"${options.path}/${file.interfaceFilename}", {
       case (_, declarations, imports, _) =>
         imports.foreach(d => importModule(file.`import`(d.path)))
-        `type`(TypingUnit(declarations), false)(ctx, noRedundantRaise, extrCtx, vars)
+        `type`(TypingUnit(declarations), false, noRedundantOutput)(ctx, noRedundantRaise, extrCtx, vars)
   })
 
   private def compile(
@@ -226,8 +227,7 @@ class Driver(options: DriverOptions) {
 
     val mlsiFile = normalize(s"${file.workDir}/${file.interfaceFilename}")
     val mlsiWriter = JSWriter(mlsiFile)
-    implicit val raise: Raise = (diag: Diagnostic) =>
-      Diagnostic.report(diag, (s: String) => mlsiWriter.writeErr(s), 0, false)
+    implicit val raise: Raise = (diag: Diagnostic) => report(diag, mlsiWriter.writeErr)
     parseAndRun(file.filename, {
       case (definitions, declarations, imports, _) => {
         val depList = imports.map(_.path)
@@ -268,44 +268,30 @@ class Driver(options: DriverOptions) {
         try { otherList.foreach(d => importModule(file.`import`(d))) }
         catch {
           case t : Throwable =>
-            if (!options.expectTypeError) totalErrors += 1
+            totalTypeErrors += 1
             mlsiWriter.writeErr(t.toString())
         }
         if (file.filename.endsWith(".mls")) { // only generate js/mlsi files for mls files
-          val expStr = try {
-            cycleSigs.foldLeft("")((s, tu) => s"$s${`type`(tu, false).show}") + {
+          val expStr = 
+            cycleSigs.foldLeft("")((s, tu) => s"$s${`type`(tu, false, mlsiWriter.writeErr).show}") + {
               dbgWriter = Some(mlsiWriter);
-              val res = packTopModule(Some(file.moduleName), `type`(TypingUnit(definitions), false).show);
+              val res = packTopModule(Some(file.moduleName), `type`(TypingUnit(definitions), false, mlsiWriter.writeErr).show);
               dbgWriter = None
               res
             }
-          }
-          catch {
-            case t : Throwable =>
-              if (!options.expectTypeError) totalErrors += 1
-              mlsiWriter.writeErr(t.toString())
-              ""
-          }
           val interfaces = otherList.map(s => Import(file.translateImportToInterface(s))).foldRight(expStr)((imp, itf) => s"$imp\n$itf")
 
           mlsiWriter.write(interfaces)
           mlsiWriter.close()
-          if (totalErrors == 0)
+          if (Driver.totalErrors == 0)
             generate(Pgrm(definitions), s"${options.outputDir}/${file.jsFilename}", file.moduleName, imports.map(
               imp => new Import(resolveJSPath(file, imp.path)) with ModuleType {
                 val isESModule = checkESModule(path, TSPathResolver.resolve(file.filename))
               }
             ), exported || importedModule(file.filename))
         }
-        else try {
-          `type`(TypingUnit(declarations), false) // for ts/mlsi files, we only check interface files
-        }
-        catch {
-          case t : Throwable =>
-            if (!options.expectTypeError) totalErrors += 1
-            mlsiWriter.writeErr(t.toString())
-            ""
-        }
+        else
+          `type`(TypingUnit(declarations), false, mlsiWriter.writeErr) // for ts/mlsi files, we only check interface files
       }
     })
   }
@@ -345,6 +331,7 @@ object Driver {
     System.err.println(msg)
 
   private var totalErrors = 0
+  private var totalTypeErrors = 0
 
   private def saveToFile(filename: String, content: String) = {
     val writer = JSWriter(filename)
@@ -352,7 +339,7 @@ object Driver {
     writer.close()
   }
 
-  private def report(diag: Diagnostic, expectTypeError: Boolean, expectError: Boolean): Unit = {
+  private def report(diag: Diagnostic, output: Str => Unit): Unit = {
     diag match {
       case ErrorReport(msg, loco, src) =>
         src match {
@@ -361,10 +348,10 @@ object Driver {
           case Diagnostic.Parsing =>
             totalErrors += 1
           case _ =>
-            if (!expectTypeError) totalErrors += 1
+            totalTypeErrors += 1
         }
       case WarningReport(msg, loco, src) => ()
     }
-    Diagnostic.report(diag, printErr, 0, false)
+    Diagnostic.report(diag, output, 0, false)
   }
 }

@@ -3,7 +3,6 @@ declare module MyPartialOrder() {
   class MyPartialOrder
   let order: MyPartialOrder
 }
-//| java.lang.Exception: Internal Error: Program reached and unexpected state.
 //| ╔══[ERROR] Unsupported parent specification
 //| ║  l.3: 	class MyPartialOrder extends BoundedMeetSemilattice.BoundedMeetSemilattice<Int> {
 //| ╙──     	                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
