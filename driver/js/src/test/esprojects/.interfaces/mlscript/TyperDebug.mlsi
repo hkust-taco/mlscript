@@ -20,10 +20,10 @@ declare module TyperDebug() {
 //| | | Params (x,Int)
 //| | | UNSTASHING... (out)
 //| | | UNSTASHING... (out)
-//| | | 1. Finalizing inheritance with ({} w/ {x: Int} & A<Object>) <: a829'
-//| | | | CONSTRAIN ({} w/ {x: Int} & A<Object>) <! a829'
+//| | | 1. Finalizing inheritance with ({} w/ {x: Int} & #A<Object>) <: a829'
+//| | | | CONSTRAIN ({} w/ {x: Int} & #A<Object>) <! a829'
 //| | | |   where 
-//| | | | 1. C ({} w/ {x: Int} & A<Object>) <! a829'    (0)
+//| | | | 1. C ({} w/ {x: Int} & #A<Object>) <! a829'    (0)
 //| | | | | NEW a829' LB (0)
 //| | | 1. Typing TypingUnit(List(fun add = (y: Int,) => + (x,) (y,)))
 //| | | | 1. Created lazy type info for fun add = (y: Int,) => + (x,) (y,)
@@ -93,14 +93,14 @@ declare module TyperDebug() {
 //| | | | UNSTASHING... (out)
 //| | | UNSTASHING... (out)
 //| | | Computing variances of A
-//| | | | Trav(+)(({} w/ {x: Int} & A<Object>))
+//| | | | Trav(+)(({} w/ {x: Int} & #A<Object>))
 //| | | | | Trav(+)({} w/ {x: Int})
 //| | | | | | Trav(+)(({}\x & {x: Int}))
 //| | | | | | | Trav(+)({}\x)
 //| | | | | | | | Trav(+)({})
 //| | | | | | | Trav(+)({x: Int})
 //| | | | | | | | Trav(+)(Int)
-//| | | | | Trav(+)(A<Object>)
+//| | | | | Trav(+)(#A<Object>)
 //| | | = HashMap()
 //| | | UNSTASHING... (out)
 //| | Completed TypedNuCls(0, TypeName(A),
@@ -118,26 +118,26 @@ declare module TyperDebug() {
 //| | | Params 
 //| | | 0. Typing term A (42,)
 //| | | | 0. Typing term A
-//| | | | 0. : ((x: Int,) -> A<Object>)
+//| | | | 0. : ((x: Int,) -> #A<Object>)
 //| | | | 0. Typing term 42
-//| | | | 0. : 42<Int,Num,Object>
-//| | | | CONSTRAIN ((x: Int,) -> A<Object>) <! ((42<Int,Num,Object>,) -> α833)
+//| | | | 0. : #42<Int,Num,Object>
+//| | | | CONSTRAIN ((x: Int,) -> #A<Object>) <! ((#42<Int,Num,Object>,) -> α833)
 //| | | |   where 
-//| | | | 0. C ((x: Int,) -> A<Object>) <! ((42<Int,Num,Object>,) -> α833)    (0)
-//| | | | | 0. C ((x: Int,) -> A<Object>) <! ((42<Int,Num,Object>,) -> α833)    (0)
-//| | | | | | 0. C ((x: Int,) -> A<Object>) <! ((42<Int,Num,Object>,) -> α833)    (0)
-//| | | | | | | 0. C (42<Int,Num,Object>,) <! (x: Int,)    (1)
-//| | | | | | | 0. C A<Object> <! α833    (1)
+//| | | | 0. C ((x: Int,) -> #A<Object>) <! ((#42<Int,Num,Object>,) -> α833)    (0)
+//| | | | | 0. C ((x: Int,) -> #A<Object>) <! ((#42<Int,Num,Object>,) -> α833)    (0)
+//| | | | | | 0. C ((x: Int,) -> #A<Object>) <! ((#42<Int,Num,Object>,) -> α833)    (0)
+//| | | | | | | 0. C (#42<Int,Num,Object>,) <! (x: Int,)    (1)
+//| | | | | | | 0. C #A<Object> <! α833    (1)
 //| | | | | | | | NEW α833 LB (0)
 //| | | 0. : α833
 //| | | CONSTRAIN α833 <! aa834'
 //| | |   where 
-		α833 :> A<Object>
+		α833 :> #A<Object>
 //| | | 1. C α833 <! aa834'    (0)
 //| | | | NEW aa834' LB (0)
 //| | | UNSTASHING... (out)
 //| | Completed TypedNuFun(0,let aa = A (42,),α833) where 
-		α833 :> A<Object>
+		α833 :> #A<Object>
 //| | Typing unit statements
 //| | | 0. Typing term (console).log ((aa).add (6,),)
 //| | | | 0. Typing term (console).log
@@ -148,14 +148,14 @@ declare module TyperDebug() {
 //| | | | | 0. C ‹∀ 0. Console› <! {log: log835}    (0)
 //| | | | | | 0. C ‹∀ 0. Console› <! {log: log835}    (0)
 //| | | | | | | 0. C ‹∀ 0. Console› <! {log: log835}    (0)
-//| | | | | | | | 0. ARGH  DNF(0, {}∧#Console)  <!  DNF(0, {log: log835})
+//| | | | | | | | 0. ARGH  DNF(0, {}∧#Console<>)  <!  DNF(0, {log: log835})
 //| | | | | | | | | DNF DISCHARGE CONSTRAINTS
-//| | | | | | | | | Consider {}∧#Console <: DNF(0, {log: log835})
+//| | | | | | | | | Consider {}∧#Console<> <: DNF(0, {log: log835})
 //| | | | | | | | | Possible: List({log: log835})
-//| | | | | | | | | 0. A  {}∧#Console  %  List()  <!  List({log: log835})  %  ⊥
-//| | | | | | | | | | 0. A  {}∧#Console  %  List()  <!  List()  %  {log:log835}
-//| | | | | | | | | | | 0. A  {}∧#Console  %  List()  <!  List()  %  |{log:log835}
-//| | | | | | | | | | | | Looking up field log in None & TreeSet(#Console) & {...}
+//| | | | | | | | | 0. A  {}∧#Console<>  %  List()  <!  List({log: log835})  %  ⊥
+//| | | | | | | | | | 0. A  {}∧#Console<>  %  List()  <!  List()  %  {log:log835}
+//| | | | | | | | | | | 0. A  {}∧#Console<>  %  List()  <!  List()  %  |{log:log835}
+//| | | | | | | | | | | | Looking up field log in None & TreeSet(#Console<>) & {...}
 //| | | | | | | | | | | | | Lookup Console.log : Some(((args0: (Anything | MutArray[Anything]),) -> Unit)) where 
 //| | | | | | | | | | | | | Fresh[0] Console.log : Some(((args0: (Anything | MutArray[Anything]),) -> Unit)) where Some()
 //| | | | | | | | | | | | |   & None  (from refinement)
@@ -169,13 +169,13 @@ declare module TyperDebug() {
 //| | | | | | 0. : α833
 //| | | | | | CONSTRAIN α833 <! {add: add836}
 //| | | | | |   where 
-		α833 :> A<Object>
+		α833 :> #A<Object>
 //| | | | | | 0. C α833 <! {add: add836}    (0)
 //| | | | | | | 0. C α833 <! {add: add836}    (0)
 //| | | | | | | | 0. C α833 <! {add: add836}    (0)
 //| | | | | | | | | NEW α833 UB (0)
-//| | | | | | | | | 0. C A<Object> <! {add: add836}    (2)
-//| | | | | | | | | | 0. C A<Object> <! {add: add836}    (2)
+//| | | | | | | | | 0. C #A<Object> <! {add: add836}    (2)
+//| | | | | | | | | | 0. C #A<Object> <! {add: add836}    (2)
 //| | | | | | | | | | | Looking up field add in Some(A) & TreeSet() & {...}
 //| | | | | | | | | | | | Lookup A.add : Some(‹∀ 1. ((y: Int,) -> α831'')›) where 
 		α831'' :> Int
@@ -186,26 +186,26 @@ declare module TyperDebug() {
 //| | | | | | | | | | | | NEW add836 LB (0)
 //| | | | | 0. : add836
 //| | | | | 0. Typing term 6
-//| | | | | 0. : 6<Int,Num,Object>
-//| | | | | CONSTRAIN add836 <! ((6<Int,Num,Object>,) -> α837)
+//| | | | | 0. : #6<Int,Num,Object>
+//| | | | | CONSTRAIN add836 <! ((#6<Int,Num,Object>,) -> α837)
 //| | | | |   where 
 		α831'' :> Int
 		add836 :> ‹∀ 1. ((y: Int,) -> α831'')›
-//| | | | | 0. C add836 <! ((6<Int,Num,Object>,) -> α837)    (0)
-//| | | | | | 0. C add836 <! ((6<Int,Num,Object>,) -> α837)    (0)
+//| | | | | 0. C add836 <! ((#6<Int,Num,Object>,) -> α837)    (0)
+//| | | | | | 0. C add836 <! ((#6<Int,Num,Object>,) -> α837)    (0)
 //| | | | | | | NEW add836 UB (0)
-//| | | | | | | 0. C ‹∀ 1. ((y: Int,) -> α831'')› <! ((6<Int,Num,Object>,) -> α837)    (2)
-//| | | | | | | | 0. C ‹∀ 1. ((y: Int,) -> α831'')› <! ((6<Int,Num,Object>,) -> α837)    (2)
-//| | | | | | | | | 0. C ‹∀ 1. ((y: Int,) -> α831'')› <! ((6<Int,Num,Object>,) -> α837)    (2)
+//| | | | | | | 0. C ‹∀ 1. ((y: Int,) -> α831'')› <! ((#6<Int,Num,Object>,) -> α837)    (2)
+//| | | | | | | | 0. C ‹∀ 1. ((y: Int,) -> α831'')› <! ((#6<Int,Num,Object>,) -> α837)    (2)
+//| | | | | | | | | 0. C ‹∀ 1. ((y: Int,) -> α831'')› <! ((#6<Int,Num,Object>,) -> α837)    (2)
 //| | | | | | | | | | INST [1]   ‹∀ 1. ((y: Int,) -> α831'')›
 //| | | | | | | | | |   where  
 		α831'' :> Int
 //| | | | | | | | | | TO [0] ~>  ((y: Int,) -> α831_838)
 //| | | | | | | | | |   where  
 		α831_838 :> Int
-//| | | | | | | | | | 0. C ((y: Int,) -> α831_838) <! ((6<Int,Num,Object>,) -> α837)    (4)
-//| | | | | | | | | | | 0. C ((y: Int,) -> α831_838) <! ((6<Int,Num,Object>,) -> α837)    (4)
-//| | | | | | | | | | | | 0. C (6<Int,Num,Object>,) <! (y: Int,)    (3)
+//| | | | | | | | | | 0. C ((y: Int,) -> α831_838) <! ((#6<Int,Num,Object>,) -> α837)    (4)
+//| | | | | | | | | | | 0. C ((y: Int,) -> α831_838) <! ((#6<Int,Num,Object>,) -> α837)    (4)
+//| | | | | | | | | | | | 0. C (#6<Int,Num,Object>,) <! (y: Int,)    (3)
 //| | | | | | | | | | | | 0. C α831_838 <! α837    (3)
 //| | | | | | | | | | | | | NEW α831_838 UB (0)
 //| | | | | | | | | | | | | 0. C Int <! α837    (6)
@@ -245,8 +245,8 @@ declare module TyperDebug() {
 	Some(α839))
 //|  where: 
 		α831'' :> Int
-		α833 :> A<Object> <: {add: add836}
-		add836 :> ‹∀ 1. ((y: Int,) -> α831'')› <: ((6<Int,Num,Object>,) -> α837)
+		α833 :> #A<Object> <: {add: add836}
+		add836 :> ‹∀ 1. ((y: Int,) -> α831'')› <: ((#6<Int,Num,Object>,) -> α837)
 		α837 :> Int <: (Anything | MutArray[Anything])
 		α839 :> Unit
 //| allVarPols: +α831'', +α833, +α839
@@ -265,14 +265,14 @@ declare module TyperDebug() {
 	Some(α839_842))
 //|  where: 
 		α831_840'' :> Int
-		α833_841 :> A<Object>
+		α833_841 :> #A<Object>
 		α839_842 :> Unit
 //| allVarPols: +α831_840'', +α833_841, +α839_842
-//| consed: Map((true,Int) -> α831_840'', (true,A<Object>) -> α833_841, (true,Unit) -> α839_842)
+//| consed: Map((true,Int) -> α831_840'', (true,#A<Object>) -> α833_841, (true,Unit) -> α839_842)
 //| !unskid-1! Int -> α831_840''
 //| !unskid-1! Int -> α831_840''
 //| !unskid-1! Int -> α831_840''
-//| !unskid-1! A<Object> -> α833_841
+//| !unskid-1! #A<Object> -> α833_841
 //| ⬤ Unskid: TypedTypingUnit(
 	TypedNuCls(0, TypeName(A),
 		List(),
@@ -285,7 +285,7 @@ declare module TyperDebug() {
 	Some(α839_842))
 //|  where: 
 		α831_840'' :> Int
-		α833_841 :> A<Object>
+		α833_841 :> #A<Object>
 		α839_842 :> Unit
 //| analyze1[+] α831_840''
 //| | analyze1[+;@[+](0)] Int
@@ -297,7 +297,7 @@ declare module TyperDebug() {
 //| analyze1[+;-] ⊤
 //| analyze1[+;-] ⊤
 //| analyze1[+] α833_841
-//| | analyze1[+;@[+](0)] A<Object>
+//| | analyze1[+;@[+](0)] #A<Object>
 //| analyze1[+] α839_842
 //| | analyze1[+;@[+](0)] Unit
 //| [inv] 
@@ -319,10 +319,10 @@ declare module TyperDebug() {
 //| analyze2[+] α833_841
 //| | >> Processing α833_841 at [+]
 //| | go α833_841   ()
-//| | | go A<Object>   (α833_841)
-//| | >> Occurrences HashSet(A<Object>, α833_841)
-//| | >>>> occs[+α833_841] := HashSet(A<Object>, α833_841)  <~ None
-//| | analyze2[+] A<Object>
+//| | | go #A<Object>   (α833_841)
+//| | >> Occurrences HashSet(#A<Object>, α833_841)
+//| | >>>> occs[+α833_841] := HashSet(#A<Object>, α833_841)  <~ None
+//| | analyze2[+] #A<Object>
 //| analyze2[+] α839_842
 //| | >> Processing α839_842 at [+]
 //| | go α839_842   ()
@@ -330,7 +330,7 @@ declare module TyperDebug() {
 //| | >> Occurrences HashSet(Unit, α839_842)
 //| | >>>> occs[+α839_842] := HashSet(Unit, α839_842)  <~ None
 //| | analyze2[+] Unit
-//| [occs] +α831_840'' {α831_840'',Int} ; +α833_841 {A<Object>,α833_841} ; +α839_842 {Unit,α839_842}
+//| [occs] +α831_840'' {α831_840'',Int} ; +α833_841 {#A<Object>,α833_841} ; +α839_842 {Unit,α839_842}
 //| [vars] TreeSet(α831_840'', α833_841, α839_842)
 //| [rec] Set()
 //| 0[1] α833_841
@@ -341,7 +341,7 @@ declare module TyperDebug() {
 //| [sub] α831_840'' -> None, α833_841 -> None, α839_842 -> None
 //| [bounds] 
 		α831_840'' :> Int
-		α833_841 :> A<Object>
+		α833_841 :> #A<Object>
 		α839_842 :> Unit
 //| [rec] Set()
 //| transform[+] α831_840''   ()  +  None
@@ -381,15 +381,15 @@ declare module TyperDebug() {
 //| | ~> ⊤ w/ {x: Int}
 //| | transform[+] α833_841   ()  +  None
 //| | | -> bound Some(true)
-//| | | transform[+] A<Object>   (α833_841)  +;@[+](0)  None
-//| | | ~> A<Object>
-//| | ~> A<Object>
-//| ~> (⊤ w/ {x: Int} & A<Object>)
+//| | | transform[+] #A<Object>   (α833_841)  +;@[+](0)  None
+//| | | ~> #A<Object>
+//| | ~> #A<Object>
+//| ~> (⊤ w/ {x: Int} & #A<Object>)
 //| transform[+] α833_841   ()  +  None
 //| | -> bound Some(true)
-//| | transform[+] A<Object>   (α833_841)  +;@[+](0)  None
-//| | ~> A<Object>
-//| ~> A<Object>
+//| | transform[+] #A<Object>   (α833_841)  +;@[+](0)  None
+//| | ~> #A<Object>
+//| ~> #A<Object>
 //| transform[+] α839_842   ()  +  None
 //| | -> bound Some(true)
 //| | transform[+] Unit   (α839_842)  +;@[+](0)  None
@@ -403,7 +403,7 @@ declare module TyperDebug() {
 		(add,TypedNuFun(1,fun add = (y: Int,) => + (x,) (y,),((y: Int,) -> Int)))
 		(x,NuParam(x,Int)),
 		: ⊤, Set(), Map())
-	TypedNuFun(0,let aa = A (42,),A<Object>)
+	TypedNuFun(0,let aa = A (42,),#A<Object>)
 	Some(Unit))
 //|  where: 
 //| allVarPols: 
@@ -415,163 +415,163 @@ declare module TyperDebug() {
 		(add,TypedNuFun(1,fun add = (y: Int,) => + (x,) (y,),((y: Int,) -> Int)))
 		(x,NuParam(x,Int)),
 		: ⊤, Set(), Map())
-	TypedNuFun(0,let aa = A (42,),A<Object>)
+	TypedNuFun(0,let aa = A (42,),#A<Object>)
 	Some(Unit))
 //| | norm[+] Int
-//| | | DNF: DNF(0, Int<Object,Num>{})
-//| | ~> Int<Object,Num>
+//| | | DNF: DNF(0, #Int<Object,Num>{})
+//| | ~> #Int<Object,Num>
 //| | norm[+] ((y: Int,) -> Int)
 //| | | DNF: DNF(0, ((y: Int,) -> Int){})
 //| | | norm[-] (y: Int,)
 //| | | | DNF: DNF(0, (y: Int,){})
 //| | | | norm[-] Int
-//| | | | | DNF: DNF(0, Int<Object,Num>{})
-//| | | | ~> Int<Object,Num>
-//| | | ~> (y: Int<Object,Num>,)
+//| | | | | DNF: DNF(0, #Int<Object,Num>{})
+//| | | | ~> #Int<Object,Num>
+//| | | ~> (y: #Int<Object,Num>,)
 //| | | norm[+] Int
-//| | | | DNF: DNF(0, Int<Object,Num>{})
-//| | | ~> Int<Object,Num>
-//| | ~> ((y: Int<Object,Num>,) -> Int<Object,Num>)
+//| | | | DNF: DNF(0, #Int<Object,Num>{})
+//| | | ~> #Int<Object,Num>
+//| | ~> ((y: #Int<Object,Num>,) -> #Int<Object,Num>)
 //| | norm[+] Int
-//| | | DNF: DNF(0, Int<Object,Num>{})
-//| | ~> Int<Object,Num>
+//| | | DNF: DNF(0, #Int<Object,Num>{})
+//| | ~> #Int<Object,Num>
 //| | norm[-] ⊤
 //| | | DNF: DNF(0, )
 //| | ~> ⊤
 //| | norm[+] ⊤
 //| | | DNF: DNF(0, )
 //| | ~> ⊤
-//| | norm[+] (⊤ w/ {x: Int} & A<Object>)
-//| | | DNF: DNF(0, A<Object>{x: Int})
+//| | norm[+] (⊤ w/ {x: Int} & #A<Object>)
+//| | | DNF: DNF(0, #A<Object>{x: Int})
 //| | | norm[+] Int
-//| | | | DNF: DNF(0, Int<Object,Num>{})
-//| | | ~> Int<Object,Num>
-//| | | rcd2 {x: Int<Object,Num>}
+//| | | | DNF: DNF(0, #Int<Object,Num>{})
+//| | | ~> #Int<Object,Num>
+//| | | rcd2 {x: #Int<Object,Num>}
 //| | | typeRef A
 //| | | clsFields 
-//| | ~> (A & {x: Int<Object,Num>})
-//| | norm[+] A<Object>
-//| | | DNF: DNF(0, A<Object>{})
+//| | ~> (A & {x: #Int<Object,Num>})
+//| | norm[+] #A<Object>
+//| | | DNF: DNF(0, #A<Object>{})
 //| | | rcd2 {}
 //| | | typeRef A
 //| | | clsFields 
 //| | ~> A
 //| | norm[+] Unit
-//| | | DNF: DNF(0, unit<>{})
-//| | ~> unit<>
+//| | | DNF: DNF(0, #unit<>{})
+//| | ~> #unit<>
 //| ⬤ Normalized: TypedTypingUnit(
 	TypedNuCls(0, TypeName(A),
 		List(),
-		List((x,Int<Object,Num>)),
+		List((x,#Int<Object,Num>)),
 		this: ⊤, 
-		(add,TypedNuFun(1,fun add = (y: Int,) => + (x,) (y,),((y: Int<Object,Num>,) -> Int<Object,Num>)))
-		(x,NuParam(x,Int<Object,Num>)),
+		(add,TypedNuFun(1,fun add = (y: Int,) => + (x,) (y,),((y: #Int<Object,Num>,) -> #Int<Object,Num>)))
+		(x,NuParam(x,#Int<Object,Num>)),
 		: ⊤, Set(), Map())
 	TypedNuFun(0,let aa = A (42,),A)
-	Some(unit<>))
+	Some(#unit<>))
 //|  where: 
 //| allVarPols: 
 //| ⬤ Cleaned up: TypedTypingUnit(
 	TypedNuCls(0, TypeName(A),
 		List(),
-		List((x,Int<Object,Num>)),
+		List((x,#Int<Object,Num>)),
 		this: ⊤, 
-		(add,TypedNuFun(1,fun add = (y: Int,) => + (x,) (y,),((y: Int<Object,Num>,) -> Int<Object,Num>)))
-		(x,NuParam(x,Int<Object,Num>)),
+		(add,TypedNuFun(1,fun add = (y: Int,) => + (x,) (y,),((y: #Int<Object,Num>,) -> #Int<Object,Num>)))
+		(x,NuParam(x,#Int<Object,Num>)),
 		: ⊤, Set(), Map())
 	TypedNuFun(0,let aa = A (42,),A)
-	Some(unit<>))
+	Some(#unit<>))
 //|  where: 
 //| allVarPols: 
 //| consed: Map()
 //| ⬤ Unskid: TypedTypingUnit(
 	TypedNuCls(0, TypeName(A),
 		List(),
-		List((x,Int<Object,Num>)),
+		List((x,#Int<Object,Num>)),
 		this: ⊤, 
-		(add,TypedNuFun(1,fun add = (y: Int,) => + (x,) (y,),((y: Int<Object,Num>,) -> Int<Object,Num>)))
-		(x,NuParam(x,Int<Object,Num>)),
+		(add,TypedNuFun(1,fun add = (y: Int,) => + (x,) (y,),((y: #Int<Object,Num>,) -> #Int<Object,Num>)))
+		(x,NuParam(x,#Int<Object,Num>)),
 		: ⊤, Set(), Map())
 	TypedNuFun(0,let aa = A (42,),A)
-	Some(unit<>))
+	Some(#unit<>))
 //|  where: 
-//| analyze1[+] Int<Object,Num>
-//| analyze1[+] ((y: Int<Object,Num>,) -> Int<Object,Num>)
-//| | analyze1[+;-] (y: Int<Object,Num>,)
-//| | | analyze1[+;-] Int<Object,Num>
-//| | analyze1[+] Int<Object,Num>
-//| analyze1[+] Int<Object,Num>
+//| analyze1[+] #Int<Object,Num>
+//| analyze1[+] ((y: #Int<Object,Num>,) -> #Int<Object,Num>)
+//| | analyze1[+;-] (y: #Int<Object,Num>,)
+//| | | analyze1[+;-] #Int<Object,Num>
+//| | analyze1[+] #Int<Object,Num>
+//| analyze1[+] #Int<Object,Num>
 //| analyze1[+;-] ⊤
 //| analyze1[+;-] ⊤
 //| analyze1[+] A
-//| analyze1[+] unit<>
+//| analyze1[+] #unit<>
 //| [inv] 
 //| [nums] 
-//| analyze2[+] Int<Object,Num>
-//| analyze2[+] ((y: Int<Object,Num>,) -> Int<Object,Num>)
-//| | analyze2[+;-] (y: Int<Object,Num>,)
-//| | | analyze2[+;-] Int<Object,Num>
-//| | analyze2[+] Int<Object,Num>
-//| analyze2[+] Int<Object,Num>
+//| analyze2[+] #Int<Object,Num>
+//| analyze2[+] ((y: #Int<Object,Num>,) -> #Int<Object,Num>)
+//| | analyze2[+;-] (y: #Int<Object,Num>,)
+//| | | analyze2[+;-] #Int<Object,Num>
+//| | analyze2[+] #Int<Object,Num>
+//| analyze2[+] #Int<Object,Num>
 //| analyze2[+;-] ⊤
 //| analyze2[+;-] ⊤
 //| analyze2[+] A
-//| analyze2[+] unit<>
+//| analyze2[+] #unit<>
 //| [occs] 
 //| [vars] TreeSet()
 //| [rec] Set()
 //| [sub] 
 //| [bounds] 
 //| [rec] Set()
-//| transform[+] Int<Object,Num>   ()  +  None
-//| ~> Int<Object,Num>
-//| transform[+] ((y: Int<Object,Num>,) -> Int<Object,Num>)   ()  +  None
-//| | transform[-] (y: Int<Object,Num>,)   ()  +;-  None
-//| | | transform[-] Int<Object,Num>   ()  +;-  None
-//| | | ~> Int<Object,Num>
-//| | ~> (y: Int<Object,Num>,)
-//| | transform[+] Int<Object,Num>   ()  +  None
-//| | ~> Int<Object,Num>
-//| ~> ((y: Int<Object,Num>,) -> Int<Object,Num>)
-//| transform[+] Int<Object,Num>   ()  +  None
-//| ~> Int<Object,Num>
+//| transform[+] #Int<Object,Num>   ()  +  None
+//| ~> #Int<Object,Num>
+//| transform[+] ((y: #Int<Object,Num>,) -> #Int<Object,Num>)   ()  +  None
+//| | transform[-] (y: #Int<Object,Num>,)   ()  +;-  None
+//| | | transform[-] #Int<Object,Num>   ()  +;-  None
+//| | | ~> #Int<Object,Num>
+//| | ~> (y: #Int<Object,Num>,)
+//| | transform[+] #Int<Object,Num>   ()  +  None
+//| | ~> #Int<Object,Num>
+//| ~> ((y: #Int<Object,Num>,) -> #Int<Object,Num>)
+//| transform[+] #Int<Object,Num>   ()  +  None
+//| ~> #Int<Object,Num>
 //| transform[-] ⊤   ()  +;-  None
 //| ~> ⊤
 //| transform[+] ⊤   ()  +  None
 //| ~> ⊤
-//| transform[+] (A & {x: Int<Object,Num>})   ()  +  None
+//| transform[+] (A & {x: #Int<Object,Num>})   ()  +  None
 //| | transform[+] A   ()  +  None
 //| | ~> A
-//| | transform[+] {x: Int<Object,Num>}   ()  +  None
-//| | | transform[+] Int<Object,Num>   ()  +  None
-//| | | ~> Int<Object,Num>
-//| | ~> {x: Int<Object,Num>}
-//| ~> (A & {x: Int<Object,Num>})
+//| | transform[+] {x: #Int<Object,Num>}   ()  +  None
+//| | | transform[+] #Int<Object,Num>   ()  +  None
+//| | | ~> #Int<Object,Num>
+//| | ~> {x: #Int<Object,Num>}
+//| ~> (A & {x: #Int<Object,Num>})
 //| transform[+] A   ()  +  None
 //| ~> A
-//| transform[+] unit<>   ()  +  None
-//| ~> unit<>
+//| transform[+] #unit<>   ()  +  None
+//| ~> #unit<>
 //| ⬤ Resim: TypedTypingUnit(
 	TypedNuCls(0, TypeName(A),
 		List(),
-		List((x,Int<Object,Num>)),
+		List((x,#Int<Object,Num>)),
 		this: ⊤, 
-		(add,TypedNuFun(1,fun add = (y: Int,) => + (x,) (y,),((y: Int<Object,Num>,) -> Int<Object,Num>)))
-		(x,NuParam(x,Int<Object,Num>)),
+		(add,TypedNuFun(1,fun add = (y: Int,) => + (x,) (y,),((y: #Int<Object,Num>,) -> #Int<Object,Num>)))
+		(x,NuParam(x,#Int<Object,Num>)),
 		: ⊤, Set(), Map())
 	TypedNuFun(0,let aa = A (42,),A)
-	Some(unit<>))
+	Some(#unit<>))
 //|  where: 
 //| allVarPols: 
 //| [subs] HashMap()
 //| ⬤ Factored: TypedTypingUnit(
 	TypedNuCls(0, TypeName(A),
 		List(),
-		List((x,Int<Object,Num>)),
+		List((x,#Int<Object,Num>)),
 		this: ⊤, 
-		(add,TypedNuFun(1,fun add = (y: Int,) => + (x,) (y,),((y: Int<Object,Num>,) -> Int<Object,Num>)))
-		(x,NuParam(x,Int<Object,Num>)),
+		(add,TypedNuFun(1,fun add = (y: Int,) => + (x,) (y,),((y: #Int<Object,Num>,) -> #Int<Object,Num>)))
+		(x,NuParam(x,#Int<Object,Num>)),
 		: ⊤, Set(), Map())
 	TypedNuFun(0,let aa = A (42,),A)
-	Some(unit<>))
+	Some(#unit<>))
 //|  where: 
