@@ -51,7 +51,7 @@ fun f: 'a => ('a where 'a : string) where int : 'a
 //│ ╟── from type variable:
 //│ ║  l.41: 	fun f: 'a => ('a where 'a : string) where int : 'a
 //│ ╙──      	                                                ^^
-//│ f: (string & 'a) -> ('a | int)
+//│ f: (string & 'a) -> (int | 'a)
 
 
 :e
@@ -70,7 +70,7 @@ fun f: 'a => 'a where
 //│ ╟── from type variable:
 //│ ║  l.60: 	  int : 'a
 //│ ╙──      	        ^^
-//│ f: (string & 'a) -> ('a | int)
+//│ f: (string & 'a) -> (int | 'a)
 
 
 :e
@@ -90,16 +90,16 @@ fun f: 'a => forall 'b; 'a where
 //│ ╟── from type variable:
 //│ ║  l.80: 	  int : 'a
 //│ ╙──      	        ^^
-//│ f: (string & 'a) -> ('a | int)
+//│ f: (string & 'a) -> (int | 'a)
 
 
 // * Constraint is stashed!
 fun f: 'a => forall 'b; 'a where
   'a : 'b => 'b
   int : 'a
-//│ f: 'a -> ('a | int
+//│ f: 'a -> (int | 'a
 //│   where
-//│     'a | int <: 'b -> 'b)
+//│     int | 'a <: 'b -> 'b)
 
 :ns
 f
@@ -155,7 +155,7 @@ fun f: 'a => forall 'b; 'b where
   int : 'a
 //│ f: 'a -> ('b
 //│   where
-//│     'a | int <: 'b -> 'b)
+//│     int | 'a <: 'b -> 'b)
 
 :ns
 f

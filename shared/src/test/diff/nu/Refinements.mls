@@ -1,0 +1,184 @@
+:NewDefs
+
+
+class D() { fun f = 0 }
+//│ class D() {
+//│   fun f: 0
+//│ }
+
+D() : D & Object
+//│ D
+//│ res
+//│     = D {}
+
+let d = D() : D & { f: 0 }
+//│ let d: D & {f: 0}
+//│ d
+//│   = D {}
+
+let c = d with { f: 1 }
+//│ let c: D\f & {f: 1}
+//│ c
+//│   = D { f: 1 }
+
+c : D & { f: 1 }
+//│ D & {f: 1}
+//│ res
+//│     = D { f: 1 }
+
+
+class C[A](a: A) extends D()
+//│ class C[A](a: A) extends D {
+//│   fun f: 0
+//│ }
+
+C(1)
+//│ C[1]
+//│ res
+//│     = C {}
+
+let c: C & {a: 1, f: 0} = C(1)
+//│ let c: C[anything] & {a: 1, f: 0}
+//│ c
+//│   = C {}
+
+c.f
+//│ 0
+//│ res
+//│     = 0
+
+
+let r = {}
+//│ let r: anything
+//│ r
+//│   = {}
+
+// * Not all records are objects!
+// * Objects are class instances.
+// * But other values, like functions, can also hold record fields...
+// * This is actually important in JS, where some library functions act like modules!
+:e
+r : Object
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.61: 	r : Object
+//│ ║        	^
+//│ ╟── reference of type `anything` is not an instance of type `Object`
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.61: 	r : Object
+//│ ╙──      	    ^^^^^^
+//│ Object
+//│ res
+//│     = {}
+
+r with { x: 1 }
+//│ {x: 1}
+//│ res
+//│     = { x: 1 }
+
+
+:pe // TODO support
+:e // TODO support
+let r = new {}
+//│ ╔══[PARSE ERROR] Unexpected record after `new` keyword
+//│ ║  l.81: 	let r = new {}
+//│ ╙──      	            ^^
+//│ ╔══[ERROR] Currently unsupported `new` syntax
+//│ ║  l.81: 	let r = new {}
+//│ ╙──      	        ^^^
+//│ let r: error
+//│ r
+//│   = {}
+
+r : Object
+//│ Object
+//│ res
+//│     = {}
+
+r with { x: 1 }
+//│ error & {x: 1}
+//│ res
+//│     = { x: 1 }
+
+
+let r = { x: 0 }
+//│ let r: {x: 0}
+//│ r
+//│   = { x: 0 }
+
+:e
+r : Object
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.109: 	r : Object
+//│ ║         	^
+//│ ╟── record literal of type `{x: 0}` is not an instance of type `Object`
+//│ ║  l.103: 	let r = { x: 0 }
+//│ ║         	             ^
+//│ ╟── but it flows into reference with expected type `Object`
+//│ ║  l.109: 	r : Object
+//│ ║         	^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.109: 	r : Object
+//│ ╙──       	    ^^^^^^
+//│ Object
+//│ res
+//│     = { x: 0 }
+
+r with { x: 1 }
+//│ {x: 1}
+//│ res
+//│     = { x: 1 }
+
+
+
+:NoJS
+
+
+fun o : {}
+//│ fun o: anything
+
+o : {}
+//│ anything
+
+:e
+o : Object
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.143: 	o : Object
+//│ ║         	^
+//│ ╟── type `anything` is not an instance of type `Object`
+//│ ║  l.136: 	fun o : {}
+//│ ║         	        ^^
+//│ ╟── but it flows into reference with expected type `Object`
+//│ ║  l.143: 	o : Object
+//│ ║         	^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.143: 	o : Object
+//│ ╙──       	    ^^^^^^
+//│ Object
+
+
+fun o : Object & {}
+//│ fun o: Object
+
+o : {}
+//│ anything
+
+o : Object
+//│ Object
+
+
+
+// === //
+
+
+:e
+let d = D & { f: 0 }
+//│ ╔══[ERROR] Illegal use of reserved operator: &
+//│ ║  l.174: 	let d = D & { f: 0 }
+//│ ╙──       	          ^
+//│ ╔══[ERROR] identifier not found: &
+//│ ║  l.174: 	let d = D & { f: 0 }
+//│ ╙──       	          ^
+//│ let d: error
+
+
+

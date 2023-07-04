@@ -423,7 +423,7 @@ pu sh_pu
 //│ ║  l.421: 	pu sh_pu
 //│ ║         	^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
-//│ res: anything -> anything -> anything -> nothing | error
+//│ res: error | anything -> anything -> anything -> nothing
 //│    = [Function (anonymous)]
 
 // * "Of course, self-application of self-application ((\x.x x)(\x.x x)) remains untypable, because it has no normal form."

@@ -130,7 +130,7 @@ def pow (n: ChurchInt) (m: ChurchInt) = n (mul m) (succ zero)
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.31: 	def succ n f x = f (n f x)
 //│ ╙──      	                        ^
-//│ pow: ChurchInt -> ChurchInt -> (((??a | 'a) -> (??a0 & 'b) & 'c -> ('c & 'b)) -> (??a0 & 'a & 'c) -> (??a | 'a | 'b) | error)
+//│ pow: ChurchInt -> ChurchInt -> (error | ((??a | 'a) -> (??a0 & 'b) & 'c -> ('c & 'b)) -> (??a0 & 'a & 'c) -> (??a | 'a | 'b))
 //│    = [Function: pow]
 
 def pow (n: ChurchInt) (m: ChurchInt) = n (mul_ty m) (succ_ty zero_ty)
@@ -289,7 +289,7 @@ def fact (n: ChurchInt) = (iszero n) (fun _ -> succ zero) (fun _ -> mul n {})
 //│ ╟── from reference:
 //│ ║  l.103: 	def mul (n: ChurchInt) m = n (add m) zero
 //│ ╙──       	                                  ^
-//│ fact: ChurchInt -> (('a -> ('a & 'b) & 'c -> 'b) -> ('b & 'a & 'c) -> 'b | error)
+//│ fact: ChurchInt -> (error | ('a -> ('a & 'b) & 'c -> 'b) -> ('b & 'a & 'c) -> 'b)
 //│     = [Function: fact2]
 
 // * We can drop all intermediate annotations if the recursive call is annotated:

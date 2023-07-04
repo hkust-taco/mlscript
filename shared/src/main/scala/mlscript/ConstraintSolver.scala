@@ -548,9 +548,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               rec(fty.ub, fldTy.ub, false)
               recLb(fldTy, fty)
             }
-            case (LhsRefined(S(pt: ClassTag), ts, r, trs), RhsBases(pts, bf, trs2)) =>
+            case (l @ LhsRefined(S(pt: ClassTag), ts, r, trs), RhsBases(pts, bf, trs2)) =>
               println(s"class checking $pt $pts")
-              if (pts.contains(pt) || pts.exists(p => pt.parentsST.contains(p.id)))
+              if (pts.exists(p => (p.id === pt.id) || l.allTags.contains(p.id)))
                 println(s"OK  $pt  <:  ${pts.mkString(" | ")}")
               // else f.fold(reportError())(f => annoying(Nil, done_ls, Nil, f))
               else annoying(pt.id match {

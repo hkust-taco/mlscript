@@ -95,7 +95,7 @@ test 1
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.78: 	  in let _ = extr f
 //│ ╙──      	             ^^^^^^
-//│ res: anything -> 'a | error
+//│ res: error | anything -> 'a
 //│   where
 //│     0 <: 0 -> 'a
 //│ Runtime error:
@@ -126,10 +126,10 @@ test 0
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.107: 	  in let _ = extr f
 //│ ╙──       	             ^^^^^^
-//│ res: 'a -> (anything -> 'b
+//│ res: error | 'a -> (anything -> 'b
 //│   where
 //│     'a <: 'c -> 'b
-//│     0 <: 0 -> 'c) | error
+//│     0 <: 0 -> 'c)
 //│    = [Function (anonymous)]
 
 def test extr x =

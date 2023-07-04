@@ -148,7 +148,7 @@ test(Test)
 //│ ╟── type variable `A` leaks out of its scope
 //│ ║  l.5: 	module Test<A> {
 //│ ╙──     	            ^
-//│ (??A & 'A) -> ('A | ??A0) | error
+//│ error | (??A & 'A) -> ('A | ??A0)
 //│ res
 //│     = undefined
 

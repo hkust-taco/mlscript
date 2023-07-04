@@ -20,10 +20,10 @@ fun f: Str | (Str, Int)
 
 
 fun f: Str | ([Str, Int])
-//│ fun f: (Str, Int,) | Str
+//│ fun f: Str | (Str, Int,)
 
 fun f: Str | ((Str, Int))
-//│ fun f: (Str, Int,) | Str
+//│ fun f: Str | (Str, Int,)
 
 
 

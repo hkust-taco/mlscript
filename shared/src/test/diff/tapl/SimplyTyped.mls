@@ -294,7 +294,6 @@ fun typeTerm(t, ctx) =
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ typeTerm: ('rhs, 'right,) -> (Err & {message: 'message} | Ok & {value: 'ty})
 //│   where
-//│     'message :> string
 //│     'right <: 'right0 & (Empty | Node & {key: string, left: 'right, right: 'right})
 //│     'right0 <: Empty | Node & {key: string, left: 'right0, right: 'right0, value: 'ty & 'lhs & (PrimitiveType & {name: string} | 'a & (FunctionType & 'b | FunctionType & ~#FunctionType))}
 //│     'rhs <: Abs & {lhs: Var & {name: string}, lty: 'rhs0 & 'lhs & 'lty & (PrimitiveType & {name: string} | 'a & (FunctionType & 'b | FunctionType & ~#FunctionType)), rhs: 'rhs} | App & {lhs: 'rhs, rhs: 'rhs} | Lit & {ty: 'ty & 'lhs & (PrimitiveType & {name: string} | 'a & (FunctionType & 'b | FunctionType & ~#FunctionType))} | Var & {name: string}

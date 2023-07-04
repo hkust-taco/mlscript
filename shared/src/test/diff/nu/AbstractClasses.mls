@@ -89,9 +89,9 @@ Baz.f(1)
 
 
 
-abstract class C1 { fun x: Int | string }
+abstract class C1 { fun x: Int | Str }
 //│ abstract class C1 {
-//│   fun x: Int | string
+//│   fun x: Int | Str
 //│ }
 
 trait T1 { fun x: Int | Bool }
@@ -105,8 +105,8 @@ class C2 extends C1, T1
 //│ ║  l.103: 	class C2 extends C1, T1
 //│ ║         	      ^^
 //│ ╟── Declared here:
-//│ ║  l.92: 	abstract class C1 { fun x: Int | string }
-//│ ╙──      	                        ^^^^^^^^^^^^^^^
+//│ ║  l.92: 	abstract class C1 { fun x: Int | Str }
+//│ ╙──      	                        ^^^^^^^^^^^^
 //│ class C2 extends C1, T1 {
 //│   fun x: Int
 //│ }
@@ -127,8 +127,8 @@ class C3 extends C2
 //│ ║  l.125: 	class C3 extends C2
 //│ ║         	      ^^
 //│ ╟── Declared here:
-//│ ║  l.92: 	abstract class C1 { fun x: Int | string }
-//│ ╙──      	                        ^^^^^^^^^^^^^^^
+//│ ║  l.92: 	abstract class C1 { fun x: Int | Str }
+//│ ╙──      	                        ^^^^^^^^^^^^
 //│ class C3 extends C1, C2, T1 {
 //│   fun x: Int
 //│ }

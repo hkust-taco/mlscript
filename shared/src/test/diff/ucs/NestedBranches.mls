@@ -160,6 +160,6 @@ fun mapPartition(f, xs) = if xs is
 //│ ╟── from application:
 //│ ║  l.126: 	  Cons(x, xs) and mapPartition(f, xs) is (l, r)
 //│ ╙──       	                  ^^^^^^^^^^^^^^^^^^^
-//│ fun mapPartition: forall 'A. (anything, Cons['A] | Nil,) -> ((Nil, Nil,) | error)
+//│ fun mapPartition: forall 'A. (anything, Cons['A] | Nil,) -> (error | (Nil, Nil,))
 //│ Code generation encountered an error:
 //│   unknown match case: Tuple#2

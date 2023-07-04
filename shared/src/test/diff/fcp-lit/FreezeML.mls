@@ -521,7 +521,7 @@ choose id (fun (x: ('a -> 'a)) -> auto_ x)
 
 // * The skolem used to (unsafely) leak into this type – see also `Skolems.mls`:
 res
-//│ res: (('a | ??a) -> (??a0 & 'a) & 'a0) -> ('a0 | 'b -> 'b | error)
+//│ res: (('a | ??a) -> (??a0 & 'a) & 'a0) -> (error | 'a0 | 'b -> 'b)
 //│    = [Function: id1]
 
 :e // skolem extrusion
@@ -538,7 +538,7 @@ res id
 //│ ╟── Note: constraint arises from type variable:
 //│ ║  l.504: 	choose id (fun (x: ('a -> 'a)) -> auto_ x)
 //│ ╙──       	                          ^^
-//│ res: 'b -> 'b | error
+//│ res: error | 'b -> 'b
 //│    = [Function: id1]
 
 
@@ -553,7 +553,7 @@ a (fun x -> { u = x })
 //│ ╟── Note: constraint arises from type variable:
 //│ ║  l.172: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ╙──       	                              ^^
-//│ res: 'b -> ('b | {u: 'b}) | error
+//│ res: error | 'b -> ('b | {u: 'b})
 //│    = [Function (anonymous)]
 
 

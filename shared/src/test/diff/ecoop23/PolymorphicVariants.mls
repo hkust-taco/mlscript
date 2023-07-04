@@ -201,7 +201,7 @@ module Test3 extends EvalVar, EvalExpr, EvalLambda
 //│   fun eval: forall 'A 'a. (Cons[{_1: anything, _2: 'result}] | Nil, Abs['b] | App['A] | Object & 'c & ~#Abs & ~#App,) -> ('A0 | 'a)
 //│ }
 //│ where
-//│   'result :> 'A0 | Var
+//│   'result :> 'A0
 //│           <: Object
 //│   'A0 :> Numb | Var | 'result | 'c | 'a
 //│   'a :> App['A0] | Abs['A0]
@@ -231,7 +231,7 @@ module Test3 extends EvalVar, EvalLambda, EvalExpr
 //│   fun eval: (Cons[{_1: anything, _2: 'result}] | Nil, 'result & (Add['a] | Mul['a] | Numb | Var),) -> ('A | 'result | 'a)
 //│ }
 //│ where
-//│   'result :> 'A | Var | 'a
+//│   'result :> 'A | 'a
 //│           <: Object
 //│   'a <: Add['a] | Mul['a] | Numb | Var
 //│   'A :> Numb | 'result | Abs['A] | App['A] | Var
@@ -252,7 +252,7 @@ Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ ╟── from reference:
 //│ ║  l.139: 	    let vv = map_expr(eta, v)
 //│ ╙──       	                           ^
-//│ 'A | Abs[Var] | Numb | error
+//│ error | 'A
 //│   where
 //│     'A :> Abs[Var] | Numb | Abs['A] | App['A] | Var
 //│ res

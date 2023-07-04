@@ -279,7 +279,7 @@ WrapBase1.wrapA("ok")
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.216: 	  fun wrapA(x) = [super.wrapA(x)]
 //│ ╙──       	                              ^
-//│ (Int,) | error
+//│ error | (Int,)
 //│ res
 //│     = [ 'ok' ]
 

@@ -209,7 +209,7 @@ ga a1
 //│ ╟── from reference:
 //│ ║  l.185: 	def ga r = (fun x -> r) (r[1] <- 6)
 //│ ╙──       	                         ^
-//│ res: Array[int] | error
+//│ res: error | Array[int]
 //│    = <no result>
 //│      a1 is not implemented
 
@@ -639,7 +639,7 @@ f mt2
 //│ ╟── tuple field of type `int` is not mutable
 //│ ║  l.382: 	def mt2: (int, int)
 //│ ╙──       	          ^^^
-//│ res: int -> unit | error
+//│ res: error | int -> unit
 //│    = <no result>
 //│      mt2 is not implemented
 
@@ -860,7 +860,7 @@ foo { mut a = 1 } 2 3
 //│ ╟── from reference:
 //│ ║  l.841: 	def foo x y z = (x.a <- 0, x.a + 1, x.a, x.a <- y, z x.a)
 //│ ╙──       	                                                   ^
-//│ res: (unit, int, 0 | 1 | 2, unit, nothing,) | error
+//│ res: error | (unit, int, 0 | 1 | 2, unit, nothing,)
 //│ Runtime error:
 //│   TypeError: z is not a function
 
@@ -879,7 +879,7 @@ foo { a = 1 } 2
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.841: 	def foo x y z = (x.a <- 0, x.a + 1, x.a, x.a <- y, z x.a)
 //│ ╙──       	                           ^^^
-//│ res: (("oops" | 0 | 2) -> 'a) -> (unit, int, "oops" | 0 | 2, unit, 'a,) | error
+//│ res: error | (("oops" | 0 | 2) -> 'a) -> (unit, int, "oops" | 0 | 2, unit, 'a,)
 //│    = [Function (anonymous)]
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.869: 	foo { a = 1 } 2
@@ -887,7 +887,7 @@ foo { a = 1 } 2
 //│ ╟── record field of type `1` is not mutable
 //│ ║  l.869: 	foo { a = 1 } 2
 //│ ╙──       	      ^^^^^
-//│ res: (1 -> 'a) -> (unit, int, 1, unit, 'a,) | error
+//│ res: error | (1 -> 'a) -> (unit, int, 1, unit, 'a,)
 //│    = [Function (anonymous)]
 
 

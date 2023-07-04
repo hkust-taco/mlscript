@@ -63,7 +63,7 @@ simpleStepImpl : ArraysImpl['a, 'r] -> ArraysImpl['a, ('r, string)]
 //│    = [Function: simpleStepImpl]
 //│ constrain calls  : 4942
 //│ annoying  calls  : 62
-//│ subtyping calls  : 31637
+//│ subtyping calls  : 31598
 // :ResetFuel
 
 // * Note that the above incidentally can be checked using recursive types
@@ -74,7 +74,7 @@ simpleStepImpl : ArraysImpl['a, 'r] -> ArraysImpl['a, ('r, string)]
 //│    = [Function: simpleStepImpl]
 //│ constrain calls  : 579
 //│ annoying  calls  : 104
-//│ subtyping calls  : 5637
+//│ subtyping calls  : 5595
 :NoRecursiveTypes
 
 

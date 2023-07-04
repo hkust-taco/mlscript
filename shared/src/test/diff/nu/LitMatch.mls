@@ -1,16 +1,15 @@
 :NewDefs
 
 
-false : Bool
-//│ Bool
-//│ res
-//│     = false
+let r = false : Bool
+//│ let r: Bool
+//│ r
+//│   = false
 
-// FIXME parsing!
-let b = true | false : Bool
-//│ let b: (Bool,)
+let b = (if r then true else false) : Bool
+//│ let b: Bool
 //│ b
-//│   = 1
+//│   = false
 
 let b = false : Bool
 //│ let b: Bool

@@ -113,7 +113,7 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
   def clsNameToNomTag(td: NuTypeDef)(prov: TypeProvenance, ctx: Ctx): ClassTag = {
     require((td.kind is Cls) || (td.kind is Mod), td.kind)
     ClassTag(Var(td.nme.name),
-        if(newDefs)
+        if(newDefs && td.nme.name =/= "Object")
           Set.single(TN("Object"))
             | ctx.tyDefs2.get(td.nme.name).map(_.inheritedTags).getOrElse(Set.empty)
         else ctx.allBaseClassesOf(td.nme.name)
@@ -121,13 +121,7 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
   }
   def clsNameToNomTag(td: TypeDef)(prov: TypeProvenance, ctx: Ctx): ClassTag = {
     require((td.kind is Cls) || (td.kind is Mod), td.kind)
-    if (newDefs && td.kind.str.isCapitalized) ClassTag(Var(td.nme.name),
-        if(newDefs)
-          Set.single(TN("Object"))
-            | ctx.tyDefs2.get(td.nme.name).map(_.inheritedTags).getOrElse(Set.empty)
-        else ctx.allBaseClassesOf(td.nme.name)
-      )(prov)
-    else ClassTag(Var(td.nme.name), ctx.allBaseClassesOf(td.nme.name))(prov)
+    ClassTag(Var(td.nme.name), ctx.allBaseClassesOf(td.nme.name))(prov)
   }
   def trtNameToNomTag(td: TypeDef)(prov: TypeProvenance, ctx: Ctx): TraitTag = {
     require(td.kind is Trt)

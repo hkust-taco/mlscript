@@ -22,7 +22,7 @@ fun f(e) = if e is
 fun f(e) = if e is
   Pair(l, r) then [l, r]
   Lit(n) then n
-//│ fun f: forall 'L 'R. (Lit | Pair['L, 'R]) -> ((Exp['L], Exp['R],) | Int)
+//│ fun f: forall 'L 'R. (Lit | Pair['L, 'R]) -> (Int | (Exp['L], Exp['R],))
 
 :e
 (e: Exp['X]) => f(e)
@@ -32,7 +32,7 @@ fun f(e) = if e is
 //│ ╟── type variable `L` leaks out of its scope
 //│ ║  l.6: 	class Pair[L, R](lhs: Exp[L], rhs: Exp[R]) extends Exp[(L, R)]
 //│ ╙──     	           ^
-//│ (e: Exp['X],) -> ((Exp['L], Exp['R],) | Int | error)
+//│ (e: Exp['X],) -> (Int | error | (Exp['L], Exp['R],))
 //│   where
 //│     'R :> ??R
 //│        <: ??R0

@@ -199,6 +199,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
   
   val BoolType: ST = if (newDefs) TR(TN("Bool"), Nil)(noTyProv)
     else ClassTag(Var("bool"), semp)(noTyProv)
+  val ObjCls: ClassTag = ClassTag(Var("Object"), semp)(noTyProv)
   val ObjType: ST = if (newDefs) TR(TN("Object"), Nil)(noTyProv)
     else TopType
   val IntType: ST = if (newDefs) TR(TN("Int"), Nil)(noTyProv)
@@ -861,10 +862,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
       case Super() =>
         err(s"Illegal use of `super`", term.toLoc)(raise)
         typeTerm(Var("super").withLocOf(term))
-      case App(Var("neg" | "~"), trm) => typeTerm(trm).neg(prov)
-      case App(App(Var("|"), lhs), rhs) =>
+      case App(Var("neg" | "~"), trm) if funkyTuples => typeTerm(trm).neg(prov)
+      case App(App(Var("|"), lhs), rhs) if funkyTuples =>
         typeTerm(lhs) | (typeTerm(rhs), prov)
-      case App(App(Var("&"), lhs), rhs) =>
+      case App(App(Var("&"), lhs), rhs) if funkyTuples =>
         typeTerm(lhs) & (typeTerm(rhs), prov)
       case Rcd(fs) =>
         val prov = tp(term.toLoc, "record literal")

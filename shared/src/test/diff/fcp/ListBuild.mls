@@ -4,7 +4,7 @@
 class Ls[A]
   method HeadTail: (A, Ls[A]) | undefined
 //│ Defined class Ls[+A]
-//│ Declared Ls.HeadTail: Ls['A] -> (('A, Ls['A],) | undefined)
+//│ Declared Ls.HeadTail: Ls['A] -> (undefined | ('A, Ls['A],))
 
 // * Note that a more structural type such as this will raise cycle errors due to `:NoRecursiveTypes`
 // class Ls[A]: { head: A | undefined; tail: Ls[A] | undefined }

@@ -104,7 +104,7 @@ x => succ (not x)
 //│ ╟── from reference:
 //│ ║  l.+1: 	(f => x => not (f x.u)) false
 //│ ╙──      	                ^
-//│ res: {u: anything} -> bool | error
+//│ res: error | {u: anything} -> bool
 
 
 
@@ -220,7 +220,7 @@ x => {l: x x, r: x }
 //│ ║  l.+1: 	(f => (x => f (v => (x x) v)) (x => f (v => (x x) v))) (f => x => f)
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
-//│ res: 'a | error
+//│ res: error | 'a
 //│   where
 //│     'a :> anything -> 'a
 

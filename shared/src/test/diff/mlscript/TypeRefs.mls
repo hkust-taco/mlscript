@@ -26,5 +26,5 @@ foo: Baz['res]
 foo: Bar['res]
 //│ res: Bar['res]
 //│   where
-//│     'res <: string -> string | int
+//│     'res <: int | string -> string
 
