@@ -21,9 +21,9 @@ class TSProgram(file: FileInfo, uesTopLevelModule: Boolean, tsconfig: Option[Str
 
   import TSPathResolver.{basename, extname, isLocal, resolve, dirname, relative, normalize}
 
-  def generate: Boolean = generate(file, None)(Nil)
+  def generate: Unit = generate(file, None)(Nil)
 
-  private def generate(file: FileInfo, ambientNS: Option[TSNamespace])(implicit stack: List[String]): Boolean = {
+  private def generate(file: FileInfo, ambientNS: Option[TSNamespace])(implicit stack: List[String]): Unit = {
     val filename = if (TypeScript.isLinux) file.resolve else file.resolve.toLowerCase()
     val moduleName = file.moduleName
     val globalNamespace = ambientNS.getOrElse(TSNamespace(!uesTopLevelModule))
@@ -88,7 +88,6 @@ class TSProgram(file: FileInfo, uesTopLevelModule: Boolean, tsconfig: Option[Str
       typer(file, writer)
       writer.close()
     }
-    else false
   }
 
   private def generate(writer: JSWriter, globalNamespace: TSNamespace, moduleName: String, commonJS: Boolean): Unit =

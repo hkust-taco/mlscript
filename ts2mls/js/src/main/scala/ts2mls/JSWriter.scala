@@ -17,13 +17,11 @@ class JSWriter(filename: String) {
   def writeErr(str: String): Unit = err ++= s"//| $str\n"
   def writeDbg(str: String): Unit = dbg ++= s"//| $str\n"
 
-  // return true if the file has been updated
-  def close(): Boolean = {
+  def close(): Unit = {
     val str = buffer.toString() + dbg.toString() + err.toString()
     val origin = readFile(filename).getOrElse("")
     val updated = str =/= origin
     if (updated) writeFile(filename, str)
-    updated
   }
 
   def getContent: String = buffer.toString()

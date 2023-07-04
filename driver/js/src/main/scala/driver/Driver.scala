@@ -207,7 +207,6 @@ class Driver(options: DriverOptions) {
         `type`(TypingUnit(declarations), false)(ctx, noRedundantRaise, extrCtx, vars)
   })
 
-  // return true if this file is recompiled.
   private def compile(
     file: FileInfo,
     exported: Boolean
@@ -216,12 +215,13 @@ class Driver(options: DriverOptions) {
     extrCtx: Opt[typer.ExtrCtx],
     vars: Map[Str, typer.SimpleType],
     stack: List[String]
-  ): Boolean = {
+  ): Unit = {
     if (!isMLScirpt(file.filename)) { // TypeScript
       System.out.println(s"generating interface for ${file.filename}...")
       val tsprog =
          TSProgram(file, true, options.tsconfig, checkTSInterface)
-      return tsprog.generate
+      tsprog.generate
+      return
     }
 
     val mlsiFile = normalize(s"${file.workDir}/${file.interfaceFilename}")
@@ -246,14 +246,11 @@ class Driver(options: DriverOptions) {
           else R(dep)
         } }
 
-        val (cycleSigs, cycleRecomp) = cycleList.foldLeft((Ls[TypingUnit](), false))((r, file) => r match {
-          case (sigs, recomp) => {
-            importedModule += file.filename
-            (sigs :+ extractSig(file.filename, file.moduleName),
-              recomp || isInterfaceOutdate(file.filename, s"${options.path}/${file.interfaceFilename}"))
-          }
+        val cycleSigs = cycleList.foldLeft(Ls[TypingUnit]())((sigs, file) => {
+          importedModule += file.filename
+          sigs :+ extractSig(file.filename, file.moduleName)
         })
-        val needRecomp = otherList.foldLeft(cycleRecomp)((nr, dp) => {
+        otherList.foreach(dp => {
           // We need to create another new context when compiling other files
           // e.g. A -> B, A -> C, B -> D, C -> D, -> means "depends on"
           // If we forget to add `import "D.mls"` in C, we need to raise an error
@@ -265,44 +262,23 @@ class Driver(options: DriverOptions) {
           val newFilename = file.`import`(dp)
           importedModule += newFilename.filename
           compile(newFilename, true)(newCtx, newExtrCtx, newVars, stack :+ file.filename)
-        } || nr)
+        })
 
-        if (options.force || needRecomp || isInterfaceOutdate(file.filename, mlsiFile)) {
-          System.out.println(s"compiling ${file.filename}...")
-          try { otherList.foreach(d => importModule(file.`import`(d))) }
-          catch {
-            case t : Throwable =>
-              if (!options.expectTypeError) totalErrors += 1
-              mlsiWriter.writeErr(t.toString())
-          }
-          if (file.filename.endsWith(".mls")) { // only generate js/mlsi files for mls files
-            val expStr = try {
-              cycleSigs.foldLeft("")((s, tu) => s"$s${`type`(tu, false).show}") + {
-                dbgWriter = Some(mlsiWriter);
-                val res = packTopModule(Some(file.moduleName), `type`(TypingUnit(definitions), false).show);
-                dbgWriter = None
-                res
-              }
+        System.out.println(s"compiling ${file.filename}...")
+        try { otherList.foreach(d => importModule(file.`import`(d))) }
+        catch {
+          case t : Throwable =>
+            if (!options.expectTypeError) totalErrors += 1
+            mlsiWriter.writeErr(t.toString())
+        }
+        if (file.filename.endsWith(".mls")) { // only generate js/mlsi files for mls files
+          val expStr = try {
+            cycleSigs.foldLeft("")((s, tu) => s"$s${`type`(tu, false).show}") + {
+              dbgWriter = Some(mlsiWriter);
+              val res = packTopModule(Some(file.moduleName), `type`(TypingUnit(definitions), false).show);
+              dbgWriter = None
+              res
             }
-            catch {
-              case t : Throwable =>
-                if (!options.expectTypeError) totalErrors += 1
-                mlsiWriter.writeErr(t.toString())
-                ""
-            }
-            val interfaces = otherList.map(s => Import(file.translateImportToInterface(s))).foldRight(expStr)((imp, itf) => s"$imp\n$itf")
-
-            mlsiWriter.write(interfaces)
-            mlsiWriter.close()
-            if (totalErrors == 0)
-              generate(Pgrm(definitions), s"${options.outputDir}/${file.jsFilename}", file.moduleName, imports.map(
-                imp => new Import(resolveJSPath(file, imp.path)) with ModuleType {
-                  val isESModule = checkESModule(path, TSPathResolver.resolve(file.filename))
-                }
-              ), exported || importedModule(file.filename))
-          }
-          else try {
-            `type`(TypingUnit(declarations), false) // for ts/mlsi files, we only check interface files
           }
           catch {
             case t : Throwable =>
@@ -310,9 +286,26 @@ class Driver(options: DriverOptions) {
               mlsiWriter.writeErr(t.toString())
               ""
           }
-          true
+          val interfaces = otherList.map(s => Import(file.translateImportToInterface(s))).foldRight(expStr)((imp, itf) => s"$imp\n$itf")
+
+          mlsiWriter.write(interfaces)
+          mlsiWriter.close()
+          if (totalErrors == 0)
+            generate(Pgrm(definitions), s"${options.outputDir}/${file.jsFilename}", file.moduleName, imports.map(
+              imp => new Import(resolveJSPath(file, imp.path)) with ModuleType {
+                val isESModule = checkESModule(path, TSPathResolver.resolve(file.filename))
+              }
+            ), exported || importedModule(file.filename))
         }
-        else false // no need to recompile
+        else try {
+          `type`(TypingUnit(declarations), false) // for ts/mlsi files, we only check interface files
+        }
+        catch {
+          case t : Throwable =>
+            if (!options.expectTypeError) totalErrors += 1
+            mlsiWriter.writeErr(t.toString())
+            ""
+        }
       }
     })
   }

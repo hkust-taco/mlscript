@@ -10,33 +10,40 @@ class DriverDiffTests extends AnyFunSuite {
   import DriverDiffTests._
   import ts2mls.JSFileSystem._
 
-  testCases.foreach {
-    case TestOption(filename, workDir, outputDir, interfaceDir, cjs, execution, tsconfig, expectTypeError, expectError) => test(filename) {
-      val options =
-        DriverOptions(filename, workDir, outputDir, tsconfig, interfaceDir, cjs, expectTypeError, expectError, forceCompiling)
-      val driver = Driver(options)
-      if (!outputDir.isEmpty()) driver.genPackageJson()
-      val success = driver.execute
+  private def run(cases: List[TestOption], helper: JSGitHelper) = {
+    val diffFiles = helper.getFiles(cases.map(_.toString()).toIndexedSeq).toSet
+    cases.filter(opt => diffFiles(opt.toString())).foreach {
+      case TestOption(filename, workDir, outputDir, interfaceDir, cjs, execution, tsconfig, expectTypeError, expectError) => test(filename) {
+        val options =
+          DriverOptions(filename, workDir, outputDir, tsconfig, interfaceDir, cjs, expectTypeError, expectError)
+        val driver = Driver(options)
+        if (!outputDir.isEmpty()) driver.genPackageJson()
+        val success = driver.execute
 
-      assert(success != expectError, s"failed when compiling $filename.")
+        assert(success != expectError, s"failed when compiling $filename.")
 
-      if (!expectError) execution match {
-        case Some((executionFile, outputFile)) =>
-          val output = cp.execSync(s"node $executionFile").toString()
-          val original = readFile(outputFile).getOrElse("")
-          if (original =/= output) fs.writeFileSync(outputFile, output)
-        case None => ()
+        if (!expectError) execution match {
+          case Some((executionFile, outputFile)) =>
+            val output = cp.execSync(s"node $executionFile").toString()
+            val original = readFile(outputFile).getOrElse("")
+            if (original =/= output) fs.writeFileSync(outputFile, output)
+          case None => ()
+        }
       }
     }
   }
+
+  run(ts2mlsCases, ts2mlsHelper)
+  run(esCases, esHelper)
+  run(cjsCases, cjsHelper)
 }
 
 object DriverDiffTests {
-  private val forceCompiling = true // TODO: check based on git
-
   private val diffPath = "driver/js/src/test/"
   private val outputPath = s"${diffPath}output/"
   private val ts2mlsPath = "ts2mls/js/src/test/diff"
+  private val esPath = s"${diffPath}esprojects/"
+  private val cjsPath = s"${diffPath}cjsprojects/"
 
   private case class TestOption(
     filename: String,
@@ -48,7 +55,9 @@ object DriverDiffTests {
     tsconfig: Option[String],
     expectTypeError: Boolean,
     expectError: Boolean
-  )
+  ) {
+    override def toString() = ts2mls.TSPathResolver.normalize(s"$workDir/$filename")
+  }
 
   private def driverEntry(
     entryModule: String,
@@ -75,34 +84,19 @@ object DriverDiffTests {
     tsconfig: Option[String] = None,
     expectTypeError: Boolean = false,
     expectError: Boolean = false
-  ) = driverEntry(entryModule, tsconfig, s"${diffPath}cjsprojects/",
-    s"${diffPath}cjsprojects/js/", expectTypeError, expectError, true)
+  ) = driverEntry(entryModule, tsconfig, cjsPath, s"${cjsPath}/js/", expectTypeError, expectError, true)
 
   private def esEntry(
     entryModule: String,
     tsconfig: Option[String] = None,
     expectTypeError: Boolean = false,
     expectError: Boolean = false
-  ) = driverEntry(entryModule, tsconfig, s"${diffPath}esprojects/",
-    s"${diffPath}esprojects/js/", expectTypeError, expectError, false)
+  ) = driverEntry(entryModule, tsconfig, esPath, s"${esPath}/js/", expectTypeError, expectError, false)
 
   private def ts2mlsEntry(entryFile: String, expectTypeError: Boolean = false, expectError: Boolean = false) =
     TestOption(s"./${entryFile}", "ts2mls/js/src/test/typescript", "", "../diff", false, None, None, expectTypeError, expectError)
 
-  private val testCases = List[TestOption](
-    esEntry("Simple"),
-    esEntry("Cycle2"),
-    esEntry("Self", expectError = true),
-    esEntry("C", expectError = true),
-    esEntry("TS", Some("./tsconfig.json"), expectTypeError = true), // TODO: type members
-    esEntry("Output", Some("./tsconfig.json"), expectTypeError = true), // TODO: type parameter position
-    esEntry("Output2", Some("./tsconfig.json"), expectTypeError = true), // TODO: type parameter position
-    esEntry("MLS2TheMax", Some("./tsconfig.json")),
-    esEntry("MyPartialOrder", Some("./tsconfig.json"), expectError = true), // TODO: type traits in modules
-    cjsEntry("Lodash", Some("./tsconfig.json"), expectTypeError = true), // TODO: module member selection/trait types
-    esEntry("Builtin"),
-    cjsEntry("CJS1"),
-    esEntry("TyperDebug"),
+  private val ts2mlsCases = List(
     ts2mlsEntry("BasicFunctions.ts", expectTypeError = true),
     ts2mlsEntry("ClassMember.ts"),
     ts2mlsEntry("Cycle1.ts", expectTypeError = true),
@@ -127,6 +121,28 @@ object DriverDiffTests {
     ts2mlsEntry("Variables.ts", expectError = true),
   )
 
+  private val esCases = List(
+    esEntry("Simple"),
+    esEntry("Cycle2"),
+    esEntry("Self", expectError = true),
+    esEntry("C", expectError = true),
+    esEntry("TS", Some("./tsconfig.json"), expectTypeError = true), // TODO: type members
+    esEntry("Output", Some("./tsconfig.json"), expectTypeError = true), // TODO: type parameter position
+    esEntry("Output2", Some("./tsconfig.json"), expectTypeError = true), // TODO: type parameter position
+    esEntry("MLS2TheMax", Some("./tsconfig.json")),
+    esEntry("MyPartialOrder", Some("./tsconfig.json"), expectError = true), // TODO: type traits in modules
+    esEntry("Builtin"),
+    esEntry("TyperDebug"),
+  )
+
+  private val cjsCases = List(
+    cjsEntry("Lodash", Some("./tsconfig.json"), expectTypeError = true), // TODO: module member selection/trait types
+    cjsEntry("CJS1"),
+  )
+
   private val cp = g.require("child_process")
   private val fs = g.require("fs")
+  private val ts2mlsHelper = JSGitHelper(".", ts2mlsPath)
+  private val esHelper = JSGitHelper(".", s"${esPath}/mlscript")
+  private val cjsHelper = JSGitHelper(".", s"${cjsPath}/mlscript")
 }

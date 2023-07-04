@@ -58,11 +58,7 @@ class DiffTests
 
   // scala test will not execute a test if the test class has constructor parameters.
   // override this to get the correct paths of test files.
-  protected lazy val files = allFiles.filter { file =>
-      val fileName = file.baseName
-      // validExt(file.ext) && filter(fileName)
-      validExt(file.ext) && filter(file.relativeTo(pwd))
-  }
+  protected lazy val files = gitHelper.getFiles(allFiles)
   
   val timeLimit = TimeLimit
   
@@ -977,52 +973,6 @@ object DiffTests {
   
   private val pwd = os.pwd
   private val dir = pwd/"shared"/"src"/"test"/"diff"
-  
   private val allFiles = os.walk(dir).filter(_.toIO.isFile)
-  
-  private val validExt = Set("fun", "mls")
-  
-  // Aggregate unstaged modified files to only run the tests on them, if there are any
-  private val modified: Set[os.RelPath] =
-    try os.proc("git", "status", "--porcelain", dir).call().out.lines().iterator.flatMap { gitStr =>
-      println(" [git] " + gitStr)
-      val prefix = gitStr.take(2)
-      val filePath = os.RelPath(gitStr.drop(3))
-      if (prefix =:= "A " || prefix =:= "M " || prefix =:= "R " || prefix =:= "D ")
-        N // * Disregard modified files that are staged
-      else S(filePath)
-    }.toSet catch {
-      case err: Throwable => System.err.println("/!\\ git command failed with: " + err)
-      Set.empty
-    }
-  
-  // Allow overriding which specific tests to run, sometimes easier for development:
-  private val focused = Set[Str](
-    // "LetRec"
-    // "Ascribe",
-    // "Repro",
-    // "RecursiveTypes",
-    // "Simple",
-    // "Inherit",
-    // "Basics",
-    // "Paper",
-    // "Negations",
-    // "RecFuns",
-    // "With",
-    // "Annoying",
-    // "Tony",
-    // "Lists",
-    // "Traits",
-    // "BadTraits",
-    // "TraitMatching",
-    // "Subsume",
-    // "Methods",
-  ).map(os.RelPath(_))
-  // private def filter(name: Str): Bool =
-  def filter(file: os.RelPath): Bool = {
-    if (focused.nonEmpty) focused(file) else modified(file) || modified.isEmpty &&
-      true
-      // name.startsWith("new/")
-      // file.segments.toList.init.lastOption.contains("parser")
-  }
+  private val gitHelper = JVMGitHelper(pwd, dir)
 }

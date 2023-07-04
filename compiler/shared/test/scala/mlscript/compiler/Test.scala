@@ -25,10 +25,7 @@ class DiffTestCompiler extends DiffTests {
           "\n" ++ err.getStackTrace().map(_.toString()).mkString("\n")
     outputBuilder.toString().linesIterator.toList
   
-  override protected lazy val files = allFiles.filter { file =>
-      val fileName = file.baseName
-      validExt(file.ext) && filter(file.relativeTo(pwd))
-  }
+  override protected lazy val files = gitHelper.getFiles(allFiles)
 }
 
 object DiffTestCompiler {
@@ -39,7 +36,5 @@ object DiffTestCompiler {
   private val allFiles = os.walk(dir).filter(_.toIO.isFile)
   
   private val validExt = Set("fun", "mls")
-
-  private def filter(file: os.RelPath) = DiffTests.filter(file)
-  
+  private val gitHelper = JVMGitHelper(pwd, dir)
 }
