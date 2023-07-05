@@ -1109,10 +1109,16 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             }
           // case 1 -> parsed as IntLit(1)
           // case "hi" -> parsed as StrLit("hi")
-          // and others
-          case AdtMatchPat(expr, rhs) =>
-            con(cond_ty, typeTerm(expr), cond_ty)
+          case AdtMatchPat(StrLit(_), rhs) =>
+            con(cond_ty, StrType, cond_ty)
             con(typeTerm(rhs), ret_ty, ret_ty)
+          case AdtMatchPat(IntLit(_), rhs) =>
+            con(cond_ty, IntType, cond_ty)
+            con(typeTerm(rhs), ret_ty, ret_ty)
+          case AdtMatchPat(Asc(trm, ty), rhs) =>
+            con(cond_ty, IntType, cond_ty)
+            con(typeTerm(rhs), ret_ty, ret_ty)
+          // and others
           case pat =>
             lastWords(s"Cannot handle pattern ${pat}")
         }

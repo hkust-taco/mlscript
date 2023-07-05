@@ -87,38 +87,45 @@ fun (x, y) ->
 foo x = match x with
   | 0 -> 0
   | 1 -> 1
-//│ foo: nothing -> (0 | 1)
-
-:e // FIXME
-foo 0
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.93: 	foo 0
-//│ ║        	^^^^^
-//│ ╟── integer literal of type `0` does not match type `1`
-//│ ║  l.93: 	foo 0
-//│ ║        	    ^
-//│ ╟── Note: constraint arises from integer literal:
-//│ ║  l.89: 	  | 1 -> 1
-//│ ║        	    ^
-//│ ╟── from reference:
-//│ ║  l.87: 	foo x = match x with
-//│ ╙──      	              ^
-//│ res: 0 | 1 | error
-
-
-foo x = match x with
-  | (0 : int) -> 0
-  | (1 : int) -> 1
 //│ foo: int -> (0 | 1)
 
 foo 0
 //│ res: 0 | 1
 
+:e // allow ascriptions
+foo x = match x with
+  | (0 : int) -> 0
+  | (1 : int) -> 1
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Cannot handle pattern ('(' 0 : int ')') then 0
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:197)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$33(Typer.scala:1123)
+//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:986)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:1160)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$20(Typer.scala:822)
+//│ 	at: mlscript.Typer$Ctx.$anonfun$poly$1(Typer.scala:104)
+//│ 	at: mlscript.Typer$Ctx.nextLevel(Typer.scala:88)
+//│ 	at: mlscript.Typer$Ctx.poly(Typer.scala:102)
 
-// :e // FIXME pattern should be rejected
+foo 0
+//│ res: 0 | 1
+
+
+:e // such patterns are not allowed
 foo x = match x with
   | (id 0) -> 0
-//│ foo: anything -> 0
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Cannot handle pattern ('(' id (0,) ')') then 0
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:197)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$33(Typer.scala:1123)
+//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:986)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:1160)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$20(Typer.scala:822)
+//│ 	at: mlscript.Typer$Ctx.$anonfun$poly$1(Typer.scala:104)
+//│ 	at: mlscript.Typer$Ctx.nextLevel(Typer.scala:88)
+//│ 	at: mlscript.Typer$Ctx.poly(Typer.scala:102)
 
 
 match Cons(0, Nil) with Cons(0, Nil) -> 0
@@ -130,13 +137,13 @@ match Cons(false, Nil) with Cons(true, Nil) -> 0
 :e
 match Cons(0, Nil) with Cons(1, Nil) -> 0
 //│ ╔══[ERROR] Type mismatch in adt match expression:
-//│ ║  l.131: 	match Cons(0, Nil) with Cons(1, Nil) -> 0
+//│ ║  l.138: 	match Cons(0, Nil) with Cons(1, Nil) -> 0
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── integer literal of type `0` does not match type `1`
-//│ ║  l.131: 	match Cons(0, Nil) with Cons(1, Nil) -> 0
+//│ ║  l.138: 	match Cons(0, Nil) with Cons(1, Nil) -> 0
 //│ ║         	           ^
 //│ ╟── Note: constraint arises from integer literal:
-//│ ║  l.131: 	match Cons(0, Nil) with Cons(1, Nil) -> 0
+//│ ║  l.138: 	match Cons(0, Nil) with Cons(1, Nil) -> 0
 //│ ╙──       	                             ^
 //│ res: 0
 
