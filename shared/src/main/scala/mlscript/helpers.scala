@@ -389,6 +389,7 @@ trait TermImpl extends StatementImpl { self: Term =>
       case Where(_, _) => s"constraint clause"
       case Forall(_, _) => s"forall clause"
       case Inst(bod) => "explicit instantiation"
+      case AdtMatchWith(cond, arms) => "adt pattern matching"
     }
   }
   
@@ -437,6 +438,8 @@ trait TermImpl extends StatementImpl { self: Term =>
     case Where(bod, wh) => s"${bod} where {${wh.mkString("; ")}}"
     case Forall(ps, bod) => s"forall ${ps.mkString(", ")}. ${bod}"
     case Inst(bod) => s"${bod.print(true)}!"
+    case AdtMatchWith(cond, arms) =>
+      s"match ${cond} with ${arms.map (patmat => s"${patmat.pat} -> ${patmat.rhs}").mkString (" | ") }"
   }}
   
   def toType: Diagnostic \/ Type =
@@ -758,6 +761,7 @@ trait StatementImpl extends Located { self: Statement =>
     case Where(bod, wh) => bod :: wh
     case Forall(ps, bod) => ps ::: bod :: Nil
     case Inst(bod) => bod :: Nil
+    case AdtMatchWith(cond, _) => cond :: Nil
   }
   
   

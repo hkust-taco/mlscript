@@ -56,6 +56,8 @@ object Helpers {
     case Where(bod, sts) => s"Where(${inspect(bod)}, ...)"
     case Forall(ps, bod) => s"Forall($ps, ${inspect(bod)})"
     case Inst(bod) => s"Inst(${inspect(bod)})"
+    case AdtMatchWith(cond, arms) =>
+      s"match ${inspect(cond)} with ${arms.map(patmat => s"${inspect(patmat.pat)} -> ${inspect(patmat.rhs)}").mkString(" | ")}"
   }
 
   def inspect(body: IfBody): Str = body match {
