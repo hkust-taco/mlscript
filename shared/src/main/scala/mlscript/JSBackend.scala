@@ -596,32 +596,59 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       def resolveName(term: Term): Str = term match {
         case App(lhs, _) => resolveName(lhs)
         case Var(name) => name
-        case Sel(_, Var(fieldName)) => fieldName
+        case Sel(parent, Var(fieldName)) => s"${resolveName(parent)}.$fieldName"
         case TyApp(lhs, _) => resolveName(lhs)
         case _ => throw CodeGenError("unsupported parents.")
       }
 
-      val name = resolveName(current)
-
-      scope.resolveValue(name) match {
-        case Some(CapturedSymbol(_, _: TraitSymbol)) => base // TODO:
-        case Some(CapturedSymbol(out, sym: MixinSymbol)) =>
-          JSInvoke(translateCapture(CapturedSymbol(out, sym)), Ls(base))
-        case Some(CapturedSymbol(out, sym: NuTypeSymbol)) if !mixinOnly =>
-          if (sym.isPlainJSClass)
-            translateCapture(CapturedSymbol(out, sym))
-          else
-            translateCapture(CapturedSymbol(out, sym)).member("class")
-        case Some(_: TraitSymbol) => base // TODO:
-        case Some(sym: MixinSymbol) =>
-          JSInvoke(translateVar(name, false), Ls(base))
-        case Some(sym: NuTypeSymbol) if !mixinOnly =>
-          if (sym.isPlainJSClass)
-            translateVar(name, false)
-          else
-            translateVar(name, false).member("class")
-        case Some(t) => throw CodeGenError(s"unexpected parent symbol $t.")
-        case N => throw CodeGenError(s"unresolved parent $name.")
+      val fullname = resolveName(current).split("\\.").toList
+      fullname match {
+        case name :: Nil => scope.resolveValue(name) match {
+          case Some(CapturedSymbol(_, _: TraitSymbol)) => base // TODO:
+          case Some(CapturedSymbol(out, sym: MixinSymbol)) =>
+            JSInvoke(translateCapture(CapturedSymbol(out, sym)), Ls(base))
+          case Some(CapturedSymbol(out, sym: NuTypeSymbol)) if !mixinOnly =>
+            if (sym.isPlainJSClass)
+              translateCapture(CapturedSymbol(out, sym))
+            else
+              translateCapture(CapturedSymbol(out, sym)).member("class")
+          case Some(_: TraitSymbol) => base // TODO:
+          case Some(sym: MixinSymbol) =>
+            JSInvoke(translateVar(name, false), Ls(base))
+          case Some(sym: NuTypeSymbol) if !mixinOnly =>
+            if (sym.isPlainJSClass)
+              translateVar(name, false)
+            else
+              translateVar(name, false).member("class")
+          case Some(t) => throw CodeGenError(s"unexpected parent symbol $t.")
+          case N => throw CodeGenError(s"unresolved parent $name.")
+        }
+        case top :: rest => {
+          def insertParent(parent: Str, child: JSExpr): JSExpr = child match {
+            case JSIdent(name) => JSIdent(parent).member(name)
+            case field: JSField => insertParent(parent, field.`object`).member(field.property.name)
+            case _ => throw new AssertionError("unsupported parent expression.")
+          }
+          def resolveSelection(restNames: Ls[Str], nested: Ls[NuTypeDef], res: JSExpr): JSExpr = restNames match {
+            case name :: Nil => nested.find(_.nme.name === name).fold(
+              throw CodeGenError(s"parent $name not found.")
+            )(p => if (p.isPlainJSClass) res.member(name) else res.member(name).member("class"))
+            case cur :: rest => (nested.find {
+              case nd: NuTypeDef => nd.kind === Mod && nd.nme.name === cur
+              case _ => false
+            }).fold[JSExpr](
+              throw CodeGenError(s"module $cur not found.")
+            )(md => resolveSelection(rest, md.body.entities.collect{ case nd: NuTypeDef => nd }, insertParent(cur, res)))
+            case Nil => throw new AssertionError("unexpected code state in resolve selection.")
+          }
+          scope.resolveValue(top) match {
+            case Some(sym: ModuleSymbol) => resolveSelection(rest, sym.nested, JSIdent(sym.lexicalName))
+            case Some(CapturedSymbol(out, sym: ModuleSymbol)) =>
+              resolveSelection(rest, sym.nested, JSIdent(out.runtimeName).member(sym.lexicalName))
+            case _ => throw CodeGenError(s"type selection ${fullname.mkString(".")} is not supported in inheritance now.")
+          }
+        }
+        case _ => throw CodeGenError(s"unresolved parent ${fullname.mkString(".")}.")
       }
     }
 

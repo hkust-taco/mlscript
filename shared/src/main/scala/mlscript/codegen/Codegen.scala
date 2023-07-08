@@ -598,7 +598,7 @@ object JSMember {
   def apply(`object`: JSExpr, property: JSExpr): JSMember = new JSMember(`object`, property)
 }
 
-class JSField(`object`: JSExpr, val property: JSIdent) extends JSMember(`object`, property) {
+class JSField(val `object`: JSExpr, val property: JSIdent) extends JSMember(`object`, property) {
   override def toSourceCode: SourceCode =
     `object`.toSourceCode.parenthesized(
       `object`.precedence < precedence || `object`.isInstanceOf[JSRecord]
