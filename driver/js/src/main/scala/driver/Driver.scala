@@ -267,13 +267,13 @@ class Driver(options: DriverOptions) {
         })
 
         System.out.println(s"compiling ${file.filename}...")
-        val importedSym = try { otherList.map(d => importModule(file.`import`(d))) }
+        val importedSym = (try { otherList.map(d => importModule(file.`import`(d))) }
         catch {
           case t : Throwable =>
             totalTypeErrors += 1
             mlsiWriter.writeErr(t.toString())
             Nil
-        }
+        }) ++ cycleSigs.map(tu => tu.entities)
         if (file.filename.endsWith(".mls")) { // only generate js/mlsi files for mls files
           val expStr = 
             cycleSigs.foldLeft("")((s, tu) => s"$s${`type`(tu, false, mlsiWriter.writeErr).show}") + {
@@ -304,7 +304,7 @@ class Driver(options: DriverOptions) {
     filename: String,
     moduleName: String,
     imports: Ls[Import with ModuleType],
-    predefs: Ls[Ls[NuDecl]],
+    predefs: Ls[Ls[Statement]],
     exported: Boolean
   ): Unit = try {
     val backend = new JSDriverBackend()

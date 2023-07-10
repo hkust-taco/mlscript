@@ -1,1 +1,1 @@
-//| codegen error: type selection BoundedMeetSemilattice.BoundedMeetSemilattice is not supported in inheritance now.
+//| codegen error: parent BoundedMeetSemilattice not found.
