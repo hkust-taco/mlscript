@@ -7,7 +7,7 @@ import mlscript.codegen.Helpers._
 import ts2mls.TSPathResolver
 
 class JSDriverBackend extends JSBackend(allowUnresolvedSymbols = false) {
-  def declareJSBuiltin(pgrm: Pgrm): Unit = {
+  def declarePredef(pgrm: Pgrm): Unit = {
     val (typeDefs, otherStmts) = pgrm.tops.partitionMap {
       case ot: Terms => R(ot)
       case fd: NuFunDef => R(fd)
@@ -63,7 +63,6 @@ class JSDriverBackend extends JSBackend(allowUnresolvedSymbols = false) {
 
   def apply(pgrm: Pgrm, topModuleName: Str, imports: Ls[Import with ModuleType], exported: Bool, commonJS: Bool): Ls[Str] = {
     imports.flatMap (imp => {
-      topLevelScope.declareValue(TSPathResolver.basename(imp.path), Some(false), false)
       translateImport(imp, commonJS).toSourceCode.toLines 
     }) ::: generateNewDef(pgrm, topModuleName, exported, commonJS)
   }

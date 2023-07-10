@@ -1,0 +1,8 @@
+declare module Parent() {
+  class Parent1(x: Int) {
+    fun inc: Int
+  }
+  class Parent2 {
+    fun x: 42
+  }
+}

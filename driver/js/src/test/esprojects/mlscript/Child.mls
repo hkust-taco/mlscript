@@ -1,0 +1,9 @@
+import "./Parent.mls"
+
+class Child1(x: Int) extends Parent.Parent1(x + 1)
+class Child2(y: Int) extends Parent.Parent2
+
+let c1 = Child1(2)
+let c2 = Child2(3)
+console.log(c1.inc)
+console.log(c2.x)

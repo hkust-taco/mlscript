@@ -133,6 +133,7 @@ object DriverDiffTests {
     esEntry("MyPartialOrder", Some("./tsconfig.json"), expectError = true, expectTypeError = true), // TODO: type traits in modules
     esEntry("Builtin"),
     esEntry("TyperDebug"),
+    esEntry("Child", expectTypeError = true)
   )
 
   private val cjsCases = List(

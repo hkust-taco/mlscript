@@ -169,6 +169,7 @@ class Driver(options: DriverOptions) {
     case (_, declarations, _, _) => declarations
   }))
 
+  // Check if generated ts interfaces are correct
   private def checkTSInterface(file: FileInfo, writer: JSWriter): Unit = parse(file.filename, writer.getContent) match {
     case (_, declarations, imports, origin) =>
       var ctx: Ctx = Ctx.init
@@ -201,11 +202,12 @@ class Driver(options: DriverOptions) {
     implicit ctx: Ctx,
     extrCtx: Opt[typer.ExtrCtx],
     vars: Map[Str, typer.SimpleType]
-  ): Unit =
+  ): List[NuDecl] =
     parseAndRun(s"${options.path}/${file.interfaceFilename}", {
       case (_, declarations, imports, _) =>
         imports.foreach(d => importModule(file.`import`(d.path)))
         `type`(TypingUnit(declarations), false, noRedundantOutput)(ctx, noRedundantRaise, extrCtx, vars)
+        declarations
   })
 
   private def compile(
@@ -265,11 +267,12 @@ class Driver(options: DriverOptions) {
         })
 
         System.out.println(s"compiling ${file.filename}...")
-        try { otherList.foreach(d => importModule(file.`import`(d))) }
+        val importedSym = try { otherList.map(d => importModule(file.`import`(d))) }
         catch {
           case t : Throwable =>
             totalTypeErrors += 1
             mlsiWriter.writeErr(t.toString())
+            Nil
         }
         if (file.filename.endsWith(".mls")) { // only generate js/mlsi files for mls files
           val expStr = 
@@ -288,7 +291,7 @@ class Driver(options: DriverOptions) {
               imp => new Import(resolveJSPath(file, imp.path)) with ModuleType {
                 val isESModule = checkESModule(path, TSPathResolver.resolve(file.filename))
               }
-            ), exported || importedModule(file.filename))
+            ), jsBuiltinDecs ++ importedSym, exported || importedModule(file.filename))
         }
         else
           `type`(TypingUnit(declarations), false, mlsiWriter.writeErr) // for ts/mlsi files, we only check interface files
@@ -301,10 +304,11 @@ class Driver(options: DriverOptions) {
     filename: String,
     moduleName: String,
     imports: Ls[Import with ModuleType],
+    predefs: Ls[Ls[NuDecl]],
     exported: Boolean
   ): Unit = try {
     val backend = new JSDriverBackend()
-    jsBuiltinDecs.foreach(lst => backend.declareJSBuiltin(Pgrm(lst)))
+    predefs.foreach(pd => backend.declarePredef(Pgrm(pd)))
     val lines = backend(program, moduleName, imports, exported, options.commonJS)
     val code = lines.mkString("", "\n", "\n")
     saveToFile(filename, code)
