@@ -994,7 +994,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             println(s"type pattern $v with loc: ${v.toLoc}")
             // update context with variables
             ctx.tyDefs.get(name).flatMap {
-              case TypeDef(Cls, _, _, RecordType(Nil), _, _, _, _, _, S(adtData)) => S(adtData)
+              case TypeDef(Cls, _, _, TopType, _, _, _, _, _, S(adtData)) => S(adtData)
               case _ => N
             }.fold {
               // `case x -> expr` catch all with a new variable in the context
