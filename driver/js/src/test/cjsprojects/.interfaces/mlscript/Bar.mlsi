@@ -1,0 +1,15 @@
+import "../ts/Foo.mlsi"
+declare module Bar() {
+  class Bar() extends Foo {
+    fun bar: "bar"
+    fun foo: () -> Str
+  }
+  let bf: Bar
+  unit
+}
+//| ╔══[ERROR] Member `foo` is declared in parent but not implemented in `Bar`
+//| ║  l.3: 	class Bar() extends Foo {
+//| ║       	      ^^^
+//| ╟── Declared here:
+//| ║  l.2: 	  fun foo(): Str
+//| ╙──     	      ^^^^^^^^^^

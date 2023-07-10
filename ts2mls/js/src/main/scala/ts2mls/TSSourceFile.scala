@@ -43,7 +43,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace, topName: String)(implici
     }
   })
 
-  // handle parents & export
+  // parse export
   TypeScript.forEachChild(sf, (node: js.Dynamic) => {
     val nodeObject = TSNodeObject(node)
     if (nodeObject.isExportDeclaration) {
@@ -52,8 +52,21 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace, topName: String)(implici
       else // ES modules
         parseExportDeclaration(nodeObject.exportClause.elements)
     }
-    else if (nodeObject.isExportAssignment) // commonJS
-      global.renameExport(nodeObject.idExpression.escapedText, topName)
+    else if (nodeObject.isExportAssignment) { // commonJS
+      val name = nodeObject.idExpression.escapedText
+      if (name === "undefined") { // For exports = { ... }. In this case we still need the top-level module
+        val props = nodeObject.nodeExpression.properties
+        props.foreach(node => {
+          val name = node.initID.escapedText
+          if (name === "undefined")
+            addNodeIntoNamespace(node.initializer, node.name.escapedText, true)(global)
+          else if (node.name.escapedText === name)
+            global.`export`(name)
+          else global.put(node.name.escapedText, TSRenamedType(node.name.escapedText, TSReferenceType(name)), true, false)
+        })
+      }
+      else global.renameExport(name, topName) // Export the member directly
+    }
     else if (nodeObject.exportedAsNamespace) // UMD
       umdModuleName = Some(nodeObject.symbol.escapedName)
   })

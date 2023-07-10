@@ -1,0 +1,11 @@
+import "../ts/MyClass.mlsi"
+declare module NewTSClass() {
+  class Bar()
+  error
+}
+//| ╔══[ERROR] Unsupported parent specification
+//| ║  l.3: 	class Bar() extends MyClass.FooClass
+//| ╙──     	                    ^^^^^^^^^^^^^^^^
+//| ╔══[ERROR] Type `Bar` does not contain member `foo`
+//| ║  l.4: 	Bar().foo()
+//| ╙──     	     ^^^^

@@ -1,0 +1,4 @@
+import "../ts/MyClass.ts"
+
+class Bar() extends MyClass.FooClass
+Bar().foo()

@@ -1,0 +1,9 @@
+import "../ts/Foo.ts"
+
+class Bar() extends Foo {
+  fun bar = "bar"
+}
+
+let bf = Bar()
+console.log(bf.bar)
+console.log(bf.foo())

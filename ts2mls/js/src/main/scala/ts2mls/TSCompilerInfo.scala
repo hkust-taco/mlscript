@@ -212,6 +212,7 @@ class TSNodeObject(node: js.Dynamic)(implicit checker: TSTypeChecker) extends TS
   lazy val heritageClauses = TSNodeArray(node.heritageClauses)
   lazy val initializer = TSNodeObject(node.initializer)
   lazy val initToken = TSTokenObject(node.initializer) // for object literal, the initializer is a token.
+  lazy val initID = TSIdentifierObject(node.initializer)
   lazy val modifier =
     if (modifiers.isUndefined) Public
     else modifiers.foldLeft[TSAccessModifier](Public)(
@@ -250,6 +251,7 @@ class TSNodeObject(node: js.Dynamic)(implicit checker: TSTypeChecker) extends TS
   lazy val moduleReference = TSNodeObject(node.moduleReference)
   lazy val expression = TSTokenObject(node.expression)
   lazy val idExpression = TSIdentifierObject(node.expression)
+  lazy val nodeExpression = TSNodeObject(node.expression)
   lazy val isVarParam = !js.isUndefined(node.dotDotDotToken)
   lazy val hasmoduleReference = !js.isUndefined(node.moduleReference)
   lazy val moduleAugmentation =

@@ -1,0 +1,6 @@
+export declare module Baz {
+  export declare class Baz {
+    constructor(t: Num)
+    fun baz(): unit
+  }
+}

@@ -1,0 +1,6 @@
+import "../ts/Baz.ts"
+
+class BazBaz() extends Baz.Baz(2)
+
+let bazbaz = BazBaz()
+bazbaz.baz()

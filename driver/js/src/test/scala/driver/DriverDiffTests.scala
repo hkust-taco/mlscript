@@ -133,12 +133,15 @@ object DriverDiffTests {
     esEntry("MyPartialOrder", Some("./tsconfig.json"), expectError = true, expectTypeError = true), // TODO: type traits in modules
     esEntry("Builtin"),
     esEntry("TyperDebug"),
-    esEntry("Child", expectTypeError = true)
+    esEntry("Child", expectTypeError = true),
+    esEntry("NewTSClass", Some("./tsconfig.json"), expectTypeError = true)
   )
 
   private val cjsCases = List(
     cjsEntry("Lodash", Some("./tsconfig.json"), expectTypeError = true), // TODO: module member selection/trait types
     cjsEntry("CJS1"),
+    cjsEntry("Bar", Some("./tsconfig.json"), expectTypeError = true),
+    cjsEntry("BazBaz", Some("./tsconfig.json"), expectTypeError = true),
   )
 
   private val cp = g.require("child_process")
