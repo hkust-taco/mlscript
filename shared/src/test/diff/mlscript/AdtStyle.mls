@@ -132,4 +132,38 @@ match Cons(false, Nil) with Cons(true, Nil) -> 0
 match Cons(0, Nil) with Cons(1, Nil) -> 0
 //│ res: 0
 
+:e
+match Cons(true, Nil) with Cons(1, Nil) -> 0
+//│ ╔══[ERROR] Type mismatch in adt match expression:
+//│ ║  l.136: 	match Cons(true, Nil) with Cons(1, Nil) -> 0
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── reference of type `true` is not an instance of type `int`
+//│ ║  l.136: 	match Cons(true, Nil) with Cons(1, Nil) -> 0
+//│ ║         	           ^^^^
+//│ ╟── Note: constraint arises from literal pattern:
+//│ ║  l.136: 	match Cons(true, Nil) with Cons(1, Nil) -> 0
+//│ ╙──       	                                ^
+//│ res: 0
+
+fun x -> 
+  match x with Cons(Left a, Nil) -> a
+//│ res: List[Either['a, ?]] -> 'a
+
+:e
+res(Cons(true, Nil))
+// match Cons(true, Nil) with Cons(Left a, Nil) -> a
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.153: 	res(Cons(true, Nil))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ╟── reference of type `true` is not an instance of type `Either`
+//│ ║  l.153: 	res(Cons(true, Nil))
+//│ ║         	         ^^^^
+//│ ╟── Note: constraint arises from pattern:
+//│ ║  l.149: 	  match x with Cons(Left a, Nil) -> a
+//│ ║         	                    ^^^^^^
+//│ ╟── Note: class type parameter A is defined at:
+//│ ║  l.13: 	datatype List[A] = Cons(A, List[A]) || Nil
+//│ ╙──      	              ^
+//│ res: error
+
 

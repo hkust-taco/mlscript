@@ -1091,7 +1091,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
                 case StrLit(_) => StrType
                 case UnitLit(_) => UnitType
               }
-              con(expected, litTy, expected)
+              con(expected, litTy.withProv(tp(pat.toLoc, "literal pattern")), expected)
               ()
             case Bind(t, v@Var(name)) =>
               nestCtx += name -> VarSymbol(expected, v)
