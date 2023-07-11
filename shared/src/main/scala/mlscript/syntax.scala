@@ -12,7 +12,7 @@ final case class Def(rec: Bool, nme: Var, rhs: Term \/ PolyType, isByname: Bool)
   val body: Located = rhs.fold(identity, identity)
 }
 
-final case class AdtInfo(ctorName: TypeName, paramPos: Ls[Int])
+final case class AdtInfo(ctorName: TypeName)
 
 final case class TypeDef(
   kind: TypeDefKind,
@@ -22,9 +22,8 @@ final case class TypeDef(
   mthDecls: List[MethodDef[Right[Term, Type]]],
   mthDefs: List[MethodDef[Left[Term, Type]]],
   positionals: Ls[Var],
-) extends Decl {
-  var adtInfo: Opt[AdtInfo] = N
-}
+  adtInfo: Opt[AdtInfo],
+) extends Decl
 
 /**
   * Method type can be a definition or a declaration based

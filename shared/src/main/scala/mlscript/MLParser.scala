@@ -216,9 +216,9 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     P((tyKind ~/ tyName ~ tyParams).flatMap {
       case (k @ (Cls | Trt), id, ts) => (":" ~ ty).? ~ (mthDecl(id) | mthDef(id)).rep.map(_.toList) map {
         case (bod, ms) => TypeDef(k, id, ts, bod.getOrElse(Top), 
-          ms.collect { case R(md) => md }, ms.collect{ case L(md) => md }, Nil)
+          ms.collect { case R(md) => md }, ms.collect{ case L(md) => md }, Nil, N)
       }
-      case (k @ Als, id, ts) => "=" ~ ty map (bod => TypeDef(k, id, ts, bod, Nil, Nil, Nil))
+      case (k @ Als, id, ts) => "=" ~ ty map (bod => TypeDef(k, id, ts, bod, Nil, Nil, Nil, N))
       case (k @ Nms, _, _) => throw new NotImplementedError("Namespaces are not supported yet.")
     })
   def tyParams[p: P]: P[Ls[TypeName]] =
@@ -319,38 +319,48 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   /** data constructor declaration
     * type 'a, 'b tup = [Tup of 'a * 'b]
     */
-  def adtCtorDecl[p: P]: P[TypeDef] =
-    P((ctorName ~ tyParams ~ parTy.?).map {
-      case (id, params, S(body: Tuple)) =>
+  def adtCtorDecl[p: P](alsName: TypeName, tparams: List[TypeName]): P[TypeDef] = {
+    val parent = tparams match {
+      case Nil => alsName
+      case _ :: _ => AppliedType(alsName, tparams)
+    }
+    P((ctorName ~ parTy.?).map {
+      case (id, S(body: Tuple)) =>
         val positionals = body.fields.zipWithIndex.map { case (_, i) => Var("_"+(i+1)) }
         val rcdBody = Record(positionals.zip(body.fields.map(_._2)))
-        TypeDef(Cls, id, params, rcdBody, Nil, Nil, positionals)
-      case (id, _, None) => TypeDef(Cls, id, Nil, Record(Ls.empty), Nil, Nil, Nil)
+        TypeDef(Cls, id, tparams, Inter(parent, rcdBody), Nil, Nil, positionals, S(AdtInfo(alsName)))
+      case (id, None) => TypeDef(Cls, id, tparams, parent, Nil, Nil, Nil, S(AdtInfo(alsName)))
       case t => throw new Exception(s"Unable to handle case $t")
     })
+  }
 
-  def adtDataCtor[p: P]: P[List[TypeDef]] = adtCtorDecl.rep(1, "||").map(_.toList)
+  def adtDataCtor[p: P](alsName: TypeName, tparams: List[TypeName]): P[List[TypeDef]] =
+    adtCtorDecl(alsName, tparams).rep(1, "||").map(_.toList)
 
   def adtTyDecl[p: P]: P[Ls[Statement]] =
-    P((kw("datatype") ~ ctorName ~ tyParams ~ "=" ~/ adtDataCtor).map {
+    P((kw("datatype") ~ ctorName ~ tyParams).flatMap { case (alsName, tparams) =>
+      "=" ~/ adtDataCtor(alsName, tparams).map { bodies =>
       // parsed data constructors create classes and helper functions
       // create an alias for the type itself
-      case (alsName, tparams, bodies) =>
         val paramSet = tparams.toSet
-        bodies.foreach(tyDef => {
-          val paramMapIndex = tyDef.tparams.filter(paramSet(_)).map(elem => tparams.zipWithIndex.filter(_._1 == elem).head._2)
-          tyDef.adtInfo = S(AdtInfo(alsName, paramMapIndex))
-        })
-        val aliasBody = bodies.foldLeft[Type](bodies.head.body) {
-          case (union, tdef) => Union(tdef.body, union)
-        }
-        val constructors = bodies.flatMap(cls => adtTyConstructors(cls, alsName, tparams))
-        val als = TypeDef(Als, alsName, tparams, aliasBody, Nil, Nil, Nil)
-        als.adtInfo = S(AdtInfo(alsName, Nil))
+        // val aliasBody = bodies.foldLeft[Type](bodies.head.body) {
+        //   case (union, tdef) => Union(tdef.body, union)
+        // }
+        val constructors = bodies.map(cls => adtTyConstructors(cls, alsName, tparams))
+        val als = TypeDef(Cls, alsName, tparams, Top, constructors.map {
+          case Def(_, nme, R(body), _) =>
+            val ctorParams = body.body match {
+              case Function(lhs, _) => lhs
+              case _: TypeName | _: AppliedType => Top
+              case _ => die
+            }
+            MethodDef(false, alsName, nme, Nil, R(ctorParams))
+          case Def(_, nme, L(body), _) => ???
+        }, Nil, Nil, S(AdtInfo(alsName)))
         // Don't add type definitions for the bodies
         // only use their constructors
         als :: bodies ::: constructors
-    })
+    }})
 
   // create a helper function for a class constructor
   //
@@ -362,25 +372,18 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   // * class right['b']
   // * constructor left(a): either['a, 'b]
   // * constructor right(b): either['a, 'b]
-  def adtTyConstructors(tyDef: TypeDef, alsName: TypeName, alsParams: Ls[TypeName]): Opt[Def] = {
-    val alsTy = (alsParams match {
-      case Nil => alsName
-      case params => AppliedType(alsName, params)
-    }).withLocOf(tyDef)
-    tyDef.kind match {
-      case Cls =>
-        tyDef.body match {
-          case Record(Nil) =>
-            val funAppTy = PolyType(alsParams.map(L.apply), alsTy)
-            val fun = Def(false, Var(tyDef.nme.name), R(funAppTy), true).withLocOf(tyDef.nme)
-            S(fun)
-          case Record(fields) =>
-            val funTy = PolyType(alsParams.map(L.apply), Function(Tuple(fields.map(N -> _._2)), alsTy))
-            val fun = Def(false, Var(tyDef.nme.name), R(funTy), true).withLocOf(tyDef.nme)
-            S(fun)
-          case _ => N
-        }
-      case _ => N
+  def adtTyConstructors(tyDef: TypeDef, alsName: TypeName, alsParams: Ls[TypeName]): Def = {
+    assert(tyDef.kind === Cls) 
+    tyDef.body match {
+      case _: TypeName | _: AppliedType =>
+        val funAppTy = PolyType(alsParams.map(L.apply), tyDef.body)
+        val fun = Def(false, Var(tyDef.nme.name), R(funAppTy), true).withLocOf(tyDef.nme)
+        fun
+      case Inter(alsTy, Record(fields)) =>
+        val funTy = PolyType(alsParams.map(L.apply), Function(Tuple(fields.map(N -> _._2)), alsTy.withLocOf(tyDef)))
+        val fun = Def(false, Var(tyDef.nme.name), R(funTy), true).withLocOf(tyDef.nme)
+        fun
+      case _ => die
     }
   }
 

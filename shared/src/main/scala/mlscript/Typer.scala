@@ -996,7 +996,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
               println(s"type pattern $v with loc: ${v.toLoc}")
               // update context with variables
               ctx.tyDefs.get(name).flatMap {
-                case TypeDef(Cls, _, _, TopType, _, _, _, _, _, S(adtData)) => S(adtData)
+                case TypeDef(Cls, _, _, _: TypeRef, _, _, _, _, _, S(adtData)) => S(adtData)
+                case TypeDef(Cls, _, _, _, _, _, _, _, _, S(adtData)) =>
+                  err(msg"Missing parameter list for pattern $name", v.toLoc)
+                  S(adtData)
                 case _ => N
               }.fold {
                 // `case x -> expr` catch all with a new variable in the context
@@ -1005,7 +1008,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
               } {
                 // `case End -> expr` or `case false -> expr` or `case [] -> expr`
                 // where case is a variant of an adt with no type arguments
-                case AdtInfo(alsName, _) =>
+                case AdtInfo(alsName) =>
                   // get adt from cache or initialize a new one with fresh vars
                   // this is so that all case expressions can share
                   // the same type variables for the adt
@@ -1043,9 +1046,18 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             case caseAdt@App(Var(ctorNme), patArgs: Tup) =>
               println(s"Typing case ($ctorNme)")
 
+              object BodyRecordType {
+                def unapply(ty: SimpleType): Opt[RecordType] = ty match {
+                  case ty: RecordType => S(ty)
+                  case ProvType(underlying) => unapply(underlying)
+                  case ComposedType(false, lhs, rhs) => unapply(lhs) orElse unapply(rhs)
+                  case _ => N
+                }
+              }
+
               // find the alias type returned by constructor
-              val (body, tparams, AdtInfo(alsName, paramPos)) = ctx.tyDefs.get(ctorNme).flatMap {
-                case TypeDef(Cls, _, tparamsargs, body: RecordType, _, _, _, _, _, S(adtInfo)) => S(body, tparamsargs, adtInfo)
+              val (body, tparams, AdtInfo(alsName)) = ctx.tyDefs.get(ctorNme).flatMap {
+                case TypeDef(Cls, _, tparamsargs, BodyRecordType(body), _, _, _, _, _, S(adtInfo)) => S(body, tparamsargs, adtInfo)
                 case _ => N
               }.getOrElse(lastWords(s"$ctorNme cannot be pattern matched"))
 
@@ -1062,12 +1074,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
               con(expected, newAlsTy, expected)
               println(s"adt_ty $newAlsTy")
 
-              val mapping: Map[ST, ST] = tparams.zip(paramPos).map {
-                case ((_, tvar), i) => (tvar, newAlsTy.targs(i))
-              }.toMap
+              val mapping: Map[ST, ST] = tparams.map(_._2).zip(newTargs).toMap
               val argFields = subst(body, mapping) match {
                 case RecordType(fields) => fields.map(_._2.ub)
-                case ty => ty :: Nil
+                case _ => die
               }
               val patArgFields = patArgs.fields.map(_._2.value)
 

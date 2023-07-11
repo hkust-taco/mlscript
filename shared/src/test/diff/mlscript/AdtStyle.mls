@@ -1,17 +1,21 @@
 :NoJS
 
-datatype Either[A, B] = Left[A](A,) || Right[B](B,)
-//│ Defined type alias Either[+A, +B]
-//│ Defined class Left[+A]
-//│ Defined class Right[+B]
+datatype Either[A, B] = Left(A,) || Right(B,)
+//│ Defined class Either[+A, +B]
+//│ Declared Either.Left: Either['A, ?] -> ('A,)
+//│ Declared Either.Right: Either[?, 'B] -> ('B,)
+//│ Defined class Left[+A, +B]
+//│ Defined class Right[+A, +B]
 //│ Left: 'a -> Either['a, nothing]
 //│ Right: 'a -> Either[nothing, 'a]
 
 
-datatype List[A] = Cons[A](A, List[A]) || Nil[A]
-//│ Defined type alias List[+A]
+datatype List[A] = Cons(A, List[A]) || Nil
+//│ Defined class List[+A]
+//│ Declared List.Cons: List['A] -> ('A, List['A],)
+//│ Declared List.Nil: List[?] -> anything
 //│ Defined class Cons[+A]
-//│ Defined class Nil
+//│ Defined class Nil[+A]
 //│ Cons: ('a, List['a],) -> List['a]
 //│ Nil: List[nothing]
 
@@ -20,15 +24,23 @@ datatype HeapVar = HeapInt(int,) || HeapV(Heap,)
 datatype Exp = EInt(int,) || Var(string,) || Plus(Exp, Exp) || Times(Exp, Exp)
 datatype Stmt = Skip || Assign(string, Exp)
 //│ Defined type alias Heap
-//│ Defined type alias HeapVar
+//│ Defined class HeapVar
+//│ Declared HeapVar.HeapInt: HeapVar -> (int,)
+//│ Declared HeapVar.HeapV: HeapVar -> (Heap,)
 //│ Defined class HeapInt
 //│ Defined class HeapV
-//│ Defined type alias Exp
+//│ Defined class Exp
+//│ Declared Exp.EInt: Exp -> (int,)
+//│ Declared Exp.Var: Exp -> (string,)
+//│ Declared Exp.Plus: Exp -> (Exp, Exp,)
+//│ Declared Exp.Times: Exp -> (Exp, Exp,)
 //│ Defined class EInt
 //│ Defined class Var
 //│ Defined class Plus
 //│ Defined class Times
-//│ Defined type alias Stmt
+//│ Defined class Stmt
+//│ Declared Stmt.Skip: Stmt -> anything
+//│ Declared Stmt.Assign: Stmt -> (string, Exp,)
 //│ Defined class Skip
 //│ Defined class Assign
 //│ HeapInt: int -> HeapVar
@@ -40,13 +52,15 @@ datatype Stmt = Skip || Assign(string, Exp)
 //│ Skip: Stmt
 //│ Assign: (string, Exp,) -> Stmt
 
-datatype Poly[A] = PolyList[A](List[A -> A],)
-//│ Defined type alias Poly[=A]
+datatype Poly[A] = PolyList(List[A -> A],)
+//│ Defined class Poly[=A]
+//│ Declared Poly.PolyList: Poly['A] -> (List['A -> 'A],)
 //│ Defined class PolyList[=A]
 //│ PolyList: List['a -> 'a] -> Poly['a]
 
 datatype FCPoly = FCPolyList(List[forall 'a. 'a -> 'a],)
-//│ Defined type alias FCPoly
+//│ Defined class FCPoly
+//│ Declared FCPoly.FCPolyList: FCPoly -> (List[forall 'a. 'a -> 'a],)
 //│ Defined class FCPolyList
 //│ FCPolyList: List[forall 'a. 'a -> 'a] -> FCPoly
 
