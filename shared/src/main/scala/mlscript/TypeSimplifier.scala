@@ -738,11 +738,6 @@ trait TypeSimplifier { self: Typer =>
       !varSubst.contains(v) && v.isRecursive_$(omitTopLevel = false)))
     println(s"[rec] ${recVars}")
     
-    // val cyclicVars = MutSet.from(allVars.iterator.filter(v =>
-    //   // !varSubst.contains(v) && 
-    //   v.isRecursive_$(omitTopLevel = false)))
-    // println(s"[cyc] ${cyclicVars}")
-    
     val renewals = MutMap.empty[TypeVariable, TypeVariable]
     
     val semp = Set.empty[TV]

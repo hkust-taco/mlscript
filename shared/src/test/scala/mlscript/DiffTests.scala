@@ -106,6 +106,8 @@ class DiffTests
     
     val exitMarker = "=" * 100
     
+    var occursCheck = false
+    
     val fileContents = os.read(file)
     val allLines = fileContents.splitSane('\n').toList
     val strw = new java.io.StringWriter
@@ -120,6 +122,7 @@ class DiffTests
     def outputSourceCode(code: SourceCode) = code.lines.foreach{line => out.println(outputMarker + line.toString())}
     val allStatements = mutable.Buffer.empty[DesugaredStatement]
     val typer = new Typer(dbg = false, verbose = false, explainErrors = false) {
+      override def recordTypeVars = occursCheck
       override def funkyTuples = file.ext =:= "fun"
       // override def emitDbg(str: String): Unit = if (stdout) System.out.println(str) else output(str)
       override def emitDbg(str: String): Unit = output(str)
@@ -174,7 +177,6 @@ class DiffTests
     var distributeForalls = true
     // var distributeForalls = false
     var noCycleCheck = false
-    var occursCheck = false
     var noRecursiveTypes = false
     var noConstrainedTypes = true
     // var noConstrainedTypes = false
@@ -721,14 +723,11 @@ class DiffTests
               
               val recs = tvs.filter(_.isRecursive_$(omitTopLevel = true)(ctx))
               
-              // recs.distinct.foreach { tv =>
               recs.find(_.prov.loco.isDefined).orElse(recs.headOption).foreach { tv =>
                 import Message._
-                // output(tv.toString())
                 if (mode.dbg) output("REC: " + tv + tv.showBounds)
                 report(ErrorReport(
                   msg"Inferred recursive type: ${
-                    // typer.expandType(tv)(ctx).show
                     getType(tv, removePolarVars = false).show
                   }" -> tv.prov.loco :: Nil) :: Nil)
               }

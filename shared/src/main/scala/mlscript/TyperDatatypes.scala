@@ -9,6 +9,7 @@ import mlscript.utils._, shorthands._
 import mlscript.Message._
 
 abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
+  def recordTypeVars: Bool = false
   
   type TN = TypeName
   
@@ -567,12 +568,9 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   )(val prov: TypeProvenance) extends SimpleType with TypeVarOrRigidVar with Ordered[TypeVariable] with Factorizable {
     require(level <= MaxLevel)
     
-    createdTypeVars += this
+    if (recordTypeVars) createdTypeVars += this
     
     var assignedTo: Opt[ST] = N
-    
-    if (toString().startsWith("f31_34")) ???
-    println(s"?! ${this}")
     
     // * Bounds shoudl always be disregarded when `equatedTo` is defined, as they are then irrelevant:
     def lowerBounds: List[SimpleType] = { require(assignedTo.isEmpty); _lowerBounds }
