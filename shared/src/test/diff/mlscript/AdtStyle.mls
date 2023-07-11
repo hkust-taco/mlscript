@@ -97,7 +97,7 @@ foo 0
 foo x = match x with
   | (0 : int) -> 0
   | (1 : int) -> 1
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Cannot handle pattern '(' 0 : int ')'
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Cannot handle pattern 0 : int
 
 foo 0
 //│ res: 0 | 1
@@ -106,7 +106,7 @@ foo 0
 :e
 foo x = match x with
   | (id 0) -> 0
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Cannot handle pattern '(' id (0,) ')'
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: id cannot be pattern matched
 
 
 match Cons(0, Nil) with Cons(0, Nil) -> 0

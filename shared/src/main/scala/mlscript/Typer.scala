@@ -1083,6 +1083,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
               }
               con(expected, litTy, expected)
               ()
+            case Bind(t, v@Var(name)) =>
+              nestCtx += name -> VarSymbol(expected, v)
+              handlePat(t, expected)
+            case Bra(false, pat) =>
+              handlePat(pat, expected)
             // case Asc(trm, ty) =>
             //   con(expected, typeType(ty), expected)
             //   ()

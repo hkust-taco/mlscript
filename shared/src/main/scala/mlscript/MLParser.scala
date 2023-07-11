@@ -14,7 +14,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     "def", "class", "trait", "type", "method", "mut",
     "let", "rec", "in", "fun", "with", "undefined", "null",
     "if", "then", "else", "match", "case", "of", "forall",
-    "datatype", "match")
+    "datatype", "match", "as")
   def kw[p: P](s: String) = s ~~ !(letter | digit | "_" | "'")
   
   // NOTE: due to bug in fastparse, the parameter should be by-name!
@@ -47,7 +47,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     case (pat, S(bod)) => LetS(false, pat, bod)
   }
 
-  def term[p: P]: P[Term] = P(let | fun | ite | forall | withsAsc | _match | adtMatchWith)
+  def term[p: P]: P[Term] = P(let | fun | ite | forall | withsAscAs | _match | adtMatchWith)
   
   def forall[p: P]: P[Term] = P( (kw("forall") ~/ tyVar.rep ~ "." ~ term).map {
     case (vars, ty) => Forall(vars.toList, ty)
@@ -117,6 +117,10 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   
   def ite[p: P]: P[Term] = P( kw("if") ~/ term ~ kw("then") ~ term ~ kw("else") ~ term ).map(ite =>
     App(App(App(Var("if"), toParam(ite._1)), toParam(ite._2)), toParam(ite._3)))
+  
+  def withsAscAs[p: P]: P[Term] = P( withsAsc ~ (kw("as") ~/ term).rep ).map {
+    case (withs, ascs) => ascs.foldLeft(withs)(Bind)
+  }
   
   def withsAsc[p: P]: P[Term] = P( withs ~ (":" ~/ ty).rep ).map {
     case (withs, ascs) => ascs.foldLeft(withs)(Asc)
