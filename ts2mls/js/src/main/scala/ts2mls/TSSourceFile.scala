@@ -79,7 +79,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace, topName: String)(implici
     val fullname = TypeScript.resolveModuleName(localName, resolvedPath, config)
     val moduleName = TSPathResolver.basename(fullname)
     val varName = req.name.escapedText
-    if (req.hasmoduleReference) {
+    if (req.hasModuleReference) {
       val imp = TSFullImport(localName, varName)
       importList.add(fullname, imp)
       global.put(varName, TSRenamedType(varName, TSReferenceType(s"$moduleName")), false, false)
@@ -287,12 +287,18 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace, topName: String)(implici
       })
     })
 
-  private def addMember(mem: TSType, node: TSNodeObject, name: String, others: Map[String, TSMemberType])(implicit ns: TSNamespace): Map[String, TSMemberType] = mem match {
+  private def addMember(
+    mem: TSType,
+    node: TSNodeObject,
+    name: String,
+    mod: Option[TSAccessModifier],
+    others: Map[String, TSMemberType]
+  )(implicit ns: TSNamespace): Map[String, TSMemberType] = mem match {
     case func: TSFunctionType => {
-      if (!others.contains(name)) others ++ Map(name -> TSMemberType(func, node.modifier))
+      if (!others.contains(name)) others ++ Map(name -> TSMemberType(func, mod.getOrElse(node.modifier)))
       else { // TODO: handle functions' overloading
         val res = TSIgnoredOverload(func, name) // the implementation is always after declarations
-        others.removed(name) ++ Map(name -> TSMemberType(res, node.modifier))
+        others.removed(name) ++ Map(name -> TSMemberType(res, mod.getOrElse(node.modifier)))
       }
     }
     case _ => mem match {
@@ -300,21 +306,21 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace, topName: String)(implici
       case TSReferenceType(ref) if name === ref =>
         others ++ Map(name -> TSMemberType(
           markUnsupported(node),
-          node.modifier
+          mod.getOrElse(node.modifier)
         ))
-      case _ => others ++ Map(name -> TSMemberType(mem, node.modifier))
+      case _ => others ++ Map(name -> TSMemberType(mem, mod.getOrElse(node.modifier)))
     }
   }
 
   private def getClassMembersType(list: TSNodeArray, requireStatic: Boolean)(implicit ns: TSNamespace): Map[String, TSMemberType] =
     list.foldLeft(Map[String, TSMemberType]())((mp, p) => {
-      val name = p.symbol.escapedName
-
-      if (name =/= "__constructor" && p.isStatic == requireStatic) {
+      // The constructors have no name identifier.
+      if (!p.name.isUndefined && p.isStatic == requireStatic) {
+        val name = p.name.escapedText
         val mem =
           if (!p.isStatic) getMemberType(p)
           else parseMembers(name, p.initializer, true)
-        addMember(mem, p, name, mp)
+        addMember(mem, p, name, Option.when[TSAccessModifier](name.startsWith("#"))(Private), mp)
       }
       else mp
     })
@@ -330,7 +336,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace, topName: String)(implici
 
   private def getInterfacePropertiesType(list: TSNodeArray)(implicit ns: TSNamespace): Map[String, TSMemberType] =
     list.foldLeft(Map[String, TSMemberType]())((mp, p) =>
-      if (p.isCallSignature) mp else addMember(getMemberType(p), p, p.symbol.escapedName, mp))
+      if (p.isCallSignature) mp else addMember(getMemberType(p), p, p.symbol.escapedName, None, mp))
 
   private def getAnonymousPropertiesType(list: TSSymbolArray)(implicit ns: TSNamespace): Map[String, TSMemberType] =
     list.foldLeft(Map[String, TSMemberType]())((mp, p) =>

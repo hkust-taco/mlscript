@@ -114,7 +114,7 @@ object Converter {
   private def convertRecord(members: Map[String, TSMemberType], typeVars: List[TSTypeParameter], parents: List[TSType],
     statics: Map[String, TSMemberType], constructorList: List[TSType], anonymous: Boolean)(implicit indent: String) = {
     val allRecs = members.toList.map((m) => m._2.modifier match {
-      case Public if !m._1.contains("#") =>
+      case Public =>
         if (anonymous) s"${escapeIdent(m._1)}: ${convert(m._2)},"
         else m._2.base match {
           case _: TSFunctionType => s"${generateFunDeclaration(m._2.base, m._1, false)(indent + "  ")}\n"
