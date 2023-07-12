@@ -45,9 +45,6 @@ class Driver(options: DriverOptions) {
 
   import TSPathResolver.{normalize, isLocal, isMLScirpt, dirname}
 
-  private def expected =
-    ((Driver.totalErrors > 0) == options.expectError) && ((Driver.totalTypeErrors > 0) == options.expectTypeError)
-
   private def checkESModule(filename: String, from: String) =
     if (isMLScirpt(filename)) None
     else if (isLocal(filename)) // Local files: check tsconfig.json
@@ -67,8 +64,9 @@ class Driver(options: DriverOptions) {
       Some(find(fullname))
     }
 
-  // Return true if success
-  def execute: Boolean =
+  import DriverResult._
+
+  def execute: DriverResult =
     try {
       Driver.totalErrors = 0
       Driver.totalTypeErrors = 0
@@ -79,12 +77,16 @@ class Driver(options: DriverOptions) {
       implicit val stack = List[String]()
       initTyper
       compile(FileInfo(options.path, options.filename, options.interfaceDir), false)
-      expected
+      if (Driver.totalErrors > 0 && !options.expectError) Error
+      else if (Driver.totalErrors == 0 && options.expectError) ExpectError
+      else if (Driver.totalTypeErrors > 0 && !options.expectTypeError) TypeError
+      else if (Driver.totalErrors > 0 && !options.expectError) ExpectTypeError
+      else OK
     }
     catch {
       case err: Diagnostic => // We can not find a file to store the error message. Print on the screen
         report(err, printErr)
-        options.expectError
+        if (options.expectError) OK else Error
     }
 
   def genPackageJson(): Unit = {

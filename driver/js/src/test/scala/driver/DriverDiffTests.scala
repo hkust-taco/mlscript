@@ -18,9 +18,16 @@ class DriverDiffTests extends AnyFunSuite {
           DriverOptions(filename, workDir, outputDir, tsconfig, interfaceDir, cjs, expectTypeError, expectError)
         val driver = Driver(options)
         if (!outputDir.isEmpty()) driver.genPackageJson()
-        val success = driver.execute
+        val res = driver.execute
 
-        assert(success, s"failed when compiling $filename.")
+        import DriverResult._
+        res match {
+          case Error => fail(s"Compiling error(s) found in $filename.")
+          case TypeError => fail(s"Type error(s) found in $filename")
+          case ExpectError => fail(s"Expect compiling error(s) in $filename")
+          case ExpectTypeError => fail(s"Expect type error(s) in $filename")
+          case OK => ()
+        }
 
         if (!expectError) execution match {
           case Some((executionFile, outputFile)) =>

@@ -15,3 +15,8 @@ final case class DriverOptions(
   expectTypeError: Boolean, // Type errors are expected
   expectError: Boolean, // Other errors(e.g., code generation errors) are expected
 )
+
+object DriverResult extends Enumeration {
+  type DriverResult = Value
+  val OK, Error, TypeError, ExpectError, ExpectTypeError = Value
+}
