@@ -6,7 +6,7 @@ import js.DynamicImplicits._
 import js.JSConverters._
 
 object TSPathResolver {
-  private val np: js.Dynamic = g.require("path") // built-in node module
+  private val np: js.Dynamic = g.require("path") // Built-in node module
 
   def resolve(path: String): String = np.resolve(path).toString()
   def dirname(filename: String): String = np.dirname(filename).toString()

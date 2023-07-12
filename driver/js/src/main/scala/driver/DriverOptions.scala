@@ -11,7 +11,7 @@ final case class DriverOptions(
   outputDir: String,
   tsconfig: Option[String],
   interfaceDir: String,
-  commonJS: Boolean, // generate common js or es5
-  expectTypeError: Boolean, // ignore type errors for test
-  expectError: Boolean, // the test should raise errors
+  commonJS: Boolean, // Generate common js or es5
+  expectTypeError: Boolean, // Type errors are expected
+  expectError: Boolean, // Other errors(e.g., code generation errors) are expected
 )

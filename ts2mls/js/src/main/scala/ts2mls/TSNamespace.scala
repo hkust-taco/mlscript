@@ -10,8 +10,8 @@ class TSNamespace(name: String, parent: Option[TSNamespace], allowReservedTypes:
   private val members = HashMap[String, (TSType, Boolean)]()
   private val cjsExport = HashMap[String, String]()
 
-  // write down the order of members
-  // easier to check the output one by one
+  // Write down the order of members.
+  // Easier to check the output one by one.
   private val order = ListBuffer.empty[Either[String, String]]
 
   def isCommonJS = !cjsExport.isEmpty
@@ -22,9 +22,9 @@ class TSNamespace(name: String, parent: Option[TSNamespace], allowReservedTypes:
   }
 
   def derive(name: String, exported: Boolean): TSNamespace =
-    if (subSpace.contains(name)) subSpace(name)._1 // if the namespace has appeared in another file, just return it
+    if (subSpace.contains(name)) subSpace(name)._1 // If the namespace has appeared in another file, just return it
     else {
-      val sub = new TSNamespace(name, Some(this), allowReservedTypes) // not a top level module!
+      val sub = new TSNamespace(name, Some(this), allowReservedTypes) // Not a top level module!
       subSpace.put(name, (sub, exported))
       order += Left(name)
       sub
@@ -77,7 +77,7 @@ class TSNamespace(name: String, parent: Option[TSNamespace], allowReservedTypes:
 
   def get(name: String): TSType =
     if (members.contains(name)) members(name)._1
-    else parent.fold[TSType](TSReferenceType(name))(p => p.get(name)) // default in es5
+    else parent.fold[TSType](TSReferenceType(name))(p => p.get(name)) // Default in es5
 
   def get(names: List[String]): TSType = names match {
     case head :: Nil => get(head)
@@ -96,8 +96,8 @@ class TSNamespace(name: String, parent: Option[TSNamespace], allowReservedTypes:
     if (members.contains(name)) members(name)._1 match {
       case _: TSClassType => put(alias, TSRenamedType(alias, TSReferenceType(name)), true, false)
       case _: TSInterfaceType => put(alias, TSRenamedType(alias, TSReferenceType(name)), true, false)
-      case _: TSTypeAlias => None // type alias in ts would be erased.
-      case tp => put(alias, TSRenamedType(alias, tp), true, false) // variables & functions
+      case _: TSTypeAlias => None // Type alias in ts would be erased.
+      case tp => put(alias, TSRenamedType(alias, tp), true, false) // Variables & functions
     }
     else if (subSpace.contains(name)) put(alias, TSRenamedType(alias, TSReferenceType(name)), true, false)
 
@@ -136,10 +136,10 @@ class TSNamespace(name: String, parent: Option[TSNamespace], allowReservedTypes:
               ns.put(name, tp, true, true)
           }
         case _ =>
-          writer.writeln(s"$indent// WARNING: duplicate $name") // if merging is not supported, do nothing
+          writer.writeln(s"$indent// WARNING: duplicate $name") // If merging is not supported, do nothing
       }
       case _ =>
-        writer.writeln(s"$indent// WARNING: duplicate $name") // if merging is not supported, do nothing
+        writer.writeln(s"$indent// WARNING: duplicate $name") // If merging is not supported, do nothing
     }
     generateNS(name, writer, indent)
   }
@@ -157,7 +157,7 @@ class TSNamespace(name: String, parent: Option[TSNamespace], allowReservedTypes:
           val (mem, exp) = members(name)
           val realName = cjsExport.getOrElse(name, name)
           mem match {
-            case inter: TSIntersectionType => // overloaded functions
+            case inter: TSIntersectionType => // Overloaded functions
               writer.writeln(Converter.generateFunDeclaration(inter, realName, exp)(indent))
             case f: TSFunctionType =>
               writer.writeln(Converter.generateFunDeclaration(f, realName, exp)(indent))

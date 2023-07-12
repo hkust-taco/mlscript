@@ -17,7 +17,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace, topName: String)(implici
   def getUMDModule: Option[TSNamespace] =
     umdModuleName.fold[Option[TSNamespace]](Some(global))(name => Some(global.derive(name, false)))
 
-  // parse import
+  // Parse import
   TypeScript.forEachChild(sf, (node: js.Dynamic) => {
     val nodeObject = TSNodeObject(node)
     if (nodeObject.isRequire)
@@ -26,33 +26,33 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace, topName: String)(implici
       parseImportDeclaration(nodeObject.importClause, nodeObject.moduleSpecifier, false)
   })
 
-  // parse main body
+  // Parse main body
   TypeScript.forEachChild(sf, (node: js.Dynamic) => {
     val nodeObject = TSNodeObject(node)
     if (!nodeObject.isToken) {
-      if (!nodeObject.symbol.isUndefined) { // for functions
+      if (!nodeObject.symbol.isUndefined) { // For functions
         if (nodeObject.isFunctionLike)
           addFunctionIntoNamespace(nodeObject.symbol, nodeObject, nodeObject.symbol.escapedName)(global)
-        else // for classes/interfaces/namespace
+        else // For classes/interfaces/namespace
           addNodeIntoNamespace(nodeObject, nodeObject.symbol.escapedName, nodeObject.isExported)(global)
       }
-      else if (!nodeObject.declarationList.isUndefined) { // for variables
+      else if (!nodeObject.declarationList.isUndefined) { // For variables
         val decNode = nodeObject.declarationList.declaration
         addNodeIntoNamespace(decNode, decNode.symbol.escapedName, decNode.isExported)(global)
       }
     }
   })
 
-  // parse export
+  // Parse export
   TypeScript.forEachChild(sf, (node: js.Dynamic) => {
     val nodeObject = TSNodeObject(node)
     if (nodeObject.isExportDeclaration) {
-      if (!nodeObject.moduleSpecifier.isUndefined) // re-export
+      if (!nodeObject.moduleSpecifier.isUndefined) // Re-export
         parseImportDeclaration(nodeObject.exportClause, nodeObject.moduleSpecifier, true)
       else // ES modules
         parseExportDeclaration(nodeObject.exportClause.elements)
     }
-    else if (nodeObject.isExportAssignment) { // commonJS
+    else if (nodeObject.isExportAssignment) { // CommonJS
       val name = nodeObject.idExpression.escapedText
       if (name === "undefined") { // For exports = { ... }. In this case we still need the top-level module
         val props = nodeObject.nodeExpression.properties
@@ -100,7 +100,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace, topName: String)(implici
   }
 
   private def parseImportDeclaration(clause: TSNodeObject, moduleSpecifier: TSTokenObject, exported: Boolean): Unit = {
-    // ignore `import "filename.ts"`
+    // Ignore `import "filename.ts"`
     if (!clause.isUndefined) {
       val bindings = clause.namedBindings
       val importName = moduleSpecifier.text
@@ -114,12 +114,12 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace, topName: String)(implici
               (ele.propertyName.escapedText, Some(ele.symbol.escapedName))
           )
           val imp = TSSingleImport(importName, list)
-          if (exported) imp.createAlias.foreach(re => reExportList += re) // re-export
+          if (exported) imp.createAlias.foreach(re => reExportList += re) // Re-export
           importList.add(fullPath, imp)
         }
         else if (!node.name.isUndefined) {
           val imp = TSFullImport(importName, node.name.escapedText)
-          if (exported) imp.createAlias.foreach(re => reExportList += re) // re-export
+          if (exported) imp.createAlias.foreach(re => reExportList += re) // Re-export
           importList.add(fullPath, imp)
         }
 
@@ -135,13 +135,13 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace, topName: String)(implici
     })
 
   private def getSymbolFullname(sym: TSSymbolObject)(implicit ns: TSNamespace): String = {
-    def simplify(symName: String, nsName: String): String = // remove unnecessary namespaces prefixes
+    def simplify(symName: String, nsName: String): String = // Remove unnecessary namespaces prefixes
       if (symName.startsWith(nsName + ".")) symName.substring(nsName.length() + 1)
       else if (nsName.lastIndexOf('.') > -1) simplify(symName, nsName.substring(0, nsName.lastIndexOf('.')))
       else symName
-    if (!sym.parent.isUndefined && sym.parent.declaration.isSourceFile) // imported from another file
+    if (!sym.parent.isUndefined && sym.parent.declaration.isSourceFile) // Imported from another file
       importList.resolveTypeAlias(sym.parent.declaration.resolvedPath, sym.escapedName)
-    else if (!sym.parent.isUndefined && sym.parent.isMerged) { // merged with other declarations
+    else if (!sym.parent.isUndefined && sym.parent.isMerged) { // Merged with other declarations
       def findDecFile(node: TSNodeObject): String =
         if (node.parent.isUndefined) ""
         else if (node.parent.isSourceFile) {
@@ -161,13 +161,13 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace, topName: String)(implici
           val res = findDecFile(dec)
           Option.when((res === resolvedPath) || importList.contains(res))(res)
       })
-      filename.fold(sym.escapedName)(filename => // not found: this file is referenced by `///`. directly use the name is safe
-        if (filename === resolvedPath) // in the same file
+      filename.fold(sym.escapedName)(filename => // Not found: this file is referenced by `///`. directly use the name is safe
+        if (filename === resolvedPath) // In the same file
           simplify(s"${getSymbolFullname(sym.parent)}.${sym.escapedName}", ns.toString())
-        else importList.resolveTypeAlias(filename, sym.escapedName) // in an imported file
+        else importList.resolveTypeAlias(filename, sym.escapedName) // In an imported file
       )
     }
-    else if (sym.parent.isUndefined) { // already top-level symbol
+    else if (sym.parent.isUndefined) { // Already top-level symbol
       val name = sym.escapedName
       if (name.contains("\"")) TSPathResolver.basename(name.substring(1, name.length() - 1))
       else name
@@ -198,7 +198,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace, topName: String)(implici
     else if (obj.isObject)
       if (obj.isAnonymous) {
         val props = getAnonymousPropertiesType(obj.properties)
-        // upper case field names are not supported in records in mlscript so far
+        // Upper case field names are not supported in records in mlscript so far
         if (!props.exists{ case (name, _) if (!name.isEmpty()) => Character.isUpperCase(name(0)); case _ => false})
           TSInterfaceType("", props, List(), List(), None)
         else TSNoInfoUnsupported
@@ -208,7 +208,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace, topName: String)(implici
     else if (obj.isConditionalType || obj.isIndexType || obj.isIndexedAccessType) TSNoInfoUnsupported
     else TSPrimitiveType(obj.intrinsicName)
 
-  // the function `getMemberType` can't process function/tuple type alias correctly
+  // The function `getMemberType` can't process function/tuple type alias correctly
   private def getTypeAlias(tn: TSNodeObject)(implicit ns: TSNamespace): TSType =
     if (tn.isFunctionLike)
       getFunctionType(tn, true)
@@ -218,23 +218,23 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace, topName: String)(implici
       case t => t
     }
 
-  // parse string/numeric literal types. we need to add quotes if it is a string literal
+  // Parse string/numeric literal types. We need to add quotes if it is a string literal
   private def getLiteralType(tp: TSNodeObject)(implicit ns: TSNamespace) =
     TSLiteralType(tp.literal.text, tp.literal.isStringLiteral)
 
-  // parse object literal types
+  // Parse object literal types
   private def getObjectLiteralMembers(props: TSNodeArray)(implicit ns: TSNamespace) =
     props.foldLeft(Map[String, TSMemberType]())((mp, p) => {
       mp ++ Map(p.name.escapedText -> TSMemberType(TSLiteralType(p.initToken.text, p.initToken.isStringLiteral)))
     })
 
-  // get the type of variables in classes/named interfaces/anonymous interfaces
+  // Get the type of variables in classes/named interfaces/anonymous interfaces
   private def getMemberType(node: TSNodeObject)(implicit ns: TSNamespace): TSType =
     if (node.isIndexSignature || node.isConstructSignature)
       markUnsupported(node)
     else {
       val res =
-        if (node.isFunctionLike) getFunctionType(node, false) // erase name to avoid name clash when overriding methods in ts
+        if (node.isFunctionLike) getFunctionType(node, false) // Erase name to avoid name clash when overriding methods in ts
         else if (node.`type`.isUndefined) getObjectType(node.typeAtLocation)
         else if (node.`type`.isLiteralTypeNode) getLiteralType(node.`type`)
         else getObjectType(node.`type`.typeNode)
@@ -256,12 +256,12 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace, topName: String)(implici
     }
 
     val pList = node.parameters.foldLeft(List[TSParameterType]())((lst, p) => {
-      // erase name to avoid name clash when overriding methods in ts
+      // Erase name to avoid name clash when overriding methods in ts
       val name = if (keepNames) p.symbol.escapedName else s"args${lst.length}"
-      // in typescript, you can use `this` to explicitly specifies the callee
-      // but it never appears in the final javascript file
+      // In typescript, you can use `this` to explicitly specifies the callee.
+      // But it never appears in the final javascript file
       if (p.symbol.escapedName === "this") lst
-      else if (p.isOptionalParameter) // TODO: support optinal and default value soon
+      else if (p.isOptionalParameter) // TODO: support optional and default value soon
         lst :+ TSParameterType(name, TSUnionType(getObjectType(p.symbolType), TSPrimitiveType("undefined")))
       else lst :+ TSParameterType(name, eraseVarParam(getObjectType(p.symbolType), p.isVarParam))
     })
@@ -297,12 +297,12 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace, topName: String)(implici
     case func: TSFunctionType => {
       if (!others.contains(name)) others ++ Map(name -> TSMemberType(func, mod.getOrElse(node.modifier)))
       else { // TODO: handle functions' overloading
-        val res = TSIgnoredOverload(func, name) // the implementation is always after declarations
+        val res = TSIgnoredOverload(func, name) // The implementation is always after declarations
         others.removed(name) ++ Map(name -> TSMemberType(res, mod.getOrElse(node.modifier)))
       }
     }
     case _ => mem match {
-      // if the member's name is the same as the type name, we need to mark it unsupported
+      // If the member's name is the same as the type name, we need to mark it unsupported
       case TSReferenceType(ref) if name === ref =>
         others ++ Map(name -> TSMemberType(
           markUnsupported(node),
@@ -343,7 +343,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace, topName: String)(implici
       mp ++ Map(p.escapedName -> TSMemberType(if (p.`type`.isUndefined) getMemberType(p.declaration) else getObjectType(p.`type`))))
 
   private def parseMembers(name: String, node: TSNodeObject, isClass: Boolean)(implicit ns: TSNamespace): TSType = {
-    val res = // do not handle parents here. we have not had enough information so far.
+    val res = // Do not handle parents here. we have not had enough information so far.
       if (isClass)
         TSClassType(name, getClassMembersType(node.members, false), getClassMembersType(node.members, true),
           getTypeParameters(node), getHeritageList(node), getConstructorList(node.members))
@@ -376,10 +376,10 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace, topName: String)(implici
       if (fun.unsupported) ns.put(name, markUnsupported(node), node.isExported, false)
       else if (!ns.containsMember(name, false)) ns.put(name, fun, node.isExported, false)
       else
-        ns.put(name, TSIgnoredOverload(fun, name), node.isExported || ns.exported(name), true) // the implementation is always after declarations
+        ns.put(name, TSIgnoredOverload(fun, name), node.isExported || ns.exported(name), true) // The implementation is always after declarations
     })
 
-  // overload functions in a sub-namespace need to provide an overload array
+  // Overload functions in a sub-namespace need to provide an overload array
   // because the namespace merely exports symbols rather than node objects themselves
   private def addNodeIntoNamespace(node: TSNodeObject, name: String, exported: Boolean)(implicit ns: TSNamespace) =
     if (node.isClassDeclaration)

@@ -5,11 +5,11 @@ import ts2mls.{TypeScript, TSImport}
 import ts2mls.TSPathResolver
 
 final case class FileInfo(
-  workDir: String, // work directory (related to compiler path)
-  localFilename: String, // filename (related to work dir, or in node_modules)
-  interfaceDir: String, // .mlsi file directory (related to output dir)
-  parent: Option[String] = None, // file that imports this (related to work dir)
-  nodeModulesNested: Boolean = false // if it is a local file in node_modules
+  workDir: String, // Work directory (related to compiler path)
+  localFilename: String, // Filename (related to work dir, or in node_modules)
+  interfaceDir: String, // `.mlsi` file directory (related to output dir)
+  parent: Option[String] = None, // File that imports this (related to work dir)
+  nodeModulesNested: Boolean = false // If it is a local file in node_modules
 ) {
   import TSPathResolver.{normalize, isLocal, dirname, basename, extname}
 
@@ -19,10 +19,10 @@ final case class FileInfo(
 
   val isNodeModule: Boolean = nodeModulesNested || relatedPath.isEmpty
 
-  // module name in ts/mls
+  // Module name in ts/mls
   val moduleName = basename(localFilename)
 
-  // full filename (related to compiler path, or module name in node_modules)
+  // Full filename (related to compiler path, or module name in node_modules)
   lazy val filename: String =
     if (!isNodeModule) normalize(s"./$workDir/$localFilename")
     else if (nodeModulesNested) localFilename
@@ -34,7 +34,7 @@ final case class FileInfo(
         val rel = normalize(TSPathResolver.relative(dirname(localFilename), file.localFilename))
         if (isLocal(rel)) rel else s"./$rel"
       }
-      else if (file.nodeModulesNested) { // node_modules, but relatoive path
+      else if (file.nodeModulesNested) { // `node_modules`, but relative path
         val p = dirname(TSImport.createInterfaceForNode(resolve))
         val rel = normalize(TSPathResolver.relative(p, file.localFilename))
         if (isLocal(rel)) rel else s"./$rel"
@@ -57,7 +57,7 @@ final case class FileInfo(
     else if (nodeModulesNested) TypeScript.resolveModuleName(s"./$moduleName", parent.getOrElse(""), config)
     else TSPathResolver.resolve(filename)
 
-  def interfaceFilename(implicit config: js.Dynamic): String = // interface filename (related to work directory)
+  def interfaceFilename(implicit config: js.Dynamic): String = // Interface filename (related to work directory)
     relatedPath.fold(
       s"$interfaceDir/${dirname(TSImport.createInterfaceForNode(resolve))}/${moduleName}.mlsi"
     )(path => s"${normalize(s"$interfaceDir/$path/$moduleName.mlsi")}")

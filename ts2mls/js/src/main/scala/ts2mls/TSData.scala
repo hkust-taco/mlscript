@@ -8,7 +8,7 @@ abstract class TSAny(v: js.Dynamic) {
   val isUndefined: Boolean = js.isUndefined(v)
 }
 
-// array for information object in tsc
+// Array for information object in tsc
 abstract class TSArray[T <: TSAny](arr: js.Dynamic) extends TSAny(arr) {
   def get(index: Int): T = ???
   lazy val length = arr.length

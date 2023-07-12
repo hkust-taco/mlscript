@@ -60,10 +60,10 @@ object TypeScript {
   val syntaxKindExport = ts.SyntaxKind.ExportKeyword
   val objectFlagsAnonymous = ts.ObjectFlags.Anonymous
   val objectFlagsMapped = ts.ObjectFlags.Mapped
-  val symbolFlagsOptional = ts.SymbolFlags.Optional // this flag is only for checking optional members of interfaces
-  val typeFlagsConditional = ts.TypeFlags.Conditional // T extends U ? X : Y
-  val typeFlagsIndex = ts.TypeFlags.Index // keyof T
-  val typeFlagsIndexedAccess = ts.TypeFlags.IndexedAccess // T[K]
+  val symbolFlagsOptional = ts.SymbolFlags.Optional // This flag is only for checking optional members of interfaces
+  val typeFlagsConditional = ts.TypeFlags.Conditional // `T extends U ? X : Y`
+  val typeFlagsIndex = ts.TypeFlags.Index // `keyof T`
+  val typeFlagsIndexedAccess = ts.TypeFlags.IndexedAccess // `T[K]`
 
   def isToken(node: js.Dynamic) = ts.isToken(node)
   def isClassDeclaration(node: js.Dynamic) = ts.isClassDeclaration(node)
@@ -141,8 +141,8 @@ class TSSymbolObject(sym: js.Dynamic)(implicit checker: TSTypeChecker) extends T
   private lazy val flags = sym.flags
   lazy val parent = TSSymbolObject(sym.parent)
 
-  // the first declaration of this symbol
-  // if there is no overloading, there is only one declaration
+  // The first declaration of this symbol/
+  // If there is no overloading, there is only one declaration
   lazy val declaration =
     if (declarations.isUndefined) TSNodeObject(g.undefined)
     else declarations.get(0)
@@ -176,8 +176,8 @@ class TSNodeObject(node: js.Dynamic)(implicit checker: TSTypeChecker) extends TS
   lazy val isObjectLiteral = !initializer.isUndefined && !initializer.isToken &&
                              TypeScript.isObjectLiteralExpression(node.initializer)
 
-  // `TypeScript.isModuleDeclaration` works on both namespaces and modules
-  // but namespaces are more recommended, so we merely use `isNamespace` here
+  // `TypeScript.isModuleDeclaration` works on both namespaces and modules.
+  // But namespaces are more recommended, so we merely use `isNamespace` here
   lazy val isNamespace = TypeScript.isModuleDeclaration(node)
   lazy val isArrayTypeNode = TypeScript.isArrayTypeNode(node)
   lazy val isTupleTypeNode = TypeScript.isTupleTypeNode(node)
@@ -189,11 +189,11 @@ class TSNodeObject(node: js.Dynamic)(implicit checker: TSTypeChecker) extends TS
   lazy val isExportAssignment = TypeScript.isExportAssignment(node)
   lazy val exportedAsNamespace = TypeScript.isNamespaceExportDeclaration(node)
 
-  // if a node has an initializer or is marked by a question notation it is optional
+  // If a node has an initializer or is marked by a question notation it is optional
   // e.g. `function f(x?: int) {}`, we can use it directly: `f()`.
-  // in this case, there would be a question token.
+  // In this case, there would be a question token.
   // e.g. `function f(x: int = 42) {}`, we can use it directly: `f()`.
-  // in this case, the initializer would store the default value and be non-empty.
+  // In this case, the initializer would store the default value and be non-empty.
   lazy val isOptionalParameter = checker.isOptionalParameter(node)
   lazy val isStatic = if (modifiers.isUndefined) false
                      else modifiers.foldLeft(false)((s, t) => t.isStatic)
@@ -211,7 +211,7 @@ class TSNodeObject(node: js.Dynamic)(implicit checker: TSTypeChecker) extends TS
   lazy val types = TSNodeArray(node.types)
   lazy val heritageClauses = TSNodeArray(node.heritageClauses)
   lazy val initializer = TSNodeObject(node.initializer)
-  lazy val initToken = TSTokenObject(node.initializer) // for object literal, the initializer is a token.
+  lazy val initToken = TSTokenObject(node.initializer) // For object literal, the initializer is a token.
   lazy val initID = TSIdentifierObject(node.initializer)
   lazy val modifier =
     if (modifiers.isUndefined) Public
@@ -305,7 +305,7 @@ class TSTypeObject(obj: js.Dynamic)(implicit checker: TSTypeChecker) extends TSA
   lazy val isIntersectionType = obj.isIntersection()
   lazy val isFunctionLike = node.isFunctionLike
   lazy val isAnonymous = (objectFlags & TypeScript.objectFlagsAnonymous) > 0
-  lazy val isMapped = (objectFlags & TypeScript.objectFlagsMapped) > 0 // mapping a type to another by using `keyof` and so on
+  lazy val isMapped = (objectFlags & TypeScript.objectFlagsMapped) > 0 // Mapping a type to another by using `keyof` and so on
   lazy val isTypeParameter = flags == TypeScript.typeFlagsTypeParameter
   lazy val isObject = flags == TypeScript.typeFlagsObject
   lazy val isTypeParameterSubstitution = isObject && typeArguments.length > 0

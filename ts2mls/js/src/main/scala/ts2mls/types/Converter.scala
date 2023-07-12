@@ -57,13 +57,13 @@ object Converter {
       s"$tpList($pList) => ${convert(res)}"
     case TSUnionType(lhs, rhs) => s"(${convert(lhs)}) | (${convert(rhs)})"
     case TSIntersectionType(lhs, rhs) => s"(${convert(lhs)}) & (${convert(rhs)})"
-    case TSTypeParameter(name, _) => s"'$name" // constraints should be translated where the type parameters were created rather than be used
+    case TSTypeParameter(name, _) => s"'$name" // Constraints should be translated where the type parameters were created rather than be used
     case TSTupleType(lst) => s"(${lst.foldLeft("")((p, t) => s"$p${convert(t)}, ")})"
     case TSArrayType(element) => s"MutArray[${convert(element)}]"
     case TSEnumType => "Int"
     case TSMemberType(base, _) => convert(base) // TODO: support private/protected members
     case itf: TSInterfaceType =>
-      if (itf.name.isEmpty()) convertRecord(itf.members, Nil, Nil, Map(), Nil, true) // anonymous interfaces
+      if (itf.name.isEmpty()) convertRecord(itf.members, Nil, Nil, Map(), Nil, true) // Anonymous interfaces
       else convertClassOrInterface(Right(itf), exported)
     case cls: TSClassType =>
       convertClassOrInterface(Left(cls), exported)

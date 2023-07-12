@@ -5,10 +5,10 @@ import js.DynamicImplicits._
 import ts2mls.types._
 import scala.collection.mutable.{HashSet, HashMap}
 
-// for general ts, we still consider that there is a top-level module
+// For general ts, we still consider that there is a top-level module
 // and in mls we will import ts file like this:
-// import * as TopLevelModuleName from "filename"
-// for es5.d.ts, we only need to translate everything
+// `import * as TopLevelModuleName from "filename"`.
+// For es5.d.ts, we only need to translate everything
 // and it will be imported without top-level module before we compile other files
 class TSProgram(file: FileInfo, uesTopLevelModule: Boolean, tsconfig: Option[String], typer: (FileInfo, JSWriter) => Unit) {
   private implicit val configContent = TypeScript.parseOption(file.workDir, tsconfig)

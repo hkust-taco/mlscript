@@ -9,7 +9,7 @@ sealed abstract class TSType {
   val unsupported = false
 }
 
-// record both parameter's name and parameter's type
+// Record both parameter's name and parameter's type
 case class TSParameterType(name: String, tp: TSType) extends TSType {
   override val unsupported: Boolean = tp.unsupported
 }
@@ -81,20 +81,20 @@ sealed abstract class TSStructuralType(lhs: TSType, rhs: TSType, notion: String)
 case class TSUnionType(lhs: TSType, rhs: TSType) extends TSStructuralType(lhs, rhs, "|")
 case class TSIntersectionType(lhs: TSType, rhs: TSType) extends TSStructuralType(lhs, rhs, "&")
 
-// ts2mls doesn't support overloading functions with type parameters
-// TSIgnoredOverload is used to store these functions and raise a warning later
-// only the most general overloading form would be stored
+// `ts2mls` doesn't support overloading functions with type parameters.
+// TSIgnoredOverload is used to store these functions and raise a warning later.
+// Only the most general overloading form would be stored
 case class TSIgnoredOverload(base: TSFunctionType, name: String) extends TSType {
   val warning = s"/* warning: the overload of function $name is not supported yet. */"
   override val unsupported: Boolean = base.unsupported
 }
 
-// generate type name = ... in mlscript
+// Generate type name = ... in mlscript
 case class TSTypeAlias(name: String, original: TSType, tp: List[TSType]) extends TSType {
   override val unsupported: Boolean =
     original.unsupported || tp.foldLeft(false)((r, t) => r || t.unsupported)
 }
-// generate val name = ... in mlscript
+// Generate val name = ... in mlscript
 case class TSRenamedType(name: String, original: TSType) extends TSType {
   override val unsupported: Boolean = original.unsupported
 }
@@ -102,6 +102,6 @@ case class TSLiteralType(value: String, isString: Boolean) extends TSType
 case class TSUnsupportedType(code: String, filename: String, line: String, column: String) extends TSType {
   override val unsupported: Boolean = true
 }
-object TSNoInfoUnsupported extends TSType { // unsupported type without code and location information
+object TSNoInfoUnsupported extends TSType { // Unsupported type without code and location information
   override val unsupported: Boolean = true
 }

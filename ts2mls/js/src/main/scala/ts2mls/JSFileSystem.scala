@@ -7,7 +7,7 @@ import js.JSConverters._
 import ts2mls.TSPathResolver
 
 object JSFileSystem {
-  private val fs = g.require("fs") // must use fs module to manipulate files in JS
+  private val fs = g.require("fs") // Must use fs module to manipulate files in JS
 
   def exists(filename: String): Boolean = fs.existsSync(filename)
 

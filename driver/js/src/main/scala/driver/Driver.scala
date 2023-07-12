@@ -35,7 +35,7 @@ class Driver(options: DriverOptions) {
       println(msg)
   }
 
-  // errors in imported files should be printed in their own files to avoid redundancy
+  // Errors in imported files should be printed in their own files to avoid redundancy
   private val noRedundantRaise = (diag: Diagnostic) => ()
   private val noRedundantOutput = (s: String) => ()
 
@@ -50,9 +50,9 @@ class Driver(options: DriverOptions) {
 
   private def checkESModule(filename: String, from: String) =
     if (isMLScirpt(filename)) None
-    else if (isLocal(filename)) // local files: check tsconfig.json
+    else if (isLocal(filename)) // Local files: check tsconfig.json
       Some(TypeScript.isESModule(config, false))
-    else { // node_modules: find package.json to get the module type
+    else { // Files in node_modules: find package.json to get the module type
       val fullname = TypeScript.resolveModuleName(filename, from, config)
       def find(path: String): Boolean = {
         val dir = dirname(path)
@@ -61,7 +61,7 @@ class Driver(options: DriverOptions) {
           val config = TypeScript.parsePackage(pack)
           TypeScript.isESModule(config, true)
         }
-        else if (dir.isEmpty || dir === "." || dir === "/") false // not found: default is commonjs
+        else if (dir.isEmpty || dir === "." || dir === "/") false // Not found: default is commonjs
         else find(dir)
       }
       Some(find(fullname))
@@ -82,7 +82,7 @@ class Driver(options: DriverOptions) {
       expected
     }
     catch {
-      case err: Diagnostic => // we can not find a file to store the error message. print on the screen
+      case err: Diagnostic => // We can not find a file to store the error message. Print on the screen
         report(err, printErr)
         options.expectError
     }
@@ -145,7 +145,7 @@ class Driver(options: DriverOptions) {
         NuTypeDef(Mod, TypeName(moduleName), Nil, S(Tup(Nil)), N, N, Nil, N, N, TypingUnit(declarations))(S(Loc(0, 1, origin)), N, N) :: Nil)
     })
 
-  // if the current file is es5.mlsi, we allow overriding builtin type(like String and Object)
+  // If the current file is es5.mlsi, we allow overriding builtin type(like String and Object)
   private def `type`(tu: TypingUnit, isES5: Boolean, errOutput: String => Unit)(
     implicit ctx: Ctx,
     raise: Raise,
@@ -186,14 +186,14 @@ class Driver(options: DriverOptions) {
     vars: Map[Str, typer.SimpleType]
   ) = jsBuiltinDecs.foreach(lst => `type`(TypingUnit(lst), true, printErr))
 
-  // translate mlscirpt import paths into js import paths
+  // Translate mlscirpt import paths into js import paths
   private def resolveJSPath(file: FileInfo, imp: String) =
-    if (isLocal(imp) && !isMLScirpt(imp)) { // local ts files: locate by checking tsconfig.json
+    if (isLocal(imp) && !isMLScirpt(imp)) { // Local ts files: locate by checking tsconfig.json
       val tsPath = TypeScript.getOutputFileNames(s"${TSPathResolver.dirname(file.filename)}/$imp", config)
       val outputBase = TSPathResolver.dirname(TSPathResolver.normalize(s"${options.outputDir}${file.jsFilename}"))
       TSPathResolver.relative(outputBase, tsPath)
     }
-    else imp // mlscript & node_module: use the original name
+    else imp // Otherwise(mlscript & node_module): use the original name
 
   private def importModule(file: FileInfo)(
     implicit ctx: Ctx,
@@ -250,9 +250,9 @@ class Driver(options: DriverOptions) {
           sigs :+ extractSig(file.filename, file.moduleName)
         })
         otherList.foreach(dp => {
-          // We need to create another new context when compiling other files
-          // e.g. A -> B, A -> C, B -> D, C -> D, -> means "depends on"
-          // If we forget to add `import "D.mls"` in C, we need to raise an error
+          // We need to create another new context when compiling other files.
+          // e.g. A -> B, A -> C, B -> D, C -> D, where `->` means "depends on".
+          // If we forget to add `import "D.mls"` in C, we need to raise an error.
           // Keeping using the same environment would not.
           var newCtx: Ctx = Ctx.init
           val newExtrCtx: Opt[typer.ExtrCtx] = N
@@ -271,7 +271,7 @@ class Driver(options: DriverOptions) {
             mlsiWriter.writeErr(t.toString())
             Nil
         }) ++ cycleSigs.map(tu => tu.entities)
-        if (file.filename.endsWith(".mls")) { // only generate js/mlsi files for mls files
+        if (file.filename.endsWith(".mls")) { // Only generate js/mlsi files for mls files
           val expStr = 
             cycleSigs.foldLeft("")((s, tu) => s"$s${`type`(tu, false, mlsiWriter.writeErr).show}") + {
               dbgWriter = Some(mlsiWriter)
@@ -290,7 +290,7 @@ class Driver(options: DriverOptions) {
             ), jsBuiltinDecs ++ importedSym, exported || importedModule(file.filename))
         }
         else
-          `type`(TypingUnit(declarations), false, mlsiWriter.writeErr) // for ts/mlsi files, we only check interface files
+          `type`(TypingUnit(declarations), false, mlsiWriter.writeErr) // For ts/mlsi files, we only check interface files
 
         if (dbdFiles.contains(file.filename)) {
           typer.dbg = false
