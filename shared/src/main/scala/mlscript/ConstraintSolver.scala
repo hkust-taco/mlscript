@@ -11,7 +11,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   
   def stopConstrainingOnFirstFailure: Bool = false
   def verboseConstraintProvenanceHints: Bool = verbose
-  def defaultStartingFuel: Int = 5000
+  def defaultStartingFuel: Int =
+    // 5000
+    10000 // necessary for fat definitions in OCamlList.mls
   var startingFuel: Int = defaultStartingFuel
   def depthLimit: Int =
     // 150

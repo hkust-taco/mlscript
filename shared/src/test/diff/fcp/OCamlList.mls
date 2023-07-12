@@ -1,14 +1,16 @@
+:NoJS
 
 // From https://github.com/ocaml/ocaml/blob/5312b4d7b913cde2a69fc0eb5e97e353865b82df/stdlib/list.ml
 // and https://github.com/ocaml/ocaml/blob/5312b4d7b913cde2a69fc0eb5e97e353865b82df/stdlib/list.mli
 
-:NoJS
-:Fuel 10000
 
-// TODO: structural equality
-// compare and (=) in OCaml
-def compare': 'a -> 'a -> int
-def eq': 'a -> 'a -> bool
+
+// *** Signatures of required definitions ***
+
+
+// `compare` and (=) in OCaml are polymorphic
+def compare' : 'a -> 'a -> int
+def eq' : 'a -> 'a -> bool
 //│ compare': anything -> anything -> int
 //│ eq': anything -> anything -> bool
 
@@ -20,7 +22,6 @@ def snd: (('a, 'b),) -> 'b
 //│ fst: ('a, anything,) -> 'a
 //│ snd: (anything, 'b,) -> 'b
 
-:escape
 def assert: { fail: anything -> nothing }
 //│ assert: {fail: anything -> nothing}
 
@@ -83,6 +84,8 @@ type Seq[A] = unit -> Node[A]
 //│ SeqCons: ('a, Seq['a],) -> Node['a]
 
 
+
+// *** Signatures ported from List.mli ***
 
 
 def length: List['a] -> int
@@ -280,6 +283,9 @@ def to_seq: List['a] -> Seq['a]
 def of_seq: Seq['a] -> List['a]
 //│ of_seq: Seq['a] -> List['a]
 
+
+
+// *** Implementations ported from List.ml ***
 
 
 rec def length_aux len = fun x -> match x with
@@ -1043,3 +1049,5 @@ rec def of_seq seq =
 //│ (unit -> Node['A]) -> List['A]
 //│   <:  of_seq:
 //│ Seq['a] -> List['a]
+
+
