@@ -339,7 +339,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   }
 
   def adtDataCtor[p: P](alsName: TypeName, tparams: List[TypeName]): P[List[TypeDef]] =
-    adtCtorDecl(alsName, tparams).rep(1, "||").map(_.toList)
+    adtCtorDecl(alsName, tparams).rep(1, "|").map(_.toList)
 
   def adtTyDecl[p: P]: P[Ls[Statement]] =
     P((kw("datatype") ~ ctorName ~ tyParams).flatMap { case (alsName, tparams) =>

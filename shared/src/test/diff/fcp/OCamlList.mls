@@ -45,7 +45,7 @@ def raise: Exn -> nothing
 //│ Not_found: Exn
 //│ raise: Exn -> nothing
 
-datatype Option[A] = Some(A,) || None
+datatype Option[A] = Some(A,) | None
 //│ Defined class Option[+A]
 //│ Declared Option.Some: Option['A] -> ('A,)
 //│ Declared Option.None: Option[?] -> anything
@@ -54,7 +54,7 @@ datatype Option[A] = Some(A,) || None
 //│ Some: 'a -> Option['a]
 //│ None: Option[nothing]
 
-datatype Either[A, B] = Left(A,) || Right(B,)
+datatype Either[A, B] = Left(A,) | Right(B,)
 //│ Defined class Either[+A, +B]
 //│ Declared Either.Left: Either['A, ?] -> ('A,)
 //│ Declared Either.Right: Either[?, 'B] -> ('B,)
@@ -63,7 +63,7 @@ datatype Either[A, B] = Left(A,) || Right(B,)
 //│ Left: 'a -> Either['a, nothing]
 //│ Right: 'a -> Either[nothing, 'a]
 
-datatype List[A] = Cons(A, List[A]) || Nil
+datatype List[A] = Cons(A, List[A]) | Nil
 //│ Defined class List[+A]
 //│ Declared List.Cons: List['A] -> ('A, List['A],)
 //│ Declared List.Nil: List[?] -> anything
@@ -72,7 +72,7 @@ datatype List[A] = Cons(A, List[A]) || Nil
 //│ Cons: ('a, List['a],) -> List['a]
 //│ Nil: List[nothing]
 
-datatype Node[A] = SeqNil || SeqCons(A, Seq[A])
+datatype Node[A] = SeqNil | SeqCons(A, Seq[A])
 type Seq[A] = unit -> Node[A]
 //│ Defined class Node[+A]
 //│ Declared Node.SeqNil: Node[?] -> anything

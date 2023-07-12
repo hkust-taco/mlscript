@@ -1,6 +1,6 @@
 :NoJS
 
-datatype Either[A, B] = Left(A) || Right(B)
+datatype Either[A, B] = Left(A) | Right(B)
 //│ Defined class Either[+A, +B]
 //│ Declared Either.Left: Either['A, ?] -> ('A,)
 //│ Declared Either.Right: Either[?, 'B] -> ('B,)
@@ -10,7 +10,7 @@ datatype Either[A, B] = Left(A) || Right(B)
 //│ Right: 'a -> Either[nothing, 'a]
 
 
-datatype List[A] = Cons(A, List[A]) || Nil
+datatype List[A] = Cons(A, List[A]) | Nil
 //│ Defined class List[+A]
 //│ Declared List.Cons: List['A] -> ('A, List['A],)
 //│ Declared List.Nil: List[?] -> anything
@@ -20,9 +20,9 @@ datatype List[A] = Cons(A, List[A]) || Nil
 //│ Nil: List[nothing]
 
 type Heap = List[(string, int)]
-datatype HeapVar = HeapInt(int) || HeapV(Heap)
-datatype Exp = EInt(int) || Var(string) || Plus(Exp, Exp) || Times(Exp, Exp)
-datatype Stmt = Skip || Assign(string, Exp)
+datatype HeapVar = HeapInt(int) | HeapV(Heap)
+datatype Exp = EInt(int) | Var(string) | Plus(Exp, Exp) | Times(Exp, Exp)
+datatype Stmt = Skip | Assign(string, Exp)
 //│ Defined type alias Heap
 //│ Defined class HeapVar
 //│ Declared HeapVar.HeapInt: HeapVar -> (int,)
@@ -162,7 +162,7 @@ res(Cons(true, Nil))
 //│ ║  l.149: 	  match x with Cons(Left a, Nil) -> a
 //│ ║         	                    ^^^^^^
 //│ ╟── Note: class type parameter A is defined at:
-//│ ║  l.13: 	datatype List[A] = Cons(A, List[A]) || Nil
+//│ ║  l.13: 	datatype List[A] = Cons(A, List[A]) | Nil
 //│ ╙──      	              ^
 //│ res: error
 
