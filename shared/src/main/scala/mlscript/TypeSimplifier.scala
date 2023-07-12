@@ -371,7 +371,7 @@ trait TypeSimplifier { self: Typer =>
   
   
   /** Remove polar type variables, unify indistinguishable ones, and inline the bounds of non-recursive ones. */
-  def simplifyType(st: SimpleType, pol: Opt[Bool] = S(true), removePolarVars: Bool = true, inlineBounds: Bool = true)(implicit ctx: Ctx): SimpleType = {
+  def simplifyType(st: SimpleType, removePolarVars: Bool, pol: Opt[Bool] = S(true), inlineBounds: Bool = true)(implicit ctx: Ctx): SimpleType = {
     
     
     
@@ -618,7 +618,7 @@ trait TypeSimplifier { self: Typer =>
     
     def computeRecVars =
       allVars.iterator.filter(v => !varSubst.contains(v) && (
-        v.isRecursive_$
+        v.isRecursive_$(omitTopLevel = false)
         // * Note: a more precise version could be the following,
         // * but it doesn't seem to change anything in our test suite, so I left if commented for now:
         // // * Only consider recursive those variables that recursive in their *reachable* bounds:
@@ -821,6 +821,7 @@ trait TypeSimplifier { self: Typer =>
       case SkolemTag(id) => transform(id, pol, parents)
       case _: TypeTag | ExtrType(_) => st
       case tv: TypeVariable if parents.exists(_ === tv) =>
+        if (pol(tv).isEmpty) transform(tv, pol, parents - tv) else
         if (pol(tv).getOrElse(lastWords(s"parent in invariant position $tv $parents"))) BotType else TopType
       case tv: TypeVariable =>
         varSubst.get(tv) match {
@@ -1105,7 +1106,7 @@ trait TypeSimplifier { self: Typer =>
   abstract class SimplifyPipeline {
     def debugOutput(msg: => Str): Unit
     
-    def apply(st: ST)(implicit ctx: Ctx): ST = {
+    def apply(st: ST, removePolarVars: Bool = true)(implicit ctx: Ctx): ST = {
       var cur = st
       
       debugOutput(s"⬤ Initial: ${cur}")
@@ -1119,7 +1120,7 @@ trait TypeSimplifier { self: Typer =>
       debugOutput(s"⬤ Unskid: ${cur}")
       debugOutput(s" where: ${cur.showBounds}")
       
-      cur = simplifyType(cur)
+      cur = simplifyType(cur, removePolarVars)
       debugOutput(s"⬤ Type after simplification: ${cur}")
       debugOutput(s" where: ${cur.showBounds}")
       
@@ -1143,7 +1144,7 @@ trait TypeSimplifier { self: Typer =>
       // * The DNFs introduced by `normalizeTypes_!` may lead more coocc info to arise
       // *  by merging things like function types together...
       // * So we need another pass of simplification!
-      cur = simplifyType(cur)
+      cur = simplifyType(cur, removePolarVars)
       // cur = simplifyType(simplifyType(cur)(ct)
       debugOutput(s"⬤ Resim: ${cur}")
       debugOutput(s" where: ${cur.showBounds}")

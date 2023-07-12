@@ -134,6 +134,10 @@ def build_ = fun g -> g (fun x -> fun xs -> Cons (x, xs)) Nil
 
 :e // * Expected: List is a structural equirecursive types and recursive types are disabled
 build_ : forall 'a. (forall 'b. (('a -> 'b -> 'b) -> 'b -> 'b)) -> List['a]
+//│ ╔══[ERROR] Inferred recursive type: 'tail
+//│   where
+//│     'tail :> (Cons[nothing] with {tail: 'tail}) | Nil
+//│ ╙──
 //│ ╔══[ERROR] Cyclic-looking constraint while typing type ascription; a type annotation may be required
 //│ ║  l.136: 	build_ : forall 'a. (forall 'b. (('a -> 'b -> 'b) -> 'b -> 'b)) -> List['a]
 //│ ║         	^^^^^^
@@ -143,8 +147,12 @@ build_ : forall 'a. (forall 'b. (('a -> 'b -> 'b) -> 'b -> 'b)) -> List['a]
 
 :e // * Works with :RecursiveTypes due to structural typing (see below)
 def build = fun (g: forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> g (fun x -> fun xs -> Cons (x, xs)) Nil
+//│ ╔══[ERROR] Inferred recursive type: 'tail
+//│   where
+//│     'tail :> (Cons[nothing] with {tail: 'tail}) | Nil
+//│ ╙──
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.145: 	def build = fun (g: forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> g (fun x -> fun xs -> Cons (x, xs)) Nil
+//│ ║  l.149: 	def build = fun (g: forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> g (fun x -> fun xs -> Cons (x, xs)) Nil
 //│ ║         	                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ build: (forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> ((Cons['a] with {tail: 'tail}) | error | Nil)
@@ -196,10 +204,14 @@ rec def foldr k z xs =
 //│        elim is not implemented
 
 
+:e // TODO(occurs-check) improve this `nothing`
 rec def foldr = fun k -> fun z -> fun xs ->
   case xs of
     Nil -> z,
     Cons -> k xs.head (foldr k z xs.tail)
+//│ ╔══[ERROR] Inferred recursive type: nothing
+//│ ║  l.209: 	  case xs of
+//│ ╙──       	       ^^
 //│ foldr: ('head -> 'a -> 'a) -> 'a -> 'b -> 'a
 //│   where
 //│     'b <: (Cons[?] with {head: 'head, tail: 'b}) | Nil
@@ -256,7 +268,7 @@ rec def k = fun x -> fun (xs: Ba) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│   <:  k:
 //│ int -> Ba -> Ba
 //│ ╔══[ERROR] Type error in binding of lambda expression
-//│ ║  l.254: 	rec def k = fun x -> fun (xs: Ba) -> fun c -> fun n -> c (x + 1) (xs k z c n)
+//│ ║  l.266: 	rec def k = fun x -> fun (xs: Ba) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `'b` leaks out of its scope
 //│ ║  l.101: 	type Ba = forall 'b. (int -> 'b -> 'b) -> 'b -> 'b
@@ -268,7 +280,7 @@ rec def k = fun x -> fun (xs: Ba) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│ ║  l.102: 	type Baa = forall 'a 'b. ('a -> 'b -> 'b) -> 'b -> 'b
 //│ ╙──       	                                      ^^
 //│ ╔══[ERROR] Type error in def definition
-//│ ║  l.254: 	rec def k = fun x -> fun (xs: Ba) -> fun c -> fun n -> c (x + 1) (xs k z c n)
+//│ ║  l.266: 	rec def k = fun x -> fun (xs: Ba) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `'b` leaks out of its scope
 //│ ║  l.101: 	type Ba = forall 'b. (int -> 'b -> 'b) -> 'b -> 'b
@@ -278,7 +290,7 @@ rec def k = fun x -> fun (xs: Ba) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│ ║         	                             ^^
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this function:
-//│ ║  l.254: 	rec def k = fun x -> fun (xs: Ba) -> fun c -> fun n -> c (x + 1) (xs k z c n)
+//│ ║  l.266: 	rec def k = fun x -> fun (xs: Ba) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│ ╙──       	                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│  = [Function: k1]
 
@@ -297,17 +309,17 @@ k = k_
 //│   <:  k:
 //│ int -> Ba -> Ba
 //│ ╔══[ERROR] Type error in def definition
-//│ ║  l.293: 	k = k_
+//│ ║  l.305: 	k = k_
 //│ ║         	^^^^^^
 //│ ╟── type variable `'b` leaks out of its scope
-//│ ║  l.214: 	def z_ = fun c -> fun n -> n
+//│ ║  l.226: 	def z_ = fun c -> fun n -> n
 //│ ║         	         ^^^^^^^^^^^^^^^^^^^
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this function:
-//│ ║  l.286: 	rec def k_ = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k_ z_ c n)
+//│ ║  l.298: 	rec def k_ = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k_ z_ c n)
 //│ ║         	                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── • this reference:
-//│ ║  l.293: 	k = k_
+//│ ║  l.305: 	k = k_
 //│ ╙──       	    ^^
 //│  = [Function: k_]
 
@@ -339,10 +351,10 @@ def bfoo xs = build (foldr k z xs)
 :e
 def bfoo_ xs = build_ (foldr k_ z_ xs)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.340: 	def bfoo_ xs = build_ (foldr k_ z_ xs)
+//│ ║  l.352: 	def bfoo_ xs = build_ (foldr k_ z_ xs)
 //│ ║         	               ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── function of type `?b -> (forall ?c. ?c -> ?c)` does not match type `Cons[?a] | Nil`
-//│ ║  l.214: 	def z_ = fun c -> fun n -> n
+//│ ║  l.226: 	def z_ = fun c -> fun n -> n
 //│ ║         	         ^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.34: 	type List[a] = Nil | Cons[a]
@@ -429,10 +441,10 @@ def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│   <:  k:
 //│ int -> Baa -> Baa
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.427: 	def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
+//│ ║  l.439: 	def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── operator application of type `int` does not match type `'a`
-//│ ║  l.427: 	def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
+//│ ║  l.439: 	def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│ ║         	                                                       ^^^^^
 //│ ╟── Note: constraint arises from type variable:
 //│ ║  l.102: 	type Baa = forall 'a 'b. ('a -> 'b -> 'b) -> 'b -> 'b
@@ -453,7 +465,7 @@ k = k_ // nope
 //│   <:  k:
 //│ int -> Baa -> Baa
 //│ ╔══[ERROR] Type error in def definition
-//│ ║  l.451: 	k = k_ // nope
+//│ ║  l.463: 	k = k_ // nope
 //│ ║         	^^^^^^
 //│ ╟── type variable `'b` leaks out of its scope
 //│ ║  l.102: 	type Baa = forall 'a 'b. ('a -> 'b -> 'b) -> 'b -> 'b
@@ -463,16 +475,21 @@ k = k_ // nope
 //│ ║         	                                ^^
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this function:
-//│ ║  l.445: 	def k_ = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k z c n)
+//│ ║  l.457: 	def k_ = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│ ║         	                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── • this reference:
-//│ ║  l.451: 	k = k_ // nope
+//│ ║  l.463: 	k = k_ // nope
 //│ ╙──       	    ^^
 //│  = <no result>
 //│    k_, k and k are not implemented
 
 
+:e // occurs-check
 rec def k_ = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k_ z c n)
+//│ ╔══[ERROR] Inferred recursive type: 'k_
+//│   where
+//│     'k_ :> int -> ('k_ -> Baa -> 'a -> 'b -> 'c) -> (int -> 'c -> 'd & 'a) -> 'b -> 'd
+//│ ╙──
 //│ k_: 'k_
 //│   where
 //│     'k_ :> int -> ('k_ -> Baa -> 'a -> 'b -> 'c) -> (int -> 'c -> 'd & 'a) -> 'b -> 'd
@@ -480,19 +497,39 @@ rec def k_ = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k_ z c n)
 
 :e
 k = k_ // nope
+//│ ╔══[ERROR] Inferred recursive type: 'a
+//│   where
+//│     'a :> ('c & 'd & 'e & 'b) -> ('b | 'f -> 'c -> 'g | Baa | 'g)
+//│        <: Baa -> 'e
+//│     'd <: 'k_ -> 'a
+//│     'k_ :> int -> 'd -> 'f -> 'c -> 'g
+//│     'f :> 'k_
+//│        <: int -> 'h -> 'g
+//│     'h :> 'f -> 'c -> 'g
+//│        <: 'd
+//│     'g :> 'f -> 'c -> 'g
+//│        <: 'h & 'e
+//│     'e <: 'f -> (Baa | 'c) -> 'h
+//│ ║  l.488: 	rec def k_ = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k_ z c n)
+//│ ╙──       	                                                             ^^^^^
 //│ 'k_
 //│   where
 //│     'k_ :> int -> ('k_ -> Baa -> 'a -> 'b -> 'c) -> (int -> 'c -> 'd & 'a) -> 'b -> 'd
 //│   <:  k:
 //│ int -> Baa -> Baa
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
-//│ ║  l.482: 	k = k_ // nope
+//│ ║  l.499: 	k = k_ // nope
 //│ ║         	^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│  = [Function: k_1]
 
 
+:e // occurs-check
 rec def k_ = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k_ z_ c n)
+//│ ╔══[ERROR] Inferred recursive type: 'k_
+//│   where
+//│     'k_ :> int -> ('k_ -> (anything -> (forall 'a. 'a -> 'a)) -> 'b -> 'c -> 'd) -> (int -> 'd -> 'e & 'b) -> 'c -> 'e
+//│ ╙──
 //│ k_: 'k_
 //│   where
 //│     'k_ :> int -> ('k_ -> (anything -> (forall 'a. 'a -> 'a)) -> 'b -> 'c -> 'd) -> (int -> 'd -> 'e & 'b) -> 'c -> 'e

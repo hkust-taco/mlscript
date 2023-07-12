@@ -163,11 +163,11 @@ def c: 'a -> C6['a]
 //│ c: 'a -> C6['a]
 
 rec def c6 a = C6{ a = c5 (c6 a) }
-//│ c6: anything -> (C6['A] with {a: forall 'A0 'a 'A1. 'a})
+//│ c6: anything -> (C6['A] with {a: forall 'a 'A0 'A1. 'a})
 //│   where
-//│     'a :> C5['A1] with {a: C2['A0] with {a: 'a}}
-//│     'A0 :> 'a | C5['A1]
-//│         <: C5['A1]
+//│     'a :> C5['A0] with {a: C2['A1] with {a: 'a}}
+//│     'A1 :> 'a | C5['A0]
+//│         <: C5['A0]
 
 :stats
 c = c6
@@ -288,7 +288,7 @@ def append ls elem = L { h = elem; t = S { v = ls } }
 
 :ns
 append
-//│ res: forall 'a 'T 'h 'v 'T0 'b 'c 't. 'a -> 'b -> 'c
+//│ res: forall 'a 'T 't 'v 'b 'c 'h 'T0. 'a -> 'b -> 'c
 //│   where
 //│     'c :> #L & {h: 'h, t: 't, L#T = 'T0}
 //│     't :> #S & {v: 'v, S#T = 'T}

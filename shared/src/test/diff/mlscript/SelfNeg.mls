@@ -56,7 +56,7 @@ def foo: ('a -> (~'a -> anything) -> anything) -> MutArray['a]
 
 :ns
 r = foo (fun a -> fun f -> f a)
-//│ r: forall 'b 'c 'a. 'c
+//│ r: forall 'a 'b 'c. 'c
 //│   where
 //│     'c :> MutArray['a]
 //│     'a <: 'b

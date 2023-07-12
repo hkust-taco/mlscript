@@ -50,13 +50,13 @@ rec def eval1_stub e = case e of {
   | Add -> eval1_stub e.lhs
   | _ -> 0
   }
-//│ eval1_stub: forall 'a 'b 'c 'd 'lhs 'eval1_stub 'e. 'eval1_stub
+//│ eval1_stub: forall 'a 'b 'c 'lhs 'd 'eval1_stub 'e. 'eval1_stub
 //│   where
-//│     'eval1_stub := 'b -> (1 | 'e | 0)
+//│     'eval1_stub := 'd -> (1 | 'e | 0)
 //│     'e :> 1 | 'e | 0
-//│     'b <: #Lit & 'c | (#Add & 'd | 'a & ~#Add) & ~#Lit
-//│     'd <: {lhs: 'lhs}
-//│     'lhs <: 'b
+//│     'd <: #Lit & 'a | (#Add & 'b | 'c & ~#Add) & ~#Lit
+//│     'b <: {lhs: 'lhs}
+//│     'lhs <: 'd
 //│           = [Function: eval1_stub2]
 
 eval1_stub
@@ -82,18 +82,18 @@ rec def eval1 k e = case e of {
 
 :ns
 eval1
-//│ res: forall 'lhs 'rhs 'a 'b 'val 'c 'd 'e 'eval1 'f 'g. 'eval1
+//│ res: forall 'a 'b 'c 'd 'e 'f 'val 'rhs 'lhs 'eval1 'g. 'eval1
 //│   where
-//│     'eval1 := 'f -> 'g -> ('val | 'b | 'd)
-//│     'b := int
-//│     'g <: #Lit & 'a | (#Add & 'e | 'c & ~#Add) & ~#Lit
-//│     'e <: {rhs: 'rhs} & {lhs: 'lhs}
-//│     'lhs <: 'g
-//│     'rhs <: 'g
-//│     'a <: {val: 'val}
+//│     'eval1 := 'a -> 'b -> ('val | 'd | 'f)
+//│     'd := int
+//│     'b <: #Lit & 'e | (#Add & 'g | 'c & ~#Add) & ~#Lit
+//│     'g <: {rhs: 'rhs} & {lhs: 'lhs}
+//│     'lhs <: 'b
+//│     'rhs <: 'b
+//│     'e <: {val: 'val}
 //│     'val <: int
-//│     'f <: 'c -> 'd
-//│     'd <: int
+//│     'a <: 'c -> 'f
+//│     'f <: int
 //│    = [Function: eval1]
 
 :re
@@ -616,7 +616,7 @@ prettier2 done eval2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── function of type `?a -> (forall ?b ?c. ?b | ?c)` is not an instance of type `number`
+//│ ╟── function of type `?a -> (forall ?b ?c. ?c | ?b)` is not an instance of type `number`
 //│ ║  l.70: 	rec def eval1 k e = case e of {
 //│ ║        	                ^^^^^^^^^^^^^^^
 //│ ║  l.71: 	  | Lit -> e.val

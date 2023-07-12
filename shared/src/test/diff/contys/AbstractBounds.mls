@@ -83,7 +83,7 @@ class Test3[A, B]
 //│ Defined Test3.Bar3: Test3['A, 'B] -> 'A -> 'B
 
 fun x -> fun y -> x.Foo3 y
-//│ res: 'a -> (forall 'b 'A. ('A -> 'b
+//│ res: 'a -> (forall 'A 'b. ('A -> 'b
 //│   where
 //│     'a <: Test3['A, 'b]))
 //│    = [Function: res]

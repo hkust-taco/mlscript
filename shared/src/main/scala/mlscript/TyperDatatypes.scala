@@ -1,7 +1,7 @@
 package mlscript
 
 import scala.collection.mutable
-import scala.collection.mutable.{Map => MutMap, Set => MutSet}
+import scala.collection.mutable.{Map => MutMap, Set => MutSet, Buffer}
 import scala.collection.immutable.{SortedSet, SortedMap}
 import scala.util.chaining._
 import scala.annotation.tailrec
@@ -9,6 +9,7 @@ import mlscript.utils._, shorthands._
 import mlscript.Message._
 
 abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
+  def recordTypeVars: Bool = false
   
   type TN = TypeName
   
@@ -435,7 +436,12 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     }
     // TODO dedup w/ above
     def mapTargs[R](pol: PolMap)(f: (PolMap, ST) => R)(implicit ctx: Ctx): Ls[R] = {
-      val td = ctx.tyDefs(defn.name)
+      val td = ctx.tyDefs.getOrElse(defn.name,
+          // * This should only happen in the presence of ill-formed type definitions;
+          // * TODO: Make sure to report this and raise a compiler internal error if the source
+          // *  does not actually have a type error! Otherwise we could silently get wrong results...
+          return Nil
+        )
       td.tvarVariances.fold(targs.map(f(pol.invar, _))) { tvv =>
         assert(td.tparamsargs.sizeCompare(targs) === 0)
         (td.tparamsargs lazyZip targs).map { case ((_, tv), ta) =>
@@ -549,6 +555,8 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       lb.fold(s"$ub")(lb => s"mut ${if (lb === BotType) "" else lb}..$ub")
   }
   
+  val createdTypeVars: Buffer[TV] = Buffer.empty
+  
   /** A type variable living at a certain polymorphism level `level`, with mutable bounds.
     * Invariant: Types appearing in the bounds never have a level higher than this variable's `level`. */
   final class TypeVariable(
@@ -567,6 +575,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   {
     require(level <= MaxLevel)
     
+    if (recordTypeVars) createdTypeVars += this
     
     var assignedTo: Opt[ST] = N
     
@@ -622,20 +631,26 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       }) + (if (assignedTo.isDefined) "#" else "")
     private[mlscript] def mkStr = nameHint.getOrElse("α") + uid
     
-    def isRecursive_$(implicit ctx: Ctx) : Bool = (lbRecOccs_$, ubRecOccs_$) match {
+    def isRecursive_$(omitTopLevel: Bool)(implicit ctx: Ctx) : Bool =
+        (lbRecOccs_$(omitTopLevel), ubRecOccs_$(omitTopLevel)) match {
       case (S(N | S(true)), _) | (_, S(N | S(false))) => true
       case _ => false
     } 
     /** None: not recursive in this bound; Some(Some(pol)): polarly-recursive; Some(None): nonpolarly-recursive.
       * Note that if we have something like 'a :> Bot <: 'a -> Top, 'a is not truly recursive
       *   and its bounds can actually be inlined. */
-    private final def lbRecOccs_$(implicit ctx: Ctx): Opt[Opt[Bool]] = {
-      // println("+", this, lowerBounds)
-      assignedTo.getOrElse(TupleType(lowerBounds.map(N -> _.toUpper(noProv)))(noProv)).getVarsPol(PolMap.pos).get(this)
-      }
-    private final def ubRecOccs_$(implicit ctx: Ctx): Opt[Opt[Bool]] ={
-      // println("-", this, upperBounds)
-      assignedTo.getOrElse(TupleType(upperBounds.map(N -> _.toUpper(noProv)))(noProv)).getVarsPol(PolMap.posAtNeg).get(this)
+    private final def lbRecOccs_$(omitTopLevel: Bool)(implicit ctx: Ctx): Opt[Opt[Bool]] = {
+      // println("+", this, assignedTo getOrElse lowerBounds)
+      // assignedTo.getOrElse(TupleType(lowerBounds.map(N -> _.toUpper(noProv)))(noProv)).getVarsPol(PolMap.pos, ignoreTopLevelOccs = true).get(this)
+      val bs = assignedTo.fold(lowerBounds)(_ :: Nil)
+      bs.foldLeft(BotType: ST)(_ | _).getVarsPol(PolMap.pos, ignoreTopLevelOccs = omitTopLevel).get(this)
+    }
+    private final def ubRecOccs_$(omitTopLevel: Bool)(implicit ctx: Ctx): Opt[Opt[Bool]] ={
+      // println("-", this, assignedTo getOrElse upperBounds)
+      // assignedTo.getOrElse(TupleType(upperBounds.map(N -> _.toUpper(noProv)))(noProv)).getVarsPol(PolMap.posAtNeg, ignoreTopLevelOccs = true).get(this)
+      val bs = assignedTo.fold(upperBounds)(_ :: Nil)
+      bs.foldLeft(TopType: ST)(_ & _).getVarsPol(PolMap.posAtNeg, ignoreTopLevelOccs = omitTopLevel).get(this)
+        // .tap(r => println(s"= $r"))
     }
   }
   type TV = TypeVariable

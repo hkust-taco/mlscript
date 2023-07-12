@@ -321,23 +321,23 @@ def a2_ (x: A1) =
 //│   = [Function: a31]
 //│ a2: A1 -> (forall 'a. (anything -> 'a
 //│   where
-//│     forall 'b 'c 'd 'e. ('c -> 'd -> 'e) -> ('e -> 'b & 'c) -> 'd -> 'b <: (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> 'a))
+//│     forall 'b 'c 'd 'e. ('b -> 'c -> 'd) -> ('d -> 'e & 'b) -> 'c -> 'e <: (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> 'a))
 //│   = [Function: a21]
 //│ a2_: A1 -> (forall 'a. (anything -> 'a
 //│   where
-//│     forall 'b 'c 'd 'e. ('c -> 'd -> 'e) -> ('e -> 'b & 'c) -> 'd -> 'b <: (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> 'a))
+//│     forall 'b 'c 'd 'e. ('b -> 'c -> 'd) -> ('d -> 'e & 'b) -> 'c -> 'e <: (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> 'a))
 //│    = [Function: a2_1]
 
 def a0 = a2 a1
 //│ a0: anything -> 'a
 //│   where
-//│     forall 'b 'c 'd 'e. ('b -> 'c -> 'd) -> ('d -> 'e & 'b) -> 'c -> 'e <: (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> 'a
+//│     forall 'b 'c 'd 'e. ('e -> 'b -> 'c) -> ('c -> 'd & 'e) -> 'b -> 'd <: (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> 'a
 //│   = [Function: a01]
 
 def a0_ = a2_ a1
 //│ a0_: anything -> 'a
 //│   where
-//│     forall 'b 'c 'd 'e. ('c -> 'd -> 'e) -> ('e -> 'b & 'c) -> 'd -> 'b <: (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> 'a
+//│     forall 'b 'c 'd 'e. ('b -> 'c -> 'd) -> ('d -> 'e & 'b) -> 'c -> 'e <: (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> 'a
 //│    = [Function: a0_1]
 
 def a1' = fun f -> fun x -> f (f (either id x))
@@ -346,15 +346,23 @@ def a1' = fun f -> fun x -> f (f (either id x))
 //│     'a <: (forall 'e. 'e -> 'e | 'b) -> 'c & 'c -> 'd))
 //│    = [Function: a1$1]
 
+:e // occurs-check
 def a2' (x: A1') =
   let _ = x auto id in
   (fun y ->
     let _ = x y church_two in
     y church_succ
   ) a3
+//│ ╔══[ERROR] Inferred recursive type: 'a
+//│   where
+//│     'a :> forall 'b 'c 'd 'e 'a 'f. (('f -> 'b & 'b -> 'd & 'e) -> ('f -> 'd | 'c)
+//│   where
+//│     'a | Sid <: (forall 'd 'e 'f 'b. ('f -> 'b & 'b -> 'd & 'e) -> 'f -> 'd) -> 'c)
+//│ ║  l.198: 	type A1' = forall 'a. (('a | Sid) -> 'a) -> 'a -> ('a | Sid)
+//│ ╙──       	                  ^^
 //│ a2': A1' -> (forall 'a. (anything -> 'a
 //│   where
-//│     forall 'b 'c 'd 'e. ('c -> 'd -> 'e) -> ('e -> 'b & 'c) -> 'd -> 'b <: (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> 'a))
+//│     forall 'b 'c 'd 'e. ('b -> 'c -> 'd) -> ('d -> 'e & 'b) -> 'c -> 'e <: (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> 'a))
 //│    = [Function: a2$1]
 
 def a2'_ x =
@@ -365,15 +373,15 @@ def a2'_ x =
   ) a3
 //│ a2'_: ((forall 'a 'b. ('a -> 'b & 'a) -> 'b) -> (forall 'c. 'c -> 'c) -> anything & (forall 'd. 'd -> (forall 'e. (anything -> 'e
 //│   where
-//│     'd <: (forall 'f 'g 'h. ('h -> 'f & 'f -> 'g) -> 'h -> 'g) -> 'e))) -> (forall 'f 'g 'h. ('h -> 'f & 'f -> 'g) -> 'h -> 'g) -> anything) -> (forall 'i. (anything -> 'i
+//│     'd <: (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> 'e))) -> (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> anything) -> (forall 'i. (anything -> 'i
 //│   where
-//│     forall 'j 'k 'l 'm. ('j -> 'k -> 'l) -> ('l -> 'm & 'j) -> 'k -> 'm <: (forall 'f 'g 'h. ('h -> 'f & 'f -> 'g) -> 'h -> 'g) -> 'i))
+//│     forall 'j 'k 'l 'm. ('j -> 'k -> 'l) -> ('l -> 'm & 'j) -> 'k -> 'm <: (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> 'i))
 //│     = [Function: a2$_1]
 
 :e // * [FCP-LIM] see previous version above
 def a0' = a2' a1'
 //│ ╔══[ERROR] Type error in application
-//│ ║  l.374: 	def a0' = a2' a1'
+//│ ║  l.382: 	def a0' = a2' a1'
 //│ ║         	          ^^^^^^^
 //│ ╟── type variable `'a` leaks out of its scope
 //│ ║  l.5: 	type Sid = forall 'a. 'a -> 'a
@@ -389,23 +397,23 @@ def a0' = a2' a1'
 //│ ║  l.208: 	def either x y = if true then x else y
 //│ ║         	                              ^
 //│ ╟── • this reference:
-//│ ║  l.374: 	def a0' = a2' a1'
+//│ ║  l.382: 	def a0' = a2' a1'
 //│ ║         	              ^^^
 //│ ╟── • this function:
-//│ ║  l.349: 	def a2' (x: A1') =
+//│ ║  l.350: 	def a2' (x: A1') =
 //│ ║         	        ^^^^^^^^^^
-//│ ║  l.350: 	  let _ = x auto id in
+//│ ║  l.351: 	  let _ = x auto id in
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.351: 	  (fun y ->
+//│ ║  l.352: 	  (fun y ->
 //│ ║         	^^^^^^^^^^^
-//│ ║  l.352: 	    let _ = x y church_two in
+//│ ║  l.353: 	    let _ = x y church_two in
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.353: 	    y church_succ
+//│ ║  l.354: 	    y church_succ
 //│ ║         	^^^^^^^^^^^^^^^^^
-//│ ║  l.354: 	  ) a3
+//│ ║  l.355: 	  ) a3
 //│ ║         	^^^^^^^
 //│ ╟── • this reference:
-//│ ║  l.374: 	def a0' = a2' a1'
+//│ ║  l.382: 	def a0' = a2' a1'
 //│ ╙──       	          ^^^
 //│ a0': anything -> 'a | error
 //│   where
@@ -415,12 +423,12 @@ def a0' = a2' a1'
 :e
 def a0'_ = a2'_ a1'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.416: 	def a0'_ = a2'_ a1'
+//│ ║  l.424: 	def a0'_ = a2'_ a1'
 //│ ║         	           ^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ a0'_: anything -> 'a | error
 //│   where
-//│     forall 'b 'c 'd 'e. ('d -> 'e -> 'b) -> ('b -> 'c & 'd) -> 'e -> 'c <: (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> 'a
+//│     forall 'b 'c 'd 'e. ('b -> 'c -> 'd) -> ('d -> 'e & 'b) -> 'c -> 'e <: (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> 'a
 //│     = [Function: a0$_2]
 
 :RecursiveTypes

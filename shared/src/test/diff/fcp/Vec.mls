@@ -353,7 +353,7 @@ sum_ty = sum
 //│     'a <: (((Cons[?, ?]\size with {head: int, tail: 'a}) | Nil) -> int) -> (int & 'b)
 //│   <:  sum_ty:
 //│ Vec[int, 'n] -> int
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?b ?tail ?c ?sum. ?sum <: forall 'n. Vec[int, 'n] -> int` exceeded recursion depth limit (250)
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?sum ?tail ?a ?b ?c. ?sum <: forall 'n. Vec[int, 'n] -> int` exceeded recursion depth limit (250)
 //│ ║  l.350: 	sum_ty = sum
 //│ ║         	^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
@@ -364,7 +364,7 @@ sum nil
 
 // * Note: also worked woth top/bot extrusion
 sum v1_0
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?b ?tail ?sum ?c. ?sum <: (forall ?P ?A ?head 'n 'a ?N ?d. ?d) -> ?e` exceeded recursion depth limit (250)
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?tail ?b ?sum ?c. ?sum <: (forall ?P 'a 'n ?N ?A ?d ?head. ?d) -> ?e` exceeded recursion depth limit (250)
 //│ ║  l.366: 	sum v1_0
 //│ ║         	^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
@@ -372,7 +372,7 @@ sum v1_0
 
 // * Note: also worked woth top/bot extrusion
 sum v2
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?b ?sum ?c ?tail. ?sum <: (forall 'p ?N ?head 'p0 'p1 'p2 ?A 'p3 ?d 'n 'p4 'p5 'a 'p6 ?P. ?d) -> ?e` exceeded recursion depth limit (250)
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?sum ?a ?tail ?b ?c. ?sum <: (forall 'p 'p0 'p1 'n ?N ?A ?head 'p2 'p3 'p4 ?d 'p5 'a 'p6 ?P. ?d) -> ?e` exceeded recursion depth limit (250)
 //│ ║  l.374: 	sum v2
 //│ ║         	^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
@@ -419,7 +419,7 @@ sum v1_ty
 //│ ╟── type `Cons[int, Z]` is not a function
 //│ ║  l.198: 	v1_ty = v1_ : Cons[int, Z]
 //│ ║         	              ^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `(forall ?head ?a ?b ?tail ?c ?d. ?b -> ?a) -> ?e`
+//│ ╟── but it flows into reference with expected type `(forall ?a ?b ?head ?c ?d ?tail. ?a -> ?c) -> ?e`
 //│ ║  l.+1: 	sum v1_ty
 //│ ║        	    ^^^^^
 //│ ╟── Note: constraint arises from application:

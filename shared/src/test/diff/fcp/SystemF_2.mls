@@ -18,6 +18,10 @@ iter2 f x = f(f x)
 //│ iter2: ('a -> 'b & 'b -> 'c) -> 'a -> 'c
 //│      = [Function: iter2]
 
+iter2 K
+//│ res: 'a -> anything -> anything -> 'a
+//│    = [Function (anonymous)]
+
 iter2 iter2
 //│ res: ('a -> 'b & 'b -> ('a & 'c)) -> 'a -> 'c
 //│    = [Function (anonymous)]
@@ -26,12 +30,29 @@ id iter2 iter2
 //│ res: ('a -> 'b & 'b -> ('a & 'c)) -> 'a -> 'c
 //│    = [Function (anonymous)]
 
+// * The following occurs-check failure is legit.
+// * We have `K: 'A -> anything -> 'A` which flows into `'a -> 'b & ('c | 'b) -> 'a`
+// *  which implies `anything -> 'A <: 'b <: 'A`, a nested cycle.
+// * The cycle displayed below is a 1-unrolling of the one above.
+:e
 iter2 iter2 K
+//│ ╔══[ERROR] Inferred recursive type: 'a
+//│   where
+//│     'a :> anything -> anything -> 'a
+//│ ╙──
 //│ res: 'a -> 'b
 //│   where
 //│     'a :> 'b
 //│     'b :> anything -> anything -> 'a
 //│    = [Function (anonymous)]
+
+iter2 iter2 iter2
+//│ res: ('a -> ('a & 'b) & 'b -> ('a & 'b & 'c)) -> 'a -> 'c
+//│    = [Function (anonymous)]
+
+iter2 K iter2 iter2 iter2
+//│ res: ('a -> 'b & 'b -> 'c) -> 'a -> 'c
+//│    = [Function: iter2]
 
 
 
@@ -72,7 +93,12 @@ c2 = succ (succ n0)
 //│ c2: ('X -> 'X) -> 'X -> 'X
 //│   = [Function (anonymous)]
 
+:e
 c2 c2 K
+//│ ╔══[ERROR] Inferred recursive type: 'a
+//│   where
+//│     'a :> anything -> 'a
+//│ ╙──
 //│ res: ('a & 'X) -> ('X | anything -> 'a)
 //│   where
 //│     'X :> anything -> 'X
@@ -97,7 +123,15 @@ c2_ c2_!
 //│    = [Function (anonymous)]
 
 // * Note: cycle check fails when generalizing curried lambdas
+:e // occurs-check
 c2_ c2_ K
+//│ ╔══[ERROR] Inferred recursive type: 'a
+//│   where
+//│     'a :> forall 'b 'c 'd 'e. ('b & 'c & 'd & 'e) -> ('a | 'f | 'g | 'h)
+//│     'g :> (forall 'c 'e. ('c & 'e) -> ('f | 'h)) | 'h
+//│     'h :> forall 'c 'd. ('c & 'd) -> ('f | 'g)
+//│     'f :> forall 'b 'c. ('b & 'c) -> ('a | 'f)
+//│ ╙──
 //│ res: ('a & 'b) -> anything -> ('c | 'd)
 //│   where
 //│     'a :> anything -> ('a | 'c | 'b | 'd)
@@ -114,13 +148,63 @@ c2__ c2__
 //│ res: ('a -> ('b & 'c) & 'b -> 'a) -> 'b -> 'c
 //│    = [Function (anonymous)]
 
+:e
 c2__ c2__ K
+//│ ╔══[ERROR] Inferred recursive type: 'a
+//│   where
+//│     'a :> anything -> anything -> 'a
+//│ ╙──
 //│ res: 'a -> 'b
 //│   where
 //│     'a :> 'b
 //│     'b :> anything -> anything -> 'a
 //│    = [Function (anonymous)]
 
+
+// --------------
+:RecursiveTypes
+
+iter2 iter2 K
+//│ res: 'a -> 'b
+//│   where
+//│     'a :> 'b
+//│     'b :> anything -> anything -> 'a
+//│    = [Function (anonymous)]
+
+res id
+//│ res: 'a
+//│   where
+//│     'a :> forall 'b. anything -> anything -> ('b -> 'b | 'a)
+//│    = [Function (anonymous)]
+
+r1 = res id id id id id
+//│ r1: 'a -> 'a | 'b
+//│   where
+//│     'b :> forall 'c. anything -> 'c -> ('b | 'c)
+//│   = [Function: id]
+
+r1 iter2 iter2 K
+//│ res: ('a & 'b & 'c) -> (anything -> anything -> 'b | 'd | 'c | 'e)
+//│   where
+//│     'd :> forall 'f. anything -> 'f -> ('d | 'f)
+//│     'a :> 'e
+//│     'e :> anything -> anything -> 'a
+//│    = [Function (anonymous)]
+
+r = r1 iter2 iter2
+//│ r: ('a -> 'b & 'b -> 'c & 'd -> 'e & 'e -> ('d & 'f)) -> ('a & 'd) -> ('c | 'f) | 'g
+//│   where
+//│     'g :> forall 'h. anything -> 'h -> ('g | 'h)
+//│  = [Function (anonymous)]
+
+r iter2
+//│ res: ('a -> ('a & 'b) & 'b -> ('a & 'b & 'c) & 'd -> 'e & 'e -> ('d & 'f) & 'g) -> (('a & 'd) -> ('c | 'f) | 'h | 'g)
+//│   where
+//│     'h :> forall 'i. anything -> 'i -> ('h | 'i)
+//│    = [Function (anonymous)]
+
+:NoRecursiveTypes
+// --------------
 
 
 
@@ -137,9 +221,9 @@ id x = x
 iter2 f x = f(f x)
 //│ id: 'a -> 'a
 //│   = [Function: id1]
-//│ iter2: 'a -> (forall 'b 'c 'd. ('b -> 'd
+//│ iter2: 'a -> (forall 'b 'c 'd. ('d -> 'c
 //│   where
-//│     'a <: 'b -> 'c & 'c -> 'd))
+//│     'a <: 'd -> 'b & 'b -> 'c))
 //│      = [Function: iter21]
 
 iter2 iter2
@@ -153,9 +237,9 @@ iter2 iter2
 id iter2 iter2
 //│ res: 'a -> 'b
 //│   where
-//│     forall 'c. 'c -> (forall 'd 'e 'f. ('f -> 'e
+//│     forall 'c. 'c -> (forall 'd 'e 'f. ('d -> 'f
 //│   where
-//│     'c <: 'f -> 'd & 'd -> 'e)) <: 'a -> 'g & 'g -> 'b
+//│     'c <: 'd -> 'e & 'e -> 'f)) <: 'a -> 'g & 'g -> 'b
 //│    = [Function (anonymous)]
 
 
@@ -171,9 +255,9 @@ iter2 iter2 K
 
 // (λzy. y(zI)(zK))(λx. xx).
 foo = (fun z -> fun y -> y (z I) (z K))
-//│ foo: 'a -> (forall 'b 'c 'd. (('b -> 'c -> 'd) -> 'd
+//│ foo: 'a -> (forall 'b 'c 'd. (('c -> 'd -> 'b) -> 'b
 //│   where
-//│     'a <: (forall 'e. 'e -> 'e) -> 'b & (forall 'f. 'f -> anything -> 'f) -> 'c))
+//│     'a <: (forall 'e. 'e -> 'e) -> 'c & (forall 'f. 'f -> anything -> 'f) -> 'd))
 //│    = [Function: foo1]
 
 foo (fun x -> x x)
@@ -198,8 +282,8 @@ succ_ n s z = s (n s z)
 def succ: (forall 'X. ('X -> 'X) -> 'X -> 'X) -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
 //│ succ_: 'a -> (forall 'b. 'b -> (forall 'c 'd 'e. ('c -> 'e
 //│   where
-//│     'b <: 'd -> 'e
-//│     'a <: 'b -> 'c -> 'd)))
+//│     'a <: 'b -> 'c -> 'd
+//│     'b <: 'd -> 'e)))
 //│      = [Function: succ_1]
 //│ succ: (forall 'X. ('X -> 'X) -> 'X -> 'X) -> (forall 'X0. ('X0 -> 'X0) -> 'X0 -> 'X0)
 //│     = <missing implementation>
@@ -212,23 +296,23 @@ succ = succ_
 //│   <:  succ:
 //│ (forall 'X. ('X -> 'X) -> 'X -> 'X) -> (forall 'X0. ('X0 -> 'X0) -> 'X0 -> 'X0)
 //│ ╔══[ERROR] Type error in def definition
-//│ ║  l.207: 	succ = succ_
+//│ ║  l.291: 	succ = succ_
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── type variable `'X` leaks out of its scope
-//│ ║  l.198: 	def succ: (forall 'X. ('X -> 'X) -> 'X -> 'X) -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
+//│ ║  l.282: 	def succ: (forall 'X. ('X -> 'X) -> 'X -> 'X) -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
 //│ ║         	                                                                    ^^
 //│ ╟── back into type variable `'X`
-//│ ║  l.198: 	def succ: (forall 'X. ('X -> 'X) -> 'X -> 'X) -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
+//│ ║  l.282: 	def succ: (forall 'X. ('X -> 'X) -> 'X -> 'X) -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
 //│ ║         	                                                              ^^
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this function:
-//│ ║  l.197: 	succ_ n s z = s (n s z)
+//│ ║  l.281: 	succ_ n s z = s (n s z)
 //│ ║         	        ^^^^^^^^^^^^^^^
 //│ ╟── • this reference:
-//│ ║  l.207: 	succ = succ_
+//│ ║  l.291: 	succ = succ_
 //│ ║         	       ^^^^^
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.198: 	def succ: (forall 'X. ('X -> 'X) -> 'X -> 'X) -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
+//│ ║  l.282: 	def succ: (forall 'X. ('X -> 'X) -> 'X -> 'X) -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
 //│ ╙──       	                             ^^
 //│     = [Function: succ_1]
 
@@ -236,7 +320,12 @@ c2 = succ (succ n0)
 //│ c2: ('X -> 'X) -> 'X -> 'X
 //│   = [Function (anonymous)]
 
+:e
 c2 c2 K
+//│ ╔══[ERROR] Inferred recursive type: 'a
+//│   where
+//│     'a :> anything -> 'a
+//│ ╙──
 //│ res: ('a & 'X) -> ('X | anything -> 'a)
 //│   where
 //│     'X :> anything -> 'X
@@ -246,35 +335,46 @@ c2_ = succ_ (succ_ n0)
 //│ c2_: 'a -> (forall 'b 'c 'd. ('b -> 'd
 //│   where
 //│     'a <: 'c -> 'd
-//│     forall 'e. 'e -> (forall 'f 'g 'h. ('g -> 'f
+//│     forall 'e. 'e -> (forall 'f 'g 'h. ('f -> 'h
 //│   where
-//│     'e <: 'h -> 'f
-//│     forall 'X. ('X -> 'X) -> 'X -> 'X <: 'e -> 'g -> 'h)) <: 'a -> 'b -> 'c))
+//│     forall 'X. ('X -> 'X) -> 'X -> 'X <: 'e -> 'f -> 'g
+//│     'e <: 'g -> 'h)) <: 'a -> 'b -> 'c))
 //│    = [Function (anonymous)]
 
 c2_ c2_
 //│ res: 'a -> 'b
 //│   where
-//│     forall 'c. 'c -> (forall 'd 'e 'f. ('d -> 'f
+//│     forall 'c. 'c -> (forall 'd 'e 'f. ('f -> 'e
 //│   where
-//│     forall 'X. ('X -> 'X) -> 'X -> 'X <: 'c -> 'd -> 'e
-//│     'c <: 'e -> 'f)) <: (forall 'g. 'g -> (forall 'h 'i 'j. ('h -> 'j
+//│     'c <: 'd -> 'e
+//│     forall 'X. ('X -> 'X) -> 'X -> 'X <: 'c -> 'f -> 'd)) <: (forall 'g. 'g -> (forall 'h 'i 'j. ('h -> 'j
 //│   where
-//│     'g <: 'i -> 'j
 //│     forall 'k. 'k -> (forall 'l 'm 'n. ('l -> 'n
 //│   where
 //│     'k <: 'm -> 'n
-//│     forall 'X. ('X -> 'X) -> 'X -> 'X <: 'k -> 'l -> 'm)) <: 'g -> 'h -> 'i))) -> 'a -> 'o
+//│     forall 'X. ('X -> 'X) -> 'X -> 'X <: 'k -> 'l -> 'm)) <: 'g -> 'h -> 'i
+//│     'g <: 'i -> 'j))) -> 'a -> 'o
 //│     forall 'g. 'g -> (forall 'h 'i 'j. ('h -> 'j
 //│   where
-//│     'g <: 'i -> 'j
 //│     forall 'k. 'k -> (forall 'l 'm 'n. ('l -> 'n
 //│   where
 //│     'k <: 'm -> 'n
-//│     forall 'X. ('X -> 'X) -> 'X -> 'X <: 'k -> 'l -> 'm)) <: 'g -> 'h -> 'i)) <: 'o -> 'b
+//│     forall 'X. ('X -> 'X) -> 'X -> 'X <: 'k -> 'l -> 'm)) <: 'g -> 'h -> 'i
+//│     'g <: 'i -> 'j)) <: 'o -> 'b
 //│    = [Function (anonymous)]
 
+:e
 c2_ c2_ K
+//│ ╔══[ERROR] Inferred recursive type: 'a
+//│   where
+//│     'a :> forall 'b 'c 'd 'e. (('b & 'e) -> (anything -> 'e | 'd)
+//│   where
+//│     forall 'f. 'f -> (forall 'g 'h 'i. ('g -> 'i
+//│   where
+//│     'f <: 'h -> 'i
+//│     forall 'X. ('X -> 'X) -> 'X -> 'X <: 'f -> 'g -> 'h)) <: 'a -> 'b -> 'c
+//│     'a <: 'c -> 'd)
+//│ ╙──
 //│ res: 'a -> 'b
 //│   where
 //│     forall 'c 'd 'e. ('c -> 'e
@@ -286,8 +386,8 @@ c2_ c2_ K
 //│     'j <: 'd -> 'e) <: 'k -> 'b
 //│     forall 'l. 'l -> (forall 'm 'n 'o. ('m -> 'o
 //│   where
-//│     'l <: 'n -> 'o
-//│     forall 'X. ('X -> 'X) -> 'X -> 'X <: 'l -> 'm -> 'n)) <: (forall 'c 'd 'e. ('c -> 'e
+//│     forall 'X. ('X -> 'X) -> 'X -> 'X <: 'l -> 'm -> 'n
+//│     'l <: 'n -> 'o)) <: (forall 'c 'd 'e. ('c -> 'e
 //│   where
 //│     forall 'f. 'f -> (forall 'g 'h 'i. ('g -> 'i
 //│   where
@@ -305,13 +405,13 @@ c2_ c2_ K
 //│    = [Function (anonymous)]
 
 c2__ = succ_ (succ_ n0_)
-//│ c2__: 'a -> (forall 'b 'c 'd. ('c -> 'b
+//│ c2__: 'a -> (forall 'b 'c 'd. ('b -> 'd
 //│   where
-//│     'a <: 'd -> 'b
 //│     forall 'e. 'e -> (forall 'f 'g 'h. ('f -> 'h
 //│   where
-//│     'e <: 'g -> 'h
-//│     anything -> (forall 'i. 'i -> 'i) <: 'e -> 'f -> 'g)) <: 'a -> 'c -> 'd))
+//│     anything -> (forall 'i. 'i -> 'i) <: 'e -> 'f -> 'g
+//│     'e <: 'g -> 'h)) <: 'a -> 'b -> 'c
+//│     'a <: 'c -> 'd))
 //│     = [Function (anonymous)]
 
 c2__ c2__
@@ -321,8 +421,8 @@ c2__ c2__
 //│   where
 //│     forall 'g. 'g -> (forall 'h 'i 'j. ('h -> 'j
 //│   where
-//│     'g <: 'i -> 'j
-//│     anything -> (forall 'k. 'k -> 'k) <: 'g -> 'h -> 'i)) <: 'c -> 'd -> 'e
+//│     anything -> (forall 'k. 'k -> 'k) <: 'g -> 'h -> 'i
+//│     'g <: 'i -> 'j)) <: 'c -> 'd -> 'e
 //│     'c <: 'e -> 'f)) <: 'l -> 'b
 //│     forall 'm. 'm -> (forall 'n 'o 'p. ('n -> 'p
 //│   where
@@ -331,31 +431,31 @@ c2__ c2__
 //│   where
 //│     forall 'g. 'g -> (forall 'h 'i 'j. ('h -> 'j
 //│   where
-//│     'g <: 'i -> 'j
-//│     anything -> (forall 'k. 'k -> 'k) <: 'g -> 'h -> 'i)) <: 'c -> 'd -> 'e
+//│     anything -> (forall 'k. 'k -> 'k) <: 'g -> 'h -> 'i
+//│     'g <: 'i -> 'j)) <: 'c -> 'd -> 'e
 //│     'c <: 'e -> 'f))) -> 'a -> 'l
 //│    = [Function (anonymous)]
 
 c2__ c2__ K
 //│ res: 'a -> 'b
 //│   where
-//│     forall 'c 'd 'e. ('d -> 'c
+//│     forall 'c 'd 'e. ('c -> 'e
 //│   where
 //│     forall 'f. 'f -> (forall 'g 'h 'i. ('g -> 'i
 //│   where
-//│     anything -> (forall 'j. 'j -> 'j) <: 'f -> 'g -> 'h
-//│     'f <: 'h -> 'i)) <: (forall 'k. 'k -> anything -> 'k) -> 'd -> 'e
-//│     forall 'k. 'k -> anything -> 'k <: 'e -> 'c) <: 'l -> 'b
+//│     'f <: 'h -> 'i
+//│     anything -> (forall 'j. 'j -> 'j) <: 'f -> 'g -> 'h)) <: (forall 'k. 'k -> anything -> 'k) -> 'c -> 'd
+//│     forall 'k. 'k -> anything -> 'k <: 'd -> 'e) <: 'l -> 'b
 //│     forall 'm. 'm -> (forall 'n 'o 'p. ('n -> 'p
 //│   where
 //│     'm <: 'o -> 'p
-//│     anything -> (forall 'j. 'j -> 'j) <: 'm -> 'n -> 'o)) <: (forall 'c 'd 'e. ('d -> 'c
+//│     anything -> (forall 'j. 'j -> 'j) <: 'm -> 'n -> 'o)) <: (forall 'c 'd 'e. ('c -> 'e
 //│   where
 //│     forall 'f. 'f -> (forall 'g 'h 'i. ('g -> 'i
 //│   where
-//│     anything -> (forall 'j. 'j -> 'j) <: 'f -> 'g -> 'h
-//│     'f <: 'h -> 'i)) <: (forall 'k. 'k -> anything -> 'k) -> 'd -> 'e
-//│     forall 'k. 'k -> anything -> 'k <: 'e -> 'c)) -> 'a -> 'l
+//│     'f <: 'h -> 'i
+//│     anything -> (forall 'j. 'j -> 'j) <: 'f -> 'g -> 'h)) <: (forall 'k. 'k -> anything -> 'k) -> 'c -> 'd
+//│     forall 'k. 'k -> anything -> 'k <: 'd -> 'e)) -> 'a -> 'l
 //│    = [Function (anonymous)]
 
 

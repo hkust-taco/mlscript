@@ -54,11 +54,11 @@ rec def eval1_stub e = case e of {
   }
 //│ eval1_stub: forall 'a 'b 'c 'd 'lhs 'eval1_stub 'e. 'eval1_stub
 //│   where
-//│     'eval1_stub := 'a -> (1 | 'd | 0)
-//│     'd :> 1 | 'd | 0
-//│     'a <: #Lit & 'c | (#Add & 'e | 'b & ~#Add) & ~#Lit
+//│     'eval1_stub := 'd -> (1 | 'c | 0)
+//│     'c :> 1 | 'c | 0
+//│     'd <: #Lit & 'b | (#Add & 'e | 'a & ~#Add) & ~#Lit
 //│     'e <: {lhs: 'lhs}
-//│     'lhs <: 'a
+//│     'lhs <: 'd
 //│           = [Function: eval1_stub2]
 
 eval1_stub
@@ -84,18 +84,18 @@ rec def eval1 k e = case e of {
 
 :ns
 eval1
-//│ res: forall 'a 'lhs 'b 'c 'eval1 'd 'val 'rhs 'e 'f 'g. 'eval1
+//│ res: forall 'eval1 'a 'b 'c 'val 'd 'e 'f 'lhs 'rhs 'g. 'eval1
 //│   where
-//│     'eval1 := 'e -> 'b -> ('val | 'f | 'd)
-//│     'f := int
-//│     'b <: #Lit & 'a | (#Add & 'c | 'g & ~#Add) & ~#Lit
-//│     'c <: {rhs: 'rhs} & {lhs: 'lhs}
-//│     'lhs <: 'b
-//│     'rhs <: 'b
-//│     'a <: {val: 'val}
+//│     'eval1 := 'b -> 'g -> ('val | 'c | 'e)
+//│     'c := int
+//│     'g <: #Lit & 'f | (#Add & 'a | 'd & ~#Add) & ~#Lit
+//│     'a <: {rhs: 'rhs} & {lhs: 'lhs}
+//│     'lhs <: 'g
+//│     'rhs <: 'g
+//│     'f <: {val: 'val}
 //│     'val <: int
-//│     'e <: 'g -> 'd
-//│     'd <: int
+//│     'b <: 'd -> 'e
+//│     'e <: int
 //│    = [Function: eval1]
 
 :re

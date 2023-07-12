@@ -206,7 +206,7 @@ class C[A]: { a: A }
 
 :ns
 rec def foo (c: C['a]) = foo (c.a)
-//│ foo: forall 'foo 'a 'a0 'b. 'foo
+//│ foo: forall 'b 'foo 'a 'a0. 'foo
 //│   where
 //│     'foo := C['a] -> 'b
 //│     'a <: 'a0
@@ -411,19 +411,19 @@ f 1
 
 :ns
 rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
-//│ f: forall 'b 'c 'd 'a 'e 'f 'g. 'f
+//│ f: forall 'b 'a 'f 'c 'd 'e 'g. 'f
 //│   where
-//│     'f := 'b -> 'g
-//│     'b :> 'b\a & {a: 'c}
-//│        <: ({a: 'a} | ~{a: 'c} | ~{})\a & ({a: 'a} | ~{a: 'c})\a & (number | ~{a: 'c} | ~{})\a & (number | ~{a: 'c})\a & (int | ~{a: 'c} | ~{})\a & (int | ~{a: 'c})\a & 'd & int & number
-//│     'a <: 'd
-//│     'd :> 'b\a & {a: 'c}
-//│        <: 'g
-//│     'g :> 'b\a & {a: 'c}
+//│     'f := 'b -> 'e
+//│     'b :> 'b\a & {a: 'd}
+//│        <: ({a: 'a} | ~{a: 'd} | ~{})\a & ({a: 'a} | ~{a: 'd})\a & (number | ~{a: 'd} | ~{})\a & (number | ~{a: 'd})\a & (int | ~{a: 'd} | ~{})\a & (int | ~{a: 'd})\a & 'c & int & number
+//│     'a <: 'c
+//│     'c :> 'b\a & {a: 'd}
 //│        <: 'e
-//│     'e :> 'b\a & {a: 'c}
+//│     'e :> 'b\a & {a: 'd}
+//│        <: 'g
+//│     'g :> 'b\a & {a: 'd}
 //│        <: {a: 'a}
-//│     'c :> int
+//│     'd :> int
 
 f
 //│ res: 'a -> 'b

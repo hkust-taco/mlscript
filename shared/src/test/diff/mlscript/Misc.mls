@@ -46,27 +46,27 @@ def arg = if true then c else 0
 
 :ns
 def arg = if true then C{x = 42} else C{x = 1}
-//│ arg: forall 'a 'A 'A0 'x 'x0. 'a
+//│ arg: forall 'A 'A0 'a 'x 'x0. 'a
 //│   where
-//│     'a :> #C & {x: 'x0, C#A = 'A0} | #C & {x: 'x, C#A = 'A}
+//│     'a :> #C & {x: 'x0, C#A = 'A} | #C & {x: 'x, C#A = 'A0}
 //│     'x :> 1
-//│        <: 'A
-//│     'A :> 1
+//│        <: 'A0
+//│     'A0 :> 1
 //│     'x0 :> 42
-//│         <: 'A0
-//│     'A0 :> 42
+//│         <: 'A
+//│     'A :> 42
 
 :ns
 arg
-//│ res: forall 'a 'A 'A0 'x 'x0. 'a
+//│ res: forall 'A 'A0 'a 'x 'x0. 'a
 //│   where
-//│     'a :> #C & {x: 'x0, C#A = 'A0} | #C & {x: 'x, C#A = 'A}
+//│     'a :> #C & {x: 'x0, C#A = 'A} | #C & {x: 'x, C#A = 'A0}
 //│     'x :> 1
-//│        <: 'A
-//│     'A :> 1
+//│        <: 'A0
+//│     'A0 :> 1
 //│     'x0 :> 42
-//│         <: 'A0
-//│     'A0 :> 42
+//│         <: 'A
+//│     'A :> 42
 
 arg
 //│ res: C[1 | 42]
