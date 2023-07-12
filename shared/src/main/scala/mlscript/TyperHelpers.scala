@@ -862,7 +862,7 @@ abstract class TyperHelpers { Typer: Typer =>
       case NuParam(nme, ty) => ty.lb.toList ::: ty.ub :: Nil
       case TypedNuFun(level, fd, ty) => ty :: Nil
       case TypedNuDummy(d) => Nil
-      case _ => ??? // TODO
+      case _ => Nil // TODO
     }
     def children(includeBounds: Bool): List[SimpleType] = this match {
       case tv @ AssignedVariable(ty) => if (includeBounds) ty :: Nil else Nil

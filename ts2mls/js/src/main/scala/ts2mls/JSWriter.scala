@@ -15,7 +15,7 @@ class JSWriter(filename: String) {
   def writeln(str: String): Unit = write(str + "\n")
   def write(str: String): Unit = buffer ++= str
   def writeErr(str: String): Unit = err ++= s"//| $str\n"
-  def writeDbg(str: String): Unit = dbg ++= s"//| $str\n"
+  def writeDbg(str: String): Unit = str.split("\n").foreach(s => dbg ++= s"//| $s\n")
 
   def close(): Unit = {
     val str = buffer.toString() + dbg.toString() + err.toString()

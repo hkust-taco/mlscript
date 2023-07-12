@@ -16,7 +16,7 @@ class Driver(options: DriverOptions) {
 
   private var dbgWriter: Option[JSWriter] = None
   private def printDbg(msg: String) =
-    dbgWriter.fold(println(msg))(writer => writer.writeDbg(msg))
+    dbgWriter.fold(())(writer => writer.writeDbg(msg.replace("\t", "  ")))
 
   private val typer =
     new mlscript.Typer(
@@ -40,6 +40,7 @@ class Driver(options: DriverOptions) {
   private val noRedundantOutput = (s: String) => ()
 
   private val importedModule = MutSet[String]()
+  private val dbdFiles = MutSet[String]()
   private implicit val config = TypeScript.parseOption(options.path, options.tsconfig)
 
   import TSPathResolver.{normalize, isLocal, isMLScirpt, dirname}
@@ -100,8 +101,10 @@ class Driver(options: DriverOptions) {
 
     val lines = content.splitSane('\n').toIndexedSeq
     lines.headOption match {
-      case S(head) => typer.dbg = head.startsWith("//") && head.endsWith(":d")
-      case _ => typer.dbg = false
+      case S(head) if (head.startsWith("//") && head.endsWith(":d")) =>
+        dbdFiles.add(filename)
+        typer.dbg = true
+      case _ => ()
     }
     val fph = new mlscript.FastParseHelpers(content, lines)
     val origin = Origin(filename, 1, fph)
@@ -271,9 +274,8 @@ class Driver(options: DriverOptions) {
         if (file.filename.endsWith(".mls")) { // only generate js/mlsi files for mls files
           val expStr = 
             cycleSigs.foldLeft("")((s, tu) => s"$s${`type`(tu, false, mlsiWriter.writeErr).show}") + {
-              dbgWriter = Some(mlsiWriter);
-              val res = packTopModule(Some(file.moduleName), `type`(TypingUnit(definitions), false, mlsiWriter.writeErr).show);
-              dbgWriter = None
+              dbgWriter = Some(mlsiWriter)
+              val res = packTopModule(Some(file.moduleName), `type`(TypingUnit(definitions), false, mlsiWriter.writeErr).show)
               res
             }
           val interfaces = otherList.map(s => Import(file.translateImportToInterface(s))).foldRight(expStr)((imp, itf) => s"$imp\n$itf")
@@ -289,6 +291,12 @@ class Driver(options: DriverOptions) {
         }
         else
           `type`(TypingUnit(declarations), false, mlsiWriter.writeErr) // for ts/mlsi files, we only check interface files
+
+        if (dbdFiles.contains(file.filename)) {
+          typer.dbg = false
+          dbdFiles.remove(file.filename)
+          ()
+        }
       }
     })
   }

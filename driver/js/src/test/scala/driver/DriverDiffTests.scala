@@ -133,6 +133,7 @@ object DriverDiffTests {
     esEntry("MyPartialOrder", Some("./tsconfig.json"), expectError = true, expectTypeError = true), // TODO: type traits in modules
     esEntry("Builtin"),
     esEntry("TyperDebug"),
+    esEntry("Debug1"),
     esEntry("Child", expectTypeError = true),
     esEntry("NewTSClass", Some("./tsconfig.json"), expectTypeError = true)
   )
