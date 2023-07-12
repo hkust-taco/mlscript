@@ -324,7 +324,11 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
       case Nil => alsName
       case _ :: _ => AppliedType(alsName, tparams)
     }
-    P((ctorName ~ parTy.?).map {
+    def tup = parTy.map {
+      case t: Tuple => t
+      case t => Tuple(N -> Field(N, t) :: Nil)
+    }
+    P((ctorName ~ tup.?).map {
       case (id, S(body: Tuple)) =>
         val positionals = body.fields.zipWithIndex.map { case (_, i) => Var("_"+(i+1)) }
         val rcdBody = Record(positionals.zip(body.fields.map(_._2)))

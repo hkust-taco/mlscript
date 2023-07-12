@@ -1,6 +1,6 @@
 :NoJS
 
-datatype Either[A, B] = Left(A,) || Right(B,)
+datatype Either[A, B] = Left(A) || Right(B)
 //│ Defined class Either[+A, +B]
 //│ Declared Either.Left: Either['A, ?] -> ('A,)
 //│ Declared Either.Right: Either[?, 'B] -> ('B,)
@@ -20,8 +20,8 @@ datatype List[A] = Cons(A, List[A]) || Nil
 //│ Nil: List[nothing]
 
 type Heap = List[(string, int)]
-datatype HeapVar = HeapInt(int,) || HeapV(Heap,)
-datatype Exp = EInt(int,) || Var(string,) || Plus(Exp, Exp) || Times(Exp, Exp)
+datatype HeapVar = HeapInt(int) || HeapV(Heap)
+datatype Exp = EInt(int) || Var(string) || Plus(Exp, Exp) || Times(Exp, Exp)
 datatype Stmt = Skip || Assign(string, Exp)
 //│ Defined type alias Heap
 //│ Defined class HeapVar
@@ -52,13 +52,13 @@ datatype Stmt = Skip || Assign(string, Exp)
 //│ Skip: Stmt
 //│ Assign: (string, Exp,) -> Stmt
 
-datatype Poly[A] = PolyList(List[A -> A],)
+datatype Poly[A] = PolyList(List[A -> A])
 //│ Defined class Poly[=A]
 //│ Declared Poly.PolyList: Poly['A] -> (List['A -> 'A],)
 //│ Defined class PolyList[=A]
 //│ PolyList: List['a -> 'a] -> Poly['a]
 
-datatype FCPoly = FCPolyList(List[forall 'a. 'a -> 'a],)
+datatype FCPoly = FCPolyList(List[forall 'a. 'a -> 'a])
 //│ Defined class FCPoly
 //│ Declared FCPoly.FCPolyList: FCPoly -> (List[forall 'a. 'a -> 'a],)
 //│ Defined class FCPolyList
