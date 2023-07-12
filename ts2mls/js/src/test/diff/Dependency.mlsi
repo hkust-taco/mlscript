@@ -11,5 +11,5 @@ export declare module Dependency {
   export declare class D {
     val d: Num
   }
-  fun default(): Num
+  declare fun default(): Num
 }

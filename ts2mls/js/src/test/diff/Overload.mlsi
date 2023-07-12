@@ -1,24 +1,24 @@
 export declare module Overload {
-  fun f(x: anything): Str /* warning: the overload of function f is not supported yet. */
+  declare fun f(x: anything): Str /* warning: the overload of function f is not supported yet. */
   declare class M {
-    fun foo(args0: anything): Str /* warning: the overload of function foo is not supported yet. */
+    declare fun foo(args0: anything): Str /* warning: the overload of function foo is not supported yet. */
   }
-  fun app(f: anything, x: anything): unit /* warning: the overload of function app is not supported yet. */
-  fun create(x: anything): () => (false) | (true) /* warning: the overload of function create is not supported yet. */
-  fun g0(x: anything): Str /* warning: the overload of function g0 is not supported yet. */
-  fun db(x: anything): MutArray[Num] /* warning: the overload of function db is not supported yet. */
+  declare fun app(f: anything, x: anything): unit /* warning: the overload of function app is not supported yet. */
+  declare fun create(x: anything): () => (false) | (true) /* warning: the overload of function create is not supported yet. */
+  declare fun g0(x: anything): Str /* warning: the overload of function g0 is not supported yet. */
+  declare fun db(x: anything): MutArray[Num] /* warning: the overload of function db is not supported yet. */
   declare class N {}
-  fun id(x: anything): unit /* warning: the overload of function id is not supported yet. */
-  fun tst(x: anything): {y: Str,} /* warning: the overload of function tst is not supported yet. */
-  fun op(x: anything, y: anything): unit /* warning: the overload of function op is not supported yet. */
-  fun swap(x: anything): MutArray[anything] /* warning: the overload of function swap is not supported yet. */
-  fun u(x: anything): Str /* warning: the overload of function u is not supported yet. */
-  fun doSome['T, 'U](x: anything): nothing /* warning: the overload of function doSome is not supported yet. */
+  declare fun id(x: anything): unit /* warning: the overload of function id is not supported yet. */
+  declare fun tst(x: anything): {y: Str,} /* warning: the overload of function tst is not supported yet. */
+  declare fun op(x: anything, y: anything): unit /* warning: the overload of function op is not supported yet. */
+  declare fun swap(x: anything): MutArray[anything] /* warning: the overload of function swap is not supported yet. */
+  declare fun u(x: anything): Str /* warning: the overload of function u is not supported yet. */
+  declare fun doSome['T, 'U](x: anything): nothing /* warning: the overload of function doSome is not supported yet. */
   declare module XX {
-    export fun f['T](x: 'T, n: anything): Str /* warning: the overload of function f is not supported yet. */
+    export declare fun f['T](x: 'T, n: anything): Str /* warning: the overload of function f is not supported yet. */
   }
   declare class WWW {
-    fun F['T](args0: 'T): 'T /* warning: the overload of function F is not supported yet. */
+    declare fun F['T](args0: 'T): 'T /* warning: the overload of function F is not supported yet. */
   }
-  fun baz(): anything /* warning: the overload of function baz is not supported yet. */
+  declare fun baz(): anything /* warning: the overload of function baz is not supported yet. */
 }

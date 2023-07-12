@@ -1,17 +1,17 @@
 export declare module InterfaceMember {
   declare trait IFoo {
     val a: Str
-    fun b(x: Num): Num
-    fun c(): (false) | (true)
-    fun d(x: Str): unit
+    declare fun b(x: Num): Num
+    declare fun c(): (false) | (true)
+    declare fun d(x: Str): unit
   }
   declare trait II['T] {
-    fun test(x: 'T): Num
+    declare fun test(x: 'T): Num
   }
-  fun create(): {v: Num,}
-  fun get(x: {t: Str,}): Str
+  declare fun create(): {v: Num,}
+  declare fun get(x: {t: Str,}): Str
   declare trait IEvent {
-    fun callback(): (x: Num) => unit
+    declare fun callback(): (x: Num) => unit
   }
   declare trait SearchFunc: (args0: Str, args1: Str) => (false) | (true) {}
   declare trait StringArray {
@@ -19,17 +19,17 @@ export declare module InterfaceMember {
   }
   declare trait Counter: (args0: Num) => Str {
     val interval: Num
-    fun reset(): unit
+    declare fun reset(): unit
   }
   declare trait Simple {
     val a: Num
-    fun b(x: (false) | (true)): Str
+    declare fun b(x: (false) | (true)): Str
   }
   declare trait Simple2['T] {
     val abc: 'T
   }
   declare trait Next extends Simple {}
   declare trait TTT['T] {
-    fun ttt(x: 'T): 'T
+    declare fun ttt(x: 'T): 'T
   }
 }

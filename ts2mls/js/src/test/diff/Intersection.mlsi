@@ -1,43 +1,43 @@
 export declare module Intersection {
-  fun extend['T, 'U](first: 'T, second: 'U): ('T) & ('U)
-  fun foo['T, 'U](x: ('T) & ('U)): unit
-  fun over(f: ((x: Num) => Str) & ((x: Object) => Str)): Str
+  declare fun extend['T, 'U](first: 'T, second: 'U): ('T) & ('U)
+  declare fun foo['T, 'U](x: ('T) & ('U)): unit
+  declare fun over(f: ((x: Num) => Str) & ((x: Object) => Str)): Str
   declare trait IA {
     val x: Num
   }
   declare trait IB {
     val y: Num
   }
-  fun iii(x: (IA) & (IB)): (IA) & (IB)
-  fun uu['U, 'V, 'T, 'P](x: (((('U) & ('T)) | (('U) & ('P))) | (('V) & ('T))) | (('V) & ('P))): (((('U) & ('T)) | (('U) & ('P))) | (('V) & ('T))) | (('V) & ('P))
-  fun iiii['U, 'T, 'V](x: (('U) & ('T)) & ('V)): (('U) & ('T)) & ('V)
-  fun arr['U, 'T](a: (MutArray['U]) & (MutArray['T])): (MutArray['U]) & (MutArray['T])
-  fun tt['U, 'T, 'V](x: (('U, 'T, )) & (('V, 'V, ))): (('U, 'T, )) & (('V, 'V, ))
+  declare fun iii(x: (IA) & (IB)): (IA) & (IB)
+  declare fun uu['U, 'V, 'T, 'P](x: (((('U) & ('T)) | (('U) & ('P))) | (('V) & ('T))) | (('V) & ('P))): (((('U) & ('T)) | (('U) & ('P))) | (('V) & ('T))) | (('V) & ('P))
+  declare fun iiii['U, 'T, 'V](x: (('U) & ('T)) & ('V)): (('U) & ('T)) & ('V)
+  declare fun arr['U, 'T](a: (MutArray['U]) & (MutArray['T])): (MutArray['U]) & (MutArray['T])
+  declare fun tt['U, 'T, 'V](x: (('U, 'T, )) & (('V, 'V, ))): (('U, 'T, )) & (('V, 'V, ))
   declare class A {}
   declare class B {}
-  fun inter(c: (A) & (B)): (A) & (B)
+  declare fun inter(c: (A) & (B)): (A) & (B)
 }
 //| ╔══[ERROR] type identifier not found: IA
-//| ║  l.11: 	  fun iii(x: (IA) & (IB)): (IA) & (IB)
-//| ╙──      	             ^^^^
+//| ║  l.11: 	  declare fun iii(x: (IA) & (IB)): (IA) & (IB)
+//| ╙──      	                     ^^^^
 //| ╔══[ERROR] type identifier not found: IB
-//| ║  l.11: 	  fun iii(x: (IA) & (IB)): (IA) & (IB)
-//| ╙──      	                    ^^^^
+//| ║  l.11: 	  declare fun iii(x: (IA) & (IB)): (IA) & (IB)
+//| ╙──      	                            ^^^^
 //| ╔══[ERROR] type identifier not found: IA
-//| ║  l.11: 	  fun iii(x: (IA) & (IB)): (IA) & (IB)
-//| ╙──      	                           ^^^^
+//| ║  l.11: 	  declare fun iii(x: (IA) & (IB)): (IA) & (IB)
+//| ╙──      	                                   ^^^^
 //| ╔══[ERROR] type identifier not found: IB
-//| ║  l.11: 	  fun iii(x: (IA) & (IB)): (IA) & (IB)
-//| ╙──      	                                  ^^^^
+//| ║  l.11: 	  declare fun iii(x: (IA) & (IB)): (IA) & (IB)
+//| ╙──      	                                          ^^^^
 //| ╔══[ERROR] type identifier not found: A
-//| ║  l.18: 	  fun inter(c: (A) & (B)): (A) & (B)
-//| ╙──      	               ^^^
+//| ║  l.18: 	  declare fun inter(c: (A) & (B)): (A) & (B)
+//| ╙──      	                       ^^^
 //| ╔══[ERROR] type identifier not found: B
-//| ║  l.18: 	  fun inter(c: (A) & (B)): (A) & (B)
-//| ╙──      	                     ^^^
+//| ║  l.18: 	  declare fun inter(c: (A) & (B)): (A) & (B)
+//| ╙──      	                             ^^^
 //| ╔══[ERROR] type identifier not found: A
-//| ║  l.18: 	  fun inter(c: (A) & (B)): (A) & (B)
-//| ╙──      	                           ^^^
+//| ║  l.18: 	  declare fun inter(c: (A) & (B)): (A) & (B)
+//| ╙──      	                                   ^^^
 //| ╔══[ERROR] type identifier not found: B
-//| ║  l.18: 	  fun inter(c: (A) & (B)): (A) & (B)
-//| ╙──      	                                 ^^^
+//| ║  l.18: 	  declare fun inter(c: (A) & (B)): (A) & (B)
+//| ╙──      	                                         ^^^

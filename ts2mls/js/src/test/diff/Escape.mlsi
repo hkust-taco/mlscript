@@ -5,7 +5,7 @@ export declare module Escape {
   declare trait id"rec" {
     val id"fun": Str
   }
-  fun id"mixin"(id"module": Str): unit
+  declare fun id"mixin"(id"module": Str): unit
   val id"forall": Num
   declare module id"trait" {
     declare module id"of" {

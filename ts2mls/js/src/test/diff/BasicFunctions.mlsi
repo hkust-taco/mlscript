@@ -1,38 +1,38 @@
 export declare module BasicFunctions {
-  fun hello(): unit
-  fun add(x: Num, y: Num): Num
-  fun sub(x: Num, y: Num): Num
-  fun foo(): Num
-  fun id(x: anything): anything
-  fun odd(x: Num): (false) | (true)
-  fun isnull(x: anything): (false) | (true)
-  fun bar(): anything
-  fun nu(n: null): null
-  fun un(n: undefined): undefined
-  fun fail(): nothing
-  fun create(): Object
-  fun pa(x: Num): Num
-  fun wtf(x: anything): unit
+  declare fun hello(): unit
+  declare fun add(x: Num, y: Num): Num
+  declare fun sub(x: Num, y: Num): Num
+  declare fun foo(): Num
+  declare fun id(x: anything): anything
+  declare fun odd(x: Num): (false) | (true)
+  declare fun isnull(x: anything): (false) | (true)
+  declare fun bar(): anything
+  declare fun nu(n: null): null
+  declare fun un(n: undefined): undefined
+  declare fun fail(): nothing
+  declare fun create(): Object
+  declare fun pa(x: Num): Num
+  declare fun wtf(x: anything): unit
   declare class Foooooo {
     val ooooooo: Num
   }
-  fun inn(f: Foooooo): unit
-  fun out1(): Foooooo
+  declare fun inn(f: Foooooo): unit
+  declare fun out1(): Foooooo
   declare trait Barrrrrrrrr {
     val rrrrrrr: Num
   }
-  fun inn2(b: Barrrrrrrrr): unit
-  fun out2(): Barrrrrrrrr
+  declare fun inn2(b: Barrrrrrrrr): unit
+  declare fun out2(): Barrrrrrrrr
 }
 //| ╔══[ERROR] type identifier not found: Foooooo
-//| ║  l.19: 	  fun inn(f: Foooooo): unit
-//| ╙──      	             ^^^^^^^
+//| ║  l.19: 	  declare fun inn(f: Foooooo): unit
+//| ╙──      	                     ^^^^^^^
 //| ╔══[ERROR] type identifier not found: Foooooo
-//| ║  l.20: 	  fun out1(): Foooooo
-//| ╙──      	              ^^^^^^^
+//| ║  l.20: 	  declare fun out1(): Foooooo
+//| ╙──      	                      ^^^^^^^
 //| ╔══[ERROR] type identifier not found: Barrrrrrrrr
-//| ║  l.24: 	  fun inn2(b: Barrrrrrrrr): unit
-//| ╙──      	              ^^^^^^^^^^^
+//| ║  l.24: 	  declare fun inn2(b: Barrrrrrrrr): unit
+//| ╙──      	                      ^^^^^^^^^^^
 //| ╔══[ERROR] type identifier not found: Barrrrrrrrr
-//| ║  l.25: 	  fun out2(): Barrrrrrrrr
-//| ╙──      	              ^^^^^^^^^^^
+//| ║  l.25: 	  declare fun out2(): Barrrrrrrrr
+//| ╙──      	                      ^^^^^^^^^^^

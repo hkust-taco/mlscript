@@ -1,5 +1,5 @@
 export declare module MyClass {
   export declare class FooClass {
-    fun foo(): unit
+    declare fun foo(): unit
   }
 }

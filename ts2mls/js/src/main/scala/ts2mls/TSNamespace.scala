@@ -158,11 +158,11 @@ class TSNamespace(name: String, parent: Option[TSNamespace], allowReservedTypes:
           val realName = cjsExport.getOrElse(name, name)
           mem match {
             case inter: TSIntersectionType => // overloaded functions
-              writer.writeln(Converter.generateFunDeclaration(inter, realName, !cjsExport.isEmpty, exp)(indent))
+              writer.writeln(Converter.generateFunDeclaration(inter, realName, exp)(indent))
             case f: TSFunctionType =>
-              writer.writeln(Converter.generateFunDeclaration(f, realName, !cjsExport.isEmpty, exp)(indent))
+              writer.writeln(Converter.generateFunDeclaration(f, realName, exp)(indent))
             case overload: TSIgnoredOverload =>
-              writer.writeln(Converter.generateFunDeclaration(overload, realName, !cjsExport.isEmpty, exp)(indent))
+              writer.writeln(Converter.generateFunDeclaration(overload, realName, exp)(indent))
             case _: TSClassType => writer.writeln(Converter.convert(mem, exp)(indent))
             case TSInterfaceType(name, _, _, _, _) if (name =/= "") => // TODO: rename?
               writer.writeln(Converter.convert(mem, exp)(indent))

@@ -1,45 +1,45 @@
 export declare module TSArray {
-  fun first(x: MutArray[Str]): Str
-  fun getZero3(): MutArray[Num]
-  fun first2(fs: MutArray[(x: Num) => Num]): (x: Num) => Num
-  fun doEs(e: MutArray[Int]): MutArray[Int]
+  declare fun first(x: MutArray[Str]): Str
+  declare fun getZero3(): MutArray[Num]
+  declare fun first2(fs: MutArray[(x: Num) => Num]): (x: Num) => Num
+  declare fun doEs(e: MutArray[Int]): MutArray[Int]
   declare class C {}
   declare trait I {
     val i: Num
   }
-  fun doCs(c: MutArray[C]): MutArray[C]
-  fun doIs(i: MutArray[I]): MutArray[I]
-  fun inter['U, 'T](x: MutArray[('U) & ('T)]): MutArray[('U) & ('T)]
-  fun clean(x: MutArray[(Str, Num, )]): MutArray[(Str, Num, )]
-  fun translate['T, 'U](x: MutArray['T]): MutArray['U]
-  fun uu(x: MutArray[((Num) | (false)) | (true)]): MutArray[((Num) | (false)) | (true)]
+  declare fun doCs(c: MutArray[C]): MutArray[C]
+  declare fun doIs(i: MutArray[I]): MutArray[I]
+  declare fun inter['U, 'T](x: MutArray[('U) & ('T)]): MutArray[('U) & ('T)]
+  declare fun clean(x: MutArray[(Str, Num, )]): MutArray[(Str, Num, )]
+  declare fun translate['T, 'U](x: MutArray['T]): MutArray['U]
+  declare fun uu(x: MutArray[((Num) | (false)) | (true)]): MutArray[((Num) | (false)) | (true)]
   declare class Temp['T] {
     val x: 'T
   }
-  fun ta(ts: MutArray[Temp[(false) | (true)]]): MutArray[Temp[(false) | (true)]]
-  fun tat['T](ts: MutArray[Temp['T]]): MutArray[Temp['T]]
+  declare fun ta(ts: MutArray[Temp[(false) | (true)]]): MutArray[Temp[(false) | (true)]]
+  declare fun tat['T](ts: MutArray[Temp['T]]): MutArray[Temp['T]]
 }
 //| ╔══[ERROR] type identifier not found: C
-//| ║  l.10: 	  fun doCs(c: MutArray[C]): MutArray[C]
-//| ╙──      	                       ^
+//| ║  l.10: 	  declare fun doCs(c: MutArray[C]): MutArray[C]
+//| ╙──      	                               ^
 //| ╔══[ERROR] type identifier not found: C
-//| ║  l.10: 	  fun doCs(c: MutArray[C]): MutArray[C]
-//| ╙──      	                                     ^
+//| ║  l.10: 	  declare fun doCs(c: MutArray[C]): MutArray[C]
+//| ╙──      	                                             ^
 //| ╔══[ERROR] type identifier not found: I
-//| ║  l.11: 	  fun doIs(i: MutArray[I]): MutArray[I]
-//| ╙──      	                       ^
+//| ║  l.11: 	  declare fun doIs(i: MutArray[I]): MutArray[I]
+//| ╙──      	                               ^
 //| ╔══[ERROR] type identifier not found: I
-//| ║  l.11: 	  fun doIs(i: MutArray[I]): MutArray[I]
-//| ╙──      	                                     ^
+//| ║  l.11: 	  declare fun doIs(i: MutArray[I]): MutArray[I]
+//| ╙──      	                                             ^
 //| ╔══[ERROR] type identifier not found: Temp
-//| ║  l.19: 	  fun ta(ts: MutArray[Temp[(false) | (true)]]): MutArray[Temp[(false) | (true)]]
-//| ╙──      	                      ^^^^^^^^^^^^^^^^^^^^^^
+//| ║  l.19: 	  declare fun ta(ts: MutArray[Temp[(false) | (true)]]): MutArray[Temp[(false) | (true)]]
+//| ╙──      	                              ^^^^^^^^^^^^^^^^^^^^^^
 //| ╔══[ERROR] type identifier not found: Temp
-//| ║  l.19: 	  fun ta(ts: MutArray[Temp[(false) | (true)]]): MutArray[Temp[(false) | (true)]]
-//| ╙──      	                                                         ^^^^^^^^^^^^^^^^^^^^^^
+//| ║  l.19: 	  declare fun ta(ts: MutArray[Temp[(false) | (true)]]): MutArray[Temp[(false) | (true)]]
+//| ╙──      	                                                                 ^^^^^^^^^^^^^^^^^^^^^^
 //| ╔══[ERROR] type identifier not found: Temp
-//| ║  l.20: 	  fun tat['T](ts: MutArray[Temp['T]]): MutArray[Temp['T]]
-//| ╙──      	                           ^^^^^^^^
+//| ║  l.20: 	  declare fun tat['T](ts: MutArray[Temp['T]]): MutArray[Temp['T]]
+//| ╙──      	                                   ^^^^^^^^
 //| ╔══[ERROR] type identifier not found: Temp
-//| ║  l.20: 	  fun tat['T](ts: MutArray[Temp['T]]): MutArray[Temp['T]]
-//| ╙──      	                                                ^^^^^^^^
+//| ║  l.20: 	  declare fun tat['T](ts: MutArray[Temp['T]]): MutArray[Temp['T]]
+//| ╙──      	                                                        ^^^^^^^^

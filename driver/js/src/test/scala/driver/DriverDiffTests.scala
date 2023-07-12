@@ -140,7 +140,7 @@ object DriverDiffTests {
   private val cjsCases = List(
     cjsEntry("Lodash", Some("./tsconfig.json"), expectTypeError = true), // TODO: module member selection/trait types
     cjsEntry("CJS1"),
-    cjsEntry("Bar", Some("./tsconfig.json"), expectTypeError = true),
+    cjsEntry("Bar", Some("./tsconfig.json")),
     cjsEntry("BazBaz", Some("./tsconfig.json"), expectTypeError = true),
   )
 

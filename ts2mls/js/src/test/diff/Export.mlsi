@@ -1,7 +1,7 @@
 import "./Dependency.mlsi"
 export declare module Export {
   export declare module Foo {
-    export fun Baz(aa: Str): IBar
+    export declare fun Baz(aa: Str): IBar
     declare trait IBar {
       val a: Str
     }
@@ -10,15 +10,15 @@ export declare module Export {
     }
     export val baz: IBar
   }
-  fun default(x: anything): anything
+  declare fun default(x: anything): anything
   export declare class E {}
   export val F = E
   export val G = Dependency.B
   export val H = Dependency
 }
 //| ╔══[ERROR] type identifier not found: IBar
-//| ║  l.4: 	    export fun Baz(aa: Str): IBar
-//| ╙──     	                             ^^^^
+//| ║  l.4: 	    export declare fun Baz(aa: Str): IBar
+//| ╙──     	                                     ^^^^
 //| ╔══[ERROR] type identifier not found: IBar
 //| ║  l.11: 	    export val baz: IBar
 //| ╙──      	                    ^^^^

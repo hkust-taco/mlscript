@@ -28,6 +28,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     def toLoc: Opt[Loc]
     def level: Level
     def isImplemented: Bool
+    def isDecl: Bool
     
     def isValueParam: Bool = this match {
       case p: NuParam => !p.isType
@@ -60,6 +61,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     def kind: DeclKind =
       if (isType) Als // FIXME?
       else Val
+
+    def isDecl: Bool = false
     def toLoc: Opt[Loc] = nme.toLoc
     def isImplemented: Bool = true
     def typeSignature: ST = ty.ub
@@ -115,6 +118,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   {
     def decl: NuTypeDef = td
     def kind: DeclKind = td.kind
+    def isDecl: Bool = td.isDecl
     def name: Str = nme.name
     def nme: mlscript.TypeName = td.nme
     def members: Map[Str, NuMember] = Map.empty
@@ -161,6 +165,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   {
     def decl: NuTypeDef = td
     def kind: DeclKind = td.kind
+    def isDecl: Bool = td.isDecl
     def nme: TypeName = td.nme
     def name: Str = nme.name
     def isImplemented: Bool = true
@@ -220,6 +225,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   {
     def decl: NuTypeDef = td
     def kind: DeclKind = td.kind
+    def isDecl: Bool = td.isDecl
     def nme: TypeName = td.nme
     def name: Str = nme.name
     def isImplemented: Bool = true
@@ -332,6 +338,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   {
     def decl: NuTypeDef = td
     def kind: DeclKind = td.kind
+    def isDecl: Bool = td.isDecl
     def nme: TypeName = td.nme
     def name: Str = nme.name
     def isImplemented: Bool = true
@@ -374,6 +381,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   case class TypedNuDummy(d: NuDecl) extends TypedNuDecl with TypedNuTermDef {
     def level = MinLevel
     def kind: DeclKind = Val
+    def isDecl: Bool = d.isDecl
     def toLoc: Opt[Loc] = N
     def name: Str = d.name
     def isImplemented: Bool = true
@@ -394,6 +402,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   case class TypedNuFun(level: Level, fd: NuFunDef, bodyType: ST)(val isImplemented: Bool)
       extends TypedNuDecl with TypedNuTermDef {
     def kind: DeclKind = Val
+    def isDecl: Bool = fd.isDecl
     def name: Str = fd.nme.name
     def toLoc: Opt[Loc] = fd.toLoc
     lazy val typeSignature: ST = PolymorphicType.mk(level, bodyType)
@@ -981,7 +990,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                   toImplement.foreach { m =>
                     implemsMap.get(m.name) match {
                       case S(_) =>
-                      case N =>
+                      case N => if (!m.isDecl)
                         err(msg"Member `${m.name}` is declared in parent but not implemented in `${
                             td.nme.name}`" -> td.nme.toLoc ::
                           msg"Declared here:" -> m.toLoc ::

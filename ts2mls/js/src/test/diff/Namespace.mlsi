@@ -1,34 +1,34 @@
 export declare module Namespace {
   declare module N1 {
-    export fun f(x: anything): Num
-    fun ff(y: anything): Num
+    export declare fun f(x: anything): Num
+    declare fun ff(y: anything): Num
     export declare class C {
-      fun f(): unit
+      declare fun f(): unit
     }
     declare trait I {
-      fun f(): Num
+      declare fun f(): Num
     }
     export declare module N2 {
-      export fun fff(x: (false) | (true)): Num
-      fun gg(c: C): C
+      export declare fun fff(x: (false) | (true)): Num
+      declare fun gg(c: C): C
       declare class BBB extends C {}
     }
   }
   declare module AA {
-    export fun f(x: anything): Str
+    export declare fun f(x: anything): Str
     export declare class C {
-      fun f(): unit
+      declare fun f(): unit
     }
     export declare trait I {
-      fun f(): Num
+      declare fun f(): Num
     }
     export declare module N2 {
     }
   }
-  fun f1(x: N1.C): N1.C
-  fun f2(x: AA.C): AA.C
+  declare fun f1(x: N1.C): N1.C
+  declare fun f2(x: AA.C): AA.C
 }
 //| ╔══[ERROR] type identifier not found: N1
-//| ║  l.28: 	  fun f1(x: N1.C): N1.C
-//| ╙──      	            ^^
+//| ║  l.28: 	  declare fun f1(x: N1.C): N1.C
+//| ╙──      	                    ^^
 //| java.lang.Exception: Internal Error: Program reached and unexpected state.

@@ -18,7 +18,7 @@ export declare module Type {
   type DEF = ABC
   type TP['A, 'B, 'C] = ('A, 'B, 'C, )
   declare module NA {
-    fun fb(b: Str): unit
+    declare fun fb(b: Str): unit
     export type B = Str
   }
   declare class NC {
@@ -26,11 +26,11 @@ export declare module Type {
   }
   type G = ABC
   val none: {_tag: "None",}
-  fun some['A](a: 'A): (None) | (Some['A])
+  declare fun some['A](a: 'A): (None) | (Some['A])
 }
 //| ╔══[ERROR] type identifier not found: None
-//| ║  l.29: 	  fun some['A](a: 'A): (None) | (Some['A])
-//| ╙──      	                       ^^^^^^
+//| ║  l.29: 	  declare fun some['A](a: 'A): (None) | (Some['A])
+//| ╙──      	                               ^^^^^^
 //| ╔══[ERROR] type identifier not found: Some
-//| ║  l.29: 	  fun some['A](a: 'A): (None) | (Some['A])
-//| ╙──      	                                ^^^^^^^^^^
+//| ║  l.29: 	  declare fun some['A](a: 'A): (None) | (Some['A])
+//| ╙──      	                                        ^^^^^^^^^^

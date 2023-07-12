@@ -1,10 +1,10 @@
 export declare module Dec {
-  fun getName(id: (Str) | (Num)): Str
-  fun render(callback: (() => unit) | (undefined)): Str
+  declare fun getName(id: (Str) | (Num)): Str
+  declare fun render(callback: (() => unit) | (undefined)): Str
   declare trait Get: (args0: Str) => Str {}
   declare class Person {
     constructor(name: Str, age: Num)
-    fun getName(args0: Num): Str
+    declare fun getName(args0: Num): Str
   }
   declare module OOO {
   }

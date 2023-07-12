@@ -1,30 +1,30 @@
 export declare module Tuple {
-  fun key(x: (Str, (false) | (true), )): Str
-  fun value(x: (Str, (false) | (true), )): (false) | (true)
-  fun third(x: (Num, Num, Num, )): Num
-  fun vec2(x: Num, y: Num): (Num, Num, )
-  fun twoFunctions(ff: ((x: Num) => Num, (x: Num) => Num, ), x: Num): Num
-  fun tupleIt(x: Str): (() => Str, )
-  fun s(flag: (false) | (true)): ((Str) | (Num), ((Num) | (false)) | (true), )
-  fun s2(t: ((false) | (true), (Str) | (Num), )): (Str) | (Num)
-  fun ex['T, 'U](x: 'T, y: 'U): ('T, 'U, ('T) & ('U), )
-  fun foo['T, 'U](x: (('T) & ('U), )): unit
-  fun conv(x: {y: Num,}): ({y: Num,}, {z: Str,}, )
+  declare fun key(x: (Str, (false) | (true), )): Str
+  declare fun value(x: (Str, (false) | (true), )): (false) | (true)
+  declare fun third(x: (Num, Num, Num, )): Num
+  declare fun vec2(x: Num, y: Num): (Num, Num, )
+  declare fun twoFunctions(ff: ((x: Num) => Num, (x: Num) => Num, ), x: Num): Num
+  declare fun tupleIt(x: Str): (() => Str, )
+  declare fun s(flag: (false) | (true)): ((Str) | (Num), ((Num) | (false)) | (true), )
+  declare fun s2(t: ((false) | (true), (Str) | (Num), )): (Str) | (Num)
+  declare fun ex['T, 'U](x: 'T, y: 'U): ('T, 'U, ('T) & ('U), )
+  declare fun foo['T, 'U](x: (('T) & ('U), )): unit
+  declare fun conv(x: {y: Num,}): ({y: Num,}, {z: Str,}, )
   declare class A {
     val x: Num
   }
   declare class B {}
-  fun swap(x: (A, B, )): (B, A, )
+  declare fun swap(x: (A, B, )): (B, A, )
 }
 //| ╔══[ERROR] type identifier not found: A
-//| ║  l.17: 	  fun swap(x: (A, B, )): (B, A, )
-//| ╙──      	               ^
+//| ║  l.17: 	  declare fun swap(x: (A, B, )): (B, A, )
+//| ╙──      	                       ^
 //| ╔══[ERROR] type identifier not found: B
-//| ║  l.17: 	  fun swap(x: (A, B, )): (B, A, )
-//| ╙──      	                  ^
-//| ╔══[ERROR] type identifier not found: B
-//| ║  l.17: 	  fun swap(x: (A, B, )): (B, A, )
+//| ║  l.17: 	  declare fun swap(x: (A, B, )): (B, A, )
 //| ╙──      	                          ^
+//| ╔══[ERROR] type identifier not found: B
+//| ║  l.17: 	  declare fun swap(x: (A, B, )): (B, A, )
+//| ╙──      	                                  ^
 //| ╔══[ERROR] type identifier not found: A
-//| ║  l.17: 	  fun swap(x: (A, B, )): (B, A, )
-//| ╙──      	                             ^
+//| ║  l.17: 	  declare fun swap(x: (A, B, )): (B, A, )
+//| ╙──      	                                     ^

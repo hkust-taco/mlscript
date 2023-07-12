@@ -37,14 +37,13 @@ object Converter {
       case (tp, i) => convert(tp)("")
     }.reduceLeft((r, p) => s"$r, $p")
 
-  def generateFunDeclaration(tsType: TSType, name: String, declared: Boolean, exported: Boolean)(implicit indent: String = ""): String = tsType match {
+  def generateFunDeclaration(tsType: TSType, name: String, exported: Boolean)(implicit indent: String = ""): String = tsType match {
     case TSFunctionType(params, res, typeVars) => {
       val pList = generateFunParamsList(params)
       val tpList = if (typeVars.isEmpty) "" else s"[${typeVars.map(p => convert(p)("")).reduceLeft((r, p) => s"$r, $p")}]"
-      val dec = if (declared) "declare " else ""
-      s"${indent}${genExport(exported)}${dec}fun ${escapeIdent(name)}$tpList($pList): ${convert(res)("")}"
+      s"${indent}${genExport(exported)}declare fun ${escapeIdent(name)}$tpList($pList): ${convert(res)("")}"
     }
-    case overload @ TSIgnoredOverload(base, _) => s"${generateFunDeclaration(base, name, declared, exported)} ${overload.warning}"
+    case overload @ TSIgnoredOverload(base, _) => s"${generateFunDeclaration(base, name, exported)} ${overload.warning}"
     case _ => throw new AssertionError("non-function type is not allowed.")
   }
 
@@ -118,8 +117,8 @@ object Converter {
       case Public if !m._1.contains("#") =>
         if (anonymous) s"${escapeIdent(m._1)}: ${convert(m._2)},"
         else m._2.base match {
-          case _: TSFunctionType => s"${generateFunDeclaration(m._2.base, m._1, false, false)(indent + "  ")}\n"
-          case _: TSIgnoredOverload => s"${generateFunDeclaration(m._2.base, m._1, false, false)(indent + "  ")}\n"
+          case _: TSFunctionType => s"${generateFunDeclaration(m._2.base, m._1, false)(indent + "  ")}\n"
+          case _: TSIgnoredOverload => s"${generateFunDeclaration(m._2.base, m._1, false)(indent + "  ")}\n"
           case _ => s"${indent}  val ${escapeIdent(m._1)}: ${convert(m._2)}\n"
         }
       case _ => "" // TODO: deal with private/protected members

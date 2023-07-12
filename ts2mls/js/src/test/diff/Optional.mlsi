@@ -1,31 +1,31 @@
 export declare module Optional {
-  fun buildName(firstName: Str, lastName: (Str) | (undefined)): Str
-  fun buildName2(firstName: Str, lastName: (Str) | (undefined)): Str
-  fun buildName3(firstName: Str, lastName: (Str) | (MutArray[Str])): Str
-  fun buildName4(firstName: Str, lastName: (anything) | (MutArray[anything])): Str
+  declare fun buildName(firstName: Str, lastName: (Str) | (undefined)): Str
+  declare fun buildName2(firstName: Str, lastName: (Str) | (undefined)): Str
+  declare fun buildName3(firstName: Str, lastName: (Str) | (MutArray[Str])): Str
+  declare fun buildName4(firstName: Str, lastName: (anything) | (MutArray[anything])): Str
   declare trait SquareConfig {
     val color: (Str) | (undefined)
     val width: (Num) | (undefined)
   }
-  fun did(x: Num, f: ((x: Num) => Num) | (undefined)): Num
-  fun getOrElse(arr: (MutArray[Object]) | (undefined)): Object
+  declare fun did(x: Num, f: ((x: Num) => Num) | (undefined)): Num
+  declare fun getOrElse(arr: (MutArray[Object]) | (undefined)): Object
   declare class ABC {}
-  fun testABC(abc: (ABC) | (undefined)): unit
-  fun testSquareConfig(conf: (SquareConfig) | (undefined)): unit
-  fun err(msg: ((Num, Str, )) | (undefined)): unit
-  fun toStr(x: (((Num) | (false)) | (true)) | (undefined)): Str
-  fun boo['T, 'U](x: (('T) & ('U)) | (undefined)): unit
+  declare fun testABC(abc: (ABC) | (undefined)): unit
+  declare fun testSquareConfig(conf: (SquareConfig) | (undefined)): unit
+  declare fun err(msg: ((Num, Str, )) | (undefined)): unit
+  declare fun toStr(x: (((Num) | (false)) | (true)) | (undefined)): Str
+  declare fun boo['T, 'U](x: (('T) & ('U)) | (undefined)): unit
   declare class B['T] {
     val b: 'T
   }
-  fun boom(b: (B[nothing]) | (undefined)): anything
+  declare fun boom(b: (B[nothing]) | (undefined)): anything
 }
 //| ╔══[ERROR] type identifier not found: ABC
-//| ║  l.13: 	  fun testABC(abc: (ABC) | (undefined)): unit
-//| ╙──      	                   ^^^^^
+//| ║  l.13: 	  declare fun testABC(abc: (ABC) | (undefined)): unit
+//| ╙──      	                           ^^^^^
 //| ╔══[ERROR] type identifier not found: SquareConfig
-//| ║  l.14: 	  fun testSquareConfig(conf: (SquareConfig) | (undefined)): unit
-//| ╙──      	                             ^^^^^^^^^^^^^^
+//| ║  l.14: 	  declare fun testSquareConfig(conf: (SquareConfig) | (undefined)): unit
+//| ╙──      	                                     ^^^^^^^^^^^^^^
 //| ╔══[ERROR] type identifier not found: B
-//| ║  l.21: 	  fun boom(b: (B[nothing]) | (undefined)): anything
-//| ╙──      	              ^^^^^^^^^^^^
+//| ║  l.21: 	  declare fun boom(b: (B[nothing]) | (undefined)): anything
+//| ╙──      	                      ^^^^^^^^^^^^

@@ -122,12 +122,6 @@ class Driver(options: DriverOptions) {
     (definitions, declarations, depList, origin)
   }
 
-  private def isInterfaceOutdate(origin: String, inter: String): Boolean = {
-    val mtime = getModificationTime(origin)
-    val imtime = getModificationTime(inter)
-    mtime >= imtime
-  }
-
   private def packTopModule(moduleName: Option[String], content: String) =
     moduleName.fold(content)(moduleName =>
       s"declare module $moduleName() {\n" +

@@ -1,0 +1,16 @@
+:NewDefs
+
+declare class Parent {
+  declare fun foo: () -> Str // there's an implementation, trust me!
+}
+//│ declare class Parent {
+//│   fun foo: () -> Str
+//│ }
+
+:re
+class Child() extends Parent
+//│ class Child() extends Parent {
+//│   fun foo: () -> Str
+//│ }
+//│ Runtime error:
+//│   ReferenceError: Parent is not defined

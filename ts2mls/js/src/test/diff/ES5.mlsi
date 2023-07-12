@@ -1,19 +1,19 @@
 val NaN: Num
 val Infinity: Num
-fun eval(x: Str): anything
-fun parseInt(string: Str, radix: (Num) | (undefined)): Num
-fun parseFloat(string: Str): Num
-fun isNaN(number: Num): (false) | (true)
-fun isFinite(number: Num): (false) | (true)
-fun decodeURI(encodedURI: Str): Str
-fun decodeURIComponent(encodedURIComponent: Str): Str
-fun encodeURI(uri: Str): Str
-fun encodeURIComponent(uriComponent: (((Str) | (Num)) | (false)) | (true)): Str
-fun escape(string: Str): Str
-fun unescape(string: Str): Str
+declare fun eval(x: Str): anything
+declare fun parseInt(string: Str, radix: (Num) | (undefined)): Num
+declare fun parseFloat(string: Str): Num
+declare fun isNaN(number: Num): (false) | (true)
+declare fun isFinite(number: Num): (false) | (true)
+declare fun decodeURI(encodedURI: Str): Str
+declare fun decodeURIComponent(encodedURIComponent: Str): Str
+declare fun encodeURI(uri: Str): Str
+declare fun encodeURIComponent(uriComponent: (((Str) | (Num)) | (false)) | (true)): Str
+declare fun escape(string: Str): Str
+declare fun unescape(string: Str): Str
 declare trait Symbol {
-  fun toString(): Str
-  fun valueOf(): Symbol
+  declare fun toString(): Str
+  declare fun valueOf(): Symbol
 }
 type PropertyKey = ((Str) | (Num)) | (Symbol)
 declare trait PropertyDescriptor {
@@ -28,36 +28,36 @@ declare trait PropertyDescriptorMap {
   val __index: unsupported["[key: PropertyKey]: PropertyDescriptor;", "ES5.d.ts", 101, 33]
 }
 declare class Object {
-  fun hasOwnProperty(args0: ((Str) | (Num)) | (Symbol)): (false) | (true)
-  fun propertyIsEnumerable(args0: ((Str) | (Num)) | (Symbol)): (false) | (true)
-  fun valueOf(): Object
-  fun toLocaleString(): Str
-  fun isPrototypeOf(args0: Object): (false) | (true)
-  fun toString(): Str
+  declare fun hasOwnProperty(args0: ((Str) | (Num)) | (Symbol)): (false) | (true)
+  declare fun propertyIsEnumerable(args0: ((Str) | (Num)) | (Symbol)): (false) | (true)
+  declare fun valueOf(): Object
+  declare fun toLocaleString(): Str
+  declare fun isPrototypeOf(args0: Object): (false) | (true)
+  declare fun toString(): Str
 }
 declare trait ObjectConstructor: (args0: anything) => anything {
-  fun getOwnPropertyNames(args0: anything): MutArray[Str]
-  fun isFrozen(args0: anything): (false) | (true)
-  fun getPrototypeOf(args0: anything): anything
-  fun defineProperty['T](args0: 'T, args1: ((Str) | (Num)) | (Symbol), args2: (PropertyDescriptor) & (ThisType[anything])): 'T
+  declare fun getOwnPropertyNames(args0: anything): MutArray[Str]
+  declare fun isFrozen(args0: anything): (false) | (true)
+  declare fun getPrototypeOf(args0: anything): anything
+  declare fun defineProperty['T](args0: 'T, args1: ((Str) | (Num)) | (Symbol), args2: (PropertyDescriptor) & (ThisType[anything])): 'T
   val prototype: Object
-  fun isSealed(args0: anything): (false) | (true)
-  fun defineProperties['T](args0: 'T, args1: (PropertyDescriptorMap) & (ThisType[anything])): 'T
-  fun preventExtensions['T](args0: 'T): 'T
-  fun create(args0: Object, args1: (PropertyDescriptorMap) & (ThisType[anything])): anything /* warning: the overload of function create is not supported yet. */
+  declare fun isSealed(args0: anything): (false) | (true)
+  declare fun defineProperties['T](args0: 'T, args1: (PropertyDescriptorMap) & (ThisType[anything])): 'T
+  declare fun preventExtensions['T](args0: 'T): 'T
+  declare fun create(args0: Object, args1: (PropertyDescriptorMap) & (ThisType[anything])): anything /* warning: the overload of function create is not supported yet. */
   val freeze: unsupported["freeze<T>(o: T): Readonly<T>;", "ES5.d.ts", 210, 143]
   val __new: unsupported["new(value?: any): Object;", "ES5.d.ts", 137, 29]
-  fun getOwnPropertyDescriptor(args0: anything, args1: ((Str) | (Num)) | (Symbol)): PropertyDescriptor
-  fun seal['T](args0: 'T): 'T
-  fun keys(args0: Object): MutArray[Str]
-  fun isExtensible(args0: anything): (false) | (true)
+  declare fun getOwnPropertyDescriptor(args0: anything, args1: ((Str) | (Num)) | (Symbol)): PropertyDescriptor
+  declare fun seal['T](args0: 'T): 'T
+  declare fun keys(args0: Object): MutArray[Str]
+  declare fun isExtensible(args0: anything): (false) | (true)
 }
 declare trait Function {
-  fun bind(args0: anything, args1: (anything) | (MutArray[anything])): anything
-  fun apply(args0: anything, args1: (anything) | (undefined)): anything
+  declare fun bind(args0: anything, args1: (anything) | (MutArray[anything])): anything
+  declare fun apply(args0: anything, args1: (anything) | (undefined)): anything
   val prototype: anything
-  fun call(args0: anything, args1: (anything) | (MutArray[anything])): anything
-  fun toString(): Str
+  declare fun call(args0: anything, args1: (anything) | (MutArray[anything])): anything
+  declare fun toString(): Str
   val length: Num
   val caller: Function
   val arguments: anything
@@ -69,14 +69,14 @@ declare trait FunctionConstructor: (args0: (Str) | (MutArray[Str])) => Function 
 type ThisParameterType = unsupported["type ThisParameterType<T> = T extends (this: infer U, ...args: never) => any ? U : unknown;", "ES5.d.ts", 301, 42]
 type OmitThisParameter = unsupported["type OmitThisParameter<T> = unknown extends ThisParameterType<T> ? T : T extends (...args: infer A) => infer R ? (...args: A) => R : T;", "ES5.d.ts", 306, 91]
 declare trait CallableFunction extends Function {
-  fun apply['T, 'A, 'R](args0: 'T, args1: 'A): 'R /* warning: the overload of function apply is not supported yet. */
-  fun call['T, 'A, 'R](args0: 'T, args1: 'A): 'R
-  fun bind['T, 'AX, 'R](args0: 'T, args1: ('AX) | (MutArray['AX])): (args: ('AX) | (MutArray['AX])) => 'R /* warning: the overload of function bind is not supported yet. */
+  declare fun apply['T, 'A, 'R](args0: 'T, args1: 'A): 'R /* warning: the overload of function apply is not supported yet. */
+  declare fun call['T, 'A, 'R](args0: 'T, args1: 'A): 'R
+  declare fun bind['T, 'AX, 'R](args0: 'T, args1: ('AX) | (MutArray['AX])): (args: ('AX) | (MutArray['AX])) => 'R /* warning: the overload of function bind is not supported yet. */
 }
 declare trait NewableFunction extends Function {
-  fun apply['T, 'A](args0: 'T, args1: 'A): unit /* warning: the overload of function apply is not supported yet. */
-  fun call['T, 'A](args0: 'T, args1: 'A): unit
-  fun bind['AX, 'R](args0: anything, args1: ('AX) | (MutArray['AX])): (args: ('AX) | (MutArray['AX])) => 'R /* warning: the overload of function bind is not supported yet. */
+  declare fun apply['T, 'A](args0: 'T, args1: 'A): unit /* warning: the overload of function apply is not supported yet. */
+  declare fun call['T, 'A](args0: 'T, args1: 'A): unit
+  declare fun bind['AX, 'R](args0: anything, args1: ('AX) | (MutArray['AX])): (args: ('AX) | (MutArray['AX])) => 'R /* warning: the overload of function bind is not supported yet. */
 }
 declare trait IArguments {
   val __index: unsupported["[index: number]: any;", "ES5.d.ts", 373, 22]
@@ -84,36 +84,36 @@ declare trait IArguments {
   val callee: Function
 }
 declare trait String {
-  fun replace(args0: (Str) | (RegExp), args1: (substring: Str, args: (anything) | (MutArray[anything])) => Str): Str /* warning: the overload of function replace is not supported yet. */
-  fun valueOf(): Str
-  fun toLocaleUpperCase(args0: ((Str) | (MutArray[Str])) | (undefined)): Str
-  fun lastIndexOf(args0: Str, args1: (Num) | (undefined)): Num
-  fun localeCompare(args0: Str): Num
-  fun toLocaleLowerCase(args0: ((Str) | (MutArray[Str])) | (undefined)): Str
-  fun match(args0: (Str) | (RegExp)): RegExpMatchArray
-  fun split(args0: (Str) | (RegExp), args1: (Num) | (undefined)): MutArray[Str]
-  fun toUpperCase(): Str
-  fun indexOf(args0: Str, args1: (Num) | (undefined)): Num
-  fun toLowerCase(): Str
-  fun concat(args0: (Str) | (MutArray[Str])): Str
+  declare fun replace(args0: (Str) | (RegExp), args1: (substring: Str, args: (anything) | (MutArray[anything])) => Str): Str /* warning: the overload of function replace is not supported yet. */
+  declare fun valueOf(): Str
+  declare fun toLocaleUpperCase(args0: ((Str) | (MutArray[Str])) | (undefined)): Str
+  declare fun lastIndexOf(args0: Str, args1: (Num) | (undefined)): Num
+  declare fun localeCompare(args0: Str): Num
+  declare fun toLocaleLowerCase(args0: ((Str) | (MutArray[Str])) | (undefined)): Str
+  declare fun match(args0: (Str) | (RegExp)): RegExpMatchArray
+  declare fun split(args0: (Str) | (RegExp), args1: (Num) | (undefined)): MutArray[Str]
+  declare fun toUpperCase(): Str
+  declare fun indexOf(args0: Str, args1: (Num) | (undefined)): Num
+  declare fun toLowerCase(): Str
+  declare fun concat(args0: (Str) | (MutArray[Str])): Str
   val __index: unsupported["readonly [index: number]: string;", "ES5.d.ts", 498, 22]
-  fun charCodeAt(args0: Num): Num
-  fun slice(args0: (Num) | (undefined), args1: (Num) | (undefined)): Str
-  fun substr(args0: Num, args1: (Num) | (undefined)): Str
-  fun toString(): Str
+  declare fun charCodeAt(args0: Num): Num
+  declare fun slice(args0: (Num) | (undefined), args1: (Num) | (undefined)): Str
+  declare fun substr(args0: Num, args1: (Num) | (undefined)): Str
+  declare fun toString(): Str
   val length: Num
-  fun substring(args0: Num, args1: (Num) | (undefined)): Str
-  fun trim(): Str
-  fun search(args0: (Str) | (RegExp)): Num
-  fun charAt(args0: Num): Str
+  declare fun substring(args0: Num, args1: (Num) | (undefined)): Str
+  declare fun trim(): Str
+  declare fun search(args0: (Str) | (RegExp)): Num
+  declare fun charAt(args0: Num): Str
 }
 declare trait StringConstructor: (args0: (anything) | (undefined)) => Str {
   val __new: unsupported["new(value?: any): String;", "ES5.d.ts", 503, 29]
   val prototype: String
-  fun fromCharCode(args0: (Num) | (MutArray[Num])): Str
+  declare fun fromCharCode(args0: (Num) | (MutArray[Num])): Str
 }
 declare class Bool {
-  fun valueOf(): (false) | (true)
+  declare fun valueOf(): (false) | (true)
 }
 declare trait BooleanConstructor: forall 'T; (args0: ('T) | (undefined)) => (false) | (true) {
   val __new: unsupported["new(value?: any): Bool;", "ES5.d.ts", 520, 30]
@@ -121,11 +121,11 @@ declare trait BooleanConstructor: forall 'T; (args0: ('T) | (undefined)) => (fal
 }
 val Boolean: BooleanConstructor
 declare trait Number {
-  fun toExponential(args0: (Num) | (undefined)): Str
-  fun valueOf(): Num
-  fun toString(args0: (Num) | (undefined)): Str
-  fun toFixed(args0: (Num) | (undefined)): Str
-  fun toPrecision(args0: (Num) | (undefined)): Str
+  declare fun toExponential(args0: (Num) | (undefined)): Str
+  declare fun valueOf(): Num
+  declare fun toString(args0: (Num) | (undefined)): Str
+  declare fun toFixed(args0: (Num) | (undefined)): Str
+  declare fun toPrecision(args0: (Num) | (undefined)): Str
 }
 declare trait NumberConstructor: (args0: (anything) | (undefined)) => Num {
   val NaN: Num
@@ -147,83 +147,83 @@ declare trait ImportAssertions {
   val __index: unsupported["[key: string]: string;", "ES5.d.ts", 616, 28]
 }
 declare trait Math {
-  fun random(): Num
-  fun asin(args0: Num): Num
+  declare fun random(): Num
+  declare fun asin(args0: Num): Num
   val LOG2E: Num
-  fun min(args0: (Num) | (MutArray[Num])): Num
-  fun cos(args0: Num): Num
+  declare fun min(args0: (Num) | (MutArray[Num])): Num
+  declare fun cos(args0: Num): Num
   val LOG10E: Num
   val PI: Num
-  fun floor(args0: Num): Num
+  declare fun floor(args0: Num): Num
   val SQRT2: Num
-  fun round(args0: Num): Num
-  fun sin(args0: Num): Num
+  declare fun round(args0: Num): Num
+  declare fun sin(args0: Num): Num
   val E: Num
   val LN10: Num
-  fun exp(args0: Num): Num
+  declare fun exp(args0: Num): Num
   val LN2: Num
-  fun atan(args0: Num): Num
-  fun pow(args0: Num, args1: Num): Num
-  fun ceil(args0: Num): Num
-  fun max(args0: (Num) | (MutArray[Num])): Num
-  fun atan2(args0: Num, args1: Num): Num
-  fun sqrt(args0: Num): Num
-  fun tan(args0: Num): Num
+  declare fun atan(args0: Num): Num
+  declare fun pow(args0: Num, args1: Num): Num
+  declare fun ceil(args0: Num): Num
+  declare fun max(args0: (Num) | (MutArray[Num])): Num
+  declare fun atan2(args0: Num, args1: Num): Num
+  declare fun sqrt(args0: Num): Num
+  declare fun tan(args0: Num): Num
   val SQRT1_2: Num
-  fun abs(args0: Num): Num
-  fun log(args0: Num): Num
-  fun acos(args0: Num): Num
+  declare fun abs(args0: Num): Num
+  declare fun log(args0: Num): Num
+  declare fun acos(args0: Num): Num
 }
 declare trait Date {
-  fun getUTCMonth(): Num
-  fun valueOf(): Num
-  fun getUTCMinutes(): Num
-  fun setMilliseconds(args0: Num): Num
-  fun toLocaleString(): Str
-  fun getDate(): Num
-  fun getUTCDate(): Num
-  fun setDate(args0: Num): Num
-  fun setFullYear(args0: Num, args1: (Num) | (undefined), args2: (Num) | (undefined)): Num
-  fun getMinutes(): Num
-  fun getFullYear(): Num
-  fun setUTCDate(args0: Num): Num
-  fun setMinutes(args0: Num, args1: (Num) | (undefined), args2: (Num) | (undefined)): Num
-  fun setTime(args0: Num): Num
-  fun toUTCString(): Str
-  fun toLocaleDateString(): Str
-  fun setUTCMonth(args0: Num, args1: (Num) | (undefined)): Num
-  fun setUTCFullYear(args0: Num, args1: (Num) | (undefined), args2: (Num) | (undefined)): Num
-  fun setHours(args0: Num, args1: (Num) | (undefined), args2: (Num) | (undefined), args3: (Num) | (undefined)): Num
-  fun getTime(): Num
-  fun setSeconds(args0: Num, args1: (Num) | (undefined)): Num
-  fun setUTCSeconds(args0: Num, args1: (Num) | (undefined)): Num
-  fun getUTCFullYear(): Num
-  fun getUTCHours(): Num
-  fun getUTCDay(): Num
-  fun setUTCMinutes(args0: Num, args1: (Num) | (undefined), args2: (Num) | (undefined)): Num
-  fun getHours(): Num
-  fun toISOString(): Str
-  fun toTimeString(): Str
-  fun setUTCMilliseconds(args0: Num): Num
-  fun getUTCSeconds(): Num
-  fun getMilliseconds(): Num
-  fun setMonth(args0: Num, args1: (Num) | (undefined)): Num
-  fun getDay(): Num
-  fun toLocaleTimeString(): Str
-  fun getSeconds(): Num
-  fun getUTCMilliseconds(): Num
-  fun toDateString(): Str
-  fun toString(): Str
-  fun getMonth(): Num
-  fun getTimezoneOffset(): Num
-  fun setUTCHours(args0: Num, args1: (Num) | (undefined), args2: (Num) | (undefined), args3: (Num) | (undefined)): Num
-  fun toJSON(args0: (anything) | (undefined)): Str
+  declare fun getUTCMonth(): Num
+  declare fun valueOf(): Num
+  declare fun getUTCMinutes(): Num
+  declare fun setMilliseconds(args0: Num): Num
+  declare fun toLocaleString(): Str
+  declare fun getDate(): Num
+  declare fun getUTCDate(): Num
+  declare fun setDate(args0: Num): Num
+  declare fun setFullYear(args0: Num, args1: (Num) | (undefined), args2: (Num) | (undefined)): Num
+  declare fun getMinutes(): Num
+  declare fun getFullYear(): Num
+  declare fun setUTCDate(args0: Num): Num
+  declare fun setMinutes(args0: Num, args1: (Num) | (undefined), args2: (Num) | (undefined)): Num
+  declare fun setTime(args0: Num): Num
+  declare fun toUTCString(): Str
+  declare fun toLocaleDateString(): Str
+  declare fun setUTCMonth(args0: Num, args1: (Num) | (undefined)): Num
+  declare fun setUTCFullYear(args0: Num, args1: (Num) | (undefined), args2: (Num) | (undefined)): Num
+  declare fun setHours(args0: Num, args1: (Num) | (undefined), args2: (Num) | (undefined), args3: (Num) | (undefined)): Num
+  declare fun getTime(): Num
+  declare fun setSeconds(args0: Num, args1: (Num) | (undefined)): Num
+  declare fun setUTCSeconds(args0: Num, args1: (Num) | (undefined)): Num
+  declare fun getUTCFullYear(): Num
+  declare fun getUTCHours(): Num
+  declare fun getUTCDay(): Num
+  declare fun setUTCMinutes(args0: Num, args1: (Num) | (undefined), args2: (Num) | (undefined)): Num
+  declare fun getHours(): Num
+  declare fun toISOString(): Str
+  declare fun toTimeString(): Str
+  declare fun setUTCMilliseconds(args0: Num): Num
+  declare fun getUTCSeconds(): Num
+  declare fun getMilliseconds(): Num
+  declare fun setMonth(args0: Num, args1: (Num) | (undefined)): Num
+  declare fun getDay(): Num
+  declare fun toLocaleTimeString(): Str
+  declare fun getSeconds(): Num
+  declare fun getUTCMilliseconds(): Num
+  declare fun toDateString(): Str
+  declare fun toString(): Str
+  declare fun getMonth(): Num
+  declare fun getTimezoneOffset(): Num
+  declare fun setUTCHours(args0: Num, args1: (Num) | (undefined), args2: (Num) | (undefined), args3: (Num) | (undefined)): Num
+  declare fun toJSON(args0: (anything) | (undefined)): Str
 }
 declare trait DateConstructor: () => Str {
-  fun UTC(args0: Num, args1: Num, args2: (Num) | (undefined), args3: (Num) | (undefined), args4: (Num) | (undefined), args5: (Num) | (undefined), args6: (Num) | (undefined)): Num
+  declare fun UTC(args0: Num, args1: Num, args2: (Num) | (undefined), args3: (Num) | (undefined), args4: (Num) | (undefined), args5: (Num) | (undefined), args6: (Num) | (undefined)): Num
   val __new: unsupported["new(year: number, monthIndex: number, date?: number, hours?: number, minutes?: number, seconds?: number, ms?: number): Date;", "ES5.d.ts", 887, 38]
-  fun now(): Num
-  fun parse(args0: Str): Num
+  declare fun now(): Num
+  declare fun parse(args0: Str): Num
   val prototype: Date
 }
 declare trait RegExpMatchArray extends Array[Str] {
@@ -237,14 +237,14 @@ declare trait RegExpExecArray extends Array[Str] {
   val id"0": Str
 }
 declare trait RegExp {
-  fun test(args0: Str): (false) | (true)
+  declare fun test(args0: Str): (false) | (true)
   val multiline: (false) | (true)
   val source: Str
-  fun compile(args0: Str, args1: (Str) | (undefined)): 'RegExp
+  declare fun compile(args0: Str, args1: (Str) | (undefined)): 'RegExp
   val global: (false) | (true)
   val lastIndex: Num
   val ignoreCase: (false) | (true)
-  fun exec(args0: Str): RegExpExecArray
+  declare fun exec(args0: Str): RegExpExecArray
 }
 declare trait RegExpConstructor: (args0: Str, args1: (Str) | (undefined)) => RegExp {
   val id"$4": Str
@@ -309,61 +309,61 @@ declare trait URIErrorConstructor: (args0: (Str) | (undefined)) => URIError exte
   val prototype: URIError
 }
 declare trait JSON {
-  fun parse(args0: Str, args1: ((key: Str, value: anything) => anything) | (undefined)): anything
-  fun stringify(args0: anything, args1: (MutArray[(Str) | (Num)]) | (undefined), args2: ((Str) | (Num)) | (undefined)): Str /* warning: the overload of function stringify is not supported yet. */
+  declare fun parse(args0: Str, args1: ((key: Str, value: anything) => anything) | (undefined)): anything
+  declare fun stringify(args0: anything, args1: (MutArray[(Str) | (Num)]) | (undefined), args2: ((Str) | (Num)) | (undefined)): Str /* warning: the overload of function stringify is not supported yet. */
 }
 declare trait ReadonlyArray['T] {
-  fun lastIndexOf(args0: 'T, args1: (Num) | (undefined)): Num
-  fun every(args0: (value: 'T, index: Num, array: ReadonlyArray['T]) => anything, args1: (anything) | (undefined)): (false) | (true) /* warning: the overload of function every is not supported yet. */
-  fun forEach(args0: (value: 'T, index: Num, array: ReadonlyArray['T]) => unit, args1: (anything) | (undefined)): unit
-  fun filter(args0: (value: 'T, index: Num, array: ReadonlyArray['T]) => anything, args1: (anything) | (undefined)): MutArray['T] /* warning: the overload of function filter is not supported yet. */
+  declare fun lastIndexOf(args0: 'T, args1: (Num) | (undefined)): Num
+  declare fun every(args0: (value: 'T, index: Num, array: ReadonlyArray['T]) => anything, args1: (anything) | (undefined)): (false) | (true) /* warning: the overload of function every is not supported yet. */
+  declare fun forEach(args0: (value: 'T, index: Num, array: ReadonlyArray['T]) => unit, args1: (anything) | (undefined)): unit
+  declare fun filter(args0: (value: 'T, index: Num, array: ReadonlyArray['T]) => anything, args1: (anything) | (undefined)): MutArray['T] /* warning: the overload of function filter is not supported yet. */
   val __index: unsupported["readonly [n: number]: T;", "ES5.d.ts", 1272, 136]
-  fun reduceRight['U](args0: (previousValue: 'U, currentValue: 'T, currentIndex: Num, array: ReadonlyArray['T]) => 'U, args1: 'U): 'U /* warning: the overload of function reduceRight is not supported yet. */
-  fun join(args0: (Str) | (undefined)): Str
-  fun map['U](args0: (value: 'T, index: Num, array: ReadonlyArray['T]) => 'U, args1: (anything) | (undefined)): MutArray['U]
-  fun concat(args0: (('T) | (ConcatArray['T])) | (MutArray[('T) | (ConcatArray['T])])): MutArray['T] /* warning: the overload of function concat is not supported yet. */
-  fun toLocaleString(): Str
-  fun slice(args0: (Num) | (undefined), args1: (Num) | (undefined)): MutArray['T]
-  fun reduce['U](args0: (previousValue: 'U, currentValue: 'T, currentIndex: Num, array: ReadonlyArray['T]) => 'U, args1: 'U): 'U /* warning: the overload of function reduce is not supported yet. */
-  fun toString(): Str
+  declare fun reduceRight['U](args0: (previousValue: 'U, currentValue: 'T, currentIndex: Num, array: ReadonlyArray['T]) => 'U, args1: 'U): 'U /* warning: the overload of function reduceRight is not supported yet. */
+  declare fun join(args0: (Str) | (undefined)): Str
+  declare fun map['U](args0: (value: 'T, index: Num, array: ReadonlyArray['T]) => 'U, args1: (anything) | (undefined)): MutArray['U]
+  declare fun concat(args0: (('T) | (ConcatArray['T])) | (MutArray[('T) | (ConcatArray['T])])): MutArray['T] /* warning: the overload of function concat is not supported yet. */
+  declare fun toLocaleString(): Str
+  declare fun slice(args0: (Num) | (undefined), args1: (Num) | (undefined)): MutArray['T]
+  declare fun reduce['U](args0: (previousValue: 'U, currentValue: 'T, currentIndex: Num, array: ReadonlyArray['T]) => 'U, args1: 'U): 'U /* warning: the overload of function reduce is not supported yet. */
+  declare fun toString(): Str
   val length: Num
-  fun some(args0: (value: 'T, index: Num, array: ReadonlyArray['T]) => anything, args1: (anything) | (undefined)): (false) | (true)
-  fun indexOf(args0: 'T, args1: (Num) | (undefined)): Num
+  declare fun some(args0: (value: 'T, index: Num, array: ReadonlyArray['T]) => anything, args1: (anything) | (undefined)): (false) | (true)
+  declare fun indexOf(args0: 'T, args1: (Num) | (undefined)): Num
 }
 declare trait ConcatArray['T] {
   val length: Num
   val __index: unsupported["readonly [n: number]: T;", "ES5.d.ts", 1278, 28]
-  fun join(args0: (Str) | (undefined)): Str
-  fun slice(args0: (Num) | (undefined), args1: (Num) | (undefined)): MutArray['T]
+  declare fun join(args0: (Str) | (undefined)): Str
+  declare fun slice(args0: (Num) | (undefined), args1: (Num) | (undefined)): MutArray['T]
 }
 declare trait Array['T] {
-  fun lastIndexOf(args0: 'T, args1: (Num) | (undefined)): Num
-  fun every(args0: (value: 'T, index: Num, array: MutArray['T]) => anything, args1: (anything) | (undefined)): (false) | (true) /* warning: the overload of function every is not supported yet. */
-  fun push(args0: ('T) | (MutArray['T])): Num
-  fun forEach(args0: (value: 'T, index: Num, array: MutArray['T]) => unit, args1: (anything) | (undefined)): unit
-  fun reduceRight['U](args0: (previousValue: 'U, currentValue: 'T, currentIndex: Num, array: MutArray['T]) => 'U, args1: 'U): 'U /* warning: the overload of function reduceRight is not supported yet. */
-  fun unshift(args0: ('T) | (MutArray['T])): Num
-  fun sort(args0: ((a: 'T, b: 'T) => Num) | (undefined)): 'Array
-  fun join(args0: (Str) | (undefined)): Str
-  fun map['U](args0: (value: 'T, index: Num, array: MutArray['T]) => 'U, args1: (anything) | (undefined)): MutArray['U]
-  fun pop(): 'T
-  fun shift(): 'T
-  fun concat(args0: (('T) | (ConcatArray['T])) | (MutArray[('T) | (ConcatArray['T])])): MutArray['T] /* warning: the overload of function concat is not supported yet. */
-  fun toLocaleString(): Str
-  fun reverse(): MutArray['T]
-  fun filter(args0: (value: 'T, index: Num, array: MutArray['T]) => anything, args1: (anything) | (undefined)): MutArray['T] /* warning: the overload of function filter is not supported yet. */
+  declare fun lastIndexOf(args0: 'T, args1: (Num) | (undefined)): Num
+  declare fun every(args0: (value: 'T, index: Num, array: MutArray['T]) => anything, args1: (anything) | (undefined)): (false) | (true) /* warning: the overload of function every is not supported yet. */
+  declare fun push(args0: ('T) | (MutArray['T])): Num
+  declare fun forEach(args0: (value: 'T, index: Num, array: MutArray['T]) => unit, args1: (anything) | (undefined)): unit
+  declare fun reduceRight['U](args0: (previousValue: 'U, currentValue: 'T, currentIndex: Num, array: MutArray['T]) => 'U, args1: 'U): 'U /* warning: the overload of function reduceRight is not supported yet. */
+  declare fun unshift(args0: ('T) | (MutArray['T])): Num
+  declare fun sort(args0: ((a: 'T, b: 'T) => Num) | (undefined)): 'Array
+  declare fun join(args0: (Str) | (undefined)): Str
+  declare fun map['U](args0: (value: 'T, index: Num, array: MutArray['T]) => 'U, args1: (anything) | (undefined)): MutArray['U]
+  declare fun pop(): 'T
+  declare fun shift(): 'T
+  declare fun concat(args0: (('T) | (ConcatArray['T])) | (MutArray[('T) | (ConcatArray['T])])): MutArray['T] /* warning: the overload of function concat is not supported yet. */
+  declare fun toLocaleString(): Str
+  declare fun reverse(): MutArray['T]
+  declare fun filter(args0: (value: 'T, index: Num, array: MutArray['T]) => anything, args1: (anything) | (undefined)): MutArray['T] /* warning: the overload of function filter is not supported yet. */
   val __index: unsupported["[n: number]: T;", "ES5.d.ts", 1463, 127]
-  fun splice(args0: Num, args1: Num, args2: ('T) | (MutArray['T])): MutArray['T] /* warning: the overload of function splice is not supported yet. */
-  fun slice(args0: (Num) | (undefined), args1: (Num) | (undefined)): MutArray['T]
-  fun reduce['U](args0: (previousValue: 'U, currentValue: 'T, currentIndex: Num, array: MutArray['T]) => 'U, args1: 'U): 'U /* warning: the overload of function reduce is not supported yet. */
-  fun toString(): Str
+  declare fun splice(args0: Num, args1: Num, args2: ('T) | (MutArray['T])): MutArray['T] /* warning: the overload of function splice is not supported yet. */
+  declare fun slice(args0: (Num) | (undefined), args1: (Num) | (undefined)): MutArray['T]
+  declare fun reduce['U](args0: (previousValue: 'U, currentValue: 'T, currentIndex: Num, array: MutArray['T]) => 'U, args1: 'U): 'U /* warning: the overload of function reduce is not supported yet. */
+  declare fun toString(): Str
   val length: Num
-  fun some(args0: (value: 'T, index: Num, array: MutArray['T]) => anything, args1: (anything) | (undefined)): (false) | (true)
-  fun indexOf(args0: 'T, args1: (Num) | (undefined)): Num
+  declare fun some(args0: (value: 'T, index: Num, array: MutArray['T]) => anything, args1: (anything) | (undefined)): (false) | (true)
+  declare fun indexOf(args0: 'T, args1: (Num) | (undefined)): Num
 }
 declare trait ArrayConstructor: forall 'T; (args0: ('T) | (MutArray['T])) => MutArray['T] {
   val __new: unsupported["new <T>(...items: T[]): T[];", "ES5.d.ts", 1470, 38]
-  fun isArray(args0: anything): (false) | (true)
+  declare fun isArray(args0: anything): (false) | (true)
   val prototype: MutArray[anything]
 }
 declare trait TypedPropertyDescriptor['T] {
@@ -376,11 +376,11 @@ declare trait TypedPropertyDescriptor['T] {
 }
 type PromiseConstructorLike = forall 'T; (executor: (resolve: (value: ('T) | (PromiseLike['T])) => unit, reject: (reason: (anything) | (undefined)) => unit) => unit) => PromiseLike['T]
 declare trait PromiseLike['T] {
-  fun id"then"['TResult1, 'TResult2](args0: ((value: 'T) => ('TResult1) | (PromiseLike['TResult1])) | (undefined), args1: ((reason: anything) => ('TResult2) | (PromiseLike['TResult2])) | (undefined)): PromiseLike[('TResult1) | ('TResult2)]
+  declare fun id"then"['TResult1, 'TResult2](args0: ((value: 'T) => ('TResult1) | (PromiseLike['TResult1])) | (undefined), args1: ((reason: anything) => ('TResult2) | (PromiseLike['TResult2])) | (undefined)): PromiseLike[('TResult1) | ('TResult2)]
 }
 declare trait Promise['T] {
-  fun id"then"['TResult1, 'TResult2](args0: ((value: 'T) => ('TResult1) | (PromiseLike['TResult1])) | (undefined), args1: ((reason: anything) => ('TResult2) | (PromiseLike['TResult2])) | (undefined)): Promise[('TResult1) | ('TResult2)]
-  fun catch['TResult](args0: ((reason: anything) => ('TResult) | (PromiseLike['TResult])) | (undefined)): Promise[('T) | ('TResult)]
+  declare fun id"then"['TResult1, 'TResult2](args0: ((value: 'T) => ('TResult1) | (PromiseLike['TResult1])) | (undefined), args1: ((reason: anything) => ('TResult2) | (PromiseLike['TResult2])) | (undefined)): Promise[('TResult1) | ('TResult2)]
+  declare fun catch['TResult](args0: ((reason: anything) => ('TResult) | (PromiseLike['TResult])) | (undefined)): Promise[('T) | ('TResult)]
 }
 type Awaited = unsupported["type Awaited<T> =     T extends null | undefined ? T : // special case for `null | undefined` when not in `--strictNullChecks` mode         T extends object & { then(onfulfilled: infer F, ...args: infer _): any } ? // `await` only unwraps object types with a callable `then`. Non-object types are not unwrapped             F extends ((value: infer V, ...args: infer _) => any) ? // if the argument to `then` is callable, extracts the first argument                 Awaited<V> : // recursively unwrap the value                 never : // the argument to `then` was not callable         T;", "ES5.d.ts", 1520, 1]
 declare trait ArrayLike['T] {
@@ -407,7 +407,7 @@ type Uncapitalize = unsupported["type Uncapitalize<S extends string> = intrinsic
 declare trait ThisType['T] {}
 declare trait ArrayBuffer {
   val byteLength: Num
-  fun slice(args0: Num, args1: (Num) | (undefined)): ArrayBuffer
+  declare fun slice(args0: Num, args1: (Num) | (undefined)): ArrayBuffer
 }
 declare trait ArrayBufferTypes {
   val ArrayBuffer: unsupported["ArrayBuffer: ArrayBuffer;", "ES5.d.ts", 1659, 28]
@@ -416,7 +416,7 @@ type ArrayBufferLike = ArrayBuffer
 declare trait ArrayBufferConstructor {
   val prototype: ArrayBuffer
   val __new: unsupported["new(byteLength: number): ArrayBuffer;", "ES5.d.ts", 1665, 36]
-  fun isView(args0: anything): (false) | (true)
+  declare fun isView(args0: anything): (false) | (true)
 }
 declare trait ArrayBufferView {
   val buffer: ArrayBuffer
@@ -424,24 +424,24 @@ declare trait ArrayBufferView {
   val byteOffset: Num
 }
 declare trait DataView {
-  fun setInt32(args0: Num, args1: Num, args2: ((false) | (true)) | (undefined)): unit
-  fun setUint32(args0: Num, args1: Num, args2: ((false) | (true)) | (undefined)): unit
-  fun setFloat64(args0: Num, args1: Num, args2: ((false) | (true)) | (undefined)): unit
-  fun getInt8(args0: Num): Num
+  declare fun setInt32(args0: Num, args1: Num, args2: ((false) | (true)) | (undefined)): unit
+  declare fun setUint32(args0: Num, args1: Num, args2: ((false) | (true)) | (undefined)): unit
+  declare fun setFloat64(args0: Num, args1: Num, args2: ((false) | (true)) | (undefined)): unit
+  declare fun getInt8(args0: Num): Num
   val buffer: ArrayBuffer
-  fun setInt16(args0: Num, args1: Num, args2: ((false) | (true)) | (undefined)): unit
-  fun getUint8(args0: Num): Num
+  declare fun setInt16(args0: Num, args1: Num, args2: ((false) | (true)) | (undefined)): unit
+  declare fun getUint8(args0: Num): Num
   val byteLength: Num
-  fun getFloat64(args0: Num, args1: ((false) | (true)) | (undefined)): Num
-  fun getFloat32(args0: Num, args1: ((false) | (true)) | (undefined)): Num
-  fun getUint16(args0: Num, args1: ((false) | (true)) | (undefined)): Num
-  fun setInt8(args0: Num, args1: Num): unit
-  fun setUint16(args0: Num, args1: Num, args2: ((false) | (true)) | (undefined)): unit
-  fun setFloat32(args0: Num, args1: Num, args2: ((false) | (true)) | (undefined)): unit
-  fun getUint32(args0: Num, args1: ((false) | (true)) | (undefined)): Num
-  fun getInt32(args0: Num, args1: ((false) | (true)) | (undefined)): Num
-  fun getInt16(args0: Num, args1: ((false) | (true)) | (undefined)): Num
-  fun setUint8(args0: Num, args1: Num): unit
+  declare fun getFloat64(args0: Num, args1: ((false) | (true)) | (undefined)): Num
+  declare fun getFloat32(args0: Num, args1: ((false) | (true)) | (undefined)): Num
+  declare fun getUint16(args0: Num, args1: ((false) | (true)) | (undefined)): Num
+  declare fun setInt8(args0: Num, args1: Num): unit
+  declare fun setUint16(args0: Num, args1: Num, args2: ((false) | (true)) | (undefined)): unit
+  declare fun setFloat32(args0: Num, args1: Num, args2: ((false) | (true)) | (undefined)): unit
+  declare fun getUint32(args0: Num, args1: ((false) | (true)) | (undefined)): Num
+  declare fun getInt32(args0: Num, args1: ((false) | (true)) | (undefined)): Num
+  declare fun getInt16(args0: Num, args1: ((false) | (true)) | (undefined)): Num
+  declare fun setUint8(args0: Num, args1: Num): unit
   val byteOffset: Num
 }
 declare trait DataViewConstructor {
@@ -449,335 +449,335 @@ declare trait DataViewConstructor {
   val __new: unsupported["new(buffer: ArrayBufferLike, byteOffset?: number, byteLength?: number): DataView;", "ES5.d.ts", 1817, 33]
 }
 declare trait Int8Array {
-  fun valueOf(): Int8Array
-  fun lastIndexOf(args0: Num, args1: (Num) | (undefined)): Num
-  fun every(args0: (value: Num, index: Num, array: Int8Array) => anything, args1: (anything) | (undefined)): (false) | (true)
-  fun set(args0: ArrayLike[Num], args1: (Num) | (undefined)): unit
-  fun toLocaleString(): Str
+  declare fun valueOf(): Int8Array
+  declare fun lastIndexOf(args0: Num, args1: (Num) | (undefined)): Num
+  declare fun every(args0: (value: Num, index: Num, array: Int8Array) => anything, args1: (anything) | (undefined)): (false) | (true)
+  declare fun set(args0: ArrayLike[Num], args1: (Num) | (undefined)): unit
+  declare fun toLocaleString(): Str
   val __index: unsupported["[index: number]: number;", "ES5.d.ts", 2065, 25]
-  fun reduceRight['U](args0: (previousValue: 'U, currentValue: Num, currentIndex: Num, array: Int8Array) => 'U, args1: 'U): 'U /* warning: the overload of function reduceRight is not supported yet. */
-  fun fill(args0: Num, args1: (Num) | (undefined), args2: (Num) | (undefined)): 'Int8Array
-  fun sort(args0: ((a: Num, b: Num) => Num) | (undefined)): 'Int8Array
+  declare fun reduceRight['U](args0: (previousValue: 'U, currentValue: Num, currentIndex: Num, array: Int8Array) => 'U, args1: 'U): 'U /* warning: the overload of function reduceRight is not supported yet. */
+  declare fun fill(args0: Num, args1: (Num) | (undefined), args2: (Num) | (undefined)): 'Int8Array
+  declare fun sort(args0: ((a: Num, b: Num) => Num) | (undefined)): 'Int8Array
   val BYTES_PER_ELEMENT: Num
-  fun copyWithin(args0: Num, args1: (Num) | (undefined), args2: (Num) | (undefined)): 'Int8Array
-  fun find(args0: (value: Num, index: Num, obj: Int8Array) => (false) | (true), args1: (anything) | (undefined)): Num
-  fun subarray(args0: (Num) | (undefined), args1: (Num) | (undefined)): Int8Array
-  fun join(args0: (Str) | (undefined)): Str
-  fun map(args0: (value: Num, index: Num, array: Int8Array) => Num, args1: (anything) | (undefined)): Int8Array
-  fun forEach(args0: (value: Num, index: Num, array: Int8Array) => unit, args1: (anything) | (undefined)): unit
+  declare fun copyWithin(args0: Num, args1: (Num) | (undefined), args2: (Num) | (undefined)): 'Int8Array
+  declare fun find(args0: (value: Num, index: Num, obj: Int8Array) => (false) | (true), args1: (anything) | (undefined)): Num
+  declare fun subarray(args0: (Num) | (undefined), args1: (Num) | (undefined)): Int8Array
+  declare fun join(args0: (Str) | (undefined)): Str
+  declare fun map(args0: (value: Num, index: Num, array: Int8Array) => Num, args1: (anything) | (undefined)): Int8Array
+  declare fun forEach(args0: (value: Num, index: Num, array: Int8Array) => unit, args1: (anything) | (undefined)): unit
   val buffer: ArrayBuffer
-  fun findIndex(args0: (value: Num, index: Num, obj: Int8Array) => (false) | (true), args1: (anything) | (undefined)): Num
-  fun reverse(): Int8Array
-  fun filter(args0: (value: Num, index: Num, array: Int8Array) => anything, args1: (anything) | (undefined)): Int8Array
-  fun slice(args0: (Num) | (undefined), args1: (Num) | (undefined)): Int8Array
+  declare fun findIndex(args0: (value: Num, index: Num, obj: Int8Array) => (false) | (true), args1: (anything) | (undefined)): Num
+  declare fun reverse(): Int8Array
+  declare fun filter(args0: (value: Num, index: Num, array: Int8Array) => anything, args1: (anything) | (undefined)): Int8Array
+  declare fun slice(args0: (Num) | (undefined), args1: (Num) | (undefined)): Int8Array
   val byteLength: Num
-  fun reduce['U](args0: (previousValue: 'U, currentValue: Num, currentIndex: Num, array: Int8Array) => 'U, args1: 'U): 'U /* warning: the overload of function reduce is not supported yet. */
-  fun toString(): Str
+  declare fun reduce['U](args0: (previousValue: 'U, currentValue: Num, currentIndex: Num, array: Int8Array) => 'U, args1: 'U): 'U /* warning: the overload of function reduce is not supported yet. */
+  declare fun toString(): Str
   val length: Num
-  fun some(args0: (value: Num, index: Num, array: Int8Array) => anything, args1: (anything) | (undefined)): (false) | (true)
-  fun indexOf(args0: Num, args1: (Num) | (undefined)): Num
+  declare fun some(args0: (value: Num, index: Num, array: Int8Array) => anything, args1: (anything) | (undefined)): (false) | (true)
+  declare fun indexOf(args0: Num, args1: (Num) | (undefined)): Num
   val byteOffset: Num
 }
 declare trait Int8ArrayConstructor {
   val __new: unsupported["new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Int8Array;", "ES5.d.ts", 2072, 63]
-  fun from['T](args0: ArrayLike['T], args1: (v: 'T, k: Num) => Num, args2: (anything) | (undefined)): Int8Array /* warning: the overload of function from is not supported yet. */
+  declare fun from['T](args0: ArrayLike['T], args1: (v: 'T, k: Num) => Num, args2: (anything) | (undefined)): Int8Array /* warning: the overload of function from is not supported yet. */
   val prototype: Int8Array
-  fun id"of"(args0: (Num) | (MutArray[Num])): Int8Array
+  declare fun id"of"(args0: (Num) | (MutArray[Num])): Int8Array
   val BYTES_PER_ELEMENT: Num
 }
 declare trait Uint8Array {
-  fun valueOf(): Uint8Array
-  fun lastIndexOf(args0: Num, args1: (Num) | (undefined)): Num
-  fun every(args0: (value: Num, index: Num, array: Uint8Array) => anything, args1: (anything) | (undefined)): (false) | (true)
-  fun set(args0: ArrayLike[Num], args1: (Num) | (undefined)): unit
-  fun toLocaleString(): Str
+  declare fun valueOf(): Uint8Array
+  declare fun lastIndexOf(args0: Num, args1: (Num) | (undefined)): Num
+  declare fun every(args0: (value: Num, index: Num, array: Uint8Array) => anything, args1: (anything) | (undefined)): (false) | (true)
+  declare fun set(args0: ArrayLike[Num], args1: (Num) | (undefined)): unit
+  declare fun toLocaleString(): Str
   val __index: unsupported["[index: number]: number;", "ES5.d.ts", 2347, 26]
-  fun reduceRight['U](args0: (previousValue: 'U, currentValue: Num, currentIndex: Num, array: Uint8Array) => 'U, args1: 'U): 'U /* warning: the overload of function reduceRight is not supported yet. */
-  fun fill(args0: Num, args1: (Num) | (undefined), args2: (Num) | (undefined)): 'Uint8Array
-  fun sort(args0: ((a: Num, b: Num) => Num) | (undefined)): 'Uint8Array
+  declare fun reduceRight['U](args0: (previousValue: 'U, currentValue: Num, currentIndex: Num, array: Uint8Array) => 'U, args1: 'U): 'U /* warning: the overload of function reduceRight is not supported yet. */
+  declare fun fill(args0: Num, args1: (Num) | (undefined), args2: (Num) | (undefined)): 'Uint8Array
+  declare fun sort(args0: ((a: Num, b: Num) => Num) | (undefined)): 'Uint8Array
   val BYTES_PER_ELEMENT: Num
-  fun copyWithin(args0: Num, args1: (Num) | (undefined), args2: (Num) | (undefined)): 'Uint8Array
-  fun find(args0: (value: Num, index: Num, obj: Uint8Array) => (false) | (true), args1: (anything) | (undefined)): Num
-  fun subarray(args0: (Num) | (undefined), args1: (Num) | (undefined)): Uint8Array
-  fun join(args0: (Str) | (undefined)): Str
-  fun map(args0: (value: Num, index: Num, array: Uint8Array) => Num, args1: (anything) | (undefined)): Uint8Array
-  fun forEach(args0: (value: Num, index: Num, array: Uint8Array) => unit, args1: (anything) | (undefined)): unit
+  declare fun copyWithin(args0: Num, args1: (Num) | (undefined), args2: (Num) | (undefined)): 'Uint8Array
+  declare fun find(args0: (value: Num, index: Num, obj: Uint8Array) => (false) | (true), args1: (anything) | (undefined)): Num
+  declare fun subarray(args0: (Num) | (undefined), args1: (Num) | (undefined)): Uint8Array
+  declare fun join(args0: (Str) | (undefined)): Str
+  declare fun map(args0: (value: Num, index: Num, array: Uint8Array) => Num, args1: (anything) | (undefined)): Uint8Array
+  declare fun forEach(args0: (value: Num, index: Num, array: Uint8Array) => unit, args1: (anything) | (undefined)): unit
   val buffer: ArrayBuffer
-  fun findIndex(args0: (value: Num, index: Num, obj: Uint8Array) => (false) | (true), args1: (anything) | (undefined)): Num
-  fun reverse(): Uint8Array
-  fun filter(args0: (value: Num, index: Num, array: Uint8Array) => anything, args1: (anything) | (undefined)): Uint8Array
-  fun slice(args0: (Num) | (undefined), args1: (Num) | (undefined)): Uint8Array
+  declare fun findIndex(args0: (value: Num, index: Num, obj: Uint8Array) => (false) | (true), args1: (anything) | (undefined)): Num
+  declare fun reverse(): Uint8Array
+  declare fun filter(args0: (value: Num, index: Num, array: Uint8Array) => anything, args1: (anything) | (undefined)): Uint8Array
+  declare fun slice(args0: (Num) | (undefined), args1: (Num) | (undefined)): Uint8Array
   val byteLength: Num
-  fun reduce['U](args0: (previousValue: 'U, currentValue: Num, currentIndex: Num, array: Uint8Array) => 'U, args1: 'U): 'U /* warning: the overload of function reduce is not supported yet. */
-  fun toString(): Str
+  declare fun reduce['U](args0: (previousValue: 'U, currentValue: Num, currentIndex: Num, array: Uint8Array) => 'U, args1: 'U): 'U /* warning: the overload of function reduce is not supported yet. */
+  declare fun toString(): Str
   val length: Num
-  fun some(args0: (value: Num, index: Num, array: Uint8Array) => anything, args1: (anything) | (undefined)): (false) | (true)
-  fun indexOf(args0: Num, args1: (Num) | (undefined)): Num
+  declare fun some(args0: (value: Num, index: Num, array: Uint8Array) => anything, args1: (anything) | (undefined)): (false) | (true)
+  declare fun indexOf(args0: Num, args1: (Num) | (undefined)): Num
   val byteOffset: Num
 }
 declare trait Uint8ArrayConstructor {
   val __new: unsupported["new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Uint8Array;", "ES5.d.ts", 2355, 64]
-  fun from['T](args0: ArrayLike['T], args1: (v: 'T, k: Num) => Num, args2: (anything) | (undefined)): Uint8Array /* warning: the overload of function from is not supported yet. */
+  declare fun from['T](args0: ArrayLike['T], args1: (v: 'T, k: Num) => Num, args2: (anything) | (undefined)): Uint8Array /* warning: the overload of function from is not supported yet. */
   val prototype: Uint8Array
-  fun id"of"(args0: (Num) | (MutArray[Num])): Uint8Array
+  declare fun id"of"(args0: (Num) | (MutArray[Num])): Uint8Array
   val BYTES_PER_ELEMENT: Num
 }
 declare trait Uint8ClampedArray {
-  fun valueOf(): Uint8ClampedArray
-  fun lastIndexOf(args0: Num, args1: (Num) | (undefined)): Num
-  fun every(args0: (value: Num, index: Num, array: Uint8ClampedArray) => anything, args1: (anything) | (undefined)): (false) | (true)
-  fun set(args0: ArrayLike[Num], args1: (Num) | (undefined)): unit
-  fun toLocaleString(): Str
+  declare fun valueOf(): Uint8ClampedArray
+  declare fun lastIndexOf(args0: Num, args1: (Num) | (undefined)): Num
+  declare fun every(args0: (value: Num, index: Num, array: Uint8ClampedArray) => anything, args1: (anything) | (undefined)): (false) | (true)
+  declare fun set(args0: ArrayLike[Num], args1: (Num) | (undefined)): unit
+  declare fun toLocaleString(): Str
   val __index: unsupported["[index: number]: number;", "ES5.d.ts", 2629, 33]
-  fun reduceRight['U](args0: (previousValue: 'U, currentValue: Num, currentIndex: Num, array: Uint8ClampedArray) => 'U, args1: 'U): 'U /* warning: the overload of function reduceRight is not supported yet. */
-  fun fill(args0: Num, args1: (Num) | (undefined), args2: (Num) | (undefined)): 'Uint8ClampedArray
-  fun sort(args0: ((a: Num, b: Num) => Num) | (undefined)): 'Uint8ClampedArray
+  declare fun reduceRight['U](args0: (previousValue: 'U, currentValue: Num, currentIndex: Num, array: Uint8ClampedArray) => 'U, args1: 'U): 'U /* warning: the overload of function reduceRight is not supported yet. */
+  declare fun fill(args0: Num, args1: (Num) | (undefined), args2: (Num) | (undefined)): 'Uint8ClampedArray
+  declare fun sort(args0: ((a: Num, b: Num) => Num) | (undefined)): 'Uint8ClampedArray
   val BYTES_PER_ELEMENT: Num
-  fun copyWithin(args0: Num, args1: (Num) | (undefined), args2: (Num) | (undefined)): 'Uint8ClampedArray
-  fun find(args0: (value: Num, index: Num, obj: Uint8ClampedArray) => (false) | (true), args1: (anything) | (undefined)): Num
-  fun subarray(args0: (Num) | (undefined), args1: (Num) | (undefined)): Uint8ClampedArray
-  fun join(args0: (Str) | (undefined)): Str
-  fun map(args0: (value: Num, index: Num, array: Uint8ClampedArray) => Num, args1: (anything) | (undefined)): Uint8ClampedArray
-  fun forEach(args0: (value: Num, index: Num, array: Uint8ClampedArray) => unit, args1: (anything) | (undefined)): unit
+  declare fun copyWithin(args0: Num, args1: (Num) | (undefined), args2: (Num) | (undefined)): 'Uint8ClampedArray
+  declare fun find(args0: (value: Num, index: Num, obj: Uint8ClampedArray) => (false) | (true), args1: (anything) | (undefined)): Num
+  declare fun subarray(args0: (Num) | (undefined), args1: (Num) | (undefined)): Uint8ClampedArray
+  declare fun join(args0: (Str) | (undefined)): Str
+  declare fun map(args0: (value: Num, index: Num, array: Uint8ClampedArray) => Num, args1: (anything) | (undefined)): Uint8ClampedArray
+  declare fun forEach(args0: (value: Num, index: Num, array: Uint8ClampedArray) => unit, args1: (anything) | (undefined)): unit
   val buffer: ArrayBuffer
-  fun findIndex(args0: (value: Num, index: Num, obj: Uint8ClampedArray) => (false) | (true), args1: (anything) | (undefined)): Num
-  fun reverse(): Uint8ClampedArray
-  fun filter(args0: (value: Num, index: Num, array: Uint8ClampedArray) => anything, args1: (anything) | (undefined)): Uint8ClampedArray
-  fun slice(args0: (Num) | (undefined), args1: (Num) | (undefined)): Uint8ClampedArray
+  declare fun findIndex(args0: (value: Num, index: Num, obj: Uint8ClampedArray) => (false) | (true), args1: (anything) | (undefined)): Num
+  declare fun reverse(): Uint8ClampedArray
+  declare fun filter(args0: (value: Num, index: Num, array: Uint8ClampedArray) => anything, args1: (anything) | (undefined)): Uint8ClampedArray
+  declare fun slice(args0: (Num) | (undefined), args1: (Num) | (undefined)): Uint8ClampedArray
   val byteLength: Num
-  fun reduce['U](args0: (previousValue: 'U, currentValue: Num, currentIndex: Num, array: Uint8ClampedArray) => 'U, args1: 'U): 'U /* warning: the overload of function reduce is not supported yet. */
-  fun toString(): Str
+  declare fun reduce['U](args0: (previousValue: 'U, currentValue: Num, currentIndex: Num, array: Uint8ClampedArray) => 'U, args1: 'U): 'U /* warning: the overload of function reduce is not supported yet. */
+  declare fun toString(): Str
   val length: Num
-  fun some(args0: (value: Num, index: Num, array: Uint8ClampedArray) => anything, args1: (anything) | (undefined)): (false) | (true)
-  fun indexOf(args0: Num, args1: (Num) | (undefined)): Num
+  declare fun some(args0: (value: Num, index: Num, array: Uint8ClampedArray) => anything, args1: (anything) | (undefined)): (false) | (true)
+  declare fun indexOf(args0: Num, args1: (Num) | (undefined)): Num
   val byteOffset: Num
 }
 declare trait Uint8ClampedArrayConstructor {
   val __new: unsupported["new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Uint8ClampedArray;", "ES5.d.ts", 2637, 71]
-  fun from['T](args0: ArrayLike['T], args1: (v: 'T, k: Num) => Num, args2: (anything) | (undefined)): Uint8ClampedArray /* warning: the overload of function from is not supported yet. */
+  declare fun from['T](args0: ArrayLike['T], args1: (v: 'T, k: Num) => Num, args2: (anything) | (undefined)): Uint8ClampedArray /* warning: the overload of function from is not supported yet. */
   val prototype: Uint8ClampedArray
-  fun id"of"(args0: (Num) | (MutArray[Num])): Uint8ClampedArray
+  declare fun id"of"(args0: (Num) | (MutArray[Num])): Uint8ClampedArray
   val BYTES_PER_ELEMENT: Num
 }
 declare trait Int16Array {
-  fun valueOf(): Int16Array
-  fun lastIndexOf(args0: Num, args1: (Num) | (undefined)): Num
-  fun every(args0: (value: Num, index: Num, array: Int16Array) => anything, args1: (anything) | (undefined)): (false) | (true)
-  fun set(args0: ArrayLike[Num], args1: (Num) | (undefined)): unit
-  fun toLocaleString(): Str
+  declare fun valueOf(): Int16Array
+  declare fun lastIndexOf(args0: Num, args1: (Num) | (undefined)): Num
+  declare fun every(args0: (value: Num, index: Num, array: Int16Array) => anything, args1: (anything) | (undefined)): (false) | (true)
+  declare fun set(args0: ArrayLike[Num], args1: (Num) | (undefined)): unit
+  declare fun toLocaleString(): Str
   val __index: unsupported["[index: number]: number;", "ES5.d.ts", 2909, 26]
-  fun reduceRight['U](args0: (previousValue: 'U, currentValue: Num, currentIndex: Num, array: Int16Array) => 'U, args1: 'U): 'U /* warning: the overload of function reduceRight is not supported yet. */
-  fun fill(args0: Num, args1: (Num) | (undefined), args2: (Num) | (undefined)): 'Int16Array
-  fun sort(args0: ((a: Num, b: Num) => Num) | (undefined)): 'Int16Array
+  declare fun reduceRight['U](args0: (previousValue: 'U, currentValue: Num, currentIndex: Num, array: Int16Array) => 'U, args1: 'U): 'U /* warning: the overload of function reduceRight is not supported yet. */
+  declare fun fill(args0: Num, args1: (Num) | (undefined), args2: (Num) | (undefined)): 'Int16Array
+  declare fun sort(args0: ((a: Num, b: Num) => Num) | (undefined)): 'Int16Array
   val BYTES_PER_ELEMENT: Num
-  fun copyWithin(args0: Num, args1: (Num) | (undefined), args2: (Num) | (undefined)): 'Int16Array
-  fun find(args0: (value: Num, index: Num, obj: Int16Array) => (false) | (true), args1: (anything) | (undefined)): Num
-  fun subarray(args0: (Num) | (undefined), args1: (Num) | (undefined)): Int16Array
-  fun join(args0: (Str) | (undefined)): Str
-  fun map(args0: (value: Num, index: Num, array: Int16Array) => Num, args1: (anything) | (undefined)): Int16Array
-  fun forEach(args0: (value: Num, index: Num, array: Int16Array) => unit, args1: (anything) | (undefined)): unit
+  declare fun copyWithin(args0: Num, args1: (Num) | (undefined), args2: (Num) | (undefined)): 'Int16Array
+  declare fun find(args0: (value: Num, index: Num, obj: Int16Array) => (false) | (true), args1: (anything) | (undefined)): Num
+  declare fun subarray(args0: (Num) | (undefined), args1: (Num) | (undefined)): Int16Array
+  declare fun join(args0: (Str) | (undefined)): Str
+  declare fun map(args0: (value: Num, index: Num, array: Int16Array) => Num, args1: (anything) | (undefined)): Int16Array
+  declare fun forEach(args0: (value: Num, index: Num, array: Int16Array) => unit, args1: (anything) | (undefined)): unit
   val buffer: ArrayBuffer
-  fun findIndex(args0: (value: Num, index: Num, obj: Int16Array) => (false) | (true), args1: (anything) | (undefined)): Num
-  fun reverse(): Int16Array
-  fun filter(args0: (value: Num, index: Num, array: Int16Array) => anything, args1: (anything) | (undefined)): Int16Array
-  fun slice(args0: (Num) | (undefined), args1: (Num) | (undefined)): Int16Array
+  declare fun findIndex(args0: (value: Num, index: Num, obj: Int16Array) => (false) | (true), args1: (anything) | (undefined)): Num
+  declare fun reverse(): Int16Array
+  declare fun filter(args0: (value: Num, index: Num, array: Int16Array) => anything, args1: (anything) | (undefined)): Int16Array
+  declare fun slice(args0: (Num) | (undefined), args1: (Num) | (undefined)): Int16Array
   val byteLength: Num
-  fun reduce['U](args0: (previousValue: 'U, currentValue: Num, currentIndex: Num, array: Int16Array) => 'U, args1: 'U): 'U /* warning: the overload of function reduce is not supported yet. */
-  fun toString(): Str
+  declare fun reduce['U](args0: (previousValue: 'U, currentValue: Num, currentIndex: Num, array: Int16Array) => 'U, args1: 'U): 'U /* warning: the overload of function reduce is not supported yet. */
+  declare fun toString(): Str
   val length: Num
-  fun some(args0: (value: Num, index: Num, array: Int16Array) => anything, args1: (anything) | (undefined)): (false) | (true)
-  fun indexOf(args0: Num, args1: (Num) | (undefined)): Num
+  declare fun some(args0: (value: Num, index: Num, array: Int16Array) => anything, args1: (anything) | (undefined)): (false) | (true)
+  declare fun indexOf(args0: Num, args1: (Num) | (undefined)): Num
   val byteOffset: Num
 }
 declare trait Int16ArrayConstructor {
   val __new: unsupported["new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Int16Array;", "ES5.d.ts", 2917, 64]
-  fun from['T](args0: ArrayLike['T], args1: (v: 'T, k: Num) => Num, args2: (anything) | (undefined)): Int16Array /* warning: the overload of function from is not supported yet. */
+  declare fun from['T](args0: ArrayLike['T], args1: (v: 'T, k: Num) => Num, args2: (anything) | (undefined)): Int16Array /* warning: the overload of function from is not supported yet. */
   val prototype: Int16Array
-  fun id"of"(args0: (Num) | (MutArray[Num])): Int16Array
+  declare fun id"of"(args0: (Num) | (MutArray[Num])): Int16Array
   val BYTES_PER_ELEMENT: Num
 }
 declare trait Uint16Array {
-  fun valueOf(): Uint16Array
-  fun lastIndexOf(args0: Num, args1: (Num) | (undefined)): Num
-  fun every(args0: (value: Num, index: Num, array: Uint16Array) => anything, args1: (anything) | (undefined)): (false) | (true)
-  fun set(args0: ArrayLike[Num], args1: (Num) | (undefined)): unit
-  fun toLocaleString(): Str
+  declare fun valueOf(): Uint16Array
+  declare fun lastIndexOf(args0: Num, args1: (Num) | (undefined)): Num
+  declare fun every(args0: (value: Num, index: Num, array: Uint16Array) => anything, args1: (anything) | (undefined)): (false) | (true)
+  declare fun set(args0: ArrayLike[Num], args1: (Num) | (undefined)): unit
+  declare fun toLocaleString(): Str
   val __index: unsupported["[index: number]: number;", "ES5.d.ts", 3192, 27]
-  fun reduceRight['U](args0: (previousValue: 'U, currentValue: Num, currentIndex: Num, array: Uint16Array) => 'U, args1: 'U): 'U /* warning: the overload of function reduceRight is not supported yet. */
-  fun fill(args0: Num, args1: (Num) | (undefined), args2: (Num) | (undefined)): 'Uint16Array
-  fun sort(args0: ((a: Num, b: Num) => Num) | (undefined)): 'Uint16Array
+  declare fun reduceRight['U](args0: (previousValue: 'U, currentValue: Num, currentIndex: Num, array: Uint16Array) => 'U, args1: 'U): 'U /* warning: the overload of function reduceRight is not supported yet. */
+  declare fun fill(args0: Num, args1: (Num) | (undefined), args2: (Num) | (undefined)): 'Uint16Array
+  declare fun sort(args0: ((a: Num, b: Num) => Num) | (undefined)): 'Uint16Array
   val BYTES_PER_ELEMENT: Num
-  fun copyWithin(args0: Num, args1: (Num) | (undefined), args2: (Num) | (undefined)): 'Uint16Array
-  fun find(args0: (value: Num, index: Num, obj: Uint16Array) => (false) | (true), args1: (anything) | (undefined)): Num
-  fun subarray(args0: (Num) | (undefined), args1: (Num) | (undefined)): Uint16Array
-  fun join(args0: (Str) | (undefined)): Str
-  fun map(args0: (value: Num, index: Num, array: Uint16Array) => Num, args1: (anything) | (undefined)): Uint16Array
-  fun forEach(args0: (value: Num, index: Num, array: Uint16Array) => unit, args1: (anything) | (undefined)): unit
+  declare fun copyWithin(args0: Num, args1: (Num) | (undefined), args2: (Num) | (undefined)): 'Uint16Array
+  declare fun find(args0: (value: Num, index: Num, obj: Uint16Array) => (false) | (true), args1: (anything) | (undefined)): Num
+  declare fun subarray(args0: (Num) | (undefined), args1: (Num) | (undefined)): Uint16Array
+  declare fun join(args0: (Str) | (undefined)): Str
+  declare fun map(args0: (value: Num, index: Num, array: Uint16Array) => Num, args1: (anything) | (undefined)): Uint16Array
+  declare fun forEach(args0: (value: Num, index: Num, array: Uint16Array) => unit, args1: (anything) | (undefined)): unit
   val buffer: ArrayBuffer
-  fun findIndex(args0: (value: Num, index: Num, obj: Uint16Array) => (false) | (true), args1: (anything) | (undefined)): Num
-  fun reverse(): Uint16Array
-  fun filter(args0: (value: Num, index: Num, array: Uint16Array) => anything, args1: (anything) | (undefined)): Uint16Array
-  fun slice(args0: (Num) | (undefined), args1: (Num) | (undefined)): Uint16Array
+  declare fun findIndex(args0: (value: Num, index: Num, obj: Uint16Array) => (false) | (true), args1: (anything) | (undefined)): Num
+  declare fun reverse(): Uint16Array
+  declare fun filter(args0: (value: Num, index: Num, array: Uint16Array) => anything, args1: (anything) | (undefined)): Uint16Array
+  declare fun slice(args0: (Num) | (undefined), args1: (Num) | (undefined)): Uint16Array
   val byteLength: Num
-  fun reduce['U](args0: (previousValue: 'U, currentValue: Num, currentIndex: Num, array: Uint16Array) => 'U, args1: 'U): 'U /* warning: the overload of function reduce is not supported yet. */
-  fun toString(): Str
+  declare fun reduce['U](args0: (previousValue: 'U, currentValue: Num, currentIndex: Num, array: Uint16Array) => 'U, args1: 'U): 'U /* warning: the overload of function reduce is not supported yet. */
+  declare fun toString(): Str
   val length: Num
-  fun some(args0: (value: Num, index: Num, array: Uint16Array) => anything, args1: (anything) | (undefined)): (false) | (true)
-  fun indexOf(args0: Num, args1: (Num) | (undefined)): Num
+  declare fun some(args0: (value: Num, index: Num, array: Uint16Array) => anything, args1: (anything) | (undefined)): (false) | (true)
+  declare fun indexOf(args0: Num, args1: (Num) | (undefined)): Num
   val byteOffset: Num
 }
 declare trait Uint16ArrayConstructor {
   val __new: unsupported["new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Uint16Array;", "ES5.d.ts", 3200, 65]
-  fun from['T](args0: ArrayLike['T], args1: (v: 'T, k: Num) => Num, args2: (anything) | (undefined)): Uint16Array /* warning: the overload of function from is not supported yet. */
+  declare fun from['T](args0: ArrayLike['T], args1: (v: 'T, k: Num) => Num, args2: (anything) | (undefined)): Uint16Array /* warning: the overload of function from is not supported yet. */
   val prototype: Uint16Array
-  fun id"of"(args0: (Num) | (MutArray[Num])): Uint16Array
+  declare fun id"of"(args0: (Num) | (MutArray[Num])): Uint16Array
   val BYTES_PER_ELEMENT: Num
 }
 declare trait Int32Array {
-  fun valueOf(): Int32Array
-  fun lastIndexOf(args0: Num, args1: (Num) | (undefined)): Num
-  fun every(args0: (value: Num, index: Num, array: Int32Array) => anything, args1: (anything) | (undefined)): (false) | (true)
-  fun set(args0: ArrayLike[Num], args1: (Num) | (undefined)): unit
-  fun toLocaleString(): Str
+  declare fun valueOf(): Int32Array
+  declare fun lastIndexOf(args0: Num, args1: (Num) | (undefined)): Num
+  declare fun every(args0: (value: Num, index: Num, array: Int32Array) => anything, args1: (anything) | (undefined)): (false) | (true)
+  declare fun set(args0: ArrayLike[Num], args1: (Num) | (undefined)): unit
+  declare fun toLocaleString(): Str
   val __index: unsupported["[index: number]: number;", "ES5.d.ts", 3475, 26]
-  fun reduceRight['U](args0: (previousValue: 'U, currentValue: Num, currentIndex: Num, array: Int32Array) => 'U, args1: 'U): 'U /* warning: the overload of function reduceRight is not supported yet. */
-  fun fill(args0: Num, args1: (Num) | (undefined), args2: (Num) | (undefined)): 'Int32Array
-  fun sort(args0: ((a: Num, b: Num) => Num) | (undefined)): 'Int32Array
+  declare fun reduceRight['U](args0: (previousValue: 'U, currentValue: Num, currentIndex: Num, array: Int32Array) => 'U, args1: 'U): 'U /* warning: the overload of function reduceRight is not supported yet. */
+  declare fun fill(args0: Num, args1: (Num) | (undefined), args2: (Num) | (undefined)): 'Int32Array
+  declare fun sort(args0: ((a: Num, b: Num) => Num) | (undefined)): 'Int32Array
   val BYTES_PER_ELEMENT: Num
-  fun copyWithin(args0: Num, args1: (Num) | (undefined), args2: (Num) | (undefined)): 'Int32Array
-  fun find(args0: (value: Num, index: Num, obj: Int32Array) => (false) | (true), args1: (anything) | (undefined)): Num
-  fun subarray(args0: (Num) | (undefined), args1: (Num) | (undefined)): Int32Array
-  fun join(args0: (Str) | (undefined)): Str
-  fun map(args0: (value: Num, index: Num, array: Int32Array) => Num, args1: (anything) | (undefined)): Int32Array
-  fun forEach(args0: (value: Num, index: Num, array: Int32Array) => unit, args1: (anything) | (undefined)): unit
+  declare fun copyWithin(args0: Num, args1: (Num) | (undefined), args2: (Num) | (undefined)): 'Int32Array
+  declare fun find(args0: (value: Num, index: Num, obj: Int32Array) => (false) | (true), args1: (anything) | (undefined)): Num
+  declare fun subarray(args0: (Num) | (undefined), args1: (Num) | (undefined)): Int32Array
+  declare fun join(args0: (Str) | (undefined)): Str
+  declare fun map(args0: (value: Num, index: Num, array: Int32Array) => Num, args1: (anything) | (undefined)): Int32Array
+  declare fun forEach(args0: (value: Num, index: Num, array: Int32Array) => unit, args1: (anything) | (undefined)): unit
   val buffer: ArrayBuffer
-  fun findIndex(args0: (value: Num, index: Num, obj: Int32Array) => (false) | (true), args1: (anything) | (undefined)): Num
-  fun reverse(): Int32Array
-  fun filter(args0: (value: Num, index: Num, array: Int32Array) => anything, args1: (anything) | (undefined)): Int32Array
-  fun slice(args0: (Num) | (undefined), args1: (Num) | (undefined)): Int32Array
+  declare fun findIndex(args0: (value: Num, index: Num, obj: Int32Array) => (false) | (true), args1: (anything) | (undefined)): Num
+  declare fun reverse(): Int32Array
+  declare fun filter(args0: (value: Num, index: Num, array: Int32Array) => anything, args1: (anything) | (undefined)): Int32Array
+  declare fun slice(args0: (Num) | (undefined), args1: (Num) | (undefined)): Int32Array
   val byteLength: Num
-  fun reduce['U](args0: (previousValue: 'U, currentValue: Num, currentIndex: Num, array: Int32Array) => 'U, args1: 'U): 'U /* warning: the overload of function reduce is not supported yet. */
-  fun toString(): Str
+  declare fun reduce['U](args0: (previousValue: 'U, currentValue: Num, currentIndex: Num, array: Int32Array) => 'U, args1: 'U): 'U /* warning: the overload of function reduce is not supported yet. */
+  declare fun toString(): Str
   val length: Num
-  fun some(args0: (value: Num, index: Num, array: Int32Array) => anything, args1: (anything) | (undefined)): (false) | (true)
-  fun indexOf(args0: Num, args1: (Num) | (undefined)): Num
+  declare fun some(args0: (value: Num, index: Num, array: Int32Array) => anything, args1: (anything) | (undefined)): (false) | (true)
+  declare fun indexOf(args0: Num, args1: (Num) | (undefined)): Num
   val byteOffset: Num
 }
 declare trait Int32ArrayConstructor {
   val __new: unsupported["new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Int32Array;", "ES5.d.ts", 3483, 64]
-  fun from['T](args0: ArrayLike['T], args1: (v: 'T, k: Num) => Num, args2: (anything) | (undefined)): Int32Array /* warning: the overload of function from is not supported yet. */
+  declare fun from['T](args0: ArrayLike['T], args1: (v: 'T, k: Num) => Num, args2: (anything) | (undefined)): Int32Array /* warning: the overload of function from is not supported yet. */
   val prototype: Int32Array
-  fun id"of"(args0: (Num) | (MutArray[Num])): Int32Array
+  declare fun id"of"(args0: (Num) | (MutArray[Num])): Int32Array
   val BYTES_PER_ELEMENT: Num
 }
 declare trait Uint32Array {
-  fun valueOf(): Uint32Array
-  fun lastIndexOf(args0: Num, args1: (Num) | (undefined)): Num
-  fun every(args0: (value: Num, index: Num, array: Uint32Array) => anything, args1: (anything) | (undefined)): (false) | (true)
-  fun set(args0: ArrayLike[Num], args1: (Num) | (undefined)): unit
-  fun toLocaleString(): Str
+  declare fun valueOf(): Uint32Array
+  declare fun lastIndexOf(args0: Num, args1: (Num) | (undefined)): Num
+  declare fun every(args0: (value: Num, index: Num, array: Uint32Array) => anything, args1: (anything) | (undefined)): (false) | (true)
+  declare fun set(args0: ArrayLike[Num], args1: (Num) | (undefined)): unit
+  declare fun toLocaleString(): Str
   val __index: unsupported["[index: number]: number;", "ES5.d.ts", 3756, 27]
-  fun reduceRight['U](args0: (previousValue: 'U, currentValue: Num, currentIndex: Num, array: Uint32Array) => 'U, args1: 'U): 'U /* warning: the overload of function reduceRight is not supported yet. */
-  fun fill(args0: Num, args1: (Num) | (undefined), args2: (Num) | (undefined)): 'Uint32Array
-  fun sort(args0: ((a: Num, b: Num) => Num) | (undefined)): 'Uint32Array
+  declare fun reduceRight['U](args0: (previousValue: 'U, currentValue: Num, currentIndex: Num, array: Uint32Array) => 'U, args1: 'U): 'U /* warning: the overload of function reduceRight is not supported yet. */
+  declare fun fill(args0: Num, args1: (Num) | (undefined), args2: (Num) | (undefined)): 'Uint32Array
+  declare fun sort(args0: ((a: Num, b: Num) => Num) | (undefined)): 'Uint32Array
   val BYTES_PER_ELEMENT: Num
-  fun copyWithin(args0: Num, args1: (Num) | (undefined), args2: (Num) | (undefined)): 'Uint32Array
-  fun find(args0: (value: Num, index: Num, obj: Uint32Array) => (false) | (true), args1: (anything) | (undefined)): Num
-  fun subarray(args0: (Num) | (undefined), args1: (Num) | (undefined)): Uint32Array
-  fun join(args0: (Str) | (undefined)): Str
-  fun map(args0: (value: Num, index: Num, array: Uint32Array) => Num, args1: (anything) | (undefined)): Uint32Array
-  fun forEach(args0: (value: Num, index: Num, array: Uint32Array) => unit, args1: (anything) | (undefined)): unit
+  declare fun copyWithin(args0: Num, args1: (Num) | (undefined), args2: (Num) | (undefined)): 'Uint32Array
+  declare fun find(args0: (value: Num, index: Num, obj: Uint32Array) => (false) | (true), args1: (anything) | (undefined)): Num
+  declare fun subarray(args0: (Num) | (undefined), args1: (Num) | (undefined)): Uint32Array
+  declare fun join(args0: (Str) | (undefined)): Str
+  declare fun map(args0: (value: Num, index: Num, array: Uint32Array) => Num, args1: (anything) | (undefined)): Uint32Array
+  declare fun forEach(args0: (value: Num, index: Num, array: Uint32Array) => unit, args1: (anything) | (undefined)): unit
   val buffer: ArrayBuffer
-  fun findIndex(args0: (value: Num, index: Num, obj: Uint32Array) => (false) | (true), args1: (anything) | (undefined)): Num
-  fun reverse(): Uint32Array
-  fun filter(args0: (value: Num, index: Num, array: Uint32Array) => anything, args1: (anything) | (undefined)): Uint32Array
-  fun slice(args0: (Num) | (undefined), args1: (Num) | (undefined)): Uint32Array
+  declare fun findIndex(args0: (value: Num, index: Num, obj: Uint32Array) => (false) | (true), args1: (anything) | (undefined)): Num
+  declare fun reverse(): Uint32Array
+  declare fun filter(args0: (value: Num, index: Num, array: Uint32Array) => anything, args1: (anything) | (undefined)): Uint32Array
+  declare fun slice(args0: (Num) | (undefined), args1: (Num) | (undefined)): Uint32Array
   val byteLength: Num
-  fun reduce['U](args0: (previousValue: 'U, currentValue: Num, currentIndex: Num, array: Uint32Array) => 'U, args1: 'U): 'U /* warning: the overload of function reduce is not supported yet. */
-  fun toString(): Str
+  declare fun reduce['U](args0: (previousValue: 'U, currentValue: Num, currentIndex: Num, array: Uint32Array) => 'U, args1: 'U): 'U /* warning: the overload of function reduce is not supported yet. */
+  declare fun toString(): Str
   val length: Num
-  fun some(args0: (value: Num, index: Num, array: Uint32Array) => anything, args1: (anything) | (undefined)): (false) | (true)
-  fun indexOf(args0: Num, args1: (Num) | (undefined)): Num
+  declare fun some(args0: (value: Num, index: Num, array: Uint32Array) => anything, args1: (anything) | (undefined)): (false) | (true)
+  declare fun indexOf(args0: Num, args1: (Num) | (undefined)): Num
   val byteOffset: Num
 }
 declare trait Uint32ArrayConstructor {
   val __new: unsupported["new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Uint32Array;", "ES5.d.ts", 3764, 65]
-  fun from['T](args0: ArrayLike['T], args1: (v: 'T, k: Num) => Num, args2: (anything) | (undefined)): Uint32Array /* warning: the overload of function from is not supported yet. */
+  declare fun from['T](args0: ArrayLike['T], args1: (v: 'T, k: Num) => Num, args2: (anything) | (undefined)): Uint32Array /* warning: the overload of function from is not supported yet. */
   val prototype: Uint32Array
-  fun id"of"(args0: (Num) | (MutArray[Num])): Uint32Array
+  declare fun id"of"(args0: (Num) | (MutArray[Num])): Uint32Array
   val BYTES_PER_ELEMENT: Num
 }
 declare trait Float32Array {
-  fun valueOf(): Float32Array
-  fun lastIndexOf(args0: Num, args1: (Num) | (undefined)): Num
-  fun every(args0: (value: Num, index: Num, array: Float32Array) => anything, args1: (anything) | (undefined)): (false) | (true)
-  fun set(args0: ArrayLike[Num], args1: (Num) | (undefined)): unit
-  fun toLocaleString(): Str
+  declare fun valueOf(): Float32Array
+  declare fun lastIndexOf(args0: Num, args1: (Num) | (undefined)): Num
+  declare fun every(args0: (value: Num, index: Num, array: Float32Array) => anything, args1: (anything) | (undefined)): (false) | (true)
+  declare fun set(args0: ArrayLike[Num], args1: (Num) | (undefined)): unit
+  declare fun toLocaleString(): Str
   val __index: unsupported["[index: number]: number;", "ES5.d.ts", 4038, 28]
-  fun reduceRight['U](args0: (previousValue: 'U, currentValue: Num, currentIndex: Num, array: Float32Array) => 'U, args1: 'U): 'U /* warning: the overload of function reduceRight is not supported yet. */
-  fun fill(args0: Num, args1: (Num) | (undefined), args2: (Num) | (undefined)): 'Float32Array
-  fun sort(args0: ((a: Num, b: Num) => Num) | (undefined)): 'Float32Array
+  declare fun reduceRight['U](args0: (previousValue: 'U, currentValue: Num, currentIndex: Num, array: Float32Array) => 'U, args1: 'U): 'U /* warning: the overload of function reduceRight is not supported yet. */
+  declare fun fill(args0: Num, args1: (Num) | (undefined), args2: (Num) | (undefined)): 'Float32Array
+  declare fun sort(args0: ((a: Num, b: Num) => Num) | (undefined)): 'Float32Array
   val BYTES_PER_ELEMENT: Num
-  fun copyWithin(args0: Num, args1: (Num) | (undefined), args2: (Num) | (undefined)): 'Float32Array
-  fun find(args0: (value: Num, index: Num, obj: Float32Array) => (false) | (true), args1: (anything) | (undefined)): Num
-  fun subarray(args0: (Num) | (undefined), args1: (Num) | (undefined)): Float32Array
-  fun join(args0: (Str) | (undefined)): Str
-  fun map(args0: (value: Num, index: Num, array: Float32Array) => Num, args1: (anything) | (undefined)): Float32Array
-  fun forEach(args0: (value: Num, index: Num, array: Float32Array) => unit, args1: (anything) | (undefined)): unit
+  declare fun copyWithin(args0: Num, args1: (Num) | (undefined), args2: (Num) | (undefined)): 'Float32Array
+  declare fun find(args0: (value: Num, index: Num, obj: Float32Array) => (false) | (true), args1: (anything) | (undefined)): Num
+  declare fun subarray(args0: (Num) | (undefined), args1: (Num) | (undefined)): Float32Array
+  declare fun join(args0: (Str) | (undefined)): Str
+  declare fun map(args0: (value: Num, index: Num, array: Float32Array) => Num, args1: (anything) | (undefined)): Float32Array
+  declare fun forEach(args0: (value: Num, index: Num, array: Float32Array) => unit, args1: (anything) | (undefined)): unit
   val buffer: ArrayBuffer
-  fun findIndex(args0: (value: Num, index: Num, obj: Float32Array) => (false) | (true), args1: (anything) | (undefined)): Num
-  fun reverse(): Float32Array
-  fun filter(args0: (value: Num, index: Num, array: Float32Array) => anything, args1: (anything) | (undefined)): Float32Array
-  fun slice(args0: (Num) | (undefined), args1: (Num) | (undefined)): Float32Array
+  declare fun findIndex(args0: (value: Num, index: Num, obj: Float32Array) => (false) | (true), args1: (anything) | (undefined)): Num
+  declare fun reverse(): Float32Array
+  declare fun filter(args0: (value: Num, index: Num, array: Float32Array) => anything, args1: (anything) | (undefined)): Float32Array
+  declare fun slice(args0: (Num) | (undefined), args1: (Num) | (undefined)): Float32Array
   val byteLength: Num
-  fun reduce['U](args0: (previousValue: 'U, currentValue: Num, currentIndex: Num, array: Float32Array) => 'U, args1: 'U): 'U /* warning: the overload of function reduce is not supported yet. */
-  fun toString(): Str
+  declare fun reduce['U](args0: (previousValue: 'U, currentValue: Num, currentIndex: Num, array: Float32Array) => 'U, args1: 'U): 'U /* warning: the overload of function reduce is not supported yet. */
+  declare fun toString(): Str
   val length: Num
-  fun some(args0: (value: Num, index: Num, array: Float32Array) => anything, args1: (anything) | (undefined)): (false) | (true)
-  fun indexOf(args0: Num, args1: (Num) | (undefined)): Num
+  declare fun some(args0: (value: Num, index: Num, array: Float32Array) => anything, args1: (anything) | (undefined)): (false) | (true)
+  declare fun indexOf(args0: Num, args1: (Num) | (undefined)): Num
   val byteOffset: Num
 }
 declare trait Float32ArrayConstructor {
   val __new: unsupported["new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Float32Array;", "ES5.d.ts", 4046, 66]
-  fun from['T](args0: ArrayLike['T], args1: (v: 'T, k: Num) => Num, args2: (anything) | (undefined)): Float32Array /* warning: the overload of function from is not supported yet. */
+  declare fun from['T](args0: ArrayLike['T], args1: (v: 'T, k: Num) => Num, args2: (anything) | (undefined)): Float32Array /* warning: the overload of function from is not supported yet. */
   val prototype: Float32Array
-  fun id"of"(args0: (Num) | (MutArray[Num])): Float32Array
+  declare fun id"of"(args0: (Num) | (MutArray[Num])): Float32Array
   val BYTES_PER_ELEMENT: Num
 }
 declare trait Float64Array {
-  fun valueOf(): Float64Array
-  fun lastIndexOf(args0: Num, args1: (Num) | (undefined)): Num
-  fun every(args0: (value: Num, index: Num, array: Float64Array) => anything, args1: (anything) | (undefined)): (false) | (true)
-  fun set(args0: ArrayLike[Num], args1: (Num) | (undefined)): unit
+  declare fun valueOf(): Float64Array
+  declare fun lastIndexOf(args0: Num, args1: (Num) | (undefined)): Num
+  declare fun every(args0: (value: Num, index: Num, array: Float64Array) => anything, args1: (anything) | (undefined)): (false) | (true)
+  declare fun set(args0: ArrayLike[Num], args1: (Num) | (undefined)): unit
   val __index: unsupported["[index: number]: number;", "ES5.d.ts", 4312, 28]
-  fun reduceRight['U](args0: (previousValue: 'U, currentValue: Num, currentIndex: Num, array: Float64Array) => 'U, args1: 'U): 'U /* warning: the overload of function reduceRight is not supported yet. */
-  fun fill(args0: Num, args1: (Num) | (undefined), args2: (Num) | (undefined)): 'Float64Array
-  fun sort(args0: ((a: Num, b: Num) => Num) | (undefined)): 'Float64Array
+  declare fun reduceRight['U](args0: (previousValue: 'U, currentValue: Num, currentIndex: Num, array: Float64Array) => 'U, args1: 'U): 'U /* warning: the overload of function reduceRight is not supported yet. */
+  declare fun fill(args0: Num, args1: (Num) | (undefined), args2: (Num) | (undefined)): 'Float64Array
+  declare fun sort(args0: ((a: Num, b: Num) => Num) | (undefined)): 'Float64Array
   val BYTES_PER_ELEMENT: Num
-  fun copyWithin(args0: Num, args1: (Num) | (undefined), args2: (Num) | (undefined)): 'Float64Array
-  fun find(args0: (value: Num, index: Num, obj: Float64Array) => (false) | (true), args1: (anything) | (undefined)): Num
-  fun subarray(args0: (Num) | (undefined), args1: (Num) | (undefined)): Float64Array
-  fun join(args0: (Str) | (undefined)): Str
-  fun map(args0: (value: Num, index: Num, array: Float64Array) => Num, args1: (anything) | (undefined)): Float64Array
-  fun forEach(args0: (value: Num, index: Num, array: Float64Array) => unit, args1: (anything) | (undefined)): unit
+  declare fun copyWithin(args0: Num, args1: (Num) | (undefined), args2: (Num) | (undefined)): 'Float64Array
+  declare fun find(args0: (value: Num, index: Num, obj: Float64Array) => (false) | (true), args1: (anything) | (undefined)): Num
+  declare fun subarray(args0: (Num) | (undefined), args1: (Num) | (undefined)): Float64Array
+  declare fun join(args0: (Str) | (undefined)): Str
+  declare fun map(args0: (value: Num, index: Num, array: Float64Array) => Num, args1: (anything) | (undefined)): Float64Array
+  declare fun forEach(args0: (value: Num, index: Num, array: Float64Array) => unit, args1: (anything) | (undefined)): unit
   val buffer: ArrayBuffer
-  fun findIndex(args0: (value: Num, index: Num, obj: Float64Array) => (false) | (true), args1: (anything) | (undefined)): Num
-  fun reverse(): Float64Array
-  fun filter(args0: (value: Num, index: Num, array: Float64Array) => anything, args1: (anything) | (undefined)): Float64Array
-  fun slice(args0: (Num) | (undefined), args1: (Num) | (undefined)): Float64Array
+  declare fun findIndex(args0: (value: Num, index: Num, obj: Float64Array) => (false) | (true), args1: (anything) | (undefined)): Num
+  declare fun reverse(): Float64Array
+  declare fun filter(args0: (value: Num, index: Num, array: Float64Array) => anything, args1: (anything) | (undefined)): Float64Array
+  declare fun slice(args0: (Num) | (undefined), args1: (Num) | (undefined)): Float64Array
   val byteLength: Num
-  fun reduce['U](args0: (previousValue: 'U, currentValue: Num, currentIndex: Num, array: Float64Array) => 'U, args1: 'U): 'U /* warning: the overload of function reduce is not supported yet. */
-  fun toString(): Str
+  declare fun reduce['U](args0: (previousValue: 'U, currentValue: Num, currentIndex: Num, array: Float64Array) => 'U, args1: 'U): 'U /* warning: the overload of function reduce is not supported yet. */
+  declare fun toString(): Str
   val length: Num
-  fun some(args0: (value: Num, index: Num, array: Float64Array) => anything, args1: (anything) | (undefined)): (false) | (true)
-  fun indexOf(args0: Num, args1: (Num) | (undefined)): Num
+  declare fun some(args0: (value: Num, index: Num, array: Float64Array) => anything, args1: (anything) | (undefined)): (false) | (true)
+  declare fun indexOf(args0: Num, args1: (Num) | (undefined)): Num
   val byteOffset: Num
 }
 declare trait Float64ArrayConstructor {
   val __new: unsupported["new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): Float64Array;", "ES5.d.ts", 4320, 66]
-  fun from['T](args0: ArrayLike['T], args1: (v: 'T, k: Num) => Num, args2: (anything) | (undefined)): Float64Array /* warning: the overload of function from is not supported yet. */
+  declare fun from['T](args0: ArrayLike['T], args1: (v: 'T, k: Num) => Num, args2: (anything) | (undefined)): Float64Array /* warning: the overload of function from is not supported yet. */
   val prototype: Float64Array
-  fun id"of"(args0: (Num) | (MutArray[Num])): Float64Array
+  declare fun id"of"(args0: (Num) | (MutArray[Num])): Float64Array
   val BYTES_PER_ELEMENT: Num
 }
 declare module Intl {
@@ -799,9 +799,9 @@ declare module Intl {
     val collation: Str
   }
   export declare trait Collator {
-    fun compare(args0: Str, args1: Str): Num
-    fun resolvedOptions(): ResolvedCollatorOptions
-    fun supportedLocalesOf(args0: (Str) | (MutArray[Str]), args1: (CollatorOptions) | (undefined)): MutArray[Str]
+    declare fun compare(args0: Str, args1: Str): Num
+    declare fun resolvedOptions(): ResolvedCollatorOptions
+    declare fun supportedLocalesOf(args0: (Str) | (MutArray[Str]), args1: (CollatorOptions) | (undefined)): MutArray[Str]
   }
   export declare trait NumberFormatOptions {
     val minimumSignificantDigits: (Num) | (undefined)
@@ -828,9 +828,9 @@ declare module Intl {
     val minimumFractionDigits: Num
   }
   export declare trait NumberFormat {
-    fun format(args0: Num): Str
-    fun resolvedOptions(): ResolvedNumberFormatOptions
-    fun supportedLocalesOf(args0: (Str) | (MutArray[Str]), args1: (NumberFormatOptions) | (undefined)): MutArray[Str]
+    declare fun format(args0: Num): Str
+    declare fun resolvedOptions(): ResolvedNumberFormatOptions
+    declare fun supportedLocalesOf(args0: (Str) | (MutArray[Str]), args1: (NumberFormatOptions) | (undefined)): MutArray[Str]
     val prototype: NumberFormat
   }
   export declare trait DateTimeFormatOptions {
@@ -865,9 +865,9 @@ declare module Intl {
     val era: (Str) | (undefined)
   }
   export declare trait DateTimeFormat {
-    fun format(args0: ((Num) | (Date)) | (undefined)): Str
-    fun resolvedOptions(): ResolvedDateTimeFormatOptions
-    fun supportedLocalesOf(args0: (Str) | (MutArray[Str]), args1: (DateTimeFormatOptions) | (undefined)): MutArray[Str]
+    declare fun format(args0: ((Num) | (Date)) | (undefined)): Str
+    declare fun resolvedOptions(): ResolvedDateTimeFormatOptions
+    declare fun supportedLocalesOf(args0: (Str) | (MutArray[Str]), args1: (DateTimeFormatOptions) | (undefined)): MutArray[Str]
     val prototype: DateTimeFormat
   }
 }
