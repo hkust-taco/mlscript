@@ -279,6 +279,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       "<=" -> numberBinPred,
       ">=" -> numberBinPred,
       "==" -> numberBinPred,
+      "<>" -> numberBinPred,
       "&&" -> fun(singleTup(BoolType), fun(singleTup(BoolType), BoolType)(noProv))(noProv),
       "||" -> fun(singleTup(BoolType), fun(singleTup(BoolType), BoolType)(noProv))(noProv),
       "id" -> {
