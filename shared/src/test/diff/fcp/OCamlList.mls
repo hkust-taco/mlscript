@@ -45,7 +45,7 @@ def raise: Exn -> nothing
 //│ Not_found: Exn
 //│ raise: Exn -> nothing
 
-datatype Option[A] = Some(A,) | None
+datatype Option[A] = Some(A) | None
 //│ Defined class Option[+A]
 //│ Declared Option.Some: Option['A] -> ('A,)
 //│ Declared Option.None: Option[?] -> anything
@@ -54,7 +54,7 @@ datatype Option[A] = Some(A,) | None
 //│ Some: 'a -> Option['a]
 //│ None: Option[nothing]
 
-datatype Either[A, B] = Left(A,) | Right(B,)
+datatype Either[A, B] = Left(A) | Right(B)
 //│ Defined class Either[+A, +B]
 //│ Declared Either.Left: Either['A, ?] -> ('A,)
 //│ Declared Either.Right: Either[?, 'B] -> ('B,)
