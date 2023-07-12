@@ -1,0 +1,3 @@
+declare fun f(x: Num, y: Num): Num
+declare fun g(x: Num): Num
+export declare fun Funs(): Num

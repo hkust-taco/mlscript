@@ -1,5 +1,5 @@
 import "./Parent.mlsi"
-declare module Child() {
+export declare module Child() {
   class Child1(x: Int)
   class Child2(y: Int)
   let c1: Child1

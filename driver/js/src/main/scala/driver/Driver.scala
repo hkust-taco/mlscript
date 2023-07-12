@@ -124,7 +124,7 @@ class Driver(options: DriverOptions) {
 
   private def packTopModule(moduleName: Option[String], content: String) =
     moduleName.fold(content)(moduleName =>
-      s"declare module $moduleName() {\n" +
+      s"export declare module $moduleName() {\n" +
           content.splitSane('\n').toIndexedSeq.filter(!_.isEmpty()).map(line => s"  $line").reduceLeft(_ + "\n" + _) +
         "\n}\n"
     )
@@ -201,7 +201,7 @@ class Driver(options: DriverOptions) {
       case (_, declarations, imports, _) =>
         imports.foreach(d => importModule(file.`import`(d.path)))
         `type`(TypingUnit(declarations), false, noRedundantOutput)(ctx, noRedundantRaise, extrCtx, vars)
-        declarations
+        declarations.filter(_.isExported)
   })
 
   private def compile(

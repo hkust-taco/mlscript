@@ -142,6 +142,7 @@ object DriverDiffTests {
     cjsEntry("CJS1"),
     cjsEntry("Bar", Some("./tsconfig.json")),
     cjsEntry("BazBaz", Some("./tsconfig.json"), expectTypeError = true),
+    cjsEntry("Call", Some("./tsconfig.json"), expectError = true)
   )
 
   private val cp = g.require("child_process")

@@ -1,5 +1,5 @@
 import "json5.mlsi"
-declare module Output2() {
+export declare module Output2() {
   fun createConfig: (path: Str,) -> nothing
   let config: nothing
   undefined

@@ -1,5 +1,5 @@
 import "../ts/Baz.mlsi"
-declare module BazBaz() {
+export declare module BazBaz() {
   class BazBaz()
   let bazbaz: BazBaz
   error

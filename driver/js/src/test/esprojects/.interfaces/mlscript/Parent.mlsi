@@ -1,4 +1,4 @@
-declare module Parent() {
+export declare module Parent() {
   class Parent1(x: Int) {
     fun inc: Int
   }

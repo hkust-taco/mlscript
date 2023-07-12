@@ -1,5 +1,5 @@
 import "./A.mlsi"
-declare module B() {
+export declare module B() {
   fun foo: error
 }
 //| ╔══[ERROR] access to class member not yet supported

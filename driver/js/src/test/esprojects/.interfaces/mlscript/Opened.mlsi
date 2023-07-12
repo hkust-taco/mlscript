@@ -1,5 +1,5 @@
 import "./tools/Inc.mlsi"
-declare module Opened() {
+export declare module Opened() {
   fun hello: (x: Int,) -> undefined
   undefined
 }

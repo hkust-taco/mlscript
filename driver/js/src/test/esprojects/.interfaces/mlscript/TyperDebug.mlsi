@@ -1,4 +1,4 @@
-declare module TyperDebug() {
+export declare module TyperDebug() {
   class A(x: Int) {
     fun add: (y: Int,) -> Int
   }

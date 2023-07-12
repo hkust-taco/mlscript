@@ -1,5 +1,5 @@
 import "./B.mlsi"
-declare module C() {
+export declare module C() {
   let a: error
   let b: error
   unit

@@ -1,6 +1,6 @@
 import "../ts/ReadLine.mlsi"
 import "./tools/Concat.mlsi"
-declare module MLS2TheMax() {
+export declare module MLS2TheMax() {
   fun ask: (question: Str,) -> Str
   class Some[A](value: A)
   module None

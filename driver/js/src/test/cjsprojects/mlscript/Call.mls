@@ -1,0 +1,5 @@
+import "../ts/Funs.ts"
+
+console.log(Funs()) // ok
+console.log(g(5)) // error: g is not exported
+console.log(f(1, 2)) // error: f is not exported
