@@ -116,7 +116,7 @@ def foo x =
 def foo x =
   let xf = x with { f = 42 }
   in { l = getf xf; r = getf x; s = x }
-//│ foo: ('a & ({f: 'b}\f & {f: 'c} | ~{f: 42}\f & {f: 'c})) -> {l: 'b, r: 'c, s: 'a}
+//│ foo: (({f: 'a} | ~{f: 42})\f & {f: 'b} & 'c) -> {l: 'a, r: 'b, s: 'c}
 //│    = [Function: foo2]
 
 :e

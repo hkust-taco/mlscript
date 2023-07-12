@@ -184,7 +184,7 @@ def eval1_ty = eval1
 //│         = [Function: eval1_ty]
 //│ constrain calls  : 77
 //│ annoying  calls  : 37
-//│ subtyping calls  : 748
+//│ subtyping calls  : 718
 
 :stats
 eval1_ty_ugly = eval1_ty
@@ -198,7 +198,7 @@ eval1_ty_ugly = eval1_ty
 //│              = [Function: eval1]
 //│ constrain calls  : 150
 //│ annoying  calls  : 1810
-//│ subtyping calls  : 4879
+//│ subtyping calls  : 4849
 
 :stats
 eval1_ty = eval1_ty_ugly
@@ -212,7 +212,7 @@ eval1_ty = eval1_ty_ugly
 //│         = [Function: eval1]
 //│ constrain calls  : 752
 //│ annoying  calls  : 674
-//│ subtyping calls  : 75734
+//│ subtyping calls  : 75704
 
 
 // Workaround:

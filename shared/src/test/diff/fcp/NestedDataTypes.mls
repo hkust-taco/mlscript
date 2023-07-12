@@ -240,7 +240,7 @@ rec def map f tree = case tree of {
 
 :e
 map succ n4
-//│ ╔══[ERROR] Subtyping constraint of the form `?a <: (forall ?A ?value ?subTree ?A0 ?subTree0 ?A1 ?b. ?b) -> ?c` exceeded recursion depth limit (250)
+//│ ╔══[ERROR] Subtyping constraint of the form `?a <: (forall ?subTree ?subTree0 ?A ?A0 ?value ?A1 ?b. ?b) -> ?c` exceeded recursion depth limit (250)
 //│ ║  l.242: 	map succ n4
 //│ ║         	^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
