@@ -1,0 +1,47 @@
+
+:OccursCheck
+
+
+rec def f x = (x, x)
+//│ f: 'a -> ('a, 'a,)
+//│  = [Function: f]
+
+rec def f x = f x
+//│ f: anything -> nothing
+//│  = [Function: f1]
+
+:e
+rec def f x = f
+//│ ╔══[ERROR] Inferred recursive type: 'f
+//│   where
+//│     'f :> anything -> 'f
+//│ ╙──
+//│ f: 'f
+//│   where
+//│     'f :> anything -> 'f
+//│  = [Function: f2]
+
+:e
+rec def f x = (f x, f x)
+//│ ╔══[ERROR] Inferred recursive type: 'a
+//│   where
+//│     'a :> ('a, 'a,)
+//│ ║  l.25: 	rec def f x = (f x, f x)
+//│ ╙──      	               ^^^
+//│ f: anything -> 'a
+//│   where
+//│     'a :> ('a, 'a,)
+//│  = [Function: f3]
+
+// TODO improve – don't look at simplified TVs?
+:e
+rec def f x = f x.a
+//│ ╔══[ERROR] Inferred recursive type: nothing
+//│ ║  l.38: 	rec def f x = f x.a
+//│ ╙──      	                ^^^
+//│ f: 'a -> nothing
+//│   where
+//│     'a <: {a: 'a}
+//│  = [Function: f4]
+
+
