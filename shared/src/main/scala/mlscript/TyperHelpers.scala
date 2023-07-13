@@ -86,7 +86,6 @@ abstract class TyperHelpers { Typer: Typer =>
         (implicit ctx: Ctx): SimpleType = {
     val cache: MutMap[TypeVariable, SimpleType] = MutMap.empty
     val subsLvl: Level = map.valuesIterator.map(_.level).reduceOption(_ max _).getOrElse(MinLevel)
-    implicit val shadows: Shadows = Shadows.empty
     def go(st: SimpleType): SimpleType = {
             // trace(s"subst($st)") {
       map.get(st) match {

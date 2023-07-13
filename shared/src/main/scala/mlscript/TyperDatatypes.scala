@@ -52,14 +52,14 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       body.freshenAbove(polymLevel, rigidify = true)
     }
     def raiseLevelTo(newPolymLevel: Level, leaveAlone: Set[TV] = Set.empty)
-          (implicit ctx: Ctx, shadows: Shadows): PolymorphicType = {
+          (implicit ctx: Ctx): PolymorphicType = {
       require(newPolymLevel >= polymLevel)
       if (newPolymLevel === polymLevel) return this
       implicit val freshened: MutMap[TV, ST] = MutMap.empty
       PolymorphicType(newPolymLevel,
         self.freshenAbove(polymLevel, body, leaveAlone = leaveAlone)(
           ctx.copy(lvl = newPolymLevel + 1), // * Q: is this really fine? cf. stashing/unstashing etc.
-          freshened, shadows)
+          freshened)
       ) //(prov)
     }
     /** Tries to split a polymorphic function type

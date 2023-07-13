@@ -1182,7 +1182,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     *   or which have bounds and whose level is greater than `above`. */
   def freshenAbove(above: Level, ty: SimpleType,
           rigidify: Bool = false, below: Level = MaxLevel, leaveAlone: Set[TV] = Set.empty)
-        (implicit ctx: Ctx, freshened: MutMap[TV, ST], shadows: Shadows)
+        (implicit ctx: Ctx, freshened: MutMap[TV, ST])
         : SimpleType =
   {
     def freshenImpl(ty: SimpleType, below: Level): SimpleType =
