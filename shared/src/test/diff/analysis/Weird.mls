@@ -7,14 +7,22 @@ class Base1[A]
 
 :DistributeForalls
 
-// * See [FIXME:1] — C should NOT be invariant here! (only happens with :DistributeForalls)
+// * Note: C used to be inferred as invariant here with :DistributeForalls;
+// *  It happened when `subst` did not hygienically substitute under polymorphic types
+:w
 class Derived2[C]: Base1[anything]
   method M1 r = Derived2{}
-//│ Defined class Derived2[=C]
-//│ Defined Derived2.M1: Derived2['C] -> anything -> Derived2['C0]
+//│ Defined class Derived2[±C]
+//│ Defined Derived2.M1: Derived2[?] -> anything -> Derived2[?]
+//│ ╔══[WARNING] Type definition Derived2 has bivariant type parameters:
+//│ ║  l.13: 	class Derived2[C]: Base1[anything]
+//│ ║        	      ^^^^^^^^
+//│ ╟── C is irrelevant and may be removed
+//│ ║  l.13: 	class Derived2[C]: Base1[anything]
+//│ ╙──      	               ^
 
 Derived2.M1
-//│ res: Derived2['C] -> (forall 'C0. anything -> Derived2['C0])
+//│ res: Derived2[?] -> anything -> Derived2[?]
 //│    = undefined
 
 
@@ -26,10 +34,10 @@ class Derived3[C]: Base1[anything]
 //│ Defined class Derived3[±C]
 //│ Defined Derived3.M1: Derived3[?] -> anything -> Derived3[?]
 //│ ╔══[WARNING] Type definition Derived3 has bivariant type parameters:
-//│ ║  l.24: 	class Derived3[C]: Base1[anything]
+//│ ║  l.32: 	class Derived3[C]: Base1[anything]
 //│ ║        	      ^^^^^^^^
 //│ ╟── C is irrelevant and may be removed
-//│ ║  l.24: 	class Derived3[C]: Base1[anything]
+//│ ║  l.32: 	class Derived3[C]: Base1[anything]
 //│ ╙──      	               ^
 
 Derived3.M1

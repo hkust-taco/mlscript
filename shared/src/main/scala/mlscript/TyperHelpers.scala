@@ -75,37 +75,49 @@ abstract class TyperHelpers { Typer: Typer =>
     val fs2m = fs2.toMap
     fs1.flatMap { case (k, v) => fs2m.get(k).map(v2 => k -> (v || v2)) }
   }
-
-  def subst(ts: PolymorphicType, map: Map[SimpleType, SimpleType]): PolymorphicType = 
+  
+  /** Note that this version of `subst` intentionally substitutes unhygienically
+    * over the outer polymorphic type, as needed by the class typing infrastructure. */
+  def subst(ts: PolymorphicType, map: Map[SimpleType, SimpleType])
+        (implicit ctx: Ctx): PolymorphicType = 
     PolymorphicType(ts.polymLevel, subst(ts.body, map))
-
+  
   def subst(st: SimpleType, map: Map[SimpleType, SimpleType], substInMap: Bool = false)
-        (implicit cache: MutMap[TypeVariable, SimpleType] = MutMap.empty): SimpleType =
+        (implicit ctx: Ctx): SimpleType = {
+    val cache: MutMap[TypeVariable, SimpleType] = MutMap.empty
+    val subsLvl: Level = map.valuesIterator.map(_.level).reduceOption(_ max _).getOrElse(MinLevel)
+    implicit val shadows: Shadows = Shadows.empty
+    def go(st: SimpleType): SimpleType = {
             // trace(s"subst($st)") {
-    map.get(st) match {
-      case S(res) => if (substInMap) subst(res, map, substInMap) else res
-      case N =>
-        st match {
-          case tv @ AssignedVariable(ty) => cache.getOrElse(tv, {
-            val v = freshVar(tv.prov, S(tv), tv.nameHint)(tv.level)
-            cache += tv -> v
-            v.assignedTo = S(subst(ty, map, substInMap))
-            v
-          })
-          case tv: TypeVariable if tv.lowerBounds.isEmpty && tv.upperBounds.isEmpty =>
-            cache += tv -> tv
-            tv
-          case tv: TypeVariable => cache.getOrElse(tv, {
-            val v = freshVar(tv.prov, S(tv), tv.nameHint)(tv.level)
-            cache += tv -> v
-            v.lowerBounds = tv.lowerBounds.map(subst(_, map, substInMap))
-            v.upperBounds = tv.upperBounds.map(subst(_, map, substInMap))
-            v
-          })
-          case _ => st.map(subst(_, map, substInMap))
-        }
+      map.get(st) match {
+        case S(res) => if (substInMap) go(res) else res
+        case N =>
+          st match {
+            case tv @ AssignedVariable(ty) => cache.getOrElse(tv, {
+              val v = freshVar(tv.prov, S(tv), tv.nameHint)(tv.level)
+              cache += tv -> v
+              v.assignedTo = S(go(ty))
+              v
+            })
+            case tv: TypeVariable if tv.lowerBounds.isEmpty && tv.upperBounds.isEmpty =>
+              cache += tv -> tv
+              tv
+            case tv: TypeVariable => cache.getOrElse(tv, {
+              val v = freshVar(tv.prov, S(tv), tv.nameHint)(tv.level)
+              cache += tv -> v
+              v.lowerBounds = tv.lowerBounds.map(go(_))
+              v.upperBounds = tv.upperBounds.map(go(_))
+              v
+            })
+            case poly: PolymorphicType if poly.polymLevel < subsLvl =>
+              go(poly.raiseLevelTo(subsLvl))
+            case _ => st.map(go(_))
+          }
+      }
+      // }(r => s"= $r")
     }
-    // }(r => s"= $r")
+    go(st)
+  }
   
   /** Substitutes only at the syntactic level, without updating type variables nor traversing their bounds. */
   def substSyntax(st: SimpleType)(map: PartialFunction[SimpleType, SimpleType]): SimpleType =
