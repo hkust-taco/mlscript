@@ -1,6 +1,6 @@
 package driver
 
-import mlscript.GitHelper
+import mlscript.utils.GitHelper
 import scala.scalajs.js
 import js.Dynamic.{global => g}
 import js.DynamicImplicits._
