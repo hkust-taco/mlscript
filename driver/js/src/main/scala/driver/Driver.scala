@@ -14,7 +14,7 @@ class Driver(options: DriverOptions) {
   import JSFileSystem._
   import JSDriverBackend.ModuleType
 
-  private val gitHelper = JSGitHelper(".", options.watchDir, options.forceIfNoChange)
+  private val gitHelper = JSGitHelper(".", options.path, options.forceIfNoChange)
 
   private var dbgWriter: Option[JSWriter] = None
   private def printDbg(msg: String) =
