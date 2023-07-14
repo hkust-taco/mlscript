@@ -8,7 +8,7 @@ import scala.collection.Iterator
 abstract class GitHelper[PathType, RelPathType](rootDir: PathType, workDir: PathType) {
   protected def diff: Iterator[Str]
   protected def str2RelPath(s: Str): RelPathType
-  protected def filter(file: PathType): Bool
+  def filter(file: PathType): Bool
 
   // Aggregate unstaged modified files to only run the tests on them, if there are any
   final protected lazy val modified: Set[RelPathType] = try diff.flatMap { gitStr =>

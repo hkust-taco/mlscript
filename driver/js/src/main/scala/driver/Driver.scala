@@ -7,12 +7,14 @@ import mlscript.utils.shorthands._
 import scala.collection.mutable.{ListBuffer,Map => MutMap, Set => MutSet}
 import mlscript.codegen._
 import mlscript.{NewLexer, NewParser, ErrorReport, Origin, Diagnostic}
-import ts2mls.{TSProgram, TypeScript, TSPathResolver, JSFileSystem, JSWriter, FileInfo}
+import ts2mls.{TSProgram, TypeScript, TSPathResolver, JSFileSystem, JSWriter, FileInfo, JSGitHelper}
 
 class Driver(options: DriverOptions) {
   import Driver._
   import JSFileSystem._
   import JSDriverBackend.ModuleType
+
+  private val gitHelper = JSGitHelper(".", options.watchDir, options.forceIfNoChange)
 
   private var dbgWriter: Option[JSWriter] = None
   private def printDbg(msg: String) =
@@ -76,8 +78,9 @@ class Driver(options: DriverOptions) {
       implicit val vars: Map[Str, typer.SimpleType] = Map.empty
       implicit val stack = List[String]()
       initTyper
-      compile(FileInfo(options.path, options.filename, options.interfaceDir), false)
-      if (Driver.totalErrors > 0 && !options.expectError) Error
+      val res = compile(FileInfo(options.path, options.filename, options.interfaceDir), false)
+      if (!res) OK // Not changed.
+      else if (Driver.totalErrors > 0 && !options.expectError) Error
       else if (Driver.totalErrors == 0 && options.expectError) ExpectError
       else if (Driver.totalTypeErrors > 0 && !options.expectTypeError) TypeError
       else if (Driver.totalErrors > 0 && !options.expectError) ExpectTypeError
@@ -217,13 +220,12 @@ class Driver(options: DriverOptions) {
     extrCtx: Opt[typer.ExtrCtx],
     vars: Map[Str, typer.SimpleType],
     stack: List[String]
-  ): Unit = {
+  ): Bool = {
     if (!isMLScirpt(file.filename)) { // TypeScript
       System.out.println(s"generating interface for ${file.filename}...")
       val tsprog =
-         TSProgram(file, true, options.tsconfig, checkTSInterface)
-      tsprog.generate
-      return
+         TSProgram(file, true, options.tsconfig, checkTSInterface, S(gitHelper))
+      return tsprog.generate
     }
 
     val mlsiFile = normalize(s"${file.workDir}/${file.interfaceFilename}")
@@ -251,7 +253,8 @@ class Driver(options: DriverOptions) {
           importedModule += file.filename
           sigs :+ extractSig(file.filename, file.moduleName)
         })
-        otherList.foreach(dp => {
+        val cycleRecompile = cycleList.foldLeft(false)((r, f) => r || gitHelper.filter(f.filename))
+        val dependentRecompile = otherList.foldLeft(cycleRecompile)((r, dp) => {
           // We need to create another new context when compiling other files.
           // e.g. A -> B, A -> C, B -> D, C -> D, where `->` means "depends on".
           // If we forget to add `import "D.mls"` in C, we need to raise an error.
@@ -262,8 +265,10 @@ class Driver(options: DriverOptions) {
           initTyper
           val newFilename = file.`import`(dp)
           importedModule += newFilename.filename
-          compile(newFilename, true)(newCtx, newExtrCtx, newVars, stack :+ file.filename)
+          compile(newFilename, true)(newCtx, newExtrCtx, newVars, stack :+ file.filename) || r
         })
+
+        if (!dependentRecompile && !gitHelper.filter(file.filename)) return false
 
         System.out.println(s"compiling ${file.filename}...")
         val importedSym = (try { otherList.map(d => importModule(file.`import`(d))) }
@@ -301,6 +306,8 @@ class Driver(options: DriverOptions) {
         }
       }
     })
+
+    true
   }
 
   private def generate(

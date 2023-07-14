@@ -8,7 +8,7 @@ class TSTypeGenerationTest extends AnyFunSuite {
   testsData.foreach((filename) => test(filename) {
     val program = TSProgram(
       FileInfo("./ts2mls/js/src/test/typescript", filename, "../diff/"),
-      false, None, (file: FileInfo, writer: JSWriter) => ()) // No need for builtin
+      false, None, (file: FileInfo, writer: JSWriter) => (), None) // No need for builtin check
     program.generate
   })
 }

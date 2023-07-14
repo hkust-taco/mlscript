@@ -6,7 +6,7 @@ import types._
 import mlscript.utils._
 import scala.collection.mutable.ListBuffer
 
-class TSSourceFile(sf: js.Dynamic, global: TSNamespace, topName: String)(implicit checker: TSTypeChecker, config: js.Dynamic) {
+class TSSourceFile(sf: js.Dynamic, val global: TSNamespace, topName: String)(implicit checker: TSTypeChecker, config: js.Dynamic) {
   private val lineHelper = new TSLineStartsHelper(sf.getLineStarts())
   private val importList = TSImportList()
   private val reExportList = new ListBuffer[TSReExport]()
@@ -17,59 +17,63 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace, topName: String)(implici
   def getUMDModule: Option[TSNamespace] =
     umdModuleName.fold[Option[TSNamespace]](Some(global))(name => Some(global.derive(name, false)))
 
-  // Parse import
+  // Parse import & re-export first
   TypeScript.forEachChild(sf, (node: js.Dynamic) => {
     val nodeObject = TSNodeObject(node)
     if (nodeObject.isRequire)
       parseRequire(nodeObject)
     else if (nodeObject.isImportDeclaration)
       parseImportDeclaration(nodeObject.importClause, nodeObject.moduleSpecifier, false)
+    else if (nodeObject.isExportDeclaration && !nodeObject.moduleSpecifier.isUndefined) // Re-export
+      parseImportDeclaration(nodeObject.exportClause, nodeObject.moduleSpecifier, true)
   })
 
-  // Parse main body
-  TypeScript.forEachChild(sf, (node: js.Dynamic) => {
-    val nodeObject = TSNodeObject(node)
-    if (!nodeObject.isToken) {
-      if (!nodeObject.symbol.isUndefined) { // For functions
-        if (nodeObject.isFunctionLike)
-          addFunctionIntoNamespace(nodeObject.symbol, nodeObject, nodeObject.symbol.escapedName)(global)
-        else // For classes/interfaces/namespace
-          addNodeIntoNamespace(nodeObject, nodeObject.symbol.escapedName, nodeObject.isExported)(global)
+  private var parsed = false
+  def parse = if (!parsed) {
+    parsed = true
+    // Parse main body
+    TypeScript.forEachChild(sf, (node: js.Dynamic) => {
+      val nodeObject = TSNodeObject(node)
+      if (!nodeObject.isToken) {
+        if (!nodeObject.symbol.isUndefined) { // For functions
+          if (nodeObject.isFunctionLike)
+            addFunctionIntoNamespace(nodeObject.symbol, nodeObject, nodeObject.symbol.escapedName)(global)
+          else // For classes/interfaces/namespace
+            addNodeIntoNamespace(nodeObject, nodeObject.symbol.escapedName, nodeObject.isExported)(global)
+        }
+        else if (!nodeObject.declarationList.isUndefined) { // For variables
+          val decNode = nodeObject.declarationList.declaration
+          addNodeIntoNamespace(decNode, decNode.symbol.escapedName, decNode.isExported)(global)
+        }
       }
-      else if (!nodeObject.declarationList.isUndefined) { // For variables
-        val decNode = nodeObject.declarationList.declaration
-        addNodeIntoNamespace(decNode, decNode.symbol.escapedName, decNode.isExported)(global)
-      }
-    }
-  })
+    })
 
-  // Parse export
-  TypeScript.forEachChild(sf, (node: js.Dynamic) => {
-    val nodeObject = TSNodeObject(node)
-    if (nodeObject.isExportDeclaration) {
-      if (!nodeObject.moduleSpecifier.isUndefined) // Re-export
-        parseImportDeclaration(nodeObject.exportClause, nodeObject.moduleSpecifier, true)
-      else // ES modules
-        parseExportDeclaration(nodeObject.exportClause.elements)
-    }
-    else if (nodeObject.isExportAssignment) { // CommonJS
-      val name = nodeObject.idExpression.escapedText
-      if (name === "undefined") { // For exports = { ... }. In this case we still need the top-level module
-        val props = nodeObject.nodeExpression.properties
-        props.foreach(node => {
-          val name = node.initID.escapedText
-          if (name === "undefined")
-            addNodeIntoNamespace(node.initializer, node.name.escapedText, true)(global)
-          else if (node.name.escapedText === name)
-            global.`export`(name)
-          else global.put(node.name.escapedText, TSRenamedType(node.name.escapedText, TSReferenceType(name)), true, false)
-        })
+    // Parse export
+    TypeScript.forEachChild(sf, (node: js.Dynamic) => {
+      val nodeObject = TSNodeObject(node)
+      if (nodeObject.isExportDeclaration) {
+        if (nodeObject.moduleSpecifier.isUndefined) // ES modules
+          parseExportDeclaration(nodeObject.exportClause.elements)
       }
-      else global.renameExport(name, topName) // Export the member directly
-    }
-    else if (nodeObject.exportedAsNamespace) // UMD
-      umdModuleName = Some(nodeObject.symbol.escapedName)
-  })
+      else if (nodeObject.isExportAssignment) { // CommonJS
+        val name = nodeObject.idExpression.escapedText
+        if (name === "undefined") { // For exports = { ... }. In this case we still need the top-level module
+          val props = nodeObject.nodeExpression.properties
+          props.foreach(node => {
+            val name = node.initID.escapedText
+            if (name === "undefined")
+              addNodeIntoNamespace(node.initializer, node.name.escapedText, true)(global)
+            else if (node.name.escapedText === name)
+              global.`export`(name)
+            else global.put(node.name.escapedText, TSRenamedType(node.name.escapedText, TSReferenceType(name)), true, false)
+          })
+        }
+        else global.renameExport(name, topName) // Export the member directly
+      }
+      else if (nodeObject.exportedAsNamespace) // UMD
+        umdModuleName = Some(nodeObject.symbol.escapedName)
+    })
+  }
 
   def getImportList: List[TSImport] = importList.getFilelist
   def getReExportList: List[TSReExport] = reExportList.toList

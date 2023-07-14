@@ -14,7 +14,7 @@ class DriverDiffTests extends AnyFunSuite {
     cases.foreach {
       case TestOption(filename, execution, tsconfig, expectTypeError, expectError) => test(filename) {
         val options =
-          DriverOptions(filename, workDir, outputDir, tsconfig, interfaceDir, cjs, expectTypeError, expectError)
+          DriverOptions(filename, workDir, workDir, outputDir, tsconfig, interfaceDir, cjs, expectTypeError, expectError, true)
         val driver = Driver(options)
         if (!outputDir.isEmpty()) driver.genPackageJson()
         val res = driver.execute
@@ -39,7 +39,7 @@ class DriverDiffTests extends AnyFunSuite {
     }
   }
 
-  run(ts2mlsCases, "ts2mls/js/src/test/typescript", "", "../diff", false)
+  run(ts2mlsCases, ts2mlsPath, "", "../diff", false)
   run(esCases, esPath, s"${esPath}/js/", ".interfaces", false)
   run(cjsCases, cjsPath, s"${cjsPath}/js/", ".interfaces", true)
 }
@@ -47,7 +47,7 @@ class DriverDiffTests extends AnyFunSuite {
 object DriverDiffTests {
   private val diffPath = "driver/js/src/test/"
   private val checkPath = s"${diffPath}output/"
-  private val ts2mlsPath = "ts2mls/js/src/test/diff"
+  private val ts2mlsPath = "ts2mls/js/src/test/typescript/"
   private val esPath = s"${diffPath}esprojects/"
   private val cjsPath = s"${diffPath}cjsprojects/"
 

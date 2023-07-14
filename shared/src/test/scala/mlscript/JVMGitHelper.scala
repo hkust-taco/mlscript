@@ -10,7 +10,7 @@ class JVMGitHelper(rootDir: os.Path, workDir: os.Path) extends GitHelper[os.Path
   override protected def str2RelPath(s: Str): os.RelPath = os.RelPath(s)
   override protected def diff: Iterator[Str] =
     os.proc("git", "status", "--porcelain", workDir).call().out.lines().iterator
-  override protected def filter(file: Path): Bool = {
+  override def filter(file: Path): Bool = {
     JVMGitHelper.validExt(file.ext) && filter(file.relativeTo(rootDir))
   }
 
