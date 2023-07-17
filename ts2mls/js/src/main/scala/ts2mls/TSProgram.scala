@@ -50,10 +50,11 @@ class TSProgram(
     val interfaceFilename = s"${file.workDir}/${file.interfaceFilename}"
 
     val (cycleList, otherList) =
-      importList.partitionMap(imp => {
-        val newFile = file.`import`(imp.filename)
-        if (stack.contains(resolve(newFile))) Left(newFile)
-        else Right(newFile)
+      importList.map(imp => file.`import`(imp.filename)).filter(
+        imp => !resolve(imp).endsWith(".js") // If it is not a ts lib, we ignore it and require users to provide full type annotations
+      ).partitionMap(imp => {
+        if (stack.contains(resolve(imp))) Left(imp)
+        else Right(imp)
       })
 
     val cycleRecompile = cycleList.foldLeft(false)((r, f) =>
