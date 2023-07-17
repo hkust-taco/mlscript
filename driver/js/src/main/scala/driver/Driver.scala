@@ -167,7 +167,7 @@ class Driver(options: DriverOptions) {
       mlscript.Bot
   }
 
-  private lazy val jsBuiltinDecs = Driver.jsBuiltinPaths.map(path => parseAndRun(path, {
+  private lazy val jsBuiltinDecs = Driver.jsBuiltinPaths.map(path => parseAndRun(s"${options.includePath}/$path", {
     case (_, declarations, _, _) => declarations
   }))
 
@@ -337,9 +337,9 @@ object Driver {
   def apply(options: DriverOptions) = new Driver(options)
 
   private val jsBuiltinPaths = List(
-    "./ts2mls/js/src/test/diff/ES5.mlsi",
-    "./ts2mls/js/src/test/diff/Dom.mlsi",
-    "./driver/js/src/test/predefs/Predef.mlsi"
+    "./ES5.mlsi",
+    "./Dom.mlsi",
+    "./Predef.mlsi"
   )
 
   private def printErr(msg: String): Unit =

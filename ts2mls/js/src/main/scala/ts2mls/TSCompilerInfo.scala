@@ -9,7 +9,7 @@ import mlscript.utils._
 import js.isUndefined
 
 object TypeScript {
-  private def load(moduleName: String) = try g.require(moduleName) catch {
+  def load(moduleName: String) = try g.require(moduleName) catch {
     case _ : Throwable => {
       System.err.println(s"Cannot find $moduleName in the current directory. Please install by running \"npm install\".")
       val process = g.require("process")

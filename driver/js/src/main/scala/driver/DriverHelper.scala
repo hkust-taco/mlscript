@@ -6,13 +6,14 @@ import js.DynamicImplicits._
 import js.JSConverters._
 import scala.scalajs.js.annotation._
 import mlscript.utils._
+import ts2mls.TypeScript
 
-@JSExportTopLevel("MLscriptDriver")
 object DriverHelper {
-  private val fs = g.require("fs")
+  // Do not use fs.watch
+  // See https://github.com/paulmillr/chokidar
+  private val watcher = TypeScript.load("chokidar")
 
-  @JSExport
-  def watch(
+  private def run(
     filename: String,
     workDir: String,
     outputDir: String,
@@ -20,20 +21,38 @@ object DriverHelper {
     commonJS: Boolean,
     expectTypeError: Boolean
   ): Unit = {
-    val options = DriverOptions(filename, workDir, outputDir, tsconfig, ".interfaces", commonJS, expectTypeError, false, false)
-    fs.watch(workDir, (event: js.Dynamic) => {
-      if (event.toString() === "change") {
-        val res = Driver(options).execute
+    System.out.println(s"start watching $workDir")
+    val options = DriverOptions(filename, workDir, s"${g.__dirname}/predefs/", outputDir, tsconfig, ".interfaces", commonJS, expectTypeError, false, false)
+    watcher.watch(workDir, js.Dictionary("ignoreInitial" -> true)).on("all", (event: js.Dynamic, file: js.Dynamic) => {
+      val res = Driver(options).execute
 
-        import DriverResult._
-        res match {
-          case Error => System.err.println(s"Compiling error(s) found in $filename.")
-          case TypeError => System.err.println(s"Type error(s) found in $filename")
-          case ExpectError => System.err.println(s"Expect compiling error(s) in $filename")
-          case ExpectTypeError => System.err.println(s"Expect type error(s) in $filename")
-          case OK => ()
-        }
+      import DriverResult._
+      res match {
+        case Error => System.err.println(s"Compiling error(s) found in $filename.")
+        case TypeError => System.err.println(s"Type error(s) found in $filename")
+        case ExpectError => System.err.println(s"Expect compiling error(s) in $filename")
+        case ExpectTypeError => System.err.println(s"Expect type error(s) in $filename")
+        case OK => ()
       }
     })
   }
+
+  @JSExportTopLevel("watch")
+  def watch(
+    filename: String,
+    workDir: String,
+    outputDir: String,
+    tsconfig: String,
+    commonJS: Boolean,
+    expectTypeError: Boolean
+  ): Unit = run(filename, workDir, outputDir, Some(tsconfig), commonJS, expectTypeError)
+
+  @JSExportTopLevel("watch")
+  def watch(
+    filename: String,
+    workDir: String,
+    outputDir: String,
+    commonJS: Boolean,
+    expectTypeError: Boolean
+  ): Unit = run(filename, workDir, outputDir, None, commonJS, expectTypeError)
 }

@@ -8,6 +8,7 @@ import js.JSConverters._
 final case class DriverOptions(
   filename: String, // The entry file's name
   path: String, // Work path
+  includePath: String, // Where the predef is
   outputDir: String, // JS output path
   tsconfig: Option[String], // TS configuration filename (if applicable)
   interfaceDir: String, // Interface file output path
