@@ -205,12 +205,23 @@ class Driver(options: DriverOptions) {
     extrCtx: Opt[typer.ExtrCtx],
     vars: Map[Str, typer.SimpleType]
   ): List[NuDecl] =
-    parseAndRun(s"${options.path}/${file.interfaceFilename}", {
+    try parseAndRun(s"${options.path}/${file.interfaceFilename}", {
       case (_, declarations, imports, _) =>
         imports.foreach(d => importModule(file.`import`(d.path)))
         `type`(TypingUnit(declarations), false, noRedundantOutput)(ctx, noRedundantRaise, extrCtx, vars)
         declarations.filter(_.isExported)
-  })
+    })
+    catch { // The generated interface code is not supported yet
+      case _: Throwable if JSFileSystem.exists(file.filename) => // Use the original file
+        parseAndRun(file.filename, {
+          case (definitions, declarations, imports, _) =>
+            imports.foreach(d => importModule(file.`import`(d.path)))
+            val mod =
+              NuTypeDef(Mod, TypeName(file.moduleName), Nil, N, N, N, Nil, N, N, TypingUnit(definitions ++ declarations))(N, N, N)
+            `type`(TypingUnit(mod :: Nil), false, noRedundantOutput)(ctx, noRedundantRaise, extrCtx, vars)
+            mod :: Nil
+        })
+    }
 
   private def compile(
     file: FileInfo,

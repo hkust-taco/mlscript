@@ -106,7 +106,8 @@ object DriverDiffTests {
     driverEntry("TyperDebug"),
     driverEntry("Debug1"),
     driverEntry("Child", expectTypeError = true),
-    driverEntry("NewTSClass", Some("./tsconfig.json"), expectTypeError = true)
+    driverEntry("NewTSClass", Some("./tsconfig.json"), expectTypeError = true),
+    driverEntry("Mixin1", expectTypeError = true)
   )
 
   private val cjsCases = List(

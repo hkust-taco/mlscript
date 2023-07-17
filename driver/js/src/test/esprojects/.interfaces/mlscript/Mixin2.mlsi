@@ -1,0 +1,11 @@
+export declare module Mixin2() {
+  class Add[E](lhs: E, rhs: E)
+  class Lit(n: Int)
+  fun eval: forall 'a. 'a -> Int
+  mixin EvalBase() {
+    this: {eval: 'lhs -> Int}
+    fun eval: (Add['lhs] | Lit) -> Int
+  }
+  where
+    'a <: Add['a] | Lit
+}

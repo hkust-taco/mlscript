@@ -632,7 +632,11 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
           def resolveSelection(restNames: Ls[Str], nested: Ls[NuTypeDef], res: JSExpr): JSExpr = restNames match {
             case name :: Nil => nested.find(_.nme.name === name).fold(
               throw CodeGenError(s"parent $name not found.")
-            )(p => if (p.isPlainJSClass) res.member(name) else res.member(name).member("class"))
+            )(p =>
+              if (p.kind === Mxn) JSInvoke(res.member(name), Ls(base))
+              else if (p.isPlainJSClass) res.member(name)
+              else res.member(name).member("class")
+            )
             case cur :: rest => (nested.find {
               case nd: NuTypeDef => nd.kind === Mod && nd.nme.name === cur
               case _ => false
@@ -643,6 +647,8 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
           }
           scope.resolveValue(top) match {
             case Some(sym: ModuleSymbol) => resolveSelection(rest, sym.nested, JSIdent(sym.lexicalName))
+            case Some(CapturedSymbol(out, sym: MixinSymbol)) =>
+              JSInvoke(resolveSelection(rest, sym.nested, JSIdent(out.runtimeName).member(sym.lexicalName)), Ls(base))
             case Some(CapturedSymbol(out, sym: ModuleSymbol)) =>
               resolveSelection(rest, sym.nested, JSIdent(out.runtimeName).member(sym.lexicalName))
             case _ => throw CodeGenError(s"type selection ${fullname.mkString(".")} is not supported in inheritance now.")
