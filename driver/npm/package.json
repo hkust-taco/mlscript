@@ -2,6 +2,8 @@
   "name": "mlscript-driver",
   "version": "0.0.1",
   "description": "mlscript driver",
+  "types": "lib/index.d.ts",
+  "main": "lib/index.js",
   "scripts": {
   },
   "repository": {
@@ -12,7 +14,7 @@
     "functional-programming",
     "type-inference"
   ],
-  "author": "hkust-taco-lab",
+  "author": "hkust-taco",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/hkust-taco/mlscript/issues"

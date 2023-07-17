@@ -9,6 +9,6 @@ project/metals.sbt
 **.worksheet.sc
 driver/js/src/test/cjsprojects/js/ts/
 driver/js/src/test/esprojects/js/my_ts_path/
-driver/npm/index.js
-driver/npm/index.js.map
+driver/npm/lib/index.js
+driver/npm/lib/index.js.map
 .DS_Store
