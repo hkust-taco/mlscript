@@ -99,7 +99,7 @@ lazy val driver = crossProject(JSPlatform, JVMPlatform).in(file("driver"))
   .jsSettings(
     libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "2.1.0",
     libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.12" % "test",
-    Compile / fastOptJS / artifactPath := baseDirectory.value / ".." / ".." / "driver" / "npm" / "index.js",
+    Compile / fastOptJS / artifactPath := baseDirectory.value / ".." / ".." / "driver" / "npm" / "lib" / "index.js",
     scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }
   )
   .dependsOn(mlscript % "compile->compile;test->test")
