@@ -3,5 +3,6 @@
     "fp-ts": "^2.16.0",
     "json5": "^2.2.3"
   },
-  "module": "es2015"
+  "module": "es2015",
+  "type": "module"
 }
