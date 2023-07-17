@@ -573,6 +573,7 @@ trait TermImpl extends StatementImpl { self: Term =>
     case App(App(Var("->"), lhs), tup: Tup) => Function(lhs.toType_!, tup.toType_!)
     case App(App(Var("|"), lhs), rhs) => Union(lhs.toType_!, rhs.toType_!)
     case App(App(Var("&"), lhs), rhs) => Inter(lhs.toType_!, rhs.toType_!)
+    case App(Var("~"), rhs) => Neg(rhs.toType_!)
     case Lam(lhs, rhs) => Function(lhs.toType_!, rhs.toType_!)
     case App(lhs, rhs) => lhs.toType_! match {
       case AppliedType(base, targs) => AppliedType(base, targs :+ rhs.toType_!)
@@ -635,7 +636,7 @@ trait LitImpl { self: Lit =>
     case _: IntLit => Set.single(TypeName("Int")) + TypeName("Num") + TypeName("Object")
     case _: StrLit => Set.single(TypeName("Str")) + TypeName("Object")
     case _: DecLit => Set.single(TypeName("Num")) + TypeName("Object")
-    case _: UnitLit => Set.empty
+    case _: UnitLit => Set.single(TypeName("Object"))
   }
 }
 

@@ -1,0 +1,254 @@
+:NewDefs
+
+
+
+fun cast(x) = x
+declare fun cast: anything -> nothing
+//│ fun cast: forall 'a. 'a -> 'a
+//│ fun cast: anything -> nothing
+
+
+fun mapi: (Array['a], ('a, Int) -> 'b) -> Array['b]
+fun mapi(xs, f) = cast(xs).map(f)
+//│ fun mapi: (anything, anything,) -> nothing
+//│ fun mapi: forall 'a 'b. (Array['a], ('a, Int,) -> 'b,) -> Array['b]
+
+mapi of ["a", "", "bb"], (x, i) => [i, length of x]
+//│ Array[(Int, Int,)]
+//│ res
+//│     = [ [ 0, 1 ], [ 1, 0 ], [ 2, 2 ] ]
+
+
+fun map(xs, f) = mapi(xs, (x, i) => f(x))
+//│ fun map: forall 'a 'b. (Array['a], 'a -> 'b,) -> Array['b]
+
+map of ["a", "", "bb"], x => length of x
+//│ Array[Int]
+//│ res
+//│     = [ 1, 0, 2 ]
+
+
+fun zip: (Array['a], Array['b & ~undefined & Object]) -> Array[['a, 'b]]
+fun zip(xs, ys) = mapi of xs, (x, i) =>
+  if ys.[i] is
+    undefined then error
+    y then [x, y]
+//│ fun zip: forall 'c 'd. (Array['c], Array[Object & 'd & ~undefined],) -> Array[('c, 'd,)]
+//│ fun zip: forall 'a 'b. (Array['a], Array[Object & 'b & ~undefined],) -> Array[('a, 'b,)]
+
+
+zip
+//│ forall 'a 'b. (Array['a], Array[Object & 'b & ~undefined],) -> Array[('a, 'b,)]
+//│ res
+//│     = [Function: zip1]
+
+
+
+class Numbr(n: Int)
+class Vectr(xs: Array[Numbr | Vectr])
+//│ class Numbr(n: Int)
+//│ class Vectr(xs: Array[Numbr | Vectr])
+
+class Pair[A, B](a: A, b: B)
+//│ class Pair[A, B](a: A, b: B)
+
+
+fun unbox(x) = if x is
+  Numbr(n) then n
+  Vectr(xs) then map of xs, unbox
+//│ fun unbox: forall 'a. (Numbr | Vectr) -> 'a
+//│   where
+//│     'a :> Int | Array['a]
+
+fun add(e) =
+  if e is
+    Pair(Numbr(n), Numbr(m)) then Numbr(n + m)
+    Pair(Vectr(xs), Vectr(ys)) then
+      Vectr of map of zip(xs, ys), ([x, y]) => add of Pair of x, y
+    Pair(Vectr(xs),  Numbr(n)) then
+      Vectr of map of xs, x => add of Pair of x, Numbr(n)
+    Pair(Numbr(n), Vectr(xs)) then
+      Vectr of map of xs, x => add of Pair of Numbr(n), x
+//│ fun add: Pair[Numbr | Vectr, Numbr | Vectr] -> (Numbr | Vectr)
+
+
+add(Pair(Numbr(0), Numbr(1)))
+//│ Numbr | Vectr
+//│ res
+//│     = Numbr {}
+
+add(Pair(Vectr([]), Vectr([])))
+//│ Numbr | Vectr
+//│ res
+//│     = Vectr {}
+
+let v = Vectr of [Numbr(10), Numbr(20), Numbr(30)]
+//│ let v: Vectr
+//│ v
+//│   = Vectr {}
+
+unbox(v)
+//│ forall 'a. 'a
+//│   where
+//│     'a :> Int | Array['a]
+//│ res
+//│     = [ 10, 20, 30 ]
+
+
+let res = add of Pair of (Vectr of [Numbr(1), Numbr(2)]), (Vectr of [Numbr(3), v])
+//│ let res: Numbr | Vectr
+//│ res
+//│     = Vectr {}
+
+unbox(res)
+//│ forall 'a. 'a
+//│   where
+//│     'a :> Int | Array['a]
+//│ res
+//│     = [ 4, [ 12, 22, 32 ] ]
+
+
+fun add2(e) =
+  if e is
+    Pair(Numbr(n), Numbr(m)) then Numbr(m + m)
+    Pair(Numbr(n), Vectr(n)) then n
+//│ fun add2: Pair[Numbr, Numbr | Vectr] -> (Numbr | Array[Numbr | Vectr])
+
+add2(Pair(Numbr(0), Numbr(1)))
+//│ Numbr | Array[Numbr | Vectr]
+//│ res
+//│     = Numbr {}
+
+
+
+// * Playing with approximated unions/intersections
+
+
+fun t: ([Numbr,Numbr]|[Vectr,Vectr]) -> Int
+//│ fun t: (Numbr | Vectr, Numbr | Vectr,) -> Int
+
+
+fun s: (([Numbr,Numbr] -> Int) & ([Vectr,Vectr] -> Int),)
+//│ fun s: (Numbr | Vectr, Numbr | Vectr,) -> Int
+
+// FIXME why does the above parse the same as:
+
+fun s: ([Numbr,Numbr] -> Int) & ([Vectr,Vectr] -> Int)
+//│ fun s: (Numbr | Vectr, Numbr | Vectr,) -> Int
+
+
+s(Vectr([]),Vectr([]))
+//│ Int
+//│ res
+//│     = <no result>
+//│       s is not implemented
+
+
+module A {
+  fun g: (Int -> Int) & (Str -> Str)
+  fun g(x) = x
+}
+// g: (Int | Str) -> (Int & Str) -- under-approx
+// g: (Int & Str) -> (Int | Str) -- over-approx
+//│ module A {
+//│   fun g: Int -> Int & Str -> Str
+//│ }
+
+
+
+
+// === === === ERROR CASES === === === //
+
+
+:ShowRelativeLineNums
+:AllowTypeErrors
+
+
+:e
+s([Numbr(0),Numbr(0)])
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.+1: 	s([Numbr(0),Numbr(0)])
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── argument of type `((?a, ?b,),)` does not match type `(Numbr | Vectr, Numbr | Vectr,)`
+//│ ║  l.+1: 	s([Numbr(0),Numbr(0)])
+//│ ║        	 ^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from tuple type:
+//│ ║  l.136: 	fun s: ([Numbr,Numbr] -> Int) & ([Vectr,Vectr] -> Int)
+//│ ╙──       	         ^^^^^^^^^^^
+//│ Int | error
+
+:e
+A.g(0)
+// g <: 0 -> 'a
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.+1: 	A.g(0)
+//│ ║        	^^^^^^
+//│ ╟── integer literal of type `0` is not an instance of type `Str`
+//│ ║  l.+1: 	A.g(0)
+//│ ╙──      	    ^
+//│ Int | Str | error
+
+:e
+fun add(e) =
+  if e is
+    Pair(Numbr(n), Numbr(m))    then 0
+    Pair(Vectr(xs),  Vectr(ys)) then 1
+    Pair(Vectr(xs),  Numbr(n))  then 2
+//│ ╔══[ERROR] The match is not exhaustive.
+//│ ║  l.+2: 	  if e is
+//│ ║        	     ^^^^
+//│ ╟── The scrutinee at this position misses 1 case.
+//│ ║  l.+3: 	    Pair(Numbr(n), Numbr(m))    then 0
+//│ ║        	                   ^^^^^^^^
+//│ ╟── [Missing Case 1/1] `Vectr`
+//│ ╟── It first appears here.
+//│ ║  l.+4: 	    Pair(Vectr(xs),  Vectr(ys)) then 1
+//│ ╙──      	                     ^^^^^^^^^
+//│ fun add: anything -> error
+
+:e
+fun add(e) =
+  if e is
+    Pair(Numbr(n), Numbr(m))    then 0
+    Pair(Vectr(xs),  Vectr(ys)) then 1
+//│ ╔══[ERROR] The match is not exhaustive.
+//│ ║  l.+2: 	  if e is
+//│ ║        	     ^^^^
+//│ ╟── The scrutinee at this position misses 1 case.
+//│ ║  l.+3: 	    Pair(Numbr(n), Numbr(m))    then 0
+//│ ║        	                   ^^^^^^^^
+//│ ╟── [Missing Case 1/1] `Vectr`
+//│ ╟── It first appears here.
+//│ ║  l.+4: 	    Pair(Vectr(xs),  Vectr(ys)) then 1
+//│ ╙──      	                     ^^^^^^^^^
+//│ fun add: anything -> error
+
+:e
+add2(Pair(Vectr(0), Numbr(1)))
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.+1: 	add2(Pair(Vectr(0), Numbr(1)))
+//│ ║        	          ^^^^^^^^
+//│ ╟── integer literal of type `0` does not match type `Array[Numbr | Vectr]`
+//│ ║  l.+1: 	add2(Pair(Vectr(0), Numbr(1)))
+//│ ║        	                ^
+//│ ╟── Note: constraint arises from applied type reference:
+//│ ║  l.48: 	class Vectr(xs: Array[Numbr | Vectr])
+//│ ╙──      	                ^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.+1: 	add2(Pair(Vectr(0), Numbr(1)))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── application of type `Vectr` is not an instance of type `Numbr`
+//│ ║  l.+1: 	add2(Pair(Vectr(0), Numbr(1)))
+//│ ║        	          ^^^^^^^^
+//│ ╟── Note: constraint arises from class pattern:
+//│ ║  l.113: 	    Pair(Numbr(n), Numbr(m)) then Numbr(m + m)
+//│ ║         	         ^^^^^
+//│ ╟── from reference:
+//│ ║  l.112: 	  if e is
+//│ ║         	     ^
+//│ ╟── Note: type parameter A is defined at:
+//│ ║  l.52: 	class Pair[A, B](a: A, b: B)
+//│ ╙──      	           ^
+//│ Numbr | error | Array[Numbr | Vectr]
+
+

@@ -483,7 +483,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
       case s => R(s)
     }
     val funSigs = MutMap.empty[Str, NuFunDef]
-    val implems = if (topLevel) decls else decls.filter {
+    val implems = decls.filter {
       case fd @ NuFunDef(N, nme, tparams, R(rhs)) =>
         funSigs.updateWith(nme.name) {
           case S(s) =>
@@ -494,6 +494,11 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
         false // There will already be typed in DelayedTypeInfo
       case _ => true
     }
+    
+    val sigInfos = if (topLevel) funSigs.map { case (nme, decl) =>
+      val lti = new DelayedTypeInfo(decl, implicitly)
+      decl.name -> lti
+    } else Nil
     val infos = implems.map {
       case _decl: NuDecl =>
         val decl = _decl match {
@@ -530,13 +535,29 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
         decl.name -> lti
     }
     ctx ++= infos
+    ctx ++= sigInfos
+    
+    val tpdFunSigs = sigInfos.mapValues(_.complete() match {
+      case res: TypedNuFun if res.fd.isDecl =>
+        TopType
+      case res: TypedNuFun =>
+        res.typeSignature
+      case _ => die
+    }).toMap
     
     // * Complete typing of block definitions and add results to context
-    val completedInfos = infos.mapValues(_.complete() match {
+    val completedInfos = (infos ++ sigInfos).mapValues(_.complete() match {
       case res: TypedNuFun =>
-        // * Generalize functions as they are typed.
-        // * Note: eventually we'll want to first reorder their typing topologically so as to maximize polymorphism.
-        ctx += res.name -> VarSymbol(res.typeSignature, res.fd.nme)
+        tpdFunSigs.get(res.name) match {
+          case S(expected) =>
+            implicit val prov: TP =
+              TypeProvenance(res.fd.toLoc, res.fd.describe)
+            subsume(res.typeSignature, expected)
+          case _ =>
+            // * Generalize functions as they are typed.
+            // * Note: eventually we'll want to first reorder their typing topologically so as to maximize polymorphism.
+            ctx += res.name -> VarSymbol(res.typeSignature, res.fd.nme)
+        }
         CompletedTypeInfo(res)
       case res => CompletedTypeInfo(res)
     })
