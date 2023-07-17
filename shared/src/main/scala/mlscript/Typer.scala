@@ -233,6 +233,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
     NuTypeDef(Mod, TN("true"), Nil, N, N, N, Var("Bool") :: Nil, N, N, TypingUnit(Nil))(N, N, N),
     NuTypeDef(Mod, TN("false"), Nil, N, N, N, Var("Bool") :: Nil, N, N, TypingUnit(Nil))(N, N, N),
     NuTypeDef(Cls, TN("Str"), Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, N, S(preludeLoc)),
+    NuTypeDef(Als, TN("undefined"), Nil, N, N, S(Literal(UnitLit(true))), Nil, N, N, TypingUnit(Nil))(N, N, S(preludeLoc)),
+    NuTypeDef(Als, TN("null"), Nil, N, N, S(Literal(UnitLit(false))), Nil, N, N, TypingUnit(Nil))(N, N, S(preludeLoc)),
   )
   val builtinTypes: Ls[TypeDef] =
     TypeDef(Cls, TN("int"), Nil, TopType, Nil, Nil, sing(TN("number")), N, Nil) ::
@@ -489,6 +491,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
                       clsNameToNomTag(ctx.tyDefs2(name).decl.asInstanceOf[NuTypeDef])(tyTp(tyLoc, "class tag"), ctx)
                     case NuTypeDef(Trt, _, _, _, _, _, _, _, _, _) =>
                       trtNameToNomTag(ctx.tyDefs2(name).decl.asInstanceOf[NuTypeDef])(tyTp(tyLoc, "class tag"), ctx)
+                    case NuTypeDef(Als, _, _, _, _, _, _, _, _, _) =>
+                      TypeRef(tn, List.fill(tpnum)(freshVar(noProv, N, N)))(tpr)
                     case _ => die // TODO
                   }
                 case _ => err(msg"Type $name takes parameters", tyLoc)(raise)

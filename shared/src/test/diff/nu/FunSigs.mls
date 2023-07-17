@@ -1,6 +1,7 @@
 :NewDefs
 
 
+
 fun log(msg: Str): unit
 //│ fun log: (msg: Str,) -> unit
 
@@ -25,10 +26,64 @@ log("ok")
 //│       log is not implemented
 
 
+
+fun con: Str => Str => Str
+fun con = concat
+//│ fun con: Str -> Str -> Str
+//│ fun con: Str -> Str -> Str
+
+con("aa")("bbb")
+//│ Str
+//│ res
+//│     = 'aabbb'
+
+
 fun con: Str => Str => Str
 //│ fun con: Str -> Str -> Str
 
 fun con = concat
 //│ fun con: Str -> Str -> Str
+
+con("aa")("bbb")
+//│ Str
+//│ res
+//│     = 'aabbb'
+
+
+
+fun oops: Str => Str
+//│ fun oops: Str -> Str
+
+fun oops = 0
+//│ fun oops: 0
+
+oops
+//│ 0
+//│ res
+//│     = 0
+
+
+:e
+fun oops: Str => Str
+fun oops = 0
+//│ ╔══[ERROR] Type mismatch in definition:
+//│ ║  l.68: 	fun oops = 0
+//│ ║        	    ^^^^^^^^
+//│ ╟── integer literal of type `0` is not a function
+//│ ║  l.68: 	fun oops = 0
+//│ ║        	           ^
+//│ ╟── but it flows into definition of method oops with expected type `Str -> Str`
+//│ ║  l.68: 	fun oops = 0
+//│ ║        	    ^^^^^^^^
+//│ ╟── Note: constraint arises from function type:
+//│ ║  l.67: 	fun oops: Str => Str
+//│ ╙──      	          ^^^^^^^^^^
+//│ fun oops: 0
+//│ fun oops: Str -> Str
+
+oops
+//│ Str -> Str
+//│ res
+//│     = 0
 
 

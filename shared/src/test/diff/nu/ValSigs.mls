@@ -1,0 +1,30 @@
+:NewDefs
+
+
+val x: Int
+val x = 1
+//│ let x: Int
+//│ let x: 1
+//│ x
+//│   = <missing implementation>
+//│ x
+//│   = 1
+
+// * FIXME type
+x
+//│ 1
+//│ res
+//│     = 1
+
+
+// :e // FIXME should be an error
+val x: Int
+val x = "oops"
+//│ let x: Int
+//│ let x: "oops"
+//│ x
+//│   = <missing implementation>
+//│ x
+//│   = 'oops'
+
+
