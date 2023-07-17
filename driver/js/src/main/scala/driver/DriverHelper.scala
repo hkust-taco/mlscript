@@ -24,7 +24,9 @@ object DriverHelper {
     System.out.println(s"start watching $workDir")
     val options = DriverOptions(filename, workDir, s"${g.__dirname}/predefs/", outputDir, tsconfig, ".interfaces", commonJS, expectTypeError, false, false)
     watcher.watch(workDir, js.Dictionary("ignoreInitial" -> true)).on("all", (event: js.Dynamic, file: js.Dynamic) => {
-      val res = Driver(options).execute
+      val driver = Driver(options)
+      driver.genPackageJson()
+      val res = driver.execute
 
       import DriverResult._
       res match {

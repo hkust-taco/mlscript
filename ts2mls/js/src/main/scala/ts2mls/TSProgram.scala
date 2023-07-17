@@ -33,7 +33,7 @@ class TSProgram(
     def resolve(file: FileInfo) = if (TypeScript.isLinux) file.resolve else file.resolve.toLowerCase()
     // We prefer to not tract node_modules in git, so we need to check if the interface file exists
     def shouldRecompile(filename: String, interface: String) = gitHelper.fold(true)(
-      helper => helper.forceIfNoChange || helper.filter(relative(filename, file.workDir)) || !JSFileSystem.exists(interface)
+      helper => helper.forceIfNoChange || helper.filter(relative(TSPathResolver.resolve(file.workDir), filename)) || !JSFileSystem.exists(interface)
     )
 
     val filename = resolve(file)
