@@ -571,6 +571,8 @@ trait TermImpl extends StatementImpl { self: Term =>
     case App(App(Var("&"), Tup(N -> Fld(false, false, lhs) :: Nil)), Tup(N -> Fld(false, false, rhs) :: Nil)) => Inter(lhs.toType_!, rhs.toType_!)
     case App(App(Var("->"), lhs), Tup(N -> Fld(false, false, rhs) :: Nil)) => Function(lhs.toType_!, rhs.toType_!)
     case App(App(Var("->"), lhs), tup: Tup) => Function(lhs.toType_!, tup.toType_!)
+    case ty @ App(App(v @ Var("\\"), Tup(N -> Fld(false, false, lhs) :: Nil)), Tup(N -> Fld(false, false, rhs) :: Nil)) =>
+      Inter(lhs.toType_!, Neg(rhs.toType_!).withLoc(Loc(v :: rhs :: Nil))).withLoc(ty.toCoveringLoc)
     case App(App(Var("|"), lhs), rhs) => Union(lhs.toType_!, rhs.toType_!)
     case App(App(Var("&"), lhs), rhs) => Inter(lhs.toType_!, rhs.toType_!)
     case App(Var("~"), rhs) => Neg(rhs.toType_!)

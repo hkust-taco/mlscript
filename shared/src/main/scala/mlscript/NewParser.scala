@@ -335,7 +335,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
               case _ => die
             }
             val (tn, success) = yeetSpaces match {
-              case (IDENT(idStr, false), l1) :: _ =>
+              case (IDENT(idStr, _), l1) :: _ =>
                 consume
                 (TypeName(idStr).withLoc(S(l1)), true)
               case c =>

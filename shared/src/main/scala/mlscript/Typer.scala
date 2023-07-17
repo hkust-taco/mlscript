@@ -491,6 +491,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
                       clsNameToNomTag(ctx.tyDefs2(name).decl.asInstanceOf[NuTypeDef])(tyTp(tyLoc, "class tag"), ctx)
                     case NuTypeDef(Trt, _, _, _, _, _, _, _, _, _) =>
                       trtNameToNomTag(ctx.tyDefs2(name).decl.asInstanceOf[NuTypeDef])(tyTp(tyLoc, "class tag"), ctx)
+                    case NuTypeDef(Als, _, _, _, _, _, _, _, _, _) =>
+                      TypeRef(tn, List.fill(tpnum)(freshVar(noProv, N, N)))(tpr)
                     case _ => die // TODO
                   }
                 case _ => err(msg"Type $name takes parameters", tyLoc)(raise)
