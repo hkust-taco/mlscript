@@ -1,6 +1,6 @@
 {
   "name": "mlscript-driver",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "mlscript driver",
   "types": "lib/index.d.ts",
   "main": "lib/index.js",

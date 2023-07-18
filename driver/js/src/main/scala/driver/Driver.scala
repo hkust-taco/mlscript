@@ -240,6 +240,7 @@ class Driver(options: DriverOptions) {
     }
 
     val mlsiFile = normalize(s"${file.workDir}/${file.interfaceFilename}")
+    val jsFile = s"${options.outputDir}/${file.jsFilename}"
     val mlsiWriter = JSWriter(mlsiFile)
     implicit val raise: Raise = (diag: Diagnostic) => report(diag, mlsiWriter.writeErr)
     parseAndRun(file.filename, {
@@ -279,7 +280,8 @@ class Driver(options: DriverOptions) {
           compile(newFilename, true)(newCtx, newExtrCtx, newVars, stack :+ file.filename) || r
         })
 
-        if (!dependentRecompile && !gitHelper.filter(file.filename)) return false
+        if (!dependentRecompile && !gitHelper.filter(file.filename) && JSFileSystem.exists(mlsiFile) && JSFileSystem.exists(jsFile))
+          return false
 
         System.out.println(s"compiling ${file.filename}...")
         val importedSym = (try { otherList.map(d => importModule(file.`import`(d))) }
@@ -301,7 +303,7 @@ class Driver(options: DriverOptions) {
           mlsiWriter.write(interfaces)
           mlsiWriter.close()
           if (Driver.totalErrors == 0)
-            generate(Pgrm(definitions), s"${options.outputDir}/${file.jsFilename}", file.moduleName, imports.map(
+            generate(Pgrm(definitions), jsFile, file.moduleName, imports.map(
               imp => new Import(resolveJSPath(file, imp.path)) with ModuleType {
                 val isESModule = checkESModule(path, TSPathResolver.resolve(file.filename))
               }
