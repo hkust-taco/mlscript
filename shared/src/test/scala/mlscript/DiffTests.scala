@@ -414,6 +414,9 @@ class DiffTests
             if (parseOnly)
               output("Parsed: " + res.showDbg)
             
+            if (mode.showParse)
+              output("AST: " + mlscript.codegen.Helpers.inspect(res))
+            
             postProcess(mode, basePath, testName, res).foreach(output)
             
             if (parseOnly)
