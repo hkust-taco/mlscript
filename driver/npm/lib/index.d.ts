@@ -1,4 +1,4 @@
-declare interface Driver {
+declare interface MLscript {
   watch(
     filename: string,
     workDir: string,
@@ -17,5 +17,5 @@ declare interface Driver {
   );
 }
 
-declare const driver: Driver
-export = driver;
+declare const mlscript: MLscript
+export = mlscript;

@@ -23,10 +23,9 @@ object DriverHelper {
   ): Unit = {
     System.out.println(s"start watching $workDir")
     val options = DriverOptions(filename, workDir, s"${g.__dirname}/predefs/", outputDir, tsconfig, ".interfaces", commonJS, expectTypeError, false, false)
-    watcher.watch(workDir,
-      js.Dictionary("ignoreInitial" -> true, "ignored" -> "(.*\\.mlsi) | (.*\\.js)")
-    ).on("all", (event: js.Dynamic, file: js.Dynamic) => {
-      if (event.toString() === "change" || event.toString() === "add") {
+    watcher.watch(workDir, js.Dictionary("ignoreInitial" -> true)).on("all", (event: js.Dynamic, file: js.Dynamic) => {
+      val filename = file.toString()
+      if ((event.toString() === "change" || event.toString() === "add") && (filename.endsWith("ts") || filename.endsWith("mls"))) {
         val driver = Driver(options)
         driver.genPackageJson()
         val res = driver.execute
