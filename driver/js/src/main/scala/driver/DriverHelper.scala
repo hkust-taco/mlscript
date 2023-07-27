@@ -23,22 +23,26 @@ object DriverHelper {
   ): Unit = {
     System.out.println(s"start watching $workDir")
     val options = DriverOptions(filename, workDir, s"${g.__dirname}/predefs/", outputDir, tsconfig, ".interfaces", commonJS, expectTypeError, false, false)
+    def compile() = {
+      val driver = Driver(options)
+      driver.genPackageJson()
+      val res = driver.execute
+
+      import DriverResult._
+      res match {
+        case Error => System.err.println(s"Compiling error(s) found in $filename.")
+        case TypeError => System.err.println(s"Type error(s) found in $filename")
+        case ExpectError => System.err.println(s"Expect compiling error(s) in $filename")
+        case ExpectTypeError => System.err.println(s"Expect type error(s) in $filename")
+        case OK => System.out.println("Finished")
+      }
+    }
+
+    compile()
     watcher.watch(workDir, js.Dictionary("ignoreInitial" -> true)).on("all", (event: js.Dynamic, file: js.Dynamic) => {
       val filename = file.toString()
-      if ((event.toString() === "change" || event.toString() === "add") && (filename.endsWith("ts") || filename.endsWith("mls"))) {
-        val driver = Driver(options)
-        driver.genPackageJson()
-        val res = driver.execute
-
-        import DriverResult._
-        res match {
-          case Error => System.err.println(s"Compiling error(s) found in $filename.")
-          case TypeError => System.err.println(s"Type error(s) found in $filename")
-          case ExpectError => System.err.println(s"Expect compiling error(s) in $filename")
-          case ExpectTypeError => System.err.println(s"Expect type error(s) in $filename")
-          case OK => ()
-        }
-      }
+      if ((event.toString() === "change" || event.toString() === "add") && (filename.endsWith("ts") || filename.endsWith("mls")))
+        compile()
     })
   }
 
