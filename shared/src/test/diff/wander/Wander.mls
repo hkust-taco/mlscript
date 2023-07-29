@@ -1,0 +1,330 @@
+:NewDefs
+
+:p
+:d
+fun f(x, y, z) = (x - y) * z
+//│ |#fun| |f|(|x|,| |y|,| |z|)| |#=| |(|x| |-| |y|)| |*| |z|
+//│ AST: TypingUnit(NuFunDef(None, f, [], Lam(Tup(_: Var(x), _: Var(y), _: Var(z)), App(App(Var(*), Tup(_: Bra(rcd = false, App(App(Var(-), Tup(_: Var(x))), Tup(_: Var(y)))))), Tup(_: Var(z))))))
+//│ Parsed: fun f = (x, y, z,) => * ('(' - (x,) (y,) ')',) (z,);
+//│ 0. Typing TypingUnit(List(fun f = (x, y, z,) => * ('(' - (x,) (y,) ')',) (z,)))
+//│ | hereeee YEAH => List(fun f = (x, y, z,) => * ('(' - (x,) (y,) ')',) (z,)) AND List()
+//│ | implems => List(fun f = (x, y, z,) => * ('(' - (x,) (y,) ')',) (z,))
+//│ | 0. Created lazy type info for fun f = (x, y, z,) => * ('(' - (x,) (y,) ')',) (z,)
+//│ | Completing fun f = (x, y, z,) => * ('(' - (x,) (y,) ')',) (z,)
+//│ | | UNSTASHING... (out)
+//│ | | Type params 
+//│ | | UNSTASHING... (out)
+//│ | | Params 
+//│ | | 1. Typing term (x, y, z,) => * ('(' - (x,) (y,) ')',) (z,)
+//│ | | | 1. Typing pattern x, y, z,
+//│ | | | | 1. Typing pattern x
+//│ | | | | 1. : x43'
+//│ | | | | 1. Typing pattern y
+//│ | | | | 1. : y44'
+//│ | | | | 1. Typing pattern z
+//│ | | | | 1. : z45'
+//│ | | | 1. : (x43', y44', z45',)
+//│ | | | 1. Typing term * ('(' - (x,) (y,) ')',) (z,)
+//│ | | | | 1. Typing term * ('(' - (x,) (y,) ')',)
+//│ | | | | | 1. Typing term *
+//│ | | | | | 1. : (Int -> (Int -> Int))
+//│ | | | | | 1. Typing term '(' - (x,) (y,) ')'
+//│ | | | | | | 1. Typing term - (x,) (y,)
+//│ | | | | | | | 1. Typing term - (x,)
+//│ | | | | | | | | 1. Typing term -
+//│ | | | | | | | | 1. : (Int -> (Int -> Int))
+//│ | | | | | | | | 1. Typing term x
+//│ | | | | | | | | 1. : x43'
+//│ | | | | | | | | CONSTRAIN (Int -> (Int -> Int)) <! (x43' -> α46')
+//│ | | | | | | | |   where 
+//│ | | | | | | | | 1. C (Int -> (Int -> Int)) <! (x43' -> α46')    (0)
+//│ | | | | | | | | | 1. C (x43',) <! (Int,)    (1)
+//│ | | | | | | | | | | 1. C x43' <! Int    (2)
+//│ | | | | | | | | | | | NEW x43' UB (0)
+//│ | | | | | | | | | 1. C (Int -> Int) <! α46'    (1)
+//│ | | | | | | | | | | NEW α46' LB (0)
+//│ | | | | | | | 1. : α46'
+//│ | | | | | | | 1. Typing term y
+//│ | | | | | | | 1. : y44'
+//│ | | | | | | | CONSTRAIN α46' <! (y44' -> α47')
+//│ | | | | | | |   where 
+//│ 		α46' :> (Int -> Int)
+//│ | | | | | | | 1. C α46' <! (y44' -> α47')    (0)
+//│ | | | | | | | | NEW α46' UB (1)
+//│ | | | | | | | | 1. C (Int -> Int) <! (y44' -> α47')    (2)
+//│ | | | | | | | | | 1. C (y44',) <! (Int,)    (2)
+//│ | | | | | | | | | | 1. C y44' <! Int    (3)
+//│ | | | | | | | | | | | NEW y44' UB (0)
+//│ | | | | | | | | | 1. C Int <! α47'    (2)
+//│ | | | | | | | | | | NEW α47' LB (0)
+//│ | | | | | | 1. : α47'
+//│ | | | | | 1. : α47'
+//│ | | | | | CONSTRAIN (Int -> (Int -> Int)) <! (α47' -> α48')
+//│ | | | | |   where 
+//│ 		α47' :> Int
+//│ | | | | | 1. C (Int -> (Int -> Int)) <! (α47' -> α48')    (0)
+//│ | | | | | | 1. C (α47',) <! (Int,)    (1)
+//│ | | | | | | | 1. C α47' <! Int    (2)
+//│ | | | | | | | | NEW α47' UB (0)
+//│ | | | | | | | | 1. C Int <! Int    (4)
+//│ | | | | | | 1. C (Int -> Int) <! α48'    (1)
+//│ | | | | | | | NEW α48' LB (0)
+//│ | | | | 1. : α48'
+//│ | | | | 1. Typing term z
+//│ | | | | 1. : z45'
+//│ | | | | CONSTRAIN α48' <! (z45' -> α49')
+//│ | | | |   where 
+//│ 		α48' :> (Int -> Int)
+//│ | | | | 1. C α48' <! (z45' -> α49')    (0)
+//│ | | | | | NEW α48' UB (1)
+//│ | | | | | 1. C (Int -> Int) <! (z45' -> α49')    (2)
+//│ | | | | | | 1. C (z45',) <! (Int,)    (2)
+//│ | | | | | | | 1. C z45' <! Int    (3)
+//│ | | | | | | | | NEW z45' UB (0)
+//│ | | | | | | 1. C Int <! α49'    (2)
+//│ | | | | | | | NEW α49' LB (0)
+//│ | | | 1. : α49'
+//│ | | 1. : ((x43', y44', z45',) -> α49')
+//│ | | UNSTASHING... (out)
+//│ | | CONSTRAIN ((x43', y44', z45',) -> α49') <! f50'
+//│ | |   where 
+//│ 		x43' <: Int
+//│ 		y44' <: Int
+//│ 		z45' <: Int
+//│ 		α49' :> Int
+//│ | | 1. C ((x43', y44', z45',) -> α49') <! f50'    (0)
+//│ | | | NEW f50' LB (1)
+//│ | | UNSTASHING... (out)
+//│ | Completed TypedNuFun(0,fun f = (x::0, y::1, z::2,) => * ('(' - (x,) (y,) ')',) (z,),((x43', y44', z45',) -> α49')) where 
+//│ 		x43' <: Int
+//│ 		y44' <: Int
+//│ 		z45' <: Int
+//│ 		α49' :> Int
+//│ | Typing unit statements
+//│ | : None
+//│ ======== TYPED ========
+//│ fun f: ‹∀ 0. ((x43', y44', z45',) -> α49')› where 
+//│ |		x43' <: Int
+//│ |		y44' <: Int
+//│ |		z45' <: Int
+//│ |		α49' :> Int
+//│ fun f: (Int, Int, Int,) -> Int
+
+:p
+:d
+f(1, 2, 3)
+//│ |f|(|1|,| |2|,| |3|)|
+//│ AST: TypingUnit(App(Var(f), Tup(_: IntLit(1), _: IntLit(2), _: IntLit(3))))
+//│ Parsed: f (1, 2, 3,);
+//│ 0. Typing TypingUnit(List(f (1, 2, 3,)))
+//│ | hereeee YEAH => List() AND List(f (1, 2, 3,))
+//│ | implems => List()
+//│ | Typing unit statements
+//│ | | 0. Typing term f (1, 2, 3,)
+//│ | | | 0. Typing term f
+//│ | | | 0. : ‹∀ 0. ((x43', y44', z45',) -> α49')›
+//│ | | | 0. Typing term 1
+//│ | | | 0. : #1<Int,Num,Object>
+//│ | | | 0. Typing term 2
+//│ | | | 0. : #2<Int,Num,Object>
+//│ | | | 0. Typing term 3
+//│ | | | 0. : #3<Int,Num,Object>
+//│ | | | CONSTRAIN ‹∀ 0. ((x43', y44', z45',) -> α49')› <! ((#1<Int,Num,Object>, #2<Int,Num,Object>, #3<Int,Num,Object>,) -> α55)
+//│ | | |   where 
+//│ 		x43' <: Int
+//│ 		y44' <: Int
+//│ 		z45' <: Int
+//│ 		α49' :> Int
+//│ | | | 0. C ‹∀ 0. ((x43', y44', z45',) -> α49')› <! ((#1<Int,Num,Object>, #2<Int,Num,Object>, #3<Int,Num,Object>,) -> α55)    (0)
+//│ | | | | could be distribbed: Set(α49')
+//│ | | | | cannot be distribbed: Set(x43', y44', z45')
+//│ | | | | inner: ‹∀ 0. α49'›
+//│ | | | | raised: ((x43', y44', z45',) -> ‹∀ 1. α49_56''›)
+//│ | | | |   where: 
+//│ 		x43' <: Int
+//│ 		y44' <: Int
+//│ 		z45' <: Int
+//│ 		α49_56'' :> Int
+//│ | | | | DISTRIB-L'  ~>  ‹∀ 0. ((x43', y44', z45',) -> ‹∀ 1. α49_56''›)›
+//│ | | | | 0. C ‹∀ 0. ((x43', y44', z45',) -> ‹∀ 1. α49_56''›)› <! ((#1<Int,Num,Object>, #2<Int,Num,Object>, #3<Int,Num,Object>,) -> α55)    (2)
+//│ | | | | | could be distribbed: Set()
+//│ | | | | | INST [0]   ‹∀ 0. ((x43', y44', z45',) -> ‹∀ 1. α49_56''›)›
+//│ | | | | |   where  
+//│ 		x43' <: Int
+//│ 		y44' <: Int
+//│ 		z45' <: Int
+//│ 		α49_56'' :> Int
+//│ | | | | | TO [0] ~>  ((x43_57, y44_58, z45_59,) -> ‹∀ 1. α49_56''›)
+//│ | | | | |   where  
+//│ 		α49_56'' :> Int
+//│ 		x43_57 <: Int
+//│ 		y44_58 <: Int
+//│ 		z45_59 <: Int
+//│ | | | | | 0. C ((x43_57, y44_58, z45_59,) -> ‹∀ 1. α49_56''›) <! ((#1<Int,Num,Object>, #2<Int,Num,Object>, #3<Int,Num,Object>,) -> α55)    (5)
+//│ | | | | | | 0. C (#1<Int,Num,Object>, #2<Int,Num,Object>, #3<Int,Num,Object>,) <! (x43_57, y44_58, z45_59,)    (3)
+//│ | | | | | | | 0. C #1<Int,Num,Object> <! x43_57    (4)
+//│ | | | | | | | | NEW x43_57 LB (0)
+//│ | | | | | | | | 0. C #1<Int,Num,Object> <! Int    (7)
+//│ | | | | | | | 0. C #2<Int,Num,Object> <! y44_58    (4)
+//│ | | | | | | | | NEW y44_58 LB (0)
+//│ | | | | | | | | 0. C #2<Int,Num,Object> <! Int    (7)
+//│ | | | | | | | 0. C #3<Int,Num,Object> <! z45_59    (4)
+//│ | | | | | | | | NEW z45_59 LB (0)
+//│ | | | | | | | | 0. C #3<Int,Num,Object> <! Int    (7)
+//│ | | | | | | 0. C ‹∀ 1. α49_56''› <! α55    (3)
+//│ | | | | | | | NEW α55 LB (0)
+//│ | | 0. : α55
+//│ | : Some(α55)
+//│ ======== TYPED ========
+//│ res: Some(α55) where 
+//│ 		α55 :> ‹∀ 1. α49_56''›
+//│ 		α49_56'' :> Int
+//│ Int
+//│ res
+//│     = -3
+
+:p
+:d
+f(x: 1, y: 2, z: 3)
+//│ |f|(|x|#:| |1|,| |y|#:| |2|,| |z|#:| |3|)|
+//│ AST: TypingUnit(App(Var(f), Tup(x: IntLit(1), y: IntLit(2), z: IntLit(3))))
+//│ Parsed: f (x: 1, y: 2, z: 3,);
+//│ 0. Typing TypingUnit(List(f (x: 1, y: 2, z: 3,)))
+//│ | hereeee YEAH => List() AND List(f (x: 1, y: 2, z: 3,))
+//│ | implems => List()
+//│ | Typing unit statements
+//│ | | 0. Typing term f (x: 1, y: 2, z: 3,)
+//│ | | | 0. Typing term f
+//│ | | | 0. : ‹∀ 0. ((x43', y44', z45',) -> α49')›
+//│ | | | 0. Typing term 1
+//│ | | | 0. : #1<Int,Num,Object>
+//│ | | | 0. Typing term 2
+//│ | | | 0. : #2<Int,Num,Object>
+//│ | | | 0. Typing term 3
+//│ | | | 0. : #3<Int,Num,Object>
+//│ | | | CONSTRAIN ‹∀ 0. ((x43', y44', z45',) -> α49')› <! ((x: #1<Int,Num,Object>, y: #2<Int,Num,Object>, z: #3<Int,Num,Object>,) -> α62)
+//│ | | |   where 
+//│ 		x43' <: Int
+//│ 		y44' <: Int
+//│ 		z45' <: Int
+//│ 		α49' :> Int
+//│ | | | 0. C ‹∀ 0. ((x43', y44', z45',) -> α49')› <! ((x: #1<Int,Num,Object>, y: #2<Int,Num,Object>, z: #3<Int,Num,Object>,) -> α62)    (0)
+//│ | | | | could be distribbed: Set(α49')
+//│ | | | | cannot be distribbed: Set(x43', y44', z45')
+//│ | | | | inner: ‹∀ 0. α49'›
+//│ | | | | raised: ((x43', y44', z45',) -> ‹∀ 1. α49_63''›)
+//│ | | | |   where: 
+//│ 		x43' <: Int
+//│ 		y44' <: Int
+//│ 		z45' <: Int
+//│ 		α49_63'' :> Int
+//│ | | | | DISTRIB-L'  ~>  ‹∀ 0. ((x43', y44', z45',) -> ‹∀ 1. α49_63''›)›
+//│ | | | | 0. C ‹∀ 0. ((x43', y44', z45',) -> ‹∀ 1. α49_63''›)› <! ((x: #1<Int,Num,Object>, y: #2<Int,Num,Object>, z: #3<Int,Num,Object>,) -> α62)    (2)
+//│ | | | | | could be distribbed: Set()
+//│ | | | | | INST [0]   ‹∀ 0. ((x43', y44', z45',) -> ‹∀ 1. α49_63''›)›
+//│ | | | | |   where  
+//│ 		x43' <: Int
+//│ 		y44' <: Int
+//│ 		z45' <: Int
+//│ 		α49_63'' :> Int
+//│ | | | | | TO [0] ~>  ((x43_64, y44_65, z45_66,) -> ‹∀ 1. α49_63''›)
+//│ | | | | |   where  
+//│ 		α49_63'' :> Int
+//│ 		x43_64 <: Int
+//│ 		y44_65 <: Int
+//│ 		z45_66 <: Int
+//│ | | | | | 0. C ((x43_64, y44_65, z45_66,) -> ‹∀ 1. α49_63''›) <! ((x: #1<Int,Num,Object>, y: #2<Int,Num,Object>, z: #3<Int,Num,Object>,) -> α62)    (5)
+//│ | | | | | | 0. C (x: #1<Int,Num,Object>, y: #2<Int,Num,Object>, z: #3<Int,Num,Object>,) <! (x43_64, y44_65, z45_66,)    (3)
+//│ | | | | | | | 0. C #1<Int,Num,Object> <! x43_64    (4)
+//│ | | | | | | | | NEW x43_64 LB (0)
+//│ | | | | | | | | 0. C #1<Int,Num,Object> <! Int    (7)
+//│ | | | | | | | 0. C #2<Int,Num,Object> <! y44_65    (4)
+//│ | | | | | | | | NEW y44_65 LB (0)
+//│ | | | | | | | | 0. C #2<Int,Num,Object> <! Int    (7)
+//│ | | | | | | | 0. C #3<Int,Num,Object> <! z45_66    (4)
+//│ | | | | | | | | NEW z45_66 LB (0)
+//│ | | | | | | | | 0. C #3<Int,Num,Object> <! Int    (7)
+//│ | | | | | | 0. C ‹∀ 1. α49_63''› <! α62    (3)
+//│ | | | | | | | NEW α62 LB (0)
+//│ | | 0. : α62
+//│ | : Some(α62)
+//│ ======== TYPED ========
+//│ res: Some(α62) where 
+//│ 		α62 :> ‹∀ 1. α49_63''›
+//│ 		α49_63'' :> Int
+//│ Int
+//│ res
+//│     = -3
+
+:p
+:d
+f(y: 2, x: 1, z: 3)
+//│ |f|(|y|#:| |2|,| |x|#:| |1|,| |z|#:| |3|)|
+//│ AST: TypingUnit(App(Var(f), Tup(y: IntLit(2), x: IntLit(1), z: IntLit(3))))
+//│ Parsed: f (y: 2, x: 1, z: 3,);
+//│ 0. Typing TypingUnit(List(f (y: 2, x: 1, z: 3,)))
+//│ | hereeee YEAH => List() AND List(f (y: 2, x: 1, z: 3,))
+//│ | implems => List()
+//│ | Typing unit statements
+//│ | | 0. Typing term f (y: 2, x: 1, z: 3,)
+//│ | | | 0. Typing term f
+//│ | | | 0. : ‹∀ 0. ((x43', y44', z45',) -> α49')›
+//│ | | | 0. Typing term 2
+//│ | | | 0. : #2<Int,Num,Object>
+//│ | | | 0. Typing term 1
+//│ | | | 0. : #1<Int,Num,Object>
+//│ | | | 0. Typing term 3
+//│ | | | 0. : #3<Int,Num,Object>
+//│ | | | CONSTRAIN ‹∀ 0. ((x43', y44', z45',) -> α49')› <! ((y: #2<Int,Num,Object>, x: #1<Int,Num,Object>, z: #3<Int,Num,Object>,) -> α69)
+//│ | | |   where 
+//│ 		x43' <: Int
+//│ 		y44' <: Int
+//│ 		z45' <: Int
+//│ 		α49' :> Int
+//│ | | | 0. C ‹∀ 0. ((x43', y44', z45',) -> α49')› <! ((y: #2<Int,Num,Object>, x: #1<Int,Num,Object>, z: #3<Int,Num,Object>,) -> α69)    (0)
+//│ | | | | could be distribbed: Set(α49')
+//│ | | | | cannot be distribbed: Set(x43', y44', z45')
+//│ | | | | inner: ‹∀ 0. α49'›
+//│ | | | | raised: ((x43', y44', z45',) -> ‹∀ 1. α49_70''›)
+//│ | | | |   where: 
+//│ 		x43' <: Int
+//│ 		y44' <: Int
+//│ 		z45' <: Int
+//│ 		α49_70'' :> Int
+//│ | | | | DISTRIB-L'  ~>  ‹∀ 0. ((x43', y44', z45',) -> ‹∀ 1. α49_70''›)›
+//│ | | | | 0. C ‹∀ 0. ((x43', y44', z45',) -> ‹∀ 1. α49_70''›)› <! ((y: #2<Int,Num,Object>, x: #1<Int,Num,Object>, z: #3<Int,Num,Object>,) -> α69)    (2)
+//│ | | | | | could be distribbed: Set()
+//│ | | | | | INST [0]   ‹∀ 0. ((x43', y44', z45',) -> ‹∀ 1. α49_70''›)›
+//│ | | | | |   where  
+//│ 		x43' <: Int
+//│ 		y44' <: Int
+//│ 		z45' <: Int
+//│ 		α49_70'' :> Int
+//│ | | | | | TO [0] ~>  ((x43_71, y44_72, z45_73,) -> ‹∀ 1. α49_70''›)
+//│ | | | | |   where  
+//│ 		α49_70'' :> Int
+//│ 		x43_71 <: Int
+//│ 		y44_72 <: Int
+//│ 		z45_73 <: Int
+//│ | | | | | 0. C ((x43_71, y44_72, z45_73,) -> ‹∀ 1. α49_70''›) <! ((y: #2<Int,Num,Object>, x: #1<Int,Num,Object>, z: #3<Int,Num,Object>,) -> α69)    (5)
+//│ | | | | | | 0. C (y: #2<Int,Num,Object>, x: #1<Int,Num,Object>, z: #3<Int,Num,Object>,) <! (x43_71, y44_72, z45_73,)    (3)
+//│ | | | | | | | 0. C #2<Int,Num,Object> <! x43_71    (4)
+//│ | | | | | | | | NEW x43_71 LB (0)
+//│ | | | | | | | | 0. C #2<Int,Num,Object> <! Int    (7)
+//│ | | | | | | | 0. C #1<Int,Num,Object> <! y44_72    (4)
+//│ | | | | | | | | NEW y44_72 LB (0)
+//│ | | | | | | | | 0. C #1<Int,Num,Object> <! Int    (7)
+//│ | | | | | | | 0. C #3<Int,Num,Object> <! z45_73    (4)
+//│ | | | | | | | | NEW z45_73 LB (0)
+//│ | | | | | | | | 0. C #3<Int,Num,Object> <! Int    (7)
+//│ | | | | | | 0. C ‹∀ 1. α49_70''› <! α69    (3)
+//│ | | | | | | | NEW α69 LB (0)
+//│ | | 0. : α69
+//│ | : Some(α69)
+//│ ======== TYPED ========
+//│ res: Some(α69) where 
+//│ 		α69 :> ‹∀ 1. α49_70''›
+//│ 		α49_70'' :> Int
+//│ Int
+//│ res
+//│     = 3
