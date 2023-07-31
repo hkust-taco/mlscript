@@ -2,7 +2,7 @@
 :NewDefs
 
 :js
-class C(a: Int) { let a = 1 }
+class C(a: Int) { val a = 1 }
 //│ class C(a: Int) {
 //│   let a: 1
 //│ }
@@ -21,7 +21,8 @@ class C(a: Int) { let a = 1 }
 //│         static $unapply(self) { return [self.#a, ] }
 //│         constructor(a) {
 //│           this.#a = a;
-//│           const a1 = 1;
+//│           this.#a = 1;
+//│           const a1 = this.#a;
 //│         }
 //│       };
 //│       this.#C = ((a) => Object.freeze(new C(a)));
@@ -42,12 +43,12 @@ a.a
 //│ a
 //│   = C {}
 //│ res
-//│     = 2
+//│     = 1
 
 :js
 class C2(a: Int, b: Int) {
-  let a = b + 1
-  let b = a + 1
+  val a = b + 1
+  val b = a + 1
 }
 //│ class C2(a: Int, b: Int) {
 //│   let a: Int
@@ -63,15 +64,17 @@ class C2(a: Int, b: Int) {
 //│     if (this.#C2 === undefined) {
 //│       class C2 {
 //│         #a;
-//│         get a() { return this.#a; }
 //│         #b;
+//│         get a() { return this.#a; }
 //│         get b() { return this.#b; }
 //│         static $unapply(self) { return [self.#a, self.#b, ] }
 //│         constructor(a, b) {
 //│           this.#a = a;
 //│           this.#b = b;
-//│           const a1 = b + 1;
-//│           const b1 = a1 + 1;
+//│           this.#a = b + 1;
+//│           const a1 = this.#a;
+//│           this.#b = a1 + 1;
+//│           const b1 = this.#b;
 //│         }
 //│       };
 //│       this.#C2 = ((a, b) => Object.freeze(new C2(a, b)));
@@ -92,14 +95,14 @@ c2.b
 //│ c2
 //│    = C2 {}
 //│ res
-//│     = 1
+//│     = 3
 //│ res
-//│     = 2
+//│     = 4
 
 class C3(a: Int) {
-  let a = 42
+  val a = 42
   class C4(a: Int) {
-    let a = 44
+    val a = 44
   }
 }
 //│ class C3(a: Int) {
@@ -115,7 +118,7 @@ let c4 = c3.C4(2)
 c3.a
 c4.a
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.114: 	let c4 = c3.C4(2)
+//│ ║  l.117: 	let c4 = c3.C4(2)
 //│ ╙──       	           ^^^
 //│ let c3: C3
 //│ let c4: error
@@ -125,6 +128,6 @@ c4.a
 //│ c4
 //│    = C4 {}
 //│ res
-//│     = 1
+//│     = 42
 //│ res
-//│     = 2
+//│     = 44

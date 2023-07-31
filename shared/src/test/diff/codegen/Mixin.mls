@@ -19,9 +19,7 @@ class Lit(n: Int)
 //│     if (this.#Add === undefined) {
 //│       class Add {
 //│         #lhs;
-//│         get lhs() { return this.#lhs; }
 //│         #rhs;
-//│         get rhs() { return this.#rhs; }
 //│         static $unapply(self) { return [self.#lhs, self.#rhs, ] }
 //│         constructor(lhs, rhs) {
 //│           this.#lhs = lhs;
@@ -38,7 +36,6 @@ class Lit(n: Int)
 //│     if (this.#Lit === undefined) {
 //│       class Lit {
 //│         #n;
-//│         get n() { return this.#n; }
 //│         static $unapply(self) { return [self.#n, ] }
 //│         constructor(n) {
 //│           this.#n = n;
@@ -68,9 +65,7 @@ class Lit(n: Int)
 //│ │ │       if (this.#Add === undefined) {
 //│ │ │         class Add {
 //│ │ │           #lhs;
-//│ │ │           get lhs() { return this.#lhs; }
 //│ │ │           #rhs;
-//│ │ │           get rhs() { return this.#rhs; }
 //│ │ │           static $unapply(self) { return [self.#lhs, self.#rhs, ] }
 //│ │ │           constructor(lhs, rhs) {
 //│ │ │             this.#lhs = lhs;
@@ -87,7 +82,6 @@ class Lit(n: Int)
 //│ │ │       if (this.#Lit === undefined) {
 //│ │ │         class Lit {
 //│ │ │           #n;
-//│ │ │           get n() { return this.#n; }
 //│ │ │           static $unapply(self) { return [self.#n, ] }
 //│ │ │           constructor(n) {
 //│ │ │             this.#n = n;
@@ -146,7 +140,7 @@ mixin EvalBase {
 //│ const typing_unit1 = new TypingUnit1;
 //│ globalThis.EvalBase = ((base) => typing_unit1.EvalBase(base));
 //│ // End of generated code
-//│ ┌ Block at Mixin.mls:111
+//│ ┌ Block at Mixin.mls:105
 //│ ├─┬ Prelude
 //│ │ ├── Code
 //│ │ │   class TypingUnit1 {
@@ -193,7 +187,6 @@ class Neg<A>(expr: A)
 //│     if (this.#Neg === undefined) {
 //│       class Neg {
 //│         #expr;
-//│         get expr() { return this.#expr; }
 //│         static $unapply(self) { return [self.#expr, ] }
 //│         constructor(expr) {
 //│           this.#expr = expr;
@@ -208,7 +201,7 @@ class Neg<A>(expr: A)
 //│ const typing_unit2 = new TypingUnit2;
 //│ globalThis.Neg = typing_unit2.Neg;
 //│ // End of generated code
-//│ ┌ Block at Mixin.mls:184
+//│ ┌ Block at Mixin.mls:178
 //│ ├─┬ Prelude
 //│ │ ├── Code
 //│ │ │   class TypingUnit2 {
@@ -220,7 +213,6 @@ class Neg<A>(expr: A)
 //│ │ │       if (this.#Neg === undefined) {
 //│ │ │         class Neg {
 //│ │ │           #expr;
-//│ │ │           get expr() { return this.#expr; }
 //│ │ │           static $unapply(self) { return [self.#expr, ] }
 //│ │ │           constructor(expr) {
 //│ │ │             this.#expr = expr;
@@ -272,7 +264,7 @@ mixin EvalNeg {
 //│ const typing_unit3 = new TypingUnit3;
 //│ globalThis.EvalNeg = ((base) => typing_unit3.EvalNeg(base));
 //│ // End of generated code
-//│ ┌ Block at Mixin.mls:243
+//│ ┌ Block at Mixin.mls:235
 //│ ├─┬ Prelude
 //│ │ ├── Code
 //│ │ │   class TypingUnit3 {
@@ -333,7 +325,7 @@ mixin EvalNegNeg {
 //│ const typing_unit4 = new TypingUnit4;
 //│ globalThis.EvalNegNeg = ((base) => typing_unit4.EvalNegNeg(base));
 //│ // End of generated code
-//│ ┌ Block at Mixin.mls:304
+//│ ┌ Block at Mixin.mls:296
 //│ ├─┬ Prelude
 //│ │ ├── Code
 //│ │ │   class TypingUnit4 {
@@ -392,7 +384,7 @@ module TestLang extends EvalBase, EvalNeg, EvalNegNeg
 //│ const typing_unit5 = new TypingUnit5;
 //│ globalThis.TestLang = typing_unit5.TestLang;
 //│ // End of generated code
-//│ ┌ Block at Mixin.mls:365
+//│ ┌ Block at Mixin.mls:357
 //│ ├─┬ Prelude
 //│ │ ├── Code
 //│ │ │   class TypingUnit5 {
@@ -441,7 +433,7 @@ TestLang.eval(mk(0))
 //│ // Query 2
 //│ res = TestLang.eval(mk(0));
 //│ // End of generated code
-//│ ┌ Block at Mixin.mls:424
+//│ ┌ Block at Mixin.mls:416
 //│ ├─┬ Prelude
 //│ │ ├── Code
 //│ │ │   class TypingUnit6 {}
@@ -492,7 +484,7 @@ class E(x: Int) extends BB, AA(x)
 //│ class E(x: Int)
 
 :js
-mixin Fooo(x: Int) { fun f = [x, this.x] }
+mixin Fooo(val x: Int) { fun f = [x, this.x] }
 //│ mixin Fooo(x: Int) {
 //│   this: {x: 'x}
 //│   fun f: (Int, 'x,)
@@ -526,7 +518,7 @@ mixin Fooo(x: Int) { fun f = [x, this.x] }
 //│ // End of generated code
 
 :js
-mixin Bazz(y: Int)
+mixin Bazz(val y: Int)
 //│ mixin Bazz(y: Int)
 //│ // Prelude
 //│ class TypingUnit15 {
@@ -592,7 +584,7 @@ mixin Base {
   fun x = y
 }
 //│ ╔══[ERROR] identifier not found: y
-//│ ║  l.592: 	  fun x = y
+//│ ║  l.584: 	  fun x = y
 //│ ╙──       	          ^
 //│ mixin Base() {
 //│   fun x: error
@@ -610,9 +602,9 @@ module Test extends Base
 //│   ReferenceError: Base is not defined
 
 
-mixin MA(a: Int)
-mixin MB(b1: Int, b2: Int)
-mixin MC(c: Int)
+mixin MA(val a: Int)
+mixin MB(val b1: Int, val b2: Int)
+mixin MC(val c: Int)
 //│ mixin MA(a: Int)
 //│ mixin MB(b1: Int, b2: Int)
 //│ mixin MC(c: Int)

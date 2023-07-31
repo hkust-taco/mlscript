@@ -34,7 +34,8 @@ sealed trait NuTypeSymbol { sym: TypeSymbol =>
   val nested: Ls[NuTypeDef] // nested class/mixin/module
   val superParameters: Ls[Term] // parameters that need to be passed to the `super()`
   val isPlainJSClass: Bool // is this a plain class in JS
-  val ctorParams: Opt[Ls[Str]] // parameters in the constructor
+  val ctorParams: Opt[Ls[(Str, Bool)]] // parameters in the constructor
+  val publicCtors: Ls[Str] // public(i.e., val-) parameters in the ctor
   val matchingFields: Ls[Str] = sym.body.collectFields
 }
 
@@ -112,11 +113,12 @@ final case class NewClassMemberSymbol(
 final case class NewClassSymbol(
     lexicalName: Str,
     params: Ls[Str],
-    ctorParams: Opt[Ls[Str]],
+    ctorParams: Opt[Ls[(Str, Bool)]],
     body: Type,
     methods: Ls[MethodDef[Left[Term, Type]]],
     ctor: Ls[Statement],
     superParameters: Ls[Term],
+    publicCtors: Ls[Str],
     nested: Ls[NuTypeDef],
     isNested: Bool,
     isPlainJSClass: Bool
@@ -134,6 +136,7 @@ final case class MixinSymbol(
     body: Type,
     methods: Ls[MethodDef[Left[Term, Type]]],
     ctor: Ls[Statement],
+    publicCtors: Ls[Str],
     nested: Ls[NuTypeDef],
     isNested: Bool
 ) extends TypeSymbol
@@ -147,7 +150,7 @@ final case class MixinSymbol(
   // But the variable name is not sure when we create the symbol object
   override val superParameters: Ls[Term] = Nil
   val isPlainJSClass: Bool = false
-  val ctorParams: Opt[Ls[Str]] = N
+  val ctorParams: Opt[Ls[(Str, Bool)]] = N
 }
 
 final case class ModuleSymbol(
@@ -166,7 +169,8 @@ final case class ModuleSymbol(
   // Modules should have fixed names determined by users
   override def runtimeName: Str = lexicalName
   val isPlainJSClass: Bool = false
-  val ctorParams: Opt[Ls[Str]] = N
+  val ctorParams: Opt[Ls[(Str, Bool)]] = N
+  val publicCtors: Ls[Str] = Nil
 }
 
 // capture runtime symbols in the outside module/class/mixin

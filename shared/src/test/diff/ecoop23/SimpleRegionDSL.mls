@@ -6,14 +6,14 @@
 
 // ******************* Initial System *******************
 
-class Vector(x: Int, y: Int)
+class Vector(val x: Int, val y: Int)
 //│ class Vector(x: Int, y: Int)
 
-class Circle(radius: Int)
-class Outside[out Region](a: Region)
-class Union[out Region](a: Region, b: Region)
-class Intersect[out Region](a: Region, b: Region)
-class Translate[out Region](v: Vector, a: Region)
+class Circle(val radius: Int)
+class Outside[out Region](val a: Region)
+class Union[out Region](val a: Region, val b: Region)
+class Intersect[out Region](val a: Region, val b: Region)
+class Translate[out Region](val v: Vector, val a: Region)
 //│ class Circle(radius: Int)
 //│ class Outside[Region](a: Region)
 //│ class Union[Region](a: Region, b: Region)
@@ -415,7 +415,7 @@ Lang.contains(mk(100), Vector(0, 0))
 //│ ║  l.113: 	    if a is
 //│ ║         	       ^
 //│ ╟── Note: type parameter Region is defined at:
-//│ ║  l.13: 	class Outside[out Region](a: Region)
+//│ ║  l.13: 	class Outside[out Region](val a: Region)
 //│ ╙──      	                  ^^^^^^
 //│ error | false | true
 //│ res

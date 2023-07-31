@@ -27,7 +27,6 @@ class A(x0: Int) {
 //│     if (this.#A === undefined) {
 //│       class A {
 //│         #x0;
-//│         get x0() { return this.#x0; }
 //│         #x3;
 //│         get x3() { return this.#x3; }
 //│         static $unapply(self) { return [self.#x0, ] }
@@ -119,19 +118,77 @@ AA().f(0)
 //│ res
 //│     = 42
 
+:js
 class B(x: Int, val y: Int)
 //│ class B(x: Int, y: Int)
+//│ // Prelude
+//│ class TypingUnit4 {
+//│   #B;
+//│   constructor() {
+//│   }
+//│   get B() {
+//│     const outer = this;
+//│     if (this.#B === undefined) {
+//│       class B {
+//│         #x;
+//│         #y;
+//│         get y() { return this.#y; }
+//│         static $unapply(self) { return [self.#x, self.#y, ] }
+//│         constructor(x, y) {
+//│           this.#x = x;
+//│           this.#y = y;
+//│         }
+//│       };
+//│       this.#B = ((x, y) => Object.freeze(new B(x, y)));
+//│       this.#B.class = B;
+//│     }
+//│     return this.#B;
+//│   }
+//│ }
+//│ const typing_unit4 = new TypingUnit4;
+//│ globalThis.B = typing_unit4.B;
+//│ // End of generated code
 
 // FIXME: should be rejected
 B(0, 0).x
 //│ Int
 //│ res
-//│     = 0
+//│     = undefined
 
 B(0, 0).y
 //│ Int
 //│ res
 //│     = 0
+
+// TODO: is this expected?
+:js
+class C {
+  constructor(val x: Int, y: Int)
+}
+//│ class C
+//│ // Prelude
+//│ class TypingUnit7 {
+//│   #C;
+//│   constructor() {
+//│   }
+//│   get C() {
+//│     const outer = this;
+//│     if (this.#C === undefined) {
+//│       class C {
+//│         #x;
+//│         get x() { return this.#x; }
+//│         constructor(x, y) {
+//│           this.#x = x;
+//│         }
+//│       };
+//│       this.#C = C;
+//│     }
+//│     return this.#C;
+//│   }
+//│ }
+//│ const typing_unit7 = new TypingUnit7;
+//│ globalThis.C = typing_unit7.C;
+//│ // End of generated code
 
 // TODO: shoud be rejected?
 fun f(val x: Int) = x + 1

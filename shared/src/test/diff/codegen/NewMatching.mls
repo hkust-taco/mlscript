@@ -1,7 +1,7 @@
 :NewDefs
 
 class V0()
-class V1(x: Int)
+class V1(val x: Int)
 class V2(x: Int, y: Int)
 class Pos(x: Int)
 class V22(c1: V2, c2: V2)
@@ -83,7 +83,7 @@ sum(42)
 //│ res
 //│     = -1
 
-class Some[T](value: T)
+class Some[T](val value: T)
 //│ class Some[T](value: T)
 
 :js

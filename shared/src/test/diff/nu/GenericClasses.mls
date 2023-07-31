@@ -11,7 +11,7 @@ fun f(x) = if x is C then x
 // f(C : #C)
 
 
-class C<A>(a: A)
+class C<A>(val a: A)
 //│ class C[A](a: A)
 
 let c = C(1)
@@ -43,7 +43,7 @@ class C[A](n: A) {
 //│ }
 
 
-class Some<A>(value: A) {
+class Some<A>(val value: A) {
   fun get = value
   fun toArray = [value]
   fun map(f) = Some(f(value))
@@ -372,7 +372,7 @@ TestBad().foo2
 
 
 
-class Weird(x: C<'a>)
+class Weird(val x: C<'a>)
 //│ class Weird(x: C['a])
 
 let w = Weird(c)

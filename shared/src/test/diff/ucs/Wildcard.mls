@@ -3,14 +3,14 @@
 
 type Option[T] = None | Some[T]
 module None
-class Some[T](value: T)
+class Some[T](val value: T)
 //│ type Option[T] = None | Some[T]
 //│ module None
 //│ class Some[T](value: T)
 
 type Either[A, B] = Left[A] | Right[B]
-class Left[A](leftValue: A)
-class Right[B](rightValue: B)
+class Left[A](val leftValue: A)
+class Right[B](val rightValue: B)
 //│ type Either[A, B] = Left[A] | Right[B]
 //│ class Left[A](leftValue: A)
 //│ class Right[B](rightValue: B)

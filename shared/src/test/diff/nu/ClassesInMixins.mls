@@ -3,7 +3,7 @@
 
 
 mixin Test {
-  class Foo(n: Int)
+  class Foo(val n: Int)
   val f = Foo(123)
 }
 //│ mixin Test() {

@@ -9,7 +9,7 @@ mixin Over {
 //│ }
 
 
-class Base1(p: Int) extends Over {
+class Base1(val p: Int) extends Over {
   fun test = [p, this.p]
   fun test2 = super.p
 }

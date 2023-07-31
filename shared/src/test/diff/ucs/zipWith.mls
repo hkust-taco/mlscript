@@ -11,7 +11,7 @@ let nothing: nothing
 module None {
   fun value = nothing
 }
-class Some[out A](value: A)
+class Some[out A](val value: A)
 //│ module None {
 //│   fun value: nothing
 //│ }
@@ -21,7 +21,7 @@ type List[out A] = Cons[A] | Nil
 module Nil {
   fun toArray = []
 }
-class Cons[out A](head: A, tail: List[A]) {
+class Cons[out A](val head: A, val tail: List[A]) {
   fun toArray: Array[anything]
   fun toArray = [head, tail.toArray]
 }

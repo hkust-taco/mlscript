@@ -1,7 +1,7 @@
 :NewDefs
 
 :js
-class Test(n: Int) {
+class Test(val n: Int) {
   fun inc = Test(n + 1)
 }
 //│ class Test(n: Int) {
@@ -59,7 +59,7 @@ module Test3 {
 Test2(0).inc.n
 //│ Int
 //│ res
-//│     = 1
+//│     = undefined
 
 class C[A](n: A) {
   fun f = g
@@ -131,7 +131,7 @@ M1.foo
 :e
 :js
 module M2 {
-  let m = 100
+  val m = 100
   fun foo(y) =
     fun bar(x) = x + y + this.m
     bar(10)
@@ -152,8 +152,11 @@ module M2 {
 //│     const outer = this;
 //│     if (this.#M2 === undefined) {
 //│       class M2 {
+//│         #m;
+//│         get m() { return this.#m; }
 //│         constructor() {
-//│           const m = 100;
+//│           this.#m = 100;
+//│           const m = this.#m;
 //│         }
 //│         foo(y) {
 //│           const self = this;
@@ -176,5 +179,5 @@ module M2 {
 M2.foo(1)
 //│ Int
 //│ res
-//│     = NaN
+//│     = 111
 

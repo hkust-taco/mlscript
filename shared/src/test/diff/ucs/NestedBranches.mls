@@ -1,13 +1,13 @@
 :NewParser
 :NewDefs
 
-class Some[A](value: A)
+class Some[A](val value: A)
 module None
-class Left[A](leftValue: A)
-class Right[A](rightValue: A)
+class Left[A](val leftValue: A)
+class Right[A](val rightValue: A)
 module Nil
-class Cons[A](head: A, tail: Cons[A] | Nil)
-class Pair[A, B](fst: A, snd: B)
+class Cons[A](val head: A, val tail: Cons[A] | Nil)
+class Pair[A, B](val fst: A, val snd: B)
 //│ class Some[A](value: A)
 //│ module None
 //│ class Left[A](leftValue: A)

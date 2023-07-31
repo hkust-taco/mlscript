@@ -38,7 +38,7 @@ class B { let a = 1 : Int }
 //│   let a: Int
 //│ }
 
-class C(a: Int, b: Int) extends B, M
+class C(val a: Int, val b: Int) extends B, M
 //│ class C(a: Int, b: Int) extends B {
 //│   let b: "hi"
 //│ }

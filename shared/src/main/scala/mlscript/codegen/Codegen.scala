@@ -861,7 +861,7 @@ final case class JSClassNewDecl(
         buffer += s"  #${f};"
       })
       accessors.distinct.foreach(f => {
-        buffer += s"  #${f};"
+        if (!privateMems.contains(f)) buffer += s"  #${f};"
         buffer += s"  get ${f}() { return this.#${f}; }"
       })
       if (requireUnapply) {
@@ -907,7 +907,7 @@ final case class JSClassNewDecl(
         SourceCode(s"class $name extends ") ++ base.toSourceCode ++
           SourceCode(" {") + constructor + methodsSourceCode + epilogue
       case None =>
-        if (fields.isEmpty && methods.isEmpty && implements.isEmpty && initStmts.isEmpty && !requireUnapply) {
+        if (fields.isEmpty && methods.isEmpty && implements.isEmpty && accessors.isEmpty && initStmts.isEmpty && !requireUnapply) {
           SourceCode(s"class $name {}")
         } else {
           SourceCode(

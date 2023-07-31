@@ -281,9 +281,9 @@ class Desugarer extends TypeDefs { self: Typer =>
       case app @ App(
         App(
           opVar @ Var(op),
-          Tup((_ -> Fld(_, _, lhs)) :: Nil)
+          Tup((_ -> Fld(_, _, _, lhs)) :: Nil)
         ),
-        Tup((_ -> Fld(_, _, rhs)) :: Nil)
+        Tup((_ -> Fld(_, _, _, rhs)) :: Nil)
       ) =>
         ctx.tyDefs.get(op) match {
           case N =>
@@ -418,8 +418,8 @@ class Desugarer extends TypeDefs { self: Typer =>
       ts.flatMap {
         case isApp @ App(
           App(Var("is"),
-              Tup(_ -> Fld(_, _, scrutinee) :: Nil)),
-          Tup(_ -> Fld(_, _, pattern) :: Nil)
+              Tup(_ -> Fld(_, _, _, scrutinee) :: Nil)),
+          Tup(_ -> Fld(_, _, _, pattern) :: Nil)
         ) =>
           // This is an inline `x is Class` match test.
           val inlineMatchLoc = isApp.toLoc

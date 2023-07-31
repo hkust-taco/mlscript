@@ -17,7 +17,7 @@ class Foo2[A](x: A) {
 //│ }
 
 
-class Foo3[A](x: A) {
+class Foo3[A](val x: A) {
   fun test = Foo3(1)
   fun foo = Foo3
 }

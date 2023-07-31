@@ -20,7 +20,7 @@ mixin ComparePoint {
 //│ }
 
 
-class Color(str: Str) {
+class Color(val str: Str) {
   fun equals(that) = str === that.str
 }
 //│ class Color(str: Str) {
@@ -86,7 +86,7 @@ mixin CompareNested {
 
 
 
-class MyPoint(x: Int, y: Int, color: Color, parent: Some[MyPoint] | None)
+class MyPoint(val x: Int, val y: Int, val color: Color, val parent: Some[MyPoint] | None)
 //│ class MyPoint(x: Int, y: Int, color: Color, parent: None | Some[MyPoint])
 
 

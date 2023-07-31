@@ -122,7 +122,7 @@ mixin Test[A] {
 //│   fun foo: A -> A
 //│ }
 
-class C(arg: Int) extends Test
+class C(val arg: Int) extends Test
 //│ class C(arg: Int) {
 //│   fun bar: (Int | 'A, Int | 'A,)
 //│   fun baz: Int

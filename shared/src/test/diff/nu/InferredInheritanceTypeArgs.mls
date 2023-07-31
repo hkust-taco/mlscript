@@ -47,7 +47,7 @@ class A3(s: Int, t: Bool) extends Test2
 //│   fun x: (Int | 'S, Bool,)
 //│ }
 
-class P(p: Int) { 
+class P(val p: Int) { 
     fun foo(x) = x + p 
 }
 //│ class P(p: Int) {
@@ -91,7 +91,7 @@ c2.p
 //│     = 3
 
 
-class Test[A](x: A)
+class Test[A](val x: A)
 //│ class Test[A](x: A)
 
 class A(a: Int) extends Test(a)

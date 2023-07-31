@@ -468,7 +468,7 @@ fun f(x: Base) = if x is
 //│ fun f: (x: Base,) -> (0 | 1)
 
 trait Base: Foo | Bar
-class Foo[A](aa: (A, A)) extends Base
+class Foo[A](val aa: (A, A)) extends Base
 class Bar[B](f: B => B) extends Base
 //│ trait Base: Bar[?] | Foo[anything]
 //│ class Foo[A](aa: (A, A,)) extends Base
@@ -647,7 +647,7 @@ e: ZL & WP
 //│     = <no result>
 //│       g is not implemented
 
-class Bs(a: Bool) {
+class Bs(val a: Bool) {
   fun foo(x) = x + 1
 }
 //│ class Bs(a: Bool) {
@@ -729,8 +729,8 @@ class Eh3 extends Bs(false), Test
 //│ ║  l.722: 	class Eh extends Bs(1)
 //│ ║         	                    ^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.650: 	class Bs(a: Bool) {
-//│ ╙──       	            ^^^^
+//│ ║  l.650: 	class Bs(val a: Bool) {
+//│ ╙──       	                ^^^^
 //│ ╔══[ERROR] class Bs expects 1 parameter(s); got 0
 //│ ║  l.723: 	class Eh1 extends Bs
 //│ ╙──       	                  ^^
@@ -777,7 +777,7 @@ class Ca(a: Int) extends Oth {
 //│   fun foo: 1
 //│ }
 
-class Cx(a: 1 | 2, b: Bool) extends Ca(a)
+class Cx(a: 1 | 2, val b: Bool) extends Ca(a)
 //│ class Cx(a: 1 | 2, b: Bool) extends Ca, Oth, Test {
 //│   fun bar: forall 'a. 'a -> 'a
 //│   fun cool: anything -> false
@@ -825,7 +825,7 @@ class Bc12() extends Bc1(1), Bc2(true)
 //│   unexpected parent symbol new class Bc2.
 
 class Bc02() extends Bc1(1:Int) {
-  let foo = 2
+  val foo = 2
 }
 //│ class Bc02() extends Bc1 {
 //│   let foo: 2
@@ -834,7 +834,7 @@ class Bc02() extends Bc1(1:Int) {
 Bc02().foo
 //│ 2
 //│ res
-//│     = 1
+//│     = 2
 
 :e
 class Bc31(baz: Bool) extends Bc3
@@ -1179,7 +1179,7 @@ trait TA[A] { let a : A }
 //│   let a: A
 //│ }
 
-class G1[A, B](a: A, b: B) extends TA[A]
+class G1[A, B](val a: A, val b: B) extends TA[A]
 //│ class G1[A, B](a: A, b: B) extends TA
 
 class G2[T](x: T) extends G1[T, Int](x, 1)

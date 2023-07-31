@@ -2,7 +2,7 @@
 
 
 mixin Base {
-  let base = 42
+  val base = 42
 }
 //│ mixin Base() {
 //│   let base: 42
@@ -31,7 +31,7 @@ Base0
 Base0.test
 //│ 42
 //│ res
-//│     = undefined
+//│     = 42
 
 
 :e
@@ -58,7 +58,7 @@ class Base1(base: Int) extends BaseTest {
 //│ }
 
 
-mixin BaseOf(base: Int) {
+mixin BaseOf(val base: Int) {
   fun original = base
 }
 //│ mixin BaseOf(base: Int) {

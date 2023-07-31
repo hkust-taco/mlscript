@@ -1,8 +1,8 @@
 :NewDefs
 
-class Some[T](value: T)
-class Left[T](value: T)
-class Right[T](value: T)
+class Some[T](val value: T)
+class Left[T](val value: T)
+class Right[T](val value: T)
 //│ class Some[T](value: T)
 //│ class Left[T](value: T)
 //│ class Right[T](value: T)

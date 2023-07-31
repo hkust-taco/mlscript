@@ -1,7 +1,7 @@
 :NewDefs
 
 
-class A(n: Int)
+class A(val n: Int)
 //│ class A(n: Int)
 
 A
@@ -67,15 +67,15 @@ class C {
 
 
 // TODO
-class Base0(n) {
+class Base0(val n) {
   fun me = this
   fun my = this.n
   fun mine = my
   fun oops = this.my
 }
 //│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.70: 	class Base0(n) {
-//│ ╙──      	            ^
+//│ ║  l.70: 	class Base0(val n) {
+//│ ╙──      	                ^
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
 //│ ║  l.74: 	  fun oops = this.my
 //│ ╙──      	                 ^^^
@@ -128,7 +128,7 @@ class Base1(base: Int) {
 //│   fun getBase2: Int
 //│ }
 
-class Base1(base: Int) {
+class Base1(val base: Int) {
   fun getBase1 = base
   fun me = this
   fun foo(x) = base + x
@@ -181,7 +181,7 @@ b : Base1
 //│     = Base1 {}
 
 
-class Rec(n: Int) {
+class Rec(val n: Int) {
   fun go = Rec(n + 1)
 }
 //│ class Rec(n: Int) {

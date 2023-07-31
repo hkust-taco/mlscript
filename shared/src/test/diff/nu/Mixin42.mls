@@ -28,7 +28,7 @@ C1().test
 
 
 
-class C1(factor: Int) extends M1, M2
+class C1(val factor: Int) extends M1, M2
 C1(2).test
 //│ class C1(factor: Int) {
 //│   fun test: Int

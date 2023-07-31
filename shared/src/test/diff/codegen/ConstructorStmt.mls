@@ -74,7 +74,6 @@ class A(a: Int) {
 //│     if (this.#A === undefined) {
 //│       class A {
 //│         #a;
-//│         get a() { return this.#a; }
 //│         static $unapply(self) { return [self.#a, ] }
 //│         constructor(a) {
 //│           this.#a = a;
@@ -137,7 +136,7 @@ class Foo {
   this: { x: Int }
 }
 //│ ╔══[ERROR] Type `#Foo` does not contain member `x`
-//│ ║  l.137: 	  this: { x: Int }
+//│ ║  l.136: 	  this: { x: Int }
 //│ ╙──       	          ^
 //│ class Foo
 //│ // Prelude
@@ -164,10 +163,10 @@ class Bar {
   super: { x: Int }
 }
 //│ ╔══[ERROR] Illegal use of `super`
-//│ ║  l.164: 	  super: { x: Int }
+//│ ║  l.163: 	  super: { x: Int }
 //│ ╙──       	  ^^^^^
 //│ ╔══[ERROR] Type `#Bar` does not contain member `x`
-//│ ║  l.164: 	  super: { x: Int }
+//│ ║  l.163: 	  super: { x: Int }
 //│ ╙──       	           ^
 //│ class Bar
 //│ // Prelude
