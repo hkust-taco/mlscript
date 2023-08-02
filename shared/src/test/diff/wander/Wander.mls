@@ -17,13 +17,84 @@ f(1, 2, 3)
 //│     = -3
 
 :p
+:d
 f(x: 1, y: 2, z: 3)
 //│ |f|(|x|#:| |1|,| |y|#:| |2|,| |z|#:| |3|)|
 //│ AST: TypingUnit(App(Var(f), Tup(x: IntLit(1), y: IntLit(2), z: IntLit(3))))
 //│ Parsed: f (x: 1, y: 2, z: 3,);
+//│ 0. Typing TypingUnit(List(f (x: 1, y: 2, z: 3,)))
+//│ | infosList()
+//│ | List()
+//│ | let bindings should be handled before this line
+//│ | Typing unit statements
+//│ | | 0. Typing term f (x: 1, y: 2, z: 3,)
+//│ | | | applying-to-function => f<class mlscript.Var>x: 1, y: 2, z: 3,<class mlscript.Tup>
+//│ | | | now we should desugar in case of named args!
+//│ | | | 0. Typing term f
+//│ | | | | bruh
+//│ | | | 0. : ‹∀ 0. ((α43', α44', α45',) -> α49')›
+//│ | | | f_ty => ‹∀ 0. ((α43', α44', α45',) -> α49')›
+//│ | | | 0. Typing term 1
+//│ | | | 0. : #1<Int,Num,Object>
+//│ | | | 0. Typing term 2
+//│ | | | 0. : #2<Int,Num,Object>
+//│ | | | 0. Typing term 3
+//│ | | | 0. : #3<Int,Num,Object>
+//│ | | | a_ty => (x: #1<Int,Num,Object>, y: #2<Int,Num,Object>, z: #3<Int,Num,Object>,)
+//│ | | | CONSTRAIN ‹∀ 0. ((α43', α44', α45',) -> α49')› <! ((x: #1<Int,Num,Object>, y: #2<Int,Num,Object>, z: #3<Int,Num,Object>,) -> α62)
+//│ | | |   where 
+//│ 		α43' <: Int
+//│ 		α44' <: Int
+//│ 		α45' <: Int
+//│ 		α49' :> Int
+//│ | | | 0. C ‹∀ 0. ((α43', α44', α45',) -> α49')› <! ((x: #1<Int,Num,Object>, y: #2<Int,Num,Object>, z: #3<Int,Num,Object>,) -> α62)    (0)
+//│ | | | | could be distribbed: Set(α49')
+//│ | | | | cannot be distribbed: Set(α43', α44', α45')
+//│ | | | | inner: ‹∀ 0. α49'›
+//│ | | | | raised: ((α43', α44', α45',) -> ‹∀ 1. α49_63''›)
+//│ | | | |   where: 
+//│ 		α43' <: Int
+//│ 		α44' <: Int
+//│ 		α45' <: Int
+//│ 		α49_63'' :> Int
+//│ | | | | DISTRIB-L'  ~>  ‹∀ 0. ((α43', α44', α45',) -> ‹∀ 1. α49_63''›)›
+//│ | | | | 0. C ‹∀ 0. ((α43', α44', α45',) -> ‹∀ 1. α49_63''›)› <! ((x: #1<Int,Num,Object>, y: #2<Int,Num,Object>, z: #3<Int,Num,Object>,) -> α62)    (2)
+//│ | | | | | could be distribbed: Set()
+//│ | | | | | INST [0]   ‹∀ 0. ((α43', α44', α45',) -> ‹∀ 1. α49_63''›)›
+//│ | | | | |   where  
+//│ 		α43' <: Int
+//│ 		α44' <: Int
+//│ 		α45' <: Int
+//│ 		α49_63'' :> Int
+//│ | | | | | TO [0] ~>  ((α43_64, α44_65, α45_66,) -> ‹∀ 1. α49_63''›)
+//│ | | | | |   where  
+//│ 		α49_63'' :> Int
+//│ 		α43_64 <: Int
+//│ 		α44_65 <: Int
+//│ 		α45_66 <: Int
+//│ | | | | | 0. C ((α43_64, α44_65, α45_66,) -> ‹∀ 1. α49_63''›) <! ((x: #1<Int,Num,Object>, y: #2<Int,Num,Object>, z: #3<Int,Num,Object>,) -> α62)    (5)
+//│ | | | | | | 0. C (x: #1<Int,Num,Object>, y: #2<Int,Num,Object>, z: #3<Int,Num,Object>,) <! (α43_64, α44_65, α45_66,)    (3)
+//│ | | | | | | | 0. C #1<Int,Num,Object> <! α43_64    (4)
+//│ | | | | | | | | NEW α43_64 LB (0)
+//│ | | | | | | | | 0. C #1<Int,Num,Object> <! Int    (7)
+//│ | | | | | | | 0. C #2<Int,Num,Object> <! α44_65    (4)
+//│ | | | | | | | | NEW α44_65 LB (0)
+//│ | | | | | | | | 0. C #2<Int,Num,Object> <! Int    (7)
+//│ | | | | | | | 0. C #3<Int,Num,Object> <! α45_66    (4)
+//│ | | | | | | | | NEW α45_66 LB (0)
+//│ | | | | | | | | 0. C #3<Int,Num,Object> <! Int    (7)
+//│ | | | | | | 0. C ‹∀ 1. α49_63''› <! α62    (3)
+//│ | | | | | | | NEW α62 LB (0)
+//│ | | 0. : α62
+//│ | : Some(α62)
+//│ ======== TYPED ========
+//│ res: Some(α62) where 
+//│ 		α62 :> ‹∀ 1. α49_63''›
+//│ 		α49_63'' :> Int
 //│ Int
 //│ res
 //│     = -3
+
 
 :p
 f(y: 2, x: 1, z: 3)
@@ -33,3 +104,82 @@ f(y: 2, x: 1, z: 3)
 //│ Int
 //│ res
 //│     = 3
+
+fun g(x, y) = x + y
+//│ fun g: (Int, Int,) -> Int
+
+:p
+f(g(1, 2), g(2, 3), g(3, 4))
+//│ |f|(|g|(|1|,| |2|)|,| |g|(|2|,| |3|)|,| |g|(|3|,| |4|)|)|
+//│ AST: TypingUnit(App(Var(f), Tup(_: App(Var(g), Tup(_: IntLit(1), _: IntLit(2))), _: App(Var(g), Tup(_: IntLit(2), _: IntLit(3))), _: App(Var(g), Tup(_: IntLit(3), _: IntLit(4))))))
+//│ Parsed: f (g (1, 2,), g (2, 3,), g (3, 4,),);
+//│ Int
+//│ res
+//│     = -14
+
+let x = 1 in log(x + 2)
+//│ ╔══[PARSE ERROR] Expected end of input; found 'in' keyword instead
+//│ ║  l.120: 	let x = 1 in log(x + 2)
+//│ ╙──       	          ^^
+//│ let x: 1
+//│ x
+//│   = 1
+
+fun g(x, y) = x + y
+//│ fun g: (Int, Int,) -> Int
+
+
+let x = 2
+let y = 3
+g(x, y)
+//│ let x: 2
+//│ let y: 3
+//│ Int
+//│ x
+//│   = 2
+//│ y
+//│   = 3
+//│ res
+//│     = 5
+
+fun g(x) =
+  let y = 2
+  x
+//│ fun g: forall 'a. 'a -> 'a
+
+fun xx(1, 2, 3) = 1 + 2 + 3
+//│ fun xx: (1, 2, 3,) -> Int
+
+xx
+//│ (1, 2, 3,) -> Int
+//│ res
+//│     = [Function: xx]
+
+fun g(xx, yy, zz) = xx + yy + zz
+g(1, 2, 3)
+//│ fun g: (Int, Int, Int,) -> Int
+//│ Int
+//│ res
+//│     = [Function: g3]
+
+let zz = 3
+let xx = 1
+let yy = 2
+g(xx, yy, zz)
+//│ let zz: 3
+//│ let xx: 1
+//│ let yy: 2
+//│ Int
+//│ zz
+//│    = 3
+//│ xx
+//│    = 1
+//│ yy
+//│    = 2
+//│ res
+//│     = 6
+
+xx
+//│ 1
+//│ res
+//│     = 1
