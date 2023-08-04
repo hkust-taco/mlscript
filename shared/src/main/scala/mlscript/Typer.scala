@@ -993,6 +993,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
         term.desugaredTerm = S(desug)
         typeTerm(desug)
       case App(f, a) =>
+        println("applying-to-function => " + f + "<" + f.getClass() + ">" + a + "<" + a.getClass() + ">")
+        println("now we should desugar in case of named args!")
         val f_ty = typeMonomorphicTerm(f)
         val a_ty = {
           def typeArg(a: Term): ST =
