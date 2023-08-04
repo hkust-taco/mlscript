@@ -283,7 +283,7 @@ class E(x: Int) {
 //│               }
 //│               get sum() {
 //│                 const y = this.#y;
-//│                 return outer1.x + y;
+//│                 return outer1.#x + y;
 //│               }
 //│               get G() {
 //│                 const outer2 = this;
@@ -296,7 +296,7 @@ class E(x: Int) {
 //│                     }
 //│                     get sum() {
 //│                       const z = this.#z;
-//│                       return outer1.x + outer2.y + z;
+//│                       return outer1.#x + outer2.#y + z;
 //│                     }
 //│                   };
 //│                   this.#G = ((z) => Object.freeze(new G(z)));
@@ -353,7 +353,7 @@ gg.sum
 //│ gg
 //│    = G {}
 //│ res
-//│     = NaN
+//│     = 6
 
 :js
 class F() {

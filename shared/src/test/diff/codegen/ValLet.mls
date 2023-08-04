@@ -193,3 +193,47 @@ class C {
 // TODO: shoud be rejected?
 fun f(val x: Int) = x + 1
 //│ fun f: (x: Int,) -> Int
+
+class D(x: Int) {
+  let x = 1
+}
+if D(42) is D(x) then x else 0
+//│ class D(x: Int) {
+//│   let x: 1
+//│ }
+//│ 0 | 1
+//│ res
+//│     = 1
+
+class E(x: Int) {
+  val x = 2
+}
+if E(42) is E(x) then x else 0
+//│ class E(x: Int) {
+//│   let x: 2
+//│ }
+//│ 0 | 2
+//│ res
+//│     = 2
+
+class F(val x: Int) {
+  let x = 3
+}
+F(0).x
+//│ class F(x: Int) {
+//│   let x: 3
+//│ }
+//│ 3
+//│ res
+//│     = 3
+
+class G(val x: Int) {
+  val x = 4
+}
+G(1).x
+//│ class G(x: Int) {
+//│   let x: 4
+//│ }
+//│ 4
+//│ res
+//│     = 4

@@ -787,7 +787,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
 
     val ctorParams = sym.ctorParams.fold(
       fields.map { f =>
-          memberList += NewClassMemberSymbol(f, Some(false), false, false).tap(nuTypeScope.register)
+          memberList += NewClassMemberSymbol(f, Some(false), false, !sym.publicCtors.contains(f)).tap(nuTypeScope.register)
           constructorScope.declareValue(f, Some(false), false).runtimeName
         }
       )(lst => lst.map { p =>
@@ -873,7 +873,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
             case Some(sym: NewClassMemberSymbol) => sym
             case _ => throw new AssertionError(s"error when handling $nme")
           }
-          if (visitedSymbols.contains(sym)) {
+          if (visitedSymbols.contains(sym) || ctorParams.contains(nme)) { // This field is used in other methods, or it overrides the ctor parameter
             privateMems += nme
             visitedSymbols -= sym
             Ls[JSStmt](
