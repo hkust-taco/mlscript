@@ -189,9 +189,9 @@ class Bar {
 
 :js
 class Baz() {
-  let x = 123
+  val x = 123
   log((1, x))
-  let y =
+  val y =
     log((2, x))
     x + 1
   log((3, y))
@@ -209,20 +209,26 @@ class Baz() {
 //│     const outer = this;
 //│     if (this.#Baz === undefined) {
 //│       class Baz {
+//│         #x;
+//│         get x() { return this.#x; }
+//│         #y;
+//│         get y() { return this.#y; }
 //│         static $unapply(self) { return [] }
 //│         constructor() {
-//│           const x = 123;
+//│           this.#x = 123;
+//│           const x = this.#x;
 //│           log([
 //│             1,
 //│             x
 //│           ]);
-//│           const y = (() => {
+//│           this.#y = (() => {
 //│             log([
 //│               2,
 //│               x
 //│             ]);
 //│             return x + 1;
 //│           })();
+//│           const y = this.#y;
 //│           log([
 //│             3,
 //│             y
@@ -252,7 +258,7 @@ log((baz.x, baz.y))
 //│ res
 //│     = undefined
 //│ // Output
-//│ [ undefined, undefined ]
+//│ [ 123, 124 ]
 
 :js
 class Q() {
