@@ -1,0 +1,33 @@
+:NewDefs
+
+class Foo() {
+  virtual fun f(x: Int) = x + 1
+  val g: Int = 0
+}
+//│ class Foo() {
+//│   fun f: (x: Int,) -> Int
+//│   let g: Int
+//│ }
+
+class Bar() extends Foo {
+  fun f(x: Int) = x + 2
+}
+//│ class Bar() extends Foo {
+//│   fun f: (x: Int,) -> Int
+//│   let g: Int
+//│ }
+
+Bar().f(40)
+//│ Int
+//│ res
+//│     = 42
+
+// TODO: reject
+class Baz() extends Foo {
+  val g = 1
+}
+//│ class Baz() extends Foo {
+//│   fun f: (x: Int,) -> Int
+//│   let g: 1
+//│ }
+
