@@ -536,7 +536,10 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     }
     ctx ++= infos
     ctx ++= sigInfos
-    
+    println("infos => " + infos)
+    println("sigInfos => " + sigInfos)
+    println("ctx => " + ctx)
+
     val tpdFunSigs = sigInfos.mapValues(_.complete() match {
       case res: TypedNuFun if res.fd.isDecl =>
         TopType

@@ -8,6 +8,8 @@ import scala.util.chaining._
 import scala.annotation.tailrec
 import mlscript.utils._, shorthands._
 import mlscript.Message._
+import mlscript.codegen.Helpers
+import mlscript.ucs.helpers
 
 /** A class encapsulating type inference state.
  *  It uses its own internal representation of types and type variables, using mutable data structures.
@@ -995,37 +997,100 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
       case App(f, a) =>
         println("applying-to-function => " + f + "<" + f.getClass() + ">" + a + "<" + a.getClass() + ">")
         println("now we should desugar in case of named args!")
-        val f_ty = typeMonomorphicTerm(f)
-        val a_ty = {
-          def typeArg(a: Term): ST =
-            if (!generalizeArguments) typePolymorphicTerm(a)
-            else ctx.poly { implicit ctx => typePolymorphicTerm(a) }
-          a match {
-            case tup @ Tup(as) =>
-              TupleType(as.map { case (n, Fld(mut, spec, a)) => // TODO handle mut?
-                // assert(!mut)
-                val fprov = tp(a.toLoc, "argument")
-                val tym = typeArg(a)
-                (n, tym.toUpper(fprov))
-              })(as match { // TODO dedup w/ general Tup case
-                case Nil | ((N, _) :: Nil) => noProv
-                case _ => tp(tup.toLoc, "argument list")
-              })
-            case _ => // can happen in the old parser
-              typeArg(a)
+        /////////////////////////////
+        def typeUnnamedApp(f: Term, a: Term) = {
+          val f_ty = typeMonomorphicTerm(f)
+          val a_ty = {
+            def typeArg(a: Term): ST =
+              if (!generalizeArguments) typePolymorphicTerm(a)
+              else ctx.poly { implicit ctx => typePolymorphicTerm(a) }
+            a match {
+              case tup @ Tup(as) =>
+                TupleType(as.map { case (n, Fld(mut, spec, a)) => // TODO handle mut?
+                  // assert(!mut)
+                  val fprov = tp(a.toLoc, "argument")
+                  val tym = typeArg(a)
+                  (n, tym.toUpper(fprov))
+                })(as match { // TODO dedup w/ general Tup case
+                  case Nil | ((N, _) :: Nil) => noProv
+                  case _ => tp(tup.toLoc, "argument list")
+                })
+              case _ => // can happen in the old parser
+                typeArg(a)
+            }
           }
+          println("f and f_ty => " + Helpers.inspect(f) + " " + f_ty)
+          println("a and a_ty => " + Helpers.inspect(a) + " " + a_ty)
+          val res = freshVar(prov, N)
+          val arg_ty = mkProxy(a_ty, tp(a.toCoveringLoc, "argument"))
+            // ^ Note: this no longer really makes a difference, due to tupled arguments by default
+          val funProv = tp(f.toCoveringLoc, "applied expression")
+          val fun_ty = mkProxy(f_ty, funProv)
+            // ^ This is mostly not useful, except in test Tuples.fun with `(1, true, "hey").2`
+          val resTy = con(fun_ty, FunctionType(arg_ty, res)(
+            prov
+            // funProv // TODO: better?
+            ), res)
+          resTy
         }
-        val res = freshVar(prov, N)
-        val arg_ty = mkProxy(a_ty, tp(a.toCoveringLoc, "argument"))
-          // ^ Note: this no longer really makes a difference, due to tupled arguments by default
-        val funProv = tp(f.toCoveringLoc, "applied expression")
-        val fun_ty = mkProxy(f_ty, funProv)
-          // ^ This is mostly not useful, except in test Tuples.fun with `(1, true, "hey").2`
-        val resTy = con(fun_ty, FunctionType(arg_ty, res)(
-          prov
-          // funProv // TODO: better?
-          ), res)
-        resTy
+        /////////////////////////////
+        def desugarNamedArgs(term: Term, f: Var, a: Tup): SimpleType = {
+          val Var(name) = f;
+          ctx.get(name) match {
+            case Some(value) => 
+              println("value => " + value  + " " + value.getClass())
+              value match {
+                case VarSymbol(ty, definingVar) => 
+                  println("definingVar => " + definingVar)
+                  println("ty => " + ty + " " + ty.getClass())
+                  ty match {
+                    case FunctionType(lhs, rhs) => 
+                      println("lhs, rhs => " + lhs + " " + rhs + " " + lhs.getClass() + " " + rhs.getClass())
+                      lhs match {
+                        case TupleType(fields) =>
+                          println("fields are => " + fields)
+                      }
+                  }
+                case CompletedTypeInfo(member) =>
+                  member match {
+                    case TypedNuFun(level: Level, fd: NuFunDef, bodyType: ST) =>
+                      println("TypedNuFun matched! fd => " + fd)
+                      // 
+                    case _ =>
+                      println("don't know => " + member)
+                  }
+                case other => println("don't know => " + other)
+              }
+            case None => 
+                err("type identifier not found: " + name, f.toLoc)(raise)
+          }
+          typeTerm(f) // should be deleted!!!
+        }
+        /////////////////////////////
+
+        // if a dosen't have any named arguments, don't desuagre anything!
+        // otherwise, desugare. 
+        f match {
+          // in this case, we should check the arguments.
+          case f1 @ Var(name) =>
+            // check arguments, if 
+            println("f is var")
+            a match {
+              case a1 @ Tup(fields) => 
+                if (fields.exists(x => x._1.isDefined)) {
+                  // we should desugar. it is named arg
+                  // then we will type the desugared and return result
+                  println("!!named args case!!")
+                  desugarNamedArgs(term, f1, a1)
+                } else {
+                  println("!!unnamed args case!!")
+                  typeUnnamedApp(f, a)
+                }
+            }
+          case _ =>
+            println("f type is => " + codegen.Helpers.inspect(f))
+            typeUnnamedApp(f, a)
+        }
       case Sel(obj, fieldName) =>
         implicit val shadows: Shadows = Shadows.empty
         // Explicit method calls have the form `x.(Class.Method)`
