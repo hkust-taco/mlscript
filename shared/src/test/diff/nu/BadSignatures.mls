@@ -14,7 +14,7 @@ trait T {
 //│ }
 
 
-class A { fun x = 1 }
+class A { virtual fun x = 1 }
 //│ class A {
 //│   fun x: 1
 //│ }
@@ -33,11 +33,11 @@ class B() extends A {
 //│ ║  l.24: 	  fun x: Int
 //│ ║        	      ^^^^^^
 //│ ╟── Note: constraint arises from integer literal:
-//│ ║  l.17: 	class A { fun x = 1 }
-//│ ║        	                  ^
+//│ ║  l.17: 	class A { virtual fun x = 1 }
+//│ ║        	                          ^
 //│ ╟── from definition of method x:
-//│ ║  l.17: 	class A { fun x = 1 }
-//│ ╙──      	              ^^^^^
+//│ ║  l.17: 	class A { virtual fun x = 1 }
+//│ ╙──      	                      ^^^^^
 //│ class B() extends A {
 //│   fun x: Int
 //│ }
@@ -77,11 +77,11 @@ class B() extends A {
 //│ ║  l.67: 	  fun x: Int
 //│ ║        	      ^^^^^^
 //│ ╟── Note: constraint arises from integer literal:
-//│ ║  l.17: 	class A { fun x = 1 }
-//│ ║        	                  ^
+//│ ║  l.17: 	class A { virtual fun x = 1 }
+//│ ║        	                          ^
 //│ ╟── from definition of method x:
-//│ ║  l.17: 	class A { fun x = 1 }
-//│ ╙──      	              ^^^^^
+//│ ║  l.17: 	class A { virtual fun x = 1 }
+//│ ╙──      	                      ^^^^^
 //│ class B() extends A {
 //│   fun x: Int
 //│ }

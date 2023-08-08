@@ -48,7 +48,7 @@ class A3(s: Int, t: Bool) extends Test2
 //│ }
 
 class P(val p: Int) { 
-    fun foo(x) = x + p 
+    virtual fun foo(x) = x + p 
 }
 //│ class P(p: Int) {
 //│   fun foo: Int -> Int

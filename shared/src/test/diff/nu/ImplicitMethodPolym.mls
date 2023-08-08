@@ -104,7 +104,7 @@ module M extends Mx {
 
 
 class C {
-  fun id1(x) = x
+  virtual fun id1(x) = x
   fun f = (id1(true), id1(0))
   fun id2(x) = x
 }
@@ -179,8 +179,8 @@ module M extends C {
 //│ ║         	      ^^^^^^^^^^
 //│ ╟── expression of type `Int` does not match type `?a`
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.107: 	  fun id1(x) = x
-//│ ╙──       	               ^
+//│ ║  l.107: 	  virtual fun id1(x) = x
+//│ ╙──       	                       ^
 //│ module M extends C {
 //│   fun f: (true, 0,)
 //│   fun id1: Int -> Int

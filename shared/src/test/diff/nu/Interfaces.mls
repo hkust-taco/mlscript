@@ -648,7 +648,7 @@ e: ZL & WP
 //│       g is not implemented
 
 class Bs(val a: Bool) {
-  fun foo(x) = x + 1
+  virtual fun foo(x) = x + 1
 }
 //│ class Bs(a: Bool) {
 //│   fun foo: Int -> Int
@@ -702,8 +702,8 @@ class Eh2 extends Bs(true), Ele {
 //│ ║  l.688: 	    fun foo(x) = x && false
 //│ ║         	                 ^^^^^^^^^^
 //│ ╟── Note: constraint arises from operator application:
-//│ ║  l.651: 	  fun foo(x) = x + 1
-//│ ╙──       	               ^^^^^
+//│ ║  l.651: 	  virtual fun foo(x) = x + 1
+//│ ╙──       	                       ^^^^^
 //│ ╔══[ERROR] Type mismatch in definition of method foo:
 //│ ║  l.688: 	    fun foo(x) = x && false
 //│ ║         	        ^^^^^^^^^^^^^^^^^^^
@@ -711,8 +711,8 @@ class Eh2 extends Bs(true), Ele {
 //│ ║  l.688: 	    fun foo(x) = x && false
 //│ ║         	                 ^^^^^^^^^^
 //│ ╟── Note: constraint arises from operator application:
-//│ ║  l.651: 	  fun foo(x) = x + 1
-//│ ╙──       	               ^^^^^
+//│ ║  l.651: 	  virtual fun foo(x) = x + 1
+//│ ╙──       	                       ^^^^^
 //│ class Eh2 extends Bs, Ele {
 //│   fun ce: forall 'a. 'a -> 'a
 //│   fun foo: Bool -> Bool
@@ -735,14 +735,14 @@ class Eh3 extends Bs(false), Test
 //│ ║  l.723: 	class Eh1 extends Bs
 //│ ╙──       	                  ^^
 //│ ╔══[ERROR] Type mismatch in definition of method foo:
-//│ ║  l.651: 	  fun foo(x) = x + 1
-//│ ║         	      ^^^^^^^^^^^^^^
+//│ ║  l.651: 	  virtual fun foo(x) = x + 1
+//│ ║         	              ^^^^^^^^^^^^^^
 //│ ╟── function of type `?a -> (forall ?b. ?b)` is not an instance of type `Int`
-//│ ║  l.651: 	  fun foo(x) = x + 1
-//│ ║         	         ^^^^^^^^^^^
+//│ ║  l.651: 	  virtual fun foo(x) = x + 1
+//│ ║         	                 ^^^^^^^^^^^
 //│ ╟── but it flows into definition of method foo with expected type `Int`
-//│ ║  l.651: 	  fun foo(x) = x + 1
-//│ ║         	      ^^^^^^^^^^^^^^
+//│ ║  l.651: 	  virtual fun foo(x) = x + 1
+//│ ║         	              ^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.5: 	  fun foo: Int
 //│ ║       	           ^^^
@@ -1023,8 +1023,8 @@ class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
 //│ }
 
 trait Ta[T] {
-  let p: Bool
-  let g: T
+  virtual val p: Bool
+  virtual val g: T
 }
 class K[A](k: Ta[A])
 //│ trait Ta[T] {
@@ -1064,11 +1064,11 @@ k1.k.p
 
 :e
 trait Tb extends Ta[Int] {
-  let p = false
+  virtual val p = false
 }
 //│ ╔══[ERROR] Method implementations in traits are not yet supported
-//│ ║  l.1067: 	  let p = false
-//│ ╙──        	      ^^^^^^^^^
+//│ ║  l.1067: 	  virtual val p = false
+//│ ╙──        	              ^^^^^^^^^
 //│ trait Tb extends Ta {
 //│   let g: 'T
 //│   let p: false
@@ -1116,7 +1116,7 @@ class Klee(age: 1 | 2 | 3) extends Oz
 //│ class Klee(age: 1 | 2 | 3) extends Oz
 
 class Fate {
-    fun foo(x) = x + 1
+    virtual fun foo(x) = x + 1
 }
 //│ class Fate {
 //│   fun foo: Int -> Int
@@ -1140,8 +1140,8 @@ class Go extends Fate {
 //│ ║  l.1127: 	    fun foo(x) = x && true
 //│ ║          	                 ^^^^^^^^^
 //│ ╟── Note: constraint arises from operator application:
-//│ ║  l.1119: 	    fun foo(x) = x + 1
-//│ ╙──        	                 ^^^^^
+//│ ║  l.1119: 	    virtual fun foo(x) = x + 1
+//│ ╙──        	                         ^^^^^
 //│ ╔══[ERROR] Type mismatch in definition of method foo:
 //│ ║  l.1127: 	    fun foo(x) = x && true
 //│ ║          	        ^^^^^^^^^^^^^^^^^^
@@ -1149,13 +1149,13 @@ class Go extends Fate {
 //│ ║  l.1127: 	    fun foo(x) = x && true
 //│ ║          	                 ^^^^^^^^^
 //│ ╟── Note: constraint arises from operator application:
-//│ ║  l.1119: 	    fun foo(x) = x + 1
-//│ ╙──        	                 ^^^^^
+//│ ║  l.1119: 	    virtual fun foo(x) = x + 1
+//│ ╙──        	                         ^^^^^
 //│ class Go extends Fate {
 //│   fun foo: Bool -> Bool
 //│ }
 
-class Ha { let x: Int = 1 }
+class Ha { virtual val x: Int = 1 }
 //│ class Ha {
 //│   let x: Int
 //│ }
@@ -1170,8 +1170,8 @@ class Ohhh(x: Bool) extends Ha
 //│ ║          	              ^^^^
 //│ ╟── type `Bool` is not an instance of `Int`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.1158: 	class Ha { let x: Int = 1 }
-//│ ╙──        	                  ^^^
+//│ ║  l.1158: 	class Ha { virtual val x: Int = 1 }
+//│ ╙──        	                          ^^^
 //│ class Ohhh(x: Bool) extends Ha
 
 trait TA[A] { let a : A }

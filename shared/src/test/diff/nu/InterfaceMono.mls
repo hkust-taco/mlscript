@@ -236,7 +236,7 @@ class Iceburg(name: Str) extends RefinedStadt, More, Fooo
 //│   fun size: 1
 //│ }
 
-class A { fun x: Int = 1 }
+class A { virtual fun x: Int = 1 }
 //│ class A {
 //│   fun x: Int
 //│ }
@@ -253,16 +253,16 @@ class B extends A { fun x = "A" }
 //│ ║  l.245: 	class B extends A { fun x = "A" }
 //│ ║         	                        ^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.239: 	class A { fun x: Int = 1 }
-//│ ║         	                 ^^^
+//│ ║  l.239: 	class A { virtual fun x: Int = 1 }
+//│ ║         	                         ^^^
 //│ ╟── from definition of method x:
-//│ ║  l.239: 	class A { fun x: Int = 1 }
-//│ ╙──       	              ^^^^^^^^^^
+//│ ║  l.239: 	class A { virtual fun x: Int = 1 }
+//│ ╙──       	                      ^^^^^^^^^^
 //│ class B extends A {
 //│   fun x: "A"
 //│ }
 
-class C1[A] { fun a: A = a }
+class C1[A] { virtual fun a: A = a }
 //│ class C1[A] {
 //│   fun a: A
 //│ }

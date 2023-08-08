@@ -22,12 +22,65 @@ Bar().f(40)
 //│ res
 //│     = 42
 
-// TODO: reject
+:e
 class Baz() extends Foo {
   val g = 1
 }
+//│ ╔══[ERROR] Value member `g` is not a virtual member
+//│ ║  l.27: 	  val g = 1
+//│ ║        	      ^^^^^
+//│ ╟── Declared here:
+//│ ║  l.5: 	  val g: Int = 0
+//│ ╙──     	      ^^^^^^^^^^
 //│ class Baz() extends Foo {
 //│   fun f: (x: Int,) -> Int
 //│   let g: 1
 //│ }
 
+mixin X {
+  fun f(x) = x + 42
+}
+mixin XX {
+  fun f(x) = super.f(x) + 42
+}
+class T() extends X, XX
+//│ mixin X() {
+//│   fun f: Int -> Int
+//│ }
+//│ mixin XX() {
+//│   super: {f: 'a -> Int}
+//│   fun f: 'a -> Int
+//│ }
+//│ class T() {
+//│   fun f: Int -> Int
+//│ }
+
+T().f(0 - 42)
+//│ Int
+//│ res
+//│     = 42
+
+class M1() {
+  val foo: Str
+}
+class M2(s: Str) extends M1 {
+  val foo = s
+}
+M2("foo").foo
+//│ class M1() {
+//│   let foo: Str
+//│ }
+//│ class M2(s: Str) extends M1 {
+//│   let foo: Str
+//│ }
+//│ Str
+//│ res
+//│     = 'foo'
+
+class U() {
+  fun f: Int -> Int
+  fun f(x) = x + 1
+}
+//│ class U() {
+//│   fun f: Int -> Int
+//│ }

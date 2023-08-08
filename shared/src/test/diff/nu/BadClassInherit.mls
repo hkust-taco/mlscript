@@ -51,7 +51,7 @@ class C2 extends C1(this)
 //│ class C2 extends C1
 
 
-class Foo { fun x: Int = 1 }
+class Foo { virtual fun x: Int = 1 }
 //│ class Foo {
 //│   fun x: Int
 //│ }
@@ -68,11 +68,11 @@ class Bar extends Foo { fun x = false }
 //│ ║  l.60: 	class Bar extends Foo { fun x = false }
 //│ ║        	                            ^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.54: 	class Foo { fun x: Int = 1 }
-//│ ║        	                   ^^^
+//│ ║  l.54: 	class Foo { virtual fun x: Int = 1 }
+//│ ║        	                           ^^^
 //│ ╟── from definition of method x:
-//│ ║  l.54: 	class Foo { fun x: Int = 1 }
-//│ ╙──      	                ^^^^^^^^^^
+//│ ║  l.54: 	class Foo { virtual fun x: Int = 1 }
+//│ ╙──      	                        ^^^^^^^^^^
 //│ class Bar extends Foo {
 //│   fun x: false
 //│ }
@@ -92,11 +92,11 @@ class Bar extends Foo {
 //│ ║  l.82: 	  fun x: Bool
 //│ ║        	      ^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.54: 	class Foo { fun x: Int = 1 }
-//│ ║        	                   ^^^
+//│ ║  l.54: 	class Foo { virtual fun x: Int = 1 }
+//│ ║        	                           ^^^
 //│ ╟── from definition of method x:
-//│ ║  l.54: 	class Foo { fun x: Int = 1 }
-//│ ╙──      	                ^^^^^^^^^^
+//│ ║  l.54: 	class Foo { virtual fun x: Int = 1 }
+//│ ╙──      	                        ^^^^^^^^^^
 //│ class Bar extends Foo {
 //│   fun x: Bool
 //│ }
@@ -118,11 +118,11 @@ class Bar extends Foo, M
 //│ ║  l.104: 	mixin M { fun x = false }
 //│ ║         	              ^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.54: 	class Foo { fun x: Int = 1 }
-//│ ║        	                   ^^^
+//│ ║  l.54: 	class Foo { virtual fun x: Int = 1 }
+//│ ║        	                           ^^^
 //│ ╟── from definition of method x:
-//│ ║  l.54: 	class Foo { fun x: Int = 1 }
-//│ ╙──      	                ^^^^^^^^^^
+//│ ║  l.54: 	class Foo { virtual fun x: Int = 1 }
+//│ ╙──      	                        ^^^^^^^^^^
 //│ class Bar extends Foo {
 //│   fun x: false
 //│ }
