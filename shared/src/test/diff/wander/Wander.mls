@@ -136,8 +136,8 @@ fff(1, 2, 3)
 //│     = -3
 
 :d
-fff(y: 2, x: 1, z: 3)
-//│ 0. Typing TypingUnit(List(fff (y: 2, x: 1, z: 3,)))
+fff(y: 2, z: 3, x: 1)
+//│ 0. Typing TypingUnit(List(fff (y: 2, z: 3, x: 1,)))
 //│ | infos => List()
 //│ | sigInfos => HashMap()
 //│ | ctx => Ctx(None,HashMap(|| -> VarSymbol((Bool -> (Bool -> Bool)),||), <= -> VarSymbol((Num -> (Num -> Bool)),<=), discard -> VarSymbol(‹∀ 0. (α16' -> #undefined<>)›,discard), Anything -> VarSymbol(⊤,Anything), lt -> VarSymbol((Num -> (Num -> Bool)),lt), True -> VarSymbol(True,True), String -> VarSymbol(Str,String), False -> VarSymbol(False,False), Unit -> VarSymbol(#undefined<>,Unit), Nothing -> VarSymbol(⊥,Nothing), Str -> Str ~> TypedNuCls(0, TypeName(Str),
@@ -198,97 +198,21 @@ fff(y: 2, x: 1, z: 3)
 //│ 	this: ⊤, ,
 //│ 	: ⊤, Set(TypeName(Num)), Map()), undefined -> undefined ~> TypedNuAls(0,type alias undefined(): undefined {},List(),#undefined<Object>)),None,HashMap())
 //│ | Typing unit statements
-//│ | | 0. Typing term fff (y: 2, x: 1, z: 3,)
-//│ | | | applying-to-function => fff<class mlscript.Var>y: 2, x: 1, z: 3,<class mlscript.Tup>
+//│ | | 0. Typing term fff (y: 2, z: 3, x: 1,)
+//│ | | | applying-to-function => fff<class mlscript.Var>y: 2, z: 3, x: 1,<class mlscript.Tup>
 //│ | | | now we should desugar in case of named args!
 //│ | | | f is var
 //│ | | | !!named args case!!
 //│ | | | value => CompletedTypeInfo(TypedNuFun(0,fun fff = (x::0, y::1, z::2,) => * ('(' - (x,) (y,) ')',) (z,),((α43', α44', α45',) -> α49'))) class mlscript.TyperDatatypes$CompletedTypeInfo
 //│ | | | TypedNuFun matched! fd => fun fff = (x::0, y::1, z::2,) => * ('(' - (x,) (y,) ')',) (z,)
-//│ | | | 0. Typing term fff
-//│ | | | 0. : ‹∀ 0. ((α43', α44', α45',) -> α49')›
-//│ | | 0. : ‹∀ 0. ((α43', α44', α45',) -> α49')›
-//│ | : Some(‹∀ 0. ((α43', α44', α45',) -> α49')›)
-//│ ======== TYPED ========
-//│ res: Some(‹∀ 0. ((α43', α44', α45',) -> α49')›) where 
-//│ 		α43' <: Int
-//│ 		α44' <: Int
-//│ 		α45' <: Int
-//│ 		α49' :> Int
-//│ (Int, Int, Int,) -> Int
-//│ res
-//│     = 3
-
-:d
-fff(1, z: 2, y: 3)
-//│ 0. Typing TypingUnit(List(fff (1, z: 2, y: 3,)))
-//│ | infos => List()
-//│ | sigInfos => HashMap()
-//│ | ctx => Ctx(None,HashMap(|| -> VarSymbol((Bool -> (Bool -> Bool)),||), <= -> VarSymbol((Num -> (Num -> Bool)),<=), discard -> VarSymbol(‹∀ 0. (α16' -> #undefined<>)›,discard), Anything -> VarSymbol(⊤,Anything), lt -> VarSymbol((Num -> (Num -> Bool)),lt), True -> VarSymbol(True,True), String -> VarSymbol(Str,String), False -> VarSymbol(False,False), Unit -> VarSymbol(#undefined<>,Unit), Nothing -> VarSymbol(⊥,Nothing), Str -> Str ~> TypedNuCls(0, TypeName(Str),
-//│ 	List(),
-//│ 	List(),
-//│ 	this: ⊤, ,
-//│ 	: ⊤, Set(), Map()), div -> VarSymbol((Int -> (Int -> Int)),div), sge -> VarSymbol((Str -> (Str -> Bool)),sge), number -> VarSymbol(Num,number), Bool -> Bool ~> TypedNuCls(0, TypeName(Bool),
-//│ 	List(),
-//│ 	List(),
-//│ 	this: ⊤, ,
-//│ 	: ⊤..(True | False), Set(), Map()), sqrt -> VarSymbol((Int -> Int),sqrt), id -> VarSymbol(‹∀ 0. (α20' -> α20')›,id), if -> VarSymbol(‹∀ 0. (Bool -> (α21' -> (α21' -> α21')))›,if), === -> VarSymbol(‹∀ 0. (Eql[α19'] -> (α19' -> Bool))›,===), == -> VarSymbol((Num -> (Num -> Bool)),==), add -> VarSymbol((Int -> (Int -> Int)),add), Eql -> Eql ~> TypedNuTrt(0,trait Eql‹A›() {},List((TypeName(A),A35',Some(-))),Map(),⊤,⊤,Set(),Map()), sgt -> VarSymbol((Str -> (Str -> Bool)),sgt), % -> VarSymbol((Int -> (Int -> Int)),%), fff -> CompletedTypeInfo(TypedNuFun(0,fun fff = (x::0, y::1, z::2,) => * ('(' - (x,) (y,) ')',) (z,),((α43', α44', α45',) -> α49'))), nothing -> VarSymbol(⊥,nothing), * -> VarSymbol((Int -> (Int -> Int)),*), concat -> VarSymbol((Str -> (Str -> Str)),concat), + -> VarSymbol((Int -> (Int -> Int)),+), eq -> VarSymbol(‹∀ 0. (α17' -> (α17' -> Bool))›,eq), - -> VarSymbol((Int -> (Int -> Int)),-), sle -> VarSymbol((Str -> (Str -> Bool)),sle), / -> VarSymbol((Num -> (Num -> Num)),/), unit -> VarSymbol(#undefined<>,unit), null -> null ~> TypedNuAls(0,type alias null(): null {},List(),#null<Object>), ne -> VarSymbol(‹∀ 0. (α18' -> (α18' -> Bool))›,ne), true -> true ~> TypedNuCls(0, TypeName(true),
-//│ 	List(),
-//│ 	List(),
-//│ 	this: ⊤, ,
-//│ 	: ⊤, Set(TypeName(Bool)), Map()), Object -> Object ~> TypedNuCls(0, TypeName(Object),
-//│ 	List(),
-//│ 	List(),
-//│ 	this: ⊤, ,
-//│ 	: ⊤, Set(), Map()), slt -> VarSymbol((Str -> (Str -> Bool)),slt), emptyArray -> VarSymbol(‹∀ 0. Array‹mut α22'..α22'››,emptyArray), < -> VarSymbol((Num -> (Num -> Bool)),<), > -> VarSymbol((Num -> (Num -> Bool)),>), >= -> VarSymbol((Num -> (Num -> Bool)),>=), && -> VarSymbol((Bool -> (Bool -> Bool)),&&), sub -> VarSymbol((Int -> (Int -> Int)),sub), string -> VarSymbol(Str,string), bool -> VarSymbol(Bool,bool), log -> VarSymbol(‹∀ 0. (α16' -> #undefined<>)›,log), mul -> VarSymbol((Int -> (Int -> Int)),mul), document -> VarSymbol(⊥,document), error -> VarSymbol(⊥,error), Int -> Int ~> TypedNuCls(0, TypeName(Int),
-//│ 	List(),
-//│ 	List(),
-//│ 	this: ⊤, ,
-//│ 	: ⊤, Set(TypeName(Num)), Map()), undefined -> undefined ~> TypedNuAls(0,type alias undefined(): undefined {},List(),#undefined<Object>), anything -> VarSymbol(⊤,anything), not -> VarSymbol((Bool -> Bool),not), Number -> VarSymbol(Num,Number), NaN -> VarSymbol(Num,NaN), typeof -> VarSymbol((⊤ -> Str),typeof), ge -> VarSymbol((Num -> (Num -> Bool)),ge), Num -> Num ~> TypedNuCls(0, TypeName(Num),
-//│ 	List(),
-//│ 	List(),
-//│ 	this: ⊤, ,
-//│ 	: ⊤, Set(), Map()), length -> VarSymbol((Str -> Int),length), false -> false ~> TypedNuCls(0, TypeName(false),
-//│ 	List(),
-//│ 	List(),
-//│ 	this: ⊤, ,
-//│ 	: ⊤, Set(TypeName(Bool)), Map()), gt -> VarSymbol((Num -> (Num -> Bool)),gt), int -> VarSymbol(Int,int), succ -> VarSymbol((Int -> Int),succ), round -> VarSymbol((Num -> Int),round), negate -> VarSymbol((Int -> Int),negate), le -> VarSymbol((Num -> (Num -> Bool)),le), toString -> VarSymbol((⊤ -> Str),toString), window -> VarSymbol(⊥,window)),HashMap(),0,false,HashMap(number -> TypeDef(Cls,TypeName(number),List(),⊤,List(),List(),Set(),None,List()), string -> TypeDef(Cls,TypeName(string),List(),⊤,List(),List(),Set(),None,List()), nothing -> TypeDef(Als,TypeName(nothing),List(),⊥,List(),List(),Set(),None,List()), int -> TypeDef(Cls,TypeName(int),List(),⊤,List(),List(),Set(TypeName(number)),None,List()), true -> TypeDef(Cls,TypeName(true),List(),⊤,List(),List(),Set(TypeName(bool)),None,List()), unit -> TypeDef(Cls,TypeName(unit),List(),⊤,List(),List(),Set(),None,List()), anything -> TypeDef(Als,TypeName(anything),List(),⊤,List(),List(),Set(),None,List()), undefined -> TypeDef(Als,TypeName(undefined),List(),#undefined<>,List(),List(),Set(),None,List()), false -> TypeDef(Cls,TypeName(false),List(),⊤,List(),List(),Set(TypeName(bool)),None,List()), MutArray -> TypeDef(Als,TypeName(MutArray),List((TypeName(A),α14')),Array‹mut α14'..α14'›,List(),List(),Set(),None,List()), Array -> TypeDef(Als,TypeName(Array),List((TypeName(A),α12')),Array‹α12'›,List(),List(),Set(),None,List()), null -> TypeDef(Als,TypeName(null),List(),#null<>,List(),List(),Set(),None,List()), bool -> TypeDef(Cls,TypeName(bool),List(),⊤,List(),List(),Set(),None,List()), error -> TypeDef(Cls,TypeName(error),List(),⊤,List(),List(),Set(),None,List())),HashMap(Str -> Str ~> TypedNuCls(0, TypeName(Str),
-//│ 	List(),
-//│ 	List(),
-//│ 	this: ⊤, ,
-//│ 	: ⊤, Set(), Map()), Eql -> Eql ~> TypedNuTrt(0,trait Eql‹A›() {},List((TypeName(A),A35',Some(-))),Map(),⊤,⊤,Set(),Map()), null -> null ~> TypedNuAls(0,type alias null(): null {},List(),#null<Object>), Bool -> Bool ~> TypedNuCls(0, TypeName(Bool),
-//│ 	List(),
-//│ 	List(),
-//│ 	this: ⊤, ,
-//│ 	: ⊤..(True | False), Set(), Map()), Num -> Num ~> TypedNuCls(0, TypeName(Num),
-//│ 	List(),
-//│ 	List(),
-//│ 	this: ⊤, ,
-//│ 	: ⊤, Set(), Map()), true -> true ~> TypedNuCls(0, TypeName(true),
-//│ 	List(),
-//│ 	List(),
-//│ 	this: ⊤, ,
-//│ 	: ⊤, Set(TypeName(Bool)), Map()), false -> false ~> TypedNuCls(0, TypeName(false),
-//│ 	List(),
-//│ 	List(),
-//│ 	this: ⊤, ,
-//│ 	: ⊤, Set(TypeName(Bool)), Map()), Object -> Object ~> TypedNuCls(0, TypeName(Object),
-//│ 	List(),
-//│ 	List(),
-//│ 	this: ⊤, ,
-//│ 	: ⊤, Set(), Map()), Int -> Int ~> TypedNuCls(0, TypeName(Int),
-//│ 	List(),
-//│ 	List(),
-//│ 	this: ⊤, ,
-//│ 	: ⊤, Set(TypeName(Num)), Map()), undefined -> undefined ~> TypedNuAls(0,type alias undefined(): undefined {},List(),#undefined<Object>)),None,HashMap())
-//│ | Typing unit statements
-//│ | | 0. Typing term fff (1, z: 2, y: 3,)
-//│ | | | applying-to-function => fff<class mlscript.Var>1, z: 2, y: 3,<class mlscript.Tup>
-//│ | | | now we should desugar in case of named args!
-//│ | | | f is var
-//│ | | | !!named args case!!
-//│ | | | value => CompletedTypeInfo(TypedNuFun(0,fun fff = (x::0, y::1, z::2,) => * ('(' - (x,) (y,) ')',) (z,),((α43', α44', α45',) -> α49'))) class mlscript.TyperDatatypes$CompletedTypeInfo
-//│ | | | TypedNuFun matched! fd => fun fff = (x::0, y::1, z::2,) => * ('(' - (x,) (y,) ')',) (z,)
+//│ | | | v and f => y Fld(false,false,2)
+//│ | | | v and f => z Fld(false,false,3)
+//│ | | | v and f => x Fld(false,false,1)
+//│ | | | lhs is => class mlscript.Tup x::0, y::1, z::2,
+//│ | | | funSignatureArgs => x::0, y::1, z::2, class mlscript.Tup Tup(_: Var(x), _: Var(y), _: Var(z))
+//│ | | | (None,Fld(false,false,x::0)) Var(x) x::0 head!
+//│ | | | y is here => List()
+//│ | | | Desugared is here => let y = 2 in let z = 3 in let x = 1 in fff (x, y, z,)
 //│ | | | 0. Typing term fff
 //│ | | | 0. : ‹∀ 0. ((α43', α44', α45',) -> α49')›
 //│ | | 0. : ‹∀ 0. ((α43', α44', α45',) -> α49')›
@@ -303,6 +227,28 @@ fff(1, z: 2, y: 3)
 //│ res
 //│     = -3
 
-fun g(x, y) = x + y
-//│ fun g: (Int, Int,) -> Int
+:p
+let x1 = 1
+let y1 = 2
+let z1 = 3
+//│ |#let| |x1| |#=| |1|↵|#let| |y1| |#=| |2|↵|#let| |z1| |#=| |3|
+//│ AST: TypingUnit(NuFunDef(Some(false), x1, [], IntLit(1)), NuFunDef(Some(false), y1, [], IntLit(2)), NuFunDef(Some(false), z1, [], IntLit(3)))
+//│ Parsed: let x1 = 1; let y1 = 2; let z1 = 3;
+//│ let x1: 1
+//│ let y1: 2
+//│ let z1: 3
+//│ x1
+//│    = 1
+//│ y1
+//│    = 2
+//│ z1
+//│    = 3
 
+:p
+fff(x1, y1, z1)
+//│ |fff|(|x1|,| |y1|,| |z1|)|
+//│ AST: TypingUnit(App(Var(fff), Tup(_: Var(x1), _: Var(y1), _: Var(z1))))
+//│ Parsed: fff (x1, y1, z1,);
+//│ Int
+//│ res
+//│     = -3
