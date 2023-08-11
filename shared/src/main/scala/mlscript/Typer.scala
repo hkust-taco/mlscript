@@ -1377,7 +1377,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
   }
 
   def desugarNamedArgs(term: Term, f: Var, a: Tup)(implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType]): SimpleType = {
-    val Var(name) = f;
+    val Var(name) = f
     ctx.get(name) match {
       case Some(value) => 
         println("value => " + value  + " " + value.getClass())
