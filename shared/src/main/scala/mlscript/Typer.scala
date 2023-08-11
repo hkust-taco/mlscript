@@ -994,38 +994,29 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
         val desug = If(IfThen(lhs, rhs), S(Var("false")))
         term.desugaredTerm = S(desug)
         typeTerm(desug)
-      case App(f, a) =>
+      case App(f @ Var(name), a @ Tup(fields)) =>
         println("applying-to-function => " + f + "<" + f.getClass() + ">" + a + "<" + a.getClass() + ">")
         println("now we should desugar in case of named args!")
         // if a dosen't have any named arguments, don't desuagre anything!
         // otherwise, desugare. 
-        f match {
-          // in this case, we should check the arguments.
-          case f1 @ Var(name) =>
-            // check arguments, if 
-            println("f is var")
-            a match {
-              case a1 @ Tup(fields) => 
-                if (fields.exists(x => x._1.isDefined)) {
-                  // we should desugar. it is named arg
-                  // then we will type the desugared and return result
-                  println("!!named args case!!")
-                  desugarNamedArgs(term, f1, a1)
-                } else {
-                  println("!!unnamed args case!!")
-                  val (args_ty, fun_ty, res) = typeUnnamedApp(f, a)
-                  val res_ty = con(fun_ty, FunctionType(args_ty, res)(
-                    prov
-                    // funProv // TODO: better?
-                    ), res)
-                  res_ty
-                }
-            }
-          case _ =>
-            println("f type is => " + codegen.Helpers.inspect(f))
-            val (args_ty, fun_ty, res) = typeUnnamedApp(f, a)
-            fun_ty
+        if (fields.exists(x => x._1.isDefined)) {
+          // we should desugar. it is named arg
+          // then we will type the desugared and return result
+          println("!!named args case!!")
+          desugarNamedArgs(term, f, a)
+        } else {
+          println("!!unnamed args case!!")
+          val (args_ty, fun_ty, res) = typeUnnamedApp(f, a)
+          val res_ty = con(fun_ty, FunctionType(args_ty, res)(
+            prov
+            // funProv // TODO: better?
+            ), res)
+          res_ty
         }
+      case App(f: Term, a: Term) =>
+        println("f type is gooz => " + codegen.Helpers.inspect(f) + " " + f.getClass())
+        val (args_ty, fun_ty, res) = typeUnnamedApp(f, a)
+        fun_ty
       case Sel(obj, fieldName) =>
         implicit val shadows: Shadows = Shadows.empty
         // Explicit method calls have the form `x.(Class.Method)`
