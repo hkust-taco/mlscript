@@ -997,11 +997,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
       case App(f @ Var(name), a @ Tup(fields)) =>
         println("applying-to-function => " + f + "<" + f.getClass() + ">" + a + "<" + a.getClass() + ">")
         println("now we should desugar in case of named args!")
-        // if a dosen't have any named arguments, don't desuagre anything!
-        // otherwise, desugare. 
         if (fields.exists(x => x._1.isDefined)) {
-          // we should desugar. it is named arg
-          // then we will type the desugared and return result
           println("!!named args case!!")
           desugarNamedArgs(term, f, a)
         } else {
@@ -1377,85 +1373,68 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
       case Some(value) => 
         println("value => " + value  + " " + value.getClass())
         value match {
-          case VarSymbol(ty, definingVar) => 
-            println("definingVar => " + definingVar)
-            println("ty => " + ty + " " + ty.getClass())
-            ty match {
-              case FunctionType(lhs, rhs) => 
-                println("lhs, rhs => " + lhs + " " + rhs + " " + lhs.getClass() + " " + rhs.getClass())
-                lhs match {
-                  case TupleType(fields) =>
-                    println("fields are => " + fields)
-                }
-            }
-          case CompletedTypeInfo(member) =>
-            member match {
-              case TypedNuFun(level: Level, fd: NuFunDef, bodyType: ST) =>
-                println("TypedNuFun matched! fd => " + fd)
-                // now, we will create the desugared term, 
-                // set the new desugared term as term.desugared
-                // and type the new term!
-                // 1. check if list is in this format : N, N, N, Some, Some, ... TODO
-                // 2. create let bindings
-                def rec (as: List[Var -> Fld]): Term = {
-                  as match {
-                    case (v, f) :: tail =>
-                      println("v and f => " + v + " " + f)
-                      Let(false, v, f.value, rec(tail))
-                    case Nil => 
-                      // call the function 
-                      // only the var name in the function call
-                      val funSignatureArgs: Term = fd.rhs match {
-                        case Left(value) => value match {
-                          case Lam(lhs, rhs) => 
-                            println("lhs is => " + lhs.getClass + " " + lhs)
-                            lhs
-                        }
-                      }
-                      
-                      println("funSignatureArgs => " + funSignatureArgs + " " + funSignatureArgs.getClass() + " " + Helpers.inspect(funSignatureArgs))
-                      val y: Tup = funSignatureArgs match {
-                        case Tup(fields) => 
-                          // TODO: in general case, in here we get argnames from 
-                          // a map.
-                          println(fields.head + " " + Helpers.inspect(fields.head._2.value) + " " + fields.head._2.value + " head!")
-                          Tup(fields.map(x =>
-                            x._2.value match {
-                              case Var(name) => 
-                                (None, Fld(false, false, Var(name)))
-                            }))
-                      }
-                      val yy: List[Opt[Var] -> Fld] = Nil 
-                      //   funSignatureArgs match {
-                      //   case Tup(fields) => 
-                      //     // println(fields.head + " head!")
-                      //     fields.map(x => (None, x._2.))
-                      // }
-                      println("y is here => " + yy)
-                      App(f, y)
+          case CompletedTypeInfo(TypedNuFun(level: Level, fd: NuFunDef, bodyType: ST)) =>
+            println("TypedNuFun matched! fd => " + fd)
+            // now, we will create the desugared term, 
+            // set the new desugared term as term.desugared
+            // and type the new term!
+            // 1. check if list is in this format : N, N, N, Some, Some, ... TODO
+            // 2. create let bindings
+            def rec (as: List[Var -> Fld]): Term = {
+              as match {
+                case (v, f) :: tail =>
+                  println("v and f => " + v + " " + f)
+                  Let(false, v, f.value, rec(tail))
+                case Nil => 
+                  // call the function 
+                  // only the var name in the function call
+                  val funSignatureArgs: Term = fd.rhs match {
+                    case Left(value) => value match {
+                      case Lam(lhs, rhs) => 
+                        println("lhs is => " + lhs.getClass + " " + lhs)
+                        lhs
+                    }
                   }
-                }
-                val aa = a.fields.map(x => 
-                  x._1 match {
-                    case Some(value) => 
-                      (value, x._2)
-                    case N =>
-                      (Var("ggg"), x._2)
-                  })
-                
-                
-                // println("NuFunDef => " + lam.lsh.getClass + " " + lam.lhs)
-                val desugared = rec(aa)
-                println("Desugared is here => " + desugared)
-                term.desugaredTerm = S(desugared)
-                // 3. type the term
-              case _ =>
-                println("don't know => " + member)
+                  
+                  println("funSignatureArgs => " + funSignatureArgs + " " + funSignatureArgs.getClass() + " " + Helpers.inspect(funSignatureArgs))
+                  val y: Tup = funSignatureArgs match {
+                    case Tup(fields) => 
+                      // TODO: in general case, in here we get argnames from 
+                      // a map.
+                      println(fields.head + " " + Helpers.inspect(fields.head._2.value) + " " + fields.head._2.value + " head!")
+                      Tup(fields.map(x =>
+                        x._2.value match {
+                          case Var(name) => 
+                            (None, Fld(false, false, Var(name)))
+                        }))
+                  }
+                  val yy: List[Opt[Var] -> Fld] = Nil 
+                  //   funSignatureArgs match {
+                  //   case Tup(fields) => 
+                  //     // println(fields.head + " head!")
+                  //     fields.map(x => (None, x._2.))
+                  // }
+                  println("y is here => " + yy)
+                  App(f, y)
+              }
             }
-          case other => println("don't know => " + other)
+            val aa = a.fields.map(x => 
+              x._1 match {
+                case Some(value) => 
+                  (value, x._2)
+                case N =>
+                  (Var("ggg"), x._2)
+              })
+            // println("NuFunDef => " + lam.lsh.getClass + " " + lam.lhs)
+            val desugared = rec(aa)
+            println("Desugared is here => " + desugared)
+            term.desugaredTerm = S(desugared)
+            // 3. type the term
+          case other =>
+            err("type is not correct.", f.toLoc)
         }
       case None => 
-          err("type identifier not found: " + name, f.toLoc)(raise)
+          err("type identifier not found: " + name, f.toLoc)
     }
     typeTerm(f)(ctx = ctx, raise = raise, vars = vars, genLambdas = false) // should be deleted!!!
   }
