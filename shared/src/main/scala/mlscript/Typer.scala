@@ -1374,16 +1374,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
         println("value => " + value  + " " + value.getClass())
         value match {
           case CompletedTypeInfo(TypedNuFun(level: Level, fd: NuFunDef, bodyType: ST)) =>
-            println("TypedNuFun matched! fd => " + fd)
-            // now, we will create the desugared term, 
-            // set the new desugared term as term.desugared
-            // and type the new term!
             // 1. check if list is in this format : N, N, N, Some, Some, ... TODO
             // 2. create let bindings
             def rec (as: List[Var -> Fld]): Term = {
               as match {
                 case (v, f) :: tail =>
-                  println("v and f => " + v + " " + f)
                   Let(false, v, f.value, rec(tail))
                 case Nil => 
                   // call the function 
@@ -1391,17 +1386,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
                   val funSignatureArgs: Term = fd.rhs match {
                     case Left(value) => value match {
                       case Lam(lhs, rhs) => 
-                        println("lhs is => " + lhs.getClass + " " + lhs)
                         lhs
                     }
                   }
-                  
-                  println("funSignatureArgs => " + funSignatureArgs + " " + funSignatureArgs.getClass() + " " + Helpers.inspect(funSignatureArgs))
                   val y: Tup = funSignatureArgs match {
                     case Tup(fields) => 
-                      // TODO: in general case, in here we get argnames from 
-                      // a map.
-                      println(fields.head + " " + Helpers.inspect(fields.head._2.value) + " " + fields.head._2.value + " head!")
                       Tup(fields.map(x =>
                         x._2.value match {
                           case Var(name) => 
@@ -1409,12 +1398,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
                         }))
                   }
                   val yy: List[Opt[Var] -> Fld] = Nil 
-                  //   funSignatureArgs match {
-                  //   case Tup(fields) => 
-                  //     // println(fields.head + " head!")
-                  //     fields.map(x => (None, x._2.))
-                  // }
-                  println("y is here => " + yy)
                   App(f, y)
               }
             }
@@ -1425,18 +1408,17 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
                 case N =>
                   (Var("ggg"), x._2)
               })
-            // println("NuFunDef => " + lam.lsh.getClass + " " + lam.lhs)
             val desugared = rec(aa)
             println("Desugared is here => " + desugared)
             term.desugaredTerm = S(desugared)
             // 3. type the term
+            typeTerm(desugared)(ctx = ctx, raise = raise, vars = vars, genLambdas = false) 
           case other =>
             err("type is not correct.", f.toLoc)
         }
       case None => 
           err("type identifier not found: " + name, f.toLoc)
     }
-    typeTerm(f)(ctx = ctx, raise = raise, vars = vars, genLambdas = false) // should be deleted!!!
   }
   
   
