@@ -1,13 +1,7 @@
 :NewDefs
 
 fun fff(x, y, z) = (x - y) * z
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.3: 	fun fff(x, y, z) = (x - y) * z
-//│ ║       	                   ^^^^^^^^^
-//│ ╟── operator application of type `Int -> Int` is not an instance of type `Int`
-//│ ║  l.3: 	fun fff(x, y, z) = (x - y) * z
-//│ ╙──     	                    ^^^
-//│ fun fff: (Int, anything, anything,) -> (error | Int -> Int)
+//│ fun fff: (Int, Int, Int,) -> Int
 
 :d
 fff(1, 2, 3)
@@ -16,59 +10,68 @@ fff(1, 2, 3)
 //│ | | 0. Typing term fff (1, 2, 3,)
 //│ | | | applying-to-function => fff<class mlscript.Var>1, 2, 3,<class mlscript.Tup>
 //│ | | | now we should desugar in case of named args!
-//│ | | | f is var
 //│ | | | !!unnamed args case!!
 //│ | | | 0. Typing term fff
-//│ | | | 0. : ‹∀ 0. ((α43', α44', α45',) -> α48')›
+//│ | | | 0. : ‹∀ 0. ((α43', α44', α45',) -> α49')›
 //│ | | | 0. Typing term 1
 //│ | | | 0. : #1<Int,Num,Object>
 //│ | | | 0. Typing term 2
 //│ | | | 0. : #2<Int,Num,Object>
 //│ | | | 0. Typing term 3
 //│ | | | 0. : #3<Int,Num,Object>
-//│ | | | f and f_ty => Var(fff) ‹∀ 0. ((α43', α44', α45',) -> α48')›
+//│ | | | f and f_ty => Var(fff) ‹∀ 0. ((α43', α44', α45',) -> α49')›
 //│ | | | a and a_ty => Tup(_: IntLit(1), _: IntLit(2), _: IntLit(3)) (#1<Int,Num,Object>, #2<Int,Num,Object>, #3<Int,Num,Object>,)
-//│ | | | CONSTRAIN ‹∀ 0. ((α43', α44', α45',) -> α48')› <! ((#1<Int,Num,Object>, #2<Int,Num,Object>, #3<Int,Num,Object>,) -> α55)
+//│ | | | CONSTRAIN ‹∀ 0. ((α43', α44', α45',) -> α49')› <! ((#1<Int,Num,Object>, #2<Int,Num,Object>, #3<Int,Num,Object>,) -> α55)
 //│ | | |   where 
 //│ 		α43' <: Int
-//│ 		α48' :> (Int -> Int) | #error<>
-//│ | | | 0. C ‹∀ 0. ((α43', α44', α45',) -> α48')› <! ((#1<Int,Num,Object>, #2<Int,Num,Object>, #3<Int,Num,Object>,) -> α55)    (0)
-//│ | | | | could be distribbed: Set(α48')
+//│ 		α44' <: Int
+//│ 		α45' <: Int
+//│ 		α49' :> Int
+//│ | | | 0. C ‹∀ 0. ((α43', α44', α45',) -> α49')› <! ((#1<Int,Num,Object>, #2<Int,Num,Object>, #3<Int,Num,Object>,) -> α55)    (0)
+//│ | | | | could be distribbed: Set(α49')
 //│ | | | | cannot be distribbed: Set(α43', α44', α45')
-//│ | | | | inner: ‹∀ 0. α48'›
-//│ | | | | raised: ((α43', α44', α45',) -> ‹∀ 1. α48_56''›)
+//│ | | | | inner: ‹∀ 0. α49'›
+//│ | | | | raised: ((α43', α44', α45',) -> ‹∀ 1. α49_56''›)
 //│ | | | |   where: 
 //│ 		α43' <: Int
-//│ 		α48_56'' :> (Int -> Int) | #error<>
-//│ | | | | DISTRIB-L'  ~>  ‹∀ 0. ((α43', α44', α45',) -> ‹∀ 1. α48_56''›)›
-//│ | | | | 0. C ‹∀ 0. ((α43', α44', α45',) -> ‹∀ 1. α48_56''›)› <! ((#1<Int,Num,Object>, #2<Int,Num,Object>, #3<Int,Num,Object>,) -> α55)    (2)
+//│ 		α44' <: Int
+//│ 		α45' <: Int
+//│ 		α49_56'' :> Int
+//│ | | | | DISTRIB-L'  ~>  ‹∀ 0. ((α43', α44', α45',) -> ‹∀ 1. α49_56''›)›
+//│ | | | | 0. C ‹∀ 0. ((α43', α44', α45',) -> ‹∀ 1. α49_56''›)› <! ((#1<Int,Num,Object>, #2<Int,Num,Object>, #3<Int,Num,Object>,) -> α55)    (2)
 //│ | | | | | could be distribbed: Set()
-//│ | | | | | INST [0]   ‹∀ 0. ((α43', α44', α45',) -> ‹∀ 1. α48_56''›)›
+//│ | | | | | INST [0]   ‹∀ 0. ((α43', α44', α45',) -> ‹∀ 1. α49_56''›)›
 //│ | | | | |   where  
 //│ 		α43' <: Int
-//│ 		α48_56'' :> (Int -> Int) | #error<>
-//│ | | | | | TO [0] ~>  ((α43_57, α44_58, α45_59,) -> ‹∀ 1. α48_56''›)
+//│ 		α44' <: Int
+//│ 		α45' <: Int
+//│ 		α49_56'' :> Int
+//│ | | | | | TO [0] ~>  ((α43_57, α44_58, α45_59,) -> ‹∀ 1. α49_56''›)
 //│ | | | | |   where  
-//│ 		α48_56'' :> (Int -> Int) | #error<>
+//│ 		α49_56'' :> Int
 //│ 		α43_57 <: Int
-//│ | | | | | 0. C ((α43_57, α44_58, α45_59,) -> ‹∀ 1. α48_56''›) <! ((#1<Int,Num,Object>, #2<Int,Num,Object>, #3<Int,Num,Object>,) -> α55)    (5)
+//│ 		α44_58 <: Int
+//│ 		α45_59 <: Int
+//│ | | | | | 0. C ((α43_57, α44_58, α45_59,) -> ‹∀ 1. α49_56''›) <! ((#1<Int,Num,Object>, #2<Int,Num,Object>, #3<Int,Num,Object>,) -> α55)    (5)
 //│ | | | | | | 0. C (#1<Int,Num,Object>, #2<Int,Num,Object>, #3<Int,Num,Object>,) <! (α43_57, α44_58, α45_59,)    (3)
 //│ | | | | | | | 0. C #1<Int,Num,Object> <! α43_57    (4)
 //│ | | | | | | | | NEW α43_57 LB (0)
 //│ | | | | | | | | 0. C #1<Int,Num,Object> <! Int    (7)
 //│ | | | | | | | 0. C #2<Int,Num,Object> <! α44_58    (4)
 //│ | | | | | | | | NEW α44_58 LB (0)
+//│ | | | | | | | | 0. C #2<Int,Num,Object> <! Int    (7)
 //│ | | | | | | | 0. C #3<Int,Num,Object> <! α45_59    (4)
 //│ | | | | | | | | NEW α45_59 LB (0)
-//│ | | | | | | 0. C ‹∀ 1. α48_56''› <! α55    (3)
+//│ | | | | | | | | 0. C #3<Int,Num,Object> <! Int    (7)
+//│ | | | | | | 0. C ‹∀ 1. α49_56''› <! α55    (3)
 //│ | | | | | | | NEW α55 LB (0)
 //│ | | 0. : α55
 //│ | : Some(α55)
 //│ ======== TYPED ========
 //│ res: Some(α55) where 
-//│ 		α55 :> ‹∀ 1. α48_56''›
-//│ 		α48_56'' :> (Int -> Int) | #error<>
-//│ error | Int -> Int
+//│ 		α55 :> ‹∀ 1. α49_56''›
+//│ 		α49_56'' :> Int
+//│ Int
 //│ res
 //│     = -3
 
@@ -79,9 +82,8 @@ fff(y: 2, z: 3, x: 1)
 //│ | | 0. Typing term fff (y: 2, z: 3, x: 1,)
 //│ | | | applying-to-function => fff<class mlscript.Var>y: 2, z: 3, x: 1,<class mlscript.Tup>
 //│ | | | now we should desugar in case of named args!
-//│ | | | f is var
 //│ | | | !!named args case!!
-//│ | | | value => CompletedTypeInfo(TypedNuFun(0,fun fff = (x::0, y::1, z::2,) => * ('(' - (x,) (y,) ')',) (z,),((α43', α44', α45',) -> α48'))) class mlscript.TyperDatatypes$CompletedTypeInfo
+//│ | | | value => CompletedTypeInfo(TypedNuFun(0,fun fff = (x::0, y::1, z::2,) => * ('(' - (x,) (y,) ')',) (z,),((α43', α44', α45',) -> α49'))) class mlscript.TyperDatatypes$CompletedTypeInfo
 //│ | | | TypedNuFun matched! fd => fun fff = (x::0, y::1, z::2,) => * ('(' - (x,) (y,) ')',) (z,)
 //│ | | | v and f => y Fld(false,false,2)
 //│ | | | v and f => z Fld(false,false,3)
@@ -92,14 +94,16 @@ fff(y: 2, z: 3, x: 1)
 //│ | | | y is here => List()
 //│ | | | Desugared is here => let y = 2 in let z = 3 in let x = 1 in fff (x, y, z,)
 //│ | | | 0. Typing term fff
-//│ | | | 0. : ‹∀ 0. ((α43', α44', α45',) -> α48')›
-//│ | | 0. : ‹∀ 0. ((α43', α44', α45',) -> α48')›
-//│ | : Some(‹∀ 0. ((α43', α44', α45',) -> α48')›)
+//│ | | | 0. : ‹∀ 0. ((α43', α44', α45',) -> α49')›
+//│ | | 0. : ‹∀ 0. ((α43', α44', α45',) -> α49')›
+//│ | : Some(‹∀ 0. ((α43', α44', α45',) -> α49')›)
 //│ ======== TYPED ========
-//│ res: Some(‹∀ 0. ((α43', α44', α45',) -> α48')›) where 
+//│ res: Some(‹∀ 0. ((α43', α44', α45',) -> α49')›) where 
 //│ 		α43' <: Int
-//│ 		α48' :> (Int -> Int) | #error<>
-//│ (Int, anything, anything,) -> (error | Int -> Int)
+//│ 		α44' <: Int
+//│ 		α45' <: Int
+//│ 		α49' :> Int
+//│ (Int, Int, Int,) -> Int
 //│ res
 //│     = -3
 
@@ -126,6 +130,6 @@ fff(x1, y1, z1)
 //│ |fff|(|x1|,| |y1|,| |z1|)|
 //│ AST: TypingUnit(App(Var(fff), Tup(_: Var(x1), _: Var(y1), _: Var(z1))))
 //│ Parsed: fff (x1, y1, z1,);
-//│ error | Int -> Int
+//│ Int
 //│ res
 //│     = -3

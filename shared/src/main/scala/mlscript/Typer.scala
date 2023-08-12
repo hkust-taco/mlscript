@@ -1016,7 +1016,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
       case App(f: Term, a: Term) =>
         println("f type is gooz => " + codegen.Helpers.inspect(f) + " " + f.getClass())
         val (args_ty, fun_ty, res) = typeUnnamedApp(f, a)
-        fun_ty
+        val res_ty = con(fun_ty, FunctionType(args_ty, res)(
+            prov
+            // funProv // TODO: better?
+            ), res)
+        res_ty
       case Sel(obj, fieldName) =>
         implicit val shadows: Shadows = Shadows.empty
         // Explicit method calls have the form `x.(Class.Method)`
