@@ -142,6 +142,9 @@ let c = C(1)
 module D extends C(0) {
   this.foo(false)
 }
+//│ ╔══[ERROR] Using of `this` in the initialization statements is forbidden.
+//│ ║  l.143: 	  this.foo(false)
+//│ ╙──       	  ^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
 //│ ║  l.143: 	  this.foo(false)
 //│ ╙──       	      ^^^^
@@ -165,7 +168,7 @@ class C extends Test { // it also fails with Test[Int]...
 //│ ║  l.115: 	  fun bar = (this.arg, this.arg)
 //│ ╙──       	                 ^^^^
 //│ ╔══[ERROR] Illegal position for this definition statement.
-//│ ║  l.156: 	  fun arg = 123
+//│ ║  l.159: 	  fun arg = 123
 //│ ╙──       	      ^^^^^^^^^
 //│ class C {
 //│   fun bar: (error | 'A, error | 'A,)

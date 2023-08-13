@@ -72,7 +72,7 @@ mixin Test3 { fun f(x) = if x is Foo then 1 }
 mixin Test {
   class Lit(n: Int)
   class Add<A>(lhs: A, rhs: A) {
-    let cached = size(this)
+    fun cached = size(this)
   }
   fun size(x) = if x is
     Add(l, r) then this.size(l) + this.size(r)
@@ -80,7 +80,7 @@ mixin Test {
 //│ mixin Test() {
 //│   this: {size: 'lhs -> Int}
 //│   class Add[A](lhs: A, rhs: A) {
-//│     let cached: Int
+//│     fun cached: Int
 //│   }
 //│   class Lit(n: Int)
 //│   fun size: Add['lhs] -> Int

@@ -1,0 +1,85 @@
+:NewDefs
+
+class Base(base: Int) {
+  fun getBase1 = base
+  fun getBase2 = this.base
+  fun foo(x) = this.base + x
+}
+//│ class Base(base: Int) {
+//│   fun foo: Int -> Int
+//│   fun getBase1: Int
+//│   fun getBase2: Int
+//│ }
+
+class Foo() {
+  virtual val foo: Int = 42
+  val baz: Int = 0
+}
+//│ class Foo() {
+//│   let baz: Int
+//│   let foo: Int
+//│ }
+
+:e
+class Foo1() extends Foo() {
+  val foo = 1
+  log(this.foo)
+}
+//│ ╔══[ERROR] Using of `this` in the initialization statements is forbidden.
+//│ ║  l.26: 	  log(this.foo)
+//│ ╙──      	  ^^^^^^^^^^^^^
+//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ║  l.26: 	  log(this.foo)
+//│ ╙──      	          ^^^^
+//│ class Foo1() extends Foo {
+//│   let baz: Int
+//│   let foo: 1
+//│ }
+
+// FIXME: type constrcutor
+class Foo2() extends Foo() {
+  val foo = 2
+  constructor() {
+    log(this.foo)
+  }
+}
+//│ class Foo2() extends Foo {
+//│   let baz: Int
+//│   let foo: 2
+//│ }
+
+:e
+class Foo3() extends Foo() {
+  val foo = 3
+  val s = this.foo
+}
+//│ ╔══[ERROR] Using of `this` in the field s initialization is forbidden.
+//│ ║  l.54: 	  val s = this.foo
+//│ ╙──      	      ^^^^^^^^^^^^
+//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ║  l.54: 	  val s = this.foo
+//│ ╙──      	              ^^^^
+//│ class Foo3() extends Foo {
+//│   let baz: Int
+//│   let foo: 3
+//│   let s: error
+//│ }
+
+:e
+class Foo4() extends Foo() {
+  val foo = 4
+  fun bar(x) = this.foo + x // ok
+  let bb = bar(0) // call `this` indirectly
+}
+//│ ╔══[ERROR] Using of `this` in the field bb initialization is forbidden.
+//│ ║  l.72: 	  let bb = bar(0) // call `this` indirectly
+//│ ╙──      	      ^^^^^^^^^^^
+//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ║  l.71: 	  fun bar(x) = this.foo + x // ok
+//│ ╙──      	                   ^^^^
+//│ class Foo4() extends Foo {
+//│   fun bar: Int -> Int
+//│   let baz: Int
+//│   let bb: Int
+//│   let foo: 4
+//│ }

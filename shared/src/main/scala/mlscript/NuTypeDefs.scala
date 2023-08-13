@@ -459,7 +459,77 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     case k => errType // FIXME
   }
   
-  
+  // TODO: check reference correctly & make an exception
+  def checkThisInCtor(decls: Ls[NuDecl], stmts: Ls[Statement])(implicit raise: Raise): Unit = {
+    val accessThis = mutable.Map.empty[Str, Bool]
+
+    def visit(s: Statement): Bool = s match {
+      case App(lhs, rhs) => visit(lhs) || visit(rhs)
+      case CaseOf(trm, cases) =>
+        def visitCases(cases: CaseBranches): Bool = cases match {
+          case Case(pat, body, rest) => visit(pat) || visit(body) || visitCases(cases)
+          case Wildcard(body) => visit(body)
+          case NoCases => false
+        }
+        visit(trm) || visitCases(cases)
+      case Asc(trm, ty) => visit(trm)
+      case Assign(lhs, rhs) => visit(lhs) || visit(rhs)
+      case Bind(lhs, rhs) => visit(lhs) || visit(rhs)
+      case Blk(stmts) => stmts.foldLeft(false)((r, s) => r || visit(s))
+      case Bra(_, trm) => visit(trm)
+      case Constructor(params, body) => visit(body)
+      case Eqn(lhs, rhs) => visit(lhs) || visit(rhs)
+      case Forall(params, body) => visit(body)
+      case If(body, els) =>
+        def visitIfBody(body: IfBody): Bool = body match {
+          case IfThen(expr, rhs) => visit(expr) || visit(rhs)
+          case IfElse(body) => visit(body)
+          case IfLet(_, _, rhs, body) => visit(rhs)
+          case IfOpApp(lhs, _, rhs) => visit(lhs)
+          case IfOpsApp(lhs, opsRhss) => visit(lhs)
+          case IfBlock(lines) => lines.foldLeft(false)((r, e) => r || (e match {
+            case L(bd) => visitIfBody(bd)
+            case R(s) => visit(s)
+          }))
+        }
+        visitIfBody(body) || els.fold(false)(t => visit(t))
+      case Inst(body) => visit(body)
+      case Lam(_, rhs) => visit(rhs)
+      case Let(_, name, rhs, body) => visit(rhs) || visit(body)
+      case LetS(_, pat, rhs) => visit(pat) || visit(rhs)
+      case New(head, body) => body.entities.foldLeft(false)((r, s) => r || visit(s))
+      case NuFunDef(_, nme, _, L(rhs)) => visit(rhs)
+      case Rcd(fields) => fields.foldLeft(false)((r, s) => r || visit(s._2.value))
+      case Sel(receiver, fieldName) => visit(receiver)
+      case Splc(fields) => fields.foldLeft(false)((r, e) => r || (e match {
+        case L(e) => visit(e)
+        case R(f) => visit(f.value)
+      }))
+      case Subs(arr, idx) => visit(arr) || visit(idx)
+      case Test(trm, ty) => visit(trm) || visit(ty)
+      case Tup(fields) => fields.foldLeft(false)((r, s) => r || visit(s._2.value))
+      case TyApp(lhs, targs) => visit(lhs)
+      case Var(name) => name === "this" || accessThis.getOrElse(name, false)
+      case Where(body, where) => where.foldLeft(visit(body))((r, s) => r || visit(s))
+      case With(trm, fields) => visit(trm) || visit(fields)
+      case _ => false
+    }
+    
+    decls.foreach {
+      case fd @ NuFunDef(_, Var(nme), _, L(rhs)) => accessThis.put(nme, visit(rhs))
+      case _ => ()
+    }
+    decls.foreach {
+      case fd @ NuFunDef(S(_), Var(nme), _, L(_)) =>
+        if (accessThis.getOrElse(nme, false)) err(s"Using of `this` in the field $nme initialization is forbidden.", fd.toLoc)
+      case _ => ()
+    }
+    stmts.foreach{
+      case Asc(Var("this"), _) => ()
+      case s =>
+        if (visit(s)) err(s"Using of `this` in the initialization statements is forbidden.", s.toLoc)
+    }
+  }
   
   /** Type checks a typing unit, which is a sequence of possibly-mutually-recursive type and function definitions
    *  interleaved with plain statements. */
@@ -482,6 +552,13 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
       case decl: NuDecl => L(decl)
       case s => R(s)
     }
+
+    outer match {
+      case S(nd: NuTypeDef) if nd.kind != Als =>
+        checkThisInCtor(decls, statements)
+      case _ => ()
+    }
+
     val funSigs = MutMap.empty[Str, NuFunDef]
     val implems = decls.filter {
       case fd @ NuFunDef(N, nme, tparams, R(rhs)) =>
