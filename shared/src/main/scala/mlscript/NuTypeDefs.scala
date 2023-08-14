@@ -391,7 +391,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   
   
   /** Note: the type `bodyType` is stored *without* its polymorphic wrapper! (unlike `typeSignature`) */
-  case class TypedNuFun(level: Level, fd: NuFunDef, bodyType: ST)(val isImplemented: Bool, val isVirtual: Bool)
+  case class TypedNuFun(level: Level, fd: NuFunDef, bodyType: ST)(val isImplemented: Bool)
       extends TypedNuDecl with TypedNuTermDef {
     def kind: DeclKind = Val
     def name: Str = fd.nme.name
@@ -402,16 +402,16 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           (implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV, ST])
           : TypedNuFun = { val outer = ctx; withLevel { implicit ctx => this match {
       case TypedNuFun(level, fd, ty) =>
-        TypedNuFun(outer.lvl, fd, ty.freshenAbove(lim, rigidify))(isImplemented, isVirtual)
+        TypedNuFun(outer.lvl, fd, ty.freshenAbove(lim, rigidify))(isImplemented)
           // .tap(res => println(s"Freshen[$level,${ctx.lvl}] $this ~> $res"))
     }}}
     
     def mapPol(pol: Opt[Bool], smart: Bool)(f: (Opt[Bool], SimpleType) => SimpleType)
           (implicit ctx: Ctx): TypedNuFun =
-      TypedNuFun(level, fd, f(pol, bodyType))(isImplemented, isVirtual)
+      TypedNuFun(level, fd, f(pol, bodyType))(isImplemented)
     def mapPolMap(pol: PolMap)(f: (PolMap, SimpleType) => SimpleType)
           (implicit ctx: Ctx): TypedNuFun =
-      TypedNuFun(level, fd, f(pol, bodyType))(isImplemented, isVirtual)
+      TypedNuFun(level, fd, f(pol, bodyType))(isImplemented)
   }
   
   
@@ -940,7 +940,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     lazy val typedSignatureMembers: Ls[Str -> TypedNuFun] = {
       val implemented = funImplems.iterator.map(_.nme.name).toSet
       typedSignatures.iterator.map { case (fd, ty) =>
-        fd.nme.name -> TypedNuFun(level + 1, fd, ty)(implemented.contains(fd.nme.name), fd.isVirtual)
+        fd.nme.name -> TypedNuFun(level + 1, fd, ty)(implemented.contains(fd.nme.name))
       }.toList
     }
     
@@ -1012,7 +1012,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                           case _ => die
                         }.toMap)
                   }
-                  TypedNuFun(ctx.lvl, fd, PolymorphicType(ctx.lvl, body_ty))(isImplemented = false, isVirtual = decl.isVirtual)
+                  TypedNuFun(ctx.lvl, fd, PolymorphicType(ctx.lvl, body_ty))(isImplemented = false)
                 case R(_) => die
                 case L(body) =>
                   fd.isLetRec match {
@@ -1021,11 +1021,11 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       implicit val gl: GenLambdas = true
                       TypedNuFun(ctx.lvl, fd, typeTerm(
                         Let(true, fd.nme, body, fd.nme)
-                      ))(isImplemented = true, isVirtual = decl.isVirtual)
+                      ))(isImplemented = true)
                     case S(false) => // * Let bindings
                       checkNoTyParams()
                       implicit val gl: GenLambdas = true
-                      TypedNuFun(ctx.lvl, fd, typeTerm(body))(isImplemented = true, isVirtual = decl.isVirtual)
+                      TypedNuFun(ctx.lvl, fd, typeTerm(body))(isImplemented = true)
                     case N =>
                       // * We don't type functions polymorphically from the point of view of a typing unit
                       // * to avoid cyclic-looking constraints due to the polymorphic recursion limitation,
@@ -1053,7 +1053,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                             typeTerm(body) }
                         }
                       }.withProv(TypeProvenance(fd.toLoc, s"definition of method ${fd.nme.name}"))
-                      TypedNuFun(ctx.lvl, fd, body_ty)(isImplemented = true, isVirtual = decl.isVirtual)
+                      TypedNuFun(ctx.lvl, fd, body_ty)(isImplemented = true)
                   }
               }
               ctx.nextLevel { implicit ctx: Ctx => constrain(res_ty.bodyType, mutRecTV) }
@@ -1109,7 +1109,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     case (m: TypedNuTermDef, S(fun: TypedNuTermDef)) => fun match {
                       // If the member has no implementation, it is virtual automatically
                       // If the implementation and the declaration are in the same class, it does not require `virtual`
-                      case td: TypedNuFun if (!td.isVirtual && fun.isImplemented && !clsSigns.contains(fun)) =>
+                      case td: TypedNuFun if (!td.fd.isVirtual && fun.isImplemented && !clsSigns.contains(fun)) =>
                         err(msg"${m.kind.str.capitalize} member `${m.name}` is not a virtual member" -> m.toLoc ::
                           msg"Declared here:" -> fun.toLoc ::
                           Nil)
@@ -1140,13 +1140,13 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                         case (S(a), S(b)) => S(a || b)
                         case _ => N // if one is fun, then it will be fun
                       }, a.fd.nme, a.fd.tparams, a.fd.rhs)(a.fd.declareLoc, a.fd.virtualLoc, N, a.fd.outer orElse b.fd.outer, a.fd.genField)
-                      S(TypedNuFun(a.level, fd, a.bodyType & b.bodyType)(a.isImplemented || b.isImplemented, a.isVirtual || b.isVirtual))
+                      S(TypedNuFun(a.level, fd, a.bodyType & b.bodyType)(a.isImplemented || b.isImplemented))
                     case (a: NuParam, S(b: NuParam)) => 
                       S(NuParam(a.nme, a.ty && b.ty)(a.level))
                     case (a: NuParam, S(b: TypedNuFun)) =>
-                      S(TypedNuFun(a.level, b.fd, a.ty.ub & b.bodyType)(a.isImplemented || b.isImplemented, b.isVirtual))
+                      S(TypedNuFun(a.level, b.fd, a.ty.ub & b.bodyType)(a.isImplemented || b.isImplemented))
                     case (a: TypedNuFun, S(b: NuParam)) =>
-                      S(TypedNuFun(a.level, a.fd, b.ty.ub & a.bodyType)(a.isImplemented || b.isImplemented, a.isVirtual))
+                      S(TypedNuFun(a.level, a.fd, b.ty.ub & a.bodyType)(a.isImplemented || b.isImplemented))
                     case (a, N) => S(a)
                     case (a, S(b)) =>
                       err(msg"Intersection of ${a.kind.str} member and ${b.kind.str} members currently unsupported" -> td.toLoc
