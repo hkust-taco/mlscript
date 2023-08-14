@@ -52,7 +52,7 @@ mixin Mx {
 module M extends Mx {
   val r = this.id1(0)
 }
-//│ ╔══[ERROR] Using of `this` in the field r initialization is forbidden.
+//│ ╔══[ERROR] Can not access `this` when initializing field r
 //│ ║  l.53: 	  val r = this.id1(0)
 //│ ╙──      	      ^^^^^^^^^^^^^^^
 //│ module M {
@@ -76,7 +76,7 @@ module M extends Mx {
 //│ ╔══[ERROR] Type `#M & {id1: ?a -> ?b}` does not contain member `id2`
 //│ ║  l.64: 	  fun id1(x) = this.id2(x)
 //│ ╙──      	                   ^^^^
-//│ ╔══[ERROR] Using of `this` in the initialization statements is forbidden.
+//│ ╔══[ERROR] Can not access `this` in the initialization statements.
 //│ ║  l.74: 	  this.id1(0)
 //│ ╙──      	  ^^^^^^^^^^^
 //│ module M {
@@ -94,7 +94,7 @@ module M extends Mx {
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
 //│ ║  l.64: 	  fun id1(x) = this.id2(x)
 //│ ╙──      	                   ^^^^
-//│ ╔══[ERROR] Using of `this` in the initialization statements is forbidden.
+//│ ╔══[ERROR] Can not access `this` in the initialization statements.
 //│ ║  l.92: 	  this.id1(0)
 //│ ╙──      	  ^^^^^^^^^^^
 //│ module M {
@@ -109,7 +109,7 @@ module M extends Mx {
   fun id2(x) = (x, x)
   this.id1(0)
 }
-//│ ╔══[ERROR] Using of `this` in the initialization statements is forbidden.
+//│ ╔══[ERROR] Can not access `this` in the initialization statements.
 //│ ║  l.110: 	  this.id1(0)
 //│ ╙──       	  ^^^^^^^^^^^
 //│ module M {
@@ -136,12 +136,12 @@ class C {
 module M extends C {
   this.id2(true)
 }
-//│ ╔══[ERROR] Using of `this` in the initialization statements is forbidden.
-//│ ║  l.137: 	  this.id2(true)
-//│ ╙──       	  ^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
 //│ ║  l.137: 	  this.id2(true)
 //│ ╙──       	      ^^^^
+//│ ╔══[ERROR] Can not access `this` in the initialization statements.
+//│ ║  l.137: 	  this.id2(true)
+//│ ╙──       	  ^^^^^^^^^^^^^^
 //│ module M extends C {
 //│   fun f: (true, 0,)
 //│   fun id1: forall 'a. 'a -> 'a

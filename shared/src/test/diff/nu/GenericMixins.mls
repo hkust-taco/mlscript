@@ -142,12 +142,12 @@ let c = C(1)
 module D extends C(0) {
   this.foo(false)
 }
-//│ ╔══[ERROR] Using of `this` in the initialization statements is forbidden.
-//│ ║  l.143: 	  this.foo(false)
-//│ ╙──       	  ^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
 //│ ║  l.143: 	  this.foo(false)
 //│ ╙──       	      ^^^^
+//│ ╔══[ERROR] Can not access `this` in the initialization statements.
+//│ ║  l.143: 	  this.foo(false)
+//│ ╙──       	  ^^^^^^^^^^^^^^^
 //│ module D extends C {
 //│   fun bar: forall 'A. (Int | 'A, Int | 'A,)
 //│   fun baz: Int
