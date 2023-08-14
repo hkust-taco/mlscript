@@ -1357,17 +1357,32 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
     (arg_ty, fun_ty, res)
   }
 
-  def getNewVarName(prefix: String, nonValidVars: Set[String])(implicit raise: Raise): String = {
+  def getNewVarName(prefix: String, nonValidVars: Set[Var])(implicit raise: Raise): String = {
     // we check all possibe prefix_num combination, till we found one that is not in the nonValidVars
     val ints = LazyList.from(1)
     val result = ints.find(index => {
-      !nonValidVars.contains(prefix + "_" + index)
+      !nonValidVars.contains(Var(prefix + "_" + index))
     })
     result match {
       case Some(index) => 
         prefix + "_" + index
       case N => 
         "ERROR" // unreachable, cause there must be an possible NewVar
+    }
+  }
+
+  def freeVars(ctx: Ctx, t: Term): Set[Var] = {
+    t match {
+      case App(lhs, rhs) => 
+        freeVars(ctx, lhs) ++ freeVars(ctx, rhs)
+      case v @ Var(_) => 
+        Set(v)
+      case Tup(fields) =>
+        fields.map(f => freeVars(ctx, f._2.value))
+                    .flatMap(x => x)
+                    .toSet
+      case _ =>
+        Set() // TODO
     }
   }
 
@@ -1386,7 +1401,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
                   println("f => " + f)
                   println("v => " + v)
                   println("acc => " + acc)
-                  val newVar = Var(getNewVarName(v, Set()))
+                  val newVar = Var(getNewVarName(v, freeVars(ctx, a)))
                   Let(false, newVar, f.value, rec(tail, acc + (v -> newVar)))
                 case Nil =>
                   // call the function 

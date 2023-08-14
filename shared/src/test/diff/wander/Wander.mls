@@ -23,3 +23,36 @@ fff(y: 2, z: 3, x: 1)
 //│ Int
 //│ res
 //│     = -3
+
+// Tests for new-variable-creation
+:p
+fff(y: 2, z: y_1 + 1, x: z_1 - 2)
+//│ |fff|(|y|#:| |2|,| |z|#:| |y_1| |+| |1|,| |x|#:| |z_1| |-| |2|)|
+//│ AST: TypingUnit(App(Var(fff), Tup(y: IntLit(2), z: App(App(Var(+), Tup(_: Var(y_1))), Tup(_: IntLit(1))), x: App(App(Var(-), Tup(_: Var(z_1))), Tup(_: IntLit(2))))))
+//│ Parsed: fff (y: 2, z: + (y_1,) (1,), x: - (z_1,) (2,),);
+//│ ╔══[ERROR] identifier not found: y_1
+//│ ║  l.29: 	fff(y: 2, z: y_1 + 1, x: z_1 - 2)
+//│ ╙──      	             ^^^
+//│ ╔══[ERROR] identifier not found: z_1
+//│ ║  l.29: 	fff(y: 2, z: y_1 + 1, x: z_1 - 2)
+//│ ╙──      	                         ^^^
+//│ Int
+//│ Code generation encountered an error:
+//│   unresolved symbol z_1
+
+:p
+let y_1 = 2
+let z_1 = 3
+fff(y: 2, z: y_1 + 1, x: z_1 - 2)
+//│ |#let| |y_1| |#=| |2|↵|#let| |z_1| |#=| |3|↵|fff|(|y|#:| |2|,| |z|#:| |y_1| |+| |1|,| |x|#:| |z_1| |-| |2|)|
+//│ AST: TypingUnit(NuFunDef(Some(false), y_1, [], IntLit(2)), NuFunDef(Some(false), z_1, [], IntLit(3)), App(Var(fff), Tup(y: IntLit(2), z: App(App(Var(+), Tup(_: Var(y_1))), Tup(_: IntLit(1))), x: App(App(Var(-), Tup(_: Var(z_1))), Tup(_: IntLit(2))))))
+//│ Parsed: let y_1 = 2; let z_1 = 3; fff (y: 2, z: + (y_1,) (1,), x: - (z_1,) (2,),);
+//│ let y_1: 2
+//│ let z_1: 3
+//│ Int
+//│ y_1
+//│     = 2
+//│ z_1
+//│     = 3
+//│ res
+//│     = -3
