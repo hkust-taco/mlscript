@@ -1357,6 +1357,20 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
     (arg_ty, fun_ty, res)
   }
 
+  def getNewVarName(prefix: String, nonValidVars: Set[String])(implicit raise: Raise): String = {
+    // we check all possibe prefix_num combination, till we found one that is not in the nonValidVars
+    val ints = LazyList.from(1)
+    val result = ints.find(index => {
+      !nonValidVars.contains(prefix + "_" + index)
+    })
+    result match {
+      case Some(index) => 
+        prefix + "_" + index
+      case N => 
+        "ERROR" // unreachable, cause there must be an possible NewVar
+    }
+  }
+
   def desugarNamedArgs(term: Term, f: Var, a: Tup)(implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType]): SimpleType = {
     val Var(name) = f
     ctx.get(name) match {
@@ -1366,39 +1380,65 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
           case CompletedTypeInfo(TypedNuFun(level: Level, fd: NuFunDef, bodyType: ST)) =>
             // 1. check if list is in this format : N, N, N, Some, Some, ... TODO
             // 2. create let bindings
-            def rec (as: List[Var -> Fld]): Term = {
+            def rec (as: List[String -> Fld], acc: Map[String, Var]): Term = {
               as match {
                 case (v, f) :: tail =>
-                  Let(false, v, f.value, rec(tail))
-                case Nil => 
+                  println("f => " + f)
+                  println("v => " + v)
+                  println("acc => " + acc)
+                  val newVar = Var(getNewVarName(v, Set()))
+                  Let(false, newVar, f.value, rec(tail, acc + (v -> newVar)))
+                case Nil =>
                   // call the function 
                   // only the var name in the function call
-                  val funSignatureArgs: Term = fd.rhs match {
-                    case Left(value) => value match {
-                      case Lam(lhs, rhs) => 
-                        lhs
+                  val fields = fd.rhs match {
+                    case Left(Lam(Tup(fields), rhs)) => 
+                      fields
+                    case _ =>
+                      Nil // TODO: check what to do if there is something wrong. cannot raise an err(because type is simple type)!
+                  }
+                  println("fields => " + fields)
+                  // I want list of vars of signature, sorted.
+                  val onlySignatureArgs: List[String] = fields.map(x =>
+                    x._2.value match {
+                      case Var(name) =>
+                        name
+                    })
+                  println("onlySignatureArgs => " + onlySignatureArgs)
+                  println("final acc => " + acc)
+
+                  // check if there is one args of signature not present in map
+                  onlySignatureArgs.foreach(x => 
+                    if (!acc.contains(x))
+                      err("the named used in binding are not matched with the function signature!", N) 
+                  )
+                  val y: Term = Tup(onlySignatureArgs.map(x => 
+                    acc.get(x) match {
+                      case Some(v) => (None, Fld(false, false, v))
+                      // err("the named used in binding are not matched with the function signature!", f.toLoc) // TODO: Check what to in case of this!
                     }
-                  }
-                  val y: Tup = funSignatureArgs match {
-                    case Tup(fields) => 
-                      Tup(fields.map(x =>
-                        x._2.value match {
-                          case Var(name) => 
-                            (None, Fld(false, false, Var(name)))
-                        }))
-                  }
-                  val yy: List[Opt[Var] -> Fld] = Nil 
+                  ))
+                  // val y: Tup = Tup(fields.map(x =>
+                  //                   x._2.value match {
+                  //                     case Var(name) => 
+                  //                       (None, Fld(false, false, Var(name)))
+                  //                   }))
+                  // // println("y => " + y)
+                  // // val yy: List[Opt[Var] -> Fld] = Nil
+
                   App(f, y)
               }
             }
             val aa = a.fields.map(x => 
               x._1 match {
                 case Some(value) => 
-                  (value, x._2)
+                  (value.name, x._2)
                 case N =>
-                  (Var("ggg"), x._2)
+                  ("ggg", x._2)
               })
-            val desugared = rec(aa)
+            println("aa => " + aa)
+            println("a => " + a)
+            val desugared = rec(aa, Map())
             println("Desugared is here => " + desugared)
             term.desugaredTerm = S(desugared)
             // 3. type the term
