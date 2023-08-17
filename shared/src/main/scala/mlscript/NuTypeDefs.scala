@@ -390,7 +390,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   }
 
   // Store referred members. indirect ref: ref by using `this`
-  case class RefMap(useThis: Bool, refs: Set[Str])
+  case class RefMap(useThis: Bool, refs: Set[(Str, Bool)])
   object RefMap {
     lazy val nothing: RefMap = RefMap(false, Set.empty)
   }
@@ -470,7 +470,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   }
 
   def getRefs(body: Statement): RefMap = {
-    val refs = mutable.HashSet[Str]()
+    val refs = mutable.HashSet[(Str, Bool)]()
 
     def visit(s: Statement): Bool = s match {
       case App(lhs, rhs) => visit(lhs) || visit(rhs)
@@ -509,6 +509,9 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
       case New(head, body) => body.entities.foldLeft(false)((r, s) => r || visit(s))
       case NuFunDef(_, nme, _, L(rhs)) => visit(rhs)
       case Rcd(fields) => fields.foldLeft(false)((r, s) => r || visit(s._2.value))
+      case Sel(Var("this"), Var(name)) =>
+        refs.add((name, true))
+        false
       case Sel(receiver, fieldName) => visit(receiver) || visit(fieldName)
       case Splc(fields) => fields.foldLeft(false)((r, e) => r || (e match {
         case L(e) => visit(e)
@@ -521,7 +524,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
       case Var(name) =>
         if (name === "this") true
         else {
-          refs.add(name)
+          refs.add((name, false))
           false
         }
       case Where(body, where) => where.foldLeft(visit(body))((r, s) => r || visit(s))
@@ -1058,17 +1061,17 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
             case td: NuTypeDef =>
               
               /** Check no `this` access in ctor statements or val rhs. */
-              def ctorThisCheck(members: Ls[NuMember], stmts: Ls[Statement]): Unit = {
+              def ctorThisCheck(members: Ls[NuMember], stmts: Ls[Statement], baseMembers: Ls[NuMember]): Unit = {
                 val cache = mutable.HashMap[Str, Bool]()
 
                 // Return true if it is invalid
-                def check(refs: RefMap, name: Opt[Str], stack: Ls[Str]): Bool = {
+                def check(refs: RefMap, name: Opt[Str], stack: Ls[Str])(expection: Bool): Bool = {
                   def run: Bool = {
                     refs.useThis || (
-                      refs.refs.foldLeft(false)((res, nme) => res || (members.find(_.name === nme) match {
-                        case S(nf: TypedNuFun) if nme =/= name.getOrElse("") && !stack.contains(nme) =>
-                          check(nf.getFunRefs, S(nme), nme :: stack)
-                        case _ => false // refer to outer 
+                      refs.refs.foldLeft(false)((res, p) => res || (members.find(_.name === p._1).fold(baseMembers.find(_.name === p._1))(m => S(m)) match {
+                        case S(nf: TypedNuFun) if p._1 =/= name.getOrElse("") && !stack.contains(p._1) =>
+                          (p._2 && (!expection || nf.fd.isVirtual)) || check(nf.getFunRefs, S(p._1), p._1 :: stack)(false)
+                        case _ => false // Refer to outer 
                       }))
                     )
                   }
@@ -1078,14 +1081,14 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
 
                 members.foreach {
                   case tf @ TypedNuFun(_, fd, _) =>
-                    if (fd.isLetRec.isDefined && check(tf.getFunRefs, S(tf.name), tf.name :: Nil)) // not a function && access `this` in the ctor
+                    if (fd.isLetRec.isDefined && check(tf.getFunRefs, S(tf.name), tf.name :: Nil)(true)) // not a function && access `this` in the ctor
                       err(msg"Can not access `this` when initializing field ${tf.name}", fd.toLoc)
                   case _ => ()
                 }
                 stmts.foreach{
                   case Asc(Var("this"), _) => ()
                   case s =>
-                    if (check(getRefs(s), N, Nil))
+                    if (check(getRefs(s), N, Nil)(false))
                       err(s"Can not access `this` in the initialization statements.", s.toLoc)
                 }
               }
@@ -1439,7 +1442,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     ctorThisCheck(newImplems, td.body.entities.filter {
                       case _: NuDecl => false
                       case _ => true
-                    })
+                    }, baseClsMembers)
                     
                     // * Those member implementations we inherit from the base class that are not overridden
                     val implemsInheritedFromBaseCls = {

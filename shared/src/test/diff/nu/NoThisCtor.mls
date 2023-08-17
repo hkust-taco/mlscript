@@ -22,7 +22,7 @@ class Foo() {
 
 :e
 class Foo1() extends Foo() {
-  val foo = 1
+  virtual val foo = 1
   log(this.foo)
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
@@ -38,7 +38,7 @@ class Foo1() extends Foo() {
 
 // FIXME: type constrcutor
 class Foo2() extends Foo() {
-  val foo = 2
+  virtual val foo = 2
   constructor() {
     log(this.foo)
   }
@@ -50,7 +50,7 @@ class Foo2() extends Foo() {
 
 :e
 class Foo3() extends Foo() {
-  val foo = 3
+  virtual val foo = 3
   val s = this.foo
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
@@ -67,7 +67,7 @@ class Foo3() extends Foo() {
 
 :e
 class Foo4() extends Foo() {
-  val foo = 4
+  virtual val foo = 4
   fun bar(x) = this.foo + x // ok
   let bb = bar(0) // call `this` indirectly
 }
@@ -100,4 +100,46 @@ class Foo5() extends Foo() {
 //│   let baz: Int
 //│   let foo: Int
 //│   let x: Int
+//│ }
+
+:e
+class Foo6() extends Foo() {
+  val y = this.baz // baz is final
+}
+//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ║  l.107: 	  val y = this.baz // baz is final
+//│ ╙──       	              ^^^^
+//│ class Foo6() extends Foo {
+//│   let baz: Int
+//│   let foo: Int
+//│   let y: error
+//│ }
+
+:e
+class Bar() {
+  val d = 1
+  fun add(x) = x + this.d
+}
+//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ║  l.121: 	  fun add(x) = x + this.d
+//│ ╙──       	                       ^^
+//│ class Bar() {
+//│   fun add: Int -> Int
+//│   let d: 1
+//│ }
+
+:e
+class Bar2() extends Bar() {
+  val two = this.add(1) // add is final, but it refers to `this`
+}
+//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ║  l.133: 	  val two = this.add(1) // add is final, but it refers to `this`
+//│ ╙──       	                ^^^^
+//│ ╔══[ERROR] Can not access `this` when initializing field two
+//│ ║  l.133: 	  val two = this.add(1) // add is final, but it refers to `this`
+//│ ╙──       	      ^^^^^^^^^^^^^^^^^
+//│ class Bar2() extends Bar {
+//│   fun add: Int -> Int
+//│   let d: 1
+//│   let two: error
 //│ }
