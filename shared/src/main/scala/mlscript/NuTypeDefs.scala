@@ -1060,17 +1060,20 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
               
             case td: NuTypeDef =>
               
-              /** Check no `this` access in ctor statements or val rhs. */
-              def ctorThisCheck(members: Ls[NuMember], stmts: Ls[Statement], baseMembers: Ls[NuMember]): Unit = {
+              /** Check no `this` access in ctor statements or val rhs and reject unqualified accesses to virtual members.. */
+              def qualificationCheck(members: Ls[NuMember], stmts: Ls[Statement], baseMembers: Ls[NuMember]): Unit = {
                 val cache = mutable.HashMap[Str, Bool]()
 
+                def getMember(name: Str) =
+                  members.find(_.name === name).fold(baseMembers.find(_.name === name))(m => S(m))
+
                 // Return true if it is invalid
-                def check(refs: RefMap, name: Opt[Str], stack: Ls[Str])(expection: Bool): Bool = {
+                def checkThisInCtor(refs: RefMap, name: Opt[Str], stack: Ls[Str])(expection: Bool): Bool = {
                   def run: Bool = {
                     refs.useThis || (
-                      refs.refs.foldLeft(false)((res, p) => res || (members.find(_.name === p._1).fold(baseMembers.find(_.name === p._1))(m => S(m)) match {
+                      refs.refs.foldLeft(false)((res, p) => res || (getMember(p._1) match {
                         case S(nf: TypedNuFun) if p._1 =/= name.getOrElse("") && !stack.contains(p._1) =>
-                          (p._2 && (!expection || nf.fd.isVirtual)) || check(nf.getFunRefs, S(p._1), p._1 :: stack)(false)
+                          (p._2 && (!expection || nf.fd.isVirtual)) || checkThisInCtor(nf.getFunRefs, S(p._1), p._1 :: stack)(false)
                         case _ => false // Refer to outer 
                       }))
                     )
@@ -1079,17 +1082,30 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                   name.fold(run)(name => cache.getOrElseUpdate(name, run))
                 }
 
+                def checkUnqualifiedVirtual(refs: RefMap, parentLoc: Opt[Loc]) =
+                  refs.refs.foreach(p => if (!p._2) getMember(p._1) match { // unqualified access
+                    case S(nf: TypedNuFun) if nf.fd.isVirtual =>
+                      err(msg"Unqualified access to virtual member ${p._1}" -> parentLoc ::
+                        msg"Declared here:" -> nf.fd.toLoc
+                      :: Nil)
+                    case _ => ()
+                  })
+
                 members.foreach {
                   case tf @ TypedNuFun(_, fd, _) =>
-                    if (fd.isLetRec.isDefined && check(tf.getFunRefs, S(tf.name), tf.name :: Nil)(true)) // not a function && access `this` in the ctor
+                    val refs = tf.getFunRefs
+                    if (fd.isLetRec.isDefined && checkThisInCtor(refs, S(tf.name), tf.name :: Nil)(true)) // not a function && access `this` in the ctor
                       err(msg"Can not access `this` when initializing field ${tf.name}", fd.toLoc)
+                    checkUnqualifiedVirtual(refs, fd.toLoc)
                   case _ => ()
                 }
                 stmts.foreach{
                   case Asc(Var("this"), _) => ()
                   case s =>
-                    if (check(getRefs(s), N, Nil)(false))
-                      err(s"Can not access `this` in the initialization statements.", s.toLoc)
+                    val refs = getRefs(s)
+                    if (checkThisInCtor(refs, N, Nil)(false))
+                      err(s"Can not access `this` in the initialization statements", s.toLoc)
+                    checkUnqualifiedVirtual(refs, s.toLoc)
                 }
               }
               
@@ -1439,7 +1455,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       baseClsMembers.partition(_.isImplemented)
                     
                     val newImplems = ttu.implementedMembers
-                    ctorThisCheck(newImplems, td.body.entities.filter {
+                    qualificationCheck(newImplems, td.body.entities.filter {
                       case _: NuDecl => false
                       case _ => true
                     }, baseClsMembers)

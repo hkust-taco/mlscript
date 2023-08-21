@@ -28,7 +28,7 @@ class Foo1() extends Foo() {
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
 //│ ║  l.26: 	  log(this.foo)
 //│ ╙──      	          ^^^^
-//│ ╔══[ERROR] Can not access `this` in the initialization statements.
+//│ ╔══[ERROR] Can not access `this` in the initialization statements
 //│ ║  l.26: 	  log(this.foo)
 //│ ╙──      	  ^^^^^^^^^^^^^
 //│ class Foo1() extends Foo {

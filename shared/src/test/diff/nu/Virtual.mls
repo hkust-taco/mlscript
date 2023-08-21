@@ -84,3 +84,32 @@ class U() {
 //│ class U() {
 //│   fun f: Int -> Int
 //│ }
+
+:e
+class V1() {
+  virtual val x = 42
+  fun foo = x // unqualified access!
+}
+//│ ╔══[ERROR] Unqualified access to virtual member x
+//│ ║  l.91: 	  fun foo = x // unqualified access!
+//│ ║        	      ^^^^^^^
+//│ ╟── Declared here:
+//│ ║  l.90: 	  virtual val x = 42
+//│ ╙──      	              ^^^^^^
+//│ class V1() {
+//│   fun foo: 42
+//│   let x: 42
+//│ }
+
+:e
+class V2() {
+  virtual val x = 42
+  fun foo: Int = this.x
+}
+//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ║  l.107: 	  fun foo: Int = this.x
+//│ ╙──       	                     ^^
+//│ class V2() {
+//│   fun foo: Int
+//│   let x: 42
+//│ }
