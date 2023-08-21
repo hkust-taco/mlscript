@@ -456,11 +456,11 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
                 case (br @ BRACKETS(Round, Spaces(cons, (KEYWORD("override"), ovLoc) :: rest)), loc) :: rest2 =>
                   resetCur(BRACKETS(Round, rest)(br.innerLoc) -> loc :: rest2)
                   funParams match {
-                    case ps @ Tup(N -> Fld(false, false, _, pat) :: Nil) :: Nil =>
+                    case ps @ Tup(N -> Fld(false, false, gen, pat) :: Nil) :: Nil =>
                       val fv = freshVar
-                      (Tup(N -> Fld(false, false, false, fv) :: Nil) :: Nil, S(
+                      (Tup(N -> Fld(false, false, gen, fv) :: Nil) :: Nil, S(
                         (body: Term) => If(IfOpApp(fv, Var("is"), IfThen(pat, body)), S(
-                          App(Sel(Super().withLoc(S(ovLoc)), v), Tup(N -> Fld(false, false, false, fv) :: Nil))
+                          App(Sel(Super().withLoc(S(ovLoc)), v), Tup(N -> Fld(false, false, gen, fv) :: Nil))
                         ))
                       ))
                     case r =>
@@ -1092,8 +1092,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
     
     def mkSeq = if (seqAcc.isEmpty) argName -> e else e match {
       case L(_) => ???
-      case R(Fld(m, s, _, res)) =>
-        argName -> R(Fld(m, s, false, Blk((res :: seqAcc).reverse)))
+      case R(Fld(m, s, g, res)) =>
+        argName -> R(Fld(m, s, g, Blk((res :: seqAcc).reverse)))
     }
     
     cur match {

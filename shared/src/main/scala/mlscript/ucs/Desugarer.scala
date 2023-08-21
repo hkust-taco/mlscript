@@ -787,6 +787,9 @@ class Desugarer extends TypeDefs { self: Typer =>
           printlnUCS(s"• Constructor pattern: $className(${fields.iterator.map(x => s"${x._1} -> ${x._2}").mkString(", ")})")
           // TODO: expand bindings here
           val consequent = rec(cases)(defs ++ fields.iterator.map(_._2))
+          // Adding a block here helps when we need to fold let-bindings in `$unapply`
+          // So we can distinguish terms in the actual body from the `$unapply` parameters
+          // It will not affect the semantics
           Case(className, mkLetFromFields(scrutinee, fields.toList, consequent match {
             case _: Let => Blk(consequent :: Nil)
             case _ => consequent

@@ -29,15 +29,15 @@ sealed trait TypeSymbol extends LexicalSymbol {
 
 sealed trait NuTypeSymbol { sym: TypeSymbol =>
   val isNested: Bool // is nested in another class/mixin/module
-  val methods: Ls[MethodDef[Left[Term, Type]]]
-  val signatures: Ls[MethodDef[Right[Term, Type]]]
+  val methods: Ls[MethodDef[Left[Term, Type]]] // implemented methods
+  val signatures: Ls[MethodDef[Right[Term, Type]]] // methods signatures
   val ctor: Ls[Statement] // statements in the constructor
   val nested: Ls[NuTypeDef] // nested class/mixin/module
   val superParameters: Ls[Term] // parameters that need to be passed to the `super()`
   val isPlainJSClass: Bool // is this a plain class in JS
   val ctorParams: Opt[Ls[(Str, Bool)]] // parameters in the constructor
   val publicCtors: Ls[Str] // public(i.e., val-) parameters in the ctor
-  val matchingFields: Ls[Str] = sym.body.collectFields
+  val matchingFields: Ls[Str] = sym.body.collectFields // matchable fields(i.e., fields in `class ClassName(...)`)
 }
 
 sealed class ValueSymbol(val lexicalName: Str, val runtimeName: Str, val isByvalueRec: Option[Boolean], val isLam: Boolean) extends RuntimeSymbol {

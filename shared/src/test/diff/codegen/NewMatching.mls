@@ -153,3 +153,103 @@ bar(Some(V1(12)))
 //│ Int
 //│ res
 //│     = 2
+
+:js
+class FooBar {
+  val x = 42
+}
+//│ class FooBar {
+//│   let x: 42
+//│ }
+//│ // Prelude
+//│ class TypingUnit11 {
+//│   #FooBar;
+//│   constructor() {
+//│   }
+//│   get FooBar() {
+//│     const outer = this;
+//│     if (this.#FooBar === undefined) {
+//│       class FooBar {
+//│         #x;
+//│         get x() { return this.#x; }
+//│         constructor() {
+//│           this.#x = 42;
+//│           const x = this.#x;
+//│         }
+//│       };
+//│       this.#FooBar = FooBar;
+//│     }
+//│     return this.#FooBar;
+//│   }
+//│ }
+//│ const typing_unit11 = new TypingUnit11;
+//│ globalThis.FooBar = typing_unit11.FooBar;
+//│ // End of generated code
+
+:js
+fun t(x) =
+  if x is
+    FooBar then 1
+    _ then 0
+//│ fun t: Object -> (0 | 1)
+//│ // Prelude
+//│ class TypingUnit12 {}
+//│ const typing_unit12 = new TypingUnit12;
+//│ // Query 1
+//│ globalThis.t = function t(x) {
+//│   return ((() => {
+//│     return x instanceof FooBar ? 1 : 0;
+//│   })());
+//│ };
+//│ // End of generated code
+
+t(new FooBar())
+//│ 0 | 1
+//│ res
+//│     = 1
+
+:e
+:ge
+fun ft(x) =
+  if x is
+    FooBar(x) then x
+    _ then 0
+//│ ╔══[ERROR] class FooBar expects 0 parameter but found 1 parameter
+//│ ║  l.215: 	    FooBar(x) then x
+//│ ╙──       	    ^^^^^^^^^
+//│ fun ft: anything -> error
+//│ Code generation encountered an error:
+//│   if expression was not desugared
+
+:js
+module MM
+fun m(x) =
+  if x is
+    MM then 1
+    _ then 0
+//│ module MM
+//│ fun m: Object -> (0 | 1)
+//│ // Prelude
+//│ class TypingUnit15 {
+//│   #MM;
+//│   constructor() {
+//│   }
+//│   get MM() {
+//│     const outer = this;
+//│     if (this.#MM === undefined) {
+//│       class MM {}
+//│       this.#MM = new MM();
+//│       this.#MM.class = MM;
+//│     }
+//│     return this.#MM;
+//│   }
+//│ }
+//│ const typing_unit15 = new TypingUnit15;
+//│ globalThis.MM = typing_unit15.MM;
+//│ // Query 1
+//│ globalThis.m = function m(x) {
+//│   return ((() => {
+//│     return x instanceof MM.class ? 1 : 0;
+//│   })());
+//│ };
+//│ // End of generated code

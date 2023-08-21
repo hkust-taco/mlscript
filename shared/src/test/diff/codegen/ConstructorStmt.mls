@@ -262,7 +262,7 @@ log((baz.x, baz.y))
 
 :js
 class Q() {
-  val q = 42
+  let q = 42
   fun qq =
     let f = (x: Int) => {q: x + q}; f(1)
 }
@@ -280,7 +280,6 @@ class Q() {
 //│     if (this.#Q === undefined) {
 //│       class Q {
 //│         #q;
-//│         get q() { return this.#q; }
 //│         static $unapply(self) { return [] }
 //│         constructor() {
 //│           this.#q = 42;
@@ -289,7 +288,7 @@ class Q() {
 //│         get qq() {
 //│           const self = this;
 //│           return ((() => {
-//│             let f = (x) => ({ q: x + self.q });
+//│             let f = (x) => ({ q: x + self.#q });
 //│             return f(1);
 //│           })());
 //│         }
@@ -315,7 +314,7 @@ q.qq.q
 
 :js
 class W() {
-  val x = 42
+  let x = 42
   fun add(self: Int) = x + self
 }
 //│ class W() {
@@ -332,7 +331,6 @@ class W() {
 //│     if (this.#W === undefined) {
 //│       class W {
 //│         #x;
-//│         get x() { return this.#x; }
 //│         static $unapply(self) { return [] }
 //│         constructor() {
 //│           this.#x = 42;
@@ -340,7 +338,7 @@ class W() {
 //│         }
 //│         add(self1) {
 //│           const self = this;
-//│           return self.x + self1;
+//│           return self.#x + self1;
 //│         }
 //│       };
 //│       this.#W = (() => Object.freeze(new W()));

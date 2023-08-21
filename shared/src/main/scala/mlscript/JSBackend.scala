@@ -254,16 +254,13 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     case CaseOf(trm, Wildcard(default)) =>
       JSCommaExpr(translateTerm(trm) :: translateTerm(default) :: Nil)
     // Pattern match with two branches -> tenary operator
-    case CaseOf(trm, cs @ Case(tst, csq, Wildcard(alt))) => tst match {
-      case Var(tp) => scope.resolveValue(tp) match {
-        case S(_: NuTypeSymbol) | S(CapturedSymbol(_, _: NuTypeSymbol)) =>
-          translateCaseBranch(translateTerm(trm), cs)
-        case _ =>
-          translateCase(translateTerm(trm), tst)(scope)(translateTerm(csq), translateTerm(alt))
-      }
-      case _ =>
-        translateCase(translateTerm(trm), tst)(scope)(translateTerm(csq), translateTerm(alt))
-    }
+    case CaseOf(trm, cs @ Case(tst, csq, Wildcard(alt))) =>
+      val unapplyParams = getUnapplyParams(tst)
+      val scrut = translateTerm(trm)
+      val res = unapplyParams.fold(translateTerm(csq))(params =>
+        translateUnapplyBranch(csq, scrut, cs, params._1, params._2)
+      )
+      translateCase(scrut, tst)(scope)(res, translateTerm(alt))
     // Pattern match with more branches -> chain of ternary expressions with cache
     case CaseOf(trm, cases) =>
       val arg = translateTerm(trm)
@@ -324,55 +321,65 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       throw CodeGenError(s"cannot generate code for term ${inspect(term)}")
   }
 
+  // Translate matching branch for NuTypeDef that uses the `$unapply` method
+  private def translateUnapplyBranch(body: Term, scrut: JSExpr, branch: CaseBranches, tp: Str, matchingList: Ls[Str])(
+    implicit scope: Scope
+  ): JSExpr = {
+    def run(term: Term, prev: Int = -1)(implicit scope: Scope): JSExpr = term match {
+      case Let(false, Var(alias), Sel(rev1, Var(name)), body) =>
+        val pos = matchingList.indexOf(name)
+        val placeholders = List.range(prev + 1, pos).map(i => JSNamePattern(s"$$$i"))
+        body match {
+          case Let(false, _, Sel(rev2, Var(name2)), _) if (rev1 === rev2 && matchingList.indexOf(name2) > matchingList.indexOf(name)) =>
+            val letScope = scope.derive(s"Let")
+            val runtimeName = letScope.declareParameter(alias)
+            run(body, pos)(letScope) match {
+              case JSInvoke(JSArrowFn(JSArrayPattern(tail) :: Nil, body), arguments) =>
+                val patterns = placeholders :+ JSNamePattern(runtimeName)
+                JSInvoke(JSArrowFn(JSArrayPattern(patterns ++ tail) :: Nil, body), arguments)
+              case t => throw new AssertionError(s"unexpected error when handling $branch.")
+            }
+          case Let(false, _, Sel(rev2, Var(name2)), _) if (rev1 === rev2) =>
+            val letScope = scope.derive(s"Let")
+            val patterns = JSNamePattern(letScope.declareParameter(alias))
+            JSInvoke(
+              JSArrowFn(JSArrayPattern(patterns :: Nil) :: Nil, letScope.tempVars `with` run(body, -1)(letScope)),
+              JSInvoke(JSIdent(s"$tp.class.$$unapply"), scrut :: Nil) :: Nil
+            )
+          case _ =>
+            val letScope = scope.derive(s"Let")
+            val runtimeName = letScope.declareParameter(alias)
+            val patterns = placeholders :+ JSNamePattern(runtimeName)
+            JSInvoke(
+              JSArrowFn(JSArrayPattern(patterns) :: Nil, letScope.tempVars `with` translateTerm(body)(letScope)),
+              JSInvoke(JSIdent(s"$tp.class.$$unapply"), scrut :: Nil) :: Nil
+            )
+        }
+      case _ => translateTerm(term)
+    }
+    run(body)
+  }
+
+  // Return S(type name, unapply fields) if it is a new type symbol
+  private def getUnapplyParams(pat: SimpleTerm)(implicit scope: Scope) =
+    pat match {
+      case Var(tp) => scope.resolveValue(tp) match {
+        case S(sym: NewClassSymbol) => S(tp -> sym.matchingFields)
+        case S(CapturedSymbol(_, sym: NewClassSymbol)) => S(tp -> sym.matchingFields)
+        case _ => N
+      }
+      case _ => N
+    }
+
   private def translateCaseBranch(scrut: JSExpr, branch: CaseBranches)(implicit
       scope: Scope
   ): JSExpr = branch match {
     case Case(pat, body, rest) =>
-      pat match {
-        case Var(tp) =>
-          def uncurry(term: Term, prev: Int = -1)(implicit scope: Scope, matchingList: Ls[Str]): JSExpr = term match {
-            case Let(false, Var(alias), Sel(rev1, Var(name)), body) =>
-              val pos = matchingList.indexOf(name)
-              val placeholders = List.range(prev + 1, pos).map(i => JSNamePattern(s"$$$i"))
-              body match {
-                case Let(false, _, Sel(rev2, Var(name2)), _) if (rev1 === rev2 && matchingList.indexOf(name2) > matchingList.indexOf(name)) =>
-                  val letScope = scope.derive(s"Let")
-                  val runtimeName = letScope.declareParameter(alias)
-                  uncurry(body, pos)(letScope, matchingList) match {
-                    case JSInvoke(JSArrowFn(JSArrayPattern(tail) :: Nil, body), arguments) =>
-                      val patterns = placeholders :+ JSNamePattern(runtimeName)
-                      JSInvoke(JSArrowFn(JSArrayPattern(patterns ++ tail) :: Nil, body), arguments)
-                    case t => throw new AssertionError(s"unexpected error when handling $branch.")
-                  }
-                case Let(false, _, Sel(rev2, Var(name2)), _) if (rev1 === rev2) =>
-                  val letScope = scope.derive(s"Let")
-                  val patterns = JSNamePattern(letScope.declareParameter(alias))
-                  JSInvoke(
-                    JSArrowFn(JSArrayPattern(patterns :: Nil) :: Nil, letScope.tempVars `with` uncurry(body, -1)(letScope, matchingList)),
-                    JSInvoke(JSIdent(s"$tp.class.$$unapply"), scrut :: Nil) :: Nil
-                  )
-                case _ =>
-                  val letScope = scope.derive(s"Let")
-                  val runtimeName = letScope.declareParameter(alias)
-                  val patterns = placeholders :+ JSNamePattern(runtimeName)
-                  JSInvoke(
-                    JSArrowFn(JSArrayPattern(patterns) :: Nil, letScope.tempVars `with` translateTerm(body)(letScope)),
-                    JSInvoke(JSIdent(s"$tp.class.$$unapply"), scrut :: Nil) :: Nil
-                  )
-              }
-            case _ => translateTerm(term)
-          }
-          scope.resolveValue(tp) match {
-            case S(sym: NuTypeSymbol) if (!sym.isPlainJSClass) =>
-              translateCase(scrut, pat)(scope)(uncurry(body)(scope, sym.matchingFields), translateCaseBranch(scrut, rest))
-            case S(CapturedSymbol(_, sym: NuTypeSymbol)) if (!sym.isPlainJSClass) =>
-              translateCase(scrut, pat)(scope)(uncurry(body)(scope, sym.matchingFields), translateCaseBranch(scrut, rest))
-            case _ =>
-              translateCase(scrut, pat)(scope)(translateTerm(body), translateCaseBranch(scrut, rest))
-          }
-        case _ =>
-          translateCase(scrut, pat)(scope)(translateTerm(body), translateCaseBranch(scrut, rest))
-      }
+      val unapplyParama = getUnapplyParams(pat)
+      val res = unapplyParama.fold(translateTerm(body))(params =>
+        translateUnapplyBranch(body, scrut, branch, params._1, params._2)
+      )
+      translateCase(scrut, pat)(scope)(res, translateCaseBranch(scrut, rest))
     case Wildcard(body) =>
       translateTerm(body)
     case NoCases        => JSImmEvalFn(N, Nil, R(JSInvoke(
@@ -594,7 +601,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     sym match {
       case S(sym: NewClassSymbol) =>
         val localScope = scope.derive(s"local ${sym.lexicalName}")
-        val nd = translateNewTypeDefinition(sym, N, true, false)(localScope)
+        val nd = translateNewTypeDefinition(sym, N, !sym.isPlainJSClass, false)(localScope)
         val ctorMth = localScope.declareValue("ctor", Some(false), false).runtimeName
         val (constructor, params) = translateNewClassParameters(nd)
         val initList =
@@ -744,7 +751,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     siblingsMembers.foreach(getterScope.captureSymbol(outerSymbol, _))
 
     val classBody =
-      translateNewTypeDefinition(classSymbol, N, true, false)(getterScope)
+      translateNewTypeDefinition(classSymbol, N, !classSymbol.isPlainJSClass, false)(getterScope)
     val (constructor, params) = translateNewClassParameters(classBody)
 
     val privateIdent = JSIdent(s"this.#${classSymbol.lexicalName}")
@@ -791,11 +798,11 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
           constructorScope.declareValue(f, Some(false), false).runtimeName
         }
       )(lst => lst.map { p =>
-          if (p._2) {
+          if (p._2) { // `constructor(val name)` will also generate a field and a getter
             memberList += NewClassMemberSymbol(p._1, Some(false), false, false).tap(nuTypeScope.register)
             getters += p._1
           }
-          constructorScope.declareValue(p._1, Some(false), false).runtimeName
+          constructorScope.declareValue(p._1, Some(false), false).runtimeName // Otherwise, it is only available in the constructor
         })
     
     val initFields = getters.toList.map(name => JSAssignExpr(JSIdent(s"this.#$name"), JSIdent(name)).stmt)
@@ -910,7 +917,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       translateSelfDeclaration(selfSymbol) ++ tempDecs ++ initFields ++ stmts,
       typeList.toList,
       sym.ctorParams.isDefined,
-      requireUnapply && !sym.isPlainJSClass
+      requireUnapply
     )
   }
 
@@ -1032,14 +1039,14 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
 
     def prepare(nme: Str, fs: Ls[Opt[Var] -> Fld], pars: Ls[Term], unit: TypingUnit) = {
       val params = fs.map {
-        case (S(nme), Fld(mut, spec, genField, trm)) =>
+        case (S(nme), Fld(mut, _, _, trm)) =>
           val ty = tt(trm)
           nme -> Field(if (mut) S(ty) else N, ty)
-        case (N, Fld(mut, spec, _, nme: Var)) => nme -> Field(if (mut) S(Bot) else N, Top)
+        case (N, Fld(mut, _, _, nme: Var)) => nme -> Field(if (mut) S(Bot) else N, Top)
         case _ => die
       }
       val publicCtors = fs.filter{
-        case (_, Fld(_, _, genField, _)) => genField
+        case (_, Fld(_, _, genGetter, _)) => genGetter
         case _ => false
       }.map {
         case (S(name), _) => name.name
@@ -1092,7 +1099,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       case td @ NuTypeDef(Cls, TypeName(nme), tps, tup, ctor, sig, pars, sup, ths, unit) => {
         val (params, preStmts) = ctor match {
           case S(Constructor(Tup(ls), Blk(stmts))) => (S(ls.map {
-            case (S(Var(nme)), Fld(_, _, genField, _)) => (nme, genField)
+            case (S(Var(nme)), Fld(_, _, genGetter, _)) => (nme, genGetter)
             case _ => throw CodeGenError(s"Unexpected constructor parameters in $nme.")
           }), stmts)
           case _ => (N, Nil)

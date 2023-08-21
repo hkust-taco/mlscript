@@ -360,7 +360,7 @@ gg.sum
 
 :js
 class F() {
-  val x = 42
+  let x = 42
   class G() {
     let x1 = x + 1
   }
@@ -382,7 +382,6 @@ class F() {
 //│       class F {
 //│         #G;
 //│         #x;
-//│         get x() { return this.#x; }
 //│         static $unapply(self) { return [] }
 //│         constructor() {
 //│           this.#x = 42;
@@ -394,7 +393,7 @@ class F() {
 //│             class G {
 //│               static $unapply(self) { return [] }
 //│               constructor() {
-//│                 const x1 = outer1.x + 1;
+//│                 const x1 = outer1.#x + 1;
 //│               }
 //│             };
 //│             this.#G = (() => Object.freeze(new G()));
@@ -515,7 +514,7 @@ let jj = G.H.J(42)
 let i = jj.ii(2)
 i.x
 //│ ╔══[ERROR] access to module member not yet supported
-//│ ║  l.514: 	let jj = G.H.J(42)
+//│ ║  l.513: 	let jj = G.H.J(42)
 //│ ╙──       	          ^^
 //│ let jj: error
 //│ let i: error
@@ -615,7 +614,7 @@ module H {
 let j = H.J(42)
 j.i.x
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.615: 	let j = H.J(42)
+//│ ║  l.614: 	let j = H.J(42)
 //│ ╙──       	         ^^
 //│ let j: error
 //│ error
@@ -645,7 +644,7 @@ let i = I(1)
 let ij = i.J(0)
 ij.incY
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.645: 	let ij = i.J(0)
+//│ ║  l.644: 	let ij = i.J(0)
 //│ ╙──       	          ^^
 //│ class I(x: Int) {
 //│   class J(x: Int) {
@@ -816,10 +815,10 @@ module J {
 let m = J.M()
 let n = J.N(2)
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.816: 	let m = J.M()
+//│ ║  l.815: 	let m = J.M()
 //│ ╙──       	         ^^
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.817: 	let n = J.N(2)
+//│ ║  l.816: 	let n = J.N(2)
 //│ ╙──       	         ^^
 //│ let m: error
 //│ let n: error
@@ -838,9 +837,9 @@ let n = J.N(2)
 
 
 module K {
-  val x = 1
+  let x = 1
   module L {
-    val x = 42
+    let x = 42
     class M() {
       fun f = x
     }
@@ -860,7 +859,7 @@ module K {
 let m = K.L.M()
 m.f
 //│ ╔══[ERROR] access to module member not yet supported
-//│ ║  l.860: 	let m = K.L.M()
+//│ ║  l.859: 	let m = K.L.M()
 //│ ╙──       	         ^^
 //│ let m: error
 //│ error
@@ -890,7 +889,7 @@ module L {
 let op = L.N.O.P(0)
 op.x
 //│ ╔══[ERROR] access to module member not yet supported
-//│ ║  l.890: 	let op = L.N.O.P(0)
+//│ ║  l.889: 	let op = L.N.O.P(0)
 //│ ╙──       	          ^^
 //│ let op: error
 //│ error
@@ -917,10 +916,10 @@ module M {
 }
 M.N.op(M.P())
 //│ ╔══[ERROR] access to module member not yet supported
-//│ ║  l.918: 	M.N.op(M.P())
+//│ ║  l.917: 	M.N.op(M.P())
 //│ ╙──       	 ^^
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.918: 	M.N.op(M.P())
+//│ ║  l.917: 	M.N.op(M.P())
 //│ ╙──       	        ^^
 //│ module M {
 //│   module N {
@@ -1087,7 +1086,7 @@ module N {
 :e
 N.O.P()
 //│ ╔══[ERROR] access to module member not yet supported
-//│ ║  l.1088: 	N.O.P()
+//│ ║  l.1087: 	N.O.P()
 //│ ╙──        	 ^^
 //│ error
 //│ res
@@ -1095,7 +1094,7 @@ N.O.P()
 
 :js
 :e
-class I(val x: Int) {
+class I(x: Int) {
   let y = x + 1
   class J(z: Int) {
     val a = [x, y, z] 
@@ -1103,7 +1102,7 @@ class I(val x: Int) {
 }
 I(1).J(3).a
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.1104: 	I(1).J(3).a
+//│ ║  l.1103: 	I(1).J(3).a
 //│ ╙──        	    ^^
 //│ class I(x: Int) {
 //│   class J(z: Int) {
@@ -1124,7 +1123,6 @@ I(1).J(3).a
 //│         #J;
 //│         #y;
 //│         #x;
-//│         get x() { return this.#x; }
 //│         static $unapply(self) { return [self.#x, ] }
 //│         constructor(x) {
 //│           this.#x = x;
@@ -1142,7 +1140,7 @@ I(1).J(3).a
 //│               constructor(z) {
 //│                 this.#z = z;
 //│                 this.#a = [
-//│                   outer1.x,
+//│                   outer1.#x,
 //│                   outer1.#y,
 //│                   z
 //│                 ];

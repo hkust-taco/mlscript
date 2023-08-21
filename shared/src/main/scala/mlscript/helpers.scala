@@ -780,7 +780,7 @@ trait StatementImpl extends Located { self: Statement =>
       val bod = pars.map(tt).foldRight(Record(params): Type)(Inter)
       val termName = Var(nme.name).withLocOf(nme)
       val ctor = Def(false, termName, L(Lam(tup, App(termName, Tup(N -> Fld(false, false, false, Rcd(fs.map {
-        case (S(nme), fld) => nme -> Fld(false, false, false, nme)
+        case (S(nme), fld) => nme -> Fld(false, false, fld.genGetter, nme)
         case (N, fld @ Fld(mut, spec, _, nme: Var)) => nme -> fld
         case _ => die
       })) :: Nil)))), true)

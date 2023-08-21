@@ -469,6 +469,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     case k => errType // FIXME
   }
 
+
   def getRefs(body: Statement): RefMap = {
     val refs = mutable.HashSet[(Str, Bool)]()
 
@@ -556,7 +557,6 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
       case decl: NuDecl => L(decl)
       case s => R(s)
     }
-
     val funSigs = MutMap.empty[Str, NuFunDef]
     val implems = decls.filter {
       case fd @ NuFunDef(N, nme, tparams, R(rhs)) =>
@@ -1153,7 +1153,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                   (m, sigMap.get(m.name)) match {
                     case (_, N) =>
                     case (m: TypedNuTermDef, S(fun: TypedNuTermDef)) => fun match {
-                      // If the implementation and the declaration are in the same class, it does not require `virtual`
+                      // If the implementation and the declaration are in the same class, it does not require to be virtual
                       case td: TypedNuFun if (!td.fd.isVirtual && !clsSigns.contains(fun)) =>
                         err(msg"${m.kind.str.capitalize} member `${m.name}` is not a virtual member" -> m.toLoc ::
                           msg"Declared here:" -> fun.toLoc ::
