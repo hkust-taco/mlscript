@@ -30,6 +30,7 @@ sealed trait TypeSymbol extends LexicalSymbol {
 sealed trait NuTypeSymbol { sym: TypeSymbol =>
   val isNested: Bool // is nested in another class/mixin/module
   val methods: Ls[MethodDef[Left[Term, Type]]]
+  val signatures: Ls[MethodDef[Right[Term, Type]]]
   val ctor: Ls[Statement] // statements in the constructor
   val nested: Ls[NuTypeDef] // nested class/mixin/module
   val superParameters: Ls[Term] // parameters that need to be passed to the `super()`
@@ -116,6 +117,7 @@ final case class NewClassSymbol(
     ctorParams: Opt[Ls[(Str, Bool)]],
     body: Type,
     methods: Ls[MethodDef[Left[Term, Type]]],
+    signatures: Ls[MethodDef[Right[Term, Type]]],
     ctor: Ls[Statement],
     superParameters: Ls[Term],
     publicCtors: Ls[Str],
@@ -135,6 +137,7 @@ final case class MixinSymbol(
     params: Ls[Str],
     body: Type,
     methods: Ls[MethodDef[Left[Term, Type]]],
+    signatures: Ls[MethodDef[Right[Term, Type]]],
     ctor: Ls[Statement],
     publicCtors: Ls[Str],
     nested: Ls[NuTypeDef],
@@ -158,6 +161,7 @@ final case class ModuleSymbol(
     params: Ls[Str],
     body: Type,
     methods: Ls[MethodDef[Left[Term, Type]]],
+    signatures: Ls[MethodDef[Right[Term, Type]]],
     ctor: Ls[Statement],
     superParameters: Ls[Term],
     nested: Ls[NuTypeDef],

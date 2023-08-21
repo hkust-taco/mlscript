@@ -1061,11 +1061,11 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
             case td: NuTypeDef =>
               
               /** Check no `this` access in ctor statements or val rhs and reject unqualified accesses to virtual members.. */
-              def qualificationCheck(members: Ls[NuMember], stmts: Ls[Statement], baseMembers: Ls[NuMember]): Unit = {
+              def qualificationCheck(members: Ls[NuMember], stmts: Ls[Statement], baseAndSigs: Ls[NuMember]): Unit = {
                 val cache = mutable.HashMap[Str, Bool]()
 
                 def getMember(name: Str) =
-                  members.find(_.name === name).fold(baseMembers.find(_.name === name))(m => S(m))
+                  members.find(_.name === name).fold(baseAndSigs.find(_.name === name))(m => S(m))
 
                 // Return true if it is invalid
                 def checkThisInCtor(refs: RefMap, name: Opt[Str], stack: Ls[Str])(expection: Bool): Bool = {
@@ -1084,7 +1084,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
 
                 def checkUnqualifiedVirtual(refs: RefMap, parentLoc: Opt[Loc]) =
                   refs.refs.foreach(p => if (!p._2) getMember(p._1) match { // unqualified access
-                    case S(nf: TypedNuFun) if nf.fd.isVirtual =>
+                    case S(nf: TypedNuFun) if nf.fd.isVirtual || !nf.isImplemented =>
                       err(msg"Unqualified access to virtual member ${p._1}" -> parentLoc ::
                         msg"Declared here:" -> nf.fd.toLoc
                       :: Nil)
@@ -1455,10 +1455,6 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       baseClsMembers.partition(_.isImplemented)
                     
                     val newImplems = ttu.implementedMembers
-                    qualificationCheck(newImplems, td.body.entities.filter {
-                      case _: NuDecl => false
-                      case _ => true
-                    }, baseClsMembers)
                     
                     // * Those member implementations we inherit from the base class that are not overridden
                     val implemsInheritedFromBaseCls = {
@@ -1483,6 +1479,15 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     // * the signatures from the base class and traits
                     val toCheck =
                       (newImplems.iterator ++ mxnMembers).distinctBy(_.name).toList
+
+                    trace(s"Checking qualifications...") {
+                      val baseAndSigs = (baseClsMembers.iterator ++ clsSigns).distinctBy(_.name).toList
+                      qualificationCheck(newImplems, td.body.entities.filter {
+                        case _: NuDecl => false
+                        case _ => true
+                      }, baseAndSigs)
+                    }()
+
                     trace(s"Checking new implementations...") {
                       overrideCheck(toCheck,
                         (clsSigns.iterator ++ ifaceMembers).distinctBy(_.name).toList, clsSigns)

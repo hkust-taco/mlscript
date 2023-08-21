@@ -140,32 +140,40 @@ class C3 extends C2 { fun x = 1 }
 
 
 
-:ge // TODO report this as a type error
+:e
 abstract class C {
   fun x : Int
   fun foo0 = x
   fun foo1 = this.x
 }
+//│ ╔══[ERROR] Unqualified access to virtual member x
+//│ ║  l.146: 	  fun foo0 = x
+//│ ║         	      ^^^^^^^^
+//│ ╟── Declared here:
+//│ ║  l.145: 	  fun x : Int
+//│ ╙──       	      ^^^^^^^
 //│ abstract class C {
 //│   fun foo0: Int
 //│   fun foo1: Int
 //│   fun x: Int
 //│ }
-//│ Code generation encountered an error:
-//│   unresolved symbol x
 
-:ge // TODO report this as a type error
+:e
 class C {
   val x : Int
   fun foo0 = x
   fun foo1 = this.x
 }
+//│ ╔══[ERROR] Unqualified access to virtual member x
+//│ ║  l.164: 	  fun foo0 = x
+//│ ║         	      ^^^^^^^^
+//│ ╟── Declared here:
+//│ ║  l.163: 	  val x : Int
+//│ ╙──       	      ^^^^^^^
 //│ class C {
 //│   fun foo0: Int
 //│   fun foo1: Int
 //│   let x: Int
 //│ }
-//│ Code generation encountered an error:
-//│   unresolved symbol x
 
 

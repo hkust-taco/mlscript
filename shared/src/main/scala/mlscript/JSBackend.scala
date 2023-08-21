@@ -3,7 +3,7 @@ package mlscript
 import mlscript.utils._, shorthands._, algorithms._
 import mlscript.codegen.Helpers._
 import mlscript.codegen._
-import scala.collection.mutable.{ListBuffer, HashMap}
+import scala.collection.mutable.{ListBuffer, HashMap, HashSet}
 import mlscript.{JSField, JSLit}
 import scala.collection.mutable.{Set => MutSet}
 import scala.util.control.NonFatal
@@ -803,6 +803,9 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     sym.methods.foreach {
       case MethodDef(_, _, Var(nme), _, _) => memberList += NewClassMemberSymbol(nme, N, true, false).tap(nuTypeScope.register)
     }
+    sym.signatures.foreach {
+      case MethodDef(_, _, Var(nme), _, _) => memberList += nuTypeScope.declareStubValue(nme)(true)
+    }
     sym.ctor.foreach {
       case nd @ NuFunDef(rec, Var(nme), _, _) =>
         memberList += NewClassMemberSymbol(nme, rec, false, !nd.genField).tap(nuTypeScope.register)
@@ -1045,9 +1048,16 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       }
 
       val body = pars.map(tt).foldRight(Record(params): Type)(Inter)
+      val implemented = new HashSet[Str]()
       val members = unit.entities.collect {
         case NuFunDef(isLetRec, mnme, tys, Left(rhs)) if (isLetRec.isEmpty || isLetRec.getOrElse(false)) =>
+          implemented.add(mnme.name)
           MethodDef[Left[Term, Type]](isLetRec.getOrElse(false), TypeName(nme), mnme, tys, Left(rhs))
+      }
+
+      val signatures = unit.entities.collect {
+        case nd @ NuFunDef(isLetRec, mnme, tys, Right(rhs)) if nd.genField && !implemented.contains(mnme.name) =>
+          MethodDef[Right[Term, Type]](isLetRec.getOrElse(false), TypeName(nme), mnme, tys, Right(rhs))
       }
 
       val stmts = unit.entities.filter {
@@ -1062,18 +1072,18 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         case nd: NuTypeDef => nd
       }
       
-      (body, members, stmts, nested, publicCtors)
+      (body, members, signatures, stmts, nested, publicCtors)
     }
 
     typeDefs.foreach {
       case td @ NuTypeDef(Mxn, TypeName(mxName), tps, tup, ctor, sig, pars, sup, ths, unit) => {
-        val (body, members, stmts, nested, publicCtors) = prepare(mxName, tup.getOrElse(Tup(Nil)).fields, pars, unit)
-        val sym = MixinSymbol(mxName, tps map { _._2.name }, body, members, stmts, publicCtors, nested, isNested).tap(scope.register)
+        val (body, members, signatures, stmts, nested, publicCtors) = prepare(mxName, tup.getOrElse(Tup(Nil)).fields, pars, unit)
+        val sym = MixinSymbol(mxName, tps map { _._2.name }, body, members, signatures, stmts, publicCtors, nested, isNested).tap(scope.register)
         if (!td.isDecl) mixins += sym
       }
       case td @ NuTypeDef(Mod, TypeName(nme), tps, tup, ctor, sig, pars, sup, ths, unit) => {
-        val (body, members, stmts, nested, _) = prepare(nme, tup.getOrElse(Tup(Nil)).fields, pars, unit)
-        val sym = ModuleSymbol(nme, tps map { _._2.name }, body, members, stmts, pars, nested, isNested).tap(scope.register)
+        val (body, members, signatures, stmts, nested, _) = prepare(nme, tup.getOrElse(Tup(Nil)).fields, pars, unit)
+        val sym = ModuleSymbol(nme, tps map { _._2.name }, body, members, signatures, stmts, pars, nested, isNested).tap(scope.register)
         if (!td.isDecl) modules += sym
       }
       case td @ NuTypeDef(Als, TypeName(nme), tps, _, ctor, sig, pars, _, _, _) => {
@@ -1087,13 +1097,13 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
           }), stmts)
           case _ => (N, Nil)
         }
-        val (body, members, stmts, nested, publicCtors) = prepare(nme, tup.getOrElse(Tup(Nil)).fields, pars, unit)
+        val (body, members, signatures, stmts, nested, publicCtors) = prepare(nme, tup.getOrElse(Tup(Nil)).fields, pars, unit)
         val sym =
-          NewClassSymbol(nme, tps map { _._2.name }, params, body, members, preStmts ++ stmts, pars, publicCtors, nested, isNested, td.isPlainJSClass).tap(scope.register)
+          NewClassSymbol(nme, tps map { _._2.name }, params, body, members, signatures, preStmts ++ stmts, pars, publicCtors, nested, isNested, td.isPlainJSClass).tap(scope.register)
         if (!td.isDecl) classes += sym
       }
       case td @ NuTypeDef(Trt, TypeName(nme), tps, tup, ctor, sig, pars, sup, ths, unit) => {
-        val (body, members, _, _, _) = prepare(nme, tup.getOrElse(Tup(Nil)).fields, pars, unit)
+        val (body, members, _, _, _, _) = prepare(nme, tup.getOrElse(Tup(Nil)).fields, pars, unit)
         val sym = scope.declareTrait(nme, tps map { _._2.name }, body, members)
         if (!td.isDecl) traits += sym
       }

@@ -261,12 +261,17 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
   ): ModuleSymbol = {
     val finalName =
       if (allowRenaming) allocateRuntimeName(lexicalName) else lexicalName
-    val (ctor, mths) = stmts.partitionMap {
+    val (mths, rest) = stmts.partitionMap {
       case NuFunDef(isLetRec, Var(nme), tys, Left(rhs)) if (isLetRec.isEmpty || isLetRec.getOrElse(false)) =>
-        Right(MethodDef[Left[Term, Type]](isLetRec.getOrElse(false), TypeName(finalName), Var(nme), tys, Left(rhs)))
-      case s => Left(s)
+        Left(MethodDef[Left[Term, Type]](isLetRec.getOrElse(false), TypeName(finalName), Var(nme), tys, Left(rhs)))
+      case s => Right(s)
     }
-    val symbol = ModuleSymbol(finalName, Nil, Record(Nil), mths, ctor, Nil, nuTypes, false)
+    val (signatures, ctor) = rest.partitionMap {
+      case NuFunDef(isLetRec, Var(nme), tys, Right(rhs)) if (isLetRec.isEmpty || isLetRec.getOrElse(false)) =>
+        Left(MethodDef[Right[Term, Type]](isLetRec.getOrElse(false), TypeName(finalName), Var(nme), tys, Right(rhs)))
+      case s => Right(s)
+    }
+    val symbol = ModuleSymbol(finalName, Nil, Record(Nil), mths, signatures, ctor, Nil, nuTypes, false)
     register(symbol)
     symbol
   }
