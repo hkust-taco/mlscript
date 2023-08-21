@@ -215,6 +215,9 @@ final case class NuFunDef(
   val body: Located = rhs.fold(identity, identity)
   def kind: DeclKind = Val
   val abstractLoc: Opt[Loc] = None
+
+  // If the member has no implementation, it is virtual automatically
+  def isVirtual: Bool = virtualLoc.nonEmpty || rhs.isRight
 }
 
 

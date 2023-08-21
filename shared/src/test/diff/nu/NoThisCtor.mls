@@ -13,27 +13,22 @@ class Base(base: Int) {
 
 class Foo() {
   virtual val foo: Int = 42
-  val baz: Int = 0
 }
 //│ class Foo() {
-//│   let baz: Int
 //│   let foo: Int
 //│ }
 
 :e
 class Foo1() extends Foo() {
+  val foo: Int
   virtual val foo = 1
   log(this.foo)
 }
-//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.26: 	  log(this.foo)
-//│ ╙──      	          ^^^^
 //│ ╔══[ERROR] Can not access `this` in the initialization statements
-//│ ║  l.26: 	  log(this.foo)
+//│ ║  l.25: 	  log(this.foo)
 //│ ╙──      	  ^^^^^^^^^^^^^
 //│ class Foo1() extends Foo {
-//│   let baz: Int
-//│   let foo: 1
+//│   let foo: Int
 //│ }
 
 // FIXME: type constrcutor
@@ -44,88 +39,73 @@ class Foo2() extends Foo() {
   }
 }
 //│ class Foo2() extends Foo {
-//│   let baz: Int
 //│   let foo: 2
 //│ }
 
 :e
 class Foo3() extends Foo() {
+  val foo: Int
   virtual val foo = 3
   val s = this.foo
 }
-//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.54: 	  val s = this.foo
-//│ ╙──      	              ^^^^
 //│ ╔══[ERROR] Can not access `this` when initializing field s
-//│ ║  l.54: 	  val s = this.foo
+//│ ║  l.49: 	  val s = this.foo
 //│ ╙──      	      ^^^^^^^^^^^^
 //│ class Foo3() extends Foo {
-//│   let baz: Int
-//│   let foo: 3
-//│   let s: error
+//│   let foo: Int
+//│   let s: Int
 //│ }
 
 :e
 class Foo4() extends Foo() {
+  val foo: Int
   virtual val foo = 4
   fun bar(x) = this.foo + x // ok
   let bb = bar(0) // call `this` indirectly
 }
-//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.71: 	  fun bar(x) = this.foo + x // ok
-//│ ╙──      	                   ^^^^
 //│ ╔══[ERROR] Can not access `this` when initializing field bb
-//│ ║  l.72: 	  let bb = bar(0) // call `this` indirectly
+//│ ║  l.64: 	  let bb = bar(0) // call `this` indirectly
 //│ ╙──      	      ^^^^^^^^^^^
 //│ class Foo4() extends Foo {
 //│   fun bar: Int -> Int
-//│   let baz: Int
 //│   let bb: Int
-//│   let foo: 4
+//│   let foo: Int
 //│ }
 
 :e
 class Foo5() extends Foo() {
+  val foo: Int
   val x = bar(0)
   fun bar(y: Int) = this.foo + y
 }
-//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.90: 	  fun bar(y: Int) = this.foo + y
-//│ ╙──      	                        ^^^^
 //│ ╔══[ERROR] Can not access `this` when initializing field x
-//│ ║  l.89: 	  val x = bar(0)
+//│ ║  l.78: 	  val x = bar(0)
 //│ ╙──      	      ^^^^^^^^^^
 //│ class Foo5() extends Foo {
 //│   fun bar: (y: Int,) -> Int
-//│   let baz: Int
 //│   let foo: Int
 //│   let x: Int
 //│ }
 
-:e
 class Foo6() extends Foo() {
+  val baz: Int
+  val baz = 0
   val y = this.baz // baz is final
 }
-//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.107: 	  val y = this.baz // baz is final
-//│ ╙──       	              ^^^^
 //│ class Foo6() extends Foo {
 //│   let baz: Int
 //│   let foo: Int
-//│   let y: error
+//│   let y: Int
 //│ }
 
-:e
 class Bar() {
+  val d: Int
   val d = 1
   fun add(x) = x + this.d
 }
-//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.121: 	  fun add(x) = x + this.d
-//│ ╙──       	                       ^^
 //│ class Bar() {
 //│   fun add: Int -> Int
-//│   let d: 1
+//│   let d: Int
 //│ }
 
 :e
@@ -133,13 +113,13 @@ class Bar2() extends Bar() {
   val two = this.add(1) // add is final, but it refers to `this`
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.133: 	  val two = this.add(1) // add is final, but it refers to `this`
+//│ ║  l.113: 	  val two = this.add(1) // add is final, but it refers to `this`
 //│ ╙──       	                ^^^^
 //│ ╔══[ERROR] Can not access `this` when initializing field two
-//│ ║  l.133: 	  val two = this.add(1) // add is final, but it refers to `this`
+//│ ║  l.113: 	  val two = this.add(1) // add is final, but it refers to `this`
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^
 //│ class Bar2() extends Bar {
 //│   fun add: Int -> Int
-//│   let d: 1
+//│   let d: Int
 //│   let two: error
 //│ }

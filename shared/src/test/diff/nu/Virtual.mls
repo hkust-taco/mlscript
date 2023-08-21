@@ -101,15 +101,12 @@ class V1() {
 //│   let x: 42
 //│ }
 
-:e
 class V2() {
+  val x: Int
   virtual val x = 42
   fun foo: Int = this.x
 }
-//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.107: 	  fun foo: Int = this.x
-//│ ╙──       	                     ^^
 //│ class V2() {
 //│   fun foo: Int
-//│   let x: 42
+//│   let x: Int
 //│ }

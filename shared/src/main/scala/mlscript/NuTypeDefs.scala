@@ -1084,7 +1084,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
 
                 def checkUnqualifiedVirtual(refs: RefMap, parentLoc: Opt[Loc]) =
                   refs.refs.foreach(p => if (!p._2) getMember(p._1) match { // unqualified access
-                    case S(nf: TypedNuFun) if nf.fd.isVirtual || !nf.isImplemented =>
+                    case S(nf: TypedNuFun) if nf.fd.isVirtual =>
                       err(msg"Unqualified access to virtual member ${p._1}" -> parentLoc ::
                         msg"Declared here:" -> nf.fd.toLoc
                       :: Nil)
@@ -1153,9 +1153,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                   (m, sigMap.get(m.name)) match {
                     case (_, N) =>
                     case (m: TypedNuTermDef, S(fun: TypedNuTermDef)) => fun match {
-                      // If the member has no implementation, it is virtual automatically
                       // If the implementation and the declaration are in the same class, it does not require `virtual`
-                      case td: TypedNuFun if (!td.fd.isVirtual && fun.isImplemented && !clsSigns.contains(fun)) =>
+                      case td: TypedNuFun if (!td.fd.isVirtual && !clsSigns.contains(fun)) =>
                         err(msg"${m.kind.str.capitalize} member `${m.name}` is not a virtual member" -> m.toLoc ::
                           msg"Declared here:" -> fun.toLoc ::
                           Nil)
@@ -1481,8 +1480,9 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       (newImplems.iterator ++ mxnMembers).distinctBy(_.name).toList
 
                     trace(s"Checking qualifications...") {
+                      val toCheckImplems = newImplems.filter(_.isImplemented)
                       val baseAndSigs = (baseClsMembers.iterator ++ clsSigns).distinctBy(_.name).toList
-                      qualificationCheck(newImplems, td.body.entities.filter {
+                      qualificationCheck(toCheckImplems, td.body.entities.filter {
                         case _: NuDecl => false
                         case _ => true
                       }, baseAndSigs)
