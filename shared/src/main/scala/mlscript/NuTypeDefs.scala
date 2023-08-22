@@ -388,7 +388,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           (implicit ctx: Ctx): TypedNuTermDef =
       this
   }
-
+  
   // Store referred members. indirect ref: ref by using `this`
   case class RefMap(useThis: Bool, refs: Set[(Str, Bool)])
   object RefMap {
@@ -468,8 +468,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     // case k => err
     case k => errType // FIXME
   }
-
-
+  
+  
   def getRefs(body: Statement): RefMap = {
     val refs = mutable.HashSet[(Str, Bool)]()
 

@@ -198,7 +198,6 @@ final case class NuTypeDef(
 )(val declareLoc: Opt[Loc], val abstractLoc: Opt[Loc])
   extends NuDecl with Statement with Outer {
     def isPlainJSClass: Bool = params.isEmpty
-    val virtualLoc: Opt[Loc] = None
   }
 
 final case class NuFunDef(
