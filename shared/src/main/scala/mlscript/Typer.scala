@@ -861,6 +861,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
       case Super() =>
         err(s"Illegal use of `super`", term.toLoc)(raise)
         typeTerm(Var("super").withLocOf(term))
+      case Unapp(cls, scrut, from, flds, csq) =>
+        val newCtx = ctx.nest
+        flds.foreach {
+          case (field -> (aliasVar @ Var(alias))) =>
+            newCtx += alias -> VarSymbol(typeTerm(Sel(scrut, Var(field)).desugaredFrom(from)), aliasVar)
+        }
+        typeTerm(csq)(newCtx, raise, vars, genLambdas)
       case App(Var("neg" | "~"), trm) if funkyTuples => typeTerm(trm).neg(prov)
       case App(App(Var("|"), lhs), rhs) if funkyTuples =>
         typeTerm(lhs) | (typeTerm(rhs), prov)

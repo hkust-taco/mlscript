@@ -501,6 +501,7 @@ trait TermImpl extends StatementImpl { self: Term =>
       case Inst(bod) => "explicit instantiation"
       case Super() => "super"
       case Eqn(lhs, rhs) => "assign for ctor"
+      case Unapp(cls, scrut, from, flds, csq) => "unapply"
     }
   }
   
@@ -551,6 +552,7 @@ trait TermImpl extends StatementImpl { self: Term =>
     case Inst(bod) => s"${bod.print(true)}!"
     case Super() => "super"
     case Eqn(lhs, rhs) => s"${lhs} = ${rhs}"
+    case Unapp(cls, scrut, _, flds, csq) => s"(($flds) => $csq)(${cls.name}.$$unapply($scrut))"
   }}
   
   def toTypeRaise(implicit raise: Raise): Type = toType match {
@@ -899,6 +901,7 @@ trait StatementImpl extends Located { self: Statement =>
     case Super() => Nil
     case Constructor(params, body) => params :: body :: Nil
     case Eqn(lhs, rhs) => lhs :: rhs :: Nil
+    case Unapp(cls, scrut, from, flds, csq) => scrut :: csq.children
     case NuTypeDef(k, nme, tps, ps, ctor, sig, pars, sup, ths, bod) =>
       nme :: tps.map(_._2) ::: ps.toList ::: pars ::: ths.toList ::: bod :: Nil
   }

@@ -68,7 +68,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       translatePattern(base)
     case Inst(bod) => translatePattern(bod)
     case _: Lam | _: App | _: Sel | _: Let | _: Blk | _: Bind | _: Test | _: With | _: CaseOf | _: Subs | _: Assign
-        | If(_, _) | New(_, _) | _: Splc | _: Forall | _: Where | _: Super | _: Eqn =>
+        | If(_, _) | New(_, _) | _: Splc | _: Forall | _: Where | _: Super | _: Eqn | _: Unapp =>
       throw CodeGenError(s"term ${inspect(t)} is not a valid pattern")
   }
 
@@ -255,11 +255,11 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       JSCommaExpr(translateTerm(trm) :: translateTerm(default) :: Nil)
     // Pattern match with two branches -> tenary operator
     case CaseOf(trm, cs @ Case(tst, csq, Wildcard(alt))) =>
-      val unapplyParams = getUnapplyParams(tst)
       val scrut = translateTerm(trm)
-      val res = unapplyParams.fold(translateTerm(csq))(params =>
-        translateUnapplyBranch(csq, scrut, cs, params._1, params._2)
-      )
+      val res = csq match {
+        case ua: Unapp => translateUnapplyBranch(ua, scrut, cs)
+        case _ => translateTerm(csq)
+      }
       translateCase(scrut, tst)(scope)(res, translateTerm(alt))
     // Pattern match with more branches -> chain of ternary expressions with cache
     case CaseOf(trm, cases) =>
@@ -317,68 +317,76 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     case TyApp(base, _) => translateTerm(base)
     case Eqn(Var(name), _) =>
       throw CodeGenError(s"assignment of $name is not supported outside a constructor")
-    case _: Bind | _: Test | If(_, _)  | _: Splc | _: Where =>
+    case _: Bind | _: Test | If(_, _)  | _: Splc | _: Where | _: Unapp =>
       throw CodeGenError(s"cannot generate code for term ${inspect(term)}")
   }
 
   // Translate matching branch for NuTypeDef that uses the `$unapply` method
-  private def translateUnapplyBranch(body: Term, scrut: JSExpr, branch: CaseBranches, tp: Str, matchingList: Ls[Str])(
+  private def translateUnapplyBranch(body: Unapp, scrut: JSExpr, branch: CaseBranches)(
     implicit scope: Scope
   ): JSExpr = {
-    def run(term: Term, prev: Int = -1)(implicit scope: Scope): JSExpr = term match {
-      case Let(false, Var(alias), Sel(rev1, Var(name)), body) =>
-        val pos = matchingList.indexOf(name)
-        val placeholders = List.range(prev + 1, pos).map(i => JSNamePattern(s"$$$i"))
-        body match {
-          case Let(false, _, Sel(rev2, Var(name2)), _) if (rev1 === rev2 && matchingList.indexOf(name2) > matchingList.indexOf(name)) =>
-            val letScope = scope.derive(s"Let")
-            val runtimeName = letScope.declareParameter(alias)
-            run(body, pos)(letScope) match {
-              case JSInvoke(JSArrowFn(JSArrayPattern(tail) :: Nil, body), arguments) =>
-                val patterns = placeholders :+ JSNamePattern(runtimeName)
-                JSInvoke(JSArrowFn(JSArrayPattern(patterns ++ tail) :: Nil, body), arguments)
-              case t => throw new AssertionError(s"unexpected error when handling $branch.")
-            }
-          case Let(false, _, Sel(rev2, Var(name2)), _) if (rev1 === rev2) =>
-            val letScope = scope.derive(s"Let")
-            val patterns = JSNamePattern(letScope.declareParameter(alias))
-            JSInvoke(
-              JSArrowFn(JSArrayPattern(patterns :: Nil) :: Nil, letScope.tempVars `with` run(body, -1)(letScope)),
-              JSInvoke(JSIdent(s"$tp.class.$$unapply"), scrut :: Nil) :: Nil
-            )
-          case _ =>
-            val letScope = scope.derive(s"Let")
-            val runtimeName = letScope.declareParameter(alias)
-            val patterns = placeholders :+ JSNamePattern(runtimeName)
-            JSInvoke(
-              JSArrowFn(JSArrayPattern(patterns) :: Nil, letScope.tempVars `with` translateTerm(body)(letScope)),
-              JSInvoke(JSIdent(s"$tp.class.$$unapply"), scrut :: Nil) :: Nil
-            )
-        }
-      case _ => translateTerm(term)
+    val tp = body.cls.name
+    val matchingList = scope.resolveValue(tp) match {
+      case S(sym: NewClassSymbol) => sym.matchingFields
+      case S(CapturedSymbol(_, sym: NewClassSymbol)) => sym.matchingFields
+      case _ => throw CodeGenError(s"cannot get matchable fields in the class $tp")
     }
-    run(body)
-  }
 
-  // Return S(type name, unapply fields) if it is a new type symbol
-  private def getUnapplyParams(pat: SimpleTerm)(implicit scope: Scope) =
-    pat match {
-      case Var(tp) => scope.resolveValue(tp) match {
-        case S(sym: NewClassSymbol) => S(tp -> sym.matchingFields)
-        case S(CapturedSymbol(_, sym: NewClassSymbol)) => S(tp -> sym.matchingFields)
-        case _ => N
-      }
-      case _ => N
+    val cache = new HashMap[Str, Str]()
+    def run(fields: Ls[Str -> Var], prev: Int = -1)(implicit scope: Scope): JSInvoke = fields match {
+      case Nil =>
+        JSInvoke(
+          JSArrowFn(JSArrayPattern(Nil) :: Nil, scope.tempVars `with` translateTerm(body.csq)),
+          JSInvoke(JSIdent(s"$tp.class.$$unapply"), scrut :: Nil) :: Nil
+        )
+      case (field -> (aliasVar @ Var(alias))) :: tail =>
+        val pos = matchingList.indexOf(field)
+        if (cache.contains(field)) { // This field has been matched before. Create an alias for it.
+          val tmpAlias = scope.declareValue(alias, S(false), false)
+          run(tail, pos) match {
+            case JSInvoke(JSArrowFn(JSArrayPattern(patterns) :: Nil, body), arguments) =>
+              val aliasDec = JSConstDecl(tmpAlias.runtimeName, JSIdent(cache(field)))
+              val newBody = body match {
+                case L(expr) => aliasDec :: JSReturnStmt(S(expr)) :: Nil
+                case R(stmts) => aliasDec :: stmts
+              }
+              JSInvoke(JSArrowFn(JSArrayPattern(patterns) :: Nil, R(newBody)), arguments)
+            case t => throw new AssertionError(s"unexpected error when handling $branch.")
+          }
+        }
+        else {
+          val placeholders = List.range(prev + 1, pos).map(i =>
+            JSNamePattern(scope.declareParameter(s"tmp$i"))
+          )
+          val runtimeName = scope.declareParameter(alias)
+          cache.put(field, runtimeName)
+          run(tail, pos) match {
+            case JSInvoke(JSArrowFn(JSArrayPattern(tail) :: Nil, body), arguments) =>
+              val patterns = placeholders :+ JSNamePattern(runtimeName)
+              JSInvoke(JSArrowFn(JSArrayPattern(patterns ++ tail) :: Nil, body), arguments)
+            case t => throw new AssertionError(s"unexpected error when handling $branch.")
+          }
+        }
     }
+
+    val unapplyScope = scope.derive(s"unapply ${body.cls.name}")
+    body.flds match {
+      case Nil => unapplyScope.tempVars `with` translateTerm(body.csq) match { // no need to unapply
+        case L(expr) => expr
+        case R(stmts) => JSImmEvalFn(N, Nil, R(stmts), Nil)
+      }
+      case list => run(body.flds)(unapplyScope)
+    }
+  }
 
   private def translateCaseBranch(scrut: JSExpr, branch: CaseBranches)(implicit
       scope: Scope
   ): JSExpr = branch match {
     case Case(pat, body, rest) =>
-      val unapplyParama = getUnapplyParams(pat)
-      val res = unapplyParama.fold(translateTerm(body))(params =>
-        translateUnapplyBranch(body, scrut, branch, params._1, params._2)
-      )
+      val res = body match {
+        case ua: Unapp => translateUnapplyBranch(ua, scrut, branch)
+        case _ => translateTerm(body)
+      }
       translateCase(scrut, pat)(scope)(res, translateCaseBranch(scrut, rest))
     case Wildcard(body) =>
       translateTerm(body)

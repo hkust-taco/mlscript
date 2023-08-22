@@ -154,7 +154,7 @@ class Pair[L, R](lhs: L, rhs: R) extends Exp[(L, R)]
 //│ ║  l.137: 	    Lit then 0
 //│ ║         	^^^^^^^^^^^^^^
 //│ ║  l.138: 	    Pair then 1
-//│ ║         	^^^^^^^^^^^^^^^
+//│ ║         	^^^^^^^^
 //│ ╟── type variable `L` leaks out of its scope
 //│ ║  l.141: 	class Pair[L, R](lhs: L, rhs: R) extends Exp[(L, R)]
 //│ ╙──       	           ^

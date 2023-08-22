@@ -785,15 +785,21 @@ class Desugarer extends TypeDefs { self: Typer =>
       xs match {
         case MutCase.Constructor(className -> fields, cases) :: next =>
           printlnUCS(s"• Constructor pattern: $className(${fields.iterator.map(x => s"${x._1} -> ${x._2}").mkString(", ")})")
-          // TODO: expand bindings here
           val consequent = rec(cases)(defs ++ fields.iterator.map(_._2))
-          // Adding a block here helps when we need to fold let-bindings in `$unapply`
-          // So we can distinguish terms in the actual body from the `$unapply` parameters
-          // It will not affect the semantics
-          Case(className, mkLetFromFields(scrutinee, fields.toList, consequent match {
-            case _: Let => Blk(consequent :: Nil)
-            case _ => consequent
-          }), rec2(next))
+          val unapplyCls = ctx.get(className.name) match {
+            case S(CompletedTypeInfo(cls: TypedNuCls)) if !cls.decl.isPlainJSClass => S(className)
+            case S(ti: DelayedTypeInfo) => ti.decl match {
+              case nd: NuTypeDef if nd.kind === Cls && !nd.isPlainJSClass => S(className)
+              case _ => N
+            }
+            case _ => N
+          }
+          val body = (scrutinee.reference, unapplyCls) match {
+            case (v: Var, S(className)) =>
+              Unapp(className, v, scrutinee.term, fields.toList, consequent)
+            case _ => mkLetFromFields(scrutinee, fields.toList, consequent)
+          }
+          Case(className, body, rec2(next))
         case MutCase.Literal(literal, cases) :: next =>
           printlnUCS(s"• Literal pattern: $literal")
           Case(literal, rec(cases), rec2(next))

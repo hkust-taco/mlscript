@@ -47,7 +47,7 @@ fun sum(v) =
 //│       x2,
 //│       y2
 //│     ]) => x1 + y1 + x2 + y2)(V2.class.$unapply(tmp1)) : -1)(V2.class.$unapply(tmp0)) : -1)(V22.class.$unapply(a)) : a instanceof Half.class ? (([
-//│       $0,
+//│       tmp0,
 //│       x
 //│     ]) => x)(Half.class.$unapply(a)) : a instanceof None.class ? 0 : -1);
 //│   })());
@@ -99,7 +99,10 @@ fun get1(s) =
 //│ globalThis.get1 = function get1(s) {
 //│   return ((() => {
 //│     let a;
-//│     return (a = s, a instanceof Some.class ? (([tmp2]) => (([y]) => tmp2 instanceof V1.class ? (([x]) => x)(V1.class.$unapply(tmp2)) : y)(Some.class.$unapply(a)))(Some.class.$unapply(a)) : (() => {
+//│     return (a = s, a instanceof Some.class ? (([tmp2]) => {
+//│       const y = tmp2;
+//│       return tmp2 instanceof V1.class ? (([x]) => x)(V1.class.$unapply(tmp2)) : y;
+//│     })(Some.class.$unapply(a)) : (() => {
 //│       throw new Error("non-exhaustive case expression");
 //│     })());
 //│   })());
@@ -131,9 +134,7 @@ fun foo(s) =
 //│ // Query 1
 //│ globalThis.foo = function foo(s) {
 //│   return ((() => {
-//│     return (s instanceof Some.class ? (([t]) => (() => {
-//│       return ((b) => b + t.x)(s2.value);
-//│     })())(Some.class.$unapply(s)) : 0);
+//│     return s instanceof Some.class ? (([t]) => ((b) => b + t.x)(s2.value))(Some.class.$unapply(s)) : 0;
 //│   })());
 //│ };
 //│ // End of generated code
@@ -215,7 +216,7 @@ fun ft(x) =
     FooBar(x) then x
     _ then 0
 //│ ╔══[ERROR] class FooBar expects 0 parameter but found 1 parameter
-//│ ║  l.215: 	    FooBar(x) then x
+//│ ║  l.216: 	    FooBar(x) then x
 //│ ╙──       	    ^^^^^^^^^
 //│ fun ft: anything -> error
 //│ Code generation encountered an error:

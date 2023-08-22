@@ -58,6 +58,7 @@ object Helpers {
     case Inst(bod) => s"Inst(${inspect(bod)})"
     case Eqn(lhs, rhs) => s"Ass(${inspect(lhs)}, ${inspect(rhs)})"
     case Super() => "Super()"
+    case Unapp(cls, scrut, _, flds, csq) => s"(($flds) => $csq)(${cls.name}.$$unapply($scrut))"
   }
 
   def inspect(body: IfBody): Str = body match {
