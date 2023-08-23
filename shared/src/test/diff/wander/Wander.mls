@@ -12,9 +12,6 @@ fff(1, 2, 3)
 //│ res
 //│     = -3
 
-
-
-
 :p
 fff(y: 2, z: 3, x: 1)
 //│ |fff|(|y|#:| |2|,| |z|#:| |3|,| |x|#:| |1|)|
@@ -25,16 +22,17 @@ fff(y: 2, z: 3, x: 1)
 //│     = -3
 
 // Tests for new-variable-creation
+:e
 :p
 fff(y: 2, z: y_1 + 1, x: z_1 - 2)
 //│ |fff|(|y|#:| |2|,| |z|#:| |y_1| |+| |1|,| |x|#:| |z_1| |-| |2|)|
 //│ AST: TypingUnit(App(Var(fff), Tup(y: IntLit(2), z: App(App(Var(+), Tup(_: Var(y_1))), Tup(_: IntLit(1))), x: App(App(Var(-), Tup(_: Var(z_1))), Tup(_: IntLit(2))))))
 //│ Parsed: fff (y: 2, z: + (y_1,) (1,), x: - (z_1,) (2,),);
 //│ ╔══[ERROR] identifier not found: y_1
-//│ ║  l.29: 	fff(y: 2, z: y_1 + 1, x: z_1 - 2)
+//│ ║  l.27: 	fff(y: 2, z: y_1 + 1, x: z_1 - 2)
 //│ ╙──      	             ^^^
 //│ ╔══[ERROR] identifier not found: z_1
-//│ ║  l.29: 	fff(y: 2, z: y_1 + 1, x: z_1 - 2)
+//│ ║  l.27: 	fff(y: 2, z: y_1 + 1, x: z_1 - 2)
 //│ ╙──      	                         ^^^
 //│ Int
 //│ Code generation encountered an error:
