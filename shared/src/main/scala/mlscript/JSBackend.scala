@@ -341,31 +341,31 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         )
       case (field -> (aliasVar @ Var(alias))) :: tail =>
         val pos = matchingList.indexOf(field)
-        if (cache.contains(field)) { // This field has been matched before. Create an alias for it.
-          val tmpAlias = scope.declareValue(alias, S(false), false)
-          run(tail, pos) match {
-            case JSInvoke(JSArrowFn(JSArrayPattern(patterns) :: Nil, body), arguments) =>
-              val aliasDec = JSConstDecl(tmpAlias.runtimeName, JSIdent(cache(field)))
-              val newBody = body match {
-                case L(expr) => aliasDec :: JSReturnStmt(S(expr)) :: Nil
-                case R(stmts) => aliasDec :: stmts
-              }
-              JSInvoke(JSArrowFn(JSArrayPattern(patterns) :: Nil, R(newBody)), arguments)
-            case t => throw new AssertionError(s"unexpected error when handling $branch.")
-          }
-        }
-        else {
-          val placeholders = List.range(prev + 1, pos).map(i =>
-            JSNamePattern(scope.declareParameter(s"tmp$i"))
-          )
-          val runtimeName = scope.declareParameter(alias)
-          cache.put(field, runtimeName)
-          run(tail, pos) match {
-            case JSInvoke(JSArrowFn(JSArrayPattern(tail) :: Nil, body), arguments) =>
-              val patterns = placeholders :+ JSNamePattern(runtimeName)
-              JSInvoke(JSArrowFn(JSArrayPattern(patterns ++ tail) :: Nil, body), arguments)
-            case t => throw new AssertionError(s"unexpected error when handling $branch.")
-          }
+        cache.get(field) match {
+          case S(field) => // This field has been matched before. Create an alias for it.
+            val tmpAlias = scope.declareValue(alias, S(false), false)
+            run(tail, pos) match {
+              case JSInvoke(JSArrowFn(JSArrayPattern(patterns) :: Nil, body), arguments) =>
+                val aliasDec = JSConstDecl(tmpAlias.runtimeName, JSIdent(field))
+                val newBody = body match {
+                  case L(expr) => aliasDec :: JSReturnStmt(S(expr)) :: Nil
+                  case R(stmts) => aliasDec :: stmts
+                }
+                JSInvoke(JSArrowFn(JSArrayPattern(patterns) :: Nil, R(newBody)), arguments)
+              case t => throw new AssertionError(s"unexpected error when handling $branch.")
+            }
+          case _ =>
+            val placeholders = List.range(prev + 1, pos).map(i =>
+              JSNamePattern(scope.declareParameter(s"tmp$i"))
+            )
+            val runtimeName = scope.declareParameter(alias)
+            cache.put(field, runtimeName)
+            run(tail, pos) match {
+              case JSInvoke(JSArrowFn(JSArrayPattern(tail) :: Nil, body), arguments) =>
+                val patterns = placeholders :+ JSNamePattern(runtimeName)
+                JSInvoke(JSArrowFn(JSArrayPattern(patterns ++ tail) :: Nil, body), arguments)
+              case t => throw new AssertionError(s"unexpected error when handling $branch.")
+            }
         }
     }
 
