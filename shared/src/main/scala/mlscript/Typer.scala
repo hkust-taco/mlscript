@@ -1407,17 +1407,26 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
 
   def desugarNamedArgs(term: Term, f: Term, a: Tup, argsList: List[Var])
   (implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType]): SimpleType = {
-    def rec (as: List[String -> Fld], acc: Map[String, Var]): Term = {
+    def rec (as: List[(String -> Fld) -> Boolean], acc: Map[String, Either[Var, Term]]): Term = {
       as match {
-        case (v, fld) :: tail =>
-          val newVar = Var(getNewVarName(v, freeVars(ctx, a)))
-          Let(false, newVar, fld.value, rec(tail, acc + (v -> newVar)))
+        case ((v, fld), isNamed) :: tail =>
+          if (isNamed) {
+            val newVar = Var(getNewVarName(v, freeVars(ctx, a)))
+            Let(false, newVar, fld.value, rec(tail, acc + (v -> L(newVar))))
+          } else {
+            rec(tail, acc + (v -> R(fld.value)))
+          }
         case Nil =>
           println("final acc => " + acc)
           val y: Term = Tup(argsList.map(x => 
             acc.get(x.name) match {
-              case Some(v) => 
-                (None, Fld(false, false, v))
+              case Some(v) =>
+                v match {
+                  case Left(v) =>
+                    (None, Fld(false, false, v))
+                  case Right(t) => 
+                    (None, Fld(false, false, t))
+                }
               case None =>
                 err(s"name ${x} used in binding are not matched with the function signature!", a.toLoc)
                 (None, Fld(false, false, Var("dummy"))) // TODO: check if this doesn't make problem in next steps (err dosen't raise exception)
@@ -1440,12 +1449,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
       val as = a.fields.zipWithIndex.map{ case(x, idx) =>
         x._1 match {
           case Some(value) => 
-            (value.name, x._2)
+            ((value.name, x._2), true)
           case N =>
-            (argsList(idx).name, x._2)
+            ((argsList(idx).name, x._2), false)
         }}
-      if (as.groupBy(x => x._1).size < argsList.size) {
-        as.groupBy(x => x._1).foreach(
+      if (as.groupBy(x => x._1._1).size < argsList.size) {
+        as.groupBy(x => x._1._1).foreach(
           x =>
             if (x._2.size > 1) {
               err(s"parameter ${x._1} is duplicate!", a.toLoc)
