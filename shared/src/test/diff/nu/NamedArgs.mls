@@ -1,79 +1,371 @@
 :NewDefs
 
-
-
 fun test(x: 'a) = if x is undefined then 0 else x + 1
 //│ fun test: (x: Int | undefined,) -> Int
 
-test(x: 0)
+test(10)
 //│ Int
 //│ res
-//│     = 1
+//│     = 11
 
-:e
-test(y: 0)
-//│ ╔══[ERROR] Wrong tuple field name: found 'y' instead of 'x'
-//│ ║  l.14: 	test(y: 0)
-//│ ╙──      	    ^^^^^^
-//│ Int | error
+test(x: 0, 1)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.11: 	test(x: 0, 1)
+//│ ║        	^^^^^^^^^^^^^
+//│ ╟── argument list of type `(x: 0, 1,)` does not match type `(x: 'a,)`
+//│ ║  l.11: 	test(x: 0, 1)
+//│ ║        	    ^^^^^^^^^
+//│ ╟── Note: constraint arises from tuple literal:
+//│ ║  l.3: 	fun test(x: 'a) = if x is undefined then 0 else x + 1
+//│ ╙──     	        ^^^^^^^
+//│ ╔══[ERROR] the unnamed args should appear first when using named args!
+//│ ║  l.11: 	test(x: 0, 1)
+//│ ╙──      	    ^^^^^^^^^
+//│ error
 //│ res
 //│     = 1
 
+fun test(x: 'a, y: 'b) = [x, y]
+//│ fun test: forall 'a 'b. (x: 'a, y: 'b,) -> ('a, 'b,)
+
+test(x: 0, 1)
+//│ ╔══[ERROR] the unnamed args should appear first when using named args!
+//│ ║  l.31: 	test(x: 0, 1)
+//│ ╙──      	    ^^^^^^^^^
+//│ error
+//│ res
+//│     = [ 0, 1 ]
+
+test(1, x: 0)
+//│ ╔══[ERROR] Wrong tuple field name: found 'x' instead of 'y'
+//│ ║  l.39: 	test(1, x: 0)
+//│ ╙──      	    ^^^^^^^^^
+//│ ╔══[ERROR] number of parameters dosen't match with the function signature!
+//│ ║  l.39: 	test(1, x: 0)
+//│ ╙──      	    ^^^^^^^^^
+//│ error
+//│ res
+//│     = [ 1, 0 ]
+
+test(y: 0)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.50: 	test(y: 0)
+//│ ║        	^^^^^^^^^^
+//│ ╟── argument list of type `(y: 0,)` does not match type `(x: 'a, y: 'b,)`
+//│ ║  l.50: 	test(y: 0)
+//│ ║        	    ^^^^^^
+//│ ╟── Note: constraint arises from tuple literal:
+//│ ║  l.28: 	fun test(x: 'a, y: 'b) = [x, y]
+//│ ╙──      	        ^^^^^^^^^^^^^^
+//│ ╔══[ERROR] number of parameters dosen't match with the function signature!
+//│ ║  l.50: 	test(y: 0)
+//│ ╙──      	    ^^^^^^
+//│ error
+//│ res
+//│     = [ 0, undefined ]
 
 fun test(x) = x + 1
 //│ fun test: Int -> Int
 
-// :e // TODO should be an error
 test(y: 0)
-//│ Int
+//│ ╔══[ERROR] number of parameters dosen't match with the function signature!
+//│ ║  l.70: 	test(y: 0)
+//│ ╙──      	    ^^^^^^
+//│ error
 //│ res
 //│     = 1
 
+fun fff(x: Int, y: Int, z: Int) = (x - y) * z
+//│ fun fff: (x: Int, y: Int, z: Int,) -> Int
 
-
-class Foo(x: Int)
-//│ class Foo(x: Int)
-
-Foo(1)
-//│ Foo
+fff(1, 2, 3)
+//│ Int
 //│ res
-//│     = Foo {}
+//│     = -3
 
-Foo(x: 1)
-//│ Foo
+fff(1, z: 3, y:2)
+//│ ╔══[ERROR] number of parameters dosen't match with the function signature!
+//│ ║  l.86: 	fff(1, z: 3, y:2)
+//│ ╙──      	   ^^^^^^^^^^^^^^
+//│ error
 //│ res
-//│     = Foo {}
+//│     = -4
 
-// :e // TODO should be an error
-Foo(y: 1)
-//│ Foo
+fff(y: 2, z: 3, x: 1)
+//│ ╔══[ERROR] number of parameters dosen't match with the function signature!
+//│ ║  l.94: 	fff(y: 2, z: 3, x: 1)
+//│ ╙──      	   ^^^^^^^^^^^^^^^^^^
+//│ error
 //│ res
-//│     = Foo {}
+//│     = -1
 
-
-:e // TODO: Here `x` is not currently treated as a field name
-class Bar(x)
-//│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.55: 	class Bar(x)
-//│ ╙──      	          ^
-//│ class Bar(x: error)
-
-Bar(1)
-//│ Bar
+fff(1, 2, y:2)
+//│ ╔══[ERROR] number of parameters dosen't match with the function signature!
+//│ ║  l.102: 	fff(1, 2, y:2)
+//│ ╙──       	   ^^^^^^^^^^^
+//│ error
 //│ res
-//│     = Bar {}
+//│     = -2
 
-Bar(x: 1)
-//│ Bar
-//│ res
-//│     = Bar {}
-
-:e
-Bar(y: 1)
+//testing renaming
+fff(y: 2, z: y_1 + 1, x: z_1 - 2)
+//│ ╔══[ERROR] identifier not found: y_1
+//│ ║  l.111: 	fff(y: 2, z: y_1 + 1, x: z_1 - 2)
+//│ ╙──       	             ^^^
+//│ ╔══[ERROR] identifier not found: z_1
+//│ ║  l.111: 	fff(y: 2, z: y_1 + 1, x: z_1 - 2)
+//│ ╙──       	                         ^^^
 //│ ╔══[ERROR] Wrong tuple field name: found 'y' instead of 'x'
-//│ ║  l.72: 	Bar(y: 1)
-//│ ╙──      	   ^^^^^^
-//│ Bar | error
-//│ res
-//│     = Bar {}
+//│ ║  l.111: 	fff(y: 2, z: y_1 + 1, x: z_1 - 2)
+//│ ╙──       	   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] number of parameters dosen't match with the function signature!
+//│ ║  l.111: 	fff(y: 2, z: y_1 + 1, x: z_1 - 2)
+//│ ╙──       	   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ error
+//│ Code generation encountered an error:
+//│   unresolved symbol y_1
 
+:d
+let y_1 = 2
+let z_1 = 3
+fff(y: 2, z: y_1 + 1, x: z_1 - 2)
+//│ 0. Typing TypingUnit(List(let y_1 = 2, let z_1 = 3, fff (y: 2, z: + (y_1,) (1,), x: - (z_1,) (2,),)))
+//│ | 0. Created lazy type info for let y_1 = 2
+//│ | 0. Created lazy type info for let z_1 = 3
+//│ | Completing let y_1 = 2
+//│ | | UNSTASHING... (out)
+//│ | | Type params 
+//│ | | UNSTASHING... (out)
+//│ | | Params 
+//│ | | 0. Typing term 2
+//│ | | 0. : #2<Int,Num,Object>
+//│ | | CONSTRAIN #2<Int,Num,Object> <! y_1107'
+//│ | |   where 
+//│ | | 1. C #2<Int,Num,Object> <! y_1107'    (0)
+//│ | | | NEW y_1107' LB (0)
+//│ | | UNSTASHING... (out)
+//│ | Completed TypedNuFun(0,let y_1 = 2,#2<Int,Num,Object>) where 
+//│ | Completing let z_1 = 3
+//│ | | UNSTASHING... (out)
+//│ | | Type params 
+//│ | | UNSTASHING... (out)
+//│ | | Params 
+//│ | | 0. Typing term 3
+//│ | | 0. : #3<Int,Num,Object>
+//│ | | CONSTRAIN #3<Int,Num,Object> <! z_1108'
+//│ | |   where 
+//│ | | 1. C #3<Int,Num,Object> <! z_1108'    (0)
+//│ | | | NEW z_1108' LB (0)
+//│ | | UNSTASHING... (out)
+//│ | Completed TypedNuFun(0,let z_1 = 3,#3<Int,Num,Object>) where 
+//│ | Typing unit statements
+//│ | | 0. Typing term fff (y: 2, z: + (y_1,) (1,), x: - (z_1,) (2,),)
+//│ | | | 0. Typing term fff
+//│ | | | 0. : ‹∀ 0. ((x: Int, y: Int, z: Int,) -> α93')›
+//│ | | | 0. Typing term 2
+//│ | | | 0. : #2<Int,Num,Object>
+//│ | | | 0. Typing term + (y_1,) (1,)
+//│ | | | | 0. Typing term + (y_1,)
+//│ | | | | | 0. Typing term +
+//│ | | | | | 0. : (Int -> (Int -> Int))
+//│ | | | | | 0. Typing term y_1
+//│ | | | | | 0. : #2<Int,Num,Object>
+//│ | | | | | f and f_ty => Var(+) (Int -> (Int -> Int))
+//│ | | | | | a and a_ty => Tup(_: Var(y_1)) (#2<Int,Num,Object>,)
+//│ | | | | | CONSTRAIN (Int -> (Int -> Int)) <! (#2<Int,Num,Object> -> α109)
+//│ | | | | |   where 
+//│ | | | | | 0. C (Int -> (Int -> Int)) <! (#2<Int,Num,Object> -> α109)    (0)
+//│ | | | | | | 0. C (#2<Int,Num,Object>,) <! (Int,)    (1)
+//│ | | | | | | 0. C (Int -> Int) <! α109    (1)
+//│ | | | | | | | NEW α109 LB (0)
+//│ | | | | 0. : α109
+//│ | | | | 0. Typing term 1
+//│ | | | | 0. : #1<Int,Num,Object>
+//│ | | | | f and f_ty => App(Var(+), Tup(_: Var(y_1))) α109
+//│ | | | | a and a_ty => Tup(_: IntLit(1)) (#1<Int,Num,Object>,)
+//│ | | | | CONSTRAIN α109 <! (#1<Int,Num,Object> -> α110)
+//│ | | | |   where 
+//│ 		α109 :> (Int -> Int)
+//│ | | | | 0. C α109 <! (#1<Int,Num,Object> -> α110)    (0)
+//│ | | | | | NEW α109 UB (0)
+//│ | | | | | 0. C (Int -> Int) <! (#1<Int,Num,Object> -> α110)    (2)
+//│ | | | | | | 0. C (#1<Int,Num,Object>,) <! (Int,)    (2)
+//│ | | | | | | 0. C Int <! α110    (2)
+//│ | | | | | | | NEW α110 LB (0)
+//│ | | | 0. : α110
+//│ | | | 0. Typing term - (z_1,) (2,)
+//│ | | | | 0. Typing term - (z_1,)
+//│ | | | | | 0. Typing term -
+//│ | | | | | 0. : (Int -> (Int -> Int))
+//│ | | | | | 0. Typing term z_1
+//│ | | | | | 0. : #3<Int,Num,Object>
+//│ | | | | | f and f_ty => Var(-) (Int -> (Int -> Int))
+//│ | | | | | a and a_ty => Tup(_: Var(z_1)) (#3<Int,Num,Object>,)
+//│ | | | | | CONSTRAIN (Int -> (Int -> Int)) <! (#3<Int,Num,Object> -> α111)
+//│ | | | | |   where 
+//│ | | | | | 0. C (Int -> (Int -> Int)) <! (#3<Int,Num,Object> -> α111)    (0)
+//│ | | | | | | 0. C (#3<Int,Num,Object>,) <! (Int,)    (1)
+//│ | | | | | | 0. C (Int -> Int) <! α111    (1)
+//│ | | | | | | | NEW α111 LB (0)
+//│ | | | | 0. : α111
+//│ | | | | 0. Typing term 2
+//│ | | | | 0. : #2<Int,Num,Object>
+//│ | | | | f and f_ty => App(Var(-), Tup(_: Var(z_1))) α111
+//│ | | | | a and a_ty => Tup(_: IntLit(2)) (#2<Int,Num,Object>,)
+//│ | | | | CONSTRAIN α111 <! (#2<Int,Num,Object> -> α112)
+//│ | | | |   where 
+//│ 		α111 :> (Int -> Int)
+//│ | | | | 0. C α111 <! (#2<Int,Num,Object> -> α112)    (0)
+//│ | | | | | NEW α111 UB (0)
+//│ | | | | | 0. C (Int -> Int) <! (#2<Int,Num,Object> -> α112)    (2)
+//│ | | | | | | 0. C (#2<Int,Num,Object>,) <! (Int,)    (2)
+//│ | | | | | | 0. C Int <! α112    (2)
+//│ | | | | | | | NEW α112 LB (0)
+//│ | | | 0. : α112
+//│ | | | f and f_ty => Var(fff) ‹∀ 0. ((x: Int, y: Int, z: Int,) -> α93')›
+//│ | | | a and a_ty => Tup(y: IntLit(2), z: App(App(Var(+), Tup(_: Var(y_1))), Tup(_: IntLit(1))), x: App(App(Var(-), Tup(_: Var(z_1))), Tup(_: IntLit(2)))) (y: #2<Int,Num,Object>, z: α110, x: α112,)
+//│ | | | CONSTRAIN ‹∀ 0. ((x: Int, y: Int, z: Int,) -> α93')› <! ((y: #2<Int,Num,Object>, z: α110, x: α112,) -> α113)
+//│ | | |   where 
+//│ 		α93' :> Int
+//│ 		α110 :> Int
+//│ 		α112 :> Int
+//│ | | | 0. C ‹∀ 0. ((x: Int, y: Int, z: Int,) -> α93')› <! ((y: #2<Int,Num,Object>, z: α110, x: α112,) -> α113)    (0)
+//│ | | | | DISTRIB-L  ~>  ((x: Int, y: Int, z: Int,) -> ‹∀ 0. α93'›)
+//│ | | | | 0. C ((x: Int, y: Int, z: Int,) -> ‹∀ 0. α93'›) <! ((y: #2<Int,Num,Object>, z: α110, x: α112,) -> α113)    (2)
+//│ | | | | | 0. C (y: #2<Int,Num,Object>, z: α110, x: α112,) <! (x: Int, y: Int, z: Int,)    (2)
+//│ | | | | | | CONSTRAIN #error<> <! α113
+//│ | | | | | |   where 
+//│ | | | | | | 0. C #error<> <! α113    (0)
+//│ | | | | | | | NEW α113 LB (0)
+//│ ╔══[ERROR] Wrong tuple field name: found 'y' instead of 'x'
+//│ ║  l.131: 	fff(y: 2, z: y_1 + 1, x: z_1 - 2)
+//│ ╙──       	   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ | | | | | | 0. C #2<Int,Num,Object> <! Int    (3)
+//│ | | | | | | 0. C α110 <! Int    (3)
+//│ | | | | | | | NEW α110 UB (0)
+//│ | | | | | | | 0. C Int <! Int    (5)
+//│ | | | | | | 0. C α112 <! Int    (3)
+//│ | | | | | | | NEW α112 UB (0)
+//│ | | | | | | | 0. C Int <! Int    (5)
+//│ | | | | | 0. C ‹∀ 0. α93'› <! α113    (2)
+//│ | | | | | | NEW α113 LB (0)
+//│ | | | f => fff
+//│ | | | args_ty => (y: #2<Int,Num,Object>, z: α110, x: α112,) class mlscript.TyperDatatypes$TupleType
+//│ | | | fun_ty => ‹∀ 0. ((x: Int, y: Int, z: Int,) -> α93')› class mlscript.TyperDatatypes$PolymorphicType
+//│ | | | argsList => List(x, y, z)
+//│ | | | a is => y: 2, z: + (y_1,) (1,), x: - (z_1,) (2,),
+//│ | | | final acc => Map(y -> y_2, z -> z_2, x -> x_1)
+//│ | | | Desugared is here => let y_2 = 2 in let z_2 = + (y_1,) (1,) in let x_1 = - (z_1,) (2,) in fff (x_1, y_2, z_2,)
+//│ | | | 0. Typing term let y_2 = 2 in let z_2 = + (y_1,) (1,) in let x_1 = - (z_1,) (2,) in fff (x_1, y_2, z_2,)
+//│ | | | | 0. Typing term 2
+//│ | | | | 0. : #2<Int,Num,Object>
+//│ | | | | 0. Typing term let z_2 = + (y_1,) (1,) in let x_1 = - (z_1,) (2,) in fff (x_1, y_2, z_2,)
+//│ | | | | | 0. Typing term + (y_1,) (1,)
+//│ | | | | | | 0. Typing term + (y_1,)
+//│ | | | | | | | 0. Typing term +
+//│ | | | | | | | 0. : (Int -> (Int -> Int))
+//│ | | | | | | | 0. Typing term y_1
+//│ | | | | | | | 0. : #2<Int,Num,Object>
+//│ | | | | | | | f and f_ty => Var(+) (Int -> (Int -> Int))
+//│ | | | | | | | a and a_ty => Tup(_: Var(y_1)) (#2<Int,Num,Object>,)
+//│ | | | | | | | CONSTRAIN (Int -> (Int -> Int)) <! (#2<Int,Num,Object> -> α114)
+//│ | | | | | | |   where 
+//│ | | | | | | | 0. C (Int -> (Int -> Int)) <! (#2<Int,Num,Object> -> α114)    (0)
+//│ | | | | | | | | 0. C (#2<Int,Num,Object>,) <! (Int,)    (1)
+//│ | | | | | | | | 0. C (Int -> Int) <! α114    (1)
+//│ | | | | | | | | | NEW α114 LB (0)
+//│ | | | | | | 0. : α114
+//│ | | | | | | 0. Typing term 1
+//│ | | | | | | 0. : #1<Int,Num,Object>
+//│ | | | | | | f and f_ty => App(Var(+), Tup(_: Var(y_1))) α114
+//│ | | | | | | a and a_ty => Tup(_: IntLit(1)) (#1<Int,Num,Object>,)
+//│ | | | | | | CONSTRAIN α114 <! (#1<Int,Num,Object> -> α115)
+//│ | | | | | |   where 
+//│ 		α114 :> (Int -> Int)
+//│ | | | | | | 0. C α114 <! (#1<Int,Num,Object> -> α115)    (0)
+//│ | | | | | | | NEW α114 UB (0)
+//│ | | | | | | | 0. C (Int -> Int) <! (#1<Int,Num,Object> -> α115)    (2)
+//│ | | | | | | | | 0. C (#1<Int,Num,Object>,) <! (Int,)    (2)
+//│ | | | | | | | | 0. C Int <! α115    (2)
+//│ | | | | | | | | | NEW α115 LB (0)
+//│ | | | | | 0. : α115
+//│ | | | | | 0. Typing term let x_1 = - (z_1,) (2,) in fff (x_1, y_2, z_2,)
+//│ | | | | | | 0. Typing term - (z_1,) (2,)
+//│ | | | | | | | 0. Typing term - (z_1,)
+//│ | | | | | | | | 0. Typing term -
+//│ | | | | | | | | 0. : (Int -> (Int -> Int))
+//│ | | | | | | | | 0. Typing term z_1
+//│ | | | | | | | | 0. : #3<Int,Num,Object>
+//│ | | | | | | | | f and f_ty => Var(-) (Int -> (Int -> Int))
+//│ | | | | | | | | a and a_ty => Tup(_: Var(z_1)) (#3<Int,Num,Object>,)
+//│ | | | | | | | | CONSTRAIN (Int -> (Int -> Int)) <! (#3<Int,Num,Object> -> α116)
+//│ | | | | | | | |   where 
+//│ | | | | | | | | 0. C (Int -> (Int -> Int)) <! (#3<Int,Num,Object> -> α116)    (0)
+//│ | | | | | | | | | 0. C (#3<Int,Num,Object>,) <! (Int,)    (1)
+//│ | | | | | | | | | 0. C (Int -> Int) <! α116    (1)
+//│ | | | | | | | | | | NEW α116 LB (0)
+//│ | | | | | | | 0. : α116
+//│ | | | | | | | 0. Typing term 2
+//│ | | | | | | | 0. : #2<Int,Num,Object>
+//│ | | | | | | | f and f_ty => App(Var(-), Tup(_: Var(z_1))) α116
+//│ | | | | | | | a and a_ty => Tup(_: IntLit(2)) (#2<Int,Num,Object>,)
+//│ | | | | | | | CONSTRAIN α116 <! (#2<Int,Num,Object> -> α117)
+//│ | | | | | | |   where 
+//│ 		α116 :> (Int -> Int)
+//│ | | | | | | | 0. C α116 <! (#2<Int,Num,Object> -> α117)    (0)
+//│ | | | | | | | | NEW α116 UB (0)
+//│ | | | | | | | | 0. C (Int -> Int) <! (#2<Int,Num,Object> -> α117)    (2)
+//│ | | | | | | | | | 0. C (#2<Int,Num,Object>,) <! (Int,)    (2)
+//│ | | | | | | | | | 0. C Int <! α117    (2)
+//│ | | | | | | | | | | NEW α117 LB (0)
+//│ | | | | | | 0. : α117
+//│ | | | | | | 0. Typing term fff (x_1, y_2, z_2,)
+//│ | | | | | | | 0. Typing term fff
+//│ | | | | | | | 0. : ‹∀ 0. ((x: Int, y: Int, z: Int,) -> α93')›
+//│ | | | | | | | 0. Typing term x_1
+//│ | | | | | | | 0. : α117
+//│ | | | | | | | 0. Typing term y_2
+//│ | | | | | | | 0. : #2<Int,Num,Object>
+//│ | | | | | | | 0. Typing term z_2
+//│ | | | | | | | 0. : α115
+//│ | | | | | | | f and f_ty => Var(fff) ‹∀ 0. ((x: Int, y: Int, z: Int,) -> α93')›
+//│ | | | | | | | a and a_ty => Tup(_: Var(x_1), _: Var(y_2), _: Var(z_2)) (α117, #2<Int,Num,Object>, α115,)
+//│ | | | | | | | CONSTRAIN ‹∀ 0. ((x: Int, y: Int, z: Int,) -> α93')› <! ((α117, #2<Int,Num,Object>, α115,) -> α118)
+//│ | | | | | | |   where 
+//│ 		α93' :> Int
+//│ 		α115 :> Int
+//│ 		α117 :> Int
+//│ | | | | | | | 0. C ‹∀ 0. ((x: Int, y: Int, z: Int,) -> α93')› <! ((α117, #2<Int,Num,Object>, α115,) -> α118)    (0)
+//│ | | | | | | | | DISTRIB-L  ~>  ((x: Int, y: Int, z: Int,) -> ‹∀ 0. α93'›)
+//│ | | | | | | | | 0. C ((x: Int, y: Int, z: Int,) -> ‹∀ 0. α93'›) <! ((α117, #2<Int,Num,Object>, α115,) -> α118)    (2)
+//│ | | | | | | | | | 0. C (α117, #2<Int,Num,Object>, α115,) <! (x: Int, y: Int, z: Int,)    (2)
+//│ | | | | | | | | | | 0. C α117 <! Int    (3)
+//│ | | | | | | | | | | | NEW α117 UB (0)
+//│ | | | | | | | | | | | 0. C Int <! Int    (5)
+//│ | | | | | | | | | | 0. C #2<Int,Num,Object> <! Int    (3)
+//│ | | | | | | | | | | 0. C α115 <! Int    (3)
+//│ | | | | | | | | | | | NEW α115 UB (0)
+//│ | | | | | | | | | | | 0. C Int <! Int    (5)
+//│ | | | | | | | | | 0. C ‹∀ 0. α93'› <! α118    (2)
+//│ | | | | | | | | | | NEW α118 LB (0)
+//│ | | | | | | 0. : α118
+//│ | | | | | 0. : α118
+//│ | | | | 0. : α118
+//│ | | | 0. : α118
+//│ | | 0. : α118
+//│ | : Some(α118)
+//│ ======== TYPED ========
+//│ let y_1: #2<Int,Num,Object> where 
+//│ let z_1: #3<Int,Num,Object> where 
+//│ res: Some(α118) where 
+//│ 		α93' :> Int
+//│ 		α118 :> ‹∀ 0. α93'›
+//│ let y_1: 2
+//│ let z_1: 3
+//│ Int
+//│ y_1
+//│     = 2
+//│ z_1
+//│     = 3
+//│ res
+//│     = -3

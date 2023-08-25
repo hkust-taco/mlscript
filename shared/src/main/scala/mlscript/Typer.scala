@@ -994,13 +994,32 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
         val desug = If(IfThen(lhs, rhs), S(Var("false")))
         term.desugaredTerm = S(desug)
         typeTerm(desug)
-      case App(f @ Var(name), a @ Tup(fields)) if (fields.exists(x => x._1.isDefined)) =>
-        println("applying-to-function => " + f + "<" + f.getClass() + ">" + a + "<" + a.getClass() + ">")
-        println("now we should desugar in case of named args!")
-        println("!!named args case!!")
-        desugarNamedArgs(term, f, a)
+      case App(f: Term, a @ Tup(fields)) if (fields.exists(x => x._1.isDefined)) =>
+        val (args_ty: SimpleType, fun_ty: SimpleType, res: TypeVariable) = typeUnnamedApp(f, a)
+        val res_ty = con(fun_ty, FunctionType(args_ty, res)(
+            prov
+            // funProv // TODO: better?
+            ), res)
+        println("f => " + f)
+        println("args_ty => " + args_ty + " " + args_ty.getClass())
+        println("fun_ty => " + fun_ty + " " + fun_ty.getClass())
+        val argsList = fun_ty match {
+                        case PolymorphicType(_, ProvType(FunctionType(TupleType(fields), _))) => 
+                          fields.map(x => x._1 match {
+                            case Some(arg) =>
+                              arg
+                            case N =>
+                              Var("dummy")
+                          })
+                        // why uncommenting fixes test(x: 0, 1) error?
+                        case _ => 
+                          println("unexpected case here")
+                          Nil
+        }
+        desugarNamedArgs(term, f, a, argsList)
+        // typeTerm(f)
       case App(f: Term, a: Term) =>
-        println("f type is gooz => " + codegen.Helpers.inspect(f) + " " + f.getClass())
+        // TODO: probably better to merge this case with previous one.
         val (args_ty, fun_ty, res) = typeUnnamedApp(f, a)
         val res_ty = con(fun_ty, FunctionType(args_ty, res)(
             prov
@@ -1386,86 +1405,59 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
     }
   }
 
-  def desugarNamedArgs(term: Term, f: Var, a: Tup)(implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType]): SimpleType = {
-    val Var(name) = f
-    ctx.get(name) match {
-      case Some(value) => 
-        println("value => " + value  + " " + value.getClass())
-        value match {
-          case CompletedTypeInfo(TypedNuFun(level: Level, fd: NuFunDef, bodyType: ST)) =>
-            // 1. check if list is in this format : N, N, N, Some, Some, ... TODO
-            // 2. create let bindings
-            def rec (as: List[String -> Fld], acc: Map[String, Var]): Term = {
-              as match {
-                case (v, f) :: tail =>
-                  println("f => " + f)
-                  println("v => " + v)
-                  println("acc => " + acc)
-                  val newVar = Var(getNewVarName(v, freeVars(ctx, a)))
-                  Let(false, newVar, f.value, rec(tail, acc + (v -> newVar)))
-                case Nil =>
-                  // call the function 
-                  // only the var name in the function call
-                  val fields = fd.rhs match {
-                    case Left(Lam(Tup(fields), rhs)) => 
-                      fields
-                    case _ =>
-                      Nil // TODO: check what to do if there is something wrong. cannot raise an err(because type is simple type)!
-                  }
-                  println("fields => " + fields)
-                  // I want list of vars of signature, sorted.
-                  val onlySignatureArgs: List[String] = fields.map(x =>
-                    x._2.value match {
-                      case Var(name) =>
-                        name
-                    })
-                  println("onlySignatureArgs => " + onlySignatureArgs)
-                  println("final acc => " + acc)
-
-                  // check if there is one args of signature not present in map
-                  onlySignatureArgs.foreach(x => 
-                    if (!acc.contains(x))
-                      err("the named used in binding are not matched with the function signature!", N) 
-                  )
-                  val y: Term = Tup(onlySignatureArgs.map(x => 
-                    acc.get(x) match {
-                      case Some(v) => (None, Fld(false, false, v))
-                      // err("the named used in binding are not matched with the function signature!", f.toLoc) // TODO: Check what to in case of this!
-                    }
-                  ))
-                  // val y: Tup = Tup(fields.map(x =>
-                  //                   x._2.value match {
-                  //                     case Var(name) => 
-                  //                       (None, Fld(false, false, Var(name)))
-                  //                   }))
-                  // // println("y => " + y)
-                  // // val yy: List[Opt[Var] -> Fld] = Nil
-
-                  App(f, y)
-              }
+  def desugarNamedArgs(term: Term, f: Term, a: Tup, argsList: List[Var])
+  (implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType]): SimpleType = {
+    def rec (as: List[String -> Fld], acc: Map[String, Var]): Term = {
+      as match {
+        case (v, fld) :: tail =>
+          val newVar = Var(getNewVarName(v, freeVars(ctx, a)))
+          Let(false, newVar, fld.value, rec(tail, acc + (v -> newVar)))
+        case Nil =>
+          println("final acc => " + acc)
+          val y: Term = Tup(argsList.map(x => 
+            acc.get(x.name) match {
+              case Some(v) => 
+                (None, Fld(false, false, v))
+              case None =>
+                err(s"name ${x} used in binding are not matched with the function signature!", a.toLoc)
+                (None, Fld(false, false, Var("dummy"))) // TODO: check if this doesn't make problem in next steps (err dosen't raise exception)
             }
-            val aa = a.fields.map(x => 
-              x._1 match {
-                case Some(value) => 
-                  (value.name, x._2)
-                case N =>
-                  ("ggg", x._2)
-              })
-            println("aa => " + aa)
-            println("a => " + a)
-            val desugared = rec(aa, Map())
-            println("Desugared is here => " + desugared)
-            term.desugaredTerm = S(desugared)
-            // 3. type the term
-            typeTerm(desugared)(ctx = ctx, raise = raise, vars = vars, genLambdas = false) 
-          case other =>
-            err("type is not correct.", f.toLoc)
-        }
-      case None => 
-          err("type identifier not found: " + name, f.toLoc)
+          ))
+          App(f, y)
+      }
+    }
+    println(s"argsList => ${argsList}")
+    println(s"a is => ${a}")
+    if (a.fields.exists(x => x._1.isDefined) &&
+        a.fields.exists(x => x._1.isEmpty) && 
+        a.fields.indexWhere(x => x._1.isDefined) < a.fields.lastIndexWhere(x => x._1.isEmpty)
+        ) {
+      err("the unnamed args should appear first when using named args!", a.toLoc) 
+    } else
+    if (a.fields.size > argsList.size || a.fields.size < argsList.size) {
+      err("number of parameters dosen't match with the function signature!", a.toLoc) 
+    } else {
+      val as = a.fields.zipWithIndex.map{ case(x, idx) =>
+        x._1 match {
+          case Some(value) => 
+            (value.name, x._2)
+          case N =>
+            (argsList(idx).name, x._2)
+        }}
+      if (as.groupBy(x => x._1).size < argsList.size) {
+        as.groupBy(x => x._1).foreach(
+          x =>
+            if (x._2.size > 1) {
+              err(s"parameter ${x._1} is duplicate!", a.toLoc)
+            }
+        )
+      }
+      val desugared = rec(as, Map())
+      println("Desugared is here => " + desugared)
+      term.desugaredTerm = S(desugared)
+      typeTerm(desugared)(ctx = ctx, raise = raise, vars = vars, genLambdas = false)
     }
   }
-  
   
   /** Convert an inferred SimpleType into the immutable Type representation. */
   def expandType(st: TypeLike, stopAtTyVars: Bool = false)(implicit ctx: Ctx): mlscript.TypeLike = {
