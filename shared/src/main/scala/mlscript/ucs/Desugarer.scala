@@ -1,12 +1,13 @@
 package mlscript.ucs
 
-import scala.collection.mutable.{Map => MutMap}
+import scala.collection.mutable.{Map => MutMap, HashMap}
 import scala.collection.mutable.Buffer
 
 import mlscript._, utils._, shorthands._
 import helpers._
 import Message.MessageContext
 import mlscript.ucs.MutCaseOf.MutCase.Constructor
+import scala.collection.mutable.ListBuffer
 
 /**
   * This class contains main desugaring methods.
@@ -72,7 +73,7 @@ class Desugarer extends TypeDefs { self: Typer =>
     val subPatterns = Buffer.empty[(Var, Term)]
     val bindings = params.iterator.zip(positionals).flatMap {
       // `x is A(_)`: ignore this binding
-      case (Var("_"), _) => N
+      case (Var("_"), fieldName) => S(fieldName -> Var("_"))
       // `x is A(value)`: generate bindings directly
       case (nameVar @ Var(n), fieldName) if (n.headOption.exists(_.isLower)) =>
         S(fieldName -> nameVar)
@@ -786,18 +787,36 @@ class Desugarer extends TypeDefs { self: Typer =>
         case MutCase.Constructor(className -> fields, cases) :: next =>
           printlnUCS(s"• Constructor pattern: $className(${fields.iterator.map(x => s"${x._1} -> ${x._2}").mkString(", ")})")
           val consequent = rec(cases)(defs ++ fields.iterator.map(_._2))
-          val unapplyCls = ctx.get(className.name) match {
-            case S(CompletedTypeInfo(cls: TypedNuCls)) if !cls.decl.isPlainJSClass => S(className)
-            case S(ti: DelayedTypeInfo) => ti.decl match {
-              case nd: NuTypeDef if nd.kind === Cls && !nd.isPlainJSClass => S(className)
-              case _ => N
-            }
+          val unapplyMtd = ctx.get(className.name) match {
+            case S(CompletedTypeInfo(cls: TypedNuCls)) => cls.td.genUnapply
+            case S(ti: DelayedTypeInfo) => ti.decl.genUnapply
             case _ => N
           }
-          val body = (scrutinee.reference, unapplyCls) match {
-            case (v: Var, S(className)) =>
-              Unapp(className, v, scrutinee.term, fields.toList, consequent)
-            case _ => mkLetFromFields(scrutinee, fields.toList, consequent)
+          val body = (scrutinee.reference, unapplyMtd) match {
+            case (v: Var, S(unapplyMtd)) if !fields.isEmpty =>
+              val visited = new HashMap[Str, Str]()
+              val extraAlias = new ListBuffer[(Str, Str)]()
+              fields.foreach {
+                case (field -> Var(alias)) => visited.get(field) match {
+                  case S(prev) => extraAlias.addOne((prev, alias))
+                  case _ => visited.put(field, alias)
+                }
+              }
+
+              App(Lam(Tup(
+                N -> Fld(false, false, false, Tup(
+                  fields.distinctBy(_._1).map {
+                    case (_ -> Var(alias)) =>
+                      if (alias === "_") N -> Fld(false, false, false, Var(freshName))
+                      else N -> Fld(false, false, false, Var(alias))
+                  }.toList
+                )) :: Nil
+              ), extraAlias.toList.foldRight(consequent)((lt, rs) => Let(false, Var(lt._2), Var(lt._1), rs))),
+                Tup(N -> Fld(false, false, false, App(Sel(className, Var(unapplyMtd.name)),
+                  Tup(N -> Fld(false, false, false, scrutinee.reference) :: Nil))
+                  ) :: Nil)
+              )
+            case _ => mkLetFromFields(scrutinee, fields.filter(_._2.name =/= "_").toList, consequent)
           }
           Case(className, body, rec2(next))
         case MutCase.Literal(literal, cases) :: next =>

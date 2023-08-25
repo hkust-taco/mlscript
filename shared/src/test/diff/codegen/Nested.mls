@@ -36,13 +36,16 @@ module A {
 //│           if (this.#B === undefined) {
 //│             class B {
 //│               #x;
-//│               static $unapply(self) { return [self.#x, ] }
 //│               constructor(x) {
 //│                 this.#x = x;
 //│               }
 //│               get b() {
 //│                 const x = this.#x;
 //│                 return x + 1;
+//│               }
+//│             static
+//│               unapply(ins) {
+//│                 return [ins.#x];
 //│               }
 //│             };
 //│             this.#B = ((x) => Object.freeze(new B(x)));
@@ -66,7 +69,7 @@ module A {
 let bb = A.B(A.a)
 bb.b
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.66: 	let bb = A.B(A.a)
+//│ ║  l.69: 	let bb = A.B(A.a)
 //│ ╙──      	          ^^
 //│ let bb: error
 //│ error
@@ -99,11 +102,11 @@ c.outer1
 let d = b.D(1)
 d.outer
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.97: 	let c = b.C(1)
-//│ ╙──      	         ^^
+//│ ║  l.100: 	let c = b.C(1)
+//│ ╙──       	         ^^
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.99: 	let d = b.D(1)
-//│ ╙──      	         ^^
+//│ ║  l.102: 	let d = b.D(1)
+//│ ╙──       	         ^^
 //│ class B(x: Int) {
 //│   class C(y: Int) {
 //│     let outer1: Int
@@ -203,9 +206,12 @@ module D {
 //│             class E {
 //│               #x;
 //│               get x() { return this.#x; }
-//│               static $unapply(self) { return [self.#x, ] }
 //│               constructor(x) {
 //│                 this.#x = x;
+//│               }
+//│             static
+//│               unapply(ins) {
+//│                 return [ins.#x];
 //│               }
 //│             };
 //│             this.#E = ((x) => Object.freeze(new E(x)));
@@ -270,7 +276,6 @@ class E(x: Int) {
 //│       class E {
 //│         #F;
 //│         #x;
-//│         static $unapply(self) { return [self.#x, ] }
 //│         constructor(x) {
 //│           this.#x = x;
 //│         }
@@ -280,7 +285,6 @@ class E(x: Int) {
 //│             class F {
 //│               #G;
 //│               #y;
-//│               static $unapply(self) { return [self.#y, ] }
 //│               constructor(y) {
 //│                 this.#y = y;
 //│               }
@@ -293,7 +297,6 @@ class E(x: Int) {
 //│                 if (this.#G === undefined) {
 //│                   class G {
 //│                     #z;
-//│                     static $unapply(self) { return [self.#z, ] }
 //│                     constructor(z) {
 //│                       this.#z = z;
 //│                     }
@@ -301,17 +304,29 @@ class E(x: Int) {
 //│                       const z = this.#z;
 //│                       return outer1.#x + outer2.#y + z;
 //│                     }
+//│                   static
+//│                     unapply(ins) {
+//│                       return [ins.#z];
+//│                     }
 //│                   };
 //│                   this.#G = ((z) => Object.freeze(new G(z)));
 //│                   this.#G.class = G;
 //│                 }
 //│                 return this.#G;
 //│               }
+//│             static
+//│               unapply(ins) {
+//│                 return [ins.#y];
+//│               }
 //│             };
 //│             this.#F = ((y) => Object.freeze(new F(y)));
 //│             this.#F.class = F;
 //│           }
 //│           return this.#F;
+//│         }
+//│       static
+//│         unapply(ins) {
+//│           return [ins.#x];
 //│         }
 //│       };
 //│       this.#E = ((x) => Object.freeze(new E(x)));
@@ -331,7 +346,7 @@ let fff = es.F(2)
 let gg = fff.G(3)
 gg.sum
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.330: 	let fff = es.F(2)
+//│ ║  l.345: 	let fff = es.F(2)
 //│ ╙──       	            ^^
 //│ let es: E
 //│ let fff: error
@@ -382,7 +397,6 @@ class F() {
 //│       class F {
 //│         #G;
 //│         #x;
-//│         static $unapply(self) { return [] }
 //│         constructor() {
 //│           this.#x = 42;
 //│           const x = this.#x;
@@ -391,15 +405,22 @@ class F() {
 //│           const outer1 = this;
 //│           if (this.#G === undefined) {
 //│             class G {
-//│               static $unapply(self) { return [] }
 //│               constructor() {
 //│                 const x1 = outer1.#x + 1;
+//│               }
+//│             static
+//│               unapply(ins) {
+//│                 return [];
 //│               }
 //│             };
 //│             this.#G = (() => Object.freeze(new G()));
 //│             this.#G.class = G;
 //│           }
 //│           return this.#G;
+//│         }
+//│       static
+//│         unapply(ins) {
+//│           return [];
 //│         }
 //│       };
 //│       this.#F = (() => Object.freeze(new F()));
@@ -460,13 +481,16 @@ module G {
 //│                 if (this.#J === undefined) {
 //│                   class J {
 //│                     #x;
-//│                     static $unapply(self) { return [self.#x, ] }
 //│                     constructor(x) {
 //│                       this.#x = x;
 //│                     }
 //│                     ii(a) {
 //│                       const x = this.#x;
 //│                       return outer1.I(x + a);
+//│                     }
+//│                   static
+//│                     unapply(ins) {
+//│                       return [ins.#x];
 //│                     }
 //│                   };
 //│                   this.#J = ((x) => Object.freeze(new J(x)));
@@ -486,9 +510,12 @@ module G {
 //│             class I {
 //│               #x;
 //│               get x() { return this.#x; }
-//│               static $unapply(self) { return [self.#x, ] }
 //│               constructor(x) {
 //│                 this.#x = x;
+//│               }
+//│             static
+//│               unapply(ins) {
+//│                 return [ins.#x];
 //│               }
 //│             };
 //│             this.#I = ((x) => Object.freeze(new I(x)));
@@ -514,7 +541,7 @@ let jj = G.H.J(42)
 let i = jj.ii(2)
 i.x
 //│ ╔══[ERROR] access to module member not yet supported
-//│ ║  l.513: 	let jj = G.H.J(42)
+//│ ║  l.540: 	let jj = G.H.J(42)
 //│ ╙──       	          ^^
 //│ let jj: error
 //│ let i: error
@@ -568,9 +595,12 @@ module H {
 //│             class I {
 //│               #x;
 //│               get x() { return this.#x; }
-//│               static $unapply(self) { return [self.#x, ] }
 //│               constructor(x) {
 //│                 this.#x = x;
+//│               }
+//│             static
+//│               unapply(ins) {
+//│                 return [ins.#x];
 //│               }
 //│             };
 //│             this.#I = ((x) => Object.freeze(new I(x)));
@@ -585,11 +615,14 @@ module H {
 //│               #x;
 //│               #i;
 //│               get i() { return this.#i; }
-//│               static $unapply(self) { return [self.#x, ] }
 //│               constructor(x) {
 //│                 this.#x = x;
 //│                 this.#i = outer1.I(x + 1);
 //│                 const i = this.#i;
+//│               }
+//│             static
+//│               unapply(ins) {
+//│                 return [ins.#x];
 //│               }
 //│             };
 //│             this.#J = ((x) => Object.freeze(new J(x)));
@@ -614,7 +647,7 @@ module H {
 let j = H.J(42)
 j.i.x
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.614: 	let j = H.J(42)
+//│ ║  l.647: 	let j = H.J(42)
 //│ ╙──       	         ^^
 //│ let j: error
 //│ error
@@ -644,7 +677,7 @@ let i = I(1)
 let ij = i.J(0)
 ij.incY
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.644: 	let ij = i.J(0)
+//│ ║  l.677: 	let ij = i.J(0)
 //│ ╙──       	          ^^
 //│ class I(x: Int) {
 //│   class J(x: Int) {
@@ -667,7 +700,6 @@ ij.incY
 //│       class I {
 //│         #J;
 //│         #x;
-//│         static $unapply(self) { return [self.#x, ] }
 //│         constructor(x) {
 //│           this.#x = x;
 //│           const y = x + 1;
@@ -678,7 +710,6 @@ ij.incY
 //│             class J {
 //│               #y;
 //│               #x;
-//│               static $unapply(self) { return [self.#x, ] }
 //│               constructor(x) {
 //│                 this.#x = x;
 //│                 this.#y = x + 2;
@@ -689,11 +720,19 @@ ij.incY
 //│                 const self = this;
 //│                 return self.#y + 1;
 //│               }
+//│             static
+//│               unapply(ins) {
+//│                 return [ins.#x];
+//│               }
 //│             };
 //│             this.#J = ((x) => Object.freeze(new J(x)));
 //│             this.#J.class = J;
 //│           }
 //│           return this.#J;
+//│         }
+//│       static
+//│         unapply(ins) {
+//│           return [ins.#x];
 //│         }
 //│       };
 //│       this.#I = ((x) => Object.freeze(new I(x)));
@@ -759,9 +798,12 @@ module J {
 //│           if (this.#K === undefined) {
 //│             class K {
 //│               #x;
-//│               static $unapply(self) { return [self.#x, ] }
 //│               constructor(x) {
 //│                 this.#x = x;
+//│               }
+//│             static
+//│               unapply(ins) {
+//│                 return [ins.#x];
 //│               }
 //│             };
 //│             this.#K = ((x) => Object.freeze(new K(x)));
@@ -773,9 +815,12 @@ module J {
 //│           const outer1 = this;
 //│           if (this.#M === undefined) {
 //│             class M extends outer1.K.class {
-//│               static $unapply(self) { return [] }
 //│               constructor() {
 //│                 super(1);
+//│               }
+//│             static
+//│               unapply(ins) {
+//│                 return [];
 //│               }
 //│             };
 //│             this.#M = (() => Object.freeze(new M()));
@@ -788,10 +833,13 @@ module J {
 //│           if (this.#N === undefined) {
 //│             class N extends outer1.L(outer1.K.class) {
 //│               #x;
-//│               static $unapply(self) { return [self.#x, ] }
 //│               constructor(x) {
 //│                 super(x + 2);
 //│                 this.#x = x;
+//│               }
+//│             static
+//│               unapply(ins) {
+//│                 return [ins.#x];
 //│               }
 //│             };
 //│             this.#N = ((x) => Object.freeze(new N(x)));
@@ -815,10 +863,10 @@ module J {
 let m = J.M()
 let n = J.N(2)
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.815: 	let m = J.M()
+//│ ║  l.863: 	let m = J.M()
 //│ ╙──       	         ^^
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.816: 	let n = J.N(2)
+//│ ║  l.864: 	let n = J.N(2)
 //│ ╙──       	         ^^
 //│ let m: error
 //│ let n: error
@@ -859,7 +907,7 @@ module K {
 let m = K.L.M()
 m.f
 //│ ╔══[ERROR] access to module member not yet supported
-//│ ║  l.859: 	let m = K.L.M()
+//│ ║  l.907: 	let m = K.L.M()
 //│ ╙──       	         ^^
 //│ let m: error
 //│ error
@@ -889,7 +937,7 @@ module L {
 let op = L.N.O.P(0)
 op.x
 //│ ╔══[ERROR] access to module member not yet supported
-//│ ║  l.889: 	let op = L.N.O.P(0)
+//│ ║  l.937: 	let op = L.N.O.P(0)
 //│ ╙──       	          ^^
 //│ let op: error
 //│ error
@@ -916,10 +964,10 @@ module M {
 }
 M.N.op(M.P())
 //│ ╔══[ERROR] access to module member not yet supported
-//│ ║  l.917: 	M.N.op(M.P())
+//│ ║  l.965: 	M.N.op(M.P())
 //│ ╙──       	 ^^
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.917: 	M.N.op(M.P())
+//│ ║  l.965: 	M.N.op(M.P())
 //│ ╙──       	        ^^
 //│ module M {
 //│   module N {
@@ -969,8 +1017,11 @@ M.N.op(M.P())
 //│           const outer1 = this;
 //│           if (this.#O === undefined) {
 //│             class O {
-//│               static $unapply(self) { return [] }
 //│               constructor() {
+//│               }
+//│             static
+//│               unapply(ins) {
+//│                 return [];
 //│               }
 //│             };
 //│             this.#O = (() => Object.freeze(new O()));
@@ -982,8 +1033,11 @@ M.N.op(M.P())
 //│           const outer1 = this;
 //│           if (this.#P === undefined) {
 //│             class P {
-//│               static $unapply(self) { return [] }
 //│               constructor() {
+//│               }
+//│             static
+//│               unapply(ins) {
+//│                 return [];
 //│               }
 //│             };
 //│             this.#P = (() => Object.freeze(new P()));
@@ -1043,9 +1097,12 @@ module N {
 //│                 const outer2 = this;
 //│                 if (this.#P === undefined) {
 //│                   class P extends outer1.Q.class {
-//│                     static $unapply(self) { return [] }
 //│                     constructor() {
 //│                       super();
+//│                     }
+//│                   static
+//│                     unapply(ins) {
+//│                       return [];
 //│                     }
 //│                   };
 //│                   this.#P = (() => Object.freeze(new P()));
@@ -1063,8 +1120,11 @@ module N {
 //│           const outer1 = this;
 //│           if (this.#Q === undefined) {
 //│             class Q {
-//│               static $unapply(self) { return [] }
 //│               constructor() {
+//│               }
+//│             static
+//│               unapply(ins) {
+//│                 return [];
 //│               }
 //│             };
 //│             this.#Q = (() => Object.freeze(new Q()));
@@ -1086,7 +1146,7 @@ module N {
 :e
 N.O.P()
 //│ ╔══[ERROR] access to module member not yet supported
-//│ ║  l.1087: 	N.O.P()
+//│ ║  l.1147: 	N.O.P()
 //│ ╙──        	 ^^
 //│ error
 //│ res
@@ -1102,7 +1162,7 @@ class I(x: Int) {
 }
 I(1).J(3).a
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.1103: 	I(1).J(3).a
+//│ ║  l.1163: 	I(1).J(3).a
 //│ ╙──        	    ^^
 //│ class I(x: Int) {
 //│   class J(z: Int) {
@@ -1123,7 +1183,6 @@ I(1).J(3).a
 //│         #J;
 //│         #y;
 //│         #x;
-//│         static $unapply(self) { return [self.#x, ] }
 //│         constructor(x) {
 //│           this.#x = x;
 //│           this.#y = x + 1;
@@ -1136,7 +1195,6 @@ I(1).J(3).a
 //│               #z;
 //│               #a;
 //│               get a() { return this.#a; }
-//│               static $unapply(self) { return [self.#z, ] }
 //│               constructor(z) {
 //│                 this.#z = z;
 //│                 this.#a = [
@@ -1146,11 +1204,19 @@ I(1).J(3).a
 //│                 ];
 //│                 const a = this.#a;
 //│               }
+//│             static
+//│               unapply(ins) {
+//│                 return [ins.#z];
+//│               }
 //│             };
 //│             this.#J = ((z) => Object.freeze(new J(z)));
 //│             this.#J.class = J;
 //│           }
 //│           return this.#J;
+//│         }
+//│       static
+//│         unapply(ins) {
+//│           return [ins.#x];
 //│         }
 //│       };
 //│       this.#I = ((x) => Object.freeze(new I(x)));
@@ -1205,9 +1271,12 @@ fun mian =
 //│     const A = (() => {
 //│       class A {
 //│         #x;
-//│         static $unapply(self) { return [self.#x, ] }
 //│         constructor(x) {
 //│           this.#x = x;
+//│         }
+//│       static
+//│         unapply(ins) {
+//│           return [ins.#x];
 //│         }
 //│       }
 //│       let ctor;
@@ -1257,10 +1326,13 @@ fun mian =
 //│     const A = (() => {
 //│       class A extends B(Object) {
 //│         #x;
-//│         static $unapply(self) { return [self.#x, ] }
 //│         constructor(x) {
 //│           super();
 //│           this.#x = x;
+//│         }
+//│       static
+//│         unapply(ins) {
+//│           return [ins.#x];
 //│         }
 //│       }
 //│       let ctor;
@@ -1306,7 +1378,6 @@ fun main(arg) =
 //│     const C = (() => {
 //│       class C {
 //│         #u;
-//│         static $unapply(self) { return [self.#u, ] }
 //│         constructor(u) {
 //│           this.#u = u;
 //│         }
@@ -1316,6 +1387,10 @@ fun main(arg) =
 //│             foo(u),
 //│             bar
 //│           ]);
+//│         }
+//│       static
+//│         unapply(ins) {
+//│           return [ins.#u];
 //│         }
 //│       }
 //│       let ctor;
@@ -1364,7 +1439,6 @@ class Outer1(outer: Int) {
 //│       class Outer1 {
 //│         #Outer2;
 //│         #outer;
-//│         static $unapply(self) { return [self.#outer, ] }
 //│         constructor(outer1) {
 //│           this.#outer = outer1;
 //│           log(outer1);
@@ -1374,16 +1448,23 @@ class Outer1(outer: Int) {
 //│           if (this.#Outer2 === undefined) {
 //│             class Outer2 {
 //│               #x;
-//│               static $unapply(self) { return [self.#x, ] }
 //│               constructor(x) {
 //│                 this.#x = x;
 //│                 const outer2 = x + 1;
+//│               }
+//│             static
+//│               unapply(ins) {
+//│                 return [ins.#x];
 //│               }
 //│             };
 //│             this.#Outer2 = ((x) => Object.freeze(new Outer2(x)));
 //│             this.#Outer2.class = Outer2;
 //│           }
 //│           return this.#Outer2;
+//│         }
+//│       static
+//│         unapply(ins) {
+//│           return [ins.#outer];
 //│         }
 //│       };
 //│       this.#Outer1 = ((outer) => Object.freeze(new Outer1(outer)));

@@ -18,11 +18,14 @@ class C(a: Int) { val a = 1 }
 //│       class C {
 //│         #a;
 //│         get a() { return this.#a; }
-//│         static $unapply(self) { return [self.#a, ] }
 //│         constructor(a) {
 //│           this.#a = a;
 //│           this.#a = 1;
 //│           const a1 = this.#a;
+//│         }
+//│       static
+//│         unapply(ins) {
+//│           return [ins.#a];
 //│         }
 //│       };
 //│       this.#C = ((a) => Object.freeze(new C(a)));
@@ -67,7 +70,6 @@ class C2(a: Int, b: Int) {
 //│         #b;
 //│         get a() { return this.#a; }
 //│         get b() { return this.#b; }
-//│         static $unapply(self) { return [self.#a, self.#b, ] }
 //│         constructor(a, b) {
 //│           this.#a = a;
 //│           this.#b = b;
@@ -75,6 +77,13 @@ class C2(a: Int, b: Int) {
 //│           const a1 = this.#a;
 //│           this.#b = a1 + 1;
 //│           const b1 = this.#b;
+//│         }
+//│       static
+//│         unapply(ins) {
+//│           return ([
+//│             ins.#a,
+//│             ins.#b
+//│           ]);
 //│         }
 //│       };
 //│       this.#C2 = ((a, b) => Object.freeze(new C2(a, b)));
@@ -118,7 +127,7 @@ let c4 = c3.C4(2)
 c3.a
 c4.a
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.117: 	let c4 = c3.C4(2)
+//│ ║  l.126: 	let c4 = c3.C4(2)
 //│ ╙──       	           ^^^
 //│ let c3: C3
 //│ let c4: error

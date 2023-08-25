@@ -74,10 +74,13 @@ class A(a: Int) {
 //│     if (this.#A === undefined) {
 //│       class A {
 //│         #a;
-//│         static $unapply(self) { return [self.#a, ] }
 //│         constructor(a) {
 //│           this.#a = a;
 //│           log(a);
+//│         }
+//│       static
+//│         unapply(ins) {
+//│           return [ins.#a];
 //│         }
 //│       };
 //│       this.#A = ((a) => Object.freeze(new A(a)));
@@ -136,7 +139,7 @@ class Foo {
   this: { x: Int }
 }
 //│ ╔══[ERROR] Type `#Foo` does not contain member `x`
-//│ ║  l.136: 	  this: { x: Int }
+//│ ║  l.139: 	  this: { x: Int }
 //│ ╙──       	          ^
 //│ class Foo
 //│ // Prelude
@@ -163,10 +166,10 @@ class Bar {
   super: { x: Int }
 }
 //│ ╔══[ERROR] Illegal use of `super`
-//│ ║  l.163: 	  super: { x: Int }
+//│ ║  l.166: 	  super: { x: Int }
 //│ ╙──       	  ^^^^^
 //│ ╔══[ERROR] Type `#Bar` does not contain member `x`
-//│ ║  l.163: 	  super: { x: Int }
+//│ ║  l.166: 	  super: { x: Int }
 //│ ╙──       	           ^
 //│ class Bar
 //│ // Prelude
@@ -213,7 +216,6 @@ class Baz() {
 //│         get x() { return this.#x; }
 //│         #y;
 //│         get y() { return this.#y; }
-//│         static $unapply(self) { return [] }
 //│         constructor() {
 //│           this.#x = 123;
 //│           const x = this.#x;
@@ -233,6 +235,10 @@ class Baz() {
 //│             3,
 //│             y
 //│           ]);
+//│         }
+//│       static
+//│         unapply(ins) {
+//│           return [];
 //│         }
 //│       };
 //│       this.#Baz = (() => Object.freeze(new Baz()));
@@ -280,7 +286,6 @@ class Q() {
 //│     if (this.#Q === undefined) {
 //│       class Q {
 //│         #q;
-//│         static $unapply(self) { return [] }
 //│         constructor() {
 //│           this.#q = 42;
 //│           const q = this.#q;
@@ -291,6 +296,10 @@ class Q() {
 //│             let f = (x) => ({ q: x + self.#q });
 //│             return f(1);
 //│           })());
+//│         }
+//│       static
+//│         unapply(ins) {
+//│           return [];
 //│         }
 //│       };
 //│       this.#Q = (() => Object.freeze(new Q()));
@@ -331,7 +340,6 @@ class W() {
 //│     if (this.#W === undefined) {
 //│       class W {
 //│         #x;
-//│         static $unapply(self) { return [] }
 //│         constructor() {
 //│           this.#x = 42;
 //│           const x = this.#x;
@@ -339,6 +347,10 @@ class W() {
 //│         add(self1) {
 //│           const self = this;
 //│           return self.#x + self1;
+//│         }
+//│       static
+//│         unapply(ins) {
+//│           return [];
 //│         }
 //│       };
 //│       this.#W = (() => Object.freeze(new W()));

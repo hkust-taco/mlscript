@@ -78,12 +78,12 @@ mixin Test {
     Add(l, r) then this.size(l) + this.size(r)
 }
 //│ mixin Test() {
-//│   this: {size: 'lhs -> Int}
+//│   this: {size: 'A -> Int}
 //│   class Add[A](lhs: A, rhs: A) {
 //│     fun cached: Int
 //│   }
 //│   class Lit(n: Int)
-//│   fun size: Add['lhs] -> Int
+//│   fun size: Add['A] -> Int
 //│ }
 
 

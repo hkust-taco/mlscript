@@ -19,13 +19,16 @@ class Test(val n: Int) {
 //│       class Test {
 //│         #n;
 //│         get n() { return this.#n; }
-//│         static $unapply(self) { return [self.#n, ] }
 //│         constructor(n) {
 //│           this.#n = n;
 //│         }
 //│         get inc() {
 //│           const n = this.#n;
 //│           return outer.Test(n + 1);
+//│         }
+//│       static
+//│         unapply(ins) {
+//│           return [ins.#n];
 //│         }
 //│       };
 //│       this.#Test = ((n) => Object.freeze(new Test(n)));
@@ -74,7 +77,7 @@ class C[A](n: A) {
 let a = C[Int](42)
 a.f
 //│ ╔══[ERROR] Type application syntax is not yet supported
-//│ ║  l.74: 	let a = C[Int](42)
+//│ ║  l.77: 	let a = C[Int](42)
 //│ ╙──      	        ^^^^^^
 //│ let a: error
 //│ error
@@ -137,7 +140,7 @@ module M2 {
     bar(10)
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.136: 	    fun bar(x) = x + y + this.m
+//│ ║  l.139: 	    fun bar(x) = x + y + this.m
 //│ ╙──       	                             ^^
 //│ module M2 {
 //│   fun foo: Int -> Int

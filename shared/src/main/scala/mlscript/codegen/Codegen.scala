@@ -844,7 +844,7 @@ final case class JSClassNewDecl(
     initStmts: Ls[JSStmt],
     nestedTypes: Ls[Str],
     ctorOverridden: Bool,
-    requireUnapply: Bool
+    staticMethods: Ls[JSClassMemberDecl]
 ) extends JSStmt {
   def toSourceCode: SourceCode = {
     val constructor: SourceCode = {
@@ -864,10 +864,6 @@ final case class JSClassNewDecl(
         if (!privateMems.contains(f)) buffer += s"  #${f};"
         buffer += s"  get ${f}() { return this.#${f}; }"
       })
-      if (requireUnapply) {
-        val list = fields.foldLeft("")((r, f) => s"${r}self.#$f, ")
-        buffer += s"  static $$unapply(self) { return [$list] }"
-      }
       buffer += s"  constructor($params) {"
       if (`extends`.isDefined) {
         val sf = superFields.iterator.zipWithIndex.foldLeft("")((res, p) =>
@@ -901,18 +897,22 @@ final case class JSClassNewDecl(
       methods.foldLeft(SourceCode.empty) { case (x, y) =>
         x + y.toSourceCode.indented
       }
+    val staticMethodsSourceCode =
+      staticMethods.foldLeft(SourceCode.empty) { case (x, y) =>
+        x + SourceCode("static") + y.toSourceCode.indented
+      }
     val epilogue = SourceCode("}")
     `extends` match {
       case Some(base) =>
         SourceCode(s"class $name extends ") ++ base.toSourceCode ++
-          SourceCode(" {") + constructor + methodsSourceCode + epilogue
+          SourceCode(" {") + constructor + methodsSourceCode + staticMethodsSourceCode + epilogue
       case None =>
-        if (fields.isEmpty && methods.isEmpty && implements.isEmpty && accessors.isEmpty && initStmts.isEmpty && !requireUnapply) {
+        if (fields.isEmpty && methods.isEmpty && implements.isEmpty && accessors.isEmpty && initStmts.isEmpty && staticMethods.isEmpty) {
           SourceCode(s"class $name {}")
         } else {
           SourceCode(
             s"class $name {" :: Nil
-          ) + constructor + methodsSourceCode + epilogue
+          ) + constructor + methodsSourceCode + staticMethodsSourceCode + epilogue
         }
     }
   }

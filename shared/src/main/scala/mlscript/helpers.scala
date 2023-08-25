@@ -424,6 +424,18 @@ trait NuDeclImpl extends Located { self: NuDecl =>
         sps.getOrElse(Tup(Nil))})${sig.fold("")(": " + _.showDbg2)}${
           if (parents.isEmpty) "" else if (k === Als) " = " else ": "}${parents.mkString(", ")}"
   }
+  def genUnapply: Opt[NuFunDef] = this match {
+    case NuTypeDef(Cls, _, _, S(Tup(fields)), _, _, _, _, _, _) =>
+      val ret = Tup(
+        fields.map {
+          case S(p) -> f => N -> Fld(f.mut, f.spec, f.genGetter, Sel(Var("ins"), p))
+          case N -> Fld(m, s, g, p: Var) => N -> Fld(m, s, g, Sel(Var("ins"), p))
+          case _ => die
+        }
+      )
+      S(NuFunDef(N, Var("unapply"), Nil, L(Lam(Tup(N -> Fld(false, false, false, Var("ins")) :: Nil), ret)))(N, N, N, N, true))
+    case _ => N
+  }
 }
 trait TypingUnitImpl extends Located { self: TypingUnit =>
   def showDbg: Str = entities.map {
@@ -501,7 +513,6 @@ trait TermImpl extends StatementImpl { self: Term =>
       case Inst(bod) => "explicit instantiation"
       case Super() => "super"
       case Eqn(lhs, rhs) => "assign for ctor"
-      case Unapp(cls, scrut, from, flds, csq) => "unapply"
     }
   }
   
@@ -552,7 +563,6 @@ trait TermImpl extends StatementImpl { self: Term =>
     case Inst(bod) => s"${bod.print(true)}!"
     case Super() => "super"
     case Eqn(lhs, rhs) => s"${lhs} = ${rhs}"
-    case Unapp(cls, scrut, _, flds, csq) => s"(($flds) => $csq)(${cls.name}.$$unapply($scrut))"
   }}
   
   def toTypeRaise(implicit raise: Raise): Type = toType match {
@@ -901,7 +911,6 @@ trait StatementImpl extends Located { self: Statement =>
     case Super() => Nil
     case Constructor(params, body) => params :: body :: Nil
     case Eqn(lhs, rhs) => lhs :: rhs :: Nil
-    case Unapp(cls, scrut, from, flds, csq) => scrut :: csq.children
     case NuTypeDef(k, nme, tps, ps, ctor, sig, pars, sup, ths, bod) =>
       nme :: tps.map(_._2) ::: ps.toList ::: pars ::: ths.toList ::: bod :: Nil
   }

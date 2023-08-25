@@ -70,8 +70,8 @@ mixin CompareNested {
 }
 //│ mixin CompareNested() {
 //│   super: {compare: ('a, 'b,) -> Bool}
-//│   this: {compare: ('value, 'value0,) -> Bool}
-//│   fun compare: ({parent: Object & ~#Some | Some['value]} & 'a, {parent: Object & ~#Some | Some['value0]} & 'b,) -> Bool
+//│   this: {compare: ('c, 'd,) -> Bool}
+//│   fun compare: ({parent: Object & ~#Some | Some['c]} & 'a, {parent: Object & ~#Some | Some['d]} & 'b,) -> Bool
 //│ }
 
 // * Alternatively:

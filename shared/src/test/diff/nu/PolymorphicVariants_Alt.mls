@@ -59,7 +59,7 @@ mixin EvalVar {
         Success(r) then r
 }
 //│ mixin EvalVar() {
-//│   fun eval: (List[{_1: Str, _2: 'result}], Var,) -> (Var | 'result)
+//│   fun eval: (List[{_1: Str, _2: 'a}], Var,) -> (Var | 'a)
 //│ }
 
 class Abs<out A>(x: Str, t: A)
@@ -94,8 +94,8 @@ mixin EvalLambda {
 }
 //│ mixin EvalLambda() {
 //│   super: {eval: ('b, 'c,) -> 'd}
-//│   this: {eval: ('b, 's,) -> 'A & (List[(Str, 'A,)], 't,) -> 'd & (List['a | (Str, Var,)], 't0,) -> 'A0}
-//│   fun eval: (List['a] & 'b, Abs['t0] | App['s & (Abs['t] | Object & ~#Abs)] | Object & 'c & ~#Abs & ~#App,) -> (Abs['A0] | App['A] | 'd)
+//│   this: {eval: ('b, 'e,) -> 'A & (List[(Str, 'A,)], 'f,) -> 'd & (List['a | (Str, Var,)], 'g,) -> 'A0}
+//│   fun eval: (List['a] & 'b, Abs['g] | App['e & (Abs['f] | Object & ~#Abs)] | Object & 'c & ~#Abs & ~#App,) -> (Abs['A0] | App['A] | 'd)
 //│ }
 
 module Test1 extends EvalVar, EvalLambda
@@ -144,7 +144,7 @@ fun map_expr(f, v) =
     Numb then v
     Add(l, r) then Add(f(l), f(r))
     Mul(l, r) then Mul(f(l), f(r))
-//│ fun map_expr: forall 'l 'A 'l0 'A0. ('l -> 'A & 'l0 -> 'A0, Add['l] | Mul['l0] | Numb | Var,) -> (Add['A] | Mul['A0] | Numb | Var)
+//│ fun map_expr: forall 'a 'A 'b 'A0. ('a -> 'A & 'b -> 'A0, Add['a] | Mul['b] | Numb | Var,) -> (Add['A] | Mul['A0] | Numb | Var)
 
 mixin EvalExpr {
   fun eval(sub, v) =
@@ -186,7 +186,7 @@ module Test3 extends EvalVar, EvalExpr, EvalLambda
 //│   fun eval: forall 'a. (List[{_1: Str, _2: anything}], 'b,) -> ('A | 'a)
 //│ }
 //│ where
-//│   'A :> 'a | Numb | Var | 'c
+//│   'A :> Numb | Var | 'c | 'a
 //│   'a :> App['A] | Abs['A]
 //│   'b <: Abs['b] | App['b & (Abs['b] | Object & ~#Abs)] | Object & 'c & ~#Abs & ~#App
 //│   'c <: Add['b] | Mul['b] | Numb | Var

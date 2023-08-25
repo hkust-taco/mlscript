@@ -83,8 +83,8 @@ fun eval[A](e: Expr[A]): A =
 //│ ║  l.5: 	class LitBool(b: Bool) extends Expr[Bool]
 //│ ║       	                 ^^^^
 //│ ╟── but it flows into reference with expected type `Int`
-//│ ║  l.55: 	        e is LitInt(n) then n
-//│ ║        	        ^
+//│ ║  l.56: 	        e is LitBool(b) then b
+//│ ║        	                             ^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.6: 	class Add(x: Expr[Int], y: Expr[Int]) extends Expr[Int]
 //│ ╙──     	                                ^^^

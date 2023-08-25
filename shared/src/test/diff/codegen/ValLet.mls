@@ -29,7 +29,6 @@ class A(x0: Int) {
 //│         #x0;
 //│         #x3;
 //│         get x3() { return this.#x3; }
-//│         static $unapply(self) { return [self.#x0, ] }
 //│         constructor(x0) {
 //│           this.#x0 = x0;
 //│           const x1 = x0 + 1;
@@ -41,6 +40,10 @@ class A(x0: Int) {
 //│           ]);
 //│           this.#x3 = x2 + 1;
 //│           const x3 = this.#x3;
+//│         }
+//│       static
+//│         unapply(ins) {
+//│           return [ins.#x0];
 //│         }
 //│       };
 //│       this.#A = ((x0) => Object.freeze(new A(x0)));
@@ -93,7 +96,6 @@ AA().f(0)
 //│     if (this.#AA === undefined) {
 //│       class AA {
 //│         #x;
-//│         static $unapply(self) { return [] }
 //│         constructor() {
 //│           this.#x = 42;
 //│           const x = this.#x;
@@ -102,6 +104,10 @@ AA().f(0)
 //│         f(y) {
 //│           const self = this;
 //│           return self.#x + y;
+//│         }
+//│       static
+//│         unapply(ins) {
+//│           return [];
 //│         }
 //│       };
 //│       this.#AA = (() => Object.freeze(new AA()));
@@ -133,10 +139,16 @@ class B(x: Int, val y: Int)
 //│         #x;
 //│         #y;
 //│         get y() { return this.#y; }
-//│         static $unapply(self) { return [self.#x, self.#y, ] }
 //│         constructor(x, y) {
 //│           this.#x = x;
 //│           this.#y = y;
+//│         }
+//│       static
+//│         unapply(ins) {
+//│           return ([
+//│             ins.#x,
+//│             ins.#y
+//│           ]);
 //│         }
 //│       };
 //│       this.#B = ((x, y) => Object.freeze(new B(x, y)));

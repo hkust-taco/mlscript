@@ -34,7 +34,7 @@ fun foo(x) = if x is A then true else false
 fun foo(x: anything) = if x is A then true
 //│ ╔══[ERROR] Type mismatch in `case` expression:
 //│ ║  l.34: 	fun foo(x: anything) = if x is A then true
-//│ ║        	                          ^^^^^^
+//│ ║        	                          ^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` is not an instance of type `Object`
 //│ ║  l.34: 	fun foo(x: anything) = if x is A then true
 //│ ║        	           ^^^^^^^^
@@ -43,7 +43,7 @@ fun foo(x: anything) = if x is A then true
 //│ ╙──      	                          ^
 //│ ╔══[ERROR] Type mismatch in `case` expression:
 //│ ║  l.34: 	fun foo(x: anything) = if x is A then true
-//│ ║        	                          ^^^^^^
+//│ ║        	                          ^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` is not an instance of type `A`
 //│ ║  l.34: 	fun foo(x: anything) = if x is A then true
 //│ ║        	           ^^^^^^^^

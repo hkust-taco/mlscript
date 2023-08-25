@@ -516,7 +516,7 @@ if b is
 //│ ║  l.511: 	  Foo(a) then a
 //│ ║         	^^^^^^^^^^^^^^^
 //│ ║  l.512: 	  Bar(f) then f
-//│ ║         	^^^^^
+//│ ║         	^^^^^^^^^^^^^^^
 //│ ╟── type variable `B` leaks out of its scope
 //│ ║  l.472: 	class Bar[B](f: B => B) extends Base
 //│ ╙──       	          ^

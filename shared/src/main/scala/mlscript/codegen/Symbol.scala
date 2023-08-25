@@ -38,6 +38,7 @@ sealed trait NuTypeSymbol { sym: TypeSymbol =>
   val ctorParams: Opt[Ls[(Str, Bool)]] // parameters in the constructor
   val publicCtors: Ls[Str] // public(i.e., val-) parameters in the ctor
   val matchingFields: Ls[Str] = sym.body.collectFields // matchable fields(i.e., fields in `class ClassName(...)`)
+  val unapplyMtd: Opt[MethodDef[Left[Term, Type]]] // unapply method
 }
 
 sealed class ValueSymbol(val lexicalName: Str, val runtimeName: Str, val isByvalueRec: Option[Boolean], val isLam: Boolean) extends RuntimeSymbol {
@@ -117,6 +118,7 @@ final case class NewClassSymbol(
     ctorParams: Opt[Ls[(Str, Bool)]],
     body: Type,
     methods: Ls[MethodDef[Left[Term, Type]]],
+    unapplyMtd: Opt[MethodDef[Left[Term, Type]]],
     signatures: Ls[MethodDef[Right[Term, Type]]],
     ctor: Ls[Statement],
     superParameters: Ls[Term],
@@ -154,6 +156,7 @@ final case class MixinSymbol(
   override val superParameters: Ls[Term] = Nil
   val isPlainJSClass: Bool = false
   val ctorParams: Opt[Ls[(Str, Bool)]] = N
+  val unapplyMtd: Opt[MethodDef[Left[Term, Type]]] = N
 }
 
 final case class ModuleSymbol(
@@ -175,6 +178,7 @@ final case class ModuleSymbol(
   val isPlainJSClass: Bool = false
   val ctorParams: Opt[Ls[(Str, Bool)]] = N
   val publicCtors: Ls[Str] = Nil
+  val unapplyMtd: Opt[MethodDef[Left[Term, Type]]] = N
 }
 
 // capture runtime symbols in the outside module/class/mixin

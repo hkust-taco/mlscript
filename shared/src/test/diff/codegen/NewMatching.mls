@@ -34,10 +34,10 @@ fun sum(v) =
 //│ globalThis.sum = function sum(v) {
 //│   return ((() => {
 //│     let a;
-//│     return (a = v, a instanceof V0.class ? 0 : a instanceof V1.class ? (([a]) => a)(V1.class.$unapply(a)) : a instanceof V2.class ? (([
+//│     return (a = v, a instanceof V0.class ? 0 : a instanceof V1.class ? (([a]) => a)(V1.class.unapply(v)) : a instanceof V2.class ? (([
 //│       a,
 //│       b
-//│     ]) => a + b)(V2.class.$unapply(a)) : a instanceof Pos.class ? (([x]) => x > 0 === true ? x : -1)(Pos.class.$unapply(a)) : a instanceof V22.class ? (([
+//│     ]) => a + b)(V2.class.unapply(v)) : a instanceof Pos.class ? (([x]) => x > 0 === true ? x : -1)(Pos.class.unapply(v)) : a instanceof V22.class ? (([
 //│       tmp0,
 //│       tmp1
 //│     ]) => tmp0 instanceof V2.class ? (([
@@ -46,10 +46,10 @@ fun sum(v) =
 //│     ]) => tmp1 instanceof V2.class ? (([
 //│       x2,
 //│       y2
-//│     ]) => x1 + y1 + x2 + y2)(V2.class.$unapply(tmp1)) : -1)(V2.class.$unapply(tmp0)) : -1)(V22.class.$unapply(a)) : a instanceof Half.class ? (([
-//│       tmp0,
+//│     ]) => x1 + y1 + x2 + y2)(V2.class.unapply(tmp1)) : -1)(V2.class.unapply(tmp0)) : -1)(V22.class.unapply(v)) : a instanceof Half.class ? (([
+//│       tmp2,
 //│       x
-//│     ]) => x)(Half.class.$unapply(a)) : a instanceof None.class ? 0 : -1);
+//│     ]) => x)(Half.class.unapply(v)) : a instanceof None.class ? (([tmp3]) => 0)(None.class.unapply(v)) : -1);
 //│   })());
 //│ };
 //│ // End of generated code
@@ -91,7 +91,7 @@ fun get1(s) =
   if s is
     Some(V1(x)) then x
     Some(y) then y
-//│ fun get1: forall 'value. Some[Object & 'value] -> (Int | 'value)
+//│ fun get1: forall 'a. Some[Object & 'a] -> (Int | 'a)
 //│ // Prelude
 //│ class TypingUnit4 {}
 //│ const typing_unit4 = new TypingUnit4;
@@ -99,10 +99,7 @@ fun get1(s) =
 //│ globalThis.get1 = function get1(s) {
 //│   return ((() => {
 //│     let a;
-//│     return (a = s, a instanceof Some.class ? (([tmp2]) => {
-//│       const y = tmp2;
-//│       return tmp2 instanceof V1.class ? (([x]) => x)(V1.class.$unapply(tmp2)) : y;
-//│     })(Some.class.$unapply(a)) : (() => {
+//│     return (a = s, a instanceof Some.class ? (([tmp4]) => ((y) => tmp4 instanceof V1.class ? (([x]) => x)(V1.class.unapply(tmp4)) : y)(tmp4))(Some.class.unapply(s)) : (() => {
 //│       throw new Error("non-exhaustive case expression");
 //│     })());
 //│   })());
@@ -134,7 +131,7 @@ fun foo(s) =
 //│ // Query 1
 //│ globalThis.foo = function foo(s) {
 //│   return ((() => {
-//│     return s instanceof Some.class ? (([t]) => ((b) => b + t.x)(s2.value))(Some.class.$unapply(s)) : 0;
+//│     return s instanceof Some.class ? (([t]) => ((b) => b + t.x)(s2.value))(Some.class.unapply(s)) : 0;
 //│   })());
 //│ };
 //│ // End of generated code
@@ -216,7 +213,7 @@ fun ft(x) =
     FooBar(x) then x
     _ then 0
 //│ ╔══[ERROR] class FooBar expects 0 parameter but found 1 parameter
-//│ ║  l.216: 	    FooBar(x) then x
+//│ ║  l.213: 	    FooBar(x) then x
 //│ ╙──       	    ^^^^^^^^^
 //│ fun ft: anything -> error
 //│ Code generation encountered an error:
@@ -254,3 +251,17 @@ fun m(x) =
 //│   })());
 //│ };
 //│ // End of generated code
+
+:e
+class VVC(v: Int, vc: Int)
+fun c(x) =
+  if x is
+    VVC(x, y, z) then x + y + z
+    _ then 0
+//│ ╔══[ERROR] class VVC expects 2 parameters but found 3 parameters
+//│ ║  l.259: 	    VVC(x, y, z) then x + y + z
+//│ ╙──       	    ^^^^^^^^^^^^
+//│ class VVC(v: Int, vc: Int)
+//│ fun c: anything -> error
+//│ Code generation encountered an error:
+//│   if expression was not desugared

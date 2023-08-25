@@ -243,9 +243,9 @@ add2(Pair(Vectr(0), Numbr(1)))
 //│ ╟── Note: constraint arises from class pattern:
 //│ ║  l.113: 	    Pair(Numbr(n), Numbr(m)) then Numbr(m + m)
 //│ ║         	         ^^^^^
-//│ ╟── from reference:
-//│ ║  l.112: 	  if e is
-//│ ║         	     ^
+//│ ╟── from field selection:
+//│ ║  l.52: 	class Pair[A, B](a: A, b: B)
+//│ ║        	                 ^
 //│ ╟── Note: type parameter A is defined at:
 //│ ║  l.52: 	class Pair[A, B](a: A, b: B)
 //│ ╙──      	           ^
