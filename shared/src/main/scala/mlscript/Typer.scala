@@ -8,8 +8,6 @@ import scala.util.chaining._
 import scala.annotation.tailrec
 import mlscript.utils._, shorthands._
 import mlscript.Message._
-import mlscript.codegen.Helpers
-import mlscript.ucs.helpers
 
 /** A class encapsulating type inference state.
  *  It uses its own internal representation of types and type variables, using mutable data structures.
@@ -1365,8 +1363,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
           typeArg(a)
       }
     }
-    println("f and f_ty => " + Helpers.inspect(f) + " " + f_ty)
-    println("a and a_ty => " + Helpers.inspect(a) + " " + a_ty)
     val res = freshVar(prov, N)
     val arg_ty = mkProxy(a_ty, tp(a.toCoveringLoc, "argument"))
       // ^ Note: this no longer really makes a difference, due to tupled arguments by default
