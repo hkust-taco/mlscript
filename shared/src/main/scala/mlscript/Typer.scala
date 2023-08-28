@@ -1000,20 +1000,20 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
             prov
             // funProv // TODO: better?
             ), res)
-        println("f => " + f)
-        println("args_ty => " + args_ty + " " + args_ty.getClass())
-        println("fun_ty => " + fun_ty + " " + fun_ty.getClass())
-        val argsList = fun_ty match {
-                        case PolymorphicType(_, ProvType(FunctionType(TupleType(fields), _))) => 
+        println(s"f => ${f}")
+        println(s"args_ty => ${args_ty} ${args_ty.getClass()}")
+        println(s"fun_ty => ${fun_ty} ${fun_ty.getClass()}")
+        val argsList = fun_ty.unwrapProxies match {
+                        case PolymorphicType(_, ProvType(FunctionType(TupleType(fields), _))) =>
                           fields.map(x => x._1 match {
                             case Some(arg) =>
                               arg
                             case N =>
+                              err("cannot use named args in this case.", a.toLoc)
                               Var("dummy")
                           })
-                        // why uncommenting fixes test(x: 0, 1) error?
                         case _ => 
-                          println("unexpected case here")
+                          println(s"unexpected case here")
                           Nil
         }
         desugarNamedArgs(term, f, a, argsList)
@@ -1428,7 +1428,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
                     (None, Fld(false, false, t))
                 }
               case None =>
-                err(s"name ${x} used in binding are not matched with the function signature!", a.toLoc)
+                err(s"name ${x} is missed in function call", a.toLoc)
                 (None, Fld(false, false, Var("dummy"))) // TODO: check if this doesn't make problem in next steps (err dosen't raise exception)
             }
           ))
