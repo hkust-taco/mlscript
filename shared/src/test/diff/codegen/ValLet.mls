@@ -102,8 +102,8 @@ AA().f(0)
 //│           const no = 0;
 //│         }
 //│         f(y) {
-//│           const self = this;
-//│           return self.#x + y;
+//│           const outer1 = this;
+//│           return outer1.#x + y;
 //│         }
 //│       static
 //│         unapply(ins) {

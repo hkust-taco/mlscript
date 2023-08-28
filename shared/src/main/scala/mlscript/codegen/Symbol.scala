@@ -28,11 +28,12 @@ sealed trait TypeSymbol extends LexicalSymbol {
 }
 
 sealed trait NuTypeSymbol { sym: TypeSymbol =>
-  val isNested: Bool // is nested in another class/mixin/module
+  val isNested: Bool // is nested in another class/mixin/module TODO: remove
   val methods: Ls[MethodDef[Left[Term, Type]]] // implemented methods
   val signatures: Ls[MethodDef[Right[Term, Type]]] // methods signatures
   val ctor: Ls[Statement] // statements in the constructor
   val nested: Ls[NuTypeDef] // nested class/mixin/module
+  val outsider: Opt[Str] // if it is inside another NuTypeSymbol, it indicates the runtime alias of parent's `this`
   val superParameters: Ls[Term] // parameters that need to be passed to the `super()`
   val isPlainJSClass: Bool // is this a plain class in JS
   val ctorParams: Opt[Ls[(Str, Bool)]] // parameters in the constructor
@@ -101,10 +102,11 @@ final case class ClassSymbol(
 }
 
 final case class NewClassMemberSymbol(
-  val lexicalName: Str,
-  val isByvalueRec: Option[Boolean],
-  val isLam: Boolean,
-  val isPrivate: Boolean
+  lexicalName: Str,
+  isByvalueRec: Option[Boolean],
+  isLam: Boolean,
+  isPrivate: Boolean,
+  outsider: Option[Str]
 ) extends RuntimeSymbol {
   override def toString: Str = s"new class member $lexicalName"
 
@@ -124,6 +126,7 @@ final case class NewClassSymbol(
     superParameters: Ls[Term],
     publicCtors: Ls[Str],
     nested: Ls[NuTypeDef],
+    outsider: Opt[Str],
     isNested: Bool,
     isPlainJSClass: Bool
 ) extends TypeSymbol
@@ -143,6 +146,7 @@ final case class MixinSymbol(
     ctor: Ls[Statement],
     publicCtors: Ls[Str],
     nested: Ls[NuTypeDef],
+    outsider: Opt[Str],
     isNested: Bool
 ) extends TypeSymbol
     with RuntimeSymbol with NuTypeSymbol {
@@ -168,6 +172,7 @@ final case class ModuleSymbol(
     ctor: Ls[Statement],
     superParameters: Ls[Term],
     nested: Ls[NuTypeDef],
+    outsider: Opt[Str],
     isNested: Bool
 ) extends TypeSymbol
     with RuntimeSymbol with NuTypeSymbol {
@@ -179,15 +184,6 @@ final case class ModuleSymbol(
   val ctorParams: Opt[Ls[(Str, Bool)]] = N
   val publicCtors: Ls[Str] = Nil
   val unapplyMtd: Opt[MethodDef[Left[Term, Type]]] = N
-}
-
-// capture runtime symbols in the outside module/class/mixin
-final case class CapturedSymbol(
-  outsiderSym: RuntimeSymbol,
-  actualSym: RuntimeSymbol
-) extends RuntimeSymbol {
-  override def lexicalName: Str = actualSym.lexicalName
-  override def runtimeName: Str = actualSym.runtimeName
 }
 
 final case class TraitSymbol(

@@ -291,9 +291,9 @@ class Q() {
 //│           const q = this.#q;
 //│         }
 //│         get qq() {
-//│           const self = this;
+//│           const outer1 = this;
 //│           return ((() => {
-//│             let f = (x) => ({ q: x + self.#q });
+//│             let f = (x) => ({ q: x + outer1.#q });
 //│             return f(1);
 //│           })());
 //│         }
@@ -345,8 +345,8 @@ class W() {
 //│           const x = this.#x;
 //│         }
 //│         add(self1) {
-//│           const self = this;
-//│           return self.#x + self1;
+//│           const outer1 = this;
+//│           return outer1.#x + self1;
 //│         }
 //│       static
 //│         unapply(ins) {

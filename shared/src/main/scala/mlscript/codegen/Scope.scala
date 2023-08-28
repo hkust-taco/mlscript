@@ -271,17 +271,9 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
         Left(MethodDef[Right[Term, Type]](isLetRec.getOrElse(false), TypeName(finalName), Var(nme), tys, Right(rhs)))
       case s => Right(s)
     }
-    val symbol = ModuleSymbol(finalName, Nil, Record(Nil), mths, signatures, ctor, Nil, nuTypes, false)
+    val symbol = ModuleSymbol(finalName, Nil, Record(Nil), mths, signatures, ctor, Nil, nuTypes, N, false)
     register(symbol)
     symbol
-  }
-
-  def captureSymbol(
-    outsiderSym: RuntimeSymbol,
-    capturedSym: RuntimeSymbol
-  ): Unit = {
-    val symbol = CapturedSymbol(outsiderSym, capturedSym)
-    lexicalValueSymbols.put(symbol.lexicalName, symbol); ()
   }
 
   // We don't want `outer` symbols to be shadowed by each other
@@ -333,10 +325,10 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
     symbol
   }
 
-  def declareOuterSymbol(): ValueSymbol = {
-    val lexicalName = "outer"
-    val symbol = declareValue(lexicalName, Some(false), false)
+  def declareOuterSymbol(lexicalName: Str): ValueSymbol = {
+    val symbol = ValueSymbol(lexicalName, allocateRuntimeName(lexicalName), S(false), false)
     outerSymbols += symbol.runtimeName
+    runtimeSymbols += symbol.runtimeName
     symbol
   }
 

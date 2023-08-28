@@ -16,6 +16,7 @@ mixin EvalAddLit {
 //│ class TypingUnit {
 //│   #Lit;
 //│   constructor() {
+//│     const outer = this;
 //│   }
 //│   EvalAddLit(base) {
 //│     const outer = this;

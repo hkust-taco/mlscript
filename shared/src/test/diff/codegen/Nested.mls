@@ -197,8 +197,8 @@ module D {
 //│         constructor() {
 //│         }
 //│         createE(x) {
-//│           const self = this;
-//│           return self.E(x + 1);
+//│           const outer1 = this;
+//│           return outer1.E(x + 1);
 //│         }
 //│         get E() {
 //│           const outer1 = this;
@@ -278,6 +278,7 @@ class E(x: Int) {
 //│         #x;
 //│         constructor(x) {
 //│           this.#x = x;
+//│           const outer1 = this;
 //│         }
 //│         get F() {
 //│           const outer1 = this;
@@ -287,6 +288,7 @@ class E(x: Int) {
 //│               #y;
 //│               constructor(y) {
 //│                 this.#y = y;
+//│                 const outer2 = this;
 //│               }
 //│               get sum() {
 //│                 const y = this.#y;
@@ -346,7 +348,7 @@ let fff = es.F(2)
 let gg = fff.G(3)
 gg.sum
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.345: 	let fff = es.F(2)
+//│ ║  l.347: 	let fff = es.F(2)
 //│ ╙──       	            ^^
 //│ let es: E
 //│ let fff: error
@@ -398,6 +400,7 @@ class F() {
 //│         #G;
 //│         #x;
 //│         constructor() {
+//│           const outer1 = this;
 //│           this.#x = 42;
 //│           const x = this.#x;
 //│         }
@@ -465,6 +468,7 @@ module G {
 //│         #I;
 //│         #H;
 //│         constructor() {
+//│           const outer1 = this;
 //│         }
 //│         get H() {
 //│           const outer1 = this;
@@ -541,7 +545,7 @@ let jj = G.H.J(42)
 let i = jj.ii(2)
 i.x
 //│ ╔══[ERROR] access to module member not yet supported
-//│ ║  l.540: 	let jj = G.H.J(42)
+//│ ║  l.544: 	let jj = G.H.J(42)
 //│ ╙──       	          ^^
 //│ let jj: error
 //│ let i: error
@@ -588,6 +592,7 @@ module H {
 //│         #I;
 //│         #J;
 //│         constructor() {
+//│           const outer1 = this;
 //│         }
 //│         get I() {
 //│           const outer1 = this;
@@ -647,7 +652,7 @@ module H {
 let j = H.J(42)
 j.i.x
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.647: 	let j = H.J(42)
+//│ ║  l.652: 	let j = H.J(42)
 //│ ╙──       	         ^^
 //│ let j: error
 //│ error
@@ -677,7 +682,7 @@ let i = I(1)
 let ij = i.J(0)
 ij.incY
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.677: 	let ij = i.J(0)
+//│ ║  l.682: 	let ij = i.J(0)
 //│ ╙──       	          ^^
 //│ class I(x: Int) {
 //│   class J(x: Int) {
@@ -717,8 +722,8 @@ ij.incY
 //│               }
 //│               get incY() {
 //│                 const x = this.#x;
-//│                 const self = this;
-//│                 return self.#y + 1;
+//│                 const outer2 = this;
+//│                 return outer2.#y + 1;
 //│               }
 //│             static
 //│               unapply(ins) {
@@ -784,6 +789,7 @@ module J {
 //│         #M;
 //│         #N;
 //│         constructor() {
+//│           const outer1 = this;
 //│         }
 //│         L(base) {
 //│           const outer1 = this;
@@ -863,10 +869,10 @@ module J {
 let m = J.M()
 let n = J.N(2)
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.863: 	let m = J.M()
+//│ ║  l.869: 	let m = J.M()
 //│ ╙──       	         ^^
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.864: 	let n = J.N(2)
+//│ ║  l.870: 	let n = J.N(2)
 //│ ╙──       	         ^^
 //│ let m: error
 //│ let n: error
@@ -907,7 +913,7 @@ module K {
 let m = K.L.M()
 m.f
 //│ ╔══[ERROR] access to module member not yet supported
-//│ ║  l.907: 	let m = K.L.M()
+//│ ║  l.913: 	let m = K.L.M()
 //│ ╙──       	         ^^
 //│ let m: error
 //│ error
@@ -937,7 +943,7 @@ module L {
 let op = L.N.O.P(0)
 op.x
 //│ ╔══[ERROR] access to module member not yet supported
-//│ ║  l.937: 	let op = L.N.O.P(0)
+//│ ║  l.943: 	let op = L.N.O.P(0)
 //│ ╙──       	          ^^
 //│ let op: error
 //│ error
@@ -964,10 +970,10 @@ module M {
 }
 M.N.op(M.P())
 //│ ╔══[ERROR] access to module member not yet supported
-//│ ║  l.965: 	M.N.op(M.P())
+//│ ║  l.971: 	M.N.op(M.P())
 //│ ╙──       	 ^^
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.965: 	M.N.op(M.P())
+//│ ║  l.971: 	M.N.op(M.P())
 //│ ╙──       	        ^^
 //│ module M {
 //│   module N {
@@ -991,11 +997,12 @@ M.N.op(M.P())
 //│         #P;
 //│         #N;
 //│         constructor() {
+//│           const outer1 = this;
 //│         }
 //│         op(x) {
 //│           let a;
-//│           const self = this;
-//│           return a = x, a instanceof self.O.class ? 0 : a instanceof self.P.class ? 1 : 2;
+//│           const outer1 = this;
+//│           return a = x, a instanceof outer1.O.class ? 0 : a instanceof outer1.P.class ? 1 : 2;
 //│         }
 //│         get N() {
 //│           const outer1 = this;
@@ -1085,6 +1092,7 @@ module N {
 //│         #Q;
 //│         #O;
 //│         constructor() {
+//│           const outer1 = this;
 //│         }
 //│         get O() {
 //│           const outer1 = this;
@@ -1146,7 +1154,7 @@ module N {
 :e
 N.O.P()
 //│ ╔══[ERROR] access to module member not yet supported
-//│ ║  l.1147: 	N.O.P()
+//│ ║  l.1155: 	N.O.P()
 //│ ╙──        	 ^^
 //│ error
 //│ res
@@ -1162,7 +1170,7 @@ class I(x: Int) {
 }
 I(1).J(3).a
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.1163: 	I(1).J(3).a
+//│ ║  l.1171: 	I(1).J(3).a
 //│ ╙──        	    ^^
 //│ class I(x: Int) {
 //│   class J(z: Int) {
@@ -1185,6 +1193,7 @@ I(1).J(3).a
 //│         #x;
 //│         constructor(x) {
 //│           this.#x = x;
+//│           const outer1 = this;
 //│           this.#y = x + 1;
 //│           const y = this.#y;
 //│         }
@@ -1439,9 +1448,9 @@ class Outer1(outer: Int) {
 //│       class Outer1 {
 //│         #Outer2;
 //│         #outer;
-//│         constructor(outer1) {
-//│           this.#outer = outer1;
-//│           log(outer1);
+//│         constructor(outer2) {
+//│           this.#outer = outer2;
+//│           log(outer2);
 //│         }
 //│         get Outer2() {
 //│           const outer1 = this;
