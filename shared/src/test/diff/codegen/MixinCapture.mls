@@ -26,7 +26,7 @@ mixin EvalAddLit {
 //│       eval(e) {
 //│         return ((() => {
 //│           let a;
-//│           return (a = e, a instanceof qualifier.Lit.class ? (([n]) => n)(qualifier.Lit.class.unapply(e)) : (() => {
+//│           return (a = e, a instanceof qualifier.Lit.class ? (([n]) => n)(qualifier.Lit.unapply(e)) : (() => {
 //│             throw new Error("non-exhaustive case expression");
 //│           })());
 //│         })());
@@ -48,6 +48,7 @@ mixin EvalAddLit {
 //│       };
 //│       this.#Lit = ((n) => Object.freeze(new Lit(n)));
 //│       this.#Lit.class = Lit;
+//│       this.#Lit.unapply = Lit.unapply;
 //│     }
 //│     return this.#Lit;
 //│   }

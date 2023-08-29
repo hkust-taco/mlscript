@@ -178,12 +178,11 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       JSRecord(fields map { case (key, Fld(_, _, _, value)) =>
         key.name -> translateTerm(value)
       })
-    case Sel(Var(cls), Var(u: "unapply")) =>
+    case Sel(Var(cls), Var(f)) =>
       scope.resolveValue(cls) match {
-        case S(sym: NewClassSymbol) =>
-          if (sym.isPlainJSClass) translateNuTypeSymbol(sym).member(u)
-          else translateNuTypeSymbol(sym).member("class").member(u)
-        case _ => JSField(translateTerm(Var(cls)), u)
+        case S(sym: NewClassSymbol) if !sym.isPlainJSClass =>
+          translateNuTypeSymbol(sym).member(f)
+        case _ => JSField(translateTerm(Var(cls)), f)
       }
     case Sel(receiver, fieldName) =>
       JSField(translateTerm(receiver), fieldName.name)
@@ -667,7 +666,8 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
             JSArrowFn(constructor, L(
               JSInvoke(JSIdent("Object").member("freeze"), Ls(JSInvoke(JSNew(JSIdent(classSymbol.lexicalName)), params)))
             )))),
-          JSExprStmt(JSAssignExpr(privateIdent.member("class"), JSIdent(classSymbol.lexicalName)))
+          JSExprStmt(JSAssignExpr(privateIdent.member("class"), JSIdent(classSymbol.lexicalName))),
+          JSExprStmt(JSAssignExpr(privateIdent.member("unapply"), JSIdent(classSymbol.lexicalName).member("unapply")))
         )
     JSClassGetter(classSymbol.lexicalName, R(qualifierStmt :: Ls(
       JSIfStmt(JSBinary("===", privateIdent, JSIdent("undefined")),

@@ -48,6 +48,7 @@ class A(x0: Int) {
 //│       };
 //│       this.#A = ((x0) => Object.freeze(new A(x0)));
 //│       this.#A.class = A;
+//│       this.#A.unapply = A.unapply;
 //│     }
 //│     return this.#A;
 //│   }
@@ -112,6 +113,7 @@ AA().f(0)
 //│       };
 //│       this.#AA = (() => Object.freeze(new AA()));
 //│       this.#AA.class = AA;
+//│       this.#AA.unapply = AA.unapply;
 //│     }
 //│     return this.#AA;
 //│   }
@@ -153,6 +155,7 @@ class B(x: Int, val y: Int)
 //│       };
 //│       this.#B = ((x, y) => Object.freeze(new B(x, y)));
 //│       this.#B.class = B;
+//│       this.#B.unapply = B.unapply;
 //│     }
 //│     return this.#B;
 //│   }

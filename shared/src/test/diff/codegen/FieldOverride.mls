@@ -30,6 +30,7 @@ class C(a: Int) { val a = 1 }
 //│       };
 //│       this.#C = ((a) => Object.freeze(new C(a)));
 //│       this.#C.class = C;
+//│       this.#C.unapply = C.unapply;
 //│     }
 //│     return this.#C;
 //│   }
@@ -88,6 +89,7 @@ class C2(a: Int, b: Int) {
 //│       };
 //│       this.#C2 = ((a, b) => Object.freeze(new C2(a, b)));
 //│       this.#C2.class = C2;
+//│       this.#C2.unapply = C2.unapply;
 //│     }
 //│     return this.#C2;
 //│   }
@@ -127,7 +129,7 @@ let c4 = c3.C4(2)
 c3.a
 c4.a
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.126: 	let c4 = c3.C4(2)
+//│ ║  l.128: 	let c4 = c3.C4(2)
 //│ ╙──       	           ^^^
 //│ let c3: C3
 //│ let c4: error

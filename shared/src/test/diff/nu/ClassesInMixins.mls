@@ -34,12 +34,15 @@ M.Foo
 //│ ╙──      	 ^^^^
 //│ error
 //│ res
-//│     = [Function (anonymous)] { class: [class Foo] }
+//│     = [Function (anonymous)] {
+//│         class: [class Foo],
+//│         unapply: [Function: unapply]
+//│       }
 
 :e // TODO support
 fun foo(x) = if x is M.Foo then 1
 //│ ╔══[ERROR] illegal pattern
-//│ ║  l.40: 	fun foo(x) = if x is M.Foo then 1
+//│ ║  l.43: 	fun foo(x) = if x is M.Foo then 1
 //│ ╙──      	                     ^^^^^
 //│ fun foo: anything -> error
 //│ Code generation encountered an error:
@@ -48,7 +51,7 @@ fun foo(x) = if x is M.Foo then 1
 :e
 mixin Test2 { let f = Foo(1) }
 //│ ╔══[ERROR] identifier not found: Foo
-//│ ║  l.49: 	mixin Test2 { let f = Foo(1) }
+//│ ║  l.52: 	mixin Test2 { let f = Foo(1) }
 //│ ╙──      	                      ^^^
 //│ mixin Test2() {
 //│   let f: error
@@ -59,7 +62,7 @@ mixin Test2 { let f = Foo(1) }
 :e
 mixin Test3 { fun f(x) = if x is Foo then 1 }
 //│ ╔══[ERROR] Cannot find constructor `Foo` in scope
-//│ ║  l.60: 	mixin Test3 { fun f(x) = if x is Foo then 1 }
+//│ ║  l.63: 	mixin Test3 { fun f(x) = if x is Foo then 1 }
 //│ ╙──      	                                 ^^^
 //│ mixin Test3() {
 //│   fun f: anything -> error

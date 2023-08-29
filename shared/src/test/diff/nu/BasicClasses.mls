@@ -7,7 +7,10 @@ class A(val n: Int)
 A
 //│ (n: Int,) -> A
 //│ res
-//│     = [Function (anonymous)] { class: [class A] }
+//│     = [Function (anonymous)] {
+//│         class: [class A],
+//│         unapply: [Function: unapply]
+//│       }
 
 let a = A(42)
 //│ let a: A
@@ -74,10 +77,10 @@ class Base0(val n) {
   fun oops = this.my
 }
 //│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.70: 	class Base0(val n) {
+//│ ║  l.73: 	class Base0(val n) {
 //│ ╙──      	                ^
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.74: 	  fun oops = this.my
+//│ ║  l.77: 	  fun oops = this.my
 //│ ╙──      	                 ^^^
 //│ class Base0(n: error) {
 //│   fun me: Base0 & {n: error}
@@ -142,7 +145,10 @@ class Base1(val base: Int) {
 Base1
 //│ (base: Int,) -> Base1
 //│ res
-//│     = [Function (anonymous)] { class: [class Base1] }
+//│     = [Function (anonymous)] {
+//│         class: [class Base1],
+//│         unapply: [Function: unapply]
+//│       }
 
 let b = Base1(1)
 //│ let b: Base1
@@ -168,7 +174,7 @@ b.me
 :e
 b.getBaseTypo
 //│ ╔══[ERROR] Type `Base1` does not contain member `getBaseTypo`
-//│ ║  l.169: 	b.getBaseTypo
+//│ ║  l.175: 	b.getBaseTypo
 //│ ╙──       	 ^^^^^^^^^^^^
 //│ error
 //│ res

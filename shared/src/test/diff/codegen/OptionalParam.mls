@@ -25,6 +25,7 @@ class A(x: Int) {}
 //│       };
 //│       this.#A = ((x) => Object.freeze(new A(x)));
 //│       this.#A.class = A;
+//│       this.#A.unapply = A.unapply;
 //│     }
 //│     return this.#A;
 //│   }
@@ -80,10 +81,10 @@ class C {
 :e // TODO: typing
 let c = new C(1)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.81: 	let c = new C(1)
+//│ ║  l.82: 	let c = new C(1)
 //│ ║        	            ^^^^
 //│ ╟── argument of type `(1,)` does not match type `()`
-//│ ║  l.81: 	let c = new C(1)
+//│ ║  l.82: 	let c = new C(1)
 //│ ╙──      	             ^^^
 //│ let c: C | error
 //│ c
@@ -123,6 +124,7 @@ class D(val x: Int) {
 //│       };
 //│       this.#D = ((x) => Object.freeze(new D(x)));
 //│       this.#D.class = D;
+//│       this.#D.unapply = D.unapply;
 //│     }
 //│     return this.#D;
 //│   }
@@ -148,14 +150,14 @@ class E {
   constructor(y: Int)
 }
 //│ ╔══[PARSE ERROR] A class may only have at most one explicit constructor
-//│ ║  l.146: 	class E {
+//│ ║  l.148: 	class E {
 //│ ╙──       	^^^^^
 //│ class E
 
 :e
 constructor(x: Int)
 //│ ╔══[ERROR] constructor must be in a class.
-//│ ║  l.156: 	constructor(x: Int)
+//│ ║  l.158: 	constructor(x: Int)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^
 //│ ()
 //│ Code generation encountered an error:
@@ -167,10 +169,10 @@ class F(x: Int) extends C(x + 1) {}
 class G extends C(2) {}
 class H extends B {}
 //│ ╔══[ERROR] class C expects 0 parameter(s); got 1
-//│ ║  l.166: 	class F(x: Int) extends C(x + 1) {}
+//│ ║  l.168: 	class F(x: Int) extends C(x + 1) {}
 //│ ╙──       	                        ^^^^^^^
 //│ ╔══[ERROR] class C expects 0 parameter(s); got 1
-//│ ║  l.167: 	class G extends C(2) {}
+//│ ║  l.169: 	class G extends C(2) {}
 //│ ╙──       	                ^^^
 //│ class F(x: Int) extends C
 //│ class G extends C
@@ -198,6 +200,7 @@ class H extends B {}
 //│       };
 //│       this.#F = ((x) => Object.freeze(new F(x)));
 //│       this.#F.class = F;
+//│       this.#F.unapply = F.unapply;
 //│     }
 //│     return this.#F;
 //│   }
@@ -246,7 +249,7 @@ fun f(c) =
 //│ globalThis.f = function f(c) {
 //│   return ((() => {
 //│     let a;
-//│     return a = c, a instanceof F.class ? (([x]) => x)(F.class.unapply(c)) : a instanceof G ? 2 : 0;
+//│     return a = c, a instanceof F.class ? (([x]) => x)(F.unapply(c)) : a instanceof G ? 2 : 0;
 //│   })());
 //│ };
 //│ // End of generated code
@@ -270,7 +273,7 @@ module I {
   }
 }
 //│ ╔══[ERROR] class J expects 0 parameter(s); got 1
-//│ ║  l.269: 	    class L extends J(0)
+//│ ║  l.272: 	    class L extends J(0)
 //│ ╙──       	                    ^^^
 //│ module I {
 //│   class J
@@ -429,10 +432,10 @@ fun h(z: Int) =
 let hh = h(1)
 new hh(1)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.430: 	new hh(1)
+//│ ║  l.433: 	new hh(1)
 //│ ║         	    ^^^^^
 //│ ╟── argument of type `(1,)` does not match type `()`
-//│ ║  l.430: 	new hh(1)
+//│ ║  l.433: 	new hh(1)
 //│ ╙──       	      ^^^
 //│ let hh: () -> N
 //│ N | error
@@ -451,10 +454,10 @@ mixin P {
   constructor(x: Int)
 }
 //│ ╔══[ERROR] Explicit module constructors are not supported
-//│ ║  l.448: 	  constructor(x: Int)
+//│ ║  l.451: 	  constructor(x: Int)
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Explicit mixin constructors are not supported
-//│ ║  l.451: 	  constructor(x: Int)
+//│ ║  l.454: 	  constructor(x: Int)
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^
 //│ module O
 //│ mixin P()
