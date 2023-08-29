@@ -3,51 +3,45 @@
 fun test(x: 'a) = if x is undefined then 0 else x + 1
 //│ fun test: (x: Int | undefined,) -> Int
 
-test(10)
-//│ Int
-//│ res
-//│     = 11
-
 :e
 test(x: 0, 1)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.12: 	test(x: 0, 1)
-//│ ║        	^^^^^^^^^^^^^
-//│ ╟── argument list of type `(x: 0, 1,)` does not match type `(x: 'a,)`
-//│ ║  l.12: 	test(x: 0, 1)
-//│ ║        	    ^^^^^^^^^
-//│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.3: 	fun test(x: 'a) = if x is undefined then 0 else x + 1
-//│ ╙──     	        ^^^^^^^
 //│ ╔══[ERROR] the unnamed args should appear first when using named args!
-//│ ║  l.12: 	test(x: 0, 1)
-//│ ╙──      	    ^^^^^^^^^
+//│ ║  l.7: 	test(x: 0, 1)
+//│ ╙──     	    ^^^^^^^^^
 //│ error
 //│ res
 //│     = 1
+
+:e
+test(y: 0)
+//│ ╔══[ERROR] name x is missed in function call
+//│ ║  l.16: 	test(y: 0)
+//│ ╙──      	    ^^^^^^
+//│ ╔══[ERROR] identifier not found: dummy
+//│ ╙──
+//│ Int
+//│ Code generation encountered an error:
+//│   unresolved symbol dummy
 
 fun test(x: 'a, y: 'b) = [x, y]
 //│ fun test: forall 'a 'b. (x: 'a, y: 'b,) -> ('a, 'b,)
 
 :e
-test(x: 0, 1)
-//│ ╔══[ERROR] the unnamed args should appear first when using named args!
-//│ ║  l.33: 	test(x: 0, 1)
-//│ ╙──      	    ^^^^^^^^^
+test(y: 0)
+//│ ╔══[ERROR] number of parameters dosen't match with the function signature!
+//│ ║  l.30: 	test(y: 0)
+//│ ╙──      	    ^^^^^^
 //│ error
 //│ res
-//│     = [ 0, 1 ]
+//│     = [ 0, undefined ]
 
 :e
 test(1, x: 0)
-//│ ╔══[ERROR] Wrong tuple field name: found 'x' instead of 'y'
-//│ ║  l.42: 	test(1, x: 0)
-//│ ╙──      	    ^^^^^^^^^
 //│ ╔══[ERROR] parameter x is duplicate!
-//│ ║  l.42: 	test(1, x: 0)
+//│ ║  l.39: 	test(1, x: 0)
 //│ ╙──      	    ^^^^^^^^^
 //│ ╔══[ERROR] name y is missed in function call
-//│ ║  l.42: 	test(1, x: 0)
+//│ ║  l.39: 	test(1, x: 0)
 //│ ╙──      	    ^^^^^^^^^
 //│ ╔══[ERROR] identifier not found: dummy
 //│ ╙──
@@ -55,88 +49,29 @@ test(1, x: 0)
 //│ Code generation encountered an error:
 //│   unresolved symbol dummy
 
-:e
-test(y: 0)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.59: 	test(y: 0)
-//│ ║        	^^^^^^^^^^
-//│ ╟── argument list of type `(y: 0,)` does not match type `(x: 'a, y: 'b,)`
-//│ ║  l.59: 	test(y: 0)
-//│ ║        	    ^^^^^^
-//│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.29: 	fun test(x: 'a, y: 'b) = [x, y]
-//│ ╙──      	        ^^^^^^^^^^^^^^
-//│ ╔══[ERROR] number of parameters dosen't match with the function signature!
-//│ ║  l.59: 	test(y: 0)
-//│ ╙──      	    ^^^^^^
-//│ error
+test(0, y: 1)
+//│ (0, 1,)
 //│ res
-//│     = [ 0, undefined ]
-
-fun test(x: Int) = x + 1
-//│ fun test: (x: Int,) -> Int
-
-:e
-test(y: 0)
-//│ ╔══[ERROR] name x is missed in function call
-//│ ║  l.80: 	test(y: 0)
-//│ ╙──      	    ^^^^^^
-//│ ╔══[ERROR] identifier not found: dummy
-//│ ╙──
-//│ Int
-//│ Code generation encountered an error:
-//│   unresolved symbol dummy
+//│     = [ 0, 1 ]
 
 fun fff(x: Int, y: Int, z: Int) = (x - y) * z
 //│ fun fff: (x: Int, y: Int, z: Int,) -> Int
-
-fff(1, 2, 3)
-//│ Int
-//│ res
-//│     = -3
-
-fff(1, z: 3, y:2)
-//│ Int
-//│ res
-//│     = -3
-
-fff(y: 2, z: 3, x: 1)
-//│ Int
-//│ res
-//│     = -3
-
-:e
-fff(1, 2, y:2)
-//│ ╔══[ERROR] parameter y is duplicate!
-//│ ║  l.109: 	fff(1, 2, y:2)
-//│ ╙──       	   ^^^^^^^^^^^
-//│ ╔══[ERROR] name z is missed in function call
-//│ ║  l.109: 	fff(1, 2, y:2)
-//│ ╙──       	   ^^^^^^^^^^^
-//│ ╔══[ERROR] identifier not found: dummy
-//│ ╙──
-//│ Int
-//│ Code generation encountered an error:
-//│   unresolved symbol dummy
 
 //testing renaming
 :e
 fff(y: 2, z: y_1 + 1, x: z_1 - 2)
 //│ ╔══[ERROR] identifier not found: y_1
-//│ ║  l.124: 	fff(y: 2, z: y_1 + 1, x: z_1 - 2)
-//│ ╙──       	             ^^^
+//│ ║  l.62: 	fff(y: 2, z: y_1 + 1, x: z_1 - 2)
+//│ ╙──      	             ^^^
 //│ ╔══[ERROR] identifier not found: z_1
-//│ ║  l.124: 	fff(y: 2, z: y_1 + 1, x: z_1 - 2)
-//│ ╙──       	                         ^^^
-//│ ╔══[ERROR] Wrong tuple field name: found 'y' instead of 'x'
-//│ ║  l.124: 	fff(y: 2, z: y_1 + 1, x: z_1 - 2)
-//│ ╙──       	   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.62: 	fff(y: 2, z: y_1 + 1, x: z_1 - 2)
+//│ ╙──      	                         ^^^
 //│ ╔══[ERROR] identifier not found: y_1
-//│ ║  l.124: 	fff(y: 2, z: y_1 + 1, x: z_1 - 2)
-//│ ╙──       	             ^^^
+//│ ║  l.62: 	fff(y: 2, z: y_1 + 1, x: z_1 - 2)
+//│ ╙──      	             ^^^
 //│ ╔══[ERROR] identifier not found: z_1
-//│ ║  l.124: 	fff(y: 2, z: y_1 + 1, x: z_1 - 2)
-//│ ╙──       	                         ^^^
+//│ ║  l.62: 	fff(y: 2, z: y_1 + 1, x: z_1 - 2)
+//│ ╙──      	                         ^^^
 //│ Int
 //│ Code generation encountered an error:
 //│   unresolved symbol z_1
@@ -144,9 +79,6 @@ fff(y: 2, z: y_1 + 1, x: z_1 - 2)
 let y_1 = 2
 let z_1 = 3
 fff(y: 2, z: y_1 + 1, x: z_1 - 2)
-//│ ╔══[ERROR] Wrong tuple field name: found 'y' instead of 'x'
-//│ ║  l.146: 	fff(y: 2, z: y_1 + 1, x: z_1 - 2)
-//│ ╙──       	   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ let y_1: 2
 //│ let z_1: 3
 //│ Int

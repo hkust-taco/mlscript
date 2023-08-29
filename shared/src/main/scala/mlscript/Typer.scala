@@ -994,10 +994,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
         typeTerm(desug)
       case App(f: Term, a @ Tup(fields)) if (fields.exists(x => x._1.isDefined)) =>
         val (args_ty: SimpleType, fun_ty: SimpleType, res: TypeVariable) = typeUnnamedApp(f, a)
-        val res_ty = con(fun_ty, FunctionType(args_ty, res)(
-            prov
-            // funProv // TODO: better?
-            ), res)
         println(s"f => ${f}")
         println(s"args_ty => ${args_ty} ${args_ty.getClass()}")
         println(s"fun_ty => ${fun_ty} ${fun_ty.getClass()}")
@@ -1015,7 +1011,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
                           Nil
         }
         desugarNamedArgs(term, f, a, argsList)
-        // typeTerm(f)
       case App(f: Term, a: Term) =>
         // TODO: probably better to merge this case with previous one.
         val (args_ty, fun_ty, res) = typeUnnamedApp(f, a)
@@ -1449,8 +1444,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
           case N =>
             ((argsList(idx).name, x._2), false)
         }}
-      if (as.groupBy(x => x._1).sizeCompare(argsList) < 0) {
-        as.groupBy(x => x._1).foreach(
+      if (as.groupBy(x => x._1._1).sizeCompare(argsList) < 0) {
+        as.groupBy(x => x._1._1).foreach(
           x =>
             if (x._2.sizeCompare(1) > 0) {
               err(s"parameter ${x._1} is duplicate!", a.toLoc)
