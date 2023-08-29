@@ -967,7 +967,7 @@ abstract class TyperHelpers { Typer: Typer =>
       case _: TypeTag => ()
       case tr: TypeRef => tr.mapTargs(pol)(apply(_)(_)); ()
       case Without(b, ns) => apply(pol)(b)
-      case TypeBounds(lb, ub) => pol.traverseBounds(lb, ub)(apply(_)(_))
+      case TypeBounds(lb, ub) => pol.traverseRange(lb, ub)(apply(_)(_))
       case PolymorphicType(plvl, und) => apply(pol.enter(plvl))(und)
       case ConstrainedType(cs, bod) =>
         cs.foreach {
@@ -1089,7 +1089,19 @@ abstract class TyperHelpers { Typer: Typer =>
           outer.quantifPolarity(lvl)
         def show: Str = s"$outer;@[${printPol(S(pol))}]($lvl)"
       }
-    def traverseBounds(lb: ST, ub: ST)(k: (PolMap, ST) => Unit): Unit = {
+    
+    def traverseRange(lb: ST, ub: ST)(k: (PolMap, ST) => Unit): Unit = {
+      if (base =/= S(true)) k(PolMap.neg, lb)
+      if (base =/= S(false)) k(PolMap.pos, ub)
+    }
+    // * Note: We used to have this weird impelmentation,
+    // * which was not consistent with the other places in the code where
+    // * we traversed TypeBound instances...
+    // * I am still unsure what's the proper way of traversing them
+    // * and it's possible there was some truth in this implementation,
+    // * but I no longer remember how it was justified.
+    /* 
+    def traverseRange(lb: ST, ub: ST)(k: (PolMap, ST) => Unit): Unit = {
       def polma(p: Bool) = new PolMap(S(p)) {
         def apply(lvl: Level): Pol =
           outer.quantifPolarity(lvl).base match {
@@ -1099,11 +1111,13 @@ abstract class TyperHelpers { Typer: Typer =>
           }
         def quantifPolarity(lvl: Level): PolMap =
           outer.quantifPolarity(lvl)
-        def show: Str = s"$outer;B${printPol(S(p))}"
+        def show: Str = s"$outer;R${printPol(S(p))}"
       }
       if (base =/= S(true)) k(polma(false), lb)
       if (base =/= S(false)) k(polma(true), ub)
     }
+    */
+    
     protected def show: Str
     override def toString: String = show
   }
