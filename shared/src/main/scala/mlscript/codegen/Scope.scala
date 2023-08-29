@@ -11,7 +11,7 @@ import mlscript.utils.{AnyOps, lastWords}
 import mlscript.JSField
 import mlscript.{NuTypeDef, NuFunDef}
 
-class Scope(name: Str, enclosing: Opt[Scope]) {
+class Scope(val name: Str, enclosing: Opt[Scope]) {
   private val lexicalTypeSymbols = scala.collection.mutable.HashMap[Str, TypeSymbol]()
   private val lexicalValueSymbols = scala.collection.mutable.HashMap[Str, RuntimeSymbol]()
   private val runtimeSymbols = scala.collection.mutable.HashSet[Str]()
@@ -326,9 +326,9 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
   }
 
   def declareQualifierSymbol(lexicalName: Str): Str = {
-    val symbol = ValueSymbol(lexicalName, allocateRuntimeName(lexicalName), S(false), false)
+    val symbol = ValueSymbol("this", allocateRuntimeName(lexicalName), S(false), false)
     qualifierSymbols += (symbol.runtimeName -> symbol)
-    runtimeSymbols += symbol.runtimeName
+    register(symbol)
     symbol.runtimeName
   }
   def resolveQualifier(runtimeName: Str): ValueSymbol =

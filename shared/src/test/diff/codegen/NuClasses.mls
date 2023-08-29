@@ -162,9 +162,9 @@ module M2 {
 //│           const m = this.#m;
 //│         }
 //│         foo(y) {
-//│           const self = this;
+//│           const qualifier1 = this;
 //│           return ((() => {
-//│             let bar = (x) => x + y + self.m;
+//│             let bar = (x) => x + y + qualifier1.m;
 //│             return bar(10);
 //│           })());
 //│         }

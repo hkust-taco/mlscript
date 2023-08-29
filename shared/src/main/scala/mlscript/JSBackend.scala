@@ -109,14 +109,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         else translateNuTypeSymbol(sym).member("class")
       case S(sym: NewClassMemberSymbol) =>
         if (sym.isByvalueRec.getOrElse(false) && !sym.isLam) throw CodeGenError(s"unguarded recursive use of by-value binding $name")
-        sym.qualifier.fold[JSExpr](scope.resolveValue("this") match {
-          case Some(selfSymbol) =>
-            visitedSymbols += selfSymbol
-            val ident = if (sym.isPrivate) JSIdent(s"${selfSymbol.runtimeName}.#${sym.runtimeName}")
-                        else JSIdent(selfSymbol.runtimeName).member(sym.runtimeName)
-            if (sym.isByvalueRec.isEmpty && !sym.isLam) ident() else ident
-          case _ => throw CodeGenError(s"unexpected new class member $name")
-        })(qualifier => {
+        sym.qualifier.fold[JSExpr](throw CodeGenError(s"unqualified member symbol $sym"))(qualifier => {
           visitedSymbols += sym
           visitedSymbols += scope.resolveQualifier(qualifier)
           val ident = if (sym.isPrivate) JSIdent(s"${qualifier}.#${sym.runtimeName}")
@@ -690,7 +683,6 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
   )(implicit scope: Scope): JSClassNewDecl = {
     val nuTypeScope = scope.derive(sym.toString)
     val constructorScope = nuTypeScope.derive(s"${sym.lexicalName} constructor")
-    val selfSymbol = constructorScope.declareThisAlias()
 
     val memberList = ListBuffer[RuntimeSymbol]() // pass to the getter of nested types
     val typeList = ListBuffer[Str]()
@@ -709,11 +701,11 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     })).toMap
 
     // `qualifier` should always be the first value in the getter scope so all qualifiers should have the same name!
-    val qualifier = memberScopes.headOption.fold[Opt[Str]](N)(mh => {
+    val qualifier = memberScopes.headOption.fold(S(constructorScope.declareQualifierSymbol(qualifierName)))(mh => {
       memberScopes.foreach(m =>
         assert(m._2.qualifier === mh._2.qualifier, s"the expected qualifier's runtime name should be ${mh._2.qualifier}, ${m._2.qualifier} found")
       )
-      constructorScope.declareQualifierSymbol(mh._2.qualifier)
+      assert(constructorScope.declareQualifierSymbol(mh._2.qualifier) === mh._2.qualifier)
       S(mh._2.qualifier)
     })
 
@@ -857,7 +849,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       rest,
       members,
       traits,
-      translateQualifierDeclaration(selfSymbol) ++ qualifierStmt ++ tempDecs ++ initFields ++ stmts,
+      qualifierStmt ++ tempDecs ++ initFields ++ stmts,
       typeList.toList,
       sym.ctorParams.isDefined,
       staticMethods
@@ -909,8 +901,6 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     qualifier: Opt[Str]
   )(implicit memberScope: Scope): JSClassMemberDecl = {
     val name = method.nme.name
-    // Declare the alias for `this` before declaring parameters.
-    val selfSymbol = memberScope.declareThisAlias()
     val preDecs = props.map(p => {
       val runtime = memberScope.declareValue(p, Some(false), false)
       JSConstDecl(runtime.runtimeName, JSIdent(s"this.#$p"))
@@ -933,12 +923,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     val qualifierStmts = qualifier.fold[Ls[JSStmt]](Nil)(qualifier =>
       translateQualifierDeclaration(memberScope.resolveQualifier(qualifier)))
 
-    // If `this` is accessed, add `const self = this`.
-    val bodyStmts = if (visitedSymbols(selfSymbol)) {
-      val thisDecl = JSConstDecl(selfSymbol.runtimeName, JSIdent("this"))
-      visitedSymbols -= selfSymbol
-      R(preDecs ++ tempDecs ++ qualifierStmts ++ (thisDecl :: bodyResult :: Nil))
-    } else R(preDecs ++ tempDecs ++ qualifierStmts ++ (bodyResult :: Nil))
+    val bodyStmts = R(preDecs ++ tempDecs ++ qualifierStmts ++ (bodyResult :: Nil))
     // Returns members depending on what it is.
     memberParams match {
       case S(memberParams) => JSClassMethod(name, memberParams, bodyStmts)

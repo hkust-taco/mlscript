@@ -141,13 +141,13 @@ mixin EvalBase {
 //│         super(...rest);
 //│       }
 //│       eval(e) {
-//│         const self = this;
+//│         const qualifier1 = this;
 //│         return ((() => {
 //│           let a;
 //│           return (a = e, a instanceof Lit.class ? (([n]) => n)(Lit.class.unapply(e)) : a instanceof Add.class ? (([
 //│             l,
 //│             r
-//│           ]) => self.eval(l) + self.eval(r))(Add.class.unapply(e)) : (() => {
+//│           ]) => qualifier1.eval(l) + qualifier1.eval(r))(Add.class.unapply(e)) : (() => {
 //│             throw new Error("non-exhaustive case expression");
 //│           })());
 //│         })());
@@ -171,13 +171,13 @@ mixin EvalBase {
 //│ │ │           super(...rest);
 //│ │ │         }
 //│ │ │         eval(e) {
-//│ │ │           const self = this;
+//│ │ │           const qualifier1 = this;
 //│ │ │           return ((() => {
 //│ │ │             let a;
 //│ │ │             return (a = e, a instanceof Lit.class ? (([n]) => n)(Lit.class.unapply(e)) : a instanceof Add.class ? (([
 //│ │ │               l,
 //│ │ │               r
-//│ │ │             ]) => self.eval(l) + self.eval(r))(Add.class.unapply(e)) : (() => {
+//│ │ │             ]) => qualifier1.eval(l) + qualifier1.eval(r))(Add.class.unapply(e)) : (() => {
 //│ │ │               throw new Error("non-exhaustive case expression");
 //│ │ │             })());
 //│ │ │           })());
@@ -277,9 +277,9 @@ mixin EvalNeg {
 //│         super(...rest);
 //│       }
 //│       eval(e) {
-//│         const self = this;
+//│         const qualifier1 = this;
 //│         return ((() => {
-//│           return e instanceof Neg.class ? (([d]) => 0 - self.eval(d))(Neg.class.unapply(e)) : super.eval(e);
+//│           return e instanceof Neg.class ? (([d]) => 0 - qualifier1.eval(d))(Neg.class.unapply(e)) : super.eval(e);
 //│         })());
 //│       }
 //│     });
@@ -301,9 +301,9 @@ mixin EvalNeg {
 //│ │ │           super(...rest);
 //│ │ │         }
 //│ │ │         eval(e) {
-//│ │ │           const self = this;
+//│ │ │           const qualifier1 = this;
 //│ │ │           return ((() => {
-//│ │ │             return e instanceof Neg.class ? (([d]) => 0 - self.eval(d))(Neg.class.unapply(e)) : super.eval(e);
+//│ │ │             return e instanceof Neg.class ? (([d]) => 0 - qualifier1.eval(d))(Neg.class.unapply(e)) : super.eval(e);
 //│ │ │           })());
 //│ │ │         }
 //│ │ │       });
@@ -338,9 +338,9 @@ mixin EvalNegNeg {
 //│         super(...rest);
 //│       }
 //│       eval(e) {
-//│         const self = this;
+//│         const qualifier1 = this;
 //│         return ((() => {
-//│           return e instanceof Neg.class ? (([tmp0]) => tmp0 instanceof Neg.class ? (([d]) => self.eval(d))(Neg.class.unapply(tmp0)) : super.eval(e))(Neg.class.unapply(e)) : super.eval(e);
+//│           return e instanceof Neg.class ? (([tmp0]) => tmp0 instanceof Neg.class ? (([d]) => qualifier1.eval(d))(Neg.class.unapply(tmp0)) : super.eval(e))(Neg.class.unapply(e)) : super.eval(e);
 //│         })());
 //│       }
 //│     });
@@ -362,9 +362,9 @@ mixin EvalNegNeg {
 //│ │ │           super(...rest);
 //│ │ │         }
 //│ │ │         eval(e) {
-//│ │ │           const self = this;
+//│ │ │           const qualifier1 = this;
 //│ │ │           return ((() => {
-//│ │ │             return e instanceof Neg.class ? (([tmp0]) => tmp0 instanceof Neg.class ? (([d]) => self.eval(d))(Neg.class.unapply(tmp0)) : super.eval(e))(Neg.class.unapply(e)) : super.eval(e);
+//│ │ │             return e instanceof Neg.class ? (([tmp0]) => tmp0 instanceof Neg.class ? (([d]) => qualifier1.eval(d))(Neg.class.unapply(tmp0)) : super.eval(e))(Neg.class.unapply(e)) : super.eval(e);
 //│ │ │           })());
 //│ │ │         }
 //│ │ │       });
@@ -528,10 +528,10 @@ mixin Fooo(val x: Int) { fun f = [x, this.x] }
 //│       }
 //│       get f() {
 //│         const x = this.#x;
-//│         const self = this;
+//│         const qualifier1 = this;
 //│         return ([
 //│           x,
-//│           self.x
+//│           qualifier1.x
 //│         ]);
 //│       }
 //│     });

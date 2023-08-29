@@ -344,9 +344,9 @@ class W() {
 //│           this.#x = 42;
 //│           const x = this.#x;
 //│         }
-//│         add(self1) {
+//│         add(self) {
 //│           const qualifier1 = this;
-//│           return qualifier1.#x + self1;
+//│           return qualifier1.#x + self;
 //│         }
 //│       static
 //│         unapply(ins) {
