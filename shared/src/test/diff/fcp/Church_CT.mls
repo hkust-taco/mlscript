@@ -67,10 +67,10 @@ def succ: ChurchInt -> ChurchInt
 
 :e // * Since "sound extrusion"
 def succ n f x = f (n f x)
-//│ 'a -> (forall 'b. 'b -> (forall 'c 'd 'e. ('c -> 'e
+//│ 'a -> (forall 'b. 'b -> (forall 'c 'd 'e. ('d -> 'c
 //│   where
-//│     'a <: 'b -> 'c -> 'd
-//│     'b <: 'd -> 'e)))
+//│     'b <: 'e -> 'c
+//│     'a <: 'b -> 'd -> 'e)))
 //│   <:  succ:
 //│ ChurchInt -> ChurchInt
 //│ ╔══[ERROR] Type error in def definition
@@ -95,8 +95,8 @@ def succD n f x = f (n f x)
 //│      = <missing implementation>
 //│ 'a -> (forall 'b. 'b -> (forall 'c 'd 'e. ('c -> 'e
 //│   where
-//│     'b <: 'd -> 'e
-//│     'a <: 'b -> 'c -> 'd)))
+//│     'a <: 'b -> 'c -> 'd
+//│     'b <: 'd -> 'e)))
 //│   <:  succD:
 //│ ChurchInt -> ('M -> 'M) -> 'M -> 'M
 //│      = [Function: succD]
@@ -147,19 +147,34 @@ wrap x = { x }
 //│ wrap: 'a -> {x: 'a}
 //│     = [Function: wrap]
 
+:e
 n1w = n1 wrap
+//│ ╔══[ERROR] Inferred recursive type: 'a
+//│   where
+//│     'a :> {x: 'a}
+//│ ╙──
 //│ n1w: 'N -> 'N
 //│   where
 //│     'N :> {x: 'N}
 //│    = [Function (anonymous)]
 
+:e
 n1w 0
+//│ ╔══[ERROR] Inferred recursive type: 'a
+//│   where
+//│     'a :> 0 | {x: 'a}
+//│ ╙──
 //│ res: 'a
 //│   where
 //│     'a :> 0 | {x: 'a}
 //│    = { x: 0 }
 
+:e
 n1 wrap 0
+//│ ╔══[ERROR] Inferred recursive type: 'a
+//│   where
+//│     'a :> 0 | {x: 'a}
+//│ ╙──
 //│ res: 'a
 //│   where
 //│     'a :> 0 | {x: 'a}
@@ -167,28 +182,37 @@ n1 wrap 0
 
 :e
 res.x + 1
+//│ ╔══[ERROR] Inferred recursive type: 'a
+//│   where
+//│     'a :> 0 | {x: 'a}
+//│ ╙──
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.169: 	res.x + 1
+//│ ║  l.184: 	res.x + 1
 //│ ║         	^^^^^
 //│ ╟── integer literal of type `0` does not have field 'x'
-//│ ║  l.162: 	n1 wrap 0
+//│ ║  l.173: 	n1 wrap 0
 //│ ║         	        ^
 //│ ╟── but it flows into reference with expected type `{x: ?x}`
-//│ ║  l.169: 	res.x + 1
+//│ ║  l.184: 	res.x + 1
 //│ ╙──       	^^^
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.169: 	res.x + 1
+//│ ║  l.184: 	res.x + 1
 //│ ║         	^^^^^^^
 //│ ╟── record literal of type `{x: ?a}` is not an instance of type `int`
 //│ ║  l.146: 	wrap x = { x }
 //│ ║         	         ^^^^^
 //│ ╟── but it flows into field selection with expected type `int`
-//│ ║  l.169: 	res.x + 1
+//│ ║  l.184: 	res.x + 1
 //│ ╙──       	^^^^^
 //│ res: error | int
 //│    = 1
 
+:e
 n2 wrap 0
+//│ ╔══[ERROR] Inferred recursive type: 'a
+//│   where
+//│     'a :> 0 | {x: 'a}
+//│ ╙──
 //│ res: 'a
 //│   where
 //│     'a :> 0 | {x: 'a}
@@ -196,32 +220,36 @@ n2 wrap 0
 
 :e
 res.x.x + 1
+//│ ╔══[ERROR] Inferred recursive type: 'a
+//│   where
+//│     'a :> 0 | {x: 'a}
+//│ ╙──
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.198: 	res.x.x + 1
+//│ ║  l.222: 	res.x.x + 1
 //│ ║         	^^^^^
 //│ ╟── integer literal of type `0` does not have field 'x'
-//│ ║  l.191: 	n2 wrap 0
+//│ ║  l.211: 	n2 wrap 0
 //│ ║         	        ^
 //│ ╟── but it flows into reference with expected type `{x: ?x}`
-//│ ║  l.198: 	res.x.x + 1
+//│ ║  l.222: 	res.x.x + 1
 //│ ╙──       	^^^
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.198: 	res.x.x + 1
+//│ ║  l.222: 	res.x.x + 1
 //│ ║         	^^^^^^^
 //│ ╟── integer literal of type `0` does not have field 'x'
-//│ ║  l.191: 	n2 wrap 0
+//│ ║  l.211: 	n2 wrap 0
 //│ ║         	        ^
 //│ ╟── but it flows into field selection with expected type `{x: ?x}`
-//│ ║  l.198: 	res.x.x + 1
+//│ ║  l.222: 	res.x.x + 1
 //│ ╙──       	^^^^^
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.198: 	res.x.x + 1
+//│ ║  l.222: 	res.x.x + 1
 //│ ║         	^^^^^^^^^
 //│ ╟── record literal of type `{x: ?a}` is not an instance of type `int`
 //│ ║  l.146: 	wrap x = { x }
 //│ ║         	         ^^^^^
 //│ ╟── but it flows into field selection with expected type `int`
-//│ ║  l.198: 	res.x.x + 1
+//│ ║  l.222: 	res.x.x + 1
 //│ ╙──       	^^^^^^^
 //│ res: error | int
 //│    = 1
@@ -237,13 +265,23 @@ wrap_ty = wrap
 //│ 'a -> {x: 'a}
 //│        = [Function: wrap]
 
+:e
 n1w = n1 wrap_ty
+//│ ╔══[ERROR] Inferred recursive type: 'a
+//│   where
+//│     'a :> {x: 'a}
+//│ ╙──
 //│ n1w: 'N -> 'N
 //│   where
 //│     'N :> {x: 'N}
 //│    = [Function (anonymous)]
 
+:e
 n1w 0
+//│ ╔══[ERROR] Inferred recursive type: 'a
+//│   where
+//│     'a :> 0 | {x: 'a}
+//│ ╙──
 //│ res: 'a
 //│   where
 //│     'a :> 0 | {x: 'a}
@@ -251,23 +289,27 @@ n1w 0
 
 :e
 res.x + 1
+//│ ╔══[ERROR] Inferred recursive type: 'a
+//│   where
+//│     'a :> 0 | {x: 'a}
+//│ ╙──
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.253: 	res.x + 1
+//│ ║  l.291: 	res.x + 1
 //│ ║         	^^^^^
 //│ ╟── integer literal of type `0` does not have field 'x'
-//│ ║  l.246: 	n1w 0
+//│ ║  l.280: 	n1w 0
 //│ ║         	    ^
 //│ ╟── but it flows into reference with expected type `{x: ?x}`
-//│ ║  l.253: 	res.x + 1
+//│ ║  l.291: 	res.x + 1
 //│ ╙──       	^^^
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.253: 	res.x + 1
+//│ ║  l.291: 	res.x + 1
 //│ ║         	^^^^^^^
 //│ ╟── type `{x: 'a}` is not an instance of type `int`
-//│ ║  l.230: 	def wrap_ty: 'a -> {x: 'a}
+//│ ║  l.258: 	def wrap_ty: 'a -> {x: 'a}
 //│ ║         	                   ^^^^^^^
 //│ ╟── but it flows into field selection with expected type `int`
-//│ ║  l.253: 	res.x + 1
+//│ ║  l.291: 	res.x + 1
 //│ ╙──       	^^^^^
 //│ res: error | int
 //│    = 1
@@ -298,12 +340,12 @@ zero = z
 succ = s
 //│ 'a -> (forall 'b. 'b -> (forall 'c 'd 'e. ('c -> 'e
 //│   where
-//│     'a <: 'b -> 'c -> 'd
-//│     'b <: 'd -> 'e)))
+//│     'b <: 'd -> 'e
+//│     'a <: 'b -> 'c -> 'd)))
 //│   <:  succ:
 //│ ChurchInt -> ChurchInt
 //│ ╔══[ERROR] Type error in def definition
-//│ ║  l.298: 	succ = s
+//│ ║  l.340: 	succ = s
 //│ ║         	^^^^^^^^
 //│ ╟── type variable `'N` leaks out of its scope
 //│ ║  l.7: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -313,10 +355,10 @@ succ = s
 //│ ║       	                             ^^
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this function:
-//│ ║  l.284: 	def s n f x = f (n f x)
+//│ ║  l.326: 	def s n f x = f (n f x)
 //│ ║         	        ^^^^^^^^^^^^^^^
 //│ ╟── • this reference:
-//│ ║  l.298: 	succ = s
+//│ ║  l.340: 	succ = s
 //│ ╙──       	       ^
 //│     = [Function: s]
 
@@ -332,7 +374,7 @@ z: ChurchInt
 :stats
 s: ChurchInt -> ChurchInt
 //│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.333: 	s: ChurchInt -> ChurchInt
+//│ ║  l.375: 	s: ChurchInt -> ChurchInt
 //│ ║         	^
 //│ ╟── type variable `'N` leaks out of its scope
 //│ ║  l.7: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -342,10 +384,10 @@ s: ChurchInt -> ChurchInt
 //│ ║       	                             ^^
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this function:
-//│ ║  l.284: 	def s n f x = f (n f x)
+//│ ║  l.326: 	def s n f x = f (n f x)
 //│ ║         	        ^^^^^^^^^^^^^^^
 //│ ╟── • this reference:
-//│ ║  l.333: 	s: ChurchInt -> ChurchInt
+//│ ║  l.375: 	s: ChurchInt -> ChurchInt
 //│ ╙──       	^
 //│ res: ChurchInt -> ChurchInt
 //│    = [Function: s]
@@ -359,10 +401,10 @@ s: ChurchInt -> ChurchInt
 
 
 n1 = s z
-//│ n1: 'a -> (forall 'b 'c 'd. ('c -> 'b
+//│ n1: 'a -> (forall 'b 'c 'd. ('b -> 'd
 //│   where
-//│     anything -> (forall 'e. 'e -> 'e) <: 'a -> 'c -> 'd
-//│     'a <: 'd -> 'b))
+//│     'a <: 'c -> 'd
+//│     anything -> (forall 'e. 'e -> 'e) <: 'a -> 'b -> 'c))
 //│   = [Function (anonymous)]
 
 n2 = s (s z)
@@ -371,20 +413,20 @@ n2 = s (s z)
 //│     'a <: 'c -> 'd
 //│     forall 'e. 'e -> (forall 'f 'g 'h. ('f -> 'h
 //│   where
-//│     'e <: 'g -> 'h
-//│     anything -> (forall 'i. 'i -> 'i) <: 'e -> 'f -> 'g)) <: 'a -> 'b -> 'c))
+//│     anything -> (forall 'i. 'i -> 'i) <: 'e -> 'f -> 'g
+//│     'e <: 'g -> 'h)) <: 'a -> 'b -> 'c))
 //│   = [Function (anonymous)]
 
 n3 = s (s (s z))
 //│ n3: 'a -> (forall 'b 'c 'd. ('b -> 'd
 //│   where
-//│     forall 'e. 'e -> (forall 'f 'g 'h. ('g -> 'f
+//│     forall 'e. 'e -> (forall 'f 'g 'h. ('f -> 'h
 //│   where
-//│     'e <: 'h -> 'f
+//│     'e <: 'g -> 'h
 //│     forall 'i. 'i -> (forall 'j 'k 'l. ('j -> 'l
 //│   where
-//│     'i <: 'k -> 'l
-//│     anything -> (forall 'm. 'm -> 'm) <: 'i -> 'j -> 'k)) <: 'e -> 'g -> 'h)) <: 'a -> 'b -> 'c
+//│     anything -> (forall 'm. 'm -> 'm) <: 'i -> 'j -> 'k
+//│     'i <: 'k -> 'l)) <: 'e -> 'f -> 'g)) <: 'a -> 'b -> 'c
 //│     'a <: 'c -> 'd))
 //│   = [Function (anonymous)]
 
@@ -442,8 +484,8 @@ wrap_ty = wrap
 n1w = n1 wrap_ty
 //│ n1w: 'b -> 'c
 //│   where
-//│     anything -> (forall 'd. 'd -> 'd) <: (forall 'a. 'a -> {x: 'a}) -> 'b -> 'e
-//│     forall 'a. 'a -> {x: 'a} <: 'e -> 'c
+//│     forall 'a. 'a -> {x: 'a} <: 'd -> 'c
+//│     anything -> (forall 'e. 'e -> 'e) <: (forall 'a. 'a -> {x: 'a}) -> 'b -> 'd
 //│    = [Function (anonymous)]
 
 n1w 0
@@ -476,22 +518,22 @@ res.x.x.x + 1
 
 
 sz = s zero
-//│ sz: 'a -> (forall 'b 'c 'd. ('b -> 'd
+//│ sz: 'a -> (forall 'b 'c 'd. ('c -> 'b
 //│   where
-//│     'a <: 'c -> 'd
-//│     ChurchInt <: 'a -> 'b -> 'c))
+//│     ChurchInt <: 'a -> 'c -> 'd
+//│     'a <: 'd -> 'b))
 //│   = [Function (anonymous)]
 
 :ns
 sz
-//│ res: forall 'a 'b. 'b
+//│ res: forall 'a 'b. 'a
 //│   where
-//│     'b :> forall 'c. 'c -> (forall 'd 'e 'f 'g. ('e -> 'g
+//│     'a :> forall 'c. 'c -> (forall 'd 'e 'f 'g. ('g -> 'e
 //│   where
-//│     'a <: 'c -> 'd
-//│     'c <: 'f -> 'g))
-//│     'd <: 'e -> 'f
-//│     'a :> ChurchInt
+//│     'b <: 'c -> 'f
+//│     'c <: 'd -> 'e))
+//│     'f <: 'g -> 'd
+//│     'b :> ChurchInt
 //│    = [Function (anonymous)]
 
 sz: ChurchInt
@@ -501,7 +543,7 @@ sz: ChurchInt
 :e // * Since "sound extrusion"
 s zero : ChurchInt
 //│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.502: 	s zero : ChurchInt
+//│ ║  l.544: 	s zero : ChurchInt
 //│ ║         	^^^^^^
 //│ ╟── type variable `'N` leaks out of its scope
 //│ ║  l.7: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -517,30 +559,30 @@ s zero : ChurchInt
 sz1 = sz 1
 //│ sz1: 'a -> 'b
 //│   where
-//│     1 <: 'c -> 'b
 //│     ChurchInt <: 1 -> 'a -> 'c
+//│     1 <: 'c -> 'b
 //│    = [Function (anonymous)]
 
 :ns
 sz1
-//│ res: forall 'a 'b 'c. 'c
+//│ res: forall 'a 'b 'c. 'b
 //│   where
-//│     'c :> forall 'd 'e 'f 'g. ('e -> 'g
+//│     'b :> forall 'd 'e 'f 'g. ('e -> 'g
 //│   where
-//│     'a <: 'b -> 'd
-//│     'b <: 'f -> 'g)
+//│     'a <: 'f -> 'g
+//│     'c <: 'a -> 'd)
 //│     'd <: 'e -> 'f
-//│     'b :> 1
-//│     'a :> ChurchInt
+//│     'c :> ChurchInt
+//│     'a :> 1
 //│    = [Function (anonymous)]
 
 :e  // * Since inconsistent constrained types (delayed error from above)
 sz1 2
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.538: 	sz1 2
+//│ ║  l.580: 	sz1 2
 //│ ║         	^^^^^
 //│ ╟── integer literal of type `1` is not a function
-//│ ║  l.517: 	sz1 = sz 1
+//│ ║  l.559: 	sz1 = sz 1
 //│ ║         	         ^
 //│ ╟── Note: constraint arises from function type:
 //│ ║  l.7: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -583,65 +625,103 @@ def to_church_ty n =
 
 // * === Conversions (Using Unannotated Defs) ===
 
+:e
 rec def to_ch_s n =
   if n == 0 then z
   else s (to_ch_s (n - 1))
+//│ ╔══[ERROR] Inferred recursive type: 'a
+//│   where
+//│     'a :> forall 'b. 'b -> (forall 'c 'd 'e 'f 'b. (('d & 'c) -> ('d | 'f)
+//│   where
+//│     'a <: 'b -> 'c -> 'e
+//│     'b <: 'e -> 'f))
+//│ ╙──
 //│ to_ch_s: int -> 'a
 //│   where
-//│     'a :> forall 'b. 'b -> (forall 'c 'd 'b 'e 'f. (('e & 'c) -> ('e | 'd)
+//│     'a :> forall 'b. 'b -> (forall 'c 'd 'e 'b 'f. (('e & 'd) -> ('e | 'f)
 //│   where
-//│     'a <: 'b -> 'c -> 'f
-//│     'b <: 'f -> 'd))
+//│     'a <: 'b -> 'd -> 'c
+//│     'b <: 'c -> 'f))
 //│        = [Function: to_ch_s]
 
+:e
 rec def to_ch n =
   if n == 0 then z
   else s (to_ch (n - 1))
+//│ ╔══[ERROR] Inferred recursive type: 'a
+//│   where
+//│     'a :> forall 'b. 'b -> (forall 'b 'c 'd 'e 'f. (('c & 'f) -> ('c | 'd)
+//│   where
+//│     'b <: 'e -> 'd
+//│     'a <: 'b -> 'f -> 'e))
+//│ ╙──
 //│ to_ch: int -> 'a
 //│   where
-//│     'a :> forall 'b. 'b -> (forall 'b 'c 'd 'e 'f. (('d & 'c) -> ('d | 'e)
+//│     'a :> forall 'b. 'b -> (forall 'c 'b 'd 'e 'f. (('c & 'd) -> ('c | 'e)
 //│   where
 //│     'b <: 'f -> 'e
-//│     'a <: 'b -> 'c -> 'f))
+//│     'a <: 'b -> 'd -> 'f))
 //│      = [Function: to_ch]
 
 :e // * Needs distrib (see below)
 to_church_ty = to_ch
+//│ ╔══[ERROR] Inferred recursive type: 'a
+//│   where
+//│     'a :> forall 'b. 'b -> (forall 'c 'd 'e 'f 'b. (('d & 'c) -> ('d | 'f)
+//│   where
+//│     'a <: 'b -> 'c -> 'e
+//│     'b <: 'e -> 'f))
+//│ ╙──
 //│ int -> 'a
 //│   where
-//│     'a :> forall 'b. 'b -> (forall 'c 'd 'b 'e 'f. (('e & 'c) -> ('e | 'd)
+//│     'a :> forall 'b. 'b -> (forall 'c 'd 'b 'e 'f. (('d & 'e) -> ('d | 'c)
 //│   where
-//│     'b <: 'f -> 'd
-//│     'a <: 'b -> 'c -> 'f))
+//│     'b <: 'f -> 'c
+//│     'a <: 'b -> 'e -> 'f))
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?b ?c ?d ?to_ch. ?to_ch <: int -> ChurchInt` exceeded recursion depth limit (250)
-//│ ║  l.609: 	to_church_ty = to_ch
+//│ ║  l.667: 	to_church_ty = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│             = [Function: to_ch]
 
+:e
 rec def to_ch_simplif n = s (to_ch_simplif n)
-//│ to_ch_simplif: anything -> 'a
+//│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
 //│     'a :> forall 'b. 'b -> (forall 'c 'd 'e. ('c -> 'e
 //│   where
 //│     'b <: 'd -> 'e
 //│     'a <: 'b -> 'c -> 'd))
-//│              = [Function: to_ch_simplif]
-
-:e
-to_church_ty = to_ch_simplif
-//│ anything -> 'a
+//│ ╙──
+//│ to_ch_simplif: anything -> 'a
 //│   where
 //│     'a :> forall 'b. 'b -> (forall 'c 'd 'e. ('c -> 'e
 //│   where
 //│     'a <: 'b -> 'c -> 'd
 //│     'b <: 'd -> 'e))
+//│              = [Function: to_ch_simplif]
+
+:e
+to_church_ty = to_ch_simplif
+//│ ╔══[ERROR] Inferred recursive type: 'a
+//│   where
+//│     'a :> forall 'b. 'b -> (forall 'c 'd 'e. ('c -> 'e
+//│   where
+//│     'b <: 'd -> 'e
+//│     'a <: 'b -> 'c -> 'd))
+//│ ╙──
+//│ anything -> 'a
+//│   where
+//│     'a :> forall 'b. 'b -> (forall 'c 'd 'e. ('e -> 'd
+//│   where
+//│     'a <: 'b -> 'e -> 'c
+//│     'b <: 'c -> 'd))
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?b ?to_ch_simplif ?c ?d. ?to_ch_simplif <: int -> ChurchInt` exceeded recursion depth limit (250)
-//│ ║  l.634: 	to_church_ty = to_ch_simplif
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?b ?c ?d ?to_ch_simplif. ?to_ch_simplif <: int -> ChurchInt` exceeded recursion depth limit (250)
+//│ ║  l.707: 	to_church_ty = to_ch_simplif
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│             = [Function: to_ch_simplif]
@@ -653,11 +733,11 @@ rec def to_ch_A1 n =
   if n == 0 then z
   else s (to_ch_A1 (n - 1) : ChurchInt)
 //│ ╔══[ERROR] Type error in binding of lambda expression
-//│ ║  l.652: 	rec def to_ch_A1 n =
+//│ ║  l.732: 	rec def to_ch_A1 n =
 //│ ║         	                 ^^^
-//│ ║  l.653: 	  if n == 0 then z
+//│ ║  l.733: 	  if n == 0 then z
 //│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ║  l.654: 	  else s (to_ch_A1 (n - 1) : ChurchInt)
+//│ ║  l.734: 	  else s (to_ch_A1 (n - 1) : ChurchInt)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `'N` leaks out of its scope
 //│ ║  l.7: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -666,11 +746,11 @@ rec def to_ch_A1 n =
 //│ ║  l.7: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ╙──     	                             ^^
 //│ ╔══[ERROR] Type error in binding of lambda expression
-//│ ║  l.652: 	rec def to_ch_A1 n =
+//│ ║  l.732: 	rec def to_ch_A1 n =
 //│ ║         	                 ^^^
-//│ ║  l.653: 	  if n == 0 then z
+//│ ║  l.733: 	  if n == 0 then z
 //│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ║  l.654: 	  else s (to_ch_A1 (n - 1) : ChurchInt)
+//│ ║  l.734: 	  else s (to_ch_A1 (n - 1) : ChurchInt)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `'N` leaks out of its scope
 //│ ║  l.7: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -679,11 +759,11 @@ rec def to_ch_A1 n =
 //│ ║  l.7: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ╙──     	                             ^^
 //│ ╔══[ERROR] Type error in binding of lambda expression
-//│ ║  l.652: 	rec def to_ch_A1 n =
+//│ ║  l.732: 	rec def to_ch_A1 n =
 //│ ║         	                 ^^^
-//│ ║  l.653: 	  if n == 0 then z
+//│ ║  l.733: 	  if n == 0 then z
 //│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ║  l.654: 	  else s (to_ch_A1 (n - 1) : ChurchInt)
+//│ ║  l.734: 	  else s (to_ch_A1 (n - 1) : ChurchInt)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `'N` leaks out of its scope
 //│ ║  l.7: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -692,14 +772,14 @@ rec def to_ch_A1 n =
 //│ ║  l.7: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ║       	                             ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.284: 	def s n f x = f (n f x)
+//│ ║  l.326: 	def s n f x = f (n f x)
 //│ ╙──       	                 ^^^^^
 //│ ╔══[ERROR] Type error in binding of lambda expression
-//│ ║  l.652: 	rec def to_ch_A1 n =
+//│ ║  l.732: 	rec def to_ch_A1 n =
 //│ ║         	                 ^^^
-//│ ║  l.653: 	  if n == 0 then z
+//│ ║  l.733: 	  if n == 0 then z
 //│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ║  l.654: 	  else s (to_ch_A1 (n - 1) : ChurchInt)
+//│ ║  l.734: 	  else s (to_ch_A1 (n - 1) : ChurchInt)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `'N` leaks out of its scope
 //│ ║  l.7: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -708,32 +788,29 @@ rec def to_ch_A1 n =
 //│ ║  l.7: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ║       	                             ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.284: 	def s n f x = f (n f x)
+//│ ║  l.326: 	def s n f x = f (n f x)
 //│ ╙──       	                 ^^^^^
-//│ to_ch_A1: int -> (forall 'a. 'a -> (forall 'a 'b 'c 'd 'e. (('e & 'b) -> ('b | 'c)
+//│ to_ch_A1: int -> (forall 'a. 'a -> (forall 'b 'c 'd 'a 'e. (('c & 'd) -> ('d | 'e)
 //│   where
-//│     'a <: 'd -> 'c
-//│     ChurchInt <: 'a -> 'e -> 'd)))
+//│     'a <: 'b -> 'e
+//│     ChurchInt <: 'a -> 'c -> 'b)))
 //│         = [Function: to_ch_A1]
 
 :precise-rec-typing
+:e // occurs-check
 rec def to_ch_A1 n =
   if n == 0 then z
   else s (to_ch_A1 (n - 1) : ChurchInt)
-//│ to_ch_A1: 'to_ch_A1
+//│ ╔══[ERROR] Inferred recursive type: 'to_ch_A1
 //│   where
-//│     'to_ch_A1 :> forall 'to_ch_A1. (int -> (forall 'a. 'a -> (forall 'b 'c 'd 'e 'a. (('d & 'b) -> ('b | 'e)
+//│     'to_ch_A1 :> forall 'to_ch_A1. (int -> (forall 'a. 'a -> (forall 'b 'c 'd 'a 'e. (('d & 'c) -> ('c | 'b)
 //│   where
-//│     'a <: 'c -> 'e
-//│     ChurchInt <: 'a -> 'd -> 'c)))
+//│     ChurchInt <: 'a -> 'd -> 'e
+//│     'a <: 'e -> 'b)))
 //│   where
 //│     'to_ch_A1 <: int -> ChurchInt)
-//│         = [Function: to_ch_A11]
-
-// * But we can't check the corresponding type
-:e
-to_church_ty = to_ch_A1
-//│ 'to_ch_A1
+//│ ╙──
+//│ to_ch_A1: 'to_ch_A1
 //│   where
 //│     'to_ch_A1 :> forall 'to_ch_A1. (int -> (forall 'a. 'a -> (forall 'b 'c 'd 'a 'e. (('b & 'd) -> ('d | 'e)
 //│   where
@@ -741,10 +818,32 @@ to_church_ty = to_ch_A1
 //│     'a <: 'c -> 'e)))
 //│   where
 //│     'to_ch_A1 <: int -> ChurchInt)
+//│         = [Function: to_ch_A11]
+
+// * But we can't check the corresponding type
+:e
+to_church_ty = to_ch_A1
+//│ ╔══[ERROR] Inferred recursive type: 'to_ch_A1
+//│   where
+//│     'to_ch_A1 :> forall 'to_ch_A1. (int -> (forall 'a. 'a -> (forall 'b 'a 'c 'd 'e. (('c & 'b) -> ('b | 'e)
+//│   where
+//│     ChurchInt <: 'a -> 'c -> 'd
+//│     'a <: 'd -> 'e)))
+//│   where
+//│     'to_ch_A1 <: int -> ChurchInt)
+//│ ╙──
+//│ 'to_ch_A1
+//│   where
+//│     'to_ch_A1 :> forall 'to_ch_A1. (int -> (forall 'a. 'a -> (forall 'b 'a 'c 'd 'e. (('b & 'c) -> ('c | 'd)
+//│   where
+//│     ChurchInt <: 'a -> 'b -> 'e
+//│     'a <: 'e -> 'd)))
+//│   where
+//│     'to_ch_A1 <: int -> ChurchInt)
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
-//│ ║  l.735: 	to_church_ty = to_ch_A1
+//│ ║  l.825: 	to_church_ty = to_ch_A1
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│             = [Function: to_ch_A11]
@@ -756,13 +855,13 @@ rec def to_ch_A2 n = (
     else s (to_ch_A2 (n - 1))
   ) : ChurchInt
 //│ ╔══[ERROR] Type error in binding of lambda expression
-//│ ║  l.754: 	rec def to_ch_A2 n = (
+//│ ║  l.853: 	rec def to_ch_A2 n = (
 //│ ║         	                 ^^^^^
-//│ ║  l.755: 	    if n == 0 then z
+//│ ║  l.854: 	    if n == 0 then z
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.756: 	    else s (to_ch_A2 (n - 1))
+//│ ║  l.855: 	    else s (to_ch_A2 (n - 1))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.757: 	  ) : ChurchInt
+//│ ║  l.856: 	  ) : ChurchInt
 //│ ║         	^^^
 //│ ╟── type variable `'N` leaks out of its scope
 //│ ║  l.7: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -771,13 +870,13 @@ rec def to_ch_A2 n = (
 //│ ║  l.7: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ╙──     	                             ^^
 //│ ╔══[ERROR] Type error in binding of lambda expression
-//│ ║  l.754: 	rec def to_ch_A2 n = (
+//│ ║  l.853: 	rec def to_ch_A2 n = (
 //│ ║         	                 ^^^^^
-//│ ║  l.755: 	    if n == 0 then z
+//│ ║  l.854: 	    if n == 0 then z
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.756: 	    else s (to_ch_A2 (n - 1))
+//│ ║  l.855: 	    else s (to_ch_A2 (n - 1))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.757: 	  ) : ChurchInt
+//│ ║  l.856: 	  ) : ChurchInt
 //│ ║         	^^^
 //│ ╟── type variable `'N` leaks out of its scope
 //│ ║  l.7: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -786,13 +885,13 @@ rec def to_ch_A2 n = (
 //│ ║  l.7: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ╙──     	                             ^^
 //│ ╔══[ERROR] Type error in binding of lambda expression
-//│ ║  l.754: 	rec def to_ch_A2 n = (
+//│ ║  l.853: 	rec def to_ch_A2 n = (
 //│ ║         	                 ^^^^^
-//│ ║  l.755: 	    if n == 0 then z
+//│ ║  l.854: 	    if n == 0 then z
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.756: 	    else s (to_ch_A2 (n - 1))
+//│ ║  l.855: 	    else s (to_ch_A2 (n - 1))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.757: 	  ) : ChurchInt
+//│ ║  l.856: 	  ) : ChurchInt
 //│ ║         	^^^
 //│ ╟── type variable `'N` leaks out of its scope
 //│ ║  l.7: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -801,16 +900,16 @@ rec def to_ch_A2 n = (
 //│ ║  l.7: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ║       	                             ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.284: 	def s n f x = f (n f x)
+//│ ║  l.326: 	def s n f x = f (n f x)
 //│ ╙──       	                 ^^^^^
 //│ ╔══[ERROR] Type error in binding of lambda expression
-//│ ║  l.754: 	rec def to_ch_A2 n = (
+//│ ║  l.853: 	rec def to_ch_A2 n = (
 //│ ║         	                 ^^^^^
-//│ ║  l.755: 	    if n == 0 then z
+//│ ║  l.854: 	    if n == 0 then z
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.756: 	    else s (to_ch_A2 (n - 1))
+//│ ║  l.855: 	    else s (to_ch_A2 (n - 1))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.757: 	  ) : ChurchInt
+//│ ║  l.856: 	  ) : ChurchInt
 //│ ║         	^^^
 //│ ╟── type variable `'N` leaks out of its scope
 //│ ║  l.7: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -819,16 +918,23 @@ rec def to_ch_A2 n = (
 //│ ║  l.7: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ║       	                             ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.284: 	def s n f x = f (n f x)
+//│ ║  l.326: 	def s n f x = f (n f x)
 //│ ╙──       	                 ^^^^^
 //│ to_ch_A2: int -> ChurchInt
 //│         = [Function: to_ch_A2]
 
 :precise-rec-typing
+:e // occurs-check
 rec def to_ch_A2 n = (
     if n == 0 then z
     else s (to_ch_A2 (n - 1))
   ) : ChurchInt
+//│ ╔══[ERROR] Inferred recursive type: 'to_ch_A2
+//│   where
+//│     'to_ch_A2 :> forall 'to_ch_A2 'a 'b. (int -> ChurchInt
+//│   where
+//│     'to_ch_A2 <: int -> ((??N & 'a) -> (??N0 | 'b)) -> (??N0 | 'b) -> (??N & 'a))
+//│ ╙──
 //│ to_ch_A2: 'to_ch_A2
 //│   where
 //│     'to_ch_A2 :> forall 'to_ch_A2. (int -> ChurchInt
@@ -838,6 +944,12 @@ rec def to_ch_A2 n = (
 
 :e // * Since the removal of "recursive definition hacks"
 to_church_ty = to_ch_A2
+//│ ╔══[ERROR] Inferred recursive type: 'to_ch_A2
+//│   where
+//│     'to_ch_A2 :> forall 'to_ch_A2 'a 'b. (int -> ChurchInt
+//│   where
+//│     'to_ch_A2 <: int -> ((??N & 'a) -> (??N0 | 'b)) -> (??N0 | 'b) -> (??N & 'a))
+//│ ╙──
 //│ 'to_ch_A2
 //│   where
 //│     'to_ch_A2 :> forall 'to_ch_A2. (int -> ChurchInt
@@ -846,7 +958,7 @@ to_church_ty = to_ch_A2
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
-//│ ║  l.840: 	to_church_ty = to_ch_A2
+//│ ║  l.946: 	to_church_ty = to_ch_A2
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│             = [Function: to_ch_A21]
@@ -856,22 +968,22 @@ to_church_ty = to_ch_A2
 def to_church_mix n =
   if n == 0 then z
   else s (to_church (n - 1))
-//│ to_church_mix: int -> (forall 'a. 'a -> (forall 'a 'b 'c 'd 'e. (('e & 'b) -> ('b | 'c)
+//│ to_church_mix: int -> (forall 'a. 'a -> (forall 'b 'c 'd 'a 'e. (('d & 'e) -> ('e | 'b)
 //│   where
-//│     ChurchInt <: 'a -> 'e -> 'd
-//│     'a <: 'd -> 'c)))
+//│     ChurchInt <: 'a -> 'd -> 'c
+//│     'a <: 'c -> 'b)))
 //│              = [Function: to_church_mix]
 
 :e
 to_church_ty = to_church_mix
-//│ int -> (forall 'a. 'a -> (forall 'a 'b 'c 'd 'e. (('d & 'e) -> ('e | 'b)
+//│ int -> (forall 'a. 'a -> (forall 'b 'a 'c 'd 'e. (('d & 'c) -> ('c | 'b)
 //│   where
-//│     ChurchInt <: 'a -> 'd -> 'c
-//│     'a <: 'c -> 'b)))
+//│     ChurchInt <: 'a -> 'd -> 'e
+//│     'a <: 'e -> 'b)))
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Type error in def definition
-//│ ║  l.866: 	to_church_ty = to_church_mix
+//│ ║  l.978: 	to_church_ty = to_church_mix
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `'N` leaks out of its scope
 //│ ║  l.7: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -881,21 +993,28 @@ to_church_ty = to_church_mix
 //│ ║       	                             ^^
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this function:
-//│ ║  l.284: 	def s n f x = f (n f x)
+//│ ║  l.326: 	def s n f x = f (n f x)
 //│ ║         	        ^^^^^^^^^^^^^^^
 //│ ╟── • this application:
-//│ ║  l.858: 	  else s (to_church (n - 1))
+//│ ║  l.970: 	  else s (to_church (n - 1))
 //│ ║         	       ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── • this reference:
-//│ ║  l.866: 	to_church_ty = to_church_mix
+//│ ║  l.978: 	to_church_ty = to_church_mix
 //│ ╙──       	               ^^^^^^^^^^^^^
 //│             = [Function: to_church_mix]
 
 
+:e
 // * It would seem we need to distribute back (in the other direction) here, but it works:
 :precise-rec-typing
 rec def to_chD n =
   succD (to_chD n)
+//│ ╔══[ERROR] Inferred recursive type: 'to_chD
+//│   where
+//│     'to_chD :> forall 'a 'M. ('a -> ('M -> 'M) -> 'M -> 'M
+//│   where
+//│     'to_chD <: 'a -> ChurchInt)
+//│ ╙──
 //│ to_chD: 'to_chD
 //│   where
 //│     'to_chD :> forall 'a 'M. ('a -> ('M -> 'M) -> 'M -> 'M
@@ -939,25 +1058,39 @@ rec def to_chD n =
 
 :e // * Since the removal of "recursive definition hacks"
 to_church_ty = to_ch
+//│ ╔══[ERROR] Inferred recursive type: 'a
+//│   where
+//│     'a :> forall 'b 'c 'd 'e 'f. 'c -> (('e & 'd) -> ('e | 'f)
+//│   where
+//│     'a <: 'c -> 'd -> 'b
+//│     'c <: 'b -> 'f)
+//│ ╙──
 //│ int -> 'a -> ('b -> ('b | 'c)
 //│   where
-//│     'a <: 'd -> 'c
-//│     'e <: 'a -> 'b -> 'd)
+//│     'd <: 'a -> 'b -> 'e
+//│     'a <: 'e -> 'c)
 //│   where
-//│     'e :> forall 'f 'g 'h 'i 'j. 'h -> (('j & 'g) -> ('j | 'f)
+//│     'd :> forall 'f 'g 'h 'i 'j. 'h -> (('j & 'g) -> ('j | 'i)
 //│   where
-//│     'h <: 'i -> 'f
-//│     'e <: 'h -> 'g -> 'i)
+//│     'h <: 'f -> 'i
+//│     'd <: 'h -> 'g -> 'f)
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?to_ch ?b ?c ?d. ?to_ch <: int -> ChurchInt` exceeded recursion depth limit (250)
-//│ ║  l.941: 	to_church_ty = to_ch
-//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?b ?to_ch ?c ?d. ?to_ch <: int -> ChurchInt` exceeded recursion depth limit (250)
+//│ ║  l.1060: 	to_church_ty = to_ch
+//│ ║          	^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│             = [Function: to_ch]
 
 :e // * Since the removal of "recursive definition hacks"
 to_church_ty = to_ch_simplif
+//│ ╔══[ERROR] Inferred recursive type: 'a
+//│   where
+//│     'a :> forall 'b 'c 'd 'e. 'c -> ('d -> 'b
+//│   where
+//│     'a <: 'c -> 'd -> 'e
+//│     'c <: 'e -> 'b)
+//│ ╙──
 //│ anything -> 'a -> ('b -> 'c
 //│   where
 //│     'a <: 'd -> 'c
@@ -969,28 +1102,23 @@ to_church_ty = to_ch_simplif
 //│     'f <: 'h -> 'i)
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?b ?c ?d ?to_ch_simplif. ?to_ch_simplif <: int -> ChurchInt` exceeded recursion depth limit (250)
-//│ ║  l.960: 	to_church_ty = to_ch_simplif
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?to_ch_simplif ?a ?b ?c ?d. ?to_ch_simplif <: int -> ChurchInt` exceeded recursion depth limit (250)
+//│ ║  l.1086: 	to_church_ty = to_ch_simplif
+//│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│             = [Function: to_ch_simplif]
 
 // * Redefinition in the context of distrib, just for the record (still infers but doesn't check)
+:e
 rec def to_ch_simplif n = s (to_ch_simplif n)
+//│ ╔══[ERROR] Inferred recursive type: 'a
+//│   where
+//│     'a :> forall 'b 'c 'd 'e. 'b -> ('c -> 'e
+//│   where
+//│     'b <: 'd -> 'e
+//│     'a <: 'b -> 'c -> 'd)
+//│ ╙──
 //│ to_ch_simplif: anything -> 'a -> ('b -> 'c
-//│   where
-//│     'a <: 'd -> 'c
-//│     'e <: 'a -> 'b -> 'd)
-//│   where
-//│     'e :> forall 'f 'g 'h 'i. 'f -> ('g -> 'i
-//│   where
-//│     'e <: 'f -> 'g -> 'h
-//│     'f <: 'h -> 'i)
-//│              = [Function: to_ch_simplif1]
-
-:e // * Since the removal of "recursive definition hacks"
-to_church_ty = to_ch_simplif
-//│ anything -> 'a -> ('b -> 'c
 //│   where
 //│     'd <: 'a -> 'b -> 'e
 //│     'a <: 'e -> 'c)
@@ -999,29 +1127,58 @@ to_church_ty = to_ch_simplif
 //│   where
 //│     'f <: 'h -> 'i
 //│     'd <: 'f -> 'g -> 'h)
+//│              = [Function: to_ch_simplif1]
+
+:e // * Since the removal of "recursive definition hacks"
+to_church_ty = to_ch_simplif
+//│ ╔══[ERROR] Inferred recursive type: 'a
+//│   where
+//│     'a :> forall 'b 'c 'd 'e. 'b -> ('c -> 'e
+//│   where
+//│     'a <: 'b -> 'c -> 'd
+//│     'b <: 'd -> 'e)
+//│ ╙──
+//│ anything -> 'a -> ('b -> 'c
+//│   where
+//│     'a <: 'd -> 'c
+//│     'e <: 'a -> 'b -> 'd)
+//│   where
+//│     'e :> forall 'f 'g 'h 'i. 'f -> ('g -> 'i
+//│   where
+//│     'f <: 'h -> 'i
+//│     'e <: 'f -> 'g -> 'h)
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?to_ch_simplif ?a ?b ?c ?d. ?to_ch_simplif <: int -> ChurchInt` exceeded recursion depth limit (250)
-//│ ║  l.992: 	to_church_ty = to_ch_simplif
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?to_ch_simplif ?b ?c ?d. ?to_ch_simplif <: int -> ChurchInt` exceeded recursion depth limit (250)
+//│ ║  l.1133: 	to_church_ty = to_ch_simplif
+//│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│             = [Function: to_ch_simplif1]
 
 // * Still doesn't work (Same with the full definition)
 :e
 to_church_ty = to_ch_A1
+//│ ╔══[ERROR] Inferred recursive type: 'to_ch_A1
+//│   where
+//│     'to_ch_A1 :> forall 'to_ch_A1. (int -> (forall 'a 'b 'c 'd 'e. 'c -> (('a & 'b) -> ('b | 'e)
+//│   where
+//│     'c <: 'd -> 'e
+//│     ChurchInt <: 'c -> 'a -> 'd))
+//│   where
+//│     'to_ch_A1 <: int -> ChurchInt)
+//│ ╙──
 //│ 'to_ch_A1
 //│   where
-//│     'to_ch_A1 :> forall 'to_ch_A1. (int -> (forall 'a 'b 'c 'd 'e. 'e -> (('c & 'd) -> ('d | 'a)
+//│     'to_ch_A1 :> forall 'to_ch_A1. (int -> (forall 'a 'b 'c 'd 'e. 'a -> (('e & 'c) -> ('c | 'b)
 //│   where
-//│     ChurchInt <: 'e -> 'c -> 'b
-//│     'e <: 'b -> 'a))
+//│     'a <: 'd -> 'b
+//│     ChurchInt <: 'a -> 'e -> 'd))
 //│   where
 //│     'to_ch_A1 <: int -> ChurchInt)
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
-//│ ║  l.1012: 	to_church_ty = to_ch_A1
+//│ ║  l.1160: 	to_church_ty = to_ch_A1
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│             = [Function: to_ch_A11]
@@ -1030,8 +1187,8 @@ to_church_ty = to_ch_A1
 to_church_ty = to_church_mix
 //│ int -> 'a -> ('b -> ('b | 'c)
 //│   where
-//│     ChurchInt <: 'a -> 'b -> 'd
-//│     'a <: 'd -> 'c)
+//│     'a <: 'd -> 'c
+//│     ChurchInt <: 'a -> 'b -> 'd)
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│             = [Function: to_church_mix]

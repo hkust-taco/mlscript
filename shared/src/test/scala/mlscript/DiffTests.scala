@@ -106,6 +106,8 @@ class DiffTests
     
     val exitMarker = "=" * 100
     
+    var occursCheck = false
+    
     val fileContents = os.read(file)
     val allLines = fileContents.splitSane('\n').toList
     val strw = new java.io.StringWriter
@@ -120,6 +122,7 @@ class DiffTests
     def outputSourceCode(code: SourceCode) = code.lines.foreach{line => out.println(outputMarker + line.toString())}
     val allStatements = mutable.Buffer.empty[DesugaredStatement]
     val typer = new Typer(dbg = false, verbose = false, explainErrors = false) {
+      override def recordTypeVars = occursCheck
       override def funkyTuples = file.ext =:= "fun"
       // override def emitDbg(str: String): Unit = if (stdout) System.out.println(str) else output(str)
       override def emitDbg(str: String): Unit = output(str)
@@ -128,6 +131,7 @@ class DiffTests
     var declared: Map[Str, typer.ST] = Map.empty
     val failures = mutable.Buffer.empty[Int]
     val unmergedChanges = mutable.Buffer.empty[Int]
+    typer.createdTypeVars.clear()
     
     case class Mode(
       expectTypeErrors: Bool = false,
@@ -230,8 +234,9 @@ class DiffTests
           case "ApproximateNegativeFunction" => approximateNegativeFunction = true; mode
           case "NoCycleCheck" => noCycleCheck = true; mode
           case "CycleCheck" => noCycleCheck = false; mode
-          case "RecursiveTypes" => noRecursiveTypes = false; mode
-          case "NoRecursiveTypes" => noRecursiveTypes = true; mode
+          case "OccursCheck" => occursCheck = true; mode
+          case "RecursiveTypes" => noRecursiveTypes = false; occursCheck = false; mode
+          case "NoRecursiveTypes" => noRecursiveTypes = true; occursCheck = true; mode
           case "ConstrainedTypes" => constrainedTypes = true; mode
           case "NoConstrainedTypes" => constrainedTypes = false; mode
           case "GeneralizeArguments" => generalizeArguments = true; mode
@@ -477,7 +482,7 @@ class DiffTests
               // else 
               typer.processTypeDefs(typeDefs)(ctx, raise)
             
-            def getType(ty: typer.SimpleType): Type = {
+            def getType(ty: typer.SimpleType, removePolarVars: Bool = true): Type = {
               if (mode.isDebugging) output(s"⬤ Typed as: $ty")
               if (mode.isDebugging) output(s" where: ${ty.showBounds}")
               typer.dbg = mode.dbgSimplif
@@ -487,7 +492,7 @@ class DiffTests
                   def debugOutput(msg: => Str): Unit =
                     if (mode.dbgSimplif) output(msg)
                 }
-                val sim = SimplifyPipeline(ty)(ctx)
+                val sim = SimplifyPipeline(ty, removePolarVars)(ctx)
                 val exp = typer.expandType(sim)(ctx)
                 if (mode.dbgSimplif) output(s"⬤ Expanded: ${exp}")
                 def stripPoly(pt: PolyType): Type =
@@ -693,7 +698,32 @@ class DiffTests
                   (name, typingLines, diagnosticLines.toList, typeBeforeDiags)
               }
             }
-
+            
+            
+            if (occursCheck) {
+              typer.dbg = mode.dbg
+              val tvs = typer.createdTypeVars.toList
+              
+              if (mode.dbg)
+                output(s"${tvs.map(tv => tv -> tv.isRecursive_$(omitTopLevel = true)(ctx))}")
+              
+              val recs = tvs.filter(_.isRecursive_$(omitTopLevel = true)(ctx))
+              
+              recs.find(_.prov.loco.isDefined).orElse(recs.headOption).foreach { tv =>
+                import Message._
+                if (mode.dbg) output("REC: " + tv + tv.showBounds)
+                report(ErrorReport(
+                  msg"Inferred recursive type: ${
+                    getType(tv, removePolarVars = false).show
+                  }" -> tv.prov.loco :: Nil) :: Nil)
+              }
+              
+              typer.dbg = false
+            }
+            
+            typer.createdTypeVars.clear()
+            
+            
             import JSTestBackend._
             
             val executionResults: Result \/ Ls[(ReplHost.Reply, Str)] = if (!allowTypeErrors &&
@@ -887,7 +917,7 @@ object DiffTests {
   
   private val TimeLimit =
     if (sys.env.get("CI").isDefined) Span(30, Seconds)
-    else Span(15, Seconds)
+    else Span(1500, Seconds)
   
   private val pwd = os.pwd
   private val dir = pwd/"shared"/"src"/"test"/"diff"

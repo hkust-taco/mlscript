@@ -11,7 +11,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   
   def stopConstrainingOnFirstFailure: Bool = false
   def verboseConstraintProvenanceHints: Bool = verbose
-  def defaultStartingFuel: Int = 5000
+  def defaultStartingFuel: Int =
+    // 5000
+    10000 // necessary for fat definitions in OCamlList.mls
   var startingFuel: Int = defaultStartingFuel
   def depthLimit: Int =
     // 150
@@ -1180,7 +1182,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     *   or which have bounds and whose level is greater than `above`. */
   def freshenAbove(above: Level, ty: SimpleType,
           rigidify: Bool = false, below: Level = MaxLevel, leaveAlone: Set[TV] = Set.empty)
-        (implicit ctx: Ctx, freshened: MutMap[TV, ST], shadows: Shadows)
+        (implicit ctx: Ctx, freshened: MutMap[TV, ST])
         : SimpleType =
   {
     def freshenImpl(ty: SimpleType, below: Level): SimpleType =

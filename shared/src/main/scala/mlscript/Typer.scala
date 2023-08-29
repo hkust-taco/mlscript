@@ -2,11 +2,13 @@ package mlscript
 
 import scala.collection.mutable
 import scala.collection.mutable.{Map => MutMap, Set => MutSet}
-import scala.collection.immutable.{SortedSet, SortedMap}
+import scala.collection.immutable.{SortedMap, SortedSet}
 import scala.util.chaining._
 import scala.annotation.tailrec
-import mlscript.utils._, shorthands._
+import mlscript.utils._
+import shorthands._
 import mlscript.Message._
+import mlscript.codegen.Helpers
 
 /** A class encapsulating type inference state.
  *  It uses its own internal representation of types and type variables, using mutable data structures.
@@ -277,6 +279,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       "<=" -> numberBinPred,
       ">=" -> numberBinPred,
       "==" -> numberBinPred,
+      "<>" -> numberBinPred,
       "&&" -> fun(singleTup(BoolType), fun(singleTup(BoolType), BoolType)(noProv))(noProv),
       "||" -> fun(singleTup(BoolType), fun(singleTup(BoolType), BoolType)(noProv))(noProv),
       "id" -> {
@@ -966,6 +969,150 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         } catch {
           case e: DesugaringException => err(e.messages)
         }
+      case AdtMatchWith(cond, arms) =>
+        println(s"typed condition term ${cond}")
+        val cond_ty = typeTerm(cond)
+        val ret_ty = if (arms.length === 1) {
+          freshVar(prov.copy(desc = "let expression"), N)
+        } else {
+          freshVar(prov.copy(desc = "match expression"), N)
+        }
+
+        // // cache type argument variables for adts
+        // // so as to reuse them for each case expression
+        // // that has the same adt type
+        // val alsCache: MutMap[Str, Ls[TV]] = MutMap()
+
+        // the assumed shape of an IfBody is a List[IfThen, IfThen, IfElse] with an optional IfElse at the end
+        arms.foreach { case AdtMatchPat(pat, rhs) =>
+          val nestCtx = ctx.nest
+          def handlePat(pat: Term, expected: SimpleType): Unit = pat match {
+            case Var("_") =>
+            // Cases where the pattern is a single variable term
+            // it can introduce a new pattern variable or it can be a constructor
+            // that takes no argument
+            // `case x -> expr`
+            // `case End -> expr` or `case false -> expr`
+            case v@Var(name) =>
+              println(s"type pattern $v with loc: ${v.toLoc}")
+              // update context with variables
+              ctx.tyDefs.get(name).flatMap {
+                case TypeDef(Cls, _, _, _: TypeRef, _, _, _, _, _, S(adtData)) => S(adtData)
+                case TypeDef(Cls, _, _, _, _, _, _, _, _, S(adtData)) =>
+                  err(msg"Missing parameter list for pattern $name", v.toLoc)
+                  S(adtData)
+                case _ => N
+              }.fold {
+                // `case x -> expr` catch all with a new variable in the context
+                println(s"catch all $v")
+                nestCtx += name -> VarSymbol(expected, v)
+              } {
+                // `case End -> expr` or `case false -> expr` or `case [] -> expr`
+                // where case is a variant of an adt with no type arguments
+                case AdtInfo(alsName) =>
+                  // get adt from cache or initialize a new one with fresh vars
+                  // this is so that all case expressions can share
+                  // the same type variables for the adt
+                  val newTargs = // alsCache.getOrElseUpdate(
+                    // alsName.name,
+                    ctx.tyDefs.getOrElse(alsName.name, lastWords(s"Could not find ${alsName}"))
+                      .targs.map(tv => freshVar(tv.prov, N, tv.nameHint))
+                  // )
+                  println(s"pattern is adt: $alsName with $newTargs")
+                  val adt_ty = TypeRef(alsName, newTargs)(TypeProvenance(v.toLoc, "pattern"))
+                    .withProv(TypeProvenance(cond.toLoc, "match `condition`"))
+                  con(expected, adt_ty, expected)
+                  ()
+              }
+            // Handle tuples specially since they don't have an explicit constructor
+            case tup@Tup(fs) =>
+              println(s"fields $fs")
+              val tupArgs = // alsCache.getOrElseUpdate("Tup" + fs.length.toString,
+                fs.map(_ => freshVar(noProv, N))
+              // )
+
+              val fld_ty = tupArgs.map(elem => N -> FieldType(N, elem)(elem.prov))
+              val caseAdtTyp = TypeProvenance(tup.toLoc, "pattern")
+              val adt_ty = TupleType(fld_ty)(caseAdtTyp)
+                .withProv(TypeProvenance(cond.toLoc, "match `condition`"))
+              con(expected, adt_ty, adt_ty)
+
+              fs.zipWithIndex.foreach {
+                case ((_, Fld(_, _, argTerm)), fieldIdx) =>
+                  println(s"Typing $argTerm field $fieldIdx in tup")
+                  val fieldType = tupArgs(fieldIdx)
+                  println(s"Field $argTerm : $fieldType")
+                  handlePat(argTerm, fieldType)
+              }
+            case caseAdt@App(Var(ctorNme), patArgs: Tup) =>
+              println(s"Typing case ($ctorNme)")
+
+              object BodyRecordType {
+                def unapply(ty: SimpleType): Opt[RecordType] = ty match {
+                  case ty: RecordType => S(ty)
+                  case ProvType(underlying) => unapply(underlying)
+                  case ComposedType(false, lhs, rhs) => unapply(lhs) orElse unapply(rhs)
+                  case _ => N
+                }
+              }
+
+              // find the alias type returned by constructor
+              val (body, tparams, AdtInfo(alsName)) = ctx.tyDefs.get(ctorNme).flatMap {
+                case TypeDef(Cls, _, tparamsargs, BodyRecordType(body), _, _, _, _, _, S(adtInfo)) => S(body, tparamsargs, adtInfo)
+                case _ => N
+              }.getOrElse(lastWords(s"$ctorNme cannot be pattern matched"))
+
+              // get alias type from cache or initialize a new one with fresh vars
+              // this is so that all case expressions can share
+              // the same type variables for the adt
+              val newTargs = // alsCache.getOrElseUpdate(
+                // alsName.name,
+                ctx.tyDefs.getOrElse(alsName.name, lastWords(s"Could not find $alsName"))
+                  .targs.map(tv => freshVar(tv.prov, N, tv.nameHint))
+              // )
+              val caseAdtTyp = TypeProvenance(caseAdt.toLoc, "pattern")
+              val newAlsTy = TypeRef(alsName, newTargs)(caseAdtTyp)
+              con(expected, newAlsTy, expected)
+              println(s"adt_ty $newAlsTy")
+
+              val mapping: Map[ST, ST] = tparams.map(_._2).zip(newTargs).toMap
+              val argFields = subst(body, mapping) match {
+                case RecordType(fields) => fields.map(_._2.ub)
+                case _ => die
+              }
+              val patArgFields = patArgs.fields.map(_._2.value)
+
+              assert(argFields.sizeCompare(patArgFields) === 0)
+
+              patArgFields.lazyZip(argFields).foreach(handlePat)
+            case pat: Lit =>
+              val litTy = pat match {
+                case DecLit(_) => DecType
+                case IntLit(_) => IntType
+                case StrLit(_) => StrType
+                case UnitLit(_) => UnitType
+              }
+              con(expected, litTy.withProv(tp(pat.toLoc, "literal pattern")), expected)
+              ()
+            case Bind(t, v@Var(name)) =>
+              nestCtx += name -> VarSymbol(expected, v)
+              handlePat(t, expected)
+            case Bra(false, pat) =>
+              handlePat(pat, expected)
+            // case Asc(trm, ty) =>
+            //   con(expected, typeType(ty), expected)
+            //   ()
+            // and others
+            case pat =>
+              lastWords(s"Cannot handle pattern ${pat}")
+          }
+
+          handlePat(pat, cond_ty)
+          nestCtx |> { implicit ctx =>
+            con(typeTerm(rhs), ret_ty, ret_ty)
+          }
+        }
+        ret_ty
       case New(S((nmedTy, trm)), TypingUnit(Nil)) =>
         typeMonomorphicTerm(App(Var(nmedTy.base.name).withLocOf(nmedTy), trm))
       case New(base, args) => ???

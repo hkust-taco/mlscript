@@ -827,7 +827,7 @@ def a = fun f -> f id
 //│            = [Function: church_succ]
 //│ f: Sa -> Sid
 //│  = [Function: f]
-//│ f_: ((forall 'a 'b. ('a -> 'b & 'a) -> 'b) -> 'c & (forall 'd 'e. ((forall 'f. anything -> 'f -> 'f) -> 'e -> anything) -> 'e -> 'd -> 'd) -> anything) -> 'c
+//│ f_: ((forall 'a 'b. ('a -> 'b & 'a) -> 'b) -> 'c & (forall 'd 'e. ((forall 'f. anything -> 'f -> 'f) -> 'd -> anything) -> 'd -> 'e -> 'e) -> anything) -> 'c
 //│   = [Function: f_]
 //│ a: ((forall 'a. 'a -> 'a) -> 'b) -> 'b
 //│  = [Function: a]
@@ -925,6 +925,13 @@ fun x -> ( (((x : 'a) : Sid) : 'a), x : 'a)
 // Same as `id1` in `ex_demo.mls`; works with `:RecursiveTypes`
 :e
 rec def id_ x = if true then x else id_ id_ x
+//│ ╔══[ERROR] Inferred recursive type: 'a
+//│   where
+//│     'a := 'b -> 'a
+//│     'b :> 'b -> 'a
+//│        <: 'a
+//│ ║  l.927: 	rec def id_ x = if true then x else id_ id_ x
+//│ ╙──       	                                    ^^^^^^^
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
 //│ ║  l.927: 	rec def id_ x = if true then x else id_ id_ x
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -947,6 +954,13 @@ def id: Sid
 // * Note: infers with `:RecursiveTypes` but does not signature-check
 :e
 rec def id x = if true then x else id id x
+//│ ╔══[ERROR] Inferred recursive type: 'a
+//│   where
+//│     'a := 'b -> 'a
+//│     'b :> 'b -> 'a
+//│        <: 'a
+//│ ║  l.956: 	rec def id x = if true then x else id id x
+//│ ╙──       	                                   ^^^^^
 //│ 'id
 //│   where
 //│     'id :> 'a -> 'b
@@ -957,20 +971,20 @@ rec def id x = if true then x else id id x
 //│   <:  id:
 //│ Sid
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
-//│ ║  l.949: 	rec def id x = if true then x else id id x
+//│ ║  l.956: 	rec def id x = if true then x else id id x
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.949: 	rec def id x = if true then x else id id x
+//│ ║  l.956: 	rec def id x = if true then x else id id x
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `'a` is not a function
 //│ ║  l.765: 	type Sid = forall 'a. 'a -> 'a
 //│ ║         	                      ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.949: 	rec def id x = if true then x else id id x
+//│ ║  l.956: 	rec def id x = if true then x else id id x
 //│ ║         	                                   ^^^^^^^
 //│ ╟── from reference:
-//│ ║  l.949: 	rec def id x = if true then x else id id x
+//│ ║  l.956: 	rec def id x = if true then x else id id x
 //│ ║         	                            ^
 //│ ╟── Note: quantified type variable 'a is defined at:
 //│ ║  l.765: 	type Sid = forall 'a. 'a -> 'a

@@ -50,14 +50,15 @@ trait TypeSimplifier { self: Typer =>
           // *  Maybe we should process with the appropriate parent, but still generate an `assignedTo`?
           // * (Tried it, and it makes almost no difference in the end result.)
           allVarPols(tv) match {
+            case p if p.isEmpty || nv.assignedTo.nonEmpty =>
+              nv.assignedTo = S(process(ty, N))
+            case N => die // covered
             case S(true) =>
               nv.lowerBounds =
                 (process(ty, S(true -> tv)) :: Nil).filterNot(_.isBot)
             case S(false) =>
               nv.upperBounds =
                 (process(ty, S(false -> tv)) :: Nil).filterNot(_.isTop)
-            case N =>
-              nv.assignedTo = S(process(ty, N))
           }
         case N =>
           nv.lowerBounds = if (allVarPols(tv).forall(_ === true))
@@ -341,9 +342,13 @@ trait TypeSimplifier { self: Typer =>
       pol match {
         case S(p) => helper(DNF.mk(MaxLevel, Nil, ty, p)(ctx, ptr = true, etf = false), pol, canDistribForall)
         case N =>
-          val dnf1 = DNF.mk(MaxLevel, Nil, ty, false)(ctx, ptr = true, etf = false)
-          val dnf2 = DNF.mk(MaxLevel, Nil, ty, true)(ctx, ptr = true, etf = false)
-          TypeBounds.mk(helper(dnf1, S(false), canDistribForall), helper(dnf2, S(true), canDistribForall))
+          if (!ty.mentionsTypeBounds)
+            helper(DNF.mk(MaxLevel, Nil, ty, true)(ctx, ptr = true, etf = false), N, canDistribForall)
+          else {
+            val dnf1 = DNF.mk(MaxLevel, Nil, ty, false)(ctx, ptr = true, etf = false)
+            val dnf2 = DNF.mk(MaxLevel, Nil, ty, true)(ctx, ptr = true, etf = false)
+            TypeBounds.mk(helper(dnf1, S(false), canDistribForall), helper(dnf2, S(true), canDistribForall))
+          }
       }
     }(r => s"~> $r")
     
@@ -366,7 +371,7 @@ trait TypeSimplifier { self: Typer =>
   
   
   /** Remove polar type variables, unify indistinguishable ones, and inline the bounds of non-recursive ones. */
-  def simplifyType(st: SimpleType, pol: Opt[Bool] = S(true), removePolarVars: Bool = true, inlineBounds: Bool = true)(implicit ctx: Ctx): SimpleType = {
+  def simplifyType(st: SimpleType, removePolarVars: Bool, pol: Opt[Bool] = S(true), inlineBounds: Bool = true)(implicit ctx: Ctx): SimpleType = {
     
     
     
@@ -396,13 +401,17 @@ trait TypeSimplifier { self: Typer =>
             }
             tv.assignedTo match {
               case S(ty) =>
-                if (pol.base =/= S(false))
-                  analyzed1.setAndIfUnset(tv -> true) { apply(pol)(ty) }
-                if (pol.base =/= S(true))
-                  analyzed1.setAndIfUnset(tv -> false) { apply(pol.contravar)(ty) }
-                // * Note: in principle this should also do it,
-                // *  but it currently leads to a couple worse-looking simplified types:
-                // analyzed1.setAndIfUnset(tv -> true) { apply(pol)(ty) }
+                // * This is quite subtle!
+                // * We should traverse assigned type variables as though they weren't there,
+                // * but they may appear in their own assignment,
+                // * so we still need to check they haven't been traversed yet.
+                // * Moreover, traversing them at different polarities may produce different results
+                // * (think of `'A# -> 'A#` where 'A# := 'X`),
+                // * so we should remember the traversal polarity in the cache.
+                // * Thanks to the invariant that the assignment shouldn't have a higher level than
+                // * the type variable itself, I think it is fine to never re-traverse the assignment
+                // * at the same polarity *even though the polmap may be different*.
+                analyzed1.setAndIfUnset(tv -> pol(tv).getOrElse(false)) { apply(pol)(ty) }
               case N =>
                 if (pol(tv) =/= S(false))
                   analyzed1.setAndIfUnset(tv -> true) { tv.lowerBounds.foreach(apply(pol.at(tv.level, true))) }
@@ -607,7 +616,16 @@ trait TypeSimplifier { self: Typer =>
     // val allVars = st.getVars
     val allVars = analyzed1.iterator.map(_._1).toSortedSet
     
-    var recVars = MutSet.from(allVars.iterator.filter(_.isRecursive_$))
+    def computeRecVars =
+      allVars.iterator.filter(v => !varSubst.contains(v) && (
+        v.isRecursive_$(omitTopLevel = false)
+        // * Note: a more precise version could be the following,
+        // * but it doesn't seem to change anything in our test suite, so I left if commented for now:
+        // // * Only consider recursive those variables that recursive in their *reachable* bounds:
+        // occNums.contains(true -> v) && v.isPosRecursive_$ || occNums.contains(false -> v) && v.isNegRecursive_$
+      )).toSet
+    
+    var recVars = computeRecVars
     
     println(s"[vars] ${allVars}")
     println(s"[rec] ${recVars}")
@@ -637,7 +655,7 @@ trait TypeSimplifier { self: Typer =>
     
     // * Remove variables that are 'dominated' by another type or variable
     // *  A variable v dominated by T if T is in both of v's positive and negative cooccurrences
-    allVars.foreach { case v => if (!varSubst.contains(v)) {
+    allVars.foreach { case v => if (v.assignedTo.isEmpty && !varSubst.contains(v)) {
       println(s"2[v] $v ${coOccurrences.get(true -> v)} ${coOccurrences.get(false -> v)}")
       
       coOccurrences.get(true -> v).iterator.flatMap(_.iterator).foreach {
@@ -767,7 +785,7 @@ trait TypeSimplifier { self: Typer =>
     // * applying the var substitution and simplifying some things on the fly.
     
     // * The recursive vars may have changed due to the previous phase!
-    recVars = MutSet.from(allVars.iterator.filter(v => !varSubst.contains(v) && v.isRecursive_$))
+    recVars = computeRecVars
     println(s"[rec] ${recVars}")
     
     val renewals = MutMap.empty[TypeVariable, TypeVariable]
@@ -803,6 +821,7 @@ trait TypeSimplifier { self: Typer =>
       case SkolemTag(id) => transform(id, pol, parents)
       case _: TypeTag | ExtrType(_) => st
       case tv: TypeVariable if parents.exists(_ === tv) =>
+        if (pol(tv).isEmpty) transform(tv, pol, parents - tv) else
         if (pol(tv).getOrElse(lastWords(s"parent in invariant position $tv $parents"))) BotType else TopType
       case tv: TypeVariable =>
         varSubst.get(tv) match {
@@ -835,23 +854,25 @@ trait TypeSimplifier { self: Typer =>
             pol(tv) match {
               case S(p) if inlineBounds && !occursInvariantly(tv) && !recVars.contains(tv) =>
                 // * Inline the bounds of non-rec non-invar-occ type variables
-                println(s"Inlining bounds of $tv (~> $res)")
+                println(s"Inlining [${printPol(p)}] bounds of $tv (~> $res)")
                 if (p) mergeTransform(true, pol, tv, Set.single(tv), canDistribForall) | res
-                else mergeTransform(false, pol.contravar, tv, Set.single(tv), canDistribForall) & res
-              case _ if (!wasDefined) =>
+                else mergeTransform(false, pol, tv, Set.single(tv), canDistribForall) & res
+              case poltv if (!wasDefined) =>
                 def setBounds = {
-                  trace(s"Setting bounds of $res...") {
+                  trace(s"Setting [±] bounds of $res... (failing ${printPol(poltv)}, inlineBounds $inlineBounds, !occursInvariantly ${!occursInvariantly(tv)}, !recVars.contains(tv) ${!recVars.contains(tv)})") {
                     tv.assignedTo match {
                       case S(ty) =>
-                        res.assignedTo = S(transform(ty, PolMap.neu, semp, canDistribForall))
+                        res.assignedTo = S(transform(ty, pol.invar, semp, canDistribForall))
                       case N =>
-                        res.lowerBounds = tv.lowerBounds.map(transform(_, pol.at(tv.level, true), Set.single(tv)))
-                        res.upperBounds = tv.upperBounds.map(transform(_, pol.at(tv.level, false), Set.single(tv)))
+                        if (occNums.contains(true -> tv))
+                          res.lowerBounds = tv.lowerBounds.map(transform(_, pol.at(tv.level, true), Set.single(tv)))
+                        if (occNums.contains(false -> tv))
+                          res.upperBounds = tv.upperBounds.map(transform(_, pol.at(tv.level, false), Set.single(tv)))
                     }
                     res
                   }()
                 }
-                pol(tv) match {
+                poltv match {
                   case polo @ S(p)
                     if coOccurrences.get(!p -> tv).isEmpty // * If tv is polar...
                     && tv.assignedTo.isEmpty // TODO handle?
@@ -896,8 +917,9 @@ trait TypeSimplifier { self: Typer =>
           transform(lb, PolMap.neg, parents, canDistribForall),
           transform(ub, PolMap.pos, parents, canDistribForall),
           noProv
-        ))(pol =>
-          if (pol) transform(ub, PolMap.pos, parents) else transform(lb, PolMap.neg, parents))
+        ))(p =>
+          if (p) transform(ub, pol, parents) else transform(lb, pol, parents)
+        )
       case PolymorphicType(plvl, bod) =>
         val res = transform(bod, pol.enter(plvl), parents, canDistribForall = S(plvl))
         canDistribForall match {
@@ -958,7 +980,8 @@ trait TypeSimplifier { self: Typer =>
           st.unwrapProvs match {
       case tv @ AssignedVariable(ty) =>
         processed.setAndIfUnset(tv) {
-          tv.assignedTo = S(process(pol, ty, S(tv)))
+          // tv.assignedTo = S(process(pol, ty, S(tv))) // * WRONG!
+          tv.assignedTo = S(process(N, ty, S(tv)))
         }
         tv
       case tv: TV =>
@@ -1083,8 +1106,11 @@ trait TypeSimplifier { self: Typer =>
   abstract class SimplifyPipeline {
     def debugOutput(msg: => Str): Unit
     
-    def apply(st: ST)(implicit ctx: Ctx): ST = {
+    def apply(st: ST, removePolarVars: Bool = true)(implicit ctx: Ctx): ST = {
       var cur = st
+      
+      debugOutput(s"⬤ Initial: ${cur}")
+      debugOutput(s" where: ${cur.showBounds}")
       
       cur = removeIrrelevantBounds(cur, inPlace = false)
       debugOutput(s"⬤ Cleaned up: ${cur}")
@@ -1094,7 +1120,7 @@ trait TypeSimplifier { self: Typer =>
       debugOutput(s"⬤ Unskid: ${cur}")
       debugOutput(s" where: ${cur.showBounds}")
       
-      cur = simplifyType(cur)
+      cur = simplifyType(cur, removePolarVars)
       debugOutput(s"⬤ Type after simplification: ${cur}")
       debugOutput(s" where: ${cur.showBounds}")
       
@@ -1118,7 +1144,7 @@ trait TypeSimplifier { self: Typer =>
       // * The DNFs introduced by `normalizeTypes_!` may lead more coocc info to arise
       // *  by merging things like function types together...
       // * So we need another pass of simplification!
-      cur = simplifyType(cur)
+      cur = simplifyType(cur, removePolarVars)
       // cur = simplifyType(simplifyType(cur)(ct)
       debugOutput(s"⬤ Resim: ${cur}")
       debugOutput(s" where: ${cur.showBounds}")

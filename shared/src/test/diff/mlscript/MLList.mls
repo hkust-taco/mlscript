@@ -27,7 +27,7 @@ rec def find(table, key) =
 //│     = [Function: find]
 
 ls = cons({key="I"; val=id}, cons({key="omega"; val=fun x -> x x}, nil))
-//│ ls: List[{key: "I" | "omega", val: forall 'a 'b 'c. ('b -> 'c & 'a & 'b) -> ('c | 'a)}]
+//│ ls: List[{key: "I" | "omega", val: forall 'a 'b 'c. ('a -> 'b & 'c & 'a) -> ('b | 'c)}]
 //│   = Cons {
 //│       head: { key: 'I', val: [Function: id] },
 //│       tail: Cons { head: { key: 'omega', val: [Function: val] }, tail: Nil {} }

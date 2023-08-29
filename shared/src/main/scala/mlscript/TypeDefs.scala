@@ -36,13 +36,20 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
     baseClasses: Set[TypeName],
     toLoc: Opt[Loc],
     positionals: Ls[Str],
+    // maps a class to it's adt by name and maps params to adt param by position
+    // for e.g. in type 'a, 'b either = Left of 'a | Right of 'b
+    // Right will have an adtData = S((TypeName("either"), List(1)))
+    // indicating that it's adt is either and it's param is the 1th param of either
+    adtData: Opt[AdtInfo] = N
   ) {
     def allBaseClasses(ctx: Ctx)(implicit traversed: Set[TypeName]): Set[TypeName] =
       baseClasses.map(v => TypeName(v.name.decapitalize)) ++
         baseClasses.iterator.filterNot(traversed).flatMap(v =>
           ctx.tyDefs.get(v.name).fold(Set.empty[TypeName])(_.allBaseClasses(ctx)(traversed + v)))
     val (tparams: List[TypeName], targs: List[TypeVariable]) = tparamsargs.unzip
-    val thisTv: TypeVariable = freshVar(noProv, N, S("this"), Nil, TypeRef(nme, targs)(noProv) :: Nil)(1) // FIXME could N here result in divergence? cf. absence of shadow
+    // * This is lazy so that the variable is not created if the type doesn't end up being processed,
+    // * which may happen if it is ill-formed.
+    lazy val thisTv: TypeVariable = freshVar(noProv, N, S("this"), Nil, TypeRef(nme, targs)(noProv) :: Nil)(1) // FIXME coudl N here result in divergence? cf. absence of shadow
     var tvarVariances: Opt[VarianceStore] = N
     def getVariancesOrDefault: collection.Map[TV, VarianceInfo] =
       tvarVariances.getOrElse(Map.empty[TV, VarianceInfo].withDefaultValue(VarianceInfo.in))
@@ -181,7 +188,7 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
           val bodyTy =
             typePolyType(td.body, simplify = false)(ctx, raise, tparamsargs.map(_.name -> _).toMap, newDefsInfo)
           val td1 = TypeDef(td.kind, td.nme, tparamsargs.toList, bodyTy,
-            td.mthDecls, td.mthDefs, baseClassesOf(td), td.toLoc, td.positionals.map(_.name))
+            td.mthDecls, td.mthDefs, baseClassesOf(td), td.toLoc, td.positionals.map(_.name), td.adtInfo)
           allDefs += n -> td1
           S(td1)
       }
@@ -706,10 +713,11 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
           case Without(base, names) => updateVariance(base, curVariance.flip)
           case Overload(alts) => alts.foreach(updateVariance(_, curVariance))
           case PolymorphicType(lvl, bod) =>
-            // * [FIXME:1](LP): here we should actually ignore from the analysis
+            // * It seems we should want to ignore from the analysis
             // *  those type vars that are being quantified...
             // *  When the same variable occurs both as quantified and not quantified
-            // *  in a type, this can make a difference (like currently in `analysis/Weird.mls`)
+            // *  in a type, this could make a difference
+            // *  (like it used to in `analysis/Weird.mls`)
             updateVariance(bod, curVariance)
           case ConstrainedType(cs, bod) =>
             cs.foreach { lu =>
@@ -738,7 +746,7 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
       val visitedSet: MutSet[Bool -> TypeVariable] = MutSet()
       varianceUpdated = false;
       tyDefs.foreach {
-        case t @ TypeDef(k, nme, _, body, mthDecls, mthDefs, _, _, _) =>
+        case t @ TypeDef(k, nme, _, body, mthDecls, mthDefs, _, _, _, _) =>
           trace(s"${k.str} ${nme.name}  ${
                 t.tvarVariances.getOrElse(die).iterator.map(kv => s"${kv._2} ${kv._1}").mkString("  ")}") {
             updateVariance(body, VarianceInfo.co)(t, visitedSet)

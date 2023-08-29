@@ -143,7 +143,7 @@ let f = choose id in (f auto, f succ)
 //│ res: (forall 'b 'a. (forall 'a0. 'a0 -> 'a0 & 'b) -> ('a -> 'a | 'b), forall 'b. (int & 'b) -> (int | 'b),)
 
 let f = choose id in (f auto2, f succ)
-//│ res: (forall 'a 'b 'c. ('b -> 'c & 'b & 'a) -> ('c | 'a), forall 'a. (int & 'a) -> (int | 'a),)
+//│ res: (forall 'a 'b 'c. ('a -> 'b & 'a & 'c) -> ('b | 'c), forall 'c. (int & 'c) -> (int | 'c),)
 
 // ------------ Sec 6 ------------
 

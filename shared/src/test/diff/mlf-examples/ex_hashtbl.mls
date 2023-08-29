@@ -150,7 +150,7 @@ table = hashtbl_add table "one" (fun f -> fun x -> f x)
 table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
 //│ table: List[nothing]
 //│ table: List[("one", forall 'a 'b. ('a -> 'b) -> 'a -> 'b,)]
-//│ table: List[("one" | "two", forall 'a 'b 'c. ('a -> 'b & 'b -> 'c & 'a -> 'c) -> 'a -> 'c,)]
+//│ table: List[("one" | "two", forall 'a 'b 'c. ('c -> 'a & 'a -> 'b & 'c -> 'b) -> 'c -> 'b,)]
 
 // let zog =
 //   printInt (add (nfind table "one") (nfind table "two"))

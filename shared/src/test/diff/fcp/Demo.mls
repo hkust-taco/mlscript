@@ -1,0 +1,69 @@
+
+:NoJS // TODO support JS code-gen for datatypes
+
+
+datatype Option[A] = Some(A) | None
+//│ Defined class Option[+A]
+//│ Declared Option.Some: Option['A] -> ('A,)
+//│ Declared Option.None: Option[?] -> anything
+//│ Defined class Some[+A]
+//│ Defined class None[+A]
+//│ Some: 'a -> Option['a]
+//│ None: Option[nothing]
+
+def foo f = (f 123, f true)
+fooid = foo id
+fooSome = foo Some
+//│ foo: (123 -> 'a & true -> 'b) -> ('a, 'b,)
+//│ fooid: (123, true,)
+//│ fooSome: (Option[123], Option[true],)
+
+def bar f = (f (fun x -> x), f (fun x -> Some x))
+test = bar foo
+//│ bar: ((forall 'a. 'a -> 'a) -> 'b & (forall 'c. 'c -> Option['c]) -> 'd) -> ('b, 'd,)
+//│ test: ((123, true,), (Option[123], Option[true],),)
+
+
+datatype List[A] = Cons(A, List[A]) | Nil
+//│ Defined class List[+A]
+//│ Declared List.Cons: List['A] -> ('A, List['A],)
+//│ Declared List.Nil: List[?] -> anything
+//│ Defined class Cons[+A]
+//│ Defined class Nil[+A]
+//│ Cons: ('a, List['a],) -> List['a]
+//│ Nil: List[nothing]
+
+rec def find(table, key) =
+  match table with
+    | Nil -> None
+    | Cons(h, t) ->
+        if h.key == key then Some(h.val) else find(t, key)
+//│ find: (List[{key: number, val: 'a}], number,) -> Option['a]
+
+
+ls = Cons({key=0; val=id}, Cons({key=1; val=fun x -> x x}, Nil))
+//│ ls: List[{key: 0 | 1, val: forall 'a 'b 'c. ('a -> 'b & 'c & 'a) -> ('b | 'c)}]
+
+def found: Option[forall 'a 'b. ('a -> 'b & 'a) -> ('b | 'a)]
+//│ found: Option[forall 'a 'b. ('a -> 'b & 'a) -> ('a | 'b)]
+
+found = find(ls, 1)
+//│ Option[forall 'a 'b 'c. ('a -> 'b & 'a & 'c) -> ('b | 'c)]
+//│   <:  found:
+//│ Option[forall 'a 'b. ('a -> 'b & 'a) -> ('a | 'b)]
+
+match found with
+  | None -> ("???", false)
+  | Some(r) -> (r id "!!!", r id true)
+//│ res: ("!!!" | "???", bool,)
+
+
+use fnd = match fnd with
+  | None -> ("???", false)
+  | Some(r) -> (r id "!!!", r id true)
+//│ use: Option[(forall 'a. 'a -> 'a) -> ("!!!" -> 'b & true -> 'c)] -> ("???" | 'b, false | 'c,)
+
+use found
+//│ res: ("!!!" | "???", bool,)
+
+

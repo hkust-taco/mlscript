@@ -193,10 +193,10 @@ def foo key = match_opt (
     fun () -> fun f -> id,
     fun v -> v
   ) (find table key)
-//│ foo: anything -> ('a -> 'b) -> 'a -> ('a | 'b)
+//│ foo: anything -> ('a -> 'b) -> 'a -> ('b | 'a)
 
 foo 1
-//│ res: ('a -> 'b) -> 'a -> ('a | 'b)
+//│ res: ('a -> 'b) -> 'a -> ('b | 'a)
 
 :e
 foo 1 2
