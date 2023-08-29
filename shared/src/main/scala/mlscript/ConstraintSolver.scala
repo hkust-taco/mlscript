@@ -1082,7 +1082,12 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case p @ ProvType(und) => ProvType(extrude(und, lowerLvl, pol, upperLvl))(p.prov)
       case p @ ProxyType(und) => extrude(und, lowerLvl, pol, upperLvl)
       case tt @ SkolemTag(id) =>
-        if (tt.level > lowerLvl) {
+        if (tt.level > upperLvl) {
+          extrude(id, lowerLvl, pol, upperLvl) match {
+            case id: TV => SkolemTag(id)(tt.prov)
+            case _ => die
+          }
+        } else if (tt.level > lowerLvl) {
             // * When a rigid type variable is extruded,
             // * we need to essentially widen it to Top or Bot.
             // * Creating a new skolem instead, as was done at some point, is actually unsound.
@@ -1091,7 +1096,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             // * which achieves the same effect as Top/Bot.
             new Extruded(!pol, tt)(
               tt.prov.copy(desc = "extruded type variable reference"), reason)
-        } else ty
+        } else die // shouldn't happen
       case _: ClassTag | _: TraitTag | _: Extruded => ty
       case tr @ TypeRef(d, ts) =>
         TypeRef(d, tr.mapTargs(S(pol)) {

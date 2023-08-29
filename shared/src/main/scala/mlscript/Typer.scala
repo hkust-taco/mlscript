@@ -820,14 +820,15 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           val param_ty = typePattern(pat)(newCtx, raise, vars)
           val midCtx = newCtx
           val body_ty = typeTerm(body)(newCtx, raise, vars,
-            doGenLambdas && (generalizeCurriedFunctions || constrainedTypes))
+            generalizeCurriedFunctions || doGenLambdas && constrainedTypes)
           FunctionType(param_ty, body_ty)(tp(term.toLoc, "function"))
         }
       case Lam(pat, body) =>
         val newCtx = ctx.nest
         val param_ty = typePattern(pat)(newCtx, raise, vars)
         assert(!doGenLambdas)
-        val body_ty = typeTerm(body)(newCtx, raise, vars, genLambdas)
+        val body_ty = typeTerm(body)(newCtx, raise, vars,
+          generalizeCurriedFunctions || doGenLambdas)
         FunctionType(param_ty, body_ty)(tp(term.toLoc, "function"))
       case App(App(Var("is"), _), _) =>
         val desug = If(IfThen(term, Var("true")), S(Var("false")))
@@ -1128,8 +1129,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             case _ => die
           }
           vars ++ newVars |> { implicit vars =>
-            implicit val genLambdas: GenLambdas = false
-            typeTerm(bod)
+            typeMonomorphicTerm(bod)
           }
         }
       case Inst(bod) =>

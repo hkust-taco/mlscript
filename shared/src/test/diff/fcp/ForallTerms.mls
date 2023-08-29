@@ -60,21 +60,39 @@ k2 r.f
 //│    = [ 0, true ]
 
 
+// * Interesting trick: can use an empty `forall` to force generalization of curried lambdas:
+:ns
+f = fun x -> fun y -> (x, y)
+g = fun x -> forall. fun y -> (x, y)
+//│ f: forall 'a 'b. 'b -> 'a -> ('b, 'a,)
+//│  = [Function: f1]
+//│ g: forall 'a. 'a -> (forall 'b. 'b -> ('a, 'b,))
+//│  = [Function: g]
+
+// * They still appear the same after simplification, due to distributivity of `forall` over `->`:
+f
+g
+//│ res: 'a -> 'b -> ('a, 'b,)
+//│    = [Function: f1]
+//│ res: 'a -> 'b -> ('a, 'b,)
+//│    = [Function: g]
+
+
 
 // * Explicitly-bound type variables are rigid (like in OCaml)
 :e
 f = forall 'A. fun (x: 'A) -> x + 1
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.66: 	f = forall 'A. fun (x: 'A) -> x + 1
+//│ ║  l.84: 	f = forall 'A. fun (x: 'A) -> x + 1
 //│ ║        	                              ^^^
 //│ ╟── rigid type variable of type `'A` is not an instance of type `int`
-//│ ║  l.66: 	f = forall 'A. fun (x: 'A) -> x + 1
+//│ ║  l.84: 	f = forall 'A. fun (x: 'A) -> x + 1
 //│ ║        	           ^^
 //│ ╟── but it flows into reference with expected type `int`
-//│ ║  l.66: 	f = forall 'A. fun (x: 'A) -> x + 1
+//│ ║  l.84: 	f = forall 'A. fun (x: 'A) -> x + 1
 //│ ╙──      	                              ^
 //│ f: anything -> (error | int)
-//│  = [Function: f1]
+//│  = [Function: f2]
 
 
 

@@ -319,11 +319,8 @@ choose id auto
 //│    = [Function: id1]
 
 // A8
-:ns
 choose id auto_
-//│ res: 'c
-//│   where
-//│     'c :> (forall 'a. 'a -> 'a) | (forall 'b. (forall 'a0. 'a0 -> 'a0) -> 'b -> 'b)
+//│ res: (forall 'a. 'a -> 'a & 'a0) -> ('a0 | 'b -> 'b)
 //│    = [Function: id1]
 
 // A9
@@ -530,7 +527,7 @@ z: ChurchInt
 // G2A
 s: ChurchInt -> ChurchInt
 //│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.531: 	s: ChurchInt -> ChurchInt
+//│ ║  l.528: 	s: ChurchInt -> ChurchInt
 //│ ║         	^
 //│ ╟── type variable `'N` leaks out of its scope
 //│ ║  l.243: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -540,10 +537,10 @@ s: ChurchInt -> ChurchInt
 //│ ║         	                             ^^
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this function:
-//│ ║  l.515: 	def s n f x = f (n f x)
+//│ ║  l.512: 	def s n f x = f (n f x)
 //│ ║         	        ^^^^^^^^^^^^^^^
 //│ ╟── • this reference:
-//│ ║  l.531: 	s: ChurchInt -> ChurchInt
+//│ ║  l.528: 	s: ChurchInt -> ChurchInt
 //│ ╙──       	^
 //│ res: ChurchInt -> ChurchInt
 //│    = [Function: s]
@@ -575,7 +572,7 @@ rec def to_ch n = if n == 0 then z else s (to_ch (n - 1))
 // G7A
 to_ch: int -> ChurchInt
 //│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.576: 	to_ch: int -> ChurchInt
+//│ ║  l.573: 	to_ch: int -> ChurchInt
 //│ ║         	^^^^^
 //│ ╟── type variable `'N` leaks out of its scope
 //│ ║  l.243: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -585,16 +582,16 @@ to_ch: int -> ChurchInt
 //│ ║         	                             ^^
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this function:
-//│ ║  l.515: 	def s n f x = f (n f x)
+//│ ║  l.512: 	def s n f x = f (n f x)
 //│ ║         	        ^^^^^^^^^^^^^^^
 //│ ╟── • this application:
-//│ ║  l.570: 	rec def to_ch n = if n == 0 then z else s (to_ch (n - 1))
+//│ ║  l.567: 	rec def to_ch n = if n == 0 then z else s (to_ch (n - 1))
 //│ ║         	                                        ^^^^^^^^^^^^^^^^^
 //│ ╟── • this reference:
-//│ ║  l.576: 	to_ch: int -> ChurchInt
+//│ ║  l.573: 	to_ch: int -> ChurchInt
 //│ ║         	^^^^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.515: 	def s n f x = f (n f x)
+//│ ║  l.512: 	def s n f x = f (n f x)
 //│ ╙──       	              ^^^^^^^^^
 //│ res: int -> ChurchInt
 //│    = [Function: to_ch]
@@ -607,10 +604,10 @@ rec def id1 x = if true then x else id1 id1 x
 //│     'a := 'b -> 'a
 //│     'b :> 'b -> 'a
 //│        <: 'a
-//│ ║  l.604: 	rec def id1 x = if true then x else id1 id1 x
+//│ ║  l.601: 	rec def id1 x = if true then x else id1 id1 x
 //│ ╙──       	                                    ^^^^^^^
 //│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: ?id1` exceeded recursion depth limit (250)
-//│ ║  l.604: 	rec def id1 x = if true then x else id1 id1 x
+//│ ║  l.601: 	rec def id1 x = if true then x else id1 id1 x
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ id1: 'id1
@@ -627,50 +624,50 @@ rec def id1 x = if true then x else id1 id1 x
 id1 id1
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a :> forall 'b 'c 'id1. 'd -> 'a | 'id1
+//│     'a :> forall 'id1 'b 'c. 'd -> 'a | 'id1
 //│        <: 'd -> 'a
-//│     'd :> forall 'b 'c 'id1. 'd -> 'a | 'id1
+//│     'd :> forall 'id1 'b 'c. 'd -> 'a | 'id1
 //│        <: 'a & 'e
-//│     'e :> forall 'b 'c 'id1. 'e -> 'f | 'id1
+//│     'e :> forall 'id1 'b 'c. 'e -> 'f | 'id1
 //│        <: 'f & 'g
-//│     'g :> forall 'b 'c 'id1. 'g -> 'h | 'id1
+//│     'g :> forall 'id1 'b 'c. 'g -> 'h | 'id1
 //│        <: 'h & 'i
-//│     'i :> forall 'b 'c 'id1. 'i -> 'j | 'id1
+//│     'i :> forall 'id1 'b 'c. 'i -> 'j | 'id1
 //│        <: 'j & 'k
-//│     'k :> forall 'b 'c 'id1. 'k -> 'l | 'id1
+//│     'k :> forall 'id1 'b 'c. 'k -> 'l | 'id1
 //│        <: 'l & 'm
-//│     'm :> forall 'b 'c 'id1. 'm -> 'n | 'id1
+//│     'm :> forall 'id1 'b 'c. 'm -> 'n | 'id1
 //│        <: 'n & 'o
-//│     'o :> forall 'b 'c 'id1. 'o -> 'p | 'id1
+//│     'o :> forall 'id1 'b 'c. 'o -> 'p | 'id1
 //│        <: 'p & 'q
-//│     'q :> forall 'b 'c 'id1. 'q -> 'r | 'id1
+//│     'q :> forall 'id1 'b 'c. 'q -> 'r | 'id1
 //│        <: 'r & 's
 //│     's :> 's -> 't
 //│        <: 't
 //│     't := 's -> 't
-//│     'r :> forall 'b 'c 'id1. 'q -> 'r | 'id1
+//│     'r :> forall 'id1 'b 'c. 'q -> 'r | 'id1
 //│        <: 'q -> 'r
-//│     'p :> forall 'b 'c 'id1. 'o -> 'p | 'id1
+//│     'p :> forall 'id1 'b 'c. 'o -> 'p | 'id1
 //│        <: 'o -> 'p
-//│     'n :> forall 'b 'c 'id1. 'm -> 'n | 'id1
+//│     'n :> forall 'id1 'b 'c. 'm -> 'n | 'id1
 //│        <: 'm -> 'n
-//│     'l :> forall 'b 'c 'id1. 'k -> 'l | 'id1
+//│     'l :> forall 'id1 'b 'c. 'k -> 'l | 'id1
 //│        <: 'k -> 'l
-//│     'j :> forall 'b 'c 'id1. 'i -> 'j | 'id1
+//│     'j :> forall 'id1 'b 'c. 'i -> 'j | 'id1
 //│        <: 'i -> 'j
-//│     'h :> forall 'b 'c 'id1. 'g -> 'h | 'id1
+//│     'h :> forall 'id1 'b 'c. 'g -> 'h | 'id1
 //│        <: 'g -> 'h
-//│     'f :> forall 'b 'c 'id1. 'e -> 'f | 'id1
+//│     'f :> forall 'id1 'b 'c. 'e -> 'f | 'id1
 //│        <: 'e -> 'f
 //│     'id1 :> 'b -> 'c
 //│     'b :> 'id1
 //│        <: 'c
 //│     'c :> 'id1
 //│        <: 'b -> 'c
-//│ ║  l.604: 	rec def id1 x = if true then x else id1 id1 x
+//│ ║  l.601: 	rec def id1 x = if true then x else id1 id1 x
 //│ ╙──       	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?b ?c ?d ?e ?id1. ?id1 <: (forall ?f ?g ?id10 ?h ?i ?j. ?id10) -> ?k` exceeded recursion depth limit (250)
-//│ ║  l.627: 	id1 id1
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?id1 ?a ?b ?c ?d ?e. ?id1 <: (forall ?f ?g ?h ?i ?j ?id10. ?id10) -> ?k` exceeded recursion depth limit (250)
+//│ ║  l.624: 	id1 id1
 //│ ║         	^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: error
@@ -680,7 +677,7 @@ id1 id1
 :e
 auto auto
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.681: 	auto auto
+//│ ║  l.678: 	auto auto
 //│ ║         	^^^^^^^^^
 //│ ╟── type `'a` is not a function
 //│ ║  l.163: 	def auto : (forall 'a. 'a -> 'a) -> (forall 'b. 'b -> 'b)
@@ -699,7 +696,7 @@ auto auto
 :e
 (fun x -> x x) (fun x -> x x)
 //│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: (forall ?c ?d. ?c -> ?d) -> ?e` exceeded recursion depth limit (250)
-//│ ║  l.700: 	(fun x -> x x) (fun x -> x x)
+//│ ║  l.697: 	(fun x -> x x) (fun x -> x x)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: error
@@ -765,11 +762,8 @@ choose id auto
 //│    = [Function: id1]
 
 // A8
-:ns
 choose id auto_
-//│ res: 'c
-//│   where
-//│     'c :> (forall 'a. 'a -> 'a) | (forall 'b. (forall 'a0. 'a0 -> 'a0) -> 'b -> 'b)
+//│ res: (forall 'a. 'a -> 'a & 'a0) -> ('a0 | 'b -> 'b)
 //│    = [Function: id1]
 
 // A9
@@ -1013,10 +1007,10 @@ rec def id1 x = if true then x else id1 id1 x
 //│     'a := 'b -> 'a
 //│     'b :> 'b -> 'a
 //│        <: 'a
-//│ ║  l.1010: 	rec def id1 x = if true then x else id1 id1 x
+//│ ║  l.1004: 	rec def id1 x = if true then x else id1 id1 x
 //│ ╙──        	                                    ^^^^^^^
 //│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: ?id1` exceeded recursion depth limit (250)
-//│ ║  l.1010: 	rec def id1 x = if true then x else id1 id1 x
+//│ ║  l.1004: 	rec def id1 x = if true then x else id1 id1 x
 //│ ║          	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ id1: 'id1
@@ -1073,10 +1067,10 @@ id1 id1
 //│        <: 'c
 //│     'c :> 'id1
 //│        <: 'b -> 'c
-//│ ║  l.1010: 	rec def id1 x = if true then x else id1 id1 x
+//│ ║  l.1004: 	rec def id1 x = if true then x else id1 id1 x
 //│ ╙──        	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?id1 ?a ?b ?c ?d ?e. ?id1 <: (forall ?f ?g ?h ?i ?j ?id10. ?id10) -> ?k` exceeded recursion depth limit (250)
-//│ ║  l.1033: 	id1 id1
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?b ?c ?id1 ?d ?e. ?id1 <: (forall ?id10 ?f ?g ?h ?i ?j. ?id10) -> ?k` exceeded recursion depth limit (250)
+//│ ║  l.1027: 	id1 id1
 //│ ║          	^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: error
@@ -1086,7 +1080,7 @@ id1 id1
 :e
 auto auto
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1087: 	auto auto
+//│ ║  l.1081: 	auto auto
 //│ ║          	^^^^^^^^^
 //│ ╟── type `'a` is not a function
 //│ ║  l.163: 	def auto : (forall 'a. 'a -> 'a) -> (forall 'b. 'b -> 'b)
@@ -1105,7 +1099,7 @@ auto auto
 :e
 (fun x -> x x) (fun x -> x x)
 //│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: (forall ?c ?d. ?c -> ?d) -> ?e` exceeded recursion depth limit (250)
-//│ ║  l.1106: 	(fun x -> x x) (fun x -> x x)
+//│ ║  l.1100: 	(fun x -> x x) (fun x -> x x)
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: error
@@ -1171,11 +1165,8 @@ choose id auto
 //│    = [Function: id1]
 
 // A8
-:ns
 choose id auto_
-//│ res: 'c
-//│   where
-//│     'c :> (forall 'a. 'a -> 'a) | (forall 'b. (forall 'a0. 'a0 -> 'a0) -> 'b -> 'b)
+//│ res: (forall 'a. 'a -> 'a & 'a0) -> ('a0 | 'b -> 'b)
 //│    = [Function: id1]
 
 // A9
@@ -1419,10 +1410,10 @@ rec def id1 x = if true then x else id1 id1 x
 //│     'a := 'b -> 'a
 //│     'b :> 'b -> 'a
 //│        <: 'a
-//│ ║  l.1416: 	rec def id1 x = if true then x else id1 id1 x
+//│ ║  l.1407: 	rec def id1 x = if true then x else id1 id1 x
 //│ ╙──        	                                    ^^^^^^^
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
-//│ ║  l.1416: 	rec def id1 x = if true then x else id1 id1 x
+//│ ║  l.1407: 	rec def id1 x = if true then x else id1 id1 x
 //│ ║          	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ id1: 'id1
@@ -1456,10 +1447,10 @@ id1 id1
 //│        <: 'c
 //│     'c :> 'id1
 //│        <: 'b -> 'c
-//│ ║  l.1416: 	rec def id1 x = if true then x else id1 id1 x
+//│ ║  l.1407: 	rec def id1 x = if true then x else id1 id1 x
 //│ ╙──        	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.1439: 	id1 id1
+//│ ║  l.1430: 	id1 id1
 //│ ║          	^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: error
@@ -1469,7 +1460,7 @@ id1 id1
 :e
 auto auto
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1470: 	auto auto
+//│ ║  l.1461: 	auto auto
 //│ ║          	^^^^^^^^^
 //│ ╟── type `'a` is not a function
 //│ ║  l.163: 	def auto : (forall 'a. 'a -> 'a) -> (forall 'b. 'b -> 'b)
@@ -1488,7 +1479,7 @@ auto auto
 :e
 (fun x -> x x) (fun x -> x x)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.1489: 	(fun x -> x x) (fun x -> x x)
+//│ ║  l.1480: 	(fun x -> x x) (fun x -> x x)
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: error
@@ -1554,11 +1545,8 @@ choose id auto
 //│    = [Function: id1]
 
 // A8
-:ns
 choose id auto_
-//│ res: 'c
-//│   where
-//│     'c :> (forall 'a. 'a -> 'a) | (forall 'b. (forall 'a0. 'a0 -> 'a0) -> 'b -> 'b)
+//│ res: (forall 'a. 'a -> 'a & 'a0) -> ('a0 | 'b -> 'b)
 //│    = [Function: id1]
 
 // A9
@@ -1824,7 +1812,7 @@ id1 id1
 :e
 auto auto
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1825: 	auto auto
+//│ ║  l.1813: 	auto auto
 //│ ║          	^^^^^^^^^
 //│ ╟── type `'a` is not a function
 //│ ║  l.163: 	def auto : (forall 'a. 'a -> 'a) -> (forall 'b. 'b -> 'b)
@@ -1843,7 +1831,7 @@ auto auto
 :e
 (fun x -> x x) (fun x -> x x)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.1844: 	(fun x -> x x) (fun x -> x x)
+//│ ║  l.1832: 	(fun x -> x x) (fun x -> x x)
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: error

@@ -202,7 +202,7 @@ def sstep = fun xx -> xx (fun (xinit, xsub) ->
     then xsub r1 (div i 2)
     else xsub r2 (div i 2) in
   fun f -> f (init, sub))
-//│ ((forall 'a 'b 'c 'd 'e. ('e -> 'a, 'b -> int -> 'c,) -> (('e -> ('a, 'a,), ('b, 'b,) -> (int & number) -> 'c,) -> 'd) -> 'd) -> 'f) -> 'f
+//│ ((forall 'a 'b 'c 'd 'e. ('d -> 'e, 'a -> int -> 'b,) -> (('d -> ('e, 'e,), ('a, 'a,) -> int -> 'b,) -> 'c) -> 'c) -> 'f) -> 'f
 //│   <:  sstep:
 //│ ExSmall -> ExSmall
 //│ ╔══[ERROR] Type error in def definition
@@ -415,7 +415,7 @@ def base : ExSig
 def base f = f ((((fun a -> a, fun r -> fun (i : int) -> r), fun r -> fun (i : int) -> fun a -> a), fun f -> fun b -> fun r -> f r b),)
 //│ base: ExSig
 //│     = <missing implementation>
-//│ ((((forall 'a. 'a -> 'a, forall 'b. 'b -> int -> 'b,), forall 'c. anything -> int -> 'c -> 'c,), forall 'd 'e 'f. ('e -> 'f -> 'd) -> 'f -> 'e -> 'd,) -> 'g) -> 'g
+//│ ((((forall 'a. 'a -> 'a, forall 'b. 'b -> int -> 'b,), forall 'c. anything -> int -> 'c -> 'c,), forall 'd 'e 'f. ('d -> 'e -> 'f) -> 'e -> 'd -> 'f,) -> 'g) -> 'g
 //│   <:  base:
 //│ ExSig
 //│     = [Function: base]
@@ -440,7 +440,7 @@ def step = fun xx -> xx (fun ((((xinit, xsub), xupdate), xfold),) ->
     else (fst r, xupdate (snd r) (div i 2) a) in
   let fold f b r = xfold f (xfold f b (fst r)) (snd r) in
     fun f -> f ((((init, sub), update), fold),) )
-//│ ((forall 'a 'b 'c 'd 'e 'f 'g 'h 'i 'j 'k 'l 'm 'n 'o 'p. ((('h -> 'l, 'e -> int -> 'b,), 'o -> int -> 'g -> 'c & 'f -> int -> 'g -> 'm,), 'p -> ('a -> 'd -> 'k & 'n -> 'j -> 'a),) -> (((('h -> ('l, 'l,), ('e, 'e,) -> (int & number) -> 'b,), forall 'q 'r. ('o & 'q, 'f & 'r,) -> (int & number) -> 'g -> ('c | 'q, 'r | 'm,),), 'p -> 'n -> ('j, 'd,) -> 'k,) -> 'i) -> 'i) -> 's) -> 's
+//│ ((forall 'a 'b 'c 'd 'e 'f 'g 'h 'i 'j 'k 'l 'm 'n 'o 'p. ((('g -> 'k, 'l -> int -> 'a,), 'e -> int -> 'h -> 'd & 'p -> int -> 'h -> 'm,), 'i -> ('f -> 'c -> 'n & 'j -> 'b -> 'f),) -> (((('g -> ('k, 'k,), ('l, 'l,) -> int -> 'a,), forall 'q 'r. ('e & 'q, 'p & 'r,) -> int -> 'h -> ('d | 'q, 'r | 'm,),), 'i -> 'j -> ('b, 'c,) -> 'n,) -> 'o) -> 'o) -> 's) -> 's
 //│   <:  step:
 //│ ExSig -> ExSig
 //│ ╔══[ERROR] Type error in def definition
