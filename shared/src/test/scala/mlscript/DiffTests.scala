@@ -916,8 +916,8 @@ class DiffTests
 object DiffTests {
   
   private val TimeLimit =
-    if (sys.env.get("CI").isDefined) Span(30, Seconds)
-    else Span(1500, Seconds)
+    if (sys.env.get("CI").isDefined) Span(60, Seconds)
+    else Span(30, Seconds)
   
   private val pwd = os.pwd
   private val dir = pwd/"shared"/"src"/"test"/"diff"
