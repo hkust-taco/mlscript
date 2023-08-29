@@ -1439,7 +1439,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
         ) {
       err("the unnamed args should appear first when using named args!", a.toLoc) 
     } else
-    if (a.fields.size > argsList.size || a.fields.size < argsList.size) {
+    if (a.fields.sizeCompare(argsList) > 0 || a.fields.sizeCompare(argsList) < 0) {
       err("number of parameters dosen't match with the function signature!", a.toLoc) 
     } else {
       val as = a.fields.zipWithIndex.map{ case(x, idx) =>
@@ -1449,10 +1449,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
           case N =>
             ((argsList(idx).name, x._2), false)
         }}
-      if (as.groupBy(x => x._1._1).size < argsList.size) {
-        as.groupBy(x => x._1._1).foreach(
+      if (as.groupBy(x => x._1).sizeCompare(argsList) < 0) {
+        as.groupBy(x => x._1).foreach(
           x =>
-            if (x._2.size > 1) {
+            if (x._2.sizeCompare(1) > 0) {
               err(s"parameter ${x._1} is duplicate!", a.toLoc)
             }
         )
