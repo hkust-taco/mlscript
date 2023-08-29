@@ -12,7 +12,6 @@ class Test(val n: Int) {
 //│ class TypingUnit {
 //│   #Test;
 //│   constructor() {
-//│     const qualifier = this;
 //│   }
 //│   get Test() {
 //│     const qualifier = this;
@@ -78,7 +77,7 @@ class C[A](n: A) {
 let a = C[Int](42)
 a.f
 //│ ╔══[ERROR] Type application syntax is not yet supported
-//│ ║  l.78: 	let a = C[Int](42)
+//│ ║  l.77: 	let a = C[Int](42)
 //│ ╙──      	        ^^^^^^
 //│ let a: error
 //│ error
@@ -141,7 +140,7 @@ module M2 {
     bar(10)
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.140: 	    fun bar(x) = x + y + this.m
+//│ ║  l.139: 	    fun bar(x) = x + y + this.m
 //│ ╙──       	                             ^^
 //│ module M2 {
 //│   fun foo: Int -> Int

@@ -21,7 +21,6 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
   protected val polyfill = Polyfill()
 
   protected val visitedSymbols = MutSet[RuntimeSymbol]()
-  private val visitedOuter = MutSet[Str]()
 
   /**
     * This function translates parameter destructions in `def` declarations.
@@ -83,7 +82,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
 
   private def translateNuTypeSymbol(sym: NuTypeSymbol with RuntimeSymbol)(implicit scope: Scope): JSExpr =
     sym.qualifier.fold[JSExpr](JSIdent(sym.runtimeName))(qualifier => {
-      visitedOuter += qualifier
+      visitedSymbols += scope.resolveQualifier(qualifier)
       JSIdent(qualifier).member(sym.runtimeName)
     })
 
@@ -119,7 +118,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
           case _ => throw CodeGenError(s"unexpected new class member $name")
         })(qualifier => {
           visitedSymbols += sym
-          visitedOuter += qualifier
+          visitedSymbols += scope.resolveQualifier(qualifier)
           val ident = if (sym.isPrivate) JSIdent(s"${qualifier}.#${sym.runtimeName}")
                       else JSIdent(qualifier).member(sym.runtimeName)
           if (sym.isByvalueRec.isEmpty && !sym.isLam) ident() else ident
@@ -493,17 +492,10 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     JSClassDecl(classSymbol.runtimeName, fields, base, members, traits)
   }
 
-  protected def translateSelfDeclaration(self: ValueSymbol): Ls[JSStmt] =
-    if (visitedSymbols(self)) {
-      visitedSymbols -= self
-      JSConstDecl(self.runtimeName, JSIdent("this")) :: Nil
-    }
-    else Nil
-  
-  protected def translateQualifierDeclaration(name: Str): Ls[JSStmt] =
-    if (visitedOuter(name)) {
-      visitedOuter -= name
-      JSConstDecl(name, JSIdent("this")) :: Nil
+  protected def translateQualifierDeclaration(qualifier: ValueSymbol): Ls[JSStmt] =
+    if (visitedSymbols(qualifier)) {
+      visitedSymbols -= qualifier
+      JSConstDecl(qualifier.runtimeName, JSIdent("this")) :: Nil
     }
     else Nil
   
@@ -708,20 +700,20 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     val qualifierName = "qualifier"
     val memberScopes = (sym.nested.map(nd => {
       val memberScope = nuTypeScope.derive(s"member ${nd.name}")
-      val sym = memberScope.declareOuterSymbol(qualifierName)
-      nd.name -> Pack(memberScope, sym.runtimeName)
+      val sym = memberScope.declareQualifierSymbol(qualifierName)
+      nd.name -> Pack(memberScope, sym)
     }) ++ sym.methods.map(m => {
       val memberScope = nuTypeScope.derive(s"member ${m.nme.name}")
-      val sym = memberScope.declareOuterSymbol(qualifierName)
-      m.nme.name -> Pack(memberScope, sym.runtimeName)
+      val sym = memberScope.declareQualifierSymbol(qualifierName)
+      m.nme.name -> Pack(memberScope, sym)
     })).toMap
 
     // `qualifier` should always be the first value in the getter scope so all qualifiers should have the same name!
-    val qualifierRuntime = memberScopes.headOption.fold[Opt[Str]](N)(mh => {
+    val qualifier = memberScopes.headOption.fold[Opt[Str]](N)(mh => {
       memberScopes.foreach(m =>
         assert(m._2.qualifier === mh._2.qualifier, s"the expected qualifier's runtime name should be ${mh._2.qualifier}, ${m._2.qualifier} found")
       )
-      constructorScope.declareOuterSymbol(mh._2.qualifier)
+      constructorScope.declareQualifierSymbol(mh._2.qualifier)
       S(mh._2.qualifier)
     })
 
@@ -732,12 +724,12 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
 
     val ctorParams = sym.ctorParams.fold(
       fields.map { f =>
-          memberList += NewClassMemberSymbol(f, Some(false), false, !sym.publicCtors.contains(f), qualifierRuntime).tap(nuTypeScope.register)
+          memberList += NewClassMemberSymbol(f, Some(false), false, !sym.publicCtors.contains(f), qualifier).tap(nuTypeScope.register)
           constructorScope.declareValue(f, Some(false), false).runtimeName
         }
       )(lst => lst.map { p =>
           if (p._2) { // `constructor(val name)` will also generate a field and a getter
-            memberList += NewClassMemberSymbol(p._1, Some(false), false, false, qualifierRuntime).tap(nuTypeScope.register)
+            memberList += NewClassMemberSymbol(p._1, Some(false), false, false, qualifier).tap(nuTypeScope.register)
             getters += p._1
           }
           constructorScope.declareValue(p._1, Some(false), false).runtimeName // Otherwise, it is only available in the constructor
@@ -746,26 +738,26 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     val initFields = getters.toList.map(name => JSAssignExpr(JSIdent(s"this.#$name"), JSIdent(name)).stmt)
 
     sym.methods.foreach {
-      case MethodDef(_, _, Var(nme), _, _) => memberList += NewClassMemberSymbol(nme, N, true, false, qualifierRuntime).tap(nuTypeScope.register)
+      case MethodDef(_, _, Var(nme), _, _) => memberList += NewClassMemberSymbol(nme, N, true, false, qualifier).tap(nuTypeScope.register)
     }
     sym.signatures.foreach {
       case MethodDef(_, _, Var(nme), _, _) => memberList += nuTypeScope.declareStubValue(nme)(true)
     }
     sym.ctor.foreach {
       case nd @ NuFunDef(rec, Var(nme), _, _) =>
-        memberList += NewClassMemberSymbol(nme, rec, false, !nd.genField, qualifierRuntime).tap(nuTypeScope.register)
+        memberList += NewClassMemberSymbol(nme, rec, false, !nd.genField, qualifier).tap(nuTypeScope.register)
       case _ => ()
     }
 
     // TODO: support traitSymbols
-    val (traitSymbols, classSymbols, mixinSymbols, moduleSymbols) = declareNewTypeDefs(sym.nested, qualifierRuntime)(nuTypeScope)
+    val (traitSymbols, classSymbols, mixinSymbols, moduleSymbols) = declareNewTypeDefs(sym.nested, qualifier)(nuTypeScope)
 
     if (keepTopLevelScope) // also declare in the top level for diff tests
       declareNewTypeDefs(sym.nested, N)(topLevelScope)
     classSymbols.foreach(s => {memberList += s; typeList += s.lexicalName})
     mixinSymbols.foreach(s => {memberList += s;})
     moduleSymbols.foreach(s => {memberList += s; typeList += s.lexicalName})
-    val members = sym.methods.map(m => translateNewClassMember(m, fields, qualifierRuntime)(memberScopes.getOrElse(m.nme.name, die).memberScope))++
+    val members = sym.methods.map(m => translateNewClassMember(m, fields, qualifier)(memberScopes.getOrElse(m.nme.name, die).memberScope))++
       mixinSymbols.map(s => translateMixinDeclaration(s, memberList.toList)(memberScopes.getOrElse(s.lexicalName, die).memberScope)) ++
       moduleSymbols.map(s => translateModuleDeclaration(s, memberList.toList)(memberScopes.getOrElse(s.lexicalName, die).memberScope)) ++
       classSymbols.map(s => translateNewClassDeclaration(s, memberList.toList)(memberScopes.getOrElse(s.lexicalName, die).memberScope))
@@ -852,7 +844,8 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       case _ => Nil
     }
 
-    val qualifierStmt = qualifierRuntime.fold[Ls[JSStmt]](Nil)(qualifier => translateQualifierDeclaration(qualifier))
+    val qualifierStmt = qualifier.fold[Ls[JSStmt]](Nil)(qualifier =>
+      translateQualifierDeclaration(constructorScope.resolveQualifier(qualifier)))
     JSClassNewDecl(
       sym.lexicalName,
       fields,
@@ -864,7 +857,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       rest,
       members,
       traits,
-      translateSelfDeclaration(selfSymbol) ++ qualifierStmt ++ tempDecs ++ initFields ++ stmts,
+      translateQualifierDeclaration(selfSymbol) ++ qualifierStmt ++ tempDecs ++ initFields ++ stmts,
       typeList.toList,
       sym.ctorParams.isDefined,
       staticMethods
@@ -937,7 +930,8 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       case _ => Nil
     }
 
-    val qualifierStmts = qualifier.fold[Ls[JSStmt]](Nil)(qualifier => translateQualifierDeclaration(qualifier))
+    val qualifierStmts = qualifier.fold[Ls[JSStmt]](Nil)(qualifier =>
+      translateQualifierDeclaration(memberScope.resolveQualifier(qualifier)))
 
     // If `this` is accessed, add `const self = this`.
     val bodyStmts = if (visitedSymbols(selfSymbol)) {

@@ -20,7 +20,7 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
   // we insert `const qualifier = this;` before the class definition starts.
   // To access ALL qualifier variables correctly, we need to make sure
   // none of them would be shadowed.
-  private val qualifierSymbols = scala.collection.mutable.HashSet[Str]()
+  private val qualifierSymbols = scala.collection.mutable.HashMap[Str, ValueSymbol]()
 
   val tempVars: TemporaryVariableEmitter = TemporaryVariableEmitter()
 
@@ -278,9 +278,9 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
 
   // We don't want `qualifier` symbols to be shadowed by each other
   // Add all runtime names of `qualifier` symbols from the parent scope
-  private def pullOuterSymbols(syms: scala.collection.mutable.HashSet[Str]) = {
+  private def pullOuterSymbols(syms: scala.collection.mutable.HashMap[Str, ValueSymbol]) = {
     syms.foreach { s =>
-      runtimeSymbols += s
+      runtimeSymbols += s._1
       qualifierSymbols += s
     }
 
@@ -325,12 +325,14 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
     symbol
   }
 
-  def declareOuterSymbol(lexicalName: Str): ValueSymbol = {
+  def declareQualifierSymbol(lexicalName: Str): Str = {
     val symbol = ValueSymbol(lexicalName, allocateRuntimeName(lexicalName), S(false), false)
-    qualifierSymbols += symbol.runtimeName
+    qualifierSymbols += (symbol.runtimeName -> symbol)
     runtimeSymbols += symbol.runtimeName
-    symbol
+    symbol.runtimeName
   }
+  def resolveQualifier(runtimeName: Str): ValueSymbol =
+    qualifierSymbols.getOrElse(runtimeName, throw CodeGenError(s"qualifier $runtimeName not found"))
 
   def declareStubValue(lexicalName: Str)(implicit allowEscape: Bool): StubValueSymbol =
     declareStubValue(lexicalName, N)

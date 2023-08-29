@@ -290,7 +290,6 @@ module I {
 //│         #J;
 //│         #K;
 //│         constructor() {
-//│           const qualifier1 = this;
 //│         }
 //│         get K() {
 //│           const qualifier1 = this;
@@ -430,10 +429,10 @@ fun h(z: Int) =
 let hh = h(1)
 new hh(1)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.431: 	new hh(1)
+//│ ║  l.430: 	new hh(1)
 //│ ║         	    ^^^^^
 //│ ╟── argument of type `(1,)` does not match type `()`
-//│ ║  l.431: 	new hh(1)
+//│ ║  l.430: 	new hh(1)
 //│ ╙──       	      ^^^
 //│ let hh: () -> N
 //│ N | error
@@ -452,10 +451,10 @@ mixin P {
   constructor(x: Int)
 }
 //│ ╔══[ERROR] Explicit module constructors are not supported
-//│ ║  l.449: 	  constructor(x: Int)
+//│ ║  l.448: 	  constructor(x: Int)
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Explicit mixin constructors are not supported
-//│ ║  l.452: 	  constructor(x: Int)
+//│ ║  l.451: 	  constructor(x: Int)
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^
 //│ module O
 //│ mixin P()
