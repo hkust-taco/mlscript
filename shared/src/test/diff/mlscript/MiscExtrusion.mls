@@ -20,23 +20,18 @@ def alsoPrintSizeSimple f =
     f (asExpr expr)
   in nested
 //│ alsoPrintSizeSimple: (Expr['a] -> 'b) -> Expr['a] -> 'b
-//│   where
-//│     'a :> anything
 
 def alsoPrintSizeSimple f =
   let rec nested expr =
     asExpr (f (asExpr expr))
   in nested
 //│ alsoPrintSizeSimple: (Expr['a] -> Expr['a0]) -> Expr['a] -> Expr['a0]
-//│   where
-//│     'a0 :> anything
-//│     'a :> anything
 
 def alsoPrintSizeSimple f =
   let rec nested expr =
     f (asExpr expr) nested
   in nested
-//│ alsoPrintSizeSimple: (Expr[in 'a out 'a | 'a0] -> (Expr[in 'a1 & ('a | 'a0) out 'a2] -> 'b) -> 'b) -> Expr['a2] -> 'b
+//│ alsoPrintSizeSimple: (Expr[in 'a out 'a | 'a0] -> (Expr[in 'a0 & 'a1 out 'a2] -> 'b) -> 'b) -> Expr['a2] -> 'b
 //│   where
 //│     'a2 :> 'a | 'a1
 //│         <: 'a0
@@ -57,17 +52,17 @@ def alsoPrintSize f =
 :e
 alsoPrintSize id
 //│ ╔══[ERROR] Type error in application
-//│ ║  l.58: 	alsoPrintSize id
+//│ ║  l.53: 	alsoPrintSize id
 //│ ║        	^^^^^^^^^^^^^^^^
 //│ ╟── type variable `'a` leaks out of its scope
-//│ ║  l.48: 	def mapExpr: (forall 'a. Expr['a] -> Expr['a]) -> Program -> Program
+//│ ║  l.43: 	def mapExpr: (forall 'a. Expr['a] -> Expr['a]) -> Program -> Program
 //│ ║        	                                          ^^
 //│ ╟── back into type variable `'a`
-//│ ║  l.48: 	def mapExpr: (forall 'a. Expr['a] -> Expr['a]) -> Program -> Program
+//│ ║  l.43: 	def mapExpr: (forall 'a. Expr['a] -> Expr['a]) -> Program -> Program
 //│ ║        	                              ^^
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this application:
-//│ ║  l.54: 	  mapExpr(fun e -> let tmp = print e in f e)
+//│ ║  l.49: 	  mapExpr(fun e -> let tmp = print e in f e)
 //│ ╙──      	                                        ^^^
 //│ res: Program -> Program | error
 
@@ -96,17 +91,17 @@ def alsoPrintSizeCo f =
 :e
 alsoPrintSizeCo id
 //│ ╔══[ERROR] Type error in application
-//│ ║  l.97: 	alsoPrintSizeCo id
+//│ ║  l.92: 	alsoPrintSizeCo id
 //│ ║        	^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `'a` leaks out of its scope
-//│ ║  l.87: 	def mapExprCo: (forall 'a. ExprCo['a] -> ExprCo['a]) -> Program -> Program
+//│ ║  l.82: 	def mapExprCo: (forall 'a. ExprCo['a] -> ExprCo['a]) -> Program -> Program
 //│ ║        	                                  ^^
 //│ ╟── back into type variable `'a`
-//│ ║  l.87: 	def mapExprCo: (forall 'a. ExprCo['a] -> ExprCo['a]) -> Program -> Program
+//│ ║  l.82: 	def mapExprCo: (forall 'a. ExprCo['a] -> ExprCo['a]) -> Program -> Program
 //│ ║        	                                                ^^
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this application:
-//│ ║  l.93: 	  mapExprCo(fun e -> let tmp = printCo e in f e)
+//│ ║  l.88: 	  mapExprCo(fun e -> let tmp = printCo e in f e)
 //│ ╙──      	                                            ^^^
 //│ res: Program -> Program | error
 

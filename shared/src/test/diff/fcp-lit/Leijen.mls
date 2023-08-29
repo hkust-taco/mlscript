@@ -944,7 +944,7 @@ def newRef4: forall 'a 's. 'a -> ST['s, (Ref['s, 'a], Ref['s, 'a])]
 runST4 (newRef4 1)
 //│ runST4: (forall 's. ST['s, ('a, 'b,)]) -> ('a, 'b,)
 //│ newRef4: 'a -> ST['s, (Ref['s, 'a], Ref['s, 'a],)]
-//│ res: (Ref[in ??s & 's out 's | ??s0, 1], Ref[in ??s & 's out 's | ??s0, 1],)
+//│ res: (Ref[in ??s & 's out 's | 's0 | ??s0, 1], Ref[in ??s & 's0 out 's | 's0 | ??s0, 1],)
 
 
 // * Distributivity demonstration:

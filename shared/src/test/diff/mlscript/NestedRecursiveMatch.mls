@@ -34,7 +34,7 @@ rec def f w = case w of
       Some ->
         let m = (tmp0).value in
         Some (m,)
-//│ f: 'right -> (None | Some[out 'a])
+//│ f: 'right -> (None | Some['a])
 //│   where
 //│     'right <: Leaf | Node & {left: 'right, right: 'right}
 

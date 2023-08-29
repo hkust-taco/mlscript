@@ -39,10 +39,10 @@ fun x -> set2 x 0
 // :ns
 fun x -> set0 x 0
 fun x -> set1 x 0
-//│ res: MutArray['b | 0] -> ()
+//│ res: MutArray[in 'b | 0 out 'b] -> ()
 //│    = <no result>
 //│      set0 is not implemented
-//│ res: MutArray['b | 0] -> ()
+//│ res: MutArray[in 'b | 0 out 'b] -> ()
 //│    = <no result>
 //│      set1 is not implemented
 
@@ -214,7 +214,7 @@ foo2 = foo : MutArray['a..'b]
 //│ ╟── from type bounds:
 //│ ║  l.50: 	def foo: MutArray[int..number]
 //│ ╙──      	                  ^^^^^^^^^^^
-//│ foo2: MutArray['b | number]
+//│ foo2: MutArray[in int & 'b out 'b | number]
 //│     = [ 1 ]
 
 foo2[0]
@@ -432,7 +432,7 @@ foo: R['a..'b]
 //│ ╟── from type bounds:
 //│ ║  l.388: 	def foo: R[int..number]
 //│ ╙──       	           ^^^^^^^^^^^
-//│ res: R['b | error | number]
+//│ res: R[in int & 'b out 'b | error | number]
 //│    = { get: 0, set: [Function: set] }
 
 // * FIXME
@@ -477,7 +477,7 @@ foo: S['a..'b]
 //│ ╟── from type bounds:
 //│ ║  l.388: 	def foo: R[int..number]
 //│ ╙──       	           ^^^^^^^^^^^
-//│ res: S['b | error | number]
+//│ res: S[in int & 'b out 'b | error | number]
 //│    = { get: 0, set: [Function: set] }
 
 foo: { get: number; set: int -> () }
@@ -553,7 +553,7 @@ foo2: S['a..'b]
 //│ ╟── from type variable:
 //│ ║  l.518: 	foo2 = foo: { get: 'a; set: 'b -> () }
 //│ ╙──       	                            ^^
-//│ res: S['b | error | number]
+//│ res: S[in int & 'b out 'b | error | number]
 //│    = { get: 0, set: [Function: set] }
 
 

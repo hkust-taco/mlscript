@@ -820,9 +820,12 @@ trait TypeSimplifier { self: Typer =>
         ot.mapAltsPol(pol)((p, t) => transform(t, p, parents, canDistribForall))
       case SkolemTag(id) => transform(id, pol, parents)
       case _: TypeTag | ExtrType(_) => st
-      case tv: TypeVariable if parents.exists(_ === tv) =>
-        if (pol(tv).isEmpty) transform(tv, pol, parents - tv) else
-        if (pol(tv).getOrElse(lastWords(s"parent in invariant position $tv $parents"))) BotType else TopType
+      case tv: TypeVariable if parents(tv) =>
+        pol(tv) match {
+          case S(true) => BotType
+          case S(false) => TopType
+          case N => transform(tv, pol, parents - tv)
+        }
       case tv: TypeVariable =>
         varSubst.get(tv) match {
           case S(S(tv2)) =>

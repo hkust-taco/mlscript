@@ -367,7 +367,7 @@ fid foo2
 //│ res: 'A -> 'A
 
 fid (f: Foo['a..'b]) = Foo.Id f
-//│ fid: Foo['b] -> ('b & 'A) -> 'A
+//│ fid: Foo['a] -> 'a -> 'a
 
 
 class Bar[A]: { value: A; id: A -> A }

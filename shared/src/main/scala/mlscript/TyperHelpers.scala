@@ -1069,14 +1069,22 @@ abstract class TyperHelpers { Typer: Typer =>
           outer.quantifPolarity(lvl)
         def show: Str = s"$outer;-"
       }
+    /** Used to traverse type variable bounds.
+      * The tricky part is that when a TV is quantified negatively,
+      * then from the POV of lower-level variables,
+      * the polarity of its upper bound is actually POSITIVE! */
     def at(atLvl: Level, pol: Bool): PolMap =
       new PolMap(base) {
         val pm = quantifPolarity(atLvl)
-        def apply(lvl: Level): Pol = pm(lvl) match {
-          case S(true) => S(pol)
-          case S(false) => S(!pol)
-          case N => N
-        }
+        def apply(lvl: Level): Pol =
+          // * Everything above or at `atLvl` gets the new polarity pol;
+          // * things under it get the new polarity unless atLvl is quantified negatively,
+          // * in which case they get the opposite polarity !pol.
+          if (lvl >= atLvl) S(pol) else pm(lvl) match {
+            case S(true) => S(pol)
+            case S(false) => S(!pol)
+            case N => N
+          }
         def quantifPolarity(lvl: Level): PolMap =
           outer.quantifPolarity(lvl)
         def show: Str = s"$outer;@[${printPol(S(pol))}]($lvl)"

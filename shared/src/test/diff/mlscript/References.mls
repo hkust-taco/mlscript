@@ -99,7 +99,7 @@ move_ty r
 move_approx r
 //│ res: Ref['A] -> unit
 //│    = [Function (anonymous)]
-//│ res: Ref[in 1 & 'b out 'b] -> unit
+//│ res: Ref['b] -> unit
 //│    = [Function (anonymous)]
 //│ res: Ref['a] -> unit
 //│   where
@@ -251,7 +251,7 @@ refin.Swap
 //│      refin is not implemented
 
 refin: Ref['a..'b]
-//│ res: Ref['b]
+//│ res: Ref[in 'b & (int | string) out 'b]
 //│    = <no result>
 //│      refin is not implemented
 
@@ -260,7 +260,7 @@ res.Swap
 //│    = undefined
 
 refin: Ref['a..'b] & Ref['c..'d]
-//│ res: Ref[in 'b | 'd out 'b & 'd]
+//│ res: Ref[in 'd & (int | string) | 'b & (int | string) out 'b & 'd]
 //│    = <no result>
 //│      refin is not implemented
 
@@ -269,7 +269,7 @@ res.Swap
 //│ res: ('A & ((int | string) & 'b | 'd & (int | string))) -> ('b & 'd | 'A)
 
 refin: Ref['a..'b] | Ref['c..'d]
-//│ res: Ref['d]
+//│ res: Ref[in 'd & (~'d | int | string) out 'd]
 //│    = <no result>
 //│      refin is not implemented
 
