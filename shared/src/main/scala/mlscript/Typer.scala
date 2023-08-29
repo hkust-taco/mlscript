@@ -8,6 +8,7 @@ import scala.util.chaining._
 import scala.annotation.tailrec
 import mlscript.utils._, shorthands._
 import mlscript.Message._
+import mlscript.codegen.Helpers
 
 /** A class encapsulating type inference state.
  *  It uses its own internal representation of types and type variables, using mutable data structures.
@@ -993,12 +994,56 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
         term.desugaredTerm = S(desug)
         typeTerm(desug)
       case App(f: Term, a @ Tup(fields)) if (fields.exists(x => x._1.isDefined)) =>
-        val (args_ty: SimpleType, fun_ty: SimpleType, res: TypeVariable) = typeUnnamedApp(f, a)
-        println(s"f => ${f}")
-        println(s"args_ty => ${args_ty} ${args_ty.getClass()}")
+        val fun_ty: SimpleType =
+          f match {
+            case Sel(t, fieldName) => 
+              val cls_ty = typeTerm(t)
+              println(s"cls_ty => ${cls_ty} ${cls_ty.getClass}")
+              val cls_name = cls_ty.unwrapProxies match {
+                case FunctionType(_, ClassTag(Var(name), parents)) =>
+                  name
+                case _ =>
+                  err("there is problem getting the class name", f.toLoc)
+                  "dummy"
+              }
+              val cls_type = ctx.get(cls_name)
+              println(s"cls type => ${cls_type}")
+              val x = cls_type match {
+                case Some(CompletedTypeInfo(d)) =>
+                  d match {
+                    case d1 @ TypedNuCls(_, _, _, _, members, _, _, _, _) =>
+                      members.get(fieldName.name) match {
+                        case Some(fun) =>
+                          fun match {
+                            case TypedNuFun(level, fd, ProvType(fun_ty @ FunctionType(_, _))) => 
+                              fun_ty
+                            case _ =>
+                              err("selected field is not a method.", f.toLoc)
+                          }
+                        case N =>
+                          err("field not method", f.toLoc)
+                      }
+                    case _ =>
+                      err("class not found", f.toLoc)
+                  }
+                case _ =>
+                  err("class not found", f.toLoc)
+              }
+              x
+            case _ => 
+              val x: SimpleType = typeUnnamedApp(f, a)._1.unwrapProxies match {
+                case PolymorphicType(_, ProvType(ft @ FunctionType(_, _))) =>
+                  ft
+                case _ =>
+                  println("wierd! ")
+                  err(s"unexpected case here", f.toLoc)
+              }
+              x   
+          }
+        println(s"f => ${Helpers.inspect(f)}")
         println(s"fun_ty => ${fun_ty} ${fun_ty.getClass()}")
         val argsList = fun_ty.unwrapProxies match {
-                        case PolymorphicType(_, ProvType(FunctionType(TupleType(fields), _))) =>
+                        case FunctionType(TupleType(fields), _) =>
                           fields.map(x => x._1 match {
                             case Some(arg) =>
                               arg
@@ -1013,7 +1058,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
         desugarNamedArgs(term, f, a, argsList)
       case App(f: Term, a: Term) =>
         // TODO: probably better to merge this case with previous one.
-        val (args_ty, fun_ty, res) = typeUnnamedApp(f, a)
+        val (fun_ty, args_ty) = typeUnnamedApp(f, a)
+        val res = freshVar(prov, N)
         val res_ty = con(fun_ty, FunctionType(args_ty, res)(
             prov
             // funProv // TODO: better?
@@ -1337,7 +1383,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
   }
 
   def typeUnnamedApp(f: Term, a: Term)(implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType], prov: TypeProvenance):
-    (SimpleType, SimpleType, TypeVariable) = {
+    (SimpleType, SimpleType) = {
     val f_ty = typeMonomorphicTerm(f)
     val a_ty = {
       def typeArg(a: Term): ST =
@@ -1358,13 +1404,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
           typeArg(a)
       }
     }
-    val res = freshVar(prov, N)
     val arg_ty = mkProxy(a_ty, tp(a.toCoveringLoc, "argument"))
       // ^ Note: this no longer really makes a difference, due to tupled arguments by default
     val funProv = tp(f.toCoveringLoc, "applied expression")
     val fun_ty = mkProxy(f_ty, funProv)
       // ^ This is mostly not useful, except in test Tuples.fun with `(1, true, "hey").2`
-    (arg_ty, fun_ty, res)
+    (fun_ty, arg_ty)
   }
 
   def getNewVarName(prefix: String, nonValidVars: Set[Var])(implicit raise: Raise): String = {
