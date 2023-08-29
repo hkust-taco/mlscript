@@ -112,7 +112,7 @@ o.x(error) + 1
 //│ Int
 //│ res
 //│ Runtime error:
-//│   Error: unexpected runtime error
+//│   Error: an error was thrown
 
 
 class Oops2[out A](x: A -> A, y: A)
@@ -145,6 +145,6 @@ o.x(error) + 1
 //│ Int
 //│ res
 //│ Runtime error:
-//│   Error: unexpected runtime error
+//│   Error: an error was thrown
 
 

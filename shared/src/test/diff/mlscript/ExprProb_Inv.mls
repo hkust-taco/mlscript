@@ -102,13 +102,13 @@ eval1
 error: ~Add[?]
 //│ res: ~Add[?]
 //│ Runtime error:
-//│   Error: unexpected runtime error
+//│   Error: an error was thrown
 
 :re
 error: ('a & ~Lit) -> 'a
 //│ res: ('a & ~Lit) -> 'a
 //│ Runtime error:
-//│   Error: unexpected runtime error
+//│   Error: an error was thrown
 
 :re
 error: ('a) -> ('a & Add[?])
@@ -116,19 +116,19 @@ error: ('a) -> ('a & ~Add[?])
 error: ('a & ~Add[?]) -> 'a
 //│ res: 'a -> (Add[?] & 'a)
 //│ Runtime error:
-//│   Error: unexpected runtime error
+//│   Error: an error was thrown
 //│ res: 'a -> ('a & ~Add[?])
 //│ Runtime error:
-//│   Error: unexpected runtime error
+//│   Error: an error was thrown
 //│ res: ('a & ~Add[?]) -> 'a
 //│ Runtime error:
-//│   Error: unexpected runtime error
+//│   Error: an error was thrown
 
 :re
 error: ('a & ~add) -> 'a
 //│ res: ('a & ~#Add) -> 'a
 //│ Runtime error:
-//│   Error: unexpected runtime error
+//│   Error: an error was thrown
 
 :ns
 def eval1_ty_ugly: ('a -> int) -> (Lit | Add['b] | 'a & ~Lit & ~Add[?] as 'b) -> int
