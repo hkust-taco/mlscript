@@ -17,10 +17,10 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
   private val runtimeSymbols = scala.collection.mutable.HashSet[Str]()
 
   // To allow a class method/getter/constructor to access members of an outer class,
-  // we insert `const outer = this;` before the class definition starts.
-  // To access ALL outer variables correctly, we need to make sure
+  // we insert `const qualifier = this;` before the class definition starts.
+  // To access ALL qualifier variables correctly, we need to make sure
   // none of them would be shadowed.
-  private val outerSymbols = scala.collection.mutable.HashSet[Str]()
+  private val qualifierSymbols = scala.collection.mutable.HashSet[Str]()
 
   val tempVars: TemporaryVariableEmitter = TemporaryVariableEmitter()
 
@@ -271,17 +271,17 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
         Left(MethodDef[Right[Term, Type]](isLetRec.getOrElse(false), TypeName(finalName), Var(nme), tys, Right(rhs)))
       case s => Right(s)
     }
-    val symbol = ModuleSymbol(finalName, Nil, Record(Nil), mths, signatures, ctor, Nil, nuTypes, N, false)
+    val symbol = ModuleSymbol(finalName, Nil, Record(Nil), mths, signatures, ctor, Nil, nuTypes, N)
     register(symbol)
     symbol
   }
 
-  // We don't want `outer` symbols to be shadowed by each other
-  // Add all runtime names of `outer` symbols from the parent scope
+  // We don't want `qualifier` symbols to be shadowed by each other
+  // Add all runtime names of `qualifier` symbols from the parent scope
   private def pullOuterSymbols(syms: scala.collection.mutable.HashSet[Str]) = {
     syms.foreach { s =>
       runtimeSymbols += s
-      outerSymbols += s
+      qualifierSymbols += s
     }
 
     this
@@ -327,7 +327,7 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
 
   def declareOuterSymbol(lexicalName: Str): ValueSymbol = {
     val symbol = ValueSymbol(lexicalName, allocateRuntimeName(lexicalName), S(false), false)
-    outerSymbols += symbol.runtimeName
+    qualifierSymbols += symbol.runtimeName
     runtimeSymbols += symbol.runtimeName
     symbol
   }
@@ -396,7 +396,7 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
     * Shorthands for deriving normal scopes.
     */
   def derive(name: Str): Scope =
-    (new Scope(name, S(this))).pullOuterSymbols(outerSymbols)
+    (new Scope(name, S(this))).pullOuterSymbols(qualifierSymbols)
 
   
   def refreshRes(): Unit = {

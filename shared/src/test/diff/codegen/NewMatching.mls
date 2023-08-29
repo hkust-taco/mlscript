@@ -165,7 +165,7 @@ class FooBar {
 //│   constructor() {
 //│   }
 //│   get FooBar() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#FooBar === undefined) {
 //│       class FooBar {
 //│         #x;
@@ -233,7 +233,7 @@ fun m(x) =
 //│   constructor() {
 //│   }
 //│   get MM() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#MM === undefined) {
 //│       class MM {}
 //│       this.#MM = new MM();

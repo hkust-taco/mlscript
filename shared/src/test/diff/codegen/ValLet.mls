@@ -23,7 +23,7 @@ class A(x0: Int) {
 //│   constructor() {
 //│   }
 //│   get A() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#A === undefined) {
 //│       class A {
 //│         #x0;
@@ -92,7 +92,7 @@ AA().f(0)
 //│   constructor() {
 //│   }
 //│   get AA() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#AA === undefined) {
 //│       class AA {
 //│         #x;
@@ -102,8 +102,8 @@ AA().f(0)
 //│           const no = 0;
 //│         }
 //│         f(y) {
-//│           const outer1 = this;
-//│           return outer1.#x + y;
+//│           const qualifier1 = this;
+//│           return qualifier1.#x + y;
 //│         }
 //│       static
 //│         unapply(ins) {
@@ -133,7 +133,7 @@ class B(x: Int, val y: Int)
 //│   constructor() {
 //│   }
 //│   get B() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#B === undefined) {
 //│       class B {
 //│         #x;
@@ -184,7 +184,7 @@ class C {
 //│   constructor() {
 //│   }
 //│   get C() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#C === undefined) {
 //│       class C {
 //│         #x;

@@ -12,10 +12,10 @@ class Test(val n: Int) {
 //│ class TypingUnit {
 //│   #Test;
 //│   constructor() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│   }
 //│   get Test() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#Test === undefined) {
 //│       class Test {
 //│         #n;
@@ -25,7 +25,7 @@ class Test(val n: Int) {
 //│         }
 //│         get inc() {
 //│           const n = this.#n;
-//│           return outer.Test(n + 1);
+//│           return qualifier.Test(n + 1);
 //│         }
 //│       static
 //│         unapply(ins) {
@@ -153,7 +153,7 @@ module M2 {
 //│   constructor() {
 //│   }
 //│   get M2() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#M2 === undefined) {
 //│       class M2 {
 //│         #m;

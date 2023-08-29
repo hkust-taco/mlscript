@@ -28,18 +28,19 @@ sealed trait TypeSymbol extends LexicalSymbol {
 }
 
 sealed trait NuTypeSymbol { sym: TypeSymbol =>
-  val isNested: Bool // is nested in another class/mixin/module TODO: remove
   val methods: Ls[MethodDef[Left[Term, Type]]] // implemented methods
   val signatures: Ls[MethodDef[Right[Term, Type]]] // methods signatures
   val ctor: Ls[Statement] // statements in the constructor
   val nested: Ls[NuTypeDef] // nested class/mixin/module
-  val outsider: Opt[Str] // if it is inside another NuTypeSymbol, it indicates the runtime alias of parent's `this`
+  val qualifier: Opt[Str] // if it is inside another NuTypeSymbol, it indicates the runtime alias of parent's `this`
   val superParameters: Ls[Term] // parameters that need to be passed to the `super()`
   val isPlainJSClass: Bool // is this a plain class in JS
   val ctorParams: Opt[Ls[(Str, Bool)]] // parameters in the constructor
   val publicCtors: Ls[Str] // public(i.e., val-) parameters in the ctor
   val matchingFields: Ls[Str] = sym.body.collectFields // matchable fields(i.e., fields in `class ClassName(...)`)
   val unapplyMtd: Opt[MethodDef[Left[Term, Type]]] // unapply method
+
+  def isNested: Bool = qualifier.isDefined // is nested in another class/mixin/module
 }
 
 sealed class ValueSymbol(val lexicalName: Str, val runtimeName: Str, val isByvalueRec: Option[Boolean], val isLam: Boolean) extends RuntimeSymbol {
@@ -106,7 +107,7 @@ final case class NewClassMemberSymbol(
   isByvalueRec: Option[Boolean],
   isLam: Boolean,
   isPrivate: Boolean,
-  outsider: Option[Str]
+  qualifier: Option[Str]
 ) extends RuntimeSymbol {
   override def toString: Str = s"new class member $lexicalName"
 
@@ -126,8 +127,7 @@ final case class NewClassSymbol(
     superParameters: Ls[Term],
     publicCtors: Ls[Str],
     nested: Ls[NuTypeDef],
-    outsider: Opt[Str],
-    isNested: Bool,
+    qualifier: Opt[Str],
     isPlainJSClass: Bool
 ) extends TypeSymbol
     with RuntimeSymbol with NuTypeSymbol {
@@ -146,8 +146,7 @@ final case class MixinSymbol(
     ctor: Ls[Statement],
     publicCtors: Ls[Str],
     nested: Ls[NuTypeDef],
-    outsider: Opt[Str],
-    isNested: Bool
+    qualifier: Opt[Str]
 ) extends TypeSymbol
     with RuntimeSymbol with NuTypeSymbol {
   override def toString: Str = s"mixin $lexicalName"
@@ -172,8 +171,7 @@ final case class ModuleSymbol(
     ctor: Ls[Statement],
     superParameters: Ls[Term],
     nested: Ls[NuTypeDef],
-    outsider: Opt[Str],
-    isNested: Bool
+    qualifier: Opt[Str]
 ) extends TypeSymbol
     with RuntimeSymbol with NuTypeSymbol {
   override def toString: Str = s"module $lexicalName"

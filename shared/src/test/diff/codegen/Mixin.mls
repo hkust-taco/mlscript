@@ -15,7 +15,7 @@ class Lit(n: Int)
 //│   constructor() {
 //│   }
 //│   get Add() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#Add === undefined) {
 //│       class Add {
 //│         #lhs;
@@ -38,7 +38,7 @@ class Lit(n: Int)
 //│     return this.#Add;
 //│   }
 //│   get Lit() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#Lit === undefined) {
 //│       class Lit {
 //│         #n;
@@ -70,7 +70,7 @@ class Lit(n: Int)
 //│ │ │     constructor() {
 //│ │ │     }
 //│ │ │     get Add() {
-//│ │ │       const outer = this;
+//│ │ │       const qualifier = this;
 //│ │ │       if (this.#Add === undefined) {
 //│ │ │         class Add {
 //│ │ │           #lhs;
@@ -93,7 +93,7 @@ class Lit(n: Int)
 //│ │ │       return this.#Add;
 //│ │ │     }
 //│ │ │     get Lit() {
-//│ │ │       const outer = this;
+//│ │ │       const qualifier = this;
 //│ │ │       if (this.#Lit === undefined) {
 //│ │ │         class Lit {
 //│ │ │           #n;
@@ -135,7 +135,7 @@ mixin EvalBase {
 //│   constructor() {
 //│   }
 //│   EvalBase(base) {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     return (class EvalBase extends base {
 //│       constructor(...rest) {
 //│         super(...rest);
@@ -165,7 +165,7 @@ mixin EvalBase {
 //│ │ │     constructor() {
 //│ │ │     }
 //│ │ │     EvalBase(base) {
-//│ │ │       const outer = this;
+//│ │ │       const qualifier = this;
 //│ │ │       return (class EvalBase extends base {
 //│ │ │         constructor(...rest) {
 //│ │ │           super(...rest);
@@ -201,7 +201,7 @@ class Neg<A>(expr: A)
 //│   constructor() {
 //│   }
 //│   get Neg() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#Neg === undefined) {
 //│       class Neg {
 //│         #expr;
@@ -230,7 +230,7 @@ class Neg<A>(expr: A)
 //│ │ │     constructor() {
 //│ │ │     }
 //│ │ │     get Neg() {
-//│ │ │       const outer = this;
+//│ │ │       const qualifier = this;
 //│ │ │       if (this.#Neg === undefined) {
 //│ │ │         class Neg {
 //│ │ │           #expr;
@@ -271,7 +271,7 @@ mixin EvalNeg {
 //│   constructor() {
 //│   }
 //│   EvalNeg(base) {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     return (class EvalNeg extends base {
 //│       constructor(...rest) {
 //│         super(...rest);
@@ -295,7 +295,7 @@ mixin EvalNeg {
 //│ │ │     constructor() {
 //│ │ │     }
 //│ │ │     EvalNeg(base) {
-//│ │ │       const outer = this;
+//│ │ │       const qualifier = this;
 //│ │ │       return (class EvalNeg extends base {
 //│ │ │         constructor(...rest) {
 //│ │ │           super(...rest);
@@ -332,7 +332,7 @@ mixin EvalNegNeg {
 //│   constructor() {
 //│   }
 //│   EvalNegNeg(base) {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     return (class EvalNegNeg extends base {
 //│       constructor(...rest) {
 //│         super(...rest);
@@ -356,7 +356,7 @@ mixin EvalNegNeg {
 //│ │ │     constructor() {
 //│ │ │     }
 //│ │ │     EvalNegNeg(base) {
-//│ │ │       const outer = this;
+//│ │ │       const qualifier = this;
 //│ │ │       return (class EvalNegNeg extends base {
 //│ │ │         constructor(...rest) {
 //│ │ │           super(...rest);
@@ -392,7 +392,7 @@ module TestLang extends EvalBase, EvalNeg, EvalNegNeg
 //│   constructor() {
 //│   }
 //│   get TestLang() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#TestLang === undefined) {
 //│       class TestLang extends EvalNegNeg(EvalNeg(EvalBase(Object))) {
 //│         constructor() {
@@ -416,7 +416,7 @@ module TestLang extends EvalBase, EvalNeg, EvalNegNeg
 //│ │ │     constructor() {
 //│ │ │     }
 //│ │ │     get TestLang() {
-//│ │ │       const outer = this;
+//│ │ │       const qualifier = this;
 //│ │ │       if (this.#TestLang === undefined) {
 //│ │ │         class TestLang extends EvalNegNeg(EvalNeg(EvalBase(Object))) {
 //│ │ │           constructor() {
@@ -518,7 +518,7 @@ mixin Fooo(val x: Int) { fun f = [x, this.x] }
 //│   constructor() {
 //│   }
 //│   Fooo(base) {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     return (class Fooo extends base {
 //│       #x;
 //│       get x() { return this.#x; }
@@ -549,7 +549,7 @@ mixin Bazz(val y: Int)
 //│   constructor() {
 //│   }
 //│   Bazz(base) {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     return (class Bazz extends base {
 //│       #y;
 //│       get y() { return this.#y; }
@@ -575,7 +575,7 @@ module Barr extends Fooo(0), Bazz(1)
 //│   constructor() {
 //│   }
 //│   get Barr() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#Barr === undefined) {
 //│       class Barr extends Bazz(Fooo(Object)) {
 //│         constructor() {
@@ -642,7 +642,7 @@ module MM extends MA(1), MB(2, 3), MC(4)
 //│   constructor() {
 //│   }
 //│   get MM() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#MM === undefined) {
 //│       class MM extends MC(MB(MA(Object))) {
 //│         constructor() {

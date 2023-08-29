@@ -16,7 +16,7 @@ module Test0 {
 //│   constructor() {
 //│   }
 //│   get Test0() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#Test0 === undefined) {
 //│       class Test0 {
 //│         constructor() {
@@ -70,7 +70,7 @@ class A(a: Int) {
 //│   constructor() {
 //│   }
 //│   get A() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#A === undefined) {
 //│       class A {
 //│         #a;
@@ -148,7 +148,7 @@ class Foo {
 //│   constructor() {
 //│   }
 //│   get Foo() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#Foo === undefined) {
 //│       class Foo {};
 //│       this.#Foo = Foo;
@@ -178,7 +178,7 @@ class Bar {
 //│   constructor() {
 //│   }
 //│   get Bar() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#Bar === undefined) {
 //│       class Bar {};
 //│       this.#Bar = Bar;
@@ -209,7 +209,7 @@ class Baz() {
 //│   constructor() {
 //│   }
 //│   get Baz() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#Baz === undefined) {
 //│       class Baz {
 //│         #x;
@@ -282,7 +282,7 @@ class Q() {
 //│   constructor() {
 //│   }
 //│   get Q() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#Q === undefined) {
 //│       class Q {
 //│         #q;
@@ -291,9 +291,9 @@ class Q() {
 //│           const q = this.#q;
 //│         }
 //│         get qq() {
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│           return ((() => {
-//│             let f = (x) => ({ q: x + outer1.#q });
+//│             let f = (x) => ({ q: x + qualifier1.#q });
 //│             return f(1);
 //│           })());
 //│         }
@@ -336,7 +336,7 @@ class W() {
 //│   constructor() {
 //│   }
 //│   get W() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#W === undefined) {
 //│       class W {
 //│         #x;
@@ -345,8 +345,8 @@ class W() {
 //│           const x = this.#x;
 //│         }
 //│         add(self1) {
-//│           const outer1 = this;
-//│           return outer1.#x + self1;
+//│           const qualifier1 = this;
+//│           return qualifier1.#x + self1;
 //│         }
 //│       static
 //│         unapply(ins) {

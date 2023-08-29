@@ -13,7 +13,7 @@ class C(a: Int) { val a = 1 }
 //│   constructor() {
 //│   }
 //│   get C() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#C === undefined) {
 //│       class C {
 //│         #a;
@@ -63,7 +63,7 @@ class C2(a: Int, b: Int) {
 //│   constructor() {
 //│   }
 //│   get C2() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#C2 === undefined) {
 //│       class C2 {
 //│         #a;

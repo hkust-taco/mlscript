@@ -16,10 +16,10 @@ mixin EvalAddLit {
 //│ class TypingUnit {
 //│   #Lit;
 //│   constructor() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│   }
 //│   EvalAddLit(base) {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     return (class EvalAddLit extends base {
 //│       constructor(...rest) {
 //│         super(...rest);
@@ -27,7 +27,7 @@ mixin EvalAddLit {
 //│       eval(e) {
 //│         return ((() => {
 //│           let a;
-//│           return (a = e, a instanceof outer.Lit.class ? (([n]) => n)(outer.Lit.class.unapply(e)) : (() => {
+//│           return (a = e, a instanceof qualifier.Lit.class ? (([n]) => n)(qualifier.Lit.class.unapply(e)) : (() => {
 //│             throw new Error("non-exhaustive case expression");
 //│           })());
 //│         })());
@@ -35,7 +35,7 @@ mixin EvalAddLit {
 //│     });
 //│   }
 //│   get Lit() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#Lit === undefined) {
 //│       class Lit {
 //│         #n;

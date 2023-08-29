@@ -21,7 +21,7 @@ module A {
 //│   constructor() {
 //│   }
 //│   get A() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#A === undefined) {
 //│       class A {
 //│         #B;
@@ -32,7 +32,7 @@ module A {
 //│           const a = this.#a;
 //│         }
 //│         get B() {
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│           if (this.#B === undefined) {
 //│             class B {
 //│               #x;
@@ -147,19 +147,19 @@ mixin C() {
 //│   constructor() {
 //│   }
 //│   C(base) {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     return (class C extends base {
 //│       constructor(...rest) {
 //│         super(...rest);
 //│       }
 //│       D(base) {
-//│         const outer1 = this;
+//│         const qualifier1 = this;
 //│         return (class D extends base {
 //│           constructor(...rest) {
 //│             super(...rest);
 //│           }
 //│           E(base) {
-//│             const outer2 = this;
+//│             const qualifier2 = this;
 //│             return (class E extends base {
 //│               constructor(...rest) {
 //│                 super(...rest);
@@ -190,18 +190,18 @@ module D {
 //│   constructor() {
 //│   }
 //│   get D() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#D === undefined) {
 //│       class D {
 //│         #E;
 //│         constructor() {
 //│         }
 //│         createE(x) {
-//│           const outer1 = this;
-//│           return outer1.E(x + 1);
+//│           const qualifier1 = this;
+//│           return qualifier1.E(x + 1);
 //│         }
 //│         get E() {
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│           if (this.#E === undefined) {
 //│             class E {
 //│               #x;
@@ -271,31 +271,31 @@ class E(x: Int) {
 //│   constructor() {
 //│   }
 //│   get E() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#E === undefined) {
 //│       class E {
 //│         #F;
 //│         #x;
 //│         constructor(x) {
 //│           this.#x = x;
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│         }
 //│         get F() {
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│           if (this.#F === undefined) {
 //│             class F {
 //│               #G;
 //│               #y;
 //│               constructor(y) {
 //│                 this.#y = y;
-//│                 const outer2 = this;
+//│                 const qualifier2 = this;
 //│               }
 //│               get sum() {
 //│                 const y = this.#y;
-//│                 return outer1.#x + y;
+//│                 return qualifier1.#x + y;
 //│               }
 //│               get G() {
-//│                 const outer2 = this;
+//│                 const qualifier2 = this;
 //│                 if (this.#G === undefined) {
 //│                   class G {
 //│                     #z;
@@ -304,7 +304,7 @@ class E(x: Int) {
 //│                     }
 //│                     get sum() {
 //│                       const z = this.#z;
-//│                       return outer1.#x + outer2.#y + z;
+//│                       return qualifier1.#x + qualifier2.#y + z;
 //│                     }
 //│                   static
 //│                     unapply(ins) {
@@ -394,22 +394,22 @@ class F() {
 //│   constructor() {
 //│   }
 //│   get F() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#F === undefined) {
 //│       class F {
 //│         #G;
 //│         #x;
 //│         constructor() {
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│           this.#x = 42;
 //│           const x = this.#x;
 //│         }
 //│         get G() {
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│           if (this.#G === undefined) {
 //│             class G {
 //│               constructor() {
-//│                 const x1 = outer1.#x + 1;
+//│                 const x1 = qualifier1.#x + 1;
 //│               }
 //│             static
 //│               unapply(ins) {
@@ -462,26 +462,26 @@ module G {
 //│   constructor() {
 //│   }
 //│   get G() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#G === undefined) {
 //│       class G {
 //│         #I;
 //│         #H;
 //│         constructor() {
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│         }
 //│         get H() {
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│           if (this.#H === undefined) {
 //│             class H {
 //│               #J;
 //│               constructor() {
 //│               }
 //│               i1(x) {
-//│                 return outer1.I(x + 1);
+//│                 return qualifier1.I(x + 1);
 //│               }
 //│               get J() {
-//│                 const outer2 = this;
+//│                 const qualifier2 = this;
 //│                 if (this.#J === undefined) {
 //│                   class J {
 //│                     #x;
@@ -490,7 +490,7 @@ module G {
 //│                     }
 //│                     ii(a) {
 //│                       const x = this.#x;
-//│                       return outer1.I(x + a);
+//│                       return qualifier1.I(x + a);
 //│                     }
 //│                   static
 //│                     unapply(ins) {
@@ -509,7 +509,7 @@ module G {
 //│           return this.#H;
 //│         }
 //│         get I() {
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│           if (this.#I === undefined) {
 //│             class I {
 //│               #x;
@@ -586,16 +586,16 @@ module H {
 //│   constructor() {
 //│   }
 //│   get H() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#H === undefined) {
 //│       class H {
 //│         #I;
 //│         #J;
 //│         constructor() {
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│         }
 //│         get I() {
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│           if (this.#I === undefined) {
 //│             class I {
 //│               #x;
@@ -614,7 +614,7 @@ module H {
 //│           return this.#I;
 //│         }
 //│         get J() {
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│           if (this.#J === undefined) {
 //│             class J {
 //│               #x;
@@ -622,7 +622,7 @@ module H {
 //│               get i() { return this.#i; }
 //│               constructor(x) {
 //│                 this.#x = x;
-//│                 this.#i = outer1.I(x + 1);
+//│                 this.#i = qualifier1.I(x + 1);
 //│                 const i = this.#i;
 //│               }
 //│             static
@@ -700,7 +700,7 @@ ij.incY
 //│   constructor() {
 //│   }
 //│   get I() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#I === undefined) {
 //│       class I {
 //│         #J;
@@ -710,7 +710,7 @@ ij.incY
 //│           const y = x + 1;
 //│         }
 //│         get J() {
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│           if (this.#J === undefined) {
 //│             class J {
 //│               #y;
@@ -722,8 +722,8 @@ ij.incY
 //│               }
 //│               get incY() {
 //│                 const x = this.#x;
-//│                 const outer2 = this;
-//│                 return outer2.#y + 1;
+//│                 const qualifier2 = this;
+//│                 return qualifier2.#y + 1;
 //│               }
 //│             static
 //│               unapply(ins) {
@@ -782,17 +782,17 @@ module J {
 //│   constructor() {
 //│   }
 //│   get J() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#J === undefined) {
 //│       class J {
 //│         #K;
 //│         #M;
 //│         #N;
 //│         constructor() {
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│         }
 //│         L(base) {
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│           return (class L extends base {
 //│             constructor(...rest) {
 //│               super(...rest);
@@ -800,7 +800,7 @@ module J {
 //│           });
 //│         }
 //│         get K() {
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│           if (this.#K === undefined) {
 //│             class K {
 //│               #x;
@@ -818,9 +818,9 @@ module J {
 //│           return this.#K;
 //│         }
 //│         get M() {
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│           if (this.#M === undefined) {
-//│             class M extends outer1.K.class {
+//│             class M extends qualifier1.K.class {
 //│               constructor() {
 //│                 super(1);
 //│               }
@@ -835,9 +835,9 @@ module J {
 //│           return this.#M;
 //│         }
 //│         get N() {
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│           if (this.#N === undefined) {
-//│             class N extends outer1.L(outer1.K.class) {
+//│             class N extends qualifier1.L(qualifier1.K.class) {
 //│               #x;
 //│               constructor(x) {
 //│                 super(x + 2);
@@ -990,29 +990,29 @@ M.N.op(M.P())
 //│   constructor() {
 //│   }
 //│   get M() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#M === undefined) {
 //│       class M {
 //│         #O;
 //│         #P;
 //│         #N;
 //│         constructor() {
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│         }
 //│         op(x) {
 //│           let a;
-//│           const outer1 = this;
-//│           return a = x, a instanceof outer1.O.class ? 0 : a instanceof outer1.P.class ? 1 : 2;
+//│           const qualifier1 = this;
+//│           return a = x, a instanceof qualifier1.O.class ? 0 : a instanceof qualifier1.P.class ? 1 : 2;
 //│         }
 //│         get N() {
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│           if (this.#N === undefined) {
 //│             class N {
 //│               constructor() {
 //│               }
 //│               op(x) {
 //│                 let a;
-//│                 return a = x, a instanceof outer1.O.class ? 0 : a instanceof outer1.P.class ? 1 : 2;
+//│                 return a = x, a instanceof qualifier1.O.class ? 0 : a instanceof qualifier1.P.class ? 1 : 2;
 //│               }
 //│             }
 //│             this.#N = new N();
@@ -1021,7 +1021,7 @@ M.N.op(M.P())
 //│           return this.#N;
 //│         }
 //│         get O() {
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│           if (this.#O === undefined) {
 //│             class O {
 //│               constructor() {
@@ -1037,7 +1037,7 @@ M.N.op(M.P())
 //│           return this.#O;
 //│         }
 //│         get P() {
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│           if (this.#P === undefined) {
 //│             class P {
 //│               constructor() {
@@ -1086,25 +1086,25 @@ module N {
 //│   constructor() {
 //│   }
 //│   get N() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#N === undefined) {
 //│       class N {
 //│         #Q;
 //│         #O;
 //│         constructor() {
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│         }
 //│         get O() {
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│           if (this.#O === undefined) {
 //│             class O {
 //│               #P;
 //│               constructor() {
 //│               }
 //│               get P() {
-//│                 const outer2 = this;
+//│                 const qualifier2 = this;
 //│                 if (this.#P === undefined) {
-//│                   class P extends outer1.Q.class {
+//│                   class P extends qualifier1.Q.class {
 //│                     constructor() {
 //│                       super();
 //│                     }
@@ -1125,7 +1125,7 @@ module N {
 //│           return this.#O;
 //│         }
 //│         get Q() {
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│           if (this.#Q === undefined) {
 //│             class Q {
 //│               constructor() {
@@ -1185,7 +1185,7 @@ I(1).J(3).a
 //│   constructor() {
 //│   }
 //│   get I() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#I === undefined) {
 //│       class I {
 //│         #J;
@@ -1193,12 +1193,12 @@ I(1).J(3).a
 //│         #x;
 //│         constructor(x) {
 //│           this.#x = x;
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│           this.#y = x + 1;
 //│           const y = this.#y;
 //│         }
 //│         get J() {
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│           if (this.#J === undefined) {
 //│             class J {
 //│               #z;
@@ -1207,8 +1207,8 @@ I(1).J(3).a
 //│               constructor(z) {
 //│                 this.#z = z;
 //│                 this.#a = [
-//│                   outer1.#x,
-//│                   outer1.#y,
+//│                   qualifier1.#x,
+//│                   qualifier1.#y,
 //│                   z
 //│                 ];
 //│                 const a = this.#a;
@@ -1443,23 +1443,23 @@ class Outer1(outer: Int) {
 //│   constructor() {
 //│   }
 //│   get Outer1() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#Outer1 === undefined) {
 //│       class Outer1 {
 //│         #Outer2;
 //│         #outer;
-//│         constructor(outer2) {
-//│           this.#outer = outer2;
-//│           log(outer2);
+//│         constructor(outer) {
+//│           this.#outer = outer;
+//│           log(outer);
 //│         }
 //│         get Outer2() {
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│           if (this.#Outer2 === undefined) {
 //│             class Outer2 {
 //│               #x;
 //│               constructor(x) {
 //│                 this.#x = x;
-//│                 const outer2 = x + 1;
+//│                 const outer = x + 1;
 //│               }
 //│             static
 //│               unapply(ins) {

@@ -11,7 +11,7 @@ class A(x: Int) {}
 //│   constructor() {
 //│   }
 //│   get A() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#A === undefined) {
 //│       class A {
 //│         #x;
@@ -42,7 +42,7 @@ class B {}
 //│   constructor() {
 //│   }
 //│   get B() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#B === undefined) {
 //│       class B {};
 //│       this.#B = B;
@@ -65,7 +65,7 @@ class C {
 //│   constructor() {
 //│   }
 //│   get C() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#C === undefined) {
 //│       class C {};
 //│       this.#C = C;
@@ -106,7 +106,7 @@ class D(val x: Int) {
 //│   constructor() {
 //│   }
 //│   get D() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#D === undefined) {
 //│       class D {
 //│         #x;
@@ -183,7 +183,7 @@ class H extends B {}
 //│   constructor() {
 //│   }
 //│   get F() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#F === undefined) {
 //│       class F extends C {
 //│         #x;
@@ -202,7 +202,7 @@ class H extends B {}
 //│     return this.#F;
 //│   }
 //│   get G() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#G === undefined) {
 //│       class G extends C {
 //│         constructor() {
@@ -214,7 +214,7 @@ class H extends B {}
 //│     return this.#G;
 //│   }
 //│   get H() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#H === undefined) {
 //│       class H extends B {
 //│         constructor() {
@@ -284,25 +284,25 @@ module I {
 //│   constructor() {
 //│   }
 //│   get I() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#I === undefined) {
 //│       class I {
 //│         #J;
 //│         #K;
 //│         constructor() {
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│         }
 //│         get K() {
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│           if (this.#K === undefined) {
 //│             class K {
 //│               #L;
 //│               constructor() {
 //│               }
 //│               get L() {
-//│                 const outer2 = this;
+//│                 const qualifier2 = this;
 //│                 if (this.#L === undefined) {
-//│                   class L extends outer1.J {
+//│                   class L extends qualifier1.J {
 //│                     constructor() {
 //│                       super(0);
 //│                     }
@@ -318,7 +318,7 @@ module I {
 //│           return this.#K;
 //│         }
 //│         get J() {
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│           if (this.#J === undefined) {
 //│             class J {};
 //│             this.#J = J;
