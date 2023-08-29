@@ -2,6 +2,7 @@
 // * when we don't annotate `arrImpl` in `stepImpl`.
 
 :NoRecursiveTypes
+:NoJS
 
 
 
@@ -17,35 +18,29 @@ type Arrays = (ArraysImpl -> 'r) -> 'r
 
 def stepImpl (arrImpl: ArraysImpl) = { fold = fun f -> arrImpl.fold f }
 //│ stepImpl: ArraysImpl -> {fold: forall 'a. 'a -> 'a}
-//│         = [Function: stepImpl]
 
 def stepImpl_noAnn arrImpl = { fold = fun f -> arrImpl.fold f }
 //│ stepImpl_noAnn: {fold: 'a -> 'b} -> {fold: 'a -> 'b}
-//│               = [Function: stepImpl_noAnn]
 
 
 def step2: Arrays -> Arrays
 //│ step2: Arrays -> Arrays
-//│      = <missing implementation>
 
 
 def step2 arr k = k (arr stepImpl)
 //│ ((ArraysImpl -> {fold: forall 'a. 'a -> 'a}) -> 'b) -> ('b -> 'c) -> 'c
 //│   <:  step2:
 //│ Arrays -> Arrays
-//│      = [Function: step2]
 
 def step2 arr (k: ArraysImplConsumer['rep]) = k (arr stepImpl)
 //│ ((ArraysImpl -> {fold: forall 'a. 'a -> 'a}) -> ArraysImpl) -> ArraysImplConsumer['b] -> 'b
 //│   <:  step2:
 //│ Arrays -> Arrays
-//│      = [Function: step21]
 
 def step2 (arr: Arrays) k = k (arr stepImpl)
 //│ Arrays -> ({fold: forall 'a. 'a -> 'a} -> 'b) -> 'b
 //│   <:  step2:
 //│ Arrays -> Arrays
-//│      = [Function: step22]
 
 // * Using `stepImpl_noAnn` fails to work, as expected:
 
@@ -55,25 +50,24 @@ def step2 arr k = k (arr stepImpl_noAnn)
 //│   <:  step2:
 //│ Arrays -> Arrays
 //│ ╔══[ERROR] Type error in def definition
-//│ ║  l.53: 	def step2 arr k = k (arr stepImpl_noAnn)
+//│ ║  l.48: 	def step2 arr k = k (arr stepImpl_noAnn)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `'b` leaks out of its scope
-//│ ║  l.8: 	type ArraysImpl = { fold: forall 'b. 'b -> 'b }
+//│ ║  l.9: 	type ArraysImpl = { fold: forall 'b. 'b -> 'b }
 //│ ║       	                                     ^^
 //│ ╟── back into type variable `'b`
-//│ ║  l.8: 	type ArraysImpl = { fold: forall 'b. 'b -> 'b }
+//│ ║  l.9: 	type ArraysImpl = { fold: forall 'b. 'b -> 'b }
 //│ ║       	                                           ^^
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this applied expression:
-//│ ║  l.53: 	def step2 arr k = k (arr stepImpl_noAnn)
+//│ ║  l.48: 	def step2 arr k = k (arr stepImpl_noAnn)
 //│ ║        	                  ^
 //│ ╟── • this application:
-//│ ║  l.53: 	def step2 arr k = k (arr stepImpl_noAnn)
+//│ ║  l.48: 	def step2 arr k = k (arr stepImpl_noAnn)
 //│ ║        	                     ^^^^^^^^^^^^^^^^^^
 //│ ╟── • this application:
 //│ ║  l.22: 	def stepImpl_noAnn arrImpl = { fold = fun f -> arrImpl.fold f }
 //│ ╙──      	                                               ^^^^^^^^^^^^^^
-//│      = [Function: step23]
 
 :e
 def step2 arr (k: ArraysImplConsumer['rep]) = k (arr stepImpl_noAnn)
@@ -81,22 +75,21 @@ def step2 arr (k: ArraysImplConsumer['rep]) = k (arr stepImpl_noAnn)
 //│   <:  step2:
 //│ Arrays -> Arrays
 //│ ╔══[ERROR] Type error in def definition
-//│ ║  l.79: 	def step2 arr (k: ArraysImplConsumer['rep]) = k (arr stepImpl_noAnn)
+//│ ║  l.73: 	def step2 arr (k: ArraysImplConsumer['rep]) = k (arr stepImpl_noAnn)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `'b` leaks out of its scope
-//│ ║  l.8: 	type ArraysImpl = { fold: forall 'b. 'b -> 'b }
+//│ ║  l.9: 	type ArraysImpl = { fold: forall 'b. 'b -> 'b }
 //│ ║       	                                     ^^
 //│ ╟── back into type variable `'b`
-//│ ║  l.8: 	type ArraysImpl = { fold: forall 'b. 'b -> 'b }
+//│ ║  l.9: 	type ArraysImpl = { fold: forall 'b. 'b -> 'b }
 //│ ║       	                                           ^^
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this applied expression:
-//│ ║  l.79: 	def step2 arr (k: ArraysImplConsumer['rep]) = k (arr stepImpl_noAnn)
+//│ ║  l.73: 	def step2 arr (k: ArraysImplConsumer['rep]) = k (arr stepImpl_noAnn)
 //│ ║        	                                                 ^^^
 //│ ╟── • this application:
 //│ ║  l.22: 	def stepImpl_noAnn arrImpl = { fold = fun f -> arrImpl.fold f }
 //│ ╙──      	                                               ^^^^^^^^^^^^^^
-//│      = [Function: step24]
 
 :e
 def step2 (arr: Arrays) k = k (arr stepImpl_noAnn)
@@ -104,25 +97,24 @@ def step2 (arr: Arrays) k = k (arr stepImpl_noAnn)
 //│   <:  step2:
 //│ Arrays -> Arrays
 //│ ╔══[ERROR] Type error in def definition
-//│ ║  l.102: 	def step2 (arr: Arrays) k = k (arr stepImpl_noAnn)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.95: 	def step2 (arr: Arrays) k = k (arr stepImpl_noAnn)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `'b` leaks out of its scope
-//│ ║  l.8: 	type ArraysImpl = { fold: forall 'b. 'b -> 'b }
+//│ ║  l.9: 	type ArraysImpl = { fold: forall 'b. 'b -> 'b }
 //│ ║       	                                     ^^
 //│ ╟── back into type variable `'b`
-//│ ║  l.8: 	type ArraysImpl = { fold: forall 'b. 'b -> 'b }
+//│ ║  l.9: 	type ArraysImpl = { fold: forall 'b. 'b -> 'b }
 //│ ║       	                                           ^^
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this applied expression:
-//│ ║  l.102: 	def step2 (arr: Arrays) k = k (arr stepImpl_noAnn)
-//│ ║         	                            ^
+//│ ║  l.95: 	def step2 (arr: Arrays) k = k (arr stepImpl_noAnn)
+//│ ║        	                            ^
 //│ ╟── • this application:
-//│ ║  l.102: 	def step2 (arr: Arrays) k = k (arr stepImpl_noAnn)
-//│ ║         	                               ^^^^^^^^^^^^^^^^^^
+//│ ║  l.95: 	def step2 (arr: Arrays) k = k (arr stepImpl_noAnn)
+//│ ║        	                               ^^^^^^^^^^^^^^^^^^
 //│ ╟── • this application:
 //│ ║  l.22: 	def stepImpl_noAnn arrImpl = { fold = fun f -> arrImpl.fold f }
 //│ ╙──      	                                               ^^^^^^^^^^^^^^
-//│      = [Function: step25]
 
 
 
@@ -141,12 +133,10 @@ def stepImpl arrImpl = { fold = fun f -> fun r0 -> arrImpl.fold f r0 }
 //│ stepImpl: 'a -> {fold: forall 'b 'c 'd. 'b -> ('c -> 'd
 //│   where
 //│     'a <: {fold: 'b -> 'c -> 'd})}
-//│         = [Function: stepImpl1]
 
 
 def step: Arrays2 -> Arrays2
 //│ step: Arrays2 -> Arrays2
-//│     = <missing implementation>
 
 :e
 def step arr k = k (arr stepImpl)
@@ -158,27 +148,26 @@ def step arr k = k (arr stepImpl)
 //│   <:  step:
 //│ Arrays2 -> Arrays2
 //│ ╔══[ERROR] Type error in def definition
-//│ ║  l.152: 	def step arr k = k (arr stepImpl)
+//│ ║  l.142: 	def step arr k = k (arr stepImpl)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `'b` leaks out of its scope
-//│ ║  l.134: 	type ArraysImpl2[Rep] = { fold: forall 'b. 'b -> Rep -> 'b }
+//│ ║  l.126: 	type ArraysImpl2[Rep] = { fold: forall 'b. 'b -> Rep -> 'b }
 //│ ║         	                                           ^^
 //│ ╟── back into type variable `'b`
-//│ ║  l.134: 	type ArraysImpl2[Rep] = { fold: forall 'b. 'b -> Rep -> 'b }
+//│ ║  l.126: 	type ArraysImpl2[Rep] = { fold: forall 'b. 'b -> Rep -> 'b }
 //│ ║         	                                                        ^^
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this function:
-//│ ║  l.140: 	def stepImpl arrImpl = { fold = fun f -> fun r0 -> arrImpl.fold f r0 }
+//│ ║  l.132: 	def stepImpl arrImpl = { fold = fun f -> fun r0 -> arrImpl.fold f r0 }
 //│ ║         	                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── • this application:
-//│ ║  l.152: 	def step arr k = k (arr stepImpl)
+//│ ║  l.142: 	def step arr k = k (arr stepImpl)
 //│ ║         	                    ^^^^^^^^^^^^
 //│ ╟── • this applied expression:
-//│ ║  l.152: 	def step arr k = k (arr stepImpl)
+//│ ║  l.142: 	def step arr k = k (arr stepImpl)
 //│ ║         	                 ^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.140: 	def stepImpl arrImpl = { fold = fun f -> fun r0 -> arrImpl.fold f r0 }
+//│ ║  l.132: 	def stepImpl arrImpl = { fold = fun f -> fun r0 -> arrImpl.fold f r0 }
 //│ ╙──       	                                                   ^^^^^^^^^^^^^^^^^
-//│     = [Function: step]
 
 

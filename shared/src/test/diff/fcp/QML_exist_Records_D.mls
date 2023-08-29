@@ -334,22 +334,13 @@ def step arr = arr (forall 'a. fun impl -> forall 'r. fun (k: ArraysImplConsumer
 //│     = [Function: step7]
 
 // * ...unless we use `stepImpl_ty` instead of `stepImpl`
-:ns // FIXME SOF in simplif
 def step arr = arr (fun impl -> forall 'r. fun (k: ArraysImplConsumer['a, 'r]) -> k (stepImpl_ty impl))
-//│ forall 'b 'c. 'c -> 'b
+//│ ((forall 'a 'a0 'a1 'r 'r0. ArraysImpl[in 'a1 out 'a1 | 'a0, 'r0] -> ArraysImplConsumer['a, 'r] -> 'r) -> 'b) -> 'b
 //│   where
-//│     'c <: (forall 'a 'r 'r0 'd 'a0. 'd -> (forall 'r1 'a1 'a2 'e. ArraysImplConsumer['a1, 'r1] -> 'e)) -> 'b
-//│     'e :> 'r1
-//│     'a1 :> 'a
-//│         <: 'a2
-//│     'a2 :> 'a
-//│         <: 'a1 & 'a0
-//│     'd <: ArraysImpl[in 'a out 'a0, in 'r0 out 'r]
-//│     'r :> 'r0
-//│     'a <: 'a0
-//│     'a0 :> 'a
+//│     'a :> 'a1
+//│        <: 'a0
 //│   <:  step:
-//│ forall 'a. Arrays['a] -> Arrays['a]
+//│ Arrays['a] -> Arrays['a]
 //│     = [Function: step8]
 
 
@@ -414,7 +405,7 @@ def step (arr: Arrays['a]) = arr (fun impl -> arrayRepToArray_A (stepImpl impl))
 //│     = [Function: step15]
 
 def step arr = arr (fun impl -> arrayRepToArray (stepImpl impl))
-//│ ((forall 'a 'r 'b. ArraysImpl['a, 'r] -> (forall 'rep. ArraysImpl['a, 'rep] -> 'b) -> 'b) -> 'c) -> 'c
+//│ ((forall 'b 'a 'r. ArraysImpl['a, 'r] -> (forall 'rep. ArraysImpl['a, 'rep] -> 'b) -> 'b) -> 'c) -> 'c
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│     = [Function: step16]

@@ -855,8 +855,8 @@ trait TypeSimplifier { self: Typer =>
               case S(p) if inlineBounds && !occursInvariantly(tv) && !recVars.contains(tv) =>
                 // * Inline the bounds of non-rec non-invar-occ type variables
                 println(s"Inlining [${printPol(p)}] bounds of $tv (~> $res)")
-                if (p) mergeTransform(true, pol, tv, Set.single(tv), canDistribForall) | res
-                else mergeTransform(false, pol, tv, Set.single(tv), canDistribForall) & res
+                if (p) mergeTransform(true, pol, tv, parents + tv, canDistribForall) | res
+                else mergeTransform(false, pol, tv, parents + tv, canDistribForall) & res
               case poltv if (!wasDefined) =>
                 def setBounds = {
                   trace(s"Setting [±] bounds of $res... (failing ${printPol(poltv)}, inlineBounds $inlineBounds, !occursInvariantly ${!occursInvariantly(tv)}, !recVars.contains(tv) ${!recVars.contains(tv)})") {
