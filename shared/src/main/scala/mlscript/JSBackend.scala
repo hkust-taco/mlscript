@@ -81,10 +81,10 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
   }
 
   // Set `requireActualCls` to true if we need the actual class rather than the constrcutor function (if the class has)
-  private def translateNuTypeSymbol(sym: NuTypeSymbol with RuntimeSymbol, requireActualCls: Bool)(implicit scope: Scope): JSExpr = {
-    val trm = sym.qualifier.fold[JSExpr](JSIdent(sym.runtimeName))(qualifier => {
+  private def translateNuTypeSymbol(sym: NuTypeSymbol, requireActualCls: Bool)(implicit scope: Scope): JSExpr = {
+    val trm = sym.qualifier.fold[JSExpr](JSIdent(sym.name))(qualifier => {
       visitedSymbols += scope.resolveQualifier(qualifier)
-      JSIdent(qualifier).member(sym.runtimeName)
+      JSIdent(qualifier).member(sym.name)
     })
     if (requireActualCls && !sym.isPlainJSClass) trm.member("class") else trm
   }
@@ -107,15 +107,15 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         visitedSymbols += sym
         val ident = JSIdent(sym.runtimeName)
         if (sym.isByvalueRec.isEmpty && !sym.isLam) ident() else ident
-      case S(sym: NuTypeSymbol with RuntimeSymbol) =>
+      case S(sym: NuTypeSymbol) =>
         translateNuTypeSymbol(sym, isCallee) // `isCallee` is true in a `new` expression, which requires the actual class
       case S(sym: NewClassMemberSymbol) =>
         if (sym.isByvalueRec.getOrElse(false) && !sym.isLam) throw CodeGenError(s"unguarded recursive use of by-value binding $name")
         sym.qualifier.fold[JSExpr](throw CodeGenError(s"unqualified member symbol $sym"))(qualifier => {
           visitedSymbols += sym
           visitedSymbols += scope.resolveQualifier(qualifier)
-          val ident = if (sym.isPrivate) JSIdent(s"${qualifier}.#${sym.runtimeName}")
-                      else JSIdent(qualifier).member(sym.runtimeName)
+          val ident = if (sym.isPrivate) JSIdent(s"${qualifier}.#${sym.name}")
+                      else JSIdent(qualifier).member(sym.name)
           if (sym.isByvalueRec.isEmpty && !sym.isLam) ident() else ident
         })
       case S(sym: ClassSymbol) =>
@@ -154,7 +154,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     case App(trm, Tup(args)) =>
       val callee = trm match {
         case Var(nme) => scope.resolveValue(nme) match {
-          case S(sym: NuTypeSymbol with RuntimeSymbol) =>
+          case S(sym: NuTypeSymbol) =>
             translateNuTypeSymbol(sym, false) // ClassName(params)
           case _ => translateVar(nme, true) // Keep this case for the legacy test cases
         }
@@ -510,41 +510,41 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     }
     sym match {
       case S(sym: NewClassSymbol) =>
-        val localScope = scope.derive(s"local ${sym.lexicalName}")
+        val localScope = scope.derive(s"local ${sym.name}")
         val nd = translateNewTypeDefinition(sym, N, false)(localScope)
         val ctorMth = localScope.declareValue("ctor", Some(false), false).runtimeName
         val (constructor, params) = translateNewClassParameters(nd)
         val initList =
           if (sym.isPlainJSClass)
-            Ls(JSReturnStmt(S(JSIdent(sym.lexicalName))))
+            Ls(JSReturnStmt(S(JSIdent(sym.name))))
           else
             Ls(
               JSLetDecl.from(Ls(ctorMth)),
-              JSAssignExpr(JSIdent(ctorMth), JSArrowFn(constructor, L(JSInvoke(JSNew(JSIdent(sym.lexicalName)), params)))).stmt,
-              JSExprStmt(JSAssignExpr(JSIdent(ctorMth).member("class"), JSIdent(sym.lexicalName))),
+              JSAssignExpr(JSIdent(ctorMth), JSArrowFn(constructor, L(JSInvoke(JSNew(JSIdent(sym.name)), params)))).stmt,
+              JSExprStmt(JSAssignExpr(JSIdent(ctorMth).member("class"), JSIdent(sym.name))),
               JSReturnStmt(S(JSIdent(ctorMth)))
             )
-        JSConstDecl(sym.lexicalName, JSImmEvalFn(
+        JSConstDecl(sym.name, JSImmEvalFn(
           N, Nil, R(nd :: initList), Nil
         ))
       case S(sym: MixinSymbol) =>
-        val localScope = scope.derive(s"local ${sym.lexicalName}")
+        val localScope = scope.derive(s"local ${sym.name}")
         val base = localScope.declareValue("base", Some(false), false)
         val nd = translateNewTypeDefinition(sym, S(base), false)(localScope)
-        JSConstDecl(sym.lexicalName, JSArrowFn(
+        JSConstDecl(sym.name, JSArrowFn(
           Ls(JSNamePattern(base.runtimeName)), R(Ls(
             JSReturnStmt(S(JSClassExpr(nd)))
           ))
         ))
       case S(sym: ModuleSymbol) =>
-        val localScope = scope.derive(s"local ${sym.lexicalName}")
+        val localScope = scope.derive(s"local ${sym.name}")
         val nd = translateNewTypeDefinition(sym, N, false)(localScope)
         val ins = localScope.declareValue("ins", Some(false), false).runtimeName
-        JSConstDecl(sym.lexicalName, JSImmEvalFn(
+        JSConstDecl(sym.name, JSImmEvalFn(
           N, Nil, R(Ls(
             nd, JSLetDecl.from(Ls(ins)),
-            JSAssignExpr(JSIdent(ins), JSInvoke(JSNew(JSIdent(sym.lexicalName)), Nil)).stmt,
-            JSExprStmt(JSAssignExpr(JSIdent(ins).member("class"), JSIdent(sym.lexicalName))),
+            JSAssignExpr(JSIdent(ins), JSInvoke(JSNew(JSIdent(sym.name)), Nil)).stmt,
+            JSExprStmt(JSAssignExpr(JSIdent(ins).member("class"), JSIdent(sym.name))),
             JSReturnStmt(S(JSIdent(ins)))
           )), Nil
         ))
@@ -560,7 +560,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
 
     val classBody = translateNewTypeDefinition(mixinSymbol, S(base), false)(getterScope)
     val qualifierStmt = mixinSymbol.qualifier.fold[JSConstDecl](die)(qualifier => JSConstDecl(qualifier, JSIdent("this")))
-    JSClassMethod(mixinSymbol.lexicalName, Ls(JSNamePattern(base.runtimeName)),
+    JSClassMethod(mixinSymbol.name, Ls(JSNamePattern(base.runtimeName)),
       R((qualifierStmt :: Nil) ::: Ls(JSReturnStmt(S(JSClassExpr(classBody)))
       ))
     )
@@ -610,15 +610,15 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       siblingsMembers: Ls[RuntimeSymbol]
   )(implicit getterScope: Scope): JSClassGetter = {
     val decl = translateNewTypeDefinition(moduleSymbol, N, false)(getterScope)
-    val privateIdent = JSIdent(s"this.#${moduleSymbol.lexicalName}")
+    val privateIdent = JSIdent(s"this.#${moduleSymbol.name}")
     val qualifierStmt = moduleSymbol.qualifier.fold[JSConstDecl](die)(qualifier => JSConstDecl(qualifier, JSIdent("this")))
-    JSClassGetter(moduleSymbol.lexicalName, R((qualifierStmt :: Nil) :::
+    JSClassGetter(moduleSymbol.name, R((qualifierStmt :: Nil) :::
       Ls(
         JSIfStmt(JSBinary("===", privateIdent, JSIdent("undefined")), Ls(
           decl,
           JSExprStmt(JSAssignExpr(privateIdent,
-            JSNew(JSInvoke(JSIdent(moduleSymbol.lexicalName), Nil)))),
-          JSExprStmt(JSAssignExpr(privateIdent.member("class"), JSIdent(moduleSymbol.lexicalName))),
+            JSNew(JSInvoke(JSIdent(moduleSymbol.name), Nil)))),
+          JSExprStmt(JSAssignExpr(privateIdent.member("class"), JSIdent(moduleSymbol.name))),
         )),
         JSReturnStmt(S(privateIdent))
       )))
@@ -643,21 +643,21 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       translateNewTypeDefinition(classSymbol, N, false)(getterScope)
     val (constructor, params) = translateNewClassParameters(classBody)
 
-    val privateIdent = JSIdent(s"this.#${classSymbol.lexicalName}")
+    val privateIdent = JSIdent(s"this.#${classSymbol.name}")
     val qualifierStmt = classSymbol.qualifier.fold[JSConstDecl](die)(qualifier => JSConstDecl(qualifier, JSIdent("this")))
     val initList =
       if (classSymbol.isPlainJSClass)
-        Ls(JSExprStmt(JSAssignExpr(privateIdent, JSIdent(classSymbol.lexicalName))))
+        Ls(JSExprStmt(JSAssignExpr(privateIdent, JSIdent(classSymbol.name))))
       else
         Ls(
           JSExprStmt(JSAssignExpr(privateIdent,
             JSArrowFn(constructor, L(
-              JSInvoke(JSIdent("Object").member("freeze"), Ls(JSInvoke(JSNew(JSIdent(classSymbol.lexicalName)), params)))
+              JSInvoke(JSIdent("Object").member("freeze"), Ls(JSInvoke(JSNew(JSIdent(classSymbol.name)), params)))
             )))),
-          JSExprStmt(JSAssignExpr(privateIdent.member("class"), JSIdent(classSymbol.lexicalName))),
-          JSExprStmt(JSAssignExpr(privateIdent.member("unapply"), JSIdent(classSymbol.lexicalName).member("unapply")))
+          JSExprStmt(JSAssignExpr(privateIdent.member("class"), JSIdent(classSymbol.name))),
+          JSExprStmt(JSAssignExpr(privateIdent.member("unapply"), JSIdent(classSymbol.name).member("unapply")))
         )
-    JSClassGetter(classSymbol.lexicalName, R(qualifierStmt :: Ls(
+    JSClassGetter(classSymbol.name, R(qualifierStmt :: Ls(
       JSIfStmt(JSBinary("===", privateIdent, JSIdent("undefined")),
         JSExprStmt(JSClassExpr(classBody)) :: initList),
       JSReturnStmt(S(privateIdent))
@@ -665,12 +665,12 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
   }
 
   protected def translateNewTypeDefinition(
-    sym: TypeSymbol with RuntimeSymbol with NuTypeSymbol,
+    sym: TypeSymbol with NuTypeSymbol,
     baseSym: Opt[ValueSymbol],
     keepTopLevelScope: Bool
   )(implicit scope: Scope): JSClassNewDecl = {
     val nuTypeScope = scope.derive(sym.toString)
-    val constructorScope = nuTypeScope.derive(s"${sym.lexicalName} constructor")
+    val constructorScope = nuTypeScope.derive(s"${sym.name} constructor")
 
     val memberList = ListBuffer[RuntimeSymbol]() // pass to the getter of nested types
     val typeList = ListBuffer[Str]()
@@ -736,13 +736,13 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
 
     if (keepTopLevelScope) // also declare in the top level for diff tests
       declareNewTypeDefs(sym.nested, N)(topLevelScope)
-    classSymbols.foreach(s => {memberList += s; typeList += s.lexicalName})
+    classSymbols.foreach(s => {memberList += s; typeList += s.name})
     mixinSymbols.foreach(s => {memberList += s;})
-    moduleSymbols.foreach(s => {memberList += s; typeList += s.lexicalName})
+    moduleSymbols.foreach(s => {memberList += s; typeList += s.name})
     val members = sym.methods.map(m => translateNewClassMember(m, fields, qualifier)(memberScopes.getOrElse(m.nme.name, die).memberScope))++
-      mixinSymbols.map(s => translateMixinDeclaration(s, memberList.toList)(memberScopes.getOrElse(s.lexicalName, die).memberScope)) ++
-      moduleSymbols.map(s => translateModuleDeclaration(s, memberList.toList)(memberScopes.getOrElse(s.lexicalName, die).memberScope)) ++
-      classSymbols.map(s => translateNewClassDeclaration(s, memberList.toList)(memberScopes.getOrElse(s.lexicalName, die).memberScope))
+      mixinSymbols.map(s => translateMixinDeclaration(s, memberList.toList)(memberScopes.getOrElse(s.name, die).memberScope)) ++
+      moduleSymbols.map(s => translateModuleDeclaration(s, memberList.toList)(memberScopes.getOrElse(s.name, die).memberScope)) ++
+      classSymbols.map(s => translateNewClassDeclaration(s, memberList.toList)(memberScopes.getOrElse(s.name, die).memberScope))
 
     val base: Opt[JSExpr] = baseSym match {
       case Some(base) => S(JSIdent(base.runtimeName))
@@ -813,7 +813,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     val staticMethods = sym.unapplyMtd match {
       case S(unapplyMtd) => unapplyMtd.rhs match {
         case Left(Lam(Tup(_ -> Fld(_, _, _, Var(nme)) :: Nil), Tup(fields))) =>
-          val unapplyScope = nuTypeScope.derive(s"unapply ${sym.lexicalName}")
+          val unapplyScope = nuTypeScope.derive(s"unapply ${sym.name}")
           val ins = unapplyScope.declareParameter(nme)
           JSClassMethod("unapply", JSNamePattern(ins) :: Nil, L(JSArray(fields.map {
             case _ -> Fld(_, _, _, trm) => trm match {
@@ -821,7 +821,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
               case _ => translateTerm(trm)
             } 
           }))) :: Nil
-        case _ => throw CodeGenError(s"invalid unapply method in ${sym.lexicalName}")
+        case _ => throw CodeGenError(s"invalid unapply method in ${sym.name}")
       }
       case _ => Nil
     }
@@ -829,7 +829,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     val qualifierStmt = qualifier.fold[Ls[JSStmt]](Nil)(qualifier =>
       translateQualifierDeclaration(constructorScope.resolveQualifier(qualifier)))
     JSClassNewDecl(
-      sym.lexicalName,
+      sym.name,
       fields,
       fields.filter(sym.publicCtors.contains(_)) ++ getters.toList,
       privateMems.toList ++ fields,
@@ -1171,7 +1171,7 @@ class JSWebBackend extends JSBackend(allowUnresolvedSymbols = true) {
     val moduleIns = topLevelScope.declareValue("typing_unit", Some(false), false)
     val moduleDecl = translateTopModuleDeclaration(topModule, true)(topLevelScope)
     val insDecl =
-      JSConstDecl(moduleIns.runtimeName, JSNew(JSIdent(topModule.runtimeName)))
+      JSConstDecl(moduleIns.runtimeName, JSNew(JSIdent(topModule.name)))
 
     val includes = typeDefs.filter(!_.isDecl).map(addNuTypeToGlobalThis(_, moduleIns.runtimeName))
 

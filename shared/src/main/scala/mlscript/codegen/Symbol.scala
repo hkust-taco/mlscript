@@ -28,6 +28,7 @@ sealed trait TypeSymbol extends LexicalSymbol {
 }
 
 sealed trait NuTypeSymbol { sym: TypeSymbol =>
+  val name: Str
   val methods: Ls[MethodDef[Left[Term, Type]]] // implemented methods
   val signatures: Ls[MethodDef[Right[Term, Type]]] // methods signatures
   val ctor: Ls[Statement] // statements in the constructor
@@ -103,20 +104,21 @@ final case class ClassSymbol(
 }
 
 final case class NewClassMemberSymbol(
-  lexicalName: Str,
+  name: Str,
   isByvalueRec: Option[Boolean],
   isLam: Boolean,
   isPrivate: Boolean,
   qualifier: Option[Str]
 ) extends RuntimeSymbol {
-  override def toString: Str = s"new class member $lexicalName"
+  override def toString: Str = s"new class member $name"
 
   // Class members should have fixed names determined by users
-  override def runtimeName: Str = lexicalName
+  override def lexicalName: Str = name
+  override def runtimeName: Str = name
 }
 
 final case class NewClassSymbol(
-    lexicalName: Str,
+    name: Str,
     params: Ls[Str],
     ctorParams: Opt[Ls[(Str, Bool)]],
     body: Type,
@@ -131,14 +133,15 @@ final case class NewClassSymbol(
     isPlainJSClass: Bool
 ) extends TypeSymbol
     with RuntimeSymbol with NuTypeSymbol {
-  override def toString: Str = s"new class $lexicalName"
+  override def toString: Str = s"new class $name"
 
   // Classes should have fixed names determined by users
-  override def runtimeName: Str = lexicalName
+  override def lexicalName: Str = name
+  override def runtimeName: Str = name
 }
 
 final case class MixinSymbol(
-    lexicalName: Str,
+    name: Str,
     params: Ls[Str],
     body: Type,
     methods: Ls[MethodDef[Left[Term, Type]]],
@@ -149,10 +152,11 @@ final case class MixinSymbol(
     qualifier: Opt[Str]
 ) extends TypeSymbol
     with RuntimeSymbol with NuTypeSymbol {
-  override def toString: Str = s"mixin $lexicalName"
+  override def toString: Str = s"mixin $name"
 
   // Mixins should have fixed names determined by users
-  override def runtimeName: Str = lexicalName
+  override def lexicalName: Str = name
+  override def runtimeName: Str = name
 
   // Mixins should pass `...rest` to the `super()`
   // But the variable name is not sure when we create the symbol object
@@ -163,7 +167,7 @@ final case class MixinSymbol(
 }
 
 final case class ModuleSymbol(
-    lexicalName: Str,
+    name: Str,
     params: Ls[Str],
     body: Type,
     methods: Ls[MethodDef[Left[Term, Type]]],
@@ -174,10 +178,11 @@ final case class ModuleSymbol(
     qualifier: Opt[Str]
 ) extends TypeSymbol
     with RuntimeSymbol with NuTypeSymbol {
-  override def toString: Str = s"module $lexicalName"
+  override def toString: Str = s"module $name"
 
   // Modules should have fixed names determined by users
-  override def runtimeName: Str = lexicalName
+  override def lexicalName: Str = name
+  override def runtimeName: Str = name
   val isPlainJSClass: Bool = false
   val ctorParams: Opt[Ls[(Str, Bool)]] = N
   val publicCtors: Ls[Str] = Nil
