@@ -66,12 +66,6 @@ fff(y: 2, z: y_1 + 1, x: z_1 - 2)
 //│ ╔══[ERROR] identifier not found: z_1
 //│ ║  l.62: 	fff(y: 2, z: y_1 + 1, x: z_1 - 2)
 //│ ╙──      	                         ^^^
-//│ ╔══[ERROR] identifier not found: y_1
-//│ ║  l.62: 	fff(y: 2, z: y_1 + 1, x: z_1 - 2)
-//│ ╙──      	             ^^^
-//│ ╔══[ERROR] identifier not found: z_1
-//│ ║  l.62: 	fff(y: 2, z: y_1 + 1, x: z_1 - 2)
-//│ ╙──      	                         ^^^
 //│ Int
 //│ Code generation encountered an error:
 //│   unresolved symbol z_1
@@ -88,3 +82,26 @@ fff(y: 2, z: y_1 + 1, x: z_1 - 2)
 //│     = 3
 //│ res
 //│     = -3
+
+class A() {
+  fun ma(x: Int, y: Int) = x - y
+  fun mma(x: Int, y: Int) = y - x
+} 
+//│ class A() {
+//│   fun ma: (x: Int, y: Int,) -> Int
+//│   fun mma: (x: Int, y: Int,) -> Int
+//│ }
+
+let x = A()
+x.ma(y: 2, x: 1)
+//│ let x: A
+//│ Int
+//│ x
+//│   = A {}
+//│ res
+//│     = -1
+
+A().ma(x: 1, y: 2)
+//│ Int
+//│ res
+//│     = -1

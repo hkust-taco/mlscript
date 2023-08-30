@@ -994,52 +994,90 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
         term.desugaredTerm = S(desug)
         typeTerm(desug)
       case App(f: Term, a @ Tup(fields)) if (fields.exists(x => x._1.isDefined)) =>
-        val fun_ty: SimpleType =
-          f match {
-            case Sel(t, fieldName) => 
-              val cls_ty = typeTerm(t)
-              println(s"cls_ty => ${cls_ty} ${cls_ty.getClass}")
-              val cls_name = cls_ty.unwrapProxies match {
-                case FunctionType(_, ClassTag(Var(name), parents)) =>
-                  name
-                case _ =>
-                  err("there is problem getting the class name", f.toLoc)
-                  "dummy"
-              }
-              val cls_type = ctx.get(cls_name)
-              println(s"cls type => ${cls_type}")
-              val x = cls_type match {
-                case Some(CompletedTypeInfo(d)) =>
-                  d match {
-                    case d1 @ TypedNuCls(_, _, _, _, members, _, _, _, _) =>
-                      members.get(fieldName.name) match {
-                        case Some(fun) =>
-                          fun match {
-                            case TypedNuFun(level, fd, ProvType(fun_ty @ FunctionType(_, _))) => 
-                              fun_ty
-                            case _ =>
-                              err("selected field is not a method.", f.toLoc)
-                          }
-                        case N =>
-                          err("field not method", f.toLoc)
-                      }
-                    case _ =>
-                      err("class not found", f.toLoc)
-                  }
-                case _ =>
-                  err("class not found", f.toLoc)
-              }
-              x
-            case _ => 
-              val x: SimpleType = typeUnnamedApp(f, a)._1.unwrapProxies match {
-                case PolymorphicType(_, ProvType(ft @ FunctionType(_, _))) =>
-                  ft
-                case _ =>
-                  println("wierd! ")
-                  err(s"unexpected case here", f.toLoc)
-              }
-              x   
-          }
+        // val fun_ty: SimpleType =
+          // f match {
+          //   case Sel(t, fieldName) => 
+          //     val cls_ty: SimpleType = typeTerm(t)
+          //     println(s"cls_ty => ${cls_ty} ${cls_ty.getClass}")
+          //     cls_ty match {
+          //       case TypeVariable(level, lowerbounds, upperbounds) => 
+          //         println("ggggg")
+          //     }
+          //     // val cls_name = cls_ty.unwrapProxies match {
+          //     //   case FunctionType(_, ClassTag(Var(name), parents)) =>
+          //     //     name
+          //     //   case _ =>
+          //     //     err("there is problem getting the class name", f.toLoc)
+          //     //     "dummy"
+          //     // }
+          //     // val cls_type = ctx.get(cls_name)
+          //     // println(s"cls type => ${cls_type}")
+          //     // val x = cls_type match {
+          //     //   case Some(CompletedTypeInfo(d)) =>
+          //     //     d match {
+          //     //       case d1 @ TypedNuCls(_, _, _, _, members, _, _, _, _) =>
+          //     //         members.get(fieldName.name) match {
+          //     //           case Some(fun) =>
+          //     //             fun match {
+          //     //               case TypedNuFun(level, fd, ProvType(fun_ty @ FunctionType(_, _))) => 
+          //     //                 fun_ty
+          //     //               case _ =>
+          //     //                 err("selected field is not a method.", f.toLoc)
+          //     //             }
+          //     //           case N =>
+          //     //             err("field not method", f.toLoc)
+          //     //         }
+          //     //       case _ =>
+          //     //         err("class not found", f.toLoc)
+          //     //     }
+          //     //   case _ =>
+          //     //     err("class not found", f.toLoc)
+          //     // }
+          //     cls_ty
+          //   case _ => 
+          //     val x: SimpleType = typeUnnamedApp(f, a)._1.unwrapProxies match {
+          //       case PolymorphicType(_, ProvType(ft @ FunctionType(_, _))) =>
+          //         ft
+          //       case _ =>
+          //         println("wierd! ")
+          //         err(s"unexpected case here", f.toLoc)
+          //     }
+          //     x   
+          // }
+        val f_ty = typeTerm(f)
+        val fun_ty: SimpleType = f_ty.unwrapProxies match {
+          case tv: TypeVariable =>
+            println(s"lowerbounds => ${tv.lowerBounds}")
+            def getLowerboundFuns(tv: TypeVariable): List[FunctionType] = {
+              val res: List[FunctionType] = tv.lowerBounds.map(x => 
+                x.unwrapProvs match {
+                  case PolymorphicType(_, ProvType(fun_ty @ FunctionType(_, _))) =>
+                    List(fun_ty)
+                  case PolymorphicType(_, fun_ty @ FunctionType(_, _)) =>
+                    List(fun_ty)
+                  case tvv: TypeVariable =>
+                    getLowerboundFuns(tvv) 
+                  case _ =>
+                    err(s"unexpected type for lowerbound members! ${x.unwrapProvs.getClass()}", f.toLoc)
+                    Nil
+                }).flatten
+              res
+            }
+            val funs = getLowerboundFuns(tv)
+            println(s"funs => ${funs}")
+            if (funs.sizeCompare(1) < 0) {
+              err("cannot extract any function", f.toLoc)
+            } else 
+            if (funs.sizeCompare(1) > 0) {
+              err(s"more than one fun type found! => ${funs}", f.toLoc)
+            } else {
+              funs.head
+            }
+          case PolymorphicType(_, ProvType(fun_ty @ FunctionType(_, _))) =>
+            fun_ty
+          case _ =>
+            err("unexpected type for f term", N)
+        }
         println(s"f => ${Helpers.inspect(f)}")
         println(s"fun_ty => ${fun_ty} ${fun_ty.getClass()}")
         val argsList = fun_ty.unwrapProxies match {
@@ -1052,9 +1090,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
                               Var("dummy")
                           })
                         case _ => 
-                          println(s"unexpected case here")
+                          println(s"unexpected case here => ${fun_ty.getClass()}")
                           Nil
         }
+        println(argsList)
         desugarNamedArgs(term, f, a, argsList)
       case App(f: Term, a: Term) =>
         // TODO: probably better to merge this case with previous one.
