@@ -157,7 +157,7 @@ final case class MixinSymbol(
   // Mixins should pass `...rest` to the `super()`
   // But the variable name is not sure when we create the symbol object
   override val superParameters: Ls[Term] = Nil
-  val isPlainJSClass: Bool = false
+  val isPlainJSClass: Bool = true
   val ctorParams: Opt[Ls[(Str, Bool)]] = N
   val unapplyMtd: Opt[MethodDef[Left[Term, Type]]] = N
 }

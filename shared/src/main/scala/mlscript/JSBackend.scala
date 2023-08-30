@@ -80,11 +80,14 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     case _           => throw CodeGenError(s"term $t is not a valid parameter list")
   }
 
-  private def translateNuTypeSymbol(sym: NuTypeSymbol with RuntimeSymbol)(implicit scope: Scope): JSExpr =
-    sym.qualifier.fold[JSExpr](JSIdent(sym.runtimeName))(qualifier => {
+  // Set `requireActualCls` to true if we need the actual class rather than the constrcutor function (if the class has)
+  private def translateNuTypeSymbol(sym: NuTypeSymbol with RuntimeSymbol, requireActualCls: Bool)(implicit scope: Scope): JSExpr = {
+    val trm = sym.qualifier.fold[JSExpr](JSIdent(sym.runtimeName))(qualifier => {
       visitedSymbols += scope.resolveQualifier(qualifier)
       JSIdent(qualifier).member(sym.runtimeName)
     })
+    if (requireActualCls && !sym.isPlainJSClass) trm.member("class") else trm
+  }
 
   protected def translateVar(name: Str, isCallee: Bool)(implicit scope: Scope): JSExpr =
     scope.resolveValue(name) match {
@@ -105,8 +108,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         val ident = JSIdent(sym.runtimeName)
         if (sym.isByvalueRec.isEmpty && !sym.isLam) ident() else ident
       case S(sym: NuTypeSymbol with RuntimeSymbol) =>
-        if (sym.isPlainJSClass || !isCallee) translateNuTypeSymbol(sym)
-        else translateNuTypeSymbol(sym).member("class")
+        translateNuTypeSymbol(sym, isCallee) // `isCallee` is true in a `new` expression, which requires the actual class
       case S(sym: NewClassMemberSymbol) =>
         if (sym.isByvalueRec.getOrElse(false) && !sym.isLam) throw CodeGenError(s"unguarded recursive use of by-value binding $name")
         sym.qualifier.fold[JSExpr](throw CodeGenError(s"unqualified member symbol $sym"))(qualifier => {
@@ -153,8 +155,8 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       val callee = trm match {
         case Var(nme) => scope.resolveValue(nme) match {
           case S(sym: NuTypeSymbol with RuntimeSymbol) =>
-            translateNuTypeSymbol(sym)
-          case _ => translateVar(nme, true)
+            translateNuTypeSymbol(sym, false) // ClassName(params)
+          case _ => translateVar(nme, true) // Keep this case for the legacy test cases
         }
         case _ => translateTerm(trm)
       }
@@ -178,12 +180,6 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       JSRecord(fields map { case (key, Fld(_, _, _, value)) =>
         key.name -> translateTerm(value)
       })
-    case Sel(Var(cls), Var(f)) =>
-      scope.resolveValue(cls) match {
-        case S(sym: NewClassSymbol) if !sym.isPlainJSClass =>
-          translateNuTypeSymbol(sym).member(f)
-        case _ => JSField(translateTerm(Var(cls)), f)
-      }
     case Sel(receiver, fieldName) =>
       JSField(translateTerm(receiver), fieldName.name)
     // Turn let into an IIFE.
@@ -332,12 +328,9 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
           JSBinary("===", scrut.member("constructor"), JSLit("String"))
         case Var(name) => scope.resolveValue(name) match {
           case S(sym: NewClassSymbol) =>
-            if (sym.isPlainJSClass)
-              JSInstanceOf(scrut, translateVar(sym.lexicalName, false))
-            else
-              JSInstanceOf(scrut, translateVar(sym.lexicalName, false).member("class"))
+            JSInstanceOf(scrut, translateNuTypeSymbol(sym, true)) // a is case ClassName(params) -> a instanceof ClassName.class
           case S(sym: ModuleSymbol) =>
-            JSInstanceOf(scrut, translateVar(sym.lexicalName, false).member("class"))
+            JSInstanceOf(scrut, translateNuTypeSymbol(sym, true))
           case _ => topLevelScope.getType(name) match {
             case S(ClassSymbol(_, runtimeName, _, _, _)) => JSInstanceOf(scrut, JSIdent(runtimeName))
             case S(TraitSymbol(_, runtimeName, _, _, _)) => JSIdent(runtimeName)("is")(scrut)
@@ -485,10 +478,8 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
   }
 
   protected def translateQualifierDeclaration(qualifier: ValueSymbol): Ls[JSStmt] =
-    if (visitedSymbols(qualifier)) {
-      visitedSymbols -= qualifier
+    if (visitedSymbols(qualifier))
       JSConstDecl(qualifier.runtimeName, JSIdent("this")) :: Nil
-    }
     else Nil
   
   protected def addNuTypeToGlobalThis(typeDef: NuTypeDef, moduleName: Str) = {
@@ -590,12 +581,9 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       scope.resolveValue(name) match {
         case Some(_: TraitSymbol) => base // TODO:
         case Some(sym: MixinSymbol) =>
-          JSInvoke(translateNuTypeSymbol(sym), Ls(base))
+          JSInvoke(translateNuTypeSymbol(sym, true), Ls(base)) // class D() extends B -> class D extends B.class
         case Some(sym: NuTypeSymbol) if !mixinOnly =>
-          if (sym.isPlainJSClass)
-            translateNuTypeSymbol(sym)
-          else
-            translateNuTypeSymbol(sym).member("class")
+          translateNuTypeSymbol(sym, true)
         case Some(t) => throw CodeGenError(s"unexpected parent symbol $t.")
         case N => throw CodeGenError(s"unresolved parent $name.")
       }
@@ -687,26 +675,28 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     val memberList = ListBuffer[RuntimeSymbol]() // pass to the getter of nested types
     val typeList = ListBuffer[Str]()
 
-    final case class Pack(memberScope: Scope, qualifier: Str)
+    // Store the scope for each member and the qualifier's name in the corresponding scope
+    // Avoid `m._1` or `m._2` in the following code
+    final case class QualifierPack(memberScope: Scope, qualifier: Str)
 
     val qualifierName = "qualifier"
     val memberScopes = (sym.nested.map(nd => {
       val memberScope = nuTypeScope.derive(s"member ${nd.name}")
       val sym = memberScope.declareQualifierSymbol(qualifierName)
-      nd.name -> Pack(memberScope, sym)
+      nd.name -> QualifierPack(memberScope, sym)
     }) ++ sym.methods.map(m => {
       val memberScope = nuTypeScope.derive(s"member ${m.nme.name}")
       val sym = memberScope.declareQualifierSymbol(qualifierName)
-      m.nme.name -> Pack(memberScope, sym)
+      m.nme.name -> QualifierPack(memberScope, sym)
     })).toMap
 
     // `qualifier` should always be the first value in the getter scope so all qualifiers should have the same name!
-    val qualifier = memberScopes.headOption.fold(S(constructorScope.declareQualifierSymbol(qualifierName)))(mh => {
-      memberScopes.foreach(m =>
-        assert(m._2.qualifier === mh._2.qualifier, s"the expected qualifier's runtime name should be ${mh._2.qualifier}, ${m._2.qualifier} found")
+    val qualifier = memberScopes.values.headOption.fold(S(constructorScope.declareQualifierSymbol(qualifierName)))(mh => {
+      memberScopes.values.foreach(m =>
+        assert(m.qualifier === mh.qualifier, s"the expected qualifier's runtime name should be ${mh.qualifier}, ${m.qualifier} found")
       )
-      assert(constructorScope.declareQualifierSymbol(mh._2.qualifier) === mh._2.qualifier)
-      S(mh._2.qualifier)
+      assert(constructorScope.declareQualifierSymbol(mh.qualifier) === mh.qualifier)
+      S(mh.qualifier)
     })
 
     val fields = sym.matchingFields ++
