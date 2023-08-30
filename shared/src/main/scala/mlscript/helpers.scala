@@ -433,7 +433,8 @@ trait NuDeclImpl extends Located { self: NuDecl =>
           case _ => die
         }
       )
-      S(NuFunDef(N, Var("unapply"), Nil, L(Lam(Tup(N -> Fld(false, false, false, Var("ins")) :: Nil), ret)))(N, N, N, N, true))
+      S(NuFunDef(N, Var("unapply"), Nil,
+        L(Lam(Tup(N -> Fld(false, false, false, Asc(Var("ins"), Inter(TypeVar(R("Ins"), N), TypeName(name)))) :: Nil), ret)))(N, N, N, N, true))
     case _ => N
   }
 }

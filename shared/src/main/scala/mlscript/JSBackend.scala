@@ -812,7 +812,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
 
     val staticMethods = sym.unapplyMtd match {
       case S(unapplyMtd) => unapplyMtd.rhs match {
-        case Left(Lam(Tup(_ -> Fld(_, _, _, Var(nme)) :: Nil), Tup(fields))) =>
+        case Left(Lam(Tup(_ -> Fld(_, _, _, Asc(Var(nme), _)) :: Nil), Tup(fields))) =>
           val unapplyScope = nuTypeScope.derive(s"unapply ${sym.name}")
           val ins = unapplyScope.declareParameter(nme)
           JSClassMethod("unapply", JSNamePattern(ins) :: Nil, L(JSArray(fields.map {
