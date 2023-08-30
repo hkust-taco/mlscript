@@ -152,7 +152,7 @@ error : BaseTest
 //│ BaseTest
 //│ res
 //│ Runtime error:
-//│   Error: unexpected runtime error
+//│   Error: an error was thrown
 
 
 // :ns

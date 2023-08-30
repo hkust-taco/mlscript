@@ -33,5 +33,5 @@ class Covar[A]
 (error : Covar[{ x: int }]) : Covar[{}]
 //│ res: Covar[?]
 //│ Runtime error:
-//│   Error: unexpected runtime error
+//│   Error: an error was thrown
 

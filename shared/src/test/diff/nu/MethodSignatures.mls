@@ -162,7 +162,7 @@ module M {
 //│ ╔══[ERROR] undeclared `this`
 //│ ║  l.159: 	  fun a: this.A
 //│ ╙──       	         ^^^^
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 
 // FIXME similar
 module M {

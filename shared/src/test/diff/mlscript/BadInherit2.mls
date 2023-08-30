@@ -188,7 +188,7 @@ class A1_2: S1 & T1
 //│ Defined A1_2.Foo1: A1_2 -> nothing
 //│ // Prelude
 //│ function error() {
-//│   throw new Error("unexpected runtime error");
+//│   throw new Error("an error was thrown");
 //│ }
 //│ class A1_2 {
 //│   constructor(fields) {
@@ -205,7 +205,7 @@ class A1_2: S1 & T1
 (A1_2{}).Foo1
 //│ res: ('A & (int | string)) -> 'A
 //│ Runtime error:
-//│   Error: unexpected runtime error
+//│   Error: an error was thrown
 
 
 f = 0

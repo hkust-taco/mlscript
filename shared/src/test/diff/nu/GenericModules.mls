@@ -92,7 +92,7 @@ Test.foo(error) + 1
 //│ Int | error
 //│ res
 //│ Runtime error:
-//│   Error: unexpected runtime error
+//│   Error: an error was thrown
 
 :e
 Test<Int> .foo

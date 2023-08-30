@@ -142,7 +142,7 @@ type Bot = 'a
 error: Bot
 //│ res: Bot
 //│ Runtime error:
-//│   Error: unexpected runtime error
+//│   Error: an error was thrown
 
 type PolyId = 'a -> 'a
 //│ Defined type alias PolyId

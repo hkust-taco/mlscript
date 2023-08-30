@@ -392,13 +392,13 @@ foo 1 2
 foo 1 error
 //│ res: 'a -> 'a
 //│ Runtime error:
-//│   Error: unexpected runtime error
+//│   Error: an error was thrown
 
 :re
 foo 1 error 2
 //│ res: 2
 //│ Runtime error:
-//│   Error: unexpected runtime error
+//│   Error: an error was thrown
 
 (fun key -> match_opt (
     fun () -> fun f -> fun x -> x,

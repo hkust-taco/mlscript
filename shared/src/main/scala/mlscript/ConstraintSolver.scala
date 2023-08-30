@@ -31,7 +31,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         (implicit ctx: Ctx, raise: Raise)
         : Either[Diagnostic, NuMember]
         = {
-    val info = ctx.tyDefs2.getOrElse(clsNme, die/*TODO*/)
+    val info = ctx.tyDefs2.getOrElse(clsNme, ???/*TODO*/)
     
     if (info.isComputing) {
       
@@ -122,11 +122,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                 // _tv.lowerBounds.foldLeft(BotType: ST)(_ | _),
                 // _tv.upperBounds.foldLeft(TopType: ST)(_ & _),
                 _tv.lowerBounds.foldLeft(
-                  Extruded(false, SkolemTag(_tv.level, _tv)(provTODO))(provTODO, Nil): ST
+                  Extruded(true, SkolemTag(_tv.level, _tv)(provTODO))(provTODO, Nil): ST
                   // ^ TODO provide extrusion reason?
                 )(_ | _),
                 _tv.upperBounds.foldLeft(
-                  Extruded(true, SkolemTag(_tv.level, _tv)(provTODO))(provTODO, Nil): ST
+                  Extruded(false, SkolemTag(_tv.level, _tv)(provTODO))(provTODO, Nil): ST
                   // ^ TODO provide extrusion reason?
                 )(_ & _),
               )(_tv.prov)
