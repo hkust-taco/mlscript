@@ -1030,6 +1030,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
             f_ty
           case _ =>
             err("unexpected type for f term", N)
+            throw new Error("match error")
         }
         println(s"f => ${Helpers.inspect(f)}")
         println(s"f_ty => ${f_ty} ${f_ty.getClass()}")
