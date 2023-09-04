@@ -19,11 +19,7 @@ test(y: 0)
 //│ ╔══[ERROR] name x is missed in function call
 //│ ║  l.18: 	test(y: 0)
 //│ ╙──      	    ^^^^^^
-//│ ╔══[ERROR] identifier not found: dummy
-//│ ╙──
-//│ Int
-//│ Code generation encountered an error:
-//│   unresolved symbol dummy
+//│ /!!!\ Uncaught error: java.lang.Error: name x is missed in function call
 
 
 fun test(x: 'a, y: 'b) = [x, y]
@@ -32,7 +28,7 @@ fun test(x: 'a, y: 'b) = [x, y]
 :e
 test(y: 0)
 //│ ╔══[ERROR] number of parameters dosen't match with the function signature!
-//│ ║  l.33: 	test(y: 0)
+//│ ║  l.29: 	test(y: 0)
 //│ ╙──      	    ^^^^^^
 //│ error
 //│ res
@@ -42,24 +38,20 @@ test(y: 0)
 :e
 test(1, x: 0)
 //│ ╔══[ERROR] parameter x is duplicate!
-//│ ║  l.43: 	test(1, x: 0)
+//│ ║  l.39: 	test(1, x: 0)
 //│ ╙──      	    ^^^^^^^^^
 //│ ╔══[ERROR] name y is missed in function call
-//│ ║  l.43: 	test(1, x: 0)
+//│ ║  l.39: 	test(1, x: 0)
 //│ ╙──      	    ^^^^^^^^^
-//│ ╔══[ERROR] identifier not found: dummy
-//│ ╙──
-//│ (0, error,)
-//│ Code generation encountered an error:
-//│   unresolved symbol dummy
+//│ /!!!\ Uncaught error: java.lang.Error: name y is missed in function call
 
 // * Notice no let binding is generated for the first argument
 :js
 test(0, y: 1)
 //│ (0, 1,)
 //│ // Prelude
-//│ class TypingUnit6 {}
-//│ const typing_unit6 = new TypingUnit6;
+//│ class TypingUnit4 {}
+//│ const typing_unit4 = new TypingUnit4;
 //│ // Query 1
 //│ res = ((y_1) => test1(0, y_1))(1);
 //│ // End of generated code
@@ -74,10 +66,10 @@ fun fff(x: Int, y: Int, z: Int) = (x - y) * z
 :e
 fff(y: 2, z: y_1 + 1, x: z_1 - 2)
 //│ ╔══[ERROR] identifier not found: y_1
-//│ ║  l.75: 	fff(y: 2, z: y_1 + 1, x: z_1 - 2)
+//│ ║  l.67: 	fff(y: 2, z: y_1 + 1, x: z_1 - 2)
 //│ ╙──      	             ^^^
 //│ ╔══[ERROR] identifier not found: z_1
-//│ ║  l.75: 	fff(y: 2, z: y_1 + 1, x: z_1 - 2)
+//│ ║  l.67: 	fff(y: 2, z: y_1 + 1, x: z_1 - 2)
 //│ ╙──      	                         ^^^
 //│ Int
 //│ Code generation encountered an error:
@@ -140,32 +132,24 @@ p(z: 1, y: 2)
 //│ // Output
 //│ [ 0, 2, 1 ]
 
-
 :e
 fun print(x) = (y, z) => log([x, y, z])
 let p = print(0)
 p(z: 1, y: 2)
 //│ ╔══[ERROR] cannot use named args in this case.
-//│ ║  l.147: 	p(z: 1, y: 2)
+//│ ║  l.138: 	p(z: 1, y: 2)
 //│ ╙──       	 ^^^^^^^^^^^^
-//│ ╔══[ERROR] cannot use named args in this case.
-//│ ║  l.147: 	p(z: 1, y: 2)
-//│ ╙──       	 ^^^^^^^^^^^^
-//│ ╔══[ERROR] name dummy is missed in function call
-//│ ║  l.147: 	p(z: 1, y: 2)
-//│ ╙──       	 ^^^^^^^^^^^^
-//│ ╔══[ERROR] name dummy is missed in function call
-//│ ║  l.147: 	p(z: 1, y: 2)
-//│ ╙──       	 ^^^^^^^^^^^^
-//│ ╔══[ERROR] identifier not found: dummy
-//│ ╙──
-//│ ╔══[ERROR] identifier not found: dummy
-//│ ╙──
-//│ fun print: anything -> (anything, anything,) -> undefined
-//│ let p: (anything, anything,) -> undefined
-//│ undefined
-//│ Code generation encountered an error:
-//│   unresolved symbol dummy
+//│ /!!!\ Uncaught error: java.lang.Error: cannot use named args in this case.
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$31(Typer.scala:1044)
+//│ 	at: scala.collection.immutable.List.map(List.scala:246)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:1039)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:1206)
+//│ 	at: mlscript.Typer.typeTerms(Typer.scala:1353)
+//│ 	at: mlscript.NuTypeDefs.go$1(NuTypeDefs.scala:577)
+//│ 	at: mlscript.NuTypeDefs.$anonfun$typeTypingUnit$12(NuTypeDefs.scala:587)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.NuTypeDefs.$anonfun$typeTypingUnit$2(NuTypeDefs.scala:587)
 
 
 class Baz() {
@@ -196,24 +180,14 @@ b.f(y: 1, x: 2)
 class A(x: Int, y: Int)
 //│ class A(x: Int, y: Int)
 
-A(x: 2, y: 1)
-//│ ╔══[ERROR] unexpected type for f term
-//│ ╙──
-//│ ╔══[ERROR] number of parameters dosen't match with the function signature!
-//│ ║  l.199: 	A(x: 2, y: 1)
-//│ ╙──       	 ^^^^^^^^^^^^
-//│ error
+let z = A(y: 2, x: 1)
+z.x
+z.y
+//│ let z: A
+//│ Int
+//│ z
+//│   = A {}
 //│ res
-//│     = A {}
-
-A(y: 1, x: 2)
-//│ ╔══[ERROR] unexpected type for f term
-//│ ╙──
-//│ ╔══[ERROR] number of parameters dosen't match with the function signature!
-//│ ║  l.209: 	A(y: 1, x: 2)
-//│ ╙──       	 ^^^^^^^^^^^^
-//│ error
+//│     = 1
 //│ res
-//│     = A {}
-
-
+//│     = 2

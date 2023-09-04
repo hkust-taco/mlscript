@@ -9,6 +9,7 @@ import scala.annotation.tailrec
 import mlscript.utils._, shorthands._
 import mlscript.Message._
 import mlscript.codegen.Helpers
+import Diagnostic._
 
 /** A class encapsulating type inference state.
  *  It uses its own internal representation of types and type variables, using mutable data structures.
@@ -994,56 +995,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
         term.desugaredTerm = S(desug)
         typeTerm(desug)
       case App(f: Term, a @ Tup(fields)) if (fields.exists(x => x._1.isDefined)) =>
-        // val fun_ty: SimpleType =
-          // f match {
-          //   case Sel(t, fieldName) => 
-          //     val cls_ty: SimpleType = typeTerm(t)
-          //     println(s"cls_ty => ${cls_ty} ${cls_ty.getClass}")
-          //     cls_ty match {
-          //       case TypeVariable(level, lowerbounds, upperbounds) => 
-          //         println("ggggg")
-          //     }
-          //     // val cls_name = cls_ty.unwrapProxies match {
-          //     //   case FunctionType(_, ClassTag(Var(name), parents)) =>
-          //     //     name
-          //     //   case _ =>
-          //     //     err("there is problem getting the class name", f.toLoc)
-          //     //     "dummy"
-          //     // }
-          //     // val cls_type = ctx.get(cls_name)
-          //     // println(s"cls type => ${cls_type}")
-          //     // val x = cls_type match {
-          //     //   case Some(CompletedTypeInfo(d)) =>
-          //     //     d match {
-          //     //       case d1 @ TypedNuCls(_, _, _, _, members, _, _, _, _) =>
-          //     //         members.get(fieldName.name) match {
-          //     //           case Some(fun) =>
-          //     //             fun match {
-          //     //               case TypedNuFun(level, fd, ProvType(fun_ty @ FunctionType(_, _))) => 
-          //     //                 fun_ty
-          //     //               case _ =>
-          //     //                 err("selected field is not a method.", f.toLoc)
-          //     //             }
-          //     //           case N =>
-          //     //             err("field not method", f.toLoc)
-          //     //         }
-          //     //       case _ =>
-          //     //         err("class not found", f.toLoc)
-          //     //     }
-          //     //   case _ =>
-          //     //     err("class not found", f.toLoc)
-          //     // }
-          //     cls_ty
-          //   case _ => 
-          //     val x: SimpleType = typeUnnamedApp(f, a)._1.unwrapProxies match {
-          //       case PolymorphicType(_, ProvType(ft @ FunctionType(_, _))) =>
-          //         ft
-          //       case _ =>
-          //         println("wierd! ")
-          //         err(s"unexpected case here", f.toLoc)
-          //     }
-          //     x   
-          // }
         val f_ty = typeTerm(f)
         val fun_ty: SimpleType = f_ty.unwrapProxies match {
           case tv: TypeVariable =>
@@ -1075,10 +1026,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
             }
           case PolymorphicType(_, ProvType(fun_ty @ FunctionType(_, _))) =>
             fun_ty
+          case FunctionType(_, _) =>
+            f_ty
           case _ =>
             err("unexpected type for f term", N)
         }
         println(s"f => ${Helpers.inspect(f)}")
+        println(s"f_ty => ${f_ty} ${f_ty.getClass()}")
         println(s"fun_ty => ${fun_ty} ${fun_ty.getClass()}")
         val argsList = fun_ty.unwrapProxies match {
                         case FunctionType(TupleType(fields), _) =>
@@ -1087,7 +1041,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
                               arg
                             case N =>
                               err("cannot use named args in this case.", a.toLoc)
-                              Var("dummy")
+                              throw new Error("cannot use named args in this case.")
                           })
                         case _ => 
                           println(s"unexpected case here => ${fun_ty.getClass()}")
@@ -1504,7 +1458,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
                 }
               case None =>
                 err(s"name ${x} is missed in function call", a.toLoc)
-                (None, Fld(false, false, Var("dummy"))) // TODO: check if this doesn't make problem in next steps (err dosen't raise exception)
+                throw new Error(s"name ${x} is missed in function call")
+
             }
           ))
           App(f, y)
