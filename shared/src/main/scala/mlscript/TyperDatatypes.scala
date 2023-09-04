@@ -389,7 +389,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   
   type TR = TypeRef
   case class TypeRef(defn: TypeName, targs: Ls[SimpleType])(val prov: TypeProvenance) extends SimpleType {
-    def level: Level = targs.iterator.map(_.level).maxOption.getOrElse(0)
+    def level: Level = targs.iterator.map(_.level).maxOption.getOrElse(MinLevel)
     def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level = targs.iterator.map(_.levelBelow(ub)).maxOption.getOrElse(MinLevel)
     override def freshenAbove(lim: Int, rigidify: Bool)(implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV, ST]): TypeRef =
       TypeRef(defn, targs.map(_.freshenAbove(lim, rigidify)))(prov)
@@ -466,9 +466,10 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       case (obj1: ObjectTag, obj2: ObjectTag) => obj1.id compare obj2.id
       case (SkolemTag(id1), SkolemTag(id2)) => id1 compare id2
       case (Extruded(_, id1), Extruded(_, id2)) => id1 compare id2
-      case (_: ObjectTag, _) => 0
-      case (_: SkolemTag, _) => 1
-      case (_: Extruded, _) => 2
+      case (_: ObjectTag, _: SkolemTag | _: Extruded) => -1
+      case (_: SkolemTag | _: Extruded, _: ObjectTag) => 1
+      case (_: SkolemTag, _: Extruded) => -1
+      case (_: Extruded, _: SkolemTag) => 1
     }
   }
   
@@ -593,7 +594,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     
     var assignedTo: Opt[ST] = N
     
-    // * Bounds shoudl always be disregarded when `equatedTo` is defined, as they are then irrelevant:
+    // * Bounds should always be disregarded when `equatedTo` is defined, as they are then irrelevant:
     def lowerBounds: List[SimpleType] = { require(assignedTo.isEmpty); _lowerBounds }
     def upperBounds: List[SimpleType] = { require(assignedTo.isEmpty); _upperBounds }
     def lowerBounds_=(bs: Ls[ST]): Unit = { require(assignedTo.isEmpty); _lowerBounds = bs }

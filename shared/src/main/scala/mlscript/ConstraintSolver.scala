@@ -464,14 +464,15 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       val lhs_rhs = lhs -> rhs
       stack.push(lhs_rhs)
       consumeFuel()
-      // Thread.sleep(10)  // useful for debugging constraint-solving explosions debugged on stdout
+      // Thread.sleep(10)  // useful for debugging constraint-solving explosions piped to stdout
       recImpl(lhs, rhs)(raise,
         if (sameLevel)
           (if (cctx._1.headOption.exists(_ is lhs)) cctx._1 else lhs :: cctx._1)
           ->
           (if (cctx._2.headOption.exists(_ is rhs)) cctx._2 else rhs :: cctx._2)
         else (lhs :: Nil) -> (rhs :: Nil),
-        if (sameLevel || prevCctxs.isEmpty) prevCctxs else cctx :: prevCctxs,
+        if (sameLevel || prevCctxs.isEmpty) prevCctxs // * See [note:2] below
+        else cctx :: prevCctxs,
         ctx,
         if (sameLevel) shadows else shadows.copy(current = Set.empty)
       )
@@ -753,7 +754,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             // * the rigid type variables without extrusion,
             // * while preventing the rigid variables from leaking out.
             
-            // * Hack ("heuristic"): we only start remembering `prevCctxs`
+            // * [note:2] Hack ("heuristic"): we only start remembering `prevCctxs`
             // * after going through at least one instantiation.
             // * This is to filter out locations that were unlikely to cause
             // * any skolem extrusion down the line.
@@ -1258,7 +1259,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           }
         case None =>
           val v = freshVar(tv.prov, S(tv), tv.nameHint)(if (tv.level > below) tv.level else {
-            assert(lvl <= below, "this condition shoudl not be true for the result to be correct")
+            assert(lvl <= below, "this condition should not be true for the result to be correct")
             lvl
           })
           freshened += tv -> v

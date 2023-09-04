@@ -25,6 +25,7 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
    * @param baseClasses base class if the class or interface inherits from any
    * @param toLoc source location related information
    * @param positionals positional term parameters of the class
+   * @param adtData maps a class to its ADT by name
    */
   case class TypeDef(
     kind: TypeDefKind,
@@ -36,11 +37,7 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
     baseClasses: Set[TypeName],
     toLoc: Opt[Loc],
     positionals: Ls[Str],
-    // maps a class to it's adt by name and maps params to adt param by position
-    // for e.g. in type 'a, 'b either = Left of 'a | Right of 'b
-    // Right will have an adtData = S((TypeName("either"), List(1)))
-    // indicating that it's adt is either and it's param is the 1th param of either
-    adtData: Opt[AdtInfo] = N
+    adtData: Opt[AdtInfo] = N,
   ) {
     def allBaseClasses(ctx: Ctx)(implicit traversed: Set[TypeName]): Set[TypeName] =
       baseClasses.map(v => TypeName(v.name.decapitalize)) ++

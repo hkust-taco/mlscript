@@ -551,7 +551,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       PolymorphicType.mk(polymLevel, css.map(_.toType(sort)).foldLeft(BotType: ST)(_ | _))
     })
     lazy val level: Level =
-      cs.maxByOption(_.level).fold(0)(_.level)
+      cs.maxByOption(_.level).fold(MinLevel)(_.level)
     def isPolymorphic: Bool = level > polymLevel
     lazy val effectivePolymLevel: Level = if (isPolymorphic) polymLevel else level
     def instantiate(implicit ctx: Ctx, shadows: Shadows): (Constrs, Ls[Conjunct]) =
