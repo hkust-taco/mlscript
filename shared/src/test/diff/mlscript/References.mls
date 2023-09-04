@@ -177,17 +177,17 @@ move ri rn
 
 
 def swap a b = let tmp = a.Get in (a.Set b.Get, b.Set tmp)
-//│ swap: Ref[in 'A | 'A0 out 'A & 'A0] -> Ref[in 'A0 & 'A1 | 'A2 out 'A1 & ('A | 'A2)] -> (unit, unit,)
+//│ swap: Ref[in 'A & 'A0 out 'A | 'A0] -> Ref[in 'A1 & 'A0 out 'A | 'A1] -> (unit, unit,)
 //│     = [Function: swap]
 
 swap r
 swap ri
 swap rn
-//│ res: Ref[in 'A out 'A0 & (1 | 'A)] -> (unit, unit,)
+//│ res: Ref[in 'A out 1 | 'A] -> (unit, unit,)
 //│    = [Function (anonymous)]
-//│ res: Ref[in 'A out nothing] -> (unit, unit,)
+//│ res: Ref[int] -> (unit, unit,)
 //│    = [Function (anonymous)]
-//│ res: Ref[in 'A out nothing] -> (unit, unit,)
+//│ res: Ref[number] -> (unit, unit,)
 //│    = [Function (anonymous)]
 
 swap r ri
@@ -278,6 +278,63 @@ res.Swap
 //│ res: 'A -> 'A
 
 
+def refrefin: Ref[Ref[int] & Ref[string]]
+//│ refrefin: Ref[in Ref[out int | string] out Ref[in int | string out nothing]]
+//│         = <missing implementation>
+
+:re
+refrefin = RefImpl { mut value = error }
+//│ RefImpl['A] with {mut value: 'value}
+//│   where
+//│     'value <: 'A
+//│   <:  refrefin:
+//│ Ref[in Ref[out int | string] out Ref[in int | string out nothing]]
+//│ Runtime error:
+//│   Error: unexpected runtime error
+
+:e
+refrefin = RefImpl { mut value = RefImpl { mut value = error } }
+//│ RefImpl['A] with {mut value: 'value}
+//│   where
+//│     'value :> RefImpl['A0] with {mut value: 'value0}
+//│            <: 'A
+//│     'A :> RefImpl['A0] with {mut value: 'value0}
+//│     'value0 <: 'A0
+//│   <:  refrefin:
+//│ Ref[in Ref[out int | string] out Ref[in int | string out nothing]]
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.296: 	refrefin = RefImpl { mut value = RefImpl { mut value = error } }
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `int` does not match type `nothing`
+//│ ║  l.281: 	def refrefin: Ref[Ref[int] & Ref[string]]
+//│ ╙──       	                      ^^^
+//│ Runtime error:
+//│   Error: unexpected runtime error
+
+
+def consrefin: (Ref[int] & Ref[string]) -> int
+//│ consrefin: Ref[out int | string] -> int
+//│          = <missing implementation>
+
+:e
+consrefin (RefImpl { mut value = error })
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.320: 	consrefin (RefImpl { mut value = error })
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `string` is not an instance of type `int`
+//│ ║  l.315: 	def consrefin: (Ref[int] & Ref[string]) -> int
+//│ ║         	                               ^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.315: 	def consrefin: (Ref[int] & Ref[string]) -> int
+//│ ║         	                    ^^^
+//│ ╟── Note: class type parameter A is defined at:
+//│ ║  l.12: 	class RefImpl[A]: Ref[A] & { mut value: A }
+//│ ╙──      	              ^
+//│ res: error | int
+//│    = <no result>
+//│      consrefin is not implemented
+
+
 
 def refun: Ref[int] | Ref[string]
 //│ refun: Ref[out int | string]
@@ -289,13 +346,13 @@ refun.Get
 fun x -> refun.Set x
 refun.Swap
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.288: 	refun.Get
+//│ ║  l.345: 	refun.Get
 //│ ║         	^^^^^^^^^
 //│ ╟── type `string` is not an instance of `int`
-//│ ║  l.282: 	def refun: Ref[int] | Ref[string]
+//│ ║  l.339: 	def refun: Ref[int] | Ref[string]
 //│ ║         	                          ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.282: 	def refun: Ref[int] | Ref[string]
+//│ ║  l.339: 	def refun: Ref[int] | Ref[string]
 //│ ║         	               ^^^
 //│ ╟── Note: class type parameter A is defined at:
 //│ ║  l.3: 	class Ref[A]
@@ -304,13 +361,13 @@ refun.Swap
 //│    = <no result>
 //│      refun is not implemented
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.289: 	fun x -> refun.Set x
+//│ ║  l.346: 	fun x -> refun.Set x
 //│ ║         	         ^^^^^^^^^
 //│ ╟── type `string` is not an instance of `int`
-//│ ║  l.282: 	def refun: Ref[int] | Ref[string]
+//│ ║  l.339: 	def refun: Ref[int] | Ref[string]
 //│ ║         	                          ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.282: 	def refun: Ref[int] | Ref[string]
+//│ ║  l.339: 	def refun: Ref[int] | Ref[string]
 //│ ║         	               ^^^
 //│ ╟── Note: class type parameter A is defined at:
 //│ ║  l.3: 	class Ref[A]
@@ -319,13 +376,13 @@ refun.Swap
 //│    = <no result>
 //│      refun is not implemented
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.290: 	refun.Swap
+//│ ║  l.347: 	refun.Swap
 //│ ║         	^^^^^^^^^^
 //│ ╟── type `string` is not an instance of `int`
-//│ ║  l.282: 	def refun: Ref[int] | Ref[string]
+//│ ║  l.339: 	def refun: Ref[int] | Ref[string]
 //│ ║         	                          ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.282: 	def refun: Ref[int] | Ref[string]
+//│ ║  l.339: 	def refun: Ref[int] | Ref[string]
 //│ ║         	               ^^^
 //│ ╟── Note: class type parameter A is defined at:
 //│ ║  l.3: 	class Ref[A]
@@ -339,13 +396,13 @@ refun.Swap
 :e
 def bar x = RefImpl { mut value = x } : Ref[int] & Ref[string]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.340: 	def bar x = RefImpl { mut value = x } : Ref[int] & Ref[string]
+//│ ║  l.397: 	def bar x = RefImpl { mut value = x } : Ref[int] & Ref[string]
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `string` is not an instance of type `int`
-//│ ║  l.340: 	def bar x = RefImpl { mut value = x } : Ref[int] & Ref[string]
+//│ ║  l.397: 	def bar x = RefImpl { mut value = x } : Ref[int] & Ref[string]
 //│ ║         	                                                       ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.340: 	def bar x = RefImpl { mut value = x } : Ref[int] & Ref[string]
+//│ ║  l.397: 	def bar x = RefImpl { mut value = x } : Ref[int] & Ref[string]
 //│ ║         	                                            ^^^
 //│ ╟── Note: class type parameter A is defined at:
 //│ ║  l.12: 	class RefImpl[A]: Ref[A] & { mut value: A }

@@ -60,7 +60,7 @@ l0 = Cons { head = 1; tail = Nil {} }
 //│ l0: Cons[1] with {tail: Nil[?]}
 //│ constrain calls  : 25
 //│ annoying  calls  : 0
-//│ subtyping calls  : 89
+//│ subtyping calls  : 87
 
 :stats
 Cons.HeadOption l0
@@ -74,7 +74,7 @@ l1 = Cons { head = 1; tail = Cons { head = 2; tail = Cons { head = 3; tail = Nil
 //│ l1: Cons[1] with {tail: Cons[2] with {tail: Cons[3] with {tail: Nil[?]}}}
 //│ constrain calls  : 55
 //│ annoying  calls  : 0
-//│ subtyping calls  : 257
+//│ subtyping calls  : 255
 
 :stats
 Cons.HeadOption l1
@@ -88,7 +88,7 @@ l2 = Cons { head = 0; tail = l1 }
 //│ l2: Cons[0] with {tail: Cons[1] with {tail: Cons[2] with {tail: Cons[3] with {tail: Nil[?]}}}}
 //│ constrain calls  : 20
 //│ annoying  calls  : 0
-//│ subtyping calls  : 181
+//│ subtyping calls  : 179
 
 :stats
 Cons.HeadOption l2
@@ -102,7 +102,7 @@ l3 = Cons { head = 0-1; tail = l2 }
 //│ l3: Cons[int] with {tail: Cons[0] with {tail: Cons[1] with {tail: Cons[2] with {tail: Cons[3] with {tail: Nil[?]}}}}}
 //│ constrain calls  : 34
 //│ annoying  calls  : 0
-//│ subtyping calls  : 268
+//│ subtyping calls  : 266
 
 :stats
 Cons.HeadOption l3

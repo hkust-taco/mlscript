@@ -212,7 +212,30 @@ trait TypeSimplifier { self: Typer =>
                       case (lb, ub) =>
                         vs(tv) match {
                           case VarianceInfo(true, true) => TypeBounds.mk(BotType, TopType)
-                          case VarianceInfo(false, false) => TypeBounds.mk(lb, ub)
+                          case VarianceInfo(false, false) =>
+                            // * FIXME: this usage of type bounds is wrong!
+                            // * We're here using it as though it meant a bounded wildcard,
+                            // * for the purpose of type pretty-printing...
+                            // * But this is inconsistent with other uses of these types as *absolute* type ranges!
+                            TypeBounds.mk(lb, ub)
+                            // * However, the fix is to make all TR arguments actual bounded wildcards
+                            // * which is not easy as it requires extensive refactoring
+                            // * 
+                            // * Note that the version below doesn't work because the refinement dedundancy tests
+                            // * below require non-polar types to compare against, so TypeBounds is inadequate.
+                            /* 
+                            pol match {
+                              case N => ???
+                                TypeBounds.mk(lb, ub)
+                              case S(true) => 
+                                TypeBounds.mk(lb, ub)
+                              case S(false) => 
+                                TypeBounds.mk(ub, lb)
+                            }
+                            */
+                            // * FIXME In fact, the use of such subtyping checks should render
+                            // * all uses of TypeBounds produced by the simplifier inadequate!
+                            // * We find a solution to this at some point...
                           case VarianceInfo(co, contra) =>
                             if (co) ub else lb
                         }
@@ -342,13 +365,9 @@ trait TypeSimplifier { self: Typer =>
       pol match {
         case S(p) => helper(DNF.mk(MaxLevel, Nil, ty, p)(ctx, ptr = true, etf = false), pol, canDistribForall)
         case N =>
-          if (!ty.mentionsTypeBounds)
-            helper(DNF.mk(MaxLevel, Nil, ty, true)(ctx, ptr = true, etf = false), N, canDistribForall)
-          else {
-            val dnf1 = DNF.mk(MaxLevel, Nil, ty, false)(ctx, ptr = true, etf = false)
-            val dnf2 = DNF.mk(MaxLevel, Nil, ty, true)(ctx, ptr = true, etf = false)
-            TypeBounds.mk(helper(dnf1, S(false), canDistribForall), helper(dnf2, S(true), canDistribForall))
-          }
+        val dnf1 = DNF.mk(MaxLevel, Nil, ty, false)(ctx, ptr = true, etf = false)
+        val dnf2 = DNF.mk(MaxLevel, Nil, ty, true)(ctx, ptr = true, etf = false)
+        TypeBounds.mk(helper(dnf1, S(false), canDistribForall), helper(dnf2, S(true), canDistribForall))
       }
     }(r => s"~> $r")
     
@@ -664,11 +683,11 @@ trait TypeSimplifier { self: Typer =>
           if !recVars(v) // can't reduce recursive sandwiches, obviously
           && coOccurrences.get(false -> v).exists(_(atom))
         =>
-          println(s"  [..] $v ${atom}")
-          val bundle = TypeBounds.mk(
+          val bundle = TypeBounds.mkSafe(
               v.upperBounds.foldLeft(atom)(_ &- _),
               v.lowerBounds.foldLeft(atom)(_ | _),
             )
+          println(s"  [..] $v := ${bundle}")
           varSubst += v -> S(bundle)
         
         case w: TV if !(w is v) && !varSubst.contains(w) && !varSubst.contains(v) && !recVars(v)
@@ -684,11 +703,11 @@ trait TypeSimplifier { self: Typer =>
           //   varSubst += w -> N
           // } else {
           
-          println(s"  [..] $v ${w}")
-          val bundle = TypeBounds.mk(
+          val bundle = TypeBounds.mkSafe(
               v.upperBounds.foldLeft(w: ST)(_ &- _),
               v.lowerBounds.foldLeft(w: ST)(_ | _),
             )
+          println(s"  [..] $v := ${bundle}")
           varSubst += v -> S(bundle)
           
           // }
@@ -838,10 +857,10 @@ trait TypeSimplifier { self: Typer =>
               lastWords("Should not be replacing an invariant type variable by its bound...") // ?
               pol.quantifPolarity(tv.level).base match {
                 case S(true) =>
-                  TypeBounds.mk(mergeTransform(false, pol, tv, parents + tv, canDistribForall),
+                  TypeBounds.mkSafe(mergeTransform(false, pol, tv, parents + tv, canDistribForall),
                     mergeTransform(true, pol, tv, parents + tv, canDistribForall))
                 case S(false) =>
-                  TypeBounds.mk(mergeTransform(true, pol, tv, parents + tv, canDistribForall),
+                  TypeBounds.mkSafe(mergeTransform(true, pol, tv, parents + tv, canDistribForall),
                     mergeTransform(false, pol, tv, parents + tv, canDistribForall))
                 case N => ???
               }
@@ -916,7 +935,7 @@ trait TypeSimplifier { self: Typer =>
         else if (pol.base === S(true)) transform(base, pol, semp, canDistribForall).withoutPos(names)
         else transform(base, pol, semp, canDistribForall).without(names)
       case tb @ TypeBounds(lb, ub) =>
-        pol.base.fold[ST](TypeBounds.mk(
+        pol.base.fold[ST](TypeBounds.mkSafe(
           transform(lb, PolMap.neg, parents, canDistribForall),
           transform(ub, PolMap.pos, parents, canDistribForall),
           noProv

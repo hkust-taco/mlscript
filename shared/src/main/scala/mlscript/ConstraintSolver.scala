@@ -302,7 +302,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           (return println(s"OK  $done_ls & $tr  =:=  ${BotType}")), rs, done_rs)
         
         // case (ls, (tr @ TypeRef(_, _)) :: rs) => annoying(ls, done_ls, tr.expand :: rs, done_rs)
-        case (ls, (tr @ TypeRef(_, _)) :: rs) => annoying(ls, done_ls, rs, done_rs | tr getOrElse
+        case (ls, (tr @ TypeRef(_, _)) :: rs) => annoying(ls, done_ls, rs, done_rs | (tr, pol = false) getOrElse
           (return println(s"OK  $done_rs & $tr  =:=  ${TopType}")))
         
         /*

@@ -304,7 +304,7 @@ rec def prettier12 k ev e = case e of {
 //│           = [Function: prettier12]
 //│ constrain calls  : 166
 //│ annoying  calls  : 0
-//│ subtyping calls  : 746
+//│ subtyping calls  : 741
 
 
 :stats
