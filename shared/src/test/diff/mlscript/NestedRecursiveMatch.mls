@@ -38,6 +38,8 @@ rec def f w = case w of
 //│   where
 //│     'right <: Leaf | Node & {left: 'right, right: 'right}
 
+// * Minimizations:
+
 rec def f w = case w of
   Node ->
     let left = (w).left in
@@ -50,8 +52,6 @@ rec def f w = case w of
 //│ f: 'b -> Some[in 'a out 'a | 0]
 //│   where
 //│     'b <: Node & {left: 'b}
-
-// * Minimizations:
 
 rec def f w = case w of
   Node ->

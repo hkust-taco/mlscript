@@ -221,7 +221,7 @@ trait TypeSimplifier { self: Typer =>
                             // * However, the fix is to make all TR arguments actual bounded wildcards
                             // * which is not easy as it requires extensive refactoring
                             // * 
-                            // * Note that the version below doesn't work because the refinement dedundancy tests
+                            // * Note that the version below doesn't work because the refinement redundancy tests
                             // * below require non-polar types to compare against, so TypeBounds is inadequate.
                             /* 
                             pol match {
@@ -235,7 +235,8 @@ trait TypeSimplifier { self: Typer =>
                             */
                             // * FIXME In fact, the use of such subtyping checks should render
                             // * all uses of TypeBounds produced by the simplifier inadequate!
-                            // * We find a solution to this at some point...
+                            // * We should find a proper solution to this at some point...
+                            // * (Probably by only using proper wildcards in the type simplifier.)
                           case VarianceInfo(co, contra) =>
                             if (co) ub else lb
                         }

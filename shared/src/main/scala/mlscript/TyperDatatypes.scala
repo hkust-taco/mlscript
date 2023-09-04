@@ -539,11 +539,11 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       ) lb else (lb, ub) match {
         case _ => mkSimple(lb, ub, prov)
       }
-    // * A version of `mk` that does not check for subtyping,
-    // * to be used in type simplification code which modifies subtype bounds on the fly
-    // * (in particular, the `transform` function make replace TV bounds `TypeBound` bundles,
-    // * and creating these `TypeBound` should NOT rely on the bounds still being there at the time
-    // * the bundle is constructed).
+    /** A version of `mk` that does not check for subtyping,
+      * to be used in type simplification code which modifies subtype bounds on the fly
+      * (in particular, the `transform` function may replace TV bounds `TypeBound` bundles,
+      * and creating these `TypeBound`s should NOT rely on the bounds still being there at the time
+      * the bundle is constructed). */
     final def mkSafe(lb: SimpleType, ub: SimpleType, prov: TypeProvenance = noProv)(implicit ctx: Ctx): SimpleType =
       if ((lb is ub)
         || lb === ub
