@@ -1041,7 +1041,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
                               arg
                             case N =>
                               err("cannot use named args in this case.", a.toLoc)
-                              throw new Error("cannot use named args in this case.")
+                              Var("error")
+                              // throw new Error("cannot use named args in this case.")
                           })
                         case _ => 
                           println(s"unexpected case here => ${fun_ty.getClass()}")
@@ -1458,7 +1459,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
                 }
               case None =>
                 err(s"name ${x} is missed in function call", a.toLoc)
-                throw new Error(s"name ${x} is missed in function call")
+                (None, Fld(false, false, Var("error")))
+                // throw new Error(s"name ${x} is missed in function call")
 
             }
           ))

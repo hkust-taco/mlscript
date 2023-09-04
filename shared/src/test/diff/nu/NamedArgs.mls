@@ -19,7 +19,10 @@ test(y: 0)
 //│ ╔══[ERROR] name x is missed in function call
 //│ ║  l.18: 	test(y: 0)
 //│ ╙──      	    ^^^^^^
-//│ /!!!\ Uncaught error: java.lang.Error: name x is missed in function call
+//│ Int
+//│ res
+//│ Runtime error:
+//│   Error: unexpected runtime error
 
 
 fun test(x: 'a, y: 'b) = [x, y]
@@ -28,7 +31,7 @@ fun test(x: 'a, y: 'b) = [x, y]
 :e
 test(y: 0)
 //│ ╔══[ERROR] number of parameters dosen't match with the function signature!
-//│ ║  l.29: 	test(y: 0)
+//│ ║  l.32: 	test(y: 0)
 //│ ╙──      	    ^^^^^^
 //│ error
 //│ res
@@ -38,20 +41,23 @@ test(y: 0)
 :e
 test(1, x: 0)
 //│ ╔══[ERROR] parameter x is duplicate!
-//│ ║  l.39: 	test(1, x: 0)
+//│ ║  l.42: 	test(1, x: 0)
 //│ ╙──      	    ^^^^^^^^^
 //│ ╔══[ERROR] name y is missed in function call
-//│ ║  l.39: 	test(1, x: 0)
+//│ ║  l.42: 	test(1, x: 0)
 //│ ╙──      	    ^^^^^^^^^
-//│ /!!!\ Uncaught error: java.lang.Error: name y is missed in function call
+//│ (0, nothing,)
+//│ res
+//│ Runtime error:
+//│   Error: unexpected runtime error
 
 // * Notice no let binding is generated for the first argument
 :js
 test(0, y: 1)
 //│ (0, 1,)
 //│ // Prelude
-//│ class TypingUnit4 {}
-//│ const typing_unit4 = new TypingUnit4;
+//│ class TypingUnit6 {}
+//│ const typing_unit6 = new TypingUnit6;
 //│ // Query 1
 //│ res = ((y_1) => test1(0, y_1))(1);
 //│ // End of generated code
@@ -66,10 +72,10 @@ fun fff(x: Int, y: Int, z: Int) = (x - y) * z
 :e
 fff(y: 2, z: y_1 + 1, x: z_1 - 2)
 //│ ╔══[ERROR] identifier not found: y_1
-//│ ║  l.67: 	fff(y: 2, z: y_1 + 1, x: z_1 - 2)
+//│ ║  l.73: 	fff(y: 2, z: y_1 + 1, x: z_1 - 2)
 //│ ╙──      	             ^^^
 //│ ╔══[ERROR] identifier not found: z_1
-//│ ║  l.67: 	fff(y: 2, z: y_1 + 1, x: z_1 - 2)
+//│ ║  l.73: 	fff(y: 2, z: y_1 + 1, x: z_1 - 2)
 //│ ╙──      	                         ^^^
 //│ Int
 //│ Code generation encountered an error:
@@ -137,19 +143,24 @@ fun print(x) = (y, z) => log([x, y, z])
 let p = print(0)
 p(z: 1, y: 2)
 //│ ╔══[ERROR] cannot use named args in this case.
-//│ ║  l.138: 	p(z: 1, y: 2)
+//│ ║  l.144: 	p(z: 1, y: 2)
 //│ ╙──       	 ^^^^^^^^^^^^
-//│ /!!!\ Uncaught error: java.lang.Error: cannot use named args in this case.
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$31(Typer.scala:1044)
-//│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:1039)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:1206)
-//│ 	at: mlscript.Typer.typeTerms(Typer.scala:1353)
-//│ 	at: mlscript.NuTypeDefs.go$1(NuTypeDefs.scala:577)
-//│ 	at: mlscript.NuTypeDefs.$anonfun$typeTypingUnit$12(NuTypeDefs.scala:587)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
-//│ 	at: mlscript.NuTypeDefs.$anonfun$typeTypingUnit$2(NuTypeDefs.scala:587)
+//│ ╔══[ERROR] cannot use named args in this case.
+//│ ║  l.144: 	p(z: 1, y: 2)
+//│ ╙──       	 ^^^^^^^^^^^^
+//│ ╔══[ERROR] name error is missed in function call
+//│ ║  l.144: 	p(z: 1, y: 2)
+//│ ╙──       	 ^^^^^^^^^^^^
+//│ ╔══[ERROR] name error is missed in function call
+//│ ║  l.144: 	p(z: 1, y: 2)
+//│ ╙──       	 ^^^^^^^^^^^^
+//│ fun print: anything -> (anything, anything,) -> undefined
+//│ let p: (anything, anything,) -> undefined
+//│ undefined
+//│ p
+//│   = [Function: print1]
+//│ res
+//│     = [Function (anonymous)]
 
 
 class Baz() {
