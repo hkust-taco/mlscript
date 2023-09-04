@@ -1,21 +1,23 @@
 :NewDefs
 
+
 fun test(x: 'a) = if x is undefined then 0 else x + 1
 //│ fun test: (x: Int | undefined,) -> Int
 
 :e
 test(x: 0, 1)
 //│ ╔══[ERROR] the unnamed args should appear first when using named args!
-//│ ║  l.7: 	test(x: 0, 1)
+//│ ║  l.8: 	test(x: 0, 1)
 //│ ╙──     	    ^^^^^^^^^
 //│ error
 //│ res
 //│     = 1
 
+// FIXME "dummy"
 :e
 test(y: 0)
 //│ ╔══[ERROR] name x is missed in function call
-//│ ║  l.16: 	test(y: 0)
+//│ ║  l.18: 	test(y: 0)
 //│ ╙──      	    ^^^^^^
 //│ ╔══[ERROR] identifier not found: dummy
 //│ ╙──
@@ -23,25 +25,27 @@ test(y: 0)
 //│ Code generation encountered an error:
 //│   unresolved symbol dummy
 
+
 fun test(x: 'a, y: 'b) = [x, y]
 //│ fun test: forall 'a 'b. (x: 'a, y: 'b,) -> ('a, 'b,)
 
 :e
 test(y: 0)
 //│ ╔══[ERROR] number of parameters dosen't match with the function signature!
-//│ ║  l.30: 	test(y: 0)
+//│ ║  l.33: 	test(y: 0)
 //│ ╙──      	    ^^^^^^
 //│ error
 //│ res
 //│     = [ 0, undefined ]
 
+// FIXME extra error "name y is missed in function call"
 :e
 test(1, x: 0)
 //│ ╔══[ERROR] parameter x is duplicate!
-//│ ║  l.39: 	test(1, x: 0)
+//│ ║  l.43: 	test(1, x: 0)
 //│ ╙──      	    ^^^^^^^^^
 //│ ╔══[ERROR] name y is missed in function call
-//│ ║  l.39: 	test(1, x: 0)
+//│ ║  l.43: 	test(1, x: 0)
 //│ ╙──      	    ^^^^^^^^^
 //│ ╔══[ERROR] identifier not found: dummy
 //│ ╙──
@@ -49,22 +53,31 @@ test(1, x: 0)
 //│ Code generation encountered an error:
 //│   unresolved symbol dummy
 
+// * Notice no let binding is generated for the first argument
+:js
 test(0, y: 1)
 //│ (0, 1,)
+//│ // Prelude
+//│ class TypingUnit6 {}
+//│ const typing_unit6 = new TypingUnit6;
+//│ // Query 1
+//│ res = ((y_1) => test1(0, y_1))(1);
+//│ // End of generated code
 //│ res
 //│     = [ 0, 1 ]
+
 
 fun fff(x: Int, y: Int, z: Int) = (x - y) * z
 //│ fun fff: (x: Int, y: Int, z: Int,) -> Int
 
-//testing renaming
+// * Testing renaming
 :e
 fff(y: 2, z: y_1 + 1, x: z_1 - 2)
 //│ ╔══[ERROR] identifier not found: y_1
-//│ ║  l.62: 	fff(y: 2, z: y_1 + 1, x: z_1 - 2)
+//│ ║  l.75: 	fff(y: 2, z: y_1 + 1, x: z_1 - 2)
 //│ ╙──      	             ^^^
 //│ ╔══[ERROR] identifier not found: z_1
-//│ ║  l.62: 	fff(y: 2, z: y_1 + 1, x: z_1 - 2)
+//│ ║  l.75: 	fff(y: 2, z: y_1 + 1, x: z_1 - 2)
 //│ ╙──      	                         ^^^
 //│ Int
 //│ Code generation encountered an error:
@@ -82,6 +95,7 @@ fff(y: 2, z: y_1 + 1, x: z_1 - 2)
 //│     = 3
 //│ res
 //│     = -3
+
 
 class A() {
   fun ma(x: Int, y: Int) = x - y
@@ -105,3 +119,101 @@ A().ma(x: 1, y: 2)
 //│ Int
 //│ res
 //│     = -1
+
+id(x).ma(y: 2, x: 1)
+//│ Int
+//│ res
+//│     = -1
+
+
+fun print(x: Int) = (y: Int, z: Int) => log([x, y, z])
+let p = print(0)
+//│ fun print: (x: Int,) -> (y: Int, z: Int,) -> undefined
+//│ let p: (y: Int, z: Int,) -> undefined
+//│ p
+//│   = [Function: print]
+
+p(z: 1, y: 2)
+//│ undefined
+//│ res
+//│     = undefined
+//│ // Output
+//│ [ 0, 2, 1 ]
+
+
+:e
+fun print(x) = (y, z) => log([x, y, z])
+let p = print(0)
+p(z: 1, y: 2)
+//│ ╔══[ERROR] cannot use named args in this case.
+//│ ║  l.147: 	p(z: 1, y: 2)
+//│ ╙──       	 ^^^^^^^^^^^^
+//│ ╔══[ERROR] cannot use named args in this case.
+//│ ║  l.147: 	p(z: 1, y: 2)
+//│ ╙──       	 ^^^^^^^^^^^^
+//│ ╔══[ERROR] name dummy is missed in function call
+//│ ║  l.147: 	p(z: 1, y: 2)
+//│ ╙──       	 ^^^^^^^^^^^^
+//│ ╔══[ERROR] name dummy is missed in function call
+//│ ║  l.147: 	p(z: 1, y: 2)
+//│ ╙──       	 ^^^^^^^^^^^^
+//│ ╔══[ERROR] identifier not found: dummy
+//│ ╙──
+//│ ╔══[ERROR] identifier not found: dummy
+//│ ╙──
+//│ fun print: anything -> (anything, anything,) -> undefined
+//│ let p: (anything, anything,) -> undefined
+//│ undefined
+//│ Code generation encountered an error:
+//│   unresolved symbol dummy
+
+
+class Baz() {
+  fun f(x: Int, y: Int) = log([x, y])
+}
+Baz().f(y: 1, x: 2)
+//│ class Baz() {
+//│   fun f: (x: Int, y: Int,) -> undefined
+//│ }
+//│ undefined
+//│ res
+//│     = undefined
+//│ // Output
+//│ [ 2, 1 ]
+
+let b = Baz()
+b.f(y: 1, x: 2)
+//│ let b: Baz
+//│ undefined
+//│ b
+//│   = Baz {}
+//│ res
+//│     = undefined
+//│ // Output
+//│ [ 2, 1 ]
+
+
+class A(x: Int, y: Int)
+//│ class A(x: Int, y: Int)
+
+A(x: 2, y: 1)
+//│ ╔══[ERROR] unexpected type for f term
+//│ ╙──
+//│ ╔══[ERROR] number of parameters dosen't match with the function signature!
+//│ ║  l.199: 	A(x: 2, y: 1)
+//│ ╙──       	 ^^^^^^^^^^^^
+//│ error
+//│ res
+//│     = A {}
+
+A(y: 1, x: 2)
+//│ ╔══[ERROR] unexpected type for f term
+//│ ╙──
+//│ ╔══[ERROR] number of parameters dosen't match with the function signature!
+//│ ║  l.209: 	A(y: 1, x: 2)
+//│ ╙──       	 ^^^^^^^^^^^^
+//│ error
+//│ res
+//│     = A {}
+
+
