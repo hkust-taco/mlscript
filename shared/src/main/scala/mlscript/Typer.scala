@@ -998,7 +998,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
         val f_ty = typeTerm(f)
         val fun_ty: SimpleType = f_ty.unwrapProxies match {
           case tv: TypeVariable =>
-            println(s"lowerbounds => ${tv.lowerBounds}")
             def getLowerboundFuns(tv: TypeVariable): List[FunctionType] = {
               val res: List[FunctionType] = tv.lowerBounds.map(x => 
                 x.unwrapProvs match {
@@ -1015,7 +1014,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
               res
             }
             val funs = getLowerboundFuns(tv)
-            println(s"funs => ${funs}")
             if (funs.sizeCompare(1) < 0) {
               err("cannot extract any function", f.toLoc)
             } else 
@@ -1032,33 +1030,27 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
             err("unexpected type for f term", N)
             throw new Error("match error")
         }
-        println(s"f => ${Helpers.inspect(f)}")
-        println(s"f_ty => ${f_ty} ${f_ty.getClass()}")
-        println(s"fun_ty => ${fun_ty} ${fun_ty.getClass()}")
         val argsList = fun_ty.unwrapProxies match {
-                        case FunctionType(TupleType(fields), _) =>
-                          fields.map(x => x._1 match {
-                            case Some(arg) =>
-                              arg
-                            case N =>
-                              err("cannot use named args in this case.", a.toLoc)
-                              Var("error")
-                              // throw new Error("cannot use named args in this case.")
-                          })
-                        case _ => 
-                          println(s"unexpected case here => ${fun_ty.getClass()}")
-                          Nil
+          case FunctionType(TupleType(fields), _) =>
+            fields.map(x => x._1 match {
+              case Some(arg) =>
+                arg
+              case N =>
+                err("cannot use named args in this case.", a.toLoc)
+                Var("error")
+            })
+          case _ => 
+            println(s"unexpected case here => ${fun_ty.getClass()}")
+            throw new Error("match error")
         }
-        println(argsList)
         desugarNamedArgs(term, f, a, argsList)
       case App(f: Term, a: Term) =>
-        // TODO: probably better to merge this case with previous one.
         val (fun_ty, args_ty) = typeUnnamedApp(f, a)
         val res = freshVar(prov, N)
         val res_ty = con(fun_ty, FunctionType(args_ty, res)(
-            prov
-            // funProv // TODO: better?
-            ), res)
+          prov
+          // funProv // TODO: better?
+          ), res)
         res_ty
       case Sel(obj, fieldName) =>
         implicit val shadows: Shadows = Shadows.empty
@@ -1448,7 +1440,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
             rec(tail, acc + (v -> R(fld.value)))
           }
         case Nil =>
-          println("final acc => " + acc)
           val y: Term = Tup(argsList.map(x => 
             acc.get(x.name) match {
               case Some(v) =>
@@ -1461,19 +1452,15 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
               case None =>
                 err(s"name ${x} is missed in function call", a.toLoc)
                 (None, Fld(false, false, Var("error")))
-                // throw new Error(s"name ${x} is missed in function call")
 
             }
           ))
           App(f, y)
       }
     }
-    println(s"argsList => ${argsList}")
-    println(s"a is => ${a}")
     if (a.fields.exists(x => x._1.isDefined) &&
         a.fields.exists(x => x._1.isEmpty) && 
-        a.fields.indexWhere(x => x._1.isDefined) < a.fields.lastIndexWhere(x => x._1.isEmpty)
-        ) {
+        a.fields.indexWhere(x => x._1.isDefined) < a.fields.lastIndexWhere(x => x._1.isEmpty)) {
       err("the unnamed args should appear first when using named args!", a.toLoc) 
     } else
     if (a.fields.sizeCompare(argsList) > 0 || a.fields.sizeCompare(argsList) < 0) {
