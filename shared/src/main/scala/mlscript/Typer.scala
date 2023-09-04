@@ -1434,8 +1434,16 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
       as match {
         case ((v, fld), isNamed) :: tail =>
           if (isNamed) {
-            val newVar = Var(getNewVarName(v, freeVars(ctx, a)))
-            Let(false, newVar, fld.value, rec(tail, acc + (v -> L(newVar))))
+            println(s"fld.value => ${Helpers.inspect(fld.value)}")
+            fld.value match {
+              case lit: Lit =>
+                rec(tail, acc + (v -> R(fld.value)))
+              case varr: Var =>
+                rec(tail, acc + (v -> R(fld.value)))
+              case _ =>
+                val newVar = Var(getNewVarName(v, freeVars(ctx, a)))
+                Let(false, newVar, fld.value, rec(tail, acc + (v -> L(newVar))))
+            }        
           } else {
             rec(tail, acc + (v -> R(fld.value)))
           }
@@ -1452,7 +1460,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
               case None =>
                 err(s"name ${x} is missed in function call", a.toLoc)
                 (None, Fld(false, false, Var("error")))
-
             }
           ))
           App(f, y)

@@ -59,10 +59,48 @@ test(0, y: 1)
 //│ class TypingUnit6 {}
 //│ const typing_unit6 = new TypingUnit6;
 //│ // Query 1
-//│ res = ((y_1) => test1(0, y_1))(1);
+//│ res = test1(0, 1);
 //│ // End of generated code
 //│ res
 //│     = [ 0, 1 ]
+
+// * No let binding in that value of argument is a var or literal
+:js
+let tmp = 2
+test(0, y: tmp)
+test(0, y: 200)
+//│ let tmp: 2
+//│ (0, 200,)
+//│ // Prelude
+//│ class TypingUnit7 {}
+//│ const typing_unit7 = new TypingUnit7;
+//│ // Query 1
+//│ globalThis.tmp = 2;
+//│ // Query 2
+//│ res = test1(0, tmp);
+//│ // Query 3
+//│ res = test1(0, 200);
+//│ // End of generated code
+//│ tmp
+//│     = 2
+//│ res
+//│     = [ 0, 2 ]
+//│ res
+//│     = [ 0, 200 ]
+
+
+:js
+test(0, y: 1 + 2)
+//│ (0, Int,)
+//│ // Prelude
+//│ class TypingUnit8 {}
+//│ const typing_unit8 = new TypingUnit8;
+//│ // Query 1
+//│ res = ((y_1) => test1(0, y_1))(1 + 2);
+//│ // End of generated code
+//│ res
+//│     = [ 0, 3 ]
+
 
 
 fun fff(x: Int, y: Int, z: Int) = (x - y) * z
@@ -72,11 +110,11 @@ fun fff(x: Int, y: Int, z: Int) = (x - y) * z
 :e
 fff(y: 2, z: y_1 + 1, x: z_1 - 2)
 //│ ╔══[ERROR] identifier not found: y_1
-//│ ║  l.73: 	fff(y: 2, z: y_1 + 1, x: z_1 - 2)
-//│ ╙──      	             ^^^
+//│ ║  l.111: 	fff(y: 2, z: y_1 + 1, x: z_1 - 2)
+//│ ╙──       	             ^^^
 //│ ╔══[ERROR] identifier not found: z_1
-//│ ║  l.73: 	fff(y: 2, z: y_1 + 1, x: z_1 - 2)
-//│ ╙──      	                         ^^^
+//│ ║  l.111: 	fff(y: 2, z: y_1 + 1, x: z_1 - 2)
+//│ ╙──       	                         ^^^
 //│ Int
 //│ Code generation encountered an error:
 //│   unresolved symbol z_1
@@ -143,16 +181,16 @@ fun print(x) = (y, z) => log([x, y, z])
 let p = print(0)
 p(z: 1, y: 2)
 //│ ╔══[ERROR] cannot use named args in this case.
-//│ ║  l.144: 	p(z: 1, y: 2)
+//│ ║  l.182: 	p(z: 1, y: 2)
 //│ ╙──       	 ^^^^^^^^^^^^
 //│ ╔══[ERROR] cannot use named args in this case.
-//│ ║  l.144: 	p(z: 1, y: 2)
+//│ ║  l.182: 	p(z: 1, y: 2)
 //│ ╙──       	 ^^^^^^^^^^^^
 //│ ╔══[ERROR] name error is missed in function call
-//│ ║  l.144: 	p(z: 1, y: 2)
+//│ ║  l.182: 	p(z: 1, y: 2)
 //│ ╙──       	 ^^^^^^^^^^^^
 //│ ╔══[ERROR] name error is missed in function call
-//│ ║  l.144: 	p(z: 1, y: 2)
+//│ ║  l.182: 	p(z: 1, y: 2)
 //│ ╙──       	 ^^^^^^^^^^^^
 //│ fun print: anything -> (anything, anything,) -> undefined
 //│ let p: (anything, anything,) -> undefined
