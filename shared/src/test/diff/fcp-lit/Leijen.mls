@@ -423,7 +423,9 @@ app (map head) (single ids)
 // ,("(undefined :: some a. [a -> a] -> Int) (undefined :: some c. [(forall d. d -> c) -> c])", Wrong)
 :ng
 (error : List['a -> 'a] -> int) (error : List[(forall 'd. 'd -> 'c) -> 'c])
-//│ ╔══[ERROR] Inferred recursive type: nothing
+//│ ╔══[ERROR] Inferred recursive type: 'a
+//│   where
+//│     'a <: anything -> 'a
 //│ ╙──
 //│ res: int
 
@@ -432,16 +434,16 @@ app (map head) (single ids)
 :ng
 (error : List['a -> 'a] -> int) (error : List[(forall 'd. 'd -> 'd) -> (int -> int)])
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.433: 	(error : List['a -> 'a] -> int) (error : List[(forall 'd. 'd -> 'd) -> (int -> int)])
+//│ ║  l.435: 	(error : List['a -> 'a] -> int) (error : List[(forall 'd. 'd -> 'd) -> (int -> int)])
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `'d` is not an instance of type `int`
-//│ ║  l.433: 	(error : List['a -> 'a] -> int) (error : List[(forall 'd. 'd -> 'd) -> (int -> int)])
+//│ ║  l.435: 	(error : List['a -> 'a] -> int) (error : List[(forall 'd. 'd -> 'd) -> (int -> int)])
 //│ ║         	                                                          ^^
 //│ ╟── but it flows into quantified type variable with expected type `int`
-//│ ║  l.433: 	(error : List['a -> 'a] -> int) (error : List[(forall 'd. 'd -> 'd) -> (int -> int)])
+//│ ║  l.435: 	(error : List['a -> 'a] -> int) (error : List[(forall 'd. 'd -> 'd) -> (int -> int)])
 //│ ║         	                                                      ^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.433: 	(error : List['a -> 'a] -> int) (error : List[(forall 'd. 'd -> 'd) -> (int -> int)])
+//│ ║  l.435: 	(error : List['a -> 'a] -> int) (error : List[(forall 'd. 'd -> 'd) -> (int -> int)])
 //│ ╙──       	                                                                        ^^^
 //│ res: error | int
 
@@ -515,16 +517,16 @@ fun x -> let polys (xs: List[forall 'a. 'a -> 'a]) = 1 in let f y = x in polys (
 :e
 ids : forall 'b. List[forall 'a. 'a -> 'b]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.516: 	ids : forall 'b. List[forall 'a. 'a -> 'b]
+//│ ║  l.518: 	ids : forall 'b. List[forall 'a. 'a -> 'b]
 //│ ║         	^^^
 //│ ╟── type `'a` does not match type `'b`
-//│ ║  l.516: 	ids : forall 'b. List[forall 'a. 'a -> 'b]
+//│ ║  l.518: 	ids : forall 'b. List[forall 'a. 'a -> 'b]
 //│ ║         	                                 ^^
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.516: 	ids : forall 'b. List[forall 'a. 'a -> 'b]
+//│ ║  l.518: 	ids : forall 'b. List[forall 'a. 'a -> 'b]
 //│ ║         	                                       ^^
 //│ ╟── Note: quantified type variable 'a is defined at:
-//│ ║  l.516: 	ids : forall 'b. List[forall 'a. 'a -> 'b]
+//│ ║  l.518: 	ids : forall 'b. List[forall 'a. 'a -> 'b]
 //│ ╙──       	                             ^^
 //│ res: List[anything -> nothing]
 //│    = Cons { head: [Function: id1], tail: Nil {} }
@@ -965,17 +967,17 @@ test2 = test1
 //│   <:  test2:
 //│ List[forall 'a. 'a -> 'a]
 //│ ╔══[ERROR] Type error in def definition
-//│ ║  l.963: 	test2 = test1
+//│ ║  l.965: 	test2 = test1
 //│ ║         	^^^^^^^^^^^^^
 //│ ╟── type variable `'a` leaks out of its scope
-//│ ║  l.953: 	def test2: List[forall 'a. 'a -> 'a]
+//│ ║  l.955: 	def test2: List[forall 'a. 'a -> 'a]
 //│ ║         	                           ^^
 //│ ╟── back into type variable `'a`
-//│ ║  l.953: 	def test2: List[forall 'a. 'a -> 'a]
+//│ ║  l.955: 	def test2: List[forall 'a. 'a -> 'a]
 //│ ║         	                                 ^^
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this reference:
-//│ ║  l.963: 	test2 = test1
+//│ ║  l.965: 	test2 = test1
 //│ ╙──       	        ^^^^^
 
 
@@ -997,8 +999,8 @@ map xauto ids
 :e
 map xauto (map xauto ids)
 //│ ╔══[ERROR] Type error in application
-//│ ║  l.998: 	map xauto (map xauto ids)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.1000: 	map xauto (map xauto ids)
+//│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `'b` leaks out of its scope
 //│ ║  l.173: 	def xauto : forall 'a. (forall 'b. 'b -> 'b) -> 'a -> 'a
 //│ ║         	                                   ^^
@@ -1007,8 +1009,8 @@ map xauto (map xauto ids)
 //│ ║         	                                         ^^
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this application:
-//│ ║  l.998: 	map xauto (map xauto ids)
-//│ ╙──       	           ^^^^^^^^^^^^^
+//│ ║  l.1000: 	map xauto (map xauto ids)
+//│ ╙──        	           ^^^^^^^^^^^^^
 //│ res: error | List['a -> 'a]
 
 
@@ -1016,17 +1018,17 @@ map xauto (map xauto ids)
 :e
 (fun x -> xauto x) : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.1017: 	(fun x -> xauto x) : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ ║  l.1019: 	(fun x -> xauto x) : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ║          	^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `'a` leaks out of its scope
-//│ ║  l.1017: 	(fun x -> xauto x) : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ ║  l.1019: 	(fun x -> xauto x) : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ║          	                                                          ^^
 //│ ╟── back into type variable `'a`
-//│ ║  l.1017: 	(fun x -> xauto x) : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ ║  l.1019: 	(fun x -> xauto x) : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ║          	                                                                ^^
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this application:
-//│ ║  l.1017: 	(fun x -> xauto x) : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ ║  l.1019: 	(fun x -> xauto x) : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ╙──        	          ^^^^^^^
 //│ res: (forall 'a. 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0)
 // * But we can trivially fix it by forcing generalization through a polymorphic let binding:
@@ -1036,17 +1038,17 @@ map xauto (map xauto ids)
 :e
 xauto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.1037: 	xauto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ ║  l.1039: 	xauto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ║          	^^^^^
 //│ ╟── type variable `'a` leaks out of its scope
-//│ ║  l.1037: 	xauto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ ║  l.1039: 	xauto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ║          	                                             ^^
 //│ ╟── back into type variable `'a`
-//│ ║  l.1037: 	xauto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ ║  l.1039: 	xauto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ║          	                                                   ^^
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this reference:
-//│ ║  l.1037: 	xauto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ ║  l.1039: 	xauto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ╙──        	^^^^^
 //│ res: (forall 'a. 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0)
 

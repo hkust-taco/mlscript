@@ -14,7 +14,7 @@ rec def f x = f x
 rec def f x = f
 //│ ╔══[ERROR] Inferred recursive type: 'f
 //│   where
-//│     'f :> anything -> 'f
+//│     'f := 'a -> 'f
 //│ ╙──
 //│ f: 'f
 //│   where
@@ -25,7 +25,8 @@ rec def f x = f
 rec def f x = (f x, f x)
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a :> ('a, 'a,)
+//│     'a :> ('a, 'b,)
+//│     'b :> ('a, 'b,)
 //│ ║  l.25: 	rec def f x = (f x, f x)
 //│ ╙──      	               ^^^
 //│ f: anything -> 'a
@@ -33,10 +34,11 @@ rec def f x = (f x, f x)
 //│     'a :> ('a, 'a,)
 //│  = [Function: f3]
 
-// TODO improve pp'd type – don't look at simplified TVs?
 :e
 rec def f x = f x.a
-//│ ╔══[ERROR] Inferred recursive type: nothing
+//│ ╔══[ERROR] Inferred recursive type: 'a
+//│   where
+//│     'a <: {a: 'a}
 //│ ║  l.38: 	rec def f x = f x.a
 //│ ╙──      	                ^^^
 //│ f: 'a -> nothing
@@ -52,8 +54,10 @@ class Foo[A] method Get: A
 
 :e
 rec def foo(x: Foo['a]) = foo(x.Get)
-//│ ╔══[ERROR] Inferred recursive type: nothing
-//│ ║  l.54: 	rec def foo(x: Foo['a]) = foo(x.Get)
+//│ ╔══[ERROR] Inferred recursive type: 'a
+//│   where
+//│     'a <: Foo['a]
+//│ ║  l.56: 	rec def foo(x: Foo['a]) = foo(x.Get)
 //│ ╙──      	                              ^^^^^
 //│ foo: 'a -> nothing
 //│   where
@@ -73,8 +77,10 @@ def get: Bar['a] -> 'a
 // * for performance and simplicity (sidesteps infinite expansion problems).
 :e
 rec def bar(x: Bar['a]) = bar(get(x))
-//│ ╔══[ERROR] Inferred recursive type: nothing
-//│ ║  l.75: 	rec def bar(x: Bar['a]) = bar(get(x))
+//│ ╔══[ERROR] Inferred recursive type: 'a
+//│   where
+//│     'a <: Bar['a]
+//│ ║  l.79: 	rec def bar(x: Bar['a]) = bar(get(x))
 //│ ╙──      	                              ^^^^^^
 //│ bar: 'a -> nothing
 //│   where

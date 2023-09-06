@@ -16,7 +16,7 @@ trait TypeSimplifier { self: Typer =>
   /** Remove bounds that are not reachable by traversing the type following variances.
     * Note that doing this on annotated type signatures would need to use polarity None
     *   because a type signature can both be used (positively) and checked against (negatively). */
-  def removeIrrelevantBounds(ty: SimpleType, pol: Opt[Bool] = S(true), inPlace: Bool = false)
+  def removeIrrelevantBounds(ty: SimpleType, pol: Opt[Bool], inPlace: Bool = false)
         (implicit ctx: Ctx): SimpleType =
   {
     val _ctx = ctx
@@ -135,7 +135,7 @@ trait TypeSimplifier { self: Typer =>
   
   /** Transform the type recursively, putting everything in Disjunctive Normal Forms and reconstructing class types
     * from their structural components. */
-  def normalizeTypes_!(st: SimpleType, pol: Opt[Bool] = S(true))(implicit ctx: Ctx): SimpleType =
+  def normalizeTypes_!(st: SimpleType, pol: Opt[Bool])(implicit ctx: Ctx): SimpleType =
   {
     val _ctx = ctx
     
@@ -391,7 +391,7 @@ trait TypeSimplifier { self: Typer =>
   
   
   /** Remove polar type variables, unify indistinguishable ones, and inline the bounds of non-recursive ones. */
-  def simplifyType(st: SimpleType, removePolarVars: Bool, pol: Opt[Bool] = S(true), inlineBounds: Bool = true)(implicit ctx: Ctx): SimpleType = {
+  def simplifyType(st: SimpleType, removePolarVars: Bool, pol: Opt[Bool], inlineBounds: Bool = true)(implicit ctx: Ctx): SimpleType = {
     
     
     
@@ -977,7 +977,7 @@ trait TypeSimplifier { self: Typer =>
     * So if no other upper bounds end up in ?a AND ?a is polar
     *   (so that ?a occurrences are indistinguishable from `{x: ?a}`),
     *   we'll eventually want to refactor ?b's recursive upper bound structure into just `?b <! ?a`. */
-  def unskidTypes_!(st: SimpleType, pol: Bool = true)(implicit ctx: Ctx): SimpleType = {
+  def unskidTypes_!(st: SimpleType, pol: Bool)(implicit ctx: Ctx): SimpleType = {
     
     val allVarPols = st.getVarsPol(PolMap(S(pol)))
     println(s"allVarPols: ${printPols(allVarPols)}")
@@ -1043,7 +1043,7 @@ trait TypeSimplifier { self: Typer =>
   
   /** Unify polar recursive type variables that have the same structure.
     * For example, `?a <: {x: ?a}` and `?b <: {x: ?b}` will be unified if they are bith polar. */
-  def factorRecursiveTypes_!(st: SimpleType, approximateRecTypes: Bool, pol: Opt[Bool] = S(true))(implicit ctx: Ctx): SimpleType = {
+  def factorRecursiveTypes_!(st: SimpleType, approximateRecTypes: Bool, pol: Opt[Bool])(implicit ctx: Ctx): SimpleType = {
     
     val allVarPols = st.getVarsPol(PolMap(pol))
     println(s"allVarPols: ${printPols(allVarPols)}")
@@ -1129,21 +1129,21 @@ trait TypeSimplifier { self: Typer =>
   abstract class SimplifyPipeline {
     def debugOutput(msg: => Str): Unit
     
-    def apply(st: ST, removePolarVars: Bool = true)(implicit ctx: Ctx): ST = {
+    def apply(st: ST, pol: Opt[Bool], removePolarVars: Bool = true)(implicit ctx: Ctx): ST = {
       var cur = st
       
       debugOutput(s"⬤ Initial: ${cur}")
       debugOutput(s" where: ${cur.showBounds}")
       
-      cur = removeIrrelevantBounds(cur, inPlace = false)
+      cur = removeIrrelevantBounds(cur, pol, inPlace = false)
       debugOutput(s"⬤ Cleaned up: ${cur}")
       debugOutput(s" where: ${cur.showBounds}")
       
-      cur = unskidTypes_!(cur)
+      pol.foreach(pol => cur = unskidTypes_!(cur, pol))
       debugOutput(s"⬤ Unskid: ${cur}")
       debugOutput(s" where: ${cur.showBounds}")
       
-      cur = simplifyType(cur, removePolarVars)
+      cur = simplifyType(cur, removePolarVars, pol)
       debugOutput(s"⬤ Type after simplification: ${cur}")
       debugOutput(s" where: ${cur.showBounds}")
       
@@ -1152,27 +1152,27 @@ trait TypeSimplifier { self: Typer =>
       // debugOutput(s"⬤ Factored: ${cur}")
       // debugOutput(s" where: ${cur.showBounds}")
       
-      cur = normalizeTypes_!(cur)
+      cur = normalizeTypes_!(cur, pol)
       debugOutput(s"⬤ Normalized: ${cur}")
       debugOutput(s" where: ${cur.showBounds}")
       
-      cur = removeIrrelevantBounds(cur, inPlace = true)
+      cur = removeIrrelevantBounds(cur, pol, inPlace = true)
       debugOutput(s"⬤ Cleaned up: ${cur}")
       debugOutput(s" where: ${cur.showBounds}")
       
-      cur = unskidTypes_!(cur)
+      pol.foreach(pol => cur = unskidTypes_!(cur, pol))
       debugOutput(s"⬤ Unskid: ${cur}")
       debugOutput(s" where: ${cur.showBounds}")
       
       // * The DNFs introduced by `normalizeTypes_!` may lead more coocc info to arise
       // *  by merging things like function types together...
       // * So we need another pass of simplification!
-      cur = simplifyType(cur, removePolarVars)
+      cur = simplifyType(cur, removePolarVars, pol)
       // cur = simplifyType(simplifyType(cur)(ct)
       debugOutput(s"⬤ Resim: ${cur}")
       debugOutput(s" where: ${cur.showBounds}")
       
-      cur = factorRecursiveTypes_!(cur, approximateRecTypes = false)
+      cur = factorRecursiveTypes_!(cur, approximateRecTypes = false, pol)
       debugOutput(s"⬤ Factored: ${cur}")
       debugOutput(s" where: ${cur.showBounds}")
       

@@ -206,7 +206,7 @@ object Main {
       object SimplifyPipeline extends typer.SimplifyPipeline {
         def debugOutput(msg: => Str): Unit = println(msg)
       }
-      val sim = SimplifyPipeline(ty)(ctx)
+      val sim = SimplifyPipeline(ty, S(true))(ctx)
       val exp = typer.expandType(sim)
       exp
     }

@@ -29,9 +29,11 @@ e (A{f = L{}})
 //│    = 0
 
 
-:e // TODO(occurs-check) improve on `nothing`
+:e
 e = eval eval!
-//│ ╔══[ERROR] Inferred recursive type: nothing
+//│ ╔══[ERROR] Inferred recursive type: 'f
+//│   where
+//│     'f <: (A with {f: 'f}) | L
 //│ ║  l.13: 	  A -> eval eval x.f
 //│ ╙──      	                 ^^^
 //│ e: 'a -> 0
@@ -39,9 +41,11 @@ e = eval eval!
 //│     'a <: (A with {f: 'a}) | L
 //│  = [Function (anonymous)]
 
-:e // TODO(occurs-check) improve on `nothing`
+:e
 e (A{f = L{}})
-//│ ╔══[ERROR] Inferred recursive type: nothing
+//│ ╔══[ERROR] Inferred recursive type: 'a
+//│   where
+//│     'a <: {f: A & 'a | L}
 //│ ║  l.11: 	def eval eval x = case x of
 //│ ╙──      	                       ^
 //│ res: 0
@@ -61,13 +65,15 @@ rec def v = A{f = v}
 
 :e
 e v
-//│ ╔══[ERROR] Inferred recursive type: 'f
+//│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
+//│     'a :> A with {f: 'f}
+//│        <: {f: A & 'a | L}
 //│     'f :> A with {f: 'f}
 //│ ║  l.11: 	def eval eval x = case x of
 //│ ╙──      	                       ^
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.63: 	e v
+//│ ║  l.67: 	e v
 //│ ║        	^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: 0 | error
@@ -95,8 +101,8 @@ def eval eval x = case x of
 :e
 e = eval eval
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.96: 	e = eval eval
-//│ ║        	    ^^^^^^^^^
+//│ ║  l.102: 	e = eval eval
+//│ ║         	    ^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ e: (A & {f: A | L} | L) -> (0 | {x: 0 | {x: nothing}}) | error
 //│  = [Function (anonymous)]

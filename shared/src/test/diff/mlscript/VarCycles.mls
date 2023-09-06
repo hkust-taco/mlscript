@@ -48,7 +48,7 @@ f 1 + 2
 bar foo
 //│ ╔══[ERROR] Inferred recursive type: 'b
 //│   where
-//│     'b :> ('b,)
+//│     'b := ('b,)
 //│ ║  l.11: 	def bar: (('b,) as 'b) -> ()
 //│ ╙──      	         ^^^^^^^^^^^^^
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required

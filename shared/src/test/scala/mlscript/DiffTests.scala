@@ -482,7 +482,7 @@ class DiffTests
               // else 
               typer.processTypeDefs(typeDefs)(ctx, raise)
             
-            def getType(ty: typer.SimpleType, removePolarVars: Bool = true): Type = {
+            def getType(ty: typer.SimpleType, pol: Opt[Bool], removePolarVars: Bool = true): Type = {
               if (mode.isDebugging) output(s"⬤ Typed as: $ty")
               if (mode.isDebugging) output(s" where: ${ty.showBounds}")
               typer.dbg = mode.dbgSimplif
@@ -492,7 +492,7 @@ class DiffTests
                   def debugOutput(msg: => Str): Unit =
                     if (mode.dbgSimplif) output(msg)
                 }
-                val sim = SimplifyPipeline(ty, removePolarVars)(ctx)
+                val sim = SimplifyPipeline(ty, pol, removePolarVars)(ctx)
                 val exp = typer.expandType(sim)(ctx)
                 if (mode.dbgSimplif) output(s"⬤ Expanded: ${exp}")
                 def stripPoly(pt: PolyType): Type =
@@ -563,8 +563,8 @@ class DiffTests
                 val methodsAndTypes = (ttd.mthDecls ++ ttd.mthDefs).flatMap {
                   case m@MethodDef(_, _, Var(mn), _, rhs) =>
                     rhs.fold(
-                      _ => ctx.getMthDefn(tn, mn).map(mthTy => (m, getType(mthTy.toPT))),
-                      _ => ctx.getMth(S(tn), mn).map(mthTy => (m, getType(mthTy.toPT)))
+                      _ => ctx.getMthDefn(tn, mn).map(mthTy => (m, getType(mthTy.toPT, S(true)))),
+                      _ => ctx.getMth(S(tn), mn).map(mthTy => (m, getType(mthTy.toPT, S(true)))) // TODO should be N
                     )
                 }
 
@@ -636,7 +636,7 @@ class DiffTests
                   
                   ctx += nme.name -> typer.VarSymbol(ty_sch, nme)
                   declared += nme.name -> ty_sch
-                  val exp = getType(ty_sch)
+                  val exp = getType(ty_sch, S(true)) // TODO should be N
                   if (mode.generateTsDeclarations) tsTypegenCodeBuilder.addTypeGenTermDefinition(exp, Some(nme.name))
                   S(nme.name -> (s"$nme: ${exp.show}" :: Nil))
                   
@@ -644,7 +644,7 @@ class DiffTests
                 case d @ Def(isrec, nme, L(rhs), isByname) =>
                   typer.dbg = mode.dbg
                   val ty_sch = typer.typeLetRhs2(isrec, nme.name, rhs)(ctx, raiseToBuffer)
-                  val exp = getType(ty_sch)
+                  val exp = getType(ty_sch, S(true))
                   // statement does not have a declared type for the body
                   // the inferred type must be used and stored for lookup
                   S(nme.name -> (declared.get(nme.name) match {
@@ -660,7 +660,7 @@ class DiffTests
                     // the inferred type is used to for ts type gen
                     case S(sign) =>
                       ctx += nme.name -> typer.VarSymbol(sign, nme)
-                      val sign_exp = getType(sign)
+                      val sign_exp = getType(sign, S(true)) // TODO should be S(false)
                       typer.dbg = mode.dbg
                       typer.subsume(ty_sch, sign)(ctx, raiseToBuffer, typer.TypeProvenance(d.toLoc, "def definition"))
                       if (mode.generateTsDeclarations) tsTypegenCodeBuilder.addTypeGenTermDefinition(exp, Some(nme.name))
@@ -672,7 +672,7 @@ class DiffTests
                   typer.typeStatement(desug, allowPure = true)(ctx, raiseToBuffer, Map.empty, genLambdas = true) match {
                     case R(binds) =>
                       binds.map { case nme -> pty =>
-                        val ptType = getType(pty)
+                        val ptType = getType(pty, S(true))
                         ctx += nme -> typer.VarSymbol(pty, Var(nme))
                         if (mode.generateTsDeclarations) tsTypegenCodeBuilder.addTypeGenTermDefinition(ptType, Some(nme))
                         nme -> (s"$nme: ${ptType.show}" :: Nil)
@@ -681,7 +681,7 @@ class DiffTests
                     // statements for terms that compute to a value
                     // and are not bound to a variable name
                     case L(pty) =>
-                      val exp = getType(pty)
+                      val exp = getType(pty, S(true))
                       S(if (exp =/= TypeName("unit")) {
                         val res = "res"
                         ctx += res -> typer.VarSymbol(pty, Var(res))
@@ -717,7 +717,7 @@ class DiffTests
                 if (mode.dbg) output("REC: " + tv + tv.showBounds)
                 report(ErrorReport(
                   msg"Inferred recursive type: ${
-                    getType(tv, removePolarVars = false).show
+                    getType(tv, pol = N, removePolarVars = false).show
                   }" -> tv.prov.loco :: Nil) :: Nil)
               }
               
