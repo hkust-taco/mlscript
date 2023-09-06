@@ -135,3 +135,24 @@ bar impossible
 //│      bar is not implemented
 
 
+def k: 'a -> 'a
+//│ k: 'a -> 'a
+//│  = <missing implementation>
+
+:e
+k = impossible
+//│ nothing -> nothing
+//│   <:  k:
+//│ 'a -> 'a
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.143: 	k = impossible
+//│ ║         	^^^^^^^^^^^^^^
+//│ ╟── type `'a` does not match type `nothing`
+//│ ║  l.138: 	def k: 'a -> 'a
+//│ ║         	       ^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.128: 	def impossible x = case x of {}
+//│ ╙──       	                        ^
+//│  = [Function: impossible]
+
+

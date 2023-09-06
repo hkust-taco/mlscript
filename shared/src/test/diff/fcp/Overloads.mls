@@ -137,6 +137,14 @@ if true then IISS else BBNN
 def test: ~(int -> int)
 //│ test: in ~(int -> int) out nothing
 
+// * Note about this known unsoundness: see test file BooleanFail.mls
+test = 42
+not test
+//│ 42
+//│   <:  test:
+//│ ~(int -> int)
+//│ res: bool
+
 // :ds
 def test: ~(int -> int) & ~bool
 //│ test: in ~(int -> int) & ~bool out nothing
