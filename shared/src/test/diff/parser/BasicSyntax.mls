@@ -398,7 +398,7 @@ f x : 1
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
 //│ ║  l.396: 	f x : 1
 //│ ╙──       	^^^
-//│ Parsed: {f (x : Literal(1),)}
+//│ Parsed: {f (x : 1,)}
 
 f x: 1, y: 2
 //│ |f| |x|#:| |1|,| |y|#:| |2|
@@ -412,7 +412,7 @@ f x : 1, y: 2
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
 //│ ║  l.410: 	f x : 1, y: 2
 //│ ╙──       	^^^^^^^^^^^^^
-//│ Parsed: {f (x : Literal(1), y: 2,)}
+//│ Parsed: {f (x : 1, y: 2,)}
 
 f x: 1, y: 2, z: 3
 //│ |f| |x|#:| |1|,| |y|#:| |2|,| |z|#:| |3|

@@ -54,12 +54,12 @@ rec def evalPeel f e = case e of {
   | Add -> eval f e.lhs + eval f e.rhs
   | _ -> f e
   }
-//│ evalPeel: ('b -> (int & 'val)) -> ('b & ~#Add & ~#Lit | Add & {lhs: Expr['b], rhs: Expr['b]} | Lit & {val: 'val}) -> (int | 'val)
+//│ evalPeel: ('b -> int & 'a -> 'val) -> (Add & {lhs: Expr['b], rhs: Expr['b]} | Lit & {val: 'val} | 'a & ~#Add & ~#Lit) -> (int | 'val)
 //│         = <no result>
 //│           eval is not implemented
 
 eval = evalPeel
-//│ ('b -> (int & 'val)) -> ('b & ~#Add & ~#Lit | Add & {lhs: Expr['b], rhs: Expr['b]} | Lit & {val: 'val}) -> (int | 'val)
+//│ ('b -> int & 'a -> 'val) -> (Add & {lhs: Expr['b], rhs: Expr['b]} | Lit & {val: 'val} | 'a & ~#Add & ~#Lit) -> (int | 'val)
 //│   <:  eval:
 //│ ('b -> int) -> Expr['b] -> int
 //│     = <no result>
@@ -150,7 +150,7 @@ eval (fun x -> x.hello) {hello=1}
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.149: 	eval (fun x -> x.hello) {hello=1}
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── record literal of type `{hello: 1}` does not match type `?b & ~Add & ~Lit | Add & {lhs: Expr[?b], rhs: Expr[?b]} | Lit & {val: int}`
+//│ ╟── record literal of type `{hello: 1}` does not match type `'b & ~Add & ~Lit | Add & {lhs: Expr['b], rhs: Expr['b]} | Lit & {val: int}`
 //│ ║  l.149: 	eval (fun x -> x.hello) {hello=1}
 //│ ║         	                        ^^^^^^^^^
 //│ ╟── Note: constraint arises from union type:

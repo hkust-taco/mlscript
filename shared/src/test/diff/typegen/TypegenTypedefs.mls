@@ -56,7 +56,7 @@ let lockA = Lock 20 in let lockB = Lock 30 in (Bank lockA 2000).Better(Bank lock
 //│ export declare class Lock<T> {
 //│     pins: T
 //│     constructor(fields: {pins: T})
-//│     Map<a>(arg: (arg1: T) => a): Lock<a>
+//│     Map<'a>(arg: (arg1: T) => 'a): Lock<'a>
 //│ }
 //│ export declare class Bank {
 //│     lock: Lock<int>

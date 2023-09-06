@@ -25,25 +25,28 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
    * @param baseClasses base class if the class or interface inherits from any
    * @param toLoc source location related information
    * @param positionals positional term parameters of the class
+   * @param adtData maps a class to its ADT by name
    */
   case class TypeDef(
     kind: TypeDefKind,
     nme: TypeName,
     tparamsargs: List[(TypeName, TypeVariable)],
-    tvars: Iterable[TypeVariable], // "implicit" type variables. instantiate every time a `TypeRef` is expanded
     bodyTy: SimpleType,
     mthDecls: List[MethodDef[Right[Term, Type]]],
     mthDefs: List[MethodDef[Left[Term, Type]]],
     baseClasses: Set[TypeName],
     toLoc: Opt[Loc],
     positionals: Ls[Str],
+    adtData: Opt[AdtInfo] = N,
   ) {
     def allBaseClasses(ctx: Ctx)(implicit traversed: Set[TypeName]): Set[TypeName] =
       baseClasses.map(v => TypeName(v.name.decapitalize)) ++
         baseClasses.iterator.filterNot(traversed).flatMap(v =>
           ctx.tyDefs.get(v.name).fold(Set.empty[TypeName])(_.allBaseClasses(ctx)(traversed + v)))
     val (tparams: List[TypeName], targs: List[TypeVariable]) = tparamsargs.unzip
-    val thisTv: TypeVariable = freshVar(noProv, S("this"), Nil, TypeRef(nme, targs)(noProv) :: Nil)(1)
+    // * This is lazy so that the variable is not created if the type doesn't end up being processed,
+    // * which may happen if it is ill-formed.
+    lazy val thisTv: TypeVariable = freshVar(noProv, N, S("this"), Nil, TypeRef(nme, targs)(noProv) :: Nil)(1) // FIXME coudl N here result in divergence? cf. absence of shadow
     var tvarVariances: Opt[VarianceStore] = N
     def getVariancesOrDefault: collection.Map[TV, VarianceInfo] =
       tvarVariances.getOrElse(Map.empty[TV, VarianceInfo].withDefaultValue(VarianceInfo.in))
@@ -127,6 +130,7 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
     }
   
   
+  
   /** Only supports getting the fields of a valid base class type.
    * Notably, does not traverse type variables. 
    * Note: this does not retrieve the positional fields implicitly defined by tuples */
@@ -142,15 +146,15 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
       case p: ProxyType => fieldsOf(p.underlying, paramTags)
       case Without(base, ns) => fieldsOf(base, paramTags).filter(ns contains _._1)
       case TypeBounds(lb, ub) => fieldsOf(ub, paramTags)
-      case _: ObjectTag | _: FunctionType | _: ArrayBase | _: TypeVariable
-        | _: NegType | _: ExtrType | _: ComposedType | _: SpliceType => Map.empty
+      case _: TypeTag | _: FunctionType | _: ArrayBase | _: TypeVariable
+        | _: NegType | _: ExtrType | _: ComposedType | _: SpliceType
+        | _: ConstrainedType | _: PolymorphicType | _: Overload
+        => Map.empty
     }
   }
   // ()
   
-  
   def processTypeDefs(newDefs0: List[mlscript.TypeDef])(implicit ctx: Ctx, raise: Raise): Ctx = {
-    
     var allDefs = ctx.tyDefs
     val allEnv = ctx.env.clone
     val allMthEnv = ctx.mthEnv.clone
@@ -176,25 +180,23 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
           N
         case N =>
           val dummyTargs = td.tparams.map(p =>
-            freshVar(originProv(p.toLoc, s"${td.kind.str} type parameter", p.name), S(p.name))(ctx.lvl + 1))
+            freshVar(originProv(p.toLoc, s"${td.kind.str} type parameter", p.name), N, S(p.name))(ctx.lvl + 1))
           val tparamsargs = td.tparams.lazyZip(dummyTargs)
-          val (bodyTy, tvars) = 
-            typeType2(td.body, simplify = false)(ctx.copy(lvl = 0), raise, tparamsargs.map(_.name -> _).toMap, newDefsInfo)
-          val td1 = TypeDef(td.kind, td.nme, tparamsargs.toList, tvars, bodyTy,
-            td.mthDecls, td.mthDefs, baseClassesOf(td), td.toLoc, td.positionals.map(_.name))
+          val bodyTy =
+            typePolyType(td.body, simplify = false)(ctx, raise, tparamsargs.map(_.name -> _).toMap, newDefsInfo)
+          val td1 = TypeDef(td.kind, td.nme, tparamsargs.toList, bodyTy,
+            td.mthDecls, td.mthDefs, baseClassesOf(td), td.toLoc, td.positionals.map(_.name), td.adtInfo)
           allDefs += n -> td1
           S(td1)
       }
     }
     import ctx.{tyDefs => oldDefs}
-    
     /* Type the bodies of type definitions, ensuring the correctness of parent types
      * and the regularity of the definitions, then register the constructors and types in the context. */
     def typeTypeDefs(implicit ctx: Ctx): Ctx =
       ctx.copy(tyDefs = oldDefs ++ newDefs.flatMap { td =>
         implicit val prov: TypeProvenance = tp(td.toLoc, "type definition")
         val n = td.nme
-        
         def gatherMthNames(td: TypeDef): (Set[Var], Set[Var]) =
           td.baseClasses.iterator.flatMap(bn => ctx.tyDefs.get(bn.name)).map(gatherMthNames(_)).fold(
             (td.mthDecls.iterator.map(md => md.nme.copy().withLocOf(md)).toSet,
@@ -204,7 +206,6 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
               if (mns.sizeIs > 1) Var(mn.name).withLoc(td.toLoc) else mn }.toSet,
             defns1 ++ defns2
           )}
-        
         def checkCycle(ty: SimpleType)(implicit travsersed: Set[TypeName \/ TV]): Bool =
             // trace(s"Cycle? $ty {${travsersed.mkString(",")}}") {
             ty match {
@@ -219,12 +220,20 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
           case TypeBounds(lb, ub) => checkCycle(lb) && checkCycle(ub)
           case tv: TypeVariable => travsersed(R(tv)) || {
             val t2 = travsersed + R(tv)
-            tv.lowerBounds.forall(checkCycle(_)(t2)) && tv.upperBounds.forall(checkCycle(_)(t2))
+            tv.assignedTo match {
+              case S(ty) =>
+                checkCycle(ty)(t2)
+              case N =>
+                tv.lowerBounds.forall(checkCycle(_)(t2)) && tv.upperBounds.forall(checkCycle(_)(t2))
+            }
           }
-          case _: ExtrType | _: ObjectTag | _: FunctionType | _: RecordType | _: ArrayBase | _: SpliceType => true
+          case PolymorphicType(_, body) => checkCycle(body)
+          case Overload(alts) => alts.forall(checkCycle)
+          case ConstrainedType(cs, bod) =>
+            cs.forall(lu => checkCycle(lu._1) && checkCycle(lu._2)) && checkCycle(bod)
+          case _: ExtrType | _: TypeTag | _: FunctionType | _: RecordType | _: ArrayBase | _: SpliceType => true
         }
         // }()
-        
         val rightParents = td.kind match {
           case Als => checkCycle(td.bodyTy)(Set.single(L(td.nme)))
           case Nms =>
@@ -234,7 +243,7 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
             val parentsClasses = MutSet.empty[TypeRef]
             def checkParents(ty: SimpleType): Bool = ty match {
               // case ClassTag(Var("string"), _) => true // Q: always?
-              case _: ObjectTag => true // Q: always? // FIXME actually no
+              case _: TypeTag => true // Q: always? // FIXME actually no
               case tr @ TypeRef(tn2, _) =>
                 val td2 = ctx.tyDefs(tn2.name)
                 td2.kind match {
@@ -263,7 +272,7 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
               case tv: TypeVariable =>
                 err(msg"cannot inherit from a type variable", prov.loco)
                 false
-              case _: FunctionType =>
+              case _: FunctionType | _: Overload =>
                 err(msg"cannot inherit from a function type", prov.loco)
                 false
               case _: NegType =>
@@ -283,6 +292,12 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
                 false
               case _: TypeBounds =>
                 err(msg"cannot inherit from type bounds", prov.loco)
+                false
+              case _: PolymorphicType =>
+                err(msg"cannot inherit from a polymorphic type", prov.loco)
+                false
+              case _: ConstrainedType =>
+                err(msg"cannot inherit from a constrained type", prov.loco)
                 false
               case _: RecordType | _: ExtrType => true
               case p: ProxyType => checkParents(p.underlying)
@@ -313,7 +328,7 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
                       val fieldsRefined = fields.iterator.map(f =>
                         if (f._1.name.isCapitalized) f
                         else {
-                          val fv = freshVar(noProv,
+                          val fv = freshVar(noProv, N,
                             S(f._1.name.drop(f._1.name.indexOf('#') + 1)) // strip any "...#" prefix
                           )(1).tap(_.upperBounds ::= f._2.ub)
                           f._1 -> (
@@ -321,7 +336,7 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
                             else fv.toUpper(f._2.prov)
                           )
                         }).toList
-                      PolymorphicType(0, FunctionType(
+                      PolymorphicType(MinLevel, FunctionType(
                         singleTup(RecordType.mk(fieldsRefined.filterNot(_._1.name.isCapitalized))(noProv)),
                         nomTag & RecordType.mk(
                           fieldsRefined ::: tparamTags
@@ -331,9 +346,9 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
                       )(originProv(td.nme.toLoc, "class constructor", td.nme.name)))
                     case Trt =>
                       val nomTag = trtNameToNomTag(td)(originProv(td.nme.toLoc, "trait", td.nme.name), ctx)
-                      val tv = freshVar(noProv)(1)
+                      val tv = freshVar(noProv, N)(1)
                       tv.upperBounds ::= td.bodyTy
-                      PolymorphicType(0, FunctionType(
+                      PolymorphicType(MinLevel, FunctionType(
                         singleTup(tv), tv & nomTag & RecordType.mk(tparamTags)(noProv)
                       )(originProv(td.nme.toLoc, "trait constructor", td.nme.name)))
                   }
@@ -343,7 +358,6 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
             }
             checkParents(td.bodyTy) && checkCycle(td.bodyTy)(Set.single(L(td.nme))) && checkAbstractAddCtors
         }
-        
         def checkRegular(ty: SimpleType)(implicit reached: Map[Str, Ls[SimpleType]]): Bool = ty match {
           case tr @ TypeRef(defn, targs) => reached.get(defn.name) match {
             case None => checkRegular(tr.expandWith(false))(reached + (defn.name -> targs))
@@ -363,14 +377,12 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
           }
           case _ => ty.children(includeBounds = false).forall(checkRegular)
         }
-        
         // Note: this will end up going through some types several times... We could make sure to
         //    only go through each type once, but the error messages would be worse.
-        if (rightParents && checkRegular(td.bodyTy)(Map(n.name -> td.targs)))
+        if (rightParents && (irregularTypes || checkRegular(td.bodyTy)(Map(n.name -> td.targs))))
           td.nme.name -> td :: Nil
         else Nil
       })
-    
     def typeMethods(implicit ctx: Ctx): Ctx = {
       /* Perform subsumption checking on method declarations and definitions by rigidifying class type variables,
        * then register the method signatures in the context */
@@ -378,10 +390,15 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
         val tn = td.nme
         val MethodSet(_, _, decls, defns) = mds
         val MethodSet(_, _, declsInherited, defnsInherited) = mds.processInheritedMethods
-        val rigidtargs = td.targs.map(freshenAbove(ctx.lvl, _, true))
+        val rigidtargs = {
+          implicit val state: MutMap[TV, ST] = MutMap.empty
+          td.targs.map(freshenAbove(ctx.lvl, _, true))
+        }
         val targsMap = td.targs.lazyZip(rigidtargs).toMap[SimpleType, SimpleType]
-        def ss(mt: MethodType, bmt: MethodType)(implicit prov: TypeProvenance) =
+        def ss(mt: MethodType, bmt: MethodType)(implicit prov: TypeProvenance) = {
+          // implicit val ec: Opt[ExtrCtx] = N
           constrain(subst(mt.bodyPT, targsMap).instantiate, subst(bmt.bodyPT, targsMap).rigidify)
+        }
         def registerImplicitSignatures(mn: Str, mthTy: MethodType) = ctx.getMth(N, mn) match {
           // If the currently registered method belongs to one of the base classes of this class,
           // then we don't need to do anything.
@@ -473,11 +490,17 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
       newDefs.foreach { td => if (ctx.tyDefs.isDefinedAt(td.nme.name)) {
         /* Recursive traverse the type definition and type the bodies of method definitions 
          * by applying the targs in `TypeRef` and rigidifying class type parameters. */
-        val rigidtargs = td.targs.map(freshenAbove(ctx.lvl, _, true))
+        val rigidtargs = {
+          implicit val state: MutMap[TV, ST] = MutMap.empty
+          td.targs.map(freshenAbove(ctx.lvl, _, true))
+        }
         val reverseRigid = rigidtargs.lazyZip(td.targs).toMap
-        def rec(tr: TypeRef, top: Bool = false)(ctx: Ctx): MethodSet = {
+        def rec(tr: TypeRef, top: Bool = false)(ctx: Ctx): MethodSet = ctx.tyDefs.get(tr.defn.name) match {
+              case N =>
+                err(msg"type identifier not found: ${tr.defn.name}" -> tr.prov.loco :: Nil)
+                MethodSet(tr.defn, Nil, Map.empty, Map.empty)
+              case S(td2) =>
           implicit val thisCtx: Ctx = ctx.nest
-          val td2 = ctx.tyDefs(tr.defn.name)
           val targsMap = td2.tparams.iterator.map(_.name).zip(tr.targs).toMap
           val declared = MutMap.empty[Str, Opt[Loc]]
           val defined = MutMap.empty[Str, Opt[Loc]]
@@ -489,7 +512,8 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
             case _ => Nil
           }
           def go(md: MethodDef[_ <: Term \/ Type]): (Str, MethodType) = {
-            val thisTag = TraitTag(Var("this"))(noProv)
+            val thisTag = TraitTag(Var("this"))(noProv) // or Skolem?!
+            // val thisTag = SkolemTag(thisCtx.lvl/*TODO correct?*/, Var("this"))(noProv)
             val thisTy = thisTag & tr
             thisCtx += "this" -> VarSymbol(thisTy, Var("this"))
             val MethodDef(rec, prt, nme, tparams, rhs) = md
@@ -522,15 +546,16 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
             }
             rhs.fold(_ => defined, _ => declared) += nme.name -> nme.toLoc
             val dummyTargs2 = tparams.map(p =>
-              TraitTag(Var(p.name))(originProv(p.toLoc, "method type parameter", p.name)))
+              TraitTag(Var(p.name))(originProv(p.toLoc, "method type parameter", p.name))) // FIXME or Skolem?!
             val targsMap2 = targsMap ++ tparams.iterator.map(_.name).zip(dummyTargs2).toMap
             val reverseRigid2 = reverseRigid ++ dummyTargs2.map(t => t ->
-              freshVar(t.prov, S(t.id.idStr))(thisCtx.lvl + 1)) +
+              freshVar(t.prov, N, S(t.id.idStr))(thisCtx.lvl + 1)) +
                 (thisTag -> td.thisTv) +
                 (td.thisTv -> td.thisTv) // needed to prevent the type variable from being refreshed during substitution!
-            val bodyTy = subst(rhs.fold(term =>
+            val bodyTy: PolymorphicType = subst(rhs.fold(term =>
               ctx.getMthDefn(prt.name, nme.name)
-                .fold(typeLetRhs(rec, nme.name, term)(thisCtx, raise, targsMap2)) { mt =>
+                .fold(typeLetRhs(rec, nme.name, term)(thisCtx, raise, targsMap2,
+                    genLambdas = !distributeForalls || generalizeCurriedFunctions)) { mt =>
                   // Now buckle-up because this is some seriously twisted stuff:
                   //    If the method is already in the environment,
                   //    it means it belongs to a previously-defined class/trait (not the one being typed),
@@ -546,11 +571,14 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
                     case pt => pt
                   })
                 },
-              ty => PolymorphicType(thisCtx.lvl,
-                typeType(ty)(thisCtx.nextLevel, raise, targsMap2))
+              ty => {
+                implicit val tp: TP = prov
+                thisCtx.nextLevel { newCtx =>
+                  PolymorphicType(ctx.lvl, typeType(ty)(newCtx, raise, targsMap2))
+                }
                 // ^ Note: we need to go to the next level here,
                 //    which is also done automatically by `typeLetRhs` in the case above
-              ), reverseRigid2)
+              }), reverseRigid2)
             val mthTy = MethodType(bodyTy.level, S((td.thisTv, bodyTy.body)), td2.nme :: Nil, false)(prov)
             if (rhs.isRight || !declared.isDefinedAt(nme.name)) {
               if (top) thisCtx.addMth(S(td.nme.name), nme.name, mthTy)
@@ -606,10 +634,10 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
           updateVariance(fieldTy.ub, curVariance)
       }
       
-      trace(s"upd[$curVariance] $ty") {
+      trace(s"upd[$curVariance] $ty") { // Note: could simplify this (at some perf cost) by just using ty.childrenPol
         ty match {
           case ProxyType(underlying) => updateVariance(underlying, curVariance)
-          case TraitTag(_) | ClassTag(_, _) => ()
+          case _: TypeTag => ()
           case ExtrType(pol) => ()
           case t: TypeVariable =>
             // update the variance information for the type variable
@@ -625,10 +653,18 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
               !curVariance.isContravariant && !visited(true -> t),
               !curVariance.isCovariant && !visited(false -> t),
             )
-            if (visitLB) visited += true -> t
-            if (visitUB) visited += false -> t
-            if (visitLB) t.lowerBounds.foreach(lb => updateVariance(lb, VarianceInfo.co))
-            if (visitUB) t.upperBounds.foreach(ub => updateVariance(ub, VarianceInfo.contra))
+            t.assignedTo match {
+              case S(ty) =>
+                if (visitLB || visitUB) {
+                  visited += true -> t; visited += false -> t
+                  updateVariance(ty, curVariance)
+                }
+              case N =>
+                if (visitLB) visited += true -> t
+                if (visitUB) visited += false -> t
+                if (visitLB) t.lowerBounds.foreach(lb => updateVariance(lb, VarianceInfo.co))
+                if (visitUB) t.upperBounds.foreach(ub => updateVariance(ub, VarianceInfo.contra))
+            }
           case RecordType(fields) => fields.foreach {
             case (_ , fieldTy) => fieldVarianceHelper(fieldTy)
           }
@@ -669,6 +705,20 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
             updateVariance(lhs, curVariance.flip)
             updateVariance(rhs, curVariance)
           case Without(base, names) => updateVariance(base, curVariance.flip)
+          case Overload(alts) => alts.foreach(updateVariance(_, curVariance))
+          case PolymorphicType(lvl, bod) =>
+            // * It seems we should want to ignore from the analysis
+            // *  those type vars that are being quantified...
+            // *  When the same variable occurs both as quantified and not quantified
+            // *  in a type, this could make a difference
+            // *  (like it used to in `analysis/Weird.mls`)
+            updateVariance(bod, curVariance)
+          case ConstrainedType(cs, bod) =>
+            cs.foreach { lu =>
+              updateVariance(lu._1, VarianceInfo.co)
+              updateVariance(lu._2, VarianceInfo.contra)
+            }
+            updateVariance(bod, curVariance)
         }
       }()
     }
@@ -690,7 +740,7 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
       val visitedSet: MutSet[Bool -> TypeVariable] = MutSet()
       varianceUpdated = false;
       tyDefs.foreach {
-        case t @ TypeDef(k, nme, _, _, body, mthDecls, mthDefs, _, _, _) =>
+        case t @ TypeDef(k, nme, _, body, mthDecls, mthDefs, _, _, _, _) =>
           trace(s"${k.str} ${nme.name}  ${
                 t.tvarVariances.getOrElse(die).iterator.map(kv => s"${kv._2} ${kv._1}").mkString("  ")}") {
             updateVariance(body, VarianceInfo.co)(t, visitedSet)

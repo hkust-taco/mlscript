@@ -128,11 +128,24 @@ def f: (~Foo[1 | 2] & 'a | ~Foo[2 | 3] & 'a) -> 'a
 //│ f: ('a & ~Foo[?]) -> 'a
 //│  = <missing implementation>
 
+// * Notice the weird negative (in) type, and also see BooleanFail.mls
 def f: (~{x: 1 | 2} & 'a | ~{x: 2 | 3} & 'a) -> 'a
-//│ f: ('a & ~{x: 2}) -> 'a
+//│ f: in forall 'a. nothing -> 'a out forall 'a. ('a & ~{x: 2}) -> 'a
 //│  = <missing implementation>
 
+f = id
+//│ 'a -> 'a
+//│   <:  f:
+//│ 'a -> 'a
+//│  = [Function: id]
+
+f x = case x of {}
+//│ nothing -> nothing
+//│   <:  f:
+//│ 'a -> 'a
+//│  = [Function: f2]
+
 def f: (~{x: 1 | 2} & ~lit & 'a | ~{x: 2 | 3} & ~lit & 'a) -> 'a
-//│ f: ('a & ~{x: 2} & ~#Lit) -> 'a
+//│ f: in forall 'a. nothing -> 'a out forall 'a. ('a & ~{x: 2} & ~#Lit) -> 'a
 //│  = <missing implementation>
 

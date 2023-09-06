@@ -18,6 +18,7 @@ final case class ReplHost() {
 
   // Skip the welcome message.
   collectUntilPrompt()
+  execute("console.info = console.error")
 
   /**
    * This function simply collect output from Node.js until meet `"\n> "`.
@@ -41,6 +42,13 @@ final case class ReplHost() {
         val message = syntaxErrorLine.substring(ReplHost.syntaxErrorHead.length)
         ReplHost.Error(true, message)
     }
+  }
+
+  private def consumeStderr(): String = {
+    val buffer = new StringBuilder()
+    while (stderr.ready())
+      buffer.append(stderr.read().toChar)
+    buffer.toString()
   }
 
   /**
@@ -85,17 +93,17 @@ final case class ReplHost() {
     * @param res the result identifier name
     * @return
     */
-  def query(prelude: Str, code: Str, res: Str): ReplHost.Reply = {
+  def query(prelude: Str, code: Str, res: Str): (ReplHost.Reply, Str) = {
     // For empty queries, returns empty.
     if (prelude.isEmpty && code.isEmpty)
-      ReplHost.Empty
+      (ReplHost.Empty, "")
     else {
       // Warp the code with `try`-`catch` block.
       val wrapped = s"$prelude try { $code } catch (e) { console.log('\\u200B' + e + '\\u200B'); }"
       // Send the code
       send(wrapped)
       // If succeed, retrieve the result.
-      parseQueryResult().map { intermediate =>
+      (parseQueryResult().map { intermediate =>
         // Since the result might not be the result of the expression, we need
         // to retrieve the value again.
         send(res match {
@@ -106,7 +114,7 @@ final case class ReplHost() {
           // Add the intermediate result to the reply.
           ReplHost.Result(result, Some(intermediate))
         }
-      }
+      }, consumeStderr())
     }
   }
 

@@ -120,6 +120,9 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
     case "is" => (4, 4)
     case "and" => (3, 3)
     case "or" => (2, 2)
+    case "=>" =>
+      val eqPrec = prec('=')
+      (eqPrec, eqPrec - 1)
     case _ if opStr.exists(_.isLetter) =>
       (5, 5)
     case _ =>
@@ -229,10 +232,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
     case _ => Tuple((N, Field(None, t)) :: Nil)
   }
   def typ(prec: Int = 0)(implicit fe: FoundErr, l: Line): Type =
-    expr(prec).toType match {
-      case L(d) => raise(d); Top // TODO better
-      case R(ty) => ty
-    }
+    mkType(expr(prec))
   
   def block(implicit et: ExpectThen, fe: FoundErr): Ls[IfBody \/ Statement] =
     cur match {
@@ -328,7 +328,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
               val asc = yeetSpaces match {
                 case (KEYWORD(":"), _) :: _ =>
                   consume
-                  S(typ(2))
+                  // S(typ(2))
+                  S(typ(0))
                 case _ => N
               }
               yeetSpaces match {
@@ -431,6 +432,18 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
         }))
         else Bra(false, Tup(res))
         exprCont(bra.withLoc(S(loc)), prec, allowNewlines = false)
+      case (KEYWORD("forall"), l0) :: _ =>
+        consume
+        val as = argsMaybeIndented()
+        skip(KEYWORD(";"))
+        val e = expr(0)
+        R(Forall(as.flatMap {
+          case N -> Fld(false, false, v: Var) =>
+            TypeVar(R(v.name), N).withLocOf(v) :: Nil
+          case v -> f =>
+            err(msg"illegal `forall` quantifiee" -> f.value.toLoc :: Nil)
+            Nil
+        }, e))
       case (KEYWORD("let"), l0) :: _ =>
         consume
         val bs = bindings(Nil)
@@ -551,21 +564,23 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
           case L(rhs) =>
             L(IfOpApp(acc, v, rhs))
           case R(rhs) =>
-            opStr match {
-              case "=>" => {
-                exprCont(rhs, prec, allowNewlines) match {
-                  case R(p) => R(Lam(toParams(acc), p))
-                  case L(b) => err(msg"Unexpected ifBody" -> b.toLoc :: Nil); L(b)
-                }
-              }
+            exprCont(opStr match {
+              case "=>" =>
+                Lam(toParams(acc), rhs)
               case _ =>
-                exprCont(App(App(v, toParams(acc)), toParams(rhs)), prec, allowNewlines)
-            }
+                App(App(v, toParams(acc)), toParams(rhs))
+            }, prec, allowNewlines)
         }
-      case (KEYWORD(":"), _) :: _ if prec <= 1 =>
+      case (KEYWORD(":"), l0) :: _ =>
         consume
-        val ty = typ(1)
-        R(Asc(acc, ty))
+        R(Asc(acc, typ(0)))
+      // case (KEYWORD(":"), _) :: _ if prec <= 1 =>
+      //   consume
+      //   R(Asc(acc, typ(1)))
+      case (KEYWORD("where"), l0) :: _ if prec <= 1 =>
+        consume
+        val tu = typingUnitMaybeIndented
+        R(Where(acc, tu.entities))
       case (SPACE, l0) :: _ =>
         consume
         exprCont(acc, prec, allowNewlines)
@@ -676,7 +691,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
           exprCont(res, prec, allowNewlines)
           
       case c @ (h :: _) if (h._1 match {
-        case KEYWORD(";" | "of") | BRACKETS(Round | Square, _)
+        case KEYWORD(";" | "of" | "where") | BRACKETS(Round | Square, _)
           | BRACKETS(Indent, (
               KEYWORD(";" | "of")
               | BRACKETS(Round | Square, _)
@@ -887,6 +902,10 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
         Nil
   }
   
+  def mkType(trm: Term): Type = trm.toType match {
+    case L(d) => raise(d); Top // TODO better
+    case R(ty) => ty
+  }
   
   
 }

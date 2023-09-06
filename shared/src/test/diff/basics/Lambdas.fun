@@ -23,7 +23,7 @@ f => f f
 //│ res: ('a -> 'b & 'a) -> 'b
 
 f => id f id f id
-//│ res: (('a -> 'a) -> 'b -> ('c -> 'c) -> 'd & 'b) -> 'd
+//│ res: ((forall 'a. 'a -> 'a) -> 'b -> (forall 'a. 'a -> 'a) -> 'c & 'b) -> 'c
 
 :pe
 let oops = hu(h

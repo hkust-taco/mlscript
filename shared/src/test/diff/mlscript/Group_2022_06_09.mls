@@ -59,10 +59,10 @@ def eval eval e = case e of {
   | Lit -> e.n
   | Add -> eval eval e.lhs + eval eval e.rhs
   }
-//│ eval: ('a -> 'rhs -> int & 'a) -> ((Add with {lhs: 'rhs, rhs: 'rhs}) | (Lit with {n: 'n})) -> (int | 'n)
+//│ eval: ('a -> 'lhs -> int & 'a) -> ((Add with {lhs: 'lhs, rhs: 'lhs}) | (Lit with {n: 'n})) -> (int | 'n)
 //│     = [Function: eval1]
 
-eval eval e
+eval eval! e
 //│ res: int
 //│    = 3
 
@@ -71,18 +71,18 @@ def evalN evalN e = case e of {
   | Neg -> 0 - evalN evalN e.e
   | _ -> eval evalN e
   }
-//│ evalN: ('a -> 'rhs -> int & 'a) -> ((Add with {lhs: 'rhs, rhs: 'rhs}) | (Lit with {n: 'n}) | (Neg with {e: 'rhs})) -> (int | 'n)
+//│ evalN: ('a -> 'e -> int & 'a -> 'lhs -> int & 'a) -> ((Add with {lhs: 'lhs, rhs: 'lhs}) | (Lit with {n: 'n}) | (Neg with {e: 'e})) -> (int | 'n)
 //│      = [Function: evalN]
 
-evalN eval e
+evalN eval! e
 //│ res: int
 //│    = 3
 
-evalN eval e2
+evalN eval! e2
 //│ res: int
 //│    = -3
 
-ev = evalN evalN
+ev = evalN evalN!
 //│ ev: ((Add with {lhs: 'a, rhs: 'a}) | (Lit with {n: 'n}) | (Neg with {e: 'a})) -> (int | 'n)
 //│   where
 //│     'a <: (Add with {lhs: 'a, rhs: 'a}) | Lit | (Neg with {e: 'a})
@@ -112,28 +112,32 @@ def evalN evalN k e = case e of {
 //│      = [Function: evalN1]
 
 
-def evalComposed evalComposed = evalN evalN (fun e -> eval evalComposed e)
-//│ evalComposed: ('a -> 'rhs -> int & 'a) -> 'b -> int
+// * Note that these `evalComposed` types could be simplified further
+// *  by making the simplifier realize that in `Lit with {n: 'n}`, `'n` really co-occurs with `int`!
+
+def evalComposed evalComposed = evalN evalN! (fun e -> eval evalComposed e)
+//│ evalComposed: ('a -> 'rhs -> int & 'a) -> ((Add with {lhs: 'rhs, rhs: 'rhs}) | (Lit with {n: 'n}) | (Neg with {e: 'b})) -> (int | 'n)
 //│   where
 //│     'b <: (Add with {lhs: 'rhs, rhs: 'rhs}) | Lit | (Neg with {e: 'b})
 //│             = [Function: evalComposed]
 
-def evalComposed evalComposed = evalN evalN (eval evalComposed)
-//│ evalComposed: ('a -> 'rhs -> int & 'a) -> 'b -> int
+def evalComposed evalComposed = evalN evalN! (eval evalComposed)
+//│ evalComposed: ('a -> 'lhs -> int & 'a) -> ((Add with {lhs: 'lhs, rhs: 'lhs}) | (Lit with {n: 'n}) | (Neg with {e: 'b})) -> (int | 'n)
 //│   where
-//│     'b <: (Add with {lhs: 'rhs, rhs: 'rhs}) | Lit | (Neg with {e: 'b})
+//│     'b <: (Add with {lhs: 'lhs, rhs: 'lhs}) | Lit | (Neg with {e: 'b})
 //│             = [Function: evalComposed1]
 
 
 // * NOTE: This inferred type is a good example
 // *    of the need for an algorithm to tie recursive TV knots and inline the rest;
 // *    once we inline, `b` we should get the expected simplified recursive type.
-ev2 = evalComposed evalComposed
-//│ ev2: 'a -> int
+ev2 = evalComposed evalComposed!
+//│ ev2: ((Add with {lhs: Neg & 'a | 'b & ~#Neg, rhs: Neg & 'a | 'b & ~#Neg}) | (Lit with {n: 'n}) | (Neg with {e: 'c})) -> (int | 'n)
 //│   where
-//│     'a <: 'b | (Neg with {e: 'a})
-//│     'b <: (Add with {lhs: 'c, rhs: 'c}) | Lit
-//│     'c <: (Neg with {e: 'c}) | 'b & ~#Neg
+//│     'c <: (Add with {lhs: Neg & 'a | 'b & ~#Neg, rhs: Neg & 'a | 'b & ~#Neg}) | Lit | (Neg with {e: 'c})
+//│     'a <: {e: 'd}
+//│     'd <: 'b | (Neg with {e: 'd})
+//│     'b <: Add & {lhs: Neg & 'a | 'b & ~#Neg, rhs: Neg & 'a | 'b & ~#Neg} | Lit
 //│    = [Function (anonymous)]
 
 ev2 e3
@@ -148,11 +152,12 @@ def ev2_ty: (Add & { lhs: 'a; rhs: 'a } | Lit | Neg & { e: 'a } as 'a) -> int
 //│       = <missing implementation>
 
 ev2_ty = ev2
-//│ 'a -> int
+//│ ((Add with {lhs: Neg & 'a | 'b & ~#Neg, rhs: Neg & 'a | 'b & ~#Neg}) | (Lit with {n: 'n}) | (Neg with {e: 'c})) -> (int | 'n)
 //│   where
-//│     'a <: 'b | (Neg with {e: 'a})
-//│     'b <: (Add with {lhs: 'c, rhs: 'c}) | Lit
-//│     'c <: (Neg with {e: 'c}) | 'b & ~#Neg
+//│     'c <: (Add with {lhs: Neg & 'a | 'b & ~#Neg, rhs: Neg & 'a | 'b & ~#Neg}) | Lit | (Neg with {e: 'c})
+//│     'a <: {e: 'd}
+//│     'd <: 'b | (Neg with {e: 'd})
+//│     'b <: Add & {lhs: Neg & 'a | 'b & ~#Neg, rhs: Neg & 'a | 'b & ~#Neg} | Lit
 //│   <:  ev2_ty:
 //│ 'a -> int
 //│   where

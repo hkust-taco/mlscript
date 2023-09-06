@@ -5,9 +5,9 @@ data type Boolean of Tru, Fals
 //│ Desugared: type alias Boolean = Tru[] | Fals[]
 //│ Desugared: class Tru: {}
 //│ Desugared: class Fals: {}
-//│ Desugared: def Tru: [] -> Tru[]
+//│ Desugared: def Tru: Tru[]
 //│ AST: Def(false, Tru, PolyType(List(),AppliedType(TypeName(Tru),List())), true)
-//│ Desugared: def Fals: [] -> Fals[]
+//│ Desugared: def Fals: Fals[]
 //│ AST: Def(false, Fals, PolyType(List(),AppliedType(TypeName(Fals),List())), true)
 //│ Defined type alias Boolean
 //│ Defined class Tru
@@ -28,8 +28,8 @@ data type Bool2 of True2 & False2
 //│ Parsed: data type Bool2 of {& True2 False2};
 //│ Desugared: type alias Bool2 = &[True2, False2]
 //│ Desugared: class &[True2, False2]: {False2 <: False2, True2 <: True2}
-//│ Desugared: def &: [True2, False2] -> True2 -> False2 -> &[True2, False2]
-//│ AST: Def(false, &, PolyType(List(TypeName(True2), TypeName(False2)),Function(TypeName(True2),Function(TypeName(False2),AppliedType(TypeName(&),List(TypeName(True2), TypeName(False2)))))), true)
+//│ Desugared: def &: forall True2 False2. True2 -> False2 -> &[True2, False2]
+//│ AST: Def(false, &, PolyType(List(Left(TypeName(True2)), Left(TypeName(False2))),Function(TypeName(True2),Function(TypeName(False2),AppliedType(TypeName(&),List(TypeName(True2), TypeName(False2)))))), true)
 //│ ╔══[ERROR] type identifier not found: True2
 //│ ║  l.27: 	data type Bool2 of True2 & False2
 //│ ╙──      	                   ^^^^^
@@ -117,10 +117,10 @@ data type List a of
 //│ Desugared: type alias List[a] = Nil[a] | Cons[a]
 //│ Desugared: class Nil[a]: {}
 //│ Desugared: class Cons[a]: {head: a, tail: List[a]}
-//│ Desugared: def Nil: [a] -> Nil[a]
-//│ AST: Def(false, Nil, PolyType(List(TypeName(a)),AppliedType(TypeName(Nil),List(TypeName(a)))), true)
-//│ Desugared: def Cons: [a] -> (head: a,) -> (tail: List[a],) -> Cons[a]
-//│ AST: Def(false, Cons, PolyType(List(TypeName(a)),Function(Tuple(List((Some(head),Field(None,TypeName(a))))),Function(Tuple(List((Some(tail),Field(None,AppliedType(TypeName(List),List(TypeName(a))))))),AppliedType(TypeName(Cons),List(TypeName(a)))))), true)
+//│ Desugared: def Nil: forall a. Nil[a]
+//│ AST: Def(false, Nil, PolyType(List(Left(TypeName(a))),AppliedType(TypeName(Nil),List(TypeName(a)))), true)
+//│ Desugared: def Cons: forall a. (head: a,) -> (tail: List[a],) -> Cons[a]
+//│ AST: Def(false, Cons, PolyType(List(Left(TypeName(a))),Function(Tuple(List((Some(head),Field(None,TypeName(a))))),Function(Tuple(List((Some(tail),Field(None,AppliedType(TypeName(List),List(TypeName(a))))))),AppliedType(TypeName(Cons),List(TypeName(a)))))), true)
 //│ Defined type alias List[+a]
 //│ Defined class Nil[±a]
 //│ Defined class Cons[+a]
@@ -139,8 +139,8 @@ data type Ls of LsA a
 //│ Parsed: data type Ls of {LsA a};
 //│ Desugared: type alias Ls = LsA[a]
 //│ Desugared: class LsA[a]: {a: a}
-//│ Desugared: def LsA: [a] -> a -> LsA[a]
-//│ AST: Def(false, LsA, PolyType(List(TypeName(a)),Function(TypeName(a),AppliedType(TypeName(LsA),List(TypeName(a))))), true)
+//│ Desugared: def LsA: forall a. a -> LsA[a]
+//│ AST: Def(false, LsA, PolyType(List(Left(TypeName(a))),Function(TypeName(a),AppliedType(TypeName(LsA),List(TypeName(a))))), true)
 //│ ╔══[ERROR] type identifier not found: a
 //│ ║  l.138: 	data type Ls of LsA a
 //│ ╙──       	                    ^
@@ -149,15 +149,22 @@ data type Ls of LsA a
 //│ LsA: 'a -> LsA['a]
 
 :p
+:e
 data type Ls2 of LsA2 `a
 //│ Parsed: data type Ls2 of {LsA2 `a};
 //│ Desugared: type alias Ls2 = LsA2[]
 //│ Desugared: class LsA2: {`a: 'a}
-//│ Desugared: def LsA2: [] -> 'a -> LsA2[]
+//│ Desugared: def LsA2: 'a -> LsA2[]
 //│ AST: Def(false, LsA2, PolyType(List(),Function(a,AppliedType(TypeName(LsA2),List()))), true)
+//│ ╔══[ERROR] cannot inherit from a polymorphic type
+//│ ║  l.153: 	data type Ls2 of LsA2 `a
+//│ ╙──       	                 ^^^^^^^
+//│ ╔══[ERROR] type identifier not found: LsA2
+//│ ╙──
 //│ Defined type alias Ls2
-//│ Defined class LsA2
-//│ LsA2: anything -> LsA2
+//│ ╔══[ERROR] type identifier not found: LsA2
+//│ ╙──
+//│ LsA2: anything -> error
 
 Nil
 Cons
@@ -180,20 +187,20 @@ not (Cons false Nil).head
 :e
 not (Cons 42 Nil).head
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.181: 	not (Cons 42 Nil).head
+//│ ║  l.188: 	not (Cons 42 Nil).head
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── integer literal of type `42` is not an instance of type `bool`
-//│ ║  l.181: 	not (Cons 42 Nil).head
+//│ ║  l.188: 	not (Cons 42 Nil).head
 //│ ║         	          ^^
 //│ ╟── but it flows into field selection with expected type `bool`
-//│ ║  l.181: 	not (Cons 42 Nil).head
+//│ ║  l.188: 	not (Cons 42 Nil).head
 //│ ╙──       	                 ^^^^^
 //│ res: bool | error
 
 :e
 (Cons 4).head
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.194: 	(Cons 4).head
+//│ ║  l.201: 	(Cons 4).head
 //│ ║         	        ^^^^^
 //│ ╟── type `(tail: List[?a],) -> Cons[?a]` does not have field 'head'
 //│ ║  l.113: 	data type List a of
@@ -203,17 +210,17 @@ not (Cons 42 Nil).head
 //│ ║  l.115: 	  Cons (head: a) (tail: List a)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into receiver with expected type `{head: ?head}`
-//│ ║  l.194: 	(Cons 4).head
+//│ ║  l.201: 	(Cons 4).head
 //│ ╙──       	^^^^^^^^
 //│ res: error
 
 :e
 Cons 1 2
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.211: 	Cons 1 2
+//│ ║  l.218: 	Cons 1 2
 //│ ║         	^^^^^^^^
 //│ ╟── integer literal of type `2` does not match type `Cons[?a] | Nil[?]`
-//│ ║  l.211: 	Cons 1 2
+//│ ║  l.218: 	Cons 1 2
 //│ ║         	       ^
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.113: 	data type List a of
@@ -227,7 +234,7 @@ Cons 1 2
 :e
 let List.head = () // ...
 //│ ╔══[ERROR] Unsupported pattern shape
-//│ ║  l.228: 	let List.head = () // ...
+//│ ║  l.235: 	let List.head = () // ...
 //│ ╙──       	        ^^^^^
 //│ <error>: ()
 

@@ -11,6 +11,9 @@ sealed abstract class Decl extends DesugaredStatement with DeclImpl
 final case class Def(rec: Bool, nme: Var, rhs: Term \/ PolyType, isByname: Bool) extends Decl with Terms {
   val body: Located = rhs.fold(identity, identity)
 }
+
+final case class AdtInfo(ctorName: TypeName)
+
 final case class TypeDef(
   kind: TypeDefKind,
   nme: TypeName,
@@ -19,6 +22,7 @@ final case class TypeDef(
   mthDecls: List[MethodDef[Right[Term, Type]]],
   mthDefs: List[MethodDef[Left[Term, Type]]],
   positionals: Ls[Var],
+  adtInfo: Opt[AdtInfo],
 ) extends Decl
 
 /**
@@ -72,6 +76,15 @@ final case class Splc(fields: Ls[Either[Term, Fld]])                 extends Ter
 final case class New(head: Opt[(NamedType, Term)], body: TypingUnit) extends Term // `new C(...)` or `new C(){...}` or `new{...}`
 final case class If(body: IfBody, els: Opt[Term])                    extends Term
 final case class TyApp(lhs: Term, targs: Ls[Type])                   extends Term
+final case class Where(body: Term, where: Ls[Statement])             extends Term
+final case class Forall(params: Ls[TypeVar], body: Term)             extends Term
+final case class Inst(body: Term)                                    extends Term
+
+final case class AdtMatchWith(cond: Term, arms: Ls[AdtMatchPat])       extends Term {
+  override def describe: Str = "adt match expression"
+}
+
+final case class AdtMatchPat(pat: Term, rhs: Term) extends AdtMatchPatImpl
 
 sealed abstract class IfBody extends IfBodyImpl
 // final case class IfTerm(expr: Term) extends IfBody // rm?
@@ -95,7 +108,9 @@ final case class DecLit(value: BigDecimal)        extends Lit
 final case class StrLit(value: Str)               extends Lit
 final case class UnitLit(undefinedOrNull: Bool)   extends Lit
 
-sealed abstract class SimpleTerm extends Term with SimpleTermImpl
+trait IdentifiedTerm
+
+sealed abstract class SimpleTerm extends Term with IdentifiedTerm with SimpleTermImpl
 
 sealed trait Statement extends StatementImpl
 final case class LetS(isRec: Bool, pat: Term, rhs: Term)  extends Statement
@@ -127,7 +142,7 @@ final case class Rem(base: Type, names: Ls[Var])         extends Type
 final case class Bounds(lb: Type, ub: Type)              extends Type
 final case class WithExtension(base: Type, rcd: Record)  extends Type
 final case class Splice(fields: Ls[Either[Type, Field]]) extends Type
-final case class Constrained(base: Type, where: Ls[TypeVar -> Bounds]) extends Type
+final case class Constrained(base: Type, tvBounds: Ls[TypeVar -> Bounds], where: Ls[Bounds]) extends Type
 
 final case class Field(in: Opt[Type], out: Type)         extends FieldImpl
 
@@ -149,7 +164,7 @@ final case class TypeVar(val identifier: Int \/ Str, nameHint: Opt[Str]) extends
   override def toString: Str = identifier.fold("α" + _, identity)
 }
 
-final case class PolyType(targs: Ls[TypeName], body: Type) extends PolyTypeImpl
+final case class PolyType(targs: Ls[TypeName \/ TypeVar], body: Type) extends Type with PolyTypeImpl
 
 
 // New Definitions AST

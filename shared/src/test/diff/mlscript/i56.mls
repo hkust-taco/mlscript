@@ -11,7 +11,7 @@ def test3 x = case x of
 
 :ns
 test3
-//│ res: 'a -> (true | false)
+//│ res: forall 'a 'b 'c 'd. 'a -> (true | false)
 //│   where
 //│     'a <: 1 & 'b | (true & 'c | 'd & ~true) & ~1
 //│    = [Function: test3]

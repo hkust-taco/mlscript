@@ -9,7 +9,7 @@ dummy = MyArray {
     set = fun (i, a) -> ();
     get = fun i -> error
   }
-//│ dummy: MyArray['A] with {get: anything -> nothing, set: (anything, anything,) -> (), size: 0}
+//│ dummy: MyArray['A] & {get: anything -> nothing, set: (anything, anything,) -> (), size: 0}
 
 dummy: MyArray[int]
 //│ res: MyArray[int]
@@ -28,9 +28,9 @@ ty2A = ty2A
 //│ MyArray['a]
 //│   <:  ty2A:
 //│ MyArray['a]
-//│ constrain calls  : 9
+//│ constrain calls  : 1
 //│ annoying  calls  : 0
-//│ subtyping calls  : 22
+//│ subtyping calls  : 1
 
 def ty2B: MyArray[MyArray['a]]
 //│ ty2B: MyArray[MyArray['a]]
@@ -40,9 +40,11 @@ ty2B = ty2A
 //│ MyArray['a]
 //│   <:  ty2B:
 //│ MyArray[MyArray['a]]
-//│ constrain calls  : 7
-//│ annoying  calls  : 0
-//│ subtyping calls  : 14
+//│ constrain calls  : 30
+//│ annoying  calls  : 23
+//│ subtyping calls  : 99
+
+
 
 def ty3A: MyArray['a] as 'a
 //│ ty3A: 'a
@@ -58,9 +60,9 @@ ty3A = ty3A
 //│ 'a
 //│   where
 //│     'a := MyArray['a]
-//│ constrain calls  : 41
-//│ annoying  calls  : 25
-//│ subtyping calls  : 220
+//│ constrain calls  : 1
+//│ annoying  calls  : 0
+//│ subtyping calls  : 1
 
 def ty3B: MyArray[MyArray['a]] as 'a
 //│ ty3B: 'a
@@ -76,9 +78,9 @@ ty3B = ty3A
 //│ 'a
 //│   where
 //│     'a := MyArray[MyArray['a]]
-//│ constrain calls  : 94
-//│ annoying  calls  : 50
-//│ subtyping calls  : 592
+//│ constrain calls  : 84
+//│ annoying  calls  : 23
+//│ subtyping calls  : 253
 
 :stats
 ty3A = ty3B
@@ -89,9 +91,9 @@ ty3A = ty3B
 //│ 'a
 //│   where
 //│     'a := MyArray['a]
-//│ constrain calls  : 41
-//│ annoying  calls  : 26
-//│ subtyping calls  : 261
+//│ constrain calls  : 84
+//│ annoying  calls  : 23
+//│ subtyping calls  : 253
 
 def ty4B: MyArray[MyArray[MyArray['a]]] as 'a
 //│ ty4B: 'a
@@ -107,9 +109,9 @@ ty4B = ty4B
 //│ 'a
 //│   where
 //│     'a := MyArray[MyArray[MyArray['a]]]
-//│ constrain calls  : 49
-//│ annoying  calls  : 25
-//│ subtyping calls  : 278
+//│ constrain calls  : 1
+//│ annoying  calls  : 0
+//│ subtyping calls  : 1
 
 
 
@@ -164,44 +166,14 @@ ty2A = ty2B
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.+1: 	ty2A = ty2B
 //│ ║        	^^^^^^^^^^^
-//│ ╟── type `MyArray[?a]` is not an instance of type `'a`
-//│ ║  l.35: 	def ty2B: MyArray[MyArray['a]]
-//│ ║        	                  ^^^^^^^^^^^
-//│ ╟── Note: constraint arises from type variable:
-//│ ║  l.23: 	def ty2A: MyArray['a]
-//│ ╙──      	                  ^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.+1: 	ty2A = ty2B
-//│ ║        	^^^^^^^^^^^
 //│ ╟── type `'a` is not an instance of type `MyArray`
 //│ ║  l.23: 	def ty2A: MyArray['a]
 //│ ║        	                  ^^
 //│ ╟── Note: constraint arises from applied type reference:
 //│ ║  l.35: 	def ty2B: MyArray[MyArray['a]]
 //│ ╙──      	                  ^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.+1: 	ty2A = ty2B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── type `'a` is not a record (expected a record with fields: size, set, get)
-//│ ║  l.23: 	def ty2A: MyArray['a]
-//│ ║        	                  ^^
-//│ ╟── Note: constraint arises from record type:
-//│ ║  l.4: 	class MyArray[A]: { size: int; set: (int, A) -> (); get: int -> A }
-//│ ║       	                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── from applied type reference:
-//│ ║  l.35: 	def ty2B: MyArray[MyArray['a]]
-//│ ╙──      	                  ^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.+1: 	ty2A = ty2B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── type `'a` does not have field 'MyArray#A'
-//│ ║  l.23: 	def ty2A: MyArray['a]
-//│ ║        	                  ^^
-//│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.35: 	def ty2B: MyArray[MyArray['a]]
-//│ ╙──      	                  ^^^^^^^^^^^
-//│ constrain calls  : 12
-//│ annoying  calls  : 4
-//│ subtyping calls  : 81
+//│ constrain calls  : 27
+//│ annoying  calls  : 22
+//│ subtyping calls  : 140
 
 

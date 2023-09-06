@@ -446,7 +446,7 @@ if v is Some(x) and x is Left(y) then 123
 // ML:
 let Some(x) = v
 //│ |#let| |Some|(|x|)| |#=| |v|
-//│ Parsed: {let Some = x, => v}
+//│ Parsed: {let Some = (x,) => v}
 
 v as Some(x)
 //│ |v| |as| |Some|(|x|)|

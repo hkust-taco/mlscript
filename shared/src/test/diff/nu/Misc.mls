@@ -72,7 +72,7 @@ f(1, 2)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.71: 	f(1, 2)
 //│ ║        	^^^^^^^
-//│ ╟── tuple literal of type `(1, 2,)` does not match type `((?a, ?b,),)`
+//│ ╟── argument list of type `(1, 2,)` does not match type `((?a, ?b,),)`
 //│ ║  l.71: 	f(1, 2)
 //│ ╙──      	 ^^^^^^
 //│ res: error | int

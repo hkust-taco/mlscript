@@ -1,5 +1,6 @@
 :NoJS
 
+
 class Expr[A]
   method Inv: A -> A
 //│ Defined class Expr[=A]
@@ -7,6 +8,12 @@ class Expr[A]
 
 def asExpr: Expr['a] -> Expr['a]
 //│ asExpr: Expr['a] -> Expr['a]
+
+def alsoPrintSizeSimple f =
+  let rec nested expr =
+    f expr
+  in nested
+//│ alsoPrintSizeSimple: ('a -> 'b) -> 'a -> 'b
 
 def alsoPrintSizeSimple f =
   let rec nested expr =
@@ -28,5 +35,81 @@ def alsoPrintSizeSimple f =
 //│   where
 //│     'a2 :> 'a | 'a1
 //│         <: 'a0
+
+
+class Program
+//│ Defined class Program
+
+def mapExpr: (forall 'a. Expr['a] -> Expr['a]) -> Program -> Program
+def print: Expr['a] -> unit
+//│ mapExpr: (forall 'a. Expr['a] -> Expr['a]) -> Program -> Program
+//│ print: Expr['a] -> unit
+
+def alsoPrintSize f =
+  mapExpr(fun e -> let tmp = print e in f e)
+//│ alsoPrintSize: (Expr[in ??a out ??a0] -> Expr[in ??a0 out ??a]) -> Program -> Program
+
+:e
+alsoPrintSize id
+//│ ╔══[ERROR] Type error in application
+//│ ║  l.53: 	alsoPrintSize id
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ╟── type variable `'a` leaks out of its scope
+//│ ║  l.43: 	def mapExpr: (forall 'a. Expr['a] -> Expr['a]) -> Program -> Program
+//│ ║        	                                          ^^
+//│ ╟── back into type variable `'a`
+//│ ║  l.43: 	def mapExpr: (forall 'a. Expr['a] -> Expr['a]) -> Program -> Program
+//│ ║        	                              ^^
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this application:
+//│ ║  l.49: 	  mapExpr(fun e -> let tmp = print e in f e)
+//│ ╙──      	                                        ^^^
+//│ res: Program -> Program | error
+
+def alsoPrintSize (f: forall 'a. Expr['a] -> Expr['a]) =
+  mapExpr(fun e -> let tmp = print e in f e)
+//│ alsoPrintSize: (forall 'a. Expr['a] -> Expr['a]) -> Program -> Program
+
+alsoPrintSize id
+//│ res: Program -> Program
+
+
+class ExprCo[A]
+  method Co: A
+//│ Defined class ExprCo[+A]
+//│ Declared ExprCo.Co: ExprCo['A] -> 'A
+
+def mapExprCo: (forall 'a. ExprCo['a] -> ExprCo['a]) -> Program -> Program
+def printCo: ExprCo['a] -> unit
+//│ mapExprCo: (forall 'a. ExprCo['a] -> ExprCo['a]) -> Program -> Program
+//│ printCo: ExprCo[?] -> unit
+
+def alsoPrintSizeCo f =
+  mapExprCo(fun e -> let tmp = printCo e in f e)
+//│ alsoPrintSizeCo: (ExprCo[??a] -> ExprCo[??a0]) -> Program -> Program
+
+:e
+alsoPrintSizeCo id
+//│ ╔══[ERROR] Type error in application
+//│ ║  l.92: 	alsoPrintSizeCo id
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ╟── type variable `'a` leaks out of its scope
+//│ ║  l.82: 	def mapExprCo: (forall 'a. ExprCo['a] -> ExprCo['a]) -> Program -> Program
+//│ ║        	                                  ^^
+//│ ╟── back into type variable `'a`
+//│ ║  l.82: 	def mapExprCo: (forall 'a. ExprCo['a] -> ExprCo['a]) -> Program -> Program
+//│ ║        	                                                ^^
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this application:
+//│ ║  l.88: 	  mapExprCo(fun e -> let tmp = printCo e in f e)
+//│ ╙──      	                                            ^^^
+//│ res: Program -> Program | error
+
+def alsoPrintSizeCo (f: forall 'a. Expr['a] -> Expr['a]) =
+  mapExpr(fun e -> let tmp = print e in f e)
+//│ alsoPrintSizeCo: (forall 'a. Expr['a] -> Expr['a]) -> Program -> Program
+
+alsoPrintSizeCo id
+//│ res: Program -> Program
 
 

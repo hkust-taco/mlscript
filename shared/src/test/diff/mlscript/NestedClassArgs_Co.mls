@@ -1,5 +1,5 @@
 :NoJS
-:NoProvs
+// :NoProvs
 
 
 class C[A]
@@ -157,12 +157,12 @@ def c: 'a -> C6['a]
 // rec def c a = C6{ a = c5 (c a) }
 
 rec def c6 a = C6{ a = c5 (c6 a) }
-//│ c6: anything -> (C6[nothing] with {a: 'A})
+//│ c6: anything -> (C6[nothing] with {a: forall 'A. 'A})
 //│   where
 //│     'A :> C5[nothing] with {a: C2['A]}
 
 c = c6
-//│ anything -> (C6[nothing] with {a: 'A})
+//│ anything -> (C6[nothing] with {a: forall 'A. 'A})
 //│   where
 //│     'A :> C5[nothing] with {a: C2['A]}
 //│   <:  c:

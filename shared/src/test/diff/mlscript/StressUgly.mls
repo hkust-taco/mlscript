@@ -36,135 +36,15 @@ eval1_ty = eval1_ty_ugly
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.30: 	eval1_ty = eval1_ty_ugly
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `Add[?b]` is not an instance of `int`
+//│ ╟── type `Add['b]` is not an instance of type `int`
 //│ ║  l.13: 	def eval1_ty_ugly: Add['b] | 'a & ~Lit as 'b
 //│ ║        	                   ^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.20: 	def eval1_ty: Add[int] // ~500
 //│ ╙──      	                  ^^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.30: 	eval1_ty = eval1_ty_ugly
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `int` is not an instance of `Add[int]`
-//│ ║  l.20: 	def eval1_ty: Add[int] // ~500
-//│ ║        	                  ^^^
-//│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.20: 	def eval1_ty: Add[int] // ~500
-//│ ║        	              ^^^^^^^^
-//│ ╟── from local type binding:
-//│ ║  l.13: 	def eval1_ty_ugly: Add['b] | 'a & ~Lit as 'b
-//│ ╙──      	                   ^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.30: 	eval1_ty = eval1_ty_ugly
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `int & {val: int}` does not match type `Add[?] | Lit`
-//│ ║  l.20: 	def eval1_ty: Add[int] // ~500
-//│ ║        	                  ^^^
-//│ ╟── but it flows into reference with expected type `Add[?] | Lit`
-//│ ║  l.30: 	eval1_ty = eval1_ty_ugly
-//│ ║        	           ^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.20: 	def eval1_ty: Add[int] // ~500
-//│ ╙──      	              ^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.30: 	eval1_ty = eval1_ty_ugly
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `int` does not match type `Add[?] | Lit`
-//│ ║  l.20: 	def eval1_ty: Add[int] // ~500
-//│ ║        	                  ^^^
-//│ ╟── but it flows into reference with expected type `Add[?] | Lit`
-//│ ║  l.30: 	eval1_ty = eval1_ty_ugly
-//│ ║        	           ^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.20: 	def eval1_ty: Add[int] // ~500
-//│ ╙──      	              ^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.30: 	eval1_ty = eval1_ty_ugly
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `int` does not match type `Lit | {lhs: int, rhs: int}`
-//│ ║  l.20: 	def eval1_ty: Add[int] // ~500
-//│ ║        	                  ^^^
-//│ ╟── but it flows into reference with expected type `Lit | {lhs: int, rhs: int}`
-//│ ║  l.30: 	eval1_ty = eval1_ty_ugly
-//│ ║        	           ^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from record type:
-//│ ║  l.3: 	class Add[E]: { lhs: E; rhs: E }
-//│ ║       	              ^^^^^^^^^^^^^^^^^^
-//│ ╟── from applied type reference:
-//│ ║  l.20: 	def eval1_ty: Add[int] // ~500
-//│ ╙──      	              ^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.30: 	eval1_ty = eval1_ty_ugly
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `int` does not match type `Lit | {lhs: int, rhs: int}`
-//│ ║  l.20: 	def eval1_ty: Add[int] // ~500
-//│ ║        	                  ^^^
-//│ ╟── but it flows into reference with expected type `Lit | {lhs: int, rhs: int}`
-//│ ║  l.30: 	eval1_ty = eval1_ty_ugly
-//│ ║        	           ^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from record type:
-//│ ║  l.3: 	class Add[E]: { lhs: E; rhs: E }
-//│ ║       	              ^^^^^^^^^^^^^^^^^^
-//│ ╟── from applied type reference:
-//│ ║  l.20: 	def eval1_ty: Add[int] // ~500
-//│ ╙──      	              ^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.30: 	eval1_ty = eval1_ty_ugly
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `int & {val: int}` does not match type `Lit | {lhs: int, rhs: int}`
-//│ ║  l.20: 	def eval1_ty: Add[int] // ~500
-//│ ║        	                  ^^^
-//│ ╟── but it flows into reference with expected type `Lit | {lhs: int, rhs: int}`
-//│ ║  l.30: 	eval1_ty = eval1_ty_ugly
-//│ ║        	           ^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from record type:
-//│ ║  l.3: 	class Add[E]: { lhs: E; rhs: E }
-//│ ║       	              ^^^^^^^^^^^^^^^^^^
-//│ ╟── from applied type reference:
-//│ ║  l.20: 	def eval1_ty: Add[int] // ~500
-//│ ╙──      	              ^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.30: 	eval1_ty = eval1_ty_ugly
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `int & {val: int}` does not match type `Lit | {lhs: int, rhs: int}`
-//│ ║  l.20: 	def eval1_ty: Add[int] // ~500
-//│ ║        	                  ^^^
-//│ ╟── but it flows into reference with expected type `Lit | {lhs: int, rhs: int}`
-//│ ║  l.30: 	eval1_ty = eval1_ty_ugly
-//│ ║        	           ^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from record type:
-//│ ║  l.3: 	class Add[E]: { lhs: E; rhs: E }
-//│ ║       	              ^^^^^^^^^^^^^^^^^^
-//│ ╟── from applied type reference:
-//│ ║  l.20: 	def eval1_ty: Add[int] // ~500
-//│ ╙──      	              ^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.30: 	eval1_ty = eval1_ty_ugly
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `int` does not match type `Lit | {Add#E = int}`
-//│ ║  l.20: 	def eval1_ty: Add[int] // ~500
-//│ ║        	                  ^^^
-//│ ╟── but it flows into reference with expected type `Lit | {Add#E = int}`
-//│ ║  l.30: 	eval1_ty = eval1_ty_ugly
-//│ ║        	           ^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.20: 	def eval1_ty: Add[int] // ~500
-//│ ╙──      	              ^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.30: 	eval1_ty = eval1_ty_ugly
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `int & {val: int}` does not match type `Lit | {Add#E = int}`
-//│ ║  l.20: 	def eval1_ty: Add[int] // ~500
-//│ ║        	                  ^^^
-//│ ╟── but it flows into reference with expected type `Lit | {Add#E = int}`
-//│ ║  l.30: 	eval1_ty = eval1_ty_ugly
-//│ ║        	           ^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.20: 	def eval1_ty: Add[int] // ~500
-//│ ╙──      	              ^^^^^^^^
 //│         = <no result>
 //│           eval1_ty_ugly is not implemented
-//│ constrain calls  : 124
-//│ annoying  calls  : 72
-//│ subtyping calls  : 1519
+//│ constrain calls  : 62
+//│ annoying  calls  : 44
+//│ subtyping calls  : 542
 

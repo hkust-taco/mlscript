@@ -30,7 +30,7 @@ Foo(y: 1)
 // TODO: Here `x` is not currently treated as a field name
 class Bar(x)
 //│ Defined class Bar
-//│ Bar: 'x -> (Bar with {x: 'x})
+//│ Bar: 'x -> (Bar & {x: 'x})
 //│    = [Function: Bar1]
 
 Bar(1)

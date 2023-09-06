@@ -58,8 +58,12 @@ package object utils {
     def firstSome: Opt[A] = self.iterator.collectFirst { case Some(v) => v }
   }
   implicit class PairIterableOps[A, B](private val self: IterableOnce[A -> B]) extends AnyVal {
+    def mapKeys[C](f: A => C): List[C -> B] = mapKeysIter(f).toList
     def mapValues[C](f: B => C): List[A -> C] = mapValuesIter(f).toList
+    def mapKeysIter[C](f: A => C): Iterator[C -> B] = self.iterator.map(p => f(p._1) -> p._2)
     def mapValuesIter[C](f: B => C): Iterator[A -> C] = self.iterator.map(p => p._1 -> f(p._2))
+    def toSortedMap(implicit ord: Ordering[A]): SortedMap[A, B] =
+      SortedMap.from(self)
   }
   
   implicit class MapOps[A, B](private val self: Map[A, B]) extends AnyVal {
@@ -115,6 +119,9 @@ package object utils {
     /** A lesser precedence one! */
     @inline def /> [B] (rhs: A => B): B = rhs(self)
     
+    @inline def matches(pf: PartialFunction[A, Bool]): Bool =
+      pf.lift(self).contains(true)
+    
     /** 
      * A helper to write left-associative applications, mainly used to get rid of paren hell
      * Example:
@@ -138,7 +145,7 @@ package object utils {
   }
   
   implicit final class ListHelpers[A](ls: Ls[A]) {
-    def filterOutConsecutive(f: (A, A) => Bool): Ls[A] =
+    def filterOutConsecutive(f: (A, A) => Bool = _ === _): Ls[A] =
       ls.foldRight[List[A]](Nil) { case (x, xs) => if (xs.isEmpty || !f(xs.head, x)) x :: xs else xs }
     def tailOption: Opt[Ls[A]] = if (ls.isEmpty) N else S(ls.tail)
     def headOr(els: => A): A = if (ls.isEmpty) els else ls.head
@@ -166,6 +173,10 @@ package object utils {
         ifUnset
       }
     }
+  }
+  
+  implicit class MutSetObjectHelpers(self: mutable.Set.type) {
+    def single[A](a: A): mutable.Set[A] = mutable.Set.empty[A] += a
   }
   
   implicit class SetObjectHelpers(self: Set.type) {

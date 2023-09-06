@@ -52,7 +52,7 @@ Cons 1 Nil
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.45: 	Cons 1 Nil
 //│ ║        	^^^^^^^^^^
-//│ ╟── application of type `Cons[?A] with {Cons#A = ?A, head: ?head, size: ?size, tail: ?tail}` is not a function
+//│ ╟── application of type `Cons[?A] & {Cons#A = ?A, head: ?head, size: ?size, tail: ?tail}` is not a function
 //│ ║  l.45: 	Cons 1 Nil
 //│ ╙──      	^^^^^^
 //│ res: error

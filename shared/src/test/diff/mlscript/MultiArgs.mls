@@ -73,8 +73,8 @@ bar((1, 2))
 :p
 f = fun (x, y) -> add x y
 f(1, 2)
-//│ Parsed: let f = x, y, => add (x,) (y,); f (1, 2,);
-//│ Desugared: def f: x, y, => add (x,) (y,)
+//│ Parsed: let f = (x, y,) => add (x,) (y,); f (1, 2,);
+//│ Desugared: def f: (x, y,) => add (x,) (y,)
 //│ AST: Def(false, f, Lam(Tup(_: Var(x), _: Var(y)), App(App(Var(add), Tup(_: Var(x))), Tup(_: Var(y)))), false)
 //│ Desugared: f (1, 2,)
 //│ AST: App(Var(f), Tup(_: IntLit(1), _: IntLit(2)))
@@ -117,8 +117,8 @@ f r
 :p
 f = fun ((x, y)) -> add x y
 f((1, 2))
-//│ Parsed: let f = '(' x, y, ')', => add (x,) (y,); f ('(' 1, 2, ')',);
-//│ Desugared: def f: '(' x, y, ')', => add (x,) (y,)
+//│ Parsed: let f = ('(' x, y, ')',) => add (x,) (y,); f ('(' 1, 2, ')',);
+//│ Desugared: def f: ('(' x, y, ')',) => add (x,) (y,)
 //│ AST: Def(false, f, Lam(Tup(_: Bra(rcd = false, Tup(_: Var(x), _: Var(y)))), App(App(Var(add), Tup(_: Var(x))), Tup(_: Var(y)))), false)
 //│ Desugared: f ('(' 1, 2, ')',)
 //│ AST: App(Var(f), Tup(_: Bra(rcd = false, Tup(_: IntLit(1), _: IntLit(2)))))
@@ -132,7 +132,7 @@ f(1, 2)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.131: 	f(1, 2)
 //│ ║         	^^^^^^^
-//│ ╟── tuple literal of type `(1, 2,)` does not match type `((?a, ?b,),)`
+//│ ╟── argument list of type `(1, 2,)` does not match type `((?a, ?b,),)`
 //│ ║  l.131: 	f(1, 2)
 //│ ╙──       	 ^^^^^^
 //│ res: error | int

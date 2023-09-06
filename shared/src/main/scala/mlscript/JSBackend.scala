@@ -6,6 +6,7 @@ import mlscript.codegen._
 import scala.collection.mutable.ListBuffer
 import mlscript.{JSField, JSLit}
 import scala.collection.mutable.{Set => MutSet}
+import scala.util.control.NonFatal
 
 class JSBackend(allowUnresolvedSymbols: Boolean) {
   /**
@@ -64,8 +65,9 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     // Others are not supported yet.
     case TyApp(base, _) =>
       translatePattern(base)
+    case Inst(bod) => translatePattern(bod)
     case _: Lam | _: App | _: Sel | _: Let | _: Blk | _: Bind | _: Test | _: With | _: CaseOf | _: Subs | _: Assign
-        | If(_, _) | New(_, _) | _: Splc =>
+        | If(_, _) | New(_, _) | _: Splc | _: Forall | _: Where | _: AdtMatchWith =>
       throw CodeGenError(s"term ${inspect(t)} is not a valid pattern")
   }
 
@@ -121,8 +123,9 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         if JSBinary.operators contains op =>
       JSBinary(op, translateTerm(lhs), translateTerm(rhs))
     // If-expressions
-    case App(App(App(Var("if"), tst), con), alt) =>
+    case App(App(App(Var("if"), Tup((_, Fld(_, _, tst)) :: Nil)), Tup((_, Fld(_, _, con)) :: Nil)), Tup((_, Fld(_, _, alt)) :: Nil)) =>
       JSTenary(translateTerm(tst), translateTerm(con), translateTerm(alt))
+    case App(App(App(Var("if"), tst), con), alt) => die
     // Function invocation
     case App(trm, Tup(args)) =>
       val callee = trm match {
@@ -238,6 +241,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         case _ =>
           throw CodeGenError(s"illegal assignemnt left-hand side: ${inspect(lhs)}")
       }
+    case Inst(bod) => translateTerm(bod)
     case iff: If =>
       throw CodeGenError(s"if expression has not been desugared")
     case New(N, TypingUnit(Nil)) => JSRecord(Nil)
@@ -246,7 +250,8 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       callee(args.map { case (_, Fld(_, _, arg)) => translateTerm(arg) }: _*)
     case New(_, TypingUnit(_)) =>
       throw CodeGenError("custom class body is not supported yet")
-    case _: Bind | _: Test | If(_, _) | TyApp(_, _) | _: Splc =>
+    case Forall(_, bod) => translateTerm(bod)
+    case _: Bind | _: Test | If(_, _) | TyApp(_, _) | _: Splc | _: Where | _: AdtMatchWith =>
       throw CodeGenError(s"cannot generate code for term ${inspect(term)}")
   }
 
@@ -468,13 +473,13 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     val traits = new ListBuffer[TraitSymbol]()
     val classes = new ListBuffer[ClassSymbol]()
     typeDefs.foreach {
-      case TypeDef(Als, TypeName(name), tparams, body, _, _, _) =>
+      case TypeDef(Als, TypeName(name), tparams, body, _, _, _, _) =>
         topLevelScope.declareTypeAlias(name, tparams map { _.name }, body)
-      case TypeDef(Trt, TypeName(name), tparams, body, _, methods, _) =>
+      case TypeDef(Trt, TypeName(name), tparams, body, _, methods, _, _) =>
         traits += topLevelScope.declareTrait(name, tparams map { _.name }, body, methods)
-      case TypeDef(Cls, TypeName(name), tparams, baseType, _, members, _) =>
+      case TypeDef(Cls, TypeName(name), tparams, baseType, _, members, _, _) =>
         classes += topLevelScope.declareClass(name, tparams map { _.name }, baseType, members)
-      case TypeDef(Nms, _, _, _, _, _, _) => throw CodeGenError("Namespaces are not supported yet.")
+      case TypeDef(Nms, _, _, _, _, _, _, _) => throw CodeGenError("Namespaces are not supported yet.")
     }
     (traits.toList, classes.toList)
   }

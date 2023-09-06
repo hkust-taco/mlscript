@@ -11,7 +11,7 @@
 // TODO?
 :e
 1 : int : int
-//│ ╔══[ERROR] not a recognized type: int : TypeName(int)
+//│ ╔══[ERROR] not a recognized type: int : int
 //│ ║  l.13: 	1 : int : int
 //│ ╙──      	    ^^^
 //│ res: anything

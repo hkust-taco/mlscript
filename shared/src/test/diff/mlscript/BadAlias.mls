@@ -118,3 +118,47 @@ type FalseNeg[A] = { x: FalseNeg[Id[A]] }
 //│ res: Id[int]
 //│    = 42
 
+
+
+type Bot = 'a
+//│ Defined type alias Bot
+
+:e
+42 : Bot
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.127: 	42 : Bot
+//│ ║         	^^
+//│ ╟── integer literal of type `42` does not match type `'a`
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.123: 	type Bot = 'a
+//│ ║         	           ^^
+//│ ╟── from type reference:
+//│ ║  l.127: 	42 : Bot
+//│ ╙──       	     ^^^
+//│ res: Bot
+//│    = 42
+
+:re
+error: Bot
+//│ res: Bot
+//│ Runtime error:
+//│   Error: unexpected runtime error
+
+type PolyId = 'a -> 'a
+//│ Defined type alias PolyId
+
+id : PolyId
+//│ res: PolyId
+//│    = [Function: id]
+
+:e
+succ : PolyId
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.155: 	succ : PolyId
+//│ ║         	^^^^
+//│ ╟── type `'a` is not an instance of type `int`
+//│ ║  l.147: 	type PolyId = 'a -> 'a
+//│ ╙──       	              ^^
+//│ res: PolyId
+//│    = [Function: succ]
+

@@ -102,10 +102,10 @@ c: nothing
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.101: 	c: nothing
 //│ ║         	^
-//│ ╟── record literal of type `{age: 42, name: "Bob"}` does not match type `~Crazy[?a]`
+//│ ╟── record literal of type `{age: 42, name: "Bob"}` does not match type `~Crazy['a]`
 //│ ║  l.95: 	def c = Crazy({ name = "Bob"; age = 42 })
 //│ ║        	              ^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `~Crazy[?a0]`
+//│ ╟── but it flows into reference with expected type `~Crazy['a0]`
 //│ ║  l.101: 	c: nothing
 //│ ║         	^
 //│ ╟── Note: constraint arises from type reference:
@@ -304,7 +304,7 @@ class B: Id[A]
 :e // TODO improve prov of the TV
 class Class3A
 class Class3B: Class3A & 'a
-//│ ╔══[ERROR] cannot inherit from a type variable
+//│ ╔══[ERROR] cannot inherit from a polymorphic type
 //│ ║  l.306: 	class Class3B: Class3A & 'a
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^
 //│ Defined class Class3A

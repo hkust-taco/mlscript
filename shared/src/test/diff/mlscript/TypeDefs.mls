@@ -152,9 +152,14 @@ type Runaway[A] = Runaway['a]
 
 :e
 type Runaway[A] = 'a -> Runaway['a]
+type RunawayAlias = Runaway[int]
 //│ ╔══[ERROR] Type definition is not regular: it occurs within itself as Runaway['a], but is defined as Runaway['A]
 //│ ║  l.154: 	type Runaway[A] = 'a -> Runaway['a]
 //│ ╙──       	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] type identifier not found: Runaway
+//│ ║  l.155: 	type RunawayAlias = Runaway[int]
+//│ ╙──       	                    ^^^^^^^^^^^^
+//│ Defined type alias RunawayAlias
 
 
 type Runaway2 = Lol -> Runaway2
@@ -163,16 +168,16 @@ type Runaway2 = Lol -> Runaway2
 :e
 id: Runaway2
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.164: 	id: Runaway2
+//│ ║  l.169: 	id: Runaway2
 //│ ║         	^^
-//│ ╟── type `{x: ?a -> ?a}` is not a function
+//│ ╟── type `{x: 'a -> 'a}` is not a function
 //│ ║  l.133: 	type Lol = { x: 'a -> 'a }
 //│ ║         	           ^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from function type:
-//│ ║  l.160: 	type Runaway2 = Lol -> Runaway2
+//│ ║  l.165: 	type Runaway2 = Lol -> Runaway2
 //│ ║         	                ^^^^^^^^^^^^^^^
 //│ ╟── from type reference:
-//│ ║  l.160: 	type Runaway2 = Lol -> Runaway2
+//│ ║  l.165: 	type Runaway2 = Lol -> Runaway2
 //│ ╙──       	                       ^^^^^^^^
 //│ res: Runaway2
 //│    = [Function: id]
@@ -187,13 +192,13 @@ error: Runaway2
 :re
 error: {x: int} -> nothing : Runaway2
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.188: 	error: {x: int} -> nothing : Runaway2
+//│ ║  l.193: 	error: {x: int} -> nothing : Runaway2
 //│ ║         	^^^^^
-//│ ╟── type `?a -> ?a` is not an instance of type `int`
+//│ ╟── type `'a -> 'a` is not an instance of type `int`
 //│ ║  l.133: 	type Lol = { x: 'a -> 'a }
 //│ ║         	                ^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.188: 	error: {x: int} -> nothing : Runaway2
+//│ ║  l.193: 	error: {x: int} -> nothing : Runaway2
 //│ ╙──       	           ^^^
 //│ res: Runaway2
 //│ Runtime error:

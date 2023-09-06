@@ -8,7 +8,7 @@ class None: Option
 //│ Defined class None
 //│ Option: () -> Option
 //│       = [Function: Option1]
-//│ Some: 'value -> (Some with {value: 'value})
+//│ Some: 'value -> (Some & {value: 'value})
 //│     = [Function: Some1]
 //│ None: () -> None
 //│     = [Function: None1]
@@ -21,9 +21,9 @@ class Right(rightValue): Either
 //│ Defined class Right
 //│ Either: () -> Either
 //│       = [Function: Either1]
-//│ Left: 'leftValue -> (Left with {leftValue: 'leftValue})
+//│ Left: 'leftValue -> (Left & {leftValue: 'leftValue})
 //│     = [Function: Left1]
-//│ Right: 'rightValue -> (Right with {rightValue: 'rightValue})
+//│ Right: 'rightValue -> (Right & {rightValue: 'rightValue})
 //│      = [Function: Right1]
 
 :e
@@ -94,8 +94,8 @@ fun f(a, b, c) =
   if a
     == 0 and b is B() and c is C() then 0
 //│ |#fun| |f|(|a|,| |b|,| |c|)| |#=|→|#if| |a|→|==| |0| |and| |b| |is| |B|(||)| |and| |c| |is| |C|(||)| |#then| |0|←|←|
-//│ Parsed: fun f = a, b, c, => {if a ‹· == (and (and (0,) (is (b,) (B (),),),) (is (c,) (C (),),)) then 0›};
-//│ Desugared: rec def f: a, b, c, => {if a ‹· == (and (and (0,) (is (b,) (B (),),),) (is (c,) (C (),),)) then 0›}
+//│ Parsed: fun f = (a, b, c,) => {if a ‹· == (and (and (0,) (is (b,) (B (),),),) (is (c,) (C (),),)) then 0›};
+//│ Desugared: rec def f: (a, b, c,) => {if a ‹· == (and (and (0,) (is (b,) (B (),),),) (is (c,) (C (),),)) then 0›}
 //│ AST: Def(true, f, Lam(Tup(_: Var(a), _: Var(b), _: Var(c)), Blk(...)), true)
 //│ ╔══[ERROR] The case when this is false is not handled: and (is (b,) (B (),),) (is (c,) (C (),),)
 //│ ║  l.95: 	    == 0 and b is B() and c is C() then 0

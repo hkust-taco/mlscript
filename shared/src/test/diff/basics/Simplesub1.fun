@@ -23,10 +23,10 @@ x => x 42
 //│ res: 42
 
 f => x => f (f x)  // twice
-//│ res: ('a -> ('a & 'b)) -> 'a -> 'b
+//│ res: ('a -> 'b & 'b -> 'c) -> 'a -> 'c
 
 let twice = f => x => f (f x)
-//│ twice: ('a -> ('a & 'b)) -> 'a -> 'b
+//│ twice: ('a -> 'b & 'b -> 'c) -> 'a -> 'c
 
 
 
@@ -165,9 +165,7 @@ x => x x
 //│ res: ('a -> 'b & 'a) -> 'b
 
 res id
-//│ res: 'a
-//│   where
-//│     'a :> 'a -> 'a
+//│ res: 'a -> 'a
 
 
 let f = (x => x + 1); {a: f; b: f 2}
@@ -183,26 +181,51 @@ x => y => x y x
 x => y => x x y
 //│ res: ('a -> 'b -> 'c & 'a) -> 'b -> 'c
 
+:e // Omega: causes divergence in first-class-polymorphic type inference, as expected
 (x => x x) (x => x x)
-//│ res: nothing
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
+//│ ║  l.+1: 	(x => x x) (x => x x)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Note: use flag `:ex` to see internal error info.
+//│ res: error
 
 
 x => {l: x x, r: x }
 //│ res: ('a -> 'b & 'a) -> {l: 'b, r: 'a}
 
 
-// From https://github.com/stedolan/mlsub
-// Y combinator:
+// * From https://github.com/stedolan/mlsub
+// * Y combinator:
+:e // similarly to Omega
 (f => (x => f (x x)) (x => f (x x)))
-//│ res: ('a -> 'a) -> 'a
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
+//│ ║  l.+1: 	(f => (x => f (x x)) (x => f (x x)))
+//│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Note: use flag `:ex` to see internal error info.
+//│ res: ('a -> 'a) -> (error | 'a)
 
-// Z combinator:
+// * Z combinator:
+:e
 (f => (x => f (v => (x x) v)) (x => f (v => (x x) v)))
-//│ res: (('a -> 'b) -> ('a -> 'b & 'c)) -> 'c
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
+//│ ║  l.+1: 	(f => (x => f (v => (x x) v)) (x => f (v => (x x) v)))
+//│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Note: use flag `:ex` to see internal error info.
+//│ res: (('a -> 'b) -> 'c & ('d -> 'e) -> ('d -> 'e & 'a -> 'b)) -> (error | 'c)
 
-// Function that takes arbitrarily many arguments:
+// * Function that takes arbitrarily many arguments:
+:e
 (f => (x => f (v => (x x) v)) (x => f (v => (x x) v))) (f => x => f)
-//│ res: 'a
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
+//│ ║  l.+1: 	(f => (x => f (v => (x x) v)) (x => f (v => (x x) v))) (f => x => f)
+//│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Note: use flag `:ex` to see internal error info.
+//│ res: 'a | error
+//│   where
+//│     'a :> anything -> 'a
+
+res 1 2
+//│ res: error | 'a
 //│   where
 //│     'a :> anything -> 'a
 
@@ -291,20 +314,41 @@ let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
 (x => (let y = (x x); 0))
 //│ res: ('a -> anything & 'a) -> 0
 
-// TODO simplify more
+// TODO simplify more?
 (let rec x = (y => (y (x x))); x)
 //│ res: 'a -> 'b
 //│   where
 //│     'a <: 'b -> 'b
 //│     'b <: 'a
 
+:e // * Note: this works with precise-rec-typing (see below)
+res (z => (z, z))
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.+1: 	res (z => (z, z))
+//│ ║        	^^^^^^^^^^^^^^^^^
+//│ ╟── tuple of type `(?a, ?a,)` is not a function
+//│ ║  l.+1: 	res (z => (z, z))
+//│ ║        	           ^^^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.318: 	(let rec x = (y => (y (x x))); x)
+//│ ╙──       	                    ^^^^^^^
+//│ res: error | 'a
+//│   where
+//│     'a :> ('a, 'a,)
+
+:precise-rec-typing
+(let rec x = (y => (y (x x))); x)
+//│ res: (nothing -> 'a) -> 'a
+
+res (z => (z, z))
+//│ res: (nothing, nothing,)
+
+
 next => 0
 //│ res: anything -> 0
 
 ((x => (x x)) (x => x))
-//│ res: 'a
-//│   where
-//│     'a :> 'a -> 'a
+//│ res: 'a -> 'a
 
 (let rec x = (y => (x (y y))); x)
 //│ res: 'a -> nothing
@@ -356,16 +400,75 @@ let rec x = (let y = (x x); (z => z)); (x (y => y.u)) // [test:T1]
 //│     'a :> 'x
 //│ res: ({u: 'u} & 'a) -> ('u | 'a) | 'b
 //│   where
-//│     'a :> ({u: 'u} & 'a) -> ('u | 'a)
+//│     'a :> forall 'u. ({u: 'u} & 'a) -> ('u | 'a)
 //│        <: 'b
 
 :ns
 let rec x = (let y = (x x); (z => z))
-//│ x: 'x
+//│ x: forall 'x 'a 'b. 'x
 //│   where
-//│     'x :> 'a -> 'a
-//│        <: 'a & 'x -> 'b
-//│     'a :> 'a -> 'a
-//│        <: 'b
-//│     'b :> 'a -> 'a
+//│     'x := 'b -> 'b
+//│     'b :> 'b -> 'b
+//│        <: 'a
+//│     'a :> 'b -> 'b
+
+
+
+// Converges under normal-order reduction, but type inference follows more of an applicative order:
+
+:e
+(w => x => x) ((y => y y) (y => y y))
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
+//│ ║  l.+1: 	(w => x => x) ((y => y y) (y => y y))
+//│ ║        	               ^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Note: use flag `:ex` to see internal error info.
+//│ res: 'a -> 'a
+
+
+
+// * === With Constrained Types ===
+
+:DontDistributeForalls
+:ConstrainedTypes
+
+
+// * Z combinator:
+// :e // Works thanks to inconsistent constrained types...
+(f => (x => f (v => (x x) v)) (x => f (v => (x x) v)))
+//│ res: ((forall 'a 'b. ('a -> 'b
+//│   where
+//│     forall 'c 'd. ('c -> 'd
+//│   where
+//│     'e <: (forall 'f 'g. ('f -> 'g
+//│   where
+//│     'c <: 'c -> 'f -> 'g)) -> 'd) <: (forall 'c 'd. ('c -> 'd
+//│   where
+//│     'e <: (forall 'f 'g. ('f -> 'g
+//│   where
+//│     'c <: 'c -> 'f -> 'g)) -> 'd)) -> 'a -> 'b)) -> 'h & 'e) -> 'h
+
+// * Function that takes arbitrarily many arguments:
+// :e // Works thanks to inconsistent constrained types...
+(f => (x => f (v => (x x) v)) (x => f (v => (x x) v))) (f => x => f)
+//│ res: anything -> (forall 'a 'b. ('b -> 'a
+//│   where
+//│     forall 'c 'd. ('c -> 'd
+//│   where
+//│     forall 'e. 'e -> anything -> 'e <: (forall 'f 'g. ('f -> 'g
+//│   where
+//│     'c <: 'c -> 'f -> 'g)) -> 'd) <: (forall 'c 'd. ('c -> 'd
+//│   where
+//│     forall 'e. 'e -> anything -> 'e <: (forall 'f 'g. ('f -> 'g
+//│   where
+//│     'c <: 'c -> 'f -> 'g)) -> 'd)) -> 'b -> 'a))
+
+
+
+
+:NoCycleCheck
+
+// Exceeds recursion depth limit:
+// :e
+// (w => x => x) ((y => y y) (y => y y))
+
 

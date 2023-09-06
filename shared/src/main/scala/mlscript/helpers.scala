@@ -75,8 +75,8 @@ abstract class TypeImpl extends Located { self: Type =>
       val prec = if (c.pol) 20 else 25
       val opStr = if (c.pol) " | " else " & "
       c.distinctComponents match {
-        case Nil => (if (c.pol) Bot else Top).showIn(ctx, prec)
-        case x :: Nil => x.showIn(ctx, prec)
+        case Nil => (if (c.pol) Bot else Top).showIn(ctx, outerPrec)
+        case x :: Nil => x.showIn(ctx, outerPrec)
         case _ =>
           parensIf(c.distinctComponents.iterator
             .map(_.showIn(ctx, prec))
@@ -94,7 +94,14 @@ abstract class TypeImpl extends Located { self: Type =>
     case Literal(IntLit(n)) => n.toString
     case Literal(DecLit(n)) => n.toString
     case Literal(StrLit(s)) => "\"" + s + "\""
-    case Constrained(b, ws) => parensIf(s"${b.showIn(ctx, 0)}\n  where${ws.map {
+    case Literal(UnitLit(b)) => if (b) "undefined" else "null"
+    case PolyType(Nil, body) => body.showIn(ctx, outerPrec)
+    case PolyType(targs, body) => parensIf(
+        s"${targs.iterator.map(_.fold(_.name, _.showIn(ctx, 0)))
+          .mkString("forall ", " ", ".")} ${body.showIn(ctx, 1)}",
+        outerPrec > 1 // or 0?
+      )
+    case Constrained(b, bs, ws) => parensIf(s"${b.showIn(ctx, 0)}\n  where${bs.map {
       case (uv, Bounds(Bot, ub)) =>
         s"\n    ${ctx.vs(uv)} <: ${ub.showIn(ctx, 0)}"
       case (uv, Bounds(lb, Top)) =>
@@ -105,8 +112,9 @@ abstract class TypeImpl extends Located { self: Type =>
         val vstr = ctx.vs(uv)
         s"\n    ${vstr             } :> ${lb.showIn(ctx, 0)}" +
         s"\n    ${" " * vstr.length} <: ${ub.showIn(ctx, 0)}"
+    }.mkString}${ws.map{
+      case Bounds(lo, hi) => s"\n    ${lo.showIn(ctx, 0)} <: ${hi.showIn(ctx, 0)}" // TODO print differently from bs?
     }.mkString}", outerPrec > 0)
-    case Literal(UnitLit(b)) => if (b) "undefined" else "null"
   }
   
   def children: List[Type] = this match {
@@ -122,8 +130,9 @@ abstract class TypeImpl extends Located { self: Type =>
     case AppliedType(n, ts) => ts
     case Rem(b, _) => b :: Nil
     case WithExtension(b, r) => b :: r :: Nil
+    case PolyType(targs, body) => targs.map(_.fold(identity, identity)) :+ body
     case Splice(fs) => fs.flatMap{ case L(l) => l :: Nil case R(r) => r.in.toList ++ (r.out :: Nil) }
-    case Constrained(b, ws) => b :: ws.flatMap(c => c._1 :: c._2 :: Nil)
+    case Constrained(b, bs, ws) => b :: bs.flatMap(c => c._1 :: c._2 :: Nil) ::: ws.flatMap(c => c.lb :: c.ub :: Nil)
   }
 
   /**
@@ -136,7 +145,7 @@ abstract class TypeImpl extends Located { self: Type =>
     case _: Union | _: Function | _: Tuple | _: Recursive
         | _: Neg | _: Rem | _: Bounds | _: WithExtension | Top | Bot
         | _: Literal | _: TypeVar | _: AppliedType | _: TypeName 
-        | _: Constrained | _ : Splice | _: TypeTag =>
+        | _: Constrained | _ : Splice | _: TypeTag | _: PolyType =>
       Nil
   }
 
@@ -149,7 +158,7 @@ abstract class TypeImpl extends Located { self: Type =>
     case AppliedType(TypeName(name), _) => name :: Nil
     case Inter(lhs, rhs) => lhs.collectTypeNames ++ rhs.collectTypeNames
     case _: Union | _: Function | _: Record | _: Tuple | _: Recursive
-        | _: Neg | _: Rem | _: Bounds | _: WithExtension | Top | Bot
+        | _: Neg | _: Rem | _: Bounds | _: WithExtension | Top | Bot | _: PolyType
         | _: Literal | _: TypeVar | _: Constrained | _ : Splice | _: TypeTag =>
       Nil
   }
@@ -162,7 +171,7 @@ abstract class TypeImpl extends Located { self: Type =>
     case Record(fields) => fields.map(field => (field._1, field._2.out))
     case Inter(ty1, ty2) => ty1.collectBodyFieldsAndTypes ++ ty2.collectBodyFieldsAndTypes
     case _: Union | _: Function | _: Tuple | _: Recursive
-        | _: Neg | _: Rem | _: Bounds | _: WithExtension | Top | Bot
+        | _: Neg | _: Rem | _: Bounds | _: WithExtension | Top | Bot | _: PolyType
         | _: Literal | _: TypeVar | _: AppliedType | _: TypeName | _: Constrained | _ : Splice | _: TypeTag =>
       Nil
   }
@@ -177,7 +186,7 @@ object ShowCtx {
     * completely new names. If same name exists increment counter suffix
     * in the name.
     */
-  def mk(tys: IterableOnce[Type], pre: Str = "'", debug: Bool = false): ShowCtx = {
+  def mk(tys: IterableOnce[Type], _pre: Str = "'", debug: Bool = false): ShowCtx = {
     val (otherVars, namedVars) = tys.iterator.toList.flatMap(_.typeVarsList).distinct.partitionMap { tv =>
       tv.identifier match { case L(_) => L(tv.nameHint -> tv); case R(nh) => R(nh -> tv) }
     }
@@ -186,7 +195,8 @@ object ShowCtx {
       case (N, tv) => R(tv)
     }
     val usedNames = MutMap.empty[Str, Int]
-    def assignName(n: Str): Str =
+    def assignName(n: Str): Str = {
+      val pre = if (n.startsWith("'") || n.startsWith(ExtrusionPrefix)) "" else _pre
       usedNames.get(n) match {
         case S(cnt) =>
           usedNames(n) = cnt + 1
@@ -197,9 +207,10 @@ object ShowCtx {
           pre + 
           n
       }
+    }
     val namedMap = (namedVars ++ hintedVars).map { case (nh, tv) =>
-      tv -> assignName(nh.dropWhile(_ === '\''))
-      // tv -> assignName(nh.stripPrefix(pre))
+      // tv -> assignName(nh.dropWhile(_ === '\''))
+      tv -> assignName(nh.stripPrefix(_pre))
     }.toMap
     val used = usedNames.keySet
     
@@ -213,6 +224,8 @@ object ShowCtx {
     ShowCtx(namedMap ++ unnamedVars.zip(names), debug)
   }
 }
+
+trait PolyTypeImpl  { self: PolyType => }
 
 trait ComposedImpl { self: Composed =>
   val lhs: Type
@@ -228,12 +241,8 @@ trait ComposedImpl { self: Composed =>
     components.filterNot(c => if (pol) c === Bot else c === Top).distinct
 }
 
-abstract class PolyTypeImpl extends Located { self: PolyType =>
-  def children: List[Located] =  targs :+ body
-  def show: Str = s"${targs.iterator.map(_.name).mkString("[", ", ", "] ->")} ${body.show}"
-}
-
 trait TypeVarImpl extends Ordered[TypeVar] { self: TypeVar =>
+  def name: Opt[Str] = identifier.toOption.orElse(nameHint)
   def compare(that: TypeVar): Int = {
     (this.identifier.fold((_, ""), (0, _))) compare (that.identifier.fold((_, ""), (0, _)))
   }
@@ -279,11 +288,11 @@ trait DeclImpl extends Located { self: Decl =>
     case _: TypeDef => "type declaration"
   }
   def show: Str = showHead + (this match {
-    case TypeDef(Als, _, _, _, _, _, _) => " = "; case _ => ": " }) + showBody
+    case TypeDef(Als, _, _, _, _, _, _, _) => " = "; case _ => ": " }) + showBody
   def showHead: Str = this match {
     case Def(true, n, b, isByname) => s"rec def $n"
     case Def(false, n, b, isByname) => s"def $n"
-    case TypeDef(k, n, tps, b, _, _, pos) =>
+    case TypeDef(k, n, tps, b, _, _, pos, _) =>
       s"${k.str} ${n.name}${if (tps.isEmpty) "" else tps.map(_.name).mkString("[", ", ", "]")}${
         if (pos.isEmpty) "" else pos.mkString("(", ", ", ")")
       }"
@@ -377,6 +386,10 @@ trait TermImpl extends StatementImpl { self: Term =>
       case New(h, b) => "object instantiation"
       case If(_, _) => "if-else block"
       case TyApp(_, _) => "type application"
+      case Where(_, _) => s"constraint clause"
+      case Forall(_, _) => s"forall clause"
+      case Inst(bod) => "explicit instantiation"
+      case AdtMatchWith(cond, arms) => "adt pattern matching"
     }
   }
   
@@ -393,8 +406,8 @@ trait TermImpl extends StatementImpl { self: Term =>
     case StrLit(value) => '"'.toString + value + '"'
     case UnitLit(value) => if (value) "undefined" else "null"
     case Var(name) => name
-    case Asc(trm, ty) => s"$trm : $ty"  |> bra
-    case Lam(name, rhs) => s"$name => $rhs" |> bra
+    case Asc(trm, ty) => s"$trm : ${ty.show}"  |> bra
+    case Lam(pat, rhs) => s"($pat) => $rhs" |> bra
     case App(lhs, rhs) => s"${lhs.print(!lhs.isInstanceOf[App])} ${rhs.print(true)}" |> bra
     case Rcd(fields) =>
       fields.iterator.map(nv =>
@@ -422,6 +435,11 @@ trait TermImpl extends StatementImpl { self: Term =>
     case New(N, bod) => s"new ${bod.show}" |> bra
     case If(body, els) => s"if $body" + els.fold("")(" else " + _) |> bra
     case TyApp(lhs, targs) => s"$lhs‹${targs.map(_.show).mkString(", ")}›"
+    case Where(bod, wh) => s"${bod} where {${wh.mkString("; ")}}"
+    case Forall(ps, bod) => s"forall ${ps.mkString(", ")}. ${bod}"
+    case Inst(bod) => s"${bod.print(true)}!"
+    case AdtMatchWith(cond, arms) =>
+      s"match ${cond} with ${arms.map (patmat => s"${patmat.pat} -> ${patmat.rhs}").mkString (" | ") }"
   }}
   
   def toType: Diagnostic \/ Type =
@@ -431,6 +449,7 @@ trait TermImpl extends StatementImpl { self: Term =>
         L(ErrorReport(msg"not a recognized type: ${e.trm.toString}"->e.trm.toLoc::Nil)) }
   protected def toType_! : Type = (this match {
     case Var(name) if name.startsWith("`") => TypeVar(R(name.tail), N)
+    case Var(name) if name.startsWith("'") => TypeVar(R(name), N)
     case Var(name) => TypeName(name)
     case lit: Lit => Literal(lit)
     case App(App(Var("|"), lhs), rhs) => Union(lhs.toType_!, rhs.toType_!)
@@ -455,6 +474,14 @@ trait TermImpl extends StatementImpl { self: Term =>
     case Rcd(fields) => Record(fields.map(fld => (fld._1, fld._2 match {
       case Fld(m, s, v) => val ty = v.toType_!; Field(Option.when(m)(ty), ty)
     })))
+    case Where(body, where) =>
+      Constrained(body.toType_!, Nil, where.map {
+        case Asc(l, r) => Bounds(l.toType_!, r)
+        case s => throw new NotAType(s)
+      })
+    case Forall(ps, bod) =>
+      PolyType(ps.map(R(_)), bod.toType_!)
+    // 
     case Sel(receiver, fieldName) => receiver match {
       case Var(name) if !name.startsWith("`") => TypeName(s"$name.$fieldName")
       case _ => throw new NotAType(this)
@@ -474,7 +501,7 @@ trait TermImpl extends StatementImpl { self: Term =>
   }).withLocOf(this)
   
 }
-private class NotAType(val trm: Term) extends Throwable
+private class NotAType(val trm: Statement) extends Throwable
 
 trait LitImpl { self: Lit =>
   def baseClasses: Set[TypeName] = this match {
@@ -508,6 +535,11 @@ trait FieldImpl extends Located { self: Field =>
 
 trait Located {
   def children: List[Located]
+  
+  lazy val freeVars: Set[Var] = this match {
+    case v: Var => Set.single(v)
+    case _ => children.iterator.flatMap(_.freeVars.iterator).toSet
+  }
   
   private var spanStart: Int = -1
   private var spanEnd: Int = -1
@@ -581,7 +613,7 @@ trait StatementImpl extends Located { self: Statement =>
       val (diags2, cs) = desugarCases(bod, targs)
       val dataDefs = cs.collect{case td: TypeDef => td}
       (diags ::: diags2 ::: diags3) -> (TypeDef(Als, TypeName(v.name).withLocOf(v), targs,
-          dataDefs.map(td => AppliedType(td.nme, td.tparams)).reduceOption(Union).getOrElse(Bot), Nil, Nil, Nil
+          dataDefs.map(td => AppliedType(td.nme, td.tparams)).reduceOption(Union).getOrElse(Bot), Nil, Nil, Nil, N
         ).withLocOf(hd) :: cs)
       case NuTypeDef(Nms, nme, tps, tup @ Tup(fs), pars, unit) =>
         ??? // TODO
@@ -594,7 +626,7 @@ trait StatementImpl extends Located { self: Statement =>
           case L(ds) => (ds :: Nil) -> Top
           case R(ty) => Nil -> ty
         }
-        diags -> (TypeDef(k, nme, tps, rhs, Nil, Nil, Nil) :: Nil)
+        diags -> (TypeDef(k, nme, tps, rhs, Nil, Nil, Nil, N) :: Nil)
       case NuTypeDef(k @ (Cls | Trt), nme, tps, tup @ Tup(fs), pars, unit) =>
         val diags = Buffer.empty[Diagnostic]
         def tt(trm: Term): Type = trm.toType match {
@@ -616,7 +648,7 @@ trait StatementImpl extends Located { self: Statement =>
           case (N, fld @ Fld(mut, spec, nme: Var)) => nme -> fld
           case _ => die
         })) :: Nil)))), true)
-        diags.toList -> (TypeDef(k, nme, tps, bod, Nil, Nil, pos) :: ctor :: Nil)
+        diags.toList -> (TypeDef(k, nme, tps, bod, Nil, Nil, pos, N) :: ctor :: Nil)
     case d: DesugaredStatement => Nil -> (d :: Nil)
   }
   import Message._
@@ -686,9 +718,9 @@ trait StatementImpl extends Located { self: Statement =>
           val params = args.flatMap(getFields)
           val clsNme = TypeName(v.name).withLocOf(v)
           val tps = tparams.toList
-          val ctor = Def(false, v, R(PolyType(tps,
+          val ctor = Def(false, v, R(PolyType(tps.map(L(_)),
             params.foldRight(AppliedType(clsNme, tps):Type)(Function(_, _)))), true).withLocOf(stmt)
-          val td = TypeDef(Cls, clsNme, tps, Record(fields.toList.mapValues(Field(None, _))), Nil, Nil, Nil).withLocOf(stmt)
+          val td = TypeDef(Cls, clsNme, tps, Record(fields.toList.mapValues(Field(None, _))), Nil, Nil, Nil, N).withLocOf(stmt)
           td :: ctor :: cs
         case _ => ??? // TODO methods in data type defs? nested data type defs?
       }
@@ -717,7 +749,7 @@ trait StatementImpl extends Located { self: Statement =>
     case With(t, fs) => t :: fs :: Nil
     case CaseOf(s, c) => s :: c :: Nil
     case d @ Def(_, n, b, _) => n :: d.body :: Nil
-    case TypeDef(kind, nme, tparams, body, _, _, pos) => nme :: tparams ::: pos ::: body :: Nil
+    case TypeDef(kind, nme, tparams, body, _, _, pos, _) => nme :: tparams ::: pos ::: body :: Nil
     case Subs(a, i) => a :: i :: Nil
     case Assign(lhs, rhs) => lhs :: rhs :: Nil
     case Splc(fields) => fields.map{case L(l) => l case R(r) => r.value}
@@ -726,6 +758,10 @@ trait StatementImpl extends Located { self: Statement =>
     case TyApp(lhs, targs) => lhs :: targs
     case New(base, bod) => base.toList.flatMap(ab => ab._1 :: ab._2 :: Nil) ::: bod :: Nil
     case NuTypeDef(_, _, _, _, _, _) => ???
+    case Where(bod, wh) => bod :: wh
+    case Forall(ps, bod) => ps ::: bod :: Nil
+    case Inst(bod) => bod :: Nil
+    case AdtMatchWith(cond, _) => cond :: Nil
   }
   
   
@@ -778,6 +814,23 @@ object MatchCase {
   final case class ClassPattern(name: Var, fields: Buffer[Var -> Var]) extends MatchCase
   final case class TuplePattern(arity: Int, fields: Buffer[Int -> Var]) extends MatchCase
   final case class BooleanTest(test: Term) extends MatchCase
+}
+
+//////////////////////////////
+// ADT style pattern matching
+//////////////////////////////
+trait MatchWithImpl { self: AdtMatchWith =>
+
+}
+trait AdtMatchPatImpl extends Located { self: AdtMatchPat =>
+
+  def children: List[Located] = this match {
+    case AdtMatchPat(p, t) => p :: t :: Nil
+  }
+
+  override def toString: String = this match {
+    case AdtMatchPat(pat, trm) => s"($pat) then $trm"
+  }
 }
 
 trait IfBodyImpl extends Located { self: IfBody =>

@@ -197,20 +197,20 @@ object Main {
           res ++= formatError("class definitions", err)
           Ctx.init
       }
+    implicit val extrCtx: Opt[typer.ExtrCtx] = N
     
     val curBlockTypeDefs = typeDefs.flatMap(td => ctx.tyDefs.get(td.nme.name))
     typer.computeVariances(curBlockTypeDefs, ctx)
     
-    def getType(ty: typer.TypeScheme): Type = {
-      val wty = ty.uninstantiatedBody
+    def getType(ty: typer.SimpleType): Type = {
       object SimplifyPipeline extends typer.SimplifyPipeline {
         def debugOutput(msg: => Str): Unit = println(msg)
       }
-      val sim = SimplifyPipeline(wty)(ctx)
+      val sim = SimplifyPipeline(ty, S(true))(ctx)
       val exp = typer.expandType(sim)
       exp
     }
-    def formatBinding(nme: Str, ty: TypeScheme): Str = {
+    def formatBinding(nme: Str, ty: SimpleType): Str = {
       val exp = getType(ty)
       s"""<b>
               <font color="#93a1a1">val </font>
@@ -290,7 +290,7 @@ object Main {
       sb.toString
     }
     
-    var declared: Map[Var, typer.PolymorphicType] = Map.empty
+    var declared: Map[Var, ST] = Map.empty
     
     def htmlize(str: Str): Str =
       str.replace("\n", "<br/>").replace("  ", "&emsp;")
@@ -301,10 +301,9 @@ object Main {
       decls = decls.tail
       try d match {
         case d @ Def(isrec, nme, L(rhs), _) =>
-          val ty_sch = typeLetRhs(isrec, nme.name, rhs)(ctx, raise)
-          val inst = ty_sch.instantiate(0)
-          println(s"Typed `$nme` as: $inst")
-          println(s" where: ${inst.showBounds}")
+          val ty_sch = typeLetRhs(isrec, nme.name, rhs)(ctx, raise, Map.empty, true)
+          println(s"Typed `$nme` as: $ty_sch")
+          println(s" where: ${ty_sch.showBounds}")
           val exp = getType(ty_sch)
           declared.get(nme) match {
             case S(sign) =>
@@ -325,12 +324,18 @@ object Main {
                 :: Nil)
             case N => ()
           }
-          val ty_sch = PolymorphicType(0, typeType(rhs)(ctx.nextLevel, raise,
-            vars = tps.map(tp => tp.name -> freshVar(noProv/*FIXME*/)(1)).toMap))
+          implicit val tp: TP = NoProv // TODO
+          val ty_sch = ctx.poly { implicit ctx =>
+            typeType(rhs)(ctx, raise,
+              vars = tps.map(tp => tp.fold(_.name, _ => ??? // FIXME
+                ) -> freshVar(noProv/*FIXME*/, N)(1)).toMap)
+          }
           ctx += nme.name -> VarSymbol(ty_sch, nme)
           declared += nme -> ty_sch
           results append S(d.nme.name) -> htmlize(getType(ty_sch).show)
         case s: DesugaredStatement =>
+          implicit val vars: Map[Str, SimpleType] = Map.empty
+          implicit val gl: typer.GenLambdas = true
           typer.typeStatement(s, allowPure = true) match {
             case R(binds) =>
               binds.foreach { case (nme, pty) =>

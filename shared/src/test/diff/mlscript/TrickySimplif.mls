@@ -30,10 +30,10 @@ def f: MutArray[('a & 'b, 'a)]
 //│ f: MutArray[('a & 'b, 'a,)]
 
 def f: MutArray[('a & 'b, 'a | 'b)]
-//│ f: MutArray[('a & 'b, 'a | 'b,)]
+//│ f: MutArray[('a, 'a,)]
 
 def f: MutArray[('a & 'b, ('a | 'b) -> int)]
-//│ f: MutArray[('a & 'b, ('a | 'b) -> int,)]
+//│ f: MutArray[('b, 'b -> int,)]
 
 def f: MutArray[('a & 'b, ('a & 'b) -> int)]
 //│ f: MutArray[('a, 'a -> int,)]

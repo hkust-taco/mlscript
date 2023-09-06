@@ -13,7 +13,7 @@ class Foo {
   fun foo: int
 }
 //│ |#class| |Foo| |{|→|#fun| |foo|#:| |int|←|↵|}|
-//│ Parsed: {class Foo() {fun foo: [] -> int}}
+//│ Parsed: {class Foo() {fun foo: int}}
 
 class Foo {
   class Bar {
@@ -113,7 +113,7 @@ class Foo(x, y, z): Bar(z, x) {
   fun blah(x) = x + y
 }
 //│ |#class| |Foo|(|x|,| |y|,| |z|)|#:| |Bar|(|z|,| |x|)| |{|→|#fun| |blah|(|x|)| |#=| |x| |+| |y|←|↵|}|
-//│ Parsed: {class Foo(x, y, z,): Bar (z, x,) {fun blah = x, => + (x,) (y,)}}
+//│ Parsed: {class Foo(x, y, z,): Bar (z, x,) {fun blah = (x,) => + (x,) (y,)}}
 
 class Foo(x, y): Bar(y, x), Baz(x + y)
 //│ |#class| |Foo|(|x|,| |y|)|#:| |Bar|(|y|,| |x|)|,| |Baz|(|x| |+| |y|)|

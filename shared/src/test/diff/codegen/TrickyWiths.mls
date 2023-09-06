@@ -52,6 +52,38 @@ a.map(fun x -> x + 1)
 //│ res: nothing
 //│    = [ 2, 3, 4 ]
 
+:js
+ax = (1,2,3) with {x = 4}
+//│ // Query 1
+//│ globalThis.ax = withConstruct([
+//│   1,
+//│   2,
+//│   3
+//│ ], { x: 4 });
+//│ // End of generated code
+//│ ax: (1, 2, 3,) & {x: 4}
+//│   = [ 1, 2, 3, x: 4 ]
+
+ax.x + 1
+//│ res: int
+//│    = 5
+
+ax[0]
+//│ res: 1 | 2 | 3 | undefined
+//│    = 1
+
+:escape
+def ax: nothing // unsound escape hatch
+//│ ax: nothing
+//│   = <missing implementation>
+
+ax.length
+ax.map(fun x -> x + 1)
+//│ res: nothing
+//│    = 3
+//│ res: nothing
+//│    = [ 2, 3, 4 ]
+
 
 // * Note that `with` currently doesn work on functions:
 
@@ -89,14 +121,14 @@ f { a = 12; b = 34 }
 :e
 f { a = "oops"; b = 34 }
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.90: 	f { a = "oops"; b = 34 }
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.122: 	f { a = "oops"; b = 34 }
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"oops"` is not an instance of type `int`
-//│ ║  l.90: 	f { a = "oops"; b = 34 }
-//│ ║        	        ^^^^^^
+//│ ║  l.122: 	f { a = "oops"; b = 34 }
+//│ ║         	        ^^^^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.81: 	def f x = x with { a = x.a + 1 }
-//│ ╙──      	                       ^^^
+//│ ║  l.113: 	def f x = x with { a = x.a + 1 }
+//│ ╙──       	                       ^^^
 //│ res: error | {a: int, b: 34}
 //│    = { a: 'oops1', b: 34 }
 
@@ -119,12 +151,40 @@ r = a2 with { x = 1 }
 //│ r: A2 with {x: 1}
 //│  = A2 { x: 1 }
 
+// * Field removal is not supported in negative positions!
+// * (When it appears in such positions, it means somethign different.)
+// * TODO reject such uses this in the typer
+:e
 r : (A2 \ x) & {x: 1}
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.158: 	r : (A2 \ x) & {x: 1}
+//│ ║         	^
+//│ ╟── application of type `A2` does not match type `{x: string}`
+//│ ║  l.147: 	a2 = A2{x="a"}
+//│ ║         	     ^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `{x: string}`
+//│ ║  l.158: 	r : (A2 \ x) & {x: 1}
+//│ ║         	^
+//│ ╟── Note: constraint arises from record type:
+//│ ║  l.144: 	class A2: { x: string }
+//│ ║         	          ^^^^^^^^^^^^^
+//│ ╟── from intersection type:
+//│ ║  l.158: 	r : (A2 \ x) & {x: 1}
+//│ ╙──       	    ^^^^^^^^^^^^^^^^^
 //│ res: A2\x & {x: 1}
 //│    = A2 { x: 1 }
 
-// :e // FIXME should be an error – field removal is not actually supported in negative positions!
+:e // * Field removal in negative position (see above)
 r2 = r : (A2 \ y) & {x: 1}
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.178: 	r2 = r : (A2 \ y) & {x: 1}
+//│ ║         	     ^
+//│ ╟── integer literal of type `1` is not an instance of type `string`
+//│ ║  l.148: 	r = a2 with { x = 1 }
+//│ ║         	                  ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.144: 	class A2: { x: string }
+//│ ╙──       	               ^^^^^^
 //│ r2: A2\y & {x: 1}
 //│   = A2 { x: 1 }
 

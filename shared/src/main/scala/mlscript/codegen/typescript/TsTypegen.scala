@@ -549,14 +549,15 @@ final class TsTypegenCodeBuilder {
           SourceCode.openAngleBracket ++ toTsType(base) ++ SourceCode.commaSpace ++
           SourceCode.sepBy(names.map(name => SourceCode(s"\"${name.name}\"")), SourceCode.separator) ++
           SourceCode.closeAngleBracket
+      case Bounds(lb, ub) if lb === ub => toTsType(lb)
       case Bounds(lb, ub) =>
         pol match {
           // positive polarity takes upper bound
           case Some(true) => toTsType(ub)
           // negative polarity takes lower bound
           case Some(false) => toTsType(lb)
-          // TODO: Yet to handle invariant types
           case None =>
+            // TODO: Yet to handle invariant types
             throw CodeGenError(s"Cannot generate type for invariant type $mlType")
         }
       case WithExtension(base, rcd) =>
@@ -570,10 +571,10 @@ final class TsTypegenCodeBuilder {
         typeScope.getTypeAliasSymbol(tvarName).map { taliasInfo =>
           SourceCode(taliasInfo.lexicalName) ++ SourceCode.paramList(taliasInfo.params.map(SourceCode(_)))
         }.getOrElse(SourceCode(tvarName))
-      case Constrained(base, where) =>
-        throw CodeGenError(s"Cannot generate type for `where` clause $where")
-      case _: Splice | _: TypeTag =>
-        throw CodeGenError(s"Cannot yet generate type for splices")
+      case Constrained(base, tvbs, where) =>
+        throw CodeGenError(s"Cannot generate type for `where` clause $tvbs $where")
+      case _: Splice | _: TypeTag | _: PolyType =>
+        throw CodeGenError(s"Cannot yet generate type for: $mlType")
     }
   }
 
