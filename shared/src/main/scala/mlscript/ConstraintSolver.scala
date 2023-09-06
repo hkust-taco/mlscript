@@ -24,6 +24,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   
   protected var currentConstrainingRun = 0
   
+  // * Each type has a shadow which identifies all variables created from copying
+  // * variables that existed at the start of constraining.
+  // * The intent is to make the total number of shadows in a given constraint
+  // * resolution run finite, so we can avoid divergence with a "cyclic-lookign constraint" error.
   type ShadowSet = Set[ST -> ST]
   case class Shadows(current: ShadowSet, previous: ShadowSet) {
     def size: Int = current.size + previous.size
@@ -549,7 +553,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             
             if (!noRecursiveTypes) cache += lhs_rhs
             
-            Shadows(shadows.current + lhs_rhs + shadow, // FIXME this conflation is not quite correct
+            Shadows(shadows.current + lhs_rhs + shadow, // * FIXME this conflation is not quite correct
               shadows.previous + shadow)
             
         }) |> { implicit shadows: Shadows =>

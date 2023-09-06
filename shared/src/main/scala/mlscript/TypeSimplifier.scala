@@ -110,7 +110,6 @@ trait TypeSimplifier { self: Typer =>
         val res = process(bod, parent, canDistribForall = S(plvl))
         canDistribForall match {
           case S(outerLvl) if distributeForalls =>
-            implicit val shadows: Shadows = Shadows.empty
             implicit val ctx: Ctx = _ctx.copy(lvl = outerLvl + 1)
             PolymorphicType(plvl, res).instantiate
           case _ =>
@@ -355,7 +354,6 @@ trait TypeSimplifier { self: Typer =>
       val base = ConstrainedType.mk(cons, res)
       canDistribForall match {
         case S(outerLvl) if distributeForalls =>
-          implicit val shadows: Shadows = Shadows.empty
           implicit val ctx: Ctx = _ctx.copy(lvl = outerLvl + 1)
           PolymorphicType(dnf.polymLevel, base).instantiate
         case _ => PolymorphicType.mk(dnf.polymLevel, base)
@@ -455,7 +453,7 @@ trait TypeSimplifier { self: Typer =>
     
     // * * Analysis 2: find the polar co-occurrences of each TV
     
-    // * TODO what about negatively quantified vars? the notion of co-occurrence would be reversed (wrt unions/inters)
+    // * Note that for negatively-quantified type variables, the notion of co-occurrence is reversed!
     
     val coOccurrences: MutMap[(Bool, TypeVariable), MutSet[SimpleType]] = LinkedHashMap.empty
     
@@ -951,7 +949,6 @@ trait TypeSimplifier { self: Typer =>
         val res = transform(bod, pol.enter(plvl), parents, canDistribForall = S(plvl))
         canDistribForall match {
           case S(outerLvl) if distributeForalls =>
-            implicit val shadows: Shadows = Shadows.empty
             ctx.copy(lvl = outerLvl + 1) |> { implicit ctx =>
               PolymorphicType(plvl, res).instantiate
             }

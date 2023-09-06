@@ -83,7 +83,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     private def containsMth(key: (Str, Str) \/ (Opt[Str], Str)): Bool = mthEnv.contains(key) || parent.exists(_.containsMth(key))
     def containsMth(parent: Opt[Str], nme: Str): Bool = containsMth(R(parent, nme))
     def nest: Ctx = copy(Some(this), MutMap.empty, MutMap.empty)
-    def nextLevel[R](k: Ctx => R)(implicit raise: Raise, prov: TP, shadows: Shadows=Shadows.empty): R = { // TODO rm implicits here and in freshen functions
+    def nextLevel[R](k: Ctx => R)(implicit raise: Raise, prov: TP): R = {
       val newCtx = copy(lvl = lvl + 1, extrCtx = MutMap.empty)
       val res = k(newCtx)
       val ec = newCtx.extrCtx
@@ -98,7 +98,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       }()
       res
     }
-    def poly(k: Ctx => ST)(implicit raise: Raise, prov: TP, shadows: Shadows=Shadows.empty): ST = {
+    def poly(k: Ctx => ST)(implicit raise: Raise, prov: TP, shadows: Shadows = Shadows.empty): ST = {
       nextLevel { newCtx =>
         
         val innerTy = k(newCtx)
@@ -875,7 +875,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           ), res)
         resTy
       case Sel(obj, fieldName) =>
-        implicit val shadows: Shadows = Shadows.empty
         // Explicit method calls have the form `x.(Class.Method)`
         // Implicit method calls have the form `x.Method`
         //   If two unrelated classes define methods of the same name,
@@ -1139,7 +1138,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         def go(ty: ST): ST = ty.unwrapAll match {
           case pt: PolymorphicType =>
             founPoly = true
-            implicit val shadows: Shadows = Shadows.empty
             go(pt.instantiate)
           case _ => ty
         }

@@ -311,9 +311,7 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
                 // * This is not actually necessary for soundness
                 // *  (if they aren't, the object type just won't be instantiable),
                 // *  but will help report inheritance errors earlier (see test BadInherit2).
-                case (nme, FieldType(S(lb), ub)) =>
-                  implicit val shadows: Shadows = Shadows.empty
-                  constrain(lb, ub)
+                case (nme, FieldType(S(lb), ub)) => constrain(lb, ub)
                 case _ => ()
               }
               (decls -- defns) match {
@@ -388,7 +386,6 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
     def typeMethods(implicit ctx: Ctx): Ctx = {
       /* Perform subsumption checking on method declarations and definitions by rigidifying class type variables,
        * then register the method signatures in the context */
-      implicit val shadows: Shadows = Shadows.empty
       def checkSubsume(td: TypeDef, mds: MethodSet): Unit = {
         val tn = td.nme
         val MethodSet(_, _, decls, defns) = mds
