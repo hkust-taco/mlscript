@@ -493,10 +493,17 @@ abstract class TyperHelpers { Typer: Typer =>
         case (RecordType(fs1), RecordType(fs2)) => assume { implicit cache =>
           fs2.forall(f => fs1.find(_._1 === f._1).exists(_._2 <:< f._2))
         }
+        
+        // * Field removal is special
+        // * and can't be compared without taking polarity into account...
+        case (_, _: Without) => false
+        /* 
         case (Without(bs1, ns1), Without(bs2, ns2)) =>
           ns1.forall(ns2) && bs1 <:< that
         case (_, Without(bs, ns)) =>
           this <:< bs
+        */
+        
         case (_: TypeVariable, _) | (_, _: TypeVariable) if !doCompareRecTypes => false
         case (_: TypeVariable, _) | (_, _: TypeVariable)
           if cache.contains(this -> that)

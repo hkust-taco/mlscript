@@ -80,7 +80,7 @@ rec def evalOpt x = case x of {
 //│        = [Function: evalOpt]
 //│ constrain calls  : 649
 //│ annoying  calls  : 105
-//│ subtyping calls  : 5362
+//│ subtyping calls  : 5353
 
 :stats
 evalOpt (Plus{lhs = Lit{v=2}; rhs = Lit{v=3}})

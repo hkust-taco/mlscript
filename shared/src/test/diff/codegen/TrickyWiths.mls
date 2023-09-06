@@ -151,12 +151,40 @@ r = a2 with { x = 1 }
 //│ r: A2 with {x: 1}
 //│  = A2 { x: 1 }
 
+// * Field removal is not supported in negative positions!
+// * (When it appears in such positions, it means somethign different.)
+// * TODO reject such uses this in the typer
+:e
 r : (A2 \ x) & {x: 1}
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.158: 	r : (A2 \ x) & {x: 1}
+//│ ║         	^
+//│ ╟── application of type `A2` does not match type `{x: string}`
+//│ ║  l.147: 	a2 = A2{x="a"}
+//│ ║         	     ^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `{x: string}`
+//│ ║  l.158: 	r : (A2 \ x) & {x: 1}
+//│ ║         	^
+//│ ╟── Note: constraint arises from record type:
+//│ ║  l.144: 	class A2: { x: string }
+//│ ║         	          ^^^^^^^^^^^^^
+//│ ╟── from intersection type:
+//│ ║  l.158: 	r : (A2 \ x) & {x: 1}
+//│ ╙──       	    ^^^^^^^^^^^^^^^^^
 //│ res: A2\x & {x: 1}
 //│    = A2 { x: 1 }
 
-// :e // FIXME should be an error – field removal is not actually supported in negative positions!
+:e // * Field removal in negative position (see above)
 r2 = r : (A2 \ y) & {x: 1}
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.178: 	r2 = r : (A2 \ y) & {x: 1}
+//│ ║         	     ^
+//│ ╟── integer literal of type `1` is not an instance of type `string`
+//│ ║  l.148: 	r = a2 with { x = 1 }
+//│ ║         	                  ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.144: 	class A2: { x: string }
+//│ ╙──       	               ^^^^^^
 //│ r2: A2\y & {x: 1}
 //│   = A2 { x: 1 }
 

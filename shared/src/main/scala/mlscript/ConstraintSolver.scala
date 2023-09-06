@@ -503,7 +503,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       // *    Therefore this subtyping check may not be worth it.
       // *    In any case, we make it more lightweight by not traversing type variables
       // *    and not using a subtyping cache (cf. `CompareRecTypes = false`).
-      if ({ implicit val ctr: CompareRecTypes = false; lhs <:< rhs }) ()
+      if ({ implicit val ctr: CompareRecTypes = false; lhs <:< rhs })
+        println(s"Already a subtype by <:<")
       
       // println(s"  where ${FunctionType(lhs, rhs)(primProv).showBounds}")
       else {
