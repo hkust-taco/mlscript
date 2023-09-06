@@ -927,7 +927,7 @@ fun x -> ( (((x : 'a) : Sid) : 'a), x : 'a)
 rec def id_ x = if true then x else id_ id_ x
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a := 'b -> 'c
+//│     'a <: 'b -> 'c
 //│     'b :> 'b -> 'c
 //│        <: 'c
 //│     'c :> 'b -> 'c
@@ -958,7 +958,7 @@ def id: Sid
 rec def id x = if true then x else id id x
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a := 'b -> 'c
+//│     'a <: 'b -> 'c
 //│     'b :> 'b -> 'c
 //│        <: 'c
 //│     'c :> 'b -> 'c

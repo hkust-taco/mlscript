@@ -648,19 +648,23 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     
     def isRecursive_$(omitTopLevel: Bool)(implicit ctx: Ctx) : Bool =
         (lbRecOccs_$(omitTopLevel), ubRecOccs_$(omitTopLevel)) match {
+      // * Variables occurring strictly negatively in their own lower bound
+      // * (resp. strictly positively in their own upper bound, ie contravariantly)
+      // * are NOT recursive, as these occurrences only demonstrate "spurious" cycles
+      // * which are easily removed.
       case (S(N | S(true)), _) | (_, S(N | S(false))) => true
       case _ => false
-    } 
+    }
     /** None: not recursive in this bound; Some(Some(pol)): polarly-recursive; Some(None): nonpolarly-recursive.
       * Note that if we have something like 'a :> Bot <: 'a -> Top, 'a is not truly recursive
       *   and its bounds can actually be inlined. */
-    private final def lbRecOccs_$(omitTopLevel: Bool)(implicit ctx: Ctx): Opt[Opt[Bool]] = {
+    private[mlscript] final def lbRecOccs_$(omitTopLevel: Bool)(implicit ctx: Ctx): Opt[Opt[Bool]] = {
       // println("+", this, assignedTo getOrElse lowerBounds)
       // assignedTo.getOrElse(TupleType(lowerBounds.map(N -> _.toUpper(noProv)))(noProv)).getVarsPol(PolMap.pos, ignoreTopLevelOccs = true).get(this)
       val bs = assignedTo.fold(lowerBounds)(_ :: Nil)
       bs.foldLeft(BotType: ST)(_ | _).getVarsPol(PolMap.pos, ignoreTopLevelOccs = omitTopLevel).get(this)
     }
-    private final def ubRecOccs_$(omitTopLevel: Bool)(implicit ctx: Ctx): Opt[Opt[Bool]] ={
+    private[mlscript] final def ubRecOccs_$(omitTopLevel: Bool)(implicit ctx: Ctx): Opt[Opt[Bool]] ={
       // println("-", this, assignedTo getOrElse upperBounds)
       // assignedTo.getOrElse(TupleType(upperBounds.map(N -> _.toUpper(noProv)))(noProv)).getVarsPol(PolMap.posAtNeg, ignoreTopLevelOccs = true).get(this)
       val bs = assignedTo.fold(upperBounds)(_ :: Nil)

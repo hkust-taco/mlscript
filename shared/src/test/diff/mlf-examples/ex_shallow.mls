@@ -355,9 +355,9 @@ def a2' (x: A1') =
   ) a3
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a :> forall 'b 'c 'd 'e 'a 'f. (('f -> 'b & 'b -> 'd & 'e) -> ('f -> 'd | 'c)
+//│     'a :> forall 'b 'a 'c 'd. (nothing -> ('c -> 'd | 'b)
 //│   where
-//│     'a | Sid <: (forall 'd 'e 'f 'b. ('f -> 'b & 'b -> 'd & 'e) -> 'f -> 'd) -> 'c)
+//│     'a | Sid <: (forall 'c 'e 'd. ('c -> 'e & 'e -> 'd) -> 'c -> 'd) -> 'b)
 //│ ║  l.198: 	type A1' = forall 'a. (('a | Sid) -> 'a) -> 'a -> ('a | Sid)
 //│ ╙──       	                  ^^
 //│ a2': A1' -> (forall 'a. (anything -> 'a
@@ -375,7 +375,7 @@ def a2'_ x =
 //│   where
 //│     'd <: (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> 'e))) -> (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> anything) -> (forall 'i. (anything -> 'i
 //│   where
-//│     forall 'j 'k 'l 'm. ('j -> 'k -> 'l) -> ('l -> 'm & 'j) -> 'k -> 'm <: (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> 'i))
+//│     forall 'j 'k 'l 'm. ('m -> 'j -> 'k) -> ('k -> 'l & 'm) -> 'j -> 'l <: (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> 'i))
 //│     = [Function: a2$_1]
 
 :e // * [FCP-LIM] see previous version above
@@ -428,14 +428,14 @@ def a0'_ = a2'_ a1'
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ a0'_: anything -> 'a | error
 //│   where
-//│     forall 'b 'c 'd 'e. ('b -> 'c -> 'd) -> ('d -> 'e & 'b) -> 'c -> 'e <: (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> 'a
+//│     forall 'b 'c 'd 'e. ('b -> 'c -> 'd) -> ('d -> 'e & 'b) -> 'c -> 'e <: (forall 'f 'g 'h. ('g -> 'h & 'h -> 'f) -> 'g -> 'f) -> 'a
 //│     = [Function: a0$_2]
 
 :RecursiveTypes
 def a0'_ = a2'_ a1'
 //│ a0'_: anything -> 'a
 //│   where
-//│     forall 'b 'c 'd 'e. ('b -> 'c -> 'd) -> ('d -> 'e & 'b) -> 'c -> 'e <: (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> 'a
+//│     forall 'b 'c 'd 'e. ('d -> 'e -> 'b) -> ('b -> 'c & 'd) -> 'e -> 'c <: (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> 'a
 //│     = [Function: a0$_3]
 :NoRecursiveTypes
 

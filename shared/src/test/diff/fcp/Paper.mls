@@ -91,7 +91,8 @@ auto auto
 auto auto!
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a := 'a -> 'b
+//│     'a :> 'a -> 'b
+//│        <: 'a -> (? & 'b)
 //│ ╙──
 //│ res: nothing
 
@@ -102,7 +103,7 @@ auto auto!
 :e
 auto auto
 //│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?b. ?b -> ?a <: (forall ?a ?c. ?c -> ?a) -> ?d` exceeded recursion depth limit (250)
-//│ ║  l.103: 	auto auto
+//│ ║  l.104: 	auto auto
 //│ ║         	^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: error
@@ -116,7 +117,7 @@ auto! auto!
 :e
 auto! auto
 //│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: (forall ?c ?d. ?d -> ?c) -> ?e` exceeded recursion depth limit (250)
-//│ ║  l.117: 	auto! auto
+//│ ║  l.118: 	auto! auto
 //│ ║         	^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: error

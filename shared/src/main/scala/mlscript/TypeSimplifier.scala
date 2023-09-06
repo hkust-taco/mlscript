@@ -665,10 +665,8 @@ trait TypeSimplifier { self: Typer =>
     allVars.foreach { case v0 => if (!recVars.contains(v0)) {
       (coOccurrences.get(true -> v0), coOccurrences.get(false -> v0)) match {
         case (Some(_), None) | (None, Some(_)) =>
-          if (removePolarVars) {
-            println(s"1[!] $v0")
-            varSubst += v0 -> None
-          }; ()
+          println(s"1[!] $v0")
+          varSubst += v0 -> None
         case occ => assert(occ =/= (None, None), s"$v0 has no occurrences...")
       }
     }}
@@ -853,7 +851,13 @@ trait TypeSimplifier { self: Typer =>
             transform(tv2, pol, parents + tv, canDistribForall)
           case S(N) =>
             println(s"-> bound ${pol(tv)}")
-            pol(tv).fold {
+            val p = pol(tv)
+            if (!removePolarVars && (
+                   tv.lowerBounds.isEmpty && p.contains(true)
+                || tv.upperBounds.isEmpty && p.contains(false)
+                || tv.lowerBounds.isEmpty && tv.upperBounds.isEmpty
+            )) ClassTag(Var("?"), Set.empty)(noProv)
+            else p.fold {
               // TypeBounds.mk(mergeTransform(true, tv, parents + tv), mergeTransform(false, tv, parents + tv)) // FIXME polarities seem inverted
               lastWords("Should not be replacing an invariant type variable by its bound...") // ?
               pol.quantifPolarity(tv.level).base match {

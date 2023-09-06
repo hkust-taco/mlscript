@@ -33,7 +33,7 @@ e (A{f = L{}})
 e = eval eval!
 //│ ╔══[ERROR] Inferred recursive type: 'f
 //│   where
-//│     'f <: (A with {f: 'f}) | L
+//│     'f <: A with {f: 'f}
 //│ ║  l.13: 	  A -> eval eval x.f
 //│ ╙──      	                 ^^^
 //│ e: 'a -> 0
@@ -45,7 +45,7 @@ e = eval eval!
 e (A{f = L{}})
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a <: {f: A & 'a | L}
+//│     'a <: {f: A & 'a}
 //│ ║  l.11: 	def eval eval x = case x of
 //│ ╙──      	                       ^
 //│ res: 0
@@ -67,9 +67,7 @@ rec def v = A{f = v}
 e v
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a :> A with {f: 'f}
-//│        <: {f: A & 'a | L}
-//│     'f :> A with {f: 'f}
+//│     'a <: {f: A & 'a}
 //│ ║  l.11: 	def eval eval x = case x of
 //│ ╙──      	                       ^
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
@@ -101,7 +99,7 @@ def eval eval x = case x of
 :e
 e = eval eval
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.102: 	e = eval eval
+//│ ║  l.100: 	e = eval eval
 //│ ║         	    ^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ e: (A & {f: A | L} | L) -> (0 | {x: 0 | {x: nothing}}) | error

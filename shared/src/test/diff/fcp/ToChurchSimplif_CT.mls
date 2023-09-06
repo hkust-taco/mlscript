@@ -555,7 +555,7 @@ rec def to_ch n =
   else s (to_ch (n - 1))
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a :> forall 'b 'c 'd 'e. 'b -> (('e & 'c) -> ('e | 'd)
+//│     'a :> forall 'b 'c 'd 'e. (? & 'b) -> (('e & 'c) -> ('e | 'd)
 //│   where
 //│     'a <: 'b -> 'c -> 'd)
 //│ ╙──
@@ -572,7 +572,7 @@ rec def to_ch n =
 to_church = to_ch
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a :> forall 'b 'c 'd 'e. 'e -> (('d & 'b) -> ('d | 'c)
+//│     'a :> forall 'b 'c 'd 'e. (? & 'e) -> (('d & 'b) -> ('d | 'c)
 //│   where
 //│     'a <: 'e -> 'b -> 'c)
 //│ ╙──
@@ -614,7 +614,7 @@ rec def to_ch_weird n =
 to_church = to_ch
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a :> forall 'b 'c 'd 'e. 'd -> (('c & 'e) -> ('c | 'b)
+//│     'a :> forall 'b 'c 'd 'e. (? & 'd) -> (('c & 'e) -> ('c | 'b)
 //│   where
 //│     'a <: 'd -> 'e -> 'b)
 //│ ╙──

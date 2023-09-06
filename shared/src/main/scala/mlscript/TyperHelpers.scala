@@ -748,7 +748,7 @@ abstract class TyperHelpers { Typer: Typer =>
       val res = MutMap.empty[TV, Pol]
       val traversed = MutSet.empty[TV -> Bool]
       def go(pol: PolMap, ignoreTLO: Bool)(ty: ST): Unit = {
-        trace(s"getVarsPol[${printPol(pol.base)}] $ty ${pol} $ignoreTLO") {
+        // trace(s"getVarsPol[${printPol(pol.base)}] $ty ${pol} $ignoreTLO") {
         ty match {
           case tv: TypeVariable =>
             val tvpol = pol(tv.level)
@@ -802,7 +802,7 @@ abstract class TyperHelpers { Typer: Typer =>
               // * just spurious occurs-check failures!
               ignoreTLO = false)(cp._2))
         }
-        }()
+        // }()
       }
       go(pol, ignoreTopLevelOccs)(this)
       res.toSortedMap

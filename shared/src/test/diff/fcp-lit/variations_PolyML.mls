@@ -29,7 +29,7 @@ rec def mem x l = case l of
   }
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a <: {head: anything, tail: Cons[?] & 'a | Nil}
+//│     'a <: {head: ?, tail: Cons[?] & 'a}
 //│ ║  l.26: 	rec def mem x l = case l of
 //│ ╙──      	                       ^
 //│ mem: anything -> 'a -> bool
@@ -43,7 +43,7 @@ rec def fold_left f x l = case l of
   }
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a <: {head: anything, tail: Cons[?] & 'a | Nil}
+//│     'a <: {head: ?, tail: Cons[?] & 'a}
 //│ ║  l.40: 	rec def fold_left f x l = case l of
 //│ ╙──      	                               ^
 //│ fold_left: ('a -> 'head -> 'a) -> 'a -> 'b -> 'a

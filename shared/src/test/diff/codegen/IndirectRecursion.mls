@@ -138,8 +138,8 @@ def z =
   (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v))!)
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a :> 'a -> nothing
-//│        <: 'a -> nothing -> anything
+//│     'a :> 'a -> ?
+//│        <: 'a -> ? -> ?
 //│ ╙──
 //│ (('a -> 'b) -> 'c & ('d -> 'e) -> ('d -> 'e & 'a -> 'b)) -> 'c
 //│   <:  z:
@@ -166,8 +166,8 @@ def z =
   (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v))!)
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a :> 'a -> nothing
-//│        <: 'a -> nothing -> anything
+//│     'a :> 'a -> ?
+//│        <: 'a -> ? -> ?
 //│ ╙──
 //│ (('a -> 'b) -> 'c & ('d -> 'e) -> ('d -> 'e & 'a -> 'b)) -> 'c
 //│   <:  z:

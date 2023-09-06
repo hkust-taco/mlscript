@@ -601,7 +601,7 @@ to_ch: int -> ChurchInt
 rec def id1 x = if true then x else id1 id1 x
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a := 'b -> 'c
+//│     'a <: 'b -> 'c
 //│     'b :> 'b -> 'c
 //│        <: 'c
 //│     'c :> 'b -> 'c
@@ -626,40 +626,40 @@ rec def id1 x = if true then x else id1 id1 x
 id1 id1
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a :> forall 'b 'c 'id1. ('d & 'b) -> ('a | 'c) | 'id1
+//│     'a :> forall 'b 'c. ('d & 'b) -> ('a | 'c)
 //│        <: 'd -> 'a
-//│     'd :> forall 'b 'c 'id1. ('d & 'b) -> ('a | 'c) | 'id1
+//│     'd :> forall 'b 'c. ('d & 'b) -> ('a | 'c)
 //│        <: 'a & 'e
-//│     'e :> forall 'b 'c 'id1. ('b & 'e) -> ('c | 'f) | 'id1
+//│     'e :> forall 'b 'c. ('b & 'e) -> ('c | 'f)
 //│        <: 'f & 'g
-//│     'g :> forall 'b 'c 'id1. ('b & 'g) -> ('c | 'h) | 'id1
+//│     'g :> forall 'b 'c. ('b & 'g) -> ('c | 'h)
 //│        <: 'h & 'i
-//│     'i :> forall 'b 'c 'id1. ('b & 'i) -> ('c | 'j) | 'id1
+//│     'i :> forall 'b 'c. ('b & 'i) -> ('c | 'j)
 //│        <: 'j & 'k
-//│     'k :> forall 'b 'c 'id1. ('b & 'k) -> ('c | 'l) | 'id1
+//│     'k :> forall 'b 'c. ('b & 'k) -> ('c | 'l)
 //│        <: 'l & 'm
-//│     'm :> forall 'b 'c 'id1. ('b & 'm) -> ('c | 'n) | 'id1
+//│     'm :> forall 'b 'c. ('b & 'm) -> ('c | 'n)
 //│        <: 'n & 'o
-//│     'o :> forall 'b 'c 'id1. ('b & 'o) -> ('c | 'p) | 'id1
+//│     'o :> forall 'b 'c. ('b & 'o) -> ('c | 'p)
 //│        <: 'p & 'q
-//│     'q :> forall 'b 'c 'id1. ('b & 'q) -> ('c | 'r) | 'id1
+//│     'q :> forall 'b 'c. ('b & 'q) -> ('c | 'r)
 //│        <: 'r & 's
 //│     's :> 's -> 't
 //│        <: 't
 //│     't := 's -> 't
-//│     'r :> forall 'b 'c 'id1. ('b & 'q) -> ('c | 'r) | 'id1
+//│     'r :> forall 'b 'c. ('b & 'q) -> ('c | 'r)
 //│        <: 'q -> 'r
-//│     'p :> forall 'b 'c 'id1. ('b & 'o) -> ('c | 'p) | 'id1
+//│     'p :> forall 'b 'c. ('b & 'o) -> ('c | 'p)
 //│        <: 'o -> 'p
-//│     'n :> forall 'b 'c 'id1. ('b & 'm) -> ('c | 'n) | 'id1
+//│     'n :> forall 'b 'c. ('b & 'm) -> ('c | 'n)
 //│        <: 'm -> 'n
-//│     'l :> forall 'b 'c 'id1. ('b & 'k) -> ('c | 'l) | 'id1
+//│     'l :> forall 'b 'c. ('b & 'k) -> ('c | 'l)
 //│        <: 'k -> 'l
-//│     'j :> forall 'b 'c 'id1. ('b & 'i) -> ('c | 'j) | 'id1
+//│     'j :> forall 'b 'c. ('b & 'i) -> ('c | 'j)
 //│        <: 'i -> 'j
-//│     'h :> forall 'b 'c 'id1. ('b & 'g) -> ('c | 'h) | 'id1
+//│     'h :> forall 'b 'c. ('b & 'g) -> ('c | 'h)
 //│        <: 'g -> 'h
-//│     'f :> forall 'b 'c 'id1. ('b & 'e) -> ('c | 'f) | 'id1
+//│     'f :> forall 'b 'c. ('b & 'e) -> ('c | 'f)
 //│        <: 'e -> 'f
 //│     'b :> 'b -> 'c
 //│        <: 'c
@@ -709,7 +709,8 @@ auto auto
 (fun x -> x x) (fun x -> x x)!
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a := 'a -> 'b
+//│     'a :> 'a -> 'b
+//│        <: 'a -> (? & 'b)
 //│ ╙──
 //│ res: nothing
 //│ Runtime error:
@@ -1004,15 +1005,15 @@ to_ch: int -> ChurchInt
 rec def id1 x = if true then x else id1 id1 x
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a := 'b -> 'c
+//│     'a <: 'b -> 'c
 //│     'b :> 'b -> 'c
 //│        <: 'c
 //│     'c :> 'b -> 'c
 //│        <: 'a
-//│ ║  l.1004: 	rec def id1 x = if true then x else id1 id1 x
+//│ ║  l.1005: 	rec def id1 x = if true then x else id1 id1 x
 //│ ╙──        	                                    ^^^^^^^
 //│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: ?id1` exceeded recursion depth limit (250)
-//│ ║  l.1004: 	rec def id1 x = if true then x else id1 id1 x
+//│ ║  l.1005: 	rec def id1 x = if true then x else id1 id1 x
 //│ ║          	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ id1: 'id1
@@ -1029,48 +1030,48 @@ rec def id1 x = if true then x else id1 id1 x
 id1 id1
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a :> forall 'id1 'b 'c. ('d & 'b) -> ('a | 'c) | 'id1
+//│     'a :> forall 'b 'c. ('d & 'b) -> ('a | 'c)
 //│        <: 'd -> 'a
-//│     'd :> forall 'id1 'b 'c. ('d & 'b) -> ('a | 'c) | 'id1
+//│     'd :> forall 'b 'c. ('d & 'b) -> ('a | 'c)
 //│        <: 'a & 'e
-//│     'e :> forall 'id1 'b 'c. ('b & 'e) -> ('c | 'f) | 'id1
+//│     'e :> forall 'b 'c. ('b & 'e) -> ('c | 'f)
 //│        <: 'f & 'g
-//│     'g :> forall 'id1 'b 'c. ('b & 'g) -> ('c | 'h) | 'id1
+//│     'g :> forall 'b 'c. ('b & 'g) -> ('c | 'h)
 //│        <: 'h & 'i
-//│     'i :> forall 'id1 'b 'c. ('b & 'i) -> ('c | 'j) | 'id1
+//│     'i :> forall 'b 'c. ('b & 'i) -> ('c | 'j)
 //│        <: 'j & 'k
-//│     'k :> forall 'id1 'b 'c. ('b & 'k) -> ('c | 'l) | 'id1
+//│     'k :> forall 'b 'c. ('b & 'k) -> ('c | 'l)
 //│        <: 'l & 'm
-//│     'm :> forall 'id1 'b 'c. ('b & 'm) -> ('c | 'n) | 'id1
+//│     'm :> forall 'b 'c. ('b & 'm) -> ('c | 'n)
 //│        <: 'n & 'o
-//│     'o :> forall 'id1 'b 'c. ('b & 'o) -> ('c | 'p) | 'id1
+//│     'o :> forall 'b 'c. ('b & 'o) -> ('c | 'p)
 //│        <: 'p & 'q
-//│     'q :> forall 'id1 'b 'c. ('b & 'q) -> ('c | 'r) | 'id1
+//│     'q :> forall 'b 'c. ('b & 'q) -> ('c | 'r)
 //│        <: 'r & 's
 //│     's :> 's -> 't
 //│        <: 't
 //│     't := 's -> 't
-//│     'r :> forall 'id1 'b 'c. ('b & 'q) -> ('c | 'r) | 'id1
+//│     'r :> forall 'b 'c. ('b & 'q) -> ('c | 'r)
 //│        <: 'q -> 'r
-//│     'p :> forall 'id1 'b 'c. ('b & 'o) -> ('c | 'p) | 'id1
+//│     'p :> forall 'b 'c. ('b & 'o) -> ('c | 'p)
 //│        <: 'o -> 'p
-//│     'n :> forall 'id1 'b 'c. ('b & 'm) -> ('c | 'n) | 'id1
+//│     'n :> forall 'b 'c. ('b & 'm) -> ('c | 'n)
 //│        <: 'm -> 'n
-//│     'l :> forall 'id1 'b 'c. ('b & 'k) -> ('c | 'l) | 'id1
+//│     'l :> forall 'b 'c. ('b & 'k) -> ('c | 'l)
 //│        <: 'k -> 'l
-//│     'j :> forall 'id1 'b 'c. ('b & 'i) -> ('c | 'j) | 'id1
+//│     'j :> forall 'b 'c. ('b & 'i) -> ('c | 'j)
 //│        <: 'i -> 'j
-//│     'h :> forall 'id1 'b 'c. ('b & 'g) -> ('c | 'h) | 'id1
+//│     'h :> forall 'b 'c. ('b & 'g) -> ('c | 'h)
 //│        <: 'g -> 'h
-//│     'f :> forall 'id1 'b 'c. ('b & 'e) -> ('c | 'f) | 'id1
+//│     'f :> forall 'b 'c. ('b & 'e) -> ('c | 'f)
 //│        <: 'e -> 'f
 //│     'b :> 'b -> 'c
 //│        <: 'c
 //│     'c := 'b -> 'c
-//│ ║  l.1004: 	rec def id1 x = if true then x else id1 id1 x
+//│ ║  l.1005: 	rec def id1 x = if true then x else id1 id1 x
 //│ ╙──        	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?b ?c ?d ?id1 ?e. ?id1 <: (forall ?f ?g ?h ?i ?j ?id10. ?id10) -> ?k` exceeded recursion depth limit (250)
-//│ ║  l.1029: 	id1 id1
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?id1 ?b ?c ?d ?e. ?id1 <: (forall ?f ?g ?id10 ?h ?i ?j. ?id10) -> ?k` exceeded recursion depth limit (250)
+//│ ║  l.1030: 	id1 id1
 //│ ║          	^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: error
@@ -1080,7 +1081,7 @@ id1 id1
 :e
 auto auto
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1081: 	auto auto
+//│ ║  l.1082: 	auto auto
 //│ ║          	^^^^^^^^^
 //│ ╟── type `'a` is not a function
 //│ ║  l.163: 	def auto : (forall 'a. 'a -> 'a) -> (forall 'b. 'b -> 'b)
@@ -1099,7 +1100,7 @@ auto auto
 :e
 (fun x -> x x) (fun x -> x x)
 //│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: (forall ?c ?d. ?c -> ?d) -> ?e` exceeded recursion depth limit (250)
-//│ ║  l.1100: 	(fun x -> x x) (fun x -> x x)
+//│ ║  l.1101: 	(fun x -> x x) (fun x -> x x)
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: error
@@ -1112,7 +1113,8 @@ auto auto
 (fun x -> x x) (fun x -> x x)!
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a := 'a -> 'b
+//│     'a :> 'a -> 'b
+//│        <: 'a -> (? & 'b)
 //│ ╙──
 //│ res: nothing
 //│ Runtime error:
@@ -1407,15 +1409,15 @@ to_ch: int -> ChurchInt
 rec def id1 x = if true then x else id1 id1 x
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a := 'b -> 'c
+//│     'a <: 'b -> 'c
 //│     'b :> 'b -> 'c
 //│        <: 'c
 //│     'c :> 'b -> 'c
 //│        <: 'a
-//│ ║  l.1407: 	rec def id1 x = if true then x else id1 id1 x
+//│ ║  l.1409: 	rec def id1 x = if true then x else id1 id1 x
 //│ ╙──        	                                    ^^^^^^^
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
-//│ ║  l.1407: 	rec def id1 x = if true then x else id1 id1 x
+//│ ║  l.1409: 	rec def id1 x = if true then x else id1 id1 x
 //│ ║          	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ id1: 'id1
@@ -1432,9 +1434,9 @@ rec def id1 x = if true then x else id1 id1 x
 id1 id1
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a :> forall 'b 'c 'id1. ('d & 'b) -> ('a | 'c) | 'id1
+//│     'a :> forall 'b 'c. ('d & 'b) -> ('a | 'c)
 //│        <: 'd -> 'a
-//│     'd :> forall 'b 'c 'id1. ('d & 'b) -> ('a | 'c) | 'id1
+//│     'd :> forall 'b 'c. ('d & 'b) -> ('a | 'c)
 //│        <: 'a & 'e & 'f
 //│     'f :> ('d & 'f) -> ('a | 'g)
 //│        <: 'd & 'g
@@ -1447,10 +1449,10 @@ id1 id1
 //│     'b :> 'b -> 'c
 //│        <: 'c
 //│     'c := 'b -> 'c
-//│ ║  l.1407: 	rec def id1 x = if true then x else id1 id1 x
+//│ ║  l.1409: 	rec def id1 x = if true then x else id1 id1 x
 //│ ╙──        	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.1432: 	id1 id1
+//│ ║  l.1434: 	id1 id1
 //│ ║          	^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: error
@@ -1460,7 +1462,7 @@ id1 id1
 :e
 auto auto
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1461: 	auto auto
+//│ ║  l.1463: 	auto auto
 //│ ║          	^^^^^^^^^
 //│ ╟── type `'a` is not a function
 //│ ║  l.163: 	def auto : (forall 'a. 'a -> 'a) -> (forall 'b. 'b -> 'b)
@@ -1479,7 +1481,7 @@ auto auto
 :e
 (fun x -> x x) (fun x -> x x)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.1480: 	(fun x -> x x) (fun x -> x x)
+//│ ║  l.1482: 	(fun x -> x x) (fun x -> x x)
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: error
@@ -1492,7 +1494,8 @@ auto auto
 (fun x -> x x) (fun x -> x x)!
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a := 'a -> 'b
+//│     'a :> 'a -> 'b
+//│        <: 'a -> (? & 'b)
 //│ ╙──
 //│ res: nothing
 //│ Runtime error:
@@ -1797,9 +1800,9 @@ rec def id1 x = if true then x else id1 id1 x
 id1 id1
 //│ res: 'a -> 'b | 'id1
 //│   where
-//│     'a :> forall 'c 'd 'id1. 'a -> 'b | 'id1
+//│     'a :> forall 'id1 'c 'd. 'a -> 'b | 'id1
 //│        <: 'b
-//│     'b :> forall 'c 'd 'id1. 'id1
+//│     'b :> forall 'id1 'c 'd. 'id1
 //│        <: 'a -> 'b
 //│     'id1 :> 'c -> 'd
 //│     'c :> 'id1
@@ -1812,7 +1815,7 @@ id1 id1
 :e
 auto auto
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1813: 	auto auto
+//│ ║  l.1816: 	auto auto
 //│ ║          	^^^^^^^^^
 //│ ╟── type `'a` is not a function
 //│ ║  l.163: 	def auto : (forall 'a. 'a -> 'a) -> (forall 'b. 'b -> 'b)
@@ -1831,7 +1834,7 @@ auto auto
 :e
 (fun x -> x x) (fun x -> x x)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.1832: 	(fun x -> x x) (fun x -> x x)
+//│ ║  l.1835: 	(fun x -> x x) (fun x -> x x)
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: error

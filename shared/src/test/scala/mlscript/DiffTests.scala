@@ -704,20 +704,41 @@ class DiffTests
               typer.dbg = mode.dbg
               val tvs = typer.createdTypeVars.toList
               
-              if (mode.dbg)
-                output(s"REC? ${
-                  tvs.map(tv => tv -> tv.isRecursive_$(omitTopLevel = true)(ctx))
-                    .mkString(" ")
-                }")
+              implicit val _ctx: typer.Ctx = ctx // Mostly for `typer.AliasOf`
               
-              val recs = tvs.filter(_.isRecursive_$(omitTopLevel = true)(ctx))
+              // if (mode.dbg)
+              //   output(s"REC? ${
+              //     tvs.map(tv => tv -> tv.isRecursive_$(omitTopLevel = true)(ctx))
+              //       .mkString(" ")}")
               
-              recs.find(_.prov.loco.isDefined).orElse(recs.headOption).foreach { tv =>
+              // * Does not keep track of recursion polarity:
+              // val recs = tvs.filter(_.isRecursive_$(omitTopLevel = true)(ctx))
+              
+              val recs = tvs.flatMap { tv =>
+                val fromLB = tv.lbRecOccs_$(omitTopLevel = true) match {
+                  case S(pol @ (S(true) | N)) => (tv, pol) :: Nil
+                  case _ => Nil
+                }
+                val fromUB = tv.ubRecOccs_$(omitTopLevel = true) match {
+                  case S(pol @ (S(false) | N)) => (tv, pol) :: Nil
+                  case _ => Nil
+                }
+                fromLB ::: fromUB
+              }
+              
+              if (mode.dbg) output(s"RECs: ${recs.mkString(" ")}")
+              
+              val withLocs = recs.filter(_._1.prov.loco.isDefined)
+              
+              withLocs.find {
+                case (typer.AliasOf(typer.AssignedVariable(_)), _) => false
+                case _ => true
+              }.orElse(withLocs.headOption).orElse(recs.headOption).foreach { case (tv, pol) =>
                 import Message._
                 if (mode.dbg) output("REC: " + tv + tv.showBounds)
                 report(ErrorReport(
                   msg"Inferred recursive type: ${
-                    getType(tv, pol = N, removePolarVars = false).show
+                    getType(tv, pol = pol, removePolarVars = false).show
                   }" -> tv.prov.loco :: Nil) :: Nil)
               }
               
