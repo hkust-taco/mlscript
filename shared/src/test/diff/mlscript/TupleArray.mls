@@ -12,7 +12,7 @@ def f x = x with { b = 2 }
 //│  = [Function: f]
 
 def r: {b: string; c: int}\b
-//│ r: {c: int}
+//│ r: in {b: string, c: int}\b out {c: int}
 //│  = <missing implementation>
 
 (1,2,3) with { _4 = "oops" }
@@ -42,16 +42,16 @@ def r: {b: string; c: int}\b
 
 
 def r: int \ _1
-//│ r: int
+//│ r: int\_1
 //│  = <missing implementation>
 
 def r: (1,2,3) \ _1
-//│ r: {_2: 2, _3: 3}
+//│ r: in (1, 2, 3,)\_1 out {_2: 2, _3: 3}
 //│  = <missing implementation>
 // (1,2,3).toRecord \ _1
 
 def r: (1,2,3) \ _12345
-//│ r: (1, 2, 3,)
+//│ r: in (1, 2, 3,)\_12345 out (1, 2, 3,)
 //│  = <missing implementation>
 
 def arr: Array[int]

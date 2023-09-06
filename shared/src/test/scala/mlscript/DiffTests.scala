@@ -167,7 +167,7 @@ class DiffTests
     
     var parseOnly = basePath.headOption.contains("parser") || basePath.headOption.contains("compiler")
     var allowTypeErrors = false
-    var allowParseErrors = false // TODO use
+    var allowParseErrors = false
     var showRelativeLineNums = false
     var noJavaScript = false
     var noProvs = false
@@ -564,7 +564,7 @@ class DiffTests
                   case m@MethodDef(_, _, Var(mn), _, rhs) =>
                     rhs.fold(
                       _ => ctx.getMthDefn(tn, mn).map(mthTy => (m, getType(mthTy.toPT, S(true)))),
-                      _ => ctx.getMth(S(tn), mn).map(mthTy => (m, getType(mthTy.toPT, S(true)))) // TODO should be N
+                      _ => ctx.getMth(S(tn), mn).map(mthTy => (m, getType(mthTy.toPT, N)))
                     )
                 }
 
@@ -636,7 +636,7 @@ class DiffTests
                   
                   ctx += nme.name -> typer.VarSymbol(ty_sch, nme)
                   declared += nme.name -> ty_sch
-                  val exp = getType(ty_sch, S(true)) // TODO should be N
+                  val exp = getType(ty_sch, N)
                   if (mode.generateTsDeclarations) tsTypegenCodeBuilder.addTypeGenTermDefinition(exp, Some(nme.name))
                   S(nme.name -> (s"$nme: ${exp.show}" :: Nil))
                   
@@ -660,7 +660,7 @@ class DiffTests
                     // the inferred type is used to for ts type gen
                     case S(sign) =>
                       ctx += nme.name -> typer.VarSymbol(sign, nme)
-                      val sign_exp = getType(sign, S(true)) // TODO should be S(false)
+                      val sign_exp = getType(sign, S(false))
                       typer.dbg = mode.dbg
                       typer.subsume(ty_sch, sign)(ctx, raiseToBuffer, typer.TypeProvenance(d.toLoc, "def definition"))
                       if (mode.generateTsDeclarations) tsTypegenCodeBuilder.addTypeGenTermDefinition(exp, Some(nme.name))

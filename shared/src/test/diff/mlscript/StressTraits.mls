@@ -63,7 +63,7 @@ foo arg
 //│ res: error | int
 //│ constrain calls  : 39
 //│ annoying  calls  : 31
-//│ subtyping calls  : 1533
+//│ subtyping calls  : 1542
 
 :stats
 :e
@@ -83,7 +83,7 @@ foo arg
 //│ res: error | int
 //│ constrain calls  : 71
 //│ annoying  calls  : 90
-//│ subtyping calls  : 4291
+//│ subtyping calls  : 4318
 
 :stats
 :e
@@ -103,7 +103,7 @@ foo arg
 //│ res: error
 //│ constrain calls  : 94
 //│ annoying  calls  : 216
-//│ subtyping calls  : 17284
+//│ subtyping calls  : 17311
 
 
 // ====== 2 ====== //
@@ -131,7 +131,7 @@ foo arg
 //│ res: error | int
 //│ constrain calls  : 47
 //│ annoying  calls  : 31
-//│ subtyping calls  : 516
+//│ subtyping calls  : 525
 
 
 // ====== 3 ====== //
@@ -160,7 +160,7 @@ foo arg
 //│ res: error | int
 //│ constrain calls  : 82
 //│ annoying  calls  : 90
-//│ subtyping calls  : 2915
+//│ subtyping calls  : 2942
 
 
 // ====== 4 ====== //
@@ -190,7 +190,7 @@ foo arg
 //│ res: error
 //│ constrain calls  : 102
 //│ annoying  calls  : 131
-//│ subtyping calls  : 3957
+//│ subtyping calls  : 4011
 
 :stats
 :e
@@ -257,7 +257,7 @@ foo arg
 //│ res: error
 //│ constrain calls  : 106
 //│ annoying  calls  : 131
-//│ subtyping calls  : 4388
+//│ subtyping calls  : 4478
 
 
 // ====== 6 ====== //
@@ -289,7 +289,7 @@ foo arg
 //│ res: error
 //│ constrain calls  : 110
 //│ annoying  calls  : 131
-//│ subtyping calls  : 4953
+//│ subtyping calls  : 5088
 
 
 // ====== 7 ====== //
@@ -322,7 +322,7 @@ foo arg
 //│ res: error
 //│ constrain calls  : 114
 //│ annoying  calls  : 131
-//│ subtyping calls  : 5673
+//│ subtyping calls  : 5862
 
 def foo_manual: ({fA: 'a} & a | {fB: 'a} & b & ~a | {fC: 'a} & c & ~a & ~b | {fD: 'a} & d & ~a & ~b & ~c | {fE: 'a} & e & ~a & ~b & ~c & ~d | {fF: 'a} & f & ~a & ~b & ~c & ~d & ~e | {fG: 'a} & g & ~a & ~b & ~c & ~d & ~e & ~f) -> 'a
 //│ foo_manual: ({fA: 'a} & #A | ~#A & ({fB: 'a} & #B | ~#B & ({fC: 'a} & #C | ~#C & ({fD: 'a} & #D | ~#D & ({fE: 'a} & #E | ~#E & ({fF: 'a} & #F | {fG: 'a} & #G & ~#F)))))) -> 'a
@@ -388,6 +388,6 @@ foo arg
 //│ res: error
 //│ constrain calls  : 118
 //│ annoying  calls  : 131
-//│ subtyping calls  : 6569
+//│ subtyping calls  : 6821
 
 

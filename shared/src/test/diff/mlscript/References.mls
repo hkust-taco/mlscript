@@ -232,7 +232,7 @@ swap ri rn
 
 
 def refin: Ref[int] & Ref[string]
-//│ refin: Ref[in int | string out nothing]
+//│ refin: in Ref[out int | string] out Ref[in int | string out nothing]
 //│      = <missing implementation>
 
 refin.Get
@@ -313,7 +313,7 @@ refrefin = RefImpl { mut value = RefImpl { mut value = error } }
 
 
 def consrefin: (Ref[int] & Ref[string]) -> int
-//│ consrefin: Ref[out int | string] -> int
+//│ consrefin: in Ref[in int | string out nothing] -> int out Ref[out int | string] -> int
 //│          = <missing implementation>
 
 :e
@@ -419,7 +419,7 @@ def bar x = RefImpl { mut value = x } : Ref[int] & Ref[string]
 rec def refin = RefImpl { mut value = refin.Get }
 //│ RefImpl['A]
 //│   <:  refin:
-//│ Ref[in int | string out nothing]
+//│ Ref[out int | string]
 //│      = [Function: refin]
 
 

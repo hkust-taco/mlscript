@@ -99,7 +99,7 @@ foo 123
 //│    = 42
 
 def fooManual: (~{f: 42} | {f: 'a})\f -> 'a
-//│ fooManual: ({f: 'a} | ~{f: 42})\f -> 'a
+//│ fooManual: in forall 'a. anything -> 'a out forall 'a. ({f: 'a} | ~{f: 42})\f -> 'a
 //│          = <missing implementation>
 
 fooManual 123

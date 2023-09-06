@@ -135,22 +135,22 @@ if true then IISS else BBNN
 // * Note that type normalization is currently very aggressive at approximating negative non-tag types, to simplify the result:
 
 def test: ~(int -> int)
-//│ test: nothing
+//│ test: in ~(int -> int) out nothing
 
 // :ds
 def test: ~(int -> int) & ~bool
-//│ test: nothing
+//│ test: in ~(int -> int) & ~bool out nothing
 
 def test: ~(int -> int) & bool
-//│ test: nothing
+//│ test: in bool out nothing
 
 def test: ~(int -> int) & ~(bool -> bool)
-//│ test: nothing
+//│ test: in ~(nothing -> (bool | int)) out nothing
 
 def test: ~(int -> int | bool -> bool)
-//│ test: nothing
+//│ test: in ~(nothing -> (bool | int)) out nothing
 
 def test: ~(int -> int & string -> string) & ~(bool -> bool & number -> number)
-//│ test: nothing
+//│ test: in ~(nothing -> (number | string) & int -> number & nothing -> (bool | string) & nothing -> (bool | int)) out nothing
 
 

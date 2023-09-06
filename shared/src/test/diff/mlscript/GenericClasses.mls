@@ -153,7 +153,7 @@ f
 
 
 def mrg: Foo2[int] & Foo2[string]
-//│ mrg: Foo2[in int | string out nothing]
+//│ mrg: in Foo2[out int | string] out Foo2[in int | string out nothing]
 //│    = <missing implementation>
 
 mrg: Foo2[int]
@@ -165,7 +165,7 @@ mrg: Foo2[int]
 mrg = Foo2{}
 //│ Foo2['A]
 //│   <:  mrg:
-//│ Foo2[in int | string out nothing]
+//│ Foo2[out int | string]
 //│    = Foo2 {}
 
 // * Even this one works although the LHS is not generalized.
@@ -271,7 +271,7 @@ mrg = Foo2_Co{}
 //│    = Foo2_Co {}
 
 def mrg: Foo2_Co[int] | Foo2_Co[string]
-//│ mrg: Foo2_Co[int | string]
+//│ mrg: in Foo2_Co[nothing] out Foo2_Co[int | string]
 //│    = <missing implementation>
 
 

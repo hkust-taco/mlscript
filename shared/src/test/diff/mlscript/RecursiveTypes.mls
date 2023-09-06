@@ -570,12 +570,12 @@ f_manual ainf
 
 // Notice the simplified type is NOT the same as that of `f`...
 def f_manual_ns: 'a | ('b & (({a: 'd & 'c} as 'c) | ~{a: 'e | int} | ~{})\a & (({a: 'd & 'c} as 'c) | ~{a: 'e | int})\a & (({a: 'f} as 'c) as 'f) & (int | ~{a: 'e | int} | ~{})\a & (int | ~{a: 'e | int})\a & int & int) -> ('g | 'd | ('b | 'h\a & {a: 'e | int} as 'h))
-//│ f_manual_ns: ((int & 'c & 'c0 | ~{a: int})\a & int & 'b & 'f) -> ('b | 'd)
+//│ f_manual_ns: in forall 'b 'd 'f 'c 'c0. ('b & 'f & ((int & 'c)\a & 'c0\a & int | int & ~{a: int})) -> ('b | 'd) out forall 'b 'd 'f 'c 'c0. ((int & 'c & 'c0 | ~{a: int})\a & int & 'b & 'f) -> ('b | 'd)
 //│   where
-//│     'f <: {a: 'f}
-//│     'b :> 'b\a & {a: int}
 //│     'c0 <: {a: 'd & 'c0}
 //│     'c <: {a: 'c & 'd}
+//│     'f <: {a: 'f}
+//│     'b :> 'b\a & {a: int}
 
 :e
 f_manual_ns ainf
