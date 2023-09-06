@@ -715,11 +715,11 @@ class DiffTests
               // val recs = tvs.filter(_.isRecursive_$(omitTopLevel = true)(ctx))
               
               val recs = tvs.flatMap { tv =>
-                val fromLB = tv.lbRecOccs_$(omitTopLevel = true) match {
+                val fromLB = tv.lbRecOccs_$(omitIrrelevantVars = true) match {
                   case S(pol @ (S(true) | N)) => (tv, pol) :: Nil
                   case _ => Nil
                 }
-                val fromUB = tv.ubRecOccs_$(omitTopLevel = true) match {
+                val fromUB = tv.ubRecOccs_$(omitIrrelevantVars = true) match {
                   case S(pol @ (S(false) | N)) => (tv, pol) :: Nil
                   case _ => Nil
                 }

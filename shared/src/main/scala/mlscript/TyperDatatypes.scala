@@ -646,8 +646,9 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       }) + (if (assignedTo.isDefined) "#" else "")
     private[mlscript] def mkStr = nameHint.getOrElse("α") + uid
     
-    def isRecursive_$(omitTopLevel: Bool)(implicit ctx: Ctx) : Bool =
-        (lbRecOccs_$(omitTopLevel), ubRecOccs_$(omitTopLevel)) match {
+    // * `omitIrrelevantVars` omits top-level as well as quantified variable occurrences
+    def isRecursive_$(omitIrrelevantVars: Bool)(implicit ctx: Ctx) : Bool =
+        (lbRecOccs_$(omitIrrelevantVars), ubRecOccs_$(omitIrrelevantVars)) match {
       // * Variables occurring strictly negatively in their own lower bound
       // * (resp. strictly positively in their own upper bound, ie contravariantly)
       // * are NOT recursive, as these occurrences only demonstrate "spurious" cycles
@@ -658,17 +659,23 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     /** None: not recursive in this bound; Some(Some(pol)): polarly-recursive; Some(None): nonpolarly-recursive.
       * Note that if we have something like 'a :> Bot <: 'a -> Top, 'a is not truly recursive
       *   and its bounds can actually be inlined. */
-    private[mlscript] final def lbRecOccs_$(omitTopLevel: Bool)(implicit ctx: Ctx): Opt[Opt[Bool]] = {
+    private[mlscript] final def lbRecOccs_$(omitIrrelevantVars: Bool)(implicit ctx: Ctx): Opt[Opt[Bool]] = {
       // println("+", this, assignedTo getOrElse lowerBounds)
       // assignedTo.getOrElse(TupleType(lowerBounds.map(N -> _.toUpper(noProv)))(noProv)).getVarsPol(PolMap.pos, ignoreTopLevelOccs = true).get(this)
       val bs = assignedTo.fold(lowerBounds)(_ :: Nil)
-      bs.foldLeft(BotType: ST)(_ | _).getVarsPol(PolMap.pos, ignoreTopLevelOccs = omitTopLevel).get(this)
+      bs.foldLeft(BotType: ST)(_ | _).getVarsPol(PolMap.pos,
+        ignoreTopLevelOccs = omitIrrelevantVars,
+        ignoreQuantifiedVars = omitIrrelevantVars,
+      ).get(this)
     }
-    private[mlscript] final def ubRecOccs_$(omitTopLevel: Bool)(implicit ctx: Ctx): Opt[Opt[Bool]] ={
+    private[mlscript] final def ubRecOccs_$(omitIrrelevantVars: Bool)(implicit ctx: Ctx): Opt[Opt[Bool]] ={
       // println("-", this, assignedTo getOrElse upperBounds)
       // assignedTo.getOrElse(TupleType(upperBounds.map(N -> _.toUpper(noProv)))(noProv)).getVarsPol(PolMap.posAtNeg, ignoreTopLevelOccs = true).get(this)
       val bs = assignedTo.fold(upperBounds)(_ :: Nil)
-      bs.foldLeft(TopType: ST)(_ & _).getVarsPol(PolMap.posAtNeg, ignoreTopLevelOccs = omitTopLevel).get(this)
+      bs.foldLeft(TopType: ST)(_ & _).getVarsPol(PolMap.posAtNeg,
+        ignoreTopLevelOccs = omitIrrelevantVars,
+        ignoreQuantifiedVars = omitIrrelevantVars,
+      ).get(this)
         // .tap(r => println(s"= $r"))
     }
   }

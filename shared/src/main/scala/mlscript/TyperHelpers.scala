@@ -744,13 +744,17 @@ abstract class TyperHelpers { Typer: Typer =>
     
     /** `ignoreTopLevelOccs` is used to discard immediate occurrences of a variable which
       * would constitute spurious recursive occurrences when traversing the variable's bounds. */
-    def getVarsPol(pol: PolMap, ignoreTopLevelOccs: Bool = false)(implicit ctx: Ctx): SortedMap[TypeVariable, Opt[Bool]] = {
+    def getVarsPol(pol: PolMap, ignoreTopLevelOccs: Bool = false, ignoreQuantifiedVars: Bool = false)
+          (implicit ctx: Ctx)
+          : SortedMap[TypeVariable, Opt[Bool]] = {
       val res = MutMap.empty[TV, Pol]
       val traversed = MutSet.empty[TV -> Bool]
-      def go(pol: PolMap, ignoreTLO: Bool)(ty: ST): Unit = {
-        // trace(s"getVarsPol[${printPol(pol.base)}] $ty ${pol} $ignoreTLO") {
+      // * We ignore variables above `upperLvl` when `ignoreQuantifiedVars` is true. 
+      def go(pol: PolMap, ignoreTLO: Bool, upperLvl: Level)(ty: ST): Unit = {
+        trace(s"getVarsPol[${printPol(pol.base)}] $ty ${pol} $ignoreTLO") {
         ty match {
           case tv: TypeVariable =>
+            if (ignoreQuantifiedVars && tv.level > upperLvl) return println(s"Quantified! ${tv}")
             val tvpol = pol(tv.level)
             if (!ignoreTLO) res.updateWith(tv) {
               case S(p) if p =/= tvpol =>
@@ -773,38 +777,41 @@ abstract class TyperHelpers { Typer: Typer =>
                   true
                 }
             }
-            println(s"$tv ${printPol(tvpol)} $needsTraversing")
+            // println(s"$tv ${printPol(tvpol)} $needsTraversing")
             if (needsTraversing)
               tv.childrenPol(pol) // * Note: `childrenPol` deals with `assignedTo`
-                .foreach(cp => go(cp._1, ignoreTLO)(cp._2))
-          case ProxyType(und) => go(pol, ignoreTLO)(und)
-          case Overload(as) => as.foreach(go(pol, ignoreTLO))
-          case NegType(n) => go(pol.contravar, ignoreTLO)(n)
-          case Without(b, ns) => go(pol, ignoreTLO)(b)
+                .foreach(cp => go(cp._1, ignoreTLO, upperLvl)(cp._2))
+          case ProxyType(und) => go(pol, ignoreTLO, upperLvl)(und)
+          case Overload(as) => as.foreach(go(pol, ignoreTLO, upperLvl))
+          case NegType(n) => go(pol.contravar, ignoreTLO, upperLvl)(n)
+          case Without(b, ns) => go(pol, ignoreTLO, upperLvl)(b)
           case TypeBounds(lb, ub) =>
-            go(PolMap.neg, ignoreTLO)(lb)
-            go(PolMap.pos, ignoreTLO)(ub)
+            go(PolMap.neg, ignoreTLO, upperLvl)(lb)
+            go(PolMap.pos, ignoreTLO, upperLvl)(ub)
             // * or simply:
-            // pol.traverseRange(lb, ub)(go(_, ignoreTLO)(_))
+            // pol.traverseRange(lb, ub)(go(_, ignoreTLO, upperLvl)(_))
           case ConstrainedType(cs, bod) =>
-            cs.foreach { vbs => go(PolMap.pos, false)(vbs._1); go(PolMap.posAtNeg, false)(vbs._2) }
-            go(pol, ignoreTLO)(bod)
+            cs.foreach { vbs =>
+              go(PolMap.pos, false, upperLvl)(vbs._1)
+              go(PolMap.posAtNeg, false, upperLvl)(vbs._2)
+            }
+            go(pol, ignoreTLO, upperLvl)(bod)
           case ComposedType(p, l, r) =>
-            go(pol, ignoreTLO)(l)
-            go(pol, ignoreTLO)(r)
+            go(pol, ignoreTLO, upperLvl)(l)
+            go(pol, ignoreTLO, upperLvl)(r)
           case pt: PolymorphicType =>
-            go(pol.enter(pt.polymLevel), ignoreTLO)(pt.body)
+            go(pol.enter(pt.polymLevel), ignoreTLO, upperLvl min pt.polymLevel)(pt.body)
           case ty =>
             ty.childrenPol(pol).foreach(cp => go(cp._1,
               // * We should have handled above all top-level cases,
               // * so the children here are not supposed to be top level.
               // * Note: We won't get unsoundness if we forgot cases,
               // * just spurious occurs-check failures!
-              ignoreTLO = false)(cp._2))
+              ignoreTLO = false, upperLvl)(cp._2))
         }
-        // }()
+        }()
       }
-      go(pol, ignoreTopLevelOccs)(this)
+      go(pol, ignoreTopLevelOccs, MaxLevel)(this)
       res.toSortedMap
     }
     

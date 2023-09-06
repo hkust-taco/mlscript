@@ -638,7 +638,7 @@ trait TypeSimplifier { self: Typer =>
     
     def computeRecVars =
       allVars.iterator.filter(v => !varSubst.contains(v) && (
-        v.isRecursive_$(omitTopLevel = false)
+        v.isRecursive_$(omitIrrelevantVars = false)
         // * Note: a more precise version could be the following,
         // * but it doesn't seem to change anything in our test suite, so I left if commented for now:
         // // * Only consider recursive those variables that recursive in their *reachable* bounds:

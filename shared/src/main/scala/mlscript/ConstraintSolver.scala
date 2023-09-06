@@ -513,12 +513,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (_: ProvType, _) | (_, _: ProvType) => shadows
           // * Note: contrary to Simple-sub, we do have to remember subtyping tests performed
           // *    between things that are not syntactically type variables or type references.
-          // *  Indeed, due to the normalization of unions and intersections in the wriong polarity,
+          // *  Indeed, due to the normalization of unions and intersections in the wrong polarity,
           // *    cycles in regular trees may only ever go through unions or intersections,
           // *    and not plain type variables.
-          // case (l: TV, r: TV) if noRecursiveTypes =>
-          //   if (cache(lhs_rhs)) return println(s"Cached! (not recursive")
-          //   cache += lhs_rhs
           case _ =>
             if (!noRecursiveTypes && cache(lhs_rhs)) return println(s"Cached!")
             val shadow = lhs.shadow -> rhs.shadow

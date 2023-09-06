@@ -309,22 +309,23 @@ t id succ 0
 //│ res: int
 //│    = 6
 
-:e // * Strange
+:stats
+:e // * Strange recursive error. The bounds graph is quite large and hard to analyze for debugging...
 t_ id succ 0
-//│ ╔══[ERROR] Inferred recursive type: 'a
-//│   where
-//│     'a :> int -> int
-//│        <: (forall 'b 'c 'd 'e 'f 'g 'h. ((forall 'i. ? -> 'i -> 'i) -> (forall 'i. ? -> 'i -> 'i) -> 'c & 'e) -> (? -> 'e | 'c) | ? | ((forall 'i. ? -> 'i -> 'i) -> (forall 'i. ? -> 'i -> 'i) -> 'b & 'h & 'g) -> (? -> 'g | 'b | 'h) | nothing -> ('f -> 'f | ?) | 'j | nothing -> ('d -> 'd | ?)) -> nothing
+//│ ╔══[ERROR] Inferred recursive type: nothing
 //│ ║  l.285: 	def t_ y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) three
-//│ ╙──       	                                                                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──       	                                                                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.313: 	t_ id succ 0
+//│ ║  l.314: 	t_ id succ 0
 //│ ║         	^^^^^^^^^^
 //│ ╟── function of type `?a -> ?b` is not an instance of type `int`
 //│ ║  l.285: 	def t_ y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) three
 //│ ╙──       	                                                                                                                                                                                ^^^^^^^^^^^^^^^^
 //│ res: error
 //│    = 6
+//│ constrain calls  : 352
+//│ annoying  calls  : 0
+//│ subtyping calls  : 2703
 
 
 // let t (z : 0) = let x = (fun (y: ['t > 0] 'a -> 't) -> y z y) in x x;;
@@ -356,7 +357,7 @@ def t (z: nothing) = let x = fun (y: forall 't. 'a -> 't) -> y z in x x
 :e
 (fun x -> x x) (fun x -> x x)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.357: 	(fun x -> x x) (fun x -> x x)
+//│ ║  l.358: 	(fun x -> x x) (fun x -> x x)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: error
@@ -367,50 +368,78 @@ def t (z: nothing) = let x = fun (y: forall 't. 'a -> 't) -> y z in x x
 //     * Rank 3, untypable in F2 but F3
 //       (fun f x -> f (f x)) (fun f x -> f (f x)) (fun v w -> v)
 
-:e // TODO(occurs-check) really recursive?!
+:e
 (fun f -> fun x -> f (f x)) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
-//│ ╔══[ERROR] Inferred recursive type: ? -> ? -> ?
-//│ ║  l.371: 	(fun f -> fun x -> f (f x)) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
-//│ ╙──       	                                                  ^^^
+//│ ╔══[ERROR] Inferred recursive type: 'a
+//│   where
+//│     'a :> anything -> anything -> 'a
+//│ ╙──
 //│ res: 'a -> 'b
 //│   where
 //│     'a :> 'b
 //│     'b :> anything -> anything -> 'a
 //│    = [Function (anonymous)]
+
+:RecursiveTypes
+(fun f -> fun x -> f (f x)) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
+//│ res: 'a -> 'b
+//│   where
+//│     'a :> 'b
+//│     'b :> anything -> anything -> 'a
+//│    = [Function (anonymous)]
+:NoRecursiveTypes
 
 
 //     * Rank 4, alternate formulation, untypeable in F2, but F3
 //       (fun two k -> two two k)(fun f x -> f (f x)) (fun v w -> v)
 
-:e // TODO(occurs-check) really recursive?!
+:e
 (fun two -> fun k -> two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
-//│ ╔══[ERROR] Inferred recursive type: ? -> ? -> ?
-//│ ║  l.386: 	(fun two -> fun k -> two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
-//│ ╙──       	                                                      ^^^
+//│ ╔══[ERROR] Inferred recursive type: 'a
+//│   where
+//│     'a :> anything -> anything -> 'a
+//│ ╙──
 //│ res: 'a -> 'b
 //│   where
 //│     'a :> 'b
 //│     'b :> anything -> anything -> 'a
 //│    = [Function (anonymous)]
 
+:RecursiveTypes
+(fun two -> fun k -> two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
+//│ res: 'a -> 'b
+//│   where
+//│     'a :> 'b
+//│     'b :> anything -> anything -> 'a
+//│    = [Function (anonymous)]
+:NoRecursiveTypes
+
 
 //     * Rank 5, causes huge blowup. Do not attempt to output skeletons !
 //       (fun two k -> two two two k)(fun f -x -> f (f x)) (fun v w -> v)
 
-:e // TODO(occurs-check) really recursive?!
+:e
 (fun two -> fun k -> two two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a :> ? -> 'b
-//│     'b :> ? -> ('a | 'b) | 'a
-//│ ║  l.401: 	(fun two -> fun k -> two two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
-//│ ╙──       	                                                          ^^^
+//│     'a :> anything -> 'a
+//│ ╙──
 //│ res: 'a -> 'b
 //│   where
 //│     'a :> 'b | 'c
 //│     'b :> anything -> 'c
 //│     'c :> anything -> 'a | 'b
 //│    = [Function (anonymous)]
+
+:RecursiveTypes
+(fun two -> fun k -> two two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
+//│ res: 'a -> 'b
+//│   where
+//│     'a :> 'b | 'c
+//│     'b :> anything -> 'c
+//│     'c :> anything -> 'a | 'b
+//│    = [Function (anonymous)]
+:NoRecursiveTypes
 
 // * Also works with CT:
 :ConstrainedTypes
@@ -465,20 +494,21 @@ def t (z: nothing) = let x = fun (y: forall 't. 'a -> 't) -> y z in x x
 //     * Factorial of two, using the Y combinator
 //       (fun h -> (fun x -> h (x x)) (fun x -> h (x x))) (fun f -> fun n -> n (fun v -> fun x -> fun y -> y) k (fun f -> fun x -> f x)(fun g -> fun x -> n (f (n (fun p -> fun s -> s (p (fun x -> fun y -> y)) (fun f -> fun x -> f (p (fun x -> fun y -> y) f x))) (fun s -> s (fun f -> fun x -> x) (fun f -> fun x -> x)) k) g) x)) (fun f -> fun x -> f (f x))
 
+// * This one still doesn't work with :RecursiveTypes
 :e
 :re
 (fun h -> (fun x -> h (x x)) (fun x -> h (x x))) (fun f -> fun n -> n (fun v -> fun x -> fun y -> y) k (fun f -> fun x -> f x)(fun g -> fun x -> n (f (n (fun p -> fun s -> s (p (fun x -> fun y -> y)) (fun f -> fun x -> f (p (fun x -> fun y -> y) f x))) (fun s -> s (fun f -> fun x -> x) (fun f -> fun x -> x)) k) g) x)) (fun f -> fun x -> f (f x))
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a <: (('b & 'c & 'd) -> ('e | 'd) | 'f) -> 'c -> 'd & (forall 'g 'h 'i 'j 'k. ((forall 'l. ? -> 'l -> 'l) -> 'k & (forall 'm. ? -> 'm -> 'm) -> 'h -> 'i -> 'g) -> ('k -> (forall 'n. ('g -> 'n & 'h) -> 'i -> 'n) -> 'j) -> 'j) -> (forall 'o. ((forall 'p. ? -> 'p -> 'p) -> (forall 'q. ? -> 'q -> 'q) -> 'o) -> 'o) -> (forall 'r. 'r -> ? -> 'r) -> 'a & (forall 's. ? -> ? -> 's -> 's) -> (forall 'r. 'r -> ? -> 'r) -> (forall 't 'u. ('t -> 'u) -> 't -> 'u) -> (('b -> 'e & 'f & 'v) -> ('c & 'd) -> 'd) -> 'v -> 'f
-//│ ║  l.470: 	(fun h -> (fun x -> h (x x)) (fun x -> h (x x))) (fun f -> fun n -> n (fun v -> fun x -> fun y -> y) k (fun f -> fun x -> f x)(fun g -> fun x -> n (f (n (fun p -> fun s -> s (p (fun x -> fun y -> y)) (fun f -> fun x -> f (p (fun x -> fun y -> y) f x))) (fun s -> s (fun f -> fun x -> x) (fun f -> fun x -> x)) k) g) x)) (fun f -> fun x -> f (f x))
+//│     'a <: (('b & 'c & 'd) -> ('e | 'd) | 'f) -> 'c -> 'd & (forall 'g 'h 'i 'j 'k. ((forall 'l. ? -> 'l -> 'l) -> 'k & (forall 'm. ? -> 'm -> 'm) -> 'h -> 'i -> 'j) -> ('k -> (forall 'n. ('j -> 'n & 'h) -> 'i -> 'n) -> 'g) -> 'g) -> (forall 'o. ((forall 'p. ? -> 'p -> 'p) -> (forall 'q. ? -> 'q -> 'q) -> 'o) -> 'o) -> (forall 'r. 'r -> ? -> 'r) -> 'a & (forall 's. ? -> ? -> 's -> 's) -> (forall 'r. 'r -> ? -> 'r) -> (forall 't 'u. ('t -> 'u) -> 't -> 'u) -> (('b -> 'e & 'f & 'v) -> ('c & 'd) -> 'd) -> 'v -> 'f
+//│ ║  l.500: 	(fun h -> (fun x -> h (x x)) (fun x -> h (x x))) (fun f -> fun n -> n (fun v -> fun x -> fun y -> y) k (fun f -> fun x -> f x)(fun g -> fun x -> n (f (n (fun p -> fun s -> s (p (fun x -> fun y -> y)) (fun f -> fun x -> f (p (fun x -> fun y -> y) f x))) (fun s -> s (fun f -> fun x -> x) (fun f -> fun x -> x)) k) g) x)) (fun f -> fun x -> f (f x))
 //│ ╙──       	                                                                                                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.470: 	(fun h -> (fun x -> h (x x)) (fun x -> h (x x))) (fun f -> fun n -> n (fun v -> fun x -> fun y -> y) k (fun f -> fun x -> f x)(fun g -> fun x -> n (f (n (fun p -> fun s -> s (p (fun x -> fun y -> y)) (fun f -> fun x -> f (p (fun x -> fun y -> y) f x))) (fun s -> s (fun f -> fun x -> x) (fun f -> fun x -> x)) k) g) x)) (fun f -> fun x -> f (f x))
+//│ ║  l.500: 	(fun h -> (fun x -> h (x x)) (fun x -> h (x x))) (fun f -> fun n -> n (fun v -> fun x -> fun y -> y) k (fun f -> fun x -> f x)(fun g -> fun x -> n (f (n (fun p -> fun s -> s (p (fun x -> fun y -> y)) (fun f -> fun x -> f (p (fun x -> fun y -> y) f x))) (fun s -> s (fun f -> fun x -> x) (fun f -> fun x -> x)) k) g) x)) (fun f -> fun x -> f (f x))
 //│ ║         	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.470: 	(fun h -> (fun x -> h (x x)) (fun x -> h (x x))) (fun f -> fun n -> n (fun v -> fun x -> fun y -> y) k (fun f -> fun x -> f x)(fun g -> fun x -> n (f (n (fun p -> fun s -> s (p (fun x -> fun y -> y)) (fun f -> fun x -> f (p (fun x -> fun y -> y) f x))) (fun s -> s (fun f -> fun x -> x) (fun f -> fun x -> x)) k) g) x)) (fun f -> fun x -> f (f x))
+//│ ║  l.500: 	(fun h -> (fun x -> h (x x)) (fun x -> h (x x))) (fun f -> fun n -> n (fun v -> fun x -> fun y -> y) k (fun f -> fun x -> f x)(fun g -> fun x -> n (f (n (fun p -> fun s -> s (p (fun x -> fun y -> y)) (fun f -> fun x -> f (p (fun x -> fun y -> y) f x))) (fun s -> s (fun f -> fun x -> x) (fun f -> fun x -> x)) k) g) x)) (fun f -> fun x -> f (f x))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: error
