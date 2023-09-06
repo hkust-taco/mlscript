@@ -728,12 +728,13 @@ abstract class TyperHelpers { Typer: Typer =>
           cs.flatMap(vbs => PolMap.pos -> vbs._1 :: PolMap.posAtNeg -> vbs._2 :: Nil) ::: pol -> bod :: Nil
     }}
     
+    /** `ignoreTopLevelOccs` is used to discard immediate occurrences of a variable which
+      * would constitute spurious recursive occurrences when traversing the variable's bounds. */
     def getVarsPol(pol: PolMap, ignoreTopLevelOccs: Bool = false)(implicit ctx: Ctx): SortedMap[TypeVariable, Opt[Bool]] = {
       val res = MutMap.empty[TV, Pol]
       val traversed = MutSet.empty[TV -> Bool]
       def go(pol: PolMap, ignoreTLO: Bool)(ty: ST): Unit = {
-        // trace(s"getVarsPol[${printPol(pol.base)}] $ty ${pol(1)}") {
-        // trace(s"getVarsPol[${printPol(pol.base)}] $ty ${pol} $ignoreTLO") {
+        trace(s"getVarsPol[${printPol(pol.base)}] $ty ${pol} $ignoreTLO") {
         ty match {
           case tv: TypeVariable =>
             val tvpol = pol(tv.level)
@@ -758,56 +759,36 @@ abstract class TyperHelpers { Typer: Typer =>
                   true
                 }
             }
-            // println(s"$tv ${printPol(tvpol)} $needsTraversing")
+            println(s"$tv ${printPol(tvpol)} $needsTraversing")
             if (needsTraversing)
               tv.childrenPol(pol) // * Note: `childrenPol` deals with `assignedTo`
                 .foreach(cp => go(cp._1, ignoreTLO)(cp._2))
           case ProxyType(und) => go(pol, ignoreTLO)(und)
-          // TODO AssignedVariable, Without, TypeBounds, ConstrainedType
-          // case tv @ AssignedVariable(ty) =>
-          //   go(pol, ignoreTLO)(ty)
-          // case tv: TypeVariable =>
-          //   // (if (pol(tv.level) =/= S(false)) tv.lowerBounds.map(PolMap.pos -> _) else Nil) :::
-          //   // (if (pol(tv.level) =/= S(true)) tv.upperBounds.map(PolMap.neg -> _) else Nil)
-          //   (if (pol(tv) =/= S(false)) tv.lowerBounds.map(pol.at(tv.level, true) -> _) else Nil) :::
-          //   (if (pol(tv) =/= S(true)) tv.upperBounds.map(pol.at(tv.level, false) -> _) else Nil)
-          // case FunctionType(l, r) => pol.contravar -> l :: pol.covar -> r :: Nil
           case Overload(as) => as.foreach(go(pol, ignoreTLO))
           case NegType(n) => go(pol.contravar, ignoreTLO)(n)
-          // case ExtrType(_) => Nil
-          // case ProxyType(und) => pol -> und :: Nil
-          // case _: ObjectTag => Nil
           case Without(b, ns) => go(pol, ignoreTLO)(b)
           case TypeBounds(lb, ub) =>
-            // PolMap.neg -> lb :: PolMap.pos -> ub :: Nil
             go(PolMap.neg, ignoreTLO)(lb)
             go(PolMap.pos, ignoreTLO)(ub)
-            // val res = collection.mutable.Buffer.empty[PolMap -> ST]
-            // // pol.traverseBounds(lb, ub)(_ -> _ |> (res +=  _))
-            // pol.traverseBounds(lb, ub)(res +=  _ -> _)
-            // res.toList
-          // case PolymorphicType(_, und) => pol -> und :: Nil
+            // * or simply:
+            // pol.traverseRange(lb, ub)(go(_, ignoreTLO)(_))
           case ConstrainedType(cs, bod) =>
-            // cs.foreach {
-            //   case (lo, hi) =>
-            //     go(S(true))(lo)
-            //     go(S(false))(hi)
-            // }
             cs.foreach { vbs => go(PolMap.pos, false)(vbs._1); go(PolMap.posAtNeg, false)(vbs._2) }
             go(pol, ignoreTLO)(bod)
-          
-          
-          // case tr: TypeRef => tr.mapTargs(pol)(_ -> _) // ?
-          
           case ComposedType(p, l, r) =>
             go(pol, ignoreTLO)(l)
             go(pol, ignoreTLO)(r)
           case pt: PolymorphicType =>
             go(pol.enter(pt.polymLevel), ignoreTLO)(pt.body)
           case ty =>
-            ty.childrenPol(pol).foreach(cp => go(cp._1, false)(cp._2)) // TODO: ignoreTLO?
+            ty.childrenPol(pol).foreach(cp => go(cp._1,
+              // * We should have handled above all top-level cases,
+              // * so the children here are not supposed to be top level.
+              // * Note: We won't get unsoundness if we forgot cases,
+              // * just spurious occurs-check failures!
+              ignoreTLO = false)(cp._2))
         }
-        // }()
+        }()
       }
       go(pol, ignoreTopLevelOccs)(this)
       res.toSortedMap

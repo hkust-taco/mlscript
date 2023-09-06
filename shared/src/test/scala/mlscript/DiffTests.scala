@@ -705,7 +705,10 @@ class DiffTests
               val tvs = typer.createdTypeVars.toList
               
               if (mode.dbg)
-                output(s"${tvs.map(tv => tv -> tv.isRecursive_$(omitTopLevel = true)(ctx))}")
+                output(s"REC? ${
+                  tvs.map(tv => tv -> tv.isRecursive_$(omitTopLevel = true)(ctx))
+                    .mkString(" ")
+                }")
               
               val recs = tvs.filter(_.isRecursive_$(omitTopLevel = true)(ctx))
               
