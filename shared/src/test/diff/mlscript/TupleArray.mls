@@ -23,7 +23,7 @@ r = {c = 1}
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.19: 	r = {c = 1}
 //│ ║        	^^^^^^^^^^^
-//│ ╟── record literal of type `{c: 1}` is not a record (expected a record with fields: b, c)
+//│ ╟── record literal of type `{c: 1}` does not have field 'b'
 //│ ║  l.19: 	r = {c = 1}
 //│ ║        	    ^^^^^^^
 //│ ╟── Note: constraint arises from record type:
@@ -41,7 +41,7 @@ r = {b = "a", c = 1}
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.37: 	r = {b = "a", c = 1}
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── record literal of type `{c: 1}` is not a record (expected a record with fields: b, c)
+//│ ╟── record literal of type `{c: 1}` does not match type `{b: string, c: int}`
 //│ ║  l.37: 	r = {b = "a", c = 1}
 //│ ║        	    ^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from record type:

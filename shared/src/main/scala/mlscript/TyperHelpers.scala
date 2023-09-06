@@ -667,6 +667,13 @@ abstract class TyperHelpers { Typer: Typer =>
       case ProvType(und) => und.unwrapProvs
       case _ => this
     }
+    /** Used for error reporting. */
+    def typeBase: SimpleType = unwrapProxies match {
+      case Without(und, ns) => und.typeBase
+      case PolymorphicType(pl, bod) => bod.typeBase
+      case TypeBounds(lb, ub) => ub.typeBase
+      case _ => this
+    }
     
     def components(union: Bool): Ls[ST] = this match {
       case ExtrType(`union`) => Nil

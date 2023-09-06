@@ -878,7 +878,13 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       }
       
       
-      val failure = failureOpt.getOrElse((lhs.unwrapProvs, rhs.unwrapProvs) match {
+      val lhsBase = lhs.typeBase
+      def lhsIsPlain = lhsBase matches {
+        case _: FunctionType | _: RecordType | _: TypeTag | _: TupleType
+           | _: TypeRef | _: ExtrType => true
+      }
+      
+      val failure = failureOpt.getOrElse((lhsBase, rhs.unwrapProvs) match {
         case lhs_rhs @ ((_: Extruded, _) | (_, _: Extruded)) =>
           val (mainExtr, extr1, extr2, reason) = lhs_rhs match {
             case (extr: Extruded, extr2: Extruded)
@@ -938,9 +944,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         case (lunw, RecordType((n, _) :: Nil))
           if !lunw.isInstanceOf[RecordType] => doesntHaveField(n.name)
         case (lunw, RecordType(fs @ (_ :: _)))
-          if !lunw.isInstanceOf[RecordType] =>
+          if lhsIsPlain && !lunw.isInstanceOf[RecordType] =>
             msg"is not a record (expected a record with field${
               if (fs.sizeCompare(1) > 0) "s" else ""}: ${fs.map(_._1.name).mkString(", ")})"
+        case (lunw, RecordType(fs @ (_ :: _))) =>
+          msg"does not have all required fields ${fs.map("'" + _._1.name + "'").mkString(", ")}"
         case _ => doesntMatch(rhs)
       })
       
