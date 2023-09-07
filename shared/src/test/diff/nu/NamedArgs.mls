@@ -24,14 +24,13 @@ test(y: 0)
 //│ Runtime error:
 //│   Error: unexpected runtime error
 
-
 fun test(x: 'a, y: 'b) = [x, y]
 //│ fun test: forall 'a 'b. (x: 'a, y: 'b,) -> ('a, 'b,)
 
 :e
 test(y: 0)
 //│ ╔══[ERROR] number of parameters dosen't match with the function signature!
-//│ ║  l.32: 	test(y: 0)
+//│ ║  l.31: 	test(y: 0)
 //│ ╙──      	    ^^^^^^
 //│ error
 //│ res
@@ -41,10 +40,10 @@ test(y: 0)
 :e
 test(1, x: 0)
 //│ ╔══[ERROR] parameter x is duplicate!
-//│ ║  l.42: 	test(1, x: 0)
+//│ ║  l.41: 	test(1, x: 0)
 //│ ╙──      	    ^^^^^^^^^
 //│ ╔══[ERROR] name y is missed in function call
-//│ ║  l.42: 	test(1, x: 0)
+//│ ║  l.41: 	test(1, x: 0)
 //│ ╙──      	    ^^^^^^^^^
 //│ (0, nothing,)
 //│ res
@@ -110,10 +109,10 @@ fun fff(x: Int, y: Int, z: Int) = (x - y) * z
 :e
 fff(y: 2, z: y_1 + 1, x: z_1 - 2)
 //│ ╔══[ERROR] identifier not found: y_1
-//│ ║  l.111: 	fff(y: 2, z: y_1 + 1, x: z_1 - 2)
+//│ ║  l.110: 	fff(y: 2, z: y_1 + 1, x: z_1 - 2)
 //│ ╙──       	             ^^^
 //│ ╔══[ERROR] identifier not found: z_1
-//│ ║  l.111: 	fff(y: 2, z: y_1 + 1, x: z_1 - 2)
+//│ ║  l.110: 	fff(y: 2, z: y_1 + 1, x: z_1 - 2)
 //│ ╙──       	                         ^^^
 //│ Int
 //│ Code generation encountered an error:
@@ -181,16 +180,16 @@ fun print(x) = (y, z) => log([x, y, z])
 let p = print(0)
 p(z: 1, y: 2)
 //│ ╔══[ERROR] cannot use named args in this case.
-//│ ║  l.182: 	p(z: 1, y: 2)
+//│ ║  l.181: 	p(z: 1, y: 2)
 //│ ╙──       	 ^^^^^^^^^^^^
 //│ ╔══[ERROR] cannot use named args in this case.
-//│ ║  l.182: 	p(z: 1, y: 2)
+//│ ║  l.181: 	p(z: 1, y: 2)
 //│ ╙──       	 ^^^^^^^^^^^^
 //│ ╔══[ERROR] name error is missed in function call
-//│ ║  l.182: 	p(z: 1, y: 2)
+//│ ║  l.181: 	p(z: 1, y: 2)
 //│ ╙──       	 ^^^^^^^^^^^^
 //│ ╔══[ERROR] name error is missed in function call
-//│ ║  l.182: 	p(z: 1, y: 2)
+//│ ║  l.181: 	p(z: 1, y: 2)
 //│ ╙──       	 ^^^^^^^^^^^^
 //│ fun print: anything -> (anything, anything,) -> undefined
 //│ let p: (anything, anything,) -> undefined

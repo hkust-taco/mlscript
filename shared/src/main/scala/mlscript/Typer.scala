@@ -999,14 +999,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
             def getLowerboundFuns(tv: TypeVariable): List[FunctionType] = {
               val res: List[FunctionType] = tv.lowerBounds.map(x => 
                 x.unwrapProvs match {
-                  case PolymorphicType(_, ProvType(fun_ty @ FunctionType(_, _))) =>
-                    List(fun_ty)
-                  case PolymorphicType(_, fun_ty @ FunctionType(_, _)) =>
+                  case PolymorphicType(_, AliasOf(fun_ty @ FunctionType(_, _))) =>
                     List(fun_ty)
                   case tvv: TypeVariable =>
                     getLowerboundFuns(tvv) 
                   case _ =>
-                    err(s"unexpected type for lowerbound members! ${x.unwrapProvs.getClass()}", f.toLoc)
+                    err("match error", f.toLoc)
                     Nil
                 }).flatten
               res
@@ -1020,7 +1018,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
             } else {
               funs.head
             }
-          case PolymorphicType(_, ProvType(fun_ty @ FunctionType(_, _))) =>
+          case PolymorphicType(_, AliasOf(fun_ty @ FunctionType(_, _))) =>
             fun_ty
           case FunctionType(_, _) =>
             f_ty
