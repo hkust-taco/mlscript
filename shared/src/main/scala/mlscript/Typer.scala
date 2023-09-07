@@ -1472,11 +1472,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
             case N =>
               ((argsList(idx).name, x._2), false)
           }}
-          if (as.groupBy(x => x._1._1).sizeCompare(argsList) < 0) {
-            as.groupBy(x => x._1._1).foreach(
+          val asGroupedByVarName = as.groupBy(x => x._1._1)
+          if (asGroupedByVarName.sizeCompare(argsList) < 0) {
+            asGroupedByVarName.foreach(
               x =>
-                if (x._2.sizeCompare(1) > 0) {
-                  err(s"parameter ${x._1} is duplicate!", a.toLoc)
+                x._2 match {
+                  case x1 :: y1 :: xs => err(s"parameter ${x._1} is duplicate!", a.toLoc) 
+                  case _ =>     
                 }
             )
           }
