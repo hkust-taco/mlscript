@@ -747,7 +747,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       mxn.params.size.toString} parameter(s); got ${parArgs.size.toString}", Loc(v :: parArgs.unzip._2))
                   
                   val paramMems = mxn.params.lazyZip(parArgs).map {
-                    case (nme -> p, _ -> Fld(_, _, _, a)) => // TODO check name, mut, spec
+                    case (nme -> p, _ -> Fld(_, a)) => // TODO check name, mut, spec
                       implicit val genLambdas: GenLambdas = true
                       val a_ty = typeTerm(a)
                       p.lb.foreach(constrain(_, a_ty))
@@ -798,7 +798,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                   err(msg"class $parNme expects ${
                     cls.params.size.toString} parameter(s); got ${parArgs.size.toString}", Loc(v :: parArgs.unzip._2))
                 
-                val paramMems = cls.params.lazyZip(parArgs).map { case (nme -> p, _ -> Fld(_, _, _, a)) => // TODO check name, mut, spec
+                val paramMems = cls.params.lazyZip(parArgs).map { case (nme -> p, _ -> Fld(_, a)) => // TODO check name, mut, spec
                   implicit val genLambdas: GenLambdas = true
                   val a_ty = typeTerm(a)
                   p.lb.foreach(constrain(_, a_ty))
@@ -882,7 +882,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
       decl match {
         case td: NuTypeDef =>
           td.params.getOrElse(Tup(Nil)).fields.map {
-            case (S(nme), Fld(mut, spec, _, value)) =>
+            case (S(nme), Fld(FldFlags(mut, spec, _), value)) =>
               assert(!mut && !spec, "TODO") // TODO
               value.toType match {
                 case R(tpe) =>
@@ -891,7 +891,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                   nme -> FieldType(N, ty)(provTODO)
                 case _ => ???
               }
-            case (N, Fld(mut, spec, _, nme: Var)) =>
+            case (N, Fld(FldFlags(mut, spec, _), nme: Var)) =>
               // assert(!mut && !spec, "TODO") // TODO
               // nme -> FieldType(N, freshVar(ttp(nme), N, S(nme.name)))(provTODO)
               nme -> FieldType(N, err(msg"${td.kind.str.capitalize} parameters currently need type annotations",

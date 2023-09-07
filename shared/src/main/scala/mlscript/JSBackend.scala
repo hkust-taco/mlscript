@@ -49,12 +49,12 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     // should returns ("{ x, y }", ["x", "y"])
     case Rcd(fields) =>
       JSObjectPattern(fields map {
-        case (Var(nme), Fld(_, _, _, Var(als))) =>
+        case (Var(nme), Fld(_, Var(als))) =>
           val runtimeName = scope.declareParameter(als)
           val fieldName = JSField.emitValidFieldName(nme)
           if (runtimeName === fieldName) fieldName -> N
           else fieldName -> S(JSNamePattern(runtimeName))
-        case (Var(nme), Fld(_, _, _, subTrm)) => 
+        case (Var(nme), Fld(_, subTrm)) => 
           JSField.emitValidFieldName(nme) -> S(translatePattern(subTrm))
       })
     // This branch supports `def f (x: int) = x`.
@@ -62,7 +62,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     // Replace literals with wildcards.
     case _: Lit      => JSWildcardPattern()
     case Bra(_, trm) => translatePattern(trm)
-    case Tup(fields) => JSArrayPattern(fields map { case (_, Fld(_, _, _, t)) => translatePattern(t) })
+    case Tup(fields) => JSArrayPattern(fields map { case (_, Fld(_, t)) => translatePattern(t) })
     // Others are not supported yet.
     case TyApp(base, _) =>
       translatePattern(base)
@@ -74,8 +74,8 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
 
   private def translateParams(t: Term)(implicit scope: Scope): Ls[JSPattern] = t match {
     case Tup(params) => params map {
-      case N -> Fld(_, _, _, p) => translatePattern(p)
-      case S(nme) -> Fld(_, _, _, p) => translatePattern(nme)
+      case N -> Fld(_, p) => translatePattern(p)
+      case S(nme) -> Fld(_, p) => translatePattern(nme)
     }
     case _           => throw CodeGenError(s"term $t is not a valid parameter list")
   }
@@ -143,11 +143,11 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     */
   protected def translateApp(term: App)(implicit scope: Scope): JSExpr = term match {
     // Binary expressions
-    case App(App(Var(op), Tup((N -> Fld(_, _, _, lhs)) :: Nil)), Tup((N -> Fld(_, _, _, rhs)) :: Nil))
+    case App(App(Var(op), Tup((N -> Fld(_, lhs)) :: Nil)), Tup((N -> Fld(_, rhs)) :: Nil))
         if JSBinary.operators contains op =>
       JSBinary(op, translateTerm(lhs), translateTerm(rhs))
     // If-expressions
-    case App(App(App(Var("if"), Tup((_, Fld(_, _, _, tst)) :: Nil)), Tup((_, Fld(_, _, _, con)) :: Nil)), Tup((_, Fld(_, _, _, alt)) :: Nil)) =>
+    case App(App(App(Var("if"), Tup((_, Fld(_, tst)) :: Nil)), Tup((_, Fld(_, con)) :: Nil)), Tup((_, Fld(_, alt)) :: Nil)) =>
       JSTenary(translateTerm(tst), translateTerm(con), translateTerm(alt))
     case App(App(App(Var("if"), tst), con), alt) => die
     // Function invocation
@@ -160,7 +160,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         }
         case _ => translateTerm(trm)
       }
-      callee(args map { case (_, Fld(_, _, _, arg)) => translateTerm(arg) }: _*)
+      callee(args map { case (_, Fld(_, arg)) => translateTerm(arg) }: _*)
     case _ => throw CodeGenError(s"ill-formed application ${inspect(term)}")
   }
 
@@ -177,7 +177,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       JSArrowFn(patterns, lamScope.tempVars `with` translateTerm(body)(lamScope))
     case t: App => translateApp(t)
     case Rcd(fields) =>
-      JSRecord(fields map { case (key, Fld(_, _, _, value)) =>
+      JSRecord(fields map { case (key, Fld(_, value)) =>
         key.name -> translateTerm(value)
       })
     case Sel(receiver, fieldName) =>
@@ -265,13 +265,13 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
           case S(fnName) => fnName
           case N         => polyfill.use("withConstruct", topLevelScope.declareRuntimeSymbol("withConstruct"))
         }),
-        translateTerm(trm) :: JSRecord(fields map { case (Var(name), Fld(_, _, _, value)) =>
+        translateTerm(trm) :: JSRecord(fields map { case (Var(name), Fld(_, value)) =>
           name -> translateTerm(value)
         }) :: Nil
       )
     case Bra(_, trm) => translateTerm(trm)
     case Tup(terms) =>
-      JSArray(terms map { case (_, Fld(_, _, _, term)) => translateTerm(term) })
+      JSArray(terms map { case (_, Fld(_, term)) => translateTerm(term) })
     case Subs(arr, idx) =>
       JSMember(translateTerm(arr), translateTerm(idx))
     case Assign(lhs, value) =>
@@ -290,7 +290,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         case n: JSNew => n
         case t => JSNew(t)
       }
-      callee(args.map { case (_, Fld(_, _, _, arg)) => translateTerm(arg) }: _*)
+      callee(args.map { case (_, Fld(_, arg)) => translateTerm(arg) }: _*)
     case New(_, TypingUnit(_)) =>
       throw CodeGenError("custom class body is not supported yet")
     case Forall(_, bod) => translateTerm(bod)
@@ -765,7 +765,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     else
       (sym.superParameters.map {
         case App(lhs, Tup(rhs)) => rhs map {
-          case (_, Fld(mut, spec, _, trm)) => translateTerm(trm)(constructorScope)
+          case (_, Fld(_, trm)) => translateTerm(trm)(constructorScope)
         }
         case _ => Nil
       }.flatMap(_.reverse).reverse, N)
@@ -811,11 +811,11 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
 
     val staticMethods = sym.unapplyMtd match {
       case S(unapplyMtd) => unapplyMtd.rhs match {
-        case Left(Lam(Tup(_ -> Fld(_, _, _, Asc(Var(nme), _)) :: Nil), Tup(fields))) =>
+        case Left(Lam(Tup(_ -> Fld(_, Asc(Var(nme), _)) :: Nil), Tup(fields))) =>
           val unapplyScope = nuTypeScope.derive(s"unapply ${sym.name}")
           val ins = unapplyScope.declareParameter(nme)
           JSClassMethod("unapply", JSNamePattern(ins) :: Nil, L(JSArray(fields.map {
-            case _ -> Fld(_, _, _, trm) => trm match {
+            case _ -> Fld(_, trm) => trm match {
               case Sel(Var(ins), Var(f)) => JSIdent(s"$ins.#$f")
               case _ => translateTerm(trm)
             } 
@@ -954,18 +954,18 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
 
     def prepare(nme: Str, fs: Ls[Opt[Var] -> Fld], pars: Ls[Term], unit: TypingUnit) = {
       val params = fs.map {
-        case (S(nme), Fld(mut, _, _, trm)) =>
+        case (S(nme), Fld(FldFlags(mut, spec, _), trm)) =>
           val ty = tt(trm)
           nme -> Field(if (mut) S(ty) else N, ty)
-        case (N, Fld(mut, _, _, nme: Var)) => nme -> Field(if (mut) S(Bot) else N, Top)
+        case (N, Fld(FldFlags(mut, spec, _), nme: Var)) => nme -> Field(if (mut) S(Bot) else N, Top)
         case _ => die
       }
       val publicCtors = fs.filter{
-        case (_, Fld(_, _, genGetter, _)) => genGetter
+        case (_, Fld(flags, _)) => flags.genGetter
         case _ => false
       }.map {
         case (S(name), _) => name.name
-        case (N, Fld(_, _, _, nme: Var)) => nme.name
+        case (N, Fld(_, nme: Var)) => nme.name
         case _ => die
       }
 
@@ -1014,7 +1014,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       case td @ NuTypeDef(Cls, TypeName(nme), tps, tup, ctor, sig, pars, sup, ths, unit) => {
         val (params, preStmts) = ctor match {
           case S(Constructor(Tup(ls), Blk(stmts))) => (S(ls.map {
-            case (S(Var(nme)), Fld(_, _, genGetter, _)) => (nme, genGetter)
+            case (S(Var(nme)), Fld(flags, _)) => (nme, flags.genGetter)
             case _ => throw CodeGenError(s"Unexpected constructor parameters in $nme.")
           }), stmts)
           case _ => (N, Nil)
