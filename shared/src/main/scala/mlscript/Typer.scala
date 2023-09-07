@@ -1010,13 +1010,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
               res
             }
             val funs = getLowerboundFuns(tv)
-            if (funs.sizeCompare(1) < 0) {
-              err("cannot extract any function", f.toLoc)
-            } else 
-            if (funs.sizeCompare(1) > 0) {
-              err(s"more than one fun type found! => ${funs}", f.toLoc)
-            } else {
-              funs.head
+            funs match {
+              case x :: Nil => 
+                funs.head
+              case Nil =>
+                err("cannot extract any function", f.toLoc)
+              case _ =>
+               err(s"more than one fun type found! => ${funs}", f.toLoc)
             }
           case PolymorphicType(_, AliasOf(fun_ty @ FunctionType(_, _))) =>
             fun_ty
@@ -1455,34 +1455,38 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
           App(f, y)
       }
     }
-    if (a.fields.exists(x => x._1.isDefined) &&
-        a.fields.exists(x => x._1.isEmpty) && 
-        a.fields.indexWhere(x => x._1.isDefined) < a.fields.lastIndexWhere(x => x._1.isEmpty)) {
+    val hasDefined = a.fields.exists(x => x._1.isDefined)
+    val hasEmpty = a.fields.exists(x => x._1.isEmpty)
+    val areArgsMisplaced = a.fields.indexWhere(x => x._1.isDefined) < a.fields.lastIndexWhere(x => x._1.isEmpty)
+    if (hasDefined &&
+        hasEmpty && 
+        areArgsMisplaced) {
       err("the unnamed args should appear first when using named args!", a.toLoc) 
-    } else
-    if (a.fields.sizeCompare(argsList) > 0 || a.fields.sizeCompare(argsList) < 0) {
-      err("number of parameters dosen't match with the function signature!", a.toLoc) 
-    } else {
-      val as = a.fields.zipWithIndex.map{ case(x, idx) =>
-        x._1 match {
-          case Some(value) => 
-            ((value.name, x._2), true)
-          case N =>
-            ((argsList(idx).name, x._2), false)
-        }}
-      if (as.groupBy(x => x._1._1).sizeCompare(argsList) < 0) {
-        as.groupBy(x => x._1._1).foreach(
-          x =>
-            if (x._2.sizeCompare(1) > 0) {
-              err(s"parameter ${x._1} is duplicate!", a.toLoc)
-            }
-        )
+    } else 
+      a.fields.sizeCompare(argsList) match {
+        case 0 =>
+          val as = a.fields.zipWithIndex.map{ case(x, idx) =>
+          x._1 match {
+            case Some(value) => 
+              ((value.name, x._2), true)
+            case N =>
+              ((argsList(idx).name, x._2), false)
+          }}
+          if (as.groupBy(x => x._1._1).sizeCompare(argsList) < 0) {
+            as.groupBy(x => x._1._1).foreach(
+              x =>
+                if (x._2.sizeCompare(1) > 0) {
+                  err(s"parameter ${x._1} is duplicate!", a.toLoc)
+                }
+            )
+          }
+          val desugared = rec(as, Map())
+          println("Desugared is here => " + desugared)
+          term.desugaredTerm = S(desugared)
+          typeTerm(desugared)(ctx = ctx, raise = raise, vars = vars, genLambdas = false)
+        case _ =>
+          err("number of parameters dosen't match with the function signature!", a.toLoc) 
       }
-      val desugared = rec(as, Map())
-      println("Desugared is here => " + desugared)
-      term.desugaredTerm = S(desugared)
-      typeTerm(desugared)(ctx = ctx, raise = raise, vars = vars, genLambdas = false)
-    }
   }
   
   /** Convert an inferred SimpleType into the immutable Type representation. */
