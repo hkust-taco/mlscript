@@ -245,7 +245,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
   final def toParams(t: Term): Tup = t match {
     case t: Tup => t
     case Bra(false, t: Tup) => t
-    case _ => Tup((N, Fld(false, false, t)) :: Nil)
+    case _ => Tup((N, Fld(FldFlags(false, false), t)) :: Nil)
   }
   final def toParamsTy(t: Type): Tuple = t match {
     case t: Tuple => t
@@ -439,7 +439,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
                 case (br @ BRACKETS(Angle | Square, toks), loc) :: _ =>
                   consume
                   val ts = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented()).map {
-                    case (N, Fld(false, false, v @ Var(nme))) =>
+                    case (N, Fld(FldFlags(false, false), v @ Var(nme))) =>
                       TypeName(nme).withLocOf(v)
                     case _ => ???
                   }
@@ -450,11 +450,11 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
                 case (br @ BRACKETS(Round, Spaces(cons, (KEYWORD("override"), ovLoc) :: rest)), loc) :: rest2 =>
                   resetCur(BRACKETS(Round, rest)(br.innerLoc) -> loc :: rest2)
                   funParams match {
-                    case ps @ Tup(N -> Fld(false, false, pat) :: Nil) :: Nil =>
+                    case ps @ Tup(N -> Fld(FldFlags(false, false), pat) :: Nil) :: Nil =>
                       val fv = freshVar
-                      (Tup(N -> Fld(false, false, fv) :: Nil) :: Nil, S(
+                      (Tup(N -> Fld(FldFlags(false, false), fv) :: Nil) :: Nil, S(
                         (body: Term) => If(IfOpApp(fv, Var("is"), IfThen(pat, body)), S(
-                          App(Sel(Super().withLoc(S(ovLoc)), v), Tup(N -> Fld(false, false, fv) :: Nil))
+                          App(Sel(Super().withLoc(S(ovLoc)), v), Tup(N -> Fld(FldFlags(false, false), fv) :: Nil))
                         ))
                       ))
                     case r =>
@@ -584,13 +584,13 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
           case (Curly, _) =>
             Bra(true, Rcd(res.map {
             case S(n) -> fld => n -> fld
-            case N -> (fld @ Fld(_, _, v: Var)) => v -> fld
+            case N -> (fld @ Fld(_, v: Var)) => v -> fld
             case N -> fld =>
               err((
                 msg"Record field should have a name" -> fld.value.toLoc :: Nil))
               Var("<error>") -> fld
             }))
-          case (Round, (N, Fld(false, false, elt)) :: Nil) =>
+          case (Round, (N, Fld(FldFlags(false, false), elt)) :: Nil) =>
             Bra(false, elt)
           case _ =>
             // TODO actually reject round tuples? (except for function arg lists)
@@ -609,7 +609,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
         val e = expr(0)
         R(Forall(as.flatMap {
           // case S(Var(nme)) -> Fld(false, false, trm) =>
-          case N -> Fld(false, false, v: Var) =>
+          case N -> Fld(FldFlags(false, false), v: Var) =>
             TypeVar(R(v.name), N).withLocOf(v) :: Nil
           case v -> f =>
             err(msg"illegal `forall` quantifier body" -> f.value.toLoc :: Nil)
@@ -638,7 +638,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
         val head = body match {
           case Var(clsNme) =>
             S(TypeName(clsNme).withLocOf(body) -> Tup(Nil))
-          case App(Var(clsNme), Tup(N -> Fld(false, false, UnitLit(true)) :: Nil)) =>
+          case App(Var(clsNme), Tup(N -> Fld(FldFlags(false, false), UnitLit(true)) :: Nil)) =>
             S(TypeName(clsNme).withLocOf(body) -> Tup(Nil))
           case App(Var(clsNme), arg) =>
             S(TypeName(clsNme).withLocOf(body) -> arg)
@@ -852,7 +852,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
         val as = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented())
         // val res = TyApp(acc, as.map(_.mapSecond.to))
         val res = TyApp(acc, as.map {
-          case (N, Fld(false, false, trm)) => trm.toType match {
+          case (N, Fld(FldFlags(false, false), trm)) => trm.toType match {
             case L(d) => raise(d); Top // TODO better
             case R(ty) => ty
           }
@@ -1021,7 +1021,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
     // argsOrIf(Nil).map{case (_, L(x))=> ???; case (n, R(x))=>n->x} // TODO
     argsOrIf(Nil, Nil, allowNewlines, prec).flatMap{case (n, L(x))=> 
         err(msg"Unexpected 'then'/'else' clause" -> x.toLoc :: Nil)
-        n->Fld(false, false, errExpr)::Nil
+        n->Fld(FldFlags(false, false), errExpr)::Nil
       case (n, R(x))=>n->x::Nil} // TODO
   /* 
   final def argsOrIf2()(implicit fe: FoundErr, et: ExpectThen): IfBlock \/ Ls[Opt[Var] -> Fld] = {
@@ -1042,7 +1042,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
       case Nil =>
         seqAcc match {
           case res :: seqAcc => 
-            (N -> R(Fld(false, false, Blk((res :: seqAcc).reverse))) :: acc).reverse
+            (N -> R(Fld(FldFlags(false, false), Blk((res :: seqAcc).reverse))) :: acc).reverse
           case Nil =>
             acc.reverse
         }
@@ -1076,12 +1076,12 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
       case _ => N
     }
     // val e = expr(NoElsePrec) -> argMut.isDefined
-    val e = exprOrIf(prec).map(Fld(argMut.isDefined, argSpec.isDefined, _))
+    val e = exprOrIf(prec).map(Fld(FldFlags(argMut.isDefined, argSpec.isDefined), _))
     
     def mkSeq = if (seqAcc.isEmpty) argName -> e else e match {
       case L(_) => ???
-      case R(Fld(m, s, res)) =>
-        argName -> R(Fld(m, s, Blk((res :: seqAcc).reverse)))
+      case R(Fld(FldFlags(m, s), res)) =>
+        argName -> R(Fld(FldFlags(m, s), Blk((res :: seqAcc).reverse)))
     }
     
     cur match {
@@ -1101,7 +1101,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
         }
         e match {
           case L(_) => ???
-          case R(Fld(false, false, res)) =>
+          case R(Fld(FldFlags(false, false), res)) =>
             argsOrIf(acc, res :: seqAcc, allowNewlines)
           case R(_) => ???
         }
