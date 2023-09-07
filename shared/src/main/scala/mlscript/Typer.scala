@@ -1068,6 +1068,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
                 rcdSel(realPrefix, fieldName)
               }
           }
+        // The code below is only a temporary solution to type `ClassName.unapply`.
+        // The `fieldName.name === "unapply"` branch should be removed when static methods can be typed properly.
         def fallback =
           obj match {
             case Var(name) if name.isCapitalized && ctx.tyDefs.isDefinedAt(name) => // explicit retrieval

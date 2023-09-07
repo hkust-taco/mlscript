@@ -792,7 +792,6 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
           }
           if (visitedSymbols.contains(sym) || ctorParams.contains(nme)) { // This field is used in other methods, or it overrides the ctor parameter
             privateMems += nme
-            visitedSymbols -= sym
             Ls[JSStmt](
               JSExprStmt(JSAssignExpr(JSIdent(s"this.#$nme"), translateTerm(rhs)(constructorScope))),
               JSConstDecl(constructorScope.declareValue(nme, S(false), false).runtimeName, JSIdent(s"this.#$nme"))
@@ -873,7 +872,6 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     // If `this` is accessed, add `const self = this`.
     val bodyStmts = if (visitedSymbols(selfSymbol)) {
       val thisDecl = JSConstDecl(selfSymbol.runtimeName, JSIdent("this"))
-      visitedSymbols -= selfSymbol
       R(thisDecl :: bodyResult :: Nil)
     } else {
       R(bodyResult :: Nil)

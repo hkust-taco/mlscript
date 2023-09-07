@@ -424,10 +424,10 @@ trait NuDeclImpl extends Located { self: NuDecl =>
         sps.getOrElse(Tup(Nil))})${sig.fold("")(": " + _.showDbg2)}${
           if (parents.isEmpty) "" else if (k === Als) " = " else ": "}${parents.mkString(", ")}"
   }
-  def genUnapply: Opt[NuFunDef] = this match {
-    case NuTypeDef(Cls, _, _, S(Tup(fields)), _, _, _, _, _, _) =>
+  lazy val genUnapply: Opt[NuFunDef] = this match {
+    case td: NuTypeDef if td.kind === Cls => td.params.fold[Opt[NuFunDef]](N)(tup => {
       val ret = Tup(
-        fields.map {
+        tup.fields.map {
           case S(p) -> f => N -> Fld(f.mut, f.spec, f.genGetter, Sel(Var("ins"), p))
           case N -> Fld(m, s, g, p: Var) => N -> Fld(m, s, g, Sel(Var("ins"), p))
           case _ => die
@@ -435,6 +435,7 @@ trait NuDeclImpl extends Located { self: NuDecl =>
       )
       S(NuFunDef(N, Var("unapply"), Nil,
         L(Lam(Tup(N -> Fld(false, false, false, Asc(Var("ins"), Inter(TypeVar(R("Ins"), N), TypeName(name)))) :: Nil), ret)))(N, N, N, N, true))
+    })
     case _ => N
   }
 }
