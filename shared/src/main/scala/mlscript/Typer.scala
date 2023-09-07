@@ -8,8 +8,6 @@ import scala.util.chaining._
 import scala.annotation.tailrec
 import mlscript.utils._, shorthands._
 import mlscript.Message._
-import mlscript.codegen.Helpers
-import Diagnostic._
 
 /** A class encapsulating type inference state.
  *  It uses its own internal representation of types and type variables, using mutable data structures.
@@ -1027,8 +1025,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
           case FunctionType(_, _) =>
             f_ty
           case _ =>
-            err("unexpected type for f term", N)
-            throw new Error("match error")
+            err("match error", f.toLoc)
+            f_ty
         }
         val argsList = fun_ty.unwrapProxies match {
           case FunctionType(TupleType(fields), _) =>
@@ -1040,8 +1038,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
                 Var("error")
             })
           case _ => 
-            println(s"unexpected case here => ${fun_ty.getClass()}")
-            throw new Error("match error")
+            err("match error", f.toLoc)
+            Nil
         }
         desugarNamedArgs(term, f, a, argsList)
       case App(f: Term, a: Term) =>
@@ -1434,7 +1432,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
       as match {
         case ((v, fld), isNamed) :: tail =>
           if (isNamed) {
-            println(s"fld.value => ${Helpers.inspect(fld.value)}")
             fld.value match {
               case lit: Lit =>
                 rec(tail, acc + (v -> R(fld.value)))
