@@ -1040,10 +1040,35 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
             Nil
         }
         desugarNamedArgs(term, f, a, argsList)
-      case App(f: Term, a: Term) =>
-        val (fun_ty, args_ty) = typeUnnamedApp(f, a)
+      case App(f, a) =>
+        val f_ty = typeMonomorphicTerm(f)
+        val a_ty = {
+          def typeArg(a: Term): ST =
+            if (!generalizeArguments) typePolymorphicTerm(a)
+            else ctx.poly { implicit ctx => typePolymorphicTerm(a) }
+          a match {
+            case tup @ Tup(as) =>
+              TupleType(as.map { case (n, Fld(mut, spec, a)) => // TODO handle mut?
+                // assert(!mut)
+                val fprov = tp(a.toLoc, "argument")
+                val tym = typeArg(a)
+                (n, tym.toUpper(fprov))
+              })(as match { // TODO dedup w/ general Tup case
+                case Nil | ((N, _) :: Nil) => noProv
+                case _ => tp(tup.toLoc, "argument list")
+              })
+            case _ => // can happen in the old parser
+              typeArg(a)
+          }
+        }
+        
+        val arg_ty = mkProxy(a_ty, tp(a.toCoveringLoc, "argument"))
+          // ^ Note: this no longer really makes a difference, due to tupled arguments by default
+        val funProv = tp(f.toCoveringLoc, "applied expression")
+        val fun_ty = mkProxy(f_ty, funProv)
+          // ^ This is mostly not useful, except in test Tuples.fun with `(1, true, "hey").2`
         val res = freshVar(prov, N)
-        val res_ty = con(fun_ty, FunctionType(args_ty, res)(
+        val res_ty = con(fun_ty, FunctionType(arg_ty, res)(
           prov
           // funProv // TODO: better?
           ), res)
@@ -1363,36 +1388,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
         }.toList
         RecordType.mk(fs)(prov)
       } else TupleType(fields.reverseIterator.mapValues(_.toUpper(noProv)))(prov)
-  }
-
-  def typeUnnamedApp(f: Term, a: Term)(implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType], prov: TypeProvenance):
-    (SimpleType, SimpleType) = {
-    val f_ty = typeMonomorphicTerm(f)
-    val a_ty = {
-      def typeArg(a: Term): ST =
-        if (!generalizeArguments) typePolymorphicTerm(a)
-        else ctx.poly { implicit ctx => typePolymorphicTerm(a) }
-      a match {
-        case tup @ Tup(as) =>
-          TupleType(as.map { case (n, Fld(mut, spec, a)) => // TODO handle mut?
-            // assert(!mut)
-            val fprov = tp(a.toLoc, "argument")
-            val tym = typeArg(a)
-            (n, tym.toUpper(fprov))
-          })(as match { // TODO dedup w/ general Tup case
-            case Nil | ((N, _) :: Nil) => noProv
-            case _ => tp(tup.toLoc, "argument list")
-          })
-        case _ => // can happen in the old parser
-          typeArg(a)
-      }
-    }
-    val arg_ty = mkProxy(a_ty, tp(a.toCoveringLoc, "argument"))
-      // ^ Note: this no longer really makes a difference, due to tupled arguments by default
-    val funProv = tp(f.toCoveringLoc, "applied expression")
-    val fun_ty = mkProxy(f_ty, funProv)
-      // ^ This is mostly not useful, except in test Tuples.fun with `(1, true, "hey").2`
-    (fun_ty, arg_ty)
   }
 
   def getNewVarName(prefix: String, nonValidVars: Set[Var])(implicit raise: Raise): String = {
