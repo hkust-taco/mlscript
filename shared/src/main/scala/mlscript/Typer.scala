@@ -887,10 +887,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
       case tup: Tup if funkyTuples =>
         typeTerms(tup :: Nil, false, Nil)
       case Tup(fs) =>
-        TupleType(fs.mapConserve { case e @ (n, Fld(FldFlags(mut, spec), t)) =>
+        TupleType(fs.mapConserve { case e @ (n, Fld(flags, t)) =>
           n match {
             case S(v) if ctx.inPattern =>
-              (n, Fld(FldFlags(mut, spec),
+              (n, Fld(flags,
                 Asc(v, t.toTypeRaise).withLoc(v.toLoc.fold(t.toLoc)(_ ++ t.toLoc |> some))))
             case _ => e
           }

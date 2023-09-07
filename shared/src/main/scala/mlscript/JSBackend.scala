@@ -776,7 +776,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     else
       (sym.superParameters.map {
         case App(lhs, Tup(rhs)) => rhs map {
-          case (_, Fld(FldFlags(mut, spec), trm)) => translateTerm(trm)(constructorScope)
+          case (_, Fld(_, trm)) => translateTerm(trm)(constructorScope)
         }
         case _ => Nil
       }.flatMap(_.reverse).reverse, N)

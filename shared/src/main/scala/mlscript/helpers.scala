@@ -781,7 +781,7 @@ trait StatementImpl extends Located { self: Statement =>
       val termName = Var(nme.name).withLocOf(nme)
       val ctor = Def(false, termName, L(Lam(tup, App(termName, Tup(N -> Fld(FldFlags(false, false), Rcd(fs.map {
         case (S(nme), fld) => nme -> Fld(FldFlags(false, false), nme)
-        case (N, fld @ Fld(FldFlags(mut, spec), nme: Var)) => nme -> fld
+        case (N, fld @ Fld(_, nme: Var)) => nme -> fld
         case _ => die
       })) :: Nil)))), true)
       diags.toList -> (TypeDef(k, nme, tps.map(_._2), bod, Nil, Nil, pos) :: ctor :: Nil)
