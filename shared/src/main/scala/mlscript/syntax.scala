@@ -90,14 +90,10 @@ final case class Inst(body: Term)                                    extends Ter
 final case class Super()                                             extends Term
 final case class Eqn(lhs: Var, rhs: Term)                            extends Term // equations such as x = y, notably used in constructors; TODO: make lhs a Term
 
-final case class AdtMatchWith(cond: Term, arms: Ls[AdtMatchPat])       extends Term {
-  override def describe: Str = "adt match expression"
-}
-
-final case class AdtMatchPat(pat: Term, rhs: Term) extends AdtMatchPatImpl
+final case class AdtMatchWith(cond: Term, arms: Ls[AdtMatchPat])     extends Term
+final case class AdtMatchPat(pat: Term, rhs: Term)                   extends AdtMatchPatImpl
 
 sealed abstract class IfBody extends IfBodyImpl
-// final case class IfTerm(expr: Term) extends IfBody // rm?
 final case class IfThen(expr: Term, rhs: Term) extends IfBody
 final case class IfElse(expr: Term) extends IfBody
 final case class IfLet(isRec: Bool, name: Var, rhs: Term, body: IfBody) extends IfBody

@@ -2,7 +2,6 @@ package mlscript
 
 import scala.util.chaining._
 import scala.collection.mutable.{Map => MutMap, SortedMap => SortedMutMap, Set => MutSet, Buffer}
-import scala.collection.immutable.SortedSet
 
 import math.Ordered.orderingToOrdered
 
@@ -937,11 +936,6 @@ trait CaseBranchesImpl extends Located { self: CaseBranches =>
     case NoCases => Nil
   }
   
-  lazy val toList: Ls[Case] = this match {
-    case c: Case => c :: c.rest.toList
-    case _ => Nil
-  }
-
   def print(isFirst: Bool): Str = this match {
     case Case(pat, body, rest) =>
       (if (isFirst) { "" } else { "; " }) +
@@ -951,40 +945,17 @@ trait CaseBranchesImpl extends Located { self: CaseBranches =>
       "_ => " + body.print(false)
     case NoCases => ""
   }
+  
 }
 
-abstract class MatchCase
-
-object MatchCase {
-  final case class ClassPattern(name: Var, fields: Buffer[Var -> Var]) extends MatchCase
-  final case class TuplePattern(arity: Int, fields: Buffer[Int -> Var]) extends MatchCase
-  final case class BooleanTest(test: Term) extends MatchCase
-}
-
-//////////////////////////////
-// ADT style pattern matching
-//////////////////////////////
-trait MatchWithImpl { self: AdtMatchWith =>
-
-}
 trait AdtMatchPatImpl extends Located { self: AdtMatchPat =>
-
-  def children: List[Located] = this match {
-    case AdtMatchPat(p, t) => p :: t :: Nil
-  }
-
-  override def toString: String = this match {
-    case AdtMatchPat(pat, trm) => s"($pat) then $trm"
-  }
+  def children: List[Located] = pat :: rhs :: Nil
+  override def toString: String = s"($pat) then $rhs"
 }
 
 trait IfBodyImpl extends Located { self: IfBody =>
-
+  
   def children: List[Located] = this match {
-    // case Case(pat, body, rest) => pat :: body :: rest :: Nil
-    // case Wildcard(body) => body :: Nil
-    // case NoCases => Nil
-    case _ if false => ??? // TODO
     case IfBlock(ts) => ts.map(_.fold(identity, identity))
     case IfThen(l, r) => l :: r :: Nil
     case IfElse(t) => t :: Nil
@@ -993,20 +964,13 @@ trait IfBodyImpl extends Located { self: IfBody =>
     case IfOpsApp(t, ops) => t :: ops.flatMap(x => x._1 :: x._2 :: Nil)
   }
   
-  // lazy val toList: Ls[Case] = this match {
-  //   case c: Case => c :: c.rest.toList
-  //   case _ => Nil
-  // }
-  
   override def toString: String = this match {
-    // case IfThen(lhs, rhs) => s"${lhs.print(true)} then $rhs"
     case IfThen(lhs, rhs) => s"($lhs) then $rhs"
     case IfElse(trm) => s"else $trm"
     case IfBlock(ts) => s"‹${ts.map(_.fold(identity, identity)).mkString("; ")}›"
     case IfOpApp(lhs, op, ib) => s"$lhs $op $ib"
     case IfOpsApp(lhs, ops) => s"$lhs ‹${ops.iterator.map{case(v, r) => s"· $v $r"}.mkString("; ")}›"
     case IfLet(isRec, v, r, b) => s"${if (isRec) "rec " else ""}let $v = $r in $b"
-    // case _ => ??? // TODO
   }
   
 }
