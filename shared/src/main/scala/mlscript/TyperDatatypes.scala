@@ -51,7 +51,7 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
   
   /** Initialized lazy type information, to be computed soon. */
   class DelayedTypeInfo(val decl: NuDecl, val outerVars: Map[Str, SimpleType])
-          (implicit val ctx: Ctx, val raise: Raise) extends LazyTypeInfo with DelayedTypeInfoImpl 
+          (implicit val ctx: Ctx, val raise: Raise) extends LazyTypeInfo with DelayedTypeInfoImpl
   
   
   /** A type with universally quantified type variables

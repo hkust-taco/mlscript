@@ -1072,31 +1072,28 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
                 rcdSel(realPrefix, fieldName)
               }
           }
-        // The code below is only a temporary solution to type `ClassName.unapply`.
-        // The `fieldName.name === "unapply"` branch should be removed when static methods can be typed properly.
-        def fallback =
-          obj match {
-            case Var(name) if name.isCapitalized && ctx.tyDefs.isDefinedAt(name) => // explicit retrieval
-              ctx.getMth(S(name), fieldName.name) match {
-                case S(mth_ty) => mth_ty.toPT.instantiate
-                case N =>
-                  err(msg"Class ${name} has no method ${fieldName.name}", term.toLoc)
-                  mthCallOrSel(obj, fieldName)
-              }
-            case _ => mthCallOrSel(obj, fieldName)
-          }
         obj match {
-          case Var(nuCls) if fieldName.name === "unapply" =>
-            (ctx.get(nuCls) match {
-              case S(CompletedTypeInfo(cls: TypedNuCls)) => cls.td.genUnapply
-              case S(ti: DelayedTypeInfo) => ti.decl.genUnapply
-              case _ => N
-            }) match {
-              case S(NuFunDef(_, _, _, L(unapplyMtd))) =>
-                typePolymorphicTerm(unapplyMtd)
-              case _ => fallback
+          case Var(name) if name.isCapitalized && ctx.tyDefs.isDefinedAt(name) => // explicit retrieval
+            ctx.getMth(S(name), fieldName.name) match {
+              case S(mth_ty) => mth_ty.toPT.instantiate
+              case N =>
+                err(msg"Class ${name} has no method ${fieldName.name}", term.toLoc)
+                mthCallOrSel(obj, fieldName)
             }
-          case _ => fallback
+          // * The code below is only a temporary solution to type `ClassName.unapply`.
+          // * It removed when static methods can be typed properly.
+          case Var(nuCls) =>
+            if (fieldName.name === "unapply") (ctx.get(nuCls) match {
+                case S(CompletedTypeInfo(cls: TypedNuCls)) => cls.td.genUnapply
+                case S(ti: DelayedTypeInfo) => ti.decl.genUnapply
+                case _ => N
+              }) match {
+                case S(NuFunDef(_, _, _, L(unapplyMtd))) =>
+                  typePolymorphicTerm(unapplyMtd)
+                case _ => mthCallOrSel(obj, fieldName)
+              }
+            else mthCallOrSel(obj, fieldName)
+          case _ => mthCallOrSel(obj, fieldName)
         }
       case Let(isrec, nme, rhs, bod) =>
         if (newDefs && !isrec) {
