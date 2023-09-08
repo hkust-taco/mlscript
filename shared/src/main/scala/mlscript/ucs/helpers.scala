@@ -16,7 +16,7 @@ object helpers {
     * @param t the sole element
     * @return a tuple term with the only element
     */
-  def mkMonuple(t: Term): Tup = Tup(N -> Fld(false, false, t) :: Nil)
+  def mkMonuple(t: Term): Tup = Tup(N -> Fld(FldFlags(false, false), t) :: Nil)
 
   /**
     * Make a binary operation.
@@ -39,8 +39,8 @@ object helpers {
     t match {
       case App(
         App(Var("and"),
-            Tup((_ -> Fld(_, _, lhs)) :: Nil)),
-        Tup((_ -> Fld(_, _, rhs)) :: Nil)
+            Tup((_ -> Fld(_, lhs)) :: Nil)),
+        Tup((_ -> Fld(_, rhs)) :: Nil)
       ) =>
         splitAnd(lhs) :+ rhs
       case _ => t :: Nil
@@ -68,8 +68,8 @@ object helpers {
     term match {
       case App(
         App(and @ Var("and"),
-            Tup((_ -> Fld(_, _, lhs)) :: Nil)),
-        Tup((_ -> Fld(_, _, rhs)) :: Nil)
+            Tup((_ -> Fld(_, lhs)) :: Nil)),
+        Tup((_ -> Fld(_, rhs)) :: Nil)
       ) =>
         separatePattern(lhs) match {
           case (pattern, N) => (pattern, S(rhs))
