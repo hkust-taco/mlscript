@@ -917,7 +917,7 @@ trait StatementImpl extends Located { self: Statement =>
     case Eqn(lhs, rhs) => lhs :: rhs :: Nil
     case NuTypeDef(k, nme, tps, ps, ctor, sig, pars, sup, ths, bod) =>
       nme :: tps.map(_._2) ::: ps.toList ::: pars ::: ths.toList ::: bod :: Nil
-    case AdtMatchWith(cond, _) => cond :: Nil
+    case AdtMatchWith(cond, _) => cond :: Nil // FIXME discards branches...
   }
   
   

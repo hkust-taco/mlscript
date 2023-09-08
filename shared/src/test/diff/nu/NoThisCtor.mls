@@ -24,7 +24,7 @@ class Foo1() extends Foo() {
   virtual val foo = 1
   log(this.foo)
 }
-//│ ╔══[ERROR] Can not access `this` in the initialization statements
+//│ ╔══[ERROR] Cannot access `this` during object initialization
 //│ ║  l.25: 	  log(this.foo)
 //│ ╙──      	  ^^^^^^^^^^^^^
 //│ class Foo1() extends Foo {
@@ -48,7 +48,7 @@ class Foo3() extends Foo() {
   virtual val foo = 3
   val s = this.foo
 }
-//│ ╔══[ERROR] Can not access `this` when initializing field s
+//│ ╔══[ERROR] Cannot access `this` while initializing field s
 //│ ║  l.49: 	  val s = this.foo
 //│ ╙──      	      ^^^^^^^^^^^^
 //│ class Foo3() extends Foo {
@@ -63,7 +63,7 @@ class Foo4() extends Foo() {
   fun bar(x) = this.foo + x // ok
   let bb = bar(0) // call `this` indirectly
 }
-//│ ╔══[ERROR] Can not access `this` when initializing field bb
+//│ ╔══[ERROR] Cannot access `this` while initializing field bb
 //│ ║  l.64: 	  let bb = bar(0) // call `this` indirectly
 //│ ╙──      	      ^^^^^^^^^^^
 //│ class Foo4() extends Foo {
@@ -78,7 +78,7 @@ class Foo5() extends Foo() {
   val x = bar(0)
   fun bar(y: Int) = this.foo + y
 }
-//│ ╔══[ERROR] Can not access `this` when initializing field x
+//│ ╔══[ERROR] Cannot access `this` while initializing field x
 //│ ║  l.78: 	  val x = bar(0)
 //│ ╙──      	      ^^^^^^^^^^
 //│ class Foo5() extends Foo {
@@ -115,7 +115,7 @@ class Bar2() extends Bar() {
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
 //│ ║  l.113: 	  val two = this.add(1) // add is final, but it refers to `this`
 //│ ╙──       	                ^^^^
-//│ ╔══[ERROR] Can not access `this` when initializing field two
+//│ ╔══[ERROR] Cannot access `this` while initializing field two
 //│ ║  l.113: 	  val two = this.add(1) // add is final, but it refers to `this`
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^
 //│ class Bar2() extends Bar {

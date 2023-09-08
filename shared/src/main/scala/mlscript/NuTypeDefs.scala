@@ -1095,7 +1095,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                   case tf @ TypedNuFun(_, fd, _) =>
                     val refs = tf.getFunRefs
                     if (fd.isLetRec.isDefined && checkThisInCtor(refs, S(tf.name), tf.name :: Nil)(true)) // not a function && access `this` in the ctor
-                      err(msg"Can not access `this` when initializing field ${tf.name}", fd.toLoc)
+                      err(msg"Cannot access `this` while initializing field ${tf.name}", fd.toLoc)
                     checkUnqualifiedVirtual(refs, fd.toLoc)
                   case _ => ()
                 }
@@ -1104,7 +1104,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                   case s =>
                     val refs = getRefs(s)
                     if (checkThisInCtor(refs, N, Nil)(false))
-                      err(s"Can not access `this` in the initialization statements", s.toLoc)
+                      err(s"Cannot access `this` during object initialization", s.toLoc)
                     checkUnqualifiedVirtual(refs, s.toLoc)
                 }
               }
@@ -1155,7 +1155,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     case (m: TypedNuTermDef, S(fun: TypedNuTermDef)) => fun match {
                       // If the implementation and the declaration are in the same class, it does not require to be virtual
                       case td: TypedNuFun if (!td.fd.isVirtual && !clsSigns.contains(fun)) =>
-                        err(msg"${m.kind.str.capitalize} member `${m.name}` is not a virtual member" -> m.toLoc ::
+                        err(msg"${m.kind.str.capitalize} member `${m.name}` is not virtual and cannot be overridden" -> m.toLoc ::
                           msg"Declared here:" -> fun.toLoc ::
                           Nil)
                       case _ =>

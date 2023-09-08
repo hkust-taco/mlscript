@@ -26,7 +26,7 @@ Bar().f(40)
 class Baz() extends Foo {
   val g = 1
 }
-//│ ╔══[ERROR] Value member `g` is not a virtual member
+//│ ╔══[ERROR] Value member `g` is not virtual and cannot be overridden
 //│ ║  l.27: 	  val g = 1
 //│ ║        	      ^^^^^
 //│ ╟── Declared here:
@@ -110,3 +110,32 @@ class V2() {
 //│   fun foo: Int
 //│   let x: Int
 //│ }
+
+
+// FIXME `x` should be considered virtual here
+class C() {
+  virtual fun x : Int
+  fun x = 1
+  fun foo0 = x // should error
+}
+C().x
+//│ class C() {
+//│   fun foo0: 1
+//│   fun x: Int
+//│ }
+//│ Int
+//│ res
+//│     = 1
+
+module D extends C {
+  fun x = 2
+}
+D.x
+//│ module D extends C {
+//│   fun foo0: 1
+//│   fun x: 2
+//│ }
+//│ 2
+//│ res
+//│     = 2
+

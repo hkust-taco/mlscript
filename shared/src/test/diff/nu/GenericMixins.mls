@@ -145,7 +145,7 @@ module D extends C(0) {
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
 //│ ║  l.143: 	  this.foo(false)
 //│ ╙──       	      ^^^^
-//│ ╔══[ERROR] Can not access `this` in the initialization statements
+//│ ╔══[ERROR] Cannot access `this` during object initialization
 //│ ║  l.143: 	  this.foo(false)
 //│ ╙──       	  ^^^^^^^^^^^^^^^
 //│ module D extends C {

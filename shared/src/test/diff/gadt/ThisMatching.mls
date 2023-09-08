@@ -6,7 +6,7 @@
 module Dummy {
   log(if this is Dummy then "duh!" else "huh?")
 }
-//│ ╔══[ERROR] Can not access `this` in the initialization statements
+//│ ╔══[ERROR] Cannot access `this` during object initialization
 //│ ║  l.7: 	  log(if this is Dummy then "duh!" else "huh?")
 //│ ╙──     	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ module Dummy

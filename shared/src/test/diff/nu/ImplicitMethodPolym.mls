@@ -128,7 +128,7 @@ module M extends C {
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
 //│ ║  l.126: 	  this.id2(true)
 //│ ╙──       	      ^^^^
-//│ ╔══[ERROR] Can not access `this` in the initialization statements
+//│ ╔══[ERROR] Cannot access `this` during object initialization
 //│ ║  l.126: 	  this.id2(true)
 //│ ╙──       	  ^^^^^^^^^^^^^^
 //│ module M extends C {
