@@ -42,12 +42,15 @@ def simpleStepImpl arrImpl = ArraysImpl {
     update = fun ((r0, r1)) -> fun i -> fun a -> (arrImpl.Update r0 i a, "updated");
     fold   = fun f -> fun b -> fun ((r0, r1)) -> arrImpl.Fold f b r0
   }
-//│ simpleStepImpl: ArraysRep[in 'A | 'A0 | 'A1 | 'A2 & 'A3 out 'A0 & 'A2, in 'Rep | 'Rep0 out nothing] -> (ArraysImpl['A3, 'Rep1] with {fold: forall 'b. ('A2 -> 'b -> 'b) -> 'b -> ('Rep0, anything,) -> 'b, init: 'A -> (nothing, "initialized",), sub: ('Rep, anything,) -> int -> 'A0, update: forall 'a. ('Rep2 & 'a, anything,) -> int -> 'A1 -> ('a, "updated",)})
+//│ simpleStepImpl: ArraysRep[in 'A & 'A0 & 'A1 out 'A0 | 'A, in 'Rep & 'Rep0 & 'a out 'Rep | 'Rep0] -> (ArraysImpl['A1, 'Rep1] with {fold: forall 'b. ('A0 -> 'b -> 'b) -> 'b -> ('Rep0, anything,) -> 'b, init: 'A -> ('Rep, "initialized",), sub: ('Rep0, anything,) -> int -> 'A0, update: forall 'c. ('Rep0 & 'c, anything,) -> int -> 'A -> ('Rep | 'c, "updated",)})
 //│   where
-//│     'Rep1 :> (nothing, "initialized" | "updated",)
-//│           <: (nothing, anything,)
-//│     'A3 :> 'A0
-//│         <: nothing
+//│     'Rep1 :> ('Rep | 'd, "initialized" | "updated",)
+//│           <: ('Rep0 & 'a, anything,)
+//│     'a <: 'Rep0 & 'd
+//│     'd :> 'Rep
+//│        <: 'Rep0 & 'a
+//│     'A1 :> 'A0
+//│         <: 'A
 //│               = [Function: simpleStepImpl]
 
 
@@ -55,15 +58,15 @@ def simpleStepImpl arrImpl = ArraysImpl {
 // * Something off is going on here (see stats)
 :stats
 simpleStepImpl : ArraysImpl['a, 'r] -> ArraysImpl['a, ('r, string)]
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?b. ?b -> ?a <: ArraysImpl['a, 'r] -> ArraysImpl['a, ('r, string,)]` took too many steps and ran out of fuel (5000)
-//│ ║  l.57: 	simpleStepImpl : ArraysImpl['a, 'r] -> ArraysImpl['a, ('r, string)]
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?b. ?b -> ?a <: ArraysImpl['a, 'r] -> ArraysImpl['a, ('r, string,)]` took too many steps and ran out of fuel (10000)
+//│ ║  l.60: 	simpleStepImpl : ArraysImpl['a, 'r] -> ArraysImpl['a, ('r, string)]
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: ArraysImpl['a, 'r] -> ArraysImpl['a, ('r, string,)]
 //│    = [Function: simpleStepImpl]
-//│ constrain calls  : 4942
-//│ annoying  calls  : 62
-//│ subtyping calls  : 31598
+//│ constrain calls  : 9926
+//│ annoying  calls  : 78
+//│ subtyping calls  : 70336
 // :ResetFuel
 
 // * Note that the above incidentally can be checked using recursive types
@@ -97,18 +100,18 @@ mkArrays impl k = k impl
 :e
 def stepped = arr (fun arrImpl -> fun k -> k (simpleStepImpl arrImpl))
 //│ ╔══[ERROR] Type error in application
-//│ ║  l.98: 	def stepped = arr (fun arrImpl -> fun k -> k (simpleStepImpl arrImpl))
-//│ ║        	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.101: 	def stepped = arr (fun arrImpl -> fun k -> k (simpleStepImpl arrImpl))
+//│ ║         	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `'Rep` leaks out of its scope
 //│ ║  l.35: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
 //│ ║        	                                            ^^^^
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this function:
-//│ ║  l.98: 	def stepped = arr (fun arrImpl -> fun k -> k (simpleStepImpl arrImpl))
-//│ ║        	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.101: 	def stepped = arr (fun arrImpl -> fun k -> k (simpleStepImpl arrImpl))
+//│ ║         	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── • this reference:
-//│ ║  l.98: 	def stepped = arr (fun arrImpl -> fun k -> k (simpleStepImpl arrImpl))
-//│ ║        	              ^^^
+//│ ║  l.101: 	def stepped = arr (fun arrImpl -> fun k -> k (simpleStepImpl arrImpl))
+//│ ║         	              ^^^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.41: 	    sub    = fun ((r0, r1)) -> fun i -> arrImpl.Sub r0 i;
 //│ ╙──      	                                                    ^^

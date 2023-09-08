@@ -227,16 +227,16 @@ class Scope(val name: Str, enclosing: Opt[Scope]) {
   }
 
   def declareTypeSymbol(typeDef: TypeDef): TypeSymbol = typeDef match {
-    case TypeDef(Als, TypeName(name), tparams, body, _, _, _) =>
+    case TypeDef(Als, TypeName(name), tparams, body, _, _, _, _) =>
       declareTypeAlias(name, tparams map { _.name }, body)
-    case TypeDef(Trt, TypeName(name), tparams, body, _, mthdDefs, _) =>
+    case TypeDef(Trt, TypeName(name), tparams, body, _, mthdDefs, _, _) =>
       declareTrait(name, tparams map { _.name }, body, mthdDefs)
-    case TypeDef(Cls, TypeName(name), tparams, baseType, _, members, _) =>
+    case TypeDef(Cls, TypeName(name), tparams, baseType, _, members, _, _) =>
       declareClass(name, tparams map { _.name }, baseType, members)
-    case TypeDef(Mxn, _, _, _, _, _, _) =>
+    case TypeDef(Mxn, _, _, _, _, _, _, _) =>
       throw CodeGenError("Mixins are not supported yet.")
-    case TypeDef(Mod, _, _, _, _, _, _) =>
-      throw CodeGenError("Namespaces are not supported yet.")
+    case TypeDef(Mod, _, _, _, _, _, _, _) =>
+      throw CodeGenError("Modules are not supported yet.")
   }
 
   def declareClass(

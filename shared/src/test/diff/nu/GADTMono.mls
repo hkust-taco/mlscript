@@ -88,5 +88,5 @@ fun eval[A](e: Expr[A]): A =
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.6: 	class Add(x: Expr[Int], y: Expr[Int]) extends Expr[Int]
 //│ ╙──     	                                ^^^
-//│ fun eval: (e: Expr[out Int | false | true],) -> (Int | false | true)
+//│ fun eval: (e: Expr[in Int out Int | false | true],) -> (Int | false | true)
 

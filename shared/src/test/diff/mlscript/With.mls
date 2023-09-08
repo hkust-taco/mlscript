@@ -99,13 +99,34 @@ foo 123
 //│    = 42
 
 def fooManual: (~{f: 42} | {f: 'a})\f -> 'a
-//│ fooManual: ({f: 'a} | ~{f: 42})\f -> 'a
+//│ fooManual: in forall 'a. anything -> 'a out forall 'a. ({f: 'a} | ~{f: 42})\f -> 'a
 //│          = <missing implementation>
+
+fooManual x = error
+//│ anything -> nothing
+//│   <:  fooManual:
+//│ anything -> nothing
+//│          = [Function: fooManual]
+
+:e
+fooManual = id
+//│ 'a -> 'a
+//│   <:  fooManual:
+//│ anything -> nothing
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.112: 	fooManual = id
+//│ ║         	^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `'a`
+//│ ║  l.101: 	def fooManual: (~{f: 42} | {f: 'a})\f -> 'a
+//│ ║         	               ^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.101: 	def fooManual: (~{f: 42} | {f: 'a})\f -> 'a
+//│ ╙──       	                                         ^^
+//│          = [Function: id]
 
 fooManual 123
 //│ res: 42
-//│    = <no result>
-//│      fooManual is not implemented
+//│    = 123
 
 def foo x =
   let xf = x with { f = 42 }
@@ -122,16 +143,16 @@ def foo x =
 :e
 foo 42
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.123: 	foo 42
+//│ ║  l.144: 	foo 42
 //│ ║         	^^^^^^
 //│ ╟── integer literal of type `42` does not have field 'f'
-//│ ║  l.123: 	foo 42
+//│ ║  l.144: 	foo 42
 //│ ║         	    ^^
 //│ ╟── Note: constraint arises from record literal:
 //│ ║  l.87: 	def getf { f } = f
 //│ ║        	         ^^^^^
 //│ ╟── from reference:
-//│ ║  l.118: 	  in { l = getf xf; r = getf x; s = x }
+//│ ║  l.139: 	  in { l = getf xf; r = getf x; s = x }
 //│ ╙──       	                             ^
 //│ res: error | {l: 42, r: nothing, s: 42}
 //│    = { l: 42, r: undefined, s: 42 }
@@ -156,13 +177,13 @@ add r.s 1
 :e
 res.z
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.157: 	res.z
+//│ ║  l.178: 	res.z
 //│ ║         	^^^^^
 //│ ╟── `with` extension of type `{x: 1, y: 2}` does not have field 'z'
-//│ ║  l.152: 	{} with { x = 1 } with { y = 2 }
+//│ ║  l.173: 	{} with { x = 1 } with { y = 2 }
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{z: ?z}`
-//│ ║  l.157: 	res.z
+//│ ║  l.178: 	res.z
 //│ ╙──       	^^^
 //│ res: error
 //│    = undefined

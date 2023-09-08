@@ -308,7 +308,7 @@ TestElim.eliminate(Outside(Outside(Univ())))
 //│ forall 'a. 'Region | 'a
 //│   where
 //│     'Region :> Univ | 'a
-//│     'a :> Outside['Region] | Union['Region] | Intersect['Region] | Translate['Region] | Scale['Region]
+//│     'a :> Outside['Region] | Translate['Region] | Scale['Region] | Union['Region] | Intersect['Region]
 //│ res
 //│     = Univ {}
 
@@ -359,7 +359,7 @@ module Lang extends SizeBase, SizeExt, Contains, Text, IsUniv, IsEmpty, Eliminat
 //│   'd <: Intersect['d] | Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~#Univ | Outside['d] | Scale['d] | Translate['d] | Union['d] | Univ
 //│   'c <: Intersect['c] | Object & 'Region & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union | Outside['c & (Object & ~#Outside | Outside['c])] | Scale['c] | Translate['c] | Union['c]
 //│   'Region :> 'b
-//│   'b :> Outside['Region] | Scale['Region] | Union['Region] | Intersect['Region] | Translate['Region]
+//│   'b :> Outside['Region] | Union['Region] | Intersect['Region] | Translate['Region] | Scale['Region]
 //│   'a <: Circle | Intersect['a] | Outside['a] | Translate['a] | Union['a]
 
 Lang.size(circles)

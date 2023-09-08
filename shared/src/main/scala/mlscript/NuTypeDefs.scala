@@ -875,7 +875,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     
     lazy private implicit val vars: Map[Str, SimpleType] =
       outerVars ++ tparams.iterator.map {
-        case (tp, tv, vi) => (tp.name, SkolemTag(tv.level, tv)(tv.prov))
+        case (tp, tv, vi) => (tp.name, SkolemTag(tv)(tv.prov))
       }
     
     lazy val typedParams: Ls[Var -> FieldType] = ctx.nest.nextLevel { implicit ctx =>

@@ -190,7 +190,7 @@ id (error: A) with { x = 1 } : A | { x: 'a }
 //│ res: A | {x: nothing}
 
 def negWeird: ~(~(~(A & { x: int })))
-//│ negWeird: ~A
+//│ negWeird: in ~(A & {x: int}) out ~A
 
 def v = negWeird with { x = 1 }
 //│ v: {x: 1} & ~{x: int} | ~A\x & {x: 1}
@@ -293,14 +293,14 @@ def ty2: TT & { x: int }
 // def ty: AA | (int -> int)
 //│ Defined class AA
 //│ Defined trait TT
-//│ ty: AA
+//│ ty: in AA | nothing\x out AA
 //│ ty2: TT & {x: int}
 
 :e
 ty = ty2
 //│ TT & {x: int}
 //│   <:  ty:
-//│ AA
+//│ AA | nothing\x
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.300: 	ty = ty2
 //│ ║         	^^^^^^^^

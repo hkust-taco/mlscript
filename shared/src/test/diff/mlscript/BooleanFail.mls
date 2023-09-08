@@ -1,0 +1,80 @@
+
+// TODO fix this
+
+// * The MLscript subtyping system is currently ill-formed in some corner cases.
+// * Notably, it considers functions and classes to intersect to nothing
+// * and also considers positive negated function/record types equivalent to nothing.
+
+// * (This isn't the case in MLstruct, which has a sound subtyping lattice.)
+
+
+// * Example 1
+oops = 42 : ~(int -> int)
+not oops
+//│ oops: nothing
+//│     = 42
+//│ res: bool
+//│    = false
+
+
+// * OTOH, this doesn't lead to immediate unsoundness:
+def f: (~{x: int}) -> 'a
+f = id
+//│ f: in nothing -> nothing out ~{x: int} -> nothing
+//│  = <missing implementation>
+//│ 'a -> 'a
+//│   <:  f:
+//│ nothing -> nothing
+//│  = [Function: id]
+
+:e
+f 0
+f id
+f {}
+f (forall 'a. fun (x: 'a) -> x)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.31: 	f 0
+//│ ║        	^^^
+//│ ╟── integer literal of type `0` does not match type `~{x: int}`
+//│ ║  l.31: 	f 0
+//│ ║        	  ^
+//│ ╟── Note: constraint arises from type negation:
+//│ ║  l.21: 	def f: (~{x: int}) -> 'a
+//│ ╙──      	       ^^^^^^^^^^^
+//│ res: error
+//│    = 0
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.32: 	f id
+//│ ║        	^^^^
+//│ ╟── reference of type `?a -> ?a` does not match type `~{x: int}`
+//│ ║  l.32: 	f id
+//│ ║        	  ^^
+//│ ╟── Note: constraint arises from type negation:
+//│ ║  l.21: 	def f: (~{x: int}) -> 'a
+//│ ╙──      	       ^^^^^^^^^^^
+//│ res: error
+//│    = [Function: id]
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.33: 	f {}
+//│ ║        	^^^^
+//│ ╟── record literal of type `anything` does not match type `~{x: int}`
+//│ ║  l.33: 	f {}
+//│ ║        	  ^^
+//│ ╟── Note: constraint arises from type negation:
+//│ ║  l.21: 	def f: (~{x: int}) -> 'a
+//│ ╙──      	       ^^^^^^^^^^^
+//│ res: error
+//│    = {}
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.34: 	f (forall 'a. fun (x: 'a) -> x)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── function of type `'a -> 'a` does not match type `~{x: int}`
+//│ ║  l.34: 	f (forall 'a. fun (x: 'a) -> x)
+//│ ║        	              ^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from type negation:
+//│ ║  l.21: 	def f: (~{x: int}) -> 'a
+//│ ╙──      	       ^^^^^^^^^^^
+//│ res: error
+//│    = [Function (anonymous)]
+
+

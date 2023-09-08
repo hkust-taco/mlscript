@@ -57,24 +57,34 @@ fun f(x, y) =
 //│ ╙──      	          ^^^^^^^^^^
 //│ f: (anything, anything,) -> error
 
+// TODO support
+fun foo(x) = if x is Some
+  (0) then 0
+  (1) then 1
+//│ ╔══[PARSE ERROR] Unexpected parenthesis section here
+//│ ║  l.63: 	  (1) then 1
+//│ ╙──      	  ^^^
+//│ ╔══[ERROR] The case when this is false is not handled: is (x,) (Some,) (0,)
+//│ ║  l.61: 	fun foo(x) = if x is Some
+//│ ║        	                ^^^^^^^^^
+//│ ║  l.62: 	  (0) then 0
+//│ ╙──      	^^^^^
+//│ foo: anything -> error
 
-
-if 42 is n then n + 1
-//│ res: int
-
-:w
-if 42 is n then n + 1 else 0
-//│ ╔══[WARNING] Found a redundant else branch
-//│ ║  l.66: 	if 42 is n then n + 1 else 0
-//│ ╙──      	                           ^
-//│ res: int
-
-
-if Some(42) is Some(n) then n + 1
-//│ res: int
-
-// TODO warn useless `else`
-if Some(42) is Some(n) then n + 1 else 0
-//│ res: int
-
+// TODO support
+fun foo(x) = if x is Some of
+  0 then 0
+  1 then 1
+//│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
+//│ ║  l.76: 	  0 then 0
+//│ ╙──      	    ^^^^
+//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause; found operator application instead
+//│ ║  l.75: 	fun foo(x) = if x is Some of
+//│ ║        	                ^^^^^^^^^^^^
+//│ ║  l.76: 	  0 then 0
+//│ ║        	^^^
+//│ ╟── Note: 'if' expression started here:
+//│ ║  l.75: 	fun foo(x) = if x is Some of
+//│ ╙──      	             ^^
+//│ foo: (Some & {value: 0}) -> undefined
 

@@ -100,12 +100,12 @@ mixin EvalLambda {
 
 module Test1 extends EvalVar, EvalLambda
 //│ module Test1 {
-//│   fun eval: forall 'a. (List[{_1: Str, _2: anything}], 'b,) -> ('A | 'a)
+//│   fun eval: forall 'a. (List[{_1: Str, _2: 'A}], 'b,) -> ('A | 'a)
 //│ }
 //│ where
+//│   'b <: Abs['b] | App['b & (Abs['b] | Object & ~#Abs)] | Var
 //│   'A :> 'a | Var
 //│   'a :> App['A] | Abs['A]
-//│   'b <: Abs['b] | App['b & (Abs['b] | Object & ~#Abs)] | Var
 
 Test1.eval(Nil(), Var("a"))
 //│ forall 'a. 'A | 'a
@@ -164,10 +164,10 @@ mixin EvalExpr {
 
 module Test2 extends EvalVar, EvalExpr
 //│ module Test2 {
-//│   fun eval: forall 'a. (List[{_1: Str, _2: anything}], 'a & (Add['b] | Mul['b] | Numb | Var),) -> (Numb | Var | 'a | 'b)
+//│   fun eval: forall 'a. (List[{_1: Str, _2: Object & 'b}], 'a & (Add['c] | Mul['c] | Numb | Var),) -> (Numb | Var | 'b | 'a | 'c)
 //│ }
 //│ where
-//│   'b <: Add['b] | Mul['b] | Numb | Var
+//│   'c <: Add['c] | Mul['c] | Numb | Var
 
 Test2.eval(Nil(), Var("a"))
 //│ Numb | Var
@@ -183,13 +183,15 @@ Test2.eval(Cons(("a", Abs("d", Var("d"))), Nil()), Add(Numb(1), Var("a")))
 
 module Test3 extends EvalVar, EvalExpr, EvalLambda
 //│ module Test3 {
-//│   fun eval: forall 'a. (List[{_1: Str, _2: anything}], 'b,) -> ('A | 'a)
+//│   fun eval: forall 'a. (List[{_1: Str, _2: 'b}], 'c,) -> ('A | 'a)
 //│ }
 //│ where
-//│   'A :> Numb | Var | 'c | 'a
+//│   'b :> 'A
+//│      <: Object
+//│   'A :> 'a | Numb | Var | 'b | 'd
+//│   'd <: Add['c] | Mul['c] | Numb | Var
+//│   'c <: Abs['c] | App['c & (Abs['c] | Object & ~#Abs)] | Object & 'd & ~#Abs & ~#App
 //│   'a :> App['A] | Abs['A]
-//│   'b <: Abs['b] | App['b & (Abs['b] | Object & ~#Abs)] | Object & 'c & ~#Abs & ~#App
-//│   'c <: Add['b] | Mul['b] | Numb | Var
 
 Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Abs("a", Var("a")))
 //│ forall 'a. 'A | 'a
@@ -205,9 +207,11 @@ Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), App(Abs("a", Var("a")), Add(N
 
 module Test3 extends EvalVar, EvalLambda, EvalExpr
 //│ module Test3 {
-//│   fun eval: (List[{_1: Str, _2: anything}], 'A & (Add['a] | Mul['a] | Numb | Var),) -> ('a | 'A)
+//│   fun eval: (List[{_1: Str, _2: 'a}], 'a & (Add['b] | Mul['b] | Numb | Var),) -> ('A | 'a | 'b)
 //│ }
 //│ where
-//│   'A :> Abs['A] | App['A] | Var | 'a | Numb
-//│   'a <: Add['a] | Mul['a] | Numb | Var
+//│   'a :> 'b | 'A
+//│      <: Object
+//│   'A :> Numb | 'a | Abs['A] | App['A] | Var
+//│   'b <: Add['b] | Mul['b] | Numb | Var
 

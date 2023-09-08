@@ -1,5 +1,4 @@
 
-// TODO comments
 1 // whoops
 //│ |1| |/* whoops*/|
 //│ Parsed: {1}
@@ -7,3 +6,20 @@
 2 /* whoops */
 //│ |2| |/* whoops */|
 //│ Parsed: {2}
+
+1
+// A
+2
+//│ |1|↵|/* A*/|↵|2|
+//│ Parsed: {1; 2}
+
+:w
+1
+  // A
+2
+//│ |1|→|/* A*/|←|↵|2|
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.17: 	1
+//│ ╙──      	^
+//│ Parsed: {1 (); 2}
+

@@ -60,17 +60,22 @@ res: Ls[int]
 //│    = undefined
 
 
-def build0 (g: forall 'b. ('a -> 'b) -> 'b) = g (fun x -> single ((x, x)))
+def build0 (g: forall 'b. ('a -> 'b) -> 'b) = g (fun x -> single((x, x)))
 //│ build0: (forall 'b. ('a -> 'b) -> 'b) -> Ls[('a, 'a,)]
 //│       = <no result>
 //│         single is not implemented
 
-def build0 (g: forall 'b. ('a -> 'a -> 'b) -> 'b) = g (fun x -> fun y -> single ((x,y)))
+def build0 (g: forall 'b. ('a -> 'a -> 'b) -> 'b) = g (fun x -> fun y -> single((x, y)))
 //│ build0: (forall 'b. ('a -> 'a -> 'b) -> 'b) -> Ls[('a, 'a,)]
 //│       = <no result>
 //│         single is not implemented
 
-def build0 (g: forall 'b. ('a -> 'b -> 'b) -> 'b) = g (fun x -> fun y -> single ((x,y)))
+:e // * This is recursive because we place the list-typed value inside a new list along with the head
+def build0 (g: forall 'b. ('a -> 'b -> 'b) -> 'b) = g (fun x -> fun y -> single((x, y)))
+//│ ╔══[ERROR] Inferred recursive type: 'a
+//│   where
+//│     'a :> Ls[(?, 'a,)]
+//│ ╙──
 //│ build0: (forall 'b. ('a -> 'b -> 'b) -> 'b) -> 'c
 //│   where
 //│     'c :> Ls[('a, 'c,)]
@@ -179,13 +184,13 @@ build: forall 'a. (forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> Ls['a]
 :e
 build: (('a -> Ls['a] -> Ls['a]) -> Ls['a] -> Ls['a]) -> Ls['a]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.180: 	build: (('a -> Ls['a] -> Ls['a]) -> Ls['a] -> Ls['a]) -> Ls['a]
+//│ ║  l.185: 	build: (('a -> Ls['a] -> Ls['a]) -> Ls['a] -> Ls['a]) -> Ls['a]
 //│ ║         	^^^^^
 //│ ╟── type `Ls['a]` does not match type `'b`
-//│ ║  l.180: 	build: (('a -> Ls['a] -> Ls['a]) -> Ls['a] -> Ls['a]) -> Ls['a]
+//│ ║  l.185: 	build: (('a -> Ls['a] -> Ls['a]) -> Ls['a] -> Ls['a]) -> Ls['a]
 //│ ║         	               ^^^^^^
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.137: 	def build = fun (g: forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> g (fun x -> fun xs -> cons (x, xs)) nil
+//│ ║  l.142: 	def build = fun (g: forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> g (fun x -> fun xs -> cons (x, xs)) nil
 //│ ╙──       	                                      ^^
 //│ res: (('a -> Ls['a] -> Ls['a]) -> Ls['a] -> Ls['a]) -> Ls['a]
 //│    = [Function: build]
@@ -259,16 +264,16 @@ b g x = build_ g x
 //│   <:  b:
 //│ (forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> Ls['a]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.257: 	b g x = build_ g x
+//│ ║  l.262: 	b g x = build_ g x
 //│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Ls['a]` is not a function
 //│ ║  l.22: 	def nil: Ls['a]
 //│ ║        	         ^^^^^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.257: 	b g x = build_ g x
+//│ ║  l.262: 	b g x = build_ g x
 //│ ║         	        ^^^^^^^^^^
 //│ ╟── from application:
-//│ ║  l.198: 	def build_ = fun g -> g (fun x -> fun xs -> cons (x, xs)) nil
+//│ ║  l.203: 	def build_ = fun g -> g (fun x -> fun xs -> cons (x, xs)) nil
 //│ ╙──       	                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│  = [Function: b3]
 

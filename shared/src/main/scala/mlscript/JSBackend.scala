@@ -68,7 +68,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       translatePattern(base)
     case Inst(bod) => translatePattern(bod)
     case _: Lam | _: App | _: Sel | _: Let | _: Blk | _: Bind | _: Test | _: With | _: CaseOf | _: Subs | _: Assign
-        | If(_, _) | New(_, _) | _: Splc | _: Forall | _: Where | _: Super | _: Eqn =>
+        | If(_, _) | New(_, _) | _: Splc | _: Forall | _: Where | _: Super | _: Eqn | _: AdtMatchWith =>
       throw CodeGenError(s"term ${inspect(t)} is not a valid pattern")
   }
 
@@ -297,7 +297,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     case TyApp(base, _) => translateTerm(base)
     case Eqn(Var(name), _) =>
       throw CodeGenError(s"assignment of $name is not supported outside a constructor")
-    case _: Bind | _: Test | If(_, _)  | _: Splc | _: Where =>
+    case _: Bind | _: Test | If(_, _)  | _: Splc | _: Where | _: AdtMatchWith =>
       throw CodeGenError(s"cannot generate code for term ${inspect(term)}")
   }
 
@@ -929,14 +929,14 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     val traits = new ListBuffer[TraitSymbol]()
     val classes = new ListBuffer[ClassSymbol]()
     typeDefs.foreach {
-      case TypeDef(Als, TypeName(name), tparams, body, _, _, _) =>
+      case TypeDef(Als, TypeName(name), tparams, body, _, _, _, _) =>
         topLevelScope.declareTypeAlias(name, tparams map { _.name }, body)
-      case TypeDef(Trt, TypeName(name), tparams, body, _, methods, _) =>
+      case TypeDef(Trt, TypeName(name), tparams, body, _, methods, _, _) =>
         traits += topLevelScope.declareTrait(name, tparams map { _.name }, body, methods)
-      case TypeDef(Cls, TypeName(name), tparams, baseType, _, members, _) =>
+      case TypeDef(Cls, TypeName(name), tparams, baseType, _, members, _, _) =>
         classes += topLevelScope.declareClass(name, tparams map { _.name }, baseType, members)
-      case TypeDef(Mxn, _, _, _, _, _, _) => throw CodeGenError("Mixins are not supported yet.")
-      case TypeDef(Mod, _, _, _, _, _, _) => throw CodeGenError("Namespaces are not supported yet.")
+      case TypeDef(Mxn, _, _, _, _, _, _, _) => throw CodeGenError("Mixins are not supported yet.")
+      case TypeDef(Mod, _, _, _, _, _, _, _) => throw CodeGenError("Namespaces are not supported yet.")
     }
     (traits.toList, classes.toList)
   }

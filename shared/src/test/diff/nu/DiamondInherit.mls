@@ -67,7 +67,7 @@ trait T1 extends Foo[Int | Bool]
 //│   fun foo: 'A
 //│ }
 //│ where
-//│   'A := Int | false | true
+//│   'A := in Bool | Int out Int | false | true
 
 module Bar extends T1, Foo[Int | Str] {
   fun foo = 123

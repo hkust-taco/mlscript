@@ -2526,7 +2526,7 @@ add
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	(let x = add; {u: x.v})
 //│ ║        	                   ^^
-//│ ╟── reference of type `int -> int -> int` does not have field 'v'
+//│ ╟── reference of type `int -> int -> int` does not match type `{v: ?v}`
 //│ ║  l.+1: 	(let x = add; {u: x.v})
 //│ ║        	         ^^^
 //│ ╟── but it flows into reference with expected type `{v: ?v}`
@@ -2911,7 +2911,7 @@ add
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	(let x = add; x.v)
 //│ ║        	               ^^
-//│ ╟── reference of type `int -> int -> int` does not have field 'v'
+//│ ╟── reference of type `int -> int -> int` does not match type `{v: ?v}`
 //│ ║  l.+1: 	(let x = add; x.v)
 //│ ║        	         ^^^
 //│ ╟── but it flows into reference with expected type `{v: ?v}`

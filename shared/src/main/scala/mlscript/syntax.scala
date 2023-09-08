@@ -11,6 +11,9 @@ sealed abstract class Decl extends DesugaredStatement with DeclImpl
 final case class Def(rec: Bool, nme: Var, rhs: Term \/ Type, isByname: Bool) extends Decl with Terms {
   val body: Located = rhs.fold(identity, identity)
 }
+
+final case class AdtInfo(ctorName: TypeName)
+
 final case class TypeDef(
   kind: TypeDefKind,
   nme: TypeName,
@@ -19,6 +22,7 @@ final case class TypeDef(
   mthDecls: List[MethodDef[Right[Term, Type]]],
   mthDefs: List[MethodDef[Left[Term, Type]]],
   positionals: Ls[Var],
+  adtInfo: Opt[AdtInfo],
 ) extends Decl
 
 /**
@@ -86,8 +90,10 @@ final case class Inst(body: Term)                                    extends Ter
 final case class Super()                                             extends Term
 final case class Eqn(lhs: Var, rhs: Term)                            extends Term // equations such as x = y, notably used in constructors; TODO: make lhs a Term
 
+final case class AdtMatchWith(cond: Term, arms: Ls[AdtMatchPat])     extends Term
+final case class AdtMatchPat(pat: Term, rhs: Term)                   extends AdtMatchPatImpl
+
 sealed abstract class IfBody extends IfBodyImpl
-// final case class IfTerm(expr: Term) extends IfBody // rm?
 final case class IfThen(expr: Term, rhs: Term) extends IfBody
 final case class IfElse(expr: Term) extends IfBody
 final case class IfLet(isRec: Bool, name: Var, rhs: Term, body: IfBody) extends IfBody
