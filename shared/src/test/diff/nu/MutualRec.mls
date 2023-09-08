@@ -112,11 +112,11 @@ foo
 
 fun foo(a) = {h1: a, t1: bar(a)}
 fun bar(b) = {h2: b, t2: foo(b)}
-//│ fun foo: forall 'a 'b 'c. 'a -> 'b
-//│ fun bar: forall 'a 'c. 'a -> 'c
+//│ fun foo: forall 'a 'b 'c. 'c -> 'a
+//│ fun bar: forall 'b 'c. 'c -> 'b
 //│ where
-//│   'b :> {h1: 'a, t1: 'c}
-//│   'c :> {h2: 'a, t2: 'b}
+//│   'a :> {h1: 'c, t1: 'b}
+//│   'b :> {h2: 'c, t2: 'a}
 
 
 

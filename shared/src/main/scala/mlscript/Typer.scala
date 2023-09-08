@@ -81,7 +81,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
     private def containsMth(key: (Str, Str) \/ (Opt[Str], Str)): Bool = mthEnv.contains(key) || parent.exists(_.containsMth(key))
     def containsMth(parent: Opt[Str], nme: Str): Bool = containsMth(R(parent, nme))
     def nest: Ctx = copy(Some(this), MutMap.empty, MutMap.empty)
-    def nextLevel[R](k: Ctx => R)(implicit raise: Raise, prov: TP, shadows: Shadows=Shadows.empty): R = { // TODO rm implicits here and in freshen functions
+    def nextLevel[R](k: Ctx => R)(implicit raise: Raise, prov: TP): R = {
       val newCtx = copy(lvl = lvl + 1, extrCtx = MutMap.empty)
       val res = k(newCtx)
       val ec = newCtx.extrCtx
@@ -96,7 +96,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
       }()
       res
     }
-    def poly(k: Ctx => ST)(implicit raise: Raise, prov: TP, shadows: Shadows=Shadows.empty): ST = {
+    def poly(k: Ctx => ST)(implicit raise: Raise, prov: TP, shadows: Shadows = Shadows.empty): ST = {
       nextLevel { newCtx =>
         
         val innerTy = k(newCtx)
@@ -237,6 +237,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
     NuTypeDef(Als, TN("null"), Nil, N, N, S(Literal(UnitLit(false))), Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
   )
   val builtinTypes: Ls[TypeDef] =
+    TypeDef(Cls, TN("?"), Nil, TopType, Nil, Nil, Set.empty, N, Nil) :: // * Dummy for pretty-printing unknown type locations
     TypeDef(Cls, TN("int"), Nil, TopType, Nil, Nil, sing(TN("number")), N, Nil) ::
     TypeDef(Cls, TN("number"), Nil, TopType, Nil, Nil, semp, N, Nil) ::
     TypeDef(Cls, TN("bool"), Nil, TopType, Nil, Nil, semp, N, Nil) ::
@@ -338,6 +339,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
         val eq = TypeRef(TypeName("Eql"), v :: Nil)(noProv)
         PolymorphicType(MinLevel, fun(singleTup(eq), fun(singleTup(v), BoolType)(noProv))(noProv))
       },
+      "<>" -> numberBinPred,
       "&&" -> fun(singleTup(BoolType), fun(singleTup(BoolType), BoolType)(noProv))(noProv),
       "||" -> fun(singleTup(BoolType), fun(singleTup(BoolType), BoolType)(noProv))(noProv),
       "id" -> {
@@ -346,7 +348,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
       },
       "if" -> {
         val v = freshVar(noProv, N)(1)
-        // PolymorphicType(MinLevel, fun(singleTup(BoolType), fun(singleTup(v), fun(singleTup(v), v)(noProv))(noProv))(noProv))
         PolymorphicType(MinLevel, fun(singleTup(BoolType), fun(singleTup(v), fun(singleTup(v), v)(noProv))(noProv))(noProv))
       },
       "emptyArray" -> {
@@ -644,7 +645,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
   
   /** Like `typeLetRhs` but removes unnecessary polymorphic type wrappers. */
   def typeLetRhs2(isrec: Boolean, nme: Str, rhs: Term)(implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType]): ST = {
-    val res = typeLetRhs(isrec: Boolean, nme: Str, rhs: Term)(ctx, raise, vars, genLambdas = true)
+    val res = typeLetRhs(isrec, nme, rhs)(ctx, raise, vars, genLambdas = true)
     def stripPoly(ty: ST): ST = ty match {
       case pt: PolymorphicType =>
         PolymorphicType.mk(pt.polymLevel, stripPoly(pt.body))
@@ -975,14 +976,15 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
           val param_ty = typePattern(pat)(newCtx, raise, vars)
           val midCtx = newCtx
           val body_ty = typeTerm(body)(newCtx, raise, vars,
-            doGenLambdas && (generalizeCurriedFunctions || constrainedTypes))
+            generalizeCurriedFunctions || doGenLambdas && constrainedTypes)
           FunctionType(param_ty, body_ty)(tp(term.toLoc, "function"))
         }
       case Lam(pat, body) =>
         val newCtx = ctx.nest
         val param_ty = typePattern(pat)(newCtx, raise, vars)
         assert(!doGenLambdas)
-        val body_ty = typeTerm(body)(newCtx, raise, vars, genLambdas)
+        val body_ty = typeTerm(body)(newCtx, raise, vars,
+          generalizeCurriedFunctions || doGenLambdas)
         FunctionType(param_ty, body_ty)(tp(term.toLoc, "function"))
       case App(App(Var("is"), _), _) =>
         val desug = If(IfThen(term, Var("true")), S(Var("false")))
@@ -994,6 +996,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
         typeTerm(desug)
       case App(f, a) =>
         val f_ty = typeMonomorphicTerm(f)
+        // * ^ Note: typing the function monomorphically simplifies type inference but
+        // *    breaks beta expansion stability property
+        // *    (ie a well-typed term may stop type-checking after beta expansion)
         val a_ty = {
           def typeArg(a: Term): ST =
             if (!generalizeArguments) typePolymorphicTerm(a)
@@ -1025,7 +1030,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
           ), res)
         resTy
       case Sel(obj, fieldName) =>
-        implicit val shadows: Shadows = Shadows.empty
         // Explicit method calls have the form `x.(Class.Method)`
         // Implicit method calls have the form `x.Method`
         //   If two unrelated classes define methods of the same name,
@@ -1131,6 +1135,145 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
         try typeTerm(desugarIf(elf)) catch {
           case e: ucs.DesugaringException => err(e.messages)
         }
+      case AdtMatchWith(cond, arms) =>
+        println(s"typed condition term ${cond}")
+        val cond_ty = typeTerm(cond)
+        val ret_ty = if (arms.length === 1) {
+          freshVar(prov.copy(desc = "let expression"), N)
+        } else {
+          freshVar(prov.copy(desc = "match expression"), N)
+        }
+
+        // the assumed shape of an IfBody is a List[IfThen, IfThen, IfElse] with an optional IfElse at the end
+        arms.foreach { case AdtMatchPat(pat, rhs) =>
+          val nestCtx = ctx.nest
+          def handlePat(pat: Term, expected: SimpleType): Unit = pat match {
+            case Var("_") =>
+            // Cases where the pattern is a single variable term
+            // it can introduce a new pattern variable or it can be a constructor
+            // that takes no argument
+            // `case x -> expr`
+            // `case End -> expr` or `case false -> expr`
+            case v@Var(name) =>
+              println(s"type pattern $v with loc: ${v.toLoc}")
+              // update context with variables
+              ctx.tyDefs.get(name).flatMap {
+                case TypeDef(Cls, _, _, _: TypeRef, _, _, _, _, _, S(adtData)) => S(adtData)
+                case TypeDef(Cls, _, _, _, _, _, _, _, _, S(adtData)) =>
+                  err(msg"Missing parameter list for pattern $name", v.toLoc)
+                  S(adtData)
+                case _ => N
+              }.fold {
+                // `case x -> expr` catch all with a new variable in the context
+                println(s"catch all $v")
+                nestCtx += name -> VarSymbol(expected, v)
+              } {
+                // `case End -> expr` or `case false -> expr` or `case [] -> expr`
+                // where case is a variant of an adt with no type arguments
+                case AdtInfo(alsName) =>
+                  // get adt from cache or initialize a new one with fresh vars
+                  // this is so that all case expressions can share
+                  // the same type variables for the adt
+                  val newTargs = // alsCache.getOrElseUpdate(
+                    // alsName.name,
+                    ctx.tyDefs.getOrElse(alsName.name, lastWords(s"Could not find ${alsName}"))
+                      .targs.map(tv => freshVar(tv.prov, N, tv.nameHint))
+                  // )
+                  println(s"pattern is adt: $alsName with $newTargs")
+                  val adt_ty = TypeRef(alsName, newTargs)(TypeProvenance(v.toLoc, "pattern"))
+                    .withProv(TypeProvenance(cond.toLoc, "match `condition`"))
+                  con(expected, adt_ty, expected)
+                  ()
+              }
+            // Handle tuples specially since they don't have an explicit constructor
+            case tup@Tup(fs) =>
+              println(s"fields $fs")
+              val tupArgs = // alsCache.getOrElseUpdate("Tup" + fs.length.toString,
+                fs.map(_ => freshVar(noProv, N))
+              // )
+
+              val fld_ty = tupArgs.map(elem => N -> FieldType(N, elem)(elem.prov))
+              val caseAdtTyp = TypeProvenance(tup.toLoc, "pattern")
+              val adt_ty = TupleType(fld_ty)(caseAdtTyp)
+                .withProv(TypeProvenance(cond.toLoc, "match `condition`"))
+              con(expected, adt_ty, adt_ty)
+
+              fs.zipWithIndex.foreach {
+                case ((_, Fld(_, _, argTerm)), fieldIdx) =>
+                  println(s"Typing $argTerm field $fieldIdx in tup")
+                  val fieldType = tupArgs(fieldIdx)
+                  println(s"Field $argTerm : $fieldType")
+                  handlePat(argTerm, fieldType)
+              }
+            case caseAdt@App(Var(ctorNme), patArgs: Tup) =>
+              println(s"Typing case ($ctorNme)")
+
+              object BodyRecordType {
+                def unapply(ty: SimpleType): Opt[RecordType] = ty match {
+                  case ty: RecordType => S(ty)
+                  case ProvType(underlying) => unapply(underlying)
+                  case ComposedType(false, lhs, rhs) => unapply(lhs) orElse unapply(rhs)
+                  case _ => N
+                }
+              }
+
+              // find the alias type returned by constructor
+              val (body, tparams, AdtInfo(alsName)) = ctx.tyDefs.get(ctorNme).flatMap {
+                case TypeDef(Cls, _, tparamsargs, BodyRecordType(body), _, _, _, _, _, S(adtInfo)) => S(body, tparamsargs, adtInfo)
+                case r => N
+              }.getOrElse(lastWords(s"$ctorNme cannot be pattern matched"))
+
+              // get alias type from cache or initialize a new one with fresh vars
+              // this is so that all case expressions can share
+              // the same type variables for the adt
+              val newTargs = // alsCache.getOrElseUpdate(
+                // alsName.name,
+                ctx.tyDefs.getOrElse(alsName.name, lastWords(s"Could not find $alsName"))
+                  .targs.map(tv => freshVar(tv.prov, N, tv.nameHint))
+              // )
+              val caseAdtTyp = TypeProvenance(caseAdt.toLoc, "pattern")
+              val newAlsTy = TypeRef(alsName, newTargs)(caseAdtTyp)
+              con(expected, newAlsTy, expected)
+              println(s"adt_ty $newAlsTy")
+
+              val mapping: Map[ST, ST] = tparams.map(_._2).zip(newTargs).toMap
+              val argFields = subst(body, mapping) match {
+                case RecordType(fields) => fields.map(_._2.ub)
+                case _ => die
+              }
+              val patArgFields = patArgs.fields.map(_._2.value)
+
+              assert(argFields.sizeCompare(patArgFields) === 0)
+
+              patArgFields.lazyZip(argFields).foreach(handlePat)
+            case pat: Lit =>
+              val litTy = pat match {
+                case DecLit(_) => DecType
+                case IntLit(_) => IntType
+                case StrLit(_) => StrType
+                case UnitLit(_) => UnitType
+              }
+              con(expected, litTy.withProv(tp(pat.toLoc, "literal pattern")), expected)
+              ()
+            case Bind(t, v@Var(name)) =>
+              nestCtx += name -> VarSymbol(expected, v)
+              handlePat(t, expected)
+            case Bra(false, pat) =>
+              handlePat(pat, expected)
+            // case Asc(trm, ty) =>
+            //   con(expected, typeType(ty), expected)
+            //   ()
+            // and others
+            case pat =>
+              lastWords(s"Cannot handle pattern ${pat}")
+          }
+
+          handlePat(pat, cond_ty)
+          nestCtx |> { implicit ctx =>
+            con(typeTerm(rhs), ret_ty, ret_ty)
+          }
+        }
+        ret_ty
       case New(S((nmedTy, trm)), TypingUnit(Nil)) =>
         typeMonomorphicTerm(App(Var(nmedTy.base.name).withLocOf(nmedTy), trm))
       case New(base, args) => err(msg"Currently unsupported `new` syntax", term.toCoveringLoc)
@@ -1143,13 +1286,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
         ctx.poly { implicit ctx =>
           val newVars = vs.map {
             case tv @ TypeVar(R(nme), _) => nme ->
-              SkolemTag(lvl, freshVar(tp(tv.toLoc, "quantified type variable"), N, S(nme)))(
+              SkolemTag(freshVar(tp(tv.toLoc, "quantified type variable"), N, S(nme)))(
                 tp(tv.toLoc, "rigid type variable"))
             case _ => die
           }
           vars ++ newVars |> { implicit vars =>
-            implicit val genLambdas: GenLambdas = false
-            typeTerm(bod)
+            typeMonomorphicTerm(bod)
           }
         }
       case Inst(bod) =>
@@ -1158,7 +1300,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
         def go(ty: ST): ST = ty.unwrapAll match {
           case pt: PolymorphicType =>
             founPoly = true
-            implicit val shadows: Shadows = Shadows.empty
             go(pt.instantiate)
           case _ => ty
         }
@@ -1476,13 +1617,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
             else TypeTag(n.capitalize)
           case lit: Lit => Literal(lit)
         }
-        case SkolemTag(_, tv) => tv.nameHint match {
+        case SkolemTag(tv) => tv.nameHint match {
             case S(n) if
                 n.isCapitalized // rigid type params like A in class Foo[A]
               => TypeName(n)
             case _ => go(tv)
           }
-        case ex @ Extruded(p, SkolemTag(_, tv)) =>
+        case ex @ Extruded(p, SkolemTag(tv)) =>
           if (p) tv.asPosExtrudedTypeVar else tv.asNegExtrudedTypeVar
         case TypeRef(td, Nil) => td
         case tr @ TypeRef(td, targs) => AppliedType(td, tr.mapTargs(S(true)) {

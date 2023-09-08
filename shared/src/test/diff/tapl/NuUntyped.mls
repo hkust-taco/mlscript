@@ -95,7 +95,7 @@ fun listConcat(xs, ys) =
   if xs is
     Nil then ys
     Cons(x, xs') then Cons(x, listConcat(xs', ys))
-//│ fun listConcat: forall 'A 'A0 'a. (Cons['A] | Nil, List['A0] & 'a,) -> (Cons['A0] | 'a)
+//│ fun listConcat: forall 'a 'A 'A0. (Cons['A] | Nil, List['A0] & 'a,) -> (Cons['A0] | 'a)
 //│   where
 //│     'A <: 'A0
 

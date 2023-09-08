@@ -12,7 +12,7 @@ def foo(fa: ((~'a) -> 'a, 'a)) =
 
 :ns
 foo
-//│ res: forall 'b 'c 'a. (~'a -> 'a, 'a,) -> 'c
+//│ res: forall 'a 'b 'c. (~'a -> 'a, 'a,) -> 'c
 //│   where
 //│     'a <: 'c & 'b
 //│     'b <: ~'a

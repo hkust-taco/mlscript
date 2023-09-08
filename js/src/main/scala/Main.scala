@@ -139,7 +139,7 @@ object Main {
               // if (mode.dbgSimplif) output(msg)
               println(msg)
           }
-          val sim = SimplifyPipeline(tpd, all = false)(ctx)
+          val sim = SimplifyPipeline(tpd, S(true))(ctx)
           
           val exp = typer.expandType(sim)(ctx)
           

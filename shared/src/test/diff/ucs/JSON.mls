@@ -104,10 +104,10 @@ fun listJoin(xs, sep) =
 //│ type List[A] = Cons[A] | Nil
 //│ module Nil
 //│ class Cons[A](head: A, tail: List[A])
-//│ fun listConcat: forall 'A 'a 'A0. (Cons['A0] | Nil, List['A] & 'a,) -> (Cons['A] | 'a)
+//│ fun listConcat: forall 'A 'A0 'a. (Cons['A] | Nil, List['A0] & 'a,) -> (Cons['A0] | 'a)
 //│ fun listJoin: forall 'A1. (Cons['A1] | Nil, Str,) -> Str
 //│ where
-//│   'A0 <: 'A
+//│   'A <: 'A0
 
 type TreeMap[A] = Node[A] | Empty
 module Empty
@@ -270,7 +270,7 @@ fun parseMatched(scanner, closingSymbol, parse, fn) =
       ParseSuccess(_, scanner) then ParseSuccess(fn(outcome), scanner)
       ParseFailure(message, scanner) then ParseFailure(message, scanner)
     ParseFailure(message, scanner) then ParseFailure(message, scanner)
-//│ fun parseMatched: forall 'T 'advance 'value. ({advance: 'advance}, Str, 'advance -> (ParseFailure | ParseSuccess['value]), 'value -> 'T,) -> (ParseFailure | ParseSuccess['T])
+//│ fun parseMatched: forall 'advance 'value 'T. ({advance: 'advance}, Str, 'advance -> (ParseFailure | ParseSuccess['value]), 'value -> 'T,) -> (ParseFailure | ParseSuccess['T])
 
 :ng
 fun parseEntries(scanner): ParseResult[TreeMap[JsonValue]] = error

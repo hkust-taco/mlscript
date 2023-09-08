@@ -561,7 +561,7 @@ object JSLit {
           if (0 < c && c <= 255 && !c.isControl) {
             c.toString
           } else {
-            s"\\u${c.toInt}"
+            f"\\u${c.toInt}%04X"
           }
       }
     }.mkString("\"", "", "\"")

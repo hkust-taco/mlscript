@@ -11,7 +11,7 @@ foo x =
 foo x =
   let _ = log (succ x.prop)
   in x
-//│ foo: forall 'prop 'a. 'a -> 'a
+//│ foo: forall 'a 'prop. 'a -> 'a
 //│   where
 //│     'a <: {prop: 'prop}
 //│     'prop <: int

@@ -15,8 +15,8 @@ type Type1[A] = Derived1 | Derived3['a, 'b]
 //│ Defined class Derived1
 //│ Defined Derived1.M1: Derived1 -> int -> Derived1
 //│ Defined Derived1.M2: Derived1 -> Derived1
-//│ Defined class Derived2[=C, =D]
-//│ Defined Derived2.M1: Derived2['C, 'D] -> {c: anything, d: anything} -> Derived2['C0, 'D0]
+//│ Defined class Derived2[-C, -D]
+//│ Defined Derived2.M1: Derived2[?, ?] -> {c: anything, d: anything} -> Derived2[anything, anything]
 //│ Defined class Derived3[=C, =D]
 //│ Defined Derived3.M1: Derived3['C, 'D] -> {c: 'c & 'C0, d: 'd & 'D0} -> (Derived3['C0, 'D0] with {c: 'c, d: 'd})
 //│ Defined type alias Type1[±A]

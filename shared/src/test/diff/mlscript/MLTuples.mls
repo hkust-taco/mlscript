@@ -237,3 +237,14 @@ def f: (1, 2, 3) & Array[2 | 3 | 4]
 //│  = <missing implementation>
 
 
+
+a = (if true then (0, 1) else (2, 1, 2))[1]
+//│ a: 0 | 1 | 2 | undefined
+//│  = 1
+
+case a of
+  undefined -> 0, _ -> a
+//│ res: 0 | 1 | 2
+//│    = 1
+
+
