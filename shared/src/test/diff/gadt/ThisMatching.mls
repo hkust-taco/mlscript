@@ -8,7 +8,7 @@ module Dummy {
 }
 //│ ╔══[ERROR] Cannot access `this` during object initialization
 //│ ║  l.7: 	  log(if this is Dummy then "duh!" else "huh?")
-//│ ╙──     	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──     	         ^^^^
 //│ module Dummy
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded

@@ -147,7 +147,7 @@ module D extends C(0) {
 //│ ╙──       	      ^^^^
 //│ ╔══[ERROR] Cannot access `this` during object initialization
 //│ ║  l.143: 	  this.foo(false)
-//│ ╙──       	  ^^^^^^^^^^^^^^^
+//│ ╙──       	      ^^^^
 //│ module D extends C {
 //│   fun bar: forall 'A. (Int | 'A, Int | 'A,)
 //│   fun baz: Int

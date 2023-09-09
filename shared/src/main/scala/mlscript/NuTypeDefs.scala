@@ -389,10 +389,15 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
       this
   }
   
-  // Store referred members. indirect ref: ref by using `this`
-  case class RefMap(useThis: Bool, refs: Set[(Str, Bool)])
+  // The field `thisRef` is defined when the member accesses to `this` object without field selection
+  // e.g., val x = this
+  // The field `refs` contains all `Var`s accessed by the member, where the boolean value indicates
+  // if it is qualified.
+  // e.g., val x = this.y -> refs: { (y, true) }
+  // e.g., val y = z -> refs: { (z, false) }
+  case class RefMap(thisRef: Opt[Var], refs: Set[(Var, Bool)])
   object RefMap {
-    lazy val nothing: RefMap = RefMap(false, Set.empty)
+    lazy val nothing: RefMap = RefMap(N, Set.empty)
   }
   
   /** Note: the type `bodyType` is stored *without* its polymorphic wrapper! (unlike `typeSignature`) */
@@ -471,66 +476,66 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   
   
   def getRefs(body: Statement): RefMap = {
-    val refs = mutable.HashSet[(Str, Bool)]()
+    val refs = mutable.HashSet[(Var, Bool)]()
 
-    def visit(s: Statement): Bool = s match {
-      case App(lhs, rhs) => visit(lhs) || visit(rhs)
+    def visit(s: Statement): Opt[Var] = s match {
+      case App(lhs, rhs) => visit(lhs).orElse(visit(rhs))
       case CaseOf(trm, cases) =>
-        def visitCases(cases: CaseBranches): Bool = cases match {
-          case Case(pat, body, rest) => visit(pat) || visit(body) || visitCases(cases)
+        def visitCases(cases: CaseBranches): Opt[Var] = cases match {
+          case Case(pat, body, rest) => visit(pat).orElse(visit(body)).orElse(visitCases(cases))
           case Wildcard(body) => visit(body)
-          case NoCases => false
+          case NoCases => N
         }
-        visit(trm) || visitCases(cases)
+        visit(trm).orElse(visitCases(cases))
       case Asc(trm, ty) => visit(trm)
-      case Assign(lhs, rhs) => visit(lhs) || visit(rhs)
-      case Bind(lhs, rhs) => visit(lhs) || visit(rhs)
-      case Blk(stmts) => stmts.foldLeft(false)((r, s) => r || visit(s))
+      case Assign(lhs, rhs) => visit(lhs).orElse(visit(rhs))
+      case Bind(lhs, rhs) => visit(lhs).orElse(visit(rhs))
+      case Blk(stmts) => stmts.foldLeft[Opt[Var]](N)((r, s) => r.orElse(visit(s)))
       case Bra(_, trm) => visit(trm)
       case Constructor(params, body) => visit(body)
-      case Eqn(lhs, rhs) => visit(lhs) || visit(rhs)
+      case Eqn(lhs, rhs) => visit(lhs).orElse(visit(rhs))
       case Forall(params, body) => visit(body)
       case If(body, els) =>
-        def visitIfBody(body: IfBody): Bool = body match {
-          case IfThen(expr, rhs) => visit(expr) || visit(rhs)
+        def visitIfBody(body: IfBody): Opt[Var] = body match {
+          case IfThen(expr, rhs) => visit(expr).orElse(visit(rhs))
           case IfElse(body) => visit(body)
           case IfLet(_, _, rhs, body) => visit(rhs)
           case IfOpApp(lhs, _, rhs) => visit(lhs)
           case IfOpsApp(lhs, opsRhss) => visit(lhs)
-          case IfBlock(lines) => lines.foldLeft(false)((r, e) => r || (e match {
+          case IfBlock(lines) => lines.foldLeft[Opt[Var]](N)((r, e) => r.orElse(e match {
             case L(bd) => visitIfBody(bd)
             case R(s) => visit(s)
           }))
         }
-        visitIfBody(body) || els.fold(false)(t => visit(t))
+        visitIfBody(body).orElse(els.fold[Opt[Var]](N)(t => visit(t)))
       case Inst(body) => visit(body)
       case Lam(_, rhs) => visit(rhs)
-      case Let(_, name, rhs, body) => visit(rhs) || visit(body)
-      case LetS(_, pat, rhs) => visit(pat) || visit(rhs)
-      case New(head, body) => body.entities.foldLeft(false)((r, s) => r || visit(s))
+      case Let(_, name, rhs, body) => visit(rhs).orElse(visit(body))
+      case LetS(_, pat, rhs) => visit(pat).orElse(visit(rhs))
+      case New(head, body) => body.entities.foldLeft[Opt[Var]](N)((r, s) => r.orElse(visit(s)))
       case NuFunDef(_, nme, _, L(rhs)) => visit(rhs)
-      case Rcd(fields) => fields.foldLeft(false)((r, s) => r || visit(s._2.value))
-      case Sel(Var("this"), Var(name)) =>
-        refs.add((name, true))
-        false
-      case Sel(receiver, fieldName) => visit(receiver) || visit(fieldName)
-      case Splc(fields) => fields.foldLeft(false)((r, e) => r || (e match {
+      case Rcd(fields) => fields.foldLeft[Opt[Var]](N)((r, s) => r.orElse(visit(s._2.value)))
+      case Sel(Var("this"), v) =>
+        refs.add((v, true))
+        N
+      case Sel(receiver, fieldName) => visit(receiver).orElse(visit(fieldName))
+      case Splc(fields) => fields.foldLeft[Opt[Var]](N)((r, e) => r.orElse(e match {
         case L(e) => visit(e)
         case R(f) => visit(f.value)
       }))
-      case Subs(arr, idx) => visit(arr) || visit(idx)
-      case Test(trm, ty) => visit(trm) || visit(ty)
-      case Tup(fields) => fields.foldLeft(false)((r, s) => r || visit(s._2.value))
+      case Subs(arr, idx) => visit(arr).orElse(visit(idx))
+      case Test(trm, ty) => visit(trm).orElse(visit(ty))
+      case Tup(fields) => fields.foldLeft[Opt[Var]](N)((r, s) => r.orElse(visit(s._2.value)))
       case TyApp(lhs, targs) => visit(lhs)
-      case Var(name) =>
-        if (name === "this") true
+      case v @ Var(name) =>
+        if (name === "this") S(v)
         else {
-          refs.add((name, false))
-          false
+          refs.add((v, false))
+          N
         }
-      case Where(body, where) => where.foldLeft(visit(body))((r, s) => r || visit(s))
-      case With(trm, fields) => visit(trm) || visit(fields)
-      case _ => false
+      case Where(body, where) => where.foldLeft(visit(body))((r, s) => r.orElse(visit(s)))
+      case With(trm, fields) => visit(trm).orElse(visit(fields))
+      case _ => N
     }
 
     RefMap(visit(body), refs.toSet)
@@ -1062,7 +1067,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
               
               /** Check no `this` access in ctor statements or val rhs and reject unqualified accesses to virtual members.. */
               def qualificationCheck(members: Ls[NuMember], stmts: Ls[Statement], base: Ls[NuMember], sigs: Ls[NuMember]): Unit = {
-                val cache = mutable.HashMap[Str, Bool]()
+                val cache = mutable.HashMap[Str, Opt[Var]]()
                 val sigMap = sigs.map(m => m.name -> m).toMap
                 val allMembers = sigMap ++ (base.iterator ++ members).map(m => m.name -> m).toMap
 
@@ -1072,14 +1077,14 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     case _ => false
                   })
 
-                // Return true if it is invalid
-                def checkThisInCtor(refs: RefMap, name: Opt[Str], stack: Ls[Str])(expection: Bool): Bool = {
-                  def run: Bool = {
-                    refs.useThis || (
-                      refs.refs.foldLeft(false)((res, p) => res || (allMembers.get(p._1) match {
-                        case S(nf: TypedNuFun) if name.fold(true)(name => name =/= p._1) && !stack.contains(p._1) => // Avoid cycle checking
-                          (p._2 && (!expection || isVirtual(nf))) || checkThisInCtor(nf.getFunRefs, S(p._1), p._1 :: stack)(false)
-                        case _ => false // Refer to outer 
+                // Return S(v) when there is an invalid access to the v.
+                def checkThisInCtor(refs: RefMap, name: Opt[Str], stack: Ls[Str])(expection: Bool): Opt[Var] = {
+                  def run: Opt[Var] = {
+                    refs.thisRef.orElse(
+                      refs.refs.foldLeft[Opt[Var]](N)((res, p) => res.orElse(allMembers.get(p._1.name) match {
+                        case S(nf: TypedNuFun) if name.fold(true)(name => name =/= p._1.name) && !stack.contains(p._1.name) => // Avoid cycle checking
+                          Option.when(p._2 && (!expection || isVirtual(nf)))(p._1).orElse(checkThisInCtor(nf.getFunRefs, S(p._1.name), p._1.name :: stack)(false))
+                        case _ => N // Refer to outer 
                       }))
                     )
                   }
@@ -1088,9 +1093,9 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                 }
 
                 def checkUnqualifiedVirtual(refs: RefMap, parentLoc: Opt[Loc]) =
-                  refs.refs.foreach(p => if (!p._2) allMembers.get(p._1) match { // unqualified access
+                  refs.refs.foreach(p => if (!p._2) allMembers.get(p._1.name) match { // unqualified access
                     case S(nf: TypedNuFun) if isVirtual(nf) =>
-                      err(msg"Unqualified access to virtual member ${p._1}" -> parentLoc ::
+                      err(msg"Unqualified access to virtual member ${p._1.name}" -> parentLoc ::
                         msg"Declared here:" -> nf.fd.toLoc
                       :: Nil)
                     case _ => ()
@@ -1099,8 +1104,11 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                 members.foreach {
                   case tf @ TypedNuFun(_, fd, _) =>
                     val refs = tf.getFunRefs
-                    if (fd.isLetRec.isDefined && checkThisInCtor(refs, S(tf.name), tf.name :: Nil)(true)) // not a function && access `this` in the ctor
-                      err(msg"Cannot access `this` while initializing field ${tf.name}", fd.toLoc)
+                    if (fd.isLetRec.isDefined) checkThisInCtor(refs, S(tf.name), tf.name :: Nil)(true) match {
+                      case S(v) => // not a function && access `this` in the ctor
+                        err(msg"Cannot access `this` while initializing field ${tf.name}", v.toLoc)
+                      case N => ()
+                    }
                     checkUnqualifiedVirtual(refs, fd.toLoc)
                   case _ => ()
                 }
@@ -1108,8 +1116,11 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                   case Asc(Var("this"), _) => ()
                   case s =>
                     val refs = getRefs(s)
-                    if (checkThisInCtor(refs, N, Nil)(false))
-                      err(s"Cannot access `this` during object initialization", s.toLoc)
+                    checkThisInCtor(refs, N, Nil)(false) match {
+                      case S(v) =>
+                        err(s"Cannot access `this` during object initialization", v.toLoc)
+                      case N => ()
+                    }
                     checkUnqualifiedVirtual(refs, s.toLoc)
                 }
               }

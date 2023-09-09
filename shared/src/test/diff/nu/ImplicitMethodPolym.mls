@@ -130,7 +130,7 @@ module M extends C {
 //│ ╙──       	      ^^^^
 //│ ╔══[ERROR] Cannot access `this` during object initialization
 //│ ║  l.126: 	  this.id2(true)
-//│ ╙──       	  ^^^^^^^^^^^^^^
+//│ ╙──       	      ^^^^
 //│ module M extends C {
 //│   fun f: (error, error,)
 //│   fun id1: forall 'a. 'a -> 'a
