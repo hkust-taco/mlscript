@@ -44,10 +44,28 @@ f({y: 1})
 //│     = 1
 
 
+fun f of x, y = x + y
+//│ fun f: (Int, Int) -> Int
+
+f of 1, 2
+//│ Int
+//│ res
+//│     = 3
+
+
+fun f of [x, y] = x + y
+//│ fun f: ([Int, Int]) -> Int
+
+f of [1, 2]
+//│ Int
+//│ res
+//│     = 3
+
+
 let f = (x, y) => x + y
 //│ let f: (Int, Int) -> Int
 //│ f
-//│   = [Function: f2]
+//│   = [Function: f4]
 
 f(1, 2)
 //│ Int
@@ -57,13 +75,13 @@ f(1, 2)
 :e
 f([1, 2])
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.58: 	f([1, 2])
+//│ ║  l.76: 	f([1, 2])
 //│ ║        	^^^^^^^^^
 //│ ╟── argument of type `[[1, 2]]` does not match type `[?a, ?b]`
-//│ ║  l.58: 	f([1, 2])
+//│ ║  l.76: 	f([1, 2])
 //│ ║        	 ^^^^^^^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.47: 	let f = (x, y) => x + y
+//│ ║  l.65: 	let f = (x, y) => x + y
 //│ ╙──      	         ^^^^
 //│ Int | error
 //│ res
@@ -74,15 +92,15 @@ f([1, 2])
 let f = ((x, y)) => x + y
 //│ let f: ([Int, Int]) -> Int
 //│ f
-//│   = [Function: f3]
+//│   = [Function: f5]
 
 :e
 f(1, 2)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.80: 	f(1, 2)
+//│ ║  l.98: 	f(1, 2)
 //│ ║        	^^^^^^^
 //│ ╟── argument list of type `[1, 2]` does not match type `[[?a, ?b]]`
-//│ ║  l.80: 	f(1, 2)
+//│ ║  l.98: 	f(1, 2)
 //│ ╙──      	 ^^^^^^
 //│ Int | error
 //│ res
@@ -101,16 +119,17 @@ f([1, 2])
 //│ res
 //│     = 3
 
+// TODO don't parse as tuple arg
 let f = (((x, y))) => x + y
 //│ let f: ([Int, Int]) -> Int
 //│ f
-//│   = [Function: f4]
+//│   = [Function: f6]
 
 // TODO parse as tuple arg!
 let f = [x, y] => x + y
 //│ let f: (Int, Int) -> Int
 //│ f
-//│   = [Function: f5]
+//│   = [Function: f7]
 
 f(1, 2)
 //│ Int
@@ -121,6 +140,6 @@ f(1, 2)
 let f = [[[x, y]]] => x + y
 //│ let f: ([[Int, Int]]) -> Int
 //│ f
-//│   = [Function: f6]
+//│   = [Function: f8]
 
 
