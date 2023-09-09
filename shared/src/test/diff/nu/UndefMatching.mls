@@ -3,7 +3,7 @@
 
 
 fun foo(x: 'a | undefined) = if x is undefined then error else x
-//│ fun foo: forall 'a. (x: Object & 'a & ~undefined | undefined,) -> 'a
+//│ fun foo: forall 'a. (x: Object & 'a & ~undefined | undefined) -> 'a
 
 
 class Abstract[A] {
@@ -21,10 +21,10 @@ class Abstract[A] {
   fun baz(a: A & Object) = [bar0(a), bar1(a), bar2(a)]
 }
 //│ class Abstract[A] {
-//│   fun bar0: (x: Object & A | undefined,) -> (Object & A & ~undefined)
-//│   fun bar1: (x: Object & A | undefined,) -> (Object & A & ~undefined)
-//│   fun bar2: (x: Object & A | undefined,) -> (Object & A & ~undefined | undefined)
-//│   fun baz: (a: Object & A,) -> (Object & A & ~undefined, Object & A & ~undefined, Object & A & ~undefined | undefined,)
+//│   fun bar0: (x: Object & A | undefined) -> (Object & A & ~undefined)
+//│   fun bar1: (x: Object & A | undefined) -> (Object & A & ~undefined)
+//│   fun bar2: (x: Object & A | undefined) -> (Object & A & ~undefined | undefined)
+//│   fun baz: (a: Object & A) -> [Object & A & ~undefined, Object & A & ~undefined, Object & A & ~undefined | undefined]
 //│ }
 
 
@@ -43,7 +43,7 @@ class Abstract[A] {
 //│ ║  l.34: 	    if x is undefined then error else x
 //│ ╙──      	       ^
 //│ class Abstract[A] {
-//│   fun bar: (x: undefined | A & ~undefined,) -> (A & ~undefined)
+//│   fun bar: (x: undefined | A & ~undefined) -> (A & ~undefined)
 //│ }
 
 

@@ -42,7 +42,7 @@ def simpleStepImpl arrImpl = ArraysImpl {
     update = fun ((r0, r1)) -> fun i -> fun a -> (arrImpl.Update r0 i a, "updated");
     fold   = fun f -> fun b -> fun ((r0, r1)) -> arrImpl.Fold f b r0
   }
-//│ simpleStepImpl: ArraysRep[in 'A & 'A0 & 'A1 out 'A0 | 'A, in 'Rep & 'Rep0 & 'a out 'Rep | 'Rep0] -> (ArraysImpl['A1, 'Rep1] with {fold: forall 'b. ('A0 -> 'b -> 'b) -> 'b -> ('Rep0, anything,) -> 'b, init: 'A -> ('Rep, "initialized",), sub: ('Rep0, anything,) -> int -> 'A0, update: forall 'c. ('Rep0 & 'c, anything,) -> int -> 'A -> ('Rep | 'c, "updated",)})
+//│ simpleStepImpl: ArraysRep[in 'A & 'A0 & 'A1 out 'A0 | 'A, in 'Rep & 'Rep0 & 'a out 'Rep | 'Rep0] -> (ArraysImpl['A1, 'Rep1] with {fold: forall 'b. ('A0 -> 'b -> 'b) -> 'b -> (('Rep0, anything,),) -> 'b, init: 'A -> ('Rep, "initialized",), sub: (('Rep0, anything,),) -> int -> 'A0, update: forall 'c. (('Rep0 & 'c, anything,),) -> int -> 'A -> ('Rep | 'c, "updated",)})
 //│   where
 //│     'Rep1 :> ('Rep | 'd, "initialized" | "updated",)
 //│           <: ('Rep0 & 'a, anything,)

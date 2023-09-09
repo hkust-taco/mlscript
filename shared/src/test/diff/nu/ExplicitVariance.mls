@@ -6,7 +6,7 @@ class Foo[out A](x: A)
 //│ class Foo[A](x: A)
 
 fun foo(x: Foo[Int]): Foo[Num] = x
-//│ fun foo: (x: Foo[Int],) -> Foo[Num]
+//│ fun foo: (x: Foo[Int]) -> Foo[Num]
 
 :e
 fun foo(x: Foo[Num]): Foo[Int] = x
@@ -19,14 +19,14 @@ fun foo(x: Foo[Num]): Foo[Int] = x
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.12: 	fun foo(x: Foo[Num]): Foo[Int] = x
 //│ ╙──      	                          ^^^
-//│ fun foo: (x: Foo[Num],) -> Foo[Int]
+//│ fun foo: (x: Foo[Num]) -> Foo[Int]
 
 
 class Foo[in A](x: A -> Int)
 //│ class Foo[A](x: A -> Int)
 
 fun foo(x: Foo[Num]): Foo[Int] = x
-//│ fun foo: (x: Foo[Num],) -> Foo[Int]
+//│ fun foo: (x: Foo[Num]) -> Foo[Int]
 
 :e
 fun foo(x: Foo[Int]): Foo[Num] = x
@@ -39,7 +39,7 @@ fun foo(x: Foo[Int]): Foo[Num] = x
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.32: 	fun foo(x: Foo[Int]): Foo[Num] = x
 //│ ╙──      	               ^^^
-//│ fun foo: (x: Foo[Int],) -> Foo[Num]
+//│ fun foo: (x: Foo[Int]) -> Foo[Num]
 
 
 

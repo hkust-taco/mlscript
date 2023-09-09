@@ -379,7 +379,7 @@ C3() : T3['X]
 
 trait Foo { fun foo: forall 'A; (x: 'A) -> 'A }
 //│ trait Foo {
-//│   fun foo: forall 'A. (x: 'A,) -> 'A
+//│   fun foo: forall 'A. (x: 'A) -> 'A
 //│ }
 
 class B extends Foo { fun foo = error }

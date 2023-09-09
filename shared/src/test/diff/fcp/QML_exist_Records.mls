@@ -60,12 +60,12 @@ def stepImpl arrImpl = {
     update = fun ((r0, r1)) -> fun i -> fun a -> (arrImpl.update r0 i a, "hey");
     fold   = fun f -> fun b -> fun ((r0, r1)) -> arrImpl.fold f b r0
   }
-//│ stepImpl: {fold: 'a -> 'b -> 'c -> 'd, init: 'e -> 'f, sub: 'g -> 'h -> 'i, update: 'j -> 'k -> 'l -> 'm} -> {fold: 'a -> 'b -> ('c, anything,) -> 'd, init: 'e -> ('f, "hi",), sub: ('g, anything,) -> 'h -> 'i, update: ('j, anything,) -> 'k -> 'l -> ('m, "hey",)}
+//│ stepImpl: {fold: 'a -> 'b -> 'c -> 'd, init: 'e -> 'f, sub: 'g -> 'h -> 'i, update: 'j -> 'k -> 'l -> 'm} -> {fold: 'a -> 'b -> (('c, anything,),) -> 'd, init: 'e -> ('f, "hi",), sub: (('g, anything,),) -> 'h -> 'i, update: (('j, anything,),) -> 'k -> 'l -> ('m, "hey",)}
 //│         = [Function: stepImpl]
 
 :e // * Since "sound extrusion"
 stepImpl_ty = stepImpl
-//│ {fold: 'a -> 'b -> 'c -> 'd, init: 'e -> 'f, sub: 'g -> 'h -> 'i, update: 'j -> 'k -> 'l -> 'm} -> {fold: 'a -> 'b -> ('c, anything,) -> 'd, init: 'e -> ('f, "hi",), sub: ('g, anything,) -> 'h -> 'i, update: ('j, anything,) -> 'k -> 'l -> ('m, "hey",)}
+//│ {fold: 'a -> 'b -> 'c -> 'd, init: 'e -> 'f, sub: 'g -> 'h -> 'i, update: 'j -> 'k -> 'l -> 'm} -> {fold: 'a -> 'b -> (('c, anything,),) -> 'd, init: 'e -> ('f, "hi",), sub: (('g, anything,),) -> 'h -> 'i, update: (('j, anything,),) -> 'k -> 'l -> ('m, "hey",)}
 //│   <:  stepImpl_ty:
 //│ ArraysRep['a, 'r] -> ArraysRep['a, ('r, string,)]
 //│ ╔══[ERROR] Type error in def definition
@@ -97,7 +97,7 @@ def stepImpl_Ann_1 arrImpl = {
     update = fun ((r0, r1)) -> fun i -> fun a -> (arrImpl.update r0 i a, "hey");
     fold   = fun f -> fun b -> fun ((r0, r1)) -> (arrImpl.fold: Fold['a, 'rep]) f b r0
   }
-//│ stepImpl_Ann_1: {fold: Fold['a, 'rep], init: 'c -> 'd, sub: 'e -> 'f -> 'g, update: 'h -> 'i -> 'j -> 'k} -> {fold: forall 'b. ('a -> 'b -> 'b) -> 'b -> ('rep, anything,) -> 'b, init: 'c -> ('d, "hi",), sub: ('e, anything,) -> 'f -> 'g, update: ('h, anything,) -> 'i -> 'j -> ('k, "hey",)}
+//│ stepImpl_Ann_1: {fold: Fold['a, 'rep], init: 'c -> 'd, sub: 'e -> 'f -> 'g, update: 'h -> 'i -> 'j -> 'k} -> {fold: forall 'b. ('a -> 'b -> 'b) -> 'b -> (('rep, anything,),) -> 'b, init: 'c -> ('d, "hi",), sub: (('e, anything,),) -> 'f -> 'g, update: (('h, anything,),) -> 'i -> 'j -> ('k, "hey",)}
 //│               = [Function: stepImpl_Ann_1]
 
 // * Still not enough to type `step` later in the file – this annotation actually doesn't help at all
@@ -107,11 +107,11 @@ def stepImpl_Ann_2 (arrImpl: ArraysRep['a, 'r]) = {
     update = fun ((r0, r1)) -> fun i -> fun a -> (arrImpl.update r0 i a, "hey");
     fold   = fun f -> fun b -> fun ((r0, r1)) -> arrImpl.fold f b r0
   }
-//│ stepImpl_Ann_2: ArraysRep['a, 'r] -> {fold: forall 'b. ('a -> 'b -> 'b) -> 'b -> ('r, anything,) -> 'b, init: 'a -> ('r, "hi",), sub: ('r, anything,) -> int -> 'a, update: ('r, anything,) -> int -> 'a -> ('r, "hey",)}
+//│ stepImpl_Ann_2: ArraysRep['a, 'r] -> {fold: forall 'b. ('a -> 'b -> 'b) -> 'b -> (('r, anything,),) -> 'b, init: 'a -> ('r, "hi",), sub: (('r, anything,),) -> int -> 'a, update: (('r, anything,),) -> int -> 'a -> ('r, "hey",)}
 //│               = [Function: stepImpl_Ann_2]
 
 stepImpl_ty = stepImpl_Ann_2
-//│ ArraysRep['a, 'r] -> {fold: forall 'b. ('a -> 'b -> 'b) -> 'b -> ('r, anything,) -> 'b, init: 'a -> ('r, "hi",), sub: ('r, anything,) -> int -> 'a, update: ('r, anything,) -> int -> 'a -> ('r, "hey",)}
+//│ ArraysRep['a, 'r] -> {fold: forall 'b. ('a -> 'b -> 'b) -> 'b -> (('r, anything,),) -> 'b, init: 'a -> ('r, "hi",), sub: (('r, anything,),) -> int -> 'a, update: (('r, anything,),) -> int -> 'a -> ('r, "hey",)}
 //│   <:  stepImpl_ty:
 //│ ArraysRep['a, 'r] -> ArraysRep['a, ('r, string,)]
 //│            = [Function: stepImpl_Ann_2]
@@ -123,12 +123,12 @@ def stepImpl_Ann_3 arrImpl = {
     update = fun ((r0, r1)) -> fun i -> fun a -> (arrImpl.update r0 i a, "hey");
     fold   = (fun f -> fun b -> fun ((r0, r1)) -> arrImpl.fold f b r0) : Fold['a, ('rep, string)]
   }
-//│ stepImpl_Ann_3: {fold: ('a -> ??b -> ??b0) -> ??b0 -> 'b -> ??b, init: 'c -> 'd, sub: 'e -> 'f -> 'g, update: 'h -> 'i -> 'j -> 'k} -> {fold: Fold['a, ('b, string,)], init: 'c -> ('d, "hi",), sub: ('e, anything,) -> 'f -> 'g, update: ('h, anything,) -> 'i -> 'j -> ('k, "hey",)}
+//│ stepImpl_Ann_3: {fold: ('a -> ??b -> ??b0) -> ??b0 -> 'b -> ??b, init: 'c -> 'd, sub: 'e -> 'f -> 'g, update: 'h -> 'i -> 'j -> 'k} -> {fold: Fold['a, ('b, string,)], init: 'c -> ('d, "hi",), sub: (('e, anything,),) -> 'f -> 'g, update: (('h, anything,),) -> 'i -> 'j -> ('k, "hey",)}
 //│               = [Function: stepImpl_Ann_3]
 
 :e
 stepImpl_ty = stepImpl_Ann_3
-//│ {fold: ('a -> ??b -> ??b0) -> ??b0 -> 'b -> ??b, init: 'c -> 'd, sub: 'e -> 'f -> 'g, update: 'h -> 'i -> 'j -> 'k} -> {fold: Fold['a, ('b, string,)], init: 'c -> ('d, "hi",), sub: ('e, anything,) -> 'f -> 'g, update: ('h, anything,) -> 'i -> 'j -> ('k, "hey",)}
+//│ {fold: ('a -> ??b -> ??b0) -> ??b0 -> 'b -> ??b, init: 'c -> 'd, sub: 'e -> 'f -> 'g, update: 'h -> 'i -> 'j -> 'k} -> {fold: Fold['a, ('b, string,)], init: 'c -> ('d, "hi",), sub: (('e, anything,),) -> 'f -> 'g, update: (('h, anything,),) -> 'i -> 'j -> ('k, "hey",)}
 //│   <:  stepImpl_ty:
 //│ ArraysRep['a, 'r] -> ArraysRep['a, ('r, string,)]
 //│ ╔══[ERROR] Type error in def definition
@@ -213,7 +213,7 @@ stepImpl_ty = stepImpl_Ann_4
 // def stepImpl2 (arr: Arrays['a]) = arr stepImpl
 
 def stepImpl2 arr = arr stepImpl
-//│ stepImpl2: ((forall 'a 'b 'c 'd 'e 'f 'g 'h 'i 'j 'k 'l 'm. {fold: 'c -> 'b -> 'i -> 'k, init: 'l -> 'd, sub: 'm -> 'h -> 'a, update: 'j -> 'f -> 'g -> 'e} -> {fold: 'c -> 'b -> ('i, anything,) -> 'k, init: 'l -> ('d, "hi",), sub: ('m, anything,) -> 'h -> 'a, update: ('j, anything,) -> 'f -> 'g -> ('e, "hey",)}) -> 'n) -> 'n
+//│ stepImpl2: ((forall 'a 'b 'c 'd 'e 'f 'g 'h 'i 'j 'k 'l 'm. {fold: 'c -> 'b -> 'i -> 'k, init: 'l -> 'd, sub: 'm -> 'h -> 'a, update: 'j -> 'f -> 'g -> 'e} -> {fold: 'c -> 'b -> (('i, anything,),) -> 'k, init: 'l -> ('d, "hi",), sub: (('m, anything,),) -> 'h -> 'a, update: (('j, anything,),) -> 'f -> 'g -> ('e, "hey",)}) -> 'n) -> 'n
 //│          = [Function: stepImpl2]
 
 def stepImpl2_ arr = arr stepImpl_ty
@@ -224,11 +224,11 @@ def stepImpl2_ arr = arr stepImpl_ty
 // def stepImpl2_Ann_1 arr = arr stepImpl_Ann_1
 
 def stepImpl2_Ann_2 arr = arr stepImpl_Ann_2
-//│ stepImpl2_Ann_2: ((forall 'a 'r. ArraysRep['a, 'r] -> {fold: forall 'b. ('a -> 'b -> 'b) -> 'b -> ('r, anything,) -> 'b, init: 'a -> ('r, "hi",), sub: ('r, anything,) -> int -> 'a, update: ('r, anything,) -> int -> 'a -> ('r, "hey",)}) -> 'c) -> 'c
+//│ stepImpl2_Ann_2: ((forall 'a 'r. ArraysRep['a, 'r] -> {fold: forall 'b. ('a -> 'b -> 'b) -> 'b -> (('r, anything,),) -> 'b, init: 'a -> ('r, "hi",), sub: (('r, anything,),) -> int -> 'a, update: (('r, anything,),) -> int -> 'a -> ('r, "hey",)}) -> 'c) -> 'c
 //│                = [Function: stepImpl2_Ann_2]
 
 def stepImpl2_Ann_3 arr = arr stepImpl_Ann_3
-//│ stepImpl2_Ann_3: ((forall 'b 'c 'd 'e 'f 'g 'h 'i 'j 'k 'a. {fold: ('a -> ??b -> ??b0) -> ??b0 -> 'e -> ??b, init: 'h -> 'i, sub: 'b -> 'c -> 'd, update: 'k -> 'j -> 'g -> 'f} -> {fold: Fold['a, ('e, string,)], init: 'h -> ('i, "hi",), sub: ('b, anything,) -> 'c -> 'd, update: ('k, anything,) -> 'j -> 'g -> ('f, "hey",)}) -> 'l) -> 'l
+//│ stepImpl2_Ann_3: ((forall 'b 'c 'd 'e 'f 'g 'h 'i 'j 'k 'a. {fold: ('a -> ??b -> ??b0) -> ??b0 -> 'e -> ??b, init: 'h -> 'i, sub: 'b -> 'c -> 'd, update: 'k -> 'j -> 'g -> 'f} -> {fold: Fold['a, ('e, string,)], init: 'h -> ('i, "hi",), sub: (('b, anything,),) -> 'c -> 'd, update: (('k, anything,),) -> 'j -> 'g -> ('f, "hey",)}) -> 'l) -> 'l
 //│                = [Function: stepImpl2_Ann_3]
 
 def stepImpl2_Ann_4 arr = arr stepImpl_Ann_4
@@ -241,7 +241,7 @@ def stepImpl2_Ann_4 arr = arr stepImpl_Ann_4
 def stepImpl2_Ann_2_Ann (arr: Arrays['a]) = arr stepImpl_Ann_2
 // def stepImpl2_Ann_2_Ann (arr: Arrays['a]) = arr stepImpl_Ann_2 : Arrays['a]
 // def stepImpl2_Ann_2_Ann (arr: ArraysRep['a, 'r]) = arr stepImpl_Ann_2
-//│ stepImpl2_Ann_2_Ann: Arrays['a] -> {fold: forall 'b. ('a -> 'b -> 'b) -> 'b -> (??Rep & 'r, anything,) -> 'b, init: 'a -> ('r | ??Rep0, "hi",), sub: (??Rep & 'r, anything,) -> int -> 'a, update: (??Rep & 'r, anything,) -> int -> 'a -> ('r | ??Rep0, "hey",)}
+//│ stepImpl2_Ann_2_Ann: Arrays['a] -> {fold: forall 'b. ('a -> 'b -> 'b) -> 'b -> ((??Rep & 'r, anything,),) -> 'b, init: 'a -> ('r | ??Rep0, "hi",), sub: ((??Rep & 'r, anything,),) -> int -> 'a, update: ((??Rep & 'r, anything,),) -> int -> 'a -> ('r | ??Rep0, "hey",)}
 //│                    = [Function: stepImpl2_Ann_2_Ann]
 
 
@@ -255,7 +255,7 @@ def step: Arrays['a] -> Arrays['a]
 // * But this problem actually disappeared after fixing a subtle bug in type freshening...!
 :e // * Since "sound extrusion"
 def step arr f = f (stepImpl2 arr)
-//│ ((forall 'a 'b 'c 'd 'e 'f 'g 'h 'i 'j 'k 'l 'm. {fold: 'j -> 'h -> 'd -> 'c, init: 'e -> 'k, sub: 'b -> 'm -> 'l, update: 'f -> 'i -> 'a -> 'g} -> {fold: 'j -> 'h -> ('d, anything,) -> 'c, init: 'e -> ('k, "hi",), sub: ('b, anything,) -> 'm -> 'l, update: ('f, anything,) -> 'i -> 'a -> ('g, "hey",)}) -> 'n) -> ('n -> 'o) -> 'o
+//│ ((forall 'a 'b 'c 'd 'e 'f 'g 'h 'i 'j 'k 'l 'm. {fold: 'j -> 'h -> 'd -> 'c, init: 'e -> 'k, sub: 'b -> 'm -> 'l, update: 'f -> 'i -> 'a -> 'g} -> {fold: 'j -> 'h -> (('d, anything,),) -> 'c, init: 'e -> ('k, "hi",), sub: (('b, anything,),) -> 'm -> 'l, update: (('f, anything,),) -> 'i -> 'a -> ('g, "hey",)}) -> 'n) -> ('n -> 'o) -> 'o
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type error in def definition
@@ -297,7 +297,7 @@ def step arr f = f (stepImpl2 arr)
 
 :e // * Since "sound extrusion"
 def step arr f = f (stepImpl2_Ann_2 arr)
-//│ ((forall 'a 'r. ArraysRep['a, 'r] -> {fold: forall 'b. ('a -> 'b -> 'b) -> 'b -> ('r, anything,) -> 'b, init: 'a -> ('r, "hi",), sub: ('r, anything,) -> int -> 'a, update: ('r, anything,) -> int -> 'a -> ('r, "hey",)}) -> 'c) -> ('c -> 'd) -> 'd
+//│ ((forall 'a 'r. ArraysRep['a, 'r] -> {fold: forall 'b. ('a -> 'b -> 'b) -> 'b -> (('r, anything,),) -> 'b, init: 'a -> ('r, "hi",), sub: (('r, anything,),) -> int -> 'a, update: (('r, anything,),) -> int -> 'a -> ('r, "hey",)}) -> 'c) -> ('c -> 'd) -> 'd
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type error in def definition
@@ -336,7 +336,7 @@ def step arr f = f (stepImpl2_Ann_2 arr)
 
 :e
 def step arr f = f (stepImpl2_Ann_3 arr)
-//│ ((forall 'b 'c 'd 'e 'f 'g 'h 'i 'j 'a 'k. {fold: ('a -> ??b -> ??b0) -> ??b0 -> 'g -> ??b, init: 'e -> 'c, sub: 'f -> 'i -> 'b, update: 'd -> 'h -> 'k -> 'j} -> {fold: Fold['a, ('g, string,)], init: 'e -> ('c, "hi",), sub: ('f, anything,) -> 'i -> 'b, update: ('d, anything,) -> 'h -> 'k -> ('j, "hey",)}) -> 'l) -> ('l -> 'm) -> 'm
+//│ ((forall 'b 'c 'd 'e 'f 'g 'h 'i 'j 'a 'k. {fold: ('a -> ??b -> ??b0) -> ??b0 -> 'g -> ??b, init: 'e -> 'c, sub: 'f -> 'i -> 'b, update: 'd -> 'h -> 'k -> 'j} -> {fold: Fold['a, ('g, string,)], init: 'e -> ('c, "hi",), sub: (('f, anything,),) -> 'i -> 'b, update: (('d, anything,),) -> 'h -> 'k -> ('j, "hey",)}) -> 'l) -> ('l -> 'm) -> 'm
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type error in def definition
@@ -383,7 +383,7 @@ def step arr f = f (stepImpl2_Ann_4 arr)
 
 :e // * Since "sound extrusion"
 def step arr f = f (stepImpl2_Ann_2_Ann arr)
-//│ Arrays['a] -> ((forall 'r. {fold: forall 'b. ('a -> 'b -> 'b) -> 'b -> (??Rep & 'r, anything,) -> 'b, init: 'a -> ('r | ??Rep0, "hi",), sub: (??Rep & 'r, anything,) -> int -> 'a, update: (??Rep & 'r, anything,) -> int -> 'a -> ('r | ??Rep0, "hey",)}) -> 'c) -> 'c
+//│ Arrays['a] -> ((forall 'r. {fold: forall 'b. ('a -> 'b -> 'b) -> 'b -> ((??Rep & 'r, anything,),) -> 'b, init: 'a -> ('r | ??Rep0, "hi",), sub: ((??Rep & 'r, anything,),) -> int -> 'a, update: ((??Rep & 'r, anything,),) -> int -> 'a -> ('r | ??Rep0, "hey",)}) -> 'c) -> 'c
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type error in def definition
@@ -419,7 +419,7 @@ def step arr f = f (stepImpl2_Ann_2_Ann arr)
 
 :e // * Since "sound extrusion"
 def step (arr: Arrays['a]) f = f (stepImpl2_Ann_2_Ann arr)
-//│ Arrays['a] -> ((forall 'r. {fold: forall 'b. ('a -> 'b -> 'b) -> 'b -> (??Rep & 'r, anything,) -> 'b, init: 'a -> ('r | ??Rep0, "hi",), sub: (??Rep & 'r, anything,) -> int -> 'a, update: (??Rep & 'r, anything,) -> int -> 'a -> ('r | ??Rep0, "hey",)}) -> 'c) -> 'c
+//│ Arrays['a] -> ((forall 'r. {fold: forall 'b. ('a -> 'b -> 'b) -> 'b -> ((??Rep & 'r, anything,),) -> 'b, init: 'a -> ('r | ??Rep0, "hi",), sub: ((??Rep & 'r, anything,),) -> int -> 'a, update: ((??Rep & 'r, anything,),) -> int -> 'a -> ('r | ??Rep0, "hey",)}) -> 'c) -> 'c
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type error in def definition

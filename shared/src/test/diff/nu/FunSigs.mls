@@ -3,7 +3,7 @@
 
 
 fun log(msg: Str): unit
-//│ fun log: (msg: Str,) -> unit
+//│ fun log: (msg: Str) -> unit
 
 let f =
   log("ok")

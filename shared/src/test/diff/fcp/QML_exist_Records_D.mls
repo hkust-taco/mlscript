@@ -84,11 +84,11 @@ def stepImpl (arrImpl: ArraysImpl['a, 'r]) = {
     update = fun ((r0, r1)) -> fun i -> fun a -> (arrImpl.update r0 i a, "hey");
     fold   = fun f -> fun b -> fun ((r0, r1)) -> arrImpl.fold f b r0
   }
-//│ stepImpl: ArraysImpl['a, 'r] -> {fold: forall 'b. ('a -> 'b -> 'b) -> 'b -> ('r, anything,) -> 'b, init: 'a -> ('r, "hi",), sub: ('r, anything,) -> int -> 'a, update: ('r, anything,) -> int -> 'a -> ('r, "hey",)}
+//│ stepImpl: ArraysImpl['a, 'r] -> {fold: forall 'b. ('a -> 'b -> 'b) -> 'b -> (('r, anything,),) -> 'b, init: 'a -> ('r, "hi",), sub: (('r, anything,),) -> int -> 'a, update: (('r, anything,),) -> int -> 'a -> ('r, "hey",)}
 //│         = [Function: stepImpl]
 
 stepImpl_ty = stepImpl
-//│ ArraysImpl['a, 'r] -> {fold: forall 'b. ('a -> 'b -> 'b) -> 'b -> ('r, anything,) -> 'b, init: 'a -> ('r, "hi",), sub: ('r, anything,) -> int -> 'a, update: ('r, anything,) -> int -> 'a -> ('r, "hey",)}
+//│ ArraysImpl['a, 'r] -> {fold: forall 'b. ('a -> 'b -> 'b) -> 'b -> (('r, anything,),) -> 'b, init: 'a -> ('r, "hi",), sub: (('r, anything,),) -> int -> 'a, update: (('r, anything,),) -> int -> 'a -> ('r, "hey",)}
 //│   <:  stepImpl_ty:
 //│ ArraysImpl['a, 'r] -> ArraysImpl['a, ('r, string,)]
 //│            = [Function: stepImpl]
@@ -307,7 +307,7 @@ def step arr = arr (fun impl -> fun k -> k (stepImpl_ty impl))
 // * Still doesn't work if we only annotate `arr`, as `k` still leaks the internal repr
 :e
 def step (arr: Arrays['a]) = arr (fun impl -> fun k -> k (stepImpl impl))
-//│ Arrays['a] -> ({fold: forall 'b. ('a -> 'b -> 'b) -> 'b -> (??rep & 'r, anything,) -> 'b, init: 'a -> ('r | ??rep0, "hi",), sub: (??rep & 'r, anything,) -> int -> 'a, update: (??rep & 'r, anything,) -> int -> 'a -> ('r | ??rep0, "hey",)} -> 'c) -> 'c
+//│ Arrays['a] -> ({fold: forall 'b. ('a -> 'b -> 'b) -> 'b -> ((??rep & 'r, anything,),) -> 'b, init: 'a -> ('r | ??rep0, "hi",), sub: ((??rep & 'r, anything,),) -> int -> 'a, update: ((??rep & 'r, anything,),) -> int -> 'a -> ('r | ??rep0, "hey",)} -> 'c) -> 'c
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type error in def definition
@@ -428,7 +428,7 @@ def stepImpl_Ann = forall 'a 'rep. fun arrImpl -> {
     update = fun ((r0, r1)) -> fun i -> fun a -> (arrImpl.update r0 i a, "hey");
     fold   = fun f -> fun b -> fun ((r0, r1)) -> (arrImpl.fold: Fold['a, 'rep]) f b r0
   }
-//│ stepImpl_Ann: {fold: Fold['a, 'rep], init: 'c -> 'd, sub: 'e -> 'f -> 'g, update: 'h -> 'i -> 'j -> 'k} -> {fold: forall 'b. ('a -> 'b -> 'b) -> 'b -> ('rep, anything,) -> 'b, init: 'c -> ('d, "hi",), sub: ('e, anything,) -> 'f -> 'g, update: ('h, anything,) -> 'i -> 'j -> ('k, "hey",)}
+//│ stepImpl_Ann: {fold: Fold['a, 'rep], init: 'c -> 'd, sub: 'e -> 'f -> 'g, update: 'h -> 'i -> 'j -> 'k} -> {fold: forall 'b. ('a -> 'b -> 'b) -> 'b -> (('rep, anything,),) -> 'b, init: 'c -> ('d, "hi",), sub: (('e, anything,),) -> 'f -> 'g, update: (('h, anything,),) -> 'i -> 'j -> ('k, "hey",)}
 //│             = [Function: stepImpl_Ann]
 
 def step arr = arr (fun impl -> fun (k: ArraysImplConsumer['a, 'r]) -> k (stepImpl_Ann impl))

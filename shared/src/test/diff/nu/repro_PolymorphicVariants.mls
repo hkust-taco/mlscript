@@ -18,7 +18,7 @@ fun eval(sub, v) =
       eval(Cons((error, error), Nil), error)
       eval(Cons(error, sub), error)
       error
-//│ fun eval: (Cons[anything] | Nil, Abs[anything],) -> nothing
+//│ fun eval: (Cons[anything] | Nil, Abs[anything]) -> nothing
 
 mixin EvalLambda {
   fun eval(sub, v) =
@@ -29,8 +29,8 @@ mixin EvalLambda {
         error
 }
 //│ mixin EvalLambda() {
-//│   this: {eval: (Cons[(string, nothing,) | 'A], nothing,) -> anything}
-//│   fun eval: (Cons['A] | Nil, Abs[anything],) -> nothing
+//│   this: {eval: (Cons[[string, nothing] | 'A], nothing) -> anything}
+//│   fun eval: (Cons['A] | Nil, Abs[anything]) -> nothing
 //│ }
 
 // * Note: this used to crash because of a current type simplification bug: analyze2 does not traverse TVs witht he correct PolMap
@@ -38,6 +38,6 @@ mixin EvalLambda {
 // :ds
 module Test1 extends EvalLambda
 //│ module Test1 {
-//│   fun eval: (Cons[anything] | Nil, Abs[anything],) -> nothing
+//│   fun eval: (Cons[anything] | Nil, Abs[anything]) -> nothing
 //│ }
 

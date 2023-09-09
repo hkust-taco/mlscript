@@ -46,7 +46,7 @@ object Main {
         sb ++= htmlLineBreak
         ()
       }
-      val sctx = Message.mkCtx(diag.allMsgs.iterator.map(_._1), "?")
+      val sctx = Message.mkCtx(diag.allMsgs.iterator.map(_._1), newDefs=true, "?")
       val headStr = diag match {
         case ErrorReport(msg, loco, src) =>
           totalTypeErrors += 1
@@ -143,7 +143,7 @@ object Main {
           
           val exp = typer.expandType(sim)(ctx)
           
-          val expStr = exp.showIn(ShowCtx.mk(exp :: Nil), 0).stripSuffix("\n")
+          val expStr = exp.showIn(ShowCtx.mk(exp :: Nil, newDefs = true), 0).stripSuffix("\n")
             .replaceAll("  ", "&nbsp;&nbsp;")
             .replaceAll("\n", "<br/>")
 

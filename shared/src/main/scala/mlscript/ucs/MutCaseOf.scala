@@ -241,8 +241,7 @@ object MutCaseOf {
           if (mergeDefault(trailingBindings, term) === 0) {
             import Message.MessageContext
             raise(WarningReport(
-              msg"Found a redundant else branch" -> term.toLoc :: Nil
-            ))
+              msg"Found a redundant else branch" -> term.toLoc :: Nil, newDefs = true))
           }
         // The CC is an if-then-else. We create a pattern match of true/false.
         case Conjunction((head @ BooleanTest(test)) :: tail, trailingBindings) -> term if test === condition =>
@@ -254,7 +253,8 @@ object MutCaseOf {
           whenTrue.tryMerge(branch)
           whenFalse match {
             case Consequent(_) =>
-              raise(WarningReport(Message.fromStr("duplicated else in the if-then-else") -> N :: Nil))
+              raise(WarningReport(Message.fromStr("duplicated else in the if-then-else") -> N :: Nil,
+                newDefs = true))
             case MissingCase =>
               whenFalse = buildFirst(branch._1, branch._2)
               whenFalse.addBindings(head.bindings)
@@ -362,8 +362,8 @@ object MutCaseOf {
               if (mergeDefault(trailingBindings, term) === 0) {
                 import Message.MessageContext
                 raise(WarningReport(
-                  msg"Found a redundant else branch" -> term.toLoc :: Nil
-                ))
+                  msg"Found a redundant else branch" -> term.toLoc :: Nil,
+                  newDefs = true))
               }
             // The conditions to be inserted does not overlap with me.
             case conjunction -> term =>
@@ -499,7 +499,7 @@ object MutCaseOf {
           // }
         }
         buffer += Message.fromStr("is subsumed by the branch here.") -> term.toLoc
-        WarningReport(buffer.toList)
+        WarningReport(buffer.toList, newDefs = true)
       }
 
     def mergeDefault(bindings: Ls[LetBinding], default: Term)

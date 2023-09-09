@@ -10,10 +10,10 @@ trait T3 extends T1, T2
 //│   fun f: forall 'A. 'A -> 'A
 //│ }
 //│ trait T2 {
-//│   fun f: forall 'B 'C. ('B, 'C,) -> ('B, 'C,)
+//│   fun f: forall 'B 'C. ('B, 'C) -> ['B, 'C]
 //│ }
 //│ trait T3 extends T1, T2 {
-//│   fun f: forall 'A 'B 'C. 'A -> 'A & ('B, 'C,) -> ('B, 'C,)
+//│   fun f: forall 'A 'B 'C. 'A -> 'A & ('B, 'C) -> ['B, 'C]
 //│ }
 
 

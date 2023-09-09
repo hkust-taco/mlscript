@@ -53,7 +53,7 @@ class Some<A>(value: A) {
 //│   fun get: A
 //│   fun map: forall 'A. (A -> 'A) -> Some['A]
 //│   fun map_A: forall 'A0. (A -> 'A0) -> Some['A0]
-//│   fun toArray: (A,)
+//│   fun toArray: [A]
 //│ }
 
 
@@ -74,7 +74,7 @@ s.get
 //│     = 1
 
 s.toArray
-//│ (1,)
+//│ [1]
 //│ res
 //│     = [ 1 ]
 
@@ -111,13 +111,13 @@ module None {
 //│ module None {
 //│   fun get: nothing
 //│   fun map: anything -> None
-//│   fun map_A: (f: nothing -> anything,) -> None
-//│   fun toArray: ()
+//│   fun map_A: (f: nothing -> anything) -> None
+//│   fun toArray: []
 //│ }
 
 
 None.toArray
-//│ ()
+//│ []
 //│ res
 //│     = []
 
@@ -169,7 +169,7 @@ if opt is Some(v) then v else 0
 fun map(x, f) = if x is
   None then None
   Some(v) then Some(f(v))
-//│ fun map: forall 'value 'A. (None | Some['value], 'value -> 'A,) -> (None | Some['A])
+//│ fun map: forall 'value 'A. (None | Some['value], 'value -> 'A) -> (None | Some['A])
 
 let mo = map(opt, succ)
 //│ let mo: None | Some[Int]
@@ -243,7 +243,7 @@ class Test<A>(n: A) {
 }
 //│ class Test[A](n: A) {
 //│   fun foo: A
-//│   fun foo1: (x: A,) -> A
+//│   fun foo1: (x: A) -> A
 //│   fun id: forall 'a. 'a -> 'a
 //│ }
 
@@ -285,7 +285,7 @@ t.id
 //│     = [Function: id]
 
 [t.id(1), t.id(true)]
-//│ (1, true,)
+//│ [1, true]
 //│ res
 //│     = [ 1, true ]
 
@@ -305,12 +305,12 @@ class TestBad<A>() {
 //│ ║  l.294: 	class TestBad<A>() {
 //│ ╙──       	              ^
 //│ class TestBad[A]() {
-//│   fun foo1: (x: A,) -> A
-//│   fun foo2: (x: A,) -> (Int | error)
+//│   fun foo1: (x: A) -> A
+//│   fun foo2: (x: A) -> (Int | error)
 //│ }
 
 TestBad().foo1
-//│ (x: 'A,) -> 'A
+//│ (x: 'A) -> 'A
 //│ res
 //│     = [Function: foo1]
 
@@ -331,12 +331,12 @@ let t = TestBad()
 //│   = TestBad {}
 
 t.foo1
-//│ (x: 'A,) -> 'A
+//│ (x: 'A) -> 'A
 //│ res
 //│     = [Function: foo1]
 
 [t.foo1(0), t.foo1(true)]
-//│ (0, true,)
+//│ [0, true]
 //│ res
 //│     = [ 0, true ]
 
@@ -352,10 +352,10 @@ t
 
 
 fun foo(x: TestBad<Int>) = x.foo1
-//│ fun foo: (x: TestBad[Int],) -> (x: Int,) -> Int
+//│ fun foo: (x: TestBad[Int]) -> (x: Int) -> Int
 
 foo(t)
-//│ (x: Int,) -> Int
+//│ (x: Int) -> Int
 //│ res
 //│     = [Function: foo1]
 
@@ -366,7 +366,7 @@ foo(t)(1)
 
 
 TestBad().foo2
-//│ (x: anything,) -> (Int | error)
+//│ (x: anything) -> (Int | error)
 //│ res
 //│     = [Function: foo2]
 

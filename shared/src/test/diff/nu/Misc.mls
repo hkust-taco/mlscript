@@ -45,7 +45,7 @@ f({y: 1})
 
 
 let f = (x, y) => x + y
-//│ let f: (Int, Int,) -> Int
+//│ let f: (Int, Int) -> Int
 //│ f
 //│   = [Function: f2]
 
@@ -59,7 +59,7 @@ f([1, 2])
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.58: 	f([1, 2])
 //│ ║        	^^^^^^^^^
-//│ ╟── argument of type `((1, 2,),)` does not match type `(?a, ?b,)`
+//│ ╟── argument of type `[[1, 2]]` does not match type `[?a, ?b]`
 //│ ║  l.58: 	f([1, 2])
 //│ ║        	 ^^^^^^^^
 //│ ╟── Note: constraint arises from tuple literal:
@@ -72,7 +72,7 @@ f([1, 2])
 
 
 let f = ((x, y)) => x + y
-//│ let f: (Int, Int,) -> Int
+//│ let f: ([Int, Int]) -> Int
 //│ f
 //│   = [Function: f3]
 
@@ -81,7 +81,7 @@ f(1, 2)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.80: 	f(1, 2)
 //│ ║        	^^^^^^^
-//│ ╟── argument list of type `(1, 2,)` does not match type `((?a, ?b,),)`
+//│ ╟── argument list of type `[1, 2]` does not match type `[[?a, ?b]]`
 //│ ║  l.80: 	f(1, 2)
 //│ ╙──      	 ^^^^^^
 //│ Int | error
@@ -102,13 +102,13 @@ f([1, 2])
 //│     = 3
 
 let f = (((x, y))) => x + y
-//│ let f: (Int, Int,) -> Int
+//│ let f: ([Int, Int]) -> Int
 //│ f
 //│   = [Function: f4]
 
 // TODO parse as tuple arg!
 let f = [x, y] => x + y
-//│ let f: (Int, Int,) -> Int
+//│ let f: (Int, Int) -> Int
 //│ f
 //│   = [Function: f5]
 
@@ -119,7 +119,7 @@ f(1, 2)
 
 // TODO...
 let f = [[[x, y]]] => x + y
-//│ let f: (Int, Int,) -> Int
+//│ let f: ([[Int, Int]]) -> Int
 //│ f
 //│   = [Function: f6]
 

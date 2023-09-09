@@ -13,14 +13,14 @@ class C1 extends T1 {
   fun f(x: Int) = x
 }
 //│ class C1 extends T1 {
-//│   fun f: (x: Int,) -> Int
+//│   fun f: (x: Int) -> Int
 //│ }
 
 class C1 extends T1['FigureItOut] {
   fun f(x: Int) = x
 }
 //│ class C1 extends T1 {
-//│   fun f: (x: Int,) -> Int
+//│   fun f: (x: Int) -> Int
 //│ }
 
 let c1 = new C1
@@ -29,7 +29,7 @@ let c1 = new C1
 //│    = C1 {}
 
 c1.f
-//│ (x: Int,) -> Int
+//│ (x: Int) -> Int
 //│ res
 //│     = [Function: f]
 
@@ -117,7 +117,7 @@ class C2 extends T2['FigureItOut] {
 //│   let r: Int | error
 //│ }
 //│ class C2 extends T2 {
-//│   fun f: (x: Int,) -> Int
+//│   fun f: (x: Int) -> Int
 //│ }
 
 :e
@@ -146,7 +146,7 @@ class C3 extends T3['FigureItOut] {
 //│   let r: error | false
 //│ }
 //│ class C3 extends T3 {
-//│   fun f: (x: Int,) -> Int
+//│   fun f: (x: Int) -> Int
 //│ }
 
 :e // FIXME

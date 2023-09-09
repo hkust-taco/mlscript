@@ -9,13 +9,13 @@ fun concat6(a, b, c, d, e, f) = concat2(a, concat5(b, c, d, e, f))
 fun concat7(a, b, c, d, e, f, g) = concat2(a, concat6(b, c, d, e, f, g))
 fun concat8(a, b, c, d, e, f, g, h) = concat2(a, concat7(b, c, d, e, f, g, h))
 fun par(a) = concat3("(", a, ")")
-//│ fun concat2: (Str, Str,) -> Str
-//│ fun concat3: (Str, Str, Str,) -> Str
-//│ fun concat4: (Str, Str, Str, Str,) -> Str
-//│ fun concat5: (Str, Str, Str, Str, Str,) -> Str
-//│ fun concat6: (Str, Str, Str, Str, Str, Str,) -> Str
-//│ fun concat7: (Str, Str, Str, Str, Str, Str, Str,) -> Str
-//│ fun concat8: (Str, Str, Str, Str, Str, Str, Str, Str,) -> Str
+//│ fun concat2: (Str, Str) -> Str
+//│ fun concat3: (Str, Str, Str) -> Str
+//│ fun concat4: (Str, Str, Str, Str) -> Str
+//│ fun concat5: (Str, Str, Str, Str, Str) -> Str
+//│ fun concat6: (Str, Str, Str, Str, Str, Str) -> Str
+//│ fun concat7: (Str, Str, Str, Str, Str, Str, Str) -> Str
+//│ fun concat8: (Str, Str, Str, Str, Str, Str, Str, Str) -> Str
 //│ fun par: Str -> Str
 
 :escape
@@ -38,9 +38,9 @@ fun fromCharCode(n: Int) = StringInstance.fromCharCode(n)
 fun stringCharCodeAt(s: Str, i) = makeString(s).charCodeAt(i)
 fun stringLength(s: Str) = makeString(s).length
 //│ let anythingToString: anything -> Str
-//│ fun fromCharCode: (n: Int,) -> Str
-//│ fun stringCharCodeAt: (s: Str, Int,) -> Int
-//│ fun stringLength: (s: Str,) -> Int
+//│ fun fromCharCode: (n: Int) -> Str
+//│ fun stringCharCodeAt: (s: Str, Int) -> Int
+//│ fun stringLength: (s: Str) -> Int
 //│ anythingToString
 //│                  = [Function: toString]
 
@@ -75,13 +75,13 @@ fun list6(x, y, z, w, v, u) = Cons(x, list5(y, z, w, v, u))
 fun list7(x, y, z, w, v, u, t) = Cons(x, list6(y, z, w, v, u, t))
 fun list8(x, y, z, w, v, u, t, s) = Cons(x, list7(y, z, w, v, u, t, s))
 //│ fun list1: forall 'A. 'A -> Cons['A]
-//│ fun list2: forall 'A0. ('A0, 'A0,) -> Cons['A0]
-//│ fun list3: forall 'A1. ('A1, 'A1, 'A1,) -> Cons['A1]
-//│ fun list4: forall 'A2. ('A2, 'A2, 'A2, 'A2,) -> Cons['A2]
-//│ fun list5: forall 'A3. ('A3, 'A3, 'A3, 'A3, 'A3,) -> Cons['A3]
-//│ fun list6: forall 'A4. ('A4, 'A4, 'A4, 'A4, 'A4, 'A4,) -> Cons['A4]
-//│ fun list7: forall 'A5. ('A5, 'A5, 'A5, 'A5, 'A5, 'A5, 'A5,) -> Cons['A5]
-//│ fun list8: forall 'A6. ('A6, 'A6, 'A6, 'A6, 'A6, 'A6, 'A6, 'A6,) -> Cons['A6]
+//│ fun list2: forall 'A0. ('A0, 'A0) -> Cons['A0]
+//│ fun list3: forall 'A1. ('A1, 'A1, 'A1) -> Cons['A1]
+//│ fun list4: forall 'A2. ('A2, 'A2, 'A2, 'A2) -> Cons['A2]
+//│ fun list5: forall 'A3. ('A3, 'A3, 'A3, 'A3, 'A3) -> Cons['A3]
+//│ fun list6: forall 'A4. ('A4, 'A4, 'A4, 'A4, 'A4, 'A4) -> Cons['A4]
+//│ fun list7: forall 'A5. ('A5, 'A5, 'A5, 'A5, 'A5, 'A5, 'A5) -> Cons['A5]
+//│ fun list8: forall 'A6. ('A6, 'A6, 'A6, 'A6, 'A6, 'A6, 'A6, 'A6) -> Cons['A6]
 
 fun findFirst(list, p) =
   if list is
@@ -89,13 +89,13 @@ fun findFirst(list, p) =
     Cons(x, xs) and
       p(x) then Some(x)
       else findFirst(xs, p)
-//│ fun findFirst: forall 'A. (Cons['A] | Nil, 'A -> Object,) -> (None | Some['A])
+//│ fun findFirst: forall 'A. (Cons['A] | Nil, 'A -> Object) -> (None | Some['A])
 
 fun listConcat(xs, ys) =
   if xs is
     Nil then ys
     Cons(x, xs') then Cons(x, listConcat(xs', ys))
-//│ fun listConcat: forall 'a 'A 'A0. (Cons['A] | Nil, List['A0] & 'a,) -> (Cons['A0] | 'a)
+//│ fun listConcat: forall 'a 'A 'A0. (Cons['A] | Nil, List['A0] & 'a) -> (Cons['A0] | 'a)
 //│   where
 //│     'A <: 'A0
 
@@ -105,7 +105,7 @@ fun listContains(xs, x) =
     Cons(x', xs') and
       eq(x)(x') then true
       _ then listContains(xs', x)
-//│ fun listContains: forall 'A. (Cons['A] | Nil, anything,) -> Bool
+//│ fun listContains: forall 'A. (Cons['A] | Nil, anything) -> Bool
 
 // Remove all occurrences of x from xs.
 fun listWithout(xs, x) =
@@ -114,7 +114,7 @@ fun listWithout(xs, x) =
     Cons(x', xs') and
       eq(x)(x') then listWithout(xs', x)
       _ then Cons(x', listWithout(xs', x))
-//│ fun listWithout: forall 'A 'A0. (Cons['A] | Nil, anything,) -> (Cons['A0] | Nil)
+//│ fun listWithout: forall 'A 'A0. (Cons['A] | Nil, anything) -> (Cons['A0] | Nil)
 //│   where
 //│     'A <: 'A0
 
@@ -130,7 +130,7 @@ fun listJoin(xs, sep) =
     Cons(x, xs') and xs' is
       Nil then toString(x)
       _ then concat3(toString(x), sep, listJoin(xs', sep))
-//│ fun listJoin: forall 'A. (Cons['A] | Nil, Str,) -> Str
+//│ fun listJoin: forall 'A. (Cons['A] | Nil, Str) -> Str
 
 listJoin(list3("x", "y", "z"), ", ")
 //│ Str
@@ -195,11 +195,11 @@ fun hasFree(t, n) =
     Abs(Var(name), body) then hasFree(body, n)
     App(lhs, rhs) then hasFree(lhs, n) || hasFree(rhs, n)
     _ then false
-//│ fun hasFree: (Object, anything,) -> Bool
+//│ fun hasFree: (Object, anything) -> Bool
 
 fun showHasFree(t, n) =
   concat4(showTerm(t), if hasFree(t, n) then " has " else " DOES NOT have ", "free variable ", n)
-//│ fun showHasFree: (Abs | App | Var, Str,) -> Str
+//│ fun showHasFree: (Abs | App | Var, Str) -> Str
 
 showHasFree(Var("x"), "x")
 showHasFree(Var("x"), "y")
@@ -280,7 +280,7 @@ fun tryNextAlphabet(initialCode, currentCode, freeNames) =
     let name = fromCharCode(currentCode)
     listContains(freeNames, name) then tryNextAlphabet(initialCode, currentCode + 1, freeNames)
     _ then Some(name)
-//│ fun tryNextAlphabet: forall 'A. (Num, Int, Cons['A] | Nil,) -> (None | Some[Str])
+//│ fun tryNextAlphabet: forall 'A. (Num, Int, Cons['A] | Nil) -> (None | Some[Str])
 
 toString(tryNextAlphabet(97, 97, list1("a")))
 toString(tryNextAlphabet(97, 98, list1("a")))
@@ -305,7 +305,7 @@ fun tryAppendDigits(name, index, freeNames) =
     listContains(freeNames, currentName) then
       tryAppendDigits(name, index + 1, freeNames)
     _ then currentName
-//│ fun tryAppendDigits: forall 'A. (Str, Int, Cons['A] | Nil,) -> Str
+//│ fun tryAppendDigits: forall 'A. (Str, Int, Cons['A] | Nil) -> Str
 
 // Note: some weird behavior here... Just try the commented code.
 fun findFreshName(name, freeNames) =
@@ -315,12 +315,12 @@ fun findFreshName(name, freeNames) =
       tryNextAlphabet(charCode, charCode + 1, freeNames) is
         Some(newName) then newName
     _ then tryAppendDigits(name, 0, freeNames)
-//│ fun findFreshName: forall 'A 'A0 'A1. (Str, Cons[in 'A | 'A0 | 'A1 out 'A & 'A0 & 'A1] | Nil,) -> Str
+//│ fun findFreshName: forall 'A 'A0 'A1. (Str, Cons[in 'A | 'A0 | 'A1 out 'A & 'A0 & 'A1] | Nil) -> Str
 
 // Find a fresh name to replace `name` that does not conflict with any bound
 // variables in the `body`.
 fun freshName(name, body) = findFreshName(name, fv(body))
-//│ fun freshName: (Str, Abs | App | Var,) -> Str
+//│ fun freshName: (Str, Abs | App | Var) -> Str
 
 fun subst(t, n, v) =
   if t is
@@ -331,11 +331,11 @@ fun subst(t, n, v) =
       _ then Abs(Var(name), subst(body, n, v))
     App(lhs, rhs) then App(subst(lhs, n, v), subst(rhs, n, v))
     _ then t
-//│ fun subst: forall 'a. (Abs | App | Term & Object & 'a & ~#Abs & ~#App & ~#Var | Var, anything, Term & Object & 'a,) -> (Abs | App | Var | 'a)
+//│ fun subst: forall 'a. (Abs | App | Term & Object & 'a & ~#Abs & ~#App & ~#Var | Var, anything, Term & Object & 'a) -> (Abs | App | Var | 'a)
 
 fun showSubst(t, n, v) =
   concat8(showTerm(t), " [", n, " / ", showTerm(v), "]", " => ", showTerm(subst(t, n, v)))
-//│ fun showSubst: (Abs | App | Var, Str, Abs & Term | App & Term | Var & Term,) -> Str
+//│ fun showSubst: (Abs | App | Var, Str, Abs & Term | App & Term | Var & Term) -> Str
 
 showSubst(Var("x"), "x", Var("y"))
 showSubst(Abs(Var("x"), Var("x")), "x", Var("z"))
@@ -457,4 +457,4 @@ fun equalTerm(a, b) =
     Abs(la, ra) and b is Abs(lb, rb) then equalTerm(la, lb) && equalTerm(ra, rb)
     App(la, ra) and b is App(lb, rb) then equalTerm(la, lb) && equalTerm(ra, rb)
     _ then false
-//│ fun equalTerm: (Object, Object,) -> Bool
+//│ fun equalTerm: (Object, Object) -> Bool

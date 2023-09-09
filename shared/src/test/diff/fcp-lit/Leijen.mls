@@ -228,20 +228,20 @@ def revapp x f = f x
 
 def fst: forall 'a 'b. (('a, 'b),) -> 'a
 def fst ((x, _),) = x
-//│ fst: ('a, anything,) -> 'a
+//│ fst: (('a, anything,),) -> 'a
 //│    = <missing implementation>
-//│ ('a, anything,) -> 'a
+//│ (('a, anything,),) -> 'a
 //│   <:  fst:
-//│ ('a, anything,) -> 'a
+//│ (('a, anything,),) -> 'a
 //│    = [Function: fst]
 
 def snd: forall 'a 'b. (('a, 'b),) -> 'b
 def snd ((_, x),) = x
-//│ snd: (anything, 'b,) -> 'b
+//│ snd: ((anything, 'b,),) -> 'b
 //│    = <missing implementation>
-//│ (anything, 'a,) -> 'a
+//│ ((anything, 'a,),) -> 'a
 //│   <:  snd:
-//│ (anything, 'b,) -> 'b
+//│ ((anything, 'b,),) -> 'b
 //│    = [Function: snd]
 
 :ng

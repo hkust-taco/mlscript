@@ -25,7 +25,7 @@ fun list_assoc(s, l) =
       if s === h._1 then Success(h._2)
       else list_assoc(s, t)
     Nil then NotFound()
-//│ fun list_assoc: forall 'a 'A. (Eql['a], Cons[{_1: 'a, _2: 'A}] | Nil,) -> (NotFound | Success['A])
+//│ fun list_assoc: forall 'a 'A. (Eql['a], Cons[{_1: 'a, _2: 'A}] | Nil) -> (NotFound | Success['A])
 
 // fun list_assoc(s: Str, l: Cons[{ _1: Str, _2: 'b }] | Nil): NotFound | Success['b]
 
@@ -40,7 +40,7 @@ mixin EvalVar {
         Success(r) then r
 }
 //│ mixin EvalVar() {
-//│   fun eval: (Cons[{_1: anything, _2: 'result}] | Nil, Var,) -> (Var | 'result)
+//│   fun eval: (Cons[{_1: anything, _2: 'result}] | Nil, Var) -> (Var | 'result)
 //│ }
 
 class Abs[A](x: Str, t: A)
@@ -52,7 +52,7 @@ fun gensym(): Str = "fun"
 //│ fun gensym: () -> Str
 
 fun int_to_string(x: Int): Str = "0"
-//│ fun int_to_string: (x: Int,) -> Str
+//│ fun int_to_string: (x: Int) -> Str
 
 mixin EvalLambda {
   fun eval(sub, v) =
@@ -71,14 +71,14 @@ mixin EvalLambda {
       super.eval(sub, v)
 }
 //│ mixin EvalLambda() {
-//│   super: {eval: ('a, 'b,) -> 'c}
-//│   this: {eval: ('a, 's,) -> ('A & 'd) & (Cons[(Str, 'd,)], 't,) -> 'c & (Cons[(Str, Var,) | 'A0], 't0,) -> 'A1}
-//│   fun eval: ('a & (Cons['A0] | Nil), Abs['t0] | App['s & (Abs['t] | Object & ~#Abs)] | Object & 'b & ~#Abs & ~#App,) -> (Abs['A1] | App['A] | 'c)
+//│   super: {eval: ('a, 'b) -> 'c}
+//│   this: {eval: ('a, 's) -> ('A & 'd) & (Cons[[Str, 'd]], 't) -> 'c & (Cons[[Str, Var] | 'A0], 't0) -> 'A1}
+//│   fun eval: ('a & (Cons['A0] | Nil), Abs['t0] | App['s & (Abs['t] | Object & ~#Abs)] | Object & 'b & ~#Abs & ~#App) -> (Abs['A1] | App['A] | 'c)
 //│ }
 
 module Test1 extends EvalVar, EvalLambda
 //│ module Test1 {
-//│   fun eval: forall 'a. (Cons[{_1: anything, _2: 'result}] | Nil, Abs['b] | App['A] | Var,) -> ('result | 'a)
+//│   fun eval: forall 'a. (Cons[{_1: anything, _2: 'result}] | Nil, Abs['b] | App['A] | Var) -> ('result | 'a)
 //│ }
 //│ where
 //│   'b <: Abs['b] | App['A] | Var
@@ -131,7 +131,7 @@ fun map_expr(f, v) =
     Numb then v
     Add(l, r) then Add(f(l), f(r))
     Mul(l, r) then Mul(f(l), f(r))
-//│ fun map_expr: forall 'A 'l 'A0 'l0. ('l -> 'A0 & 'l0 -> 'A, Add['l] | Mul['l0] | Numb | Var,) -> (Add['A0] | Mul['A] | Numb | Var)
+//│ fun map_expr: forall 'A 'l 'A0 'l0. ('l -> 'A0 & 'l0 -> 'A, Add['l] | Mul['l0] | Numb | Var) -> (Add['A0] | Mul['A] | Numb | Var)
 
 mixin EvalExpr {
   fun eval(sub, v) =
@@ -144,14 +144,14 @@ mixin EvalExpr {
     else v
 }
 //│ mixin EvalExpr() {
-//│   super: {eval: ('a, Var,) -> 'b}
-//│   this: {eval: ('a, 'c,) -> Object}
-//│   fun eval: ('a, 'b & (Add['c] | Mul['c] | Numb | Var),) -> (Numb | 'b)
+//│   super: {eval: ('a, Var) -> 'b}
+//│   this: {eval: ('a, 'c) -> Object}
+//│   fun eval: ('a, 'b & (Add['c] | Mul['c] | Numb | Var)) -> (Numb | 'b)
 //│ }
 
 module Test2 extends EvalVar, EvalExpr
 //│ module Test2 {
-//│   fun eval: forall 'a. (Cons[{_1: anything, _2: Object & 'result}] | Nil, 'a & (Add['b] | Mul['b] | Numb | Var),) -> (Numb | Var | 'result | 'a | 'b)
+//│   fun eval: forall 'a. (Cons[{_1: anything, _2: Object & 'result}] | Nil, 'a & (Add['b] | Mul['b] | Numb | Var)) -> (Numb | Var | 'result | 'a | 'b)
 //│ }
 //│ where
 //│   'b <: Add['b] | Mul['b] | Numb | Var
@@ -198,7 +198,7 @@ Test2.eval(Cons(("a", Abs("d", Var("d"))), Nil), Add(Numb(1), Var("a")))
 
 module Test3 extends EvalVar, EvalExpr, EvalLambda
 //│ module Test3 {
-//│   fun eval: forall 'a 'A. (Cons[{_1: anything, _2: 'result}] | Nil, Abs['b] | App['A] | Object & 'c & ~#Abs & ~#App,) -> ('A0 | 'a)
+//│   fun eval: forall 'a 'A. (Cons[{_1: anything, _2: 'result}] | Nil, Abs['b] | App['A] | Object & 'c & ~#Abs & ~#App) -> ('A0 | 'a)
 //│ }
 //│ where
 //│   'result :> 'A0
@@ -228,7 +228,7 @@ Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), App(Abs("a", Var("a")), Add(Num
 // * Incorrect version, for regression testing – EvalLambda should be mixed in after EvalExpr
 module Test3 extends EvalVar, EvalLambda, EvalExpr
 //│ module Test3 {
-//│   fun eval: (Cons[{_1: anything, _2: 'result}] | Nil, 'result & (Add['a] | Mul['a] | Numb | Var),) -> ('A | 'result | 'a)
+//│   fun eval: (Cons[{_1: anything, _2: 'result}] | Nil, 'result & (Add['a] | Mul['a] | Numb | Var)) -> ('A | 'result | 'a)
 //│ }
 //│ where
 //│   'result :> 'A | 'a

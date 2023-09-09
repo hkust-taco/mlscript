@@ -100,7 +100,7 @@ mixin M0(n: Int) {
 }
 //│ mixin M0(n: Int) {
 //│   fun bar: Int
-//│   fun foo: (Int, Int, Int,)
+//│   fun foo: [Int, Int, Int]
 //│   let m: Int
 //│ }
 
@@ -111,19 +111,19 @@ module M1 extends M0(123) {
 }
 //│ module M1 {
 //│   fun bar: "bar"
-//│   fun foo: (Int, Int, Int,)
+//│   fun foo: [Int, Int, Int]
 //│   fun m: "m"
 //│   fun n: "n"
 //│ }
 
 [M1.n, M1.m, M1.bar]
-//│ ("n", "m", "bar",)
+//│ ["n", "m", "bar"]
 //│ res
 //│     = [ 'n', 'm', 'bar' ]
 
 // FIXME typing/runtime mismatch
 M1.foo
-//│ (Int, Int, Int,)
+//│ [Int, Int, Int]
 //│ res
 //│     = [ 123, 'm', 'bar' ]
 

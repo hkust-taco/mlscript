@@ -22,8 +22,8 @@ def snd: (('a, 'b),) -> 'b
 //│ isnil: List[?] -> bool
 //│ car: List['a] -> 'a
 //│ cdr: List['a] -> List['a]
-//│ fst: ('a, anything,) -> 'a
-//│ snd: (anything, 'b,) -> 'b
+//│ fst: (('a, anything,),) -> 'a
+//│ snd: ((anything, 'b,),) -> 'b
 
 
 // (* Use the value restriction ! *)

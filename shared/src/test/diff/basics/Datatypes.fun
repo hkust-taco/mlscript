@@ -28,7 +28,7 @@ data type Bool2 of True2 & False2
 //│ Parsed: data type Bool2 of {& True2 False2};
 //│ Desugared: type alias Bool2 = &[True2, False2]
 //│ Desugared: class &[True2, False2]: {False2 <: False2, True2 <: True2}
-//│ Desugared: def &: forall True2 False2. True2 -> False2 -> &[True2, False2]
+//│ Desugared: def &: forall True2 False2. (...True2) -> (...False2) -> &[True2, False2]
 //│ AST: Def(false, &, PolyType(List(Left(TypeName(True2)), Left(TypeName(False2))),Function(TypeName(True2),Function(TypeName(False2),AppliedType(TypeName(&),List(TypeName(True2), TypeName(False2)))))), true)
 //│ ╔══[ERROR] type identifier not found: True2
 //│ ║  l.27: 	data type Bool2 of True2 & False2
@@ -119,7 +119,7 @@ data type List a of
 //│ Desugared: class Cons[a]: {head: a, tail: List[a]}
 //│ Desugared: def Nil: forall a. Nil[a]
 //│ AST: Def(false, Nil, PolyType(List(Left(TypeName(a))),AppliedType(TypeName(Nil),List(TypeName(a)))), true)
-//│ Desugared: def Cons: forall a. (head: a,) -> (tail: List[a],) -> Cons[a]
+//│ Desugared: def Cons: forall a. (head: a) -> (tail: List[a]) -> Cons[a]
 //│ AST: Def(false, Cons, PolyType(List(Left(TypeName(a))),Function(Tuple(List((Some(head),Field(None,TypeName(a))))),Function(Tuple(List((Some(tail),Field(None,AppliedType(TypeName(List),List(TypeName(a))))))),AppliedType(TypeName(Cons),List(TypeName(a)))))), true)
 //│ Defined type alias List[+a]
 //│ Defined class Nil[±a]
@@ -139,7 +139,7 @@ data type Ls of LsA a
 //│ Parsed: data type Ls of {LsA a};
 //│ Desugared: type alias Ls = LsA[a]
 //│ Desugared: class LsA[a]: {a: a}
-//│ Desugared: def LsA: forall a. a -> LsA[a]
+//│ Desugared: def LsA: forall a. (...a) -> LsA[a]
 //│ AST: Def(false, LsA, PolyType(List(Left(TypeName(a))),Function(TypeName(a),AppliedType(TypeName(LsA),List(TypeName(a))))), true)
 //│ ╔══[ERROR] type identifier not found: a
 //│ ║  l.138: 	data type Ls of LsA a
@@ -154,7 +154,7 @@ data type Ls2 of LsA2 `a
 //│ Parsed: data type Ls2 of {LsA2 `a};
 //│ Desugared: type alias Ls2 = LsA2[]
 //│ Desugared: class LsA2: {`a: 'a}
-//│ Desugared: def LsA2: 'a -> LsA2[]
+//│ Desugared: def LsA2: (...'a) -> LsA2[]
 //│ AST: Def(false, LsA2, PolyType(List(),Function(a,AppliedType(TypeName(LsA2),List()))), true)
 //│ ╔══[ERROR] cannot inherit from a polymorphic type
 //│ ║  l.153: 	data type Ls2 of LsA2 `a

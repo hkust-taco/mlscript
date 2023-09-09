@@ -44,7 +44,7 @@ final class TsTypegenCodeBuilder {
   object TypegenContext {
 
     def apply(mlType: Type): TypegenContext = {
-      val existingTypeVars = ShowCtx.mk(mlType :: Nil, "").vs
+      val existingTypeVars = ShowCtx.mk(mlType :: Nil, false, "").vs
       val typegenTypeScope = typeScope.derive("localTypeScope")
       val typegenTermScope = termScope.derive("localTermScope")
       val typeVarMapping = existingTypeVars.to(MutSortedMap)

@@ -33,7 +33,7 @@ fun f(x, y) =
 //│ ╟── It first appears here.
 //│ ║  l.18: 	        C then 2
 //│ ╙──      	        ^
-//│ fun f: (anything, anything,) -> error
+//│ fun f: (anything, anything) -> error
 
 :e
 // These operators are uninterpreted. So, it's impossible to reason the

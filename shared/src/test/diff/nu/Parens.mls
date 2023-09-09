@@ -2,7 +2,7 @@
 
 
 ()
-//│ ()
+//│ []
 //│ res
 //│     = []
 
@@ -29,18 +29,18 @@
 //│     = 1
 
 (1, 2)
-//│ (1, 2,)
+//│ [1, 2]
 //│ res
 //│     = [ 1, 2 ]
 
 (1, 2,)
-//│ (1, 2,)
+//│ [1, 2]
 //│ res
 //│     = [ 1, 2 ]
 
 
 let x: ()
-//│ let x: ()
+//│ let x: []
 //│ x
 //│   = <missing implementation>
 
@@ -67,11 +67,11 @@ let x: (1,)
 //│   = <missing implementation>
 
 let x: (1, 2)
-//│ let x: (1, 2,)
+//│ let x: [1, 2]
 //│ x
 //│   = <missing implementation>
 
 let x: (1, 2,)
-//│ let x: (1, 2,)
+//│ let x: [1, 2]
 //│ x
 //│   = <missing implementation>

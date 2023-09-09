@@ -317,7 +317,7 @@ class W() {
   fun add(self: Int) = x + self
 }
 //│ class W() {
-//│   fun add: (self: Int,) -> Int
+//│   fun add: (self: Int) -> Int
 //│   let x: 42
 //│ }
 //│ // Prelude

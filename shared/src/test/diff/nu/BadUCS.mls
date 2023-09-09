@@ -73,7 +73,7 @@ fun foo(x) = if x is M() then 0
 
 
 fun foo0(x, y) = if x is y then 0
-//│ fun foo0: (anything, anything,) -> 0
+//│ fun foo0: (anything, anything) -> 0
 
 
 fun foo = 0

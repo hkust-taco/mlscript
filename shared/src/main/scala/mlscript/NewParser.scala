@@ -45,7 +45,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
     if (!foundErr) raiseFun(mkDiag)
   
   final def err(msgs: Ls[Message -> Opt[Loc]]): Unit =
-    raise(ErrorReport(msgs, source = Diagnostic.Parsing))
+    raise(ErrorReport(msgs, newDefs = true, source = Diagnostic.Parsing))
   
   final def mkLoc(l: Int, r: Int): Loc =
     Loc(l, r, origin)
@@ -54,7 +54,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
   protected def printDbg(msg: => Any): Unit =
     doPrintDbg("│ " * this.indent + msg)
   protected var indent = 0
-  private def wrap[R](args: Any)(mkRes: Unit => R)(implicit l: Line, n: Name): R = {
+  private def wrap[R](args: => Any)(mkRes: Unit => R)(implicit l: Line, n: Name): R = {
     printDbg(s"@ ${n.value}${args match {
       case it: Iterable[_] => it.mkString("(", ",", ")")
       case _: Product => args
@@ -543,7 +543,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
   }
   
   private def warnDbg(msg: Any, loco: Opt[Loc] = curLoc): Unit =
-    raise(WarningReport(msg"[${cur.headOption.map(_._1).mkString}] ${""+msg}" -> loco :: Nil))
+    raise(WarningReport(msg"[${cur.headOption.map(_._1).mkString}] ${""+msg}" -> loco :: Nil,
+      newDefs = true))
   
   final def exprOrIf(prec: Int, allowSpace: Bool = true)(implicit et: ExpectThen, fe: FoundErr, l: Line): IfBody \/ Term = wrap(prec, allowSpace) { l =>
     cur match {
@@ -887,7 +888,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
         val as = argsMaybeIndented()
         val res = App(acc, Tup(as))
         raise(WarningReport(msg"Paren-less applications should use the 'of' keyword"
-          -> res.toLoc :: Nil))
+          -> res.toLoc :: Nil, newDefs = true))
         exprCont(res, prec, allowNewlines)
         
       case _ => R(acc)
