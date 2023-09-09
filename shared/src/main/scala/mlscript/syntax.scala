@@ -213,7 +213,7 @@ final case class NuFunDef(
   rhs: Term \/ Type,
 )(
   val declareLoc: Opt[Loc],
-  val virtualLoc: Opt[Loc],
+  val virtualLoc: Opt[Loc], // Some(Loc) means that the function is modified by keyword `virtual`
   val signature: Opt[NuFunDef],
   val outer: Opt[Outer],
   val genField: Bool

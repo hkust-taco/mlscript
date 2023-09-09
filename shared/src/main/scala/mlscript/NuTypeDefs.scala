@@ -478,64 +478,18 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   def getRefs(body: Statement): RefMap = {
     val refs = mutable.HashSet[(Var, Bool)]()
 
-    def visit(s: Statement): Opt[Var] = s match {
-      case App(lhs, rhs) => visit(lhs).orElse(visit(rhs))
-      case CaseOf(trm, cases) =>
-        def visitCases(cases: CaseBranches): Opt[Var] = cases match {
-          case Case(pat, body, rest) => visit(pat).orElse(visit(body)).orElse(visitCases(cases))
-          case Wildcard(body) => visit(body)
-          case NoCases => N
-        }
-        visit(trm).orElse(visitCases(cases))
-      case Asc(trm, ty) => visit(trm)
-      case Assign(lhs, rhs) => visit(lhs).orElse(visit(rhs))
-      case Bind(lhs, rhs) => visit(lhs).orElse(visit(rhs))
-      case Blk(stmts) => stmts.foldLeft[Opt[Var]](N)((r, s) => r.orElse(visit(s)))
-      case Bra(_, trm) => visit(trm)
-      case Constructor(params, body) => visit(body)
-      case Eqn(lhs, rhs) => visit(lhs).orElse(visit(rhs))
-      case Forall(params, body) => visit(body)
-      case If(body, els) =>
-        def visitIfBody(body: IfBody): Opt[Var] = body match {
-          case IfThen(expr, rhs) => visit(expr).orElse(visit(rhs))
-          case IfElse(body) => visit(body)
-          case IfLet(_, _, rhs, body) => visit(rhs)
-          case IfOpApp(lhs, _, rhs) => visit(lhs)
-          case IfOpsApp(lhs, opsRhss) => visit(lhs)
-          case IfBlock(lines) => lines.foldLeft[Opt[Var]](N)((r, e) => r.orElse(e match {
-            case L(bd) => visitIfBody(bd)
-            case R(s) => visit(s)
-          }))
-        }
-        visitIfBody(body).orElse(els.fold[Opt[Var]](N)(t => visit(t)))
-      case Inst(body) => visit(body)
-      case Lam(_, rhs) => visit(rhs)
-      case Let(_, name, rhs, body) => visit(rhs).orElse(visit(body))
-      case LetS(_, pat, rhs) => visit(pat).orElse(visit(rhs))
-      case New(head, body) => body.entities.foldLeft[Opt[Var]](N)((r, s) => r.orElse(visit(s)))
-      case NuFunDef(_, nme, _, L(rhs)) => visit(rhs)
-      case Rcd(fields) => fields.foldLeft[Opt[Var]](N)((r, s) => r.orElse(visit(s._2.value)))
+    def visit(s: Located): Opt[Var] = s match {
       case Sel(Var("this"), v) =>
         refs.add((v, true))
         N
-      case Sel(receiver, fieldName) => visit(receiver).orElse(visit(fieldName))
-      case Splc(fields) => fields.foldLeft[Opt[Var]](N)((r, e) => r.orElse(e match {
-        case L(e) => visit(e)
-        case R(f) => visit(f.value)
-      }))
-      case Subs(arr, idx) => visit(arr).orElse(visit(idx))
-      case Test(trm, ty) => visit(trm).orElse(visit(ty))
-      case Tup(fields) => fields.foldLeft[Opt[Var]](N)((r, s) => r.orElse(visit(s._2.value)))
-      case TyApp(lhs, targs) => visit(lhs)
       case v @ Var(name) =>
         if (name === "this") S(v)
         else {
           refs.add((v, false))
           N
         }
-      case Where(body, where) => where.foldLeft(visit(body))((r, s) => r.orElse(visit(s)))
-      case With(trm, fields) => visit(trm).orElse(visit(fields))
-      case _ => N
+      case _ =>
+        s.children.foldLeft[Opt[Var]](N)((r, c) => r.orElse(visit(c)))
     }
 
     RefMap(visit(body), refs.toSet)
