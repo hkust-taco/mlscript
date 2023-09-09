@@ -112,13 +112,19 @@ class V2() {
 //│ }
 
 
-// FIXME `x` should be considered virtual here
+:e
 class C() {
   virtual fun x : Int
   fun x = 1
   fun foo0 = x // should error
 }
 C().x
+//│ ╔══[ERROR] Unqualified access to virtual member x
+//│ ║  l.119: 	  fun foo0 = x // should error
+//│ ║         	      ^^^^^^^^
+//│ ╟── Declared here:
+//│ ║  l.118: 	  fun x = 1
+//│ ╙──       	      ^^^^^
 //│ class C() {
 //│   fun foo0: 1
 //│   fun x: Int

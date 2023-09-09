@@ -1061,11 +1061,18 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
             case td: NuTypeDef =>
               
               /** Check no `this` access in ctor statements or val rhs and reject unqualified accesses to virtual members.. */
-              def qualificationCheck(members: Ls[NuMember], stmts: Ls[Statement], baseAndSigs: Ls[NuMember]): Unit = {
+              def qualificationCheck(members: Ls[NuMember], stmts: Ls[Statement], base: Ls[NuMember], sigs: Ls[NuMember]): Unit = {
                 val cache = mutable.HashMap[Str, Bool]()
+                val baseAndSigs = (base.iterator ++ sigs).distinctBy(_.name).toList
 
                 def getMember(name: Str) =
                   members.find(_.name === name).fold(baseAndSigs.find(_.name === name))(m => S(m))
+
+                def isVirtual(nf: TypedNuFun) =
+                  nf.fd.isVirtual || (sigs.find(_.name === nf.name) match {
+                    case S(sig: TypedNuFun) => sig.fd.virtualLoc.nonEmpty // The signature is virtual by itself, so we need to check the virtual keyword
+                    case _ => false
+                  })
 
                 // Return true if it is invalid
                 def checkThisInCtor(refs: RefMap, name: Opt[Str], stack: Ls[Str])(expection: Bool): Bool = {
@@ -1073,7 +1080,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     refs.useThis || (
                       refs.refs.foldLeft(false)((res, p) => res || (getMember(p._1) match {
                         case S(nf: TypedNuFun) if p._1 =/= name.getOrElse("") && !stack.contains(p._1) =>
-                          (p._2 && (!expection || nf.fd.isVirtual)) || checkThisInCtor(nf.getFunRefs, S(p._1), p._1 :: stack)(false)
+                          (p._2 && (!expection || isVirtual(nf))) || checkThisInCtor(nf.getFunRefs, S(p._1), p._1 :: stack)(false)
                         case _ => false // Refer to outer 
                       }))
                     )
@@ -1084,7 +1091,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
 
                 def checkUnqualifiedVirtual(refs: RefMap, parentLoc: Opt[Loc]) =
                   refs.refs.foreach(p => if (!p._2) getMember(p._1) match { // unqualified access
-                    case S(nf: TypedNuFun) if nf.fd.isVirtual =>
+                    case S(nf: TypedNuFun) if isVirtual(nf) =>
                       err(msg"Unqualified access to virtual member ${p._1}" -> parentLoc ::
                         msg"Declared here:" -> nf.fd.toLoc
                       :: Nil)
@@ -1481,11 +1488,10 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
 
                     trace(s"Checking qualifications...") {
                       val toCheckImplems = newImplems.filter(_.isImplemented)
-                      val baseAndSigs = (baseClsMembers.iterator ++ clsSigns).distinctBy(_.name).toList
                       qualificationCheck(toCheckImplems, td.body.entities.filter {
                         case _: NuDecl => false
                         case _ => true
-                      }, baseAndSigs)
+                      }, baseClsMembers, clsSigns)
                     }()
 
                     trace(s"Checking new implementations...") {
