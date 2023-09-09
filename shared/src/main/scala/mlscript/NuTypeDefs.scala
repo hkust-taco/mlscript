@@ -1063,13 +1063,11 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
               /** Check no `this` access in ctor statements or val rhs and reject unqualified accesses to virtual members.. */
               def qualificationCheck(members: Ls[NuMember], stmts: Ls[Statement], base: Ls[NuMember], sigs: Ls[NuMember]): Unit = {
                 val cache = mutable.HashMap[Str, Bool]()
-                val baseAndSigs = (base.iterator ++ sigs).distinctBy(_.name).toList
-
-                def getMember(name: Str) =
-                  members.find(_.name === name).fold(baseAndSigs.find(_.name === name))(m => S(m))
+                val sigMap = sigs.map(m => m.name -> m).toMap
+                val allMembers = sigMap ++ (base.iterator ++ members).map(m => m.name -> m).toMap
 
                 def isVirtual(nf: TypedNuFun) =
-                  nf.fd.isVirtual || (sigs.find(_.name === nf.name) match {
+                  nf.fd.isVirtual || (sigMap.get(nf.name) match {
                     case S(sig: TypedNuFun) => sig.fd.virtualLoc.nonEmpty // The signature is virtual by itself, so we need to check the virtual keyword
                     case _ => false
                   })
@@ -1078,7 +1076,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                 def checkThisInCtor(refs: RefMap, name: Opt[Str], stack: Ls[Str])(expection: Bool): Bool = {
                   def run: Bool = {
                     refs.useThis || (
-                      refs.refs.foldLeft(false)((res, p) => res || (getMember(p._1) match {
+                      refs.refs.foldLeft(false)((res, p) => res || (allMembers.get(p._1) match {
                         case S(nf: TypedNuFun) if p._1 =/= name.getOrElse("") && !stack.contains(p._1) =>
                           (p._2 && (!expection || isVirtual(nf))) || checkThisInCtor(nf.getFunRefs, S(p._1), p._1 :: stack)(false)
                         case _ => false // Refer to outer 
@@ -1090,7 +1088,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                 }
 
                 def checkUnqualifiedVirtual(refs: RefMap, parentLoc: Opt[Loc]) =
-                  refs.refs.foreach(p => if (!p._2) getMember(p._1) match { // unqualified access
+                  refs.refs.foreach(p => if (!p._2) allMembers.get(p._1) match { // unqualified access
                     case S(nf: TypedNuFun) if isVirtual(nf) =>
                       err(msg"Unqualified access to virtual member ${p._1}" -> parentLoc ::
                         msg"Declared here:" -> nf.fd.toLoc
