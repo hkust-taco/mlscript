@@ -598,20 +598,21 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
       case (KEYWORD("forall"), l0) :: _ =>
         consume
         val as = argsMaybeIndented()
-        skip(KEYWORD(";"))
-        // yeetSpaces match {
-        //   case (KEYWORD(";" | "."), _) :: _ =>
-        //     consume
-        //   case _ => ???
-        // }
-        val e = expr(0)
+        val rest = cur match {
+          case (KEYWORD(";"), l0) :: _ =>
+            consume
+            expr(0)
+          case _ =>
+            err((msg"Expected `;` after `forall` section" -> curLoc.orElse(lastLoc) :: Nil))
+            errExpr
+        }
         R(Forall(as.flatMap {
           case N -> Fld(FldFlags(false, false), v: Var) =>
             TypeVar(R(v.name), N).withLocOf(v) :: Nil
           case v -> f =>
             err(msg"illegal `forall` quantifier body" -> f.value.toLoc :: Nil)
             Nil
-        }, e))
+        }, rest))
       case (KEYWORD("let"), l0) :: _ =>
         consume
         val bs = bindings(Nil)
@@ -724,6 +725,10 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
   
   final def exprCont(acc: Term, prec: Int, allowNewlines: Bool)(implicit et: ExpectThen, fe: FoundErr, l: Line): IfBody \/ Term = wrap(prec, s"`$acc`", allowNewlines) { l =>
     cur match {
+      case (IDENT(opStr @ "=>", true), l0) :: (NEWLINE, l1) :: _ if opPrec(opStr)._1 > prec =>
+        consume
+        val rhs = Blk(typingUnit.entities)
+        R(Lam(toParams(acc), rhs))
       case (IDENT(".", _), l0) :: (br @ BRACKETS(Square, toks), l1) :: _ =>
         consume
         consume
