@@ -2,7 +2,7 @@
 
 
 type *[A, B] = [A, B]
-//│ type *[A, B] = (A, B,)
+//│ type *[A, B] = [A, B]
 
 
 :e // FIXME parsing of type operators
@@ -17,7 +17,7 @@ fun x = [0, 1]
 //│ ╟── Note: constraint arises from tuple type:
 //│ ║  l.9: 	fun x : Int * Int
 //│ ╙──     	        ^^^
-//│ fun x: (0, 1,)
-//│ fun x: *[(Int,), (Int,)]
+//│ fun x: [0, 1]
+//│ fun x: *[[Int], [Int]]
 
 

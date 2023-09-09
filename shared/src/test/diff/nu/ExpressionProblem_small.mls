@@ -30,7 +30,7 @@ mixin EvalNeg {
     else super.eval(e)
 }
 //│ mixin EvalNothing() {
-//│   fun eval: (e: nothing,) -> nothing
+//│   fun eval: (e: nothing) -> nothing
 //│ }
 //│ mixin EvalAddLit() {
 //│   super: {eval: 'a -> 'b}

@@ -7,7 +7,7 @@ declare class Date {
   fun toLocaleString(locales: Str | Array[Str], options: anything): Str
 }
 //│ declare class Date {
-//│   fun toLocaleString: (locales: Str | Array[Str], options: anything,) -> Str
+//│   fun toLocaleString: (locales: Str | Array[Str], options: anything) -> Str
 //│   fun toString: () -> Str
 //│ }
 
@@ -16,7 +16,7 @@ let date1 = new Date(12345678)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.15: 	let date1 = new Date(12345678)
 //│ ║        	                ^^^^^^^^^^^^^^
-//│ ╟── argument of type `(12345678,)` does not match type `()`
+//│ ╟── argument of type `[12345678]` does not match type `[]`
 //│ ║  l.15: 	let date1 = new Date(12345678)
 //│ ╙──      	                    ^^^^^^^^^^
 //│ let date1: Date | error

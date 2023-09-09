@@ -2,7 +2,7 @@
 
 
 fun foo1 = forall 'A; (x: 'A) => x
-//│ fun foo1: forall 'A. (x: 'A,) -> 'A
+//│ fun foo1: forall 'A. (x: 'A) -> 'A
 
 foo1(42)
 //│ 42
@@ -20,7 +20,7 @@ foo1[Int](42)
 
 
 fun foo2<A>(x: A) = x
-//│ fun foo2: forall 'A. (x: 'A,) -> 'A
+//│ fun foo2: forall 'A. (x: 'A) -> 'A
 
 foo2(42)
 //│ 42
@@ -38,7 +38,7 @@ foo2<Int>(42)
 
 
 fun foo3[A](x: A) = x
-//│ fun foo3: forall 'A. (x: 'A,) -> 'A
+//│ fun foo3: forall 'A. (x: 'A) -> 'A
 
 foo3(42)
 //│ 42
@@ -117,14 +117,14 @@ module Test {
 //│ module Test {
 //│   fun bar: nothing
 //│   fun foo: forall 'A. 'A -> 'A
-//│   fun test: forall 'A0. (x: 'A0,) -> 'A0
+//│   fun test: forall 'A0. (x: 'A0) -> 'A0
 //│ }
 
 class Test<A>(n: A) {
   fun test<A>(x: A) = [x, n]
 }
 //│ class Test[A](n: A) {
-//│   fun test: forall 'A. (x: 'A,) -> ('A, A,)
+//│   fun test: forall 'A. (x: 'A) -> ['A, A]
 //│ }
 
 

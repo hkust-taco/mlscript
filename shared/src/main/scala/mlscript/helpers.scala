@@ -16,9 +16,9 @@ trait SignatureImpl extends Located { self: Signature =>
 
 trait TypeLikeImpl extends Located { self: TypeLike =>
   
-  def showDbg2: Str = show // TODO more lightweight debug printing routine
+  def showDbg2: Str = show(newDefs = true) // TODO more lightweight debug printing routine
   
-  def show: Str = showIn(ShowCtx.mk(this :: Nil), 0)
+  def show(newDefs: Bool): Str = showIn(ShowCtx.mk(this :: Nil, newDefs), 0)
   
   private def parensIf(str: Str, cnd: Boolean): Str = if (cnd) "(" + str + ")" else str
   private def showField(f: Field, ctx: ShowCtx): Str = f match {
@@ -38,7 +38,17 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
     case uv: TypeVar => ctx.vs(uv)
     case Recursive(n, b) => parensIf(s"${b.showIn(ctx, 2)} as ${ctx.vs(n)}", outerPrec > 1)
     case WithExtension(b, r) => parensIf(s"${b.showIn(ctx, 2)} with ${r.showIn(ctx, 0)}", outerPrec > 1)
-    case Function(Tuple((N,Field(N,l)) :: Nil), r) => Function(l, r).showIn(ctx, outerPrec)
+    case Function(Tuple(fs), r) =>
+      val innerStr = fs match {
+        case Nil => "()"
+        case N -> Field(N, f) :: Nil if !f.isInstanceOf[Tuple] => f.showIn(ctx, 31)
+        case _ =>
+          val inner = fs.map(nt => s"${nt._2.mutStr}${nt._1.fold("")(_.name + ": ")}${showField(nt._2, ctx)}")
+          if (ctx.newDefs) inner.mkString("(", ", ", ")") else inner.mkString("(", ", ", ",)")
+      }
+      parensIf(innerStr + " -> " + r.showIn(ctx, 30), outerPrec > 30)
+    case Function(l, r) if ctx.newDefs =>
+      parensIf("(..." + l.showIn(ctx, 0) + ") -> " + r.showIn(ctx, 30), outerPrec > 30)
     case Function(l, r) => parensIf(l.showIn(ctx, 31) + " -> " + r.showIn(ctx, 30), outerPrec > 30)
     case Neg(t) => s"~${t.showIn(ctx, 100)}"
     case Record(fs) => fs.map { nt =>
@@ -53,9 +63,12 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
         else s"${nt._2.mutStr}${nme}: ${showField(nt._2, ctx)}"
       }.mkString("{", ", ", "}")
     case Splice(fs) =>
-      fs.map{case L(l) => s"...${l.showIn(ctx, 0)}" case R(r) => s"${showField(r, ctx)}"}.mkString("(", ", ", ")")
+      val inner = fs.map{case L(l) => s"...${l.showIn(ctx, 0)}" case R(r) => s"${showField(r, ctx)}"}
+      if (ctx.newDefs) inner.mkString("[", ", ", "]") else inner.mkString("(", ", ", ")")
     case Tuple(fs) =>
-      fs.map(nt => s"${nt._2.mutStr}${nt._1.fold("")(_.name + ": ")}${showField(nt._2, ctx)},").mkString("(", " ", ")")
+      val inner = fs.map(nt => s"${nt._2.mutStr}${nt._1.fold("")(_.name + ": ")}${showField(nt._2, ctx)}")
+      if (ctx.newDefs) inner.mkString("[", ", ", "]")
+      else inner.mkString("(", ", ", if (fs.nonEmpty) ",)" else ")")
     case Union(TypeName("true"), TypeName("false")) | Union(TypeName("false"), TypeName("true")) =>
       TypeName("bool").showIn(ctx, 0)
     // case Union(l, r) => parensIf(l.showIn(ctx, 20) + " | " + r.showIn(ctx, 20), outerPrec > 20)
@@ -259,13 +272,14 @@ final case class ShowCtx(
     debug: Bool, // TODO make use of `debug` or rm
     indentLevel: Int,
     newDefs: Bool,
+    angletards: Bool = false,
   )
 {
   lazy val indStr: Str = "  " * indentLevel
   def lnIndStr: Str = "\n" + indStr
   def indent: ShowCtx = copy(indentLevel = indentLevel + 1)
-  def < : Str = if (newDefs) "<" else "["
-  def > : Str = if (newDefs) ">" else "]"
+  def < : Str = if (angletards) "<" else "["
+  def > : Str = if (angletards) ">" else "]"
 }
 object ShowCtx {
   /**
@@ -274,7 +288,7 @@ object ShowCtx {
     * completely new names. If same name exists increment counter suffix
     * in the name.
     */
-  def mk(tys: IterableOnce[TypeLike], _pre: Str = "'", debug: Bool = false): ShowCtx = {
+  def mk(tys: IterableOnce[TypeLike], newDefs: Bool, _pre: Str = "'", debug: Bool = false): ShowCtx = {
     val (otherVars, namedVars) = tys.iterator.toList.flatMap(_.typeVarsList).distinct.partitionMap { tv =>
       tv.identifier match { case L(_) => L(tv.nameHint -> tv); case R(nh) => R(nh -> tv) }
     }
@@ -309,7 +323,7 @@ object ShowCtx {
       S(('a' + idx % numLetters).toChar.toString + (if (postfix === 0) "" else postfix.toString), idx + 1)
     }.filterNot(used).map(assignName)
     
-    ShowCtx(namedMap ++ unnamedVars.zip(names), debug, indentLevel = 0, newDefs = false)
+    ShowCtx(namedMap ++ unnamedVars.zip(names), debug, indentLevel = 0, newDefs)
   }
 }
 
@@ -577,7 +591,7 @@ trait TermImpl extends StatementImpl { self: Term =>
     try R(toType_!.withLocOf(this)) catch {
       case e: NotAType =>
         import Message._
-        L(ErrorReport(msg"not a recognized type" -> e.trm.toLoc::Nil)) }
+        L(ErrorReport(msg"not a recognized type" -> e.trm.toLoc::Nil, newDefs=true)) }
   protected def toType_! : Type = (this match {
     case Var(name) if name.startsWith("`") => TypeVar(R(name.tail), N)
     case Var(name) if name.startsWith("'") => TypeVar(R(name), N)
@@ -747,7 +761,7 @@ trait StatementImpl extends Located { self: Statement =>
   private def doDesugar: Ls[Diagnostic] -> Ls[DesugaredStatement] = this match {
     case ctor: Constructor =>
       import Message._
-      (ErrorReport(msg"constructor must be in a class." -> ctor.toLoc :: Nil) :: Nil) -> Nil
+      (ErrorReport(msg"constructor must be in a class." -> ctor.toLoc :: Nil, newDefs=true) :: Nil) -> Nil
     case l @ LetS(isrec, pat, rhs) =>
       val (diags, v, args) = desugDefnPattern(pat, Nil)
       diags -> (Def(isrec, v, L(args.foldRight(rhs)(Lam(_, _))), false).withLocOf(l) :: Nil) // TODO use v, not v.name
@@ -758,7 +772,7 @@ trait StatementImpl extends Located { self: Statement =>
         case v @ Var(nme) => R(TypeName(nme).withLocOf(v))
         case t =>
           import Message._
-          L(ErrorReport(msg"illegal datatype type parameter shape: ${t.toString}" -> t.toLoc :: Nil))
+          L(ErrorReport(msg"illegal datatype type parameter shape: ${t.toString}" -> t.toLoc :: Nil, newDefs=false))
       }
       val (diags2, cs) = desugarCases(bod, targs)
       val dataDefs = cs.collect{case td: TypeDef => td}
@@ -807,7 +821,7 @@ trait StatementImpl extends Located { self: Statement =>
   protected def desugDefnPattern(pat: Term, args: Ls[Term]): (Ls[Diagnostic], Var, Ls[Term]) = pat match {
     case App(l, r) => desugDefnPattern(l, r :: args)
     case v: Var => (Nil, v, args)
-    case _ => (ErrorReport(msg"Unsupported pattern shape" -> pat.toLoc :: Nil) :: Nil, Var("<error>"), args) // TODO
+    case _ => (ErrorReport(msg"Unsupported pattern shape" -> pat.toLoc :: Nil, newDefs=true) :: Nil, Var("<error>"), args) // TODO
   }
   protected def desugarCases(bod: Term, baseTargs: Ls[TypeName]): (Ls[Diagnostic], Ls[Decl]) = bod match {
     case Blk(stmts) => desugarCases(stmts, baseTargs)
@@ -817,7 +831,7 @@ trait StatementImpl extends Located { self: Statement =>
         case S(n) -> Fld(_, d) => ???
       }
       desugarCases(stmts, baseTargs)
-    case _ => (ErrorReport(msg"Unsupported data type case shape" -> bod.toLoc :: Nil) :: Nil, Nil)
+    case _ => (ErrorReport(msg"Unsupported data type case shape" -> bod.toLoc :: Nil, newDefs=true) :: Nil, Nil)
   }
   protected def desugarCases(stmts: Ls[Statement], baseTargs: Ls[TypeName]): (Ls[Diagnostic], Ls[Decl]) = stmts match {
     case stmt :: stmts =>

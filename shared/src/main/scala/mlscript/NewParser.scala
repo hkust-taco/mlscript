@@ -45,7 +45,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
     if (!foundErr) raiseFun(mkDiag)
   
   final def err(msgs: Ls[Message -> Opt[Loc]]): Unit =
-    raise(ErrorReport(msgs, source = Diagnostic.Parsing))
+    raise(ErrorReport(msgs, newDefs = true, source = Diagnostic.Parsing))
   
   final def mkLoc(l: Int, r: Int): Loc =
     Loc(l, r, origin)
@@ -54,7 +54,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
   protected def printDbg(msg: => Any): Unit =
     doPrintDbg("│ " * this.indent + msg)
   protected var indent = 0
-  private def wrap[R](args: Any)(mkRes: Unit => R)(implicit l: Line, n: Name): R = {
+  private def wrap[R](args: => Any)(mkRes: Unit => R)(implicit l: Line, n: Name): R = {
     printDbg(s"@ ${n.value}${args match {
       case it: Iterable[_] => it.mkString("(", ",", ")")
       case _: Product => args
@@ -549,7 +549,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
   }
   
   private def warnDbg(msg: Any, loco: Opt[Loc] = curLoc): Unit =
-    raise(WarningReport(msg"[${cur.headOption.map(_._1).mkString}] ${""+msg}" -> loco :: Nil))
+    raise(WarningReport(msg"[${cur.headOption.map(_._1).mkString}] ${""+msg}" -> loco :: Nil,
+      newDefs = true))
   
   final def exprOrIf(prec: Int, allowSpace: Bool = true)(implicit et: ExpectThen, fe: FoundErr, l: Line): IfBody \/ Term = wrap(prec, allowSpace) { l =>
     cur match {
@@ -603,20 +604,21 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
       case (KEYWORD("forall"), l0) :: _ =>
         consume
         val as = argsMaybeIndented()
-        skip(KEYWORD(";"))
-        // yeetSpaces match {
-        //   case (KEYWORD(";" | "."), _) :: _ =>
-        //     consume
-        //   case _ => ???
-        // }
-        val e = expr(0)
+        val rest = cur match {
+          case (KEYWORD(";"), l0) :: _ =>
+            consume
+            expr(0)
+          case _ =>
+            err((msg"Expected `;` after `forall` section" -> curLoc.orElse(lastLoc) :: Nil))
+            errExpr
+        }
         R(Forall(as.flatMap {
           case N -> Fld(FldFlags(false, false, _), v: Var) =>
             TypeVar(R(v.name), N).withLocOf(v) :: Nil
           case v -> f =>
             err(msg"illegal `forall` quantifier body" -> f.value.toLoc :: Nil)
             Nil
-        }, e))
+        }, rest))
       case (KEYWORD("let"), l0) :: _ =>
         consume
         val bs = bindings(Nil)
@@ -729,6 +731,10 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
   
   final def exprCont(acc: Term, prec: Int, allowNewlines: Bool)(implicit et: ExpectThen, fe: FoundErr, l: Line): IfBody \/ Term = wrap(prec, s"`$acc`", allowNewlines) { l =>
     cur match {
+      case (IDENT(opStr @ "=>", true), l0) :: (NEWLINE, l1) :: _ if opPrec(opStr)._1 > prec =>
+        consume
+        val rhs = Blk(typingUnit.entities)
+        R(Lam(toParams(acc), rhs))
       case (IDENT(".", _), l0) :: (br @ BRACKETS(Square, toks), l1) :: _ =>
         consume
         consume
@@ -893,7 +899,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
         val as = argsMaybeIndented()
         val res = App(acc, Tup(as))
         raise(WarningReport(msg"Paren-less applications should use the 'of' keyword"
-          -> res.toLoc :: Nil))
+          -> res.toLoc :: Nil, newDefs = true))
         exprCont(res, prec, allowNewlines)
         
       case _ => R(acc)

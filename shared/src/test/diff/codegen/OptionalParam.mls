@@ -83,7 +83,7 @@ let c = new C(1)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.82: 	let c = new C(1)
 //│ ║        	            ^^^^
-//│ ╟── argument of type `(1,)` does not match type `()`
+//│ ╟── argument of type `[1]` does not match type `[]`
 //│ ║  l.82: 	let c = new C(1)
 //│ ╙──      	             ^^^
 //│ let c: C | error
@@ -159,7 +159,7 @@ constructor(x: Int)
 //│ ╔══[ERROR] constructor must be in a class.
 //│ ║  l.158: 	constructor(x: Int)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^
-//│ ()
+//│ []
 //│ Code generation encountered an error:
 //│   unexpected constructor.
 
@@ -347,7 +347,7 @@ fun g(x: Int) =
     fun ll = x + y
   }
   L
-//│ fun g: (x: Int,) -> (y: Int,) -> L
+//│ fun g: (x: Int) -> (y: Int) -> L
 //│ // Prelude
 //│ class TypingUnit11 {}
 //│ const typing_unit11 = new TypingUnit11;
@@ -384,7 +384,7 @@ fun g(x: Int) =
 let m = g(1)
 let n = m(2)
 n.ll
-//│ let m: (y: Int,) -> L
+//│ let m: (y: Int) -> L
 //│ let n: L
 //│ Int
 //│ // Prelude
@@ -426,7 +426,7 @@ fun h(z: Int) =
     }
   }
   N
-//│ fun h: (z: Int,) -> () -> N
+//│ fun h: (z: Int) -> () -> N
 
 :e // TODO: typing
 let hh = h(1)
@@ -434,7 +434,7 @@ new hh(1)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.433: 	new hh(1)
 //│ ║         	    ^^^^^
-//│ ╟── argument of type `(1,)` does not match type `()`
+//│ ╟── argument of type `[1]` does not match type `[]`
 //│ ║  l.433: 	new hh(1)
 //│ ╙──       	      ^^^
 //│ let hh: () -> N

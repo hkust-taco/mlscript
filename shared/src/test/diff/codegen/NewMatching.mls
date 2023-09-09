@@ -16,7 +16,7 @@ class None(no: Int)
 //│ class None(no: Int)
 
 V2.unapply(V2(114, 514))
-//│ (Int, Int,)
+//│ [Int, Int]
 //│ res
 //│     = [ 114, 514 ]
 

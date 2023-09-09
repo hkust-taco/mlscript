@@ -12,7 +12,7 @@ type Two[A] = (A, A)
 //│ Defined type alias Two[+A]
 
 def mapTwo f ((a, b)) = (f a, f b)
-//│ mapTwo: 'a -> (('b, 'c,) -> ('d, 'e,)
+//│ mapTwo: 'a -> ((('b, 'c,),) -> ('d, 'e,)
 //│   where
 //│     'a <: 'b -> 'd & 'c -> 'e)
 //│       = [Function: mapTwo]
@@ -238,7 +238,7 @@ rec def map f tree = case tree of {
 //│   where
 //│     'map :> forall 'A 'subTree 'value 'value0 'a 'subTree0. 'a -> ((Leaf[?] & {value: 'value} | (Node[?] with {subTree: 'subTree0})) -> (Leaf['value0] | (Node['A] with {subTree: 'subTree}))
 //│       where
-//│         'map <: (forall 'b 'c 'd 'e. ('b, 'd,) -> ('c, 'e,)
+//│         'map <: (forall 'b 'c 'd 'e. (('b, 'd,),) -> ('c, 'e,)
 //│           where
 //│             'a <: 'b -> 'c & 'd -> 'e) -> 'subTree0 -> (PerfectTree[Two['A]] & 'subTree)
 //│         'a <: 'value -> 'value0)
@@ -247,7 +247,7 @@ rec def map f tree = case tree of {
 //│   where
 //│     'map :> forall 'subTree 'value 'value0 'subTree0 'a 'A. 'a -> ((Leaf[?] & {value: 'value} | (Node[?] with {subTree: 'subTree0})) -> (Leaf['value0] | (Node['A] with {subTree: 'subTree}))
 //│       where
-//│         'map <: (forall 'b 'c 'd 'e. ('b, 'd,) -> ('c, 'e,)
+//│         'map <: (forall 'b 'c 'd 'e. (('b, 'd,),) -> ('c, 'e,)
 //│           where
 //│             'a <: 'b -> 'c & 'd -> 'e) -> 'subTree0 -> (PerfectTree[Two['A]] & 'subTree)
 //│         'a <: 'value -> 'value0)
@@ -259,7 +259,7 @@ map succ n4
 //│   where
 //│     'map :> forall 'A 'subTree 'value 'subTree0 'a 'value0. 'a -> ((Leaf[?] & {value: 'value} | (Node[?] with {subTree: 'subTree0})) -> (Leaf['value0] | (Node['A] with {subTree: 'subTree}))
 //│       where
-//│         'map <: (forall 'b 'c 'd 'e. ('b, 'd,) -> ('c, 'e,)
+//│         'map <: (forall 'b 'c 'd 'e. (('b, 'd,),) -> ('c, 'e,)
 //│           where
 //│             'a <: 'b -> 'c & 'd -> 'e) -> 'subTree0 -> (PerfectTree[Two['A]] & 'subTree)
 //│         'a <: 'value -> 'value0)

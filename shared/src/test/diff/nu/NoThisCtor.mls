@@ -82,7 +82,7 @@ class Foo5() extends Foo() {
 //│ ║  l.79: 	  fun bar(y: Int) = this.foo + y
 //│ ╙──      	                        ^^^^
 //│ class Foo5() extends Foo {
-//│   fun bar: (y: Int,) -> Int
+//│   fun bar: (y: Int) -> Int
 //│   let foo: Int
 //│   let x: Int
 //│ }

@@ -87,7 +87,7 @@ module M extends Mx {
 //│ ╙──      	                   ^^^^
 //│ module M {
 //│   fun id1: anything -> error
-//│   fun id2: forall 'a. 'a -> ('a, 'a,)
+//│   fun id2: forall 'a. 'a -> ['a, 'a]
 //│ }
 
 // * Notice that `id1` is no longer generalized!
@@ -97,8 +97,8 @@ module M extends Mx {
   this.id1(0)
 }
 //│ module M {
-//│   fun id1: 'a -> (0 | 'a, 0 | 'a,)
-//│   fun id2: forall 'a0. 'a0 -> ('a0, 'a0,)
+//│   fun id1: 'a -> [0 | 'a, 0 | 'a]
+//│   fun id2: forall 'a0. 'a0 -> ['a0, 'a0]
 //│ }
 
 
@@ -115,7 +115,7 @@ class C {
 //│ ║  l.108: 	  fun f = (this.id1(true), this.id1(0))
 //│ ╙──       	                               ^^^^
 //│ class C {
-//│   fun f: (error, error,)
+//│   fun f: [error, error]
 //│   fun id1: forall 'a. 'a -> 'a
 //│   fun id2: forall 'b. 'b -> 'b
 //│ }
@@ -132,7 +132,7 @@ module M extends C {
 //│ ║  l.126: 	  this.id2(true)
 //│ ╙──       	      ^^^^
 //│ module M extends C {
-//│   fun f: (error, error,)
+//│   fun f: [error, error]
 //│   fun id1: forall 'a. 'a -> 'a
 //│   fun id2: forall 'b. 'b -> 'b
 //│ }
@@ -148,8 +148,8 @@ module M extends C {
 //│ ║  l.142: 	  fun g = (this.id2(true), this.id2(0))
 //│ ╙──       	                               ^^^^
 //│ module M extends C {
-//│   fun f: (error, error,)
-//│   fun g: (error, error,)
+//│   fun f: [error, error]
+//│   fun g: [error, error]
 //│   fun id1: forall 'a. 'a -> 'a
 //│   fun id2: forall 'b. 'b -> 'b
 //│ }
@@ -165,12 +165,12 @@ M.id2
 //│     = [Function: id2]
 
 M.f
-//│ (error, error,)
+//│ [error, error]
 //│ res
 //│     = [ true, 0 ]
 
 M.g
-//│ (error, error,)
+//│ [error, error]
 //│ res
 //│     = [ true, 0 ]
 
@@ -191,7 +191,7 @@ module M extends C {
 //│ ║  l.107: 	  virtual fun id1(x) = x
 //│ ╙──       	                       ^
 //│ module M extends C {
-//│   fun f: (error, error,)
+//│   fun f: [error, error]
 //│   fun id1: Int -> Int
 //│   fun id2: forall 'a. 'a -> 'a
 //│ }
@@ -210,7 +210,7 @@ M.id1
 
 // FIXME? parsing/semantics of this, currently treated as a named tuple...
 (M: C)
-//│ (M: () -> C,)
+//│ [M: () -> C]
 //│ res
 //│     = [ [class C] ]
 

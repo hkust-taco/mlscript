@@ -82,7 +82,7 @@ class AA() {
 }
 AA().f(0)
 //│ class AA() {
-//│   fun f: (y: Int,) -> Int
+//│   fun f: (y: Int) -> Int
 //│   let no: 0
 //│   let x: 42
 //│ }
@@ -207,7 +207,7 @@ class C {
 
 // TODO: shoud be rejected?
 fun f(val x: Int) = x + 1
-//│ fun f: (x: Int,) -> Int
+//│ fun f: (x: Int) -> Int
 
 class D(x: Int) {
   let x = 1

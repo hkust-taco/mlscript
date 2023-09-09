@@ -14,7 +14,7 @@ fun f(a, b) = if a is
 //│ ╔══[ERROR] Cannot find operator `and` in the context
 //│ ║  l.11: 	    and b is Some(v') then v + v'
 //│ ╙──      	    ^^^
-//│ fun f: (anything, anything,) -> error
+//│ fun f: (anything, anything) -> error
 //│ Code generation encountered an error:
 //│   if expression was not desugared
 

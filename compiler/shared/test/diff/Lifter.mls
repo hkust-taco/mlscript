@@ -142,7 +142,7 @@ class A<T, U>(x: Int): {a1: Int} & B<T> & D(x){
   }
 }
 //│ |#class| |B|‹|T|›| |{||}|↵|#class| |C| |{||}|↵|#class| |D|(|y|#:| |Int|)| |{||}|↵|#class| |A|‹|T|,| |U|›|(|x|#:| |Int|)|#:| |{|a1|#:| |Int|}| |&| |B|‹|T|›| |&| |D|(|x|)|{|→|#fun| |getA|(||)| |#=| |#new| |C|{|→|#fun| |foo|(|x|#:| |T|)| |#=| |x|←|↵|}|←|↵|}|
-//│ Parsed: {class B‹T›() {}; class C() {}; class D(y: Int,) {}; class A‹T, U›(x: Int,): {a1: Int} & B[T] & D[(x,)] {fun getA = () => new C() {fun foo = (x: T,) => x}}}
+//│ Parsed: {class B‹T›() {}; class C() {}; class D(y: Int,) {}; class A‹T, U›(x: Int,): {a1: Int} & B[T] & D[[x]] {fun getA = () => new C() {fun foo = (x: T,) => x}}}
 //│ Parsed:
 //│ TypingUnit(NuTypeDef(class, B, ((None,TypeName(T))), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, C, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, D, (), Tup(y: Var(Int)), (), None, None, TypingUnit()), NuTypeDef(class, A, ((None,TypeName(T)), (None,TypeName(U))), Tup(x: Var(Int)), (), None, None, TypingUnit(NuFunDef(None, getA, [], Lam(Tup(), New(Some((TypeName(C),)), TypingUnit(List(fun foo = (x: T,) => x))))))))
 //│ Lifted:

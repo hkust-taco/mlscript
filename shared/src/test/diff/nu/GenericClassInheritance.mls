@@ -4,12 +4,12 @@ class Room[A](name: Str) {
     virtual fun foo(x: A) = x
 }
 //│ class Room[A](name: Str) {
-//│   fun foo: (x: A,) -> A
+//│   fun foo: (x: A) -> A
 //│ }
 
 class BigRoom extends Room[Bool]("big")
 //│ class BigRoom extends Room {
-//│   fun foo: (x: 'A,) -> 'A
+//│   fun foo: (x: 'A) -> 'A
 //│ }
 //│ where
 //│   'A := Bool
@@ -35,7 +35,7 @@ class TooManyRoom extends Room[Int, Str]("too many")
 //│ ║  l.33: 	class TooManyRoom extends Room[Int, Str]("too many")
 //│ ╙──      	                          ^^^^^^^^^^^^^
 //│ class TooManyRoom extends Room {
-//│   fun foo: (x: 'A,) -> 'A
+//│   fun foo: (x: 'A) -> 'A
 //│ }
 //│ where
 //│   'A := Int
@@ -109,28 +109,28 @@ mixin M1[A] {
     fun f2(x: A): (A, A) = (x, x)
 }
 //│ mixin M1[A]() {
-//│   fun f1: (x: A,) -> A
-//│   fun f2: (x: A,) -> (A, A,)
+//│   fun f1: (x: A) -> A
+//│   fun f2: (x: A) -> [A, A]
 //│ }
 
 class A1 extends M1 {
     fun f1(x: Int) = x
 }
 //│ class A1 {
-//│   fun f1: (x: Int,) -> Int
-//│   fun f2: (x: 'A,) -> ('A, 'A,)
+//│   fun f1: (x: Int) -> Int
+//│   fun f2: (x: 'A) -> ['A, 'A]
 //│ }
 
 class A2[S, T] extends M1[(S, T)]
 //│ class A2[S, T] {
-//│   fun f1: (x: (S, T,),) -> (S, T,)
-//│   fun f2: (x: (S, T,),) -> ((S, T,), (S, T,),)
+//│   fun f1: (x: [S, T]) -> [S, T]
+//│   fun f2: (x: [S, T]) -> [[S, T], [S, T]]
 //│ }
 
 class A3(f1: Bool => Bool) extends M1
 //│ class A3(f1: Bool -> Bool) {
-//│   fun f1: (x: 'A,) -> 'A
-//│   fun f2: (x: 'A,) -> ('A, 'A,)
+//│   fun f1: (x: 'A) -> 'A
+//│   fun f2: (x: 'A) -> ['A, 'A]
 //│ }
 
 mixin M2[A] {

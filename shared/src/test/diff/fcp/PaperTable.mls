@@ -250,7 +250,7 @@ def fst: forall 'a 'b. Pair['a, 'b] -> 'a
 def fst((x, y)) = x
 //│ fst: Pair['a, ?] -> 'a
 //│    = <missing implementation>
-//│ ('a, anything,) -> 'a
+//│ (('a, anything,),) -> 'a
 //│   <:  fst:
 //│ Pair['a, ?] -> 'a
 //│    = [Function: fst]

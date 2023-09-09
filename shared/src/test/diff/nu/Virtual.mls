@@ -5,7 +5,7 @@ class Foo() {
   val g: Int = 0
 }
 //│ class Foo() {
-//│   fun f: (x: Int,) -> Int
+//│   fun f: (x: Int) -> Int
 //│   let g: Int
 //│ }
 
@@ -13,7 +13,7 @@ class Bar() extends Foo {
   fun f(x: Int) = x + 2
 }
 //│ class Bar() extends Foo {
-//│   fun f: (x: Int,) -> Int
+//│   fun f: (x: Int) -> Int
 //│   let g: Int
 //│ }
 
@@ -33,7 +33,7 @@ class Baz() extends Foo {
 //│ ║  l.5: 	  val g: Int = 0
 //│ ╙──     	      ^^^^^^^^^^
 //│ class Baz() extends Foo {
-//│   fun f: (x: Int,) -> Int
+//│   fun f: (x: Int) -> Int
 //│   let g: 1
 //│ }
 

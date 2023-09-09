@@ -6,7 +6,7 @@ abstract class Foo(x: Int) {
   fun f(y: Int) = x + y
 }
 //│ abstract class Foo(x: Int) {
-//│   fun f: (y: Int,) -> Int
+//│   fun f: (y: Int) -> Int
 //│ }
 
 :e

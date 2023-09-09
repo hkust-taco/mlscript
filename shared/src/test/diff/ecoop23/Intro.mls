@@ -16,7 +16,7 @@ mixin ComparePoint {
     (lhs.x === rhs.x) && (lhs.y === rhs.y)
 }
 //│ mixin ComparePoint() {
-//│   fun compare: ({x: Eql['a], y: Eql['b]}, {x: 'a, y: 'b},) -> Bool
+//│   fun compare: ({x: Eql['a], y: Eql['b]}, {x: 'a, y: 'b}) -> Bool
 //│ }
 
 
@@ -38,8 +38,8 @@ mixin CompareColored {
     super.compare(lhs, rhs) && lhs.color.equals(rhs.color)
 }
 //│ mixin CompareColored() {
-//│   super: {compare: ('a, 'b,) -> Bool}
-//│   fun compare: ({color: {equals: 'color -> Bool}} & 'a, {color: 'color} & 'b,) -> Bool
+//│   super: {compare: ('a, 'b) -> Bool}
+//│   fun compare: ({color: {equals: 'color -> Bool}} & 'a, {color: 'color} & 'b) -> Bool
 //│ }
 
 
@@ -69,9 +69,9 @@ mixin CompareNested {
         else rhs.parent is None
 }
 //│ mixin CompareNested() {
-//│   super: {compare: ('a, 'b,) -> Bool}
-//│   this: {compare: ('c, 'd,) -> Bool}
-//│   fun compare: ({parent: Object & ~#Some | Some['c]} & 'a, {parent: Object & ~#Some | Some['d]} & 'b,) -> Bool
+//│   super: {compare: ('a, 'b) -> Bool}
+//│   this: {compare: ('c, 'd) -> Bool}
+//│   fun compare: ({parent: Object & ~#Some | Some['c]} & 'a, {parent: Object & ~#Some | Some['d]} & 'b) -> Bool
 //│ }
 
 // * Alternatively:
@@ -92,7 +92,7 @@ class MyPoint(val x: Int, val y: Int, val color: Color, val parent: Some[MyPoint
 
 module CompareMyPoint extends ComparePoint, CompareColored, CompareNested
 //│ module CompareMyPoint {
-//│   fun compare: ('a, 'b,) -> Bool
+//│   fun compare: ('a, 'b) -> Bool
 //│ }
 //│ where
 //│   'b <: {color: 'color, parent: Object & ~#Some | Some['b], x: 'c, y: 'd}

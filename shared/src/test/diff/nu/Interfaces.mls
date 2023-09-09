@@ -11,7 +11,7 @@ trait Test {
 //│ }
 
 fun ts(x: Test) = x.foo
-//│ fun ts: (x: Test,) -> Int
+//│ fun ts: (x: Test) -> Int
 
 
 module M extends Test {
@@ -262,12 +262,12 @@ let c1: Test = C()
 
 // :d
 fun fcc(x: C) = x.foo
-//│ fun fcc: (x: C,) -> 1
+//│ fun fcc: (x: C) -> 1
 
 fun fc(x: Test) = x
 fun ffm(x: F) = x.get
-//│ fun fc: (x: Test,) -> Test
-//│ fun ffm: (x: F,) -> true
+//│ fun fc: (x: Test) -> Test
+//│ fun ffm: (x: F) -> true
 
 :e
 fun fee(x: Test) = x: Oth
@@ -283,7 +283,7 @@ fun fee(x: Test) = x: Oth
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.273: 	fun fee(x: Test) = x: Oth
 //│ ╙──       	                      ^^^
-//│ fun fee: (x: Test,) -> Oth
+//│ fun fee: (x: Test) -> Oth
 
 fc(c)
 //│ Test
@@ -292,7 +292,7 @@ fc(c)
 
 fun fts['a](x: 'a & Test) = x.foo
 fts(c)
-//│ fun fts: forall 'foo. (x: Test & {foo: 'foo} | Test & ~#Test,) -> 'foo
+//│ fun fts: forall 'foo. (x: Test & {foo: 'foo} | Test & ~#Test) -> 'foo
 //│ 1
 //│ res
 //│     = [Function: fts]
@@ -465,13 +465,13 @@ if b is
 fun f(x: Base) = if x is
   A then 0
   B then 1
-//│ fun f: (x: Base,) -> (0 | 1)
+//│ fun f: (x: Base) -> (0 | 1)
 
 trait Base: Foo | Bar
 class Foo[A](val aa: (A, A)) extends Base
 class Bar[B](f: B => B) extends Base
 //│ trait Base: Bar[?] | Foo[anything]
-//│ class Foo[A](aa: (A, A,)) extends Base
+//│ class Foo[A](aa: [A, A]) extends Base
 //│ class Bar[B](f: B -> B) extends Base
 
 let f: Foo = Foo((1, 2))
@@ -480,7 +480,7 @@ let f: Foo = Foo((1, 2))
 //│   = Foo {}
 
 f.aa
-//│ (??A, ??A,)
+//│ [??A, ??A]
 //│ res
 //│     = [ 1, 2 ]
 
@@ -490,7 +490,7 @@ let b: Base = f
 //│   = Foo {}
 
 if b is Foo(a) then a else 0
-//│ 0 | (??A, ??A,)
+//│ 0 | [??A, ??A]
 //│ res
 //│     = [ 1, 2 ]
 
@@ -578,8 +578,8 @@ z: Geo
 e: WP
 w: ZL & GL
 e: ZL & Geo
-//│ fun fot: (x: EM,) -> Geo
-//│ fun fit: (x: EM,) -> WP
+//│ fun fot: (x: EM) -> Geo
+//│ fun fit: (x: EM) -> WP
 //│ Geo & ZL
 //│ res
 //│     = [Function: fot]
@@ -636,7 +636,7 @@ e: ZL & WP
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.601: 	g: ZL
 //│ ╙──       	   ^^
-//│ fun fto: (w: WP,) -> EM
+//│ fun fto: (w: WP) -> EM
 //│ WP & ZL
 //│ res
 //│     = [Function: fto]
@@ -878,7 +878,7 @@ class Der1 extends Base[Int] { fun f(x) = x + 1 }
 
 class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (x, y) }
 //│ class Der2[A, B] extends Base {
-//│   fun f: forall 'a 'b. ('a, 'b,) -> ('a, 'b,)
+//│   fun f: forall 'a 'b. (['a, 'b]) -> ['a, 'b]
 //│ }
 
 :e
@@ -897,7 +897,7 @@ trait BPar[T] extends Base[(Int,T)]
 //│   fun f: 'A -> 'A
 //│ }
 //│ where
-//│   'A := (Int, T,)
+//│   'A := [Int, T]
 
 let bi: BInt
 let bp: BPar[Bool]
@@ -909,7 +909,7 @@ let bp: BPar[Bool]
 //│    = <missing implementation>
 
 bp: Base[(Int, Bool)]
-//│ Base[(Int, Bool,)]
+//│ Base[[Int, Bool]]
 //│ res
 //│     = <no result>
 //│       bp is not implemented
@@ -920,7 +920,7 @@ bp: Base[(Int, Int)]
 //│ ║  l.918: 	bp: Base[(Int, Int)]
 //│ ║         	^^
 //│ ╙── expression of type `true` is not an instance of type `Int`
-//│ Base[(Int, Int,)]
+//│ Base[[Int, Int]]
 //│ res
 //│     = <no result>
 //│       bp is not implemented
@@ -932,16 +932,16 @@ bi.f(1)
 //│       bi is not implemented
 
 bp.f
-//│ ((Int, Bool,) & 'A) -> ((Int, Bool,) | 'A)
+//│ ([Int, Bool] & 'A) -> ([Int, Bool] | 'A)
 //│ res
 //│     = <no result>
 //│       bp is not implemented
 
 fun fb[T](x: Base[(Int, T)], y: T) = x.f((1, y))
-//│ fun fb: forall 'T. (x: Base[(Int, 'T,)], y: 'T,) -> (Int, 'T,)
+//│ fun fb: forall 'T. (x: Base[[Int, 'T]], y: 'T) -> [Int, 'T]
 
 fb(bp, false)
-//│ (Int, Bool,)
+//│ [Int, Bool]
 //│ res
 //│     = <no result>
 //│       bp is not implemented
@@ -950,7 +950,7 @@ class CP() extends BPar[Int] {
   fun f(x) = (x._2, x._1)
 }
 //│ class CP() extends BPar, Base {
-//│   fun f: forall 'a 'b. {_1: 'a, _2: 'b} -> ('b, 'a,)
+//│   fun f: forall 'a 'b. {_1: 'a, _2: 'b} -> ['b, 'a]
 //│ }
 
 let cp1 = CP()
@@ -959,7 +959,7 @@ let cp1 = CP()
 //│     = CP {}
 
 fb(cp1, 2)
-//│ (Int, Int,)
+//│ [Int, Int]
 //│ res
 //│     = [ undefined, undefined ]
 
@@ -1019,7 +1019,7 @@ class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
 //│ ║  l.996: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
 //│ ╙──       	           ^
 //│ class Der2[A, B] extends Base {
-//│   fun f: forall 'a 'b. ('a, 'b,) -> ('b, 'a,)
+//│   fun f: forall 'a 'b. (['a, 'b]) -> ['b, 'a]
 //│ }
 
 trait Ta[T] {

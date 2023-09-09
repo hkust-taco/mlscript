@@ -19,7 +19,7 @@ fun foo: 'a => 'a => 'a where 'a : int
 
 fun foo: 'a + 'a + 'a where 'a : int
 //│ |#fun| |foo|#:| |'a| |+| |'a| |+| |'a| |#where| |'a| |#:| |int|
-//│ Parsed: {fun foo: +[(+[('a,), ('a,)],), ('a,)]
+//│ Parsed: {fun foo: +[[+[['a], ['a]]], ['a]]
 //│   where
 //│     'a <: int}
 

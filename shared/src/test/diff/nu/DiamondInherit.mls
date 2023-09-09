@@ -147,7 +147,7 @@ trait Derived2 extends Base[(Int | Str, Int | Str)]
 //│   fun foo: 'A0
 //│ }
 //│ where
-//│   'A0 := (Int | Str, Int | Str,)
+//│   'A0 := [Int | Str, Int | Str]
 //│   'A := A
 
 class Final extends Derived1[(Int, Int)], Derived2 {
@@ -155,8 +155,8 @@ class Final extends Derived1[(Int, Int)], Derived2 {
   fun bar([x, y]) = [error, error]
 }
 //│ class Final extends Base, Derived1, Derived2 {
-//│   fun bar: (anything, anything,) -> (nothing, nothing,)
-//│   fun foo: (123, 456,)
+//│   fun bar: ([anything, anything]) -> [nothing, nothing]
+//│   fun foo: [123, 456]
 //│ }
 
 class Final extends Derived1[(Int, Int)], Derived2 {
@@ -164,8 +164,8 @@ class Final extends Derived1[(Int, Int)], Derived2 {
   fun bar([x, y]) = [y, x]
 }
 //│ class Final extends Base, Derived1, Derived2 {
-//│   fun bar: forall 'a 'b. ('a, 'b,) -> ('b, 'a,)
-//│   fun foo: (123, 456,)
+//│   fun bar: forall 'a 'b. (['a, 'b]) -> ['b, 'a]
+//│   fun foo: [123, 456]
 //│ }
 
 

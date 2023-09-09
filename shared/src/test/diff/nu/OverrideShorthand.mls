@@ -44,7 +44,7 @@ fun f(override Pair(x, y), z) = x + y
 //│ ╔══[ERROR] identifier not found: y
 //│ ║  l.34: 	fun f(override Pair(x, y), z) = x + y
 //│ ╙──      	                                    ^
-//│ fun f: (error, anything,) -> Int
+//│ fun f: (error, anything) -> Int
 //│ Code generation encountered an error:
 //│   term App(Var(Pair), Tup(_: Var(x), _: Var(y))) is not a valid pattern
 

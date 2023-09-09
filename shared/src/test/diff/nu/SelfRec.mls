@@ -22,12 +22,12 @@ class Foo3[A](val x: A) {
   fun foo = Foo3
 }
 //│ class Foo3[A](x: A) {
-//│   fun foo: (x: A,) -> Foo3[A]
+//│   fun foo: (x: A) -> Foo3[A]
 //│   fun test: Foo3[1]
 //│ }
 
 Foo3
-//│ forall 'A. (x: 'A,) -> Foo3['A]
+//│ forall 'A. (x: 'A) -> Foo3['A]
 //│ res
 //│     = [Function (anonymous)] {
 //│         class: [class Foo3],
@@ -45,7 +45,7 @@ Foo3(1).x
 //│     = 1
 
 Foo3(1).foo
-//│ forall 'A. (x: 'A,) -> Foo3['A]
+//│ forall 'A. (x: 'A) -> Foo3['A]
 //│ res
 //│     = [Function (anonymous)] {
 //│         class: [class Foo3],
@@ -63,7 +63,7 @@ class Foo4 {
 //│ ║  l.57: 	  fun test = [Foo4.test]
 //│ ╙──      	              ^^^^
 //│ class Foo4 {
-//│   fun test: (error,)
+//│   fun test: [error]
 //│ }
 
 :e
@@ -74,7 +74,7 @@ class Foo5(x: Int) {
 //│ ║  l.71: 	  fun test = [Foo5(5).test]
 //│ ╙──      	                     ^^^^^
 //│ class Foo5(x: Int) {
-//│   fun test: (error,)
+//│   fun test: [error]
 //│ }
 
 :e
@@ -93,9 +93,9 @@ class Foo6[A](x: A) {
 //│ ║  l.84: 	  fun test3 = [Foo6([x]).test3]
 //│ ╙──      	                        ^^^^^^
 //│ class Foo6[A](x: A) {
-//│   fun test1: (error,)
-//│   fun test2: (error,)
-//│   fun test3: (error,)
+//│   fun test1: [error]
+//│   fun test2: [error]
+//│   fun test3: [error]
 //│ }
 
 module N
@@ -152,7 +152,7 @@ class Foo8[A](x: A) {
 //│ ║  l.148: 	    let tmp = Foo8(y).test1(x)
 //│ ╙──       	                     ^^^^^^
 //│ class Foo8[A](x: A) {
-//│   fun test1: (y: anything,) -> A
+//│   fun test1: (y: anything) -> A
 //│ }
 
 

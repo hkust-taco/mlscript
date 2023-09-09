@@ -71,7 +71,7 @@ declare class Sanitizer {
   fun sanitizeFor(element: Str, input: Str): Str
 }
 //│ declare class Sanitizer {
-//│   fun sanitizeFor: (element: Str, input: Str,) -> Str
+//│   fun sanitizeFor: (element: Str, input: Str) -> Str
 //│ }
 
 :re
@@ -99,7 +99,7 @@ declare module Buffer {
 //│     let length: Int
 //│   }
 //│   fun bar: Int
-//│   fun from: (a: Array[Int],) -> Buffer2
+//│   fun from: (a: Array[Int]) -> Buffer2
 //│ }
 
 let b = Buffer.from([0, 1, 2])

@@ -7,7 +7,7 @@ mixin BaseTest[A] {
   fun test(x: A) = x
 }
 //│ mixin BaseTest[A]() {
-//│   fun test: (x: A,) -> A
+//│   fun test: (x: A) -> A
 //│ }
 
 mixin BaseTest[A](x: A) {
@@ -117,14 +117,14 @@ mixin Test[A] {
 }
 //│ mixin Test[A]() {
 //│   this: {arg: A & 'a}
-//│   fun bar: (A, A,)
+//│   fun bar: [A, A]
 //│   fun baz: 'a
 //│   fun foo: A -> A
 //│ }
 
 class C(val arg: Int) extends Test
 //│ class C(arg: Int) {
-//│   fun bar: (Int | 'A, Int | 'A,)
+//│   fun bar: [Int | 'A, Int | 'A]
 //│   fun baz: Int
 //│   fun foo: 'A -> (Int | 'A)
 //│ }
@@ -132,7 +132,7 @@ class C(val arg: Int) extends Test
 let c = C(1)
 [c.foo(false), c.bar]
 //│ let c: C
-//│ (Int | false, (Int, Int,),)
+//│ [Int | false, [Int, Int]]
 //│ c
 //│   = C {}
 //│ res
@@ -149,7 +149,7 @@ module D extends C(0) {
 //│ ║  l.143: 	  this.foo(false)
 //│ ╙──       	      ^^^^
 //│ module D extends C {
-//│   fun bar: forall 'A. (Int | 'A, Int | 'A,)
+//│   fun bar: forall 'A. [Int | 'A, Int | 'A]
 //│   fun baz: Int
 //│   fun foo: forall 'A. 'A -> (Int | 'A)
 //│ }
@@ -158,20 +158,20 @@ module D extends C(0) {
 class C extends Test { // it also fails with Test[Int]...
   fun arg = 123
 }
-//│ ╔══[ERROR] Type `#C & {bar: (?A, ?A,), baz: ?a, foo: ?A -> ?A}` does not contain member `arg`
+//│ ╔══[ERROR] Type `#C & {bar: [?A, ?A], baz: ?a, foo: ?A -> ?A}` does not contain member `arg`
 //│ ║  l.116: 	  fun baz = foo(this.arg)
 //│ ╙──       	                    ^^^^
-//│ ╔══[ERROR] Type `#C & {bar: (?A, ?A,), baz: ?a, foo: ?A -> ?A}` does not contain member `arg`
+//│ ╔══[ERROR] Type `#C & {bar: [?A, ?A], baz: ?a, foo: ?A -> ?A}` does not contain member `arg`
 //│ ║  l.115: 	  fun bar = (this.arg, this.arg)
 //│ ╙──       	                           ^^^^
-//│ ╔══[ERROR] Type `#C & {bar: (?A, ?A,), baz: ?a, foo: ?A -> ?A}` does not contain member `arg`
+//│ ╔══[ERROR] Type `#C & {bar: [?A, ?A], baz: ?a, foo: ?A -> ?A}` does not contain member `arg`
 //│ ║  l.115: 	  fun bar = (this.arg, this.arg)
 //│ ╙──       	                 ^^^^
 //│ ╔══[ERROR] Illegal position for this definition statement.
 //│ ║  l.159: 	  fun arg = 123
 //│ ╙──       	      ^^^^^^^^^
 //│ class C {
-//│   fun bar: (error | 'A, error | 'A,)
+//│   fun bar: [error | 'A, error | 'A]
 //│   fun baz: error
 //│   fun foo: 'A -> (error | 'A)
 //│ }
@@ -182,7 +182,7 @@ class C extends Test {
 }
 //│ class C {
 //│   fun arg: Int
-//│   fun bar: (Int | 'A, Int | 'A,)
+//│   fun bar: [Int | 'A, Int | 'A]
 //│   fun baz: Int
 //│   fun foo: 'A -> (Int | 'A)
 //│ }

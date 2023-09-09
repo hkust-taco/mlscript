@@ -82,38 +82,38 @@ v1.x <- 1
 
 
 let v2: (mut Int)
-//│ let v2: (mut Int,)
+//│ let v2: [mut Int]
 //│ v2
 //│    = <missing implementation>
 
 let v2 = (mut 1)
-//│ let v2: (mut 'a,)
+//│ let v2: [mut 'a]
 //│   where
 //│     'a :> 1
 //│ v2
 //│    = [ 1 ]
 
 let v2: (mut x: Int)
-//│ let v2: (mut x: Int,)
+//│ let v2: [mut x: Int]
 //│ v2
 //│    = <missing implementation>
 
 let v2 = (mut 1)
-//│ let v2: (mut 'a,)
+//│ let v2: [mut 'a]
 //│   where
 //│     'a :> 1
 //│ v2
 //│    = [ 1 ]
 
 let v2 = (mut x: 1)
-//│ let v2: (mut x: 'x,)
+//│ let v2: [mut x: 'x]
 //│   where
 //│     'x :> 1
 //│ v2
 //│    = [ 1 ]
 
 let v2 = (mut y: 1)
-//│ let v2: (mut y: 'y,)
+//│ let v2: [mut y: 'y]
 //│   where
 //│     'y :> 1
 //│ v2

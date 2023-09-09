@@ -1,0 +1,16 @@
+:NewDefs
+
+
+forall 'a; (x: 'a) => x
+//│ forall 'a. (x: 'a) -> 'a
+//│ res
+//│     = [Function: res]
+
+
+forall 'a;
+  (x: 'a) => x
+//│ forall 'a. (x: 'a) -> 'a
+//│ res
+//│     = [Function (anonymous)]
+
+

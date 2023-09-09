@@ -8,7 +8,7 @@ import scala.annotation.tailrec
 import mlscript.utils._, shorthands._
 import mlscript.Message._
 
-class TypeDefs extends NuTypeDefs { self: Typer =>
+class TypeDefs extends NuTypeDefs { Typer: Typer =>
   import TypeProvenance.{apply => tp}
   
   
@@ -392,9 +392,9 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
               //    and to have the same has hashCode (see: the use of a cache MutSet)
               if (defn === td.nme && tys =/= targs) {
                 err(msg"Type definition is not regular: it occurs within itself as ${
-                  expandType(tr).show
+                  expandType(tr).show(Typer.newDefs)
                 }, but is defined as ${
-                  expandType(TypeRef(defn, td.targs)(noProv)).show
+                  expandType(TypeRef(defn, td.targs)(noProv)).show(Typer.newDefs)
                 }", td.toLoc)(raise)
                 false
               } else true

@@ -1,0 +1,24 @@
+:NewDefs
+
+
+// * Note that this always to the left
+:e
+fun f(x) =
+  if x ==
+    1 +
+      2 then 0
+      _ then 1
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.7: 	  if x ==
+//│ ║       	     ^^^^
+//│ ║  l.8: 	    1 +
+//│ ║       	^^^^^^^
+//│ ╟── operator application of type `Bool` is not an instance of `Int`
+//│ ║  l.7: 	  if x ==
+//│ ║       	     ^^^^
+//│ ║  l.8: 	    1 +
+//│ ╙──     	^^^^^^
+//│ fun f: Num -> (0 | 1)
+
+
+

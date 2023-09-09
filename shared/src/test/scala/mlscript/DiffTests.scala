@@ -326,7 +326,7 @@ class DiffTests
         // report errors and warnings
         def report(diags: Ls[mlscript.Diagnostic], output: Str => Unit = output): Unit = {
           diags.foreach { diag =>
-            val sctx = Message.mkCtx(diag.allMsgs.iterator.map(_._1), "?")
+            val sctx = Message.mkCtx(diag.allMsgs.iterator.map(_._1), newDefs, "?")
             val headStr = diag match {
               case ErrorReport(msg, loco, src) =>
                 src match {
@@ -570,7 +570,7 @@ class DiffTests
               val exp = typer.expandType(sim)(ctx)
               
               val expStr =
-                exp.showIn(ShowCtx.mk(exp :: Nil)
+                exp.showIn(ShowCtx.mk(exp :: Nil, newDefs)
                     // .copy(newDefs = true) // TODO later
                   , 0)
               
@@ -695,7 +695,7 @@ class DiffTests
                     output(s"${rhs.fold(
                       _ => "Defined",  // the method has been defined
                       _ => "Declared"  // the method type has just been declared
-                    )} ${tn}.${mn}: ${res.show}")
+                    )} ${tn}.${mn}: ${res.show(newDefs)}")
                 }
 
                 // start typegen, declare methods if any and complete typegen block
@@ -721,7 +721,9 @@ class DiffTests
               import Message._
               val diags = varianceWarnings.iterator.map { case (tname, biVars) =>
                 val warnings = biVars.map( tname => msg"${tname.name} is irrelevant and may be removed" -> tname.toLoc)
-                WarningReport(msg"Type definition ${tname.name} has bivariant type parameters:" -> tname.toLoc :: warnings)
+                WarningReport(
+                  msg"Type definition ${tname.name} has bivariant type parameters:" -> tname.toLoc :: warnings,
+                  newDefs)
               }.toList
               report(diags)
             }
@@ -762,7 +764,7 @@ class DiffTests
                   declared += nme.name -> ty_sch
                   val exp = getType(ty_sch, N)
                   if (mode.generateTsDeclarations) tsTypegenCodeBuilder.addTypeGenTermDefinition(exp, Some(nme.name))
-                  S(nme.name -> (s"$nme: ${exp.show}" :: Nil))
+                  S(nme.name -> (s"$nme: ${exp.show(newDefs)}" :: Nil))
                   
                 // statement is defined and has a body/definition
                 case d @ Def(isrec, nme, L(rhs), isByname) =>
@@ -777,7 +779,7 @@ class DiffTests
                     case N =>
                       ctx += nme.name -> typer.VarSymbol(ty_sch, nme)
                       if (mode.generateTsDeclarations) tsTypegenCodeBuilder.addTypeGenTermDefinition(exp, Some(nme.name))
-                      s"$nme: ${exp.show}" :: Nil
+                      s"$nme: ${exp.show(newDefs)}" :: Nil
                       
                     // statement has a body and a declared type
                     // both are used to compute a subsumption (What is this??)
@@ -789,7 +791,7 @@ class DiffTests
                       typer.subsume(ty_sch, sign)(ctx, raiseToBuffer, typer.TypeProvenance(d.toLoc, "def definition"))
                       if (mode.generateTsDeclarations) tsTypegenCodeBuilder.addTypeGenTermDefinition(exp, Some(nme.name))
                       typeBeforeDiags = true
-                      exp.show :: s"  <:  $nme:" :: sign_exp.show :: Nil
+                      exp.show(newDefs) :: s"  <:  $nme:" :: sign_exp.show(newDefs) :: Nil
                   }))
                 case desug: DesugaredStatement =>
                   typer.dbg = mode.dbg
@@ -799,7 +801,7 @@ class DiffTests
                         val ptType = getType(pty, S(true))
                         ctx += nme -> typer.VarSymbol(pty, Var(nme))
                         if (mode.generateTsDeclarations) tsTypegenCodeBuilder.addTypeGenTermDefinition(ptType, Some(nme))
-                        nme -> (s"$nme: ${ptType.show}" :: Nil)
+                        nme -> (s"$nme: ${ptType.show(newDefs)}" :: Nil)
                       }
                     
                     // statements for terms that compute to a value
@@ -810,7 +812,7 @@ class DiffTests
                         val res = "res"
                         ctx += res -> typer.VarSymbol(pty, Var(res))
                         if (mode.generateTsDeclarations) tsTypegenCodeBuilder.addTypeGenTermDefinition(exp, None)
-                        res -> (s"res: ${exp.show}" :: Nil)
+                        res -> (s"res: ${exp.show(newDefs)}" :: Nil)
                       } else (
                         "" -> Nil
                       ))
@@ -862,8 +864,8 @@ class DiffTests
                 if (mode.dbg) output("REC: " + tv + tv.showBounds)
                 report(ErrorReport(
                   msg"Inferred recursive type: ${
-                    getType(tv, pol = pol, removePolarVars = false).show
-                  }" -> tv.prov.loco :: Nil) :: Nil)
+                    getType(tv, pol = pol, removePolarVars = false).show(newDefs)
+                  }" -> tv.prov.loco :: Nil, newDefs) :: Nil)
               }
               
               typer.dbg = false

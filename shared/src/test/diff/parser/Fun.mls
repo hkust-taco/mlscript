@@ -179,16 +179,16 @@ fun = 1
 
 fun add(x: number, y: number): number
 //│ |#fun| |add|(|x|#:| |number|,| |y|#:| |number|)|#:| |number|
-//│ Parsed: {fun add: (x: number, y: number,) -> number}
+//│ Parsed: {fun add: (x: number, y: number) -> number}
 
 fun apply(x: int, f: int => int): int
 //│ |#fun| |apply|(|x|#:| |int|,| |f|#:| |int| |=>| |int|)|#:| |int|
-//│ Parsed: {fun apply: (x: int, f: int -> int,) -> int}
+//│ Parsed: {fun apply: (x: int, f: int -> int) -> int}
 
 fun apply2(x: number, f: int => number => number): number
 //│ |#fun| |apply2|(|x|#:| |number|,| |f|#:| |int| |=>| |number| |=>| |number|)|#:| |number|
-//│ Parsed: {fun apply2: (x: number, f: int -> number -> number,) -> number}
+//│ Parsed: {fun apply2: (x: number, f: int -> number -> number) -> number}
 
 fun apply3(x: number, f: (int => number) => number): number
 //│ |#fun| |apply3|(|x|#:| |number|,| |f|#:| |(|int| |=>| |number|)| |=>| |number|)|#:| |number|
-//│ Parsed: {fun apply3: (x: number, f: (int -> number) -> number,) -> number}
+//│ Parsed: {fun apply3: (x: number, f: (int -> number) -> number) -> number}

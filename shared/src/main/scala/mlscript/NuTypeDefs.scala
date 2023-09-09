@@ -561,7 +561,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
             decl match {
               case NuFunDef(S(_), _, _, _) => ()
               case _ =>
-                err(msg"Refininition of ${decl.name}", decl.toLoc)
+                err(msg"Refininition of '${decl.name}'", decl.toLoc)
             }
             S(lti)
           case N =>

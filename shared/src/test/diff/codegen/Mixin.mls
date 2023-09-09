@@ -523,7 +523,7 @@ class E(x: Int) extends BB, AA(x)
 mixin Fooo(val x: Int) { fun f = [x, this.x] }
 //│ mixin Fooo(x: Int) {
 //│   this: {x: 'x}
-//│   fun f: (Int, 'x,)
+//│   fun f: [Int, 'x]
 //│ }
 //│ // Prelude
 //│ class TypingUnit14 {
@@ -579,7 +579,7 @@ mixin Bazz(val y: Int)
 :js
 module Barr extends Fooo(0), Bazz(1)
 //│ module Barr {
-//│   fun f: (Int, 0,)
+//│   fun f: [Int, 0]
 //│ }
 //│ // Prelude
 //│ class TypingUnit16 {

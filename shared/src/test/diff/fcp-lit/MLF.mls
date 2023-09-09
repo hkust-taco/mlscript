@@ -323,8 +323,8 @@ def packed_pair = pack (1, fun x -> (x, x ))
 
 def fst((x,y)) = x
 def snd((x,y)) = y
-//│ fst: ('a, anything,) -> 'a
-//│ snd: (anything, 'a,) -> 'a
+//│ fst: (('a, anything,),) -> 'a
+//│ snd: ((anything, 'a,),) -> 'a
 
 v = packed_int (fun p -> (snd p) ( fst p ))
 //│ v: int

@@ -634,7 +634,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
             raise = err => raise(WarningReport( // Demote constraint errors from this to warnings
               msg"Expression in statement position should have type `unit`." -> N ::
               msg"Use the `discard` function to discard non-unit values, making the intent clearer." -> N ::
-              err.allMsgs)),
+              err.allMsgs, newDefs)),
             prov = TypeProvenance(t.toLoc, t.describe), ctx)
       }
       L(ty)

@@ -72,12 +72,12 @@ class D(x: Int)
 //│ class D(x: Int)
 
 D.unapply
-//│ forall 'x. (D & {x: 'x} | D & ~#D) -> ('x,)
+//│ forall 'x. (D & {x: 'x} | D & ~#D) -> ['x]
 //│ res
 //│     = [Function: unapply]
 
 D.unapply(D(42))
-//│ (Int,)
+//│ [Int]
 //│ res
 //│     = [ 42 ]
 
@@ -89,7 +89,7 @@ D.unapply({ x: 42 })
 //│ ╟── record literal of type `{x: 42}` is not an instance of type `D`
 //│ ║  l.85: 	D.unapply({ x: 42 })
 //│ ╙──      	               ^^
-//│ error | (42,)
+//│ error | [42]
 //│ res
 //│ Runtime error:
 //│   TypeError: Cannot read private member #x from an object whose class did not declare it
@@ -97,12 +97,12 @@ D.unapply({ x: 42 })
 class DT[T](x: T)
 DT.unapply
 //│ class DT[T](x: T)
-//│ forall 'x. (DT[anything] & {x: 'x} | DT[anything] & ~#DT) -> ('x,)
+//│ forall 'x. (DT[anything] & {x: 'x} | DT[anything] & ~#DT) -> ['x]
 //│ res
 //│     = [Function: unapply]
 
 DT.unapply(DT(42))
-//│ (42,)
+//│ [42]
 //│ res
 //│     = [ 42 ]
 
@@ -114,7 +114,7 @@ DT.unapply({ x: 42 })
 //│ ╟── record literal of type `{x: 42}` is not an instance of type `DT`
 //│ ║  l.110: 	DT.unapply({ x: 42 })
 //│ ╙──       	                ^^
-//│ error | (42 & ??T,)
+//│ error | [42 & ??T]
 //│ res
 //│ Runtime error:
 //│   TypeError: Cannot read private member #x from an object whose class did not declare it
@@ -160,7 +160,7 @@ bar(D.class)
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.159: 	bar(D.class)
 //│ ║         	    ^^^^^^^
-//│ ╟── reference of type `(x: Int,) -> D` does not have field 'class'
+//│ ╟── reference of type `(x: Int) -> D` does not have field 'class'
 //│ ║  l.159: 	bar(D.class)
 //│ ╙──       	    ^
 //│ error
@@ -232,7 +232,7 @@ fun test(a: Object) = if a is
 //│ ╟── type variable `A` leaks out of its scope
 //│ ║  l.214: 	class Cls[A] { fun x: A = x; fun g: A -> Int; fun g = g }
 //│ ╙──       	          ^
-//│ fun test: (a: Object,) -> (error | ??A)
+//│ fun test: (a: Object) -> (error | ??A)
 
 :e // TODO
 fun test(a: Object) = if a is
@@ -248,7 +248,7 @@ fun test(a: Object) = if a is
 //│ ╟── type variable `A` leaks out of its scope
 //│ ║  l.214: 	class Cls[A] { fun x: A = x; fun g: A -> Int; fun g = g }
 //│ ╙──       	          ^
-//│ fun test: (a: Object,) -> Int
+//│ fun test: (a: Object) -> Int
 
 
 class Cls[out A] { fun x: A = x }
@@ -259,12 +259,12 @@ class Cls[out A] { fun x: A = x }
 fun test(a: Object) = if a is
   Cls then a.x
   else error
-//│ fun test: (a: Object,) -> ??A
+//│ fun test: (a: Object) -> ??A
 
 fun test(a: Object) = if a is
   Cls then a
   else error
-//│ fun test: (a: Object,) -> Cls[??A]
+//│ fun test: (a: Object) -> Cls[??A]
 
 :re
 test(0).x
@@ -304,7 +304,7 @@ class BoolLit() extends Expr[Bool]
 
 fun test(f: ((IntLit | BoolLit) -> Int)) =
   f : Expr[anything] -> Int
-//│ fun test: (f: (BoolLit | IntLit) -> Int,) -> Expr[anything] -> Int
+//│ fun test: (f: (BoolLit | IntLit) -> Int) -> Expr[anything] -> Int
 
 class OopsLit() extends Expr[Bool]
 //│ class OopsLit() extends Expr

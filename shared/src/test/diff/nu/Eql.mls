@@ -51,7 +51,7 @@ fun test1(x) =
 
 fun test2(x, y) =
   x === y
-//│ fun test2: forall 'a. (Eql['a], 'a,) -> Bool
+//│ fun test2: forall 'a. (Eql['a], 'a) -> Bool
 
 
 1 : Eql['a]

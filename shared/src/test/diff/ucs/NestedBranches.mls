@@ -22,7 +22,7 @@ fun optionApply(x, y, f) =
       Some(yv) then Some(f(xv, yv))
       None then None
     None then None
-//│ fun optionApply: forall 'a 'b 'A. (None | Some['a], None | Some['b], ('a, 'b,) -> 'A,) -> (None | Some['A])
+//│ fun optionApply: forall 'a 'b 'A. (None | Some['a], None | Some['b], ('a, 'b) -> 'A) -> (None | Some['A])
 
 let zeroToThree = Cons(0, Cons(1, Cons(2, Cons(3, Nil))))
 //│ let zeroToThree: Cons['A]
@@ -39,7 +39,7 @@ fun mapPartition(f, xs) = if xs is
   Cons(x, xs) and mapPartition(f, xs) is Pair(l, r) and f(x) is
     Left(v)  then Pair(Cons(v, l), r)
     Right(v) then Pair(l, Cons(v, r))
-//│ fun mapPartition: forall 'A 'A0 'A1. ('A -> (Left['A0] | Right['A1]), Cons['A] | Nil,) -> Pair[Cons['A0] | Nil, Cons['A1] | Nil]
+//│ fun mapPartition: forall 'A 'A0 'A1. ('A -> (Left['A0] | Right['A1]), Cons['A] | Nil) -> Pair[Cons['A0] | Nil, Cons['A1] | Nil]
 
 mapPartition(x => Left(x + 1), zeroToThree)
 //│ Pair[Cons['A] | Nil, Cons['A0] | Nil]
@@ -63,7 +63,7 @@ fun mapPartition(f, xs) = if xs is
     mapPartition(f, xs) is Pair(l, r) and f(x) is
       Left(v)  then Pair(Cons(v, l), r)
       Right(v) then Pair(l, Cons(v, r))
-//│ fun mapPartition: forall 'A 'A0 'A1. ('A -> (Left['A0] | Right['A1]), Cons['A] | Nil,) -> Pair[Cons['A0] | Nil, Cons['A1] | Nil]
+//│ fun mapPartition: forall 'A 'A0 'A1. ('A -> (Left['A0] | Right['A1]), Cons['A] | Nil) -> Pair[Cons['A0] | Nil, Cons['A1] | Nil]
 
 mapPartition(f, zeroToThree)
 //│ Pair[Cons['A] | Nil, Cons['A0] | Nil]
@@ -85,7 +85,7 @@ fun mapPartition(f, xs) = if xs is
             Pair(Cons(v, l), r)
           Right(v) then
             Pair(l, Cons(v, r))
-//│ fun mapPartition: forall 'A 'A0 'A1. ('A -> (Left['A0] | Right['A1]), Cons['A] | Nil,) -> Pair[Cons['A0] | Nil, Cons['A1] | Nil]
+//│ fun mapPartition: forall 'A 'A0 'A1. ('A -> (Left['A0] | Right['A1]), Cons['A] | Nil) -> Pair[Cons['A0] | Nil, Cons['A1] | Nil]
 
 mapPartition(f, zeroToThree)
 //│ Pair[Cons['A] | Nil, Cons['A0] | Nil]
@@ -104,7 +104,7 @@ fun mapPartition(f, xs) = if xs is
 //│ ╔══[ERROR] The case when this is false is not handled: is (mapPartition (f, xs,),) (l, r,)
 //│ ║  l.101: 	  Cons(x, xs) and mapPartition(f, xs) is (l, r) and f(x) is
 //│ ╙──       	                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ fun mapPartition: (anything, anything,) -> error
+//│ fun mapPartition: (anything, anything) -> error
 //│ Code generation encountered an error:
 //│   if expression was not desugared
 
@@ -147,7 +147,7 @@ fun mapPartition(f, xs) = if xs is
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.128: 	                      Right(v) then (l, Cons(v, r))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── tuple literal of type `(Nil, Nil,)` is not an instance of type `Object`
+//│ ╟── tuple literal of type `[Nil, Nil]` is not an instance of type `Object`
 //│ ║  l.125: 	  Nil then (Nil, Nil)
 //│ ║         	            ^^^^^^^^
 //│ ╟── Note: constraint arises from `case` expression:
@@ -160,6 +160,6 @@ fun mapPartition(f, xs) = if xs is
 //│ ╟── from application:
 //│ ║  l.126: 	  Cons(x, xs) and mapPartition(f, xs) is (l, r)
 //│ ╙──       	                  ^^^^^^^^^^^^^^^^^^^
-//│ fun mapPartition: forall 'A. (anything, Cons['A] | Nil,) -> (error | (Nil, Nil,))
+//│ fun mapPartition: forall 'A. (anything, Cons['A] | Nil) -> (error | [Nil, Nil])
 //│ Code generation encountered an error:
 //│   unknown match case: Tuple#2
