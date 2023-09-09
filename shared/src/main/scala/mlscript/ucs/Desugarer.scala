@@ -790,7 +790,7 @@ class Desugarer extends TypeDefs { self: Typer =>
           val unapplyMtd = ctx.get(className.name) match {
             case S(CompletedTypeInfo(cls: TypedNuCls)) => cls.td.genUnapply // Classes from other typing units
             case S(ti: DelayedTypeInfo) => ti.decl.genUnapply // Classes in the same typing units
-            case _ => N // Not found or not a class
+            case S(_: AbstractConstructor) | S(_: LazyTypeInfo) | S(_: VarSymbol) | N => N // Not found or not a class
           }
           val body = (scrutinee.reference, unapplyMtd) match {
             case (v: Var, S(unapplyMtd)) if !fields.isEmpty =>

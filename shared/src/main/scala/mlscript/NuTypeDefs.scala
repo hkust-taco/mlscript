@@ -488,8 +488,9 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           refs.add((v, false))
           N
         }
-      case _ =>
-        s.children.foldLeft[Opt[Var]](N)((r, c) => r.orElse(visit(c)))
+      case _: Type => N
+      case _: Term| _: Statement | _: NuDecl | _: IfBody | _: CaseBranches | _: TypingUnit =>
+          s.children.foldLeft[Opt[Var]](N)((r, c) => r.orElse(visit(c)))
     }
 
     RefMap(visit(body), refs.toSet)
