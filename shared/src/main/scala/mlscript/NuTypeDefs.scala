@@ -1061,7 +1061,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     val refs = tf.getFunRefs
                     if (fd.isLetRec.isDefined) checkThisInCtor(refs, S(tf.name), tf.name :: Nil)(true) match {
                       case S(v) => // not a function && access `this` in the ctor
-                        err(msg"Cannot access `this` while initializing field ${tf.name}", v.toLoc)
+                        err(msg"Cannot access `this` while initializing field ${tf.name}" -> fd.toLoc ::
+                          msg"The access to `this` is here" -> v.toLoc :: Nil)
                       case N => ()
                     }
                     checkUnqualifiedVirtual(refs, fd.toLoc)
@@ -1073,7 +1074,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     val refs = getRefs(s)
                     checkThisInCtor(refs, N, Nil)(false) match {
                       case S(v) =>
-                        err(s"Cannot access `this` during object initialization", v.toLoc)
+                        err(msg"Cannot access `this` during object initialization" -> s.toLoc ::
+                          msg"The access to `this` is here" -> v.toLoc :: Nil)
                       case N => ()
                     }
                     checkUnqualifiedVirtual(refs, s.toLoc)

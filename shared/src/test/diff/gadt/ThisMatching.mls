@@ -8,6 +8,9 @@ module Dummy {
 }
 //│ ╔══[ERROR] Cannot access `this` during object initialization
 //│ ║  l.7: 	  log(if this is Dummy then "duh!" else "huh?")
+//│ ║       	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The access to `this` is here
+//│ ║  l.7: 	  log(if this is Dummy then "duh!" else "huh?")
 //│ ╙──     	         ^^^^
 //│ module Dummy
 //│ Runtime error:
@@ -36,10 +39,10 @@ class Funny: Int { fun test = this + 1 }
 :e
 class Unfunny { fun test = this + 1 }
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.37: 	class Unfunny { fun test = this + 1 }
+//│ ║  l.40: 	class Unfunny { fun test = this + 1 }
 //│ ║        	                           ^^^^^^
 //│ ╟── reference of type `#Unfunny` is not an instance of type `Int`
-//│ ║  l.37: 	class Unfunny { fun test = this + 1 }
+//│ ║  l.40: 	class Unfunny { fun test = this + 1 }
 //│ ╙──      	                           ^^^^
 //│ class Unfunny {
 //│   fun test: Int | error
@@ -96,7 +99,7 @@ class Exp: Pair | Lit {
 class Lit(n: Int) extends Exp
 class Pair(lhs: Exp, rhs: Exp) extends Exp
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.94: 	    Pair(l, r) then l.test + r.test
+//│ ║  l.97: 	    Pair(l, r) then l.test + r.test
 //│ ╙──      	                     ^^^^^
 //│ class Exp: Lit | Pair {
 //│   fun test: Int | error
@@ -137,23 +140,23 @@ class Exp[A]: Pair | Lit {
 class Lit(n: Int) extends Exp[Int]
 class Pair[L, R](lhs: L, rhs: R) extends Exp[(L, R)]
 //│ ╔══[ERROR] Unhandled cyclic definition
-//│ ║  l.132: 	class Exp[A]: Pair | Lit {
+//│ ║  l.135: 	class Exp[A]: Pair | Lit {
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.133: 	  fun test = if this is
+//│ ║  l.136: 	  fun test = if this is
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.134: 	    Lit then 0
+//│ ║  l.137: 	    Lit then 0
 //│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.135: 	    Pair then 1
+//│ ║  l.138: 	    Pair then 1
 //│ ╙──       	^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Type error in `case` expression
-//│ ║  l.133: 	  fun test = if this is
+//│ ║  l.136: 	  fun test = if this is
 //│ ║         	                ^^^^^^^
-//│ ║  l.134: 	    Lit then 0
+//│ ║  l.137: 	    Lit then 0
 //│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.135: 	    Pair then 1
+//│ ║  l.138: 	    Pair then 1
 //│ ║         	^^^^^^^^^^^^^^^
 //│ ╟── type variable `L` leaks out of its scope
-//│ ║  l.138: 	class Pair[L, R](lhs: L, rhs: R) extends Exp[(L, R)]
+//│ ║  l.141: 	class Pair[L, R](lhs: L, rhs: R) extends Exp[(L, R)]
 //│ ╙──       	           ^
 //│ class Exp[A]: Lit | Pair[anything, anything] {
 //│   fun test: 0 | 1
