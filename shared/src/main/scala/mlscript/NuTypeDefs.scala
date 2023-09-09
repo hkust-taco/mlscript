@@ -1077,7 +1077,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                   def run: Bool = {
                     refs.useThis || (
                       refs.refs.foldLeft(false)((res, p) => res || (allMembers.get(p._1) match {
-                        case S(nf: TypedNuFun) if p._1 =/= name.getOrElse("") && !stack.contains(p._1) =>
+                        case S(nf: TypedNuFun) if name.fold(true)(name => name =/= p._1) && !stack.contains(p._1) => // Avoid cycle checking
                           (p._2 && (!expection || isVirtual(nf))) || checkThisInCtor(nf.getFunRefs, S(p._1), p._1 :: stack)(false)
                         case _ => false // Refer to outer 
                       }))
