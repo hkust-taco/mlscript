@@ -391,11 +391,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   
   // The field `thisRef` is defined when the member accesses to `this` object without field selection
   // e.g., val x = this
-  // The field `refs` contains all `Var`s accessed by the member, where the boolean value indicates
-  // if it is qualified.
-  // e.g., val x = this.y -> refs: { (y, true) }
-  // e.g., val y = z -> refs: { (z, false) }
-  case class RefMap(thisRef: Opt[Var], refs: Set[(Var, Bool)])
+  // The field `refs` contains all `Var`s accessed by the member with their qualifiers (None if it is an unqualifier access)
+  case class RefMap(thisRef: Opt[Var], refs: Set[(Var, Opt[Var])])
   object RefMap {
     lazy val nothing: RefMap = RefMap(N, Set.empty)
   }
@@ -476,16 +473,16 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   
   
   def getRefs(body: Statement): RefMap = {
-    val refs = mutable.HashSet[(Var, Bool)]()
+    val refs = mutable.HashSet[(Var, Opt[Var])]()
 
     def visit(s: Located): Opt[Var] = s match {
-      case Sel(Var("this"), v) =>
-        refs.add((v, true))
+      case Sel(ths @ Var("this"), v) =>
+        refs.add((v, S(ths)))
         N
       case v @ Var(name) =>
         if (name === "this") S(v)
         else {
-          refs.add((v, false))
+          refs.add((v, N))
           N
         }
       case _: Type => N
@@ -1038,7 +1035,10 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     refs.thisRef.orElse(
                       refs.refs.foldLeft[Opt[Var]](N)((res, p) => res.orElse(allMembers.get(p._1.name) match {
                         case S(nf: TypedNuFun) if name.fold(true)(name => name =/= p._1.name) && !stack.contains(p._1.name) => // Avoid cycle checking
-                          Option.when(p._2 && (!expection || isVirtual(nf)))(p._1).orElse(checkThisInCtor(nf.getFunRefs, S(p._1.name), p._1.name :: stack)(false))
+                          p._2 match {
+                            case q @ S(_) if !expection || isVirtual(nf) => q
+                            case _ => checkThisInCtor(nf.getFunRefs, S(p._1.name), p._1.name :: stack)(false)
+                          }
                         case _ => N // Refer to outer 
                       }))
                     )
@@ -1048,7 +1048,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                 }
 
                 def checkUnqualifiedVirtual(refs: RefMap, parentLoc: Opt[Loc]) =
-                  refs.refs.foreach(p => if (!p._2) allMembers.get(p._1.name) match { // unqualified access
+                  refs.refs.foreach(p => if (p._2.isEmpty) allMembers.get(p._1.name) match { // unqualified access
                     case S(nf: TypedNuFun) if isVirtual(nf) =>
                       err(msg"Unqualified access to virtual member ${p._1.name}" -> parentLoc ::
                         msg"Declared here:" -> nf.fd.toLoc
@@ -1056,13 +1056,21 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     case _ => ()
                   })
 
+                // If the second error message location is covered by the first one,
+                // we show the first error message with more precise location
+                def mergeErrMsg(msg1: Message -> Opt[Loc], msg2: Message -> Opt[Loc]) =
+                  (msg1._2, msg2._2) match {
+                    case (S(loc1), l @ S(loc2)) if loc1 covers loc2 => msg1._1 -> l :: Nil
+                    case _ => msg1 :: msg2 :: Nil
+                  }
+
                 members.foreach {
                   case tf @ TypedNuFun(_, fd, _) =>
                     val refs = tf.getFunRefs
                     if (fd.isLetRec.isDefined) checkThisInCtor(refs, S(tf.name), tf.name :: Nil)(true) match {
                       case S(v) => // not a function && access `this` in the ctor
-                        err(msg"Cannot access `this` while initializing field ${tf.name}" -> fd.toLoc ::
-                          msg"The access to `this` is here" -> v.toLoc :: Nil)
+                        err(mergeErrMsg(msg"Cannot access `this` while initializing field ${tf.name}" -> fd.toLoc,
+                          msg"The access to `this` is here" -> v.toLoc))
                       case N => ()
                     }
                     checkUnqualifiedVirtual(refs, fd.toLoc)
@@ -1074,8 +1082,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     val refs = getRefs(s)
                     checkThisInCtor(refs, N, Nil)(false) match {
                       case S(v) =>
-                        err(msg"Cannot access `this` during object initialization" -> s.toLoc ::
-                          msg"The access to `this` is here" -> v.toLoc :: Nil)
+                        err(mergeErrMsg(msg"Cannot access `this` during object initialization" -> s.toLoc,
+                          msg"The access to `this` is here" -> v.toLoc))
                       case N => ()
                     }
                     checkUnqualifiedVirtual(refs, s.toLoc)

@@ -147,10 +147,7 @@ module D extends C(0) {
 //│ ╙──       	      ^^^^
 //│ ╔══[ERROR] Cannot access `this` during object initialization
 //│ ║  l.143: 	  this.foo(false)
-//│ ║         	  ^^^^^^^^^^^^^^^
-//│ ╟── The access to `this` is here
-//│ ║  l.143: 	  this.foo(false)
-//│ ╙──       	      ^^^^
+//│ ╙──       	  ^^^^
 //│ module D extends C {
 //│   fun bar: forall 'A. [Int | 'A, Int | 'A]
 //│   fun baz: Int
@@ -171,7 +168,7 @@ class C extends Test { // it also fails with Test[Int]...
 //│ ║  l.115: 	  fun bar = (this.arg, this.arg)
 //│ ╙──       	                 ^^^^
 //│ ╔══[ERROR] Illegal position for this definition statement.
-//│ ║  l.162: 	  fun arg = 123
+//│ ║  l.159: 	  fun arg = 123
 //│ ╙──       	      ^^^^^^^^^
 //│ class C {
 //│   fun bar: [error | 'A, error | 'A]
