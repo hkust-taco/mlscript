@@ -89,3 +89,15 @@ fun foo(x) = x is (Pair(a, b) and a > b) | Int
 //│   if expression was not desugared
 
 
+
+class A(arg)
+//│ Defined class A
+//│ A: 'arg -> (A & {arg: 'arg})
+//│  = [Function: A1]
+
+// TODO make `is` lower precedence than `=>`
+x => (x is A(_))
+//│ res: anything -> Bool
+//│    = [Function: res]
+
+
