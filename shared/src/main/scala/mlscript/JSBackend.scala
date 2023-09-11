@@ -720,13 +720,27 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     sym.methods.foreach {
       case MethodDef(_, _, Var(nme), _, _) => memberList += NewClassMemberSymbol(nme, N, true, false, qualifier).tap(nuTypeScope.register)
     }
-    sym.signatures.foreach {
-      case MethodDef(_, _, Var(nme), _, _) => memberList += nuTypeScope.declareStubValue(nme)(true)
-    }
     sym.ctor.foreach {
       case nd @ NuFunDef(rec, Var(nme), _, _) =>
         memberList += NewClassMemberSymbol(nme, rec, false, !nd.genField, qualifier).tap(nuTypeScope.register)
       case _ => ()
+    }
+
+    val (superParameters, rest) = if (baseSym.isDefined) {
+      val rest = constructorScope.declareValue("rest", Some(false), false)
+      (Ls(JSIdent(s"...${rest.runtimeName}")), S(rest.runtimeName))
+    }
+    else
+      (sym.superParameters.map {
+        case App(lhs, Tup(rhs)) => rhs map {
+          case (_, Fld(_, trm)) => translateTerm(trm)(constructorScope)
+        }
+        case _ => Nil
+      }.flatMap(_.reverse).reverse, N)
+
+    // Declare the signatures after creating `super(...)` to avoid generating unexpected access
+    sym.signatures.foreach {
+      case MethodDef(_, _, Var(nme), _, _) => memberList += nuTypeScope.declareStubValue(nme)(true)
     }
 
     // TODO: support traitSymbols
@@ -755,18 +769,6 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         case N => N
       }
     }
-
-    val (superParameters, rest) = if (baseSym.isDefined) {
-      val rest = constructorScope.declareValue("rest", Some(false), false)
-      (Ls(JSIdent(s"...${rest.runtimeName}")), S(rest.runtimeName))
-    }
-    else
-      (sym.superParameters.map {
-        case App(lhs, Tup(rhs)) => rhs map {
-          case (_, Fld(_, trm)) => translateTerm(trm)(constructorScope)
-        }
-        case _ => Nil
-      }.flatMap(_.reverse).reverse, N)
 
     val privateMems = new ListBuffer[Str]()
     val stmts = sym.ctor.flatMap {
