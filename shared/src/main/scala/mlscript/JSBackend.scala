@@ -667,8 +667,15 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     baseSym: Opt[ValueSymbol],
     keepTopLevelScope: Bool
   )(implicit scope: Scope): JSClassNewDecl = {
+    // * nuTypeScope: root scope
+    // ** inheritanceScope: contains specialized parameters for `super(...)`
+    // ** bodyScope: contains the part of the class between the `{...}`
+    // *** constructorScope: contains variables in the ctor statements
+    // *** memberScopes: contains member methods and variables
     val nuTypeScope = scope.derive(sym.toString)
-    val constructorScope = nuTypeScope.derive(s"${sym.name} constructor")
+    val inheritanceScope = nuTypeScope.derive(s"${sym.name} inheritance")
+    val bodyScope = nuTypeScope.derive(s"${sym.name} body")
+    val constructorScope = bodyScope.derive(s"${sym.name} constructor")
 
     val memberList = ListBuffer[RuntimeSymbol]() // pass to the getter of nested types
     val typeList = ListBuffer[Str]()
@@ -679,11 +686,11 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
 
     val qualifierName = "qualifier"
     val memberScopes = (sym.nested.map(nd => {
-      val memberScope = nuTypeScope.derive(s"member ${nd.name}")
+      val memberScope = bodyScope.derive(s"member ${nd.name}")
       val sym = memberScope.declareQualifierSymbol(qualifierName)
       nd.name -> QualifierPack(memberScope, sym)
     }) ++ sym.methods.map(m => {
-      val memberScope = nuTypeScope.derive(s"member ${m.nme.name}")
+      val memberScope = bodyScope.derive(s"member ${m.nme.name}")
       val sym = memberScope.declareQualifierSymbol(qualifierName)
       m.nme.name -> QualifierPack(memberScope, sym)
     })).toMap
@@ -704,12 +711,13 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
 
     val ctorParams = sym.ctorParams.fold(
       fields.map { f =>
-          memberList += NewClassMemberSymbol(f, Some(false), false, !sym.publicCtors.contains(f), qualifier).tap(nuTypeScope.register)
+          memberList += NewClassMemberSymbol(f, Some(false), false, !sym.publicCtors.contains(f), qualifier).tap(bodyScope.register)
+          inheritanceScope.declareValue(f, Some(false), false).runtimeName
           constructorScope.declareValue(f, Some(false), false).runtimeName
         }
       )(lst => lst.map { p =>
           if (p._2) { // `constructor(val name)` will also generate a field and a getter
-            memberList += NewClassMemberSymbol(p._1, Some(false), false, false, qualifier).tap(nuTypeScope.register)
+            memberList += NewClassMemberSymbol(p._1, Some(false), false, false, qualifier).tap(bodyScope.register)
             getters += p._1
           }
           constructorScope.declareValue(p._1, Some(false), false).runtimeName // Otherwise, it is only available in the constructor
@@ -718,33 +726,19 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     val initFields = getters.toList.map(name => JSAssignExpr(JSIdent(s"this.#$name"), JSIdent(name)).stmt)
 
     sym.methods.foreach {
-      case MethodDef(_, _, Var(nme), _, _) => memberList += NewClassMemberSymbol(nme, N, true, false, qualifier).tap(nuTypeScope.register)
+      case MethodDef(_, _, Var(nme), _, _) => memberList += NewClassMemberSymbol(nme, N, true, false, qualifier).tap(bodyScope.register)
+    }
+    sym.signatures.foreach {
+      case MethodDef(_, _, Var(nme), _, _) => memberList += bodyScope.declareStubValue(nme)(true)
     }
     sym.ctor.foreach {
       case nd @ NuFunDef(rec, Var(nme), _, _) =>
-        memberList += NewClassMemberSymbol(nme, rec, false, !nd.genField, qualifier).tap(nuTypeScope.register)
+        memberList += NewClassMemberSymbol(nme, rec, false, !nd.genField, qualifier).tap(bodyScope.register)
       case _ => ()
     }
 
-    val (superParameters, rest) = if (baseSym.isDefined) {
-      val rest = constructorScope.declareValue("rest", Some(false), false)
-      (Ls(JSIdent(s"...${rest.runtimeName}")), S(rest.runtimeName))
-    }
-    else
-      (sym.superParameters.map {
-        case App(lhs, Tup(rhs)) => rhs map {
-          case (_, Fld(_, trm)) => translateTerm(trm)(constructorScope)
-        }
-        case _ => Nil
-      }.flatMap(_.reverse).reverse, N)
-
-    // Declare the signatures after creating `super(...)` to avoid generating unexpected access
-    sym.signatures.foreach {
-      case MethodDef(_, _, Var(nme), _, _) => memberList += nuTypeScope.declareStubValue(nme)(true)
-    }
-
     // TODO: support traitSymbols
-    val (traitSymbols, classSymbols, mixinSymbols, moduleSymbols) = declareNewTypeDefs(sym.nested, qualifier)(nuTypeScope)
+    val (traitSymbols, classSymbols, mixinSymbols, moduleSymbols) = declareNewTypeDefs(sym.nested, qualifier)(bodyScope)
 
     if (keepTopLevelScope) // also declare in the top level for diff tests
       declareNewTypeDefs(sym.nested, N)(topLevelScope)
@@ -758,7 +752,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
 
     val base: Opt[JSExpr] = baseSym match {
       case Some(base) => S(JSIdent(base.runtimeName))
-      case _ => translateParents(sym.superParameters, constructorScope)
+      case _ => translateParents(sym.superParameters, inheritanceScope)
     }
 
     val traits = sym.body.collectTypeNames.flatMap {
@@ -769,6 +763,18 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         case N => N
       }
     }
+
+    val (superParameters, rest) = if (baseSym.isDefined) {
+      val rest = constructorScope.declareValue("rest", Some(false), false)
+      (Ls(JSIdent(s"...${rest.runtimeName}")), S(rest.runtimeName))
+    }
+    else
+      (sym.superParameters.map {
+        case App(lhs, Tup(rhs)) => rhs map {
+          case (_, Fld(_, trm)) => translateTerm(trm)(inheritanceScope)
+        }
+        case _ => Nil
+      }.flatMap(_.reverse).reverse, N)
 
     val privateMems = new ListBuffer[Str]()
     val stmts = sym.ctor.flatMap {
@@ -786,7 +792,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
           )
         }
         else {
-          val sym = nuTypeScope.resolveValue(nme) match {
+          val sym = bodyScope.resolveValue(nme) match {
             case Some(sym: NewClassMemberSymbol) => sym
             case _ => throw new AssertionError(s"error when handling $nme")
           }
