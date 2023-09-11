@@ -102,17 +102,18 @@ module M extends Mx {
 //│ }
 
 
-:e
+
+:e // FIXME
 class C {
   virtual fun id1(x) = x
   fun f = (this.id1(true), this.id1(0))
   fun id2(x) = x
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.108: 	  fun f = (this.id1(true), this.id1(0))
+//│ ║  l.109: 	  fun f = (this.id1(true), this.id1(0))
 //│ ╙──       	               ^^^^
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.108: 	  fun f = (this.id1(true), this.id1(0))
+//│ ║  l.109: 	  fun f = (this.id1(true), this.id1(0))
 //│ ╙──       	                               ^^^^
 //│ class C {
 //│   fun f: [error, error]
@@ -126,10 +127,10 @@ module M extends C {
   this.id2(true)
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.126: 	  this.id2(true)
+//│ ║  l.127: 	  this.id2(true)
 //│ ╙──       	      ^^^^
 //│ ╔══[ERROR] Cannot access `this` during object initialization
-//│ ║  l.126: 	  this.id2(true)
+//│ ║  l.127: 	  this.id2(true)
 //│ ╙──       	  ^^^^
 //│ module M extends C {
 //│   fun f: [error, error]
@@ -142,10 +143,10 @@ module M extends C {
   fun g = (this.id2(true), this.id2(0))
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.142: 	  fun g = (this.id2(true), this.id2(0))
+//│ ║  l.143: 	  fun g = (this.id2(true), this.id2(0))
 //│ ╙──       	               ^^^^
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.142: 	  fun g = (this.id2(true), this.id2(0))
+//│ ║  l.143: 	  fun g = (this.id2(true), this.id2(0))
 //│ ╙──       	                               ^^^^
 //│ module M extends C {
 //│   fun f: [error, error]
@@ -180,15 +181,15 @@ module M extends C {
   fun id1 = succ
 }
 //│ ╔══[ERROR] Type mismatch in definition of method id1:
-//│ ║  l.180: 	  fun id1 = succ
+//│ ║  l.181: 	  fun id1 = succ
 //│ ║         	      ^^^^^^^^^^
 //│ ╙── variable of type `?a` is not an instance of type `Int`
 //│ ╔══[ERROR] Type mismatch in definition of method id1:
-//│ ║  l.180: 	  fun id1 = succ
+//│ ║  l.181: 	  fun id1 = succ
 //│ ║         	      ^^^^^^^^^^
 //│ ╟── expression of type `Int` does not match type `?a`
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.107: 	  virtual fun id1(x) = x
+//│ ║  l.108: 	  virtual fun id1(x) = x
 //│ ╙──       	                       ^
 //│ module M extends C {
 //│   fun f: [error, error]
@@ -228,19 +229,19 @@ module M {
   fun oops(x) = m := x
 }
 //│ ╔══[PARSE ERROR] Unexpected 'mut' keyword in expression position
-//│ ║  l.227: 	  mut val m = None
+//│ ║  l.228: 	  mut val m = None
 //│ ╙──       	  ^^^
 //│ ╔══[PARSE ERROR] Unexpected 'val' keyword in expression position
-//│ ║  l.227: 	  mut val m = None
+//│ ║  l.228: 	  mut val m = None
 //│ ╙──       	      ^^^
 //│ ╔══[ERROR] identifier not found: :=
-//│ ║  l.228: 	  fun oops(x) = m := x
+//│ ║  l.229: 	  fun oops(x) = m := x
 //│ ╙──       	                  ^^
 //│ ╔══[ERROR] identifier not found: m
-//│ ║  l.228: 	  fun oops(x) = m := x
+//│ ║  l.229: 	  fun oops(x) = m := x
 //│ ╙──       	                ^
 //│ ╔══[ERROR] Unexpected equation in this position
-//│ ║  l.227: 	  mut val m = None
+//│ ║  l.228: 	  mut val m = None
 //│ ╙──       	          ^^^^^^^^
 //│ module M {
 //│   fun oops: anything -> error

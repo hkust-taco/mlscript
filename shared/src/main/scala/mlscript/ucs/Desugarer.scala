@@ -788,7 +788,7 @@ class Desugarer extends TypeDefs { self: Typer =>
           printlnUCS(s"• Constructor pattern: $className(${fields.iterator.map(x => s"${x._1} -> ${x._2}").mkString(", ")})")
           val consequent = rec(cases)(defs ++ fields.iterator.map(_._2))
           val unapplyMtd = ctx.get(className.name) match {
-            case S(CompletedTypeInfo(cls: TypedNuCls)) => cls.td.genUnapply // Classes from other typing units
+            case S(CompletedTypeInfo(cls: TypedNuTypeDef)) => cls.td.genUnapply // Classes from other typing units
             case S(ti: DelayedTypeInfo) => ti.decl.genUnapply // Classes in the same typing units
             case S(_: AbstractConstructor) | S(_: LazyTypeInfo) | S(_: VarSymbol) | N => N // Not found or not a class
           }
