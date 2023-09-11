@@ -1,0 +1,45 @@
+:NewDefs
+
+:p
+fun x(a? : Int, b? : Int) = a + b
+//│ |#fun| |x|(|a|?| |#:| |Int|,| |b|?| |#:| |Int|)| |#=| |a| |+| |b|
+//│ ╔══[PARSE ERROR] Unexpected ':' in expression position
+//│ ║  l.4: 	fun x(a? : Int, b? : Int) = a + b
+//│ ╙──     	         ^
+//│ ╔══[PARSE ERROR] Unexpected ':' in expression position
+//│ ║  l.4: 	fun x(a? : Int, b? : Int) = a + b
+//│ ╙──     	                   ^
+//│ AST: TypingUnit(NuFunDef(None, x, [], Lam(Tup(_: App(App(Var(?), Tup(_: Var(a))), Tup(_: Var(Int))), _: App(App(Var(?), Tup(_: Var(b))), Tup(_: Var(Int)))), App(App(Var(+), Tup(_: Var(a))), Tup(_: Var(b))))))
+//│ Parsed: fun x = (? (a,) (Int,), ? (b,) (Int,),) => + (a,) (b,);
+//│ ╔══[ERROR] Unsupported pattern shape:
+//│ ║  l.4: 	fun x(a? : Int, b? : Int) = a + b
+//│ ╙──     	      ^^^^^^^^
+//│ ╔══[ERROR] Unsupported pattern shape:
+//│ ║  l.4: 	fun x(a? : Int, b? : Int) = a + b
+//│ ╙──     	                ^^^^^^^^
+//│ ╔══[ERROR] identifier not found: a
+//│ ║  l.4: 	fun x(a? : Int, b? : Int) = a + b
+//│ ╙──     	                            ^
+//│ ╔══[ERROR] identifier not found: b
+//│ ║  l.4: 	fun x(a? : Int, b? : Int) = a + b
+//│ ╙──     	                                ^
+//│ fun x: (error, error,) -> Int
+//│ Code generation encountered an error:
+//│   term App(App(Var(?), Tup(_: Var(a))), Tup(_: Var(Int))) is not a valid pattern
+
+
+:p
+fun f1(a : Int, b : Int) = a + b
+//│ |#fun| |f1|(|a| |#:| |Int|,| |b| |#:| |Int|)| |#=| |a| |+| |b|
+//│ AST: TypingUnit(NuFunDef(None, f1, [], Lam(Tup(_: Asc(Var(a), TypeName(Int)), _: Asc(Var(b), TypeName(Int))), App(App(Var(+), Tup(_: Var(a))), Tup(_: Var(b))))))
+//│ Parsed: fun f1 = (a : Int, b : Int,) => + (a,) (b,);
+//│ fun f1: (Int, Int,) -> Int
+
+:p
+f1(1, 2)
+//│ |f1|(|1|,| |2|)|
+//│ AST: TypingUnit(App(Var(f1), Tup(_: IntLit(1), _: IntLit(2))))
+//│ Parsed: f1 (1, 2,);
+//│ Int
+//│ res
+//│     = 3

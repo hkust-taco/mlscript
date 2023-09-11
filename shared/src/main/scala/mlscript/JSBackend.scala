@@ -934,10 +934,10 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
 
     def prepare(nme: Str, fs: Ls[Opt[Var] -> Fld], pars: Ls[Term], unit: TypingUnit) = {
       val params = fs.map {
-        case (S(nme), Fld(FldFlags(mut, spec), trm)) =>
+        case (S(nme), Fld(FldFlags(mut, spec, opt), trm)) =>
           val ty = tt(trm)
           nme -> Field(if (mut) S(ty) else N, ty)
-        case (N, Fld(FldFlags(mut, spec), nme: Var)) => nme -> Field(if (mut) S(Bot) else N, Top)
+        case (N, Fld(FldFlags(mut, spec, opt), nme: Var)) => nme -> Field(if (mut) S(Bot) else N, Top)
         case _ => die
       }
       val body = pars.map(tt).foldRight(Record(params): Type)(Inter)

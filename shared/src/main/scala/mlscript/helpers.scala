@@ -533,7 +533,7 @@ trait TermImpl extends StatementImpl { self: Term =>
       }.mkString(" ") |> bra
     case Splc(fields) => fields.map{
       case L(l) => s"...$l"
-      case R(Fld(FldFlags(m, s), r)) => (if (m) "mut " else "") + (if (s) "#" else "") + r
+      case R(Fld(FldFlags(m, s, o), r)) => (if (m) "mut " else "") + (if (s) "#" else "") + r + (if (o) "?" else "")
     }.mkString("(", ", ", ")")
     case Bind(l, r) => s"$l as $r" |> bra
     case Test(l, r) => s"$l is $r" |> bra
@@ -569,11 +569,11 @@ trait TermImpl extends StatementImpl { self: Term =>
     case Var(name) if name.startsWith("'") => TypeVar(R(name), N)
     case Var(name) => TypeName(name)
     case lit: Lit => Literal(lit)
-    case App(App(Var("|"), Tup(N -> Fld(FldFlags(false, false), lhs) :: Nil)), Tup(N -> Fld(FldFlags(false, false), rhs) :: Nil)) => Union(lhs.toType_!, rhs.toType_!)
-    case App(App(Var("&"), Tup(N -> Fld(FldFlags(false, false), lhs) :: Nil)), Tup(N -> Fld(FldFlags(false, false), rhs) :: Nil)) => Inter(lhs.toType_!, rhs.toType_!)
-    case App(App(Var("->"), lhs), Tup(N -> Fld(FldFlags(false, false), rhs) :: Nil)) => Function(lhs.toType_!, rhs.toType_!)
+    case App(App(Var("|"), Tup(N -> Fld(FldFlags(false, false, _), lhs) :: Nil)), Tup(N -> Fld(FldFlags(false, false, _), rhs) :: Nil)) => Union(lhs.toType_!, rhs.toType_!)
+    case App(App(Var("&"), Tup(N -> Fld(FldFlags(false, false, _), lhs) :: Nil)), Tup(N -> Fld(FldFlags(false, false, _), rhs) :: Nil)) => Inter(lhs.toType_!, rhs.toType_!)
+    case App(App(Var("->"), lhs), Tup(N -> Fld(FldFlags(false, false, _), rhs) :: Nil)) => Function(lhs.toType_!, rhs.toType_!)
     case App(App(Var("->"), lhs), tup: Tup) => Function(lhs.toType_!, tup.toType_!)
-    case ty @ App(App(v @ Var("\\"), Tup(N -> Fld(FldFlags(false, false), lhs) :: Nil)), Tup(N -> Fld(FldFlags(false, false), rhs) :: Nil)) =>
+    case ty @ App(App(v @ Var("\\"), Tup(N -> Fld(FldFlags(false, false, _), lhs) :: Nil)), Tup(N -> Fld(FldFlags(false, false, _), rhs) :: Nil)) =>
       Inter(lhs.toType_!, Neg(rhs.toType_!).withLoc(Loc(v :: rhs :: Nil))).withLoc(ty.toCoveringLoc)
     case App(App(Var("|"), lhs), rhs) => Union(lhs.toType_!, rhs.toType_!)
     case App(App(Var("&"), lhs), rhs) => Inter(lhs.toType_!, rhs.toType_!)
@@ -585,7 +585,7 @@ trait TermImpl extends StatementImpl { self: Term =>
       case _ => throw new NotAType(this)
     }
     case Tup(fields) => Tuple(fields.map(fld => (fld._1, fld._2 match {
-      case Fld(FldFlags(m, s), v) => val ty = v.toType_!; Field(Option.when(m)(ty), ty)
+      case Fld(FldFlags(m, s, _), v) => val ty = v.toType_!; Field(Option.when(m)(ty), ty)
     })))
     case Bra(rcd, trm) => trm match {
       case _: Rcd => if (rcd) trm.toType_! else throw new NotAType(this)
@@ -596,7 +596,7 @@ trait TermImpl extends StatementImpl { self: Term =>
       case _ => throw new NotAType(this)
     }
     case Rcd(fields) => Record(fields.map(fld => (fld._1, fld._2 match {
-      case Fld(FldFlags(m, s), v) => val ty = v.toType_!; Field(Option.when(m)(ty), ty)
+      case Fld(FldFlags(m, s, _), v) => val ty = v.toType_!; Field(Option.when(m)(ty), ty)
     })))
     case Where(body, where) =>
       Constrained(body.toType_!, Nil, where.map {
@@ -772,17 +772,17 @@ trait StatementImpl extends Located { self: Statement =>
         case R(ty) => ty
       }
       val params = fs.map {
-        case (S(nme), Fld(FldFlags(mut, spec), trm)) =>
+        case (S(nme), Fld(FldFlags(mut, spec, _), trm)) =>
           val ty = tt(trm)
           nme -> Field(if (mut) S(ty) else N, ty)
-        case (N, Fld(FldFlags(mut, spec), nme: Var)) => nme -> Field(if (mut) S(Bot) else N, Top)
+        case (N, Fld(FldFlags(mut, spec, _), nme: Var)) => nme -> Field(if (mut) S(Bot) else N, Top)
         case _ => die
       }
       val pos = params.unzip._1
       val bod = pars.map(tt).foldRight(Record(params): Type)(Inter)
       val termName = Var(nme.name).withLocOf(nme)
-      val ctor = Def(false, termName, L(Lam(tup, App(termName, Tup(N -> Fld(FldFlags(false, false), Rcd(fs.map {
-        case (S(nme), fld) => nme -> Fld(FldFlags(false, false), nme)
+      val ctor = Def(false, termName, L(Lam(tup, App(termName, Tup(N -> Fld(FldFlags(false, false, false), Rcd(fs.map {
+        case (S(nme), fld) => nme -> Fld(FldFlags(false, false, false), nme)
         case (N, fld @ Fld(_, nme: Var)) => nme -> fld
         case _ => die
       })) :: Nil)))), true)
@@ -830,7 +830,7 @@ trait StatementImpl extends Located { self: Statement =>
             case Bra(false, t) => getFields(t)
             case Bra(true, Tup(fs)) =>
               Record(fs.map {
-                case (S(n) -> Fld(FldFlags(mut, _), t)) =>
+                case (S(n) -> Fld(FldFlags(mut, _, _), t)) =>
                   val ty = t.toType match {
                     case L(d) => allDiags += d; Top
                     case R(t) => t
@@ -842,7 +842,7 @@ trait StatementImpl extends Located { self: Statement =>
             case Bra(true, t) => lastWords(s"$t ${t.getClass}")
             case Tup(fs) => // TODO factor with case Bra(true, Tup(fs)) above
               Tuple(fs.map {
-                case (S(n) -> Fld(FldFlags(tmut, _), t)) =>
+                case (S(n) -> Fld(FldFlags(tmut, _, _), t)) =>
                   val ty = t.toType match {
                     case L(d) => allDiags += d; Top
                     case R(t) => t

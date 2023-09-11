@@ -807,7 +807,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
       decl match {
         case td: NuTypeDef =>
           td.params.getOrElse(Tup(Nil)).fields.map {
-            case (S(nme), Fld(FldFlags(mut, spec), value)) =>
+            case (S(nme), Fld(FldFlags(mut, spec, opt), value)) =>
               assert(!mut && !spec, "TODO") // TODO
               value.toType match {
                 case R(tpe) =>
@@ -816,7 +816,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                   nme -> FieldType(N, ty)(provTODO)
                 case _ => ???
               }
-            case (N, Fld(FldFlags(mut, spec), nme: Var)) =>
+            case (N, Fld(FldFlags(mut, spec, opt), nme: Var)) =>
               // assert(!mut && !spec, "TODO") // TODO
               // nme -> FieldType(N, freshVar(ttp(nme), N, S(nme.name)))(provTODO)
               nme -> FieldType(N, err(msg"${td.kind.str.capitalize} parameters currently need type annotations",
