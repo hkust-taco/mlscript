@@ -270,3 +270,56 @@ fun c(x) =
 //│ fun c: anything -> error
 //│ Code generation encountered an error:
 //│   if expression was not desugared
+
+
+
+// * Testing polymorphic `unapply`
+
+class C[A](f: A -> A)
+//│ class C[A](f: A -> A)
+
+// TODO simplify type more
+let r = C.unapply
+//│ let r: forall 'f. (C[?] & {f: 'f} | C[?] & ~#C) -> ['f]
+//│ r
+//│   = [Function: unapply]
+
+let r2 = r(C(succ))
+//│ let r2: [Int -> Int]
+//│ r2
+//│    = [ [Function: succ] ]
+
+let r3 = (([f]) => f) of r2
+//│ let r3: Int -> Int
+//│ r3
+//│    = [Function: succ]
+
+r3(123)
+//│ Int
+//│ res
+//│     = 124
+
+let r4 = r(C(id))
+//│ let r4: ['A -> 'A]
+//│ r4
+//│    = [ [Function: id] ]
+
+// * Notice that the type is not generalized (lack of distributivity?)
+let g = (([f]) => f) of r4
+//│ let g: 'A -> 'A
+//│ g
+//│   = [Function: id]
+
+g(0)
+//│ 0
+//│ res
+//│     = 0
+
+// * Approximated type
+g(true)
+//│ 0 | true
+//│ res
+//│     = true
+
+
+
