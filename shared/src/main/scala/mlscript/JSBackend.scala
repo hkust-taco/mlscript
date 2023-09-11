@@ -20,8 +20,6 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     */
   protected val polyfill = Polyfill()
 
-  protected val visitedSymbols = MutSet[RuntimeSymbol]()
-
   /**
     * This function translates parameter destructions in `def` declarations.
     *
@@ -83,7 +81,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
   // Set `requireActualCls` to true if we need the actual class rather than the constrcutor function (if the class has)
   private def translateNuTypeSymbol(sym: NuTypeSymbol, requireActualCls: Bool)(implicit scope: Scope): JSExpr = {
     val trm = sym.qualifier.fold[JSExpr](JSIdent(sym.name))(qualifier => {
-      visitedSymbols += scope.resolveQualifier(qualifier)
+      scope.resolveQualifier(qualifier).visited = true
       JSIdent(qualifier).member(sym.name)
     })
     if (requireActualCls && !sym.isPlainJSClass) trm.member("class") else trm
@@ -104,7 +102,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
           throw new UnimplementedError(sym)
       case S(sym: ValueSymbol) =>
         if (sym.isByvalueRec.getOrElse(false) && !sym.isLam) throw CodeGenError(s"unguarded recursive use of by-value binding $name")
-        visitedSymbols += sym
+        sym.visited = true
         val ident = JSIdent(sym.runtimeName)
         if (sym.isByvalueRec.isEmpty && !sym.isLam) ident() else ident
       case S(sym: NuTypeSymbol) =>
@@ -112,8 +110,8 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       case S(sym: NewClassMemberSymbol) =>
         if (sym.isByvalueRec.getOrElse(false) && !sym.isLam) throw CodeGenError(s"unguarded recursive use of by-value binding $name")
         sym.qualifier.fold[JSExpr](throw CodeGenError(s"unqualified member symbol $sym"))(qualifier => {
-          visitedSymbols += sym
-          visitedSymbols += scope.resolveQualifier(qualifier)
+          sym.visited = true
+          scope.resolveQualifier(qualifier).visited = true
           val ident = if (sym.isPrivate) JSIdent(s"${qualifier}.#${sym.name}")
                       else JSIdent(qualifier).member(sym.name)
           if (sym.isByvalueRec.isEmpty && !sym.isLam) ident() else ident
@@ -478,7 +476,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
   }
 
   protected def translateQualifierDeclaration(qualifier: ValueSymbol): Ls[JSStmt] =
-    if (visitedSymbols(qualifier))
+    if (qualifier.visited)
       JSConstDecl(qualifier.runtimeName, JSIdent("this")) :: Nil
     else Nil
   
@@ -790,7 +788,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
             case Some(sym: NewClassMemberSymbol) => sym
             case _ => throw new AssertionError(s"error when handling $nme")
           }
-          if (visitedSymbols.contains(sym) || ctorParams.contains(nme)) { // This field is used in other methods, or it overrides the ctor parameter
+          if (sym.visited || ctorParams.contains(nme)) { // This field is used in other methods, or it overrides the ctor parameter
             privateMems += nme
             Ls[JSStmt](
               JSExprStmt(JSAssignExpr(JSIdent(s"this.#$nme"), translateTerm(rhs)(constructorScope))),
@@ -870,7 +868,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     // Translate class member body.
     val bodyResult = translateTerm(body)(memberScope).`return`
     // If `this` is accessed, add `const self = this`.
-    val bodyStmts = if (visitedSymbols(selfSymbol)) {
+    val bodyStmts = if (selfSymbol.visited) {
       val thisDecl = JSConstDecl(selfSymbol.runtimeName, JSIdent("this"))
       R(thisDecl :: bodyResult :: Nil)
     } else {

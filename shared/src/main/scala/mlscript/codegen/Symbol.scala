@@ -20,6 +20,7 @@ sealed trait LexicalSymbol {
 
 sealed trait RuntimeSymbol extends LexicalSymbol {
   def runtimeName: Str
+  var visited: Bool = false
 }
 
 sealed trait TypeSymbol extends LexicalSymbol {
