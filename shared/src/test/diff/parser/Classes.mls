@@ -124,13 +124,13 @@ class Foo(x, y, z)
 
 class Foo(x, y, z): Bar(z, x)
 //│ |#class| |Foo|(|x|,| |y|,| |z|)|#:| |Bar|(|z|,| |x|)|
-//│ Parsed: {class Foo(x, y, z,): Bar[[z, x]] {}}
+//│ Parsed: {class Foo(x, y, z,): Bar[z, x] {}}
 
 class Foo(x, y, z): Bar(z, x) {
   fun blah(x) = x + y
 }
 //│ |#class| |Foo|(|x|,| |y|,| |z|)|#:| |Bar|(|z|,| |x|)| |{|→|#fun| |blah|(|x|)| |#=| |x| |+| |y|←|↵|}|
-//│ Parsed: {class Foo(x, y, z,): Bar[[z, x]] {fun blah = (x,) => + (x,) (y,)}}
+//│ Parsed: {class Foo(x, y, z,): Bar[z, x] {fun blah = (x,) => + (x,) (y,)}}
 
 class Foo(x, y) extends Bar(y, x), Baz(x + y)
 //│ |#class| |Foo|(|x|,| |y|)| |#extends| |Bar|(|y|,| |x|)|,| |Baz|(|x| |+| |y|)|

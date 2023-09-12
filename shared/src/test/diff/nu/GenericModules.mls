@@ -84,7 +84,7 @@ Test.foo(1)
 Test.foo(error) + 1
 //│ ╔══[ERROR] Type error in operator application
 //│ ║  l.84: 	Test.foo(error) + 1
-//│ ║        	^^^^^^^^^^^^^^^^^
+//│ ║        	^^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `A` leaks out of its scope
 //│ ║  l.84: 	Test.foo(error) + 1
 //│ ║        	^^^^^^^^^^^^^^^

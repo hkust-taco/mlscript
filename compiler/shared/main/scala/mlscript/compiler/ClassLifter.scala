@@ -58,7 +58,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
   var anonymCnt: Int = 0
   var clsCnt: Int = 0
   val logOutput: StringBuilder = new StringBuilder
-  val primiTypes = new mlscript.Typer(false, false, false).primitiveTypes
+  val primiTypes = new mlscript.Typer(false, false, false, true).primitiveTypes
 
   private def log(str: String): Unit = {
     logOutput.append(str)
@@ -88,7 +88,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
 
   private def getFields(etts: List[Statement]): Set[Var] = {
     etts.flatMap{
-      case NuFunDef(_, nm, _, _) => Some(nm)
+      case NuFunDef(_, nm, _, _, _) => Some(nm)
       case nuty: NuTypeDef => Some(Var(nuty.name))
       case Let(_, name, _, _) => Some(name)
       case _ => None 
@@ -163,7 +163,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
     case Lam(lhs, rhs) =>
       val lhsVs = getFreeVars(lhs)
       getFreeVars(rhs)(using ctx ++ lhsVs) -+ lhsVs
-    case NuFunDef(_, vm, tps, Left(trm)) =>
+    case NuFunDef(_, vm, _, tps, Left(trm)) =>
       getFreeVars(trm).extV(vm).extT(tps)
     case OpApp(_, trm) => getFreeVars(trm)
     case Sel(trm, _) => getFreeVars(trm)
@@ -542,7 +542,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
 
   private def liftFunc(func: NuFunDef)(using ctx: LocalContext, cache: ClassCache, outer: Option[ClassInfoCache]): (NuFunDef, LocalContext) = {
     log(s"liftFunc $func under $ctx # $cache # $outer")
-    val NuFunDef(rec, nm, tpVs, body) = func
+    val NuFunDef(rec, nm, sn, tpVs, body) = func
     body match {
       case Left(value) =>
         val ret = liftTerm(value)(using ctx.addV(nm).addT(tpVs))
