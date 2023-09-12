@@ -208,7 +208,7 @@ fun (??) oops(a, b) = a + b
 
 
 
-// * Note: some misformed definitions
+// * Note: some malformed definitions
 
 :pe
 :e
@@ -239,5 +239,88 @@ fun compose(>>)(f, g) = x => g(f(x))
 //│ ╙──       	            ^^
 //│ fun compose: forall 'a 'b 'c. () -> ('a -> 'b, 'b -> 'c) -> 'a -> 'c
 
+
+:pe
+fun () foo(a, b) = a + b
+//│ ╔══[PARSE ERROR] Expected a symbolic name between brackets, found nothing
+//│ ║  l.244: 	fun () foo(a, b) = a + b
+//│ ╙──       	    ^^
+//│ fun foo: (Int, Int) -> Int
+
+:pe
+fun (   ) foo(a, b) = a + b
+//│ ╔══[PARSE ERROR] Expected a symbolic name, found space instead
+//│ ║  l.251: 	fun (   ) foo(a, b) = a + b
+//│ ╙──       	     ^^^
+//│ fun foo: (Int, Int) -> Int
+
+:pe
+fun (
+) foo(a, b) = a + b
+//│ ╔══[PARSE ERROR] Expected a symbolic name, found newline instead
+//│ ║  l.258: 	fun (
+//│ ║         	     ^
+//│ ║  l.259: 	) foo(a, b) = a + b
+//│ ╙──       	
+//│ fun foo: (Int, Int) -> Int
+
+:pe
+fun (1) foo(a, b) = a + b
+//│ ╔══[PARSE ERROR] Expected a symbolic name, found literal instead
+//│ ║  l.268: 	fun (1) foo(a, b) = a + b
+//│ ╙──       	     ^
+//│ fun foo: (Int, Int) -> Int
+
+:pe
+fun (++ 1) foo(a, b) = a + b
+//│ ╔══[PARSE ERROR] Unexpected literal after symbolic name
+//│ ║  l.275: 	fun (++ 1) foo(a, b) = a + b
+//│ ╙──       	        ^
+//│ fun (++) foo: (Int, Int) -> Int
+
+:pe
+fun (a ++ 1) foo(a, b) = a + b
+//│ ╔══[PARSE ERROR] Expected a symbolic name, found identifier instead
+//│ ║  l.282: 	fun (a ++ 1) foo(a, b) = a + b
+//│ ╙──       	     ^
+//│ fun foo: (Int, Int) -> Int
+// should be `<<|+_+|>>`, but we got `<<|+`
+
+
+:pe
+fun (<<|+_+|>>) robot(a, b) = a + b
+//│ ╔══[PARSE ERROR] Unexpected identifier after symbolic name
+//│ ║  l.291: 	fun (<<|+_+|>>) robot(a, b) = a + b
+//│ ╙──       	         ^
+//│ fun (<<|+) robot: (Int, Int) -> Int
+
+fun (<<|+-+|>>) robot(a, b) = a + b
+//│ fun (<<|+-+|>>) robot: (Int, Int) -> Int
+
+2 <<|+-+|>> 2
+//│ Int
+//│ res
+//│     = 4
+
+
+:pe
+fun (:-D) dd(a, b) = a + b
+//│ ╔══[PARSE ERROR] Unexpected identifier after symbolic name
+//│ ║  l.307: 	fun (:-D) dd(a, b) = a + b
+//│ ╙──       	       ^
+//│ fun (:-) dd: (Int, Int) -> Int
+// should be `:-D`, but we got `:-`
+
+
+val (-->) f(x, y) = [x, y]
+//│ let (-->) f: forall 'a 'b. ('a, 'b) -> ['a, 'b]
+//│ f
+//│   = [Function: f1]
+
+:ge // FIXME
+12 --> 34
+//│ [12, 34]
+//│ Code generation encountered an error:
+//│   unresolved symbol -->
 
 
