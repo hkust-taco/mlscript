@@ -1,45 +1,96 @@
 :NewDefs
 
+
+// TODO: there is problem when the is SPACE after '?'
+
 :p
-fun x(a? : Int, b? : Int) = a + b
-//│ |#fun| |x|(|a|?| |#:| |Int|,| |b|?| |#:| |Int|)| |#=| |a| |+| |b|
-//│ ╔══[PARSE ERROR] Unexpected ':' in expression position
-//│ ║  l.4: 	fun x(a? : Int, b? : Int) = a + b
-//│ ╙──     	         ^
-//│ ╔══[PARSE ERROR] Unexpected ':' in expression position
-//│ ║  l.4: 	fun x(a? : Int, b? : Int) = a + b
-//│ ╙──     	                   ^
-//│ AST: TypingUnit(NuFunDef(None, x, [], Lam(Tup(_: App(App(Var(?), Tup(_: Var(a))), Tup(_: Var(Int))), _: App(App(Var(?), Tup(_: Var(b))), Tup(_: Var(Int)))), App(App(Var(+), Tup(_: Var(a))), Tup(_: Var(b))))))
-//│ Parsed: fun x = (? (a,) (Int,), ? (b,) (Int,),) => + (a,) (b,);
-//│ ╔══[ERROR] Unsupported pattern shape:
-//│ ║  l.4: 	fun x(a? : Int, b? : Int) = a + b
-//│ ╙──     	      ^^^^^^^^
-//│ ╔══[ERROR] Unsupported pattern shape:
-//│ ║  l.4: 	fun x(a? : Int, b? : Int) = a + b
-//│ ╙──     	                ^^^^^^^^
+fun f1(a?: Int, b?: Int) = a + b
+//│ tokens here => List((KEYWORD(fun),Loc(0,3,nu/OptionalArgs:+7)), (SPACE,Loc(3,4,nu/OptionalArgs:+7)), (IDENT(f1,false),Loc(4,6,nu/OptionalArgs:+7)), (BRACKETS(Round,List((IDENT(a,false),Loc(7,8,nu/OptionalArgs:+7)), (IDENT(?,true),Loc(8,8,nu/OptionalArgs:+7)), (KEYWORD(:),Loc(9,10,nu/OptionalArgs:+7)), (SPACE,Loc(10,11,nu/OptionalArgs:+7)), (IDENT(Int,false),Loc(11,14,nu/OptionalArgs:+7)), (COMMA,Loc(14,15,nu/OptionalArgs:+7)), (SPACE,Loc(15,16,nu/OptionalArgs:+7)), (IDENT(b,false),Loc(16,17,nu/OptionalArgs:+7)), (IDENT(?,true),Loc(17,17,nu/OptionalArgs:+7)), (KEYWORD(:),Loc(18,19,nu/OptionalArgs:+7)), (SPACE,Loc(19,20,nu/OptionalArgs:+7)), (IDENT(Int,false),Loc(20,23,nu/OptionalArgs:+7)))),Loc(6,24,nu/OptionalArgs:+7)), (SPACE,Loc(24,25,nu/OptionalArgs:+7)), (KEYWORD(=),Loc(25,26,nu/OptionalArgs:+7)), (SPACE,Loc(26,27,nu/OptionalArgs:+7)), (IDENT(a,false),Loc(27,28,nu/OptionalArgs:+7)), (SPACE,Loc(28,29,nu/OptionalArgs:+7)), (IDENT(+,true),Loc(29,30,nu/OptionalArgs:+7)), (SPACE,Loc(30,31,nu/OptionalArgs:+7)), (IDENT(b,false),Loc(31,32,nu/OptionalArgs:+7)))
+//│ printtokens? |#fun| |f1|(|a|?|#:| |Int|,| |b|?|#:| |Int|)| |#=| |a| |+| |b|
+//│ |#fun| |f1|(|a|?|#:| |Int|,| |b|?|#:| |Int|)| |#=| |a| |+| |b|
+//│ AST: TypingUnit(NuFunDef(None, f1, [], App(App(Var(+), Tup(_: Var(a))), Tup(_: Var(b)))))
+//│ Parsed: fun f1 = + (a,) (b,);
 //│ ╔══[ERROR] identifier not found: a
-//│ ║  l.4: 	fun x(a? : Int, b? : Int) = a + b
-//│ ╙──     	                            ^
+//│ ║  l.7: 	fun f1(a?: Int, b?: Int) = a + b
+//│ ╙──     	                           ^
 //│ ╔══[ERROR] identifier not found: b
-//│ ║  l.4: 	fun x(a? : Int, b? : Int) = a + b
-//│ ╙──     	                                ^
-//│ fun x: (error, error,) -> Int
+//│ ║  l.7: 	fun f1(a?: Int, b?: Int) = a + b
+//│ ╙──     	                               ^
+//│ fun f1: Int
 //│ Code generation encountered an error:
-//│   term App(App(Var(?), Tup(_: Var(a))), Tup(_: Var(Int))) is not a valid pattern
+//│   unresolved symbol a
 
+
+// using space, creates ASC in AST.
+:p
+fun f1(a: Int, b: Int) = a + b
+//│ tokens here => List((KEYWORD(fun),Loc(0,3,nu/OptionalArgs:+26)), (SPACE,Loc(3,4,nu/OptionalArgs:+26)), (IDENT(f1,false),Loc(4,6,nu/OptionalArgs:+26)), (BRACKETS(Round,List((IDENT(a,false),Loc(7,8,nu/OptionalArgs:+26)), (KEYWORD(:),Loc(8,9,nu/OptionalArgs:+26)), (SPACE,Loc(9,10,nu/OptionalArgs:+26)), (IDENT(Int,false),Loc(10,13,nu/OptionalArgs:+26)), (COMMA,Loc(13,14,nu/OptionalArgs:+26)), (SPACE,Loc(14,15,nu/OptionalArgs:+26)), (IDENT(b,false),Loc(15,16,nu/OptionalArgs:+26)), (KEYWORD(:),Loc(16,17,nu/OptionalArgs:+26)), (SPACE,Loc(17,18,nu/OptionalArgs:+26)), (IDENT(Int,false),Loc(18,21,nu/OptionalArgs:+26)))),Loc(6,22,nu/OptionalArgs:+26)), (SPACE,Loc(22,23,nu/OptionalArgs:+26)), (KEYWORD(=),Loc(23,24,nu/OptionalArgs:+26)), (SPACE,Loc(24,25,nu/OptionalArgs:+26)), (IDENT(a,false),Loc(25,26,nu/OptionalArgs:+26)), (SPACE,Loc(26,27,nu/OptionalArgs:+26)), (IDENT(+,true),Loc(27,28,nu/OptionalArgs:+26)), (SPACE,Loc(28,29,nu/OptionalArgs:+26)), (IDENT(b,false),Loc(29,30,nu/OptionalArgs:+26)))
+//│ printtokens? |#fun| |f1|(|a|#:| |Int|,| |b|#:| |Int|)| |#=| |a| |+| |b|
+//│ |#fun| |f1|(|a|#:| |Int|,| |b|#:| |Int|)| |#=| |a| |+| |b|
+//│ AST: TypingUnit(NuFunDef(None, f1, [], App(App(Var(+), Tup(_: Var(a))), Tup(_: Var(b)))))
+//│ Parsed: fun f1 = + (a,) (b,);
+//│ ╔══[ERROR] identifier not found: a
+//│ ║  l.26: 	fun f1(a: Int, b: Int) = a + b
+//│ ╙──      	                         ^
+//│ ╔══[ERROR] identifier not found: b
+//│ ║  l.26: 	fun f1(a: Int, b: Int) = a + b
+//│ ╙──      	                             ^
+//│ fun f1: Int
+//│ Code generation encountered an error:
+//│   unresolved symbol a
+
+f1(1, 2)
+//│ tokens here => List((IDENT(f1,false),Loc(0,2,nu/OptionalArgs:+42)), (BRACKETS(Round,List((LITVAL(1),Loc(3,4,nu/OptionalArgs:+42)), (COMMA,Loc(4,5,nu/OptionalArgs:+42)), (SPACE,Loc(5,6,nu/OptionalArgs:+42)), (LITVAL(2),Loc(6,7,nu/OptionalArgs:+42)))),Loc(2,8,nu/OptionalArgs:+42)))
+//│ printtokens? |f1|(|1|,| |2|)|
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.42: 	f1(1, 2)
+//│ ║        	^^^^^^^^
+//│ ╟── operator application of type `Int` is not a function
+//│ ║  l.26: 	fun f1(a: Int, b: Int) = a + b
+//│ ║        	                         ^^^^^
+//│ ╟── but it flows into reference with expected type `(1, 2,) -> ?a`
+//│ ║  l.42: 	f1(1, 2)
+//│ ╙──      	^^
+//│ error
+//│ res
+//│ Runtime error:
+//│   ReferenceError: f11 is not defined
 
 :p
-fun f1(a : Int, b : Int) = a + b
-//│ |#fun| |f1|(|a| |#:| |Int|,| |b| |#:| |Int|)| |#=| |a| |+| |b|
-//│ AST: TypingUnit(NuFunDef(None, f1, [], Lam(Tup(_: Asc(Var(a), TypeName(Int)), _: Asc(Var(b), TypeName(Int))), App(App(Var(+), Tup(_: Var(a))), Tup(_: Var(b))))))
-//│ Parsed: fun f1 = (a : Int, b : Int,) => + (a,) (b,);
-//│ fun f1: (Int, Int,) -> Int
+fun f1(a, b) = a + b
+//│ tokens here => List((KEYWORD(fun),Loc(0,3,nu/OptionalArgs:+60)), (SPACE,Loc(3,4,nu/OptionalArgs:+60)), (IDENT(f1,false),Loc(4,6,nu/OptionalArgs:+60)), (BRACKETS(Round,List((IDENT(a,false),Loc(7,8,nu/OptionalArgs:+60)), (COMMA,Loc(8,9,nu/OptionalArgs:+60)), (SPACE,Loc(9,10,nu/OptionalArgs:+60)), (IDENT(b,false),Loc(10,11,nu/OptionalArgs:+60)))),Loc(6,12,nu/OptionalArgs:+60)), (SPACE,Loc(12,13,nu/OptionalArgs:+60)), (KEYWORD(=),Loc(13,14,nu/OptionalArgs:+60)), (SPACE,Loc(14,15,nu/OptionalArgs:+60)), (IDENT(a,false),Loc(15,16,nu/OptionalArgs:+60)), (SPACE,Loc(16,17,nu/OptionalArgs:+60)), (IDENT(+,true),Loc(17,18,nu/OptionalArgs:+60)), (SPACE,Loc(18,19,nu/OptionalArgs:+60)), (IDENT(b,false),Loc(19,20,nu/OptionalArgs:+60)))
+//│ printtokens? |#fun| |f1|(|a|,| |b|)| |#=| |a| |+| |b|
+//│ |#fun| |f1|(|a|,| |b|)| |#=| |a| |+| |b|
+//│ AST: TypingUnit(NuFunDef(None, f1, [], App(App(Var(+), Tup(_: Var(a))), Tup(_: Var(b)))))
+//│ Parsed: fun f1 = + (a,) (b,);
+//│ ╔══[ERROR] identifier not found: a
+//│ ║  l.60: 	fun f1(a, b) = a + b
+//│ ╙──      	               ^
+//│ ╔══[ERROR] identifier not found: b
+//│ ║  l.60: 	fun f1(a, b) = a + b
+//│ ╙──      	                   ^
+//│ fun f1: Int
+//│ Code generation encountered an error:
+//│   unresolved symbol a
+
 
 :p
 f1(1, 2)
+//│ tokens here => List((IDENT(f1,false),Loc(0,2,nu/OptionalArgs:+78)), (BRACKETS(Round,List((LITVAL(1),Loc(3,4,nu/OptionalArgs:+78)), (COMMA,Loc(4,5,nu/OptionalArgs:+78)), (SPACE,Loc(5,6,nu/OptionalArgs:+78)), (LITVAL(2),Loc(6,7,nu/OptionalArgs:+78)))),Loc(2,8,nu/OptionalArgs:+78)))
+//│ printtokens? |f1|(|1|,| |2|)|
 //│ |f1|(|1|,| |2|)|
 //│ AST: TypingUnit(App(Var(f1), Tup(_: IntLit(1), _: IntLit(2))))
 //│ Parsed: f1 (1, 2,);
-//│ Int
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.78: 	f1(1, 2)
+//│ ║        	^^^^^^^^
+//│ ╟── operator application of type `Int` is not a function
+//│ ║  l.60: 	fun f1(a, b) = a + b
+//│ ║        	               ^^^^^
+//│ ╟── but it flows into reference with expected type `(1, 2,) -> ?a`
+//│ ║  l.78: 	f1(1, 2)
+//│ ╙──      	^^
+//│ error
 //│ res
-//│     = 3
+//│ Runtime error:
+//│   ReferenceError: f12 is not defined

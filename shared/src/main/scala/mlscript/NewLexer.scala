@@ -163,6 +163,9 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
         // go(j, if (keywords.contains(n)) KEYWORD(n) else IDENT(n, isAlphaOp(n)))
         lex(j, ind, next(j, if (keywords.contains(n)) KEYWORD(n) else IDENT(n, isAlphaOp(n))))
       case _ if isOpChar(c) =>
+        if (c === '?') {
+          lex(i + 1, ind, next(i, IDENT(c.toString(), true)))
+        } else
         if (c === '-' && isDigit(bytes(i + 1))) {
           val (str, j) = takeWhile(i + 1)(isDigit)
           lex(j, ind, next(j, LITVAL(IntLit(-BigInt(str)))))

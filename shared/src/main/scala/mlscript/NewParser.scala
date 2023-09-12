@@ -7,6 +7,7 @@ import sourcecode.{Name, Line}
 import utils._, shorthands._
 import mlscript.Message._
 import BracketKind._
+import mlscript.codegen.Helpers
 
 object NewParser {
   
@@ -216,6 +217,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
   */
   
   final def typingUnit: TypingUnit = {
+    printDbg("At MM")
+    
     val ts = block(false, false)
     val es = ts.map {
       case L(t) =>
@@ -409,6 +412,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
             R(res.withLoc(S(l0 ++ res.getLoc)))
           
           case ModifierSet(mods, (KEYWORD(kwStr @ ("fun" | "val" | "let")), l0) :: c) => // TODO support rec?
+            printDbg("At MM2")
             consume
             val (isDecl, mods2) = mods.handle("declare")
             mods2.done
@@ -431,6 +435,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
                 // R(errExpr)
                 (Var("<error>").withLoc(curLoc.map(_.left)), false)
             }
+            printDbg(s"foundErr => ${foundErr} ${success}")
             foundErr || !success pipe { implicit fe =>
               val tparams = if (kwStr === "let") Ls[TypeName]() else yeetSpaces match {
                 case (br @ BRACKETS(Angle | Square, toks), loc) :: _ =>
@@ -443,8 +448,10 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
                   ts
                 case _ => Nil
               }
+              printDbg("HERE1")
               val (ps, transformBody) = yeetSpaces match {
                 case (br @ BRACKETS(Round, Spaces(cons, (KEYWORD("override"), ovLoc) :: rest)), loc) :: rest2 =>
+                  printDbg("case 1")
                   resetCur(BRACKETS(Round, rest)(br.innerLoc) -> loc :: rest2)
                   funParams match {
                     case ps @ Tup(N -> Fld(FldFlags(false, false, false), pat) :: Nil) :: Nil =>
@@ -459,8 +466,15 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
                       (r, N)
                   }
                 case _ =>
+                  val res = funParams
+                  res match {
+                    case x :: _ => printDbg(s"head => ${x.fields}")
+                    case Nil => printDbg(s"list is empty")
+                  }
+                  printDbg(s"case 2${res}") // important
                   (funParams, N)
               }
+              printDbg(s"ps and transformBody => ${ps} ${transformBody}")
               val asc = yeetSpaces match {
                 case (KEYWORD(":"), _) :: _ =>
                   consume
@@ -513,7 +527,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
     cur.dropWhile(_._1 === SPACE && { consume; true })
   
   final def funParams(implicit et: ExpectThen, fe: FoundErr, l: Line): Ls[Tup] = wrap(()) { l =>
-    yeetSpaces match {
+    val res = yeetSpaces match {
       case (KEYWORD("=" | ":"), _) :: _ => Nil
       case Nil => Nil
       case (KEYWORD("of"), _) :: _ =>
@@ -523,6 +537,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
       case (br @ BRACKETS(Round, toks), loc) :: _ =>
         consume
         val as = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented()) // TODO
+        printDbg(s"Okkkkk as => ${as}")
         Tup(as).withLoc(S(loc)) :: funParams
       case (tk, l0) :: _ =>
         err((
@@ -531,6 +546,13 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
         consume
         Nil
     }
+    res match {
+      case x :: _ => 
+        printDbg(s"Here, creating the params! ${res} ${Helpers.inspect(x)}" )
+      case Nil =>
+        printDbg(s"Here, creating the params! ${res}")
+    }
+    res
   }
   
   final def expr(prec: Int, allowSpace: Bool = true)(implicit fe: FoundErr, l: Line): Term = wrap(prec,allowSpace) { l =>
@@ -1032,7 +1054,6 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
   final def argsOrIf(acc: Ls[Opt[Var] -> (IfBody \/ Fld)], seqAcc: Ls[Statement], allowNewlines: Bool, prec: Int = NoElsePrec)
         (implicit fe: FoundErr, et: ExpectThen): Ls[Opt[Var] -> (IfBody \/ Fld)] =
       wrap(acc, seqAcc) { l =>
-    
     cur match {
       case Nil =>
         seqAcc match {
@@ -1063,19 +1084,27 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
         S(l0)
       case _ => N
     }
-    val argOpt = yeetSpaces match {
-      case (KEYWORD("?"), l0) :: _ =>
-        consume
-        S(l0)
-      case _ => N
+    yeetSpaces match {
+      case x1 :: x2 :: x3 :: xs => 
+        printDbg(s"good! ${x1} ${x2} ${x3}" )
+      case _ =>
+        printDbg("not-good!")
     }
-    val argName = yeetSpaces match {
-      case (IDENT(idStr, false), l0) :: (KEYWORD(":"), _) :: _ => // TODO: | ...
+    val (argName, argOpt) = yeetSpaces match {
+      case (IDENT(idStr, false), l0) :: (IDENT("?", true), l1) :: (KEYWORD(":"), _) :: _ => // TODO: | ...
         consume
         consume
-        S(Var(idStr).withLoc(S(l0)))
-      case _ => N
+        consume
+        printDbg("case #3")
+        (S(Var(idStr).withLoc(S(l0))), S(l1))
+      case (IDENT(idStr, false), l0) :: (KEYWORD(":"), _) :: _ =>
+        consume
+        consume
+        printDbg("case #2")
+        (S(Var(idStr).withLoc(S(l0))), N)
+      case _ => (N, N)
     }
+    printDbg(s"flags => ${argMut} ${argSpec} ${argOpt}")
     // val e = expr(NoElsePrec) -> argMut.isDefined
     val e = exprOrIf(prec).map(Fld(FldFlags(argMut.isDefined, argSpec.isDefined, argOpt.isDefined), _))
     
