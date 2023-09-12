@@ -38,3 +38,76 @@ fun x: Id[[[Int, Int]]]
 //│ fun x: Id[[[Int, Int]]]
 
 
+
+:pe
+fun () foo(a, b) = a + b
+//│ ╔══[PARSE ERROR] Expected a symbolic name between brackets, found nothing
+//│ ║  l.43: 	fun () foo(a, b) = a + b
+//│ ╙──      	    ^^
+//│ fun foo: (Int, Int) -> Int
+
+:pe
+fun (   ) foo(a, b) = a + b
+//│ ╔══[PARSE ERROR] Expected a symbolic name, found space instead
+//│ ║  l.50: 	fun (   ) foo(a, b) = a + b
+//│ ╙──      	     ^^^
+//│ fun foo: (Int, Int) -> Int
+
+:pe
+fun (
+) foo(a, b) = a + b
+//│ ╔══[PARSE ERROR] Expected a symbolic name, found newline instead
+//│ ║  l.57: 	fun (
+//│ ║        	     ^
+//│ ║  l.58: 	) foo(a, b) = a + b
+//│ ╙──      	
+//│ fun foo: (Int, Int) -> Int
+
+:pe
+fun (1) foo(a, b) = a + b
+//│ ╔══[PARSE ERROR] Expected a symbolic name, found literal instead
+//│ ║  l.67: 	fun (1) foo(a, b) = a + b
+//│ ╙──      	     ^
+//│ fun foo: (Int, Int) -> Int
+
+:pe
+fun (++ 1) foo(a, b) = a + b
+//│ ╔══[PARSE ERROR] Unexpected literal after symbolic name
+//│ ║  l.74: 	fun (++ 1) foo(a, b) = a + b
+//│ ╙──      	        ^
+//│ fun (++) foo: (Int, Int) -> Int
+
+:pe
+fun (a ++ 1) foo(a, b) = a + b
+//│ ╔══[PARSE ERROR] Expected a symbolic name, found identifier instead
+//│ ║  l.81: 	fun (a ++ 1) foo(a, b) = a + b
+//│ ╙──      	     ^
+//│ fun foo: (Int, Int) -> Int
+// should be `<<|+_+|>>`, but we got `<<|+`
+
+
+:pe
+fun (<<|+_+|>>) robot(a, b) = a + b
+//│ ╔══[PARSE ERROR] Unexpected identifier after symbolic name
+//│ ║  l.90: 	fun (<<|+_+|>>) robot(a, b) = a + b
+//│ ╙──      	         ^
+//│ fun (<<|+) robot: (Int, Int) -> Int
+
+fun (<<|+-+|>>) robot(a, b) = a + b
+//│ fun (<<|+-+|>>) robot: (Int, Int) -> Int
+
+2 <<|+-+|>> 2
+//│ Int
+//│ res
+//│     = 4
+
+
+:pe
+fun (:-D) dd(a, b) = a + b
+//│ ╔══[PARSE ERROR] Unexpected identifier after symbolic name
+//│ ║  l.106: 	fun (:-D) dd(a, b) = a + b
+//│ ╙──       	       ^
+//│ fun (:-) dd: (Int, Int) -> Int
+// should be `:-D`, but we got `:-`
+
+

@@ -419,12 +419,24 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
               case c => if (kwStr === "fun") N else S(false)
             }
             val opStr = yeetSpaces match {
-              case (BRACKETS(Round, ts), _) :: _ =>
+              case (BRACKETS(Round, ts), brackloc) :: _ =>
                 ts match {
-                  case (IDENT(opStr, true), l1) :: _ =>
+                  case (IDENT(opStr, true), l1) :: rest =>
                     consume
+                    rest.dropWhile(_._1 === SPACE) match {
+                      case Nil =>
+                      case (tok, loc) :: ts =>
+                        err((msg"Unexpected ${tok.describe} after symbolic name" -> S(loc) :: Nil))
+                    }
                     S(Var(opStr).withLoc(S(l1)))
-                  case _ => N
+                  case (tok, loc) :: _ =>
+                    consume
+                    err((msg"Expected a symbolic name, found ${tok.describe} instead" -> S(loc) :: Nil))
+                    N
+                  case Nil =>
+                    consume
+                    err((msg"Expected a symbolic name between brackets, found nothing" -> S(brackloc) :: Nil))
+                    N
                 }
               case _ => N
             }
