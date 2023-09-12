@@ -111,3 +111,15 @@ fun (:-D) dd(a, b) = a + b
 // should be `:-D`, but we got `:-`
 
 
+val (-->) f(x, y) = [x, y]
+//│ let (-->) f: forall 'a 'b. ('a, 'b) -> ['a, 'b]
+//│ f
+//│   = [Function: f]
+
+:ge // FIXME
+12 --> 34
+//│ [12, 34]
+//│ Code generation encountered an error:
+//│   unresolved symbol -->
+
+

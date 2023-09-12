@@ -28,4 +28,29 @@ val a = a
 //│   = 1
 
 
+val f(x) = x
+//│ let f: forall 'a. 'a -> 'a
+//│ f
+//│   = [Function: f]
+
+f(123)
+//│ 123
+//│ res
+//│     = 123
+
+
+module M {
+  let tmp = 2
+  val f(x) = x + tmp
+}
+//│ module M {
+//│   let f: Int -> Int
+//│   let tmp: 2
+//│ }
+
+M.f(123)
+//│ Int
+//│ res
+//│     = 125
+
 
