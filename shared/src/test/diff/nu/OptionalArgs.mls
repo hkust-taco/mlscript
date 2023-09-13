@@ -91,11 +91,7 @@ fun f1(a?: Int, b?: Int) = a + b
 //│ = List(a: Int, b: Int,)
 //│ head => List((Some(a),Fld(FldFlags(false,false,true),Int)), (Some(b),Fld(FldFlags(false,false,true),Int)))
 //│ case 2List(a: Int, b: Int,)
-//│ @ funParams(())    [at l.475]
-//│ │ ? yeetSpaces		inspects |#=| |a| |+|...    [at l.527]
-//│ │ Here, creating the params! List()
-//│ = List()
-//│ ps and transformBody => List() None
+//│ ps and transformBody => List(a: Int, b: Int,) None
 //│ ? yeetSpaces		inspects |#=| |a| |+|...    [at l.527]
 //│ ? yeetSpaces		inspects |#=| |a| |+|...    [at l.527]
 //│ ! t		consumes |#=|    [at l.487]
@@ -133,63 +129,29 @@ fun f1(a?: Int, b?: Int) = a + b
 //│ = + (a,) (b,)
 //│ ? yeetSpaces		inspects ||    [at l.527]
 //│ ? parseAll		inspects ||    [at l.75]
-//│ Parsed: fun f1 = + (a,) (b,);
-//│ ╔══[ERROR] identifier not found: a
-//│ ║  l.7: 	fun f1(a?: Int, b?: Int) = a + b
-//│ ╙──     	                           ^
-//│ ╔══[ERROR] identifier not found: b
-//│ ║  l.7: 	fun f1(a?: Int, b?: Int) = a + b
-//│ ╙──     	                               ^
-//│ fun f1: Int
-//│ Code generation encountered an error:
-//│   unresolved symbol a
+//│ Parsed: fun f1 = (a: Int, b: Int,) => + (a,) (b,);
+//│ fun f1: (a: Int, b: Int,) -> Int
 
 
 // using space, creates ASC in AST.
 :p
 fun f1(a: Int, b: Int) = a + b
 //│ |#fun| |f1|(|a|#:| |Int|,| |b|#:| |Int|)| |#=| |a| |+| |b|
-//│ AST: TypingUnit(NuFunDef(None, f1, [], App(App(Var(+), Tup(_: Var(a))), Tup(_: Var(b)))))
-//│ Parsed: fun f1 = + (a,) (b,);
-//│ ╔══[ERROR] identifier not found: a
-//│ ║  l.150: 	fun f1(a: Int, b: Int) = a + b
-//│ ╙──       	                         ^
-//│ ╔══[ERROR] identifier not found: b
-//│ ║  l.150: 	fun f1(a: Int, b: Int) = a + b
-//│ ╙──       	                             ^
-//│ fun f1: Int
-//│ Code generation encountered an error:
-//│   unresolved symbol a
+//│ AST: TypingUnit(NuFunDef(None, f1, [], Lam(Tup(a: Var(Int), b: Var(Int)), App(App(Var(+), Tup(_: Var(a))), Tup(_: Var(b))))))
+//│ Parsed: fun f1 = (a: Int, b: Int,) => + (a,) (b,);
+//│ fun f1: (a: Int, b: Int,) -> Int
 
 f1(1, 2)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.164: 	f1(1, 2)
-//│ ║         	^^^^^^^^
-//│ ╟── operator application of type `Int` is not a function
-//│ ║  l.150: 	fun f1(a: Int, b: Int) = a + b
-//│ ║         	                         ^^^^^
-//│ ╟── but it flows into reference with expected type `(1, 2,) -> ?a`
-//│ ║  l.164: 	f1(1, 2)
-//│ ╙──       	^^
-//│ error
+//│ Int
 //│ res
-//│ Runtime error:
-//│   ReferenceError: f11 is not defined
+//│     = 3
 
 :p
 fun f1(a, b) = a + b
 //│ |#fun| |f1|(|a|,| |b|)| |#=| |a| |+| |b|
-//│ AST: TypingUnit(NuFunDef(None, f1, [], App(App(Var(+), Tup(_: Var(a))), Tup(_: Var(b)))))
-//│ Parsed: fun f1 = + (a,) (b,);
-//│ ╔══[ERROR] identifier not found: a
-//│ ║  l.180: 	fun f1(a, b) = a + b
-//│ ╙──       	               ^
-//│ ╔══[ERROR] identifier not found: b
-//│ ║  l.180: 	fun f1(a, b) = a + b
-//│ ╙──       	                   ^
-//│ fun f1: Int
-//│ Code generation encountered an error:
-//│   unresolved symbol a
+//│ AST: TypingUnit(NuFunDef(None, f1, [], Lam(Tup(_: Var(a), _: Var(b)), App(App(Var(+), Tup(_: Var(a))), Tup(_: Var(b))))))
+//│ Parsed: fun f1 = (a, b,) => + (a,) (b,);
+//│ fun f1: (Int, Int,) -> Int
 
 
 :p
@@ -197,16 +159,6 @@ f1(1, 2)
 //│ |f1|(|1|,| |2|)|
 //│ AST: TypingUnit(App(Var(f1), Tup(_: IntLit(1), _: IntLit(2))))
 //│ Parsed: f1 (1, 2,);
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.196: 	f1(1, 2)
-//│ ║         	^^^^^^^^
-//│ ╟── operator application of type `Int` is not a function
-//│ ║  l.180: 	fun f1(a, b) = a + b
-//│ ║         	               ^^^^^
-//│ ╟── but it flows into reference with expected type `(1, 2,) -> ?a`
-//│ ║  l.196: 	f1(1, 2)
-//│ ╙──       	^^
-//│ error
+//│ Int
 //│ res
-//│ Runtime error:
-//│   ReferenceError: f12 is not defined
+//│     = 3

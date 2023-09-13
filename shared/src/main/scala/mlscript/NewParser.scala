@@ -472,7 +472,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
                     case Nil => printDbg(s"list is empty")
                   }
                   printDbg(s"case 2${res}") // important
-                  (funParams, N)
+                  (res, N)
               }
               printDbg(s"ps and transformBody => ${ps} ${transformBody}")
               val asc = yeetSpaces match {
