@@ -13,9 +13,9 @@ a + 1 where let a = 1
 
 fun foo: 'a => 'a => 'a where 'a : int
 //│ |#fun| |foo|#:| |'a| |=>| |'a| |=>| |'a| |#where| |'a| |#:| |int|
-//│ Parsed: {fun foo: 'a -> 'a -> 'a
+//│ Parsed: {fun foo: 'a -> 'a -> ('a
 //│   where
-//│     'a <: int}
+//│     'a <: int)}
 
 :e
 fun foo: 'a + 'a + 'a where 'a : int

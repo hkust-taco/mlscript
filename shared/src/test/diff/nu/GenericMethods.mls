@@ -85,15 +85,21 @@ fun bar<A>: A => A
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
 //│ ║  l.77: 	fun bar<A>: A => A
 //│ ╙──      	    ^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Unsupported pattern shape:
+//│ ╔══[ERROR] identifier not found: >:
 //│ ║  l.77: 	fun bar<A>: A => A
-//│ ╙──      	        ^^^^^
+//│ ╙──      	         ^^
+//│ ╔══[ERROR] identifier not found: A
+//│ ║  l.77: 	fun bar<A>: A => A
+//│ ╙──      	        ^
+//│ ╔══[ERROR] identifier not found: A
+//│ ║  l.77: 	fun bar<A>: A => A
+//│ ╙──      	            ^
 //│ ╔══[ERROR] identifier not found: A
 //│ ║  l.77: 	fun bar<A>: A => A
 //│ ╙──      	                 ^
-//│ error -> error
+//│ error
 //│ Code generation encountered an error:
-//│   term App(Var(>:), Tup(_: Var(A), _: Var(A))) is not a valid pattern
+//│   unresolved symbol >:
 
 
 :e
@@ -103,16 +109,16 @@ module Test {
   fun test<A>(x: A) = x
 }
 //│ ╔══[ERROR] Member `foo` is declared in parent but not implemented in `Test`
-//│ ║  l.100: 	module Test {
+//│ ║  l.106: 	module Test {
 //│ ║         	       ^^^^
 //│ ╟── Declared here:
-//│ ║  l.101: 	  fun foo: 'A => 'A
+//│ ║  l.107: 	  fun foo: 'A => 'A
 //│ ╙──       	      ^^^^^^^^^^^^^
 //│ ╔══[ERROR] Member `bar` is declared in parent but not implemented in `Test`
-//│ ║  l.100: 	module Test {
+//│ ║  l.106: 	module Test {
 //│ ║         	       ^^^^
 //│ ╟── Declared here:
-//│ ║  l.102: 	  fun bar: 'A
+//│ ║  l.108: 	  fun bar: 'A
 //│ ╙──       	      ^^^^^^^
 //│ module Test {
 //│   fun bar: nothing

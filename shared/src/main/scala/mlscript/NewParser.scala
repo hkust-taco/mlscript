@@ -135,8 +135,14 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
     case "and" => (3, 3)
     case "or" => (2, 2)
     case "=>" =>
-      val eqPrec = prec('=')
-      (eqPrec, eqPrec - 1)
+      // * The lambda operator is special:
+      // *  it should associate veyr strongly on the left and very loosely on the right
+      // *  so that we can write things like `f() |> x => x is 0` ie `(f()) |> (x => (x is 0))`
+      val eqPrec = prec('.') // * We pick the tightest precedence
+      (eqPrec, 1)
+      // * Note: we used to do this instead which broke the example above on both sides:
+      // val eqPrec = prec('=')
+      // (eqPrec, eqPrec - 1)
     case _ if opStr.exists(_.isLetter) =>
       (5, 5)
     case _ =>
