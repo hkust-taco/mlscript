@@ -396,7 +396,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         case Lam(params, body) =>
           val methodScope = scope.derive(s"Method $name")
           val methodParams = translateParams(params)(methodScope)
-          methodScope.declareValue("this", Some(false), false)
+          methodScope.declareValue("this", Some(false), false, N)
           instance(name) := JSFuncExpr(
             N,
             methodParams,
@@ -405,7 +405,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         // Define getters for pure expressions.
         case term =>
           val getterScope = scope.derive(s"Getter $name")
-          getterScope.declareValue("this", Some(false), false)
+          getterScope.declareValue("this", Some(false), false, N)
           id("Object")("defineProperty")(
             instance,
             JSExpr(name),
@@ -547,7 +547,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       case S(sym: NewClassSymbol) =>
         val localScope = scope.derive(s"local ${sym.lexicalName}")
         val nd = translateNewTypeDefinition(sym, N, false)(localScope)
-        val ctorMth = localScope.declareValue("ctor", Some(false), false).runtimeName
+        val ctorMth = localScope.declareValue("ctor", Some(false), false, N).runtimeName
         val (constructor, params) = translateNewClassParameters(nd)
         val initList =
           if (sym.isPlainJSClass)
@@ -564,7 +564,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         ))
       case S(sym: MixinSymbol) =>
         val localScope = scope.derive(s"local ${sym.lexicalName}")
-        val base = localScope.declareValue("base", Some(false), false)
+        val base = localScope.declareValue("base", Some(false), false, N)
         val nd = translateNewTypeDefinition(sym, S(base), false)(localScope)
         JSConstDecl(sym.lexicalName, JSArrowFn(
           Ls(JSNamePattern(base.runtimeName)), R(Ls(
@@ -574,7 +574,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       case S(sym: ModuleSymbol) =>
         val localScope = scope.derive(s"local ${sym.lexicalName}")
         val nd = translateNewTypeDefinition(sym, N, false)(localScope)
-        val ins = localScope.declareValue("ins", Some(false), false).runtimeName
+        val ins = localScope.declareValue("ins", Some(false), false, N).runtimeName
         JSConstDecl(sym.lexicalName, JSImmEvalFn(
           N, Nil, R(Ls(
             nd, JSLetDecl.from(Ls(ins)),
@@ -592,7 +592,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       siblingsMembers: Ls[RuntimeSymbol]
   )(implicit scope: Scope): JSClassMethod = {
     val getterScope = scope.derive(s"getter ${mixinSymbol.lexicalName}")
-    val base = getterScope.declareValue("base", Some(false), false)
+    val base = getterScope.declareValue("base", Some(false), false, N)
     val outerSymbol = getterScope.declareOuterSymbol()
     siblingsMembers.foreach(getterScope.captureSymbol(outerSymbol, _))
 
@@ -737,10 +737,10 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     val ctorParams = sym.ctorParams.fold(
       fields.map { f =>
           memberList += NewClassMemberSymbol(f, Some(false), false).tap(nuTypeScope.register)
-          constructorScope.declareValue(f, Some(false), false).runtimeName
+          constructorScope.declareValue(f, Some(false), false, N).runtimeName
         }
       )(lst => lst.map { p =>
-          constructorScope.declareValue(p, Some(false), false).runtimeName
+          constructorScope.declareValue(p, Some(false), false, N).runtimeName
         })
 
     sym.methods.foreach {
@@ -784,7 +784,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     }
 
     val (superParameters, rest) = if (baseSym.isDefined) {
-      val rest = constructorScope.declareValue("rest", Some(false), false)
+      val rest = constructorScope.declareValue("rest", Some(false), false, N)
       (Ls(JSIdent(s"...${rest.runtimeName}")), S(rest.runtimeName))
     }
     else
@@ -799,12 +799,12 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     val stmts = sym.ctor.flatMap {
       case Eqn(Var(name), rhs) => Ls(
         JSAssignExpr(JSIdent(s"this.#$name"), translateTerm(rhs)(constructorScope)).stmt,
-        JSConstDecl(constructorScope.declareValue(name, S(false), false).runtimeName, JSIdent(s"this.#$name"))
+        JSConstDecl(constructorScope.declareValue(name, S(false), false, N).runtimeName, JSIdent(s"this.#$name"))
       )
       case s: Term => JSExprStmt(translateTerm(s)(constructorScope)) :: Nil
       case NuFunDef(_, Var(nme), _, _, Left(rhs)) => getters += nme; Ls[JSStmt](
         JSExprStmt(JSAssignExpr(JSIdent(s"this.#$nme"), translateTerm(rhs)(constructorScope))),
-        JSConstDecl(constructorScope.declareValue(nme, S(false), false).runtimeName, JSIdent(s"this.#$nme"))
+        JSConstDecl(constructorScope.declareValue(nme, S(false), false, N).runtimeName, JSIdent(s"this.#$nme"))
       )
       case _ => Nil
     }
@@ -882,7 +882,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     // Declare the alias for `this` before declaring parameters.
     val selfSymbol = memberScope.declareThisAlias()
     val preDecs = props.map(p => {
-      val runtime = memberScope.declareValue(p, Some(false), false)
+      val runtime = memberScope.declareValue(p, Some(false), false, N)
       JSConstDecl(runtime.runtimeName, JSIdent(s"this.#$p"))
     })
     // Declare parameters.
@@ -1104,17 +1104,18 @@ class JSWebBackend extends JSBackend(allowUnresolvedSymbols = true) {
         // ```
         .concat(otherStmts.flatMap {
           case Def(recursive, Var(name), L(body), isByname) =>
+            val isLam = body.isInstanceOf[Lam]
             val (originalExpr, sym) = if (recursive) {
               val isByvalueRecIn = if (isByname) None else Some(true)
-              val sym = topLevelScope.declareValue(name, isByvalueRecIn, body.isInstanceOf[Lam])
+              val sym = topLevelScope.declareValue(name, isByvalueRecIn, isLam, N)
               val translated = translateTerm(body)(topLevelScope)
               topLevelScope.unregisterSymbol(sym)
               val isByvalueRecOut = if (isByname) None else Some(false)
-              (translated, topLevelScope.declareValue(name, isByvalueRecOut, body.isInstanceOf[Lam]))
+              (translated, topLevelScope.declareValue(name, isByvalueRecOut, isLam, N))
             } else {
               val translatedBody = translateTerm(body)(topLevelScope)
               val isByvalueRec = if (isByname) None else Some(false)
-              (translatedBody, topLevelScope.declareValue(name, isByvalueRec, body.isInstanceOf[Lam]))
+              (translatedBody, topLevelScope.declareValue(name, isByvalueRec, isLam, N))
             }
             val translatedBody = if (sym.isByvalueRec.isEmpty && !sym.isLam) JSArrowFn(Nil, L(originalExpr)) else originalExpr
             topLevelScope.tempVars `with` JSConstDecl(sym.runtimeName, translatedBody) ::
@@ -1143,7 +1144,7 @@ class JSWebBackend extends JSBackend(allowUnresolvedSymbols = true) {
 
     // don't pass `otherStmts` to the top-level module, because we need to execute them one by one later
     val topModule = topLevelScope.declareTopModule("TypingUnit", Nil, typeDefs, true)
-    val moduleIns = topLevelScope.declareValue("typing_unit", Some(false), false)
+    val moduleIns = topLevelScope.declareValue("typing_unit", Some(false), false, N)
     val moduleDecl = translateTopModuleDeclaration(topModule, true)(topLevelScope)
     val insDecl =
       JSConstDecl(moduleIns.runtimeName, JSNew(JSIdent(topModule.runtimeName)))
@@ -1170,7 +1171,7 @@ class JSWebBackend extends JSBackend(allowUnresolvedSymbols = true) {
               val isByvalueRecIn = if (isByname) None else Some(true)
               
               // TODO Improve: (Lionel) what?!
-              val sym = topLevelScope.declareValue(name, isByvalueRecIn, bodyIsLam)
+              val sym = topLevelScope.declareValue(name, isByvalueRecIn, bodyIsLam, N)
               val translated = translateTerm(body)(topLevelScope)
               topLevelScope.unregisterSymbol(sym)
               
@@ -1206,7 +1207,7 @@ class JSWebBackend extends JSBackend(allowUnresolvedSymbols = true) {
 }
 
 class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
-  private val lastResultSymbol = topLevelScope.declareValue("res", Some(false), false)
+  private val lastResultSymbol = topLevelScope.declareValue("res", Some(false), false, N)
   private val resultIdent = JSIdent(lastResultSymbol.runtimeName)
 
   private var numRun = 0
@@ -1259,12 +1260,12 @@ class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
         val bodyIsLam = body match { case _: Lam => true case _ => false }
         (if (recursive) {
           val isByvalueRecIn = if (isByname) None else Some(true)
-          val sym = scope.declareValue(name, isByvalueRecIn, bodyIsLam)
+          val sym = scope.declareValue(name, isByvalueRecIn, bodyIsLam, N)
           try {
             val translated = translateTerm(body)
             scope.unregisterSymbol(sym)
             val isByvalueRecOut = if (isByname) None else Some(false)
-            R((translated, scope.declareValue(name, isByvalueRecOut, bodyIsLam)))
+            R((translated, scope.declareValue(name, isByvalueRecOut, bodyIsLam, N)))
           } catch {
             case e: UnimplementedError =>
               scope.stubize(sym, e.symbol)
@@ -1272,7 +1273,7 @@ class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
             case NonFatal(e) =>
               scope.unregisterSymbol(sym)
               val isByvalueRecOut = if (isByname) None else Some(false)
-              scope.declareValue(name, isByvalueRecOut, bodyIsLam)
+              scope.declareValue(name, isByvalueRecOut, bodyIsLam, N)
               throw e
           }
         } else {
@@ -1282,7 +1283,7 @@ class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
               L(e.getMessage())
           }) map {
             val isByvalueRec = if (isByname) None else Some(false)
-            expr => (expr, scope.declareValue(name, isByvalueRec, bodyIsLam))
+            expr => (expr, scope.declareValue(name, isByvalueRec, bodyIsLam, N))
           }
         }) match {
           case R((originalExpr, sym)) =>
@@ -1338,7 +1339,7 @@ class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
 
     // don't pass `otherStmts` to the top-level module, because we need to execute them one by one later
     val topModule = topLevelScope.declareTopModule("TypingUnit", Nil, typeDefs, true)
-    val moduleIns = topLevelScope.declareValue("typing_unit", Some(false), false)
+    val moduleIns = topLevelScope.declareValue("typing_unit", Some(false), false, N)
     val moduleDecl = translateTopModuleDeclaration(topModule, true)
     val insDecl =
       JSConstDecl(moduleIns.runtimeName, JSNew(JSIdent(topModule.runtimeName)))
@@ -1399,7 +1400,7 @@ class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
               L(e.getMessage())
           }) map {
             val isByvalueRec = if (isByname) None else Some(false)
-            expr => (expr, scope.declareValue(name, isByvalueRec, bodyIsLam))
+            expr => (expr, scope.declareValue(name, isByvalueRec, bodyIsLam, symb))
           }
         }) match {
           case R((originalExpr, sym)) =>

@@ -312,15 +312,32 @@ fun (:-D) dd(a, b) = a + b
 // should be `:-D`, but we got `:-`
 
 
-val (-->) f(x, y) = [x, y]
-//│ let (-->) f: forall 'a 'b. ('a, 'b) -> ['a, 'b]
+val (->) f(x, y) = [x, y]
+//│ let (->) f: forall 'a 'b. ('a, 'b) -> ['a, 'b]
 //│ f
 //│   = [Function: f1]
 
-:ge // FIXME
-12 --> 34
+12 -> 34
 //│ [12, 34]
-//│ Code generation encountered an error:
-//│   unresolved symbol -->
+//│ res
+//│     = [ 12, 34 ]
+
+
+let (->) _ = f
+//│ let (->) _: forall 'a 'b. ('a, 'b) -> ['a, 'b]
+//│ _
+//│   = [Function: f1]
+
+:js
+12 -> 34
+//│ [12, 34]
+//│ // Prelude
+//│ class TypingUnit42 {}
+//│ const typing_unit42 = new TypingUnit42;
+//│ // Query 1
+//│ res = _(12, 34);
+//│ // End of generated code
+//│ res
+//│     = [ 12, 34 ]
 
 
