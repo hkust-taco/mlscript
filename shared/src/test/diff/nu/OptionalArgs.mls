@@ -6,128 +6,114 @@
 :dp
 fun f1(a?: Int, b?: Int) = a + b
 //│ |#fun| |f1|(|a|?|#:| |Int|,| |b|?|#:| |Int|)| |#=| |a| |+| |b|
-//│ At MM
-//│ ? block		inspects |#fun| |f1|(|a|?|#:| |Int|,| |b|?|#:| |Int|)| |...    [at l.301]
-//│ ? go		inspects |#fun| |f1|(|a|?|#:| |Int|,| |b|?|#:| |Int|)| |...    [at l.270]
-//│ ? go		inspects |#fun| |f1|(|a|?|#:| |Int|,| |b|?|#:| |Int|)| |...    [at l.270]
-//│ At MM2
-//│ ! t		consumes |#fun|    [at l.416]
-//│ ? yeetSpaces		inspects | |f1|(|a|?|#:| |Int|,| |b|?|#:| |Int|)| |#=|...    [at l.527]
-//│ ! yeetSpaces		consumes | |    [at l.527]
-//│ ? yeetSpaces		inspects |f1|(|a|?|#:| |Int|,| |b|?|#:| |Int|)| |#=| |...    [at l.527]
-//│ ! x$29		consumes |f1|    [at l.427]
-//│ foundErr => false true
-//│ ? yeetSpaces		inspects |(|a|?|#:| |Int|,| |b|?|#:| |Int|)| |#=| |a|...    [at l.527]
-//│ HERE1
-//│ ? yeetSpaces		inspects |(|a|?|#:| |Int|,| |b|?|#:| |Int|)| |#=| |a|...    [at l.527]
-//│ @ funParams(())    [at l.469]
-//│ │ ? yeetSpaces		inspects |(|a|?|#:| |Int|,| |b|?|#:| |Int|)| |#=| |a|...    [at l.527]
-//│ │ ! res		consumes |(|a|?|#:| |Int|,| |b|?|#:| |Int|)|    [at l.538]
-//│ │ > ? maybeIndented		inspects |a|?|#:| |Int|...    [at l.1013]
-//│ │ > @ argsOrIf(List(),List())    [at l.1056]
-//│ │ > │ ? argsOrIf		inspects |a|?|#:| |Int|...    [at l.1057]
-//│ │ > │ ? yeetSpaces		inspects |a|?|#:| |Int|...    [at l.527]
-//│ │ > │ ? yeetSpaces		inspects |a|?|#:| |Int|...    [at l.527]
-//│ │ > │ ? yeetSpaces		inspects |a|?|#:| |Int|...    [at l.527]
-//│ │ > │ good! (IDENT(a,false),Loc(7,8,nu/OptionalArgs:+7)) (IDENT(?,true),Loc(8,8,nu/OptionalArgs:+7)) (KEYWORD(:),Loc(9,10,nu/OptionalArgs:+7))
-//│ │ > │ ? yeetSpaces		inspects |a|?|#:| |Int|...    [at l.527]
-//│ │ > │ ! x$60		consumes |a|    [at l.1095]
-//│ │ > │ ! x$60		consumes |?|    [at l.1096]
-//│ │ > │ ! x$60		consumes |#:|    [at l.1097]
-//│ │ > │ case #3
+//│ ? block		inspects |#fun| |f1|(|a|?|#:| |Int|,| |b|?|#:| |Int|)| |...    [at l.299]
+//│ ? go		inspects |#fun| |f1|(|a|?|#:| |Int|,| |b|?|#:| |Int|)| |...    [at l.268]
+//│ ? go		inspects |#fun| |f1|(|a|?|#:| |Int|,| |b|?|#:| |Int|)| |...    [at l.268]
+//│ ! t		consumes |#fun|    [at l.413]
+//│ ? yeetSpaces		inspects | |f1|(|a|?|#:| |Int|,| |b|?|#:| |Int|)| |#=|...    [at l.514]
+//│ ! yeetSpaces		consumes | |    [at l.514]
+//│ ? yeetSpaces		inspects |f1|(|a|?|#:| |Int|,| |b|?|#:| |Int|)| |#=| |...    [at l.514]
+//│ ! x$29		consumes |f1|    [at l.424]
+//│ ? yeetSpaces		inspects |(|a|?|#:| |Int|,| |b|?|#:| |Int|)| |#=| |a|...    [at l.514]
+//│ ? yeetSpaces		inspects |(|a|?|#:| |Int|,| |b|?|#:| |Int|)| |#=| |a|...    [at l.514]
+//│ @ funParams(())    [at l.463]
+//│ │ ? yeetSpaces		inspects |(|a|?|#:| |Int|,| |b|?|#:| |Int|)| |#=| |a|...    [at l.514]
+//│ │ ! res		consumes |(|a|?|#:| |Int|,| |b|?|#:| |Int|)|    [at l.525]
+//│ │ > ? maybeIndented		inspects |a|?|#:| |Int|...    [at l.999]
+//│ │ > @ argsOrIf(List(),List())    [at l.1042]
+//│ │ > │ ? argsOrIf		inspects |a|?|#:| |Int|...    [at l.1043]
+//│ │ > │ ? yeetSpaces		inspects |a|?|#:| |Int|...    [at l.514]
+//│ │ > │ ? yeetSpaces		inspects |a|?|#:| |Int|...    [at l.514]
+//│ │ > │ ? yeetSpaces		inspects |a|?|#:| |Int|...    [at l.514]
+//│ │ > │ ! x$60		consumes |a|    [at l.1075]
+//│ │ > │ ! x$60		consumes |?|    [at l.1076]
+//│ │ > │ ! x$60		consumes |#:|    [at l.1077]
 //│ │ > │ flags => None None Some(Loc(8,8,nu/OptionalArgs:+7))
-//│ │ > │ @ exprOrIf(1,true)    [at l.1109]
-//│ │ > │ │ ? exprOrIf		inspects | |Int|,| |b|...    [at l.571]
-//│ │ > │ │ ! exprOrIf		consumes | |    [at l.573]
-//│ │ > │ │ @ exprOrIf(1,true)    [at l.574]
-//│ │ > │ │ │ ? exprOrIf		inspects |Int|,| |b|?|...    [at l.571]
-//│ │ > │ │ │ ! exprOrIf		consumes |Int|    [at l.590]
-//│ │ > │ │ │ @ exprCont(1,`Int`,false)    [at l.591]
-//│ │ > │ │ │ │ ? exprCont		inspects |,| |b|?|#:|...    [at l.747]
+//│ │ > │ @ exprOrIf(1,true)    [at l.1087]
+//│ │ > │ │ ? exprOrIf		inspects | |Int|,| |b|...    [at l.557]
+//│ │ > │ │ ! exprOrIf		consumes | |    [at l.559]
+//│ │ > │ │ @ exprOrIf(1,true)    [at l.560]
+//│ │ > │ │ │ ? exprOrIf		inspects |Int|,| |b|?|...    [at l.557]
+//│ │ > │ │ │ ! exprOrIf		consumes |Int|    [at l.576]
+//│ │ > │ │ │ @ exprCont(1,`Int`,false)    [at l.577]
+//│ │ > │ │ │ │ ? exprCont		inspects |,| |b|?|#:|...    [at l.733]
 //│ │ > │ │ │ = Right(Int)
 //│ │ > │ │ = Right(Int)
 //│ │ > │ = Right(Int)
-//│ │ > │ ? argsOrIf		inspects |,| |b|?|#:|...    [at l.1117]
-//│ │ > │ ! argsOrIf		consumes |,|    [at l.1123]
-//│ │ > │ @ argsOrIf(List((Some(a),Right(Fld(FldFlags(false,false,true),Int)))),List())    [at l.1056]
-//│ │ > │ │ ? argsOrIf		inspects | |b|?|#:| |...    [at l.1057]
-//│ │ > │ │ ! argsOrIf		consumes | |    [at l.1066]
-//│ │ > │ │ @ argsOrIf(List((Some(a),Right(Fld(FldFlags(false,false,true),Int)))),List())    [at l.1056]
-//│ │ > │ │ │ ? argsOrIf		inspects |b|?|#:| |Int|    [at l.1057]
-//│ │ > │ │ │ ? yeetSpaces		inspects |b|?|#:| |Int|    [at l.527]
-//│ │ > │ │ │ ? yeetSpaces		inspects |b|?|#:| |Int|    [at l.527]
-//│ │ > │ │ │ ? yeetSpaces		inspects |b|?|#:| |Int|    [at l.527]
-//│ │ > │ │ │ good! (IDENT(b,false),Loc(16,17,nu/OptionalArgs:+7)) (IDENT(?,true),Loc(17,17,nu/OptionalArgs:+7)) (KEYWORD(:),Loc(18,19,nu/OptionalArgs:+7))
-//│ │ > │ │ │ ? yeetSpaces		inspects |b|?|#:| |Int|    [at l.527]
-//│ │ > │ │ │ ! x$60		consumes |b|    [at l.1095]
-//│ │ > │ │ │ ! x$60		consumes |?|    [at l.1096]
-//│ │ > │ │ │ ! x$60		consumes |#:|    [at l.1097]
-//│ │ > │ │ │ case #3
+//│ │ > │ ? argsOrIf		inspects |,| |b|?|#:|...    [at l.1095]
+//│ │ > │ ! argsOrIf		consumes |,|    [at l.1101]
+//│ │ > │ @ argsOrIf(List((Some(a),Right(Fld(FldFlags(false,false,true),Int)))),List())    [at l.1042]
+//│ │ > │ │ ? argsOrIf		inspects | |b|?|#:| |...    [at l.1043]
+//│ │ > │ │ ! argsOrIf		consumes | |    [at l.1052]
+//│ │ > │ │ @ argsOrIf(List((Some(a),Right(Fld(FldFlags(false,false,true),Int)))),List())    [at l.1042]
+//│ │ > │ │ │ ? argsOrIf		inspects |b|?|#:| |Int|    [at l.1043]
+//│ │ > │ │ │ ? yeetSpaces		inspects |b|?|#:| |Int|    [at l.514]
+//│ │ > │ │ │ ? yeetSpaces		inspects |b|?|#:| |Int|    [at l.514]
+//│ │ > │ │ │ ? yeetSpaces		inspects |b|?|#:| |Int|    [at l.514]
+//│ │ > │ │ │ ! x$60		consumes |b|    [at l.1075]
+//│ │ > │ │ │ ! x$60		consumes |?|    [at l.1076]
+//│ │ > │ │ │ ! x$60		consumes |#:|    [at l.1077]
 //│ │ > │ │ │ flags => None None Some(Loc(17,17,nu/OptionalArgs:+7))
-//│ │ > │ │ │ @ exprOrIf(1,true)    [at l.1109]
-//│ │ > │ │ │ │ ? exprOrIf		inspects | |Int|    [at l.571]
-//│ │ > │ │ │ │ ! exprOrIf		consumes | |    [at l.573]
-//│ │ > │ │ │ │ @ exprOrIf(1,true)    [at l.574]
-//│ │ > │ │ │ │ │ ? exprOrIf		inspects |Int|    [at l.571]
-//│ │ > │ │ │ │ │ ! exprOrIf		consumes |Int|    [at l.590]
-//│ │ > │ │ │ │ │ @ exprCont(1,`Int`,false)    [at l.591]
-//│ │ > │ │ │ │ │ │ ? exprCont		inspects ||    [at l.747]
+//│ │ > │ │ │ @ exprOrIf(1,true)    [at l.1087]
+//│ │ > │ │ │ │ ? exprOrIf		inspects | |Int|    [at l.557]
+//│ │ > │ │ │ │ ! exprOrIf		consumes | |    [at l.559]
+//│ │ > │ │ │ │ @ exprOrIf(1,true)    [at l.560]
+//│ │ > │ │ │ │ │ ? exprOrIf		inspects |Int|    [at l.557]
+//│ │ > │ │ │ │ │ ! exprOrIf		consumes |Int|    [at l.576]
+//│ │ > │ │ │ │ │ @ exprCont(1,`Int`,false)    [at l.577]
+//│ │ > │ │ │ │ │ │ ? exprCont		inspects ||    [at l.733]
 //│ │ > │ │ │ │ │ = Right(Int)
 //│ │ > │ │ │ │ = Right(Int)
 //│ │ > │ │ │ = Right(Int)
-//│ │ > │ │ │ ? argsOrIf		inspects ||    [at l.1117]
+//│ │ > │ │ │ ? argsOrIf		inspects ||    [at l.1095]
 //│ │ > │ │ = List((Some(a),Right(Fld(FldFlags(false,false,true),Int))), (Some(b),Right(Fld(FldFlags(false,false,true),Int))))
 //│ │ > │ = List((Some(a),Right(Fld(FldFlags(false,false,true),Int))), (Some(b),Right(Fld(FldFlags(false,false,true),Int))))
 //│ │ > = List((Some(a),Right(Fld(FldFlags(false,false,true),Int))), (Some(b),Right(Fld(FldFlags(false,false,true),Int))))
 //│ │ > ? concludeWith		inspects ||    [at l.86]
 //│ │ > Concluded with List((Some(a),Fld(FldFlags(false,false,true),Int)), (Some(b),Fld(FldFlags(false,false,true),Int)))
-//│ │ Okkkkk as => List((Some(a),Fld(FldFlags(false,false,true),Int)), (Some(b),Fld(FldFlags(false,false,true),Int)))
-//│ │ @ funParams(())    [at l.541]
-//│ │ │ ? yeetSpaces		inspects | |#=| |a| |...    [at l.527]
-//│ │ │ ! yeetSpaces		consumes | |    [at l.527]
+//│ │ @ funParams(())    [at l.527]
+//│ │ │ ? yeetSpaces		inspects | |#=| |a| |...    [at l.514]
+//│ │ │ ! yeetSpaces		consumes | |    [at l.514]
 //│ │ │ Here, creating the params! List()
 //│ │ = List()
 //│ │ Here, creating the params! List(a: Int, b: Int,) Tup(a: Var(Int), b: Var(Int))
 //│ = List(a: Int, b: Int,)
-//│ head => List((Some(a),Fld(FldFlags(false,false,true),Int)), (Some(b),Fld(FldFlags(false,false,true),Int)))
-//│ case 2List(a: Int, b: Int,)
-//│ ps and transformBody => List(a: Int, b: Int,) None
-//│ ? yeetSpaces		inspects |#=| |a| |+|...    [at l.527]
-//│ ? yeetSpaces		inspects |#=| |a| |+|...    [at l.527]
-//│ ! t		consumes |#=|    [at l.487]
-//│ @ expr(0,true)    [at l.488]
-//│ │ @ exprOrIf(0,true)    [at l.559]
-//│ │ │ ? exprOrIf		inspects | |a| |+| |...    [at l.571]
-//│ │ │ ! exprOrIf		consumes | |    [at l.573]
-//│ │ │ @ exprOrIf(0,true)    [at l.574]
-//│ │ │ │ ? exprOrIf		inspects |a| |+| |b|    [at l.571]
-//│ │ │ │ ! exprOrIf		consumes |a|    [at l.590]
-//│ │ │ │ @ exprCont(0,`a`,false)    [at l.591]
-//│ │ │ │ │ ? exprCont		inspects | |+| |b|    [at l.747]
-//│ │ │ │ │ ! exprCont		consumes | |    [at l.791]
-//│ │ │ │ │ @ exprCont(0,`a`,false)    [at l.792]
-//│ │ │ │ │ │ ? exprCont		inspects |+| |b|    [at l.747]
-//│ │ │ │ │ │ ! exprCont		consumes |+|    [at l.756]
-//│ │ │ │ │ │ @ exprOrIf(18,true)    [at l.759]
-//│ │ │ │ │ │ │ ? exprOrIf		inspects | |b|    [at l.571]
-//│ │ │ │ │ │ │ ! exprOrIf		consumes | |    [at l.573]
-//│ │ │ │ │ │ │ @ exprOrIf(18,true)    [at l.574]
-//│ │ │ │ │ │ │ │ ? exprOrIf		inspects |b|    [at l.571]
-//│ │ │ │ │ │ │ │ ! exprOrIf		consumes |b|    [at l.590]
-//│ │ │ │ │ │ │ │ @ exprCont(18,`b`,false)    [at l.591]
-//│ │ │ │ │ │ │ │ │ ? exprCont		inspects ||    [at l.747]
+//│ ? yeetSpaces		inspects |#=| |a| |+|...    [at l.514]
+//│ ? yeetSpaces		inspects |#=| |a| |+|...    [at l.514]
+//│ ! t		consumes |#=|    [at l.474]
+//│ @ expr(0,true)    [at l.475]
+//│ │ @ exprOrIf(0,true)    [at l.545]
+//│ │ │ ? exprOrIf		inspects | |a| |+| |...    [at l.557]
+//│ │ │ ! exprOrIf		consumes | |    [at l.559]
+//│ │ │ @ exprOrIf(0,true)    [at l.560]
+//│ │ │ │ ? exprOrIf		inspects |a| |+| |b|    [at l.557]
+//│ │ │ │ ! exprOrIf		consumes |a|    [at l.576]
+//│ │ │ │ @ exprCont(0,`a`,false)    [at l.577]
+//│ │ │ │ │ ? exprCont		inspects | |+| |b|    [at l.733]
+//│ │ │ │ │ ! exprCont		consumes | |    [at l.777]
+//│ │ │ │ │ @ exprCont(0,`a`,false)    [at l.778]
+//│ │ │ │ │ │ ? exprCont		inspects |+| |b|    [at l.733]
+//│ │ │ │ │ │ ! exprCont		consumes |+|    [at l.742]
+//│ │ │ │ │ │ @ exprOrIf(18,true)    [at l.745]
+//│ │ │ │ │ │ │ ? exprOrIf		inspects | |b|    [at l.557]
+//│ │ │ │ │ │ │ ! exprOrIf		consumes | |    [at l.559]
+//│ │ │ │ │ │ │ @ exprOrIf(18,true)    [at l.560]
+//│ │ │ │ │ │ │ │ ? exprOrIf		inspects |b|    [at l.557]
+//│ │ │ │ │ │ │ │ ! exprOrIf		consumes |b|    [at l.576]
+//│ │ │ │ │ │ │ │ @ exprCont(18,`b`,false)    [at l.577]
+//│ │ │ │ │ │ │ │ │ ? exprCont		inspects ||    [at l.733]
 //│ │ │ │ │ │ │ │ = Right(b)
 //│ │ │ │ │ │ │ = Right(b)
 //│ │ │ │ │ │ = Right(b)
-//│ │ │ │ │ │ @ exprCont(0,`+ (a,) (b,)`,false)    [at l.763]
-//│ │ │ │ │ │ │ ? exprCont		inspects ||    [at l.747]
+//│ │ │ │ │ │ @ exprCont(0,`+ (a,) (b,)`,false)    [at l.749]
+//│ │ │ │ │ │ │ ? exprCont		inspects ||    [at l.733]
 //│ │ │ │ │ │ = Right(+ (a,) (b,))
 //│ │ │ │ │ = Right(+ (a,) (b,))
 //│ │ │ │ = Right(+ (a,) (b,))
 //│ │ │ = Right(+ (a,) (b,))
 //│ │ = Right(+ (a,) (b,))
 //│ = + (a,) (b,)
-//│ ? yeetSpaces		inspects ||    [at l.527]
+//│ ? yeetSpaces		inspects ||    [at l.514]
 //│ ? parseAll		inspects ||    [at l.75]
 //│ Parsed: fun f1 = (a: Int, b: Int,) => + (a,) (b,);
 //│ fun f1: (a: Int, b: Int,) -> Int
