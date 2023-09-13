@@ -302,7 +302,7 @@ module TestElim extends Eliminate
 //│ where
 //│   'b <: Intersect['b] | Object & 'c & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union | Outside['b & (Object & ~#Outside | Outside['b])] | Scale['b] | Translate['b] | Union['b]
 //│   'c :> 'a
-//│   'a :> Outside['c] | Translate['c] | Scale['c] | Union['c] | Intersect['c]
+//│   'a :> Outside['c] | Union['c] | Intersect['c] | Translate['c] | Scale['c]
 
 TestElim.eliminate(Outside(Outside(Univ())))
 //│ forall 'a. 'b | 'a
@@ -336,7 +336,7 @@ fun mk(n) = if n is
 TestElim.eliminate(mk(100))
 //│ forall 'a. 'a
 //│   where
-//│     'a :> Outside['Region] | Union['Region] | Intersect['Region] | Translate['Region] | Scale['Region]
+//│     'a :> Outside['Region] | Translate['Region] | Scale['Region] | Union['Region] | Intersect['Region]
 //│     'Region :> 'a
 //│ res
 //│ Runtime error:

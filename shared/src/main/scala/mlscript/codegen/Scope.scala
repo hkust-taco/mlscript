@@ -262,7 +262,7 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
     val finalName =
       if (allowRenaming) allocateRuntimeName(lexicalName) else lexicalName
     val (ctor, mths) = stmts.partitionMap {
-      case NuFunDef(isLetRec, Var(nme), tys, Left(rhs)) if (isLetRec.isEmpty || isLetRec.getOrElse(false)) =>
+      case NuFunDef(isLetRec, Var(nme), _, tys, Left(rhs)) if (isLetRec.isEmpty || isLetRec.getOrElse(false)) =>
         Right(MethodDef[Left[Term, Type]](isLetRec.getOrElse(false), TypeName(finalName), Var(nme), tys, Left(rhs)))
       case s => Left(s)
     }
@@ -315,7 +315,7 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
     symbol
   }
 
-  def declareValue(lexicalName: Str, isByvalueRec: Option[Boolean], isLam: Boolean): ValueSymbol = {
+  def declareValue(lexicalName: Str, isByvalueRec: Option[Boolean], isLam: Boolean, symbolicName: Opt[Str]): ValueSymbol = {
     val runtimeName = lexicalValueSymbols.get(lexicalName) match {
       // If we are implementing a stub symbol and the stub symbol did not shadow any other
       // symbols, it is safe to reuse its `runtimeName`.
@@ -325,28 +325,30 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
     }
     val symbol = ValueSymbol(lexicalName, runtimeName, isByvalueRec, isLam)
     register(symbol)
+    symbolicName.foreach { symbolicName =>
+      register(ValueSymbol(symbolicName, runtimeName, isByvalueRec, isLam))
+    }
     symbol
   }
 
   def declareOuterSymbol(): ValueSymbol = {
     val lexicalName = "outer"
-    val symbol = declareValue(lexicalName, Some(false), false)
+    val symbol = declareValue(lexicalName, Some(false), false, N)
     outerSymbols += symbol.runtimeName
     symbol
   }
 
-  def declareStubValue(lexicalName: Str)(implicit allowEscape: Bool): StubValueSymbol =
-    declareStubValue(lexicalName, N)
+  def declareStubValue(lexicalName: Str, symbolicName: Opt[Str])(implicit allowEscape: Bool): StubValueSymbol =
+    declareStubValue(lexicalName, N, symbolicName)
 
-  def declareStubValue(lexicalName: Str, previous: StubValueSymbol)(implicit
+  def declareStubValue(lexicalName: Str, previous: StubValueSymbol, symbolicName: Opt[Str])(implicit
       allowEscape: Bool
   ): StubValueSymbol =
-    declareStubValue(lexicalName, S(previous))
+    declareStubValue(lexicalName, S(previous), symbolicName)
 
-  private def declareStubValue(lexicalName: Str, previous: Opt[StubValueSymbol])(implicit
+  private def declareStubValue(lexicalName: Str, previous: Opt[StubValueSymbol], symbolicName: Opt[Str])(implicit
       allowEscape: Bool
   ): StubValueSymbol = {
-
     val symbol = lexicalValueSymbols.get(lexicalName) match {
       // If a stub with the same name has been defined, use the name.
       case S(value) => StubValueSymbol(lexicalName, value.runtimeName, true, previous)
@@ -354,6 +356,9 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
       case N => StubValueSymbol(lexicalName, allocateRuntimeName(lexicalName), false, previous)
     }
     register(symbol)
+    symbolicName.foreach { symbolicName =>
+      register(StubValueSymbol(symbolicName, symbol.runtimeName, false, previous))
+    }
     symbol
   }
 
@@ -361,7 +366,7 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
       allowEscape: Bool
   ): StubValueSymbol = {
     unregister(sym)
-    declareStubValue(sym.lexicalName, S(previous))
+    declareStubValue(sym.lexicalName, S(previous), N)
   }
 
   def declareRuntimeSymbol(): Str = {

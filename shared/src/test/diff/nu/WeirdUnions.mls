@@ -2,21 +2,17 @@
 
 
 
-// * There are strange parsing quirks here
-
 fun f: Str | [Str, Int]
-//│ fun f: Array[Int | Str] & {_1: Str}
-
-// * ^ parses as:
+//│ fun f: Str | [Str, Int]
 
 fun f: [Str] | [Str, Int]
 //│ fun f: Array[Int | Str] & {_1: Str}
 
 fun f: (Str | [Str, Int])
-//│ fun f: Array[Int | Str] & {_1: Str}
+//│ fun f: Str | [Str, Int]
 
 fun f: Str | (Str, Int)
-//│ fun f: Array[Int | Str] & {_1: Str}
+//│ fun f: Str | [Str, Int]
 
 
 fun f: Str | ([Str, Int])
@@ -46,10 +42,10 @@ fun f: (Str => Str) & ((Str, Int) => Int)
 :e
 f("abc", "abc")
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.47: 	f("abc", "abc")
+//│ ║  l.43: 	f("abc", "abc")
 //│ ║        	^^^^^^^^^^^^^^^
 //│ ╟── argument list of type `["abc", "abc"]` does not match type `nothing`
-//│ ║  l.47: 	f("abc", "abc")
+//│ ║  l.43: 	f("abc", "abc")
 //│ ╙──      	 ^^^^^^^^^^^^^^
 //│ Int | Str | error
 //│ res
@@ -68,19 +64,19 @@ let r = if true then id else [x, y] => [y, x]
 r(error)
 r(error, error)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.68: 	r(error)
+//│ ║  l.64: 	r(error)
 //│ ║        	^^^^^^^^
 //│ ╟── argument of type `[nothing]` does not match type `[?a, ?b]`
-//│ ║  l.68: 	r(error)
+//│ ║  l.64: 	r(error)
 //│ ║        	 ^^^^^^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.62: 	let r = if true then id else [x, y] => [y, x]
+//│ ║  l.58: 	let r = if true then id else [x, y] => [y, x]
 //│ ╙──      	                              ^^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.69: 	r(error, error)
+//│ ║  l.65: 	r(error, error)
 //│ ║        	^^^^^^^^^^^^^^^
 //│ ╟── argument list of type `[nothing, nothing]` does not match type `[?a]`
-//│ ║  l.69: 	r(error, error)
+//│ ║  l.65: 	r(error, error)
 //│ ╙──      	 ^^^^^^^^^^^^^^
 //│ error | [nothing, nothing]
 //│ res

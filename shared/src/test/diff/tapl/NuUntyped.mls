@@ -1,37 +1,22 @@
-:NewParser
 :NewDefs
 
-fun concat2(a, b) = concat(a)(b)
-fun concat3(a, b, c) = concat2(a, concat2(b, c))
-fun concat4(a, b, c, d) = concat2(a, concat3(b, c, d))
-fun concat5(a, b, c, d, e) = concat2(a, concat4(b, c, d, e))
-fun concat6(a, b, c, d, e, f) = concat2(a, concat5(b, c, d, e, f))
-fun concat7(a, b, c, d, e, f, g) = concat2(a, concat6(b, c, d, e, f, g))
-fun concat8(a, b, c, d, e, f, g, h) = concat2(a, concat7(b, c, d, e, f, g, h))
-fun par(a) = concat3("(", a, ")")
-//│ fun concat2: (Str, Str) -> Str
-//│ fun concat3: (Str, Str, Str) -> Str
-//│ fun concat4: (Str, Str, Str, Str) -> Str
-//│ fun concat5: (Str, Str, Str, Str, Str) -> Str
-//│ fun concat6: (Str, Str, Str, Str, Str, Str) -> Str
-//│ fun concat7: (Str, Str, Str, Str, Str, Str, Str) -> Str
-//│ fun concat8: (Str, Str, Str, Str, Str, Str, Str, Str) -> Str
+fun (++) concatOp(a, b) = concat(a)(b)
+//│ fun (++) concatOp: (Str, Str) -> Str
+
+fun par(a) = "(" ++ a ++ ")"
 //│ fun par: Str -> Str
 
-:escape
-let String: nothing
+declare fun String: nothing
+//│ fun String: nothing
+
 let makeString: anything => { length: Int, charCodeAt: Int => Int } = String
 let StringInstance: { fromCharCode: Int => Str } = String
-//│ let String: nothing
 //│ let makeString: anything -> {charCodeAt: Int -> Int, length: Int}
 //│ let StringInstance: {fromCharCode: Int -> Str}
-//│ String
-//│        = <missing implementation>
 //│ makeString
 //│            = [Function: String]
 //│ StringInstance
 //│                = [Function: String]
-
 
 let anythingToString = toString
 fun fromCharCode(n: Int) = StringInstance.fromCharCode(n)
@@ -46,7 +31,7 @@ fun stringLength(s: Str) = makeString(s).length
 
 type Option[A] = Some[A] | None
 class Some[A](value: A) {
-  fun toString() = concat3("Some(", anythingToString(value), ")")
+  fun toString() = "Some(" ++ anythingToString(value) ++ ")"
 }
 module None {
   fun toString() = "None"
@@ -66,6 +51,7 @@ module Nil
 //│ class Cons[A](head: A, tail: List[A])
 //│ module Nil
 
+// * We could define a shorthand for these, but let's leave them as useful tests
 fun list1(x) = Cons(x, Nil)
 fun list2(x, y) = Cons(x, list1(y))
 fun list3(x, y, z) = Cons(x, list2(y, z))
@@ -118,18 +104,21 @@ fun listWithout(xs, x) =
 //│   where
 //│     'A <: 'A0
 
-// fix this:
-// fun listJoin(xs, sep) =
-//   if xs is
-//     Nil then ""
-//     Cons(x, Nil) then toString(x)
-//     Cons(x, xs') then concat3(toString(x), sep, listJoin(xs', sep))
+
+// * FIXME?
+fun listJoin(xs, sep) =
+  if xs is
+    Nil then ""
+    Cons(x, Nil) then toString(x)
+    Cons(x, xs') then toString(x) ++ sep ++ listJoin(xs', sep)
+//│ fun listJoin: forall 'A. (Cons['A] | Nil, Str) -> Str
+
 fun listJoin(xs, sep) =
   if xs is
     Nil then ""
     Cons(x, xs') and xs' is
       Nil then toString(x)
-      _ then concat3(toString(x), sep, listJoin(xs', sep))
+      _ then toString(x) ++ sep ++ listJoin(xs', sep)
 //│ fun listJoin: forall 'A. (Cons['A] | Nil, Str) -> Str
 
 listJoin(list3("x", "y", "z"), ", ")
@@ -149,10 +138,10 @@ class App(lhs: Term, rhs: Term)
 fun showTerm(t) =
   if t is
     Var(name) then toString(name)
-    Abs(lhs, rhs) then concat4("&", showTerm(lhs), ". ", showTerm(rhs))
+    Abs(lhs, rhs) then "&" ++ showTerm(lhs) ++ ". " ++ showTerm(rhs)
     App(Abs(lhs0, lhs1), rhs) then
-      concat8("((", "&", showTerm(lhs0), ". ", showTerm(lhs1), ") ", showTerm(rhs), ")")
-    App(lhs, rhs) then par(concat3(showTerm(lhs), " ", showTerm(rhs)))
+      "((" ++ "&" ++ showTerm(lhs0) ++ ". " ++ showTerm(lhs1) ++ ") " ++ showTerm(rhs) ++ ")"
+    App(lhs, rhs) then par(showTerm(lhs) ++ " " ++ showTerm(rhs))
 //│ fun showTerm: (Abs | App | Var) -> Str
 
 showTerm(Var("x"))
@@ -198,7 +187,7 @@ fun hasFree(t, n) =
 //│ fun hasFree: (Object, anything) -> Bool
 
 fun showHasFree(t, n) =
-  concat4(showTerm(t), if hasFree(t, n) then " has " else " DOES NOT have ", "free variable ", n)
+  showTerm(t) ++ (if hasFree(t, n) then " has " else " DOES NOT have ") ++ "free variable " ++ n
 //│ fun showHasFree: (Abs | App | Var, Str) -> Str
 
 showHasFree(Var("x"), "x")
@@ -249,10 +238,9 @@ fun fv(t) =
 //│     'A :> Str
 
 fun showFv(t) =
-  concat2(showTerm(t), if fv(t) is
+  showTerm(t) ++ if fv(t) is
     Nil then " DOES NOT have free variables"
-    _ then concat2(" has free variables: ", listJoin(fv(t), ", "))
-  )
+    _ then " has free variables: " ++ listJoin(fv(t), ", ")
 //│ fun showFv: (Abs | App | Var) -> Str
 
 showFv(Var("x"))
@@ -282,11 +270,11 @@ fun tryNextAlphabet(initialCode, currentCode, freeNames) =
     _ then Some(name)
 //│ fun tryNextAlphabet: forall 'A. (Num, Int, Cons['A] | Nil) -> (None | Some[Str])
 
-toString(tryNextAlphabet(97, 97, list1("a")))
-toString(tryNextAlphabet(97, 98, list1("a")))
-toString(tryNextAlphabet(97, 98, list2("a", "b")))
-toString(tryNextAlphabet(121, 122, list1("y")))
-toString(tryNextAlphabet(121, 122, list2("y", "z")))
+tryNextAlphabet(97, 97, list1("a")).toString()
+tryNextAlphabet(97, 98, list1("a")).toString()
+tryNextAlphabet(97, 98, list2("a", "b")).toString()
+tryNextAlphabet(121, 122, list1("y")).toString()
+tryNextAlphabet(121, 122, list2("y", "z")).toString()
 //│ Str
 //│ res
 //│     = 'None'
@@ -301,7 +289,7 @@ toString(tryNextAlphabet(121, 122, list2("y", "z")))
 
 fun tryAppendDigits(name, index, freeNames) =
   if
-    let currentName = concat2(name, toString(index))
+    let currentName = name ++ toString(index)
     listContains(freeNames, currentName) then
       tryAppendDigits(name, index + 1, freeNames)
     _ then currentName
@@ -334,7 +322,7 @@ fun subst(t, n, v) =
 //│ fun subst: forall 'a. (Abs | App | Term & Object & 'a & ~#Abs & ~#App & ~#Var | Var, anything, Term & Object & 'a) -> (Abs | App | Var | 'a)
 
 fun showSubst(t, n, v) =
-  concat8(showTerm(t), " [", n, " / ", showTerm(v), "]", " => ", showTerm(subst(t, n, v)))
+  showTerm(t) ++ " [" ++ n ++ " / " ++ showTerm(v) ++ "]" ++ " => " ++ showTerm(subst(t, n, v))
 //│ fun showSubst: (Abs | App | Var, Str, Abs & Term | App & Term | Var & Term) -> Str
 
 showSubst(Var("x"), "x", Var("y"))
@@ -359,13 +347,13 @@ showSubst(Abs(Var("z"), Abs(Var("x"), App(Var("z"), App(Var("x"), Var("y"))))), 
 
 type Result = Normal | Stuck | Stepped
 class Normal(term: Term) {
-  fun toString() = concat2("Normal form: ", showTerm(term))
+  fun toString() = "Normal form: " ++ showTerm(term)
 }
 class Stuck(term: Term, part: Term) {
-  fun toString() = concat4("Stuck: ", showTerm(part), " in ", showTerm(term))
+  fun toString() = "Stuck: " ++ showTerm(part) ++ " in " ++ showTerm(term)
 }
 class Stepped(from: Term, to: Term) {
-  fun toString() = concat3(showTerm(from), " => ", showTerm(to))
+  fun toString() = showTerm(from) ++ " => " ++ showTerm(to)
 }
 //│ type Result = Normal | Stepped | Stuck
 //│ class Normal(term: Term) {

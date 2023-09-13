@@ -26,8 +26,9 @@ object helpers {
     * @param rhs the right-hand side term
     * @return something like `App(App(op, lhs), rhs)`
     */
-  def mkBinOp(lhs: Term, op: Var, rhs: Term): Term =
-    App(App(op, mkMonuple(lhs)), mkMonuple(rhs))
+  def mkBinOp(lhs: Term, op: Var, rhs: Term, newDefs: Bool): Term =
+    if (newDefs) App(op, PlainTup(lhs, rhs))
+    else App(App(op, mkMonuple(lhs)), mkMonuple(rhs))
 
   /**
     * Split a term joined by `and` into a list of terms.
@@ -41,7 +42,9 @@ object helpers {
         App(Var("and"),
             Tup((_ -> Fld(_, lhs)) :: Nil)),
         Tup((_ -> Fld(_, rhs)) :: Nil)
-      ) =>
+      ) => // * Old-style operators
+        splitAnd(lhs) :+ rhs
+      case App(Var("and"), PlainTup(lhs, rhs)) =>
         splitAnd(lhs) :+ rhs
       case _ => t :: Nil
     }
@@ -64,16 +67,21 @@ object helpers {
     * @return a tuple, whose the first element is the pattern and the second
     *   element is the extra test
     */
-  def separatePattern(term: Term): (Term, Opt[Term]) =
+  def separatePattern(term: Term, newDefs: Bool): (Term, Opt[Term]) =
     term match {
       case App(
         App(and @ Var("and"),
             Tup((_ -> Fld(_, lhs)) :: Nil)),
         Tup((_ -> Fld(_, rhs)) :: Nil)
-      ) =>
-        separatePattern(lhs) match {
+      ) => // * Old-style operators
+        separatePattern(lhs, newDefs) match {
           case (pattern, N) => (pattern, S(rhs))
-          case (pattern, S(lshRhs)) => (pattern, S(mkBinOp(lshRhs, and, rhs)))
+          case (pattern, S(lshRhs)) => (pattern, S(mkBinOp(lshRhs, and, rhs, newDefs)))
+        }
+      case App(and @ Var("and"), PlainTup(lhs, rhs)) =>
+        separatePattern(lhs, newDefs) match {
+          case (pattern, N) => (pattern, S(rhs))
+          case (pattern, S(lshRhs)) => (pattern, S(mkBinOp(lshRhs, and, rhs, newDefs)))
         }
       case _ => (term, N)
     }

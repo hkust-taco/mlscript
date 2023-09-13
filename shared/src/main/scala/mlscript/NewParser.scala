@@ -19,7 +19,7 @@ object NewParser {
 }
 import NewParser._
 
-abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: Diagnostic => Unit, val dbg: Bool, fallbackLoc: Opt[Loc], description: Str = "input") {
+abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bool, raiseFun: Diagnostic => Unit, val dbg: Bool, fallbackLoc: Opt[Loc], description: Str = "input") {
   outer =>
   
   private var freshCnt: Int = 0
@@ -37,7 +37,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
   }
   
   final def rec(tokens: Ls[Stroken -> Loc], fallbackLoc: Opt[Loc], description: Str): NewParser =
-    new NewParser(origin, tokens, raiseFun, dbg, fallbackLoc, description) {
+    new NewParser(origin, tokens, newDefs, raiseFun, dbg, fallbackLoc, description) {
       def doPrintDbg(msg: => Str): Unit = outer.printDbg("> " + msg)
     }
   
@@ -135,8 +135,14 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
     case "and" => (3, 3)
     case "or" => (2, 2)
     case "=>" =>
-      val eqPrec = prec('=')
-      (eqPrec, eqPrec - 1)
+      // * The lambda operator is special:
+      // *  it should associate veyr strongly on the left and very loosely on the right
+      // *  so that we can write things like `f() |> x => x is 0` ie `(f()) |> (x => (x is 0))`
+      val eqPrec = prec('.') // * We pick the tightest precedence
+      (eqPrec, 1)
+      // * Note: we used to do this instead which broke the example above on both sides:
+      // val eqPrec = prec('=')
+      // (eqPrec, eqPrec - 1)
     case _ if opStr.exists(_.isLetter) =>
       (5, 5)
     case _ =>
@@ -418,15 +424,35 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
                 S(true)
               case c => if (kwStr === "fun") N else S(false)
             }
+            val opStr = yeetSpaces match {
+              case (BRACKETS(Round, ts), brackloc) :: _ =>
+                ts match {
+                  case (IDENT(opStr, true), l1) :: rest =>
+                    consume
+                    rest.dropWhile(_._1 === SPACE) match {
+                      case Nil =>
+                      case (tok, loc) :: ts =>
+                        err((msg"Unexpected ${tok.describe} after symbolic name" -> S(loc) :: Nil))
+                    }
+                    S(Var(opStr).withLoc(S(l1)))
+                  case (tok, loc) :: _ =>
+                    consume
+                    err((msg"Expected a symbolic name, found ${tok.describe} instead" -> S(loc) :: Nil))
+                    N
+                  case Nil =>
+                    consume
+                    err((msg"Expected a symbolic name between brackets, found nothing" -> S(brackloc) :: Nil))
+                    N
+                }
+              case _ => N
+            }
             val (v, success) = yeetSpaces match {
               case (IDENT(idStr, false), l1) :: _ =>
                 consume
                 (Var(idStr).withLoc(S(l1)), true)
               case c =>
                 val (tkstr, loc) = c.headOption.fold(("end of input", lastLoc))(_.mapFirst(_.describe).mapSecond(some))
-                err((
-                  // msg"Expected a function name; found ${"[TODO]"} instead" -> N :: Nil))
-                  msg"Expected a function name; found ${tkstr} instead" -> loc :: Nil))
+                err((msg"Expected a function name; found ${tkstr} instead" -> loc :: Nil))
                 consume
                 // R(errExpr)
                 (Var("<error>").withLoc(curLoc.map(_.left)), false)
@@ -474,12 +500,12 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
                   val body = expr(0)
                   val newBody = transformBody.fold(body)(_(body))
                   val annotatedBody = asc.fold(newBody)(ty => Asc(newBody, ty))
-                  R(NuFunDef(isLetRec, v, tparams, L(ps.foldRight(annotatedBody)((i, acc) => Lam(i, acc))))(isDecl, N, N))
+                  R(NuFunDef(isLetRec, v, opStr, tparams, L(ps.foldRight(annotatedBody)((i, acc) => Lam(i, acc))))(isDecl, N, N))
                 case c =>
                   asc match {
                     case S(ty) =>
                       if (transformBody.nonEmpty) die // TODO
-                      R(NuFunDef(isLetRec, v, tparams, R(PolyType(Nil, ps.foldRight(ty)((p, r) => Function(p.toType match {
+                      R(NuFunDef(isLetRec, v, opStr, tparams, R(PolyType(Nil, ps.foldRight(ty)((p, r) => Function(p.toType match {
                         case L(diag) => raise(diag); Top // TODO better
                         case R(tp) => tp
                       }, r)))))(isDecl, N, N)) // TODO rm PolyType after FCP is merged
@@ -489,7 +515,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
                       err((
                         msg"Expected ':' or '=' followed by a function body or signature; found ${tkstr} instead" -> loc :: Nil))
                       consume
-                      R(NuFunDef(isLetRec, v, Nil, L(ps.foldRight(errExpr: Term)((i, acc) => Lam(i, acc))))(isDecl, N, N))
+                      R(NuFunDef(isLetRec, v, opStr, Nil, L(ps.foldRight(errExpr: Term)((i, acc) => Lam(i, acc))))(isDecl, N, N))
                   }
               }
             }
@@ -575,6 +601,9 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
         consume
         val rest = expr(prec, allowSpace = true)
         exprCont(App(Var("~").withLoc(S(l0)), rest).withLoc(S(l0 ++ rest.toLoc)), prec, allowNewlines = false)
+      case (BRACKETS(Round, (IDENT(opStr, true), l1) :: Nil), l0) :: _ =>
+        consume
+        exprCont(Var(opStr).withLoc(S(l1)), prec, allowNewlines = false)
       case (br @ BRACKETS(bk @ (Round | Square | Curly), toks), loc) :: _ =>
         consume
         val res = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented()) // TODO
@@ -758,7 +787,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
               case "=>" =>
                 Lam(toParams(acc), rhs)
               case _ =>
-                App(App(v, toParams(acc)), toParams(rhs))
+                if (newDefs) App(v, PlainTup(acc, rhs))
+                else App(App(v, toParams(acc)), toParams(rhs))
             }, prec, allowNewlines)
         }
       case (KEYWORD(":"), l0) :: _ =>

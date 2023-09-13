@@ -13,6 +13,8 @@ fun f(x) =
 //│ ║       	     ^^^^
 //│ ║  l.8: 	    1 +
 //│ ║       	^^^^^^^
+//│ ║  l.9: 	      2 then 0
+//│ ║       	^^^^^^^
 //│ ╟── operator application of type `Bool` is not an instance of `Int`
 //│ ║  l.7: 	  if x ==
 //│ ║       	     ^^^^

@@ -115,15 +115,15 @@ class Node[A](key: Str, value: A, left: TreeMap[A], right: TreeMap[A])
 fun insert(t, k, v) =
   if t is
     Node(k', _, l, r) and
-      slt(k)(k') then Node(k', v, insert(l, k, v), r)
-      sgt(k)(k') then Node(k', v, l, insert(r, k, v))
+      slt(k, k') then Node(k', v, insert(l, k, v), r)
+      sgt(k, k') then Node(k', v, l, insert(r, k, v))
       _ then Node(k, v, l, r)
     Empty then Node(k, v, Empty, Empty)
 fun find(t, k) =
   if t is
     Node(k', v, l, r) and
-      slt(k)(k') then find(l, k)
-      sgt(k)(k') then find(r, k)
+      slt(k, k') then find(l, k)
+      sgt(k, k') then find(r, k)
       _ then Some(v)
     Empty then None
 fun traverse(t, f) =

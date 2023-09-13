@@ -113,5 +113,5 @@ id + of x => x + 1
 //│ ╔══[PARSE ERROR] Unexpected 'of' keyword in expression position
 //│ ║  l.111: 	id + of x => x + 1
 //│ ╙──       	     ^^
-//│ Parsed: {(+ (id,) (x,),) => + (x,) (1,)}
+//│ Parsed: {+ (id,) ((x,) => + (x,) (1,),)}
 

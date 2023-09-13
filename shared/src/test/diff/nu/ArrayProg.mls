@@ -174,7 +174,7 @@ s([Numbr(0),Numbr(0)])
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from tuple type:
 //│ ║  l.136: 	fun s: ([Numbr,Numbr] -> Int) & ([Vectr,Vectr] -> Int)
-//│ ╙──       	         ^^^^^^^^^^^
+//│ ╙──       	        ^^^^^^^^^^^^^
 //│ Int | error
 
 :e
