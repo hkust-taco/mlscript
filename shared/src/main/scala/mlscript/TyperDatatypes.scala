@@ -403,7 +403,8 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
       case (_: SkolemTag | _: Extruded, _: ObjectTag) => 1
       case (_: SkolemTag, _: Extruded) => -1
       case (_: Extruded, _: SkolemTag) => 1
-      case (_: UnusableLike, _) => 2
+      case (_, _: UnusableLike) => -1
+      case (_: UnusableLike, _) => 1
     }
   }
   
