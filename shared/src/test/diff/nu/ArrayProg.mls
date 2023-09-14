@@ -10,17 +10,17 @@ declare fun cast: anything -> nothing
 
 fun mapi: (Array['a], ('a, Int) -> 'b) -> Array['b]
 fun mapi(xs, f) = cast(xs).map(f)
-//│ fun mapi: (anything, anything,) -> nothing
-//│ fun mapi: forall 'a 'b. (Array['a], ('a, Int,) -> 'b,) -> Array['b]
+//│ fun mapi: (anything, anything) -> nothing
+//│ fun mapi: forall 'a 'b. (Array['a], ('a, Int) -> 'b) -> Array['b]
 
 mapi of ["a", "", "bb"], (x, i) => [i, length of x]
-//│ Array[(Int, Int,)]
+//│ Array[[Int, Int]]
 //│ res
 //│     = [ [ 0, 1 ], [ 1, 0 ], [ 2, 2 ] ]
 
 
 fun map(xs, f) = mapi(xs, (x, i) => f(x))
-//│ fun map: forall 'a 'b. (Array['a], 'a -> 'b,) -> Array['b]
+//│ fun map: forall 'a 'b. (Array['a], 'a -> 'b) -> Array['b]
 
 map of ["a", "", "bb"], x => length of x
 //│ Array[Int]
@@ -33,12 +33,12 @@ fun zip(xs, ys) = mapi of xs, (x, i) =>
   if ys.[i] is
     undefined then error
     y then [x, y]
-//│ fun zip: forall 'c 'd. (Array['c], Array[Object & 'd & ~undefined],) -> Array[('c, 'd,)]
-//│ fun zip: forall 'a 'b. (Array['a], Array[Object & 'b & ~undefined],) -> Array[('a, 'b,)]
+//│ fun zip: forall 'c 'd. (Array['c], Array[Object & 'd & ~undefined]) -> Array[['c, 'd]]
+//│ fun zip: forall 'a 'b. (Array['a], Array[Object & 'b & ~undefined]) -> Array[['a, 'b]]
 
 
 zip
-//│ forall 'a 'b. (Array['a], Array[Object & 'b & ~undefined],) -> Array[('a, 'b,)]
+//│ forall 'a 'b. (Array['a], Array[Object & 'b & ~undefined]) -> Array[['a, 'b]]
 //│ res
 //│     = [Function: zip1]
 
@@ -125,16 +125,16 @@ add2(Pair(Numbr(0), Numbr(1)))
 
 
 fun t: ([Numbr,Numbr]|[Vectr,Vectr]) -> Int
-//│ fun t: (Numbr | Vectr, Numbr | Vectr,) -> Int
+//│ fun t: ([Numbr | Vectr, Numbr | Vectr]) -> Int
 
 
 fun s: (([Numbr,Numbr] -> Int) & ([Vectr,Vectr] -> Int),)
-//│ fun s: (Numbr | Vectr, Numbr | Vectr,) -> Int
+//│ fun s: (Numbr | Vectr, Numbr | Vectr) -> Int
 
 // FIXME why does the above parse the same as:
 
 fun s: ([Numbr,Numbr] -> Int) & ([Vectr,Vectr] -> Int)
-//│ fun s: (Numbr | Vectr, Numbr | Vectr,) -> Int
+//│ fun s: (Numbr | Vectr, Numbr | Vectr) -> Int
 
 
 s(Vectr([]),Vectr([]))
@@ -169,12 +169,12 @@ s([Numbr(0),Numbr(0)])
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	s([Numbr(0),Numbr(0)])
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── argument of type `((?a, ?b,),)` does not match type `(Numbr | Vectr, Numbr | Vectr,)`
+//│ ╟── argument of type `[[?a, ?b]]` does not match type `[Numbr | Vectr, Numbr | Vectr]`
 //│ ║  l.+1: 	s([Numbr(0),Numbr(0)])
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from tuple type:
 //│ ║  l.136: 	fun s: ([Numbr,Numbr] -> Int) & ([Vectr,Vectr] -> Int)
-//│ ╙──       	         ^^^^^^^^^^^
+//│ ╙──       	        ^^^^^^^^^^^^^
 //│ Int | error
 
 :e

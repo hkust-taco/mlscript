@@ -37,14 +37,14 @@ mixin SizeBase {
 // ******************* Linguistic Reuse and Meta-Language Optimizations *******************
 
 fun round(n: Num): Int = 0
-//│ fun round: (n: Num,) -> Int
+//│ fun round: (n: Num) -> Int
 
 fun go(x, offset) =
   if x is 0 then Circle(1)
   else
     let shared = go(x - 1, round(offset / 2))
     Union(Translate(Vector(0 - offset, 0), shared), Translate(Vector(offset, 0), shared))
-//│ fun go: forall 'Region. (0 | Int & ~0, Int,) -> 'Region
+//│ fun go: forall 'Region. (0 | Int & ~0, Int) -> 'Region
 //│   where
 //│     'Region :> Circle | Union[Translate['Region]]
 
@@ -106,7 +106,7 @@ TestSize.size(Scale(Vector(1, 1), circles))
 fun pow(x, a) =
   if a is 0 then 1
   else x * pow(x, a - 1)
-//│ fun pow: (Int, 0 | Int & ~0,) -> Int
+//│ fun pow: (Int, 0 | Int & ~0) -> Int
 
 mixin Contains {
   fun contains(a, p) =
@@ -118,13 +118,13 @@ mixin Contains {
       Translate(v, a) then this.contains(a, Vector(p.x - v.x, p.y - v.y))
 }
 //│ mixin Contains() {
-//│   this: {contains: ('a, 'b,) -> Bool & ('a0, Vector,) -> 'c}
-//│   fun contains: (Circle | Intersect['a] | Outside['a] | Translate['a0] | Union['a], {x: Int, y: Int} & 'b,) -> (Bool | 'c)
+//│   this: {contains: ('a, 'b) -> Bool & ('a0, Vector) -> 'c}
+//│   fun contains: (Circle | Intersect['a] | Outside['a] | Translate['a0] | Union['a], {x: Int, y: Int} & 'b) -> (Bool | 'c)
 //│ }
 
 module TestContains extends Contains
 //│ module TestContains {
-//│   fun contains: ('a, {x: Int, y: Int},) -> Bool
+//│   fun contains: ('a, {x: Int, y: Int}) -> Bool
 //│ }
 //│ where
 //│   'a <: Circle | Intersect['a] | Outside['a] | Translate['a] | Union['a]
@@ -148,8 +148,8 @@ TestContains.contains(circles, Vector(0, 0))
 
 fun toString(a: Int): Str = "foo"
 fun concat(a: Str, b: Str): Str = a
-//│ fun toString: (a: Int,) -> Str
-//│ fun concat: (a: Str, b: Str,) -> Str
+//│ fun toString: (a: Int) -> Str
+//│ fun concat: (a: Str, b: Str) -> Str
 
 mixin Text {
   fun text(e) =
@@ -317,7 +317,7 @@ TestElim.eliminate(circles)
 //│ forall 'a. 'b | 'a
 //│   where
 //│     'b :> Circle | 'a
-//│     'a :> Outside['Region] | Intersect['Region] | Translate['Region] | Scale['Region] | Union['Region]
+//│     'a :> Outside['Region] | Union['Region] | Intersect['Region] | Translate['Region] | Scale['Region]
 //│     'Region :> Circle | 'b
 //│ res
 //│     = Union {}
@@ -336,7 +336,7 @@ fun mk(n) = if n is
 TestElim.eliminate(mk(100))
 //│ forall 'a. 'a
 //│   where
-//│     'a :> Outside['Region] | Union['Region] | Intersect['Region] | Translate['Region] | Scale['Region]
+//│     'a :> Outside['Region] | Translate['Region] | Scale['Region] | Union['Region] | Intersect['Region]
 //│     'Region :> 'a
 //│ res
 //│ Runtime error:
@@ -346,7 +346,7 @@ TestElim.eliminate(mk(100))
 
 module Lang extends SizeBase, SizeExt, Contains, Text, IsUniv, IsEmpty, Eliminate
 //│ module Lang {
-//│   fun contains: ('a, {x: Int, y: Int},) -> Bool
+//│   fun contains: ('a, {x: Int, y: Int}) -> Bool
 //│   fun eliminate: forall 'b. 'c -> ('b | 'd)
 //│   fun isEmpty: 'e -> Bool
 //│   fun isUniv: 'f -> Bool

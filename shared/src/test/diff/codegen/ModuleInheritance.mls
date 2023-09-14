@@ -9,7 +9,7 @@ module A {
 }
 //│ module A {
 //│   class B(x: Int) {
-//│     fun add: (y: Int,) -> Int
+//│     fun add: (y: Int) -> Int
 //│   }
 //│   class C
 //│ }

@@ -31,4 +31,4 @@ export declare module Namespace {
 //| ╔══[ERROR] type identifier not found: N1
 //| ║  l.28: 	  declare fun f1(x: N1.C): N1.C
 //| ╙──      	                    ^^
-//| java.lang.Exception: Internal Error: Program reached and unexpected state.
+//| scala.NotImplementedError: an implementation is missing

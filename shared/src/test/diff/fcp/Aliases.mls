@@ -4,6 +4,9 @@
 type Sid = forall 'A. 'A -> 'A
 //│ Defined type alias Sid
 
+type Sid2 = 'B -> 'B
+//│ Defined type alias Sid2
+
 type A1 = forall 'S. 'S -> ('S | Sid)
 //│ Defined type alias A1
 
@@ -11,6 +14,9 @@ type A1 = forall 'S. 'S -> ('S | Sid)
 
 def a: Sid -> Sid
 //│ a: Sid -> Sid
+
+a : Sid2 -> Sid2 : Sid -> Sid
+//│ res: Sid -> Sid
 
 a = error : A1
 //│ A1

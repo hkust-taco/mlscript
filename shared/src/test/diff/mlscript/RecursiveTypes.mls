@@ -206,11 +206,11 @@ class C[A]: { a: A }
 
 :ns
 rec def foo (c: C['a]) = foo (c.a)
-//│ foo: forall 'b 'foo 'a 'a0. 'foo
+//│ foo: forall 'a 'b 'foo 'a0. 'foo
 //│   where
-//│     'foo := C['a] -> 'b
-//│     'a <: 'a0
-//│     'a0 <: C['a]
+//│     'foo := C['a0] -> 'b
+//│     'a0 <: 'a
+//│     'a <: C['a0]
 
 foo
 //│ res: 'a -> nothing
@@ -360,10 +360,10 @@ bar2_ty2 = bar_ty2
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.352: 	bar2_ty2 = bar_ty2
 //│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ╟── type `forall 'r. 'r` does not have field 'x'
+//│ ╟── type `forall 'r. 'r` does not match type `{x: 'r0}`
 //│ ║  l.285: 	def bar_ty2: C['r] as 'r
 //│ ║         	             ^^^^^
-//│ ╟── but it flows into reference with expected type `{x: 'r0}`
+//│ ╟── but it flows into reference with expected type `{x: 'r1}`
 //│ ║  l.352: 	bar2_ty2 = bar_ty2
 //│ ║         	           ^^^^^^^
 //│ ╟── Note: constraint arises from record type:
@@ -411,17 +411,17 @@ f 1
 
 :ns
 rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
-//│ f: forall 'f 'b 'c 'a 'd 'e 'g. 'f
+//│ f: forall 'a 'b 'c 'f 'd 'e 'g. 'f
 //│   where
-//│     'f := 'c -> 'b
-//│     'c :> 'c\a & {a: 'e}
-//│        <: ({a: 'a} | ~{a: 'e} | ~{})\a & ({a: 'a} | ~{a: 'e})\a & (number | ~{a: 'e} | ~{})\a & (number | ~{a: 'e})\a & (int | ~{a: 'e} | ~{})\a & (int | ~{a: 'e})\a & 'g & int & number
-//│     'a <: 'g
-//│     'g :> 'c\a & {a: 'e}
-//│        <: 'b
-//│     'b :> 'c\a & {a: 'e}
-//│        <: 'd
-//│     'd :> 'c\a & {a: 'e}
+//│     'f := 'b -> 'c
+//│     'b :> 'b\a & {a: 'e}
+//│        <: ({a: 'a} | ~{a: 'e} | ~{})\a & ({a: 'a} | ~{a: 'e})\a & (number | ~{a: 'e} | ~{})\a & (number | ~{a: 'e})\a & (int | ~{a: 'e} | ~{})\a & (int | ~{a: 'e})\a & 'd & int & number
+//│     'a <: 'd
+//│     'd :> 'b\a & {a: 'e}
+//│        <: 'c
+//│     'c :> 'b\a & {a: 'e}
+//│        <: 'g
+//│     'g :> 'b\a & {a: 'e}
 //│        <: {a: 'a}
 //│     'e :> int
 
@@ -564,31 +564,32 @@ f_manual error
 f_manual ainf
 //│ res: 'e | 'ainf
 //│   where
-//│     'e :> forall 'ainf. 'e\a & {a: int} | 'ainf
 //│     'ainf :> {a: 'ainf}
+//│     'e :> forall 'ainf0. 'e\a & {a: int} | 'ainf0
+//│     'ainf0 :> {a: 'ainf0}
 
 // Notice the simplified type is NOT the same as that of `f`...
 def f_manual_ns: 'a | ('b & (({a: 'd & 'c} as 'c) | ~{a: 'e | int} | ~{})\a & (({a: 'd & 'c} as 'c) | ~{a: 'e | int})\a & (({a: 'f} as 'c) as 'f) & (int | ~{a: 'e | int} | ~{})\a & (int | ~{a: 'e | int})\a & int & int) -> ('g | 'd | ('b | 'h\a & {a: 'e | int} as 'h))
-//│ f_manual_ns: ((int & 'c & 'c0 | ~{a: int})\a & int & 'b & 'f) -> ('b | 'd)
+//│ f_manual_ns: in forall 'd 'c 'b 'f 'c0. ('f & 'b & (int & ~{a: int} | (int & 'c)\a & 'c0\a & int)) -> ('b | 'd) out forall 'd 'c 'b 'f 'c0. ((int & 'c & 'c0 | ~{a: int})\a & int & 'b & 'f) -> ('b | 'd)
 //│   where
-//│     'f <: {a: 'f}
-//│     'b :> 'b\a & {a: int}
 //│     'c0 <: {a: 'd & 'c0}
 //│     'c <: {a: 'c & 'd}
+//│     'b :> 'b\a & {a: int}
+//│     'f <: {a: 'f}
 
 :e
 f_manual_ns ainf
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.580: 	f_manual_ns ainf
+//│ ║  l.581: 	f_manual_ns ainf
 //│ ║         	^^^^^^^^^^^^^^^^
 //│ ╟── type `int` does not have field 'a'
-//│ ║  l.571: 	def f_manual_ns: 'a | ('b & (({a: 'd & 'c} as 'c) | ~{a: 'e | int} | ~{})\a & (({a: 'd & 'c} as 'c) | ~{a: 'e | int})\a & (({a: 'f} as 'c) as 'f) & (int | ~{a: 'e | int} | ~{})\a & (int | ~{a: 'e | int})\a & int & int) -> ('g | 'd | ('b | 'h\a & {a: 'e | int} as 'h))
+//│ ║  l.572: 	def f_manual_ns: 'a | ('b & (({a: 'd & 'c} as 'c) | ~{a: 'e | int} | ~{})\a & (({a: 'd & 'c} as 'c) | ~{a: 'e | int})\a & (({a: 'f} as 'c) as 'f) & (int | ~{a: 'e | int} | ~{})\a & (int | ~{a: 'e | int})\a & int & int) -> ('g | 'd | ('b | 'h\a & {a: 'e | int} as 'h))
 //│ ║         	                                                              ^^^
 //│ ╟── Note: constraint arises from record type:
-//│ ║  l.571: 	def f_manual_ns: 'a | ('b & (({a: 'd & 'c} as 'c) | ~{a: 'e | int} | ~{})\a & (({a: 'd & 'c} as 'c) | ~{a: 'e | int})\a & (({a: 'f} as 'c) as 'f) & (int | ~{a: 'e | int} | ~{})\a & (int | ~{a: 'e | int})\a & int & int) -> ('g | 'd | ('b | 'h\a & {a: 'e | int} as 'h))
+//│ ║  l.572: 	def f_manual_ns: 'a | ('b & (({a: 'd & 'c} as 'c) | ~{a: 'e | int} | ~{})\a & (({a: 'd & 'c} as 'c) | ~{a: 'e | int})\a & (({a: 'f} as 'c) as 'f) & (int | ~{a: 'e | int} | ~{})\a & (int | ~{a: 'e | int})\a & int & int) -> ('g | 'd | ('b | 'h\a & {a: 'e | int} as 'h))
 //│ ║         	                              ^^^^^^^^^^^^
 //│ ╟── from local type binding:
-//│ ║  l.571: 	def f_manual_ns: 'a | ('b & (({a: 'd & 'c} as 'c) | ~{a: 'e | int} | ~{})\a & (({a: 'd & 'c} as 'c) | ~{a: 'e | int})\a & (({a: 'f} as 'c) as 'f) & (int | ~{a: 'e | int} | ~{})\a & (int | ~{a: 'e | int})\a & int & int) -> ('g | 'd | ('b | 'h\a & {a: 'e | int} as 'h))
+//│ ║  l.572: 	def f_manual_ns: 'a | ('b & (({a: 'd & 'c} as 'c) | ~{a: 'e | int} | ~{})\a & (({a: 'd & 'c} as 'c) | ~{a: 'e | int})\a & (({a: 'f} as 'c) as 'f) & (int | ~{a: 'e | int} | ~{})\a & (int | ~{a: 'e | int})\a & int & int) -> ('g | 'd | ('b | 'h\a & {a: 'e | int} as 'h))
 //│ ╙──       	                             ^^^^^^^^^^^^^^^^^^^^
 //│ res: error
 
@@ -629,13 +630,13 @@ r + 1
 :e
 r.a
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.630: 	r.a
+//│ ║  l.631: 	r.a
 //│ ║         	^^^
 //│ ╟── integer literal of type `1` does not have field 'a'
-//│ ║  l.621: 	r = f 1
+//│ ║  l.622: 	r = f 1
 //│ ║         	      ^
 //│ ╟── but it flows into reference with expected type `{a: ?a}`
-//│ ║  l.630: 	r.a
+//│ ║  l.631: 	r.a
 //│ ╙──       	^
 //│ res: error | int
 

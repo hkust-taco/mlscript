@@ -1,5 +1,4 @@
 :NoJS
-
 :NoRecursiveTypes
 
 // ============ Dummy classes to represent the types in the examples ============
@@ -112,3 +111,4 @@ def f: (int -> (forall 'a. 'a -> 'a)) -> int
 fun x -> f x // Not typeable in Boxy Types!
 //│ f: (int -> (forall 'a. 'a -> 'a)) -> int
 //│ res: (int -> (forall 'a. 'a -> 'a)) -> int
+

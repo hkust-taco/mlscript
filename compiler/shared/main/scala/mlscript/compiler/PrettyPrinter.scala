@@ -40,7 +40,7 @@ object PrettyPrinter:
          then ""
          else funDef.tparams.map(_.name).mkString("[", ", ", "]"))
       + " = "
-      + funDef.rhs.fold(_.toString, _.show)
+      + funDef.rhs.fold(_.toString, _.show(newDefs = true))
 
   def showTypeDef(tyDef: NuTypeDef, indent: Int = 0): String =
     s"${tyDef.kind.str} ${tyDef.nme.name}"

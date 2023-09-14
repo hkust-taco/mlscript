@@ -13,13 +13,13 @@ object Helpers {
     case App(lhs, rhs) => s"App(${inspect(lhs)}, ${inspect(rhs)})"
     case Tup(fields) =>
       val entries = fields map {
-        case (S(name), Fld(_, _, value)) => s"$name: ${inspect(value)}"
-        case (N, Fld(_, _, value))       => s"_: ${inspect(value)}"
+        case (S(name), Fld(_, value)) => s"$name: ${inspect(value)}"
+        case (N, Fld(_, value))       => s"_: ${inspect(value)}"
       }
       s"Tup(${entries mkString ", "})"
     case Rcd(fields) =>
       val entries = fields.iterator
-        .map { case k -> Fld(_, _, v) => s"${inspect(k)} = ${inspect(v)}" }
+        .map { case k -> Fld(_, v) => s"${inspect(k)} = ${inspect(v)}" }
         .mkString(", ")
       s"Rcd($entries)"
     case Sel(receiver, fieldName)    => s"Sel(${inspect(receiver)}, $fieldName)"
@@ -46,7 +46,7 @@ object Helpers {
     case Subs(arr, idx) => s"Subs(${inspect(arr)}, ${inspect(idx)})"
     case Assign(f, v)   => s"Assign(${inspect(f)}, ${inspect(v)})"
     case Splc(fs)       => 
-      val elems = fs.map{case L(l) => s"...${inspect(l)}" case R(Fld(_, _, r)) => inspect(r)}.mkString(", ")
+      val elems = fs.map{case L(l) => s"...${inspect(l)}" case R(Fld(_, r)) => inspect(r)}.mkString(", ")
       s"Splc($elems)"
     case If(bod, els) => s"If(${inspect(bod)}, ${els.map(inspect)})"
     case New(base, body) => s"New(${base}, ${body})"
@@ -58,6 +58,8 @@ object Helpers {
     case Inst(bod) => s"Inst(${inspect(bod)})"
     case Eqn(lhs, rhs) => s"Ass(${inspect(lhs)}, ${inspect(rhs)})"
     case Super() => "Super()"
+    case AdtMatchWith(cond, arms) =>
+      s"match ${inspect(cond)} with ${arms.map(patmat => s"${inspect(patmat.pat)} -> ${inspect(patmat.rhs)}").mkString(" | ")}"
   }
 
   def inspect(body: IfBody): Str = body match {
@@ -66,7 +68,7 @@ object Helpers {
     case IfBlock(lines) => s"IfBlock(${
       lines.iterator.map {
         case L(body) => inspect(body)
-        case R(NuFunDef(S(isRec), nme, _, L(rhs))) =>
+        case R(NuFunDef(S(isRec), nme, _, _, L(rhs))) =>
           s"Let($isRec, ${nme.name}, ${inspect(rhs)})"
         case R(_) => ???
       }.mkString(";")
@@ -83,10 +85,10 @@ object Helpers {
   def inspect(t: TypingUnit): Str = t.entities.iterator
     .map {
       case term: Term => inspect(term)
-      case NuFunDef(lt, nme, targs, L(term)) =>
-        s"NuFunDef(${lt}, ${nme.name}, ${targs.mkString("[", ", ", "]")}, ${inspect(term)})"
-      case NuFunDef(lt, nme, targs, R(ty)) =>
-        s"NuFunDef(${lt}, ${nme.name}, ${targs.mkString("[", ", ", "]")}, $ty)"
+      case NuFunDef(lt, nme, symNme, targs, L(term)) =>
+        s"NuFunDef(${lt}, ${nme.name}, $symNme, ${targs.mkString("[", ", ", "]")}, ${inspect(term)})"
+      case NuFunDef(lt, nme, symNme, targs, R(ty)) =>
+        s"NuFunDef(${lt}, ${nme.name}, $symNme, ${targs.mkString("[", ", ", "]")}, $ty)"
       case NuTypeDef(kind, nme, tparams, params, ctor, sig, parents, sup, ths, body) =>
         s"NuTypeDef(${kind.str}, ${nme.name}, ${tparams.mkString("(", ", ", ")")}, ${
           inspect(params.getOrElse(Tup(Nil)))}, ${parents.map(inspect).mkString("(", ", ", ")")}, $sup, $ths, ${inspect(body)})"

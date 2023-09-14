@@ -23,7 +23,7 @@ fun process(e, n) =
   if e is
     Numb(n) and n > 0 then n
     Numb(m) then n + m
-//│ fun process: (Numb, anything,) -> Int
+//│ fun process: (Numb, anything) -> Int
 
 process(Numb(0), 10)
 //│ Int

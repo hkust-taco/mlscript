@@ -18,7 +18,7 @@ c = Child(Parent { name = "Bob" })
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.17: 	c = Child(Parent { name = "Bob" })
 //│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `Parent & {name: ?name}` is not a record (expected a record with fields: name, age)
+//│ ╟── application of type `Parent & {name: ?name}` does not have all required fields 'name', 'age'
 //│ ║  l.17: 	c = Child(Parent { name = "Bob" })
 //│ ╙──      	          ^^^^^^^^^^^^^^^^^^^^^^^
 //│ c: Child & {age: nothing, name: "Bob"} | error

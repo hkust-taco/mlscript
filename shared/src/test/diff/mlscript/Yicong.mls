@@ -79,7 +79,7 @@ if true then x1 else x2
 
 
 def f: ((1,2) | (3,4)) -> anything
-//│ f: (1 | 3, 2 | 4,) -> anything
+//│ f: ((1 | 3, 2 | 4,),) -> anything
 //│  = <missing implementation>
 
 fun (x, y) -> f ((x,y))
@@ -206,7 +206,7 @@ h (fun (x, y) -> x)
 //│    = [ 1, 1 ]
 
 def h f = (f ((1,2,false)), f ((1,true)))
-//│ h: ((1, 2, false,) -> 'a & (1, true,) -> 'b) -> ('a, 'b,)
+//│ h: (((1, 2, false,),) -> 'a & ((1, true,),) -> 'b) -> ('a, 'b,)
 //│  = [Function: h1]
 
 h (fun x -> x[0])
@@ -224,7 +224,7 @@ fx ((a,b,c)) = a + b + c
 //│   = [ 1, 1, 1, 1 ]
 //│ q2: (1, 1,)
 //│   = [ 1, 1 ]
-//│ fx: (int, int, int,) -> int
+//│ fx: ((int, int, int,),) -> int
 //│   = [Function: fx]
 
 :e
@@ -483,9 +483,9 @@ tg (T2 ((true,false,false)))
 def fst ((a, b)) = a
 def snd ((a, b)) = b
 def get: Array['a] -> int -> 'a
-//│ fst: ('a, anything,) -> 'a
+//│ fst: (('a, anything,),) -> 'a
 //│    = [Function: fst]
-//│ snd: (anything, 'a,) -> 'a
+//│ snd: ((anything, 'a,),) -> 'a
 //│    = [Function: snd]
 //│ get: Array['a] -> int -> 'a
 //│    = <missing implementation>
@@ -721,7 +721,7 @@ def ornull x = definedOr x (fun () -> null)
 defined ()[0]
 //│ res: nothing
 //│ Runtime error:
-//│   Error: unexpected runtime error
+//│   Error: an error was thrown
 
 
 ta1 = (2,3,4,5)

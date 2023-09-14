@@ -30,7 +30,7 @@ fun filtermap(f, xs) = if xs is
     [true, z] then Cons(y, filtermap(f, ys))
 //│ ╔══[ERROR] type identifier not found: Tuple#2
 //│ ╙──
-//│ fun filtermap: ((Cons[nothing] | Nil) -> nothing, Cons[anything] | Nil,) -> (Cons[nothing] | Nil | error)
+//│ fun filtermap: ((Cons[nothing] | Nil) -> nothing, Cons[anything] | Nil) -> (Cons[nothing] | Nil | error)
 //│ Code generation encountered an error:
 //│   unknown match case: Tuple#2
 
@@ -49,7 +49,7 @@ fun filtermap(f, xs) = if xs is
     Tru then filtermap(f, ys)
     Fals then Cons(y, filtermap(f, ys))
     Pair(Tru, z) then Cons(z, filtermap(f, ys))
-//│ fun filtermap: forall 'head 'A. ('head -> (Fals | Pair[Tru, 'A] | Tru), Cons['head & 'A] | Nil,) -> (Cons['A] | Nil)
+//│ fun filtermap: forall 'head 'A. ('head -> (Fals | Pair[Tru, 'A] | Tru), Cons['head & 'A] | Nil) -> (Cons['A] | Nil)
 
 fun mkString(xs) =
   if xs is

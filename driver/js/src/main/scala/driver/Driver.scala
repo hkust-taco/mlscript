@@ -6,6 +6,7 @@ import mlscript._
 import mlscript.utils.shorthands._
 import scala.collection.mutable.{ListBuffer,Map => MutMap, Set => MutSet}
 import mlscript.codegen._
+import mlscript.Message._
 import mlscript.{NewLexer, NewParser, ErrorReport, Origin, Diagnostic}
 import ts2mls.{TSProgram, TypeScript, TSPathResolver, JSFileSystem, JSWriter, FileInfo, JSGitHelper}
 
@@ -116,14 +117,14 @@ class Driver(options: DriverOptions) {
     val lexer = new NewLexer(origin, throw _, dbg = false)
     val tokens = lexer.bracketedTokens
 
-    val parser = new NewParser(origin, tokens, throw _, dbg = false, None) {
+    val parser = new NewParser(origin, tokens, true, throw _, dbg = false, None) {
       def doPrintDbg(msg: => String): Unit = if (dbg) println(msg)
     }
 
     val (tu, depList) = parser.parseAll(parser.tuWithImports)
     val (definitions, declarations) = tu.entities.partitionMap {
       case nt: NuTypeDef if (nt.isDecl) => Right(nt)
-      case nf @ NuFunDef(_, _, _, Right(_)) => Right(nf)
+      case nf: NuFunDef if nf.rhs.isRight => Right(nf)
       case t => Left(t)
     }
 
@@ -141,7 +142,7 @@ class Driver(options: DriverOptions) {
     case Some(content) => f(parse(filename, content))
     case _ =>
       throw
-        ErrorReport(Ls((s"Cannot open file $filename", None)), Diagnostic.Compilation)
+        ErrorReport(msg"Cannot open file $filename" -> None :: Nil, true, Diagnostic.Compilation)
   }
 
   private def extractSig(filename: String, moduleName: String): TypingUnit =
@@ -158,7 +159,7 @@ class Driver(options: DriverOptions) {
     vars: Map[Str, typer.SimpleType]
   ) = try {
     val tpd = typer.typeTypingUnit(tu, N, isES5)
-    val sim = SimplifyPipeline(tpd, all = false)
+    val sim = SimplifyPipeline(tpd, pol = S(true))(ctx)
     typer.expandType(sim)
   } catch {
     case t: Throwable =>
@@ -293,9 +294,9 @@ class Driver(options: DriverOptions) {
         }) ++ cycleSigs.map(tu => tu.entities)
         if (file.filename.endsWith(".mls")) { // Only generate js/mlsi files for mls files
           val expStr = 
-            cycleSigs.foldLeft("")((s, tu) => s"$s${`type`(tu, false, mlsiWriter.writeErr).show}") + {
+            cycleSigs.foldLeft("")((s, tu) => s"$s${`type`(tu, false, mlsiWriter.writeErr).show(true)}") + {
               dbgWriter = Some(mlsiWriter)
-              val res = packTopModule(Some(file.moduleName), `type`(TypingUnit(definitions), false, mlsiWriter.writeErr).show)
+              val res = packTopModule(Some(file.moduleName), `type`(TypingUnit(definitions), false, mlsiWriter.writeErr).show(true))
               res
             }
           val interfaces = otherList.map(s => Import(file.translateImportToInterface(s))).foldRight(expStr)((imp, itf) => s"$imp\n$itf")
@@ -380,6 +381,6 @@ object Driver {
         }
       case WarningReport(msg, loco, src) => ()
     }
-    Diagnostic.report(diag, output, 0, false)
+    Diagnostic.report(diag, output, 0, false, true)
   }
 }

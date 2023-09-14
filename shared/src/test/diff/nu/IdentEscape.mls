@@ -4,8 +4,8 @@ let id"of" = 42
 fun id"fun"(x: Int) = x + 1
 fun id"declare"(id"if": Int) = id"of" + id"if"
 //│ let of: 42
-//│ fun fun: (x: Int,) -> Int
-//│ fun declare: (if: Int,) -> Int
+//│ fun fun: (x: Int) -> Int
+//│ fun declare: (if: Int) -> Int
 //│ of
 //│    = 42
 
@@ -33,7 +33,7 @@ class Foo(id"class": Int) {
 let foo = Foo(2)
 foo.id"mixin"(3)
 //│ class Foo(class: Int) {
-//│   fun mixin: (x: Int,) -> Int
+//│   fun mixin: (x: Int) -> Int
 //│ }
 //│ let foo: Foo
 //│ Int

@@ -1,6 +1,36 @@
 :NewDefs
 
 
+
+fun test(x: 'a) = if x is undefined then 0 else x + 1
+//│ fun test: (x: Int | undefined) -> Int
+
+test(x: 0)
+//│ Int
+//│ res
+//│     = 1
+
+:e
+test(y: 0)
+//│ ╔══[ERROR] Wrong tuple field name: found 'y' instead of 'x'
+//│ ║  l.14: 	test(y: 0)
+//│ ╙──      	    ^^^^^^
+//│ Int | error
+//│ res
+//│     = 1
+
+
+fun test(x) = x + 1
+//│ fun test: Int -> Int
+
+// :e // TODO should be an error
+test(y: 0)
+//│ Int
+//│ res
+//│     = 1
+
+
+
 class Foo(x: Int)
 //│ class Foo(x: Int)
 
@@ -14,6 +44,7 @@ Foo(x: 1)
 //│ res
 //│     = Foo {}
 
+// :e // TODO should be an error
 Foo(y: 1)
 //│ Foo
 //│ res
@@ -23,7 +54,7 @@ Foo(y: 1)
 :e // TODO: Here `x` is not currently treated as a field name
 class Bar(x)
 //│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.24: 	class Bar(x)
+//│ ║  l.55: 	class Bar(x)
 //│ ╙──      	          ^
 //│ class Bar(x: error)
 
@@ -40,7 +71,7 @@ Bar(x: 1)
 :e
 Bar(y: 1)
 //│ ╔══[ERROR] Wrong tuple field name: found 'y' instead of 'x'
-//│ ║  l.41: 	Bar(y: 1)
+//│ ║  l.72: 	Bar(y: 1)
 //│ ╙──      	   ^^^^^^
 //│ Bar | error
 //│ res

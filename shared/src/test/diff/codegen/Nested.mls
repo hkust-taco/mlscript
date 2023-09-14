@@ -179,7 +179,7 @@ module D {
 }
 //│ module D {
 //│   class E(x: Int)
-//│   fun createE: (x: Int,) -> E
+//│   fun createE: (x: Int) -> E
 //│ }
 //│ // Prelude
 //│ class TypingUnit4 {
@@ -427,9 +427,9 @@ module G {
 //│ module G {
 //│   module H {
 //│     class J(x: Int) {
-//│       fun ii: (a: Int,) -> I
+//│       fun ii: (a: Int) -> I
 //│     }
-//│     fun i1: (x: Int,) -> I
+//│     fun i1: (x: Int) -> I
 //│   }
 //│   class I(x: Int)
 //│ }
@@ -1095,7 +1095,7 @@ I(1).J(3).a
 //│ ╙──        	    ^^
 //│ class I(x: Int) {
 //│   class J(z: Int) {
-//│     let a: (Int, Int, Int,)
+//│     let a: [Int, Int, Int]
 //│   }
 //│   let y: Int
 //│ }
@@ -1165,7 +1165,7 @@ fun main =
     else g(x - 1)
   fun g(x: Int): Int = f(x)
   f
-//│ fun main: (x: Int,) -> Int
+//│ fun main: (x: Int) -> Int
 //│ // Prelude
 //│ class TypingUnit24 {}
 //│ const typing_unit24 = new TypingUnit24;
@@ -1230,7 +1230,7 @@ fun mian =
   class A(x: Int) extends B
   module C extends B
   [A, C]
-//│ fun mian: ((x: Int,) -> A, C,)
+//│ fun mian: [(x: Int) -> A, C]
 //│ // Prelude
 //│ class TypingUnit26 {}
 //│ const typing_unit26 = new TypingUnit26;

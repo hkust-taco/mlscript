@@ -38,3 +38,4 @@ def delta x = let y = (x : Sid) in y y
 fun x -> let y = annot x in y y
 //│ res: Sid -> Sid
 //│    = [Function: res]
+

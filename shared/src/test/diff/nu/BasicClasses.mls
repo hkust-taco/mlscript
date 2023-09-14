@@ -5,7 +5,7 @@ class A(n: Int)
 //│ class A(n: Int)
 
 A
-//│ (n: Int,) -> A
+//│ (n: Int) -> A
 //│ res
 //│     = [Function (anonymous)] { class: [class A] }
 
@@ -21,13 +21,13 @@ a.n
 
 
 fun f(x: A) = x.n
-//│ fun f: (x: A,) -> Int
+//│ fun f: (x: A) -> Int
 
 fun f(x: A) = if x is A then x.n
-//│ fun f: (x: A,) -> Int
+//│ fun f: (x: A) -> Int
 
 fun f(x: A | 'b) = if x is A then x.n else 0
-//│ fun f: (x: Object,) -> Int
+//│ fun f: (x: Object) -> Int
 
 
 fun f(x) = x.n
@@ -140,7 +140,7 @@ class Base1(base: Int) {
 //│ }
 
 Base1
-//│ (base: Int,) -> Base1
+//│ (base: Int) -> Base1
 //│ res
 //│     = [Function (anonymous)] { class: [class Base1] }
 

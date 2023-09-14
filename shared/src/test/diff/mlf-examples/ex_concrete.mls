@@ -46,7 +46,7 @@ def id x = x
 //   | Nil -> Nil
 //   | Cons (car,cdr) -> Cons (f car, mymap f cdr) 
 //   end
-:RecursiveTypes // needed for this recursive def
+:RecursiveTypes // * Needed for this structurally-typed recursive def
 rec def map f l = case l of
   { Nil -> Nil
   | Cons -> Cons (f l.head, map f l.tail)

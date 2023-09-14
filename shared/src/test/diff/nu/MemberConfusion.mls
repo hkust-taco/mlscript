@@ -46,7 +46,7 @@ class C(a: Int, b: Int) extends B, M
 let c = C(2, 3)
 (c.a, c.b)
 //│ let c: C
-//│ (Int, "hi",)
+//│ [Int, "hi"]
 //│ c
 //│   = C {}
 //│ res

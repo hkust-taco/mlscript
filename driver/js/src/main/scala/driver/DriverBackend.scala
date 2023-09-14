@@ -17,8 +17,8 @@ class JSDriverBackend extends JSBackend(allowUnresolvedSymbols = false) {
 
     declareNewTypeDefs(typeDefs, false)(topLevelScope)
     otherStmts.foreach {
-      case NuFunDef(_, Var(name), _, _) =>
-        topLevelScope.declareStubValue(name)(true)
+      case NuFunDef(_, Var(name), sym, _, _) =>
+        topLevelScope.declareStubValue(name, sym.flatMap(n => S(n.name)))(true)
       case _ => ()
     }
   }

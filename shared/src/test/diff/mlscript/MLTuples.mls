@@ -48,7 +48,7 @@ htx.x
 //│    = 1
 
 f ((a, b, c)) = { a; b; c }
-//│ f: ('a, 'b, 'c,) -> {a: 'a, b: 'b, c: 'c}
+//│ f: (('a, 'b, 'c,),) -> {a: 'a, b: 'b, c: 'c}
 //│  = [Function: f]
 
 f t
@@ -64,7 +64,7 @@ f htx
 //│    = { a: 1, b: 2, c: 3 }
 
 f ((a, b)) = add a b
-//│ f: (int, int,) -> int
+//│ f: ((int, int,),) -> int
 //│  = [Function: f1]
 
 :e
@@ -235,5 +235,16 @@ def f: (1, 2, 3) & (2, 3)
 def f: (1, 2, 3) & Array[2 | 3 | 4]
 //│ f: (nothing, 2, 3,)
 //│  = <missing implementation>
+
+
+
+a = (if true then (0, 1) else (2, 1, 2))[1]
+//│ a: 0 | 1 | 2 | undefined
+//│  = 1
+
+case a of
+  undefined -> 0, _ -> a
+//│ res: 0 | 1 | 2
+//│    = 1
 
 

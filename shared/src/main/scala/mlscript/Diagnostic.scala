@@ -23,8 +23,8 @@ object Diagnostic {
   case object Compilation extends Source
   case object Runtime     extends Source
   
-  def report(diag: Diagnostic, output: Str => Unit, blockLineNum: Int, showRelativeLineNums: Bool): Unit = {
-    val sctx = Message.mkCtx(diag.allMsgs.iterator.map(_._1), "?")
+  def report(diag: Diagnostic, output: Str => Unit, blockLineNum: Int, showRelativeLineNums: Bool, newDefs: Bool): Unit = {
+    val sctx = Message.mkCtx(diag.allMsgs.iterator.map(_._1), newDefs, "?")
     val headStr =
       diag match {
         case ErrorReport(msg, loco, src) =>
@@ -86,16 +86,16 @@ final case class ErrorReport(mainMsg: Str, allMsgs: Ls[Message -> Opt[Loc]], sou
   val kind: Kind = Error
 }
 object ErrorReport {
-  def apply(msgs: Ls[Message -> Opt[Loc]], source: Source = Typing): ErrorReport =
-    ErrorReport(msgs.head._1.show, msgs, source)
+  def apply(msgs: Ls[Message -> Opt[Loc]], newDefs: Bool, source: Source = Typing): ErrorReport =
+    ErrorReport(msgs.head._1.show(newDefs), msgs, source)
 }
 
 final case class WarningReport(mainMsg: Str, allMsgs: Ls[Message -> Opt[Loc]], source: Source) extends Diagnostic(mainMsg) {
   val kind: Kind = Warning
 }
 object WarningReport {
-  def apply(msgs: Ls[Message -> Opt[Loc]], source: Source = Typing): WarningReport =
-    WarningReport(msgs.head._1.show, msgs, source)
+  def apply(msgs: Ls[Message -> Opt[Loc]], newDefs: Bool, source: Source = Typing): WarningReport =
+    WarningReport(msgs.head._1.show(newDefs), msgs, source)
 }
 
 

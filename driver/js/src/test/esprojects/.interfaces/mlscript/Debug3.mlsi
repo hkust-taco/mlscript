@@ -10,10 +10,10 @@ export declare module Debug3() {
 //| | | Params 
 //| | | 0. Typing term 1
 //| | | 0. : #1<Int,Num,Object>
-//| | | CONSTRAIN #1<Int,Num,Object> <! z2421'
+//| | | CONSTRAIN #1<Int,Num,Object> <! z2407'
 //| | |   where 
-//| | | 1. C #1<Int,Num,Object> <! z2421'    (0)
-//| | | | NEW z2421' LB (0)
+//| | | 1. C #1<Int,Num,Object> <! z2407'    (0)
+//| | | | NEW z2407' LB (0)
 //| | | UNSTASHING... (out)
 //| | Completed TypedNuFun(0,let z = 1,#1<Int,Num,Object>) where 
 //| | Typing unit statements

@@ -12,12 +12,12 @@ trait Base1: Foo
 //│ trait Base1: #Foo
 
 (b: Base1) => b.x
-//│ (b: Base1,) -> ??A
+//│ (b: Base1) -> ??A
 //│ res
 //│     = [Function: res]
 
 (b: Base1) => b : Foo
-//│ (b: Base1,) -> #Foo
+//│ (b: Base1) -> #Foo
 //│ res
 //│     = [Function: res]
 
@@ -32,7 +32,7 @@ trait Base1: Foo
 //│ ╟── back into type variable `A`
 //│ ║  l.5: 	trait Foo[A] { fun x: A }
 //│ ╙──     	          ^
-//│ (b: Base1,) -> Foo['X]
+//│ (b: Base1) -> Foo['X]
 //│   where
 //│     'X :> ??A
 //│        <: ??A0
@@ -59,7 +59,7 @@ trait Base1: Foo { val x: Int }
 //│ }
 
 (b: Base1) => b.x
-//│ (b: Base1,) -> (Int & ??A)
+//│ (b: Base1) -> (Int & ??A)
 //│ res
 //│     = [Function: res]
 
@@ -70,7 +70,7 @@ trait Base1: Foo[1 | 2] { val x: 0 | 1 }
 //│ }
 
 (b: Base1) => b.x
-//│ (b: Base1,) -> 1
+//│ (b: Base1) -> 1
 //│ res
 //│     = [Function: res]
 
@@ -79,18 +79,18 @@ trait Base2: Foo['FigureItOut]
 //│ trait Base2: Foo[in ??FigureItOut out ??FigureItOut0]
 
 (b: Base2) => b.x
-//│ (b: Base2,) -> ??FigureItOut
+//│ (b: Base2) -> ??FigureItOut
 //│ res
 //│     = [Function: res]
 
 (b: Base1) => b : Foo
-//│ (b: Base1,) -> #Foo
+//│ (b: Base1) -> #Foo
 //│ res
 //│     = [Function: res]
 
 // :e
 (b: Base2) => b : Foo['X]
-//│ (b: Base2,) -> Foo['X]
+//│ (b: Base2) -> Foo['X]
 //│   where
 //│     'X :> ??FigureItOut
 //│        <: ??FigureItOut0
@@ -103,7 +103,7 @@ class Impl extends Base2
 //│ class Impl extends Base2
 
 (x: Impl) => x : Base2
-//│ (x: Impl,) -> Base2
+//│ (x: Impl) -> Base2
 //│ res
 //│     = [Function: res]
 
@@ -160,10 +160,10 @@ trait Test2[A]: Test1[(A, A)]
 //│ trait Test1[A] {
 //│   fun x: A
 //│ }
-//│ trait Test2[A]: Test1[(A, A,)]
+//│ trait Test2[A]: Test1[[A, A]]
 
 (t: Test2[Int]) => t.x
-//│ (t: Test2[Int],) -> (Int, Int,)
+//│ (t: Test2[Int]) -> [Int, Int]
 //│ res
 //│     = [Function: res]
 

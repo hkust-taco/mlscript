@@ -1,0 +1,283 @@
+:NewDefs
+
+
+
+
+
+// *** Class instantiation *** //
+
+
+class C
+//│ class C
+
+new C
+//│ C
+//│ res
+//│     = C {}
+
+// TODO Forbid?
+new C()
+//│ C
+//│ res
+//│     = C {}
+
+// :e // TODO reject
+:re
+C()
+//│ C
+//│ res
+//│ Runtime error:
+//│   TypeError: Class constructor C cannot be invoked without 'new'
+
+
+class D(x: Int)
+//│ class D(x: Int)
+
+:js
+D(0)
+//│ D
+//│ // Prelude
+//│ class TypingUnit5 {}
+//│ const typing_unit5 = new TypingUnit5;
+//│ // Query 1
+//│ res = D(0);
+//│ // End of generated code
+//│ res
+//│     = D {}
+
+// TODO reject or accept?
+:js
+new D(0)
+//│ D
+//│ // Prelude
+//│ class TypingUnit6 {}
+//│ const typing_unit6 = new TypingUnit6;
+//│ // Query 1
+//│ res = new D.class(0);
+//│ // End of generated code
+//│ res
+//│     = D {}
+
+
+
+// *** Explicit unapply *** //
+
+
+// function D ...
+// D.class = class D { #x; static unapply(self) { return [self.#x] } }
+// D.unapply = D.class.unapply
+
+
+class D(x: Int)
+//│ class D(x: Int)
+
+:e // TODO support
+D.unapply
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.75: 	D.unapply
+//│ ║        	^^^^^^^^^
+//│ ╟── reference of type `(x: Int) -> D` does not have field 'unapply'
+//│ ║  l.75: 	D.unapply
+//│ ╙──      	^
+//│ error
+//│ res
+//│     = undefined
+
+
+
+// *** First-class classes *** //
+
+
+class C
+//│ class C
+
+// :e // TODO fix type
+fun foo(c) = new c
+//│ fun foo: forall 'a. (() -> 'a) -> 'a
+
+// :e // TODO reject
+:re
+foo(() => 123)
+//│ 123
+//│ res
+//│ Runtime error:
+//│   TypeError: c is not a constructor
+
+foo(C)
+//│ C
+//│ res
+//│     = C {}
+
+
+// :e // TODO fix type
+fun bar(c) = new c(123)
+//│ fun bar: forall 'a. (123 -> 'a) -> 'a
+
+// :e // TODO reject
+:re
+bar(D)
+//│ D
+//│ res
+//│ Runtime error:
+//│   TypeError: c is not a constructor
+
+:e // TODO accept
+bar(D.class)
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.125: 	bar(D.class)
+//│ ║         	    ^^^^^^^
+//│ ╟── reference of type `(x: Int) -> D` does not have field 'class'
+//│ ║  l.125: 	bar(D.class)
+//│ ╙──       	    ^
+//│ error
+//│ res
+//│     = D {}
+
+
+
+// *** Refinements *** //
+
+
+class C
+//│ class C
+
+:e // TODO
+new C { val x = 1 }
+//│ ╔══[ERROR] Currently unsupported `new` syntax
+//│ ║  l.145: 	new C { val x = 1 }
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^
+//│ error
+//│ Code generation encountered an error:
+//│   custom class body is not supported yet
+
+
+
+// *** Path-dependent types *** //
+
+
+class Cls[A] { fun x: A = x }
+//│ class Cls[A] {
+//│   fun x: A
+//│ }
+
+let c = new Cls
+//│ let c: forall 'A. Cls['A]
+//│ c
+//│   = Cls {}
+
+// FIXME
+let y: c.A = c.x
+//│ ╔══[ERROR] type identifier not found: c
+//│ ║  l.169: 	let y: c.A = c.x
+//│ ╙──       	       ^
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+
+
+
+// *** GADTs *** //
+
+
+class Cls[A] { fun x: A = x; fun g: A -> Int; fun g = g }
+//│ class Cls[A] {
+//│   fun g: A -> Int
+//│   fun x: A
+//│ }
+
+
+:e // TODO
+fun test(a: Object) = if a is
+  Cls then a.x
+  else error
+//│ ╔══[ERROR] Type error in `case` expression
+//│ ║  l.188: 	fun test(a: Object) = if a is
+//│ ║         	                         ^^^^
+//│ ║  l.189: 	  Cls then a.x
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.190: 	  else error
+//│ ║         	^^^^^^^^^^^^
+//│ ╟── type variable `A` leaks out of its scope
+//│ ║  l.180: 	class Cls[A] { fun x: A = x; fun g: A -> Int; fun g = g }
+//│ ╙──       	          ^
+//│ fun test: (a: Object) -> (error | ??A)
+
+:e // TODO
+fun test(a: Object) = if a is
+  Cls then a.g(a.x) // a.x : a.A ; a.g : a.A -> a.A
+  else 0
+//│ ╔══[ERROR] Type error in `case` expression
+//│ ║  l.204: 	fun test(a: Object) = if a is
+//│ ║         	                         ^^^^
+//│ ║  l.205: 	  Cls then a.g(a.x) // a.x : a.A ; a.g : a.A -> a.A
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.206: 	  else 0
+//│ ║         	^^^^^^^^
+//│ ╟── type variable `A` leaks out of its scope
+//│ ║  l.180: 	class Cls[A] { fun x: A = x; fun g: A -> Int; fun g = g }
+//│ ╙──       	          ^
+//│ fun test: (a: Object) -> Int
+
+
+class Cls[out A] { fun x: A = x }
+//│ class Cls[A] {
+//│   fun x: A
+//│ }
+
+fun test(a: Object) = if a is
+  Cls then a.x
+  else error
+//│ fun test: (a: Object) -> ??A
+
+fun test(a: Object) = if a is
+  Cls then a
+  else error
+//│ fun test: (a: Object) -> Cls[??A]
+
+:re
+test(0).x
+//│ ??A
+//│ res
+//│ Runtime error:
+//│   Error: an error was thrown
+
+
+// class Expr[T] {
+//   constructor
+//     IntLit(n: Int) { T = Int }
+//     BoolLit(b: Bool) { T = Bool }
+// }
+// 
+// fun foo(x) = if x is
+//    IntLit then x.n as x.T
+//    BoolLit then x.b
+// foo: (x: IntLit | BoolLit) -> x.T | Bool
+// 
+// fun foo(x) = if x is
+//    IntLit then x.n as x.T
+//    BoolLit then x.b as x.T
+// foo: (x: IntLit | BoolLit) -> x.T
+//   <: Expr['a] -> 'a
+// 
+// fun foo(x: Expr[T]): T = if x is
+//    IntLit then x.n // in Scala, compiler sees x.n : Int = x.T <: T
+//    BoolLit then x.b
+
+abstract class Expr[A]: IntLit | BoolLit {}
+class IntLit() extends Expr[Int]
+class BoolLit() extends Expr[Bool]
+//│ abstract class Expr[A]: BoolLit | IntLit
+//│ class IntLit() extends Expr
+//│ class BoolLit() extends Expr
+
+fun test(f: ((IntLit | BoolLit) -> Int)) =
+  f : Expr[anything] -> Int
+//│ fun test: (f: (BoolLit | IntLit) -> Int) -> Expr[anything] -> Int
+
+class OopsLit() extends Expr[Bool]
+//│ class OopsLit() extends Expr
+
+fun test(a) = if a is
+  IntLit then 0
+  OopsLit then 1
+//│ fun test: (IntLit | OopsLit) -> (0 | 1)
+
+

@@ -7,12 +7,12 @@ mixin Test[A] {
 }
 //│ mixin Test[A]() {
 //│   this: {a: A}
-//│   fun bar: (A, A,)
+//│   fun bar: [A, A]
 //│ }
 
 class A(a: Int) extends Test
 //│ class A(a: Int) {
-//│   fun bar: (Int, Int,)
+//│   fun bar: [Int, Int]
 //│ }
 
 mixin Test2[S, T] {
@@ -23,28 +23,28 @@ mixin Test2[S, T] {
 }
 //│ mixin Test2[S, T]() {
 //│   this: {s: S, t: T}
-//│   fun fb: S -> (S, S,)
-//│   fun x: (S, T,)
+//│   fun fb: S -> [S, S]
+//│   fun x: [S, T]
 //│ }
 
 class A1[B](s: Bool, t: B) extends Test2[Bool, B]
 //│ class A1[B](s: Bool, t: B) {
-//│   fun fb: (Bool & 'S) -> (Bool | 'S, Bool | 'S,)
-//│   fun x: (Bool | 'S, B,)
+//│   fun fb: (Bool & 'S) -> [Bool | 'S, Bool | 'S]
+//│   fun x: [Bool | 'S, B]
 //│ }
 
 // TODO: Investigate type of fb
 class A2[A](s: A, t: Int) extends Test2
 //│ class A2[A](s: A, t: Int) {
-//│   fun fb: 'S -> (A | 'S, A | 'S,)
-//│   fun x: (A | 'S, Int,)
+//│   fun fb: 'S -> [A | 'S, A | 'S]
+//│   fun x: [A | 'S, Int]
 //│ }
 
 // TODO: Investigate type of fb
 class A3(s: Int, t: Bool) extends Test2
 //│ class A3(s: Int, t: Bool) {
-//│   fun fb: 'S -> (Int | 'S, Int | 'S,)
-//│   fun x: (Int | 'S, Bool,)
+//│   fun fb: 'S -> [Int | 'S, Int | 'S]
+//│   fun x: [Int | 'S, Bool]
 //│ }
 
 class P(p: Int) { 
@@ -119,7 +119,7 @@ a1.x
 
 trait Foo[A] { fun foo(x: A): A }
 //│ trait Foo[A] {
-//│   fun foo: (x: A,) -> A
+//│   fun foo: (x: A) -> A
 //│ }
 
 // * This is pretty funky but it seems sound for now...
@@ -168,14 +168,14 @@ trait Foo[type A] { fun foo(x: A): A }
 //│ ║  l.166: 	trait Foo[type A] { fun foo(x: A): A }
 //│ ╙──       	          ^^^^
 //│ trait Foo {
-//│   fun foo: (x: A,) -> A
+//│   fun foo: (x: A) -> A
 //│ }
 
 
 trait Foo[A] { fun a: A; fun foo(x: A): A }
 //│ trait Foo[A] {
 //│   fun a: A
-//│   fun foo: (x: A,) -> A
+//│   fun foo: (x: A) -> A
 //│ }
 
 class Bar[B](a: B) extends Foo { fun foo(x) = x }
@@ -204,7 +204,7 @@ b.foo
 // * Note the shadowed type variable `A` in `foo`
 trait Foo[A] { fun foo[A](x: A): A }
 //│ trait Foo[A] {
-//│   fun foo: forall 'A. (x: 'A,) -> 'A
+//│   fun foo: forall 'A. (x: 'A) -> 'A
 //│ }
 
 class B extends Foo { fun foo(x) = x }

@@ -11,10 +11,10 @@ export declare module Debug2() {
 //| | | Params 
 //| | | 0. Typing term 42
 //| | | 0. : #42<Int,Num,Object>
-//| | | CONSTRAIN #42<Int,Num,Object> <! y2424'
+//| | | CONSTRAIN #42<Int,Num,Object> <! y2410'
 //| | |   where 
-//| | | 1. C #42<Int,Num,Object> <! y2424'    (0)
-//| | | | NEW y2424' LB (0)
+//| | | 1. C #42<Int,Num,Object> <! y2410'    (0)
+//| | | | NEW y2410' LB (0)
 //| | | UNSTASHING... (out)
 //| | Completed TypedNuFun(0,let y = 42,#42<Int,Num,Object>) where 
 //| | Typing unit statements

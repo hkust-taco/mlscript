@@ -93,6 +93,7 @@ fun f(a, b, c) =
   if a
     == 0 and b is B() and c is C() then 0
 //│ |#fun| |f|(|a|,| |b|,| |c|)| |#=|→|#if| |a|→|==| |0| |and| |b| |is| |B|(||)| |and| |c| |is| |C|(||)| |#then| |0|←|←|
+//│ AST: TypingUnit(NuFunDef(None, f, None, [], Lam(Tup(_: Var(a), _: Var(b), _: Var(c)), Blk(...))))
 //│ Parsed: fun f = (a, b, c,) => {if a ‹· == (and (and (0,) (is (b,) (B (),),),) (is (c,) (C (),),)) then 0›};
 //│ Desugared: rec def f: (a, b, c,) => {if a ‹· == (and (and (0,) (is (b,) (B (),),),) (is (c,) (C (),),)) then 0›}
 //│ AST: Def(true, f, Lam(Tup(_: Var(a), _: Var(b), _: Var(c)), Blk(...)), true)
