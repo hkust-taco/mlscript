@@ -234,7 +234,6 @@ class Driver(options: DriverOptions) {
     stack: List[String]
   ): Bool = {
     if (!isMLScirpt(file.filename)) { // TypeScript
-      System.out.println(s"generating interface for ${file.filename}...")
       val tsprog =
          TSProgram(file, true, options.tsconfig, checkTSInterface, S(gitHelper))
       return tsprog.generate
@@ -281,7 +280,8 @@ class Driver(options: DriverOptions) {
           compile(newFilename, true)(newCtx, newExtrCtx, newVars, stack :+ file.filename) || r
         })
 
-        if (!dependentRecompile && !gitHelper.filter(file.filename) && JSFileSystem.exists(mlsiFile) && JSFileSystem.exists(jsFile))
+        if (!dependentRecompile && !gitHelper.filter(file.filename) && !gitHelper.filter(mlsiFile) &&
+              JSFileSystem.exists(mlsiFile) && JSFileSystem.exists(jsFile))
           return false
 
         System.out.println(s"compiling ${file.filename}...")

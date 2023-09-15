@@ -17,11 +17,12 @@ class JSWriter(filename: String) {
   def writeErr(str: String): Unit = err ++= s"//| $str\n"
   def writeDbg(str: String): Unit = str.split("\n").foreach(s => dbg ++= s"//| $s\n")
 
-  def close(): Unit = {
+  def close(): Boolean = {
     val str = buffer.toString() + dbg.toString() + err.toString()
     val origin = readFile(filename).getOrElse("")
     val updated = str =/= origin
     if (updated) writeFile(filename, str)
+    updated
   }
 
   def getContent: String = buffer.toString()

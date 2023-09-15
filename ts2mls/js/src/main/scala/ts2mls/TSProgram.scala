@@ -74,6 +74,7 @@ class TSProgram(
     })
 
     if (!dependentRecompile && !shouldRecompile(filename, interfaceFilename)) return false
+    System.out.println(s"generating interface for ${file.filename}...")
     sourceFile.parse
     
     val writer = JSWriter(interfaceFilename)
@@ -119,8 +120,7 @@ class TSProgram(
       typer(file, writer)
       writer.close()
     }
-
-    true
+    else false
   }
 
   private def generate(writer: JSWriter, globalNamespace: TSNamespace, moduleName: String, commonJS: Boolean): Unit =
