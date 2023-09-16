@@ -1061,18 +1061,17 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
               typeArg(a)
           }
         }
-        
+        val res = freshVar(prov, N)
         val arg_ty = mkProxy(a_ty, tp(a.toCoveringLoc, "argument"))
           // ^ Note: this no longer really makes a difference, due to tupled arguments by default
         val funProv = tp(f.toCoveringLoc, "applied expression")
         val fun_ty = mkProxy(f_ty, funProv)
           // ^ This is mostly not useful, except in test Tuples.fun with `(1, true, "hey").2`
-        val res = freshVar(prov, N)
-        val res_ty = con(fun_ty, FunctionType(arg_ty, res)(
+        val resTy = con(fun_ty, FunctionType(arg_ty, res)(
           prov
           // funProv // TODO: better?
           ), res)
-        res_ty
+        resTy
       case Sel(obj, fieldName) =>
         implicit val shadows: Shadows = Shadows.empty
         // Explicit method calls have the form `x.(Class.Method)`
@@ -1390,7 +1389,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
       } else TupleType(fields.reverseIterator.mapValues(_.toUpper(noProv)))(prov)
   }
 
-  def getNewVarName(prefix: String, nonValidVars: Set[Var])(implicit raise: Raise): String = {
+  def getNewVarName(prefix: String, nonValidVars: Set[Var]): String = {
     // we check all possibe prefix_num combination, till we found one that is not in the nonValidVars
     val ints = LazyList.from(1)
     val result = ints.find(index => {
@@ -1400,18 +1399,18 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
       case Some(index) => 
         prefix + "_" + index
       case N => 
-        "ERROR" // unreachable, cause there must be an possible NewVar
+        die
     }
   }
 
-  def freeVars(ctx: Ctx, t: Term): Set[Var] = {
+  def freeVars(t: Term): Set[Var] = {
     t match {
       case App(lhs, rhs) => 
-        freeVars(ctx, lhs) ++ freeVars(ctx, rhs)
+        freeVars(lhs) ++ freeVars(rhs)
       case v @ Var(_) => 
         Set(v)
       case Tup(fields) =>
-        fields.map(f => freeVars(ctx, f._2.value))
+        fields.map(f => freeVars(f._2.value))
                     .flatMap(x => x)
                     .toSet
       case _ =>
@@ -1426,14 +1425,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
         case ((v, fld), isNamed) :: tail =>
           if (isNamed) {
             fld.value match {
-              case lit: Lit =>
-                rec(tail, acc + (v -> R(fld.value)))
-              case varr: Var =>
+              case _: Lit | _: Var =>
                 rec(tail, acc + (v -> R(fld.value)))
               case _ =>
-                val newVar = Var(getNewVarName(v, freeVars(ctx, a)))
+                val newVar = Var(getNewVarName(v, freeVars(a)))
                 Let(false, newVar, fld.value, rec(tail, acc + (v -> L(newVar))))
-            }        
+            }
           } else {
             rec(tail, acc + (v -> R(fld.value)))
           }
