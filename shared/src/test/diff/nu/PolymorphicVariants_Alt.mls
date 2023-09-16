@@ -110,7 +110,7 @@ module Test1 extends EvalVar, EvalLambda
 Test1.eval(Nil(), Var("a"))
 //│ forall 'a. 'A | 'a
 //│   where
-//│     'A :> Var | 'a
+//│     'A :> 'a | Var
 //│     'a :> App['A] | Abs['A]
 
 Test1.eval(Nil(), Abs("b", Var("a")))
@@ -128,7 +128,7 @@ Test1.eval(Cons(("c", Var("d")), Nil()), App(Abs("b", Var("b")), Var("c")))
 Test1.eval(Cons(("c", Abs("d", Var("d"))), Nil()), App(Abs("b", Var("b")), Var("c")))
 //│ forall 'a. 'A | 'a
 //│   where
-//│     'A :> Abs[Var] | Var | 'a
+//│     'A :> 'a | Abs[Var] | Var
 //│     'a :> App['A] | Abs['A]
 
 class Numb(n: Int)

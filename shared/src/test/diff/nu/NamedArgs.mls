@@ -22,10 +22,10 @@ test(y: 0)
 //│ Int
 //│ res
 //│ Runtime error:
-//│   Error: unexpected runtime error
+//│   Error: an error was thrown
 
 fun test(x: 'a, y: 'b) = [x, y]
-//│ fun test: forall 'a 'b. (x: 'a, y: 'b,) -> ('a, 'b,)
+//│ fun test: forall 'a 'b. (x: 'a, y: 'b) -> ['a, 'b]
 
 :e
 test(y: 0)
@@ -45,15 +45,15 @@ test(1, x: 0)
 //│ ╔══[ERROR] name y is missed in function call
 //│ ║  l.41: 	test(1, x: 0)
 //│ ╙──      	    ^^^^^^^^^
-//│ (0, nothing,)
+//│ [0, nothing]
 //│ res
 //│ Runtime error:
-//│   Error: unexpected runtime error
+//│   Error: an error was thrown
 
 // * Notice no let binding is generated for the first argument
 :js
 test(0, y: 1)
-//│ (0, 1,)
+//│ [0, 1]
 //│ // Prelude
 //│ class TypingUnit6 {}
 //│ const typing_unit6 = new TypingUnit6;
@@ -69,7 +69,7 @@ let tmp = 2
 test(0, y: tmp)
 test(0, y: 200)
 //│ let tmp: 2
-//│ (0, 200,)
+//│ [0, 200]
 //│ // Prelude
 //│ class TypingUnit7 {}
 //│ const typing_unit7 = new TypingUnit7;
@@ -90,7 +90,7 @@ test(0, y: 200)
 
 :js
 test(0, y: 1 + 2)
-//│ (0, Int,)
+//│ [0, Int]
 //│ // Prelude
 //│ class TypingUnit8 {}
 //│ const typing_unit8 = new TypingUnit8;
@@ -103,7 +103,7 @@ test(0, y: 1 + 2)
 
 
 fun fff(x: Int, y: Int, z: Int) = (x - y) * z
-//│ fun fff: (x: Int, y: Int, z: Int,) -> Int
+//│ fun fff: (x: Int, y: Int, z: Int) -> Int
 
 // * Testing renaming
 :e
@@ -137,8 +137,8 @@ class A() {
   fun mma(x: Int, y: Int) = y - x
 } 
 //│ class A() {
-//│   fun ma: (x: Int, y: Int,) -> Int
-//│   fun mma: (x: Int, y: Int,) -> Int
+//│   fun ma: (x: Int, y: Int) -> Int
+//│   fun mma: (x: Int, y: Int) -> Int
 //│ }
 
 let x = A()
@@ -163,8 +163,8 @@ id(x).ma(y: 2, x: 1)
 
 fun print(x: Int) = (y: Int, z: Int) => log([x, y, z])
 let p = print(0)
-//│ fun print: (x: Int,) -> (y: Int, z: Int,) -> undefined
-//│ let p: (y: Int, z: Int,) -> undefined
+//│ fun print: (x: Int) -> (y: Int, z: Int) -> undefined
+//│ let p: (y: Int, z: Int) -> undefined
 //│ p
 //│   = [Function: print]
 
@@ -191,8 +191,8 @@ p(z: 1, y: 2)
 //│ ╔══[ERROR] name error is missed in function call
 //│ ║  l.181: 	p(z: 1, y: 2)
 //│ ╙──       	 ^^^^^^^^^^^^
-//│ fun print: anything -> (anything, anything,) -> undefined
-//│ let p: (anything, anything,) -> undefined
+//│ fun print: anything -> (anything, anything) -> undefined
+//│ let p: (anything, anything) -> undefined
 //│ undefined
 //│ p
 //│   = [Function: print1]
@@ -205,7 +205,7 @@ class Baz() {
 }
 Baz().f(y: 1, x: 2)
 //│ class Baz() {
-//│   fun f: (x: Int, y: Int,) -> undefined
+//│   fun f: (x: Int, y: Int) -> undefined
 //│ }
 //│ undefined
 //│ res

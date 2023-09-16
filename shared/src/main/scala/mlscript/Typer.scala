@@ -1606,13 +1606,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
               case Some(v) =>
                 v match {
                   case Left(v) =>
-                    (None, Fld(false, false, v))
+                    (None, Fld(FldFlags(false, false), v))
                   case Right(t) => 
-                    (None, Fld(false, false, t))
+                    (None, Fld(FldFlags(false, false), t))
                 }
               case None =>
                 err(s"name ${x} is missed in function call", a.toLoc)
-                (None, Fld(false, false, Var("error")))
+                (None, Fld(FldFlags(false, false), Var("error")))
             }
           ))
           App(f, y)
