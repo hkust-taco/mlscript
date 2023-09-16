@@ -389,9 +389,9 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
       this
   }
   
-  // The field `thisRef` is defined when the member accesses to `this` object without field selection
+  // Field `thisRef` is defined when the member refers to `this` selecting a field on it
   // e.g., val x = this
-  // The field `refs` contains all `Var`s accessed by the member with their qualifiers (None if it is an unqualifier access)
+  // Field `refs` contains all `Var`s accessed by the member with their possible `this` qualifiers (`None` if it is an unqualified access)
   case class RefMap(thisRef: Opt[Var], refs: Set[(Var, Opt[Var])])
   object RefMap {
     lazy val nothing: RefMap = RefMap(N, Set.empty)
