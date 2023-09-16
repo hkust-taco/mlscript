@@ -324,7 +324,6 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       S(res, _cur)
     }
   }
-  
   final def block(prev: Ls[IfBody \/ Statement])(implicit et: ExpectThen, fe: FoundErr): Ls[IfBody \/ Statement] =
     cur match {
       case Nil => prev.reverse

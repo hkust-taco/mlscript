@@ -229,7 +229,7 @@ class TSSourceFile(sf: js.Dynamic, val global: TSNamespace, topName: String)(imp
   // Parse object literal types
   private def getObjectLiteralMembers(props: TSNodeArray)(implicit ns: TSNamespace) =
     props.foldLeft(Map[String, TSMemberType]())((mp, p) => {
-      mp ++ Map(p.name.escapedText -> TSMemberType(TSLiteralType(p.initToken.text, p.initToken.isStringLiteral)))
+      mp.updated(p.name.escapedText, TSMemberType(TSLiteralType(p.initToken.text, p.initToken.isStringLiteral)))
     })
 
   // Get the type of variables in classes/named interfaces/anonymous interfaces
@@ -299,20 +299,20 @@ class TSSourceFile(sf: js.Dynamic, val global: TSNamespace, topName: String)(imp
     others: Map[String, TSMemberType]
   )(implicit ns: TSNamespace): Map[String, TSMemberType] = mem match {
     case func: TSFunctionType => {
-      if (!others.contains(name)) others ++ Map(name -> TSMemberType(func, mod.getOrElse(node.modifier)))
+      if (!others.contains(name)) others.updated(name, TSMemberType(func, mod.getOrElse(node.modifier)))
       else { // TODO: handle functions' overloading
         val res = TSIgnoredOverload(func, name) // The implementation is always after declarations
-        others.removed(name) ++ Map(name -> TSMemberType(res, mod.getOrElse(node.modifier)))
+        others.updated(name, TSMemberType(res, mod.getOrElse(node.modifier)))
       }
     }
     case _ => mem match {
       // If the member's name is the same as the type name, we need to mark it unsupported
       case TSReferenceType(ref) if name === ref =>
-        others ++ Map(name -> TSMemberType(
+        others.updated(name, TSMemberType(
           markUnsupported(node),
           mod.getOrElse(node.modifier)
         ))
-      case _ => others ++ Map(name -> TSMemberType(mem, mod.getOrElse(node.modifier)))
+      case _ => others.updated(name, TSMemberType(mem, mod.getOrElse(node.modifier)))
     }
   }
 
@@ -344,7 +344,7 @@ class TSSourceFile(sf: js.Dynamic, val global: TSNamespace, topName: String)(imp
 
   private def getAnonymousPropertiesType(list: TSSymbolArray)(implicit ns: TSNamespace): Map[String, TSMemberType] =
     list.foldLeft(Map[String, TSMemberType]())((mp, p) =>
-      mp ++ Map(p.escapedName -> TSMemberType(if (p.`type`.isUndefined) getMemberType(p.declaration) else getObjectType(p.`type`))))
+      mp.updated(p.escapedName, TSMemberType(if (p.`type`.isUndefined) getMemberType(p.declaration) else getObjectType(p.`type`))))
 
   private def parseMembers(name: String, node: TSNodeObject, isClass: Boolean)(implicit ns: TSNamespace): TSType = {
     val res = // Do not handle parents here. we have not had enough information so far.

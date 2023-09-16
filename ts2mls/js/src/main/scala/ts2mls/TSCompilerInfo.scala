@@ -22,6 +22,7 @@ object TypeScript {
   private val sys: js.Dynamic = ts.sys
   private val process: js.Dynamic = g.require("process")
 
+  // * For other platforms, we need to invoke `toLowerCase` on the resolved names, or the file would not be found.
   lazy val isLinux: Boolean = process.platform.toString().toLowerCase === "linux"
 
   // tsconfig.json

@@ -1071,7 +1071,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       val fd = NuFunDef((a.fd.isLetRec, b.fd.isLetRec) match {
                         case (S(a), S(b)) => S(a || b)
                         case _ => N // if one is fun, then it will be fun
-                      }, a.fd.nme, N, a.fd.tparams, a.fd.rhs)(a.fd.declareLoc, a.fd.exportLoc, N, a.fd.outer orElse b.fd.outer)
+                      }, a.fd.nme, N/*no sym name?*/, a.fd.tparams, a.fd.rhs)(a.fd.declareLoc, a.fd.exportLoc, N, a.fd.outer orElse b.fd.outer)
                       S(TypedNuFun(a.level, fd, a.bodyType & b.bodyType)(a.isImplemented || b.isImplemented))
                     case (a: NuParam, S(b: NuParam)) => 
                       S(NuParam(a.nme, a.ty && b.ty)(a.level))

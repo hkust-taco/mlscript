@@ -122,11 +122,11 @@ trait IdentifiedTerm
 sealed abstract class SimpleTerm extends Term with IdentifiedTerm with SimpleTermImpl
 
 sealed trait Statement extends StatementImpl
-final case class LetS(isRec: Bool, pat: Term, rhs: Term)  extends Statement
-final case class DataDefn(body: Term)                     extends Statement
-final case class DatatypeDefn(head: Term, body: Term)     extends Statement
-final case class Constructor(params: Tup, body: Blk)      extends Statement // constructor(...) { ... }
-class Import(val path: Str)                               extends Statement
+final case class LetS(isRec: Bool, pat: Term, rhs: Term) extends Statement
+final case class DataDefn(body: Term)                    extends Statement
+final case class DatatypeDefn(head: Term, body: Term)    extends Statement
+final case class Constructor(params: Tup, body: Blk)     extends Statement // constructor(...) { ... }
+class Import(val path: Str)                              extends Statement
 
 object Import {
   def apply(path: Str): Import = new Import(path)

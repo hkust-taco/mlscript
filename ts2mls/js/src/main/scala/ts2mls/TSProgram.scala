@@ -8,7 +8,7 @@ import scala.collection.mutable.{HashSet, HashMap}
 // For general ts, we still consider that there is a top-level module
 // and in mls we will import ts file like this:
 // `import * as TopLevelModuleName from "filename"`.
-// For es5.d.ts, we only need to translate everything
+// For es5.d.ts and dom.d.ts, we only need to translate everything
 // and it will be imported without top-level module before we compile other files
 class TSProgram(
   file: FileInfo,

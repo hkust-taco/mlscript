@@ -4,10 +4,9 @@ import scala.scalajs.js
 import mlscript.utils._
 import mlscript._
 import mlscript.utils.shorthands._
-import scala.collection.mutable.{ListBuffer,Map => MutMap, Set => MutSet}
+import scala.collection.mutable.{ListBuffer, Map => MutMap, Set => MutSet}
 import mlscript.codegen._
 import mlscript.Message._
-import mlscript.{NewLexer, NewParser, ErrorReport, Origin, Diagnostic}
 import ts2mls.{TSProgram, TypeScript, TSPathResolver, JSFileSystem, JSWriter, FileInfo, JSGitHelper}
 
 class Driver(options: DriverOptions) {
@@ -17,9 +16,11 @@ class Driver(options: DriverOptions) {
 
   private val gitHelper = JSGitHelper(".", options.path, options.forceIfNoChange)
 
+  private var totalErrors = 0
+  private var totalTypeErrors = 0
   private var dbgWriter: Option[JSWriter] = None
   private def printDbg(msg: String) =
-    dbgWriter.fold(())(writer => writer.writeDbg(msg.replace("\t", "  ")))
+    dbgWriter.foreach(writer => writer.writeDbg(msg.replace("\t", "  ")))
 
   private val typer =
     new mlscript.Typer(
@@ -43,7 +44,7 @@ class Driver(options: DriverOptions) {
   private val noRedundantOutput = (s: String) => ()
 
   private val importedModule = MutSet[String]()
-  private val dbdFiles = MutSet[String]()
+  private val dbgFiles = MutSet[String]()
   private implicit val config = TypeScript.parseOption(options.path, options.tsconfig)
 
   import TSPathResolver.{normalize, isLocal, isMLScirpt, dirname}
@@ -71,8 +72,8 @@ class Driver(options: DriverOptions) {
 
   def execute: DriverResult =
     try {
-      Driver.totalErrors = 0
-      Driver.totalTypeErrors = 0
+      totalErrors = 0
+      totalTypeErrors = 0
       implicit var ctx: Ctx = Ctx.init
       implicit val raise: Raise = (diag: Diagnostic) => report(diag, printErr)
       implicit val extrCtx: Opt[typer.ExtrCtx] = N
@@ -81,10 +82,10 @@ class Driver(options: DriverOptions) {
       initTyper
       val res = compile(FileInfo(options.path, options.filename, options.interfaceDir), false)
       if (!res) OK // Not changed.
-      else if (Driver.totalErrors > 0 && !options.expectError) Error
-      else if (Driver.totalErrors == 0 && options.expectError) ExpectError
-      else if (Driver.totalTypeErrors > 0 && !options.expectTypeError) TypeError
-      else if (Driver.totalErrors > 0 && !options.expectError) ExpectTypeError
+      else if (totalErrors > 0 && !options.expectError) Error
+      else if (totalErrors == 0 && options.expectError) ExpectError
+      else if (totalTypeErrors > 0 && !options.expectTypeError) TypeError
+      else if (totalErrors > 0 && !options.expectError) ExpectTypeError
       else OK
     }
     catch {
@@ -95,8 +96,10 @@ class Driver(options: DriverOptions) {
 
   def genPackageJson(): Unit = {
     val content = // TODO: more settings?
-      if (!options.commonJS) "{ \"type\": \"module\" }\n"
-      else "{ \"type\": \"commonjs\" }\n"
+      if (!options.commonJS)
+        """{ "type": "module" }""" + "\n"
+      else
+        """{ "type": "commonjs" }""" + "\n"
     saveToFile(s"${options.outputDir}/package.json", content)
   }
 
@@ -108,7 +111,7 @@ class Driver(options: DriverOptions) {
     val lines = content.splitSane('\n').toIndexedSeq
     lines.headOption match {
       case S(head) if (head.startsWith("//") && head.endsWith(":d")) =>
-        dbdFiles.add(filename)
+        dbgFiles.add(filename)
         typer.dbg = true
       case _ => ()
     }
@@ -222,6 +225,7 @@ class Driver(options: DriverOptions) {
             `type`(TypingUnit(mod :: Nil), false, noRedundantOutput)(ctx, noRedundantRaise, extrCtx, vars)
             mod :: Nil
         })
+      case _: Throwable => throw ErrorReport(msg"Cannot import file ${file.filename}" -> None :: Nil, true, Diagnostic.Compilation)
     }
 
   private def compile(
@@ -281,8 +285,7 @@ class Driver(options: DriverOptions) {
         })
 
         if (!dependentRecompile && !gitHelper.filter(file.filename) && !gitHelper.filter(mlsiFile) &&
-              JSFileSystem.exists(mlsiFile) && JSFileSystem.exists(jsFile))
-          return false
+            JSFileSystem.exists(mlsiFile) && JSFileSystem.exists(jsFile)) return false
 
         System.out.println(s"compiling ${file.filename}...")
         val importedSym = (try { otherList.map(d => importModule(file.`import`(d))) }
@@ -303,7 +306,7 @@ class Driver(options: DriverOptions) {
 
           mlsiWriter.write(interfaces)
           mlsiWriter.close()
-          if (Driver.totalErrors == 0)
+          if (totalErrors == 0)
             generate(Pgrm(definitions), jsFile, file.moduleName, imports.map(
               imp => new Import(resolveJSPath(file, imp.path)) with ModuleType {
                 val isESModule = checkESModule(path, TSPathResolver.resolve(file.filename))
@@ -313,9 +316,9 @@ class Driver(options: DriverOptions) {
         else
           `type`(TypingUnit(declarations), false, mlsiWriter.writeErr) // For ts/mlsi files, we only check interface files
 
-        if (dbdFiles.contains(file.filename)) {
+        if (dbgFiles.contains(file.filename)) {
           typer.dbg = false
-          dbdFiles.remove(file.filename)
+          dbgFiles.remove(file.filename)
           ()
         }
       }
@@ -340,33 +343,11 @@ class Driver(options: DriverOptions) {
   } catch {
       case CodeGenError(err) =>
         totalErrors += 1
-        saveToFile(filename, s"//| codegen error: $err")
+        saveToFile(filename, s"//| codegen error: $err\n")
       case t : Throwable =>
         totalErrors += 1
-        saveToFile(filename, s"//| unexpected error: ${t.toString()}")
+        saveToFile(filename, s"//| unexpected error: ${t.toString()}\n")
     }
-}
-
-object Driver {
-  def apply(options: DriverOptions) = new Driver(options)
-
-  private val jsBuiltinPaths = List(
-    "./ES5.mlsi",
-    "./Dom.mlsi",
-    "./Predef.mlsi"
-  )
-
-  private def printErr(msg: String): Unit =
-    System.err.println(msg)
-
-  private var totalErrors = 0
-  private var totalTypeErrors = 0
-
-  private def saveToFile(filename: String, content: String) = {
-    val writer = JSWriter(filename)
-    writer.write(content)
-    writer.close()
-  }
 
   private def report(diag: Diagnostic, output: Str => Unit): Unit = {
     diag match {
@@ -382,5 +363,26 @@ object Driver {
       case WarningReport(msg, loco, src) => ()
     }
     Diagnostic.report(diag, output, 0, false, true)
+  }
+}
+
+object Driver {
+  def apply(options: DriverOptions) = new Driver(options)
+
+  private val jsBuiltinPaths = List(
+    "./ES5.mlsi",
+    "./Dom.mlsi",
+    "./Predef.mlsi"
+  )
+
+  private def printErr(msg: String): Unit =
+    System.err.println(msg)
+
+  
+
+  private def saveToFile(filename: String, content: String) = {
+    val writer = JSWriter(filename)
+    writer.write(content)
+    writer.close()
   }
 }
