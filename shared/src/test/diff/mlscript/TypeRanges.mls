@@ -9,7 +9,7 @@ def set1: MutArray['a..'b] -> 'b -> ()
 //│     = <missing implementation>
 
 def set2: MutArray[int..number] -> int -> ()
-//│ set2: MutArray[in number out int] -> int -> ()
+//│ set2: in MutArray[in int out number] -> int -> () out MutArray[in number out int] -> int -> ()
 //│     = <missing implementation>
 
 :e
@@ -23,7 +23,7 @@ def set3: MutArray[number..int] -> 'b -> ()
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.16: 	def set3: MutArray[number..int] -> 'b -> ()
 //│ ╙──      	                           ^^^
-//│ set3: MutArray[in int out number] -> anything -> ()
+//│ set3: in MutArray[in number out int] -> anything -> () out MutArray[in int out number] -> anything -> ()
 //│     = <missing implementation>
 
 
@@ -39,16 +39,16 @@ fun x -> set2 x 0
 // :ns
 fun x -> set0 x 0
 fun x -> set1 x 0
-//│ res: MutArray[0 | 'b] -> ()
+//│ res: MutArray[in 0 | 'b out 'b] -> ()
 //│    = <no result>
 //│      set0 is not implemented
-//│ res: MutArray[0 | 'b] -> ()
+//│ res: MutArray[in 0 | 'b out 'b] -> ()
 //│    = <no result>
 //│      set1 is not implemented
 
 
 def foo: MutArray[int..number]
-//│ foo: MutArray[in int out number]
+//│ foo: in MutArray[in number out int] out MutArray[in int out number]
 //│    = <missing implementation>
 
 :e
@@ -56,7 +56,7 @@ def foo: MutArray[int..number]
 foo = foo
 //│ MutArray[in int out number]
 //│   <:  foo:
-//│ MutArray[in int out number]
+//│ MutArray[in number out int]
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.56: 	foo = foo
 //│ ║        	^^^^^^^^^
@@ -76,7 +76,7 @@ foo = (mut 0,)
 //│   where
 //│     'a :> 0
 //│   <:  foo:
-//│ MutArray[in int out number]
+//│ MutArray[in number out int]
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.74: 	foo = (mut 0,)
 //│ ║        	^^^^^^^^^^^^^^
@@ -214,7 +214,7 @@ foo2 = foo : MutArray['a..'b]
 //│ ╟── from type bounds:
 //│ ║  l.50: 	def foo: MutArray[int..number]
 //│ ╙──      	                  ^^^^^^^^^^^
-//│ foo2: MutArray[number | 'b]
+//│ foo2: MutArray[in int & 'b out number | 'b]
 //│     = [ 1 ]
 
 foo2[0]
@@ -250,7 +250,7 @@ def foo: MutArray[number..int]
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.243: 	def foo: MutArray[number..int]
 //│ ╙──       	                          ^^^
-//│ foo: MutArray[in number out int]
+//│ foo: in MutArray[in int out number] out MutArray[in number out int]
 //│    = <missing implementation>
 
 foo = (mut 0,)
@@ -258,7 +258,7 @@ foo = (mut 0,)
 //│   where
 //│     'a :> 0
 //│   <:  foo:
-//│ MutArray[in number out int]
+//│ MutArray[in int out number]
 //│    = [ 0 ]
 
 foo[0]
@@ -293,7 +293,7 @@ fun x -> if true then x : MutArray[int] else x : MutArray[number]
 
 // * FIXME
 def maf: MutArray[int..number] -> MutArray[int..number]
-//│ maf: MutArray[in number out int] -> MutArray[in int out number]
+//│ maf: in MutArray[in int out number] -> MutArray[in number out int] out MutArray[in number out int] -> MutArray[in int out number]
 //│    = <missing implementation>
 :ns
 maf
@@ -367,7 +367,7 @@ def maf: MutArray[number..int] -> MutArray[int..number]
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.360: 	def maf: MutArray[number..int] -> MutArray[int..number]
 //│ ╙──       	                          ^^^
-//│ maf: MutArray[in int out number] -> MutArray[in int out number]
+//│ maf: in MutArray[in number out int] -> MutArray[in number out int] out MutArray[in int out number] -> MutArray[in int out number]
 //│    = <missing implementation>
 
 maf ((mut error,))
@@ -432,7 +432,7 @@ foo: R['a..'b]
 //│ ╟── from type bounds:
 //│ ║  l.388: 	def foo: R[int..number]
 //│ ╙──       	           ^^^^^^^^^^^
-//│ res: R[number | 'b]
+//│ res: R[in int & 'b out number | 'b]
 //│    = { get: 0, set: [Function: set] }
 
 // * FIXME
@@ -477,7 +477,7 @@ foo: S['a..'b]
 //│ ╟── from type bounds:
 //│ ║  l.388: 	def foo: R[int..number]
 //│ ╙──       	           ^^^^^^^^^^^
-//│ res: S[number | 'b]
+//│ res: S[in int & 'b out number | 'b]
 //│    = { get: 0, set: [Function: set] }
 
 foo: { get: number; set: int -> () }
@@ -553,7 +553,7 @@ foo2: S['a..'b]
 //│ ╟── from type variable:
 //│ ║  l.518: 	foo2 = foo: { get: 'a; set: 'b -> () }
 //│ ╙──       	                            ^^
-//│ res: S[number | 'b]
+//│ res: S[in int & 'b out number | 'b]
 //│    = { get: 0, set: [Function: set] }
 
 
@@ -563,7 +563,7 @@ foo2: S['a..'b]
 
 
 def maf: { get: int..number; set: (int..number) -> () } -> { get: int..number; set: (int..number) -> () }
-//│ maf: {get: int, set: number -> ()} -> {get: number, set: int -> ()}
+//│ maf: in {get: number, set: int -> ()} -> {get: int, set: number -> ()} out {get: int, set: number -> ()} -> {get: number, set: int -> ()}
 //│    = <missing implementation>
 
 

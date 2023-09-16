@@ -267,7 +267,7 @@ trait T : {x': int}
 //│ Defined trait T
 //│ Defined T.N': T -> int
 //│ Defined T.P': T -> int -> int
-//│ Defined T.Q: T -> (int, {z': int},) -> int
+//│ Defined T.Q: T -> ((int, {z': int},),) -> int
 //│ // Prelude
 //│ const T = function () {
 //│   const tag = Symbol();

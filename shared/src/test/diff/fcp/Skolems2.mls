@@ -234,7 +234,7 @@ def foo(a, b) = (a, b) : forall 'c. ('c, 'c)
 foo(error, error)
 //│ res: (nothing, nothing,)
 //│ Runtime error:
-//│   Error: unexpected runtime error
+//│   Error: an error was thrown
 
 def foo(a, b) = (a, b) : forall 'c. ('c, 'c -> 'c)
 //│ foo: (??c, ??c0 -> ??c,) -> (forall 'c. ('c, 'c -> 'c,))

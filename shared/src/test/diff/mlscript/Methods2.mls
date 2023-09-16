@@ -29,27 +29,15 @@ class List[A]
 //│ Declared List.Map: List['A] -> ('A -> 'B) -> List['B]
 
 :DistributeForalls
-// * Note: an idiosyncrasy of the old class-typing mechanism:
-// *  It seems it wraps the method body's type in a polymorphic type
-// *  which may become disconnected from the class/method type parameters:
-:e
+// * Note: this used to fail when `subst` did not hygienically substitute under polymorphic types
 class Nil_oops[A]: List[A]
     method Size = 0
     method HeadOption = None {}
     method Map f = Nil_oops {}
-//│ ╔══[ERROR] Type mismatch in method definition:
-//│ ║  l.39: 	    method Map f = Nil_oops {}
-//│ ║        	           ^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `A` does not match type `B`
-//│ ║  l.36: 	class Nil_oops[A]: List[A]
-//│ ║        	               ^
-//│ ╟── Note: constraint arises from method type parameter:
-//│ ║  l.25: 	    method Map[B]: (A -> B) -> List[B]
-//│ ╙──      	               ^
-//│ Defined class Nil_oops[=A]
-//│ Defined Nil_oops.Size: Nil_oops['A] -> 0
-//│ Defined Nil_oops.HeadOption: Nil_oops['A] -> None[nothing]
-//│ Defined Nil_oops.Map: Nil_oops['A] -> anything -> Nil_oops['A0]
+//│ Defined class Nil_oops[+A]
+//│ Defined Nil_oops.Size: Nil_oops[?] -> 0
+//│ Defined Nil_oops.HeadOption: Nil_oops[?] -> None[nothing]
+//│ Defined Nil_oops.Map: Nil_oops[?] -> anything -> Nil_oops[nothing]
 // * Works without distrib:
 :DontDistributeForalls
 class Nil[A]: List[A]
@@ -161,13 +149,13 @@ o = l.HeadOption
 :e
 case o of {None -> 0 | Some -> o.payload}
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.162: 	case o of {None -> 0 | Some -> o.payload}
+//│ ║  l.150: 	case o of {None -> 0 | Some -> o.payload}
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Option[?A]` does not match type `None[?] & ?a | Some[?] & ?b`
 //│ ║  l.24: 	    method HeadOption: Option[A]
 //│ ║        	                       ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `None[?] & ?a | Some[?] & ?c`
-//│ ║  l.162: 	case o of {None -> 0 | Some -> o.payload}
+//│ ║  l.150: 	case o of {None -> 0 | Some -> o.payload}
 //│ ╙──       	     ^
 //│ res: 0
 //│    = 0
@@ -206,15 +194,15 @@ case res of {None -> 0 | Some -> res.payload}
 case o of {
     Some -> o.Get | None -> 0 }
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.206: 	case o of {
+//│ ║  l.194: 	case o of {
 //│ ║         	^^^^^^^^^^^
-//│ ║  l.207: 	    Some -> o.Get | None -> 0 }
+//│ ║  l.195: 	    Some -> o.Get | None -> 0 }
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Option[?A]` does not match type `None[?] & ?a | Some[?] & ?b`
 //│ ║  l.24: 	    method HeadOption: Option[A]
 //│ ║        	                       ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `None[?] & ?a | Some[?] & ?c`
-//│ ║  l.206: 	case o of {
+//│ ║  l.194: 	case o of {
 //│ ╙──       	     ^
 //│ res: 0 | 1
 //│    = 0

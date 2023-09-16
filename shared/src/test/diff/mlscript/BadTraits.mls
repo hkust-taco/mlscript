@@ -99,7 +99,7 @@ T (B {})
 t = T error
 //│ t: nothing
 //│ Runtime error:
-//│   Error: unexpected runtime error
+//│   Error: an error was thrown
 
 :re
 t: nothing

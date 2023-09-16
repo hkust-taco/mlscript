@@ -151,7 +151,7 @@ object Polyfill {
     )
     buffer += BuiltinFunc(
       "error", fn(_) {
-        `throw`(JSNew(JSIdent("Error"))(JSExpr("unexpected runtime error")))
+        `throw`(JSNew(JSIdent("Error"))(JSExpr("an error was thrown")))
       }
     )
     buffer += BuiltinFunc(

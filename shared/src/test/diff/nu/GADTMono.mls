@@ -14,8 +14,8 @@ class Snd[S, T](p: Expr[(S, T)]) extends Expr[T]
 //│ class Add(x: Expr[Int], y: Expr[Int]) extends Expr
 //│ class Cond[T](p: Expr[Bool], t: Expr[T], e: Expr[T]) extends Expr
 //│ class Pair[S, T](a: Expr[S], b: Expr[T]) extends Expr
-//│ class Fst[S, T](p: Expr[(S, T,)]) extends Expr
-//│ class Snd[S, T](p: Expr[(S, T,)]) extends Expr
+//│ class Fst[S, T](p: Expr[[S, T]]) extends Expr
+//│ class Snd[S, T](p: Expr[[S, T]]) extends Expr
 
 let l1 = LitInt(1)
 //│ let l1: LitInt
@@ -88,5 +88,5 @@ fun eval[A](e: Expr[A]): A =
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.6: 	class Add(x: Expr[Int], y: Expr[Int]) extends Expr[Int]
 //│ ╙──     	                                ^^^
-//│ fun eval: (e: Expr[out Int | false | true],) -> (Int | false | true)
+//│ fun eval: (e: Expr[in Int out Int | false | true]) -> (Int | false | true)
 

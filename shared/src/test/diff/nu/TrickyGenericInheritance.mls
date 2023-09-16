@@ -13,14 +13,14 @@ class C1 extends T1 {
   fun f(x: Int) = x
 }
 //│ class C1 extends T1 {
-//│   fun f: (x: Int,) -> Int
+//│   fun f: (x: Int) -> Int
 //│ }
 
 class C1 extends T1['FigureItOut] {
   fun f(x: Int) = x
 }
 //│ class C1 extends T1 {
-//│   fun f: (x: Int,) -> Int
+//│   fun f: (x: Int) -> Int
 //│ }
 
 let c1 = new C1
@@ -29,7 +29,7 @@ let c1 = new C1
 //│    = C1 {}
 
 c1.f
-//│ (x: Int,) -> Int
+//│ (x: Int) -> Int
 //│ res
 //│     = [Function: f]
 
@@ -117,7 +117,7 @@ class C2 extends T2['FigureItOut] {
 //│   let r: Int | error
 //│ }
 //│ class C2 extends T2 {
-//│   fun f: (x: Int,) -> Int
+//│   fun f: (x: Int) -> Int
 //│ }
 
 :e
@@ -146,7 +146,7 @@ class C3 extends T3['FigureItOut] {
 //│   let r: error | false
 //│ }
 //│ class C3 extends T3 {
-//│   fun f: (x: Int,) -> Int
+//│   fun f: (x: Int) -> Int
 //│ }
 
 :e // FIXME
@@ -160,5 +160,115 @@ C3() : T3['X]
 //│ res
 //│ Runtime error:
 //│   TypeError: Class constructor C3 cannot be invoked without 'new'
+
+
+
+// FIXME
+abstract class IO[A] {
+  fun test = Bind(this) : IO[Int]
+}
+class Bind[A](underlying: IO[A]) extends IO[Int]
+//│ ╔══[ERROR] Unhandled cyclic definition
+//│ ║  l.167: 	abstract class IO[A] {
+//│ ║         	         ^^^^^^^^^^^^^
+//│ ║  l.168: 	  fun test = Bind(this) : IO[Int]
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type `Bind[?A]` does not contain member `IO#A`
+//│ ║  l.167: 	abstract class IO[A] {
+//│ ╙──       	                  ^
+//│ abstract class IO[A] {
+//│   fun test: IO[Int]
+//│ }
+//│ class Bind[A](underlying: IO[A]) extends IO
+
+// FIXME
+abstract class IO[A] {
+  fun map[B]: (A -> B) -> IO[B] // * Removing this works...
+  fun map(f) = Map(this, f)
+  fun run: A
+}
+class Map[A, B](underlying: IO[A], f: A -> B) extends IO[B] {
+  fun run: B = error
+}
+//│ ╔══[ERROR] Unhandled cyclic definition
+//│ ║  l.185: 	abstract class IO[A] {
+//│ ║         	         ^^^^^^^^^^^^^
+//│ ║  l.186: 	  fun map[B]: (A -> B) -> IO[B] // * Removing this works...
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.187: 	  fun map(f) = Map(this, f)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.188: 	  fun run: A
+//│ ╙──       	^^^^^^^^^^^^
+//│ ╔══[ERROR] Type `Map[?A, ?B]` does not contain member `IO#A`
+//│ ║  l.185: 	abstract class IO[A] {
+//│ ╙──       	                  ^
+//│ ╔══[ERROR] Type mismatch in definition of method map:
+//│ ║  l.187: 	  fun map(f) = Map(this, f)
+//│ ║         	      ^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── application of type `Map[?A, ?B]` does not have field 'IO#A'
+//│ ║  l.187: 	  fun map(f) = Map(this, f)
+//│ ║         	               ^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from applied type reference:
+//│ ║  l.186: 	  fun map[B]: (A -> B) -> IO[B] // * Removing this works...
+//│ ╙──       	                          ^^^^^
+//│ abstract class IO[A] {
+//│   fun map: forall 'B. (A -> 'B) -> IO['B]
+//│   fun run: A
+//│ }
+//│ class Map[A, B](underlying: IO[A], f: A -> B) extends IO {
+//│   fun run: B
+//│ }
+
+// FIXME
+abstract class IO[A] {
+  fun bind[B]: (A -> IO[B]) -> IO[B] // * FIXME: causes cycle error
+  fun bind(f) = Bind(this, f)
+  fun run: A
+}
+class Bind[A, B](underlying: IO[A], f: A -> IO[B]) extends IO[B] {
+  fun run = f(underlying.run).run
+}
+//│ ╔══[ERROR] Unhandled cyclic definition
+//│ ║  l.223: 	abstract class IO[A] {
+//│ ║         	         ^^^^^^^^^^^^^
+//│ ║  l.224: 	  fun bind[B]: (A -> IO[B]) -> IO[B] // * FIXME: causes cycle error
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.225: 	  fun bind(f) = Bind(this, f)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.226: 	  fun run: A
+//│ ╙──       	^^^^^^^^^^^^
+//│ ╔══[ERROR] Type `Bind[?A, ?B]` does not contain member `IO#A`
+//│ ║  l.223: 	abstract class IO[A] {
+//│ ╙──       	                  ^
+//│ ╔══[ERROR] Type mismatch in definition of method bind:
+//│ ║  l.225: 	  fun bind(f) = Bind(this, f)
+//│ ║         	      ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── application of type `Bind[?A, ?B]` does not have field 'IO#A'
+//│ ║  l.225: 	  fun bind(f) = Bind(this, f)
+//│ ║         	                ^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from applied type reference:
+//│ ║  l.224: 	  fun bind[B]: (A -> IO[B]) -> IO[B] // * FIXME: causes cycle error
+//│ ╙──       	                               ^^^^^
+//│ abstract class IO[A] {
+//│   fun bind: forall 'B. (A -> IO['B]) -> IO['B]
+//│   fun run: A
+//│ }
+//│ class Bind[A, B](underlying: IO[A], f: A -> IO[B]) extends IO {
+//│   fun run: B
+//│ }
+
+
+// TODO support
+abstract class IO[A] {
+  class Bind[B]() extends IO[B]
+}
+//│ ╔══[ERROR] Unhandled cyclic definition
+//│ ║  l.262: 	abstract class IO[A] {
+//│ ║         	         ^^^^^^^^^^^^^
+//│ ║  l.263: 	  class Bind[B]() extends IO[B]
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ abstract class IO[A] {
+//│   class Bind[B]() extends IO
+//│ }
 
 

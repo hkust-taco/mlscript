@@ -54,7 +54,7 @@ class Base1(base: Int) extends BaseTest {
 //│ ╙──      	             ^^^^^
 //│ class Base1(base: Int) {
 //│   fun test: nothing
-//│   fun test2: (Int, Int,)
+//│   fun test2: [Int, Int]
 //│ }
 
 
@@ -73,7 +73,7 @@ mixin BaseInc {
 //│   super: {base: Int}
 //│   this: {base: 'base, original: 'original}
 //│   fun base: Int
-//│   fun test2: ('original, 'base,)
+//│   fun test2: ['original, 'base]
 //│ }
 
 
@@ -86,7 +86,7 @@ class Base2(x: Int) extends BaseOf(x + 1), BaseTest, BaseInc {
 //│   fun original: Int
 //│   fun overridden: Int
 //│   fun test: Int
-//│   fun test2: (Int, Int,)
+//│   fun test2: [Int, Int]
 //│ }
 
 Base2(11).base
@@ -105,7 +105,7 @@ Base2(11).test
 //│     = 12
 
 Base2(11).test2
-//│ (Int, Int,)
+//│ [Int, Int]
 //│ res
 //│     = [ 12, 11 ]
 
@@ -128,7 +128,7 @@ class Base1(x: Int): BaseTest
 //│ class Base1(x: Int): BaseTest
 
 Base1
-//│ (x: Int,) -> Base1
+//│ (x: Int) -> Base1
 //│ res
 //│     = [Function (anonymous)] { class: [class Base1] }
 
@@ -149,7 +149,7 @@ error : BaseTest
 //│ BaseTest
 //│ res
 //│ Runtime error:
-//│   Error: unexpected runtime error
+//│   Error: an error was thrown
 
 
 // :ns
@@ -158,7 +158,7 @@ mixin Foo {
 }
 //│ mixin Foo() {
 //│   super: {base: Int, misc: 'misc}
-//│   fun test: (Int & 'a) -> (Int, 'a, 'misc,)
+//│   fun test: (Int & 'a) -> [Int, 'a, 'misc]
 //│ }
 
 :e
@@ -191,11 +191,11 @@ module Base1(base: Int, misc: string) extends Foo
 //│ ║  l.157: 	  fun test(x) = [super.base + x, x, super.misc]
 //│ ╙──       	                 ^^^^^
 //│ module Base1(base: Int, misc: string) {
-//│   fun test: forall 'a. (Int & 'a) -> (Int, 'a, nothing,)
+//│   fun test: forall 'a. (Int & 'a) -> [Int, 'a, nothing]
 //│ }
 
 Base1.test
-//│ forall 'a. (Int & 'a) -> (Int, 'a, nothing,)
+//│ forall 'a. (Int & 'a) -> [Int, 'a, nothing]
 //│ res
 //│     = [Function: test]
 
@@ -208,7 +208,7 @@ mixin WrapBase {
 }
 //│ mixin WrapBase() {
 //│   fun wrap: 'a -> 'a
-//│   fun wrapA: (x: Int,) -> Int
+//│   fun wrapA: (x: Int) -> Int
 //│ }
 
 // :d
@@ -218,8 +218,8 @@ mixin Wrap {
 }
 //│ mixin Wrap() {
 //│   super: {wrap: 'a -> 'b, wrapA: 'c -> 'd}
-//│   fun wrap: 'a -> ('b,)
-//│   fun wrapA: 'c -> ('d,)
+//│   fun wrap: 'a -> ['b]
+//│   fun wrapA: 'c -> ['d]
 //│ }
 
 
@@ -227,8 +227,8 @@ mixin Wrap {
 // :d
 module WrapBase1 extends WrapBase, Wrap
 //│ module WrapBase1 {
-//│   fun wrap: 'a -> ('a,)
-//│   fun wrapA: Int -> (Int,)
+//│   fun wrap: 'a -> ['a]
+//│   fun wrapA: Int -> [Int]
 //│ }
 
 
@@ -239,12 +239,12 @@ WrapBase1
 
 // :d
 WrapBase1.wrapA
-//│ Int -> (Int,)
+//│ Int -> [Int]
 //│ res
 //│     = [Function: wrapA]
 
 WrapBase1.wrap
-//│ 'a -> ('a,)
+//│ 'a -> ['a]
 //│ res
 //│     = [Function: wrap]
 
@@ -253,18 +253,18 @@ WrapBase1.wrap
 
 
 WrapBase1.wrap(1)
-//│ (1,)
+//│ [1]
 //│ res
 //│     = [ 1 ]
 
 WrapBase1.wrap("ok")
-//│ ("ok",)
+//│ ["ok"]
 //│ res
 //│     = [ 'ok' ]
 
 
 WrapBase1.wrapA(1)
-//│ (Int,)
+//│ [Int]
 //│ res
 //│     = [ 1 ]
 
@@ -279,7 +279,7 @@ WrapBase1.wrapA("ok")
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.216: 	  fun wrapA(x) = [super.wrapA(x)]
 //│ ╙──       	                              ^
-//│ error | (Int,)
+//│ error | [Int]
 //│ res
 //│     = [ 'ok' ]
 
@@ -287,17 +287,17 @@ WrapBase1.wrapA("ok")
 
 module WrapBase2 extends WrapBase, Wrap, Wrap, Wrap
 //│ module WrapBase2 {
-//│   fun wrap: 'a -> ((('a,),),)
-//│   fun wrapA: Int -> (((Int,),),)
+//│   fun wrap: 'a -> [[['a]]]
+//│   fun wrapA: Int -> [[[Int]]]
 //│ }
 
 let w = WrapBase2.wrap
-//│ let w: 'a -> ((('a,),),)
+//│ let w: 'a -> [[['a]]]
 //│ w
 //│   = [Function: wrap]
 
 let wd = w(1)
-//│ let wd: (((1,),),)
+//│ let wd: [[[1]]]
 //│ wd
 //│    = [ [ [ 1 ] ] ]
 

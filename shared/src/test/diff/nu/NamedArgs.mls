@@ -2,7 +2,7 @@
 
 
 fun test(x: 'a) = if x is undefined then 0 else x + 1
-//│ fun test: (x: Int | undefined,) -> Int
+//│ fun test: (x: Int | undefined) -> Int
 
 :e
 test(x: 0, 1)

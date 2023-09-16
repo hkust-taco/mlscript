@@ -36,7 +36,7 @@ fun stringTail(s) = asNativeString(s).slice(1)
 //│ let getStringOf: anything -> Str
 //│ fun fromCharCode: Int -> Str
 //│ fun firstCharCode: anything -> Int
-//│ fun getCharAtIndex: (anything, Int,) -> Str
+//│ fun getCharAtIndex: (anything, Int) -> Str
 //│ fun strlen: anything -> Int
 //│ fun stringHead: anything -> Str
 //│ fun stringTail: anything -> Str
@@ -72,13 +72,13 @@ fun concat6(a, b, c, d, e, f) = concat2(a, concat5(b, c, d, e, f))
 fun concat7(a, b, c, d, e, f, g) = concat2(a, concat6(b, c, d, e, f, g))
 fun concat8(a, b, c, d, e, f, g, h) = concat2(a, concat7(b, c, d, e, f, g, h))
 fun par(a) = concat3("(", a, ")")
-//│ fun concat2: (Str, Str,) -> Str
-//│ fun concat3: (Str, Str, Str,) -> Str
-//│ fun concat4: (Str, Str, Str, Str,) -> Str
-//│ fun concat5: (Str, Str, Str, Str, Str,) -> Str
-//│ fun concat6: (Str, Str, Str, Str, Str, Str,) -> Str
-//│ fun concat7: (Str, Str, Str, Str, Str, Str, Str,) -> Str
-//│ fun concat8: (Str, Str, Str, Str, Str, Str, Str, Str,) -> Str
+//│ fun concat2: (Str, Str) -> Str
+//│ fun concat3: (Str, Str, Str) -> Str
+//│ fun concat4: (Str, Str, Str, Str) -> Str
+//│ fun concat5: (Str, Str, Str, Str, Str) -> Str
+//│ fun concat6: (Str, Str, Str, Str, Str, Str) -> Str
+//│ fun concat7: (Str, Str, Str, Str, Str, Str, Str) -> Str
+//│ fun concat8: (Str, Str, Str, Str, Str, Str, Str, Str) -> Str
 //│ fun par: Str -> Str
 
 type Option[A] = Some[A] | None
@@ -104,10 +104,10 @@ fun listJoin(xs, sep) =
 //│ type List[A] = Cons[A] | Nil
 //│ module Nil
 //│ class Cons[A](head: A, tail: List[A])
-//│ fun listConcat: forall 'A 'a 'A0. (Cons['A0] | Nil, List['A] & 'a,) -> (Cons['A] | 'a)
-//│ fun listJoin: forall 'A1. (Cons['A1] | Nil, Str,) -> Str
+//│ fun listConcat: forall 'A 'A0 'a. (Cons['A] | Nil, List['A0] & 'a) -> (Cons['A0] | 'a)
+//│ fun listJoin: forall 'A1. (Cons['A1] | Nil, Str) -> Str
 //│ where
-//│   'A0 <: 'A
+//│   'A <: 'A0
 
 type TreeMap[A] = Node[A] | Empty
 module Empty
@@ -115,15 +115,15 @@ class Node[A](key: Str, value: A, left: TreeMap[A], right: TreeMap[A])
 fun insert(t, k, v) =
   if t is
     Node(k', _, l, r) and
-      slt(k)(k') then Node(k', v, insert(l, k, v), r)
-      sgt(k)(k') then Node(k', v, l, insert(r, k, v))
+      slt(k, k') then Node(k', v, insert(l, k, v), r)
+      sgt(k, k') then Node(k', v, l, insert(r, k, v))
       _ then Node(k, v, l, r)
     Empty then Node(k, v, Empty, Empty)
 fun find(t, k) =
   if t is
     Node(k', v, l, r) and
-      slt(k)(k') then find(l, k)
-      sgt(k)(k') then find(r, k)
+      slt(k, k') then find(l, k)
+      sgt(k, k') then find(r, k)
       _ then Some(v)
     Empty then None
 fun traverse(t, f) =
@@ -134,9 +134,9 @@ fun traverse(t, f) =
 //│ type TreeMap[A] = Empty | Node[A]
 //│ module Empty
 //│ class Node[A](key: Str, value: A, left: TreeMap[A], right: TreeMap[A])
-//│ fun insert: forall 'A. (Empty | Node['A], Str, 'A,) -> Node['A]
-//│ fun find: forall 'A0. (Empty | Node['A0], Str,) -> (None | Some['A0])
-//│ fun traverse: forall 'A1 'A2. (Empty | Node['A1], (Str, 'A1,) -> 'A2,) -> (Cons['A2] | Nil)
+//│ fun insert: forall 'A. (Empty | Node['A], Str, 'A) -> Node['A]
+//│ fun find: forall 'A0. (Empty | Node['A0], Str) -> (None | Some['A0])
+//│ fun traverse: forall 'A1 'A2. (Empty | Node['A1], (Str, 'A1) -> 'A2) -> (Cons['A2] | Nil)
 
 type JsonValue = JsonNull | JsonNumber | JsonString | JsonBoolean | JsonObject | JsonArray
 module JsonNull {
@@ -222,7 +222,7 @@ fun skipWhiteSpace(s: Scanner) =
 //│   fun peek: Option[Str]
 //│ }
 //│ fun scan: Str -> Scanner
-//│ fun skipWhiteSpace: (s: Scanner,) -> Scanner
+//│ fun skipWhiteSpace: (s: Scanner) -> Scanner
 
 type ParseResult[T] = ParseSuccess[T] | ParseFailure
 class ParseSuccess[T](value: T, scanner: Scanner) {
@@ -245,7 +245,7 @@ fun expect(scanner, ch) =
       eq(ch)(ch') then ParseSuccess((), scanner.advance)
       else ParseFailure(concat4("expect '", ch, "' but found ", ch'), scanner)
     None then ParseFailure(concat3("expect '", ch, "' but found EOF"), scanner)
-//│ fun expect: (Scanner & {advance: Scanner}, Str,) -> (ParseFailure | ParseSuccess[()])
+//│ fun expect: (Scanner & {advance: Scanner}, Str) -> (ParseFailure | ParseSuccess[[]])
 
 fun expectWord(scanner, word, result) =
   if
@@ -260,7 +260,7 @@ fun expectWord(scanner, word, result) =
         ParseFailure(concat3("there should not be other alphabets after\"", word, "\""), scanner)
       else
         ParseSuccess(result, scanner)
-//│ fun expectWord: forall 'T. (Scanner & {peek: Object & ~#Some | Some[anything], advance: Scanner}, Str, 'T,) -> (ParseFailure | ParseSuccess['T])
+//│ fun expectWord: forall 'T. (Scanner & {peek: Object & ~#Some | Some[anything], advance: Scanner}, Str, 'T) -> (ParseFailure | ParseSuccess['T])
 
 // If we put this function together with the next block, there will be type
 // mismatch errors.
@@ -270,7 +270,7 @@ fun parseMatched(scanner, closingSymbol, parse, fn) =
       ParseSuccess(_, scanner) then ParseSuccess(fn(outcome), scanner)
       ParseFailure(message, scanner) then ParseFailure(message, scanner)
     ParseFailure(message, scanner) then ParseFailure(message, scanner)
-//│ fun parseMatched: forall 'T 'advance 'value. ({advance: 'advance}, Str, 'advance -> (ParseFailure | ParseSuccess['value]), 'value -> 'T,) -> (ParseFailure | ParseSuccess['T])
+//│ fun parseMatched: forall 'advance 'value 'T. ({advance: 'advance}, Str, 'advance -> (ParseFailure | ParseSuccess['value]), 'value -> 'T) -> (ParseFailure | ParseSuccess['T])
 
 :ng
 fun parseEntries(scanner): ParseResult[TreeMap[JsonValue]] = error

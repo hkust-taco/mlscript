@@ -11,7 +11,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   
   def stopConstrainingOnFirstFailure: Bool = false
   def verboseConstraintProvenanceHints: Bool = verbose
-  def defaultStartingFuel: Int = 5000
+  def defaultStartingFuel: Int =
+    // 5000
+    10000 // necessary for fat definitions in OCamlList.mls
   var startingFuel: Int = defaultStartingFuel
   def depthLimit: Int =
     // 150
@@ -25,13 +27,13 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   
   private def noSuchMember(info: DelayedTypeInfo, fld: Var): Diagnostic =
     ErrorReport(
-      msg"${info.decl.kind.str.capitalize} `${info.decl.name}` does not contain member `${fld.name}`" -> fld.toLoc :: Nil)
+      msg"${info.decl.kind.str.capitalize} `${info.decl.name}` does not contain member `${fld.name}`" -> fld.toLoc :: Nil, newDefs)
   
   def lookupMember(clsNme: Str, rfnt: Var => Opt[FieldType], fld: Var)
         (implicit ctx: Ctx, raise: Raise)
         : Either[Diagnostic, NuMember]
         = {
-    val info = ctx.tyDefs2.getOrElse(clsNme, die/*TODO*/)
+    val info = ctx.tyDefs2.getOrElse(clsNme, ???/*TODO*/)
     
     if (info.isComputing) {
       
@@ -72,7 +74,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         case N if info.isComputing =>
           
           if (info.allFields.contains(fld)) // TODO don't report this if the field can be found somewhere else!
-            foundRec = S(ErrorReport(msg"Indirectly-recursive member should have type annotation" -> fld.toLoc :: Nil))
+            foundRec = S(ErrorReport(
+              msg"Indirectly-recursive member should have type annotation" -> fld.toLoc :: Nil, newDefs))
           
           N
         
@@ -122,11 +125,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                 // _tv.lowerBounds.foldLeft(BotType: ST)(_ | _),
                 // _tv.upperBounds.foldLeft(TopType: ST)(_ & _),
                 _tv.lowerBounds.foldLeft(
-                  Extruded(false, SkolemTag(_tv.level, _tv)(provTODO))(provTODO, Nil): ST
+                  Extruded(true, SkolemTag(_tv)(provTODO))(provTODO, Nil): ST
                   // ^ TODO provide extrusion reason?
                 )(_ | _),
                 _tv.upperBounds.foldLeft(
-                  Extruded(true, SkolemTag(_tv.level, _tv)(provTODO))(provTODO, Nil): ST
+                  Extruded(false, SkolemTag(_tv)(provTODO))(provTODO, Nil): ST
                   // ^ TODO provide extrusion reason?
                 )(_ & _),
               )(_tv.prov)
@@ -168,6 +171,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   }()
   
   
+  // * Each type has a shadow which identifies all variables created from copying
+  // * variables that existed at the start of constraining.
+  // * The intent is to make the total number of shadows in a given constraint
+  // * resolution run finite, so we can avoid divergence with a "cyclic-lookign constraint" error.
   type ShadowSet = Set[ST -> ST]
   case class Shadows(current: ShadowSet, previous: ShadowSet) {
     def size: Int = current.size + previous.size
@@ -204,7 +211,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     type ConCtx = Ls[SimpleType] -> Ls[SimpleType]
     
     
-    val ret = () => return
+    val abort = () => return
     
     def abbreviate(msgs: Ls[Message -> Opt[Loc]]) = {
       val treshold = 15
@@ -228,7 +235,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               msg"while constraining:  ${s"${c._1}  <!<  ${c._2}"}" -> N))
           )
         )
-        ret()
+        abort()
       } else
       if (fuel <= 0) {
         err(
@@ -238,7 +245,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           else cctx._1.map(c => msg" + ${s"$c"}" -> c.prov.loco)
             ::: cctx._2.map(c => msg" - ${s"$c"}" -> c.prov.loco))
         )
-        ret()
+        abort()
       } else fuel -= 1
     }
     
@@ -263,7 +270,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         }}
         ec.clear()
       }()
-    } //  ensuring ctx.extrCtx.isEmpty
+    } // ensuring ctx.extrCtx.isEmpty
     
     /* To solve constraints that are more tricky. */
     def goToWork(lhs: ST, rhs: ST)(implicit cctx: ConCtx, prevCctxs: Ls[ConCtx], ctx: Ctx, shadows: Shadows): Unit = {
@@ -447,7 +454,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           (return println(s"OK  $done_ls & $tr  =:=  ${BotType}")), rs, done_rs)
         
         // case (ls, (tr @ TypeRef(_, _)) :: rs) => annoying(ls, done_ls, tr.expand :: rs, done_rs)
-        case (ls, (tr @ TypeRef(_, _)) :: rs) => annoying(ls, done_ls, rs, done_rs | tr getOrElse
+        case (ls, (tr @ TypeRef(_, _)) :: rs) => annoying(ls, done_ls, rs, done_rs | (tr, pol = false) getOrElse
           (return println(s"OK  $done_rs & $tr  =:=  ${TopType}")))
         
         /*
@@ -472,9 +479,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           (return println(s"OK  $done_rs | $f  =:=  ${TopType}")))
         case (ls, (r @ RecordType(fs)) :: rs) => annoying(ls, done_ls, r.toInter :: rs, done_rs)
           
-        // TODO prevent these cases by refining `annoyingImpl`'s parameter types
-        case (_, (_: PolymorphicType) :: _) | ((_: PolymorphicType) :: _, _) => ???
-        case (_, (_: ConstrainedType) :: _) | ((_: ConstrainedType) :: _, _) => ???
+        // TODO statically prevent these cases by refining `annoyingImpl`'s parameter types
+        case (_, (_: PolymorphicType) :: _) | ((_: PolymorphicType) :: _, _) => die
+        case (_, (_: ConstrainedType) :: _) | ((_: ConstrainedType) :: _, _) => die
           
         case (Nil, Nil) =>
           // TODO improve:
@@ -621,8 +628,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         }
       }
     
-    /** Extrudes and also checks that avoided type variables (which are widened to top/bot)
-      * do not introduce bad bounds. To do this, we constrain the bounds.
+    /** Extrudes and also checks type variable avoidance (which widens skolems to top/bot)
+      * did not introduce bad bounds. To do this, we reconstrain the bounds of all new variables.
       * This is a bit of a sledgehammer approach that could be improved – it will duplicate TV bounds!
       * For instance, it would be better to accumulate new TVs' future bounds first
       * and add them by constraining later. */
@@ -661,14 +668,15 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       val lhs_rhs = lhs -> rhs
       stack.push(lhs_rhs)
       consumeFuel()
-      // Thread.sleep(10)  // useful for debugging constraint-solving explosions debugged on stdout
+      // Thread.sleep(10)  // useful for debugging constraint-solving explosions piped to stdout
       recImpl(lhs, rhs)(raise,
         if (sameLevel)
           (if (cctx._1.headOption.exists(_ is lhs)) cctx._1 else lhs :: cctx._1)
           ->
           (if (cctx._2.headOption.exists(_ is rhs)) cctx._2 else rhs :: cctx._2)
         else (lhs :: Nil) -> (rhs :: Nil),
-        if (sameLevel || prevCctxs.isEmpty) prevCctxs else cctx :: prevCctxs,
+        if (sameLevel || prevCctxs.isEmpty) prevCctxs // * See [note:2] below
+        else cctx :: prevCctxs,
         ctx,
         if (sameLevel) shadows else shadows.copy(current = Set.empty)
       )
@@ -699,7 +707,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       // *    Therefore this subtyping check may not be worth it.
       // *    In any case, we make it more lightweight by not traversing type variables
       // *    and not using a subtyping cache (cf. `CompareRecTypes = false`).
-      if ({ implicit val ctr: CompareRecTypes = false; lhs <:< rhs }) ()
+      if ({ implicit val ctr: CompareRecTypes = false; lhs <:< rhs })
+        println(s"Already a subtype by <:<")
       
       // println(s"  where ${FunctionType(lhs, rhs)(primProv).showBounds}")
       else {
@@ -708,12 +717,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (_: ProvType, _) | (_, _: ProvType) => shadows
           // * Note: contrary to Simple-sub, we do have to remember subtyping tests performed
           // *    between things that are not syntactically type variables or type references.
-          // *  Indeed, due to the normalization of unions and intersections in the wriong polarity,
+          // *  Indeed, due to the normalization of unions and intersections in the wrong polarity,
           // *    cycles in regular trees may only ever go through unions or intersections,
           // *    and not plain type variables.
-          // case (l: TV, r: TV) if noRecursiveTypes =>
-          //   if (cache(lhs_rhs)) return println(s"Cached! (not recursive")
-          //   cache += lhs_rhs
           case _ =>
             if (!noRecursiveTypes && cache(lhs_rhs)) return println(s"Cached!")
             val shadow = lhs.shadow -> rhs.shadow
@@ -747,7 +753,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             
             if (!noRecursiveTypes) cache += lhs_rhs
             
-            Shadows(shadows.current + lhs_rhs + shadow, // FIXME this conflation is not quite correct
+            Shadows(shadows.current + lhs_rhs + shadow, // * FIXME this conflation is not quite correct
               shadows.previous + shadow)
             
         }) |> { implicit shadows: Shadows =>
@@ -818,7 +824,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               println(s"EXTR RHS  ~>  $rhs2  to ${lhs.level}")
               println(s" where ${rhs2.showBounds}")
               // println(s"   and ${rhs.showBounds}")
-                rec(lhs, rhs2, true)
+              rec(lhs, rhs2, true)
             }
             
           case (lhs, rhs: TypeVariable) =>
@@ -836,8 +842,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               println(s"EXTR LHS  ~>  $lhs2  to ${rhs.level}")
               println(s" where ${lhs2.showBounds}")
               // println(s"   and ${lhs.showBounds}")
-              // rec(lhs2, rhs, true)
-                rec(lhs2, rhs, true)
+              rec(lhs2, rhs, true)
             }
             
             
@@ -998,7 +1003,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             // * the rigid type variables without extrusion,
             // * while preventing the rigid variables from leaking out.
             
-            // * Hack ("heuristic"): we only start remembering `prevCctxs`
+            // * [note:2] Hack ("heuristic"): we only start remembering `prevCctxs`
             // * after going through at least one instantiation.
             // * This is to filter out locations that were unlikely to cause
             // * any skolem extrusion down the line.
@@ -1123,7 +1128,13 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       }
       
       
-      val failure = failureOpt.getOrElse((lhs.unwrapProvs, rhs.unwrapProvs) match {
+      val lhsBase = lhs.typeBase
+      def lhsIsPlain = lhsBase matches {
+        case _: FunctionType | _: RecordType | _: TypeTag | _: TupleType
+           | _: TypeRef | _: ExtrType => true
+      }
+      
+      val failure = failureOpt.getOrElse((lhsBase, rhs.unwrapProvs) match {
         case lhs_rhs @ ((_: Extruded, _) | (_, _: Extruded)) =>
           val (mainExtr, extr1, extr2, reason) = lhs_rhs match {
             case (extr: Extruded, extr2: Extruded)
@@ -1165,7 +1176,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                   case _ => Nil
                 }
               )
-          return raise(ErrorReport(msgs ::: mk_constraintProvenanceHints))
+          return raise(ErrorReport(msgs ::: mk_constraintProvenanceHints, newDefs))
         case (_: TV | _: ProxyType, _) => doesntMatch(rhs)
         case (RecordType(fs0), RecordType(fs1)) =>
           (fs1.map(_._1).toSet -- fs0.map(_._1).toSet)
@@ -1183,9 +1194,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         case (lunw, RecordType((n, _) :: Nil))
           if !lunw.isInstanceOf[RecordType] => doesntHaveField(n.name)
         case (lunw, RecordType(fs @ (_ :: _)))
-          if !lunw.isInstanceOf[RecordType] =>
+          if lhsIsPlain && !lunw.isInstanceOf[RecordType] =>
             msg"is not a record (expected a record with field${
               if (fs.sizeCompare(1) > 0) "s" else ""}: ${fs.map(_._1.name).mkString(", ")})"
+        case (lunw, RecordType(fs @ (_ :: _))) =>
+          msg"does not have all required fields ${fs.map("'" + _._1.name + "'").mkString(", ")}"
         case _ => doesntMatch(rhs)
       })
       
@@ -1234,11 +1247,12 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         detailedContext,
       ).flatten
       
-      raise(ErrorReport(msgs))
+      raise(ErrorReport(msgs, newDefs))
     }
     
     rec(lhs, rhs, true)(raise, Nil -> Nil, Nil, outerCtx, shadows)
   }}
+  
   
   
   def subsume(ty_sch: ST, sign: ST)
@@ -1255,6 +1269,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       else if (showAllErrors || errCnt === 1) raise(err)
     }, prov, ctx, Shadows.empty)
   }
+  
   
   
   /** Copies a type up to its type variables of wrong level (and their extruded bounds),
@@ -1326,8 +1341,13 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case e @ ExtrType(_) => e
       case p @ ProvType(und) => ProvType(extrude(und, lowerLvl, pol, upperLvl))(p.prov)
       case p @ ProxyType(und) => extrude(und, lowerLvl, pol, upperLvl)
-      case tt @ SkolemTag(level, id) =>
-        if (level > lowerLvl) {
+      case tt @ SkolemTag(id) =>
+        if (tt.level > upperLvl) {
+          extrude(id, lowerLvl, pol, upperLvl) match {
+            case id: TV => SkolemTag(id)(tt.prov)
+            case _ => die
+          }
+        } else if (tt.level > lowerLvl) {
             // * When a rigid type variable is extruded,
             // * we need to essentially widen it to Top or Bot.
             // * Creating a new skolem instead, as was done at some point, is actually unsound.
@@ -1336,7 +1356,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             // * which achieves the same effect as Top/Bot.
             new Extruded(!pol, tt)(
               tt.prov.copy(desc = "extruded type variable reference"), reason)
-        } else ty
+        } else die // shouldn't happen
       case _: ClassTag | _: TraitTag | _: Extruded => ty
       case tr @ TypeRef(d, ts) =>
         TypeRef(d, tr.mapTargs(S(pol)) {
@@ -1373,7 +1393,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     err(msg -> loco :: Nil)
   }
   def err(msgs: List[Message -> Opt[Loc]])(implicit raise: Raise): SimpleType = {
-    err(ErrorReport(msgs))
+    err(ErrorReport(msgs, newDefs))
   }
   def err(diag: Diagnostic)(implicit raise: Raise): SimpleType = {
     raise(diag)
@@ -1385,7 +1405,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     warn(msg -> loco :: Nil)
 
   def warn(msgs: List[Message -> Opt[Loc]])(implicit raise: Raise): Unit =
-    raise(WarningReport(msgs))
+    raise(WarningReport(msgs, newDefs))
   
   
   
@@ -1426,13 +1446,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   
   
   
-  
-  
   /** Freshens all the type variables whose level is comprised in `(above, below]`
     *   or which have bounds and whose level is greater than `above`. */
   def freshenAbove(above: Level, ty: SimpleType,
           rigidify: Bool = false, below: Level = MaxLevel, leaveAlone: Set[TV] = Set.empty)
-        (implicit ctx: Ctx, freshened: MutMap[TV, ST], shadows: Shadows)
+        (implicit ctx: Ctx, freshened: MutMap[TV, ST])
         : SimpleType =
   {
     def freshenImpl(ty: SimpleType, below: Level): SimpleType =
@@ -1480,7 +1498,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         case Some(tv) => tv
         case None if rigidify && tv.level <= below =>
           // * Rigid type variables (ie, skolems) are encoded as SkolemTag-s
-          val rv = SkolemTag(lvl, freshVar(noProv, S(tv), tv.nameHint/* .orElse(S("_"))*/))(tv.prov)
+          val rv = SkolemTag(freshVar(noProv, S(tv), tv.nameHint/* .orElse(S("_"))*/))(tv.prov)
           println(s"New skolem: $tv ~> $rv")
           if (tv.lowerBounds.nonEmpty || tv.upperBounds.nonEmpty) { // TODO just add bounds to skolems! should lead to simpler constraints
             // The bounds of `tv` may be recursive (refer to `tv` itself),
@@ -1542,7 +1560,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case e @ ExtrType(_) => e
       case p @ ProvType(und) => ProvType(freshen(und))(p.prov)
       case p @ ProxyType(und) => freshen(und)
-      case SkolemTag(level, id) if level > above && level <= below =>
+      case s @ SkolemTag(id) if s.level > above && s.level <= below =>
         freshen(id)
       case _: ClassTag | _: TraitTag | _: SkolemTag | _: Extruded => ty
       case w @ Without(b, ns) => Without(freshen(b), ns)(w.prov)

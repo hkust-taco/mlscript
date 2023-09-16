@@ -12,8 +12,42 @@ def f x = x with { b = 2 }
 //│  = [Function: f]
 
 def r: {b: string; c: int}\b
-//│ r: {c: int}
+//│ r: in {b: string, c: int}\b out {c: int}
 //│  = <missing implementation>
+
+:e
+r = {c = 1}
+//│ {c: 1}
+//│   <:  r:
+//│ {b: string, c: int}\b
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.19: 	r = {c = 1}
+//│ ║        	^^^^^^^^^^^
+//│ ╟── record literal of type `{c: 1}` does not have field 'b'
+//│ ║  l.19: 	r = {c = 1}
+//│ ║        	    ^^^^^^^
+//│ ╟── Note: constraint arises from record type:
+//│ ║  l.14: 	def r: {b: string; c: int}\b
+//│ ╙──      	       ^^^^^^^^^^^^^^^^^^^
+//│  = { c: 1 }
+
+// * Note that \b in negative position has special semantics
+// * (it's moved onto the LHS in a constraint)
+:e
+r = {b = "a", c = 1}
+//│ {b: "a", c: 1}
+//│   <:  r:
+//│ {b: string, c: int}\b
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.37: 	r = {b = "a", c = 1}
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ╟── record literal of type `{c: 1}` does not match type `{b: string, c: int}`
+//│ ║  l.37: 	r = {b = "a", c = 1}
+//│ ║        	    ^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from record type:
+//│ ║  l.14: 	def r: {b: string; c: int}\b
+//│ ╙──      	       ^^^^^^^^^^^^^^^^^^^
+//│  = { b: 'a', c: 1 }
 
 (1,2,3) with { _4 = "oops" }
 //│ res: (1, 2, 3,) & {_4: "oops"}
@@ -26,32 +60,32 @@ def r: {b: string; c: int}\b
 :e
 (res: (int,int,int,))._1
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.27: 	(res: (int,int,int,))._1
+//│ ║  l.61: 	(res: (int,int,int,))._1
 //│ ║        	 ^^^
 //│ ╟── `with` extension of type `{_1: "oops", _2: 2, _3: 3}` is not a 3-element tuple
-//│ ║  l.22: 	(1,2,3) with { _1 = "oops" }
+//│ ║  l.56: 	(1,2,3) with { _1 = "oops" }
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `(int, int, int,)`
-//│ ║  l.27: 	(res: (int,int,int,))._1
+//│ ║  l.61: 	(res: (int,int,int,))._1
 //│ ║        	 ^^^
 //│ ╟── Note: constraint arises from tuple type:
-//│ ║  l.27: 	(res: (int,int,int,))._1
+//│ ║  l.61: 	(res: (int,int,int,))._1
 //│ ╙──      	      ^^^^^^^^^^^^^^
 //│ res: int
 //│    = 'oops'
 
 
 def r: int \ _1
-//│ r: int
+//│ r: int\_1
 //│  = <missing implementation>
 
 def r: (1,2,3) \ _1
-//│ r: {_2: 2, _3: 3}
+//│ r: in (1, 2, 3,)\_1 out {_2: 2, _3: 3}
 //│  = <missing implementation>
 // (1,2,3).toRecord \ _1
 
 def r: (1,2,3) \ _12345
-//│ r: (1, 2, 3,)
+//│ r: in (1, 2, 3,)\_12345 out (1, 2, 3,)
 //│  = <missing implementation>
 
 def arr: Array[int]
@@ -75,14 +109,14 @@ fr : Array[int] & {b: int}
 :e
 arr._1
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.76: 	arr._1
-//│ ║        	^^^^^^
+//│ ║  l.110: 	arr._1
+//│ ║         	^^^^^^
 //│ ╟── type `Array[int]` does not have field '_1'
-//│ ║  l.57: 	def arr: Array[int]
+//│ ║  l.91: 	def arr: Array[int]
 //│ ║        	         ^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{_1: ?a}`
-//│ ║  l.76: 	arr._1
-//│ ╙──      	^^^
+//│ ║  l.110: 	arr._1
+//│ ╙──       	^^^
 //│ res: error
 //│    = undefined
 
@@ -136,10 +170,10 @@ def test: {x: 1} & (1, 2, 3)
 :e
 f(1,2,3) : 1 | 2 | 3
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.137: 	f(1,2,3) : 1 | 2 | 3
+//│ ║  l.171: 	f(1,2,3) : 1 | 2 | 3
 //│ ║         	^^^^^^^^
 //│ ╟── argument list of type `(1, 2, 3,)` does not match type `(?a,)`
-//│ ║  l.137: 	f(1,2,3) : 1 | 2 | 3
+//│ ║  l.171: 	f(1,2,3) : 1 | 2 | 3
 //│ ╙──       	 ^^^^^^^
 //│ res: 1 | 2 | 3
 //│    = [Number: 1] { b: 2 }
@@ -147,19 +181,19 @@ f(1,2,3) : 1 | 2 | 3
 :e
 (arr[0])[1][2]
 //│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.148: 	(arr[0])[1][2]
+//│ ║  l.182: 	(arr[0])[1][2]
 //│ ║         	^^^^^^^^^^^
 //│ ╟── type `int` does not match type `Array[?a]`
-//│ ║  l.57: 	def arr: Array[int]
+//│ ║  l.91: 	def arr: Array[int]
 //│ ║        	               ^^^
 //│ ╟── but it flows into array access with expected type `Array[?b]`
-//│ ║  l.148: 	(arr[0])[1][2]
+//│ ║  l.182: 	(arr[0])[1][2]
 //│ ╙──       	 ^^^^^^
 //│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.148: 	(arr[0])[1][2]
+//│ ║  l.182: 	(arr[0])[1][2]
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╟── possibly-undefined array access of type `undefined` does not match type `Array[?a]`
-//│ ║  l.148: 	(arr[0])[1][2]
+//│ ║  l.182: 	(arr[0])[1][2]
 //│ ╙──       	^^^^^^^^^^^
 //│ res: error | undefined
 //│ Runtime error:
@@ -311,13 +345,13 @@ a2.x
 :e
 a2._1
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.312: 	a2._1
+//│ ║  l.346: 	a2._1
 //│ ║         	^^^^^
 //│ ╟── type `Array['a]` does not match type `{_1: ?a} | ~{_2: true, x: "haha"}`
-//│ ║  l.289: 	def rep5: 'a -> Array['a]
+//│ ║  l.323: 	def rep5: 'a -> Array['a]
 //│ ║         	                ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{_1: ?a} | ~{_2: true, x: "haha"}`
-//│ ║  l.312: 	a2._1
+//│ ║  l.346: 	a2._1
 //│ ╙──       	^^
 //│ res: error
 //│    = undefined

@@ -21,7 +21,7 @@
 //│     = 1
 
 fun foo(x: Int) = x + 1
-//│ fun foo: (x: Int,) -> Int
+//│ fun foo: (x: Int) -> Int
 
 fun foo(x : Int) = x + 1
 //│ fun foo: Int -> Int

@@ -2,7 +2,7 @@
 
 
 fun foo1 = forall 'A; (x: 'A) => x
-//│ fun foo1: forall 'A. (x: 'A,) -> 'A
+//│ fun foo1: forall 'A. (x: 'A) -> 'A
 
 foo1(42)
 //│ 42
@@ -20,7 +20,7 @@ foo1[Int](42)
 
 
 fun foo2<A>(x: A) = x
-//│ fun foo2: forall 'A. (x: 'A,) -> 'A
+//│ fun foo2: forall 'A. (x: 'A) -> 'A
 
 foo2(42)
 //│ 42
@@ -38,7 +38,7 @@ foo2<Int>(42)
 
 
 fun foo3[A](x: A) = x
-//│ fun foo3: forall 'A. (x: 'A,) -> 'A
+//│ fun foo3: forall 'A. (x: 'A) -> 'A
 
 foo3(42)
 //│ 42
@@ -85,15 +85,21 @@ fun bar<A>: A => A
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
 //│ ║  l.77: 	fun bar<A>: A => A
 //│ ╙──      	    ^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Unsupported pattern shape:
+//│ ╔══[ERROR] identifier not found: >:
 //│ ║  l.77: 	fun bar<A>: A => A
-//│ ╙──      	        ^^^^^
+//│ ╙──      	         ^^
+//│ ╔══[ERROR] identifier not found: A
+//│ ║  l.77: 	fun bar<A>: A => A
+//│ ╙──      	        ^
+//│ ╔══[ERROR] identifier not found: A
+//│ ║  l.77: 	fun bar<A>: A => A
+//│ ╙──      	            ^
 //│ ╔══[ERROR] identifier not found: A
 //│ ║  l.77: 	fun bar<A>: A => A
 //│ ╙──      	                 ^
-//│ error -> error
+//│ error
 //│ Code generation encountered an error:
-//│   term App(App(Var(>:), Tup(_: Var(A))), Tup(_: Var(A))) is not a valid pattern
+//│   unresolved symbol >:
 
 
 :e
@@ -103,28 +109,28 @@ module Test {
   fun test<A>(x: A) = x
 }
 //│ ╔══[ERROR] Member `foo` is declared in parent but not implemented in `Test`
-//│ ║  l.100: 	module Test {
+//│ ║  l.106: 	module Test {
 //│ ║         	       ^^^^
 //│ ╟── Declared here:
-//│ ║  l.101: 	  fun foo: 'A => 'A
+//│ ║  l.107: 	  fun foo: 'A => 'A
 //│ ╙──       	      ^^^^^^^^^^^^^
 //│ ╔══[ERROR] Member `bar` is declared in parent but not implemented in `Test`
-//│ ║  l.100: 	module Test {
+//│ ║  l.106: 	module Test {
 //│ ║         	       ^^^^
 //│ ╟── Declared here:
-//│ ║  l.102: 	  fun bar: 'A
+//│ ║  l.108: 	  fun bar: 'A
 //│ ╙──       	      ^^^^^^^
 //│ module Test {
 //│   fun bar: nothing
 //│   fun foo: forall 'A. 'A -> 'A
-//│   fun test: forall 'A0. (x: 'A0,) -> 'A0
+//│   fun test: forall 'A0. (x: 'A0) -> 'A0
 //│ }
 
 class Test<A>(n: A) {
   fun test<A>(x: A) = [x, n]
 }
 //│ class Test[A](n: A) {
-//│   fun test: forall 'A. (x: 'A,) -> ('A, A,)
+//│   fun test: forall 'A. (x: 'A) -> ['A, A]
 //│ }
 
 

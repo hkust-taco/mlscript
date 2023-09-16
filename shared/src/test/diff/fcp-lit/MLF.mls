@@ -1,6 +1,5 @@
-:NoJS
-
 :NoRecursiveTypes
+:NoJS
 
 
 // ------------ Dummy classes to represent the types in the examples ------------
@@ -78,7 +77,7 @@ choose id succ
 choose id auto
 //│ res: (forall 'a. 'a -> 'a & 'b) -> ('a0 -> 'a0 | 'b)
 
-// nope, along with anything with it as a subterm
+// Not typeable in MLF, along with anything with it as a subterm
 // i.e. unannotated auto
 omega = fun x -> x x
 //│ omega: ('a -> 'b & 'a) -> 'b
@@ -103,21 +102,21 @@ app auto id
 
 // ------------ Sec 5.2 ------------
 
-// Error in the paper (confirmed by Rémy via email).
+// * Mistake in the paper (confirmed by Rémy via email).
 :e
 let f = choose id in (f auto) (f succ)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.108: 	let f = choose id in (f auto) (f succ)
+//│ ║  l.107: 	let f = choose id in (f auto) (f succ)
 //│ ║         	                     ^^^^^^^^^^^^^^^^^
 //│ ╟── type `'a` is not an instance of type `int`
-//│ ║  l.29: 	def auto (x: forall 'a. 'a -> 'a) = x x
+//│ ║  l.28: 	def auto (x: forall 'a. 'a -> 'a) = x x
 //│ ║        	                        ^^
 //│ ╟── Note: quantified type variable 'a is defined at:
-//│ ║  l.29: 	def auto (x: forall 'a. 'a -> 'a) = x x
+//│ ║  l.28: 	def auto (x: forall 'a. 'a -> 'a) = x x
 //│ ╙──      	                    ^^
 //│ res: error | int -> int
 
-// Reproduced with an unnanotated auto:
+// * Reproduced with an unnanotated auto:
 
 def auto2 x = x x
 //│ auto2: ('a -> 'b & 'a) -> 'b
@@ -125,26 +124,26 @@ def auto2 x = x x
 choose id auto2
 //│ res: ('a -> 'b & 'a) -> ('b | 'a)
 
-:e // This is a legit error
+:e // * This is a legit error
 res (choose id succ)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.129: 	res (choose id succ)
+//│ ║  l.128: 	res (choose id succ)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── reference of type `int -> int` is not an instance of type `int`
-//│ ║  l.129: 	res (choose id succ)
+//│ ║  l.128: 	res (choose id succ)
 //│ ║         	               ^^^^
 //│ ╟── but it flows into application with expected type `int`
-//│ ║  l.129: 	res (choose id succ)
+//│ ║  l.128: 	res (choose id succ)
 //│ ╙──       	     ^^^^^^^^^^^^^^
 //│ res: error | int | int -> int
 
-// Didier Le Botlan suggested this fix by email:
+// * Didier Le Botlan suggested this fix by email:
 
 let f = choose id in (f auto, f succ)
 //│ res: (forall 'b 'a. (forall 'a0. 'a0 -> 'a0 & 'b) -> ('a -> 'a | 'b), forall 'b. (int & 'b) -> (int | 'b),)
 
 let f = choose id in (f auto2, f succ)
-//│ res: (forall 'a 'b 'c. ('c -> 'a & 'c & 'b) -> ('a | 'b), forall 'b. (int & 'b) -> (int | 'b),)
+//│ res: (forall 'a 'b 'c. ('a -> 'b & 'a & 'c) -> ('b | 'c), forall 'c. (int & 'c) -> (int | 'c),)
 
 // ------------ Sec 6 ------------
 
@@ -163,7 +162,7 @@ K x y = x
 (fun y -> let tmp = y I in y K) (fun x -> x x)
 //│ res: anything -> 'a -> anything -> 'a
 
-// Note: reduces to
+// * Note: reduces to
 let tmp = (fun x -> x x) I in (fun x -> x x) K
 //│ res: anything -> 'a -> anything -> 'a
 
@@ -185,25 +184,25 @@ let tmp = I I in K K
 
 // ------------ Sec 2.3.1 ------------
 
-// i.e. id auto (FreezeML A5)
+// * i.e. id auto (FreezeML A5)
 (fun z -> z) omegad
 (fun z -> z) omega
 //│ res: (forall 'a. 'a -> 'a) -> 'a0 -> 'a0
 //│ res: ('a -> 'b & 'a) -> 'b
 
-// i.e. auto id (FreezeML F5)
+// * i.e. auto id (FreezeML F5)
 (fun x -> x x) id
 //│ res: 'a -> 'a
 
 fun z -> (z omegad)
 fun z -> (z omega)
 //│ res: ((forall 'a. (forall 'a0. 'a0 -> 'a0) -> 'a -> 'a) -> 'b) -> 'b
-//│ res: ((forall 'a 'b. ('b -> 'a & 'b) -> 'a) -> 'c) -> 'c
+//│ res: ((forall 'a 'b. ('a -> 'b & 'a) -> 'b) -> 'c) -> 'c
 
 (fun y -> fun z -> z y) omegad
 (fun y -> fun z -> z y) omega
 //│ res: ((forall 'a. (forall 'a0. 'a0 -> 'a0) -> 'a -> 'a) -> 'b) -> 'b
-//│ res: ((forall 'a 'b. ('b -> 'a & 'b) -> 'a) -> 'c) -> 'c
+//│ res: ((forall 'a 'b. ('a -> 'b & 'a) -> 'b) -> 'c) -> 'c
 
 fun z -> omegad z
 fun z -> omega z
@@ -228,12 +227,12 @@ fun (x: forall 'b 'a. 'a -> 'b -> 'a) -> x
 
 // ------------ Sec 2 ------------
 
-// FreezeML B1
-// nope
+// * FreezeML B1
+// Not typeable in MLF
 poly = fun f -> (f 1, f true)
 //│ poly: (1 -> 'a & true -> 'b) -> ('a, 'b,)
 
-// FreezeML B2
+// * FreezeML B2
 polyL = fun xs -> poly (head xs)
 //│ polyL: List[1 -> 'a & true -> 'b] -> ('a, 'b,)
 
@@ -242,15 +241,15 @@ let ids = single id in (polyL ids, append ids (single inc))
 
 // ------------ Sec 5 ------------
 
-// FreezeML C5
+// * FreezeML C5
 ids = single id
 //│ ids: List[forall 'a. 'a -> 'a]
 
-// Let-bound version of FreezeML A3
+// * Let-bound version of FreezeML A3
 let f = choose nil in f ids
 //│ res: List[forall 'a. 'a -> 'a]
 
-// FreezeML A3
+// * FreezeML A3
 choose nil ids
 //│ res: List[forall 'a. 'a -> 'a]
 
@@ -263,12 +262,12 @@ g (fun x -> id)
 let f = fun x -> id in g f
 //│ res: int
 
-// FreezeML D4
+// * FreezeML D4
 app runST argST
 //│ res: int
 
 
-// ============ Variations ported from supertype tests ============
+// ============ Variations ported from old Supertype prototype tests ============
 
 killer_app = (fun x -> x id) auto
 //│ killer_app: 'a -> 'a
@@ -303,5 +302,36 @@ monster2 = (fun y -> (y I, y K)) (fun x -> x x)
 
 K K
 //│ res: anything -> 'a -> anything -> 'a
+
+
+
+// ============ A new look on MLF (2008 slides) ============
+
+
+// def pack : forall α. forall β. (α, (α -> β)) -> (forall γ. (forall δ. (δ, (δ -> β)) -> γ) -> γ)
+
+type Pair[A,B] = (A,B)
+def pack : forall α. forall β. (α, (α -> β)) -> (forall γ. (forall δ. Pair[δ, (δ -> β)] -> γ) -> γ)
+//│ Defined type alias Pair[+A, +B]
+//│ pack: ('α, 'α -> 'β,) -> (forall 'δ. Pair['δ, 'δ -> 'β] -> 'γ) -> 'γ
+
+def packed_int = pack (1, fun x -> x + 1)
+//│ packed_int: (forall 'δ. Pair['δ, 'δ -> int] -> 'γ) -> 'γ
+
+def packed_pair = pack (1, fun x -> (x, x ))
+//│ packed_pair: (forall 'δ. Pair['δ, 'δ -> (1, 1,)] -> 'γ) -> 'γ
+
+def fst((x,y)) = x
+def snd((x,y)) = y
+//│ fst: (('a, anything,),) -> 'a
+//│ snd: ((anything, 'a,),) -> 'a
+
+v = packed_int (fun p -> (snd p) ( fst p ))
+//│ v: int
+
+
+def a: ' -> '
+//│ a: ' -> '
+
 
 

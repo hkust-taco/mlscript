@@ -192,7 +192,7 @@ f0(Box{})
 
 // i.e., def f: exists T. Box[T] -> int
 def f: Box[?] -> int
-//│ f: Box[nothing] -> int
+//│ f: in Box[?] -> int out Box[nothing] -> int
 //│  = <missing implementation>
 
 :e
@@ -213,7 +213,7 @@ f(Box{})
 f = f0
 //│ Box[?] -> 42
 //│   <:  f:
-//│ Box[nothing] -> int
+//│ Box[?] -> int
 //│  = [Function: f0]
 
 
@@ -234,7 +234,7 @@ class Point: { x: int; y: int }
 //│ Defined Point.Move: Point -> (int, int,) -> Point
 //│ Defined Point.Sum: Point -> {x: int, y: int} -> Point
 //│ Defined Point.Shadow: Point -> {x: int, y: int} -> Point
-//│ Defined Point.Shadow2: Point -> {x: int, y: int} -> Point
+//│ Defined Point.Shadow2: Point -> (({x: int, y: int},),) -> Point
 //│ Defined Point.Shadow3: Point -> {this: {x: int, y: int}} -> Point
 //│ // Prelude
 //│ class Point {

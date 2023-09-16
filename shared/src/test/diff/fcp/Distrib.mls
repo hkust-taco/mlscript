@@ -1,7 +1,5 @@
 :NoRecursiveTypes
-:NoConstrainedTypes
 :DistributeForalls
-
 :NoJS
 
 
@@ -107,17 +105,17 @@ f1 = f2
 //│   <:  f1:
 //│ 'a -> (forall 'b. 'b -> ('a, 'b,))
 //│ ╔══[ERROR] Type error in def definition
-//│ ║  l.105: 	f1 = f2
+//│ ║  l.103: 	f1 = f2
 //│ ║         	^^^^^^^
 //│ ╟── type variable `'b` leaks out of its scope
-//│ ║  l.9: 	def f1: 'a -> (forall 'b. 'b -> ('a, 'b))
+//│ ║  l.7: 	def f1: 'a -> (forall 'b. 'b -> ('a, 'b))
 //│ ║       	                          ^^
 //│ ╟── back into type variable `'b`
-//│ ║  l.9: 	def f1: 'a -> (forall 'b. 'b -> ('a, 'b))
+//│ ║  l.7: 	def f1: 'a -> (forall 'b. 'b -> ('a, 'b))
 //│ ║       	                                     ^^
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this reference:
-//│ ║  l.105: 	f1 = f2
+//│ ║  l.103: 	f1 = f2
 //│ ╙──       	     ^^
 
 f2 = f1

@@ -75,7 +75,7 @@ trait T
 error: (1,2) & t | Array[3]
 //│ res: (1, 2,) & #T | Array[3]
 //│ Runtime error:
-//│   Error: unexpected runtime error
+//│   Error: an error was thrown
 
 
 def arr: Array[1]
@@ -203,4 +203,4 @@ class A: (1,2)
 error: Array[1] & { _1: int }
 //│ res: Array[1] & {_1: int}
 //│ Runtime error:
-//│   Error: unexpected runtime error
+//│   Error: an error was thrown

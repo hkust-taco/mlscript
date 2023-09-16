@@ -15,11 +15,11 @@
 :e // FIXME new rigidification semantics
 def n: ?
 n = 42
-//│ n: anything
+//│ n: ?
 //│  = <missing implementation>
 //│ 42
 //│   <:  n:
-//│ anything
+//│ nothing
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.17: 	n = 42
 //│ ║        	^^^^^^
@@ -89,11 +89,11 @@ add 1 : Als1[?]
 :e // FIXME new rigidification semantics
 def a1: Als1[?]
 a1 = add 1
-//│ a1: Als1[?]
+//│ a1: in Als1[nothing] out Als1[?]
 //│   = <missing implementation>
 //│ int -> int
 //│   <:  a1:
-//│ Als1[?]
+//│ Als1[nothing]
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.91: 	a1 = add 1
 //│ ║        	^^^^^^^^^^
@@ -121,11 +121,11 @@ add 1 : Als2[?]
 :e // FIXME new rigidification semantics
 def a2: Als2[?]
 a2 = add 1
-//│ a2: Als2[?]
+//│ a2: in Als2[anything] out Als2[?]
 //│   = <missing implementation>
 //│ int -> int
 //│   <:  a2:
-//│ Als2[?]
+//│ Als2[anything]
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.123: 	a2 = add 1
 //│ ║         	^^^^^^^^^^
@@ -136,14 +136,14 @@ a2 = add 1
 
 
 def q: ?
-//│ q: anything
+//│ q: ?
 //│  = <missing implementation>
 
 :e // FIXME new rigidification semantics
 q = 1
 //│ 1
 //│   <:  q:
-//│ anything
+//│ nothing
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.143: 	q = 1
 //│ ║         	^^^^^
@@ -367,7 +367,7 @@ fid foo2
 //│ res: 'A -> 'A
 
 fid (f: Foo['a..'b]) = Foo.Id f
-//│ fid: Foo['b] -> ('b & 'A) -> 'A
+//│ fid: Foo['a] -> 'a -> 'a
 
 
 class Bar[A]: { value: A; id: A -> A }

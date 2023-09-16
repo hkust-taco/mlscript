@@ -66,7 +66,7 @@ module Oops {
   fun a = 1
   fun a = 2
 }
-//│ ╔══[ERROR] Refininition of a
+//│ ╔══[ERROR] Refininition of 'a'
 //│ ║  l.67: 	  fun a = 2
 //│ ╙──      	      ^^^^^
 //│ module Oops {
@@ -162,7 +162,7 @@ module M {
 //│ ╔══[ERROR] undeclared `this`
 //│ ║  l.159: 	  fun a: this.A
 //│ ╙──       	         ^^^^
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 
 // FIXME similar
 module M {

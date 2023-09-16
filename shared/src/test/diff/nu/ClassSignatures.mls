@@ -41,7 +41,7 @@ not(Foo().x)
 //│     = true
 
 (f: Foo) => f.x
-//│ (f: Foo,) -> (0 & ??FigureItOut)
+//│ (f: Foo) -> (0 & ??FigureItOut)
 //│ res
 //│     = [Function: res]
 

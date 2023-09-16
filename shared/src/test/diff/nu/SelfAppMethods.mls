@@ -61,7 +61,7 @@ A.i
 A.f
 //│ 'f
 //│   where
-//│     'f :> forall 'a 'f0. 'a
+//│     'f :> forall 'f0 'a. 'a
 //│     'a <: 'f0
 //│     'f0 <: 'f0 -> 'a
 //│ res
