@@ -132,3 +132,20 @@ class Bar2() extends Bar() {
 //│   let d: Int
 //│   let two: error
 //│ }
+
+// it accesses this in an unusual way!
+:e
+abstract class Foo: Int -> Int {
+  val x = f
+  fun f = this(0)
+}
+//│ ╔══[ERROR] Cannot access `this` while initializing field x
+//│ ║  l.139: 	  val x = f
+//│ ║         	      ^^^^^
+//│ ╟── The access to `this` is here
+//│ ║  l.140: 	  fun f = this(0)
+//│ ╙──       	          ^^^^
+//│ abstract class Foo: Int -> Int {
+//│   fun f: nothing
+//│   let x: nothing
+//│ }
