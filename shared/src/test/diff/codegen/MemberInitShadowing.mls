@@ -32,8 +32,8 @@ class A(x0: Int) {
 //│           log(x11);
 //│         }
 //│       static
-//│         unapply(ins) {
-//│           return [ins.#x0];
+//│         unapply(x) {
+//│           return [x.#x0];
 //│         }
 //│       };
 //│       this.#A = ((x0) => Object.freeze(new A(x0)));
@@ -86,8 +86,8 @@ class A(x0: Int) {
 //│           log(x11);
 //│         }
 //│       static
-//│         unapply(ins) {
-//│           return [ins.#x0];
+//│         unapply(x) {
+//│           return [x.#x0];
 //│         }
 //│       };
 //│       this.#A = ((x0) => Object.freeze(new A(x0)));

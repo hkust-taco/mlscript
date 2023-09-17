@@ -816,6 +816,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     }
 
     val staticMethods = sym.unapplyMtd match {
+      // * Note: this code is a temporary hack until we have proper `unapply` desugaring
       case S(unapplyMtd) => unapplyMtd.rhs match {
         case Left(Lam(Tup(_ -> Fld(_, Asc(Var(nme), _)) :: Nil), Tup(fields))) =>
           val unapplyScope = nuTypeScope.derive(s"unapply ${sym.name}")

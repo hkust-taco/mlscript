@@ -27,8 +27,8 @@ class Test(val n: Int) {
 //│           return qualifier.Test(n + 1);
 //│         }
 //│       static
-//│         unapply(ins) {
-//│           return [ins.#n];
+//│         unapply(x) {
+//│           return [x.#n];
 //│         }
 //│       };
 //│       this.#Test = ((n) => Object.freeze(new Test(n)));

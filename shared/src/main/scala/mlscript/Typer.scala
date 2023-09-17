@@ -515,12 +515,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
               }
           }
         })
-      case tv: TypeVar => vars.getOrElse(tv.identifier.toOption.getOrElse(""), {
+      case tv: TypeVar => tv.identifier.toOption.flatMap(vars.get).getOrElse {
         recVars.getOrElse(tv,
-          localVars.getOrElseUpdate(tv, freshVar(noProv, N, tv.name)
+          localVars.getOrElseUpdate(tv, freshVar(noProv, N, tv.name.filter(_.exists(_ =/= '\'')))
               (outerCtxLvl)) // * Type variables not explicily bound are assigned the widest (the outer context's) level
           ).withProv(tyTp(ty.toLoc, "type variable"))
-      })
+      }
       case AppliedType(base, targs) =>
         val prov = tyTp(ty.toLoc, "applied type reference")
         typeNamed(ty.toLoc, base.name) match {
@@ -1088,8 +1088,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
                 case S(ti: DelayedTypeInfo) => ti.decl.genUnapply
                 case _ => N
               }) match {
-                case S(NuFunDef(_, _, _, L(unapplyMtd))) =>
-                  typePolymorphicTerm(unapplyMtd)
+                case S(NuFunDef(_, _, _, L(unapplyMtd))) => typePolymorphicTerm(unapplyMtd)
                 case _ => mthCallOrSel(obj, fieldName)
               }
             else mthCallOrSel(obj, fieldName)

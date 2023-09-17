@@ -19,8 +19,8 @@ class A(x: Int) {}
 //│           this.#x = x;
 //│         }
 //│       static
-//│         unapply(ins) {
-//│           return [ins.#x];
+//│         unapply(x) {
+//│           return [x.#x];
 //│         }
 //│       };
 //│       this.#A = ((x) => Object.freeze(new A(x)));
@@ -118,8 +118,8 @@ class D(val x: Int) {
 //│           log(x);
 //│         }
 //│       static
-//│         unapply(ins) {
-//│           return [ins.#x];
+//│         unapply(x) {
+//│           return [x.#x];
 //│         }
 //│       };
 //│       this.#D = ((x) => Object.freeze(new D(x)));
@@ -194,8 +194,8 @@ class H extends B {}
 //│           this.#x = x;
 //│         }
 //│       static
-//│         unapply(ins) {
-//│           return [ins.#x];
+//│         unapply(x) {
+//│           return [x.#x];
 //│         }
 //│       };
 //│       this.#F = ((x) => Object.freeze(new F(x)));
@@ -366,8 +366,8 @@ fun g(x: Int) =
 //│           return x + y;
 //│         }
 //│       static
-//│         unapply(ins) {
-//│           return [ins.#y];
+//│         unapply(x) {
+//│           return [x.#y];
 //│         }
 //│       }
 //│       let ctor;

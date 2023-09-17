@@ -25,10 +25,10 @@ class Lit(n: Int)
 //│           this.#rhs = rhs;
 //│         }
 //│       static
-//│         unapply(ins) {
+//│         unapply(x) {
 //│           return ([
-//│             ins.#lhs,
-//│             ins.#rhs
+//│             x.#lhs,
+//│             x.#rhs
 //│           ]);
 //│         }
 //│       };
@@ -47,8 +47,8 @@ class Lit(n: Int)
 //│           this.#n = n;
 //│         }
 //│       static
-//│         unapply(ins) {
-//│           return [ins.#n];
+//│         unapply(x) {
+//│           return [x.#n];
 //│         }
 //│       };
 //│       this.#Lit = ((n) => Object.freeze(new Lit(n)));
@@ -82,10 +82,10 @@ class Lit(n: Int)
 //│ │ │             this.#rhs = rhs;
 //│ │ │           }
 //│ │ │         static
-//│ │ │           unapply(ins) {
+//│ │ │           unapply(x) {
 //│ │ │             return ([
-//│ │ │               ins.#lhs,
-//│ │ │               ins.#rhs
+//│ │ │               x.#lhs,
+//│ │ │               x.#rhs
 //│ │ │             ]);
 //│ │ │           }
 //│ │ │         };
@@ -104,8 +104,8 @@ class Lit(n: Int)
 //│ │ │             this.#n = n;
 //│ │ │           }
 //│ │ │         static
-//│ │ │           unapply(ins) {
-//│ │ │             return [ins.#n];
+//│ │ │           unapply(x) {
+//│ │ │             return [x.#n];
 //│ │ │           }
 //│ │ │         };
 //│ │ │         this.#Lit = ((n) => Object.freeze(new Lit(n)));
@@ -216,8 +216,8 @@ class Neg<A>(expr: A)
 //│           this.#expr = expr;
 //│         }
 //│       static
-//│         unapply(ins) {
-//│           return [ins.#expr];
+//│         unapply(x) {
+//│           return [x.#expr];
 //│         }
 //│       };
 //│       this.#Neg = ((expr) => Object.freeze(new Neg(expr)));
@@ -246,8 +246,8 @@ class Neg<A>(expr: A)
 //│ │ │             this.#expr = expr;
 //│ │ │           }
 //│ │ │         static
-//│ │ │           unapply(ins) {
-//│ │ │             return [ins.#expr];
+//│ │ │           unapply(x) {
+//│ │ │             return [x.#expr];
 //│ │ │           }
 //│ │ │         };
 //│ │ │         this.#Neg = ((expr) => Object.freeze(new Neg(expr)));

@@ -44,8 +44,8 @@ module A {
 //│                 return x + 1;
 //│               }
 //│             static
-//│               unapply(ins) {
-//│                 return [ins.#x];
+//│               unapply(x) {
+//│                 return [x.#x];
 //│               }
 //│             };
 //│             this.#B = ((x) => Object.freeze(new B(x)));
@@ -211,8 +211,8 @@ module D {
 //│                 this.#x = x;
 //│               }
 //│             static
-//│               unapply(ins) {
-//│                 return [ins.#x];
+//│               unapply(x) {
+//│                 return [x.#x];
 //│               }
 //│             };
 //│             this.#E = ((x) => Object.freeze(new E(x)));
@@ -307,8 +307,8 @@ class E(x: Int) {
 //│                       return qualifier1.#x + qualifier2.#y + z;
 //│                     }
 //│                   static
-//│                     unapply(ins) {
-//│                       return [ins.#z];
+//│                     unapply(x) {
+//│                       return [x.#z];
 //│                     }
 //│                   };
 //│                   this.#G = ((z) => Object.freeze(new G(z)));
@@ -318,8 +318,8 @@ class E(x: Int) {
 //│                 return this.#G;
 //│               }
 //│             static
-//│               unapply(ins) {
-//│                 return [ins.#y];
+//│               unapply(x) {
+//│                 return [x.#y];
 //│               }
 //│             };
 //│             this.#F = ((y) => Object.freeze(new F(y)));
@@ -329,8 +329,8 @@ class E(x: Int) {
 //│           return this.#F;
 //│         }
 //│       static
-//│         unapply(ins) {
-//│           return [ins.#x];
+//│         unapply(x) {
+//│           return [x.#x];
 //│         }
 //│       };
 //│       this.#E = ((x) => Object.freeze(new E(x)));
@@ -414,7 +414,7 @@ class F() {
 //│                 const x1 = qualifier1.#x + 1;
 //│               }
 //│             static
-//│               unapply(ins) {
+//│               unapply(x) {
 //│                 return [];
 //│               }
 //│             };
@@ -425,7 +425,7 @@ class F() {
 //│           return this.#G;
 //│         }
 //│       static
-//│         unapply(ins) {
+//│         unapply(x) {
 //│           return [];
 //│         }
 //│       };
@@ -496,8 +496,8 @@ module G {
 //│                       return qualifier1.I(x + a);
 //│                     }
 //│                   static
-//│                     unapply(ins) {
-//│                       return [ins.#x];
+//│                     unapply(x) {
+//│                       return [x.#x];
 //│                     }
 //│                   };
 //│                   this.#J = ((x) => Object.freeze(new J(x)));
@@ -522,8 +522,8 @@ module G {
 //│                 this.#x = x;
 //│               }
 //│             static
-//│               unapply(ins) {
-//│                 return [ins.#x];
+//│               unapply(x) {
+//│                 return [x.#x];
 //│               }
 //│             };
 //│             this.#I = ((x) => Object.freeze(new I(x)));
@@ -608,8 +608,8 @@ module H {
 //│                 this.#x = x;
 //│               }
 //│             static
-//│               unapply(ins) {
-//│                 return [ins.#x];
+//│               unapply(x) {
+//│                 return [x.#x];
 //│               }
 //│             };
 //│             this.#I = ((x) => Object.freeze(new I(x)));
@@ -631,8 +631,8 @@ module H {
 //│                 const i = this.#i;
 //│               }
 //│             static
-//│               unapply(ins) {
-//│                 return [ins.#x];
+//│               unapply(x) {
+//│                 return [x.#x];
 //│               }
 //│             };
 //│             this.#J = ((x) => Object.freeze(new J(x)));
@@ -732,8 +732,8 @@ ij.incY
 //│                 return qualifier2.#y + 1;
 //│               }
 //│             static
-//│               unapply(ins) {
-//│                 return [ins.#x];
+//│               unapply(x) {
+//│                 return [x.#x];
 //│               }
 //│             };
 //│             this.#J = ((x) => Object.freeze(new J(x)));
@@ -743,8 +743,8 @@ ij.incY
 //│           return this.#J;
 //│         }
 //│       static
-//│         unapply(ins) {
-//│           return [ins.#x];
+//│         unapply(x) {
+//│           return [x.#x];
 //│         }
 //│       };
 //│       this.#I = ((x) => Object.freeze(new I(x)));
@@ -815,8 +815,8 @@ module J {
 //│                 this.#x = x;
 //│               }
 //│             static
-//│               unapply(ins) {
-//│                 return [ins.#x];
+//│               unapply(x) {
+//│                 return [x.#x];
 //│               }
 //│             };
 //│             this.#K = ((x) => Object.freeze(new K(x)));
@@ -833,7 +833,7 @@ module J {
 //│                 super(1);
 //│               }
 //│             static
-//│               unapply(ins) {
+//│               unapply(x) {
 //│                 return [];
 //│               }
 //│             };
@@ -853,8 +853,8 @@ module J {
 //│                 this.#x = x;
 //│               }
 //│             static
-//│               unapply(ins) {
-//│                 return [ins.#x];
+//│               unapply(x) {
+//│                 return [x.#x];
 //│               }
 //│             };
 //│             this.#N = ((x) => Object.freeze(new N(x)));
@@ -1036,7 +1036,7 @@ M.N.op(M.P())
 //│               constructor() {
 //│               }
 //│             static
-//│               unapply(ins) {
+//│               unapply(x) {
 //│                 return [];
 //│               }
 //│             };
@@ -1053,7 +1053,7 @@ M.N.op(M.P())
 //│               constructor() {
 //│               }
 //│             static
-//│               unapply(ins) {
+//│               unapply(x) {
 //│                 return [];
 //│               }
 //│             };
@@ -1119,7 +1119,7 @@ module N {
 //│                       super();
 //│                     }
 //│                   static
-//│                     unapply(ins) {
+//│                     unapply(x) {
 //│                       return [];
 //│                     }
 //│                   };
@@ -1142,7 +1142,7 @@ module N {
 //│               constructor() {
 //│               }
 //│             static
-//│               unapply(ins) {
+//│               unapply(x) {
 //│                 return [];
 //│               }
 //│             };
@@ -1225,8 +1225,8 @@ I(1).J(3).a
 //│                 const a = this.#a;
 //│               }
 //│             static
-//│               unapply(ins) {
-//│                 return [ins.#z];
+//│               unapply(x) {
+//│                 return [x.#z];
 //│               }
 //│             };
 //│             this.#J = ((z) => Object.freeze(new J(z)));
@@ -1236,8 +1236,8 @@ I(1).J(3).a
 //│           return this.#J;
 //│         }
 //│       static
-//│         unapply(ins) {
-//│           return [ins.#x];
+//│         unapply(x) {
+//│           return [x.#x];
 //│         }
 //│       };
 //│       this.#I = ((x) => Object.freeze(new I(x)));
@@ -1297,8 +1297,8 @@ fun mian =
 //│           this.#x = x;
 //│         }
 //│       static
-//│         unapply(ins) {
-//│           return [ins.#x];
+//│         unapply(x) {
+//│           return [x.#x];
 //│         }
 //│       }
 //│       let ctor;
@@ -1353,8 +1353,8 @@ fun mian =
 //│           this.#x = x;
 //│         }
 //│       static
-//│         unapply(ins) {
-//│           return [ins.#x];
+//│         unapply(x) {
+//│           return [x.#x];
 //│         }
 //│       }
 //│       let ctor;
@@ -1411,8 +1411,8 @@ fun main(arg) =
 //│           ]);
 //│         }
 //│       static
-//│         unapply(ins) {
-//│           return [ins.#u];
+//│         unapply(x) {
+//│           return [x.#u];
 //│         }
 //│       }
 //│       let ctor;
@@ -1475,8 +1475,8 @@ class Outer1(outer: Int) {
 //│                 const outer = x + 1;
 //│               }
 //│             static
-//│               unapply(ins) {
-//│                 return [ins.#x];
+//│               unapply(x) {
+//│                 return [x.#x];
 //│               }
 //│             };
 //│             this.#Outer2 = ((x) => Object.freeze(new Outer2(x)));
@@ -1486,8 +1486,8 @@ class Outer1(outer: Int) {
 //│           return this.#Outer2;
 //│         }
 //│       static
-//│         unapply(ins) {
-//│           return [ins.#outer];
+//│         unapply(x) {
+//│           return [x.#outer];
 //│         }
 //│       };
 //│       this.#Outer1 = ((outer) => Object.freeze(new Outer1(outer)));

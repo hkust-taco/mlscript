@@ -79,8 +79,8 @@ class A(a: Int) {
 //│           log(a);
 //│         }
 //│       static
-//│         unapply(ins) {
-//│           return [ins.#a];
+//│         unapply(x) {
+//│           return [x.#a];
 //│         }
 //│       };
 //│       this.#A = ((a) => Object.freeze(new A(a)));
@@ -238,7 +238,7 @@ class Baz() {
 //│           ]);
 //│         }
 //│       static
-//│         unapply(ins) {
+//│         unapply(x) {
 //│           return [];
 //│         }
 //│       };
@@ -300,7 +300,7 @@ class Q() {
 //│           })());
 //│         }
 //│       static
-//│         unapply(ins) {
+//│         unapply(x) {
 //│           return [];
 //│         }
 //│       };
@@ -352,7 +352,7 @@ class W() {
 //│           return qualifier1.#x + self;
 //│         }
 //│       static
-//│         unapply(ins) {
+//│         unapply(x) {
 //│           return [];
 //│         }
 //│       };

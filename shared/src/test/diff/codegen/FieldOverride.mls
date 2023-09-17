@@ -24,8 +24,8 @@ class C(a: Int) { val a = 1 }
 //│           const a1 = this.#a;
 //│         }
 //│       static
-//│         unapply(ins) {
-//│           return [ins.#a];
+//│         unapply(x) {
+//│           return [x.#a];
 //│         }
 //│       };
 //│       this.#C = ((a) => Object.freeze(new C(a)));
@@ -80,10 +80,10 @@ class C2(a: Int, b: Int) {
 //│           const b1 = this.#b;
 //│         }
 //│       static
-//│         unapply(ins) {
+//│         unapply(x) {
 //│           return ([
-//│             ins.#a,
-//│             ins.#b
+//│             x.#a,
+//│             x.#b
 //│           ]);
 //│         }
 //│       };

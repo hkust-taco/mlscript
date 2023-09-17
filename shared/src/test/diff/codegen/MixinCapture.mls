@@ -42,8 +42,8 @@ mixin EvalAddLit {
 //│           this.#n = n;
 //│         }
 //│       static
-//│         unapply(ins) {
-//│           return [ins.#n];
+//│         unapply(x) {
+//│           return [x.#n];
 //│         }
 //│       };
 //│       this.#Lit = ((n) => Object.freeze(new Lit(n)));

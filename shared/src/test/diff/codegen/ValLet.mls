@@ -42,8 +42,8 @@ class A(x0: Int) {
 //│           const x3 = this.#x3;
 //│         }
 //│       static
-//│         unapply(ins) {
-//│           return [ins.#x0];
+//│         unapply(x) {
+//│           return [x.#x0];
 //│         }
 //│       };
 //│       this.#A = ((x0) => Object.freeze(new A(x0)));
@@ -107,7 +107,7 @@ AA().f(0)
 //│           return qualifier1.#x + y;
 //│         }
 //│       static
-//│         unapply(ins) {
+//│         unapply(x) {
 //│           return [];
 //│         }
 //│       };
@@ -146,10 +146,10 @@ class B(x: Int, val y: Int)
 //│           this.#y = y;
 //│         }
 //│       static
-//│         unapply(ins) {
+//│         unapply(x) {
 //│           return ([
-//│             ins.#x,
-//│             ins.#y
+//│             x.#x,
+//│             x.#y
 //│           ]);
 //│         }
 //│       };
