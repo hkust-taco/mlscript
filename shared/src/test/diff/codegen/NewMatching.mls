@@ -278,9 +278,8 @@ fun c(x) =
 class C[A](f: A -> A)
 //│ class C[A](f: A -> A)
 
-// TODO simplify type more
 let r = C.unapply
-//│ let r: forall 'f. (C[?] & {f: 'f} | C[?] & ~#C) -> ['f]
+//│ let r: forall 'f. (C[?] & {f: 'f}) -> ['f]
 //│ r
 //│   = [Function: unapply]
 

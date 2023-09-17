@@ -72,7 +72,7 @@ class D(x: Int)
 //│ class D(x: Int)
 
 D.unapply
-//│ forall 'x. (D & {x: 'x} | D & ~#D) -> ['x]
+//│ forall 'x. (D & {x: 'x}) -> ['x]
 //│ res
 //│     = [Function: unapply]
 
@@ -97,7 +97,7 @@ D.unapply({ x: 42 })
 class DT[T](x: T)
 DT.unapply
 //│ class DT[T](x: T)
-//│ forall 'x. (DT[anything] & {x: 'x} | DT[anything] & ~#DT) -> ['x]
+//│ forall 'x. (DT[anything] & {x: 'x}) -> ['x]
 //│ res
 //│     = [Function: unapply]
 
@@ -114,7 +114,7 @@ DT.unapply({ x: 42 })
 //│ ╟── record literal of type `{x: 42}` is not an instance of type `DT`
 //│ ║  l.110: 	DT.unapply({ x: 42 })
 //│ ╙──       	                ^^
-//│ error | [42 & ??T]
+//│ error | [42]
 //│ res
 //│ Runtime error:
 //│   TypeError: Cannot read private member #x from an object whose class did not declare it
