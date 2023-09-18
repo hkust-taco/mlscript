@@ -1565,7 +1565,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       qualificationCheck(toCheckImplems, td.body.entities.filter {
                         case _: NuDecl => false
                         case _ => true
-                      }, baseClsMembers, clsSigns)
+                      } ++ td.ctor.fold[Ls[Statement]](Nil)(s => s.body.stmts), baseClsMembers, clsSigns)
                     }()
                     
                     // * Those member implementations we inherit from the base class that are not overridden

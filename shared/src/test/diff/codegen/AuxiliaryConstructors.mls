@@ -542,4 +542,39 @@ mixin P {
 //│ }
 //│ mixin P()
 
+:w
+:e
+class QQ(qq: Str) {
+  constructor(foo: Int) {
+    lol
+    qq = foo
+  }
+}
+//│ ╔══[ERROR] identifier not found: lol
+//│ ║  l.549: 	    lol
+//│ ╙──       	    ^^^
+//│ ╔══[WARNING] Pure expression does nothing in statement position.
+//│ ║  l.549: 	    lol
+//│ ╙──       	    ^^^
+//│ ╔══[ERROR] Type mismatch in auxiliary class constructor:
+//│ ║  l.548: 	  constructor(foo: Int) {
+//│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.549: 	    lol
+//│ ║         	^^^^^^^
+//│ ║  l.550: 	    qq = foo
+//│ ║         	^^^^^^^^^^^^
+//│ ╟── type `Int` is not an instance of `Str`
+//│ ║  l.548: 	  constructor(foo: Int) {
+//│ ║         	                   ^^^
+//│ ╟── but it flows into reference with expected type `Str`
+//│ ║  l.550: 	    qq = foo
+//│ ║         	         ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.547: 	class QQ(qq: Str) {
+//│ ╙──       	             ^^^
+//│ class QQ(qq: Str) {
+//│   constructor(foo: Int)
+//│ }
+//│ Code generation encountered an error:
+//│   unresolved symbol lol
 
