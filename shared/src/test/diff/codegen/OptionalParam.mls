@@ -461,3 +461,29 @@ mixin P {
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^
 //│ module O
 //│ mixin P()
+
+:e
+class QQ(qq: Str) {
+  constructor(foo: Int) {
+    lol
+    qq = foo
+  }
+}
+//│ ╔══[ERROR] identifier not found: lol
+//│ ║  l.468: 	    lol
+//│ ╙──       	    ^^^
+//│ ╔══[ERROR] Type mismatch in type declaration:
+//│ ║  l.466: 	class QQ(qq: Str) {
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ╟── type `Int` is not an instance of `Str`
+//│ ║  l.467: 	  constructor(foo: Int) {
+//│ ║         	                   ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.466: 	class QQ(qq: Str) {
+//│ ║         	             ^^^
+//│ ╟── from reference:
+//│ ║  l.469: 	    qq = foo
+//│ ╙──       	    ^^
+//│ class QQ(qq: Str)
+//│ Code generation encountered an error:
+//│   unresolved symbol lol

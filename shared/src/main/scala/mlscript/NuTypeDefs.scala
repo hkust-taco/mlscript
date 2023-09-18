@@ -1438,7 +1438,26 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     ctx += "this" -> VarSymbol(thisTV, Var("this"))
                     ctx += "super" -> VarSymbol(thisType, Var("super"))
                     val ttu = typeTypingUnit(td.body, S(td))
-                    
+
+                    td.ctor.foreach(ctor => {
+                      val newCtx = ctx.nest
+                      typePattern(ctor.params)(newCtx, raise, vars)
+
+                      ctor.body.stmts.foreach {
+                        case Eqn(lhs, rhs) =>
+                          val lhs_ty = typeMonomorphicTerm(lhs)(newCtx, raise, vars)
+                          val rhs_ty = typeMonomorphicTerm(rhs)(newCtx, raise, vars)
+                          constrain(rhs_ty, lhs_ty)(raise, prov, newCtx)
+                        case s =>
+                          val (diags, dss) = s.desugared
+                          diags.foreach(raise)
+                          S(typeTerms(dss, false, Nil)(newCtx, raise, TypeProvenance(s.toLoc, s match {
+                            case trm: Term => trm.describe
+                            case s => "statement"
+                          }), vars, genLambdas = false))
+                      }
+                    })
+
                     val (baseClsImplemMembers, baseClsIfaceMembers) =
                       baseClsMembers.partition(_.isImplemented)
                     
@@ -1473,7 +1492,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       qualificationCheck(toCheckImplems, td.body.entities.filter {
                         case _: NuDecl => false
                         case _ => true
-                      }, baseClsMembers, clsSigns)
+                      } ++ td.ctor.fold[Ls[Statement]](Nil)(s => s.body.stmts), baseClsMembers, clsSigns)
                     }()
 
                     trace(s"Checking new implementations...") {
