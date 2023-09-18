@@ -14,7 +14,7 @@ class Derived0(n: Int) extends Base
 //│   unresolved parent Base.
 
 
-mixin Base1(n: Num) {
+mixin Base1(val n: Num) {
   fun original = n
 }
 //│ mixin Base1(n: Num) {
@@ -28,7 +28,7 @@ mixin DerivedBad(n: Int) extends Base
 //│ ╙──      	                                 ^^^^
 //│ mixin DerivedBad(n: Int)
 
-mixin Derived1(n: Int) {
+mixin Derived1(val n: Int) {
   fun foo = [n, this.n, super.n]
 }
 //│ mixin Derived1(n: Int) {
@@ -82,7 +82,7 @@ Test1.n
 //│   RangeError: Maximum call stack size exceeded
 
 
-class Test2(n: Str) extends Base1(1/2), Derived1(1) {
+class Test2(val n: Str) extends Base1(1/2), Derived1(1) {
   fun bar = [this.foo, n, this.n, this.original]
 }
 //│ class Test2(n: Str) {
@@ -97,7 +97,7 @@ Test2("test").bar
 //│     = [ [ 1, 'test', 0.5 ], 'test', 'test', 0.5 ]
 
 
-class Test3(n: Str) extends Base1(1/2), Derived1(length(n)) {
+class Test3(val n: Str) extends Base1(1/2), Derived1(length(n)) {
   fun foo = [super.foo, n, this.original]
 }
 //│ class Test3(n: Str) {

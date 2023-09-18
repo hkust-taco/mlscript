@@ -233,9 +233,15 @@ val defaultCtx = {printLine, readInt, pure: Pure}
 //│ let defaultCtx: {printLine: (str: Str) -> printLine, pure: forall 'A. (value: 'A) -> Pure['A], readInt: readInt}
 //│ defaultCtx
 //│            = {
-//│                printLine: [Function (anonymous)] { class: [class printLine extends IO] },
+//│                printLine: [Function (anonymous)] {
+//│                  class: [class printLine extends IO],
+//│                  unapply: [Function: unapply]
+//│                },
 //│                readInt: readInt { class: [class readInt extends IO] },
-//│                pure: [Function (anonymous)] { class: [class Pure extends IO] }
+//│                pure: [Function (anonymous)] {
+//│                  class: [class Pure extends IO],
+//│                  unapply: [Function: unapply]
+//│                }
 //│              }
 
 main(defaultCtx).run

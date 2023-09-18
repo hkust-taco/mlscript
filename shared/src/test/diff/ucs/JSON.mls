@@ -270,7 +270,7 @@ fun parseMatched(scanner, closingSymbol, parse, fn) =
       ParseSuccess(_, scanner) then ParseSuccess(fn(outcome), scanner)
       ParseFailure(message, scanner) then ParseFailure(message, scanner)
     ParseFailure(message, scanner) then ParseFailure(message, scanner)
-//│ fun parseMatched: forall 'advance 'value 'T. ({advance: 'advance}, Str, 'advance -> (ParseFailure | ParseSuccess['value]), 'value -> 'T) -> (ParseFailure | ParseSuccess['T])
+//│ fun parseMatched: forall 'advance 'a 'T. ({advance: 'advance}, Str, 'advance -> (ParseFailure | ParseSuccess['a]), 'a -> 'T) -> (ParseFailure | ParseSuccess['T])
 
 :ng
 fun parseEntries(scanner): ParseResult[TreeMap[JsonValue]] = error

@@ -1,0 +1,151 @@
+:NewDefs
+
+class Base(base: Int) {
+  fun getBase1 = base
+  fun getBase2 = this.base
+  fun foo(x) = this.base + x
+}
+//│ class Base(base: Int) {
+//│   fun foo: Int -> Int
+//│   fun getBase1: Int
+//│   fun getBase2: Int
+//│ }
+
+class Foo() {
+  virtual val foo: Int = 42
+}
+//│ class Foo() {
+//│   let foo: Int
+//│ }
+
+:e
+class Foo1() extends Foo() {
+  val foo: Int
+  virtual val foo = 1
+  log(this.foo)
+}
+//│ ╔══[ERROR] Cannot access `this` during object initialization
+//│ ║  l.25: 	  log(this.foo)
+//│ ╙──      	      ^^^^
+//│ class Foo1() extends Foo {
+//│   let foo: Int
+//│ }
+
+// FIXME: type constrcutor
+class Foo2() extends Foo() {
+  virtual val foo = 2
+  constructor() {
+    log(this.foo)
+  }
+}
+//│ class Foo2() extends Foo {
+//│   let foo: 2
+//│ }
+
+:e
+class Foo3() extends Foo() {
+  val foo: Int
+  virtual val foo = 3
+  val s = this.foo
+}
+//│ ╔══[ERROR] Cannot access `this` while initializing field s
+//│ ║  l.49: 	  val s = this.foo
+//│ ╙──      	          ^^^^
+//│ class Foo3() extends Foo {
+//│   let foo: Int
+//│   let s: Int
+//│ }
+
+:e
+class Foo4() extends Foo() {
+  val foo: Int
+  virtual val foo = 4
+  fun bar(x) = this.foo + x // ok
+  let bb = bar(0) // call `this` indirectly
+}
+//│ ╔══[ERROR] Cannot access `this` while initializing field bb
+//│ ║  l.64: 	  let bb = bar(0) // call `this` indirectly
+//│ ║        	      ^^^^^^^^^^^
+//│ ╟── The access to `this` is here
+//│ ║  l.63: 	  fun bar(x) = this.foo + x // ok
+//│ ╙──      	               ^^^^
+//│ class Foo4() extends Foo {
+//│   fun bar: Int -> Int
+//│   let bb: Int
+//│   let foo: Int
+//│ }
+
+:e
+class Foo5() extends Foo() {
+  val foo: Int
+  val x = bar(0)
+  fun bar(y: Int) = this.foo + y
+}
+//│ ╔══[ERROR] Cannot access `this` while initializing field x
+//│ ║  l.81: 	  val x = bar(0)
+//│ ║        	      ^^^^^^^^^^
+//│ ╟── The access to `this` is here
+//│ ║  l.82: 	  fun bar(y: Int) = this.foo + y
+//│ ╙──      	                    ^^^^
+//│ class Foo5() extends Foo {
+//│   fun bar: (y: Int) -> Int
+//│   let foo: Int
+//│   let x: Int
+//│ }
+
+class Foo6() extends Foo() {
+  val baz: Int
+  val baz = 0
+  val y = this.baz // baz is final
+}
+//│ class Foo6() extends Foo {
+//│   let baz: Int
+//│   let foo: Int
+//│   let y: Int
+//│ }
+
+class Bar() {
+  val d: Int
+  val d = 1
+  fun add(x) = x + this.d
+}
+//│ class Bar() {
+//│   fun add: Int -> Int
+//│   let d: Int
+//│ }
+
+:e
+class Bar2() extends Bar() {
+  val two = this.add(1) // add is final, but it refers to `this`
+}
+//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ║  l.119: 	  val two = this.add(1) // add is final, but it refers to `this`
+//│ ╙──       	                ^^^^
+//│ ╔══[ERROR] Cannot access `this` while initializing field two
+//│ ║  l.119: 	  val two = this.add(1) // add is final, but it refers to `this`
+//│ ║         	      ^^^^^^^^^^^^^^^^^
+//│ ╟── The access to `this` is here
+//│ ║  l.110: 	  fun add(x) = x + this.d
+//│ ╙──       	                   ^^^^
+//│ class Bar2() extends Bar {
+//│   fun add: Int -> Int
+//│   let d: Int
+//│   let two: error
+//│ }
+
+// it accesses this in an unusual way!
+:e
+abstract class Foo: Int -> Int {
+  val x = f
+  fun f = this(0)
+}
+//│ ╔══[ERROR] Cannot access `this` while initializing field x
+//│ ║  l.139: 	  val x = f
+//│ ║         	      ^^^^^
+//│ ╟── The access to `this` is here
+//│ ║  l.140: 	  fun f = this(0)
+//│ ╙──       	          ^^^^
+//│ abstract class Foo: Int -> Int {
+//│   fun f: nothing
+//│   let x: nothing
+//│ }

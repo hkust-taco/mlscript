@@ -8,7 +8,10 @@ class Foo(x: Int)
 Foo
 //│ (x: Int) -> Foo
 //│ res
-//│     = [Function (anonymous)] { class: [class Foo] }
+//│     = [Function (anonymous)] {
+//│         class: [class Foo],
+//│         unapply: [Function: unapply]
+//│       }
 
 typeof(Foo)
 //│ Str
@@ -28,10 +31,10 @@ typeof(f)
 :e
 let cls = Foo.class
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.29: 	let cls = Foo.class
+//│ ║  l.32: 	let cls = Foo.class
 //│ ║        	          ^^^^^^^^^
 //│ ╟── reference of type `(x: Int) -> Foo` does not have field 'class'
-//│ ║  l.29: 	let cls = Foo.class
+//│ ║  l.32: 	let cls = Foo.class
 //│ ╙──      	          ^^^
 //│ let cls: error
 //│ cls
@@ -54,15 +57,18 @@ class Derived() extends Base
 Derived
 //│ () -> Derived
 //│ res
-//│     = [Function (anonymous)] { class: [Function: Derived] }
+//│     = [Function (anonymous)] {
+//│         class: [Function: Derived],
+//│         unapply: [Function: unapply]
+//│       }
 
 :e
 let cls = Derived.class
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.60: 	let cls = Derived.class
+//│ ║  l.66: 	let cls = Derived.class
 //│ ║        	          ^^^^^^^^^^^^^
 //│ ╟── reference of type `() -> Derived` does not have field 'class'
-//│ ║  l.60: 	let cls = Derived.class
+//│ ║  l.66: 	let cls = Derived.class
 //│ ╙──      	          ^^^^^^^
 //│ let cls: error
 //│ cls

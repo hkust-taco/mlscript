@@ -71,19 +71,53 @@ new D(0)
 class D(x: Int)
 //│ class D(x: Int)
 
-:e // TODO support
 D.unapply
-//│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.75: 	D.unapply
-//│ ║        	^^^^^^^^^
-//│ ╟── reference of type `(x: Int) -> D` does not have field 'unapply'
-//│ ║  l.75: 	D.unapply
-//│ ╙──      	^
-//│ error
+//│ forall 'x. (D & {x: 'x}) -> ['x]
 //│ res
-//│     = undefined
+//│     = [Function: unapply]
 
+D.unapply(D(42))
+//│ [Int]
+//│ res
+//│     = [ 42 ]
 
+:e
+D.unapply({ x: 42 })
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.85: 	D.unapply({ x: 42 })
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ╟── record literal of type `{x: 42}` is not an instance of type `D`
+//│ ║  l.85: 	D.unapply({ x: 42 })
+//│ ╙──      	               ^^
+//│ error | [42]
+//│ res
+//│ Runtime error:
+//│   TypeError: Cannot read private member #x from an object whose class did not declare it
+
+class DT[T](x: T)
+DT.unapply
+//│ class DT[T](x: T)
+//│ forall 'x. (DT[anything] & {x: 'x}) -> ['x]
+//│ res
+//│     = [Function: unapply]
+
+DT.unapply(DT(42))
+//│ [42]
+//│ res
+//│     = [ 42 ]
+
+:e
+DT.unapply({ x: 42 })
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.110: 	DT.unapply({ x: 42 })
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── record literal of type `{x: 42}` is not an instance of type `DT`
+//│ ║  l.110: 	DT.unapply({ x: 42 })
+//│ ╙──       	                ^^
+//│ error | [42]
+//│ res
+//│ Runtime error:
+//│   TypeError: Cannot read private member #x from an object whose class did not declare it
 
 // *** First-class classes *** //
 
@@ -124,10 +158,10 @@ bar(D)
 :e // TODO accept
 bar(D.class)
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.125: 	bar(D.class)
+//│ ║  l.159: 	bar(D.class)
 //│ ║         	    ^^^^^^^
 //│ ╟── reference of type `(x: Int) -> D` does not have field 'class'
-//│ ║  l.125: 	bar(D.class)
+//│ ║  l.159: 	bar(D.class)
 //│ ╙──       	    ^
 //│ error
 //│ res
@@ -144,7 +178,7 @@ class C
 :e // TODO
 new C { val x = 1 }
 //│ ╔══[ERROR] Currently unsupported `new` syntax
-//│ ║  l.145: 	new C { val x = 1 }
+//│ ║  l.179: 	new C { val x = 1 }
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^
 //│ error
 //│ Code generation encountered an error:
@@ -168,7 +202,7 @@ let c = new Cls
 // FIXME
 let y: c.A = c.x
 //│ ╔══[ERROR] type identifier not found: c
-//│ ║  l.169: 	let y: c.A = c.x
+//│ ║  l.203: 	let y: c.A = c.x
 //│ ╙──       	       ^
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 
@@ -189,14 +223,14 @@ fun test(a: Object) = if a is
   Cls then a.x
   else error
 //│ ╔══[ERROR] Type error in `case` expression
-//│ ║  l.188: 	fun test(a: Object) = if a is
+//│ ║  l.222: 	fun test(a: Object) = if a is
 //│ ║         	                         ^^^^
-//│ ║  l.189: 	  Cls then a.x
+//│ ║  l.223: 	  Cls then a.x
 //│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.190: 	  else error
+//│ ║  l.224: 	  else error
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.180: 	class Cls[A] { fun x: A = x; fun g: A -> Int; fun g = g }
+//│ ║  l.214: 	class Cls[A] { fun x: A = x; fun g: A -> Int; fun g = g }
 //│ ╙──       	          ^
 //│ fun test: (a: Object) -> (error | ??A)
 
@@ -205,14 +239,14 @@ fun test(a: Object) = if a is
   Cls then a.g(a.x) // a.x : a.A ; a.g : a.A -> a.A
   else 0
 //│ ╔══[ERROR] Type error in `case` expression
-//│ ║  l.204: 	fun test(a: Object) = if a is
+//│ ║  l.238: 	fun test(a: Object) = if a is
 //│ ║         	                         ^^^^
-//│ ║  l.205: 	  Cls then a.g(a.x) // a.x : a.A ; a.g : a.A -> a.A
+//│ ║  l.239: 	  Cls then a.g(a.x) // a.x : a.A ; a.g : a.A -> a.A
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.206: 	  else 0
+//│ ║  l.240: 	  else 0
 //│ ║         	^^^^^^^^
 //│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.180: 	class Cls[A] { fun x: A = x; fun g: A -> Int; fun g = g }
+//│ ║  l.214: 	class Cls[A] { fun x: A = x; fun g: A -> Int; fun g = g }
 //│ ╙──       	          ^
 //│ fun test: (a: Object) -> Int
 

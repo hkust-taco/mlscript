@@ -51,21 +51,21 @@ mixin EvalAdd {
       Add(l, r) then this.eval(l)
 }
 //│ mixin EvalAdd() {
-//│   this: {eval: 'lhs -> 'a}
-//│   fun eval: Add['lhs] -> 'a
+//│   this: {eval: 'a -> 'b}
+//│   fun eval: Add['a] -> 'b
 //│ }
 
 module TestLang extends EvalAdd
 //│ module TestLang {
-//│   fun eval: Add['lhs] -> nothing
+//│   fun eval: Add['a] -> nothing
 //│ }
 //│ where
-//│   'lhs <: Add['lhs]
+//│   'a <: Add['a]
 
 TestLang.eval
-//│ Add['lhs] -> nothing
+//│ Add['a] -> nothing
 //│   where
-//│     'lhs <: Add['lhs]
+//│     'a <: Add['a]
 
 
 
@@ -76,22 +76,22 @@ mixin EvalBase {
       Add(l, r) then this.eval(l) + this.eval(r)
 }
 //│ mixin EvalBase() {
-//│   this: {eval: 'lhs -> Int}
-//│   fun eval: (Add['lhs] | Lit) -> Int
+//│   this: {eval: 'a -> Int}
+//│   fun eval: (Add['a] | Lit) -> Int
 //│ }
 
 
 module TestLang extends EvalBase
 //│ module TestLang {
-//│   fun eval: (Add['E] | Lit) -> Int
+//│   fun eval: (Add['a] | Lit) -> Int
 //│ }
 //│ where
-//│   'E <: Add['E] | Lit
+//│   'a <: Add['a] | Lit
 
 TestLang.eval
-//│ (Add['E] | Lit) -> Int
+//│ (Add['a] | Lit) -> Int
 //│   where
-//│     'E <: Add['E] | Lit
+//│     'a <: Add['a] | Lit
 
 
 
@@ -126,8 +126,8 @@ mixin EvalNeg {
 }
 //│ mixin EvalNeg() {
 //│   super: {eval: 'a -> 'b}
-//│   this: {eval: 'expr -> Int}
-//│   fun eval: (Neg['expr] | Object & 'a & ~#Neg) -> (Int | 'b)
+//│   this: {eval: 'c -> Int}
+//│   fun eval: (Neg['c] | Object & 'a & ~#Neg) -> (Int | 'b)
 //│ }
 
 

@@ -12,17 +12,20 @@ class Foo()
 Foo
 //│ () -> Foo
 //│ res
-//│     = [Function (anonymous)] { class: [class Foo] }
+//│     = [Function (anonymous)] {
+//│         class: [class Foo],
+//│         unapply: [Function: unapply]
+//│       }
 
 // TODO
 fun fooo(x) =
   class C(y, z)
   C(0, x)
 //│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.19: 	  class C(y, z)
+//│ ║  l.22: 	  class C(y, z)
 //│ ╙──      	          ^
 //│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.19: 	  class C(y, z)
+//│ ║  l.22: 	  class C(y, z)
 //│ ╙──      	             ^
 //│ fun fooo: error -> C
 
@@ -160,7 +163,7 @@ module Test1_2 {
   fun b = Test1_1.a
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.160: 	  fun b = Test1_1.a
+//│ ║  l.163: 	  fun b = Test1_1.a
 //│ ╙──       	                 ^^
 //│ module Test1_1 {
 //│   fun a: error
@@ -185,7 +188,7 @@ class Test1_2 {
   fun b = Test1_1().a
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.185: 	  fun b = Test1_1().a
+//│ ║  l.188: 	  fun b = Test1_1().a
 //│ ╙──       	                   ^^
 //│ class Test1_1 {
 //│   fun a: error
@@ -208,7 +211,7 @@ module Test2_2 {
   fun e = Test2_1.n
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.207: 	  fun c = Test2_1.a
+//│ ║  l.210: 	  fun c = Test2_1.a
 //│ ╙──       	                 ^^
 //│ module Test2_1 {
 //│   fun a: 123 | error

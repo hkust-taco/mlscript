@@ -1,7 +1,7 @@
 :NewDefs
 
 class Room[A](name: Str) {
-    fun foo(x: A) = x
+    virtual fun foo(x: A) = x
 }
 //│ class Room[A](name: Str) {
 //│   fun foo: (x: A) -> A
@@ -63,8 +63,8 @@ class WrongRoom extends Room[Bool]("wrong") {
 //│ ║  l.44: 	class WrongRoom extends Room[Bool]("wrong") {
 //│ ║        	                             ^^^^
 //│ ╟── from reference:
-//│ ║  l.4: 	    fun foo(x: A) = x
-//│ ╙──     	                    ^
+//│ ║  l.4: 	    virtual fun foo(x: A) = x
+//│ ╙──     	                            ^
 //│ class WrongRoom extends Room {
 //│   fun foo: Int -> Int
 //│ }

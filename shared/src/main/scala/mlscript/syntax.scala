@@ -102,10 +102,10 @@ final case class IfOpsApp(lhs: Term, opsRhss: Ls[Var -> IfBody]) extends IfBody
 final case class IfBlock(lines: Ls[IfBody \/ Statement]) extends IfBody
 // final case class IfApp(fun: Term, opsRhss: Ls[Var -> IfBody]) extends IfBody
 
-final case class FldFlags(mut: Bool, spec: Bool)
+final case class FldFlags(mut: Bool, spec: Bool, genGetter: Bool)
 final case class Fld(flags: FldFlags, value: Term) extends FldImpl
 
-object FldFlags { val empty: FldFlags = FldFlags(false, false) }
+object FldFlags { val empty: FldFlags = FldFlags(false, false, false) }
 
 sealed abstract class CaseBranches extends CaseBranchesImpl
 final case class Case(pat: SimpleTerm, body: Term, rest: CaseBranches) extends CaseBranches
@@ -214,10 +214,19 @@ final case class NuFunDef(
   symbolicNme: Opt[Var],
   tparams: Ls[TypeName],
   rhs: Term \/ Type,
-)(val declareLoc: Opt[Loc], val signature: Opt[NuFunDef], val outer: Opt[Outer]) extends NuDecl with DesugaredStatement {
+)(
+  val declareLoc: Opt[Loc],
+  val virtualLoc: Opt[Loc], // Some(Loc) means that the function is modified by keyword `virtual`
+  val signature: Opt[NuFunDef],
+  val outer: Opt[Outer],
+  val genField: Bool
+) extends NuDecl with DesugaredStatement {
   val body: Located = rhs.fold(identity, identity)
   def kind: DeclKind = Val
   val abstractLoc: Opt[Loc] = None
+
+  // If the member has no implementation, it is virtual automatically
+  def isVirtual: Bool = virtualLoc.nonEmpty || rhs.isRight
 }
 
 

@@ -11,16 +11,16 @@ import mlscript.utils.{AnyOps, lastWords}
 import mlscript.JSField
 import mlscript.{NuTypeDef, NuFunDef}
 
-class Scope(name: Str, enclosing: Opt[Scope]) {
+class Scope(val name: Str, enclosing: Opt[Scope]) {
   private val lexicalTypeSymbols = scala.collection.mutable.HashMap[Str, TypeSymbol]()
   private val lexicalValueSymbols = scala.collection.mutable.HashMap[Str, RuntimeSymbol]()
   private val runtimeSymbols = scala.collection.mutable.HashSet[Str]()
 
   // To allow a class method/getter/constructor to access members of an outer class,
-  // we insert `const outer = this;` before the class definition starts.
-  // To access ALL outer variables correctly, we need to make sure
+  // we insert `const qualifier = this;` before the class definition starts.
+  // To access ALL qualifier variables correctly, we need to make sure
   // none of them would be shadowed.
-  private val outerSymbols = scala.collection.mutable.HashSet[Str]()
+  private val qualifierSymbols = scala.collection.mutable.HashMap[Str, ValueSymbol]()
 
   val tempVars: TemporaryVariableEmitter = TemporaryVariableEmitter()
 
@@ -261,30 +261,27 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
   ): ModuleSymbol = {
     val finalName =
       if (allowRenaming) allocateRuntimeName(lexicalName) else lexicalName
-    val (ctor, mths) = stmts.partitionMap {
+    val (mths, rest) = stmts.partitionMap {
       case NuFunDef(isLetRec, Var(nme), _, tys, Left(rhs)) if (isLetRec.isEmpty || isLetRec.getOrElse(false)) =>
-        Right(MethodDef[Left[Term, Type]](isLetRec.getOrElse(false), TypeName(finalName), Var(nme), tys, Left(rhs)))
-      case s => Left(s)
+        Left(MethodDef[Left[Term, Type]](isLetRec.getOrElse(false), TypeName(finalName), Var(nme), tys, Left(rhs)))
+      case s => Right(s)
     }
-    val symbol = ModuleSymbol(finalName, Nil, Record(Nil), mths, ctor, Nil, nuTypes, false)
+    val (signatures, ctor) = rest.partitionMap {
+      case NuFunDef(isLetRec, Var(nme), _, tys, Right(rhs)) if (isLetRec.isEmpty || isLetRec.getOrElse(false)) =>
+        Left(MethodDef[Right[Term, Type]](isLetRec.getOrElse(false), TypeName(finalName), Var(nme), tys, Right(rhs)))
+      case s => Right(s)
+    }
+    val symbol = ModuleSymbol(finalName, Nil, Record(Nil), mths, signatures, ctor, Nil, nuTypes, N)
     register(symbol)
     symbol
   }
 
-  def captureSymbol(
-    outsiderSym: RuntimeSymbol,
-    capturedSym: RuntimeSymbol
-  ): Unit = {
-    val symbol = CapturedSymbol(outsiderSym, capturedSym)
-    lexicalValueSymbols.put(symbol.lexicalName, symbol); ()
-  }
-
-  // We don't want `outer` symbols to be shadowed by each other
-  // Add all runtime names of `outer` symbols from the parent scope
-  private def pullOuterSymbols(syms: scala.collection.mutable.HashSet[Str]) = {
+  // We don't want `qualifier` symbols to be shadowed by each other
+  // Add all runtime names of `qualifier` symbols from the parent scope
+  private def pullOuterSymbols(syms: scala.collection.mutable.HashMap[Str, ValueSymbol]) = {
     syms.foreach { s =>
-      runtimeSymbols += s
-      outerSymbols += s
+      runtimeSymbols += s._1
+      qualifierSymbols += s
     }
 
     this
@@ -331,12 +328,14 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
     symbol
   }
 
-  def declareOuterSymbol(): ValueSymbol = {
-    val lexicalName = "outer"
-    val symbol = declareValue(lexicalName, Some(false), false, N)
-    outerSymbols += symbol.runtimeName
-    symbol
+  def declareQualifierSymbol(lexicalName: Str): Str = {
+    val symbol = ValueSymbol("this", allocateRuntimeName(lexicalName), S(false), false)
+    qualifierSymbols += (symbol.runtimeName -> symbol)
+    register(symbol)
+    symbol.runtimeName
   }
+  def resolveQualifier(runtimeName: Str): ValueSymbol =
+    qualifierSymbols.getOrElse(runtimeName, throw CodeGenError(s"qualifier $runtimeName not found"))
 
   def declareStubValue(lexicalName: Str, symbolicName: Opt[Str])(implicit allowEscape: Bool): StubValueSymbol =
     declareStubValue(lexicalName, N, symbolicName)
@@ -404,7 +403,7 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
     * Shorthands for deriving normal scopes.
     */
   def derive(name: Str): Scope =
-    (new Scope(name, S(this))).pullOuterSymbols(outerSymbols)
+    (new Scope(name, S(this))).pullOuterSymbols(qualifierSymbols)
 
   
   def refreshRes(): Unit = {
