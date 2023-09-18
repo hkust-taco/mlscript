@@ -37,7 +37,7 @@ class Funny: Int { fun test = this + 1 }
 class Unfunny { fun test = this + 1 }
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.37: 	class Unfunny { fun test = this + 1 }
-//│ ║        	                           ^^^^^^
+//│ ║        	                           ^^^^^^^^
 //│ ╟── reference of type `#Unfunny` is not an instance of type `Int`
 //│ ║  l.37: 	class Unfunny { fun test = this + 1 }
 //│ ╙──      	                           ^^^^

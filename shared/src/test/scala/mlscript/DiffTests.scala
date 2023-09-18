@@ -415,7 +415,7 @@ class DiffTests
             if (mode.showParse || mode.dbgParsing || parseOnly)
               output(NewLexer.printTokens(tokens))
             
-            val p = new NewParser(origin, tokens, raise, dbg = mode.dbgParsing, N) {
+            val p = new NewParser(origin, tokens, newDefs, raise, dbg = mode.dbgParsing, N) {
               def doPrintDbg(msg: => Str): Unit = if (dbg) output(msg)
             }
             val res = p.parseAll(p.typingUnit)
@@ -458,7 +458,6 @@ class DiffTests
             if (mode.stats) typer.resetStats()
             typer.dbg = mode.dbg
             typer.dbgUCS = mode.dbgUCS
-            typer.newDefs = newDefs
             // typer.recordProvenances = !noProvs
             typer.recordProvenances = !noProvs && !mode.dbg && !mode.dbgSimplif || mode.explainErrors
             typer.generalizeCurriedFunctions = generalizeCurriedFunctions
@@ -603,7 +602,7 @@ class DiffTests
               // (Nil, Nil, N)
               (Nil, Nil, S(p.tops.collect {
                 // case LetS(isRec, pat, bod) => ("res", Nil, Nil, false)
-                case NuFunDef(isLet @ S(_), nme, tparams, bod) =>
+                case NuFunDef(isLet @ S(_), nme, snme, tparams, bod) =>
                   (nme.name + " ", nme.name :: Nil, Nil, false)
                 case t: Term => ("res ", "res" :: Nil, Nil, false)
               }))

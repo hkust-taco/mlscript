@@ -112,13 +112,173 @@ printLine("").bind of [] => error
 //│     = Bind {}
 
 
+// * Using a shortand operator for `bind`
+
+fun (|>=) bindOp[A, B](x: IO[A], f: A -> IO[B]): IO[B] = x.bind(f)
+//│ fun (|>=) bindOp: forall 'A 'B. (x: IO['A], f: 'A -> IO['B]) -> IO['B]
+
+:e // FIXME why the errors?
+val main =
+  printLine("Hi! Input two numbers: ") |>= _ =>
+  readInt |>= n =>
+  readInt |>= m =>
+  val sum = n + m
+  printLine(concat("The sum is: ")(String of sum)) |>= _ =>
+  Pure(sum)
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.124: 	  readInt |>= m =>
+//│ ║         	  ^^^^^^^^^^^^^^^^
+//│ ║  l.125: 	  val sum = n + m
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ║  l.126: 	  printLine(concat("The sum is: ")(String of sum)) |>= _ =>
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.127: 	  Pure(sum)
+//│ ║         	^^^^^^^^^^^
+//│ ╟── type `Int` does not match type `undefined`
+//│ ║  l.32: 	module readInt extends IO[Int] { fun run = 42 }
+//│ ║        	                          ^^^
+//│ ╟── Note: constraint arises from literal type:
+//│ ║  l.33: 	class printLine(str: Str) extends IO[undefined] { fun run = log(str) }
+//│ ║        	                                     ^^^^^^^^^
+//│ ╟── Note: method type parameter A is defined at:
+//│ ║  l.117: 	fun (|>=) bindOp[A, B](x: IO[A], f: A -> IO[B]): IO[B] = x.bind(f)
+//│ ╙──       	                 ^
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.123: 	  readInt |>= n =>
+//│ ║         	  ^^^^^^^^^^^^^^^^
+//│ ║  l.124: 	  readInt |>= m =>
+//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ║  l.125: 	  val sum = n + m
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ║  l.126: 	  printLine(concat("The sum is: ")(String of sum)) |>= _ =>
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.127: 	  Pure(sum)
+//│ ║         	^^^^^^^^^^^
+//│ ╟── type `Int` does not match type `undefined`
+//│ ║  l.32: 	module readInt extends IO[Int] { fun run = 42 }
+//│ ║        	                          ^^^
+//│ ╟── Note: constraint arises from literal type:
+//│ ║  l.33: 	class printLine(str: Str) extends IO[undefined] { fun run = log(str) }
+//│ ║        	                                     ^^^^^^^^^
+//│ ╟── Note: method type parameter A is defined at:
+//│ ║  l.117: 	fun (|>=) bindOp[A, B](x: IO[A], f: A -> IO[B]): IO[B] = x.bind(f)
+//│ ╙──       	                 ^
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.122: 	  printLine("Hi! Input two numbers: ") |>= _ =>
+//│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.123: 	  readInt |>= n =>
+//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ║  l.124: 	  readInt |>= m =>
+//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ║  l.125: 	  val sum = n + m
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ║  l.126: 	  printLine(concat("The sum is: ")(String of sum)) |>= _ =>
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.127: 	  Pure(sum)
+//│ ║         	^^^^^^^^^^^
+//│ ╟── type `undefined` is not an instance of type `Int`
+//│ ║  l.33: 	class printLine(str: Str) extends IO[undefined] { fun run = log(str) }
+//│ ║        	                                     ^^^^^^^^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.125: 	  val sum = n + m
+//│ ╙──       	            ^
+//│ let main: IO['B] | error
+//│ main
+//│      = Bind {}
+
+
+// * With no type annotations:
+
+fun (|>=) bindOp(x, f) = x.bind(f)
+//│ fun (|>=) bindOp: forall 'a 'b. ({bind: 'a -> 'b}, 'a) -> 'b
+
+// FIXME why `nothing`?
+val main =
+  printLine("Hi! Input two numbers: ") |>= _ =>
+  readInt |>= n =>
+  readInt |>= m =>
+  val sum = n + m
+  printLine(concat("The sum is: ")(String of sum)) |>= _ =>
+  Pure(sum)
+//│ let main: Bind[nothing, 'B]
+//│   where
+//│     'B :> Int
+//│ main
+//│      = Bind {}
+
+main.run
+//│ Int
+//│ res
+//│     = 84
+//│ // Output
+//│ Hi! Input two numbers: 
+//│ The sum is: 84
+
+
+// * Abstracting over the monad:
+
+fun (|>=) bindOp(x, f) = x.bind(f)
+//│ fun (|>=) bindOp: forall 'a 'b. ({bind: 'a -> 'b}, 'a) -> 'b
+
+fun main(ctx) =
+  ctx.printLine("Hi! Input two numbers: ") |>= _ =>
+  ctx.readInt |>= n =>
+  ctx.readInt |>= m =>
+  val sum = n + m
+  ctx.printLine(concat("The sum is: ")(String of sum)) |>= _ =>
+  ctx.pure(sum)
+//│ fun main: forall 'a 'b. {printLine: Str -> {bind: (Int -> ('a | 'b)) -> 'a}, pure: Int -> 'b, readInt: {bind: (Int -> ('a | 'b)) -> 'a}} -> 'a
+
+val defaultCtx = {printLine, readInt, pure: Pure}
+//│ let defaultCtx: {printLine: (str: Str) -> printLine, pure: forall 'A. (value: 'A) -> Pure['A], readInt: readInt}
+//│ defaultCtx
+//│            = {
+//│                printLine: [Function (anonymous)] {
+//│                  class: [class printLine extends IO],
+//│                  unapply: [Function: unapply]
+//│                },
+//│                readInt: readInt { class: [class readInt extends IO] },
+//│                pure: [Function (anonymous)] {
+//│                  class: [class Pure extends IO],
+//│                  unapply: [Function: unapply]
+//│                }
+//│              }
+
+main(defaultCtx).run
+//│ Int
+//│ res
+//│     = 84
+//│ // Output
+//│ Hi! Input two numbers: 
+//│ The sum is: 84
+
+fun loop(ctx) =
+  ctx.printLine("Input a positive number: ") |>= _ =>
+  ctx.readInt |>= n =>
+  if n < 0 then loop(ctx) else ctx.pure(n)
+//│ fun loop: forall 'a 'b 'c. {printLine: "Input a positive number: " -> {bind: ((Int & 'a) -> ('b | 'c)) -> 'b}, pure: 'a -> 'c, readInt: {bind: ((Int & 'a) -> ('b | 'c)) -> 'b}} -> 'b
+
+// FIXME why `nothing`?
+let r = loop(defaultCtx).run
+//│ let r: nothing
+//│ r
+//│   = 42
+//│ // Output
+//│ Input a positive number: 
+
+not(r)
+//│ Bool
+//│ res
+//│     = false
+
+
 // * Note: using inferred type parent arguments
 
 module readInt extends IO { fun run = 42 }
 class printLine(str: Str) extends IO { fun run = log(str) }
 declare fun String: anything -> Str
 //│ module readInt extends IO {
-//│   fun bind: forall 'B 'A. ('A -> IO['B]) -> Bind['A, 'B]
+//│   fun bind: forall 'A 'B. ('A -> IO['B]) -> Bind['A, 'B]
 //│   fun run: 42
 //│ }
 //│ class printLine(str: Str) extends IO {

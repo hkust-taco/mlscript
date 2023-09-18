@@ -421,7 +421,12 @@ class Desugarer extends TypeDefs { self: Typer =>
           App(Var("is"),
               Tup(_ -> Fld(_, scrutinee) :: Nil)),
           Tup(_ -> Fld(_, pattern) :: Nil)
-        ) =>
+        ) if !newDefs => // * Old-style operators
+          // This is an inline `x is Class` match test.
+          val inlineMatchLoc = isApp.toLoc
+          val inlineScrutinee = makeScrutinee(scrutinee, inlineMatchLoc)
+          destructPattern(inlineScrutinee, pattern, true)(ctx, raise, exhaustivenessMap, scrutineeFieldAliasMap)
+        case isApp @ App(Var("is"), PlainTup(scrutinee, pattern)) =>
           // This is an inline `x is Class` match test.
           val inlineMatchLoc = isApp.toLoc
           val inlineScrutinee = makeScrutinee(scrutinee, inlineMatchLoc)
@@ -469,8 +474,8 @@ class Desugarer extends TypeDefs { self: Typer =>
         //   A(...) then ...         // Case 1: no conjunctions
         //   B(...) and ... then ... // Case 2: more conjunctions
         case L(IfThen(patTest, consequent)) =>
-          val (patternPart, extraTestOpt) = separatePattern(patTest)
-          val clauses = destructPattern(scrutinee, partialPattern.addTerm(patternPart).term, true)
+          val (patternPart, extraTestOpt) = separatePattern(patTest, newDefs)
+          val clauses = destructPattern(scrutinee, partialPattern.addTerm(patternPart, newDefs).term, true)
           val conditions = collectedConditions + Conjunction(clauses, Nil).withBindings
           printlnUCS(s"Result: " + conditions.clauses.mkString(", "))
           extraTestOpt match {
@@ -489,14 +494,14 @@ class Desugarer extends TypeDefs { self: Typer =>
         //     B(...) then ...
         //     B(...) then ...
         case L(IfOpApp(patLhs, Var("and"), consequent)) =>
-          val (pattern, optTests) = separatePattern(patLhs)
+          val (pattern, optTests) = separatePattern(patLhs, newDefs)
           val patternConditions = destructPattern(scrutinee, pattern, true)
           val tailTestConditions = optTests.fold(Nil: Ls[Clause])(x => desugarConditions(splitAnd(x)))
           val conditions =
             collectedConditions + Conjunction(patternConditions ::: tailTestConditions, Nil).withBindings
           desugarIfBody(consequent, PartialTerm.Empty, conditions)
         case L(IfOpApp(patLhs, op, consequent)) =>
-          separatePattern(patLhs) match {
+          separatePattern(patLhs, newDefs) match {
             // Case 1.
             // The pattern is completed. There is also a conjunction.
             // So, we need to separate the pattern from remaining parts.
@@ -513,17 +518,17 @@ class Desugarer extends TypeDefs { self: Typer =>
             //     Nil then ...  // do something with head
             //     tail then ... // do something with head and tail
             case (patternPart, N) =>
-              desugarMatchBranch(scrutinee, L(consequent), partialPattern.addTermOp(patternPart, op), collectedConditions)
+              desugarMatchBranch(scrutinee, L(consequent), partialPattern.addTermOp(patternPart, op, newDefs), collectedConditions)
           }
         case L(IfOpsApp(patLhs, opsRhss)) =>
-          separatePattern(patLhs) match {
+          separatePattern(patLhs, newDefs) match {
             case (patternPart, N) =>
-              val partialPattern2 = partialPattern.addTerm(patternPart)
+              val partialPattern2 = partialPattern.addTerm(patternPart, newDefs)
               opsRhss.foreach { case op -> consequent =>
                 desugarMatchBranch(scrutinee, L(consequent), partialPattern2.addOp(op), collectedConditions)
               }
             case (patternPart, S(extraTests)) =>
-              val patternConditions = destructPattern(scrutinee, partialPattern.addTerm(patternPart).term, true)
+              val patternConditions = destructPattern(scrutinee, partialPattern.addTerm(patternPart, newDefs).term, true)
               val testTerms = splitAnd(extraTests)
               val middleConditions = desugarConditions(testTerms.init)
               val conditions =
@@ -542,7 +547,7 @@ class Desugarer extends TypeDefs { self: Typer =>
         case L(IfLet(_, _, _, _)) =>
           TODO("please add this rare case to test files")
         // This case handles interleaved lets.
-        case R(NuFunDef(S(isRec), nameVar, _, L(term))) =>
+        case R(NuFunDef(S(isRec), nameVar, _, _, L(term))) =>
           interleavedLets += (LetBinding(LetBinding.Kind.InterleavedLet, isRec, nameVar, term))
         // Other statements are considered to be ill-formed.
         case R(statement) => throw new DesugaringException({
@@ -557,7 +562,7 @@ class Desugarer extends TypeDefs { self: Typer =>
     : Unit = traceUCS[Unit]("[desugarIfBody]") {
       body match {
         case IfOpsApp(exprPart, opsRhss) =>
-          val exprStart = expr.addTerm(exprPart)
+          val exprStart = expr.addTerm(exprPart, newDefs)
           opsRhss.foreach { case opVar -> contBody =>
             desugarIfBody(contBody, exprStart.addOp(opVar), acc)
           }
@@ -565,7 +570,7 @@ class Desugarer extends TypeDefs { self: Typer =>
           branches += (acc -> consequent)
         // The termination case.
         case IfThen(term, consequent) =>
-          val totalTerm = expr.addTerm(term)
+          val totalTerm = expr.addTerm(term, newDefs)
           // “Atomic” means terms that do not contain `and`.
           val atomicTerms = splitAnd(totalTerm.term)
           val fragments = atomicTerms ::: totalTerm.fragments
@@ -575,7 +580,7 @@ class Desugarer extends TypeDefs { self: Typer =>
         case IfOpApp(scrutineePart, isVar @ Var("is"), IfBlock(lines)) =>
           // Create a synthetic scrutinee term by combining accumulated partial
           // term with the new part.
-          val scrutineeTerm = expr.addTerm(scrutineePart).term
+          val scrutineeTerm = expr.addTerm(scrutineePart, newDefs).term
           // We don't need to include the entire `IfOpApp` because it might be
           // very long... Indicating the beginning of the match is enough.
           val matchRootLoc = (scrutineeTerm.toLoc, isVar.toLoc) match {
@@ -597,12 +602,12 @@ class Desugarer extends TypeDefs { self: Typer =>
           }
         // For example: "if x == 0 and y is \n ..."
         case IfOpApp(testPart, Var("and"), consequent) =>
-          val conditions = acc + (desugarConditions(expr.addTerm(testPart).term :: Nil))
+          val conditions = acc + (desugarConditions(expr.addTerm(testPart, newDefs).term :: Nil))
           desugarIfBody(consequent, PartialTerm.Empty, conditions)
         // Otherwise, this is not a pattern matching.
         // We create a partial term from `lhs` and `op` and dive deeper.
         case IfOpApp(lhs, op, body) =>
-          desugarIfBody(body, expr.addTermOp(lhs, op), acc)
+          desugarIfBody(body, expr.addTermOp(lhs, op, newDefs), acc)
         // This case is rare. Let's put it aside.
         case IfLet(isRec, name, rhs, body) =>
           TODO("please add this rare case to test files")
@@ -612,7 +617,7 @@ class Desugarer extends TypeDefs { self: Typer =>
         case IfBlock(lines) =>
           lines.foreach {
             case L(subBody) => desugarIfBody(subBody, expr, acc)
-            case R(NuFunDef(S(isRec), nameVar, _, L(term))) =>
+            case R(NuFunDef(S(isRec), nameVar, _, _, L(term))) =>
               printlnUCS(s"Found interleaved binding ${nameVar.name}")
               interleavedLets += LetBinding(LetBinding.Kind.InterleavedLet, isRec, nameVar, term)
             case R(_) =>

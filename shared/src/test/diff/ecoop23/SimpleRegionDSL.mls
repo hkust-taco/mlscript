@@ -308,7 +308,7 @@ TestElim.eliminate(Outside(Outside(Univ())))
 //│ forall 'a. 'Region | 'a
 //│   where
 //│     'Region :> Univ | 'a
-//│     'a :> Outside['Region] | Translate['Region] | Scale['Region] | Union['Region] | Intersect['Region]
+//│     'a :> Outside['Region] | Union['Region] | Intersect['Region] | Translate['Region] | Scale['Region]
 //│ res
 //│     = Univ {}
 

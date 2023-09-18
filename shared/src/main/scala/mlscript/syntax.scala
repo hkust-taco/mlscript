@@ -105,6 +105,8 @@ final case class IfBlock(lines: Ls[IfBody \/ Statement]) extends IfBody
 final case class FldFlags(mut: Bool, spec: Bool, genGetter: Bool)
 final case class Fld(flags: FldFlags, value: Term) extends FldImpl
 
+object FldFlags { val empty: FldFlags = FldFlags(false, false, false) }
+
 sealed abstract class CaseBranches extends CaseBranchesImpl
 final case class Case(pat: SimpleTerm, body: Term, rest: CaseBranches) extends CaseBranches
 final case class Wildcard(body: Term) extends CaseBranches
@@ -209,6 +211,7 @@ final case class NuTypeDef(
 final case class NuFunDef(
   isLetRec: Opt[Bool], // None means it's a `fun`, which is always recursive; Some means it's a `let`
   nme: Var,
+  symbolicNme: Opt[Var],
   tparams: Ls[TypeName],
   rhs: Term \/ Type,
 )(

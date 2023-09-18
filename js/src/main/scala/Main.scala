@@ -110,7 +110,7 @@ object Main {
       val origin = Origin("<input>", 1, fph)
       val lexer = new NewLexer(origin, throw _, dbg = false)
       val tokens = lexer.bracketedTokens
-      val parser = new NewParser(origin, tokens, throw _, dbg = false, N) {
+      val parser = new NewParser(origin, tokens, newDefs = true, throw _, dbg = false, N) {
         def doPrintDbg(msg: => Str): Unit = if (dbg) println(msg)
       }
       parser.parseAll(parser.typingUnit) match {

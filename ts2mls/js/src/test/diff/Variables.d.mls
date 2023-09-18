@@ -1,4 +1,4 @@
-:NewParser
+:NewDefs
 :ParseOnly
 let URI: string
 let URI2: string
@@ -16,3 +16,4 @@ module DD {
 }
 //│ |#let| |URI|#:| |string|↵|#let| |URI2|#:| |string|↵|#let| |foo|#:| |number|↵|#let| |bar|#:| |false|↵|#class| |FooBar|(||)| |{||}|↵|#let| |fb|#:| |FooBar|↵|#module| |ABC| |{|→|#class| |DEF|(||)| |{||}|←|↵|}|↵|#let| |d|#:| |ABC|.DEF|↵|#module| |DD| |{|→|#let| |foo|#:| |number|↵|#let| |bar|#:| |number|←|↵|}|
 //│ Parsed: {let URI: string; let URI2: string; let foo: number; let bar: false; class FooBar() {}; let fb: FooBar; module ABC() {class DEF() {}}; let d: ABC.DEF; module DD() {let foo: number; let bar: number}}
+//│ 

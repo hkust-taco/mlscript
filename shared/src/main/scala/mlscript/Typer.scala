@@ -14,7 +14,7 @@ import mlscript.Message._
  *  Inferred SimpleType values are then turned into CompactType values for simplification.
  *  In order to turn the resulting CompactType into a mlscript.Type, we use `expandCompactType`.
  */
-class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var newDefs: Bool = false)
+class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val newDefs: Bool)
     extends ucs.Desugarer with TypeSimplifier {
   
   def funkyTuples: Bool = false
@@ -162,7 +162,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
         }),
       )
       implicit val raise: Raise = throw _
-      res.tyDefs2.valuesIterator.foreach(_.complete())
+      res.tyDefs2.valuesIterator.foreach { dti =>
+        val mem = dti.complete()
+        // * Not strictly necessary, but it makes sense to use the completed member symbols:
+        res.env += mem.name -> CompletedTypeInfo(mem)
+      }
       res
     }
     val empty: Ctx = init
@@ -277,13 +281,23 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
   val reservedTypeNames: Set[Str] = primitiveTypes + "Eql"
   def singleTup(ty: ST): ST =
     if (funkyTuples) ty else TupleType((N, ty.toUpper(ty.prov) ) :: Nil)(noProv)
+  def pair(ty1: ST, ty2: ST): ST =
+    TupleType(N -> ty1.toUpper(ty1.prov) :: N -> ty2.toUpper(ty2.prov) :: Nil)(noProv)
   val builtinBindings: Bindings = {
     val tv = freshVar(noProv, N)(1)
     import FunctionType.{ apply => fun }
-    val intBinOpTy = fun(singleTup(IntType), fun(singleTup(IntType), IntType)(noProv))(noProv)
-    val numberBinOpTy = fun(singleTup(DecType), fun(singleTup(DecType), DecType)(noProv))(noProv)
-    val numberBinPred = fun(singleTup(DecType), fun(singleTup(DecType), BoolType)(noProv))(noProv)
-    val stringBinPred = fun(singleTup(StrType), fun(singleTup(StrType), BoolType)(noProv))(noProv)
+    val (intBinOpTy, numberBinOpTy, numberBinPred, stringBinPred) = if (newDefs) (
+      fun(pair(IntType, IntType), IntType)(noProv),
+      fun(pair(DecType, DecType), DecType)(noProv),
+      fun(pair(DecType, DecType), BoolType)(noProv),
+      fun(pair(StrType, StrType), BoolType)(noProv),
+    )
+    else (
+      fun(singleTup(IntType), fun(singleTup(IntType), IntType)(noProv))(noProv),
+      fun(singleTup(DecType), fun(singleTup(DecType), DecType)(noProv))(noProv),
+      fun(singleTup(DecType), fun(singleTup(DecType), BoolType)(noProv))(noProv),
+      fun(singleTup(StrType), fun(singleTup(StrType), BoolType)(noProv))(noProv),
+    )
     Map(
       "true" -> TrueType,
       "false" -> FalseType,
@@ -337,11 +351,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
       "===" -> {
         val v = freshVar(noProv, N)(1)
         val eq = TypeRef(TypeName("Eql"), v :: Nil)(noProv)
-        PolymorphicType(MinLevel, fun(singleTup(eq), fun(singleTup(v), BoolType)(noProv))(noProv))
+        PolymorphicType(MinLevel, fun(pair(eq, v), BoolType)(noProv))
       },
       "<>" -> numberBinPred,
-      "&&" -> fun(singleTup(BoolType), fun(singleTup(BoolType), BoolType)(noProv))(noProv),
-      "||" -> fun(singleTup(BoolType), fun(singleTup(BoolType), BoolType)(noProv))(noProv),
+      "&&" -> (if (newDefs) fun(pair(BoolType, BoolType), BoolType)(noProv)
+        else fun(singleTup(BoolType), fun(singleTup(BoolType), BoolType)(noProv))(noProv)),
+      "||" -> (if (newDefs) fun(pair(BoolType, BoolType), BoolType)(noProv)
+        else fun(singleTup(BoolType), fun(singleTup(BoolType), BoolType)(noProv))(noProv)),
       "id" -> {
         val v = freshVar(noProv, N)(1)
         PolymorphicType(MinLevel, fun(singleTup(v), v)(noProv))
@@ -354,7 +370,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
         val v = freshVar(noProv, N)(1)
         PolymorphicType(0, ArrayType(FieldType(S(v), v)(noProv))(noProv))
       },
-    ) ++ primTypes ++ primTypes.map(p => "" + p._1.capitalize -> p._2) // TODO settle on naming convention...
+    ) ++ (if (!newDefs) primTypes ++ primTypes.map(p => p._1.capitalize -> p._2) // TODO settle on naming convention...
+      else Nil)
   }
   
   
@@ -986,11 +1003,19 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
         val body_ty = typeTerm(body)(newCtx, raise, vars,
           generalizeCurriedFunctions || doGenLambdas)
         FunctionType(param_ty, body_ty)(tp(term.toLoc, "function"))
-      case App(App(Var("is"), _), _) =>
+      case App(App(Var("is"), _), _) => // * Old-style operators
         val desug = If(IfThen(term, Var("true")), S(Var("false")))
         term.desugaredTerm = S(desug)
         typeTerm(desug)
-      case App(App(Var("and"), Tup(_ -> Fld(_, lhs) :: Nil)), Tup(_ -> Fld(_, rhs) :: Nil)) =>
+      case App(Var("is"), _) =>
+        val desug = If(IfThen(term, Var("true")), S(Var("false")))
+        term.desugaredTerm = S(desug)
+        typeTerm(desug)
+      case App(App(Var("and"), PlainTup(lhs)), PlainTup(rhs)) => // * Old-style operators
+        val desug = If(IfThen(lhs, rhs), S(Var("false")))
+        term.desugaredTerm = S(desug)
+        typeTerm(desug)
+      case App(Var("and"), PlainTup(lhs, rhs)) =>
         val desug = If(IfThen(lhs, rhs), S(Var("false")))
         term.desugaredTerm = S(desug)
         typeTerm(desug)
@@ -1088,7 +1113,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
                 case S(ti: DelayedTypeInfo) => ti.decl.genUnapply
                 case _ => N
               }) match {
-                case S(NuFunDef(_, _, _, L(unapplyMtd))) => typePolymorphicTerm(unapplyMtd)
+                case S(NuFunDef(_, _, _, _, L(unapplyMtd))) => typePolymorphicTerm(unapplyMtd)
                 case _ => mthCallOrSel(obj, fieldName)
               }
             else mthCallOrSel(obj, fieldName)
@@ -1563,7 +1588,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
             mkTypingUnit(thisTy, members))(td.declareLoc, td.abstractLoc)
           }
       case tf @ TypedNuFun(level, fd, bodyTy) =>
-        NuFunDef(fd.isLetRec, fd.nme, Nil, R(go(tf.typeSignature)))(fd.declareLoc, fd.virtualLoc, fd.signature, fd.outer, fd.genField)
+        NuFunDef(fd.isLetRec, fd.nme, fd.symbolicNme, Nil, R(go(tf.typeSignature)))(fd.declareLoc, fd.virtualLoc, fd.signature, fd.outer, fd.genField)
       case p: NuParam =>
         ??? // TODO
       case TypedNuDummy(d) =>

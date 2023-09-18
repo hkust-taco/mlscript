@@ -11,7 +11,7 @@ fun f(a, b) = if a is
     and b is Some(v') then v + v'
     or  b is Some(v)  then v
   else 0
-//│ ╔══[ERROR] Cannot find operator `and` in the context
+//│ ╔══[ERROR] Illegal pattern `and`
 //│ ║  l.11: 	    and b is Some(v') then v + v'
 //│ ╙──      	    ^^^
 //│ fun f: (anything, anything) -> error

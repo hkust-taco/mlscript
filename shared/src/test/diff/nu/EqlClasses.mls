@@ -64,7 +64,7 @@ p === { fst: 1, snd: 2 }
 { fst: 1, snd: 2 } === p
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.64: 	{ fst: 1, snd: 2 } === p
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── record literal of type `{fst: 1, snd: 2}` is not an instance of type `Eql`
 //│ ║  l.64: 	{ fst: 1, snd: 2 } === p
 //│ ╙──      	       ^^^^^^^^^
@@ -87,7 +87,7 @@ r : {x: Int}
 x => { a: 0 } === x
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.87: 	x => { a: 0 } === x
-//│ ║        	     ^^^^^^^^^^^^
+//│ ║        	     ^^^^^^^^^^^^^^
 //│ ╟── record literal of type `{a: 0}` is not an instance of type `Eql`
 //│ ║  l.87: 	x => { a: 0 } === x
 //│ ╙──      	          ^
