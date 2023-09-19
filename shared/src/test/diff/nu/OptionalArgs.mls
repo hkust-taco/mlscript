@@ -4,117 +4,130 @@
 // TODO: there is problem when the is SPACE after '?'
 
 :dp
+:p
 fun f1(a?: Int, b?: Int) = a + b
 //│ |#fun| |f1|(|a|?|#:| |Int|,| |b|?|#:| |Int|)| |#=| |a| |+| |b|
-//│ ? block		inspects |#fun| |f1|(|a|?|#:| |Int|,| |b|?|#:| |Int|)| |...    [at l.299]
-//│ ? go		inspects |#fun| |f1|(|a|?|#:| |Int|,| |b|?|#:| |Int|)| |...    [at l.268]
-//│ ? go		inspects |#fun| |f1|(|a|?|#:| |Int|,| |b|?|#:| |Int|)| |...    [at l.268]
-//│ ! t		consumes |#fun|    [at l.413]
-//│ ? yeetSpaces		inspects | |f1|(|a|?|#:| |Int|,| |b|?|#:| |Int|)| |#=|...    [at l.514]
-//│ ! yeetSpaces		consumes | |    [at l.514]
-//│ ? yeetSpaces		inspects |f1|(|a|?|#:| |Int|,| |b|?|#:| |Int|)| |#=| |...    [at l.514]
-//│ ! x$29		consumes |f1|    [at l.424]
-//│ ? yeetSpaces		inspects |(|a|?|#:| |Int|,| |b|?|#:| |Int|)| |#=| |a|...    [at l.514]
-//│ ? yeetSpaces		inspects |(|a|?|#:| |Int|,| |b|?|#:| |Int|)| |#=| |a|...    [at l.514]
-//│ @ funParams(())    [at l.463]
-//│ │ ? yeetSpaces		inspects |(|a|?|#:| |Int|,| |b|?|#:| |Int|)| |#=| |a|...    [at l.514]
-//│ │ ! res		consumes |(|a|?|#:| |Int|,| |b|?|#:| |Int|)|    [at l.525]
-//│ │ > ? maybeIndented		inspects |a|?|#:| |Int|...    [at l.999]
-//│ │ > @ argsOrIf(List(),List())    [at l.1042]
-//│ │ > │ ? argsOrIf		inspects |a|?|#:| |Int|...    [at l.1043]
-//│ │ > │ ? yeetSpaces		inspects |a|?|#:| |Int|...    [at l.514]
-//│ │ > │ ? yeetSpaces		inspects |a|?|#:| |Int|...    [at l.514]
-//│ │ > │ ? yeetSpaces		inspects |a|?|#:| |Int|...    [at l.514]
-//│ │ > │ ! x$60		consumes |a|    [at l.1075]
-//│ │ > │ ! x$60		consumes |?|    [at l.1076]
-//│ │ > │ ! x$60		consumes |#:|    [at l.1077]
-//│ │ > │ flags => None None Some(Loc(8,8,nu/OptionalArgs:+7))
-//│ │ > │ @ exprOrIf(1,true)    [at l.1087]
-//│ │ > │ │ ? exprOrIf		inspects | |Int|,| |b|...    [at l.557]
-//│ │ > │ │ ! exprOrIf		consumes | |    [at l.559]
-//│ │ > │ │ @ exprOrIf(1,true)    [at l.560]
-//│ │ > │ │ │ ? exprOrIf		inspects |Int|,| |b|?|...    [at l.557]
-//│ │ > │ │ │ ! exprOrIf		consumes |Int|    [at l.576]
-//│ │ > │ │ │ @ exprCont(1,`Int`,false)    [at l.577]
-//│ │ > │ │ │ │ ? exprCont		inspects |,| |b|?|#:|...    [at l.733]
+//│ ? block		inspects |#fun| |f1|(|a|?|#:| |Int|,| |b|?|#:| |Int|)| |...    [at l.300]
+//│ ? go		inspects |#fun| |f1|(|a|?|#:| |Int|,| |b|?|#:| |Int|)| |...    [at l.269]
+//│ ? go		inspects |#fun| |f1|(|a|?|#:| |Int|,| |b|?|#:| |Int|)| |...    [at l.269]
+//│ ! t		consumes |#fun|    [at l.414]
+//│ ? yeetSpaces		inspects | |f1|(|a|?|#:| |Int|,| |b|?|#:| |Int|)| |#=|...    [at l.515]
+//│ ! yeetSpaces		consumes | |    [at l.515]
+//│ ? yeetSpaces		inspects |f1|(|a|?|#:| |Int|,| |b|?|#:| |Int|)| |#=| |...    [at l.515]
+//│ ! x$29		consumes |f1|    [at l.425]
+//│ ? yeetSpaces		inspects |(|a|?|#:| |Int|,| |b|?|#:| |Int|)| |#=| |a|...    [at l.515]
+//│ ? yeetSpaces		inspects |(|a|?|#:| |Int|,| |b|?|#:| |Int|)| |#=| |a|...    [at l.515]
+//│ @ funParams(())    [at l.464]
+//│ │ ? yeetSpaces		inspects |(|a|?|#:| |Int|,| |b|?|#:| |Int|)| |#=| |a|...    [at l.515]
+//│ │ ! res		consumes |(|a|?|#:| |Int|,| |b|?|#:| |Int|)|    [at l.526]
+//│ │ > ? maybeIndented		inspects |a|?|#:| |Int|...    [at l.1005]
+//│ │ > @ argsOrIf(List(),List())    [at l.1048]
+//│ │ > │ ? argsOrIf		inspects |a|?|#:| |Int|...    [at l.1049]
+//│ │ > │ ? yeetSpaces		inspects |a|?|#:| |Int|...    [at l.515]
+//│ │ > │ ? yeetSpaces		inspects |a|?|#:| |Int|...    [at l.515]
+//│ │ > │ ? yeetSpaces		inspects |a|?|#:| |Int|...    [at l.515]
+//│ │ > │ ! x$60		consumes |a|    [at l.1081]
+//│ │ > │ ! x$60		consumes |?|    [at l.1082]
+//│ │ > │ ! x$60		consumes |#:|    [at l.1083]
+//│ │ > │ @ exprOrIf(1,true)    [at l.1092]
+//│ │ > │ │ ? exprOrIf		inspects | |Int|,| |b|...    [at l.561]
+//│ │ > │ │ ! exprOrIf		consumes | |    [at l.563]
+//│ │ > │ │ @ exprOrIf(1,true)    [at l.564]
+//│ │ > │ │ │ ? exprOrIf		inspects |Int|,| |b|?|...    [at l.561]
+//│ │ > │ │ │ ! exprOrIf		consumes |Int|    [at l.580]
+//│ │ > │ │ │ @ exprCont(1,`Int`,false)    [at l.581]
+//│ │ > │ │ │ │ ? exprCont		inspects |,| |b|?|#:|...    [at l.737]
 //│ │ > │ │ │ = Right(Int)
 //│ │ > │ │ = Right(Int)
 //│ │ > │ = Right(Int)
-//│ │ > │ ? argsOrIf		inspects |,| |b|?|#:|...    [at l.1095]
-//│ │ > │ ! argsOrIf		consumes |,|    [at l.1101]
-//│ │ > │ @ argsOrIf(List((Some(a),Right(Fld(FldFlags(false,false,true),Int)))),List())    [at l.1042]
-//│ │ > │ │ ? argsOrIf		inspects | |b|?|#:| |...    [at l.1043]
-//│ │ > │ │ ! argsOrIf		consumes | |    [at l.1052]
-//│ │ > │ │ @ argsOrIf(List((Some(a),Right(Fld(FldFlags(false,false,true),Int)))),List())    [at l.1042]
-//│ │ > │ │ │ ? argsOrIf		inspects |b|?|#:| |Int|    [at l.1043]
-//│ │ > │ │ │ ? yeetSpaces		inspects |b|?|#:| |Int|    [at l.514]
-//│ │ > │ │ │ ? yeetSpaces		inspects |b|?|#:| |Int|    [at l.514]
-//│ │ > │ │ │ ? yeetSpaces		inspects |b|?|#:| |Int|    [at l.514]
-//│ │ > │ │ │ ! x$60		consumes |b|    [at l.1075]
-//│ │ > │ │ │ ! x$60		consumes |?|    [at l.1076]
-//│ │ > │ │ │ ! x$60		consumes |#:|    [at l.1077]
-//│ │ > │ │ │ flags => None None Some(Loc(17,17,nu/OptionalArgs:+7))
-//│ │ > │ │ │ @ exprOrIf(1,true)    [at l.1087]
-//│ │ > │ │ │ │ ? exprOrIf		inspects | |Int|    [at l.557]
-//│ │ > │ │ │ │ ! exprOrIf		consumes | |    [at l.559]
-//│ │ > │ │ │ │ @ exprOrIf(1,true)    [at l.560]
-//│ │ > │ │ │ │ │ ? exprOrIf		inspects |Int|    [at l.557]
-//│ │ > │ │ │ │ │ ! exprOrIf		consumes |Int|    [at l.576]
-//│ │ > │ │ │ │ │ @ exprCont(1,`Int`,false)    [at l.577]
-//│ │ > │ │ │ │ │ │ ? exprCont		inspects ||    [at l.733]
+//│ │ > │ ? argsOrIf		inspects |,| |b|?|#:|...    [at l.1093]
+//│ │ > │ nexttoken => (COMMA,Loc(14,15,nu/OptionalArgs:+8))
+//│ │ > │ ? isOptinoal		inspects |,| |b|?|#:|...    [at l.1098]
+//│ │ > │ flags => None None Some(Loc(8,8,nu/OptionalArgs:+8))
+//│ │ > │ e => Right(Fld(FldFlags(false,false,true),Int))
+//│ │ > │ body => Int Var(Int)
+//│ │ > │ ? argsOrIf		inspects |,| |b|?|#:|...    [at l.1122]
+//│ │ > │ ! argsOrIf		consumes |,|    [at l.1128]
+//│ │ > │ @ argsOrIf(List((Some(a),Right(Fld(FldFlags(false,false,true),Int)))),List())    [at l.1048]
+//│ │ > │ │ ? argsOrIf		inspects | |b|?|#:| |...    [at l.1049]
+//│ │ > │ │ ! argsOrIf		consumes | |    [at l.1058]
+//│ │ > │ │ @ argsOrIf(List((Some(a),Right(Fld(FldFlags(false,false,true),Int)))),List())    [at l.1048]
+//│ │ > │ │ │ ? argsOrIf		inspects |b|?|#:| |Int|    [at l.1049]
+//│ │ > │ │ │ ? yeetSpaces		inspects |b|?|#:| |Int|    [at l.515]
+//│ │ > │ │ │ ? yeetSpaces		inspects |b|?|#:| |Int|    [at l.515]
+//│ │ > │ │ │ ? yeetSpaces		inspects |b|?|#:| |Int|    [at l.515]
+//│ │ > │ │ │ ! x$60		consumes |b|    [at l.1081]
+//│ │ > │ │ │ ! x$60		consumes |?|    [at l.1082]
+//│ │ > │ │ │ ! x$60		consumes |#:|    [at l.1083]
+//│ │ > │ │ │ @ exprOrIf(1,true)    [at l.1092]
+//│ │ > │ │ │ │ ? exprOrIf		inspects | |Int|    [at l.561]
+//│ │ > │ │ │ │ ! exprOrIf		consumes | |    [at l.563]
+//│ │ > │ │ │ │ @ exprOrIf(1,true)    [at l.564]
+//│ │ > │ │ │ │ │ ? exprOrIf		inspects |Int|    [at l.561]
+//│ │ > │ │ │ │ │ ! exprOrIf		consumes |Int|    [at l.580]
+//│ │ > │ │ │ │ │ @ exprCont(1,`Int`,false)    [at l.581]
+//│ │ > │ │ │ │ │ │ ? exprCont		inspects ||    [at l.737]
 //│ │ > │ │ │ │ │ = Right(Int)
 //│ │ > │ │ │ │ = Right(Int)
 //│ │ > │ │ │ = Right(Int)
-//│ │ > │ │ │ ? argsOrIf		inspects ||    [at l.1095]
+//│ │ > │ │ │ ? argsOrIf		inspects ||    [at l.1093]
+//│ │ > │ │ │ ? isOptinoal		inspects ||    [at l.1098]
+//│ │ > │ │ │ flags => None None Some(Loc(17,17,nu/OptionalArgs:+8))
+//│ │ > │ │ │ e => Right(Fld(FldFlags(false,false,true),Int))
+//│ │ > │ │ │ body => Int Var(Int)
+//│ │ > │ │ │ ? argsOrIf		inspects ||    [at l.1122]
 //│ │ > │ │ = List((Some(a),Right(Fld(FldFlags(false,false,true),Int))), (Some(b),Right(Fld(FldFlags(false,false,true),Int))))
 //│ │ > │ = List((Some(a),Right(Fld(FldFlags(false,false,true),Int))), (Some(b),Right(Fld(FldFlags(false,false,true),Int))))
 //│ │ > = List((Some(a),Right(Fld(FldFlags(false,false,true),Int))), (Some(b),Right(Fld(FldFlags(false,false,true),Int))))
-//│ │ > ? concludeWith		inspects ||    [at l.86]
+//│ │ > ? concludeWith		inspects ||    [at l.87]
 //│ │ > Concluded with List((Some(a),Fld(FldFlags(false,false,true),Int)), (Some(b),Fld(FldFlags(false,false,true),Int)))
-//│ │ @ funParams(())    [at l.527]
-//│ │ │ ? yeetSpaces		inspects | |#=| |a| |...    [at l.514]
-//│ │ │ ! yeetSpaces		consumes | |    [at l.514]
+//│ │ @ funParams(())    [at l.528]
+//│ │ │ ? yeetSpaces		inspects | |#=| |a| |...    [at l.515]
+//│ │ │ ! yeetSpaces		consumes | |    [at l.515]
 //│ │ │ Here, creating the params! List()
 //│ │ = List()
 //│ │ Here, creating the params! List(a: Int, b: Int,) Tup(a: Var(Int), b: Var(Int))
 //│ = List(a: Int, b: Int,)
-//│ ? yeetSpaces		inspects |#=| |a| |+|...    [at l.514]
-//│ ? yeetSpaces		inspects |#=| |a| |+|...    [at l.514]
-//│ ! t		consumes |#=|    [at l.474]
-//│ @ expr(0,true)    [at l.475]
-//│ │ @ exprOrIf(0,true)    [at l.545]
-//│ │ │ ? exprOrIf		inspects | |a| |+| |...    [at l.557]
-//│ │ │ ! exprOrIf		consumes | |    [at l.559]
-//│ │ │ @ exprOrIf(0,true)    [at l.560]
-//│ │ │ │ ? exprOrIf		inspects |a| |+| |b|    [at l.557]
-//│ │ │ │ ! exprOrIf		consumes |a|    [at l.576]
-//│ │ │ │ @ exprCont(0,`a`,false)    [at l.577]
-//│ │ │ │ │ ? exprCont		inspects | |+| |b|    [at l.733]
-//│ │ │ │ │ ! exprCont		consumes | |    [at l.777]
-//│ │ │ │ │ @ exprCont(0,`a`,false)    [at l.778]
-//│ │ │ │ │ │ ? exprCont		inspects |+| |b|    [at l.733]
-//│ │ │ │ │ │ ! exprCont		consumes |+|    [at l.742]
-//│ │ │ │ │ │ @ exprOrIf(18,true)    [at l.745]
-//│ │ │ │ │ │ │ ? exprOrIf		inspects | |b|    [at l.557]
-//│ │ │ │ │ │ │ ! exprOrIf		consumes | |    [at l.559]
-//│ │ │ │ │ │ │ @ exprOrIf(18,true)    [at l.560]
-//│ │ │ │ │ │ │ │ ? exprOrIf		inspects |b|    [at l.557]
-//│ │ │ │ │ │ │ │ ! exprOrIf		consumes |b|    [at l.576]
-//│ │ │ │ │ │ │ │ @ exprCont(18,`b`,false)    [at l.577]
-//│ │ │ │ │ │ │ │ │ ? exprCont		inspects ||    [at l.733]
+//│ ? yeetSpaces		inspects |#=| |a| |+|...    [at l.515]
+//│ ? yeetSpaces		inspects |#=| |a| |+|...    [at l.515]
+//│ ! t		consumes |#=|    [at l.475]
+//│ @ expr(0,true)    [at l.476]
+//│ │ @ exprOrIf(0,true)    [at l.546]
+//│ │ │ ? exprOrIf		inspects | |a| |+| |...    [at l.561]
+//│ │ │ ! exprOrIf		consumes | |    [at l.563]
+//│ │ │ @ exprOrIf(0,true)    [at l.564]
+//│ │ │ │ ? exprOrIf		inspects |a| |+| |b|    [at l.561]
+//│ │ │ │ ! exprOrIf		consumes |a|    [at l.580]
+//│ │ │ │ @ exprCont(0,`a`,false)    [at l.581]
+//│ │ │ │ │ ? exprCont		inspects | |+| |b|    [at l.737]
+//│ │ │ │ │ ! exprCont		consumes | |    [at l.783]
+//│ │ │ │ │ @ exprCont(0,`a`,false)    [at l.784]
+//│ │ │ │ │ │ ? exprCont		inspects |+| |b|    [at l.737]
+//│ │ │ │ │ │ ! exprCont		consumes |+|    [at l.746]
+//│ │ │ │ │ │ @ exprOrIf(18,true)    [at l.749]
+//│ │ │ │ │ │ │ ? exprOrIf		inspects | |b|    [at l.561]
+//│ │ │ │ │ │ │ ! exprOrIf		consumes | |    [at l.563]
+//│ │ │ │ │ │ │ @ exprOrIf(18,true)    [at l.564]
+//│ │ │ │ │ │ │ │ ? exprOrIf		inspects |b|    [at l.561]
+//│ │ │ │ │ │ │ │ ! exprOrIf		consumes |b|    [at l.580]
+//│ │ │ │ │ │ │ │ @ exprCont(18,`b`,false)    [at l.581]
+//│ │ │ │ │ │ │ │ │ ? exprCont		inspects ||    [at l.737]
 //│ │ │ │ │ │ │ │ = Right(b)
 //│ │ │ │ │ │ │ = Right(b)
 //│ │ │ │ │ │ = Right(b)
-//│ │ │ │ │ │ @ exprCont(0,`+ (a,) (b,)`,false)    [at l.749]
-//│ │ │ │ │ │ │ ? exprCont		inspects ||    [at l.733]
+//│ │ │ │ │ │ @ exprCont(0,`+ (a,) (b,)`,false)    [at l.753]
+//│ │ │ │ │ │ │ ? exprCont		inspects ||    [at l.737]
 //│ │ │ │ │ │ = Right(+ (a,) (b,))
 //│ │ │ │ │ = Right(+ (a,) (b,))
 //│ │ │ │ = Right(+ (a,) (b,))
 //│ │ │ = Right(+ (a,) (b,))
 //│ │ = Right(+ (a,) (b,))
+//│ │ result => + (a,) (b,) ## App(App(Var(+), Tup(_: Var(a))), Tup(_: Var(b)))
+//│ │ result toType => Right(AppliedType(TypeName(+),List(Tuple(List((None,Field(None,TypeName(a),false)))), Tuple(List((None,Field(None,TypeName(b),false)))))))
 //│ = + (a,) (b,)
-//│ ? yeetSpaces		inspects ||    [at l.514]
-//│ ? parseAll		inspects ||    [at l.75]
+//│ ? yeetSpaces		inspects ||    [at l.515]
+//│ ? parseAll		inspects ||    [at l.76]
+//│ AST: TypingUnit(NuFunDef(None, f1, [], Lam(Tup(a: Var(Int), b: Var(Int)), App(App(Var(+), Tup(_: Var(a))), Tup(_: Var(b))))))
 //│ Parsed: fun f1 = (a: Int, b: Int,) => + (a,) (b,);
 //│ fun f1: (a: Int, b: Int,) -> Int
 
@@ -148,3 +161,353 @@ f1(1, 2)
 //│ Int
 //│ res
 //│     = 3
+
+// checking how typer works.
+let x = [1, 2] : [Int, Int]
+//│ let x: (Int, Int,)
+//│ x
+//│   = [ 1, 2 ]
+
+let f = ([a, b]) => a - b
+//│ let f: (Int, Int,) -> Int
+//│ f
+//│   = [Function: f]
+
+f(x)
+//│ Int
+//│ res
+//│     = -1
+
+[1, 2, 3]: [Int, Int, Int]
+//│ (Int, Int, Int,)
+//│ res
+//│     = [ 1, 2, 3 ]
+
+[1]
+//│ (1,)
+//│ res
+//│     = [ 1 ]
+
+class C1
+class C2 extends C1
+let x = new C2()
+let y: C1 = x
+//│ class C1
+//│ class C2 extends C1
+//│ let x: C2
+//│ let y: C1
+//│ x
+//│   = C2 {}
+//│ y
+//│   = C2 {}
+
+[x, y]: [C1, C1]
+//│ (C1, C1,)
+//│ res
+//│     = [ C2 {}, C2 {} ]
+
+
+[1, 2, 3]: [Int, Int, Int]
+//│ (Int, Int, Int,)
+//│ res
+//│     = [ 1, 2, 3 ]
+
+:dp
+:p
+[1, 2]: [Int, Int]
+//│ |[|1|,| |2|]|#:| |[|Int|,| |Int|]|
+//│ ? block		inspects |[|1|,| |2|]|#:| |[|Int|,| |Int|]|    [at l.300]
+//│ ? go		inspects |[|1|,| |2|]|#:| |[|Int|,| |Int|]|    [at l.269]
+//│ ? go		inspects |[|1|,| |2|]|#:| |[|Int|,| |Int|]|    [at l.269]
+//│ @ exprOrIf(0,false)    [at l.499]
+//│ │ ? exprOrIf		inspects |[|1|,| |2|]|#:| |[|Int|,| |Int|]|    [at l.561]
+//│ │ ! exprOrIf		consumes |[|1|,| |2|]|    [at l.590]
+//│ │ > ? maybeIndented		inspects |1|,| |2|    [at l.1005]
+//│ │ > @ argsOrIf(List(),List())    [at l.1048]
+//│ │ > │ ? argsOrIf		inspects |1|,| |2|    [at l.1049]
+//│ │ > │ ? yeetSpaces		inspects |1|,| |2|    [at l.515]
+//│ │ > │ ? yeetSpaces		inspects |1|,| |2|    [at l.515]
+//│ │ > │ ? yeetSpaces		inspects |1|,| |2|    [at l.515]
+//│ │ > │ @ exprOrIf(1,true)    [at l.1092]
+//│ │ > │ │ ? exprOrIf		inspects |1|,| |2|    [at l.561]
+//│ │ > │ │ ! exprOrIf		consumes |1|    [at l.574]
+//│ │ > │ │ @ exprCont(1,`1`,false)    [at l.575]
+//│ │ > │ │ │ ? exprCont		inspects |,| |2|    [at l.737]
+//│ │ > │ │ = Right(1)
+//│ │ > │ = Right(1)
+//│ │ > │ ? argsOrIf		inspects |,| |2|    [at l.1093]
+//│ │ > │ nexttoken => (COMMA,Loc(2,3,nu/OptionalArgs:+217))
+//│ │ > │ ? isOptinoal		inspects |,| |2|    [at l.1098]
+//│ │ > │ flags => None None None
+//│ │ > │ e => Right(Fld(FldFlags(false,false,false),1))
+//│ │ > │ body => 1 IntLit(1)
+//│ │ > │ ? argsOrIf		inspects |,| |2|    [at l.1122]
+//│ │ > │ ! argsOrIf		consumes |,|    [at l.1128]
+//│ │ > │ @ argsOrIf(List((None,Right(Fld(FldFlags(false,false,false),1)))),List())    [at l.1048]
+//│ │ > │ │ ? argsOrIf		inspects | |2|    [at l.1049]
+//│ │ > │ │ ! argsOrIf		consumes | |    [at l.1058]
+//│ │ > │ │ @ argsOrIf(List((None,Right(Fld(FldFlags(false,false,false),1)))),List())    [at l.1048]
+//│ │ > │ │ │ ? argsOrIf		inspects |2|    [at l.1049]
+//│ │ > │ │ │ ? yeetSpaces		inspects |2|    [at l.515]
+//│ │ > │ │ │ ? yeetSpaces		inspects |2|    [at l.515]
+//│ │ > │ │ │ ? yeetSpaces		inspects |2|    [at l.515]
+//│ │ > │ │ │ @ exprOrIf(1,true)    [at l.1092]
+//│ │ > │ │ │ │ ? exprOrIf		inspects |2|    [at l.561]
+//│ │ > │ │ │ │ ! exprOrIf		consumes |2|    [at l.574]
+//│ │ > │ │ │ │ @ exprCont(1,`2`,false)    [at l.575]
+//│ │ > │ │ │ │ │ ? exprCont		inspects ||    [at l.737]
+//│ │ > │ │ │ │ = Right(2)
+//│ │ > │ │ │ = Right(2)
+//│ │ > │ │ │ ? argsOrIf		inspects ||    [at l.1093]
+//│ │ > │ │ │ ? isOptinoal		inspects ||    [at l.1098]
+//│ │ > │ │ │ flags => None None None
+//│ │ > │ │ │ e => Right(Fld(FldFlags(false,false,false),2))
+//│ │ > │ │ │ body => 2 IntLit(2)
+//│ │ > │ │ │ ? argsOrIf		inspects ||    [at l.1122]
+//│ │ > │ │ = List((None,Right(Fld(FldFlags(false,false,false),1))), (None,Right(Fld(FldFlags(false,false,false),2))))
+//│ │ > │ = List((None,Right(Fld(FldFlags(false,false,false),1))), (None,Right(Fld(FldFlags(false,false,false),2))))
+//│ │ > = List((None,Right(Fld(FldFlags(false,false,false),1))), (None,Right(Fld(FldFlags(false,false,false),2))))
+//│ │ > ? concludeWith		inspects ||    [at l.87]
+//│ │ > Concluded with List((None,Fld(FldFlags(false,false,false),1)), (None,Fld(FldFlags(false,false,false),2)))
+//│ │ @ exprCont(0,`'(' 1, 2, ')'`,false)    [at l.608]
+//│ │ │ ? exprCont		inspects |#:| |[|Int|,| |Int|]|    [at l.737]
+//│ │ │ ! exprCont		consumes |#:|    [at l.771]
+//│ │ │ @ expr(0,true)    [at l.772]
+//│ │ │ │ @ exprOrIf(0,true)    [at l.546]
+//│ │ │ │ │ ? exprOrIf		inspects | |[|Int|,| |Int|]|    [at l.561]
+//│ │ │ │ │ ! exprOrIf		consumes | |    [at l.563]
+//│ │ │ │ │ @ exprOrIf(0,true)    [at l.564]
+//│ │ │ │ │ │ ? exprOrIf		inspects |[|Int|,| |Int|]|    [at l.561]
+//│ │ │ │ │ │ ! exprOrIf		consumes |[|Int|,| |Int|]|    [at l.590]
+//│ │ │ │ │ │ > ? maybeIndented		inspects |Int|,| |Int|    [at l.1005]
+//│ │ │ │ │ │ > @ argsOrIf(List(),List())    [at l.1048]
+//│ │ │ │ │ │ > │ ? argsOrIf		inspects |Int|,| |Int|    [at l.1049]
+//│ │ │ │ │ │ > │ ? yeetSpaces		inspects |Int|,| |Int|    [at l.515]
+//│ │ │ │ │ │ > │ ? yeetSpaces		inspects |Int|,| |Int|    [at l.515]
+//│ │ │ │ │ │ > │ ? yeetSpaces		inspects |Int|,| |Int|    [at l.515]
+//│ │ │ │ │ │ > │ @ exprOrIf(1,true)    [at l.1092]
+//│ │ │ │ │ │ > │ │ ? exprOrIf		inspects |Int|,| |Int|    [at l.561]
+//│ │ │ │ │ │ > │ │ ! exprOrIf		consumes |Int|    [at l.580]
+//│ │ │ │ │ │ > │ │ @ exprCont(1,`Int`,false)    [at l.581]
+//│ │ │ │ │ │ > │ │ │ ? exprCont		inspects |,| |Int|    [at l.737]
+//│ │ │ │ │ │ > │ │ = Right(Int)
+//│ │ │ │ │ │ > │ = Right(Int)
+//│ │ │ │ │ │ > │ ? argsOrIf		inspects |,| |Int|    [at l.1093]
+//│ │ │ │ │ │ > │ nexttoken => (COMMA,Loc(12,13,nu/OptionalArgs:+217))
+//│ │ │ │ │ │ > │ ? isOptinoal		inspects |,| |Int|    [at l.1098]
+//│ │ │ │ │ │ > │ flags => None None None
+//│ │ │ │ │ │ > │ e => Right(Fld(FldFlags(false,false,false),Int))
+//│ │ │ │ │ │ > │ body => Int Var(Int)
+//│ │ │ │ │ │ > │ ? argsOrIf		inspects |,| |Int|    [at l.1122]
+//│ │ │ │ │ │ > │ ! argsOrIf		consumes |,|    [at l.1128]
+//│ │ │ │ │ │ > │ @ argsOrIf(List((None,Right(Fld(FldFlags(false,false,false),Int)))),List())    [at l.1048]
+//│ │ │ │ │ │ > │ │ ? argsOrIf		inspects | |Int|    [at l.1049]
+//│ │ │ │ │ │ > │ │ ! argsOrIf		consumes | |    [at l.1058]
+//│ │ │ │ │ │ > │ │ @ argsOrIf(List((None,Right(Fld(FldFlags(false,false,false),Int)))),List())    [at l.1048]
+//│ │ │ │ │ │ > │ │ │ ? argsOrIf		inspects |Int|    [at l.1049]
+//│ │ │ │ │ │ > │ │ │ ? yeetSpaces		inspects |Int|    [at l.515]
+//│ │ │ │ │ │ > │ │ │ ? yeetSpaces		inspects |Int|    [at l.515]
+//│ │ │ │ │ │ > │ │ │ ? yeetSpaces		inspects |Int|    [at l.515]
+//│ │ │ │ │ │ > │ │ │ @ exprOrIf(1,true)    [at l.1092]
+//│ │ │ │ │ │ > │ │ │ │ ? exprOrIf		inspects |Int|    [at l.561]
+//│ │ │ │ │ │ > │ │ │ │ ! exprOrIf		consumes |Int|    [at l.580]
+//│ │ │ │ │ │ > │ │ │ │ @ exprCont(1,`Int`,false)    [at l.581]
+//│ │ │ │ │ │ > │ │ │ │ │ ? exprCont		inspects ||    [at l.737]
+//│ │ │ │ │ │ > │ │ │ │ = Right(Int)
+//│ │ │ │ │ │ > │ │ │ = Right(Int)
+//│ │ │ │ │ │ > │ │ │ ? argsOrIf		inspects ||    [at l.1093]
+//│ │ │ │ │ │ > │ │ │ ? isOptinoal		inspects ||    [at l.1098]
+//│ │ │ │ │ │ > │ │ │ flags => None None None
+//│ │ │ │ │ │ > │ │ │ e => Right(Fld(FldFlags(false,false,false),Int))
+//│ │ │ │ │ │ > │ │ │ body => Int Var(Int)
+//│ │ │ │ │ │ > │ │ │ ? argsOrIf		inspects ||    [at l.1122]
+//│ │ │ │ │ │ > │ │ = List((None,Right(Fld(FldFlags(false,false,false),Int))), (None,Right(Fld(FldFlags(false,false,false),Int))))
+//│ │ │ │ │ │ > │ = List((None,Right(Fld(FldFlags(false,false,false),Int))), (None,Right(Fld(FldFlags(false,false,false),Int))))
+//│ │ │ │ │ │ > = List((None,Right(Fld(FldFlags(false,false,false),Int))), (None,Right(Fld(FldFlags(false,false,false),Int))))
+//│ │ │ │ │ │ > ? concludeWith		inspects ||    [at l.87]
+//│ │ │ │ │ │ > Concluded with List((None,Fld(FldFlags(false,false,false),Int)), (None,Fld(FldFlags(false,false,false),Int)))
+//│ │ │ │ │ │ @ exprCont(0,`'(' Int, Int, ')'`,false)    [at l.608]
+//│ │ │ │ │ │ │ ? exprCont		inspects ||    [at l.737]
+//│ │ │ │ │ │ = Right('(' Int, Int, ')')
+//│ │ │ │ │ = Right('(' Int, Int, ')')
+//│ │ │ │ = Right('(' Int, Int, ')')
+//│ │ │ │ result => '(' Int, Int, ')' ## Bra(rcd = false, Tup(_: Var(Int), _: Var(Int)))
+//│ │ │ │ result toType => Right(Tuple(List((None,Field(None,TypeName(Int),false)), (None,Field(None,TypeName(Int),false)))))
+//│ │ │ = '(' Int, Int, ')'
+//│ │ │ asc => '(' 1, 2, ')' : (Int, Int,)
+//│ │ = Right('(' 1, 2, ')' : (Int, Int,))
+//│ = Right('(' 1, 2, ')' : (Int, Int,))
+//│ ? yeetSpaces		inspects ||    [at l.515]
+//│ ? parseAll		inspects ||    [at l.76]
+//│ AST: TypingUnit(Asc(Bra(rcd = false, Tup(_: IntLit(1), _: IntLit(2))), Tuple(List((None,Field(None,TypeName(Int),false)), (None,Field(None,TypeName(Int),false))))))
+//│ Parsed: '(' 1, 2, ')' : (Int, Int,);
+//│ (Int, Int,)
+//│ res
+//│     = [ 1, 2 ]
+
+:dp
+[1, 2]: [Int, Int, Int?]
+//│ |[|1|,| |2|]|#:| |[|Int|,| |Int|,| |Int|?|]|
+//│ ? block		inspects |[|1|,| |2|]|#:| |[|Int|,| |Int|,| |Int|?|]|    [at l.300]
+//│ ? go		inspects |[|1|,| |2|]|#:| |[|Int|,| |Int|,| |Int|?|]|    [at l.269]
+//│ ? go		inspects |[|1|,| |2|]|#:| |[|Int|,| |Int|,| |Int|?|]|    [at l.269]
+//│ @ exprOrIf(0,false)    [at l.499]
+//│ │ ? exprOrIf		inspects |[|1|,| |2|]|#:| |[|Int|,| |Int|,| |Int|?|]|    [at l.561]
+//│ │ ! exprOrIf		consumes |[|1|,| |2|]|    [at l.590]
+//│ │ > ? maybeIndented		inspects |1|,| |2|    [at l.1005]
+//│ │ > @ argsOrIf(List(),List())    [at l.1048]
+//│ │ > │ ? argsOrIf		inspects |1|,| |2|    [at l.1049]
+//│ │ > │ ? yeetSpaces		inspects |1|,| |2|    [at l.515]
+//│ │ > │ ? yeetSpaces		inspects |1|,| |2|    [at l.515]
+//│ │ > │ ? yeetSpaces		inspects |1|,| |2|    [at l.515]
+//│ │ > │ @ exprOrIf(1,true)    [at l.1092]
+//│ │ > │ │ ? exprOrIf		inspects |1|,| |2|    [at l.561]
+//│ │ > │ │ ! exprOrIf		consumes |1|    [at l.574]
+//│ │ > │ │ @ exprCont(1,`1`,false)    [at l.575]
+//│ │ > │ │ │ ? exprCont		inspects |,| |2|    [at l.737]
+//│ │ > │ │ = Right(1)
+//│ │ > │ = Right(1)
+//│ │ > │ ? argsOrIf		inspects |,| |2|    [at l.1093]
+//│ │ > │ nexttoken => (COMMA,Loc(2,3,nu/OptionalArgs:+349))
+//│ │ > │ ? isOptinoal		inspects |,| |2|    [at l.1098]
+//│ │ > │ flags => None None None
+//│ │ > │ e => Right(Fld(FldFlags(false,false,false),1))
+//│ │ > │ body => 1 IntLit(1)
+//│ │ > │ ? argsOrIf		inspects |,| |2|    [at l.1122]
+//│ │ > │ ! argsOrIf		consumes |,|    [at l.1128]
+//│ │ > │ @ argsOrIf(List((None,Right(Fld(FldFlags(false,false,false),1)))),List())    [at l.1048]
+//│ │ > │ │ ? argsOrIf		inspects | |2|    [at l.1049]
+//│ │ > │ │ ! argsOrIf		consumes | |    [at l.1058]
+//│ │ > │ │ @ argsOrIf(List((None,Right(Fld(FldFlags(false,false,false),1)))),List())    [at l.1048]
+//│ │ > │ │ │ ? argsOrIf		inspects |2|    [at l.1049]
+//│ │ > │ │ │ ? yeetSpaces		inspects |2|    [at l.515]
+//│ │ > │ │ │ ? yeetSpaces		inspects |2|    [at l.515]
+//│ │ > │ │ │ ? yeetSpaces		inspects |2|    [at l.515]
+//│ │ > │ │ │ @ exprOrIf(1,true)    [at l.1092]
+//│ │ > │ │ │ │ ? exprOrIf		inspects |2|    [at l.561]
+//│ │ > │ │ │ │ ! exprOrIf		consumes |2|    [at l.574]
+//│ │ > │ │ │ │ @ exprCont(1,`2`,false)    [at l.575]
+//│ │ > │ │ │ │ │ ? exprCont		inspects ||    [at l.737]
+//│ │ > │ │ │ │ = Right(2)
+//│ │ > │ │ │ = Right(2)
+//│ │ > │ │ │ ? argsOrIf		inspects ||    [at l.1093]
+//│ │ > │ │ │ ? isOptinoal		inspects ||    [at l.1098]
+//│ │ > │ │ │ flags => None None None
+//│ │ > │ │ │ e => Right(Fld(FldFlags(false,false,false),2))
+//│ │ > │ │ │ body => 2 IntLit(2)
+//│ │ > │ │ │ ? argsOrIf		inspects ||    [at l.1122]
+//│ │ > │ │ = List((None,Right(Fld(FldFlags(false,false,false),1))), (None,Right(Fld(FldFlags(false,false,false),2))))
+//│ │ > │ = List((None,Right(Fld(FldFlags(false,false,false),1))), (None,Right(Fld(FldFlags(false,false,false),2))))
+//│ │ > = List((None,Right(Fld(FldFlags(false,false,false),1))), (None,Right(Fld(FldFlags(false,false,false),2))))
+//│ │ > ? concludeWith		inspects ||    [at l.87]
+//│ │ > Concluded with List((None,Fld(FldFlags(false,false,false),1)), (None,Fld(FldFlags(false,false,false),2)))
+//│ │ @ exprCont(0,`'(' 1, 2, ')'`,false)    [at l.608]
+//│ │ │ ? exprCont		inspects |#:| |[|Int|,| |Int|,| |Int|?|]|    [at l.737]
+//│ │ │ ! exprCont		consumes |#:|    [at l.771]
+//│ │ │ @ expr(0,true)    [at l.772]
+//│ │ │ │ @ exprOrIf(0,true)    [at l.546]
+//│ │ │ │ │ ? exprOrIf		inspects | |[|Int|,| |Int|,| |Int|?|]|    [at l.561]
+//│ │ │ │ │ ! exprOrIf		consumes | |    [at l.563]
+//│ │ │ │ │ @ exprOrIf(0,true)    [at l.564]
+//│ │ │ │ │ │ ? exprOrIf		inspects |[|Int|,| |Int|,| |Int|?|]|    [at l.561]
+//│ │ │ │ │ │ ! exprOrIf		consumes |[|Int|,| |Int|,| |Int|?|]|    [at l.590]
+//│ │ │ │ │ │ > ? maybeIndented		inspects |Int|,| |Int|,|...    [at l.1005]
+//│ │ │ │ │ │ > @ argsOrIf(List(),List())    [at l.1048]
+//│ │ │ │ │ │ > │ ? argsOrIf		inspects |Int|,| |Int|,|...    [at l.1049]
+//│ │ │ │ │ │ > │ ? yeetSpaces		inspects |Int|,| |Int|,|...    [at l.515]
+//│ │ │ │ │ │ > │ ? yeetSpaces		inspects |Int|,| |Int|,|...    [at l.515]
+//│ │ │ │ │ │ > │ ? yeetSpaces		inspects |Int|,| |Int|,|...    [at l.515]
+//│ │ │ │ │ │ > │ @ exprOrIf(1,true)    [at l.1092]
+//│ │ │ │ │ │ > │ │ ? exprOrIf		inspects |Int|,| |Int|,|...    [at l.561]
+//│ │ │ │ │ │ > │ │ ! exprOrIf		consumes |Int|    [at l.580]
+//│ │ │ │ │ │ > │ │ @ exprCont(1,`Int`,false)    [at l.581]
+//│ │ │ │ │ │ > │ │ │ ? exprCont		inspects |,| |Int|,| |...    [at l.737]
+//│ │ │ │ │ │ > │ │ = Right(Int)
+//│ │ │ │ │ │ > │ = Right(Int)
+//│ │ │ │ │ │ > │ ? argsOrIf		inspects |,| |Int|,| |...    [at l.1093]
+//│ │ │ │ │ │ > │ nexttoken => (COMMA,Loc(12,13,nu/OptionalArgs:+349))
+//│ │ │ │ │ │ > │ ? isOptinoal		inspects |,| |Int|,| |...    [at l.1098]
+//│ │ │ │ │ │ > │ flags => None None None
+//│ │ │ │ │ │ > │ e => Right(Fld(FldFlags(false,false,false),Int))
+//│ │ │ │ │ │ > │ body => Int Var(Int)
+//│ │ │ │ │ │ > │ ? argsOrIf		inspects |,| |Int|,| |...    [at l.1122]
+//│ │ │ │ │ │ > │ ! argsOrIf		consumes |,|    [at l.1128]
+//│ │ │ │ │ │ > │ @ argsOrIf(List((None,Right(Fld(FldFlags(false,false,false),Int)))),List())    [at l.1048]
+//│ │ │ │ │ │ > │ │ ? argsOrIf		inspects | |Int|,| |Int|...    [at l.1049]
+//│ │ │ │ │ │ > │ │ ! argsOrIf		consumes | |    [at l.1058]
+//│ │ │ │ │ │ > │ │ @ argsOrIf(List((None,Right(Fld(FldFlags(false,false,false),Int)))),List())    [at l.1048]
+//│ │ │ │ │ │ > │ │ │ ? argsOrIf		inspects |Int|,| |Int|?|    [at l.1049]
+//│ │ │ │ │ │ > │ │ │ ? yeetSpaces		inspects |Int|,| |Int|?|    [at l.515]
+//│ │ │ │ │ │ > │ │ │ ? yeetSpaces		inspects |Int|,| |Int|?|    [at l.515]
+//│ │ │ │ │ │ > │ │ │ ? yeetSpaces		inspects |Int|,| |Int|?|    [at l.515]
+//│ │ │ │ │ │ > │ │ │ @ exprOrIf(1,true)    [at l.1092]
+//│ │ │ │ │ │ > │ │ │ │ ? exprOrIf		inspects |Int|,| |Int|?|    [at l.561]
+//│ │ │ │ │ │ > │ │ │ │ ! exprOrIf		consumes |Int|    [at l.580]
+//│ │ │ │ │ │ > │ │ │ │ @ exprCont(1,`Int`,false)    [at l.581]
+//│ │ │ │ │ │ > │ │ │ │ │ ? exprCont		inspects |,| |Int|?|    [at l.737]
+//│ │ │ │ │ │ > │ │ │ │ = Right(Int)
+//│ │ │ │ │ │ > │ │ │ = Right(Int)
+//│ │ │ │ │ │ > │ │ │ ? argsOrIf		inspects |,| |Int|?|    [at l.1093]
+//│ │ │ │ │ │ > │ │ │ nexttoken => (COMMA,Loc(17,18,nu/OptionalArgs:+349))
+//│ │ │ │ │ │ > │ │ │ ? isOptinoal		inspects |,| |Int|?|    [at l.1098]
+//│ │ │ │ │ │ > │ │ │ flags => None None None
+//│ │ │ │ │ │ > │ │ │ e => Right(Fld(FldFlags(false,false,false),Int))
+//│ │ │ │ │ │ > │ │ │ body => Int Var(Int)
+//│ │ │ │ │ │ > │ │ │ ? argsOrIf		inspects |,| |Int|?|    [at l.1122]
+//│ │ │ │ │ │ > │ │ │ ! argsOrIf		consumes |,|    [at l.1128]
+//│ │ │ │ │ │ > │ │ │ @ argsOrIf(List((None,Right(Fld(FldFlags(false,false,false),Int))), (None,Right(Fld(FldFlags(false,false,false),Int)))),List())    [at l.1048]
+//│ │ │ │ │ │ > │ │ │ │ ? argsOrIf		inspects | |Int|?|    [at l.1049]
+//│ │ │ │ │ │ > │ │ │ │ ! argsOrIf		consumes | |    [at l.1058]
+//│ │ │ │ │ │ > │ │ │ │ @ argsOrIf(List((None,Right(Fld(FldFlags(false,false,false),Int))), (None,Right(Fld(FldFlags(false,false,false),Int)))),List())    [at l.1048]
+//│ │ │ │ │ │ > │ │ │ │ │ ? argsOrIf		inspects |Int|?|    [at l.1049]
+//│ │ │ │ │ │ > │ │ │ │ │ ? yeetSpaces		inspects |Int|?|    [at l.515]
+//│ │ │ │ │ │ > │ │ │ │ │ ? yeetSpaces		inspects |Int|?|    [at l.515]
+//│ │ │ │ │ │ > │ │ │ │ │ ? yeetSpaces		inspects |Int|?|    [at l.515]
+//│ │ │ │ │ │ > │ │ │ │ │ @ exprOrIf(1,true)    [at l.1092]
+//│ │ │ │ │ │ > │ │ │ │ │ │ ? exprOrIf		inspects |Int|?|    [at l.561]
+//│ │ │ │ │ │ > │ │ │ │ │ │ ! exprOrIf		consumes |Int|    [at l.580]
+//│ │ │ │ │ │ > │ │ │ │ │ │ @ exprCont(1,`Int`,false)    [at l.581]
+//│ │ │ │ │ │ > │ │ │ │ │ │ │ ? exprCont		inspects |?|    [at l.737]
+//│ │ │ │ │ │ > │ │ │ │ │ │ = Right(Int)
+//│ │ │ │ │ │ > │ │ │ │ │ = Right(Int)
+//│ │ │ │ │ │ > │ │ │ │ │ ? argsOrIf		inspects |?|    [at l.1093]
+//│ │ │ │ │ │ > │ │ │ │ │ nexttoken => (IDENT(?,true),Loc(22,22,nu/OptionalArgs:+349))
+//│ │ │ │ │ │ > │ │ │ │ │ ? isOptinoal		inspects |?|    [at l.1098]
+//│ │ │ │ │ │ > │ │ │ │ │ ! isOptinoal		consumes |?|    [at l.1100]
+//│ │ │ │ │ │ > │ │ │ │ │ flags => None None None
+//│ │ │ │ │ │ > │ │ │ │ │ e => Right(Fld(FldFlags(false,false,true),Int))
+//│ │ │ │ │ │ > │ │ │ │ │ body => Int Var(Int)
+//│ │ │ │ │ │ > │ │ │ │ │ ? argsOrIf		inspects ||    [at l.1122]
+//│ │ │ │ │ │ > │ │ │ │ = List((None,Right(Fld(FldFlags(false,false,false),Int))), (None,Right(Fld(FldFlags(false,false,false),Int))), (None,Right(Fld(FldFlags(false,false,true),Int))))
+//│ │ │ │ │ │ > │ │ │ = List((None,Right(Fld(FldFlags(false,false,false),Int))), (None,Right(Fld(FldFlags(false,false,false),Int))), (None,Right(Fld(FldFlags(false,false,true),Int))))
+//│ │ │ │ │ │ > │ │ = List((None,Right(Fld(FldFlags(false,false,false),Int))), (None,Right(Fld(FldFlags(false,false,false),Int))), (None,Right(Fld(FldFlags(false,false,true),Int))))
+//│ │ │ │ │ │ > │ = List((None,Right(Fld(FldFlags(false,false,false),Int))), (None,Right(Fld(FldFlags(false,false,false),Int))), (None,Right(Fld(FldFlags(false,false,true),Int))))
+//│ │ │ │ │ │ > = List((None,Right(Fld(FldFlags(false,false,false),Int))), (None,Right(Fld(FldFlags(false,false,false),Int))), (None,Right(Fld(FldFlags(false,false,true),Int))))
+//│ │ │ │ │ │ > ? concludeWith		inspects ||    [at l.87]
+//│ │ │ │ │ │ > Concluded with List((None,Fld(FldFlags(false,false,false),Int)), (None,Fld(FldFlags(false,false,false),Int)), (None,Fld(FldFlags(false,false,true),Int)))
+//│ │ │ │ │ │ @ exprCont(0,`'(' Int, Int, Int, ')'`,false)    [at l.608]
+//│ │ │ │ │ │ │ ? exprCont		inspects ||    [at l.737]
+//│ │ │ │ │ │ = Right('(' Int, Int, Int, ')')
+//│ │ │ │ │ = Right('(' Int, Int, Int, ')')
+//│ │ │ │ = Right('(' Int, Int, Int, ')')
+//│ │ │ │ result => '(' Int, Int, Int, ')' ## Bra(rcd = false, Tup(_: Var(Int), _: Var(Int), _: Var(Int)))
+//│ │ │ │ result toType => Right(Tuple(List((None,Field(None,TypeName(Int),false)), (None,Field(None,TypeName(Int),false)), (None,Field(None,TypeName(Int),true)))))
+//│ │ │ = '(' Int, Int, Int, ')'
+//│ │ │ asc => '(' 1, 2, ')' : (Int, Int, Int,)
+//│ │ = Right('(' 1, 2, ')' : (Int, Int, Int,))
+//│ = Right('(' 1, 2, ')' : (Int, Int, Int,))
+//│ ? yeetSpaces		inspects ||    [at l.515]
+//│ ? parseAll		inspects ||    [at l.76]
+//│ Parsed: '(' 1, 2, ')' : (Int, Int, Int,);
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.349: 	[1, 2]: [Int, Int, Int?]
+//│ ║         	^^^^^^
+//│ ╟── tuple literal of type `(1, 2,)` does not match type `(Int, Int, Int,)`
+//│ ║  l.349: 	[1, 2]: [Int, Int, Int?]
+//│ ║         	 ^^^^
+//│ ╟── Note: constraint arises from tuple type:
+//│ ║  l.349: 	[1, 2]: [Int, Int, Int?]
+//│ ╙──       	        ^^^^^^^^^^^^^^^^
+//│ (Int, Int, Int,)
+//│ res
+//│     = [ 1, 2 ]

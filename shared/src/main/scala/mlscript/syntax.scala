@@ -156,7 +156,7 @@ final case class Splice(fields: Ls[Either[Type, Field]]) extends Type
 final case class Constrained(base: TypeLike, tvBounds: Ls[TypeVar -> Bounds], where: Ls[Bounds]) extends Type
 // final case class FirstClassDefn(defn: NuTypeDef)         extends Type // TODO
 
-final case class Field(in: Opt[Type], out: Type)         extends FieldImpl
+final case class Field(in: Opt[Type], out: Type, opt: Boolean)         extends FieldImpl
 
 sealed abstract class NullaryType                        extends Type
 

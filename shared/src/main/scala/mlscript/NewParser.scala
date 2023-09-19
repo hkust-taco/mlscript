@@ -8,6 +8,7 @@ import utils._, shorthands._
 import mlscript.Message._
 import BracketKind._
 import mlscript.codegen.Helpers
+import mlscript.ucs.helpers
 
 object NewParser {
   
@@ -250,7 +251,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
   }
   final def toParamsTy(t: Type): Tuple = t match {
     case t: Tuple => t
-    case _ => Tuple((N, Field(None, t)) :: Nil)
+    case _ => Tuple((N, Field(None, t, false)) :: Nil)
   }
   final def typ(prec: Int = 0)(implicit fe: FoundErr, l: Line): Type =
     mkType(expr(prec))
@@ -542,12 +543,15 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
   }
   
   final def expr(prec: Int, allowSpace: Bool = true)(implicit fe: FoundErr, l: Line): Term = wrap(prec,allowSpace) { l =>
-    exprOrIf(prec, allowSpace)(et = false, fe = fe, l = implicitly) match {
+    val result = exprOrIf(prec, allowSpace)(et = false, fe = fe, l = implicitly) match {
       case R(e) => e
       case L(e) =>
         err(msg"Expected an expression; found a 'then'/'else' clause instead" -> e.toLoc :: Nil)
         errExpr
     }
+    printDbg(s"result => ${result} ## ${Helpers.inspect(result)}")
+    printDbg(s"result toType => ${result.toType}")
+    result
   }
   
   private def warnDbg(msg: Any, loco: Opt[Loc] = curLoc): Unit =
@@ -738,7 +742,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
           .concludeWith(_.expr(0, allowSpace = true))
         val newAcc = Subs(acc, idx).withLoc(S(l0 ++ l1 ++ idx.toLoc))
         exprCont(newAcc, prec, allowNewlines)
-      case (IDENT(opStr, true), l0) :: _ if /* isInfix(opStr) && */ opPrec(opStr)._1 > prec =>
+      case (IDENT(opStr, true), l0) :: _ if /* isInfix(opStr) && */ opPrec(opStr)._1 > prec && opStr =/= "?" =>
         consume
         val v = Var(opStr).withLoc(S(l0))
         // printDbg(s">>> $opStr ${opPrec(opStr)}")
@@ -765,7 +769,9 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
         }
       case (KEYWORD(":"), l0) :: _ =>
         consume
-        R(Asc(acc, typ(0)))
+        val asc = Asc(acc, typ(0))
+        printDbg(s"asc => ${asc}")
+        R(asc)
       // case (KEYWORD(":"), _) :: _ if prec <= 1 =>
       //   consume
       //   R(Asc(acc, typ(1)))
@@ -1082,9 +1088,30 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
         (S(Var(idStr).withLoc(S(l0))), N)
       case _ => (N, N)
     }
-    printDbg(s"flags => ${argMut} ${argSpec} ${argOpt}")
     // val e = expr(NoElsePrec) -> argMut.isDefined
-    val e = exprOrIf(prec).map(Fld(FldFlags(argMut.isDefined, argSpec.isDefined, argOpt.isDefined), _))
+    val body = exprOrIf(prec)
+    cur match {
+      case x :: _ => 
+        printDbg(s"nexttoken => ${x}")
+      case _ => ()
+    }
+    val isOptinoal = cur match {
+      case (IDENT("?", true), l0) :: _ =>
+        consume
+        true
+      case _ =>
+        false
+    }
+    val e = body.map(Fld(FldFlags(argMut.isDefined, argSpec.isDefined, argOpt.isDefined || isOptinoal), _))
+    printDbg(s"flags => ${argMut} ${argSpec} ${argOpt}")
+    printDbg(s"e => ${e}")
+    
+    body match {
+      case Right(value) => 
+        printDbg(s"body => ${value} ${Helpers.inspect(value)}")
+      case _ => ()
+    }
+    
     
     def mkSeq = if (seqAcc.isEmpty) argName -> e else e match {
       case L(_) => ???

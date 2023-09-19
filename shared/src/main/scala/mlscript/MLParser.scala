@@ -31,7 +31,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   }
   def toParamsTy(t: Type): Tuple = t match {
     case t: Tuple => t
-    case _ => Tuple((N, Field(None, t)) :: Nil)
+    case _ => Tuple((N, Field(None, t, false)) :: Nil)
   }
   
   def letter[p: P]     = P( lowercase | uppercase )
@@ -272,8 +272,8 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def rcd[p: P]: P[Record] =
     locate(P( "{" ~/ ( kw("mut").!.? ~ variable ~ ":" ~ ty).rep(sep = ";") ~ "}" )
       .map(_.toList.map {
-        case (None, v, t) => v -> Field(None, t)
-        case (Some(_), v, t) => v -> Field(Some(t), t)
+        case (None, v, t) => v -> Field(None, t, false)
+        case (Some(_), v, t) => v -> Field(Some(t), t, false)
       } pipe Record))
   
   def parTyCell[p: P]: P[Either[Type, (Type, Boolean)]] = (("..." | kw("mut")).!.? ~ ty). map {
@@ -287,14 +287,14 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     case (fs, _) => 
       if (fs.forall(_._2.isRight))
         Tuple(fs.map {
-          case (l, Right(t -> false)) => l -> Field(None, t)
-          case (l, Right(t -> true)) => l -> Field(Some(t), t)
+          case (l, Right(t -> false)) => l -> Field(None, t, false)
+          case (l, Right(t -> true)) => l -> Field(Some(t), t, false)
           case _ => ??? // unreachable
         })
       else Splice(fs.map{ _._2 match { 
         case L(l) => L(l) 
-        case R(r -> true) => R(Field(Some(r), r))
-        case R(r -> false) => R(Field(None, r))
+        case R(r -> true) => R(Field(Some(r), r, false))
+        case R(r -> false) => R(Field(None, r, false))
       } })
   })
   def litTy[p: P]: P[Type] = P( lit.map(l => Literal(l).withLocOf(l)) )
@@ -325,7 +325,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     }
     def tup = parTy.map {
       case t: Tuple => t
-      case t => Tuple(N -> Field(N, t) :: Nil)
+      case t => Tuple(N -> Field(N, t, false) :: Nil)
     }
     P((ctorName ~ tup.?).map {
       case (id, S(body: Tuple)) =>

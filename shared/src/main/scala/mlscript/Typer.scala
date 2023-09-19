@@ -1494,9 +1494,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
     def field(ft: FieldType)(implicit ectx: ExpCtx): Field = ft match {
       case FieldType(S(l: TV), u: TV) if l === u =>
         val res = go(u)
-        Field(S(res), res) // TODO improve Field
+        Field(S(res), res, false) // TODO improve Field
       case f =>
-        Field(f.lb.map(go), go(f.ub))
+        Field(f.lb.map(go), go(f.ub), false)
     }
     
     class ExpCtx(val tps: Map[TV, TN]) {
@@ -1602,7 +1602,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
           AppliedType(TypeName("MutArray"), Bounds(f2.in.getOrElse(Bot), f2.out) :: Nil)
         case SpliceType(elems) => Splice(elems.map { 
               case L(l) => L(go(l)) 
-              case R(v) => R(Field(v.lb.map(go(_)), go(v.ub))) })
+              case R(v) => R(Field(v.lb.map(go(_)), go(v.ub), false)) })
         case NegType(t) => Neg(go(t))
         case ExtrType(true) => Bot
         case ExtrType(false) => Top
