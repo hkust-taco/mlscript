@@ -3,7 +3,7 @@
 
 fun discard(x) = ()
 //│ |#fun| |discard|(|x|)| |#=| |(||)|
-//│ Parsed: {fun discard = (x,) => '('  ')'}
+//│ Parsed: {fun discard = (x,) => '(' [] ')'}
 
 // FIXME parses wrong:
 foo of
@@ -53,7 +53,7 @@ foo of
 //│ ╟── Note: 'if' expression started here:
 //│ ║  l.13: 	  if g of y is
 //│ ╙──      	  ^^
-//│ Parsed: {foo ({discard (if (f (undefined,)) then undefined,); if (g (undefined,)) then undefined},)}
+//│ Parsed: {foo({discard(if (f(undefined,)) then undefined,); if (g(undefined,)) then undefined},)}
 
 foo of
   if f of x is
@@ -120,21 +120,21 @@ foo of
 //│ ╟── Note: 'if' expression started here:
 //│ ║  l.62: 	  if g of y is
 //│ ╙──      	  ^^
-//│ Parsed: {foo ({if (f (undefined,)) then undefined; if (g (undefined,)) then undefined},)}
+//│ Parsed: {foo({if (f(undefined,)) then undefined; if (g(undefined,)) then undefined},)}
 
 print of Foo(x) is Some
 //│ |print| |#of| |Foo|(|x|)| |is| |Some|
-//│ Parsed: {print (is (Foo (x,),) (Some,),)}
+//│ Parsed: {print(is(Foo(x,),)(Some,),)}
 
 // FIXME parses wrong:
 if f of x is Some then 1 else 0
 //│ |#if| |f| |#of| |x| |is| |Some| |#then| |1| |#else| |0|
-//│ Parsed: {if (f (is (x,) (Some,),)) then 1 else 0}
+//│ Parsed: {if (f(is(x,)(Some,),)) then 1 else 0}
 
 if f of 0 and g of 1 then "ok"
 //│ |#if| |f| |#of| |0| |and| |g| |#of| |1| |#then| |"ok"|
-//│ Parsed: {if (f (and (0,) (g (1,),),)) then "ok"}
+//│ Parsed: {if (f(and(0,)(g(1,),),)) then "ok"}
 
 A and B or C and D
 //│ |A| |and| |B| |or| |C| |and| |D|
-//│ Parsed: {or (and (A,) (B,),) (and (C,) (D,),)}
+//│ Parsed: {or(and(A,)(B,),)(and(C,)(D,),)}

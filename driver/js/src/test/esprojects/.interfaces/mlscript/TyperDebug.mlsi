@@ -5,10 +5,10 @@ export declare module TyperDebug() {
   let aa: A
   unit
 }
-//| 0. Typing TypingUnit(List(class A(x: Int,) {fun add = (y: Int,) => + (x, y,)}, let aa = A (42,), (console).log ((aa).add (6,),)))
-//| | 0. Created lazy type info for class A(x: Int,) {fun add = (y: Int,) => + (x, y,)}
-//| | 0. Created lazy type info for let aa = A (42,)
-//| | Completing class A(x: Int,) {fun add = (y: Int,) => + (x, y,)}
+//| 0. Typing TypingUnit(List(class A(x: Int,) {fun add = (y: Int,) => +(x, y,)}, let aa = A(42,), (console).log((aa).add(6,),)))
+//| | 0. Created lazy type info for class A(x: Int,) {fun add = (y: Int,) => +(x, y,)}
+//| | 0. Created lazy type info for let aa = A(42,)
+//| | Completing class A(x: Int,) {fun add = (y: Int,) => +(x, y,)}
 //| | | UNSTASHING... (out)
 //| | | Type params 
 //| | | Typing type TypeName(Int)
@@ -25,15 +25,15 @@ export declare module TyperDebug() {
 //| | | |   where 
 //| | | | 1. C ({} w/ {x: Int} & #A<Object>) <! a815'    (0)
 //| | | | | NEW a815' LB (0)
-//| | | 1. Typing TypingUnit(List(fun add = (y: Int,) => + (x, y,)))
-//| | | | 1. Created lazy type info for fun add = (y: Int,) => + (x, y,)
-//| | | | Completing fun add = (y: Int,) => + (x, y,)
+//| | | 1. Typing TypingUnit(List(fun add = (y: Int,) => +(x, y,)))
+//| | | | 1. Created lazy type info for fun add = (y: Int,) => +(x, y,)
+//| | | | Completing fun add = (y: Int,) => +(x, y,)
 //| | | | | UNSTASHING... (out)
 //| | | | | Type params 
 //| | | | | UNSTASHING... (out)
 //| | | | | Params 
-//| | | | | 2. Typing term (y: Int,) => + (x, y,)
-//| | | | | | 2. Typing pattern y: Int,
+//| | | | | 2. Typing term (y: Int,) => +(x, y,)
+//| | | | | | 2. Typing pattern [y: Int,]
 //| | | | | | | 2. Typing pattern y : Int
 //| | | | | | | | Typing type TypeName(Int)
 //| | | | | | | | | vars=Map() newDefsInfo=Map()
@@ -42,7 +42,7 @@ export declare module TyperDebug() {
 //| | | | | | | | => Int ——— 
 //| | | | | | | 2. : Int
 //| | | | | | 2. : (y: Int,)
-//| | | | | | 2. Typing term + (x, y,)
+//| | | | | | 2. Typing term +(x, y,)
 //| | | | | | | 2. Typing term +
 //| | | | | | | 2. : ((Int, Int,) -> Int)
 //| | | | | | | 2. Typing term x
@@ -68,12 +68,12 @@ export declare module TyperDebug() {
 //| | | | | | 2. C ((y: Int,) -> α816'') <! add817''    (0)
 //| | | | | | | NEW add817'' LB (2)
 //| | | | | UNSTASHING... (out)
-//| | | | Completed TypedNuFun(1,fun add = (y: Int,) => + (x, y,),((y: Int,) -> α816'')) where 
+//| | | | Completed TypedNuFun(1,fun add = (y: Int,) => +(x, y,),((y: Int,) -> α816'')) where 
 //|     α816'' :> Int
 //| | | | Typing unit statements
 //| | | | : None
 //| | | Checking base class implementations...
-//| | | | (List(),List(TypedNuFun(1,fun add = (y: Int,) => + (x, y,),((y: Int,) -> α816''))))
+//| | | | (List(),List(TypedNuFun(1,fun add = (y: Int,) => +(x, y,),((y: Int,) -> α816''))))
 //| | | | UNSTASHING... (out)
 //| | | Checking qualifications...
 //| | | Checking new implementations...
@@ -96,16 +96,16 @@ export declare module TyperDebug() {
 //|   List(),
 //|   List((x,Int)),
 //|   this: ⊤, 
-//|   (add,TypedNuFun(1,fun add = (y: Int,) => + (x, y,),((y: Int,) -> α816'')))
+//|   (add,TypedNuFun(1,fun add = (y: Int,) => +(x, y,),((y: Int,) -> α816'')))
 //|   (x,NuParam(x,Int)),
 //|   : ⊤, Set(), Map()) where 
 //|     α816'' :> Int
-//| | Completing let aa = A (42,)
+//| | Completing let aa = A(42,)
 //| | | UNSTASHING... (out)
 //| | | Type params 
 //| | | UNSTASHING... (out)
 //| | | Params 
-//| | | 0. Typing term A (42,)
+//| | | 0. Typing term A(42,)
 //| | | | 0. Typing term A
 //| | | | 0. : ((x: Int,) -> #A<Object>)
 //| | | | 0. Typing term 42
@@ -126,10 +126,10 @@ export declare module TyperDebug() {
 //| | | 1. C α818 <! aa819'    (0)
 //| | | | NEW aa819' LB (0)
 //| | | UNSTASHING... (out)
-//| | Completed TypedNuFun(0,let aa = A (42,),α818) where 
+//| | Completed TypedNuFun(0,let aa = A(42,),α818) where 
 //|     α818 :> #A<Object>
 //| | Typing unit statements
-//| | | 0. Typing term (console).log ((aa).add (6,),)
+//| | | 0. Typing term (console).log((aa).add(6,),)
 //| | | | 0. Typing term (console).log
 //| | | | | 0. Typing term console
 //| | | | | 0. : ‹∀ 0. Console›
@@ -153,7 +153,7 @@ export declare module TyperDebug() {
 //| | | | | | | | | | | | | 0. C ((args0: (Anything | MutArray[Anything]),) -> Unit) <! log820    (1)
 //| | | | | | | | | | | | | | NEW log820 LB (0)
 //| | | | 0. : log820
-//| | | | 0. Typing term (aa).add (6,)
+//| | | | 0. Typing term (aa).add(6,)
 //| | | | | 0. Typing term (aa).add
 //| | | | | | 0. Typing term aa
 //| | | | | | 0. : α818
@@ -230,10 +230,10 @@ export declare module TyperDebug() {
 //|     List(),
 //|     List((x,Int)),
 //|     this: ⊤, 
-//|     (add,TypedNuFun(1,fun add = (y: Int,) => + (x, y,),((y: Int,) -> α816'')))
+//|     (add,TypedNuFun(1,fun add = (y: Int,) => +(x, y,),((y: Int,) -> α816'')))
 //|     (x,NuParam(x,Int)),
 //|     : ⊤, Set(), Map())
-//|   TypedNuFun(0,let aa = A (42,),α818)
+//|   TypedNuFun(0,let aa = A(42,),α818)
 //|   Some(α824))
 //|  where: 
 //|     α816'' :> Int
@@ -250,10 +250,10 @@ export declare module TyperDebug() {
 //|     List(),
 //|     List((x,Int)),
 //|     this: ⊤, 
-//|     (add,TypedNuFun(1,fun add = (y: Int,) => + (x, y,),((y: Int,) -> α816_825'')))
+//|     (add,TypedNuFun(1,fun add = (y: Int,) => +(x, y,),((y: Int,) -> α816_825'')))
 //|     (x,NuParam(x,Int)),
 //|     : ⊤, Set(), Map())
-//|   TypedNuFun(0,let aa = A (42,),α818_826)
+//|   TypedNuFun(0,let aa = A(42,),α818_826)
 //|   Some(α824_827))
 //|  where: 
 //|     α816_825'' :> Int
@@ -270,10 +270,10 @@ export declare module TyperDebug() {
 //|     List(),
 //|     List((x,α816_825'')),
 //|     this: ⊤, 
-//|     (add,TypedNuFun(1,fun add = (y: Int,) => + (x, y,),((y: Int,) -> α816_825'')))
+//|     (add,TypedNuFun(1,fun add = (y: Int,) => +(x, y,),((y: Int,) -> α816_825'')))
 //|     (x,NuParam(x,α816_825'')),
 //|     : ⊤, Set(), Map())
-//|   TypedNuFun(0,let aa = A (42,),α818_826)
+//|   TypedNuFun(0,let aa = A(42,),α818_826)
 //|   Some(α824_827))
 //|  where: 
 //|     α816_825'' :> Int
@@ -392,10 +392,10 @@ export declare module TyperDebug() {
 //|     List(),
 //|     List((x,Int)),
 //|     this: ⊤, 
-//|     (add,TypedNuFun(1,fun add = (y: Int,) => + (x, y,),((y: Int,) -> Int)))
+//|     (add,TypedNuFun(1,fun add = (y: Int,) => +(x, y,),((y: Int,) -> Int)))
 //|     (x,NuParam(x,Int)),
 //|     : ⊤, Set(), Map())
-//|   TypedNuFun(0,let aa = A (42,),#A<Object>)
+//|   TypedNuFun(0,let aa = A(42,),#A<Object>)
 //|   Some(Unit))
 //|  where: 
 //| allVarPols: 
@@ -404,10 +404,10 @@ export declare module TyperDebug() {
 //|     List(),
 //|     List((x,Int)),
 //|     this: ⊤, 
-//|     (add,TypedNuFun(1,fun add = (y: Int,) => + (x, y,),((y: Int,) -> Int)))
+//|     (add,TypedNuFun(1,fun add = (y: Int,) => +(x, y,),((y: Int,) -> Int)))
 //|     (x,NuParam(x,Int)),
 //|     : ⊤, Set(), Map())
-//|   TypedNuFun(0,let aa = A (42,),#A<Object>)
+//|   TypedNuFun(0,let aa = A(42,),#A<Object>)
 //|   Some(Unit))
 //| | norm[+] Int
 //| | | DNF: DNF(0, #Int<Object,Num>{})
@@ -456,10 +456,10 @@ export declare module TyperDebug() {
 //|     List(),
 //|     List((x,#Int<Object,Num>)),
 //|     this: ⊤, 
-//|     (add,TypedNuFun(1,fun add = (y: Int,) => + (x, y,),((y: #Int<Object,Num>,) -> #Int<Object,Num>)))
+//|     (add,TypedNuFun(1,fun add = (y: Int,) => +(x, y,),((y: #Int<Object,Num>,) -> #Int<Object,Num>)))
 //|     (x,NuParam(x,#Int<Object,Num>)),
 //|     : ⊤, Set(), Map())
-//|   TypedNuFun(0,let aa = A (42,),A)
+//|   TypedNuFun(0,let aa = A(42,),A)
 //|   Some(#unit<>))
 //|  where: 
 //| allVarPols: 
@@ -468,10 +468,10 @@ export declare module TyperDebug() {
 //|     List(),
 //|     List((x,#Int<Object,Num>)),
 //|     this: ⊤, 
-//|     (add,TypedNuFun(1,fun add = (y: Int,) => + (x, y,),((y: #Int<Object,Num>,) -> #Int<Object,Num>)))
+//|     (add,TypedNuFun(1,fun add = (y: Int,) => +(x, y,),((y: #Int<Object,Num>,) -> #Int<Object,Num>)))
 //|     (x,NuParam(x,#Int<Object,Num>)),
 //|     : ⊤, Set(), Map())
-//|   TypedNuFun(0,let aa = A (42,),A)
+//|   TypedNuFun(0,let aa = A(42,),A)
 //|   Some(#unit<>))
 //|  where: 
 //| allVarPols: 
@@ -481,10 +481,10 @@ export declare module TyperDebug() {
 //|     List(),
 //|     List((x,#Int<Object,Num>)),
 //|     this: ⊤, 
-//|     (add,TypedNuFun(1,fun add = (y: Int,) => + (x, y,),((y: #Int<Object,Num>,) -> #Int<Object,Num>)))
+//|     (add,TypedNuFun(1,fun add = (y: Int,) => +(x, y,),((y: #Int<Object,Num>,) -> #Int<Object,Num>)))
 //|     (x,NuParam(x,#Int<Object,Num>)),
 //|     : ⊤, Set(), Map())
-//|   TypedNuFun(0,let aa = A (42,),A)
+//|   TypedNuFun(0,let aa = A(42,),A)
 //|   Some(#unit<>))
 //|  where: 
 //| analyze1[+] #Int<Object,Num>
@@ -548,10 +548,10 @@ export declare module TyperDebug() {
 //|     List(),
 //|     List((x,#Int<Object,Num>)),
 //|     this: ⊤, 
-//|     (add,TypedNuFun(1,fun add = (y: Int,) => + (x, y,),((y: #Int<Object,Num>,) -> #Int<Object,Num>)))
+//|     (add,TypedNuFun(1,fun add = (y: Int,) => +(x, y,),((y: #Int<Object,Num>,) -> #Int<Object,Num>)))
 //|     (x,NuParam(x,#Int<Object,Num>)),
 //|     : ⊤, Set(), Map())
-//|   TypedNuFun(0,let aa = A (42,),A)
+//|   TypedNuFun(0,let aa = A(42,),A)
 //|   Some(#unit<>))
 //|  where: 
 //| allVarPols: 
@@ -561,9 +561,9 @@ export declare module TyperDebug() {
 //|     List(),
 //|     List((x,#Int<Object,Num>)),
 //|     this: ⊤, 
-//|     (add,TypedNuFun(1,fun add = (y: Int,) => + (x, y,),((y: #Int<Object,Num>,) -> #Int<Object,Num>)))
+//|     (add,TypedNuFun(1,fun add = (y: Int,) => +(x, y,),((y: #Int<Object,Num>,) -> #Int<Object,Num>)))
 //|     (x,NuParam(x,#Int<Object,Num>)),
 //|     : ⊤, Set(), Map())
-//|   TypedNuFun(0,let aa = A (42,),A)
+//|   TypedNuFun(0,let aa = A(42,),A)
 //|   Some(#unit<>))
 //|  where: 

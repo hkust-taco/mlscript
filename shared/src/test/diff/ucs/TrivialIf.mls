@@ -52,7 +52,7 @@ fun f(a, b) = if a and b then 0
 fun f(x, y) =
   if x == y + 5 then 0
   else if x == y + 7 then 0
-//│ ╔══[ERROR] The case when this is false is not handled: == (x,) (+ (y,) (7,),)
+//│ ╔══[ERROR] The case when this is false is not handled: ==(x,)(+(y,)(7,),)
 //│ ║  l.54: 	  else if x == y + 7 then 0
 //│ ╙──      	          ^^^^^^^^^^
 //│ f: (anything, anything,) -> error
@@ -64,7 +64,7 @@ fun foo(x) = if x is Some
 //│ ╔══[PARSE ERROR] Unexpected parenthesis section here
 //│ ║  l.63: 	  (1) then 1
 //│ ╙──      	  ^^^
-//│ ╔══[ERROR] The case when this is false is not handled: is (x,) (Some,) (0,)
+//│ ╔══[ERROR] The case when this is false is not handled: is(x,)(Some,)(0,)
 //│ ║  l.61: 	fun foo(x) = if x is Some
 //│ ║        	                ^^^^^^^^^
 //│ ║  l.62: 	  (0) then 0

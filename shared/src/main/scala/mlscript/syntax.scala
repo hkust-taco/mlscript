@@ -67,7 +67,7 @@ sealed abstract class Lit                                            extends Sim
 final case class Var(name: Str)                                      extends SimpleTerm with VarImpl with NameRef
 final case class Lam(lhs: Term, rhs: Term)                           extends Term
 final case class App(lhs: Term, rhs: Term)                           extends Term
-final case class Tup(fields: Ls[Opt[Var] -> Fld])                    extends Term
+final case class Tup(fields: Ls[Opt[Var] -> Fld])                    extends Term with TupImpl
 final case class Rcd(fields: Ls[Var -> Fld])                         extends Term
 final case class Sel(receiver: Term, fieldName: Var)                 extends Term
 final case class Let(isRec: Bool, name: Var, rhs: Term, body: Term)  extends Term

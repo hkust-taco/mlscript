@@ -1,15 +1,15 @@
 
 1 + 1 where 1
 //│ |1| |+| |1| |#where| |1|
-//│ Parsed: {+ (1,) (1,) where {1}}
+//│ Parsed: {+(1,)(1,) where {1}}
 
 a => a + 1 where foo
 //│ |a| |=>| |a| |+| |1| |#where| |foo|
-//│ Parsed: {(a,) => + (a,) (1,) where {foo}}
+//│ Parsed: {(a,) => +(a,)(1,) where {foo}}
 
 a + 1 where let a = 1
 //│ |a| |+| |1| |#where| |#let| |a| |#=| |1|
-//│ Parsed: {+ (a,) (1,) where {let a = 1}}
+//│ Parsed: {+(a,)(1,) where {let a = 1}}
 
 fun foo: 'a => 'a => 'a where 'a : int
 //│ |#fun| |foo|#:| |'a| |=>| |'a| |=>| |'a| |#where| |'a| |#:| |int|

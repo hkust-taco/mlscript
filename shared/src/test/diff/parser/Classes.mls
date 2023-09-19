@@ -2,17 +2,17 @@
 
 class Foo
 //│ |#class| |Foo|
-//│ Parsed: {class Foo() {}}
+//│ Parsed: {class Foo {}}
 
 class Foo {}
 //│ |#class| |Foo| |{||}|
-//│ Parsed: {class Foo() {}}
+//│ Parsed: {class Foo {}}
 
 class Foo {
   fun foo: int
 }
 //│ |#class| |Foo| |{|→|#fun| |foo|#:| |int|←|↵|}|
-//│ Parsed: {class Foo() {fun foo: int}}
+//│ Parsed: {class Foo {fun foo: int}}
 
 class Foo {
   class Bar {
@@ -20,15 +20,15 @@ class Foo {
   }
 }
 //│ |#class| |Foo| |{|→|#class| |Bar| |{|→|#class| |Baz|←|↵|}|←|↵|}|
-//│ Parsed: {class Foo() {class Bar() {class Baz() {}}}}
+//│ Parsed: {class Foo {class Bar {class Baz {}}}}
 
 class Foo: Bar
 //│ |#class| |Foo|#:| |Bar|
-//│ Parsed: {class Foo(): Bar {}}
+//│ Parsed: {class Foo: Bar {}}
 
 class Foo extends Bar, Baz
 //│ |#class| |Foo| |#extends| |Bar|,| |Baz|
-//│ Parsed: {class Foo(): Bar, Baz {}}
+//│ Parsed: {class Foo: Bar, Baz {}}
 
 :pe
 class Foo: Bar, Baz
@@ -36,15 +36,15 @@ class Foo: Bar, Baz
 //│ ╔══[PARSE ERROR] Expected end of input; found comma instead
 //│ ║  l.34: 	class Foo: Bar, Baz
 //│ ╙──      	              ^
-//│ Parsed: {class Foo(): Bar {}}
+//│ Parsed: {class Foo: Bar {}}
 
 class Foo: Bar { fun f = 0 }
 //│ |#class| |Foo|#:| |Bar| |{| |#fun| |f| |#=| |0| |}|
-//│ Parsed: {class Foo(): Bar {fun f = 0}}
+//│ Parsed: {class Foo: Bar {fun f = 0}}
 
 class Foo extends Bar, Baz { fun f = 0 }
 //│ |#class| |Foo| |#extends| |Bar|,| |Baz| |{| |#fun| |f| |#=| |0| |}|
-//│ Parsed: {class Foo(): Bar, Baz {fun f = 0}}
+//│ Parsed: {class Foo: Bar, Baz {fun f = 0}}
 
 :pe
 class Foo: Bar, Baz { fun f = 0 }
@@ -52,7 +52,7 @@ class Foo: Bar, Baz { fun f = 0 }
 //│ ╔══[PARSE ERROR] Expected end of input; found comma instead
 //│ ║  l.50: 	class Foo: Bar, Baz { fun f = 0 }
 //│ ╙──      	              ^
-//│ Parsed: {class Foo(): Bar {}}
+//│ Parsed: {class Foo: Bar {}}
 
 // * Pretty confusing... better reject this:
 :pe
@@ -72,7 +72,7 @@ class Foo: Bar { fun f = 0
 //│ ║        	                         ^
 //│ ║  l.61: 	  fun bar = 1
 //│ ╙──      	^^^^^^^^^
-//│ Parsed: {class Foo(): Bar {fun f = 0 (bar,)}}
+//│ Parsed: {class Foo: Bar {fun f = 0(bar,)}}
 
 // TODO disallow? (i.e., require unindent before closing brace)
 // :e
@@ -81,14 +81,14 @@ class Foo: Bar {
   fun bar = 1
   }
 //│ |#class| |Foo|#:| |Bar| |{|→|#fun| |f| |#=| |0|↵|#fun| |bar| |#=| |1|↵|←|}|
-//│ Parsed: {class Foo(): Bar {fun f = 0; fun bar = 1}}
+//│ Parsed: {class Foo: Bar {fun f = 0; fun bar = 1}}
 
 class Foo: Bar {
   fun f = 0
   fun bar = 1
 }
 //│ |#class| |Foo|#:| |Bar| |{|→|#fun| |f| |#=| |0|↵|#fun| |bar| |#=| |1|←|↵|}|
-//│ Parsed: {class Foo(): Bar {fun f = 0; fun bar = 1}}
+//│ Parsed: {class Foo: Bar {fun f = 0; fun bar = 1}}
 
 class Foo: Bar {
   
@@ -98,20 +98,20 @@ class Foo: Bar {
   
 }
 //│ |#class| |Foo|#:| |Bar| |{|→|#fun| |f| |#=| |0|↵|#fun| |bar| |#=| |1|←|↵|}|
-//│ Parsed: {class Foo(): Bar {fun f = 0; fun bar = 1}}
+//│ Parsed: {class Foo: Bar {fun f = 0; fun bar = 1}}
 
 class Foo: Bar {
   
 }
 //│ |#class| |Foo|#:| |Bar| |{|↵|}|
-//│ Parsed: {class Foo(): Bar {}}
+//│ Parsed: {class Foo: Bar {}}
 
 fun foo =
   class Foo: Bar {
   
   }
 //│ |#fun| |foo| |#=|→|#class| |Foo|#:| |Bar| |{|↵|}|←|
-//│ Parsed: {fun foo = {class Foo(): Bar {}}}
+//│ Parsed: {fun foo = {class Foo: Bar {}}}
 
 class Foo()
 //│ |#class| |Foo|(||)|
@@ -130,10 +130,10 @@ class Foo(x, y, z): Bar(z, x) {
   fun blah(x) = x + y
 }
 //│ |#class| |Foo|(|x|,| |y|,| |z|)|#:| |Bar|(|z|,| |x|)| |{|→|#fun| |blah|(|x|)| |#=| |x| |+| |y|←|↵|}|
-//│ Parsed: {class Foo(x, y, z,): Bar[z, x] {fun blah = (x,) => + (x,) (y,)}}
+//│ Parsed: {class Foo(x, y, z,): Bar[z, x] {fun blah = (x,) => +(x,)(y,)}}
 
 class Foo(x, y) extends Bar(y, x), Baz(x + y)
 //│ |#class| |Foo|(|x|,| |y|)| |#extends| |Bar|(|y|,| |x|)|,| |Baz|(|x| |+| |y|)|
-//│ Parsed: {class Foo(x, y,): Bar (y, x,), Baz (+ (x,) (y,),) {}}
+//│ Parsed: {class Foo(x, y,): Bar(y, x,), Baz(+(x,)(y,),) {}}
 
 
