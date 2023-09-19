@@ -18,7 +18,7 @@ class C2(x: Int) extends C1(y) {
 //│ ║  l.4: 	class C1(x: Int)
 //│ ╙──     	         ^
 //│ class C2(x: Int) extends C1 {
-//│   let y: Int
+//│   val y: Int
 //│ }
 //│ Code generation encountered an error:
 //│   unresolved symbol y
@@ -31,7 +31,7 @@ abstract class C2 extends C1(y) {
 //│ ║  l.27: 	abstract class C2 extends C1(y) {
 //│ ╙──      	                             ^
 //│ abstract class C2 extends C1 {
-//│   let y: Int
+//│   val y: Int
 //│ }
 //│ Code generation encountered an error:
 //│   unresolved symbol y
@@ -44,7 +44,7 @@ abstract class C2 extends C1(this.y) {
 //│ ║  l.40: 	abstract class C2 extends C1(this.y) {
 //│ ╙──      	                             ^^^^
 //│ abstract class C2 extends C1 {
-//│   let y: Int
+//│   val y: Int
 //│ }
 
 

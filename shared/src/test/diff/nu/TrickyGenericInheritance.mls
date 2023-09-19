@@ -103,12 +103,12 @@ class C2 extends T2['FigureItOut] {
 //│ ╙──      	          ^^
 //│ trait T2[A] {
 //│   fun f: A -> A
-//│   let r: error
+//│   val r: error
 //│ }
 //│ class C2 extends T2 {
 //│   constructor()
 //│   fun f: (x: Int) -> Int
-//│   let r: error
+//│   val r: error
 //│ }
 
 :e
@@ -127,12 +127,12 @@ class C3 extends T3['FigureItOut] {
 //│ ╙──       	           ^^
 //│ trait T3[A] {
 //│   fun f: A -> A
-//│   let r: false
+//│   val r: false
 //│ }
 //│ class C3 extends T3 {
 //│   constructor()
 //│   fun f: (x: Int) -> Int
-//│   let r: false
+//│   val r: false
 //│ }
 
 :e // FIXME

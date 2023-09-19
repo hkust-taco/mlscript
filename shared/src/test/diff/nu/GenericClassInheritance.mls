@@ -76,13 +76,13 @@ class WrongRoom extends Room[Bool]("wrong") {
 
 abstract class C0[A] { val a: A }
 //│ abstract class C0[A] {
-//│   let a: A
+//│   val a: A
 //│ }
 
 class C1[A] extends C0[A] { val a = a }
 //│ class C1[A] extends C0 {
 //│   constructor()
-//│   let a: nothing
+//│   val a: nothing
 //│ }
 
 new C1 : C1[Int]

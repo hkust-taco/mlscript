@@ -132,10 +132,10 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
           case Bounds(lo, hi) => s"\n${ctx.indStr}${lo.showIn(ctx, 0)} <: ${hi.showIn(ctx, 0)}" // TODO print differently from bs?
         }.mkString}"
       }, outerPrec > 0)
-    case NuFunDef(isLetRec, nme, snme, targs, rhs) =>
+    case fd @ NuFunDef(isLetRec, nme, snme, targs, rhs) =>
       s"${isLetRec match {
-        case S(false) => "let"
-        case S(true) => "let rec"
+        case S(false) => if (fd.genField) "val" else "let"
+        case S(true) => if (fd.genField) die else "let rec"
         case N => "fun"
       }}${snme.fold("")(" (" + _.name + ")")
       } ${nme.name}${targs.map(_.showIn(ctx, 0)).mkStringOr(", ", "[", "]")}${rhs match {
@@ -143,13 +143,9 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
         case R(ty) => ": " + ty.showIn(ctx, 0)
       }}"
     case Signature(decls, res) =>
-      // decls.map(ctx.indStr + (if (ctx.indentLevel === 0) "" else "\n") + _.showIn(ctx, 0)).mkString +
       (decls.map(ctx.indStr + _.showIn(ctx, 0) + "\n") ::: (res match {
         case S(ty) => ctx.indStr + ty.showIn(ctx, 0) + "\n" :: Nil
         case N => Nil
-      // })).mkString(if (ctx.indentLevel === 0) "" else "\n", "\n", "")
-      // })).mkString("\n")
-      // })).mkString("", "\n", "\n")
       })).mkString
     case NuTypeDef(kind @ Als, nme, tparams, params, ctor, sig, parents, sup, ths, body) =>
       assert(params.isEmpty, params)

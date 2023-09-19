@@ -60,7 +60,7 @@ trait S3 extends S1, S2
 
 trait S1 { val f: Int -> Int }
 //│ trait S1 {
-//│   let f: Int -> Int
+//│   val f: Int -> Int
 //│ }
 
 trait S2 extends T1, S1
@@ -78,7 +78,7 @@ class C1(val x: Int | Bool)
 trait T1 { val x: Int | Str }
 //│ class C1(x: Int | false | true)
 //│ trait T1 {
-//│   let x: Int | Str
+//│   val x: Int | Str
 //│ }
 
 class C2() extends C1(0), T1

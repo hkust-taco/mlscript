@@ -14,7 +14,7 @@ class C(a: Int) extends T
 class B { virtual val a = "hi" }
 //│ class B {
 //│   constructor()
-//│   let a: "hi"
+//│   val a: "hi"
 //│ }
 
 :e
@@ -37,7 +37,7 @@ mixin M { let b = "hi" }
 class B { virtual val a = 1 : Int }
 //│ class B {
 //│   constructor()
-//│   let a: Int
+//│   val a: Int
 //│ }
 
 class C(val a: Int, val b: Int) extends B, M

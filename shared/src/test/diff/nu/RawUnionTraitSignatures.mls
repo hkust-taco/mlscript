@@ -55,7 +55,7 @@ trait Base1: Foo
 
 trait Base1: Foo { val x: Int }
 //│ trait Base1: #Foo {
-//│   let x: Int
+//│   val x: Int
 //│ }
 
 (b: Base1) => b.x
@@ -66,7 +66,7 @@ trait Base1: Foo { val x: Int }
 
 trait Base1: Foo[1 | 2] { val x: 0 | 1 }
 //│ trait Base1: Foo[1 | 2] {
-//│   let x: 0 | 1
+//│   val x: 0 | 1
 //│ }
 
 (b: Base1) => b.x

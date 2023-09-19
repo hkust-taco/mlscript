@@ -163,7 +163,7 @@ class FooBar {
 }
 //│ class FooBar {
 //│   constructor()
-//│   let x: 42
+//│   val x: 42
 //│ }
 //│ // Prelude
 //│ class TypingUnit12 {

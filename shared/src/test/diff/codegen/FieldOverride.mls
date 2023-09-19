@@ -4,7 +4,7 @@
 :js
 class C(a: Int) { val a = 1 }
 //│ class C(a: Int) {
-//│   let a: 1
+//│   val a: 1
 //│ }
 //│ // Prelude
 //│ let res;
@@ -55,8 +55,8 @@ class C2(a: Int, b: Int) {
   val b = a + 1
 }
 //│ class C2(a: Int, b: Int) {
-//│   let a: Int
-//│   let b: Int
+//│   val a: Int
+//│   val b: Int
 //│ }
 //│ // Prelude
 //│ class TypingUnit2 {
@@ -118,9 +118,9 @@ class C3(a: Int) {
 }
 //│ class C3(a: Int) {
 //│   class C4(a: Int) {
-//│     let a: 44
+//│     val a: 44
 //│   }
-//│   let a: 42
+//│   val a: 42
 //│ }
 
 :e

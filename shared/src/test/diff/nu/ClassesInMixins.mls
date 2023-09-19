@@ -8,13 +8,13 @@ mixin Test {
 }
 //│ mixin Test() {
 //│   class Foo(n: Int)
-//│   let f: Foo
+//│   val f: Foo
 //│ }
 
 module M extends Test
 //│ module M {
 //│   class Foo(n: Int)
-//│   let f: Foo
+//│   val f: Foo
 //│ }
 
 M.f

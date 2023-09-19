@@ -6,7 +6,7 @@ class Foo() {
 }
 //│ class Foo() {
 //│   fun f: (x: Int) -> Int
-//│   let g: Int
+//│   val g: Int
 //│ }
 
 class Bar() extends Foo {
@@ -14,7 +14,7 @@ class Bar() extends Foo {
 }
 //│ class Bar() extends Foo {
 //│   fun f: (x: Int) -> Int
-//│   let g: Int
+//│   val g: Int
 //│ }
 
 Bar().f(40)
@@ -34,7 +34,7 @@ class Baz() extends Foo {
 //│ ╙──     	      ^^^^^^^^^^
 //│ class Baz() extends Foo {
 //│   fun f: (x: Int) -> Int
-//│   let g: 1
+//│   val g: 1
 //│ }
 
 mixin X {
@@ -68,10 +68,10 @@ class M2(s: Str) extends M1 {
 }
 M2("foo").foo
 //│ abstract class M1() {
-//│   let foo: Str
+//│   val foo: Str
 //│ }
 //│ class M2(s: Str) extends M1 {
-//│   let foo: Str
+//│   val foo: Str
 //│ }
 //│ Str
 //│ res
@@ -98,7 +98,7 @@ class V1() {
 //│ ╙──      	              ^^^^^^
 //│ class V1() {
 //│   fun foo: 42
-//│   let x: 42
+//│   val x: 42
 //│ }
 
 class V2() {
@@ -108,7 +108,7 @@ class V2() {
 }
 //│ class V2() {
 //│   fun foo: Int
-//│   let x: Int
+//│   val x: Int
 //│ }
 
 

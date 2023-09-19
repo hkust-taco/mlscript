@@ -143,7 +143,7 @@ class C { val x: Int }
 //│ ╙──       	              ^^^^^^
 //│ class C {
 //│   constructor()
-//│   let x: Int
+//│   val x: Int
 //│ }
 
 

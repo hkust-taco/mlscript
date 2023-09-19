@@ -53,7 +53,7 @@ module M extends Mx {
 }
 //│ module M {
 //│   fun id1: forall 'a. ('b & 'a) -> (0 | 'a)
-//│   let r: 0 | 'b
+//│   val r: 0 | 'b
 //│ }
 
 mixin Mx {

@@ -5,7 +5,7 @@ mixin Base {
   val base = 42
 }
 //│ mixin Base() {
-//│   let base: 42
+//│   val base: 42
 //│ }
 
 mixin BaseTest {
@@ -19,7 +19,7 @@ mixin BaseTest {
 
 module Base0 extends Base, BaseTest
 //│ module Base0 {
-//│   let base: 42
+//│   val base: 42
 //│   fun test: 42
 //│ }
 

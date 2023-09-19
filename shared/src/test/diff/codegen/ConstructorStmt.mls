@@ -209,8 +209,8 @@ class Baz() {
   log((3, y))
 }
 //│ class Baz() {
-//│   let x: 123
-//│   let y: Int
+//│   val x: 123
+//│   val y: Int
 //│ }
 //│ // Prelude
 //│ class TypingUnit10 {

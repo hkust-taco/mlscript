@@ -16,10 +16,10 @@ C1().test
 //│   fun test: Int
 //│ }
 //│ mixin M3() {
-//│   let factor: 2
+//│   val factor: 2
 //│ }
 //│ class C1() {
-//│   let factor: 2
+//│   val factor: 2
 //│   fun test: Int
 //│ }
 //│ Int
@@ -51,7 +51,7 @@ class C1() extends M1, M2 { val factor = 2 }
 //│ ║  l.6: 	mixin M2 { fun test = super.test * this.factor }
 //│ ╙──     	                                       ^^^^^^^
 //│ class C1() {
-//│   let factor: 2
+//│   val factor: 2
 //│   fun test: Int
 //│ }
 
@@ -62,7 +62,7 @@ class C1() extends M1, M2 { val factor: Int = 2 }
 //│ ║  l.6: 	mixin M2 { fun test = super.test * this.factor }
 //│ ╙──     	                                       ^^^^^^^
 //│ class C1() {
-//│   let factor: Int
+//│   val factor: Int
 //│   fun test: Int
 //│ }
 
@@ -71,11 +71,11 @@ abstract class C1 extends M1, M2 { val factor: Int }
 module C2 extends C1 { val factor = 2 }
 C2.test
 //│ abstract class C1 {
-//│   let factor: Int
+//│   val factor: Int
 //│   fun test: Int
 //│ }
 //│ module C2 extends C1 {
-//│   let factor: 2
+//│   val factor: 2
 //│   fun test: Int
 //│ }
 //│ Int
@@ -86,7 +86,7 @@ C2.test
 class C1() extends M1, M2 { val factor: Int; val factor = 2 }
 C1().test
 //│ class C1() {
-//│   let factor: Int
+//│   val factor: Int
 //│   fun test: Int
 //│ }
 //│ Int
@@ -96,7 +96,7 @@ C1().test
 
 abstract class C0 { val factor = 2 }
 //│ abstract class C0 {
-//│   let factor: 2
+//│   val factor: 2
 //│ }
 
 :e
@@ -105,14 +105,14 @@ class C1() extends C0, M1, M2
 //│ ║  l.6: 	mixin M2 { fun test = super.test * this.factor }
 //│ ╙──     	                                       ^^^^^^^
 //│ class C1() extends C0 {
-//│   let factor: 2
+//│   val factor: 2
 //│   fun test: Int
 //│ }
 
 
 abstract class C0 { val factor: Int }
 //│ abstract class C0 {
-//│   let factor: Int
+//│   val factor: Int
 //│ }
 
 :e // * TODO support
@@ -121,7 +121,7 @@ class C1() extends C0, M1, M2 { val factor = 2 }
 //│ ║  l.6: 	mixin M2 { fun test = super.test * this.factor }
 //│ ╙──     	                                       ^^^^^^^
 //│ class C1() extends C0 {
-//│   let factor: 2
+//│   val factor: 2
 //│   fun test: Int
 //│ }
 

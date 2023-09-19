@@ -177,7 +177,7 @@ abstract class C {
 //│ abstract class C {
 //│   fun foo0: Int
 //│   fun foo1: Int
-//│   let x: Int
+//│   val x: Int
 //│ }
 
 

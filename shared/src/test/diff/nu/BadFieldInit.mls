@@ -8,8 +8,8 @@ module A {
   val y = x
 }
 //│ module A {
-//│   let x: nothing
-//│   let y: nothing
+//│   val x: nothing
+//│   val y: nothing
 //│ }
 //│ // Prelude
 //│ let res;
@@ -55,8 +55,8 @@ module A {
   val y = 1
 }
 //│ module A {
-//│   let x: 1
-//│   let y: 1
+//│   val x: 1
+//│   val y: 1
 //│ }
 //│ // Prelude
 //│ class TypingUnit2 {

@@ -97,7 +97,7 @@ declare module Buffer {
 }
 //│ declare module Buffer {
 //│   abstract class Buffer2 {
-//│     let length: Int
+//│     val length: Int
 //│   }
 //│   fun bar: Int
 //│   fun from: (a: Array[Int]) -> Buffer2

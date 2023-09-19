@@ -72,7 +72,7 @@ class Foo(x: Int) {
   val x = toString(x)
 }
 //│ class Foo(x: Int) {
-//│   let x: Str
+//│   val x: Str
 //│ }
 
 // * Current hack: use `scrut.#x` to access a private field while passing the typer...

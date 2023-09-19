@@ -15,7 +15,7 @@ class Foo() {
   virtual val foo: Int = 42
 }
 //│ class Foo() {
-//│   let foo: Int
+//│   val foo: Int
 //│ }
 
 :e
@@ -28,7 +28,7 @@ class Foo1() extends Foo() {
 //│ ║  l.25: 	  log(this.foo)
 //│ ╙──      	      ^^^^
 //│ class Foo1() extends Foo {
-//│   let foo: Int
+//│   val foo: Int
 //│ }
 
 // FIXME: reject access to `this` from constructor
@@ -44,7 +44,7 @@ class Foo2() extends Foo() {
 //│ ╙──      	        ^^^^
 //│ class Foo2() extends Foo {
 //│   constructor()
-//│   let foo: Int
+//│   val foo: Int
 //│ }
 
 :e
@@ -57,8 +57,8 @@ class Foo3() extends Foo() {
 //│ ║  l.54: 	  val s = this.foo
 //│ ╙──      	          ^^^^
 //│ class Foo3() extends Foo {
-//│   let foo: Int
-//│   let s: Int
+//│   val foo: Int
+//│   val s: Int
 //│ }
 
 :e
@@ -77,7 +77,7 @@ class Foo4() extends Foo() {
 //│ class Foo4() extends Foo {
 //│   fun bar: Int -> Int
 //│   let bb: Int
-//│   let foo: Int
+//│   val foo: Int
 //│ }
 
 :e
@@ -94,8 +94,8 @@ class Foo5() extends Foo() {
 //│ ╙──      	                    ^^^^
 //│ class Foo5() extends Foo {
 //│   fun bar: (y: Int) -> Int
-//│   let foo: Int
-//│   let x: Int
+//│   val foo: Int
+//│   val x: Int
 //│ }
 
 class Foo6() extends Foo() {
@@ -104,9 +104,9 @@ class Foo6() extends Foo() {
   val y = this.baz // baz is final
 }
 //│ class Foo6() extends Foo {
-//│   let baz: Int
-//│   let foo: Int
-//│   let y: Int
+//│   val baz: Int
+//│   val foo: Int
+//│   val y: Int
 //│ }
 
 class Bar() {
@@ -116,7 +116,7 @@ class Bar() {
 }
 //│ class Bar() {
 //│   fun add: Int -> Int
-//│   let d: Int
+//│   val d: Int
 //│ }
 
 :e
@@ -134,8 +134,8 @@ class Bar2() extends Bar() {
 //│ ╙──       	                   ^^^^
 //│ class Bar2() extends Bar {
 //│   fun add: Int -> Int
-//│   let d: Int
-//│   let two: error
+//│   val d: Int
+//│   val two: error
 //│ }
 
 // it accesses this in an unusual way!
@@ -152,5 +152,5 @@ abstract class Foo: Int -> Int {
 //│ ╙──       	          ^^^^
 //│ abstract class Foo: Int -> Int {
 //│   fun f: nothing
-//│   let x: nothing
+//│   val x: nothing
 //│ }

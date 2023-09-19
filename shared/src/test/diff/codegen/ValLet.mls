@@ -11,7 +11,7 @@ class A(x0: Int) {
 //│ class A(x0: Int) {
 //│   let x1: Int
 //│   let x2: Int
-//│   let x3: Int
+//│   val x3: Int
 //│ }
 //│ // Prelude
 //│ function log(x) {
@@ -249,7 +249,7 @@ class E(x: Int) {
 }
 if E(42) is E(x) then x else 0
 //│ class E(x: Int) {
-//│   let x: 2
+//│   val x: 2
 //│ }
 //│ 0 | 2
 //│ res
@@ -271,7 +271,7 @@ class G(val x: Int) {
 }
 G(1).x
 //│ class G(x: Int) {
-//│   let x: 4
+//│   val x: 4
 //│ }
 //│ 4
 //│ res

@@ -7,7 +7,7 @@ mixin Foo0 {
   val foo0 = 0
 }
 //│ mixin Foo0() {
-//│   let foo0: 0
+//│   val foo0: 0
 //│ }
 //│ // Prelude
 //│ let res;
@@ -38,8 +38,8 @@ mixin Foo1 {
 }
 //│ mixin Foo1() {
 //│   super: {foo0: 'foo0}
-//│   let foo0: 1
-//│   let foo1: 'foo0
+//│   val foo0: 1
+//│   val foo1: 'foo0
 //│ }
 //│ // Prelude
 //│ class TypingUnit1 {
@@ -68,8 +68,8 @@ mixin Foo1 {
 
 module Test0 extends Foo0, Foo1
 //│ module Test0 {
-//│   let foo0: 1
-//│   let foo1: 0
+//│   val foo0: 1
+//│   val foo1: 0
 //│ }
 
 [Test0.foo0, Test0.foo1]

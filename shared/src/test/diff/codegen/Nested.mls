@@ -12,7 +12,7 @@ module A {
 //│   class B(x: Int) {
 //│     fun b: Int
 //│   }
-//│   let a: 42
+//│   val a: 42
 //│ }
 //│ // Prelude
 //│ let res;
@@ -110,10 +110,10 @@ d.outer
 //│ ╙──       	         ^^
 //│ class B(x: Int) {
 //│   class C(y: Int) {
-//│     let outer1: Int
+//│     val outer1: Int
 //│   }
 //│   class D(outer: Int)
-//│   let outer: 42
+//│   val outer: 42
 //│ }
 //│ let b: B
 //│ let c: error
@@ -582,7 +582,7 @@ module H {
 //│ module H {
 //│   class I(x: Int)
 //│   class J(x: Int) {
-//│     let i: I
+//│     val i: I
 //│   }
 //│ }
 //│ // Prelude
@@ -1186,7 +1186,7 @@ I(1).J(3).a
 //│ ╙──        	    ^^
 //│ class I(x: Int) {
 //│   class J(z: Int) {
-//│     let a: [Int, Int, Int]
+//│     val a: [Int, Int, Int]
 //│   }
 //│   let y: Int
 //│ }

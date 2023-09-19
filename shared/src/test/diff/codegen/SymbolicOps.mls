@@ -313,7 +313,7 @@ fun (:-D) dd(a, b) = a + b
 
 
 val (->) f(x, y) = [x, y]
-//│ let (->) f: forall 'a 'b. ('a, 'b) -> ['a, 'b]
+//│ val (->) f: forall 'a 'b. ('a, 'b) -> ['a, 'b]
 //│ f
 //│   = [Function: f1]
 

@@ -858,7 +858,7 @@ class Bc02() extends Bc1(1:Int) {
 //│ ║  l.830: 	class Bc1(foo: Int)
 //│ ╙──       	          ^^^
 //│ class Bc02() extends Bc1 {
-//│   let foo: 2
+//│   val foo: 2
 //│ }
 
 Bc02().foo
@@ -1062,8 +1062,8 @@ trait Ta[T] {
 }
 class K[A](val k: Ta[A])
 //│ trait Ta[T] {
-//│   let g: T
-//│   let p: Bool
+//│   val g: T
+//│   val p: Bool
 //│ }
 //│ class K[A](k: Ta[A])
 
@@ -1104,8 +1104,8 @@ trait Tb extends Ta[Int] {
 //│ ║  l.1101: 	  virtual val p = false
 //│ ╙──        	              ^^^^^^^^^
 //│ trait Tb extends Ta {
-//│   let g: 'T
-//│   let p: false
+//│   val g: 'T
+//│   val p: false
 //│ }
 //│ where
 //│   'T := Int
@@ -1195,7 +1195,7 @@ class Go extends Fate {
 class Ha { virtual val x: Int = 1 }
 //│ class Ha {
 //│   constructor()
-//│   let x: Int
+//│   val x: Int
 //│ }
 
 class Haha(x: 1 | 2) extends Ha

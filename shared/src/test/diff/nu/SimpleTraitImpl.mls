@@ -341,13 +341,13 @@ trait T2 { val r = 1(1) }
 //│ ║  l.333: 	trait T2 { val r = 1(1) }
 //│ ╙──       	                   ^
 //│ trait T2 {
-//│   let r: error
+//│   val r: error
 //│ }
 
 class C2 extends T2
 //│ class C2 extends T2 {
 //│   constructor()
-//│   let r: error
+//│   val r: error
 //│ }
 
 
@@ -363,11 +363,11 @@ class C2 extends T3[Int]
 //│ ║  l.356: 	  val r = C2().x
 //│ ╙──       	          ^^
 //│ trait T3[A] {
-//│   let r: error
+//│   val r: error
 //│ }
 //│ class C2 extends T3 {
 //│   constructor()
-//│   let r: error
+//│   val r: error
 //│ }
 
 :e // * Note: lack of hygiene... happens only if class shadows previous C2 and is part of the error-throwing block
@@ -380,7 +380,7 @@ C2() : T3['X]
 class C3 extends T3[Int]
 //│ class C3 extends T3 {
 //│   constructor()
-//│   let r: error
+//│   val r: error
 //│ }
 
 (new C3) : T3['X]
