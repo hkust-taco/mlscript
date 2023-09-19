@@ -3,33 +3,33 @@
 
 []
 //│ |[||]|
-//│ Parsed: {'('  ')'}
+//│ Parsed: {'(' [] ')'}
 
 [x: 1]
 //│ |[|x|#:| |1|]|
-//│ Parsed: {'(' x: 1, ')'}
+//│ Parsed: {'(' [x: 1,] ')'}
 
 [x : 1]
 //│ |[|x| |#:| |1|]|
-//│ Parsed: {'(' x : 1, ')'}
+//│ Parsed: {'(' [x : 1,] ')'}
 
 [x: 1,]
 //│ |[|x|#:| |1|,|]|
-//│ Parsed: {'(' x: 1, ')'}
+//│ Parsed: {'(' [x: 1,] ')'}
 
 [x: 1, y:]
 //│ |[|x|#:| |1|,| |y|#:|]|
 //│ ╔══[PARSE ERROR] Unexpected end of square bracket section; an expression was expected here
 //│ ║  l.20: 	[x: 1, y:]
 //│ ╙──      	         ^
-//│ Parsed: {'(' x: 1, y: undefined, ')'}
+//│ Parsed: {'(' [x: 1, y: undefined,] ')'}
 
 [x:, y: 1]
 //│ |[|x|#:|,| |y|#:| |1|]|
 //│ ╔══[PARSE ERROR] Unexpected comma in expression position
 //│ ║  l.27: 	[x:, y: 1]
 //│ ╙──      	   ^
-//│ Parsed: {'(' x: y : 1, ')'}
+//│ Parsed: {'(' [x: y : 1,] ')'}
 
 [x:, y:]
 //│ |[|x|#:|,| |y|#:|]|
@@ -39,50 +39,50 @@
 //│ ╔══[PARSE ERROR] Unexpected end of square bracket section; an expression was expected here
 //│ ║  l.34: 	[x:, y:]
 //│ ╙──      	       ^
-//│ Parsed: {'(' x: y : undefined, ')'}
+//│ Parsed: {'(' [x: y : undefined,] ')'}
 
 [x: 1, 2, 3]
 //│ |[|x|#:| |1|,| |2|,| |3|]|
-//│ Parsed: {'(' x: 1, 2, 3, ')'}
+//│ Parsed: {'(' [x: 1, 2, 3,] ')'}
 
 [1, y: 2, 3]
 //│ |[|1|,| |y|#:| |2|,| |3|]|
-//│ Parsed: {'(' 1, y: 2, 3, ')'}
+//│ Parsed: {'(' [1, y: 2, 3,] ')'}
 
 [x: 1, y: 2, z: 3]
 //│ |[|x|#:| |1|,| |y|#:| |2|,| |z|#:| |3|]|
-//│ Parsed: {'(' x: 1, y: 2, z: 3, ')'}
+//│ Parsed: {'(' [x: 1, y: 2, z: 3,] ')'}
 
 ()
 //│ |(||)|
-//│ Parsed: {'('  ')'}
+//│ Parsed: {'(' [] ')'}
 
 (x: 1)
 //│ |(|x|#:| |1|)|
-//│ Parsed: {'(' x: 1, ')'}
+//│ Parsed: {'(' [x: 1,] ')'}
 
 (x:)
 //│ |(|x|#:|)|
 //│ ╔══[PARSE ERROR] Unexpected end of parenthesis section; an expression was expected here
 //│ ║  l.64: 	(x:)
 //│ ╙──      	   ^
-//│ Parsed: {'(' x: undefined, ')'}
+//│ Parsed: {'(' [x: undefined,] ')'}
 
 (x: 1,)
 //│ |(|x|#:| |1|,|)|
-//│ Parsed: {'(' x: 1, ')'}
+//│ Parsed: {'(' [x: 1,] ')'}
 
 (x: 1, 2, 3)
 //│ |(|x|#:| |1|,| |2|,| |3|)|
-//│ Parsed: {'(' x: 1, 2, 3, ')'}
+//│ Parsed: {'(' [x: 1, 2, 3,] ')'}
 
 (1, y: 2, 3)
 //│ |(|1|,| |y|#:| |2|,| |3|)|
-//│ Parsed: {'(' 1, y: 2, 3, ')'}
+//│ Parsed: {'(' [1, y: 2, 3,] ')'}
 
 (x: 1, y: 2, z: 3)
 //│ |(|x|#:| |1|,| |y|#:| |2|,| |z|#:| |3|)|
-//│ Parsed: {'(' x: 1, y: 2, z: 3, ')'}
+//│ Parsed: {'(' [x: 1, y: 2, z: 3,] ')'}
 
 
 1
@@ -116,27 +116,27 @@ x: 1,
 
 f of 1, 2, 3
 //│ |f| |#of| |1|,| |2|,| |3|
-//│ Parsed: {f (1, 2, 3,)}
+//│ Parsed: {f(1, 2, 3,)}
 
 f of x: 1, y: 2, z: 3
 //│ |f| |#of| |x|#:| |1|,| |y|#:| |2|,| |z|#:| |3|
-//│ Parsed: {f (x: 1, y: 2, z: 3,)}
+//│ Parsed: {f(x: 1, y: 2, z: 3,)}
 
 f of x: 1, 2, z: 3
 //│ |f| |#of| |x|#:| |1|,| |2|,| |z|#:| |3|
-//│ Parsed: {f (x: 1, 2, z: 3,)}
+//│ Parsed: {f(x: 1, 2, z: 3,)}
 
 f of
   x: 1, 2, 3
 //│ |f| |#of|→|x|#:| |1|,| |2|,| |3|←|
-//│ Parsed: {f (x: 1, 2, 3,)}
+//│ Parsed: {f(x: 1, 2, 3,)}
 
 f of
   x: 1,
   y: 2,
   z: 3
 //│ |f| |#of|→|x|#:| |1|,|↵|y|#:| |2|,|↵|z|#:| |3|←|
-//│ Parsed: {f (x: 1, y: 2, z: 3,)}
+//│ Parsed: {f(x: 1, y: 2, z: 3,)}
 
 f of
   x: 1
@@ -149,7 +149,7 @@ f of
 //│ ╔══[PARSE ERROR] Unexpected named argument name here
 //│ ║  l.143: 	  y: 2
 //│ ╙──       	  ^
-//│ Parsed: {f (z: {1; 2; 3},)}
+//│ Parsed: {f(z: {1; 2; 3},)}
 
 f of
   x: 1
@@ -159,7 +159,7 @@ f of
 //│ ╔══[PARSE ERROR] Unexpected named argument name here
 //│ ║  l.155: 	  x: 1
 //│ ╙──       	  ^
-//│ Parsed: {f (z: {1; 2; 3},)}
+//│ Parsed: {f(z: {1; 2; 3},)}
 
 f of
   x: 1
@@ -172,7 +172,7 @@ f of
 //│ ╔══[PARSE ERROR] Unexpected named argument name here
 //│ ║  l.166: 	  y: 2
 //│ ╙──       	  ^
-//│ Parsed: {f ({1; 2; 3},)}
+//│ Parsed: {f({1; 2; 3},)}
 
 
 

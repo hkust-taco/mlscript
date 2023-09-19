@@ -33,7 +33,7 @@ fun f(x) =
     is Left(v) then 0
     is Right(v) then 1
     <> undefined then 2
-//│ ╔══[ERROR] The case when this is false is not handled: <> (x,) (undefined,)
+//│ ╔══[ERROR] The case when this is false is not handled: <>(x,)(undefined,)
 //│ ║  l.32: 	  if x
 //│ ║        	     ^
 //│ ║  l.33: 	    is Left(v) then 0
@@ -94,10 +94,10 @@ fun f(a, b, c) =
     == 0 and b is B() and c is C() then 0
 //│ |#fun| |f|(|a|,| |b|,| |c|)| |#=|→|#if| |a|→|==| |0| |and| |b| |is| |B|(||)| |and| |c| |is| |C|(||)| |#then| |0|←|←|
 //│ AST: TypingUnit(NuFunDef(None, f, None, [], Lam(Tup(_: Var(a), _: Var(b), _: Var(c)), Blk(...))))
-//│ Parsed: fun f = (a, b, c,) => {if a ‹· == (and (and (0,) (is (b,) (B (),),),) (is (c,) (C (),),)) then 0›};
-//│ Desugared: rec def f: (a, b, c,) => {if a ‹· == (and (and (0,) (is (b,) (B (),),),) (is (c,) (C (),),)) then 0›}
+//│ Parsed: fun f = (a, b, c,) => {if a ‹· == (and(and(0,)(is(b,)(B(),),),)(is(c,)(C(),),)) then 0›};
+//│ Desugared: rec def f: (a, b, c,) => {if a ‹· == (and(and(0,)(is(b,)(B(),),),)(is(c,)(C(),),)) then 0›}
 //│ AST: Def(true, f, Lam(Tup(_: Var(a), _: Var(b), _: Var(c)), Blk(...)), true)
-//│ ╔══[ERROR] The case when this is false is not handled: == (a,) (0,)
+//│ ╔══[ERROR] The case when this is false is not handled: ==(a,)(0,)
 //│ ║  l.93: 	  if a
 //│ ║        	     ^
 //│ ║  l.94: 	    == 0 and b is B() and c is C() then 0

@@ -433,9 +433,9 @@ trait NuDeclImpl extends Located { self: NuDecl =>
     case NuFunDef(S(false), n, snme, _, b) => s"let${snme.fold("")(" "+_+")")} $n"
     case NuFunDef(S(true), n, snme, _, b) => s"let rec${snme.fold("")(" "+_+")")} $n"
     case NuTypeDef(k, n, tps, sps, ctor, sig, parents, sup, ths, bod) =>
-      s"${k.str} ${n.name}${if (tps.isEmpty) "" else tps.map(_._2.name).mkString("‹", ", ", "›")}(${
-        // sps.mkString("(",",",")")
-        sps.getOrElse(Tup(Nil))})${sig.fold("")(": " + _.showDbg2)}${
+      s"${k.str} ${n.name}${if (tps.isEmpty) "" else tps.map(_._2.name).mkString("‹", ", ", "›")}${
+          sps.fold("")("(" + _.showElems + ")")
+        }${sig.fold("")(": " + _.showDbg2)}${
           if (parents.isEmpty) "" else if (k === Als) " = " else ": "}${parents.mkString(", ")}"
   }
   lazy val genUnapply: Opt[NuFunDef] = this match {
@@ -546,22 +546,25 @@ trait TermImpl extends StatementImpl { self: Term =>
     case UnitLit(value) => if (value) "undefined" else "null"
     case v @ Var(name) => name + v.uid.fold("")("::"+_.toString)
     case Asc(trm, ty) => s"$trm : ${ty.showDbg2}"  |> bra
-    case Lam(pat, rhs) => s"($pat) => $rhs" |> bra
-    case App(lhs, rhs) => s"${lhs.print(!lhs.isInstanceOf[App])} ${rhs.print(true)}" |> bra
+    case Lam(pat: Tup, rhs) => s"(${pat.showElems}) => $rhs" |> bra
+    case Lam(pat, rhs) => s"(...$pat) => $rhs" |> bra
+    case App(lhs, rhs: Tup) => s"${lhs.print(!lhs.isInstanceOf[App])}(${rhs.showElems})" |> bra
+    case App(lhs, rhs) => s"${lhs.print(!lhs.isInstanceOf[App])}(...${rhs.print(true)})" |> bra
     case Rcd(fields) =>
       fields.iterator.map(nv =>
         (if (nv._2.flags.mut) "mut " else "") + nv._1.name + ": " + nv._2.value).mkString("{", ", ", "}")
     case Sel(receiver, fieldName) => "(" + receiver.toString + ")." + fieldName
     case Let(isRec, name, rhs, body) =>
       s"let${if (isRec) " rec" else ""} $name = $rhs in $body" |> bra
-    case Tup(xs) =>
-      xs.iterator.map { case (n, t) =>
-        (if (t.flags.mut) "mut " else "") + (if (t.flags.spec) "#" else "") + n.fold("")(_.name + ": ") + t.value + ","
-      // }.mkString("(", " ", ")")
-      }.mkString(" ") |> bra
+    case tup: Tup => "[" + tup.showElems + "]"
     case Splc(fields) => fields.map{
       case L(l) => s"...$l"
-      case R(Fld(FldFlags(m, s, g), r)) => (if (m) "mut " else "") + (if (g) "val " else "") + (if (s) "#" else "") + r
+      case R(Fld(FldFlags(m, s, g), r)) => (
+        (if (m) "mut " else "")
+        + (if (g) "val " else "")
+        + (if (s) "#" else "")
+        + r
+      )
     }.mkString("(", ", ", ")")
     case Bind(l, r) => s"$l as $r" |> bra
     case Test(l, r) => s"$l is $r" |> bra
@@ -688,6 +691,16 @@ trait VarImpl { self: Var =>
     (name.head.isLetter && name.head.isLower || name.head === '_' || name.head === '$') && name =/= "true" && name =/= "false"
   def toVar: Var = this
   var uid: Opt[Int] = N
+}
+
+trait TupImpl { self: Tup =>
+  def showElems: Str =
+    fields.iterator.map { case (n, t) => (
+      (if (t.flags.mut) "mut " else "")
+      + (if (t.flags.genGetter) "val " else "")
+      + (if (t.flags.spec) "#" else "")
+      + n.fold("")(_.name + ": ") + t.value + ","
+    )}.mkString(" ")
 }
 
 trait SimpleTermImpl extends Ordered[SimpleTerm] { self: SimpleTerm =>

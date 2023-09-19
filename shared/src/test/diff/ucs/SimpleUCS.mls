@@ -179,7 +179,7 @@ fun f(x, y) =
       >  0 then "gt"
       <  0 then "le"
       == 0 then "eq"
-//│ ╔══[ERROR] The case when this is false is not handled: == (y,) (0,)
+//│ ╔══[ERROR] The case when this is false is not handled: ==(y,)(0,)
 //│ ║  l.178: 	    Some(x) and y
 //│ ║         	                ^
 //│ ║  l.179: 	      >  0 then "gt"
