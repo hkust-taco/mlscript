@@ -5,8 +5,12 @@
 module Mod
 //│ module Mod
 
+:e
 Mod === Mod
-//│ Bool
+//│ ╔══[ERROR] Module 'Mod' does not support equality comparison because it does not have a parameter list
+//│ ║  l.9: 	Mod === Mod
+//│ ╙──     	^^^^^^^^^^^
+//│ error | false | true
 //│ res
 //│     = true
 
@@ -63,10 +67,10 @@ p === { fst: 1, snd: 2 }
 :e
 { fst: 1, snd: 2 } === p
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.64: 	{ fst: 1, snd: 2 } === p
+//│ ║  l.68: 	{ fst: 1, snd: 2 } === p
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── record literal of type `{fst: 1, snd: 2}` is not an instance of type `Eql`
-//│ ║  l.64: 	{ fst: 1, snd: 2 } === p
+//│ ║  l.68: 	{ fst: 1, snd: 2 } === p
 //│ ╙──      	       ^^^^^^^^^
 //│ error | false | true
 //│ res
@@ -86,10 +90,10 @@ r : {x: Int}
 :e
 x => { a: 0 } === x
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.87: 	x => { a: 0 } === x
+//│ ║  l.91: 	x => { a: 0 } === x
 //│ ║        	     ^^^^^^^^^^^^^^
 //│ ╟── record literal of type `{a: 0}` is not an instance of type `Eql`
-//│ ║  l.87: 	x => { a: 0 } === x
+//│ ║  l.91: 	x => { a: 0 } === x
 //│ ╙──      	          ^
 //│ anything -> (error | false | true)
 //│ res
@@ -111,10 +115,10 @@ let q = Pair(1, "oops")
 :e
 q === q
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.112: 	q === q
+//│ ║  l.116: 	q === q
 //│ ║         	^^^^^^^
 //│ ╟── integer literal of type `1` is not an instance of type `Str`
-//│ ║  l.106: 	let q = Pair(1, "oops")
+//│ ║  l.110: 	let q = Pair(1, "oops")
 //│ ╙──       	             ^
 //│ error | false | true
 //│ res

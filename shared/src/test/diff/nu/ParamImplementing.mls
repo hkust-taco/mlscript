@@ -21,7 +21,9 @@ class C extends T, M(false)
 //│ ╟── from signature of member `x`:
 //│ ║  l.4: 	trait T { fun x: Int }
 //│ ╙──     	              ^^^^^^
-//│ class C extends T
+//│ class C extends T {
+//│   constructor()
+//│ }
 
 
 trait T { fun x: Int }
@@ -32,6 +34,8 @@ mixin M(x: Num)
 //│ mixin M(x: Num)
 
 class C extends T, M(0)
-//│ class C extends T
+//│ class C extends T {
+//│   constructor()
+//│ }
 
 

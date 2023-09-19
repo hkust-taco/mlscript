@@ -18,3 +18,17 @@ let x = 1
 //│ x
 //│   = 1
 
+
+class E(x: Int)
+//│ class E(x: Int)
+
+:e // TODO support (currently parsed as a function definition named E)
+let E(x) = new E(1)
+//│ ╔══[ERROR] Value E cannot be used in `new` expression
+//│ ║  l.26: 	let E(x) = new E(1)
+//│ ╙──      	           ^^^^^^^^
+//│ let E: anything -> error
+//│ E
+//│   = [Function: E1]
+
+

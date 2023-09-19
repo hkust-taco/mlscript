@@ -22,7 +22,7 @@ Foo(1)
 new Foo(1)
 //│ ╔══[ERROR] Class Foo is abstract and cannot be instantiated
 //│ ║  l.22: 	new Foo(1)
-//│ ╙──      	    ^^^^^^
+//│ ╙──      	^^^^^^^^^^
 //│ Foo
 //│ res
 //│     = Foo {}
@@ -108,11 +108,13 @@ class C2 extends C1, T1
 //│ ║  l.92: 	abstract class C1 { fun x: Int | Str }
 //│ ╙──      	                        ^^^^^^^^^^^^
 //│ class C2 extends C1, T1 {
+//│   constructor()
 //│   fun x: Int
 //│ }
 
 class C2 extends C1, T1 { fun x = 1 }
 //│ class C2 extends C1, T1 {
+//│   constructor()
 //│   fun x: 1
 //│ }
 
@@ -124,17 +126,19 @@ abstract class C2 extends C1, T1
 :e
 class C3 extends C2
 //│ ╔══[ERROR] Member `x` is declared in parent but not implemented in `C3`
-//│ ║  l.125: 	class C3 extends C2
+//│ ║  l.127: 	class C3 extends C2
 //│ ║         	      ^^
 //│ ╟── Declared here:
 //│ ║  l.92: 	abstract class C1 { fun x: Int | Str }
 //│ ╙──      	                        ^^^^^^^^^^^^
 //│ class C3 extends C1, C2, T1 {
+//│   constructor()
 //│   fun x: Int
 //│ }
 
 class C3 extends C2 { fun x = 1 }
 //│ class C3 extends C1, C2, T1 {
+//│   constructor()
 //│   fun x: 1
 //│ }
 
@@ -147,10 +151,10 @@ abstract class C {
   fun foo1 = this.x
 }
 //│ ╔══[ERROR] Unqualified access to virtual member x
-//│ ║  l.146: 	  fun foo0 = x
+//│ ║  l.150: 	  fun foo0 = x
 //│ ║         	      ^^^^^^^^
 //│ ╟── Declared here:
-//│ ║  l.145: 	  fun x : Int
+//│ ║  l.149: 	  fun x : Int
 //│ ╙──       	      ^^^^^^^
 //│ abstract class C {
 //│   fun foo0: Int
@@ -165,12 +169,13 @@ class C {
   fun foo1 = this.x
 }
 //│ ╔══[ERROR] Unqualified access to virtual member x
-//│ ║  l.164: 	  fun foo0 = x
+//│ ║  l.168: 	  fun foo0 = x
 //│ ║         	      ^^^^^^^^
 //│ ╟── Declared here:
-//│ ║  l.163: 	  val x : Int
+//│ ║  l.167: 	  val x : Int
 //│ ╙──       	      ^^^^^^^
 //│ class C {
+//│   constructor()
 //│   fun foo0: Int
 //│   fun foo1: Int
 //│   let x: Int

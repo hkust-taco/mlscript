@@ -9,6 +9,7 @@ class Room[A](name: Str) {
 
 class BigRoom extends Room[Bool]("big")
 //│ class BigRoom extends Room {
+//│   constructor()
 //│   fun foo: (x: 'A) -> 'A
 //│ }
 //│ where
@@ -19,6 +20,7 @@ class InferredRoom extends Room("infer") {
     fun foo(x) = x && true
 }
 //│ class InferredRoom extends Room {
+//│   constructor()
 //│   fun foo: Bool -> Bool
 //│ }
 
@@ -32,9 +34,10 @@ class InferredRoom extends Room("infer") {
 :e
 class TooManyRoom extends Room[Int, Str]("too many")
 //│ ╔══[ERROR] class Room expects 1 type parameter(s); got 2
-//│ ║  l.33: 	class TooManyRoom extends Room[Int, Str]("too many")
+//│ ║  l.35: 	class TooManyRoom extends Room[Int, Str]("too many")
 //│ ╙──      	                          ^^^^^^^^^^^^^
 //│ class TooManyRoom extends Room {
+//│   constructor()
 //│   fun foo: (x: 'A) -> 'A
 //│ }
 //│ where
@@ -45,53 +48,48 @@ class WrongRoom extends Room[Bool]("wrong") {
     fun foo(x) = x + 1
 }
 //│ ╔══[ERROR] Type mismatch in definition of method foo:
-//│ ║  l.45: 	    fun foo(x) = x + 1
+//│ ║  l.48: 	    fun foo(x) = x + 1
 //│ ║        	        ^^^^^^^^^^^^^^
 //│ ╟── type `Bool` is not an instance of `Int`
-//│ ║  l.44: 	class WrongRoom extends Room[Bool]("wrong") {
+//│ ║  l.47: 	class WrongRoom extends Room[Bool]("wrong") {
 //│ ║        	                             ^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.45: 	    fun foo(x) = x + 1
+//│ ║  l.48: 	    fun foo(x) = x + 1
 //│ ╙──      	                 ^
 //│ ╔══[ERROR] Type mismatch in definition of method foo:
-//│ ║  l.45: 	    fun foo(x) = x + 1
+//│ ║  l.48: 	    fun foo(x) = x + 1
 //│ ║        	        ^^^^^^^^^^^^^^
 //│ ╟── operator application of type `Int` is not an instance of type `Bool`
-//│ ║  l.45: 	    fun foo(x) = x + 1
+//│ ║  l.48: 	    fun foo(x) = x + 1
 //│ ║        	                 ^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.44: 	class WrongRoom extends Room[Bool]("wrong") {
+//│ ║  l.47: 	class WrongRoom extends Room[Bool]("wrong") {
 //│ ║        	                             ^^^^
 //│ ╟── from reference:
 //│ ║  l.4: 	    virtual fun foo(x: A) = x
 //│ ╙──     	                            ^
 //│ class WrongRoom extends Room {
+//│   constructor()
 //│   fun foo: Int -> Int
 //│ }
 
 
 class C0[A] { val a: A }
 //│ class C0[A] {
+//│   constructor()
 //│   let a: A
 //│ }
 
 class C1[A] extends C0[A] { val a = a }
 //│ class C1[A] extends C0 {
+//│   constructor()
 //│   let a: nothing
 //│ }
 
-:pe
-:e
 new C1 : C1[Int]
-//│ ╔══[PARSE ERROR] Unexpected type ascription after `new` keyword
-//│ ║  l.85: 	new C1 : C1[Int]
-//│ ╙──      	    ^^
-//│ ╔══[ERROR] Currently unsupported `new` syntax
-//│ ║  l.85: 	new C1 : C1[Int]
-//│ ╙──      	^^^
-//│ error
+//│ C1[Int]
 //│ res
-//│     = {}
+//│     = C1 {}
 
 ((new C1) : C1[Int]) : C0['X]
 //│ C0[Int]
@@ -117,12 +115,14 @@ class A1 extends M1 {
     fun f1(x: Int) = x
 }
 //│ class A1 {
+//│   constructor()
 //│   fun f1: (x: Int) -> Int
 //│   fun f2: (x: 'A) -> ['A, 'A]
 //│ }
 
 class A2[S, T] extends M1[(S, T)]
 //│ class A2[S, T] {
+//│   constructor()
 //│   fun f1: (x: [S, T]) -> [S, T]
 //│   fun f2: (x: [S, T]) -> [[S, T], [S, T]]
 //│ }

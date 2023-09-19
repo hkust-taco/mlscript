@@ -13,13 +13,14 @@ class C(a: Int) extends T
 
 class B { virtual val a = "hi" }
 //│ class B {
+//│   constructor()
 //│   let a: "hi"
 //│ }
 
 :e
 class C(a: Int) extends B
 //│ ╔══[ERROR] Type mismatch in type reference:
-//│ ║  l.20: 	class C(a: Int) extends B
+//│ ║  l.21: 	class C(a: Int) extends B
 //│ ║        	           ^^^
 //│ ╟── type `Int` does not match type `"hi"`
 //│ ╟── Note: constraint arises from string literal:
@@ -35,6 +36,7 @@ mixin M { let b = "hi" }
 
 class B { virtual val a = 1 : Int }
 //│ class B {
+//│   constructor()
 //│   let a: Int
 //│ }
 

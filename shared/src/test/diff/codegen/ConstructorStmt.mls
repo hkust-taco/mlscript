@@ -1,5 +1,13 @@
-:NewParser
 :NewDefs
+
+
+log("Hello!")
+//│ undefined
+//│ res
+//│     = undefined
+//│ // Output
+//│ Hello!
+
 
 :js
 module Test0 {
@@ -7,11 +15,7 @@ module Test0 {
 }
 //│ module Test0
 //│ // Prelude
-//│ function log(x) {
-//│   return console.info(x);
-//│ }
-//│ let res;
-//│ class TypingUnit {
+//│ class TypingUnit1 {
 //│   #Test0;
 //│   constructor() {
 //│   }
@@ -29,23 +33,9 @@ module Test0 {
 //│     return this.#Test0;
 //│   }
 //│ }
-//│ const typing_unit = new TypingUnit;
-//│ globalThis.Test0 = typing_unit.Test0;
-//│ // End of generated code
-
-:js
-Test0
-//│ Test0
-//│ // Prelude
-//│ class TypingUnit1 {}
 //│ const typing_unit1 = new TypingUnit1;
-//│ // Query 1
-//│ res = Test0;
+//│ globalThis.Test0 = typing_unit1.Test0;
 //│ // End of generated code
-//│ res
-//│     = Test0 { class: [class Test0] }
-//│ // Output
-//│ Hello!
 
 :js
 Test0
@@ -58,6 +48,20 @@ Test0
 //│ // End of generated code
 //│ res
 //│     = Test0 { class: [class Test0] }
+//│ // Output
+//│ Hello!
+
+:js
+Test0
+//│ Test0
+//│ // Prelude
+//│ class TypingUnit3 {}
+//│ const typing_unit3 = new TypingUnit3;
+//│ // Query 1
+//│ res = Test0;
+//│ // End of generated code
+//│ res
+//│     = Test0 { class: [class Test0] }
 
 :js
 class A(a: Int) {
@@ -65,7 +69,7 @@ class A(a: Int) {
 }
 //│ class A(a: Int)
 //│ // Prelude
-//│ class TypingUnit3 {
+//│ class TypingUnit4 {
 //│   #A;
 //│   constructor() {
 //│   }
@@ -90,16 +94,16 @@ class A(a: Int) {
 //│     return this.#A;
 //│   }
 //│ }
-//│ const typing_unit3 = new TypingUnit3;
-//│ globalThis.A = typing_unit3.A;
+//│ const typing_unit4 = new TypingUnit4;
+//│ globalThis.A = typing_unit4.A;
 //│ // End of generated code
 
 :js
 let aa = A(42)
 //│ let aa: A
 //│ // Prelude
-//│ class TypingUnit4 {}
-//│ const typing_unit4 = new TypingUnit4;
+//│ class TypingUnit5 {}
+//│ const typing_unit5 = new TypingUnit5;
 //│ // Query 1
 //│ globalThis.aa = A(42);
 //│ // End of generated code
@@ -112,8 +116,8 @@ let aa = A(42)
 aa
 //│ A
 //│ // Prelude
-//│ class TypingUnit5 {}
-//│ const typing_unit5 = new TypingUnit5;
+//│ class TypingUnit6 {}
+//│ const typing_unit6 = new TypingUnit6;
 //│ // Query 1
 //│ res = aa;
 //│ // End of generated code
@@ -124,8 +128,8 @@ aa
 let ab = A(0)
 //│ let ab: A
 //│ // Prelude
-//│ class TypingUnit6 {}
-//│ const typing_unit6 = new TypingUnit6;
+//│ class TypingUnit7 {}
+//│ const typing_unit7 = new TypingUnit7;
 //│ // Query 1
 //│ globalThis.ab = A(0);
 //│ // End of generated code
@@ -140,11 +144,13 @@ class Foo {
   this: { x: Int }
 }
 //│ ╔══[ERROR] Type `#Foo` does not contain member `x`
-//│ ║  l.140: 	  this: { x: Int }
+//│ ║  l.144: 	  this: { x: Int }
 //│ ╙──       	          ^
-//│ class Foo
+//│ class Foo {
+//│   constructor()
+//│ }
 //│ // Prelude
-//│ class TypingUnit7 {
+//│ class TypingUnit8 {
 //│   #Foo;
 //│   constructor() {
 //│   }
@@ -157,8 +163,8 @@ class Foo {
 //│     return this.#Foo;
 //│   }
 //│ }
-//│ const typing_unit7 = new TypingUnit7;
-//│ globalThis.Foo = typing_unit7.Foo;
+//│ const typing_unit8 = new TypingUnit8;
+//│ globalThis.Foo = typing_unit8.Foo;
 //│ // End of generated code
 
 :e
@@ -167,14 +173,16 @@ class Bar {
   super: { x: Int }
 }
 //│ ╔══[ERROR] Illegal use of `super`
-//│ ║  l.167: 	  super: { x: Int }
+//│ ║  l.173: 	  super: { x: Int }
 //│ ╙──       	  ^^^^^
 //│ ╔══[ERROR] Type `#Bar` does not contain member `x`
-//│ ║  l.167: 	  super: { x: Int }
+//│ ║  l.173: 	  super: { x: Int }
 //│ ╙──       	           ^
-//│ class Bar
+//│ class Bar {
+//│   constructor()
+//│ }
 //│ // Prelude
-//│ class TypingUnit8 {
+//│ class TypingUnit9 {
 //│   #Bar;
 //│   constructor() {
 //│   }
@@ -187,8 +195,8 @@ class Bar {
 //│     return this.#Bar;
 //│   }
 //│ }
-//│ const typing_unit8 = new TypingUnit8;
-//│ globalThis.Bar = typing_unit8.Bar;
+//│ const typing_unit9 = new TypingUnit9;
+//│ globalThis.Bar = typing_unit9.Bar;
 //│ // End of generated code
 
 :js
@@ -205,7 +213,7 @@ class Baz() {
 //│   let y: Int
 //│ }
 //│ // Prelude
-//│ class TypingUnit9 {
+//│ class TypingUnit10 {
 //│   #Baz;
 //│   constructor() {
 //│   }
@@ -249,8 +257,8 @@ class Baz() {
 //│     return this.#Baz;
 //│   }
 //│ }
-//│ const typing_unit9 = new TypingUnit9;
-//│ globalThis.Baz = typing_unit9.Baz;
+//│ const typing_unit10 = new TypingUnit10;
+//│ globalThis.Baz = typing_unit10.Baz;
 //│ // End of generated code
 
 let baz = Baz()
@@ -279,7 +287,7 @@ class Q() {
 //│   fun qq: {q: Int}
 //│ }
 //│ // Prelude
-//│ class TypingUnit11 {
+//│ class TypingUnit12 {
 //│   #Q;
 //│   constructor() {
 //│   }
@@ -311,8 +319,8 @@ class Q() {
 //│     return this.#Q;
 //│   }
 //│ }
-//│ const typing_unit11 = new TypingUnit11;
-//│ globalThis.Q = typing_unit11.Q;
+//│ const typing_unit12 = new TypingUnit12;
+//│ globalThis.Q = typing_unit12.Q;
 //│ // End of generated code
 
 let q = Q()
@@ -334,7 +342,7 @@ class W() {
 //│   let x: 42
 //│ }
 //│ // Prelude
-//│ class TypingUnit13 {
+//│ class TypingUnit14 {
 //│   #W;
 //│   constructor() {
 //│   }
@@ -363,8 +371,8 @@ class W() {
 //│     return this.#W;
 //│   }
 //│ }
-//│ const typing_unit13 = new TypingUnit13;
-//│ globalThis.W = typing_unit13.W;
+//│ const typing_unit14 = new TypingUnit14;
+//│ globalThis.W = typing_unit14.W;
 //│ // End of generated code
 
 :js
@@ -373,8 +381,8 @@ www.add(42)
 //│ let www: W
 //│ Int
 //│ // Prelude
-//│ class TypingUnit14 {}
-//│ const typing_unit14 = new TypingUnit14;
+//│ class TypingUnit15 {}
+//│ const typing_unit15 = new TypingUnit15;
 //│ // Query 1
 //│ globalThis.www = W();
 //│ // Query 2

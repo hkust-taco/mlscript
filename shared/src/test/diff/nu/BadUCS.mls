@@ -2,7 +2,9 @@
 
 
 class Foo
-//│ class Foo
+//│ class Foo {
+//│   constructor()
+//│ }
 
 fun foo(x) = if x is Foo then 0
 //│ fun foo: Foo -> 0
@@ -12,7 +14,9 @@ module Bar {
   class Foo0
 }
 //│ module Bar {
-//│   class Foo0
+//│   class Foo0 {
+//│     constructor()
+//│   }
 //│ }
 
 fun foo(x) = if x is Bar then 0
@@ -21,7 +25,7 @@ fun foo(x) = if x is Bar then 0
 :e
 fun foo(x) = if x is Foo0 then 0
 //│ ╔══[ERROR] Cannot find constructor `Foo0` in scope
-//│ ║  l.22: 	fun foo(x) = if x is Foo0 then 0
+//│ ║  l.26: 	fun foo(x) = if x is Foo0 then 0
 //│ ╙──      	                     ^^^^
 //│ fun foo: anything -> error
 //│ Code generation encountered an error:
@@ -34,7 +38,7 @@ type F = Foo
 :e
 fun foo(x) = if x is F then 0
 //│ ╔══[ERROR] Cannot find constructor `F` in scope
-//│ ║  l.35: 	fun foo(x) = if x is F then 0
+//│ ║  l.39: 	fun foo(x) = if x is F then 0
 //│ ╙──      	                     ^
 //│ fun foo: anything -> error
 //│ Code generation encountered an error:
@@ -43,7 +47,7 @@ fun foo(x) = if x is F then 0
 :e
 fun foo(x) = if x is F() then 0
 //│ ╔══[ERROR] Illegal pattern `F`
-//│ ║  l.44: 	fun foo(x) = if x is F() then 0
+//│ ║  l.48: 	fun foo(x) = if x is F() then 0
 //│ ╙──      	                     ^
 //│ fun foo: anything -> error
 //│ Code generation encountered an error:
@@ -56,7 +60,7 @@ mixin M
 :e
 fun foo(x) = if x is M then 0
 //│ ╔══[ERROR] Cannot find constructor `M` in scope
-//│ ║  l.57: 	fun foo(x) = if x is M then 0
+//│ ║  l.61: 	fun foo(x) = if x is M then 0
 //│ ╙──      	                     ^
 //│ fun foo: anything -> error
 //│ Code generation encountered an error:
@@ -65,7 +69,7 @@ fun foo(x) = if x is M then 0
 :e
 fun foo(x) = if x is M() then 0
 //│ ╔══[ERROR] Illegal pattern `M`
-//│ ║  l.66: 	fun foo(x) = if x is M() then 0
+//│ ║  l.70: 	fun foo(x) = if x is M() then 0
 //│ ╙──      	                     ^
 //│ fun foo: anything -> error
 //│ Code generation encountered an error:
@@ -82,7 +86,7 @@ fun foo = 0
 :e
 fun foo0(x) = if x is foo() then 0
 //│ ╔══[ERROR] Illegal pattern `foo`
-//│ ║  l.83: 	fun foo0(x) = if x is foo() then 0
+//│ ║  l.87: 	fun foo0(x) = if x is foo() then 0
 //│ ╙──      	                      ^^^
 //│ fun foo0: anything -> error
 //│ Code generation encountered an error:
@@ -91,7 +95,7 @@ fun foo0(x) = if x is foo() then 0
 :e
 fun foo(x) = if x is foo() then 0
 //│ ╔══[ERROR] Illegal pattern `foo`
-//│ ║  l.92: 	fun foo(x) = if x is foo() then 0
+//│ ║  l.96: 	fun foo(x) = if x is foo() then 0
 //│ ╙──      	                     ^^^
 //│ fun foo: anything -> error
 //│ Code generation encountered an error:

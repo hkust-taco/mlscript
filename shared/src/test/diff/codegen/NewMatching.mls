@@ -162,6 +162,7 @@ class FooBar {
   val x = 42
 }
 //│ class FooBar {
+//│   constructor()
 //│   let x: 42
 //│ }
 //│ // Prelude
@@ -218,7 +219,7 @@ fun ft(x) =
     FooBar(x) then x
     _ then 0
 //│ ╔══[ERROR] class FooBar expects 0 parameter but found 1 parameter
-//│ ║  l.218: 	    FooBar(x) then x
+//│ ║  l.219: 	    FooBar(x) then x
 //│ ╙──       	    ^^^^^^^^^
 //│ fun ft: anything -> error
 //│ Code generation encountered an error:
@@ -264,7 +265,7 @@ fun c(x) =
     VVC(x, y, z) then x + y + z
     _ then 0
 //│ ╔══[ERROR] class VVC expects 2 parameters but found 3 parameters
-//│ ║  l.264: 	    VVC(x, y, z) then x + y + z
+//│ ║  l.265: 	    VVC(x, y, z) then x + y + z
 //│ ╙──       	    ^^^^^^^^^^^^
 //│ class VVC(v: Int, vc: Int)
 //│ fun c: anything -> error

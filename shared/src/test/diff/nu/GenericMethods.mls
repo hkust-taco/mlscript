@@ -14,7 +14,7 @@ foo1[Int](42)
 //│ ╔══[ERROR] Type application syntax is not yet supported
 //│ ║  l.13: 	foo1[Int](42)
 //│ ╙──      	^^^^^^^^^
-//│ error
+//│ 42
 //│ res
 //│     = 42
 
@@ -32,7 +32,7 @@ foo2<Int>(42)
 //│ ╔══[ERROR] Type application syntax is not yet supported
 //│ ║  l.31: 	foo2<Int>(42)
 //│ ╙──      	^^^^^^^^^
-//│ error
+//│ 42
 //│ res
 //│     = 42
 
@@ -50,7 +50,7 @@ foo3[Int](42)
 //│ ╔══[ERROR] Type application syntax is not yet supported
 //│ ║  l.49: 	foo3[Int](42)
 //│ ╙──      	^^^^^^^^^
-//│ error
+//│ 42
 //│ res
 //│     = 42
 

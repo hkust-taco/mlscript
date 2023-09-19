@@ -8,12 +8,43 @@ mixin BaseTest(x: Int) {
 //│   fun test: Int
 //│ }
 
-// TODO
+module Test extends BaseTest(42)
+//│ module Test {
+//│   fun test: Int
+//│ }
+
+Test.test
+//│ Int
+//│ res
+//│     = 42
+
+// :e // TODO reject
+Test.x
+//│ 42
+//│ res
+//│     = undefined
+
+
+mixin BaseTest(x: Int -> Int)
+//│ mixin BaseTest(x: Int -> Int)
+
+module Test extends BaseTest(id)
+//│ module Test
+
+:re // TODO implement mixin param getters
+Test.x(1)
+//│ 1
+//│ res
+//│ Runtime error:
+//│   TypeError: Test.x is not a function
+
+
+:e // TODO support
 mixin BaseTest(x) {
   fun test = x
 }
 //│ ╔══[ERROR] Mixin parameters currently need type annotations
-//│ ║  l.12: 	mixin BaseTest(x) {
+//│ ║  l.43: 	mixin BaseTest(x) {
 //│ ╙──      	               ^
 //│ mixin BaseTest(x: error) {
 //│   fun test: error

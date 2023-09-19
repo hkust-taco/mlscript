@@ -56,13 +56,11 @@ Foo3(1).foo
 class Foo4 {
   fun test = [Foo4.test]
 }
-//│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.57: 	  fun test = [Foo4.test]
-//│ ║        	              ^^^^^^^^^
-//│ ╟── reference of type `() -> #Foo4` does not have field 'test'
+//│ ╔══[ERROR] Class Foo4 cannot be instantiated as it exposes no such constructor
 //│ ║  l.57: 	  fun test = [Foo4.test]
 //│ ╙──      	              ^^^^
 //│ class Foo4 {
+//│   constructor()
 //│   fun test: [error]
 //│ }
 
@@ -71,7 +69,7 @@ class Foo5(x: Int) {
   fun test = [Foo5(5).test]
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.71: 	  fun test = [Foo5(5).test]
+//│ ║  l.69: 	  fun test = [Foo5(5).test]
 //│ ╙──      	                     ^^^^^
 //│ class Foo5(x: Int) {
 //│   fun test: [error]
@@ -84,13 +82,13 @@ class Foo6[A](x: A) {
   fun test3 = [Foo6([x]).test3]
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.82: 	  fun test1 = [Foo6(x).test1]
+//│ ║  l.80: 	  fun test1 = [Foo6(x).test1]
 //│ ╙──      	                      ^^^^^^
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.83: 	  fun test2 = [Foo6(123).test2]
+//│ ║  l.81: 	  fun test2 = [Foo6(123).test2]
 //│ ╙──      	                        ^^^^^^
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.84: 	  fun test3 = [Foo6([x]).test3]
+//│ ║  l.82: 	  fun test3 = [Foo6([x]).test3]
 //│ ╙──      	                        ^^^^^^
 //│ class Foo6[A](x: A) {
 //│   fun test1: [error]
@@ -108,7 +106,7 @@ class Foo7[A](head: A, tail: Foo7[A] | N) {
     _ then tail.test1
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.108: 	    _ then tail.test1
+//│ ║  l.106: 	    _ then tail.test1
 //│ ╙──       	               ^^^^^^
 //│ class Foo7[A](head: A, tail: Foo7[A] | N) {
 //│   fun test1: error | A
@@ -149,7 +147,7 @@ class Foo8[A](x: A) {
     x
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.148: 	    let tmp = Foo8(y).test1(x)
+//│ ║  l.146: 	    let tmp = Foo8(y).test1(x)
 //│ ╙──       	                     ^^^^^^
 //│ class Foo8[A](x: A) {
 //│   fun test1: (y: anything) -> A

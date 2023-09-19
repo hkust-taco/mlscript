@@ -71,6 +71,7 @@ module M extends C2 {
 
 class C1 { virtual fun x: 0 | 2 = 0 }
 //│ class C1 {
+//│   constructor()
 //│   fun x: 0 | 2
 //│ }
 
@@ -123,7 +124,7 @@ module M extends T1, T2, C1 {
   fun x = this.x
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.123: 	  fun x = this.x
+//│ ║  l.124: 	  fun x = this.x
 //│ ╙──       	              ^^
 //│ module M extends C1, T1, T2 {
 //│   fun x: error
@@ -135,13 +136,13 @@ module M extends T1, T2, C1 {
   fun x = this.x
 }
 //│ ╔══[ERROR] Type mismatch in signature of member `x`:
-//│ ║  l.134: 	  fun x: 0
+//│ ║  l.135: 	  fun x: 0
 //│ ║         	      ^^^^
 //│ ╟── type `0` does not match type `1 | 2`
-//│ ║  l.134: 	  fun x: 0
+//│ ║  l.135: 	  fun x: 0
 //│ ║         	         ^
 //│ ╟── but it flows into signature of member `x` with expected type `1 | 2`
-//│ ║  l.134: 	  fun x: 0
+//│ ║  l.135: 	  fun x: 0
 //│ ║         	      ^^^^
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.8: 	trait T2 { fun x: 1 | 2 }
@@ -158,6 +159,7 @@ class C extends C1, T2 {
   fun x = this.x
 }
 //│ class C extends C1, T2 {
+//│   constructor()
 //│   fun x: 2
 //│ }
 
@@ -174,12 +176,13 @@ M.x
 :e
 class C2 extends T1
 //│ ╔══[ERROR] Member `x` is declared in parent but not implemented in `C2`
-//│ ║  l.175: 	class C2 extends T1
+//│ ║  l.177: 	class C2 extends T1
 //│ ║         	      ^^
 //│ ╟── Declared here:
 //│ ║  l.7: 	trait T1 { fun x: 0 | 1 }
 //│ ╙──     	               ^^^^^^^^
 //│ class C2 extends T1 {
+//│   constructor()
 //│   fun x: 0 | 1
 //│ }
 
@@ -191,12 +194,13 @@ abstract class C2 extends T1
 :e
 class C3 extends C2
 //│ ╔══[ERROR] Member `x` is declared in parent but not implemented in `C3`
-//│ ║  l.192: 	class C3 extends C2
+//│ ║  l.195: 	class C3 extends C2
 //│ ║         	      ^^
 //│ ╟── Declared here:
 //│ ║  l.7: 	trait T1 { fun x: 0 | 1 }
 //│ ╙──     	               ^^^^^^^^
 //│ class C3 extends C2, T1 {
+//│   constructor()
 //│   fun x: 0 | 1
 //│ }
 
@@ -207,19 +211,20 @@ abstract class C3 extends C2
 
 class C2 extends T1 { fun x = 1 }
 //│ class C2 extends T1 {
+//│   constructor()
 //│   fun x: 1
 //│ }
 
 :e
 class C2 extends T1, T2 { fun x = 2 }
 //│ ╔══[ERROR] Type mismatch in definition of method x:
-//│ ║  l.214: 	class C2 extends T1, T2 { fun x = 2 }
+//│ ║  l.219: 	class C2 extends T1, T2 { fun x = 2 }
 //│ ║         	                              ^^^^^
 //│ ╟── integer literal of type `2` does not match type `0 | 1`
-//│ ║  l.214: 	class C2 extends T1, T2 { fun x = 2 }
+//│ ║  l.219: 	class C2 extends T1, T2 { fun x = 2 }
 //│ ║         	                                  ^
 //│ ╟── but it flows into definition of method x with expected type `0 | 1`
-//│ ║  l.214: 	class C2 extends T1, T2 { fun x = 2 }
+//│ ║  l.219: 	class C2 extends T1, T2 { fun x = 2 }
 //│ ║         	                              ^^^^^
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.7: 	trait T1 { fun x: 0 | 1 }
@@ -228,60 +233,66 @@ class C2 extends T1, T2 { fun x = 2 }
 //│ ║  l.7: 	trait T1 { fun x: 0 | 1 }
 //│ ╙──     	               ^^^^^^^^
 //│ class C2 extends T1, T2 {
+//│   constructor()
 //│   fun x: 2
 //│ }
 
 class C2 extends T1, T2 { virtual fun x = 1 }
 //│ class C2 extends T1, T2 {
+//│   constructor()
 //│   fun x: 1
 //│ }
 
 :e
 class C3 extends C2 { virtual fun x = 111 }
 //│ ╔══[ERROR] Type mismatch in definition of method x:
-//│ ║  l.240: 	class C3 extends C2 { virtual fun x = 111 }
+//│ ║  l.247: 	class C3 extends C2 { virtual fun x = 111 }
 //│ ║         	                                  ^^^^^^^
 //│ ╟── integer literal of type `111` does not match type `1`
-//│ ║  l.240: 	class C3 extends C2 { virtual fun x = 111 }
+//│ ║  l.247: 	class C3 extends C2 { virtual fun x = 111 }
 //│ ║         	                                      ^^^
 //│ ╟── but it flows into definition of method x with expected type `1`
-//│ ║  l.240: 	class C3 extends C2 { virtual fun x = 111 }
+//│ ║  l.247: 	class C3 extends C2 { virtual fun x = 111 }
 //│ ║         	                                  ^^^^^^^
 //│ ╟── Note: constraint arises from integer literal:
-//│ ║  l.234: 	class C2 extends T1, T2 { virtual fun x = 1 }
+//│ ║  l.240: 	class C2 extends T1, T2 { virtual fun x = 1 }
 //│ ║         	                                          ^
 //│ ╟── from definition of method x:
-//│ ║  l.234: 	class C2 extends T1, T2 { virtual fun x = 1 }
+//│ ║  l.240: 	class C2 extends T1, T2 { virtual fun x = 1 }
 //│ ╙──       	                                      ^^^^^
 //│ class C3 extends C2, T1, T2 {
+//│   constructor()
 //│   fun x: 111
 //│ }
 
 class C3 extends C2 { fun x = 1 }
 //│ class C3 extends C2, T1, T2 {
+//│   constructor()
 //│   fun x: 1
 //│ }
 
 class C2 extends C1, T1 { fun x = 0 }
 //│ class C2 extends C1, T1 {
+//│   constructor()
 //│   fun x: 0
 //│ }
 
 class C2 extends T1, C1 { fun x = 0 }
 //│ class C2 extends C1, T1 {
+//│   constructor()
 //│   fun x: 0
 //│ }
 
 :e
 class C2 extends C1, T1 { fun x = 1 }
 //│ ╔══[ERROR] Type mismatch in definition of method x:
-//│ ║  l.276: 	class C2 extends C1, T1 { fun x = 1 }
+//│ ║  l.287: 	class C2 extends C1, T1 { fun x = 1 }
 //│ ║         	                              ^^^^^
 //│ ╟── integer literal of type `1` does not match type `0 | 2`
-//│ ║  l.276: 	class C2 extends C1, T1 { fun x = 1 }
+//│ ║  l.287: 	class C2 extends C1, T1 { fun x = 1 }
 //│ ║         	                                  ^
 //│ ╟── but it flows into definition of method x with expected type `0 | 2`
-//│ ║  l.276: 	class C2 extends C1, T1 { fun x = 1 }
+//│ ║  l.287: 	class C2 extends C1, T1 { fun x = 1 }
 //│ ║         	                              ^^^^^
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.72: 	class C1 { virtual fun x: 0 | 2 = 0 }
@@ -290,19 +301,20 @@ class C2 extends C1, T1 { fun x = 1 }
 //│ ║  l.72: 	class C1 { virtual fun x: 0 | 2 = 0 }
 //│ ╙──      	                       ^^^^^^^^^^^^
 //│ class C2 extends C1, T1 {
+//│   constructor()
 //│   fun x: 1
 //│ }
 
 :e
 class C2 extends T1, C1 { fun x = 1 }
 //│ ╔══[ERROR] Type mismatch in definition of method x:
-//│ ║  l.297: 	class C2 extends T1, C1 { fun x = 1 }
+//│ ║  l.309: 	class C2 extends T1, C1 { fun x = 1 }
 //│ ║         	                              ^^^^^
 //│ ╟── integer literal of type `1` does not match type `0 | 2`
-//│ ║  l.297: 	class C2 extends T1, C1 { fun x = 1 }
+//│ ║  l.309: 	class C2 extends T1, C1 { fun x = 1 }
 //│ ║         	                                  ^
 //│ ╟── but it flows into definition of method x with expected type `0 | 2`
-//│ ║  l.297: 	class C2 extends T1, C1 { fun x = 1 }
+//│ ║  l.309: 	class C2 extends T1, C1 { fun x = 1 }
 //│ ║         	                              ^^^^^
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.72: 	class C1 { virtual fun x: 0 | 2 = 0 }
@@ -311,6 +323,7 @@ class C2 extends T1, C1 { fun x = 1 }
 //│ ║  l.72: 	class C1 { virtual fun x: 0 | 2 = 0 }
 //│ ╙──      	                       ^^^^^^^^^^^^
 //│ class C2 extends C1, T1 {
+//│   constructor()
 //│   fun x: 1
 //│ }
 
@@ -319,13 +332,13 @@ class C2 extends T1, C1 { fun x = 1 }
 :e
 trait T2 { val r = 1(1) }
 //│ ╔══[ERROR] Method implementations in traits are not yet supported
-//│ ║  l.320: 	trait T2 { val r = 1(1) }
+//│ ║  l.333: 	trait T2 { val r = 1(1) }
 //│ ╙──       	               ^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.320: 	trait T2 { val r = 1(1) }
+//│ ║  l.333: 	trait T2 { val r = 1(1) }
 //│ ║         	                   ^^^^
 //│ ╟── integer literal of type `1` is not a function
-//│ ║  l.320: 	trait T2 { val r = 1(1) }
+//│ ║  l.333: 	trait T2 { val r = 1(1) }
 //│ ╙──       	                   ^
 //│ trait T2 {
 //│   let r: error
@@ -333,6 +346,7 @@ trait T2 { val r = 1(1) }
 
 class C2 extends T2
 //│ class C2 extends T2 {
+//│   constructor()
 //│   let r: error
 //│ }
 
@@ -343,36 +357,33 @@ trait T3[A] {
 }
 class C2 extends T3[Int]
 //│ ╔══[ERROR] Method implementations in traits are not yet supported
-//│ ║  l.342: 	  val r = C2().x
+//│ ║  l.356: 	  val r = C2().x
 //│ ╙──       	      ^^^^^^^^^^
-//│ ╔══[ERROR] Unhandled cyclic definition
-//│ ║  l.341: 	trait T3[A] {
-//│ ║         	^^^^^^^^^^^^^
-//│ ║  l.342: 	  val r = C2().x
-//│ ╙──       	^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Type `C2` does not contain member `x`
-//│ ║  l.342: 	  val r = C2().x
-//│ ╙──       	              ^^
+//│ ╔══[ERROR] Class C2 cannot be instantiated as it exposes no such constructor
+//│ ║  l.356: 	  val r = C2().x
+//│ ╙──       	          ^^
 //│ trait T3[A] {
 //│   let r: error
 //│ }
-//│ class C2 extends T3
-
-:e // * Note: lack of hygiene... happens only if class shadows previous C2 and is part of the error-throwing block
-C2() : T3['X]
-//│ ╔══[ERROR] Type `C2` does not contain member `T3#A`
-//│ ║  l.341: 	trait T3[A] {
-//│ ╙──       	         ^
-//│ T3['X]
-//│   where
-//│     'X :> error
-
-class C3 extends T3[Int]
-//│ class C3 extends T3 {
+//│ class C2 extends T3 {
+//│   constructor()
 //│   let r: error
 //│ }
 
-C3() : T3['X]
+:e // * Note: lack of hygiene... happens only if class shadows previous C2 and is part of the error-throwing block
+C2() : T3['X]
+//│ ╔══[ERROR] Construction of unparameterized class C2 should use the `new` keyword
+//│ ║  l.374: 	C2() : T3['X]
+//│ ╙──       	^^
+//│ T3[Int]
+
+class C3 extends T3[Int]
+//│ class C3 extends T3 {
+//│   constructor()
+//│   let r: error
+//│ }
+
+(new C3) : T3['X]
 //│ T3[Int]
 
 
@@ -384,38 +395,41 @@ trait Foo { fun foo: forall 'A; (x: 'A) -> 'A }
 
 class B extends Foo { fun foo = error }
 //│ class B extends Foo {
+//│   constructor()
 //│   fun foo: nothing
 //│ }
 
 class B extends Foo { fun foo(x) = x }
 //│ class B extends Foo {
+//│   constructor()
 //│   fun foo: forall 'a. 'a -> 'a
 //│ }
 
 :e
 class B extends Foo { fun foo(x) = x + 1 }
 //│ ╔══[ERROR] Type mismatch in definition of method foo:
-//│ ║  l.396: 	class B extends Foo { fun foo(x) = x + 1 }
+//│ ║  l.409: 	class B extends Foo { fun foo(x) = x + 1 }
 //│ ║         	                          ^^^^^^^^^^^^^^
 //│ ╟── type `'A` is not an instance of type `Int`
-//│ ║  l.380: 	trait Foo { fun foo: forall 'A; (x: 'A) -> 'A }
+//│ ║  l.391: 	trait Foo { fun foo: forall 'A; (x: 'A) -> 'A }
 //│ ║         	                                    ^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.396: 	class B extends Foo { fun foo(x) = x + 1 }
+//│ ║  l.409: 	class B extends Foo { fun foo(x) = x + 1 }
 //│ ║         	                                   ^
 //│ ╟── Note: quantified type variable 'A is defined at:
-//│ ║  l.380: 	trait Foo { fun foo: forall 'A; (x: 'A) -> 'A }
+//│ ║  l.391: 	trait Foo { fun foo: forall 'A; (x: 'A) -> 'A }
 //│ ╙──       	                            ^^
 //│ ╔══[ERROR] Type mismatch in definition of method foo:
-//│ ║  l.396: 	class B extends Foo { fun foo(x) = x + 1 }
+//│ ║  l.409: 	class B extends Foo { fun foo(x) = x + 1 }
 //│ ║         	                          ^^^^^^^^^^^^^^
 //│ ╟── operator application of type `Int` does not match type `'A`
-//│ ║  l.396: 	class B extends Foo { fun foo(x) = x + 1 }
+//│ ║  l.409: 	class B extends Foo { fun foo(x) = x + 1 }
 //│ ║         	                                   ^^^^^
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.380: 	trait Foo { fun foo: forall 'A; (x: 'A) -> 'A }
+//│ ║  l.391: 	trait Foo { fun foo: forall 'A; (x: 'A) -> 'A }
 //│ ╙──       	                                           ^^
 //│ class B extends Foo {
+//│   constructor()
 //│   fun foo: Int -> Int
 //│ }
 

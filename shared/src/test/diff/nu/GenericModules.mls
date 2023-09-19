@@ -99,7 +99,7 @@ Test<Int> .foo
 //│ ╔══[ERROR] Type application syntax is not yet supported
 //│ ║  l.98: 	Test<Int> .foo
 //│ ╙──      	^^^^^^^^^
-//│ error
+//│ ??A -> ??A0
 //│ res
 //│     = undefined
 
@@ -108,7 +108,7 @@ Test<Int> .foo
 //│ ╔══[ERROR] Type application syntax is not yet supported
 //│ ║  l.107: 	(Test<Int>).foo
 //│ ╙──       	 ^^^^^^^^^
-//│ error
+//│ ??A -> ??A0
 //│ res
 //│     = undefined
 

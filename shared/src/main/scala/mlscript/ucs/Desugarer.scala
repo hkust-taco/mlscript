@@ -243,9 +243,9 @@ class Desugarer extends TypeDefs { self: Typer =>
         ctx.tyDefs.get(className).map(td => (td.kind, td.positionals))
             .orElse(ctx.get(className) match {
               case S(ti: DelayedTypeInfo) if ti.decl.kind is Cls =>
-                S((ti.decl.kind, ti.typedParams.map(_._1.name)))
+                S((ti.decl.kind, ti.typedParams.getOrElse(Nil).map(_._1.name))) // * Error should be caught before if this doesn't take params
               case S(CompletedTypeInfo(td: TypedNuCls)) =>
-                S((td.decl.kind, td.params.map(_._1.name)))
+                S((td.decl.kind, td.params.getOrElse(Nil).map(_._1.name))) // * Error should be caught before if this doesn't take params
               case _ => throw new DesugaringException(msg"Illegal pattern `$className`", classNameVar.toLoc)
             }) match {
           case N =>

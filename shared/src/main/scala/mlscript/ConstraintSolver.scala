@@ -541,13 +541,19 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                   RhsBases(ots, S(R(RhsField(fldNme, fldTy))), trs))
             if ctx.tyDefs2.contains(nme) => if (newDefs && nme =/= "Eql" && fldNme.name === "Eql#A") {
               val info = ctx.tyDefs2(nme)
-              info.typedParams.foreach { p =>
-                val fty = lookupField(() => done_ls.toType(sort = true), S(nme), r.fields.toMap.get, ts, p._1)
-                rec(fldTy.lb.getOrElse(die), RecordType(p._1 -> TypeRef(TypeName("Eql"),
-                    fty.ub // FIXME check mutable?
-                    :: Nil
-                  )(provTODO).toUpper(provTODO) :: Nil)(provTODO), false)
-              }
+              if (info.typedParams.isEmpty && !primitiveTypes.contains(nme))
+                // TODO shoudl actually reject all non-data classes...
+                err(msg"${info.decl.kind.str.capitalize} '${info.decl.name
+                  }' does not support equality comparison because it does not have a parameter list", prov.loco)
+              info.typedParams
+                .getOrElse(Nil) // FIXME?... prim type
+                .foreach { p =>
+                  val fty = lookupField(() => done_ls.toType(sort = true), S(nme), r.fields.toMap.get, ts, p._1)
+                  rec(fldTy.lb.getOrElse(die), RecordType(p._1 -> TypeRef(TypeName("Eql"),
+                      fty.ub // FIXME check mutable?
+                      :: Nil
+                    )(provTODO).toUpper(provTODO) :: Nil)(provTODO), false)
+                }
             } else {
               val fty = lookupField(() => done_ls.toType(sort = true), S(nme), r.fields.toMap.get, ts, fldNme)
               rec(fty.ub, fldTy.ub, false)

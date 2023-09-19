@@ -2,7 +2,9 @@
 
 
 class C
-//│ class C
+//│ class C {
+//│   constructor()
+//│ }
 
 :js
 new C
@@ -16,9 +18,12 @@ new C
 //│ res
 //│     = C {}
 
-:re // TODO reject in type checking
+:e
 :js
 C()
+//│ ╔══[ERROR] Construction of unparameterized class C should use the `new` keyword
+//│ ║  l.23: 	C()
+//│ ╙──      	^
 //│ C
 //│ // Prelude
 //│ class TypingUnit2 {}
@@ -31,7 +36,11 @@ C()
 //│   TypeError: Class constructor C cannot be invoked without 'new'
 
 :js
+:e // TODO support first-class classes
 let c = C
+//│ ╔══[ERROR] Construction of unparameterized class C should use the `new` keyword
+//│ ║  l.40: 	let c = C
+//│ ╙──      	        ^
 //│ let c: () -> C
 //│ // Prelude
 //│ class TypingUnit3 {}
@@ -42,7 +51,7 @@ let c = C
 //│ c
 //│   = [class C]
 
-:re // TODO reject in type checking
+:re // TODO should eventually be reject in type checking
 c()
 //│ C
 //│ res

@@ -10,27 +10,33 @@ class C0 extends M0
 //│ ╔══[ERROR] mixin M0 expects 1 parameter(s); got 0
 //│ ║  l.9: 	class C0 extends M0
 //│ ╙──     	                 ^^
-//│ class C0
+//│ class C0 {
+//│   constructor()
+//│ }
 
 :e
 class C0 extends M0(1, 2)
 //│ ╔══[ERROR] mixin M0 expects 1 parameter(s); got 2
-//│ ║  l.16: 	class C0 extends M0(1, 2)
+//│ ║  l.18: 	class C0 extends M0(1, 2)
 //│ ╙──      	                 ^^^^^^^
-//│ class C0
+//│ class C0 {
+//│   constructor()
+//│ }
 
 :e
 class C0 extends M0(true)
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.23: 	class C0 extends M0(true)
+//│ ║  l.27: 	class C0 extends M0(true)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── reference of type `true` is not an instance of type `Int`
-//│ ║  l.23: 	class C0 extends M0(true)
+//│ ║  l.27: 	class C0 extends M0(true)
 //│ ║        	                    ^^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.5: 	mixin M0(x: Int)
 //│ ╙──     	            ^^^
-//│ class C0
+//│ class C0 {
+//│   constructor()
+//│ }
 
 
 // TODO catch this at typing (lack of `this`)
@@ -39,6 +45,7 @@ class Foo {
   fun bar = foo
 }
 //│ class Foo {
+//│   constructor()
 //│   fun bar: 0
 //│   fun foo: 0
 //│ }
@@ -49,6 +56,7 @@ class Foo {
   fun bar = foo
 }
 //│ class Foo {
+//│   constructor()
 //│   fun bar: 0
 //│   let foo: 0
 //│ }
@@ -66,7 +74,7 @@ module Bar {
 :e
 hello
 //│ ╔══[ERROR] identifier not found: hello
-//│ ║  l.67: 	hello
+//│ ║  l.75: 	hello
 //│ ╙──      	^^^^^
 //│ error
 //│ Code generation encountered an error:
@@ -75,7 +83,7 @@ hello
 :e
 1 : I
 //│ ╔══[ERROR] type identifier not found: I
-//│ ║  l.76: 	1 : I
+//│ ║  l.84: 	1 : I
 //│ ╙──      	    ^
 //│ error
 //│ res
@@ -85,21 +93,24 @@ hello
 :e
 class Foo[A] { 42: A }
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.86: 	class Foo[A] { 42: A }
+//│ ║  l.94: 	class Foo[A] { 42: A }
 //│ ║        	               ^^
 //│ ╟── integer literal of type `42` does not match type `A`
 //│ ╟── Note: constraint arises from type parameter:
-//│ ║  l.86: 	class Foo[A] { 42: A }
+//│ ║  l.94: 	class Foo[A] { 42: A }
 //│ ╙──      	          ^
-//│ class Foo[A]
+//│ class Foo[A] {
+//│   constructor()
+//│ }
 
 
 :e
 class C1 { fun oops = this.x }
 //│ ╔══[ERROR] Type `#C1` does not contain member `x`
-//│ ║  l.98: 	class C1 { fun oops = this.x }
-//│ ╙──      	                          ^^
+//│ ║  l.108: 	class C1 { fun oops = this.x }
+//│ ╙──       	                          ^^
 //│ class C1 {
+//│   constructor()
 //│   fun oops: error
 //│ }
 
@@ -107,12 +118,13 @@ class C1 { fun oops = this.x }
 :e
 class C { fun x: Int }
 //│ ╔══[ERROR] Member `x` is declared in parent but not implemented in `C`
-//│ ║  l.108: 	class C { fun x: Int }
+//│ ║  l.119: 	class C { fun x: Int }
 //│ ║         	      ^
 //│ ╟── Declared here:
-//│ ║  l.108: 	class C { fun x: Int }
+//│ ║  l.119: 	class C { fun x: Int }
 //│ ╙──       	              ^^^^^^
 //│ class C {
+//│   constructor()
 //│   fun x: Int
 //│ }
 
@@ -120,6 +132,7 @@ class C { fun x: Int }
 // :e
 class C { val x: Int }
 //│ class C {
+//│   constructor()
 //│   let x: Int
 //│ }
 

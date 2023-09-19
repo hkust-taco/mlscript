@@ -8,7 +8,9 @@
 
 
 class C
-//│ class C
+//│ class C {
+//│   constructor()
+//│ }
 
 new C
 //│ C
@@ -21,9 +23,11 @@ new C()
 //│ res
 //│     = C {}
 
-// :e // TODO reject
-:re
+:e
 C()
+//│ ╔══[ERROR] Construction of unparameterized class C should use the `new` keyword
+//│ ║  l.27: 	C()
+//│ ╙──      	^
 //│ C
 //│ res
 //│ Runtime error:
@@ -84,10 +88,10 @@ D.unapply(D(42))
 :e
 D.unapply({ x: 42 })
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.85: 	D.unapply({ x: 42 })
+//│ ║  l.89: 	D.unapply({ x: 42 })
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── record literal of type `{x: 42}` is not an instance of type `D`
-//│ ║  l.85: 	D.unapply({ x: 42 })
+//│ ║  l.89: 	D.unapply({ x: 42 })
 //│ ╙──      	               ^^
 //│ error | [42]
 //│ res
@@ -109,10 +113,10 @@ DT.unapply(DT(42))
 :e
 DT.unapply({ x: 42 })
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.110: 	DT.unapply({ x: 42 })
+//│ ║  l.114: 	DT.unapply({ x: 42 })
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── record literal of type `{x: 42}` is not an instance of type `DT`
-//│ ║  l.110: 	DT.unapply({ x: 42 })
+//│ ║  l.114: 	DT.unapply({ x: 42 })
 //│ ╙──       	                ^^
 //│ error | [42]
 //│ res
@@ -123,45 +127,55 @@ DT.unapply({ x: 42 })
 
 
 class C
-//│ class C
+//│ class C {
+//│   constructor()
+//│ }
 
-// :e // TODO fix type
+:e
 fun foo(c) = new c
-//│ fun foo: forall 'a. (() -> 'a) -> 'a
+//│ ╔══[ERROR] Cannot use `new` on non-class variable of type ?a
+//│ ║  l.135: 	fun foo(c) = new c
+//│ ╙──       	             ^^^^^
+//│ fun foo: anything -> error
 
-// :e // TODO reject
 :re
 foo(() => 123)
-//│ 123
+//│ error
 //│ res
 //│ Runtime error:
 //│   TypeError: c is not a constructor
 
+:e
 foo(C)
-//│ C
+//│ ╔══[ERROR] Construction of unparameterized class C should use the `new` keyword
+//│ ║  l.149: 	foo(C)
+//│ ╙──       	    ^
+//│ error
 //│ res
 //│     = C {}
 
 
-// :e // TODO fix type
+:e
 fun bar(c) = new c(123)
-//│ fun bar: forall 'a. (123 -> 'a) -> 'a
+//│ ╔══[ERROR] Cannot use `new` on non-class variable of type ?a
+//│ ║  l.159: 	fun bar(c) = new c(123)
+//│ ╙──       	             ^^^^^^^^^^
+//│ fun bar: anything -> error
 
-// :e // TODO reject
 :re
 bar(D)
-//│ D
+//│ error
 //│ res
 //│ Runtime error:
 //│   TypeError: c is not a constructor
 
-:e // TODO accept
+:e // TODO accept when we have first-class classes
 bar(D.class)
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.159: 	bar(D.class)
+//│ ║  l.173: 	bar(D.class)
 //│ ║         	    ^^^^^^^
 //│ ╟── reference of type `(x: Int) -> D` does not have field 'class'
-//│ ║  l.159: 	bar(D.class)
+//│ ║  l.173: 	bar(D.class)
 //│ ╙──       	    ^
 //│ error
 //│ res
@@ -173,12 +187,14 @@ bar(D.class)
 
 
 class C
-//│ class C
+//│ class C {
+//│   constructor()
+//│ }
 
 :e // TODO
 new C { val x = 1 }
 //│ ╔══[ERROR] Currently unsupported `new` syntax
-//│ ║  l.179: 	new C { val x = 1 }
+//│ ║  l.195: 	new C { val x = 1 }
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^
 //│ error
 //│ Code generation encountered an error:
@@ -191,6 +207,7 @@ new C { val x = 1 }
 
 class Cls[A] { fun x: A = x }
 //│ class Cls[A] {
+//│   constructor()
 //│   fun x: A
 //│ }
 
@@ -202,7 +219,7 @@ let c = new Cls
 // FIXME
 let y: c.A = c.x
 //│ ╔══[ERROR] type identifier not found: c
-//│ ║  l.203: 	let y: c.A = c.x
+//│ ║  l.220: 	let y: c.A = c.x
 //│ ╙──       	       ^
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 
@@ -213,6 +230,7 @@ let y: c.A = c.x
 
 class Cls[A] { fun x: A = x; fun g: A -> Int; fun g = g }
 //│ class Cls[A] {
+//│   constructor()
 //│   fun g: A -> Int
 //│   fun x: A
 //│ }
@@ -223,14 +241,14 @@ fun test(a: Object) = if a is
   Cls then a.x
   else error
 //│ ╔══[ERROR] Type error in `case` expression
-//│ ║  l.222: 	fun test(a: Object) = if a is
+//│ ║  l.240: 	fun test(a: Object) = if a is
 //│ ║         	                         ^^^^
-//│ ║  l.223: 	  Cls then a.x
+//│ ║  l.241: 	  Cls then a.x
 //│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.224: 	  else error
+//│ ║  l.242: 	  else error
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.214: 	class Cls[A] { fun x: A = x; fun g: A -> Int; fun g = g }
+//│ ║  l.231: 	class Cls[A] { fun x: A = x; fun g: A -> Int; fun g = g }
 //│ ╙──       	          ^
 //│ fun test: (a: Object) -> (error | ??A)
 
@@ -239,20 +257,21 @@ fun test(a: Object) = if a is
   Cls then a.g(a.x) // a.x : a.A ; a.g : a.A -> a.A
   else 0
 //│ ╔══[ERROR] Type error in `case` expression
-//│ ║  l.238: 	fun test(a: Object) = if a is
+//│ ║  l.256: 	fun test(a: Object) = if a is
 //│ ║         	                         ^^^^
-//│ ║  l.239: 	  Cls then a.g(a.x) // a.x : a.A ; a.g : a.A -> a.A
+//│ ║  l.257: 	  Cls then a.g(a.x) // a.x : a.A ; a.g : a.A -> a.A
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.240: 	  else 0
+//│ ║  l.258: 	  else 0
 //│ ║         	^^^^^^^^
 //│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.214: 	class Cls[A] { fun x: A = x; fun g: A -> Int; fun g = g }
+//│ ║  l.231: 	class Cls[A] { fun x: A = x; fun g: A -> Int; fun g = g }
 //│ ╙──       	          ^
 //│ fun test: (a: Object) -> Int
 
 
 class Cls[out A] { fun x: A = x }
 //│ class Cls[A] {
+//│   constructor()
 //│   fun x: A
 //│ }
 

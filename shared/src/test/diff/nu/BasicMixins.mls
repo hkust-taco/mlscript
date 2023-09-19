@@ -166,7 +166,7 @@ mixin Foo {
 
 :e
 module Base1(base: Int, misc: string) extends Foo
-//│ ╔══[ERROR] module parameters are not supported
+//│ ╔══[ERROR] Module parameters are not supported
 //│ ║  l.168: 	module Base1(base: Int, misc: string) extends Foo
 //│ ╙──       	             ^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in type declaration:
@@ -197,8 +197,18 @@ module Base1(base: Int, misc: string) extends Foo
 //│   fun test: forall 'a. (Int & 'a) -> [Int, 'a, nothing]
 //│ }
 
+:e
 Base1.test
-//│ forall 'a. (Int & 'a) -> [Int, 'a, nothing]
+//│ ╔══[ERROR] Parameterized modules are not supported
+//│ ║  l.201: 	Base1.test
+//│ ╙──       	^^^^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.201: 	Base1.test
+//│ ║         	^^^^^^^^^^
+//│ ╟── reference of type `(base: Int, misc: string) -> Base1` does not have field 'test'
+//│ ║  l.201: 	Base1.test
+//│ ╙──       	^^^^^
+//│ error
 //│ res
 //│     = [Function: test]
 
@@ -274,13 +284,13 @@ WrapBase1.wrapA(1)
 :e
 WrapBase1.wrapA("ok")
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.275: 	WrapBase1.wrapA("ok")
+//│ ║  l.285: 	WrapBase1.wrapA("ok")
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"ok"` is not an instance of type `Int`
-//│ ║  l.275: 	WrapBase1.wrapA("ok")
+//│ ║  l.285: 	WrapBase1.wrapA("ok")
 //│ ║         	                ^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.219: 	  fun wrapA(x) = [super.wrapA(x)]
+//│ ║  l.229: 	  fun wrapA(x) = [super.wrapA(x)]
 //│ ╙──       	                              ^
 //│ error | [Int]
 //│ res

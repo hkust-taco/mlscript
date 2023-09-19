@@ -21,6 +21,7 @@ class Abstract[A] {
   fun baz(a: A & Object) = [bar0(a), bar1(a), bar2(a)]
 }
 //│ class Abstract[A] {
+//│   constructor()
 //│   fun bar0: (x: Object & A | undefined) -> (Object & A & ~undefined)
 //│   fun bar1: (x: Object & A | undefined) -> (Object & A & ~undefined)
 //│   fun bar2: (x: Object & A | undefined) -> (Object & A & ~undefined | undefined)
@@ -34,15 +35,16 @@ class Abstract[A] {
     if x is undefined then error else x
 }
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.34: 	    if x is undefined then error else x
+//│ ║  l.35: 	    if x is undefined then error else x
 //│ ║        	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `A & ~undefined` is not an instance of type `Object`
-//│ ║  l.33: 	  fun bar(x: A & ~undefined | undefined) =
+//│ ║  l.34: 	  fun bar(x: A & ~undefined | undefined) =
 //│ ║        	             ^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `Object`
-//│ ║  l.34: 	    if x is undefined then error else x
+//│ ║  l.35: 	    if x is undefined then error else x
 //│ ╙──      	       ^
 //│ class Abstract[A] {
+//│   constructor()
 //│   fun bar: (x: undefined | A & ~undefined) -> (A & ~undefined)
 //│ }
 

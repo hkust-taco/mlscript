@@ -36,7 +36,9 @@ class A(x: Int) {}
 
 :js
 class B {}
-//│ class B
+//│ class B {
+//│   constructor()
+//│ }
 //│ // Prelude
 //│ class TypingUnit1 {
 //│   #B;
@@ -55,40 +57,101 @@ class B {}
 //│ globalThis.B = typing_unit1.B;
 //│ // End of generated code
 
+new B
+//│ B
+//│ res
+//│     = B {}
+
+:e
+B()
+//│ ╔══[ERROR] Construction of unparameterized class B should use the `new` keyword
+//│ ║  l.66: 	B()
+//│ ╙──      	^
+//│ B
+//│ res
+//│ Runtime error:
+//│   TypeError: Class constructor B cannot be invoked without 'new'
+
+abstract class C
+//│ abstract class C
+
+:e
+new C
+//│ ╔══[ERROR] Class C is abstract and cannot be instantiated
+//│ ║  l.79: 	new C
+//│ ╙──      	^^^^^
+//│ ╔══[ERROR] Class C cannot be instantiated as it exposes no such constructor
+//│ ║  l.79: 	new C
+//│ ╙──      	^^^^^
+//│ error
+//│ res
+//│     = C {}
+
+:e
+C()
+//│ ╔══[ERROR] Class C is abstract and cannot be instantiated
+//│ ║  l.91: 	C()
+//│ ╙──      	^
+//│ ╔══[ERROR] Class C cannot be instantiated as it exposes no such constructor
+//│ ║  l.91: 	C()
+//│ ╙──      	^
+//│ error
+//│ res
+//│ Runtime error:
+//│   TypeError: Class constructor C cannot be invoked without 'new'
+
 :js
 class C {
-  constructor(x: Int)
+  constructor(x: Int) { log(x) }
 }
-//│ class C
+//│ class C {
+//│   constructor(x: Int)
+//│ }
 //│ // Prelude
-//│ class TypingUnit2 {
+//│ function log(x) {
+//│   return console.info(x);
+//│ }
+//│ class TypingUnit7 {
 //│   #C;
 //│   constructor() {
 //│   }
 //│   get C() {
 //│     const qualifier = this;
 //│     if (this.#C === undefined) {
-//│       class C {};
+//│       class C {
+//│         constructor(x) {
+//│           log(x);
+//│         }
+//│       };
 //│       this.#C = C;
 //│     }
 //│     return this.#C;
 //│   }
 //│ }
-//│ const typing_unit2 = new TypingUnit2;
-//│ globalThis.C = typing_unit2.C;
+//│ const typing_unit7 = new TypingUnit7;
+//│ globalThis.C = typing_unit7.C;
 //│ // End of generated code
 
-:e // TODO: typing
-let c = new C(1)
+:e
+let c = new C()
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.82: 	let c = new C(1)
-//│ ║        	            ^^^^
-//│ ╟── argument of type `[1]` does not match type `[]`
-//│ ║  l.82: 	let c = new C(1)
-//│ ╙──      	             ^^^
+//│ ║  l.136: 	let c = new C()
+//│ ║         	        ^^^^^^^
+//│ ╟── argument of type `[]` does not match type `[x: Int]`
+//│ ║  l.136: 	let c = new C()
+//│ ╙──       	             ^^
 //│ let c: C | error
 //│ c
 //│   = C {}
+//│ // Output
+//│ undefined
+
+let c = new C(1)
+//│ let c: C
+//│ c
+//│   = C {}
+//│ // Output
+//│ 1
 
 :js
 class D(val x: Int) {
@@ -97,12 +160,11 @@ class D(val x: Int) {
   }
   log(x)
 }
-//│ class D(x: Int)
-//│ // Prelude
-//│ function log(x) {
-//│   return console.info(x);
+//│ class D(x: Int) {
+//│   constructor(y: Int)
 //│ }
-//│ class TypingUnit4 {
+//│ // Prelude
+//│ class TypingUnit10 {
 //│   #D;
 //│   constructor() {
 //│   }
@@ -129,11 +191,22 @@ class D(val x: Int) {
 //│     return this.#D;
 //│   }
 //│ }
-//│ const typing_unit4 = new TypingUnit4;
-//│ globalThis.D = typing_unit4.D;
+//│ const typing_unit10 = new TypingUnit10;
+//│ globalThis.D = typing_unit10.D;
 //│ // End of generated code
 
 let dd = new D(41)
+dd.x
+//│ let dd: D
+//│ Int
+//│ dd
+//│    = D {}
+//│ // Output
+//│ 42
+//│ res
+//│     = 42
+
+let dd = D(41)
 dd.x
 //│ let dd: D
 //│ Int
@@ -150,35 +223,34 @@ class E {
   constructor(y: Int)
 }
 //│ ╔══[PARSE ERROR] A class may only have at most one explicit constructor
-//│ ║  l.148: 	class E {
+//│ ║  l.221: 	class E {
 //│ ╙──       	^^^^^
-//│ class E
+//│ class E {
+//│   constructor()
+//│ }
 
 :e
 constructor(x: Int)
 //│ ╔══[ERROR] constructor must be in a class.
-//│ ║  l.158: 	constructor(x: Int)
+//│ ║  l.233: 	constructor(x: Int)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^
 //│ []
 //│ Code generation encountered an error:
 //│   unexpected constructor.
 
-:e
 :js
 class F(x: Int) extends C(x + 1) {}
 class G extends C(2) {}
 class H extends B {}
-//│ ╔══[ERROR] class C expects 0 parameter(s); got 1
-//│ ║  l.168: 	class F(x: Int) extends C(x + 1) {}
-//│ ╙──       	                        ^^^^^^^
-//│ ╔══[ERROR] class C expects 0 parameter(s); got 1
-//│ ║  l.169: 	class G extends C(2) {}
-//│ ╙──       	                ^^^
 //│ class F(x: Int) extends C
-//│ class G extends C
-//│ class H extends B
+//│ class G extends C {
+//│   constructor()
+//│ }
+//│ class H extends B {
+//│   constructor()
+//│ }
 //│ // Prelude
-//│ class TypingUnit7 {
+//│ class TypingUnit14 {
 //│   #F;
 //│   #G;
 //│   #H;
@@ -229,10 +301,10 @@ class H extends B {}
 //│     return this.#H;
 //│   }
 //│ }
-//│ const typing_unit7 = new TypingUnit7;
-//│ globalThis.F = typing_unit7.F;
-//│ globalThis.G = typing_unit7.G;
-//│ globalThis.H = typing_unit7.H;
+//│ const typing_unit14 = new TypingUnit14;
+//│ globalThis.F = typing_unit14.F;
+//│ globalThis.G = typing_unit14.G;
+//│ globalThis.H = typing_unit14.H;
 //│ // End of generated code
 
 :js
@@ -243,8 +315,8 @@ fun f(c) =
     _ then 0
 //│ fun f: Object -> Int
 //│ // Prelude
-//│ class TypingUnit8 {}
-//│ const typing_unit8 = new TypingUnit8;
+//│ class TypingUnit15 {}
+//│ const typing_unit15 = new TypingUnit15;
 //│ // Query 1
 //│ globalThis.f = function f(c) {
 //│   return ((() => {
@@ -259,11 +331,14 @@ f(new G())
 //│ Int
 //│ res
 //│     = 12
+//│ // Output
+//│ 13
 //│ res
 //│     = 2
+//│ // Output
+//│ 2
 
 :js
-:e
 module I {
   class J {
     constructor(x: Int)
@@ -272,17 +347,18 @@ module I {
     class L extends J(0)
   }
 }
-//│ ╔══[ERROR] class J expects 0 parameter(s); got 1
-//│ ║  l.272: 	    class L extends J(0)
-//│ ╙──       	                    ^^^
 //│ module I {
-//│   class J
+//│   class J {
+//│     constructor(x: Int)
+//│   }
 //│   module K {
-//│     class L extends J
+//│     class L extends J {
+//│       constructor()
+//│     }
 //│   }
 //│ }
 //│ // Prelude
-//│ class TypingUnit10 {
+//│ class TypingUnit17 {
 //│   #I;
 //│   constructor() {
 //│   }
@@ -334,8 +410,8 @@ module I {
 //│     return this.#I;
 //│   }
 //│ }
-//│ const typing_unit10 = new TypingUnit10;
-//│ globalThis.I = typing_unit10.I;
+//│ const typing_unit17 = new TypingUnit17;
+//│ globalThis.I = typing_unit17.I;
 //│ // End of generated code
 
 :js
@@ -349,8 +425,8 @@ fun g(x: Int) =
   L
 //│ fun g: (x: Int) -> (y: Int) -> L
 //│ // Prelude
-//│ class TypingUnit11 {}
-//│ const typing_unit11 = new TypingUnit11;
+//│ class TypingUnit18 {}
+//│ const typing_unit18 = new TypingUnit18;
 //│ // Query 1
 //│ globalThis.g = function g(x) {
 //│   return ((() => {
@@ -388,8 +464,8 @@ n.ll
 //│ let n: L
 //│ Int
 //│ // Prelude
-//│ class TypingUnit12 {}
-//│ const typing_unit12 = new TypingUnit12;
+//│ class TypingUnit19 {}
+//│ const typing_unit19 = new TypingUnit19;
 //│ // Query 1
 //│ globalThis.m = g(1);
 //│ // Query 2
@@ -411,14 +487,15 @@ class M()
 let mm = new M()
 //│ let mm: M
 //│ // Prelude
-//│ class TypingUnit14 {}
-//│ const typing_unit14 = new TypingUnit14;
+//│ class TypingUnit21 {}
+//│ const typing_unit21 = new TypingUnit21;
 //│ // Query 1
 //│ globalThis.mm = new M.class();
 //│ // End of generated code
 //│ mm
 //│    = M {}
 
+:e // TODO support first-class classes
 fun h(z: Int) =
   class N {
     constructor(x: Int) {
@@ -426,21 +503,22 @@ fun h(z: Int) =
     }
   }
   N
-//│ fun h: (z: Int) -> () -> N
+//│ ╔══[ERROR] Construction of unparameterized class N should use the `new` keyword
+//│ ║  l.505: 	  N
+//│ ╙──       	  ^
+//│ fun h: (z: Int) -> (x: Int) -> N
 
-:e // TODO: typing
 let hh = h(1)
-new hh(1)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.433: 	new hh(1)
-//│ ║         	    ^^^^^
-//│ ╟── argument of type `[1]` does not match type `[]`
-//│ ║  l.433: 	new hh(1)
-//│ ╙──       	      ^^^
-//│ let hh: () -> N
-//│ N | error
+//│ let hh: (x: Int) -> N
 //│ hh
 //│    = [class N]
+
+:e
+new hh(1)
+//│ ╔══[ERROR] Value hh cannot be used in `new` expression
+//│ ║  l.517: 	new hh(1)
+//│ ╙──       	^^^^^^^^^
+//│ error
 //│ res
 //│     = N {}
 //│ // Output
@@ -454,10 +532,14 @@ mixin P {
   constructor(x: Int)
 }
 //│ ╔══[ERROR] Explicit module constructors are not supported
-//│ ║  l.451: 	  constructor(x: Int)
+//│ ║  l.529: 	  constructor(x: Int)
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Explicit mixin constructors are not supported
-//│ ║  l.454: 	  constructor(x: Int)
+//│ ║  l.532: 	  constructor(x: Int)
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^
-//│ module O
+//│ module O {
+//│   constructor(x: Int)
+//│ }
 //│ mixin P()
+
+

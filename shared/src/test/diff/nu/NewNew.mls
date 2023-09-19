@@ -38,7 +38,7 @@ let origin = PoInt[Int](0, 0)
 //│ ╔══[ERROR] Type application syntax is not yet supported
 //│ ║  l.37: 	let origin = PoInt[Int](0, 0)
 //│ ╙──      	             ^^^^^^^^^^
-//│ let origin: error
+//│ let origin: PoInt[0]
 //│ origin
 //│        = PoInt {}
 
@@ -92,5 +92,46 @@ new
 //│ res
 //│     = {}
 
+
+
+
+fun f(x) = {x}
+//│ fun f: forall 'a. 'a -> {x: 'a}
+
+:e
+new f(1)
+//│ ╔══[ERROR] Value f cannot be used in `new` expression
+//│ ║  l.102: 	new f(1)
+//│ ╙──       	^^^^^^^^
+//│ error
+//│ res
+//│     = { x: 1 }
+
+
+module Oops
+//│ module Oops
+
+:e
+new Oops
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.115: 	new Oops
+//│ ║         	^^^^^^^^
+//│ ╙── applied expression of type `Oops` is not a function
+//│ error
+//│ res
+//│     = Oops {}
+
+
+:e
+new Oops2
+trait Oops2
+//│ ╔══[ERROR] Trait Oops2 cannot be used in term position
+//│ ║  l.126: 	new Oops2
+//│ ╙──       	^^^^^^^^^
+//│ trait Oops2
+//│ error
+//│ res
+//│ Runtime error:
+//│   TypeError: Cannot read properties of undefined (reading 'build')
 
 

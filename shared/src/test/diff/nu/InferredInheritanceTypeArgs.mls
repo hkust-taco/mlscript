@@ -209,30 +209,32 @@ trait Foo[A] { fun foo[A](x: A): A }
 
 class B extends Foo { fun foo(x) = x }
 //│ class B extends Foo {
+//│   constructor()
 //│   fun foo: forall 'a. 'a -> 'a
 //│ }
 
 :e
 class B extends Foo { fun foo(x) = x + 1 }
 //│ ╔══[ERROR] Type mismatch in definition of method foo:
-//│ ║  l.216: 	class B extends Foo { fun foo(x) = x + 1 }
+//│ ║  l.217: 	class B extends Foo { fun foo(x) = x + 1 }
 //│ ║         	                          ^^^^^^^^^^^^^^
 //│ ╟── type `A` is not an instance of type `Int`
 //│ ║  l.205: 	trait Foo[A] { fun foo[A](x: A): A }
 //│ ║         	                       ^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.216: 	class B extends Foo { fun foo(x) = x + 1 }
+//│ ║  l.217: 	class B extends Foo { fun foo(x) = x + 1 }
 //│ ╙──       	                                   ^
 //│ ╔══[ERROR] Type mismatch in definition of method foo:
-//│ ║  l.216: 	class B extends Foo { fun foo(x) = x + 1 }
+//│ ║  l.217: 	class B extends Foo { fun foo(x) = x + 1 }
 //│ ║         	                          ^^^^^^^^^^^^^^
 //│ ╟── operator application of type `Int` does not match type `A`
-//│ ║  l.216: 	class B extends Foo { fun foo(x) = x + 1 }
+//│ ║  l.217: 	class B extends Foo { fun foo(x) = x + 1 }
 //│ ║         	                                   ^^^^^
 //│ ╟── Note: constraint arises from method type parameter:
 //│ ║  l.205: 	trait Foo[A] { fun foo[A](x: A): A }
 //│ ╙──       	                       ^
 //│ class B extends Foo {
+//│   constructor()
 //│   fun foo: Int -> Int
 //│ }
 

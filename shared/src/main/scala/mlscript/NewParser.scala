@@ -667,7 +667,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         }
       case (KEYWORD("new"), l0) :: c =>
         consume
-        val body = expr(0)
+        val body = expr(outer.prec('.'))
         val head = body match {
           case Var(clsNme) =>
             S(TypeName(clsNme).withLocOf(body) -> Tup(Nil))
@@ -682,7 +682,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
               msg"Unexpected ${body.describe} after `new` keyword" -> body.toLoc :: Nil))
             N
         }
-        R(New(head, curlyTypingUnit).withLoc(S(head.foldLeft(l0)((l, h) => l ++ h._1.toLoc ++ h._2.toLoc))))
+        val res = New(head, curlyTypingUnit).withLoc(S(head.foldLeft(l0)((l, h) => l ++ h._1.toLoc ++ h._2.toLoc)))
+        exprCont(res, prec, allowNewlines = false)
       case (KEYWORD("else"), l0) :: _ =>
         consume
         val e = expr(0)
@@ -797,16 +798,14 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                 else App(App(v, toParams(acc)), toParams(rhs))
             }, prec, allowNewlines)
         }
-      case (KEYWORD(":"), l0) :: _ =>
+      case (KEYWORD(":"), l0) :: _ if prec <= outer.prec(':') =>
         consume
         R(Asc(acc, typ(0)))
-      // case (KEYWORD(":"), _) :: _ if prec <= 1 =>
-      //   consume
-      //   R(Asc(acc, typ(1)))
       case (KEYWORD("where"), l0) :: _ if prec <= 1 =>
         consume
         val tu = typingUnitMaybeIndented
-        R(Where(acc, tu.entities))
+        val res = Where(acc, tu.entities).withLoc(S(l0))
+        exprCont(res, prec, allowNewlines = false)
       case (SPACE, l0) :: _ =>
         consume
         exprCont(acc, prec, allowNewlines)
@@ -917,7 +916,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
           exprCont(res, prec, allowNewlines)
           
       case c @ (h :: _) if (h._1 match {
-        case KEYWORD(";" | "of" | "where" | "extends") | BRACKETS(Round | Square, _)
+        case KEYWORD(";" | ":" | "of" | "where" | "extends") | BRACKETS(Round | Square, _)
           | BRACKETS(Indent, (
               KEYWORD(";" | "of")
               | BRACKETS(Round | Square, _)

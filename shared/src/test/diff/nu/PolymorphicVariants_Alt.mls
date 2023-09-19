@@ -18,14 +18,15 @@ class List<out A> {
 let Nil: () => List<'a>
 let Cons: (head: 'a, tail: List<'a>) => List<'a>
 //│ class List[A] {
+//│   constructor()
 //│   fun match: forall 'res. (ifNil: () -> 'res, ifCons: (A, List[A]) -> 'res) -> 'res
 //│ }
 //│ let Nil: () -> List[nothing]
 //│ let Cons: forall 'a. (head: 'a, tail: List['a]) -> List['a]
 
-class NotFound
+module NotFound
 class Success<out A>(result: A)
-//│ class NotFound
+//│ module NotFound
 //│ class Success[A](result: A)
 
 fun eq(l: Str, r: Str): Bool
@@ -35,7 +36,7 @@ fun eq(l: Str, r: Str): Bool
 // fun list_assoc(s, l) =
 fun list_assoc(s, l: List<'a>) =
   l.match(
-    ifNil: () => NotFound(),
+    ifNil: () => NotFound,
     ifCons: (h, t) =>
       if eq(s, h._1) then Success(h._2)
       else list_assoc(s, t)

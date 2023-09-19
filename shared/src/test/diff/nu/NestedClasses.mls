@@ -30,13 +30,15 @@ module M0 {
   class NC0
 }
 //│ module M0 {
-//│   class NC0
+//│   class NC0 {
+//│     constructor()
+//│   }
 //│ }
 
 :e
 M0.NC0
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.37: 	M0.NC0
+//│ ║  l.39: 	M0.NC0
 //│ ╙──      	  ^^^^
 //│ error
 //│ res
@@ -53,7 +55,7 @@ module M1 {
 :e
 M1.NM1
 //│ ╔══[ERROR] access to module member not yet supported
-//│ ║  l.54: 	M1.NM1
+//│ ║  l.56: 	M1.NM1
 //│ ╙──      	  ^^^^
 //│ error
 //│ res

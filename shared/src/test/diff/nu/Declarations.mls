@@ -71,11 +71,12 @@ declare class Sanitizer {
   fun sanitizeFor(element: Str, input: Str): Str
 }
 //│ declare class Sanitizer {
+//│   constructor()
 //│   fun sanitizeFor: (element: Str, input: Str) -> Str
 //│ }
 
 :re
-let s = Sanitizer()
+let s = new Sanitizer
 //│ let s: Sanitizer
 //│ s
 //│ Runtime error:
@@ -96,6 +97,7 @@ declare module Buffer {
 }
 //│ declare module Buffer {
 //│   class Buffer2 {
+//│     constructor()
 //│     let length: Int
 //│   }
 //│   fun bar: Int
@@ -118,10 +120,10 @@ b.length
 :pe
 declare 42
 //│ ╔══[PARSE ERROR] Unexpected literal token after modifier
-//│ ║  l.119: 	declare 42
+//│ ║  l.121: 	declare 42
 //│ ╙──       	        ^^
 //│ ╔══[PARSE ERROR] Unexpected literal token after modifier
-//│ ║  l.119: 	declare 42
+//│ ║  l.121: 	declare 42
 //│ ╙──       	        ^^
 //│ 42
 //│ res

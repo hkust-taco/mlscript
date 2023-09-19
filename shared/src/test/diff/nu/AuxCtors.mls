@@ -1,0 +1,149 @@
+:NewDefs
+
+
+class C(val x: Int) { constructor(y: Int) { x = y } }
+//│ class C(x: Int) {
+//│   constructor(y: Int)
+//│ }
+
+class C(val x: Int) { constructor(y) { x = y } }
+//│ class C(x: Int) {
+//│   constructor(y: Int)
+//│ }
+
+// * FIXME location
+// * TODO `undefined` should be treated as the unit type...
+:w // FIXME
+class C(val x: Int) { constructor(y: Int) { log(y); x = y; log(x) } }
+//│ ╔══[WARNING] Pure expression does nothing in statement position.
+//│ ╙──
+//│ class C(x: Int) {
+//│   constructor(y: Int)
+//│ }
+
+// FIXME should be a type error
+class C(val x: Int) { constructor(y: Int) { log(x); x = y } }
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.25: 	class C(val x: Int) { constructor(y: Int) { log(x); x = y } }
+//│ ╙──      	                                                ^
+//│ class C(x: Int) {
+//│   constructor(y: Int)
+//│ }
+//│ Code generation encountered an error:
+//│   unresolved symbol x
+
+:e
+class C(val x: Int) { constructor(y: Str) { x = y } }
+//│ ╔══[ERROR] Type mismatch in auxiliary class constructor:
+//│ ║  l.36: 	class C(val x: Int) { constructor(y: Str) { x = y } }
+//│ ║        	                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `Str` is not an instance of `Int`
+//│ ║  l.36: 	class C(val x: Int) { constructor(y: Str) { x = y } }
+//│ ║        	                                     ^^^
+//│ ╟── but it flows into reference with expected type `Int`
+//│ ║  l.36: 	class C(val x: Int) { constructor(y: Str) { x = y } }
+//│ ║        	                                                ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.36: 	class C(val x: Int) { constructor(y: Str) { x = y } }
+//│ ╙──      	               ^^^
+//│ class C(x: Int) {
+//│   constructor(y: Str)
+//│ }
+
+:e
+class C(val x: Int) { constructor(y: Int) { z = y } }
+//│ ╔══[ERROR] Unknown class parameter z
+//│ ║  l.54: 	class C(val x: Int) { constructor(y: Int) { z = y } }
+//│ ╙──      	                                            ^
+//│ class C(x: Int) {
+//│   constructor(y: Int)
+//│ }
+//│ Syntax error:
+//│   Private field '#z' must be declared in an enclosing class
+
+:e
+class C(val x: Int) { constructor(val y: Int) { x = y } }
+//│ ╔══[ERROR] Cannot use `val` in constructor parameters
+//│ ║  l.65: 	class C(val x: Int) { constructor(val y: Int) { x = y } }
+//│ ╙──      	                                      ^
+//│ class C(x: Int) {
+//│   constructor(y: Int)
+//│ }
+
+:e
+class C(val x: Int) { constructor(val y) { x = y } }
+//│ ╔══[ERROR] Cannot use `val` in constructor parameters
+//│ ║  l.74: 	class C(val x: Int) { constructor(val y) { x = y } }
+//│ ╙──      	                                      ^
+//│ class C(x: Int) {
+//│   constructor(y: Int)
+//│ }
+
+:e
+class C(val x: Int) { constructor(2 + 2) { x = 0 } }
+//│ ╔══[ERROR] Unsupported constructor parameter shape
+//│ ║  l.83: 	class C(val x: Int) { constructor(2 + 2) { x = 0 } }
+//│ ╙──      	                                  ^^^^^
+//│ class C(x: Int) {
+//│   constructor(<error>: error)
+//│ }
+//│ Code generation encountered an error:
+//│   Unexpected constructor parameters in C.
+
+
+:w // FIXME
+class C(val x: Int, y: Int) {
+  constructor(z: Int) { x = z; y = z }
+  log([x, y])
+}
+//│ ╔══[WARNING] Pure expression does nothing in statement position.
+//│ ╙──
+//│ class C(x: Int, y: Int) {
+//│   constructor(z: Int)
+//│ }
+
+:e
+C(11)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.106: 	C(11)
+//│ ║         	^^^^^
+//│ ╟── argument of type `[11]` does not match type `[x: Int, y: Int]`
+//│ ║  l.106: 	C(11)
+//│ ╙──       	 ^^^^
+//│ C | error
+//│ res
+//│     = C {}
+//│ // Output
+//│ [ 11, 11 ]
+
+C(1, 2)
+//│ C
+//│ res
+//│     = C {}
+//│ // Output
+//│ [ 1, 1 ]
+
+new C(11)
+//│ C
+//│ res
+//│     = C {}
+//│ // Output
+//│ [ 11, 11 ]
+
+:e
+new C(1, 2)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.134: 	new C(1, 2)
+//│ ║         	^^^^^^^^^^^
+//│ ╟── argument list of type `[1, 2]` does not match type `[z: Int]`
+//│ ║  l.134: 	new C(1, 2)
+//│ ╙──       	     ^^^^^^
+//│ C | error
+//│ res
+//│     = C {}
+//│ // Output
+//│ [ 1, 1 ]
+
+
+
+

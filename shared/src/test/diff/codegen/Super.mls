@@ -159,6 +159,7 @@ class Foo extends Foo0 {
   fun foo0(n) = [super.foo0, super.foo0 + n]
 }
 //│ class Foo {
+//│   constructor()
 //│   fun foo0: Int -> [0, Int]
 //│ }
 
