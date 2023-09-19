@@ -1401,8 +1401,8 @@ def c_succ_ n = fun f -> fun x -> n f (f x)
 def c_add_ n m = m c_succ_ n
 //│ c_add_: 'a -> (forall 'b. ((forall 'c. 'c -> (forall 'd. 'd -> (forall 'e 'f 'g. 'g -> 'f
 //│   where
-//│     'd <: 'g -> 'e
-//│     'c <: 'd -> 'e -> 'f))) -> 'a -> 'b) -> 'b)
+//│     'c <: 'd -> 'e -> 'f
+//│     'd <: 'g -> 'e))) -> 'a -> 'b) -> 'b)
 //│       = [Function: c_add_1]
 
 // let c_i1 = fun f x -> f x
@@ -1421,10 +1421,10 @@ def c_i2_ = c_succ_ c_i1
 //│     = [Function: c_i22]
 //│ c_i2_: 'a -> (forall 'b 'c 'd. 'd -> 'c
 //│   where
-//│     'a <: 'd -> 'b
 //│     forall 'e. 'e -> (forall 'f 'g. 'f -> 'g
 //│       where
-//│         'e <: 'f -> 'g) <: 'a -> 'b -> 'c)
+//│         'e <: 'f -> 'g) <: 'a -> 'b -> 'c
+//│     'a <: 'd -> 'b)
 //│      = [Function: c_i2_1]
 
 // let c_i3 = c_succ c_i2
@@ -1450,26 +1450,26 @@ c_i5_ = c_add_ c_i3_ c_i2
 //│     'b :> forall 'c. 'c -> (forall 'd 'e 'f 'g. 'g -> 'f
 //│       where
 //│         'c <: 'g -> 'e & 'g -> 'd
-//│         'b <: 'c -> 'e -> 'f
 //│         forall 'h. 'h -> (forall 'i 'j 'k. 'k -> 'j
 //│           where
 //│             'h <: 'k -> 'i
 //│             forall 'l. 'l -> (forall 'a 'm. 'm -> 'a
 //│               where
-//│                 'l <: 'a -> 'a & 'm -> 'a) <: 'h -> 'i -> 'j) <: 'c -> 'd -> 'f)
+//│                 'l <: 'a -> 'a & 'm -> 'a) <: 'h -> 'i -> 'j) <: 'c -> 'd -> 'f
+//│         'b <: 'c -> 'e -> 'f)
 //│ ╙──
 //│ c_i5_: 'b
 //│   where
 //│     'b :> forall 'c. 'c -> (forall 'd 'e 'f 'g. 'f -> 'e
 //│       where
 //│         'c <: 'f -> 'd & 'f -> 'g
+//│         'b <: 'c -> 'd -> 'e
 //│         forall 'h. 'h -> (forall 'i 'j 'k. 'k -> 'j
 //│           where
 //│             'h <: 'k -> 'i
 //│             forall 'l. 'l -> (forall 'a 'm. 'm -> 'a
 //│               where
-//│                 'l <: 'a -> 'a & 'm -> 'a) <: 'h -> 'i -> 'j) <: 'c -> 'g -> 'e
-//│         'b <: 'c -> 'd -> 'e)
+//│                 'l <: 'a -> 'a & 'm -> 'a) <: 'h -> 'i -> 'j) <: 'c -> 'g -> 'e)
 //│      = [Function (anonymous)]
 //│ constrain calls  : 140
 //│ annoying  calls  : 0

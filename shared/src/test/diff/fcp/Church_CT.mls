@@ -39,8 +39,8 @@ def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M
 def succ n f x = f (n f x)
 //│ 'a -> (forall 'b. 'b -> (forall 'c 'd 'e. 'd -> 'c
 //│   where
-//│     'a <: 'b -> 'd -> 'e
-//│     'b <: 'e -> 'c))
+//│     'b <: 'e -> 'c
+//│     'a <: 'b -> 'd -> 'e))
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Type error in def definition
@@ -69,8 +69,8 @@ def succ: ChurchInt -> ChurchInt
 def succ n f x = f (n f x)
 //│ 'a -> (forall 'b. 'b -> (forall 'c 'd 'e. 'e -> 'd
 //│   where
-//│     'b <: 'c -> 'd
-//│     'a <: 'b -> 'e -> 'c))
+//│     'a <: 'b -> 'e -> 'c
+//│     'b <: 'c -> 'd))
 //│   <:  succ:
 //│ ChurchInt -> ChurchInt
 //│ ╔══[ERROR] Type error in def definition
@@ -340,8 +340,8 @@ zero = z
 succ = s
 //│ 'a -> (forall 'b. 'b -> (forall 'c 'd 'e. 'c -> 'e
 //│   where
-//│     'b <: 'd -> 'e
-//│     'a <: 'b -> 'c -> 'd))
+//│     'a <: 'b -> 'c -> 'd
+//│     'b <: 'd -> 'e))
 //│   <:  succ:
 //│ ChurchInt -> ChurchInt
 //│ ╔══[ERROR] Type error in def definition
@@ -410,24 +410,24 @@ n1 = s z
 n2 = s (s z)
 //│ n2: 'a -> (forall 'b 'c 'd. 'b -> 'd
 //│   where
-//│     'a <: 'c -> 'd
 //│     forall 'e. 'e -> (forall 'f 'g 'h. 'f -> 'h
 //│       where
 //│         anything -> (forall 'i. 'i -> 'i) <: 'e -> 'f -> 'g
-//│         'e <: 'g -> 'h) <: 'a -> 'b -> 'c)
+//│         'e <: 'g -> 'h) <: 'a -> 'b -> 'c
+//│     'a <: 'c -> 'd)
 //│   = [Function (anonymous)]
 
 n3 = s (s (s z))
 //│ n3: 'a -> (forall 'b 'c 'd. 'c -> 'b
 //│   where
+//│     'a <: 'd -> 'b
 //│     forall 'e. 'e -> (forall 'f 'g 'h. 'f -> 'h
 //│       where
+//│         'e <: 'g -> 'h
 //│         forall 'i. 'i -> (forall 'j 'k 'l. 'j -> 'l
 //│           where
-//│             'i <: 'k -> 'l
-//│             anything -> (forall 'm. 'm -> 'm) <: 'i -> 'j -> 'k) <: 'e -> 'f -> 'g
-//│         'e <: 'g -> 'h) <: 'a -> 'c -> 'd
-//│     'a <: 'd -> 'b)
+//│             anything -> (forall 'm. 'm -> 'm) <: 'i -> 'j -> 'k
+//│             'i <: 'k -> 'l) <: 'e -> 'f -> 'g) <: 'a -> 'c -> 'd)
 //│   = [Function (anonymous)]
 
 
@@ -438,8 +438,8 @@ wrap x = { x }
 n1w = n1 wrap
 //│ n1w: 'a -> 'b
 //│   where
-//│     anything -> (forall 'c. 'c -> 'c) <: (forall 'd. 'd -> {x: 'd}) -> 'a -> 'e
-//│     forall 'd. 'd -> {x: 'd} <: 'e -> 'b
+//│     forall 'c. 'c -> {x: 'c} <: 'd -> 'b
+//│     anything -> (forall 'e. 'e -> 'e) <: (forall 'c. 'c -> {x: 'c}) -> 'a -> 'd
 //│    = [Function (anonymous)]
 
 n1w 0
@@ -484,8 +484,8 @@ wrap_ty = wrap
 n1w = n1 wrap_ty
 //│ n1w: 'b -> 'c
 //│   where
-//│     forall 'a. 'a -> {x: 'a} <: 'd -> 'c
-//│     anything -> (forall 'e. 'e -> 'e) <: (forall 'a. 'a -> {x: 'a}) -> 'b -> 'd
+//│     anything -> (forall 'd. 'd -> 'd) <: (forall 'a. 'a -> {x: 'a}) -> 'b -> 'e
+//│     forall 'a. 'a -> {x: 'a} <: 'e -> 'c
 //│    = [Function (anonymous)]
 
 n1w 0
@@ -520,8 +520,8 @@ res.x.x.x + 1
 sz = s zero
 //│ sz: 'a -> (forall 'b 'c 'd. 'd -> 'c
 //│   where
-//│     ChurchInt <: 'a -> 'd -> 'b
-//│     'a <: 'b -> 'c)
+//│     'a <: 'b -> 'c
+//│     ChurchInt <: 'a -> 'd -> 'b)
 //│   = [Function (anonymous)]
 
 :ns
@@ -559,8 +559,8 @@ s zero : ChurchInt
 sz1 = sz 1
 //│ sz1: 'a -> 'b
 //│   where
-//│     ChurchInt <: 1 -> 'a -> 'c
 //│     1 <: 'c -> 'b
+//│     ChurchInt <: 1 -> 'a -> 'c
 //│    = [Function (anonymous)]
 
 :ns
@@ -569,11 +569,11 @@ sz1
 //│   where
 //│     'b :> forall 'd 'e 'f 'g. 'e -> 'g
 //│       where
-//│         'a <: 'f -> 'g
 //│         'c <: 'a -> 'd
+//│         'a <: 'f -> 'g
 //│     'd <: 'e -> 'f
-//│     'c :> ChurchInt
 //│     'a :> 1
+//│     'c :> ChurchInt
 //│    = [Function (anonymous)]
 
 :e  // * Since inconsistent constrained types (delayed error from above)
@@ -633,15 +633,15 @@ rec def to_ch_s n =
 //│   where
 //│     'a :> forall 'b. (? & 'b) -> (forall 'b 'c 'd 'e 'f. ('c & 'f) -> ('c | 'e)
 //│       where
-//│         'b <: 'd -> 'e
-//│         'a <: 'b -> 'f -> 'd)
+//│         'a <: 'b -> 'f -> 'd
+//│         'b <: 'd -> 'e)
 //│ ╙──
 //│ to_ch_s: int -> 'a
 //│   where
 //│     'a :> forall 'b. 'b -> (forall 'c 'b 'd 'e 'f. ('d & 'c) -> ('d | 'e)
 //│       where
-//│         'b <: 'f -> 'e
-//│         'a <: 'b -> 'c -> 'f)
+//│         'a <: 'b -> 'c -> 'f
+//│         'b <: 'f -> 'e)
 //│        = [Function: to_ch_s]
 
 :e
@@ -652,15 +652,15 @@ rec def to_ch n =
 //│   where
 //│     'a :> forall 'b. (? & 'b) -> (forall 'c 'd 'e 'b 'f. ('f & 'e) -> ('f | 'c)
 //│       where
-//│         'a <: 'b -> 'e -> 'd
-//│         'b <: 'd -> 'c)
+//│         'b <: 'd -> 'c
+//│         'a <: 'b -> 'e -> 'd)
 //│ ╙──
 //│ to_ch: int -> 'a
 //│   where
 //│     'a :> forall 'b. 'b -> (forall 'c 'd 'b 'e 'f. ('c & 'f) -> ('c | 'd)
 //│       where
-//│         'a <: 'b -> 'f -> 'e
-//│         'b <: 'e -> 'd)
+//│         'b <: 'e -> 'd
+//│         'a <: 'b -> 'f -> 'e)
 //│      = [Function: to_ch]
 
 :e // * Needs distrib (see below)
@@ -692,15 +692,15 @@ rec def to_ch_simplif n = s (to_ch_simplif n)
 //│   where
 //│     'a :> forall 'b. 'b -> (forall 'c 'd 'e. 'c -> 'e
 //│       where
-//│         'a <: 'b -> 'c -> 'd
-//│         'b <: 'd -> 'e)
+//│         'b <: 'd -> 'e
+//│         'a <: 'b -> 'c -> 'd)
 //│ ╙──
 //│ to_ch_simplif: anything -> 'a
 //│   where
 //│     'a :> forall 'b. 'b -> (forall 'c 'd 'e. 'c -> 'e
 //│       where
-//│         'a <: 'b -> 'c -> 'd
-//│         'b <: 'd -> 'e)
+//│         'b <: 'd -> 'e
+//│         'a <: 'b -> 'c -> 'd)
 //│              = [Function: to_ch_simplif]
 
 :e
@@ -716,8 +716,8 @@ to_church_ty = to_ch_simplif
 //│   where
 //│     'a :> forall 'b. 'b -> (forall 'c 'd 'e. 'c -> 'e
 //│       where
-//│         'a <: 'b -> 'c -> 'd
-//│         'b <: 'd -> 'e)
+//│         'b <: 'd -> 'e
+//│         'a <: 'b -> 'c -> 'd)
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Subtyping constraint of the form `forall ?to_ch_simplif. ?to_ch_simplif <: int -> ChurchInt` exceeded recursion depth limit (250)
@@ -792,8 +792,8 @@ rec def to_ch_A1 n =
 //│ ╙──       	                 ^^^^^
 //│ to_ch_A1: int -> (forall 'a. 'a -> (forall 'b 'a 'c 'd 'e. ('b & 'c) -> ('c | 'd)
 //│   where
-//│     ChurchInt <: 'a -> 'b -> 'e
-//│     'a <: 'e -> 'd))
+//│     'a <: 'e -> 'd
+//│     ChurchInt <: 'a -> 'b -> 'e))
 //│         = [Function: to_ch_A1]
 
 :precise-rec-typing
@@ -814,8 +814,8 @@ rec def to_ch_A1 n =
 //│   where
 //│     'to_ch_A1 :> forall 'to_ch_A1. int -> (forall 'a. 'a -> (forall 'a 'b 'c 'd 'e. ('b & 'c) -> ('c | 'd)
 //│       where
-//│         'a <: 'e -> 'd
-//│         ChurchInt <: 'a -> 'b -> 'e))
+//│         ChurchInt <: 'a -> 'b -> 'e
+//│         'a <: 'e -> 'd))
 //│     where
 //│       'to_ch_A1 <: int -> ChurchInt
 //│         = [Function: to_ch_A11]
@@ -836,8 +836,8 @@ to_church_ty = to_ch_A1
 //│   where
 //│     'to_ch_A1 :> forall 'to_ch_A1. int -> (forall 'a. 'a -> (forall 'a 'b 'c 'd 'e. ('e & 'b) -> ('b | 'c)
 //│       where
-//│         ChurchInt <: 'a -> 'e -> 'd
-//│         'a <: 'd -> 'c))
+//│         'a <: 'd -> 'c
+//│         ChurchInt <: 'a -> 'e -> 'd))
 //│     where
 //│       'to_ch_A1 <: int -> ChurchInt
 //│   <:  to_church_ty:
@@ -970,8 +970,8 @@ def to_church_mix n =
   else s (to_church (n - 1))
 //│ to_church_mix: int -> (forall 'a. 'a -> (forall 'b 'c 'a 'd 'e. ('e & 'd) -> ('d | 'c)
 //│   where
-//│     'a <: 'b -> 'c
-//│     ChurchInt <: 'a -> 'e -> 'b))
+//│     ChurchInt <: 'a -> 'e -> 'b
+//│     'a <: 'b -> 'c))
 //│              = [Function: to_church_mix]
 
 :e
@@ -1037,8 +1037,8 @@ rec def to_chD n =
 succ = s
 //│ 'a -> 'b -> ('c -> 'd
 //│   where
-//│     'b <: 'e -> 'd
-//│     'a <: 'b -> 'c -> 'e)
+//│     'a <: 'b -> 'c -> 'e
+//│     'b <: 'e -> 'd)
 //│   <:  succ:
 //│ ChurchInt -> ChurchInt
 //│     = [Function: s]
@@ -1062,18 +1062,18 @@ to_church_ty = to_ch
 //│   where
 //│     'a :> forall 'b 'c 'd 'e 'f. (? & 'c) -> (('d & 'b) -> ('d | 'e)
 //│       where
-//│         'a <: 'c -> 'b -> 'f
-//│         'c <: 'f -> 'e)
+//│         'c <: 'f -> 'e
+//│         'a <: 'c -> 'b -> 'f)
 //│ ╙──
 //│ int -> 'a -> ('b -> ('b | 'c)
 //│   where
-//│     'd <: 'a -> 'b -> 'e
-//│     'a <: 'e -> 'c)
+//│     'a <: 'd -> 'c
+//│     'e <: 'a -> 'b -> 'd)
 //│ where
-//│   'd :> forall 'f 'g 'h 'i 'j. 'f -> (('i & 'j) -> ('i | 'g)
+//│   'e :> forall 'f 'g 'h 'i 'j. 'f -> (('i & 'j) -> ('i | 'g)
 //│     where
 //│       'f <: 'h -> 'g
-//│       'd <: 'f -> 'j -> 'h)
+//│       'e <: 'f -> 'j -> 'h)
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Subtyping constraint of the form `forall ?to_ch. ?to_ch <: int -> ChurchInt` exceeded recursion depth limit (250)
@@ -1088,8 +1088,8 @@ to_church_ty = to_ch_simplif
 //│   where
 //│     'a :> forall 'b 'c 'd 'e. 'b -> ('c -> 'e
 //│       where
-//│         'a <: 'b -> 'c -> 'd
-//│         'b <: 'd -> 'e)
+//│         'b <: 'd -> 'e
+//│         'a <: 'b -> 'c -> 'd)
 //│ ╙──
 //│ anything -> 'a -> ('b -> 'c
 //│   where
@@ -1098,8 +1098,8 @@ to_church_ty = to_ch_simplif
 //│ where
 //│   'e :> forall 'f 'g 'h 'i. 'f -> ('g -> 'i
 //│     where
-//│       'f <: 'h -> 'i
-//│       'e <: 'f -> 'g -> 'h)
+//│       'e <: 'f -> 'g -> 'h
+//│       'f <: 'h -> 'i)
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Subtyping constraint of the form `forall ?to_ch_simplif. ?to_ch_simplif <: int -> ChurchInt` exceeded recursion depth limit (250)
@@ -1120,13 +1120,13 @@ rec def to_ch_simplif n = s (to_ch_simplif n)
 //│ ╙──
 //│ to_ch_simplif: anything -> 'a -> ('b -> 'c
 //│   where
-//│     'd <: 'a -> 'b -> 'e
-//│     'a <: 'e -> 'c)
+//│     'a <: 'd -> 'c
+//│     'e <: 'a -> 'b -> 'd)
 //│ where
-//│   'd :> forall 'f 'g 'h 'i. 'f -> ('g -> 'i
+//│   'e :> forall 'f 'g 'h 'i. 'f -> ('g -> 'i
 //│     where
 //│       'f <: 'h -> 'i
-//│       'd <: 'f -> 'g -> 'h)
+//│       'e <: 'f -> 'g -> 'h)
 //│              = [Function: to_ch_simplif1]
 
 :e // * Since the removal of "recursive definition hacks"
@@ -1135,8 +1135,8 @@ to_church_ty = to_ch_simplif
 //│   where
 //│     'a :> forall 'b 'c 'd 'e. 'b -> ('c -> 'e
 //│       where
-//│         'b <: 'd -> 'e
-//│         'a <: 'b -> 'c -> 'd)
+//│         'a <: 'b -> 'c -> 'd
+//│         'b <: 'd -> 'e)
 //│ ╙──
 //│ anything -> 'a -> ('b -> 'c
 //│   where
@@ -1162,8 +1162,8 @@ to_church_ty = to_ch_A1
 //│   where
 //│     'to_ch_A1 :> forall 'to_ch_A1. int -> (forall 'a 'b 'c 'd 'e. (? & 'e) -> (('a & 'c) -> ('c | 'd)
 //│       where
-//│         ChurchInt <: 'e -> 'a -> 'b
-//│         'e <: 'b -> 'd))
+//│         'e <: 'b -> 'd
+//│         ChurchInt <: 'e -> 'a -> 'b))
 //│     where
 //│       'to_ch_A1 <: int -> ChurchInt
 //│ ╙──
@@ -1187,8 +1187,8 @@ to_church_ty = to_ch_A1
 to_church_ty = to_church_mix
 //│ int -> 'a -> ('b -> ('b | 'c)
 //│   where
-//│     'a <: 'd -> 'c
-//│     ChurchInt <: 'a -> 'b -> 'd)
+//│     ChurchInt <: 'a -> 'b -> 'd
+//│     'a <: 'd -> 'c)
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│             = [Function: to_church_mix]

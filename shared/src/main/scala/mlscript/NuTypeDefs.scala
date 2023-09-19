@@ -167,7 +167,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     
     lazy val virtualMembers: Map[Str, NuMember] = members ++ tparams.map {
       case (nme @ TypeName(name), tv, _) => 
-        td.nme.name+"#"+name -> NuParam(nme, FieldType(S(tv), tv)(provTODO))(level)
+        td.nme.name+"#"+name -> NuParam(nme, FieldType(S(tv), tv, false)(provTODO))(level)
     } ++ parentTP
     
     def freshenAbove(lim: Int, rigidify: Bool)
@@ -229,7 +229,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     /** Includes class-name-coded type parameter fields. */
     lazy val virtualMembers: Map[Str, NuMember] = members ++ tparams.map {
       case (nme @ TypeName(name), tv, _) => 
-        td.nme.name+"#"+name -> NuParam(nme, FieldType(S(tv), tv)(provTODO))(level)
+        td.nme.name+"#"+name -> NuParam(nme, FieldType(S(tv), tv, false)(provTODO))(level)
     } ++ parentTP
     
     // TODO
@@ -338,7 +338,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
 
     lazy val virtualMembers: Map[Str, NuMember] = members ++ tparams.map {
       case (nme @ TypeName(name), tv, _) => 
-        td.nme.name+"#"+name -> NuParam(nme, FieldType(S(tv), tv)(provTODO))(level)
+        td.nme.name+"#"+name -> NuParam(nme, FieldType(S(tv), tv, false)(provTODO))(level)
     } 
     
     def freshenAbove(lim: Int, rigidify: Bool)
@@ -677,7 +677,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       val a_ty = typeTerm(a)
                       p.lb.foreach(constrain(_, a_ty))
                       constrain(a_ty, p.ub)
-                      NuParam(nme, FieldType(p.lb, a_ty)(provTODO))(lvl)
+                      NuParam(nme, FieldType(p.lb, a_ty, false)(provTODO))(lvl)
                   }
                   
                   paramMems //++ mxn.members.valuesIterator
@@ -728,7 +728,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                   val a_ty = typeTerm(a)
                   p.lb.foreach(constrain(_, a_ty))
                   constrain(a_ty, p.ub)
-                  NuParam(nme, FieldType(p.lb, a_ty)(provTODO))(lvl)
+                  NuParam(nme, FieldType(p.lb, a_ty, false)(provTODO))(lvl)
                 }
                 
                 S((cls, paramMems, ptp ++ cls.parentTP, p.toLoc))
@@ -813,14 +813,14 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                 case R(tpe) =>
                   implicit val newDefsInfo: Map[Str, (TypeDefKind, Int)] = Map.empty // TODO?
                   val ty = typeType(tpe)
-                  nme -> FieldType(N, ty)(provTODO)
+                  nme -> FieldType(N, ty, false)(provTODO)
                 case _ => ???
               }
             case (N, Fld(FldFlags(mut, spec, opt), nme: Var)) =>
               // assert(!mut && !spec, "TODO") // TODO
               // nme -> FieldType(N, freshVar(ttp(nme), N, S(nme.name)))(provTODO)
               nme -> FieldType(N, err(msg"${td.kind.str.capitalize} parameters currently need type annotations",
-                nme.toLoc))(provTODO)
+                nme.toLoc), false)(provTODO)
             case _ => ???
           }
         case fd: NuFunDef => Nil
@@ -1213,7 +1213,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     
                     val tparamMems = tparams.map { case (tp, tv, vi) => // TODO use vi
                       val fldNme = td.nme.name + "#" + tp.name
-                      NuParam(TypeName(fldNme).withLocOf(tp), FieldType(S(tv), tv)(tv.prov))(lvl)
+                      NuParam(TypeName(fldNme).withLocOf(tp), FieldType(S(tv), tv, false)(tv.prov))(lvl)
                     }
                     val tparamFields = tparamMems.map(p => p.nme.toVar -> p.ty)
                     assert(!typedParams.keys.exists(tparamFields.keys.toSet), ???)
@@ -1452,7 +1452,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           tv
       })
       freshened += _tv -> tv
-      rawName+"#"+tn.name -> NuParam(tn, FieldType(S(tv), tv)(provTODO))(ctx.lvl)
+      rawName+"#"+tn.name -> NuParam(tn, FieldType(S(tv), tv, false)(provTODO))(ctx.lvl)
     }
     
     freshened -> parTP.toMap

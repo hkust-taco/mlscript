@@ -472,18 +472,18 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
       }
   }
   
-  case class FieldType(lb: Option[SimpleType], ub: SimpleType)(val prov: TypeProvenance) {
+  case class FieldType(lb: Option[SimpleType], ub: SimpleType, opt: Boolean)(val prov: TypeProvenance) {
     def level: Int = lb.map(_.level).getOrElse(ub.level) max ub.level
     def levelBelow(ubLvl: Level)(implicit cache: MutSet[TV]): Level =
       lb.fold(MinLevel)(_.levelBelow(ubLvl)) max ub.levelBelow(ubLvl)
     def <:< (that: FieldType)(implicit ctx: Ctx, cache: MutMap[ST -> ST, Bool] = MutMap.empty): Bool =
       (that.lb.getOrElse(BotType) <:< this.lb.getOrElse(BotType)) && (this.ub <:< that.ub)
     def && (that: FieldType, prov: TypeProvenance = noProv): FieldType =
-      FieldType(lb.fold(that.lb)(l => Some(that.lb.fold(l)(l | _))), ub & that.ub)(prov)
+      FieldType(lb.fold(that.lb)(l => Some(that.lb.fold(l)(l | _))), ub & that.ub, false)(prov)
     def || (that: FieldType, prov: TypeProvenance = noProv): FieldType =
-      FieldType(for {l <- lb; r <- that.lb} yield (l & r), ub | that.ub)(prov)
+      FieldType(for {l <- lb; r <- that.lb} yield (l & r), ub | that.ub, false)(prov)
     def update(lb: SimpleType => SimpleType, ub: SimpleType => SimpleType): FieldType =
-      FieldType(this.lb.map(lb), ub(this.ub))(prov)
+      FieldType(this.lb.map(lb), ub(this.ub), false)(prov)
     def freshenAbove(lim: Int, rigidify: Bool)(implicit ctx: Ctx, freshened: MutMap[TV, ST]): FieldType =
       update(_.freshenAbove(lim, rigidify), _.freshenAbove(lim, rigidify))
     override def toString =
@@ -491,10 +491,10 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
   }
   object FieldType {
     def mk(vi: VarianceInfo, lb: ST, ub: ST)(prov: TP): FieldType = vi match {
-      case VarianceInfo(true, true) => FieldType(N, TopType)(prov)
-      case VarianceInfo(true, false) => FieldType(N, ub)(prov)
-      case VarianceInfo(false, true) => FieldType(S(lb), TopType)(prov)
-      case VarianceInfo(false, false) => FieldType(S(lb), ub)(prov)
+      case VarianceInfo(true, true) => FieldType(N, TopType, false)(prov)
+      case VarianceInfo(true, false) => FieldType(N, ub, false)(prov)
+      case VarianceInfo(false, true) => FieldType(S(lb), TopType, false)(prov)
+      case VarianceInfo(false, false) => FieldType(S(lb), ub, false)(prov)
     }
   }
   

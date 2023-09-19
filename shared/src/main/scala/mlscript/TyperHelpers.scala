@@ -374,8 +374,8 @@ abstract class TyperHelpers { Typer: Typer =>
       case _: TypeVariable | _: TypeTag | _: ExtrType => this
     }
     
-    def toUpper(prov: TypeProvenance): FieldType = FieldType(None, this)(prov)
-    def toLower(prov: TypeProvenance): FieldType = FieldType(Some(this), TopType)(prov)
+    def toUpper(prov: TypeProvenance): FieldType = FieldType(None, this, false)(prov)
+    def toLower(prov: TypeProvenance): FieldType = FieldType(Some(this), TopType, false)(prov)
     
     def | (that: SimpleType, prov: TypeProvenance = noProv, swapped: Bool = false): SimpleType = (this, that) match {
       case (TopType, _) => this
@@ -1158,7 +1158,7 @@ abstract class TyperHelpers { Typer: Typer =>
             val tvv = td.getVariancesOrDefault
             tparamField(defn, tp) -> FieldType(
               Some(if (tvv(tv).isCovariant) BotType else tv),
-              if (tvv(tv).isContravariant) TopType else tv)(prov)
+              if (tvv(tv).isContravariant) TopType else tv, false)(prov)
           })(noProv)
         else TopType
       subst(td.kind match {

@@ -182,8 +182,8 @@ def simpleStep arr f = f (simpleStepImpl2 arr)
 //│   where
 //│     'a <: (forall 'A 'e 'f 'Rep. (ArraysRep['A, 'e] & 'f) -> (ArraysImpl['A, 'Rep] with {fold: forall 'g 'b 'A0 'Rep0. 'g -> 'b -> (('Rep0, anything,) -> 'b
 //│       where
-//│         'f <: ArraysRep['A0, 'Rep0]
-//│         'g <: 'A0 -> 'b -> 'b), init: forall 'A1 'Rep1. 'A1 -> ('Rep1, "initialized",)
+//│         'g <: 'A0 -> 'b -> 'b
+//│         'f <: ArraysRep['A0, 'Rep0]), init: forall 'A1 'Rep1. 'A1 -> ('Rep1, "initialized",)
 //│       where
 //│         'f <: ArraysRep['A1, 'Rep1], sub: forall 'Rep2 'A2. ('Rep2, anything,) -> (int -> 'A2
 //│       where
