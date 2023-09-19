@@ -3,7 +3,7 @@
 
 :js
 module A {
-  let a = 42
+  val a = 42
   class B(x: Int) {
     fun b = x + 1
   }
@@ -21,7 +21,7 @@ module A {
 //│   constructor() {
 //│   }
 //│   get A() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#A === undefined) {
 //│       class A {
 //│         #B;
@@ -32,11 +32,10 @@ module A {
 //│           const a = this.#a;
 //│         }
 //│         get B() {
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│           if (this.#B === undefined) {
 //│             class B {
 //│               #x;
-//│               get x() { return this.#x; }
 //│               constructor(x) {
 //│                 this.#x = x;
 //│               }
@@ -44,9 +43,14 @@ module A {
 //│                 const x = this.#x;
 //│                 return x + 1;
 //│               }
+//│             static
+//│               unapply(x) {
+//│                 return [x.#x];
+//│               }
 //│             };
 //│             this.#B = ((x) => Object.freeze(new B(x)));
 //│             this.#B.class = B;
+//│             this.#B.unapply = B.unapply;
 //│           }
 //│           return this.#B;
 //│         }
@@ -66,7 +70,7 @@ module A {
 let bb = A.B(A.a)
 bb.b
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.66: 	let bb = A.B(A.a)
+//│ ║  l.70: 	let bb = A.B(A.a)
 //│ ╙──      	          ^^
 //│ let bb: error
 //│ error
@@ -86,11 +90,11 @@ bb.b
 
 :e
 class B(x: Int) {
-  let outer = 42
+  val outer = 42
   class C(y: Int) {
-    let outer1 = outer + outer
+    val outer1 = outer + outer
   }
-  class D(outer: Int)
+  class D(val outer: Int)
 }
 let b = B(1)
 b.outer
@@ -99,11 +103,11 @@ c.outer1
 let d = b.D(1)
 d.outer
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.97: 	let c = b.C(1)
-//│ ╙──      	         ^^
+//│ ║  l.101: 	let c = b.C(1)
+//│ ╙──       	         ^^
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.99: 	let d = b.D(1)
-//│ ╙──      	         ^^
+//│ ║  l.103: 	let d = b.D(1)
+//│ ╙──       	         ^^
 //│ class B(x: Int) {
 //│   class C(y: Int) {
 //│     let outer1: Int
@@ -144,19 +148,19 @@ mixin C() {
 //│   constructor() {
 //│   }
 //│   C(base) {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     return (class C extends base {
 //│       constructor(...rest) {
 //│         super(...rest);
 //│       }
 //│       D(base) {
-//│         const outer1 = this;
+//│         const qualifier1 = this;
 //│         return (class D extends base {
 //│           constructor(...rest) {
 //│             super(...rest);
 //│           }
 //│           E(base) {
-//│             const outer2 = this;
+//│             const qualifier2 = this;
 //│             return (class E extends base {
 //│               constructor(...rest) {
 //│                 super(...rest);
@@ -174,7 +178,7 @@ mixin C() {
 
 :js
 module D {
-  class E(x: Int) {}
+  class E(val x: Int) {}
   fun createE(x: Int) = E(x + 1)
 }
 //│ module D {
@@ -187,18 +191,18 @@ module D {
 //│   constructor() {
 //│   }
 //│   get D() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#D === undefined) {
 //│       class D {
 //│         #E;
 //│         constructor() {
 //│         }
 //│         createE(x) {
-//│           const self = this;
-//│           return self.E(x + 1);
+//│           const qualifier1 = this;
+//│           return qualifier1.E(x + 1);
 //│         }
 //│         get E() {
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│           if (this.#E === undefined) {
 //│             class E {
 //│               #x;
@@ -206,9 +210,14 @@ module D {
 //│               constructor(x) {
 //│                 this.#x = x;
 //│               }
+//│             static
+//│               unapply(x) {
+//│                 return [x.#x];
+//│               }
 //│             };
 //│             this.#E = ((x) => Object.freeze(new E(x)));
 //│             this.#E.class = E;
+//│             this.#E.unapply = E.unapply;
 //│           }
 //│           return this.#E;
 //│         }
@@ -264,57 +273,69 @@ class E(x: Int) {
 //│   constructor() {
 //│   }
 //│   get E() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#E === undefined) {
 //│       class E {
 //│         #F;
 //│         #x;
-//│         get x() { return this.#x; }
 //│         constructor(x) {
 //│           this.#x = x;
 //│         }
 //│         get F() {
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│           if (this.#F === undefined) {
 //│             class F {
 //│               #G;
 //│               #y;
-//│               get y() { return this.#y; }
 //│               constructor(y) {
 //│                 this.#y = y;
 //│               }
 //│               get sum() {
 //│                 const y = this.#y;
-//│                 return outer1.x + y;
+//│                 return qualifier1.#x + y;
 //│               }
 //│               get G() {
-//│                 const outer2 = this;
+//│                 const qualifier2 = this;
 //│                 if (this.#G === undefined) {
 //│                   class G {
 //│                     #z;
-//│                     get z() { return this.#z; }
 //│                     constructor(z) {
 //│                       this.#z = z;
 //│                     }
 //│                     get sum() {
 //│                       const z = this.#z;
-//│                       return outer1.x + outer2.y + z;
+//│                       return qualifier1.#x + qualifier2.#y + z;
+//│                     }
+//│                   static
+//│                     unapply(x) {
+//│                       return [x.#z];
 //│                     }
 //│                   };
 //│                   this.#G = ((z) => Object.freeze(new G(z)));
 //│                   this.#G.class = G;
+//│                   this.#G.unapply = G.unapply;
 //│                 }
 //│                 return this.#G;
+//│               }
+//│             static
+//│               unapply(x) {
+//│                 return [x.#y];
 //│               }
 //│             };
 //│             this.#F = ((y) => Object.freeze(new F(y)));
 //│             this.#F.class = F;
+//│             this.#F.unapply = F.unapply;
 //│           }
 //│           return this.#F;
+//│         }
+//│       static
+//│         unapply(x) {
+//│           return [x.#x];
 //│         }
 //│       };
 //│       this.#E = ((x) => Object.freeze(new E(x)));
 //│       this.#E.class = E;
+//│       this.#E.unapply = E.unapply;
 //│     }
 //│     return this.#E;
 //│   }
@@ -330,7 +351,7 @@ let fff = es.F(2)
 let gg = fff.G(3)
 gg.sum
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.329: 	let fff = es.F(2)
+//│ ║  l.350: 	let fff = es.F(2)
 //│ ╙──       	            ^^
 //│ let es: E
 //│ let fff: error
@@ -376,35 +397,41 @@ class F() {
 //│   constructor() {
 //│   }
 //│   get F() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#F === undefined) {
 //│       class F {
 //│         #G;
 //│         #x;
-//│         get x() { return this.#x; }
 //│         constructor() {
 //│           this.#x = 42;
 //│           const x = this.#x;
 //│         }
 //│         get G() {
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│           if (this.#G === undefined) {
 //│             class G {
-//│               #x1;
-//│               get x1() { return this.#x1; }
 //│               constructor() {
-//│                 this.#x1 = outer1.x + 1;
-//│                 const x1 = this.#x1;
+//│                 const x1 = qualifier1.#x + 1;
+//│               }
+//│             static
+//│               unapply(x) {
+//│                 return [];
 //│               }
 //│             };
 //│             this.#G = (() => Object.freeze(new G()));
 //│             this.#G.class = G;
+//│             this.#G.unapply = G.unapply;
 //│           }
 //│           return this.#G;
+//│         }
+//│       static
+//│         unapply(x) {
+//│           return [];
 //│         }
 //│       };
 //│       this.#F = (() => Object.freeze(new F()));
 //│       this.#F.class = F;
+//│       this.#F.unapply = F.unapply;
 //│     }
 //│     return this.#F;
 //│   }
@@ -416,7 +443,7 @@ class F() {
 
 :js
 module G {
-  class I(x: Int) {}
+  class I(val x: Int) {}
   module H {
     fun i1(x: Int) = I(x + 1)
     class J(x: Int) {
@@ -439,7 +466,7 @@ module G {
 //│   constructor() {
 //│   }
 //│   get G() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#G === undefined) {
 //│       class G {
 //│         #I;
@@ -447,31 +474,35 @@ module G {
 //│         constructor() {
 //│         }
 //│         get H() {
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│           if (this.#H === undefined) {
 //│             class H {
 //│               #J;
 //│               constructor() {
 //│               }
 //│               i1(x) {
-//│                 return outer1.I(x + 1);
+//│                 return qualifier1.I(x + 1);
 //│               }
 //│               get J() {
-//│                 const outer2 = this;
+//│                 const qualifier2 = this;
 //│                 if (this.#J === undefined) {
 //│                   class J {
 //│                     #x;
-//│                     get x() { return this.#x; }
 //│                     constructor(x) {
 //│                       this.#x = x;
 //│                     }
 //│                     ii(a) {
 //│                       const x = this.#x;
-//│                       return outer1.I(x + a);
+//│                       return qualifier1.I(x + a);
+//│                     }
+//│                   static
+//│                     unapply(x) {
+//│                       return [x.#x];
 //│                     }
 //│                   };
 //│                   this.#J = ((x) => Object.freeze(new J(x)));
 //│                   this.#J.class = J;
+//│                   this.#J.unapply = J.unapply;
 //│                 }
 //│                 return this.#J;
 //│               }
@@ -482,7 +513,7 @@ module G {
 //│           return this.#H;
 //│         }
 //│         get I() {
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│           if (this.#I === undefined) {
 //│             class I {
 //│               #x;
@@ -490,9 +521,14 @@ module G {
 //│               constructor(x) {
 //│                 this.#x = x;
 //│               }
+//│             static
+//│               unapply(x) {
+//│                 return [x.#x];
+//│               }
 //│             };
 //│             this.#I = ((x) => Object.freeze(new I(x)));
 //│             this.#I.class = I;
+//│             this.#I.unapply = I.unapply;
 //│           }
 //│           return this.#I;
 //│         }
@@ -514,7 +550,7 @@ let jj = G.H.J(42)
 let i = jj.ii(2)
 i.x
 //│ ╔══[ERROR] access to module member not yet supported
-//│ ║  l.513: 	let jj = G.H.J(42)
+//│ ║  l.549: 	let jj = G.H.J(42)
 //│ ╙──       	          ^^
 //│ let jj: error
 //│ let i: error
@@ -538,9 +574,9 @@ i.x
 
 :js
 module H {
-  class I(x: Int)
+  class I(val x: Int)
   class J(x: Int) {
-    let i = I(x + 1)
+    val i = I(x + 1)
   }
 }
 //│ module H {
@@ -555,7 +591,7 @@ module H {
 //│   constructor() {
 //│   }
 //│   get H() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#H === undefined) {
 //│       class H {
 //│         #I;
@@ -563,7 +599,7 @@ module H {
 //│         constructor() {
 //│         }
 //│         get I() {
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│           if (this.#I === undefined) {
 //│             class I {
 //│               #x;
@@ -571,28 +607,37 @@ module H {
 //│               constructor(x) {
 //│                 this.#x = x;
 //│               }
+//│             static
+//│               unapply(x) {
+//│                 return [x.#x];
+//│               }
 //│             };
 //│             this.#I = ((x) => Object.freeze(new I(x)));
 //│             this.#I.class = I;
+//│             this.#I.unapply = I.unapply;
 //│           }
 //│           return this.#I;
 //│         }
 //│         get J() {
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│           if (this.#J === undefined) {
 //│             class J {
 //│               #x;
-//│               get x() { return this.#x; }
 //│               #i;
 //│               get i() { return this.#i; }
 //│               constructor(x) {
 //│                 this.#x = x;
-//│                 this.#i = outer1.I(x + 1);
+//│                 this.#i = qualifier1.I(x + 1);
 //│                 const i = this.#i;
+//│               }
+//│             static
+//│               unapply(x) {
+//│                 return [x.#x];
 //│               }
 //│             };
 //│             this.#J = ((x) => Object.freeze(new J(x)));
 //│             this.#J.class = J;
+//│             this.#J.unapply = J.unapply;
 //│           }
 //│           return this.#J;
 //│         }
@@ -613,7 +658,7 @@ module H {
 let j = H.J(42)
 j.i.x
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.613: 	let j = H.J(42)
+//│ ║  l.658: 	let j = H.J(42)
 //│ ╙──       	         ^^
 //│ let j: error
 //│ error
@@ -643,7 +688,7 @@ let i = I(1)
 let ij = i.J(0)
 ij.incY
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.643: 	let ij = i.J(0)
+//│ ║  l.688: 	let ij = i.J(0)
 //│ ╙──       	          ^^
 //│ class I(x: Int) {
 //│   class J(x: Int) {
@@ -661,27 +706,21 @@ ij.incY
 //│   constructor() {
 //│   }
 //│   get I() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#I === undefined) {
 //│       class I {
 //│         #J;
 //│         #x;
-//│         get x() { return this.#x; }
-//│         #y;
-//│         get y() { return this.#y; }
 //│         constructor(x) {
 //│           this.#x = x;
-//│           this.#y = x + 1;
-//│           const y = this.#y;
+//│           const y = x + 1;
 //│         }
 //│         get J() {
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│           if (this.#J === undefined) {
 //│             class J {
-//│               #x;
-//│               get x() { return this.#x; }
 //│               #y;
-//│               get y() { return this.#y; }
+//│               #x;
 //│               constructor(x) {
 //│                 this.#x = x;
 //│                 this.#y = x + 2;
@@ -689,18 +728,28 @@ ij.incY
 //│               }
 //│               get incY() {
 //│                 const x = this.#x;
-//│                 const self = this;
-//│                 return self.y + 1;
+//│                 const qualifier2 = this;
+//│                 return qualifier2.#y + 1;
+//│               }
+//│             static
+//│               unapply(x) {
+//│                 return [x.#x];
 //│               }
 //│             };
 //│             this.#J = ((x) => Object.freeze(new J(x)));
 //│             this.#J.class = J;
+//│             this.#J.unapply = J.unapply;
 //│           }
 //│           return this.#J;
+//│         }
+//│       static
+//│         unapply(x) {
+//│           return [x.#x];
 //│         }
 //│       };
 //│       this.#I = ((x) => Object.freeze(new I(x)));
 //│       this.#I.class = I;
+//│       this.#I.unapply = I.unapply;
 //│     }
 //│     return this.#I;
 //│   }
@@ -741,7 +790,7 @@ module J {
 //│   constructor() {
 //│   }
 //│   get J() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#J === undefined) {
 //│       class J {
 //│         #K;
@@ -750,7 +799,7 @@ module J {
 //│         constructor() {
 //│         }
 //│         L(base) {
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│           return (class L extends base {
 //│             constructor(...rest) {
 //│               super(...rest);
@@ -758,46 +807,59 @@ module J {
 //│           });
 //│         }
 //│         get K() {
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│           if (this.#K === undefined) {
 //│             class K {
 //│               #x;
-//│               get x() { return this.#x; }
 //│               constructor(x) {
 //│                 this.#x = x;
+//│               }
+//│             static
+//│               unapply(x) {
+//│                 return [x.#x];
 //│               }
 //│             };
 //│             this.#K = ((x) => Object.freeze(new K(x)));
 //│             this.#K.class = K;
+//│             this.#K.unapply = K.unapply;
 //│           }
 //│           return this.#K;
 //│         }
 //│         get M() {
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│           if (this.#M === undefined) {
-//│             class M extends outer1.K.class {
+//│             class M extends qualifier1.K.class {
 //│               constructor() {
 //│                 super(1);
+//│               }
+//│             static
+//│               unapply(x) {
+//│                 return [];
 //│               }
 //│             };
 //│             this.#M = (() => Object.freeze(new M()));
 //│             this.#M.class = M;
+//│             this.#M.unapply = M.unapply;
 //│           }
 //│           return this.#M;
 //│         }
 //│         get N() {
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│           if (this.#N === undefined) {
-//│             class N extends outer1.L(outer1.K.class) {
+//│             class N extends qualifier1.L(qualifier1.K.class) {
 //│               #x;
-//│               get x() { return this.#x; }
 //│               constructor(x) {
 //│                 super(x + 2);
 //│                 this.#x = x;
 //│               }
+//│             static
+//│               unapply(x) {
+//│                 return [x.#x];
+//│               }
 //│             };
 //│             this.#N = ((x) => Object.freeze(new N(x)));
 //│             this.#N.class = N;
+//│             this.#N.unapply = N.unapply;
 //│           }
 //│           return this.#N;
 //│         }
@@ -817,10 +879,10 @@ module J {
 let m = J.M()
 let n = J.N(2)
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.817: 	let m = J.M()
+//│ ║  l.879: 	let m = J.M()
 //│ ╙──       	         ^^
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.818: 	let n = J.N(2)
+//│ ║  l.880: 	let n = J.N(2)
 //│ ╙──       	         ^^
 //│ let m: error
 //│ let n: error
@@ -861,7 +923,7 @@ module K {
 let m = K.L.M()
 m.f
 //│ ╔══[ERROR] access to module member not yet supported
-//│ ║  l.861: 	let m = K.L.M()
+//│ ║  l.923: 	let m = K.L.M()
 //│ ╙──       	         ^^
 //│ let m: error
 //│ error
@@ -871,7 +933,7 @@ m.f
 //│     = 42
 
 module L {
-  class M(x: Int) {}
+  class M(val x: Int) {}
   module N {
     module O {
       class P(y: Int) extends M(y + 1) {}
@@ -891,7 +953,7 @@ module L {
 let op = L.N.O.P(0)
 op.x
 //│ ╔══[ERROR] access to module member not yet supported
-//│ ║  l.891: 	let op = L.N.O.P(0)
+//│ ║  l.953: 	let op = L.N.O.P(0)
 //│ ╙──       	          ^^
 //│ let op: error
 //│ error
@@ -918,10 +980,10 @@ module M {
 }
 M.N.op(M.P())
 //│ ╔══[ERROR] access to module member not yet supported
-//│ ║  l.919: 	M.N.op(M.P())
+//│ ║  l.981: 	M.N.op(M.P())
 //│ ╙──       	 ^^
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.919: 	M.N.op(M.P())
+//│ ║  l.981: 	M.N.op(M.P())
 //│ ╙──       	        ^^
 //│ module M {
 //│   module N {
@@ -938,7 +1000,7 @@ M.N.op(M.P())
 //│   constructor() {
 //│   }
 //│   get M() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#M === undefined) {
 //│       class M {
 //│         #O;
@@ -948,18 +1010,18 @@ M.N.op(M.P())
 //│         }
 //│         op(x) {
 //│           let a;
-//│           const self = this;
-//│           return a = x, a instanceof self.O.class ? 0 : a instanceof self.P.class ? 1 : 2;
+//│           const qualifier1 = this;
+//│           return a = x, a instanceof qualifier1.O.class ? 0 : a instanceof qualifier1.P.class ? 1 : 2;
 //│         }
 //│         get N() {
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│           if (this.#N === undefined) {
 //│             class N {
 //│               constructor() {
 //│               }
 //│               op(x) {
 //│                 let a;
-//│                 return a = x, a instanceof outer1.O.class ? 0 : a instanceof outer1.P.class ? 1 : 2;
+//│                 return a = x, a instanceof qualifier1.O.class ? 0 : a instanceof qualifier1.P.class ? 1 : 2;
 //│               }
 //│             }
 //│             this.#N = new N();
@@ -968,20 +1030,36 @@ M.N.op(M.P())
 //│           return this.#N;
 //│         }
 //│         get O() {
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│           if (this.#O === undefined) {
-//│             class O {};
+//│             class O {
+//│               constructor() {
+//│               }
+//│             static
+//│               unapply(x) {
+//│                 return [];
+//│               }
+//│             };
 //│             this.#O = (() => Object.freeze(new O()));
 //│             this.#O.class = O;
+//│             this.#O.unapply = O.unapply;
 //│           }
 //│           return this.#O;
 //│         }
 //│         get P() {
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│           if (this.#P === undefined) {
-//│             class P {};
+//│             class P {
+//│               constructor() {
+//│               }
+//│             static
+//│               unapply(x) {
+//│                 return [];
+//│               }
+//│             };
 //│             this.#P = (() => Object.freeze(new P()));
 //│             this.#P.class = P;
+//│             this.#P.unapply = P.unapply;
 //│           }
 //│           return this.#P;
 //│         }
@@ -1019,7 +1097,7 @@ module N {
 //│   constructor() {
 //│   }
 //│   get N() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#N === undefined) {
 //│       class N {
 //│         #Q;
@@ -1027,22 +1105,27 @@ module N {
 //│         constructor() {
 //│         }
 //│         get O() {
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│           if (this.#O === undefined) {
 //│             class O {
 //│               #P;
 //│               constructor() {
 //│               }
 //│               get P() {
-//│                 const outer2 = this;
+//│                 const qualifier2 = this;
 //│                 if (this.#P === undefined) {
-//│                   class P extends outer1.Q.class {
+//│                   class P extends qualifier1.Q.class {
 //│                     constructor() {
 //│                       super();
+//│                     }
+//│                   static
+//│                     unapply(x) {
+//│                       return [];
 //│                     }
 //│                   };
 //│                   this.#P = (() => Object.freeze(new P()));
 //│                   this.#P.class = P;
+//│                   this.#P.unapply = P.unapply;
 //│                 }
 //│                 return this.#P;
 //│               }
@@ -1053,11 +1136,19 @@ module N {
 //│           return this.#O;
 //│         }
 //│         get Q() {
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│           if (this.#Q === undefined) {
-//│             class Q {};
+//│             class Q {
+//│               constructor() {
+//│               }
+//│             static
+//│               unapply(x) {
+//│                 return [];
+//│               }
+//│             };
 //│             this.#Q = (() => Object.freeze(new Q()));
 //│             this.#Q.class = Q;
+//│             this.#Q.unapply = Q.unapply;
 //│           }
 //│           return this.#Q;
 //│         }
@@ -1075,7 +1166,7 @@ module N {
 :e
 N.O.P()
 //│ ╔══[ERROR] access to module member not yet supported
-//│ ║  l.1076: 	N.O.P()
+//│ ║  l.1167: 	N.O.P()
 //│ ╙──        	 ^^
 //│ error
 //│ res
@@ -1086,12 +1177,12 @@ N.O.P()
 class I(x: Int) {
   let y = x + 1
   class J(z: Int) {
-    let a = [x, y, z] 
+    val a = [x, y, z] 
   }
 }
 I(1).J(3).a
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.1092: 	I(1).J(3).a
+//│ ║  l.1183: 	I(1).J(3).a
 //│ ╙──        	    ^^
 //│ class I(x: Int) {
 //│   class J(z: Int) {
@@ -1106,45 +1197,52 @@ I(1).J(3).a
 //│   constructor() {
 //│   }
 //│   get I() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#I === undefined) {
 //│       class I {
 //│         #J;
-//│         #x;
-//│         get x() { return this.#x; }
 //│         #y;
-//│         get y() { return this.#y; }
+//│         #x;
 //│         constructor(x) {
 //│           this.#x = x;
 //│           this.#y = x + 1;
 //│           const y = this.#y;
 //│         }
 //│         get J() {
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│           if (this.#J === undefined) {
 //│             class J {
 //│               #z;
-//│               get z() { return this.#z; }
 //│               #a;
 //│               get a() { return this.#a; }
 //│               constructor(z) {
 //│                 this.#z = z;
 //│                 this.#a = [
-//│                   outer1.x,
-//│                   outer1.y,
+//│                   qualifier1.#x,
+//│                   qualifier1.#y,
 //│                   z
 //│                 ];
 //│                 const a = this.#a;
 //│               }
+//│             static
+//│               unapply(x) {
+//│                 return [x.#z];
+//│               }
 //│             };
 //│             this.#J = ((z) => Object.freeze(new J(z)));
 //│             this.#J.class = J;
+//│             this.#J.unapply = J.unapply;
 //│           }
 //│           return this.#J;
+//│         }
+//│       static
+//│         unapply(x) {
+//│           return [x.#x];
 //│         }
 //│       };
 //│       this.#I = ((x) => Object.freeze(new I(x)));
 //│       this.#I.class = I;
+//│       this.#I.unapply = I.unapply;
 //│     }
 //│     return this.#I;
 //│   }
@@ -1195,9 +1293,12 @@ fun mian =
 //│     const A = (() => {
 //│       class A {
 //│         #x;
-//│         get x() { return this.#x; }
 //│         constructor(x) {
 //│           this.#x = x;
+//│         }
+//│       static
+//│         unapply(x) {
+//│           return [x.#x];
 //│         }
 //│       }
 //│       let ctor;
@@ -1247,10 +1348,13 @@ fun mian =
 //│     const A = (() => {
 //│       class A extends B(Object) {
 //│         #x;
-//│         get x() { return this.#x; }
 //│         constructor(x) {
 //│           super();
 //│           this.#x = x;
+//│         }
+//│       static
+//│         unapply(x) {
+//│           return [x.#x];
 //│         }
 //│       }
 //│       let ctor;
@@ -1296,7 +1400,6 @@ fun main(arg) =
 //│     const C = (() => {
 //│       class C {
 //│         #u;
-//│         get u() { return this.#u; }
 //│         constructor(u) {
 //│           this.#u = u;
 //│         }
@@ -1306,6 +1409,10 @@ fun main(arg) =
 //│             foo(u),
 //│             bar
 //│           ]);
+//│         }
+//│       static
+//│         unapply(x) {
+//│           return [x.#u];
 //│         }
 //│       }
 //│       let ctor;
@@ -1349,38 +1456,43 @@ class Outer1(outer: Int) {
 //│   constructor() {
 //│   }
 //│   get Outer1() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#Outer1 === undefined) {
 //│       class Outer1 {
 //│         #Outer2;
 //│         #outer;
-//│         get outer() { return this.#outer; }
-//│         constructor(outer1) {
-//│           this.#outer = outer1;
-//│           log(outer1);
+//│         constructor(outer) {
+//│           this.#outer = outer;
+//│           log(outer);
 //│         }
 //│         get Outer2() {
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│           if (this.#Outer2 === undefined) {
 //│             class Outer2 {
 //│               #x;
-//│               get x() { return this.#x; }
-//│               #outer;
-//│               get outer() { return this.#outer; }
 //│               constructor(x) {
 //│                 this.#x = x;
-//│                 this.#outer = x + 1;
-//│                 const outer2 = this.#outer;
+//│                 const outer = x + 1;
+//│               }
+//│             static
+//│               unapply(x) {
+//│                 return [x.#x];
 //│               }
 //│             };
 //│             this.#Outer2 = ((x) => Object.freeze(new Outer2(x)));
 //│             this.#Outer2.class = Outer2;
+//│             this.#Outer2.unapply = Outer2.unapply;
 //│           }
 //│           return this.#Outer2;
+//│         }
+//│       static
+//│         unapply(x) {
+//│           return [x.#outer];
 //│         }
 //│       };
 //│       this.#Outer1 = ((outer) => Object.freeze(new Outer1(outer)));
 //│       this.#Outer1.class = Outer1;
+//│       this.#Outer1.unapply = Outer1.unapply;
 //│     }
 //│     return this.#Outer1;
 //│   }

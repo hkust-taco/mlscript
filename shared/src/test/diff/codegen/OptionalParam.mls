@@ -11,17 +11,21 @@ class A(x: Int) {}
 //│   constructor() {
 //│   }
 //│   get A() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#A === undefined) {
 //│       class A {
 //│         #x;
-//│         get x() { return this.#x; }
 //│         constructor(x) {
 //│           this.#x = x;
+//│         }
+//│       static
+//│         unapply(x) {
+//│           return [x.#x];
 //│         }
 //│       };
 //│       this.#A = ((x) => Object.freeze(new A(x)));
 //│       this.#A.class = A;
+//│       this.#A.unapply = A.unapply;
 //│     }
 //│     return this.#A;
 //│   }
@@ -39,7 +43,7 @@ class B {}
 //│   constructor() {
 //│   }
 //│   get B() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#B === undefined) {
 //│       class B {};
 //│       this.#B = B;
@@ -62,7 +66,7 @@ class C {
 //│   constructor() {
 //│   }
 //│   get C() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#C === undefined) {
 //│       class C {};
 //│       this.#C = C;
@@ -77,17 +81,17 @@ class C {
 :e // TODO: typing
 let c = new C(1)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.78: 	let c = new C(1)
+//│ ║  l.82: 	let c = new C(1)
 //│ ║        	            ^^^^
 //│ ╟── argument of type `[1]` does not match type `[]`
-//│ ║  l.78: 	let c = new C(1)
+//│ ║  l.82: 	let c = new C(1)
 //│ ╙──      	             ^^^
 //│ let c: C | error
 //│ c
 //│   = C {}
 
 :js
-class D(x: Int) {
+class D(val x: Int) {
   constructor(y: Int) {
     x = y + 1
   }
@@ -103,7 +107,7 @@ class D(x: Int) {
 //│   constructor() {
 //│   }
 //│   get D() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#D === undefined) {
 //│       class D {
 //│         #x;
@@ -113,9 +117,14 @@ class D(x: Int) {
 //│           const x = this.#x;
 //│           log(x);
 //│         }
+//│       static
+//│         unapply(x) {
+//│           return [x.#x];
+//│         }
 //│       };
 //│       this.#D = ((x) => Object.freeze(new D(x)));
 //│       this.#D.class = D;
+//│       this.#D.unapply = D.unapply;
 //│     }
 //│     return this.#D;
 //│   }
@@ -141,14 +150,14 @@ class E {
   constructor(y: Int)
 }
 //│ ╔══[PARSE ERROR] A class may only have at most one explicit constructor
-//│ ║  l.139: 	class E {
+//│ ║  l.148: 	class E {
 //│ ╙──       	^^^^^
 //│ class E
 
 :e
 constructor(x: Int)
 //│ ╔══[ERROR] constructor must be in a class.
-//│ ║  l.149: 	constructor(x: Int)
+//│ ║  l.158: 	constructor(x: Int)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^
 //│ []
 //│ Code generation encountered an error:
@@ -160,10 +169,10 @@ class F(x: Int) extends C(x + 1) {}
 class G extends C(2) {}
 class H extends B {}
 //│ ╔══[ERROR] class C expects 0 parameter(s); got 1
-//│ ║  l.159: 	class F(x: Int) extends C(x + 1) {}
+//│ ║  l.168: 	class F(x: Int) extends C(x + 1) {}
 //│ ╙──       	                        ^^^^^^^
 //│ ╔══[ERROR] class C expects 0 parameter(s); got 1
-//│ ║  l.160: 	class G extends C(2) {}
+//│ ║  l.169: 	class G extends C(2) {}
 //│ ╙──       	                ^^^
 //│ class F(x: Int) extends C
 //│ class G extends C
@@ -176,23 +185,27 @@ class H extends B {}
 //│   constructor() {
 //│   }
 //│   get F() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#F === undefined) {
 //│       class F extends C {
 //│         #x;
-//│         get x() { return this.#x; }
 //│         constructor(x) {
 //│           super(x + 1);
 //│           this.#x = x;
 //│         }
+//│       static
+//│         unapply(x) {
+//│           return [x.#x];
+//│         }
 //│       };
 //│       this.#F = ((x) => Object.freeze(new F(x)));
 //│       this.#F.class = F;
+//│       this.#F.unapply = F.unapply;
 //│     }
 //│     return this.#F;
 //│   }
 //│   get G() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#G === undefined) {
 //│       class G extends C {
 //│         constructor() {
@@ -204,7 +217,7 @@ class H extends B {}
 //│     return this.#G;
 //│   }
 //│   get H() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#H === undefined) {
 //│       class H extends B {
 //│         constructor() {
@@ -236,7 +249,7 @@ fun f(c) =
 //│ globalThis.f = function f(c) {
 //│   return ((() => {
 //│     let a;
-//│     return a = c, a instanceof F.class ? ((x) => x)(c.x) : a instanceof G ? 2 : 0;
+//│     return a = c, a instanceof F.class ? (([x]) => x)(F.unapply(c)) : a instanceof G ? 2 : 0;
 //│   })());
 //│ };
 //│ // End of generated code
@@ -260,7 +273,7 @@ module I {
   }
 }
 //│ ╔══[ERROR] class J expects 0 parameter(s); got 1
-//│ ║  l.259: 	    class L extends J(0)
+//│ ║  l.272: 	    class L extends J(0)
 //│ ╙──       	                    ^^^
 //│ module I {
 //│   class J
@@ -274,7 +287,7 @@ module I {
 //│   constructor() {
 //│   }
 //│   get I() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#I === undefined) {
 //│       class I {
 //│         #J;
@@ -282,16 +295,16 @@ module I {
 //│         constructor() {
 //│         }
 //│         get K() {
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│           if (this.#K === undefined) {
 //│             class K {
 //│               #L;
 //│               constructor() {
 //│               }
 //│               get L() {
-//│                 const outer2 = this;
+//│                 const qualifier2 = this;
 //│                 if (this.#L === undefined) {
-//│                   class L extends outer1.J {
+//│                   class L extends qualifier1.J {
 //│                     constructor() {
 //│                       super(0);
 //│                     }
@@ -307,7 +320,7 @@ module I {
 //│           return this.#K;
 //│         }
 //│         get J() {
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│           if (this.#J === undefined) {
 //│             class J {};
 //│             this.#J = J;
@@ -344,7 +357,6 @@ fun g(x: Int) =
 //│     const L = (() => {
 //│       class L {
 //│         #y;
-//│         get y() { return this.#y; }
 //│         constructor(z) {
 //│           this.#y = z + 1;
 //│           const y = this.#y;
@@ -352,6 +364,10 @@ fun g(x: Int) =
 //│         get ll() {
 //│           const y = this.#y;
 //│           return x + y;
+//│         }
+//│       static
+//│         unapply(x) {
+//│           return [x.#y];
 //│         }
 //│       }
 //│       let ctor;
@@ -416,10 +432,10 @@ fun h(z: Int) =
 let hh = h(1)
 new hh(1)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.417: 	new hh(1)
+//│ ║  l.433: 	new hh(1)
 //│ ║         	    ^^^^^
 //│ ╟── argument of type `[1]` does not match type `[]`
-//│ ║  l.417: 	new hh(1)
+//│ ║  l.433: 	new hh(1)
 //│ ╙──       	      ^^^
 //│ let hh: () -> N
 //│ N | error
@@ -438,10 +454,10 @@ mixin P {
   constructor(x: Int)
 }
 //│ ╔══[ERROR] Explicit module constructors are not supported
-//│ ║  l.435: 	  constructor(x: Int)
+//│ ║  l.451: 	  constructor(x: Int)
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Explicit mixin constructors are not supported
-//│ ║  l.438: 	  constructor(x: Int)
+//│ ║  l.454: 	  constructor(x: Int)
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^
 //│ module O
 //│ mixin P()

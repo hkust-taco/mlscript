@@ -15,22 +15,22 @@ const MLS2TheMax = new class MLS2TheMax {
     })());
   }
   parse(s) {
-    const self = this;
+    const qualifier = this;
     return ((() => {
       let i = parseInt(s, undefined);
-      return isNaN(i) === true ? self.None : self.Some(i);
+      return isNaN(i) === true ? qualifier.None : qualifier.Some(i);
     })());
   }
   get main() {
-    const self = this;
+    const qualifier = this;
     return ((() => {
-      let name = self.ask("What is your name?");
+      let name = qualifier.ask("What is your name?");
       console.log(Concat.concat3("Hello, ", name, " welcome to the game!"));
-      return self.Game(name).loop;
+      return qualifier.Game(name).loop;
     })());
   }
   get None() {
-    const outer = this;
+    const qualifier = this;
     if (this.#None === undefined) {
       class None {}
       this.#None = new None();
@@ -39,28 +39,30 @@ const MLS2TheMax = new class MLS2TheMax {
     return this.#None;
   }
   get Some() {
-    const outer = this;
+    const qualifier = this;
     if (this.#Some === undefined) {
       class Some {
         #value;
-        get value() { return this.#value; }
         constructor(value) {
           this.#value = value;
+        }
+      static
+        unapply(x) {
+          return [x.#value];
         }
       };
       this.#Some = ((value) => Object.freeze(new Some(value)));
       this.#Some.class = Some;
+      this.#Some.unapply = Some.unapply;
     }
     return this.#Some;
   }
   get Game() {
-    const outer = this;
+    const qualifier = this;
     if (this.#Game === undefined) {
       class Game {
-        #name;
-        get name() { return this.#name; }
         #number;
-        get number() { return this.#number; }
+        #name;
         constructor(name) {
           this.#name = name;
           this.#number = 4;
@@ -68,37 +70,42 @@ const MLS2TheMax = new class MLS2TheMax {
         }
         get shouldContinue() {
           const name = this.#name;
-          const self = this;
+          const qualifier1 = this;
           return ((() => {
-            let ans = outer.ask("Do you want to continue?");
-            return ans === "y" === true ? self.loop : console.log("Bye!");
+            let ans = qualifier.ask("Do you want to continue?");
+            return ans === "y" === true ? qualifier1.loop : console.log("Bye!");
           })());
         }
         check(x) {
           const name = this.#name;
-          const self = this;
+          const qualifier1 = this;
           return ((() => {
-            return x == self.number === true ? console.log(Concat.concat2("You guessed right, ", name)) : console.log(Concat.concat2("You guessed wrong, ", name));
+            return x == qualifier1.#number === true ? console.log(Concat.concat2("You guessed right, ", name)) : console.log(Concat.concat2("You guessed wrong, ", name));
           })());
         }
         get loop() {
           const name = this.#name;
-          const self = this;
+          const qualifier1 = this;
           return ((() => {
-            let guess = outer.ask(Concat.concat3("Dear ", name, ", please guess a number from 1 to 5"));
-            ((tmp0) => tmp0 instanceof outer.Some.class ? ((i) => self.check(i))(tmp0.value) : console.log("Not a number!"))(outer.parse(guess));
-            return self.shouldContinue;
+            let guess = qualifier.ask(Concat.concat3("Dear ", name, ", please guess a number from 1 to 5"));
+            ((tmp0) => tmp0 instanceof qualifier.Some.class ? (([i]) => qualifier1.check(i))(qualifier.Some.unapply(tmp0)) : console.log("Not a number!"))(qualifier.parse(guess));
+            return qualifier1.shouldContinue;
           })());
+        }
+      static
+        unapply(x) {
+          return [x.#name];
         }
       };
       this.#Game = ((name) => Object.freeze(new Game(name)));
       this.#Game.class = Game;
+      this.#Game.unapply = Game.unapply;
     }
     return this.#Game;
   }
   $init() {
-    const self = this;
-    self.main;
+    const qualifier = this;
+    qualifier.main;
   }
 };
 MLS2TheMax.$init();

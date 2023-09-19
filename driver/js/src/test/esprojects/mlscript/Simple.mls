@@ -2,7 +2,7 @@ import "./Opened.mls"
 
 mixin B { fun foo = this.n }
 
-class A(n: Int) extends B
+class A(val n: Int) extends B
 let a = A(42)
 
 log(a.foo)

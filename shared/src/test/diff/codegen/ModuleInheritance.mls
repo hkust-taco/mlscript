@@ -33,28 +33,38 @@ class CC() extends A.C
 //│   constructor() {
 //│   }
 //│   get C() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#C === undefined) {
 //│       class C extends A.B.class {
 //│         constructor() {
 //│           super(1);
 //│         }
+//│       static
+//│         unapply(x) {
+//│           return [];
+//│         }
 //│       };
 //│       this.#C = (() => Object.freeze(new C()));
 //│       this.#C.class = C;
+//│       this.#C.unapply = C.unapply;
 //│     }
 //│     return this.#C;
 //│   }
 //│   get CC() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#CC === undefined) {
 //│       class CC extends A.C {
 //│         constructor() {
 //│           super();
 //│         }
+//│       static
+//│         unapply(x) {
+//│           return [];
+//│         }
 //│       };
 //│       this.#CC = (() => Object.freeze(new CC()));
 //│       this.#CC.class = CC;
+//│       this.#CC.unapply = CC.unapply;
 //│     }
 //│     return this.#CC;
 //│   }
@@ -67,7 +77,7 @@ class CC() extends A.C
 :e
 C().add(3)
 //│ ╔══[ERROR] Type `C` does not contain member `add`
-//│ ║  l.68: 	C().add(3)
+//│ ║  l.78: 	C().add(3)
 //│ ╙──      	   ^^^^
 //│ error
 //│ res
@@ -82,7 +92,7 @@ module B {
   }
 }
 //│ ╔══[ERROR] Unsupported parent specification
-//│ ║  l.80: 	  class D() extends B.C {
+//│ ║  l.90: 	  class D() extends B.C {
 //│ ╙──      	                    ^^^
 //│ module B {
 //│   class C()
@@ -96,7 +106,7 @@ module B {
 //│   constructor() {
 //│   }
 //│   get B() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#B === undefined) {
 //│       class B {
 //│         #C;
@@ -104,18 +114,26 @@ module B {
 //│         constructor() {
 //│         }
 //│         get C() {
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│           if (this.#C === undefined) {
-//│             class C {};
+//│             class C {
+//│               constructor() {
+//│               }
+//│             static
+//│               unapply(x) {
+//│                 return [];
+//│               }
+//│             };
 //│             this.#C = (() => Object.freeze(new C()));
 //│             this.#C.class = C;
+//│             this.#C.unapply = C.unapply;
 //│           }
 //│           return this.#C;
 //│         }
 //│         get D() {
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│           if (this.#D === undefined) {
-//│             class D extends outer.B.C.class {
+//│             class D extends qualifier.B.C.class {
 //│               #x;
 //│               get x() { return this.#x; }
 //│               constructor() {
@@ -123,9 +141,14 @@ module B {
 //│                 this.#x = 42;
 //│                 const x = this.#x;
 //│               }
+//│             static
+//│               unapply(x) {
+//│                 return [];
+//│               }
 //│             };
 //│             this.#D = (() => Object.freeze(new D()));
 //│             this.#D.class = D;
+//│             this.#D.unapply = D.unapply;
 //│           }
 //│           return this.#D;
 //│         }
@@ -144,7 +167,7 @@ module B {
 let dd = B.D()
 dd.x
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.144: 	let dd = B.D()
+//│ ║  l.167: 	let dd = B.D()
 //│ ╙──       	          ^^
 //│ let dd: error
 //│ error
@@ -159,11 +182,11 @@ module C {
   module D {
     class E()
   }
-  class F(x: Int) extends D.E
+  class F(val x: Int) extends D.E
 }
 //│ ╔══[ERROR] Unsupported parent specification
-//│ ║  l.162: 	  class F(x: Int) extends D.E
-//│ ╙──       	                          ^^^
+//│ ║  l.185: 	  class F(val x: Int) extends D.E
+//│ ╙──       	                              ^^^
 //│ module C {
 //│   module D {
 //│     class E()
@@ -176,7 +199,7 @@ module C {
 //│   constructor() {
 //│   }
 //│   get C() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#C === undefined) {
 //│       class C {
 //│         #F;
@@ -184,18 +207,26 @@ module C {
 //│         constructor() {
 //│         }
 //│         get D() {
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│           if (this.#D === undefined) {
 //│             class D {
 //│               #E;
 //│               constructor() {
 //│               }
 //│               get E() {
-//│                 const outer2 = this;
+//│                 const qualifier2 = this;
 //│                 if (this.#E === undefined) {
-//│                   class E {};
+//│                   class E {
+//│                     constructor() {
+//│                     }
+//│                   static
+//│                     unapply(x) {
+//│                       return [];
+//│                     }
+//│                   };
 //│                   this.#E = (() => Object.freeze(new E()));
 //│                   this.#E.class = E;
+//│                   this.#E.unapply = E.unapply;
 //│                 }
 //│                 return this.#E;
 //│               }
@@ -206,18 +237,23 @@ module C {
 //│           return this.#D;
 //│         }
 //│         get F() {
-//│           const outer1 = this;
+//│           const qualifier1 = this;
 //│           if (this.#F === undefined) {
-//│             class F extends outer1.D.E.class {
+//│             class F extends qualifier1.D.E.class {
 //│               #x;
 //│               get x() { return this.#x; }
 //│               constructor(x) {
 //│                 super();
 //│                 this.#x = x;
 //│               }
+//│             static
+//│               unapply(x) {
+//│                 return [x.#x];
+//│               }
 //│             };
 //│             this.#F = ((x) => Object.freeze(new F(x)));
 //│             this.#F.class = F;
+//│             this.#F.unapply = F.unapply;
 //│           }
 //│           return this.#F;
 //│         }
@@ -236,7 +272,7 @@ module C {
 let fff = C.F(24)
 fff.x
 //│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.236: 	let fff = C.F(24)
+//│ ║  l.272: 	let fff = C.F(24)
 //│ ╙──       	           ^^
 //│ let fff: error
 //│ error

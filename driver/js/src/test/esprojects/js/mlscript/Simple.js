@@ -6,31 +6,26 @@ function log(x) {
 const Simple = new class Simple {
   #A;
   #C;
-  #a;
-  get a() { return this.#a; }
   constructor() {
   }
   B(base) {
-    const outer = this;
+    const qualifier = this;
     return (class B extends base {
       constructor(...rest) {
         super(...rest);
       }
       get foo() {
-        const self = this;
-        return self.n;
+        const qualifier1 = this;
+        return qualifier1.n;
       }
     });
   }
   get C() {
-    const outer = this;
+    const qualifier = this;
     if (this.#C === undefined) {
       class C {
-        #b;
-        get b() { return this.#b; }
         constructor() {
-          this.#b = 1;
-          const b = this.#b;
+          const b = 1;
         }
       }
       this.#C = new C();
@@ -39,25 +34,29 @@ const Simple = new class Simple {
     return this.#C;
   }
   get A() {
-    const outer = this;
+    const qualifier = this;
     if (this.#A === undefined) {
-      class A extends outer.B(Object) {
+      class A extends qualifier.B(Object) {
         #n;
         get n() { return this.#n; }
         constructor(n) {
           super();
           this.#n = n;
         }
+      static
+        unapply(x) {
+          return [x.#n];
+        }
       };
       this.#A = ((n) => Object.freeze(new A(n)));
       this.#A.class = A;
+      this.#A.unapply = A.unapply;
     }
     return this.#A;
   }
   $init() {
-    const self = this;
-    this.#a = self.A(42);
-    const a = this.#a;
+    const qualifier = this;
+    const a = qualifier.A(42);
     log(a.foo);
     Opened.hello(a.n);
   }

@@ -2,27 +2,29 @@ const Baz = require("../ts/Baz.js")
 
 const BazBaz = new class BazBaz {
   #BazBaz;
-  #bazbaz;
-  get bazbaz() { return this.#bazbaz; }
   constructor() {
   }
   get BazBaz() {
-    const outer = this;
+    const qualifier = this;
     if (this.#BazBaz === undefined) {
       class BazBaz extends Baz.Baz {
         constructor() {
           super(2);
         }
+      static
+        unapply(x) {
+          return [];
+        }
       };
       this.#BazBaz = (() => Object.freeze(new BazBaz()));
       this.#BazBaz.class = BazBaz;
+      this.#BazBaz.unapply = BazBaz.unapply;
     }
     return this.#BazBaz;
   }
   $init() {
-    const self = this;
-    this.#bazbaz = self.BazBaz();
-    const bazbaz = this.#bazbaz;
+    const qualifier = this;
+    const bazbaz = qualifier.BazBaz();
     bazbaz.baz();
   }
 };

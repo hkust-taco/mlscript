@@ -3,8 +3,8 @@ export declare module Mixin2() {
   class Lit(n: Int)
   fun eval: forall 'a. 'a -> Int
   mixin EvalBase() {
-    this: {eval: 'lhs -> Int}
-    fun eval: (Add['lhs] | Lit) -> Int
+    this: {eval: 'b -> Int}
+    fun eval: (Add['b] | Lit) -> Int
   }
   where
     'a <: Add['a] | Lit

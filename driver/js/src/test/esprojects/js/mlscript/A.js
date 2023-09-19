@@ -3,7 +3,7 @@ export const A = new class A {
   constructor() {
   }
   get Foo() {
-    const outer = this;
+    const qualifier = this;
     if (this.#Foo === undefined) {
       class Foo {
         #x;
@@ -11,9 +11,14 @@ export const A = new class A {
         constructor(x) {
           this.#x = x;
         }
+      static
+        unapply(x) {
+          return [x.#x];
+        }
       };
       this.#Foo = ((x) => Object.freeze(new Foo(x)));
       this.#Foo.class = Foo;
+      this.#Foo.unapply = Foo.unapply;
     }
     return this.#Foo;
   }

@@ -7,11 +7,11 @@ export declare module Child() {
   unit
 }
 //| ╔══[ERROR] Unsupported parent specification
-//| ║  l.3: 	class Child1(x: Int) extends Parent.Parent1(x + 1)
-//| ╙──     	                             ^^^^^^^^^^^^^^^^^^^^^
+//| ║  l.3: 	class Child1(val x: Int) extends Parent.Parent1(x + 1)
+//| ╙──     	                                 ^^^^^^^^^^^^^^^^^^^^^
 //| ╔══[ERROR] Unsupported parent specification
-//| ║  l.4: 	class Child2(y: Int) extends Parent.Parent2
-//| ╙──     	                             ^^^^^^^^^^^^^^
+//| ║  l.4: 	class Child2(val y: Int) extends Parent.Parent2
+//| ╙──     	                                 ^^^^^^^^^^^^^^
 //| ╔══[ERROR] Type `Child1` does not contain member `inc`
 //| ║  l.8: 	console.log(c1.inc)
 //| ╙──     	              ^^^^

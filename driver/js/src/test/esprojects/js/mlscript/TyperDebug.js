@@ -1,15 +1,12 @@
 const TyperDebug = new class TyperDebug {
   #A;
-  #aa;
-  get aa() { return this.#aa; }
   constructor() {
   }
   get A() {
-    const outer = this;
+    const qualifier = this;
     if (this.#A === undefined) {
       class A {
         #x;
-        get x() { return this.#x; }
         constructor(x) {
           this.#x = x;
         }
@@ -17,16 +14,20 @@ const TyperDebug = new class TyperDebug {
           const x = this.#x;
           return x + y;
         }
+      static
+        unapply(x) {
+          return [x.#x];
+        }
       };
       this.#A = ((x) => Object.freeze(new A(x)));
       this.#A.class = A;
+      this.#A.unapply = A.unapply;
     }
     return this.#A;
   }
   $init() {
-    const self = this;
-    this.#aa = self.A(42);
-    const aa = this.#aa;
+    const qualifier = this;
+    const aa = qualifier.A(42);
     console.log(aa.add(6));
   }
 };

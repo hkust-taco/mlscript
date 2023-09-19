@@ -7,8 +7,8 @@ const Lodash = new class Lodash {
     return x + 1;
   }
   $init() {
-    const self = this;
-    console.log(fp.map(self.inc)([
+    const qualifier = this;
+    console.log(fp.map(qualifier.inc)([
       1,
       2,
       3

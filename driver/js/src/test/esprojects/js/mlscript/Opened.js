@@ -13,8 +13,8 @@ export const Opened = new class Opened {
     ]));
   }
   $init() {
-    const self = this;
-    self.hello(114513);
+    const qualifier = this;
+    qualifier.hello(114513);
   }
 };
 Opened.$init();

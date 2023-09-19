@@ -4,8 +4,6 @@ function log(x) {
   return console.info(x);
 }
 const Output2 = new class Output2 {
-  #config;
-  get config() { return this.#config; }
   constructor() {
   }
   createConfig(path) {
@@ -16,9 +14,8 @@ const Output2 = new class Output2 {
     })());
   }
   $init() {
-    const self = this;
-    this.#config = self.createConfig("bar");
-    const config = this.#config;
+    const qualifier = this;
+    const config = qualifier.createConfig("bar");
     log(config);
   }
 };

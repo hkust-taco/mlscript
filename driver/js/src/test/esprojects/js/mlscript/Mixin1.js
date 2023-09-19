@@ -6,30 +6,30 @@ const Mixin1 = new class Mixin1 {
   constructor() {
   }
   get show() {
-    const self = this;
+    const qualifier = this;
     return ((() => {
-      let program = Mixin2.Add(Mixin2.Lit(48), self.Neg(Mixin2.Lit(6)));
-      return console.log(self.MyLang.eval(program));
+      let program = Mixin2.Add(Mixin2.Lit(48), qualifier.Neg(Mixin2.Lit(6)));
+      return console.log(qualifier.MyLang.eval(program));
     })());
   }
   EvalNeg(base) {
-    const outer = this;
+    const qualifier = this;
     return (class EvalNeg extends base {
       constructor(...rest) {
         super(...rest);
       }
       eval(e) {
-        const self = this;
+        const qualifier1 = this;
         return ((() => {
-          return e instanceof outer.Neg.class ? ((d) => 0 - self.eval(d))(e.expr) : super.eval(e);
+          return e instanceof qualifier.Neg.class ? (([d]) => 0 - qualifier1.eval(d))(qualifier.Neg.unapply(e)) : super.eval(e);
         })());
       }
     });
   }
   get MyLang() {
-    const outer = this;
+    const qualifier = this;
     if (this.#MyLang === undefined) {
-      class MyLang extends outer.EvalNeg(Mixin2.EvalBase(Object)) {
+      class MyLang extends qualifier.EvalNeg(Mixin2.EvalBase(Object)) {
         constructor() {
           super();
         }
@@ -40,23 +40,27 @@ const Mixin1 = new class Mixin1 {
     return this.#MyLang;
   }
   get Neg() {
-    const outer = this;
+    const qualifier = this;
     if (this.#Neg === undefined) {
       class Neg {
         #expr;
-        get expr() { return this.#expr; }
         constructor(expr) {
           this.#expr = expr;
+        }
+      static
+        unapply(x) {
+          return [x.#expr];
         }
       };
       this.#Neg = ((expr) => Object.freeze(new Neg(expr)));
       this.#Neg.class = Neg;
+      this.#Neg.unapply = Neg.unapply;
     }
     return this.#Neg;
   }
   $init() {
-    const self = this;
-    self.show;
+    const qualifier = this;
+    qualifier.show;
   }
 };
 Mixin1.$init();

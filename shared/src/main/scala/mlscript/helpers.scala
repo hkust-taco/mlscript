@@ -441,6 +441,19 @@ trait NuDeclImpl extends Located { self: NuDecl =>
         sps.getOrElse(Tup(Nil))})${sig.fold("")(": " + _.showDbg2)}${
           if (parents.isEmpty) "" else if (k === Als) " = " else ": "}${parents.mkString(", ")}"
   }
+  lazy val genUnapply: Opt[NuFunDef] = this match {
+    case td: NuTypeDef if td.kind is Cls => td.params.map { tup =>
+      val ret = Let(false, Var("_"), Asc(Var("x"), TypeName(name)), Tup(tup.fields.map {
+        case S(p) -> f => N -> Fld(f.flags, Sel(Var("x"), p))
+        case N -> Fld(flags, p: Var) => N -> Fld(flags, Sel(Var("x"), p))
+        case _ => die
+      }))
+      NuFunDef(N, Var("unapply"), N, Nil, L(Lam(
+        Tup(N -> Fld(FldFlags(false, false, false), Var("x")) :: Nil),
+        ret)))(N, N, N, N, N, true)
+    }
+    case _ => N
+  }
 }
 trait TypingUnitImpl extends Located { self: TypingUnit =>
   def showDbg: Str = entities.map {
@@ -551,7 +564,7 @@ trait TermImpl extends StatementImpl { self: Term =>
       }.mkString(" ") |> bra
     case Splc(fields) => fields.map{
       case L(l) => s"...$l"
-      case R(Fld(FldFlags(m, s), r)) => (if (m) "mut " else "") + (if (s) "#" else "") + r
+      case R(Fld(FldFlags(m, s, g), r)) => (if (m) "mut " else "") + (if (g) "val " else "") + (if (s) "#" else "") + r
     }.mkString("(", ", ", ")")
     case Bind(l, r) => s"$l as $r" |> bra
     case Test(l, r) => s"$l is $r" |> bra
@@ -606,7 +619,7 @@ trait TermImpl extends StatementImpl { self: Term =>
         case _ => throw new NotAType(this)
       }
     case Tup(fields) => Tuple(fields.map(fld => (fld._1, fld._2 match {
-      case Fld(FldFlags(m, s), v) => val ty = v.toType_!; Field(Option.when(m)(ty), ty)
+      case Fld(FldFlags(m, s, _), v) => val ty = v.toType_!; Field(Option.when(m)(ty), ty)
     })))
     case Bra(rcd, trm) => trm match {
       case _: Rcd => if (rcd) trm.toType_! else throw new NotAType(this)
@@ -617,7 +630,7 @@ trait TermImpl extends StatementImpl { self: Term =>
       case _ => throw new NotAType(this)
     }
     case Rcd(fields) => Record(fields.map(fld => (fld._1, fld._2 match {
-      case Fld(FldFlags(m, s), v) => val ty = v.toType_!; Field(Option.when(m)(ty), ty)
+      case Fld(FldFlags(m, s, _), v) => val ty = v.toType_!; Field(Option.when(m)(ty), ty)
     })))
     case Where(body, where) =>
       Constrained(body.toType_!, Nil, where.map {
@@ -649,7 +662,7 @@ private class NotAType(val trm: Statement) extends Throwable
 
 object PlainTup {
   def apply(fields: Term*): Term =
-    Tup(fields.iterator.map(t => (N, Fld(FldFlags(false, false), t))).toList)
+    Tup(fields.iterator.map(t => (N, Fld(FldFlags(false, false, false), t))).toList)
   def unapplySeq(trm: Term): Opt[List[Term]] = trm match {
     case Tup(fields) if fields.forall(f =>
       f._1.isEmpty && f._2.flags.mut === false && f._2.flags.spec === false
@@ -804,17 +817,17 @@ trait StatementImpl extends Located { self: Statement =>
         case R(ty) => ty
       }
       val params = fs.map {
-        case (S(nme), Fld(FldFlags(mut, spec), trm)) =>
+        case (S(nme), Fld(FldFlags(mut, spec, _), trm)) =>
           val ty = tt(trm)
           nme -> Field(if (mut) S(ty) else N, ty)
-        case (N, Fld(FldFlags(mut, spec), nme: Var)) => nme -> Field(if (mut) S(Bot) else N, Top)
+        case (N, Fld(FldFlags(mut, spec, _), nme: Var)) => nme -> Field(if (mut) S(Bot) else N, Top)
         case _ => die
       }
       val pos = params.unzip._1
       val bod = pars.map(tt).foldRight(Record(params): Type)(Inter)
       val termName = Var(nme.name).withLocOf(nme)
-      val ctor = Def(false, termName, L(Lam(tup, App(termName, Tup(N -> Fld(FldFlags(false, false), Rcd(fs.map {
-        case (S(nme), fld) => nme -> Fld(FldFlags(false, false), nme)
+      val ctor = Def(false, termName, L(Lam(tup, App(termName, Tup(N -> Fld(FldFlags(false, false, false), Rcd(fs.map {
+        case (S(nme), fld) => nme -> Fld(FldFlags(false, false, fld.flags.genGetter), nme)
         case (N, fld @ Fld(_, nme: Var)) => nme -> fld
         case _ => die
       })) :: Nil)))), true)
@@ -862,7 +875,7 @@ trait StatementImpl extends Located { self: Statement =>
             case Bra(false, t) => getFields(t)
             case Bra(true, Tup(fs)) =>
               Record(fs.map {
-                case (S(n) -> Fld(FldFlags(mut, _), t)) =>
+                case (S(n) -> Fld(FldFlags(mut, _, _), t)) =>
                   val ty = t.toType match {
                     case L(d) => allDiags += d; Top
                     case R(t) => t
@@ -874,7 +887,7 @@ trait StatementImpl extends Located { self: Statement =>
             case Bra(true, t) => lastWords(s"$t ${t.getClass}")
             case Tup(fs) => // TODO factor with case Bra(true, Tup(fs)) above
               Tuple(fs.map {
-                case (S(n) -> Fld(FldFlags(tmut, _), t)) =>
+                case (S(n) -> Fld(FldFlags(tmut, _, _), t)) =>
                   val ty = t.toType match {
                     case L(d) => allDiags += d; Top
                     case R(t) => t
@@ -936,7 +949,7 @@ trait StatementImpl extends Located { self: Statement =>
     case Eqn(lhs, rhs) => lhs :: rhs :: Nil
     case NuTypeDef(k, nme, tps, ps, ctor, sig, pars, sup, ths, bod) =>
       nme :: tps.map(_._2) ::: ps.toList ::: pars ::: ths.toList ::: bod :: Nil
-    case AdtMatchWith(cond, _) => cond :: Nil
+    case AdtMatchWith(cond, _) => cond :: Nil // FIXME discards branches...
   }
   
   

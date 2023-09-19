@@ -3,14 +3,10 @@ import { Parent } from "./Parent.js"
 const Child = new class Child {
   #Child1;
   #Child2;
-  #c1;
-  get c1() { return this.#c1; }
-  #c2;
-  get c2() { return this.#c2; }
   constructor() {
   }
   get Child1() {
-    const outer = this;
+    const qualifier = this;
     if (this.#Child1 === undefined) {
       class Child1 extends Parent.Parent1.class {
         #x;
@@ -19,14 +15,19 @@ const Child = new class Child {
           super(x + 1);
           this.#x = x;
         }
+      static
+        unapply(x) {
+          return [x.#x];
+        }
       };
       this.#Child1 = ((x) => Object.freeze(new Child1(x)));
       this.#Child1.class = Child1;
+      this.#Child1.unapply = Child1.unapply;
     }
     return this.#Child1;
   }
   get Child2() {
-    const outer = this;
+    const qualifier = this;
     if (this.#Child2 === undefined) {
       class Child2 extends Parent.Parent2 {
         #y;
@@ -35,18 +36,21 @@ const Child = new class Child {
           super();
           this.#y = y;
         }
+      static
+        unapply(x) {
+          return [x.#y];
+        }
       };
       this.#Child2 = ((y) => Object.freeze(new Child2(y)));
       this.#Child2.class = Child2;
+      this.#Child2.unapply = Child2.unapply;
     }
     return this.#Child2;
   }
   $init() {
-    const self = this;
-    this.#c1 = self.Child1(2);
-    const c1 = this.#c1;
-    this.#c2 = self.Child2(3);
-    const c2 = this.#c2;
+    const qualifier = this;
+    const c1 = qualifier.Child1(2);
+    const c2 = qualifier.Child2(3);
     console.log(c1.inc);
     console.log(c2.x);
   }

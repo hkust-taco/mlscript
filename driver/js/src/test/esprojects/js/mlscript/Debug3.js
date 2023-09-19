@@ -1,11 +1,8 @@
 export const Debug3 = new class Debug3 {
-  #z;
-  get z() { return this.#z; }
   constructor() {
   }
   $init() {
-    this.#z = 1;
-    const z = this.#z;
+    const z = 1;
   }
 };
 Debug3.$init();

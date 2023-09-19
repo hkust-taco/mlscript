@@ -3,16 +3,16 @@ export declare module Mixin1() {
   class Neg[A](expr: A)
   mixin EvalNeg() {
     super: {eval: 'a -> 'b}
-    this: {eval: 'expr -> Int}
-    fun eval: (Neg['expr] | Object & 'a & ~#Neg) -> (Int | 'b)
+    this: {eval: 'c -> Int}
+    fun eval: (Neg['c] | Object & 'a & ~#Neg) -> (Int | 'b)
   }
   module MyLang {
-    fun eval: (Neg['A] | Object & ~#Neg) -> Int
+    fun eval: (Neg['d] | Object & ~#Neg) -> Int
   }
   fun show: unit
   unit
   where
-    'A <: Neg['A] | Object & ~#Neg
+    'd <: Neg['d] | Object & ~#Neg
 }
 //| ╔══[ERROR] Unsupported parent specification
 //| ║  l.11: 	module MyLang extends Mixin2.EvalBase, EvalNeg

@@ -4,7 +4,7 @@ export const Parent = new class Parent {
   constructor() {
   }
   get Parent1() {
-    const outer = this;
+    const qualifier = this;
     if (this.#Parent1 === undefined) {
       class Parent1 {
         #x;
@@ -16,14 +16,19 @@ export const Parent = new class Parent {
           const x = this.#x;
           return x + 1;
         }
+      static
+        unapply(x) {
+          return [x.#x];
+        }
       };
       this.#Parent1 = ((x) => Object.freeze(new Parent1(x)));
       this.#Parent1.class = Parent1;
+      this.#Parent1.unapply = Parent1.unapply;
     }
     return this.#Parent1;
   }
   get Parent2() {
-    const outer = this;
+    const qualifier = this;
     if (this.#Parent2 === undefined) {
       class Parent2 {
         constructor() {

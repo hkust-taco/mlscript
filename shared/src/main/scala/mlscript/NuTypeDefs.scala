@@ -397,6 +397,13 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
       this
   }
   
+  // Field `thisRef` is defined when the member refers to `this` selecting a field on it
+  // e.g., val x = this
+  // Field `refs` contains all `Var`s accessed by the member with their possible `this` qualifiers (`None` if it is an unqualified access)
+  case class RefMap(thisRef: Opt[Var], refs: Set[(Var, Opt[Var])])
+  object RefMap {
+    lazy val nothing: RefMap = RefMap(N, Set.empty)
+  }
   
   /** Note: the type `bodyType` is stored *without* its polymorphic wrapper! (unlike `typeSignature`) */
   case class TypedNuFun(level: Level, fd: NuFunDef, bodyType: ST)(val isImplemented: Bool)
@@ -421,6 +428,11 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     def mapPolMap(pol: PolMap)(f: (PolMap, SimpleType) => SimpleType)
           (implicit ctx: Ctx): TypedNuFun =
       TypedNuFun(level, fd, f(pol, bodyType))(isImplemented)
+
+    def getFunRefs: RefMap = fd.rhs match {
+      case L(term) => getRefs(term)
+      case _ => RefMap.nothing
+    }
   }
   
   
@@ -469,6 +481,26 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   }
   
   
+  def getRefs(body: Statement): RefMap = {
+    val refs = mutable.HashSet[(Var, Opt[Var])]()
+
+    def visit(s: Located): Opt[Var] = s match {
+      case Sel(ths @ Var("this"), v) =>
+        refs.add((v, S(ths)))
+        N
+      case v @ Var(name) =>
+        if (name === "this") S(v)
+        else {
+          refs.add((v, N))
+          N
+        }
+      case _: Type => N
+      case _: Term| _: Statement | _: NuDecl | _: IfBody | _: CaseBranches | _: TypingUnit =>
+          s.children.foldLeft[Opt[Var]](N)((r, c) => r.orElse(visit(c)))
+    }
+
+    RefMap(visit(body), refs.toSet)
+  }
   
   /** Type checks a typing unit, which is a sequence of possibly-mutually-recursive type and function definitions
    *  interleaved with plain statements. */
@@ -520,9 +552,9 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
             assert(fd.signature.isEmpty)
             funSigs.get(fd.nme.name) match {
               case S(sig) =>
-                fd.copy()(fd.declareLoc, fd.exportLoc, S(sig), outer)
+                fd.copy()(fd.declareLoc, fd.exportLoc, fd.virtualLoc, S(sig), outer, fd.genField)
               case _ =>
-                fd.copy()(fd.declareLoc, fd.exportLoc, fd.signature, outer)
+                fd.copy()(fd.declareLoc, fd.exportLoc, fd.virtualLoc, fd.signature, outer, fd.genField)
             }
           case td: NuTypeDef =>
             if ((td.nme.name in reservedTypeNames) && !isPredef)
@@ -824,7 +856,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
       decl match {
         case td: NuTypeDef =>
           td.params.getOrElse(Tup(Nil)).fields.map {
-            case (S(nme), Fld(FldFlags(mut, spec), value)) =>
+            case (S(nme), Fld(FldFlags(mut, spec, _), value)) =>
               assert(!mut && !spec, "TODO") // TODO
               value.toType match {
                 case R(tpe) =>
@@ -833,7 +865,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                   nme -> FieldType(N, ty)(provTODO)
                 case _ => ???
               }
-            case (N, Fld(FldFlags(mut, spec), nme: Var)) =>
+            case (N, Fld(FldFlags(mut, spec, _), nme: Var)) =>
               // assert(!mut && !spec, "TODO") // TODO
               // nme -> FieldType(N, freshVar(ttp(nme), N, S(nme.name)))(provTODO)
               nme -> FieldType(N, err(msg"${td.kind.str.capitalize} parameters currently need type annotations",
@@ -1002,6 +1034,78 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
               
             case td: NuTypeDef =>
               
+              /** Check no `this` access in ctor statements or val rhs and reject unqualified accesses to virtual members.. */
+              def qualificationCheck(members: Ls[NuMember], stmts: Ls[Statement], base: Ls[NuMember], sigs: Ls[NuMember]): Unit = {
+                val cache = mutable.HashMap[Str, Opt[Var]]()
+                val sigMap = sigs.map(m => m.name -> m).toMap
+                val allMembers = sigMap ++ (base.iterator ++ members).map(m => m.name -> m).toMap
+
+                def isVirtual(nf: TypedNuFun) =
+                  nf.fd.isVirtual || (sigMap.get(nf.name) match {
+                    case S(sig: TypedNuFun) => sig.fd.virtualLoc.nonEmpty // The signature is virtual by itself, so we need to check the virtual keyword
+                    case _ => false
+                  })
+
+                // Return S(v) when there is an invalid access to the v.
+                def checkThisInCtor(refs: RefMap, name: Opt[Str], stack: Ls[Str])(expection: Bool): Opt[Var] = {
+                  def run: Opt[Var] = {
+                    refs.thisRef.orElse(
+                      refs.refs.foldLeft[Opt[Var]](N)((res, p) => res.orElse(allMembers.get(p._1.name) match {
+                        case S(nf: TypedNuFun) if name.fold(true)(name => name =/= p._1.name) && !stack.contains(p._1.name) => // Avoid cycle checking
+                          p._2 match {
+                            case q @ S(_) if !expection || isVirtual(nf) => q
+                            case _ => checkThisInCtor(nf.getFunRefs, S(p._1.name), p._1.name :: stack)(false)
+                          }
+                        case _ => N // Refer to outer 
+                      }))
+                    )
+                  }
+
+                  name.fold(run)(name => cache.getOrElseUpdate(name, run))
+                }
+
+                def checkUnqualifiedVirtual(refs: RefMap, parentLoc: Opt[Loc]) =
+                  refs.refs.foreach(p => if (p._2.isEmpty) allMembers.get(p._1.name) match { // unqualified access
+                    case S(nf: TypedNuFun) if isVirtual(nf) =>
+                      err(msg"Unqualified access to virtual member ${p._1.name}" -> parentLoc ::
+                        msg"Declared here:" -> nf.fd.toLoc
+                      :: Nil)
+                    case _ => ()
+                  })
+
+                // If the second error message location is covered by the first one,
+                // we show the first error message with more precise location
+                def mergeErrMsg(msg1: Message -> Opt[Loc], msg2: Message -> Opt[Loc]) =
+                  (msg1._2, msg2._2) match {
+                    case (S(loc1), l @ S(loc2)) if loc1 covers loc2 => msg1._1 -> l :: Nil
+                    case _ => msg1 :: msg2 :: Nil
+                  }
+
+                members.foreach {
+                  case tf @ TypedNuFun(_, fd, _) =>
+                    val refs = tf.getFunRefs
+                    if (fd.isLetRec.isDefined) checkThisInCtor(refs, S(tf.name), tf.name :: Nil)(true) match {
+                      case S(v) => // not a function && access `this` in the ctor
+                        err(mergeErrMsg(msg"Cannot access `this` while initializing field ${tf.name}" -> fd.toLoc,
+                          msg"The access to `this` is here" -> v.toLoc))
+                      case N => ()
+                    }
+                    checkUnqualifiedVirtual(refs, fd.toLoc)
+                  case _ => ()
+                }
+                stmts.foreach{
+                  case Asc(Var("this"), _) => ()
+                  case s =>
+                    val refs = getRefs(s)
+                    checkThisInCtor(refs, N, Nil)(false) match {
+                      case S(v) =>
+                        err(mergeErrMsg(msg"Cannot access `this` during object initialization" -> s.toLoc,
+                          msg"The access to `this` is here" -> v.toLoc))
+                      case N => ()
+                    }
+                    checkUnqualifiedVirtual(refs, s.toLoc)
+                }
+              }
               
               /** Checks everything is implemented and there are no implementation duplicates. */
               def implemCheck(implementedMembers: Ls[NuMember], toImplement: Ls[NuMember]): Unit = {
@@ -1031,7 +1135,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
               }
               
               /** Checks overriding members against their parent types. */
-              def overrideCheck(newMembers: Ls[NuMember], signatures: Ls[NuMember]): Unit =
+              def overrideCheck(newMembers: Ls[NuMember], signatures: Ls[NuMember], clsSigns: Ls[NuMember]): Unit =
                   ctx.nextLevel { implicit ctx: Ctx => // * Q: why exactly do we need `ctx.nextLevel`?
                 
                 val sigMap = MutMap.empty[Str, NuMember]
@@ -1046,10 +1150,17 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                   println(s"Checking overriding for `${m.name}`...")
                   (m, sigMap.get(m.name)) match {
                     case (_, N) =>
-                    case (m: TypedNuTermDef, S(fun: TypedNuTermDef)) =>
-                      val mSign = m.typeSignature
-                      implicit val prov: TP = mSign.prov
-                      constrain(mSign, fun.typeSignature)
+                    case (m: TypedNuTermDef, S(fun: TypedNuTermDef)) => fun match {
+                      // If the implementation and the declaration are in the same class, it does not require to be virtual
+                      case td: TypedNuFun if (!td.fd.isVirtual && !clsSigns.contains(fun)) =>
+                        err(msg"${m.kind.str.capitalize} member `${m.name}` is not virtual and cannot be overridden" -> m.toLoc ::
+                          msg"Declared here:" -> fun.toLoc ::
+                          Nil)
+                      case _ =>
+                        val mSign = m.typeSignature
+                        implicit val prov: TP = mSign.prov
+                        constrain(mSign, fun.typeSignature)
+                    }
                     case (_, S(that)) =>
                       err(msg"${m.kind.str.capitalize} member `${m.name}` cannot override ${
                           that.kind.str} member of the same name declared in parent" -> td.toLoc ::
@@ -1071,7 +1182,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       val fd = NuFunDef((a.fd.isLetRec, b.fd.isLetRec) match {
                         case (S(a), S(b)) => S(a || b)
                         case _ => N // if one is fun, then it will be fun
-                      }, a.fd.nme, N/*no sym name?*/, a.fd.tparams, a.fd.rhs)(a.fd.declareLoc, a.fd.exportLoc, N, a.fd.outer orElse b.fd.outer)
+                      }, a.fd.nme, N/*no sym name?*/, a.fd.tparams, a.fd.rhs)(a.fd.declareLoc, a.fd.exportLoc, a.fd.virtualLoc, N, a.fd.outer orElse b.fd.outer, a.fd.genField)
                       S(TypedNuFun(a.level, fd, a.bodyType & b.bodyType)(a.isImplemented || b.isImplemented))
                     case (a: NuParam, S(b: NuParam)) => 
                       S(NuParam(a.nme, a.ty && b.ty)(a.level))
@@ -1181,7 +1292,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     ).toMap
                     
                     // check trait overriding
-                    overrideCheck(typedSignatureMembers.map(_._2), trtMembers)
+                    overrideCheck(typedSignatureMembers.map(_._2), trtMembers, Nil)
                     
                     TypedNuTrt(outerCtx.lvl, td,
                       tparams,
@@ -1352,7 +1463,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     // * ... must type check against the trait signatures
                     trace(s"Checking base class implementations...") {
                       println(implemsInheritedFromBaseCls, newImplems)
-                      overrideCheck(implemsInheritedFromBaseCls, traitMembers)
+                      overrideCheck(implemsInheritedFromBaseCls, traitMembers, Nil)
                     }()
                     
                     // * The following are type signatures all implementations must satisfy
@@ -1365,9 +1476,18 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     // * the signatures from the base class and traits
                     val toCheck =
                       (newImplems.iterator ++ mxnMembers).distinctBy(_.name).toList
+
+                    trace(s"Checking qualifications...") {
+                      val toCheckImplems = newImplems.filter(_.isImplemented)
+                      qualificationCheck(toCheckImplems, td.body.entities.filter {
+                        case _: NuDecl => false
+                        case _ => true
+                      }, baseClsMembers, clsSigns)
+                    }()
+
                     trace(s"Checking new implementations...") {
                       overrideCheck(toCheck,
-                        (clsSigns.iterator ++ ifaceMembers).distinctBy(_.name).toList)
+                        (clsSigns.iterator ++ ifaceMembers).distinctBy(_.name).toList, clsSigns)
                     }()
                     
                     val impltdMems = (
@@ -1376,7 +1496,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       ++ baseClsImplemMembers
                     ).distinctBy(_.name)
                     
-                    overrideCheck(clsSigns, ifaceMembers)
+                    overrideCheck(clsSigns, ifaceMembers, clsSigns)
                     
                     implemCheck(impltdMems,
                       (clsSigns.iterator ++ ifaceMembers.iterator)
@@ -1410,7 +1530,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     val ttu = typeTypingUnit(td.body, S(td))
                     val impltdMems = ttu.implementedMembers
                     val signs = typedSignatureMembers.map(_._2)
-                    overrideCheck(impltdMems, signs)
+                    overrideCheck(impltdMems, signs, signs)
                     implemCheck(impltdMems, signs)
                     val mems = impltdMems.map(m => m.name -> m).toMap ++ typedSignatureMembers
                     TypedNuMxn(outer.lvl, td, thisTV, superTV, tparams, typedParams, mems)

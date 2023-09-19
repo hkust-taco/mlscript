@@ -333,6 +333,7 @@ object NewLexer {
     "undefined",
     "abstract",
     "constructor",
+    "virtual",
     "unsupported"
   )
 

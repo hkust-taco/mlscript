@@ -10,8 +10,8 @@ export const Cycle2 = new class Cycle2 {
     return Cycle1.f(x);
   }
   $init() {
-    const self = this;
-    log(self.g(42));
+    const qualifier = this;
+    log(qualifier.g(42));
   }
 };
 Cycle2.$init();

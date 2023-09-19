@@ -1,4 +1,4 @@
-export class Parent1(x: Int) {
+export class Parent1(val x: Int) {
   fun inc = x + 1
 }
 

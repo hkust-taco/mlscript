@@ -1,17 +1,11 @@
 import * as MyPrint from "../my_ts_path/MyPrint.js"
 
 const TS = new class TS {
-  #tspt;
-  get tspt() { return this.#tspt; }
-  #printer;
-  get printer() { return this.#printer; }
   constructor() {
   }
   $init() {
-    this.#tspt = MyPrint.DatePrint;
-    const tspt = this.#tspt;
-    this.#printer = new tspt("love from ts");
-    const printer = this.#printer;
+    const tspt = MyPrint.DatePrint;
+    const printer = new tspt("love from ts");
     printer.print("hello world!");
   }
 };

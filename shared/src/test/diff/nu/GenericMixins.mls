@@ -122,7 +122,7 @@ mixin Test[A] {
 //│   fun foo: A -> A
 //│ }
 
-class C(arg: Int) extends Test
+class C(val arg: Int) extends Test
 //│ class C(arg: Int) {
 //│   fun bar: [Int | 'A, Int | 'A]
 //│   fun baz: Int
@@ -145,6 +145,9 @@ module D extends C(0) {
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
 //│ ║  l.143: 	  this.foo(false)
 //│ ╙──       	      ^^^^
+//│ ╔══[ERROR] Cannot access `this` during object initialization
+//│ ║  l.143: 	  this.foo(false)
+//│ ╙──       	  ^^^^
 //│ module D extends C {
 //│   fun bar: forall 'A. [Int | 'A, Int | 'A]
 //│   fun baz: Int
@@ -165,7 +168,7 @@ class C extends Test { // it also fails with Test[Int]...
 //│ ║  l.115: 	  fun bar = (this.arg, this.arg)
 //│ ╙──       	                 ^^^^
 //│ ╔══[ERROR] Illegal position for this definition statement.
-//│ ║  l.156: 	  fun arg = 123
+//│ ║  l.159: 	  fun arg = 123
 //│ ╙──       	      ^^^^^^^^^
 //│ class C {
 //│   fun bar: [error | 'A, error | 'A]

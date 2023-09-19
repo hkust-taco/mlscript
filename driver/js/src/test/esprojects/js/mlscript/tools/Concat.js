@@ -12,8 +12,8 @@ export const Concat = new class Concat {
     return concat(s1)(s2);
   }
   concat3(s1, s2, s3) {
-    const self = this;
-    return self.concat2(self.concat2(s1, s2), s3);
+    const qualifier = this;
+    return qualifier.concat2(qualifier.concat2(s1, s2), s3);
   }
   $init() {}
 };

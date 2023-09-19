@@ -87,7 +87,10 @@ let c = C
 //│ globalThis.c1 = C;
 //│ // End of generated code
 //│ c
-//│   = [Function (anonymous)] { class: [class C] }
+//│   = [Function (anonymous)] {
+//│       class: [class C],
+//│       unapply: [Function: unapply]
+//│     }
 
 c()
 //│ C

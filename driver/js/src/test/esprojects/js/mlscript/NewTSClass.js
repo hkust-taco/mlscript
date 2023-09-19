@@ -5,21 +5,26 @@ const NewTSClass = new class NewTSClass {
   constructor() {
   }
   get Bar() {
-    const outer = this;
+    const qualifier = this;
     if (this.#Bar === undefined) {
       class Bar extends MyClass.FooClass {
         constructor() {
           super();
         }
+      static
+        unapply(x) {
+          return [];
+        }
       };
       this.#Bar = (() => Object.freeze(new Bar()));
       this.#Bar.class = Bar;
+      this.#Bar.unapply = Bar.unapply;
     }
     return this.#Bar;
   }
   $init() {
-    const self = this;
-    self.Bar().foo();
+    const qualifier = this;
+    qualifier.Bar().foo();
   }
 };
 NewTSClass.$init();

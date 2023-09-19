@@ -15,14 +15,14 @@ fun f(p: Pair['a, 'b]) = p.lhs
 
 fun f(e) = if e is
   Pair(l, r) then [l, r]
-//│ fun f: forall 'lhs 'rhs. Pair['lhs, 'rhs] -> ['lhs, 'rhs]
+//│ fun f: forall 'a 'b. Pair['a, 'b] -> ['a, 'b]
 // f: (Exp['a] & Pair) -> 0
 
 
 fun f(e) = if e is
   Pair(l, r) then [l, r]
   Lit(n) then n
-//│ fun f: forall 'lhs 'rhs. (Lit | Pair['lhs, 'rhs]) -> (Int | ['lhs, 'rhs])
+//│ fun f: forall 'a 'b. (Lit | Pair['a, 'b]) -> (Int | ['a, 'b])
 
 (e: Exp['X]) => f(e)
 //│ (e: Exp['X]) -> (Int | [??L, ??R])

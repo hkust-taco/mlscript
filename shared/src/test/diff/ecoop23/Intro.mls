@@ -20,7 +20,7 @@ mixin ComparePoint {
 //│ }
 
 
-class Color(str: Str) {
+class Color(val str: Str) {
   fun equals(that) = str === that.str
 }
 //│ class Color(str: Str) {
@@ -70,8 +70,8 @@ mixin CompareNested {
 }
 //│ mixin CompareNested() {
 //│   super: {compare: ('a, 'b) -> Bool}
-//│   this: {compare: ('value, 'value0) -> Bool}
-//│   fun compare: ({parent: Object & ~#Some | Some['value]} & 'a, {parent: Object & ~#Some | Some['value0]} & 'b) -> Bool
+//│   this: {compare: ('c, 'd) -> Bool}
+//│   fun compare: ({parent: Object & ~#Some | Some['c]} & 'a, {parent: Object & ~#Some | Some['d]} & 'b) -> Bool
 //│ }
 
 // * Alternatively:
@@ -86,7 +86,7 @@ mixin CompareNested {
 
 
 
-class MyPoint(x: Int, y: Int, color: Color, parent: Some[MyPoint] | None)
+class MyPoint(val x: Int, val y: Int, val color: Color, val parent: Some[MyPoint] | None)
 //│ class MyPoint(x: Int, y: Int, color: Color, parent: None | Some[MyPoint])
 
 

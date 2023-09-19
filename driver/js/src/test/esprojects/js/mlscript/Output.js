@@ -4,13 +4,10 @@ function log(x) {
   return console.info(x);
 }
 const Output = new class Output {
-  #res;
-  get res() { return this.#res; }
   constructor() {
   }
   $init() {
-    this.#res = ConfigGen.generate("foo");
-    const res = this.#res;
+    const res = ConfigGen.generate("foo");
     log(res);
   }
 };

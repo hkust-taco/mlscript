@@ -532,12 +532,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
               }
           }
         })
-      case tv: TypeVar => vars.getOrElse(tv.identifier.toOption.getOrElse(""), {
+      case tv: TypeVar => tv.identifier.toOption.flatMap(vars.get).getOrElse {
         recVars.getOrElse(tv,
-          localVars.getOrElseUpdate(tv, freshVar(noProv, N, tv.name)
+          localVars.getOrElseUpdate(tv, freshVar(noProv, N, tv.name.filter(_.exists(_ =/= '\'')))
               (outerCtxLvl)) // * Type variables not explicily bound are assigned the widest (the outer context's) level
           ).withProv(tyTp(ty.toLoc, "type variable"))
-      })
+      }
       case app @ AppliedType(base, targs) if (base.name === "unsupported") => targs match {
         case Literal(StrLit(tp)) :: Literal(StrLit(file)) :: Literal(IntLit(line)) :: Literal(IntLit(col)) :: Nil =>
           Unsupported(tp, file, line, col)(noProv)
@@ -896,7 +896,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
               :: fieldNames.map(tp => msg"Declared at" -> tp.toLoc))(raise)
           case _ =>
         }
-        RecordType.mk(fs.map { case (n, Fld(FldFlags(mut, _), t)) => 
+        RecordType.mk(fs.map { case (n, Fld(FldFlags(mut, _, _), t)) => 
           if (n.name.isCapitalized)
             err(msg"Field identifiers must start with a small letter", term.toLoc)(raise)
           val tym = typePolymorphicTerm(t)
@@ -917,7 +917,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
                 Asc(v, t.toTypeRaise).withLoc(v.toLoc.fold(t.toLoc)(_ ++ t.toLoc |> some))))
             case _ => e
           }
-        }.map { case (n, Fld(FldFlags(mut, _), t)) =>
+        }.map { case (n, Fld(FldFlags(mut, _, _), t)) =>
           val tym = typePolymorphicTerm(t)
           // val tym = if (n.isDefined) typeType(t.toTypeRaise)
           //   else typePolymorphicTerm(t)
@@ -979,7 +979,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
             val t_a = ArrayType(freshVar(prov, N).toUpper(prov))(prov)
             con(t_l, t_a, t_l)
           }) 
-          case R(Fld(FldFlags(mt, sp), r)) => {
+          case R(Fld(FldFlags(mt, sp, _), r)) => {
             val t = typeMonomorphicTerm(r)
             if (mt) { R(FieldType(Some(t), t)(t.prov)) } else {R(t.toUpper(t.prov))}
           }
@@ -1035,7 +1035,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
             else ctx.poly { implicit ctx => typePolymorphicTerm(a) }
           a match {
             case tup @ Tup(as) =>
-              TupleType(as.map { case (n, Fld(FldFlags(mut, spec), a)) => // TODO handle mut?
+              TupleType(as.map { case (n, Fld(FldFlags(mut, spec, _), a)) => // TODO handle mut?
                 // assert(!mut)
                 val fprov = tp(a.toLoc, "argument")
                 val tym = typeArg(a)
@@ -1110,6 +1110,18 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
                 err(msg"Class ${name} has no method ${fieldName.name}", term.toLoc)
                 mthCallOrSel(obj, fieldName)
             }
+          // * The code below is only a temporary solution to type `ClassName.unapply`.
+          // * It removed when static methods can be typed properly.
+          case Var(nuCls) =>
+            if (fieldName.name === "unapply") (ctx.get(nuCls) match {
+                case S(CompletedTypeInfo(cls: TypedNuCls)) => cls.td.genUnapply
+                case S(ti: DelayedTypeInfo) => ti.decl.genUnapply
+                case _ => N
+              }) match {
+                case S(NuFunDef(_, _, _, _, L(unapplyMtd))) => typePolymorphicTerm(unapplyMtd)
+                case _ => mthCallOrSel(obj, fieldName)
+              }
+            else mthCallOrSel(obj, fieldName)
           case _ => mthCallOrSel(obj, fieldName)
         }
       case Let(isrec, nme, rhs, bod) =>
@@ -1442,10 +1454,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         (implicit ctx: Ctx, raise: Raise, prov: TypeProvenance, vars: Map[Str, SimpleType], genLambdas: GenLambdas): SimpleType
       = term match {
     case (trm @ Var(nme)) :: sts if rcd => // field punning
-      typeTerms(Tup(S(trm) -> Fld(FldFlags(false, false), trm) :: Nil) :: sts, rcd, fields)
+      typeTerms(Tup(S(trm) -> Fld(FldFlags(false, false, false), trm) :: Nil) :: sts, rcd, fields)
     case Blk(sts0) :: sts1 => typeTerms(sts0 ::: sts1, rcd, fields)
     case Tup(Nil) :: sts => typeTerms(sts, rcd, fields)
-    case Tup((no, Fld(FldFlags(tmut, _), trm)) :: ofs) :: sts =>
+    case Tup((no, Fld(FldFlags(tmut, _, _), trm)) :: ofs) :: sts =>
       val ty = {
         trm match  {
           case Bra(false, t) if ctx.inPattern => // we use syntax `(x: (p))` to type `p` as a pattern and not a type...
@@ -1550,7 +1562,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       case TypedNuMxn(level, td, thisTy, superTy, tparams, params, members) =>
         ectx(tparams) |> { implicit ectx =>
           NuTypeDef(td.kind, td.nme, td.tparams,
-            S(Tup(params.map(p => N -> Fld(FldFlags(false, false), Asc(p._1, go(p._2.ub)))))),
+            S(Tup(params.map(p => N -> Fld(FldFlags(false, false, false), Asc(p._1, go(p._2.ub)))))),
             N,//TODO
             N,
             Nil, // TODO mixin parents?
@@ -1561,7 +1573,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       case TypedNuCls(level, td, tparams, params, members, thisTy, sign, ihtags, ptps) =>
         ectx(tparams) |> { implicit ectx =>
           NuTypeDef(td.kind, td.nme, td.tparams,
-            Opt.when(td.params.isDefined)(Tup(params.map(p => N -> Fld(FldFlags(false, false), Asc(p._1, go(p._2.ub)))))),
+            Opt.when(td.params.isDefined)(Tup(params.map(p => N -> Fld(FldFlags(false, false, false), Asc(p._1, go(p._2.ub)))))),
             td.ctor,
             Option.when(!(TopType <:< sign))(go(sign)),
             ihtags.toList.sorted.map(_.toVar), // TODO provide targs/args
@@ -1581,7 +1593,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
             mkTypingUnit(thisTy, members))(td.declareLoc, td.exportLoc, td.abstractLoc)
           }
       case tf @ TypedNuFun(level, fd, bodyTy) =>
-        NuFunDef(fd.isLetRec, fd.nme, fd.symbolicNme, Nil, R(go(tf.typeSignature)))(fd.declareLoc, fd.exportLoc, fd.signature, fd.outer)
+        NuFunDef(fd.isLetRec, fd.nme, fd.symbolicNme, Nil, R(go(tf.typeSignature)))(fd.declareLoc, fd.exportLoc, fd.virtualLoc, fd.signature, fd.outer, fd.genField)
       case p: NuParam =>
         ??? // TODO
       case TypedNuDummy(d) =>
