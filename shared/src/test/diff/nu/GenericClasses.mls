@@ -35,7 +35,7 @@ f(c)
 //│     = 1
 
 
-class C[A](n: A) {
+class C[A](val n: A) {
   fun f = this.n
   fun g = C(12).n
 }

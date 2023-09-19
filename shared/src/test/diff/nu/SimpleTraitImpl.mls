@@ -175,7 +175,7 @@ M.x
 
 :e
 class C2 extends T1
-//│ ╔══[ERROR] Member `x` is declared in parent but not implemented in `C2`
+//│ ╔══[ERROR] Member `x` is declared (or its declaration is inherited) but is not implemented in `C2`
 //│ ║  l.177: 	class C2 extends T1
 //│ ║         	      ^^
 //│ ╟── Declared here:
@@ -193,7 +193,7 @@ abstract class C2 extends T1
 
 :e
 class C3 extends C2
-//│ ╔══[ERROR] Member `x` is declared in parent but not implemented in `C3`
+//│ ╔══[ERROR] Member `x` is declared (or its declaration is inherited) but is not implemented in `C3`
 //│ ║  l.195: 	class C3 extends C2
 //│ ║         	      ^^
 //│ ╟── Declared here:

@@ -11,8 +11,8 @@ let f =
 
 let x : Int | string
 let x = 1
-//│ let x: Int | string
 //│ let x: 1
+//│ let x: Int | string
 //│ x
 //│   = <missing implementation>
 //│ x

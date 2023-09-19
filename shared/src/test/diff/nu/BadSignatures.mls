@@ -90,7 +90,7 @@ class B() extends A {
 
 :e
 mixin M { fun x : Int }
-//│ ╔══[ERROR] Member `x` is declared in parent but not implemented in `M`
+//│ ╔══[ERROR] Member `x` is declared (or its declaration is inherited) but is not implemented in `M`
 //│ ║  l.92: 	mixin M { fun x : Int }
 //│ ║        	      ^
 //│ ╟── Declared here:

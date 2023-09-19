@@ -1,6 +1,6 @@
 :NewDefs
 
-class Base(base: Int) {
+class Base(val base: Int) {
   fun getBase1 = base
   fun getBase2 = this.base
   fun foo(x) = this.base + x

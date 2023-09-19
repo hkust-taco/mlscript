@@ -86,7 +86,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       val res = k(newCtx)
       val ec = newCtx.extrCtx
       assert(constrainedTypes || newCtx.extrCtx.isEmpty)
-      trace(s"UNSTASHING... (out)") {
+      if (ec.nonEmpty) trace(s"UNSTASHING... (out)") {
         implicit val ctx: Ctx = this
         ec.foreach { case (tv, bs) => bs.foreach {
           case (true, b) => constrain(b, tv)
@@ -116,7 +116,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         println(s"Inferred poly constr: $cty  —— where ${cty.showBounds}")
         
         val cty_fresh =
-          // * Samnity check: uncommenting this should change nothing (modulo type simplification randomness)
+          // * Sanity check: uncommenting this should change nothing (modulo type simplification randomness)
           // cty.freshenAbove(lvl, false)
           cty
         

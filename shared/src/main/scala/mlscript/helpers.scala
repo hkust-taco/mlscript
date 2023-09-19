@@ -455,8 +455,8 @@ trait NuDeclImpl extends Located { self: NuDecl =>
   lazy val genUnapply: Opt[NuFunDef] = this match {
     case td: NuTypeDef if td.kind is Cls => td.params.map { tup =>
       val ret = Let(false, Var("_"), Asc(Var("x"), TypeName(name)), Tup(tup.fields.map {
-        case S(p) -> f => N -> Fld(FldFlags.empty, Sel(Var("x"), p))
-        case N -> Fld(flags, p: Var) => N -> Fld(FldFlags.empty, Sel(Var("x"), p))
+        case S(p) -> f => N -> Fld(FldFlags.empty, Sel(Var("x"), Var("#" + p.name).withLocOf(p)))
+        case N -> Fld(flags, p: Var) => N -> Fld(FldFlags.empty, Sel(Var("x"), Var("#" + p.name).withLocOf(p)))
         case _ => die
       }))
       NuFunDef(N, Var("unapply"), N, Nil, L(Lam(

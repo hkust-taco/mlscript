@@ -833,7 +833,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
           val ins = unapplyScope.declareParameter(nme)
           JSClassMethod("unapply", JSNamePattern(ins) :: Nil, L(JSArray(fields.map {
             case _ -> Fld(_, trm) => trm match {
-              case Sel(Var(ins), Var(f)) => JSIdent(s"$ins.#$f")
+              case Sel(Var(ins), Var(f)) => JSIdent(s"$ins.$f")
               case _ => translateTerm(trm)
             } 
           }))) :: Nil

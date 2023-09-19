@@ -18,25 +18,26 @@ Test.test
 //│ res
 //│     = 42
 
-// :e // TODO reject
+:e
 Test.x
-//│ 42
+//│ ╔══[ERROR] Type `Test` does not contain member `x`
+//│ ║  l.22: 	Test.x
+//│ ╙──      	    ^^
+//│ error
 //│ res
 //│     = undefined
 
 
-mixin BaseTest(x: Int -> Int)
+mixin BaseTest(val x: Int -> Int)
 //│ mixin BaseTest(x: Int -> Int)
 
 module Test extends BaseTest(id)
 //│ module Test
 
-:re // TODO implement mixin param getters
 Test.x(1)
 //│ 1
 //│ res
-//│ Runtime error:
-//│   TypeError: Test.x is not a function
+//│     = 1
 
 
 :e // TODO support
@@ -44,7 +45,7 @@ mixin BaseTest(x) {
   fun test = x
 }
 //│ ╔══[ERROR] Mixin parameters currently need type annotations
-//│ ║  l.43: 	mixin BaseTest(x) {
+//│ ║  l.44: 	mixin BaseTest(x) {
 //│ ╙──      	               ^
 //│ mixin BaseTest(x: error) {
 //│   fun test: error

@@ -2,24 +2,36 @@
 
 
 mixin Test[A] {
-    fun bar: (A, A)
-    fun bar = (this.a, this.a)
+  fun bar: (A, A)
+  fun bar = (this.a, this.a)
 }
 //│ mixin Test[A]() {
 //│   this: {a: A}
 //│   fun bar: [A, A]
 //│ }
 
+class A(val a: Int) extends Test
+//│ class A(a: Int) {
+//│   fun bar: [Int, Int]
+//│ }
+
+:e
 class A(a: Int) extends Test
+//│ ╔══[ERROR] Parameter 'a' cannot tbe accessed as a field
+//│ ║  l.6: 	  fun bar = (this.a, this.a)
+//│ ╙──     	                         ^^
+//│ ╔══[ERROR] Parameter 'a' cannot tbe accessed as a field
+//│ ║  l.6: 	  fun bar = (this.a, this.a)
+//│ ╙──     	                 ^^
 //│ class A(a: Int) {
 //│   fun bar: [Int, Int]
 //│ }
 
 mixin Test2[S, T] {
-    fun x: (S, T)
-    fun x = (this.s, this.t)
-    fun fb: S => (S, S)
-    fun fb(h: S) = (this.s, h)
+  fun x: (S, T)
+  fun x = (this.s, this.t)
+  fun fb: S => (S, S)
+  fun fb(h: S) = (this.s, h)
 }
 //│ mixin Test2[S, T]() {
 //│   this: {s: S, t: T}
@@ -27,50 +39,50 @@ mixin Test2[S, T] {
 //│   fun x: [S, T]
 //│ }
 
-class A1[B](s: Bool, t: B) extends Test2[Bool, B]
+class A1[B](val s: Bool, val t: B) extends Test2[Bool, B]
 //│ class A1[B](s: Bool, t: B) {
 //│   fun fb: (Bool & 'S) -> [Bool | 'S, Bool | 'S]
 //│   fun x: [Bool | 'S, B]
 //│ }
 
-// TODO: Investigate type of fb
-class A2[A](s: A, t: Int) extends Test2
+// * TODO: Investigate type of fb
+class A2[A](val s: A, val t: Int) extends Test2
 //│ class A2[A](s: A, t: Int) {
 //│   fun fb: 'S -> [A | 'S, A | 'S]
 //│   fun x: [A | 'S, Int]
 //│ }
 
-// TODO: Investigate type of fb
-class A3(s: Int, t: Bool) extends Test2
+// * TODO: Investigate type of fb
+class A3(val s: Int, val t: Bool) extends Test2
 //│ class A3(s: Int, t: Bool) {
 //│   fun fb: 'S -> [Int | 'S, Int | 'S]
 //│   fun x: [Int | 'S, Bool]
 //│ }
 
 class P(val p: Int) { 
-    virtual fun foo(x) = x + p 
+  virtual fun foo(x) = x + p 
 }
 //│ class P(p: Int) {
 //│   fun foo: Int -> Int
 //│ }
 
-:e // FIXME
+:e // TODO improve type checking
 class C1(a: Int) extends P(a) { fun bar = this.foo(0) }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.58: 	class C1(a: Int) extends P(a) { fun bar = this.foo(0) }
+//│ ║  l.70: 	class C1(a: Int) extends P(a) { fun bar = this.foo(0) }
 //│ ╙──      	                                              ^^^^
 //│ class C1(a: Int) extends P {
 //│   fun bar: error
 //│   fun foo: Int -> Int
 //│ }
 
-:e // FIXME
+:e // TODO improve type checking
 class C2(a: Int, b: Int) extends P(a + b) {
-    fun foo(x) = x * this.p + a * b
+  fun foo(x) = x * this.p + a * b
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.69: 	    fun foo(x) = x * this.p + a * b
-//│ ╙──      	                         ^^
+//│ ║  l.81: 	  fun foo(x) = x * this.p + a * b
+//│ ╙──      	                       ^^
 //│ class C2(a: Int, b: Int) extends P {
 //│   fun foo: Int -> Int
 //│ }
@@ -165,7 +177,7 @@ B.foo
 :pe
 trait Foo[type A] { fun foo(x: A): A }
 //│ ╔══[PARSE ERROR] Unexpected 'type' keyword here
-//│ ║  l.166: 	trait Foo[type A] { fun foo(x: A): A }
+//│ ║  l.178: 	trait Foo[type A] { fun foo(x: A): A }
 //│ ╙──       	          ^^^^
 //│ trait Foo {
 //│   fun foo: (x: A) -> A
@@ -216,22 +228,22 @@ class B extends Foo { fun foo(x) = x }
 :e
 class B extends Foo { fun foo(x) = x + 1 }
 //│ ╔══[ERROR] Type mismatch in definition of method foo:
-//│ ║  l.217: 	class B extends Foo { fun foo(x) = x + 1 }
+//│ ║  l.229: 	class B extends Foo { fun foo(x) = x + 1 }
 //│ ║         	                          ^^^^^^^^^^^^^^
 //│ ╟── type `A` is not an instance of type `Int`
-//│ ║  l.205: 	trait Foo[A] { fun foo[A](x: A): A }
+//│ ║  l.217: 	trait Foo[A] { fun foo[A](x: A): A }
 //│ ║         	                       ^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.217: 	class B extends Foo { fun foo(x) = x + 1 }
+//│ ║  l.229: 	class B extends Foo { fun foo(x) = x + 1 }
 //│ ╙──       	                                   ^
 //│ ╔══[ERROR] Type mismatch in definition of method foo:
-//│ ║  l.217: 	class B extends Foo { fun foo(x) = x + 1 }
+//│ ║  l.229: 	class B extends Foo { fun foo(x) = x + 1 }
 //│ ║         	                          ^^^^^^^^^^^^^^
 //│ ╟── operator application of type `Int` does not match type `A`
-//│ ║  l.217: 	class B extends Foo { fun foo(x) = x + 1 }
+//│ ║  l.229: 	class B extends Foo { fun foo(x) = x + 1 }
 //│ ║         	                                   ^^^^^
 //│ ╟── Note: constraint arises from method type parameter:
-//│ ║  l.205: 	trait Foo[A] { fun foo[A](x: A): A }
+//│ ║  l.217: 	trait Foo[A] { fun foo[A](x: A): A }
 //│ ╙──       	                       ^
 //│ class B extends Foo {
 //│   constructor()

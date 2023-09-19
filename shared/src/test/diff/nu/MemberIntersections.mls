@@ -74,11 +74,11 @@ trait S3 extends S1, T1
 //│ }
 
 
-class C1(x: Int | Bool)
-trait T1 { val x: Int | string }
+class C1(val x: Int | Bool)
+trait T1 { val x: Int | Str }
 //│ class C1(x: Int | false | true)
 //│ trait T1 {
-//│   let x: Int | string
+//│   let x: Int | Str
 //│ }
 
 class C2() extends C1(0), T1
@@ -92,13 +92,13 @@ class C2 extends C1(false), T1
 //│ ╔══[ERROR] Type mismatch in reference:
 //│ ║  l.91: 	class C2 extends C1(false), T1
 //│ ║        	                    ^^^^^
-//│ ╟── reference of type `false` does not match type `Int | string`
+//│ ╟── reference of type `false` does not match type `Int | Str`
 //│ ╟── Note: constraint arises from union type:
-//│ ║  l.78: 	trait T1 { val x: Int | string }
-//│ ║        	                  ^^^^^^^^^^^^
+//│ ║  l.78: 	trait T1 { val x: Int | Str }
+//│ ║        	                  ^^^^^^^^^
 //│ ╟── from signature of member `x`:
-//│ ║  l.78: 	trait T1 { val x: Int | string }
-//│ ╙──      	               ^^^^^^^^^^^^^^^
+//│ ║  l.78: 	trait T1 { val x: Int | Str }
+//│ ╙──      	               ^^^^^^^^^^^^
 //│ class C2 extends C1, T1 {
 //│   constructor()
 //│ }
@@ -112,18 +112,8 @@ class C2 extends C1("oops"), T1
 //│ ║  l.107: 	class C2 extends C1("oops"), T1
 //│ ║         	                    ^^^^^^
 //│ ╟── Note: constraint arises from union type:
-//│ ║  l.77: 	class C1(x: Int | Bool)
-//│ ╙──      	            ^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in string literal:
-//│ ║  l.107: 	class C2 extends C1("oops"), T1
-//│ ║         	                    ^^^^^^
-//│ ╟── string literal of type `"oops"` does not match type `Int | string`
-//│ ╟── Note: constraint arises from union type:
-//│ ║  l.78: 	trait T1 { val x: Int | string }
-//│ ║        	                  ^^^^^^^^^^^^
-//│ ╟── from signature of member `x`:
-//│ ║  l.78: 	trait T1 { val x: Int | string }
-//│ ╙──      	               ^^^^^^^^^^^^^^^
+//│ ║  l.77: 	class C1(val x: Int | Bool)
+//│ ╙──      	                ^^^^^^^^^^
 //│ class C2 extends C1, T1 {
 //│   constructor()
 //│ }

@@ -14,7 +14,7 @@ module Oops {
 module Oops {
   fun a : Int
 }
-//│ ╔══[ERROR] Member `a` is declared in parent but not implemented in `Oops`
+//│ ╔══[ERROR] Member `a` is declared (or its declaration is inherited) but is not implemented in `Oops`
 //│ ║  l.14: 	module Oops {
 //│ ║        	       ^^^^
 //│ ╟── Declared here:

@@ -29,7 +29,7 @@ class Baz() extends Foo {
 //│ ╔══[ERROR] Value member `g` is not virtual and cannot be overridden
 //│ ║  l.27: 	  val g = 1
 //│ ║        	      ^^^^^
-//│ ╟── Declared here:
+//│ ╟── Originally declared here:
 //│ ║  l.5: 	  val g: Int = 0
 //│ ╙──     	      ^^^^^^^^^^
 //│ class Baz() extends Foo {
@@ -60,14 +60,14 @@ T().f(0 - 42)
 //│ res
 //│     = 42
 
-class M1() {
+abstract class M1() {
   val foo: Str
 }
 class M2(s: Str) extends M1 {
   val foo = s
 }
 M2("foo").foo
-//│ class M1() {
+//│ abstract class M1() {
 //│   let foo: Str
 //│ }
 //│ class M2(s: Str) extends M1 {

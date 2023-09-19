@@ -121,7 +121,7 @@ let n2 = b2.n
 
 
 
-class Base1(base: Int) {
+class Base1(val base: Int) {
   fun getBase1 = base
   fun getBase2 = this.base
   fun foo(x) = this.base + x

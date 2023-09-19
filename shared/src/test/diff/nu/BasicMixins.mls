@@ -35,17 +35,17 @@ Base0.test
 
 
 :e
-class Base1(base: Int) extends BaseTest {
+class Base1(val base: Int) extends BaseTest {
   fun test2 = [base, this.base]
 }
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.38: 	class Base1(base: Int) extends BaseTest {
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.38: 	class Base1(val base: Int) extends BaseTest {
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.39: 	  fun test2 = [base, this.base]
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Object of type `anything` does not have field 'base'
-//│ ║  l.38: 	class Base1(base: Int) extends BaseTest {
-//│ ║        	                               ^
+//│ ║  l.38: 	class Base1(val base: Int) extends BaseTest {
+//│ ║        	                                   ^
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.12: 	  fun test = super.base
 //│ ║        	             ^^^^^^^^^^

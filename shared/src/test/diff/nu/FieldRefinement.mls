@@ -2,7 +2,7 @@
 :NoJS
 
 
-class Foo(x: Int) {
+class Foo(val x: Int) {
   fun bar = x
   fun baz: 1 | 2 = 1
 }

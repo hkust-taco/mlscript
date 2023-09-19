@@ -87,7 +87,7 @@ let s = new Sanitizer
 // * TODO allow Buffer2 to be named Buffer...
 // :d
 declare module Buffer {
-  class Buffer2 {
+  abstract class Buffer2 {
     val length: Int
   }
   fun bar: Int
@@ -96,8 +96,7 @@ declare module Buffer {
   // fun from2(a: Array[Int]): Buffer.Buffer2 = from2(a) // FIXME
 }
 //│ declare module Buffer {
-//│   class Buffer2 {
-//│     constructor()
+//│   abstract class Buffer2 {
 //│     let length: Int
 //│   }
 //│   fun bar: Int
@@ -120,10 +119,10 @@ b.length
 :pe
 declare 42
 //│ ╔══[PARSE ERROR] Unexpected literal token after modifier
-//│ ║  l.121: 	declare 42
+//│ ║  l.120: 	declare 42
 //│ ╙──       	        ^^
 //│ ╔══[PARSE ERROR] Unexpected literal token after modifier
-//│ ║  l.121: 	declare 42
+//│ ║  l.120: 	declare 42
 //│ ╙──       	        ^^
 //│ 42
 //│ res

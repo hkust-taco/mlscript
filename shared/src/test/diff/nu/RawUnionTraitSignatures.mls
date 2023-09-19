@@ -111,7 +111,7 @@ class Impl extends Base2
 
 :e
 class Impl() extends Base2, Foo
-//│ ╔══[ERROR] Member `x` is declared in parent but not implemented in `Impl`
+//│ ╔══[ERROR] Member `x` is declared (or its declaration is inherited) but is not implemented in `Impl`
 //│ ║  l.113: 	class Impl() extends Base2, Foo
 //│ ║         	      ^^^^
 //│ ╟── Declared here:

@@ -335,7 +335,7 @@ Test2_1.n
 //│     = 456
 
 
-class Test2(n: Int) {
+class Test2(val n: Int) {
   fun inc = Test3.inc(this)
 }
 module Test3 {

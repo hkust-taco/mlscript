@@ -114,13 +114,9 @@ module F extends E(123, 456)
 //│   fun a2: 2
 //│ }
 
-:e // FIXME
 // * Note: strangely, we see here the ctor output from the previous definitions of the F module 🤔
 F.m
-//│ ╔══[ERROR] Type `F` does not contain member `m`
-//│ ║  l.119: 	F.m
-//│ ╙──       	 ^^
-//│ error
+//│ Int
 //│ res
 //│     = 579
 //│ // Output
@@ -135,12 +131,8 @@ class G(x: Int) extends E(x, x + 1)
 //│   fun a2: 2
 //│ }
 
-:e // FIXME
 G(123).m
-//│ ╔══[ERROR] Type `G` does not contain member `m`
-//│ ║  l.139: 	G(123).m
-//│ ╙──       	      ^^
-//│ error
+//│ Int
 //│ res
 //│     = 247
 //│ // Output
@@ -154,13 +146,13 @@ class H extends E {
   }
 }
 //│ ╔══[ERROR] class E expects 2 parameter(s); got 0
-//│ ║  l.151: 	class H extends E {
+//│ ║  l.143: 	class H extends E {
 //│ ╙──       	                ^
 //│ ╔══[ERROR] Illegal use of `super`
-//│ ║  l.153: 	    super(a, b)
+//│ ║  l.145: 	    super(a, b)
 //│ ╙──       	    ^^^^^
 //│ ╔══[ERROR] identifier not found: super
-//│ ║  l.153: 	    super(a, b)
+//│ ║  l.145: 	    super(a, b)
 //│ ╙──       	    ^^^^^
 //│ class H extends A, E {
 //│   constructor(a: Int, b: Int)

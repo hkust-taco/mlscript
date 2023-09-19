@@ -2,7 +2,7 @@
 :NoJS
 
 
-class Add[E](lhs: E)
+class Add[E](val lhs: E)
 val add11 = Add(add11)
 module EvalAddLit {
   fun eval(e: Add['A]) =

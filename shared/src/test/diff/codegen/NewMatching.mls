@@ -280,7 +280,7 @@ class C[A](f: A -> A)
 //│ class C[A](f: A -> A)
 
 let r = C.unapply
-//│ let r: forall 'f. (C[?] & {f: 'f}) -> ['f]
+//│ let r: forall '#f. (C[?] & {#f: '#f}) -> ['#f]
 //│ r
 //│   = [Function: unapply]
 

@@ -40,7 +40,7 @@ class ErrC2 extends Showable {
     fun toString = 114
 }
 class ErrC3(toString: Str -> Str) extends Showable
-//│ ╔══[ERROR] Member `toString` is declared in parent but not implemented in `ErrC1`
+//│ ╔══[ERROR] Member `toString` is declared (or its declaration is inherited) but is not implemented in `ErrC1`
 //│ ║  l.38: 	class ErrC1 extends Showable
 //│ ║        	      ^^^^^
 //│ ╟── Declared here:
@@ -149,13 +149,13 @@ class Errcity(size: Int) extends SizedStadt {
 //│ ╟── from signature of member `size`:
 //│ ║  l.102: 	    let size: 1 | 2 | 3
 //│ ╙──       	        ^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Member `name` is declared in parent but not implemented in `Errcity`
+//│ ╔══[ERROR] Member `name` is declared (or its declaration is inherited) but is not implemented in `Errcity`
 //│ ║  l.124: 	class Errcity(size: Int) extends SizedStadt {
 //│ ║         	      ^^^^^^^
 //│ ╟── Declared here:
 //│ ║  l.85: 	    let name: Str
 //│ ╙──      	        ^^^^^^^^^
-//│ ╔══[ERROR] Member `foo` is declared in parent but not implemented in `Errcity`
+//│ ╔══[ERROR] Member `foo` is declared (or its declaration is inherited) but is not implemented in `Errcity`
 //│ ║  l.124: 	class Errcity(size: Int) extends SizedStadt {
 //│ ║         	      ^^^^^^^
 //│ ╟── Declared here:
