@@ -95,7 +95,9 @@ mixin EvalLambda {
 }
 //│ mixin EvalLambda() {
 //│   super: {eval: ('b, 'c) -> 'd}
-//│   this: {eval: ('b, 'e) -> 'A & (List[[Str, 'A]], 'f) -> 'd & (List['a | [Str, Var]], 'g) -> 'A0}
+//│   this: {
+//│     eval: ('b, 'e) -> 'A & (List[[Str, 'A]], 'f) -> 'd & (List['a | [Str, Var]], 'g) -> 'A0
+//│   }
 //│   fun eval: (List['a] & 'b, Abs['g] | App['e & (Abs['f] | Object & ~#Abs)] | Object & 'c & ~#Abs & ~#App) -> (Abs['A0] | App['A] | 'd)
 //│ }
 

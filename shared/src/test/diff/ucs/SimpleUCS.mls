@@ -338,7 +338,9 @@ fun p(e, context) =
       Some(BoolVal(v)) then Right(v)
     Lit(IntVal(v)) then Left(v)
     Lit(BoolVal(v)) then Right(v)
-//│ p: (Lit & {value: BoolVal & {value: 'value} | IntVal & {value: 'value0}} | Var & {name: 'name}, {get: 'name -> (Some & {value: BoolVal & {value: 'value} | IntVal & {value: 'value0}})},) -> (Left & {leftValue: 'value0} | Right & {rightValue: 'value})
+//│ p: (Lit & {value: BoolVal & {value: 'value} | IntVal & {value: 'value0}} | Var & {name: 'name}, {
+//│   get: 'name -> (Some & {value: BoolVal & {value: 'value} | IntVal & {value: 'value0}})
+//│ },) -> (Left & {leftValue: 'value0} | Right & {rightValue: 'value})
 //│  = [Function: p1]
 
 class Nil()
@@ -354,7 +356,7 @@ fun f(x) =
     0 ::
       Nil() then "oh"
 //│ ╔══[ERROR] Cannot find operator `::` in the context
-//│ ║  l.354: 	    0 ::
+//│ ║  l.356: 	    0 ::
 //│ ╙──       	      ^^
 //│ f: anything -> error
 //│ Code generation encountered an error:

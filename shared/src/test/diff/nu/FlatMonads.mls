@@ -171,10 +171,18 @@ fun main(ctx) =
   val sum = n + m
   ctx.printLine(concat("The sum is: ")(String of sum)) |>= _ =>
   ctx.pure(sum)
-//│ fun main: forall 'a 'b 'c 'd 'e. {printLine: "Hi! Input two numbers: " -> {bind: (anything -> 'a) -> 'e} & Str -> {bind: (anything -> 'd) -> 'b}, pure: Int -> 'd, readInt: {bind: (Int -> 'c) -> 'a & (Int -> 'b) -> 'c}} -> 'e
+//│ fun main: forall 'a 'b 'c 'd 'e. {
+//│   printLine: "Hi! Input two numbers: " -> {bind: (anything -> 'a) -> 'e} & Str -> {bind: (anything -> 'd) -> 'b},
+//│   pure: Int -> 'd,
+//│   readInt: {bind: (Int -> 'c) -> 'a & (Int -> 'b) -> 'c}
+//│ } -> 'e
 
 val defaultCtx = {printLine, readInt, pure: Pure}
-//│ val defaultCtx: {printLine: (str: Str) -> printLine, pure: forall 'A. (value: 'A) -> Pure['A], readInt: readInt}
+//│ val defaultCtx: {
+//│   printLine: (str: Str) -> printLine,
+//│   pure: forall 'A. (value: 'A) -> Pure['A],
+//│   readInt: readInt
+//│ }
 //│ defaultCtx
 //│            = {
 //│                printLine: [Function (anonymous)] {
@@ -200,7 +208,11 @@ fun loop(ctx) =
   ctx.printLine("Input a positive number: ") |>= _ =>
   ctx.readInt |>= n =>
   if n < 0 then loop(ctx) else ctx.pure(n)
-//│ fun loop: forall 'a 'b 'c 'd. {printLine: "Input a positive number: " -> {bind: (anything -> 'a) -> 'b}, pure: 'c -> 'd, readInt: {bind: ((Num & 'c) -> ('d | 'b)) -> 'a}} -> 'b
+//│ fun loop: forall 'a 'b 'c 'd. {
+//│   printLine: "Input a positive number: " -> {bind: (anything -> 'a) -> 'b},
+//│   pure: 'c -> 'd,
+//│   readInt: {bind: ((Num & 'c) -> ('d | 'b)) -> 'a}
+//│ } -> 'b
 
 // * FIXME why `nothing`?
 let r = loop(defaultCtx).run

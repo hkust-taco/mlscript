@@ -72,7 +72,9 @@ mixin EvalLambda {
 }
 //│ mixin EvalLambda() {
 //│   super: {eval: ('a, 'b) -> 'c}
-//│   this: {eval: ('a, 'd) -> ('A & 'e) & (Cons[[Str, 'e]], 'f) -> 'c & (Cons[[Str, Var] | 'A0], 'g) -> 'A1}
+//│   this: {
+//│     eval: ('a, 'd) -> ('A & 'e) & (Cons[[Str, 'e]], 'f) -> 'c & (Cons[[Str, Var] | 'A0], 'g) -> 'A1
+//│   }
 //│   fun eval: ('a & (Cons['A0] | Nil), Abs['g] | App['d & (Abs['f] | Object & ~#Abs)] | Object & 'b & ~#Abs & ~#App) -> (Abs['A1] | App['A] | 'c)
 //│ }
 
@@ -175,16 +177,16 @@ Test2.eval(Cons(("a", Numb(1)), Nil), Var("a"))
 :e
 Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.176: 	Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
+//│ ║  l.178: 	Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Abs[?A]` does not match type `Add[?A0] | Mul[?A1] | Numb | Var`
-//│ ║  l.176: 	Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
+//│ ║  l.178: 	Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ ║         	                                                 ^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.129: 	  if v is
+//│ ║  l.131: 	  if v is
 //│ ║         	     ^
 //│ ╟── from reference:
-//│ ║  l.139: 	    let vv = map_expr(eta, v)
+//│ ║  l.141: 	    let vv = map_expr(eta, v)
 //│ ╙──       	                           ^
 //│ Abs[Var] | Numb | Var | error
 //│ res
@@ -241,16 +243,16 @@ module Test3 extends EvalVar, EvalLambda, EvalExpr
 :e
 Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.242: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
+//│ ║  l.244: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Abs[?A]` does not match type `Add[?A0] | Mul[?A1] | Numb | Var`
-//│ ║  l.242: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
+//│ ║  l.244: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ ║         	                                                 ^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.129: 	  if v is
+//│ ║  l.131: 	  if v is
 //│ ║         	     ^
 //│ ╟── from reference:
-//│ ║  l.139: 	    let vv = map_expr(eta, v)
+//│ ║  l.141: 	    let vv = map_expr(eta, v)
 //│ ╙──       	                           ^
 //│ error | 'A
 //│   where

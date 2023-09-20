@@ -53,7 +53,8 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
       parensIf("(..." + l.showIn(ctx, 0) + ") -> " + r.showIn(ctx, 30), outerPrec > 30)
     case Function(l, r) => parensIf(l.showIn(ctx, 31) + " -> " + r.showIn(ctx, 30), outerPrec > 30)
     case Neg(t) => s"~${t.showIn(ctx, 100)}"
-    case Record(fs) => fs.map { nt =>
+    case Record(fs) =>
+      val strs = fs.map { nt =>
         val nme = nt._1.name
         if (nme.isCapitalized) nt._2 match {
           case Field(N | S(Bot), Top) => s"$nme"
@@ -63,7 +64,11 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
           case Field(S(lb), ub) => s"$nme :> ${lb.showIn(ctx, 0)} <: ${ub.showIn(ctx, 0)}"
         }
         else s"${nt._2.mutStr}${nme}: ${showField(nt._2, ctx)}"
-      }.mkString("{", ", ", "}")
+      }
+      if (strs.foldLeft(0)(_ + _.length) > 80)
+        strs.mkString("{\n" + ctx.indStr, ",\n" + ctx.indStr, "")
+          .indentNewLines(ShowCtx.indentation) + "\n" + ctx.indStr + "}"
+      else strs.mkString("{", ", ", "}")
     case Splice(fs) =>
       val inner = fs.map{case L(l) => s"...${l.showIn(ctx, 0)}" case R(r) => s"${showField(r, ctx)}"}
       if (ctx.newDefs) inner.mkString("[", ", ", "]") else inner.mkString("(", ", ", ")")
@@ -286,13 +291,14 @@ final case class ShowCtx(
     angletards: Bool = false,
   )
 {
-  lazy val indStr: Str = "  " * indentLevel
+  lazy val indStr: Str = ShowCtx.indentation * indentLevel
   def lnIndStr: Str = "\n" + indStr
   def indent: ShowCtx = copy(indentLevel = indentLevel + 1)
   def < : Str = if (angletards) "<" else "["
   def > : Str = if (angletards) ">" else "]"
 }
 object ShowCtx {
+  def indentation: Str = "  "
   /**
     * Create a context from a list of types. For named variables and
     * hinted variables use what is given. For unnamed variables generate
