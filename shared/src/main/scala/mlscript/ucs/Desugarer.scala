@@ -809,16 +809,16 @@ class Desugarer extends TypeDefs { self: Typer =>
               }
 
               App(Lam(Tup(
-                N -> Fld(FldFlags(false, false, false), Tup(
+                N -> Fld(FldFlags.empty, Tup(
                   fields.distinctBy(_._1).map {
                     case (_ -> Var(alias)) =>
-                      if (alias === "_") N -> Fld(FldFlags(false, false, false), Var(freshName))
-                      else N -> Fld(FldFlags(false, false, false), Var(alias))
+                      if (alias === "_") N -> Fld(FldFlags.empty, Var(freshName))
+                      else N -> Fld(FldFlags.empty, Var(alias))
                   }.toList
                 )) :: Nil
               ), extraAlias.toList.foldRight(consequent)((lt, rs) => Let(false, Var(lt._2), Var(lt._1), rs))),
-                Tup(N -> Fld(FldFlags(false, false, false), App(Sel(className, Var(unapplyMtd.name)),
-                  Tup(N -> Fld(FldFlags(false, false, false), scrutinee.reference) :: Nil))
+                Tup(N -> Fld(FldFlags.empty, App(Sel(className, Var(unapplyMtd.name)),
+                  Tup(N -> Fld(FldFlags.empty, scrutinee.reference) :: Nil))
                   ) :: Nil)
               )
             case _ => mkLetFromFields(scrutinee, fields.filter(_._2.name =/= "_").toList, consequent)

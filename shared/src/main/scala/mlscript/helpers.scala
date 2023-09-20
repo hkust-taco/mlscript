@@ -173,7 +173,7 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
         ths.fold("")(s"${bodyCtx.indStr}this: " + _.showIn(bodyCtx, 0) + "\n") +
           body.entities.collect {
             case Constructor(params, body) => s"${bodyCtx.indStr}constructor(${params.fields.map {
-              case N -> Fld(FldFlags(false, false, false), Asc(Var(nme), ty)) => 
+              case N -> Fld(FldFlags.empty, Asc(Var(nme), ty)) => 
                 s"${nme}: ${ty.showIn(bodyCtx, 0)}"
               case _ => lastWords("ill-formed constructor parameter")
             }.mkString(", ")})\n"
@@ -456,7 +456,7 @@ trait NuDeclImpl extends Located { self: NuDecl =>
         case _ => die
       }))
       NuFunDef(N, Var("unapply"), N, Nil, L(Lam(
-        Tup(N -> Fld(FldFlags(false, false, false), Var("x")) :: Nil),
+        Tup(N -> Fld(FldFlags.empty, Var("x")) :: Nil),
         ret)))(N, N, N, N, true)
     }
     case _ => N
@@ -675,7 +675,7 @@ private class NotAType(val trm: Statement) extends Throwable
 
 object PlainTup {
   def apply(fields: Term*): Term =
-    Tup(fields.iterator.map(t => (N, Fld(FldFlags(false, false, false), t))).toList)
+    Tup(fields.iterator.map(t => (N, Fld(FldFlags.empty, t))).toList)
   def unapplySeq(trm: Term): Opt[List[Term]] = trm match {
     case Tup(fields) if fields.forall(f =>
       f._1.isEmpty && f._2.flags.mut === false && f._2.flags.spec === false
@@ -846,7 +846,7 @@ trait StatementImpl extends Located { self: Statement =>
       val pos = params.unzip._1
       val bod = pars.map(tt).foldRight(Record(params): Type)(Inter)
       val termName = Var(nme.name).withLocOf(nme)
-      val ctor = Def(false, termName, L(Lam(tup, App(termName, Tup(N -> Fld(FldFlags(false, false, false), Rcd(fs.map {
+      val ctor = Def(false, termName, L(Lam(tup, App(termName, Tup(N -> Fld(FldFlags.empty, Rcd(fs.map {
         case (S(nme), fld) => nme -> Fld(FldFlags(false, false, fld.flags.genGetter), nme)
         case (N, fld @ Fld(_, nme: Var)) => nme -> fld
         case _ => die

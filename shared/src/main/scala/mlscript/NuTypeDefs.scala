@@ -1242,7 +1242,6 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                           msg"Originally declared here:" -> fun.toLoc ::
                           Nil)
                       case _ =>
-                        // println(s"?! $fun")
                         val mSign = m.typeSignature
                         implicit val prov: TP = mSign.prov
                         constrain(mSign, fun.typeSignature)

@@ -251,7 +251,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
   final def toParams(t: Term): Tup = t match {
     case t: Tup => t
     case Bra(false, t: Tup) => t
-    case _ => Tup((N, Fld(FldFlags(false, false, false), t)) :: Nil)
+    case _ => Tup((N, Fld(FldFlags.empty, t)) :: Nil)
   }
   final def toParamsTy(t: Type): Tuple = t match {
     case t: Tuple => t
@@ -1060,7 +1060,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
     // argsOrIf(Nil).map{case (_, L(x))=> ???; case (n, R(x))=>n->x} // TODO
     argsOrIf(Nil, Nil, allowNewlines, prec).flatMap{case (n, L(x))=> 
         err(msg"Unexpected 'then'/'else' clause" -> x.toLoc :: Nil)
-        n->Fld(FldFlags(false, false, false), errExpr)::Nil
+        n->Fld(FldFlags.empty, errExpr)::Nil
       case (n, R(x))=>n->x::Nil} // TODO
   /* 
   final def argsOrIf2()(implicit fe: FoundErr, et: ExpectThen): IfBlock \/ Ls[Opt[Var] -> Fld] = {
@@ -1081,7 +1081,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       case Nil =>
         seqAcc match {
           case res :: seqAcc => 
-            (N -> R(Fld(FldFlags(false, false, false), Blk((res :: seqAcc).reverse))) :: acc).reverse
+            (N -> R(Fld(FldFlags.empty, Blk((res :: seqAcc).reverse))) :: acc).reverse
           case Nil =>
             acc.reverse
         }

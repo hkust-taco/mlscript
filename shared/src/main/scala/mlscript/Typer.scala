@@ -1485,7 +1485,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         (implicit ctx: Ctx, raise: Raise, prov: TypeProvenance, vars: Map[Str, SimpleType], genLambdas: GenLambdas): SimpleType
       = term match {
     case (trm @ Var(nme)) :: sts if rcd => // field punning
-      typeTerms(Tup(S(trm) -> Fld(FldFlags(false, false, false), trm) :: Nil) :: sts, rcd, fields)
+      typeTerms(Tup(S(trm) -> Fld(FldFlags.empty, trm) :: Nil) :: sts, rcd, fields)
     case Blk(sts0) :: sts1 => typeTerms(sts0 ::: sts1, rcd, fields)
     case Tup(Nil) :: sts => typeTerms(sts, rcd, fields)
     case Tup((no, Fld(FldFlags(tmut, _, _), trm)) :: ofs) :: sts =>
@@ -1593,7 +1593,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       case TypedNuMxn(level, td, thisTy, superTy, tparams, params, members) =>
         ectx(tparams) |> { implicit ectx =>
           NuTypeDef(td.kind, td.nme, td.tparams,
-            S(Tup(params.map(p => N -> Fld(FldFlags(false, false, false), Asc(p._1, go(p._2.ub)))))),
+            S(Tup(params.map(p => N -> Fld(FldFlags.empty, Asc(p._1, go(p._2.ub)))))),
             N,//TODO
             N,
             Nil, // TODO mixin parents?
@@ -1605,8 +1605,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       case TypedNuCls(level, td, tparams, params, acParams, members, thisTy, sign, ihtags, ptps) =>
         ectx(tparams) |> { implicit ectx =>
           NuTypeDef(td.kind, td.nme, td.tparams,
-            // Opt.when(td.params.isDefined)(Tup(params.map(p => N -> Fld(FldFlags(false, false, false), Asc(p._1, go(p._2.ub)))))),
-            params.map(ps => Tup(ps.map(p => N -> Fld(FldFlags(false, false, false), Asc(p._1, go(p._2.ub)))))),
+            params.map(ps => Tup(ps.map(p => N -> Fld(FldFlags.empty, Asc(p._1, go(p._2.ub)))))),
             td.ctor,
             Option.when(!(TopType <:< sign))(go(sign)),
             ihtags.toList.sorted.map(_.toVar), // TODO provide targs/args
@@ -1616,7 +1615,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
               val tun = mkTypingUnit(thisTy, members)
               acParams match {
                 case S(ps) => TypingUnit(Constructor(
-                  Tup(ps.map(p => N -> Fld(FldFlags(false, false, false), Asc(p._1, go(p._2))))),
+                  Tup(ps.map(p => N -> Fld(FldFlags.empty, Asc(p._1, go(p._2))))),
                   Blk(Nil)) :: tun.entities)
                 case N => tun
               }
