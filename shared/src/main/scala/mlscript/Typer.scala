@@ -424,10 +424,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
         implicit val prov: TP = tyTp(ty.toLoc, "type bounds")
         constrain(lb_ty, ub_ty)
         TypeBounds(lb_ty, ub_ty)(prov)
-      case Tuple(fields) =>
+      case Tuple(fields) => {
+        println("typing tuple!!!")
         TupleType(fields.mapValues(f =>
-            FieldType(f.in.map(rec), rec(f.out), false)(tp(f.toLoc, "tuple field"))
+            FieldType(f.in.map(rec), rec(f.out), f.opt)(tp(f.toLoc, "tuple field"))
           ))(tyTp(ty.toLoc, "tuple type"))
+      }
       case Splice(fields) => 
         SpliceType(fields.map{ 
           case L(l) => {
@@ -479,6 +481,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
       case tn @ TypeTag(name) => rec(TypeName(name.decapitalize)) // TODO rm this hack
       // case tn @ TypeTag(name) => rec(TypeName(name))
       case tn @ TypeName(name) =>
+        println("typename case??")
         val tyLoc = ty.toLoc
         val tpr = tyTp(tyLoc, "type reference")
         vars.getOrElse(name, {
@@ -802,10 +805,15 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
         }
         
       case Asc(trm, ty) =>
+        println(s"typing-trm-here!!! ${trm}")
         val trm_ty = typePolymorphicTerm(trm)
+        println(s"typing-ty-here!!! ${ty}")
         val ty_ty = typeType(ty)(ctx.copy(inPattern = false), raise, vars)
         if (ctx.inPattern) { unify(trm_ty, ty_ty); ty_ty } // * In patterns, we actually _unify_ the pattern and ascribed type 
-        else con(trm_ty, ty_ty, ty_ty)
+        else {
+          println("constraining!!!")
+          con(trm_ty, ty_ty, ty_ty)
+        }
       case (v @ ValidPatVar(nme)) =>
         val prov = tp(if (verboseConstraintProvenanceHints) v.toLoc else N, "variable")
         // * Note: only look at ctx.env, and not the outer ones!

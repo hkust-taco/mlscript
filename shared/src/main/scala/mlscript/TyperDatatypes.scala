@@ -487,7 +487,7 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
     def freshenAbove(lim: Int, rigidify: Bool)(implicit ctx: Ctx, freshened: MutMap[TV, ST]): FieldType =
       update(_.freshenAbove(lim, rigidify), _.freshenAbove(lim, rigidify))
     override def toString =
-      lb.fold(s"$ub")(lb => s"mut ${if (lb === BotType) "" else lb}..$ub")
+      lb.fold(s"$ub${if (opt) "?" else ""}")(lb => s"mut ${if (lb === BotType) "" else lb}..$ub")
   }
   object FieldType {
     def mk(vi: VarianceInfo, lb: ST, ub: ST)(prov: TP): FieldType = vi match {
