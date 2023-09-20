@@ -418,6 +418,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
       extends TypedNuDecl with TypedNuTermDef {
     def kind: DeclKind = Val
     def name: Str = fd.nme.name
+    def symbolicName: Opt[Str] = fd.symbolicNme.map(_.name)
     def toLoc: Opt[Loc] = fd.toLoc
     def isPublic = true // TODO
     lazy val typeSignature: ST = PolymorphicType.mk(level, bodyType)
@@ -628,6 +629,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
             // * Generalize functions as they are typed.
             // * Note: eventually we'll want to first reorder their typing topologically so as to maximize polymorphism.
             ctx += res.name -> VarSymbol(res.typeSignature, res.fd.nme)
+            res.symbolicName.foreach(ctx += _ -> VarSymbol(res.typeSignature, res.fd.nme))
         }
         CompletedTypeInfo(res)
       case res => CompletedTypeInfo(res)

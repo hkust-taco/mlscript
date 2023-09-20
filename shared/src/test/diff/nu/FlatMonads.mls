@@ -117,7 +117,6 @@ printLine("").bind of [] => error
 fun (|>=) bindOp[A, B](x: IO[A], f: A -> IO[B]): IO[B] = x.bind(f)
 //│ fun (|>=) bindOp: forall 'A 'B. (x: IO['A], f: 'A -> IO['B]) -> IO['B]
 
-:e // FIXME why the errors?
 val main =
   printLine("Hi! Input two numbers: ") |>= _ =>
   readInt |>= n =>
@@ -125,64 +124,9 @@ val main =
   val sum = n + m
   printLine(concat("The sum is: ")(String of sum)) |>= _ =>
   Pure(sum)
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.124: 	  readInt |>= m =>
-//│ ║         	  ^^^^^^^^^^^^^^^^
-//│ ║  l.125: 	  val sum = n + m
-//│ ║         	^^^^^^^^^^^^^^^^^
-//│ ║  l.126: 	  printLine(concat("The sum is: ")(String of sum)) |>= _ =>
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.127: 	  Pure(sum)
-//│ ║         	^^^^^^^^^^^
-//│ ╟── type `Int` does not match type `undefined`
-//│ ║  l.32: 	module readInt extends IO[Int] { fun run = 42 }
-//│ ║        	                          ^^^
-//│ ╟── Note: constraint arises from literal type:
-//│ ║  l.33: 	class printLine(str: Str) extends IO[undefined] { fun run = log(str) }
-//│ ║        	                                     ^^^^^^^^^
-//│ ╟── Note: method type parameter A is defined at:
-//│ ║  l.117: 	fun (|>=) bindOp[A, B](x: IO[A], f: A -> IO[B]): IO[B] = x.bind(f)
-//│ ╙──       	                 ^
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.123: 	  readInt |>= n =>
-//│ ║         	  ^^^^^^^^^^^^^^^^
-//│ ║  l.124: 	  readInt |>= m =>
-//│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ║  l.125: 	  val sum = n + m
-//│ ║         	^^^^^^^^^^^^^^^^^
-//│ ║  l.126: 	  printLine(concat("The sum is: ")(String of sum)) |>= _ =>
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.127: 	  Pure(sum)
-//│ ║         	^^^^^^^^^^^
-//│ ╟── type `Int` does not match type `undefined`
-//│ ║  l.32: 	module readInt extends IO[Int] { fun run = 42 }
-//│ ║        	                          ^^^
-//│ ╟── Note: constraint arises from literal type:
-//│ ║  l.33: 	class printLine(str: Str) extends IO[undefined] { fun run = log(str) }
-//│ ║        	                                     ^^^^^^^^^
-//│ ╟── Note: method type parameter A is defined at:
-//│ ║  l.117: 	fun (|>=) bindOp[A, B](x: IO[A], f: A -> IO[B]): IO[B] = x.bind(f)
-//│ ╙──       	                 ^
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.122: 	  printLine("Hi! Input two numbers: ") |>= _ =>
-//│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.123: 	  readInt |>= n =>
-//│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ║  l.124: 	  readInt |>= m =>
-//│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ║  l.125: 	  val sum = n + m
-//│ ║         	^^^^^^^^^^^^^^^^^
-//│ ║  l.126: 	  printLine(concat("The sum is: ")(String of sum)) |>= _ =>
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.127: 	  Pure(sum)
-//│ ║         	^^^^^^^^^^^
-//│ ╟── type `undefined` is not an instance of type `Int`
-//│ ║  l.33: 	class printLine(str: Str) extends IO[undefined] { fun run = log(str) }
-//│ ║        	                                     ^^^^^^^^^
-//│ ╟── Note: constraint arises from reference:
-//│ ║  l.125: 	  val sum = n + m
-//│ ╙──       	            ^
-//│ val main: IO['B] | error
+//│ val main: IO['B]
+//│   where
+//│     'B :> Int
 //│ main
 //│      = Bind {}
 
@@ -192,7 +136,6 @@ val main =
 fun (|>=) bindOp(x, f) = x.bind(f)
 //│ fun (|>=) bindOp: forall 'a 'b. ({bind: 'a -> 'b}, 'a) -> 'b
 
-// FIXME why `nothing`?
 val main =
   printLine("Hi! Input two numbers: ") |>= _ =>
   readInt |>= n =>
@@ -200,9 +143,10 @@ val main =
   val sum = n + m
   printLine(concat("The sum is: ")(String of sum)) |>= _ =>
   Pure(sum)
-//│ val main: Bind[nothing, 'B]
+//│ val main: Bind['A, 'B]
 //│   where
 //│     'B :> Int
+//│     'A <: undefined
 //│ main
 //│      = Bind {}
 
@@ -227,7 +171,7 @@ fun main(ctx) =
   val sum = n + m
   ctx.printLine(concat("The sum is: ")(String of sum)) |>= _ =>
   ctx.pure(sum)
-//│ fun main: forall 'a 'b. {printLine: Str -> {bind: (Int -> ('a | 'b)) -> 'a}, pure: Int -> 'b, readInt: {bind: (Int -> ('a | 'b)) -> 'a}} -> 'a
+//│ fun main: forall 'a 'b 'c 'd 'e. {printLine: "Hi! Input two numbers: " -> {bind: (anything -> 'a) -> 'e} & Str -> {bind: (anything -> 'd) -> 'b}, pure: Int -> 'd, readInt: {bind: (Int -> 'c) -> 'a & (Int -> 'b) -> 'c}} -> 'e
 
 val defaultCtx = {printLine, readInt, pure: Pure}
 //│ val defaultCtx: {printLine: (str: Str) -> printLine, pure: forall 'A. (value: 'A) -> Pure['A], readInt: readInt}
@@ -256,9 +200,9 @@ fun loop(ctx) =
   ctx.printLine("Input a positive number: ") |>= _ =>
   ctx.readInt |>= n =>
   if n < 0 then loop(ctx) else ctx.pure(n)
-//│ fun loop: forall 'a 'b 'c. {printLine: "Input a positive number: " -> {bind: ((Int & 'a) -> ('b | 'c)) -> 'b}, pure: 'a -> 'c, readInt: {bind: ((Int & 'a) -> ('b | 'c)) -> 'b}} -> 'b
+//│ fun loop: forall 'a 'b 'c 'd. {printLine: "Input a positive number: " -> {bind: (anything -> 'a) -> 'b}, pure: 'c -> 'd, readInt: {bind: ((Num & 'c) -> ('d | 'b)) -> 'a}} -> 'b
 
-// FIXME why `nothing`?
+// * FIXME why `nothing`?
 let r = loop(defaultCtx).run
 //│ let r: nothing
 //│ r
