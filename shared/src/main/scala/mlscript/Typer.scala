@@ -895,7 +895,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
         })(prov)
       case tup: Tup if funkyTuples =>
         typeTerms(tup :: Nil, false, Nil)
-      case Tup(fs) =>
+      case Tup(fs) => {
+        println("HERE, good!")
         TupleType(fs.mapConserve { case e @ (n, Fld(flags, t)) =>
           n match {
             case S(v) if ctx.inPattern =>
@@ -903,20 +904,28 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
                 Asc(v, t.toTypeRaise).withLoc(v.toLoc.fold(t.toLoc)(_ ++ t.toLoc |> some))))
             case _ => e
           }
-        }.map { case (n, Fld(FldFlags(mut, _, _), t)) =>
+        }.map { case (n, Fld(FldFlags(mut, _, opt), t)) =>
           val tym = typePolymorphicTerm(t)
           // val tym = if (n.isDefined) typeType(t.toTypeRaise)
           //   else typePolymorphicTerm(t)
           val fprov = tp(t.toLoc, (if (mut) "mutable " else "") + "tuple field")
+          println(s"opt is => ${opt}")
           if (mut) {
+            println("case #1")
             val res = freshVar(fprov, N, n.map(_.name))
             val rs = con(tym, res, res)
-            (n, FieldType(Some(rs), rs, false)(fprov))
-          } else (n, tym.toUpper(fprov))
+            (n, FieldType(Some(rs), rs, opt)(fprov))
+          } else {
+            println("case #2")
+            val ty = tym.toUpper(fprov)
+            val tres = FieldType(ty.lb, ty.ub, opt)(ty.prov)
+            (n, tres)
+          }
         })(fs match {
           case Nil | ((N, _) :: Nil) => noProv // TODO rm?
           case _ => tp(term.toLoc, "tuple literal")
         })
+      }
       case Subs(a, i) =>
         val t_a = typeMonomorphicTerm(a)
         val t_i = typeMonomorphicTerm(i)

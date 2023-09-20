@@ -3,130 +3,82 @@
 
 // TODO: there is problem when the is SPACE after '?'
 
-:dp
+// Typing of (a?: Int, b?: Int) is ok, but constraining is not 
+:d
 fun f1(a?: Int, b?: Int) = a + b
-//│ |#fun| |f1|(|a|?|#:| |Int|,| |b|?|#:| |Int|)| |#=| |a| |+| |b|
-//│ ? block		inspects |#fun| |f1|(|a|?|#:| |Int|,| |b|?|#:| |Int|)| |...    [at l.300]
-//│ ? go		inspects |#fun| |f1|(|a|?|#:| |Int|,| |b|?|#:| |Int|)| |...    [at l.269]
-//│ ? go		inspects |#fun| |f1|(|a|?|#:| |Int|,| |b|?|#:| |Int|)| |...    [at l.269]
-//│ ! t		consumes |#fun|    [at l.414]
-//│ ? yeetSpaces		inspects | |f1|(|a|?|#:| |Int|,| |b|?|#:| |Int|)| |#=|...    [at l.515]
-//│ ! yeetSpaces		consumes | |    [at l.515]
-//│ ? yeetSpaces		inspects |f1|(|a|?|#:| |Int|,| |b|?|#:| |Int|)| |#=| |...    [at l.515]
-//│ ! x$29		consumes |f1|    [at l.425]
-//│ ? yeetSpaces		inspects |(|a|?|#:| |Int|,| |b|?|#:| |Int|)| |#=| |a|...    [at l.515]
-//│ ? yeetSpaces		inspects |(|a|?|#:| |Int|,| |b|?|#:| |Int|)| |#=| |a|...    [at l.515]
-//│ @ funParams(())    [at l.464]
-//│ │ ? yeetSpaces		inspects |(|a|?|#:| |Int|,| |b|?|#:| |Int|)| |#=| |a|...    [at l.515]
-//│ │ ! res		consumes |(|a|?|#:| |Int|,| |b|?|#:| |Int|)|    [at l.526]
-//│ │ > ? maybeIndented		inspects |a|?|#:| |Int|...    [at l.1005]
-//│ │ > @ argsOrIf(List(),List())    [at l.1048]
-//│ │ > │ ? argsOrIf		inspects |a|?|#:| |Int|...    [at l.1049]
-//│ │ > │ ? yeetSpaces		inspects |a|?|#:| |Int|...    [at l.515]
-//│ │ > │ ? yeetSpaces		inspects |a|?|#:| |Int|...    [at l.515]
-//│ │ > │ ? yeetSpaces		inspects |a|?|#:| |Int|...    [at l.515]
-//│ │ > │ ! x$60		consumes |a|    [at l.1081]
-//│ │ > │ ! x$60		consumes |?|    [at l.1082]
-//│ │ > │ ! x$60		consumes |#:|    [at l.1083]
-//│ │ > │ @ exprOrIf(1,true)    [at l.1092]
-//│ │ > │ │ ? exprOrIf		inspects | |Int|,| |b|...    [at l.561]
-//│ │ > │ │ ! exprOrIf		consumes | |    [at l.563]
-//│ │ > │ │ @ exprOrIf(1,true)    [at l.564]
-//│ │ > │ │ │ ? exprOrIf		inspects |Int|,| |b|?|...    [at l.561]
-//│ │ > │ │ │ ! exprOrIf		consumes |Int|    [at l.580]
-//│ │ > │ │ │ @ exprCont(1,`Int`,false)    [at l.581]
-//│ │ > │ │ │ │ ? exprCont		inspects |,| |b|?|#:|...    [at l.737]
-//│ │ > │ │ │ = Right(Int)
-//│ │ > │ │ = Right(Int)
-//│ │ > │ = Right(Int)
-//│ │ > │ ? argsOrIf		inspects |,| |b|?|#:|...    [at l.1093]
-//│ │ > │ nexttoken => (COMMA,Loc(14,15,nu/OptionalArgs:+7))
-//│ │ > │ ? isOptinoal		inspects |,| |b|?|#:|...    [at l.1098]
-//│ │ > │ flags => None None Some(Loc(8,8,nu/OptionalArgs:+7))
-//│ │ > │ e => Right(Fld(FldFlags(false,false,true),Int))
-//│ │ > │ body => Int Var(Int)
-//│ │ > │ ? argsOrIf		inspects |,| |b|?|#:|...    [at l.1122]
-//│ │ > │ ! argsOrIf		consumes |,|    [at l.1128]
-//│ │ > │ @ argsOrIf(List((Some(a),Right(Fld(FldFlags(false,false,true),Int)))),List())    [at l.1048]
-//│ │ > │ │ ? argsOrIf		inspects | |b|?|#:| |...    [at l.1049]
-//│ │ > │ │ ! argsOrIf		consumes | |    [at l.1058]
-//│ │ > │ │ @ argsOrIf(List((Some(a),Right(Fld(FldFlags(false,false,true),Int)))),List())    [at l.1048]
-//│ │ > │ │ │ ? argsOrIf		inspects |b|?|#:| |Int|    [at l.1049]
-//│ │ > │ │ │ ? yeetSpaces		inspects |b|?|#:| |Int|    [at l.515]
-//│ │ > │ │ │ ? yeetSpaces		inspects |b|?|#:| |Int|    [at l.515]
-//│ │ > │ │ │ ? yeetSpaces		inspects |b|?|#:| |Int|    [at l.515]
-//│ │ > │ │ │ ! x$60		consumes |b|    [at l.1081]
-//│ │ > │ │ │ ! x$60		consumes |?|    [at l.1082]
-//│ │ > │ │ │ ! x$60		consumes |#:|    [at l.1083]
-//│ │ > │ │ │ @ exprOrIf(1,true)    [at l.1092]
-//│ │ > │ │ │ │ ? exprOrIf		inspects | |Int|    [at l.561]
-//│ │ > │ │ │ │ ! exprOrIf		consumes | |    [at l.563]
-//│ │ > │ │ │ │ @ exprOrIf(1,true)    [at l.564]
-//│ │ > │ │ │ │ │ ? exprOrIf		inspects |Int|    [at l.561]
-//│ │ > │ │ │ │ │ ! exprOrIf		consumes |Int|    [at l.580]
-//│ │ > │ │ │ │ │ @ exprCont(1,`Int`,false)    [at l.581]
-//│ │ > │ │ │ │ │ │ ? exprCont		inspects ||    [at l.737]
-//│ │ > │ │ │ │ │ = Right(Int)
-//│ │ > │ │ │ │ = Right(Int)
-//│ │ > │ │ │ = Right(Int)
-//│ │ > │ │ │ ? argsOrIf		inspects ||    [at l.1093]
-//│ │ > │ │ │ ? isOptinoal		inspects ||    [at l.1098]
-//│ │ > │ │ │ flags => None None Some(Loc(17,17,nu/OptionalArgs:+7))
-//│ │ > │ │ │ e => Right(Fld(FldFlags(false,false,true),Int))
-//│ │ > │ │ │ body => Int Var(Int)
-//│ │ > │ │ │ ? argsOrIf		inspects ||    [at l.1122]
-//│ │ > │ │ = List((Some(a),Right(Fld(FldFlags(false,false,true),Int))), (Some(b),Right(Fld(FldFlags(false,false,true),Int))))
-//│ │ > │ = List((Some(a),Right(Fld(FldFlags(false,false,true),Int))), (Some(b),Right(Fld(FldFlags(false,false,true),Int))))
-//│ │ > = List((Some(a),Right(Fld(FldFlags(false,false,true),Int))), (Some(b),Right(Fld(FldFlags(false,false,true),Int))))
-//│ │ > ? concludeWith		inspects ||    [at l.87]
-//│ │ > Concluded with List((Some(a),Fld(FldFlags(false,false,true),Int)), (Some(b),Fld(FldFlags(false,false,true),Int)))
-//│ │ @ funParams(())    [at l.528]
-//│ │ │ ? yeetSpaces		inspects | |#=| |a| |...    [at l.515]
-//│ │ │ ! yeetSpaces		consumes | |    [at l.515]
-//│ │ │ Here, (not) creating the params! List()
-//│ │ = List()
-//│ │ Here, creating the params! List(a: Int,? b: Int,?) Tup(a: Var(Int), b: Var(Int))
-//│ = List(a: Int,? b: Int,?)
-//│ ? yeetSpaces		inspects |#=| |a| |+|...    [at l.515]
-//│ ? yeetSpaces		inspects |#=| |a| |+|...    [at l.515]
-//│ ! t		consumes |#=|    [at l.475]
-//│ @ expr(0,true)    [at l.476]
-//│ │ @ exprOrIf(0,true)    [at l.546]
-//│ │ │ ? exprOrIf		inspects | |a| |+| |...    [at l.561]
-//│ │ │ ! exprOrIf		consumes | |    [at l.563]
-//│ │ │ @ exprOrIf(0,true)    [at l.564]
-//│ │ │ │ ? exprOrIf		inspects |a| |+| |b|    [at l.561]
-//│ │ │ │ ! exprOrIf		consumes |a|    [at l.580]
-//│ │ │ │ @ exprCont(0,`a`,false)    [at l.581]
-//│ │ │ │ │ ? exprCont		inspects | |+| |b|    [at l.737]
-//│ │ │ │ │ ! exprCont		consumes | |    [at l.783]
-//│ │ │ │ │ @ exprCont(0,`a`,false)    [at l.784]
-//│ │ │ │ │ │ ? exprCont		inspects |+| |b|    [at l.737]
-//│ │ │ │ │ │ ! exprCont		consumes |+|    [at l.746]
-//│ │ │ │ │ │ @ exprOrIf(18,true)    [at l.749]
-//│ │ │ │ │ │ │ ? exprOrIf		inspects | |b|    [at l.561]
-//│ │ │ │ │ │ │ ! exprOrIf		consumes | |    [at l.563]
-//│ │ │ │ │ │ │ @ exprOrIf(18,true)    [at l.564]
-//│ │ │ │ │ │ │ │ ? exprOrIf		inspects |b|    [at l.561]
-//│ │ │ │ │ │ │ │ ! exprOrIf		consumes |b|    [at l.580]
-//│ │ │ │ │ │ │ │ @ exprCont(18,`b`,false)    [at l.581]
-//│ │ │ │ │ │ │ │ │ ? exprCont		inspects ||    [at l.737]
-//│ │ │ │ │ │ │ │ = Right(b)
-//│ │ │ │ │ │ │ = Right(b)
-//│ │ │ │ │ │ = Right(b)
-//│ │ │ │ │ │ @ exprCont(0,`+ (a,) (b,)`,false)    [at l.753]
-//│ │ │ │ │ │ │ ? exprCont		inspects ||    [at l.737]
-//│ │ │ │ │ │ = Right(+ (a,) (b,))
-//│ │ │ │ │ = Right(+ (a,) (b,))
-//│ │ │ │ = Right(+ (a,) (b,))
-//│ │ │ = Right(+ (a,) (b,))
-//│ │ = Right(+ (a,) (b,))
-//│ │ result => + (a,) (b,) ## App(App(Var(+), Tup(_: Var(a))), Tup(_: Var(b)))
-//│ │ result toType => Right(AppliedType(TypeName(+),List(Tuple(List((None,Field(None,TypeName(a),false)))), Tuple(List((None,Field(None,TypeName(b),false)))))))
-//│ = + (a,) (b,)
-//│ ? yeetSpaces		inspects ||    [at l.515]
-//│ ? parseAll		inspects ||    [at l.76]
-//│ Parsed: fun f1 = (a: Int,? b: Int,?) => + (a,) (b,);
+//│ 0. Typing TypingUnit(List(fun f1 = (a: Int?, b: Int?,) => + (a,) (b,)))
+//│ | 0. Created lazy type info for fun f1 = (a: Int?, b: Int?,) => + (a,) (b,)
+//│ | Completing fun f1 = (a: Int?, b: Int?,) => + (a,) (b,)
+//│ | | UNSTASHING... (out)
+//│ | | Type params 
+//│ | | UNSTASHING... (out)
+//│ | | Params 
+//│ | | 1. Typing term (a: Int?, b: Int?,) => + (a,) (b,)
+//│ | | | 1. Typing pattern a: Int?, b: Int?,
+//│ | | | | HERE, good!
+//│ | | | | 1. Typing pattern a : Int
+//│ | | | | | Typing type TypeName(Int)
+//│ | | | | | | vars=Map() newDefsInfo=Map()
+//│ | | | | | | 1. type TypeName(Int)
+//│ | | | | | | | typename case??
+//│ | | | | | | => Int
+//│ | | | | | => Int ——— 
+//│ | | | | 1. : Int
+//│ | | | | opt is => true
+//│ | | | | case #2
+//│ | | | | 1. Typing pattern b : Int
+//│ | | | | | Typing type TypeName(Int)
+//│ | | | | | | vars=Map() newDefsInfo=Map()
+//│ | | | | | | 1. type TypeName(Int)
+//│ | | | | | | | typename case??
+//│ | | | | | | => Int
+//│ | | | | | => Int ——— 
+//│ | | | | 1. : Int
+//│ | | | | opt is => true
+//│ | | | | case #2
+//│ | | | 1. : (a: Int?, b: Int?,)
+//│ | | | 1. Typing term + (a,) (b,)
+//│ | | | | 1. Typing term + (a,)
+//│ | | | | | 1. Typing term +
+//│ | | | | | 1. : (Int -> (Int -> Int))
+//│ | | | | | 1. Typing term a
+//│ | | | | | 1. : Int
+//│ | | | | | CONSTRAIN (Int -> (Int -> Int)) <! (Int -> α29')
+//│ | | | | |   where 
+//│ | | | | | 1. C (Int -> (Int -> Int)) <! (Int -> α29')    (0)
+//│ | | | | | | 1. C (Int,) <! (Int,)    (1)
+//│ | | | | | | | Already a subtype by <:<
+//│ | | | | | | 1. C (Int -> Int) <! α29'    (1)
+//│ | | | | | | | NEW α29' LB (0)
+//│ | | | | 1. : α29'
+//│ | | | | 1. Typing term b
+//│ | | | | 1. : Int
+//│ | | | | CONSTRAIN α29' <! (Int -> α30')
+//│ | | | |   where 
+//│ 		α29' :> (Int -> Int)
+//│ | | | | 1. C α29' <! (Int -> α30')    (0)
+//│ | | | | | NEW α29' UB (1)
+//│ | | | | | 1. C (Int -> Int) <! (Int -> α30')    (2)
+//│ | | | | | | 1. C (Int,) <! (Int,)    (2)
+//│ | | | | | | | Already a subtype by <:<
+//│ | | | | | | 1. C Int <! α30'    (2)
+//│ | | | | | | | NEW α30' LB (0)
+//│ | | | 1. : α30'
+//│ | | 1. : ((a: Int?, b: Int?,) -> α30')
+//│ | | UNSTASHING... (out)
+//│ | | CONSTRAIN ((a: Int?, b: Int?,) -> α30') <! f131'
+//│ | |   where 
+//│ 		α30' :> Int
+//│ | | 1. C ((a: Int?, b: Int?,) -> α30') <! f131'    (0)
+//│ | | | NEW f131' LB (1)
+//│ | | UNSTASHING... (out)
+//│ | Completed TypedNuFun(0,fun f1 = (a: Int?, b: Int?,) => + (a,) (b,),((a: Int?, b: Int?,) -> α30')) where 
+//│ 		α30' :> Int
+//│ | Typing unit statements
+//│ | : None
+//│ ======== TYPED ========
+//│ fun f1: ‹∀ 0. ((a: Int?, b: Int?,) -> α30')› where 
+//│ |		α30' :> Int
 //│ fun f1: (a: Int, b: Int,) -> Int
 
 
@@ -211,48 +163,49 @@ let y: C1 = x
 //│ res
 //│     = [ 1, 2, 3 ]
 
+// Typing of [Int, Int?] is ok, but constraining is not 
 :d
-[1, 2]: [Int, (Int | C1)?]
-//│ 0. Typing TypingUnit(List('(' 1, 2, ')' : (Int, Int | C1,)))
+[1, 2]: [Int, Int?]
+//│ 0. Typing TypingUnit(List('(' 1, 2, ')' : (Int, Int,)))
 //│ | Typing unit statements
-//│ | | 0. Typing term '(' 1, 2, ')' : (Int, Int | C1,)
+//│ | | 0. Typing term '(' 1, 2, ')' : (Int, Int,)
 //│ | | | typing-trm-here!!! '(' 1, 2, ')'
 //│ | | | 0. Typing term '(' 1, 2, ')'
 //│ | | | | 0. Typing term 1, 2,
+//│ | | | | | HERE, good!
 //│ | | | | | 0. Typing term 1
 //│ | | | | | 0. : #1<Int,Num,Object>
+//│ | | | | | opt is => false
+//│ | | | | | case #2
 //│ | | | | | 0. Typing term 2
 //│ | | | | | 0. : #2<Int,Num,Object>
+//│ | | | | | opt is => false
+//│ | | | | | case #2
 //│ | | | | 0. : (#1<Int,Num,Object>, #2<Int,Num,Object>,)
 //│ | | | 0. : (#1<Int,Num,Object>, #2<Int,Num,Object>,)
-//│ | | | typing-ty-here!!! Tuple(List((None,Field(None,TypeName(Int),false)), (None,Field(None,Union(TypeName(Int),TypeName(C1)),true))))
-//│ | | | Typing type Tuple(List((None,Field(None,TypeName(Int),false)), (None,Field(None,Union(TypeName(Int),TypeName(C1)),true))))
+//│ | | | typing-ty-here!!! Tuple(List((None,Field(None,TypeName(Int),false)), (None,Field(None,TypeName(Int),true))))
+//│ | | | Typing type Tuple(List((None,Field(None,TypeName(Int),false)), (None,Field(None,TypeName(Int),true))))
 //│ | | | | vars=Map() newDefsInfo=Map()
-//│ | | | | 0. type Tuple(List((None,Field(None,TypeName(Int),false)), (None,Field(None,Union(TypeName(Int),TypeName(C1)),true))))
+//│ | | | | 0. type Tuple(List((None,Field(None,TypeName(Int),false)), (None,Field(None,TypeName(Int),true))))
 //│ | | | | | typing tuple!!!
 //│ | | | | | 0. type TypeName(Int)
 //│ | | | | | | typename case??
 //│ | | | | | => Int
-//│ | | | | | 0. type Union(TypeName(Int),TypeName(C1))
-//│ | | | | | | 0. type TypeName(Int)
-//│ | | | | | | | typename case??
-//│ | | | | | | => Int
-//│ | | | | | | 0. type TypeName(C1)
-//│ | | | | | | | typename case??
-//│ | | | | | | => C1
-//│ | | | | | => (Int | C1)
-//│ | | | | => (Int, (Int | C1)?,)
-//│ | | | => (Int, (Int | C1)?,) ——— 
+//│ | | | | | 0. type TypeName(Int)
+//│ | | | | | | typename case??
+//│ | | | | | => Int
+//│ | | | | => (Int, Int?,)
+//│ | | | => (Int, Int?,) ——— 
 //│ | | | constraining!!!
-//│ | | | CONSTRAIN (#1<Int,Num,Object>, #2<Int,Num,Object>,) <! (Int, (Int | C1)?,)
+//│ | | | CONSTRAIN (#1<Int,Num,Object>, #2<Int,Num,Object>,) <! (Int, Int?,)
 //│ | | |   where 
-//│ | | | 0. C (#1<Int,Num,Object>, #2<Int,Num,Object>,) <! (Int, (Int | C1)?,)    (0)
+//│ | | | 0. C (#1<Int,Num,Object>, #2<Int,Num,Object>,) <! (Int, Int?,)    (0)
 //│ | | | | Already a subtype by <:<
-//│ | | 0. : (Int, (Int | C1)?,)
-//│ | : Some((Int, (Int | C1)?,))
+//│ | | 0. : (Int, Int?,)
+//│ | : Some((Int, Int?,))
 //│ ======== TYPED ========
-//│ res: Some((Int, (Int | C1)?,)) where 
-//│ (Int, C1 | Int,)
+//│ res: Some((Int, Int?,)) where 
+//│ (Int, Int,)
 //│ res
 //│     = [ 1, 2 ]
 
@@ -279,7 +232,7 @@ let y: C1 = x
 //│ │ > │ │ = Right(1)
 //│ │ > │ = Right(1)
 //│ │ > │ ? argsOrIf		inspects |,| |2|    [at l.1093]
-//│ │ > │ nexttoken => (COMMA,Loc(2,3,nu/OptionalArgs:+260))
+//│ │ > │ nexttoken => (COMMA,Loc(2,3,nu/OptionalArgs:+213))
 //│ │ > │ ? isOptinoal		inspects |,| |2|    [at l.1098]
 //│ │ > │ flags => None None None
 //│ │ > │ e => Right(Fld(FldFlags(false,false,false),1))
@@ -336,7 +289,7 @@ let y: C1 = x
 //│ │ │ │ │ │ > │ │ = Right(Int)
 //│ │ │ │ │ │ > │ = Right(Int)
 //│ │ │ │ │ │ > │ ? argsOrIf		inspects |,| |Int|,| |...    [at l.1093]
-//│ │ │ │ │ │ > │ nexttoken => (COMMA,Loc(12,13,nu/OptionalArgs:+260))
+//│ │ │ │ │ │ > │ nexttoken => (COMMA,Loc(12,13,nu/OptionalArgs:+213))
 //│ │ │ │ │ │ > │ ? isOptinoal		inspects |,| |Int|,| |...    [at l.1098]
 //│ │ │ │ │ │ > │ flags => None None None
 //│ │ │ │ │ │ > │ e => Right(Fld(FldFlags(false,false,false),Int))
@@ -359,7 +312,7 @@ let y: C1 = x
 //│ │ │ │ │ │ > │ │ │ │ = Right(Int)
 //│ │ │ │ │ │ > │ │ │ = Right(Int)
 //│ │ │ │ │ │ > │ │ │ ? argsOrIf		inspects |,| |Int|?|    [at l.1093]
-//│ │ │ │ │ │ > │ │ │ nexttoken => (COMMA,Loc(17,18,nu/OptionalArgs:+260))
+//│ │ │ │ │ │ > │ │ │ nexttoken => (COMMA,Loc(17,18,nu/OptionalArgs:+213))
 //│ │ │ │ │ │ > │ │ │ ? isOptinoal		inspects |,| |Int|?|    [at l.1098]
 //│ │ │ │ │ │ > │ │ │ flags => None None None
 //│ │ │ │ │ │ > │ │ │ e => Right(Fld(FldFlags(false,false,false),Int))
@@ -382,7 +335,7 @@ let y: C1 = x
 //│ │ │ │ │ │ > │ │ │ │ │ │ = Right(Int)
 //│ │ │ │ │ │ > │ │ │ │ │ = Right(Int)
 //│ │ │ │ │ │ > │ │ │ │ │ ? argsOrIf		inspects |?|    [at l.1093]
-//│ │ │ │ │ │ > │ │ │ │ │ nexttoken => (IDENT(?,true),Loc(22,22,nu/OptionalArgs:+260))
+//│ │ │ │ │ │ > │ │ │ │ │ nexttoken => (IDENT(?,true),Loc(22,22,nu/OptionalArgs:+213))
 //│ │ │ │ │ │ > │ │ │ │ │ ? isOptinoal		inspects |?|    [at l.1098]
 //│ │ │ │ │ │ > │ │ │ │ │ ! isOptinoal		consumes |?|    [at l.1100]
 //│ │ │ │ │ │ > │ │ │ │ │ flags => None None None
@@ -396,14 +349,14 @@ let y: C1 = x
 //│ │ │ │ │ │ > = List((None,Right(Fld(FldFlags(false,false,false),Int))), (None,Right(Fld(FldFlags(false,false,false),Int))), (None,Right(Fld(FldFlags(false,false,true),Int))))
 //│ │ │ │ │ │ > ? concludeWith		inspects ||    [at l.87]
 //│ │ │ │ │ │ > Concluded with List((None,Fld(FldFlags(false,false,false),Int)), (None,Fld(FldFlags(false,false,false),Int)), (None,Fld(FldFlags(false,false,true),Int)))
-//│ │ │ │ │ │ @ exprCont(0,`'(' Int, Int, Int,? ')'`,false)    [at l.608]
+//│ │ │ │ │ │ @ exprCont(0,`'(' Int, Int, Int?, ')'`,false)    [at l.608]
 //│ │ │ │ │ │ │ ? exprCont		inspects ||    [at l.737]
-//│ │ │ │ │ │ = Right('(' Int, Int, Int,? ')')
-//│ │ │ │ │ = Right('(' Int, Int, Int,? ')')
-//│ │ │ │ = Right('(' Int, Int, Int,? ')')
-//│ │ │ │ result => '(' Int, Int, Int,? ')' ## Bra(rcd = false, Tup(_: Var(Int), _: Var(Int), _: Var(Int)))
+//│ │ │ │ │ │ = Right('(' Int, Int, Int?, ')')
+//│ │ │ │ │ = Right('(' Int, Int, Int?, ')')
+//│ │ │ │ = Right('(' Int, Int, Int?, ')')
+//│ │ │ │ result => '(' Int, Int, Int?, ')' ## Bra(rcd = false, Tup(_: Var(Int), _: Var(Int), _: Var(Int)))
 //│ │ │ │ result toType => Right(Tuple(List((None,Field(None,TypeName(Int),false)), (None,Field(None,TypeName(Int),false)), (None,Field(None,TypeName(Int),true)))))
-//│ │ │ = '(' Int, Int, Int,? ')'
+//│ │ │ = '(' Int, Int, Int?, ')'
 //│ │ │ asc => '(' 1, 2, ')' : (Int, Int, Int,)
 //│ │ = Right('(' 1, 2, ')' : (Int, Int, Int,))
 //│ = Right('(' 1, 2, ')' : (Int, Int, Int,))
@@ -411,14 +364,15 @@ let y: C1 = x
 //│ ? parseAll		inspects ||    [at l.76]
 //│ Parsed: '(' 1, 2, ')' : (Int, Int, Int,);
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.260: 	[1, 2]: [Int, Int, Int?]
+//│ ║  l.213: 	[1, 2]: [Int, Int, Int?]
 //│ ║         	^^^^^^
 //│ ╟── tuple literal of type `(1, 2,)` does not match type `(Int, Int, Int,)`
-//│ ║  l.260: 	[1, 2]: [Int, Int, Int?]
+//│ ║  l.213: 	[1, 2]: [Int, Int, Int?]
 //│ ║         	 ^^^^
 //│ ╟── Note: constraint arises from tuple type:
-//│ ║  l.260: 	[1, 2]: [Int, Int, Int?]
+//│ ║  l.213: 	[1, 2]: [Int, Int, Int?]
 //│ ╙──       	        ^^^^^^^^^^^^^^^^
 //│ (Int, Int, Int,)
 //│ res
 //│     = [ 1, 2 ]
+
