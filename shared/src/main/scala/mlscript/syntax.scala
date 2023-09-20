@@ -138,7 +138,7 @@ sealed abstract class TypeLike extends TypeLikeImpl
 
 sealed abstract class Type extends TypeLike with TypeImpl
 
-sealed trait NamedType extends Type { val base: TypeName }
+sealed trait NamedType extends Type { def base: TypeName; def targs: Ls[Type] }
 
 sealed abstract class Composed(val pol: Bool) extends Type with ComposedImpl
 

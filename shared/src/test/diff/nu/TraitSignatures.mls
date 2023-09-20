@@ -8,7 +8,7 @@ declare trait Foo: (x: Num) => Num {
   val y: Str
 }
 //│ declare trait Foo: (x: Num) -> Num {
-//│   let y: Str
+//│   val y: Str
 //│ }
 
 (f: Foo) => [f.y, f(0)]

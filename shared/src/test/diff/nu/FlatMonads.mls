@@ -56,7 +56,7 @@ val main =
         val sum = n + m
         printLine(concat("The sum is: ")(String of sum)).bind of _ =>
           Pure(sum)
-//│ let main: Bind['A, 'B]
+//│ val main: Bind['A, 'B]
 //│   where
 //│     'B :> Int
 //│     'A <: undefined
@@ -80,7 +80,7 @@ val main =
   val sum = n + m
   printLine(concat("The sum is: ")(String of sum)).bind of _ =>
   Pure(sum)
-//│ let main: Bind['A, 'B]
+//│ val main: Bind['A, 'B]
 //│   where
 //│     'B :> Int
 //│     'A <: undefined
@@ -182,7 +182,7 @@ val main =
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.125: 	  val sum = n + m
 //│ ╙──       	            ^
-//│ let main: IO['B] | error
+//│ val main: IO['B] | error
 //│ main
 //│      = Bind {}
 
@@ -200,7 +200,7 @@ val main =
   val sum = n + m
   printLine(concat("The sum is: ")(String of sum)) |>= _ =>
   Pure(sum)
-//│ let main: Bind[nothing, 'B]
+//│ val main: Bind[nothing, 'B]
 //│   where
 //│     'B :> Int
 //│ main
@@ -230,7 +230,7 @@ fun main(ctx) =
 //│ fun main: forall 'a 'b. {printLine: Str -> {bind: (Int -> ('a | 'b)) -> 'a}, pure: Int -> 'b, readInt: {bind: (Int -> ('a | 'b)) -> 'a}} -> 'a
 
 val defaultCtx = {printLine, readInt, pure: Pure}
-//│ let defaultCtx: {printLine: (str: Str) -> printLine, pure: forall 'A. (value: 'A) -> Pure['A], readInt: readInt}
+//│ val defaultCtx: {printLine: (str: Str) -> printLine, pure: forall 'A. (value: 'A) -> Pure['A], readInt: readInt}
 //│ defaultCtx
 //│            = {
 //│                printLine: [Function (anonymous)] {
@@ -299,7 +299,7 @@ val main =
   val sum = n + m
   printLine(concat("The sum is: ")(String of sum)).bind of _ =>
   Pure(sum)
-//│ let main: Bind['A, 'B]
+//│ val main: Bind['A, 'B]
 //│   where
 //│     'B :> Int
 //│ main
@@ -367,7 +367,7 @@ val main =
   val sum = n + m
   printLine(concat("The sum is: ")(String of sum)) of _ =>
   pure(sum)
-//│ let main: IO['b]
+//│ val main: IO['b]
 //│   where
 //│     'b :> Int
 

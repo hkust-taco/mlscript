@@ -2,7 +2,7 @@
 :NoJS
 
 
-class Union[out Region](a: Region)
+class Union[out Region](val a: Region)
 // class Union[Region](a: Region)
 //│ class Union[Region](a: Region)
 

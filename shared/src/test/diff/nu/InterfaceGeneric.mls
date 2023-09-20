@@ -25,7 +25,7 @@ trait Product[A, B] extends Into[A] {
 //│ where
 //│   'T := A
 
-class TwoInts(pair: (Int, Int)) extends Product[Int, Int] {
+class TwoInts(val pair: (Int, Int)) extends Product[Int, Int] {
     fun Into = pair._1 + pair._2
 }
 //│ class TwoInts(pair: [Int, Int]) extends Into, Product {

@@ -55,10 +55,16 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   
   
   /** Note: `mkType` is just for reporting errors. */
-  def lookupField(mkType: () => ST, clsNme: Opt[Str], rfnt: Var => Opt[FieldType], tags: SortedSet[AbstractTag], fld: Var)
+  def lookupField(mkType: () => ST, clsNme: Opt[Str], rfnt: Var => Opt[FieldType],
+        tags: SortedSet[AbstractTag], _fld: Var)
         (implicit ctx: Ctx, raise: Raise)
         : FieldType
-        = trace(s"Looking up field ${fld.name} in $clsNme & ${tags} & {...}") {
+        = trace(s"Looking up field ${_fld.name} in $clsNme & ${tags} & {...}") {
+    
+    // * Field selections with field names starting with `#` are a typer hack to access private members.
+    val (fld, allowPrivateAccess) =
+      if (_fld.name.startsWith("#")) (Var(_fld.name.tail).withLocOf(_fld), true)
+      else (_fld, false)
     
     val fromRft = rfnt(fld)
     
@@ -69,7 +75,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       // * The raw type of this member, with original references to the class' type variables/type parameters
       val raw = (if (info.isComputed) N else info.typedFields.get(fld)) match {
         
-        case S(fty) => S(fty)
+        case S(fty) =>
+          if (info.privateParams.contains(fld) && !allowPrivateAccess)
+            err(msg"Parameter '${fld.name}' cannot tbe accessed as a field" -> fld.toLoc :: Nil)
+          S(fty)
         
         case N if info.isComputing =>
           
@@ -86,9 +95,13 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               case S(d: TypedNuFun) =>
                 S(d.typeSignature.toUpper(provTODO))
               case S(p: NuParam) =>
+                if (!allowPrivateAccess && !p.isPublic)
+                  err(msg"Parameter '${p.nme.name}' cannot tbe accessed as a field" -> fld.toLoc ::
+                    msg"Either make the parameter a `val` or access it through destructuring" -> p.nme.toLoc ::
+                    Nil)
                 S(p.ty)
               case S(m) =>
-                S(err(msg"access to ${m.kind.str} member not yet supported", fld.toLoc).toUpper(noProv))
+                S(err(msg"Access to ${m.kind.str} member not yet supported", fld.toLoc).toUpper(noProv))
               case N => N
             }
           
@@ -541,13 +554,19 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                   RhsBases(ots, S(R(RhsField(fldNme, fldTy))), trs))
             if ctx.tyDefs2.contains(nme) => if (newDefs && nme =/= "Eql" && fldNme.name === "Eql#A") {
               val info = ctx.tyDefs2(nme)
-              info.typedParams.foreach { p =>
-                val fty = lookupField(() => done_ls.toType(sort = true), S(nme), r.fields.toMap.get, ts, p._1)
-                rec(fldTy.lb.getOrElse(die), RecordType(p._1 -> TypeRef(TypeName("Eql"),
-                    fty.ub // FIXME check mutable?
-                    :: Nil
-                  )(provTODO).toUpper(provTODO) :: Nil)(provTODO), false)
-              }
+              if (info.typedParams.isEmpty && !primitiveTypes.contains(nme))
+                // TODO shoudl actually reject all non-data classes...
+                err(msg"${info.decl.kind.str.capitalize} '${info.decl.name
+                  }' does not support equality comparison because it does not have a parameter list", prov.loco)
+              info.typedParams
+                .getOrElse(Nil) // FIXME?... prim type
+                .foreach { p =>
+                  val fty = lookupField(() => done_ls.toType(sort = true), S(nme), r.fields.toMap.get, ts, p._1)
+                  rec(fldTy.lb.getOrElse(die), RecordType(p._1 -> TypeRef(TypeName("Eql"),
+                      fty.ub // FIXME check mutable?
+                      :: Nil
+                    )(provTODO).toUpper(provTODO) :: Nil)(provTODO), false)
+                }
             } else {
               val fty = lookupField(() => done_ls.toType(sort = true), S(nme), r.fields.toMap.get, ts, fldNme)
               rec(fty.ub, fldTy.ub, false)
@@ -564,8 +583,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               annoying(Nil, lr, Nil, RhsBases(Nil, S(R(rf)), SortedMap.empty))
             case (LhsRefined(N, ts, r, _), RhsBases(ots, S(R(RhsField(fldNme, fldTy))), trs)) if newDefs =>
               val fty = lookupField(() => done_ls.toType(sort = true), N, r.fields.toMap.get, ts, fldNme)
-                rec(fty.ub, fldTy.ub, false)
-                recLb(fldTy, fty)
+              rec(fty.ub, fldTy.ub, false)
+              recLb(fldTy, fty)
             case (LhsRefined(bo, ts, r, _), RhsBases(ots, S(R(RhsField(n, t2))), trs)) =>
               // TODO simplify - merge with above?
               r.fields.find(_._1 === n) match {

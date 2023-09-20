@@ -99,44 +99,44 @@ trait TypeSimplifier { self: Typer =>
         val prefix = fnme.takeWhile(_ =/= '#')
         val postfix = fnme.drop(prefix.length + 1)
         lazy val default = fty.update(process(_ , N), process(_ , N))
-        if (postfix.isEmpty) v -> default :: Nil
+        if (postfix.isEmpty || prefix.isEmpty) v -> default :: Nil
         else ctx.tyDefs.get(prefix) match {
-        case S(td) =>
-          td.tvarVariances.fold(v -> default :: Nil)(tvv =>
-            tvv(td.tparamsargs.find(_._1.name === postfix).getOrElse(die)._2) match {
-              case VarianceInfo(true, true) => Nil
-              case VarianceInfo(co, contra) =>
-                if (co) v -> FieldType(S(BotType), process(fty.ub, N))(fty.prov) :: Nil
-                else if (contra) v -> FieldType(fty.lb.map(process(_, N)), TopType)(fty.prov) :: Nil
-                else  v -> default :: Nil
-            })
-        case N =>
-          // v -> default :: Nil
-          ctx.tyDefs2.get(prefix) match {
-            case S(info) =>
-              info.result match {
-                case S(cls: TypedNuCls) =>
-                  cls.varianceOf(cls.tparams.find(_._1.name === postfix).getOrElse(die)._2) match {
-                    case VarianceInfo(true, true) => Nil
-                    case VarianceInfo(co, contra) =>
-                      if (co) v -> FieldType(S(BotType), process(fty.ub, N))(fty.prov) :: Nil
-                      else if (contra) v -> FieldType(fty.lb.map(process(_, N)), TopType)(fty.prov) :: Nil
-                      else  v -> default :: Nil
-                  }
-                case S(trt: TypedNuTrt) => // TODO factor w/ above & generalize
-                  trt.tparams.iterator.find(_._1.name === postfix).flatMap(_._3).getOrElse(VarianceInfo.in) match {
-                    case VarianceInfo(true, true) => Nil
-                    case VarianceInfo(co, contra) =>
-                      if (co) v -> FieldType(S(BotType), process(fty.ub, N))(fty.prov) :: Nil
-                      else if (contra) v -> FieldType(fty.lb.map(process(_, N)), TopType)(fty.prov) :: Nil
-                      else  v -> default :: Nil
-                  }
-                case S(_) => ??? // TODO:
-                case N =>
-                  ??? // TODO use info.explicitVariances
-              }
-            case N => die
-          }
+          case S(td) =>
+            td.tvarVariances.fold(v -> default :: Nil)(tvv =>
+              tvv(td.tparamsargs.find(_._1.name === postfix).getOrElse(die)._2) match {
+                case VarianceInfo(true, true) => Nil
+                case VarianceInfo(co, contra) =>
+                  if (co) v -> FieldType(S(BotType), process(fty.ub, N))(fty.prov) :: Nil
+                  else if (contra) v -> FieldType(fty.lb.map(process(_, N)), TopType)(fty.prov) :: Nil
+                  else  v -> default :: Nil
+              })
+          case N =>
+            // v -> default :: Nil
+            ctx.tyDefs2.get(prefix) match {
+              case S(info) =>
+                info.result match {
+                  case S(cls: TypedNuCls) =>
+                    cls.varianceOf(cls.tparams.find(_._1.name === postfix).getOrElse(die)._2) match {
+                      case VarianceInfo(true, true) => Nil
+                      case VarianceInfo(co, contra) =>
+                        if (co) v -> FieldType(S(BotType), process(fty.ub, N))(fty.prov) :: Nil
+                        else if (contra) v -> FieldType(fty.lb.map(process(_, N)), TopType)(fty.prov) :: Nil
+                        else  v -> default :: Nil
+                    }
+                  case S(trt: TypedNuTrt) => // TODO factor w/ above & generalize
+                    trt.tparams.iterator.find(_._1.name === postfix).flatMap(_._3).getOrElse(VarianceInfo.in) match {
+                      case VarianceInfo(true, true) => Nil
+                      case VarianceInfo(co, contra) =>
+                        if (co) v -> FieldType(S(BotType), process(fty.ub, N))(fty.prov) :: Nil
+                        else if (contra) v -> FieldType(fty.lb.map(process(_, N)), TopType)(fty.prov) :: Nil
+                        else  v -> default :: Nil
+                    }
+                  case S(_) => ??? // TODO:
+                  case N =>
+                    ??? // TODO use info.explicitVariances
+                }
+              case N => lastWords(s"'$prefix' not found")
+            }
         }
       })(ty.prov)
       

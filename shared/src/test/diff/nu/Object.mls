@@ -89,15 +89,39 @@ fun foo = forall 'a; (x: 'a) => if x is A then true else false
 
 
 
-:ge
+:e
 Object
-//│ () -> Object
+//│ ╔══[ERROR] Class Object is abstract and cannot be instantiated
+//│ ║  l.93: 	Object
+//│ ╙──      	^^^^^^
+//│ ╔══[ERROR] Class Object cannot be instantiated as it exposes no such constructor
+//│ ║  l.93: 	Object
+//│ ╙──      	^^^^^^
+//│ error
 //│ Code generation encountered an error:
 //│   unresolved symbol Object
 
-:ge
+:e
 Object()
-//│ Object
+//│ ╔══[ERROR] Class Object is abstract and cannot be instantiated
+//│ ║  l.105: 	Object()
+//│ ╙──       	^^^^^^
+//│ ╔══[ERROR] Class Object cannot be instantiated as it exposes no such constructor
+//│ ║  l.105: 	Object()
+//│ ╙──       	^^^^^^
+//│ error
+//│ Code generation encountered an error:
+//│   unresolved symbol Object
+
+:e
+new Object
+//│ ╔══[ERROR] Class Object is abstract and cannot be instantiated
+//│ ║  l.117: 	new Object
+//│ ╙──       	^^^^^^^^^^
+//│ ╔══[ERROR] Class Object cannot be instantiated as it exposes no such constructor
+//│ ║  l.117: 	new Object
+//│ ╙──       	^^^^^^^^^^
+//│ error
 //│ Code generation encountered an error:
 //│   unresolved symbol Object
 
@@ -109,7 +133,6 @@ class B() extends Object
 //│ Code generation encountered an error:
 //│   unresolved parent Object.
 
-// TODO
 class C() extends A
 //│ class C() extends A
 

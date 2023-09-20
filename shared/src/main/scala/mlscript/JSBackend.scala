@@ -833,7 +833,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
           val ins = unapplyScope.declareParameter(nme)
           JSClassMethod("unapply", JSNamePattern(ins) :: Nil, L(JSArray(fields.map {
             case _ -> Fld(_, trm) => trm match {
-              case Sel(Var(ins), Var(f)) => JSIdent(s"$ins.#$f")
+              case Sel(Var(ins), Var(f)) => JSIdent(s"$ins.$f")
               case _ => translateTerm(trm)
             } 
           }))) :: Nil
@@ -1034,6 +1034,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         val (params, preStmts) = ctor match {
           case S(Constructor(Tup(ls), Blk(stmts))) => (S(ls.map {
             case (S(Var(nme)), Fld(flags, _)) => (nme, flags.genGetter)
+            case (N, Fld(flags, Var(nme))) => (nme, flags.genGetter)
             case _ => throw CodeGenError(s"Unexpected constructor parameters in $nme.")
           }), stmts)
           case _ => (N, Nil)

@@ -498,8 +498,8 @@ TestLang.eval(mk(0))
 class Foo(x: Int)
 //│ class Foo(x: Int)
 
-class Bar(x: Int, y: Int) extends Foo(x + y)
-//│ class Bar(x: Int, y: Int) extends Foo
+class Bar(x2: Int, y: Int) extends Foo(x2 + y)
+//│ class Bar(x2: Int, y: Int) extends Foo
 
 
 mixin AA(a: Int) {

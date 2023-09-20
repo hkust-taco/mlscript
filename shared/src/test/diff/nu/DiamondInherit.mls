@@ -155,6 +155,7 @@ class Final extends Derived1[(Int, Int)], Derived2 {
   fun bar([x, y]) = [error, error]
 }
 //│ class Final extends Base, Derived1, Derived2 {
+//│   constructor()
 //│   fun bar: ([anything, anything]) -> [nothing, nothing]
 //│   fun foo: [123, 456]
 //│ }
@@ -164,6 +165,7 @@ class Final extends Derived1[(Int, Int)], Derived2 {
   fun bar([x, y]) = [y, x]
 }
 //│ class Final extends Base, Derived1, Derived2 {
+//│   constructor()
 //│   fun bar: forall 'a 'b. (['a, 'b]) -> ['b, 'a]
 //│   fun foo: [123, 456]
 //│ }

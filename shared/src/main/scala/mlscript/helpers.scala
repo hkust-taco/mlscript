@@ -28,6 +28,8 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
     case Field(S(lb), Top) => s"in ${lb.showIn(ctx, 0)}"
     case Field(S(lb), ub) => s"in ${lb.showIn(ctx, 0)} out ${ub.showIn(ctx, 0)}"
   }
+  private def showFields(fs: Ls[Opt[Var] -> Field], ctx: ShowCtx): Ls[Str] =
+    fs.map(nt => s"${nt._2.mutStr}${nt._1.fold("")(_.name + ": ")}${showField(nt._2, ctx)}")
   def showIn(ctx: ShowCtx, outerPrec: Int): Str = this match {
   // TODO remove obsolete pretty-printing hacks
     case Top => "anything"
@@ -43,7 +45,7 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
         case Nil => "()"
         case N -> Field(N, f) :: Nil if !f.isInstanceOf[Tuple] => f.showIn(ctx, 31)
         case _ =>
-          val inner = fs.map(nt => s"${nt._2.mutStr}${nt._1.fold("")(_.name + ": ")}${showField(nt._2, ctx)}")
+          val inner = showFields(fs, ctx)
           if (ctx.newDefs) inner.mkString("(", ", ", ")") else inner.mkString("(", ", ", ",)")
       }
       parensIf(innerStr + " -> " + r.showIn(ctx, 30), outerPrec > 30)
@@ -66,7 +68,7 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
       val inner = fs.map{case L(l) => s"...${l.showIn(ctx, 0)}" case R(r) => s"${showField(r, ctx)}"}
       if (ctx.newDefs) inner.mkString("[", ", ", "]") else inner.mkString("(", ", ", ")")
     case Tuple(fs) =>
-      val inner = fs.map(nt => s"${nt._2.mutStr}${nt._1.fold("")(_.name + ": ")}${showField(nt._2, ctx)}")
+      val inner = showFields(fs, ctx)
       if (ctx.newDefs) inner.mkString("[", ", ", "]")
       else inner.mkString("(", ", ", if (fs.nonEmpty) ",)" else ")")
     case Union(TypeName("true"), TypeName("false")) | Union(TypeName("false"), TypeName("true")) =>
@@ -130,10 +132,10 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
           case Bounds(lo, hi) => s"\n${ctx.indStr}${lo.showIn(ctx, 0)} <: ${hi.showIn(ctx, 0)}" // TODO print differently from bs?
         }.mkString}"
       }, outerPrec > 0)
-    case NuFunDef(isLetRec, nme, snme, targs, rhs) =>
+    case fd @ NuFunDef(isLetRec, nme, snme, targs, rhs) =>
       s"${isLetRec match {
-        case S(false) => "let"
-        case S(true) => "let rec"
+        case S(false) => if (fd.genField) "val" else "let"
+        case S(true) => if (fd.genField) die else "let rec"
         case N => "fun"
       }}${snme.fold("")(" (" + _.name + ")")
       } ${nme.name}${targs.map(_.showIn(ctx, 0)).mkStringOr(", ", "[", "]")}${rhs match {
@@ -141,15 +143,17 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
         case R(ty) => ": " + ty.showIn(ctx, 0)
       }}"
     case Signature(decls, res) =>
-      // decls.map(ctx.indStr + (if (ctx.indentLevel === 0) "" else "\n") + _.showIn(ctx, 0)).mkString +
       (decls.map(ctx.indStr + _.showIn(ctx, 0) + "\n") ::: (res match {
         case S(ty) => ctx.indStr + ty.showIn(ctx, 0) + "\n" :: Nil
         case N => Nil
-      // })).mkString(if (ctx.indentLevel === 0) "" else "\n", "\n", "")
-      // })).mkString("\n")
-      // })).mkString("", "\n", "\n")
       })).mkString
     case NuTypeDef(kind @ Als, nme, tparams, params, ctor, sig, parents, sup, ths, body) =>
+      assert(params.isEmpty, params)
+      assert(ctor.isEmpty, ctor)
+      assert(parents.isEmpty, parents)
+      assert(sup.isEmpty, sup)
+      assert(ths.isEmpty, ths)
+      assert(body.entities.isEmpty, body)
       s"type ${nme.name}${tparams.map(_._2.showIn(ctx, 0)).mkStringOr(", ", "[", "]")} = ${
         sig.getOrElse(die).showIn(ctx, 0)}"
     case td @ NuTypeDef(kind, nme, tparams, params, ctor, sig, parents, sup, ths, body) =>
@@ -158,8 +162,7 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
         nme.name}${tparams.map(_._2.showIn(ctx, 0)).mkStringOr(", ", "[", "]")}${params match {
         case S(Tup(fields)) => s"(${fields.map {
           case (N, Fld(_, Asc(v: Var, ty))) => v.name + ": " + ty.showIn(ctx, 0)
-          case (N, _) => "???"
-          case (S(nme), rhs) => nme.name
+          case (N | S(_), _) => lastWords("ill-formed type definition parameter")
         }.mkString(", ")})"
         case _ => ""
       }}${sig.fold("")(": " + _.showIn(bodyCtx, 0))}${parents match {
@@ -168,6 +171,13 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
       }}${if (body.entities.isEmpty && sup.isEmpty && ths.isEmpty) "" else
         " {\n" + sup.fold("")(s"${bodyCtx.indStr}super: " + _.showIn(bodyCtx, 0) + "\n") +
         ths.fold("")(s"${bodyCtx.indStr}this: " + _.showIn(bodyCtx, 0) + "\n") +
+          body.entities.collect {
+            case Constructor(params, body) => s"${bodyCtx.indStr}constructor(${params.fields.map {
+              case N -> Fld(FldFlags.empty, Asc(Var(nme), ty)) => 
+                s"${nme}: ${ty.showIn(bodyCtx, 0)}"
+              case _ => lastWords("ill-formed constructor parameter")
+            }.mkString(", ")})\n"
+          }.mkString +
           Signature(body.entities.collect { case d: NuDecl => d }, N).showIn(bodyCtx, 0) +
             ctx.indStr + "}"
       }"
@@ -441,12 +451,12 @@ trait NuDeclImpl extends Located { self: NuDecl =>
   lazy val genUnapply: Opt[NuFunDef] = this match {
     case td: NuTypeDef if td.kind is Cls => td.params.map { tup =>
       val ret = Let(false, Var("_"), Asc(Var("x"), TypeName(name)), Tup(tup.fields.map {
-        case S(p) -> f => N -> Fld(f.flags, Sel(Var("x"), p))
-        case N -> Fld(flags, p: Var) => N -> Fld(flags, Sel(Var("x"), p))
+        case S(p) -> f => N -> Fld(FldFlags.empty, Sel(Var("x"), Var("#" + p.name).withLocOf(p)))
+        case N -> Fld(flags, p: Var) => N -> Fld(FldFlags.empty, Sel(Var("x"), Var("#" + p.name).withLocOf(p)))
         case _ => die
       }))
       NuFunDef(N, Var("unapply"), N, Nil, L(Lam(
-        Tup(N -> Fld(FldFlags(false, false, false), Var("x")) :: Nil),
+        Tup(N -> Fld(FldFlags.empty, Var("x")) :: Nil),
         ret)))(N, N, N, N, true)
     }
     case _ => N
@@ -456,13 +466,16 @@ trait TypingUnitImpl extends Located { self: TypingUnit =>
   def showDbg: Str = entities.map {
     case t: Term => t.toString
     case d: NuDecl => d.showDbg
-    case _ => die
+    case c: Constructor => c.toString
+    case e => lastWords(s"Unexpected typing unit entity: $e")
   }.mkString("{", "; ", "}")
+  override def toString: String = s"‹${entities.mkString("; ")}›"
   lazy val children: List[Located] = entities
 }
 
 trait TypeNameImpl extends Ordered[TypeName] { self: TypeName =>
-  val base: TypeName = this
+  def base: TypeName = this
+  def targs: Ls[Type] = Nil
   def compare(that: TypeName): Int = this.name compare that.name
   lazy val toVar: Var = Var(name).withLocOf(this)
 }
@@ -662,7 +675,7 @@ private class NotAType(val trm: Statement) extends Throwable
 
 object PlainTup {
   def apply(fields: Term*): Term =
-    Tup(fields.iterator.map(t => (N, Fld(FldFlags(false, false, false), t))).toList)
+    Tup(fields.iterator.map(t => (N, Fld(FldFlags.empty, t))).toList)
   def unapplySeq(trm: Term): Opt[List[Term]] = trm match {
     case Tup(fields) if fields.forall(f =>
       f._1.isEmpty && f._2.flags.mut === false && f._2.flags.spec === false
@@ -833,7 +846,7 @@ trait StatementImpl extends Located { self: Statement =>
       val pos = params.unzip._1
       val bod = pars.map(tt).foldRight(Record(params): Type)(Inter)
       val termName = Var(nme.name).withLocOf(nme)
-      val ctor = Def(false, termName, L(Lam(tup, App(termName, Tup(N -> Fld(FldFlags(false, false, false), Rcd(fs.map {
+      val ctor = Def(false, termName, L(Lam(tup, App(termName, Tup(N -> Fld(FldFlags.empty, Rcd(fs.map {
         case (S(nme), fld) => nme -> Fld(FldFlags(false, false, fld.flags.genGetter), nme)
         case (N, fld @ Fld(_, nme: Var)) => nme -> fld
         case _ => die
@@ -963,7 +976,7 @@ trait StatementImpl extends Located { self: Statement =>
     case LetS(isRec, name, rhs) => s"let${if (isRec) " rec" else ""} $name = $rhs"
     case DatatypeDefn(head, body) => s"data type $head of $body"
     case DataDefn(head) => s"data $head"
-    case Constructor(params, _) => s"constructor($params)"
+    case Constructor(params, bod) => s"constructor(${params.showElems}) $bod"
     case _: Term => super.toString
     case d: Decl => d.showDbg
     case d: NuDecl => d.showDbg

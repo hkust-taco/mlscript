@@ -251,7 +251,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
   final def toParams(t: Term): Tup = t match {
     case t: Tup => t
     case Bra(false, t: Tup) => t
-    case _ => Tup((N, Fld(FldFlags(false, false, false), t)) :: Nil)
+    case _ => Tup((N, Fld(FldFlags.empty, t)) :: Nil)
   }
   final def toParamsTy(t: Type): Tuple = t match {
     case t: Tuple => t
@@ -528,16 +528,19 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
           case _ =>
             exprOrIf(0, allowSpace = false)
         }
-        yeetSpaces match {
+        val finalTerm = yeetSpaces match {
           case (KEYWORD("="), l0) :: _ => t match {
             case R(v: Var) =>
               consume
-              R(Eqn(v, expr(0))) :: block
-            case _ => t :: Nil
+              R(Eqn(v, expr(0)))
+            case _ => t
           }
-          case (KEYWORD(";"), _) :: _ => consume; t :: block
-          case (NEWLINE, _) :: _ => consume; t :: block
-          case _ => t :: Nil
+          case _ => t
+        }
+        yeetSpaces match {
+          case (KEYWORD(";"), _) :: _ => consume; finalTerm :: block
+          case (NEWLINE, _) :: _ => consume; finalTerm :: block
+          case _ => finalTerm :: Nil
         }
     }
   
@@ -659,7 +662,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
             consume
             exprOrIf(0)
           case _ =>
-            R(UnitLit(true))
+            R(UnitLit(true).withLoc(curLoc.map(_.left)))
         }
         bs.foldRight(body) {
           case ((v, r), R(acc)) => R(Let(false, v, r, acc))
@@ -667,7 +670,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         }
       case (KEYWORD("new"), l0) :: c =>
         consume
-        val body = expr(0)
+        val body = expr(outer.prec('.'))
         val head = body match {
           case Var(clsNme) =>
             S(TypeName(clsNme).withLocOf(body) -> Tup(Nil))
@@ -682,7 +685,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
               msg"Unexpected ${body.describe} after `new` keyword" -> body.toLoc :: Nil))
             N
         }
-        R(New(head, curlyTypingUnit).withLoc(S(head.foldLeft(l0)((l, h) => l ++ h._1.toLoc ++ h._2.toLoc))))
+        val res = New(head, curlyTypingUnit).withLoc(S(head.foldLeft(l0)((l, h) => l ++ h._1.toLoc ++ h._2.toLoc)))
+        exprCont(res, prec, allowNewlines = false)
       case (KEYWORD("else"), l0) :: _ =>
         consume
         val e = expr(0)
@@ -745,8 +749,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       case Nil =>
         err(msg"Unexpected end of $description; an expression was expected here" -> lastLoc :: Nil)
         R(errExpr)
-      case ((KEYWORD(";") /* | NEWLINE */ /* | BRACKETS(Curly, _) */, _) :: _) =>
-        R(UnitLit(true))
+      case ((KEYWORD(";") /* | NEWLINE */ /* | BRACKETS(Curly, _) */, l0) :: _) =>
+        R(UnitLit(true).withLoc(S(l0)))
         // R(errExpr) // TODO
       case (tk, l0) :: _ =>
         err(msg"Unexpected ${tk.describe} in expression position" -> S(l0) :: Nil)
@@ -797,16 +801,14 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                 else App(App(v, toParams(acc)), toParams(rhs))
             }, prec, allowNewlines)
         }
-      case (KEYWORD(":"), l0) :: _ =>
+      case (KEYWORD(":"), l0) :: _ if prec <= outer.prec(':') =>
         consume
         R(Asc(acc, typ(0)))
-      // case (KEYWORD(":"), _) :: _ if prec <= 1 =>
-      //   consume
-      //   R(Asc(acc, typ(1)))
       case (KEYWORD("where"), l0) :: _ if prec <= 1 =>
         consume
         val tu = typingUnitMaybeIndented
-        R(Where(acc, tu.entities))
+        val res = Where(acc, tu.entities).withLoc(S(l0))
+        exprCont(res, prec, allowNewlines = false)
       case (SPACE, l0) :: _ =>
         consume
         exprCont(acc, prec, allowNewlines)
@@ -917,7 +919,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
           exprCont(res, prec, allowNewlines)
           
       case c @ (h :: _) if (h._1 match {
-        case KEYWORD(";" | "of" | "where" | "extends") | BRACKETS(Round | Square, _)
+        case KEYWORD(";" | ":" | "of" | "where" | "extends") | BRACKETS(Round | Square, _)
           | BRACKETS(Indent, (
               KEYWORD(";" | "of")
               | BRACKETS(Round | Square, _)
@@ -1058,7 +1060,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
     // argsOrIf(Nil).map{case (_, L(x))=> ???; case (n, R(x))=>n->x} // TODO
     argsOrIf(Nil, Nil, allowNewlines, prec).flatMap{case (n, L(x))=> 
         err(msg"Unexpected 'then'/'else' clause" -> x.toLoc :: Nil)
-        n->Fld(FldFlags(false, false, false), errExpr)::Nil
+        n->Fld(FldFlags.empty, errExpr)::Nil
       case (n, R(x))=>n->x::Nil} // TODO
   /* 
   final def argsOrIf2()(implicit fe: FoundErr, et: ExpectThen): IfBlock \/ Ls[Opt[Var] -> Fld] = {
@@ -1079,7 +1081,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       case Nil =>
         seqAcc match {
           case res :: seqAcc => 
-            (N -> R(Fld(FldFlags(false, false, false), Blk((res :: seqAcc).reverse))) :: acc).reverse
+            (N -> R(Fld(FldFlags.empty, Blk((res :: seqAcc).reverse))) :: acc).reverse
           case Nil =>
             acc.reverse
         }

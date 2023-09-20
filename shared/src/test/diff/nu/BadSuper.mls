@@ -43,6 +43,7 @@ class Foo {
 //│ ║  l.40: 	  fun f = super
 //│ ╙──      	          ^^^^^
 //│ class Foo {
+//│   constructor()
 //│   fun f: Foo
 //│ }
 //│ Syntax error:

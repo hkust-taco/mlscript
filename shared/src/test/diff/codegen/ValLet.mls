@@ -11,7 +11,7 @@ class A(x0: Int) {
 //│ class A(x0: Int) {
 //│   let x1: Int
 //│   let x2: Int
-//│   let x3: Int
+//│   val x3: Int
 //│ }
 //│ // Prelude
 //│ function log(x) {
@@ -164,9 +164,15 @@ class B(x: Int, val y: Int)
 //│ globalThis.B = typing_unit4.B;
 //│ // End of generated code
 
-// FIXME: should be rejected
+:e
 B(0, 0).x
-//│ Int
+//│ ╔══[ERROR] Parameter 'x' cannot tbe accessed as a field
+//│ ║  l.168: 	B(0, 0).x
+//│ ║         	       ^^
+//│ ╟── Either make the parameter a `val` or access it through destructuring
+//│ ║  l.130: 	class B(x: Int, val y: Int)
+//│ ╙──       	        ^
+//│ Int | error
 //│ res
 //│     = undefined
 
@@ -175,12 +181,17 @@ B(0, 0).y
 //│ res
 //│     = 0
 
-// TODO: is this expected?
+:e
 :js
 class C {
   constructor(val x: Int, y: Int)
 }
-//│ class C
+//│ ╔══[ERROR] Cannot use `val` in constructor parameters
+//│ ║  l.187: 	  constructor(val x: Int, y: Int)
+//│ ╙──       	                  ^
+//│ class C {
+//│   constructor(x: Int, y: Int)
+//│ }
 //│ // Prelude
 //│ class TypingUnit7 {
 //│   #C;
@@ -205,9 +216,22 @@ class C {
 //│ globalThis.C = typing_unit7.C;
 //│ // End of generated code
 
-// TODO: shoud be rejected?
+// * TODO improve error location
+:e
 fun f(val x: Int) = x + 1
+//│ ╔══[ERROR] Cannot use `val` in this position
+//│ ║  l.221: 	fun f(val x: Int) = x + 1
+//│ ╙──       	          ^^^^^^
 //│ fun f: (x: Int) -> Int
+
+:e
+(val x: 1)
+//│ ╔══[ERROR] Cannot use `val` in this position
+//│ ║  l.228: 	(val x: 1)
+//│ ╙──       	     ^^^^
+//│ [x: 1]
+//│ res
+//│     = [ 1 ]
 
 class D(x: Int) {
   let x = 1
@@ -225,7 +249,7 @@ class E(x: Int) {
 }
 if E(42) is E(x) then x else 0
 //│ class E(x: Int) {
-//│   let x: 2
+//│   val x: 2
 //│ }
 //│ 0 | 2
 //│ res
@@ -247,7 +271,7 @@ class G(val x: Int) {
 }
 G(1).x
 //│ class G(x: Int) {
-//│   let x: 4
+//│   val x: 4
 //│ }
 //│ 4
 //│ res

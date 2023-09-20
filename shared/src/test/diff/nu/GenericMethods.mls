@@ -14,7 +14,7 @@ foo1[Int](42)
 //│ ╔══[ERROR] Type application syntax is not yet supported
 //│ ║  l.13: 	foo1[Int](42)
 //│ ╙──      	^^^^^^^^^
-//│ error
+//│ 42
 //│ res
 //│     = 42
 
@@ -32,7 +32,7 @@ foo2<Int>(42)
 //│ ╔══[ERROR] Type application syntax is not yet supported
 //│ ║  l.31: 	foo2<Int>(42)
 //│ ╙──      	^^^^^^^^^
-//│ error
+//│ 42
 //│ res
 //│     = 42
 
@@ -50,7 +50,7 @@ foo3[Int](42)
 //│ ╔══[ERROR] Type application syntax is not yet supported
 //│ ║  l.49: 	foo3[Int](42)
 //│ ╙──      	^^^^^^^^^
-//│ error
+//│ 42
 //│ res
 //│     = 42
 
@@ -108,13 +108,13 @@ module Test {
   fun bar: 'A
   fun test<A>(x: A) = x
 }
-//│ ╔══[ERROR] Member `foo` is declared in parent but not implemented in `Test`
+//│ ╔══[ERROR] Member `foo` is declared (or its declaration is inherited) but is not implemented in `Test`
 //│ ║  l.106: 	module Test {
 //│ ║         	       ^^^^
 //│ ╟── Declared here:
 //│ ║  l.107: 	  fun foo: 'A => 'A
 //│ ╙──       	      ^^^^^^^^^^^^^
-//│ ╔══[ERROR] Member `bar` is declared in parent but not implemented in `Test`
+//│ ╔══[ERROR] Member `bar` is declared (or its declaration is inherited) but is not implemented in `Test`
 //│ ║  l.106: 	module Test {
 //│ ║         	       ^^^^
 //│ ╟── Declared here:

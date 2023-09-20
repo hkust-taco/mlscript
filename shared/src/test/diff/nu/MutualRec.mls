@@ -148,6 +148,7 @@ class Test0_2() {
   fun b = 123
 }
 //│ class Test0_1 {
+//│   constructor()
 //│   fun a: 123
 //│ }
 //│ class Test0_2() {
@@ -163,7 +164,7 @@ module Test1_2 {
   fun b = Test1_1.a
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.163: 	  fun b = Test1_1.a
+//│ ║  l.164: 	  fun b = Test1_1.a
 //│ ╙──       	                 ^^
 //│ module Test1_1 {
 //│   fun a: error
@@ -187,13 +188,56 @@ class Test1_1 {
 class Test1_2 {
   fun b = Test1_1().a
 }
-//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.188: 	  fun b = Test1_1().a
-//│ ╙──       	                   ^^
+//│ ╔══[ERROR] Class Test1_2 cannot be instantiated as it exposes no such constructor
+//│ ║  l.186: 	  fun a = Test1_2().b
+//│ ╙──       	          ^^^^^^^
+//│ ╔══[ERROR] Class Test1_1 cannot be instantiated as it exposes no such constructor
+//│ ║  l.189: 	  fun b = Test1_1().a
+//│ ╙──       	          ^^^^^^^
 //│ class Test1_1 {
+//│   constructor()
 //│   fun a: error
 //│ }
 //│ class Test1_2 {
+//│   constructor()
+//│   fun b: error
+//│ }
+
+:e
+class Test1_1() {
+  fun a = Test1_2().b
+}
+class Test1_2() {
+  fun b = Test1_1().a
+}
+//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ║  l.211: 	  fun b = Test1_1().a
+//│ ╙──       	                   ^^
+//│ class Test1_1() {
+//│   fun a: error
+//│ }
+//│ class Test1_2() {
+//│   fun b: error
+//│ }
+
+:e
+class Test1_1 {
+  fun a = (new Test1_2).b
+}
+class Test1_2 {
+  fun b = (new Test1_1).a
+}
+//│ ╔══[ERROR] Unhandled cyclic definition
+//│ ║  l.224: 	class Test1_1 {
+//│ ║         	^^^^^^^^^^^^^^^
+//│ ║  l.225: 	  fun a = (new Test1_2).b
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ class Test1_1 {
+//│   constructor()
+//│   fun a: error
+//│ }
+//│ class Test1_2 {
+//│   constructor()
 //│   fun b: error
 //│ }
 
@@ -211,7 +255,7 @@ module Test2_2 {
   fun e = Test2_1.n
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.210: 	  fun c = Test2_1.a
+//│ ║  l.254: 	  fun c = Test2_1.a
 //│ ╙──       	                 ^^
 //│ module Test2_1 {
 //│   fun a: 123 | error
@@ -291,7 +335,7 @@ Test2_1.n
 //│     = 456
 
 
-class Test2(n: Int) {
+class Test2(val n: Int) {
   fun inc = Test3.inc(this)
 }
 module Test3 {

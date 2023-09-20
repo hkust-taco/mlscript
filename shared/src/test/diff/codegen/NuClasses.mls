@@ -80,8 +80,8 @@ a.f
 //│ ╔══[ERROR] Type application syntax is not yet supported
 //│ ║  l.78: 	let a = C[Int](42)
 //│ ╙──      	        ^^^^^^
-//│ let a: error
-//│ error
+//│ let a: C[42]
+//│ 42
 //│ a
 //│   = C {}
 //│ res
@@ -106,7 +106,7 @@ mixin M0(n: Int) {
 //│ mixin M0(n: Int) {
 //│   fun bar: Int
 //│   fun foo: [Int, Int, Int]
-//│   let m: Int
+//│   val m: Int
 //│ }
 
 module M1 extends M0(123) {
@@ -145,7 +145,7 @@ module M2 {
 //│ ╙──       	                             ^^
 //│ module M2 {
 //│   fun foo: Int -> Int
-//│   let m: 100
+//│   val m: 100
 //│ }
 //│ // Prelude
 //│ class TypingUnit11 {

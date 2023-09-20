@@ -2,19 +2,85 @@
 
 
 
-class Foo1(x: Int) {
+class Foo1(val x: Int) {
   fun test = Foo1(1).x
 }
 //│ class Foo1(x: Int) {
 //│   fun test: Int
 //│ }
 
-class Foo2[A](x: A) {
+:e
+class Foo1X(x: 0 | 1) extends Foo1(x) {
+  fun test2 = Foo1X(1).x
+}
+//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ║  l.14: 	  fun test2 = Foo1X(1).x
+//│ ╙──      	                      ^^
+//│ ╔══[ERROR] Inherited parameter named `x` is not virtual and cannot be overridden
+//│ ║  l.13: 	class Foo1X(x: 0 | 1) extends Foo1(x) {
+//│ ║        	            ^
+//│ ╟── Originally declared here:
+//│ ║  l.5: 	class Foo1(val x: Int) {
+//│ ╙──     	               ^
+//│ class Foo1X(x: 0 | 1) extends Foo1 {
+//│   fun test: Int
+//│   fun test2: error
+//│ }
+
+
+class Foo2[A](val x: A) {
   fun test = Foo2(1).x
 }
 //│ class Foo2[A](x: A) {
 //│   fun test: 1
 //│ }
+
+:e
+class Foo2X(x: 0 | 1) extends Foo2(x) {
+  fun test2 = Foo2X(1).x
+}
+//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ║  l.40: 	  fun test2 = Foo2X(1).x
+//│ ╙──      	                      ^^
+//│ ╔══[ERROR] Inherited parameter named `x` is not virtual and cannot be overridden
+//│ ║  l.39: 	class Foo2X(x: 0 | 1) extends Foo2(x) {
+//│ ║        	            ^
+//│ ╟── Originally declared here:
+//│ ║  l.31: 	class Foo2[A](val x: A) {
+//│ ╙──      	                  ^
+//│ class Foo2X(x: 0 | 1) extends Foo2 {
+//│   fun test: 1
+//│   fun test2: error
+//│ }
+
+:e
+Foo2X(1).x
+//│ ╔══[ERROR] Parameter 'x' cannot tbe accessed as a field
+//│ ║  l.57: 	Foo2X(1).x
+//│ ║        	        ^^
+//│ ╟── Either make the parameter a `val` or access it through destructuring
+//│ ║  l.39: 	class Foo2X(x: 0 | 1) extends Foo2(x) {
+//│ ╙──      	            ^
+//│ 0 | 1 | error
+//│ res
+//│     = 1
+
+:e // TODO improve type checking
+class Foo2X(a: 0 | 1) extends Foo2(a) {
+  fun test2 = Foo2X(1).x
+}
+//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ║  l.70: 	  fun test2 = Foo2X(1).x
+//│ ╙──      	                      ^^
+//│ class Foo2X(a: 0 | 1) extends Foo2 {
+//│   fun test: 1
+//│   fun test2: error
+//│ }
+
+Foo2X(1).x
+//│ 0 | 1
+//│ res
+//│     = 1
 
 
 class Foo3[A](val x: A) {
@@ -56,13 +122,11 @@ Foo3(1).foo
 class Foo4 {
   fun test = [Foo4.test]
 }
-//│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.57: 	  fun test = [Foo4.test]
-//│ ║        	              ^^^^^^^^^
-//│ ╟── reference of type `() -> #Foo4` does not have field 'test'
-//│ ║  l.57: 	  fun test = [Foo4.test]
-//│ ╙──      	              ^^^^
+//│ ╔══[ERROR] Class Foo4 cannot be instantiated as it exposes no such constructor
+//│ ║  l.123: 	  fun test = [Foo4.test]
+//│ ╙──       	              ^^^^
 //│ class Foo4 {
+//│   constructor()
 //│   fun test: [error]
 //│ }
 
@@ -71,8 +135,8 @@ class Foo5(x: Int) {
   fun test = [Foo5(5).test]
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.71: 	  fun test = [Foo5(5).test]
-//│ ╙──      	                     ^^^^^
+//│ ║  l.135: 	  fun test = [Foo5(5).test]
+//│ ╙──       	                     ^^^^^
 //│ class Foo5(x: Int) {
 //│   fun test: [error]
 //│ }
@@ -84,14 +148,14 @@ class Foo6[A](x: A) {
   fun test3 = [Foo6([x]).test3]
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.82: 	  fun test1 = [Foo6(x).test1]
-//│ ╙──      	                      ^^^^^^
+//│ ║  l.146: 	  fun test1 = [Foo6(x).test1]
+//│ ╙──       	                      ^^^^^^
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.83: 	  fun test2 = [Foo6(123).test2]
-//│ ╙──      	                        ^^^^^^
+//│ ║  l.147: 	  fun test2 = [Foo6(123).test2]
+//│ ╙──       	                        ^^^^^^
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.84: 	  fun test3 = [Foo6([x]).test3]
-//│ ╙──      	                        ^^^^^^
+//│ ║  l.148: 	  fun test3 = [Foo6([x]).test3]
+//│ ╙──       	                        ^^^^^^
 //│ class Foo6[A](x: A) {
 //│   fun test1: [error]
 //│   fun test2: [error]
@@ -108,7 +172,7 @@ class Foo7[A](head: A, tail: Foo7[A] | N) {
     _ then tail.test1
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.108: 	    _ then tail.test1
+//│ ║  l.172: 	    _ then tail.test1
 //│ ╙──       	               ^^^^^^
 //│ class Foo7[A](head: A, tail: Foo7[A] | N) {
 //│   fun test1: error | A
@@ -149,7 +213,7 @@ class Foo8[A](x: A) {
     x
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.148: 	    let tmp = Foo8(y).test1(x)
+//│ ║  l.212: 	    let tmp = Foo8(y).test1(x)
 //│ ╙──       	                     ^^^^^^
 //│ class Foo8[A](x: A) {
 //│   fun test1: (y: anything) -> A
