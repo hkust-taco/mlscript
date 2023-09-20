@@ -528,16 +528,19 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
           case _ =>
             exprOrIf(0, allowSpace = false)
         }
-        yeetSpaces match {
+        val finalTerm = yeetSpaces match {
           case (KEYWORD("="), l0) :: _ => t match {
             case R(v: Var) =>
               consume
-              R(Eqn(v, expr(0))) :: block
-            case _ => t :: Nil
+              R(Eqn(v, expr(0)))
+            case _ => t
           }
-          case (KEYWORD(";"), _) :: _ => consume; t :: block
-          case (NEWLINE, _) :: _ => consume; t :: block
-          case _ => t :: Nil
+          case _ => t
+        }
+        yeetSpaces match {
+          case (KEYWORD(";"), _) :: _ => consume; finalTerm :: block
+          case (NEWLINE, _) :: _ => consume; finalTerm :: block
+          case _ => finalTerm :: Nil
         }
     }
   
@@ -659,7 +662,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
             consume
             exprOrIf(0)
           case _ =>
-            R(UnitLit(true))
+            R(UnitLit(true).withLoc(curLoc.map(_.left)))
         }
         bs.foldRight(body) {
           case ((v, r), R(acc)) => R(Let(false, v, r, acc))
@@ -746,8 +749,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       case Nil =>
         err(msg"Unexpected end of $description; an expression was expected here" -> lastLoc :: Nil)
         R(errExpr)
-      case ((KEYWORD(";") /* | NEWLINE */ /* | BRACKETS(Curly, _) */, _) :: _) =>
-        R(UnitLit(true))
+      case ((KEYWORD(";") /* | NEWLINE */ /* | BRACKETS(Curly, _) */, l0) :: _) =>
+        R(UnitLit(true).withLoc(S(l0)))
         // R(errExpr) // TODO
       case (tk, l0) :: _ =>
         err(msg"Unexpected ${tk.describe} in expression position" -> S(l0) :: Nil)

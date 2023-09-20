@@ -556,7 +556,7 @@ if true then; else;
 //│ |#if| |true| |#then|#;| |#else|#;|
 //│ ╔══[PARSE ERROR] Unexpected 'then'/'else' clause
 //│ ║  l.555: 	if true then; else;
-//│ ╙──       	              ^^^^
+//│ ╙──       	              ^^^^^
 //│ Parsed: {if (true) then undefined; undefined}
 
 if true then () else;

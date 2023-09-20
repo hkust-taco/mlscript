@@ -1538,8 +1538,6 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     val baseType =
                       RecordType(Nil)(TypeProvenance(Loc(td.parents).map(_.left), "Object"))
                     
-                    println("PPP",privateParams)
-                    
                     val paramMems = typedParams.getOrElse(Nil).map(f =>
                       NuParam(f._1, f._2, isPublic = !privateParams.contains(f._1))(lvl))
                     
@@ -1647,17 +1645,20 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                           case _ => bod :: Nil
                         }
                         // * TODO later: for each `typedParams`, first add sthg like `ctx += lhs.name -> UndefinedParam(...)`
-                        val classParamsMap = MutMap.from(typedParams.getOrElse(Nil))
+                        val classParamsMap = MutMap.from(typedParams.getOrElse(Nil).mapValues(some))
                         bodStmts.foreach {
                           case Eqn(lhs, rhs) =>
                             classParamsMap.updateWith(lhs) {
-                              case S(p) =>
+                              case S(S(p)) =>
                                 val rhs_ty = typeTerm(rhs)
                                 constrain(rhs_ty, p.ub)
                                 ctx += lhs.name -> VarSymbol(rhs_ty, lhs)
+                                S(N)
+                              case S(N) =>
+                                err(msg"Class parameter '${lhs.name}' was already set", lhs.toLoc)
                                 N
                               case N =>
-                                err(msg"Unknown class parameter ${lhs.name}", lhs.toLoc)
+                                err(msg"Unknown class parameter '${lhs.name}'", lhs.toLoc)
                                 N
                             }
                           case stmt: DesugaredStatement =>

@@ -466,8 +466,10 @@ trait TypingUnitImpl extends Located { self: TypingUnit =>
   def showDbg: Str = entities.map {
     case t: Term => t.toString
     case d: NuDecl => d.showDbg
-    case _ => die
+    case c: Constructor => c.toString
+    case e => lastWords(s"Unexpected typing unit entity: $e")
   }.mkString("{", "; ", "}")
+  override def toString: String = s"‹${entities.mkString("; ")}›"
   lazy val children: List[Located] = entities
 }
 
@@ -974,7 +976,7 @@ trait StatementImpl extends Located { self: Statement =>
     case LetS(isRec, name, rhs) => s"let${if (isRec) " rec" else ""} $name = $rhs"
     case DatatypeDefn(head, body) => s"data type $head of $body"
     case DataDefn(head) => s"data $head"
-    case Constructor(params, _) => s"constructor($params)"
+    case Constructor(params, bod) => s"constructor(${params.showElems}) $bod"
     case _: Term => super.toString
     case d: Decl => d.showDbg
     case d: NuDecl => d.showDbg
