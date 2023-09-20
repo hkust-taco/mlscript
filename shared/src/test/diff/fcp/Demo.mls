@@ -2,6 +2,7 @@
 :NoJS // TODO support JS code-gen for datatypes
 
 
+
 datatype Option[A] = Some(A) | None
 //│ Defined class Option[+A]
 //│ Declared Option.Some: Option['A] -> ('A,)
@@ -10,6 +11,9 @@ datatype Option[A] = Some(A) | None
 //│ Defined class None[+A]
 //│ Some: 'a -> Option['a]
 //│ None: Option[nothing]
+
+
+// * Original
 
 def foo f = (f 123, f true)
 fooid = foo id
@@ -22,6 +26,52 @@ def bar f = (f (fun x -> x), f (fun x -> Some x))
 test = bar foo
 //│ bar: ((forall 'a. 'a -> 'a) -> 'b & (forall 'c. 'c -> Option['c]) -> 'd) -> ('b, 'd,)
 //│ test: ((123, true,), (Option[123], Option[true],),)
+
+
+// * Let-expanded
+
+def foo f = let g = f in (f 123, f true)
+fooid = foo id
+fooSome = foo Some
+//│ foo: (123 -> 'a & true -> 'b) -> ('a, 'b,)
+//│ fooid: (123, true,)
+//│ fooSome: (Option[123], Option[true],)
+
+def bar f = (f (fun x -> x), f (fun x -> Some x))
+test = bar foo
+//│ bar: ((forall 'a. 'a -> 'a) -> 'b & (forall 'c. 'c -> Option['c]) -> 'd) -> ('b, 'd,)
+//│ test: ((123, true,), (Option[123], Option[true],),)
+
+
+// * Eta-expanded (notice the lesser generality)
+
+def foo f = let g x = f x in (g 123, g true)
+fooid = foo id
+fooSome = foo Some
+//│ foo: ((123 | true) -> 'a) -> ('a, 'a,)
+//│ fooid: (123 | true, 123 | true,)
+//│ fooSome: (Option[123 | true], Option[123 | true],)
+
+def bar f = (f (fun x -> x), f (fun x -> Some x))
+test = bar foo
+//│ bar: ((forall 'a. 'a -> 'a) -> 'b & (forall 'c. 'c -> Option['c]) -> 'd) -> ('b, 'd,)
+//│ test: ((123 | true, 123 | true,), (Option[123 | true], Option[123 | true],),)
+
+
+// * With function type annotation (same lesser generality)
+
+def foo (f: 'x -> 'a) = (f 123, f true)
+fooid = foo id
+fooSome = foo Some
+//│ foo: ((123 | true) -> 'a) -> ('a, 'a,)
+//│ fooid: (123 | true, 123 | true,)
+//│ fooSome: (Option[123 | true], Option[123 | true],)
+
+def bar f = (f (fun x -> x), f (fun x -> Some x))
+test = bar foo
+//│ bar: ((forall 'a. 'a -> 'a) -> 'b & (forall 'c. 'c -> Option['c]) -> 'd) -> ('b, 'd,)
+//│ test: ((123 | true, 123 | true,), (Option[123 | true], Option[123 | true],),)
+
 
 
 datatype List[A] = Cons(A, List[A]) | Nil
@@ -65,5 +115,6 @@ use fnd = match fnd with
 
 use found
 //│ res: ("!!!" | "???", bool,)
+
 
 
