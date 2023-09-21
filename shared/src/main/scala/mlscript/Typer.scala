@@ -1043,9 +1043,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
               case x :: Nil => 
                 funs.head
               case Nil =>
-                err("cannot extract any function", f.toLoc)
+                err("Cannot extract any function", f.toLoc)
               case _ =>
-               err(s"more than one fun type found! => ${funs}", f.toLoc)
+                err(s"More than one fun type found: ${funs}", f.toLoc)
             }
           case PolymorphicType(_, AliasOf(fun_ty @ FunctionType(_, _))) =>
             fun_ty
@@ -1061,7 +1061,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
               case Some(arg) =>
                 arg
               case N =>
-                err("cannot use named args in this case.", a.toLoc)
+                err("Cannot use named args in this case", a.toLoc)
                 Var("error")
             })
           case _ => 
@@ -1606,15 +1606,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
   def getNewVarName(prefix: String, nonValidVars: Set[Var]): String = {
     // we check all possibe prefix_num combination, till we found one that is not in the nonValidVars
     val ints = LazyList.from(1)
-    val result = ints.find(index => {
+    prefix + "_" + ints.find(index => {
       !nonValidVars.contains(Var(prefix + "_" + index))
-    })
-    result match {
-      case Some(index) => 
-        prefix + "_" + index
-      case N => 
-        die
-    }
+    }).get
   }
 
   def freeVars(t: Term): Set[Var] = {
@@ -1654,13 +1648,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
               case Some(v) =>
                 v match {
                   case Left(v) =>
-                    (None, Fld(FldFlags(false, false), v))
+                    (None, Fld(FldFlags.empty, v))
                   case Right(t) => 
-                    (None, Fld(FldFlags(false, false), t))
+                    (None, Fld(FldFlags.empty, t))
                 }
               case None =>
-                err(s"name ${x} is missed in function call", a.toLoc)
-                (None, Fld(FldFlags(false, false), Var("error")))
+                err(s"Argument named ${x} is missing from this function call", a.toLoc)
+                (None, Fld(FldFlags.empty, Var("error")))
             }
           ))
           App(f, y)
@@ -1672,7 +1666,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
     if (hasDefined &&
         hasEmpty && 
         areArgsMisplaced) {
-      err("the unnamed args should appear first when using named args!", a.toLoc) 
+      err("Unnamed arguments should appear first when using named arguments", a.toLoc) 
     } else 
       a.fields.sizeCompare(argsList) match {
         case 0 =>
@@ -1688,7 +1682,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
             asGroupedByVarName.foreach(
               x =>
                 x._2 match {
-                  case x1 :: y1 :: xs => err(s"parameter ${x._1} is duplicate!", a.toLoc) 
+                  case x1 :: y1 :: xs => err(s"Argument for parameter ${x._1} is duplicated", a.toLoc) 
                   case _ =>     
                 }
             )
@@ -1698,7 +1692,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
           term.desugaredTerm = S(desugared)
           typeTerm(desugared)(ctx = ctx, raise = raise, vars = vars, genLambdas = false)
         case _ =>
-          err("number of parameters dosen't match with the function signature!", a.toLoc) 
+          err("Number of arguments dosen't match with the function signature", a.toLoc) 
       }
   }
   

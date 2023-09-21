@@ -6,18 +6,17 @@ fun test(x: 'a) = if x is undefined then 0 else x + 1
 
 :e
 test(x: 0, 1)
-//│ ╔══[ERROR] the unnamed args should appear first when using named args!
+//│ ╔══[ERROR] Unnamed arguments should appear first when using named arguments
 //│ ║  l.8: 	test(x: 0, 1)
 //│ ╙──     	    ^^^^^^^^^
 //│ error
 //│ res
 //│     = 1
 
-// FIXME "dummy"
 :e
 test(y: 0)
-//│ ╔══[ERROR] name x is missed in function call
-//│ ║  l.18: 	test(y: 0)
+//│ ╔══[ERROR] Argument named x is missing from this function call
+//│ ║  l.17: 	test(y: 0)
 //│ ╙──      	    ^^^^^^
 //│ Int
 //│ res
@@ -29,21 +28,20 @@ fun test(x: 'a, y: 'b) = [x, y]
 
 :e
 test(y: 0)
-//│ ╔══[ERROR] number of parameters dosen't match with the function signature!
-//│ ║  l.31: 	test(y: 0)
+//│ ╔══[ERROR] Number of arguments dosen't match with the function signature
+//│ ║  l.30: 	test(y: 0)
 //│ ╙──      	    ^^^^^^
 //│ error
 //│ res
 //│     = [ 0, undefined ]
 
-// FIXME extra error "name y is missed in function call"
 :e
 test(1, x: 0)
-//│ ╔══[ERROR] parameter x is duplicate!
-//│ ║  l.41: 	test(1, x: 0)
+//│ ╔══[ERROR] Argument for parameter x is duplicated
+//│ ║  l.39: 	test(1, x: 0)
 //│ ╙──      	    ^^^^^^^^^
-//│ ╔══[ERROR] name y is missed in function call
-//│ ║  l.41: 	test(1, x: 0)
+//│ ╔══[ERROR] Argument named y is missing from this function call
+//│ ║  l.39: 	test(1, x: 0)
 //│ ╙──      	    ^^^^^^^^^
 //│ [0, nothing]
 //│ res
@@ -109,21 +107,32 @@ fun fff(x: Int, y: Int, z: Int) = (x - y) * z
 :e
 fff(y: 2, z: y_1 + 1, x: z_1 - 2)
 //│ ╔══[ERROR] identifier not found: y_1
-//│ ║  l.110: 	fff(y: 2, z: y_1 + 1, x: z_1 - 2)
+//│ ║  l.108: 	fff(y: 2, z: y_1 + 1, x: z_1 - 2)
 //│ ╙──       	             ^^^
 //│ ╔══[ERROR] identifier not found: z_1
-//│ ║  l.110: 	fff(y: 2, z: y_1 + 1, x: z_1 - 2)
+//│ ║  l.108: 	fff(y: 2, z: y_1 + 1, x: z_1 - 2)
 //│ ╙──       	                         ^^^
 //│ Int
 //│ Code generation encountered an error:
 //│   unresolved symbol z_1
 
+:js
 let y_1 = 2
 let z_1 = 3
 fff(y: 2, z: y_1 + 1, x: z_1 - 2)
 //│ let y_1: 2
 //│ let z_1: 3
 //│ Int
+//│ // Prelude
+//│ class TypingUnit11 {}
+//│ const typing_unit11 = new TypingUnit11;
+//│ // Query 1
+//│ globalThis["y_1"] = 2;
+//│ // Query 2
+//│ globalThis["z_1"] = 3;
+//│ // Query 3
+//│ res = ((z_2) => ((x_1) => fff(x_1, 2, z_2))(z_1 - 2))(y_1 + 1);
+//│ // End of generated code
 //│ y_1
 //│     = 2
 //│ z_1
@@ -179,17 +188,17 @@ p(z: 1, y: 2)
 fun print(x) = (y, z) => log([x, y, z])
 let p = print(0)
 p(z: 1, y: 2)
-//│ ╔══[ERROR] cannot use named args in this case.
-//│ ║  l.181: 	p(z: 1, y: 2)
+//│ ╔══[ERROR] Cannot use named args in this case
+//│ ║  l.190: 	p(z: 1, y: 2)
 //│ ╙──       	 ^^^^^^^^^^^^
-//│ ╔══[ERROR] cannot use named args in this case.
-//│ ║  l.181: 	p(z: 1, y: 2)
+//│ ╔══[ERROR] Cannot use named args in this case
+//│ ║  l.190: 	p(z: 1, y: 2)
 //│ ╙──       	 ^^^^^^^^^^^^
-//│ ╔══[ERROR] name error is missed in function call
-//│ ║  l.181: 	p(z: 1, y: 2)
+//│ ╔══[ERROR] Argument named error is missing from this function call
+//│ ║  l.190: 	p(z: 1, y: 2)
 //│ ╙──       	 ^^^^^^^^^^^^
-//│ ╔══[ERROR] name error is missed in function call
-//│ ║  l.181: 	p(z: 1, y: 2)
+//│ ╔══[ERROR] Argument named error is missing from this function call
+//│ ║  l.190: 	p(z: 1, y: 2)
 //│ ╙──       	 ^^^^^^^^^^^^
 //│ fun print: anything -> (anything, anything) -> undefined
 //│ let p: (anything, anything) -> undefined
@@ -225,7 +234,7 @@ b.f(y: 1, x: 2)
 //│ [ 2, 1 ]
 
 
-class A(x: Int, y: Int)
+class A(val x: Int, val y: Int)
 //│ class A(x: Int, y: Int)
 
 let z = A(y: 2, x: 1)
