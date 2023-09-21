@@ -29,22 +29,22 @@ mixin EvalBase {
       Add(l, r) then this.eval(l) + this.eval(r)
 }
 //│ mixin EvalBase() {
-//│   this: {eval: 'lhs -> Int}
-//│   fun eval: (Add['lhs] | Lit) -> Int
+//│   this: {eval: 'a -> Int}
+//│   fun eval: (Add['a] | Lit) -> Int
 //│ }
 
 
 module TestLang extends EvalBase
 //│ module TestLang {
-//│   fun eval: (Add['E] | Lit) -> Int
+//│   fun eval: (Add['a] | Lit) -> Int
 //│ }
 //│ where
-//│   'E <: Add['E] | Lit
+//│   'a <: Add['a] | Lit
 
 TestLang.eval
-//│ (Add['E] | Lit) -> Int
+//│ (Add['a] | Lit) -> Int
 //│   where
-//│     'E <: Add['E] | Lit
+//│     'a <: Add['a] | Lit
 //│ res
 //│     = [Function: eval]
 
@@ -70,19 +70,19 @@ module TestLang extends EvalNothing, EvalAddLit
 //│ }
 //│ mixin EvalAddLit() {
 //│   super: {eval: 'a -> 'b}
-//│   this: {eval: 'lhs -> Int}
-//│   fun eval: (Add['lhs] | Lit | Object & 'a & ~#Add & ~#Lit) -> (Int | 'b)
+//│   this: {eval: 'c -> Int}
+//│   fun eval: (Add['c] | Lit | Object & 'a & ~#Add & ~#Lit) -> (Int | 'b)
 //│ }
 //│ module TestLang {
-//│   fun eval: (Add['E] | Lit) -> Int
+//│   fun eval: (Add['d] | Lit) -> Int
 //│ }
 //│ where
-//│   'E <: Add['E] | Lit
+//│   'd <: Add['d] | Lit
 
 TestLang.eval
-//│ (Add['E] | Lit) -> Int
+//│ (Add['a] | Lit) -> Int
 //│   where
-//│     'E <: Add['E] | Lit
+//│     'a <: Add['a] | Lit
 //│ res
 //│     = [Function: eval]
 
@@ -108,8 +108,8 @@ mixin EvalNeg {
 }
 //│ mixin EvalNeg() {
 //│   super: {eval: 'a -> 'b}
-//│   this: {eval: 'expr -> Int}
-//│   fun eval: (Neg['expr] | Object & 'a & ~#Neg) -> (Int | 'b)
+//│   this: {eval: 'c -> Int}
+//│   fun eval: (Neg['c] | Object & 'a & ~#Neg) -> (Int | 'b)
 //│ }
 
 
@@ -176,8 +176,8 @@ mixin EvalNegNeg_0 {
 }
 //│ mixin EvalNegNeg_0() {
 //│   super: {eval: (Neg[nothing] | 'a) -> 'b}
-//│   this: {eval: 'expr -> 'b}
-//│   fun eval: (Neg[Neg['expr] | Object & ~#Neg] | Object & 'a & ~#Neg) -> 'b
+//│   this: {eval: 'c -> 'b}
+//│   fun eval: (Neg[Neg['c] | Object & ~#Neg] | Object & 'a & ~#Neg) -> 'b
 //│ }
 
 // * Concise alternative, usign syntax sugar:
@@ -186,8 +186,8 @@ mixin EvalNegNeg {
 }
 //│ mixin EvalNegNeg() {
 //│   super: {eval: (Neg[nothing] | 'a) -> 'b}
-//│   this: {eval: 'expr -> 'b}
-//│   fun eval: (Neg[Neg['expr] | Object & ~#Neg] | Object & 'a & ~#Neg) -> 'b
+//│   this: {eval: 'c -> 'b}
+//│   fun eval: (Neg[Neg['c] | Object & ~#Neg] | Object & 'a & ~#Neg) -> 'b
 //│ }
 
 module TestLang extends EvalBase, EvalNeg, EvalNegNeg

@@ -23,7 +23,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   }
   
   def toParam(t: Term): Tup =
-    Tup((N, Fld(FldFlags(false, false), t)) :: Nil)
+    Tup((N, Fld(FldFlags.empty, t)) :: Nil)
   
   def toParams(t: Term): Tup = t match {
     case t: Tup => t
@@ -67,14 +67,14 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
 
   def parens[p: P]: P[Term] = locate(P( "(" ~/ parenCell.rep(0, ",") ~ ",".!.? ~ ")" ).map {
     case (Seq(Right(t -> false)), N) => Bra(false, t)
-    case (Seq(Right(t -> true)), N) => Tup(N -> Fld(FldFlags(true, false), t) :: Nil) // ? single tuple with mutable
+    case (Seq(Right(t -> true)), N) => Tup(N -> Fld(FldFlags(true, false, false), t) :: Nil) // ? single tuple with mutable
     case (ts, _) => 
       if (ts.forall(_.isRight)) Tup(ts.iterator.map {
-        case R(f) => N -> Fld(FldFlags(f._2, false), f._1)
+        case R(f) => N -> Fld(FldFlags(f._2, false, false), f._1)
         case _ => die // left unreachable
       }.toList)
       else Splc(ts.map {
-        case R((v, m)) => R(Fld(FldFlags(m, false), v))
+        case R((v, m)) => R(Fld(FldFlags(m, false, false), v))
         case L(spl) => L(spl)
       }.toList)
   })
@@ -104,8 +104,8 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
       "{" ~/ (kw("mut").!.? ~ variable ~ "=" ~ term map L.apply).|(kw("mut").!.? ~
         variable map R.apply).rep(sep = ";" | ",") ~ "}"
     ).map { fs => Rcd(fs.map{ 
-        case L((mut, v, t)) => v -> Fld(FldFlags(mut.isDefined, false), t)
-        case R(mut -> id) => id -> Fld(FldFlags(mut.isDefined, false), id) }.toList)})
+        case L((mut, v, t)) => v -> Fld(FldFlags(mut.isDefined, false, false), t)
+        case R(mut -> id) => id -> Fld(FldFlags(mut.isDefined, false, false), id) }.toList)})
   
   def fun[p: P]: P[Term] = locate(P( kw("fun") ~/ term ~ "->" ~ term ).map(nb => Lam(toParams(nb._1), nb._2)))
   

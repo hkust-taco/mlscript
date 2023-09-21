@@ -67,7 +67,7 @@ sealed abstract class Lit                                            extends Sim
 final case class Var(name: Str)                                      extends SimpleTerm with VarImpl with NameRef
 final case class Lam(lhs: Term, rhs: Term)                           extends Term
 final case class App(lhs: Term, rhs: Term)                           extends Term
-final case class Tup(fields: Ls[Opt[Var] -> Fld])                    extends Term
+final case class Tup(fields: Ls[Opt[Var] -> Fld])                    extends Term with TupImpl
 final case class Rcd(fields: Ls[Var -> Fld])                         extends Term
 final case class Sel(receiver: Term, fieldName: Var)                 extends Term
 final case class Let(isRec: Bool, name: Var, rhs: Term, body: Term)  extends Term
@@ -102,10 +102,10 @@ final case class IfOpsApp(lhs: Term, opsRhss: Ls[Var -> IfBody]) extends IfBody
 final case class IfBlock(lines: Ls[IfBody \/ Statement]) extends IfBody
 // final case class IfApp(fun: Term, opsRhss: Ls[Var -> IfBody]) extends IfBody
 
-final case class FldFlags(mut: Bool, spec: Bool)
+final case class FldFlags(mut: Bool, spec: Bool, genGetter: Bool)
 final case class Fld(flags: FldFlags, value: Term) extends FldImpl
 
-object FldFlags { val empty: FldFlags = FldFlags(false, false) }
+object FldFlags { val empty: FldFlags = FldFlags(false, false, false) }
 
 sealed abstract class CaseBranches extends CaseBranchesImpl
 final case class Case(pat: SimpleTerm, body: Term, rest: CaseBranches) extends CaseBranches
@@ -138,7 +138,7 @@ sealed abstract class TypeLike extends TypeLikeImpl
 
 sealed abstract class Type extends TypeLike with TypeImpl
 
-sealed trait NamedType extends Type { val base: TypeName }
+sealed trait NamedType extends Type { def base: TypeName; def targs: Ls[Type] }
 
 sealed abstract class Composed(val pol: Bool) extends Type with ComposedImpl
 
@@ -214,10 +214,19 @@ final case class NuFunDef(
   symbolicNme: Opt[Var],
   tparams: Ls[TypeName],
   rhs: Term \/ Type,
-)(val declareLoc: Opt[Loc], val signature: Opt[NuFunDef], val outer: Opt[Outer]) extends NuDecl with DesugaredStatement {
+)(
+  val declareLoc: Opt[Loc],
+  val virtualLoc: Opt[Loc], // Some(Loc) means that the function is modified by keyword `virtual`
+  val signature: Opt[NuFunDef],
+  val outer: Opt[Outer],
+  val genField: Bool
+) extends NuDecl with DesugaredStatement {
   val body: Located = rhs.fold(identity, identity)
   def kind: DeclKind = Val
   val abstractLoc: Opt[Loc] = None
+
+  // If the member has no implementation, it is virtual automatically
+  def isVirtual: Bool = virtualLoc.nonEmpty || rhs.isRight
 }
 
 

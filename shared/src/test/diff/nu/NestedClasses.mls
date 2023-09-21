@@ -15,25 +15,30 @@ let c = C0()
 
 :e
 c.NC0
-//│ ╔══[ERROR] access to class member not yet supported
+//│ ╔══[ERROR] Access to class member not yet supported
 //│ ║  l.17: 	c.NC0
 //│ ╙──      	 ^^^^
 //│ error
 //│ res
-//│     = [Function (anonymous)] { class: [class NC0] }
+//│     = [Function (anonymous)] {
+//│         class: [class NC0],
+//│         unapply: [Function: unapply]
+//│       }
 
 
 module M0 {
   class NC0
 }
 //│ module M0 {
-//│   class NC0
+//│   class NC0 {
+//│     constructor()
+//│   }
 //│ }
 
 :e
 M0.NC0
-//│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.34: 	M0.NC0
+//│ ╔══[ERROR] Access to class member not yet supported
+//│ ║  l.39: 	M0.NC0
 //│ ╙──      	  ^^^^
 //│ error
 //│ res
@@ -49,8 +54,8 @@ module M1 {
 
 :e
 M1.NM1
-//│ ╔══[ERROR] access to module member not yet supported
-//│ ║  l.51: 	M1.NM1
+//│ ╔══[ERROR] Access to module member not yet supported
+//│ ║  l.56: 	M1.NM1
 //│ ╙──      	  ^^^^
 //│ error
 //│ res

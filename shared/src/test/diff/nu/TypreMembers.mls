@@ -3,6 +3,7 @@
 
 class Test { type T = Int }
 //│ class Test {
+//│   constructor()
 //│   type T = Int
 //│ }
 
@@ -20,7 +21,7 @@ trait Test { type T = Int }
 :e
 1 : Test.T
 //│ ╔══[ERROR] Illegal prefix of type selection: Test
-//│ ║  l.21: 	1 : Test.T
+//│ ║  l.22: 	1 : Test.T
 //│ ╙──      	    ^^^^
 //│ error
 //│ res

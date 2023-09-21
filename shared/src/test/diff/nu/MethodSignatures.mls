@@ -14,7 +14,7 @@ module Oops {
 module Oops {
   fun a : Int
 }
-//│ ╔══[ERROR] Member `a` is declared in parent but not implemented in `Oops`
+//│ ╔══[ERROR] Member `a` is declared (or its declaration is inherited) but is not implemented in `Oops`
 //│ ║  l.14: 	module Oops {
 //│ ║        	       ^^^^
 //│ ╟── Declared here:
@@ -149,7 +149,9 @@ module M {
 //│ ║  l.133: 	  fun a: A
 //│ ╙──       	      ^^^^
 //│ module M {
-//│   class A
+//│   class A {
+//│     constructor()
+//│   }
 //│   fun a: A
 //│ }
 
@@ -160,7 +162,7 @@ module M {
   fun a = 1
 }
 //│ ╔══[ERROR] undeclared `this`
-//│ ║  l.159: 	  fun a: this.A
+//│ ║  l.161: 	  fun a: this.A
 //│ ╙──       	         ^^^^
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 

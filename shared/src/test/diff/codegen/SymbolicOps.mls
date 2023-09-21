@@ -54,13 +54,13 @@ succ >> succ of 3
 //│ ╟── from reference:
 //│ ║  l.4: 	fun (>>) compose(f, g) = x => g(f(x))
 //│ ╙──     	                              ^
-//│ error | Int -> Int
+//│ error | Int -> nothing
 //│ res
 //│     = [Function (anonymous)]
 
 :js
 let f = (>>)
-//│ let f: forall 'a 'b. ((3 | 'a) -> Int, Int -> 'b) -> (Int & 'a) -> (Int | 'b)
+//│ let f: forall 'a 'b 'c. ('a -> 'b, 'b -> 'c) -> 'a -> 'c
 //│ // Prelude
 //│ class TypingUnit7 {}
 //│ const typing_unit7 = new TypingUnit7;
@@ -109,7 +109,7 @@ f(succ, succ)(3)
 //│ ╟── from reference:
 //│ ║  l.4: 	fun (>>) compose(f, g) = x => g(f(x))
 //│ ╙──     	                              ^
-//│ error | Int -> Int
+//│ error | Int -> nothing
 //│ res
 //│     = [Function (anonymous)]
 
@@ -313,7 +313,7 @@ fun (:-D) dd(a, b) = a + b
 
 
 val (->) f(x, y) = [x, y]
-//│ let (->) f: forall 'a 'b. ('a, 'b) -> ['a, 'b]
+//│ val (->) f: forall 'a 'b. ('a, 'b) -> ['a, 'b]
 //│ f
 //│   = [Function: f1]
 

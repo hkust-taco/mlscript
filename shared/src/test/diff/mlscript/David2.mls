@@ -148,7 +148,10 @@ rec def mkInteger_oops value = Integer { value; addOne = fun n -> mkInteger_oops
 // * We may still want to retain the precise typing of the `value` part:
 
 def mkIntegerPrecise value = Integer { value; addOne = addOne1 }
-//│ mkIntegerPrecise: (int & 'value) -> (Integer with {addOne: forall 'a 'b. ((Integer\value with {addOne: 'a -> 'b}) & 'a) -> 'b, value: 'value})
+//│ mkIntegerPrecise: (int & 'value) -> (Integer with {
+//│   addOne: forall 'a 'b. ((Integer\value with {addOne: 'a -> 'b}) & 'a) -> 'b,
+//│   value: 'value
+//│ })
 //│                 = [Function: mkIntegerPrecise]
 
 def mkIntegerPrecise value = Integer { value; addOne = fun n -> mkInteger (n.value + 1) }
@@ -203,13 +206,13 @@ def mkIntegerPrecise3 = mkInteger
 //│   <:  mkIntegerPrecise3:
 //│ (int & 'a) -> (Integer\addOne with {value: 'a})
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.199: 	def mkIntegerPrecise3 = mkInteger
+//│ ║  l.202: 	def mkIntegerPrecise3 = mkInteger
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── operator application of type `int` does not match type `'a`
 //│ ║  l.72: 	rec def mkInteger value = Integer { value; addOne = fun n -> mkInteger (n.value + 1) }
 //│ ║        	                                                                        ^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.193: 	def mkIntegerPrecise3: (int & 'a) -> (Integer & { value: 'a })
+//│ ║  l.196: 	def mkIntegerPrecise3: (int & 'a) -> (Integer & { value: 'a })
 //│ ╙──       	                                                         ^^
 //│                  = [Function: mkIntegerPrecise3]
 
@@ -217,10 +220,10 @@ def mkIntegerPrecise3 = mkInteger
 :e
 addOne1 (Stri { value = ""; addOne = error })
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.218: 	addOne1 (Stri { value = ""; addOne = error })
+//│ ║  l.221: 	addOne1 (Stri { value = ""; addOne = error })
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Stri & {addOne: ?addOne, value: ?value}` does not match type `Integer & ?a`
-//│ ║  l.218: 	addOne1 (Stri { value = ""; addOne = error })
+//│ ║  l.221: 	addOne1 (Stri { value = ""; addOne = error })
 //│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.11: 	addOne1 x = case x of {

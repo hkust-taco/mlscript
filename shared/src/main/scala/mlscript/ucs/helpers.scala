@@ -16,7 +16,7 @@ object helpers {
     * @param t the sole element
     * @return a tuple term with the only element
     */
-  def mkMonuple(t: Term): Tup = Tup(N -> Fld(FldFlags(false, false), t) :: Nil)
+  def mkMonuple(t: Term): Tup = Tup(N -> Fld(FldFlags.empty, t) :: Nil)
 
   /**
     * Make a binary operation.

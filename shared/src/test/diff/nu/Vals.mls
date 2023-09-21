@@ -3,8 +3,8 @@
 
 val a = 1
 val b = a + 1
-//│ let a: 1
-//│ let b: Int
+//│ val a: 1
+//│ val b: Int
 //│ a
 //│   = 1
 //│ b
@@ -15,21 +15,21 @@ val b = a + 1
 :ge
 val c = d + 1
 val d = 1
-//│ let c: Int
-//│ let d: 1
+//│ val c: Int
+//│ val d: 1
 //│ Code generation encountered an error:
 //│   unresolved symbol d
 
 
 // :e // FIXME should not type check
 val a = a
-//│ let a: nothing
+//│ val a: nothing
 //│ a
 //│   = 1
 
 
 val f(x) = x
-//│ let f: forall 'a. 'a -> 'a
+//│ val f: forall 'a. 'a -> 'a
 //│ f
 //│   = [Function: f]
 
@@ -44,7 +44,7 @@ module M {
   val f(x) = x + tmp
 }
 //│ module M {
-//│   let f: Int -> Int
+//│   val f: Int -> Int
 //│   let tmp: 2
 //│ }
 

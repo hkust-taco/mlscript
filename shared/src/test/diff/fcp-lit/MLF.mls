@@ -331,7 +331,7 @@ v = packed_int (fun p -> (snd p) ( fst p ))
 
 
 def a: ' -> '
-//│ a: ' -> '
+//│ a: 'a -> 'a
 
 
 

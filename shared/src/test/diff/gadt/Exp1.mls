@@ -3,8 +3,10 @@
 
 class Exp[A]: Pair | Lit
 class Lit(n: Int) extends Exp[Int]
-class Pair[L, R](lhs: L, rhs: R) extends Exp[(L, R)]
-//│ class Exp[A]: Lit | Pair[anything, anything]
+class Pair[L, R](val lhs: L, val rhs: R) extends Exp[(L, R)]
+//│ class Exp[A]: Lit | Pair[anything, anything] {
+//│   constructor()
+//│ }
 //│ class Lit(n: Int) extends Exp
 //│ class Pair[L, R](lhs: L, rhs: R) extends Exp
 
@@ -15,14 +17,14 @@ fun f(p: Pair['a, 'b]) = p.lhs
 
 fun f(e) = if e is
   Pair(l, r) then [l, r]
-//│ fun f: forall 'lhs 'rhs. Pair['lhs, 'rhs] -> ['lhs, 'rhs]
+//│ fun f: forall 'a 'b. Pair['a, 'b] -> ['a, 'b]
 // f: (Exp['a] & Pair) -> 0
 
 
 fun f(e) = if e is
   Pair(l, r) then [l, r]
   Lit(n) then n
-//│ fun f: forall 'lhs 'rhs. (Lit | Pair['lhs, 'rhs]) -> (Int | ['lhs, 'rhs])
+//│ fun f: forall 'a 'b. (Lit | Pair['a, 'b]) -> (Int | ['a, 'b])
 
 (e: Exp['X]) => f(e)
 //│ (e: Exp['X]) -> (Int | [??L, ??R])
@@ -34,7 +36,7 @@ fun f(e) = if e is
 fun f(e) = if e is
   Pair['a, 'b](l, r) then [l, r]
 //│ ╔══[ERROR] illegal pattern
-//│ ║  l.35: 	  Pair['a, 'b](l, r) then [l, r]
+//│ ║  l.37: 	  Pair['a, 'b](l, r) then [l, r]
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^
 //│ fun f: anything -> error
 //│ Code generation encountered an error:
@@ -47,10 +49,10 @@ fun f(e) = if e is
     fun f(x: a) = x
     f(l)
 //│ ╔══[ERROR] type identifier not found: a
-//│ ║  l.47: 	    fun f(x: a) = x
+//│ ║  l.49: 	    fun f(x: a) = x
 //│ ╙──      	             ^
 //│ ╔══[ERROR] identifier not found: l
-//│ ║  l.48: 	    f(l)
+//│ ║  l.50: 	    f(l)
 //│ ╙──      	      ^
 //│ fun f: Pair[anything, anything] -> error
 //│ Code generation encountered an error:

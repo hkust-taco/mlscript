@@ -5,8 +5,12 @@
 module Mod
 //│ module Mod
 
+:e
 Mod === Mod
-//│ Bool
+//│ ╔══[ERROR] Module 'Mod' does not support equality comparison because it does not have a parameter list
+//│ ║  l.9: 	Mod === Mod
+//│ ╙──     	^^^^^^^^^^^
+//│ error | false | true
 //│ res
 //│     = true
 
@@ -23,6 +27,22 @@ Cls1() === Cls1()
 class Cls2(x: Int)
 //│ class Cls2(x: Int)
 
+:e // TODO better error – or actually only support data classes
+Cls2(0) === Cls2(1)
+//│ ╔══[ERROR] Parameter 'x' cannot tbe accessed as a field
+//│ ║  l.27: 	class Cls2(x: Int)
+//│ ║        	           ^
+//│ ╟── Either make the parameter a `val` or access it through destructuring
+//│ ║  l.27: 	class Cls2(x: Int)
+//│ ╙──      	           ^
+//│ error | false | true
+//│ res
+//│     = false
+
+
+class Cls2(val x: Int)
+//│ class Cls2(x: Int)
+
 Cls2(0) === Cls2(1)
 //│ Bool
 //│ res
@@ -30,7 +50,7 @@ Cls2(0) === Cls2(1)
 
 
 
-class Pair[A](fst: A, snd: A)
+class Pair[A](val fst: A, val snd: A)
 //  extends (A <: Eql[A]) => Eql[Pair[A]]
 //│ class Pair[A](fst: A, snd: A)
 
@@ -63,10 +83,10 @@ p === { fst: 1, snd: 2 }
 :e
 { fst: 1, snd: 2 } === p
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.64: 	{ fst: 1, snd: 2 } === p
+//│ ║  l.84: 	{ fst: 1, snd: 2 } === p
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── record literal of type `{fst: 1, snd: 2}` is not an instance of type `Eql`
-//│ ║  l.64: 	{ fst: 1, snd: 2 } === p
+//│ ║  l.84: 	{ fst: 1, snd: 2 } === p
 //│ ╙──      	       ^^^^^^^^^
 //│ error | false | true
 //│ res
@@ -86,11 +106,11 @@ r : {x: Int}
 :e
 x => { a: 0 } === x
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.87: 	x => { a: 0 } === x
-//│ ║        	     ^^^^^^^^^^^^^^
+//│ ║  l.107: 	x => { a: 0 } === x
+//│ ║         	     ^^^^^^^^^^^^^^
 //│ ╟── record literal of type `{a: 0}` is not an instance of type `Eql`
-//│ ║  l.87: 	x => { a: 0 } === x
-//│ ╙──      	          ^
+//│ ║  l.107: 	x => { a: 0 } === x
+//│ ╙──       	          ^
 //│ anything -> (error | false | true)
 //│ res
 //│ Syntax error:
@@ -111,17 +131,17 @@ let q = Pair(1, "oops")
 :e
 q === q
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.112: 	q === q
+//│ ║  l.132: 	q === q
 //│ ║         	^^^^^^^
 //│ ╟── integer literal of type `1` is not an instance of type `Str`
-//│ ║  l.106: 	let q = Pair(1, "oops")
+//│ ║  l.126: 	let q = Pair(1, "oops")
 //│ ╙──       	             ^
 //│ error | false | true
 //│ res
 //│     = true
 
 
-class Pair2[A, B](fst: A, snd: B)
+class Pair2[A, B](val fst: A, val snd: B)
 //│ class Pair2[A, B](fst: A, snd: B)
 
 let q = Pair2(1, "oops")

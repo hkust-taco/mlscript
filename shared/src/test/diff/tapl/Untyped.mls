@@ -86,15 +86,60 @@ fun list8(x, y, z, w, v, u, t, s) = Cons(x, list7(y, z, w, v, u, t, s))
 //│      = [Function: list2]
 //│ list3: ('head, 'head0, 'head1,) -> (Cons & {head: 'head, tail: Cons & {head: 'head0, tail: Cons & {head: 'head1, tail: Nil}}})
 //│      = [Function: list3]
-//│ list4: ('head, 'head0, 'head1, 'head2,) -> (Cons & {head: 'head, tail: Cons & {head: 'head0, tail: Cons & {head: 'head1, tail: Cons & {head: 'head2, tail: Nil}}}})
+//│ list4: ('head, 'head0, 'head1, 'head2,) -> (Cons & {
+//│   head: 'head,
+//│   tail: Cons & {head: 'head0, tail: Cons & {head: 'head1, tail: Cons & {head: 'head2, tail: Nil}}}
+//│ })
 //│      = [Function: list4]
-//│ list5: ('head, 'head0, 'head1, 'head2, 'head3,) -> (Cons & {head: 'head, tail: Cons & {head: 'head0, tail: Cons & {head: 'head1, tail: Cons & {head: 'head2, tail: Cons & {head: 'head3, tail: Nil}}}}})
+//│ list5: ('head, 'head0, 'head1, 'head2, 'head3,) -> (Cons & {
+//│   head: 'head,
+//│   tail: Cons & {
+//│     head: 'head0,
+//│     tail: Cons & {head: 'head1, tail: Cons & {head: 'head2, tail: Cons & {head: 'head3, tail: Nil}}}
+//│   }
+//│ })
 //│      = [Function: list5]
-//│ list6: ('head, 'head0, 'head1, 'head2, 'head3, 'head4,) -> (Cons & {head: 'head, tail: Cons & {head: 'head0, tail: Cons & {head: 'head1, tail: Cons & {head: 'head2, tail: Cons & {head: 'head3, tail: Cons & {head: 'head4, tail: Nil}}}}}})
+//│ list6: ('head, 'head0, 'head1, 'head2, 'head3, 'head4,) -> (Cons & {
+//│   head: 'head,
+//│   tail: Cons & {
+//│     head: 'head0,
+//│     tail: Cons & {
+//│       head: 'head1,
+//│       tail: Cons & {head: 'head2, tail: Cons & {head: 'head3, tail: Cons & {head: 'head4, tail: Nil}}}
+//│     }
+//│   }
+//│ })
 //│      = [Function: list6]
-//│ list7: ('head, 'head0, 'head1, 'head2, 'head3, 'head4, 'head5,) -> (Cons & {head: 'head, tail: Cons & {head: 'head0, tail: Cons & {head: 'head1, tail: Cons & {head: 'head2, tail: Cons & {head: 'head3, tail: Cons & {head: 'head4, tail: Cons & {head: 'head5, tail: Nil}}}}}}})
+//│ list7: ('head, 'head0, 'head1, 'head2, 'head3, 'head4, 'head5,) -> (Cons & {
+//│   head: 'head,
+//│   tail: Cons & {
+//│     head: 'head0,
+//│     tail: Cons & {
+//│       head: 'head1,
+//│       tail: Cons & {
+//│         head: 'head2,
+//│         tail: Cons & {head: 'head3, tail: Cons & {head: 'head4, tail: Cons & {head: 'head5, tail: Nil}}}
+//│       }
+//│     }
+//│   }
+//│ })
 //│      = [Function: list7]
-//│ list8: ('head, 'head0, 'head1, 'head2, 'head3, 'head4, 'head5, 'head6,) -> (Cons & {head: 'head, tail: Cons & {head: 'head0, tail: Cons & {head: 'head1, tail: Cons & {head: 'head2, tail: Cons & {head: 'head3, tail: Cons & {head: 'head4, tail: Cons & {head: 'head5, tail: Cons & {head: 'head6, tail: Nil}}}}}}}})
+//│ list8: ('head, 'head0, 'head1, 'head2, 'head3, 'head4, 'head5, 'head6,) -> (Cons & {
+//│   head: 'head,
+//│   tail: Cons & {
+//│     head: 'head0,
+//│     tail: Cons & {
+//│       head: 'head1,
+//│       tail: Cons & {
+//│         head: 'head2,
+//│         tail: Cons & {
+//│           head: 'head3,
+//│           tail: Cons & {head: 'head4, tail: Cons & {head: 'head5, tail: Cons & {head: 'head6, tail: Nil}}}
+//│         }
+//│       }
+//│     }
+//│   }
+//│ })
 //│      = [Function: list8]
 
 fun listConcat(xs, ys) =
@@ -465,7 +510,10 @@ fun showStepByValue(t) =
   )
 //│ showStepByValue: ('rhs & (Abs | App & 'a | Var)) -> string
 //│   where
-//│     'a <: {lhs: 'lhs & 'rhs0 & (Abs & {rhs: 'rhs1} | Abs & ~#Abs | App & 'a | Var), rhs: 'lhs & 'rhs0 & 'rhs2 & 'rhs3 & (Abs | App & 'a | Var)}
+//│     'a <: {
+//│       lhs: 'lhs & 'rhs0 & (Abs & {rhs: 'rhs1} | Abs & ~#Abs | App & 'a | Var),
+//│       rhs: 'lhs & 'rhs0 & 'rhs2 & 'rhs3 & (Abs | App & 'a | Var)
+//│     }
 //│     'rhs2 <: Abs & {rhs: 'rhs2} | App & {lhs: 'rhs2, rhs: 'rhs2} | Var | ~Abs & ~App & ~Var
 //│     'rhs1 <: Abs & 'b | App & 'c | Var & 'd | 'e & ~#Abs & ~#App & ~#Var
 //│     'b <: 'lhs & 'rhs0 & 'rhs4 & (Abs & {lhs: Var & {name: string} | ~Var, rhs: 'rhs3} | App & {lhs: Var & {name: string} | ~Var, rhs: 'rhs3} & 'c | Var & {lhs: Var & {name: string} | ~Var, rhs: 'rhs3} & 'd | {lhs: Var & {name: string} | ~Var, rhs: 'rhs3} & 'e & ~#Abs & ~#App & ~#Var)

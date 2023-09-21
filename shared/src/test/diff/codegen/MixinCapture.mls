@@ -18,7 +18,7 @@ mixin EvalAddLit {
 //│   constructor() {
 //│   }
 //│   EvalAddLit(base) {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     return (class EvalAddLit extends base {
 //│       constructor(...rest) {
 //│         super(...rest);
@@ -26,7 +26,7 @@ mixin EvalAddLit {
 //│       eval(e) {
 //│         return ((() => {
 //│           let a;
-//│           return (a = e, a instanceof outer.Lit.class ? ((n) => n)(e.n) : (() => {
+//│           return (a = e, a instanceof qualifier.Lit.class ? (([n]) => n)(qualifier.Lit.unapply(e)) : (() => {
 //│             throw new Error("non-exhaustive case expression");
 //│           })());
 //│         })());
@@ -34,17 +34,21 @@ mixin EvalAddLit {
 //│     });
 //│   }
 //│   get Lit() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#Lit === undefined) {
 //│       class Lit {
 //│         #n;
-//│         get n() { return this.#n; }
 //│         constructor(n) {
 //│           this.#n = n;
+//│         }
+//│       static
+//│         unapply(x) {
+//│           return [x.#n];
 //│         }
 //│       };
 //│       this.#Lit = ((n) => Object.freeze(new Lit(n)));
 //│       this.#Lit.class = Lit;
+//│       this.#Lit.unapply = Lit.unapply;
 //│     }
 //│     return this.#Lit;
 //│   }

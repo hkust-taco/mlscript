@@ -2,14 +2,14 @@
 
 type Option[out T] = None | Some[T]
 module None
-class Some[out T](value: T)
+class Some[out T](val value: T)
 //│ type Option[T] = None | Some[T]
 //│ module None
 //│ class Some[T](value: T)
 
 type Either[A, B] = Left[A] | Right[B]
-class Left[A](leftValue: A)
-class Right[B](rightValue: B)
+class Left[A](val leftValue: A)
+class Right[B](val rightValue: B)
 //│ type Either[A, B] = Left[A] | Right[B]
 //│ class Left[A](leftValue: A)
 //│ class Right[B](rightValue: B)
@@ -26,7 +26,7 @@ fun h0(a) =
     a is Some(Left(y)) then y
     a is Some(Right(z)) then z
     a is None then 0
-//│ fun h0: forall 'leftValue. (None | Some[Left['leftValue] | Right['leftValue]]) -> (0 | 'leftValue)
+//│ fun h0: forall 'a. (None | Some[Left['a] | Right['a]]) -> (0 | 'a)
 
 // FIXME: Precise scrutinee identification (easy)
 // This seems fine. But the subtrees are not merged.
@@ -35,7 +35,7 @@ fun h1(a) =
     a is Some(x) and x is Left(y) then y
     a is Some(y) and y is Right(z) then z
     a is None then 0
-//│ fun h1: forall 'leftValue. (None | Some[Right['leftValue]]) -> (0 | 'leftValue)
+//│ fun h1: forall 'a. (None | Some[Right['a]]) -> (0 | 'a)
 
 // This is the desugared version of the test case above.
 fun h1'(a) =
@@ -62,7 +62,7 @@ fun h1''(a) =
     a is Some(x) and x is Left(y) then y
     a is Some(x) and x is Right(z) then z
     a is None then 0
-//│ fun h1'': forall 'leftValue. (None | Some[Left['leftValue] | Right['leftValue]]) -> (0 | 'leftValue)
+//│ fun h1'': forall 'a. (None | Some[Left['a] | Right['a]]) -> (0 | 'a)
 
 // FIXME
 h1(Some(Left(0)))
@@ -77,11 +77,11 @@ h1''(Some(Left(0)))
 //│ ╟── Note: constraint arises from class pattern:
 //│ ║  l.36: 	    a is Some(y) and y is Right(z) then z
 //│ ║        	                          ^^^^^
-//│ ╟── from reference:
-//│ ║  l.35: 	    a is Some(x) and x is Left(y) then y
-//│ ║        	    ^
+//│ ╟── from field selection:
+//│ ║  l.5: 	class Some[out T](val value: T)
+//│ ║       	                      ^^^^^
 //│ ╟── Note: type parameter T is defined at:
-//│ ║  l.5: 	class Some[out T](value: T)
+//│ ║  l.5: 	class Some[out T](val value: T)
 //│ ╙──     	               ^
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.69: 	h1'(Some(Left(0)))
@@ -96,7 +96,7 @@ h1''(Some(Left(0)))
 //│ ║  l.45: 	      let y = a.value
 //│ ║        	              ^^^^^^^
 //│ ╟── Note: type parameter T is defined at:
-//│ ║  l.5: 	class Some[out T](value: T)
+//│ ║  l.5: 	class Some[out T](val value: T)
 //│ ╙──     	               ^
 //│ 0
 //│ res
@@ -120,7 +120,7 @@ fun h2(a) =
 //│ ╔══[ERROR] identifier not found: y
 //│ ║  l.114: 	      let y' = y
 //│ ╙──       	               ^
-//│ fun h2: forall 'leftValue. (None | Some[Left['leftValue] | Object & ~#Left]) -> (0 | error | 'leftValue)
+//│ fun h2: forall 'a. (None | Some[Left['a] | Object & ~#Left]) -> (0 | error | 'a)
 //│ Code generation encountered an error:
 //│   unresolved symbol y
 

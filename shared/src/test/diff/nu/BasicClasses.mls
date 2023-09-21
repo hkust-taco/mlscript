@@ -1,13 +1,16 @@
 :NewDefs
 
 
-class A(n: Int)
+class A(val n: Int)
 //│ class A(n: Int)
 
 A
 //│ (n: Int) -> A
 //│ res
-//│     = [Function (anonymous)] { class: [class A] }
+//│     = [Function (anonymous)] {
+//│         class: [class A],
+//│         unapply: [Function: unapply]
+//│       }
 
 let a = A(42)
 //│ let a: A
@@ -61,23 +64,24 @@ class C {
   fun const(x) = id
 }
 //│ class C {
+//│   constructor()
 //│   fun const: anything -> (forall 'a. 'a -> 'a)
 //│   fun id: forall 'a. 'a -> 'a
 //│ }
 
 
 // TODO
-class Base0(n) {
+class Base0(val n) {
   fun me = this
   fun my = this.n
   fun mine = my
   fun oops = this.my
 }
 //│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.70: 	class Base0(n) {
-//│ ╙──      	            ^
+//│ ║  l.74: 	class Base0(val n) {
+//│ ╙──      	                ^
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.74: 	  fun oops = this.my
+//│ ║  l.78: 	  fun oops = this.my
 //│ ╙──      	                 ^^^
 //│ class Base0(n: error) {
 //│   fun me: Base0 & {n: error}
@@ -117,7 +121,7 @@ let n2 = b2.n
 
 
 
-class Base1(base: Int) {
+class Base1(val base: Int) {
   fun getBase1 = base
   fun getBase2 = this.base
   fun foo(x) = this.base + x
@@ -128,7 +132,7 @@ class Base1(base: Int) {
 //│   fun getBase2: Int
 //│ }
 
-class Base1(base: Int) {
+class Base1(val base: Int) {
   fun getBase1 = base
   fun me = this
   fun foo(x) = base + x
@@ -142,7 +146,10 @@ class Base1(base: Int) {
 Base1
 //│ (base: Int) -> Base1
 //│ res
-//│     = [Function (anonymous)] { class: [class Base1] }
+//│     = [Function (anonymous)] {
+//│         class: [class Base1],
+//│         unapply: [Function: unapply]
+//│       }
 
 let b = Base1(1)
 //│ let b: Base1
@@ -168,7 +175,7 @@ b.me
 :e
 b.getBaseTypo
 //│ ╔══[ERROR] Type `Base1` does not contain member `getBaseTypo`
-//│ ║  l.169: 	b.getBaseTypo
+//│ ║  l.176: 	b.getBaseTypo
 //│ ╙──       	 ^^^^^^^^^^^^
 //│ error
 //│ res
@@ -181,7 +188,7 @@ b : Base1
 //│     = Base1 {}
 
 
-class Rec(n: Int) {
+class Rec(val n: Int) {
   fun go = Rec(n + 1)
 }
 //│ class Rec(n: Int) {

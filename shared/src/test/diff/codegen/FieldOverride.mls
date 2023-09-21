@@ -2,9 +2,9 @@
 :NewDefs
 
 :js
-class C(a: Int) { let a = 1 }
+class C(a: Int) { val a = 1 }
 //│ class C(a: Int) {
-//│   let a: 1
+//│   val a: 1
 //│ }
 //│ // Prelude
 //│ let res;
@@ -13,7 +13,7 @@ class C(a: Int) { let a = 1 }
 //│   constructor() {
 //│   }
 //│   get C() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#C === undefined) {
 //│       class C {
 //│         #a;
@@ -23,9 +23,14 @@ class C(a: Int) { let a = 1 }
 //│           this.#a = 1;
 //│           const a1 = this.#a;
 //│         }
+//│       static
+//│         unapply(x) {
+//│           return [x.#a];
+//│         }
 //│       };
 //│       this.#C = ((a) => Object.freeze(new C(a)));
 //│       this.#C.class = C;
+//│       this.#C.unapply = C.unapply;
 //│     }
 //│     return this.#C;
 //│   }
@@ -46,12 +51,12 @@ a.a
 
 :js
 class C2(a: Int, b: Int) {
-  let a = b + 1
-  let b = a + 1
+  val a = b + 1
+  val b = a + 1
 }
 //│ class C2(a: Int, b: Int) {
-//│   let a: Int
-//│   let b: Int
+//│   val a: Int
+//│   val b: Int
 //│ }
 //│ // Prelude
 //│ class TypingUnit2 {
@@ -59,12 +64,12 @@ class C2(a: Int, b: Int) {
 //│   constructor() {
 //│   }
 //│   get C2() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#C2 === undefined) {
 //│       class C2 {
 //│         #a;
-//│         get a() { return this.#a; }
 //│         #b;
+//│         get a() { return this.#a; }
 //│         get b() { return this.#b; }
 //│         constructor(a, b) {
 //│           this.#a = a;
@@ -74,9 +79,17 @@ class C2(a: Int, b: Int) {
 //│           this.#b = a1 + 1;
 //│           const b1 = this.#b;
 //│         }
+//│       static
+//│         unapply(x) {
+//│           return ([
+//│             x.#a,
+//│             x.#b
+//│           ]);
+//│         }
 //│       };
 //│       this.#C2 = ((a, b) => Object.freeze(new C2(a, b)));
 //│       this.#C2.class = C2;
+//│       this.#C2.unapply = C2.unapply;
 //│     }
 //│     return this.#C2;
 //│   }
@@ -98,16 +111,16 @@ c2.b
 //│     = 4
 
 class C3(a: Int) {
-  let a = 42
+  val a = 42
   class C4(a: Int) {
-    let a = 44
+    val a = 44
   }
 }
 //│ class C3(a: Int) {
 //│   class C4(a: Int) {
-//│     let a: 44
+//│     val a: 44
 //│   }
-//│   let a: 42
+//│   val a: 42
 //│ }
 
 :e
@@ -115,8 +128,8 @@ let c3 = C3(1)
 let c4 = c3.C4(2)
 c3.a
 c4.a
-//│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.115: 	let c4 = c3.C4(2)
+//│ ╔══[ERROR] Access to class member not yet supported
+//│ ║  l.128: 	let c4 = c3.C4(2)
 //│ ╙──       	           ^^^
 //│ let c3: C3
 //│ let c4: error

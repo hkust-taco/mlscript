@@ -38,7 +38,7 @@ x => x + 2 >> succ
 //│ ╟── from reference:
 //│ ║  l.19: 	fun (>>) compose(f, g) = x => g(f(x))
 //│ ╙──      	                                ^
-//│ Int -> (error | Int -> Int)
+//│ Int -> (error | anything -> Int)
 //│ res
 //│     = [Function: res]
 

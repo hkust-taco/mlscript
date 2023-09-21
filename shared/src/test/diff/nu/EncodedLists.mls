@@ -9,6 +9,7 @@ class List<A> {
 let Nil: List<nothing>
 let Cons: (head: 'a, tail: List<'a>) => List<'a>
 //│ class List[A] {
+//│   constructor()
 //│   fun match: forall 'res. (ifNil: () -> 'res, ifCons: ('res, List[A]) -> 'res) -> 'res
 //│ }
 //│ let Nil: List[nothing]
@@ -20,7 +21,7 @@ let x: List<Int>
 // FIXME
 x: List<anything>
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.21: 	x: List<anything>
+//│ ║  l.22: 	x: List<anything>
 //│ ║        	^
 //│ ╙── expression of type `anything` is not an instance of type `Int`
 //│ List[anything]

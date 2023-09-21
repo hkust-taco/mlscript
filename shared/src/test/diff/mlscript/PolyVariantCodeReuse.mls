@@ -416,9 +416,18 @@ rec def eval4 subst = eval_lexpr' eval4 subst
 //│     'tail4 <: Cons[?]\head\tail & {head: {_1: string, _2: 'result0}, tail: 'tail4} | Nil
 //│     'tail3 <: Cons[?]\head\tail & {head: {_1: string, _2: 'result0}, tail: 'tail3} | Nil
 //│     'tail2 <: Cons[?]\head\tail & {head: {_1: string, _2: 'result & (Numb | ~#Numb)}, tail: 'tail2} | Nil
-//│     'tail1 <: Cons[?]\head\tail & {head: {_1: string, _2: 'result & 'a & (Abs[?] & 'b | 'lhs & (Numb | ~#Abs & ~#Numb))}, tail: 'tail1} | Nil
-//│     'tail0 <: Cons[?]\head\tail & {head: {_1: string, _2: 'result & 'a & (Abs[?] & 'b | 'lhs & (Numb | ~#Abs & ~#Numb))}, tail: 'tail0} | Nil
-//│     'tail <: Cons[?]\head\tail & {head: {_1: string, _2: 'result & 'a & (Abs[?] & 'b | 'lhs & (Numb | ~#Abs & ~#Numb))}, tail: 'tail} | Nil
+//│     'tail1 <: Cons[?]\head\tail & {
+//│       head: {_1: string, _2: 'result & 'a & (Abs[?] & 'b | 'lhs & (Numb | ~#Abs & ~#Numb))},
+//│       tail: 'tail1
+//│     } | Nil
+//│     'tail0 <: Cons[?]\head\tail & {
+//│       head: {_1: string, _2: 'result & 'a & (Abs[?] & 'b | 'lhs & (Numb | ~#Abs & ~#Numb))},
+//│       tail: 'tail0
+//│     } | Nil
+//│     'tail <: Cons[?]\head\tail & {
+//│       head: {_1: string, _2: 'result & 'a & (Abs[?] & 'b | 'lhs & (Numb | ~#Abs & ~#Numb))},
+//│       tail: 'tail
+//│     } | Nil
 //│     'result :> Mul['result] | Add['result] | Abs['result] | App['lhs] & {lhs: 'lhs, rhs: nothing} | 'result0 | 'c | 'd | 'e
 //│     'result0 :> Var | Numb
 //│              <: 'a & (Numb | ~#Numb)

@@ -3,14 +3,14 @@
 
 type Option[T] = None | Some[T]
 module None
-class Some[T](value: T)
+class Some[T](val value: T)
 //│ type Option[T] = None | Some[T]
 //│ module None
 //│ class Some[T](value: T)
 
 type Either[A, B] = Left[A] | Right[B]
-class Left[A](leftValue: A)
-class Right[B](rightValue: B)
+class Left[A](val leftValue: A)
+class Right[B](val rightValue: B)
 //│ type Either[A, B] = Left[A] | Right[B]
 //│ class Left[A](leftValue: A)
 //│ class Right[B](rightValue: B)
@@ -221,7 +221,7 @@ fun w6(x, y) =
       Some(z) then z
       None then 0
     else x
-//│ fun w6: forall 'value. ('value, Object & ~#Some | Some['value]) -> (0 | 'value)
+//│ fun w6: forall 'a. ('a, Object & ~#Some | Some['a]) -> (0 | 'a)
 
 w6("42", Some(42))
 w6("42", None)
@@ -243,7 +243,7 @@ fun w7(x, f) =
       None then x
     Left(x) then x + 1
     Right(x) then x + 2
-//│ fun w7: forall 'a 'value. (Left[Int] | Object & 'a & ~#Left & ~#Right | Right[Int], 'a -> (None | Some['value])) -> (Int | 'value | 'a)
+//│ fun w7: forall 'a 'b. (Left[Int] | Object & 'a & ~#Left & ~#Right | Right[Int], 'a -> (None | Some['b])) -> (Int | 'a | 'b)
 
 // The results are wrong:
 w7(Left(99), _ => Some(0)) // => 0

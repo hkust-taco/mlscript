@@ -14,6 +14,7 @@ module Foo {
 }
 //│ module Foo {
 //│   class C extends T1, T2 {
+//│     constructor()
 //│     fun x: 1
 //│   }
 //│   trait T2 {
@@ -29,7 +30,7 @@ mixin Foo { fun f = this.x }
 //│ }
 
 module Bar {
-  class C(x: Int) extends Foo
+  class C(val x: Int) extends Foo
 }
 //│ module Bar {
 //│   class C(x: Int) {

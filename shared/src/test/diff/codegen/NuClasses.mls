@@ -1,7 +1,7 @@
 :NewDefs
 
 :js
-class Test(n: Int) {
+class Test(val n: Int) {
   fun inc = Test(n + 1)
 }
 //│ class Test(n: Int) {
@@ -14,7 +14,7 @@ class Test(n: Int) {
 //│   constructor() {
 //│   }
 //│   get Test() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#Test === undefined) {
 //│       class Test {
 //│         #n;
@@ -24,11 +24,16 @@ class Test(n: Int) {
 //│         }
 //│         get inc() {
 //│           const n = this.#n;
-//│           return outer.Test(n + 1);
+//│           return qualifier.Test(n + 1);
+//│         }
+//│       static
+//│         unapply(x) {
+//│           return [x.#n];
 //│         }
 //│       };
 //│       this.#Test = ((n) => Object.freeze(new Test(n)));
 //│       this.#Test.class = Test;
+//│       this.#Test.unapply = Test.unapply;
 //│     }
 //│     return this.#Test;
 //│   }
@@ -42,7 +47,7 @@ Test(0).inc.n
 //│ res
 //│     = 1
 
-class Test2(n: Int) {
+class Test2(val n: Int) {
   fun inc = Test3.inc(n)
 }
 module Test3 {
@@ -73,10 +78,10 @@ class C[A](n: A) {
 let a = C[Int](42)
 a.f
 //│ ╔══[ERROR] Type application syntax is not yet supported
-//│ ║  l.73: 	let a = C[Int](42)
+//│ ║  l.78: 	let a = C[Int](42)
 //│ ╙──      	        ^^^^^^
-//│ let a: error
-//│ error
+//│ let a: C[42]
+//│ 42
 //│ a
 //│   = C {}
 //│ res
@@ -94,14 +99,14 @@ module Foo {
 
 
 mixin M0(n: Int) {
-  let m = n // this refers to specifically the `n` we had in parameter, not necessarily this.n
+  val m = n // this refers to specifically the `n` we had in parameter, not necessarily this.n
   fun bar = m
   fun foo = [n, m, bar] // should this be the same as `[this.n, this.m, this.bar]`?
 }
 //│ mixin M0(n: Int) {
 //│   fun bar: Int
 //│   fun foo: [Int, Int, Int]
-//│   let m: Int
+//│   val m: Int
 //│ }
 
 module M1 extends M0(123) {
@@ -130,17 +135,17 @@ M1.foo
 :e
 :js
 module M2 {
-  let m = 100
+  val m = 100
   fun foo(y) =
     fun bar(x) = x + y + this.m
     bar(10)
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.135: 	    fun bar(x) = x + y + this.m
+//│ ║  l.140: 	    fun bar(x) = x + y + this.m
 //│ ╙──       	                             ^^
 //│ module M2 {
 //│   fun foo: Int -> Int
-//│   let m: 100
+//│   val m: 100
 //│ }
 //│ // Prelude
 //│ class TypingUnit11 {
@@ -148,7 +153,7 @@ module M2 {
 //│   constructor() {
 //│   }
 //│   get M2() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#M2 === undefined) {
 //│       class M2 {
 //│         #m;
@@ -158,9 +163,9 @@ module M2 {
 //│           const m = this.#m;
 //│         }
 //│         foo(y) {
-//│           const self = this;
+//│           const qualifier1 = this;
 //│           return ((() => {
-//│             let bar = (x) => x + y + self.m;
+//│             let bar = (x) => x + y + qualifier1.m;
 //│             return bar(10);
 //│           })());
 //│         }

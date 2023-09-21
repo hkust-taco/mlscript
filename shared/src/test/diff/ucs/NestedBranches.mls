@@ -1,13 +1,13 @@
 :NewParser
 :NewDefs
 
-class Some[A](value: A)
+class Some[A](val value: A)
 module None
-class Left[A](leftValue: A)
-class Right[A](rightValue: A)
+class Left[A](val leftValue: A)
+class Right[A](val rightValue: A)
 module Nil
-class Cons[A](head: A, tail: Cons[A] | Nil)
-class Pair[A, B](fst: A, snd: B)
+class Cons[A](val head: A, val tail: Cons[A] | Nil)
+class Pair[A, B](val fst: A, val snd: B)
 //│ class Some[A](value: A)
 //│ module None
 //│ class Left[A](leftValue: A)
@@ -22,7 +22,7 @@ fun optionApply(x, y, f) =
       Some(yv) then Some(f(xv, yv))
       None then None
     None then None
-//│ fun optionApply: forall 'value 'value0 'A. (None | Some['value], None | Some['value0], ('value, 'value0) -> 'A) -> (None | Some['A])
+//│ fun optionApply: forall 'a 'b 'A. (None | Some['a], None | Some['b], ('a, 'b) -> 'A) -> (None | Some['A])
 
 let zeroToThree = Cons(0, Cons(1, Cons(2, Cons(3, Nil))))
 //│ let zeroToThree: Cons['A]
@@ -39,7 +39,7 @@ fun mapPartition(f, xs) = if xs is
   Cons(x, xs) and mapPartition(f, xs) is Pair(l, r) and f(x) is
     Left(v)  then Pair(Cons(v, l), r)
     Right(v) then Pair(l, Cons(v, r))
-//│ fun mapPartition: forall 'head 'A 'A0. ('head -> (Left['A] | Right['A0]), Cons['head] | Nil) -> Pair[Cons['A] | Nil, Cons['A0] | Nil]
+//│ fun mapPartition: forall 'A 'A0 'A1. ('A -> (Left['A0] | Right['A1]), Cons['A] | Nil) -> Pair[Cons['A0] | Nil, Cons['A1] | Nil]
 
 mapPartition(x => Left(x + 1), zeroToThree)
 //│ Pair[Cons['A] | Nil, Cons['A0] | Nil]
@@ -63,7 +63,7 @@ fun mapPartition(f, xs) = if xs is
     mapPartition(f, xs) is Pair(l, r) and f(x) is
       Left(v)  then Pair(Cons(v, l), r)
       Right(v) then Pair(l, Cons(v, r))
-//│ fun mapPartition: forall 'head 'A 'A0. ('head -> (Left['A] | Right['A0]), Cons['head] | Nil) -> Pair[Cons['A] | Nil, Cons['A0] | Nil]
+//│ fun mapPartition: forall 'A 'A0 'A1. ('A -> (Left['A0] | Right['A1]), Cons['A] | Nil) -> Pair[Cons['A0] | Nil, Cons['A1] | Nil]
 
 mapPartition(f, zeroToThree)
 //│ Pair[Cons['A] | Nil, Cons['A0] | Nil]
@@ -85,7 +85,7 @@ fun mapPartition(f, xs) = if xs is
             Pair(Cons(v, l), r)
           Right(v) then
             Pair(l, Cons(v, r))
-//│ fun mapPartition: forall 'head 'A 'A0. ('head -> (Left['A] | Right['A0]), Cons['head] | Nil) -> Pair[Cons['A] | Nil, Cons['A0] | Nil]
+//│ fun mapPartition: forall 'A 'A0 'A1. ('A -> (Left['A0] | Right['A1]), Cons['A] | Nil) -> Pair[Cons['A0] | Nil, Cons['A1] | Nil]
 
 mapPartition(f, zeroToThree)
 //│ Pair[Cons['A] | Nil, Cons['A0] | Nil]

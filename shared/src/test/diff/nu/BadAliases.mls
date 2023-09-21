@@ -36,16 +36,18 @@ type Test(n: Int) = n
 //│ type Test = error
 
 class Base
-//│ class Base
+//│ class Base {
+//│   constructor()
+//│ }
 
 :pe
 :e
 type Test: Base
 //│ ╔══[PARSE ERROR] Expected end of input; found ':' instead
-//│ ║  l.43: 	type Test: Base
+//│ ║  l.45: 	type Test: Base
 //│ ╙──      	         ^
 //│ ╔══[ERROR] Type alias definition requires a right-hand side
-//│ ║  l.43: 	type Test: Base
+//│ ║  l.45: 	type Test: Base
 //│ ╙──      	^^^^^^^^^
 //│ type Test = error
 
@@ -53,20 +55,20 @@ type Test: Base
 :e
 type Test: Base = Int
 //│ ╔══[PARSE ERROR] Expected end of input; found ':' instead
-//│ ║  l.54: 	type Test: Base = Int
+//│ ║  l.56: 	type Test: Base = Int
 //│ ╙──      	         ^
 //│ ╔══[ERROR] Type alias definition requires a right-hand side
-//│ ║  l.54: 	type Test: Base = Int
+//│ ║  l.56: 	type Test: Base = Int
 //│ ╙──      	^^^^^^^^^
 //│ type Test = error
 
 :e
 type Test extends Base
 //│ ╔══[ERROR] Type alias definitions cannot extend parents
-//│ ║  l.64: 	type Test extends Base
+//│ ║  l.66: 	type Test extends Base
 //│ ╙──      	                  ^^^^
 //│ ╔══[ERROR] Type alias definition requires a right-hand side
-//│ ║  l.64: 	type Test extends Base
+//│ ║  l.66: 	type Test extends Base
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^
 //│ type Test = error
 
@@ -74,20 +76,20 @@ type Test extends Base
 :e
 type Test extends Base = Int
 //│ ╔══[PARSE ERROR] Expected end of input; found '=' instead
-//│ ║  l.75: 	type Test extends Base = Int
+//│ ║  l.77: 	type Test extends Base = Int
 //│ ╙──      	                       ^
 //│ ╔══[ERROR] Type alias definitions cannot extend parents
-//│ ║  l.75: 	type Test extends Base = Int
+//│ ║  l.77: 	type Test extends Base = Int
 //│ ╙──      	                  ^^^^
 //│ ╔══[ERROR] Type alias definition requires a right-hand side
-//│ ║  l.75: 	type Test extends Base = Int
+//│ ║  l.77: 	type Test extends Base = Int
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^
 //│ type Test = error
 
 :e
 type Test = Int extends Base
 //│ ╔══[ERROR] Type alias definitions cannot extend parents
-//│ ║  l.88: 	type Test = Int extends Base
+//│ ║  l.90: 	type Test = Int extends Base
 //│ ╙──      	                        ^^^^
 //│ type Test = Int
 
@@ -95,14 +97,14 @@ type Test = Int extends Base
 :pe
 type Poly[mut A] = A
 //│ ╔══[PARSE ERROR] Unexpected 'mut' keyword here
-//│ ║  l.96: 	type Poly[mut A] = A
+//│ ║  l.98: 	type Poly[mut A] = A
 //│ ╙──      	          ^^^
 //│ type Poly = A
 
 :pe
 type Poly[#A] = A
 //│ ╔══[PARSE ERROR] Unexpected '#' here
-//│ ║  l.103: 	type Poly[#A] = A
+//│ ║  l.105: 	type Poly[#A] = A
 //│ ╙──       	          ^
 //│ type Poly = A
 

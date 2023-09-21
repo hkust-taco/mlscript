@@ -2,13 +2,13 @@
 
 class Foo<A>
 //│ |#class| |Foo|‹|A|›|
-//│ Parsed: {class Foo‹A›() {}}
+//│ Parsed: {class Foo‹A› {}}
 
 
 
 class Foo‹A›
 //│ |#class| |Foo|‹|A|›|
-//│ Parsed: {class Foo‹A›() {}}
+//│ Parsed: {class Foo‹A› {}}
 
 
 (1)
@@ -26,15 +26,15 @@ foo<1, 2, 3>
 
 foo<1, 2, 3>()
 //│ |foo|‹|1|,| |2|,| |3|›|(||)|
-//│ Parsed: {foo‹1, 2, 3› ()}
+//│ Parsed: {foo‹1, 2, 3›()}
 
 foo<1, 2, 3>(1, 2, 3)
 //│ |foo|‹|1|,| |2|,| |3|›|(|1|,| |2|,| |3|)|
-//│ Parsed: {foo‹1, 2, 3› (1, 2, 3,)}
+//│ Parsed: {foo‹1, 2, 3›(1, 2, 3,)}
 
 1 < 2 > 4
 //│ |1| |<| |2| |>| |4|
-//│ Parsed: {> (< (1,) (2,),) (4,)}
+//│ Parsed: {>(<(1,)(2,),)(4,)}
 
 :w
 1 < 2> 4
@@ -43,7 +43,7 @@ foo<1, 2, 3>(1, 2, 3)
 //│ ║        	     ^
 //│ ╙── Add spaces around it if you intended to use `<` as an operator
 //│ |1| |<| |2|>| |4|
-//│ Parsed: {> (< (1,) (2,),) (4,)}
+//│ Parsed: {>(<(1,)(2,),)(4,)}
 
 :pe
 :w
@@ -56,7 +56,7 @@ foo<1, 2, 3>(1, 2, 3)
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
 //│ ║  l.50: 	1< 2 > 4
 //│ ╙──      	^^^^^^^^
-//│ Parsed: {> (2,) (4 (1,),)}
+//│ Parsed: {>(2,)(4(1,),)}
 
 :w
 1< 2> 4
@@ -64,19 +64,19 @@ foo<1, 2, 3>(1, 2, 3)
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
 //│ ║  l.62: 	1< 2> 4
 //│ ╙──      	^^^^^^^
-//│ Parsed: {1‹2› (4,)}
+//│ Parsed: {1‹2›(4,)}
 
 1< 2> (4)
 //│ |1|‹| |2|›| |(|4|)|
-//│ Parsed: {1‹2› (4,)}
+//│ Parsed: {1‹2›(4,)}
 
 1<2>(4)
 //│ |1|‹|2|›|(|4|)|
-//│ Parsed: {1‹2› (4,)}
+//│ Parsed: {1‹2›(4,)}
 
 1<>2
 //│ |1|<>|2|
-//│ Parsed: {<> (1,) (2,)}
+//│ Parsed: {<>(1,)(2,)}
 
 :pe
 1< >2
@@ -88,7 +88,7 @@ foo<1, 2, 3>(1, 2, 3)
 //│ ╔══[PARSE ERROR] Unexpected operator in expression position
 //│ ║  l.82: 	1< >2
 //│ ╙──      	   ^
-//│ Parsed: {2 (1,)}
+//│ Parsed: {2(1,)}
 
 :pe
 1 < >2
@@ -96,25 +96,25 @@ foo<1, 2, 3>(1, 2, 3)
 //│ ╔══[PARSE ERROR] Unexpected operator in expression position
 //│ ║  l.94: 	1 < >2
 //│ ╙──      	    ^
-//│ Parsed: {< (1,) (2,)}
+//│ Parsed: {<(1,)(2,)}
 
 
 foo<S, T>(1, 2, 3) & Bar<U>("ok")
 //│ |foo|‹|S|,| |T|›|(|1|,| |2|,| |3|)| |&| |Bar|‹|U|›|(|"ok"|)|
-//│ Parsed: {& (foo‹S, T› (1, 2, 3,),) (Bar‹U› ("ok",),)}
+//│ Parsed: {&(foo‹S, T›(1, 2, 3,),)(Bar‹U›("ok",),)}
 
 foo<Str, Int>(2 + 3) & Bar<MyClass>("ok")
 //│ |foo|‹|Str|,| |Int|›|(|2| |+| |3|)| |&| |Bar|‹|MyClass|›|(|"ok"|)|
-//│ Parsed: {& (foo‹Str, Int› (+ (2,) (3,),),) (Bar‹MyClass› ("ok",),)}
+//│ Parsed: {&(foo‹Str, Int›(+(2,)(3,),),)(Bar‹MyClass›("ok",),)}
 
 // :pe
 foo[S, T](1, 2, 3) & Bar[U]("ok")
 //│ |foo|[|S|,| |T|]|(|1|,| |2|,| |3|)| |&| |Bar|[|U|]|(|"ok"|)|
-//│ Parsed: {& (foo‹S, T› (1, 2, 3,),) (Bar‹U› ("ok",),)}
+//│ Parsed: {&(foo‹S, T›(1, 2, 3,),)(Bar‹U›("ok",),)}
 
 class Foo<T> {}
 //│ |#class| |Foo|‹|T|›| |{||}|
-//│ Parsed: {class Foo‹T›() {}}
+//│ Parsed: {class Foo‹T› {}}
 
 fun foo<T>(x: T): string = "rua"
 //│ |#fun| |foo|‹|T|›|(|x|#:| |T|)|#:| |string| |#=| |"rua"|
@@ -122,4 +122,4 @@ fun foo<T>(x: T): string = "rua"
 
 foo<int>(42)
 //│ |foo|‹|int|›|(|42|)|
-//│ Parsed: {foo‹int› (42,)}
+//│ Parsed: {foo‹int›(42,)}

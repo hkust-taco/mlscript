@@ -61,8 +61,12 @@ onMousePressed(event => readLine.flatMap(println))
 class Event
 class MouseEvent: Event
 module Register
-//│ class Event
-//│ class MouseEvent: Event
+//│ class Event {
+//│   constructor()
+//│ }
+//│ class MouseEvent: Event {
+//│   constructor()
+//│ }
 //│ module Register
 
 fun onMousePressed(listener) =
@@ -82,14 +86,14 @@ onMouseClick of ev =>
   onMouseClick(ev => pure of ()).flatMap of _ =>
     pure of ()
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.81: 	onMouseClick of ev =>
+//│ ║  l.85: 	onMouseClick of ev =>
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.82: 	  onMouseClick(ev => pure of ()).flatMap of _ =>
+//│ ║  l.86: 	  onMouseClick(ev => pure of ()).flatMap of _ =>
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.83: 	    pure of ()
+//│ ║  l.87: 	    pure of ()
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── type `Register` does not match type `~Register`
-//│ ║  l.74: 	fun onMouseClick(f: Event -> Effectful[(), 'e \ Register]): Effectful[(), Register]
+//│ ║  l.78: 	fun onMouseClick(f: Event -> Effectful[(), 'e \ Register]): Effectful[(), Register]
 //│ ╙──      	                                                                          ^^^^^^^^
 //│ Effectful[[], Register] | error
 

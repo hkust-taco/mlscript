@@ -22,7 +22,7 @@ Foo(1)
 new Foo(1)
 //│ ╔══[ERROR] Class Foo is abstract and cannot be instantiated
 //│ ║  l.22: 	new Foo(1)
-//│ ╙──      	    ^^^^^^
+//│ ╙──      	^^^^^^^^^^
 //│ Foo
 //│ res
 //│     = Foo {}
@@ -62,7 +62,7 @@ abstract class Bar extends Foo(1)
 :e
 module Baz extends Bar
 Baz.f(1)
-//│ ╔══[ERROR] Member `f` is declared in parent but not implemented in `Baz`
+//│ ╔══[ERROR] Member `f` is declared (or its declaration is inherited) but is not implemented in `Baz`
 //│ ║  l.63: 	module Baz extends Bar
 //│ ║        	       ^^^
 //│ ╟── Declared here:
@@ -101,18 +101,20 @@ trait T1 { fun x: Int | Bool }
 
 :e
 class C2 extends C1, T1
-//│ ╔══[ERROR] Member `x` is declared in parent but not implemented in `C2`
+//│ ╔══[ERROR] Member `x` is declared (or its declaration is inherited) but is not implemented in `C2`
 //│ ║  l.103: 	class C2 extends C1, T1
 //│ ║         	      ^^
 //│ ╟── Declared here:
 //│ ║  l.92: 	abstract class C1 { fun x: Int | Str }
 //│ ╙──      	                        ^^^^^^^^^^^^
 //│ class C2 extends C1, T1 {
+//│   constructor()
 //│   fun x: Int
 //│ }
 
 class C2 extends C1, T1 { fun x = 1 }
 //│ class C2 extends C1, T1 {
+//│   constructor()
 //│   fun x: 1
 //│ }
 
@@ -123,49 +125,59 @@ abstract class C2 extends C1, T1
 
 :e
 class C3 extends C2
-//│ ╔══[ERROR] Member `x` is declared in parent but not implemented in `C3`
-//│ ║  l.125: 	class C3 extends C2
+//│ ╔══[ERROR] Member `x` is declared (or its declaration is inherited) but is not implemented in `C3`
+//│ ║  l.127: 	class C3 extends C2
 //│ ║         	      ^^
 //│ ╟── Declared here:
 //│ ║  l.92: 	abstract class C1 { fun x: Int | Str }
 //│ ╙──      	                        ^^^^^^^^^^^^
 //│ class C3 extends C1, C2, T1 {
+//│   constructor()
 //│   fun x: Int
 //│ }
 
 class C3 extends C2 { fun x = 1 }
 //│ class C3 extends C1, C2, T1 {
+//│   constructor()
 //│   fun x: 1
 //│ }
 
 
 
-:ge // TODO report this as a type error
+:e
 abstract class C {
   fun x : Int
   fun foo0 = x
   fun foo1 = this.x
 }
+//│ ╔══[ERROR] Unqualified access to virtual member x
+//│ ║  l.150: 	  fun foo0 = x
+//│ ║         	      ^^^^^^^^
+//│ ╟── Declared here:
+//│ ║  l.149: 	  fun x : Int
+//│ ╙──       	      ^^^^^^^
 //│ abstract class C {
 //│   fun foo0: Int
 //│   fun foo1: Int
 //│   fun x: Int
 //│ }
-//│ Code generation encountered an error:
-//│   unresolved symbol x
 
-:ge // TODO report this as a type error
-class C {
+:e
+abstract class C {
   val x : Int
   fun foo0 = x
   fun foo1 = this.x
 }
-//│ class C {
+//│ ╔══[ERROR] Unqualified access to virtual member x
+//│ ║  l.168: 	  fun foo0 = x
+//│ ║         	      ^^^^^^^^
+//│ ╟── Declared here:
+//│ ║  l.167: 	  val x : Int
+//│ ╙──       	      ^^^^^^^
+//│ abstract class C {
 //│   fun foo0: Int
 //│   fun foo1: Int
-//│   let x: Int
+//│   val x: Int
 //│ }
-//│ Code generation encountered an error:
-//│   unresolved symbol x
 
 
