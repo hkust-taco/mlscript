@@ -1055,20 +1055,36 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
             err("match error", f.toLoc)
             f_ty
         }
-        val argsList = fun_ty.unwrapProxies match {
+        // check if all
+        val hasUntypedArg = fun_ty.unwrapProxies match {
           case FunctionType(TupleType(fields), _) =>
-            fields.map(x => x._1 match {
+            fields.exists(x => x._1 match {
               case Some(arg) =>
-                arg
+                false
               case N =>
-                err("Cannot use named args in this case", a.toLoc)
-                Var("error")
+                true
             })
           case _ => 
             err("match error", f.toLoc)
-            Nil
+            true
         }
-        desugarNamedArgs(term, f, a, argsList)
+        if (hasUntypedArg) {
+          err("Cannot use named args if there is untyped argument", a.toLoc)
+        } else {
+          val argsList = fun_ty.unwrapProxies match {
+            case FunctionType(TupleType(fields), _) =>
+              fields.map(x => x._1 match {
+                case Some(arg) =>
+                  arg
+                case N =>
+                  Var("error")
+              })
+            case _ => 
+              err("match error", f.toLoc)
+              Nil
+          }
+          desugarNamedArgs(term, f, a, argsList)
+        }
       case App(f, a) =>
         val f_ty = typeMonomorphicTerm(f)
         // * ^ Note: typing the function monomorphically simplifies type inference but

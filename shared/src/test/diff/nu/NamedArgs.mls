@@ -188,21 +188,12 @@ p(z: 1, y: 2)
 fun print(x) = (y, z) => log([x, y, z])
 let p = print(0)
 p(z: 1, y: 2)
-//│ ╔══[ERROR] Cannot use named args in this case
-//│ ║  l.190: 	p(z: 1, y: 2)
-//│ ╙──       	 ^^^^^^^^^^^^
-//│ ╔══[ERROR] Cannot use named args in this case
-//│ ║  l.190: 	p(z: 1, y: 2)
-//│ ╙──       	 ^^^^^^^^^^^^
-//│ ╔══[ERROR] Argument named error is missing from this function call
-//│ ║  l.190: 	p(z: 1, y: 2)
-//│ ╙──       	 ^^^^^^^^^^^^
-//│ ╔══[ERROR] Argument named error is missing from this function call
+//│ ╔══[ERROR] Cannot use named args if there is untyped argument
 //│ ║  l.190: 	p(z: 1, y: 2)
 //│ ╙──       	 ^^^^^^^^^^^^
 //│ fun print: anything -> (anything, anything) -> undefined
 //│ let p: (anything, anything) -> undefined
-//│ undefined
+//│ error
 //│ p
 //│   = [Function: print1]
 //│ res
