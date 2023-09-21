@@ -6,6 +6,7 @@ import mlscript.utils.shorthands.*
 import scala.collection.mutable.StringBuilder as StringBuilder
 import scala.collection.mutable.Map as MutMap
 import scala.collection.mutable.Set as MutSet
+import scala.collection.mutable.ArrayBuffer as ArrayBuffer
 import mlscript.codegen.Helpers.inspect as showStructure
 import mlscript.codegen.CodeGenError
 
@@ -28,6 +29,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
       LocalContext(vSet ++ inters.map(x => Var(x.name)), tSet -- inters)
     }
     def intersect(rst: LocalContext) = LocalContext(vSet intersect rst.vSet, tSet intersect rst.tSet)
+    def intersectV(rst: Set[Var]) = LocalContext(vSet.intersect(rst), tSet)
     def contains(v: Var) = vSet.contains(v) || tSet.contains(TypeName(v.name))
     def contains(tv: TypeName) = vSet.contains(Var(tv.name)) || tSet.contains(tv)
     override def toString(): String = "(" ++ vSet.mkString(", ") ++ "; " ++ tSet.mkString(", ") ++ ")"
@@ -37,6 +39,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
   private def asContext(t: TypeName) = LocalContext(Set(), Set(t))
   private def asContextT(tS: IterableOnce[TypeName]) = LocalContext(Set(), tS.iterator.toSet)
   private def emptyCtx = LocalContext(Set(), Set())
+  private def emptyCtxObj = LocalContext(Set(Var("this")), Set())
 
   case class ClassInfoCache(
     originNm: TypeName, 
@@ -55,6 +58,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
   type NamePath = List[String]
 
   var retSeq: List[NuTypeDef] = Nil
+  val globalFunctions: ArrayBuffer[NuFunDef] = ArrayBuffer()
   var anonymCnt: Int = 0
   var clsCnt: Int = 0
   val logOutput: StringBuilder = new StringBuilder
@@ -144,7 +148,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
     (tmp._1.flatten, tmp._2.flatten, tmp._3.flatten)
   }
 
-  private def genClassNm(orgNm: String)(using ctx: LocalContext, cache: ClassCache, outer: Option[ClassInfoCache]): TypeName = {
+  private def genClassNm(orgNm: String)(using ctx: LocalContext, cache: ClassCache, globFuncs: Map[Var, (Var, LocalContext)], outer: Option[ClassInfoCache]): TypeName = {
     TypeName(outer match{
       case None =>
         clsCnt = clsCnt+1
@@ -153,11 +157,15 @@ class ClassLifter(logDebugMsg: Boolean = false) {
     })
   }
 
-  private def getFreeVars(stmt: Located)(using ctx: LocalContext, cache: ClassCache, outer: Option[ClassInfoCache]): LocalContext = stmt match{
-    case v:Var =>
-      log(s"get free var find $v: ${ctx.vSet.contains(v)}/${buildPathToVar(v).isDefined}/${cache.contains(TypeName(v.name))}/${v.name.equals("this")}")
-      if(ctx.vSet.contains(v) || buildPathToVar(v).isDefined || cache.contains(TypeName(v.name)) || v.name.equals("this") || primiTypes.contains(v.name)) then emptyCtx else asContext(v)
-    case t: NamedType =>
+  private def getFreeVars(stmt: Located)(using ctx: LocalContext, cache: ClassCache, globFuncs: Map[Var, (Var, LocalContext)], outer: Option[ClassInfoCache]): LocalContext = stmt match{
+    case v:Var => 
+      val caseEmpty = ctx.vSet.contains(v) || cache.contains(TypeName(v.name)) || globFuncs.contains(v) || primiTypes.contains(v.name)
+      val caseThis = buildPathToVar(v).isDefined && !ctx.vSet.contains(Var("this"))
+      log(s"get free var find $v: $caseEmpty/$caseThis")
+      if(caseEmpty) then emptyCtx
+      else if(caseThis) asContext(Var("this"))
+      else asContext(v)
+    case t: NamedType => 
       log(s"get type $t under $ctx, $cache, $outer")
       asContextT(t.collectTypeNames.map(TypeName(_)).filterNot(x => ctx.contains(x) || cache.contains(x) || primiTypes.contains(x.name)))
     case Lam(lhs, rhs) =>
@@ -181,7 +189,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
     case TyApp(trm, tpLst) =>
       getFreeVars(trm).addT(tpLst.flatMap(_.collectTypeNames.map(TypeName(_))))
     case NuTypeDef(_, nm, tps, param, pars, body) =>
-      val prmVs = getFreeVars(param)(using emptyCtx, Map(), None)
+      val prmVs = getFreeVars(param)(using emptyCtx, Map(), globFuncs, None)
       val newVs = prmVs.vSet ++ getFields(body.entities) + Var(nm.name)
       val nCtx = ctx.addV(newVs).addT(nm).addT(tps)
       val parVs = pars.map(getFreeVars(_)(using nCtx)).fold(emptyCtx)(_ ++ _)
@@ -196,20 +204,20 @@ class ClassLifter(logDebugMsg: Boolean = false) {
       others.children.map(getFreeVars).fold(emptyCtx)(_ ++ _)
   }
 
-  private def collectClassInfo(cls: NuTypeDef, preClss: Set[TypeName])(using ctx: LocalContext, cache: ClassCache, outer: Option[ClassInfoCache]): ClassInfoCache = {
+  private def collectClassInfo(cls: NuTypeDef, preClss: Set[TypeName])(using ctx: LocalContext, cache: ClassCache, globFuncs: Map[Var, (Var, LocalContext)], outer: Option[ClassInfoCache]): ClassInfoCache = {
     val NuTypeDef(_, nm, tps, param, pars, body) = cls
-    log(s"grep context of ${cls.nme.name} under {\n$ctx\n$cache\n$outer\n}\n")
+    log(s"grep context of ${cls.nme.name} under $ctx # $cache # $globFuncs # $outer ")
     val (clses, funcs, trms) = splitEntities(cls.body.entities)
     val (supNms, rcdFlds) = pars.map(getSupClsInfoByTerm).unzip
     val flds = rcdFlds.flatten.map{
-      case (v, Fld(_, _, trm)) =>
-        val tmp = getFreeVars(trm)(using emptyCtx)
+      case (v, Fld(_, _, trm)) => 
+        val tmp = getFreeVars(trm)(using emptyCtxObj)
         val ret = tmp.tSet ++ tmp.vSet.map(x => TypeName(x.name))
         (v, ret)
     }.unzip
     log(s"par record: ${flds._2.flatten}")
     val fields = (param.fields.flatMap(tupleEntityToVar) ++ funcs.map(_.nme) ++ clses.map(x => Var(x.nme.name)) ++ trms.flatMap(grepFieldsInTrm) ++ flds._1).toSet
-    val nCtx = ctx.addV(fields).addV(flds._1).extT(tps)
+    val nCtx = ctx.addV(fields).addV(flds._1).extT(tps).addV(Var("this"))
     val tmpCtx = ((body.entities.map(getFreeVars(_)(using nCtx)) ++ pars.map(getFreeVars(_)(using nCtx))).fold(emptyCtx)(_ ++ _).moveT2V(preClss)
                   ).addT(flds._2.flatten.toSet).extV(supNms.flatten.map(x => Var(x.name)))
 
@@ -218,36 +226,36 @@ class ClassLifter(logDebugMsg: Boolean = false) {
     ret
   }
 
-  private def liftCaseBranch(brn: CaseBranches)(using ctx: LocalContext, cache: ClassCache, outer: Option[ClassInfoCache]): (CaseBranches, LocalContext) = brn match{
-    case Case(v: Var, body, rest) =>
-      val nTrm = liftTerm(body)(using ctx.addV(v))
+  private def liftCaseBranch(brn: CaseBranches)(using ctx: LocalContext, cache: ClassCache, globFuncs: Map[Var, (Var, LocalContext)], outer: Option[ClassInfoCache]): (CaseBranches, LocalContext) = brn match{
+    case Case(v: Var, body, rest) => 
+      val nTrm = liftTermNew(body)(using ctx.addV(v))
       val nRest = liftCaseBranch(rest)
       (Case(v, nTrm._1, nRest._1), nTrm._2 ++ nRest._2)
     case Case(pat, body, rest) =>
-      val nTrm = liftTerm(body)
+      val nTrm = liftTermNew(body)
       val nRest = liftCaseBranch(rest)
       (Case(pat, nTrm._1, nRest._1), nTrm._2 ++ nRest._2)
     case Wildcard(body) =>
-      val nTrm = liftTerm(body)
+      val nTrm = liftTermNew(body)
       (Wildcard(nTrm._1), nTrm._2)
     case NoCases => (brn, emptyCtx)
   }
 
-  private def liftIf(body: IfBody)(using ctx: LocalContext, cache: ClassCache, outer: Option[ClassInfoCache]): (IfBody, LocalContext) = body match{
-    case IfElse(expr) =>
-      val ret = liftTerm(expr)
+  private def liftIf(body: IfBody)(using ctx: LocalContext, cache: ClassCache, globFuncs: Map[Var, (Var, LocalContext)], outer: Option[ClassInfoCache]): (IfBody, LocalContext) = body match{
+    case IfElse(expr) => 
+      val ret = liftTermNew(expr)
       (IfElse(ret._1), ret._2)
     case IfThen(expr, rhs) =>
-      val nE = liftTerm(expr)
-      val nR = liftTerm(rhs)
+      val nE = liftTermNew(expr)
+      val nR = liftTermNew(rhs)
       (IfThen(nE._1, nR._1), nE._2 ++ nR._2)
     case _ => ???
   }
 
-  private def liftTuple(tup: Tup)(using ctx: LocalContext, cache: ClassCache, outer: Option[ClassInfoCache]): (Tup, LocalContext) = {
+  private def liftTuple(tup: Tup)(using ctx: LocalContext, cache: ClassCache, globFuncs: Map[Var, (Var, LocalContext)], outer: Option[ClassInfoCache]): (Tup, LocalContext) = {
     val ret = tup.fields.map{
         case (None, Fld(b1, b2, trm)) =>
-          val tmp = liftTerm(trm)
+          val tmp = liftTermNew(trm)
           ((None, Fld(b1, b2, tmp._1)), tmp._2)
         case (Some(v), Fld(b1, b2, trm)) =>
           val nTrm = liftTermAsType(trm)
@@ -256,7 +264,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
     (Tup(ret._1), ret._2.fold(emptyCtx)(_ ++ _))
   }
 
-  private def liftConstr(tp: TypeName, prm: Tup)(using ctx: LocalContext, cache: ClassCache, outer: Option[ClassInfoCache]): (TypeName, Tup, LocalContext) = {
+  private def liftConstr(tp: TypeName, prm: Tup)(using ctx: LocalContext, cache: ClassCache, globFuncs: Map[Var, (Var, LocalContext)], outer: Option[ClassInfoCache]): (TypeName, Tup, LocalContext) = {
     def findAncestor(crt: ClassInfoCache, target: Option[ClassInfoCache]): Option[(List[String], Option[String])] = {
       (crt.outerCls, target) match{
         case (None, None) =>  None
@@ -290,8 +298,13 @@ class ClassLifter(logDebugMsg: Boolean = false) {
     }
   }
 
-  private def liftTerm(target: Term)(using ctx: LocalContext, cache: ClassCache, outer: Option[ClassInfoCache]): (Term, LocalContext) = target match {
-    case v: Var =>
+  private def newLambObj(lhs: Term, rhs: Term) = 
+    New(None, TypingUnit(List(NuFunDef(None, Var("apply"), Nil, Left(Lam(lhs, rhs))))))
+
+  private def liftTermNew(target: Term)(using ctx: LocalContext, cache: ClassCache, globFuncs: Map[Var, (Var, LocalContext)], outer: Option[ClassInfoCache]): (Term, LocalContext) = 
+    log(s"liftTermNew $target in $ctx, $cache, $globFuncs, $outer")
+    target match{
+    case v: Var => 
       if(ctx.contains(v) || v.name.equals("this") || primiTypes.contains(v.name))   (v, emptyCtx)
       else if(cache.contains(TypeName(v.name))){
         val ret = liftConstr(TypeName(v.name), Tup(Nil))
@@ -303,12 +316,14 @@ class ClassLifter(logDebugMsg: Boolean = false) {
           case None => (v, asContext(v))
         }
       }
-    case Lam(lhs, rhs) =>
-      val lctx = getFreeVars(lhs)(using emptyCtx, cache, None)
-      val (ltrm, _) = liftTerm(lhs)(using ctx.addV(lctx.vSet))
-      val (rtrm, rctx) = liftTerm(rhs)(using ctx.addV(lctx.vSet))
-      (Lam(ltrm, rtrm), rctx -+ lctx)
-    case t: Tup =>
+    case Lam(lhs, rhs) => 
+      val prmCnt = getFreeVars(lhs)(using emptyCtx, cache, globFuncs, None).vSet.size
+      val nTpNm = TypeName(genAnoName("Lambda"+prmCnt))
+      val anoCls = NuTypeDef(Cls, nTpNm, Nil, Tup(Nil), Nil, TypingUnit(List(NuFunDef(None, Var("apply"), Nil, Left(Lam(lhs, rhs))))))
+      val nSta = New(Some((nTpNm, Tup(Nil))), TypingUnit(Nil))
+      val ret = liftEntitiesNew(List(anoCls, nSta))
+      (Blk(ret._1), ret._2)
+    case t: Tup => 
       liftTuple(t)
     case Rcd(fields) =>
       val ret = fields.map{
@@ -318,29 +333,34 @@ class ClassLifter(logDebugMsg: Boolean = false) {
       }.unzip
       (Rcd(ret._1), ret._2.fold(emptyCtx)(_ ++ _))
     case Asc(trm, ty) =>
-      val ret = liftTerm(trm)
+      val ret = liftTermNew(trm)
       val nTy = liftType(ty)
       (Asc(ret._1, nTy._1), ret._2 ++ nTy._2)
     case App(v: Var, prm: Tup) if cache.contains(TypeName(v.name)) =>
       val ret = liftConstr(TypeName(v.name), prm)
       (App(Var(ret._1.name), ret._2), ret._3)
-    case App(lhs, rhs) =>
-      val (ltrm, lctx) = liftTerm(lhs)
-      val (rtrm, rctx) = liftTerm(rhs)
+    case App(v: Var, prm: Tup) if globFuncs.contains(v) => 
+      val (nFuncName, nCtxs) = globFuncs.get(v).get
+      val addiArgs = nCtxs.vSet.toList.map(toFldsEle(_))
+      val nPrm = liftTuple(prm)
+      (App(nFuncName, Tup(nPrm._1.fields ++ addiArgs)), nPrm._2)
+    case App(lhs, rhs) => 
+      val (ltrm, lctx) = liftTermNew(lhs)
+      val (rtrm, rctx) = liftTermNew(rhs)
       (App(ltrm, rtrm), lctx ++ rctx)
     case Assign(lhs, rhs) =>
-      val (ltrm, lctx) = liftTerm(lhs)
-      val (rtrm, rctx) = liftTerm(rhs)
+      val (ltrm, lctx) = liftTermNew(lhs)
+      val (rtrm, rctx) = liftTermNew(rhs)
       (Assign(ltrm, rtrm), lctx ++ rctx)
     case Bind(lhs, rhs) =>
-      val (ltrm, lctx) = liftTerm(lhs)
+      val (ltrm, lctx) = liftTermNew(lhs)
       val (rtrm, rctx) = liftTermAsType(rhs)
       (Bind(ltrm, rtrm), lctx ++ rctx)
     case Bra(rcd, trm) =>
-      val ret = liftTerm(trm)
+      val ret = liftTermNew(trm)
       (Bra(rcd, ret._1), ret._2)
     case CaseOf(trm, cases) =>
-      val nTrm = liftTerm(trm)
+      val nTrm = liftTermNew(trm)
       val nCases = liftCaseBranch(cases)
       (CaseOf(nTrm._1, nCases._1), nTrm._2 ++ nCases._2)
     case If(body, None) =>
@@ -348,26 +368,26 @@ class ClassLifter(logDebugMsg: Boolean = false) {
       (If(ret._1, None), ret._2)
     case If(body, Some(trm)) =>
       val ret = liftIf(body)
-      val nTrm = liftTerm(trm)
+      val nTrm = liftTermNew(trm)
       (If(ret._1, Some(nTrm._1)), ret._2 ++ nTrm._2)
     case Let(isRec, name, rhs, body) =>
-      val nRhs = if(isRec) liftTerm(rhs)(using ctx.addV(name)) else liftTerm(rhs)
-      val nBody = liftTerm(body)(using ctx.addV(name))
+      val nRhs = if(isRec) liftTermNew(rhs)(using ctx.addV(name)) else liftTermNew(rhs)
+      val nBody = liftTermNew(body)(using ctx.addV(name))
       (Let(isRec, name, nRhs._1, nBody._1), nRhs._2 ++ nBody._2)
     case Sel(receiver, fieldName) =>
-      val nRec = liftTerm(receiver)
+      val nRec = liftTermNew(receiver)
       (Sel(nRec._1, fieldName), nRec._2)
     case Splc(fields) => ???
     case Subs(arr, idx) =>
-      val (ltrm, lctx) = liftTerm(arr)
-      val (rtrm, rctx) = liftTerm(idx)
+      val (ltrm, lctx) = liftTermNew(arr)
+      val (rtrm, rctx) = liftTermNew(idx)
       (Subs(ltrm, rtrm), lctx ++ rctx)
     case Test(trm, ty) =>
-      val (ltrm, lctx) = liftTerm(trm)
+      val (ltrm, lctx) = liftTermNew(trm)
       val (rtrm, rctx) = liftTermAsType(ty)
       (Test(ltrm, rtrm), lctx ++ rctx)
     case TyApp(lhs, targs) =>
-      val ret = liftTerm(lhs)
+      val ret = liftTermNew(lhs)
       val nTs = targs.map(liftType).unzip
       (TyApp(ret._1, nTs._1), nTs._2.fold(ret._2)(_ ++ _))
     case With(trm, fields) => ???
@@ -381,34 +401,34 @@ class ClassLifter(logDebugMsg: Boolean = false) {
       val supArgs = Tup(cls.body.params.fields.flatMap(tupleEntityToVar).map(toFldsEle))
       val anoCls = NuTypeDef(Cls, nTpNm, Nil, cls.body.params, List(App(Var(t.name), supArgs)), tu)
       val nSta = New(Some((nTpNm, prm)), TypingUnit(Nil))
-      val ret = liftEntities(List(anoCls, nSta))
+      val ret = liftEntitiesNew(List(anoCls, nSta))
       (Blk(ret._1), ret._2)
     case New(None, tu) =>
       val nTpNm = TypeName(genAnoName())
       val anoCls = NuTypeDef(Cls, nTpNm, Nil, Tup(Nil), Nil, tu)
       val nSta = New(Some((nTpNm, Tup(Nil))), TypingUnit(Nil))
-      val ret = liftEntities(List(anoCls, nSta))
+      val ret = liftEntitiesNew(List(anoCls, nSta))
       (Blk(ret._1), ret._2)
     case New(head, body) => ???
     case Blk(stmts) =>
-      val ret = liftEntities(stmts)
+      val ret = liftEntitiesNew(stmts)
       (Blk(ret._1), ret._2)
     case lit: Lit => (lit, emptyCtx)
     case Inst(bod) =>
-      val (trm, ctx) = liftTerm(bod)
+      val (trm, ctx) = liftTermNew(bod)
       (Inst(trm), ctx)
     case Forall(ps, bod) =>
-      val (trm, ctx) = liftTerm(bod)
+      val (trm, ctx) = liftTermNew(bod)
       (Forall(ps, trm), ctx)
     case Where(bod, sts) =>
-      val (bod2, ctx) = liftTerm(bod)
-      val (sts2, ctx2) = liftEntities(sts)
+      val (bod2, ctx) = liftTermNew(bod)
+      val (sts2, ctx2) = liftEntitiesNew(sts)
       (Where(bod2, sts2), ctx2)
-    case patmat: AdtMatchWith => lastWords(s"Cannot liftTerm ${patmat}")
+    case patmat: AdtMatchWith => lastWords(s"Cannot liftTermNew ${patmat}")
   }
 
   //serves for lifting Tup(Some(_), Fld(_, _, trm)), where trm refers to a type
-  private def liftTermAsType(target: Term)(using ctx: LocalContext, cache: ClassCache, outer: Option[ClassInfoCache]): (Term, LocalContext) = 
+  private def liftTermAsType(target: Term)(using ctx: LocalContext, cache: ClassCache, globFuncs: Map[Var, (Var, LocalContext)], outer: Option[ClassInfoCache]): (Term, LocalContext) = 
     log(s"liftTermAsType $target in $ctx, $cache")
     target match{
     case v: Var =>
@@ -443,21 +463,21 @@ class ClassLifter(logDebugMsg: Boolean = false) {
     case _ => ???
   }
 
-  private def liftTypeName(target: TypeName)(using ctx: LocalContext, cache: ClassCache, outer: Option[ClassInfoCache]): (TypeName, LocalContext) = {
+  private def liftTypeName(target: TypeName)(using ctx: LocalContext, cache: ClassCache, globFuncs: Map[Var, (Var, LocalContext)], outer: Option[ClassInfoCache]): (TypeName, LocalContext) = {
     if(ctx.contains(target) || primiTypes.contains(target.name)) { target -> emptyCtx }
     else {
       cache.get(target).map(x => (x.liftedNm -> emptyCtx)).getOrElse(target -> asContext(target)) 
     }
   }
 
-  private def liftTypeField(target: Field)(using ctx: LocalContext, cache: ClassCache, outer: Option[ClassInfoCache]): (Field, LocalContext) = {
+  private def liftTypeField(target: Field)(using ctx: LocalContext, cache: ClassCache, globFuncs: Map[Var, (Var, LocalContext)], outer: Option[ClassInfoCache]): (Field, LocalContext) = {
     val (inT, iCtx) = target.in.map(liftType).unzip
     val (outT, oCtx) = liftType(target.out)
     Field(inT, outT) -> (iCtx.getOrElse(emptyCtx) ++ oCtx)
   }
 
-  private def liftType(target: Type)(using ctx: LocalContext, cache: ClassCache, outer: Option[ClassInfoCache]): (Type, LocalContext) = target match{
-    case AppliedType(base, targs) =>
+  private def liftType(target: Type)(using ctx: LocalContext, cache: ClassCache, globFuncs: Map[Var, (Var, LocalContext)], outer: Option[ClassInfoCache]): (Type, LocalContext) = target match{
+    case AppliedType(base, targs) => 
       val (nTargs, nCtx) = targs.map(liftType).unzip
       val (nBase, bCtx) = liftTypeName(base)
       AppliedType(nBase, nTargs) -> (nCtx.fold(emptyCtx)(_ ++ _) ++ bCtx)
@@ -536,14 +556,20 @@ class ClassLifter(logDebugMsg: Boolean = false) {
   }
   
 
-  private def liftFunc(func: NuFunDef)(using ctx: LocalContext, cache: ClassCache, outer: Option[ClassInfoCache]): (NuFunDef, LocalContext) = {
-    log(s"liftFunc $func under $ctx # $cache # $outer")
+  private def liftMemberFunc(func: NuFunDef)(using ctx: LocalContext, cache: ClassCache, globFuncs: Map[Var, (Var, LocalContext)], outer: Option[ClassInfoCache]): (NuFunDef, LocalContext) = {
+    log(s"liftMemberFunc $func under $ctx # $cache # $globFuncs # $outer")
     val NuFunDef(rec, nm, tpVs, body) = func
     body match{
-      case Left(value) =>
-        val ret = liftTerm(value)(using ctx.addV(nm).addT(tpVs))
-        (func.copy(rhs = Left(ret._1)), ret._2)
-      case Right(PolyType(targs, body)) =>
+      case Left(Lam(lhs@Tup(etts), rhs)) =>
+        val lctx = getFreeVars(lhs)(using emptyCtx, cache, globFuncs, None)
+        val lret = liftTuple(lhs)(using ctx.addV(lctx.vSet))
+        val ret = liftTermNew(rhs)(using ctx.addV(lctx.vSet).addT(tpVs))
+        (func.copy(rhs = Left(Lam(lret._1, ret._1))), ret._2 -+ lret._2)
+      case Left(value) => 
+        // will be treated as Lam(Tup(Nil), rhs)
+        val ret = liftTermNew(value)(using ctx.addT(tpVs))
+        (func.copy(rhs = Left(Lam(Tup(Nil), ret._1))), ret._2)
+      case Right(PolyType(targs, body)) => 
         val nBody = liftType(body)(using ctx.addT(tpVs))
         val nTargs = targs.map {
           case L(tp) => liftTypeName(tp)(using ctx.addT(tpVs)).mapFirst(Left.apply)
@@ -552,6 +578,35 @@ class ClassLifter(logDebugMsg: Boolean = false) {
         (func.copy(rhs = Right(PolyType(nTargs._1, nBody._1))), nTargs._2.fold(nBody._2)(_ ++ _))
     }
   }
+
+  private def liftGlobalFunc(func: NuFunDef)(using ctx: LocalContext, cache: ClassCache, globFuncs: Map[Var, (Var, LocalContext)], outer: Option[ClassInfoCache]): Unit = {
+    log(s"liftGlobalFunc $func under $ctx # $cache # $globFuncs # $outer")
+    val NuFunDef(rec, nm, tpVs, body) = func
+    val nTpVs = tpVs ++ globFuncs.get(nm).get._2.tSet.toList
+    globalFunctions.addOne(body match{
+      case Left(Lam(lhs@Tup(etts), rhs)) =>
+        val tmp = globFuncs.get(nm).get._2.vSet.toList.map(toFldsEle)
+        val lctx = getFreeVars(lhs)(using emptyCtx, cache, globFuncs, None)
+        val lret = liftTuple(lhs)(using ctx.addV(lctx.vSet) ++ globFuncs.get(nm).get._2, cache, globFuncs)
+        val ret = liftTermNew(rhs)(using ctx.addV(lctx.vSet) ++ globFuncs.get(nm).get._2, cache, globFuncs)
+        NuFunDef(rec, globFuncs.get(nm).get._1, nTpVs, Left(Lam(Tup(lret._1.fields ++ tmp), ret._1)))
+      case Left(rhs) => 
+        // will be treated as Lam(Tup(Nil), rhs)
+        val tmp = globFuncs.get(nm).get._2.vSet.toList.map(toFldsEle)
+        val ret = liftTermNew(rhs)(using ctx ++ globFuncs.get(nm).get._2, cache, globFuncs)
+        NuFunDef(rec, globFuncs.get(nm).get._1, nTpVs, Left(Lam(Tup(tmp), ret._1)))
+        // val ret = liftTermNew(value)(using ctx.addV(nm) ++ globFuncs.get(nm).get._2, cache, globFuncs)
+        // NuFunDef(rec, globFuncs.get(nm).get._1, nTpVs, Left(ret._1))
+      case Right(PolyType(targs, body)) => 
+        val nBody = liftType(body)(using ctx ++ globFuncs.get(nm).get._2, cache, globFuncs, None)
+        val nTargs = targs.map({
+          case L(tn) => 
+            liftTypeName(tn)(using ctx.addT(nTpVs), cache, globFuncs, None) match
+              case (tn, ctx) => (L(tn), ctx)
+          case R(tv) => R(tv) -> emptyCtx}).unzip
+        NuFunDef(rec, globFuncs.get(nm).get._1, nTpVs, Right(PolyType(nTargs._1, nBody._1)))
+    })
+  }
   
 
   private def grepFieldsInTrm(trm: Term): Option[Var] = trm match{
@@ -559,66 +614,88 @@ class ClassLifter(logDebugMsg: Boolean = false) {
     case _ => None
   }
 
-  private def mixClsInfos(clsInfos: Map[TypeName, ClassInfoCache], newClsNms: Set[Var])(using cache: ClassCache): Map[TypeName, ClassInfoCache] = {
-    val nameInfoMap: MutMap[TypeName, ClassInfoCache] = MutMap(clsInfos.toSeq: _*)
-    log(s"mix cls infos $nameInfoMap")
+  private def mixClsInfos(clsInfos: Map[String, ClassInfoCache], funcInfos: Map[String, LocalContext])(using cache: ClassCache): (Map[String, ClassInfoCache], Map[String, LocalContext]) = {
+    val nameInfoMap: MutMap[String, ClassInfoCache] = MutMap(clsInfos.toSeq: _*)
+    val nameFuncMap: MutMap[String, LocalContext] = MutMap(funcInfos.toSeq: _*)
+    log(s"mix cls infos $nameInfoMap, $nameFuncMap")
     // val fullMp = cache ++ nameInfoMap
-    val clsNmsAsTypeNm = newClsNms.map(x => TypeName(x.name))
-    val len = clsInfos.size
-    for(_ <- 1 to len){
-      val tmp = nameInfoMap.toList
-      tmp.foreach{case (nmOfCls, infoOfCls@ClassInfoCache(_, _, ctx, flds, inners, sups, _, _, _)) => {
-        val usedClsNmList = ctx.vSet.map(x => TypeName(x.name)).intersect(clsNmsAsTypeNm)
-        val newCtxForCls = usedClsNmList.foldLeft(ctx)((c1, c2) => c1 ++ nameInfoMap.get(c2).get.capturedParams)
+    val clsNmsAsTypeNm = clsInfos.keySet.map(x => TypeName(x))
+    val len = clsInfos.size + nameFuncMap.size
+    for(_ <- 0 to len){
+      nameInfoMap.toList.foreach{case (nmOfCls, infoOfCls@ClassInfoCache(_, _, ctx, flds, inners, sups, _, _, _)) => {
+        val usedClsNmList = ctx.vSet.map(_.name).intersect(clsInfos.keySet)
+        val newCtxForCls_tmp = usedClsNmList.foldLeft(ctx)((c1, c2) => c1 ++ nameInfoMap.get(c2).get.capturedParams)
+
+        val usedFuncNmList = ctx.vSet.map(_.name).intersect(funcInfos.keySet)
+        val newCtxForCls = usedFuncNmList.foldLeft(newCtxForCls_tmp)((c, x) => c ++ nameFuncMap.get(x).get)
+
         val supClsNmList = infoOfCls.supClses
-        val newFields = supClsNmList.foreach(c2 => flds.addAll(
-          nameInfoMap.get(c2).map(_.fields).getOrElse(cache.get(c2).map(_.fields).getOrElse(Nil))
+        supClsNmList.foreach(c2 => flds.addAll(
+          nameInfoMap.get(c2.name).map(_.fields).getOrElse(cache.get(c2).map(_.fields).getOrElse(Nil))
           ))
-        val newInners = supClsNmList.foreach(c2 => inners.addAll(
-          nameInfoMap.get(c2).map(_.innerClses).getOrElse(cache.get(c2).map(_.innerClses).getOrElse(Nil))
+        supClsNmList.foreach(c2 => inners.addAll(
+          nameInfoMap.get(c2.name).map(_.innerClses).getOrElse(cache.get(c2).map(_.innerClses).getOrElse(Nil))
           ))
-        val newCtxFromSup = supClsNmList.map(c2 =>
-          nameInfoMap.get(c2).map(_.capturedParams).getOrElse(cache.get(c2).map(_.capturedParams).getOrElse(emptyCtx))
+        val newCtxFromSup = supClsNmList.map(c2 => 
+          nameInfoMap.get(c2.name).map(_.capturedParams).getOrElse(cache.get(c2).map(_.capturedParams).getOrElse(emptyCtx))
           ).fold(emptyCtx)(_ ++ _)
         infoOfCls.capturedParams = newCtxForCls ++ newCtxFromSup
       }}
+      nameFuncMap.toList.foreach((nm, ctx) => {
+        val usedClsNmList = ctx.vSet.map(_.name).intersect(clsInfos.keySet)
+        val usedFuncNmList = ctx.vSet.map(_.name).intersect(funcInfos.keySet)
+        val nCtx = (usedClsNmList.map(x => nameInfoMap.get(x).get.capturedParams) ++ usedFuncNmList.map(x => nameFuncMap.get(x).get)).foldLeft(ctx)(_ ++ _)
+        nameFuncMap.update(nm, nCtx)
+      })
     }
-    nameInfoMap.foreach((x1, x2) => x2.capturedParams = (x2.capturedParams extV newClsNms).extT(x2.innerClses.keySet))
-    nameInfoMap.toMap
+    nameInfoMap.foreach((x1, x2) => x2.capturedParams = (x2.capturedParams.extV(clsInfos.keySet.map(Var(_)))).extV(funcInfos.keySet.map(Var(_))).extT(x2.innerClses.keySet))
+    nameFuncMap.toList.foreach((x, c) => nameFuncMap.update(x, c.extV(clsInfos.keySet.map(Var(_))).extV(funcInfos.keySet.map(Var(_)))))
+    log(s"mix result: $nameInfoMap, $nameFuncMap")
+    nameInfoMap.toMap -> nameFuncMap.toMap
   }
+  
 
-  private def liftEntities(etts: List[Statement])(using ctx: LocalContext, cache: ClassCache, outer: Option[ClassInfoCache]): (List[Statement], LocalContext) = {
-    log("liftEntities: " ++ etts.headOption.map(_.toString()).getOrElse(""))
+  private def liftEntitiesNew(etts: List[Statement])(using ctx: LocalContext, cache: ClassCache, globFuncs: Map[Var, (Var, LocalContext)], outer: Option[ClassInfoCache]): (List[Statement], LocalContext) = {
+    log("liftEntitiesNew: " ++ etts.headOption.map(_.toString()).getOrElse(""))
     val (newCls, newFuncs, rstTrms) = splitEntities(etts)
     val newClsNms = newCls.map(x => Var(x.nme.name)).toSet
     val newFuncNms = newFuncs.map(_.nme)
     val nmsInTrm = rstTrms.flatMap(grepFieldsInTrm)
     val clsInfos = newCls.map(x => {
       val infos = collectClassInfo(x, newCls.map(_.nme).toSet)(using emptyCtx)
-      infos.capturedParams = infos.capturedParams.copy(vSet = infos.capturedParams.vSet.intersect(ctx.vSet ++ newClsNms ++ newFuncNms ++ nmsInTrm))
-      x.nme -> infos}).toMap
+      infos.capturedParams = infos.capturedParams.intersect(ctx.addT(infos.capturedParams.tSet).addV(newClsNms ++ newFuncNms ++ nmsInTrm -- globFuncs.keySet ++ outer.map(_ => Var("this"))))
+      x.nme.name -> infos}).toMap
+    val funcInfos = 
+      newFuncs.map(x => x.nme.name -> (x.rhs match {
+        case Left(trm) => getFreeVars(trm)(using emptyCtx)
+                            .intersect(ctx.addV(newClsNms ++ newFuncNms ++ nmsInTrm -- globFuncs.keySet ++ outer.map(_ => Var("this"))))
+                            .extT(x.targs) 
+        case _ => emptyCtx})
+      ).toMap
     log("captured cls infos: \n" ++ clsInfos.toString())
-    val refinedInfo = mixClsInfos(clsInfos, newClsNms)
-    val newCache = cache ++ refinedInfo
-    refinedInfo.foreach((_, clsi) => completeClsInfo(clsi)(using newCache))
+    log("captured func infos: \n" ++ funcInfos.toString())
+    val (refinedClsInfo, refinedFuncInfo) = mixClsInfos(clsInfos, funcInfos)
+    val newCache = cache ++ refinedClsInfo.map(x => (TypeName(x._1) -> x._2))
+    refinedClsInfo.foreach((_, clsi) => completeClsInfo(clsi)(using newCache))
+    val newGlobalFuncs = refinedFuncInfo.map((nm, vs) => (Var(nm) -> (Var(genAnoName(nm)), vs)))
 
-    newCls.foreach(x => liftTypeDefNew(x)(using newCache))
-    val (liftedFuns, funVs) = newFuncs.map(liftFunc(_)(using ctx.addV(newFuncNms), newCache)).unzip
-    val (liftedTerms, termVs) = rstTrms.map(liftTerm(_)(using ctx.addV(newFuncNms), newCache)).unzip
-    (liftedFuns ++ liftedTerms, (funVs ++ termVs).fold(emptyCtx)(_ ++ _))
+    newCls.foreach(x => liftTypeDefNew(x)(using newCache, globFuncs ++ newGlobalFuncs))
+    (newFuncs zip refinedFuncInfo).foreach((f, c) => liftGlobalFunc(f)(using ctx, newCache, globFuncs ++ newGlobalFuncs))
+    val (liftedTerms, termVs) = rstTrms.map(liftTermNew(_)(using ctx.addV(newFuncNms), newCache, globFuncs ++ newGlobalFuncs)).unzip
+    (liftedTerms, (termVs).fold(emptyCtx)(_ ++ _))
   }
 
-  private def completeClsInfo(clsInfo: ClassInfoCache)(using cache: ClassCache): Unit = {
+  private def completeClsInfo(clsInfo: ClassInfoCache)(using cache: ClassCache, globFuncs: Map[Var, (Var, LocalContext)]): Unit = {
     val ClassInfoCache(_, nName, freeVs, flds, inners, _, _, cls, _) = clsInfo
     val (clsList, _, _) = splitEntities(cls.body.entities)
     val innerClsNmSet = clsList.map(_.nme).toSet
-    val innerClsInfos = clsList.map(x => x.nme -> collectClassInfo(x, innerClsNmSet)(using asContextV(freeVs.vSet ++ flds), cache, Some(clsInfo))).toMap
-    val refinedInfos = mixClsInfos(innerClsInfos, innerClsNmSet.map(x => Var(x.name)))
+    val innerClsInfos = clsList.map(x => x.nme.name -> collectClassInfo(x, innerClsNmSet)(using asContextV(freeVs.vSet ++ flds), cache, globFuncs, Some(clsInfo))).toMap
+    val refinedInfos = mixClsInfos(innerClsInfos, Map())._1.map(x => (TypeName(x._1) -> x._2))
     refinedInfos.foreach((_, info) => completeClsInfo(info)(using cache ++ refinedInfos))
     inners.addAll(refinedInfos)
   }
 
-  private def liftTypeDefNew(target: NuTypeDef)(using cache: ClassCache, outer: Option[ClassInfoCache]): Unit = {
+  private def liftTypeDefNew(target: NuTypeDef)(using cache: ClassCache, globFuncs: Map[Var, (Var, LocalContext)], outer: Option[ClassInfoCache]): Unit = {
     def getAllInners(sups: Set[TypeName]): ClassCache = {
       sups.flatMap(
         t => cache.get(t).map(x => getAllInners(x.supClses) ++ x.innerClses)
@@ -638,10 +715,10 @@ class ClassLifter(logDebugMsg: Boolean = false) {
       outer.map(x => List(toFldsEle(Var(genParName(x.liftedNm.name))))).getOrElse(Nil)
       ++ params.fields
       ++ freeVs.vSet.map(toFldsEle) 
-    val nPars = pars.map(liftTerm(_)(using emptyCtx, nCache, nOuter)).unzip
-    val nFuncs = funcList.map(liftFunc(_)(using emptyCtx, nCache, nOuter)).unzip
-    val nTerms = termList.map(liftTerm(_)(using emptyCtx, nCache, nOuter)).unzip
-    clsList.foreach(x => liftTypeDefNew(x)(using nCache, nOuter))
+    val nPars = pars.map(liftTermNew(_)(using emptyCtx, nCache, globFuncs, nOuter)).unzip
+    val nFuncs = funcList.map(liftMemberFunc(_)(using emptyCtx, nCache, globFuncs, nOuter)).unzip
+    val nTerms = termList.map(liftTermNew(_)(using emptyCtx, nCache, globFuncs, nOuter)).unzip
+    clsList.foreach(x => liftTypeDefNew(x)(using nCache, globFuncs, nOuter))
     retSeq = retSeq.appended(NuTypeDef(kind, nName, nTps, Tup(nParams), nPars._1, TypingUnit(nFuncs._1 ++ nTerms._1)))
   }
 
@@ -649,9 +726,10 @@ class ClassLifter(logDebugMsg: Boolean = false) {
     log("=========================\n")
     log(s"lifting: \n${showStructure(rawUnit)}\n")
     retSeq = Nil
-    val re = liftEntities(rawUnit.entities)(using emptyCtx, Map(), None)
+    globalFunctions.clear()
+    val re = liftEntitiesNew(rawUnit.entities)(using emptyCtx, Map(), Map(), None)
     log(s"freeVars: ${re._2}")
     // println(logOutput.toString())
-    TypingUnit(retSeq.toList++re._1)
+    TypingUnit(retSeq.toList ++ globalFunctions.toList ++ re._1)
   }
 }

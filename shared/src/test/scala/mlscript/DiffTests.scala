@@ -39,6 +39,7 @@ abstract class ModeType {
   def expectCodeGenErrors: Bool
   def showRepl: Bool
   def allowEscape: Bool
+  def mono: Bool
 }
 
 class DiffTests
@@ -159,13 +160,14 @@ class DiffTests
       expectCodeGenErrors: Bool = false,
       showRepl: Bool = false,
       allowEscape: Bool = false,
+      mono: Bool = false,
       // noProvs: Bool = false,
     ) extends ModeType {
       def isDebugging: Bool = dbg || dbgSimplif
     }
     val defaultMode = Mode()
     
-    var parseOnly = basePath.headOption.contains("parser") || basePath.headOption.contains("compiler")
+    var parseOnly = basePath.headOption.contains("parser")
     var allowTypeErrors = false
     var allowParseErrors = false
     var showRelativeLineNums = false
@@ -255,6 +257,7 @@ class DiffTests
           case "re" => mode.copy(expectRuntimeErrors = true)
           case "ShowRepl" => mode.copy(showRepl = true)
           case "escape" => mode.copy(allowEscape = true)
+          case "mono" => {mode.copy(mono = true)}
           case "exit" =>
             out.println(exitMarker)
             ls.dropWhile(_ =:= exitMarker).tails.foreach {
@@ -400,7 +403,7 @@ class DiffTests
         
         // try to parse block of text into mlscript ast
         val ans = try {
-          if (newParser || basePath.headOption.contains("compiler")) {
+          if (newParser) {
             
             val origin = Origin(testName, globalStartLineNum, fph)
             val lexer = new NewLexer(origin, raise, dbg = mode.dbgParsing)
