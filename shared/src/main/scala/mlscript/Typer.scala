@@ -1611,21 +1611,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
     }).get
   }
 
-  def freeVars(t: Term): Set[Var] = {
-    t match {
-      case App(lhs, rhs) => 
-        freeVars(lhs) ++ freeVars(rhs)
-      case v @ Var(_) => 
-        Set(v)
-      case Tup(fields) =>
-        fields.map(f => freeVars(f._2.value))
-                    .flatMap(x => x)
-                    .toSet
-      case _ =>
-        Set() // TODO
-    }
-  }
-
   def desugarNamedArgs(term: Term, f: Term, a: Tup, argsList: List[Var])
   (implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType]): SimpleType = {
     def rec (as: List[(String -> Fld) -> Boolean], acc: Map[String, Either[Var, Term]]): Term = {
@@ -1636,7 +1621,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
               case _: Lit | _: Var =>
                 rec(tail, acc + (v -> R(fld.value)))
               case _ =>
-                val newVar = Var(getNewVarName(v, freeVars(a)))
+                val newVar = Var(getNewVarName(v, a.freeVars))
                 Let(false, newVar, fld.value, rec(tail, acc + (v -> L(newVar))))
             }
           } else {
