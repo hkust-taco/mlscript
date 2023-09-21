@@ -895,13 +895,23 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
       decl match {
         case td: NuTypeDef =>
           td.tparams.map(tp =>
-            (tp._2, freshVar(TypeProvenance(
-              tp._2.toLoc,
-              "type parameter",
-              S(tp._2.name),
-              true), N, S(tp._2.name)), tp._1))
-        case fd: NuFunDef => Nil // TODO
+            (tp._2, freshVar(
+              TypeProvenance(tp._2.toLoc, "type parameter",
+                S(tp._2.name),
+                isType = true),
+              N, S(tp._2.name)), tp._1))
+        case fd: NuFunDef =>
+          fd.tparams.map { tn =>
+            (tn, freshVar(
+              TypeProvenance(tn.toLoc, "method type parameter",
+                originName = S(tn.name),
+                isType = true),
+              N, S(tn.name)), N)
+          }
       }
+    }
+    lazy val tparamsSkolems: Ls[Str -> SkolemTag] = tparams.map {
+      case (tp, tv, vi) => (tp.name, SkolemTag(tv)(tv.prov))
     }
     
     lazy val explicitVariances: VarianceStore =
@@ -912,9 +922,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
       explicitVariances.get(tv).getOrElse(VarianceInfo.in)
     
     lazy private implicit val vars: Map[Str, SimpleType] =
-      outerVars ++ tparams.iterator.map {
-        case (tp, tv, vi) => (tp.name, SkolemTag(tv)(tv.prov))
-      }
+      outerVars ++ tparamsSkolems
     
     lazy val typedParams: Opt[Ls[Var -> FieldType]] = ctx.nest.nextLevel { implicit ctx =>
       decl match {
@@ -1089,11 +1097,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       val body_ty = ctx.nextLevel { implicit ctx: Ctx =>
                         // * Note: can't use `ctx.poly` instead of `ctx.nextLevel` because all the methods
                         // * in the current typing unit are quantified together.
-                        vars ++ fd.tparams.map { tn =>
-                          tn.name -> freshVar(TypeProvenance(tn.toLoc, "method type parameter",
-                            originName = S(tn.name),
-                            isType = true), N, S(tn.name))
-                        } |> { implicit vars =>
+                        assert(fd.tparams.sizeCompare(tparamsSkolems) === 0, (fd.tparams, tparamsSkolems))
+                        vars ++ tparamsSkolems |> { implicit vars =>
                           // * Only type methods polymorphically if they're at the top level or if
                           // * they're annotated with a type signature.
                           // * Otherwise, we get too much extrusion and cycle check failures

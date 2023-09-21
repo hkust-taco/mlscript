@@ -11,7 +11,7 @@ fun pure[A](a: A): Effectful['a, 'e] = Effectful(a)
 //│ class Effectful[A, E](value: A) {
 //│   fun flatMap: forall 'B. (f: A -> Effectful['B, E]) -> Effectful['B, E]
 //│ }
-//│ fun pure: forall 'a. (a: 'a) -> Effectful['a, nothing]
+//│ fun pure: forall 'A. (a: 'A) -> Effectful['A, nothing]
 
 // * Some effect tags
 module IO

@@ -292,8 +292,8 @@ fc(c)
 
 fun fts['a](x: 'a & Test) = x.foo
 fts(c)
-//│ fun fts: forall 'foo. (x: Test & {foo: 'foo} | Test & ~#Test) -> 'foo
-//│ 1
+//│ fun fts: (x: Test) -> Int
+//│ Int
 //│ res
 //│     = [Function: fts]
 
