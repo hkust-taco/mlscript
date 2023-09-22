@@ -61,6 +61,29 @@ test(0, y: 1)
 //│ res
 //│     = [ 0, 1 ]
 
+id(test)(0, y: 1)
+//│ [0, 1]
+//│ res
+//│     = [ 0, 1 ]
+
+id(if true then test else error)(0, y: 1)
+//│ [0, 1]
+//│ res
+//│     = [ 0, 1 ]
+
+id(if true then test else id)(0, y: 1)
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:209)
+//│ 	at: mlscript.utils.package$.die(package.scala:208)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$25(Typer.scala:1036)
+//│ 	at: scala.collection.immutable.List.map(List.scala:246)
+//│ 	at: mlscript.Typer.getLowerboundFuns$1(Typer.scala:1029)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:1040)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:1437)
+//│ 	at: mlscript.Typer.typeTerms(Typer.scala:1584)
+//│ 	at: mlscript.NuTypeDefs.go$1(NuTypeDefs.scala:650)
+
 // * No let binding in that value of argument is a var or literal
 :js
 let tmp = 2
@@ -69,8 +92,8 @@ test(0, y: 200)
 //│ let tmp: 2
 //│ [0, 200]
 //│ // Prelude
-//│ class TypingUnit7 {}
-//│ const typing_unit7 = new TypingUnit7;
+//│ class TypingUnit9 {}
+//│ const typing_unit9 = new TypingUnit9;
 //│ // Query 1
 //│ globalThis.tmp = 2;
 //│ // Query 2
@@ -90,8 +113,8 @@ test(0, y: 200)
 test(0, y: 1 + 2)
 //│ [0, Int]
 //│ // Prelude
-//│ class TypingUnit8 {}
-//│ const typing_unit8 = new TypingUnit8;
+//│ class TypingUnit10 {}
+//│ const typing_unit10 = new TypingUnit10;
 //│ // Query 1
 //│ res = ((y_1) => test1(0, y_1))(1 + 2);
 //│ // End of generated code
@@ -107,10 +130,10 @@ fun fff(x: Int, y: Int, z: Int) = (x - y) * z
 :e
 fff(y: 2, z: y_1 + 1, x: z_1 - 2)
 //│ ╔══[ERROR] identifier not found: y_1
-//│ ║  l.108: 	fff(y: 2, z: y_1 + 1, x: z_1 - 2)
+//│ ║  l.131: 	fff(y: 2, z: y_1 + 1, x: z_1 - 2)
 //│ ╙──       	             ^^^
 //│ ╔══[ERROR] identifier not found: z_1
-//│ ║  l.108: 	fff(y: 2, z: y_1 + 1, x: z_1 - 2)
+//│ ║  l.131: 	fff(y: 2, z: y_1 + 1, x: z_1 - 2)
 //│ ╙──       	                         ^^^
 //│ Int
 //│ Code generation encountered an error:
@@ -124,8 +147,8 @@ fff(y: 2, z: y_1 + 1, x: z_1 - 2)
 //│ let z_1: 3
 //│ Int
 //│ // Prelude
-//│ class TypingUnit11 {}
-//│ const typing_unit11 = new TypingUnit11;
+//│ class TypingUnit13 {}
+//│ const typing_unit13 = new TypingUnit13;
 //│ // Query 1
 //│ globalThis["y_1"] = 2;
 //│ // Query 2
@@ -189,7 +212,7 @@ fun print(x) = (y, z) => log([x, y, z])
 let p = print(0)
 p(z: 1, y: 2)
 //│ ╔══[ERROR] Cannot use named arguments as the function type has untyped arguments
-//│ ║  l.190: 	p(z: 1, y: 2)
+//│ ║  l.213: 	p(z: 1, y: 2)
 //│ ╙──       	 ^^^^^^^^^^^^
 //│ fun print: anything -> (anything, anything) -> undefined
 //│ let p: (anything, anything) -> undefined
@@ -239,3 +262,227 @@ z.y
 //│     = 1
 //│ res
 //│     = 2
+
+
+(f => f(x: a))
+//│ ╔══[ERROR] Cannot extract any function
+//│ ║  l.267: 	(f => f(x: a))
+//│ ╙──       	      ^
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:209)
+//│ 	at: mlscript.utils.package$.die(package.scala:208)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:1058)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:1437)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:1006)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:1437)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:986)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+
+(f => f)(error)(x: a)
+//│ ╔══[ERROR] Cannot extract any function
+//│ ║  l.283: 	(f => f)(error)(x: a)
+//│ ╙──       	^^^^^^^^^^^^^^^
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:209)
+//│ 	at: mlscript.utils.package$.die(package.scala:208)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:1058)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:1437)
+//│ 	at: mlscript.Typer.typeTerms(Typer.scala:1584)
+//│ 	at: mlscript.NuTypeDefs.go$1(NuTypeDefs.scala:650)
+//│ 	at: mlscript.NuTypeDefs.$anonfun$typeTypingUnit$15(NuTypeDefs.scala:660)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.NuTypeDefs.$anonfun$typeTypingUnit$2(NuTypeDefs.scala:660)
+
+(f => f)(42)(x: a)
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:209)
+//│ 	at: mlscript.utils.package$.die(package.scala:208)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$25(Typer.scala:1036)
+//│ 	at: scala.collection.immutable.List.map(List.scala:246)
+//│ 	at: mlscript.Typer.getLowerboundFuns$1(Typer.scala:1029)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:1040)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:1437)
+//│ 	at: mlscript.Typer.typeTerms(Typer.scala:1584)
+//│ 	at: mlscript.NuTypeDefs.go$1(NuTypeDefs.scala:650)
+
+(f => f)(if true then 123 else false)(x: a)
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:209)
+//│ 	at: mlscript.utils.package$.die(package.scala:208)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$25(Typer.scala:1036)
+//│ 	at: scala.collection.immutable.List.map(List.scala:246)
+//│ 	at: mlscript.Typer.getLowerboundFuns$1(Typer.scala:1029)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:1040)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:1437)
+//│ 	at: mlscript.Typer.typeTerms(Typer.scala:1584)
+//│ 	at: mlscript.NuTypeDefs.go$1(NuTypeDefs.scala:650)
+
+(f => f)(if true then (x: Int) => x + 1 else error)(x: 123)
+//│ Int
+//│ res
+//│     = 124
+
+(f => if true then f else id)(if true then (x: Int) => x + 1 else id)(x: 123)
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:209)
+//│ 	at: mlscript.utils.package$.die(package.scala:208)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$25(Typer.scala:1036)
+//│ 	at: scala.collection.immutable.List.map(List.scala:246)
+//│ 	at: mlscript.Typer.getLowerboundFuns$1(Typer.scala:1029)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:1040)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:1437)
+//│ 	at: mlscript.Typer.typeTerms(Typer.scala:1584)
+//│ 	at: mlscript.NuTypeDefs.go$1(NuTypeDefs.scala:650)
+
+
+fun foo(f: (x: Int) => Int) = f(x: 123)
+//│ fun foo: (f: (x: Int) -> Int) -> Int
+
+fun foo(f: ((x: Int) => Int) & 'a) = [f(x: 123), f]
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:209)
+//│ 	at: mlscript.utils.package$.die(package.scala:208)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:1053)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:1437)
+//│ 	at: mlscript.Typer.typePolymorphicTerm(Typer.scala:753)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$18(Typer.scala:918)
+//│ 	at: scala.collection.immutable.List.map(List.scala:246)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:915)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+
+foo((x: Int) => 1)
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:209)
+//│ 	at: mlscript.utils.package$.die(package.scala:208)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:1053)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:1437)
+//│ 	at: mlscript.Typer.typePolymorphicTerm(Typer.scala:753)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$18(Typer.scala:918)
+//│ 	at: scala.collection.immutable.List.map(List.scala:246)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:915)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+
+fun foo(f: ((x: Int) => Int) | 'a) = f(x: 123)
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:209)
+//│ 	at: mlscript.utils.package$.die(package.scala:208)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:1053)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:1437)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:1006)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:1437)
+//│ 	at: mlscript.NuTypeDefs$DelayedTypeInfoImpl.$anonfun$complete$10(NuTypeDefs.scala:1107)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:119)
+
+// * the result of the if-then-else is a TV with two LBs: the type of x and the function type
+fun foo(x) = (if true then (x: Int) => x + 1 else x)(x: 123)
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:209)
+//│ 	at: mlscript.utils.package$.die(package.scala:208)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:1053)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:1437)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:1006)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:1437)
+//│ 	at: mlscript.NuTypeDefs$DelayedTypeInfoImpl.$anonfun$complete$10(NuTypeDefs.scala:1107)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:119)
+
+foo((y: Int) => y)
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:209)
+//│ 	at: mlscript.utils.package$.die(package.scala:208)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:1053)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:1437)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:1006)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:1437)
+//│ 	at: mlscript.NuTypeDefs$DelayedTypeInfoImpl.$anonfun$complete$10(NuTypeDefs.scala:1107)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:119)
+
+fun foo(x) = if true then (x: Int) => x + 1 else x
+//│ fun foo: forall 'a. 'a -> ((x: Int) -> Int | 'a)
+
+foo((y: Int) => y)(x: 123)
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:209)
+//│ 	at: mlscript.utils.package$.die(package.scala:208)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$25(Typer.scala:1036)
+//│ 	at: scala.collection.immutable.List.map(List.scala:246)
+//│ 	at: mlscript.Typer.getLowerboundFuns$1(Typer.scala:1029)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:1040)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:1437)
+//│ 	at: mlscript.Typer.typeTerms(Typer.scala:1584)
+//│ 	at: mlscript.NuTypeDefs.go$1(NuTypeDefs.scala:650)
+
+foo((x: Int) => x - 1)(x: 123)
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:209)
+//│ 	at: mlscript.utils.package$.die(package.scala:208)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$25(Typer.scala:1036)
+//│ 	at: scala.collection.immutable.List.map(List.scala:246)
+//│ 	at: mlscript.Typer.getLowerboundFuns$1(Typer.scala:1029)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:1040)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:1437)
+//│ 	at: mlscript.Typer.typeTerms(Typer.scala:1584)
+//│ 	at: mlscript.NuTypeDefs.go$1(NuTypeDefs.scala:650)
+
+
+
+fun foo0(x: Int) = [x + 1, x]
+//│ fun foo0: (x: Int) -> [Int, Int]
+
+:e
+foo1(x: 123)
+//│ ╔══[ERROR] identifier not found: foo1
+//│ ║  l.448: 	foo1(x: 123)
+//│ ╙──       	^^^^
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:209)
+//│ 	at: mlscript.utils.package$.die(package.scala:208)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:1053)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:1437)
+//│ 	at: mlscript.Typer.typeTerms(Typer.scala:1584)
+//│ 	at: mlscript.NuTypeDefs.go$1(NuTypeDefs.scala:650)
+//│ 	at: mlscript.NuTypeDefs.$anonfun$typeTypingUnit$15(NuTypeDefs.scala:660)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.NuTypeDefs.$anonfun$typeTypingUnit$2(NuTypeDefs.scala:660)
+
+foo0(x: 123)
+//│ [Int, Int]
+//│ res
+//│     = [ 124, 123 ]
+
+fun foo1(x) = [x + 1, x]
+//│ fun foo1: forall 'a. (Int & 'a) -> [Int, 'a]
+
+foo1(x: 123)
+//│ ╔══[ERROR] Cannot use named arguments as the function type has untyped arguments
+//│ ║  l.472: 	foo1(x: 123)
+//│ ╙──       	    ^^^^^^^^
+//│ error
+//│ res
+//│     = [ 124, 123 ]
+
+fun foo1(x: Int & 'a) = [x + 1, x]
+//│ fun foo1: forall 'a. (x: Int & 'a) -> [Int, Int & 'a]
+
+foo1(x: 123)
+//│ [Int, 123]
+//│ res
+//│     = [ 124, 123 ]
+
+
