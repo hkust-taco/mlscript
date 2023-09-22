@@ -1033,7 +1033,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
                   case tvv: TypeVariable =>
                     getLowerboundFuns(tvv) 
                   case _ =>
-                    die
+                    die // never happens
                 }).flatten
               res
             }
@@ -1050,12 +1050,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
             fun_ty
           case FunctionType(_, _) =>
             f_ty
-          case _ => die
+          case _ => die // never happens
         }
         val hasUntypedArg = fun_ty.unwrapProxies match {
           case FunctionType(TupleType(fields), _) =>
             fields.exists(_._1.isEmpty)
-          case _ => die
+          case _ => die // never happens
         }
         if (hasUntypedArg) {
           err("Cannot use named arguments as the function type has untyped arguments", a.toLoc)
