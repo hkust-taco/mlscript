@@ -603,6 +603,22 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       case (IDENT(nme, false), l0) :: _ =>
         consume
         exprCont(Var(nme).withLoc(S(l0)), prec, allowNewlines = false)
+      case (br @ BRACKETS(Quasiquote | QuasiquoteTriple, toks), loc) :: _ =>
+        consume 
+        val body = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.typingUnit)
+        if (body.entities.isEmpty) {
+          err((msg"Expected an expression in the quiasiquote" -> S(loc) :: Nil))
+          R(errExpr.withLoc(S(loc)))
+        }
+        else exprCont(Quoted(Blk(body.entities)).withLoc(S(loc)), prec, allowNewlines = false)
+      case (br @ BRACKETS(Unquote, toks), loc) :: _ =>
+        consume 
+        val body = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.typingUnit)
+        if (body.entities.isEmpty) {
+          err((msg"Expected an expression in the unquote" -> S(loc) :: Nil))
+          R(errExpr.withLoc(S(loc)))
+        }
+        else exprCont(Unquoted(Blk(body.entities)).withLoc(S(loc)), prec, allowNewlines = false)
       case (KEYWORD("super"), l0) :: _ =>
         consume
         exprCont(Super().withLoc(S(l0)), prec, allowNewlines = false)

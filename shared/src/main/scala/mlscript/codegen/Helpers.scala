@@ -60,6 +60,10 @@ object Helpers {
     case Super() => "Super()"
     case AdtMatchWith(cond, arms) =>
       s"match ${inspect(cond)} with ${arms.map(patmat => s"${inspect(patmat.pat)} -> ${inspect(patmat.rhs)}").mkString(" | ")}"
+    case Quoted(body) =>
+      s"Quoted(${inspect(body)})"
+    case Unquoted(body) =>
+      s"Unquoted(${inspect(body)})"
   }
 
   def inspect(body: IfBody): Str = body match {

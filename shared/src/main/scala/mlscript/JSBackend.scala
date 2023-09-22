@@ -66,7 +66,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       translatePattern(base)
     case Inst(bod) => translatePattern(bod)
     case _: Lam | _: App | _: Sel | _: Let | _: Blk | _: Bind | _: Test | _: With | _: CaseOf | _: Subs | _: Assign
-        | If(_, _) | New(_, _) | _: Splc | _: Forall | _: Where | _: Super | _: Eqn | _: AdtMatchWith =>
+        | If(_, _) | New(_, _) | _: Splc | _: Forall | _: Where | _: Super | _: Eqn | _: AdtMatchWith | _: Quoted | _: Unquoted =>
       throw CodeGenError(s"term ${inspect(t)} is not a valid pattern")
   }
 
@@ -305,7 +305,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     case TyApp(base, _) => translateTerm(base)
     case Eqn(Var(name), _) =>
       throw CodeGenError(s"assignment of $name is not supported outside a constructor")
-    case _: Bind | _: Test | If(_, _)  | _: Splc | _: Where | _: AdtMatchWith =>
+    case _: Bind | _: Test | If(_, _)  | _: Splc | _: Where | _: AdtMatchWith | _: Quoted | _: Unquoted =>
       throw CodeGenError(s"cannot generate code for term ${inspect(term)}")
   }
 

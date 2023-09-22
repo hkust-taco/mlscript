@@ -62,15 +62,42 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       env: MutMap[Str, TypeInfo],
       mthEnv: MutMap[(Str, Str) \/ (Opt[Str], Str), MethodType],
       lvl: Int,
+      qenv: MutMap[Str, SkolemTag], // * SkolemTag for variables in quasiquotes
+      quotedLvl: Int, // * Level of quasiquotes
       inPattern: Bool,
       tyDefs: Map[Str, TypeDef],
       tyDefs2: MutMap[Str, DelayedTypeInfo],
       inRecursiveDef: Opt[Var], // TODO rm
       extrCtx: ExtrCtx,
   ) {
-    def +=(b: Str -> TypeInfo): Unit = env += b
+    def +=(b: Str -> TypeInfo): Unit = {
+      env += b
+      if (quotedLvl > 0) {
+        val tag = SkolemTag(freshVar(NoProv, N)(lvl))(NoProv)
+        println(s"Create skolem tag $tag for ${b._2} in quasiquote.")
+        qenv += b._1 -> tag
+      }
+    }
     def ++=(bs: IterableOnce[Str -> TypeInfo]): Unit = bs.iterator.foreach(+=)
     def get(name: Str): Opt[TypeInfo] = env.get(name) orElse parent.dlof(_.get(name))(N)
+    def qget(name: Str, qlvl: Int = quotedLvl): Opt[SkolemTag] =
+      if (qlvl === quotedLvl) qenv.get(name) orElse parent.dlof(_.qget(name, quotedLvl))(N)
+      else parent.dlof(_.qget(name, quotedLvl))(N)
+    def wrapCode: Ls[(Str, TypeInfo)] = qenv.flatMap {
+      case (name, tag) =>
+        env.get(name) match {
+          case S(VarSymbol(ty, _)) =>
+            name -> VarSymbol(TypeRef(TypeName("Code"), ty :: tag :: Nil)(noProv), Var(name)) :: Nil
+          case _ => Nil // TODO: what's this?
+        }
+    }.toList
+    def unwrap: Ls[(Str, TypeInfo)] = qenv.flatMap {
+      case (name, tag) =>
+        env.get(name) match {
+          case S(ti) => name -> ti :: Nil
+          case _ => Nil
+        }
+    }.toList
     def contains(name: Str): Bool = env.contains(name) || parent.exists(_.contains(name))
     def addMth(parent: Opt[Str], nme: Str, ty: MethodType): Unit = mthEnv += R(parent, nme) -> ty
     def addMthDefn(parent: Str, nme: Str, ty: MethodType): Unit = mthEnv += L(parent, nme) -> ty
@@ -147,6 +174,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       env = MutMap.from(builtinBindings.iterator.map(nt => nt._1 -> VarSymbol(nt._2, Var(nt._1)))),
       mthEnv = MutMap.empty,
       lvl = MinLevel,
+      qenv = MutMap.empty,
+      quotedLvl = 0,
       inPattern = false,
       tyDefs = Map.from(builtinTypes.map(t => t.nme.name -> t)),
       tyDefs2 = MutMap.empty,
@@ -239,6 +268,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
     NuTypeDef(Cls, TN("Str"), Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
     NuTypeDef(Als, TN("undefined"), Nil, N, N, S(Literal(UnitLit(true))), Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
     NuTypeDef(Als, TN("null"), Nil, N, N, S(Literal(UnitLit(false))), Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
+    NuTypeDef(Cls, TN("Code"), (S(VarianceInfo.co) -> TN("T")) :: (S(VarianceInfo.co) -> TN("C")) :: Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc))
   )
   val builtinTypes: Ls[TypeDef] =
     TypeDef(Cls, TN("?"), Nil, TopType, Nil, Nil, Set.empty, N, Nil) :: // * Dummy for pretty-printing unknown type locations
@@ -370,6 +400,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         val v = freshVar(noProv, N)(1)
         PolymorphicType(0, ArrayType(FieldType(S(v), v)(noProv))(noProv))
       },
+      "run" -> {
+        val tv = freshVar(noProv, N)(1)
+        PolymorphicType(0, fun(singleTup(TypeRef(TypeName("Code"), tv :: BotType :: Nil)(noProv)), tv)(noProv))
+      },
+      "Const" -> fun(singleTup(IntType), TypeRef(TypeName("Code"), IntType :: BotType :: Nil)(noProv))(noProv),
     ) ++ (if (!newDefs) primTypes ++ primTypes.map(p => p._1.capitalize -> p._2) // TODO settle on naming convention...
       else Nil)
   }
@@ -834,7 +869,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
             res
           }
       case v @ ValidVar(name) =>
-        val ty = ctx.get(name).fold(err("identifier not found: " + name, term.toLoc): ST) {
+        val tyOpt = if (ctx.quotedLvl > 0 && !builtinBindings.contains(name)) {
+          if (ctx.qget(name).isDefined) ctx.get(name) else N
+        } else ctx.get(name)
+        val ty = tyOpt.fold(err("identifier not found: " + name, term.toLoc): ST) {
           case AbstractConstructor(absMths, traitWithMths) =>
             val td = ctx.tyDefs(name)
             err((msg"Instantiation of an abstract type is forbidden" -> term.toLoc)
@@ -1382,6 +1420,26 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         res
       case Eqn(lhs, rhs) =>
         err(msg"Unexpected equation in this position", term.toLoc)
+      case Quoted(body) =>
+        val newCtx =
+          ctx.nest.copy(quotedLvl = ctx.quotedLvl + 1, qenv = MutMap.empty)
+        ctx.parent.foreach(p => if (p.quotedLvl > ctx.quotedLvl) newCtx ++= p.unwrap)
+        val bodyType = typePolymorphicTerm(body)(newCtx, raise, vars)
+        TypeRef(TypeName("Code"), bodyType :: BotType :: Nil)(noProv) // TODO: trace the unbound free vars
+      case Unquoted(body) =>
+        if (ctx.quotedLvl > 0) {
+          val newCtx = ctx.nest.copy(quotedLvl = 0)
+          val wrappedCodes = ctx.wrapCode
+          println("Map qenv to env in unquote...")
+          wrappedCodes.foreach(c => {
+            println(s"Create ${c._2} in newCtx")
+            newCtx += c
+          })
+          val bodyType = typePolymorphicTerm(body)(newCtx, raise, vars)
+          val res = freshVar(noTyProv, N)
+          con(bodyType, TypeRef(TypeName("Code"), res :: freshVar(noTyProv, N) :: Nil)(noProv), res)
+        }
+        else err("Unquotes should be enclosed with a quasiquote.", body.toLoc)(raise)
     }
   }(r => s"$lvl. : ${r}")
   

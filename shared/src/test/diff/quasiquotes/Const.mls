@@ -1,0 +1,29 @@
+:NewDefs
+:NoJS
+
+
+:e
+// :ge
+code"x => y => 100 + ${Const(x + y)}"
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.7: 	code"x => y => 100 + ${Const(x + y)}"
+//│ ║       	                             ^^^^^
+//│ ╟── reference of type `Code[?a, ?b]` is not an instance of `Int`
+//│ ║  l.7: 	code"x => y => 100 + ${Const(x + y)}"
+//│ ╙──     	                                 ^
+//│ Code[Int -> anything -> Int, nothing]
+
+:e
+code"x => y => 100 + code"${Const(x + y)}""
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.17: 	code"x => y => 100 + code"${Const(x + y)}""
+//│ ║        	               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── expression of type `Code[?a, nothing]` is not an instance of `Int`
+//│ Code[Int -> Int -> (Int | error), nothing]
+
+
+let res = code"x => code"${x}""
+//│ let res: Code[forall 'a. Code['a, anything] -> Code['a, nothing], nothing]
+
+run(res)(code"1")
+//│ Code[1, nothing]

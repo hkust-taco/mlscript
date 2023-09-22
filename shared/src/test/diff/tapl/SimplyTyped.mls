@@ -312,7 +312,7 @@ fun typeTerm(t, ctx) =
 //│       lty: 'lhs & 'rhs0 & 'lhs0 & 'lty & (PrimitiveType & {name: string} | 'a & (FunctionType & 'b | FunctionType & ~#FunctionType)),
 //│       rhs: 'rhs
 //│     } | App & {lhs: 'rhs, rhs: 'rhs} | Lit & {
-//│       ty: 'lhs & 'ty & (PrimitiveType & {name: string} | 'a & (FunctionType & 'b | FunctionType & ~#FunctionType))
+//│       ty: 'ty & 'lhs & (PrimitiveType & {name: string} | 'a & (FunctionType & 'b | FunctionType & ~#FunctionType))
 //│     } | Var & {name: string}
 //│     'a <: {lhs: 'rhs0 & 'lhs0, rhs: 'rhs1}
 //│     'rhs1 :> 'ty
@@ -339,9 +339,9 @@ fun showTypeTerm(t, ctx) =
 //│     'rhs3 <: FunctionType & 'b | PrimitiveType | ~FunctionType & ~PrimitiveType
 //│     'lhs1 <: FunctionType & {lhs: 'lhs1 & (PrimitiveType & {name: string} | ~#PrimitiveType), rhs: 'lhs1} | PrimitiveType & {name: string}
 //│     'rhs2 <: FunctionType & {lhs: 'rhs2, rhs: 'rhs2} | PrimitiveType | ~FunctionType & ~PrimitiveType
-//│     'lhs0 <: FunctionType & {lhs: 'lhs0 & (PrimitiveType & {name: string} | ~#PrimitiveType), rhs: 'lhs0} | PrimitiveType & {name: string}
+//│     'lhs <: FunctionType & {lhs: 'lhs & (PrimitiveType & {name: string} | ~#PrimitiveType), rhs: 'lhs} | PrimitiveType & {name: string}
 //│     'right <: Empty | Node & {key: string, left: 'right, right: 'right, value: 'rhs4}
-//│     'rhs4 <: 'lhs2 & 'lhs & (FunctionType & {lhs: 'rhs5 & 'lhs3, rhs: 'rhs4} & ~#FunctionType | FunctionType & {lhs: 'rhs5 & 'lhs3, rhs: 'rhs4} & 'c | PrimitiveType & {name: string})
+//│     'rhs4 <: 'lhs2 & 'lhs0 & (FunctionType & {lhs: 'rhs5 & 'lhs3, rhs: 'rhs4} & ~#FunctionType | FunctionType & {lhs: 'rhs5 & 'lhs3, rhs: 'rhs4} & 'c | PrimitiveType & {name: string})
 //│     'c <: {lhs: 'rhs6, rhs: 'rhs6}
 //│     'rhs6 <: FunctionType & 'c | PrimitiveType | ~FunctionType & ~PrimitiveType
 //│     'lhs3 <: FunctionType & {lhs: 'lhs3 & (PrimitiveType & {name: string} | ~#PrimitiveType), rhs: 'lhs3} | PrimitiveType & {name: string}
@@ -351,14 +351,14 @@ fun showTypeTerm(t, ctx) =
 //│     'lty <: FunctionType & {lhs: 'lty & (PrimitiveType & {name: string} | ~#PrimitiveType), rhs: 'lty} | PrimitiveType & {name: string}
 //│     'rhs <: Abs & {
 //│       lhs: Var & {name: string},
-//│       lty: 'lhs4 & 'rhs7 & 'lhs5 & 'lhs & (PrimitiveType & {name: string} | 'd & (FunctionType & 'e | FunctionType & ~#FunctionType)),
+//│       lty: 'lhs4 & 'rhs7 & 'lhs5 & 'lhs0 & (PrimitiveType & {name: string} | 'd & (FunctionType & 'e | FunctionType & ~#FunctionType)),
 //│       rhs: 'rhs
 //│     } | App & {lhs: 'rhs, rhs: 'rhs} | Lit & {ty: 'rhs8} | Var & {name: string}
 //│     'd <: {lhs: 'rhs7 & 'lhs5, rhs: 'rhs8}
-//│     'rhs8 <: 'lhs4 & 'lhs & (PrimitiveType & {name: string} | 'd & (FunctionType & 'e | FunctionType & ~#FunctionType))
+//│     'rhs8 <: 'lhs4 & 'lhs0 & (PrimitiveType & {name: string} | 'd & (FunctionType & 'e | FunctionType & ~#FunctionType))
 //│     'e <: {lhs: 'rhs9, rhs: 'rhs9}
 //│     'rhs9 <: FunctionType & 'e | PrimitiveType | ~FunctionType & ~PrimitiveType
-//│     'lhs <: FunctionType & {lhs: 'lhs & (PrimitiveType & {name: string} | ~#PrimitiveType), rhs: 'lhs} | PrimitiveType & {name: string}
+//│     'lhs0 <: FunctionType & {lhs: 'lhs0 & (PrimitiveType & {name: string} | ~#PrimitiveType), rhs: 'lhs0} | PrimitiveType & {name: string}
 //│     'lhs5 <: FunctionType & {lhs: 'lhs5 & (PrimitiveType & {name: string} | ~#PrimitiveType), rhs: 'lhs5} | PrimitiveType & {name: string}
 //│     'rhs7 <: FunctionType & {lhs: 'rhs7, rhs: 'rhs7} | PrimitiveType | ~FunctionType & ~PrimitiveType
 //│     'lhs4 <: FunctionType & {lhs: 'lhs4 & (PrimitiveType & {name: string} | ~#PrimitiveType), rhs: 'lhs4} | PrimitiveType & {name: string}

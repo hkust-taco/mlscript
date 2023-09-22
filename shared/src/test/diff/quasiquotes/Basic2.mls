@@ -1,0 +1,61 @@
+:NewDefs
+:NoJS
+
+// More specific checks from parser folder
+
+let res = code"[]"
+//│ let res: Code[[], nothing]
+run(res)
+//│ []
+
+let res = code"()"
+run(res)
+//│ let res: Code[[], nothing]
+//│ []
+
+let res = code"(1,)"
+run(res)
+//│ let res: Code[1, nothing]
+//│ 1
+
+let res = code"let f = (x, y, z) => x + y + x; f of 1,2,3"
+run(res)
+//│ let res: Code[Int, nothing]
+//│ Int
+
+//any of a, b, c -> codegen error from unresolved symbol "any"
+
+:pe
+code"// Can I comment?"
+//│ ╔══[PARSE ERROR] Unmatched opening quasiquote
+//│ ║  l.29: 	code"// Can I comment?"
+//│ ╙──      	^^^^^
+//│ 
+
+let res = code"[x: 1,]"
+//│ let res: Code[[x: 1], nothing]
+run(res)
+//│ [x: 1]
+
+// :ge
+:e
+code"let x = {a: 100}; x . a" // "." ?
+//│ ╔══[ERROR] identifier not found: .
+//│ ║  l.42: 	code"let x = {a: 100}; x . a" // "." ?
+//│ ╙──      	                         ^
+//│ ╔══[ERROR] identifier not found: a
+//│ ║  l.42: 	code"let x = {a: 100}; x . a" // "." ?
+//│ ╙──      	                           ^
+//│ Code[error, nothing]
+
+
+code"let x = {a: 100}; x.a"
+//│ Code[100, nothing]
+
+
+// should be ok
+let res = code"let x = {a: 100}; x .a"
+//│ let res: Code[100, nothing]
+
+run(res)
+//│ 100

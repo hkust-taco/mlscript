@@ -20,7 +20,7 @@ class Bind[A, B](underlying: IO[A], f: A -> IO[B]) extends IO[B] {
 //│   fun run: A
 //│ }
 //│ class Bind[A, B](underlying: IO[A], f: A -> IO[B]) extends IO {
-//│   fun bind: forall 'B1 'A0. ('A0 -> IO['B1]) -> Bind['A0, 'B1]
+//│   fun bind: forall 'A0 'B1. ('A0 -> IO['B1]) -> Bind['A0, 'B1]
 //│   fun run: B
 //│ }
 //│ where
@@ -172,10 +172,10 @@ fun main(ctx) =
   ctx.printLine(concat("The sum is: ")(String of sum)) |>= _ =>
   ctx.pure(sum)
 //│ fun main: forall 'a 'b 'c 'd 'e. {
-//│   printLine: "Hi! Input two numbers: " -> {bind: (anything -> 'a) -> 'e} & Str -> {bind: (anything -> 'd) -> 'b},
-//│   pure: Int -> 'd,
-//│   readInt: {bind: (Int -> 'c) -> 'a & (Int -> 'b) -> 'c}
-//│ } -> 'e
+//│   printLine: "Hi! Input two numbers: " -> {bind: (anything -> 'a) -> 'b} & Str -> {bind: (anything -> 'e) -> 'd},
+//│   pure: Int -> 'e,
+//│   readInt: {bind: (Int -> 'c) -> 'a & (Int -> 'd) -> 'c}
+//│ } -> 'b
 
 val defaultCtx = {printLine, readInt, pure: Pure}
 //│ val defaultCtx: {

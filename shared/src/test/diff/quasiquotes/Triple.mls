@@ -1,0 +1,38 @@
+:NewDefs
+:NoJS
+
+
+"normal string"
+//│ "normal string"
+
+
+:pe
+code""error code""
+//│ ╔══[PARSE ERROR] Expected an expression in the quiasiquote
+//│ ║  l.10: 	code""error code""
+//│ ╙──      	^^^^^^
+//│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
+//│ ║  l.10: 	code""error code""
+//│ ╙──      	      ^^^^^
+//│ undefined
+
+
+:pe
+code""wrong example""
+//│ ╔══[PARSE ERROR] Expected an expression in the quiasiquote
+//│ ║  l.21: 	code""wrong example""
+//│ ╙──      	^^^^^^
+//│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
+//│ ║  l.21: 	code""wrong example""
+//│ ╙──      	      ^^^^^
+//│ undefined
+
+code""""hello world""""
+//│ Code["hello world", nothing]
+
+:pe
+code""" "HKUST"
+//│ ╔══[PARSE ERROR] Unmatched opening quasiquote triple
+//│ ║  l.34: 	code""" "HKUST"
+//│ ╙──      	^^^^^^^
+//│ "HKUST"

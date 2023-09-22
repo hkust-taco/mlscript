@@ -291,7 +291,7 @@ def append ls elem = L { h = elem; t = S { v = ls } }
 
 :ns
 append
-//│ res: forall 'h 'a 'b 'T 't 'v 'T0 'c. 'c -> 'a -> 'b
+//│ res: forall 'a 'b 'c 'T 'v 'h 'T0 't. 'c -> 'a -> 'b
 //│   where
 //│     'b :> #L & {h: 'h, t: 't, L#T = 'T0}
 //│     't :> #S & {v: 'v, S#T = 'T}
