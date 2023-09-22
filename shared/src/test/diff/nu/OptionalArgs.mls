@@ -4,81 +4,145 @@
 // TODO: there is problem when the is SPACE after '?'
 
 // Typing of (a?: Int, b?: Int) is ok, but constraining is not 
-:d
+// :d
+:ds
 fun f1(a?: Int, b?: Int) = a + b
-//│ 0. Typing TypingUnit(List(fun f1 = (a: Int?, b: Int?,) => + (a,) (b,)))
-//│ | 0. Created lazy type info for fun f1 = (a: Int?, b: Int?,) => + (a,) (b,)
-//│ | Completing fun f1 = (a: Int?, b: Int?,) => + (a,) (b,)
-//│ | | UNSTASHING... (out)
-//│ | | Type params 
-//│ | | UNSTASHING... (out)
-//│ | | Params 
-//│ | | 1. Typing term (a: Int?, b: Int?,) => + (a,) (b,)
-//│ | | | 1. Typing pattern a: Int?, b: Int?,
-//│ | | | | HERE, good!
-//│ | | | | 1. Typing pattern a : Int
-//│ | | | | | Typing type TypeName(Int)
-//│ | | | | | | vars=Map() newDefsInfo=Map()
-//│ | | | | | | 1. type TypeName(Int)
-//│ | | | | | | | typename case??
-//│ | | | | | | => Int
-//│ | | | | | => Int ——— 
-//│ | | | | 1. : Int
-//│ | | | | opt is => true
-//│ | | | | case #2
-//│ | | | | 1. Typing pattern b : Int
-//│ | | | | | Typing type TypeName(Int)
-//│ | | | | | | vars=Map() newDefsInfo=Map()
-//│ | | | | | | 1. type TypeName(Int)
-//│ | | | | | | | typename case??
-//│ | | | | | | => Int
-//│ | | | | | => Int ——— 
-//│ | | | | 1. : Int
-//│ | | | | opt is => true
-//│ | | | | case #2
-//│ | | | 1. : (a: Int?, b: Int?,)
-//│ | | | 1. Typing term + (a,) (b,)
-//│ | | | | 1. Typing term + (a,)
-//│ | | | | | 1. Typing term +
-//│ | | | | | 1. : (Int -> (Int -> Int))
-//│ | | | | | 1. Typing term a
-//│ | | | | | 1. : Int
-//│ | | | | | CONSTRAIN (Int -> (Int -> Int)) <! (Int -> α29')
-//│ | | | | |   where 
-//│ | | | | | 1. C (Int -> (Int -> Int)) <! (Int -> α29')    (0)
-//│ | | | | | | 1. C (Int,) <! (Int,)    (1)
-//│ | | | | | | | Already a subtype by <:<
-//│ | | | | | | 1. C (Int -> Int) <! α29'    (1)
-//│ | | | | | | | NEW α29' LB (0)
-//│ | | | | 1. : α29'
-//│ | | | | 1. Typing term b
-//│ | | | | 1. : Int
-//│ | | | | CONSTRAIN α29' <! (Int -> α30')
-//│ | | | |   where 
-//│ 		α29' :> (Int -> Int)
-//│ | | | | 1. C α29' <! (Int -> α30')    (0)
-//│ | | | | | NEW α29' UB (1)
-//│ | | | | | 1. C (Int -> Int) <! (Int -> α30')    (2)
-//│ | | | | | | 1. C (Int,) <! (Int,)    (2)
-//│ | | | | | | | Already a subtype by <:<
-//│ | | | | | | 1. C Int <! α30'    (2)
-//│ | | | | | | | NEW α30' LB (0)
-//│ | | | 1. : α30'
-//│ | | 1. : ((a: Int?, b: Int?,) -> α30')
-//│ | | UNSTASHING... (out)
-//│ | | CONSTRAIN ((a: Int?, b: Int?,) -> α30') <! f131'
-//│ | |   where 
+//│ ⬤ Initial: TypedTypingUnit(
+//│ 	TypedNuFun(0,fun f1 = (a: Int?, b: Int?,) => + (a,) (b,),((a: Int?, b: Int?,) -> α30'))
+//│ 	None)
+//│  where: 
 //│ 		α30' :> Int
-//│ | | 1. C ((a: Int?, b: Int?,) -> α30') <! f131'    (0)
-//│ | | | NEW f131' LB (1)
-//│ | | UNSTASHING... (out)
-//│ | Completed TypedNuFun(0,fun f1 = (a: Int?, b: Int?,) => + (a,) (b,),((a: Int?, b: Int?,) -> α30')) where 
-//│ 		α30' :> Int
-//│ | Typing unit statements
-//│ | : None
-//│ ======== TYPED ========
-//│ fun f1: ‹∀ 0. ((a: Int?, b: Int?,) -> α30')› where 
-//│ |		α30' :> Int
+//│ allVarPols: +α30'
+//│ Renewed α30' ~> α30_32'
+//│ ⬤ Cleaned up: TypedTypingUnit(
+//│ 	TypedNuFun(0,fun f1 = (a: Int?, b: Int?,) => + (a,) (b,),((a: Int, b: Int,) -> α30_32'))
+//│ 	None)
+//│  where: 
+//│ 		α30_32' :> Int
+//│ allVarPols: +α30_32'
+//│ consed: Map((true,Int) -> α30_32')
+//│ ⬤ Unskid: TypedTypingUnit(
+//│ 	TypedNuFun(0,fun f1 = (a: Int?, b: Int?,) => + (a,) (b,),((a: Int, b: Int,) -> α30_32'))
+//│ 	None)
+//│  where: 
+//│ 		α30_32' :> Int
+//│ analyze1[+] ((a: Int, b: Int,) -> α30_32')
+//│ | analyze1[+;-] (a: Int, b: Int,)
+//│ | | analyze1[+;-] Int
+//│ | | analyze1[+;-] Int
+//│ | analyze1[+] α30_32'
+//│ | | analyze1[+;@[+](0)] Int
+//│ [inv] 
+//│ [nums] +α30_32' 1
+//│ analyze2[+] ((a: Int, b: Int,) -> α30_32')
+//│ | analyze2[+;-] (a: Int, b: Int,)
+//│ | | analyze2[+;-] Int
+//│ | | analyze2[+;-] Int
+//│ | analyze2[+] α30_32'
+//│ | | >> Processing α30_32' at [+]
+//│ | | go α30_32'   ()
+//│ | | | go Int   (α30_32')
+//│ | | >> Occurrences HashSet(α30_32', Int)
+//│ | | >>>> occs[+α30_32'] := HashSet(α30_32', Int)  <~ None
+//│ | | analyze2[+] Int
+//│ [occs] +α30_32' {α30_32',Int}
+//│ [vars] TreeSet(α30_32')
+//│ [rec] Set()
+//│ 0[1] α30_32'
+//│ 1[!] α30_32'
+//│ [sub] α30_32' -> None
+//│ [bounds] 
+//│ 		α30_32' :> Int
+//│ [rec] Set()
+//│ transform[+] ((a: Int, b: Int,) -> α30_32')   ()  +  None
+//│ | transform[-] (a: Int, b: Int,)   ()  +;-  None
+//│ | | transform[-] Int   ()  +;-  None
+//│ | | ~> Int
+//│ | | transform[-] Int   ()  +;-  None
+//│ | | ~> Int
+//│ | ~> (a: Int, b: Int,)
+//│ | transform[+] α30_32'   ()  +  None
+//│ | | -> bound Some(true)
+//│ | | transform[+] Int   (α30_32')  +;@[+](0)  None
+//│ | | ~> Int
+//│ | ~> Int
+//│ ~> ((a: Int, b: Int,) -> Int)
+//│ ⬤ Type after simplification: TypedTypingUnit(
+//│ 	TypedNuFun(0,fun f1 = (a: Int?, b: Int?,) => + (a,) (b,),((a: Int, b: Int,) -> Int))
+//│ 	None)
+//│  where: 
+//│ allVarPols: 
+//│ normLike[+] TypedTypingUnit(
+//│ 	TypedNuFun(0,fun f1 = (a: Int?, b: Int?,) => + (a,) (b,),((a: Int, b: Int,) -> Int))
+//│ 	None)
+//│ | norm[+] ((a: Int, b: Int,) -> Int)
+//│ | | DNF: DNF(0, ((a: Int, b: Int,) -> Int){})
+//│ | | norm[-] (a: Int, b: Int,)
+//│ | | | DNF: DNF(0, (a: Int, b: Int,){})
+//│ | | | norm[-] Int
+//│ | | | | DNF: DNF(0, #Int<Object,Num>{})
+//│ | | | ~> #Int<Object,Num>
+//│ | | | norm[-] Int
+//│ | | | | DNF: DNF(0, #Int<Object,Num>{})
+//│ | | | ~> #Int<Object,Num>
+//│ | | ~> (a: #Int<Object,Num>, b: #Int<Object,Num>,)
+//│ | | norm[+] Int
+//│ | | | DNF: DNF(0, #Int<Object,Num>{})
+//│ | | ~> #Int<Object,Num>
+//│ | ~> ((a: #Int<Object,Num>, b: #Int<Object,Num>,) -> #Int<Object,Num>)
+//│ ⬤ Normalized: TypedTypingUnit(
+//│ 	TypedNuFun(0,fun f1 = (a: Int?, b: Int?,) => + (a,) (b,),((a: #Int<Object,Num>, b: #Int<Object,Num>,) -> #Int<Object,Num>))
+//│ 	None)
+//│  where: 
+//│ allVarPols: 
+//│ ⬤ Cleaned up: TypedTypingUnit(
+//│ 	TypedNuFun(0,fun f1 = (a: Int?, b: Int?,) => + (a,) (b,),((a: #Int<Object,Num>, b: #Int<Object,Num>,) -> #Int<Object,Num>))
+//│ 	None)
+//│  where: 
+//│ allVarPols: 
+//│ consed: Map()
+//│ ⬤ Unskid: TypedTypingUnit(
+//│ 	TypedNuFun(0,fun f1 = (a: Int?, b: Int?,) => + (a,) (b,),((a: #Int<Object,Num>, b: #Int<Object,Num>,) -> #Int<Object,Num>))
+//│ 	None)
+//│  where: 
+//│ analyze1[+] ((a: #Int<Object,Num>, b: #Int<Object,Num>,) -> #Int<Object,Num>)
+//│ | analyze1[+;-] (a: #Int<Object,Num>, b: #Int<Object,Num>,)
+//│ | | analyze1[+;-] #Int<Object,Num>
+//│ | | analyze1[+;-] #Int<Object,Num>
+//│ | analyze1[+] #Int<Object,Num>
+//│ [inv] 
+//│ [nums] 
+//│ analyze2[+] ((a: #Int<Object,Num>, b: #Int<Object,Num>,) -> #Int<Object,Num>)
+//│ | analyze2[+;-] (a: #Int<Object,Num>, b: #Int<Object,Num>,)
+//│ | | analyze2[+;-] #Int<Object,Num>
+//│ | | analyze2[+;-] #Int<Object,Num>
+//│ | analyze2[+] #Int<Object,Num>
+//│ [occs] 
+//│ [vars] TreeSet()
+//│ [rec] Set()
+//│ [sub] 
+//│ [bounds] 
+//│ [rec] Set()
+//│ transform[+] ((a: #Int<Object,Num>, b: #Int<Object,Num>,) -> #Int<Object,Num>)   ()  +  None
+//│ | transform[-] (a: #Int<Object,Num>, b: #Int<Object,Num>,)   ()  +;-  None
+//│ | | transform[-] #Int<Object,Num>   ()  +;-  None
+//│ | | ~> #Int<Object,Num>
+//│ | | transform[-] #Int<Object,Num>   ()  +;-  None
+//│ | | ~> #Int<Object,Num>
+//│ | ~> (a: #Int<Object,Num>, b: #Int<Object,Num>,)
+//│ | transform[+] #Int<Object,Num>   ()  +  None
+//│ | ~> #Int<Object,Num>
+//│ ~> ((a: #Int<Object,Num>, b: #Int<Object,Num>,) -> #Int<Object,Num>)
+//│ ⬤ Resim: TypedTypingUnit(
+//│ 	TypedNuFun(0,fun f1 = (a: Int?, b: Int?,) => + (a,) (b,),((a: #Int<Object,Num>, b: #Int<Object,Num>,) -> #Int<Object,Num>))
+//│ 	None)
+//│  where: 
+//│ allVarPols: 
+//│ [subs] HashMap()
+//│ ⬤ Factored: TypedTypingUnit(
+//│ 	TypedNuFun(0,fun f1 = (a: Int?, b: Int?,) => + (a,) (b,),((a: #Int<Object,Num>, b: #Int<Object,Num>,) -> #Int<Object,Num>))
+//│ 	None)
+//│  where: 
 //│ fun f1: (a: Int, b: Int,) -> Int
 
 
@@ -209,6 +273,104 @@ let y: C1 = x
 //│ res
 //│     = [ 1, 2 ]
 
+:d
+[1]: [Int, Int?]
+//│ 0. Typing TypingUnit(List('(' 1, ')' : (Int, Int,)))
+//│ | Typing unit statements
+//│ | | 0. Typing term '(' 1, ')' : (Int, Int,)
+//│ | | | typing-trm-here!!! '(' 1, ')'
+//│ | | | 0. Typing term '(' 1, ')'
+//│ | | | | 0. Typing term 1,
+//│ | | | | | HERE, good!
+//│ | | | | | 0. Typing term 1
+//│ | | | | | 0. : #1<Int,Num,Object>
+//│ | | | | | opt is => false
+//│ | | | | | case #2
+//│ | | | | 0. : (#1<Int,Num,Object>,)
+//│ | | | 0. : (#1<Int,Num,Object>,)
+//│ | | | typing-ty-here!!! Tuple(List((None,Field(None,TypeName(Int),false)), (None,Field(None,TypeName(Int),true))))
+//│ | | | Typing type Tuple(List((None,Field(None,TypeName(Int),false)), (None,Field(None,TypeName(Int),true))))
+//│ | | | | vars=Map() newDefsInfo=Map()
+//│ | | | | 0. type Tuple(List((None,Field(None,TypeName(Int),false)), (None,Field(None,TypeName(Int),true))))
+//│ | | | | | typing tuple!!!
+//│ | | | | | 0. type TypeName(Int)
+//│ | | | | | | typename case??
+//│ | | | | | => Int
+//│ | | | | | 0. type TypeName(Int)
+//│ | | | | | | typename case??
+//│ | | | | | => Int
+//│ | | | | => (Int, Int?,)
+//│ | | | => (Int, Int?,) ——— 
+//│ | | | constraining!!!
+//│ | | | CONSTRAIN (#1<Int,Num,Object>,) <! (Int, Int?,)
+//│ | | |   where 
+//│ | | | 0. C (#1<Int,Num,Object>,) <! (Int, Int?,)    (0)
+//│ | | | | CONSTRAINT FAILURE: (#1<Int,Num,Object>,) <: (Int, Int?,)
+//│ | | | | allVarPols: 
+//│ | | | | normLike[-] (Int, Int,)
+//│ | | | | | norm[-] (Int, Int,)
+//│ | | | | | | DNF: DNF(0, (Int, Int,){})
+//│ | | | | | | norm[-] Int
+//│ | | | | | | | DNF: DNF(0, #Int<Object,Num>{})
+//│ | | | | | | ~> #Int<Object,Num>
+//│ | | | | | | norm[-] Int
+//│ | | | | | | | DNF: DNF(0, #Int<Object,Num>{})
+//│ | | | | | | ~> #Int<Object,Num>
+//│ | | | | | ~> (#Int<Object,Num>, #Int<Object,Num>,)
+//│ | | | | allVarPols: 
+//│ | | | | normLike[+] (#1<Int,Num,Object>,)
+//│ | | | | | norm[+] (#1<Int,Num,Object>,)
+//│ | | | | | | DNF: DNF(0, (#1<Int,Num,Object>,){})
+//│ | | | | | | norm[+] #1<Int,Num,Object>
+//│ | | | | | | | DNF: DNF(0, #1<Int,Num,Object>{})
+//│ | | | | | | ~> #1<Int,Num,Object>
+//│ | | | | | ~> (#1<Int,Num,Object>,)
+//│ | | | | CONSTRAIN #error<> <! (Int, Int?,)
+//│ | | | |   where 
+//│ | | | | 0. C #error<> <! (Int, Int?,)    (0)
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.277: 	[1]: [Int, Int?]
+//│ ║         	^^^
+//│ ╟── expression of type `(1,)` does not match type `(Int, Int,)`
+//│ ╟── Note: constraint arises from tuple type:
+//│ ║  l.277: 	[1]: [Int, Int?]
+//│ ╙──       	     ^^^^^^^^^^^
+//│ | | 0. : (Int, Int?,)
+//│ | : Some((Int, Int?,))
+//│ ======== TYPED ========
+//│ res: Some((Int, Int?,)) where 
+//│ (Int, Int,)
+//│ res
+//│     = [ 1 ]
+
+:e
+[]: [Int, Int?]
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.347: 	[]: [Int, Int?]
+//│ ║         	^^
+//│ ╟── expression of type `()` does not match type `(Int, Int,)`
+//│ ╟── Note: constraint arises from tuple type:
+//│ ║  l.347: 	[]: [Int, Int?]
+//│ ╙──       	    ^^^^^^^^^^^
+//│ (Int, Int,)
+//│ res
+//│     = []
+
+:e
+[1, 2, 3]: [Int, Int?]
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.360: 	[1, 2, 3]: [Int, Int?]
+//│ ║         	^^^^^^^^^
+//│ ╟── tuple literal of type `(1, 2, 3,)` does not match type `(Int, Int,)`
+//│ ║  l.360: 	[1, 2, 3]: [Int, Int?]
+//│ ║         	 ^^^^^^^
+//│ ╟── Note: constraint arises from tuple type:
+//│ ║  l.360: 	[1, 2, 3]: [Int, Int?]
+//│ ╙──       	           ^^^^^^^^^^^
+//│ (Int, Int,)
+//│ res
+//│     = [ 1, 2, 3 ]
+
 :dp
 [1, 2]: [Int, Int, Int?]
 //│ |[|1|,| |2|]|#:| |[|Int|,| |Int|,| |Int|?|]|
@@ -232,7 +394,7 @@ let y: C1 = x
 //│ │ > │ │ = Right(1)
 //│ │ > │ = Right(1)
 //│ │ > │ ? argsOrIf		inspects |,| |2|    [at l.1093]
-//│ │ > │ nexttoken => (COMMA,Loc(2,3,nu/OptionalArgs:+213))
+//│ │ > │ nexttoken => (COMMA,Loc(2,3,nu/OptionalArgs:+375))
 //│ │ > │ ? isOptinoal		inspects |,| |2|    [at l.1098]
 //│ │ > │ flags => None None None
 //│ │ > │ e => Right(Fld(FldFlags(false,false,false),1))
@@ -289,7 +451,7 @@ let y: C1 = x
 //│ │ │ │ │ │ > │ │ = Right(Int)
 //│ │ │ │ │ │ > │ = Right(Int)
 //│ │ │ │ │ │ > │ ? argsOrIf		inspects |,| |Int|,| |...    [at l.1093]
-//│ │ │ │ │ │ > │ nexttoken => (COMMA,Loc(12,13,nu/OptionalArgs:+213))
+//│ │ │ │ │ │ > │ nexttoken => (COMMA,Loc(12,13,nu/OptionalArgs:+375))
 //│ │ │ │ │ │ > │ ? isOptinoal		inspects |,| |Int|,| |...    [at l.1098]
 //│ │ │ │ │ │ > │ flags => None None None
 //│ │ │ │ │ │ > │ e => Right(Fld(FldFlags(false,false,false),Int))
@@ -312,7 +474,7 @@ let y: C1 = x
 //│ │ │ │ │ │ > │ │ │ │ = Right(Int)
 //│ │ │ │ │ │ > │ │ │ = Right(Int)
 //│ │ │ │ │ │ > │ │ │ ? argsOrIf		inspects |,| |Int|?|    [at l.1093]
-//│ │ │ │ │ │ > │ │ │ nexttoken => (COMMA,Loc(17,18,nu/OptionalArgs:+213))
+//│ │ │ │ │ │ > │ │ │ nexttoken => (COMMA,Loc(17,18,nu/OptionalArgs:+375))
 //│ │ │ │ │ │ > │ │ │ ? isOptinoal		inspects |,| |Int|?|    [at l.1098]
 //│ │ │ │ │ │ > │ │ │ flags => None None None
 //│ │ │ │ │ │ > │ │ │ e => Right(Fld(FldFlags(false,false,false),Int))
@@ -335,7 +497,7 @@ let y: C1 = x
 //│ │ │ │ │ │ > │ │ │ │ │ │ = Right(Int)
 //│ │ │ │ │ │ > │ │ │ │ │ = Right(Int)
 //│ │ │ │ │ │ > │ │ │ │ │ ? argsOrIf		inspects |?|    [at l.1093]
-//│ │ │ │ │ │ > │ │ │ │ │ nexttoken => (IDENT(?,true),Loc(22,22,nu/OptionalArgs:+213))
+//│ │ │ │ │ │ > │ │ │ │ │ nexttoken => (IDENT(?,true),Loc(22,22,nu/OptionalArgs:+375))
 //│ │ │ │ │ │ > │ │ │ │ │ ? isOptinoal		inspects |?|    [at l.1098]
 //│ │ │ │ │ │ > │ │ │ │ │ ! isOptinoal		consumes |?|    [at l.1100]
 //│ │ │ │ │ │ > │ │ │ │ │ flags => None None None
@@ -364,15 +526,99 @@ let y: C1 = x
 //│ ? parseAll		inspects ||    [at l.76]
 //│ Parsed: '(' 1, 2, ')' : (Int, Int, Int,);
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.213: 	[1, 2]: [Int, Int, Int?]
+//│ ║  l.375: 	[1, 2]: [Int, Int, Int?]
 //│ ║         	^^^^^^
 //│ ╟── tuple literal of type `(1, 2,)` does not match type `(Int, Int, Int,)`
-//│ ║  l.213: 	[1, 2]: [Int, Int, Int?]
+//│ ║  l.375: 	[1, 2]: [Int, Int, Int?]
 //│ ║         	 ^^^^
 //│ ╟── Note: constraint arises from tuple type:
-//│ ║  l.213: 	[1, 2]: [Int, Int, Int?]
+//│ ║  l.375: 	[1, 2]: [Int, Int, Int?]
 //│ ╙──       	        ^^^^^^^^^^^^^^^^
 //│ (Int, Int, Int,)
 //│ res
 //│     = [ 1, 2 ]
+
+
+// * Harder case:
+
+:d
+fun foo(xs: [Int] & 'a) = xs : [Int, Int?]
+//│ 0. Typing TypingUnit(List(fun foo = (xs: & (Int,) ('a,),) => xs : (Int, Int,)))
+//│ | 0. Created lazy type info for fun foo = (xs: & (Int,) ('a,),) => xs : (Int, Int,)
+//│ | Completing fun foo = (xs: & (Int,) ('a,),) => xs : (Int, Int,)
+//│ | | UNSTASHING... (out)
+//│ | | Type params 
+//│ | | UNSTASHING... (out)
+//│ | | Params 
+//│ | | 1. Typing term (xs: & (Int,) ('a,),) => xs : (Int, Int,)
+//│ | | | 1. Typing pattern xs: & (Int,) ('a,),
+//│ | | | | HERE, good!
+//│ | | | | 1. Typing pattern xs : Int & 'a
+//│ | | | | | Typing type Inter(TypeName(Int),'a)
+//│ | | | | | | vars=Map() newDefsInfo=Map()
+//│ | | | | | | 1. type Inter(TypeName(Int),'a)
+//│ | | | | | | | 1. type TypeName(Int)
+//│ | | | | | | | | typename case??
+//│ | | | | | | | => Int
+//│ | | | | | | | 1. type 'a
+//│ | | | | | | | => 'a75'
+//│ | | | | | | => (Int & 'a75')
+//│ | | | | | => (Int & 'a75') ——— 'a75'
+//│ | | | | 1. : (Int & 'a75')
+//│ | | | | opt is => false
+//│ | | | | case #2
+//│ | | | 1. : (xs: (Int & 'a75'),)
+//│ | | | 1. Typing term xs : (Int, Int,)
+//│ | | | | typing-trm-here!!! xs
+//│ | | | | 1. Typing term xs
+//│ | | | | 1. : (Int & 'a75')
+//│ | | | | typing-ty-here!!! Tuple(List((None,Field(None,TypeName(Int),false)), (None,Field(None,TypeName(Int),true))))
+//│ | | | | Typing type Tuple(List((None,Field(None,TypeName(Int),false)), (None,Field(None,TypeName(Int),true))))
+//│ | | | | | vars=Map() newDefsInfo=Map()
+//│ | | | | | 1. type Tuple(List((None,Field(None,TypeName(Int),false)), (None,Field(None,TypeName(Int),true))))
+//│ | | | | | | typing tuple!!!
+//│ | | | | | | 1. type TypeName(Int)
+//│ | | | | | | | typename case??
+//│ | | | | | | => Int
+//│ | | | | | | 1. type TypeName(Int)
+//│ | | | | | | | typename case??
+//│ | | | | | | => Int
+//│ | | | | | => (Int, Int?,)
+//│ | | | | => (Int, Int?,) ——— 
+//│ | | | | constraining!!!
+//│ | | | | CONSTRAIN (Int & 'a75') <! (Int, Int?,)
+//│ | | | |   where 
+//│ | | | | 1. C (Int & 'a75') <! (Int, Int?,)    (0)
+//│ | | | | | 1. ARGH  DNF(1, #Int<Object,Num>{}∧'a75')  <!  DNF(0, (#Int<Object,Num>, #Int<Object,Num>,){_2: #Int<Object,Num>, _1: #Int<Object,Num>})
+//│ | | | | | | DNF DISCHARGE CONSTRAINTS
+//│ | | | | | | 1. C 'a75' <! (((#Int<Object,Num>, #Int<Object,Num>,) & {_2: #Int<Object,Num>, _1: #Int<Object,Num>}) | ~(#Int<Object,Num>))    (3)
+//│ | | | | | | | NEW 'a75' UB (0)
+//│ | | | 1. : (Int, Int?,)
+//│ | | 1. : ((xs: (Int & 'a75'),) -> (Int, Int?,))
+//│ | | UNSTASHING... (out)
+//│ | | CONSTRAIN ((xs: (Int & 'a75'),) -> (Int, Int?,)) <! foo76'
+//│ | |   where 
+//│ 		'a75' <: (((#Int<Object,Num>, #Int<Object,Num>,) & {_2: #Int<Object,Num>, _1: #Int<Object,Num>}) | ~(#Int<Object,Num>))
+//│ | | 1. C ((xs: (Int & 'a75'),) -> (Int, Int?,)) <! foo76'    (0)
+//│ | | | NEW foo76' LB (1)
+//│ | | UNSTASHING... (out)
+//│ | Completed TypedNuFun(0,fun foo = (xs: & (Int,) ('a,),) => xs : (Int, Int,),((xs: (Int & 'a75'),) -> (Int, Int?,))) where 
+//│ 		'a75' <: (((#Int<Object,Num>, #Int<Object,Num>,) & {_2: #Int<Object,Num>, _1: #Int<Object,Num>}) | ~(#Int<Object,Num>))
+//│ | Typing unit statements
+//│ | : None
+//│ ======== TYPED ========
+//│ fun foo: ‹∀ 0. ((xs: (Int & 'a75'),) -> (Int, Int?,))› where 
+//│ |		'a75' <: (((#Int<Object,Num>, #Int<Object,Num>,) & {_2: #Int<Object,Num>, _1: #Int<Object,Num>}) | ~(#Int<Object,Num>))
+//│ fun foo: (xs: nothing,) -> (Int, Int,)
+
+
+
+// TODO later: update normal form construction
+
+fun foo: [Int] | [Int, Int?]
+//│ fun foo: Array[Int] & {_1: Int}
+
+fun foo: [Int] & [Int, Int?]
+//│ fun foo: nothing
+
 
