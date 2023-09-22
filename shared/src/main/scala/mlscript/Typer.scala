@@ -1033,8 +1033,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
                   case tvv: TypeVariable =>
                     getLowerboundFuns(tvv) 
                   case _ =>
-                    err("match error", f.toLoc)
-                    Nil
+                    die
                 }).flatten
               res
             }
@@ -1051,25 +1050,15 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
             fun_ty
           case FunctionType(_, _) =>
             f_ty
-          case _ =>
-            err("match error", f.toLoc)
-            f_ty
+          case _ => die
         }
-        // check if all
         val hasUntypedArg = fun_ty.unwrapProxies match {
           case FunctionType(TupleType(fields), _) =>
-            fields.exists(x => x._1 match {
-              case Some(arg) =>
-                false
-              case N =>
-                true
-            })
-          case _ => 
-            err("match error", f.toLoc)
-            true
+            fields.exists(_._1.isEmpty)
+          case _ => die
         }
         if (hasUntypedArg) {
-          err("Cannot use named args if there is untyped argument", a.toLoc)
+          err("Cannot use named arguments as the function type has untyped arguments", a.toLoc)
         } else {
           val argsList = fun_ty.unwrapProxies match {
             case FunctionType(TupleType(fields), _) =>
@@ -1077,11 +1066,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
                 case Some(arg) =>
                   arg
                 case N =>
-                  Var("error")
+                  Var("error") // dummy term for using "error" builtin
               })
-            case _ => 
-              err("match error", f.toLoc)
-              Nil
+            case _ => die
           }
           desugarNamedArgs(term, f, a, argsList)
         }
@@ -1646,13 +1633,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         case Nil =>
           val y: Term = Tup(argsList.map(x => 
             acc.get(x.name) match {
-              case Some(v) =>
-                v match {
-                  case Left(v) =>
-                    (None, Fld(FldFlags.empty, v))
-                  case Right(t) => 
-                    (None, Fld(FldFlags.empty, t))
-                }
+              case Some(Left(v)) => (None, Fld(FldFlags.empty, v))
+              case Some(Right(t)) => (None, Fld(FldFlags.empty, t))
               case None =>
                 err(s"Argument named ${x} is missing from this function call", a.toLoc)
                 (None, Fld(FldFlags.empty, Var("error")))
@@ -1671,29 +1653,28 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
     } else 
       a.fields.sizeCompare(argsList) match {
         case 0 =>
-          val as = a.fields.zipWithIndex.map{ case(x, idx) =>
-          x._1 match {
-            case Some(value) => 
-              ((value.name, x._2), true)
-            case N =>
-              ((argsList(idx).name, x._2), false)
-          }}
+          val as = a.fields.zipWithIndex.map{
+            case(x, idx) =>
+              x._1 match {
+                case Some(value) => 
+                  ((value.name, x._2), true)
+                case N =>
+                  ((argsList(idx).name, x._2), false)
+              }}
           val asGroupedByVarName = as.groupBy(x => x._1._1)
           if (asGroupedByVarName.sizeCompare(argsList) < 0) {
-            asGroupedByVarName.foreach(
-              x =>
-                x._2 match {
-                  case x1 :: y1 :: xs => err(s"Argument for parameter ${x._1} is duplicated", a.toLoc) 
-                  case _ =>     
-                }
-            )
+            asGroupedByVarName.foreach(x =>
+              x._2 match {
+                case x1 :: y1 :: xs => err(s"Argument for parameter ${x._1} is duplicated", a.toLoc) 
+                case _ =>
+              })
           }
           val desugared = rec(as, Map())
           println("Desugared is here => " + desugared)
           term.desugaredTerm = S(desugared)
           typeTerm(desugared)(ctx = ctx, raise = raise, vars = vars, genLambdas = false)
         case _ =>
-          err("Number of arguments dosen't match with the function signature", a.toLoc) 
+          err("Number of arguments dosen't match with the function signature", a.toLoc)
       }
   }
   
