@@ -14,8 +14,8 @@ a + b
 :p
 a +
   b
-//│ Parsed: + a {b};
-//│ Desugared: + a {b}
+//│ Parsed: +(...a)(...{b});
+//│ Desugared: +(...a)(...{b})
 //│ AST: App(App(Var(+), Var(a)), Blk(...))
 //│ res: int
 
@@ -29,8 +29,8 @@ a +
 succ a +
   b +
     c
-//│ Parsed: + (succ a) {+ b {c}};
-//│ Desugared: + (succ a) {+ b {c}}
+//│ Parsed: +(...(succ(...a)))(...{+(...b)(...{c})});
+//│ Desugared: +(...(succ(...a)))(...{+(...b)(...{c})})
 //│ AST: App(App(Var(+), App(Var(succ), Var(a))), Blk(...))
 //│ res: int
 
@@ -38,8 +38,8 @@ succ a +
 succ / a +
   b +
     c
-//│ Parsed: succ (+ a {+ b {c}});
-//│ Desugared: succ (+ a {+ b {c}})
+//│ Parsed: succ(...(+(...a)(...{+(...b)(...{c})})));
+//│ Desugared: succ(...(+(...a)(...{+(...b)(...{c})})))
 //│ AST: App(Var(succ), App(App(Var(+), Var(a)), Blk(...)))
 //│ res: int
 
@@ -53,12 +53,12 @@ a
   + b
   + c
   + d
-//│ Parsed: + a b; + (+ a b) c; + (+ (+ a b) c) d;
-//│ Desugared: + a b
+//│ Parsed: +(...a)(...b); +(...(+(...a)(...b)))(...c); +(...(+(...(+(...a)(...b)))(...c)))(...d);
+//│ Desugared: +(...a)(...b)
 //│ AST: App(App(Var(+), Var(a)), Var(b))
-//│ Desugared: + (+ a b) c
+//│ Desugared: +(...(+(...a)(...b)))(...c)
 //│ AST: App(App(Var(+), App(App(Var(+), Var(a)), Var(b))), Var(c))
-//│ Desugared: + (+ (+ a b) c) d
+//│ Desugared: +(...(+(...(+(...a)(...b)))(...c)))(...d)
 //│ AST: App(App(Var(+), App(App(Var(+), App(App(Var(+), Var(a)), Var(b))), Var(c))), Var(d))
 //│ res: int
 //│ res: int
@@ -72,8 +72,8 @@ a
     + 2
       + 3
   + d
-//│ Parsed: + (+ (+ a b) (+ (+ c 1) (+ 2 3))) d;
-//│ Desugared: + (+ (+ a b) (+ (+ c 1) (+ 2 3))) d
+//│ Parsed: +(...(+(...(+(...a)(...b)))(...(+(...(+(...c)(...1)))(...(+(...2)(...3)))))))(...d);
+//│ Desugared: +(...(+(...(+(...a)(...b)))(...(+(...(+(...c)(...1)))(...(+(...2)(...3)))))))(...d)
 //│ AST: App(App(Var(+), App(App(Var(+), App(App(Var(+), Var(a)), Var(b))), App(App(Var(+), App(App(Var(+), Var(c)), IntLit(1))), App(App(Var(+), IntLit(2)), IntLit(3))))), Var(d))
 //│ res: int
 
@@ -110,8 +110,8 @@ succ / succ 1
 succ
     a + b
   + c
-//│ Parsed: + (succ {+ a b}) c;
-//│ Desugared: + (succ {+ a b}) c
+//│ Parsed: +(...(succ(...{+(...a)(...b)})))(...c);
+//│ Desugared: +(...(succ(...{+(...a)(...b)})))(...c)
 //│ AST: App(App(Var(+), App(Var(succ), Blk(...))), Var(c))
 //│ res: int
 

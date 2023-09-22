@@ -1,7 +1,7 @@
 package mlscript.compiler
 
 import mlscript.{App, Asc, Assign, Bind, Blk, Bra, CaseOf, Lam, Let, Lit,
-                 New, Rcd, Sel, Subs, Term, Test, Tup, With, Var, Fld, If}
+                 New, Rcd, Sel, Subs, Term, Test, Tup, With, Var, Fld, FldFlags, If, PolyType}
 import mlscript.{IfBody, IfThen, IfElse, IfLet, IfOpApp, IfOpsApp, IfBlock}
 import mlscript.UnitLit
 import mlscript.codegen.Helpers.inspect as showStructure
@@ -27,8 +27,8 @@ object Helpers:
   def toFuncParams(term: Term): Iterator[Parameter] = term match
     case Tup(fields) => fields.iterator.flatMap {
       // The new parser emits `Tup(_: UnitLit(true))` from `fun f() = x`.
-      case (_, Fld(_, _, UnitLit(true))) => None
-      case (_, Fld(_, spec, Var(name))) => Some((spec, Expr.Ref(name)))
+      case (_, Fld(FldFlags(_, _, _), UnitLit(true))) => None
+      case (_, Fld(FldFlags(_, spec, _), Var(name))) => Some((spec, Expr.Ref(name)))
       case _ => throw new MonomorphError(
         s"only `Var` can be parameters but we meet ${showStructure(term)}"
       )
@@ -38,7 +38,7 @@ object Helpers:
   def toFuncArgs(term: Term): IterableOnce[Term] = term match
     // The new parser generates `(undefined, )` when no arguments.
     // Let's do this temporary fix.
-    case Tup((_, Fld(_, _, UnitLit(true))) :: Nil) => Iterable.empty
+    case Tup((_, Fld(FldFlags(_, _, _), UnitLit(true))) :: Nil) => Iterable.empty
     case Tup(fields) => fields.iterator.map(_._2.value)
     case _ => Some(term)
 
@@ -59,11 +59,11 @@ object Helpers:
           Expr.Apply(callee, arguments)
         case Tup(fields) =>
           Expr.Tuple(fields.map {
-            case (_, Fld(mut, spec, value)) => term2Expr(value)
+            case (_, Fld(FldFlags(mut, spec, genGetter), value)) => term2Expr(value)
           })
         case Rcd(fields) =>
           Expr.Record(fields.map {
-            case (name, Fld(mut, spec, value)) => (Expr.Ref(name.name), term2Expr(value))
+            case (name, Fld(FldFlags(mut, spec, genGetter), value)) => (Expr.Ref(name.name), term2Expr(value))
           })
         case Sel(receiver, fieldName) =>
           Expr.Select(term2Expr(receiver), Expr.Ref(fieldName.name))
@@ -75,12 +75,12 @@ object Helpers:
           case term: Term => Some(term2Expr(term))
           case tyDef: NuTypeDef => ???
           case funDef: NuFunDef => 
-            val NuFunDef(_, nme, targs, rhs) = funDef
+            val NuFunDef(_, nme, sn, targs, rhs) = funDef
             val ret: Item.FuncDecl | Item.FuncDefn = rhs match
               case Left(Lam(params, body)) =>
                 Item.FuncDecl(Expr.Ref(nme.name), toFuncParams(params).toList, term2Expr(body))
               case Left(body: Term) => Item.FuncDecl(Expr.Ref(nme.name), Nil, term2Expr(body))
-              case Right(polyType) => Item.FuncDefn(Expr.Ref(nme.name), targs, polyType)
+              case Right(tp) => Item.FuncDefn(Expr.Ref(nme.name), targs, PolyType(Nil, tp)) //TODO: Check correctness in Type -> Polytype conversion
             Some(ret)
           case mlscript.DataDefn(_) => throw MonomorphError("unsupported DataDefn")
           case mlscript.DatatypeDefn(_, _) => throw MonomorphError("unsupported DatatypeDefn")
@@ -94,7 +94,7 @@ object Helpers:
         case _: Test => throw MonomorphError("cannot monomorphize `Test`")
         case With(term, Rcd(fields)) =>
           Expr.With(term2Expr(term), Expr.Record(fields.map {
-            case (name, Fld(mut, spec, value)) => (Expr.Ref(name.name), term2Expr(term))
+            case (name, Fld(FldFlags(mut, spec, getGetter), value)) => (Expr.Ref(name.name), term2Expr(term))
           }))
         case CaseOf(term, cases) => 
           def rec(bra: CaseBranches)(using buffer: ArrayBuffer[CaseBranch]): Unit = bra match
@@ -148,15 +148,15 @@ object Helpers:
     }
   
   def func2Item(funDef: NuFunDef): Item.FuncDecl | Item.FuncDefn =
-      val NuFunDef(_, nme, targs, rhs) = funDef
+      val NuFunDef(_, nme, sn, targs, rhs) = funDef
       rhs match
         case Left(Lam(params, body)) =>
           Item.FuncDecl(Expr.Ref(nme.name), toFuncParams(params).toList, term2Expr(body))
         case Left(body: Term) => Item.FuncDecl(Expr.Ref(nme.name), Nil, term2Expr(body))
-        case Right(polyType) => Item.FuncDefn(Expr.Ref(nme.name), targs, polyType)
+        case Right(tp) => Item.FuncDefn(Expr.Ref(nme.name), targs, PolyType(Nil, tp)) //TODO: Check correctness in Type -> Polytype conversion
   
   def type2Item(tyDef: NuTypeDef): Item.TypeDecl =
-    val NuTypeDef(kind, className, tparams, params, parents, body) = tyDef
+    val NuTypeDef(kind, className, tparams, params, _, _, parents, _, _, body) = tyDef
     val isolation = Isolation(body.entities.flatMap {
       // Question: Will there be pure terms in class body?
       case term: Term =>
@@ -168,8 +168,8 @@ object Helpers:
     val typeDecl: Item.TypeDecl = Item.TypeDecl(
       Expr.Ref(className.name), // name
       kind, // kind
-      tparams, // typeParams
-      toFuncParams(params).toList, // params
+      tparams.map(_._2), // typeParams
+      toFuncParams(params.getOrElse(Tup(Nil))).toList, // params
       parents.map {
         case Var(name) => (TypeName(name), Nil)
         case App(Var(name), args) => (TypeName(name), term2Expr(args) match{

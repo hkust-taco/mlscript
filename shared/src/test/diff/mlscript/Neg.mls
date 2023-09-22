@@ -149,3 +149,16 @@ def f: (~{x: 1 | 2} & ~lit & 'a | ~{x: 2 | 3} & ~lit & 'a) -> 'a
 //│ f: in forall 'a. nothing -> 'a out forall 'a. ('a & ~{x: 2} & ~#Lit) -> 'a
 //│  = <missing implementation>
 
+
+def f: string & 'a & ~int & ~string | string & ~int
+//│ f: string
+//│  = <missing implementation>
+
+
+trait T
+//│ Defined trait T
+
+def a: T & 1 | T & 1 & ~'a | 'a
+//│ a: T & 1
+//│  = <missing implementation>
+

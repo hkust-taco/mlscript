@@ -40,11 +40,13 @@ test(f)
 //│ res: 1
 //│    = 1
 
-class Point(x, y)
-//│ Defined class Point
-//│ Point: ('x, 'y,) -> (Point & {x: 'x, y: 'y})
-//│      = [Function: Point1]
+class PoInt(x, y)
+//│ Defined class PoInt
+//│ PoInt: ('x, 'y,) -> (PoInt & {x: 'x, y: 'y})
+//│      = [Function: PoInt1]
 
-let origin = new Point(0, 0)
-//│ origin: Point & {x: 0, y: 0}
-//│       = Point { x: 0, y: 0 }
+let origin = new PoInt(0, 0)
+//│ origin: PoInt & {x: 0, y: 0}
+//│       = PoInt { x: 0, y: 0 }
+
+

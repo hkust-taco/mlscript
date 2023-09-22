@@ -44,7 +44,7 @@ final class TsTypegenCodeBuilder {
   object TypegenContext {
 
     def apply(mlType: Type): TypegenContext = {
-      val existingTypeVars = ShowCtx.mk(mlType :: Nil, "").vs
+      val existingTypeVars = ShowCtx.mk(mlType :: Nil, false, "").vs
       val typegenTypeScope = typeScope.derive("localTypeScope")
       val typegenTermScope = termScope.derive("localTermScope")
       val typeVarMapping = existingTypeVars.to(MutSortedMap)
@@ -81,6 +81,7 @@ final class TsTypegenCodeBuilder {
       case (classInfo: ClassSymbol) => addTypeGenClassDef(classInfo, methods)
       case (aliasInfo: TypeAliasSymbol) => addTypeGenTypeAlias(aliasInfo)
       case (traitInfo: TraitSymbol) => addTypegenTraitDef(traitInfo, methods)
+      case _ => ??? // TODO
     }
   }
 
@@ -404,11 +405,11 @@ final class TsTypegenCodeBuilder {
         )
       case Record(fields) =>
         // ts can only handle fields that have only out type or the same in out types
-        if (fields.iterator
-          .map(field => field._2.in.map(in => in === field._2.out).getOrElse(true))
-          .exists(!_))
-            throw CodeGenError("Cannot convert mutable record field with different in out types to typescript")
-
+        fields.iterator.foreach { field =>
+          if (field._2.in.exists(in => in =/= field._2.out)) throw CodeGenError(
+            s"Cannot convert mutable record field with different in out types to typescript (${
+              field})")
+        }
         SourceCode.recordWithEntries(
           fields.map(entry => 
             if (entry._2.in.isDefined)
@@ -418,11 +419,11 @@ final class TsTypegenCodeBuilder {
         ))
       case Tuple(fields) =>
         // ts can only handle fields that have only out type or the same in out types
-        if (fields.iterator
-          .map(field => field._2.in.map(in => in === field._2.out).getOrElse(true))
-          .exists(!_))
-            throw CodeGenError("Cannot convert mutable tuple field with different in out types to typescript")
-
+        fields.iterator.foreach { field =>
+          if (field._2.in.exists(in => in =/= field._2.out)) throw CodeGenError(
+            s"Cannot convert mutable tuple field with different in out types to typescript (${
+              field})")
+        }
         // tuple that is a function argument becomes
         // multi-parameter argument list
         // ! Note: No equivalent to readonly fields for tuples
@@ -573,7 +574,7 @@ final class TsTypegenCodeBuilder {
         }.getOrElse(SourceCode(tvarName))
       case Constrained(base, tvbs, where) =>
         throw CodeGenError(s"Cannot generate type for `where` clause $tvbs $where")
-      case _: Splice | _: TypeTag | _: PolyType =>
+      case _: Splice | _: TypeTag | _: PolyType | _: Selection =>
         throw CodeGenError(s"Cannot yet generate type for: $mlType")
     }
   }

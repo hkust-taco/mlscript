@@ -36,7 +36,7 @@ D
 error: A & B
 //│ res: A & B
 //│ Runtime error:
-//│   Error: unexpected runtime error
+//│   Error: an error was thrown
 
 :e
 dv = D{}

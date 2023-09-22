@@ -21,7 +21,7 @@ Test1 { x = "oops" }
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.2: 	class Test1: { x: int }
 //│ ╙──     	                  ^^^
-//│ res: error | (Test1 with {x: "oops"})
+//│ res: (Test1 with {x: "oops"}) | error
 //│    = Test1 { x: 'oops' }
 
 def Test1 = fun x -> Test1 { x = x }
@@ -137,7 +137,7 @@ type Lol = { x: 'a -> 'a }
 error: Lol -> Lol
 //│ res: Lol -> Lol
 //│ Runtime error:
-//│   Error: unexpected runtime error
+//│   Error: an error was thrown
 
 { x = id } : Lol
 //│ res: Lol
@@ -186,7 +186,7 @@ id: Runaway2
 error: Runaway2
 //│ res: Runaway2
 //│ Runtime error:
-//│   Error: unexpected runtime error
+//│   Error: an error was thrown
 
 :e
 :re
@@ -202,13 +202,13 @@ error: {x: int} -> nothing : Runaway2
 //│ ╙──       	           ^^^
 //│ res: Runaway2
 //│ Runtime error:
-//│   Error: unexpected runtime error
+//│   Error: an error was thrown
 
 :re
 error: {x: 'x -> 'x} -> nothing : Runaway2
 //│ res: Runaway2
 //│ Runtime error:
-//│   Error: unexpected runtime error
+//│   Error: an error was thrown
 
 
 

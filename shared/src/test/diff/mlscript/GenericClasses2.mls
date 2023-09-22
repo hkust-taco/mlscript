@@ -95,7 +95,7 @@ error: {A: 1}
 //│ ╙──      	        ^
 //│ res: {A <: 1}
 //│ Runtime error:
-//│   Error: unexpected runtime error
+//│   Error: an error was thrown
 
 b = Bar2{x = 1}
 //│ b: Bar2 & {x: 1}

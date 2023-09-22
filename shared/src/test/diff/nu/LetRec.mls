@@ -1,38 +1,50 @@
-:NewParser
+:NewDefs
+
 
 :js
 fun f(x) = x > 0 && f(x - 1)
+//│ fun f: Int -> Bool
 //│ // Prelude
 //│ let res;
+//│ class TypingUnit {}
+//│ const typing_unit = new TypingUnit;
 //│ // Query 1
 //│ globalThis.f = function f(x) {
 //│   return x > 0 && f(x - 1);
 //│ };
 //│ // End of generated code
-//│ f: int -> bool
-//│  = [Function: f]
 
 f(12)
-//│ res: bool
-//│    = false
+//│ Bool
+//│ res
+//│     = false
 
 :js
 let rec f(x) = x > 0 && f(x - 1)
+//│ let rec f: Int -> Bool
+//│ // Prelude
+//│ class TypingUnit2 {}
+//│ const typing_unit2 = new TypingUnit2;
 //│ // Query 1
 //│ globalThis.f1 = function f1(x) {
 //│   return x > 0 && f1(x - 1);
 //│ };
 //│ // End of generated code
-//│ f: int -> bool
-//│  = [Function: f1]
+//│ f
+//│   = [Function: f1]
 
 f(12)
-//│ res: bool
-//│    = false
+//│ Bool
+//│ res
+//│     = false
 
 :js
 let rec f() =
   f()
+//│ let rec f: () -> nothing
+//│ // Prelude
+//│ class TypingUnit4 {}
+//│ const typing_unit4 = new TypingUnit4;
 //│ // Query 1
 //│ globalThis.f2 = function f2() {
 //│   return ((() => {
@@ -40,12 +52,13 @@ let rec f() =
 //│   })());
 //│ };
 //│ // End of generated code
-//│ f: () -> nothing
-//│  = [Function: f2]
+//│ f
+//│   = [Function: f2]
 
 :re
 f()
-//│ res: nothing
+//│ nothing
+//│ res
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded
 
@@ -54,30 +67,72 @@ f()
 :js
 let rec f =
   f
-//│ f: nothing
+//│ let rec f: nothing
 //│ Code generation encountered an error:
 //│   unguarded recursive use of by-value binding f
 
 :re
 :js
 f
+//│ nothing
+//│ // Prelude
+//│ class TypingUnit7 {}
+//│ const typing_unit7 = new TypingUnit7;
 //│ // Query 1
 //│ res = f3;
 //│ // End of generated code
-//│ res: nothing
+//│ res
 //│ Runtime error:
 //│   ReferenceError: f3 is not defined
 
 :p
 let rec f = 1
 //│ |#let| |#rec| |f| |#=| |1|
+//│ AST: TypingUnit(NuFunDef(Some(true), f, None, [], IntLit(1)))
 //│ Parsed: let rec f = 1;
-//│ Desugared: rec def f: 1
-//│ AST: Def(true, f, IntLit(1), false)
-//│ f: 1
-//│  = 1
+//│ let rec f: 1
+//│ f
+//│   = 1
 
 let rec f =
   1
-//│ f: 1
-//│  = 1
+//│ let rec f: 1
+//│ f
+//│   = 1
+
+
+// :e // FIXME
+:ge
+let foo = foo
+//│ let foo: nothing
+//│ Code generation encountered an error:
+//│   unresolved symbol foo
+
+
+// FIXME should work
+// No recursion:
+let foo = 1
+let foo = foo + 1
+//│ let foo: 1
+//│ let foo: Int
+//│ foo
+//│     = 1
+//│ foo
+//│     = 2
+
+
+// FIXME
+let foo = foo.x
+//│ let foo: nothing
+//│ foo
+//│     = undefined
+
+// :e // FIXME
+:re
+foo()()
+//│ nothing
+//│ res
+//│ Runtime error:
+//│   TypeError: foo2 is not a function
+
+

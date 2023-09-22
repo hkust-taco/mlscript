@@ -353,7 +353,7 @@ succ = s
 //│     = [Function: s]
 
 succ = s_A1
-//│ ChurchInt -> (forall 'a 'N 'N0. ('N -> ('N & 'N0) & 'N0 -> 'a) -> ('N & 'N0) -> 'a)
+//│ ChurchInt -> (forall 'N 'a 'N0. ('N0 -> ('N0 & 'N) & 'N -> 'a) -> ('N0 & 'N) -> 'a)
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│     = [Function: s_A1]
@@ -393,9 +393,9 @@ s: ChurchInt -> ChurchInt
 //│ ╙──       	^
 //│ res: ChurchInt -> ChurchInt
 //│    = [Function: s]
-//│ constrain calls  : 110
+//│ constrain calls  : 109
 //│ annoying  calls  : 0
-//│ subtyping calls  : 383
+//│ subtyping calls  : 382
 
 
 
@@ -535,16 +535,16 @@ sz = s zero
 
 :ns
 sz
-//│ res: forall 'a 'b 'N 'c 'd. 'b
+//│ res: forall 'a 'b 'c 'N 'd. 'b
 //│   where
 //│     'b :> forall 'e 'f 'g. 'e -> (forall 'h 'i. 'h -> 'i)
 //│     'i :> 'g
-//│     'h <: 'c
-//│     'c <: 'N
+//│     'h <: 'a
+//│     'a <: 'N
 //│     'e <: 'f -> 'g & 'd
 //│     'd <: 'N -> 'N
-//│     'N <: 'a
-//│     'f :> 'a
+//│     'N <: 'c
+//│     'f :> 'c
 //│    = [Function (anonymous)]
 
 sz: ChurchInt
@@ -589,7 +589,7 @@ sz1 = sz 1
 //│ ╟── from reference:
 //│ ║  l.314: 	def s n f x = f (n f x)
 //│ ╙──       	              ^
-//│ sz1: anything -> nothing | error
+//│ sz1: error | anything -> nothing
 //│    = [Function (anonymous)]
 
 :re

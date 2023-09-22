@@ -4,7 +4,7 @@
 class Ls[A]
   method HeadTail: (A, Ls[A]) | undefined
 //│ Defined class Ls[+A]
-//│ Declared Ls.HeadTail: Ls['A] -> (('A, Ls['A],) | undefined)
+//│ Declared Ls.HeadTail: Ls['A] -> (undefined | ('A, Ls['A],))
 
 // * Note that a more structural type such as this will raise cycle errors due to `:NoRecursiveTypes`
 // class Ls[A]: { head: A | undefined; tail: Ls[A] | undefined }
@@ -132,7 +132,7 @@ def build0 (g: forall 'b. ('a -> 'b -> 'b) -> 'b) = g (fun x -> fun xs -> cons (
 build0 (fun k -> k 1 error)
 //│ res: Ls[1]
 //│ Runtime error:
-//│   Error: unexpected runtime error
+//│   Error: an error was thrown
 
 
 
@@ -192,7 +192,7 @@ build: (('a -> Ls['a] -> Ls['a]) -> Ls['a] -> Ls['a]) -> Ls['a]
 //│ ╟── Note: constraint arises from type variable:
 //│ ║  l.142: 	def build = fun (g: forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> g (fun x -> fun xs -> cons (x, xs)) nil
 //│ ╙──       	                                      ^^
-//│ res: (('a -> Ls['a] -> Ls['a | error]) -> Ls['a | error] -> Ls['a]) -> Ls['a | error]
+//│ res: (('a -> Ls['a] -> Ls['a]) -> Ls['a] -> Ls['a]) -> Ls['a]
 //│    = [Function: build]
 
 

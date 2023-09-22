@@ -70,3 +70,12 @@ foo = Foo
 //│    = [Function: foo1]
 
 
+
+:e
+1 : #Eql
+//│ ╔══[ERROR] type identifier not found: eql
+//│ ╙──
+//│ res: error
+//│    = 1
+
+

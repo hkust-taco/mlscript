@@ -1,0 +1,137 @@
+:NewDefs
+
+
+class Foo(x: Int)
+//│ class Foo(x: Int)
+
+let f = Foo(1)
+//│ let f: Foo
+//│ f
+//│   = Foo {}
+
+let f = new Foo(1)
+//│ let f: Foo
+//│ f
+//│   = Foo {}
+
+if f is Foo then 1 else 0
+//│ 0 | 1
+//│ res
+//│     = 1
+
+if f is Foo(a) then a else 0
+//│ Int
+//│ res
+//│     = 1
+
+
+class PoInt[A](x: A, y: A)
+//│ class PoInt[A](x: A, y: A)
+
+let origin = new PoInt(0, 0)
+//│ let origin: PoInt[0]
+//│ origin
+//│        = PoInt {}
+
+// TODO
+let origin = PoInt[Int](0, 0)
+//│ ╔══[ERROR] Type application syntax is not yet supported
+//│ ║  l.37: 	let origin = PoInt[Int](0, 0)
+//│ ╙──      	             ^^^^^^^^^^
+//│ let origin: PoInt[0]
+//│ origin
+//│        = PoInt {}
+
+// TODO
+let origin = new PoInt[Int](0, 0)
+//│ ╔══[PARSE ERROR] Unexpected application after `new` keyword
+//│ ║  l.46: 	let origin = new PoInt[Int](0, 0)
+//│ ╙──      	                 ^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Currently unsupported `new` syntax
+//│ ║  l.46: 	let origin = new PoInt[Int](0, 0)
+//│ ╙──      	             ^^^
+//│ let origin: error
+//│ origin
+//│        = {}
+
+
+// TODO
+new {}
+//│ ╔══[PARSE ERROR] Unexpected record after `new` keyword
+//│ ║  l.59: 	new {}
+//│ ╙──      	    ^^
+//│ ╔══[ERROR] Currently unsupported `new` syntax
+//│ ║  l.59: 	new {}
+//│ ╙──      	^^^
+//│ error
+//│ res
+//│     = {}
+
+// TODO
+new
+//│ ╔══[PARSE ERROR] Unexpected end of input; an expression was expected here
+//│ ║  l.71: 	new
+//│ ╙──      	   ^
+//│ ╔══[ERROR] Currently unsupported `new` syntax
+//│ ║  l.71: 	new
+//│ ╙──      	^^^
+//│ error
+//│ res
+//│     = {}
+
+// TODO
+new
+  x: 0
+//│ ╔══[PARSE ERROR] Unexpected type ascription after `new` keyword
+//│ ║  l.84: 	  x: 0
+//│ ╙──      	  ^
+//│ ╔══[ERROR] Currently unsupported `new` syntax
+//│ ║  l.83: 	new
+//│ ╙──      	^^^
+//│ error
+//│ res
+//│     = {}
+
+
+
+
+fun f(x) = {x}
+//│ fun f: forall 'a. 'a -> {x: 'a}
+
+:e
+new f(1)
+//│ ╔══[ERROR] Value f cannot be used in `new` expression
+//│ ║  l.102: 	new f(1)
+//│ ╙──       	^^^^^^^^
+//│ error
+//│ res
+//│     = { x: 1 }
+
+
+module Oops
+//│ module Oops
+
+:e
+new Oops
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.115: 	new Oops
+//│ ║         	^^^^^^^^
+//│ ╙── applied expression of type `Oops` is not a function
+//│ error
+//│ res
+//│     = Oops {}
+
+
+:e
+new Oops2
+trait Oops2
+//│ ╔══[ERROR] Trait Oops2 cannot be used in term position
+//│ ║  l.126: 	new Oops2
+//│ ╙──       	^^^^^^^^^
+//│ trait Oops2
+//│ error
+//│ res
+//│ Runtime error:
+//│   TypeError: Cannot read properties of undefined (reading 'build')
+
+

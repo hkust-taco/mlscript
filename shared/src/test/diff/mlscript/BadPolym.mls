@@ -96,20 +96,20 @@ bar1 = bar1
 error: int -> int & string -> string : (int & string) -> (int | string)
 //│ res: nothing -> (int | string)
 //│ Runtime error:
-//│   Error: unexpected runtime error
+//│   Error: an error was thrown
 
 // :e // * Did not work before when added subtype checking to constraining...
 :re
 error: int -> int & string -> string : int -> int
 //│ res: int -> int
 //│ Runtime error:
-//│   Error: unexpected runtime error
+//│   Error: an error was thrown
 
 :re
 error: number -> int & string -> string : int -> number
 //│ res: int -> number
 //│ Runtime error:
-//│   Error: unexpected runtime error
+//│   Error: an error was thrown
 
 // * The tricky thing in these tests is that we currently lossily merge function types
 // * in constraint solving, so the best-effort subtyping check may actually accept things
@@ -123,7 +123,7 @@ type Als = number -> int
 error: Als & string -> string : int -> number
 //│ res: int -> number
 //│ Runtime error:
-//│   Error: unexpected runtime error
+//│   Error: an error was thrown
 
 type Id[A] = A
 //│ Defined type alias Id[+A]
@@ -132,6 +132,6 @@ type Id[A] = A
 error: Id[Id[Als] & bool -> bool] & string -> string : int -> number
 //│ res: int -> number
 //│ Runtime error:
-//│   Error: unexpected runtime error
+//│   Error: an error was thrown
 
 

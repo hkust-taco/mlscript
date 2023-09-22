@@ -16,7 +16,7 @@ if f of
 //│ ╟── Note: 'if' expression started here:
 //│ ║  l.4: 	if f of
 //│ ╙──     	^^
-//│ Parsed: {if (f (0,)) then undefined}
+//│ Parsed: {if (f(0,)) then undefined}
 
 if f (
   0 then "ok"
@@ -38,7 +38,7 @@ if f (
 //│ ╟── Note: 'if' expression started here:
 //│ ║  l.21: 	if f (
 //│ ╙──      	^^
-//│ Parsed: {if (f (0,)) then undefined}
+//│ Parsed: {if (f(0,)) then undefined}
 
 if f of
   0 then "ok"
@@ -56,7 +56,7 @@ if f of
 //│ ╟── Note: 'if' expression started here:
 //│ ║  l.43: 	if f of
 //│ ╙──      	^^
-//│ Parsed: {if (f (0,)) then undefined}
+//│ Parsed: {if (f(0,)) then undefined}
 
 if f of
   0 is 0 then "ok"
@@ -73,7 +73,7 @@ if f of
 //│ ╟── Note: 'if' expression started here:
 //│ ║  l.61: 	if f of
 //│ ╙──      	^^
-//│ Parsed: {if (f (is (0,) (0,),)) then undefined}
+//│ Parsed: {if (f(is(0,)(0,),)) then undefined}
 
 
 

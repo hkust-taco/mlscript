@@ -1,0 +1,164 @@
+:NewDefs
+
+type Option[out T] = None | Some[T]
+module None
+class Some[out T](val value: T)
+//│ type Option[T] = None | Some[T]
+//│ module None
+//│ class Some[T](value: T)
+
+type Either[A, B] = Left[A] | Right[B]
+class Left[A](val leftValue: A)
+class Right[B](val rightValue: B)
+//│ type Either[A, B] = Left[A] | Right[B]
+//│ class Left[A](leftValue: A)
+//│ class Right[B](rightValue: B)
+
+type List[out A] = Nil | Cons[A]
+module Nil
+class Cons[out A](head: A, tail: List[A])
+//│ type List[A] = Cons[A] | Nil
+//│ module Nil
+//│ class Cons[A](head: A, tail: List[A])
+
+fun h0(a) =
+  if
+    a is Some(Left(y)) then y
+    a is Some(Right(z)) then z
+    a is None then 0
+//│ fun h0: forall 'a. (None | Some[Left['a] | Right['a]]) -> (0 | 'a)
+
+// FIXME: Precise scrutinee identification (easy)
+// This seems fine. But the subtrees are not merged.
+fun h1(a) =
+  if
+    a is Some(x) and x is Left(y) then y
+    a is Some(y) and y is Right(z) then z
+    a is None then 0
+//│ fun h1: forall 'a. (None | Some[Right['a]]) -> (0 | 'a)
+
+// This is the desugared version of the test case above.
+fun h1'(a) =
+  if a is
+    Some then
+      let x = a.value
+      let y = a.value
+      if x is
+        Left then
+          let y = x.leftValue
+          y
+        _ then
+          if y is
+            Right then
+              let z = y.rightValue
+              z
+    None then 0
+//│ fun h1': forall 'leftValue. (None | Some[Right['leftValue]]) -> (0 | 'leftValue)
+
+// FIXME This seems fine but the desugared term does not merge the cases.
+// See the example below.
+fun h1''(a) =
+  if
+    a is Some(x) and x is Left(y) then y
+    a is Some(x) and x is Right(z) then z
+    a is None then 0
+//│ fun h1'': forall 'a. (None | Some[Left['a] | Right['a]]) -> (0 | 'a)
+
+// FIXME
+h1(Some(Left(0)))
+h1'(Some(Left(0)))
+h1''(Some(Left(0)))
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.68: 	h1(Some(Left(0)))
+//│ ║        	^^^^^^^^^^^^^^^^^
+//│ ╟── application of type `Left[?A]` is not an instance of type `Right`
+//│ ║  l.68: 	h1(Some(Left(0)))
+//│ ║        	        ^^^^^^^
+//│ ╟── Note: constraint arises from class pattern:
+//│ ║  l.36: 	    a is Some(y) and y is Right(z) then z
+//│ ║        	                          ^^^^^
+//│ ╟── from field selection:
+//│ ║  l.5: 	class Some[out T](val value: T)
+//│ ║       	                      ^^^^^
+//│ ╟── Note: type parameter T is defined at:
+//│ ║  l.5: 	class Some[out T](val value: T)
+//│ ╙──     	               ^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.69: 	h1'(Some(Left(0)))
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ╟── application of type `Left[?A]` is not an instance of type `Right`
+//│ ║  l.69: 	h1'(Some(Left(0)))
+//│ ║        	         ^^^^^^^
+//│ ╟── Note: constraint arises from class pattern:
+//│ ║  l.52: 	            Right then
+//│ ║        	            ^^^^^
+//│ ╟── from field selection:
+//│ ║  l.45: 	      let y = a.value
+//│ ║        	              ^^^^^^^
+//│ ╟── Note: type parameter T is defined at:
+//│ ║  l.5: 	class Some[out T](val value: T)
+//│ ╙──     	               ^
+//│ 0
+//│ res
+//│     = 0
+//│ res
+//│     = 0
+//│ res
+//│     = 0
+
+// FIXME: Precise scrutinee identification (hard)
+fun h2(a) =
+  if
+    a is Some(x) and x is x' and x' is Left(y) then y
+    a is Some(y) and
+      let y' = y
+      y' is Right(z) then z
+    a is None then 0
+//│ ╔══[ERROR] identifier not found: y
+//│ ║  l.114: 	      let y' = y
+//│ ╙──       	               ^
+//│ ╔══[ERROR] identifier not found: y
+//│ ║  l.114: 	      let y' = y
+//│ ╙──       	               ^
+//│ fun h2: forall 'a. (None | Some[Left['a] | Object & ~#Left]) -> (0 | error | 'a)
+//│ Code generation encountered an error:
+//│   unresolved symbol y
+
+// FIXME: Some results are wrong.
+fun h3(x, y, f, p) =
+  if x is
+    _ and f(x) is y and p(x) then y
+    None then y
+    _ then "anyway"
+h3("anything", "not me", _ => "should be me", _ => true)
+h3(None, "should be me", _ => "not me", _ => false)
+h3("anything", "anything", _ => "not me", _ => false)
+//│ fun h3: forall 'a 'b. (None | Object & 'a & ~#None, 'b, (None | 'a) -> anything, (None | 'a) -> Object) -> ("anyway" | 'b)
+//│ "anything" | "anyway"
+//│ res
+//│     = [Function: h3]
+//│ res
+//│     = 'not me'
+//│ res
+//│     = 'should be me'
+
+// FIXME: Some results are wrong.
+fun h4(x, y, p) =
+  if x is
+    y and p(x) then y
+    None then y
+    _ then "default"
+h4("should be me", "not me", _ => true) // WRONG!
+h4(None, "not me", _ => true) // WRONG!
+h4(None, "should be me", _ => false)
+h4("anything", "not me", _ => false)
+//│ fun h4: forall 'a 'b. (None | Object & 'a & ~#None, 'b, (None | 'a) -> Object) -> ("default" | 'b)
+//│ "default" | "not me"
+//│ res
+//│     = [Function: h4]
+//│ res
+//│     = 'not me'
+//│ res
+//│     = 'not me'
+//│ res
+//│     = 'should be me'

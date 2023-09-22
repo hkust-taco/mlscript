@@ -53,7 +53,7 @@ extrude(id)
 //│ ╟── • this reference:
 //│ ║  l.19: 	def extrude f = oops((f, 0))
 //│ ╙──      	                ^^^^
-//│ res: 'c -> 'c | error
+//│ res: error | 'c -> 'c
 //│    = [Function: id]
 //│ // Output
 //│ Hi!
@@ -177,7 +177,7 @@ f = extrude (fun x -> extrude (fun y -> x) x)
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.145: 	f = extrude (fun x -> extrude (fun y -> x) x)
 //│ ╙──       	                                        ^
-//│ f: 'c -> 'c | error
+//│ f: error | 'c -> 'c
 //│  = [Function (anonymous)]
 //│ // Output
 //│ Hi!
@@ -234,7 +234,7 @@ def foo(a, b) = (a, b) : forall 'c. ('c, 'c)
 foo(error, error)
 //│ res: (nothing, nothing,)
 //│ Runtime error:
-//│   Error: unexpected runtime error
+//│   Error: an error was thrown
 
 def foo(a, b) = (a, b) : forall 'c. ('c, 'c -> 'c)
 //│ foo: (??c, ??c0 -> ??c,) -> (forall 'c. ('c, 'c -> 'c,))
@@ -255,7 +255,7 @@ foo(id, id)
 //│ ╟── back into type variable `'c`
 //│ ║  l.243: 	def foo(a, b) = (a, b) : forall 'c. ('c -> 'c, 'c -> 'c)
 //│ ╙──       	                                           ^^
-//│ res: ('c -> 'c, 'c -> 'c,) | error
+//│ res: error | ('c -> 'c, 'c -> 'c,)
 //│    = [ [Function: id], [Function: id] ]
 
 
@@ -277,7 +277,7 @@ foo(id)
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.262: 	def foo(f) = (fun a -> f a) : forall 'c. 'c -> 'c
 //│ ╙──       	                       ^^^
-//│ res: 'c -> 'c | error
+//│ res: error | 'c -> 'c
 //│    = [Function (anonymous)]
 
 
@@ -296,7 +296,7 @@ foo(id, 0)
 //│ ╟── back into type variable `'c`
 //│ ║  l.284: 	def foo(a, b) = let tmp = (a, b) : forall 'c. ('c -> 'c, 0) in a
 //│ ╙──       	                                                     ^^
-//│ res: 'a -> 'a | error
+//│ res: error | 'a -> 'a
 //│    = [Function: id]
 
 :e
@@ -313,7 +313,7 @@ foo(fun x -> foo(fun y -> x, 0) x, 0)
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.303: 	foo(fun x -> foo(fun y -> x, 0) x, 0)
 //│ ╙──       	                          ^
-//│ res: (??c & 'a) -> 'a | error
+//│ res: error | (??c & 'a) -> 'a
 //│    = [Function (anonymous)]
 
 
@@ -343,7 +343,7 @@ foo((fun x -> foo((fun y -> x, 0)), 0))
 //│ ╟── type variable `'c` leaks out of its scope
 //│ ║  l.321: 	def foo((a, b) : forall 'c. ('c -> 'c, 0)) = ()
 //│ ╙──       	                             ^^
-//│ res: () | error
+//│ res: error | ()
 //│    = []
 
 

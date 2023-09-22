@@ -1,3 +1,4 @@
+
 :js
 trait X: { x: int }
 class Y: X
@@ -211,13 +212,13 @@ def checkP x = case x of
   { P -> true
   | _ -> false
   }
-//│ checkS: anything -> bool
+//│ checkS: anything -> Bool
 //│       = [Function: checkS]
-//│ checkR: anything -> bool
+//│ checkR: anything -> Bool
 //│       = [Function: checkR]
-//│ checkQ: anything -> bool
+//│ checkQ: anything -> Bool
 //│       = [Function: checkQ]
-//│ checkP: anything -> bool
+//│ checkP: anything -> Bool
 //│       = [Function: checkP]
 
 // Should pass all checks.
@@ -256,3 +257,4 @@ bar = Bar{}
 bar.Foo
 //│ res: 1
 //│    = 1
+

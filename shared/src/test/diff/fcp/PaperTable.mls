@@ -113,7 +113,7 @@ rec def length l =
 //│ List[?] -> int
 //│   <:  length:
 //│ List[?] -> int
-//│       = [Function: length]
+//│       = [Function: length1]
 
 def id: 'a -> 'a
 def id x = x
@@ -250,7 +250,7 @@ def fst: forall 'a 'b. Pair['a, 'b] -> 'a
 def fst((x, y)) = x
 //│ fst: Pair['a, ?] -> 'a
 //│    = <missing implementation>
-//│ ('a, anything,) -> 'a
+//│ (('a, anything,),) -> 'a
 //│   <:  fst:
 //│ Pair['a, ?] -> 'a
 //│    = [Function: fst]
@@ -666,7 +666,7 @@ id1 id1
 //│     'c := 'b -> 'c
 //│ ║  l.601: 	rec def id1 x = if true then x else id1 id1 x
 //│ ╙──       	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?b ?c ?d ?e ?id1. ?id1 <: (forall ?f ?g ?id10 ?h ?i ?j. ?id10) -> ?k` exceeded recursion depth limit (250)
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?id1. ?id1 <: (forall ?id10. ?id10) -> ?a` exceeded recursion depth limit (250)
 //│ ║  l.626: 	id1 id1
 //│ ║         	^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
@@ -688,7 +688,7 @@ auto auto
 //│ ╟── Note: quantified type variable 'a is defined at:
 //│ ║  l.163: 	def auto : (forall 'a. 'a -> 'a) -> (forall 'b. 'b -> 'b)
 //│ ╙──       	                   ^^
-//│ res: 'b -> 'b | error
+//│ res: error | 'b -> 'b
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded
 
@@ -1070,7 +1070,7 @@ id1 id1
 //│     'c := 'b -> 'c
 //│ ║  l.1005: 	rec def id1 x = if true then x else id1 id1 x
 //│ ╙──        	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?id1 ?b ?c ?d ?e. ?id1 <: (forall ?f ?g ?id10 ?h ?i ?j. ?id10) -> ?k` exceeded recursion depth limit (250)
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?id1. ?id1 <: (forall ?id10. ?id10) -> ?a` exceeded recursion depth limit (250)
 //│ ║  l.1030: 	id1 id1
 //│ ║          	^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
@@ -1092,7 +1092,7 @@ auto auto
 //│ ╟── Note: quantified type variable 'a is defined at:
 //│ ║  l.163: 	def auto : (forall 'a. 'a -> 'a) -> (forall 'b. 'b -> 'b)
 //│ ╙──       	                   ^^
-//│ res: 'b -> 'b | error
+//│ res: error | 'b -> 'b
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded
 
@@ -1473,7 +1473,7 @@ auto auto
 //│ ╟── Note: quantified type variable 'a is defined at:
 //│ ║  l.163: 	def auto : (forall 'a. 'a -> 'a) -> (forall 'b. 'b -> 'b)
 //│ ╙──       	                   ^^
-//│ res: 'b -> 'b | error
+//│ res: error | 'b -> 'b
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded
 
@@ -1826,7 +1826,7 @@ auto auto
 //│ ╟── Note: quantified type variable 'a is defined at:
 //│ ║  l.163: 	def auto : (forall 'a. 'a -> 'a) -> (forall 'b. 'b -> 'b)
 //│ ╙──       	                   ^^
-//│ res: 'b -> 'b | error
+//│ res: error | 'b -> 'b
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded
 

@@ -1,0 +1,57 @@
+:NewDefs
+
+
+// * Interfaces that are "callable" are important to support for TS/JS interop
+
+
+declare trait Foo: (x: Num) => Num {
+  val y: Str
+}
+//│ declare trait Foo: (x: Num) -> Num {
+//│   val y: Str
+//│ }
+
+(f: Foo) => [f.y, f(0)]
+//│ (f: Foo) -> [Str, Num]
+//│ res
+//│     = [Function: res]
+
+
+declare trait FooPoly: forall 'a; (x: 'a) => 'a
+//│ declare trait FooPoly: forall 'a. (x: 'a) -> 'a
+
+(f: FooPoly) => [f(0), f(true)]
+//│ (f: FooPoly) -> [0, true]
+//│ res
+//│     = [Function: res]
+
+
+// :e // TODO signatures are currently unchecked
+class Oops(y: Str) extends Foo
+//│ class Oops(y: Str) extends Foo
+
+// :e // TODO
+module Oops extends FooPoly
+//│ module Oops extends FooPoly
+
+:e
+Oops(123)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.38: 	Oops(123)
+//│ ║        	^^^^^^^^^
+//│ ╟── reference of type `Oops` is not a function
+//│ ║  l.38: 	Oops(123)
+//│ ╙──      	^^^^
+//│ error
+//│ res
+//│ Runtime error:
+//│   TypeError: Oops is not a function
+
+:re
+(Oops : FooPoly)(123)
+//│ 123
+//│ res
+//│ Runtime error:
+//│   TypeError: Oops is not a function
+
+

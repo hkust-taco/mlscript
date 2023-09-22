@@ -8,9 +8,15 @@ import scala.annotation.tailrec
 import mlscript.utils._, shorthands._
 import mlscript.Message._
 
-class TypeDefs extends NuTypeDefs { self: Typer =>
+class TypeDefs extends NuTypeDefs { Typer: Typer =>
   import TypeProvenance.{apply => tp}
   
+  
+  trait AnyTypeDef {
+    // val kind: TypeDefKind
+    // val nme: TypeName
+    // val tparamsargs: List[(TypeName, TypeVariable)]
+  }
   
   /**
    * TypeDef holds information about declarations like classes, interfaces, and type aliases
@@ -40,7 +46,7 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
     adtData: Opt[AdtInfo] = N,
   ) {
     def allBaseClasses(ctx: Ctx)(implicit traversed: Set[TypeName]): Set[TypeName] =
-      baseClasses.map(v => TypeName(v.name.decapitalize)) ++
+      baseClasses.map(v => TypeName(v.name)) ++
         baseClasses.iterator.filterNot(traversed).flatMap(v =>
           ctx.tyDefs.get(v.name).fold(Set.empty[TypeName])(_.allBaseClasses(ctx)(traversed + v)))
     val (tparams: List[TypeName], targs: List[TypeVariable]) = tparamsargs.unzip
@@ -108,13 +114,26 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
   def tparamField(clsNme: TypeName, tparamNme: TypeName): Var =
     Var(clsNme.name + "#" + tparamNme.name)
   
+  def clsNameToNomTag(td: NuTypeDef)(prov: TypeProvenance, ctx: Ctx): ClassTag = {
+    require((td.kind is Cls) || (td.kind is Mod), td.kind)
+    ClassTag(Var(td.nme.name),
+        if(newDefs && td.nme.name =/= "Object")
+          Set.single(TN("Object"))
+            | ctx.tyDefs2.get(td.nme.name).map(_.inheritedTags).getOrElse(Set.empty)
+        else ctx.allBaseClassesOf(td.nme.name)
+      )(prov)
+  }
   def clsNameToNomTag(td: TypeDef)(prov: TypeProvenance, ctx: Ctx): ClassTag = {
-    require(td.kind is Cls)
-    ClassTag(Var(td.nme.name.decapitalize), ctx.allBaseClassesOf(td.nme.name))(prov)
+    require((td.kind is Cls) || (td.kind is Mod), td.kind)
+    ClassTag(Var(td.nme.name), ctx.allBaseClassesOf(td.nme.name))(prov)
   }
   def trtNameToNomTag(td: TypeDef)(prov: TypeProvenance, ctx: Ctx): TraitTag = {
     require(td.kind is Trt)
-    TraitTag(Var(td.nme.name.decapitalize))(prov)
+    TraitTag(Var(td.nme.name), Set.empty)(prov)
+  }
+  def trtNameToNomTag(td: NuTypeDef)(prov: TypeProvenance, ctx: Ctx): TraitTag = {
+    require(td.kind is Trt)
+    TraitTag(Var(td.nme.name), ctx.tyDefs2.get(td.nme.name).map(_.inheritedTags).getOrElse(Set.empty))(prov)
   }
   
   def baseClassesOf(tyd: mlscript.TypeDef): Set[TypeName] =
@@ -166,7 +185,7 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
         err(msg"Type names must start with a capital letter", td0.nme.toLoc)
         td0.copy(nme = td0.nme.copy(n).withLocOf(td0.nme)).withLocOf(td0)
       }
-      if (primitiveTypes.contains(n)) {
+      if (reservedTypeNames.contains(n)) {
         err(msg"Type name '$n' is reserved.", td.nme.toLoc)
       }
       td.tparams.groupBy(_.name).foreach { case s -> tps if tps.sizeIs > 1 => err(
@@ -236,8 +255,8 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
         // }()
         val rightParents = td.kind match {
           case Als => checkCycle(td.bodyTy)(Set.single(L(td.nme)))
-          case Nms =>
-            err(msg"a namespace cannot inherit from others", prov.loco)
+          case Mod =>
+            err(msg"modules cannot inherit from other types", prov.loco)
             false
           case k: ObjDefKind =>
             val parentsClasses = MutSet.empty[TypeRef]
@@ -258,11 +277,14 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
                     } else
                       checkParents(tr.expand)
                   case Trt => checkParents(tr.expand)
-                  case Nms =>
-                    err(msg"cannot inherit from a namespace", prov.loco)
+                  case Mod =>
+                    err(msg"cannot inherit from a module", prov.loco)
                     false
                   case Als => 
                     err(msg"cannot inherit from a type alias", prov.loco)
+                    false
+                  case Mxn =>
+                    err(msg"cannot inherit from a mixin", prov.loco)
                     false
                 }
               case ComposedType(false, l, r) => checkParents(l) && checkParents(r)
@@ -351,12 +373,14 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
                       PolymorphicType(MinLevel, FunctionType(
                         singleTup(tv), tv & nomTag & RecordType.mk(tparamTags)(noProv)
                       )(originProv(td.nme.toLoc, "trait constructor", td.nme.name)))
+                    case _ => ??? // TODO
                   }
                   ctx += n.name -> VarSymbol(ctor, Var(n.name))
               }
               true
             }
             checkParents(td.bodyTy) && checkCycle(td.bodyTy)(Set.single(L(td.nme))) && checkAbstractAddCtors
+          case _ => ??? // TODO
         }
         def checkRegular(ty: SimpleType)(implicit reached: Map[Str, Ls[SimpleType]]): Bool = ty match {
           case tr @ TypeRef(defn, targs) => reached.get(defn.name) match {
@@ -368,9 +392,9 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
               //    and to have the same has hashCode (see: the use of a cache MutSet)
               if (defn === td.nme && tys =/= targs) {
                 err(msg"Type definition is not regular: it occurs within itself as ${
-                  expandType(tr).show
+                  expandType(tr).show(Typer.newDefs)
                 }, but is defined as ${
-                  expandType(TypeRef(defn, td.targs)(noProv)).show
+                  expandType(TypeRef(defn, td.targs)(noProv)).show(Typer.newDefs)
                 }", td.toLoc)(raise)
                 false
               } else true
@@ -405,7 +429,7 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
           // This is because implicit method calls always default to the parent methods.
           case S(MethodType(_, _, parents, _)) if {
             val bcs = ctx.allBaseClassesOf(tn.name)
-            parents.forall(prt => bcs(TypeName(prt.name.decapitalize)))
+            parents.forall(prt => bcs(TypeName(prt.name)))
           } =>
           // If this class is one of the base classes of the parent(s) of the currently registered method,
           // then we need to register the new method. Only happens when the class definitions are "out-of-order",
@@ -418,7 +442,7 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
             // class A
             //   method F: int
           case S(MethodType(_, _, parents, _)) if {
-            val v = TypeName(tn.name.decapitalize)
+            val v = TypeName(tn.name)
             parents.forall(prt => ctx.allBaseClassesOf(prt.name).contains(v)) 
           } => ctx.addMth(N, mn, mthTy)
           // If this class is unrelated to the parent(s) of the currently registered method,
@@ -512,7 +536,7 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
             case _ => Nil
           }
           def go(md: MethodDef[_ <: Term \/ Type]): (Str, MethodType) = {
-            val thisTag = TraitTag(Var("this"))(noProv) // or Skolem?!
+            val thisTag = TraitTag(Var("this"), Set.empty)(noProv) // or Skolem?!
             // val thisTag = SkolemTag(thisCtx.lvl/*TODO correct?*/, Var("this"))(noProv)
             val thisTy = thisTag & tr
             thisCtx += "this" -> VarSymbol(thisTy, Var("this"))
@@ -546,7 +570,7 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
             }
             rhs.fold(_ => defined, _ => declared) += nme.name -> nme.toLoc
             val dummyTargs2 = tparams.map(p =>
-              TraitTag(Var(p.name))(originProv(p.toLoc, "method type parameter", p.name))) // FIXME or Skolem?!
+              TraitTag(Var(p.name), Set.empty)(originProv(p.toLoc, "method type parameter", p.name))) // FIXME or Skolem?!
             val targsMap2 = targsMap ++ tparams.iterator.map(_.name).zip(dummyTargs2).toMap
             val reverseRigid2 = reverseRigid ++ dummyTargs2.map(t => t ->
               freshVar(t.prov, N, S(t.id.idStr))(thisCtx.lvl + 1)) +
@@ -758,33 +782,7 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
     println(s"DONE")
   }
   
-  case class VarianceInfo(isCovariant: Bool, isContravariant: Bool) {
-    
-    /** Combine two pieces of variance information together
-     */
-    def &&(that: VarianceInfo): VarianceInfo =
-      VarianceInfo(isCovariant && that.isCovariant, isContravariant && that.isContravariant)
-    
-    /*  Flip the current variance if it encounters a contravariant position
-     */
-    def flip: VarianceInfo = VarianceInfo(isContravariant, isCovariant)
-    
-    override def toString: Str = show
-    
-    def show: Str = this match {
-      case (VarianceInfo(true, true)) => "±"
-      case (VarianceInfo(false, true)) => "-"
-      case (VarianceInfo(true, false)) => "+"
-      case (VarianceInfo(false, false)) => "="
-    }
-  }
-  
-  object VarianceInfo {
-    val bi: VarianceInfo = VarianceInfo(true, true)
-    val co: VarianceInfo = VarianceInfo(true, false)
-    val contra: VarianceInfo = VarianceInfo(false, true)
-    val in: VarianceInfo = VarianceInfo(false, false)
-  }
-  
   type VarianceStore = MutMap[TypeVariable, VarianceInfo]
+  object VarianceStore { def empty: VarianceStore = MutMap.empty }
+  
 }

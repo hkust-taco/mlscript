@@ -7,7 +7,7 @@ x => x
 
 (x) => x
 //│ |(|x|)| |=>| |x|
-//│ Parsed: {(x,) => x}
+//│ Parsed: {('(' x ')',) => x}
 
 // TODO
 fun x => x
@@ -61,11 +61,11 @@ x =>
 //│ ╔══[PARSE ERROR] Unexpected end of parenthesis section; an expression was expected here
 //│ ║  l.59: 	(x =>)
 //│ ╙──      	     ^
-//│ Parsed: {'(' (x,) => undefined, ')'}
+//│ Parsed: {'(' (x,) => undefined ')'}
 
 a --> b --> c
 //│ |a| |-->| |b| |-->| |c|
-//│ Parsed: {--> (a,) (--> (b,) (c,),)}
+//│ Parsed: {-->(a,)(-->(b,)(c,),)}
 
 a => b => c
 //│ |a| |=>| |b| |=>| |c|
@@ -73,19 +73,19 @@ a => b => c
 
 (a => b) => c
 //│ |(|a| |=>| |b|)| |=>| |c|
-//│ Parsed: {((a,) => b,) => c}
+//│ Parsed: {('(' (a,) => b ')',) => c}
 
 a => (b => c)
 //│ |a| |=>| |(|b| |=>| |c|)|
-//│ Parsed: {(a,) => '(' (b,) => c, ')'}
+//│ Parsed: {(a,) => '(' (b,) => c ')'}
 
 xs.forall(x => x > 0)
 //│ |xs|.forall|(|x| |=>| |x| |>| |0|)|
-//│ Parsed: {(xs).forall ((x,) => > (x,) (0,),)}
+//│ Parsed: {(xs).forall((x,) => >(x,)(0,),)}
 
 xs.forall of x => x > 0
 //│ |xs|.forall| |#of| |x| |=>| |x| |>| |0|
-//│ Parsed: {(xs).forall ((x,) => > (x,) (0,),)}
+//│ Parsed: {(xs).forall((x,) => >(x,)(0,),)}
 
 :pe
 a => b then c
@@ -101,9 +101,17 @@ if a => b then c
 
 if xs.forall(a => b) then c
 //│ |#if| |xs|.forall|(|a| |=>| |b|)| |#then| |c|
-//│ Parsed: {if ((xs).forall ((a,) => b,)) then c}
+//│ Parsed: {if ((xs).forall((a,) => b,)) then c}
 
 if xs.forall of a => b then c
 //│ |#if| |xs|.forall| |#of| |a| |=>| |b| |#then| |c|
-//│ Parsed: {if ((xs).forall ((a,) => b,)) then c}
+//│ Parsed: {if ((xs).forall((a,) => b,)) then c}
+
+
+id + of x => x + 1
+//│ |id| |+| |#of| |x| |=>| |x| |+| |1|
+//│ ╔══[PARSE ERROR] Unexpected 'of' keyword in expression position
+//│ ║  l.111: 	id + of x => x + 1
+//│ ╙──       	     ^^
+//│ Parsed: {+(id,)((x,) => +(x,)(1,),)}
 

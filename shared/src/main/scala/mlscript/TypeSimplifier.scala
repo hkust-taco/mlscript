@@ -16,12 +16,13 @@ trait TypeSimplifier { self: Typer =>
   /** Remove bounds that are not reachable by traversing the type following variances.
     * Note that doing this on annotated type signatures would need to use polarity None
     *   because a type signature can both be used (positively) and checked against (negatively). */
-  def removeIrrelevantBounds(ty: SimpleType, pol: Opt[Bool], inPlace: Bool = false)
-        (implicit ctx: Ctx): SimpleType =
+  def removeIrrelevantBounds(ty: TypeLike, pol: Opt[Bool], inPlace: Bool = false)
+        (implicit ctx: Ctx): TypeLike =
   {
     val _ctx = ctx
     
     val allVarPols = ty.getVarsPol(PolMap(pol))
+    // println("!!"+ty.childrenPol(PolMap(pol)))
     println(s"allVarPols: ${printPols(allVarPols)}")
     
     val renewed = MutMap.empty[TypeVariable, TypeVariable]
@@ -31,6 +32,11 @@ trait TypeSimplifier { self: Typer =>
         if (inPlace) tv
         else freshVar(noProv, S(tv), tv.nameHint)(tv.level) tap { fv => println(s"Renewed $tv ~> $fv") })
     
+    def processLike(ty: TypeLike): TypeLike = ty match {
+      case ty: ST => process(ty, N)
+      case OtherTypeLike(tu) =>
+        tu.map(process(_, N))
+    }
     def process(ty: ST, parent: Opt[Bool -> TV], canDistribForall: Opt[Level] = N): ST =
         // trace(s"process($ty) $canDistribForall") {
         ty match {
@@ -85,24 +91,52 @@ trait TypeSimplifier { self: Typer =>
         ProvType(process(ty, parent, canDistribForall = canDistribForall))(ty.prov)
       case ProvType(ty) => process(ty, parent, canDistribForall = canDistribForall)
       
-      case tr @ TypeRef(defn, targs) if builtinTypes.contains(defn) => process(tr.expand, parent)
+      case tr @ TypeRef(defn, targs) if builtinTypes.contains(defn) && tr.canExpand =>
+        process(tr.expandOrCrash, parent)
       
       case RecordType(fields) => RecordType.mk(fields.flatMap { case (v @ Var(fnme), fty) =>
-        // * We make a pass to transform the LB and UB of variant type parameter fields into their exterma
+        // * We make a pass to transform the LB and UB of variant type parameter fields into their extrema
         val prefix = fnme.takeWhile(_ =/= '#')
         val postfix = fnme.drop(prefix.length + 1)
         lazy val default = fty.update(process(_ , N), process(_ , N))
-        if (postfix.isEmpty) v -> default :: Nil
-        else {
-          val td = ctx.tyDefs(prefix)
-          td.tvarVariances.fold(v -> default :: Nil)(tvv =>
-            tvv(td.tparamsargs.find(_._1.name === postfix).getOrElse(die)._2) match {
-              case VarianceInfo(true, true) => Nil
-              case VarianceInfo(co, contra) =>
-                if (co) v -> FieldType(S(BotType), process(fty.ub, N))(fty.prov) :: Nil
-                else if (contra) v -> FieldType(fty.lb.map(process(_, N)), TopType)(fty.prov) :: Nil
-                else  v -> default :: Nil
-            })
+        if (postfix.isEmpty || prefix.isEmpty) v -> default :: Nil
+        else ctx.tyDefs.get(prefix) match {
+          case S(td) =>
+            td.tvarVariances.fold(v -> default :: Nil)(tvv =>
+              tvv(td.tparamsargs.find(_._1.name === postfix).getOrElse(die)._2) match {
+                case VarianceInfo(true, true) => Nil
+                case VarianceInfo(co, contra) =>
+                  if (co) v -> FieldType(S(BotType), process(fty.ub, N))(fty.prov) :: Nil
+                  else if (contra) v -> FieldType(fty.lb.map(process(_, N)), TopType)(fty.prov) :: Nil
+                  else  v -> default :: Nil
+              })
+          case N =>
+            // v -> default :: Nil
+            ctx.tyDefs2.get(prefix) match {
+              case S(info) =>
+                info.result match {
+                  case S(cls: TypedNuCls) =>
+                    cls.varianceOf(cls.tparams.find(_._1.name === postfix).getOrElse(die)._2) match {
+                      case VarianceInfo(true, true) => Nil
+                      case VarianceInfo(co, contra) =>
+                        if (co) v -> FieldType(S(BotType), process(fty.ub, N))(fty.prov) :: Nil
+                        else if (contra) v -> FieldType(fty.lb.map(process(_, N)), TopType)(fty.prov) :: Nil
+                        else  v -> default :: Nil
+                    }
+                  case S(trt: TypedNuTrt) => // TODO factor w/ above & generalize
+                    trt.tparams.iterator.find(_._1.name === postfix).flatMap(_._3).getOrElse(VarianceInfo.in) match {
+                      case VarianceInfo(true, true) => Nil
+                      case VarianceInfo(co, contra) =>
+                        if (co) v -> FieldType(S(BotType), process(fty.ub, N))(fty.prov) :: Nil
+                        else if (contra) v -> FieldType(fty.lb.map(process(_, N)), TopType)(fty.prov) :: Nil
+                        else  v -> default :: Nil
+                    }
+                  case S(_) => ??? // TODO:
+                  case N =>
+                    ??? // TODO use info.explicitVariances
+                }
+              case N => lastWords(s"'$prefix' not found")
+            }
         }
       })(ty.prov)
       
@@ -126,15 +160,21 @@ trait TypeSimplifier { self: Typer =>
     }
     // }(r => s"= $r")
     
-    process(ty, N)
+    processLike(ty)
     
   }
   
   
   
   /** Transform the type recursively, putting everything in Disjunctive Normal Forms and reconstructing class types
-    * from their structural components. */
-  def normalizeTypes_!(st: SimpleType, pol: Opt[Bool])(implicit ctx: Ctx): SimpleType =
+    * from their structural components.
+    * Note that performing this _in place_ is not fully correct,
+    *   as this will lead us to assume TV bounds while simplifying the TV bounds themselves!
+    *     – see [test:T3] –
+    *   However, I think this only manifests in contrived manually-constructed corner cases like 
+    *   unguarded recursive types such as `C['a] | 'a as 'a`.
+    */
+  def normalizeTypes_!(st: TypeLike, pol: Opt[Bool])(implicit ctx: Ctx): TypeLike =
   {
     val _ctx = ctx
     
@@ -184,12 +224,16 @@ trait TypeSimplifier { self: Typer =>
             }
             
             val traitPrefixes =
-              tts.iterator.collect{ case TraitTag(Var(tagNme)) => tagNme.capitalize }.toSet
+              tts.iterator.collect{ case TraitTag(Var(tagNme), _) => tagNme.capitalize }.toSet
             
             bo match {
-              case S(cls @ ClassTag(Var(tagNme), ps)) if !primitiveTypes.contains(tagNme) =>
-                val clsNme = tagNme.capitalize
-                val clsTyNme = TypeName(tagNme.capitalize)
+              case S(cls @ ClassTag(Var(tagNme), ps))
+                if !primitiveTypes.contains(tagNme)
+                && ctx.tyDefs.contains(tagNme.capitalize)
+                && !newDefs
+              =>
+                val clsNme = tagNme.capitalize // TODO rm capitalize
+                val clsTyNme = TypeName(clsNme)
                 val td = ctx.tyDefs(clsNme)
                 
                 val rcdMap  = rcd.fields.toMap
@@ -287,6 +331,77 @@ trait TypeSimplifier { self: Typer =>
                 
                 trs3.valuesIterator.foldLeft(withTraits)(_ & _)
                 
+              case S(cls @ ClassTag(Var(clsNme), ps))
+                if !primitiveTypes.contains(clsNme)
+                && ctx.tyDefs2.contains(clsNme)
+                && ctx.tyDefs2(clsNme).result.isDefined
+              =>
+                val clsTyNme = TypeName(clsNme)
+                val lti = ctx.tyDefs2(clsNme)
+                val cls = lti.result match {
+                  case S(r: TypedNuCls) => r
+                  case _ => die 
+                }
+                
+                val rcdMap  = rcd.fields.toMap
+                
+                val rcd2  = rcd.copy(rcd.fields.mapValues(_.update(go(_, pol.map(!_)), go(_, pol))))(rcd.prov)
+                println(s"rcd2 ${rcd2}")
+                
+                // val vs =
+                //   // td.getVariancesOrDefault
+                //   // Map.empty[TV, VarianceInfo].withDefaultValue(VarianceInfo.in)
+                //   cls.variances
+                
+                // * Reconstruct a TypeRef from its current structural components
+                val typeRef = TypeRef(cls.td.nme, cls.tparams.zipWithIndex.map { case ((tp, tv, vi), tpidx) =>
+                  val fieldTagNme = tparamField(clsTyNme, tp)
+                  val fromTyRef = trs2.get(clsTyNme).map(_.targs(tpidx) |> { ta => FieldType(S(ta), ta)(noProv) })
+                  fromTyRef.++(rcd2.fields.iterator.filter(_._1 === fieldTagNme).map(_._2))
+                    .foldLeft((BotType: ST, TopType: ST)) {
+                      case ((acc_lb, acc_ub), FieldType(lb, ub)) =>
+                        (acc_lb | lb.getOrElse(BotType), acc_ub & ub)
+                    }.pipe {
+                      case (lb, ub) =>
+                        cls.varianceOf(tv) match {
+                          case VarianceInfo(true, true) => TypeBounds.mk(BotType, TopType)
+                          case VarianceInfo(false, false) => TypeBounds.mk(lb, ub)
+                          case VarianceInfo(co, contra) =>
+                            if (co) ub else lb
+                        }
+                    }
+                })(noProv)
+                println(s"typeRef ${typeRef}")
+                
+                val clsFields = fieldsOf(typeRef.expandWith(paramTags = true), paramTags = true)
+                println(s"clsFields ${clsFields.mkString(", ")}")
+                
+                val cleanPrefixes = ps.map(_.name.capitalize) + clsNme ++ traitPrefixes
+                
+                val cleanedRcd = RecordType(
+                  rcd2.fields.filterNot { case (field, fty) =>
+                    // * This is a bit messy, but was the only way I was able to achieve maximal simplification:
+                    // *  We remove fields that are already inclued by definition of the class by testing for subtyping
+                    // *  with BOTH the new normalized type (from `clsFields`) AND the old one too (from `rcdMap`).
+                    // *  The reason there's a difference is probably because:
+                    // *    - Subtye checking with <:< is an imperfect heuristic and may stop working after normalizing.
+                    // *    - Recursive types will be normalized progressively...
+                    // *        at this point we may look at some bounds that have not yet been normalized.
+                    clsFields.get(field).exists(cf => cf <:< fty ||
+                      rcdMap.get(field).exists(cf <:< _))
+                  }
+                )(rcd2.prov)
+                
+                val rcd2Fields  = rcd2.fields.unzip._1.toSet
+                
+                val withTraits = tts.toArray.sorted // TODO also filter out tts that are inherited by the class
+                  .foldLeft(typeRef & cleanedRcd: ST)(_ & _)
+                
+                val trs3 = trs2 - cls.nme // TODO also filter out class refs that are inherited by the class
+                
+                trs3.valuesIterator.foldLeft(withTraits)(_ & _)
+                
+                
               case _ =>
                 lazy val nFields = rcd.fields
                   .filterNot(traitPrefixes contains _._1.name.takeWhile(_ =/= '#'))
@@ -360,13 +475,17 @@ trait TypeSimplifier { self: Typer =>
       }
     }
     
+    def goLike(ty: TL, pol: Opt[Bool], canDistribForall: Opt[Level] = N): TL = trace(s"normLike[${printPol(pol)}] $ty") { ty match {
+      case ty: ST => go(ty, pol)
+      case OtherTypeLike(tu) => tu.mapPol(pol, true)((p, t) => go(t, p))
+    }}()
     def go(ty: ST, pol: Opt[Bool], canDistribForall: Opt[Level] = N): ST = trace(s"norm[${printPol(pol)}] $ty") {
       pol match {
         case S(p) => helper(DNF.mk(MaxLevel, Nil, ty, p)(ctx, ptr = true, etf = false), pol, canDistribForall)
         case N =>
-        val dnf1 = DNF.mk(MaxLevel, Nil, ty, false)(ctx, ptr = true, etf = false)
-        val dnf2 = DNF.mk(MaxLevel, Nil, ty, true)(ctx, ptr = true, etf = false)
-        TypeBounds.mk(helper(dnf1, S(false), canDistribForall), helper(dnf2, S(true), canDistribForall))
+          val dnf1 = DNF.mk(MaxLevel, Nil, ty, false)(ctx, ptr = true, etf = false)
+          val dnf2 = DNF.mk(MaxLevel, Nil, ty, true)(ctx, ptr = true, etf = false)
+          TypeBounds.mk(helper(dnf1, S(false), canDistribForall), helper(dnf2, S(true), canDistribForall))
       }
     }(r => s"~> $r")
     
@@ -382,15 +501,18 @@ trait TypeSimplifier { self: Typer =>
       }
     }
     
-    go(st, pol)
+    goLike(st, pol)
     
   }
   
   
   
   /** Remove polar type variables, unify indistinguishable ones, and inline the bounds of non-recursive ones. */
-  def simplifyType(st: SimpleType, removePolarVars: Bool, pol: Opt[Bool], inlineBounds: Bool = true)(implicit ctx: Ctx): SimpleType = {
+  def simplifyType(st: TypeLike, removePolarVars: Bool, pol: Opt[Bool], inlineBounds: Bool = true)(implicit ctx: Ctx): TypeLike = {
     
+    
+    // * There are two main analyses, which are quite subtle.
+    // * TODO: add assertion to check that their results are consistent!
     
     
     // * * Analysis 1: count number of TV occurrences at each polarity
@@ -406,7 +528,7 @@ trait TypeSimplifier { self: Typer =>
     // *    coincides with that of the later `transform` function.
     // *  In particular, the traversal of fields with identical UB/LB is considered invariant.
     object Analyze1 extends Traverser2.InvariantFields {
-      override def apply(pol: PolMap)(st: ST): Unit = trace(s"analyze1[${printPol(pol)}] $st") {
+      override def apply(pol: PolMap)(st: ST): Unit = trace(s"analyze1[${(pol)}] $st") {
         st match {
           case tv: TV =>
             pol(tv) match {
@@ -441,7 +563,7 @@ trait TypeSimplifier { self: Typer =>
         }
       }()
     }
-    Analyze1(PolMap(pol))(st)
+    Analyze1.applyLike(PolMap(pol))(st)
     
     println(s"[inv] ${occursInvariantly.mkString(", ")}")
     println(s"[nums] ${occNums.iterator
@@ -453,7 +575,7 @@ trait TypeSimplifier { self: Typer =>
     
     // * * Analysis 2: find the polar co-occurrences of each TV
     
-    // * Note that for negatively-quantified type variables, the notion of co-occurrence is reversed!
+    // * Note: for negatively-quantified vars, the notion of co-occurrence is reversed (wrt unions/inters)...
     
     val coOccurrences: MutMap[(Bool, TypeVariable), MutSet[SimpleType]] = LinkedHashMap.empty
     
@@ -516,8 +638,9 @@ trait TypeSimplifier { self: Typer =>
     */
     
     
-    def analyze2(st: SimpleType, pol: PolMap): Unit =
-      Analyze2(pol)(st.unwrapProvs)
+    // FIXME Currently we don't traverse TVs witht he correct PolMap, which introduces misatches with other analyses in tricky cases
+    def analyze2(st: TL, pol: PolMap): Unit =
+      Analyze2.applyLike(pol)(st.unwrapProvs)
     
     object Analyze2 extends Traverser2 {
       override def apply(pol: PolMap)(st: ST): Unit = trace(s"analyze2[${(pol)}] $st") {
@@ -814,6 +937,10 @@ trait TypeSimplifier { self: Typer =>
         case N => merge(pol, if (pol) tv.lowerBounds else tv.upperBounds)
       }, polmap.at(tv.level, pol), parents, canDistribForall)
     
+    def transformLike(ty: TL, pol: PolMap): TL = ty match {
+      case ty: ST => transform(ty, pol, semp)
+      case OtherTypeLike(tu) => tu.mapPolMap(pol)((p,t) => transform(t, p, semp))
+    }
     def transform(st: SimpleType, pol: PolMap, parents: Set[TV], canDistribForall: Opt[Level] = N): SimpleType =
           trace(s"transform[${printPol(pol)}] $st   (${parents.mkString(", ")})  $pol  $canDistribForall") {
         def transformField(f: FieldType): FieldType = f match {
@@ -835,7 +962,7 @@ trait TypeSimplifier { self: Typer =>
       case ot @ Overload(as) =>
         ot.mapAltsPol(pol)((p, t) => transform(t, p, parents, canDistribForall))
       case SkolemTag(id) => transform(id, pol, parents)
-      case _: TypeTag | ExtrType(_) => st
+      case _: ObjectTag | _: Extruded | _: ExtrType => st
       case tv: TypeVariable if parents(tv) =>
         pol(tv) match {
           case S(true) => BotType
@@ -880,6 +1007,8 @@ trait TypeSimplifier { self: Typer =>
               case S(p) if inlineBounds && !occursInvariantly(tv) && !recVars.contains(tv) =>
                 // * Inline the bounds of non-rec non-invar-occ type variables
                 println(s"Inlining [${printPol(p)}] bounds of $tv (~> $res)")
+                // if (p) mergeTransform(true, pol, tv, Set.single(tv), canDistribForall) | res
+                // else mergeTransform(false, pol, tv, Set.single(tv), canDistribForall) & res
                 if (p) mergeTransform(true, pol, tv, parents + tv, canDistribForall) | res
                 else mergeTransform(false, pol, tv, parents + tv, canDistribForall) & res
               case poltv if (!wasDefined) =>
@@ -941,6 +1070,10 @@ trait TypeSimplifier { self: Typer =>
         pol.base.fold[ST](TypeBounds.mkSafe(
           transform(lb, PolMap.neg, parents, canDistribForall),
           transform(ub, PolMap.pos, parents, canDistribForall),
+          // transform(lb, pol, parents, canDistribForall),
+          // transform(ub, pol, parents, canDistribForall),
+          // transform(lb, pol.contravar, parents, canDistribForall),
+          // transform(ub, pol.covar, parents, canDistribForall),
           noProv
         ))(p =>
           if (p) transform(ub, pol, parents) else transform(lb, pol, parents)
@@ -965,7 +1098,7 @@ trait TypeSimplifier { self: Typer =>
     }
     }(r => s"~> $r")
     
-    transform(st, PolMap(pol), semp)
+    transformLike(st, PolMap(pol))
     
     
   }
@@ -978,7 +1111,7 @@ trait TypeSimplifier { self: Typer =>
     * So if no other upper bounds end up in ?a AND ?a is polar
     *   (so that ?a occurrences are indistinguishable from `{x: ?a}`),
     *   we'll eventually want to refactor ?b's recursive upper bound structure into just `?b <! ?a`. */
-  def unskidTypes_!(st: SimpleType, pol: Bool)(implicit ctx: Ctx): SimpleType = {
+  def unskidTypes_!(st: TypeLike, pol: Bool)(implicit ctx: Ctx): TypeLike = {
     
     val allVarPols = st.getVarsPol(PolMap(S(pol)))
     println(s"allVarPols: ${printPols(allVarPols)}")
@@ -1016,6 +1149,7 @@ trait TypeSimplifier { self: Typer =>
         tv
       case _ =>
         lazy val mapped = st.mapPol(pol, smart = true)(process(_, _, parent))
+        // println(s"mapped $mapped")
         pol match {
           case S(p) =>
             // println(s"!1! ${st} ${consed.get(p -> st)}")
@@ -1037,14 +1171,19 @@ trait TypeSimplifier { self: Typer =>
     }
     // }(r => s"~> $r")
     
-    process(S(pol), st, N)
+    def processLike(pol: Opt[Bool], ty: TL): TL = ty match {
+      case ty: ST => process(pol, ty, N)
+      case OtherTypeLike(tu) => tu.mapPol(pol, smart = true)(process(_, _, N))
+    }
+    
+    processLike(S(pol), st)
   }
   
   
   
   /** Unify polar recursive type variables that have the same structure.
     * For example, `?a <: {x: ?a}` and `?b <: {x: ?b}` will be unified if they are bith polar. */
-  def factorRecursiveTypes_!(st: SimpleType, approximateRecTypes: Bool, pol: Opt[Bool])(implicit ctx: Ctx): SimpleType = {
+  def factorRecursiveTypes_!(st: TypeLike, approximateRecTypes: Bool, pol: Opt[Bool])(implicit ctx: Ctx): TypeLike = {
     
     val allVarPols = st.getVarsPol(PolMap(pol))
     println(s"allVarPols: ${printPols(allVarPols)}")
@@ -1084,7 +1223,7 @@ trait TypeSimplifier { self: Typer =>
                           (fields1.size === fields2.size || nope) && fields1.map(_._2).lazyZip(fields2.map(_._2)).forall(unifyF)
                         case (FunctionType(lhs1, rhs1), FunctionType(lhs2, rhs2)) => unify(lhs1, lhs2) && unify(rhs1, rhs2)
                         case (Without(base1, names1), Without(base2, names2)) => unify(base1, base2) && (names1 === names2 || nope)
-                        case (TraitTag(id1), TraitTag(id2)) => id1 === id2 || nope
+                        case (TraitTag(id1, _), TraitTag(id2, _)) => id1 === id2 || nope
                         case (SkolemTag(id1), SkolemTag(id2)) => id1 === id2 || nope
                         case (ExtrType(pol1), ExtrType(pol2)) => pol1 === pol2 || nope
                         case (TypeBounds(lb1, ub1), TypeBounds(lb2, ub2)) =>
@@ -1121,7 +1260,7 @@ trait TypeSimplifier { self: Typer =>
     
     println(s"[subs] ${varSubst}")
     
-    if (varSubst.nonEmpty) subst(st, varSubst.toMap, substInMap = true) else st
+    if (varSubst.nonEmpty) substLike(st, varSubst.toMap, substInMap = true) else st
     
   }
   
@@ -1130,7 +1269,7 @@ trait TypeSimplifier { self: Typer =>
   abstract class SimplifyPipeline {
     def debugOutput(msg: => Str): Unit
     
-    def apply(st: ST, pol: Opt[Bool], removePolarVars: Bool = true)(implicit ctx: Ctx): ST = {
+    def apply(st: TL, pol: Opt[Bool], removePolarVars: Bool = true)(implicit ctx: Ctx): TypeLike = {
       var cur = st
       
       debugOutput(s"⬤ Initial: ${cur}")

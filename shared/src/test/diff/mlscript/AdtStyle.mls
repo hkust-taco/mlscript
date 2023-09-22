@@ -89,7 +89,7 @@ fun x ->
    | (1, 2, 3) -> 6
    | (x, y, 3,) -> x + y
    | _ -> 0
-//│ res: (int, int, int,) -> int
+//│ res: ((int, int, int,),) -> int
 
 fun (x, y) ->
   match (x, y) with
@@ -134,7 +134,7 @@ match Cons(0, Nil) with Cons(1, Nil) -> 0
 
 :e
 match Cons(true, Nil) with Cons(1, Nil) -> 0
-//│ ╔══[ERROR] Type mismatch in adt match expression:
+//│ ╔══[ERROR] Type mismatch in ADT pattern matching:
 //│ ║  l.136: 	match Cons(true, Nil) with Cons(1, Nil) -> 0
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── reference of type `true` is not an instance of type `int`

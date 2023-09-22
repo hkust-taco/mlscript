@@ -1,110 +1,145 @@
-:NewParser
+:NewDefs
 
 
 1
-//│ res: 1
-//│    = 1
+//│ 1
+//│ res
+//│     = 1
 
 2 + 2
-//│ res: int
-//│    = 4
+//│ Int
+//│ res
+//│     = 4
 
 let r = { x: 1 }
-//│ r: {x: 1}
-//│  = { x: 1 }
+//│ let r: {x: 1}
+//│ r
+//│   = { x: 1 }
 
 r.x + 1
-//│ res: int
-//│    = 2
+//│ Int
+//│ res
+//│     = 2
 
 
 x => x + 1
-//│ res: int -> int
-//│    = [Function: res]
+//│ Int -> Int
+//│ res
+//│     = [Function: res]
 
 { y } => y
-//│ res: {y: 'a} -> 'a
-//│    = [Function: res]
+//│ {y: 'a} -> 'a
+//│ res
+//│     = [Function: res]
 
 fun f({ y }) = y
-//│ f: {y: 'a} -> 'a
-//│  = [Function: f]
+//│ fun f: forall 'a. {y: 'a} -> 'a
 
 fun f of { y } = y
-//│ f: {y: 'a} -> 'a
-//│  = [Function: f1]
+//│ fun f: forall 'a. {y: 'a} -> 'a
 
 f({y: 1})
-//│ res: 1
-//│    = 1
+//│ 1
+//│ res
+//│     = 1
+
+
+fun f of x, y = x + y
+//│ fun f: (Int, Int) -> Int
+
+f of 1, 2
+//│ Int
+//│ res
+//│     = 3
+
+
+fun f of [x, y] = x + y
+//│ fun f: ([Int, Int]) -> Int
+
+f of [1, 2]
+//│ Int
+//│ res
+//│     = 3
 
 
 let f = (x, y) => x + y
-//│ f: (int, int,) -> int
-//│  = [Function: f2]
+//│ let f: (Int, Int) -> Int
+//│ f
+//│   = [Function: f4]
 
 f(1, 2)
-//│ res: int
-//│    = 3
+//│ Int
+//│ res
+//│     = 3
 
 :e
 f([1, 2])
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.51: 	f([1, 2])
+//│ ║  l.76: 	f([1, 2])
 //│ ║        	^^^^^^^^^
-//│ ╟── argument of type `((1, 2,),)` does not match type `(?a, ?b,)`
-//│ ║  l.51: 	f([1, 2])
+//│ ╟── argument of type `[[1, 2]]` does not match type `[?a, ?b]`
+//│ ║  l.76: 	f([1, 2])
 //│ ║        	 ^^^^^^^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.42: 	let f = (x, y) => x + y
+//│ ║  l.65: 	let f = (x, y) => x + y
 //│ ╙──      	         ^^^^
-//│ res: error | int
-//│    = '1,2undefined'
+//│ Int | error
+//│ res
+//│     = '1,2undefined'
 
 
 
 let f = ((x, y)) => x + y
-//│ f: (int, int,) -> int
-//│  = [Function: f3]
+//│ let f: ([Int, Int]) -> Int
+//│ f
+//│   = [Function: f5]
 
 :e
 f(1, 2)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.71: 	f(1, 2)
+//│ ║  l.98: 	f(1, 2)
 //│ ║        	^^^^^^^
-//│ ╟── argument list of type `(1, 2,)` does not match type `((?a, ?b,),)`
-//│ ║  l.71: 	f(1, 2)
+//│ ╟── argument list of type `[1, 2]` does not match type `[[?a, ?b]]`
+//│ ║  l.98: 	f(1, 2)
 //│ ╙──      	 ^^^^^^
-//│ res: error | int
+//│ Int | error
+//│ res
 //│ Runtime error:
 //│   TypeError: number 1 is not iterable (cannot read property Symbol(Symbol.iterator))
 
 
 
 f((1, 2))
-//│ res: int
-//│    = 3
+//│ Int
+//│ res
+//│     = 3
 
 f([1, 2])
-//│ res: int
-//│    = 3
+//│ Int
+//│ res
+//│     = 3
 
+// TODO don't parse as tuple arg
 let f = (((x, y))) => x + y
-//│ f: (int, int,) -> int
-//│  = [Function: f4]
+//│ let f: ([Int, Int]) -> Int
+//│ f
+//│   = [Function: f6]
 
 // TODO parse as tuple arg!
 let f = [x, y] => x + y
-//│ f: (int, int,) -> int
-//│  = [Function: f5]
+//│ let f: (Int, Int) -> Int
+//│ f
+//│   = [Function: f7]
 
 f(1, 2)
-//│ res: int
-//│    = 3
+//│ Int
+//│ res
+//│     = 3
 
 // TODO...
 let f = [[[x, y]]] => x + y
-//│ f: (int, int,) -> int
-//│  = [Function: f6]
+//│ let f: ([[Int, Int]]) -> Int
+//│ f
+//│   = [Function: f8]
 
 

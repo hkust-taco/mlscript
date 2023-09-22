@@ -33,7 +33,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
   )
   
   private val isSymKeyword = Set(
-    "->",
+    // "->",
     "=",
     ":",
     ";",
@@ -44,6 +44,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
   )
   
   private val isAlphaOp = Set(
+    "with",
     "and",
     "or",
     "is",
@@ -54,37 +55,72 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
   def takeWhile(i: Int, cur: Ls[Char] = Nil)(pred: Char => Bool): (Str, Int) =
     if (i < length && pred(bytes(i))) takeWhile(i + 1, bytes(i) :: cur)(pred)
     else (cur.reverseIterator.mkString, i)
+
+  @tailrec final
+  def str(i: Int, escapeMode: Bool, cur: Ls[Char] = Nil): (Str, Int) =
+    if (escapeMode)
+      if (i < length)
+        bytes(i) match {
+          case '"' => str(i + 1, false, '"' :: cur)
+          case 'n' => str(i + 1, false, '\n' :: cur)
+          case 't' => str(i + 1, false, '\t' :: cur)
+          case 'r' => str(i + 1, false, '\r' :: cur)
+          case ch =>
+            raise(WarningReport(msg"Found invalid escape character" -> S(loc(i, i + 1)) :: Nil,
+              newDefs = true, source = Lexing))
+            str(i + 1, false, ch :: cur)
+        }
+      else {
+        raise(ErrorReport(msg"Expect an escape character" -> S(loc(i, i + 1)) :: Nil,
+          newDefs = true, source = Lexing))
+        (cur.reverseIterator.mkString, i)
+      }
+    else {
+      if (i < length)
+        bytes(i) match {
+          case '\\' => str(i + 1, true, cur)
+          case '"' | '\n' => (cur.reverseIterator.mkString, i)
+          case ch => str(i + 1, false, ch :: cur)
+        }
+      else
+        (cur.reverseIterator.mkString, i)
+    }
   
   def loc(start: Int, end: Int): Loc = Loc(start, end, origin)
   
-  // @tailrec final
+  @tailrec final
   def lex(i: Int, ind: Ls[Int], acc: Ls[TokLoc]): Ls[TokLoc] = if (i >= length) acc.reverse else {
     val c = bytes(i)
     def pe(msg: Message): Unit =
       // raise(ParseError(false, msg -> S(loc(i, i + 1)) :: Nil))
-      raise(ErrorReport(msg -> S(loc(i, i + 1)) :: Nil, source = Lexing)) // TODO parse error
+      raise(ErrorReport(msg -> S(loc(i, i + 1)) :: Nil, newDefs = true, source = Lexing))
     // @inline 
-    def go(j: Int, tok: Token) = lex(j, ind, (tok, loc(i, j)) :: acc)
+    // def go(j: Int, tok: Token) = lex(j, ind, (tok, loc(i, j)) :: acc)
+    def next(j: Int, tok: Token) = (tok, loc(i, j)) :: acc
     c match {
       case ' ' =>
         val (_, j) = takeWhile(i)(_ === ' ')
-        go(j, SPACE)
+        // go(j, SPACE)
+        lex(j, ind, next(j, SPACE))
       case ',' =>
         val j = i + 1
-        go(j, COMMA)
+        // go(j, COMMA)
+        lex(j, ind, next(j, COMMA))
       case '"' =>
         val j = i + 1
-        val (chars, k) = takeWhile(j)(c => c =/= '"' && c =/= '\n')
+        val (chars, k) = str(j, false)
         val k2 = if (bytes.lift(k) === Some('"')) k + 1 else {
           pe(msg"unclosed quotation mark")
           k
         }
-        go(k2, LITVAL(StrLit(chars)))
+        // go(k2, LITVAL(StrLit(chars)))
+        lex(k2, ind, next(k2, LITVAL(StrLit(chars))))
       case '/' if bytes.lift(i + 1).contains('/') =>
         val j = i + 2
         val (txt, k) =
           takeWhile(j)(c => c =/= '\n')
-        go(k, COMMENT(txt))
+        // go(k, COMMENT(txt))
+        lex(k, ind, next(k, COMMENT(txt)))
       case '/' if bytes.lift(i + 1).contains('*') => // multiple-line comment
         val j = i + 2
         var prev1 = '/'; var prev2 = '*'
@@ -94,9 +130,12 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
             prev1 = prev2; prev2 = c
             res
           })
-        go(k, COMMENT(txt.dropRight(2)))
-      case BracketKind(Left(k)) => go(i + 1, OPEN_BRACKET(k))
-      case BracketKind(Right(k)) => go(i + 1, CLOSE_BRACKET(k))
+        // go(k, COMMENT(txt.dropRight(2)))
+        lex(k, ind, next(k, COMMENT(txt.dropRight(2))))
+      // case BracketKind(Left(k)) => go(i + 1, OPEN_BRACKET(k))
+      // case BracketKind(Right(k)) => go(i + 1, CLOSE_BRACKET(k))
+      case BracketKind(Left(k)) => lex(i + 1, ind, next(i + 1, OPEN_BRACKET(k)))
+      case BracketKind(Right(k)) => lex(i + 1, ind, next(i + 1, CLOSE_BRACKET(k)))
       case '\n' =>
         val j = i + 1
         val (space, k) =
@@ -123,20 +162,30 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
         }
       case _ if isIdentFirstChar(c) =>
         val (n, j) = takeWhile(i)(isIdentChar)
-        go(j, if (keywords.contains(n)) KEYWORD(n) else IDENT(n, isAlphaOp(n)))
+        // go(j, if (keywords.contains(n)) KEYWORD(n) else IDENT(n, isAlphaOp(n)))
+        lex(j, ind, next(j, if (keywords.contains(n)) KEYWORD(n) else IDENT(n, isAlphaOp(n))))
       case _ if isOpChar(c) =>
-        val (n, j) = takeWhile(i)(isOpChar)
-        if (n === "." && j < length && isIdentFirstChar(bytes(j))) {
-          val (name, k) = takeWhile(j)(isIdentChar)
-          go(k, SELECT(name))
+        if (c === '-' && isDigit(bytes(i + 1))) {
+          val (str, j) = takeWhile(i + 1)(isDigit)
+          lex(j, ind, next(j, LITVAL(IntLit(-BigInt(str)))))
+        } else {
+          val (n, j) = takeWhile(i)(isOpChar)
+          if (n === "." && j < length && isIdentFirstChar(bytes(j))) {
+            val (name, k) = takeWhile(j)(isIdentChar)
+            // go(k, SELECT(name))
+            lex(k, ind, next(k, SELECT(name)))
+          }
+          // else go(j, if (isSymKeyword.contains(n)) KEYWORD(n) else IDENT(n, true))
+          else lex(j, ind, next(j, if (isSymKeyword.contains(n)) KEYWORD(n) else IDENT(n, true)))
         }
-        else go(j, if (isSymKeyword.contains(n)) KEYWORD(n) else IDENT(n, true))
       case _ if isDigit(c) =>
         val (str, j) = takeWhile(i)(isDigit)
-        go(j, LITVAL(IntLit(BigInt(str))))
+        // go(j, LITVAL(IntLit(BigInt(str))))
+        lex(j, ind, next(j, LITVAL(IntLit(BigInt(str)))))
       case _ =>
         pe(msg"unexpected character '${escapeChar(c)}'")
-        go(i + 1, ERROR)
+        // go(i + 1, ERROR)
+        lex(i + 1, ind, next(i + 1, ERROR))
     }
   }
  
@@ -174,10 +223,12 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
             case ((k0, l0), oldAcc) :: stack =>
               if (k0 =/= k1)
                 raise(ErrorReport(msg"Mistmatched closing ${k1.name}" -> S(l1) ::
-                  msg"does not correspond to opening ${k0.name}" -> S(l0) :: Nil, source = Parsing))
+                  msg"does not correspond to opening ${k0.name}" -> S(l0) :: Nil, newDefs = true,
+                  source = Parsing))
               go(rest, true, stack, BRACKETS(k0, acc.reverse)(l0.right ++ l1.left) -> (l0 ++ l1) :: oldAcc)
             case Nil =>
-              raise(ErrorReport(msg"Unexpected closing ${k1.name}" -> S(l1) :: Nil, source = Parsing))
+              raise(ErrorReport(msg"Unexpected closing ${k1.name}" -> S(l1) :: Nil,
+                newDefs = true, source = Parsing))
               go(rest, false, stack, acc)
           }
         case (INDENT, loc) :: rest =>
@@ -198,8 +249,10 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
         })) => // split  `>>` to `>` and `>` so that code like `A<B<C>>` can be parsed correctly
           go((CLOSE_BRACKET(Angle) -> loc.left) :: (IDENT(id.drop(1), true) -> loc) :: rest, false, stack, acc)
         case ((tk @ IDENT(">", true), loc)) :: rest if canStartAngles =>
-          raise(WarningReport(msg"This looks like an angle bracket, but it does not close any angle bracket section" -> S(loc) ::
-            msg"Add spaces around it if you intended to use `<` as an operator" -> N :: Nil, source = Parsing))
+          raise(WarningReport(
+            msg"This looks like an angle bracket, but it does not close any angle bracket section" -> S(loc) ::
+            msg"Add spaces around it if you intended to use `<` as an operator" -> N :: Nil,
+            newDefs = true, source = Parsing))
           go(rest, false, stack, tk -> loc :: acc)
         case (tk: Stroken, loc) :: rest =>
           go(rest, tk match {
@@ -215,7 +268,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
                 if (k === Angle)
                   msg"Note that `<` without spaces around it is considered as an angle bracket and not as an operator" -> N :: Nil
                 else Nil
-              ), source = Parsing))
+              ), newDefs = true, source = Parsing))
               (oldAcc ::: acc).reverse
             case Nil => acc.reverse
           }
@@ -236,6 +289,8 @@ object NewLexer {
     "then",
     "else",
     "fun",
+    "val",
+    "var",
     // "is",
     // "as",
     "of",
@@ -247,15 +302,28 @@ object NewLexer {
     // "any",
     // "all",
     "mut",
+    "declare",
     "class",
     "trait",
+    "mixin",
     "interface",
+    "extends",
+    "override",
+    "super",
     "new",
     "namespace",
+    "module",
     "type",
     "where",
     "forall",
     "exists",
+    "in",
+    "out",
+    "null",
+    "undefined",
+    "abstract",
+    "constructor",
+    "virtual"
   )
   
   def printToken(tl: TokLoc): Str = tl match {

@@ -5,7 +5,7 @@ forall 'a; 'a => 'a
 
 forall 'a, 'b; ('a, 'b) => ('b, 'a)
 //│ |#forall| |'a|,| |'b|#;| |(|'a|,| |'b|)| |=>| |(|'b|,| |'a|)|
-//│ Parsed: {forall 'a, 'b. ('a, 'b,) => '(' 'b, 'a, ')'}
+//│ Parsed: {forall 'a, 'b. ('a, 'b,) => '(' ['b, 'a,] ')'}
 
 fun f: forall 'a; 'a => 'a
 //│ |#fun| |f|#:| |#forall| |'a|#;| |'a| |=>| |'a|
@@ -13,5 +13,5 @@ fun f: forall 'a; 'a => 'a
 
 fun f: forall 'a, 'b; ('a, 'b) => ('b, 'a)
 //│ |#fun| |f|#:| |#forall| |'a|,| |'b|#;| |(|'a|,| |'b|)| |=>| |(|'b|,| |'a|)|
-//│ Parsed: {fun f: forall 'a 'b. ('a, 'b,) -> ('b, 'a,)}
+//│ Parsed: {fun f: forall 'a 'b. ('a, 'b) -> ['b, 'a]}
 

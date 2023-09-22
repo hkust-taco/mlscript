@@ -93,7 +93,7 @@ rec def length l =
 //│ List[?] -> int
 //│   <:  length:
 //│ List[?] -> int
-//│       = [Function: length]
+//│       = [Function: length1]
 
 def choose: forall 'a. 'a -> 'a -> 'a
 def choose x y = if true then x else y

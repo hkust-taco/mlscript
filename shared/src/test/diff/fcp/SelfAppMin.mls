@@ -21,7 +21,7 @@ e = eval eval
 //│ ║  l.19: 	e = eval eval
 //│ ║        	    ^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
-//│ e: (A & {f: A | L} | L) -> 0 | error
+//│ e: error | (A & {f: A | L} | L) -> 0
 //│  = [Function (anonymous)]
 
 e (A{f = L{}})
@@ -102,7 +102,7 @@ e = eval eval
 //│ ║  l.100: 	e = eval eval
 //│ ║         	    ^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
-//│ e: (A & {f: A | L} | L) -> (0 | {x: 0 | {x: nothing}}) | error
+//│ e: error | (A & {f: A | L} | L) -> (0 | {x: 0 | {x: nothing}})
 //│  = [Function (anonymous)]
 
 :re

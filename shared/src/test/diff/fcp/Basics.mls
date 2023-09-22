@@ -67,7 +67,7 @@ example 1
 //│ ╟── from reference:
 //│ ║  l.52: 	def example f = (f: forall 'a. 'a -> 'a)
 //│ ╙──      	                 ^
-//│ res: 'a -> 'a | error
+//│ res: error | 'a -> 'a
 //│    = 1
 
 :e
@@ -81,7 +81,7 @@ example succ
 //│ ╟── Note: quantified type variable 'a is defined at:
 //│ ║  l.52: 	def example f = (f: forall 'a. 'a -> 'a)
 //│ ╙──      	                           ^^
-//│ res: 'a -> 'a | error
+//│ res: error | 'a -> 'a
 //│    = [Function: succ]
 
 example id
@@ -124,7 +124,7 @@ ex 1
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.108: 	def ex x = example x
 //│ ╙──       	                   ^
-//│ res: (0, nothing,) | error
+//│ res: error | (0, nothing,)
 //│    = [ 0, 1 ]
 
 def example f = ((0, f) : forall 'a. (0, 'a -> 'a))

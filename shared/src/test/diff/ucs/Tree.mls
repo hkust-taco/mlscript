@@ -1,0 +1,42 @@
+:NewDefs
+
+type Option[A] = Some[A] | None
+class Some[A](value: A)
+module None
+//│ type Option[A] = None | Some[A]
+//│ class Some[A](value: A)
+//│ module None
+
+type Tree[A] = Node[A] | Empty
+module Empty
+class Node[A](value: Int, left: Tree[A], right: Tree[A])
+//│ type Tree[A] = Empty | Node[A]
+//│ module Empty
+//│ class Node[A](value: Int, left: Tree[A], right: Tree[A])
+
+fun find(t, v) = if t is
+  Node(v', l, r) and
+    v < v' then find(l, v)
+    v > v' then find(r, v)
+    _ then Some(v)
+  Empty then None
+//│ fun find: forall 'A 'A0. (Empty | Node['A], Num & 'A0) -> (None | Some['A0])
+
+fun insert(t, v) = if t is
+  Node(v', l, r) and
+    v < v' then Node(v', insert(l, v), r)
+    v > v' then Node(v', l, insert(r, v))
+    _ then t
+  Empty then Node(v, Empty, Empty)
+//│ fun insert: forall 'A. (Empty | Node['A], Int) -> Node['A]
+
+find(Empty, 0)
+find(Node(0, Empty, Empty), 0)
+find(Node(1, Empty, Empty), 0)
+//│ None | Some[0]
+//│ res
+//│     = None { class: [class None] }
+//│ res
+//│     = Some {}
+//│ res
+//│     = None { class: [class None] }

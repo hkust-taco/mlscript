@@ -1,0 +1,54 @@
+:NewDefs
+
+
+
+class Some[T](value: T)
+//│ class Some[T](value: T)
+
+
+
+// TODO
+fun f(a, b) = if a is
+  Some(av)
+    and b is Some(bv) then av + bv
+//│ ╔══[ERROR] Illegal pattern `and`
+//│ ║  l.13: 	    and b is Some(bv) then av + bv
+//│ ╙──      	    ^^^
+//│ fun f: (anything, anything) -> error
+//│ Code generation encountered an error:
+//│   if expression was not desugared
+
+:p
+fun f(a, b) = if a is Some(av)
+    and b is Some(bv)
+    then av + bv
+//│ |#fun| |f|(|a|,| |b|)| |#=| |#if| |a| |is| |Some|(|av|)|→|and| |b| |is| |Some|(|bv|)|↵|#then| |av| |+| |bv|←|
+//│ AST: TypingUnit(NuFunDef(None, f, None, [], Lam(Tup(_: Var(a), _: Var(b)), If(IfOpApp(Var(a), Var(is), I; f; O; p; s; A; p; p; (; A; p; p; (; V; a; r; (; S; o; m; e; ); ,;  ; T; u; p; (; _; :;  ; V; a; r; (; a; v; ); ); ); ,;  ; <; i; t; e; r; a; t; o; r; >, None))))
+//│ Parsed: fun f = (a, b,) => if a is Some(av,) ‹· and (is(b, Some(bv,),)) then +(av, bv,)›;
+//│ fun f: (Some[Int], Some[Int]) -> Int
+
+// TODO
+:p
+fun f(a, b) = if a is
+  Some(av)
+    and b is Some(bv)
+    then av + bv
+//│ |#fun| |f|(|a|,| |b|)| |#=| |#if| |a| |is|→|Some|(|av|)|→|and| |b| |is| |Some|(|bv|)|↵|#then| |av| |+| |bv|←|←|
+//│ AST: TypingUnit(NuFunDef(None, f, None, [], Lam(Tup(_: Var(a), _: Var(b)), If(IfOpApp(Var(a), Var(is), IfBlock(I; f; O; p; s; A; p; p; (; A; p; p; (; V; a; r; (; S; o; m; e; ); ,;  ; T; u; p; (; _; :;  ; V; a; r; (; a; v; ); ); ); ,;  ; <; i; t; e; r; a; t; o; r; >), None))))
+//│ Parsed: fun f = (a, b,) => if a is ‹Some(av,) ‹· and (is(b, Some(bv,),)) then +(av, bv,)››;
+//│ ╔══[ERROR] Illegal pattern `and`
+//│ ║  l.34: 	    and b is Some(bv)
+//│ ╙──      	    ^^^
+//│ fun f: (anything, anything) -> error
+//│ Code generation encountered an error:
+//│   if expression was not desugared
+
+
+
+// FIXME (parser)
+fun f(a, b) = if a is
+  Some(av)
+    and b is Some(bv) then av + bv
+    
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+

@@ -23,7 +23,7 @@ class ExprPrinter:
         else typeParams.iterator.map(_.name).mkString("[", ", ", "]")
       val reprParents = if parents.isEmpty then ""
         else parents.iterator.map { case (parent, args) =>
-          parent.show + args.iterator.mkString("(", ", ", ")")
+          parent.show(true) + args.iterator.mkString("(", ", ", ")")
         }.mkString(": ", ", ", "")
       print(s"$kind $name$typeParamsStr${show(params)}$reprParents ")
       show(body)

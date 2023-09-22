@@ -1,0 +1,109 @@
+:NewDefs
+
+
+class C
+//│ class C {
+//│   constructor()
+//│ }
+
+:js
+new C
+//│ C
+//│ // Prelude
+//│ class TypingUnit1 {}
+//│ const typing_unit1 = new TypingUnit1;
+//│ // Query 1
+//│ res = new C();
+//│ // End of generated code
+//│ res
+//│     = C {}
+
+:e
+:js
+C()
+//│ ╔══[ERROR] Construction of unparameterized class C should use the `new` keyword
+//│ ║  l.23: 	C()
+//│ ╙──      	^
+//│ C
+//│ // Prelude
+//│ class TypingUnit2 {}
+//│ const typing_unit2 = new TypingUnit2;
+//│ // Query 1
+//│ res = C();
+//│ // End of generated code
+//│ res
+//│ Runtime error:
+//│   TypeError: Class constructor C cannot be invoked without 'new'
+
+:js
+:e // TODO support first-class classes
+let c = C
+//│ ╔══[ERROR] Construction of unparameterized class C should use the `new` keyword
+//│ ║  l.40: 	let c = C
+//│ ╙──      	        ^
+//│ let c: () -> C
+//│ // Prelude
+//│ class TypingUnit3 {}
+//│ const typing_unit3 = new TypingUnit3;
+//│ // Query 1
+//│ globalThis.c = C;
+//│ // End of generated code
+//│ c
+//│   = [class C]
+
+:re // TODO should eventually be reject in type checking
+c()
+//│ C
+//│ res
+//│ Runtime error:
+//│   TypeError: Class constructor C cannot be invoked without 'new'
+
+
+class C()
+//│ class C()
+
+:js
+new C
+//│ C
+//│ // Prelude
+//│ class TypingUnit6 {}
+//│ const typing_unit6 = new TypingUnit6;
+//│ // Query 1
+//│ res = new C.class();
+//│ // End of generated code
+//│ res
+//│     = C {}
+
+:js
+C()
+//│ C
+//│ // Prelude
+//│ class TypingUnit7 {}
+//│ const typing_unit7 = new TypingUnit7;
+//│ // Query 1
+//│ res = C();
+//│ // End of generated code
+//│ res
+//│     = C {}
+
+:js
+let c = C
+//│ let c: () -> C
+//│ // Prelude
+//│ class TypingUnit8 {}
+//│ const typing_unit8 = new TypingUnit8;
+//│ // Query 1
+//│ globalThis.c1 = C;
+//│ // End of generated code
+//│ c
+//│   = [Function (anonymous)] {
+//│       class: [class C],
+//│       unapply: [Function: unapply]
+//│     }
+
+c()
+//│ C
+//│ res
+//│     = C {}
+
+

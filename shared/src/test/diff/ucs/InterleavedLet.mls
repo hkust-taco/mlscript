@@ -39,15 +39,19 @@ fun q(x) =
 //│ q: Some -> 0
 //│  = [Function: q]
 
-// FIXME
 :w
 fun p(x, y) =
   if
     x is Some and y is None then 0
     y is Some and x is Some then 1
     x is Some and y is Some then 0
-//│ ╔══[WARNING] duplicated branch
-//│ ╙──
+//│ ╔══[WARNING] Found a duplicated branch
+//│ ╟── This branch
+//│ ║  l.47: 	    x is Some and y is Some then 0
+//│ ║        	                                 ^
+//│ ╟── is subsumed by the branch here.
+//│ ║  l.46: 	    y is Some and x is Some then 1
+//│ ╙──      	                                 ^
 //│ p: (Some, None | Some,) -> (0 | 1)
 //│  = [Function: p]
 
@@ -88,9 +92,9 @@ fun q(a) =
     let y = a + 1
     then y
 //│ ╔══[PARSE ERROR] Expected an expression; found a 'then'/'else' clause instead
-//│ ║  l.88: 	    let y = a + 1
+//│ ║  l.92: 	    let y = a + 1
 //│ ║        	            ^^^^^
-//│ ║  l.89: 	    then y
+//│ ║  l.93: 	    then y
 //│ ╙──      	^^^^^^^^^^
 //│ q: (Left & {leftValue: 'leftValue}) -> 'leftValue
 //│  = [Function: q1]
@@ -229,7 +233,10 @@ fun showList(xs) =
 //│         = [Function: showList]
 
 let zeroToThree = Cons(0, Cons(1, Cons(2, Cons(3, Nil()))))
-//│ zeroToThree: Cons & {head: 0, tail: Cons & {head: 1, tail: Cons & {head: 2, tail: Cons & {head: 3, tail: Nil}}}}
+//│ zeroToThree: Cons & {
+//│   head: 0,
+//│   tail: Cons & {head: 1, tail: Cons & {head: 2, tail: Cons & {head: 3, tail: Nil}}}
+//│ }
 //│            = Cons {
 //│                head: 0,
 //│                tail: Cons { head: 1, tail: Cons { head: 2, tail: [Cons] } }
@@ -239,7 +246,6 @@ showList(zeroToThree)
 //│ res: string
 //│    = '0, 1, 2, 3'
 
-// FIXME: This needs lifting functions.
 fun mapPartition(f, xs) =
   if xs is
     Nil then Pair(Nil(), Nil())
@@ -249,28 +255,98 @@ fun mapPartition(f, xs) =
       let r = res.snd
       Left(v)  then Pair(Cons(v, l), r)
       Right(v) then Pair(l, Cons(v, r))
-//│ mapPartition: ('head -> (Left & {leftValue: 'leftValue} | Right & {rightValue: 'rightValue}), 'tail,) -> (Pair & {fst: 'fst, snd: 'tail0})
+//│ mapPartition: ('head -> (Left & {leftValue: 'leftValue} | Right & {rightValue: 'rightValue}), 'tail,) -> (Pair & {fst: 'fst, snd: 'snd})
 //│   where
-//│     'tail0 :> Cons & {head: 'rightValue, tail: 'tail0} | Nil
-//│     'fst :> Nil | Cons & {head: 'leftValue, tail: 'fst}
+//│     'snd :> Cons & {head: 'rightValue, tail: 'snd}
+//│     'fst :> Cons & {head: 'leftValue, tail: 'fst}
 //│     'tail <: Cons & {head: 'head, tail: 'tail} | Nil
 //│             = [Function: mapPartition]
 
-// FIXME: Something wrong with code generation.
 mapPartition(x => if x % 2 == 0 then Left(x) else Right(x), zeroToThree)
 //│ res: Pair & {fst: 'fst, snd: 'snd}
 //│   where
 //│     'snd :> Cons & {head: 0 | 1 | 2 | 3, tail: 'snd} | Nil
 //│     'fst :> Nil | Cons & {head: 0 | 1 | 2 | 3, tail: 'fst}
-//│ Runtime error:
-//│   RangeError: Maximum call stack size exceeded
+//│    = Pair {
+//│        fst: Cons { head: 0, tail: Cons { head: 2, tail: Nil {} } },
+//│        snd: Cons { head: 1, tail: Cons { head: 3, tail: Nil {} } }
+//│      }
+
+// This should be the desugaring of the above:
+fun mapPartition2(f, xs) =
+  if xs is
+    Nil then Pair(Nil(), Nil())
+    Cons(x, xs) and mapPartition(f, xs) is res and res.fst is l and res.snd is r and f(x) is
+      Left(v)  then Pair(Cons(v, l), r)
+      Right(v) then Pair(l, Cons(v, r))
+//│ mapPartition2: ('head -> (Left & {leftValue: 'leftValue} | Right & {rightValue: 'rightValue}) & 'head0 -> (Left & {leftValue: 'leftValue0} | Right & {rightValue: 'rightValue0}), Cons & {head: 'head0, tail: 'tail} | Nil,) -> (Pair & {
+//│   fst: forall 'fst. Cons & {
+//│     head: 'leftValue0,
+//│     tail: forall 'fst0. Nil | 'fst0 | Cons & {head: 'leftValue, tail: Nil | 'fst0}
+//│   } | Nil | 'fst | Cons & {head: 'leftValue, tail: Nil | 'fst},
+//│   snd: forall 'snd. Cons & {
+//│     head: 'rightValue0,
+//│     tail: forall 'snd0. Nil | 'snd0 | Cons & {head: 'rightValue, tail: Nil | 'snd0}
+//│   } | Nil | 'snd | Cons & {head: 'rightValue, tail: Nil | 'snd}
+//│ })
+//│ where
+//│   'snd :> Nil | Cons & {head: 'rightValue, tail: 'snd}
+//│   'snd0 :> Nil | Cons & {head: 'rightValue, tail: 'snd0}
+//│   'fst :> Nil | Cons & {head: 'leftValue, tail: 'fst}
+//│   'fst0 :> Nil | Cons & {head: 'leftValue, tail: 'fst0}
+//│   'tail <: Cons & {head: 'head, tail: 'tail} | Nil
+//│              = [Function: mapPartition2]
+
+mapPartition2(x => if x % 2 == 0 then Left(x) else Right(x), zeroToThree)
+//│ res: Pair & {
+//│   fst: forall 'fst. Cons & {
+//│     head: 0,
+//│     tail: forall 'fst0. Nil | 'fst0 | Cons & {head: 1 | 2 | 3, tail: Nil | 'fst0}
+//│   } | Nil | 'fst | Cons & {head: 1 | 2 | 3, tail: Nil | 'fst},
+//│   snd: forall 'snd. Cons & {
+//│     head: 0,
+//│     tail: forall 'snd0. Nil | 'snd0 | Cons & {head: 1 | 2 | 3, tail: Nil | 'snd0}
+//│   } | Nil | 'snd | Cons & {head: 1 | 2 | 3, tail: Nil | 'snd}
+//│ }
+//│ where
+//│   'snd :> Nil | Cons & {head: 1 | 2 | 3, tail: 'snd}
+//│   'snd0 :> Nil | Cons & {head: 1 | 2 | 3, tail: 'snd0}
+//│   'fst :> Nil | Cons & {head: 1 | 2 | 3, tail: 'fst}
+//│   'fst0 :> Nil | Cons & {head: 1 | 2 | 3, tail: 'fst0}
+//│    = Pair {
+//│        fst: Cons { head: 0, tail: Cons { head: 2, tail: Nil {} } },
+//│        snd: Cons { head: 1, tail: Cons { head: 3, tail: Nil {} } }
+//│      }
+
+fun log(x) = ()
+//│ log: anything -> ()
+//│    = [Function: log]
 
 fun mn(a) =
   if a is
     Some(x) and x is
-      Left(a)  then "left-defined"
-      let y = x + 1
+      Left(b) and b is
+        0 then "b is 1"
+        let _ = log(b)
+        1 then "b is 2"
+        2 then "b is 3"
       Right(b) then "right-defined"
     None       then "undefined"
-//│ mn: (None | Some & {value: nothing}) -> ("left-defined" | "right-defined" | "undefined")
+//│ mn: (None | Some & {value: Left & {leftValue: 0 | 1 | 2} | Right}) -> ("b is 1" | "b is 2" | "b is 3" | "right-defined" | "undefined")
 //│   = [Function: mn]
+
+mn(None())
+mn(Some(Left(0)))
+mn(Some(Left(1)))
+mn(Some(Left(2)))
+mn(Some(Right(())))
+//│ res: "b is 1" | "b is 2" | "b is 3" | "right-defined" | "undefined"
+//│    = 'undefined'
+//│ res: "b is 1" | "b is 2" | "b is 3" | "right-defined" | "undefined"
+//│    = 'b is 1'
+//│ res: "b is 1" | "b is 2" | "b is 3" | "right-defined" | "undefined"
+//│    = 'b is 2'
+//│ res: "b is 1" | "b is 2" | "b is 3" | "right-defined" | "undefined"
+//│    = 'b is 3'
+//│ res: "b is 1" | "b is 2" | "b is 3" | "right-defined" | "undefined"
+//│    = 'right-defined'

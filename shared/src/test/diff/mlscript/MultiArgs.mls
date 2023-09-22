@@ -65,7 +65,7 @@ bar((1, 2))
 
 def bar((x, y)) = add x y
 bar((1, 2))
-//│ bar: (int, int,) -> int
+//│ bar: ((int, int,),) -> int
 //│    = [Function: bar4]
 //│ res: int
 //│    = 3
@@ -73,10 +73,10 @@ bar((1, 2))
 :p
 f = fun (x, y) -> add x y
 f(1, 2)
-//│ Parsed: let f = (x, y,) => add (x,) (y,); f (1, 2,);
-//│ Desugared: def f: (x, y,) => add (x,) (y,)
+//│ Parsed: let f = (x, y,) => add(x,)(y,); f(1, 2,);
+//│ Desugared: def f: (x, y,) => add(x,)(y,)
 //│ AST: Def(false, f, Lam(Tup(_: Var(x), _: Var(y)), App(App(Var(add), Tup(_: Var(x))), Tup(_: Var(y)))), false)
-//│ Desugared: f (1, 2,)
+//│ Desugared: f(1, 2,)
 //│ AST: App(Var(f), Tup(_: IntLit(1), _: IntLit(2)))
 //│ f: (int, int,) -> int
 //│  = [Function: f]
@@ -117,12 +117,12 @@ f r
 :p
 f = fun ((x, y)) -> add x y
 f((1, 2))
-//│ Parsed: let f = ('(' x, y, ')',) => add (x,) (y,); f ('(' 1, 2, ')',);
-//│ Desugared: def f: ('(' x, y, ')',) => add (x,) (y,)
+//│ Parsed: let f = ('(' [x, y,] ')',) => add(x,)(y,); f('(' [1, 2,] ')',);
+//│ Desugared: def f: ('(' [x, y,] ')',) => add(x,)(y,)
 //│ AST: Def(false, f, Lam(Tup(_: Bra(rcd = false, Tup(_: Var(x), _: Var(y)))), App(App(Var(add), Tup(_: Var(x))), Tup(_: Var(y)))), false)
-//│ Desugared: f ('(' 1, 2, ')',)
+//│ Desugared: f('(' [1, 2,] ')',)
 //│ AST: App(Var(f), Tup(_: Bra(rcd = false, Tup(_: IntLit(1), _: IntLit(2)))))
-//│ f: (int, int,) -> int
+//│ f: ((int, int,),) -> int
 //│  = [Function: f1]
 //│ res: int
 //│    = 3

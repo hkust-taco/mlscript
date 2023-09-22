@@ -55,7 +55,7 @@ class A0: S0[int] & T0[string]
 //│ ╟── Hint: method Foo0 is abstract
 //│ ║  l.44: 	class A0: S0[int] & T0[string]
 //│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^^^
-//│ res: error
+//│ res: nothing
 //│    = undefined
 
 :e
@@ -149,7 +149,7 @@ class A1_2: S1 & T1
 //│ Defined A1_2.Foo1: A1_2 -> nothing
 //│ // Prelude
 //│ function error() {
-//│   throw new Error("unexpected runtime error");
+//│   throw new Error("an error was thrown");
 //│ }
 //│ class A1_2 {
 //│   constructor(fields) {
@@ -166,7 +166,7 @@ class A1_2: S1 & T1
 (A1_2{}).Foo1
 //│ res: nothing
 //│ Runtime error:
-//│   Error: unexpected runtime error
+//│   Error: an error was thrown
 
 
 f = 0

@@ -12,7 +12,7 @@ fun ((x, y)) -> x
 //│   y
 //│ ]) => x);
 //│ // End of generated code
-//│ res: ('a, anything,) -> 'a
+//│ res: (('a, anything,),) -> 'a
 //│    = [Function: res]
 
 :js

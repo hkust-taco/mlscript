@@ -104,7 +104,7 @@ x => succ (not x)
 //│ ╟── from reference:
 //│ ║  l.+1: 	(f => x => not (f x.u)) false
 //│ ╙──      	                ^
-//│ res: {u: anything} -> bool | error
+//│ res: error | {u: anything} -> bool
 
 
 
@@ -134,7 +134,7 @@ f => { x: f 42, y: 123 }.y
 //│ res: (42 -> anything) -> 123
 
 if true then { a: 1, b: true } else { b: false, c: 42 }
-//│ res: {b: bool}
+//│ res: {b: Bool}
 
 :e
 { a: 123, b: true }.c
@@ -220,7 +220,7 @@ x => {l: x x, r: x }
 //│ ║  l.+1: 	(f => (x => f (v => (x x) v)) (x => f (v => (x x) v))) (f => x => f)
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
-//│ res: 'a | error
+//│ res: error | 'a
 //│   where
 //│     'a :> anything -> 'a
 
@@ -435,32 +435,32 @@ let rec x = (let y = (x x); (z => z))
 // * Z combinator:
 // :e // Works thanks to inconsistent constrained types...
 (f => (x => f (v => (x x) v)) (x => f (v => (x x) v)))
-//│ res: ((forall 'a 'b. ('a -> 'b
+//│ res: ((forall 'a 'b. 'a -> 'b
 //│   where
-//│     forall 'c 'd. ('c -> 'd
-//│   where
-//│     'e <: (forall 'f 'g. ('f -> 'g
-//│   where
-//│     'c <: 'c -> 'f -> 'g)) -> 'd) <: (forall 'c 'd. ('c -> 'd
-//│   where
-//│     'e <: (forall 'f 'g. ('f -> 'g
-//│   where
-//│     'c <: 'c -> 'f -> 'g)) -> 'd)) -> 'a -> 'b)) -> 'h & 'e) -> 'h
+//│     forall 'c 'd. 'd -> 'c
+//│       where
+//│         'e <: (forall 'f 'g. 'f -> 'g
+//│           where
+//│             'd <: 'd -> 'f -> 'g) -> 'c <: (forall 'c 'd. 'd -> 'c
+//│       where
+//│         'e <: (forall 'f 'g. 'f -> 'g
+//│           where
+//│             'd <: 'd -> 'f -> 'g) -> 'c) -> 'a -> 'b) -> 'h & 'e) -> 'h
 
 // * Function that takes arbitrarily many arguments:
 // :e // Works thanks to inconsistent constrained types...
 (f => (x => f (v => (x x) v)) (x => f (v => (x x) v))) (f => x => f)
-//│ res: anything -> (forall 'a 'b. ('b -> 'a
+//│ res: anything -> (forall 'a 'b. 'a -> 'b
 //│   where
-//│     forall 'c 'd. ('c -> 'd
-//│   where
-//│     forall 'e. 'e -> anything -> 'e <: (forall 'f 'g. ('f -> 'g
-//│   where
-//│     'c <: 'c -> 'f -> 'g)) -> 'd) <: (forall 'c 'd. ('c -> 'd
-//│   where
-//│     forall 'e. 'e -> anything -> 'e <: (forall 'f 'g. ('f -> 'g
-//│   where
-//│     'c <: 'c -> 'f -> 'g)) -> 'd)) -> 'b -> 'a))
+//│     forall 'c 'd. 'c -> 'd
+//│       where
+//│         forall 'e. 'e -> anything -> 'e <: (forall 'f 'g. 'f -> 'g
+//│           where
+//│             'c <: 'c -> 'f -> 'g) -> 'd <: (forall 'c 'd. 'c -> 'd
+//│       where
+//│         forall 'e. 'e -> anything -> 'e <: (forall 'f 'g. 'f -> 'g
+//│           where
+//│             'c <: 'c -> 'f -> 'g) -> 'd) -> 'a -> 'b)
 
 
 

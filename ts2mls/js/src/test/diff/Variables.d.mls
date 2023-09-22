@@ -1,4 +1,4 @@
-:NewParser
+:NewDefs
 :ParseOnly
 let URI: string
 let URI2: string
@@ -6,13 +6,14 @@ let foo: number
 let bar: false
 class FooBar() {}
 let fb: FooBar
-namespace ABC {
+module ABC {
   class DEF() {}
 }
 let d: ABC.DEF
-namespace DD {
+module DD {
   let foo: number
   let bar: number
 }
-//│ |#let| |URI|#:| |string|↵|#let| |URI2|#:| |string|↵|#let| |foo|#:| |number|↵|#let| |bar|#:| |false|↵|#class| |FooBar|(||)| |{||}|↵|#let| |fb|#:| |FooBar|↵|#namespace| |ABC| |{|→|#class| |DEF|(||)| |{||}|←|↵|}|↵|#let| |d|#:| |ABC|.DEF|↵|#namespace| |DD| |{|→|#let| |foo|#:| |number|↵|#let| |bar|#:| |number|←|↵|}|
-//│ Parsed: {let URI: string; let URI2: string; let foo: number; let bar: false; class FooBar() {}; let fb: FooBar; namespace ABC() {class DEF() {}}; let d: ABC.DEF; namespace DD() {let foo: number; let bar: number}}
+//│ |#let| |URI|#:| |string|↵|#let| |URI2|#:| |string|↵|#let| |foo|#:| |number|↵|#let| |bar|#:| |false|↵|#class| |FooBar|(||)| |{||}|↵|#let| |fb|#:| |FooBar|↵|#module| |ABC| |{|→|#class| |DEF|(||)| |{||}|←|↵|}|↵|#let| |d|#:| |ABC|.DEF|↵|#module| |DD| |{|→|#let| |foo|#:| |number|↵|#let| |bar|#:| |number|←|↵|}|
+//│ Parsed: {let URI: string; let URI2: string; let foo: number; let bar: false; class FooBar() {}; let fb: FooBar; module ABC {class DEF() {}}; let d: ABC.DEF; module DD {let foo: number; let bar: number}}
+//│ 

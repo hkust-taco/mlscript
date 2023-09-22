@@ -5,11 +5,11 @@ x.a
 
 x . a
 //│ |x| |.| |a|
-//│ Parsed: {. (x,) (a,)}
+//│ Parsed: {.(x,)(a,)}
 
 x. a
 //│ |x|.| |a|
-//│ Parsed: {. (x,) (a,)}
+//│ Parsed: {.(x,)(a,)}
 
 x .a
 //│ |x| |.a|
@@ -84,19 +84,15 @@ x
 //│ ╙──      	 ^
 //│ Parsed: {undefined}
 
-:pe
 (.)
 //│ |(|.|)|
-//│ ╔══[PARSE ERROR] Unexpected operator here
-//│ ║  l.88: 	(.)
-//│ ╙──      	 ^
-//│ Parsed: {'('  ')'}
+//│ Parsed: {.}
 
 :pe
 a, b
 //│ |a|,| |b|
 //│ ╔══[PARSE ERROR] Expected end of input; found comma instead
-//│ ║  l.96: 	a, b
+//│ ║  l.92: 	a, b
 //│ ╙──      	 ^
 //│ Parsed: {a}
 
@@ -107,32 +103,32 @@ a .b .c
 
 a + 1 .c
 //│ |a| |+| |1| |.c|
-//│ Parsed: {+ (a,) ((1).c,)}
+//│ Parsed: {+(a,)((1).c,)}
 
 a + f(1) .c
 //│ |a| |+| |f|(|1|)| |.c|
-//│ Parsed: {+ (a,) ((f (1,)).c,)}
+//│ Parsed: {+(a,)((f(1,)).c,)}
 
 a + f (1) .c
 //│ |a| |+| |f| |(|1|)| |.c|
-//│ Parsed: {+ (a,) ((f (1,)).c,)}
+//│ Parsed: {+(a,)((f(1,)).c,)}
 
 a + f (1).c
 //│ |a| |+| |f| |(|1|)|.c|
-//│ Parsed: {+ (a,) ((f (1,)).c,)}
+//│ Parsed: {+(a,)((f(1,)).c,)}
 
 f of x . y
 //│ |f| |#of| |x| |.| |y|
-//│ Parsed: {f (. (x,) (y,),)}
+//│ Parsed: {f(.(x,)(y,),)}
 
 f of x .y
 //│ |f| |#of| |x| |.y|
-//│ Parsed: {f ((x).y,)}
+//│ Parsed: {f((x).y,)}
 
 a + b
   .c
 //│ |a| |+| |b|→|.c|←|
-//│ Parsed: {(+ (a,) (b,)).c}
+//│ Parsed: {(+(a,)(b,)).c}
 
 :pe
 a +
@@ -140,49 +136,49 @@ a +
   .c
 //│ |a| |+|→|b|↵|.c|←|
 //│ ╔══[PARSE ERROR] Unexpected selector in expression position
-//│ ║  l.140: 	  .c
+//│ ║  l.136: 	  .c
 //│ ╙──       	  ^^
 //│ ╔══[PARSE ERROR] Unexpected end of indented block; an expression was expected here
-//│ ║  l.140: 	  .c
+//│ ║  l.136: 	  .c
 //│ ╙──       	    ^
-//│ Parsed: {+ (a,) ({b; undefined},)}
+//│ Parsed: {+(a,)({b; undefined},)}
 
 a +
   b
     .c
 //│ |a| |+|→|b|→|.c|←|←|
-//│ Parsed: {+ (a,) ({(b).c},)}
+//│ Parsed: {+(a,)({(b).c},)}
 
 a + b
   .c * 2
     .d - 1
 //│ |a| |+| |b|→|.c| |*| |2|→|.d| |-| |1|←|←|
-//│ Parsed: {- ((* ((+ (a,) (b,)).c,) (2,)).d,) (1,)}
+//│ Parsed: {-((*((+(a,)(b,)).c,)(2,)).d,)(1,)}
 
 a + b
   .c * 2
   .d - 1
 //│ |a| |+| |b|→|.c| |*| |2|↵|.d| |-| |1|←|
-//│ Parsed: {- ((* ((+ (a,) (b,)).c,) (2,)).d,) (1,)}
+//│ Parsed: {-((*((+(a,)(b,)).c,)(2,)).d,)(1,)}
 
 
 a
   .b
   of c
 //│ |a|→|.b|↵|#of| |c|←|
-//│ Parsed: {(a).b (c,)}
+//│ Parsed: {(a).b(c,)}
 
 a
   .b + 1
   of c
 //│ |a|→|.b| |+| |1|↵|#of| |c|←|
-//│ Parsed: {+ ((a).b,) (1,) (c,)}
+//│ Parsed: {+((a).b,)(1,)(c,)}
 
 a
   .b + 1
     of c
 //│ |a|→|.b| |+| |1|→|#of| |c|←|←|
-//│ Parsed: {+ ((a).b,) (1,) (c,)}
+//│ Parsed: {+((a).b,)(1,)(c,)}
 
 :pe
 a
@@ -191,37 +187,37 @@ a
     of c
 //│ |a|→|.b| |+|→|1|↵|#of| |c|←|←|
 //│ ╔══[PARSE ERROR] Unexpected 'of' keyword in expression position
-//│ ║  l.191: 	    of c
+//│ ║  l.187: 	    of c
 //│ ╙──       	    ^^
-//│ Parsed: {+ ((a).b,) ({1; c},)}
+//│ Parsed: {+((a).b,)({1; c},)}
 
 a
   .b +
     1
       of c
 //│ |a|→|.b| |+|→|1|→|#of| |c|←|←|←|
-//│ Parsed: {+ ((a).b,) ({1 (c,)},)}
+//│ Parsed: {+((a).b,)({1(c,)},)}
 
 a
   .b
   of c
   .d
 //│ |a|→|.b|↵|#of| |c|↵|.d|←|
-//│ Parsed: {((a).b (c,)).d}
+//│ Parsed: {((a).b(c,)).d}
 
 a
   .b
     of c
   .d
 //│ |a|→|.b|→|#of| |c|←|↵|.d|←|
-//│ Parsed: {((a).b (c,)).d}
+//│ Parsed: {((a).b(c,)).d}
 
 a
   .b
   +1
   *2
 //│ |a|→|.b|↵|+|1|↵|*|2|←|
-//│ Parsed: {* (+ ((a).b,) (1,),) (2,)}
+//│ Parsed: {*(+((a).b,)(1,),)(2,)}
 
 // TODO we should find a more uniform way of typing indented operator/selector/of blocks
 a
@@ -230,33 +226,33 @@ a
   .b
 //│ |a|→|+|1|↵|*|2|↵|.b|←|
 //│ ╔══[PARSE ERROR] Unexpected selector in operator block
-//│ ║  l.230: 	  .b
+//│ ║  l.226: 	  .b
 //│ ╙──       	  ^^
-//│ Parsed: {* (+ a 1) 2}
+//│ Parsed: {*(...(+(...a)(...1)))(...2)}
 
 
 1 .+ 2
 //│ |1| |.+| |2|
-//│ Parsed: {.+ (1,) (2,)}
+//│ Parsed: {.+(1,)(2,)}
 
 1 +. 2
 //│ |1| |+.| |2|
-//│ Parsed: {+. (1,) (2,)}
+//│ Parsed: {+.(1,)(2,)}
 
 1 .+! 2
 //│ |1| |.+!| |2|
-//│ Parsed: {.+! (1,) (2,)}
+//│ Parsed: {.+!(1,)(2,)}
 
 0 * 1 .+. 2 * 3
 //│ |0| |*| |1| |.+.| |2| |*| |3|
-//│ Parsed: {* (* (0,) (.+. (1,) (2,),),) (3,)}
+//│ Parsed: {*(*(0,)(.+.(1,)(2,),),)(3,)}
 
 :w
 1 .+a 2
 //│ |1| |.+|a| |2|
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.255: 	1 .+a 2
+//│ ║  l.251: 	1 .+a 2
 //│ ╙──       	    ^^^
-//│ Parsed: {.+ (1,) (a (2,),)}
+//│ Parsed: {.+(1,)(a(2,),)}
 
 

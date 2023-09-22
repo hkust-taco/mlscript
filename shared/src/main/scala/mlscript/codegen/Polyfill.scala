@@ -151,8 +151,11 @@ object Polyfill {
     )
     buffer += BuiltinFunc(
       "error", fn(_) {
-        `throw`(JSNew(JSIdent("Error"))(JSExpr("unexpected runtime error")))
+        `throw`(JSNew(JSIdent("Error"))(JSExpr("an error was thrown")))
       }
+    )
+    buffer += BuiltinFunc(
+      "length", fn(_, param("x")) { `return` { id("x").member("length") } }
     )
     buffer += BuiltinFunc("concat", makeBinaryFunc("+"))
     buffer += BuiltinFunc("add", makeBinaryFunc("+"))
@@ -162,6 +165,12 @@ object Polyfill {
     buffer += BuiltinFunc("gt", makeBinaryFunc(">"))
     buffer += BuiltinFunc("not", makeUnaryFunc("!"))
     buffer += BuiltinFunc("negate", makeUnaryFunc("-"))
+    buffer += BuiltinFunc("eq", makeBinaryFunc("==="))
+    buffer += BuiltinFunc("ne", makeBinaryFunc("!=="))
+    buffer += BuiltinFunc("sgt", makeBinaryFunc(">"))
+    buffer += BuiltinFunc("slt", makeBinaryFunc("<"))
+    buffer += BuiltinFunc("sge", makeBinaryFunc(">="))
+    buffer += BuiltinFunc("sle", makeBinaryFunc("<="))
     buffer += BuiltinFunc("eq", makeBinaryFunc("==="))
     buffer += BuiltinFunc("unit", makeUnaryFunc("undefined"))
     buffer += BuiltinFunc(

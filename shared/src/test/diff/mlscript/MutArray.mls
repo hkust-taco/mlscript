@@ -29,7 +29,7 @@ set0((1,))
 //│ ╟── tuple field of type `1` is not mutable
 //│ ║  l.25: 	set0((1,))
 //│ ╙──      	      ^
-//│ res: anything -> unit | error
+//│ res: error | anything -> unit
 //│    = [Function (anonymous)]
 
 

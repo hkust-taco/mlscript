@@ -147,7 +147,7 @@ not test
 
 // :ds
 def test: ~(int -> int) & ~bool
-//│ test: in ~(int -> int) & ~bool out nothing
+//│ test: in ~bool & ~(int -> int) out nothing
 
 def test: ~(int -> int) & bool
 //│ test: in bool out nothing

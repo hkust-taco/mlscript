@@ -4,13 +4,13 @@
 data type Either l r of
   Left l
   Right r
-//│ Parsed: data type Either l r of {Left l; Right r};
+//│ Parsed: data type Either(...l)(...r) of {Left(...l); Right(...r)};
 //│ Desugared: type alias Either[l, r] = Left[l, r] | Right[l, r]
 //│ Desugared: class Left[l, r]: {l: l}
 //│ Desugared: class Right[l, r]: {r: r}
-//│ Desugared: def Left: forall l r. l -> Left[l, r]
+//│ Desugared: def Left: forall l r. (...l) -> Left[l, r]
 //│ AST: Def(false, Left, PolyType(List(Left(TypeName(l)), Left(TypeName(r))),Function(TypeName(l),AppliedType(TypeName(Left),List(TypeName(l), TypeName(r))))), true)
-//│ Desugared: def Right: forall l r. r -> Right[l, r]
+//│ Desugared: def Right: forall l r. (...r) -> Right[l, r]
 //│ AST: Def(false, Right, PolyType(List(Left(TypeName(l)), Left(TypeName(r))),Function(TypeName(r),AppliedType(TypeName(Right),List(TypeName(l), TypeName(r))))), true)
 //│ Defined type alias Either[+l, +r]
 //│ Defined class Left[+l, ±r]
@@ -34,10 +34,10 @@ data type Either l r of
 data type Either2 (l: _) (r: _) of
   Left2 l
   Right2 r
-//│ ╔══[ERROR] illegal datatype type parameter shape: '(' {l: _,} ')'
+//│ ╔══[ERROR] illegal datatype type parameter shape: '(' {[l: _,]} ')'
 //│ ║  l.34: 	data type Either2 (l: _) (r: _) of
 //│ ╙──      	                  ^^^^^^
-//│ ╔══[ERROR] illegal datatype type parameter shape: '(' {r: _,} ')'
+//│ ╔══[ERROR] illegal datatype type parameter shape: '(' {[r: _,]} ')'
 //│ ║  l.34: 	data type Either2 (l: _) (r: _) of
 //│ ╙──      	                         ^^^^^^
 //│ ╔══[ERROR] type identifier not found: l

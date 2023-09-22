@@ -76,7 +76,7 @@ def mem[a]: a -> List[a] -> bool
 //│ mem: anything -> List[?] -> bool
 
 rec def mem x l = match_list l false (fun head -> fun tail -> if eq head x then true else mem x tail)
-//│ anything -> List[?] -> (false | true)
+//│ anything -> List[?] -> Bool
 //│   <:  mem:
 //│ anything -> List[?] -> bool
 

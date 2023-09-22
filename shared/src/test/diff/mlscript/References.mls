@@ -209,7 +209,7 @@ swap ri rn
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.86: 	ri = r : Ref[int]
 //│ ╙──      	             ^^^
-//│ res: (unit, unit,) | error
+//│ res: error | (unit, unit,)
 //│    = [ [], [] ]
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.202: 	swap ri rn
@@ -226,7 +226,7 @@ swap ri rn
 //│ ╟── Note: class type parameter A is defined at:
 //│ ║  l.3: 	class Ref[A]
 //│ ╙──     	          ^
-//│ res: (unit, unit,) | error
+//│ res: error | (unit, unit,)
 //│    = [ [], [] ]
 
 
@@ -269,7 +269,7 @@ res.Swap
 //│ res: ('A & ((int | string) & 'b | 'd & (int | string))) -> ('b & 'd | 'A)
 
 refin: Ref['a..'b] | Ref['c..'d]
-//│ res: Ref[in 'd & (~'d | int | string) out 'd]
+//│ res: Ref[in 'd & (int | string | ~'d) out 'd]
 //│    = <no result>
 //│      refin is not implemented
 
@@ -290,7 +290,7 @@ refrefin = RefImpl { mut value = error }
 //│   <:  refrefin:
 //│ Ref[in Ref[out int | string] out Ref[in int | string out nothing]]
 //│ Runtime error:
-//│   Error: unexpected runtime error
+//│   Error: an error was thrown
 
 :e
 refrefin = RefImpl { mut value = RefImpl { mut value = error } }
@@ -309,7 +309,7 @@ refrefin = RefImpl { mut value = RefImpl { mut value = error } }
 //│ ║  l.281: 	def refrefin: Ref[Ref[int] & Ref[string]]
 //│ ╙──       	                      ^^^
 //│ Runtime error:
-//│   Error: unexpected runtime error
+//│   Error: an error was thrown
 
 
 def consrefin: (Ref[int] & Ref[string]) -> int
@@ -390,7 +390,7 @@ refun.Swap
 //│ ╟── Note: class type parameter A is defined at:
 //│ ║  l.3: 	class Ref[A]
 //│ ╙──     	          ^
-//│ res: nothing -> (int | string) | error
+//│ res: error | nothing -> (int | string)
 //│    = <no result>
 //│      refun is not implemented
 

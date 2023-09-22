@@ -1,4 +1,4 @@
-:NewParser
+:NewDefs
 
 // Should report duplicated else branches.
 :w
@@ -6,93 +6,108 @@ if
   _ then 0
   else 0
 else 1
-//│ ╔══[WARNING] duplicated branch
-//│ ╙──
-//│ ╔══[WARNING] duplicated branch
-//│ ╙──
-//│ res: 0
-//│    = 0
+//│ ╔══[WARNING] Found a duplicated branch
+//│ ╟── This branch
+//│ ║  l.7: 	  else 0
+//│ ║       	       ^
+//│ ╟── is subsumed by the branch here.
+//│ ║  l.6: 	  _ then 0
+//│ ╙──     	         ^
+//│ ╔══[WARNING] Found a duplicated branch
+//│ ╟── This branch
+//│ ║  l.8: 	else 1
+//│ ║       	     ^
+//│ ╟── is subsumed by the branch here.
+//│ ║  l.6: 	  _ then 0
+//│ ╙──     	         ^
+//│ 0
+//│ res
+//│     = 0
 
 :w
 if else 0 else 1
-//│ ╔══[WARNING] duplicated branch
-//│ ╙──
-//│ res: 0
-//│    = 0
+//│ ╔══[WARNING] Found a duplicated branch
+//│ ╟── This branch
+//│ ║  l.28: 	if else 0 else 1
+//│ ║        	               ^
+//│ ╟── is subsumed by the branch here.
+//│ ║  l.28: 	if else 0 else 1
+//│ ╙──      	        ^
+//│ 0
+//│ res
+//│     = 0
 
 :w
 fun f(x) = if x is else 0 else 1
-//│ ╔══[WARNING] duplicated branch
-//│ ╙──
-//│ f: anything -> 0
-//│  = [Function: f]
+//│ ╔══[WARNING] Found a duplicated branch
+//│ ╟── This branch
+//│ ║  l.41: 	fun f(x) = if x is else 0 else 1
+//│ ║        	                               ^
+//│ ╟── is subsumed by the branch here.
+//│ ║  l.41: 	fun f(x) = if x is else 0 else 1
+//│ ╙──      	                        ^
+//│ fun f: anything -> 0
 
 fun f(x) = if x is else 0 
-//│ f: anything -> 0
-//│  = [Function: f1]
+//│ fun f: anything -> 0
 
 :e
 :ge
 if true
   then 0
 //│ ╔══[ERROR] The case when this is false is not handled: true
-//│ ║  l.36: 	if true
+//│ ║  l.56: 	if true
 //│ ╙──      	   ^^^^
-//│ res: error
+//│ error
 //│ Code generation encountered an error:
-//│   if expression has not been desugared
+//│   if expression was not desugared
 
 // This cannot be parsed. But the next one works.
 :pe
 :e
 :ge
 fun f(x) =
-  if x ==
+  if x ===
     else "bruh"
 //│ ╔══[PARSE ERROR] Unexpected indented block in expression position
-//│ ║  l.51: 	    else "bruh"
+//│ ║  l.71: 	    else "bruh"
 //│ ╙──      	^^^^
 //│ ╔══[PARSE ERROR] Unexpected end of indented block; an expression was expected here
-//│ ║  l.51: 	    else "bruh"
+//│ ║  l.71: 	    else "bruh"
 //│ ╙──      	    ^
 //│ ╔══[PARSE ERROR] Expected 'then'/'else' clause; found operator application instead
-//│ ║  l.50: 	  if x ==
-//│ ║        	     ^^^^
-//│ ║  l.51: 	    else "bruh"
+//│ ║  l.70: 	  if x ===
+//│ ║        	     ^^^^^
+//│ ║  l.71: 	    else "bruh"
 //│ ║        	^^^^
 //│ ╟── Note: 'if' expression started here:
-//│ ║  l.50: 	  if x ==
+//│ ║  l.70: 	  if x ===
 //│ ╙──      	  ^^
-//│ ╔══[ERROR] The case when this is false is not handled: == (x,) (undefined,)
-//│ ║  l.50: 	  if x ==
-//│ ║        	     ^^^^
-//│ ║  l.51: 	    else "bruh"
+//│ ╔══[ERROR] The case when this is false is not handled: ===(x, undefined,)
+//│ ║  l.70: 	  if x ===
+//│ ║        	     ^^^^^
+//│ ║  l.71: 	    else "bruh"
 //│ ╙──      	^^^^
-//│ f: anything -> error
+//│ fun f: anything -> error
 //│ Code generation encountered an error:
-//│   if expression has not been desugared
+//│   if expression was not desugared
 
 // But this works.
 fun f(x) =
-  if x ==
+  if x ===
     _ then "bruh"
-//│ f: anything -> "bruh"
-//│  = [Function: f3]
+//│ fun f: anything -> "bruh"
 
-:e
-:ge
-// Hmmmmmm, this one is valid but how to get it work?
 fun boolToStr(x) =
   if x is
     true then "yah"
     false then "nah"
-//│ ╔══[ERROR] The case when this is false is not handled: == (x,) (false,)
-//│ ║  l.86: 	  if x is
-//│ ║        	     ^^^^
-//│ ║  l.87: 	    true then "yah"
-//│ ║        	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.88: 	    false then "nah"
-//│ ╙──      	^^^^^^^^^
-//│ boolToStr: anything -> error
-//│ Code generation encountered an error:
-//│   if expression has not been desugared
+//│ fun boolToStr: nothing -> ("nah" | "yah")
+
+boolToStr of true
+boolToStr of false
+//│ "nah" | "yah"
+//│ res
+//│     = 'yah'
+//│ res
+//│     = 'nah'

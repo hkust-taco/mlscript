@@ -1,0 +1,24 @@
+:NewDefs
+
+class Some[T](value: T)
+class Left[T](value: T)
+class Right[T](value: T)
+//│ class Some[T](value: T)
+//│ class Left[T](value: T)
+//│ class Right[T](value: T)
+
+// FIXME unhygienic, the `x` in the second branch shadows parameter `x`
+fun foo(x) = if x is
+  Some(Left(y)) then x
+  Some(x) then x
+//│ fun foo: forall 'a. Some['a & (Left[anything] | Object & ~#Left)] -> 'a
+
+foo(Some(Left(1)))
+//│ Left[1]
+//│ res
+//│     = Left {}
+
+foo(Some(2))
+//│ 2
+//│ res
+//│     = 2

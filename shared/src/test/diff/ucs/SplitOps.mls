@@ -33,7 +33,7 @@ fun f(x) =
     is Left(v) then 0
     is Right(v) then 1
     <> undefined then 2
-//│ ╔══[ERROR] The case when this is false is not handled: <> (x,) (undefined,)
+//│ ╔══[ERROR] The case when this is false is not handled: <>(x,)(undefined,)
 //│ ║  l.32: 	  if x
 //│ ║        	     ^
 //│ ║  l.33: 	    is Left(v) then 0
@@ -44,7 +44,7 @@ fun f(x) =
 //│ ╙──      	^^^^^^^^^^^^^^^^
 //│ f: anything -> error
 //│ Code generation encountered an error:
-//│   if expression has not been desugared
+//│   if expression was not desugared
 
 :e
 :ge
@@ -64,7 +64,7 @@ fun f(x) =
 //│ ╙──      	                       ^^^^^^
 //│ f: anything -> error
 //│ Code generation encountered an error:
-//│   if expression has not been desugared
+//│   if expression was not desugared
 
 class A()
 class B()
@@ -86,7 +86,6 @@ class C()
 //│ C: () -> C
 //│  = [Function: C1]
 
-// * FIXME: the missing otherwise is for `a == 0`
 :p
 :e
 :ge
@@ -94,15 +93,18 @@ fun f(a, b, c) =
   if a
     == 0 and b is B() and c is C() then 0
 //│ |#fun| |f|(|a|,| |b|,| |c|)| |#=|→|#if| |a|→|==| |0| |and| |b| |is| |B|(||)| |and| |c| |is| |C|(||)| |#then| |0|←|←|
-//│ Parsed: fun f = (a, b, c,) => {if a ‹· == (and (and (0,) (is (b,) (B (),),),) (is (c,) (C (),),)) then 0›};
-//│ Desugared: rec def f: (a, b, c,) => {if a ‹· == (and (and (0,) (is (b,) (B (),),),) (is (c,) (C (),),)) then 0›}
+//│ AST: TypingUnit(NuFunDef(None, f, None, [], Lam(Tup(_: Var(a), _: Var(b), _: Var(c)), Blk(...))))
+//│ Parsed: fun f = (a, b, c,) => {if a ‹· == (and(and(0,)(is(b,)(B(),),),)(is(c,)(C(),),)) then 0›};
+//│ Desugared: rec def f: (a, b, c,) => {if a ‹· == (and(and(0,)(is(b,)(B(),),),)(is(c,)(C(),),)) then 0›}
 //│ AST: Def(true, f, Lam(Tup(_: Var(a), _: Var(b), _: Var(c)), Blk(...)), true)
-//│ ╔══[ERROR] The case when this is false is not handled: and (is (b,) (B (),),) (is (c,) (C (),),)
-//│ ║  l.95: 	    == 0 and b is B() and c is C() then 0
-//│ ╙──      	             ^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] The case when this is false is not handled: ==(a,)(0,)
+//│ ║  l.93: 	  if a
+//│ ║        	     ^
+//│ ║  l.94: 	    == 0 and b is B() and c is C() then 0
+//│ ╙──      	^^^^^^^^
 //│ f: (anything, anything, anything,) -> error
 //│ Code generation encountered an error:
-//│   if expression has not been desugared
+//│   if expression was not desugared
 
 fun f(x) =
   if x

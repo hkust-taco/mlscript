@@ -123,7 +123,7 @@ rec def length l =
 //│ List[?] -> int
 //│   <:  length:
 //│ List[?] -> int
-//│       = [Function: length]
+//│       = [Function: length1]
 
 def id: 'a -> 'a
 def id x = x
@@ -228,20 +228,20 @@ def revapp x f = f x
 
 def fst: forall 'a 'b. (('a, 'b),) -> 'a
 def fst ((x, _),) = x
-//│ fst: ('a, anything,) -> 'a
+//│ fst: (('a, anything,),) -> 'a
 //│    = <missing implementation>
-//│ ('a, anything,) -> 'a
+//│ (('a, anything,),) -> 'a
 //│   <:  fst:
-//│ ('a, anything,) -> 'a
+//│ (('a, anything,),) -> 'a
 //│    = [Function: fst]
 
 def snd: forall 'a 'b. (('a, 'b),) -> 'b
 def snd ((_, x),) = x
-//│ snd: (anything, 'b,) -> 'b
+//│ snd: ((anything, 'b,),) -> 'b
 //│    = <missing implementation>
-//│ (anything, 'a,) -> 'a
+//│ ((anything, 'a,),) -> 'a
 //│   <:  snd:
-//│ (anything, 'b,) -> 'b
+//│ ((anything, 'b,),) -> 'b
 //│    = [Function: snd]
 
 :ng
@@ -974,11 +974,7 @@ test2 = test1
 //│ ║         	                           ^^
 //│ ╟── back into type variable `'a`
 //│ ║  l.955: 	def test2: List[forall 'a. 'a -> 'a]
-//│ ║         	                                 ^^
-//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
-//│ ╟── • this reference:
-//│ ║  l.965: 	test2 = test1
-//│ ╙──       	        ^^^^^
+//│ ╙──       	                                 ^^
 
 
 
@@ -999,36 +995,32 @@ map xauto ids
 :e
 map xauto (map xauto ids)
 //│ ╔══[ERROR] Type error in application
-//│ ║  l.1000: 	map xauto (map xauto ids)
-//│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.996: 	map xauto (map xauto ids)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `'b` leaks out of its scope
 //│ ║  l.173: 	def xauto : forall 'a. (forall 'b. 'b -> 'b) -> 'a -> 'a
 //│ ║         	                                   ^^
 //│ ╟── back into type variable `'b`
 //│ ║  l.173: 	def xauto : forall 'a. (forall 'b. 'b -> 'b) -> 'a -> 'a
-//│ ║         	                                         ^^
-//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
-//│ ╟── • this application:
-//│ ║  l.1000: 	map xauto (map xauto ids)
-//│ ╙──        	           ^^^^^^^^^^^^^
-//│ res: error | List['a -> 'a]
+//│ ╙──       	                                         ^^
+//│ res: List['a -> 'a] | error
 
 
 // * This doesn't work (without distrib.) because we don't currently generalize non-functions:
 :e
 (fun x -> xauto x) : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.1019: 	(fun x -> xauto x) : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ ║  l.1011: 	(fun x -> xauto x) : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ║          	^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `'a` leaks out of its scope
-//│ ║  l.1019: 	(fun x -> xauto x) : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ ║  l.1011: 	(fun x -> xauto x) : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ║          	                                                          ^^
 //│ ╟── back into type variable `'a`
-//│ ║  l.1019: 	(fun x -> xauto x) : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ ║  l.1011: 	(fun x -> xauto x) : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ║          	                                                                ^^
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this application:
-//│ ║  l.1019: 	(fun x -> xauto x) : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ ║  l.1011: 	(fun x -> xauto x) : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ╙──        	          ^^^^^^^
 //│ res: (forall 'a. 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0)
 // * But we can trivially fix it by forcing generalization through a polymorphic let binding:
@@ -1038,17 +1030,17 @@ map xauto (map xauto ids)
 :e
 xauto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.1039: 	xauto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ ║  l.1031: 	xauto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ║          	^^^^^
 //│ ╟── type variable `'a` leaks out of its scope
-//│ ║  l.1039: 	xauto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ ║  l.1031: 	xauto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ║          	                                             ^^
 //│ ╟── back into type variable `'a`
-//│ ║  l.1039: 	xauto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ ║  l.1031: 	xauto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ║          	                                                   ^^
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this reference:
-//│ ║  l.1039: 	xauto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ ║  l.1031: 	xauto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ╙──        	^^^^^
 //│ res: (forall 'a. 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0)
 

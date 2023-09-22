@@ -211,3 +211,18 @@ test r2
 //│    = 1
 
 
+f = (fun x -> x) with {a = 0}
+//│ f: 'a -> 'a & {a: 0}
+//│  = Function { a: 0 }
+
+f.a
+//│ res: 0
+//│    = 0
+
+:re // `with` is currently broken with functions
+f(0)
+//│ res: 0
+//│ Runtime error:
+//│   TypeError: f2 is not a function
+
+

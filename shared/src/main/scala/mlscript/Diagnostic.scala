@@ -29,16 +29,16 @@ final case class ErrorReport(mainMsg: Str, allMsgs: Ls[Message -> Opt[Loc]], sou
   val kind: Kind = Error
 }
 object ErrorReport {
-  def apply(msgs: Ls[Message -> Opt[Loc]], source: Source = Typing): ErrorReport =
-    ErrorReport(msgs.head._1.show, msgs, source)
+  def apply(msgs: Ls[Message -> Opt[Loc]], newDefs: Bool, source: Source = Typing): ErrorReport =
+    ErrorReport(msgs.head._1.show(newDefs), msgs, source)
 }
 
 final case class WarningReport(mainMsg: Str, allMsgs: Ls[Message -> Opt[Loc]], source: Source) extends Diagnostic(mainMsg) {
   val kind: Kind = Warning
 }
 object WarningReport {
-  def apply(msgs: Ls[Message -> Opt[Loc]], source: Source = Typing): WarningReport =
-    WarningReport(msgs.head._1.show, msgs, source)
+  def apply(msgs: Ls[Message -> Opt[Loc]], newDefs: Bool, source: Source = Typing): WarningReport =
+    WarningReport(msgs.head._1.show(newDefs), msgs, source)
 }
 
 
@@ -59,6 +59,10 @@ final case class Loc(spanStart: Int, spanEnd: Int, origin: Origin) {
   def ++(that: Opt[Loc]): Loc = that.fold(this)(this ++ _)
   def right: Loc = copy(spanStart = spanEnd)
   def left: Loc = copy(spanEnd = spanStart)
+}
+object Loc {
+  def apply(xs: IterableOnce[Located]): Opt[Loc] =
+    xs.iterator.foldLeft(none[Loc])((acc, l) => acc.fold(l.toLoc)(_ ++ l.toLoc |> some))
 }
 
 final case class Origin(fileName: Str, startLineNum: Int, fph: FastParseHelpers) {

@@ -6,12 +6,12 @@ def test3 x = case x of
   | true -> true
   | _ -> false
   }
-//│ test3: anything -> bool
+//│ test3: anything -> Bool
 //│      = [Function: test3]
 
 :ns
 test3
-//│ res: forall 'a 'b 'c 'd. 'a -> (true | false)
+//│ res: forall 'a 'b 'c 'd. 'a -> Bool
 //│   where
 //│     'a <: 1 & 'b | (true & 'c | 'd & ~true) & ~1
 //│    = [Function: test3]
@@ -22,28 +22,28 @@ def test3 x = case x of
   | true -> true
   | _ -> false
   }
-//│ test3: (1 & 'a | ~1) -> (false | true | 'a)
+//│ test3: (1 & 'a | ~1) -> (Bool | 'a)
 //│      = [Function: test31]
 
 
 def ty_1: (1 & 'a | true | ~1 & ~true) -> (false | true | 'a)
-//│ ty_1: (1 & 'a | true | ~1 & ~true) -> ('a | false | true)
+//│ ty_1: (1 & 'a | true | ~1 & ~true) -> (Bool | 'a)
 //│     = <missing implementation>
 
 ty_1 = test3
-//│ (1 & 'a | ~1) -> (false | true | 'a)
+//│ (1 & 'a | ~1) -> (Bool | 'a)
 //│   <:  ty_1:
-//│ (1 & 'a | true | ~1 & ~true) -> ('a | false | true)
+//│ (1 & 'a | true | ~1 & ~true) -> (Bool | 'a)
 //│     = [Function: test31]
 
 def ty_2: (1 & 'a | ~1) -> (false | true | 'a)
-//│ ty_2: (1 & 'a | ~1) -> ('a | false | true)
+//│ ty_2: (1 & 'a | ~1) -> (Bool | 'a)
 //│     = <missing implementation>
 
 ty_2 = ty_1
-//│ (1 & 'a | true | ~1 & ~true) -> ('a | false | true)
+//│ (1 & 'a | true | ~1 & ~true) -> (Bool | 'a)
 //│   <:  ty_2:
-//│ (1 & 'a | ~1) -> ('a | false | true)
+//│ (1 & 'a | ~1) -> (Bool | 'a)
 //│     = [Function: test31]
 
 

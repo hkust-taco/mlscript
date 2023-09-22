@@ -1,0 +1,220 @@
+:NewDefs
+:NoJS
+
+
+// * Adapted example from Code reuse through polymorphic variants (FOSE 2000)
+// * This time with an ML-style List data type encoding.
+
+
+// TODO improvements/things to investigate:
+//  - constraining loop with unannotated `list_assoc` ascription
+//  - still a number of quite ugly types
+
+
+class List<out A> {
+  fun match: forall 'res; (ifNil: () => 'res, ifCons: (A, List[A]) => 'res) => 'res
+  fun match = error
+}
+let Nil: () => List<'a>
+let Cons: (head: 'a, tail: List<'a>) => List<'a>
+//│ class List[A] {
+//│   constructor()
+//│   fun match: forall 'res. (ifNil: () -> 'res, ifCons: (A, List[A]) -> 'res) -> 'res
+//│ }
+//│ let Nil: () -> List[nothing]
+//│ let Cons: forall 'a. (head: 'a, tail: List['a]) -> List['a]
+
+module NotFound
+class Success<out A>(result: A)
+//│ module NotFound
+//│ class Success[A](result: A)
+
+fun eq(l: Str, r: Str): Bool
+//│ fun eq: (l: Str, r: Str) -> Bool
+
+// * Annotation currently needed to avoid later ascription loop (due to excessive TV refreshing?)
+// fun list_assoc(s, l) =
+fun list_assoc(s, l: List<'a>) =
+  l.match(
+    ifNil: () => NotFound,
+    ifCons: (h, t) =>
+      if eq(s, h._1) then Success(h._2)
+      else list_assoc(s, t)
+  )
+//│ fun list_assoc: forall 'A. (Str, l: List[{_1: Str, _2: 'A}]) -> (NotFound | Success['A])
+
+list_assoc : (Str, List<{ _1: Str, _2: 'b }>) => (NotFound | Success['b])
+//│ (Str, List[{_1: Str, _2: 'b}]) -> (NotFound | Success['b])
+
+fun list_assoc(s: Str, l: List<{ _1: Str, _2: 'b }>): NotFound | Success['b]
+//│ fun list_assoc: forall 'b. (s: Str, l: List[{_1: Str, _2: 'b}]) -> (NotFound | Success['b])
+
+class Var(s: Str)
+//│ class Var(s: Str)
+
+mixin EvalVar {
+  fun eval(sub, v) =
+    if v is Var(s) then
+      if list_assoc(s, sub) is
+        NotFound then v
+        Success(r) then r
+}
+//│ mixin EvalVar() {
+//│   fun eval: (List[{_1: Str, _2: 'a}], Var) -> (Var | 'a)
+//│ }
+
+class Abs<out A>(x: Str, t: A)
+class App<out A>(s: A, t: A)
+//│ class Abs[A](x: Str, t: A)
+//│ class App[A](s: A, t: A)
+
+fun incr(x: {a: Int}): unit
+//│ fun incr: (x: {a: Int}) -> unit
+
+fun gensym(): Str
+//│ fun gensym: () -> Str
+
+fun Int_to_string(x: Int): Str
+//│ fun Int_to_string: (x: Int) -> Str
+
+mixin EvalLambda {
+  fun eval(sub, v) =
+    if v is
+      App(t1, t2) then
+        let l1 = this.eval(sub, t1)
+        let l2 = this.eval(sub, t2)
+        if t1 is
+          Abs(x, t) then this.eval(Cons((x, l2), Nil()), t)
+        else
+          App(l1, l2)
+      Abs(x, t) then
+        let s = gensym()
+        Abs(s, this.eval(Cons((x, Var(s)), sub), t))
+    else
+      super.eval(sub, v)
+}
+//│ mixin EvalLambda() {
+//│   super: {eval: ('b, 'c) -> 'd}
+//│   this: {
+//│     eval: ('b, 'e) -> 'A & (List[[Str, 'A]], 'f) -> 'd & (List['a | [Str, Var]], 'g) -> 'A0
+//│   }
+//│   fun eval: (List['a] & 'b, Abs['g] | App['e & (Abs['f] | Object & ~#Abs)] | Object & 'c & ~#Abs & ~#App) -> (Abs['A0] | App['A] | 'd)
+//│ }
+
+module Test1 extends EvalVar, EvalLambda
+//│ module Test1 {
+//│   fun eval: forall 'a. (List[{_1: Str, _2: 'A}], 'b) -> ('A | 'a)
+//│ }
+//│ where
+//│   'b <: Abs['b] | App['b & (Abs['b] | Object & ~#Abs)] | Var
+//│   'A :> 'a | Var
+//│   'a :> App['A] | Abs['A]
+
+Test1.eval(Nil(), Var("a"))
+//│ forall 'a. 'A | 'a
+//│   where
+//│     'A :> 'a | Var
+//│     'a :> App['A] | Abs['A]
+
+Test1.eval(Nil(), Abs("b", Var("a")))
+//│ forall 'a. 'A | 'a
+//│   where
+//│     'A :> 'a | Var
+//│     'a :> App['A] | Abs['A]
+
+Test1.eval(Cons(("c", Var("d")), Nil()), App(Abs("b", Var("b")), Var("c")))
+//│ forall 'a. 'A | 'a
+//│   where
+//│     'A :> 'a | Var
+//│     'a :> App['A] | Abs['A]
+
+Test1.eval(Cons(("c", Abs("d", Var("d"))), Nil()), App(Abs("b", Var("b")), Var("c")))
+//│ forall 'a. 'A | 'a
+//│   where
+//│     'A :> 'a | Abs[Var] | Var
+//│     'a :> App['A] | Abs['A]
+
+class Numb(n: Int)
+class Add<out A>(l: A, r: A)
+class Mul<out A>(l: A, r: A)
+//│ class Numb(n: Int)
+//│ class Add[A](l: A, r: A)
+//│ class Mul[A](l: A, r: A)
+
+fun map_expr(f, v) =
+  if v is
+    Var then v
+    Numb then v
+    Add(l, r) then Add(f(l), f(r))
+    Mul(l, r) then Mul(f(l), f(r))
+//│ fun map_expr: forall 'a 'A 'b 'A0. ('a -> 'A & 'b -> 'A0, Add['a] | Mul['b] | Numb | Var) -> (Add['A] | Mul['A0] | Numb | Var)
+
+mixin EvalExpr {
+  fun eval(sub, v) =
+    fun eta(e) = this.eval(sub, e)
+    let vv = map_expr(eta, v)
+    if vv is
+      Var then super.eval(sub, vv)
+      Add(Numb(l), Numb(r)) then Numb(l + r)
+      Mul(Numb(l), Numb(r)) then Numb(l * r)
+    else v
+}
+//│ mixin EvalExpr() {
+//│   super: {eval: ('a, Var) -> 'b}
+//│   this: {eval: ('a, 'c) -> Object}
+//│   fun eval: ('a, 'b & (Add['c] | Mul['c] | Numb | Var)) -> (Numb | 'b)
+//│ }
+
+module Test2 extends EvalVar, EvalExpr
+//│ module Test2 {
+//│   fun eval: forall 'a. (List[{_1: Str, _2: Object & 'b}], 'a & (Add['c] | Mul['c] | Numb | Var)) -> (Numb | Var | 'b | 'a | 'c)
+//│ }
+//│ where
+//│   'c <: Add['c] | Mul['c] | Numb | Var
+
+Test2.eval(Nil(), Var("a"))
+//│ Numb | Var
+
+Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Var("a"))
+//│ Abs[Var] | Numb | Var
+
+Test2.eval(Cons(("a", Numb(1)), Nil()), Var("a"))
+//│ Numb | Var
+
+Test2.eval(Cons(("a", Abs("d", Var("d"))), Nil()), Add(Numb(1), Var("a")))
+//│ Abs[Var] | Add[Numb | Var] | Numb | Var
+
+module Test3 extends EvalVar, EvalExpr, EvalLambda
+//│ module Test3 {
+//│   fun eval: forall 'a. (List[{_1: Str, _2: 'b}], 'c) -> ('A | 'a)
+//│ }
+//│ where
+//│   'b :> 'A
+//│      <: Object
+//│   'A :> 'a | Numb | Var | 'b | 'd
+//│   'd <: Add['c] | Mul['c] | Numb | Var
+//│   'c <: Abs['c] | App['c & (Abs['c] | Object & ~#Abs)] | Object & 'd & ~#Abs & ~#App
+//│   'a :> App['A] | Abs['A]
+
+Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Abs("a", Var("a")))
+//│ forall 'a. 'A | 'a
+//│   where
+//│     'A :> 'a | Abs[Var] | Numb | Var
+//│     'a :> App['A] | Abs['A]
+
+Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), App(Abs("a", Var("a")), Add(Numb(1), Var("c"))))
+//│ forall 'a. 'A | 'a
+//│   where
+//│     'A :> 'a | Abs[Var] | Add[Numb | Var] | Numb | Var
+//│     'a :> App['A] | Abs['A]
+
+module Test3 extends EvalVar, EvalLambda, EvalExpr
+//│ module Test3 {
+//│   fun eval: (List[{_1: Str, _2: 'a}], 'a & (Add['b] | Mul['b] | Numb | Var)) -> ('A | 'a | 'b)
+//│ }
+//│ where
+//│   'a :> 'b | 'A
+//│      <: Object
+//│   'A :> Numb | 'a | Abs['A] | App['A] | Var
+//│   'b <: Add['b] | Mul['b] | Numb | Var
+

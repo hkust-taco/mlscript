@@ -210,4 +210,3 @@ fun x -> x.Foo
 //│    = [Function: res]
 
 
-

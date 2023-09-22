@@ -1,0 +1,38 @@
+:NewDefs
+
+
+let r = false : Bool
+//│ let r: Bool
+//│ r
+//│   = false
+
+let b = (if r then true else false) : Bool
+//│ let b: Bool
+//│ b
+//│   = false
+
+let b = false : Bool
+//│ let b: Bool
+//│ b
+//│   = false
+
+b : true | false
+//│ Bool
+//│ res
+//│     = false
+
+if false is false then 0
+//│ 0
+//│ res
+//│     = 0
+
+fun foo(x) = if x is
+  false then 0
+//│ fun foo: nothing -> 0
+
+fun foo(x) = if x is
+  false then 0
+  true  then 1
+//│ fun foo: nothing -> (0 | 1)
+
+
