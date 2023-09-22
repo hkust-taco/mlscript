@@ -1,14 +1,18 @@
 :NewDefs
 
-
 fun test(x: 'a) = if x is undefined then 0 else x + 1
 //│ fun test: (x: Int | undefined) -> Int
+
+test(x: 0)
+//│ Int
+//│ res
+//│     = 1
 
 :e
 test(x: 0, 1)
 //│ ╔══[ERROR] Unnamed arguments should appear first when using named arguments
-//│ ║  l.8: 	test(x: 0, 1)
-//│ ╙──     	    ^^^^^^^^^
+//│ ║  l.12: 	test(x: 0, 1)
+//│ ╙──      	    ^^^^^^^^^
 //│ error
 //│ res
 //│     = 1
@@ -16,7 +20,7 @@ test(x: 0, 1)
 :e
 test(y: 0)
 //│ ╔══[ERROR] Argument named x is missing from this function call
-//│ ║  l.17: 	test(y: 0)
+//│ ║  l.21: 	test(y: 0)
 //│ ╙──      	    ^^^^^^
 //│ Int
 //│ res
@@ -29,7 +33,7 @@ fun test(x: 'a, y: 'b) = [x, y]
 :e
 test(y: 0)
 //│ ╔══[ERROR] Number of arguments dosen't match with the function signature
-//│ ║  l.30: 	test(y: 0)
+//│ ║  l.34: 	test(y: 0)
 //│ ╙──      	    ^^^^^^
 //│ error
 //│ res
@@ -38,10 +42,10 @@ test(y: 0)
 :e
 test(1, x: 0)
 //│ ╔══[ERROR] Argument for parameter x is duplicated
-//│ ║  l.39: 	test(1, x: 0)
+//│ ║  l.43: 	test(1, x: 0)
 //│ ╙──      	    ^^^^^^^^^
 //│ ╔══[ERROR] Argument named y is missing from this function call
-//│ ║  l.39: 	test(1, x: 0)
+//│ ║  l.43: 	test(1, x: 0)
 //│ ╙──      	    ^^^^^^^^^
 //│ [0, nothing]
 //│ res
@@ -53,8 +57,8 @@ test(1, x: 0)
 test(0, y: 1)
 //│ [0, 1]
 //│ // Prelude
-//│ class TypingUnit6 {}
-//│ const typing_unit6 = new TypingUnit6;
+//│ class TypingUnit7 {}
+//│ const typing_unit7 = new TypingUnit7;
 //│ // Query 1
 //│ res = test1(0, 1);
 //│ // End of generated code
@@ -71,18 +75,14 @@ id(if true then test else error)(0, y: 1)
 //│ res
 //│     = [ 0, 1 ]
 
+:e
 id(if true then test else id)(0, y: 1)
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
-//│ 	at: mlscript.utils.package$.lastWords(package.scala:209)
-//│ 	at: mlscript.utils.package$.die(package.scala:208)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$25(Typer.scala:1036)
-//│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.Typer.getLowerboundFuns$1(Typer.scala:1029)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:1040)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:1437)
-//│ 	at: mlscript.Typer.typeTerms(Typer.scala:1584)
-//│ 	at: mlscript.NuTypeDefs.go$1(NuTypeDefs.scala:650)
+//│ ╔══[ERROR] Cannot retrieve any function type in given function call
+//│ ║  l.79: 	id(if true then test else id)(0, y: 1)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ error
+//│ res
+//│     = [ 0, 1 ]
 
 // * No let binding in that value of argument is a var or literal
 :js
@@ -92,8 +92,8 @@ test(0, y: 200)
 //│ let tmp: 2
 //│ [0, 200]
 //│ // Prelude
-//│ class TypingUnit9 {}
-//│ const typing_unit9 = new TypingUnit9;
+//│ class TypingUnit11 {}
+//│ const typing_unit11 = new TypingUnit11;
 //│ // Query 1
 //│ globalThis.tmp = 2;
 //│ // Query 2
@@ -113,8 +113,8 @@ test(0, y: 200)
 test(0, y: 1 + 2)
 //│ [0, Int]
 //│ // Prelude
-//│ class TypingUnit10 {}
-//│ const typing_unit10 = new TypingUnit10;
+//│ class TypingUnit12 {}
+//│ const typing_unit12 = new TypingUnit12;
 //│ // Query 1
 //│ res = ((y_1) => test1(0, y_1))(1 + 2);
 //│ // End of generated code
@@ -147,8 +147,8 @@ fff(y: 2, z: y_1 + 1, x: z_1 - 2)
 //│ let z_1: 3
 //│ Int
 //│ // Prelude
-//│ class TypingUnit13 {}
-//│ const typing_unit13 = new TypingUnit13;
+//│ class TypingUnit15 {}
+//│ const typing_unit15 = new TypingUnit15;
 //│ // Query 1
 //│ globalThis["y_1"] = 2;
 //│ // Query 2
@@ -265,62 +265,36 @@ z.y
 
 
 (f => f(x: a))
-//│ ╔══[ERROR] Cannot extract any function
+//│ ╔══[ERROR] Cannot retrieve any function type in given function call
 //│ ║  l.267: 	(f => f(x: a))
 //│ ╙──       	      ^
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
-//│ 	at: mlscript.utils.package$.lastWords(package.scala:209)
-//│ 	at: mlscript.utils.package$.die(package.scala:208)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:1058)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:1437)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:1006)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:1437)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:986)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ anything -> error
+//│ Code generation encountered an error:
+//│   unresolved symbol a
 
 (f => f)(error)(x: a)
-//│ ╔══[ERROR] Cannot extract any function
-//│ ║  l.283: 	(f => f)(error)(x: a)
+//│ ╔══[ERROR] Cannot retrieve any function type in given function call
+//│ ║  l.275: 	(f => f)(error)(x: a)
 //│ ╙──       	^^^^^^^^^^^^^^^
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
-//│ 	at: mlscript.utils.package$.lastWords(package.scala:209)
-//│ 	at: mlscript.utils.package$.die(package.scala:208)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:1058)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:1437)
-//│ 	at: mlscript.Typer.typeTerms(Typer.scala:1584)
-//│ 	at: mlscript.NuTypeDefs.go$1(NuTypeDefs.scala:650)
-//│ 	at: mlscript.NuTypeDefs.$anonfun$typeTypingUnit$15(NuTypeDefs.scala:660)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
-//│ 	at: mlscript.NuTypeDefs.$anonfun$typeTypingUnit$2(NuTypeDefs.scala:660)
+//│ error
+//│ Code generation encountered an error:
+//│   unresolved symbol a
 
 (f => f)(42)(x: a)
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
-//│ 	at: mlscript.utils.package$.lastWords(package.scala:209)
-//│ 	at: mlscript.utils.package$.die(package.scala:208)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$25(Typer.scala:1036)
-//│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.Typer.getLowerboundFuns$1(Typer.scala:1029)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:1040)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:1437)
-//│ 	at: mlscript.Typer.typeTerms(Typer.scala:1584)
-//│ 	at: mlscript.NuTypeDefs.go$1(NuTypeDefs.scala:650)
+//│ ╔══[ERROR] Cannot retrieve any function type in given function call
+//│ ║  l.283: 	(f => f)(42)(x: a)
+//│ ╙──       	^^^^^^^^^^^^
+//│ error
+//│ Code generation encountered an error:
+//│   unresolved symbol a
 
 (f => f)(if true then 123 else false)(x: a)
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
-//│ 	at: mlscript.utils.package$.lastWords(package.scala:209)
-//│ 	at: mlscript.utils.package$.die(package.scala:208)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$25(Typer.scala:1036)
-//│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.Typer.getLowerboundFuns$1(Typer.scala:1029)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:1040)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:1437)
-//│ 	at: mlscript.Typer.typeTerms(Typer.scala:1584)
-//│ 	at: mlscript.NuTypeDefs.go$1(NuTypeDefs.scala:650)
+//│ ╔══[ERROR] Cannot retrieve any function type in given function call
+//│ ║  l.291: 	(f => f)(if true then 123 else false)(x: a)
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ error
+//│ Code generation encountered an error:
+//│   unresolved symbol a
 
 (f => f)(if true then (x: Int) => x + 1 else error)(x: 123)
 //│ Int
@@ -328,150 +302,81 @@ z.y
 //│     = 124
 
 (f => if true then f else id)(if true then (x: Int) => x + 1 else id)(x: 123)
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
-//│ 	at: mlscript.utils.package$.lastWords(package.scala:209)
-//│ 	at: mlscript.utils.package$.die(package.scala:208)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$25(Typer.scala:1036)
-//│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.Typer.getLowerboundFuns$1(Typer.scala:1029)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:1040)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:1437)
-//│ 	at: mlscript.Typer.typeTerms(Typer.scala:1584)
-//│ 	at: mlscript.NuTypeDefs.go$1(NuTypeDefs.scala:650)
+//│ ╔══[ERROR] Cannot retrieve any function type in given function call
+//│ ║  l.304: 	(f => if true then f else id)(if true then (x: Int) => x + 1 else id)(x: 123)
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ error
+//│ res
+//│     = 124
+
+// FIXME
+(f => if true then f else id)(if true then (x: Int) => x + 1 else (x: Int) => x + 1)(x: 123)
+//│ ╔══[ERROR] Cannot retrieve any function type in given function call
+//│ ║  l.313: 	(f => if true then f else id)(if true then (x: Int) => x + 1 else (x: Int) => x + 1)(x: 123)
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ error
+//│ res
+//│     = 124
 
 
 fun foo(f: (x: Int) => Int) = f(x: 123)
 //│ fun foo: (f: (x: Int) -> Int) -> Int
 
 fun foo(f: ((x: Int) => Int) & 'a) = [f(x: 123), f]
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
-//│ 	at: mlscript.utils.package$.lastWords(package.scala:209)
-//│ 	at: mlscript.utils.package$.die(package.scala:208)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:1053)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:1437)
-//│ 	at: mlscript.Typer.typePolymorphicTerm(Typer.scala:753)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$18(Typer.scala:918)
-//│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:915)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ ╔══[ERROR] Cannot retrieve any function type in given function call
+//│ ║  l.325: 	fun foo(f: ((x: Int) => Int) & 'a) = [f(x: 123), f]
+//│ ╙──       	                                      ^
+//│ fun foo: forall 'a 'b. (f: (x: Int) -> Int & 123 -> 'b & 'a) -> ['b, (x: Int) -> Int & 'a]
 
 foo((x: Int) => 1)
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
-//│ 	at: mlscript.utils.package$.lastWords(package.scala:209)
-//│ 	at: mlscript.utils.package$.die(package.scala:208)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:1053)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:1437)
-//│ 	at: mlscript.Typer.typePolymorphicTerm(Typer.scala:753)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$18(Typer.scala:918)
-//│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:915)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ [1, (x: Int) -> 1]
+//│ res
+//│     = [ 1, [Function (anonymous)] ]
 
 fun foo(f: ((x: Int) => Int) | 'a) = f(x: 123)
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
-//│ 	at: mlscript.utils.package$.lastWords(package.scala:209)
-//│ 	at: mlscript.utils.package$.die(package.scala:208)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:1053)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:1437)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:1006)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:1437)
-//│ 	at: mlscript.NuTypeDefs$DelayedTypeInfoImpl.$anonfun$complete$10(NuTypeDefs.scala:1107)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:119)
+//│ ╔══[ERROR] Cannot retrieve any function type in given function call
+//│ ║  l.336: 	fun foo(f: ((x: Int) => Int) | 'a) = f(x: 123)
+//│ ╙──       	                                     ^
+//│ fun foo: (f: anything) -> error
 
 // * the result of the if-then-else is a TV with two LBs: the type of x and the function type
 fun foo(x) = (if true then (x: Int) => x + 1 else x)(x: 123)
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
-//│ 	at: mlscript.utils.package$.lastWords(package.scala:209)
-//│ 	at: mlscript.utils.package$.die(package.scala:208)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:1053)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:1437)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:1006)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:1437)
-//│ 	at: mlscript.NuTypeDefs$DelayedTypeInfoImpl.$anonfun$complete$10(NuTypeDefs.scala:1107)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:119)
+//│ ╔══[ERROR] Cannot retrieve any function type in given function call
+//│ ║  l.343: 	fun foo(x) = (if true then (x: Int) => x + 1 else x)(x: 123)
+//│ ╙──       	             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ fun foo: anything -> error
 
 foo((y: Int) => y)
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
-//│ 	at: mlscript.utils.package$.lastWords(package.scala:209)
-//│ 	at: mlscript.utils.package$.die(package.scala:208)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:1053)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:1437)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:1006)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:1437)
-//│ 	at: mlscript.NuTypeDefs$DelayedTypeInfoImpl.$anonfun$complete$10(NuTypeDefs.scala:1107)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:119)
+//│ error
+//│ res
+//│     = 124
 
 fun foo(x) = if true then (x: Int) => x + 1 else x
 //│ fun foo: forall 'a. 'a -> ((x: Int) -> Int | 'a)
 
 foo((y: Int) => y)(x: 123)
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
-//│ 	at: mlscript.utils.package$.lastWords(package.scala:209)
-//│ 	at: mlscript.utils.package$.die(package.scala:208)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$25(Typer.scala:1036)
-//│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.Typer.getLowerboundFuns$1(Typer.scala:1029)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:1040)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:1437)
-//│ 	at: mlscript.Typer.typeTerms(Typer.scala:1584)
-//│ 	at: mlscript.NuTypeDefs.go$1(NuTypeDefs.scala:650)
+//│ ╔══[ERROR] Cannot retrieve any function type in given function call
+//│ ║  l.357: 	foo((y: Int) => y)(x: 123)
+//│ ╙──       	^^^^^^^^^^^^^^^^^^
+//│ error
+//│ res
+//│     = 124
 
 foo((x: Int) => x - 1)(x: 123)
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
-//│ 	at: mlscript.utils.package$.lastWords(package.scala:209)
-//│ 	at: mlscript.utils.package$.die(package.scala:208)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$25(Typer.scala:1036)
-//│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.Typer.getLowerboundFuns$1(Typer.scala:1029)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:1040)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:1437)
-//│ 	at: mlscript.Typer.typeTerms(Typer.scala:1584)
-//│ 	at: mlscript.NuTypeDefs.go$1(NuTypeDefs.scala:650)
-
-
-
-fun foo0(x: Int) = [x + 1, x]
-//│ fun foo0: (x: Int) -> [Int, Int]
-
-:e
-foo1(x: 123)
-//│ ╔══[ERROR] identifier not found: foo1
-//│ ║  l.448: 	foo1(x: 123)
-//│ ╙──       	^^^^
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
-//│ 	at: mlscript.utils.package$.lastWords(package.scala:209)
-//│ 	at: mlscript.utils.package$.die(package.scala:208)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:1053)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:1437)
-//│ 	at: mlscript.Typer.typeTerms(Typer.scala:1584)
-//│ 	at: mlscript.NuTypeDefs.go$1(NuTypeDefs.scala:650)
-//│ 	at: mlscript.NuTypeDefs.$anonfun$typeTypingUnit$15(NuTypeDefs.scala:660)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
-//│ 	at: mlscript.NuTypeDefs.$anonfun$typeTypingUnit$2(NuTypeDefs.scala:660)
-
-foo0(x: 123)
-//│ [Int, Int]
+//│ ╔══[ERROR] Cannot retrieve any function type in given function call
+//│ ║  l.365: 	foo((x: Int) => x - 1)(x: 123)
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^
+//│ error
 //│ res
-//│     = [ 124, 123 ]
+//│     = 124
 
 fun foo1(x) = [x + 1, x]
 //│ fun foo1: forall 'a. (Int & 'a) -> [Int, 'a]
 
+:e
 foo1(x: 123)
 //│ ╔══[ERROR] Cannot use named arguments as the function type has untyped arguments
-//│ ║  l.472: 	foo1(x: 123)
+//│ ║  l.377: 	foo1(x: 123)
 //│ ╙──       	    ^^^^^^^^
 //│ error
 //│ res
@@ -484,5 +389,3 @@ foo1(x: 123)
 //│ [Int, 123]
 //│ res
 //│     = [ 124, 123 ]
-
-

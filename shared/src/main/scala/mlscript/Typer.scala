@@ -1022,8 +1022,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         term.desugaredTerm = S(desug)
         typeTerm(desug)
       case App(f: Term, a @ Tup(fields)) if (fields.exists(x => x._1.isDefined)) =>
-        val f_ty = typeTerm(f)
-        val fun_ty: SimpleType = f_ty.unwrapProxies match {
+        def getLowerBoundFunctionType(t: SimpleType): Either[SimpleType, SimpleType] = t.unwrapProvs match {
           case tv: TypeVariable =>
             def getLowerboundFuns(tv: TypeVariable): List[FunctionType] = {
               val res: List[FunctionType] = tv.lowerBounds.map(x => 
@@ -1033,44 +1032,69 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
                   case tvv: TypeVariable =>
                     getLowerboundFuns(tvv) 
                   case _ =>
-                    die // never happens
+                    Nil
                 }).flatten
               res
             }
             val funs = getLowerboundFuns(tv)
             funs match {
               case x :: Nil => 
-                funs.head
+                R(funs.head)
               case Nil =>
-                err("Cannot extract any function", f.toLoc)
+                L(err("Cannot retrieve any function type in given function call", f.toLoc))
               case _ =>
-                err(s"More than one fun type found: ${funs}", f.toLoc)
+                L(err(s"More than 1 function definition found for the given function call: ${funs}", f.toLoc))
+            }
+          case ct @ ComposedType(pol, lhs, rhs) =>
+            if (pol === false) {
+              val x1 = getLowerBoundFunctionType(lhs)
+              val x2 = getLowerBoundFunctionType(rhs)
+              (x1, x2) match {
+                case (Left(_), Left(_)) =>
+                  L(err("Cannot retrieve any function type in given function call", f.toLoc))
+                case (Right(x), Left(_)) => 
+                  R(x)
+                case (Left(_), Right(x)) =>
+                  R(x)
+                case (Right(x), Right(y)) =>
+                  L(err(s"More than 1 function definition found for the given function call: $x $y}", f.toLoc))
+              }
+            } else {
+              L(err("Cannot retrieve any function type in given function call", f.toLoc))
             }
           case PolymorphicType(_, AliasOf(fun_ty @ FunctionType(_, _))) =>
-            fun_ty
+            R(fun_ty)
           case FunctionType(_, _) =>
-            f_ty
-          case _ => die // never happens
+            R(t)
+          case _ =>
+            L(err(s"Cannot retrieve any function type in given function call", f.toLoc))
         }
-        val hasUntypedArg = fun_ty.unwrapProxies match {
-          case FunctionType(TupleType(fields), _) =>
-            fields.exists(_._1.isEmpty)
-          case _ => die // never happens
-        }
-        if (hasUntypedArg) {
-          err("Cannot use named arguments as the function type has untyped arguments", a.toLoc)
-        } else {
-          val argsList = fun_ty.unwrapProxies match {
-            case FunctionType(TupleType(fields), _) =>
-              fields.map(x => x._1 match {
-                case Some(arg) =>
-                  arg
-                case N =>
-                  Var("error") // dummy term for using "error" builtin
-              })
-            case _ => die
-          }
-          desugarNamedArgs(term, f, a, argsList)
+        val f_ty = typeTerm(f)
+        val ff: Either[SimpleType, SimpleType] = getLowerBoundFunctionType(f_ty)
+        ff match {
+          case Right(fun_ty) =>
+            val hasUntypedArg = fun_ty.unwrapProxies match {
+              case FunctionType(TupleType(fields), _) =>
+                fields.exists(_._1.isEmpty)
+              case _ => die // never happens (cause the retrived fun_ty is always a function type)
+            }
+            if (hasUntypedArg) {
+              err("Cannot use named arguments as the function type has untyped arguments", a.toLoc)
+            } else {
+              val argsList = fun_ty.unwrapProxies match {
+                case FunctionType(TupleType(fields), _) =>
+                  fields.map(x => x._1 match {
+                    case Some(arg) =>
+                      arg
+                    case N =>
+                      Var("error") // dummy term for using "error" builtin
+                  })
+                case _ => die // cannot happen, because 
+              }
+              desugarNamedArgs(term, f, a, argsList)
+            }
+          case Left(eType) => 
+            eType
         }
       case App(f, a) =>
         val f_ty = typeMonomorphicTerm(f)
