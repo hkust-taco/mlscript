@@ -315,17 +315,13 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
           case (br @ BRACKETS(Round, toks), loc) :: _ =>
             consume
             val as = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented()) // TODO
-            val body = curlyTypingUnit.entities
-            Constructor(Tup(as).withLoc(S(loc)), Blk(body))
+            val body = curlyTypingUnit
+            Constructor(Tup(as).withLoc(S(loc)), Blk(body.entities).withLocOf(body))
           case _ =>
             err(msg"Expect parameter list for the constructor" -> S(l0) :: Nil)
             Constructor(Tup(Nil), Blk(Nil))
         }
-        val t = R(res.withLoc(S(l0 ++ res.getLoc)))
-        yeetSpaces match {
-          case (NEWLINE, _) :: _ => consume; t :: block
-          case _ => t :: Nil
-        }
+        R(res.withLoc(S(l0 ++ res.getLoc))) :: block
       case c =>
         val t = c match {
           case ModifierSet(mods, (KEYWORD(k @ ("class" | "infce" | "trait" | "mixin" | "type" | "module")), l0) :: c) =>
@@ -401,21 +397,20 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                 expr(0) :: otherParents
               case _ => Nil
             }
-            val tu = curlyTypingUnit
-            val (ctors, body) = tu.entities.partitionMap {
+            val fullTu = curlyTypingUnit
+            val (ctors, bodyStmts) = fullTu.entities.partitionMap {
               case c: Constructor => L(c)
               case t => R(t)
             }
-
-            val ctor =
-              if (ctors.lengthIs > 1) {
-                err(msg"A class may only have at most one explicit constructor" -> S(l0) :: Nil)
-                N
-              }
-              else ctors.headOption
-
+            val tu = TypingUnit(bodyStmts).withLocOf(fullTu)
+            if (ctors.lengthIs > 1) {
+              err(msg"A class may have at most one explicit constructor" -> S(l0) :: Nil)
+              N
+            }
+            val ctor = ctors.headOption
             val res =
-              NuTypeDef(kind, tn, tparams, params, ctor, sig, ps, N, N, TypingUnit(body))(isDecl, isAbs)
+              NuTypeDef(kind, tn, tparams, params, ctor, sig, ps, N, N, tu)(isDecl, isAbs)
+            R(res.withLoc(S(l0 ++ tn.getLoc ++ res.getLoc)))
             R(res.withLoc(S(l0 ++ res.getLoc)))
           
           case ModifierSet(mods, (KEYWORD(kwStr @ ("fun" | "val" | "let")), l0) :: c) => // TODO support rec?

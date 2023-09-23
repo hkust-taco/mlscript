@@ -62,7 +62,7 @@ class C(val x: Int) { constructor(y: Int) { log(x);; x = y } }
 class C(val x: Int) { constructor(y: Str) { x = y } }
 //│ ╔══[ERROR] Type mismatch in auxiliary class constructor:
 //│ ║  l.62: 	class C(val x: Int) { constructor(y: Str) { x = y } }
-//│ ║        	                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║        	                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Str` is not an instance of `Int`
 //│ ║  l.62: 	class C(val x: Int) { constructor(y: Str) { x = y } }
 //│ ║        	                                     ^^^
@@ -167,6 +167,14 @@ new C(1, 2)
 //│ // Output
 //│ [ 1, 1 ]
 
+:pe
+class C { constructor(x: Int);; constructor(y: Int) }
+//│ ╔══[PARSE ERROR] A class may have at most one explicit constructor
+//│ ║  l.171: 	class C { constructor(x: Int);; constructor(y: Int) }
+//│ ╙──       	^^^^^
+//│ class C {
+//│   constructor(x: Int)
+//│ }
 
 
 
