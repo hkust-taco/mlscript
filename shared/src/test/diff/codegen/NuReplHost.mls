@@ -1,16 +1,17 @@
 :NewDefs
 
 
-// * FIXME This should crash due to `error`,
+// * This should crash due to `error`,
 // * but the crash is somehow swallowed and we get the result of the previous statement instead!
 // * The same happens with any other side effect, like `log(...)`
 // * Note: this doesn't happen if the last line is in a spearate diff-test block
-:showRepl
+:ShowRepl
+:re
 fun foo(x) = error
 let r = foo(1)
 //│ fun foo: anything -> nothing
 //│ let r: nothing
-//│ ┌ Block at NuReplHost.mls:9
+//│ ┌ Block at NuReplHost.mls:10
 //│ ├─┬ Prelude
 //│ │ ├── Code
 //│ │ │   function error() {
@@ -41,8 +42,8 @@ let r = foo(1)
 r
 //│ nothing
 //│ res
-//│ Runtime error:
-//│   ReferenceError: r is not defined
+//│     Runtime error:
+//│       ReferenceError: r is not defined
 
 
 

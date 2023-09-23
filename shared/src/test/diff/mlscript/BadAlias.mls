@@ -141,8 +141,8 @@ type Bot = 'a
 :re
 error: Bot
 //│ res: Bot
-//│ Runtime error:
-//│   Error: an error was thrown
+//│    Runtime error:
+//│      Error: an error was thrown
 
 type PolyId = 'a -> 'a
 //│ Defined type alias PolyId

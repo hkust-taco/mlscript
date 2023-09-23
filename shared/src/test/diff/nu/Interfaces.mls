@@ -536,8 +536,8 @@ let tt1 = Test
 //│ ╙──       	          ^^^^
 //│ let tt1: error
 //│ tt1
-//│ Runtime error:
-//│   TypeError: Cannot read properties of undefined (reading 'build')
+//│     Runtime error:
+//│       TypeError: Cannot read properties of undefined (reading 'build')
 
 :e
 fun mt(x) = if x is Test then 1 else 0

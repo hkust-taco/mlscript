@@ -66,8 +66,8 @@ A.f
 //│     'a <: 'f0
 //│     'f0 <: 'f0 -> 'a
 //│ res
-//│ Runtime error:
-//│   RangeError: Maximum call stack size exceeded
+//│     Runtime error:
+//│       RangeError: Maximum call stack size exceeded
 
 :ns
 A.g
@@ -88,7 +88,7 @@ A.h
 //│     'h :> forall 'a 'h0. 'a
 //│     'a <: 'h0
 //│ res
-//│ Runtime error:
-//│   RangeError: Maximum call stack size exceeded
+//│     Runtime error:
+//│       RangeError: Maximum call stack size exceeded
 
 

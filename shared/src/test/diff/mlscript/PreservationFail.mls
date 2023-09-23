@@ -102,8 +102,8 @@ t1nt1 = T1 nt1
 :re
 t1nt1.lol "oops!"
 //│ res: nothing
-//│ Runtime error:
-//│   TypeError: t1nt1.lol is not a function
+//│    Runtime error:
+//│      TypeError: t1nt1.lol is not a function
 
 
 

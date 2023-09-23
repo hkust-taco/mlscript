@@ -62,8 +62,8 @@ fun test =
 test
 //│ 1
 //│ res
-//│ Runtime error:
-//│   ReferenceError: Cannot access 'b' before initialization
+//│     Runtime error:
+//│       ReferenceError: Cannot access 'b' before initialization
 
 :js
 fun test =
@@ -120,8 +120,8 @@ fun test =
 test
 //│ Int
 //│ res
-//│ Runtime error:
-//│   ReferenceError: test8 is not defined
+//│     Runtime error:
+//│       ReferenceError: test8 is not defined
 
 
 :pe

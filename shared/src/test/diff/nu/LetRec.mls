@@ -59,8 +59,8 @@ let rec f() =
 f()
 //│ nothing
 //│ res
-//│ Runtime error:
-//│   RangeError: Maximum call stack size exceeded
+//│     Runtime error:
+//│       RangeError: Maximum call stack size exceeded
 
 // :e // TODO this should be rejected by the type checker
 :ge
@@ -82,8 +82,8 @@ f
 //│ res = f3;
 //│ // End of generated code
 //│ res
-//│ Runtime error:
-//│   ReferenceError: f3 is not defined
+//│     Runtime error:
+//│       ReferenceError: f3 is not defined
 
 // :e // TODO this should be rejected by the type checker
 :ge
@@ -173,7 +173,7 @@ let foo = foo.x
 foo()()
 //│ nothing
 //│ res
-//│ Runtime error:
-//│   TypeError: foo2 is not a function
+//│     Runtime error:
+//│       TypeError: foo2 is not a function
 
 

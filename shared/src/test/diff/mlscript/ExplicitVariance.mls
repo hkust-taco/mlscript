@@ -32,6 +32,6 @@ class Covar[A]
 :re
 (error : Covar[{ x: int }]) : Covar[{}]
 //│ res: Covar[?]
-//│ Runtime error:
-//│   Error: an error was thrown
+//│    Runtime error:
+//│      Error: an error was thrown
 

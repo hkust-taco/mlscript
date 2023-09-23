@@ -168,11 +168,11 @@ MyBox.Map mb (fun x -> x * 3)
 //│ res = MyBox1.Map(mb1)((x) => x * 3);
 //│ // End of generated code
 //│ res: Box[int] & {info: string}
-//│ Runtime error:
-//│   TypeError: mb1.MyBox.Map is not a function
+//│    Runtime error:
+//│      TypeError: mb1.MyBox.Map is not a function
 //│ res: Box[int] & {info: string}
-//│ Runtime error:
-//│   TypeError: MyBox1.Map is not a function
+//│    Runtime error:
+//│      TypeError: MyBox1.Map is not a function
 
 
 

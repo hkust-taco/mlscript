@@ -152,5 +152,5 @@ xs
 //│ res: 'tail
 //│   where
 //│     'tail :> Cons[0 | 1] with {head: 0, tail: Cons[0 | 1] with {head: 1, tail: 'tail}}
-//│ Runtime error:
-//│   RangeError: Maximum call stack size exceeded
+//│    Runtime error:
+//│      RangeError: Maximum call stack size exceeded

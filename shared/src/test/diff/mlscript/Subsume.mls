@@ -30,8 +30,8 @@ f = 42
 :re
 f 1
 //│ res: int
-//│ Runtime error:
-//│   TypeError: f1 is not a function
+//│    Runtime error:
+//│      TypeError: f1 is not a function
 
 fun x -> f x
 //│ res: int -> int
@@ -198,8 +198,8 @@ def f = impl
 :re
 f 1 
 //│ res: 1
-//│ Runtime error:
-//│   TypeError: a is not a function
+//│    Runtime error:
+//│      TypeError: a is not a function
 
 
 def f: (int & 'a) -> (int & 'a) -> 'a 
@@ -241,8 +241,8 @@ f 1
 :re
 res 2
 //│ res: 1 | 2
-//│ Runtime error:
-//│   TypeError: b is not a function
+//│    Runtime error:
+//│      TypeError: b is not a function
 
 
 :e

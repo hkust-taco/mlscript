@@ -35,8 +35,8 @@ D
 :re
 error: A & B
 //│ res: A & B
-//│ Runtime error:
-//│   Error: an error was thrown
+//│    Runtime error:
+//│      Error: an error was thrown
 
 :e
 dv = D{}

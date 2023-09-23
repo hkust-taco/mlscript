@@ -595,8 +595,8 @@ sz1 = sz 1
 :re
 sz1 2
 //│ res: error
-//│ Runtime error:
-//│   TypeError: f is not a function
+//│    Runtime error:
+//│      TypeError: f is not a function
 
 
 

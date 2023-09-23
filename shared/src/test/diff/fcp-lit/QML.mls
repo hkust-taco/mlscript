@@ -372,8 +372,8 @@ ma1 (fun (xinit1, xsub1) -> ma2 (fun (xinit2, xsub2) -> xsub2 (xinit1 true) 0))
 //│ ║  l.348: 	ma1 (fun (xinit1, xsub1) -> ma2 (fun (xinit2, xsub2) -> xsub2 (xinit1 true) 0))
 //│ ╙──       	                                                               ^^^^^^^^^^^
 //│ res: error
-//│ Runtime error:
-//│   TypeError: boolean true is not iterable (cannot read property Symbol(Symbol.iterator))
+//│    Runtime error:
+//│      TypeError: boolean true is not iterable (cannot read property Symbol(Symbol.iterator))
 
 :e
 ma1 (fun (xinit1, xsub1) -> ma2 (fun (xinit2, xsub2) -> xsub1 (xinit2 true) 0))
@@ -546,8 +546,8 @@ res 0
 //│ ║  l.526: 	mkArray 3 (fun ((((xinit, xsub), xupdate), xfold),) -> xinit 2)
 //│ ╙──       	^^^^^^^^^
 //│ res: error
-//│ Runtime error:
-//│   TypeError: res is not a function
+//│    Runtime error:
+//│      TypeError: res is not a function
 
 
 // =============== Sec 7 ===============

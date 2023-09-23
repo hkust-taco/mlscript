@@ -60,8 +60,8 @@ bar (fun x -> case x of {})
 //│ ║  l.23: 	bar f = foo (fun x -> let tmp = f x in x)
 //│ ╙──      	             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: error | int
-//│ Runtime error:
-//│   Error: non-exhaustive case expression
+//│    Runtime error:
+//│      Error: non-exhaustive case expression
 
 
 def f: 'a -> 'b

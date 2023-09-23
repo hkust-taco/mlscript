@@ -588,8 +588,8 @@ sz1 2
 //│ ║  l.7: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ╙──     	                            ^^^^^^^^^^
 //│ res: error
-//│ Runtime error:
-//│   TypeError: f is not a function
+//│    Runtime error:
+//│      TypeError: f is not a function
 
 
 

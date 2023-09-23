@@ -24,8 +24,8 @@ fun foo(c) = new c
 foo(() => 123)
 //│ error
 //│ res
-//│ Runtime error:
-//│   TypeError: c is not a constructor
+//│     Runtime error:
+//│       TypeError: c is not a constructor
 
 :e
 foo(C)
@@ -48,8 +48,8 @@ fun bar(c) = new c(123)
 bar(D)
 //│ error
 //│ res
-//│ Runtime error:
-//│   TypeError: c is not a constructor
+//│     Runtime error:
+//│       TypeError: c is not a constructor
 
 :e // TODO accept when we have first-class classes
 bar(D.class)
@@ -171,8 +171,8 @@ fun test(a: Object) = if a is
 test(0).x
 //│ ??A
 //│ res
-//│ Runtime error:
-//│   Error: an error was thrown
+//│     Runtime error:
+//│       Error: an error was thrown
 
 
 // class Expr[T] {

@@ -181,8 +181,8 @@ q q
 //│ ║  l.173: 	q q
 //│ ╙──       	^
 //│ res: error
-//│ Runtime error:
-//│   TypeError: q is not a function
+//│    Runtime error:
+//│      TypeError: q is not a function
 
 
 :NoJS

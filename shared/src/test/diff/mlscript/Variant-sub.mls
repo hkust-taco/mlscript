@@ -37,8 +37,8 @@ flatMap f "oops"
 //│ ║  l.14: 	  case opt of { Some -> f opt.v | None -> opt }
 //│ ╙──      	       ^^^
 //│ res: Some[nothing] | error
-//│ Runtime error:
-//│   Error: non-exhaustive case expression
+//│    Runtime error:
+//│      Error: non-exhaustive case expression
 
 class NoneBecause: None & { reason: string }
 flatMap f (NoneBecause { reason = "uh uh" })

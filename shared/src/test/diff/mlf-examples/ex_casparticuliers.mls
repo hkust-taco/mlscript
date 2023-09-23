@@ -146,8 +146,8 @@ succ' {} {} {}
 //│ ║  l.48: 	def succ' n = fun f -> fun x -> f (n f x)
 //│ ╙──      	                                ^
 //│ res: error
-//│ Runtime error:
-//│   TypeError: n is not a function
+//│    Runtime error:
+//│      TypeError: n is not a function
 
 fun x -> succ' x x x x x x x x x
 //│ res: ('a -> 'a -> 'b & 'b -> 'a -> 'a -> 'a -> 'a -> 'a -> 'a -> 'c & 'a) -> 'c
@@ -616,8 +616,8 @@ succ' {} {} {}
 //│ ║  l.525: 	def succ' n = fun f -> fun x -> f (n f x)
 //│ ╙──       	                                   ^^^
 //│ res: error
-//│ Runtime error:
-//│   TypeError: n is not a function
+//│    Runtime error:
+//│      TypeError: n is not a function
 
 
 

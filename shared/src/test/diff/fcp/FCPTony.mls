@@ -27,8 +27,8 @@ g {} {}
 //│ ║  l.6: 	def app n f = n f
 //│ ╙──     	              ^^^
 //│ res: error
-//│ Runtime error:
-//│   TypeError: n is not a function
+//│    Runtime error:
+//│      TypeError: n is not a function
 
 
 
@@ -64,8 +64,8 @@ mul id {}
 //│ ║  l.44: 	def mul r s = r (app s) id
 //│ ╙──      	                     ^
 //│ res: error
-//│ Runtime error:
-//│   TypeError: p is not a function
+//│    Runtime error:
+//│      TypeError: p is not a function
 
 def fact t = mul t {}
 //│ fact: ((forall 'a 'b. 'a -> 'b
@@ -85,8 +85,8 @@ fact id
 //│ ║  l.38: 	def app p q = p q
 //│ ╙──      	              ^^^
 //│ res: error
-//│ Runtime error:
-//│   TypeError: p is not a function
+//│    Runtime error:
+//│      TypeError: p is not a function
 
 def mul r s = r (app s)
 //│ mul: 'a -> ('b -> 'c
@@ -170,8 +170,8 @@ f {} {}
 //│ ║  l.129: 	def add n m = n succ m
 //│ ╙──       	              ^^^^^^
 //│ res: error
-//│ Runtime error:
-//│   TypeError: n is not a function
+//│    Runtime error:
+//│      TypeError: n is not a function
 
 
 

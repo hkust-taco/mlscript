@@ -136,8 +136,8 @@ type Bad = { x: 'a }
 :re
 error: Bad
 //│ res: Bad
-//│ Runtime error:
-//│   Error: an error was thrown
+//│    Runtime error:
+//│      Error: an error was thrown
 
 type BadRec = { x: 'a; y: BadRec }
 //│ Defined type alias BadRec
@@ -145,14 +145,14 @@ type BadRec = { x: 'a; y: BadRec }
 :re
 (fun (x: BadRec) -> ()) (error: BadRec)
 //│ res: ()
-//│ Runtime error:
-//│   Error: an error was thrown
+//│    Runtime error:
+//│      Error: an error was thrown
 
 :re
 error: BadRec
 //│ res: BadRec
-//│ Runtime error:
-//│   Error: an error was thrown
+//│    Runtime error:
+//│      Error: an error was thrown
 
 def someRec: { y: 'a } as 'a
 //│ someRec: 'a

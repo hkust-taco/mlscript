@@ -80,11 +80,11 @@ r(error, error)
 //│ ╙──      	 ^^^^^^^^^^^^^^
 //│ error | [nothing, nothing]
 //│ res
-//│ Runtime error:
-//│   Error: an error was thrown
+//│     Runtime error:
+//│       Error: an error was thrown
 //│ res
-//│ Runtime error:
-//│   Error: an error was thrown
+//│     Runtime error:
+//│       Error: an error was thrown
 
 // * Note: the correct version:
 let r = if true then id else ([x, y]) => [y, x]

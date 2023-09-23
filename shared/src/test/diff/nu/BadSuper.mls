@@ -31,8 +31,8 @@ C0.g
 //│ }
 //│ {f: 42}
 //│ res
-//│ Runtime error:
-//│   ReferenceError: M1 is not defined
+//│     Runtime error:
+//│       ReferenceError: M1 is not defined
 
 
 :e

@@ -142,8 +142,8 @@ C3() : T3['X]
 //│ ╙──       	^^
 //│ T3[Int]
 //│ res
-//│ Runtime error:
-//│   TypeError: Class constructor C3 cannot be invoked without 'new'
+//│     Runtime error:
+//│       TypeError: Class constructor C3 cannot be invoked without 'new'
 
 
 

@@ -45,6 +45,6 @@ self x = x x
 :re
 self self!
 //│ res: nothing
-//│ Runtime error:
-//│   RangeError: Maximum call stack size exceeded
+//│    Runtime error:
+//│      RangeError: Maximum call stack size exceeded
 
