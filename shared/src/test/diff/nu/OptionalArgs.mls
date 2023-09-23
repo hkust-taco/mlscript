@@ -230,9 +230,9 @@ let y: C1 = x
 // Typing of [Int, Int?] is ok, but constraining is not 
 :d
 [1, 2]: [Int, Int?]
-//│ 0. Typing TypingUnit(List('(' 1, 2, ')' : (Int, Int,)))
+//│ 0. Typing TypingUnit(List('(' 1, 2, ')' : (Int, Int?,)))
 //│ | Typing unit statements
-//│ | | 0. Typing term '(' 1, 2, ')' : (Int, Int,)
+//│ | | 0. Typing term '(' 1, 2, ')' : (Int, Int?,)
 //│ | | | typing-trm-here!!! '(' 1, 2, ')'
 //│ | | | 0. Typing term '(' 1, 2, ')'
 //│ | | | | 0. Typing term 1, 2,
@@ -275,9 +275,9 @@ let y: C1 = x
 
 :d
 [1]: [Int, Int?]
-//│ 0. Typing TypingUnit(List('(' 1, ')' : (Int, Int,)))
+//│ 0. Typing TypingUnit(List('(' 1, ')' : (Int, Int?,)))
 //│ | Typing unit statements
-//│ | | 0. Typing term '(' 1, ')' : (Int, Int,)
+//│ | | 0. Typing term '(' 1, ')' : (Int, Int?,)
 //│ | | | typing-trm-here!!! '(' 1, ')'
 //│ | | | 0. Typing term '(' 1, ')'
 //│ | | | | 0. Typing term 1,
@@ -519,12 +519,12 @@ let y: C1 = x
 //│ │ │ │ result => '(' Int, Int, Int?, ')' ## Bra(rcd = false, Tup(_: Var(Int), _: Var(Int), _: Var(Int)))
 //│ │ │ │ result toType => Right(Tuple(List((None,Field(None,TypeName(Int),false)), (None,Field(None,TypeName(Int),false)), (None,Field(None,TypeName(Int),true)))))
 //│ │ │ = '(' Int, Int, Int?, ')'
-//│ │ │ asc => '(' 1, 2, ')' : (Int, Int, Int,)
-//│ │ = Right('(' 1, 2, ')' : (Int, Int, Int,))
-//│ = Right('(' 1, 2, ')' : (Int, Int, Int,))
+//│ │ │ asc => '(' 1, 2, ')' : (Int, Int, Int?,)
+//│ │ = Right('(' 1, 2, ')' : (Int, Int, Int?,))
+//│ = Right('(' 1, 2, ')' : (Int, Int, Int?,))
 //│ ? yeetSpaces		inspects ||    [at l.515]
 //│ ? parseAll		inspects ||    [at l.76]
-//│ Parsed: '(' 1, 2, ')' : (Int, Int, Int,);
+//│ Parsed: '(' 1, 2, ')' : (Int, Int, Int?,);
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.375: 	[1, 2]: [Int, Int, Int?]
 //│ ║         	^^^^^^
@@ -543,14 +543,14 @@ let y: C1 = x
 
 :d
 fun foo(xs: [Int] & 'a) = xs : [Int, Int?]
-//│ 0. Typing TypingUnit(List(fun foo = (xs: & (Int,) ('a,),) => xs : (Int, Int,)))
-//│ | 0. Created lazy type info for fun foo = (xs: & (Int,) ('a,),) => xs : (Int, Int,)
-//│ | Completing fun foo = (xs: & (Int,) ('a,),) => xs : (Int, Int,)
+//│ 0. Typing TypingUnit(List(fun foo = (xs: & (Int,) ('a,),) => xs : (Int, Int?,)))
+//│ | 0. Created lazy type info for fun foo = (xs: & (Int,) ('a,),) => xs : (Int, Int?,)
+//│ | Completing fun foo = (xs: & (Int,) ('a,),) => xs : (Int, Int?,)
 //│ | | UNSTASHING... (out)
 //│ | | Type params 
 //│ | | UNSTASHING... (out)
 //│ | | Params 
-//│ | | 1. Typing term (xs: & (Int,) ('a,),) => xs : (Int, Int,)
+//│ | | 1. Typing term (xs: & (Int,) ('a,),) => xs : (Int, Int?,)
 //│ | | | 1. Typing pattern xs: & (Int,) ('a,),
 //│ | | | | HERE, good!
 //│ | | | | 1. Typing pattern xs : Int & 'a
@@ -568,7 +568,7 @@ fun foo(xs: [Int] & 'a) = xs : [Int, Int?]
 //│ | | | | opt is => false
 //│ | | | | case #2
 //│ | | | 1. : (xs: (Int & 'a75'),)
-//│ | | | 1. Typing term xs : (Int, Int,)
+//│ | | | 1. Typing term xs : (Int, Int?,)
 //│ | | | | typing-trm-here!!! xs
 //│ | | | | 1. Typing term xs
 //│ | | | | 1. : (Int & 'a75')
@@ -602,7 +602,7 @@ fun foo(xs: [Int] & 'a) = xs : [Int, Int?]
 //│ | | 1. C ((xs: (Int & 'a75'),) -> (Int, Int?,)) <! foo76'    (0)
 //│ | | | NEW foo76' LB (1)
 //│ | | UNSTASHING... (out)
-//│ | Completed TypedNuFun(0,fun foo = (xs: & (Int,) ('a,),) => xs : (Int, Int,),((xs: (Int & 'a75'),) -> (Int, Int?,))) where 
+//│ | Completed TypedNuFun(0,fun foo = (xs: & (Int,) ('a,),) => xs : (Int, Int?,),((xs: (Int & 'a75'),) -> (Int, Int?,))) where 
 //│ 		'a75' <: (((#Int<Object,Num>, #Int<Object,Num>,) & {_2: #Int<Object,Num>, _1: #Int<Object,Num>}) | ~(#Int<Object,Num>))
 //│ | Typing unit statements
 //│ | : None
