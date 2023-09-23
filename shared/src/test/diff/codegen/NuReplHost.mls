@@ -5,13 +5,12 @@
 // * but the crash is somehow swallowed and we get the result of the previous statement instead!
 // * The same happens with any other side effect, like `log(...)`
 // * Note: this doesn't happen if the last line is in a spearate diff-test block
-:ShowRepl
-:re
+:showRepl
 fun foo(x) = error
 let r = foo(1)
 //│ fun foo: anything -> nothing
 //│ let r: nothing
-//│ ┌ Block at NuReplHost.mls:10
+//│ ┌ Block at NuReplHost.mls:9
 //│ ├─┬ Prelude
 //│ │ ├── Code
 //│ │ │   function error() {
@@ -35,12 +34,17 @@ let r = foo(1)
 //│   ├── Code:
 //│   ├──   globalThis.r = foo(1);
 //│   └── Reply: [runtime error] Error: an error was thrown
+//│ what foo 
+//│ foo
+//│ what r 
 //│ r
-//│   = [Function: foo]
+//│   Runtime error:
+//│     Error: an error was thrown
 
 :re
 r
 //│ nothing
+//│ what res 
 //│ res
 //│     Runtime error:
 //│       ReferenceError: r is not defined

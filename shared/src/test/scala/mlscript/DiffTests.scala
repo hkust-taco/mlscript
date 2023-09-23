@@ -258,7 +258,7 @@ class DiffTests
           case "dv" => mode.copy(debugVariance = true)
           case "ge" => mode.copy(expectCodeGenErrors = true)
           case "re" => mode.copy(expectRuntimeErrors = true)
-          case "ShowRepl" => mode.copy(showRepl = true)
+          case "r" | "showRepl" => mode.copy(showRepl = true)
           case "escape" => mode.copy(allowEscape = true)
           case "exit" =>
             out.println(exitMarker)
@@ -966,19 +966,21 @@ class DiffTests
                 if (typerResults.isEmpty)
                   checkReply(replyQueue, 0, true)
                 else {
-                  typerResults
-                    .iterator
-                    .filterNot(_._5)
-                    .foreach { case (name, typingLines, diagnosticLines, typeBeforeDiags, hide) =>
-                      if (typeBeforeDiags) {
-                        typingLines.foreach(output)
-                        diagnosticLines.foreach(output)
-                      } else {
-                        diagnosticLines.foreach(output)
-                        typingLines.foreach(output)
-                      }
+                  typerResults.foreach { case (name, typingLines, diagnosticLines, typeBeforeDiags, hide) =>
+                    output(s"what $name")
+                    if (typeBeforeDiags) {
+                      typingLines.foreach(output)
+                      diagnosticLines.foreach(output)
+                    } else {
+                      diagnosticLines.foreach(output)
+                      typingLines.foreach(output)
+                    }
+                    if (hide) {
+                      replyQueue.dequeue()
+                    } else {
                       checkReply(replyQueue, name.length)
                     }
+                  }
                 }
               case L(other) =>
                 // Print type checking results first.
