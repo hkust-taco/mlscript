@@ -11,7 +11,7 @@ fun pure[A](a: A): Effectful['a, 'e] = Effectful(a)
 //│ class Effectful[A, E](value: A) {
 //│   fun flatMap: forall 'B. (f: A -> Effectful['B, E]) -> Effectful['B, E]
 //│ }
-//│ fun pure: forall 'a. (a: 'a) -> Effectful['a, nothing]
+//│ fun pure: forall 'A. (a: 'A) -> Effectful['A, nothing]
 
 // * Some effect tags
 module IO
@@ -32,12 +32,12 @@ type NonBlocking[out A, out E] = Effectful[A, E \ Block]
 
 // * Example use of NonBlocking in an annotation; the type arguments are inferred
 fun f(x) = x : NonBlocking
-//│ fun f: forall 'a 'b. NonBlocking['a, 'b] -> NonBlocking['a, 'b]
+//│ fun f: forall 'a 'b. NonBlocking['b, 'a] -> NonBlocking['b, 'a]
 
 
 // * the `listener` callback should be non-blocking
 fun onMousePressed(listener) =
-  fun l(e) = listener(e) : NonBlocking
+  let l(e) = listener(e) : NonBlocking
   l(0).flatMap of a => l(1).flatMap of b => pure of ()
 //│ fun onMousePressed: forall 'a. ((0 | 1) -> NonBlocking[anything, 'a]) -> Effectful[[], 'a & ~Block]
 
@@ -70,7 +70,7 @@ module Register
 //│ module Register
 
 fun onMousePressed(listener) =
-  fun l(e: MouseEvent) = listener(e) : Effectful[(), 'e \ Block \ Register]
+  let l(e: MouseEvent) = listener(e) : Effectful[(), 'e \ Block \ Register]
   ()
 //│ fun onMousePressed: (MouseEvent -> Effectful[[], ~Block & ~Register]) -> []
 

@@ -150,7 +150,9 @@ class Pair[L, R](lhs: L, rhs: R) extends Exp[(L, R)]
 //│ ║  l.140: 	    Lit then 0
 //│ ║         	^^^^^^^^^^^^^^
 //│ ║  l.141: 	    Pair then 1
-//│ ╙──       	^^^^^^^^^^^^^^^
+//│ ║         	^^^^^^^^^^^^^^^
+//│ ║  l.142: 	}
+//│ ╙──       	^
 //│ ╔══[ERROR] Type error in `case` expression
 //│ ║  l.139: 	  fun test = if this is
 //│ ║         	                ^^^^^^^

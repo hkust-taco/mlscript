@@ -74,7 +74,7 @@ fun f: 'a => 'a where
 
 
 :e
-fun f: 'a => forall 'b; 'a where
+fun f: 'a => forall 'b: 'a where
   'a : 'b
   'b : string
   int : 'a
@@ -94,7 +94,7 @@ fun f: 'a => forall 'b; 'a where
 
 
 // * Constraint is stashed!
-fun f: 'a => forall 'b; 'a where
+fun f: 'a => forall 'b: 'a where
   'a : 'b => 'b
   int : 'a
 //│ f: 'a -> (int | 'a
@@ -150,7 +150,7 @@ r + 1
 //│ res: error | int
 
 
-fun f: 'a => forall 'b; 'b where
+fun f: 'a => forall 'b: 'b where
   'a : 'b => 'b
   int : 'a
 //│ f: 'a -> ('b

@@ -4,7 +4,7 @@
 
 code"let arr = [
   1
-]; arr"
+] in arr"
 //│ Code[[1], nothing]
 
 let res = code"let foo = (x, y) => x * y

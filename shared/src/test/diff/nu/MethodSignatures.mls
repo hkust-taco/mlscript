@@ -19,7 +19,7 @@ module Oops {
 //│ ║        	       ^^^^
 //│ ╟── Declared here:
 //│ ║  l.15: 	  fun a : Int
-//│ ╙──      	      ^^^^^^^
+//│ ╙──      	  ^^^^^^^^^^^
 //│ module Oops {
 //│   fun a: Int
 //│ }
@@ -32,7 +32,7 @@ module Oops {
 }
 //│ ╔══[ERROR] A type signature for 'a' was already given
 //│ ║  l.30: 	  fun a : string
-//│ ╙──      	      ^^^^^^^^^^
+//│ ╙──      	  ^^^^^^^^^^^^^^
 //│ module Oops {
 //│   fun a: string
 //│ }
@@ -86,7 +86,7 @@ module A {
 // * With a type signature, it is generalized and checked against the signature
 module A {
   
-  fun i: forall 'a; 'a -> 'a
+  fun i: forall 'a: 'a -> 'a
   fun i(x) = x
   
   fun j: 'b -> 'b

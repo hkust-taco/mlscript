@@ -1258,10 +1258,10 @@ I(1).J(3).a
 
 :js
 fun main =
-  fun f(x: Int): Int = if x is
+  let f(x: Int): Int = if x is
     0 then 1
     else g(x - 1)
-  fun g(x: Int): Int = f(x)
+  let g(x: Int): Int = f(x)
   f
 //│ fun main: (x: Int) -> Int
 //│ // Prelude
@@ -1384,9 +1384,9 @@ fun mian =
 :js
 fun main(arg) =
   let x = arg + 1
-  fun foo(y) = x + y
+  let foo(y) = x + y
   class C(u: Int) { fun z = [foo(u), bar] }
-  fun bar = x
+  let bar = x
   C(123)
 //│ fun main: Int -> C
 //│ // Prelude

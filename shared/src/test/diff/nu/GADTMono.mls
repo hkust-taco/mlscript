@@ -64,12 +64,28 @@ fun eval[A](e: Expr[A]): A =
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.59: 	        e is Add(x, y) then eval(x) + eval(y)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `#Expr & (Add & {Expr#A = ?A} | Cond[?] & {Expr#A = ?A} | Fst[?, ?] & {Expr#A = ?A} | LitBool & {Expr#A = ?A} | LitInt & {Expr#A = ?A} | Pair[?, ?] & {Expr#A = ?A} | Snd[?, ?] & {Expr#A = ?A})` does not match type `Add | LitBool | LitInt`
+//│ ╟── type `#Expr & (Add & {Expr#A = A} | Cond[?] & {Expr#A = A} | Fst[?, ?] & {Expr#A = A} | LitBool & {Expr#A = A} | LitInt & {Expr#A = A} | Pair[?, ?] & {Expr#A = A} | Snd[?, ?] & {Expr#A = A})` does not match type `Add | LitBool | LitInt`
 //│ ║  l.55: 	fun eval[A](e: Expr[A]): A =
 //│ ║        	               ^^^^^^^
 //│ ╟── but it flows into reference with expected type `Add | LitBool | LitInt`
 //│ ║  l.57: 	        e is LitInt(n) then n
 //│ ╙──      	        ^
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.57: 	        e is LitInt(n) then n
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.58: 	        e is LitBool(b) then b
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.59: 	        e is Add(x, y) then eval(x) + eval(y)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `Int` does not match type `A`
+//│ ║  l.4: 	class LitInt(n: Int) extends Expr[Int]
+//│ ║       	                ^^^
+//│ ╟── but it flows into reference with expected type `A`
+//│ ║  l.57: 	        e is LitInt(n) then n
+//│ ║        	                            ^
+//│ ╟── Note: constraint arises from method type parameter:
+//│ ║  l.55: 	fun eval[A](e: Expr[A]): A =
+//│ ╙──      	         ^
 //│ ╔══[ERROR] Type mismatch in definition:
 //│ ║  l.55: 	fun eval[A](e: Expr[A]): A =
 //│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -81,14 +97,28 @@ fun eval[A](e: Expr[A]): A =
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.59: 	        e is Add(x, y) then eval(x) + eval(y)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `Bool` is not an instance of `Int`
-//│ ║  l.5: 	class LitBool(b: Bool) extends Expr[Bool]
-//│ ║       	                 ^^^^
-//│ ╟── but it flows into reference with expected type `Int`
+//│ ╟── type `Int` does not match type `A`
+//│ ║  l.6: 	class Add(x: Expr[Int], y: Expr[Int]) extends Expr[Int]
+//│ ║       	                                ^^^
+//│ ╟── Note: constraint arises from method type parameter:
+//│ ║  l.55: 	fun eval[A](e: Expr[A]): A =
+//│ ╙──      	         ^
+//│ ╔══[ERROR] Type mismatch in definition:
+//│ ║  l.55: 	fun eval[A](e: Expr[A]): A =
+//│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.56: 	    if 
+//│ ║        	^^^^^^^
+//│ ║  l.57: 	        e is LitInt(n) then n
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.58: 	        e is LitBool(b) then b
-//│ ║        	                             ^
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.59: 	        e is Add(x, y) then eval(x) + eval(y)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `A` is not an instance of type `Int`
+//│ ║  l.55: 	fun eval[A](e: Expr[A]): A =
+//│ ║        	         ^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.6: 	class Add(x: Expr[Int], y: Expr[Int]) extends Expr[Int]
 //│ ╙──     	                                ^^^
-//│ fun eval: (e: Expr[in Int out Int | false | true]) -> (Int | false | true)
+//│ fun eval: forall 'A. (e: Expr['A]) -> 'A
 

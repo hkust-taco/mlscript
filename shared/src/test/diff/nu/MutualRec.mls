@@ -231,7 +231,9 @@ class Test1_2 {
 //│ ║  l.224: 	class Test1_1 {
 //│ ║         	^^^^^^^^^^^^^^^
 //│ ║  l.225: 	  fun a = (new Test1_2).b
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.226: 	}
+//│ ╙──       	^
 //│ class Test1_1 {
 //│   constructor()
 //│   fun a: error
@@ -255,7 +257,7 @@ module Test2_2 {
   fun e = Test2_1.n
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.254: 	  fun c = Test2_1.a
+//│ ║  l.256: 	  fun c = Test2_1.a
 //│ ╙──       	                 ^^
 //│ module Test2_1 {
 //│   fun a: 123 | error

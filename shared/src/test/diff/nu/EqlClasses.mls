@@ -156,6 +156,45 @@ q === q
 
 
 
+class MP[Col](val color: Col)
+//│ class MP[Col](color: Col)
+
+val mp = MP(1)
+//│ val mp: MP[1]
+//│ mp
+//│    = MP {}
+
+mp === mp
+//│ Bool
+//│ res
+//│     = true
+
+fun cmp(lhs, rhs) = lhs.color === rhs.color
+//│ fun cmp: forall 'a. ({color: Eql['a]}, {color: 'a}) -> Bool
+
+cmp(mp, mp)
+//│ Bool
+//│ res
+//│     = true
+
+module Mix {
+  fun compare(lhs, rhs) = (lhs.color === rhs.color)
+}
+module Comp extends Mix
+//│ module Mix {
+//│   fun compare: forall 'a. ({color: Eql['a]}, {color: 'a}) -> Bool
+//│ }
+//│ module Comp extends Mix {
+//│   fun compare: forall 'b. ({color: Eql['b]}, {color: 'b}) -> Bool
+//│ }
+
+Comp.compare(mp, mp)
+//│ Bool
+//│ res
+//│     = true
+
+
+
 
 // *** NOTES ***
 

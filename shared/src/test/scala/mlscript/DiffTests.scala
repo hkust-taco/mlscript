@@ -258,7 +258,7 @@ class DiffTests
           case "dv" => mode.copy(debugVariance = true)
           case "ge" => mode.copy(expectCodeGenErrors = true)
           case "re" => mode.copy(expectRuntimeErrors = true)
-          case "ShowRepl" => mode.copy(showRepl = true)
+          case "r" | "showRepl" => mode.copy(showRepl = true)
           case "escape" => mode.copy(allowEscape = true)
           case "exit" =>
             out.println(exitMarker)

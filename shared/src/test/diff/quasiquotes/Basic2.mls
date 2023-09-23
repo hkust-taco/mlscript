@@ -18,7 +18,7 @@ run(res)
 //│ let res: Code[1, nothing]
 //│ 1
 
-let res = code"let f = (x, y, z) => x + y + x; f of 1,2,3"
+let res = code"let f = (x, y, z) => x + y + x in f of 1,2,3"
 run(res)
 //│ let res: Code[Int, nothing]
 //│ Int
@@ -39,22 +39,22 @@ run(res)
 
 // :ge
 :e
-code"let x = {a: 100}; x . a" // "." ?
+code"let x = {a: 100} in x . a" // "." ?
 //│ ╔══[ERROR] identifier not found: .
-//│ ║  l.42: 	code"let x = {a: 100}; x . a" // "." ?
-//│ ╙──      	                         ^
-//│ ╔══[ERROR] identifier not found: a
-//│ ║  l.42: 	code"let x = {a: 100}; x . a" // "." ?
+//│ ║  l.42: 	code"let x = {a: 100} in x . a" // "." ?
 //│ ╙──      	                           ^
+//│ ╔══[ERROR] identifier not found: a
+//│ ║  l.42: 	code"let x = {a: 100} in x . a" // "." ?
+//│ ╙──      	                             ^
 //│ Code[error, nothing]
 
 
-code"let x = {a: 100}; x.a"
+code"let x = {a: 100} in x.a"
 //│ Code[100, nothing]
 
 
 // should be ok
-let res = code"let x = {a: 100}; x .a"
+let res = code"let x = {a: 100} in x .a"
 //│ let res: Code[100, nothing]
 
 run(res)

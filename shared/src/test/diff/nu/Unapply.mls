@@ -99,7 +99,7 @@ fun D(x: Int) = {x}
 module D { fun unapply(a) = [a.x] }
 //│ ╔══[ERROR] Refininition of 'D'
 //│ ║  l.99: 	module D { fun unapply(a) = [a.x] }
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ fun D: (x: Int) -> {x: Int}
 //│ module D {
 //│   fun unapply: forall 'x. {x: 'x} -> ['x]

@@ -110,7 +110,7 @@ let y: c.A = c.x
 // *** GADTs *** //
 
 
-class Cls[A] { fun x: A = x; fun g: A -> Int; fun g = g }
+class Cls[A] { fun x: A = x;; fun g: A -> Int;; fun g = g }
 //│ class Cls[A] {
 //│   constructor()
 //│   fun g: A -> Int
@@ -130,7 +130,7 @@ fun test(a: Object) = if a is
 //│ ║  l.124: 	  else error
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.113: 	class Cls[A] { fun x: A = x; fun g: A -> Int; fun g = g }
+//│ ║  l.113: 	class Cls[A] { fun x: A = x;; fun g: A -> Int;; fun g = g }
 //│ ╙──       	          ^
 //│ fun test: (a: Object) -> (error | ??A)
 
@@ -146,7 +146,7 @@ fun test(a: Object) = if a is
 //│ ║  l.140: 	  else 0
 //│ ║         	^^^^^^^^
 //│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.113: 	class Cls[A] { fun x: A = x; fun g: A -> Int; fun g = g }
+//│ ║  l.113: 	class Cls[A] { fun x: A = x;; fun g: A -> Int;; fun g = g }
 //│ ╙──       	          ^
 //│ fun test: (a: Object) -> Int
 

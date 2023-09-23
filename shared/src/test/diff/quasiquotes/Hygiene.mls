@@ -3,7 +3,7 @@
 
 
 // Test 1
-let code_test = code"let x0 = 1; let x1 = 10; let x2 = 100; x0 + x1 + x2"
+let code_test = code"let x0 = 1 in let x1 = 10 in let x2 = 100 in x0 + x1 + x2"
 //│ let code_test: Code[Int, nothing]
 
 run(code_test)
@@ -11,7 +11,7 @@ run(code_test)
 
 
 // Test 2: this is hygienic because the child Quoted is a descendant of the parent Quoted in the AST
-fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, code"${cde} + x")}" else cde
+fun test(n, cde) = if n > 0 then code"let x = ${Const(n)} in ${test(n - 1, code"${cde} + x")}" else cde
 //│ fun test: forall 'a. (Int, Code[Int, anything] & 'a) -> (Code[Int, nothing] | 'a)
 
 
@@ -22,7 +22,7 @@ run(test(3, code"0"))
 // Test 3: note that the free variable makes this unhygienic, which is intended
 :e
 fun cde_template(cde) = code"${cde} + x"
-fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, cde_template(cde))}" else cde
+fun test(n, cde) = if n > 0 then code"let x = ${Const(n)} in ${test(n - 1, cde_template(cde))}" else cde
 //│ ╔══[ERROR] identifier not found: x
 //│ ║  l.24: 	fun cde_template(cde) = code"${cde} + x"
 //│ ╙──      	                                      ^

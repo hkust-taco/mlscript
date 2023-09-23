@@ -1,13 +1,13 @@
 :NewDefs
 
 
-forall 'a; (x: 'a) => x
+forall 'a: (x: 'a) => x
 //│ forall 'a. (x: 'a) -> 'a
 //│ res
 //│     = [Function: res]
 
 
-forall 'a;
+forall 'a:
   (x: 'a) => x
 //│ forall 'a. (x: 'a) -> 'a
 //│ res
