@@ -73,6 +73,28 @@ test = bar foo
 //│ test: ((123 | true, 123 | true,), (Option[123 | true], Option[123 | true],),)
 
 
+// * Here's an idea: we could use application types to retain this function's precise typing
+
+// let g x = f x
+// g : forall 'a. 'a -> ('f 'a) where constraint: 'f <: 'a -> anything
+//                              extruded to 'f <: 'a0 -> anything where 'a <: 'a0
+// 
+// foo : 'f -> ('f 123, 'f true) where 'f <: 'a0 -> anything, 123 <: 'a0, true <: 'a0
+// foo : 'f -> ('f 123, 'f true) where 'f <: (123 | true) -> anything
+// 
+// foo Some -- ok because Some : (forall 'a. 'a -> Option['a]) <: (123 | true) -> anything
+// 
+
+// * Note: the old idea was to use constrained types, as in:
+
+// def example f = f 123
+// example : 'a -> ('a 123) where 'a <: 123 -> anything
+
+// * ... which worked, but CTs are a pain to work with/implement
+// * AND they may be silently inconsistent, delaying error reporting to use sites.
+// * Moreover, ensuring that CTs remain consistent defeats their purpose (can't solve tis problem anymore)
+
+
 
 datatype List[A] = Cons(A, List[A]) | Nil
 //│ Defined class List[+A]
