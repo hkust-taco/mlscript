@@ -1,0 +1,74 @@
+:NewDefs
+:NoJS
+
+
+run
+//│ forall 'a. Code['a, nothing] -> 'a
+
+// :e // FIXME this should not type check!
+code"x => ${run(code"x")}"
+//│ Code[forall 'a. Code['a, anything] -> 'a, nothing]
+
+
+// * FIXME type is wrong: it's not true that this accepts code with any context dependency and returns code with no context dependency
+fun test(cde) =
+  code"x => x + ${cde}"
+//│ fun test: Code[Int, anything] -> Code[Int -> Int, nothing]
+
+// :e // FIXME this should not type check
+code"y => ${ run(test(code"y")); code"0" }"
+//│ Code[Int -> 0, nothing]
+
+
+fun test(cde) =
+  code"x => ${ code"x + ${cde}" }"
+//│ fun test: Code[Int, anything] -> Code[Int -> Int, nothing]
+
+
+fun test(cde, f) =
+  code"x => x + ${f(cde)}"
+//│ fun test: forall 'a. ('a, 'a -> Code[Int, anything]) -> Code[Int -> Int, nothing]
+
+run(test(code"1", id))
+//│ Int -> Int
+
+
+fun test(cde: Code[Int, 'a], f: forall 'c: Code[Int, 'c] -> Code[Int, 'c]) =
+  code"x => x + ${f(cde)}"
+//│ fun test: (cde: Code[Int, anything], f: forall 'c. Code[Int, 'c] -> Code[Int, 'c]) -> Code[Int -> Int, nothing]
+
+run(test(code"1", id))
+//│ Int -> Int
+
+// :e // FIXME this should not type check!
+code"x => ${ run(test(code"x", id)); code"x" }"
+//│ Code[forall 'a. (Int & 'a) -> 'a, nothing]
+
+// :e // FIXME this should not type check!
+code"x => ${ let c = code"x" in run(test(c, id)); c }"
+//│ Code[forall 'a. (Int & 'a) -> 'a, nothing]
+
+
+// * FIXME type is wrong
+fun test(f) =
+  code"x => x + ${f(code"x + 1")}"
+//│ fun test: (Code[Int, nothing] -> Code[Int, anything]) -> Code[Int -> Int, nothing]
+
+// :e // FIXME this should not type check!
+code"x => ${ test(c => run(c); code"0") }"
+//│ Code[anything -> Int -> Int, nothing]
+
+:e // FIXME why the type error? it seems there's a type confusion
+code"x => ${ test(c => run(c); code"x") }"
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.62: 	code"x => ${ test(c => run(c); code"x") }"
+//│ ║        	             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── reference of type `Code[?a, ?b]` is not an instance of `Int`
+//│ ║  l.62: 	code"x => ${ test(c => run(c); code"x") }"
+//│ ╙──      	                                    ^
+//│ Code[anything -> Int -> Int, nothing]
+
+fun test2(a) = code"x => ${ test(c => run(c); a) }"
+//│ fun test2: Code[Int, anything] -> Code[anything -> Int -> Int, nothing]
+
+
