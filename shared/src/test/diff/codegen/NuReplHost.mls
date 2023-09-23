@@ -6,11 +6,12 @@
 // * The same happens with any other side effect, like `log(...)`
 // * Note: this doesn't happen if the last line is in a spearate diff-test block
 :showRepl
+:re
 fun foo(x) = error
 let r = foo(1)
 //│ fun foo: anything -> nothing
 //│ let r: nothing
-//│ ┌ Block at NuReplHost.mls:9
+//│ ┌ Block at NuReplHost.mls:10
 //│ ├─┬ Prelude
 //│ │ ├── Code
 //│ │ │   function error() {
