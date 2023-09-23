@@ -30,7 +30,7 @@ class Foo(n: Int) { fun test = this.x }
 
 :e
 class Foo<A>(n: A) { fun test = this.x }
-//│ ╔══[ERROR] Type `#Foo & {Foo#A = ?A, n: A}` does not contain member `x`
+//│ ╔══[ERROR] Type `#Foo & {Foo#A = A, n: A}` does not contain member `x`
 //│ ║  l.32: 	class Foo<A>(n: A) { fun test = this.x }
 //│ ╙──      	                                    ^^
 //│ class Foo[A](n: A) {
