@@ -426,10 +426,13 @@ abstract class TyperHelpers { Typer: Typer =>
       case (_: ClassTag, _: FunctionType) => BotType
       case (RecordType(fs1), RecordType(fs2)) =>
         RecordType(mergeSortedMap(fs1, fs2)(_ && _).toList)(prov)
-      case (t0 @ TupleType(fs0), t1 @ TupleType(fs1)) =>
+      case (t0 @ TupleType(fs0), t1 @ TupleType(fs1)) => {
+        println("case #2")
+
         // TODO[optional-fields] update this condition
         if (fs0.sizeCompare(fs1) =/= 0) BotType
         else TupleType(tupleIntersection(fs0, fs1))(t0.prov)
+      }
       case _ if !swapped => that & (this, prov, swapped = true)
       case (`that`, _) => this
       case _ if !swapped => that & (this, prov, swapped = true)
@@ -488,11 +491,13 @@ abstract class TyperHelpers { Typer: Typer =>
         // case (ClassTag(ErrTypeId, _), _) | (_, ClassTag(ErrTypeId, _)) => true
         case (_: TypeTag, _: TypeTag) | (_: TV, _: TV) if this === that => true
         case (ab: ArrayBase, at: ArrayType) => ab.inner <:< at.inner
-        case (TupleType(fs1), TupleType(fs2)) =>
+        case (TupleType(fs1), TupleType(fs2)) => {
           // TODO[optional-fields] generalize: handle optionality; eg: [Int] <:< [Int, Int?]
-          fs1.sizeCompare(fs2) === 0 && fs1.lazyZip(fs2).forall {
+          println(s"case #3 ${fs1} ${fs2}")
+          fs1.sizeCompare(fs2) <= 0 && fs1.sizeCompare(fs2.filter(x => !x._2.opt)) >= 0 && fs1.lazyZip(fs2).forall {
             case ((_, ty1), (_, ty2)) => ty1 <:< ty2
           }
+        }
         case (RecordType(Nil), _) => TopType <:< that
         case (_, RecordType(Nil)) => this <:< TopType
         case (pt1 @ ClassTag(id1, ps1), pt2 @ ClassTag(id2, ps2)) => (id1 === id2) || pt1.parentsST(id2)
