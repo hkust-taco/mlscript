@@ -1053,10 +1053,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
               val argsList = fun_ty match {
                 case FunctionType(TupleType(fields), _) =>
                   fields.map(x => x._1 match {
-                    case Some(arg) =>
-                      arg
-                    case N =>
-                      Var("error") // dummy term for using "error" builtin
+                    case Some(arg) => arg
+                    case N => die // cannot happen, because already checked with the hasUntypedArg
                   })
                 case _ => die // FIXME happens when lhs of function type is not TupleType(possible?)
               }

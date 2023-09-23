@@ -4,9 +4,10 @@
 fun test(x: 'a, y: 'b) = [x, y]
 //│ fun test: forall 'a 'b. (x: 'a, y: 'b) -> ['a, 'b]
 
+:e
 test(x: 1, 2)
 //│ ╔══[ERROR] Unnamed arguments should appear first when using named arguments
-//│ ║  l.7: 	test(x: 1, 2)
+//│ ║  l.8: 	test(x: 1, 2)
 //│ ╙──     	    ^^^^^^^^^
 //│ error
 //│ res
@@ -15,7 +16,7 @@ test(x: 1, 2)
 :e
 test(x: 1, z: 3)
 //│ ╔══[ERROR] Argument named y is missing from this function call
-//│ ║  l.16: 	test(x: 1, z: 3)
+//│ ║  l.17: 	test(x: 1, z: 3)
 //│ ╙──      	    ^^^^^^^^^^^^
 //│ [1, nothing]
 //│ res
@@ -25,7 +26,7 @@ test(x: 1, z: 3)
 :e
 test(y: 0)
 //│ ╔══[ERROR] Number of arguments dosen't match with the function signature
-//│ ║  l.26: 	test(y: 0)
+//│ ║  l.27: 	test(y: 0)
 //│ ╙──      	    ^^^^^^
 //│ error
 //│ res
@@ -34,10 +35,10 @@ test(y: 0)
 :e
 test(1, x: 0)
 //│ ╔══[ERROR] Argument for parameter x is duplicated
-//│ ║  l.35: 	test(1, x: 0)
+//│ ║  l.36: 	test(1, x: 0)
 //│ ╙──      	    ^^^^^^^^^
 //│ ╔══[ERROR] Argument named y is missing from this function call
-//│ ║  l.35: 	test(1, x: 0)
+//│ ║  l.36: 	test(1, x: 0)
 //│ ╙──      	    ^^^^^^^^^
 //│ [0, nothing]
 //│ res
@@ -70,7 +71,7 @@ id(if true then test else error)(0, y: 1)
 :e
 id(if true then test else id)(0, y: 1)
 //│ ╔══[ERROR] Cannot retrieve any function type for applying named arguments
-//│ ║  l.71: 	id(if true then test else id)(0, y: 1)
+//│ ║  l.72: 	id(if true then test else id)(0, y: 1)
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ error
 //│ res
@@ -122,10 +123,10 @@ fun fff(x: Int, y: Int, z: Int) = (x - y) * z
 :e
 fff(y: 2, z: y_1 + 1, x: z_1 - 2)
 //│ ╔══[ERROR] identifier not found: y_1
-//│ ║  l.123: 	fff(y: 2, z: y_1 + 1, x: z_1 - 2)
+//│ ║  l.124: 	fff(y: 2, z: y_1 + 1, x: z_1 - 2)
 //│ ╙──       	             ^^^
 //│ ╔══[ERROR] identifier not found: z_1
-//│ ║  l.123: 	fff(y: 2, z: y_1 + 1, x: z_1 - 2)
+//│ ║  l.124: 	fff(y: 2, z: y_1 + 1, x: z_1 - 2)
 //│ ╙──       	                         ^^^
 //│ Int
 //│ Code generation encountered an error:
@@ -204,7 +205,7 @@ fun print(x) = (y, z) => log([x, y, z])
 let p = print(0)
 p(z: 1, y: 2)
 //│ ╔══[ERROR] Cannot use named arguments as the function type has untyped arguments
-//│ ║  l.205: 	p(z: 1, y: 2)
+//│ ║  l.206: 	p(z: 1, y: 2)
 //│ ╙──       	 ^^^^^^^^^^^^
 //│ fun print: anything -> (anything, anything) -> undefined
 //│ let p: (anything, anything) -> undefined
@@ -258,7 +259,7 @@ z.y
 :e
 (f => f(x: a))
 //│ ╔══[ERROR] Cannot retrieve any function type for applying named arguments
-//│ ║  l.259: 	(f => f(x: a))
+//│ ║  l.260: 	(f => f(x: a))
 //│ ╙──       	      ^
 //│ anything -> error
 //│ Code generation encountered an error:
@@ -267,7 +268,7 @@ z.y
 :e
 (f => f)(error)(x: a)
 //│ ╔══[ERROR] Cannot retrieve any function type for applying named arguments
-//│ ║  l.268: 	(f => f)(error)(x: a)
+//│ ║  l.269: 	(f => f)(error)(x: a)
 //│ ╙──       	^^^^^^^^^^^^^^^
 //│ error
 //│ Code generation encountered an error:
@@ -276,7 +277,7 @@ z.y
 :e
 (f => f)(42)(x: a)
 //│ ╔══[ERROR] Cannot retrieve any function type for applying named arguments
-//│ ║  l.277: 	(f => f)(42)(x: a)
+//│ ║  l.278: 	(f => f)(42)(x: a)
 //│ ╙──       	^^^^^^^^^^^^
 //│ error
 //│ Code generation encountered an error:
@@ -285,7 +286,7 @@ z.y
 :e
 (f => f)(if true then 123 else false)(x: a)
 //│ ╔══[ERROR] Cannot retrieve any function type for applying named arguments
-//│ ║  l.286: 	(f => f)(if true then 123 else false)(x: a)
+//│ ║  l.287: 	(f => f)(if true then 123 else false)(x: a)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ error
 //│ Code generation encountered an error:
@@ -299,13 +300,12 @@ z.y
 :e
 (f => if true then f else id)(if true then (x: Int) => x + 1 else id)(x: 123)
 //│ ╔══[ERROR] Cannot retrieve any function type for applying named arguments
-//│ ║  l.300: 	(f => if true then f else id)(if true then (x: Int) => x + 1 else id)(x: 123)
+//│ ║  l.301: 	(f => if true then f else id)(if true then (x: Int) => x + 1 else id)(x: 123)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ error
 //│ res
 //│     = 124
 
-// FIXME
 :e
 (f => if true then f else id)(if true then (x: Int) => x + 1 else (x: Int) => x + 1)(x: 123)
 //│ ╔══[ERROR] Cannot retrieve any function type for applying named arguments
@@ -319,71 +319,7 @@ z.y
 fun foo(f: (x: Int) => Int) = f(x: 123)
 //│ fun foo: (f: (x: Int) -> Int) -> Int
 
-// upperbound and lowerbound are empty?
-:d
 fun foo(f: ((x: Int) => Int) & 'a) = [f(x: 123), f]
-//│ 0. Typing ‹fun foo = (f: &('(' (x: Int,) => Int ')', 'a,),) => '(' [f(x: 123,), f,] ')'›
-//│ | 0. Created lazy type info for fun foo = (f: &('(' (x: Int,) => Int ')', 'a,),) => '(' [f(x: 123,), f,] ')'
-//│ | Completing fun foo = (f: &('(' (x: Int,) => Int ')', 'a,),) => '(' [f(x: 123,), f,] ')'
-//│ | | Type params 
-//│ | | Params 
-//│ | | 1. Typing term (f: &('(' (x: Int,) => Int ')', 'a,),) => '(' [f(x: 123,), f,] ')'
-//│ | | | 1. Typing pattern [f: &('(' (x: Int,) => Int ')', 'a,),]
-//│ | | | | 1. Typing pattern f : (x: Int) -> Int & 'a
-//│ | | | | | Typing type Inter(Function(Tuple(List((Some(x),Field(None,TypeName(Int))))),TypeName(Int)),'a)
-//│ | | | | | | vars=Map() newDefsInfo=Map()
-//│ | | | | | | 1. type Inter(Function(Tuple(List((Some(x),Field(None,TypeName(Int))))),TypeName(Int)),'a)
-//│ | | | | | | | 1. type Function(Tuple(List((Some(x),Field(None,TypeName(Int))))),TypeName(Int))
-//│ | | | | | | | | 1. type Tuple(List((Some(x),Field(None,TypeName(Int)))))
-//│ | | | | | | | | | 1. type TypeName(Int)
-//│ | | | | | | | | | => Int
-//│ | | | | | | | | => (x: Int,)
-//│ | | | | | | | | 1. type TypeName(Int)
-//│ | | | | | | | | => Int
-//│ | | | | | | | => ((x: Int,) -> Int)
-//│ | | | | | | | 1. type 'a
-//│ | | | | | | | => 'a235'
-//│ | | | | | | => (((x: Int,) -> Int) & 'a235')
-//│ | | | | | => (((x: Int,) -> Int) & 'a235') ——— 'a235'
-//│ | | | | 1. : (((x: Int,) -> Int) & 'a235')
-//│ | | | 1. : (f: (((x: Int,) -> Int) & 'a235'),)
-//│ | | | 1. Typing term '(' [f(x: 123,), f,] ')'
-//│ | | | | 1. Typing term [f(x: 123,), f,]
-//│ | | | | | 1. Typing term f(x: 123,)
-//│ | | | | | | 1. Typing term f
-//│ | | | | | | 1. : (((x: Int,) -> Int) & 'a235')
-//│ | | | | | | Desugared is here => f(123,)
-//│ | | | | | | 1. Typing term f(123,)
-//│ | | | | | | | 1. Typing term f
-//│ | | | | | | | 1. : (((x: Int,) -> Int) & 'a235')
-//│ | | | | | | | 1. Typing term 123
-//│ | | | | | | | 1. : #123<Int,Num,Object>
-//│ | | | | | | | CONSTRAIN (((x: Int,) -> Int) & 'a235') <! (#123<Int,Num,Object> -> α236')
-//│ | | | | | | |   where 
-//│ | | | | | | | 1. C (((x: Int,) -> Int) & 'a235') <! (#123<Int,Num,Object> -> α236')    (0)
-//│ | | | | | | | | 1. ARGH  DNF(1, ((x: #Int<Object,Num>,) -> #Int<Object,Num>){}∧'a235')  <!  DNF(1, (#123<Int,Num,Object> -> α236'){})
-//│ | | | | | | | | | DNF DISCHARGE CONSTRAINTS
-//│ | | | | | | | | | 1. C 'a235' <! ((#123<Int,Num,Object> -> α236') | ~(((x: #Int<Object,Num>,) -> #Int<Object,Num>)))    (2)
-//│ | | | | | | | | | | NEW 'a235' UB (1)
-//│ | | | | | | 1. : α236'
-//│ | | | | | 1. : α236'
-//│ | | | | | 1. Typing term f
-//│ | | | | | 1. : (((x: Int,) -> Int) & 'a235')
-//│ | | | | 1. : (α236', (((x: Int,) -> Int) & 'a235'),)
-//│ | | | 1. : (α236', (((x: Int,) -> Int) & 'a235'),)
-//│ | | 1. : ((f: (((x: Int,) -> Int) & 'a235'),) -> (α236', (((x: Int,) -> Int) & 'a235'),))
-//│ | | CONSTRAIN ((f: (((x: Int,) -> Int) & 'a235'),) -> (α236', (((x: Int,) -> Int) & 'a235'),)) <! foo237'
-//│ | |   where 
-//│ 		'a235' <: ((#123<Int,Num,Object> -> α236') | ~(((x: #Int<Object,Num>,) -> #Int<Object,Num>)))
-//│ | | 1. C ((f: (((x: Int,) -> Int) & 'a235'),) -> (α236', (((x: Int,) -> Int) & 'a235'),)) <! foo237'    (0)
-//│ | | | NEW foo237' LB (1)
-//│ | Completed TypedNuFun(0,fun foo = (f: &('(' (x: Int,) => Int ')', 'a,),) => '(' [f(x: 123,), f,] ')',((f: (((x: Int,) -> Int) & 'a235'),) -> (α236', (((x: Int,) -> Int) & 'a235'),))) where 
-//│ 		'a235' <: ((#123<Int,Num,Object> -> α236') | ~(((x: #Int<Object,Num>,) -> #Int<Object,Num>)))
-//│ | Typing unit statements
-//│ | : None
-//│ ======== TYPED ========
-//│ fun foo: ‹∀ 0. ((f: (((x: Int,) -> Int) & 'a235'),) -> (α236', (((x: Int,) -> Int) & 'a235'),))› where 
-//│ |		'a235' <: ((#123<Int,Num,Object> -> α236') | ~(((x: #Int<Object,Num>,) -> #Int<Object,Num>)))
 //│ fun foo: forall 'b 'a. (f: (x: Int) -> Int & 123 -> 'b & 'a) -> ['b, (x: Int) -> Int & 'a]
 
 foo((x: Int) => 1)
@@ -391,23 +327,20 @@ foo((x: Int) => 1)
 //│ res
 //│     = [ 1, [Function (anonymous)] ]
 
+:e
 fun foo(f: ((x: Int) => Int) | 'a) = f(x: 123)
 //│ ╔══[ERROR] Cannot retrieve any function type for applying named arguments
-//│ ║  l.394: 	fun foo(f: ((x: Int) => Int) | 'a) = f(x: 123)
+//│ ║  l.331: 	fun foo(f: ((x: Int) => Int) | 'a) = f(x: 123)
 //│ ╙──       	                                     ^
 //│ fun foo: (f: anything) -> error
 
 // * the result of the if-then-else is a TV with two LBs: the type of x and the function type
+:e
 fun foo(x) = (if true then (x: Int) => x + 1 else x)(x: 123)
 //│ ╔══[ERROR] Cannot retrieve any function type for applying named arguments
-//│ ║  l.401: 	fun foo(x) = (if true then (x: Int) => x + 1 else x)(x: 123)
+//│ ║  l.339: 	fun foo(x) = (if true then (x: Int) => x + 1 else x)(x: 123)
 //│ ╙──       	             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ fun foo: anything -> error
-
-foo((y: Int) => y)
-//│ error
-//│ res
-//│     = 124
 
 fun foo(x) = if true then (x: Int) => x + 1 else x
 //│ fun foo: forall 'a. 'a -> ((x: Int) -> Int | 'a)
@@ -415,7 +348,7 @@ fun foo(x) = if true then (x: Int) => x + 1 else x
 :e
 foo((y: Int) => y)(x: 123)
 //│ ╔══[ERROR] Cannot retrieve any function type for applying named arguments
-//│ ║  l.416: 	foo((y: Int) => y)(x: 123)
+//│ ║  l.349: 	foo((y: Int) => y)(x: 123)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^
 //│ error
 //│ res
@@ -424,7 +357,7 @@ foo((y: Int) => y)(x: 123)
 :e
 foo((x: Int) => x - 1)(x: 123)
 //│ ╔══[ERROR] Cannot retrieve any function type for applying named arguments
-//│ ║  l.425: 	foo((x: Int) => x - 1)(x: 123)
+//│ ║  l.358: 	foo((x: Int) => x - 1)(x: 123)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^
 //│ error
 //│ res
@@ -436,7 +369,7 @@ fun foo1(x) = [x + 1, x]
 :e
 foo1(x: 123)
 //│ ╔══[ERROR] Cannot use named arguments as the function type has untyped arguments
-//│ ║  l.437: 	foo1(x: 123)
+//│ ║  l.370: 	foo1(x: 123)
 //│ ╙──       	    ^^^^^^^^
 //│ error
 //│ res
