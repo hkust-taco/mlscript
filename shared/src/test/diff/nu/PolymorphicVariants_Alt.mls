@@ -12,7 +12,7 @@
 
 
 class List<out A> {
-  fun match: forall 'res; (ifNil: () => 'res, ifCons: (A, List[A]) => 'res) => 'res
+  fun match: forall 'res: (ifNil: () => 'res, ifCons: (A, List[A]) => 'res) => 'res
   fun match = error
 }
 let Nil: () => List<'a>

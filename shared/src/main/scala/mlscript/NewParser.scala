@@ -538,7 +538,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
           case _ => t
         }
         yeetSpaces match {
-          case (KEYWORD(";"), _) :: _ => consume; finalTerm :: block
+          case (KEYWORD(";;"), _) :: _ => consume; finalTerm :: block
           case (NEWLINE, _) :: _ => consume; finalTerm :: block
           case _ => finalTerm :: Nil
         }
@@ -635,27 +635,33 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         exprCont(bra.withLoc(S(loc)), prec, allowNewlines = false)
       case (KEYWORD("forall"), l0) :: _ =>
         consume
-        val as = argsMaybeIndented()
+        def getIdents: Ls[TypeVar] = yeetSpaces match {
+          case (IDENT(nme, false), l0) :: _ =>
+            consume
+            val res = TypeVar(R(nme), N).withLoc(S(l0))
+            yeetSpaces match {
+              case (COMMA, _) :: _ =>
+                consume
+                res :: getIdents
+              case _ => res :: Nil
+            }
+          case _ => Nil
+        }
+        val idents = getIdents
         val rest = cur match {
-          case (KEYWORD(";"), l0) :: _ =>
+          case (KEYWORD(":"), l0) :: _ =>
             consume
             expr(0)
           case _ =>
-            err((msg"Expected `;` after `forall` section" -> curLoc.orElse(lastLoc) :: Nil))
+            err((msg"Expected `:` after `forall` section" -> curLoc.orElse(lastLoc) :: Nil))
             errExpr
         }
-        R(Forall(as.flatMap {
-          case N -> Fld(FldFlags(false, false, _), v: Var) =>
-            TypeVar(R(v.name), N).withLocOf(v) :: Nil
-          case v -> f =>
-            err(msg"illegal `forall` quantifier body" -> f.value.toLoc :: Nil)
-            Nil
-        }, rest))
+        R(Forall(idents, rest))
       case (KEYWORD("let"), l0) :: _ =>
         consume
         val bs = bindings(Nil)
         val body = yeetSpaces match {
-          case (KEYWORD("in") | KEYWORD(";"), _) :: _ =>
+          case (KEYWORD("in" | ";;"), _) :: _ =>
             consume
             exprOrIf(0)
           case (NEWLINE, _) :: _ =>
@@ -749,7 +755,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       case Nil =>
         err(msg"Unexpected end of $description; an expression was expected here" -> lastLoc :: Nil)
         R(errExpr)
-      case ((KEYWORD(";") /* | NEWLINE */ /* | BRACKETS(Curly, _) */, l0) :: _) =>
+      case ((KEYWORD(";;") /* | NEWLINE */ /* | BRACKETS(Curly, _) */, l0) :: _) =>
         R(UnitLit(true).withLoc(S(l0)))
         // R(errExpr) // TODO
       case (tk, l0) :: _ =>
@@ -796,6 +802,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                 }
               case "=>" =>
                 Lam(toParams(acc), rhs)
+              case ";" =>
+                Blk(acc :: rhs :: Nil)
               case _ =>
                 if (newDefs) App(v, PlainTup(acc, rhs))
                 else App(App(v, toParams(acc)), toParams(rhs))
@@ -841,7 +849,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       case (NEWLINE, _) :: _ if allowNewlines =>
         consume
         exprCont(acc, 0, allowNewlines)
-      case (COMMA | NEWLINE | KEYWORD("then" | "else" | "in" | ";" | "=")
+      case (COMMA | NEWLINE | KEYWORD("then" | "else" | "in" | ";;" | "=")
         | IDENT(_, true) | BRACKETS(Curly, _), _) :: _ => R(acc)
       
       case (KEYWORD("of"), _) :: _ if prec <= 1 =>
@@ -919,9 +927,9 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
           exprCont(res, prec, allowNewlines)
           
       case c @ (h :: _) if (h._1 match {
-        case KEYWORD(";" | ":" | "of" | "where" | "extends") | BRACKETS(Round | Square, _)
+        case KEYWORD(";;" | ":" | "of" | "where" | "extends") | BRACKETS(Round | Square, _)
           | BRACKETS(Indent, (
-              KEYWORD(";" | "of")
+              KEYWORD(";;" | "of")
               | BRACKETS(Round | Square, _)
               | SELECT(_)
             , _) :: _)
@@ -1162,7 +1170,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       case (SPACE, _) :: _ =>
         consume
         bindings(acc)
-      case (NEWLINE | IDENT(_, true) | KEYWORD(";"), _) :: _ => // TODO: | ...
+      case (NEWLINE | IDENT(_, true) | KEYWORD(";;"), _) :: _ => // TODO: | ...
         acc.reverse
       case (IDENT(id, false), l0) :: _ =>
         consume

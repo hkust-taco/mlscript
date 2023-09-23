@@ -86,7 +86,7 @@ module A {
 // * With a type signature, it is generalized and checked against the signature
 module A {
   
-  fun i: forall 'a; 'a -> 'a
+  fun i: forall 'a: 'a -> 'a
   fun i(x) = x
   
   fun j: 'b -> 'b

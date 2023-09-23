@@ -1,7 +1,7 @@
 :NewDefs
 
 
-fun foo1 = forall 'A; (x: 'A) => x
+fun foo1 = forall 'A: (x: 'A) => x
 //│ fun foo1: forall 'A. (x: 'A) -> 'A
 
 foo1(42)
@@ -55,7 +55,7 @@ foo3[Int](42)
 //│     = 42
 
 
-fun bar: forall 'A; 'A => 'A
+fun bar: forall 'A: 'A => 'A
 //│ fun bar: forall 'A. 'A -> 'A
 
 :e

@@ -388,7 +388,7 @@ class C3 extends T3[Int]
 
 
 
-trait Foo { fun foo: forall 'A; (x: 'A) -> 'A }
+trait Foo { fun foo: forall 'A: (x: 'A) -> 'A }
 //│ trait Foo {
 //│   fun foo: forall 'A. (x: 'A) -> 'A
 //│ }
@@ -411,13 +411,13 @@ class B extends Foo { fun foo(x) = x + 1 }
 //│ ║  l.409: 	class B extends Foo { fun foo(x) = x + 1 }
 //│ ║         	                          ^^^^^^^^^^^^^^
 //│ ╟── type `'A` is not an instance of type `Int`
-//│ ║  l.391: 	trait Foo { fun foo: forall 'A; (x: 'A) -> 'A }
+//│ ║  l.391: 	trait Foo { fun foo: forall 'A: (x: 'A) -> 'A }
 //│ ║         	                                    ^^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.409: 	class B extends Foo { fun foo(x) = x + 1 }
 //│ ║         	                                   ^
 //│ ╟── Note: quantified type variable 'A is defined at:
-//│ ║  l.391: 	trait Foo { fun foo: forall 'A; (x: 'A) -> 'A }
+//│ ║  l.391: 	trait Foo { fun foo: forall 'A: (x: 'A) -> 'A }
 //│ ╙──       	                            ^^
 //│ ╔══[ERROR] Type mismatch in definition of method foo:
 //│ ║  l.409: 	class B extends Foo { fun foo(x) = x + 1 }
@@ -426,7 +426,7 @@ class B extends Foo { fun foo(x) = x + 1 }
 //│ ║  l.409: 	class B extends Foo { fun foo(x) = x + 1 }
 //│ ║         	                                   ^^^^^
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.391: 	trait Foo { fun foo: forall 'A; (x: 'A) -> 'A }
+//│ ║  l.391: 	trait Foo { fun foo: forall 'A: (x: 'A) -> 'A }
 //│ ╙──       	                                           ^^
 //│ class B extends Foo {
 //│   constructor()

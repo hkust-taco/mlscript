@@ -3,7 +3,7 @@
 
 
 class List<A> {
-  fun match: forall 'res; (ifNil: () => 'res, ifCons: ('res, List[A]) => 'res) => 'res
+  fun match: forall 'res: (ifNil: () => 'res, ifCons: ('res, List[A]) => 'res) => 'res
   fun match = error // TODO use self-type...
 }
 let Nil: List<nothing>

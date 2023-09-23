@@ -2,7 +2,7 @@
 
 
 fun f(y) =
-  let local = forall 'A; (x: 'A) =>
+  let local = forall 'A: (x: 'A) =>
     y(x) + 1
     x
   y
@@ -14,7 +14,7 @@ f(id)
 //│ ║  l.12: 	f(id)
 //│ ║        	^^^^^
 //│ ╟── type variable `'A` leaks out of its scope
-//│ ║  l.5: 	  let local = forall 'A; (x: 'A) =>
+//│ ║  l.5: 	  let local = forall 'A: (x: 'A) =>
 //│ ║       	                     ^^
 //│ ╟── into application of type `Int`
 //│ ║  l.6: 	    y(x) + 1
@@ -29,8 +29,8 @@ f(id)
 
 
 fun f(y) =
-  let local = forall 'A; (x: 'A) =>
-    (y : forall 'a; 'a -> 'a)(x)
+  let local = forall 'A: (x: 'A) =>
+    (y : forall 'a: 'a -> 'a)(x)
     x
   y
 //│ fun f: forall 'b. (forall 'a. 'a -> 'a & 'b) -> 'b

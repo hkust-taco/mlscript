@@ -7,7 +7,7 @@ module Test<A> {
   fun bar: A => A = id
   fun baz(x: A) = x
   fun poly0: 'a -> 'a
-  fun poly1: forall 'a; 'a -> 'a
+  fun poly1: forall 'a: 'a -> 'a
   fun poly2: 'a -> 'a = id
 }
 //│ ╔══[ERROR] Member `foo` is declared (or its declaration is inherited) but is not implemented in `Test`
@@ -26,7 +26,7 @@ module Test<A> {
 //│ ║  l.5: 	module Test<A> {
 //│ ║       	       ^^^^
 //│ ╟── Declared here:
-//│ ║  l.10: 	  fun poly1: forall 'a; 'a -> 'a
+//│ ║  l.10: 	  fun poly1: forall 'a: 'a -> 'a
 //│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ module Test[A] {
 //│   fun bar: A -> A

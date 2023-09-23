@@ -1,0 +1,26 @@
+:NewDefs
+
+
+let test(x) = log(x); x + 1
+//│ let test: Int -> Int
+//│ test
+//│      = [Function: test]
+
+test(log("here we go"); 123)
+//│ Int
+//│ res
+//│     = 124
+//│ // Output
+//│ here we go
+//│ 123
+
+
+let a = 1;; let b = a + 1
+//│ let a: 1
+//│ let b: Int
+//│ a
+//│   = 1
+//│ b
+//│   = 2
+
+
