@@ -1022,93 +1022,35 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         term.desugaredTerm = S(desug)
         typeTerm(desug)
       case App(f: Term, a @ Tup(fields)) if (fields.exists(x => x._1.isDefined)) =>
-        def getLowerBoundFunctionType(t: SimpleType, showError: Boolean): Either[SimpleType, FunctionType] = t.unwrapProvs match {
+        def getLowerBoundFunctionType(t: SimpleType): List[FunctionType] = t.unwrapProvs match {
+          case PolymorphicType(_, AliasOf(fun_ty @ FunctionType(_, _))) =>
+            List(fun_ty)
+          case tt @ FunctionType(_, _) =>
+            List(tt)
           case tv: TypeVariable =>
-            def getLowerboundFuns(tv: TypeVariable): List[FunctionType] = {
-              val res: List[FunctionType] = tv.lowerBounds.map(x => 
-                x.unwrapProvs match {
-                  case PolymorphicType(_, AliasOf(fun_ty @ FunctionType(_, _))) =>
-                    List(fun_ty)
-                  case tvv: TypeVariable =>
-                    getLowerboundFuns(tvv)
-                  case ct @ ComposedType(_, _, _) =>
-                    println(s"ok, lowerbounds => ${x} ${x.getClass}")
-                    val result = getLowerBoundFunctionType(ct, false)
-                    result match {
-                      case Right(funType) =>  List(funType)
-                      case Left(eType) => Nil
-                    }
-                  case _ =>
-                    Nil
-                }).flatten
-              res
-            }
-            val funs = getLowerboundFuns(tv)
-            funs match {
-              case x :: Nil => 
-                R(funs.head)
-              case Nil =>
-                if (showError) {
-                  L(err(s"Cannot retrieve any function type for applying named arguments #1 ${f} ${t.getClass()} ${funs} ${tv._lowerBounds} ${tv._upperBounds}", f.toLoc))
-                } else {
-                  L(errType)
-                }
-              case _ =>
-                if (showError) {
-                  L(err(s"More than 1 function definition found for the given function call: ${funs}", f.toLoc))
-                } else {
-                  L(errType)
-                }
-            }
+            tv.lowerBounds.map(getLowerBoundFunctionType(_)).flatten
           case ct @ ComposedType(pol, lhs, rhs) =>
             if (pol === false) {
-              val x1 = getLowerBoundFunctionType(lhs, false)
-              val x2 = getLowerBoundFunctionType(rhs, false)
-              (x1, x2) match {
-                case (Left(_), Left(_)) =>
-                  if (showError) {
-                    L(err("Cannot retrieve any function type for applying named arguments #2", f.toLoc))
-                  } else {
-                    L(errType)
-                  }
-                case (Right(x), Left(_)) => 
-                  R(x)
-                case (Left(_), Right(x)) =>
-                  R(x)
-                case (Right(x), Right(y)) =>
-                  if (showError) {
-                    L(err(s"More than 1 function definition found for the given function call: $x $y}", f.toLoc))
-                  } else {
-                    L(errType)
-                  }
-              }
-            } else {
-                if (showError) {
-                  L(err("Cannot retrieve any function type for applying named arguments #3", f.toLoc))
-                } else {
-                  L(errType)
-                }
-            }
-          case PolymorphicType(_, AliasOf(fun_ty @ FunctionType(_, _))) =>
-            R(fun_ty)
-          case tt @ FunctionType(_, _) =>
-            R(tt)
+              getLowerBoundFunctionType(lhs) ++ getLowerBoundFunctionType(rhs)
+            } else 
+              Nil
           case _ =>
-            L(err("Cannot retrieve any function type for applying named arguments #4", f.toLoc))
+            Nil
         }
         val f_ty = typeTerm(f)
-        val ff: Either[SimpleType, SimpleType] = getLowerBoundFunctionType(f_ty, true)
-        ff match {
-          case Right(fun_ty) =>
-            val hasUntypedArg = fun_ty.unwrapProxies match {
+        val fun_tys: List[FunctionType] = getLowerBoundFunctionType(f_ty)
+
+        fun_tys match {
+          case fun_ty :: Nil =>
+            val hasUntypedArg = fun_ty match {
               case FunctionType(TupleType(fields), _) =>
                 fields.exists(_._1.isEmpty)
-              case _ => die // never happens (cause the retrived fun_ty is always a function type)
+              case _ => die // FIXME happens when lhs of function type is not TupleType(possible?)
             }
             if (hasUntypedArg) {
               err("Cannot use named arguments as the function type has untyped arguments", a.toLoc)
             } else {
-              val argsList = fun_ty.unwrapProxies match {
+              val argsList = fun_ty match {
                 case FunctionType(TupleType(fields), _) =>
                   fields.map(x => x._1 match {
                     case Some(arg) =>
@@ -1116,12 +1058,14 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
                     case N =>
                       Var("error") // dummy term for using "error" builtin
                   })
-                case _ => die // cannot happen, because 
+                case _ => die // FIXME happens when lhs of function type is not TupleType(possible?)
               }
               desugarNamedArgs(term, f, a, argsList)
             }
-          case Left(eType) => 
-            eType
+          case x :: y :: _ => 
+            err("More than 1 function definition found for function call", f.toLoc)
+          case Nil =>
+            err("Cannot retrieve any function type for applying named arguments", f.toLoc)
         }
       case App(f, a) =>
         val f_ty = typeMonomorphicTerm(f)

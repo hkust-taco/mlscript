@@ -77,7 +77,7 @@ id(if true then test else error)(0, y: 1)
 
 :e
 id(if true then test else id)(0, y: 1)
-//│ ╔══[ERROR] Cannot retrieve any function type for applying named arguments #1 id(if (true) then test else id,) class mlscript.TyperDatatypes$TypeVariable List() List((‹∀ 0. ((x: 'a48', y: 'b49',) -> ('a48', 'b49',))› | ‹∀ 0. (α6' -> α6')›)) List()
+//│ ╔══[ERROR] Cannot retrieve any function type for applying named arguments
 //│ ║  l.79: 	id(if true then test else id)(0, y: 1)
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ error
@@ -265,7 +265,7 @@ z.y
 
 :e
 (f => f(x: a))
-//│ ╔══[ERROR] Cannot retrieve any function type for applying named arguments #1 f class mlscript.TyperDatatypes$ProvType List() List() List()
+//│ ╔══[ERROR] Cannot retrieve any function type for applying named arguments
 //│ ║  l.267: 	(f => f(x: a))
 //│ ╙──       	      ^
 //│ anything -> error
@@ -274,7 +274,7 @@ z.y
 
 :e
 (f => f)(error)(x: a)
-//│ ╔══[ERROR] Cannot retrieve any function type for applying named arguments #1 '(' (f::4,) => f ')'(error,) class mlscript.TyperDatatypes$TypeVariable List() List() List()
+//│ ╔══[ERROR] Cannot retrieve any function type for applying named arguments
 //│ ║  l.276: 	(f => f)(error)(x: a)
 //│ ╙──       	^^^^^^^^^^^^^^^
 //│ error
@@ -283,7 +283,7 @@ z.y
 
 :e
 (f => f)(42)(x: a)
-//│ ╔══[ERROR] Cannot retrieve any function type for applying named arguments #1 '(' (f::5,) => f ')'(42,) class mlscript.TyperDatatypes$TypeVariable List() List(#42<Int,Num,Object>) List()
+//│ ╔══[ERROR] Cannot retrieve any function type for applying named arguments
 //│ ║  l.285: 	(f => f)(42)(x: a)
 //│ ╙──       	^^^^^^^^^^^^
 //│ error
@@ -292,7 +292,7 @@ z.y
 
 :e
 (f => f)(if true then 123 else false)(x: a)
-//│ ╔══[ERROR] Cannot retrieve any function type for applying named arguments #1 '(' (f::6,) => f ')'(if (true) then 123 else false,) class mlscript.TyperDatatypes$TypeVariable List() List((#123<Int,Num,Object> | #false<Bool,Object>)) List()
+//│ ╔══[ERROR] Cannot retrieve any function type for applying named arguments
 //│ ║  l.294: 	(f => f)(if true then 123 else false)(x: a)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ error
@@ -306,7 +306,7 @@ z.y
 
 :e
 (f => if true then f else id)(if true then (x: Int) => x + 1 else id)(x: 123)
-//│ ╔══[ERROR] Cannot retrieve any function type for applying named arguments #1 '(' (f::9,) => if (true) then f else id ')'(if (true) then (x: Int,) => +(x, 1,) else id,) class mlscript.TyperDatatypes$TypeVariable List() List((α234 | ‹∀ 0. (α6' -> α6')›)) List()
+//│ ╔══[ERROR] Cannot retrieve any function type for applying named arguments
 //│ ║  l.308: 	(f => if true then f else id)(if true then (x: Int) => x + 1 else id)(x: 123)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ error
@@ -316,7 +316,7 @@ z.y
 // FIXME
 :e
 (f => if true then f else id)(if true then (x: Int) => x + 1 else (x: Int) => x + 1)(x: 123)
-//│ ╔══[ERROR] Cannot retrieve any function type for applying named arguments #1 '(' (f::10,) => if (true) then f else id ')'(if (true) then (x: Int,) => +(x, 1,) else (x: Int,) => +(x, 1,),) class mlscript.TyperDatatypes$TypeVariable List() List((α239 | ‹∀ 0. (α6' -> α6')›)) List()
+//│ ╔══[ERROR] Cannot retrieve any function type for applying named arguments
 //│ ║  l.318: 	(f => if true then f else id)(if true then (x: Int) => x + 1 else (x: Int) => x + 1)(x: 123)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ error
@@ -400,14 +400,14 @@ foo((x: Int) => 1)
 //│     = [ 1, [Function (anonymous)] ]
 
 fun foo(f: ((x: Int) => Int) | 'a) = f(x: 123)
-//│ ╔══[ERROR] Cannot retrieve any function type for applying named arguments #3
+//│ ╔══[ERROR] Cannot retrieve any function type for applying named arguments
 //│ ║  l.402: 	fun foo(f: ((x: Int) => Int) | 'a) = f(x: 123)
 //│ ╙──       	                                     ^
 //│ fun foo: (f: anything) -> error
 
 // * the result of the if-then-else is a TV with two LBs: the type of x and the function type
 fun foo(x) = (if true then (x: Int) => x + 1 else x)(x: 123)
-//│ ╔══[ERROR] Cannot retrieve any function type for applying named arguments #3
+//│ ╔══[ERROR] Cannot retrieve any function type for applying named arguments
 //│ ║  l.409: 	fun foo(x) = (if true then (x: Int) => x + 1 else x)(x: 123)
 //│ ╙──       	             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ fun foo: anything -> error
@@ -422,7 +422,7 @@ fun foo(x) = if true then (x: Int) => x + 1 else x
 
 :e
 foo((y: Int) => y)(x: 123)
-//│ ╔══[ERROR] Cannot retrieve any function type for applying named arguments #1 foo((y: Int,) => y,) class mlscript.TyperDatatypes$TypeVariable List() List(‹∀ 1. (((x: Int,) -> α275_285'') | α274_284)›) List()
+//│ ╔══[ERROR] Cannot retrieve any function type for applying named arguments
 //│ ║  l.424: 	foo((y: Int) => y)(x: 123)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^
 //│ error
@@ -431,7 +431,7 @@ foo((y: Int) => y)(x: 123)
 
 :e
 foo((x: Int) => x - 1)(x: 123)
-//│ ╔══[ERROR] Cannot retrieve any function type for applying named arguments #1 foo((x: Int,) => -(x, 1,),) class mlscript.TyperDatatypes$TypeVariable List() List(‹∀ 1. (((x: Int,) -> α275_290'') | α274_289)›) List()
+//│ ╔══[ERROR] Cannot retrieve any function type for applying named arguments
 //│ ║  l.433: 	foo((x: Int) => x - 1)(x: 123)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^
 //│ error
