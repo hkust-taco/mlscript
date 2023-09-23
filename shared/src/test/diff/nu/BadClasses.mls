@@ -127,7 +127,7 @@ class C { fun x: Int }
 //│ ║         	      ^
 //│ ╟── Declared here:
 //│ ║  l.124: 	class C { fun x: Int }
-//│ ╙──       	              ^^^^^^
+//│ ╙──       	          ^^^^^^^^^^
 //│ class C {
 //│   constructor()
 //│   fun x: Int
@@ -140,7 +140,7 @@ class C { val x: Int }
 //│ ║         	      ^
 //│ ╟── Declared here:
 //│ ║  l.137: 	class C { val x: Int }
-//│ ╙──       	              ^^^^^^
+//│ ╙──       	          ^^^^^^^^^^
 //│ class C {
 //│   constructor()
 //│   val x: Int

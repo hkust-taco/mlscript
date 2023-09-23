@@ -170,7 +170,7 @@ class C extends Test { // it also fails with Test[Int]...
 //│ ╙──       	                 ^^^^
 //│ ╔══[ERROR] Illegal position for this definition statement.
 //│ ║  l.160: 	  fun arg = 123
-//│ ╙──       	      ^^^^^^^^^
+//│ ╙──       	  ^^^^^^^^^^^^^
 //│ class C {
 //│   constructor()
 //│   fun bar: [error | 'A, error | 'A]

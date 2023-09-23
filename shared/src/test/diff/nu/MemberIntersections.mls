@@ -31,7 +31,7 @@ trait S2 extends T1, S1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── The value member is defined here:
 //│ ║  l.6: 	trait T1 { fun f[A]: A -> A }
-//│ ║       	               ^^^^^^^^^^^^
+//│ ║       	           ^^^^^^^^^^^^^^^^
 //│ ╟── The class member is defined here:
 //│ ║  l.20: 	trait S1 { class f }
 //│ ╙──      	           ^^^^^^^

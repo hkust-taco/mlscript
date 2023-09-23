@@ -48,6 +48,9 @@ fun f(e) = if e is
   Pair(l: a, r) then
     fun f(x: a) = x
     f(l)
+//│ ╔══[ERROR] Cannot use `val` or `fun` in local block; use `let` instead.
+//│ ║  l.49: 	    fun f(x: a) = x
+//│ ╙──      	    ^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] type identifier not found: a
 //│ ║  l.49: 	    fun f(x: a) = x
 //│ ╙──      	             ^

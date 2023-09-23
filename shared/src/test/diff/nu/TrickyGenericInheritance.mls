@@ -97,7 +97,7 @@ class C2 extends T2['FigureItOut] {
 }
 //│ ╔══[ERROR] Method implementations in traits are not yet supported
 //│ ║  l.93: 	  val r = C2().f(false)
-//│ ╙──      	      ^^^^^^^^^^^^^^^^^
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Class C2 cannot be instantiated as it exposes no such constructor
 //│ ║  l.93: 	  val r = C2().f(false)
 //│ ╙──      	          ^^
@@ -121,7 +121,7 @@ class C3 extends T3['FigureItOut] {
 }
 //│ ╔══[ERROR] Method implementations in traits are not yet supported
 //│ ║  l.117: 	  val r = (C3() : T3['X]).f(false)
-//│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Class C3 cannot be instantiated as it exposes no such constructor
 //│ ║  l.117: 	  val r = (C3() : T3['X]).f(false)
 //│ ╙──       	           ^^

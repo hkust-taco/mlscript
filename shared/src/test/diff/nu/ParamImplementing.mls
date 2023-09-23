@@ -57,7 +57,7 @@ C.x
 //│ ║        	       ^
 //│ ╟── Declared here:
 //│ ║  l.45: 	trait T { fun x: Int }
-//│ ╙──      	              ^^^^^^
+//│ ╙──      	          ^^^^^^^^^^
 //│ module C extends T {
 //│   fun x: Int
 //│ }

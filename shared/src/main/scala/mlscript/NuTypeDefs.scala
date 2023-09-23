@@ -535,6 +535,12 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     
     // println(s"vars ${vars}")
     
+    tu.entities.foreach {
+      case fd: NuFunDef if fd.isLetRec.isEmpty && outer.exists(_.kind is Block) =>
+        err(msg"Cannot use `val` or `fun` in local block; use `let` instead.", fd.toLoc)
+      case _ =>
+    }
+    
     val named = mutable.Map.empty[Str, LazyTypeInfo]
     
     // * Not sure we should support declaring signature with the `ident: type` syntax

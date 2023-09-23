@@ -180,7 +180,7 @@ class C2 extends T1
 //│ ║         	      ^^
 //│ ╟── Declared here:
 //│ ║  l.7: 	trait T1 { fun x: 0 | 1 }
-//│ ╙──     	               ^^^^^^^^
+//│ ╙──     	           ^^^^^^^^^^^^
 //│ class C2 extends T1 {
 //│   constructor()
 //│   fun x: 0 | 1
@@ -198,7 +198,7 @@ class C3 extends C2
 //│ ║         	      ^^
 //│ ╟── Declared here:
 //│ ║  l.7: 	trait T1 { fun x: 0 | 1 }
-//│ ╙──     	               ^^^^^^^^
+//│ ╙──     	           ^^^^^^^^^^^^
 //│ class C3 extends C2, T1 {
 //│   constructor()
 //│   fun x: 0 | 1
@@ -333,7 +333,7 @@ class C2 extends T1, C1 { fun x = 1 }
 trait T2 { val r = 1(1) }
 //│ ╔══[ERROR] Method implementations in traits are not yet supported
 //│ ║  l.333: 	trait T2 { val r = 1(1) }
-//│ ╙──       	               ^^^^^^^^
+//│ ╙──       	           ^^^^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.333: 	trait T2 { val r = 1(1) }
 //│ ║         	                   ^^^^
@@ -358,7 +358,7 @@ trait T3[A] {
 class C2 extends T3[Int]
 //│ ╔══[ERROR] Method implementations in traits are not yet supported
 //│ ║  l.356: 	  val r = C2().x
-//│ ╙──       	      ^^^^^^^^^^
+//│ ╙──       	  ^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Class C2 cannot be instantiated as it exposes no such constructor
 //│ ║  l.356: 	  val r = C2().x
 //│ ╙──       	          ^^
