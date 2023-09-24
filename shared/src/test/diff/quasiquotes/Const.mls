@@ -18,12 +18,12 @@ code"x => y => 100 + code"${Const(x + y)}""
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.17: 	code"x => y => 100 + code"${Const(x + y)}""
 //│ ║        	               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── expression of type `Code[?a, nothing]` is not an instance of `Int`
+//│ ╙── expression of type `Code[?a, ?b]` is not an instance of `Int`
 //│ Code[Int -> Int -> (Int | error), nothing]
 
 
 let res = code"x => code"${x}""
-//│ let res: Code[forall 'a. Code['a, anything] -> Code['a, nothing], nothing]
+//│ let res: Code[forall 'a 'b. Code['a, 'b] -> Code['a, 'b], nothing]
 
 run(res)(code"1")
 //│ Code[1, nothing]

@@ -5,8 +5,12 @@
 run
 //│ forall 'a. Code['a, nothing] -> 'a
 
-// :e // FIXME this should not type check!
+:e
 code"x => ${run(code"x")}"
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.9: 	code"x => ${run(code"x")}"
+//│ ║       	            ^^^^^^^^^^^^
+//│ ╙── expression of type `?a` does not match type `nothing`
 //│ Code[forall 'a. Code['a, anything] -> 'a, nothing]
 
 
@@ -18,11 +22,6 @@ fun test(cde) =
 // :e // FIXME this should not type check
 code"y => ${ run(test(code"y")); code"0" }"
 //│ Code[Int -> 0, nothing]
-
-
-fun test(cde) =
-  code"x => ${ code"x + ${cde}" }"
-//│ fun test: Code[Int, anything] -> Code[Int -> Int, nothing]
 
 
 fun test(cde, f) =
@@ -49,26 +48,66 @@ code"x => ${ let c = code"x" in run(test(c, id)); c }"
 //│ Code[forall 'a. (Int & 'a) -> 'a, nothing]
 
 
-// * FIXME type is wrong
 fun test(f) =
   code"x => x + ${f(code"x + 1")}"
-//│ fun test: (Code[Int, nothing] -> Code[Int, anything]) -> Code[Int -> Int, nothing]
+//│ fun test: (Code[Int, ??_] -> Code[Int, anything]) -> Code[Int -> Int, nothing]
 
-// :e // FIXME this should not type check!
+
+let myrun = c => run(c)
+//│ let myrun: forall 'a. Code['a, nothing] -> 'a
+
+:e
+code"x => ${ test(myrun) }"
+//│ ╔══[ERROR] Type error in application
+//│ ║  l.60: 	code"x => ${ test(myrun) }"
+//│ ║        	             ^^^^^^^^^^^
+//│ ╟── type variable `?a` leaks out of its scope
+//│ ╟── into type `nothing`
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this reference:
+//│ ║  l.52: 	  code"x => x + ${f(code"x + 1")}"
+//│ ╙──      	                  ^
+//│ Code[anything -> Int -> Int, nothing]
+
+:e
 code"x => ${ test(c => run(c); code"0") }"
-//│ Code[anything -> Int -> Int, nothing]
-
-:e // FIXME why the type error? it seems there's a type confusion
-code"x => ${ test(c => run(c); code"x") }"
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.62: 	code"x => ${ test(c => run(c); code"x") }"
+//│ ╔══[ERROR] Type error in application
+//│ ║  l.73: 	code"x => ${ test(c => run(c); code"0") }"
 //│ ║        	             ^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── reference of type `Code[?a, ?b]` is not an instance of `Int`
-//│ ║  l.62: 	code"x => ${ test(c => run(c); code"x") }"
-//│ ╙──      	                                    ^
+//│ ╟── type variable `?a` leaks out of its scope
+//│ ╟── into type `nothing`
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this reference:
+//│ ║  l.52: 	  code"x => x + ${f(code"x + 1")}"
+//│ ╙──      	                  ^
 //│ Code[anything -> Int -> Int, nothing]
 
+
+:e
+code"x => ${ test(c => run(c); code"x") }"
+//│ ╔══[ERROR] Type error in application
+//│ ║  l.87: 	code"x => ${ test(c => run(c); code"x") }"
+//│ ║        	             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type variable `?a` leaks out of its scope
+//│ ╟── into type `nothing`
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this reference:
+//│ ║  l.52: 	  code"x => x + ${f(code"x + 1")}"
+//│ ╙──      	                  ^
+//│ Code[anything -> Int -> Int, nothing]
+
+
+:e
 fun test2(a) = code"x => ${ test(c => run(c); a) }"
+//│ ╔══[ERROR] Type error in application
+//│ ║  l.101: 	fun test2(a) = code"x => ${ test(c => run(c); a) }"
+//│ ║         	                            ^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type variable `?a` leaks out of its scope
+//│ ╟── into type `nothing`
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this reference:
+//│ ║  l.52: 	  code"x => x + ${f(code"x + 1")}"
+//│ ╙──      	                  ^
 //│ fun test2: Code[Int, anything] -> Code[anything -> Int -> Int, nothing]
 
 

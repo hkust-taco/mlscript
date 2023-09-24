@@ -80,13 +80,16 @@ run(res)(1)
 //│ Int
 
 
-code"x => ${ x }"
-//│ Code[forall 'a. 'a -> 'a, nothing]
+let res = code"x => ${ x }"
+run(res)
+run(code"x => ${ x }")
+//│ let res: Code[forall 'a. 'a -> 'a, nothing]
+//│ forall 'b. 'b -> 'b
 
 f => code"x => ${ let tmp = f(x) in x }"
 //│ (Code['a, ??_] -> anything) -> Code[forall 'b. ('a & 'b) -> 'b, nothing]
 
 let res = code"x => code"${x}""
-//│ let res: Code[forall 'a. Code['a, anything] -> Code['a, nothing], nothing]
+//│ let res: Code[forall 'a 'b. Code['a, 'b] -> Code['a, 'b], nothing]
 run(res)(code"1")
 //│ Code[1, nothing]

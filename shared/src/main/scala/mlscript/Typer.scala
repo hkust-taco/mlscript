@@ -63,6 +63,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       mthEnv: MutMap[(Str, Str) \/ (Opt[Str], Str), MethodType],
       lvl: Int,
       qenv: MutMap[Str, SkolemTag], // * SkolemTag for variables in quasiquotes
+      fvars: MutSet[ST], // * Free variables
       quotedLvl: Int, // * Level of quasiquotes
       inPattern: Bool,
       tyDefs: Map[Str, TypeDef],
@@ -91,13 +92,18 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
           case _ => Nil // TODO: what's this?
         }
     }.toList
-    def unwrap: Ls[(Str, TypeInfo)] = qenv.flatMap {
-      case (name, tag) =>
-        env.get(name) match {
-          case S(ti) => name -> ti :: Nil
-          case _ => Nil
-        }
-    }.toList
+    def unwrap[T](names: Ls[Str], f: () => T): T = { // * Revert ctx modification temporarily
+      val cache: MutMap[Str, TypeInfo] = MutMap.empty
+      names.foreach(name => {
+        cache += name -> env.getOrElse(name, die)
+        env -= name
+      })
+      val res = f()
+      cache.foreach(env += _)
+      res
+    }
+    def traceFV(fv: ST): Unit = fvars += fv
+    def releaseFv: ST = qenv.foldLeft[ST](TopType)((res, ty) => res & NegType(ty._2)(noProv))
     def contains(name: Str): Bool = env.contains(name) || parent.exists(_.contains(name))
     def addMth(parent: Opt[Str], nme: Str, ty: MethodType): Unit = mthEnv += R(parent, nme) -> ty
     def addMthDefn(parent: Str, nme: Str, ty: MethodType): Unit = mthEnv += L(parent, nme) -> ty
@@ -175,6 +181,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       mthEnv = MutMap.empty,
       lvl = MinLevel,
       qenv = MutMap.empty,
+      fvars = MutSet.empty,
       quotedLvl = 0,
       inPattern = false,
       tyDefs = Map.from(builtinTypes.map(t => t.nme.name -> t)),
@@ -870,7 +877,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
           }
       case v @ ValidVar(name) =>
         val tyOpt = if (ctx.quotedLvl > 0 && !builtinBindings.contains(name)) {
-          if (ctx.qget(name).isDefined) ctx.get(name) else N
+          ctx.qget(name) match {
+            case S(ctxTy) =>
+              if (!ctx.qenv.contains(name)) ctx.traceFV(ctxTy)
+              ctx.get(name)
+            case _ => N
+          }
         } else ctx.get(name)
         val ty = tyOpt.fold(err("identifier not found: " + name, term.toLoc): ST) {
           case AbstractConstructor(absMths, traitWithMths) =>
@@ -1422,10 +1434,14 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         err(msg"Unexpected equation in this position", term.toLoc)
       case Quoted(body) =>
         val newCtx =
-          ctx.nest.copy(quotedLvl = ctx.quotedLvl + 1, qenv = MutMap.empty)
-        ctx.parent.foreach(p => if (p.quotedLvl > ctx.quotedLvl) newCtx ++= p.unwrap)
-        val bodyType = typePolymorphicTerm(body)(newCtx, raise, vars)
-        TypeRef(TypeName("Code"), bodyType :: BotType :: Nil)(noProv) // TODO: trace the unbound free vars
+          ctx.nest.copy(quotedLvl = ctx.quotedLvl + 1, qenv = MutMap.empty, fvars = MutSet.empty)
+        val bodyType = ctx.parent match {
+          case S(p) if p.quotedLvl > ctx.quotedLvl =>
+            ctx.unwrap(p.wrapCode.map(_._1), () => typePolymorphicTerm(body)(newCtx, raise, vars))
+          case _ => typePolymorphicTerm(body)(newCtx, raise, vars)
+        }
+        val ctxTy = newCtx.fvars.foldLeft[ST](BotType)((res, ty) => res | ty)
+        TypeRef(TypeName("Code"), bodyType :: ctxTy :: Nil)(noProv) // TODO: trace the unbound free vars
       case Unquoted(body) =>
         if (ctx.quotedLvl > 0) {
           val newCtx = ctx.nest.copy(quotedLvl = 0)
@@ -1437,7 +1453,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
           })
           val bodyType = typePolymorphicTerm(body)(newCtx, raise, vars)
           val res = freshVar(noTyProv, N)
-          con(bodyType, TypeRef(TypeName("Code"), res :: freshVar(noTyProv, N) :: Nil)(noProv), res)
+          val ctxTy = freshVar(noTyProv, N)
+          val ty = con(bodyType, TypeRef(TypeName("Code"), res :: ctxTy :: Nil)(noProv), res)
+          ctx.traceFV(ctxTy & ctx.releaseFv)
+          ty
         }
         else err("Unquotes should be enclosed with a quasiquote.", body.toLoc)(raise)
     }
