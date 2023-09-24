@@ -967,7 +967,6 @@ class DiffTests
                   checkReply(replyQueue, 0, true)
                 else {
                   typerResults.foreach { case (name, typingLines, diagnosticLines, typeBeforeDiags, hide) =>
-                    output(s"what $name")
                     if (typeBeforeDiags) {
                       typingLines.foreach(output)
                       diagnosticLines.foreach(output)
