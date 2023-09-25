@@ -7,19 +7,21 @@ class Foo[out A](x: A)
 
 fun foo(x: Foo[Int]): Foo[Num] = x
 //│ fun foo: (x: Foo[Int]) -> Foo[Num]
+//│ foo
 
 :e
 fun foo(x: Foo[Num]): Foo[Int] = x
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.12: 	fun foo(x: Foo[Num]): Foo[Int] = x
+//│ ║  l.13: 	fun foo(x: Foo[Num]): Foo[Int] = x
 //│ ║        	                                 ^
 //│ ╟── type `Num` is not an instance of `Int`
-//│ ║  l.12: 	fun foo(x: Foo[Num]): Foo[Int] = x
+//│ ║  l.13: 	fun foo(x: Foo[Num]): Foo[Int] = x
 //│ ║        	               ^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.12: 	fun foo(x: Foo[Num]): Foo[Int] = x
+//│ ║  l.13: 	fun foo(x: Foo[Num]): Foo[Int] = x
 //│ ╙──      	                          ^^^
 //│ fun foo: (x: Foo[Num]) -> Foo[Int]
+//│ foo
 
 
 class Foo[in A](x: A -> Int)
@@ -27,19 +29,21 @@ class Foo[in A](x: A -> Int)
 
 fun foo(x: Foo[Num]): Foo[Int] = x
 //│ fun foo: (x: Foo[Num]) -> Foo[Int]
+//│ foo
 
 :e
 fun foo(x: Foo[Int]): Foo[Num] = x
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.32: 	fun foo(x: Foo[Int]): Foo[Num] = x
+//│ ║  l.35: 	fun foo(x: Foo[Int]): Foo[Num] = x
 //│ ║        	                                 ^
 //│ ╟── type `Num` is not an instance of `Int`
-//│ ║  l.32: 	fun foo(x: Foo[Int]): Foo[Num] = x
+//│ ║  l.35: 	fun foo(x: Foo[Int]): Foo[Num] = x
 //│ ║        	                          ^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.32: 	fun foo(x: Foo[Int]): Foo[Num] = x
+//│ ║  l.35: 	fun foo(x: Foo[Int]): Foo[Num] = x
 //│ ╙──      	               ^^^
 //│ fun foo: (x: Foo[Int]) -> Foo[Num]
+//│ foo
 
 
 

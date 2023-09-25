@@ -19,6 +19,7 @@ let x: M.T = id
 
 fun foo(x: M.C) = x
 //│ fun foo: (x: C) -> C
+//│ foo
 
 
 foo(M.mkC(42))
@@ -30,7 +31,7 @@ foo(M.mkC(42))
 :e
 42 : M.mkC
 //│ ╔══[ERROR] Illegal selection of value member in type position
-//│ ║  l.31: 	42 : M.mkC
+//│ ║  l.32: 	42 : M.mkC
 //│ ╙──      	      ^^^^
 //│ error
 //│ res

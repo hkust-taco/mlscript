@@ -1276,6 +1276,7 @@ fun main =
 //│   })());
 //│ };
 //│ // End of generated code
+//│ main
 
 :js
 fun mian =
@@ -1324,6 +1325,7 @@ fun mian =
 //│   })());
 //│ };
 //│ // End of generated code
+//│ mian
 
 :js
 fun mian =
@@ -1380,6 +1382,7 @@ fun mian =
 //│   })());
 //│ };
 //│ // End of generated code
+//│ mian
 
 :js
 fun main(arg) =
@@ -1425,6 +1428,7 @@ fun main(arg) =
 //│   })());
 //│ };
 //│ // End of generated code
+//│ main
 
 module Test {
   log(0)

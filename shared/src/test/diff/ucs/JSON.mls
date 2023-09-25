@@ -42,6 +42,12 @@ fun stringTail(s) = asNativeString(s).slice(1)
 //│ fun stringTail: anything -> Str
 //│ getStringOf
 //│             = [Function: toString]
+//│ fromCharCode
+//│ firstCharCode
+//│ getCharAtIndex
+//│ strlen
+//│ stringHead
+//│ stringTail
 
 fun isWhiteSpace(ch) =
   if (firstCharCode of ch) ==
@@ -50,11 +56,13 @@ fun isWhiteSpace(ch) =
     32 then true // space
     _ then false
 //│ fun isWhiteSpace: anything -> Bool
+//│ isWhiteSpace
 
 fun isDigit(ch) =
   let n = firstCharCode of ch
   if 48 <= n and n <= 57 then true else false
 //│ fun isDigit: anything -> Bool
+//│ isDigit
 
 fun isAlphabet(ch) =
   let n = firstCharCode of ch
@@ -63,6 +71,7 @@ fun isAlphabet(ch) =
     122 and n >= 97 then true
     else false
 //│ fun isAlphabet: anything -> Bool
+//│ isAlphabet
 
 fun concat2(a, b) = concat(a)(b)
 fun concat3(a, b, c) = concat2(a, concat2(b, c))
@@ -80,6 +89,14 @@ fun par(a) = concat3("(", a, ")")
 //│ fun concat7: (Str, Str, Str, Str, Str, Str, Str) -> Str
 //│ fun concat8: (Str, Str, Str, Str, Str, Str, Str, Str) -> Str
 //│ fun par: Str -> Str
+//│ concat2
+//│ concat3
+//│ concat4
+//│ concat5
+//│ concat6
+//│ concat7
+//│ concat8
+//│ par
 
 type Option[A] = Some[A] | None
 module None
@@ -108,6 +125,8 @@ fun listJoin(xs, sep) =
 //│ fun listJoin: forall 'A1. (Cons['A1] | Nil, Str) -> Str
 //│ where
 //│   'A <: 'A0
+//│ listConcat
+//│ listJoin
 
 type TreeMap[A] = Node[A] | Empty
 module Empty
@@ -137,6 +156,9 @@ fun traverse(t, f) =
 //│ fun insert: forall 'A. (Empty | Node['A], Str, 'A) -> Node['A]
 //│ fun find: forall 'A0. (Empty | Node['A0], Str) -> (None | Some['A0])
 //│ fun traverse: forall 'A1 'A2. (Empty | Node['A1], (Str, 'A1) -> 'A2) -> (Cons['A2] | Nil)
+//│ insert
+//│ find
+//│ traverse
 
 type JsonValue = JsonNull | JsonNumber | JsonString | JsonBoolean | JsonObject | JsonArray
 module JsonNull {
@@ -223,6 +245,8 @@ fun skipWhiteSpace(s: Scanner) =
 //│ }
 //│ fun scan: Str -> Scanner
 //│ fun skipWhiteSpace: (s: Scanner) -> Scanner
+//│ scan
+//│ skipWhiteSpace
 
 type ParseResult[T] = ParseSuccess[T] | ParseFailure
 class ParseSuccess[T](value: T, scanner: Scanner) {
@@ -246,6 +270,7 @@ fun expect(scanner, ch) =
       else ParseFailure(concat4("expect '", ch, "' but found ", ch'), scanner)
     None then ParseFailure(concat3("expect '", ch, "' but found EOF"), scanner)
 //│ fun expect: (Scanner & {advance: Scanner}, Str) -> (ParseFailure | ParseSuccess[[]])
+//│ expect
 
 fun expectWord(scanner, word, result) =
   if
@@ -261,6 +286,7 @@ fun expectWord(scanner, word, result) =
       else
         ParseSuccess(result, scanner)
 //│ fun expectWord: forall 'T. (Scanner & {peek: Object & ~#Some | Some[anything], advance: Scanner}, Str, 'T) -> (ParseFailure | ParseSuccess['T])
+//│ expectWord
 
 // If we put this function together with the next block, there will be type
 // mismatch errors.
@@ -271,6 +297,7 @@ fun parseMatched(scanner, closingSymbol, parse, fn) =
       ParseFailure(message, scanner) then ParseFailure(message, scanner)
     ParseFailure(message, scanner) then ParseFailure(message, scanner)
 //│ fun parseMatched: forall 'advance 'a 'T. ({advance: 'advance}, Str, 'advance -> (ParseFailure | ParseSuccess['a]), 'a -> 'T) -> (ParseFailure | ParseSuccess['T])
+//│ parseMatched
 
 :ng
 fun parseEntries(scanner): ParseResult[TreeMap[JsonValue]] = error

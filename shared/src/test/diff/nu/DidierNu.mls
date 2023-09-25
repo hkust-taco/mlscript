@@ -10,26 +10,34 @@
 
 fun k(x, y) = y
 //│ fun k: forall 'a. (anything, 'a) -> 'a
+//│ k
 
 fun unify : 'A -> 'A -> 'B -> 'B
 //│ fun unify: forall 'B. anything -> anything -> 'B -> 'B
+//│ unify
 
 fun unify = x => y => z => k(z => k(z(x), y => k(z(y), y)), z)
 //│ fun unify: forall 'a. anything -> anything -> 'a -> 'a
+//│ unify
 
 fun unify = x => y => z => k of z => k(z(x), y => k of z(y), y), z
 //│ fun unify: forall 'a. anything -> anything -> 'a -> 'a
+//│ unify
 
 
 fun a0 = (z => z) (id : forall 'A: 'A -> 'A) of 1
 //│ fun a0: 1
+//│ a0
 
 fun fst([a, _]) = a
 fun snd([_, b]) = b
 //│ fun fst: forall 'a. (['a, anything]) -> 'a
 //│ fun snd: forall 'b. ([anything, 'b]) -> 'b
+//│ fst
+//│ snd
 
 fun a1(x) = (z => unify(x)(fst of z)(snd of z))([id, (id : forall 'A: 'A -> 'A)]) of 1
 //│ fun a1: anything -> 1
+//│ a1
 
 

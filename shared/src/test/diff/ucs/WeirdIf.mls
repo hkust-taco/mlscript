@@ -47,16 +47,18 @@ fun f(x) = if x is else 0 else 1
 //│ ║  l.41: 	fun f(x) = if x is else 0 else 1
 //│ ╙──      	                        ^
 //│ fun f: anything -> 0
+//│ f
 
 fun f(x) = if x is else 0 
 //│ fun f: anything -> 0
+//│ f
 
 :e
 :ge
 if true
   then 0
 //│ ╔══[ERROR] The case when this is false is not handled: true
-//│ ║  l.56: 	if true
+//│ ║  l.58: 	if true
 //│ ╙──      	   ^^^^
 //│ error
 //│ Code generation encountered an error:
@@ -70,23 +72,23 @@ fun f(x) =
   if x ===
     else "bruh"
 //│ ╔══[PARSE ERROR] Unexpected indented block in expression position
-//│ ║  l.71: 	    else "bruh"
+//│ ║  l.73: 	    else "bruh"
 //│ ╙──      	^^^^
 //│ ╔══[PARSE ERROR] Unexpected end of indented block; an expression was expected here
-//│ ║  l.71: 	    else "bruh"
+//│ ║  l.73: 	    else "bruh"
 //│ ╙──      	    ^
 //│ ╔══[PARSE ERROR] Expected 'then'/'else' clause; found operator application instead
-//│ ║  l.70: 	  if x ===
+//│ ║  l.72: 	  if x ===
 //│ ║        	     ^^^^^
-//│ ║  l.71: 	    else "bruh"
+//│ ║  l.73: 	    else "bruh"
 //│ ║        	^^^^
 //│ ╟── Note: 'if' expression started here:
-//│ ║  l.70: 	  if x ===
+//│ ║  l.72: 	  if x ===
 //│ ╙──      	  ^^
 //│ ╔══[ERROR] The case when this is false is not handled: ===(x, undefined,)
-//│ ║  l.70: 	  if x ===
+//│ ║  l.72: 	  if x ===
 //│ ║        	     ^^^^^
-//│ ║  l.71: 	    else "bruh"
+//│ ║  l.73: 	    else "bruh"
 //│ ╙──      	^^^^
 //│ fun f: anything -> error
 //│ Code generation encountered an error:
@@ -97,12 +99,14 @@ fun f(x) =
   if x ===
     _ then "bruh"
 //│ fun f: anything -> "bruh"
+//│ f
 
 fun boolToStr(x) =
   if x is
     true then "yah"
     false then "nah"
 //│ fun boolToStr: nothing -> ("nah" | "yah")
+//│ boolToStr
 
 boolToStr of true
 boolToStr of false

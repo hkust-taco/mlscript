@@ -13,6 +13,7 @@ fun f(x) = x > 0 && f(x - 1)
 //│   return x > 0 && f(x - 1);
 //│ };
 //│ // End of generated code
+//│ f
 
 f(12)
 //│ Bool

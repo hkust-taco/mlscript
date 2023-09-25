@@ -21,6 +21,7 @@ fun find(t, v) = if t is
     _ then Some(v)
   Empty then None
 //│ fun find: forall 'A 'A0. (Empty | Node['A], Num & 'A0) -> (None | Some['A0])
+//│ find
 
 fun insert(t, v) = if t is
   Node(v', l, r) and
@@ -29,6 +30,7 @@ fun insert(t, v) = if t is
     _ then t
   Empty then Node(v, Empty, Empty)
 //│ fun insert: forall 'A. (Empty | Node['A], Int) -> Node['A]
+//│ insert
 
 find(Empty, 0)
 find(Node(0, Empty, Empty), 0)

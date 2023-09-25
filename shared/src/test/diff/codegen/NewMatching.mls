@@ -58,6 +58,7 @@ fun sum(v) =
 //│   })());
 //│ };
 //│ // End of generated code
+//│ sum
 
 sum(V0())
 sum(V1(42))
@@ -110,6 +111,7 @@ fun get1(s) =
 //│   })());
 //│ };
 //│ // End of generated code
+//│ get1
 
 get1(Some(V1(1)))
 get1(Some(V0()))
@@ -140,6 +142,7 @@ fun foo(s) =
 //│   })());
 //│ };
 //│ // End of generated code
+//│ foo
 
 foo(Some(V1(12)))
 //│ Int
@@ -151,6 +154,7 @@ fun bar(s) =
     Some(_) then let b = s2.value in b + 1
     _ then 0
 //│ fun bar: (Object & ~#Some | Some[anything]) -> Int
+//│ bar
 
 bar(Some(V1(12)))
 //│ Int
@@ -206,6 +210,7 @@ fun t(x) =
 //│   })());
 //│ };
 //│ // End of generated code
+//│ t
 
 t(new FooBar())
 //│ 0 | 1
@@ -219,7 +224,7 @@ fun ft(x) =
     FooBar(x) then x
     _ then 0
 //│ ╔══[ERROR] class FooBar expects 0 parameter but found 1 parameter
-//│ ║  l.219: 	    FooBar(x) then x
+//│ ║  l.224: 	    FooBar(x) then x
 //│ ╙──       	    ^^^^^^^^^
 //│ fun ft: anything -> error
 //│ Code generation encountered an error:
@@ -257,6 +262,7 @@ fun m(x) =
 //│   })());
 //│ };
 //│ // End of generated code
+//│ m
 
 :e
 class VVC(v: Int, vc: Int)
@@ -265,7 +271,7 @@ fun c(x) =
     VVC(x, y, z) then x + y + z
     _ then 0
 //│ ╔══[ERROR] class VVC expects 2 parameters but found 3 parameters
-//│ ║  l.265: 	    VVC(x, y, z) then x + y + z
+//│ ║  l.271: 	    VVC(x, y, z) then x + y + z
 //│ ╙──       	    ^^^^^^^^^^^^
 //│ class VVC(v: Int, vc: Int)
 //│ fun c: anything -> error

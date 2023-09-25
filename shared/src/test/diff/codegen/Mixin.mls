@@ -255,8 +255,9 @@ TestLang.eval(mk(0))
 //│ // Query 2
 //│ res = TestLang.eval(mk(0));
 //│ // End of generated code
+//│ mk
 //│ res
-//│     = [Function: mk]
+//│     = 0
 
 
 class Foo(x: Int)
@@ -384,7 +385,7 @@ mixin Base {
   fun x = y
 }
 //│ ╔══[ERROR] identifier not found: y
-//│ ║  l.384: 	  fun x = y
+//│ ║  l.385: 	  fun x = y
 //│ ╙──       	          ^
 //│ mixin Base() {
 //│   fun x: error

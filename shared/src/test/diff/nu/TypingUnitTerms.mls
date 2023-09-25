@@ -12,5 +12,6 @@ fun test =
 //│ ║  l.6: 	  let x = 0(0)
 //│ ╙──     	          ^
 //│ fun test: 1
+//│ test
 
 

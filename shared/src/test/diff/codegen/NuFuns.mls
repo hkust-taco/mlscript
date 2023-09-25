@@ -18,6 +18,7 @@ fun foo =
 //│   })());
 //│ };
 //│ // End of generated code
+//│ foo
 
 fun foo =
   class C(a: Int) { fun bar(x) = a + x + 1 }
@@ -25,8 +26,9 @@ fun foo =
 foo
 //│ fun foo: Int
 //│ Int
+//│ foo
 //│ res
-//│     = [Function: foo1]
+//│     = 111
 
 
 // FIXME: returns a thunk
@@ -35,12 +37,16 @@ fun main =
 main
 //│ fun main: undefined
 //│ undefined
+//│ main
 //│ res
-//│     = [Function: main]
+//│     = undefined
+//│ // Output
+//│ Hello
 
 fun main =
   log("Hello")
 //│ fun main: undefined
+//│ main
 
 main
 //│ undefined
@@ -58,6 +64,11 @@ fun main =
 main
 //│ fun main: undefined
 //│ undefined
+//│ main
 //│ res
-//│     = [Function: main2]
+//│     = undefined
+//│ // Output
+//│ 0
+//│ 1
+//│ 2
 

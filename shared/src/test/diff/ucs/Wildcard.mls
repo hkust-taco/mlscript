@@ -24,6 +24,7 @@ fun w1(x, e_0, e_1) =
       _ and e_1 is y_1 and x is
         Right(Some(rv)) then concat("Right of Some of ")(toString(rv))
 //│ fun w1: (Left[None | Some[anything]] | Right[None | Some[anything]], anything, anything) -> Str
+//│ w1
 
 w1(Left(None), "a", "b")
 w1(Right(None), "a", "b")
@@ -46,6 +47,7 @@ fun w2(x, p) =
     None then 3
     _ then 4
 //│ fun w2: forall 'a. (None | Object & 'a & ~#None & ~#Some | Some[anything], (None | 'a) -> Object) -> (1 | 2 | 3 | 4)
+//│ w2
 
 w2(Some(0), x => true)
 w2(None, x => true)
@@ -67,6 +69,7 @@ fun w3(x, p) = if x is
   None then "r3"
   _ then "r4"
 //│ fun w3: forall 'a. (None | Object & 'a & ~#None & ~#Some | Some[anything], (None | Some[nothing] | 'a) -> Object) -> Str
+//│ w3
 
 // Expect "r1"
 w3(0, _ => true)
@@ -105,9 +108,10 @@ w3(0, _ => false)
 fun w3_1(x, f) =
   if f(x) is _ then 0 else 1
 //│ ╔══[WARNING] Found a redundant else branch
-//│ ║  l.106: 	  if f(x) is _ then 0 else 1
+//│ ║  l.109: 	  if f(x) is _ then 0 else 1
 //│ ╙──       	                           ^
 //│ fun w3_1: forall 'a. ('a, 'a -> anything) -> 0
+//│ w3_1
 
 w3_1(0, _ => true)
 w3_1(0, _ => false)
@@ -121,9 +125,10 @@ w3_1(0, _ => false)
 fun w3_1_1(x, f) =
   if f(x) is a then a else 0
 //│ ╔══[WARNING] Found a redundant else branch
-//│ ║  l.122: 	  if f(x) is a then a else 0
+//│ ║  l.126: 	  if f(x) is a then a else 0
 //│ ╙──       	                           ^
 //│ fun w3_1_1: forall 'a 'b. ('a, 'a -> 'b) -> 'b
+//│ w3_1_1
 
 w3_1_1(0, x => x)
 w3_1_1(0, x => x + 1)
@@ -143,6 +148,7 @@ fun w4(x, p) = if x is
   None then "r3"
   _ then "r4"
 //│ fun w4: forall 'a. (None | Object & 'a & ~#None & ~#Some | Some[anything], (None | Some[nothing] | 'a) -> Object) -> Str
+//│ w4
 
 
 // Expect "r1"
@@ -197,6 +203,7 @@ fun w5(y) =
           Delta then "delta"
           _ then "unknown"
 //│ fun w5: Object -> ("alpha" | "beta" | "delta" | "gamma" | "unknown")
+//│ w5
 
 w5(0)
 w5(Alpha())
@@ -222,6 +229,7 @@ fun w6(x, y) =
       None then 0
     else x
 //│ fun w6: forall 'a. ('a, Object & ~#Some | Some['a]) -> (0 | 'a)
+//│ w6
 
 w6("42", Some(42))
 w6("42", None)
@@ -244,6 +252,7 @@ fun w7(x, f) =
     Left(x) then x + 1
     Right(x) then x + 2
 //│ fun w7: forall 'a 'b. (Left[Int] | Object & 'a & ~#Left & ~#Right | Right[Int], 'a -> (None | Some['b])) -> (Int | 'a | 'b)
+//│ w7
 
 // The results are wrong:
 w7(Left(99), _ => Some(0)) // => 0

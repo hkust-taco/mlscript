@@ -34,13 +34,12 @@ box0 = Box { inner = 0 }
 //│   ├──   globalThis.box0 = new Box({ inner: 0 });
 //│   ├── Intermediate: Box { inner: 0 }
 //│   └── Reply: [success] Box { inner: 0 }
-//│ what box0
 //│ box0: Box[0]
 //│     = Box { inner: 0 }
 
 :showRepl
 box1 = Box { inner = 1 }
-//│ ┌ Block at ReplHost.mls:42
+//│ ┌ Block at ReplHost.mls:41
 //│ ├── No prelude
 //│ └─┬ Query 1/1
 //│   ├── Prelude: <empty>
@@ -48,13 +47,12 @@ box1 = Box { inner = 1 }
 //│   ├──   globalThis.box1 = new Box({ inner: 1 });
 //│   ├── Intermediate: Box { inner: 1 }
 //│   └── Reply: [success] Box { inner: 1 }
-//│ what box1
 //│ box1: Box[1]
 //│     = Box { inner: 1 }
 
 :showRepl
 case box1 of { Box -> 0 }
-//│ ┌ Block at ReplHost.mls:56
+//│ ┌ Block at ReplHost.mls:54
 //│ ├── No prelude
 //│ └─┬ Query 1/1
 //│   ├── Prelude:
@@ -65,7 +63,6 @@ case box1 of { Box -> 0 }
 //│   ├──   })());
 //│   ├── Intermediate: 0
 //│   └── Reply: [success] 0
-//│ what res
 //│ res: 0
 //│    = 0
 
@@ -73,7 +70,7 @@ case box1 of { Box -> 0 }
 box1.Map (fun x -> add x 1)
 box1.Map (fun x -> add x 2)
 box1.Map (fun x -> Box { inner = x })
-//│ ┌ Block at ReplHost.mls:73
+//│ ┌ Block at ReplHost.mls:70
 //│ ├─┬ Prelude
 //│ │ ├── Code
 //│ │ │   function add(x, y) {
@@ -103,17 +100,13 @@ box1.Map (fun x -> Box { inner = x })
 //│   ├──   res = box1.Map((x) => new Box({ inner: x }));
 //│   ├── Intermediate: Box { inner: Box { inner: 1 } }
 //│   └── Reply: [success] Box { inner: Box { inner: 1 } }
-//│ what res
 //│ res: Box[int]
 //│    = Box { inner: 2 }
-//│ what res
 //│ res: Box[int]
 //│    = Box { inner: 3 }
-//│ what res
 //│ res: Box[Box[1]]
 //│    = Box { inner: Box { inner: 1 } }
 
 box1.Map (fun x -> Box { inner = x })
-//│ what res
 //│ res: Box[Box[1]]
 //│    = Box { inner: Box { inner: 1 } }

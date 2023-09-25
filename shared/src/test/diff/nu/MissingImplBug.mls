@@ -3,6 +3,7 @@
 
 declare fun String: nothing
 //│ fun String: nothing
+//│ String
 
 let makeString: anything => { length: Int, charCodeAt: Int => Int } = String
 let StringInstance: { fromCharCode: Int => Str } = String
@@ -21,8 +22,9 @@ let StringInstance: { fromCharCode: Int => Str } = String
 //│ let makeString: anything -> {charCodeAt: Int -> Int, length: Int}
 //│ let StringInstance: {fromCharCode: Int -> Str}
 //│ fun String: nothing
+//│ String
 //│ makeString
-//│            = <missing implementation>
+//│            = [Function: String]
 //│ StringInstance
 //│                = [Function: String]
 

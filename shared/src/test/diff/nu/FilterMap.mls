@@ -50,6 +50,7 @@ fun filtermap(f, xs) = if xs is
     Fals then Cons(y, filtermap(f, ys))
     Pair(Tru, z) then Cons(z, filtermap(f, ys))
 //│ fun filtermap: forall 'a 'A. ('a -> (Fals | Pair[Tru, 'A] | Tru), Cons['a & 'A] | Nil) -> (Cons['A] | Nil)
+//│ filtermap
 
 fun mkString(xs) =
   if xs is
@@ -58,6 +59,7 @@ fun mkString(xs) =
       Nil then toString(x)
       else concat(toString(x))(concat(", ")(mkString(xs')))
 //│ fun mkString: (Cons[anything] | Nil) -> Str
+//│ mkString
 
 let list = Cons(1, Cons(2, Cons(3, Cons(4, Cons(5, Cons(6, Cons(7, Nil)))))))
 mkString of list

@@ -12,10 +12,11 @@ let b = i(true)
 //│ fun i: forall 'a. 'a -> 'a
 //│ let a: 0
 //│ let b: true
+//│ i
 //│ a
-//│   = [Function: i]
-//│ b
 //│   = 0
+//│ b
+//│   = true
 
 :re // FIXME shouldn't be a reference error
 let a = i(0)
@@ -27,8 +28,9 @@ let b = i(true)
 //│ a
 //│   Runtime error:
 //│     ReferenceError: i1 is not defined
+//│ i
 //│ b
-//│   = [Function: i1]
+//│   = true
 
 :re // FIXME shouldn't be a reference error
 let a = i(0)
@@ -43,6 +45,7 @@ fun i(x) = x
 //│ b
 //│   Runtime error:
 //│     ReferenceError: i2 is not defined
+//│ i
 
 
 module Test {

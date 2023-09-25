@@ -25,16 +25,20 @@ a.n
 
 fun f(x: A) = x.n
 //│ fun f: (x: A) -> Int
+//│ f
 
 fun f(x: A) = if x is A then x.n
 //│ fun f: (x: A) -> Int
+//│ f
 
 fun f(x: A | 'b) = if x is A then x.n else 0
 //│ fun f: (x: Object) -> Int
+//│ f
 
 
 fun f(x) = x.n
 //│ fun f: forall 'n. {n: 'n} -> 'n
+//│ f
 
 f(a)
 //│ Int
@@ -43,6 +47,7 @@ f(a)
 
 fun f(x) = if x is A then x.n
 //│ fun f: A -> Int
+//│ f
 
 f(a)
 //│ Int
@@ -51,6 +56,7 @@ f(a)
 
 fun f(x) = if x is A then x.n else 0
 //│ fun f: Object -> Int
+//│ f
 
 f(a)
 //│ Int
@@ -78,10 +84,10 @@ class Base0(val n) {
   fun oops = this.my
 }
 //│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.74: 	class Base0(val n) {
+//│ ║  l.80: 	class Base0(val n) {
 //│ ╙──      	                ^
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.78: 	  fun oops = this.my
+//│ ║  l.84: 	  fun oops = this.my
 //│ ╙──      	                 ^^^
 //│ class Base0(n: error) {
 //│   fun me: Base0 & {n: error}
@@ -175,7 +181,7 @@ b.me
 :e
 b.getBaseTypo
 //│ ╔══[ERROR] Type `Base1` does not contain member `getBaseTypo`
-//│ ║  l.176: 	b.getBaseTypo
+//│ ║  l.182: 	b.getBaseTypo
 //│ ╙──       	 ^^^^^^^^^^^^
 //│ error
 //│ res

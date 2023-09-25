@@ -19,6 +19,7 @@ fun eval(sub, v) =
       eval(Cons(error, sub), error)
       error
 //│ fun eval: (Cons[anything] | Nil, Abs[anything]) -> nothing
+//│ eval
 
 mixin EvalLambda {
   fun eval(sub, v) =

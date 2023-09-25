@@ -104,5 +104,6 @@ module D { fun unapply(a) = [a.x] }
 //│ module D {
 //│   fun unapply: forall 'x. {x: 'x} -> ['x]
 //│ }
+//│ D
 
 

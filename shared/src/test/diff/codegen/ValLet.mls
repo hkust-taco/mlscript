@@ -223,11 +223,12 @@ fun f(val x: Int) = x + 1
 //│ ║  l.221: 	fun f(val x: Int) = x + 1
 //│ ╙──       	          ^^^^^^
 //│ fun f: (x: Int) -> Int
+//│ f
 
 :e
 (val x: 1)
 //│ ╔══[ERROR] Cannot use `val` in this position
-//│ ║  l.228: 	(val x: 1)
+//│ ║  l.229: 	(val x: 1)
 //│ ╙──       	     ^^^^
 //│ [x: 1]
 //│ res

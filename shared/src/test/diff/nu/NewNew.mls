@@ -97,11 +97,12 @@ new
 
 fun f(x) = {x}
 //│ fun f: forall 'a. 'a -> {x: 'a}
+//│ f
 
 :e
 new f(1)
 //│ ╔══[ERROR] Value f cannot be used in `new` expression
-//│ ║  l.102: 	new f(1)
+//│ ║  l.103: 	new f(1)
 //│ ╙──       	^^^^^^^^
 //│ error
 //│ res
@@ -114,7 +115,7 @@ module Oops
 :e
 new Oops
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.115: 	new Oops
+//│ ║  l.116: 	new Oops
 //│ ║         	^^^^^^^^
 //│ ╙── applied expression of type `Oops` is not a function
 //│ error
@@ -126,7 +127,7 @@ new Oops
 new Oops2
 trait Oops2
 //│ ╔══[ERROR] Trait Oops2 cannot be used in term position
-//│ ║  l.126: 	new Oops2
+//│ ║  l.127: 	new Oops2
 //│ ╙──       	^^^^^^^^^
 //│ trait Oops2
 //│ error
