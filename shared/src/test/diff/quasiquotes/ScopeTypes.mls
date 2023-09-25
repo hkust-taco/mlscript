@@ -10,26 +10,26 @@ code"x => ${run(code"x")}"
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.9: 	code"x => ${run(code"x")}"
 //│ ║       	            ^^^^^^^^^^^^
-//│ ╙── expression of type `?a` does not match type `nothing`
+//│ ╙── expression of type `?x` does not match type `nothing`
 //│ Code[forall 'a. Code['a, anything] -> 'a, nothing]
 
 
 fun test(cde) =
   code"x => x + ${cde}"
-//│ fun test: forall 'a. Code[Int, ??_ | 'a] -> Code[Int -> Int, 'a]
+//│ fun test: forall 'a. Code[Int, ??x | 'a] -> Code[Int -> Int, 'a]
 
 :e
 code"y => ${ run(test(code"y")); code"0" }"
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.22: 	code"y => ${ run(test(code"y")); code"0" }"
 //│ ║        	             ^^^^^^^^^^^^^^^^^^
-//│ ╙── expression of type `?a & ~??_` does not match type `nothing`
+//│ ╙── expression of type `?y & ~??x` does not match type `nothing`
 //│ Code[Int -> 0, nothing]
 
 
 fun test(cde, f) =
   code"x => x + ${f(cde)}"
-//│ fun test: forall 'a 'b. ('a, 'a -> Code[Int, ??_ | 'b]) -> Code[Int -> Int, 'b]
+//│ fun test: forall 'a 'b. ('a, 'a -> Code[Int, ??x | 'b]) -> Code[Int -> Int, 'b]
 
 run(test(code"1", id))
 //│ Int -> Int
@@ -37,7 +37,7 @@ run(test(code"1", id))
 
 fun test(cde: Code[Int, 'a], f: forall 'c: Code[Int, 'c] -> Code[Int, 'c]) =
   code"x => x + ${f(cde)}"
-//│ fun test: forall 'a. (cde: Code[Int, ??_ | 'a], f: forall 'c. Code[Int, 'c] -> Code[Int, 'c]) -> Code[Int -> Int, 'a]
+//│ fun test: forall 'a. (cde: Code[Int, ??x | 'a], f: forall 'c. Code[Int, 'c] -> Code[Int, 'c]) -> Code[Int -> Int, 'a]
 
 run(test(code"1", id))
 //│ Int -> Int
@@ -47,7 +47,7 @@ code"x => ${ run(test(code"x", id)); code"x" }"
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.46: 	code"x => ${ run(test(code"x", id)); code"x" }"
 //│ ║        	             ^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── expression of type `?a & ~??_` does not match type `nothing`
+//│ ╙── expression of type `?x & ~??x` does not match type `nothing`
 //│ Code[forall 'a. (Int & 'a) -> 'a, nothing]
 
 :e
@@ -55,13 +55,13 @@ code"x => ${ let c = code"x" in run(test(c, id)); c }"
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.54: 	code"x => ${ let c = code"x" in run(test(c, id)); c }"
 //│ ║        	                                ^^^^^^^^^^^^^^^^
-//│ ╙── expression of type `?a & ~??_` does not match type `nothing`
+//│ ╙── expression of type `?x & ~??x` does not match type `nothing`
 //│ Code[forall 'a. (Int & 'a) -> 'a, nothing]
 
 
 fun test(f) =
   code"x => x + ${f(code"x + 1")}"
-//│ fun test: forall 'a. (Code[Int, ??_] -> Code[Int, ??_0 | 'a]) -> Code[Int -> Int, 'a]
+//│ fun test: forall 'a. (Code[Int, ??x] -> Code[Int, ??x0 | 'a]) -> Code[Int -> Int, 'a]
 
 
 let myrun = c => run(c)
@@ -72,7 +72,7 @@ code"x => ${ test(myrun) }"
 //│ ╔══[ERROR] Type error in application
 //│ ║  l.71: 	code"x => ${ test(myrun) }"
 //│ ║        	             ^^^^^^^^^^^
-//│ ╟── type variable `?a` leaks out of its scope
+//│ ╟── type variable `?x` leaks out of its scope
 //│ ╟── into type `nothing`
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this reference:
@@ -85,7 +85,7 @@ code"x => ${ test(c => run(c); code"0") }"
 //│ ╔══[ERROR] Type error in application
 //│ ║  l.84: 	code"x => ${ test(c => run(c); code"0") }"
 //│ ║        	             ^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type variable `?a` leaks out of its scope
+//│ ╟── type variable `?x` leaks out of its scope
 //│ ╟── into type `nothing`
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this reference:
@@ -99,7 +99,7 @@ code"x => ${ test(c => run(c); code"x") }"
 //│ ╔══[ERROR] Type error in application
 //│ ║  l.98: 	code"x => ${ test(c => run(c); code"x") }"
 //│ ║        	             ^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type variable `?a` leaks out of its scope
+//│ ╟── type variable `?x` leaks out of its scope
 //│ ╟── into type `nothing`
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this reference:
@@ -113,13 +113,13 @@ fun test2(a) = code"x => ${ test(c => run(c); a) }"
 //│ ╔══[ERROR] Type error in application
 //│ ║  l.112: 	fun test2(a) = code"x => ${ test(c => run(c); a) }"
 //│ ║         	                            ^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type variable `?a` leaks out of its scope
+//│ ╟── type variable `?x` leaks out of its scope
 //│ ╟── into type `nothing`
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this reference:
 //│ ║  l.63: 	  code"x => x + ${f(code"x + 1")}"
 //│ ╙──      	                  ^
-//│ fun test2: forall 'a. Code[Int, ??_ | ??_0 | 'a] -> Code[anything -> Int -> Int, 'a]
+//│ fun test2: forall 'a. Code[Int, ??x | ??x0 | 'a] -> Code[anything -> Int -> Int, 'a]
 
 type Hide[C] = C & (C | Int)
 //│ type Hide[C] = C

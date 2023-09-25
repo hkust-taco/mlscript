@@ -74,7 +74,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
     def +=(b: Str -> TypeInfo): Unit = {
       env += b
       if (quotedLvl > 0) {
-        val tag = SkolemTag(freshVar(NoProv, N)(lvl))(NoProv)
+        val tag = SkolemTag(freshVar(NoProv, N, nameHint = S(b._1))(lvl))(NoProv)
         println(s"Create skolem tag $tag for ${b._2} in quasiquote.")
         qenv += b._1 -> tag
       }
