@@ -39,3 +39,14 @@ run(c)
 
 code"x => ${ code"x" }"
 //│ Code[forall 'a. 'a -> 'a, nothing]
+
+
+let x4 = code"x => x => x => x"
+run(x4)(1)(2)(3)
+//│ let x4: Code[forall 'a. anything -> anything -> 'a -> 'a, nothing]
+//│ 3
+
+let y4 = code"let y = 1 in let y = 2 in let y = 3 in y"
+run(y4)
+//│ let y4: Code[3, nothing]
+//│ 3

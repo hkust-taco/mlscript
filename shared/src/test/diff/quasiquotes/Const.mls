@@ -10,8 +10,8 @@ code"x => y => 100 + ${Const(x + y)}"
 //│ ║       	                             ^^^^^
 //│ ╟── reference of type `Code[?a, ?b]` is not an instance of `Int`
 //│ ║  l.7: 	code"x => y => 100 + ${Const(x + y)}"
-//│ ╙──     	                                 ^
-//│ Code[Int -> anything -> Int, nothing]
+//│ ╙──     	                             ^
+//│ Code[anything -> anything -> Int, nothing]
 
 :e
 code"x => y => 100 + code"${Const(x + y)}""
@@ -23,7 +23,7 @@ code"x => y => 100 + code"${Const(x + y)}""
 
 
 let res = code"x => code"${x}""
-//│ let res: Code[forall 'a 'b. Code['b, 'a] -> Code['b, 'a], nothing]
+//│ let res: Code[forall 'a 'b. Code['a, 'b] -> Code['a, 'b], nothing]
 
 run(res)(code"1")
 //│ Code[1, nothing]

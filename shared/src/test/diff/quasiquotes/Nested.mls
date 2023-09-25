@@ -93,3 +93,20 @@ let res = code"x => code"${x}""
 //│ let res: Code[forall 'a 'b. Code['a, 'b] -> Code['a, 'b], nothing]
 run(res)(code"1")
 //│ Code[1, nothing]
+
+code"code"code"x => ${x}"""
+//│ Code[Code[Code[forall 'a. 'a -> 'a, nothing], nothing], nothing]
+
+code"x => ${code"${code"${code"x"}"}"}"
+//│ Code[forall 'a. 'a -> 'a, nothing]
+
+fun f(cde) = code"x => ${code"${code"${code"x + ${cde}"}"}"}"
+run(f(Const(114)))(514)
+//│ fun f: forall 'a. Code[Int, ??_ | 'a] -> Code[Int -> Int, 'a]
+//│ Int
+
+fun f(x) = code"${run(x)} + 1"
+//│ fun f: forall 'a. Code[Code[Int, 'a], nothing] -> Code[Int, 'a]
+
+code"x => ${code"code"code"${x}"""}"
+//│ Code[forall 'a 'b. Code['a, 'b] -> Code[Code['a, 'b], nothing], nothing]

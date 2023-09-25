@@ -86,10 +86,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       else parent.dlof(_.qget(name, qlvl))(N)
     def wrapCode: Ls[(Str, TypeInfo)] = qenv.flatMap {
       case (name, tag) =>
-        env.get(name) match {
+        get(name) match {
           case S(VarSymbol(ty, _)) =>
             name -> VarSymbol(TypeRef(TypeName("Code"), ty :: tag :: Nil)(noProv), Var(name)) :: Nil
-          case _ => Nil // TODO: what's this?
+          case S(_: AbstractConstructor) | S(_: LazyTypeInfo) => die // * Abstract ctors and type defs are not allowed
+          case N => Nil // * In the same quasiquote but not the same scope
         }
     }.toList
     def unwrap[T](names: Ls[Str], f: () => T): T = { // * Revert ctx modification temporarily
@@ -103,7 +104,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       res
     }
     def traceFV(fv: ST): Unit = fvars += fv
-    def releaseFv: ST = qenv.foldLeft[ST](TopType)((res, ty) => res & NegType(ty._2)(noProv))
     def contains(name: Str): Bool = env.contains(name) || parent.exists(_.contains(name))
     def addMth(parent: Opt[Str], nme: Str, ty: MethodType): Unit = mthEnv += R(parent, nme) -> ty
     def addMthDefn(parent: Str, nme: Str, ty: MethodType): Unit = mthEnv += L(parent, nme) -> ty
@@ -1454,15 +1454,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
           val bodyType = typePolymorphicTerm(body)(newCtx, raise, vars)
           val res = freshVar(noTyProv, N)
           val ctxTy = freshVar(noTyProv, N)
-          val ty = con(bodyType, TypeRef(TypeName("Code"), res :: ctxTy :: Nil)(noProv), res)
-          val lbs = ctx.qenv.map(_._2).toSet
-          def bind(c: ST): Ls[ST] = c.unwrapProvs match {
-            case tag: SkolemTag if lbs(tag) => tag :: Nil
-            case tv: TypeVariable => tv._lowerBounds.flatMap(bind(_))
-            case ComposedType(true, lhs, rhs) => bind(lhs) ++ bind(rhs)
-            case _ => Nil
-          }
-          ctx.traceFV(bind(ctxTy).foldLeft[ST](ctxTy)((res, ty) => res & NegType(ty)(noProv)))
+          val ty =
+            con(bodyType, TypeRef(TypeName("Code"), res :: ctx.qenv.foldLeft[ST](ctxTy)((res, ty) => ty._2 | res) :: Nil)(noProv), res)
+          ctx.traceFV(ctxTy)
           ty
         }
         else err("Unquotes should be enclosed with a quasiquote.", body.toLoc)(raise)

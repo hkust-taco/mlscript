@@ -59,3 +59,127 @@ let res = code"let x = {a: 100} in x .a"
 
 run(res)
 //│ 100
+
+let app = code"f => x => f(x)"
+run(app)(id)(1)
+//│ let app: Code[forall 'a 'b. ('a -> 'b) -> 'a -> 'b, nothing]
+//│ 1
+
+:e
+code"f => x => f(${run(x)})"
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.69: 	code"f => x => f(${run(x)})"
+//│ ║        	                   ^^^^^^
+//│ ╙── expression of type `?a` does not match type `nothing`
+//│ Code[forall 'a 'b. ('a -> 'b) -> Code['a, anything] -> 'b, nothing]
+
+:d
+run(code"(x => x + 1)(${Const(42)})")
+//│ 0. Typing ‹run(code"'(' (x,) => +(x, 1,) ')'(${Const(42,)},)",)›
+//│ | Typing unit statements
+//│ | | 0. Typing term run(code"'(' (x,) => +(x, 1,) ')'(${Const(42,)},)",)
+//│ | | | 0. Typing term run
+//│ | | | 0. : ‹∀ 0. (Code[α9',⊥] -> α9')›
+//│ | | | 0. Typing term code"'(' (x,) => +(x, 1,) ')'(${Const(42,)},)"
+//│ | | | | 0. Typing term '(' (x,) => +(x, 1,) ')'(${Const(42,)},)
+//│ | | | | | 0. Typing term '(' (x,) => +(x, 1,) ')'
+//│ | | | | | | 0. Typing term (x,) => +(x, 1,)
+//│ | | | | | | | 0. Typing pattern [x,]
+//│ | | | | | | | | 0. Typing pattern x
+//│ | | | | | | | | | Create skolem tag ‘α152 for VarSymbol(x151,x::7) in quasiquote.
+//│ | | | | | | | | 0. : x151
+//│ | | | | | | | 0. : (x151,)
+//│ | | | | | | | 0. Typing term +(x, 1,)
+//│ | | | | | | | | 0. Typing term +
+//│ | | | | | | | | 0. : ((Int, Int,) -> Int)
+//│ | | | | | | | | 0. Typing term x
+//│ | | | | | | | | 0. : x151
+//│ | | | | | | | | 0. Typing term 1
+//│ | | | | | | | | 0. : #1<Int,Num,Object>
+//│ | | | | | | | | CONSTRAIN ((Int, Int,) -> Int) <! ((x151, #1<Int,Num,Object>,) -> α153)
+//│ | | | | | | | |   where 
+//│ | | | | | | | | 0. C ((Int, Int,) -> Int) <! ((x151, #1<Int,Num,Object>,) -> α153)    (0)
+//│ | | | | | | | | | 0. C (x151, #1<Int,Num,Object>,) <! (Int, Int,)    (1)
+//│ | | | | | | | | | | 0. C x151 <! Int    (2)
+//│ | | | | | | | | | | | NEW x151 UB (0)
+//│ | | | | | | | | | | 0. C #1<Int,Num,Object> <! Int    (2)
+//│ | | | | | | | | | | | Already a subtype by <:<
+//│ | | | | | | | | | 0. C Int <! α153    (1)
+//│ | | | | | | | | | | NEW α153 LB (0)
+//│ | | | | | | | 0. : α153
+//│ | | | | | | 0. : (x151 -> α153)
+//│ | | | | | 0. : (x151 -> α153)
+//│ | | | | | 0. Typing term ${Const(42,)}
+//│ | | | | | | Map qenv to env in unquote...
+//│ | | | | | | 0. Typing term Const(42,)
+//│ | | | | | | | 0. Typing term Const
+//│ | | | | | | | 0. : (Int -> Code[Int,⊥])
+//│ | | | | | | | 0. Typing term 42
+//│ | | | | | | | 0. : #42<Int,Num,Object>
+//│ | | | | | | | CONSTRAIN (Int -> Code[Int,⊥]) <! (#42<Int,Num,Object> -> α154)
+//│ | | | | | | |   where 
+//│ | | | | | | | 0. C (Int -> Code[Int,⊥]) <! (#42<Int,Num,Object> -> α154)    (0)
+//│ | | | | | | | | 0. C (#42<Int,Num,Object>,) <! (Int,)    (1)
+//│ | | | | | | | | | Already a subtype by <:<
+//│ | | | | | | | | 0. C Code[Int,⊥] <! α154    (1)
+//│ | | | | | | | | | NEW α154 LB (0)
+//│ | | | | | | 0. : α154
+//│ | | | | | | CONSTRAIN α154 <! Code[α155,(‘α152 | α156)]
+//│ | | | | | |   where 
+//│ 		α154 :> Code[Int,⊥]
+//│ | | | | | | 0. C α154 <! Code[α155,(‘α152 | α156)]    (0)
+//│ | | | | | | | NEW α154 UB (0)
+//│ | | | | | | | 0. C Code[Int,⊥] <! Code[α155,(‘α152 | α156)]    (2)
+//│ | | | | | | | | 0. C Int <! α155    (2)
+//│ | | | | | | | | | NEW α155 LB (0)
+//│ | | | | | | | | 0. C ⊥ <! (‘α152 | α156)    (2)
+//│ | | | | | | | | | Already a subtype by <:<
+//│ | | | | | 0. : α155
+//│ | | | | | CONSTRAIN (x151 -> α153) <! (α155 -> α157)
+//│ | | | | |   where 
+//│ 		x151 <: Int
+//│ 		α153 :> Int
+//│ 		α155 :> Int
+//│ | | | | | 0. C (x151 -> α153) <! (α155 -> α157)    (0)
+//│ | | | | | | 0. C (α155,) <! (x151,)    (1)
+//│ | | | | | | | 0. C α155 <! x151    (2)
+//│ | | | | | | | | NEW α155 UB (0)
+//│ | | | | | | | | 0. C Int <! x151    (4)
+//│ | | | | | | | | | NEW x151 LB (0)
+//│ | | | | | | | | | 0. C Int <! Int    (6)
+//│ | | | | | | | | | | Already a subtype by <:<
+//│ | | | | | | 0. C α153 <! α157    (1)
+//│ | | | | | | | NEW α153 UB (0)
+//│ | | | | | | | 0. C Int <! α157    (3)
+//│ | | | | | | | | NEW α157 LB (0)
+//│ | | | | 0. : α157
+//│ | | | 0. : Code[α157,α156]
+//│ | | | CONSTRAIN ‹∀ 0. (Code[α9',⊥] -> α9')› <! (Code[α157,α156] -> α158)
+//│ | | |   where 
+//│ 		α157 :> Int
+//│ | | | 0. C ‹∀ 0. (Code[α9',⊥] -> α9')› <! (Code[α157,α156] -> α158)    (0)
+//│ | | | | could be distribbed: Set(α9')
+//│ | | | | cannot be distribbed: Set(α9')
+//│ | | | | INST [0]   ‹∀ 0. (Code[α9',⊥] -> α9')›
+//│ | | | |   where  
+//│ | | | | TO [0] ~>  (Code[α9_159,⊥] -> α9_159)
+//│ | | | |   where  
+//│ | | | | 0. C (Code[α9_159,⊥] -> α9_159) <! (Code[α157,α156] -> α158)    (2)
+//│ | | | | | 0. C (Code[α157,α156],) <! (Code[α9_159,⊥],)    (2)
+//│ | | | | | | 0. C Code[α157,α156] <! Code[α9_159,⊥]    (3)
+//│ | | | | | | | 0. C α157 <! α9_159    (4)
+//│ | | | | | | | | NEW α157 UB (0)
+//│ | | | | | | | | 0. C Int <! α9_159    (7)
+//│ | | | | | | | | | NEW α9_159 LB (0)
+//│ | | | | | | | 0. C α156 <! ⊥    (4)
+//│ | | | | | | | | NEW α156 UB (0)
+//│ | | | | | 0. C α9_159 <! α158    (2)
+//│ | | | | | | NEW α9_159 UB (0)
+//│ | | | | | | 0. C Int <! α158    (5)
+//│ | | | | | | | NEW α158 LB (0)
+//│ | | 0. : α158
+//│ | : Some(α158)
+//│ ======== TYPED ========
+//│ res: Some(α158) where 
+//│ 		α158 :> Int
+//│ Int
