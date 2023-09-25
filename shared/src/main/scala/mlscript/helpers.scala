@@ -43,14 +43,20 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
     case Neg(t) => s"~${t.showIn(ctx, 100)}"
     case Record(fs) => fs.map { nt =>
         val nme = nt._1.name
-        if (nme.isCapitalized) nt._2 match {
+        val opt = nt._2 match {
+          case Field(_, _, true) => "?"
+          case Field(_, _, false) => ""
+        }
+        val res = if (nme.isCapitalized) nt._2 match {
           case Field(N | S(Bot), Top, _) => s"$nme"
           case Field(S(lb), ub, _) if lb === ub => s"$nme = ${ub.showIn(ctx, 0)}"
           case Field(N | S(Bot), ub, _) => s"$nme <: ${ub.showIn(ctx, 0)}"
           case Field(S(lb), Top, _) => s"$nme :> ${lb.showIn(ctx, 0)}"
           case Field(S(lb), ub, _) => s"$nme :> ${lb.showIn(ctx, 0)} <: ${ub.showIn(ctx, 0)}"
         }
-        else s"${nt._2.mutStr}${nme}: ${showField(nt._2, ctx)}"
+        else 
+          s"${nt._2.mutStr}${nme}: ${showField(nt._2, ctx)}"
+        res + opt
       }.mkString("{", ", ", "}")
     case Splice(fs) =>
       fs.map{case L(l) => s"...${l.showIn(ctx, 0)}" case R(r) => s"${showField(r, ctx)}"}.mkString("(", ", ", ")")

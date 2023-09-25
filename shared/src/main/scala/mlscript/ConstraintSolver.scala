@@ -845,7 +845,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             }
             
             
-          case (TupleType(fs0), TupleType(fs1)) if fs0.size === fs1.size => { // TODO[optional-fields] generalize (coerce compatible tuples)
+          case (TupleType(fs0), TupleType(fs1)) if fs0.sizeCompare(fs1) <= 0 && fs0.sizeCompare(fs1.filter(x => !x._2.opt)) >= 0 => { // TODO[optional-fields] generalize (coerce compatible tuples)
             println("case #1")
 
             fs0.lazyZip(fs1).foreach { case ((ln, l), (rn, r)) =>

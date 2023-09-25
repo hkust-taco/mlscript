@@ -430,7 +430,7 @@ abstract class TyperHelpers { Typer: Typer =>
         println("case #2")
 
         // TODO[optional-fields] update this condition
-        if (fs0.sizeCompare(fs1) =/= 0) BotType
+        if (fs0.sizeCompare(fs1) > 0 || fs0.sizeCompare(fs1.filter(x => !x._2.opt)) < 0) BotType
         else TupleType(tupleIntersection(fs0, fs1))(t0.prov)
       }
       case _ if !swapped => that & (this, prov, swapped = true)

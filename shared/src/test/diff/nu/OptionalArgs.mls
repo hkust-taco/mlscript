@@ -260,6 +260,7 @@ let y: C1 = x
 //│ res
 //│     = [ 1, 2, 3 ]
 
+// FIXME
 [1, 2]: [Int, Int, Int?]
 //│ (Int, Int, Int,)
 //│ res
@@ -284,6 +285,16 @@ fun foo: [Int] | [Int, Int?]
 //│ fun foo: Array[Int] & {_1: Int}
 
 fun foo: [Int] & [Int, Int?]
-//│ fun foo: nothing
+//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
+//│ 	at: scala.Predef$.require(Predef.scala:324)
+//│ 	at: mlscript.TyperHelpers.tupleIntersection(TyperHelpers.scala:135)
+//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.$amp(TyperHelpers.scala:434)
+//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.$amp$(TyperHelpers.scala:411)
+//│ 	at: mlscript.TyperDatatypes$SimpleType.$amp(TyperDatatypes.scala:155)
+//│ 	at: mlscript.Typer.$anonfun$typeType2$17(Typer.scala:445)
+//│ 	at: mlscript.Typer.$anonfun$typeType2$11(Typer.scala:447)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.Typer.rec$1(Typer.scala:604)
+//│ 	at: mlscript.Typer.$anonfun$typeType2$2(Typer.scala:605)
 
 
