@@ -206,6 +206,9 @@ code"${code"${z}"}"
 
 :e
 code"let x = 1 in let z = 1 in code"x + y""
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.208: 	code"let x = 1 in let z = 1 in code"x + y""
+//│ ╙──       	                                    ^
 //│ ╔══[ERROR] identifier not found: y
 //│ ║  l.208: 	code"let x = 1 in let z = 1 in code"x + y""
 //│ ╙──       	                                        ^
@@ -218,7 +221,7 @@ code"let z = 0 in ${code"z + 1"}"
 :e
 code"let x = 1 in ${code"x + y"}"
 //│ ╔══[ERROR] identifier not found: y
-//│ ║  l.219: 	code"let x = 1 in ${code"x + y"}"
+//│ ║  l.222: 	code"let x = 1 in ${code"x + y"}"
 //│ ╙──       	                             ^
 //│ Code[Int, nothing]
 

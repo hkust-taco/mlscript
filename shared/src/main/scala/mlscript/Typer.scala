@@ -82,8 +82,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
     def ++=(bs: IterableOnce[Str -> TypeInfo]): Unit = bs.iterator.foreach(+=)
     def get(name: Str): Opt[TypeInfo] = env.get(name) orElse parent.dlof(_.get(name))(N)
     def qget(name: Str, qlvl: Int = quotedLvl): Opt[SkolemTag] =
-      if (qlvl === quotedLvl) qenv.get(name) orElse parent.dlof(_.qget(name, quotedLvl))(N)
-      else parent.dlof(_.qget(name, quotedLvl))(N)
+      if (qlvl === quotedLvl) qenv.get(name) orElse parent.dlof(_.qget(name, qlvl))(N)
+      else parent.dlof(_.qget(name, qlvl))(N)
     def wrapCode: Ls[(Str, TypeInfo)] = qenv.flatMap {
       case (name, tag) =>
         env.get(name) match {
