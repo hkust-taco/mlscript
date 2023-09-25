@@ -23,7 +23,7 @@ code"x => y => 100 + code"${Const(x + y)}""
 
 
 let res = code"x => code"${x}""
-//│ let res: Code[forall 'a 'b. Code['a, 'b] -> Code['a, 'b], nothing]
+//│ let res: Code[forall 'a 'b. Code['b, 'a] -> Code['b, 'a], nothing]
 
 run(res)(code"1")
 //│ Code[1, nothing]

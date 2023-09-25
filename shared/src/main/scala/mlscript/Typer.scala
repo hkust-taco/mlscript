@@ -1455,7 +1455,14 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
           val res = freshVar(noTyProv, N)
           val ctxTy = freshVar(noTyProv, N)
           val ty = con(bodyType, TypeRef(TypeName("Code"), res :: ctxTy :: Nil)(noProv), res)
-          ctx.traceFV(ctxTy & ctx.releaseFv)
+          val lbs = ctx.qenv.map(_._2).toSet
+          def bind(c: ST): Ls[ST] = c.unwrapProvs match {
+            case tag: SkolemTag if lbs(tag) => tag :: Nil
+            case tv: TypeVariable => tv._lowerBounds.flatMap(bind(_))
+            case ComposedType(true, lhs, rhs) => bind(lhs) ++ bind(rhs)
+            case _ => Nil
+          }
+          ctx.traceFV(bind(ctxTy).foldLeft[ST](ctxTy)((res, ty) => res & NegType(ty)(noProv)))
           ty
         }
         else err("Unquotes should be enclosed with a quasiquote.", body.toLoc)(raise)

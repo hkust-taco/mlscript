@@ -208,3 +208,7 @@ run(res)({x:1})
 
 code"x => ${ code"x" }"
 //│ Code[forall 'a. 'a -> 'a, nothing]
+
+
+run(code"x => x + ${x}")(1)
+//│ Int

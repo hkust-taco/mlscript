@@ -11,22 +11,26 @@ code"x => ${run(code"x")}"
 //│ ║  l.9: 	code"x => ${run(code"x")}"
 //│ ║       	            ^^^^^^^^^^^^
 //│ ╙── expression of type `?a` does not match type `nothing`
-//│ Code[forall 'a. Code['a, anything] -> 'a, nothing]
+//│ Code[forall 'a 'b. Code['a, 'b] -> 'a, 'b]
 
 
 // * FIXME type is wrong: it's not true that this accepts code with any context dependency and returns code with no context dependency
 fun test(cde) =
   code"x => x + ${cde}"
-//│ fun test: Code[Int, anything] -> Code[Int -> Int, nothing]
+//│ fun test: forall 'a. Code[Int, 'a] -> Code[Int -> Int, 'a]
 
-// :e // FIXME this should not type check
+:e
 code"y => ${ run(test(code"y")); code"0" }"
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.23: 	code"y => ${ run(test(code"y")); code"0" }"
+//│ ║        	             ^^^^^^^^^^^^^^^^^^
+//│ ╙── expression of type `?a` does not match type `nothing`
 //│ Code[Int -> 0, nothing]
 
 
 fun test(cde, f) =
   code"x => x + ${f(cde)}"
-//│ fun test: forall 'a. ('a, 'a -> Code[Int, anything]) -> Code[Int -> Int, nothing]
+//│ fun test: forall 'a 'b. ('a, 'a -> Code[Int, 'b]) -> Code[Int -> Int, 'b]
 
 run(test(code"1", id))
 //│ Int -> Int
@@ -34,23 +38,35 @@ run(test(code"1", id))
 
 fun test(cde: Code[Int, 'a], f: forall 'c: Code[Int, 'c] -> Code[Int, 'c]) =
   code"x => x + ${f(cde)}"
-//│ fun test: (cde: Code[Int, anything], f: forall 'c. Code[Int, 'c] -> Code[Int, 'c]) -> Code[Int -> Int, nothing]
+//│ fun test: forall 'a. (cde: Code[Int, 'a], f: forall 'c. Code[Int, 'c] -> Code[Int, 'c]) -> Code[Int -> Int, 'a]
 
 run(test(code"1", id))
 //│ Int -> Int
 
-// :e // FIXME this should not type check!
+:e
 code"x => ${ run(test(code"x", id)); code"x" }"
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.47: 	code"x => ${ run(test(code"x", id)); code"x" }"
+//│ ║        	             ^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `?a` does not match type `nothing`
+//│ ║  l.39: 	fun test(cde: Code[Int, 'a], f: forall 'c: Code[Int, 'c] -> Code[Int, 'c]) =
+//│ ╙──      	                        ^^
 //│ Code[forall 'a. (Int & 'a) -> 'a, nothing]
 
-// :e // FIXME this should not type check!
+:e
 code"x => ${ let c = code"x" in run(test(c, id)); c }"
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.57: 	code"x => ${ let c = code"x" in run(test(c, id)); c }"
+//│ ║        	                                ^^^^^^^^^^^^^^^^
+//│ ╟── type `?a` does not match type `nothing`
+//│ ║  l.39: 	fun test(cde: Code[Int, 'a], f: forall 'c: Code[Int, 'c] -> Code[Int, 'c]) =
+//│ ╙──      	                        ^^
 //│ Code[forall 'a. (Int & 'a) -> 'a, nothing]
 
 
 fun test(f) =
   code"x => x + ${f(code"x + 1")}"
-//│ fun test: (Code[Int, ??_] -> Code[Int, anything]) -> Code[Int -> Int, nothing]
+//│ fun test: forall 'a. (Code[Int, ??_] -> Code[Int, 'a]) -> Code[Int -> Int, 'a]
 
 
 let myrun = c => run(c)
@@ -59,26 +75,26 @@ let myrun = c => run(c)
 :e
 code"x => ${ test(myrun) }"
 //│ ╔══[ERROR] Type error in application
-//│ ║  l.60: 	code"x => ${ test(myrun) }"
+//│ ║  l.76: 	code"x => ${ test(myrun) }"
 //│ ║        	             ^^^^^^^^^^^
 //│ ╟── type variable `?a` leaks out of its scope
 //│ ╟── into type `nothing`
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this reference:
-//│ ║  l.52: 	  code"x => x + ${f(code"x + 1")}"
+//│ ║  l.68: 	  code"x => x + ${f(code"x + 1")}"
 //│ ╙──      	                  ^
 //│ Code[anything -> Int -> Int, nothing]
 
 :e
 code"x => ${ test(c => run(c); code"0") }"
 //│ ╔══[ERROR] Type error in application
-//│ ║  l.73: 	code"x => ${ test(c => run(c); code"0") }"
+//│ ║  l.89: 	code"x => ${ test(c => run(c); code"0") }"
 //│ ║        	             ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `?a` leaks out of its scope
 //│ ╟── into type `nothing`
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this reference:
-//│ ║  l.52: 	  code"x => x + ${f(code"x + 1")}"
+//│ ║  l.68: 	  code"x => x + ${f(code"x + 1")}"
 //│ ╙──      	                  ^
 //│ Code[anything -> Int -> Int, nothing]
 
@@ -86,13 +102,13 @@ code"x => ${ test(c => run(c); code"0") }"
 :e
 code"x => ${ test(c => run(c); code"x") }"
 //│ ╔══[ERROR] Type error in application
-//│ ║  l.87: 	code"x => ${ test(c => run(c); code"x") }"
-//│ ║        	             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.103: 	code"x => ${ test(c => run(c); code"x") }"
+//│ ║         	             ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `?a` leaks out of its scope
 //│ ╟── into type `nothing`
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this reference:
-//│ ║  l.52: 	  code"x => x + ${f(code"x + 1")}"
+//│ ║  l.68: 	  code"x => x + ${f(code"x + 1")}"
 //│ ╙──      	                  ^
 //│ Code[anything -> Int -> Int, nothing]
 
@@ -100,14 +116,14 @@ code"x => ${ test(c => run(c); code"x") }"
 :e
 fun test2(a) = code"x => ${ test(c => run(c); a) }"
 //│ ╔══[ERROR] Type error in application
-//│ ║  l.101: 	fun test2(a) = code"x => ${ test(c => run(c); a) }"
+//│ ║  l.117: 	fun test2(a) = code"x => ${ test(c => run(c); a) }"
 //│ ║         	                            ^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `?a` leaks out of its scope
 //│ ╟── into type `nothing`
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this reference:
-//│ ║  l.52: 	  code"x => x + ${f(code"x + 1")}"
+//│ ║  l.68: 	  code"x => x + ${f(code"x + 1")}"
 //│ ╙──      	                  ^
-//│ fun test2: Code[Int, anything] -> Code[anything -> Int -> Int, nothing]
+//│ fun test2: forall 'a. Code[Int, 'a] -> Code[anything -> Int -> Int, 'a]
 
 
