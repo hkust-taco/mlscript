@@ -38,6 +38,11 @@ class DiffTestCompiler extends DiffTests {
         outputBuilder ++= "\n"
       }catch{
         case error: MonomorphError => outputBuilder ++= (error.getMessage() :: error.getStackTrace().map(_.toString()).toList).mkString("\n")
+        case e : Throwable => 
+          throw Error(
+              e.getStackTrace().take(20
+              ).map("\n" + "\tat: " + _).mkString+"\n"+
+              treeDebug.getLines.foldLeft("")((acc, str) => acc + str + "\n"))
         // case error: StackOverflowError => outputBuilder ++= (error.getMessage() :: error.getStackTrace().take(40).map(_.toString()).toList).mkString("\n")
       }
       // outputBuilder ++= treeDebug.getLines.mkString("\n")

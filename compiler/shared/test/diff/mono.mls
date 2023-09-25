@@ -840,17 +840,70 @@ class Sub2(c): Sub(c+c){
 (new Sub2(c)).foo()
 //│ |#class| |Sup|(|a|)|{|→|#fun| |foo| |#=| |a|←|↵|}|↵|#class| |Sub|(|b|)|#:| |Sup|(|b|+|b|)|{|↵|}|↵|#class| |Sub2|(|c|)|#:| |Sub|(|c|+|c|)|{|→|#fun| |foo| |#=| |a|+|c|←|↵|}|↵|(|#new| |Sub|(|10|)|)|.foo|(||)|↵|(|#new| |Sub2|(|c|)|)|.foo|(||)|
 //│ Parsed: {class Sup(a,) {fun foo = a}; class Sub(b,): Sup[+[b, b]] {}; class Sub2(c,): Sub[+[c, c]] {fun foo = +(a, c,)}; ('(' new Sub([10,]) {} ')').foo(); ('(' new Sub2([c,]) {} ')').foo()}
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: None.get
+//│ 
 //│ 	at: scala.None$.get(Option.scala:627)
 //│ 	at: scala.None$.get(Option.scala:626)
-//│ 	at: mlscript.compiler.mono.Monomorph.getFieldVal$$anonfun$1(Monomorph.scala:300)
+//│ 	at: mlscript.compiler.mono.Monomorph.getFieldVal$$anonfun$1(Monomorph.scala:303)
 //│ 	at: mlscript.compiler.debug.RainbowDebug.trace(RainbowDebug.scala:21)
-//│ 	at: mlscript.compiler.mono.Monomorph.getFieldVal(Monomorph.scala:306)
+//│ 	at: mlscript.compiler.mono.Monomorph.getFieldVal(Monomorph.scala:309)
 //│ 	at: mlscript.compiler.mono.specializer.Specializer.$anonfun$5(Specializer.scala:77)
 //│ 	at: scala.collection.StrictOptimizedIterableOps.map(StrictOptimizedIterableOps.scala:100)
 //│ 	at: scala.collection.StrictOptimizedIterableOps.map$(StrictOptimizedIterableOps.scala:87)
 //│ 	at: scala.collection.immutable.Set$Set1.map(Set.scala:156)
 //│ 	at: mlscript.compiler.mono.specializer.Specializer.evaluate(Specializer.scala:80)
+//│ 	at: mlscript.compiler.mono.specializer.Specializer.evaluate(Specializer.scala:43)
+//│ 	at: mlscript.compiler.mono.Monomorph.updateFunc(Monomorph.scala:203)
+//│ 	at: mlscript.compiler.mono.Monomorph.updateFunction(Monomorph.scala:139)
+//│ 	at: mlscript.compiler.mono.Monomorph.defunctionalize(Monomorph.scala:114)
+//│ 	at: mlscript.compiler.DiffTestCompiler.postProcess(Test.scala:35)
+//│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:432)
+//│ 	at: mlscript.DiffTests.$anonfun$new$3(DiffTests.scala:1055)
+//│ 	at: org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
+//│ 	at: org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
+//│ 	at: org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)
+//│ [mono] ┌────┬──────────────────────────┐
+//│ │ 1 │ main$$3()                │
+//│ │ 2 │ main$$4()                │
+//│ │ 3 │ fun main$$4() =          │
+//│ │ 4 │   new Sub2$3 (c) .foo()  │
+//│ │ 5 │ fun main$$3() =          │
+//│ │ 6 │   new Sub$2 (#10) .foo() │
+//│ │ 7 │ class Sub2$3(c) {        │
+//│ │ 8 │ }                        │
+//│ │ 9 │ class Sup$1(a) {         │
+//│ │ 10 │ }                        │
+//│ │ 11 │ class Sub$2(b) {         │
+//│ │ 12 │ }                        │
+//│ └────┴──────────────────────────┘
+//│ [mono] evaluating main$$4, rests: HashSet(main$$3)
+//│ [mono] ========== updating main$$4 ==========
+//│ [mono] main$$4: () -> *49*=[*49*=...] @{}
+//│ [mono] ┌ SPEC NEW Sub2$3(List([?74?]))
+//│ [mono] │ par objs: List()
+//│ [mono] └ SPEC NEW Sub2$3@{c: [?74?]}
+//│ [mono] ┌ SPEC SEL Sub2$3@{c: [?74?]} :: foo
+//│ [mono] │ defined
+//│ [mono] └ SPEC SEL [foo$Sub2$3() given {this: [Sub2$3@{c: [?74?]}]}]
+//│ [mono] ┌ SPEC CALL foo$Sub2$3 with ([Sub2$3@{c: [?74?]}])
+//│ [mono] │ comparing ([]) with (Plain([Sub2$3@{c: [?74?]}]))
+//│ [mono] │ first time encounter foo$Sub2$3
+//│ [mono] │ evaluating foo$Sub2$3, rests: HashSet(main$$3)
+//│ [mono] │ ========== updating foo$Sub2$3 ==========
+//│ [mono] │ foo$Sub2$3: ([Sub2$3@{c: [?74?]}]) -> *50*=[*50*=...] @{main$$4}
+//│ [mono] │ comparing [*50*=...] with [?77?]
+//│ [mono] │ foo$Sub2$3: ([Sub2$3@{c: [?74?]}]) -> *50*=[?77?] @{main$$4}
+//│ [mono] └ SPEC CALL [*50*=[?77?]]
+//│ [mono] comparing [*49*=...] with [*50*=[?77?]]
+//│ [mono] main$$4: () -> *49*=[*50*=[?77?]] @{}
+//│ [mono] evaluating main$$3, rests: HashSet()
+//│ [mono] ========== updating main$$3 ==========
+//│ [mono] main$$3: () -> *48*=[*48*=...] @{}
+//│ [mono] ┌ SPEC NEW Sub$2(List([10]))
+//│ [mono] │ par objs: List()
+//│ [mono] └ SPEC NEW Sub$2@{b: [10]}
+//│ [mono] ┌ SPEC SEL Sub$2@{b: [10]} :: foo
+//│ [mono] │ else
+//│ 
 
 :mono
 class Foo(f){
@@ -862,14 +915,47 @@ class F2(): Foo(x => x+2){}
 (new F2()).foo()
 //│ |#class| |Foo|(|f|)|{|→|#fun| |foo| |#=| |f|(|1|)|←|↵|}|↵|#class| |F1|(||)|#:| |Foo|(|x| |=>| |x|+|1|)|{||}|↵|#class| |F2|(||)|#:| |Foo|(|x| |=>| |x|+|2|)|{||}|↵|(|#new| |F1|(||)|)|.foo|(||)|↵|(|#new| |F2|(||)|)|.foo|(||)|
 //│ Parsed: {class Foo(f,) {fun foo = f(1,)}; class F1(): Foo[x -> +[x, 1]] {}; class F2(): Foo[x -> +[x, 2]] {}; ('(' new F1([]) {} ')').foo(); ('(' new F2([]) {} ')').foo()}
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: None.get
+//│ 
 //│ 	at: scala.None$.get(Option.scala:627)
 //│ 	at: scala.None$.get(Option.scala:626)
-//│ 	at: mlscript.compiler.mono.Monomorph.getFieldVal$$anonfun$1(Monomorph.scala:300)
+//│ 	at: mlscript.compiler.mono.Monomorph.getFieldVal$$anonfun$1(Monomorph.scala:303)
 //│ 	at: mlscript.compiler.debug.RainbowDebug.trace(RainbowDebug.scala:21)
-//│ 	at: mlscript.compiler.mono.Monomorph.getFieldVal(Monomorph.scala:306)
+//│ 	at: mlscript.compiler.mono.Monomorph.getFieldVal(Monomorph.scala:309)
 //│ 	at: mlscript.compiler.mono.specializer.Specializer.$anonfun$5(Specializer.scala:77)
 //│ 	at: scala.collection.StrictOptimizedIterableOps.map(StrictOptimizedIterableOps.scala:100)
 //│ 	at: scala.collection.StrictOptimizedIterableOps.map$(StrictOptimizedIterableOps.scala:87)
 //│ 	at: scala.collection.immutable.Set$Set1.map(Set.scala:156)
 //│ 	at: mlscript.compiler.mono.specializer.Specializer.evaluate(Specializer.scala:80)
+//│ 	at: mlscript.compiler.mono.specializer.Specializer.evaluate(Specializer.scala:43)
+//│ 	at: mlscript.compiler.mono.Monomorph.updateFunc(Monomorph.scala:203)
+//│ 	at: mlscript.compiler.mono.Monomorph.updateFunction(Monomorph.scala:139)
+//│ 	at: mlscript.compiler.mono.Monomorph.defunctionalize(Monomorph.scala:114)
+//│ 	at: mlscript.compiler.DiffTestCompiler.postProcess(Test.scala:35)
+//│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:432)
+//│ 	at: mlscript.DiffTests.$anonfun$new$3(DiffTests.scala:1055)
+//│ 	at: org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
+//│ 	at: org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
+//│ 	at: org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)
+//│ [mono] ┌────┬──────────────────────┐
+//│ │ 1 │ main$$3()            │
+//│ │ 2 │ main$$4()            │
+//│ │ 3 │ fun main$$4() =      │
+//│ │ 4 │   new F2$3 () .foo() │
+//│ │ 5 │ fun main$$3() =      │
+//│ │ 6 │   new F1$2 () .foo() │
+//│ │ 7 │ class F1$2() {       │
+//│ │ 8 │ }                    │
+//│ │ 9 │ class F2$3() {       │
+//│ │ 10 │ }                    │
+//│ │ 11 │ class Foo$1(f) {     │
+//│ │ 12 │ }                    │
+//│ └────┴──────────────────────┘
+//│ [mono] evaluating main$$4, rests: HashSet(main$$3)
+//│ [mono] ========== updating main$$4 ==========
+//│ [mono] main$$4: () -> *52*=[*52*=...] @{}
+//│ [mono] ┌ SPEC NEW F2$3(List())
+//│ [mono] │ par objs: List()
+//│ [mono] └ SPEC NEW F2$3@{}
+//│ [mono] ┌ SPEC SEL F2$3@{} :: foo
+//│ [mono] │ else
+//│ 

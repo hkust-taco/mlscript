@@ -277,6 +277,7 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
         case _ => None
       }.headOption
       if(func.isDefined){
+        debug.log("defined")
         val Item.FuncDecl(nm, prms, bd) = func.get
         val nFuncName = s"${nm.name}$$${obj.name}"
         if(!funImpls.contains(nFuncName)){
@@ -286,8 +287,10 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
         BoundedExpr(FunctionValue(nFuncName, prms.map(_._2.name), List("this" -> BoundedExpr(obj))))
       }
       else if(obj.fields.contains(field))
+        debug.log("contains")
         obj.fields.get(field).get
       else{
+        debug.log("else")
         obj.fields.flatMap(x => {
           if (x._1.matches("sup\\$[0-9]+")) {
             x._2.asValue match{
