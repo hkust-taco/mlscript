@@ -1058,12 +1058,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
                   })
                 case _ => die // FIXME happens when lhs of function type is not TupleType(possible?)
               }
-              desugarNamedArgs(term, f, a, argsList)
+              desugarNamedArgs(term, f, a, argsList, f_ty)
             }
           case x :: y :: _ => 
-            err("More than 1 function definition found for function call", f.toLoc)
+            err(msg"More than one function signature found in type `${f_ty.expPos}` for function call with named arguments", f.toLoc)
           case Nil =>
-            err("Cannot retrieve any function type for applying named arguments", f.toLoc)
+            err(msg"Cannot retrieve appropriate function signature from type `${f_ty.expPos}` for applying named arguments", f.toLoc)
         }
       case App(f, a) =>
         val f_ty = typeMonomorphicTerm(f)
@@ -1598,16 +1598,16 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         RecordType.mk(fs)(prov)
       } else TupleType(fields.reverseIterator.mapValues(_.toUpper(noProv)))(prov)
   }
-
-  def getNewVarName(prefix: String, nonValidVars: Set[Var]): String = {
-    // we check all possibe prefix_num combination, till we found one that is not in the nonValidVars
+  
+  def getNewVarName(prefix: Str, nonValidVars: Set[Var]): Str = {
+    // we check all possibe prefix_num combination, till we find one that is not in the nonValidVars
     val ints = LazyList.from(1)
     prefix + "_" + ints.find(index => {
       !nonValidVars.contains(Var(prefix + "_" + index))
-    }).get
+    }).getOrElse(die)
   }
-
-  def desugarNamedArgs(term: Term, f: Term, a: Tup, argsList: List[Var])
+  
+  def desugarNamedArgs(term: Term, f: Term, a: Tup, argsList: List[Var], f_ty: ST)
   (implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType]): SimpleType = {
     def rec (as: List[(String -> Fld) -> Boolean], acc: Map[String, Either[Var, Term]]): Term = {
       as match {
@@ -1629,7 +1629,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
               case Some(Left(v)) => (None, Fld(FldFlags.empty, v))
               case Some(Right(t)) => (None, Fld(FldFlags.empty, t))
               case None =>
-                err(s"Argument named ${x} is missing from this function call", a.toLoc)
+                err(msg"Argument named '${x.name}' is missing from this function call", a.toLoc)
                 (None, Fld(FldFlags.empty, Var("error")))
             }
           ))
@@ -1642,7 +1642,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
     if (hasDefined &&
         hasEmpty && 
         areArgsMisplaced) {
-      err("Unnamed arguments should appear first when using named arguments", a.toLoc) 
+      err(msg"Unnamed arguments should appear first when using named arguments", a.toLoc) 
     } else 
       a.fields.sizeCompare(argsList) match {
         case 0 =>
@@ -1658,7 +1658,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
           if (asGroupedByVarName.sizeCompare(argsList) < 0) {
             asGroupedByVarName.foreach(x =>
               x._2 match {
-                case x1 :: y1 :: xs => err(s"Argument for parameter ${x._1} is duplicated", a.toLoc) 
+                case x1 :: y1 :: xs => err(msg"Argument for parameter '${x._1}' is duplicated", a.toLoc) 
                 case _ =>
               })
           }
@@ -1667,7 +1667,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
           term.desugaredTerm = S(desugared)
           typeTerm(desugared)(ctx = ctx, raise = raise, vars = vars, genLambdas = false)
         case _ =>
-          err("Number of arguments dosen't match with the function signature", a.toLoc)
+          err(msg"Number of arguments doesn't match function signature `${f_ty.expPos}`", a.toLoc)
       }
   }
   

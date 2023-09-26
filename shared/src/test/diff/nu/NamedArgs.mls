@@ -20,7 +20,7 @@ test(x: 0, 1)
 
 :e
 test(y: 0)
-//│ ╔══[ERROR] Argument named x is missing from this function call
+//│ ╔══[ERROR] Argument named 'x' is missing from this function call
 //│ ║  l.22: 	test(y: 0)
 //│ ╙──      	    ^^^^^^
 //│ Int
@@ -43,7 +43,7 @@ test(x: 1, 2)
 
 :e
 test(x: 1, z: 3)
-//│ ╔══[ERROR] Argument named y is missing from this function call
+//│ ╔══[ERROR] Argument named 'y' is missing from this function call
 //│ ║  l.45: 	test(x: 1, z: 3)
 //│ ╙──      	    ^^^^^^^^^^^^
 //│ [1, nothing]
@@ -53,7 +53,7 @@ test(x: 1, z: 3)
 
 :e
 test(y: 0)
-//│ ╔══[ERROR] Number of arguments dosen't match with the function signature
+//│ ╔══[ERROR] Number of arguments doesn't match function signature `forall 'a 'b. (x: 'a, y: 'b) -> ['a, 'b]`
 //│ ║  l.55: 	test(y: 0)
 //│ ╙──      	    ^^^^^^
 //│ error
@@ -62,10 +62,10 @@ test(y: 0)
 
 :e
 test(1, x: 0)
-//│ ╔══[ERROR] Argument for parameter x is duplicated
+//│ ╔══[ERROR] Argument for parameter 'x' is duplicated
 //│ ║  l.64: 	test(1, x: 0)
 //│ ╙──      	    ^^^^^^^^^
-//│ ╔══[ERROR] Argument named y is missing from this function call
+//│ ╔══[ERROR] Argument named 'y' is missing from this function call
 //│ ║  l.64: 	test(1, x: 0)
 //│ ╙──      	    ^^^^^^^^^
 //│ [0, nothing]
@@ -98,7 +98,7 @@ id(if true then test else error)(0, y: 1)
 
 :e
 id(if true then test else id)(0, y: 1)
-//│ ╔══[ERROR] Cannot retrieve any function type for applying named arguments
+//│ ╔══[ERROR] Cannot retrieve appropriate function signature from type `?a` for applying named arguments
 //│ ║  l.100: 	id(if true then test else id)(0, y: 1)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ error
@@ -286,7 +286,7 @@ z.y
 
 :e
 (f => f(x: a))
-//│ ╔══[ERROR] Cannot retrieve any function type for applying named arguments
+//│ ╔══[ERROR] Cannot retrieve appropriate function signature from type `?a` for applying named arguments
 //│ ║  l.288: 	(f => f(x: a))
 //│ ╙──       	      ^
 //│ anything -> error
@@ -295,7 +295,7 @@ z.y
 
 :e
 (f => f)(error)(x: a)
-//│ ╔══[ERROR] Cannot retrieve any function type for applying named arguments
+//│ ╔══[ERROR] Cannot retrieve appropriate function signature from type `?a` for applying named arguments
 //│ ║  l.297: 	(f => f)(error)(x: a)
 //│ ╙──       	^^^^^^^^^^^^^^^
 //│ error
@@ -304,7 +304,7 @@ z.y
 
 :e
 (f => f)(42)(x: a)
-//│ ╔══[ERROR] Cannot retrieve any function type for applying named arguments
+//│ ╔══[ERROR] Cannot retrieve appropriate function signature from type `?a` for applying named arguments
 //│ ║  l.306: 	(f => f)(42)(x: a)
 //│ ╙──       	^^^^^^^^^^^^
 //│ error
@@ -313,7 +313,7 @@ z.y
 
 :e
 (f => f)(if true then 123 else false)(x: a)
-//│ ╔══[ERROR] Cannot retrieve any function type for applying named arguments
+//│ ╔══[ERROR] Cannot retrieve appropriate function signature from type `?a` for applying named arguments
 //│ ║  l.315: 	(f => f)(if true then 123 else false)(x: a)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ error
@@ -327,7 +327,7 @@ z.y
 
 :e
 (f => if true then f else id)(if true then (x: Int) => x + 1 else id)(x: 123)
-//│ ╔══[ERROR] Cannot retrieve any function type for applying named arguments
+//│ ╔══[ERROR] Cannot retrieve appropriate function signature from type `?a` for applying named arguments
 //│ ║  l.329: 	(f => if true then f else id)(if true then (x: Int) => x + 1 else id)(x: 123)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ error
@@ -336,7 +336,7 @@ z.y
 
 :e
 (f => if true then f else id)(if true then (x: Int) => x + 1 else (x: Int) => x + 1)(x: 123)
-//│ ╔══[ERROR] Cannot retrieve any function type for applying named arguments
+//│ ╔══[ERROR] Cannot retrieve appropriate function signature from type `?a` for applying named arguments
 //│ ║  l.338: 	(f => if true then f else id)(if true then (x: Int) => x + 1 else (x: Int) => x + 1)(x: 123)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ error
@@ -348,7 +348,7 @@ fun foo(f: (x: Int) => Int) = f(x: 123)
 //│ fun foo: (f: (x: Int) -> Int) -> Int
 
 fun foo(f: ((x: Int) => Int) & 'a) = [f(x: 123), f]
-//│ fun foo: forall 'b 'a. (f: (x: Int) -> Int & 123 -> 'b & 'a) -> ['b, (x: Int) -> Int & 'a]
+//│ fun foo: forall 'a 'b. (f: (x: Int) -> Int & 123 -> 'b & 'a) -> ['b, (x: Int) -> Int & 'a]
 
 foo((x: Int) => 1)
 //│ [1, (x: Int) -> 1]
@@ -358,7 +358,7 @@ foo((x: Int) => 1)
 
 :e
 fun foo(f: ((x: Int) => Int) | 'a) = f(x: 123)
-//│ ╔══[ERROR] Cannot retrieve any function type for applying named arguments
+//│ ╔══[ERROR] Cannot retrieve appropriate function signature from type `'a | (x: Int) -> Int` for applying named arguments
 //│ ║  l.360: 	fun foo(f: ((x: Int) => Int) | 'a) = f(x: 123)
 //│ ╙──       	                                     ^
 //│ fun foo: (f: anything) -> error
@@ -367,7 +367,7 @@ fun foo(f: ((x: Int) => Int) | 'a) = f(x: 123)
 // * the result of the if-then-else is a TV with two LBs: the type of x and the function type
 :e
 fun foo(x) = (if true then (x: Int) => x + 1 else x)(x: 123)
-//│ ╔══[ERROR] Cannot retrieve any function type for applying named arguments
+//│ ╔══[ERROR] Cannot retrieve appropriate function signature from type `(x: Int) -> ?a | ?b` for applying named arguments
 //│ ║  l.369: 	fun foo(x) = (if true then (x: Int) => x + 1 else x)(x: 123)
 //│ ╙──       	             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ fun foo: anything -> error
@@ -378,13 +378,21 @@ foo((y: Int) => y)
 //│     = 124
 
 
+:e // TODO later: this could be made to work...
+fun foo(x) = (if true then (x: Int) => x + 1 else (x: Int) => x + 1)(x: 123)
+//│ ╔══[ERROR] Cannot retrieve appropriate function signature from type `(x: Int) -> (?a | ?b)` for applying named arguments
+//│ ║  l.382: 	fun foo(x) = (if true then (x: Int) => x + 1 else (x: Int) => x + 1)(x: 123)
+//│ ╙──       	             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ fun foo: anything -> error
+
+
 fun foo(x) = if true then (x: Int) => x + 1 else x
 //│ fun foo: forall 'a. 'a -> ((x: Int) -> Int | 'a)
 
 :e
 foo((y: Int) => y)(x: 123)
-//│ ╔══[ERROR] Cannot retrieve any function type for applying named arguments
-//│ ║  l.385: 	foo((y: Int) => y)(x: 123)
+//│ ╔══[ERROR] Cannot retrieve appropriate function signature from type `?a` for applying named arguments
+//│ ║  l.393: 	foo((y: Int) => y)(x: 123)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^
 //│ error
 //│ res
@@ -392,8 +400,8 @@ foo((y: Int) => y)(x: 123)
 
 :e
 foo((x: Int) => x - 1)(x: 123)
-//│ ╔══[ERROR] Cannot retrieve any function type for applying named arguments
-//│ ║  l.394: 	foo((x: Int) => x - 1)(x: 123)
+//│ ╔══[ERROR] Cannot retrieve appropriate function signature from type `?a` for applying named arguments
+//│ ║  l.402: 	foo((x: Int) => x - 1)(x: 123)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^
 //│ error
 //│ res
@@ -406,7 +414,7 @@ fun foo1(x) = [x + 1, x]
 :e
 foo1(x: 123)
 //│ ╔══[ERROR] Cannot use named arguments as the function type has untyped arguments
-//│ ║  l.407: 	foo1(x: 123)
+//│ ║  l.415: 	foo1(x: 123)
 //│ ╙──       	    ^^^^^^^^
 //│ error
 //│ res
