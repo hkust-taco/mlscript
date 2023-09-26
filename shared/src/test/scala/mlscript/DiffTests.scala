@@ -567,8 +567,17 @@ class DiffTests
                 SimplifyPipeline(tpd, pol = S(true))(ctx)
               } finally typer.dbg = oldDbg
               
+              output(s"sim => ${sim}")
+
               val exp = typer.expandType(sim)(ctx)
               
+              output(s"exp => ${exp.getClass()}")
+              exp match {
+                case Signature(members, result) => 
+                  output(s"members => ${members}")
+                  output(s"result => ${result}")
+              }
+
               val expStr =
                 exp.showIn(ShowCtx.mk(exp :: Nil)
                     // .copy(newDefs = true) // TODO later

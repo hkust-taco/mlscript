@@ -1509,11 +1509,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
     val seenVars = mutable.Set.empty[TV]
     
     def field(ft: FieldType)(implicit ectx: ExpCtx): Field = ft match {
-      case FieldType(S(l: TV), u: TV, _) if l === u =>
+      case FieldType(S(l: TV), u: TV, opt) if l === u =>
         val res = go(u)
-        Field(S(res), res, false) // TODO improve Field
+        Field(S(res), res, opt) // TODO improve Field
       case f =>
-        Field(f.lb.map(go), go(f.ub), false)
+        Field(f.lb.map(go), go(f.ub), f.opt)
     }
     
     class ExpCtx(val tps: Map[TV, TN]) {
