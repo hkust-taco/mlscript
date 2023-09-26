@@ -321,7 +321,7 @@ class Lit(value)
 //│ Defined class BoolVal
 //│ Defined class Lit
 //│ Var: 'name -> (Var & {name: 'name})
-//│    = [Function: Var1]
+//│    = [Function: Var2]
 //│ ValBase: () -> ValBase
 //│        = [Function: ValBase1]
 //│ IntVal: 'value -> (IntVal & {value: 'value})

@@ -158,8 +158,8 @@ p = Pair {
 //│   rhs: Pair[?, ?] with {lhs: IntLit & {value: 2}, rhs: IntLit & {value: 3}}
 //│ }
 //│  = Pair {
-//│      lhs: IntLit { value: 1 },
-//│      rhs: Pair { lhs: IntLit { value: 2 }, rhs: IntLit { value: 3 } }
+//│      lhs: IntLit1 { value: 1 },
+//│      rhs: Pair { lhs: IntLit1 { value: 2 }, rhs: IntLit1 { value: 3 } }
 //│    }
 
 ep = eval p

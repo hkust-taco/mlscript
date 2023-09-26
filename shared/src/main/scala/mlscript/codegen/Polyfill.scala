@@ -176,6 +176,10 @@ object Polyfill {
     buffer += BuiltinFunc(
       "log", fn(_, param("x")) { `return` { id("console.info")(id("x")) } }
     )
+    // TODO: implement these methods
+    buffer += BuiltinFunc("run", fn(_, param("code"), param("ctx")) { `return` { id("undefined") } } )
+    buffer += BuiltinFunc("freshVar", fn(_, param("x")) { `return` { id("undefined") } })
+    buffer += BuiltinFunc("Const", fn(_, param("x")) { `return` { id("x") } })
     buffer.toList
   }
 

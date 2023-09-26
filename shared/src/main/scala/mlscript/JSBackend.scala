@@ -171,6 +171,79 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     case _ => throw CodeGenError(s"ill-formed application ${inspect(term)}")
   }
 
+  private def createASTCall(tp: Str, args: Ls[Term]): App =
+    App(Var(tp), Tup(args.map(a => N -> Fld(FldFlags.empty, a))))
+
+  private def desugarQuote(term: Term)(implicit scope: Scope, isQuoted: Bool, freeVars: MutSet[Str]): Term = term match {
+    case Var(name) if isQuoted || freeVars(name) => createASTCall("Var", StrLit(scope.resolveValue(name).fold[Str](
+      throw CodeGenError(s"unbound free variable $name is not supported yet.")
+    )(_.runtimeName)) :: Nil)
+    case lit @ IntLit(value) if isQuoted => createASTCall("IntLit", lit :: Nil)
+    case lit @ DecLit(value) if isQuoted => createASTCall("DecLit", lit :: Nil)
+    case lit @ StrLit(value) if isQuoted => createASTCall("StrLit", lit :: Nil)
+    case lit @ UnitLit(value) if isQuoted => createASTCall("UnitLit", lit :: Nil)
+    case Lam(params, body) =>
+      if (isQuoted) {
+        val lamScope = scope.derive("Lam")
+        val res = params match {
+          case Tup(params) =>
+            val newfreeVars = params.map {
+              case N -> Fld(_, Var(nme)) =>
+                lamScope.declareParameter(nme)
+                nme -> lamScope.declareValue(nme, S(false), false, N).runtimeName
+              case _ => ??? // TODO
+            }
+            newfreeVars.foldRight(desugarQuote(body)(lamScope, isQuoted, freeVars ++ newfreeVars.map(_._1)))((p, res) =>
+              Let(false, Var(p._2), createASTCall("freshVar", StrLit(p._1) :: Nil), res))
+          case _  => throw CodeGenError(s"term $params is not a valid parameter list")
+        }
+        createASTCall("Lam", res :: Nil)
+      }
+      else Lam(params, desugarQuote(body))
+    case Unquoted(body) if isQuoted =>
+      val unquoteScope = scope.derive("unquote")
+      desugarQuote(body)(unquoteScope, false, freeVars)
+    case Quoted(body) =>
+      val quoteScope = scope.derive("quote")
+      desugarQuote(body)(quoteScope, true, MutSet.empty)
+    case App(App(Var(op), Tup((N -> Fld(_, lhs)) :: Nil)), Tup((N -> Fld(_, rhs)) :: Nil))
+        if JSBinary.operators contains op =>
+      if (isQuoted)
+        createASTCall("App", createASTCall("Var", StrLit(op) :: Nil) :: desugarQuote(lhs) :: desugarQuote(rhs) :: Nil)
+      else
+        App(desugarQuote(lhs), desugarQuote(rhs))
+    case App(Var(op), Tup(N -> Fld(_, lhs) :: N -> Fld(_, rhs) :: Nil))
+        if JSBinary.operators.contains(op) && !translateVarImpl(op, isCallee = true).isRight =>
+      if (isQuoted)
+        createASTCall("App", createASTCall("Var", StrLit(op) :: Nil) :: desugarQuote(lhs) :: desugarQuote(rhs) :: Nil)
+      else
+        App(desugarQuote(lhs), desugarQuote(rhs))
+    case App(lhs, Tup(params)) =>
+      if (isQuoted)
+        createASTCall("App", desugarQuote(lhs) :: (params map { case (_, Fld(_, arg)) => desugarQuote(arg) }))
+      else
+        App(desugarQuote(lhs), Tup(params map { case (v, Fld(f, arg)) => v -> Fld(f, desugarQuote(arg)) }))
+    case Rcd(fields) =>
+      if (isQuoted) createASTCall("Rcd", fields.flatMap(f => createASTCall("Var", StrLit(f._1.name) :: Nil) :: desugarQuote(f._2.value) :: Nil))
+      else Rcd(fields.map(f => (f._1, Fld(f._2.flags, desugarQuote(f._2.value)))))
+    case Bra(rcd, trm) =>
+      if (isQuoted) createASTCall("Bra", desugarQuote(trm) :: Nil)
+      else Bra(rcd, desugarQuote(trm))
+    case Sel(receiver, f @ Var(name)) =>
+      if (isQuoted) createASTCall("Sel", desugarQuote(receiver) :: createASTCall("Var", StrLit(name) :: Nil) :: Nil)
+      else Sel(desugarQuote(receiver), f)
+    case Let(rec, Var(name), value, body) =>
+      val letScope = scope.derive("Let")
+      if (isQuoted) {
+        letScope.declareParameter(name)
+        val freshedName = letScope.declareValue(name, S(false), false, N).runtimeName
+        // TODO: bind value
+        Let(false, Var(freshedName), createASTCall("freshVar", StrLit(name) :: Nil), desugarQuote(body)(letScope, isQuoted, freeVars))
+      }
+      else Let(rec, Var(name), desugarQuote(value), desugarQuote(body)(letScope, isQuoted, freeVars))
+    case _ => term
+  }
+
   /**
     * Translate MLscript terms into JavaScript expressions.
     */
@@ -305,7 +378,9 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     case TyApp(base, _) => translateTerm(base)
     case Eqn(Var(name), _) =>
       throw CodeGenError(s"assignment of $name is not supported outside a constructor")
-    case _: Bind | _: Test | If(_, _)  | _: Splc | _: Where | _: AdtMatchWith | _: Quoted | _: Unquoted =>
+    case Quoted(body) =>
+      translateTerm(desugarQuote(body)(scope.derive("desugar"), true, MutSet.empty))(scope.derive("quote"))
+    case _: Bind | _: Test | If(_, _)  | _: Splc | _: Where | _: AdtMatchWith | _: Unquoted =>
       throw CodeGenError(s"cannot generate code for term ${inspect(term)}")
   }
 

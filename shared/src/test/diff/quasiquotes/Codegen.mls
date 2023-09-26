@@ -1,0 +1,128 @@
+:NewDefs
+
+
+:js
+:e
+code"x"
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.6: 	code"x"
+//│ ╙──     	     ^
+//│ Code[error, nothing]
+//│ Code generation encountered an error:
+//│   unbound free variable x is not supported yet.
+
+
+:js
+:ne
+code"x => x"
+//│ Code[forall 'a. 'a -> 'a, nothing]
+//│ // Prelude
+//│ function freshVar(x) {
+//│   return undefined;
+//│ }
+//│ let res;
+//│ class TypingUnit1 {}
+//│ const typing_unit1 = new TypingUnit1;
+//│ // Query 1
+//│ res = Lam(((x1) => Var("x1"))(freshVar("x")));
+//│ // End of generated code
+
+
+:js
+:ne
+code"x => ${x}"
+//│ Code[forall 'a. 'a -> 'a, nothing]
+//│ // Prelude
+//│ class TypingUnit2 {}
+//│ const typing_unit2 = new TypingUnit2;
+//│ // Query 1
+//│ res = Lam(((x1) => Var("x1"))(freshVar("x")));
+//│ // End of generated code
+
+
+:js
+:ne
+code"x => ${id(code"x")}"
+//│ Code[forall 'a. 'a -> 'a, nothing]
+//│ // Prelude
+//│ function id(x) {
+//│   return x;
+//│ }
+//│ class TypingUnit3 {}
+//│ const typing_unit3 = new TypingUnit3;
+//│ // Query 1
+//│ res = Lam(((x1) => id(Var("x1")))(freshVar("x")));
+//│ // End of generated code
+
+
+:js
+:ne
+code"1 + 2"
+//│ Code[Int, nothing]
+//│ // Prelude
+//│ class TypingUnit4 {}
+//│ const typing_unit4 = new TypingUnit4;
+//│ // Query 1
+//│ res = App(Var("+"), IntLit(1), IntLit(2));
+//│ // End of generated code
+
+
+:js
+:ne
+code"f => f(114)"
+//│ Code[forall 'a. (114 -> 'a) -> 'a, nothing]
+//│ // Prelude
+//│ class TypingUnit5 {}
+//│ const typing_unit5 = new TypingUnit5;
+//│ // Query 1
+//│ res = Lam(((f1) => App(Var("f1"), IntLit(114)))(freshVar("f")));
+//│ // End of generated code
+
+
+:js
+:ne
+code""" "come on! roach!" """
+//│ Code["come on! roach!", nothing]
+//│ // Prelude
+//│ class TypingUnit6 {}
+//│ const typing_unit6 = new TypingUnit6;
+//│ // Query 1
+//│ res = StrLit("come on! roach!");
+//│ // End of generated code
+
+
+:js
+:ne
+code"{x: 114, y: 514}"
+//│ Code[{x: 114, y: 514}, nothing]
+//│ // Prelude
+//│ class TypingUnit7 {}
+//│ const typing_unit7 = new TypingUnit7;
+//│ // Query 1
+//│ res = Bra(Rcd(Var("x"), IntLit(114), Var("y"), IntLit(514)));
+//│ // End of generated code
+
+
+:js
+:ne
+code"{x: 114}.x"
+//│ Code[114, nothing]
+//│ // Prelude
+//│ class TypingUnit8 {}
+//│ const typing_unit8 = new TypingUnit8;
+//│ // Query 1
+//│ res = Sel(Bra(Rcd(Var("x"), IntLit(114))), Var("x"));
+//│ // End of generated code
+
+
+// TODO: bind value
+:js
+:ne
+code"let x = 42 in x"
+//│ Code[42, nothing]
+//│ // Prelude
+//│ class TypingUnit9 {}
+//│ const typing_unit9 = new TypingUnit9;
+//│ // Query 1
+//│ res = ((x1) => Var("x1"))(freshVar("x"));
+//│ // End of generated code
