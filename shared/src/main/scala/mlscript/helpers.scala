@@ -21,12 +21,19 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
   def show: Str = showIn(ShowCtx.mk(this :: Nil), 0)
   
   private def parensIf(str: Str, cnd: Boolean): Str = if (cnd) "(" + str + ")" else str
-  private def showField(f: Field, ctx: ShowCtx): Str = f match {
+  private def showField(f: Field, ctx: ShowCtx): Str = {
+    val res = f match {
     case Field(N, ub, _) => ub.showIn(ctx, 0)
     case Field(S(lb), ub, _) if lb === ub => ub.showIn(ctx, 0)
     case Field(S(Bot), ub, _) => s"out ${ub.showIn(ctx, 0)}"
     case Field(S(lb), Top, _) => s"in ${lb.showIn(ctx, 0)}"
     case Field(S(lb), ub, _) => s"in ${lb.showIn(ctx, 0)} out ${ub.showIn(ctx, 0)}"
+    }
+    val opt = f match {
+      case Field(_, _, true) => "?"
+      case Field(_, _, false)=> ""
+    }
+    res + opt
   }
   def showIn(ctx: ShowCtx, outerPrec: Int): Str = this match {
   // TODO remove obsolete pretty-printing hacks
@@ -47,21 +54,20 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
           case Field(_, _, true) => "?"
           case Field(_, _, false) => ""
         }
-        val res = if (nme.isCapitalized) nt._2 match {
-          case Field(N | S(Bot), Top, _) => s"$nme"
-          case Field(S(lb), ub, _) if lb === ub => s"$nme = ${ub.showIn(ctx, 0)}"
-          case Field(N | S(Bot), ub, _) => s"$nme <: ${ub.showIn(ctx, 0)}"
-          case Field(S(lb), Top, _) => s"$nme :> ${lb.showIn(ctx, 0)}"
-          case Field(S(lb), ub, _) => s"$nme :> ${lb.showIn(ctx, 0)} <: ${ub.showIn(ctx, 0)}"
+        if (nme.isCapitalized) nt._2 match {
+          case Field(N | S(Bot), Top, _) => s"$nme" + opt
+          case Field(S(lb), ub, _) if lb === ub => s"$nme = ${ub.showIn(ctx, 0)}" + opt
+          case Field(N | S(Bot), ub, _) => s"$nme <: ${ub.showIn(ctx, 0)}" + opt
+          case Field(S(lb), Top, _) => s"$nme :> ${lb.showIn(ctx, 0)}" + opt
+          case Field(S(lb), ub, _) => s"$nme :> ${lb.showIn(ctx, 0)} <: ${ub.showIn(ctx, 0)}" + opt
         }
         else 
           s"${nt._2.mutStr}${nme}: ${showField(nt._2, ctx)}"
-        res + opt
       }.mkString("{", ", ", "}")
     case Splice(fs) =>
       fs.map{case L(l) => s"...${l.showIn(ctx, 0)}" case R(r) => s"${showField(r, ctx)}"}.mkString("(", ", ", ")")
     case Tuple(fs) =>
-      fs.map(nt => s"${nt._2.mutStr}${nt._1.fold("")(_.name + ": ")}${showField(nt._2, ctx)}${if (nt._2.opt) "?" else ""},").mkString("(", " ", ")")
+      fs.map(nt => s"${nt._2.mutStr}${nt._1.fold("")(_.name + ": ")}${showField(nt._2, ctx)},").mkString("(", " ", ")")
     case Union(TypeName("true"), TypeName("false")) | Union(TypeName("false"), TypeName("true")) =>
       TypeName("bool").showIn(ctx, 0)
     // case Union(l, r) => parensIf(l.showIn(ctx, 20) + " | " + r.showIn(ctx, 20), outerPrec > 20)
