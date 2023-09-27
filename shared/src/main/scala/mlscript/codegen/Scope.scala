@@ -71,7 +71,18 @@ class Scope(val name: Str, enclosing: Opt[Scope]) {
       "UnitLit",
       "Rcd",
       "Bra",
-      "Sel"
+      "Sel",
+      "Blk",
+      "Tup",
+      "Fld",
+      "Subs",
+      "With",
+      "Quoted",
+      "CaseOf",
+      "Case",
+      "Wildcard",
+      "NoCases",
+      "bindMeta"
     ) foreach { name =>
       register(BuiltinSymbol(name, name))
     }

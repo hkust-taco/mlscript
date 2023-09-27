@@ -75,7 +75,7 @@ code"f => f(114)"
 //│ class TypingUnit5 {}
 //│ const typing_unit5 = new TypingUnit5;
 //│ // Query 1
-//│ res = Lam(((f1) => App(Var("f1"), IntLit(114)))(freshVar("f")));
+//│ res = Lam(((f1) => App(Var("f1"), Tup(Fld(IntLit(114)))))(freshVar("f")));
 //│ // End of generated code
 
 
@@ -115,7 +115,6 @@ code"{x: 114}.x"
 //│ // End of generated code
 
 
-// TODO: bind value
 :js
 :ne
 code"let x = 42 in x"
@@ -124,5 +123,253 @@ code"let x = 42 in x"
 //│ class TypingUnit9 {}
 //│ const typing_unit9 = new TypingUnit9;
 //│ // Query 1
-//│ res = ((x1) => Var("x1"))(freshVar("x"));
+//│ res = ((x1) => (() => {
+//│   bindMeta("x", IntLit(42));
+//│   return Var("x1");
+//│ })())(freshVar("x"));
+//│ // End of generated code
+
+
+:js
+:ne
+code"(x => x + 1)(41)"
+//│ Code[Int, nothing]
+//│ // Prelude
+//│ class TypingUnit10 {}
+//│ const typing_unit10 = new TypingUnit10;
+//│ // Query 1
+//│ res = App(Bra(Lam(((x1) => App(Var("+"), Var("x1"), IntLit(1)))(freshVar("x")))), Tup(Fld(IntLit(41))));
+//│ // End of generated code
+
+
+:js
+:ne
+code"let x = ${Const(42)} in ${code"x"}"
+//│ Code[Int, nothing]
+//│ // Prelude
+//│ class TypingUnit11 {}
+//│ const typing_unit11 = new TypingUnit11;
+//│ // Query 1
+//│ res = ((x1) => (() => {
+//│   bindMeta("x", IntLit(42));
+//│   return Var("x1");
+//│ })())(freshVar("x"));
+//│ // End of generated code
+
+
+:js
+:ne
+code"let x = 1 in (x + 1; x + 2)"
+//│ Code[Int, nothing]
+//│ // Prelude
+//│ class TypingUnit12 {}
+//│ const typing_unit12 = new TypingUnit12;
+//│ // Query 1
+//│ res = ((x1) => (() => {
+//│   bindMeta("x", IntLit(1));
+//│   return Bra(Blk(App(Var("+"), Var("x1"), IntLit(1)), App(Var("+"), Var("x1"), IntLit(2))));
+//│ })())(freshVar("x"));
+//│ // End of generated code
+
+
+:js
+:ne
+code"(1, 2, 3)"
+//│ Code[[1, 2, 3], nothing]
+//│ // Prelude
+//│ class TypingUnit13 {}
+//│ const typing_unit13 = new TypingUnit13;
+//│ // Query 1
+//│ res = Bra(Tup(Fld(IntLit(1)), Fld(IntLit(2)), Fld(IntLit(3))));
+//│ // End of generated code
+
+:js
+:ne
+code"(1, 2, 3).[1]"
+//│ Code[1 | 2 | 3 | undefined, nothing]
+//│ // Prelude
+//│ class TypingUnit14 {}
+//│ const typing_unit14 = new TypingUnit14;
+//│ // Query 1
+//│ res = Subs(Bra(Tup(Fld(IntLit(1)), Fld(IntLit(2)), Fld(IntLit(3)))), IntLit(1));
+//│ // End of generated code
+
+
+:js
+:ne
+code"true"
+//│ Code[true, nothing]
+//│ // Prelude
+//│ class TypingUnit15 {}
+//│ const typing_unit15 = new TypingUnit15;
+//│ // Query 1
+//│ res = Var("true");
+//│ // End of generated code
+
+
+:js
+:ne
+code"42: Int"
+//│ Code[Int, nothing]
+//│ // Prelude
+//│ class TypingUnit16 {}
+//│ const typing_unit16 = new TypingUnit16;
+//│ // Query 1
+//│ res = IntLit(42);
+//│ // End of generated code
+
+
+:js
+:ne
+code"(x: Int) => x + 1"
+//│ Code[(x: Int) -> Int, nothing]
+//│ // Prelude
+//│ class TypingUnit17 {}
+//│ const typing_unit17 = new TypingUnit17;
+//│ // Query 1
+//│ res = Lam(((x1) => App(Var("+"), Var("x1"), IntLit(1)))(freshVar("x")));
+//│ // End of generated code
+
+
+:js
+:ne
+code"{x: 42} with {y: true}"
+//│ Code[{x: 42, y: true}, nothing]
+//│ // Prelude
+//│ class TypingUnit18 {}
+//│ const typing_unit18 = new TypingUnit18;
+//│ // Query 1
+//│ res = With(Bra(Rcd(Var("x"), IntLit(42))), Rcd(Var("y"), Var("true")));
+//│ // End of generated code
+
+
+:js
+:ne
+code"${Const(42)}"
+//│ Code[Int, nothing]
+//│ // Prelude
+//│ class TypingUnit19 {}
+//│ const typing_unit19 = new TypingUnit19;
+//│ // Query 1
+//│ res = IntLit(42);
+//│ // End of generated code
+
+
+:js
+:ne
+code"code"42""
+//│ Code[Code[42, nothing], nothing]
+//│ // Prelude
+//│ class TypingUnit20 {}
+//│ const typing_unit20 = new TypingUnit20;
+//│ // Query 1
+//│ res = Quoted(IntLit(42));
+//│ // End of generated code
+
+
+:js
+:ne
+code"Const(42)"
+//│ Code[Code[Int, nothing], nothing]
+//│ // Prelude
+//│ class TypingUnit21 {}
+//│ const typing_unit21 = new TypingUnit21;
+//│ // Query 1
+//│ res = Quoted(IntLit(42));
+//│ // End of generated code
+
+
+:js
+:ne
+code"if (1 == 2) then false else true"
+//│ Code[Bool, nothing]
+//│ // Prelude
+//│ class TypingUnit22 {}
+//│ const typing_unit22 = new TypingUnit22;
+//│ // Query 1
+//│ res = CaseOf(Bra(App(Var("=="), IntLit(1), IntLit(2))), Case(Var("true"), Var("false"), Wildcard(Var("true"))));
+//│ // End of generated code
+
+
+:js
+:ne
+code"if 3 is
+  1 then 114
+  2 then 514
+  _ then 0
+"
+//│ Code[0 | 114 | 514, nothing]
+//│ // Prelude
+//│ class TypingUnit23 {}
+//│ const typing_unit23 = new TypingUnit23;
+//│ // Query 1
+//│ res = ((tmp01) => (() => {
+//│   bindMeta("tmp0", IntLit(3));
+//│   return (((tmp01) => (() => {
+//│     bindMeta("tmp0", IntLit(3));
+//│     return CaseOf(Var("tmp01"), Case(IntLit(1), IntLit(114), Case(IntLit(2), IntLit(514), Wildcard(IntLit(0)))));
+//│   })())(freshVar("tmp0")));
+//│ })())(freshVar("tmp0"));
+//│ // End of generated code
+
+
+:js
+:ne
+let zero = Const(0)
+let one = Const(1)
+code"p => if p.x ===
+    ${zero} then true
+    ${one} then false
+  else false
+"
+//│ let zero: Code[Int, nothing]
+//│ let one: Code[Int, nothing]
+//│ Code[{x: Eql[Int]} -> Bool, nothing]
+//│ // Prelude
+//│ class TypingUnit24 {}
+//│ const typing_unit24 = new TypingUnit24;
+//│ // Query 1
+//│ globalThis.zero = IntLit(0);
+//│ // Query 2
+//│ globalThis.one = IntLit(1);
+//│ // Query 3
+//│ res = Lam(((p1) => CaseOf(App(Var("==="), Sel(Var("p1"), Var("x")), zero), Case(Var("true"), Var("true"), Wildcard(CaseOf(App(Var("==="), Sel(Var("p1"), Var("x")), one), Case(Var("true"), Var("false"), Wildcard(Var("false"))))))))(freshVar("p")));
+//│ // End of generated code
+
+
+:js
+:ne
+fun test(cde, f) =
+  code"x => x + ${f(cde)}"
+//│ fun test: forall 'a 'b. ('a, 'a -> Code[Int, ??x | 'b]) -> Code[Int -> Int, 'b]
+//│ // Prelude
+//│ class TypingUnit25 {}
+//│ const typing_unit25 = new TypingUnit25;
+//│ // Query 1
+//│ globalThis.test = function test(cde, f) {
+//│   return ((() => {
+//│     return Lam(((x1) => App(Var("+"), Var("x1"), f(cde)))(freshVar("x")));
+//│   })());
+//│ };
+//│ // End of generated code
+
+
+:js
+:ne
+code"""let x = ${log("foo"); Const(0)} in x + 1"""
+//│ Code[Int, nothing]
+//│ // Prelude
+//│ function log(x) {
+//│   return console.info(x);
+//│ }
+//│ class TypingUnit26 {}
+//│ const typing_unit26 = new TypingUnit26;
+//│ // Query 1
+//│ res = ((x1) => (() => {
+//│   bindMeta("x", (() => {
+//│     log("foo");
+//│     return IntLit(0);
+//│   })());
+//│   return App(Var("+"), Var("x1"), IntLit(1));
+//│ })())(freshVar("x"));
 //│ // End of generated code

@@ -157,6 +157,10 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     case App(App(App(Var("if"), Tup((_, Fld(_, tst)) :: Nil)), Tup((_, Fld(_, con)) :: Nil)), Tup((_, Fld(_, alt)) :: Nil)) =>
       JSTenary(translateTerm(tst), translateTerm(con), translateTerm(alt))
     case App(App(App(Var("if"), tst), con), alt) => die
+    case App(Var("Const"), Tup(N -> Fld(_, lit: IntLit) :: Nil)) =>
+      translateTerm(createASTCall("IntLit", lit :: Nil))
+    case App(Var("Const"), Tup(N -> Fld(_, Var(name)) :: Nil)) =>
+      translateTerm(createASTCall("Var", StrLit(name) :: Nil))
     // Function invocation
     case App(trm, Tup(args)) =>
       val callee = trm match {
@@ -174,14 +178,32 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
   private def createASTCall(tp: Str, args: Ls[Term]): App =
     App(Var(tp), Tup(args.map(a => N -> Fld(FldFlags.empty, a))))
 
+  private def desugarQuotedBranch(branch: CaseBranches)(
+    implicit scope: Scope, isQuoted: Bool, freeVars: MutSet[Str]
+  ): Either[Term, CaseBranches] = branch match {
+    case Case(pat, body, rest) =>
+      val dp = desugarQuote(pat)
+      val db = desugarQuote(body)
+      desugarQuotedBranch(rest) match {
+        case L(t) => L(createASTCall("Case", dp :: db :: t :: Nil))
+        case R(b) => dp match {
+          case dp: SimpleTerm => R(Case(dp, db, b))
+          case _ => die
+        }
+      }
+    case Wildcard(body) =>
+      if (isQuoted) L(createASTCall("Wildcard", desugarQuote(body) :: Nil)) else R(Wildcard(desugarQuote(body)))
+    case NoCases => if (isQuoted) L(createASTCall("NoCases", Nil)) else R(NoCases)
+  }
+
   private def desugarQuote(term: Term)(implicit scope: Scope, isQuoted: Bool, freeVars: MutSet[Str]): Term = term match {
     case Var(name) if isQuoted || freeVars(name) => createASTCall("Var", StrLit(scope.resolveValue(name).fold[Str](
       throw CodeGenError(s"unbound free variable $name is not supported yet.")
     )(_.runtimeName)) :: Nil)
-    case lit @ IntLit(value) if isQuoted => createASTCall("IntLit", lit :: Nil)
-    case lit @ DecLit(value) if isQuoted => createASTCall("DecLit", lit :: Nil)
-    case lit @ StrLit(value) if isQuoted => createASTCall("StrLit", lit :: Nil)
-    case lit @ UnitLit(value) if isQuoted => createASTCall("UnitLit", lit :: Nil)
+    case lit: IntLit if isQuoted => createASTCall("IntLit", lit :: Nil)
+    case lit: DecLit if isQuoted => createASTCall("DecLit", lit :: Nil)
+    case lit: StrLit if isQuoted => createASTCall("StrLit", lit :: Nil)
+    case lit: UnitLit if isQuoted => createASTCall("UnitLit", lit :: Nil)
     case Lam(params, body) =>
       if (isQuoted) {
         val lamScope = scope.derive("Lam")
@@ -191,7 +213,10 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
               case N -> Fld(_, Var(nme)) =>
                 lamScope.declareParameter(nme)
                 nme -> lamScope.declareValue(nme, S(false), false, N).runtimeName
-              case _ => ??? // TODO
+              case S(Var(nme)) -> _ =>
+                lamScope.declareParameter(nme)
+                nme -> lamScope.declareValue(nme, S(false), false, N).runtimeName
+              case _ => ???
             }
             newfreeVars.foldRight(desugarQuote(body)(lamScope, isQuoted, freeVars ++ newfreeVars.map(_._1)))((p, res) =>
               Let(false, Var(p._2), createASTCall("freshVar", StrLit(p._1) :: Nil), res))
@@ -205,7 +230,9 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       desugarQuote(body)(unquoteScope, false, freeVars)
     case Quoted(body) =>
       val quoteScope = scope.derive("quote")
-      desugarQuote(body)(quoteScope, true, MutSet.empty)
+      val res = desugarQuote(body)(quoteScope, true, MutSet.empty)
+      if (isQuoted) createASTCall("Quoted", res :: Nil)
+      else res
     case App(App(Var(op), Tup((N -> Fld(_, lhs)) :: Nil)), Tup((N -> Fld(_, rhs)) :: Nil))
         if JSBinary.operators contains op =>
       if (isQuoted)
@@ -218,11 +245,16 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         createASTCall("App", createASTCall("Var", StrLit(op) :: Nil) :: desugarQuote(lhs) :: desugarQuote(rhs) :: Nil)
       else
         App(desugarQuote(lhs), desugarQuote(rhs))
-    case App(lhs, Tup(params)) =>
-      if (isQuoted)
-        createASTCall("App", desugarQuote(lhs) :: (params map { case (_, Fld(_, arg)) => desugarQuote(arg) }))
-      else
-        App(desugarQuote(lhs), Tup(params map { case (v, Fld(f, arg)) => v -> Fld(f, desugarQuote(arg)) }))
+    case App(Var("Const"), rhs) =>
+      val body = rhs match {
+        case Tup(N -> Fld(_, lit: IntLit) :: Nil) => createASTCall("IntLit", lit :: Nil)
+        case Tup(N -> Fld(_, Var(name)) :: Nil) => createASTCall("Var", StrLit(name) :: Nil)
+        case _ => throw CodeGenError(s"can not desugar $rhs in Const")
+      }
+      if (isQuoted) createASTCall("Quoted", body :: Nil) else body
+    case App(lhs, rhs) =>
+      if (isQuoted) createASTCall("App", desugarQuote(lhs) :: desugarQuote(rhs) :: Nil)
+      else App(desugarQuote(lhs), desugarQuote(rhs))
     case Rcd(fields) =>
       if (isQuoted) createASTCall("Rcd", fields.flatMap(f => createASTCall("Var", StrLit(f._1.name) :: Nil) :: desugarQuote(f._2.value) :: Nil))
       else Rcd(fields.map(f => (f._1, Fld(f._2.flags, desugarQuote(f._2.value)))))
@@ -237,11 +269,44 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       if (isQuoted) {
         letScope.declareParameter(name)
         val freshedName = letScope.declareValue(name, S(false), false, N).runtimeName
-        // TODO: bind value
-        Let(false, Var(freshedName), createASTCall("freshVar", StrLit(name) :: Nil), desugarQuote(body)(letScope, isQuoted, freeVars))
+        Let(false, Var(freshedName), createASTCall("freshVar", StrLit(name) :: Nil), Blk(
+          createASTCall("bindMeta", StrLit(name) :: desugarQuote(value) :: Nil) :: desugarQuote(body)(letScope, isQuoted, freeVars) :: Nil
+        ))
       }
       else Let(rec, Var(name), desugarQuote(value), desugarQuote(body)(letScope, isQuoted, freeVars))
-    case _ => term
+    case Blk(stmts) =>
+      val blkScope = scope.derive("blk")
+      val res = stmts.map {
+        case t: Term =>
+          desugarQuote(t)(blkScope, isQuoted, freeVars)
+        case s => throw CodeGenError(s"statement $s is not supported in quasiquotes")
+      }
+      if (isQuoted) createASTCall("Blk", res)
+      else Blk(res)
+    case Tup(eles) =>
+      if (isQuoted) createASTCall("Tup", eles flatMap { // TODO: need flags?
+        case S(Var(name)) -> Fld(_, t) => createASTCall("Var", StrLit(name) :: Nil) :: createASTCall("Fld", desugarQuote(t) :: Nil) :: Nil
+        case N -> Fld(_, t) => createASTCall("Fld", desugarQuote(t) :: Nil) :: Nil
+      })
+      else Tup(eles.map {
+        case v -> Fld(flags, t) => v -> Fld(flags, desugarQuote(t))
+      })
+    case Subs(arr, idx) =>
+      if (isQuoted) createASTCall("Subs", desugarQuote(arr) :: desugarQuote(idx) :: Nil)
+      else Subs(desugarQuote(arr), desugarQuote(idx))
+    case Asc(trm, ty) =>
+      if (isQuoted) desugarQuote(trm)
+      else Asc(desugarQuote(trm), ty)
+    case With(lhs, rhs @ Rcd(fields)) =>
+      if (isQuoted) createASTCall("With", desugarQuote(lhs) :: desugarQuote(rhs) :: Nil)
+      else With(desugarQuote(lhs), Rcd(fields.map(f => (f._1, Fld(f._2.flags, desugarQuote(f._2.value))))))
+    case CaseOf(trm, cases) =>
+      desugarQuotedBranch(cases) match {
+        case L(t) => createASTCall("CaseOf", desugarQuote(trm) :: t :: Nil)
+        case R(b) => CaseOf(desugarQuote(trm), b)
+      }
+    case _ if term.desugaredTerm.isDefined => desugarQuote(term.desugaredTerm.getOrElse(die))
+    case _ => term // * For other terms, either they are not supported & there would be a type error, or we don't need desugar them
   }
 
   /**
