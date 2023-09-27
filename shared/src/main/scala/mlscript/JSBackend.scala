@@ -157,10 +157,6 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     case App(App(App(Var("if"), Tup((_, Fld(_, tst)) :: Nil)), Tup((_, Fld(_, con)) :: Nil)), Tup((_, Fld(_, alt)) :: Nil)) =>
       JSTenary(translateTerm(tst), translateTerm(con), translateTerm(alt))
     case App(App(App(Var("if"), tst), con), alt) => die
-    case App(Var("Const"), Tup(N -> Fld(_, lit: IntLit) :: Nil)) =>
-      translateTerm(createASTCall("IntLit", lit :: Nil))
-    case App(Var("Const"), Tup(N -> Fld(_, Var(name)) :: Nil)) =>
-      translateTerm(createASTCall("Var", StrLit(name) :: Nil))
     // Function invocation
     case App(trm, Tup(args)) =>
       val callee = trm match {
@@ -245,13 +241,6 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         createASTCall("App", createASTCall("Var", StrLit(op) :: Nil) :: desugarQuote(lhs) :: desugarQuote(rhs) :: Nil)
       else
         App(desugarQuote(lhs), desugarQuote(rhs))
-    case App(Var("Const"), rhs) =>
-      val body = rhs match {
-        case Tup(N -> Fld(_, lit: IntLit) :: Nil) => createASTCall("IntLit", lit :: Nil)
-        case Tup(N -> Fld(_, Var(name)) :: Nil) => createASTCall("Var", StrLit(name) :: Nil)
-        case _ => throw CodeGenError(s"can not desugar $rhs in Const")
-      }
-      if (isQuoted) createASTCall("Quoted", body :: Nil) else body
     case App(lhs, rhs) =>
       if (isQuoted) createASTCall("App", desugarQuote(lhs) :: desugarQuote(rhs) :: Nil)
       else App(desugarQuote(lhs), desugarQuote(rhs))

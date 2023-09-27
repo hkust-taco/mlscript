@@ -17,9 +17,6 @@ code"x"
 code"x => x"
 //│ Code[forall 'a. 'a -> 'a, nothing]
 //│ // Prelude
-//│ function freshVar(x) {
-//│   return undefined;
-//│ }
 //│ let res;
 //│ class TypingUnit1 {}
 //│ const typing_unit1 = new TypingUnit1;
@@ -151,7 +148,7 @@ code"let x = ${Const(42)} in ${code"x"}"
 //│ const typing_unit11 = new TypingUnit11;
 //│ // Query 1
 //│ res = ((x1) => (() => {
-//│   bindMeta("x", IntLit(42));
+//│   bindMeta("x", Const(42));
 //│   return Var("x1");
 //│ })())(freshVar("x"));
 //│ // End of generated code
@@ -251,7 +248,7 @@ code"${Const(42)}"
 //│ class TypingUnit19 {}
 //│ const typing_unit19 = new TypingUnit19;
 //│ // Query 1
-//│ res = IntLit(42);
+//│ res = Const(42);
 //│ // End of generated code
 
 
@@ -275,7 +272,7 @@ code"Const(42)"
 //│ class TypingUnit21 {}
 //│ const typing_unit21 = new TypingUnit21;
 //│ // Query 1
-//│ res = Quoted(IntLit(42));
+//│ res = App(Var("Const"), Tup(Fld(IntLit(42))));
 //│ // End of generated code
 
 
@@ -329,9 +326,9 @@ code"p => if p.x ===
 //│ class TypingUnit24 {}
 //│ const typing_unit24 = new TypingUnit24;
 //│ // Query 1
-//│ globalThis.zero = IntLit(0);
+//│ globalThis.zero = Const(0);
 //│ // Query 2
-//│ globalThis.one = IntLit(1);
+//│ globalThis.one = Const(1);
 //│ // Query 3
 //│ res = Lam(((p1) => CaseOf(App(Var("==="), Sel(Var("p1"), Var("x")), zero), Case(Var("true"), Var("true"), Wildcard(CaseOf(App(Var("==="), Sel(Var("p1"), Var("x")), one), Case(Var("true"), Var("false"), Wildcard(Var("false"))))))))(freshVar("p")));
 //│ // End of generated code
@@ -368,7 +365,7 @@ code"""let x = ${log("foo"); Const(0)} in x + 1"""
 //│ res = ((x1) => (() => {
 //│   bindMeta("x", (() => {
 //│     log("foo");
-//│     return IntLit(0);
+//│     return Const(0);
 //│   })());
 //│   return App(Var("+"), Var("x1"), IntLit(1));
 //│ })())(freshVar("x"));
