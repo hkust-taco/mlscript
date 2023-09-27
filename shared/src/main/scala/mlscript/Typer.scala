@@ -1567,8 +1567,15 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
             Option.when(!(TopType <:< thisTy))(go(thisTy)),
             mkTypingUnit(thisTy, members))(td.declareLoc, td.abstractLoc)
           }
-      case tf @ TypedNuFun(level, fd, bodyTy) =>
-        NuFunDef(fd.isLetRec, fd.nme, Nil, R(go(tf.typeSignature)))(fd.declareLoc, fd.signature, fd.outer)
+      case tf @ TypedNuFun(level, fd, bodyTy) => {
+        println(s"tf => $tf \n######\n fd => $fd \n######\n bodyTy => $bodyTy") // (problem) bodyTy type dosen't have the opt field, so tf.typeSignature(which
+        // uses the bodyTy fails.
+        println(s"typeSignature => ${tf.typeSignature}")
+        val res = NuFunDef(fd.isLetRec, fd.nme, Nil, R(go(tf.typeSignature)))(fd.declareLoc, fd.signature, fd.outer)
+        // res.toString()
+        println(s"ress(problem)!! $res ## ${res.rhs}")
+        res
+      }
       case p: NuParam =>
         ??? // TODO
       case TypedNuDummy(d) =>
@@ -1580,9 +1587,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, var ne
         // if (bounds.isEmpty) res
         // else Constrained(res, bounds, Nil)
         res
-      case OtherTypeLike(tu) =>
+      case OtherTypeLike(tu) => {
         val mems = tu.implementedMembers.map(goDecl)
-        Signature(mems, tu.result.map(go))
+        val res = Signature(mems, tu.result.map(go))
+        println(s"tu => $tu")
+        println(s"resss => $res")
+        res
+      }
     }
     
     def go(st: SimpleType)(implicit ectx: ExpCtx): Type =
