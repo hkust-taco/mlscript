@@ -76,7 +76,7 @@ e v
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: 0 | error
 //│ Runtime error:
-//│ RangeError: Maximum call stack size exceeded
+//│   RangeError: Maximum call stack size exceeded
 
 :RecursiveTypes
 
@@ -85,7 +85,7 @@ e v
 e v
 //│ res: 0
 //│ Runtime error:
-//│ RangeError: Maximum call stack size exceeded
+//│   RangeError: Maximum call stack size exceeded
 
 
 
@@ -109,7 +109,7 @@ e = eval eval
 e v
 //│ res: 0 | error | {x: 0 | {x: nothing}}
 //│ Runtime error:
-//│ RangeError: Maximum call stack size exceeded
+//│   RangeError: Maximum call stack size exceeded
 
 
 e = eval eval!
@@ -125,5 +125,5 @@ e v
 //│   where
 //│     'a :> 0 | {x: 'a}
 //│ Runtime error:
-//│ RangeError: Maximum call stack size exceeded
+//│   RangeError: Maximum call stack size exceeded
 

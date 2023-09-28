@@ -102,7 +102,7 @@ r.run
 //│ Int
 //│ res
 //│ Runtime error:
-//│ TypeError: Cannot read properties of undefined (reading 'run')
+//│   TypeError: Cannot read properties of undefined (reading 'run')
 
 
 let r = readInt.bind of Pure

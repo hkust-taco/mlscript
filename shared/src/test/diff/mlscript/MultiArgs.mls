@@ -137,7 +137,7 @@ f(1, 2)
 //│ ╙──       	 ^^^^^^
 //│ res: error | int
 //│ Runtime error:
-//│ TypeError: number 1 is not iterable (cannot read property Symbol(Symbol.iterator))
+//│   TypeError: number 1 is not iterable (cannot read property Symbol(Symbol.iterator))
 
 r = (1, 2)
 f r

@@ -35,7 +35,7 @@ D.unapply({ x: 42 })
 //│ error | [nothing]
 //│ res
 //│ Runtime error:
-//│ TypeError: Cannot read private member #x from an object whose class did not declare it
+//│   TypeError: Cannot read private member #x from an object whose class did not declare it
 
 class DT[T](x: T)
 DT.unapply
@@ -63,7 +63,7 @@ DT.unapply({ x: 42 })
 //│ error | [nothing]
 //│ res
 //│ Runtime error:
-//│ TypeError: Cannot read private member #x from an object whose class did not declare it
+//│   TypeError: Cannot read private member #x from an object whose class did not declare it
 
 
 // * TODO improve `unapply` logic: currently it picks up shadowing fields/methods

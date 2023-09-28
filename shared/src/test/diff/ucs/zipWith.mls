@@ -178,7 +178,7 @@ zipWith(pairup, Nil, Cons(0, Nil)).value.toArray
 //│ Array[anything]
 //│ res
 //│ Runtime error:
-//│ ReferenceError: nothing is not defined
+//│   ReferenceError: nothing is not defined
 
 zipWith(pairup, Cons(0, Nil), Cons("0", Nil)).value.toArray
 //│ Array[anything]

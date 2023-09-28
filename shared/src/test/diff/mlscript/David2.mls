@@ -54,7 +54,7 @@ addOne1 funny
 addOne1 (Integer { value = 1; addOne = fun x -> (error : Integer) } with { value = "oops!" })
 //│ res: Integer
 //│ Runtime error:
-//│ Error: an error was thrown
+//│   Error: an error was thrown
 
 // * `addOne` is now typed polymorphically, so this line now works!
 addOne1 ((Integer { value = 1; addOne = id }) with { value = "oops!" })
@@ -230,7 +230,7 @@ addOne1 (Stri { value = ""; addOne = error })
 //│ ╙──      	                 ^
 //│ res: error
 //│ Runtime error:
-//│ Error: an error was thrown
+//│   Error: an error was thrown
 
 
 addOne2 x = case x of {
@@ -249,7 +249,7 @@ addOne2 (mkIntegerPrecise 42)
 addOne2 (Stri { value = ""; addOne = error })
 //│ res: nothing
 //│ Runtime error:
-//│ Error: an error was thrown
+//│   Error: an error was thrown
 
 def mkStr: string -> Stri
 rec def mkStr value = Stri { value; addOne = fun s -> mkStr (concat s.value "1") }

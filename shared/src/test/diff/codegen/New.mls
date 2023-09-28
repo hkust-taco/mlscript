@@ -33,7 +33,7 @@ C()
 //│ // End of generated code
 //│ res
 //│ Runtime error:
-//│ TypeError: Class constructor C cannot be invoked without 'new'
+//│   TypeError: Class constructor C cannot be invoked without 'new'
 
 :js
 :e // TODO support first-class classes
@@ -56,7 +56,7 @@ c()
 //│ C
 //│ res
 //│ Runtime error:
-//│ TypeError: Class constructor C cannot be invoked without 'new'
+//│   TypeError: Class constructor C cannot be invoked without 'new'
 
 
 class C()

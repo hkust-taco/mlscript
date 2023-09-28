@@ -690,7 +690,7 @@ auto auto
 //│ ╙──       	                   ^^
 //│ res: error | 'b -> 'b
 //│ Runtime error:
-//│ RangeError: Maximum call stack size exceeded
+//│   RangeError: Maximum call stack size exceeded
 
 // Gn+1
 :e
@@ -701,7 +701,7 @@ auto auto
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: error
 //│ Runtime error:
-//│ RangeError: Maximum call stack size exceeded
+//│   RangeError: Maximum call stack size exceeded
 
 :e
 :re
@@ -714,7 +714,7 @@ auto auto
 //│ ╙──
 //│ res: nothing
 //│ Runtime error:
-//│ RangeError: Maximum call stack size exceeded
+//│   RangeError: Maximum call stack size exceeded
 
 
 
@@ -1094,7 +1094,7 @@ auto auto
 //│ ╙──       	                   ^^
 //│ res: error | 'b -> 'b
 //│ Runtime error:
-//│ RangeError: Maximum call stack size exceeded
+//│   RangeError: Maximum call stack size exceeded
 
 // Gn+1
 :e
@@ -1105,7 +1105,7 @@ auto auto
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: error
 //│ Runtime error:
-//│ RangeError: Maximum call stack size exceeded
+//│   RangeError: Maximum call stack size exceeded
 
 :e
 :re
@@ -1118,7 +1118,7 @@ auto auto
 //│ ╙──
 //│ res: nothing
 //│ Runtime error:
-//│ RangeError: Maximum call stack size exceeded
+//│   RangeError: Maximum call stack size exceeded
 
 
 
@@ -1475,7 +1475,7 @@ auto auto
 //│ ╙──       	                   ^^
 //│ res: error | 'b -> 'b
 //│ Runtime error:
-//│ RangeError: Maximum call stack size exceeded
+//│   RangeError: Maximum call stack size exceeded
 
 // Gn+1
 :e
@@ -1486,7 +1486,7 @@ auto auto
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: error
 //│ Runtime error:
-//│ RangeError: Maximum call stack size exceeded
+//│   RangeError: Maximum call stack size exceeded
 
 :e
 :re
@@ -1499,7 +1499,7 @@ auto auto
 //│ ╙──
 //│ res: nothing
 //│ Runtime error:
-//│ RangeError: Maximum call stack size exceeded
+//│   RangeError: Maximum call stack size exceeded
 
 
 
@@ -1828,7 +1828,7 @@ auto auto
 //│ ╙──       	                   ^^
 //│ res: error | 'b -> 'b
 //│ Runtime error:
-//│ RangeError: Maximum call stack size exceeded
+//│   RangeError: Maximum call stack size exceeded
 
 // Gn+1
 :e
@@ -1839,13 +1839,13 @@ auto auto
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: error
 //│ Runtime error:
-//│ RangeError: Maximum call stack size exceeded
+//│   RangeError: Maximum call stack size exceeded
 
 :re
 // Gn+2
 (fun x -> x x) (fun x -> x x)!
 //│ res: nothing
 //│ Runtime error:
-//│ RangeError: Maximum call stack size exceeded
+//│   RangeError: Maximum call stack size exceeded
 
 

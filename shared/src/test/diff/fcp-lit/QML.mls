@@ -373,7 +373,7 @@ ma1 (fun (xinit1, xsub1) -> ma2 (fun (xinit2, xsub2) -> xsub2 (xinit1 true) 0))
 //│ ╙──       	                                                               ^^^^^^^^^^^
 //│ res: error
 //│ Runtime error:
-//│ TypeError: boolean true is not iterable (cannot read property Symbol(Symbol.iterator))
+//│   TypeError: boolean true is not iterable (cannot read property Symbol(Symbol.iterator))
 
 :e
 ma1 (fun (xinit1, xsub1) -> ma2 (fun (xinit2, xsub2) -> xsub1 (xinit2 true) 0))
@@ -547,7 +547,7 @@ res 0
 //│ ╙──       	^^^^^^^^^
 //│ res: error
 //│ Runtime error:
-//│ TypeError: res is not a function
+//│   TypeError: res is not a function
 
 
 // =============== Sec 7 ===============

@@ -25,7 +25,7 @@ foo(() => 123)
 //│ error
 //│ res
 //│ Runtime error:
-//│ TypeError: c is not a constructor
+//│   TypeError: c is not a constructor
 
 :e
 foo(C)
@@ -49,7 +49,7 @@ bar(D)
 //│ error
 //│ res
 //│ Runtime error:
-//│ TypeError: c is not a constructor
+//│   TypeError: c is not a constructor
 
 :e // TODO accept when we have first-class classes
 bar(D.class)
@@ -172,7 +172,7 @@ test(0).x
 //│ ??A
 //│ res
 //│ Runtime error:
-//│ Error: an error was thrown
+//│   Error: an error was thrown
 
 
 // class Expr[T] {

@@ -362,7 +362,7 @@ def t (z: nothing) = let x = fun (y: forall 't. 'a -> 't) -> y z in x x
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: error
 //│ Runtime error:
-//│ RangeError: Maximum call stack size exceeded
+//│   RangeError: Maximum call stack size exceeded
 
 
 //     * Rank 3, untypable in F2 but F3
@@ -513,7 +513,7 @@ def t (z: nothing) = let x = fun (y: forall 't. 'a -> 't) -> y z in x x
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: error
 //│ Runtime error:
-//│ RangeError: Maximum call stack size exceeded
+//│   RangeError: Maximum call stack size exceeded
 
 // *)
 

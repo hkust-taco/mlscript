@@ -191,7 +191,7 @@ Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ Abs[Var] | Numb | Var | error
 //│ res
 //│ Runtime error:
-//│ Error: non-exhaustive case expression
+//│   Error: non-exhaustive case expression
 
 Test2.eval(Cons(("a", Abs("d", Var("d"))), Nil), Add(Numb(1), Var("a")))
 //│ Abs[Var] | Add[Numb | Var] | Numb | Var
@@ -259,5 +259,5 @@ Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│     'A :> Abs[Var] | Numb | Abs['A] | App['A] | Var
 //│ res
 //│ Runtime error:
-//│ Error: non-exhaustive case expression
+//│   Error: non-exhaustive case expression
 

@@ -172,7 +172,7 @@ c: Cycle1
 //│ ╙──       	   ^^^^^^
 //│ res: error
 //│ Runtime error:
-//│ ReferenceError: Cycle1 is not defined
+//│   ReferenceError: Cycle1 is not defined
 
 
 type N[A] = ~A

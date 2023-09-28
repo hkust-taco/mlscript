@@ -862,7 +862,7 @@ foo { mut a = 1 } 2 3
 //│ ╙──       	                                                   ^
 //│ res: error | (unit, int, 0 | 1 | 2, unit, nothing,)
 //│ Runtime error:
-//│ TypeError: z is not a function
+//│   TypeError: z is not a function
 
 :e
 foo { mut a = "oops" } 2

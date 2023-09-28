@@ -90,7 +90,7 @@ loop = z (fun self -> self)
 loop 1
 //│ res: nothing
 //│ Runtime error:
-//│ RangeError: Maximum call stack size exceeded
+//│   RangeError: Maximum call stack size exceeded
 
 
 def pow pow n x =
@@ -115,7 +115,7 @@ def oops = z (fun f -> f)
 oops 1
 //│ res: nothing
 //│ Runtime error:
-//│ RangeError: Maximum call stack size exceeded
+//│   RangeError: Maximum call stack size exceeded
 
 
 

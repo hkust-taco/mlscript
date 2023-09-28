@@ -192,7 +192,7 @@ f = extrude (fun x -> extrude (fun y -> x) x)
 f 42
 //│ res: 42 | error
 //│ Runtime error:
-//│ TypeError: f(...) is not a function
+//│   TypeError: f(...) is not a function
 //│ // Output
 //│ Hi!
 //│ [Function (anonymous)]
@@ -234,7 +234,7 @@ def foo(a, b) = (a, b) : forall 'c. ('c, 'c)
 foo(error, error)
 //│ res: (nothing, nothing,)
 //│ Runtime error:
-//│ Error: an error was thrown
+//│   Error: an error was thrown
 
 def foo(a, b) = (a, b) : forall 'c. ('c, 'c -> 'c)
 //│ foo: (??c, ??c0 -> ??c,) -> (forall 'c. ('c, 'c -> 'c,))

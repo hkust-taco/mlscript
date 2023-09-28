@@ -81,7 +81,7 @@ z = x + y
 //│ ╙──      	^
 //│ res: error
 //│ Runtime error:
-//│ TypeError: 1 is not a function
+//│   TypeError: 1 is not a function
 
 def f x y z = add x y 
 //│ f: int -> int -> anything -> int

@@ -16,7 +16,7 @@ error: Foo[int]: Bar[int]
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: Bar[int]
 //│ Runtime error:
-//│ Error: an error was thrown
+//│   Error: an error was thrown
 
 
 // * Interestingly, this is caught by the cycle checker when rectypes are disabled:
@@ -30,6 +30,6 @@ error: Foo[int]: Bar[int]
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: Bar[int]
 //│ Runtime error:
-//│ Error: an error was thrown
+//│   Error: an error was thrown
 
 

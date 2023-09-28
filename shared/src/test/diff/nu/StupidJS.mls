@@ -30,5 +30,5 @@ r.f
 //│ () -> C
 //│ res
 //│ Runtime error:
-//│ TypeError: Cannot read properties of undefined (reading 'f')
+//│   TypeError: Cannot read properties of undefined (reading 'f')
 

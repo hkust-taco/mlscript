@@ -13,7 +13,7 @@ case 1 of { }
 //│ ╙──     	     ^
 //│ res: nothing
 //│ Runtime error:
-//│ Error: non-exhaustive case expression
+//│   Error: non-exhaustive case expression
 
 :e
 :ge

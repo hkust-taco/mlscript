@@ -27,7 +27,7 @@ C()
 //│ C
 //│ res
 //│ Runtime error:
-//│ TypeError: Class constructor C cannot be invoked without 'new'
+//│   TypeError: Class constructor C cannot be invoked without 'new'
 
 
 class D(x: Int)

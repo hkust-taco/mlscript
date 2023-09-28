@@ -103,7 +103,7 @@ t1nt1 = T1 nt1
 t1nt1.lol "oops!"
 //│ res: nothing
 //│ Runtime error:
-//│ TypeError: t1nt1.lol is not a function
+//│   TypeError: t1nt1.lol is not a function
 
 
 

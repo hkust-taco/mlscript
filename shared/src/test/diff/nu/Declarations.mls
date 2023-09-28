@@ -54,7 +54,7 @@ Foo.foo
 //│ Int
 //│ res
 //│ Runtime error:
-//│ ReferenceError: Foo is not defined
+//│   ReferenceError: Foo is not defined
 
 
 declare type A = Int
@@ -80,7 +80,7 @@ let s = new Sanitizer
 //│ let s: Sanitizer
 //│ s
 //│ Runtime error:
-//│ ReferenceError: Sanitizer is not defined
+//│   ReferenceError: Sanitizer is not defined
 
 
 

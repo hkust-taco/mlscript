@@ -165,7 +165,7 @@ new H(111, 222)
 //│ H
 //│ res
 //│ Runtime error:
-//│ ReferenceError: Super constructor may only be called once
+//│   ReferenceError: Super constructor may only be called once
 //│ // Output
 //│ Here's m: NaN
 //│ Here's m: 333

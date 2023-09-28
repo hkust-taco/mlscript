@@ -33,7 +33,7 @@ f.(Foo.Fun)
 Foo.Fun f
 //│ res: ((1 | 'A) -> (2 | 'B) -> 'C) -> 'A -> 'B -> 'C
 //│ Runtime error:
-//│ TypeError: (intermediate value).Fun is not a function
+//│   TypeError: (intermediate value).Fun is not a function
 
 f.Fun
 //│ res: ((1 | 'A) -> (2 | 'B) -> 'C) -> 'A -> 'B -> 'C
@@ -60,10 +60,10 @@ Foo.Fun g
 Bar.Fun g
 //│ res: (int -> bool -> 'C) -> int -> bool -> 'C
 //│ Runtime error:
-//│ TypeError: (intermediate value).Fun is not a function
+//│   TypeError: (intermediate value).Fun is not a function
 //│ res: 'a -> 'a
 //│ Runtime error:
-//│ TypeError: (intermediate value).Fun is not a function
+//│   TypeError: (intermediate value).Fun is not a function
 
 g.Fun
 //│ res: (int -> bool -> 'C) -> int -> bool -> 'C

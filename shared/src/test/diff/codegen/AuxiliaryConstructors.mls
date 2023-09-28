@@ -70,7 +70,7 @@ B()
 //│ B
 //│ res
 //│ Runtime error:
-//│ TypeError: Class constructor B cannot be invoked without 'new'
+//│   TypeError: Class constructor B cannot be invoked without 'new'
 
 abstract class C
 //│ abstract class C
@@ -98,7 +98,7 @@ C()
 //│ error
 //│ res
 //│ Runtime error:
-//│ TypeError: Class constructor C cannot be invoked without 'new'
+//│   TypeError: Class constructor C cannot be invoked without 'new'
 
 :js
 class C {

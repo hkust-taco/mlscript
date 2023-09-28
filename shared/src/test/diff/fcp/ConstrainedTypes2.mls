@@ -21,7 +21,7 @@ f {}
 //│ ╙──     	          ^
 //│ res: error
 //│ Runtime error:
-//│ TypeError: n is not a function
+//│   TypeError: n is not a function
 
 // :d
 :e
@@ -40,7 +40,7 @@ f {} {}
 //│ ╙──     	          ^
 //│ res: error
 //│ Runtime error:
-//│ TypeError: n is not a function
+//│   TypeError: n is not a function
 
 
 def f n m = n 0
@@ -69,7 +69,7 @@ f {} {}
 //│ ╙──      	            ^^^
 //│ res: error
 //│ Runtime error:
-//│ TypeError: n is not a function
+//│   TypeError: n is not a function
 
 
 
@@ -99,7 +99,7 @@ test 1
 //│   where
 //│     0 <: 0 -> 'a
 //│ Runtime error:
-//│ TypeError: extr is not a function
+//│   TypeError: extr is not a function
 
 // * Note: this extrudes a Constrainedtype referring to a higher-level variable (x)
 def test extr x =
@@ -162,7 +162,7 @@ test 0 1 2
 //│ ╙──       	              ^^^^^^^
 //│ res: error
 //│ Runtime error:
-//│ TypeError: n is not a function
+//│   TypeError: n is not a function
 
 def test extr x =
   let f n m = (n x 0)
@@ -192,6 +192,6 @@ test 0 1 2
 //│ ╙──       	               ^^^
 //│ res: error
 //│ Runtime error:
-//│ TypeError: n is not a function
+//│   TypeError: n is not a function
 
 

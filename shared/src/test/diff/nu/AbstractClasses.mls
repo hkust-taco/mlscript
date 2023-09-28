@@ -74,7 +74,7 @@ Baz.f(1)
 //│ Int
 //│ res
 //│ Runtime error:
-//│ TypeError: Baz.f is not a function
+//│   TypeError: Baz.f is not a function
 
 module Baz extends Bar {
   fun f(x) = x + 1

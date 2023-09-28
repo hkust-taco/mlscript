@@ -182,7 +182,7 @@ q q
 //│ ╙──       	^
 //│ res: error
 //│ Runtime error:
-//│ TypeError: q is not a function
+//│   TypeError: q is not a function
 
 
 :NoJS

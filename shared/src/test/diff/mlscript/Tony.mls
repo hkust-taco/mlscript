@@ -103,7 +103,7 @@ res 1
 //│ ╙──      	                                       ^^^
 //│ res: error
 //│ Runtime error:
-//│ Error: non-exhaustive case expression
+//│   Error: non-exhaustive case expression
 
 
 def funny = fun f -> case f of { Some -> f f }

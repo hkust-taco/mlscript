@@ -31,7 +31,7 @@ f = 42
 f 1
 //│ res: int
 //│ Runtime error:
-//│ TypeError: f1 is not a function
+//│   TypeError: f1 is not a function
 
 fun x -> f x
 //│ res: int -> int
@@ -199,7 +199,7 @@ def f = impl
 f 1 
 //│ res: 1
 //│ Runtime error:
-//│ TypeError: a is not a function
+//│   TypeError: a is not a function
 
 
 def f: (int & 'a) -> (int & 'a) -> 'a 
@@ -242,7 +242,7 @@ f 1
 res 2
 //│ res: 1 | 2
 //│ Runtime error:
-//│ TypeError: b is not a function
+//│   TypeError: b is not a function
 
 
 :e

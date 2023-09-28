@@ -79,7 +79,7 @@ Test1.n
 //│ 1
 //│ res
 //│ Runtime error:
-//│ RangeError: Maximum call stack size exceeded
+//│   RangeError: Maximum call stack size exceeded
 
 
 class Test2(val n: Str) extends Base1(1/2), Derived1(1) {

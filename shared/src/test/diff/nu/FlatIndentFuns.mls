@@ -43,7 +43,7 @@ r of 1 of 2
 //│ Int -> Int
 //│ res
 //│ Runtime error:
-//│ TypeError: 1 is not a function
+//│   TypeError: 1 is not a function
 
 
 // * Could support this too...

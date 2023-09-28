@@ -73,7 +73,7 @@ update1 0 ((mut 1,))
 :re // FIXME
 update2 0 ((mut 1,))
 //│ Runtime error:
-//│ TypeError: ((intermediate value) , []) is not a function
+//│   TypeError: ((intermediate value) , []) is not a function
 
 
 

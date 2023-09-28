@@ -104,7 +104,7 @@ undef = error
 //│   <:  undef:
 //│ int -> 'a -> 'a
 //│ Runtime error:
-//│ Error: an error was thrown
+//│   Error: an error was thrown
 
 // swizzle :: Int → ∀ a. a → a
 // swizzle = undef
@@ -117,7 +117,7 @@ swizzle = undef
 //│   <:  swizzle:
 //│ int -> (forall 'a. 'a -> 'a)
 //│ Runtime error:
-//│ ReferenceError: undef is not defined
+//│   ReferenceError: undef is not defined
 
 // In Haskell, "deeply skolemization" would eta expand swizzle as:
 swizzle = fun x -> undef x

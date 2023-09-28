@@ -339,7 +339,7 @@ TestElim.eliminate(mk(100))
 //│     'a :> Outside['a] | Union['a] | Intersect['a] | Translate['a] | Scale['a]
 //│ res
 //│ Runtime error:
-//│ RangeError: Maximum call stack size exceeded
+//│   RangeError: Maximum call stack size exceeded
 
 // *************************************************************************
 
@@ -399,7 +399,7 @@ Lang.size(mk(100))
 //│ Int
 //│ res
 //│ Runtime error:
-//│ RangeError: Maximum call stack size exceeded
+//│   RangeError: Maximum call stack size exceeded
 
 :e
 :re
@@ -422,7 +422,7 @@ Lang.contains(mk(100), Vector(0, 0))
 //│ error | false | true
 //│ res
 //│ Runtime error:
-//│ RangeError: Maximum call stack size exceeded
+//│   RangeError: Maximum call stack size exceeded
 
 :e
 :re
@@ -442,25 +442,25 @@ Lang.text(mk(100))
 //│ Str | error
 //│ res
 //│ Runtime error:
-//│ RangeError: Maximum call stack size exceeded
+//│   RangeError: Maximum call stack size exceeded
 
 :re
 Lang.isUniv(mk(100))
 //│ Bool
 //│ res
 //│ Runtime error:
-//│ RangeError: Maximum call stack size exceeded
+//│   RangeError: Maximum call stack size exceeded
 
 :re
 Lang.isEmpty(mk(100))
 //│ Bool
 //│ res
 //│ Runtime error:
-//│ RangeError: Maximum call stack size exceeded
+//│   RangeError: Maximum call stack size exceeded
 
 :re
 Lang.size(Lang.eliminate(mk(100)))
 //│ Int
 //│ res
 //│ Runtime error:
-//│ RangeError: Maximum call stack size exceeded
+//│   RangeError: Maximum call stack size exceeded

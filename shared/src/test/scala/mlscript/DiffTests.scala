@@ -941,7 +941,7 @@ class DiffTests
                       output("Runtime error:")
                       totalRuntimeErrors += 1
                     }
-                    content.linesIterator.foreach(output)
+                    content.linesIterator.foreach { s => output("  " + s) }
                   case ReplHost.Unexecuted(reason) =>
                     output(indent + "= <no result>")
                     output(indent + "  " + reason)

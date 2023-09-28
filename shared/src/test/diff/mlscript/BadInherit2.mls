@@ -205,7 +205,7 @@ class A1_2: S1 & T1
 (A1_2{}).Foo1
 //│ res: ('A & (int | string)) -> 'A
 //│ Runtime error:
-//│ Error: an error was thrown
+//│   Error: an error was thrown
 
 
 f = 0

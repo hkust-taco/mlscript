@@ -147,7 +147,7 @@ succ' {} {} {}
 //│ ╙──      	                                ^
 //│ res: error
 //│ Runtime error:
-//│ TypeError: n is not a function
+//│   TypeError: n is not a function
 
 fun x -> succ' x x x x x x x x x
 //│ res: ('a -> 'a -> 'b & 'b -> 'a -> 'a -> 'a -> 'a -> 'a -> 'a -> 'c & 'a) -> 'c
@@ -617,7 +617,7 @@ succ' {} {} {}
 //│ ╙──       	                                   ^^^
 //│ res: error
 //│ Runtime error:
-//│ TypeError: n is not a function
+//│   TypeError: n is not a function
 
 
 

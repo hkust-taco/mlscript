@@ -596,7 +596,7 @@ sz1 = sz 1
 sz1 2
 //│ res: error
 //│ Runtime error:
-//│ TypeError: f is not a function
+//│   TypeError: f is not a function
 
 
 

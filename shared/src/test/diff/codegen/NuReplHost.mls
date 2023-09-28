@@ -37,14 +37,14 @@ let r = foo(1)
 //│   └── Reply: [runtime error] Error: an error was thrown
 //│ r
 //│ Runtime error:
-//│ Error: an error was thrown
+//│   Error: an error was thrown
 
 :re
 r
 //│ nothing
 //│ res
 //│ Runtime error:
-//│ ReferenceError: r is not defined
+//│   ReferenceError: r is not defined
 
 
 

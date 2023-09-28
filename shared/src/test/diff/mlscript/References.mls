@@ -290,7 +290,7 @@ refrefin = RefImpl { mut value = error }
 //│   <:  refrefin:
 //│ Ref[in Ref[out int | string] out Ref[in int | string out nothing]]
 //│ Runtime error:
-//│ Error: an error was thrown
+//│   Error: an error was thrown
 
 :e
 refrefin = RefImpl { mut value = RefImpl { mut value = error } }
@@ -309,7 +309,7 @@ refrefin = RefImpl { mut value = RefImpl { mut value = error } }
 //│ ║  l.281: 	def refrefin: Ref[Ref[int] & Ref[string]]
 //│ ╙──       	                      ^^^
 //│ Runtime error:
-//│ Error: an error was thrown
+//│   Error: an error was thrown
 
 
 def consrefin: (Ref[int] & Ref[string]) -> int

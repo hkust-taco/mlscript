@@ -172,7 +172,7 @@ null.x
 //│ ╙──       	^^^^^^^^^
 //│ res: error
 //│ Runtime error:
-//│ TypeError: Cannot read properties of undefined (reading 'x')
+//│   TypeError: Cannot read properties of undefined (reading 'x')
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.166: 	null.x
 //│ ║         	^^^^^^
@@ -181,7 +181,7 @@ null.x
 //│ ╙──       	^^^^
 //│ res: error
 //│ Runtime error:
-//│ TypeError: Cannot read properties of null (reading 'x')
+//│   TypeError: Cannot read properties of null (reading 'x')
 
 def bypass: nothing
 //│ bypass: nothing
@@ -209,7 +209,7 @@ bypass.x
 bypass + 1
 //│ res: nothing
 //│ Runtime error:
-//│ TypeError: Cannot read properties of undefined (reading 'x')
+//│   TypeError: Cannot read properties of undefined (reading 'x')
 //│ res: int
 //│    = NaN
 

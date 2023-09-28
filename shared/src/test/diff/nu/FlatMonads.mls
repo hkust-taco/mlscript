@@ -384,7 +384,7 @@ r.run
 //│ 1 | error
 //│ res
 //│ Runtime error:
-//│ TypeError: Cannot read properties of undefined (reading 'a')
+//│   TypeError: Cannot read properties of undefined (reading 'a')
 
 
 // * We can even technically support the following syntax...

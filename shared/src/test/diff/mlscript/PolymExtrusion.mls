@@ -61,7 +61,7 @@ bar (fun x -> case x of {})
 //│ ╙──      	             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: error | int
 //│ Runtime error:
-//│ Error: non-exhaustive case expression
+//│   Error: non-exhaustive case expression
 
 
 def f: 'a -> 'b

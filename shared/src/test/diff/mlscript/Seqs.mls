@@ -57,7 +57,7 @@ Cons 1 Nil
 //│ ╙──      	^^^^^^
 //│ res: error
 //│ Runtime error:
-//│ TypeError: (intermediate value) is not a function
+//│   TypeError: (intermediate value) is not a function
 
 Cons
 //│ res: {head: 'A & 'head, size: int & 'size, tail: List['A] & 'tail} -> (Cons['A] with {head: 'head, size: 'size, tail: 'tail})

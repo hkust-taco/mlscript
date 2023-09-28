@@ -132,7 +132,7 @@ def build0 (g: forall 'b. ('a -> 'b -> 'b) -> 'b) = g (fun x -> fun xs -> cons (
 build0 (fun k -> k 1 error)
 //│ res: Ls[1]
 //│ Runtime error:
-//│ Error: an error was thrown
+//│   Error: an error was thrown
 
 
 

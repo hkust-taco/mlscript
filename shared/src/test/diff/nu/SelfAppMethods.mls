@@ -67,7 +67,7 @@ A.f
 //│     'f0 <: 'f0 -> 'a
 //│ res
 //│ Runtime error:
-//│ RangeError: Maximum call stack size exceeded
+//│   RangeError: Maximum call stack size exceeded
 
 :ns
 A.g
@@ -89,6 +89,6 @@ A.h
 //│     'a <: 'h0
 //│ res
 //│ Runtime error:
-//│ RangeError: Maximum call stack size exceeded
+//│   RangeError: Maximum call stack size exceeded
 
 

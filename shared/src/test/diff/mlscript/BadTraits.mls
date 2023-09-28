@@ -99,13 +99,13 @@ T (B {})
 t = T error
 //│ t: nothing
 //│ Runtime error:
-//│ Error: an error was thrown
+//│   Error: an error was thrown
 
 :re
 t: nothing
 //│ res: nothing
 //│ Runtime error:
-//│ ReferenceError: t is not defined
+//│   ReferenceError: t is not defined
 
 type Als = A & B
 //│ Defined type alias Als
@@ -114,7 +114,7 @@ type Als = A & B
 t: Als
 //│ res: Als
 //│ Runtime error:
-//│ ReferenceError: t is not defined
+//│   ReferenceError: t is not defined
 
 
 :e

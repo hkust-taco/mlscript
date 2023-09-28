@@ -52,7 +52,7 @@ eval e2
 //│ ╙──      	                      ^
 //│ res: error | int
 //│ Runtime error:
-//│ Error: non-exhaustive case expression
+//│   Error: non-exhaustive case expression
 
 
 def eval eval e = case e of {

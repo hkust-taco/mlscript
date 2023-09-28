@@ -80,7 +80,7 @@ res.tail.head
 //│ ╙──     	      ^^^
 //│ res: error
 //│ Runtime error:
-//│ TypeError: Cannot read properties of undefined (reading 'head')
+//│   TypeError: Cannot read properties of undefined (reading 'head')
 
 
 

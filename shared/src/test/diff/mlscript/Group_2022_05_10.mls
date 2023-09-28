@@ -46,5 +46,5 @@ self x = x x
 self self!
 //│ res: nothing
 //│ Runtime error:
-//│ RangeError: Maximum call stack size exceeded
+//│   RangeError: Maximum call stack size exceeded
 
