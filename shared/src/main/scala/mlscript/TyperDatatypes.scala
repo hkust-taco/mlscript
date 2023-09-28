@@ -479,17 +479,17 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
     def <:< (that: FieldType)(implicit ctx: Ctx, cache: MutMap[ST -> ST, Bool] = MutMap.empty): Bool =
       (that.lb.getOrElse(BotType) <:< this.lb.getOrElse(BotType)) && (this.ub <:< that.ub)
     def && (that: FieldType, prov: TypeProvenance = noProv): FieldType =
-      FieldType(lb.fold(that.lb)(l => Some(that.lb.fold(l)(l | _))), ub & that.ub, false)(prov)
+      FieldType(lb.fold(that.lb)(l => Some(that.lb.fold(l)(l | _))), ub & that.ub, opt && that.opt)(prov)
     def || (that: FieldType, prov: TypeProvenance = noProv): FieldType =
-      FieldType(for {l <- lb; r <- that.lb} yield (l & r), ub | that.ub, false)(prov)
+      FieldType(for {l <- lb; r <- that.lb} yield (l & r), ub | that.ub, opt || that.opt)(prov)
     def update(lb: SimpleType => SimpleType, ub: SimpleType => SimpleType): FieldType =
-      FieldType(this.lb.map(lb), ub(this.ub), false)(prov)
+      FieldType(this.lb.map(lb), ub(this.ub), opt)(prov)
     def freshenAbove(lim: Int, rigidify: Bool)(implicit ctx: Ctx, freshened: MutMap[TV, ST]): FieldType =
       update(_.freshenAbove(lim, rigidify), _.freshenAbove(lim, rigidify))
     override def toString =
       lb.fold(s"$ub${if (opt) "?" else ""}")(lb => s"mut ${if (lb === BotType) "" else lb}..$ub")
   }
-  object FieldType {
+  object FieldType { //TODO
     def mk(vi: VarianceInfo, lb: ST, ub: ST)(prov: TP): FieldType = vi match {
       case VarianceInfo(true, true) => FieldType(N, TopType, false)(prov)
       case VarianceInfo(true, false) => FieldType(N, ub, false)(prov)
