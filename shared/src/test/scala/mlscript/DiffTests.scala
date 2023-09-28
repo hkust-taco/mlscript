@@ -918,7 +918,12 @@ class DiffTests
               }
             }
 
-            def checkReply(replyQueue: mutable.Queue[(ReplHost.Reply, Str)], prefixLength: Int, errorOnly: Boolean = false): Unit = {
+            def checkReply(
+                replyQueue: mutable.Queue[(ReplHost.Reply, Str)],
+                prefixLength: Int,
+                hide: Boolean, // Show nothing except errors if `hide` is true.
+                errorOnly: Boolean
+            ): Unit = {
               val indent = " " * prefixLength
               replyQueue.headOption.foreach { case (head, log) =>
                 head match {
@@ -942,15 +947,15 @@ class DiffTests
                       totalRuntimeErrors += 1
                     }
                     content.linesIterator.foreach { s => output("  " + s) }
-                  case ReplHost.Unexecuted(reason) =>
+                  case ReplHost.Unexecuted(reason) if (!hide) =>
                     output(indent + "= <no result>")
                     output(indent + "  " + reason)
-                  case ReplHost.Result(result, _) if (!errorOnly) =>
+                  case ReplHost.Result(result, _) if (!errorOnly && !hide) =>
                     result.linesIterator.zipWithIndex.foreach { case (line, i) =>
                       if (i =:= 0) output(indent + "= " + line)
                       else output(indent + "  " + line)
                     }
-                  case ReplHost.Empty if (!errorOnly) =>
+                  case ReplHost.Empty if (!errorOnly && !hide) =>
                     output(indent + "= <missing implementation>")
                   case _ => ()
                 }
@@ -964,12 +969,10 @@ class DiffTests
               case R(replies) =>
                 val replyQueue = mutable.Queue.from(replies)
                 if (typerResults.isEmpty)
-                  checkReply(replyQueue, 0, true)
+                  checkReply(replyQueue, 0, false, true)
                 else {
                   typerResults.foreach { case (name, typingLines, diagnosticLines, typeBeforeDiags, hide) =>
-                    if (hide) {
-                      replyQueue.dequeue()
-                    } else {
+                    if (!hide) {
                       if (typeBeforeDiags) {
                         typingLines.foreach(output)
                         diagnosticLines.foreach(output)
@@ -977,8 +980,8 @@ class DiffTests
                         diagnosticLines.foreach(output)
                         typingLines.foreach(output)
                       }
-                      checkReply(replyQueue, name.length)
                     }
+                    checkReply(replyQueue, name.length, hide, false)
                   }
                 }
               case L(other) =>
