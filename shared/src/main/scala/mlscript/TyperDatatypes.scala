@@ -274,6 +274,7 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
       fields.map(f => s"${f._1.fold("")(_.name+": ")}${f._2},").mkString(" ")
     override def toString = s"($showInner)"
     // override def toString = s"(${fields.map(f => s"${f._1.fold("")(_+": ")}${f._2},").mkString(" ")})"
+    def isSubtype(that: TupleType): Boolean = fields.sizeCompare(that.fields) <= 0 && fields.sizeCompare(that.fields.filter(x => !x._2.opt)) >= 0
   }
 
   case class SpliceType(elems: Ls[Either[SimpleType, FieldType]])(val prov: TypeProvenance) extends ArrayBase {
