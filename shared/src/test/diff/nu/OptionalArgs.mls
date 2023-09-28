@@ -463,12 +463,13 @@ fun foo: ([Int] & [Int, Int?]) -> Int
 //│ result => None
 //│ fun foo: ([Int]) -> Int
 
+:e
 foo([1, true])
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.466: 	foo([1, true])
+//│ ║  l.467: 	foo([1, true])
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╟── tuple literal of type `[1, true]` does not match type `[Int]`
-//│ ║  l.466: 	foo([1, true])
+//│ ║  l.467: 	foo([1, true])
 //│ ║         	     ^^^^^^^
 //│ ╟── Note: constraint arises from tuple type:
 //│ ║  l.457: 	fun foo: ([Int] & [Int, Int?]) -> Int
@@ -493,12 +494,13 @@ fun foo: ([Int] | [Int, Int?]) -> Int
 //│ result => None
 //│ fun foo: ([Int, Int?]) -> Int
 
+:e
 foo([1, true])
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.496: 	foo([1, true])
+//│ ║  l.498: 	foo([1, true])
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╟── reference of type `true` is not an instance of type `Int`
-//│ ║  l.496: 	foo([1, true])
+//│ ║  l.498: 	foo([1, true])
 //│ ╙──       	        ^^^^
 //│ sim => TypedTypingUnit(
 //│ 	Some((#Int<Object,Num> | #error<>)))
