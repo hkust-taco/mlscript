@@ -7,12 +7,11 @@ fun f(y) =
     x
   y
 //│ fun f: forall 'a. (??A -> Int & 'a) -> 'a
-//│ f
 
 :e
 f(id)
 //│ ╔══[ERROR] Type error in application
-//│ ║  l.13: 	f(id)
+//│ ║  l.12: 	f(id)
 //│ ║        	^^^^^
 //│ ╟── type variable `'A` leaks out of its scope
 //│ ║  l.5: 	  let local = forall 'A: (x: 'A) =>
@@ -35,7 +34,6 @@ fun f(y) =
     x
   y
 //│ fun f: forall 'b. (forall 'a. 'a -> 'a & 'b) -> 'b
-//│ f
 
 f(id)
 //│ forall 'a. 'a -> 'a

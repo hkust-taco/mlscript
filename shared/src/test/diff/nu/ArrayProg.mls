@@ -6,16 +6,12 @@ fun cast(x) = x
 declare fun cast: anything -> nothing
 //│ fun cast: forall 'a. 'a -> 'a
 //│ fun cast: anything -> nothing
-//│ cast
-//│ cast
 
 
 fun mapi: (Array['a], ('a, Int) -> 'b) -> Array['b]
 fun mapi(xs, f) = cast(xs).map(f)
 //│ fun mapi: (anything, anything) -> nothing
 //│ fun mapi: forall 'a 'b. (Array['a], ('a, Int) -> 'b) -> Array['b]
-//│ mapi
-//│ mapi
 
 mapi of ["a", "", "bb"], (x, i) => [i, length of x]
 //│ Array[[Int, Int]]
@@ -25,7 +21,6 @@ mapi of ["a", "", "bb"], (x, i) => [i, length of x]
 
 fun map(xs, f) = mapi(xs, (x, i) => f(x))
 //│ fun map: forall 'a 'b. (Array['a], 'a -> 'b) -> Array['b]
-//│ map
 
 map of ["a", "", "bb"], x => length of x
 //│ Array[Int]
@@ -40,8 +35,6 @@ fun zip(xs, ys) = mapi of xs, (x, i) =>
     y then [x, y]
 //│ fun zip: forall 'c 'd. (Array['c], Array[Object & 'd & ~undefined]) -> Array[['c, 'd]]
 //│ fun zip: forall 'a 'b. (Array['a], Array[Object & 'b & ~undefined]) -> Array[['a, 'b]]
-//│ zip
-//│ zip
 
 
 zip
@@ -66,7 +59,6 @@ fun unbox(x) = if x is
 //│ fun unbox: forall 'a. (Numbr | Vectr) -> 'a
 //│   where
 //│     'a :> Int | Array['a]
-//│ unbox
 
 fun add(e) =
   if e is
@@ -78,7 +70,6 @@ fun add(e) =
     Pair(Numbr(n), Vectr(xs)) then
       Vectr of map of xs, x => add of Pair of Numbr(n), x
 //│ fun add: Pair[Numbr | Vectr, Numbr | Vectr] -> (Numbr | Vectr)
-//│ add
 
 
 add(Pair(Numbr(0), Numbr(1)))
@@ -122,7 +113,6 @@ fun add2(e) =
     Pair(Numbr(n), Numbr(m)) then Numbr(m + m)
     Pair(Numbr(n), Vectr(n)) then n
 //│ fun add2: Pair[Numbr, Numbr | Vectr] -> (Numbr | Array[Numbr | Vectr])
-//│ add2
 
 add2(Pair(Numbr(0), Numbr(1)))
 //│ Numbr | Array[Numbr | Vectr]
@@ -136,18 +126,15 @@ add2(Pair(Numbr(0), Numbr(1)))
 
 fun t: ([Numbr,Numbr]|[Vectr,Vectr]) -> Int
 //│ fun t: ([Numbr | Vectr, Numbr | Vectr]) -> Int
-//│ t
 
 
 fun s: (([Numbr,Numbr] -> Int) & ([Vectr,Vectr] -> Int),)
 //│ fun s: (Numbr | Vectr, Numbr | Vectr) -> Int
-//│ s
 
 // FIXME why does the above parse the same as:
 
 fun s: ([Numbr,Numbr] -> Int) & ([Vectr,Vectr] -> Int)
 //│ fun s: (Numbr | Vectr, Numbr | Vectr) -> Int
-//│ s
 
 
 s(Vectr([]),Vectr([]))
@@ -186,7 +173,7 @@ s([Numbr(0),Numbr(0)])
 //│ ║  l.+1: 	s([Numbr(0),Numbr(0)])
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from tuple type:
-//│ ║  l.148: 	fun s: ([Numbr,Numbr] -> Int) & ([Vectr,Vectr] -> Int)
+//│ ║  l.136: 	fun s: ([Numbr,Numbr] -> Int) & ([Vectr,Vectr] -> Int)
 //│ ╙──       	        ^^^^^^^^^^^^^
 //│ Int | error
 
@@ -245,7 +232,7 @@ add2(Pair(Vectr(0), Numbr(1)))
 //│ ║  l.+1: 	add2(Pair(Vectr(0), Numbr(1)))
 //│ ║        	                ^
 //│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.55: 	class Vectr(xs: Array[Numbr | Vectr])
+//│ ║  l.48: 	class Vectr(xs: Array[Numbr | Vectr])
 //│ ╙──      	                ^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	add2(Pair(Vectr(0), Numbr(1)))
@@ -254,13 +241,13 @@ add2(Pair(Vectr(0), Numbr(1)))
 //│ ║  l.+1: 	add2(Pair(Vectr(0), Numbr(1)))
 //│ ║        	          ^^^^^^^^
 //│ ╟── Note: constraint arises from class pattern:
-//│ ║  l.122: 	    Pair(Numbr(n), Numbr(m)) then Numbr(m + m)
+//│ ║  l.113: 	    Pair(Numbr(n), Numbr(m)) then Numbr(m + m)
 //│ ║         	         ^^^^^
 //│ ╟── from field selection:
-//│ ║  l.59: 	class Pair[A, B](a: A, b: B)
+//│ ║  l.52: 	class Pair[A, B](a: A, b: B)
 //│ ║        	                 ^
 //│ ╟── Note: type parameter A is defined at:
-//│ ║  l.59: 	class Pair[A, B](a: A, b: B)
+//│ ║  l.52: 	class Pair[A, B](a: A, b: B)
 //│ ╙──      	           ^
 //│ Numbr | error | Array[Numbr | Vectr]
 

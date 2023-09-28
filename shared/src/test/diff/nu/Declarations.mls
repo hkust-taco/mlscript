@@ -6,8 +6,6 @@ declare fun btoa: nothing
 declare fun atob: nothing
 //│ fun btoa: nothing
 //│ fun atob: nothing
-//│ btoa
-//│ atob
 
 let str = btoa("hello")
 atob(str)
@@ -36,7 +34,7 @@ console.error("hello")
 :e
 console.log("hello")
 //│ ╔══[ERROR] Type `console` does not contain member `log`
-//│ ║  l.37: 	console.log("hello")
+//│ ║  l.35: 	console.log("hello")
 //│ ╙──      	       ^^^^
 //│ error
 //│ res
@@ -121,10 +119,10 @@ b.length
 :pe
 declare 42
 //│ ╔══[PARSE ERROR] Unexpected literal token after modifier
-//│ ║  l.122: 	declare 42
+//│ ║  l.120: 	declare 42
 //│ ╙──       	        ^^
 //│ ╔══[PARSE ERROR] Unexpected literal token after modifier
-//│ ║  l.122: 	declare 42
+//│ ║  l.120: 	declare 42
 //│ ╙──       	        ^^
 //│ 42
 //│ res

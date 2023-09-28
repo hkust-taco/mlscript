@@ -171,7 +171,6 @@ mp === mp
 
 fun cmp(lhs, rhs) = lhs.color === rhs.color
 //│ fun cmp: forall 'a. ({color: Eql['a]}, {color: 'a}) -> Bool
-//│ cmp
 
 cmp(mp, mp)
 //│ Bool

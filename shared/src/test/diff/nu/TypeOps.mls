@@ -9,22 +9,16 @@ fun x : Int * Int
 fun x = [0, 1]
 //│ fun x: [0, 1]
 //│ fun x: *[Int, Int]
-//│ x
-//│ x
 
 fun x : Int * [Int]
 fun x = [0, [1]]
 //│ fun x: [0, [1]]
 //│ fun x: *[Int, [Int]]
-//│ x
-//│ x
 
 fun x : [Int] * Int
 fun x = [[0], 1]
 //│ fun x: [[0], 1]
 //│ fun x: *[[Int], Int]
-//│ x
-//│ x
 
 
 type Id[A] = A
@@ -33,17 +27,14 @@ type Id[A] = A
 :e
 fun x: Id[Int, Int]
 //│ ╔══[ERROR] Wrong number of type arguments – expected 1, found 2
-//│ ║  l.34: 	fun x: Id[Int, Int]
+//│ ║  l.28: 	fun x: Id[Int, Int]
 //│ ╙──      	       ^^^^^^^^^^^^
 //│ fun x: Id[Int]
-//│ x
 
 fun x: Id[[Int, Int]]
 //│ fun x: Id[[Int, Int]]
-//│ x
 
 fun x: Id[[[Int, Int]]]
 //│ fun x: Id[[[Int, Int]]]
-//│ x
 
 

@@ -12,7 +12,6 @@ let b = i(true)
 //│ fun i: forall 'a. 'a -> 'a
 //│ let a: 0
 //│ let b: true
-//│ i
 //│ a
 //│   = 0
 //│ b
@@ -28,7 +27,6 @@ let b = i(true)
 //│ a
 //│   Runtime error:
 //│     ReferenceError: i1 is not defined
-//│ i
 //│ b
 //│   = true
 
@@ -45,7 +43,6 @@ fun i(x) = x
 //│ b
 //│   Runtime error:
 //│     ReferenceError: i2 is not defined
-//│ i
 
 
 module Test {

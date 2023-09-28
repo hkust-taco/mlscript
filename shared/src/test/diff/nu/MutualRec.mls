@@ -28,7 +28,6 @@ fun fooo(x) =
 //│ ║  l.22: 	  class C(y, z)
 //│ ╙──      	             ^
 //│ fun fooo: error -> C
-//│ fooo
 
 
 
@@ -36,8 +35,6 @@ fun foo = bar
 fun bar = foo
 //│ fun foo: nothing
 //│ fun bar: nothing
-//│ foo
-//│ bar
 
 :re
 foo(bar)
@@ -51,7 +48,6 @@ fun foo = {x: foo}
 //│ fun foo: forall 'foo. 'foo
 //│   where
 //│     'foo :> {x: 'foo}
-//│ foo
 
 
 fun foo = {x: bar}
@@ -60,8 +56,6 @@ fun bar = {y: foo}
 //│ fun bar: forall 'foo. {y: 'foo}
 //│ where
 //│   'foo :> {x: {y: 'foo}}
-//│ foo
-//│ bar
 
 :re
 foo
@@ -107,8 +101,6 @@ fun bar(b) = foo(b)
 //│ fun bar: forall 'a 'b. 'a -> 'b
 //│ where
 //│   'b :> {h: 'a, t: 'b}
-//│ foo
-//│ bar
 
 :ns
 foo
@@ -128,8 +120,6 @@ fun bar(b) = {h2: b, t2: foo(b)}
 //│ where
 //│   'a :> {h1: 'c, t1: 'b}
 //│   'b :> {h2: 'c, t2: 'a}
-//│ foo
-//│ bar
 
 
 
@@ -174,7 +164,7 @@ module Test1_2 {
   fun b = Test1_1.a
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.174: 	  fun b = Test1_1.a
+//│ ║  l.164: 	  fun b = Test1_1.a
 //│ ╙──       	                 ^^
 //│ module Test1_1 {
 //│   fun a: error
@@ -199,10 +189,10 @@ class Test1_2 {
   fun b = Test1_1().a
 }
 //│ ╔══[ERROR] Class Test1_2 cannot be instantiated as it exposes no such constructor
-//│ ║  l.196: 	  fun a = Test1_2().b
+//│ ║  l.186: 	  fun a = Test1_2().b
 //│ ╙──       	          ^^^^^^^
 //│ ╔══[ERROR] Class Test1_1 cannot be instantiated as it exposes no such constructor
-//│ ║  l.199: 	  fun b = Test1_1().a
+//│ ║  l.189: 	  fun b = Test1_1().a
 //│ ╙──       	          ^^^^^^^
 //│ class Test1_1 {
 //│   constructor()
@@ -221,7 +211,7 @@ class Test1_2() {
   fun b = Test1_1().a
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.221: 	  fun b = Test1_1().a
+//│ ║  l.211: 	  fun b = Test1_1().a
 //│ ╙──       	                   ^^
 //│ class Test1_1() {
 //│   fun a: error
@@ -238,11 +228,11 @@ class Test1_2 {
   fun b = (new Test1_1).a
 }
 //│ ╔══[ERROR] Unhandled cyclic definition
-//│ ║  l.234: 	class Test1_1 {
+//│ ║  l.224: 	class Test1_1 {
 //│ ║         	^^^^^^^^^^^^^^^
-//│ ║  l.235: 	  fun a = (new Test1_2).b
+//│ ║  l.225: 	  fun a = (new Test1_2).b
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.236: 	}
+//│ ║  l.226: 	}
 //│ ╙──       	^
 //│ class Test1_1 {
 //│   constructor()
@@ -267,7 +257,7 @@ module Test2_2 {
   fun e = Test2_1.n
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.266: 	  fun c = Test2_1.a
+//│ ║  l.256: 	  fun c = Test2_1.a
 //│ ╙──       	                 ^^
 //│ module Test2_1 {
 //│   fun a: 123 | error

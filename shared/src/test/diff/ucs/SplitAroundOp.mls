@@ -13,7 +13,6 @@ fun f(x, b) =
       "2" then "s2"
   else ":p"  
 //│ fun f: (Eql["0" | "1" | "2" | 0 | 1 | 2], Object) -> (":p" | "n0" | "n1" | "n2" | "s0" | "s1" | "s2")
-//│ f
 
 fun f(x, y, a, b) =
   if x === 0
@@ -23,7 +22,6 @@ fun f(x, y, a, b) =
       b === 0 then "x, b"
   else "nah"
 //│ fun f: (Eql[0], Eql[0], Eql[0], Eql[0]) -> ("nah" | "x, a" | "x, b" | "x, y")
-//│ f
 
 class A()
 class B()
@@ -36,7 +34,6 @@ fun f(x) =
       A() then 0
       B() then 1
 //│ fun f: (A | B) -> (0 | 1)
-//│ f
 
 :e // FIXME
 if x is
@@ -45,7 +42,7 @@ if x is
     > 0 then 1
     < 0 then 2
 //│ ╔══[ERROR] Illegal pattern `===`
-//│ ║  l.44: 	    === 0 then 0
+//│ ║  l.41: 	    === 0 then 0
 //│ ╙──      	    ^^^
 //│ error
 //│ Code generation encountered an error:

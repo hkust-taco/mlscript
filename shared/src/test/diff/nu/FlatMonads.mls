@@ -3,7 +3,6 @@
 
 declare fun String: anything -> Str
 //│ fun String: anything -> Str
-//│ String
 
 
 abstract class IO[A] {
@@ -99,10 +98,10 @@ main.run
 :e
 printLine("").bind of [] => error
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.100: 	printLine("").bind of [] => error
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.99: 	printLine("").bind of [] => error
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `[?A]` does not match type `[]`
-//│ ║  l.16: 	class Bind[A, B](underlying: IO[A], f: A -> IO[B]) extends IO[B] {
+//│ ║  l.15: 	class Bind[A, B](underlying: IO[A], f: A -> IO[B]) extends IO[B] {
 //│ ╙──      	                                       ^
 //│ Bind[undefined, 'B] | error
 //│ res
@@ -113,7 +112,6 @@ printLine("").bind of [] => error
 
 fun (#>>) bind[A, B](x: IO[A], f: A -> IO[B]): IO[B] = x.bind(f)
 //│ fun (#>>) bind: forall 'A 'B. (x: IO['A], f: 'A -> IO['B]) -> IO['B]
-//│ bind
 
 val main =
   printLine("Hi! Input two numbers: ") #>> _ =>
@@ -143,7 +141,6 @@ fun loop =
 //│ fun loop: forall 'B. IO['B]
 //│   where
 //│     'B :> Int
-//│ loop
 
 let r = loop.run
 //│ let r: Int
@@ -159,8 +156,6 @@ fun (>>) compose[A, B, C](f: A -> B, g: B -> C): A -> C = x => g(f(x))
 fun (#>) map[A, B](x: IO[A], f: A -> B): IO[B] = x.bind(f >> Pure)
 //│ fun (>>) compose: forall 'A 'B 'C. (f: 'A -> 'B, g: 'B -> 'C) -> 'A -> 'C
 //│ fun (#>) map: forall 'A0 'B0. (x: IO['A0], f: 'A0 -> 'B0) -> IO['B0]
-//│ compose
-//│ map
 
 val main =
   printLine("Hi! Input two numbers: ") #>> _ =>
@@ -184,9 +179,6 @@ fun (#>) map(x, f) = x.bind(f >> Pure)
 //│ fun (>>) compose: forall 'a 'b 'c. ('c -> 'a, 'a -> 'b) -> 'c -> 'b
 //│ fun (#>>) bind: forall 'd 'e. ({bind: 'd -> 'e}, 'd) -> 'e
 //│ fun (#>) map: forall 'f 'A 'g. ({bind: ('f -> Pure['A]) -> 'g}, 'f -> 'A) -> 'g
-//│ compose
-//│ bind
-//│ map
 
 val main =
   printLine("Hi! Input two numbers: ") #>> _ =>
@@ -216,7 +208,6 @@ fun loop =
 //│ fun loop: forall 'B. Bind[undefined, 'B]
 //│   where
 //│     'B :> Int
-//│ loop
 
 let r = loop.run
 //│ let r: Int
@@ -240,7 +231,6 @@ fun main(ctx) =
 //│   pure: Int -> 'd,
 //│   readInt: {bind: (Int -> 'b) -> 'a & (Int -> 'c) -> 'b}
 //│ } -> 'e
-//│ main
 
 val defaultCtx = {printLine, readInt, pure: Pure}
 //│ val defaultCtx: {
@@ -278,7 +268,6 @@ fun loop(ctx) =
 //│   pure: 'c -> 'd,
 //│   readInt: {bind: ((Num & 'c) -> ('d | 'b)) -> 'a}
 //│ } -> 'b
-//│ loop
 
 let r = loop(defaultCtx)
 //│ let r: Bind[undefined, 'B]
@@ -297,13 +286,13 @@ let r = loop(defaultCtx).run
 :e
 not(r)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.298: 	not(r)
+//│ ║  l.287: 	not(r)
 //│ ║         	^^^^^^
 //│ ╟── type `Int` is not an instance of type `Bool`
-//│ ║  l.35: 	module readInt extends IO[Int] { fun run: Int = 42 }
+//│ ║  l.34: 	module readInt extends IO[Int] { fun run: Int = 42 }
 //│ ║        	                          ^^^
 //│ ╟── but it flows into reference with expected type `Bool`
-//│ ║  l.298: 	not(r)
+//│ ║  l.287: 	not(r)
 //│ ╙──       	    ^
 //│ error | false | true
 //│ res
@@ -350,13 +339,13 @@ main
 :e
 let r = printLine("").bind of 0 => Pure(1)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.351: 	let r = printLine("").bind of 0 => Pure(1)
+//│ ║  l.340: 	let r = printLine("").bind of 0 => Pure(1)
 //│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `undefined` does not match type `0`
-//│ ║  l.316: 	class printLine(str: Str) extends IO { fun run = log(str) }
+//│ ║  l.305: 	class printLine(str: Str) extends IO { fun run = log(str) }
 //│ ║         	                                                 ^^^^^^^^
 //│ ╟── Note: constraint arises from integer literal:
-//│ ║  l.351: 	let r = printLine("").bind of 0 => Pure(1)
+//│ ║  l.340: 	let r = printLine("").bind of 0 => Pure(1)
 //│ ╙──       	                              ^
 //│ let r: Bind[in 0 & 'A out undefined | 'A, 'B] | error
 //│   where
@@ -369,20 +358,20 @@ let r = printLine("").bind of x =>
 log(x.a)
 Pure(1)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.368: 	let r = printLine("").bind of x =>
+//│ ║  l.357: 	let r = printLine("").bind of x =>
 //│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.369: 	log(x.a)
+//│ ║  l.358: 	log(x.a)
 //│ ║         	^^^^^^^^^
-//│ ║  l.370: 	Pure(1)
+//│ ║  l.359: 	Pure(1)
 //│ ║         	^^^^^^^
 //│ ╟── application of type `undefined` does not have field 'a'
-//│ ║  l.316: 	class printLine(str: Str) extends IO { fun run = log(str) }
+//│ ║  l.305: 	class printLine(str: Str) extends IO { fun run = log(str) }
 //│ ║         	                                                 ^^^^^^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.369: 	log(x.a)
+//│ ║  l.358: 	log(x.a)
 //│ ║         	    ^^^
 //│ ╟── from reference:
-//│ ║  l.369: 	log(x.a)
+//│ ║  l.358: 	log(x.a)
 //│ ╙──       	    ^
 //│ let r: Bind[in {a: anything} & 'A out undefined | 'A, 'B] | error
 //│   where

@@ -3,7 +3,6 @@
 
 fun foo(x) = (x, x)
 //│ fun foo: forall 'a. 'a -> ['a, 'a]
-//│ foo
 
 id
 //│ forall 'a. 'a -> 'a
@@ -20,8 +19,6 @@ fun fst(x, _) = x
 fun snd(_, x) = x
 //│ fun fst: forall 'a. ('a, anything) -> 'a
 //│ fun snd: forall 'b. (anything, 'b) -> 'b
-//│ fst
-//│ snd
 
 fst(1, 2)
 //│ 1
@@ -31,13 +28,13 @@ fst(1, 2)
 :e
 fst([1, 2])
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.32: 	fst([1, 2])
+//│ ║  l.29: 	fst([1, 2])
 //│ ║        	^^^^^^^^^^^
 //│ ╟── argument of type `[[1, 2]]` does not match type `[?a, ?b]`
-//│ ║  l.32: 	fst([1, 2])
+//│ ║  l.29: 	fst([1, 2])
 //│ ║        	   ^^^^^^^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.19: 	fun fst(x, _) = x
+//│ ║  l.18: 	fun fst(x, _) = x
 //│ ╙──      	       ^^^^^^
 //│ error
 //│ res
@@ -48,8 +45,6 @@ fun fst([x, _]) = x
 fun snd([_, x]) = x
 //│ fun fst: forall 'a. (['a, anything]) -> 'a
 //│ fun snd: forall 'b. ([anything, 'b]) -> 'b
-//│ fst
-//│ snd
 
 let s = fst(r)
 //│ let s: forall 'a. 'a -> 'a

@@ -139,12 +139,11 @@ Test:  Test<'a>
 
 fun test(x) = if x is Test then x.foo
 //│ fun test: forall 'A. Test['A] -> 'A -> 'A
-//│ test
 
 :e
 test(Test)
 //│ ╔══[ERROR] Type error in application
-//│ ║  l.145: 	test(Test)
+//│ ║  l.144: 	test(Test)
 //│ ║         	^^^^^^^^^^
 //│ ╟── type variable `A` leaks out of its scope
 //│ ║  l.5: 	module Test<A> {

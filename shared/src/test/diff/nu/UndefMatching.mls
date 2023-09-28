@@ -4,7 +4,6 @@
 
 fun foo(x: 'a | undefined) = if x is undefined then error else x
 //│ fun foo: forall 'a. (x: Object & 'a & ~undefined | undefined) -> 'a
-//│ foo
 
 
 class Abstract[A] {
@@ -36,13 +35,13 @@ class Abstract[A] {
     if x is undefined then error else x
 }
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.36: 	    if x is undefined then error else x
+//│ ║  l.35: 	    if x is undefined then error else x
 //│ ║        	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `A & ~undefined` is not an instance of type `Object`
-//│ ║  l.35: 	  fun bar(x: A & ~undefined | undefined) =
+//│ ║  l.34: 	  fun bar(x: A & ~undefined | undefined) =
 //│ ║        	             ^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `Object`
-//│ ║  l.36: 	    if x is undefined then error else x
+//│ ║  l.35: 	    if x is undefined then error else x
 //│ ╙──      	       ^
 //│ class Abstract[A] {
 //│   constructor()

@@ -35,7 +35,6 @@ class Cons[out A](val head: A, val tail: List[A]) {
 
 fun pairup(x, y) = [x, y]
 //│ fun pairup: forall 'a 'b. ('a, 'b) -> ['a, 'b]
-//│ pairup
 
 
 
@@ -47,32 +46,31 @@ fun zipWith_wrong(f, xs, ys) =
   then Some(Cons(f(x, y), tail))
   else None
 //│ ╔══[PARSE ERROR] Expected 'then'/'else' clause; found operator application followed by newline instead
-//│ ║  l.44: 	  if  xs is Cons(x, xs)
+//│ ║  l.43: 	  if  xs is Cons(x, xs)
 //│ ║        	      ^^^^^^^^^^^^^^^^^
-//│ ║  l.45: 	  and ys is Cons(y, ys)
+//│ ║  l.44: 	  and ys is Cons(y, ys)
 //│ ║        	^^
 //│ ╟── Note: 'if' expression started here:
-//│ ║  l.44: 	  if  xs is Cons(x, xs)
+//│ ║  l.43: 	  if  xs is Cons(x, xs)
 //│ ╙──      	  ^^
 //│ ╔══[PARSE ERROR] Unexpected operator in expression position
-//│ ║  l.45: 	  and ys is Cons(y, ys)
+//│ ║  l.44: 	  and ys is Cons(y, ys)
 //│ ╙──      	  ^^^
 //│ ╔══[PARSE ERROR] Unexpected operator in expression position
-//│ ║  l.46: 	  and zipWith_wrong(f, xs, ys) is Some(tail)
+//│ ║  l.45: 	  and zipWith_wrong(f, xs, ys) is Some(tail)
 //│ ╙──      	  ^^^
 //│ ╔══[PARSE ERROR] Expected an expression; found a 'then'/'else' clause instead
-//│ ║  l.44: 	  if  xs is Cons(x, xs)
+//│ ║  l.43: 	  if  xs is Cons(x, xs)
 //│ ║        	      ^^^^^^^^^^^^^^^^^
-//│ ║  l.45: 	  and ys is Cons(y, ys)
+//│ ║  l.44: 	  and ys is Cons(y, ys)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.46: 	  and zipWith_wrong(f, xs, ys) is Some(tail)
+//│ ║  l.45: 	  and zipWith_wrong(f, xs, ys) is Some(tail)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.47: 	  then Some(Cons(f(x, y), tail))
+//│ ║  l.46: 	  then Some(Cons(f(x, y), tail))
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.48: 	  else None
+//│ ║  l.47: 	  else None
 //│ ╙──      	^^^^^^^^^^^
 //│ fun zipWith_wrong: (anything, anything, anything) -> undefined
-//│ zipWith_wrong
 
 
 // FIXME parsing
@@ -82,9 +80,9 @@ fun zipWith_wrong(f, xs, ys) =
     and zipWith_wrong(f, xs, ys) is Some(tail) then Some(Cons(f(x, y), tail))
   else None
 //│ ╔══[ERROR] illegal pattern
-//│ ║  l.80: 	  if  xs is Cons(x, xs)
+//│ ║  l.78: 	  if  xs is Cons(x, xs)
 //│ ║        	            ^^^^^^^^^^^
-//│ ║  l.81: 	    and ys is Cons(y, ys)
+//│ ║  l.79: 	    and ys is Cons(y, ys)
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ fun zipWith_wrong: (anything, anything, anything) -> error
 //│ Code generation encountered an error:
@@ -96,7 +94,6 @@ fun zipWith_wrong(f, xs, ys) =
     and ys is Cons(y, ys) and zipWith_wrong(f, xs, ys) is Some(tail) then Some(Cons(f(x, y), tail))
   else None
 //│ fun zipWith_wrong: forall 'a 'b 'A. (('a, 'b) -> 'A, Cons['a] | Object & ~#Cons, Cons['b] | Object & ~#Cons) -> (None | Some[Cons['A]])
-//│ zipWith_wrong
 
 // * Notice the result is wrong (duh)
 zipWith_wrong(pairup, Nil, Nil)
@@ -112,7 +109,6 @@ fun zipWith(f, xs, ys) =
     Nil and ys is Nil then Some(Nil)
   else None
 //│ fun zipWith: forall 'a 'b 'A. (('a, 'b) -> 'A, Cons['a] | Object & ~#Cons, Cons['b] | Object & ~#Cons) -> (None | Some[Cons['A] | Nil])
-//│ zipWith
 
 zipWith(pairup, Cons(0, Nil), Cons("0", Nil)).value.toArray
 //│ Array[anything]
@@ -126,7 +122,6 @@ fun zipWith(f, xs, ys) =
     Nil and ys is Nil then Some(Nil)
   else None
 //│ fun zipWith: forall 'a 'b 'A. (('a, 'b) -> 'A, Cons['a] | Object & ~#Cons, Cons['b] | Object & ~#Cons) -> (None | Some[Cons['A] | Nil])
-//│ zipWith
 
 zipWith(pairup, Cons(0, Nil), Cons("0", Nil)).value.toArray
 //│ Array[anything]
@@ -139,7 +134,6 @@ fun zipWith(f, xs, ys) =
   else if xs is Nil and ys is Nil then Some(Nil)
   else None
 //│ fun zipWith: forall 'a 'b 'A. (('a, 'b) -> 'A, Cons['a] | Object & ~#Cons, Cons['b] | Object & ~#Cons) -> (None | Some[Cons['A] | Nil])
-//│ zipWith
 
 zipWith(pairup, Cons(0, Nil), Cons("0", Nil)).value.toArray
 //│ Array[anything]
@@ -154,7 +148,6 @@ fun zipWith(f, xs, ys) =
   else if xs is Nil and ys is Nil then Some(Nil)
   else None
 //│ fun zipWith: forall 'a 'b 'A. (('a, 'b) -> 'A, Cons['a] | Object & ~#Cons, Cons['b] | Object & ~#Cons) -> (None | Some[Cons['A] | Nil])
-//│ zipWith
 
 zipWith(pairup, Cons(0, Nil), Cons("0", Nil)).value.toArray
 //│ Array[anything]
@@ -174,7 +167,6 @@ fun zipWith(f, xs, ys) =
     Nil then
       if ys is Nil then Some(Nil) else None
 //│ fun zipWith: forall 'a 'b 'A. (('a, 'b) -> 'A, Cons['a] | Nil, Cons['b] | Nil) -> (None | Some[Cons['A] | Nil])
-//│ zipWith
 
 zipWith(pairup, Nil, Nil).value.toArray
 //│ Array[anything]
@@ -209,7 +201,6 @@ fun zipWith_wrong2(f, xs, ys) =
   else if xs is Nil and ys is Nil then Some(Nil)
   else None
 //│ fun zipWith_wrong2: forall 'a 'b 'A. (('a, 'b) -> 'A, Cons['a] | Object & ~#Cons, Cons['b] | Object & ~#Cons) -> (Cons[Some['A]] | None | Some[Nil])
-//│ zipWith_wrong2
 
 // * No type error! The definition and use are well-typed...
 zipWith_wrong2(pairup, Cons(0, Cons(1, Nil)), Cons("0", Cons("1", Nil)))

@@ -29,7 +29,6 @@ if Pair(0, 1) is Pair(a, b) then true else false
 
 fun foo(x) = x is Pair(a, b)
 //│ fun foo: (Object & ~#Pair | Pair[anything]) -> Bool
-//│ foo
 
 
 Pair(0, 1) is Pair(a, b) and a > b
@@ -45,11 +44,9 @@ if Pair(0, 1) is Pair(a, b) then a > b else false
 
 fun foo(x) = x is Pair(a, b) and a > b
 //│ fun foo: (Object & ~#Pair | Pair[Num]) -> Bool
-//│ foo
 
 fun foo(x) = if x is Pair(a, b) then a > b else false
 //│ fun foo: (Object & ~#Pair | Pair[Num]) -> Bool
-//│ foo
 
 
 // TODO proper error
@@ -57,9 +54,9 @@ fun foo(x) = x is
   Pair
   Int
 //│ ╔══[ERROR] illegal pattern
-//│ ║  l.57: 	  Pair
+//│ ║  l.54: 	  Pair
 //│ ║        	  ^^^^
-//│ ║  l.58: 	  Int
+//│ ║  l.55: 	  Int
 //│ ╙──      	^^^^^
 //│ fun foo: anything -> error
 //│ Code generation encountered an error:
@@ -70,9 +67,9 @@ fun foo(x) = x is
   Pair(a, b) and a > b
   Int
 //│ ╔══[ERROR] illegal pattern
-//│ ║  l.70: 	  Pair(a, b) and a > b
+//│ ║  l.67: 	  Pair(a, b) and a > b
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.71: 	  Int
+//│ ║  l.68: 	  Int
 //│ ╙──      	^^^^^
 //│ fun foo: anything -> error
 //│ Code generation encountered an error:
@@ -82,10 +79,10 @@ fun foo(x) = x is
 fun foo1(x) = x is Pair(a, b) | Int
 fun foo2(x) = x is (Pair(a, b) and a > b) | Int
 //│ ╔══[ERROR] Illegal pattern `|`
-//│ ║  l.82: 	fun foo1(x) = x is Pair(a, b) | Int
+//│ ║  l.79: 	fun foo1(x) = x is Pair(a, b) | Int
 //│ ╙──      	                              ^
 //│ ╔══[ERROR] Illegal pattern `|`
-//│ ║  l.83: 	fun foo2(x) = x is (Pair(a, b) and a > b) | Int
+//│ ║  l.80: 	fun foo2(x) = x is (Pair(a, b) and a > b) | Int
 //│ ╙──      	                                          ^
 //│ fun foo1: anything -> error
 //│ fun foo2: anything -> error

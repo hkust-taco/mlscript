@@ -967,16 +967,16 @@ class DiffTests
                   checkReply(replyQueue, 0, true)
                 else {
                   typerResults.foreach { case (name, typingLines, diagnosticLines, typeBeforeDiags, hide) =>
-                    if (typeBeforeDiags) {
-                      typingLines.foreach(output)
-                      diagnosticLines.foreach(output)
-                    } else {
-                      diagnosticLines.foreach(output)
-                      typingLines.foreach(output)
-                    }
                     if (hide) {
                       replyQueue.dequeue()
                     } else {
+                      if (typeBeforeDiags) {
+                        typingLines.foreach(output)
+                        diagnosticLines.foreach(output)
+                      } else {
+                        diagnosticLines.foreach(output)
+                        typingLines.foreach(output)
+                      }
                       checkReply(replyQueue, name.length)
                     }
                   }

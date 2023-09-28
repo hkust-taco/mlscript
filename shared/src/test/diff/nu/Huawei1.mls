@@ -22,7 +22,6 @@ fun bar(c) = if c is
   C(y) then y
   B    then 0
 //│ fun bar: forall 'a. (B | C['a]) -> (0 | 'a)
-//│ bar
 
 bar(c)
 //│ 0 | 123
@@ -34,7 +33,6 @@ fun bar(c) = if c is
     B    then 0
   else 1
 //│ fun bar: (C[Int] | Object & ~#C) -> Int
-//│ bar
 
 bar(c)
 //│ Int
@@ -44,13 +42,13 @@ bar(c)
 :e
 bar(C(true))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.45: 	bar(C(true))
+//│ ║  l.43: 	bar(C(true))
 //│ ║        	^^^^^^^^^^^^
 //│ ╟── reference of type `true` is not an instance of type `Int`
-//│ ║  l.45: 	bar(C(true))
+//│ ║  l.43: 	bar(C(true))
 //│ ║        	      ^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.33: 	    C(y) then y + 1
+//│ ║  l.32: 	    C(y) then y + 1
 //│ ║        	              ^
 //│ ╟── from field selection:
 //│ ║  l.4: 	class C[A](x: A) {

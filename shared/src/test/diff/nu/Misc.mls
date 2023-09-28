@@ -34,11 +34,9 @@ x => x + 1
 
 fun f({ y }) = y
 //│ fun f: forall 'a. {y: 'a} -> 'a
-//│ f
 
 fun f of { y } = y
 //│ fun f: forall 'a. {y: 'a} -> 'a
-//│ f
 
 f({y: 1})
 //│ 1
@@ -48,7 +46,6 @@ f({y: 1})
 
 fun f of x, y = x + y
 //│ fun f: (Int, Int) -> Int
-//│ f
 
 f of 1, 2
 //│ Int
@@ -58,7 +55,6 @@ f of 1, 2
 
 fun f of [x, y] = x + y
 //│ fun f: ([Int, Int]) -> Int
-//│ f
 
 f of [1, 2]
 //│ Int
@@ -79,13 +75,13 @@ f(1, 2)
 :e
 f([1, 2])
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.80: 	f([1, 2])
+//│ ║  l.76: 	f([1, 2])
 //│ ║        	^^^^^^^^^
 //│ ╟── argument of type `[[1, 2]]` does not match type `[?a, ?b]`
-//│ ║  l.80: 	f([1, 2])
+//│ ║  l.76: 	f([1, 2])
 //│ ║        	 ^^^^^^^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.69: 	let f = (x, y) => x + y
+//│ ║  l.65: 	let f = (x, y) => x + y
 //│ ╙──      	         ^^^^
 //│ Int | error
 //│ res
@@ -101,11 +97,11 @@ let f = ((x, y)) => x + y
 :e
 f(1, 2)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.102: 	f(1, 2)
-//│ ║         	^^^^^^^
+//│ ║  l.98: 	f(1, 2)
+//│ ║        	^^^^^^^
 //│ ╟── argument list of type `[1, 2]` does not match type `[[?a, ?b]]`
-//│ ║  l.102: 	f(1, 2)
-//│ ╙──       	 ^^^^^^
+//│ ║  l.98: 	f(1, 2)
+//│ ╙──      	 ^^^^^^
 //│ Int | error
 //│ res
 //│     Runtime error:

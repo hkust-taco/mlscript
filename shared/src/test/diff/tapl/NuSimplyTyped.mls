@@ -3,11 +3,9 @@
 
 fun (++) concatOp(a, b) = concat(a)(b)
 //│ fun (++) concatOp: (Str, Str) -> Str
-//│ concatOp
 
 fun par(a) = "(" ++ a ++ ")"
 //│ fun par: Str -> Str
-//│ par
 
 type Option[A] = Some[A] | None
 class Some[A](value: A)
@@ -35,8 +33,6 @@ fun _f(lhs, rhs) = FunctionType(lhs, rhs)
 fun _t(name) = PrimitiveType(name)
 //│ fun _f: (Type, Type) -> FunctionType
 //│ fun _t: Str -> PrimitiveType
-//│ _f
-//│ _t
 
 type Term = Lit | Var | Abs | App
 class Lit(tag: Str, ty: Type)
@@ -73,8 +69,6 @@ fun find(t, k) =
     Empty then None
 //│ fun insert: forall 'A. (Empty | Node['A], Str, 'A) -> Node['A]
 //│ fun find: forall 'A0. (Empty | Node['A0], Str) -> (None | Some['A0])
-//│ insert
-//│ find
 
 fun showType(ty) =
   if ty is
@@ -82,7 +76,6 @@ fun showType(ty) =
     FunctionType(lhs, rhs) then "(" ++ showType(lhs) ++ ") -> " ++ showType(rhs)
     PrimitiveType(name) then name
 //│ fun showType: (FunctionType | PrimitiveType) -> Str
-//│ showType
 
 showType(_t("int"))
 showType(_f(_t("int"), _t("bool")))
@@ -105,7 +98,6 @@ fun typeEqual(t1, t2) =
       typeEqual(lhs1, lhs2) and typeEqual(rhs1, rhs2)
     _ then false
 //│ fun typeEqual: (Object, Object) -> Bool
-//│ typeEqual
 
 fun showTerm(t) =
   if t is
@@ -116,7 +108,6 @@ fun showTerm(t) =
       "((" ++ showTerm(Abs(lhs0, ty, rhs)) ++ ") " ++ showTerm(rhs) ++ ")"
     App(lhs, rhs) then par(showTerm(lhs) ++ " " ++ showTerm(rhs))
 //│ fun showTerm: (Abs | App | Lit | Var) -> Str
-//│ showTerm
 
 showTerm(Var("x"))
 showTerm(Abs(Var("x"), _t("int"), Var("y")))
@@ -151,14 +142,12 @@ fun typeTerm(t: Term, ctx: TreeMap[Type]): Result[Type, Str] =
       Ok(PrimitiveType(name)) then Err("cannot apply primitive type `" ++ name ++ "`")
       Err(message) then Err(message)
 //│ fun typeTerm: (t: Term, ctx: TreeMap[Type]) -> Result[Type, Str]
-//│ typeTerm
 
 fun showTypeTerm(t, ctx) =
   if typeTerm(t, ctx) is
     Ok(ty) then showTerm(t) ++ " : " ++ showType(ty)
     Err(message) then "Type error: " ++ message
 //│ fun showTypeTerm: (Term, TreeMap[Type]) -> Str
-//│ showTypeTerm
 
 showTypeTerm(Var("x"), Empty)
 showTypeTerm(Abs(Var("x"), _t("int"), Var("x")), Empty)

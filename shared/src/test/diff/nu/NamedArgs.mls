@@ -4,7 +4,6 @@
 
 fun test(x: 'a) = if x is undefined then 0 else x + 1
 //│ fun test: (x: Int | undefined) -> Int
-//│ test
 
 test(x: 0)
 //│ Int
@@ -14,7 +13,7 @@ test(x: 0)
 :e
 test(y: 0)
 //│ ╔══[ERROR] Wrong tuple field name: found 'y' instead of 'x'
-//│ ║  l.15: 	test(y: 0)
+//│ ║  l.14: 	test(y: 0)
 //│ ╙──      	    ^^^^^^
 //│ Int | error
 //│ res
@@ -23,7 +22,6 @@ test(y: 0)
 
 fun test(x) = x + 1
 //│ fun test: Int -> Int
-//│ test
 
 // :e // TODO should be an error
 test(y: 0)
@@ -56,7 +54,7 @@ Foo(y: 1)
 :e // TODO: Here `x` is not currently treated as a field name
 class Bar(x)
 //│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.57: 	class Bar(x)
+//│ ║  l.55: 	class Bar(x)
 //│ ╙──      	          ^
 //│ class Bar(x: error)
 
@@ -73,7 +71,7 @@ Bar(x: 1)
 :e
 Bar(y: 1)
 //│ ╔══[ERROR] Wrong tuple field name: found 'y' instead of 'x'
-//│ ║  l.74: 	Bar(y: 1)
+//│ ║  l.72: 	Bar(y: 1)
 //│ ╙──      	   ^^^^^^
 //│ Bar | error
 //│ res

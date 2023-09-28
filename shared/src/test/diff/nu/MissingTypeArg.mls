@@ -15,7 +15,6 @@ fun test(pt1, pt2) = pt1.color === pt1.color and
 //│   where
 //│     'c <: {parent: Object & 'c & ~undefined | undefined}
 //│     'a <: {color: Eql['b] & 'b, parent: Object & 'a & ~undefined | undefined}
-//│ test
 
 
 // * This works out fine:
@@ -50,10 +49,10 @@ val p = MyPoint2(0, undefined)
 :e
 test(p, p)
 //│ ╔══[ERROR] Type error in application
-//│ ║  l.51: 	test(p, p)
+//│ ║  l.50: 	test(p, p)
 //│ ║        	^^^^^^^^^^
 //│ ╟── type variable `Col` leaks out of its scope
-//│ ║  l.42: 	class MyPoint2[Col](val color: Col, val parent: MyPoint2 | undefined)
+//│ ║  l.41: 	class MyPoint2[Col](val color: Col, val parent: MyPoint2 | undefined)
 //│ ║        	               ^^^
 //│ ╟── into field selection of type `#Eql`
 //│ ║  l.8: 	fun test(pt1, pt2) = pt1.color === pt1.color and
@@ -75,18 +74,17 @@ fun test(pt1, pt2) = pt1.color === pt1.color and
 //│   where
 //│     'a <: {parent: Object & 'a}
 //│     'b <: {color: Eql['c] & 'c, parent: Object & 'b & ~undefined | undefined}
-//│ test
 
 :e // TODO support
 test(p, p)
 //│ ╔══[ERROR] Type error in application
-//│ ║  l.81: 	test(p, p)
+//│ ║  l.79: 	test(p, p)
 //│ ║        	^^^^^^^^^^
 //│ ╟── type variable `Col` leaks out of its scope
-//│ ║  l.42: 	class MyPoint2[Col](val color: Col, val parent: MyPoint2 | undefined)
+//│ ║  l.41: 	class MyPoint2[Col](val color: Col, val parent: MyPoint2 | undefined)
 //│ ║        	               ^^^
 //│ ╟── into field selection of type `#Eql`
-//│ ║  l.69: 	fun test(pt1, pt2) = pt1.color === pt1.color and
+//│ ║  l.68: 	fun test(pt1, pt2) = pt1.color === pt1.color and
 //│ ╙──      	                     ^^^^^^^^^
 //│ error
 //│ res

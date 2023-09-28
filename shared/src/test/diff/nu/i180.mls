@@ -3,7 +3,6 @@
 
 fun (++) stringConcat(a, b) = concat(a)(b)
 //│ fun (++) stringConcat: (Str, Str) -> Str
-//│ stringConcat
 
 type List[out A] = Cons[A] | Nil
 class Cons[out A](head: A, tail: List[A]) {
@@ -30,7 +29,6 @@ module Nil {
 
 fun (::) cons[A](x: A, xs: List[A]): List[A] = Cons(x, xs)
 //│ fun (::) cons: forall 'A. (x: 'A, xs: List['A]) -> List['A]
-//│ cons
 
 (1 :: Nil).join(", ")
 (1 :: (2 :: Nil)).join(", ")
@@ -57,7 +55,6 @@ fun (:-) listExclude(xs, x) =
       x === x' then xs' :- x
       else x' :: (xs' :- x)
 //│ fun (:-) listExclude: forall 'A. (Cons['A] | Nil, Eql['A]) -> (Nil | List['A])
-//│ listExclude
 
 (Nil :- 0).join(", ")
 ((0 :: Nil) :- 0).join(", ")

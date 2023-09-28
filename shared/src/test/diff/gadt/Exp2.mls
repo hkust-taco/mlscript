@@ -13,13 +13,11 @@ class Pair[L, R](val lhs: Exp[L], val rhs: Exp[R]) extends Exp[(L, R)]
 
 fun f(p: Pair['a, 'b]) = p.lhs
 //│ fun f: forall 'a 'b. (p: Pair['a, 'b]) -> Exp['a]
-//│ f
 
 
 fun f(e) = if e is
   Pair(l, r) then [l, r]
 //│ fun f: forall 'L 'R. Pair['L, 'R] -> [Exp['L], Exp['R]]
-//│ f
 // f: (Exp['a] & Pair) -> 0
 
 
@@ -27,12 +25,11 @@ fun f(e) = if e is
   Pair(l, r) then [l, r]
   Lit(n) then n
 //│ fun f: forall 'L 'R. (Lit | Pair['L, 'R]) -> (Int | [Exp['L], Exp['R]])
-//│ f
 
 :e
 (e: Exp['X]) => f(e)
 //│ ╔══[ERROR] Type error in application
-//│ ║  l.33: 	(e: Exp['X]) => f(e)
+//│ ║  l.30: 	(e: Exp['X]) => f(e)
 //│ ║        	                ^^^^
 //│ ╟── type variable `L` leaks out of its scope
 //│ ║  l.6: 	class Pair[L, R](val lhs: Exp[L], val rhs: Exp[R]) extends Exp[(L, R)]
@@ -52,21 +49,21 @@ fun f(e) = if e is
   Pair(l, r) then f(l) + f(r)
   Lit(n) then n
 //│ ╔══[ERROR] Type error in definition
-//│ ║  l.51: 	fun f(e) = if e is
+//│ ║  l.48: 	fun f(e) = if e is
 //│ ║        	    ^^^^^^^^^^^^^^
-//│ ║  l.52: 	  Pair(l, r) then f(l) + f(r)
+//│ ║  l.49: 	  Pair(l, r) then f(l) + f(r)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.53: 	  Lit(n) then n
+//│ ║  l.50: 	  Lit(n) then n
 //│ ║        	^^^^^^^^^^^^^^^
 //│ ╟── type variable `L` leaks out of its scope
 //│ ║  l.6: 	class Pair[L, R](val lhs: Exp[L], val rhs: Exp[R]) extends Exp[(L, R)]
 //│ ╙──     	           ^
 //│ ╔══[ERROR] Type error in definition
-//│ ║  l.51: 	fun f(e) = if e is
+//│ ║  l.48: 	fun f(e) = if e is
 //│ ║        	    ^^^^^^^^^^^^^^
-//│ ║  l.52: 	  Pair(l, r) then f(l) + f(r)
+//│ ║  l.49: 	  Pair(l, r) then f(l) + f(r)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.53: 	  Lit(n) then n
+//│ ║  l.50: 	  Lit(n) then n
 //│ ║        	^^^^^^^^^^^^^^^
 //│ ╟── type variable `R` leaks out of its scope
 //│ ║  l.6: 	class Pair[L, R](val lhs: Exp[L], val rhs: Exp[R]) extends Exp[(L, R)]
@@ -77,6 +74,5 @@ fun f(e) = if e is
 //│        <: ??R0
 //│     'L :> ??L
 //│        <: ??L0
-//│ f
 
 

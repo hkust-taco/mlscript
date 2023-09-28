@@ -161,14 +161,9 @@ fun loop3 = readInt.bind of (x => Pure(x) : IO[Int])
 //│ where
 //│   'AA0 :> Int
 //│   'AA :> Int
-//│ loop0
-//│ loop1
-//│ loop2
-//│ loop3
 
 fun (#>>) bindOp(x, f) = x.bind(f)
 //│ fun (#>>) bindOp: forall 'a 'b. ({bind: 'a -> 'b}, 'a) -> 'b
-//│ bindOp
 
 fun loop =
   readInt #>> n =>
@@ -176,7 +171,6 @@ fun loop =
 //│ fun loop: forall 'AA. Bind[in Int & 'AA out Int, 'AA]
 //│   where
 //│     'AA :> Int
-//│ loop
 
 
 

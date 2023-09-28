@@ -11,7 +11,6 @@ fun process(e) =
     Numb(n) and n > 0 then n
     Numb(m) then n
 //│ fun process: Numb -> Int
-//│ process
 
 process(Numb(-10))
 //│ Int
@@ -25,7 +24,6 @@ fun process(e, n) =
     Numb(n) and n > 0 then n
     Numb(m) then n + m
 //│ fun process: (Numb, anything) -> Int
-//│ process
 
 process(Numb(0), 10)
 //│ Int
@@ -46,7 +44,6 @@ fun process(e) =
     Pair(Vec(n),  Numb(n)) then n
     Pair(Numb(n), Vec(n))  then n
 //│ fun process: Pair[Numb | Vec, Numb | Vec] -> (Int | Numb | Array[Numb | Vec])
-//│ process
 
 
 // * FIXME should warn, be rejected, or compare both values for equality
@@ -54,7 +51,6 @@ fun process(e) =
   if e is
     Pair(Numb(n), Numb(n)) then n
 //│ fun process: Pair[Numb, Numb] -> Int
-//│ process
 
 process(Pair(Numb(1), Numb(2)))
 //│ Int

@@ -22,11 +22,9 @@
 
 fun foo(x: Int) = x + 1
 //│ fun foo: (x: Int) -> Int
-//│ foo
 
 fun foo(x : Int) = x + 1
 //│ fun foo: Int -> Int
-//│ foo
 
 foo(123 : Int) : Int
 //│ Int

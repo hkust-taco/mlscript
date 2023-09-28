@@ -9,7 +9,6 @@ fun test =
 //│ ║  l.6: 	  fun lol = log("ok")
 //│ ╙──     	  ^^^^^^^^^^^^^^^^^^^
 //│ fun test: [undefined, undefined]
-//│ test
 
 test
 //│ [undefined, undefined]
@@ -23,10 +22,9 @@ fun test =
   fun lol = log("ok")
   []
 //│ ╔══[ERROR] Cannot use `val` or `fun` in local block; use `let` instead.
-//│ ║  l.23: 	  fun lol = log("ok")
+//│ ║  l.22: 	  fun lol = log("ok")
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^^
 //│ fun test: []
-//│ test
 
 test
 //│ []
@@ -39,7 +37,6 @@ fun test =
   let a = 0
   a
 //│ fun test: 0
-//│ test
 
 :e
 fun test =
@@ -47,13 +44,12 @@ fun test =
   fun b = 1
   a
 //│ ╔══[ERROR] Cannot use `val` or `fun` in local block; use `let` instead.
-//│ ║  l.46: 	  fun a = b
+//│ ║  l.43: 	  fun a = b
 //│ ╙──      	  ^^^^^^^^^
 //│ ╔══[ERROR] Cannot use `val` or `fun` in local block; use `let` instead.
-//│ ║  l.47: 	  fun b = 1
+//│ ║  l.44: 	  fun b = 1
 //│ ╙──      	  ^^^^^^^^^
 //│ fun test: 1
-//│ test
 
 // TODO[init-check] reject
 fun test =
@@ -61,7 +57,6 @@ fun test =
   let b = 1
   a
 //│ fun test: 1
-//│ test
 
 :re
 test
@@ -88,7 +83,6 @@ fun test =
 //│   })());
 //│ };
 //│ // End of generated code
-//│ test
 
 test
 //│ 1
@@ -101,7 +95,6 @@ fun test =
   class Foo(x: Int) { fun y = x + 1 }
   Foo(1).y
 //│ fun test: Int
-//│ test
 
 // * MAYBE OK
 :ge // TODO accept?
@@ -137,10 +130,10 @@ fun test = {
   fun a = 1
 }
 //│ ╔══[PARSE ERROR] Unexpected 'fun' keyword in expression position
-//│ ║  l.137: 	  fun a = 1
+//│ ║  l.130: 	  fun a = 1
 //│ ╙──       	  ^^^
 //│ ╔══[PARSE ERROR] Unexpected '=' here
-//│ ║  l.137: 	  fun a = 1
+//│ ║  l.130: 	  fun a = 1
 //│ ╙──       	        ^
 //│ fun test: {a: () -> 1}
 //│ Code generation encountered an error:
@@ -153,13 +146,12 @@ fun test = {
   fun a = 123
 }.res
 //│ ╔══[PARSE ERROR] Unexpected '=' here
-//│ ║  l.152: 	  val res = a + 1
+//│ ║  l.145: 	  val res = a + 1
 //│ ╙──       	          ^
 //│ ╔══[ERROR] identifier not found: res
-//│ ║  l.152: 	  val res = a + 1
+//│ ║  l.145: 	  val res = a + 1
 //│ ╙──       	      ^^^
 //│ fun test: error
-//│ test
 
 :pe // TODO support
 :e
@@ -168,20 +160,19 @@ fun test = (new {
   fun a = 123
 }).res
 //│ ╔══[PARSE ERROR] Unexpected '=' here
-//│ ║  l.167: 	  val res = a + 1
+//│ ║  l.159: 	  val res = a + 1
 //│ ╙──       	          ^
 //│ ╔══[PARSE ERROR] Unexpected record after `new` keyword
-//│ ║  l.166: 	fun test = (new {
+//│ ║  l.158: 	fun test = (new {
 //│ ║         	                ^
-//│ ║  l.167: 	  val res = a + 1
+//│ ║  l.159: 	  val res = a + 1
 //│ ║         	^^^^^^^^^^^^^^^^^
-//│ ║  l.168: 	  fun a = 123
+//│ ║  l.160: 	  fun a = 123
 //│ ║         	^^^^^^^^^^^^^
-//│ ║  l.169: 	}).res
+//│ ║  l.161: 	}).res
 //│ ╙──       	^
 //│ ╔══[ERROR] Currently unsupported `new` syntax
-//│ ║  l.166: 	fun test = (new {
+//│ ║  l.158: 	fun test = (new {
 //│ ╙──       	            ^^^
 //│ fun test: error
-//│ test
 

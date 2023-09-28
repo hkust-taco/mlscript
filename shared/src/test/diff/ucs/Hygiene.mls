@@ -12,7 +12,6 @@ fun foo(x) = if x is
   Some(Left(y)) then x
   Some(x) then x
 //│ fun foo: forall 'a. Some['a & (Left[anything] | Object & ~#Left)] -> 'a
-//│ foo
 
 foo(Some(Left(1)))
 //│ Left[1]

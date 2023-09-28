@@ -3,7 +3,6 @@
 
 fun (-) i(x, y) = x
 //│ fun (-) i: forall 'a. ('a, anything) -> 'a
-//│ i
 
 1 - 1
 //│ 1
@@ -15,7 +14,6 @@ fun (-) i(x, y) = x
 [i(1,1), i(2,1), 1 - 1, 2 - 1]
 //│ fun (-) i: forall 'a. ('a, anything) -> 'a
 //│ [1, 2, 1, 2]
-//│ i
 //│ res
 //│     = [ 1, 2, 1, 2 ]
 

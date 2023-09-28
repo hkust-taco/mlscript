@@ -4,7 +4,6 @@
 
 fun log(msg: Str): unit
 //│ fun log: (msg: Str) -> unit
-//│ log
 
 let f =
   log("ok")
@@ -16,11 +15,9 @@ let f =
 
 fun log: Str -> unit
 //│ fun log: Str -> unit
-//│ log
 
 fun log: Str => unit
 //│ fun log: Str -> unit
-//│ log
 
 log("ok")
 //│ unit
@@ -34,8 +31,6 @@ fun con: Str => Str => Str
 fun con = concat
 //│ fun con: Str -> Str -> Str
 //│ fun con: Str -> Str -> Str
-//│ con
-//│ con
 
 con("aa")("bbb")
 //│ Str
@@ -45,11 +40,9 @@ con("aa")("bbb")
 
 fun con: Str => Str => Str
 //│ fun con: Str -> Str -> Str
-//│ con
 
 fun con = concat
 //│ fun con: Str -> Str -> Str
-//│ con
 
 con("aa")("bbb")
 //│ Str
@@ -60,11 +53,9 @@ con("aa")("bbb")
 
 fun oops: Str => Str
 //│ fun oops: Str -> Str
-//│ oops
 
 fun oops = 0
 //│ fun oops: 0
-//│ oops
 
 oops
 //│ 0
@@ -76,21 +67,19 @@ oops
 fun oops: Str => Str
 fun oops = 0
 //│ ╔══[ERROR] Type mismatch in definition:
-//│ ║  l.77: 	fun oops = 0
+//│ ║  l.68: 	fun oops = 0
 //│ ║        	    ^^^^^^^^
 //│ ╟── integer literal of type `0` is not a function
-//│ ║  l.77: 	fun oops = 0
+//│ ║  l.68: 	fun oops = 0
 //│ ║        	           ^
 //│ ╟── but it flows into definition of method oops with expected type `Str -> Str`
-//│ ║  l.77: 	fun oops = 0
+//│ ║  l.68: 	fun oops = 0
 //│ ║        	    ^^^^^^^^
 //│ ╟── Note: constraint arises from function type:
-//│ ║  l.76: 	fun oops: Str => Str
+//│ ║  l.67: 	fun oops: Str => Str
 //│ ╙──      	          ^^^^^^^^^^
 //│ fun oops: 0
 //│ fun oops: Str -> Str
-//│ oops
-//│ oops
 
 oops
 //│ Str -> Str

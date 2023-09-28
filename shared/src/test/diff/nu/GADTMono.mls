@@ -121,5 +121,4 @@ fun eval[A](e: Expr[A]): A =
 //│ ║  l.6: 	class Add(x: Expr[Int], y: Expr[Int]) extends Expr[Int]
 //│ ╙──     	                                ^^^
 //│ fun eval: forall 'A. (e: Expr['A]) -> 'A
-//│ eval
 

@@ -10,8 +10,6 @@ fun x: ()
 fun x = ()
 //│ fun x: []
 //│ fun x: []
-//│ x
-//│ x
 
 x
 //│ []
@@ -28,16 +26,16 @@ x : Array['a]
 // TODO
 x : undefined
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.29: 	x : undefined
+//│ ║  l.27: 	x : undefined
 //│ ║        	^
 //│ ╟── type `[]` does not match type `undefined`
 //│ ║  l.9: 	fun x: ()
 //│ ║       	       ^^
 //│ ╟── but it flows into reference with expected type `undefined`
-//│ ║  l.29: 	x : undefined
+//│ ║  l.27: 	x : undefined
 //│ ║        	^
 //│ ╟── Note: constraint arises from literal type:
-//│ ║  l.29: 	x : undefined
+//│ ║  l.27: 	x : undefined
 //│ ╙──      	    ^^^^^^^^^
 //│ undefined
 //│ res
@@ -47,41 +45,37 @@ x : undefined
 fun x: ()
 fun x = undefined
 //│ ╔══[ERROR] Type mismatch in definition:
-//│ ║  l.48: 	fun x = undefined
+//│ ║  l.46: 	fun x = undefined
 //│ ║        	    ^^^^^^^^^^^^^
 //│ ╟── undefined literal of type `undefined` is not a 0-element tuple
-//│ ║  l.48: 	fun x = undefined
+//│ ║  l.46: 	fun x = undefined
 //│ ║        	        ^^^^^^^^^
 //│ ╟── but it flows into definition of method x with expected type `[]`
-//│ ║  l.48: 	fun x = undefined
+//│ ║  l.46: 	fun x = undefined
 //│ ║        	    ^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from tuple type:
-//│ ║  l.47: 	fun x: ()
+//│ ║  l.45: 	fun x: ()
 //│ ╙──      	       ^^
 //│ fun x: undefined
 //│ fun x: []
-//│ x
-//│ x
 
 
 :e
 fun x: ()
 fun x = 1
 //│ ╔══[ERROR] Type mismatch in definition:
-//│ ║  l.69: 	fun x = 1
+//│ ║  l.65: 	fun x = 1
 //│ ║        	    ^^^^^
 //│ ╟── integer literal of type `1` is not a 0-element tuple
-//│ ║  l.69: 	fun x = 1
+//│ ║  l.65: 	fun x = 1
 //│ ║        	        ^
 //│ ╟── but it flows into definition of method x with expected type `[]`
-//│ ║  l.69: 	fun x = 1
+//│ ║  l.65: 	fun x = 1
 //│ ║        	    ^^^^^
 //│ ╟── Note: constraint arises from tuple type:
-//│ ║  l.68: 	fun x: ()
+//│ ║  l.64: 	fun x: ()
 //│ ╙──      	       ^^
 //│ fun x: 1
 //│ fun x: []
-//│ x
-//│ x
 
 

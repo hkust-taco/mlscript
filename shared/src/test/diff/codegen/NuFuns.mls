@@ -18,7 +18,6 @@ fun foo =
 //│   })());
 //│ };
 //│ // End of generated code
-//│ foo
 
 fun foo =
   class C(a: Int) { fun bar(x) = a + x + 1 }
@@ -26,7 +25,6 @@ fun foo =
 foo
 //│ fun foo: Int
 //│ Int
-//│ foo
 //│ res
 //│     = 111
 
@@ -37,7 +35,6 @@ fun main =
 main
 //│ fun main: undefined
 //│ undefined
-//│ main
 //│ res
 //│     = undefined
 //│ // Output
@@ -46,7 +43,6 @@ main
 fun main =
   log("Hello")
 //│ fun main: undefined
-//│ main
 
 main
 //│ undefined
@@ -64,7 +60,6 @@ fun main =
 main
 //│ fun main: undefined
 //│ undefined
-//│ main
 //│ res
 //│     = undefined
 //│ // Output

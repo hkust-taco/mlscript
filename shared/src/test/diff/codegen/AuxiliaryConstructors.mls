@@ -325,7 +325,6 @@ fun f(c) =
 //│   })());
 //│ };
 //│ // End of generated code
-//│ f
 
 f(F(12))
 f(new G())
@@ -456,7 +455,6 @@ fun g(x: Int) =
 //│   })());
 //│ };
 //│ // End of generated code
-//│ g
 
 :js
 let m = g(1)
@@ -506,10 +504,9 @@ fun h(z: Int) =
   }
   N
 //│ ╔══[ERROR] Construction of unparameterized class N should use the `new` keyword
-//│ ║  l.507: 	  N
+//│ ║  l.505: 	  N
 //│ ╙──       	  ^
 //│ fun h: (z: Int) -> (x: Int) -> N
-//│ h
 
 let hh = h(1)
 //│ let hh: (x: Int) -> N
@@ -519,7 +516,7 @@ let hh = h(1)
 :e
 new hh(1)
 //│ ╔══[ERROR] Value hh cannot be used in `new` expression
-//│ ║  l.520: 	new hh(1)
+//│ ║  l.517: 	new hh(1)
 //│ ╙──       	^^^^^^^^^
 //│ error
 //│ res
@@ -535,10 +532,10 @@ mixin P {
   constructor(x: Int)
 }
 //│ ╔══[ERROR] Explicit module constructors are not supported
-//│ ║  l.532: 	  constructor(x: Int)
+//│ ║  l.529: 	  constructor(x: Int)
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Explicit mixin constructors are not supported
-//│ ║  l.535: 	  constructor(x: Int)
+//│ ║  l.532: 	  constructor(x: Int)
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^
 //│ module O {
 //│   constructor(x: Int)
@@ -554,28 +551,28 @@ class QQ(qq: Str) {
   }
 }
 //│ ╔══[ERROR] identifier not found: lol
-//│ ║  l.552: 	    lol
+//│ ║  l.549: 	    lol
 //│ ╙──       	    ^^^
 //│ ╔══[WARNING] Pure expression does nothing in statement position.
-//│ ║  l.552: 	    lol
+//│ ║  l.549: 	    lol
 //│ ╙──       	    ^^^
 //│ ╔══[ERROR] Type mismatch in auxiliary class constructor:
-//│ ║  l.551: 	  constructor(foo: Int) {
+//│ ║  l.548: 	  constructor(foo: Int) {
 //│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.552: 	    lol
+//│ ║  l.549: 	    lol
 //│ ║         	^^^^^^^
-//│ ║  l.553: 	    qq = foo
+//│ ║  l.550: 	    qq = foo
 //│ ║         	^^^^^^^^^^^^
-//│ ║  l.554: 	  }
+//│ ║  l.551: 	  }
 //│ ║         	^^^
 //│ ╟── type `Int` is not an instance of `Str`
-//│ ║  l.551: 	  constructor(foo: Int) {
+//│ ║  l.548: 	  constructor(foo: Int) {
 //│ ║         	                   ^^^
 //│ ╟── but it flows into reference with expected type `Str`
-//│ ║  l.553: 	    qq = foo
+//│ ║  l.550: 	    qq = foo
 //│ ║         	         ^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.550: 	class QQ(qq: Str) {
+//│ ║  l.547: 	class QQ(qq: Str) {
 //│ ╙──       	             ^^^
 //│ class QQ(qq: Str) {
 //│   constructor(foo: Int)

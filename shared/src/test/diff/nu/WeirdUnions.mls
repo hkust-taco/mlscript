@@ -4,35 +4,28 @@
 
 fun f: Str | [Str, Int]
 //│ fun f: Str | [Str, Int]
-//│ f
 
 fun f: [Str] | [Str, Int]
 //│ fun f: Array[Int | Str] & {_1: Str}
-//│ f
 
 fun f: (Str | [Str, Int])
 //│ fun f: Str | [Str, Int]
-//│ f
 
 fun f: Str | (Str, Int)
 //│ fun f: Str | [Str, Int]
-//│ f
 
 
 fun f: Str | ([Str, Int])
 //│ fun f: Str | [Str, Int]
-//│ f
 
 fun f: Str | ((Str, Int))
 //│ fun f: Str | [Str, Int]
-//│ f
 
 
 
 // * This type merges the input tuples, resulting in the union seen above:
 fun f: (Str => Str) & ((Str, Int) => Str)
 //│ fun f: (...Array[Int | Str] & {_1: Str}) -> Str
-//│ f
 
 f("abc", "abc")
 //│ Str
@@ -44,16 +37,15 @@ f("abc", "abc")
 // * Note: the merge doesn't happen when the result type is different...
 fun f: (Str => Str) & ((Str, Int) => Int)
 //│ fun f: Str -> Str & (Str, Int) -> Int
-//│ f
 
 // * ...resulting in approximation at call sites (we don't handle overloading)
 :e
 f("abc", "abc")
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.51: 	f("abc", "abc")
+//│ ║  l.43: 	f("abc", "abc")
 //│ ║        	^^^^^^^^^^^^^^^
 //│ ╟── argument list of type `["abc", "abc"]` does not match type `nothing`
-//│ ║  l.51: 	f("abc", "abc")
+//│ ║  l.43: 	f("abc", "abc")
 //│ ╙──      	 ^^^^^^^^^^^^^^
 //│ Int | Str | error
 //│ res
@@ -72,19 +64,19 @@ let r = if true then id else [x, y] => [y, x]
 r(error)
 r(error, error)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.72: 	r(error)
+//│ ║  l.64: 	r(error)
 //│ ║        	^^^^^^^^
 //│ ╟── argument of type `[nothing]` does not match type `[?a, ?b]`
-//│ ║  l.72: 	r(error)
+//│ ║  l.64: 	r(error)
 //│ ║        	 ^^^^^^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.66: 	let r = if true then id else [x, y] => [y, x]
+//│ ║  l.58: 	let r = if true then id else [x, y] => [y, x]
 //│ ╙──      	                              ^^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.73: 	r(error, error)
+//│ ║  l.65: 	r(error, error)
 //│ ║        	^^^^^^^^^^^^^^^
 //│ ╟── argument list of type `[nothing, nothing]` does not match type `[?a]`
-//│ ║  l.73: 	r(error, error)
+//│ ║  l.65: 	r(error, error)
 //│ ╙──      	 ^^^^^^^^^^^^^^
 //│ error | [nothing, nothing]
 //│ res

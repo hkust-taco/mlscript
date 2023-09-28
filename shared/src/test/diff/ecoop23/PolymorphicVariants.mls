@@ -26,7 +26,6 @@ fun list_assoc(s, l) =
       else list_assoc(s, t)
     Nil then NotFound()
 //│ fun list_assoc: forall 'a 'A. (Eql['a], Cons[{_1: 'a, _2: 'A}] | Nil) -> (NotFound | Success['A])
-//│ list_assoc
 
 // fun list_assoc(s: Str, l: Cons[{ _1: Str, _2: 'b }] | Nil): NotFound | Success['b]
 
@@ -51,11 +50,9 @@ class App[A](s: A, t: A)
 
 fun gensym(): Str = "fun"
 //│ fun gensym: () -> Str
-//│ gensym
 
 fun int_to_string(x: Int): Str = "0"
 //│ fun int_to_string: (x: Int) -> Str
-//│ int_to_string
 
 mixin EvalLambda {
   fun eval(sub, v) =
@@ -137,7 +134,6 @@ fun map_expr(f, v) =
     Add(l, r) then Add(f(l), f(r))
     Mul(l, r) then Mul(f(l), f(r))
 //│ fun map_expr: forall 'a 'A 'b 'A0. ('a -> 'A & 'b -> 'A0, Add['a] | Mul['b] | Numb | Var) -> (Add['A] | Mul['A0] | Numb | Var)
-//│ map_expr
 
 mixin EvalExpr {
   fun eval(sub, v) =
@@ -181,16 +177,16 @@ Test2.eval(Cons(("a", Numb(1)), Nil), Var("a"))
 :e
 Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.182: 	Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
+//│ ║  l.178: 	Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Abs[?A]` does not match type `Add[?A0] | Mul[?A1] | Numb | Var`
-//│ ║  l.182: 	Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
+//│ ║  l.178: 	Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ ║         	                                                 ^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.134: 	  if v is
+//│ ║  l.131: 	  if v is
 //│ ║         	     ^
 //│ ╟── from reference:
-//│ ║  l.145: 	    let vv = map_expr(eta, v)
+//│ ║  l.141: 	    let vv = map_expr(eta, v)
 //│ ╙──       	                           ^
 //│ Abs[Var] | Numb | Var | error
 //│ res
@@ -247,16 +243,16 @@ module Test3 extends EvalVar, EvalLambda, EvalExpr
 :e
 Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.248: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
+//│ ║  l.244: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Abs[?A]` does not match type `Add[?A0] | Mul[?A1] | Numb | Var`
-//│ ║  l.248: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
+//│ ║  l.244: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ ║         	                                                 ^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.134: 	  if v is
+//│ ║  l.131: 	  if v is
 //│ ║         	     ^
 //│ ╟── from reference:
-//│ ║  l.145: 	    let vv = map_expr(eta, v)
+//│ ║  l.141: 	    let vv = map_expr(eta, v)
 //│ ╙──       	                           ^
 //│ error | 'A
 //│   where

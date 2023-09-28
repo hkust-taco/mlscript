@@ -3,7 +3,6 @@
 
 fun (>>) compose(f, g) = x => g(f(x))
 //│ fun (>>) compose: forall 'a 'b 'c. ('a -> 'b, 'b -> 'c) -> 'a -> 'c
-//│ compose
 
 :js 
 let r = succ >> succ
@@ -44,10 +43,10 @@ compose(succ, succ)(3)
 :e
 succ >> succ of 3
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.45: 	succ >> succ of 3
+//│ ║  l.44: 	succ >> succ of 3
 //│ ║        	^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Int` is not a function
-//│ ║  l.45: 	succ >> succ of 3
+//│ ║  l.44: 	succ >> succ of 3
 //│ ║        	        ^^^^^^^^^
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.4: 	fun (>>) compose(f, g) = x => g(f(x))
@@ -95,14 +94,14 @@ f(succ, succ)(3)
 (>>) of succ, succ
   of 3
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.95: 	(>>) of succ, succ
+//│ ║  l.94: 	(>>) of succ, succ
 //│ ║        	 ^^^^^^^^^^^^^^^^^
-//│ ║  l.96: 	  of 3
+//│ ║  l.95: 	  of 3
 //│ ║        	^^^^^^
 //│ ╟── application of type `Int` is not a function
-//│ ║  l.95: 	(>>) of succ, succ
+//│ ║  l.94: 	(>>) of succ, succ
 //│ ║        	              ^^^^
-//│ ║  l.96: 	  of 3
+//│ ║  l.95: 	  of 3
 //│ ║        	^^^^^^
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.4: 	fun (>>) compose(f, g) = x => g(f(x))
@@ -124,7 +123,6 @@ fun oops = (+)
 
 fun (%) mod = div
 //│ fun (%) mod: (Int, Int) -> Int
-//│ mod
 
 // TODO builtin `div` should compute *integer* division
 12 % 5
@@ -151,7 +149,7 @@ abstract class Nested {
   log("abc" ++ "def")
 }
 //│ ╔══[ERROR] identifier not found: ++
-//│ ║  l.151: 	  log("abc" ++ "def")
+//│ ║  l.149: 	  log("abc" ++ "def")
 //│ ╙──       	            ^^
 //│ abstract class Nested {
 //│   fun (++) conc: (Int, Int) -> Int
@@ -163,7 +161,6 @@ abstract class Nested {
 
 fun (??) oops: (Int, Int) => Int
 //│ fun (??) oops: (Int, Int) -> Int
-//│ oops
 
 1 ?? 2
 //│ Int
@@ -175,8 +172,6 @@ fun (??) oops: (Int, Int) => Int
 fun oops(a, b) = a + b
 //│ fun oops: (Int, Int) -> Int
 //│ fun (??) oops: (Int, Int) -> Int
-//│ oops
-//│ oops
 
 // FIXME-later (stub symbols) This is actually implemented...
 1 ?? 2
@@ -189,8 +184,6 @@ fun oops: (Int, Int) => Int
 fun (??) oops(a, b) = a + b
 //│ fun (??) oops: (Int, Int) -> Int
 //│ fun oops: (Int, Int) -> Int
-//│ oops
-//│ oops
 
 1 ?? 2
 //│ Int
@@ -201,8 +194,6 @@ fun (!?) oops: (Int, Int) => Int
 fun (??) oops(a, b) = a + b
 //│ fun (??) oops: (Int, Int) -> Int
 //│ fun (!?) oops: (Int, Int) -> Int
-//│ oops
-//│ oops
 
 1 ?? 2
 //│ Int
@@ -223,16 +214,16 @@ fun (??) oops(a, b) = a + b
 :e
 fun (>>)(f, g) = x => g(f(x))
 //│ ╔══[PARSE ERROR] Expected a function name; found parenthesis section instead
-//│ ║  l.224: 	fun (>>)(f, g) = x => g(f(x))
+//│ ║  l.215: 	fun (>>)(f, g) = x => g(f(x))
 //│ ╙──       	        ^^^^^^
 //│ ╔══[ERROR] identifier not found: g
-//│ ║  l.224: 	fun (>>)(f, g) = x => g(f(x))
+//│ ║  l.215: 	fun (>>)(f, g) = x => g(f(x))
 //│ ╙──       	                      ^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.224: 	fun (>>)(f, g) = x => g(f(x))
+//│ ║  l.215: 	fun (>>)(f, g) = x => g(f(x))
 //│ ║         	                        ^^^^
 //│ ╟── argument of type `[?a]` does not match type `[?b, ?c]`
-//│ ║  l.224: 	fun (>>)(f, g) = x => g(f(x))
+//│ ║  l.215: 	fun (>>)(f, g) = x => g(f(x))
 //│ ║         	                         ^^^
 //│ ╟── Note: constraint arises from tuple literal:
 //│ ║  l.4: 	fun (>>) compose(f, g) = x => g(f(x))
@@ -244,76 +235,67 @@ fun (>>)(f, g) = x => g(f(x))
 :pe
 fun compose(>>)(f, g) = x => g(f(x))
 //│ ╔══[PARSE ERROR] Unexpected operator here
-//│ ║  l.245: 	fun compose(>>)(f, g) = x => g(f(x))
+//│ ║  l.236: 	fun compose(>>)(f, g) = x => g(f(x))
 //│ ╙──       	            ^^
 //│ fun compose: forall 'a 'b 'c. () -> ('a -> 'b, 'b -> 'c) -> 'a -> 'c
-//│ compose
 
 
 :pe
 fun () foo(a, b) = a + b
 //│ ╔══[PARSE ERROR] Expected a symbolic name between brackets, found nothing
-//│ ║  l.254: 	fun () foo(a, b) = a + b
+//│ ║  l.244: 	fun () foo(a, b) = a + b
 //│ ╙──       	    ^^
 //│ fun foo: (Int, Int) -> Int
-//│ foo
 
 :pe
 fun (   ) foo(a, b) = a + b
 //│ ╔══[PARSE ERROR] Expected a symbolic name, found space instead
-//│ ║  l.262: 	fun (   ) foo(a, b) = a + b
+//│ ║  l.251: 	fun (   ) foo(a, b) = a + b
 //│ ╙──       	     ^^^
 //│ fun foo: (Int, Int) -> Int
-//│ foo
 
 :pe
 fun (
 ) foo(a, b) = a + b
 //│ ╔══[PARSE ERROR] Expected a symbolic name, found newline instead
-//│ ║  l.270: 	fun (
+//│ ║  l.258: 	fun (
 //│ ║         	     ^
-//│ ║  l.271: 	) foo(a, b) = a + b
+//│ ║  l.259: 	) foo(a, b) = a + b
 //│ ╙──       	
 //│ fun foo: (Int, Int) -> Int
-//│ foo
 
 :pe
 fun (1) foo(a, b) = a + b
 //│ ╔══[PARSE ERROR] Expected a symbolic name, found literal instead
-//│ ║  l.281: 	fun (1) foo(a, b) = a + b
+//│ ║  l.268: 	fun (1) foo(a, b) = a + b
 //│ ╙──       	     ^
 //│ fun foo: (Int, Int) -> Int
-//│ foo
 
 :pe
 fun (++ 1) foo(a, b) = a + b
 //│ ╔══[PARSE ERROR] Unexpected literal after symbolic name
-//│ ║  l.289: 	fun (++ 1) foo(a, b) = a + b
+//│ ║  l.275: 	fun (++ 1) foo(a, b) = a + b
 //│ ╙──       	        ^
 //│ fun (++) foo: (Int, Int) -> Int
-//│ foo
 
 :pe
 fun (a ++ 1) foo(a, b) = a + b
 //│ ╔══[PARSE ERROR] Expected a symbolic name, found identifier instead
-//│ ║  l.297: 	fun (a ++ 1) foo(a, b) = a + b
+//│ ║  l.282: 	fun (a ++ 1) foo(a, b) = a + b
 //│ ╙──       	     ^
 //│ fun foo: (Int, Int) -> Int
-//│ foo
 // should be `<<|+_+|>>`, but we got `<<|+`
 
 
 :pe
 fun (<<|+_+|>>) robot(a, b) = a + b
 //│ ╔══[PARSE ERROR] Unexpected identifier after symbolic name
-//│ ║  l.307: 	fun (<<|+_+|>>) robot(a, b) = a + b
+//│ ║  l.291: 	fun (<<|+_+|>>) robot(a, b) = a + b
 //│ ╙──       	         ^
 //│ fun (<<|+) robot: (Int, Int) -> Int
-//│ robot
 
 fun (<<|+-+|>>) robot(a, b) = a + b
 //│ fun (<<|+-+|>>) robot: (Int, Int) -> Int
-//│ robot
 
 2 <<|+-+|>> 2
 //│ Int
@@ -324,10 +306,9 @@ fun (<<|+-+|>>) robot(a, b) = a + b
 :pe
 fun (:-D) dd(a, b) = a + b
 //│ ╔══[PARSE ERROR] Unexpected identifier after symbolic name
-//│ ║  l.325: 	fun (:-D) dd(a, b) = a + b
+//│ ║  l.307: 	fun (:-D) dd(a, b) = a + b
 //│ ╙──       	       ^
 //│ fun (:-) dd: (Int, Int) -> Int
-//│ dd
 // should be `:-D`, but we got `:-`
 
 

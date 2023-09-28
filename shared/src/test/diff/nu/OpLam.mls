@@ -9,7 +9,6 @@ x => x is 42
 
 fun (|>;) foo(a, b) = [a, b]
 //│ fun (|>;) foo: forall 'a 'b. ('a, 'b) -> ['a, 'b]
-//│ foo
 
 42 |>; x => x
 //│ [42, forall 'a. 'a -> 'a]
@@ -19,7 +18,6 @@ fun (|>;) foo(a, b) = [a, b]
 
 fun (>>) compose(f, g) = x => g(f(x))
 //│ fun (>>) compose: forall 'a 'b 'c. ('a -> 'b, 'b -> 'c) -> 'a -> 'c
-//│ compose
 
 succ >> x => x + 2
 //│ Int -> Int
@@ -29,16 +27,16 @@ succ >> x => x + 2
 :e
 x => x + 2 >> succ
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.30: 	x => x + 2 >> succ
+//│ ║  l.28: 	x => x + 2 >> succ
 //│ ║        	     ^^^^^^^^^^^^^
 //│ ╟── operator application of type `Int` is not a function
-//│ ║  l.30: 	x => x + 2 >> succ
+//│ ║  l.28: 	x => x + 2 >> succ
 //│ ║        	     ^^^^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.20: 	fun (>>) compose(f, g) = x => g(f(x))
+//│ ║  l.19: 	fun (>>) compose(f, g) = x => g(f(x))
 //│ ║        	                                ^^^^
 //│ ╟── from reference:
-//│ ║  l.20: 	fun (>>) compose(f, g) = x => g(f(x))
+//│ ║  l.19: 	fun (>>) compose(f, g) = x => g(f(x))
 //│ ╙──      	                                ^
 //│ Int -> (error | anything -> Int)
 //│ res
@@ -53,23 +51,23 @@ x => x + 2 >> succ
 x => x + 2
   >> succ
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.53: 	x => x + 2
+//│ ║  l.51: 	x => x + 2
 //│ ║        	         ^
-//│ ║  l.54: 	  >> succ
+//│ ║  l.52: 	  >> succ
 //│ ║        	^^^^
 //│ ╟── integer literal of type `2` is not a 2-element tuple
-//│ ║  l.53: 	x => x + 2
+//│ ║  l.51: 	x => x + 2
 //│ ║        	         ^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.20: 	fun (>>) compose(f, g) = x => g(f(x))
+//│ ║  l.19: 	fun (>>) compose(f, g) = x => g(f(x))
 //│ ╙──      	                ^^^^^^
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.53: 	x => x + 2
+//│ ║  l.51: 	x => x + 2
 //│ ║        	         ^
-//│ ║  l.54: 	  >> succ
+//│ ║  l.52: 	  >> succ
 //│ ║        	^^^^^^^^^^
 //│ ╟── reference of type `Int -> Int` is not a 1-element tuple
-//│ ║  l.54: 	  >> succ
+//│ ║  l.52: 	  >> succ
 //│ ╙──      	     ^^^^
 //│ Int -> Int
 //│ Code generation encountered an error:
@@ -79,10 +77,10 @@ x => x + 2
 :e
 x => x.y => y
 //│ ╔══[ERROR] Unsupported pattern shape:
-//│ ║  l.80: 	x => x.y => y
+//│ ║  l.78: 	x => x.y => y
 //│ ╙──      	     ^^^
 //│ ╔══[ERROR] identifier not found: y
-//│ ║  l.80: 	x => x.y => y
+//│ ║  l.78: 	x => x.y => y
 //│ ╙──      	            ^
 //│ anything -> error -> error
 //│ Code generation encountered an error:

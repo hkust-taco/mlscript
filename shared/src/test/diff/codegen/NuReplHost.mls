@@ -35,7 +35,6 @@ let r = foo(1)
 //│   ├── Code:
 //│   ├──   globalThis.r = foo(1);
 //│   └── Reply: [runtime error] Error: an error was thrown
-//│ foo
 //│ r
 //│   Runtime error:
 //│     Error: an error was thrown
