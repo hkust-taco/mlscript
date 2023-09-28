@@ -441,12 +441,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         implicit val prov: TP = tyTp(ty.toLoc, "type bounds")
         constrain(lb_ty, ub_ty)
         TypeBounds(lb_ty, ub_ty)(prov)
-      case Tuple(fields) => {
-        println("typing tuple!!!")
+      case Tuple(fields) =>
         TupleType(fields.mapValues(f =>
             FieldType(f.in.map(rec), rec(f.out), f.opt)(tp(f.toLoc, "tuple field"))
           ))(tyTp(ty.toLoc, "tuple type"))
-      }
       case Splice(fields) => 
         SpliceType(fields.map{ 
           case L(l) => {
@@ -498,7 +496,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       case tn @ TypeTag(name) => rec(TypeName(name.decapitalize)) // TODO rm this hack
       // case tn @ TypeTag(name) => rec(TypeName(name))
       case tn @ TypeName(name) =>
-        println("typename case??")
         val tyLoc = ty.toLoc
         val tpr = tyTp(tyLoc, "type reference")
         vars.getOrElse(name, {
@@ -822,15 +819,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         }
         
       case Asc(trm, ty) =>
-        println(s"typing-trm-here!!! ${trm}")
         val trm_ty = typePolymorphicTerm(trm)
-        println(s"typing-ty-here!!! ${ty}")
         val ty_ty = typeType(ty)(ctx.copy(inPattern = false), raise, vars)
         if (ctx.inPattern) { unify(trm_ty, ty_ty); ty_ty } // * In patterns, we actually _unify_ the pattern and ascribed type 
-        else {
-          println("constraining!!!")
+        else
           con(trm_ty, ty_ty, ty_ty)
-        }
       case (v @ ValidPatVar(nme)) =>
         val prov = tp(if (verboseConstraintProvenanceHints) v.toLoc else N, "variable")
         // * Note: only look at ctx.env, and not the outer ones!
@@ -899,7 +892,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
               :: fieldNames.map(tp => msg"Declared at" -> tp.toLoc))(raise)
           case _ =>
         }
-        RecordType.mk(fs.map { case (n, Fld(FldFlags(mut, _, _), t)) => 
+        RecordType.mk(fs.map { case (n, Fld(FldFlags(mut, _, opt), t)) => 
           if (n.name.isCapitalized)
             err(msg"Field identifiers must start with a small letter", term.toLoc)(raise)
           val tym = typePolymorphicTerm(t)
@@ -907,13 +900,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
           if (mut) {
             val res = freshVar(fprov, N, S(n.name))
             val rs = con(tym, res, res)
-            (n, FieldType(Some(rs), rs, false)(fprov))
-          } else (n, tym.toUpper(fprov))
+            (n, FieldType(Some(rs), rs, opt)(fprov))
+          } else (n, tym.toUpper(fprov)) // TODO[optional-fields]: should send opt in toUpper?
         })(prov)
       case tup: Tup if funkyTuples =>
         typeTerms(tup :: Nil, false, Nil)
-      case Tup(fs) => {
-        println("HERE, good!")
+      case Tup(fs) =>
         TupleType(fs.mapConserve { case e @ (n, Fld(flags, t)) =>
           n match {
             case S(v) if ctx.inPattern =>
@@ -926,15 +918,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
           // val tym = if (n.isDefined) typeType(t.toTypeRaise)
           //   else typePolymorphicTerm(t)
           val fprov = tp(t.toLoc, (if (mut) "mutable " else "") + "tuple field")
-          println(s"opt is => ${opt}")
           if (mut) {
-            println("case #1")
             val res = freshVar(fprov, N, n.map(_.name))
             val rs = con(tym, res, res)
             (n, FieldType(Some(rs), rs, opt)(fprov))
           } else {
-            println("case #2")
-            val ty = tym.toUpper(fprov)
+            val ty = tym.toUpper(fprov) // TODO[optional-fields]: should send opt in toUpper?
             val tres = FieldType(ty.lb, ty.ub, opt)(ty.prov)
             (n, tres)
           }
@@ -942,7 +931,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
           case Nil | ((N, _) :: Nil) => noProv // TODO rm?
           case _ => tp(term.toLoc, "tuple literal")
         })
-      }
       case Subs(a, i) =>
         val t_a = typeMonomorphicTerm(a)
         val t_i = typeMonomorphicTerm(i)
@@ -993,7 +981,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
           }) 
           case R(Fld(FldFlags(mt, sp, op), r)) => {
             val t = typeMonomorphicTerm(r)
-            if (mt) { R(FieldType(Some(t), t, false)(t.prov)) } else {R(t.toUpper(t.prov))}
+            if (mt) { R(FieldType(Some(t), t, op)(t.prov)) } else {R(t.toUpper(t.prov))} // TODO[optional-fields]: should send opt in toUpper?
           }
         })(prov)
       case Bra(false, trm: Blk) => typeTerm(trm)
@@ -1051,7 +1039,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
                 // assert(!mut)
                 val fprov = tp(a.toLoc, "argument")
                 val tym = typeArg(a)
-                (n, tym.toUpper(fprov))
+                (n, tym.toUpper(fprov)) // TODO[optional-fields]: should send opt in toUpper?
               })(as match { // TODO dedup w/ general Tup case
                 case Nil | ((N, _) :: Nil) => noProv
                 case _ => tp(tup.toLoc, "argument list")
@@ -1607,10 +1595,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         res
       case OtherTypeLike(tu) => {
         val mems = tu.implementedMembers.map(goDecl)
-        val res = Signature(mems, tu.result.map(go))
-        println(s"tu => $tu")
-        println(s"resss => $res")
-        res
+        Signature(mems, tu.result.map(go))
       }
     }
     
