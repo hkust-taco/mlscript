@@ -562,15 +562,12 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
   }
   
   final def expr(prec: Int, allowSpace: Bool = true)(implicit fe: FoundErr, l: Line): Term = wrap(prec,allowSpace) { l =>
-    val result = exprOrIf(prec, allowSpace)(et = false, fe = fe, l = implicitly) match {
+    exprOrIf(prec, allowSpace)(et = false, fe = fe, l = implicitly) match {
       case R(e) => e
       case L(e) =>
         err(msg"Expected an expression; found a 'then'/'else' clause instead" -> e.toLoc :: Nil)
         errExpr
     }
-    printDbg(s"result => ${result} ## ${Helpers.inspect(result)}")
-    printDbg(s"result toType => ${result.toType}")
-    result
   }
   
   private def warnDbg(msg: Any, loco: Opt[Loc] = curLoc): Unit =
