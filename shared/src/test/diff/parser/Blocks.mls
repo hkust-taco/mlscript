@@ -166,8 +166,8 @@ fun foo =
 
 
 log(1); log(a)
-//│ |log|(|1|)|#;| |log|(|a|)|
-//│ Parsed: {log(1,); log(a,)}
+//│ |log|(|1|)|;| |log|(|a|)|
+//│ Parsed: {{log(1,); log(a,)}}
 
 constructor(){
   a = 1
@@ -177,8 +177,8 @@ constructor(){
 //│ Parsed: {constructor() {a = 1; a = 2}}
 
 a = 1; log(a)
-//│ |a| |#=| |1|#;| |log|(|a|)|
-//│ Parsed: {a = 1; log(a,)}
+//│ |a| |#=| |1|;| |log|(|a|)|
+//│ Parsed: {a = {1; log(a,)}}
 
 :pe
 f(a) = 1

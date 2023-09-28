@@ -180,7 +180,7 @@ class C2 extends T1
 //│ ║         	      ^^
 //│ ╟── Declared here:
 //│ ║  l.7: 	trait T1 { fun x: 0 | 1 }
-//│ ╙──     	               ^^^^^^^^
+//│ ╙──     	           ^^^^^^^^^^^^
 //│ class C2 extends T1 {
 //│   constructor()
 //│   fun x: 0 | 1
@@ -198,7 +198,7 @@ class C3 extends C2
 //│ ║         	      ^^
 //│ ╟── Declared here:
 //│ ║  l.7: 	trait T1 { fun x: 0 | 1 }
-//│ ╙──     	               ^^^^^^^^
+//│ ╙──     	           ^^^^^^^^^^^^
 //│ class C3 extends C2, T1 {
 //│   constructor()
 //│   fun x: 0 | 1
@@ -333,7 +333,7 @@ class C2 extends T1, C1 { fun x = 1 }
 trait T2 { val r = 1(1) }
 //│ ╔══[ERROR] Method implementations in traits are not yet supported
 //│ ║  l.333: 	trait T2 { val r = 1(1) }
-//│ ╙──       	               ^^^^^^^^
+//│ ╙──       	           ^^^^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.333: 	trait T2 { val r = 1(1) }
 //│ ║         	                   ^^^^
@@ -358,7 +358,7 @@ trait T3[A] {
 class C2 extends T3[Int]
 //│ ╔══[ERROR] Method implementations in traits are not yet supported
 //│ ║  l.356: 	  val r = C2().x
-//│ ╙──       	      ^^^^^^^^^^
+//│ ╙──       	  ^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Class C2 cannot be instantiated as it exposes no such constructor
 //│ ║  l.356: 	  val r = C2().x
 //│ ╙──       	          ^^
@@ -388,7 +388,7 @@ class C3 extends T3[Int]
 
 
 
-trait Foo { fun foo: forall 'A; (x: 'A) -> 'A }
+trait Foo { fun foo: forall 'A: (x: 'A) -> 'A }
 //│ trait Foo {
 //│   fun foo: forall 'A. (x: 'A) -> 'A
 //│ }
@@ -411,13 +411,13 @@ class B extends Foo { fun foo(x) = x + 1 }
 //│ ║  l.409: 	class B extends Foo { fun foo(x) = x + 1 }
 //│ ║         	                          ^^^^^^^^^^^^^^
 //│ ╟── type `'A` is not an instance of type `Int`
-//│ ║  l.391: 	trait Foo { fun foo: forall 'A; (x: 'A) -> 'A }
+//│ ║  l.391: 	trait Foo { fun foo: forall 'A: (x: 'A) -> 'A }
 //│ ║         	                                    ^^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.409: 	class B extends Foo { fun foo(x) = x + 1 }
 //│ ║         	                                   ^
 //│ ╟── Note: quantified type variable 'A is defined at:
-//│ ║  l.391: 	trait Foo { fun foo: forall 'A; (x: 'A) -> 'A }
+//│ ║  l.391: 	trait Foo { fun foo: forall 'A: (x: 'A) -> 'A }
 //│ ╙──       	                            ^^
 //│ ╔══[ERROR] Type mismatch in definition of method foo:
 //│ ║  l.409: 	class B extends Foo { fun foo(x) = x + 1 }
@@ -426,7 +426,7 @@ class B extends Foo { fun foo(x) = x + 1 }
 //│ ║  l.409: 	class B extends Foo { fun foo(x) = x + 1 }
 //│ ║         	                                   ^^^^^
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.391: 	trait Foo { fun foo: forall 'A; (x: 'A) -> 'A }
+//│ ║  l.391: 	trait Foo { fun foo: forall 'A: (x: 'A) -> 'A }
 //│ ╙──       	                                           ^^
 //│ class B extends Foo {
 //│   constructor()

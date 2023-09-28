@@ -67,7 +67,7 @@ Baz.f(1)
 //│ ║        	       ^^^
 //│ ╟── Declared here:
 //│ ║  l.32: 	  fun f: Int -> Int
-//│ ╙──      	      ^^^^^^^^^^^^^
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^
 //│ module Baz extends Bar, Foo {
 //│   fun f: Int -> Int
 //│ }
@@ -155,7 +155,7 @@ abstract class C {
 //│ ║         	      ^^^^^^^^
 //│ ╟── Declared here:
 //│ ║  l.149: 	  fun x : Int
-//│ ╙──       	      ^^^^^^^
+//│ ╙──       	  ^^^^^^^^^^^
 //│ abstract class C {
 //│   fun foo0: Int
 //│   fun foo1: Int
@@ -173,7 +173,7 @@ abstract class C {
 //│ ║         	      ^^^^^^^^
 //│ ╟── Declared here:
 //│ ║  l.167: 	  val x : Int
-//│ ╙──       	      ^^^^^^^
+//│ ╙──       	  ^^^^^^^^^^^
 //│ abstract class C {
 //│   fun foo0: Int
 //│   fun foo1: Int

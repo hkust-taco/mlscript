@@ -166,16 +166,16 @@ class C extends A, B
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Originally declared here:
 //│ ║  l.147: 	trait B { class X { fun g = 1 } }
-//│ ╙──       	          ^^^^^^^^^^^^^^^^^^^
+//│ ╙──       	          ^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Intersection of class member and class members currently unsupported
 //│ ║  l.163: 	class C extends A, B
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── The class member is defined here:
 //│ ║  l.146: 	class A { class X { fun f = 1 } }
-//│ ║         	          ^^^^^^^^^^^^^^^^^^^
+//│ ║         	          ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── The class member is defined here:
 //│ ║  l.147: 	trait B { class X { fun g = 1 } }
-//│ ╙──       	          ^^^^^^^^^^^^^^^^^^^
+//│ ╙──       	          ^^^^^^^^^^^^^^^^^^^^^
 //│ class C extends A, B {
 //│   constructor()
 //│   class X {
@@ -192,10 +192,12 @@ class C extends A {
 //│ ║  l.188: 	class C extends A {
 //│ ║         	^^^^^^^^^^^^^^^^^^^
 //│ ║  l.189: 	  class X { fun g = 1 }
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.190: 	}
+//│ ║         	^
 //│ ╟── Originally declared here:
 //│ ║  l.146: 	class A { class X { fun f = 1 } }
-//│ ╙──       	          ^^^^^^^^^^^^^^^^^^^
+//│ ╙──       	          ^^^^^^^^^^^^^^^^^^^^^
 //│ class C extends A {
 //│   constructor()
 //│   class X {
@@ -209,7 +211,7 @@ class C extends A {
 :e
 class Foo2 extends Foo2
 //│ ╔══[ERROR] Unhandled cyclic definition
-//│ ║  l.210: 	class Foo2 extends Foo2
+//│ ║  l.212: 	class Foo2 extends Foo2
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^
 //│ class Foo2 extends Foo2 {
 //│   constructor()

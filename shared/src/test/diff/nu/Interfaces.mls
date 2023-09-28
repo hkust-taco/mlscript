@@ -365,7 +365,7 @@ class E1 extends Test {
 //│ ║         	      ^^
 //│ ╟── Declared here:
 //│ ║  l.6: 	  fun bar: Bool -> Bool
-//│ ╙──     	      ^^^^^^^^^^^^^^^^^
+//│ ╙──     	  ^^^^^^^^^^^^^^^^^^^^^
 //│ class E1 extends Test {
 //│   constructor()
 //│   fun bar: Bool -> Bool
@@ -760,7 +760,7 @@ class Eh3 extends Bs(false), Test
 //│ ║         	      ^^^
 //│ ╟── Declared here:
 //│ ║  l.6: 	  fun bar: Bool -> Bool
-//│ ╙──     	      ^^^^^^^^^^^^^^^^^
+//│ ╙──     	  ^^^^^^^^^^^^^^^^^^^^^
 //│ class Eh extends Bs {
 //│   constructor()
 //│   fun foo: Int -> Int
@@ -919,7 +919,7 @@ trait BInt extends Base[Int] {
 }
 //│ ╔══[ERROR] Method implementations in traits are not yet supported
 //│ ║  l.918: 	  fun f = error
-//│ ╙──       	      ^^^^^^^^^
+//│ ╙──       	  ^^^^^^^^^^^^^
 //│ trait BInt extends Base {
 //│   fun f: nothing
 //│ }
@@ -1017,7 +1017,7 @@ class DerBad1 extends Base[Int, Int]
 //│ ║          	      ^^^^^^^
 //│ ╟── Declared here:
 //│ ║  l.899: 	trait Base[A] { fun f: A -> A }
-//│ ╙──       	                    ^^^^^^^^^
+//│ ╙──       	                ^^^^^^^^^^^^^
 //│ class DerBad1 extends Base {
 //│   constructor()
 //│   fun f: 'A -> 'A
@@ -1102,7 +1102,7 @@ trait Tb extends Ta[Int] {
 }
 //│ ╔══[ERROR] Method implementations in traits are not yet supported
 //│ ║  l.1101: 	  virtual val p = false
-//│ ╙──        	              ^^^^^^^^^
+//│ ╙──        	          ^^^^^^^^^^^^^
 //│ trait Tb extends Ta {
 //│   val g: 'T
 //│   val p: false

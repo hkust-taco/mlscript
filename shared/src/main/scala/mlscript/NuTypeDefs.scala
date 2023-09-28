@@ -535,6 +535,12 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     
     // println(s"vars ${vars}")
     
+    tu.entities.foreach {
+      case fd: NuFunDef if fd.isLetRec.isEmpty && outer.exists(_.kind is Block) =>
+        err(msg"Cannot use `val` or `fun` in local block; use `let` instead.", fd.toLoc)
+      case _ =>
+    }
+    
     val named = mutable.Map.empty[Str, LazyTypeInfo]
     
     // * Not sure we should support declaring signature with the `ident: type` syntax
@@ -785,7 +791,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                 
               case rawCls: TypedNuCls =>
                 
-                // println(s"Raw $rawCls")
+                // println(s"Raw $rawCls where ${rawCls.showBounds}")
                 
                 val (fr, ptp) = refreshHelper(rawCls, v, if (parTargs.isEmpty) N else S(parTargs)) // infer ty args if not provided
                 val cls = {
@@ -794,7 +800,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                   rawCls.freshenAbove(info.level, rigidify = false)
                 }
                 
-                // println(s"Fresh[${ctx.lvl}] $cls")
+                // println(s"Fresh[${ctx.lvl}] $cls where ${cls.showBounds}")
                 
                 def checkArgsNum(effectiveParamSize: Int) =
                   if (parArgs.sizeCompare(effectiveParamSize) =/= 0)
@@ -1433,7 +1439,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     
                     val tparamMems = tparams.map { case (tp, tv, vi) => // TODO use vi
                       val fldNme = td.nme.name + "#" + tp.name
-                      NuParam(TypeName(fldNme).withLocOf(tp), FieldType(S(tv), tv)(tv.prov), isPublic = true)(lvl)
+                      val skol = SkolemTag(tv)(tv.prov)
+                      NuParam(TypeName(fldNme).withLocOf(tp), FieldType(S(skol), skol)(tv.prov), isPublic = true)(lvl)
                     }
                     val tparamFields = tparamMems.map(p => p.nme.toVar -> p.ty)
                     assert(!typedParams.exists(_.keys.exists(tparamFields.keys.toSet)), ???)
@@ -1765,10 +1772,19 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
         case _ =>
           println(s"Assigning ${tn.name} :: ${_tv} := $targ where ${targ.showBounds}")
           val tv =
-            freshVar(_tv.prov, S(_tv), _tv.nameHint)(targ.level)
+            freshVar(_tv.prov, S(_tv), _tv.nameHint,
+              lbs = _tv.lowerBounds,
+              ubs = _tv.upperBounds,
+              )(targ.level)
           println(s"Set ${tv} ~> ${_tv}")
           assert(tv.assignedTo.isEmpty)
+          
+          // * Note: no checks that the assigned variable satisfies the bounds...
+          // * When we support bounded types, bounds check will be needed at the type definition site
+          assert(tv.lowerBounds.isEmpty, tv.lowerBounds)
+          assert(tv.upperBounds.isEmpty, tv.upperBounds)
           tv.assignedTo = S(targ)
+          
           // println(s"Assigned ${tv.assignedTo}")
           tv
       })

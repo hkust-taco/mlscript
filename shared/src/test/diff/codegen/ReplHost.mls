@@ -1,5 +1,5 @@
 
-:ShowRepl
+:showRepl
 class Box[T]: { inner: T }
   method Map: (T -> 'a) -> Box['a]
   method Map f = Box { inner = f this.inner }
@@ -37,7 +37,7 @@ box0 = Box { inner = 0 }
 //│ box0: Box[0]
 //│     = Box { inner: 0 }
 
-:ShowRepl
+:showRepl
 box1 = Box { inner = 1 }
 //│ ┌ Block at ReplHost.mls:41
 //│ ├── No prelude
@@ -50,7 +50,7 @@ box1 = Box { inner = 1 }
 //│ box1: Box[1]
 //│     = Box { inner: 1 }
 
-:ShowRepl
+:showRepl
 case box1 of { Box -> 0 }
 //│ ┌ Block at ReplHost.mls:54
 //│ ├── No prelude
@@ -66,7 +66,7 @@ case box1 of { Box -> 0 }
 //│ res: 0
 //│    = 0
 
-:ShowRepl
+:showRepl
 box1.Map (fun x -> add x 1)
 box1.Map (fun x -> add x 2)
 box1.Map (fun x -> Box { inner = x })

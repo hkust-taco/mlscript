@@ -12,7 +12,7 @@
 
 
 class List<out A> {
-  fun match: forall 'res; (ifNil: () => 'res, ifCons: (A, List[A]) => 'res) => 'res
+  fun match: forall 'res: (ifNil: () => 'res, ifCons: (A, List[A]) => 'res) => 'res
   fun match = error
 }
 let Nil: () => List<'a>
@@ -151,7 +151,7 @@ fun map_expr(f, v) =
 
 mixin EvalExpr {
   fun eval(sub, v) =
-    fun eta(e) = this.eval(sub, e)
+    let eta(e) = this.eval(sub, e)
     let vv = map_expr(eta, v)
     if vv is
       Var then super.eval(sub, vv)

@@ -12,7 +12,7 @@ class IntLit(value: Int) extends Code[Int, nothing]
 class Add[C](lhs: Code[Int, C], rhs: Code[Int, C]) extends Code[Int, C]
 //│ class Add[C](lhs: Code[Int, C], rhs: Code[Int, C]) extends Code
 
-fun bind(x: Code['a, 'c], k: (forall 'cc; Code['a, 'cc] -> Code['b, 'cc])): Code['b, 'c] = k(x)
+fun bind(x: Code['a, 'c], k: (forall 'cc: Code['a, 'cc] -> Code['b, 'cc])): Code['b, 'c] = k(x)
 //│ fun bind: forall 'a 'c 'b. (x: Code['a, 'c], k: forall 'cc. Code['a, 'cc] -> Code['b, 'cc]) -> Code['b, 'c]
 
 
@@ -41,7 +41,7 @@ abstract class Test[C] {
 
 :NoJS
 
-fun mkVar(f: forall 'C; Test['C] -> 'a): 'a
+fun mkVar(f: forall 'C: Test['C] -> 'a): 'a
 //│ fun mkVar: forall 'a. (f: forall 'C. Test['C] -> 'a) -> 'a
 
 mkVar of t0 =>

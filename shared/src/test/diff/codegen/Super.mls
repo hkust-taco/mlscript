@@ -78,14 +78,13 @@ module Test0 extends Foo0, Foo1
 //│     = [ 1, 0 ]
 
 
-:ShowRepl
 :js
 :e
 mixin Foo2 {
   fun foo2 = super
 }
 //│ ╔══[ERROR] Illegal use of `super`
-//│ ║  l.85: 	  fun foo2 = super
+//│ ║  l.84: 	  fun foo2 = super
 //│ ╙──      	             ^^^^^
 //│ mixin Foo2() {
 //│   super: 'super

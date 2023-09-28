@@ -30,7 +30,7 @@ class Foo(n: Int) { fun test = this.x }
 
 :e
 class Foo<A>(n: A) { fun test = this.x }
-//│ ╔══[ERROR] Type `#Foo & {Foo#A = ?A, n: A}` does not contain member `x`
+//│ ╔══[ERROR] Type `#Foo & {Foo#A = A, n: A}` does not contain member `x`
 //│ ║  l.32: 	class Foo<A>(n: A) { fun test = this.x }
 //│ ╙──      	                                    ^^
 //│ class Foo[A](n: A) {
@@ -54,12 +54,12 @@ class Foo {
 
 // TODO
 // * All on one line:
-class Test { this: { x: Int}; fun test = this.x }
+class Test { this: { x: Int};; fun test = this.x }
 //│ ╔══[ERROR] Type `#Test` does not contain member `x`
-//│ ║  l.57: 	class Test { this: { x: Int}; fun test = this.x }
-//│ ╙──      	                                             ^^
+//│ ║  l.57: 	class Test { this: { x: Int};; fun test = this.x }
+//│ ╙──      	                                              ^^
 //│ ╔══[ERROR] Type `#Test` does not contain member `x`
-//│ ║  l.57: 	class Test { this: { x: Int}; fun test = this.x }
+//│ ║  l.57: 	class Test { this: { x: Int};; fun test = this.x }
 //│ ╙──      	                     ^
 //│ class Test {
 //│   constructor()

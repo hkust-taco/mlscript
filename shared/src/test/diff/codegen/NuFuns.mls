@@ -3,7 +3,7 @@
 
 :js
 fun foo =
-  fun bar(x) = x + 1
+  let bar(x) = x + 1
   bar(10)
 //│ fun foo: Int
 //│ // Prelude
