@@ -1,9 +1,6 @@
 :NewDefs
 // TODO add check two compatible fields
 
-// Typing of (a?: Int, b?: Int) is ok, but constraining is not 
-// :d
-// :ds
 :ds
 fun f1(a?: Int, b?: Int) = a + b
 //│ ⬤ Initial: TypedTypingUnit(
@@ -151,7 +148,6 @@ fun f1(a?: Int, b?: Int) = a + b
 //│ fun f1: (a: Int?, b: Int?) -> Int
 
 
-// using space, creates ASC in AST.
 :p
 fun f1(a: Int, b: Int) = a + b
 //│ |#fun| |f1|(|a|#:| |Int|,| |b|#:| |Int|)| |#=| |a| |+| |b|
@@ -205,6 +201,7 @@ let y: C1 = x
 //│ [C1, C1]
 //│ res
 //│     = [ C2 {}, C2 {} ]
+
 [x, y]: [C1, C1, C1?]
 //│ sim => TypedTypingUnit(
 //│ 	Some((C1, C1, C1?,)))
@@ -218,11 +215,11 @@ let y: C1 = x
 :e
 [x]: [C1, C1, C1?]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.219: 	[x]: [C1, C1, C1?]
+//│ ║  l.216: 	[x]: [C1, C1, C1?]
 //│ ║         	^^^
 //│ ╟── expression of type `[?a]` does not match type `[C1, C1, C1?]`
 //│ ╟── Note: constraint arises from tuple type:
-//│ ║  l.219: 	[x]: [C1, C1, C1?]
+//│ ║  l.216: 	[x]: [C1, C1, C1?]
 //│ ╙──       	     ^^^^^^^^^^^^^
 //│ sim => TypedTypingUnit(
 //│ 	Some((C1, C1, C1?,)))
@@ -267,11 +264,11 @@ let y: C1 = x
 :e
 []: [Int, Int?]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.268: 	[]: [Int, Int?]
+//│ ║  l.265: 	[]: [Int, Int?]
 //│ ║         	^^
 //│ ╟── expression of type `[]` does not match type `[Int, Int?]`
 //│ ╟── Note: constraint arises from tuple type:
-//│ ║  l.268: 	[]: [Int, Int?]
+//│ ║  l.265: 	[]: [Int, Int?]
 //│ ╙──       	    ^^^^^^^^^^^
 //│ sim => TypedTypingUnit(
 //│ 	Some((#Int<Object,Num>, #Int<Object,Num>?,)))
@@ -285,13 +282,13 @@ let y: C1 = x
 :e
 [1, 2, 3]: [Int, Int?]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.286: 	[1, 2, 3]: [Int, Int?]
+//│ ║  l.283: 	[1, 2, 3]: [Int, Int?]
 //│ ║         	^^^^^^^^^
 //│ ╟── tuple literal of type `[1, 2, 3]` does not match type `[Int, Int?]`
-//│ ║  l.286: 	[1, 2, 3]: [Int, Int?]
+//│ ║  l.283: 	[1, 2, 3]: [Int, Int?]
 //│ ║         	 ^^^^^^^
 //│ ╟── Note: constraint arises from tuple type:
-//│ ║  l.286: 	[1, 2, 3]: [Int, Int?]
+//│ ║  l.283: 	[1, 2, 3]: [Int, Int?]
 //│ ╙──       	           ^^^^^^^^^^^
 //│ sim => TypedTypingUnit(
 //│ 	Some((#Int<Object,Num>, #Int<Object,Num>?,)))
@@ -302,7 +299,6 @@ let y: C1 = x
 //│ res
 //│     = [ 1, 2, 3 ]
 
-// FIXME
 :ds
 [1, 2]: [Int, Int, Int?]
 //│ ⬤ Initial: TypedTypingUnit(
@@ -414,8 +410,6 @@ let y: C1 = x
 
 
 // * Harder case:
-
-// why xs type is `nothing` ?
 :p
 fun foo(xs: [Int] & 'a) = xs : [Int, Int?]
 //│ |#fun| |foo|(|xs|#:| |[|Int|]| |&| |'a|)| |#=| |xs| |#:| |[|Int|,| |Int|?|]|
@@ -471,13 +465,13 @@ fun foo: ([Int] & [Int, Int?]) -> Int
 
 foo([1, true])
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.472: 	foo([1, true])
+//│ ║  l.466: 	foo([1, true])
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╟── tuple literal of type `[1, true]` does not match type `[Int]`
-//│ ║  l.472: 	foo([1, true])
+//│ ║  l.466: 	foo([1, true])
 //│ ║         	     ^^^^^^^
 //│ ╟── Note: constraint arises from tuple type:
-//│ ║  l.463: 	fun foo: ([Int] & [Int, Int?]) -> Int
+//│ ║  l.457: 	fun foo: ([Int] & [Int, Int?]) -> Int
 //│ ╙──       	          ^^^^^
 //│ sim => TypedTypingUnit(
 //│ 	Some((#Int<Object,Num> | #error<>)))
@@ -501,10 +495,10 @@ fun foo: ([Int] | [Int, Int?]) -> Int
 
 foo([1, true])
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.502: 	foo([1, true])
+//│ ║  l.496: 	foo([1, true])
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╟── reference of type `true` is not an instance of type `Int`
-//│ ║  l.502: 	foo([1, true])
+//│ ║  l.496: 	foo([1, true])
 //│ ╙──       	        ^^^^
 //│ sim => TypedTypingUnit(
 //│ 	Some((#Int<Object,Num> | #error<>)))
@@ -515,5 +509,3 @@ foo([1, true])
 //│ res
 //│     = <no result>
 //│       foo is not implemented
-
-
