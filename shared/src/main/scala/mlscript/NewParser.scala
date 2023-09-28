@@ -1116,11 +1116,6 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
     }
     // val e = expr(NoElsePrec) -> argMut.isDefined
     val body = exprOrIf(prec)
-    cur match {
-      case x :: _ => 
-        printDbg(s"nexttoken => ${x}")
-      case _ => ()
-    }
     val isOptinoal = cur match {
       case (IDENT("?", true), l0) :: _ =>
         consume
@@ -1129,15 +1124,6 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         false
     }
     val e = body.map(Fld(FldFlags(argMut.isDefined, argSpec.isDefined, argOpt.isDefined || isOptinoal), _))
-    printDbg(s"flags => ${argMut} ${argSpec} ${argOpt}")
-    printDbg(s"e => ${e}")
-    
-    body match {
-      case Right(value) => 
-        printDbg(s"body => ${value} ${Helpers.inspect(value)}")
-      case _ => ()
-    }
-    
     
     def mkSeq = if (seqAcc.isEmpty) argName -> e else e match {
       case L(_) => ???
