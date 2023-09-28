@@ -541,7 +541,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
     cur.dropWhile(_._1 === SPACE && { consume; true })
   
   final def funParams(implicit et: ExpectThen, fe: FoundErr, l: Line): Ls[Tup] = wrap(()) { l =>
-    val res = yeetSpaces match {
+    yeetSpaces match {
       case (KEYWORD("=" | ":"), _) :: _ => Nil
       case Nil => Nil
       case (KEYWORD("of"), _) :: _ =>
@@ -559,13 +559,6 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         consume
         Nil
     }
-    res match {
-      case x :: _ => 
-        printDbg(s"Here, creating the params! ${res} ${Helpers.inspect(x)}" )
-      case Nil =>
-        printDbg(s"Here, (not) creating the params! ${res}")
-    }
-    res
   }
   
   final def expr(prec: Int, allowSpace: Bool = true)(implicit fe: FoundErr, l: Line): Term = wrap(prec,allowSpace) { l =>

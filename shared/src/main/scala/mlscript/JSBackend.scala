@@ -953,7 +953,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         case (S(nme), Fld(FldFlags(mut, spec, opt), trm)) =>
           val ty = tt(trm)
           nme -> Field(if (mut) S(ty) else N, ty, false)
-        case (N, Fld(FldFlags(mut, spec, opt), nme: Var)) => nme -> Field(if (mut) S(Bot) else N, Top, false)
+        case (N, Fld(FldFlags(mut, spec, opt), nme: Var)) => nme -> Field(if (mut) S(Bot) else N, Top, opt)
         case _ => die
       }
       val body = pars.map(tt).foldRight(Record(params): Type)(Inter)
