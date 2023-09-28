@@ -627,7 +627,7 @@ trait TermImpl extends StatementImpl { self: Term =>
       case _ => throw new NotAType(this)
     }
     case Rcd(fields) => Record(fields.map(fld => (fld._1, fld._2 match {
-      case Fld(FldFlags(m, s, _), v) => val ty = v.toType_!; Field(Option.when(m)(ty), ty, false)
+      case Fld(FldFlags(m, s, o), v) => val ty = v.toType_!; Field(Option.when(m)(ty), ty, o)
     })))
     case Where(body, where) =>
       Constrained(body.toType_!, Nil, where.map {
@@ -811,10 +811,10 @@ trait StatementImpl extends Located { self: Statement =>
         case R(ty) => ty
       }
       val params = fs.map {
-        case (S(nme), Fld(FldFlags(mut, spec, _), trm)) =>
+        case (S(nme), Fld(FldFlags(mut, spec, opt), trm)) =>
           val ty = tt(trm)
-          nme -> Field(if (mut) S(ty) else N, ty, false)
-        case (N, Fld(FldFlags(mut, spec, _), nme: Var)) => nme -> Field(if (mut) S(Bot) else N, Top, false)
+          nme -> Field(if (mut) S(ty) else N, ty, opt)
+        case (N, Fld(FldFlags(mut, spec, opt), nme: Var)) => nme -> Field(if (mut) S(Bot) else N, Top, opt)
         case _ => die
       }
       val pos = params.unzip._1
@@ -869,13 +869,13 @@ trait StatementImpl extends Located { self: Statement =>
             case Bra(false, t) => getFields(t)
             case Bra(true, Tup(fs)) =>
               Record(fs.map {
-                case (S(n) -> Fld(FldFlags(mut, _, _), t)) =>
+                case (S(n) -> Fld(FldFlags(mut, _, opt), t)) =>
                   val ty = t.toType match {
                     case L(d) => allDiags += d; Top
                     case R(t) => t
                   }
                   fields += n -> ty
-                  n -> Field(None, ty, false)
+                  n -> Field(None, ty, opt)
                 case _ => ???
               }) :: Nil
             case Bra(true, t) => lastWords(s"$t ${t.getClass}")
