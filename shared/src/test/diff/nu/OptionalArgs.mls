@@ -139,12 +139,6 @@ fun f1(a?: Int, b?: Int) = a + b
 //│ 	TypedNuFun(0,fun f1 = (a: Int?, b: Int?,) => + (a, b,),((a: #Int<Object,Num>?, b: #Int<Object,Num>?,) -> #Int<Object,Num>))
 //│ 	None)
 //│  where: 
-//│ sim => TypedTypingUnit(
-//│ 	TypedNuFun(0,fun f1 = (a: Int?, b: Int?,) => + (a, b,),((a: #Int<Object,Num>?, b: #Int<Object,Num>?,) -> #Int<Object,Num>))
-//│ 	None)
-//│ exp => class mlscript.Signature
-//│ members => List(fun f1: (a: Int?, b: Int?) -> Int)
-//│ result => None
 //│ fun f1: (a: Int?, b: Int?) -> Int
 
 
@@ -153,12 +147,6 @@ fun f1(a: Int, b: Int) = a + b
 //│ |#fun| |f1|(|a|#:| |Int|,| |b|#:| |Int|)| |#=| |a| |+| |b|
 //│ AST: TypingUnit(NuFunDef(None, f1, None, [], Lam(Tup(a: Var(Int), b: Var(Int)), App(Var(+), Tup(_: Var(a), _: Var(b))))))
 //│ Parsed: fun f1 = (a: Int, b: Int,) => + (a, b,);
-//│ sim => TypedTypingUnit(
-//│ 	TypedNuFun(0,fun f1 = (a: Int, b: Int,) => + (a, b,),((a: #Int<Object,Num>, b: #Int<Object,Num>,) -> #Int<Object,Num>))
-//│ 	None)
-//│ exp => class mlscript.Signature
-//│ members => List(fun f1: (a: Int, b: Int) -> Int)
-//│ result => None
 //│ fun f1: (a: Int, b: Int) -> Int
 
 
@@ -166,23 +154,6 @@ class C1
 class C2 extends C1
 let x = new C2()
 let y: C1 = x
-//│ sim => TypedTypingUnit(
-//│ 	TypedNuCls(0, TypeName(C1),
-//│ 		List(),
-//│ 		List(),
-//│ 		this: ⊤, ,
-//│ 		: ⊤, Set(), Map())
-//│ 	TypedNuCls(0, TypeName(C2),
-//│ 		List(),
-//│ 		List(),
-//│ 		this: ⊤, ,
-//│ 		: ⊤, Set(TypeName(C1)), Map())
-//│ 	TypedNuFun(0,let x = new C2() {},C2)
-//│ 	TypedNuFun(0,let y = x : C1,C1)
-//│ 	None)
-//│ exp => class mlscript.Signature
-//│ members => List(class C1() {}, class C2(): C1 {}, let x: C2, let y: C1)
-//│ result => None
 //│ class C1
 //│ class C2 extends C1
 //│ let x: C2
@@ -193,21 +164,11 @@ let y: C1 = x
 //│   = C2 {}
 
 [x, y]: [C1, C1]
-//│ sim => TypedTypingUnit(
-//│ 	Some((C1, C1,)))
-//│ exp => class mlscript.Signature
-//│ members => List()
-//│ result => Some(Tuple(List((None,Field(None,TypeName(C1),false)), (None,Field(None,TypeName(C1),false)))))
 //│ [C1, C1]
 //│ res
 //│     = [ C2 {}, C2 {} ]
 
 [x, y]: [C1, C1, C1?]
-//│ sim => TypedTypingUnit(
-//│ 	Some((C1, C1, C1?,)))
-//│ exp => class mlscript.Signature
-//│ members => List()
-//│ result => Some(Tuple(List((None,Field(None,TypeName(C1),false)), (None,Field(None,TypeName(C1),false)), (None,Field(None,TypeName(C1),true)))))
 //│ [C1, C1, C1?]
 //│ res
 //│     = [ C2 {}, C2 {} ]
@@ -215,48 +176,28 @@ let y: C1 = x
 :e
 [x]: [C1, C1, C1?]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.216: 	[x]: [C1, C1, C1?]
+//│ ║  l.177: 	[x]: [C1, C1, C1?]
 //│ ║         	^^^
 //│ ╟── expression of type `[?a]` does not match type `[C1, C1, C1?]`
 //│ ╟── Note: constraint arises from tuple type:
-//│ ║  l.216: 	[x]: [C1, C1, C1?]
+//│ ║  l.177: 	[x]: [C1, C1, C1?]
 //│ ╙──       	     ^^^^^^^^^^^^^
-//│ sim => TypedTypingUnit(
-//│ 	Some((C1, C1, C1?,)))
-//│ exp => class mlscript.Signature
-//│ members => List()
-//│ result => Some(Tuple(List((None,Field(None,TypeName(C1),false)), (None,Field(None,TypeName(C1),false)), (None,Field(None,TypeName(C1),true)))))
 //│ [C1, C1, C1?]
 //│ res
 //│     = [ C2 {} ]
 
 
 [1, 2, 3]: [Int, Int, Int]
-//│ sim => TypedTypingUnit(
-//│ 	Some((#Int<Object,Num>, #Int<Object,Num>, #Int<Object,Num>,)))
-//│ exp => class mlscript.Signature
-//│ members => List()
-//│ result => Some(Tuple(List((None,Field(None,TypeName(Int),false)), (None,Field(None,TypeName(Int),false)), (None,Field(None,TypeName(Int),false)))))
 //│ [Int, Int, Int]
 //│ res
 //│     = [ 1, 2, 3 ]
 
 [1, 2]: [Int, Int?]
-//│ sim => TypedTypingUnit(
-//│ 	Some((#Int<Object,Num>, #Int<Object,Num>?,)))
-//│ exp => class mlscript.Signature
-//│ members => List()
-//│ result => Some(Tuple(List((None,Field(None,TypeName(Int),false)), (None,Field(None,TypeName(Int),true)))))
 //│ [Int, Int?]
 //│ res
 //│     = [ 1, 2 ]
 
 [1]: [Int, Int?]
-//│ sim => TypedTypingUnit(
-//│ 	Some((#Int<Object,Num>, #Int<Object,Num>?,)))
-//│ exp => class mlscript.Signature
-//│ members => List()
-//│ result => Some(Tuple(List((None,Field(None,TypeName(Int),false)), (None,Field(None,TypeName(Int),true)))))
 //│ [Int, Int?]
 //│ res
 //│     = [ 1 ]
@@ -264,17 +205,12 @@ let y: C1 = x
 :e
 []: [Int, Int?]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.265: 	[]: [Int, Int?]
+//│ ║  l.206: 	[]: [Int, Int?]
 //│ ║         	^^
 //│ ╟── expression of type `[]` does not match type `[Int, Int?]`
 //│ ╟── Note: constraint arises from tuple type:
-//│ ║  l.265: 	[]: [Int, Int?]
+//│ ║  l.206: 	[]: [Int, Int?]
 //│ ╙──       	    ^^^^^^^^^^^
-//│ sim => TypedTypingUnit(
-//│ 	Some((#Int<Object,Num>, #Int<Object,Num>?,)))
-//│ exp => class mlscript.Signature
-//│ members => List()
-//│ result => Some(Tuple(List((None,Field(None,TypeName(Int),false)), (None,Field(None,TypeName(Int),true)))))
 //│ [Int, Int?]
 //│ res
 //│     = []
@@ -282,19 +218,14 @@ let y: C1 = x
 :e
 [1, 2, 3]: [Int, Int?]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.283: 	[1, 2, 3]: [Int, Int?]
+//│ ║  l.219: 	[1, 2, 3]: [Int, Int?]
 //│ ║         	^^^^^^^^^
 //│ ╟── tuple literal of type `[1, 2, 3]` does not match type `[Int, Int?]`
-//│ ║  l.283: 	[1, 2, 3]: [Int, Int?]
+//│ ║  l.219: 	[1, 2, 3]: [Int, Int?]
 //│ ║         	 ^^^^^^^
 //│ ╟── Note: constraint arises from tuple type:
-//│ ║  l.283: 	[1, 2, 3]: [Int, Int?]
+//│ ║  l.219: 	[1, 2, 3]: [Int, Int?]
 //│ ╙──       	           ^^^^^^^^^^^
-//│ sim => TypedTypingUnit(
-//│ 	Some((#Int<Object,Num>, #Int<Object,Num>?,)))
-//│ exp => class mlscript.Signature
-//│ members => List()
-//│ result => Some(Tuple(List((None,Field(None,TypeName(Int),false)), (None,Field(None,TypeName(Int),true)))))
 //│ [Int, Int?]
 //│ res
 //│     = [ 1, 2, 3 ]
@@ -399,11 +330,6 @@ let y: C1 = x
 //│ ⬤ Factored: TypedTypingUnit(
 //│ 	Some((#Int<Object,Num>, #Int<Object,Num>, #Int<Object,Num>?,)))
 //│  where: 
-//│ sim => TypedTypingUnit(
-//│ 	Some((#Int<Object,Num>, #Int<Object,Num>, #Int<Object,Num>?,)))
-//│ exp => class mlscript.Signature
-//│ members => List()
-//│ result => Some(Tuple(List((None,Field(None,TypeName(Int),false)), (None,Field(None,TypeName(Int),false)), (None,Field(None,TypeName(Int),true)))))
 //│ [Int, Int, Int?]
 //│ res
 //│     = [ 1, 2 ]
@@ -415,21 +341,9 @@ fun foo(xs: [Int] & 'a) = xs : [Int, Int?]
 //│ |#fun| |foo|(|xs|#:| |[|Int|]| |&| |'a|)| |#=| |xs| |#:| |[|Int|,| |Int|?|]|
 //│ AST: TypingUnit(NuFunDef(None, foo, None, [], Lam(Tup(xs: App(Var(&), Tup(_: Bra(rcd = false, Tup(_: Var(Int))), _: Var('a)))), Asc(Var(xs), Tuple(List((None,Field(None,TypeName(Int),false)), (None,Field(None,TypeName(Int),true))))))))
 //│ Parsed: fun foo = (xs: & ('(' Int, ')', 'a,),) => xs : [Int, Int?];
-//│ sim => TypedTypingUnit(
-//│ 	TypedNuFun(0,fun foo = (xs: & ('(' Int, ')', 'a,),) => xs : [Int, Int?],((xs: (#Int<Object,Num>,),) -> (#Int<Object,Num>, #Int<Object,Num>?,)))
-//│ 	None)
-//│ exp => class mlscript.Signature
-//│ members => List(fun foo: (xs: [Int]) -> [Int, Int?])
-//│ result => None
 //│ fun foo: (xs: [Int]) -> [Int, Int?]
 
 fun foo(xs: [Int] & 'a) = [xs : [Int, Int?], xs]
-//│ sim => TypedTypingUnit(
-//│ 	TypedNuFun(0,fun foo = (xs: & ('(' Int, ')', 'a,),) => '(' xs : [Int, Int?], xs, ')',((xs: ((#Int<Object,Num>,) & 'a45_49'),) -> ((#Int<Object,Num>, #Int<Object,Num>?,), ((#Int<Object,Num>,) & 'a45_49'),)))
-//│ 	None)
-//│ exp => class mlscript.Signature
-//│ members => List(fun foo: forall 'a. (xs: [Int] & 'a) -> [[Int, Int?], [Int] & 'a])
-//│ result => None
 //│ fun foo: forall 'a. (xs: [Int] & 'a) -> [[Int, Int?], [Int] & 'a]
 
 
@@ -437,48 +351,25 @@ fun foo(xs: [Int] & 'a) = [xs : [Int, Int?], xs]
 // TODO later: update normal form construction
 
 fun foo: [Int] | [Int, Int?]
-//│ sim => TypedTypingUnit(
-//│ 	TypedNuFun(0,fun foo: [Int] | [Int, Int?],(#Int<Object,Num>, #Int<Object,Num>?,))
-//│ 	None)
-//│ exp => class mlscript.Signature
-//│ members => List(fun foo: [Int, Int?])
-//│ result => None
 //│ fun foo: [Int, Int?]
 
 fun foo: [Int] & [Int, Int?]
-//│ sim => TypedTypingUnit(
-//│ 	TypedNuFun(0,fun foo: [Int] & [Int, Int?],(#Int<Object,Num>,))
-//│ 	None)
-//│ exp => class mlscript.Signature
-//│ members => List(fun foo: [Int])
-//│ result => None
 //│ fun foo: [Int]
 
 fun foo: ([Int] & [Int, Int?]) -> Int
-//│ sim => TypedTypingUnit(
-//│ 	TypedNuFun(0,fun foo: ([Int] & [Int, Int?]) -> Int,([#Int<Object,Num>,] -> #Int<Object,Num>))
-//│ 	None)
-//│ exp => class mlscript.Signature
-//│ members => List(fun foo: ([Int]) -> Int)
-//│ result => None
 //│ fun foo: ([Int]) -> Int
 
 :e
 foo([1, true])
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.467: 	foo([1, true])
+//│ ║  l.363: 	foo([1, true])
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╟── tuple literal of type `[1, true]` does not match type `[Int]`
-//│ ║  l.467: 	foo([1, true])
+//│ ║  l.363: 	foo([1, true])
 //│ ║         	     ^^^^^^^
 //│ ╟── Note: constraint arises from tuple type:
-//│ ║  l.457: 	fun foo: ([Int] & [Int, Int?]) -> Int
+//│ ║  l.359: 	fun foo: ([Int] & [Int, Int?]) -> Int
 //│ ╙──       	          ^^^^^
-//│ sim => TypedTypingUnit(
-//│ 	Some((#Int<Object,Num> | #error<>)))
-//│ exp => class mlscript.Signature
-//│ members => List()
-//│ result => Some(Union(TypeName(Int),TypeName(error)))
 //│ Int | error
 //│ res
 //│     = <no result>
@@ -486,27 +377,16 @@ foo([1, true])
 
 
 fun foo: ([Int] | [Int, Int?]) -> Int
-//│ sim => TypedTypingUnit(
-//│ 	TypedNuFun(0,fun foo: ([Int] | [Int, Int?]) -> Int,([#Int<Object,Num>, #Int<Object,Num>?,] -> #Int<Object,Num>))
-//│ 	None)
-//│ exp => class mlscript.Signature
-//│ members => List(fun foo: ([Int, Int?]) -> Int)
-//│ result => None
 //│ fun foo: ([Int, Int?]) -> Int
 
 :e
 foo([1, true])
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.498: 	foo([1, true])
+//│ ║  l.383: 	foo([1, true])
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╟── reference of type `true` is not an instance of type `Int`
-//│ ║  l.498: 	foo([1, true])
+//│ ║  l.383: 	foo([1, true])
 //│ ╙──       	        ^^^^
-//│ sim => TypedTypingUnit(
-//│ 	Some((#Int<Object,Num> | #error<>)))
-//│ exp => class mlscript.Signature
-//│ members => List()
-//│ result => Some(Union(TypeName(Int),TypeName(error)))
 //│ Int | error
 //│ res
 //│     = <no result>

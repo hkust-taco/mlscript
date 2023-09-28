@@ -160,45 +160,67 @@ abstract class Nested {
 
 
 fun (??) oops: (Int, Int) => Int
-//│ fun (??) oops: (Int, Int) -> Int
+//│ ╔══[PARSE ERROR] Unexpected operator after symbolic name
+//│ ║  l.162: 	fun (??) oops: (Int, Int) => Int
+//│ ╙──       	      ^
+//│ fun (?) oops: (Int, Int) -> Int
 
 1 ?? 2
-//│ Int
+//│ ╔══[PARSE ERROR] Expected end of input; found operator instead
+//│ ║  l.168: 	1 ?? 2
+//│ ╙──       	  ^
+//│ 1
 //│ res
-//│     = <no result>
-//│       ?? is not implemented
+//│     = 1
 
 fun (??) oops: (Int, Int) => Int
 fun oops(a, b) = a + b
+//│ ╔══[PARSE ERROR] Unexpected operator after symbolic name
+//│ ║  l.176: 	fun (??) oops: (Int, Int) => Int
+//│ ╙──       	      ^
 //│ fun oops: (Int, Int) -> Int
-//│ fun (??) oops: (Int, Int) -> Int
+//│ fun (?) oops: (Int, Int) -> Int
 
 // FIXME-later (stub symbols) This is actually implemented...
 1 ?? 2
-//│ Int
+//│ ╔══[PARSE ERROR] Expected end of input; found operator instead
+//│ ║  l.185: 	1 ?? 2
+//│ ╙──       	  ^
+//│ 1
 //│ res
-//│     = <no result>
-//│       ?? is not implemented
+//│     = 1
 
 fun oops: (Int, Int) => Int
 fun (??) oops(a, b) = a + b
-//│ fun (??) oops: (Int, Int) -> Int
+//│ ╔══[PARSE ERROR] Unexpected operator after symbolic name
+//│ ║  l.194: 	fun (??) oops(a, b) = a + b
+//│ ╙──       	      ^
+//│ fun (?) oops: (Int, Int) -> Int
 //│ fun oops: (Int, Int) -> Int
 
 1 ?? 2
-//│ Int
+//│ ╔══[PARSE ERROR] Expected end of input; found operator instead
+//│ ║  l.201: 	1 ?? 2
+//│ ╙──       	  ^
+//│ 1
 //│ res
-//│     = 3
+//│     = 1
 
 fun (!?) oops: (Int, Int) => Int
 fun (??) oops(a, b) = a + b
-//│ fun (??) oops: (Int, Int) -> Int
+//│ ╔══[PARSE ERROR] Unexpected operator after symbolic name
+//│ ║  l.210: 	fun (??) oops(a, b) = a + b
+//│ ╙──       	      ^
+//│ fun (?) oops: (Int, Int) -> Int
 //│ fun (!?) oops: (Int, Int) -> Int
 
 1 ?? 2
-//│ Int
+//│ ╔══[PARSE ERROR] Expected end of input; found operator instead
+//│ ║  l.217: 	1 ?? 2
+//│ ╙──       	  ^
+//│ 1
 //│ res
-//│     = 3
+//│     = 1
 
 1 !? 2
 //│ Int
@@ -214,16 +236,16 @@ fun (??) oops(a, b) = a + b
 :e
 fun (>>)(f, g) = x => g(f(x))
 //│ ╔══[PARSE ERROR] Expected a function name; found parenthesis section instead
-//│ ║  l.215: 	fun (>>)(f, g) = x => g(f(x))
+//│ ║  l.237: 	fun (>>)(f, g) = x => g(f(x))
 //│ ╙──       	        ^^^^^^
 //│ ╔══[ERROR] identifier not found: g
-//│ ║  l.215: 	fun (>>)(f, g) = x => g(f(x))
+//│ ║  l.237: 	fun (>>)(f, g) = x => g(f(x))
 //│ ╙──       	                      ^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.215: 	fun (>>)(f, g) = x => g(f(x))
+//│ ║  l.237: 	fun (>>)(f, g) = x => g(f(x))
 //│ ║         	                        ^^^^
 //│ ╟── argument of type `[?a]` does not match type `[?b, ?c]`
-//│ ║  l.215: 	fun (>>)(f, g) = x => g(f(x))
+//│ ║  l.237: 	fun (>>)(f, g) = x => g(f(x))
 //│ ║         	                         ^^^
 //│ ╟── Note: constraint arises from tuple literal:
 //│ ║  l.4: 	fun (>>) compose(f, g) = x => g(f(x))
@@ -235,7 +257,7 @@ fun (>>)(f, g) = x => g(f(x))
 :pe
 fun compose(>>)(f, g) = x => g(f(x))
 //│ ╔══[PARSE ERROR] Unexpected operator here
-//│ ║  l.236: 	fun compose(>>)(f, g) = x => g(f(x))
+//│ ║  l.258: 	fun compose(>>)(f, g) = x => g(f(x))
 //│ ╙──       	            ^^
 //│ fun compose: forall 'a 'b 'c. () -> ('a -> 'b, 'b -> 'c) -> 'a -> 'c
 
@@ -243,14 +265,14 @@ fun compose(>>)(f, g) = x => g(f(x))
 :pe
 fun () foo(a, b) = a + b
 //│ ╔══[PARSE ERROR] Expected a symbolic name between brackets, found nothing
-//│ ║  l.244: 	fun () foo(a, b) = a + b
+//│ ║  l.266: 	fun () foo(a, b) = a + b
 //│ ╙──       	    ^^
 //│ fun foo: (Int, Int) -> Int
 
 :pe
 fun (   ) foo(a, b) = a + b
 //│ ╔══[PARSE ERROR] Expected a symbolic name, found space instead
-//│ ║  l.251: 	fun (   ) foo(a, b) = a + b
+//│ ║  l.273: 	fun (   ) foo(a, b) = a + b
 //│ ╙──       	     ^^^
 //│ fun foo: (Int, Int) -> Int
 
@@ -258,30 +280,30 @@ fun (   ) foo(a, b) = a + b
 fun (
 ) foo(a, b) = a + b
 //│ ╔══[PARSE ERROR] Expected a symbolic name, found newline instead
-//│ ║  l.258: 	fun (
+//│ ║  l.280: 	fun (
 //│ ║         	     ^
-//│ ║  l.259: 	) foo(a, b) = a + b
+//│ ║  l.281: 	) foo(a, b) = a + b
 //│ ╙──       	
 //│ fun foo: (Int, Int) -> Int
 
 :pe
 fun (1) foo(a, b) = a + b
 //│ ╔══[PARSE ERROR] Expected a symbolic name, found literal instead
-//│ ║  l.268: 	fun (1) foo(a, b) = a + b
+//│ ║  l.290: 	fun (1) foo(a, b) = a + b
 //│ ╙──       	     ^
 //│ fun foo: (Int, Int) -> Int
 
 :pe
 fun (++ 1) foo(a, b) = a + b
 //│ ╔══[PARSE ERROR] Unexpected literal after symbolic name
-//│ ║  l.275: 	fun (++ 1) foo(a, b) = a + b
+//│ ║  l.297: 	fun (++ 1) foo(a, b) = a + b
 //│ ╙──       	        ^
 //│ fun (++) foo: (Int, Int) -> Int
 
 :pe
 fun (a ++ 1) foo(a, b) = a + b
 //│ ╔══[PARSE ERROR] Expected a symbolic name, found identifier instead
-//│ ║  l.282: 	fun (a ++ 1) foo(a, b) = a + b
+//│ ║  l.304: 	fun (a ++ 1) foo(a, b) = a + b
 //│ ╙──       	     ^
 //│ fun foo: (Int, Int) -> Int
 // should be `<<|+_+|>>`, but we got `<<|+`
@@ -290,7 +312,7 @@ fun (a ++ 1) foo(a, b) = a + b
 :pe
 fun (<<|+_+|>>) robot(a, b) = a + b
 //│ ╔══[PARSE ERROR] Unexpected identifier after symbolic name
-//│ ║  l.291: 	fun (<<|+_+|>>) robot(a, b) = a + b
+//│ ║  l.313: 	fun (<<|+_+|>>) robot(a, b) = a + b
 //│ ╙──       	         ^
 //│ fun (<<|+) robot: (Int, Int) -> Int
 
@@ -306,7 +328,7 @@ fun (<<|+-+|>>) robot(a, b) = a + b
 :pe
 fun (:-D) dd(a, b) = a + b
 //│ ╔══[PARSE ERROR] Unexpected identifier after symbolic name
-//│ ║  l.307: 	fun (:-D) dd(a, b) = a + b
+//│ ║  l.329: 	fun (:-D) dd(a, b) = a + b
 //│ ╙──       	       ^
 //│ fun (:-) dd: (Int, Int) -> Int
 // should be `:-D`, but we got `:-`

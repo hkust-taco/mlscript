@@ -123,16 +123,8 @@ data type List a of
 //│ Desugared: class Cons[a]: {head: a, tail: anything}
 //│ Desugared: def Nil: forall a. Nil[a]
 //│ AST: Def(false, Nil, PolyType(List(Left(TypeName(a))),AppliedType(TypeName(Nil),List(TypeName(a)))), true)
-<<<<<<< HEAD
-//│ Desugared: def Cons: forall a. (head: a,) -> (tail: List[a],) -> Cons[a]
-//│ AST: Def(false, Cons, PolyType(List(Left(TypeName(a))),Function(Tuple(List((Some(head),Field(None,TypeName(a),false)))),Function(Tuple(List((Some(tail),Field(None,AppliedType(TypeName(List),List(TypeName(a))),false)))),AppliedType(TypeName(Cons),List(TypeName(a)))))), true)
-||||||| a0084daf
-//│ Desugared: def Cons: forall a. (head: a,) -> (tail: List[a],) -> Cons[a]
-//│ AST: Def(false, Cons, PolyType(List(Left(TypeName(a))),Function(Tuple(List((Some(head),Field(None,TypeName(a))))),Function(Tuple(List((Some(tail),Field(None,AppliedType(TypeName(List),List(TypeName(a))))))),AppliedType(TypeName(Cons),List(TypeName(a)))))), true)
-=======
 //│ Desugared: def Cons: forall a. (head: a) -> (tail: anything) -> Cons[a]
-//│ AST: Def(false, Cons, PolyType(List(Left(TypeName(a))),Function(Tuple(List((Some(head),Field(None,TypeName(a))))),Function(Tuple(List((Some(tail),Field(None,Top)))),AppliedType(TypeName(Cons),List(TypeName(a)))))), true)
->>>>>>> new-definition-typing
+//│ AST: Def(false, Cons, PolyType(List(Left(TypeName(a))),Function(Tuple(List((Some(head),Field(None,TypeName(a),false)))),Function(Tuple(List((Some(tail),Field(None,Top,false)))),AppliedType(TypeName(Cons),List(TypeName(a)))))), true)
 //│ Defined type alias List[+a]
 //│ Defined class Nil[±a]
 //│ Defined class Cons[+a]

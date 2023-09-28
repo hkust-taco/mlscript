@@ -238,14 +238,8 @@ rec def map f tree = case tree of {
 //│   where
 //│     'map :> forall 'A 'subTree 'value 'value0 'a 'subTree0. 'a -> ((Leaf[?] & {value: 'value} | (Node[?] with {subTree: 'subTree0})) -> (Leaf['value0] | (Node['A] with {subTree: 'subTree}))
 //│       where
-<<<<<<< HEAD
 //│         'a <: 'value -> 'value0
-//│         'map <: (forall 'b 'c 'd 'e. ('b, 'd,) -> ('c, 'e,)
-||||||| a0084daf
-//│         'map <: (forall 'b 'c 'd 'e. ('b, 'd,) -> ('c, 'e,)
-=======
 //│         'map <: (forall 'b 'c 'd 'e. (('b, 'd,),) -> ('c, 'e,)
->>>>>>> new-definition-typing
 //│           where
 //│             'a <: 'b -> 'c & 'd -> 'e) -> 'subTree0 -> (PerfectTree[Two['A]] & 'subTree))
 //│ ╙──
@@ -253,14 +247,8 @@ rec def map f tree = case tree of {
 //│   where
 //│     'map :> forall 'subTree 'value 'value0 'subTree0 'a 'A. 'a -> ((Leaf[?] & {value: 'value} | (Node[?] with {subTree: 'subTree0})) -> (Leaf['value0] | (Node['A] with {subTree: 'subTree}))
 //│       where
-<<<<<<< HEAD
 //│         'a <: 'value -> 'value0
-//│         'map <: (forall 'b 'c 'd 'e. ('b, 'd,) -> ('c, 'e,)
-||||||| a0084daf
-//│         'map <: (forall 'b 'c 'd 'e. ('b, 'd,) -> ('c, 'e,)
-=======
 //│         'map <: (forall 'b 'c 'd 'e. (('b, 'd,),) -> ('c, 'e,)
->>>>>>> new-definition-typing
 //│           where
 //│             'a <: 'b -> 'c & 'd -> 'e) -> 'subTree0 -> (PerfectTree[Two['A]] & 'subTree))
 //│    = [Function: map1]
