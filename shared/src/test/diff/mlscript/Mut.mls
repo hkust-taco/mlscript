@@ -861,8 +861,8 @@ foo { mut a = 1 } 2 3
 //│ ║  l.841: 	def foo x y z = (x.a <- 0, x.a + 1, x.a, x.a <- y, z x.a)
 //│ ╙──       	                                                   ^
 //│ res: error | (unit, int, 0 | 1 | 2, unit, nothing,)
-//│    Runtime error:
-//│      TypeError: z is not a function
+//│ Runtime error:
+//│ TypeError: z is not a function
 
 :e
 foo { mut a = "oops" } 2

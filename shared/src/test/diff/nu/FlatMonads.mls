@@ -383,8 +383,8 @@ Pure(1)
 r.run
 //│ 1 | error
 //│ res
-//│     Runtime error:
-//│       TypeError: Cannot read properties of undefined (reading 'a')
+//│ Runtime error:
+//│ TypeError: Cannot read properties of undefined (reading 'a')
 
 
 // * We can even technically support the following syntax...

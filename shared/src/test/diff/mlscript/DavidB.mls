@@ -227,7 +227,7 @@ foo (Con{ h = 1; t = N{} })
 //│ ║  l.131: 	class N
 //│ ╙──       	      ^
 //│ res: error
-//│    Runtime error:
-//│      Error: non-exhaustive case expression
+//│ Runtime error:
+//│ Error: non-exhaustive case expression
 
 

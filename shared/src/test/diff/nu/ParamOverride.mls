@@ -78,8 +78,8 @@ module Test1 extends Base1(1/2), Derived1(1) {
 Test1.n
 //│ 1
 //│ res
-//│     Runtime error:
-//│       RangeError: Maximum call stack size exceeded
+//│ Runtime error:
+//│ RangeError: Maximum call stack size exceeded
 
 
 class Test2(val n: Str) extends Base1(1/2), Derived1(1) {

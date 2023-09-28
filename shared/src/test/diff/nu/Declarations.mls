@@ -53,8 +53,8 @@ declare module Foo {
 Foo.foo
 //│ Int
 //│ res
-//│     Runtime error:
-//│       ReferenceError: Foo is not defined
+//│ Runtime error:
+//│ ReferenceError: Foo is not defined
 
 
 declare type A = Int
@@ -79,8 +79,8 @@ declare class Sanitizer {
 let s = new Sanitizer
 //│ let s: Sanitizer
 //│ s
-//│   Runtime error:
-//│     ReferenceError: Sanitizer is not defined
+//│ Runtime error:
+//│ ReferenceError: Sanitizer is not defined
 
 
 

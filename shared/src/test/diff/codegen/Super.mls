@@ -110,7 +110,7 @@ mixin Foo2 {
 //│ globalThis.Foo2 = ((base) => typing_unit4.Foo2(base));
 //│ // End of generated code
 //│ Syntax error:
-//│   'super' keyword unexpected here
+//│ 'super' keyword unexpected here
 
 :re
 :js
@@ -141,7 +141,7 @@ module Test0 extends Foo2
 //│ globalThis.Test0 = typing_unit5.Test0;
 //│ // End of generated code
 //│ Runtime error:
-//│   ReferenceError: Foo2 is not defined
+//│ ReferenceError: Foo2 is not defined
 
 Test0
 //│ Test0

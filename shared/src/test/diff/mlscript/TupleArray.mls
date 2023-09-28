@@ -196,8 +196,8 @@ f(1,2,3) : 1 | 2 | 3
 //│ ║  l.182: 	(arr[0])[1][2]
 //│ ╙──       	^^^^^^^^^^^
 //│ res: error | undefined
-//│    Runtime error:
-//│      TypeError: Cannot read properties of undefined (reading '2')
+//│ Runtime error:
+//│ TypeError: Cannot read properties of undefined (reading '2')
 
 
 class A: { x: int }

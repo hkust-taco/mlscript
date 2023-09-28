@@ -48,8 +48,8 @@ bar Test
 //│ ║  l.2: 	class Test: { value: int }
 //│ ╙──     	      ^^^^
 //│ res: error
-//│    Runtime error:
-//│      Error: non-exhaustive case expression
+//│ Runtime error:
+//│ Error: non-exhaustive case expression
 
 :e
 bar "ops"
@@ -63,8 +63,8 @@ bar "ops"
 //│ ║  l.29: 	def bar x = case x of
 //│ ╙──      	                 ^
 //│ res: error
-//│    Runtime error:
-//│      Error: non-exhaustive case expression
+//│ Runtime error:
+//│ Error: non-exhaustive case expression
 
 
 def baz x = case x of
@@ -86,7 +86,7 @@ baz "oops"
 //│ ║  l.70: 	def baz x = case x of
 //│ ╙──      	                 ^
 //│ res: error
-//│    Runtime error:
-//│      Error: non-exhaustive case expression
+//│ Runtime error:
+//│ Error: non-exhaustive case expression
 
 

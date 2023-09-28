@@ -217,7 +217,7 @@ class Foo2 extends Foo2
 //│   constructor()
 //│ }
 //│ Runtime error:
-//│   RangeError: Maximum call stack size exceeded
+//│ RangeError: Maximum call stack size exceeded
 
 
 

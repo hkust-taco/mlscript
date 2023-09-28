@@ -79,8 +79,8 @@ res.tail.head
 //│ ║  l.2: 	class Nil: {}
 //│ ╙──     	      ^^^
 //│ res: error
-//│    Runtime error:
-//│      TypeError: Cannot read properties of undefined (reading 'head')
+//│ Runtime error:
+//│ TypeError: Cannot read properties of undefined (reading 'head')
 
 
 

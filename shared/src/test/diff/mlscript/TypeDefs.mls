@@ -136,8 +136,8 @@ type Lol = { x: 'a -> 'a }
 :re
 error: Lol -> Lol
 //│ res: Lol -> Lol
-//│    Runtime error:
-//│      Error: an error was thrown
+//│ Runtime error:
+//│ Error: an error was thrown
 
 { x = id } : Lol
 //│ res: Lol
@@ -185,8 +185,8 @@ id: Runaway2
 :re
 error: Runaway2
 //│ res: Runaway2
-//│    Runtime error:
-//│      Error: an error was thrown
+//│ Runtime error:
+//│ Error: an error was thrown
 
 :e
 :re
@@ -201,14 +201,14 @@ error: {x: int} -> nothing : Runaway2
 //│ ║  l.193: 	error: {x: int} -> nothing : Runaway2
 //│ ╙──       	           ^^^
 //│ res: Runaway2
-//│    Runtime error:
-//│      Error: an error was thrown
+//│ Runtime error:
+//│ Error: an error was thrown
 
 :re
 error: {x: 'x -> 'x} -> nothing : Runaway2
 //│ res: Runaway2
-//│    Runtime error:
-//│      Error: an error was thrown
+//│ Runtime error:
+//│ Error: an error was thrown
 
 
 

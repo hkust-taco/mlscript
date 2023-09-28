@@ -131,8 +131,8 @@ def build0 (g: forall 'b. ('a -> 'b -> 'b) -> 'b) = g (fun x -> fun xs -> cons (
 :re
 build0 (fun k -> k 1 error)
 //│ res: Ls[1]
-//│    Runtime error:
-//│      Error: an error was thrown
+//│ Runtime error:
+//│ Error: an error was thrown
 
 
 

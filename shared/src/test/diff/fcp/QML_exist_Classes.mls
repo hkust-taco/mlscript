@@ -223,8 +223,8 @@ sb (fun arr -> arr.Sub 0 (arr.Init true))
 //│ ║  l.7: 	class ArraysRep[A, Rep]
 //│ ╙──     	                   ^^^
 //│ res: error | true
-//│    Runtime error:
-//│      TypeError: number 0 is not iterable (cannot read property Symbol(Symbol.iterator))
+//│ Runtime error:
+//│ TypeError: number 0 is not iterable (cannot read property Symbol(Symbol.iterator))
 
 sb (fun arr -> arr.Update (arr.Init true) 1 false)
 //│ res: ??Rep

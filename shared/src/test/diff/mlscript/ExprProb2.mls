@@ -222,8 +222,8 @@ rec def eval1_fixed = eval1f (eval1f eval1_fixed)
 :re
 eval1_fixed e1
 //│ res: int
-//│    Runtime error:
-//│      RangeError: Maximum call stack size exceeded
+//│ Runtime error:
+//│ RangeError: Maximum call stack size exceeded
 
 rec def eval1_fixed() = eval1f (eval1f (eval1_fixed()))
 //│ eval1_fixed: () -> (Add[?] & 'a | Lit\val & {val: 'val}) -> (int | 'val)
@@ -235,8 +235,8 @@ rec def eval1_fixed() = eval1f (eval1f (eval1_fixed()))
 :re
 eval1_fixed() e1
 //│ res: int
-//│    Runtime error:
-//│      RangeError: Maximum call stack size exceeded
+//│ Runtime error:
+//│ RangeError: Maximum call stack size exceeded
 
 
 

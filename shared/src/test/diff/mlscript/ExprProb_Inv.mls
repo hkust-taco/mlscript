@@ -101,34 +101,34 @@ eval1
 :re
 error: ~Add[?]
 //│ res: ~Add[?]
-//│    Runtime error:
-//│      Error: an error was thrown
+//│ Runtime error:
+//│ Error: an error was thrown
 
 :re
 error: ('a & ~Lit) -> 'a
 //│ res: ('a & ~Lit) -> 'a
-//│    Runtime error:
-//│      Error: an error was thrown
+//│ Runtime error:
+//│ Error: an error was thrown
 
 :re
 error: ('a) -> ('a & Add[?])
 error: ('a) -> ('a & ~Add[?])
 error: ('a & ~Add[?]) -> 'a
 //│ res: 'a -> (Add[?] & 'a)
-//│    Runtime error:
-//│      Error: an error was thrown
+//│ Runtime error:
+//│ Error: an error was thrown
 //│ res: 'a -> ('a & ~Add[?])
-//│    Runtime error:
-//│      Error: an error was thrown
+//│ Runtime error:
+//│ Error: an error was thrown
 //│ res: ('a & ~Add[?]) -> 'a
-//│    Runtime error:
-//│      Error: an error was thrown
+//│ Runtime error:
+//│ Error: an error was thrown
 
 :re
 error: ('a & ~add) -> 'a
 //│ res: ('a & ~#Add) -> 'a
-//│    Runtime error:
-//│      Error: an error was thrown
+//│ Runtime error:
+//│ Error: an error was thrown
 
 :ns
 def eval1_ty_ugly: ('a -> int) -> (Lit | Add['b] | 'a & ~Lit & ~Add[?] as 'b) -> int
@@ -573,8 +573,8 @@ eval1 done e2
 //│ ║  l.74: 	  | Add -> eval1 k e.lhs + eval1 k e.rhs
 //│ ╙──      	                                   ^^^^^
 //│ res: error | int
-//│    Runtime error:
-//│      Error: non-exhaustive case expression
+//│ Runtime error:
+//│ Error: non-exhaustive case expression
 
 
 :e
@@ -628,8 +628,8 @@ prettier2 done (eval1 done) e2
 //│ ║  l.264: 	      else if ev e.rhs == 0 then prettier1 k ev e.lhs
 //│ ╙──       	                 ^^^^^
 //│ res: error | string
-//│    Runtime error:
-//│      Error: non-exhaustive case expression
+//│ Runtime error:
+//│ Error: non-exhaustive case expression
 //│ constrain calls  : 710
 //│ annoying  calls  : 238
 //│ subtyping calls  : 8749

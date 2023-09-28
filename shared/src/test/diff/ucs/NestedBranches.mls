@@ -135,8 +135,8 @@ fun mapPartition(f, xs) = if xs is
 mapPartition(f, zeroToThree)
 //│ error | [Nil, Nil]
 //│ res
-//│     Runtime error:
-//│       ReferenceError: mapPartition3 is not defined
+//│ Runtime error:
+//│ ReferenceError: mapPartition3 is not defined
 
 
 // * Vertical alignment is not allowed! (good)

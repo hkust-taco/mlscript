@@ -102,11 +102,11 @@ g.a
 g 0
 g g.a
 //│ res: int
-//│    Runtime error:
-//│      TypeError: g is not a function
+//│ Runtime error:
+//│ TypeError: g is not a function
 //│ res: int
-//│    Runtime error:
-//│      TypeError: g is not a function
+//│ Runtime error:
+//│ TypeError: g is not a function
 
 
 
@@ -222,7 +222,7 @@ f.a
 :re // `with` is currently broken with functions
 f(0)
 //│ res: 0
-//│    Runtime error:
-//│      TypeError: f2 is not a function
+//│ Runtime error:
+//│ TypeError: f2 is not a function
 
 

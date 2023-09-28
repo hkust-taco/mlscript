@@ -110,8 +110,8 @@ foo (fun x -> foo (fun y -> x) x)
 //│ ║  l.99: 	foo (fun x -> foo (fun y -> x) x)
 //│ ╙──      	                            ^
 //│ res: error | 'b -> 'b
-//│    Runtime error:
-//│      RangeError: Maximum call stack size exceeded
+//│ Runtime error:
+//│ RangeError: Maximum call stack size exceeded
 
 
 // * Producing an actual crash from this:
@@ -147,8 +147,8 @@ f = extrude (fun x -> extrude (fun y -> x) x)
 :re
 f 42 // Boom!
 //│ res: 42 | error
-//│    Runtime error:
-//│      TypeError: i(...) is not a function
+//│ Runtime error:
+//│ TypeError: i(...) is not a function
 
 
 

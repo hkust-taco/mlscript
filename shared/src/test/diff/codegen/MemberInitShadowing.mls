@@ -51,8 +51,8 @@ class A(x0: Int) {
 A(123)
 //│ A
 //│ res
-//│     Runtime error:
-//│       ReferenceError: Cannot access 'x11' before initialization
+//│ Runtime error:
+//│ ReferenceError: Cannot access 'x11' before initialization
 
 
 // TODO `val` redefinition should be a type error

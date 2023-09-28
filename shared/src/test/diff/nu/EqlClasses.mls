@@ -113,8 +113,8 @@ x => { a: 0 } === x
 //│ ╙──       	          ^
 //│ anything -> (error | false | true)
 //│ res
-//│     Syntax error:
-//│       Unexpected token '==='
+//│ Syntax error:
+//│ Unexpected token '==='
 
 x => x === { a: 0 }
 //│ Eql[{a: 0}] -> Bool

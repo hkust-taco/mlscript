@@ -36,15 +36,15 @@ let r = foo(1)
 //│   ├──   globalThis.r = foo(1);
 //│   └── Reply: [runtime error] Error: an error was thrown
 //│ r
-//│   Runtime error:
-//│     Error: an error was thrown
+//│ Runtime error:
+//│ Error: an error was thrown
 
 :re
 r
 //│ nothing
 //│ res
-//│     Runtime error:
-//│       ReferenceError: r is not defined
+//│ Runtime error:
+//│ ReferenceError: r is not defined
 
 
 

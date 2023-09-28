@@ -69,8 +69,8 @@ fst(1,2)
 //│ ║  l.64: 	fst(1,2)
 //│ ╙──      	   ^^^^^
 //│ res: error
-//│    Runtime error:
-//│      TypeError: number 1 is not iterable (cannot read property Symbol(Symbol.iterator))
+//│ Runtime error:
+//│ TypeError: number 1 is not iterable (cannot read property Symbol(Symbol.iterator))
 
 fst((1,2))
 //│ res: 1

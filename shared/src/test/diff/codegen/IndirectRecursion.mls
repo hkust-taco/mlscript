@@ -89,8 +89,8 @@ loop = z (fun self -> self)
 :re
 loop 1
 //│ res: nothing
-//│    Runtime error:
-//│      RangeError: Maximum call stack size exceeded
+//│ Runtime error:
+//│ RangeError: Maximum call stack size exceeded
 
 
 def pow pow n x =
@@ -114,8 +114,8 @@ def oops = z (fun f -> f)
 :re
 oops 1
 //│ res: nothing
-//│    Runtime error:
-//│      RangeError: Maximum call stack size exceeded
+//│ Runtime error:
+//│ RangeError: Maximum call stack size exceeded
 
 
 

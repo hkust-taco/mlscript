@@ -399,7 +399,7 @@ module Test extends Base
 //│   fun x: error
 //│ }
 //│ Runtime error:
-//│   ReferenceError: Base is not defined
+//│ ReferenceError: Base is not defined
 
 
 mixin MA(val a: Int)

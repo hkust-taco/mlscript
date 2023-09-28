@@ -29,6 +29,6 @@ let r = id(C.f)()
 r.f
 //│ () -> C
 //│ res
-//│     Runtime error:
-//│       TypeError: Cannot read properties of undefined (reading 'f')
+//│ Runtime error:
+//│ TypeError: Cannot read properties of undefined (reading 'f')
 

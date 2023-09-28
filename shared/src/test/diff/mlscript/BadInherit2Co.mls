@@ -165,8 +165,8 @@ class A1_2: S1 & T1
 :re
 (A1_2{}).Foo1
 //│ res: nothing
-//│    Runtime error:
-//│      Error: an error was thrown
+//│ Runtime error:
+//│ Error: an error was thrown
 
 
 f = 0

@@ -12,8 +12,8 @@ case 1 of { }
 //│ ║  l.7: 	case 1 of { }
 //│ ╙──     	     ^
 //│ res: nothing
-//│    Runtime error:
-//│      Error: non-exhaustive case expression
+//│ Runtime error:
+//│ Error: non-exhaustive case expression
 
 :e
 :ge

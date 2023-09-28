@@ -40,8 +40,8 @@ fun bar = foo
 foo(bar)
 //│ nothing
 //│ res
-//│     Runtime error:
-//│       RangeError: Maximum call stack size exceeded
+//│ Runtime error:
+//│ RangeError: Maximum call stack size exceeded
 
 
 fun foo = {x: foo}
@@ -63,8 +63,8 @@ foo
 //│   where
 //│     'foo :> {x: {y: 'foo}}
 //│ res
-//│     Runtime error:
-//│       RangeError: Maximum call stack size exceeded
+//│ Runtime error:
+//│ RangeError: Maximum call stack size exceeded
 
 :ns
 :re
@@ -73,8 +73,8 @@ foo
 //│   where
 //│     'foo :> {x: {y: 'foo}}
 //│ res
-//│     Runtime error:
-//│       RangeError: Maximum call stack size exceeded
+//│ Runtime error:
+//│ RangeError: Maximum call stack size exceeded
 
 :re
 foo.x
@@ -82,8 +82,8 @@ foo.x
 //│   where
 //│     'x :> {y: {x: 'x}}
 //│ res
-//│     Runtime error:
-//│       RangeError: Maximum call stack size exceeded
+//│ Runtime error:
+//│ RangeError: Maximum call stack size exceeded
 
 :re
 foo.x.y
@@ -91,8 +91,8 @@ foo.x.y
 //│   where
 //│     'foo :> {x: {y: 'foo}}
 //│ res
-//│     Runtime error:
-//│       RangeError: Maximum call stack size exceeded
+//│ Runtime error:
+//│ RangeError: Maximum call stack size exceeded
 
 
 fun foo(a) = {h: a, t: bar(a)}
@@ -177,8 +177,8 @@ module Test1_2 {
 Test1_1.a
 //│ error
 //│ res
-//│     Runtime error:
-//│       RangeError: Maximum call stack size exceeded
+//│ Runtime error:
+//│ RangeError: Maximum call stack size exceeded
 
 
 :e

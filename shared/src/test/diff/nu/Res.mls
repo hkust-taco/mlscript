@@ -31,7 +31,7 @@ res(1)
 res(1)
 //│ Int
 //│ res
-//│     Runtime error:
-//│       TypeError: res is not a function
+//│ Runtime error:
+//│ TypeError: res is not a function
 
 

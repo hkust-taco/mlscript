@@ -36,8 +36,8 @@ f {} {} {}
 //│ ║  l.28: 	f {} {} {}
 //│ ╙──      	^^^^^^^
 //│ res: error
-//│    Runtime error:
-//│      TypeError: f(...)(...) is not a function
+//│ Runtime error:
+//│ TypeError: f(...)(...) is not a function
 
 
 // * ========= Original: =========
@@ -58,6 +58,6 @@ f {} {}
 //│ ║  l.50: 	f {} {}
 //│ ╙──      	^^^^
 //│ res: error
-//│    Runtime error:
-//│      TypeError: f1(...) is not a function
+//│ Runtime error:
+//│ TypeError: f1(...) is not a function
 

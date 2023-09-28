@@ -131,7 +131,7 @@ trait Oops2
 //│ trait Oops2
 //│ error
 //│ res
-//│     Runtime error:
-//│       TypeError: Cannot read properties of undefined (reading 'build')
+//│ Runtime error:
+//│ TypeError: Cannot read properties of undefined (reading 'build')
 
 

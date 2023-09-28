@@ -85,7 +85,7 @@ class C(val x: Int) { constructor(y: Int) { z = y } }
 //│   constructor(y: Int)
 //│ }
 //│ Syntax error:
-//│   Private field '#z' must be declared in an enclosing class
+//│ Private field '#z' must be declared in an enclosing class
 
 :e
 class C(val x: Int) { constructor(val y: Int) { x = y } }

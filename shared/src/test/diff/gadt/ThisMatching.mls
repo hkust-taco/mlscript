@@ -11,7 +11,7 @@ module Dummy {
 //│ ╙──     	         ^^^^
 //│ module Dummy
 //│ Runtime error:
-//│   RangeError: Maximum call stack size exceeded
+//│ RangeError: Maximum call stack size exceeded
 
 module Dummy {
   fun introspect =

@@ -75,7 +75,7 @@ module M extends Mx {
 //│   fun id1: anything -> error
 //│ }
 //│ Runtime error:
-//│   TypeError: qualifier1.id2 is not a function
+//│ TypeError: qualifier1.id2 is not a function
 
 :e
 module M extends Mx {

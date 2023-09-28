@@ -64,8 +64,8 @@ foo false
 //│ ║  l.50: 	  let _ = log ((fun y -> x.prop y) 0)
 //│ ╙──      	                         ^^^^^^
 //│ res: error | false
-//│    Runtime error:
-//│      TypeError: x.prop is not a function
+//│ Runtime error:
+//│ TypeError: x.prop is not a function
 
 :ng
 app = error : ('a -> 'a) -> ()
@@ -89,7 +89,7 @@ foo false
 //│ ║  l.76: 	  let _ = app (fun y -> x.prop y)
 //│ ╙──      	                        ^^^^^^
 //│ res: error | false
-//│    Runtime error:
-//│      TypeError: x.prop is not a function
+//│ Runtime error:
+//│ TypeError: x.prop is not a function
 
 

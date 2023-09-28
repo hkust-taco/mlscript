@@ -13,8 +13,8 @@ rec def id x = let tmp = id x in x
 :re
 id 1
 //│ res: 1
-//│    Runtime error:
-//│      RangeError: Maximum call stack size exceeded
+//│ Runtime error:
+//│ RangeError: Maximum call stack size exceeded
 
 id_ty = id
 //│ 'a -> 'a
@@ -68,8 +68,8 @@ id 1
 //│   where
 //│     'a :> 1 | 'a -> 'a
 //│        <: 'a -> anything & 'b
-//│    Runtime error:
-//│      RangeError: Maximum call stack size exceeded
+//│ Runtime error:
+//│ RangeError: Maximum call stack size exceeded
 
 :e
 id_ty = id
@@ -113,8 +113,8 @@ rec def id x = let tmp = id id x in x
 :re
 id 1
 //│ res: 1
-//│    Runtime error:
-//│      RangeError: Maximum call stack size exceeded
+//│ Runtime error:
+//│ RangeError: Maximum call stack size exceeded
 
 id_ty = id
 //│ 'a -> 'a

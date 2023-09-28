@@ -143,11 +143,11 @@ f_g._2 42
 //│ f_g: (int -> int, int -> int,)
 //│    = [ [Function (anonymous)], [Function (anonymous)] ]
 //│ res: int
-//│    Runtime error:
-//│      TypeError: f_g._1 is not a function
+//│ Runtime error:
+//│ TypeError: f_g._1 is not a function
 //│ res: int
-//│    Runtime error:
-//│      TypeError: f_g._2 is not a function
+//│ Runtime error:
+//│ TypeError: f_g._2 is not a function
 
 
 def test f =

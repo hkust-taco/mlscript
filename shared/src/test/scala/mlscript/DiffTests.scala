@@ -935,13 +935,13 @@ class DiffTests
                     if (isSyntaxError) {
                       // If there is syntax error in the generated code,
                       // it should be a code generation error.
-                      output(indent + "Syntax error:")
+                      output("Syntax error:")
                       totalCodeGenErrors += 1
                     } else { // Otherwise, it is a runtime error.
-                      output(indent + "Runtime error:")
+                      output("Runtime error:")
                       totalRuntimeErrors += 1
                     }
-                    content.linesIterator.foreach { s => output(indent + "  " + s) }
+                    content.linesIterator.foreach(output)
                   case ReplHost.Unexecuted(reason) =>
                     output(indent + "= <no result>")
                     output(indent + "  " + reason)

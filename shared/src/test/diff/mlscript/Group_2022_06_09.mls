@@ -51,8 +51,8 @@ eval e2
 //│ ║  l.10: 	rec def eval e = case e of {
 //│ ╙──      	                      ^
 //│ res: error | int
-//│    Runtime error:
-//│      Error: non-exhaustive case expression
+//│ Runtime error:
+//│ Error: non-exhaustive case expression
 
 
 def eval eval e = case e of {

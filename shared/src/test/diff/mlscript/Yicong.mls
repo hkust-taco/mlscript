@@ -722,8 +722,8 @@ def ornull x = definedOr x (fun () -> null)
 :re
 defined ()[0]
 //│ res: nothing
-//│    Runtime error:
-//│      Error: an error was thrown
+//│ Runtime error:
+//│ Error: an error was thrown
 
 
 ta1 = (2,3,4,5)
@@ -777,8 +777,8 @@ ge[2]
 //│ ║  l.764: 	ta3[ge 3][ge (1+2)]
 //│ ╙──       	^^^^^^^^^
 //│ res: 1 | 2 | 3 | error | undefined
-//│    Runtime error:
-//│      TypeError: Cannot read properties of undefined (reading '4')
+//│ Runtime error:
+//│ TypeError: Cannot read properties of undefined (reading '4')
 //│ ╔══[ERROR] Type mismatch in array access:
 //│ ║  l.765: 	true[false]
 //│ ║         	^^^^^^^^^^^
@@ -914,5 +914,5 @@ dup (defined ara[1])._1 (defined (defined arb[10])[8])._2 + 1
 //│ ║  l.906: 	(1,2,3)._1[1]
 //│ ╙──       	^^^^^^^^^^
 //│ res: error | undefined
-//│    Runtime error:
-//│      TypeError: Cannot read properties of undefined (reading '1')
+//│ Runtime error:
+//│ TypeError: Cannot read properties of undefined (reading '1')

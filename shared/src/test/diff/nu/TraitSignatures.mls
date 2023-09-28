@@ -44,14 +44,14 @@ Oops(123)
 //│ ╙──      	^^^^
 //│ error
 //│ res
-//│     Runtime error:
-//│       TypeError: Oops is not a function
+//│ Runtime error:
+//│ TypeError: Oops is not a function
 
 :re
 (Oops : FooPoly)(123)
 //│ 123
 //│ res
-//│     Runtime error:
-//│       TypeError: Oops is not a function
+//│ Runtime error:
+//│ TypeError: Oops is not a function
 
 
