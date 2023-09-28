@@ -680,12 +680,12 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       mxn.params.size.toString} parameter(s); got ${parArgs.size.toString}", Loc(v :: parArgs.unzip._2))
                   
                   val paramMems = mxn.params.lazyZip(parArgs).map {
-                    case (nme -> p, _ -> Fld(_, a)) => // TODO check name, mut, spec
+                    case (nme -> p, _ -> Fld(flags, a)) => // TODO check name, mut, spec
                       implicit val genLambdas: GenLambdas = true
                       val a_ty = typeTerm(a)
                       p.lb.foreach(constrain(_, a_ty))
                       constrain(a_ty, p.ub)
-                      NuParam(nme, FieldType(p.lb, a_ty, false)(provTODO))(lvl)
+                      NuParam(nme, FieldType(p.lb, a_ty, flags.opt)(provTODO))(lvl)
                   }
                   
                   paramMems //++ mxn.members.valuesIterator
@@ -731,12 +731,12 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                   err(msg"class $parNme expects ${
                     cls.params.size.toString} parameter(s); got ${parArgs.size.toString}", Loc(v :: parArgs.unzip._2))
                 
-                val paramMems = cls.params.lazyZip(parArgs).map { case (nme -> p, _ -> Fld(_, a)) => // TODO check name, mut, spec
+                val paramMems = cls.params.lazyZip(parArgs).map { case (nme -> p, _ -> Fld(flags, a)) => // TODO check name, mut, spec
                   implicit val genLambdas: GenLambdas = true
                   val a_ty = typeTerm(a)
                   p.lb.foreach(constrain(_, a_ty))
                   constrain(a_ty, p.ub)
-                  NuParam(nme, FieldType(p.lb, a_ty, false)(provTODO))(lvl)
+                  NuParam(nme, FieldType(p.lb, a_ty, flags.opt)(provTODO))(lvl)
                 }
                 
                 S((cls, paramMems, ptp ++ cls.parentTP, p.toLoc))
@@ -821,14 +821,14 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                 case R(tpe) =>
                   implicit val newDefsInfo: Map[Str, (TypeDefKind, Int)] = Map.empty // TODO?
                   val ty = typeType(tpe)
-                  nme -> FieldType(N, ty, false)(provTODO)
+                  nme -> FieldType(N, ty, opt)(provTODO)
                 case _ => ???
               }
             case (N, Fld(FldFlags(mut, spec, opt), nme: Var)) =>
               // assert(!mut && !spec, "TODO") // TODO
               // nme -> FieldType(N, freshVar(ttp(nme), N, S(nme.name)))(provTODO)
               nme -> FieldType(N, err(msg"${td.kind.str.capitalize} parameters currently need type annotations",
-                nme.toLoc), false)(provTODO)
+                nme.toLoc), opt)(provTODO)
             case _ => ???
           }
         case fd: NuFunDef => Nil
