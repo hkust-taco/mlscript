@@ -1041,26 +1041,20 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         val fun_tys: List[FunctionType] = getLowerBoundFunctionType(f_ty)
 
         fun_tys match {
-          case fun_ty :: Nil =>
-            val hasUntypedArg = fun_ty match {
-              case FunctionType(TupleType(fields), _) =>
-                fields.exists(_._1.isEmpty)
-              case _ => die // FIXME happens when lhs of function type is not TupleType(possible?)
-            }
+          case FunctionType(TupleType(fields), _) :: Nil =>
+            val hasUntypedArg = fields.exists(_._1.isEmpty)
             if (hasUntypedArg) {
               err("Cannot use named arguments as the function type has untyped arguments", a.toLoc)
             } else {
-              val argsList = fun_ty match {
-                case FunctionType(TupleType(fields), _) =>
-                  fields.map(x => x._1 match {
-                    case Some(arg) => arg
-                    case N => die // cannot happen, because already checked with the hasUntypedArg
-                  })
-                case _ => die // FIXME happens when lhs of function type is not TupleType(possible?)
-              }
+              val argsList = fields.map(x => x._1 match {
+                case Some(arg) => arg
+                case N => die // cannot happen, because already checked with the hasUntypedArg
+              })
               desugarNamedArgs(term, f, a, argsList, f_ty)
             }
-          case x :: y :: _ => 
+          case _ :: Nil =>
+            err("Function type is not handled", f.toLoc)
+          case _ :: _ :: _ =>
             err(msg"More than one function signature found in type `${f_ty.expPos}` for function call with named arguments", f.toLoc)
           case Nil =>
             err(msg"Cannot retrieve appropriate function signature from type `${f_ty.expPos}` for applying named arguments", f.toLoc)
