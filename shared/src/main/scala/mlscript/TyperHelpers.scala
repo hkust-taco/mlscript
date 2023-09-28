@@ -132,7 +132,7 @@ abstract class TyperHelpers { Typer: Typer =>
     // }(r => s"=> $r")
   
   def tupleIntersection(fs1: Ls[Opt[Var] -> FieldType], fs2: Ls[Opt[Var] -> FieldType]): Ls[Opt[Var] -> FieldType] = {
-    require(fs1.size === fs2.size)
+    require(fs1.sizeCompare(fs2) <= 0 && fs1.sizeCompare(fs2.filter(x => !x._2.opt)) >= 0)
     (fs1 lazyZip fs2).map {
       case ((S(n1), t1), (S(n2), t2)) if n1 =/= n2 => (N, t1 && t2)
       case ((no1, t1), (no2, t2)) => (no1 orElse no2, t1 && t2)
