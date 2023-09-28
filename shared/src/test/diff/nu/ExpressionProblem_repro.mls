@@ -41,7 +41,7 @@ mixin EvalLit {
   fun eval(e: Lit) = e.value
 }
 //│ mixin EvalLit() {
-//│   fun eval: (e: Lit,) -> Int
+//│   fun eval: (e: Lit) -> Int
 //│ }
 
 

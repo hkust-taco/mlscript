@@ -287,15 +287,15 @@ sp_ty = sp
 //│      = [Function (anonymous)]
 
 p01 = pair (()) Z
-//│ p01: (() -> (forall 'a. anything -> 'a -> 'a) -> 'b) -> 'b
+//│ p01: (((),) -> (forall 'a. anything -> 'a -> 'a) -> 'b) -> 'b
 //│    = [Function (anonymous)]
 
 p = pair (())
-//│ p: 'a -> (() -> 'a -> 'b) -> 'b
+//│ p: 'a -> (((),) -> 'a -> 'b) -> 'b
 //│  = [Function (anonymous)]
 
 p01 = p Z
-//│ p01: (() -> (forall 'a. anything -> 'a -> 'a) -> 'b) -> 'b
+//│ p01: (((),) -> (forall 'a. anything -> 'a -> 'a) -> 'b) -> 'b
 //│    = [Function (anonymous)]
 
 

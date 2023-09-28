@@ -36,4 +36,4 @@ fun foo(x, y) = if x is
 //│ ╔══[ERROR] Illegal pattern `Z`
 //│ ║  l.32: 	  Z() and y is O() then 0 else 1
 //│ ╙──      	  ^
-//│ fun foo: (anything, anything,) -> error
+//│ fun foo: (anything, anything) -> error

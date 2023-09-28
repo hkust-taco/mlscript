@@ -18,7 +18,7 @@ class JSWriter(filename: String) {
   private var fileSize = 0 // how many bytes we've written in the file
   private var needTruncate = false
 
-  writeln(":NewParser\n:ParseOnly")
+  writeln(":NewDefs\n:ParseOnly")
 
   def writeln(str: String) = {
     val strln = str + "\n"

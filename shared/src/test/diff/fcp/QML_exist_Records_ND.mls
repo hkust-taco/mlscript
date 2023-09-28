@@ -86,11 +86,11 @@ def stepImpl (arrImpl: ArraysImpl['a, 'r]) = {
     update = fun ((r0, r1)) -> fun i -> fun a -> (arrImpl.update r0 i a, "hey");
     fold   = fun f -> fun b -> fun ((r0, r1)) -> arrImpl.fold f b r0
   }
-//│ stepImpl: ArraysImpl['a, 'r] -> {fold: forall 'b 'b0. ('a -> 'b -> ('b & 'b0)) -> (forall 'c. ('b & 'c) -> ('r, anything,) -> ('b0 | 'c)), init: 'a -> ('r, "hi",), sub: ('r, anything,) -> int -> 'a, update: ('r, anything,) -> int -> 'a -> ('r, "hey",)}
+//│ stepImpl: ArraysImpl['a, 'r] -> {fold: forall 'b 'b0. ('a -> 'b -> ('b & 'b0)) -> (forall 'c. ('b & 'c) -> (('r, anything,),) -> ('b0 | 'c)), init: 'a -> ('r, "hi",), sub: (('r, anything,),) -> int -> 'a, update: (('r, anything,),) -> int -> 'a -> ('r, "hey",)}
 //│         = [Function: stepImpl]
 
 stepImpl_ty = stepImpl
-//│ ArraysImpl['a, 'r] -> {fold: forall 'b 'b0. ('a -> 'b -> ('b & 'b0)) -> (forall 'c. ('b & 'c) -> ('r, anything,) -> ('b0 | 'c)), init: 'a -> ('r, "hi",), sub: ('r, anything,) -> int -> 'a, update: ('r, anything,) -> int -> 'a -> ('r, "hey",)}
+//│ ArraysImpl['a, 'r] -> {fold: forall 'b 'b0. ('a -> 'b -> ('b & 'b0)) -> (forall 'c. ('b & 'c) -> (('r, anything,),) -> ('b0 | 'c)), init: 'a -> ('r, "hi",), sub: (('r, anything,),) -> int -> 'a, update: (('r, anything,),) -> int -> 'a -> ('r, "hey",)}
 //│   <:  stepImpl_ty:
 //│ ArraysImpl['a, 'r] -> ArraysImpl['a, ('r, string,)]
 //│            = [Function: stepImpl]
@@ -193,17 +193,17 @@ def step (arr: Arrays['a]) = arr helper
 
 // * Doesn't work (`'rep` leaks out of its scope in `step`)
 def helper impl k = k (stepImpl impl)
-//│ helper: ArraysImpl[in 'a out 'a | 'a0, in 'r out 'r | 'r0] -> (forall 'a1 'r1 'c. ({fold: forall 'b 'b0. (('a | 'a1) -> 'b -> ('b & 'b0)) -> (forall 'd. ('b & 'd) -> ('r0 & 'r1, anything,) -> ('b0 | 'd)), init: ('a0 & 'a1) -> ('r | 'r1, "hi",), sub: ('r0 & 'r1, anything,) -> int -> ('a | 'a1), update: ('r0 & 'r1, anything,) -> int -> ('a0 & 'a1) -> ('r | 'r1, "hey",)} -> 'c) -> 'c)
+//│ helper: ArraysImpl[in 'a out 'a | 'a0, in 'r out 'r | 'r0] -> (forall 'a1 'r1 'c. ({fold: forall 'b 'b0. (('a | 'a1) -> 'b -> ('b & 'b0)) -> (forall 'd. ('b & 'd) -> (('r0 & 'r1, anything,),) -> ('b0 | 'd)), init: ('a0 & 'a1) -> ('r | 'r1, "hi",), sub: (('r0 & 'r1, anything,),) -> int -> ('a | 'a1), update: (('r0 & 'r1, anything,),) -> int -> ('a0 & 'a1) -> ('r | 'r1, "hey",)} -> 'c) -> 'c)
 //│       = [Function: helper4]
 
 // * Idem
 def helper (impl: ArraysImpl['a, 'rep]) k = k (stepImpl impl)
-//│ helper: ArraysImpl['a, 'rep] -> (forall 'c. ({fold: forall 'b 'b0. ('a -> 'b -> ('b & 'b0)) -> (forall 'd. ('b & 'd) -> ('rep, anything,) -> ('b0 | 'd)), init: 'a -> ('rep, "hi",), sub: ('rep, anything,) -> int -> 'a, update: ('rep, anything,) -> int -> 'a -> ('rep, "hey",)} -> 'c) -> 'c)
+//│ helper: ArraysImpl['a, 'rep] -> (forall 'c. ({fold: forall 'b 'b0. ('a -> 'b -> ('b & 'b0)) -> (forall 'd. ('b & 'd) -> (('rep, anything,),) -> ('b0 | 'd)), init: 'a -> ('rep, "hi",), sub: (('rep, anything,),) -> int -> 'a, update: (('rep, anything,),) -> int -> 'a -> ('rep, "hey",)} -> 'c) -> 'c)
 //│       = [Function: helper5]
 
 :e
 def step (arr: Arrays['a]) = arr helper
-//│ Arrays['a] -> (forall 'c. error | ({fold: forall 'b 'b0. (('a0 | 'a) -> 'b -> ('b & 'b0)) -> (forall 'd. ('b & 'd) -> ('rep & 'rep0, anything,) -> ('b0 | 'd)), init: 'a -> ('rep, "hi",), sub: ('rep & 'rep0, anything,) -> int -> ('a0 | 'a), update: ('rep & 'rep0, anything,) -> int -> 'a -> ('rep, "hey",)} -> 'c) -> 'c)
+//│ Arrays['a] -> (forall 'c. error | ({fold: forall 'b 'b0. (('a0 | 'a) -> 'b -> ('b & 'b0)) -> (forall 'd. ('b & 'd) -> (('rep & 'rep0, anything,),) -> ('b0 | 'd)), init: 'a -> ('rep, "hi",), sub: (('rep & 'rep0, anything,),) -> int -> ('a0 | 'a), update: (('rep & 'rep0, anything,),) -> int -> 'a -> ('rep, "hey",)} -> 'c) -> 'c)
 //│   where
 //│     'rep :> ??rep
 //│          <: 'rep0

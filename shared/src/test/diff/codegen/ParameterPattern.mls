@@ -13,7 +13,7 @@ def volatile ((this, break)) = this + break
 //│   return this$ + break$;
 //│ };
 //│ // End of generated code
-//│ volatile: (int, int,) -> int
+//│ volatile: ((int, int,),) -> int
 //│         = [Function: volatile1]
 
 :js

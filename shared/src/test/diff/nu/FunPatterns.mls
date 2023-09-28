@@ -3,15 +3,15 @@
 
 
 fun f(x, y) = x + y
-//│ fun f: (Int, Int,) -> Int
+//│ fun f: (Int, Int) -> Int
 
 // FIXME array pattern...?!
 fun f1([x, y]) = x + y
 fun f2([x, y],) = x + y
 fun f3([(x, y,),],) = x + y
-//│ fun f1: (Int, Int,) -> Int
-//│ fun f2: (Int, Int,) -> Int
-//│ fun f3: (Int, Int,) -> Int
+//│ fun f1: ([Int, Int]) -> Int
+//│ fun f2: ([Int, Int]) -> Int
+//│ fun f3: ([[Int, Int]]) -> Int
 
 
 class Pair(lhs: Int, rhs: Int)

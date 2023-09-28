@@ -9,7 +9,7 @@
 
 
 fun k(x, y) = y
-//│ fun k: forall 'a. (anything, 'a,) -> 'a
+//│ fun k: forall 'a. (anything, 'a) -> 'a
 
 fun unify : 'A -> 'A -> 'B -> 'B
 //│ fun unify: forall 'B. anything -> anything -> 'B -> 'B
@@ -26,8 +26,8 @@ fun a0 = (z => z) (id : forall 'A; 'A -> 'A) of 1
 
 fun fst([a, _]) = a
 fun snd([_, b]) = b
-//│ fun fst: forall 'a. ('a, anything,) -> 'a
-//│ fun snd: forall 'b. (anything, 'b,) -> 'b
+//│ fun fst: forall 'a. (['a, anything]) -> 'a
+//│ fun snd: forall 'b. ([anything, 'b]) -> 'b
 
 fun a1(x) = (z => unify(x)(fst of z)(snd of z))([id, (id : forall 'A; 'A -> 'A)]) of 1
 //│ fun a1: anything -> 1

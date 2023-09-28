@@ -27,7 +27,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   
   private def noSuchMember(info: DelayedTypeInfo, fld: Var): Diagnostic =
     ErrorReport(
-      msg"${info.decl.kind.str.capitalize} `${info.decl.name}` does not contain member `${fld.name}`" -> fld.toLoc :: Nil)
+      msg"${info.decl.kind.str.capitalize} `${info.decl.name}` does not contain member `${fld.name}`" -> fld.toLoc :: Nil, newDefs)
   
   def lookupMember(clsNme: Str, rfnt: Var => Opt[FieldType], fld: Var)
         (implicit ctx: Ctx, raise: Raise)
@@ -74,7 +74,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         case N if info.isComputing =>
           
           if (info.allFields.contains(fld)) // TODO don't report this if the field can be found somewhere else!
-            foundRec = S(ErrorReport(msg"Indirectly-recursive member should have type annotation" -> fld.toLoc :: Nil))
+            foundRec = S(ErrorReport(
+              msg"Indirectly-recursive member should have type annotation" -> fld.toLoc :: Nil, newDefs))
           
           N
         
@@ -1178,7 +1179,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                   case _ => Nil
                 }
               )
-          return raise(ErrorReport(msgs ::: mk_constraintProvenanceHints))
+          return raise(ErrorReport(msgs ::: mk_constraintProvenanceHints, newDefs))
         case (_: TV | _: ProxyType, _) => doesntMatch(rhs)
         case (RecordType(fs0), RecordType(fs1)) =>
           (fs1.map(_._1).toSet -- fs0.map(_._1).toSet)
@@ -1249,7 +1250,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         detailedContext,
       ).flatten
       
-      raise(ErrorReport(msgs))
+      raise(ErrorReport(msgs, newDefs))
     }
     
     rec(lhs, rhs, true)(raise, Nil -> Nil, Nil, outerCtx, shadows)
@@ -1395,7 +1396,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     err(msg -> loco :: Nil)
   }
   def err(msgs: List[Message -> Opt[Loc]])(implicit raise: Raise): SimpleType = {
-    err(ErrorReport(msgs))
+    err(ErrorReport(msgs, newDefs))
   }
   def err(diag: Diagnostic)(implicit raise: Raise): SimpleType = {
     raise(diag)
@@ -1407,7 +1408,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     warn(msg -> loco :: Nil)
 
   def warn(msgs: List[Message -> Opt[Loc]])(implicit raise: Raise): Unit =
-    raise(WarningReport(msgs))
+    raise(WarningReport(msgs, newDefs))
   
   
   

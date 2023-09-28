@@ -18,6 +18,6 @@ fun x: forall 'a; 'a -> 'a = succ
 //│ fun x: forall 'a. 'a -> 'a
 
 fun x: [Int -> Int,] = [id : forall 'a; 'a -> 'a,]
-//│ fun x: (Int -> Int,)
+//│ fun x: [Int -> Int]
 
 

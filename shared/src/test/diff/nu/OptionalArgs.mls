@@ -6,72 +6,72 @@
 :ds
 fun f1(a?: Int, b?: Int) = a + b
 //│ ⬤ Initial: TypedTypingUnit(
-//│ 	TypedNuFun(0,fun f1 = (a: Int?, b: Int?,) => + (a,) (b,),((a: Int?, b: Int?,) -> α30'))
+//│ 	TypedNuFun(0,fun f1 = (a: Int?, b: Int?,) => + (a, b,),((a: Int?, b: Int?,) -> α29'))
 //│ 	None)
 //│  where: 
-//│ 		α30' :> Int
-//│ allVarPols: +α30'
-//│ Renewed α30' ~> α30_32'
+//│ 		α29' :> Int
+//│ allVarPols: +α29'
+//│ Renewed α29' ~> α29_31'
 //│ ⬤ Cleaned up: TypedTypingUnit(
-//│ 	TypedNuFun(0,fun f1 = (a: Int?, b: Int?,) => + (a,) (b,),((a: Int?, b: Int?,) -> α30_32'))
+//│ 	TypedNuFun(0,fun f1 = (a: Int?, b: Int?,) => + (a, b,),((a: Int?, b: Int?,) -> α29_31'))
 //│ 	None)
 //│  where: 
-//│ 		α30_32' :> Int
-//│ allVarPols: +α30_32'
-//│ consed: Map((true,Int) -> α30_32')
+//│ 		α29_31' :> Int
+//│ allVarPols: +α29_31'
+//│ consed: Map((true,Int) -> α29_31')
 //│ ⬤ Unskid: TypedTypingUnit(
-//│ 	TypedNuFun(0,fun f1 = (a: Int?, b: Int?,) => + (a,) (b,),((a: Int?, b: Int?,) -> α30_32'))
+//│ 	TypedNuFun(0,fun f1 = (a: Int?, b: Int?,) => + (a, b,),((a: Int?, b: Int?,) -> α29_31'))
 //│ 	None)
 //│  where: 
-//│ 		α30_32' :> Int
-//│ analyze1[+] ((a: Int?, b: Int?,) -> α30_32')
+//│ 		α29_31' :> Int
+//│ analyze1[+] ((a: Int?, b: Int?,) -> α29_31')
 //│ | analyze1[+;-] (a: Int?, b: Int?,)
 //│ | | analyze1[+;-] Int
 //│ | | analyze1[+;-] Int
-//│ | analyze1[+] α30_32'
+//│ | analyze1[+] α29_31'
 //│ | | analyze1[+;@[+](0)] Int
 //│ [inv] 
-//│ [nums] +α30_32' 1
-//│ analyze2[+] ((a: Int?, b: Int?,) -> α30_32')
+//│ [nums] +α29_31' 1
+//│ analyze2[+] ((a: Int?, b: Int?,) -> α29_31')
 //│ | analyze2[+;-] (a: Int?, b: Int?,)
 //│ | | analyze2[+;-] Int
 //│ | | analyze2[+;-] Int
-//│ | analyze2[+] α30_32'
-//│ | | >> Processing α30_32' at [+]
-//│ | | go α30_32'   ()
-//│ | | | go Int   (α30_32')
-//│ | | >> Occurrences HashSet(α30_32', Int)
-//│ | | >>>> occs[+α30_32'] := HashSet(α30_32', Int)  <~ None
+//│ | analyze2[+] α29_31'
+//│ | | >> Processing α29_31' at [+]
+//│ | | go α29_31'   ()
+//│ | | | go Int   (α29_31')
+//│ | | >> Occurrences HashSet(Int, α29_31')
+//│ | | >>>> occs[+α29_31'] := HashSet(Int, α29_31')  <~ None
 //│ | | analyze2[+] Int
-//│ [occs] +α30_32' {α30_32',Int}
-//│ [vars] TreeSet(α30_32')
+//│ [occs] +α29_31' {Int,α29_31'}
+//│ [vars] TreeSet(α29_31')
 //│ [rec] Set()
-//│ 0[1] α30_32'
-//│ 1[!] α30_32'
-//│ [sub] α30_32' -> None
+//│ 0[1] α29_31'
+//│ 1[!] α29_31'
+//│ [sub] α29_31' -> None
 //│ [bounds] 
-//│ 		α30_32' :> Int
+//│ 		α29_31' :> Int
 //│ [rec] Set()
-//│ transform[+] ((a: Int?, b: Int?,) -> α30_32')   ()  +  None
+//│ transform[+] ((a: Int?, b: Int?,) -> α29_31')   ()  +  None
 //│ | transform[-] (a: Int?, b: Int?,)   ()  +;-  None
 //│ | | transform[-] Int   ()  +;-  None
 //│ | | ~> Int
 //│ | | transform[-] Int   ()  +;-  None
 //│ | | ~> Int
 //│ | ~> (a: Int?, b: Int?,)
-//│ | transform[+] α30_32'   ()  +  None
+//│ | transform[+] α29_31'   ()  +  None
 //│ | | -> bound Some(true)
-//│ | | transform[+] Int   (α30_32')  +;@[+](0)  None
+//│ | | transform[+] Int   (α29_31')  +;@[+](0)  None
 //│ | | ~> Int
 //│ | ~> Int
 //│ ~> ((a: Int?, b: Int?,) -> Int)
 //│ ⬤ Type after simplification: TypedTypingUnit(
-//│ 	TypedNuFun(0,fun f1 = (a: Int?, b: Int?,) => + (a,) (b,),((a: Int?, b: Int?,) -> Int))
+//│ 	TypedNuFun(0,fun f1 = (a: Int?, b: Int?,) => + (a, b,),((a: Int?, b: Int?,) -> Int))
 //│ 	None)
 //│  where: 
 //│ allVarPols: 
 //│ normLike[+] TypedTypingUnit(
-//│ 	TypedNuFun(0,fun f1 = (a: Int?, b: Int?,) => + (a,) (b,),((a: Int?, b: Int?,) -> Int))
+//│ 	TypedNuFun(0,fun f1 = (a: Int?, b: Int?,) => + (a, b,),((a: Int?, b: Int?,) -> Int))
 //│ 	None)
 //│ | norm[+] ((a: Int?, b: Int?,) -> Int)
 //│ | | DNF: DNF(0, ((a: Int?, b: Int?,) -> Int){})
@@ -89,18 +89,18 @@ fun f1(a?: Int, b?: Int) = a + b
 //│ | | ~> #Int<Object,Num>
 //│ | ~> ((a: #Int<Object,Num>?, b: #Int<Object,Num>?,) -> #Int<Object,Num>)
 //│ ⬤ Normalized: TypedTypingUnit(
-//│ 	TypedNuFun(0,fun f1 = (a: Int?, b: Int?,) => + (a,) (b,),((a: #Int<Object,Num>?, b: #Int<Object,Num>?,) -> #Int<Object,Num>))
+//│ 	TypedNuFun(0,fun f1 = (a: Int?, b: Int?,) => + (a, b,),((a: #Int<Object,Num>?, b: #Int<Object,Num>?,) -> #Int<Object,Num>))
 //│ 	None)
 //│  where: 
 //│ allVarPols: 
 //│ ⬤ Cleaned up: TypedTypingUnit(
-//│ 	TypedNuFun(0,fun f1 = (a: Int?, b: Int?,) => + (a,) (b,),((a: #Int<Object,Num>?, b: #Int<Object,Num>?,) -> #Int<Object,Num>))
+//│ 	TypedNuFun(0,fun f1 = (a: Int?, b: Int?,) => + (a, b,),((a: #Int<Object,Num>?, b: #Int<Object,Num>?,) -> #Int<Object,Num>))
 //│ 	None)
 //│  where: 
 //│ allVarPols: 
 //│ consed: Map()
 //│ ⬤ Unskid: TypedTypingUnit(
-//│ 	TypedNuFun(0,fun f1 = (a: Int?, b: Int?,) => + (a,) (b,),((a: #Int<Object,Num>?, b: #Int<Object,Num>?,) -> #Int<Object,Num>))
+//│ 	TypedNuFun(0,fun f1 = (a: Int?, b: Int?,) => + (a, b,),((a: #Int<Object,Num>?, b: #Int<Object,Num>?,) -> #Int<Object,Num>))
 //│ 	None)
 //│  where: 
 //│ analyze1[+] ((a: #Int<Object,Num>?, b: #Int<Object,Num>?,) -> #Int<Object,Num>)
@@ -132,37 +132,37 @@ fun f1(a?: Int, b?: Int) = a + b
 //│ | ~> #Int<Object,Num>
 //│ ~> ((a: #Int<Object,Num>?, b: #Int<Object,Num>?,) -> #Int<Object,Num>)
 //│ ⬤ Resim: TypedTypingUnit(
-//│ 	TypedNuFun(0,fun f1 = (a: Int?, b: Int?,) => + (a,) (b,),((a: #Int<Object,Num>?, b: #Int<Object,Num>?,) -> #Int<Object,Num>))
+//│ 	TypedNuFun(0,fun f1 = (a: Int?, b: Int?,) => + (a, b,),((a: #Int<Object,Num>?, b: #Int<Object,Num>?,) -> #Int<Object,Num>))
 //│ 	None)
 //│  where: 
 //│ allVarPols: 
 //│ [subs] HashMap()
 //│ ⬤ Factored: TypedTypingUnit(
-//│ 	TypedNuFun(0,fun f1 = (a: Int?, b: Int?,) => + (a,) (b,),((a: #Int<Object,Num>?, b: #Int<Object,Num>?,) -> #Int<Object,Num>))
+//│ 	TypedNuFun(0,fun f1 = (a: Int?, b: Int?,) => + (a, b,),((a: #Int<Object,Num>?, b: #Int<Object,Num>?,) -> #Int<Object,Num>))
 //│ 	None)
 //│  where: 
 //│ sim => TypedTypingUnit(
-//│ 	TypedNuFun(0,fun f1 = (a: Int?, b: Int?,) => + (a,) (b,),((a: #Int<Object,Num>?, b: #Int<Object,Num>?,) -> #Int<Object,Num>))
+//│ 	TypedNuFun(0,fun f1 = (a: Int?, b: Int?,) => + (a, b,),((a: #Int<Object,Num>?, b: #Int<Object,Num>?,) -> #Int<Object,Num>))
 //│ 	None)
 //│ exp => class mlscript.Signature
-//│ members => List(fun f1: (a: Int?, b: Int?,) -> Int)
+//│ members => List(fun f1: (a: Int?, b: Int?) -> Int)
 //│ result => None
-//│ fun f1: (a: Int?, b: Int?,) -> Int
+//│ fun f1: (a: Int?, b: Int?) -> Int
 
 
 // using space, creates ASC in AST.
 :p
 fun f1(a: Int, b: Int) = a + b
 //│ |#fun| |f1|(|a|#:| |Int|,| |b|#:| |Int|)| |#=| |a| |+| |b|
-//│ AST: TypingUnit(NuFunDef(None, f1, [], Lam(Tup(a: Var(Int), b: Var(Int)), App(App(Var(+), Tup(_: Var(a))), Tup(_: Var(b))))))
-//│ Parsed: fun f1 = (a: Int, b: Int,) => + (a,) (b,);
+//│ AST: TypingUnit(NuFunDef(None, f1, None, [], Lam(Tup(a: Var(Int), b: Var(Int)), App(Var(+), Tup(_: Var(a), _: Var(b))))))
+//│ Parsed: fun f1 = (a: Int, b: Int,) => + (a, b,);
 //│ sim => TypedTypingUnit(
-//│ 	TypedNuFun(0,fun f1 = (a: Int, b: Int,) => + (a,) (b,),((a: #Int<Object,Num>, b: #Int<Object,Num>,) -> #Int<Object,Num>))
+//│ 	TypedNuFun(0,fun f1 = (a: Int, b: Int,) => + (a, b,),((a: #Int<Object,Num>, b: #Int<Object,Num>,) -> #Int<Object,Num>))
 //│ 	None)
 //│ exp => class mlscript.Signature
-//│ members => List(fun f1: (a: Int, b: Int,) -> Int)
+//│ members => List(fun f1: (a: Int, b: Int) -> Int)
 //│ result => None
-//│ fun f1: (a: Int, b: Int,) -> Int
+//│ fun f1: (a: Int, b: Int) -> Int
 
 
 class C1
@@ -201,7 +201,7 @@ let y: C1 = x
 //│ exp => class mlscript.Signature
 //│ members => List()
 //│ result => Some(Tuple(List((None,Field(None,TypeName(C1),false)), (None,Field(None,TypeName(C1),false)))))
-//│ (C1, C1,)
+//│ [C1, C1]
 //│ res
 //│     = [ C2 {}, C2 {} ]
 [x, y]: [C1, C1, C1?]
@@ -210,7 +210,7 @@ let y: C1 = x
 //│ exp => class mlscript.Signature
 //│ members => List()
 //│ result => Some(Tuple(List((None,Field(None,TypeName(C1),false)), (None,Field(None,TypeName(C1),false)), (None,Field(None,TypeName(C1),true)))))
-//│ (C1, C1, C1?,)
+//│ [C1, C1, C1?]
 //│ res
 //│     = [ C2 {}, C2 {} ]
 
@@ -219,7 +219,7 @@ let y: C1 = x
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.218: 	[x]: [C1, C1, C1?]
 //│ ║         	^^^
-//│ ╟── expression of type `(?a,)` does not match type `(C1, C1, C1?,)`
+//│ ╟── expression of type `[?a]` does not match type `[C1, C1, C1?]`
 //│ ╟── Note: constraint arises from tuple type:
 //│ ║  l.218: 	[x]: [C1, C1, C1?]
 //│ ╙──       	     ^^^^^^^^^^^^^
@@ -228,7 +228,7 @@ let y: C1 = x
 //│ exp => class mlscript.Signature
 //│ members => List()
 //│ result => Some(Tuple(List((None,Field(None,TypeName(C1),false)), (None,Field(None,TypeName(C1),false)), (None,Field(None,TypeName(C1),true)))))
-//│ (C1, C1, C1?,)
+//│ [C1, C1, C1?]
 //│ res
 //│     = [ C2 {} ]
 
@@ -239,7 +239,7 @@ let y: C1 = x
 //│ exp => class mlscript.Signature
 //│ members => List()
 //│ result => Some(Tuple(List((None,Field(None,TypeName(Int),false)), (None,Field(None,TypeName(Int),false)), (None,Field(None,TypeName(Int),false)))))
-//│ (Int, Int, Int,)
+//│ [Int, Int, Int]
 //│ res
 //│     = [ 1, 2, 3 ]
 
@@ -249,7 +249,7 @@ let y: C1 = x
 //│ exp => class mlscript.Signature
 //│ members => List()
 //│ result => Some(Tuple(List((None,Field(None,TypeName(Int),false)), (None,Field(None,TypeName(Int),true)))))
-//│ (Int, Int?,)
+//│ [Int, Int?]
 //│ res
 //│     = [ 1, 2 ]
 
@@ -259,7 +259,7 @@ let y: C1 = x
 //│ exp => class mlscript.Signature
 //│ members => List()
 //│ result => Some(Tuple(List((None,Field(None,TypeName(Int),false)), (None,Field(None,TypeName(Int),true)))))
-//│ (Int, Int?,)
+//│ [Int, Int?]
 //│ res
 //│     = [ 1 ]
 
@@ -268,7 +268,7 @@ let y: C1 = x
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.267: 	[]: [Int, Int?]
 //│ ║         	^^
-//│ ╟── expression of type `()` does not match type `(Int, Int?,)`
+//│ ╟── expression of type `[]` does not match type `[Int, Int?]`
 //│ ╟── Note: constraint arises from tuple type:
 //│ ║  l.267: 	[]: [Int, Int?]
 //│ ╙──       	    ^^^^^^^^^^^
@@ -277,7 +277,7 @@ let y: C1 = x
 //│ exp => class mlscript.Signature
 //│ members => List()
 //│ result => Some(Tuple(List((None,Field(None,TypeName(Int),false)), (None,Field(None,TypeName(Int),true)))))
-//│ (Int, Int?,)
+//│ [Int, Int?]
 //│ res
 //│     = []
 
@@ -286,7 +286,7 @@ let y: C1 = x
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.285: 	[1, 2, 3]: [Int, Int?]
 //│ ║         	^^^^^^^^^
-//│ ╟── tuple literal of type `(1, 2, 3,)` does not match type `(Int, Int?,)`
+//│ ╟── tuple literal of type `[1, 2, 3]` does not match type `[Int, Int?]`
 //│ ║  l.285: 	[1, 2, 3]: [Int, Int?]
 //│ ║         	 ^^^^^^^
 //│ ╟── Note: constraint arises from tuple type:
@@ -297,7 +297,7 @@ let y: C1 = x
 //│ exp => class mlscript.Signature
 //│ members => List()
 //│ result => Some(Tuple(List((None,Field(None,TypeName(Int),false)), (None,Field(None,TypeName(Int),true)))))
-//│ (Int, Int?,)
+//│ [Int, Int?]
 //│ res
 //│     = [ 1, 2, 3 ]
 
@@ -407,7 +407,7 @@ let y: C1 = x
 //│ exp => class mlscript.Signature
 //│ members => List()
 //│ result => Some(Tuple(List((None,Field(None,TypeName(Int),false)), (None,Field(None,TypeName(Int),false)), (None,Field(None,TypeName(Int),true)))))
-//│ (Int, Int, Int?,)
+//│ [Int, Int, Int?]
 //│ res
 //│     = [ 1, 2 ]
 
@@ -418,15 +418,15 @@ let y: C1 = x
 :p
 fun foo(xs: [Int] & 'a) = xs : [Int, Int?]
 //│ |#fun| |foo|(|xs|#:| |[|Int|]| |&| |'a|)| |#=| |xs| |#:| |[|Int|,| |Int|?|]|
-//│ AST: TypingUnit(NuFunDef(None, foo, [], Lam(Tup(xs: App(App(Var(&), Tup(_: Var(Int))), Tup(_: Var('a)))), Asc(Var(xs), Tuple(List((None,Field(None,TypeName(Int),false)), (None,Field(None,TypeName(Int),true))))))))
-//│ Parsed: fun foo = (xs: & (Int,) ('a,),) => xs : (Int, Int?,);
+//│ AST: TypingUnit(NuFunDef(None, foo, None, [], Lam(Tup(xs: App(Var(&), Tup(_: Bra(rcd = false, Tup(_: Var(Int))), _: Var('a)))), Asc(Var(xs), Tuple(List((None,Field(None,TypeName(Int),false)), (None,Field(None,TypeName(Int),true))))))))
+//│ Parsed: fun foo = (xs: & ('(' Int, ')', 'a,),) => xs : [Int, Int?];
 //│ sim => TypedTypingUnit(
-//│ 	TypedNuFun(0,fun foo = (xs: & (Int,) ('a,),) => xs : (Int, Int?,),((xs: ⊥,) -> (#Int<Object,Num>, #Int<Object,Num>?,)))
+//│ 	TypedNuFun(0,fun foo = (xs: & ('(' Int, ')', 'a,),) => xs : [Int, Int?],((xs: (#Int<Object,Num>,),) -> (#Int<Object,Num>, #Int<Object,Num>?,)))
 //│ 	None)
 //│ exp => class mlscript.Signature
-//│ members => List(fun foo: (xs: nothing,) -> (Int, Int?,))
+//│ members => List(fun foo: (xs: [Int]) -> [Int, Int?])
 //│ result => None
-//│ fun foo: (xs: nothing,) -> (Int, Int?,)
+//│ fun foo: (xs: [Int]) -> [Int, Int?]
 
 
 
@@ -434,12 +434,12 @@ fun foo(xs: [Int] & 'a) = xs : [Int, Int?]
 
 fun foo: [Int] | [Int, Int?]
 //│ sim => TypedTypingUnit(
-//│ 	TypedNuFun(0,fun foo: (Int,) | (Int, Int?,),(#Int<Object,Num>, #Int<Object,Num>?,))
+//│ 	TypedNuFun(0,fun foo: [Int] | [Int, Int?],(#Int<Object,Num>, #Int<Object,Num>?,))
 //│ 	None)
 //│ exp => class mlscript.Signature
-//│ members => List(fun foo: (Int, Int?,))
+//│ members => List(fun foo: [Int, Int?])
 //│ result => None
-//│ fun foo: (Int, Int?,)
+//│ fun foo: [Int, Int?]
 
 fun foo: [Int] & [Int, Int?]
 //│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
@@ -448,10 +448,10 @@ fun foo: [Int] & [Int, Int?]
 //│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.$amp(TyperHelpers.scala:434)
 //│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.$amp$(TyperHelpers.scala:411)
 //│ 	at: mlscript.TyperDatatypes$SimpleType.$amp(TyperDatatypes.scala:155)
-//│ 	at: mlscript.Typer.$anonfun$typeType2$17(Typer.scala:445)
-//│ 	at: mlscript.Typer.$anonfun$typeType2$11(Typer.scala:447)
+//│ 	at: mlscript.Typer.$anonfun$typeType2$17(Typer.scala:462)
+//│ 	at: mlscript.Typer.$anonfun$typeType2$11(Typer.scala:464)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
-//│ 	at: mlscript.Typer.rec$1(Typer.scala:604)
-//│ 	at: mlscript.Typer.$anonfun$typeType2$2(Typer.scala:605)
+//│ 	at: mlscript.Typer.rec$1(Typer.scala:621)
+//│ 	at: mlscript.Typer.$anonfun$typeType2$2(Typer.scala:622)
 
 

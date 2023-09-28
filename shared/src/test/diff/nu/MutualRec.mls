@@ -298,6 +298,6 @@ module Test3 {
 //│   fun inc: Test2
 //│ }
 //│ module Test3 {
-//│   fun inc: (t: Test2,) -> Test2
+//│   fun inc: (t: Test2) -> Test2
 //│ }
 

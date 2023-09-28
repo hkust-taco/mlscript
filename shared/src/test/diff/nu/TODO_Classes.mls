@@ -76,7 +76,7 @@ D.unapply
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.75: 	D.unapply
 //│ ║        	^^^^^^^^^
-//│ ╟── reference of type `(x: Int,) -> D` does not have field 'unapply'
+//│ ╟── reference of type `(x: Int) -> D` does not have field 'unapply'
 //│ ║  l.75: 	D.unapply
 //│ ╙──      	^
 //│ error
@@ -126,7 +126,7 @@ bar(D.class)
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.125: 	bar(D.class)
 //│ ║         	    ^^^^^^^
-//│ ╟── reference of type `(x: Int,) -> D` does not have field 'class'
+//│ ╟── reference of type `(x: Int) -> D` does not have field 'class'
 //│ ║  l.125: 	bar(D.class)
 //│ ╙──       	    ^
 //│ error
@@ -198,7 +198,7 @@ fun test(a: Object) = if a is
 //│ ╟── type variable `A` leaks out of its scope
 //│ ║  l.180: 	class Cls[A] { fun x: A = x; fun g: A -> Int; fun g = g }
 //│ ╙──       	          ^
-//│ fun test: (a: Object,) -> (error | ??A)
+//│ fun test: (a: Object) -> (error | ??A)
 
 :e // TODO
 fun test(a: Object) = if a is
@@ -214,7 +214,7 @@ fun test(a: Object) = if a is
 //│ ╟── type variable `A` leaks out of its scope
 //│ ║  l.180: 	class Cls[A] { fun x: A = x; fun g: A -> Int; fun g = g }
 //│ ╙──       	          ^
-//│ fun test: (a: Object,) -> Int
+//│ fun test: (a: Object) -> Int
 
 
 class Cls[out A] { fun x: A = x }
@@ -225,12 +225,12 @@ class Cls[out A] { fun x: A = x }
 fun test(a: Object) = if a is
   Cls then a.x
   else error
-//│ fun test: (a: Object,) -> ??A
+//│ fun test: (a: Object) -> ??A
 
 fun test(a: Object) = if a is
   Cls then a
   else error
-//│ fun test: (a: Object,) -> Cls[??A]
+//│ fun test: (a: Object) -> Cls[??A]
 
 :re
 test(0).x
@@ -270,7 +270,7 @@ class BoolLit() extends Expr[Bool]
 
 fun test(f: ((IntLit | BoolLit) -> Int)) =
   f : Expr[anything] -> Int
-//│ fun test: (f: (BoolLit | IntLit) -> Int,) -> Expr[anything] -> Int
+//│ fun test: (f: (BoolLit | IntLit) -> Int) -> Expr[anything] -> Int
 
 class OopsLit() extends Expr[Bool]
 //│ class OopsLit() extends Expr

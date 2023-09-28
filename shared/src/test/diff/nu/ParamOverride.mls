@@ -34,13 +34,13 @@ mixin Derived1(n: Int) {
 //│ mixin Derived1(n: Int) {
 //│   super: {n: 'n}
 //│   this: {n: 'n0}
-//│   fun foo: (Int, 'n0, 'n,)
+//│   fun foo: [Int, 'n0, 'n]
 //│ }
 
 
 class Test0() extends Base1(1/2), Derived1(1)
 //│ class Test0() {
-//│   fun foo: (Int, 1, Num,)
+//│   fun foo: [Int, 1, Num]
 //│   fun original: Num
 //│ }
 
@@ -60,7 +60,7 @@ t.original
 //│     = 0.5
 
 t.foo
-//│ (Int, 1, Num,)
+//│ [Int, 1, Num]
 //│ res
 //│     = [ 1, 1, 0.5 ]
 
@@ -69,7 +69,7 @@ module Test1 extends Base1(1/2), Derived1(1) {
   fun n = this.n
 }
 //│ module Test1 {
-//│   fun foo: (Int, 1, Num,)
+//│   fun foo: [Int, 1, Num]
 //│   fun n: 1
 //│   fun original: Num
 //│ }
@@ -86,13 +86,13 @@ class Test2(n: Str) extends Base1(1/2), Derived1(1) {
   fun bar = [this.foo, n, this.n, this.original]
 }
 //│ class Test2(n: Str) {
-//│   fun bar: ((Int, Str, Num,), Str, Str, Num,)
-//│   fun foo: (Int, Str, Num,)
+//│   fun bar: [[Int, Str, Num], Str, Str, Num]
+//│   fun foo: [Int, Str, Num]
 //│   fun original: Num
 //│ }
 
 Test2("test").bar
-//│ ((Int, Str, Num,), Str, Str, Num,)
+//│ [[Int, Str, Num], Str, Str, Num]
 //│ res
 //│     = [ [ 1, 'test', 0.5 ], 'test', 'test', 0.5 ]
 
@@ -101,12 +101,12 @@ class Test3(n: Str) extends Base1(1/2), Derived1(length(n)) {
   fun foo = [super.foo, n, this.original]
 }
 //│ class Test3(n: Str) {
-//│   fun foo: ((Int, Str, Num,), Str, Num,)
+//│   fun foo: [[Int, Str, Num], Str, Num]
 //│   fun original: Num
 //│ }
 
 Test3("test").foo
-//│ ((Int, Str, Num,), Str, Num,)
+//│ [[Int, Str, Num], Str, Num]
 //│ res
 //│     = [ [ 4, 'test', 0.5 ], 'test', 0.5 ]
 

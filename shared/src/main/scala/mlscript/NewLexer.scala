@@ -66,11 +66,13 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
           case 't' => str(i + 1, false, '\t' :: cur)
           case 'r' => str(i + 1, false, '\r' :: cur)
           case ch =>
-            raise(WarningReport(msg"Found invalid escape character" -> S(loc(i, i + 1)) :: Nil, source = Lexing))
+            raise(WarningReport(msg"Found invalid escape character" -> S(loc(i, i + 1)) :: Nil,
+              newDefs = true, source = Lexing))
             str(i + 1, false, ch :: cur)
         }
       else {
-        raise(ErrorReport(msg"Expect an escape character" -> S(loc(i, i + 1)) :: Nil, source = Lexing))
+        raise(ErrorReport(msg"Expect an escape character" -> S(loc(i, i + 1)) :: Nil,
+          newDefs = true, source = Lexing))
         (cur.reverseIterator.mkString, i)
       }
     else {
@@ -91,7 +93,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
     val c = bytes(i)
     def pe(msg: Message): Unit =
       // raise(ParseError(false, msg -> S(loc(i, i + 1)) :: Nil))
-      raise(ErrorReport(msg -> S(loc(i, i + 1)) :: Nil, source = Lexing)) // TODO parse error
+      raise(ErrorReport(msg -> S(loc(i, i + 1)) :: Nil, newDefs = true, source = Lexing))
     // @inline 
     // def go(j: Int, tok: Token) = lex(j, ind, (tok, loc(i, j)) :: acc)
     def next(j: Int, tok: Token) = (tok, loc(i, j)) :: acc
@@ -224,10 +226,12 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
             case ((k0, l0), oldAcc) :: stack =>
               if (k0 =/= k1)
                 raise(ErrorReport(msg"Mistmatched closing ${k1.name}" -> S(l1) ::
-                  msg"does not correspond to opening ${k0.name}" -> S(l0) :: Nil, source = Parsing))
+                  msg"does not correspond to opening ${k0.name}" -> S(l0) :: Nil, newDefs = true,
+                  source = Parsing))
               go(rest, true, stack, BRACKETS(k0, acc.reverse)(l0.right ++ l1.left) -> (l0 ++ l1) :: oldAcc)
             case Nil =>
-              raise(ErrorReport(msg"Unexpected closing ${k1.name}" -> S(l1) :: Nil, source = Parsing))
+              raise(ErrorReport(msg"Unexpected closing ${k1.name}" -> S(l1) :: Nil,
+                newDefs = true, source = Parsing))
               go(rest, false, stack, acc)
           }
         case (INDENT, loc) :: rest =>
@@ -248,8 +252,10 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
         })) => // split  `>>` to `>` and `>` so that code like `A<B<C>>` can be parsed correctly
           go((CLOSE_BRACKET(Angle) -> loc.left) :: (IDENT(id.drop(1), true) -> loc) :: rest, false, stack, acc)
         case ((tk @ IDENT(">", true), loc)) :: rest if canStartAngles =>
-          raise(WarningReport(msg"This looks like an angle bracket, but it does not close any angle bracket section" -> S(loc) ::
-            msg"Add spaces around it if you intended to use `<` as an operator" -> N :: Nil, source = Parsing))
+          raise(WarningReport(
+            msg"This looks like an angle bracket, but it does not close any angle bracket section" -> S(loc) ::
+            msg"Add spaces around it if you intended to use `<` as an operator" -> N :: Nil,
+            newDefs = true, source = Parsing))
           go(rest, false, stack, tk -> loc :: acc)
         case (tk: Stroken, loc) :: rest =>
           go(rest, tk match {
@@ -265,7 +271,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
                 if (k === Angle)
                   msg"Note that `<` without spaces around it is considered as an angle bracket and not as an operator" -> N :: Nil
                 else Nil
-              ), source = Parsing))
+              ), newDefs = true, source = Parsing))
               (oldAcc ::: acc).reverse
             case Nil => acc.reverse
           }

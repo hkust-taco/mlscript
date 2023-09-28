@@ -9,7 +9,7 @@ module M {
 //│ module M {
 //│   class C(n: Int)
 //│   type T = Int -> Int
-//│   fun mkC: (n: Int,) -> C
+//│   fun mkC: (n: Int) -> C
 //│ }
 
 let x: M.T = id
@@ -18,7 +18,7 @@ let x: M.T = id
 //│   = [Function: id]
 
 fun foo(x: M.C) = x
-//│ fun foo: (x: C,) -> C
+//│ fun foo: (x: C) -> C
 
 
 foo(M.mkC(42))

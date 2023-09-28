@@ -30,7 +30,7 @@ module Test<A> {
 //│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ module Test[A] {
 //│   fun bar: A -> A
-//│   fun baz: (x: A,) -> A
+//│   fun baz: (x: A) -> A
 //│   fun foo: A -> A
 //│   fun poly0: forall 'a. 'a -> 'a
 //│   fun poly1: forall 'a0. 'a0 -> 'a0
@@ -48,7 +48,7 @@ Test.bar
 //│     = [Function: id]
 
 Test.baz
-//│ (x: ??A,) -> ??A0
+//│ (x: ??A) -> ??A0
 //│ res
 //│     = [Function: baz]
 
@@ -84,7 +84,7 @@ Test.foo(1)
 Test.foo(error) + 1
 //│ ╔══[ERROR] Type error in operator application
 //│ ║  l.84: 	Test.foo(error) + 1
-//│ ║        	^^^^^^^^^^^^^^^^^
+//│ ║        	^^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `A` leaks out of its scope
 //│ ║  l.84: 	Test.foo(error) + 1
 //│ ║        	^^^^^^^^^^^^^^^

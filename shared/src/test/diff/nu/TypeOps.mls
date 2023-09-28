@@ -2,22 +2,39 @@
 
 
 type *[A, B] = [A, B]
-//│ type *[A, B] = (A, B,)
+//│ type *[A, B] = [A, B]
 
 
-:e // FIXME parsing of type operators
 fun x : Int * Int
 fun x = [0, 1]
-//│ ╔══[ERROR] Type mismatch in definition:
-//│ ║  l.10: 	fun x = [0, 1]
-//│ ║        	    ^^^^^^^^^^
-//│ ╟── integer literal of type `0` is not a 1-element tuple
-//│ ║  l.10: 	fun x = [0, 1]
-//│ ║        	         ^
-//│ ╟── Note: constraint arises from tuple type:
-//│ ║  l.9: 	fun x : Int * Int
-//│ ╙──     	        ^^^
-//│ fun x: (0, 1,)
-//│ fun x: *[(Int,), (Int,)]
+//│ fun x: [0, 1]
+//│ fun x: *[Int, Int]
+
+fun x : Int * [Int]
+fun x = [0, [1]]
+//│ fun x: [0, [1]]
+//│ fun x: *[Int, [Int]]
+
+fun x : [Int] * Int
+fun x = [[0], 1]
+//│ fun x: [[0], 1]
+//│ fun x: *[[Int], Int]
+
+
+type Id[A] = A
+//│ type Id[A] = A
+
+:e
+fun x: Id[Int, Int]
+//│ ╔══[ERROR] Wrong number of type arguments – expected 1, found 2
+//│ ║  l.28: 	fun x: Id[Int, Int]
+//│ ╙──      	       ^^^^^^^^^^^^
+//│ fun x: Id[Int]
+
+fun x: Id[[Int, Int]]
+//│ fun x: Id[[Int, Int]]
+
+fun x: Id[[[Int, Int]]]
+//│ fun x: Id[[[Int, Int]]]
 
 

@@ -95,7 +95,7 @@ trait TypeSimplifier { self: Typer =>
         process(tr.expandOrCrash, parent)
       
       case RecordType(fields) => RecordType.mk(fields.flatMap { case (v @ Var(fnme), fty) =>
-        // * We make a pass to transform the LB and UB of variant type parameter fields into their exterma
+        // * We make a pass to transform the LB and UB of variant type parameter fields into their extrema
         val prefix = fnme.takeWhile(_ =/= '#')
         val postfix = fnme.drop(prefix.length + 1)
         lazy val default = fty.update(process(_ , N), process(_ , N))
@@ -117,6 +117,14 @@ trait TypeSimplifier { self: Typer =>
               info.result match {
                 case S(cls: TypedNuCls) =>
                   cls.varianceOf(cls.tparams.find(_._1.name === postfix).getOrElse(die)._2) match {
+                    case VarianceInfo(true, true) => Nil
+                    case VarianceInfo(co, contra) =>
+                      if (co) v -> FieldType(S(BotType), process(fty.ub, N), false)(fty.prov) :: Nil
+                      else if (contra) v -> FieldType(fty.lb.map(process(_, N)), TopType, false)(fty.prov) :: Nil
+                      else  v -> default :: Nil
+                  }
+                case S(trt: TypedNuTrt) => // TODO factor w/ above & generalize
+                  trt.tparams.iterator.find(_._1.name === postfix).flatMap(_._3).getOrElse(VarianceInfo.in) match {
                     case VarianceInfo(true, true) => Nil
                     case VarianceInfo(co, contra) =>
                       if (co) v -> FieldType(S(BotType), process(fty.ub, N), false)(fty.prov) :: Nil

@@ -182,6 +182,7 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
     def freshenAboveImpl(lim: Int, rigidify: Bool)(implicit ctx: Ctx, freshened: MutMap[TV, ST]): FunctionType =
       FunctionType(lhs.freshenAbove(lim, rigidify), rhs.freshenAbove(lim, rigidify))(prov)
     override def toString = s"(${lhs match {
+      case TupleType((N, FieldType(N, f: TupleType, false)) :: Nil) => "[" + f.showInner + "]"
       case TupleType((N, f) :: Nil) => f.toString
       case lhs => lhs
     }} -> $rhs)"
@@ -269,8 +270,9 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
         //    corresponding to this tuple type.
         //    i.e., no `::: fields.collect { case (S(n), t) => (n, t) }`
       )(prov)
-    override def toString =
-      s"(${fields.map(f => s"${f._1.fold("")(_.name+": ")}${f._2},").mkString(" ")})"
+    def showInner: Str =
+      fields.map(f => s"${f._1.fold("")(_.name+": ")}${f._2},").mkString(" ")
+    override def toString = s"($showInner)"
     // override def toString = s"(${fields.map(f => s"${f._1.fold("")(_+": ")}${f._2},").mkString(" ")})"
   }
 

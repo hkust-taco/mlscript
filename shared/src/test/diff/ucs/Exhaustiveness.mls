@@ -33,7 +33,7 @@ fun f(x, y) =
 //│ ╟── It first appears here.
 //│ ║  l.18: 	        C then 2
 //│ ╙──      	        ^
-//│ fun f: (anything, anything,) -> error
+//│ fun f: (anything, anything) -> error
 
 :e
 // These operators are uninterpreted. So, it's impossible to reason the
@@ -48,7 +48,7 @@ class Node[A](value: int, left: Tree[A], right: Tree[A]) {
     >= value then right.find(wanted)
     == value then true
 }
-//│ ╔══[ERROR] The case when this is false is not handled: == (wanted,) (value,)
+//│ ╔══[ERROR] The case when this is false is not handled: == (wanted, value,)
 //│ ║  l.46: 	  fun contains(wanted) = if wanted
 //│ ║        	                            ^^^^^^
 //│ ║  l.47: 	    <= value then left.find(wanted)

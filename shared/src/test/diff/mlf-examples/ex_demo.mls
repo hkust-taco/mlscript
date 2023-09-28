@@ -474,11 +474,11 @@ def id2 x = if true then x else id2 id2 x
 
 // let make_ex1 x (f:['a] ('a * ('a -> 'c)) -> 'b) = f x
 def make_ex1 x (f: forall 'a. (('a, 'a -> 'c),) -> 'b) = f x
-//│ make_ex1: ('a, 'a -> 'c,) -> (forall 'a0. ('a0, 'a0 -> 'c,) -> 'b) -> 'b
+//│ make_ex1: (('a, 'a -> 'c,),) -> (forall 'a0. (('a0, 'a0 -> 'c,),) -> 'b) -> 'b
 //│         = [Function: make_ex1]
 
 ex1_1 = make_ex1 (("A String", print_string))
-//│ ex1_1: (forall 'a. ('a, 'a -> unit,) -> 'b) -> 'b
+//│ ex1_1: (forall 'a. (('a, 'a -> unit,),) -> 'b) -> 'b
 //│      = [Function (anonymous)]
 
 ex1_1 (fun ((x, f)) -> f x)
@@ -487,7 +487,7 @@ ex1_1 (fun ((x, f)) -> f x)
 //│ A String
 
 ex1_2 = if true then make_ex1 ((42, print_int)) else ex1_1
-//│ ex1_2: (forall 'a 'a0. ('a0, 'a0 -> unit,) -> 'b & ('a, 'a -> unit,) -> 'b) -> 'b
+//│ ex1_2: (forall 'a 'a0. (('a0, 'a0 -> unit,),) -> 'b & (('a, 'a -> unit,),) -> 'b) -> 'b
 //│      = [Function (anonymous)]
 
 ex1_2 (fun ((x, f)) -> f x)
@@ -499,7 +499,7 @@ ex1_2 (fun ((x, f)) -> f x)
 // let make_ex2 x (f:['a] ('a * 'a * ('a -> 'a -> 'c)) -> 'b) = f x
 // ;;
 def make_ex2 x (f: forall 'a. (('a, 'a, 'a -> 'a -> 'c),) -> 'b) = f x
-//│ make_ex2: ('a, 'a, 'a -> 'a -> 'c,) -> (forall 'a0. ('a0, 'a0, 'a0 -> 'a0 -> 'c,) -> 'b) -> 'b
+//│ make_ex2: (('a, 'a, 'a -> 'a -> 'c,),) -> (forall 'a0. (('a0, 'a0, 'a0 -> 'a0 -> 'c,),) -> 'b) -> 'b
 //│         = [Function: make_ex2]
 
 // let ex_list1 = [ make_ex1 ("A String", print_string) ; 
@@ -509,7 +509,7 @@ def make_ex2 x (f: forall 'a. (('a, 'a, 'a -> 'a -> 'c),) -> 'b) = f x
 ex_list1 = cons (make_ex1 (("A String", print_string)))
   (cons (make_ex1 ((8250, print_int)))
   (cons (make_ex1 ((true, print_bool))) nil))
-//│ ex_list1: List[forall 'b. (forall 'a 'a0 'a1. ('a, 'a -> unit,) -> 'b & ('a0, 'a0 -> unit,) -> 'b & ('a1, 'a1 -> unit,) -> 'b) -> 'b]
+//│ ex_list1: List[forall 'b. (forall 'a 'a0 'a1. (('a, 'a -> unit,),) -> 'b & (('a0, 'a0 -> unit,),) -> 'b & (('a1, 'a1 -> unit,),) -> 'b) -> 'b]
 //│         = Cons {
 //│             head: [Function (anonymous)],
 //│             tail: Cons {
@@ -525,7 +525,7 @@ ex_list1 = cons (make_ex1 (("A String", print_string)))
 ex_list2 = cons (make_ex2 (("String", "String", eqstring)))
   (cons (make_ex2 ((1250, 4890, eqint)))
   (cons (make_ex2 ((true, false, eqbool))) nil))
-//│ ex_list2: List[forall 'b. (forall 'a 'c 'a0 'a1. ('a, 'a, 'a -> 'a -> (forall 'c. bool | 'c),) -> 'b & ('a0, 'a0, 'a0 -> 'a0 -> (bool | false | 'c),) -> 'b & ('a1, 'a1, 'a1 -> 'a1 -> (forall 'c. bool | 'c),) -> 'b) -> 'b]
+//│ ex_list2: List[forall 'b. (forall 'a 'c 'a0 'a1. (('a, 'a, 'a -> 'a -> (forall 'c. bool | 'c),),) -> 'b & (('a0, 'a0, 'a0 -> 'a0 -> (bool | false | 'c),),) -> 'b & (('a1, 'a1, 'a1 -> 'a1 -> (forall 'c. bool | 'c),),) -> 'b) -> 'b]
 //│         = Cons {
 //│             head: [Function (anonymous)],
 //│             tail: Cons {
@@ -536,7 +536,7 @@ ex_list2 = cons (make_ex2 (("String", "String", eqstring)))
 
 
 h = head ex_list1
-//│ h: (forall 'a 'a0 'a1. ('a, 'a -> unit,) -> 'b & ('a0, 'a0 -> unit,) -> 'b & ('a1, 'a1 -> unit,) -> 'b) -> 'b
+//│ h: (forall 'a 'a0 'a1. (('a, 'a -> unit,),) -> 'b & (('a0, 'a0 -> unit,),) -> 'b & (('a1, 'a1 -> unit,),) -> 'b) -> 'b
 //│  = [Function (anonymous)]
 
 h (fun ((x, f)) -> f x)
@@ -566,7 +566,7 @@ test1 = listiter (fun ex -> ex (fun ((p1, p2)) -> p2 p1)) ex_list1
 //│ true
 
 test1_ = listiter (fun ex -> ex (fun ((p1, p2)) -> p2 p1))
-//│ test1_: List[(forall 'a 'b. ('a, 'a -> 'b,) -> 'b) -> anything] -> unit
+//│ test1_: List[(forall 'a 'b. (('a, 'a -> 'b,),) -> 'b) -> anything] -> unit
 //│       = [Function (anonymous)]
 
 test1_ ex_list1
@@ -577,7 +577,7 @@ test1_ ex_list1
 //│ true
 
 process ex = ex (fun ((p1, p2)) -> p2 p1)
-//│ process: ((forall 'a 'b. ('a, 'a -> 'b,) -> 'b) -> 'c) -> 'c
+//│ process: ((forall 'a 'b. (('a, 'a -> 'b,),) -> 'b) -> 'c) -> 'c
 //│        = [Function: process]
 
 process h
@@ -619,7 +619,7 @@ test2_ = listiter (fun ex -> ex (fun ((t1, t2, t3)) ->
   let eqf = t3 in
   let areequal = eqf arg1 arg2 in
   print_bool areequal ))
-//│ test2_: List[(forall 'a 'b. ('a, 'b, 'a -> 'b -> bool,) -> unit) -> anything] -> unit
+//│ test2_: List[(forall 'a 'b. (('a, 'b, 'a -> 'b -> bool,),) -> unit) -> anything] -> unit
 //│       = [Function (anonymous)]
 
 test2_ ex_list2
