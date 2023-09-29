@@ -824,7 +824,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                         case S(ps) =>
                           checkArgsNum(ps.size)
                           ps.lazyZip(parArgs).flatMap {
-                            case (nme -> p, _ -> Fld(FldFlags(mut, spec, _, get), a)) =>
+                            case (nme -> p, _ -> Fld(FldFlags(mut, spec, opt, get), a)) =>
                               assert(!mut && !spec && !get, "TODO") // TODO check mut, spec, get
                               val a_ty = typeTerm(a)
                               p.lb.foreach(constrain(_, a_ty))
@@ -832,8 +832,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                               val isPublic = cls.members(nme.name).isPublic
                               val fty = if (p.lb.isDefined)
                                   // * We don't refine the field type when it's mutable as that could lead to muable updates being rejected
-                                  FieldType(p.lb, p.ub)(provTODO)
-                                else FieldType(p.lb, a_ty)(provTODO)
+                                  FieldType(p.lb, p.ub, opt)(provTODO)
+                                else FieldType(p.lb, a_ty, opt)(provTODO)
                               Option.when(isPublic)(NuParam(nme, fty, isPublic = isPublic)(lvl))
                           }
                         case N =>
@@ -1629,7 +1629,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                         def getterError(loco: Opt[Loc]) =
                           err(msg"Cannot use `val` in constructor parameters", loco)
                         val res = ps.fields.map {
-                          case (S(nme), Fld(FldFlags(mut, spec, getter), value)) =>
+                          case (S(nme), Fld(FldFlags(mut, spec, _, getter), value)) =>
                             assert(!mut && !spec, "TODO") // TODO
                             if (getter)
                               // TODO we could support this to some extent
@@ -1641,7 +1641,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                                 nme -> ty
                               case _ => ???
                             }
-                          case (N, Fld(FldFlags(mut, spec, getter), nme: Var)) =>
+                          case (N, Fld(FldFlags(mut, spec, _, getter), nme: Var)) =>
                             assert(!mut && !spec, "TODO") // TODO
                             if (getter)
                               getterError(nme.toLoc)

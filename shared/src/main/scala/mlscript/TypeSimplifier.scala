@@ -107,7 +107,7 @@ trait TypeSimplifier { self: Typer =>
                 case VarianceInfo(true, true) => Nil
                 case VarianceInfo(co, contra) =>
                   if (co) v -> FieldType(S(BotType), process(fty.ub, N), false)(fty.prov) :: Nil
-                  else if (contra) v -> FieldType(fty.lb.map(process(_, N)), TopType)(fty.prov) :: Nil
+                  else if (contra) v -> FieldType(fty.lb.map(process(_, N)), TopType, false)(fty.prov) :: Nil
                   else  v -> default :: Nil
               })
           case N =>
@@ -119,8 +119,8 @@ trait TypeSimplifier { self: Typer =>
                     cls.varianceOf(cls.tparams.find(_._1.name === postfix).getOrElse(die)._2) match {
                       case VarianceInfo(true, true) => Nil
                       case VarianceInfo(co, contra) =>
-                        if (co) v -> FieldType(S(BotType), process(fty.ub, N))(fty.prov) :: Nil
-                        else if (contra) v -> FieldType(fty.lb.map(process(_, N)), TopType)(fty.prov) :: Nil
+                        if (co) v -> FieldType(S(BotType), process(fty.ub, N), false)(fty.prov) :: Nil
+                        else if (contra) v -> FieldType(fty.lb.map(process(_, N)), TopType, false)(fty.prov) :: Nil
                         else  v -> default :: Nil
                     }
                   case S(trt: TypedNuTrt) => // TODO factor w/ above & generalize
