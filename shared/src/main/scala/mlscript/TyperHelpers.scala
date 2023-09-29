@@ -834,7 +834,7 @@ abstract class TyperHelpers { Typer: Typer =>
                 cls.members.valuesIterator.flatMap(childrenPolMem) ++
                 S(pol.contravar -> cls.thisTy) ++
                 S(pol.covar -> cls.sign) ++
-                S(pol.covar -> cls.instanceType) ++
+                // S(pol.covar -> cls.instanceType) ++ // Not a real child; to remove
                 cls.parentTP.valuesIterator.flatMap(childrenPolMem)
             case trt: TypedNuTrt =>
               trt.tparams.iterator.map(pol.invar -> _._2) ++
@@ -966,8 +966,8 @@ abstract class TyperHelpers { Typer: Typer =>
               cls.auxCtorParams.toList.flatMap(_.values) ++
               cls.members.valuesIterator.flatMap(childrenMem) ++
               S(cls.thisTy) ++
-              S(cls.sign) ++
-              S(cls.instanceType)
+              S(cls.sign) /* ++
+              S(cls.instanceType) // Not a real child; to remove */
           case trt: TypedNuTrt =>
             trt.tparams.iterator.map(_._2) ++
               trt.members.valuesIterator.flatMap(childrenMem) ++

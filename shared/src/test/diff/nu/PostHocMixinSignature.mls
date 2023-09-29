@@ -1,0 +1,73 @@
+:NewDefs
+
+
+mixin Foo {
+  fun foo(x) = if x.a then x else foo(x.b)
+}
+//│ mixin Foo() {
+//│   fun foo: 'a -> 'a
+//│ }
+//│ where
+//│   'a <: {a: Object, b: 'a}
+
+
+module ValA {
+  val a = false
+  val b = ValB
+}
+module ValB {
+  val a = true
+  fun b = ValA
+}
+//│ module ValA {
+//│   val a: false
+//│   val b: ValB
+//│ }
+//│ module ValB {
+//│   val a: true
+//│   fun b: ValA
+//│ }
+
+
+module Test extends Foo
+//│ module Test {
+//│   fun foo: forall 'a. 'a -> 'a
+//│ }
+//│ where
+//│   'a <: {a: Object, b: 'a}
+
+[Test.foo(ValA), Test.foo(ValB)]
+//│ [ValA | ValB, ValA | ValB]
+//│ res
+//│     = [ ValB { class: [class ValB] }, ValB { class: [class ValB] } ]
+
+
+type V = {a: Bool, b: V}
+//│ type V = {a: Bool, b: V}
+
+module Test extends Foo {
+  fun foo: V -> anything
+}
+//│ module Test {
+//│   fun foo: V -> anything
+//│ }
+
+[Test.foo(ValA), Test.foo(ValB)]
+//│ [anything, anything]
+//│ res
+//│     = [ ValB { class: [class ValB] }, ValB { class: [class ValB] } ]
+
+
+module Test extends Foo {
+  fun foo: V -> V
+}
+//│ module Test {
+//│   fun foo: V -> V
+//│ }
+
+[Test.foo(ValA), Test.foo(ValB)]
+//│ [V, V]
+//│ res
+//│     = [ ValB { class: [class ValB] }, ValB { class: [class ValB] } ]
+
+

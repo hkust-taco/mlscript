@@ -222,7 +222,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
         sign: ST,
         inheritedTags: Set[TypeName],
         parentTP: Map[Str, NuMember]
-      )(val instanceType: ST, // * only meant to be used in `force` and `variances`
+      )(val instanceType: ST, // * only meant to be used in `variances`
+        // * TODO remove `instanceType` and implement proper variance analysis instead
       ) extends TypedNuTypeDef(Cls) with PolyNuDecl
   {
     def decl: NuTypeDef = td
@@ -317,7 +318,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           f(pol, sign),
           inheritedTags,
           parentTP.mapValuesIter(_.mapPol(pol, smart)(f)).toMap,
-        )(f(pol, instanceType))
+        )(/* f(pol, instanceType) */TopType) // TODO remove instanceType
     def mapPolMap(pol: PolMap)(f: (PolMap, SimpleType) => SimpleType)
           (implicit ctx: Ctx): TypedNuCls =
         TypedNuCls(level, td,
@@ -329,10 +330,10 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           f(pol, sign),
           inheritedTags,
           parentTP.mapValuesIter(_.mapPolMap(pol)(f)).toMap,
-        )(f(pol, instanceType))
+        )(/* f(pol, instanceType) */TopType) // TODO remove instanceType
     
     override def toString: Str = s"TypedNuCls($level, ${td.nme},\n\t$tparams,\n\t$params,\n\tthis: $thisTy, ${
-      members.lnIndent()},\n\t: $sign, $inheritedTags, $parentTP)"
+      members.lnIndent()},\n\t: $sign, $inheritedTags, $parentTP)($instanceType)"
   }
   
   
