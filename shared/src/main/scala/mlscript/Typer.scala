@@ -1052,11 +1052,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
               })
               desugarNamedArgs(term, f, a, argsList, f_ty)
             }
-          case _ :: Nil =>
-            err("Function type is not handled", f.toLoc)
           case _ :: _ :: _ =>
             err(msg"More than one function signature found in type `${f_ty.expPos}` for function call with named arguments", f.toLoc)
-          case Nil =>
+          case Nil | _ :: Nil =>
             err(msg"Cannot retrieve appropriate function signature from type `${f_ty.expPos}` for applying named arguments", f.toLoc)
         }
       case App(f, a) =>
