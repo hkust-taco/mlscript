@@ -648,13 +648,27 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
       case s :: stmts =>
         val res_ty = s match {
           case decl: NuDecl => N
-          case s: Statement =>
-            val (diags, dss) = s.desugared
-            diags.foreach(raise)
-            S(typeTerms(dss, false, Nil)(ctx, raise, TypeProvenance(s.toLoc, s match {
-              case trm: Term => trm.describe
-              case s => "statement"
-            }), vars, genLambdas = false))
+          case t: Term =>
+            implicit val genLambdas: GenLambdas = true
+            val ty = typeTerm(t)
+            /* // TODO next:
+            if (!topLevel) {
+              if (t.isInstanceOf[Var] || t.isInstanceOf[Lit])
+                warn("Pure expression does nothing in statement position.", t.toLoc)
+              else
+                constrain(mkProxy(ty, TypeProvenance(t.toCoveringLoc, "expression in statement position")), UnitType)(
+                  raise = err => raise(WarningReport( // Demote constraint errors from this to warnings
+                    msg"Expression in statement position should have type `unit`." -> N ::
+                    msg"Use the `discard` function to discard non-unit values, making the intent clearer." -> N ::
+                    err.allMsgs, newDefs)),
+                  prov = TypeProvenance(t.toLoc, t.describe), ctx)
+            }
+            */
+            S(ty)
+          case s: DesugaredStatement =>
+            err(msg"Illegal position for this ${s.describe} statement.", s.toLoc)(raise)
+            N
+          case _ => die
         }
         stmts match {
           case Nil => res_ty

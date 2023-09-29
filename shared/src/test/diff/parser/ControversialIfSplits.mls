@@ -8,12 +8,12 @@ if f of
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
 //│ ║  l.5: 	  0 then "ok"
 //│ ╙──     	    ^^^^
-//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause; found application instead
+//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'if'; found application instead
 //│ ║  l.4: 	if f of
 //│ ║       	   ^^^^
 //│ ║  l.5: 	  0 then "ok"
 //│ ║       	^^^^
-//│ ╟── Note: 'if' expression started here:
+//│ ╟── Note: 'if' expression starts here:
 //│ ║  l.4: 	if f of
 //│ ╙──     	^^
 //│ Parsed: {if (f(0,)) then undefined}
@@ -26,7 +26,7 @@ if f (
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
 //│ ║  l.22: 	  0 then "ok"
 //│ ╙──      	    ^^^^
-//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause; found application instead
+//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'if'; found application instead
 //│ ║  l.21: 	if f (
 //│ ║        	   ^^^
 //│ ║  l.22: 	  0 then "ok"
@@ -35,7 +35,7 @@ if f (
 //│ ║        	^^^^^^^^^^^^^
 //│ ║  l.24: 	)
 //│ ║        	^
-//│ ╟── Note: 'if' expression started here:
+//│ ╟── Note: 'if' expression starts here:
 //│ ║  l.21: 	if f (
 //│ ╙──      	^^
 //│ Parsed: {if (f(0,)) then undefined}
@@ -48,12 +48,12 @@ if f of
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
 //│ ║  l.44: 	  0 then "ok"
 //│ ╙──      	    ^^^^
-//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause; found application instead
+//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'if'; found application instead
 //│ ║  l.43: 	if f of
 //│ ║        	   ^^^^
 //│ ║  l.44: 	  0 then "ok"
 //│ ║        	^^^^
-//│ ╟── Note: 'if' expression started here:
+//│ ╟── Note: 'if' expression starts here:
 //│ ║  l.43: 	if f of
 //│ ╙──      	^^
 //│ Parsed: {if (f(0,)) then undefined}
@@ -65,12 +65,12 @@ if f of
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
 //│ ║  l.62: 	  0 is 0 then "ok"
 //│ ╙──      	         ^^^^
-//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause; found application instead
+//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'if'; found application instead
 //│ ║  l.61: 	if f of
 //│ ║        	   ^^^^
 //│ ║  l.62: 	  0 is 0 then "ok"
 //│ ║        	^^^^^^^^
-//│ ╟── Note: 'if' expression started here:
+//│ ╟── Note: 'if' expression starts here:
 //│ ║  l.61: 	if f of
 //│ ╙──      	^^
 //│ Parsed: {if (f(is(0,)(0,),)) then undefined}

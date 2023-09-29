@@ -27,7 +27,7 @@ _.foo(1)
 
 // * ie
 x => x.foo(1)
-//│ {foo: 1 -> 'a} -> 'a
+//│ forall 'a. {foo: 1 -> 'a} -> 'a
 
 
 _ + _

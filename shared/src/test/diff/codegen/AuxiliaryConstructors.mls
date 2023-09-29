@@ -231,10 +231,10 @@ class E {
 
 :e
 constructor(x: Int)
-//│ ╔══[ERROR] constructor must be in a class.
+//│ ╔══[ERROR] Illegal position for this constructor statement.
 //│ ║  l.233: 	constructor(x: Int)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^
-//│ []
+//│ 
 //│ Code generation encountered an error:
 //│   unexpected constructor.
 

@@ -147,7 +147,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       (5, 5)
     case _ =>
       val r = opStr.last
-      (prec(opStr.head), prec(r) - (if (r === '@' || r === '/' || r === ',') 1 else 0))
+      (prec(opStr.head), prec(r) - (if (r === '@' || r === '/' || r === ',' || r === ':') 1 else 0))
   }
   
   // def pe(msg: Message, l: Loc, rest: (Message, Opt[Loc])*): Unit =
@@ -546,7 +546,10 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
     }
   
   private def yeetSpaces: Ls[TokLoc] =
-    cur.dropWhile(_._1 === SPACE && { consume; true })
+    cur.dropWhile(tkloc =>
+      (tkloc._1 === SPACE
+      || tkloc._1.isInstanceOf[COMMENT] // TODO properly retrieve and sotre all comments in AST?
+      ) && { consume; true })
   
   final def funParams(implicit et: ExpectThen, fe: FoundErr, l: Line): Ls[Tup] = wrap(()) { l =>
     yeetSpaces match {
@@ -698,6 +701,17 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         consume
         val e = expr(0)
         L(IfElse(e).withLoc(S(l0 ++ e.toLoc)))
+      case (KEYWORD("case"), l0) :: _ =>
+        consume
+        exprOrIf(0)(et = true, fe = fe, l = implicitly) match {
+          case L(body) =>
+            R(Lam(PlainTup(Var("case$scrut")), If(IfOpApp(Var("case$scrut"), Var("is"), body), N)))
+          case R(rhs) =>
+            err((msg"Expected 'then'/'else' clause after 'case'; found ${rhs.describe} instead" -> rhs.toLoc ::
+              msg"Note: 'case' expression starts here:" -> S(l0) :: Nil))
+            R(Lam(PlainTup(Var("case$scrut")), If(IfElse(rhs), N)))
+        }
+        
       case (KEYWORD("if"), l0) :: _ =>
         consume
         cur match {
@@ -746,8 +760,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                       S(e.toLoc.foldRight(l1)(_ ++ _)))
                     case Nil => (msg"${e.describe}", e.toLoc)
                   }
-                  err((msg"Expected 'then'/'else' clause; found $found instead" -> loc ::
-                    msg"Note: 'if' expression started here:" -> S(l0) :: Nil))
+                  err((msg"Expected 'then'/'else' clause after 'if'; found $found instead" -> loc ::
+                    msg"Note: 'if' expression starts here:" -> S(l0) :: Nil))
                   R(If(IfThen(e, errExpr), N))
               }
           }

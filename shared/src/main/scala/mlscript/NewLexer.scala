@@ -290,6 +290,7 @@ object NewLexer {
     "if",
     "then",
     "else",
+    "case",
     "fun",
     "val",
     "var",

@@ -17,12 +17,12 @@ if x is
 //│ ╔══[PARSE ERROR] Unexpected end of input; an expression was expected here
 //│ ║  l.12: 	  else e
 //│ ╙──      	  ^
-//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause; found operator application instead
+//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'if'; found operator application instead
 //│ ║  l.11: 	if x is
 //│ ║        	   ^^^^
 //│ ║  l.12: 	  else e
 //│ ║        	^^
-//│ ╟── Note: 'if' expression started here:
+//│ ╟── Note: 'if' expression starts here:
 //│ ║  l.11: 	if x is
 //│ ╙──      	^^
 //│ Parsed: {if (is(x,)(undefined,)) then undefined}
@@ -34,12 +34,12 @@ if x is
 //│ ╔══[PARSE ERROR] Unexpected 'else' keyword here
 //│ ║  l.32: 	  P else e
 //│ ╙──      	    ^^^^
-//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause; found operator application instead
+//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'if'; found operator application instead
 //│ ║  l.31: 	if x is
 //│ ║        	   ^^^^
 //│ ║  l.32: 	  P else e
 //│ ║        	^^^^
-//│ ╟── Note: 'if' expression started here:
+//│ ╟── Note: 'if' expression starts here:
 //│ ║  l.31: 	if x is
 //│ ╙──      	^^
 //│ Parsed: {if (is(x,)({P},)) then undefined}
