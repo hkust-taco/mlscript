@@ -29,7 +29,6 @@ foo
 //│     = 111
 
 
-// FIXME: returns a thunk
 fun main =
   log("Hello")
 main
