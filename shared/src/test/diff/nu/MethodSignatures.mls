@@ -14,12 +14,12 @@ module Oops {
 module Oops {
   fun a : Int
 }
-//│ ╔══[ERROR] Member `a` is declared in parent but not implemented in `Oops`
+//│ ╔══[ERROR] Member `a` is declared (or its declaration is inherited) but is not implemented in `Oops`
 //│ ║  l.14: 	module Oops {
 //│ ║        	       ^^^^
 //│ ╟── Declared here:
 //│ ║  l.15: 	  fun a : Int
-//│ ╙──      	      ^^^^^^^
+//│ ╙──      	  ^^^^^^^^^^^
 //│ module Oops {
 //│   fun a: Int
 //│ }
@@ -32,7 +32,7 @@ module Oops {
 }
 //│ ╔══[ERROR] A type signature for 'a' was already given
 //│ ║  l.30: 	  fun a : string
-//│ ╙──      	      ^^^^^^^^^^
+//│ ╙──      	  ^^^^^^^^^^^^^^
 //│ module Oops {
 //│   fun a: string
 //│ }
@@ -86,7 +86,7 @@ module A {
 // * With a type signature, it is generalized and checked against the signature
 module A {
   
-  fun i: forall 'a; 'a -> 'a
+  fun i: forall 'a: 'a -> 'a
   fun i(x) = x
   
   fun j: 'b -> 'b
@@ -149,7 +149,9 @@ module M {
 //│ ║  l.133: 	  fun a: A
 //│ ╙──       	      ^^^^
 //│ module M {
-//│   class A
+//│   class A {
+//│     constructor()
+//│   }
 //│   fun a: A
 //│ }
 
@@ -160,7 +162,7 @@ module M {
   fun a = 1
 }
 //│ ╔══[ERROR] undeclared `this`
-//│ ║  l.159: 	  fun a: this.A
+//│ ║  l.161: 	  fun a: this.A
 //│ ╙──       	         ^^^^
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 

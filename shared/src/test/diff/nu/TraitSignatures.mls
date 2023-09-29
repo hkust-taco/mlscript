@@ -8,7 +8,7 @@ declare trait Foo: (x: Num) => Num {
   val y: Str
 }
 //│ declare trait Foo: (x: Num) -> Num {
-//│   let y: Str
+//│   val y: Str
 //│ }
 
 (f: Foo) => [f.y, f(0)]
@@ -17,7 +17,7 @@ declare trait Foo: (x: Num) => Num {
 //│     = [Function: res]
 
 
-declare trait FooPoly: forall 'a; (x: 'a) => 'a
+declare trait FooPoly: forall 'a: (x: 'a) => 'a
 //│ declare trait FooPoly: forall 'a. (x: 'a) -> 'a
 
 (f: FooPoly) => [f(0), f(true)]

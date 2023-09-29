@@ -42,28 +42,28 @@ foo
 //│ ║        	^^^
 //│ ║  l.36: 	  b
 //│ ╙──      	^^^
-//│ Parsed: {foo ({a; b},)}
+//│ Parsed: {foo({a; b},)}
 
 foo(
   a,
   b
 )
 //│ |foo|(|→|a|,|↵|b|←|↵|)|
-//│ Parsed: {foo (a, b,)}
+//│ Parsed: {foo(a, b,)}
 
 foo(
   a,
   b,
 )
 //│ |foo|(|→|a|,|↵|b|,|←|↵|)|
-//│ Parsed: {foo (a, b,)}
+//│ Parsed: {foo(a, b,)}
 
 foo(
   a
   b
 )
 //│ |foo|(|→|a|↵|b|←|↵|)|
-//│ Parsed: {foo ({a; b},)}
+//│ Parsed: {foo({a; b},)}
 
 foo(
     a
@@ -75,7 +75,7 @@ foo(
 //│ ║        	^^^
 //│ ║  l.71: 	)
 //│ ╙──      	^
-//│ Parsed: {foo (a,)}
+//│ Parsed: {foo(a,)}
 
 // TODO
 foo of
@@ -89,26 +89,26 @@ foo of
 //│ ╔══[PARSE ERROR] Unexpected '=' here
 //│ ║  l.83: 	  fun f = 1
 //│ ╙──      	        ^
-//│ Parsed: {foo ({a; f},)}
+//│ Parsed: {foo({a; f},)}
 
 foo +
   a
   b
 //│ |foo| |+|→|a|↵|b|←|
-//│ Parsed: {+ (foo,) ({a; b},)}
+//│ Parsed: {+(foo,)({a; b},)}
 
 
 foo(a, b, c)
 foo of a, b, c
 //│ |foo|(|a|,| |b|,| |c|)|↵|foo| |#of| |a|,| |b|,| |c|
-//│ Parsed: {foo (a, b, c,); foo (a, b, c,)}
+//│ Parsed: {foo(a, b, c,); foo(a, b, c,)}
 
 foo of
   aaaaa,
   bbbbb,
   ccccc
 //│ |foo| |#of|→|aaaaa|,|↵|bbbbb|,|↵|ccccc|←|
-//│ Parsed: {foo (aaaaa, bbbbb, ccccc,)}
+//│ Parsed: {foo(aaaaa, bbbbb, ccccc,)}
 
 foo of
   a
@@ -124,14 +124,14 @@ foo of
 //│ ║         	^^^^^
 //│ ║  l.117: 	    y
 //│ ╙──       	^^^^^
-//│ Parsed: {foo ({a; boo ({x; y},); c},)}
+//│ Parsed: {foo({a; boo({x; y},); c},)}
 
 
 fun foo =
   print("ok")
   print("ko")
 //│ |#fun| |foo| |#=|→|print|(|"ok"|)|↵|print|(|"ko"|)|←|
-//│ Parsed: {fun foo = {print ("ok",); print ("ko",)}}
+//│ Parsed: {fun foo = {print("ok",); print("ko",)}}
 
 fun foo =
   
@@ -140,14 +140,14 @@ fun foo =
   print("ko")
   
 //│ |#fun| |foo| |#=|→|print|(|"ok"|)|↵|print|(|"ko"|)|↵|←|
-//│ Parsed: {fun foo = {print ("ok",); print ("ko",)}}
+//│ Parsed: {fun foo = {print("ok",); print("ko",)}}
 
 fun foo =
   fun local(x) = x + 1
   print(local(1))
   class Foo
 //│ |#fun| |foo| |#=|→|#fun| |local|(|x|)| |#=| |x| |+| |1|↵|print|(|local|(|1|)|)|↵|#class| |Foo|←|
-//│ Parsed: {fun foo = {fun local = (x,) => + (x,) (1,); print (local (1,),); class Foo() {}}}
+//│ Parsed: {fun foo = {fun local = (x,) => +(x,)(1,); print(local(1,),); class Foo {}}}
 
 fun foo =
   fun local(x) =
@@ -161,6 +161,31 @@ fun foo =
   print of local of 0 + local of 1
   fun tmp = 2
 //│ |#fun| |foo| |#=|→|#fun| |local|(|x|)| |#=|→|#class| |Foo| |{|→|#fun| |bar| |#=| |x| |+| |1|←|↵|}|↵|Foo|(||)|.bar|←|↵|print| |#of| |local|(|0|)| |+| |local|(|1|)|↵|print| |#of| |(|local| |#of| |0|)| |+| |local| |#of| |1|↵|#fun| |tmp| |#=| |1|↵|print| |#of| |local| |#of| |0| |+| |local| |#of| |1|↵|#fun| |tmp| |#=| |2|←|
-//│ Parsed: {fun foo = {fun local = (x,) => {class Foo() {fun bar = + (x,) (1,)}; (Foo ()).bar}; print (+ (local (0,),) (local (1,),),); print (+ ('(' local (0,) ')',) (local (1,),),); fun tmp = 1; print (local (+ (0,) (local (1,),),),); fun tmp = 2}}
+//│ Parsed: {fun foo = {fun local = (x,) => {class Foo {fun bar = +(x,)(1,)}; (Foo()).bar}; print(+(local(0,),)(local(1,),),); print(+('(' local(0,) ')',)(local(1,),),); fun tmp = 1; print(local(+(0,)(local(1,),),),); fun tmp = 2}}
+
+
+
+log(1); log(a)
+//│ |log|(|1|)|;| |log|(|a|)|
+//│ Parsed: {{log(1,); log(a,)}}
+
+constructor(){
+  a = 1
+  a = 2
+}
+//│ |#constructor|(||)|{|→|a| |#=| |1|↵|a| |#=| |2|←|↵|}|
+//│ Parsed: {constructor() {a = 1; a = 2}}
+
+a = 1; log(a)
+//│ |a| |#=| |1|;| |log|(|a|)|
+//│ Parsed: {a = {1; log(a,)}}
+
+:pe
+f(a) = 1
+//│ |f|(|a|)| |#=| |1|
+//│ ╔══[PARSE ERROR] Expected end of input; found '=' instead
+//│ ║  l.184: 	f(a) = 1
+//│ ╙──       	     ^
+//│ Parsed: {f(a,)}
 
 

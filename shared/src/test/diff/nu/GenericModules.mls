@@ -7,27 +7,27 @@ module Test<A> {
   fun bar: A => A = id
   fun baz(x: A) = x
   fun poly0: 'a -> 'a
-  fun poly1: forall 'a; 'a -> 'a
+  fun poly1: forall 'a: 'a -> 'a
   fun poly2: 'a -> 'a = id
 }
-//│ ╔══[ERROR] Member `foo` is declared in parent but not implemented in `Test`
+//│ ╔══[ERROR] Member `foo` is declared (or its declaration is inherited) but is not implemented in `Test`
 //│ ║  l.5: 	module Test<A> {
 //│ ║       	       ^^^^
 //│ ╟── Declared here:
 //│ ║  l.6: 	  fun foo: A => A
-//│ ╙──     	      ^^^^^^^^^^^
-//│ ╔══[ERROR] Member `poly0` is declared in parent but not implemented in `Test`
+//│ ╙──     	  ^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Member `poly0` is declared (or its declaration is inherited) but is not implemented in `Test`
 //│ ║  l.5: 	module Test<A> {
 //│ ║       	       ^^^^
 //│ ╟── Declared here:
 //│ ║  l.9: 	  fun poly0: 'a -> 'a
-//│ ╙──     	      ^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Member `poly1` is declared in parent but not implemented in `Test`
+//│ ╙──     	  ^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Member `poly1` is declared (or its declaration is inherited) but is not implemented in `Test`
 //│ ║  l.5: 	module Test<A> {
 //│ ║       	       ^^^^
 //│ ╟── Declared here:
-//│ ║  l.10: 	  fun poly1: forall 'a; 'a -> 'a
-//│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.10: 	  fun poly1: forall 'a: 'a -> 'a
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ module Test[A] {
 //│   fun bar: A -> A
 //│   fun baz: (x: A) -> A
@@ -99,7 +99,7 @@ Test<Int> .foo
 //│ ╔══[ERROR] Type application syntax is not yet supported
 //│ ║  l.98: 	Test<Int> .foo
 //│ ╙──      	^^^^^^^^^
-//│ error
+//│ ??A -> ??A0
 //│ res
 //│     = undefined
 
@@ -108,7 +108,7 @@ Test<Int> .foo
 //│ ╔══[ERROR] Type application syntax is not yet supported
 //│ ║  l.107: 	(Test<Int>).foo
 //│ ╙──       	 ^^^^^^^^^
-//│ error
+//│ ??A -> ??A0
 //│ res
 //│     = undefined
 

@@ -48,11 +48,11 @@ fun foo(x: Foo[Int]): Foo[Num] = x
 
 
 // :e // TODO check variance annotations!
-class Oops0[in A](x: A)
+class Oops0[in A](val x: A)
 //│ class Oops0[A](x: A)
 
 // :e // TODO check variance annotations!
-class Oops0[out A](x: A -> Int)
+class Oops0[out A](val x: A -> Int)
 //│ class Oops0[A](x: A -> Int)
 
 let o = Oops0(id)
@@ -88,7 +88,7 @@ o.x(123)
 //│     = 123
 
 
-class Oops1[out A](x: A -> A, y: A)
+class Oops1[out A](val x: A -> A, val y: A)
 //│ class Oops1[A](x: A -> A, y: A)
 
 let o = Oops1(id, 123)
@@ -115,7 +115,7 @@ o.x(error) + 1
 //│   Error: an error was thrown
 
 
-class Oops2[out A](x: A -> A, y: A)
+class Oops2[out A](val x: A -> A, val y: A)
 //│ class Oops2[A](x: A -> A, y: A)
 
 let o = Oops2(id, 123)

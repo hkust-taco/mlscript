@@ -53,7 +53,7 @@ module M extends Mx {
 }
 //│ module M {
 //│   fun id1: forall 'a. ('b & 'a) -> (0 | 'a)
-//│   let r: 0 | 'b
+//│   val r: 0 | 'b
 //│ }
 
 mixin Mx {
@@ -75,7 +75,7 @@ module M extends Mx {
 //│   fun id1: anything -> error
 //│ }
 //│ Runtime error:
-//│   TypeError: self.id2 is not a function
+//│   TypeError: qualifier1.id2 is not a function
 
 :e
 module M extends Mx {
@@ -103,13 +103,21 @@ module M extends Mx {
 
 
 
+:e // FIXME
 class C {
-  fun id1(x) = x
-  fun f = (id1(true), id1(0))
+  virtual fun id1(x) = x
+  fun f = (this.id1(true), this.id1(0))
   fun id2(x) = x
 }
+//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ║  l.109: 	  fun f = (this.id1(true), this.id1(0))
+//│ ╙──       	               ^^^^
+//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ║  l.109: 	  fun f = (this.id1(true), this.id1(0))
+//│ ╙──       	                               ^^^^
 //│ class C {
-//│   fun f: [true, 0]
+//│   constructor()
+//│   fun f: [error, error]
 //│   fun id1: forall 'a. 'a -> 'a
 //│   fun id2: forall 'b. 'b -> 'b
 //│ }
@@ -120,10 +128,13 @@ module M extends C {
   this.id2(true)
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.120: 	  this.id2(true)
+//│ ║  l.128: 	  this.id2(true)
 //│ ╙──       	      ^^^^
+//│ ╔══[ERROR] Cannot access `this` during object initialization
+//│ ║  l.128: 	  this.id2(true)
+//│ ╙──       	  ^^^^
 //│ module M extends C {
-//│   fun f: [true, 0]
+//│   fun f: [error, error]
 //│   fun id1: forall 'a. 'a -> 'a
 //│   fun id2: forall 'b. 'b -> 'b
 //│ }
@@ -133,13 +144,13 @@ module M extends C {
   fun g = (this.id2(true), this.id2(0))
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.133: 	  fun g = (this.id2(true), this.id2(0))
+//│ ║  l.144: 	  fun g = (this.id2(true), this.id2(0))
 //│ ╙──       	               ^^^^
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.133: 	  fun g = (this.id2(true), this.id2(0))
+//│ ║  l.144: 	  fun g = (this.id2(true), this.id2(0))
 //│ ╙──       	                               ^^^^
 //│ module M extends C {
-//│   fun f: [true, 0]
+//│   fun f: [error, error]
 //│   fun g: [error, error]
 //│   fun id1: forall 'a. 'a -> 'a
 //│   fun id2: forall 'b. 'b -> 'b
@@ -156,7 +167,7 @@ M.id2
 //│     = [Function: id2]
 
 M.f
-//│ [true, 0]
+//│ [error, error]
 //│ res
 //│     = [ true, 0 ]
 
@@ -171,18 +182,18 @@ module M extends C {
   fun id1 = succ
 }
 //│ ╔══[ERROR] Type mismatch in definition of method id1:
-//│ ║  l.171: 	  fun id1 = succ
+//│ ║  l.182: 	  fun id1 = succ
 //│ ║         	      ^^^^^^^^^^
 //│ ╙── variable of type `?a` is not an instance of type `Int`
 //│ ╔══[ERROR] Type mismatch in definition of method id1:
-//│ ║  l.171: 	  fun id1 = succ
+//│ ║  l.182: 	  fun id1 = succ
 //│ ║         	      ^^^^^^^^^^
 //│ ╟── expression of type `Int` does not match type `?a`
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.107: 	  fun id1(x) = x
-//│ ╙──       	               ^
+//│ ║  l.108: 	  virtual fun id1(x) = x
+//│ ╙──       	                       ^
 //│ module M extends C {
-//│   fun f: [true, 0]
+//│   fun f: [error, error]
 //│   fun id1: Int -> Int
 //│   fun id2: forall 'a. 'a -> 'a
 //│ }
@@ -201,6 +212,9 @@ M.id1
 
 // FIXME? parsing/semantics of this, currently treated as a named tuple...
 (M: C)
+//│ ╔══[ERROR] Construction of unparameterized class C should use the `new` keyword
+//│ ║  l.214: 	(M: C)
+//│ ╙──       	    ^
 //│ [M: () -> C]
 //│ res
 //│     = [ [class C] ]
@@ -219,19 +233,19 @@ module M {
   fun oops(x) = m := x
 }
 //│ ╔══[PARSE ERROR] Unexpected 'mut' keyword in expression position
-//│ ║  l.218: 	  mut val m = None
+//│ ║  l.232: 	  mut val m = None
 //│ ╙──       	  ^^^
 //│ ╔══[PARSE ERROR] Unexpected 'val' keyword in expression position
-//│ ║  l.218: 	  mut val m = None
+//│ ║  l.232: 	  mut val m = None
 //│ ╙──       	      ^^^
 //│ ╔══[ERROR] identifier not found: :=
-//│ ║  l.219: 	  fun oops(x) = m := x
+//│ ║  l.233: 	  fun oops(x) = m := x
 //│ ╙──       	                  ^^
 //│ ╔══[ERROR] identifier not found: m
-//│ ║  l.219: 	  fun oops(x) = m := x
+//│ ║  l.233: 	  fun oops(x) = m := x
 //│ ╙──       	                ^
 //│ ╔══[ERROR] Unexpected equation in this position
-//│ ║  l.218: 	  mut val m = None
+//│ ║  l.232: 	  mut val m = None
 //│ ╙──       	          ^^^^^^^^
 //│ module M {
 //│   fun oops: anything -> error

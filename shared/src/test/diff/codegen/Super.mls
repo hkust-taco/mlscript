@@ -4,10 +4,10 @@
 
 :js
 mixin Foo0 {
-  let foo0 = 0
+  val foo0 = 0
 }
 //│ mixin Foo0() {
-//│   let foo0: 0
+//│   val foo0: 0
 //│ }
 //│ // Prelude
 //│ let res;
@@ -15,7 +15,7 @@ mixin Foo0 {
 //│   constructor() {
 //│   }
 //│   Foo0(base) {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     return (class Foo0 extends base {
 //│       #foo0;
 //│       get foo0() { return this.#foo0; }
@@ -33,20 +33,20 @@ mixin Foo0 {
 
 :js
 mixin Foo1 {
-  let foo0 = 1
-  let foo1 = super.foo0
+  val foo0 = 1
+  val foo1 = super.foo0
 }
 //│ mixin Foo1() {
 //│   super: {foo0: 'foo0}
-//│   let foo0: 1
-//│   let foo1: 'foo0
+//│   val foo0: 1
+//│   val foo1: 'foo0
 //│ }
 //│ // Prelude
 //│ class TypingUnit1 {
 //│   constructor() {
 //│   }
 //│   Foo1(base) {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     return (class Foo1 extends base {
 //│       #foo0;
 //│       get foo0() { return this.#foo0; }
@@ -68,8 +68,8 @@ mixin Foo1 {
 
 module Test0 extends Foo0, Foo1
 //│ module Test0 {
-//│   let foo0: 1
-//│   let foo1: 0
+//│   val foo0: 1
+//│   val foo1: 0
 //│ }
 
 [Test0.foo0, Test0.foo1]
@@ -78,14 +78,13 @@ module Test0 extends Foo0, Foo1
 //│     = [ 1, 0 ]
 
 
-:ShowRepl
 :js
 :e
 mixin Foo2 {
   fun foo2 = super
 }
 //│ ╔══[ERROR] Illegal use of `super`
-//│ ║  l.85: 	  fun foo2 = super
+//│ ║  l.84: 	  fun foo2 = super
 //│ ╙──      	             ^^^^^
 //│ mixin Foo2() {
 //│   super: 'super
@@ -96,7 +95,7 @@ mixin Foo2 {
 //│   constructor() {
 //│   }
 //│   Foo2(base) {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     return (class Foo2 extends base {
 //│       constructor(...rest) {
 //│         super(...rest);
@@ -125,7 +124,7 @@ module Test0 extends Foo2
 //│   constructor() {
 //│   }
 //│   get Test0() {
-//│     const outer = this;
+//│     const qualifier = this;
 //│     if (this.#Test0 === undefined) {
 //│       class Test0 extends Foo2(Object) {
 //│         constructor() {
@@ -159,6 +158,7 @@ class Foo extends Foo0 {
   fun foo0(n) = [super.foo0, super.foo0 + n]
 }
 //│ class Foo {
+//│   constructor()
 //│   fun foo0: Int -> [0, Int]
 //│ }
 

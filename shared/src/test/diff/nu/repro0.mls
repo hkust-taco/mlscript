@@ -2,7 +2,7 @@
 :NoJS
 
 
-class Add[E](lhs: E)
+class Add[E](val lhs: E)
 val add11 = Add(add11)
 module EvalAddLit {
   fun eval(e: Add['A]) =
@@ -10,7 +10,7 @@ module EvalAddLit {
 }
 let res = EvalAddLit.eval(add11)
 //│ class Add[E](lhs: E)
-//│ let add11: 'E
+//│ val add11: 'E
 //│ module EvalAddLit {
 //│   fun eval: forall 'lhs 'A. (e: 'lhs) -> nothing
 //│ }

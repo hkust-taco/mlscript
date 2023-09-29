@@ -76,28 +76,49 @@ fun foo(x: Object) = if x is A then true else false
 // TODO make this a rigid type variable!
 // :e
 fun foo = forall 'a; (x: 'a) => if x is A then true else false
-//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ╔══[PARSE ERROR] Expected `:` after `forall` section
 //│ ║  l.78: 	fun foo = forall 'a; (x: 'a) => if x is A then true else false
-//│ ║        	                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── rigid type variable of type `'a` is not an instance of type `Object`
+//│ ╙──      	                   ^
+//│ ╔══[PARSE ERROR] Expected end of input; found operator instead
 //│ ║  l.78: 	fun foo = forall 'a; (x: 'a) => if x is A then true else false
-//│ ║        	                 ^^
-//│ ╟── but it flows into reference with expected type `Object`
-//│ ║  l.78: 	fun foo = forall 'a; (x: 'a) => if x is A then true else false
-//│ ╙──      	                                   ^
-//│ fun foo: (x: anything) -> Bool
+//│ ╙──      	                   ^
+//│ fun foo: undefined
 
 
 
-:ge
+:e
 Object
-//│ () -> Object
+//│ ╔══[ERROR] Class Object is abstract and cannot be instantiated
+//│ ║  l.90: 	Object
+//│ ╙──      	^^^^^^
+//│ ╔══[ERROR] Class Object cannot be instantiated as it exposes no such constructor
+//│ ║  l.90: 	Object
+//│ ╙──      	^^^^^^
+//│ error
 //│ Code generation encountered an error:
 //│   unresolved symbol Object
 
-:ge
+:e
 Object()
-//│ Object
+//│ ╔══[ERROR] Class Object is abstract and cannot be instantiated
+//│ ║  l.102: 	Object()
+//│ ╙──       	^^^^^^
+//│ ╔══[ERROR] Class Object cannot be instantiated as it exposes no such constructor
+//│ ║  l.102: 	Object()
+//│ ╙──       	^^^^^^
+//│ error
+//│ Code generation encountered an error:
+//│   unresolved symbol Object
+
+:e
+new Object
+//│ ╔══[ERROR] Class Object is abstract and cannot be instantiated
+//│ ║  l.114: 	new Object
+//│ ╙──       	^^^^^^^^^^
+//│ ╔══[ERROR] Class Object cannot be instantiated as it exposes no such constructor
+//│ ║  l.114: 	new Object
+//│ ╙──       	^^^^^^^^^^
+//│ error
 //│ Code generation encountered an error:
 //│   unresolved symbol Object
 
@@ -109,7 +130,6 @@ class B() extends Object
 //│ Code generation encountered an error:
 //│   unresolved parent Object.
 
-// TODO
 class C() extends A
 //│ class C() extends A
 

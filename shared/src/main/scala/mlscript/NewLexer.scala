@@ -26,17 +26,19 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
   def isDigit(c: Char): Bool =
     c >= '0' && c <= '9'
   
+  /* // TODO remove (unused)
   private val isNonStickyKeywordChar = Set(
     ',',
     ':',
     ';',
   )
+  */
   
   private val isSymKeyword = Set(
     // "->",
     "=",
     ":",
-    ";",
+    ";;",
     "#",
     // ".",
     // "<",
@@ -325,7 +327,8 @@ object NewLexer {
     "null",
     "undefined",
     "abstract",
-    "constructor"
+    "constructor",
+    "virtual"
   )
   
   def printToken(tl: TokLoc): Str = tl match {

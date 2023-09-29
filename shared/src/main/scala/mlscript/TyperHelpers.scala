@@ -783,7 +783,7 @@ abstract class TyperHelpers { Typer: Typer =>
       def childrenPolField(pol: PolMap)(fld: FieldType): List[PolMap -> SimpleType] =
         fld.lb.map(pol.contravar -> _).toList ::: pol.covar -> fld.ub :: Nil
       def childrenPolMem(m: NuMember): List[PolMap -> SimpleType] = m match {
-        case NuParam(nme, ty) => childrenPolField(PolMap.pos)(ty) // TODO invariant when mutable
+        case NuParam(nme, ty, pub) => childrenPolField(PolMap.pos)(ty) // TODO invariant when mutable
         case TypedNuFun(level, fd, ty) => pol -> ty :: Nil
         case td: TypedNuDecl => TypedTypingUnit(td :: Nil, N).childrenPol(pol: PolMap) // TODO refactor
         // case NuTypeParam(nme, ty) => childrenPolField(PolMap.pos)(ty)
@@ -830,7 +830,8 @@ abstract class TyperHelpers { Typer: Typer =>
             case cls: TypedNuCls =>
               cls.tparams.iterator.map(pol.invar -> _._2) ++
               // cls.params.flatMap(p => childrenPolField(pol.invar)(p._2))
-                cls.params.flatMap(p => childrenPolField(PolMap.pos)(p._2)) ++
+                cls.params.toList.flatMap(_.flatMap(p => childrenPolField(PolMap.pos)(p._2))) ++
+                cls.auxCtorParams.toList.flatMap(_.map(PolMap.neg -> _._2)) ++
                 cls.members.valuesIterator.flatMap(childrenPolMem) ++
                 S(pol.contravar -> cls.thisTy) ++
                 S(pol.covar -> cls.sign) ++
@@ -922,7 +923,7 @@ abstract class TyperHelpers { Typer: Typer =>
     }
     
     private def childrenMem(m: NuMember): List[ST] = m match {
-      case NuParam(nme, ty) => ty.lb.toList ::: ty.ub :: Nil
+      case NuParam(nme, ty, pub) => ty.lb.toList ::: ty.ub :: Nil
       case TypedNuFun(level, fd, ty) => ty :: Nil
       case TypedNuDummy(d) => Nil
       case _ => ??? // TODO
@@ -962,7 +963,8 @@ abstract class TyperHelpers { Typer: Typer =>
               S(mxn.thisTy)
           case cls: TypedNuCls =>
             cls.tparams.iterator.map(_._2) ++
-              cls.params.flatMap(p => p._2.lb.toList ::: p._2.ub :: Nil) ++
+              cls.params.toList.flatMap(_.flatMap(p => p._2.lb.toList ::: p._2.ub :: Nil)) ++
+              cls.auxCtorParams.toList.flatMap(_.values) ++
               cls.members.valuesIterator.flatMap(childrenMem) ++
               S(cls.thisTy) ++
               S(cls.sign) ++
@@ -1301,9 +1303,10 @@ abstract class TyperHelpers { Typer: Typer =>
       case TypedNuAls(level, td, tparams, body) =>
         tparams.iterator.foreach(tp => apply(pol.invar)(tp._2))
         apply(pol)(body)
-      case TypedNuCls(level, td, tparams, params, members, thisTy, sign, _, ptps) =>
+      case TypedNuCls(level, td, tparams, params, acParams, members, thisTy, sign, _, ptps) =>
         tparams.iterator.foreach(tp => apply(pol.invar)(tp._2))
-        params.foreach(p => applyField(pol)(p._2))
+        params.foreach(_.foreach(p => applyField(pol)(p._2)))
+        acParams.foreach(_.foreach(p => apply(pol.contravar)(p._2)))
         members.valuesIterator.foreach(applyMem(pol))
         apply(pol.contravar)(thisTy)
         apply(pol.contravar)(sign)
@@ -1320,7 +1323,7 @@ abstract class TyperHelpers { Typer: Typer =>
         members.valuesIterator.foreach(applyMem(pol))
         apply(pol.contravar)(thisTy)
         apply(pol.contravar)(superTy)
-      case NuParam(nme, ty) => applyField(pol)(ty)
+      case NuParam(nme, ty, pub) => applyField(pol)(ty)
       case TypedNuFun(level, fd, ty) => apply(pol)(ty)
       case TypedNuDummy(d) => ()
       // case NuTypeParam(nme, ty) => applyField(pol)(ty)

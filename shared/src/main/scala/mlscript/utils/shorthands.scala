@@ -28,6 +28,8 @@ object shorthands {
   def some[A]: A => Option[A] = Some(_)
   def none[A]: Option[A] = None
   
+  def nil[A]: List[A] = Nil
+  
   type Paf[-A,+B] = PartialFunction[A,B]
   
   type Exc = Exception

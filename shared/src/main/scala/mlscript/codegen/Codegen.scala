@@ -833,7 +833,8 @@ final case class JSClassDecl(
 final case class JSClassNewDecl(
     name: Str,
     fields: Ls[Str],
-    privateMem: Ls[Str],
+    accessors: Ls[Str],
+    privateMems: Ls[Str],
     `extends`: Opt[JSExpr],
     superFields: Ls[JSExpr],
     ctorParams: Ls[Str],
@@ -842,7 +843,8 @@ final case class JSClassNewDecl(
     implements: Ls[Str],
     initStmts: Ls[JSStmt],
     nestedTypes: Ls[Str],
-    ctorOverridden: Bool
+    ctorOverridden: Bool,
+    staticMethods: Ls[JSClassMemberDecl]
 ) extends JSStmt {
   def toSourceCode: SourceCode = {
     val constructor: SourceCode = {
@@ -855,8 +857,11 @@ final case class JSClassNewDecl(
         if (s.isEmpty) s"${p._1}"
         else s"${p._1}, $s")
       nestedTypes.foreach(t => buffer += s"  #$t;")
-      privateMem.distinct.foreach(f => {
+      privateMems.distinct.foreach(f => {
         buffer += s"  #${f};"
+      })
+      accessors.distinct.foreach(f => {
+        if (!privateMems.contains(f)) buffer += s"  #${f};"
         buffer += s"  get ${f}() { return this.#${f}; }"
       })
       buffer += s"  constructor($params) {"
@@ -892,18 +897,22 @@ final case class JSClassNewDecl(
       methods.foldLeft(SourceCode.empty) { case (x, y) =>
         x + y.toSourceCode.indented
       }
+    val staticMethodsSourceCode =
+      staticMethods.foldLeft(SourceCode.empty) { case (x, y) =>
+        x + SourceCode("static") + y.toSourceCode.indented
+      }
     val epilogue = SourceCode("}")
     `extends` match {
       case Some(base) =>
         SourceCode(s"class $name extends ") ++ base.toSourceCode ++
-          SourceCode(" {") + constructor + methodsSourceCode + epilogue
+          SourceCode(" {") + constructor + methodsSourceCode + staticMethodsSourceCode + epilogue
       case None =>
-        if (fields.isEmpty && methods.isEmpty && implements.isEmpty && initStmts.isEmpty) {
+        if (fields.isEmpty && methods.isEmpty && implements.isEmpty && accessors.isEmpty && initStmts.isEmpty && staticMethods.isEmpty) {
           SourceCode(s"class $name {}")
         } else {
           SourceCode(
             s"class $name {" :: Nil
-          ) + constructor + methodsSourceCode + epilogue
+          ) + constructor + methodsSourceCode + staticMethodsSourceCode + epilogue
         }
     }
   }

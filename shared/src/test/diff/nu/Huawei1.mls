@@ -14,12 +14,14 @@ let c = C(123)
 //│   = C {}
 
 class B
-//│ class B
+//│ class B {
+//│   constructor()
+//│ }
 
 fun bar(c) = if c is
   C(y) then y
   B    then 0
-//│ fun bar: forall 'x. (B | C['x]) -> (0 | 'x)
+//│ fun bar: forall 'a. (B | C['a]) -> (0 | 'a)
 
 bar(c)
 //│ 0 | 123
@@ -40,17 +42,17 @@ bar(c)
 :e
 bar(C(true))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.41: 	bar(C(true))
+//│ ║  l.43: 	bar(C(true))
 //│ ║        	^^^^^^^^^^^^
 //│ ╟── reference of type `true` is not an instance of type `Int`
-//│ ║  l.41: 	bar(C(true))
+//│ ║  l.43: 	bar(C(true))
 //│ ║        	      ^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.30: 	    C(y) then y + 1
+//│ ║  l.32: 	    C(y) then y + 1
 //│ ║        	              ^
-//│ ╟── from reference:
-//│ ║  l.29: 	fun bar(c) = if c is
-//│ ║        	                ^
+//│ ╟── from field selection:
+//│ ║  l.4: 	class C[A](x: A) {
+//│ ║       	           ^
 //│ ╟── Note: type parameter A is defined at:
 //│ ║  l.4: 	class C[A](x: A) {
 //│ ╙──     	        ^

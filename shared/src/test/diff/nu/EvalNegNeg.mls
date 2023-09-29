@@ -14,8 +14,8 @@ mixin EvalBase {
       Add(l, r) then this.eval(l) + this.eval(r)
 }
 //│ mixin EvalBase() {
-//│   this: {eval: 'lhs -> Int}
-//│   fun eval: (Add['lhs] | Lit) -> Int
+//│   this: {eval: 'a -> Int}
+//│   fun eval: (Add['a] | Lit) -> Int
 //│ }
 
 
@@ -30,8 +30,8 @@ mixin EvalNeg {
 }
 //│ mixin EvalNeg() {
 //│   super: {eval: 'a -> 'b}
-//│   this: {eval: 'expr -> Int}
-//│   fun eval: (Neg['expr] | Object & 'a & ~#Neg) -> (Int | 'b)
+//│   this: {eval: 'c -> Int}
+//│   fun eval: (Neg['c] | Object & 'a & ~#Neg) -> (Int | 'b)
 //│ }
 
 
@@ -42,8 +42,8 @@ mixin EvalNegNeg {
 }
 //│ mixin EvalNegNeg() {
 //│   super: {eval: (Neg[nothing] | 'a) -> 'b}
-//│   this: {eval: 'expr -> 'b}
-//│   fun eval: (Neg[Neg['expr] | Object & ~#Neg] | Object & 'a & ~#Neg) -> 'b
+//│   this: {eval: 'c -> 'b}
+//│   fun eval: (Neg[Neg['c] | Object & ~#Neg] | Object & 'a & ~#Neg) -> 'b
 //│ }
 
 

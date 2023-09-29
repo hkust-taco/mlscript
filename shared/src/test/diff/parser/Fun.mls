@@ -46,7 +46,7 @@ let f = fun x => x
 
 f(x) + x
 //│ |f|(|x|)| |+| |x|
-//│ Parsed: {+ (f (x,),) (x,)}
+//│ Parsed: {+(f(x,),)(x,)}
 
 
 fun f(x, y) = x
@@ -90,40 +90,40 @@ fun f x y = x
 
 fun f(x, y)(a, b) = x + y * a / b
 //│ |#fun| |f|(|x|,| |y|)|(|a|,| |b|)| |#=| |x| |+| |y| |*| |a| |/| |b|
-//│ Parsed: {fun f = (x, y,) => (a, b,) => / (+ (x,) (* (y,) (a,),),) (b,)}
+//│ Parsed: {fun f = (x, y,) => (a, b,) => /(+(x,)(*(y,)(a,),),)(b,)}
 
 fun f(x, y) of a, b = x + y * a / b
 //│ |#fun| |f|(|x|,| |y|)| |#of| |a|,| |b| |#=| |x| |+| |y| |*| |a| |/| |b|
-//│ Parsed: {fun f = (x, y,) => (a, b,) => / (+ (x,) (* (y,) (a,),),) (b,)}
+//│ Parsed: {fun f = (x, y,) => (a, b,) => /(+(x,)(*(y,)(a,),),)(b,)}
 
 fun f of x, y of a, b = x + y * a / b
 //│ |#fun| |f| |#of| |x|,| |y| |#of| |a|,| |b| |#=| |x| |+| |y| |*| |a| |/| |b|
-//│ Parsed: {fun f = (x, y (a, b,),) => / (+ (x,) (* (y,) (a,),),) (b,)}
+//│ Parsed: {fun f = (x, y(a, b,),) => /(+(x,)(*(y,)(a,),),)(b,)}
 
 
 fun f(Some(x)) = x
 //│ |#fun| |f|(|Some|(|x|)|)| |#=| |x|
-//│ Parsed: {fun f = (Some (x,),) => x}
+//│ Parsed: {fun f = (Some(x,),) => x}
 
 fun f(Some of x) = x
 //│ |#fun| |f|(|Some| |#of| |x|)| |#=| |x|
-//│ Parsed: {fun f = (Some (x,),) => x}
+//│ Parsed: {fun f = (Some(x,),) => x}
 
 fun f of Some of x = x
 //│ |#fun| |f| |#of| |Some| |#of| |x| |#=| |x|
-//│ Parsed: {fun f = (Some (x,),) => x}
+//│ Parsed: {fun f = (Some(x,),) => x}
 
 fun f(Some(x), Some(y)) = x
 //│ |#fun| |f|(|Some|(|x|)|,| |Some|(|y|)|)| |#=| |x|
-//│ Parsed: {fun f = (Some (x,), Some (y,),) => x}
+//│ Parsed: {fun f = (Some(x,), Some(y,),) => x}
 
 fun f(Some of x, Some of y) = x + y
 //│ |#fun| |f|(|Some| |#of| |x|,| |Some| |#of| |y|)| |#=| |x| |+| |y|
-//│ Parsed: {fun f = (Some (x, Some (y,),),) => + (x,) (y,)}
+//│ Parsed: {fun f = (Some(x, Some(y,),),) => +(x,)(y,)}
 
 fun f of Some of x, Some of y = x + y
 //│ |#fun| |f| |#of| |Some| |#of| |x|,| |Some| |#of| |y| |#=| |x| |+| |y|
-//│ Parsed: {fun f = (Some (x, Some (y,),),) => + (x,) (y,)}
+//│ Parsed: {fun f = (Some(x, Some(y,),),) => +(x,)(y,)}
 
 
 fun f(x: Int, y: Int) = x
