@@ -427,7 +427,7 @@ abstract class TyperHelpers { Typer: Typer =>
       case (RecordType(fs1), RecordType(fs2)) =>
         RecordType(mergeSortedMap(fs1, fs2)(_ && _).toList)(prov)
       case (t0 @ TupleType(fs0), t1 @ TupleType(fs1)) => {
-        if (!t0.isSubtype(t1)) BotType
+        if (!t0.isLengthCompatibleWith(t1)) BotType
         else TupleType(tupleIntersection(fs0, fs1))(t0.prov)
       }
       case _ if !swapped => that & (this, prov, swapped = true)
@@ -489,7 +489,7 @@ abstract class TyperHelpers { Typer: Typer =>
         case (_: TypeTag, _: TypeTag) | (_: TV, _: TV) if this === that => true
         case (ab: ArrayBase, at: ArrayType) => ab.inner <:< at.inner
         case (t1 @ TupleType(fs1), t2 @ TupleType(fs2)) =>
-          t1.isSubtype(t2) && fs1.lazyZip(fs2).forall {
+          t1.isLengthCompatibleWith(t2) && fs1.lazyZip(fs2).forall {
             case ((_, ty1), (_, ty2)) => ty1 <:< ty2
           }
         case (RecordType(Nil), _) => TopType <:< that
