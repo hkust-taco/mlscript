@@ -15,6 +15,6 @@ fun (-) i(x, y) = x
 //│ fun (-) i: forall 'a. ('a, anything) -> 'a
 //│ [1, 2, 1, 2]
 //│ res
-//│     = [Function: i1]
+//│     = [ 1, 2, 1, 2 ]
 
 

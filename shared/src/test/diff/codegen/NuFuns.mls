@@ -26,17 +26,18 @@ foo
 //│ fun foo: Int
 //│ Int
 //│ res
-//│     = [Function: foo1]
+//│     = 111
 
 
-// FIXME: returns a thunk
 fun main =
   log("Hello")
 main
 //│ fun main: undefined
 //│ undefined
 //│ res
-//│     = [Function: main]
+//│     = undefined
+//│ // Output
+//│ Hello
 
 fun main =
   log("Hello")
@@ -59,5 +60,9 @@ main
 //│ fun main: undefined
 //│ undefined
 //│ res
-//│     = [Function: main2]
+//│     = undefined
+//│ // Output
+//│ 0
+//│ 1
+//│ 2
 

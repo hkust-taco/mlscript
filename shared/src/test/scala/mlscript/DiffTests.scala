@@ -602,9 +602,9 @@ class DiffTests
               // (Nil, Nil, N)
               (Nil, Nil, S(p.tops.collect {
                 // case LetS(isRec, pat, bod) => ("res", Nil, Nil, false)
-                case NuFunDef(isLet @ S(_), nme, snme, tparams, bod) =>
-                  (nme.name + " ", nme.name :: Nil, Nil, false)
-                case t: Term => ("res ", "res" :: Nil, Nil, false)
+                case NuFunDef(isLet, nme, snme, tparams, bod) =>
+                  (nme.name + " ", nme.name :: Nil, Nil, false, isLet.isEmpty)
+                case t: Term => ("res ", "res" :: Nil, Nil, false, false)
               }))
               
             } else {
@@ -731,8 +731,8 @@ class DiffTests
             // all `Def`s and `Term`s are processed here
             // generate typescript types if generateTsDeclarations flag is
             // set in the mode
-            // The tuple type means: (<stmt name>, <type>, <diagnosis>, <order>)
-            val typerResults: Ls[(Str, Ls[Str], Ls[Str], Bool)] = newDefsResults getOrElse stmts.map { stmt =>
+            // The tuple type means: (<stmt name>, <type>, <diagnosis>, <order>, <hide>)
+            val typerResults: Ls[(Str, Ls[Str], Ls[Str], Bool, Bool)] = newDefsResults getOrElse stmts.map { stmt =>
               // Because diagnostic lines are after the typing results,
               // we need to cache the diagnostic blocks and add them to the
               // `typerResults` buffer after the statement has been processed.
@@ -818,9 +818,9 @@ class DiffTests
                 }
               }
               typingResults match {
-                case N => ("", Nil, diagnosticLines.toList, false)
+                case N => ("", Nil, diagnosticLines.toList, false, false)
                 case S(name -> typingLines) =>
-                  (name, typingLines, diagnosticLines.toList, typeBeforeDiags)
+                  (name, typingLines, diagnosticLines.toList, typeBeforeDiags, false)
               }
             }
             
@@ -918,7 +918,13 @@ class DiffTests
               }
             }
 
-            def checkReply(replyQueue: mutable.Queue[(ReplHost.Reply, Str)], prefixLength: Int, errorOnly: Boolean = false): Unit =
+            def checkReply(
+                replyQueue: mutable.Queue[(ReplHost.Reply, Str)],
+                prefixLength: Int,
+                hide: Boolean, // Show nothing except errors if `hide` is true.
+                errorOnly: Boolean
+            ): Unit = {
+              val indent = " " * prefixLength
               replyQueue.headOption.foreach { case (head, log) =>
                 head match {
                   case ReplHost.Error(isSyntaxError, content) =>
@@ -941,44 +947,46 @@ class DiffTests
                       totalRuntimeErrors += 1
                     }
                     content.linesIterator.foreach { s => output("  " + s) }
-                  case ReplHost.Unexecuted(reason) =>
-                    output(" " * prefixLength + "= <no result>")
-                    output(" " * (prefixLength + 2) + reason)
-                  case ReplHost.Result(result, _) if (!errorOnly) =>
+                  case ReplHost.Unexecuted(reason) if (!hide) =>
+                    output(indent + "= <no result>")
+                    output(indent + "  " + reason)
+                  case ReplHost.Result(result, _) if (!errorOnly && !hide) =>
                     result.linesIterator.zipWithIndex.foreach { case (line, i) =>
-                      if (i =:= 0) output(" " * prefixLength + "= " + line)
-                      else output(" " * (prefixLength + 2) + line)
+                      if (i =:= 0) output(indent + "= " + line)
+                      else output(indent + "  " + line)
                     }
-                  case ReplHost.Empty if (!errorOnly) =>
-                    output(" " * prefixLength + "= <missing implementation>")
+                  case ReplHost.Empty if (!errorOnly && !hide) =>
+                    output(indent + "= <missing implementation>")
                   case _ => ()
                 }
                 outputLog(log)
                 replyQueue.dequeue()
               }
+            }
             
             // If code generation fails, show the error message.
             executionResults match {
               case R(replies) =>
                 val replyQueue = mutable.Queue.from(replies)
                 if (typerResults.isEmpty)
-                  checkReply(replyQueue, 0, true)
+                  checkReply(replyQueue, 0, false, true)
                 else {
-                  typerResults.foreach { case (name, typingLines, diagnosticLines, typeBeforeDiags) =>
-                    if (typeBeforeDiags) {
-                      typingLines.foreach(output)
-                      diagnosticLines.foreach(output)
-                    } else {
-                      diagnosticLines.foreach(output)
-                      typingLines.foreach(output)
+                  typerResults.foreach { case (name, typingLines, diagnosticLines, typeBeforeDiags, hide) =>
+                    if (!hide) {
+                      if (typeBeforeDiags) {
+                        typingLines.foreach(output)
+                        diagnosticLines.foreach(output)
+                      } else {
+                        diagnosticLines.foreach(output)
+                        typingLines.foreach(output)
+                      }
                     }
-                    val prefixLength = name.length
-                    checkReply(replyQueue, prefixLength)
+                    checkReply(replyQueue, name.length, hide, false)
                   }
                 }
               case L(other) =>
                 // Print type checking results first.
-                if (!newDefs) typerResults.foreach { case (_, typingLines, diagnosticLines, typeBeforeDiags) =>
+                if (!newDefs) typerResults.foreach { case (_, typingLines, diagnosticLines, typeBeforeDiags, _) =>
                   if (typeBeforeDiags) {
                     typingLines.foreach(output)
                     diagnosticLines.foreach(output)

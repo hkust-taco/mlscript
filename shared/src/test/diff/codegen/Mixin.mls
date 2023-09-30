@@ -234,7 +234,6 @@ module TestLang extends EvalBase, EvalNeg, EvalNegNeg
 //│ globalThis.TestLang = typing_unit5.TestLang;
 //│ // End of generated code
 
-:js
 fun mk(n) = if n is
   0 then Lit(0)
   1 then Neg(mk(n))
@@ -244,19 +243,8 @@ TestLang.eval(mk(0))
 //│ Int
 //│ where
 //│   'E :> Add['E] | Lit | Neg['E]
-//│ // Prelude
-//│ class TypingUnit6 {}
-//│ const typing_unit6 = new TypingUnit6;
-//│ // Query 1
-//│ globalThis.mk = function mk(n) {
-//│   let a;
-//│   return a = n, a === 0 ? Lit(0) : a === 1 ? Neg(mk(n)) : Add(mk(n), mk(n));
-//│ };
-//│ // Query 2
-//│ res = TestLang.eval(mk(0));
-//│ // End of generated code
 //│ res
-//│     = [Function: mk]
+//│     = 0
 
 
 class Foo(x: Int)
@@ -384,7 +372,7 @@ mixin Base {
   fun x = y
 }
 //│ ╔══[ERROR] identifier not found: y
-//│ ║  l.384: 	  fun x = y
+//│ ║  l.372: 	  fun x = y
 //│ ╙──       	          ^
 //│ mixin Base() {
 //│   fun x: error

@@ -22,7 +22,7 @@ let StringInstance: { fromCharCode: Int => Str } = String
 //│ let StringInstance: {fromCharCode: Int -> Str}
 //│ fun String: nothing
 //│ makeString
-//│            = <missing implementation>
+//│            = [Function: String]
 //│ StringInstance
 //│                = [Function: String]
 
