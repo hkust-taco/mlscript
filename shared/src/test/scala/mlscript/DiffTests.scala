@@ -1032,8 +1032,6 @@ class DiffTests
               failures += blockLineNum
         } catch {
           case oh_noes: ThreadDeath => throw oh_noes
-          case debug: Error =>
-            output(debug.getMessage())
           case err: Throwable =>
             if (!mode.fixme)
               failures += allLines.size - lines.size
@@ -1042,7 +1040,7 @@ class DiffTests
               err.getStackTrace().take(
                 if (mode.fullExceptionStack) Int.MaxValue
                 else if (mode.fixme || err.isInstanceOf[StackOverflowError]) 0
-                else 20
+                else 10
               ).map("\n" + "\tat: " + _).mkString)
         } finally {
           typer.dbg = false
