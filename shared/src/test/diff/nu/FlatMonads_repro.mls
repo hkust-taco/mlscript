@@ -118,7 +118,7 @@ r.run
 //│     = 42
 
 x => readInt.bind of x
-//│ (Int -> IO['AA]) -> Bind[Int, 'AA]
+//│ forall 'AA. (Int -> IO['AA]) -> Bind[Int, 'AA]
 //│ res
 //│     = [Function: res]
 
@@ -145,7 +145,7 @@ readInt.run
 //│     = 42
 
 x => Pure(x).run
-//│ 'run -> 'run
+//│ forall 'run. 'run -> 'run
 //│ res
 //│     = [Function: res]
 

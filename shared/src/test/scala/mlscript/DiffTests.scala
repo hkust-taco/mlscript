@@ -997,7 +997,7 @@ class DiffTests
                 }
                 other match {
                   case _: TestCode => () // Impossible case.
-                  case IllFormedCode(message) =>
+                  case e @ IllFormedCode(message) =>
                     totalCodeGenErrors += 1
                     if (!mode.expectCodeGenErrors && !mode.fixme && !mode.expectTypeErrors)
                       failures += blockLineNum

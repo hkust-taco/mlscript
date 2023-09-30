@@ -75,12 +75,12 @@ fun f(x) =
 //│ ╔══[PARSE ERROR] Unexpected end of indented block; an expression was expected here
 //│ ║  l.71: 	    else "bruh"
 //│ ╙──      	    ^
-//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause; found operator application instead
+//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'if'; found operator application instead
 //│ ║  l.70: 	  if x ===
 //│ ║        	     ^^^^^
 //│ ║  l.71: 	    else "bruh"
 //│ ║        	^^^^
-//│ ╟── Note: 'if' expression started here:
+//│ ╟── Note: 'if' expression starts here:
 //│ ║  l.70: 	  if x ===
 //│ ╙──      	  ^^
 //│ ╔══[ERROR] The case when this is false is not handled: ===(x, undefined,)

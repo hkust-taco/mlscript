@@ -318,7 +318,7 @@ TestElim.eliminate(circles)
 //│ forall 'a. 'Region | 'a
 //│   where
 //│     'Region :> Circle | 'a
-//│     'a :> Outside['Region] | Union['Region] | Intersect['Region] | Translate['Region] | Scale['Region]
+//│     'a :> Outside['Region] | Translate['Region] | Scale['Region] | Union['Region] | Intersect['Region]
 //│ res
 //│     = Union {}
 

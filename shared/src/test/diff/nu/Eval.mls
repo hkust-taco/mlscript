@@ -1,0 +1,228 @@
+:NewDefs
+
+
+
+// * Standard definitions:
+
+
+declare fun String: anything -> Str
+//│ fun String: anything -> Str
+
+fun (++) stringConcat(a, b) = concat(a)(b)
+//│ fun (++) stringConcat: (Str, Str) -> Str
+
+fun (|>) pipe(x, f) = f(x)
+fun (<|) pepi(f, x) = f(x)
+//│ fun (|>) pipe: forall 'a 'b. ('a, 'a -> 'b) -> 'b
+//│ fun (<|) pepi: forall 'c 'd. ('c -> 'd, 'c) -> 'd
+
+
+// * Hack to throw exceptions
+declare class throw(arg: anything): nothing
+//│ declare class throw(arg: anything): nothing
+
+:re
+throw(1); 0
+//│ 0
+//│ res
+//│ Runtime error:
+//│   1
+
+fun test = throw(1); 0
+//│ fun test: 0
+
+:re
+test
+//│ 0
+//│ res
+//│ Runtime error:
+//│   1
+
+fun test =
+  throw(1)
+  error
+//│ fun test: nothing
+
+:re
+test
+//│ nothing
+//│ res
+//│ Runtime error:
+//│   1
+
+
+abstract class Option[out A]
+class Some[out A](val value: A) extends Option[A]
+module None extends Option[nothing]
+//│ abstract class Option[A]
+//│ class Some[A](value: A) extends Option
+//│ module None extends Option
+
+abstract class List[out A]: Cons[A] | Nil { virtual val length: Int }
+class Cons[out A](val head: A, val tail: List[A]) extends List[A] {
+  val length: Int
+  val length = tail.length + 1
+  fun toString() = "Cons(" ++ String(head) ++ ", " ++ String(tail) ++ ")"
+}
+module Nil extends List[nothing] {
+  val length = 0
+  fun toString() = "Nil"
+}
+//│ abstract class List[A]: Cons[A] | Nil {
+//│   val length: Int
+//│ }
+//│ class Cons[A](head: A, tail: List[A]) extends List {
+//│   val length: Int
+//│   fun toString: () -> Str
+//│ }
+//│ module Nil extends List {
+//│   val length: 0
+//│   fun toString: () -> "Nil"
+//│ }
+
+fun (::) cons(x, xs) = Cons(x, xs)
+fun (:::) concatList(xs, ys) = if xs is
+  Nil then ys
+  Cons(x, xs) then x :: xs ::: ys
+//│ fun (::) cons: forall 'A. ('A, List['A]) -> Cons['A]
+//│ fun (:::) concatList: forall 'A0 'a. (Cons['A0] | Nil, List['A0] & 'a) -> (Cons['A0] | 'a)
+
+module Lists { // TODO use name List when module overloading is supported:
+  
+  fun map(f) = case
+    Nil then Nil
+    Cons(x, xs) then f(x) :: map(f)(xs)
+  
+  fun zip(xs, ys) = if xs is
+    Nil then Nil
+    Cons(x, xs) then if ys is
+      Nil then Nil
+      Cons(y, ys) then
+        [x, y] :: zip(xs, ys)
+  
+  fun assoc(e) = case
+    Cons(kv, rest) then
+      if kv.key === e then Some(kv.value)
+      else assoc(e)(rest)
+    Nil then None
+  
+}
+//│ module Lists {
+//│   fun assoc: forall 'a 'A. 'a -> (Cons[{key: Eql['a], value: 'A}] | Nil) -> (None | Some['A])
+//│   fun map: forall 'b 'A0. ('b -> 'A0) -> (Cons['b] | Nil) -> (Cons['A0] | Nil)
+//│   fun zip: forall 'c 'd. (Cons['c] | Nil, Cons['d] | Nil) -> (Cons[['c, 'd]] | Nil)
+//│ }
+
+let xs = 1 :: 2 :: 3 :: Nil
+//│ let xs: Cons[1 | 2 | 3]
+//│ xs
+//│    = Cons {}
+
+String of xs ::: 4 :: 5 :: Nil
+//│ Str
+//│ res
+//│     = 'Cons(1, Cons(2, Cons(3, Cons(4, Cons(5, Nil)))))'
+
+
+let ls = {key: "a", value: 0} :: Nil
+//│ let ls: Cons[{key: "a", value: 0}]
+//│ ls
+//│    = Cons {}
+
+ls |> Lists.assoc("a")
+//│ None | Some[0]
+//│ res
+//│     = Some {}
+
+
+
+// * Our little language:
+
+
+abstract class Term: Var | App | Lam | Sel | Rcd[Term]
+class Var(val name: Str) extends Term
+class App(val lhs: Term, val args: List[Term]) extends Term
+class Lam(val params: List[Str], val body: Term) extends Term
+class Rcd[out Sub](val fields: List[{key: Str, value: Sub}]) extends Term
+class Sel(val prefix: Term, val fieldName: Str) extends Term
+abstract class Lit[out A](val value: A): IntLit | StrLit extends Term
+class IntLit(v: Int) extends Lit[Int](v)
+class StrLit(v: Str) extends Lit[Str](v)
+//│ abstract class Term: App | Lam | Rcd[Term] | Sel | Var
+//│ class Var(name: Str) extends Term
+//│ class App(lhs: Term, args: List[Term]) extends Term
+//│ class Lam(params: List[Str], body: Term) extends Term
+//│ class Rcd[Sub](fields: List[{key: Str, value: Sub}]) extends Term
+//│ class Sel(prefix: Term, fieldName: Str) extends Term
+//│ abstract class Lit[A](value: A): IntLit | StrLit extends Term
+//│ class IntLit(v: Int) extends Lit, Term
+//│ class StrLit(v: Str) extends Lit, Term
+
+type Value = Lam | Lit | Rcd[Value]
+//│ type Value = Lam | Lit[anything] | Rcd[Value]
+
+
+fun err(msg) =
+  throw(concat("Evaluation error: " ++ msg))
+  error
+//│ fun err: Str -> nothing
+
+fun eval(t, env) = if t is
+  Var(nme) then if env |> Lists.assoc(nme) is Some(v)
+    then v
+    else err("variable not found: " ++ nme)
+  Lit then t
+  Lam then t
+  App(f, args) then
+    let fe = eval(f, env)
+    if fe is Lam(ps, bod) then
+      val argse = args |> Lists.map(a => eval(a, env))
+      if ps.length === argse.length then () else err("wrong number of arguments")
+      let envp = Lists.zip(ps, argse) |> Lists.map of ([key, value]) => {key, value}
+      eval(bod, envp ::: env)
+    else err(String(fe) ++ " cannot be applied")
+  Sel(pre, nme) then
+    let pree = eval(pre, env)
+    if pree is Rcd(xs) and xs |> Lists.assoc(nme) is Some(v) then v
+    else err(String(pree) ++ " does not have field " ++ nme)
+  Rcd(fs) then
+    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ fun eval: forall 'a 'A 'b 'Sub. ('a, Cons[{key: Eql[Str], value: 'b}] & {List#A <: {key: Eql[Str], value: 'b}} & List[{key: Eql[Str], value: 'b}] | Nil & {List#A <: {key: Eql[Str], value: 'b}} & List[{key: Eql[Str], value: 'b}]) -> 'Sub
+//│   where
+//│     'b :> 'Sub
+//│        <: Object & ~#Rcd | Rcd['b]
+//│     'Sub :> Lam | Lit['A] | Rcd['Sub] | 'b
+//│     'a <: App | Lam | Lit['A] | Rcd['a] | Sel | Var
+
+eval : (Term, List[{key: Str, value: Value}]) -> Value
+//│ (Term, List[{key: Str, value: Value}]) -> Value
+//│ res
+//│     = [Function: eval]
+
+let rcd = Rcd({key: "a", value: IntLit(0)} :: Nil)
+//│ let rcd: Rcd[IntLit]
+//│ rcd
+//│     = Rcd {}
+
+eval of rcd, Nil
+//│ 'Sub
+//│   where
+//│     'Sub :> Lam | Lit[Int] | Rcd['Sub]
+//│ res
+//│     = Rcd {}
+
+eval of Sel(rcd, "a"), Nil
+//│ 'Sub
+//│   where
+//│     'Sub :> Lam | Lit[nothing] | Rcd['Sub]
+//│ res
+//│     = IntLit {}
+
+eval of App(Lam("x" :: Nil, Sel(Var("x"), "a")), rcd :: Nil), Nil
+//│ 'Sub
+//│   where
+//│     'Sub :> Lam | Lit[nothing] | Rcd['Sub]
+//│ res
+//│     = IntLit {}
+
+

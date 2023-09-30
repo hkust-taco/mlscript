@@ -21,7 +21,7 @@ foo of
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.12: 	    None    then 0
 //│ ╙──      	^^^^^^^^^^^^^^^^^^
-//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause; found application followed by newline instead
+//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'if'; found application followed by newline instead
 //│ ║  l.10: 	  discard of if f of x is
 //│ ║        	                ^^^^^^^^^
 //│ ║  l.11: 	    Some(v) then v + 1
@@ -32,7 +32,7 @@ foo of
 //│ ║        	^^^^^^^^^^^^^^
 //│ ║  l.14: 	    Some(v) then v + 1
 //│ ║        	^^^^
-//│ ╟── Note: 'if' expression started here:
+//│ ╟── Note: 'if' expression starts here:
 //│ ║  l.10: 	  discard of if f of x is
 //│ ╙──      	             ^^
 //│ ╔══[PARSE ERROR] Unexpected comma here
@@ -45,12 +45,12 @@ foo of
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.15: 	    None    then 0,  
 //│ ╙──      	^^^^^^^^^^^^^^^^^^
-//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause; found application instead
+//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'if'; found application instead
 //│ ║  l.13: 	  if g of y is
 //│ ║        	     ^^^^^^^^^
 //│ ║  l.14: 	    Some(v) then v + 1
 //│ ║        	^^^^
-//│ ╟── Note: 'if' expression started here:
+//│ ╟── Note: 'if' expression starts here:
 //│ ║  l.13: 	  if g of y is
 //│ ╙──      	  ^^
 //│ Parsed: {foo({discard(if (f(undefined,)) then undefined,); if (g(undefined,)) then undefined},)}
@@ -77,7 +77,7 @@ foo of
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.61: 	    None   then 0,
 //│ ╙──      	^^^^^^^^^^^^^^^^^
-//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause; found application followed by newline instead
+//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'if'; found application followed by newline instead
 //│ ║  l.59: 	  if f of x is
 //│ ║        	     ^^^^^^^^^
 //│ ║  l.60: 	    Some v then v + 1
@@ -92,7 +92,7 @@ foo of
 //│ ║        	^^^^^^^^^^^^^^^^^^
 //│ ║  l.65: 	  
 //│ ║        	^^
-//│ ╟── Note: 'if' expression started here:
+//│ ╟── Note: 'if' expression starts here:
 //│ ║  l.59: 	  if f of x is
 //│ ╙──      	  ^^
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
@@ -108,7 +108,7 @@ foo of
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.64: 	    None   then 0,
 //│ ╙──      	^^^^^^^^^^^^^^^^^
-//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause; found application followed by newline instead
+//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'if'; found application followed by newline instead
 //│ ║  l.62: 	  if g of y is
 //│ ║        	     ^^^^^^^^^
 //│ ║  l.63: 	    Some v then v + 1
@@ -117,7 +117,7 @@ foo of
 //│ ║        	^^^^^^^^^^^^^^^^^^
 //│ ║  l.65: 	  
 //│ ║        	^^
-//│ ╟── Note: 'if' expression started here:
+//│ ╟── Note: 'if' expression starts here:
 //│ ║  l.62: 	  if g of y is
 //│ ╙──      	  ^^
 //│ Parsed: {foo({if (f(undefined,)) then undefined; if (g(undefined,)) then undefined},)}

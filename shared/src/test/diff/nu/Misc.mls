@@ -28,7 +28,7 @@ x => x + 1
 //│     = [Function: res]
 
 { y } => y
-//│ {y: 'a} -> 'a
+//│ forall 'a. {y: 'a} -> 'a
 //│ res
 //│     = [Function: res]
 

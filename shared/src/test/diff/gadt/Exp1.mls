@@ -27,7 +27,7 @@ fun f(e) = if e is
 //│ fun f: forall 'a 'b. (Lit | Pair['a, 'b]) -> (Int | ['a, 'b])
 
 (e: Exp['X]) => f(e)
-//│ (e: Exp['X]) -> (Int | [??L, ??R])
+//│ forall 'X. (e: Exp['X]) -> (Int | [??L, ??R])
 //│ res
 //│     = [Function: res]
 

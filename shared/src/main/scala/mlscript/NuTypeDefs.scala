@@ -222,7 +222,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
         sign: ST,
         inheritedTags: Set[TypeName],
         parentTP: Map[Str, NuMember]
-      )(val instanceType: ST, // * only meant to be used in `force` and `variances`
+      )(val instanceType: ST, // * only meant to be used in `variances`
+        // * TODO remove `instanceType` and implement proper variance analysis instead
       ) extends TypedNuTypeDef(Cls) with PolyNuDecl
   {
     def decl: NuTypeDef = td
@@ -317,7 +318,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           f(pol, sign),
           inheritedTags,
           parentTP.mapValuesIter(_.mapPol(pol, smart)(f)).toMap,
-        )(f(pol, instanceType))
+        )(/* f(pol, instanceType) */TopType) // TODO remove instanceType
     def mapPolMap(pol: PolMap)(f: (PolMap, SimpleType) => SimpleType)
           (implicit ctx: Ctx): TypedNuCls =
         TypedNuCls(level, td,
@@ -329,10 +330,10 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           f(pol, sign),
           inheritedTags,
           parentTP.mapValuesIter(_.mapPolMap(pol)(f)).toMap,
-        )(f(pol, instanceType))
+        )(/* f(pol, instanceType) */TopType) // TODO remove instanceType
     
     override def toString: Str = s"TypedNuCls($level, ${td.nme},\n\t$tparams,\n\t$params,\n\tthis: $thisTy, ${
-      members.lnIndent()},\n\t: $sign, $inheritedTags, $parentTP)"
+      members.lnIndent()},\n\t: $sign, $inheritedTags, $parentTP)($instanceType)"
   }
   
   
@@ -647,13 +648,27 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
       case s :: stmts =>
         val res_ty = s match {
           case decl: NuDecl => N
-          case s: Statement =>
-            val (diags, dss) = s.desugared
-            diags.foreach(raise)
-            S(typeTerms(dss, false, Nil)(ctx, raise, TypeProvenance(s.toLoc, s match {
-              case trm: Term => trm.describe
-              case s => "statement"
-            }), vars, genLambdas = false))
+          case t: Term =>
+            implicit val genLambdas: GenLambdas = true
+            val ty = typeTerm(t)
+            /* // TODO next:
+            if (!topLevel) {
+              if (t.isInstanceOf[Var] || t.isInstanceOf[Lit])
+                warn("Pure expression does nothing in statement position.", t.toLoc)
+              else
+                constrain(mkProxy(ty, TypeProvenance(t.toCoveringLoc, "expression in statement position")), UnitType)(
+                  raise = err => raise(WarningReport( // Demote constraint errors from this to warnings
+                    msg"Expression in statement position should have type `unit`." -> N ::
+                    msg"Use the `discard` function to discard non-unit values, making the intent clearer." -> N ::
+                    err.allMsgs, newDefs)),
+                  prov = TypeProvenance(t.toLoc, t.describe), ctx)
+            }
+            */
+            S(ty)
+          case s: DesugaredStatement =>
+            err(msg"Illegal position for this ${s.describe} statement.", s.toLoc)(raise)
+            N
+          case _ => die
         }
         stmts match {
           case Nil => res_ty
