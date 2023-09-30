@@ -139,7 +139,7 @@ abstract class TyperHelpers { Typer: Typer =>
     }
   }
   def tupleUnion(fs1: Ls[Opt[Var] -> FieldType], fs2: Ls[Opt[Var] -> FieldType]): Ls[Opt[Var] -> FieldType] = {
-    require(fs1.size === fs2.size)
+    require(fs1.sizeCompare(fs2) <= 0 && fs1.sizeCompare(fs2.filter(x => !x._2.opt)) >= 0)
     (fs1 lazyZip fs2).map {
       case ((S(n1), t1), (S(n2), t2)) => (Option.when(n1 === n2)(n1), t1 || t2)
       case ((no1, t1), (no2, t2)) => (N, t1 || t2)
@@ -377,7 +377,10 @@ abstract class TyperHelpers { Typer: Typer =>
     def toUpper(prov: TypeProvenance, opt: Bool = false): FieldType = FieldType(None, this, opt)(prov)
     def toLower(prov: TypeProvenance): FieldType = FieldType(Some(this), TopType, false)(prov)
     
-    def | (that: SimpleType, prov: TypeProvenance = noProv, swapped: Bool = false): SimpleType = (this, that) match {
+    def | (that: SimpleType, prov: TypeProvenance = noProv, swapped: Bool = false): SimpleType = 
+      {
+        println("SHIT!")
+        (this, that) match {
       case (TopType, _) => this
       case (BotType, _) => that
       
@@ -388,16 +391,20 @@ abstract class TyperHelpers { Typer: Typer =>
       case (_: RecordType, _: FunctionType) => TopType
       case (RecordType(fs1), RecordType(fs2)) =>
         RecordType(recordUnion(fs1, fs2))(prov)
-      case (t0 @ TupleType(fs0), t1 @ TupleType(fs1))
+      case (t0 @ TupleType(fs0), t1 @ TupleType(fs1)) if (fs0.sizeCompare(fs1) === 0) => // TODO[optional-fields]: check size is ok?
         // If the sizes are different, to merge these we'd have to return
         //  the awkward `t0.toArray & t0.toRecord | t1.toArray & t1.toRecord`
-      if fs0.sizeCompare(fs1) === 0 =>
+        if (!t0.isLengthCompatibleWith(t1)) BotType
+        println("HERE, UNION")
         TupleType(tupleUnion(fs0, fs1))(t0.prov)
       case _ if !swapped => that | (this, prov, swapped = true)
       case (`that`, _) => this
       case (NegType(`that`), _) => TopType
-      case _ => ComposedType(true, that, this)(prov)
-    }
+      case _ => {
+        println("COMPOSDED!!!")
+        ComposedType(true, that, this)(prov)
+      }
+    }}
     
     /** This is to intersect two types that occur in negative position,
       * where it may be sound to perform some online simplifications/approximations. */
@@ -426,10 +433,9 @@ abstract class TyperHelpers { Typer: Typer =>
       case (_: ClassTag, _: FunctionType) => BotType
       case (RecordType(fs1), RecordType(fs2)) =>
         RecordType(mergeSortedMap(fs1, fs2)(_ && _).toList)(prov)
-      case (t0 @ TupleType(fs0), t1 @ TupleType(fs1)) => {
+      case (t0 @ TupleType(fs0), t1 @ TupleType(fs1)) =>
         if (!t0.isLengthCompatibleWith(t1)) BotType
         else TupleType(tupleIntersection(fs0, fs1))(t0.prov)
-      }
       case _ if !swapped => that & (this, prov, swapped = true)
       case (`that`, _) => this
       case _ if !swapped => that & (this, prov, swapped = true)

@@ -16,6 +16,7 @@ fun f1(a?: Int, b?: Int) = a + b
 //│  where: 
 //│ 		α29_31' :> Int
 //│ allVarPols: +α29_31'
+//│ SHIT!
 //│ consed: Map((true,Int) -> α29_31')
 //│ ⬤ Unskid: TypedTypingUnit(
 //│ 	TypedNuFun(0,fun f1 = (a: Int, b: Int,) => +(a, b,),((a: Int?, b: Int?,) -> α29_31'))
@@ -42,6 +43,7 @@ fun f1(a?: Int, b?: Int) = a + b
 //│ | | >>>> occs[+α29_31'] := HashSet(Int, α29_31')  <~ None
 //│ | | analyze2[+] Int
 //│ [occs] +α29_31' {Int,α29_31'}
+//│ SHIT!
 //│ [vars] TreeSet(α29_31')
 //│ [rec] Set()
 //│ 0[1] α29_31'
@@ -59,6 +61,7 @@ fun f1(a?: Int, b?: Int) = a + b
 //│ | ~> (a: Int?, b: Int?,)
 //│ | transform[+] α29_31'   ()  +  None
 //│ | | -> bound Some(true)
+//│ | | SHIT!
 //│ | | transform[+] Int   (α29_31')  +;@[+](0)  None
 //│ | | ~> Int
 //│ | ~> Int
@@ -77,14 +80,29 @@ fun f1(a?: Int, b?: Int) = a + b
 //│ | | | DNF: DNF(0, (a: Int?, b: Int?,){})
 //│ | | | norm[-] Int
 //│ | | | | DNF: DNF(0, #Int<Object,Num>{})
+//│ | | | | SHIT!
+//│ | | | | SHIT!
+//│ | | | | SHIT!
 //│ | | | ~> #Int<Object,Num>
 //│ | | | norm[-] Int
 //│ | | | | DNF: DNF(0, #Int<Object,Num>{})
+//│ | | | | SHIT!
+//│ | | | | SHIT!
+//│ | | | | SHIT!
 //│ | | | ~> #Int<Object,Num>
+//│ | | | SHIT!
+//│ | | | SHIT!
+//│ | | | SHIT!
 //│ | | ~> (a: #Int<Object,Num>?, b: #Int<Object,Num>?,)
 //│ | | norm[+] Int
 //│ | | | DNF: DNF(0, #Int<Object,Num>{})
+//│ | | | SHIT!
+//│ | | | SHIT!
+//│ | | | SHIT!
 //│ | | ~> #Int<Object,Num>
+//│ | | SHIT!
+//│ | | SHIT!
+//│ | | SHIT!
 //│ | ~> ((a: #Int<Object,Num>?, b: #Int<Object,Num>?,) -> #Int<Object,Num>)
 //│ ⬤ Normalized: TypedTypingUnit(
 //│ 	TypedNuFun(0,fun f1 = (a: Int, b: Int,) => +(a, b,),((a: #Int<Object,Num>?, b: #Int<Object,Num>?,) -> #Int<Object,Num>))
@@ -180,11 +198,11 @@ let y: C1 = x
 :e
 [x]: [C1, C1, C1?]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.181: 	[x]: [C1, C1, C1?]
+//│ ║  l.199: 	[x]: [C1, C1, C1?]
 //│ ║         	^^^
 //│ ╟── expression of type `[?a]` does not match type `[C1, C1, C1?]`
 //│ ╟── Note: constraint arises from tuple type:
-//│ ║  l.181: 	[x]: [C1, C1, C1?]
+//│ ║  l.199: 	[x]: [C1, C1, C1?]
 //│ ╙──       	     ^^^^^^^^^^^^^
 //│ [C1, C1, C1?]
 //│ res
@@ -209,11 +227,11 @@ let y: C1 = x
 :e
 []: [Int, Int?]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.210: 	[]: [Int, Int?]
+//│ ║  l.228: 	[]: [Int, Int?]
 //│ ║         	^^
 //│ ╟── expression of type `[]` does not match type `[Int, Int?]`
 //│ ╟── Note: constraint arises from tuple type:
-//│ ║  l.210: 	[]: [Int, Int?]
+//│ ║  l.228: 	[]: [Int, Int?]
 //│ ╙──       	    ^^^^^^^^^^^
 //│ [Int, Int?]
 //│ res
@@ -222,13 +240,13 @@ let y: C1 = x
 :e
 [1, 2, 3]: [Int, Int?]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.223: 	[1, 2, 3]: [Int, Int?]
+//│ ║  l.241: 	[1, 2, 3]: [Int, Int?]
 //│ ║         	^^^^^^^^^
 //│ ╟── tuple literal of type `[1, 2, 3]` does not match type `[Int, Int?]`
-//│ ║  l.223: 	[1, 2, 3]: [Int, Int?]
+//│ ║  l.241: 	[1, 2, 3]: [Int, Int?]
 //│ ║         	 ^^^^^^^
 //│ ╟── Note: constraint arises from tuple type:
-//│ ║  l.223: 	[1, 2, 3]: [Int, Int?]
+//│ ║  l.241: 	[1, 2, 3]: [Int, Int?]
 //│ ╙──       	           ^^^^^^^^^^^
 //│ [Int, Int?]
 //│ res
@@ -282,13 +300,25 @@ let y: C1 = x
 //│ | | DNF: DNF(0, (Int, Int, Int?,){})
 //│ | | norm[+] Int
 //│ | | | DNF: DNF(0, #Int<Object,Num>{})
+//│ | | | SHIT!
+//│ | | | SHIT!
+//│ | | | SHIT!
 //│ | | ~> #Int<Object,Num>
 //│ | | norm[+] Int
 //│ | | | DNF: DNF(0, #Int<Object,Num>{})
+//│ | | | SHIT!
+//│ | | | SHIT!
+//│ | | | SHIT!
 //│ | | ~> #Int<Object,Num>
 //│ | | norm[+] Int
 //│ | | | DNF: DNF(0, #Int<Object,Num>{})
+//│ | | | SHIT!
+//│ | | | SHIT!
+//│ | | | SHIT!
 //│ | | ~> #Int<Object,Num>
+//│ | | SHIT!
+//│ | | SHIT!
+//│ | | SHIT!
 //│ | ~> (#Int<Object,Num>, #Int<Object,Num>, #Int<Object,Num>?,)
 //│ ⬤ Normalized: TypedTypingUnit(
 //│ 	Some((#Int<Object,Num>, #Int<Object,Num>, #Int<Object,Num>?,)))
@@ -354,6 +384,12 @@ fun foo(xs: [Int] & 'a) = [xs : [Int, Int?], xs]
 
 // TODO later: update normal form construction
 
+fun foo: [Int] | [Int?]
+//│ fun foo: [Int?]
+
+fun foo: [Int] & [Int?]
+//│ fun foo: [Int]
+
 fun foo: [Int] | [Int, Int?]
 //│ fun foo: [Int, Int?]
 
@@ -363,16 +399,17 @@ fun foo: [Int] & [Int, Int?]
 fun foo: ([Int] & [Int, Int?]) -> Int
 //│ fun foo: ([Int]) -> Int
 
+
 :e
 foo([1, true])
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.367: 	foo([1, true])
+//│ ║  l.404: 	foo([1, true])
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╟── tuple literal of type `[1, true]` does not match type `[Int]`
-//│ ║  l.367: 	foo([1, true])
+//│ ║  l.404: 	foo([1, true])
 //│ ║         	     ^^^^^^^
 //│ ╟── Note: constraint arises from tuple type:
-//│ ║  l.363: 	fun foo: ([Int] & [Int, Int?]) -> Int
+//│ ║  l.399: 	fun foo: ([Int] & [Int, Int?]) -> Int
 //│ ╙──       	          ^^^^^
 //│ Int | error
 //│ res
@@ -386,12 +423,34 @@ fun foo: ([Int] | [Int, Int?]) -> Int
 :e
 foo([1, true])
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.387: 	foo([1, true])
+//│ ║  l.424: 	foo([1, true])
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╟── reference of type `true` is not an instance of type `Int`
-//│ ║  l.387: 	foo([1, true])
+//│ ║  l.424: 	foo([1, true])
 //│ ╙──       	        ^^^^
 //│ Int | error
 //│ res
 //│     = <no result>
 //│       foo is not implemented
+
+// check check check
+let x = [1, 2, 3]: [Int, Int, Int]
+//│ let x: [Int, Int, Int]
+//│ x
+//│   = [ 1, 2, 3 ]
+
+
+fun foo0(x: Int?) = if x is undefined then 0 else x + 1
+//│ fun foo0: (x: Int?) -> Int
+
+fun foo1(x?) = if x is undefined then 0 else x + 1
+//│ fun foo1: (Int | undefined?) -> Int
+
+:e
+fun foo0(x: Int?) = x + 1
+//│ fun foo0: (x: Int?) -> Int
+
+:e
+fun foo1(x?) = x + 1
+//│ fun foo1: (Int?) -> Int
+
