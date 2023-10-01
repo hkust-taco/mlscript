@@ -1466,7 +1466,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       baseClsNme: Opt[Str], 
                       baseClsMembers: Ls[NuMember], 
                       traitMembers: Ls[NuMember],
-                      tparamMembers: Map[Str, NuMember]
+                      tparamMembers: Map[Str, NuMember],
+                      selfSig: ST,
                     )
                     
                     def inherit(parents: Ls[TypedParentSpec], pack: Pack): Pack = parents match {
@@ -1529,6 +1530,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                           
                           println(s"argMembs $argMembs")
                           
+                          println(s"selfSig ${cls.sign}")
+                          
                           inherit(ps, pack.copy(
                             baseClsNme = S(parNme), 
                             // baseClsMembers = argMembs ++ cls.members.valuesIterator.filterNot(_.isValueParam), 
@@ -1536,7 +1539,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                             // baseClsMembers = cls.members.valuesIterator.filter(_.isValueParam) ++ argMembs ++ cls.members.valuesIterator.filterNot(_.isValueParam), 
                             // baseClsMembers = baseParamMems ::: argMembs ::: otherBaseMems, 
                             baseClsMembers = argMembs ++ cls.members.valuesIterator,
-                            tparamMembers = pack.tparamMembers ++ tpms
+                            tparamMembers = pack.tparamMembers ++ tpms,
+                            selfSig = pack.selfSig & cls.sign
                           ))
                           
                         case als: TypedNuAls => // Should be rejected in `typedParents`
@@ -1569,8 +1573,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     val paramMems = typedParams.getOrElse(Nil).map(f =>
                       NuParam(f._1, f._2, isPublic = !privateParams.contains(f._1))(lvl))
                     
-                    val Pack(thisType, mxnMembers, _, baseClsMembers, traitMembers, tparamMembers) =
-                      inherit(typedParents, Pack(baseType, tparamMems ++ paramMems, N, Nil, Nil, Map.empty))
+                    val Pack(thisType, mxnMembers, _, baseClsMembers, traitMembers, tparamMembers, selfSig) =
+                      inherit(typedParents, Pack(baseType, tparamMems ++ paramMems, N, Nil, Nil, Map.empty, TopType))
                     
                     ctx += "this" -> VarSymbol(thisTV, Var("this"))
                     ctx += "super" -> VarSymbol(thisType, Var("super"))
@@ -1697,6 +1701,10 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       }
                       case N => N
                     }
+                    
+                    if (!td.isAbstract) trace(s"Checking self signature...") {
+                      constrain(thisTV, selfSig)
+                    }()
                     
                     TypedNuCls(outerCtx.lvl, td,
                       tparams,
