@@ -319,7 +319,7 @@ mapPartition2(x => if x % 2 == 0 then Left(x) else Right(x), zeroToThree)
 //│      }
 
 fun log(x) = ()
-//│ log: anything -> ()
+//│ log: anything -> undefined
 //│    = [Function: log]
 
 fun mn(a) =

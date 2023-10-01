@@ -2,80 +2,221 @@
 
 
 ()
-//│ []
+//│ undefined
 //│ res
-//│     = []
+//│     = undefined
 
 fun x: ()
 fun x = ()
-//│ fun x: []
-//│ fun x: []
+//│ fun x: undefined
+//│ fun x: undefined
 
 x
-//│ []
-//│ res
-//│     = []
-
-
-// :e // TODO – currently we treat () as an empty array; should in fact be JS's `undefined`
-x : Array['a]
-//│ Array[nothing]
-//│ res
-//│     = []
-
-// TODO
-x : undefined
-//│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.27: 	x : undefined
-//│ ║        	^
-//│ ╟── type `[]` does not match type `undefined`
-//│ ║  l.9: 	fun x: ()
-//│ ║       	       ^^
-//│ ╟── but it flows into reference with expected type `undefined`
-//│ ║  l.27: 	x : undefined
-//│ ║        	^
-//│ ╟── Note: constraint arises from literal type:
-//│ ║  l.27: 	x : undefined
-//│ ╙──      	    ^^^^^^^^^
 //│ undefined
 //│ res
-//│     = []
+//│     = undefined
 
-// TODO
+
+:e // we used to treat () as an empty array; should in fact be JS's `undefined`
+x : Array['a]
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.21: 	x : Array['a]
+//│ ║        	^
+//│ ╟── type `undefined` does not match type `Array['a]`
+//│ ║  l.9: 	fun x: ()
+//│ ║       	       ^^
+//│ ╟── but it flows into reference with expected type `Array['a]`
+//│ ║  l.21: 	x : Array['a]
+//│ ║        	^
+//│ ╟── Note: constraint arises from applied type reference:
+//│ ║  l.21: 	x : Array['a]
+//│ ╙──      	    ^^^^^^^^^
+//│ Array[nothing]
+//│ res
+//│     = undefined
+
+x : undefined
+//│ undefined
+//│ res
+//│     = undefined
+
 fun x: ()
 fun x = undefined
-//│ ╔══[ERROR] Type mismatch in definition:
-//│ ║  l.46: 	fun x = undefined
-//│ ║        	    ^^^^^^^^^^^^^
-//│ ╟── undefined literal of type `undefined` is not a 0-element tuple
-//│ ║  l.46: 	fun x = undefined
-//│ ║        	        ^^^^^^^^^
-//│ ╟── but it flows into definition of method x with expected type `[]`
-//│ ║  l.46: 	fun x = undefined
-//│ ║        	    ^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from tuple type:
-//│ ║  l.45: 	fun x: ()
-//│ ╙──      	       ^^
 //│ fun x: undefined
-//│ fun x: []
+//│ fun x: undefined
 
 
 :e
 fun x: ()
 fun x = 1
 //│ ╔══[ERROR] Type mismatch in definition:
-//│ ║  l.65: 	fun x = 1
+//│ ║  l.51: 	fun x = 1
 //│ ║        	    ^^^^^
-//│ ╟── integer literal of type `1` is not a 0-element tuple
-//│ ║  l.65: 	fun x = 1
+//│ ╟── integer literal of type `1` does not match type `undefined`
+//│ ║  l.51: 	fun x = 1
 //│ ║        	        ^
-//│ ╟── but it flows into definition of method x with expected type `[]`
-//│ ║  l.65: 	fun x = 1
+//│ ╟── but it flows into definition of method x with expected type `undefined`
+//│ ║  l.51: 	fun x = 1
 //│ ║        	    ^^^^^
-//│ ╟── Note: constraint arises from tuple type:
-//│ ║  l.64: 	fun x: ()
+//│ ╟── Note: constraint arises from literal type:
+//│ ║  l.50: 	fun x: ()
 //│ ╙──      	       ^^
 //│ fun x: 1
-//│ fun x: []
+//│ fun x: undefined
+
+
+(1)
+//│ 1
+//│ res
+//│     = 1
+
+// :pe // TODO?
+(1,)
+//│ 1
+//│ res
+//│     = 1
+
+:pe
+(1,2)
+//│ ╔══[PARSE ERROR] Expected '=>' or '->' after this parameter section
+//│ ║  l.80: 	(1,2)
+//│ ╙──      	^^^^^
+//│ [1, 2]
+//│ res
+//│     = [ 1, 2 ]
+
+(let x = 1)
+//│ undefined
+//│ res
+//│     = undefined
+
+:pe
+(let x = 1 in)
+//│ ╔══[PARSE ERROR] Unexpected end of parenthesis section; an expression was expected here
+//│ ║  l.94: 	(let x = 1 in)
+//│ ╙──      	             ^
+//│ undefined
+//│ res
+//│     = undefined
+
+(log(1))
+//│ undefined
+//│ res
+//│     = undefined
+//│ // Output
+//│ 1
+
+:pe
+(log(1);)
+//│ ╔══[PARSE ERROR] Unexpected end of parenthesis section; an expression was expected here
+//│ ║  l.110: 	(log(1);)
+//│ ╙──       	        ^
+//│ undefined
+//│ res
+//│     = undefined
+//│ // Output
+//│ 1
+
+(log(1); 2)
+//│ 2
+//│ res
+//│     = 2
+//│ // Output
+//│ 1
+
+(log(1); ())
+//│ undefined
+//│ res
+//│     = undefined
+//│ // Output
+//│ 1
+
+(((log((())))))
+//│ undefined
+//│ res
+//│     = undefined
+//│ // Output
+//│ undefined
+
+
+
+
+:pe
+(1, 2)
+//│ ╔══[PARSE ERROR] Expected '=>' or '->' after this parameter section
+//│ ║  l.145: 	(1, 2)
+//│ ╙──       	^^^^^^
+//│ [1, 2]
+//│ res
+//│     = [ 1, 2 ]
+
+
+x => x
+//│ forall 'a. 'a -> 'a
+//│ res
+//│     = [Function: res]
+
+(x) => x
+//│ forall 'a. 'a -> 'a
+//│ res
+//│     = [Function: res]
+
+(x, y) => x + y
+//│ (Int, Int) -> Int
+//│ res
+//│     = [Function: res]
+
+
+(1, 2) => 3
+//│ (1, 2) -> 3
+//│ res
+//│     = [Function: res]
+
+
+:pe
+1 => (2, 3)
+//│ ╔══[PARSE ERROR] Expected '=>' or '->' after this parameter section
+//│ ║  l.177: 	1 => (2, 3)
+//│ ╙──       	     ^^^^^^
+//│ 1 -> [2, 3]
+//│ res
+//│     = [Function: res]
+
+
+fun f(x, y) = x + y
+//│ fun f: (Int, Int) -> Int
+
+f(1, 2)
+//│ Int
+//│ res
+//│     = 3
+
+f of 1, 2
+//│ Int
+//│ res
+//│     = 3
+
+:pe
+:e
+f of (1, 2)
+//│ ╔══[PARSE ERROR] Expected '=>' or '->' after this parameter section
+//│ ║  l.201: 	f of (1, 2)
+//│ ╙──       	     ^^^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.201: 	f of (1, 2)
+//│ ║         	^^^^^^^^^^^
+//│ ╟── argument of type `[[1, 2]]` does not match type `[?a, ?b]`
+//│ ║  l.201: 	f of (1, 2)
+//│ ║         	     ^^^^^^
+//│ ╟── Note: constraint arises from tuple literal:
+//│ ║  l.186: 	fun f(x, y) = x + y
+//│ ╙──       	     ^^^^^^
+//│ Int | error
+//│ res
+//│     = '1,2undefined'
+
+
+
+
 
 

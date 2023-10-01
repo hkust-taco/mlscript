@@ -572,7 +572,7 @@ if true then;; else;;
 
 if true then () else;;
 //│ |#if| |true| |#then| |(||)| |#else|#;;|
-//│ Parsed: {if (true) then '(' [] ')' else undefined}
+//│ Parsed: {if (true) then undefined else undefined}
 
 
 

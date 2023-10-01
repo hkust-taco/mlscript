@@ -2,9 +2,9 @@
 
 
 ()
-//│ []
+//│ undefined
 //│ res
-//│     = []
+//│     = undefined
 
 :pe
 (,)
@@ -28,29 +28,37 @@
 //│ res
 //│     = 1
 
+:pe
 (1, 2)
+//│ ╔══[PARSE ERROR] Expected '=>' or '->' after this parameter section
+//│ ║  l.32: 	(1, 2)
+//│ ╙──      	^^^^^^
 //│ [1, 2]
 //│ res
 //│     = [ 1, 2 ]
 
+:pe
 (1, 2,)
+//│ ╔══[PARSE ERROR] Expected '=>' or '->' after this parameter section
+//│ ║  l.41: 	(1, 2,)
+//│ ╙──      	^^^^^^^
 //│ [1, 2]
 //│ res
 //│     = [ 1, 2 ]
 
 
 let x: ()
-//│ let x: []
+//│ let x: undefined
 //│ x
 //│   = <missing implementation>
 
 :pe
 let x: (,)
 //│ ╔══[PARSE ERROR] Unexpected comma in expression position
-//│ ║  l.48: 	let x: (,)
+//│ ║  l.56: 	let x: (,)
 //│ ╙──      	        ^
 //│ ╔══[PARSE ERROR] Unexpected end of parenthesis section; an expression was expected here
-//│ ║  l.48: 	let x: (,)
+//│ ║  l.56: 	let x: (,)
 //│ ╙──      	         ^
 //│ let x: undefined
 //│ x
@@ -66,12 +74,20 @@ let x: (1,)
 //│ x
 //│   = <missing implementation>
 
+:pe
 let x: (1, 2)
+//│ ╔══[PARSE ERROR] Expected '=>' or '->' after this parameter section
+//│ ║  l.78: 	let x: (1, 2)
+//│ ╙──      	       ^^^^^^
 //│ let x: [1, 2]
 //│ x
 //│   = <missing implementation>
 
+:pe
 let x: (1, 2,)
+//│ ╔══[PARSE ERROR] Expected '=>' or '->' after this parameter section
+//│ ║  l.87: 	let x: (1, 2,)
+//│ ╙──      	       ^^^^^^^
 //│ let x: [1, 2]
 //│ x
 //│   = <missing implementation>

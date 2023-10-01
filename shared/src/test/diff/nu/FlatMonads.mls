@@ -401,7 +401,7 @@ declare fun printLine: Str -> IO[()]
 //│ declare trait IO[A]: forall 'b. (A -> IO['b]) -> IO['b] {
 //│   fun run: A
 //│ }
-//│ fun printLine: Str -> IO[[]]
+//│ fun printLine: Str -> IO[undefined]
 //│ fun pure: forall 'a. 'a -> IO['a]
 //│ fun readInt: IO[Int]
 

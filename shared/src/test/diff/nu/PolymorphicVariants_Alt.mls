@@ -84,12 +84,12 @@ mixin EvalLambda {
         let l1 = this.eval(sub, t1)
         let l2 = this.eval(sub, t2)
         if t1 is
-          Abs(x, t) then this.eval(Cons((x, l2), Nil()), t)
+          Abs(x, t) then this.eval(Cons([x, l2], Nil()), t)
         else
           App(l1, l2)
       Abs(x, t) then
         let s = gensym()
-        Abs(s, this.eval(Cons((x, Var(s)), sub), t))
+        Abs(s, this.eval(Cons([x, Var(s)], sub), t))
     else
       super.eval(sub, v)
 }
@@ -122,13 +122,13 @@ Test1.eval(Nil(), Abs("b", Var("a")))
 //│     'A :> 'a | Var
 //│     'a :> App['A] | Abs['A]
 
-Test1.eval(Cons(("c", Var("d")), Nil()), App(Abs("b", Var("b")), Var("c")))
+Test1.eval(Cons(["c", Var("d")], Nil()), App(Abs("b", Var("b")), Var("c")))
 //│ forall 'a. 'A | 'a
 //│   where
 //│     'A :> 'a | Var
 //│     'a :> App['A] | Abs['A]
 
-Test1.eval(Cons(("c", Abs("d", Var("d"))), Nil()), App(Abs("b", Var("b")), Var("c")))
+Test1.eval(Cons(["c", Abs("d", Var("d"))], Nil()), App(Abs("b", Var("b")), Var("c")))
 //│ forall 'a. 'A | 'a
 //│   where
 //│     'A :> 'a | Abs[Var] | Var
@@ -175,13 +175,13 @@ module Test2 extends EvalVar, EvalExpr
 Test2.eval(Nil(), Var("a"))
 //│ Numb | Var
 
-Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Var("a"))
+Test2.eval(Cons(["c", Abs("d", Var("d"))], Nil()), Var("a"))
 //│ Abs[Var] | Numb | Var
 
-Test2.eval(Cons(("a", Numb(1)), Nil()), Var("a"))
+Test2.eval(Cons(["a", Numb(1)], Nil()), Var("a"))
 //│ Numb | Var
 
-Test2.eval(Cons(("a", Abs("d", Var("d"))), Nil()), Add(Numb(1), Var("a")))
+Test2.eval(Cons(["a", Abs("d", Var("d"))], Nil()), Add(Numb(1), Var("a")))
 //│ Abs[Var] | Add[Numb | Var] | Numb | Var
 
 module Test3 extends EvalVar, EvalExpr, EvalLambda
@@ -196,13 +196,13 @@ module Test3 extends EvalVar, EvalExpr, EvalLambda
 //│   'c <: Abs['c] | App['c & (Abs['c] | Object & ~#Abs)] | Object & 'd & ~#Abs & ~#App
 //│   'a :> App['A] | Abs['A]
 
-Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Abs("a", Var("a")))
+Test3.eval(Cons(["c", Abs("d", Var("d"))], Nil()), Abs("a", Var("a")))
 //│ forall 'a. 'A | 'a
 //│   where
 //│     'A :> 'a | Abs[Var] | Numb | Var
 //│     'a :> App['A] | Abs['A]
 
-Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), App(Abs("a", Var("a")), Add(Numb(1), Var("c"))))
+Test3.eval(Cons(["c", Abs("d", Var("d"))], Nil()), App(Abs("a", Var("a")), Add(Numb(1), Var("c"))))
 //│ forall 'a. 'A | 'a
 //│   where
 //│     'A :> 'a | Abs[Var] | Add[Numb | Var] | Numb | Var

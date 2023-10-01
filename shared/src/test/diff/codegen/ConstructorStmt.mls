@@ -202,11 +202,11 @@ class Bar {
 :js
 class Baz() {
   val x = 123
-  log((1, x))
+  log([1, x])
   val y =
-    log((2, x))
+    log([2, x])
     x + 1
-  log((3, y))
+  log([3, y])
 }
 //│ class Baz() {
 //│   val x: 123
@@ -262,7 +262,7 @@ class Baz() {
 //│ // End of generated code
 
 let baz = Baz()
-log((baz.x, baz.y))
+log([baz.x, baz.y])
 //│ let baz: Baz
 //│ undefined
 //│ baz

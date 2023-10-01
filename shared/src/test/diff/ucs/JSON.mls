@@ -245,7 +245,7 @@ fun expect(scanner, ch) =
       eq(ch)(ch') then ParseSuccess((), scanner.advance)
       else ParseFailure(concat4("expect '", ch, "' but found ", ch'), scanner)
     None then ParseFailure(concat3("expect '", ch, "' but found EOF"), scanner)
-//│ fun expect: (Scanner & {advance: Scanner}, Str) -> (ParseFailure | ParseSuccess[[]])
+//│ fun expect: (Scanner & {advance: Scanner}, Str) -> (ParseFailure | ParseSuccess[undefined])
 
 fun expectWord(scanner, word, result) =
   if
