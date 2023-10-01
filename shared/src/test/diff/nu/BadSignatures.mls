@@ -8,7 +8,7 @@ trait T {
 }
 //│ ╔══[ERROR] Method implementations in traits are not yet supported
 //│ ║  l.7: 	  fun x = false
-//│ ╙──     	      ^^^^^^^^^
+//│ ╙──     	  ^^^^^^^^^^^^^
 //│ trait T {
 //│   fun x: Int
 //│ }
@@ -95,7 +95,7 @@ mixin M { fun x : Int }
 //│ ║        	      ^
 //│ ╟── Declared here:
 //│ ║  l.92: 	mixin M { fun x : Int }
-//│ ╙──      	              ^^^^^^^
+//│ ╙──      	          ^^^^^^^^^^^
 //│ mixin M() {
 //│   fun x: Int
 //│ }

@@ -127,7 +127,7 @@ let s2 = Some(1)
 :js
 fun foo(s) =
   if s is
-    Some(t) then let b = s2.value; b + t.x
+    Some(t) then let b = s2.value in b + t.x
     _ then 0  
 //│ fun foo: (Object & ~#Some | Some[{x: Int}]) -> Int
 //│ // Prelude
@@ -148,7 +148,7 @@ foo(Some(V1(12)))
 
 fun bar(s) =
   if s is
-    Some(_) then let b = s2.value; b + 1
+    Some(_) then let b = s2.value in b + 1
     _ then 0
 //│ fun bar: (Object & ~#Some | Some[anything]) -> Int
 

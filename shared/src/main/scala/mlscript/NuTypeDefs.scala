@@ -222,7 +222,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
         sign: ST,
         inheritedTags: Set[TypeName],
         parentTP: Map[Str, NuMember]
-      )(val instanceType: ST, // * only meant to be used in `force` and `variances`
+      )(val instanceType: ST, // * only meant to be used in `variances`
+        // * TODO remove `instanceType` and implement proper variance analysis instead
       ) extends TypedNuTypeDef(Cls) with PolyNuDecl
   {
     def decl: NuTypeDef = td
@@ -317,7 +318,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           f(pol, sign),
           inheritedTags,
           parentTP.mapValuesIter(_.mapPol(pol, smart)(f)).toMap,
-        )(f(pol, instanceType))
+        )(/* f(pol, instanceType) */TopType) // TODO remove instanceType
     def mapPolMap(pol: PolMap)(f: (PolMap, SimpleType) => SimpleType)
           (implicit ctx: Ctx): TypedNuCls =
         TypedNuCls(level, td,
@@ -329,10 +330,10 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           f(pol, sign),
           inheritedTags,
           parentTP.mapValuesIter(_.mapPolMap(pol)(f)).toMap,
-        )(f(pol, instanceType))
+        )(/* f(pol, instanceType) */TopType) // TODO remove instanceType
     
     override def toString: Str = s"TypedNuCls($level, ${td.nme},\n\t$tparams,\n\t$params,\n\tthis: $thisTy, ${
-      members.lnIndent()},\n\t: $sign, $inheritedTags, $parentTP)"
+      members.lnIndent()},\n\t: $sign, $inheritedTags, $parentTP)($instanceType)"
   }
   
   
@@ -535,6 +536,12 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     
     // println(s"vars ${vars}")
     
+    tu.entities.foreach {
+      case fd: NuFunDef if fd.isLetRec.isEmpty && outer.exists(_.kind is Block) =>
+        err(msg"Cannot use `val` or `fun` in local block; use `let` instead.", fd.toLoc)
+      case _ =>
+    }
+    
     val named = mutable.Map.empty[Str, LazyTypeInfo]
     
     // * Not sure we should support declaring signature with the `ident: type` syntax
@@ -641,13 +648,27 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
       case s :: stmts =>
         val res_ty = s match {
           case decl: NuDecl => N
-          case s: Statement =>
-            val (diags, dss) = s.desugared
-            diags.foreach(raise)
-            S(typeTerms(dss, false, Nil)(ctx, raise, TypeProvenance(s.toLoc, s match {
-              case trm: Term => trm.describe
-              case s => "statement"
-            }), vars, genLambdas = false))
+          case t: Term =>
+            implicit val genLambdas: GenLambdas = true
+            val ty = typeTerm(t)
+            /* // TODO next:
+            if (!topLevel) {
+              if (t.isInstanceOf[Var] || t.isInstanceOf[Lit])
+                warn("Pure expression does nothing in statement position.", t.toLoc)
+              else
+                constrain(mkProxy(ty, TypeProvenance(t.toCoveringLoc, "expression in statement position")), UnitType)(
+                  raise = err => raise(WarningReport( // Demote constraint errors from this to warnings
+                    msg"Expression in statement position should have type `unit`." -> N ::
+                    msg"Use the `discard` function to discard non-unit values, making the intent clearer." -> N ::
+                    err.allMsgs, newDefs)),
+                  prov = TypeProvenance(t.toLoc, t.describe), ctx)
+            }
+            */
+            S(ty)
+          case s: DesugaredStatement =>
+            err(msg"Illegal position for this ${s.describe} statement.", s.toLoc)(raise)
+            N
+          case _ => die
         }
         stmts match {
           case Nil => res_ty
@@ -785,7 +806,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                 
               case rawCls: TypedNuCls =>
                 
-                // println(s"Raw $rawCls")
+                // println(s"Raw $rawCls where ${rawCls.showBounds}")
                 
                 val (fr, ptp) = refreshHelper(rawCls, v, if (parTargs.isEmpty) N else S(parTargs)) // infer ty args if not provided
                 val cls = {
@@ -794,7 +815,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                   rawCls.freshenAbove(info.level, rigidify = false)
                 }
                 
-                // println(s"Fresh[${ctx.lvl}] $cls")
+                // println(s"Fresh[${ctx.lvl}] $cls where ${cls.showBounds}")
                 
                 def checkArgsNum(effectiveParamSize: Int) =
                   if (parArgs.sizeCompare(effectiveParamSize) =/= 0)
@@ -895,13 +916,23 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
       decl match {
         case td: NuTypeDef =>
           td.tparams.map(tp =>
-            (tp._2, freshVar(TypeProvenance(
-              tp._2.toLoc,
-              "type parameter",
-              S(tp._2.name),
-              true), N, S(tp._2.name)), tp._1))
-        case fd: NuFunDef => Nil // TODO
+            (tp._2, freshVar(
+              TypeProvenance(tp._2.toLoc, "type parameter",
+                S(tp._2.name),
+                isType = true),
+              N, S(tp._2.name)), tp._1))
+        case fd: NuFunDef =>
+          fd.tparams.map { tn =>
+            (tn, freshVar(
+              TypeProvenance(tn.toLoc, "method type parameter",
+                originName = S(tn.name),
+                isType = true),
+              N, S(tn.name)), N)
+          }
       }
+    }
+    lazy val tparamsSkolems: Ls[Str -> SkolemTag] = tparams.map {
+      case (tp, tv, vi) => (tp.name, SkolemTag(tv)(tv.prov))
     }
     
     lazy val explicitVariances: VarianceStore =
@@ -912,9 +943,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
       explicitVariances.get(tv).getOrElse(VarianceInfo.in)
     
     lazy private implicit val vars: Map[Str, SimpleType] =
-      outerVars ++ tparams.iterator.map {
-        case (tp, tv, vi) => (tp.name, SkolemTag(tv)(tv.prov))
-      }
+      outerVars ++ tparamsSkolems
     
     lazy val typedParams: Opt[Ls[Var -> FieldType]] = ctx.nest.nextLevel { implicit ctx =>
       decl match {
@@ -1089,11 +1118,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       val body_ty = ctx.nextLevel { implicit ctx: Ctx =>
                         // * Note: can't use `ctx.poly` instead of `ctx.nextLevel` because all the methods
                         // * in the current typing unit are quantified together.
-                        vars ++ fd.tparams.map { tn =>
-                          tn.name -> freshVar(TypeProvenance(tn.toLoc, "method type parameter",
-                            originName = S(tn.name),
-                            isType = true), N, S(tn.name))
-                        } |> { implicit vars =>
+                        assert(fd.tparams.sizeCompare(tparamsSkolems) === 0, (fd.tparams, tparamsSkolems))
+                        vars ++ tparamsSkolems |> { implicit vars =>
                           // * Only type methods polymorphically if they're at the top level or if
                           // * they're annotated with a type signature.
                           // * Otherwise, we get too much extrusion and cycle check failures
@@ -1428,7 +1454,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     
                     val tparamMems = tparams.map { case (tp, tv, vi) => // TODO use vi
                       val fldNme = td.nme.name + "#" + tp.name
-                      NuParam(TypeName(fldNme).withLocOf(tp), FieldType(S(tv), tv)(tv.prov), isPublic = true)(lvl)
+                      val skol = SkolemTag(tv)(tv.prov)
+                      NuParam(TypeName(fldNme).withLocOf(tp), FieldType(S(skol), skol)(tv.prov), isPublic = true)(lvl)
                     }
                     val tparamFields = tparamMems.map(p => p.nme.toVar -> p.ty)
                     assert(!typedParams.exists(_.keys.exists(tparamFields.keys.toSet)), ???)
@@ -1760,10 +1787,19 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
         case _ =>
           println(s"Assigning ${tn.name} :: ${_tv} := $targ where ${targ.showBounds}")
           val tv =
-            freshVar(_tv.prov, S(_tv), _tv.nameHint)(targ.level)
+            freshVar(_tv.prov, S(_tv), _tv.nameHint,
+              lbs = _tv.lowerBounds,
+              ubs = _tv.upperBounds,
+              )(targ.level)
           println(s"Set ${tv} ~> ${_tv}")
           assert(tv.assignedTo.isEmpty)
+          
+          // * Note: no checks that the assigned variable satisfies the bounds...
+          // * When we support bounded types, bounds check will be needed at the type definition site
+          assert(tv.lowerBounds.isEmpty, tv.lowerBounds)
+          assert(tv.upperBounds.isEmpty, tv.upperBounds)
           tv.assignedTo = S(targ)
+          
           // println(s"Assigned ${tv.assignedTo}")
           tv
       })

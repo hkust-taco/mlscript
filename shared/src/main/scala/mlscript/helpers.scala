@@ -381,6 +381,7 @@ trait PgrmImpl { self: Pgrm =>
       case ot: Terms => R(ot)
       case NuFunDef(isLetRec, nme, _, tys, rhs) =>
         R(Def(isLetRec.getOrElse(true), nme, rhs, isLetRec.isEmpty))
+      case _: Constructor => die
    }
     diags.toList -> res
   }
@@ -468,6 +469,7 @@ trait NuDeclImpl extends Located { self: NuDecl =>
     case _ => N
   }
 }
+
 trait TypingUnitImpl extends Located { self: TypingUnit =>
   def showDbg: Str = entities.map {
     case t: Term => t.toString
@@ -477,6 +479,12 @@ trait TypingUnitImpl extends Located { self: TypingUnit =>
   }.mkString("{", "; ", "}")
   override def toString: String = s"‹${entities.mkString("; ")}›"
   lazy val children: List[Located] = entities
+}
+
+trait ConstructorImpl { self: Constructor =>
+  // def children: List[Located] = fields.map(_._2)
+  def describe: Str = "constructor"
+  // def showDbg: Str = s"constructor(${fields.map(_._1.name).mkString(", ")})"
 }
 
 trait TypeNameImpl extends Ordered[TypeName] { self: TypeName =>
@@ -802,9 +810,9 @@ trait StatementImpl extends Located { self: Statement =>
   
   lazy val desugared = doDesugar
   private def doDesugar: Ls[Diagnostic] -> Ls[DesugaredStatement] = this match {
-    case ctor: Constructor =>
-      import Message._
-      (ErrorReport(msg"constructor must be in a class." -> ctor.toLoc :: Nil, newDefs=true) :: Nil) -> Nil
+    // case ctor: Constructor =>
+    //   import Message._
+    //   (ErrorReport(msg"constructor must be in a class." -> ctor.toLoc :: Nil, newDefs=true) :: Nil) -> Nil
     case l @ LetS(isrec, pat, rhs) =>
       val (diags, v, args) = desugDefnPattern(pat, Nil)
       diags -> (Def(isrec, v, L(args.foldRight(rhs)(Lam(_, _))), false).withLocOf(l) :: Nil) // TODO use v, not v.name

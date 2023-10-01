@@ -322,7 +322,7 @@ TestBad().foo1(1)
 //│     = 1
 
 x => TestBad().foo1(x)
-//│ 'a -> 'a
+//│ forall 'a. 'a -> 'a
 //│ res
 //│     = [Function: res]
 

@@ -137,7 +137,7 @@ fun map_expr(f, v) =
 
 mixin EvalExpr {
   fun eval(sub, v) =
-    fun eta(e) = this.eval(sub, e)
+    let eta(e) = this.eval(sub, e)
     let vv = map_expr(eta, v)
     if vv is
       Var then super.eval(sub, vv)

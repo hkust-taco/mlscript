@@ -19,7 +19,7 @@ C(123).x
 //│ res
 //│     = 123
 
-class C(val x: Int) { constructor(y: Int) { log(y); x = y; log(x) } }
+class C(val x: Int) { constructor(y: Int) { log(y);; x = y;; log(x) } }
 C(123).x
 //│ class C(x: Int) {
 //│   constructor(y: Int)
@@ -32,11 +32,11 @@ C(123).x
 //│ 123
 
 :e
-class C(val x: Int) { constructor(y: Int) { x = y; log(x); x = y + 1; log(x) } }
+class C(val x: Int) { constructor(y: Int) { x = y;; log(x);; x = y + 1;; log(x) } }
 C(123).x
 //│ ╔══[ERROR] Class parameter 'x' was already set
-//│ ║  l.35: 	class C(val x: Int) { constructor(y: Int) { x = y; log(x); x = y + 1; log(x) } }
-//│ ╙──      	                                                           ^
+//│ ║  l.35: 	class C(val x: Int) { constructor(y: Int) { x = y;; log(x);; x = y + 1;; log(x) } }
+//│ ╙──      	                                                             ^
 //│ class C(x: Int) {
 //│   constructor(y: Int)
 //│ }
@@ -48,9 +48,9 @@ C(123).x
 //│ 124
 
 :e
-class C(val x: Int) { constructor(y: Int) { log(x); x = y } }
+class C(val x: Int) { constructor(y: Int) { log(x);; x = y } }
 //│ ╔══[ERROR] identifier not found: x
-//│ ║  l.51: 	class C(val x: Int) { constructor(y: Int) { log(x); x = y } }
+//│ ║  l.51: 	class C(val x: Int) { constructor(y: Int) { log(x);; x = y } }
 //│ ╙──      	                                                ^
 //│ class C(x: Int) {
 //│   constructor(y: Int)
@@ -62,7 +62,7 @@ class C(val x: Int) { constructor(y: Int) { log(x); x = y } }
 class C(val x: Int) { constructor(y: Str) { x = y } }
 //│ ╔══[ERROR] Type mismatch in auxiliary class constructor:
 //│ ║  l.62: 	class C(val x: Int) { constructor(y: Str) { x = y } }
-//│ ║        	                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║        	                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Str` is not an instance of `Int`
 //│ ║  l.62: 	class C(val x: Int) { constructor(y: Str) { x = y } }
 //│ ║        	                                     ^^^
@@ -118,7 +118,7 @@ class C(val x: Int) { constructor(2 + 2) { x = 0 } }
 
 
 class C(val x: Int, y: Int) {
-  constructor(z: Int) { x = z; y = z }
+  constructor(z: Int) { x = z;; y = z }
   log([x, y])
 }
 //│ class C(x: Int, y: Int) {
@@ -167,6 +167,14 @@ new C(1, 2)
 //│ // Output
 //│ [ 1, 1 ]
 
+:pe
+class C { constructor(x: Int);; constructor(y: Int) }
+//│ ╔══[PARSE ERROR] A class may have at most one explicit constructor
+//│ ║  l.171: 	class C { constructor(x: Int);; constructor(y: Int) }
+//│ ╙──       	^^^^^
+//│ class C {
+//│   constructor(x: Int)
+//│ }
 
 
 

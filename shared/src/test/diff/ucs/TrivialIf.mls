@@ -78,12 +78,12 @@ fun foo(x) = if x is Some of
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
 //│ ║  l.76: 	  0 then 0
 //│ ╙──      	    ^^^^
-//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause; found operator application instead
+//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'if'; found operator application instead
 //│ ║  l.75: 	fun foo(x) = if x is Some of
 //│ ║        	                ^^^^^^^^^^^^
 //│ ║  l.76: 	  0 then 0
 //│ ║        	^^^
-//│ ╟── Note: 'if' expression started here:
+//│ ╟── Note: 'if' expression starts here:
 //│ ║  l.75: 	fun foo(x) = if x is Some of
 //│ ╙──      	             ^^
 //│ foo: (Some & {value: 0}) -> undefined

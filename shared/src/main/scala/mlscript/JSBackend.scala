@@ -1232,7 +1232,7 @@ class JSWebBackend extends JSBackend(allowUnresolvedSymbols = true) {
               JSInvoke(resultsIdent("push"), JSIdent(sym.runtimeName) :: Nil).stmt :: Nil
           case fd @ NuFunDef(isLetRec, Var(name), _, tys, R(ty)) =>
             Nil
-          case _: Def | _: TypeDef =>
+          case _: Def | _: TypeDef | _: Constructor =>
             throw CodeGenError("Def and TypeDef are not supported in NewDef files.")
           case term: Term =>
             val name = translateTerm(term)(topLevelScope)
@@ -1476,7 +1476,7 @@ class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
         } catch {
           case e: UnimplementedError => JSTestBackend.AbortedQuery(e.getMessage())
         }
-      case _: Def | _: TypeDef =>
+      case _: Def | _: TypeDef | _: Constructor =>
         throw CodeGenError("Def and TypeDef are not supported in NewDef files.")
     }
 

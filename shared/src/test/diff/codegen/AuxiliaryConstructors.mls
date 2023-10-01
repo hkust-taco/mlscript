@@ -222,19 +222,19 @@ class E {
   constructor(x: Int)
   constructor(y: Int)
 }
-//│ ╔══[PARSE ERROR] A class may only have at most one explicit constructor
+//│ ╔══[PARSE ERROR] A class may have at most one explicit constructor
 //│ ║  l.221: 	class E {
 //│ ╙──       	^^^^^
 //│ class E {
-//│   constructor()
+//│   constructor(x: Int)
 //│ }
 
 :e
 constructor(x: Int)
-//│ ╔══[ERROR] constructor must be in a class.
+//│ ╔══[ERROR] Illegal position for this constructor statement.
 //│ ║  l.233: 	constructor(x: Int)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^
-//│ []
+//│ 
 //│ Code generation encountered an error:
 //│   unexpected constructor.
 
@@ -563,6 +563,8 @@ class QQ(qq: Str) {
 //│ ║         	^^^^^^^
 //│ ║  l.550: 	    qq = foo
 //│ ║         	^^^^^^^^^^^^
+//│ ║  l.551: 	  }
+//│ ║         	^^^
 //│ ╟── type `Int` is not an instance of `Str`
 //│ ║  l.548: 	  constructor(foo: Int) {
 //│ ║         	                   ^^^

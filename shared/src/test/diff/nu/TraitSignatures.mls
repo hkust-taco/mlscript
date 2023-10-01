@@ -17,7 +17,7 @@ declare trait Foo: (x: Num) => Num {
 //│     = [Function: res]
 
 
-declare trait FooPoly: forall 'a; (x: 'a) => 'a
+declare trait FooPoly: forall 'a: (x: 'a) => 'a
 //│ declare trait FooPoly: forall 'a. (x: 'a) -> 'a
 
 (f: FooPoly) => [f(0), f(true)]

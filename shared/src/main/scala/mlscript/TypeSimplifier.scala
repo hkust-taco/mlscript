@@ -763,7 +763,7 @@ trait TypeSimplifier { self: Typer =>
         // * Note: a more precise version could be the following,
         // * but it doesn't seem to change anything in our test suite, so I left if commented for now:
         // // * Only consider recursive those variables that recursive in their *reachable* bounds:
-        // occNums.contains(true -> v) && v.isPosRecursive_$ || occNums.contains(false -> v) && v.isNegRecursive_$
+        // occNums.contains(true -> v) && v.isPosRecursive_$(false) || occNums.contains(false -> v) && v.isNegRecursive_$(false)
       )).toSet
     
     var recVars = computeRecVars

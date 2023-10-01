@@ -1,6 +1,10 @@
 :NewDefs
 
 
+declare fun String: anything -> Str
+//│ fun String: anything -> Str
+
+
 abstract class IO[A] {
   fun bind(f) = Bind(this, f)
   fun run: A
@@ -16,39 +20,34 @@ class Bind[A, B](underlying: IO[A], f: A -> IO[B]) extends IO[B] {
 //│   fun run: A
 //│ }
 //│ class Pure[A](value: A) extends IO {
-//│   fun bind: forall 'A 'B0. ('A -> IO['B0]) -> Bind['A, 'B0]
+//│   fun bind: forall 'B0. (A -> IO['B0]) -> Bind[in A & 'A out A, 'B0]
 //│   fun run: A
 //│ }
 //│ class Bind[A, B](underlying: IO[A], f: A -> IO[B]) extends IO {
-//│   fun bind: forall 'B1 'A0. ('A0 -> IO['B1]) -> Bind['A0, 'B1]
+//│   fun bind: forall 'B1. (B -> IO['B1]) -> Bind[in B & 'A0 out B, 'B1]
 //│   fun run: B
 //│ }
 //│ where
-//│   'A0 <: 'A1
-//│   'A1 := B
-//│   'A <: 'A2
-//│   'A2 := A
+//│   'A0 := B
+//│   'A := A
 
-module readInt extends IO[Int] { fun run = 42 }
+module readInt extends IO[Int] { fun run: Int = 42 }
 class printLine(str: Str) extends IO[undefined] { fun run = log(str) }
-declare fun String: anything -> Str
 //│ module readInt extends IO {
-//│   fun bind: forall 'A 'B. ('A -> IO['B]) -> Bind['A, 'B]
-//│   fun run: 42
+//│   fun bind: forall 'B. ('A -> IO['B]) -> Bind[Int & 'A, 'B]
+//│   fun run: Int
 //│ }
 //│ class printLine(str: Str) extends IO {
-//│   fun bind: forall 'A0 'B0. ('A0 -> IO['B0]) -> Bind['A0, 'B0]
+//│   fun bind: forall 'B0. ('A0 -> IO['B0]) -> Bind[undefined & 'A0, 'B0]
 //│   fun run: undefined
 //│ }
-//│ fun String: anything -> Str
 //│ where
-//│   'A0 <: 'A1
-//│   'A1 := undefined
-//│   'A <: 'A2
-//│   'A2 := Int
+//│   'A0 := undefined
+//│   'A := Int
 
 
 // * Nested indent:
+
 val main =
   printLine("Hi! Input two numbers: ").bind of _ =>
     readInt.bind of n =>
@@ -56,10 +55,9 @@ val main =
         val sum = n + m
         printLine(concat("The sum is: ")(String of sum)).bind of _ =>
           Pure(sum)
-//│ val main: Bind['A, 'B]
+//│ val main: Bind[undefined, 'B]
 //│   where
 //│     'B :> Int
-//│     'A <: undefined
 //│ main
 //│      = Bind {}
 
@@ -73,6 +71,7 @@ main.run
 
 
 // * Flat indent:
+
 val main =
   printLine("Hi! Input two numbers: ").bind of _ =>
   readInt.bind of n =>
@@ -80,10 +79,9 @@ val main =
   val sum = n + m
   printLine(concat("The sum is: ")(String of sum)).bind of _ =>
   Pure(sum)
-//│ val main: Bind['A, 'B]
+//│ val main: Bind[undefined, 'B]
 //│   where
 //│     'B :> Int
-//│     'A <: undefined
 //│ main
 //│      = Bind {}
 
@@ -96,34 +94,76 @@ main.run
 //│ The sum is: 84
 
 
-// * TODO improve this error
+// * TODO improve this error (parameter list repr.)
 :e
 printLine("").bind of [] => error
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.101: 	printLine("").bind of [] => error
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.99: 	printLine("").bind of [] => error
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `[?A]` does not match type `[]`
-//│ ║  l.11: 	class Bind[A, B](underlying: IO[A], f: A -> IO[B]) extends IO[B] {
+//│ ║  l.15: 	class Bind[A, B](underlying: IO[A], f: A -> IO[B]) extends IO[B] {
 //│ ╙──      	                                       ^
-//│ Bind['A, 'B] | error
-//│   where
-//│     'A <: undefined
+//│ Bind[undefined, 'B] | error
 //│ res
 //│     = Bind {}
 
 
-// * Using a shortand operator for `bind`
+// * Using a shortand operator for `bind`... What's the use of a `do` notation?! :^)
 
-fun (|>=) bindOp[A, B](x: IO[A], f: A -> IO[B]): IO[B] = x.bind(f)
-//│ fun (|>=) bindOp: forall 'A 'B. (x: IO['A], f: 'A -> IO['B]) -> IO['B]
+fun (#>>) bind[A, B](x: IO[A], f: A -> IO[B]): IO[B] = x.bind(f)
+//│ fun (#>>) bind: forall 'A 'B. (x: IO['A], f: 'A -> IO['B]) -> IO['B]
 
 val main =
-  printLine("Hi! Input two numbers: ") |>= _ =>
-  readInt |>= n =>
-  readInt |>= m =>
+  printLine("Hi! Input two numbers: ") #>> _ =>
+  readInt #>> n =>
+  readInt #>> m =>
   val sum = n + m
-  printLine(concat("The sum is: ")(String of sum)) |>= _ =>
+  printLine(concat("The sum is: ")(String of sum)) #>> _ =>
   Pure(sum)
+//│ val main: IO['B]
+//│   where
+//│     'B :> Int
+//│ main
+//│      = Bind {}
+
+main.run
+//│ Int
+//│ res
+//│     = 84
+//│ // Output
+//│ Hi! Input two numbers: 
+//│ The sum is: 84
+
+fun loop =
+  printLine("Input a positive number: ") #>> _ =>
+  readInt #>> n =>
+  if n < 0 then loop else Pure(n)
+//│ fun loop: forall 'B. IO['B]
+//│   where
+//│     'B :> Int
+
+let r = loop.run
+//│ let r: Int
+//│ r
+//│   = 42
+//│ // Output
+//│ Input a positive number: 
+
+
+// * Using another shortand operator for `map`
+
+fun (>>) compose[A, B, C](f: A -> B, g: B -> C): A -> C = x => g(f(x))
+fun (#>) map[A, B](x: IO[A], f: A -> B): IO[B] = x.bind(f >> Pure)
+//│ fun (>>) compose: forall 'A 'B 'C. (f: 'A -> 'B, g: 'B -> 'C) -> 'A -> 'C
+//│ fun (#>) map: forall 'A0 'B0. (x: IO['A0], f: 'A0 -> 'B0) -> IO['B0]
+
+val main =
+  printLine("Hi! Input two numbers: ") #>> _ =>
+  readInt #>> n =>
+  readInt #>> m =>
+  val sum = n + m
+  printLine(concat("The sum is: ")(String of sum)) #> _ =>
+  sum
 //│ val main: IO['B]
 //│   where
 //│     'B :> Int
@@ -133,20 +173,23 @@ val main =
 
 // * With no type annotations:
 
-fun (|>=) bindOp(x, f) = x.bind(f)
-//│ fun (|>=) bindOp: forall 'a 'b. ({bind: 'a -> 'b}, 'a) -> 'b
+fun (>>) compose(f, g) = x => g(f(x))
+fun (#>>) bind(x, f) = x.bind(f)
+fun (#>) map(x, f) = x.bind(f >> Pure)
+//│ fun (>>) compose: forall 'a 'b 'c. ('c -> 'a, 'a -> 'b) -> 'c -> 'b
+//│ fun (#>>) bind: forall 'd 'e. ({bind: 'd -> 'e}, 'd) -> 'e
+//│ fun (#>) map: forall 'f 'A 'g. ({bind: ('f -> Pure['A]) -> 'g}, 'f -> 'A) -> 'g
 
 val main =
-  printLine("Hi! Input two numbers: ") |>= _ =>
-  readInt |>= n =>
-  readInt |>= m =>
+  printLine("Hi! Input two numbers: ") #>> _ =>
+  readInt #>> n =>
+  readInt #>> m =>
   val sum = n + m
-  printLine(concat("The sum is: ")(String of sum)) |>= _ =>
-  Pure(sum)
-//│ val main: Bind['A, 'B]
+  printLine(concat("The sum is: ")(String of sum)) #> _ =>
+  sum
+//│ val main: Bind[undefined, 'B]
 //│   where
 //│     'B :> Int
-//│     'A <: undefined
 //│ main
 //│      = Bind {}
 
@@ -158,23 +201,35 @@ main.run
 //│ Hi! Input two numbers: 
 //│ The sum is: 84
 
+fun loop =
+  printLine("Input a positive number: ") #>> _ =>
+  readInt #>> n =>
+  if n < 0 then loop else Pure(n)
+//│ fun loop: forall 'B. Bind[undefined, 'B]
+//│   where
+//│     'B :> Int
+
+let r = loop.run
+//│ let r: Int
+//│ r
+//│   = 42
+//│ // Output
+//│ Input a positive number: 
+
 
 // * Abstracting over the monad:
 
-fun (|>=) bindOp(x, f) = x.bind(f)
-//│ fun (|>=) bindOp: forall 'a 'b. ({bind: 'a -> 'b}, 'a) -> 'b
-
 fun main(ctx) =
-  ctx.printLine("Hi! Input two numbers: ") |>= _ =>
-  ctx.readInt |>= n =>
-  ctx.readInt |>= m =>
+  ctx.printLine("Hi! Input two numbers: ") #>> _ =>
+  ctx.readInt #>> n =>
+  ctx.readInt #>> m =>
   val sum = n + m
-  ctx.printLine(concat("The sum is: ")(String of sum)) |>= _ =>
+  ctx.printLine(concat("The sum is: ")(String of sum)) #>> _ =>
   ctx.pure(sum)
 //│ fun main: forall 'a 'b 'c 'd 'e. {
-//│   printLine: "Hi! Input two numbers: " -> {bind: (anything -> 'a) -> 'e} & Str -> {bind: (anything -> 'd) -> 'b},
+//│   printLine: "Hi! Input two numbers: " -> {bind: (anything -> 'a) -> 'e} & Str -> {bind: (anything -> 'd) -> 'c},
 //│   pure: Int -> 'd,
-//│   readInt: {bind: (Int -> 'c) -> 'a & (Int -> 'b) -> 'c}
+//│   readInt: {bind: (Int -> 'b) -> 'a & (Int -> 'c) -> 'b}
 //│ } -> 'e
 
 val defaultCtx = {printLine, readInt, pure: Pure}
@@ -205,8 +260,8 @@ main(defaultCtx).run
 //│ The sum is: 84
 
 fun loop(ctx) =
-  ctx.printLine("Input a positive number: ") |>= _ =>
-  ctx.readInt |>= n =>
+  ctx.printLine("Input a positive number: ") #>> _ =>
+  ctx.readInt #>> n =>
   if n < 0 then loop(ctx) else ctx.pure(n)
 //│ fun loop: forall 'a 'b 'c 'd. {
 //│   printLine: "Input a positive number: " -> {bind: (anything -> 'a) -> 'b},
@@ -214,39 +269,51 @@ fun loop(ctx) =
 //│   readInt: {bind: ((Num & 'c) -> ('d | 'b)) -> 'a}
 //│ } -> 'b
 
-// * FIXME why `nothing`?
+let r = loop(defaultCtx)
+//│ let r: Bind[undefined, 'B]
+//│   where
+//│     'B :> Int
+//│ r
+//│   = Bind {}
+
 let r = loop(defaultCtx).run
-//│ let r: nothing
+//│ let r: Int
 //│ r
 //│   = 42
 //│ // Output
 //│ Input a positive number: 
 
+:e
 not(r)
-//│ Bool
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.287: 	not(r)
+//│ ║         	^^^^^^
+//│ ╟── type `Int` is not an instance of type `Bool`
+//│ ║  l.34: 	module readInt extends IO[Int] { fun run: Int = 42 }
+//│ ║        	                          ^^^
+//│ ╟── but it flows into reference with expected type `Bool`
+//│ ║  l.287: 	not(r)
+//│ ╙──       	    ^
+//│ error | false | true
 //│ res
 //│     = false
 
 
-// * Note: using inferred type parent arguments
+// * Note: using inferred parent type arguments
 
 module readInt extends IO { fun run = 42 }
 class printLine(str: Str) extends IO { fun run = log(str) }
-declare fun String: anything -> Str
 //│ module readInt extends IO {
-//│   fun bind: forall 'A 'B. ('A -> IO['B]) -> Bind['A, 'B]
+//│   fun bind: forall 'B. ('A -> IO['B]) -> Bind['A, 'B]
 //│   fun run: 42
 //│ }
 //│ class printLine(str: Str) extends IO {
-//│   fun bind: forall 'A0 'B0. ('A0 -> IO['B0]) -> Bind['A0, 'B0]
+//│   fun bind: forall 'B0. ('A0 -> IO['B0]) -> Bind['A0, 'B0]
 //│   fun run: undefined
 //│ }
-//│ fun String: anything -> Str
 //│ where
-//│   'A0 <: 'A1
-//│   'A1 :> undefined
-//│   'A <: 'A2
-//│   'A2 :> 42
+//│   'A0 :> undefined
+//│   'A :> 42
 
 val main =
   printLine("Hi! Input two numbers: ").bind of _ =>
@@ -255,55 +322,77 @@ val main =
   val sum = n + m
   printLine(concat("The sum is: ")(String of sum)).bind of _ =>
   Pure(sum)
-//│ val main: Bind['A, 'B]
+//│ val main: Bind[in 'A out undefined | 'A, 'B]
 //│   where
 //│     'B :> Int
 //│ main
 //│      = Bind {}
 
 main
-//│ Bind['A, 'B]
+//│ Bind[in 'A out undefined | 'A, 'B]
 //│   where
 //│     'B :> Int
 //│ res
 //│     = Bind {}
 
 
-// :e // * FIXME this should be an error
+:e
 let r = printLine("").bind of 0 => Pure(1)
-//│ let r: Bind['A, 'B]
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.340: 	let r = printLine("").bind of 0 => Pure(1)
+//│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── application of type `undefined` does not match type `0`
+//│ ║  l.305: 	class printLine(str: Str) extends IO { fun run = log(str) }
+//│ ║         	                                                 ^^^^^^^^
+//│ ╟── Note: constraint arises from integer literal:
+//│ ║  l.340: 	let r = printLine("").bind of 0 => Pure(1)
+//│ ╙──       	                              ^
+//│ let r: Bind[in 0 & 'A out undefined | 'A, 'B] | error
 //│   where
 //│     'B :> 1
-//│     'A <: 0
 //│ r
 //│   = Bind {}
 
-// :e // * FIXME this should be an error
+:e
 let r = printLine("").bind of x =>
 log(x.a)
 Pure(1)
-//│ let r: Bind['A, 'B]
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.357: 	let r = printLine("").bind of x =>
+//│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.358: 	log(x.a)
+//│ ║         	^^^^^^^^^
+//│ ║  l.359: 	Pure(1)
+//│ ║         	^^^^^^^
+//│ ╟── application of type `undefined` does not have field 'a'
+//│ ║  l.305: 	class printLine(str: Str) extends IO { fun run = log(str) }
+//│ ║         	                                                 ^^^^^^^^
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.358: 	log(x.a)
+//│ ║         	    ^^^
+//│ ╟── from reference:
+//│ ║  l.358: 	log(x.a)
+//│ ╙──       	    ^
+//│ let r: Bind[in {a: anything} & 'A out undefined | 'A, 'B] | error
 //│   where
 //│     'B :> 1
-//│     'A <: {a: anything}
 //│ r
 //│   = Bind {}
 
 :re
 r.run
-//│ 1
+//│ 1 | error
 //│ res
 //│ Runtime error:
 //│   TypeError: Cannot read properties of undefined (reading 'a')
 
 
-
-// * We can even have the following syntax... what's the use of a `do` notation?!
+// * We can even technically support the following syntax...
 
 :NoJS // * TODO We'll need to support functions extended with fields
 
 // * An interface that describes monadic functions with a field `run`
-declare trait IO[A]: forall 'b; (A -> IO['b]) -> IO['b] {
+declare trait IO[A]: forall 'b: (A -> IO['b]) -> IO['b] {
   fun run: A
 }
 declare fun pure: 'a -> IO['a]

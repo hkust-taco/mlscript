@@ -14,7 +14,7 @@ package object utils {
   implicit final class AnyOps[A](self: A) {
     def ===(other: A): Bool = self == other
     def =/=(other: A): Bool = self != other
-    def is(other: AnyRef): Bool = self.asInstanceOf[AnyRef] eq other
+    def is(other: A): Bool = self.asInstanceOf[AnyRef] eq other.asInstanceOf[AnyRef]
     def isnt(other: AnyRef): Bool = !(self.asInstanceOf[AnyRef] eq other)
     /** An alternative to === when in ScalaTest, which shadows our === */
     def =:=(other: A): Bool = self == other

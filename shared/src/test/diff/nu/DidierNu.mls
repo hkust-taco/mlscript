@@ -21,7 +21,7 @@ fun unify = x => y => z => k of z => k(z(x), y => k of z(y), y), z
 //│ fun unify: forall 'a. anything -> anything -> 'a -> 'a
 
 
-fun a0 = (z => z) (id : forall 'A; 'A -> 'A) of 1
+fun a0 = (z => z) (id : forall 'A: 'A -> 'A) of 1
 //│ fun a0: 1
 
 fun fst([a, _]) = a
@@ -29,7 +29,7 @@ fun snd([_, b]) = b
 //│ fun fst: forall 'a. (['a, anything]) -> 'a
 //│ fun snd: forall 'b. ([anything, 'b]) -> 'b
 
-fun a1(x) = (z => unify(x)(fst of z)(snd of z))([id, (id : forall 'A; 'A -> 'A)]) of 1
+fun a1(x) = (z => unify(x)(fst of z)(snd of z))([id, (id : forall 'A: 'A -> 'A)]) of 1
 //│ fun a1: anything -> 1
 
 

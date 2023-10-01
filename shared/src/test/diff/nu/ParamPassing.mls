@@ -145,7 +145,7 @@ Bar(11).x
 class Bar extends Foo(1) { val x: 2 }
 //│ ╔══[ERROR] Inherited parameter named `x` is not virtual and cannot be overridden
 //│ ║  l.145: 	class Bar extends Foo(1) { val x: 2 }
-//│ ║         	                               ^^^^
+//│ ║         	                           ^^^^^^^^
 //│ ╟── Originally declared here:
 //│ ║  l.92: 	class Foo(val x: Int)
 //│ ╙──      	              ^
@@ -199,7 +199,7 @@ B.x
 
 
 
-abstract class Foo[A](val x: A) { fun y = x; fun i: A -> A }
+abstract class Foo[A](val x: A) { fun y = x;; fun i: A -> A }
 //│ abstract class Foo[A](x: A) {
 //│   fun i: A -> A
 //│   fun y: A
@@ -231,16 +231,16 @@ module Bazz extends Foo(0) {
 }
 //│ ╔══[ERROR] Inherited parameter named `x` is not virtual and cannot be overridden
 //│ ║  l.230: 	  val x: 2
-//│ ║         	      ^^^^
+//│ ║         	  ^^^^^^^^
 //│ ╟── Originally declared here:
-//│ ║  l.202: 	abstract class Foo[A](val x: A) { fun y = x; fun i: A -> A }
+//│ ║  l.202: 	abstract class Foo[A](val x: A) { fun y = x;; fun i: A -> A }
 //│ ╙──       	                          ^
 //│ ╔══[ERROR] Member `i` is declared (or its declaration is inherited) but is not implemented in `Bazz`
 //│ ║  l.229: 	module Bazz extends Foo(0) {
 //│ ║         	       ^^^^
 //│ ╟── Declared here:
-//│ ║  l.202: 	abstract class Foo[A](val x: A) { fun y = x; fun i: A -> A }
-//│ ╙──       	                                                 ^^^^^^^^^
+//│ ║  l.202: 	abstract class Foo[A](val x: A) { fun y = x;; fun i: A -> A }
+//│ ╙──       	                                              ^^^^^^^^^^^^^
 //│ module Bazz extends Foo {
 //│   fun i: 'A -> 'A
 //│   val x: 2

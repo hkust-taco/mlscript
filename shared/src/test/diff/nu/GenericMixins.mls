@@ -159,20 +159,18 @@ module D extends C(0) {
 class C extends Test { // it also fails with Test[Int]...
   fun arg = 123
 }
-//│ ╔══[ERROR] Type `#C & {bar: [?A, ?A], baz: ?a, foo: ?A -> ?A}` does not contain member `arg`
+//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
 //│ ║  l.117: 	  fun baz = foo(this.arg)
 //│ ╙──       	                    ^^^^
-//│ ╔══[ERROR] Type `#C & {bar: [?A, ?A], baz: ?a, foo: ?A -> ?A}` does not contain member `arg`
+//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
 //│ ║  l.116: 	  fun bar = (this.arg, this.arg)
 //│ ╙──       	                           ^^^^
-//│ ╔══[ERROR] Type `#C & {bar: [?A, ?A], baz: ?a, foo: ?A -> ?A}` does not contain member `arg`
+//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
 //│ ║  l.116: 	  fun bar = (this.arg, this.arg)
 //│ ╙──       	                 ^^^^
-//│ ╔══[ERROR] Illegal position for this definition statement.
-//│ ║  l.160: 	  fun arg = 123
-//│ ╙──       	      ^^^^^^^^^
 //│ class C {
 //│   constructor()
+//│   fun arg: 123
 //│   fun bar: [error | 'A, error | 'A]
 //│   fun baz: error
 //│   fun foo: 'A -> (error | 'A)
