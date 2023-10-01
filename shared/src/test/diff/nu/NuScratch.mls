@@ -66,13 +66,7 @@ f : Int
 
 // FIXME
 Foo() + 1
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.68: 	Foo() + 1
-//│ ║        	^^^^^^^^^
-//│ ╟── application of type `Foo` is not an instance of type `Int`
-//│ ║  l.68: 	Foo() + 1
-//│ ╙──      	^^^^^
-//│ Int | error
+//│ Int
 //│ res
 //│     = '[object Object]1'
 
@@ -88,10 +82,10 @@ Foo() + 1
 module Foo: Int
 Foo + 1
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.89: 	Foo + 1
+//│ ║  l.83: 	Foo + 1
 //│ ║        	^^^^^^^
 //│ ╟── reference of type `Foo` is not an instance of type `Int`
-//│ ║  l.89: 	Foo + 1
+//│ ║  l.83: 	Foo + 1
 //│ ╙──      	^^^
 //│ module Foo: Int
 //│ Int | error

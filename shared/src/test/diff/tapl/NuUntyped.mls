@@ -75,7 +75,9 @@ fun findFirst(list, p) =
     Cons(x, xs) and
       p(x) then Some(x)
       else findFirst(xs, p)
-//│ fun findFirst: forall 'A. (Cons['A] | Nil, 'A -> Object) -> (None | Some['A])
+//│ fun findFirst: forall 'A 'A0. (Cons['A] | Nil, 'A -> Object) -> (None | Some['A0])
+//│   where
+//│     'A <: 'A0
 
 fun listConcat(xs, ys) =
   if xs is
@@ -268,7 +270,9 @@ fun tryNextAlphabet(initialCode, currentCode, freeNames) =
     let name = fromCharCode(currentCode)
     listContains(freeNames, name) then tryNextAlphabet(initialCode, currentCode + 1, freeNames)
     _ then Some(name)
-//│ fun tryNextAlphabet: forall 'A. (Num, Int, Cons['A] | Nil) -> (None | Some[Str])
+//│ fun tryNextAlphabet: forall 'A 'A0. (Num, Int, Cons['A] | Nil) -> (None | Some['A0])
+//│   where
+//│     'A0 :> Str
 
 tryNextAlphabet(97, 97, list1("a")).toString()
 tryNextAlphabet(97, 98, list1("a")).toString()

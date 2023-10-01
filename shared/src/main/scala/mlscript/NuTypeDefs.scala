@@ -489,6 +489,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
       PolymorphicType.mk(level,
         FunctionType(
           TupleType(ps.mapKeys(some))(provTODO),
+          /* 
           ClassTag(Var(td.nme.name),
             ihtags + TN("Object")
           )(provTODO) & RecordType.mk(
@@ -500,6 +501,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
               Var(td.nme.name + "#" + tn.name).withLocOf(tn) ->
                 FieldType.mk(vi.getOrElse(VarianceInfo.in), tv, tv)(provTODO) }
           )(provTODO)
+          */
+          TypeRef(td.nme, tparams.map(_._2))(provTODO)
         )(provTODO)
       )
     } else errType // FIXME

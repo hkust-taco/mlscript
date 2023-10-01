@@ -33,7 +33,9 @@ fun insert(t, v) = if t is
 find(Empty, 0)
 find(Node(0, Empty, Empty), 0)
 find(Node(1, Empty, Empty), 0)
-//│ None | Some[0]
+//│ None | Some['A]
+//│   where
+//│     'A :> 0
 //│ res
 //│     = None { class: [class None] }
 //│ res

@@ -37,17 +37,19 @@ fun mk(n) = if n is
   0 then Lit(0)
   1 then Neg(mk(n))
   _ then Add(mk(n), mk(n))
-//│ fun mk: forall 'E. Object -> 'E
+//│ fun mk: forall 'a 'A 'E. Object -> (Lit | 'a)
 //│   where
-//│     'E :> Add['E] | Lit | Neg['E]
+//│     'a :> Neg['A] | Add['E]
+//│     'E :> Lit | 'a
+//│     'A :> Lit | 'a
 
 :stats
 TestLang.eval(mk(0))
 //│ Int
 //│ res
 //│     = 0
-//│ constrain calls  : 190
+//│ constrain calls  : 211
 //│ annoying  calls  : 47
-//│ subtyping calls  : 1376
+//│ subtyping calls  : 1397
 
 

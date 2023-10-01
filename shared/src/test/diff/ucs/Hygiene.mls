@@ -14,7 +14,9 @@ fun foo(x) = if x is
 //│ fun foo: forall 'a. Some['a & (Left[anything] | Object & ~#Left)] -> 'a
 
 foo(Some(Left(1)))
-//│ Left[1]
+//│ Left['T]
+//│   where
+//│     'T :> 1
 //│ res
 //│     = Left {}
 

@@ -1254,7 +1254,9 @@ class G2[T](x: T) extends G1[T, Int](x, 1)
 //│ class G2[T](x: T) extends G1, TA
 
 let g21 = G2(false)
-//│ let g21: G2[false]
+//│ let g21: G2['T]
+//│   where
+//│     'T :> false
 //│ g21
 //│     = G2 {}
 

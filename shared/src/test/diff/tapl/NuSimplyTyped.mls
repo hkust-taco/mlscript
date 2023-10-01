@@ -68,7 +68,9 @@ fun find(t, k) =
       _ then Some(v)
     Empty then None
 //│ fun insert: forall 'A. (Empty | Node['A], Str, 'A) -> Node['A]
-//│ fun find: forall 'A0. (Empty | Node['A0], Str) -> (None | Some['A0])
+//│ fun find: forall 'A0 'A1. (Empty | Node['A0], Str) -> (None | Some['A1])
+//│ where
+//│   'A0 <: 'A1
 
 fun showType(ty) =
   if ty is

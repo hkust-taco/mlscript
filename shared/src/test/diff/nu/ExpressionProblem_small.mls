@@ -11,8 +11,12 @@ class Lit(n: Int)
 
 let add11 = Add(Lit(1), Lit(2))
 let add2negadd11 = Add(Lit(2), Neg(add11))
-//│ let add11: Add[Lit]
-//│ let add2negadd11: Add[Lit | Neg[Add[Lit]]]
+//│ let add11: Add['E]
+//│ let add2negadd11: Add['E0]
+//│ where
+//│   'E0 :> Lit | Neg['A]
+//│   'A :> Add['E]
+//│   'E :> Lit
 
 mixin EvalNothing {
   fun eval(e: nothing) = e

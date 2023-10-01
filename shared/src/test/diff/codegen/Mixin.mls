@@ -239,10 +239,12 @@ fun mk(n) = if n is
   1 then Neg(mk(n))
   _ then Add(mk(n), mk(n))
 TestLang.eval(mk(0))
-//│ fun mk: forall 'E. Object -> 'E
+//│ fun mk: forall 'a 'A 'E. Object -> (Lit | 'a)
 //│ Int
 //│ where
-//│   'E :> Add['E] | Lit | Neg['E]
+//│   'a :> Neg['A] | Add['E]
+//│   'E :> Lit | 'a
+//│   'A :> Lit | 'a
 //│ res
 //│     = 0
 
@@ -372,7 +374,7 @@ mixin Base {
   fun x = y
 }
 //│ ╔══[ERROR] identifier not found: y
-//│ ║  l.372: 	  fun x = y
+//│ ║  l.374: 	  fun x = y
 //│ ╙──       	          ^
 //│ mixin Base() {
 //│   fun x: error

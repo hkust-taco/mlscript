@@ -80,8 +80,10 @@ a.f
 //│ ╔══[ERROR] Type application syntax is not yet supported
 //│ ║  l.78: 	let a = C[Int](42)
 //│ ╙──      	        ^^^^^^
-//│ let a: C[42]
-//│ 42
+//│ let a: C['A]
+//│ 'A
+//│ where
+//│   'A :> 42
 //│ a
 //│   = C {}
 //│ res
@@ -141,10 +143,10 @@ module M2 {
     bar(10)
 }
 //│ ╔══[ERROR] Cannot use `val` or `fun` in local block; use `let` instead.
-//│ ║  l.140: 	    fun bar(x) = x + y + this.m
+//│ ║  l.142: 	    fun bar(x) = x + y + this.m
 //│ ╙──       	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.140: 	    fun bar(x) = x + y + this.m
+//│ ║  l.142: 	    fun bar(x) = x + y + this.m
 //│ ╙──       	                             ^^
 //│ module M2 {
 //│   fun foo: Int -> Int

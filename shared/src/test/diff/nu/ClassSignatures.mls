@@ -30,10 +30,7 @@ not(Foo().x)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.29: 	not(Foo().x)
 //│ ║        	^^^^^^^^^^^^
-//│ ╟── integer literal of type `0` is not an instance of type `Bool`
-//│ ║  l.22: 	  fun x = 0
-//│ ║        	          ^
-//│ ╟── but it flows into field selection with expected type `Bool`
+//│ ╟── field selection of type `0 & ??FigureItOut` is not an instance of type `Bool`
 //│ ║  l.29: 	not(Foo().x)
 //│ ╙──      	    ^^^^^^^
 //│ error | false | true
@@ -53,15 +50,8 @@ trait B
 class A(): B
 //│ class A(): B
 
-:e
+// :e
 A() : B
-//│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.57: 	A() : B
-//│ ║        	^^^
-//│ ╟── application of type `A` is not an instance of type `B`
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.57: 	A() : B
-//│ ╙──      	      ^
 //│ B
 //│ res
 //│     = A {}
@@ -72,15 +62,8 @@ abstract class A(): B
 :e
 A() : B
 //│ ╔══[ERROR] Class A is abstract and cannot be instantiated
-//│ ║  l.73: 	A() : B
+//│ ║  l.63: 	A() : B
 //│ ╙──      	^
-//│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.73: 	A() : B
-//│ ║        	^^^
-//│ ╟── application of type `A` is not an instance of type `B`
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.73: 	A() : B
-//│ ╙──      	      ^
 //│ B
 //│ res
 //│     = A {}

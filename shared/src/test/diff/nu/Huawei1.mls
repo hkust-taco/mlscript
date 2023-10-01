@@ -9,7 +9,9 @@ class C[A](x: A) {
 //│ }
 
 let c = C(123)
-//│ let c: C[123]
+//│ let c: C['A]
+//│   where
+//│     'A :> 123
 //│ c
 //│   = C {}
 
@@ -42,13 +44,13 @@ bar(c)
 :e
 bar(C(true))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.43: 	bar(C(true))
+//│ ║  l.45: 	bar(C(true))
 //│ ║        	^^^^^^^^^^^^
 //│ ╟── reference of type `true` is not an instance of type `Int`
-//│ ║  l.43: 	bar(C(true))
+//│ ║  l.45: 	bar(C(true))
 //│ ║        	      ^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.32: 	    C(y) then y + 1
+//│ ║  l.34: 	    C(y) then y + 1
 //│ ║        	              ^
 //│ ╟── from field selection:
 //│ ║  l.4: 	class C[A](x: A) {

@@ -191,7 +191,7 @@ module Test3 extends EvalVar, EvalExpr, EvalLambda
 //│ where
 //│   'b :> 'A
 //│      <: Object
-//│   'A :> 'a | Numb | Var | 'b | 'd
+//│   'A :> 'a | 'b | 'd
 //│   'd <: Add['c] | Mul['c] | Numb | Var
 //│   'c <: Abs['c] | App['c & (Abs['c] | Object & ~#Abs)] | Object & 'd & ~#Abs & ~#App
 //│   'a :> App['A] | Abs['A]
@@ -210,11 +210,10 @@ Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), App(Abs("a", Var("a")), Add(N
 
 module Test3 extends EvalVar, EvalLambda, EvalExpr
 //│ module Test3 {
-//│   fun eval: (List[{_1: Str, _2: 'a}], 'a & (Add['b] | Mul['b] | Numb | Var)) -> ('A | 'a | 'b)
+//│   fun eval: (List[{_1: Str, _2: 'a}], 'a & (Add['b] | Mul['b] | Numb | Var)) -> (Numb | 'a | 'b)
 //│ }
 //│ where
-//│   'a :> 'b | 'A
+//│   'a :> 'b
 //│      <: Object
-//│   'A :> Numb | 'a | Abs['A] | App['A] | Var
 //│   'b <: Add['b] | Mul['b] | Numb | Var
 

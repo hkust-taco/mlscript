@@ -10,7 +10,7 @@ module EvalAddLit {
 }
 let res = EvalAddLit.eval(add11)
 //│ class Add[E](lhs: E)
-//│ val add11: 'E
+//│ val add11: 'a
 //│ module EvalAddLit {
 //│   fun eval: forall 'lhs 'A. (e: 'lhs) -> nothing
 //│ }
@@ -18,6 +18,8 @@ let res = EvalAddLit.eval(add11)
 //│ where
 //│   'lhs <: Add['A]
 //│   'A <: 'lhs
-//│   'E :> Add['E]
+//│   'a :> Add['E]
+//│   'E :> 'a
+//│      <: Add['E]
 
 

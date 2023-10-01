@@ -17,7 +17,9 @@ class C<A>(val a: A)
 //│ class C[A](a: A)
 
 let c = C(1)
-//│ let c: C[1]
+//│ let c: C['A]
+//│   where
+//│     'A :> 1
 //│ c
 //│   = C {}
 
@@ -60,7 +62,9 @@ class Some<A>(val value: A) {
 
 
 let s = Some(1)
-//│ let s: Some[1]
+//│ let s: Some['A]
+//│   where
+//│     'A :> 1
 //│ s
 //│   = Some {}
 
@@ -87,7 +91,9 @@ s.map
 //│     = [Function: map]
 
 s.map(succ)
-//│ Some[Int]
+//│ Some['A]
+//│   where
+//│     'A :> Int
 //│ res
 //│     = Some {}
 
@@ -98,7 +104,9 @@ s.map_A
 //│     = [Function: map_A]
 
 s.map_A(succ)
-//│ Some[Int]
+//│ Some['A]
+//│   where
+//│     'A :> Int
 //│ res
 //│     = Some {}
 
@@ -130,7 +138,9 @@ type Option<A> = Some<A> | None
 
 
 let opt = if true then Some(123) else None
-//│ let opt: None | Some[123]
+//│ let opt: None | Some['A]
+//│   where
+//│     'A :> 123
 //│ opt
 //│     = Some {}
 
@@ -141,17 +151,23 @@ opt.toArray
 
 
 opt.map(succ)
-//│ None | Some[Int]
+//│ None | Some['A]
+//│   where
+//│     'A :> Int
 //│ res
 //│     = Some {}
 
 opt.map_A(succ)
-//│ None | Some[Int]
+//│ None | Some['A]
+//│   where
+//│     'A :> Int
 //│ res
 //│     = Some {}
 
 opt.map(x => x > 0)
-//│ None | Some[Bool]
+//│ None | Some['A]
+//│   where
+//│     'A :> Bool
 //│ res
 //│     = Some {}
 
@@ -174,7 +190,9 @@ fun map(x, f) = if x is
 //│ fun map: forall 'a 'A. (None | Some['a], 'a -> 'A) -> (None | Some['A])
 
 let mo = map(opt, succ)
-//│ let mo: None | Some[Int]
+//│ let mo: None | Some['A]
+//│   where
+//│     'A :> Int
 //│ mo
 //│    = Some {}
 
@@ -191,7 +209,7 @@ class Test(n) {
   fun bar = n
 }
 //│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.189: 	class Test(n) {
+//│ ║  l.207: 	class Test(n) {
 //│ ╙──       	           ^
 //│ class Test(n: error) {
 //│   fun bar: error
@@ -215,25 +233,29 @@ class Test<A>(n: A) {
   fun foo = n + 1
 }
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.215: 	  fun foo = n + 1
+//│ ║  l.233: 	  fun foo = n + 1
 //│ ║         	            ^^^^^
 //│ ╟── reference of type `A` is not an instance of type `Int`
-//│ ║  l.215: 	  fun foo = n + 1
+//│ ║  l.233: 	  fun foo = n + 1
 //│ ║         	            ^
 //│ ╟── Note: type parameter A is defined at:
-//│ ║  l.214: 	class Test<A>(n: A) {
+//│ ║  l.232: 	class Test<A>(n: A) {
 //│ ╙──       	           ^
 //│ class Test[A](n: A) {
 //│   fun foo: Int | error
 //│ }
 
 Test(1)
-//│ Test[1]
+//│ Test['A]
+//│   where
+//│     'A :> 1
 //│ res
 //│     = Test {}
 
 Test(true)
-//│ Test[true]
+//│ Test['A]
+//│   where
+//│     'A :> true
 //│ res
 //│     = Test {}
 
@@ -250,7 +272,9 @@ class Test<A>(n: A) {
 //│ }
 
 Test(1)
-//│ Test[1]
+//│ Test['A]
+//│   where
+//│     'A :> 1
 //│ res
 //│     = Test {}
 
@@ -265,7 +289,9 @@ Test("ok").foo
 //│     = 'ok'
 
 let t = Test(1)
-//│ let t: Test[1]
+//│ let t: Test['A]
+//│   where
+//│     'A :> 1
 //│ t
 //│   = Test {}
 
@@ -298,13 +324,13 @@ class TestBad<A>() {
   fun foo2(x: A) = x + 1
 }
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.298: 	  fun foo2(x: A) = x + 1
+//│ ║  l.324: 	  fun foo2(x: A) = x + 1
 //│ ║         	                   ^^^^^
 //│ ╟── reference of type `A` is not an instance of type `Int`
-//│ ║  l.298: 	  fun foo2(x: A) = x + 1
+//│ ║  l.324: 	  fun foo2(x: A) = x + 1
 //│ ║         	                   ^
 //│ ╟── Note: type parameter A is defined at:
-//│ ║  l.296: 	class TestBad<A>() {
+//│ ║  l.322: 	class TestBad<A>() {
 //│ ╙──       	              ^
 //│ class TestBad[A]() {
 //│   fun foo1: (x: A) -> A
@@ -395,7 +421,7 @@ not(w.x.n)
 :e
 not(w.x.a)
 //│ ╔══[ERROR] Type `C['a]` does not contain member `a`
-//│ ║  l.396: 	not(w.x.a)
+//│ ║  l.422: 	not(w.x.a)
 //│ ╙──       	       ^^
 //│ Bool
 //│ res

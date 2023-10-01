@@ -10,7 +10,9 @@ class Lit(n: Int)
 //│ class Lit(n: Int)
 
 fun add11 = Add(Lit(1), Lit(2))
-//│ fun add11: Add[Lit]
+//│ fun add11: forall 'E. Add['E]
+//│   where
+//│     'E :> Lit
 
 
 fun eval(e) =
@@ -96,7 +98,11 @@ class Neg<A>(expr: A)
 //│ class Neg[A](expr: A)
 
 let add2negadd11 = Add(Lit(2), Neg(add11))
-//│ let add2negadd11: Add[Lit | Neg[Add[Lit]]]
+//│ let add2negadd11: Add['E]
+//│   where
+//│     'E :> Lit | Neg['A]
+//│     'A :> forall 'E0. Add['E0]
+//│     'E0 :> Lit
 //│ add2negadd11
 //│              = Add {}
 
@@ -203,9 +209,11 @@ fun mk(n) = if n is
   0 then Lit(0)
   1 then Neg(mk(n))
   _ then Add(mk(n), mk(n))
-//│ fun mk: forall 'E. Object -> 'E
+//│ fun mk: forall 'a 'A 'E. Object -> (Lit | 'a)
 //│   where
-//│     'E :> Add['E] | Lit | Neg['E]
+//│     'a :> Neg['A] | Add['E]
+//│     'E :> Lit | 'a
+//│     'A :> Lit | 'a
 
 TestLang.eval
 //│ 'a -> Int
