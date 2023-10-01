@@ -25,11 +25,11 @@ module C2 extends C0
 //│ | |   where 
 //│ | | 1. C (C1 | C2) <! α29'    (0)
 //│ | | | NEW α29' LB (0)
-//│ | | Done inheriting: Pack({},List(),None,List(),List(),Map(),⊤)
-//│ | | 1. Finalizing inheritance with (({} w/ {} & #C0<Object>) & ⊤..(C1 | C2)) <: c030'
-//│ | | | CONSTRAIN (({} w/ {} & #C0<Object>) & ⊤..(C1 | C2)) <! c030'
+//│ | | Done inheriting: Pack({},List(),None,List(),List(),Map(),(C1 | C2))
+//│ | | 1. Finalizing inheritance with ({} w/ {} & #C0<Object>) <: c030'
+//│ | | | CONSTRAIN (({} w/ {} & #C0<Object>) & (C1 | C2)) <! c030'
 //│ | | |   where 
-//│ | | | 1. C (({} w/ {} & #C0<Object>) & ⊤..(C1 | C2)) <! c030'    (0)
+//│ | | | 1. C (({} w/ {} & #C0<Object>) & (C1 | C2)) <! c030'    (0)
 //│ | | | | NEW c030' LB (0)
 //│ | | 1. Typing ‹›
 //│ | | | Typing unit statements
@@ -41,21 +41,16 @@ module C2 extends C0
 //│ | | Checking new signatures against inherited signatures...
 //│ | | allMembers Map()
 //│ | | Computing variances of C0
-//│ | | | Trav(+)((({} w/ {} & #C0<Object>) & ⊤..(C1 | C2)))
-//│ | | | | Trav(+)(({} w/ {} & #C0<Object>))
-//│ | | | | | Trav(+)({} w/ {})
-//│ | | | | | | Trav(+)({})
-//│ | | | | | Trav(+)(#C0<Object>)
-//│ | | | | Trav(+)(⊤..(C1 | C2))
-//│ | | | | | Trav(+)((C1 | C2))
-//│ | | | | | | Trav(+)(C1)
-//│ | | | | | | Trav(+)(C2)
+//│ | | | Trav(+)(({} w/ {} & #C0<Object>))
+//│ | | | | Trav(+)({} w/ {})
+//│ | | | | | Trav(+)({})
+//│ | | | | Trav(+)(#C0<Object>)
 //│ | | = HashMap()
 //│ | Completed TypedNuCls(0, TypeName(C0),
 //│ 	List(),
 //│ 	None,
 //│ 	this: ⊤, ,
-//│ 	: ⊤..(C1 | C2), Set(), Map())((({} w/ {} & #C0<Object>) & ⊤..(C1 | C2))) where 
+//│ 	: (C1 | C2), Set(), Map())(({} w/ {} & #C0<Object>)) where 
 //│ | Completing class C1(): C0 {}
 //│ | | Type params 
 //│ | | Params List()
@@ -65,15 +60,23 @@ module C2 extends C0
 //│ 	List(),
 //│ 	None,
 //│ 	this: ⊤, ,
-//│ 	: ⊤..(C1 | C2), Set(), Map())((({} w/ {} & #C0<Object>) & ⊤..(C1 | C2)))
+//│ 	: (C1 | C2), Set(), Map())(({} w/ {} & #C0<Object>))
 //│ | | argMembs List()
-//│ | | st ⊤..(C1 | C2)
-//│ | | Done inheriting: Pack({},List(),Some(C0),List(),List(),Map(),⊤)
+//│ | | selfSig (C1 | C2)
+//│ | | Done inheriting: Pack({},List(),Some(C0),List(),List(),Map(),(C1 | C2))
 //│ | | 1. Finalizing inheritance with ({} w/ {} & #C1<Object,C0>) <: c131'
 //│ | | | CONSTRAIN ({} w/ {} & #C1<Object,C0>) <! c131'
 //│ | | |   where 
 //│ | | | 1. C ({} w/ {} & #C1<Object,C0>) <! c131'    (0)
 //│ | | | | NEW c131' LB (0)
+//│ | | Checking self signature...
+//│ | | | CONSTRAIN ({} w/ {} & #C1<Object,C0>) <! (C1 | C2)
+//│ | | |   where 
+//│ | | | 1. C ({} w/ {} & #C1<Object,C0>) <! (C1 | C2)    (0)
+//│ | | | | 1. ARGH  DNF(0, #C1<Object,C0>{})  <!  DNF(0, #C1<Object,C0>{} | #C2<Object,C0>{})
+//│ | | | | | DNF DISCHARGE CONSTRAINTS
+//│ | | | | | Consider #C1<Object,C0>{} <: DNF(0, #C1<Object,C0>{} | #C2<Object,C0>{})
+//│ | | | | | OK  #C1<Object,C0>{} <: #C1<Object,C0>{}
 //│ | | 1. Typing ‹›
 //│ | | | Typing unit statements
 //│ | | | : None
@@ -103,15 +106,23 @@ module C2 extends C0
 //│ 	List(),
 //│ 	None,
 //│ 	this: ⊤, ,
-//│ 	: ⊤..(C1 | C2), Set(), Map())((({} w/ {} & #C0<Object>) & ⊤..(C1 | C2)))
+//│ 	: (C1 | C2), Set(), Map())(({} w/ {} & #C0<Object>))
 //│ | | argMembs List()
-//│ | | st ⊤..(C1 | C2)
-//│ | | Done inheriting: Pack({},List(),Some(C0),List(),List(),Map(),⊤)
+//│ | | selfSig (C1 | C2)
+//│ | | Done inheriting: Pack({},List(),Some(C0),List(),List(),Map(),(C1 | C2))
 //│ | | 1. Finalizing inheritance with ({} w/ {} & #C2<Object,C0>) <: c232'
 //│ | | | CONSTRAIN ({} w/ {} & #C2<Object,C0>) <! c232'
 //│ | | |   where 
 //│ | | | 1. C ({} w/ {} & #C2<Object,C0>) <! c232'    (0)
 //│ | | | | NEW c232' LB (0)
+//│ | | Checking self signature...
+//│ | | | CONSTRAIN ({} w/ {} & #C2<Object,C0>) <! (C1 | C2)
+//│ | | |   where 
+//│ | | | 1. C ({} w/ {} & #C2<Object,C0>) <! (C1 | C2)    (0)
+//│ | | | | 1. ARGH  DNF(0, #C2<Object,C0>{})  <!  DNF(0, #C1<Object,C0>{} | #C2<Object,C0>{})
+//│ | | | | | DNF DISCHARGE CONSTRAINTS
+//│ | | | | | Consider #C2<Object,C0>{} <: DNF(0, #C1<Object,C0>{} | #C2<Object,C0>{})
+//│ | | | | | OK  #C2<Object,C0>{} <: #C2<Object,C0>{}
 //│ | | 1. Typing ‹›
 //│ | | | Typing unit statements
 //│ | | | : None
@@ -145,9 +156,17 @@ module C2 extends C0
 //│ class C1() extends C0
 //│ module C2 extends C0
 
+// :d
 :e
-class C2 extends C0
-//│ class C2 extends C0 {
+class C3 extends C0
+//│ ╔══[ERROR] Type mismatch in type declaration:
+//│ ║  l.161: 	class C3 extends C0
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `#C3` does not match type `C1 | C2`
+//│ ╟── Note: constraint arises from union type:
+//│ ║  l.5: 	abstract class C0: C1 | C2
+//│ ╙──     	                   ^^^^^^^
+//│ class C3 extends C0 {
 //│   constructor()
 //│ }
 
@@ -163,37 +182,63 @@ class Foo(): {} {
 //│   fun x: 0
 //│ }
 
+:e
 class Foo(): { x: Int } {
   fun x = 0
 }
+//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ║  l.186: 	class Foo(): { x: Int } {
+//│ ╙──       	               ^
 //│ class Foo(): {x: Int} {
 //│   fun x: 0
 //│ }
 
-class Foo(): { x: 'FigureItOut } {
+class Foo(): { x: Int } {
+  fun x: Int
   fun x = 0
 }
+//│ class Foo(): {x: Int} {
+//│   fun x: Int
+//│ }
+
+:e
+class Foo(): { x: 'FigureItOut } {
+  fun x: Int
+  fun x = 0
+}
+//│ ╔══[ERROR] Type error in type declaration
+//│ ║  l.205: 	class Foo(): { x: 'FigureItOut } {
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.206: 	  fun x: Int
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.207: 	  fun x = 0
+//│ ║         	^^^^^^^^^^^
+//│ ║  l.208: 	}
+//│ ║         	^
+//│ ╟── type variable `'FigureItOut` leaks out of its scope
+//│ ║  l.206: 	  fun x: Int
+//│ ╙──       	         ^^^
 //│ class Foo(): {x: ??FigureItOut} {
-//│   fun x: 0
+//│   fun x: Int
 //│ }
 
 :e
 not(Foo().x)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.144: 	not(Foo().x)
+//│ ║  l.226: 	not(Foo().x)
 //│ ║         	^^^^^^^^^^^^
-//│ ╟── integer literal of type `0` is not an instance of type `Bool`
-//│ ║  l.137: 	  fun x = 0
-//│ ║         	          ^
+//│ ╟── type `Int` is not an instance of `Bool`
+//│ ║  l.206: 	  fun x: Int
+//│ ║         	         ^^^
 //│ ╟── but it flows into field selection with expected type `Bool`
-//│ ║  l.144: 	not(Foo().x)
+//│ ║  l.226: 	not(Foo().x)
 //│ ╙──       	    ^^^^^^^
 //│ error | false | true
 //│ res
 //│     = true
 
 (f: Foo) => f.x
-//│ (f: Foo) -> (0 & ??FigureItOut)
+//│ (f: Foo) -> (Int & ??FigureItOut)
 //│ res
 //│     = [Function: res]
 
@@ -201,19 +246,26 @@ not(Foo().x)
 trait B
 //│ trait B
 
-// :e // TODO check classes against their signatures
+:e
 // :d
 class A(): B
+//│ ╔══[ERROR] Type mismatch in type declaration:
+//│ ║  l.251: 	class A(): B
+//│ ║         	^^^^^^^^^
+//│ ╟── expression of type `#A` is not an instance of type `B`
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.251: 	class A(): B
+//│ ╙──       	           ^
 //│ class A(): B
 
 :e
 A() : B
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.173: 	A() : B
+//│ ║  l.262: 	A() : B
 //│ ║         	^^^
 //│ ╟── application of type `A` is not an instance of type `B`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.173: 	A() : B
+//│ ║  l.262: 	A() : B
 //│ ╙──       	      ^
 //│ B
 //│ res
@@ -225,14 +277,14 @@ abstract class A(): B
 :e
 A() : B
 //│ ╔══[ERROR] Class A is abstract and cannot be instantiated
-//│ ║  l.189: 	A() : B
+//│ ║  l.278: 	A() : B
 //│ ╙──       	^
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.189: 	A() : B
+//│ ║  l.278: 	A() : B
 //│ ║         	^^^
 //│ ╟── application of type `A` is not an instance of type `B`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.189: 	A() : B
+//│ ║  l.278: 	A() : B
 //│ ╙──       	      ^
 //│ B
 //│ res
@@ -247,28 +299,70 @@ C : B
 //│     = C { class: [class C extends A] }
 
 
+:e
 class A(): C
 class B() extends A
 class C() extends B
+//│ ╔══[ERROR] Type mismatch in type declaration:
+//│ ║  l.303: 	class A(): C
+//│ ║         	^^^^^^^^^
+//│ ╟── expression of type `#A` is not an instance of type `C`
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.303: 	class A(): C
+//│ ╙──       	           ^
+//│ ╔══[ERROR] Type mismatch in type declaration:
+//│ ║  l.304: 	class B() extends A
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `#B` is not an instance of type `C`
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.303: 	class A(): C
+//│ ╙──       	           ^
 //│ class A(): C
 //│ class B() extends A
 //│ class C() extends A, B
 
+:e // FIXME transitivity
+abstract class A(): C
+class B() extends A
+class C() extends B
+//│ ╔══[ERROR] Type mismatch in type declaration:
+//│ ║  l.326: 	class B() extends A
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `#B` is not an instance of type `C`
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.325: 	abstract class A(): C
+//│ ╙──       	                    ^
+//│ abstract class A(): C
+//│ class B() extends A
+//│ class C() extends A, B
+
+abstract class A(): C
+abstract class B() extends A
+class C() extends B
+//│ abstract class A(): C
+//│ abstract class B() extends A
+//│ class C() extends A, B
+
+:e
+class D() extends B
+//│ class D() extends A, B
+
 :e // FIXME transitivity of self types
 fun test(x: B): C = x
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.221: 	fun test(x: B): C = x
+//│ ║  l.350: 	fun test(x: B): C = x
 //│ ║         	                    ^
 //│ ╟── type `B` is not an instance of `C`
-//│ ║  l.221: 	fun test(x: B): C = x
+//│ ║  l.350: 	fun test(x: B): C = x
 //│ ║         	            ^
 //│ ╟── but it flows into reference with expected type `C`
-//│ ║  l.221: 	fun test(x: B): C = x
+//│ ║  l.350: 	fun test(x: B): C = x
 //│ ║         	                    ^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.221: 	fun test(x: B): C = x
+//│ ║  l.350: 	fun test(x: B): C = x
 //│ ╙──       	                ^
 //│ fun test: (x: B) -> C
+
 
 
 
