@@ -2,17 +2,17 @@
 
 
 ()
-//│ undefined
+//│ ()
 //│ res
 //│     = undefined
 
 fun x: ()
 fun x = ()
-//│ fun x: undefined
-//│ fun x: undefined
+//│ fun x: ()
+//│ fun x: ()
 
 x
-//│ undefined
+//│ ()
 //│ res
 //│     = undefined
 
@@ -22,7 +22,7 @@ x : Array['a]
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.21: 	x : Array['a]
 //│ ║        	^
-//│ ╟── type `undefined` does not match type `Array['a]`
+//│ ╟── type `()` does not match type `Array['a]`
 //│ ║  l.9: 	fun x: ()
 //│ ║       	       ^^
 //│ ╟── but it flows into reference with expected type `Array['a]`
@@ -36,14 +36,14 @@ x : Array['a]
 //│     = undefined
 
 x : undefined
-//│ undefined
+//│ ()
 //│ res
 //│     = undefined
 
 fun x: ()
 fun x = undefined
-//│ fun x: undefined
-//│ fun x: undefined
+//│ fun x: ()
+//│ fun x: ()
 
 
 :e
@@ -52,17 +52,17 @@ fun x = 1
 //│ ╔══[ERROR] Type mismatch in definition:
 //│ ║  l.51: 	fun x = 1
 //│ ║        	    ^^^^^
-//│ ╟── integer literal of type `1` does not match type `undefined`
+//│ ╟── integer literal of type `1` does not match type `()`
 //│ ║  l.51: 	fun x = 1
 //│ ║        	        ^
-//│ ╟── but it flows into definition of method x with expected type `undefined`
+//│ ╟── but it flows into definition of method x with expected type `()`
 //│ ║  l.51: 	fun x = 1
 //│ ║        	    ^^^^^
 //│ ╟── Note: constraint arises from literal type:
 //│ ║  l.50: 	fun x: ()
 //│ ╙──      	       ^^
 //│ fun x: 1
-//│ fun x: undefined
+//│ fun x: ()
 
 
 (1)
@@ -86,7 +86,7 @@ fun x = 1
 //│     = [ 1, 2 ]
 
 (let x = 1)
-//│ undefined
+//│ ()
 //│ res
 //│     = undefined
 
@@ -95,12 +95,12 @@ fun x = 1
 //│ ╔══[PARSE ERROR] Unexpected end of parenthesis section; an expression was expected here
 //│ ║  l.94: 	(let x = 1 in)
 //│ ╙──      	             ^
-//│ undefined
+//│ ()
 //│ res
 //│     = undefined
 
 (log(1))
-//│ undefined
+//│ ()
 //│ res
 //│     = undefined
 //│ // Output
@@ -111,7 +111,7 @@ fun x = 1
 //│ ╔══[PARSE ERROR] Unexpected end of parenthesis section; an expression was expected here
 //│ ║  l.110: 	(log(1);)
 //│ ╙──       	        ^
-//│ undefined
+//│ ()
 //│ res
 //│     = undefined
 //│ // Output
@@ -125,14 +125,14 @@ fun x = 1
 //│ 1
 
 (log(1); ())
-//│ undefined
+//│ ()
 //│ res
 //│     = undefined
 //│ // Output
 //│ 1
 
 (((log((())))))
-//│ undefined
+//│ ()
 //│ res
 //│     = undefined
 //│ // Output

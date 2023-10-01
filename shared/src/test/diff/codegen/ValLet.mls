@@ -246,7 +246,7 @@ fun f(val x: Int) = x + 1
 //│ ╔══[ERROR] Cannot use `val` in this position
 //│ ║  l.242: 	(val x: 1) =>
 //│ ╙──       	     ^^^^
-//│ (x: 1) -> undefined
+//│ (x: 1) -> ()
 //│ res
 //│     = [Function: res]
 
@@ -255,7 +255,7 @@ fun f(val x: Int) = x + 1
 //│ ╔══[ERROR] Cannot use `val` in this position
 //│ ║  l.254: 	(val x: 1) => ()
 //│ ╙──       	     ^^^^
-//│ (x: 1) -> undefined
+//│ (x: 1) -> ()
 //│ res
 //│     = [Function: res]
 

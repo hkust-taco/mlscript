@@ -2,7 +2,7 @@
 
 
 ()
-//│ undefined
+//│ ()
 //│ res
 //│     = undefined
 
@@ -14,7 +14,7 @@
 //│ ╔══[PARSE ERROR] Unexpected end of parenthesis section; an expression was expected here
 //│ ║  l.10: 	(,)
 //│ ╙──      	  ^
-//│ undefined
+//│ ()
 //│ res
 //│     = undefined
 
@@ -48,7 +48,7 @@
 
 
 let x: ()
-//│ let x: undefined
+//│ let x: ()
 //│ x
 //│   = <missing implementation>
 
@@ -60,7 +60,7 @@ let x: (,)
 //│ ╔══[PARSE ERROR] Unexpected end of parenthesis section; an expression was expected here
 //│ ║  l.56: 	let x: (,)
 //│ ╙──      	         ^
-//│ let x: undefined
+//│ let x: ()
 //│ x
 //│   = <missing implementation>
 

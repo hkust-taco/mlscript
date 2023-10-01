@@ -82,7 +82,7 @@ fun foo = forall 'a; (x: 'a) => if x is A then true else false
 //│ ╔══[PARSE ERROR] Expected end of input; found operator instead
 //│ ║  l.78: 	fun foo = forall 'a; (x: 'a) => if x is A then true else false
 //│ ╙──      	                   ^
-//│ fun foo: undefined
+//│ fun foo: ()
 
 
 

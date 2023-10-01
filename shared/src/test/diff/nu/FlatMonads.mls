@@ -38,11 +38,11 @@ class printLine(str: Str) extends IO[undefined] { fun run = log(str) }
 //│   fun run: Int
 //│ }
 //│ class printLine(str: Str) extends IO {
-//│   fun bind: forall 'B0. ('A0 -> IO['B0]) -> Bind[undefined & 'A0, 'B0]
-//│   fun run: undefined
+//│   fun bind: forall 'B0. ('A0 -> IO['B0]) -> Bind[() & 'A0, 'B0]
+//│   fun run: ()
 //│ }
 //│ where
-//│   'A0 := undefined
+//│   'A0 := ()
 //│   'A := Int
 
 
@@ -55,7 +55,7 @@ val main =
         val sum = n + m
         printLine(concat("The sum is: ")(String of sum)).bind of _ =>
           Pure(sum)
-//│ val main: Bind[undefined, 'B]
+//│ val main: Bind[(), 'B]
 //│   where
 //│     'B :> Int
 //│ main
@@ -79,7 +79,7 @@ val main =
   val sum = n + m
   printLine(concat("The sum is: ")(String of sum)).bind of _ =>
   Pure(sum)
-//│ val main: Bind[undefined, 'B]
+//│ val main: Bind[(), 'B]
 //│   where
 //│     'B :> Int
 //│ main
@@ -103,7 +103,7 @@ printLine("").bind of [] => error
 //│ ╟── type `[?A]` does not match type `[]`
 //│ ║  l.15: 	class Bind[A, B](underlying: IO[A], f: A -> IO[B]) extends IO[B] {
 //│ ╙──      	                                       ^
-//│ Bind[undefined, 'B] | error
+//│ Bind[(), 'B] | error
 //│ res
 //│     = Bind {}
 
@@ -187,7 +187,7 @@ val main =
   val sum = n + m
   printLine(concat("The sum is: ")(String of sum)) #> _ =>
   sum
-//│ val main: Bind[undefined, 'B]
+//│ val main: Bind[(), 'B]
 //│   where
 //│     'B :> Int
 //│ main
@@ -205,7 +205,7 @@ fun loop =
   printLine("Input a positive number: ") #>> _ =>
   readInt #>> n =>
   if n < 0 then loop else Pure(n)
-//│ fun loop: forall 'B. Bind[undefined, 'B]
+//│ fun loop: forall 'B. Bind[(), 'B]
 //│   where
 //│     'B :> Int
 
@@ -270,7 +270,7 @@ fun loop(ctx) =
 //│ } -> 'b
 
 let r = loop(defaultCtx)
-//│ let r: Bind[undefined, 'B]
+//│ let r: Bind[(), 'B]
 //│   where
 //│     'B :> Int
 //│ r
@@ -309,10 +309,10 @@ class printLine(str: Str) extends IO { fun run = log(str) }
 //│ }
 //│ class printLine(str: Str) extends IO {
 //│   fun bind: forall 'B0. ('A0 -> IO['B0]) -> Bind['A0, 'B0]
-//│   fun run: undefined
+//│   fun run: ()
 //│ }
 //│ where
-//│   'A0 :> undefined
+//│   'A0 :> ()
 //│   'A :> 42
 
 val main =
@@ -322,14 +322,14 @@ val main =
   val sum = n + m
   printLine(concat("The sum is: ")(String of sum)).bind of _ =>
   Pure(sum)
-//│ val main: Bind[in 'A out undefined | 'A, 'B]
+//│ val main: Bind[in 'A out () | 'A, 'B]
 //│   where
 //│     'B :> Int
 //│ main
 //│      = Bind {}
 
 main
-//│ Bind[in 'A out undefined | 'A, 'B]
+//│ Bind[in 'A out () | 'A, 'B]
 //│   where
 //│     'B :> Int
 //│ res
@@ -341,13 +341,13 @@ let r = printLine("").bind of 0 => Pure(1)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.340: 	let r = printLine("").bind of 0 => Pure(1)
 //│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `undefined` does not match type `0`
+//│ ╟── application of type `()` does not match type `0`
 //│ ║  l.305: 	class printLine(str: Str) extends IO { fun run = log(str) }
 //│ ║         	                                                 ^^^^^^^^
 //│ ╟── Note: constraint arises from integer literal:
 //│ ║  l.340: 	let r = printLine("").bind of 0 => Pure(1)
 //│ ╙──       	                              ^
-//│ let r: Bind[in 0 & 'A out undefined | 'A, 'B] | error
+//│ let r: Bind[in 0 & 'A out () | 'A, 'B] | error
 //│   where
 //│     'B :> 1
 //│ r
@@ -364,7 +364,7 @@ Pure(1)
 //│ ║         	^^^^^^^^^
 //│ ║  l.359: 	Pure(1)
 //│ ║         	^^^^^^^
-//│ ╟── application of type `undefined` does not have field 'a'
+//│ ╟── application of type `()` does not have field 'a'
 //│ ║  l.305: 	class printLine(str: Str) extends IO { fun run = log(str) }
 //│ ║         	                                                 ^^^^^^^^
 //│ ╟── Note: constraint arises from field selection:
@@ -373,7 +373,7 @@ Pure(1)
 //│ ╟── from reference:
 //│ ║  l.358: 	log(x.a)
 //│ ╙──       	    ^
-//│ let r: Bind[in {a: anything} & 'A out undefined | 'A, 'B] | error
+//│ let r: Bind[in {a: anything} & 'A out () | 'A, 'B] | error
 //│   where
 //│     'B :> 1
 //│ r
@@ -401,7 +401,7 @@ declare fun printLine: Str -> IO[()]
 //│ declare trait IO[A]: forall 'b. (A -> IO['b]) -> IO['b] {
 //│   fun run: A
 //│ }
-//│ fun printLine: Str -> IO[undefined]
+//│ fun printLine: Str -> IO[()]
 //│ fun pure: forall 'a. 'a -> IO['a]
 //│ fun readInt: IO[Int]
 

@@ -39,7 +39,7 @@
 //│ ╔══[PARSE ERROR] Unexpected end of square bracket section; an expression was expected here
 //│ ║  l.34: 	[x:, y:]
 //│ ╙──      	       ^
-//│ Parsed: {'(' [x: y : undefined,] ')'}
+//│ Parsed: {'(' [x: y : (),] ')'}
 
 [x: 1, 2, 3]
 //│ |[|x|#:| |1|,| |2|,| |3|]|

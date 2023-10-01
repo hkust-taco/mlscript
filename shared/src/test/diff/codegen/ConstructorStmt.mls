@@ -2,7 +2,7 @@
 
 
 log("Hello!")
-//│ undefined
+//│ ()
 //│ res
 //│     = undefined
 //│ // Output
@@ -264,7 +264,7 @@ class Baz() {
 let baz = Baz()
 log([baz.x, baz.y])
 //│ let baz: Baz
-//│ undefined
+//│ ()
 //│ baz
 //│     = Baz {}
 //│ // Output
