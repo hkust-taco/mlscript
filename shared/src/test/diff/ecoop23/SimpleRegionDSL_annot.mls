@@ -285,7 +285,7 @@ IsUnivIsEmpty.isEmpty(circles)
 //│ res
 //│     = false
 
-:e // Exprected since the annotation only allows Lang variants
+:e // Expected since the annotation only allows Lang variants
 class Foo()
 IsUnivIsEmpty.isEmpty(Scale(Vector(1, 2), Intersect(Foo(), circles)))
 //│ ╔══[ERROR] Type mismatch in application:
