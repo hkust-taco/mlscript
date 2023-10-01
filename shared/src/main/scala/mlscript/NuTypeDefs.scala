@@ -1569,7 +1569,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                         }()
                         
                         // println(s"${lvl}. Finalized inheritance with $superType ~> $thisType")
-                        pack.copy(superType = thisType)
+                        pack.copy(superType = thisType, selfSig = pack.selfSig & sig_ty)
                     }
                     
                     // * We start from an empty super type.
@@ -1723,6 +1723,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       allMembers,
                       TopType,
                       sig_ty,
+                      // selfSig, // FIXME causes SOF in NF
                       inheritedTags,
                       tparamMembers
                     )(thisType)

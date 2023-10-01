@@ -299,23 +299,25 @@ C : B
 //│     = C { class: [class C extends A] }
 
 
+// TODO warn on non-asbtract class with a self-sig
+
 :e
 class A(): C
 class B() extends A
 class C() extends B
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.303: 	class A(): C
+//│ ║  l.305: 	class A(): C
 //│ ║         	^^^^^^^^^
 //│ ╟── expression of type `#A` is not an instance of type `C`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.303: 	class A(): C
+//│ ║  l.305: 	class A(): C
 //│ ╙──       	           ^
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.304: 	class B() extends A
+//│ ║  l.306: 	class B() extends A
 //│ ║         	^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `#B` is not an instance of type `C`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.303: 	class A(): C
+//│ ║  l.305: 	class A(): C
 //│ ╙──       	           ^
 //│ class A(): C
 //│ class B() extends A
@@ -326,11 +328,11 @@ abstract class A(): C
 class B() extends A
 class C() extends B
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.326: 	class B() extends A
+//│ ║  l.328: 	class B() extends A
 //│ ║         	^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `#B` is not an instance of type `C`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.325: 	abstract class A(): C
+//│ ║  l.327: 	abstract class A(): C
 //│ ╙──       	                    ^
 //│ abstract class A(): C
 //│ class B() extends A
@@ -350,18 +352,19 @@ class D() extends B
 :e // FIXME transitivity of self types
 fun test(x: B): C = x
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.350: 	fun test(x: B): C = x
+//│ ║  l.353: 	fun test(x: B): C = x
 //│ ║         	                    ^
 //│ ╟── type `B` is not an instance of `C`
-//│ ║  l.350: 	fun test(x: B): C = x
+//│ ║  l.353: 	fun test(x: B): C = x
 //│ ║         	            ^
 //│ ╟── but it flows into reference with expected type `C`
-//│ ║  l.350: 	fun test(x: B): C = x
+//│ ║  l.353: 	fun test(x: B): C = x
 //│ ║         	                    ^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.350: 	fun test(x: B): C = x
+//│ ║  l.353: 	fun test(x: B): C = x
 //│ ╙──       	                ^
 //│ fun test: (x: B) -> C
+
 
 
 

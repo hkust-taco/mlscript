@@ -18,7 +18,15 @@ fun (<|) pepi(f, x) = f(x)
 
 
 // * Hack to throw exceptions
+:e
 declare class throw(arg: anything): nothing
+//│ ╔══[ERROR] Type mismatch in type declaration:
+//│ ║  l.22: 	declare class throw(arg: anything): nothing
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `#Throw & {arg: anything}` does not match type `nothing`
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.22: 	declare class throw(arg: anything): nothing
+//│ ╙──      	                                    ^^^^^^^
 //│ declare class throw(arg: anything): nothing
 
 :re
@@ -110,7 +118,7 @@ module Lists { // TODO use name List when module overloading is supported:
 //│ module Lists {
 //│   fun assoc: forall 'a 'A. 'a -> (Cons[{key: Eql['a], value: 'A}] | Nil) -> (None | Some['A])
 //│   fun map: forall 'b 'A0. ('b -> 'A0) -> (Cons['b] | Nil) -> (Cons['A0] | Nil)
-//│   fun zip: forall 'c 'd. (Cons['c] | Nil, Cons['d] | Nil) -> (Cons[['c, 'd]] | Nil)
+//│   fun zip: forall 'c 'd. (Cons['d] | Nil, Cons['c] | Nil) -> (Cons[['d, 'c]] | Nil)
 //│ }
 
 let xs = 1 :: 2 :: 3 :: Nil
@@ -139,7 +147,7 @@ ls |> Lists.assoc("a")
 // * Our little language:
 
 
-abstract class Term: Var | App | Lam | Sel | Rcd[Term]
+abstract class Term: Var | App | Lam | Sel | Rcd[Term] | Lit
 class Var(val name: Str) extends Term
 class App(val lhs: Term, val args: List[Term]) extends Term
 class Lam(val params: List[Str], val body: Term) extends Term
@@ -148,7 +156,31 @@ class Sel(val prefix: Term, val fieldName: Str) extends Term
 abstract class Lit[out A](val value: A): IntLit | StrLit extends Term
 class IntLit(v: Int) extends Lit[Int](v)
 class StrLit(v: Str) extends Lit[Str](v)
-//│ abstract class Term: App | Lam | Rcd[Term] | Sel | Var
+//│ ╔══[ERROR] Type mismatch in type declaration:
+//│ ║  l.154: 	class Rcd[out Sub](val fields: List[{key: Str, value: Sub}]) extends Term
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `Sub` is not an instance of type `Term`
+//│ ║  l.154: 	class Rcd[out Sub](val fields: List[{key: Str, value: Sub}]) extends Term
+//│ ║         	              ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.150: 	abstract class Term: Var | App | Lam | Sel | Rcd[Term] | Lit
+//│ ╙──       	                                                 ^^^^
+//│ ╔══[ERROR] Type mismatch in type declaration:
+//│ ║  l.154: 	class Rcd[out Sub](val fields: List[{key: Str, value: Sub}]) extends Term
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `Sub` does not match type `App | Lam | #Lit | Rcd[Term] | Sel | Var`
+//│ ║  l.154: 	class Rcd[out Sub](val fields: List[{key: Str, value: Sub}]) extends Term
+//│ ║         	              ^^^
+//│ ╟── Note: constraint arises from union type:
+//│ ║  l.150: 	abstract class Term: Var | App | Lam | Sel | Rcd[Term] | Lit
+//│ ║         	                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── from type reference:
+//│ ║  l.150: 	abstract class Term: Var | App | Lam | Sel | Rcd[Term] | Lit
+//│ ╙──       	                                                 ^^^^
+//│ ╔══[ERROR] Type `Sub` does not contain member `Rcd#Sub`
+//│ ║  l.154: 	class Rcd[out Sub](val fields: List[{key: Str, value: Sub}]) extends Term
+//│ ╙──       	              ^^^
+//│ abstract class Term: App | Lam | Lit[anything] | Rcd[Term] | Sel | Var
 //│ class Var(name: Str) extends Term
 //│ class App(lhs: Term, args: List[Term]) extends Term
 //│ class Lam(params: List[Str], body: Term) extends Term
@@ -191,7 +223,7 @@ fun eval(t, env) = if t is
 //│   where
 //│     'b :> 'Sub
 //│        <: Object & ~#Rcd | Rcd['b]
-//│     'Sub :> Lam | Lit['A] | Rcd['Sub] | 'b
+//│     'Sub :> Lam | Lit['A | ??A] | Rcd['Sub] | 'b
 //│     'a <: App | Lam | Lit['A] | Rcd['a] | Sel | Var
 
 eval : (Term, List[{key: Str, value: Value}]) -> Value
@@ -207,21 +239,21 @@ let rcd = Rcd({key: "a", value: IntLit(0)} :: Nil)
 eval of rcd, Nil
 //│ 'Sub
 //│   where
-//│     'Sub :> Lam | Lit[Int] | Rcd['Sub]
+//│     'Sub :> Lam | Lit[Int | ??A] | Rcd['Sub]
 //│ res
 //│     = Rcd {}
 
 eval of Sel(rcd, "a"), Nil
 //│ 'Sub
 //│   where
-//│     'Sub :> Lam | Lit[nothing] | Rcd['Sub]
+//│     'Sub :> Lam | Lit[??A] | Rcd['Sub]
 //│ res
 //│     = IntLit {}
 
 eval of App(Lam("x" :: Nil, Sel(Var("x"), "a")), rcd :: Nil), Nil
 //│ 'Sub
 //│   where
-//│     'Sub :> Lam | Lit[nothing] | Rcd['Sub]
+//│     'Sub :> Lam | Lit[??A] | Rcd['Sub]
 //│ res
 //│     = IntLit {}
 

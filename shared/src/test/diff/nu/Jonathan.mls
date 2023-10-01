@@ -59,12 +59,12 @@ onMousePressed(event => readLine.flatMap(println))
 
 
 class Event
-class MouseEvent: Event
+class MouseEvent extends Event
 module Register
 //│ class Event {
 //│   constructor()
 //│ }
-//│ class MouseEvent: Event {
+//│ class MouseEvent extends Event {
 //│   constructor()
 //│ }
 //│ module Register
