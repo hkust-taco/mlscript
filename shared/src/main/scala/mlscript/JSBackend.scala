@@ -1381,6 +1381,16 @@ class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
       case _ => die
     }
 
+    otherStmts.foreach {
+      case fd @ NuFunDef(isLetRec, Var(nme), symNme, _, L(body)) if isLetRec.getOrElse(true) =>
+        val isByname = isLetRec.isEmpty
+        val isByvalueRecIn = if (isByname) None else Some(true)
+        val bodyIsLam = body match { case _: Lam => true case _ => false }
+        val symb = symNme.map(_.name)
+        scope.declareValue(nme, isByvalueRecIn, bodyIsLam, symb)
+      case _ => ()
+    }
+    
     // don't pass `otherStmts` to the top-level module, because we need to execute them one by one later
     val topModule = topLevelScope.declareTopModule("TypingUnit", Nil, typeDefs, true)
     val moduleIns = topLevelScope.declareValue("typing_unit", Some(false), false, N)
@@ -1395,16 +1405,6 @@ class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
       JSIdent("e"),
       (zeroWidthSpace + JSIdent("e") + zeroWidthSpace).log() :: Nil
     )
-
-    otherStmts.foreach {
-      case fd @ NuFunDef(isLetRec, Var(nme), symNme, _, L(body)) if isLetRec.getOrElse(true) =>
-        val isByname = isLetRec.isEmpty
-        val isByvalueRecIn = if (isByname) None else Some(true)
-        val bodyIsLam = body match { case _: Lam => true case _ => false }
-        val symb = symNme.map(_.name)
-        scope.declareValue(nme, isByvalueRecIn, bodyIsLam, symb)
-      case _ => ()
-    }
 
     // TODO Improve: (Lionel) I find this logic very strange! What's going on here?
     //  Why are we declaring some things above AND below?
