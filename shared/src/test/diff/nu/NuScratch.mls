@@ -1,3 +1,103 @@
 :NewDefs
 
 
+
+class C0: C1 | C2
+module C1 extends C0
+class C2() extends C0
+//│ class C0: C1 | C2 {
+//│   constructor()
+//│ }
+//│ module C1 extends C0
+//│ class C2() extends C0
+
+fun foo(x: C0) = if x is
+  C1 then 1
+  C2 then 2
+//│ fun foo: (x: C0) -> (1 | 2)
+
+fun foo(x: C0) = x : C1 | C2
+//│ fun foo: (x: C0) -> (C1 | C2)
+
+
+
+class Foo(): Int
+//│ class Foo(): Int
+
+
+fun foo(x: Foo) = x : Int
+//│ fun foo: (x: Foo) -> Int
+
+let f = Foo() : Foo
+//│ let f: Foo
+//│ f
+//│   = Foo {}
+
+f : Int | 0
+//│ Int
+//│ res
+//│     = Foo {}
+
+:d
+f : Int
+//│ 0. Typing ‹f : Int›
+//│ | Typing unit statements
+//│ | | 0. Typing term f : Int
+//│ | | | 0. Typing term f
+//│ | | | 0. : Foo
+//│ | | | Typing type TypeName(Int)
+//│ | | | | vars=Map() newDefsInfo=Map()
+//│ | | | | 0. type TypeName(Int)
+//│ | | | | => Int
+//│ | | | => Int ——— 
+//│ | | | CONSTRAIN Foo <! Int
+//│ | | |   where 
+//│ | | | 0. C Foo <! Int    (0)
+//│ | | | | 0. C (#Foo<Object> & ⊤..Int) <! #Int<Object,Num>    (2)
+//│ | | | | | Already a subtype by <:<
+//│ | | 0. : Int
+//│ | : Some(Int)
+//│ ======== TYPED ========
+//│ res: Some(Int) where 
+//│ Int
+//│ res
+//│     = Foo {}
+
+
+// FIXME
+Foo() + 1
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.68: 	Foo() + 1
+//│ ║        	^^^^^^^^^
+//│ ╟── application of type `Foo` is not an instance of type `Int`
+//│ ║  l.68: 	Foo() + 1
+//│ ╙──      	^^^^^
+//│ Int | error
+//│ res
+//│     = '[object Object]1'
+
+// FIXME
+(Foo() : Foo) + 1
+//│ Int
+//│ res
+//│     = '[object Object]1'
+
+
+
+// FIXME
+module Foo: Int
+Foo + 1
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.89: 	Foo + 1
+//│ ║        	^^^^^^^
+//│ ╟── reference of type `Foo` is not an instance of type `Int`
+//│ ║  l.89: 	Foo + 1
+//│ ╙──      	^^^
+//│ module Foo: Int
+//│ Int | error
+//│ res
+//│     = '[object Object]1'
+
+
+
+

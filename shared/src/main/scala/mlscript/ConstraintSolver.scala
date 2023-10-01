@@ -951,7 +951,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               }
             } else {
               (tr1.mkClsTag, tr2.mkClsTag) match {
-                case (S(tag1), S(tag2)) if !(tag1 <:< tag2) =>
+                case (S(tag1), S(tag2)) if !(tag1 <:< tag2) && !tr1.hasSelfType =>
                   reportError()
                 case _ =>
                   rec(tr1.expand, tr2.expand, true)

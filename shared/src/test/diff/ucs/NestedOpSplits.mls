@@ -15,7 +15,7 @@ fun f(x) =
 //│ ║       	^^^^^^^
 //│ ║  l.9: 	      2 then 0
 //│ ║       	^^^^^^^
-//│ ╟── operator application of type `Bool` is not an instance of `Int`
+//│ ╟── operator application of type `Bool` is not an instance of type `Int`
 //│ ║  l.7: 	  if x ==
 //│ ║       	     ^^^^
 //│ ║  l.8: 	    1 +

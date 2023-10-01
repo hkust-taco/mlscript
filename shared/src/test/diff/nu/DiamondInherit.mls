@@ -110,7 +110,16 @@ module Bar extends T1, Foo[Int | Str] {
 //│ ╔══[ERROR] Type mismatch in definition of method bar:
 //│ ║  l.108: 	  fun bar(x) = x + 1
 //│ ║         	      ^^^^^^^^^^^^^^
-//│ ╟── type `Bool` is not an instance of `Int`
+//│ ╟── type `Bool` is not an instance of type `Int`
+//│ ║  l.64: 	trait T1 extends Foo[Int | Bool]
+//│ ║        	                           ^^^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.108: 	  fun bar(x) = x + 1
+//│ ╙──       	               ^
+//│ ╔══[ERROR] Type mismatch in definition of method bar:
+//│ ║  l.108: 	  fun bar(x) = x + 1
+//│ ║         	      ^^^^^^^^^^^^^^
+//│ ╟── type `Bool` is not an instance of type `Int`
 //│ ║  l.64: 	trait T1 extends Foo[Int | Bool]
 //│ ║        	                           ^^^^
 //│ ╟── Note: constraint arises from reference:

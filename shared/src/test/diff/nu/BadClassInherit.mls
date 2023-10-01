@@ -97,7 +97,22 @@ class Bar extends Foo {
 //│ ╔══[ERROR] Type mismatch in signature of member `x`:
 //│ ║  l.94: 	  fun x: Bool
 //│ ║        	      ^^^^^^^
-//│ ╟── type `Bool` is not an instance of `Int`
+//│ ╟── type `Bool` is not an instance of type `Int`
+//│ ║  l.94: 	  fun x: Bool
+//│ ║        	         ^^^^
+//│ ╟── but it flows into signature of member `x` with expected type `Int`
+//│ ║  l.94: 	  fun x: Bool
+//│ ║        	      ^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.64: 	class Foo { virtual fun x: Int = 1 }
+//│ ║        	                           ^^^
+//│ ╟── from definition of method x:
+//│ ║  l.64: 	class Foo { virtual fun x: Int = 1 }
+//│ ╙──      	                        ^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in signature of member `x`:
+//│ ║  l.94: 	  fun x: Bool
+//│ ║        	      ^^^^^^^
+//│ ╟── type `Bool` is not an instance of type `Int`
 //│ ║  l.94: 	  fun x: Bool
 //│ ║        	         ^^^^
 //│ ╟── but it flows into signature of member `x` with expected type `Int`
@@ -122,13 +137,13 @@ mixin M { fun x = false }
 :e
 class Bar extends Foo, M
 //│ ╔══[ERROR] Type mismatch in definition of method x:
-//│ ║  l.117: 	mixin M { fun x = false }
+//│ ║  l.132: 	mixin M { fun x = false }
 //│ ║         	              ^^^^^^^^^
 //│ ╟── reference of type `false` is not an instance of type `Int`
-//│ ║  l.117: 	mixin M { fun x = false }
+//│ ║  l.132: 	mixin M { fun x = false }
 //│ ║         	                  ^^^^^
 //│ ╟── but it flows into definition of method x with expected type `Int`
-//│ ║  l.117: 	mixin M { fun x = false }
+//│ ║  l.132: 	mixin M { fun x = false }
 //│ ║         	              ^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.64: 	class Foo { virtual fun x: Int = 1 }
@@ -162,19 +177,19 @@ trait B { class X { fun g = 1 } }
 :e
 class C extends A, B
 //│ ╔══[ERROR] Class member `X` cannot override class member of the same name declared in parent
-//│ ║  l.163: 	class C extends A, B
+//│ ║  l.178: 	class C extends A, B
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Originally declared here:
-//│ ║  l.147: 	trait B { class X { fun g = 1 } }
+//│ ║  l.162: 	trait B { class X { fun g = 1 } }
 //│ ╙──       	          ^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Intersection of class member and class members currently unsupported
-//│ ║  l.163: 	class C extends A, B
+//│ ║  l.178: 	class C extends A, B
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── The class member is defined here:
-//│ ║  l.146: 	class A { class X { fun f = 1 } }
+//│ ║  l.161: 	class A { class X { fun f = 1 } }
 //│ ║         	          ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── The class member is defined here:
-//│ ║  l.147: 	trait B { class X { fun g = 1 } }
+//│ ║  l.162: 	trait B { class X { fun g = 1 } }
 //│ ╙──       	          ^^^^^^^^^^^^^^^^^^^^^
 //│ class C extends A, B {
 //│   constructor()
@@ -189,14 +204,14 @@ class C extends A {
   class X { fun g = 1 }
 }
 //│ ╔══[ERROR] Class member `X` cannot override class member of the same name declared in parent
-//│ ║  l.188: 	class C extends A {
+//│ ║  l.203: 	class C extends A {
 //│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.189: 	  class X { fun g = 1 }
+//│ ║  l.204: 	  class X { fun g = 1 }
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.190: 	}
+//│ ║  l.205: 	}
 //│ ║         	^
 //│ ╟── Originally declared here:
-//│ ║  l.146: 	class A { class X { fun f = 1 } }
+//│ ║  l.161: 	class A { class X { fun f = 1 } }
 //│ ╙──       	          ^^^^^^^^^^^^^^^^^^^^^
 //│ class C extends A {
 //│   constructor()
@@ -211,7 +226,7 @@ class C extends A {
 :e
 class Foo2 extends Foo2
 //│ ╔══[ERROR] Unhandled cyclic definition
-//│ ║  l.212: 	class Foo2 extends Foo2
+//│ ║  l.227: 	class Foo2 extends Foo2
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^
 //│ class Foo2 extends Foo2 {
 //│   constructor()

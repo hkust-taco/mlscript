@@ -50,7 +50,16 @@ class WrongRoom extends Room[Bool]("wrong") {
 //│ ╔══[ERROR] Type mismatch in definition of method foo:
 //│ ║  l.48: 	    fun foo(x) = x + 1
 //│ ║        	        ^^^^^^^^^^^^^^
-//│ ╟── type `Bool` is not an instance of `Int`
+//│ ╟── type `Bool` is not an instance of type `Int`
+//│ ║  l.47: 	class WrongRoom extends Room[Bool]("wrong") {
+//│ ║        	                             ^^^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.48: 	    fun foo(x) = x + 1
+//│ ╙──      	                 ^
+//│ ╔══[ERROR] Type mismatch in definition of method foo:
+//│ ║  l.48: 	    fun foo(x) = x + 1
+//│ ║        	        ^^^^^^^^^^^^^^
+//│ ╟── type `Bool` is not an instance of type `Int`
 //│ ║  l.47: 	class WrongRoom extends Room[Bool]("wrong") {
 //│ ║        	                             ^^^^
 //│ ╟── Note: constraint arises from reference:
@@ -153,14 +162,14 @@ class B2[A](val a: Int => A) extends M2
 :e
 class E1(val a: Int) extends M2[Bool]
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.154: 	class E1(val a: Int) extends M2[Bool]
+//│ ║  l.163: 	class E1(val a: Int) extends M2[Bool]
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `Int` is not an instance of type `Bool`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.154: 	class E1(val a: Int) extends M2[Bool]
+//│ ║  l.163: 	class E1(val a: Int) extends M2[Bool]
 //│ ║         	                                ^^^^
 //│ ╟── from field selection:
-//│ ║  l.136: 	    fun m: A = this.a
+//│ ║  l.145: 	    fun m: A = this.a
 //│ ╙──       	               ^^^^^^
 //│ class E1(a: Int) {
 //│   fun m: Bool
