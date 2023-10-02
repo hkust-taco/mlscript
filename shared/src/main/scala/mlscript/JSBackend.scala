@@ -229,18 +229,18 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       val res = desugarQuote(body)(quoteScope, true, MutSet.empty)
       if (isQuoted) createASTCall("Quoted", res :: Nil)
       else res
-    case App(App(Var(op), Tup((N -> Fld(_, lhs)) :: Nil)), Tup((N -> Fld(_, rhs)) :: Nil))
+    case App(App(Var(op), Tup((N -> Fld(f1, lhs)) :: Nil)), Tup((N -> Fld(f2, rhs)) :: Nil))
         if JSBinary.operators contains op =>
       if (isQuoted)
         createASTCall("App", createASTCall("Var", StrLit(op) :: Nil) :: desugarQuote(lhs) :: desugarQuote(rhs) :: Nil)
       else
-        App(desugarQuote(lhs), desugarQuote(rhs))
-    case App(Var(op), Tup(N -> Fld(_, lhs) :: N -> Fld(_, rhs) :: Nil))
+        App(App(Var(op), Tup((N -> Fld(f1, desugarQuote(lhs))) :: Nil)), Tup((N -> Fld(f2, desugarQuote(rhs))) :: Nil))
+    case App(Var(op), Tup(N -> Fld(f1, lhs) :: N -> Fld(f2, rhs) :: Nil))
         if JSBinary.operators.contains(op) && !translateVarImpl(op, isCallee = true).isRight =>
       if (isQuoted)
         createASTCall("App", createASTCall("Var", StrLit(op) :: Nil) :: desugarQuote(lhs) :: desugarQuote(rhs) :: Nil)
       else
-        App(desugarQuote(lhs), desugarQuote(rhs))
+        App(Var(op), Tup(N -> Fld(f1, desugarQuote(lhs)) :: N -> Fld(f2, desugarQuote(rhs)) :: Nil))
     case App(lhs, rhs) =>
       if (isQuoted) createASTCall("App", desugarQuote(lhs) :: desugarQuote(rhs) :: Nil)
       else App(desugarQuote(lhs), desugarQuote(rhs))

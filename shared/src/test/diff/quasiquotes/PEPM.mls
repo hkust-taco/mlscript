@@ -1,0 +1,77 @@
+:NewDefs
+
+:ne
+let a = code"1 + 1"
+let b = code"40 + ${a}"
+//│ let a: Code[Int, nothing]
+//│ let b: Code[Int, nothing]
+
+:ne
+run(b)
+//│ Int
+
+:ne
+let one = Const(42)
+let one' = code"42"
+let one'' = let tmp = 42 in Const(tmp)
+//│ let one: Code[Int, nothing]
+//│ let one': Code[42, nothing]
+//│ let one'': Code[Int, nothing]
+
+declare module Math {
+  declare fun floor(x: Num): Int
+}
+//│ declare module Math {
+//│   fun floor: (x: Num) -> Int
+//│ }
+
+fun even(n) = n % 2 == 0
+//│ fun even: Int -> Bool
+
+// x^n
+fun power(x, n) =
+  if (n == 0) then 1
+  else if (even(n)) then let t = power(x, Math.floor(n / 2)) in t * t
+  else x * power(x, n - 1)
+//│ fun power: (Int, Int) -> Int
+
+power(3, 3)
+power(2, 10)
+//│ Int
+//│ res
+//│     = 27
+//│ res
+//│     = 1024
+
+
+// x^n
+:js
+fun power'(x, n) =
+  if (n == 0) then Const(1)
+  else if (even(n)) then code"let t = ${power'(x, Math.floor(n / 2))} in t * t"
+  else code"${x} * ${power'(x, n - 1)}"
+//│ fun power': forall 'a. (Code[Int, 'a], Int) -> Code[Int, 'a]
+//│ // Prelude
+//│ class TypingUnit7 {}
+//│ const typing_unit7 = new TypingUnit7;
+//│ // Query 1
+//│ globalThis.power$ = function power$(x, n) {
+//│   return ((() => {
+//│     return (n == 0 === true ? Const(1) : even(n) === true ? ((t1) => (() => {
+//│       bindMeta("t", power$(x, Math.floor(n / 2)));
+//│       return App(Var("*"), Var("t1"), Var("t1"));
+//│     })())(freshVar("t")) : App(Var("*"), x, power$(x, n - 1)));
+//│   })());
+//│ };
+//│ // End of generated code
+
+:ne
+:js
+let power10 = run(code"x => ${power'(x, 10)}")
+//│ let power10: Int -> Int
+//│ // Prelude
+//│ class TypingUnit8 {}
+//│ const typing_unit8 = new TypingUnit8;
+//│ // Query 1
+//│ globalThis.power10 = run(Lam(((x1) => power$(Var("x1"), 10))(freshVar("x"))));
+//│ // End of generated code
