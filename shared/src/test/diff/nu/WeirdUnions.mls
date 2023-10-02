@@ -63,7 +63,7 @@ f("abc", "abc")
 
 
 // * Mismatched argument list sizes yields surprising results:
-let r = if true then id else [x, y] => [y, x]
+let r = if true then id else (x, y) => [y, x]
 //│ let r: (...nothing) -> [nothing, nothing]
 //│ r
 //│   = [Function: id]
@@ -78,7 +78,7 @@ r(error, error)
 //│ ║  l.72: 	r(error)
 //│ ║        	 ^^^^^^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.66: 	let r = if true then id else [x, y] => [y, x]
+//│ ║  l.66: 	let r = if true then id else (x, y) => [y, x]
 //│ ╙──      	                              ^^^^
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.73: 	r(error, error)
@@ -105,5 +105,10 @@ r of [0, 1]
 //│ res
 //│     = [ 0, 1 ]
 
+// Also currently parses the same:
+let r = if true then id else [x, y] => [y, x]
+//│ let r: forall 'a 'b 'c. (['a, 'b] & 'c) -> (['b, 'a] | 'c)
+//│ r
+//│   = [Function: id]
 
 

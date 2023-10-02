@@ -94,55 +94,43 @@ let f = ((x, y)) => x + y
 //│ ╔══[PARSE ERROR] Expected '=>' or '->' after this parameter section
 //│ ║  l.93: 	let f = ((x, y)) => x + y
 //│ ╙──      	         ^^^^^^
-//│ let f: (Int, Int) -> Int
+//│ let f: ([Int, Int]) -> Int
 //│ f
 //│   = [Function: f5]
 
+:e
 f(1, 2)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.102: 	f(1, 2)
+//│ ║         	^^^^^^^
+//│ ╟── argument list of type `[1, 2]` does not match type `[[?a, ?b]]`
+//│ ║  l.102: 	f(1, 2)
+//│ ╙──       	 ^^^^^^
+//│ Int | error
+//│ res
+//│ Runtime error:
+//│   TypeError: number 1 is not iterable (cannot read property Symbol(Symbol.iterator))
+
+:pe
+f((1, 2))
+//│ ╔══[PARSE ERROR] Expected '=>' or '->' after this parameter section
+//│ ║  l.115: 	f((1, 2))
+//│ ╙──       	  ^^^^^^
 //│ Int
 //│ res
 //│     = 3
 
-:pe
-:e
-f((1, 2))
-//│ ╔══[PARSE ERROR] Expected '=>' or '->' after this parameter section
-//│ ║  l.108: 	f((1, 2))
-//│ ╙──       	  ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.108: 	f((1, 2))
-//│ ║         	^^^^^^^^^
-//│ ╟── argument of type `[[1, 2]]` does not match type `[?a, ?b]`
-//│ ║  l.108: 	f((1, 2))
-//│ ║         	 ^^^^^^^^
-//│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.93: 	let f = ((x, y)) => x + y
-//│ ╙──      	         ^^^^^^
-//│ Int | error
-//│ res
-//│     = '1,2undefined'
-
-:e
 f([1, 2])
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.126: 	f([1, 2])
-//│ ║         	^^^^^^^^^
-//│ ╟── argument of type `[[1, 2]]` does not match type `[?a, ?b]`
-//│ ║  l.126: 	f([1, 2])
-//│ ║         	 ^^^^^^^^
-//│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.93: 	let f = ((x, y)) => x + y
-//│ ╙──      	         ^^^^^^
-//│ Int | error
+//│ Int
 //│ res
-//│     = '1,2undefined'
+//│     = 3
 
 :e
 f[1, 2]
 //│ ╔══[ERROR] Type application syntax is not yet supported
-//│ ║  l.141: 	f[1, 2]
+//│ ║  l.129: 	f[1, 2]
 //│ ╙──       	^^^^^^^
-//│ (Int, Int) -> Int
+//│ ([Int, Int]) -> Int
 //│ res
 //│     = [Function: f5]
 
@@ -150,7 +138,7 @@ f[1, 2]
 :pe
 let f = (((x, y))) => x + y
 //│ ╔══[PARSE ERROR] Expected '=>' or '->' after this parameter section
-//│ ║  l.151: 	let f = (((x, y))) => x + y
+//│ ║  l.139: 	let f = (((x, y))) => x + y
 //│ ╙──       	          ^^^^^^
 //│ let f: ([Int, Int]) -> Int
 //│ f
@@ -159,30 +147,27 @@ let f = (((x, y))) => x + y
 
 // * TODO maybe parse as type lambda?
 let f = [x, y] => x + y
-//│ let f: (Int, Int) -> Int
+//│ let f: ([Int, Int]) -> Int
 //│ f
 //│   = [Function: f7]
 
-// :e // TODO
+:e
 f(1, 2)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.155: 	f(1, 2)
+//│ ║         	^^^^^^^
+//│ ╟── argument list of type `[1, 2]` does not match type `[[?a, ?b]]`
+//│ ║  l.155: 	f(1, 2)
+//│ ╙──       	 ^^^^^^
+//│ Int | error
+//│ res
+//│ Runtime error:
+//│   TypeError: number 1 is not iterable (cannot read property Symbol(Symbol.iterator))
+
+f([1, 2])
 //│ Int
 //│ res
 //│     = 3
-
-:e
-f([1, 2])
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.173: 	f([1, 2])
-//│ ║         	^^^^^^^^^
-//│ ╟── argument of type `[[1, 2]]` does not match type `[?a, ?b]`
-//│ ║  l.173: 	f([1, 2])
-//│ ║         	 ^^^^^^^^
-//│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.161: 	let f = [x, y] => x + y
-//│ ╙──       	         ^^^^
-//│ Int | error
-//│ res
-//│     = '1,2undefined'
 
 
 let f = ([x, y]) => x + y
@@ -198,10 +183,10 @@ f([1, 2])
 :e
 f(1, 2)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.199: 	f(1, 2)
+//│ ║  l.184: 	f(1, 2)
 //│ ║         	^^^^^^^
 //│ ╟── argument list of type `[1, 2]` does not match type `[[?a, ?b]]`
-//│ ║  l.199: 	f(1, 2)
+//│ ║  l.184: 	f(1, 2)
 //│ ╙──       	 ^^^^^^
 //│ Int | error
 //│ res
@@ -210,12 +195,20 @@ f(1, 2)
 
 
 let f = [[[x, y]]] => x + y
-//│ let f: ([[Int, Int]]) -> Int
+//│ let f: ([[[Int, Int]]]) -> Int
 //│ f
 //│   = [Function: f9]
 
+:e
 f([[1, 2]])
-//│ Int
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.203: 	f([[1, 2]])
+//│ ║         	^^^^^^^^^^^
+//│ ╟── tuple literal of type `[1, 2]` does not match type `[[?a, ?b]]`
+//│ ║  l.203: 	f([[1, 2]])
+//│ ╙──       	   ^^^^^^
+//│ Int | error
 //│ res
-//│     = 3
+//│ Runtime error:
+//│   TypeError: number 1 is not iterable (cannot read property Symbol(Symbol.iterator))
 

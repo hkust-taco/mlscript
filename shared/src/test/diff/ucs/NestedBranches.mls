@@ -118,7 +118,7 @@ fun mapPartition(f, xs) = if xs is
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── tuple literal of type `[Nil, Nil]` is not an instance of type `Object`
 //│ ║  l.102: 	  Nil then [Nil, Nil]
-//│ ║         	            ^^^^^^^^
+//│ ║         	           ^^^^^^^^^^
 //│ ╟── Note: constraint arises from `case` expression:
 //│ ║  l.103: 	  Cons(x, xs) and mapPartition(f, xs) is [l, r] and f(x) is
 //│ ║         	                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -174,7 +174,7 @@ fun mapPartition(f, xs) = if xs is
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── tuple literal of type `[Nil, Nil]` is not an instance of type `Object`
 //│ ║  l.150: 	  Nil then [Nil, Nil]
-//│ ║         	            ^^^^^^^^
+//│ ║         	           ^^^^^^^^^^
 //│ ╟── Note: constraint arises from `case` expression:
 //│ ║  l.151: 	  Cons(x, xs) and mapPartition(f, xs) is [l, r]
 //│ ║         	                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

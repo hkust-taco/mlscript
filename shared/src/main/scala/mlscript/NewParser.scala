@@ -248,11 +248,6 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       TypingUnit(Nil)
   }
   
-  final def toParams(t: Term): Tup = t match {
-    case t: Tup => t
-    case Bra(false, t: Tup) => t
-    case _ => Tup((N, Fld(FldFlags.empty, t)) :: Nil)
-  }
   final def toParamsTy(t: Type): Tuple = t match {
     case t: Tuple => t
     case _ => Tuple((N, Field(None, t)) :: Nil)
@@ -653,8 +648,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                 }
             }
           case _ =>
-            // TODO actually reject round tuples? (except for function arg lists)
-            Bra(false, Tup(res))
+            Tup(res)
         }
         exprCont(bra.withLoc(S(loc)), prec, allowNewlines = false)
       case (KEYWORD("forall"), l0) :: _ =>
@@ -808,12 +802,11 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       case (KEYWORD(opStr @ "=>"), l0) :: (NEWLINE, l1) :: _ if opPrec(opStr)._1 > prec =>
         consume
         val rhs = Blk(typingUnit.entities)
-        R(Lam(toParams(acc), rhs))
+        R(Lam(PlainTup(acc), rhs))
       case (KEYWORD(opStr @ "=>"), l0) :: _ if opPrec(opStr)._1 > prec =>
         consume
         val rhs = expr(1)
-        // R(Lam(toParams(acc), rhs))
-        val res = Lam(toParams(acc), rhs)
+        val res = Lam(PlainTup(acc), rhs)
         exprCont(res, prec, allowNewlines)
       case (IDENT(".", _), l0) :: (br @ BRACKETS(Square, toks), l1) :: _ =>
         consume
@@ -845,7 +838,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                 Blk(acc :: rhs :: Nil)
               case _ =>
                 if (newDefs) App(v, PlainTup(acc, rhs))
-                else App(App(v, toParams(acc)), toParams(rhs))
+                else App(App(v, PlainTup(acc)), PlainTup(rhs))
             }, prec, allowNewlines)
         }
       case (KEYWORD(":"), l0) :: _ if prec <= outer.prec(':') =>
