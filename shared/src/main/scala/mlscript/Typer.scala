@@ -916,17 +916,25 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         }.map { case (n, Fld(FldFlags(mut, spec, opt, getter), t)) =>
           if (getter)
             err(msg"Cannot use `val` in this position", Loc(t :: n.toList))
-          val tym = typePolymorphicTerm(t)
+          val fprov = tp(t.toLoc, (if (mut) "mutable " else "") + "tuple field")
+          val tym = if (opt) {
+            println(s"opt val => $opt")
+            // (typePolymorphicTerm(t) | BotType)
+            ComposedType(true, 
+              typePolymorphicTerm(t), 
+              TypeRef(TypeName("undefined"), Nil)(noProv))(fprov)
+          } else {
+            typePolymorphicTerm(t)
+          }
           // val tym = if (n.isDefined) typeType(t.toTypeRaise)
           //   else typePolymorphicTerm(t)
-          val fprov = tp(t.toLoc, (if (mut) "mutable " else "") + "tuple field")
           if (mut) {
             val res = freshVar(fprov, N, n.map(_.name))
             val rs = con(tym, res, res)
-            (n, FieldType(Some(rs), rs, opt)(fprov))
+            (n, FieldType(Some(rs), rs, false)(fprov))
           } else {
             val ty = tym.toUpper(fprov) // TODO[optional-fields]: should send opt in toUpper?
-            val tres = FieldType(ty.lb, ty.ub, opt)(ty.prov)
+            val tres = FieldType(ty.lb, ty.ub, false)(ty.prov)
             (n, tres)
           }
         })(fs match {
