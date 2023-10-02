@@ -140,11 +140,10 @@ fun x = 1
 
 
 
-
 :pe
 (1, 2)
 //│ ╔══[PARSE ERROR] Expected '=>' or '->' after this parameter section
-//│ ║  l.145: 	(1, 2)
+//│ ║  l.144: 	(1, 2)
 //│ ╙──       	^^^^^^
 //│ [1, 2]
 //│ res
@@ -176,7 +175,7 @@ x => x
 :pe
 1 => (2, 3)
 //│ ╔══[PARSE ERROR] Expected '=>' or '->' after this parameter section
-//│ ║  l.177: 	1 => (2, 3)
+//│ ║  l.176: 	1 => (2, 3)
 //│ ╙──       	     ^^^^^^
 //│ 1 -> [2, 3]
 //│ res
@@ -200,16 +199,16 @@ f of 1, 2
 :e
 f of (1, 2)
 //│ ╔══[PARSE ERROR] Expected '=>' or '->' after this parameter section
-//│ ║  l.201: 	f of (1, 2)
+//│ ║  l.200: 	f of (1, 2)
 //│ ╙──       	     ^^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.201: 	f of (1, 2)
+//│ ║  l.200: 	f of (1, 2)
 //│ ║         	^^^^^^^^^^^
 //│ ╟── argument of type `[[1, 2]]` does not match type `[?a, ?b]`
-//│ ║  l.201: 	f of (1, 2)
+//│ ║  l.200: 	f of (1, 2)
 //│ ║         	     ^^^^^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.186: 	fun f(x, y) = x + y
+//│ ║  l.185: 	fun f(x, y) = x + y
 //│ ╙──       	     ^^^^^^
 //│ Int | error
 //│ res
@@ -217,6 +216,46 @@ f of (1, 2)
 
 
 
+:w
+0; 0
+//│ ╔══[WARNING] Pure expression does nothing in statement position.
+//│ ║  l.220: 	0; 0
+//│ ╙──       	^
+//│ 0
+//│ res
+//│     = 0
+
+:w
+succ(0); 0
+//│ ╔══[WARNING] Expression in statement position should have type `unit`.
+//│ ╟── Use the `discard` function to discard non-unit values, making the intent clearer.
+//│ ╟── Type mismatch in application:
+//│ ║  l.229: 	succ(0); 0
+//│ ║         	^^^^^^^
+//│ ╙── application of type `Int` does not match type `()`
+//│ 0
+//│ res
+//│     = 0
+
+discard(succ(0)); 0
+//│ 0
+//│ res
+//│     = 0
+
+discard of succ(0);; 0
+//│ 0
+//│ res
+//│     = undefined
+//│ res
+//│     = 0
+
+let _ = succ(0);; 0
+//│ let _: Int
+//│ 0
+//│ _
+//│   = 1
+//│ res
+//│     = 0
 
 
 

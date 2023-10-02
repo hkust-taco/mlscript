@@ -651,8 +651,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           case t: Term =>
             implicit val genLambdas: GenLambdas = true
             val ty = typeTerm(t)
-            /* // TODO next:
-            if (!topLevel) {
+            if (!topLevel && !stmts.isEmpty) {
               if (t.isInstanceOf[Var] || t.isInstanceOf[Lit])
                 warn("Pure expression does nothing in statement position.", t.toLoc)
               else
@@ -663,7 +662,6 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     err.allMsgs, newDefs)),
                   prov = TypeProvenance(t.toLoc, t.describe), ctx)
             }
-            */
             S(ty)
           case s: DesugaredStatement =>
             err(msg"Illegal position for this ${s.describe} statement.", s.toLoc)(raise)

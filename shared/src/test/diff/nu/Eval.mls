@@ -21,14 +21,28 @@ fun (<|) pepi(f, x) = f(x)
 declare class throw(arg: anything): nothing
 //│ declare class throw(arg: anything): nothing
 
+:w // * Due to current limitations of self types
 :re
 throw(1); 0
+//│ ╔══[WARNING] Expression in statement position should have type `unit`.
+//│ ╟── Use the `discard` function to discard non-unit values, making the intent clearer.
+//│ ╟── Type mismatch in application:
+//│ ║  l.26: 	throw(1); 0
+//│ ║        	^^^^^^^^
+//│ ╙── application of type `throw` does not match type `()`
 //│ 0
 //│ res
 //│ Runtime error:
 //│   1
 
+:w
 fun test = throw(1); 0
+//│ ╔══[WARNING] Expression in statement position should have type `unit`.
+//│ ╟── Use the `discard` function to discard non-unit values, making the intent clearer.
+//│ ╟── Type mismatch in application:
+//│ ║  l.39: 	fun test = throw(1); 0
+//│ ║        	           ^^^^^^^^
+//│ ╙── application of type `throw` does not match type `()`
 //│ fun test: 0
 
 :re
@@ -38,9 +52,16 @@ test
 //│ Runtime error:
 //│   1
 
+:w
 fun test =
   throw(1)
   error
+//│ ╔══[WARNING] Expression in statement position should have type `unit`.
+//│ ╟── Use the `discard` function to discard non-unit values, making the intent clearer.
+//│ ╟── Type mismatch in application:
+//│ ║  l.57: 	  throw(1)
+//│ ║        	  ^^^^^^^^
+//│ ╙── application of type `throw` does not match type `()`
 //│ fun test: nothing
 
 :re
@@ -162,9 +183,16 @@ type Value = Lam | Lit | Rcd[Value]
 //│ type Value = Lam | Lit[anything] | Rcd[Value]
 
 
+:w
 fun err(msg) =
   throw(concat("Evaluation error: " ++ msg))
   error
+//│ ╔══[WARNING] Expression in statement position should have type `unit`.
+//│ ╟── Use the `discard` function to discard non-unit values, making the intent clearer.
+//│ ╟── Type mismatch in application:
+//│ ║  l.188: 	  throw(concat("Evaluation error: " ++ msg))
+//│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── application of type `throw` does not match type `()`
 //│ fun err: Str -> nothing
 
 fun eval(t, env) = if t is
