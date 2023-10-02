@@ -2,7 +2,7 @@
 // TODO add check two compatible fields
 
 fun f1(a?: Int, b?: Int) = a + b
-//│ fun f1: (a: Int | undefined, b: Int | undefined) -> Int
+//│ fun f1: (a: (Int)?, b: (Int)?) -> Int
 
 fun f1(a: Int, b: Int) = a + b
 //│ fun f1: (a: Int, b: Int) -> Int
@@ -31,7 +31,7 @@ let y: C1 = x
 //│     = [ C2 {}, C2 {} ]
 
 [x, y]: [C1, C1, C1?]
-//│ [C1, C1, C1?]
+//│ [C1, C1, (C1)?]
 //│ res
 //│     = [ C2 {}, C2 {} ]
 
@@ -40,11 +40,11 @@ let y: C1 = x
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.39: 	[x]: [C1, C1, C1?]
 //│ ║        	^^^
-//│ ╟── expression of type `[?a]` does not match type `[C1, C1, C1?]`
+//│ ╟── expression of type `[?a]` does not match type `[C1, C1, (C1)?]`
 //│ ╟── Note: constraint arises from tuple type:
 //│ ║  l.39: 	[x]: [C1, C1, C1?]
 //│ ╙──      	     ^^^^^^^^^^^^^
-//│ [C1, C1, C1?]
+//│ [C1, C1, (C1)?]
 //│ res
 //│     = [ C2 {} ]
 
@@ -55,12 +55,12 @@ let y: C1 = x
 //│     = [ 1, 2, 3 ]
 
 [1, 2]: [Int, Int?]
-//│ [Int, Int?]
+//│ [Int, (Int)?]
 //│ res
 //│     = [ 1, 2 ]
 
 [1]: [Int, Int?]
-//│ [Int, Int?]
+//│ [Int, (Int)?]
 //│ res
 //│     = [ 1 ]
 
@@ -69,11 +69,11 @@ let y: C1 = x
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.68: 	[]: [Int, Int?]
 //│ ║        	^^
-//│ ╟── expression of type `[]` does not match type `[Int, Int?]`
+//│ ╟── expression of type `[]` does not match type `[Int, (Int)?]`
 //│ ╟── Note: constraint arises from tuple type:
 //│ ║  l.68: 	[]: [Int, Int?]
 //│ ╙──      	    ^^^^^^^^^^^
-//│ [Int, Int?]
+//│ [Int, (Int)?]
 //│ res
 //│     = []
 
@@ -82,18 +82,18 @@ let y: C1 = x
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.81: 	[1, 2, 3]: [Int, Int?]
 //│ ║        	^^^^^^^^^
-//│ ╟── tuple literal of type `[1, 2, 3]` does not match type `[Int, Int?]`
+//│ ╟── tuple literal of type `[1, 2, 3]` does not match type `[Int, (Int)?]`
 //│ ║  l.81: 	[1, 2, 3]: [Int, Int?]
 //│ ║        	 ^^^^^^^
 //│ ╟── Note: constraint arises from tuple type:
 //│ ║  l.81: 	[1, 2, 3]: [Int, Int?]
 //│ ╙──      	           ^^^^^^^^^^^
-//│ [Int, Int?]
+//│ [Int, (Int)?]
 //│ res
 //│     = [ 1, 2, 3 ]
 
 [1, 2]: [Int, Int, Int?]
-//│ [Int, Int, Int?]
+//│ [Int, Int, (Int)?]
 //│ res
 //│     = [ 1, 2 ]
 
@@ -103,24 +103,24 @@ let y: C1 = x
 fun foo(xs: [Int] & 'a) = xs : [Int, Int?]
 //│ |#fun| |foo|(|xs|#:| |[|Int|]| |&| |'a|)| |#=| |xs| |#:| |[|Int|,| |Int|?|]|
 //│ AST: TypingUnit(NuFunDef(None, foo, None, [], Lam(Tup(xs: App(Var(&), Tup(_: Bra(rcd = false, Tup(_: Var(Int))), _: Var('a)))), Asc(Var(xs), Tuple(List((None,Field(None,TypeName(Int),false)), (None,Field(None,TypeName(Int),true))))))))
-//│ Parsed: fun foo = (xs: &('(' [Int,] ')', 'a,),) => xs : [Int, Int?];
-//│ fun foo: (xs: [Int]) -> [Int, Int?]
+//│ Parsed: fun foo = (xs: &('(' [Int,] ')', 'a,),) => xs : [Int, (Int)?];
+//│ fun foo: (xs: [Int]) -> [Int, (Int)?]
 
 fun foo(xs: [Int] & 'a) = [xs : [Int, Int?], xs]
-//│ fun foo: forall 'a. (xs: [Int] & 'a) -> [[Int, Int?], [Int] & 'a]
+//│ fun foo: forall 'a. (xs: [Int] & 'a) -> [[Int, (Int)?], [Int] & 'a]
 
 
 
 // TODO later: update normal form construction
 
 fun foo: [Int] | [Int?]
-//│ fun foo: [Int?]
+//│ fun foo: [(Int)?]
 
 fun foo: [Int] & [Int?]
 //│ fun foo: [Int]
 
 fun foo: [Int] | [Int, Int?]
-//│ fun foo: [Int, Int?]
+//│ fun foo: [Int, (Int)?]
 
 fun foo: [Int] & [Int, Int?]
 //│ fun foo: [Int]
@@ -147,7 +147,7 @@ foo([1, true])
 
 
 fun foo: ([Int] | [Int, Int?]) -> Int
-//│ fun foo: ([Int, Int?]) -> Int
+//│ fun foo: ([Int, (Int)?]) -> Int
 
 :e
 foo([1, true])
@@ -169,15 +169,32 @@ let x = [1, 2, 3]: [Int, Int, Int]
 //│   = [ 1, 2, 3 ]
 
 fun foo0(x: Int?) = if x is undefined then 0 else x + 1
-//│ fun foo0: (x: Int | undefined) -> Int
+//│ fun foo0: (x: (Int)?) -> Int
 
 fun foo1(x?) = if x is undefined then 0 else x + 1
-//│ fun foo1: (Int | undefined) -> Int
+//│ fun foo1: ((Int | undefined)?) -> Int
 
 :e
 fun foo0(x: Int?) = x + 1
-//│ fun foo0: (x: Int | undefined) -> Int
+//│ fun foo0: (x: (Int)?) -> Int
 
 :e
 fun foo1(x?) = x + 1
-//│ fun foo1: (Int | undefined) -> Int
+//│ fun foo1: ((Int)?) -> Int
+
+:e
+fun ff(x: Int?) = x + 1
+//│ fun ff: (x: (Int)?) -> Int
+
+:e
+fun ff(x: Int | undefined) = x + 1
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.190: 	fun ff(x: Int | undefined) = x + 1
+//│ ║         	                             ^^^^^
+//│ ╟── type `undefined` is not an instance of type `Int`
+//│ ║  l.190: 	fun ff(x: Int | undefined) = x + 1
+//│ ║         	                ^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `Int`
+//│ ║  l.190: 	fun ff(x: Int | undefined) = x + 1
+//│ ╙──       	                             ^
+//│ fun ff: (x: Int | undefined) -> (Int | error)

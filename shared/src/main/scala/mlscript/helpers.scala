@@ -22,6 +22,7 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
   
   private def parensIf(str: Str, cnd: Boolean): Str = if (cnd) "(" + str + ")" else str
   private def showField(f: Field, ctx: ShowCtx): Str = {
+    // println(s"OK $f")
     val res = f match {
     case Field(N, ub, _) => ub.showIn(ctx, 0)
     case Field(S(lb), ub, _) if lb === ub => ub.showIn(ctx, 0)
@@ -30,10 +31,16 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
     case Field(S(lb), ub, _) => s"in ${lb.showIn(ctx, 0)} out ${ub.showIn(ctx, 0)}"
     }
     val opt = f match {
-      case Field(_, _, true) => "?"
-      case Field(_, _, false)=> ""
+      case Field(_, _, true) => true
+      case Field(_, _, false)=> false
     }
-    res + opt
+    println(s"OK $f ### ${res + opt}" )
+    if (opt) {
+      "(" + res + ")" + "?" 
+    } else {
+      res
+    }
+    // res + opt
   }
   private def showFields(fs: Ls[Opt[Var] -> Field], ctx: ShowCtx): Ls[Str] =
     fs.map(nt => s"${nt._2.mutStr}${nt._1.fold("")(_.name + ": ")}${showField(nt._2, ctx)}")
