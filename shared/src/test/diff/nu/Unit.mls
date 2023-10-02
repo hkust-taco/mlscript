@@ -259,3 +259,25 @@ let _ = succ(0);; 0
 
 
 
+:e
+fun foo =
+  let tmp = 0
+foo + 1
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.265: 	foo + 1
+//│ ║         	^^^^^^^
+//│ ╟── definition of method foo of type `()` is not an instance of type `Int`
+//│ ║  l.263: 	fun foo =
+//│ ║         	    ^^^^^
+//│ ║  l.264: 	  let tmp = 0
+//│ ║         	^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `Int`
+//│ ║  l.265: 	foo + 1
+//│ ╙──       	^^^
+//│ fun foo: ()
+//│ Int | error
+//│ res
+//│     = NaN
+
+
+
