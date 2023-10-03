@@ -184,7 +184,7 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
     def freshenAboveImpl(lim: Int, rigidify: Bool)(implicit ctx: Ctx, freshened: MutMap[TV, ST]): FunctionType =
       FunctionType(lhs.freshenAbove(lim, rigidify), rhs.freshenAbove(lim, rigidify))(prov)
     override def toString = s"(${lhs match {
-      case TupleType((N, FieldType(N, f: TupleType, false)) :: Nil) => "[" + f.showInner + "]"
+      case TupleType((N, FieldType(N, f: TupleType, _)) :: Nil) => "[" + f.showInner + "]"
       case TupleType((N, f) :: Nil) => f.toString
       case lhs => lhs
     }} -> $rhs)"
@@ -492,7 +492,7 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
     def freshenAbove(lim: Int, rigidify: Bool)(implicit ctx: Ctx, freshened: MutMap[TV, ST]): FieldType =
       update(_.freshenAbove(lim, rigidify), _.freshenAbove(lim, rigidify))
     override def toString =
-      lb.fold(s"$ub${if (opt) "?" else ""}")(lb => s"mut ${if (lb === BotType) "" else lb}..$ub")
+      lb.fold(s"$ub")(lb => s"mut ${if (lb === BotType) "" else lb}..$ub") + (if (opt) "?" else "")
   }
   object FieldType { //TODO
     def mk(vi: VarianceInfo, lb: ST, ub: ST)(prov: TP): FieldType = vi match {
