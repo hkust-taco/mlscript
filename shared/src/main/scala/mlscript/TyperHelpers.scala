@@ -377,10 +377,7 @@ abstract class TyperHelpers { Typer: Typer =>
     def toUpper(prov: TypeProvenance, opt: Bool = false): FieldType = FieldType(None, this, opt)(prov)
     def toLower(prov: TypeProvenance): FieldType = FieldType(Some(this), TopType, false)(prov)
     
-    def | (that: SimpleType, prov: TypeProvenance = noProv, swapped: Bool = false): SimpleType = 
-      {
-        println("SHIT!")
-        (this, that) match {
+    def | (that: SimpleType, prov: TypeProvenance = noProv, swapped: Bool = false): SimpleType = (this, that) match {
       case (TopType, _) => this
       case (BotType, _) => that
       
@@ -404,7 +401,7 @@ abstract class TyperHelpers { Typer: Typer =>
         println("COMPOSDED!!!")
         ComposedType(true, that, this)(prov)
       }
-    }}
+    }
     
     /** This is to intersect two types that occur in negative position,
       * where it may be sound to perform some online simplifications/approximations. */

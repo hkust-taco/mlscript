@@ -186,15 +186,175 @@ fun foo1(x?) = x + 1
 fun ff(x: Int?) = x + 1
 //│ fun ff: (x: (Int)?) -> Int
 
-:e
+:d
 fun ff(x: Int | undefined) = x + 1
+//│ 0. Typing ‹fun ff = (x: |(Int, undefined,),) => +(x, 1,)›
+//│ | 0. Created lazy type info for fun ff = (x: |(Int, undefined,),) => +(x, 1,)
+//│ | Completing fun ff = (x: |(Int, undefined,),) => +(x, 1,)
+//│ | | Type params 
+//│ | | Params 
+//│ | | 1. Typing term (x: |(Int, undefined,),) => +(x, 1,)
+//│ | | | 1. Typing pattern [x: |(Int, undefined,),]
+//│ | | | | 1. Typing pattern x : Int | undefined
+//│ | | | | | Typing type Union(TypeName(Int),Literal(undefined))
+//│ | | | | | | vars=Map() newDefsInfo=Map()
+//│ | | | | | | 1. type Union(TypeName(Int),Literal(undefined))
+//│ | | | | | | | 1. type TypeName(Int)
+//│ | | | | | | | => Int
+//│ | | | | | | | 1. type Literal(undefined)
+//│ | | | | | | | => #undefined<Object>
+//│ | | | | | | | COMPOSDED!!!
+//│ | | | | | | => (Int | #undefined<Object>)
+//│ | | | | | => (Int | #undefined<Object>) ——— 
+//│ | | | | 1. : (Int | #undefined<Object>)
+//│ | | | 1. : (x: (Int | #undefined<Object>),)
+//│ | | | 1. Typing term +(x, 1,)
+//│ | | | | 1. Typing term +
+//│ | | | | 1. : ((Int, Int,) -> Int)
+//│ | | | | 1. Typing term x
+//│ | | | | 1. : (Int | #undefined<Object>)
+//│ | | | | 1. Typing term 1
+//│ | | | | 1. : #1<Int,Num,Object>
+//│ | | | | CONSTRAIN ((Int, Int,) -> Int) <! (((Int | #undefined<Object>), #1<Int,Num,Object>,) -> α83')
+//│ | | | |   where 
+//│ | | | | 1. C ((Int, Int,) -> Int) <! (((Int | #undefined<Object>), #1<Int,Num,Object>,) -> α83')    (0)
+//│ | | | | | 1. C ((Int | #undefined<Object>), #1<Int,Num,Object>,) <! (Int, Int,)    (1)
+//│ | | | | | | 1. C (Int | #undefined<Object>) <! Int    (2)
+//│ | | | | | | | 1. C Int <! Int    (4)
+//│ | | | | | | | | Already a subtype by <:<
+//│ | | | | | | | 1. C #undefined<Object> <! Int    (4)
+//│ | | | | | | | | 1. C #undefined<Object> <! #Int<Object,Num>    (6)
+//│ | | | | | | | | | CONSTRAINT FAILURE: #undefined<Object> <: #Int<Object,Num>
+//│ | | | | | | | | | allVarPols: 
+//│ | | | | | | | | | normLike[+] #undefined<Object>
+//│ | | | | | | | | | | norm[+] #undefined<Object>
+//│ | | | | | | | | | | | DNF: DNF(0, #undefined<Object>{})
+//│ | | | | | | | | | | ~> #undefined<Object>
+//│ | | | | | | | | | CONSTRAIN #error<> <! α83'
+//│ | | | | | | | | |   where 
+//│ | | | | | | | | | 1. C #error<> <! α83'    (0)
+//│ | | | | | | | | | | NEW α83' LB (0)
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.190: 	fun ff(x: Int | undefined) = x + 1
 //│ ║         	                             ^^^^^
 //│ ╟── type `undefined` is not an instance of type `Int`
 //│ ║  l.190: 	fun ff(x: Int | undefined) = x + 1
-//│ ║         	                ^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `Int`
-//│ ║  l.190: 	fun ff(x: Int | undefined) = x + 1
-//│ ╙──       	                             ^
+//│ ╙──       	                ^^^^^^^^^
+//│ | | | | | | 1. C #1<Int,Num,Object> <! Int    (2)
+//│ | | | | | | | Already a subtype by <:<
+//│ | | | | | 1. C Int <! α83'    (1)
+//│ | | | | | | NEW α83' LB (0)
+//│ | | | 1. : α83'
+//│ | | 1. : ((x: (Int | #undefined<Object>),) -> α83')
+//│ | | CONSTRAIN ((x: (Int | #undefined<Object>),) -> α83') <! ff84'
+//│ | |   where 
+//│ 		α83' :> Int | #error<>
+//│ | | 1. C ((x: (Int | #undefined<Object>),) -> α83') <! ff84'    (0)
+//│ | | | NEW ff84' LB (1)
+//│ | Completed TypedNuFun(0,fun ff = (x: |(Int, undefined,),) => +(x, 1,),((x: (Int | #undefined<Object>),) -> α83')) where 
+//│ 		α83' :> Int | #error<>
+//│ | Typing unit statements
+//│ | : None
+//│ ======== TYPED ========
+//│ fun ff: ‹∀ 0. ((x: (Int | #undefined<Object>),) -> α83')› where 
+//│ |		α83' :> Int | #error<>
+//│ COMPOSDED!!!
+//│ COMPOSDED!!!
 //│ fun ff: (x: Int | undefined) -> (Int | error)
+
+:d
+fun ff(x: Int | undefined) = if x is undefined then 0 else x + 1
+//│ 0. Typing ‹fun ff = (x: |(Int, undefined,),) => if (is(x, undefined,)) then 0 else +(x, 1,)›
+//│ | 0. Created lazy type info for fun ff = (x: |(Int, undefined,),) => if (is(x, undefined,)) then 0 else +(x, 1,)
+//│ | Completing fun ff = (x: |(Int, undefined,),) => if (is(x, undefined,)) then 0 else +(x, 1,)
+//│ | | Type params 
+//│ | | Params 
+//│ | | 1. Typing term (x: |(Int, undefined,),) => if (is(x, undefined,)) then 0 else +(x, 1,)
+//│ | | | 1. Typing pattern [x: |(Int, undefined,),]
+//│ | | | | 1. Typing pattern x : Int | undefined
+//│ | | | | | Typing type Union(TypeName(Int),Literal(undefined))
+//│ | | | | | | vars=Map() newDefsInfo=Map()
+//│ | | | | | | 1. type Union(TypeName(Int),Literal(undefined))
+//│ | | | | | | | 1. type TypeName(Int)
+//│ | | | | | | | => Int
+//│ | | | | | | | 1. type Literal(undefined)
+//│ | | | | | | | => #undefined<Object>
+//│ | | | | | | | COMPOSDED!!!
+//│ | | | | | | => (Int | #undefined<Object>)
+//│ | | | | | => (Int | #undefined<Object>) ——— 
+//│ | | | | 1. : (Int | #undefined<Object>)
+//│ | | | 1. : (x: (Int | #undefined<Object>),)
+//│ | | | 1. Typing term if (is(x, undefined,)) then 0 else +(x, 1,)
+//│ | | | | [Desugarer.destructPattern] scrutinee = x; pattern = undefined
+//│ | | | | [Desugarer.destructPattern] Result: «x is undefined
+//│ | | | | Desugared term: case x of { undefined => 0; _ => +(x, 1,) }
+//│ | | | | 1. Typing term case x of { undefined => 0; _ => +(x, 1,) }
+//│ | | | | | 1. Typing term x
+//│ | | | | | 1. : (Int | #undefined<Object>)
+//│ | | | | | CONSTRAIN (Int | #undefined<Object>) <! Object
+//│ | | | | |   where 
+//│ | | | | | 1. C (Int | #undefined<Object>) <! Object    (0)
+//│ | | | | | | Already a subtype by <:<
+//│ | | | | | 1. Typing term 0
+//│ | | | | | 1. : #0<Int,Num,Object>
+//│ | | | | | 1. Typing term +(x, 1,)
+//│ | | | | | | 1. Typing term +
+//│ | | | | | | 1. : ((Int, Int,) -> Int)
+//│ | | | | | | 1. Typing term x
+//│ | | | | | | 1. : α86'
+//│ | | | | | | 1. Typing term 1
+//│ | | | | | | 1. : #1<Int,Num,Object>
+//│ | | | | | | CONSTRAIN ((Int, Int,) -> Int) <! ((α86', #1<Int,Num,Object>,) -> α87')
+//│ | | | | | |   where 
+//│ | | | | | | 1. C ((Int, Int,) -> Int) <! ((α86', #1<Int,Num,Object>,) -> α87')    (0)
+//│ | | | | | | | 1. C (α86', #1<Int,Num,Object>,) <! (Int, Int,)    (1)
+//│ | | | | | | | | 1. C α86' <! Int    (2)
+//│ | | | | | | | | | NEW α86' UB (0)
+//│ | | | | | | | | 1. C #1<Int,Num,Object> <! Int    (2)
+//│ | | | | | | | | | Already a subtype by <:<
+//│ | | | | | | | 1. C Int <! α87'    (1)
+//│ | | | | | | | | NEW α87' LB (0)
+//│ | | | | | 1. : α87'
+//│ | | | | | COMPOSDED!!!
+//│ | | | | | COMPOSDED!!!
+//│ | | | | | CONSTRAIN (Int | #undefined<Object>) <! (#undefined<Object> | (α86' & ~(#undefined<Object>)))
+//│ | | | | |   where 
+//│ 		α86' <: Int
+//│ | | | | | 1. C (Int | #undefined<Object>) <! (#undefined<Object> | (α86' & ~(#undefined<Object>)))    (0)
+//│ | | | | | | 1. C Int <! (#undefined<Object> | (α86' & ~(#undefined<Object>)))    (2)
+//│ | | | | | | | 1. C #Int<Object,Num> <! (#undefined<Object> | (α86' & ~(#undefined<Object>)))    (4)
+//│ | | | | | | | | COMPOSDED!!!
+//│ | | | | | | | | 1. ARGH  DNF(0, #Int<Object,Num>{})  <!  DNF(1, #undefined<Object>{} | α86'∧~(#undefined<Object>))
+//│ | | | | | | | | | DNF DISCHARGE CONSTRAINTS
+//│ | | | | | | | | | Consider #Int<Object,Num>{} <: DNF(1, #undefined<Object>{} | α86'∧~(#undefined<Object>))
+//│ | | | | | | | | | Possible: List(α86'∧~(#undefined<Object>))
+//│ | | | | | | | | | 1. A  #Int<Object,Num>{}  %  List()  <!  List((α86' & ~(#undefined<Object>)))  %  ⊥
+//│ | | | | | | | | | | Case.1
+//│ | | | | | | | | | | 1. A  #Int<Object,Num>{}  %  List()  <!  List(α86')  %  ⊥
+//│ | | | | | | | | | | | 1. C #Int<Object,Num> <! α86'    (6)
+//│ | | | | | | | | | | | | NEW α86' LB (0)
+//│ | | | | | | | | | | | | 1. C #Int<Object,Num> <! Int    (8)
+//│ | | | | | | | | | | | | | Already a subtype by <:<
+//│ | | | | | | | | | | Case.2
+//│ | | | | | | | | | | 1. A  #Int<Object,Num>{}  %  List()  <!  List(~(#undefined<Object>))  %  ⊥
+//│ | | | | | | | | | | | 1. A  #Int<Object,Num>{}  %  List(#undefined<Object>)  <!  List()  %  ⊥
+//│ | | | | | | | | | | | | OK  #Int<Object,Num>{} & #undefined<Object>  =:=  ⊥
+//│ | | | | | | 1. C #undefined<Object> <! (#undefined<Object> | (α86' & ~(#undefined<Object>)))    (2)
+//│ | | | | | | | Already a subtype by <:<
+//│ | | | | 1. : (#0<Int,Num,Object> | α87')
+//│ | | | 1. : (#0<Int,Num,Object> | α87')
+//│ | | 1. : ((x: (Int | #undefined<Object>),) -> (#0<Int,Num,Object> | α87'))
+//│ | | CONSTRAIN ((x: (Int | #undefined<Object>),) -> (#0<Int,Num,Object> | α87')) <! ff88'
+//│ | |   where 
+//│ 		α87' :> Int
+//│ | | 1. C ((x: (Int | #undefined<Object>),) -> (#0<Int,Num,Object> | α87')) <! ff88'    (0)
+//│ | | | NEW ff88' LB (1)
+//│ | Completed TypedNuFun(0,fun ff = (x: |(Int, undefined,),) => if (is(x, undefined,)) then 0 else +(x, 1,),((x: (Int | #undefined<Object>),) -> (#0<Int,Num,Object> | α87'))) where 
+//│ 		α87' :> Int
+//│ | Typing unit statements
+//│ | : None
+//│ ======== TYPED ========
+//│ fun ff: ‹∀ 0. ((x: (Int | #undefined<Object>),) -> (#0<Int,Num,Object> | α87'))› where 
+//│ |		α87' :> Int
+//│ COMPOSDED!!!
+//│ fun ff: (x: Int | undefined) -> Int
