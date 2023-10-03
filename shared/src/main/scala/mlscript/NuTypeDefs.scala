@@ -222,8 +222,6 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
         sign: ST,
         inheritedTags: Set[TypeName],
         parentTP: Map[Str, NuMember]
-      )(val instanceType: ST, // * only meant to be used in `variances`
-        // * TODO remove `instanceType` and implement proper variance analysis instead
       ) extends TypedNuTypeDef(Cls) with PolyNuDecl
   {
     def decl: NuTypeDef = td
@@ -277,7 +275,10 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
             }
             }()
           }
-          Trav(PolMap.pos)(instanceType)
+          members.foreach {
+            case (_, m: NuParam) if m.isType =>
+            case (_, m) => Trav.applyMem(PolMap.pos)(m)
+          }
           
           // TODO check consistency with explicitVariances
           val res = store ++ tparams.iterator.collect { case (_, tv, S(vi)) => tv -> vi }
@@ -304,7 +305,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
         sign.freshenAbove(lim, rigidify),
         inheritedTags,
         parentTP.mapValuesIter(_.freshenAbove(lim, rigidify)).toMap,
-      )(this.instanceType.freshenAbove(lim, rigidify))
+      )
     }}
     
     def mapPol(pol: Opt[Bool], smart: Bool)(f: (Opt[Bool], SimpleType) => SimpleType)
@@ -318,7 +319,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           f(pol, sign),
           inheritedTags,
           parentTP.mapValuesIter(_.mapPol(pol, smart)(f)).toMap,
-        )(/* f(pol, instanceType) */TopType) // TODO remove instanceType
+        )
     def mapPolMap(pol: PolMap)(f: (PolMap, SimpleType) => SimpleType)
           (implicit ctx: Ctx): TypedNuCls =
         TypedNuCls(level, td,
@@ -330,10 +331,10 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           f(pol, sign),
           inheritedTags,
           parentTP.mapValuesIter(_.mapPolMap(pol)(f)).toMap,
-        )(/* f(pol, instanceType) */TopType) // TODO remove instanceType
+        )
     
     override def toString: Str = s"TypedNuCls($level, ${td.nme},\n\t$tparams,\n\t$params,\n\tthis: $thisTy, ${
-      members.lnIndent()},\n\t: $sign, $inheritedTags, $parentTP)($instanceType)"
+      members.lnIndent()},\n\t: $sign, $inheritedTags, $parentTP)"
   }
   
   
@@ -651,8 +652,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           case t: Term =>
             implicit val genLambdas: GenLambdas = true
             val ty = typeTerm(t)
-            /* // TODO next:
-            if (!topLevel) {
+            if (!topLevel && !stmts.isEmpty) {
               if (t.isInstanceOf[Var] || t.isInstanceOf[Lit])
                 warn("Pure expression does nothing in statement position.", t.toLoc)
               else
@@ -663,7 +663,6 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     err.allMsgs, newDefs)),
                   prov = TypeProvenance(t.toLoc, t.describe), ctx)
             }
-            */
             S(ty)
           case s: DesugaredStatement =>
             err(msg"Illegal position for this ${s.describe} statement.", s.toLoc)(raise)
@@ -1708,8 +1707,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       sig_ty,
                       inheritedTags,
                       tparamMembers
-                    )(thisType)
-                      .tap(_.variances) // * Force variance computation
+                    ).tap(_.variances) // * Force variance computation
                   }
                   
                 case Mxn =>

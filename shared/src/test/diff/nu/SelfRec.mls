@@ -89,8 +89,10 @@ class Foo3[A](val x: A) {
 }
 //│ class Foo3[A](x: A) {
 //│   fun foo: (x: A) -> Foo3[A]
-//│   fun test: Foo3[1]
+//│   fun test: forall 'A. Foo3['A]
 //│ }
+//│ where
+//│   'A :> 1
 
 Foo3
 //│ forall 'A. (x: 'A) -> Foo3['A]
@@ -101,7 +103,9 @@ Foo3
 //│       }
 
 Foo3(1)
-//│ Foo3[1]
+//│ Foo3['A]
+//│   where
+//│     'A :> 1
 //│ res
 //│     = Foo3 {}
 
@@ -123,7 +127,7 @@ class Foo4 {
   fun test = [Foo4.test]
 }
 //│ ╔══[ERROR] Class Foo4 cannot be instantiated as it exposes no such constructor
-//│ ║  l.123: 	  fun test = [Foo4.test]
+//│ ║  l.127: 	  fun test = [Foo4.test]
 //│ ╙──       	              ^^^^
 //│ class Foo4 {
 //│   constructor()
@@ -135,7 +139,7 @@ class Foo5(x: Int) {
   fun test = [Foo5(5).test]
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.135: 	  fun test = [Foo5(5).test]
+//│ ║  l.139: 	  fun test = [Foo5(5).test]
 //│ ╙──       	                     ^^^^^
 //│ class Foo5(x: Int) {
 //│   fun test: [error]
@@ -148,13 +152,13 @@ class Foo6[A](x: A) {
   fun test3 = [Foo6([x]).test3]
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.146: 	  fun test1 = [Foo6(x).test1]
+//│ ║  l.150: 	  fun test1 = [Foo6(x).test1]
 //│ ╙──       	                      ^^^^^^
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.147: 	  fun test2 = [Foo6(123).test2]
+//│ ║  l.151: 	  fun test2 = [Foo6(123).test2]
 //│ ╙──       	                        ^^^^^^
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.148: 	  fun test3 = [Foo6([x]).test3]
+//│ ║  l.152: 	  fun test3 = [Foo6([x]).test3]
 //│ ╙──       	                        ^^^^^^
 //│ class Foo6[A](x: A) {
 //│   fun test1: [error]
@@ -172,7 +176,7 @@ class Foo7[A](head: A, tail: Foo7[A] | N) {
     _ then tail.test1
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.172: 	    _ then tail.test1
+//│ ║  l.176: 	    _ then tail.test1
 //│ ╙──       	               ^^^^^^
 //│ class Foo7[A](head: A, tail: Foo7[A] | N) {
 //│   fun test1: error | A
@@ -213,7 +217,7 @@ class Foo8[A](x: A) {
     x
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.212: 	    let tmp = Foo8(y).test1(x)
+//│ ║  l.216: 	    let tmp = Foo8(y).test1(x)
 //│ ╙──       	                     ^^^^^^
 //│ class Foo8[A](x: A) {
 //│   fun test1: (y: anything) -> A
@@ -226,7 +230,7 @@ class Foo8[A](x: A) {
 abstract class List(val length: Int): Cons
 class Cons(tail: List) extends List(tail.length + 1)
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.227: 	class Cons(tail: List) extends List(tail.length + 1)
+//│ ║  l.231: 	class Cons(tail: List) extends List(tail.length + 1)
 //│ ╙──       	                                        ^^^^^^^
 //│ abstract class List(length: Int): Cons
 //│ class Cons(tail: List) extends List
@@ -238,7 +242,7 @@ abstract class List[out A](val length: Int): Cons[A] | Nil
 class Cons[out A](val head: A, val tail: List[A]) extends List[A](tail.length + 1)
 module Nil extends List[nothing](0)
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.238: 	class Cons[out A](val head: A, val tail: List[A]) extends List[A](tail.length + 1)
+//│ ║  l.242: 	class Cons[out A](val head: A, val tail: List[A]) extends List[A](tail.length + 1)
 //│ ╙──       	                                                                      ^^^^^^^
 //│ abstract class List[A](length: Int): Cons[A] | Nil
 //│ class Cons[A](head: A, tail: List[A]) extends List

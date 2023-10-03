@@ -1430,7 +1430,7 @@ module Test {
   log(0)
   module Foo { log(2) }
   log(1)
-  Foo
+  discard of Foo
   log(3)
   Foo
 }

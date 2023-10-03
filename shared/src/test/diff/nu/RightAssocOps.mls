@@ -56,7 +56,7 @@ fun (++) conc(xs, ys) = [xs, ys]
 //│ ║        	     ^^^^^^^^^^^^^^^
 //│ ╟── tuple literal of type `[?a, ?b]` is not an instance of type `Int`
 //│ ║  l.9: 	fun (++) conc(xs, ys) = [xs, ys]
-//│ ║       	                         ^^^^^^
+//│ ║       	                        ^^^^^^^^
 //│ ╟── but it flows into operator application with expected type `Int`
 //│ ║  l.50: 	1 +: "a" ++ 2 +: "b"
 //│ ║        	     ^^^^^^^^

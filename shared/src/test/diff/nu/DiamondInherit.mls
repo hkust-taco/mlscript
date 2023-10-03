@@ -133,7 +133,7 @@ module Bar extends T1, Foo[Int | Str] {
 
 trait Base[A] { fun foo: A;; fun bar: A -> A }
 trait Derived1[A] extends Base[A]
-trait Derived2 extends Base[(Int | Str, Int | Str)]
+trait Derived2 extends Base[[Int | Str, Int | Str]]
 //│ trait Base[A] {
 //│   fun bar: A -> A
 //│   fun foo: A
@@ -150,8 +150,8 @@ trait Derived2 extends Base[(Int | Str, Int | Str)]
 //│   'A0 := [Int | Str, Int | Str]
 //│   'A := A
 
-class Final extends Derived1[(Int, Int)], Derived2 {
-  fun foo = (123, 456)
+class Final extends Derived1[[Int, Int]], Derived2 {
+  fun foo = [123, 456]
   fun bar([x, y]) = [error, error]
 }
 //│ class Final extends Base, Derived1, Derived2 {
@@ -160,8 +160,8 @@ class Final extends Derived1[(Int, Int)], Derived2 {
 //│   fun foo: [123, 456]
 //│ }
 
-class Final extends Derived1[(Int, Int)], Derived2 {
-  fun foo = (123, 456)
+class Final extends Derived1[[Int, Int]], Derived2 {
+  fun foo = [123, 456]
   fun bar([x, y]) = [y, x]
 }
 //│ class Final extends Base, Derived1, Derived2 {

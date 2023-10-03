@@ -3,7 +3,7 @@
 
 fun discard(x) = ()
 //│ |#fun| |discard|(|x|)| |#=| |(||)|
-//│ Parsed: {fun discard = (x,) => '(' [] ')'}
+//│ Parsed: {fun discard = (x,) => undefined}
 
 // FIXME parses wrong:
 foo of

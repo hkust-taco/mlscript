@@ -5,9 +5,9 @@ class LitInt(n: Int) extends Expr[Int]
 class LitBool(b: Bool) extends Expr[Bool]
 class Add(x: Expr[Int], y: Expr[Int]) extends Expr[Int]
 class Cond[T](p: Expr[Bool], t: Expr[T], e: Expr[T]) extends Expr[T]
-class Pair[S, T](a: Expr[S], b: Expr[T]) extends Expr[(S, T)]
-class Fst[S, T](p: Expr[(S, T)]) extends Expr[S]
-class Snd[S, T](p: Expr[(S, T)]) extends Expr[T]
+class Pair[S, T](a: Expr[S], b: Expr[T]) extends Expr[[S, T]]
+class Fst[S, T](p: Expr[[S, T]]) extends Expr[S]
+class Snd[S, T](p: Expr[[S, T]]) extends Expr[T]
 //│ trait Expr[A]: Add | Cond[?] | Fst[?, ?] | LitBool | LitInt | Pair[?, ?] | Snd[?, ?]
 //│ class LitInt(n: Int) extends Expr
 //│ class LitBool(b: Bool) extends Expr

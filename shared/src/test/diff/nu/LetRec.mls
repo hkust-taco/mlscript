@@ -91,21 +91,21 @@ f
 fun test =
   let rec f =
     f
-//│ fun test: undefined
+//│ fun test: ()
 //│ Code generation encountered an error:
 //│   unguarded recursive use of by-value binding f
 
 :ge // TODO this one should actually be accepted by codegen!
 fun test =
   let rec f() = f()
-//│ fun test: undefined
+//│ fun test: ()
 //│ Code generation encountered an error:
 //│   unguarded recursive use of by-value binding f
 
 :ge // TODO this one should actually be accepted by codegen!
 fun test =
   let rec lol = () => lol
-//│ fun test: undefined
+//│ fun test: ()
 //│ Code generation encountered an error:
 //│   unguarded recursive use of by-value binding lol
 

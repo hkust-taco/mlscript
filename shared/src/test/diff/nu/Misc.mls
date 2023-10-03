@@ -89,7 +89,11 @@ f([1, 2])
 
 
 
+:pe
 let f = ((x, y)) => x + y
+//│ ╔══[PARSE ERROR] Expected '=>' or '->' after this parameter section
+//│ ║  l.93: 	let f = ((x, y)) => x + y
+//│ ╙──      	         ^^^^^^
 //│ let f: ([Int, Int]) -> Int
 //│ f
 //│   = [Function: f5]
@@ -97,19 +101,21 @@ let f = ((x, y)) => x + y
 :e
 f(1, 2)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.98: 	f(1, 2)
-//│ ║        	^^^^^^^
+//│ ║  l.102: 	f(1, 2)
+//│ ║         	^^^^^^^
 //│ ╟── argument list of type `[1, 2]` does not match type `[[?a, ?b]]`
-//│ ║  l.98: 	f(1, 2)
-//│ ╙──      	 ^^^^^^
+//│ ║  l.102: 	f(1, 2)
+//│ ╙──       	 ^^^^^^
 //│ Int | error
 //│ res
 //│ Runtime error:
 //│   TypeError: number 1 is not iterable (cannot read property Symbol(Symbol.iterator))
 
-
-
+:pe
 f((1, 2))
+//│ ╔══[PARSE ERROR] Expected '=>' or '->' after this parameter section
+//│ ║  l.115: 	f((1, 2))
+//│ ╙──       	  ^^^^^^
 //│ Int
 //│ res
 //│     = 3
@@ -119,27 +125,90 @@ f([1, 2])
 //│ res
 //│     = 3
 
-// TODO don't parse as tuple arg
+:e
+f[1, 2]
+//│ ╔══[ERROR] Type application syntax is not yet supported
+//│ ║  l.129: 	f[1, 2]
+//│ ╙──       	^^^^^^^
+//│ ([Int, Int]) -> Int
+//│ res
+//│     = [Function: f5]
+
+
+:pe
 let f = (((x, y))) => x + y
+//│ ╔══[PARSE ERROR] Expected '=>' or '->' after this parameter section
+//│ ║  l.139: 	let f = (((x, y))) => x + y
+//│ ╙──       	          ^^^^^^
 //│ let f: ([Int, Int]) -> Int
 //│ f
 //│   = [Function: f6]
 
-// TODO parse as tuple arg!
+
+// * TODO maybe parse as type lambda?
 let f = [x, y] => x + y
-//│ let f: (Int, Int) -> Int
+//│ let f: ([Int, Int]) -> Int
 //│ f
 //│   = [Function: f7]
 
+:e
 f(1, 2)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.155: 	f(1, 2)
+//│ ║         	^^^^^^^
+//│ ╟── argument list of type `[1, 2]` does not match type `[[?a, ?b]]`
+//│ ║  l.155: 	f(1, 2)
+//│ ╙──       	 ^^^^^^
+//│ Int | error
+//│ res
+//│ Runtime error:
+//│   TypeError: number 1 is not iterable (cannot read property Symbol(Symbol.iterator))
+
+f([1, 2])
 //│ Int
 //│ res
 //│     = 3
 
-// TODO...
-let f = [[[x, y]]] => x + y
-//│ let f: ([[Int, Int]]) -> Int
+
+let f = ([x, y]) => x + y
+//│ let f: ([Int, Int]) -> Int
 //│ f
 //│   = [Function: f8]
 
+f([1, 2])
+//│ Int
+//│ res
+//│     = 3
+
+:e
+f(1, 2)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.184: 	f(1, 2)
+//│ ║         	^^^^^^^
+//│ ╟── argument list of type `[1, 2]` does not match type `[[?a, ?b]]`
+//│ ║  l.184: 	f(1, 2)
+//│ ╙──       	 ^^^^^^
+//│ Int | error
+//│ res
+//│ Runtime error:
+//│   TypeError: number 1 is not iterable (cannot read property Symbol(Symbol.iterator))
+
+
+let f = [[[x, y]]] => x + y
+//│ let f: ([[[Int, Int]]]) -> Int
+//│ f
+//│   = [Function: f9]
+
+:e
+f([[1, 2]])
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.203: 	f([[1, 2]])
+//│ ║         	^^^^^^^^^^^
+//│ ╟── tuple literal of type `[1, 2]` does not match type `[[?a, ?b]]`
+//│ ║  l.203: 	f([[1, 2]])
+//│ ╙──       	   ^^^^^^
+//│ Int | error
+//│ res
+//│ Runtime error:
+//│   TypeError: number 1 is not iterable (cannot read property Symbol(Symbol.iterator))
 

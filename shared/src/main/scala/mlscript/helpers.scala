@@ -105,7 +105,8 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
     case Literal(IntLit(n)) => n.toString
     case Literal(DecLit(n)) => n.toString
     case Literal(StrLit(s)) => "\"" + s + "\""
-    case Literal(UnitLit(b)) => if (b) "undefined" else "null"
+    case Literal(UnitLit(b)) =>
+      if (b) if (ctx.newDefs) "()" else "undefined" else "null"
     case PolyType(Nil, body) => body.showIn(ctx, outerPrec)
     case PolyType(targs, body) => parensIf(
         s"${targs.iterator.map(_.fold(_.name, _.showIn(ctx, 0)))

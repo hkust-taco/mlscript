@@ -2,7 +2,7 @@
 
 
 fun test(x: 'a) = if x is undefined then 0 else x + 1
-//│ fun test: (x: Int | undefined) -> Int
+//│ fun test: (x: Int | ()) -> Int
 
 test(x: 0)
 //│ Int
@@ -216,13 +216,13 @@ id(x).ma(y: 2, x: 1)
 
 fun print(x: Int) = (y: Int, z: Int) => log([x, y, z])
 let p = print(0)
-//│ fun print: (x: Int) -> (y: Int, z: Int) -> undefined
-//│ let p: (y: Int, z: Int) -> undefined
+//│ fun print: (x: Int) -> (y: Int, z: Int) -> ()
+//│ let p: (y: Int, z: Int) -> ()
 //│ p
 //│   = [Function (anonymous)]
 
 p(z: 1, y: 2)
-//│ undefined
+//│ ()
 //│ res
 //│     = undefined
 //│ // Output
@@ -235,8 +235,8 @@ p(z: 1, y: 2)
 //│ ╔══[ERROR] Cannot use named arguments as the function type has untyped arguments
 //│ ║  l.234: 	p(z: 1, y: 2)
 //│ ╙──       	 ^^^^^^^^^^^^
-//│ fun print: anything -> (anything, anything) -> undefined
-//│ let p: (anything, anything) -> undefined
+//│ fun print: anything -> (anything, anything) -> ()
+//│ let p: (anything, anything) -> ()
 //│ error
 //│ p
 //│   = [Function (anonymous)]
@@ -251,9 +251,9 @@ class Baz() {
 }
 Baz().f(y: 1, x: 2)
 //│ class Baz() {
-//│   fun f: (x: Int, y: Int) -> undefined
+//│   fun f: (x: Int, y: Int) -> ()
 //│ }
-//│ undefined
+//│ ()
 //│ res
 //│     = undefined
 //│ // Output
@@ -262,7 +262,7 @@ Baz().f(y: 1, x: 2)
 let b = Baz()
 b.f(y: 1, x: 2)
 //│ let b: Baz
-//│ undefined
+//│ ()
 //│ b
 //│   = Baz {}
 //│ res

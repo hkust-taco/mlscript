@@ -473,13 +473,13 @@ fun f(x: Base) = if x is
 //│ fun f: (x: Base) -> (0 | 1)
 
 trait Base: Foo | Bar
-class Foo[A](val aa: (A, A)) extends Base
+class Foo[A](val aa: [A, A]) extends Base
 class Bar[B](f: B => B) extends Base
 //│ trait Base: Bar[?] | Foo[anything]
 //│ class Foo[A](aa: [A, A]) extends Base
 //│ class Bar[B](f: B -> B) extends Base
 
-let f: Foo = Foo((1, 2))
+let f: Foo = Foo([1, 2])
 //│ let f: Foo[anything]
 //│ f
 //│   = Foo {}
@@ -910,7 +910,7 @@ class Der1 extends Base[Int] { fun f(x) = x + 1 }
 //│   fun f: Int -> Int
 //│ }
 
-class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (x, y) }
+class Der2[A, B] extends Base[[A, B]] { fun f([x, y]) = [x, y] }
 //│ class Der2[A, B] extends Base {
 //│   constructor()
 //│   fun f: forall 'a 'b. (['a, 'b]) -> ['a, 'b]
@@ -927,7 +927,7 @@ trait BInt extends Base[Int] {
 //│   fun f: nothing
 //│ }
 
-trait BPar[T] extends Base[(Int,T)]
+trait BPar[T] extends Base[[Int, T]]
 //│ trait BPar[T] extends Base {
 //│   fun f: 'A -> 'A
 //│ }
@@ -943,16 +943,16 @@ let bp: BPar[Bool]
 //│ bp
 //│    = <missing implementation>
 
-bp: Base[(Int, Bool)]
+bp: Base[[Int, Bool]]
 //│ Base[[Int, Bool]]
 //│ res
 //│     = <no result>
 //│       bp is not implemented
 
 :e
-bp: Base[(Int, Int)]
+bp: Base[[Int, Int]]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.953: 	bp: Base[(Int, Int)]
+//│ ║  l.953: 	bp: Base[[Int, Int]]
 //│ ║         	^^
 //│ ╙── expression of type `true` is not an instance of type `Int`
 //│ Base[[Int, Int]]
@@ -972,7 +972,7 @@ bp.f
 //│     = <no result>
 //│       bp is not implemented
 
-fun fb[T](x: Base[(Int, T)], y: T) = x.f((1, y))
+fun fb[T](x: Base[[Int, T]], y: T) = x.f([1, y])
 //│ fun fb: forall 'T. (x: Base[[Int, 'T]], y: 'T) -> [Int, 'T]
 
 fb(bp, false)
@@ -982,7 +982,7 @@ fb(bp, false)
 //│       bp is not implemented
 
 class CP() extends BPar[Int] {
-  fun f(x) = (x._2, x._1)
+  fun f(x) = [x._2, x._1]
 }
 //│ class CP() extends BPar, Base {
 //│   fun f: forall 'a 'b. {_1: 'a, _2: 'b} -> ['b, 'a]
@@ -1029,30 +1029,30 @@ class DerBad1 extends Base[Int, Int]
 //│   'A := Int
 
 :e
-class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
+class Der2[A, B] extends Base[[A, B]] { fun f([x, y]) = [y, x] }
 //│ ╔══[ERROR] Type mismatch in definition of method f:
-//│ ║  l.1032: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
+//│ ║  l.1032: 	class Der2[A, B] extends Base[[A, B]] { fun f([x, y]) = [y, x] }
 //│ ║          	                                            ^^^^^^^^^^^^^^^^^^
 //│ ╟── reference of type `B` does not match type `A`
-//│ ║  l.1032: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
+//│ ║  l.1032: 	class Der2[A, B] extends Base[[A, B]] { fun f([x, y]) = [y, x] }
 //│ ║          	                                                         ^
 //│ ╟── Note: constraint arises from type parameter:
-//│ ║  l.1032: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
+//│ ║  l.1032: 	class Der2[A, B] extends Base[[A, B]] { fun f([x, y]) = [y, x] }
 //│ ║          	           ^
 //│ ╟── Note: type parameter B is defined at:
-//│ ║  l.1032: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
+//│ ║  l.1032: 	class Der2[A, B] extends Base[[A, B]] { fun f([x, y]) = [y, x] }
 //│ ╙──        	              ^
 //│ ╔══[ERROR] Type mismatch in definition of method f:
-//│ ║  l.1032: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
+//│ ║  l.1032: 	class Der2[A, B] extends Base[[A, B]] { fun f([x, y]) = [y, x] }
 //│ ║          	                                            ^^^^^^^^^^^^^^^^^^
 //│ ╟── reference of type `A` does not match type `B`
-//│ ║  l.1032: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
+//│ ║  l.1032: 	class Der2[A, B] extends Base[[A, B]] { fun f([x, y]) = [y, x] }
 //│ ║          	                                                            ^
 //│ ╟── Note: constraint arises from type parameter:
-//│ ║  l.1032: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
+//│ ║  l.1032: 	class Der2[A, B] extends Base[[A, B]] { fun f([x, y]) = [y, x] }
 //│ ║          	              ^
 //│ ╟── Note: type parameter A is defined at:
-//│ ║  l.1032: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
+//│ ║  l.1032: 	class Der2[A, B] extends Base[[A, B]] { fun f([x, y]) = [y, x] }
 //│ ╙──        	           ^
 //│ class Der2[A, B] extends Base {
 //│   constructor()

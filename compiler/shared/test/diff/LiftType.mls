@@ -5,7 +5,7 @@ class CTX{
   class A {}
   fun foo(f: A => A): (A => A) => A = f(new A)
 }
-//│ |#class| |CTX|{|→|#class| |A| |{||}|↵|#fun| |foo|(|f|#:| |A| |=>| |A|)|#:| |(|A| |=>| |A|)| |=>| |A| |#=| |f|(|#new| |A|)|←|↵|}|
+//│ |#class| |CTX|{|→|#class| |A| |{||}|↵|#fun| |foo|(|f|#:| |A| |#=>| |A|)|#:| |(|A| |#=>| |A|)| |#=>| |A| |#=| |f|(|#new| |A|)|←|↵|}|
 //│ Parsed: {class CTX {class A {}; fun foo = (f: (A,) => A,) => f(new A([]) {},) : (A -> A) -> A}}
 //│ Parsed:
 //│ TypingUnit(NuTypeDef(class, CTX, (), Tup(), (), None, None, TypingUnit(NuTypeDef(class, A, (), Tup(), (), None, None, TypingUnit()), NuFunDef(None, foo, None, [], Lam(Tup(f: Lam(Tup(_: Var(A)), Var(A))), Asc(App(Var(f), Tup(_: New(Some((TypeName(A),[])), TypingUnit()))), Function(Tuple(List((None,Field(None,Function(Tuple(List((None,Field(None,TypeName(A))))),TypeName(A)))))),TypeName(A))))))))
@@ -21,18 +21,18 @@ class CTX{
 class CTX(x, y){
   class A{ fun foo = x}
   class B: A { fun foo = y}
-  fun foo(any: (A, B)): (B, A) = (any._2, any._1)
+  fun foo(any: [A, B]): [B, A] = [any._2, any._1]
 }
-//│ |#class| |CTX|(|x|,| |y|)|{|→|#class| |A|{| |#fun| |foo| |#=| |x|}|↵|#class| |B|#:| |A| |{| |#fun| |foo| |#=| |y|}|↵|#fun| |foo|(|any|#:| |(|A|,| |B|)|)|#:| |(|B|,| |A|)| |#=| |(|any|._2|,| |any|._1|)|←|↵|}|
-//│ Parsed: {class CTX(x, y,) {class A {fun foo = x}; class B: A {fun foo = y}; fun foo = (any: '(' [A, B,] ')',) => '(' [(any)._2, (any)._1,] ')' : [B, A]}}
+//│ |#class| |CTX|(|x|,| |y|)|{|→|#class| |A|{| |#fun| |foo| |#=| |x|}|↵|#class| |B|#:| |A| |{| |#fun| |foo| |#=| |y|}|↵|#fun| |foo|(|any|#:| |[|A|,| |B|]|)|#:| |[|B|,| |A|]| |#=| |[|any|._2|,| |any|._1|]|←|↵|}|
+//│ Parsed: {class CTX(x, y,) {class A {fun foo = x}; class B: A {fun foo = y}; fun foo = (any: [A, B,],) => [(any)._2, (any)._1,] : [B, A]}}
 //│ Parsed:
-//│ TypingUnit(NuTypeDef(class, CTX, (), Tup(_: Var(x), _: Var(y)), (), None, None, TypingUnit(NuTypeDef(class, A, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, foo, None, [], Var(x)))), NuTypeDef(class, B, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, foo, None, [], Var(y)))), NuFunDef(None, foo, None, [], Lam(Tup(any: Bra(rcd = false, Tup(_: Var(A), _: Var(B)))), Asc(Bra(rcd = false, Tup(_: Sel(Var(any), _2), _: Sel(Var(any), _1))), Tuple(List((None,Field(None,TypeName(B))), (None,Field(None,TypeName(A)))))))))))
+//│ TypingUnit(NuTypeDef(class, CTX, (), Tup(_: Var(x), _: Var(y)), (), None, None, TypingUnit(NuTypeDef(class, A, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, foo, None, [], Var(x)))), NuTypeDef(class, B, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, foo, None, [], Var(y)))), NuFunDef(None, foo, None, [], Lam(Tup(any: Tup(_: Var(A), _: Var(B))), Asc(Tup(_: Sel(Var(any), _2), _: Sel(Var(any), _1)), Tuple(List((None,Field(None,TypeName(B))), (None,Field(None,TypeName(A)))))))))))
 //│ Lifted:
 //│ TypingUnit {
 //│   class CTX$1_A$2([par$CTX$1,]) {fun foo = () => ((this).par$CTX$1).x}
 //│   class CTX$1_B$3([par$CTX$1,]) {fun foo = () => ((this).par$CTX$1).y}
 //│   class CTX$1([x, y,]) {
-//│     fun foo = (any: '(' [CTX$1_A$2, CTX$1_B$3,] ')',) => '(' [(any)._2, (any)._1,] ')' : [CTX$1_B$3, CTX$1_A$2]
+//│     fun foo = (any: [CTX$1_A$2, CTX$1_B$3,],) => [(any)._2, (any)._1,] : [CTX$1_B$3, CTX$1_A$2]
 //│   }
 //│ }
 //│ 
@@ -40,18 +40,18 @@ class CTX(x, y){
 class CTX(x, y){
   class A{ fun foo = x}
   class B: A { fun foo = y}
-  fun foo(any: {p1: A, p2: B}): (B, A) = (any.p2, any.p1)
+  fun foo(any: {p1: A, p2: B}): [B, A] = [any.p2, any.p1]
 }
-//│ |#class| |CTX|(|x|,| |y|)|{|→|#class| |A|{| |#fun| |foo| |#=| |x|}|↵|#class| |B|#:| |A| |{| |#fun| |foo| |#=| |y|}|↵|#fun| |foo|(|any|#:| |{|p1|#:| |A|,| |p2|#:| |B|}|)|#:| |(|B|,| |A|)| |#=| |(|any|.p2|,| |any|.p1|)|←|↵|}|
-//│ Parsed: {class CTX(x, y,) {class A {fun foo = x}; class B: A {fun foo = y}; fun foo = (any: '{' {p1: A, p2: B} '}',) => '(' [(any).p2, (any).p1,] ')' : [B, A]}}
+//│ |#class| |CTX|(|x|,| |y|)|{|→|#class| |A|{| |#fun| |foo| |#=| |x|}|↵|#class| |B|#:| |A| |{| |#fun| |foo| |#=| |y|}|↵|#fun| |foo|(|any|#:| |{|p1|#:| |A|,| |p2|#:| |B|}|)|#:| |[|B|,| |A|]| |#=| |[|any|.p2|,| |any|.p1|]|←|↵|}|
+//│ Parsed: {class CTX(x, y,) {class A {fun foo = x}; class B: A {fun foo = y}; fun foo = (any: '{' {p1: A, p2: B} '}',) => [(any).p2, (any).p1,] : [B, A]}}
 //│ Parsed:
-//│ TypingUnit(NuTypeDef(class, CTX, (), Tup(_: Var(x), _: Var(y)), (), None, None, TypingUnit(NuTypeDef(class, A, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, foo, None, [], Var(x)))), NuTypeDef(class, B, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, foo, None, [], Var(y)))), NuFunDef(None, foo, None, [], Lam(Tup(any: Bra(rcd = true, Rcd(Var(p1) = Var(A), Var(p2) = Var(B)))), Asc(Bra(rcd = false, Tup(_: Sel(Var(any), p2), _: Sel(Var(any), p1))), Tuple(List((None,Field(None,TypeName(B))), (None,Field(None,TypeName(A)))))))))))
+//│ TypingUnit(NuTypeDef(class, CTX, (), Tup(_: Var(x), _: Var(y)), (), None, None, TypingUnit(NuTypeDef(class, A, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, foo, None, [], Var(x)))), NuTypeDef(class, B, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, foo, None, [], Var(y)))), NuFunDef(None, foo, None, [], Lam(Tup(any: Bra(rcd = true, Rcd(Var(p1) = Var(A), Var(p2) = Var(B)))), Asc(Tup(_: Sel(Var(any), p2), _: Sel(Var(any), p1)), Tuple(List((None,Field(None,TypeName(B))), (None,Field(None,TypeName(A)))))))))))
 //│ Lifted:
 //│ TypingUnit {
 //│   class CTX$1_A$2([par$CTX$1,]) {fun foo = () => ((this).par$CTX$1).x}
 //│   class CTX$1_B$3([par$CTX$1,]) {fun foo = () => ((this).par$CTX$1).y}
 //│   class CTX$1([x, y,]) {
-//│     fun foo = (any: '{' {p1: CTX$1_A$2, p2: CTX$1_B$3} '}',) => '(' [(any).p2, (any).p1,] ')' : [CTX$1_B$3, CTX$1_A$2]
+//│     fun foo = (any: '{' {p1: CTX$1_A$2, p2: CTX$1_B$3} '}',) => [(any).p2, (any).p1,] : [CTX$1_B$3, CTX$1_A$2]
 //│   }
 //│ }
 //│ 
@@ -59,18 +59,18 @@ class CTX(x, y){
 class CTX(x, y){
   class A{ fun foo = x}
   class B<T> { fun foo = y}
-  fun foo(any: (A, B<A>)): ((B<A>, A), A) = (any, any._1)
+  fun foo(any: [A, B<A>]): [[B<A>, A], A] = [any, any._1]
 }
-//│ |#class| |CTX|(|x|,| |y|)|{|→|#class| |A|{| |#fun| |foo| |#=| |x|}|↵|#class| |B|‹|T|›| |{| |#fun| |foo| |#=| |y|}|↵|#fun| |foo|(|any|#:| |(|A|,| |B|‹|A|›|)|)|#:| |(|(|B|‹|A|›|,| |A|)|,| |A|)| |#=| |(|any|,| |any|._1|)|←|↵|}|
-//│ Parsed: {class CTX(x, y,) {class A {fun foo = x}; class B‹T› {fun foo = y}; fun foo = (any: '(' [A, B‹A›,] ')',) => '(' [any, (any)._1,] ')' : [[B[A], A], A]}}
+//│ |#class| |CTX|(|x|,| |y|)|{|→|#class| |A|{| |#fun| |foo| |#=| |x|}|↵|#class| |B|‹|T|›| |{| |#fun| |foo| |#=| |y|}|↵|#fun| |foo|(|any|#:| |[|A|,| |B|‹|A|›|]|)|#:| |[|[|B|‹|A|›|,| |A|]|,| |A|]| |#=| |[|any|,| |any|._1|]|←|↵|}|
+//│ Parsed: {class CTX(x, y,) {class A {fun foo = x}; class B‹T› {fun foo = y}; fun foo = (any: [A, B‹A›,],) => [any, (any)._1,] : [[B[A], A], A]}}
 //│ Parsed:
-//│ TypingUnit(NuTypeDef(class, CTX, (), Tup(_: Var(x), _: Var(y)), (), None, None, TypingUnit(NuTypeDef(class, A, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, foo, None, [], Var(x)))), NuTypeDef(class, B, ((None,TypeName(T))), Tup(), (), None, None, TypingUnit(NuFunDef(None, foo, None, [], Var(y)))), NuFunDef(None, foo, None, [], Lam(Tup(any: Bra(rcd = false, Tup(_: Var(A), _: TyApp(Var(B), List(TypeName(A)))))), Asc(Bra(rcd = false, Tup(_: Var(any), _: Sel(Var(any), _1))), Tuple(List((None,Field(None,Tuple(List((None,Field(None,AppliedType(TypeName(B),List(TypeName(A))))), (None,Field(None,TypeName(A))))))), (None,Field(None,TypeName(A)))))))))))
+//│ TypingUnit(NuTypeDef(class, CTX, (), Tup(_: Var(x), _: Var(y)), (), None, None, TypingUnit(NuTypeDef(class, A, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, foo, None, [], Var(x)))), NuTypeDef(class, B, ((None,TypeName(T))), Tup(), (), None, None, TypingUnit(NuFunDef(None, foo, None, [], Var(y)))), NuFunDef(None, foo, None, [], Lam(Tup(any: Tup(_: Var(A), _: TyApp(Var(B), List(TypeName(A))))), Asc(Tup(_: Var(any), _: Sel(Var(any), _1)), Tuple(List((None,Field(None,Tuple(List((None,Field(None,AppliedType(TypeName(B),List(TypeName(A))))), (None,Field(None,TypeName(A))))))), (None,Field(None,TypeName(A)))))))))))
 //│ Lifted:
 //│ TypingUnit {
 //│   class CTX$1_A$2([par$CTX$1,]) {fun foo = () => ((this).par$CTX$1).x}
 //│   class CTX$1_B$3[T]([par$CTX$1,]) {fun foo = () => ((this).par$CTX$1).y}
 //│   class CTX$1([x, y,]) {
-//│     fun foo = (any: '(' [CTX$1_A$2, CTX$1_B$3‹CTX$1_A$2›,] ')',) => '(' [any, (any)._1,] ')' : [[CTX$1_B$3[CTX$1_A$2], CTX$1_A$2], CTX$1_A$2]
+//│     fun foo = (any: [CTX$1_A$2, CTX$1_B$3‹CTX$1_A$2›,],) => [any, (any)._1,] : [[CTX$1_B$3[CTX$1_A$2], CTX$1_A$2], CTX$1_A$2]
 //│   }
 //│ }
 //│ 

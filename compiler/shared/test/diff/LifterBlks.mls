@@ -14,16 +14,16 @@ fun foo =
 
 class A{
   class B {}
-  fun foo(x: B) = (x:B)
+  fun foo(x: B) = (x : B)
 }
-//│ |#class| |A|{|→|#class| |B| |{||}|↵|#fun| |foo|(|x|#:| |B|)| |#=| |(|x|#:|B|)|←|↵|}|
-//│ Parsed: {class A {class B {}; fun foo = (x: B,) => '(' [x: B,] ')'}}
+//│ |#class| |A|{|→|#class| |B| |{||}|↵|#fun| |foo|(|x|#:| |B|)| |#=| |(|x| |#:| |B|)|←|↵|}|
+//│ Parsed: {class A {class B {}; fun foo = (x: B,) => '(' x : B ')'}}
 //│ Parsed:
-//│ TypingUnit(NuTypeDef(class, A, (), Tup(), (), None, None, TypingUnit(NuTypeDef(class, B, (), Tup(), (), None, None, TypingUnit()), NuFunDef(None, foo, None, [], Lam(Tup(x: Var(B)), Bra(rcd = false, Tup(x: Var(B))))))))
+//│ TypingUnit(NuTypeDef(class, A, (), Tup(), (), None, None, TypingUnit(NuTypeDef(class, B, (), Tup(), (), None, None, TypingUnit()), NuFunDef(None, foo, None, [], Lam(Tup(x: Var(B)), Bra(rcd = false, Asc(Var(x), TypeName(B))))))))
 //│ Lifted:
 //│ TypingUnit {
 //│   class A$1_B$2([par$A$1,]) {}
-//│   class A$1([]) {fun foo = (x: A$1_B$2,) => '(' [x: A$1_B$2,] ')'}
+//│   class A$1([]) {fun foo = (x: A$1_B$2,) => '(' x : A$1_B$2 ')'}
 //│ }
 //│ 
 
@@ -54,7 +54,7 @@ fun foo =
 class A(y){}
 let f = x => new A(0){fun bar = x+y}
 f(0)
-//│ |#class| |A|(|y|)|{||}|↵|#let| |f| |#=| |x| |=>| |#new| |A|(|0|)|{|#fun| |bar| |#=| |x|+|y|}|↵|f|(|0|)|
+//│ |#class| |A|(|y|)|{||}|↵|#let| |f| |#=| |x| |#=>| |#new| |A|(|0|)|{|#fun| |bar| |#=| |x|+|y|}|↵|f|(|0|)|
 //│ Parsed: {class A(y,) {}; let f = (x,) => new A([0,]) {fun bar = +(x, y,)}; f(0,)}
 //│ Parsed:
 //│ TypingUnit(NuTypeDef(class, A, (), Tup(_: Var(y)), (), None, None, TypingUnit()), NuFunDef(Some(false), f, None, [], Lam(Tup(_: Var(x)), New(Some((TypeName(A),[0,])), TypingUnit(NuFunDef(None, bar, None, [], App(Var(+), Tup(_: Var(x), _: Var(y)))))))), App(Var(f), Tup(_: IntLit(0))))
@@ -247,8 +247,8 @@ class A<T>{
     fun g: T => B => T
   }
 }
-//│ |#class| |A|‹|T|›|{|→|#class| |B|{|→|#fun| |f| |#=| |x| |=>| |y| |=>| |x|↵|#fun| |g|#:| |T| |=>| |B| |=>| |T|←|↵|}|←|↵|}|
-//│ Parsed: {class A‹T› {class B {fun f = (x,) => (y,) => x; fun g: T -> B -> T}}}
+//│ |#class| |A|‹|T|›|{|→|#class| |B|{|→|#fun| |f|#:| |T| |#=>| |B| |#=>| |T| |#=| |x| |#=>| |y| |#=>| |x|↵|#fun| |g|#:| |T| |#=>| |B| |#=>| |T|←|↵|}|←|↵|}|
+//│ Parsed: {class A‹T› {class B {fun f = (x,) => (y,) => x : T -> B -> T; fun g: T -> B -> T}}}
 //│ Parsed:
 //│ TypingUnit(NuTypeDef(class, A, ((None,TypeName(T))), Tup(), (), None, None, TypingUnit(NuTypeDef(class, B, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, f, None, [], Lam(Tup(_: Var(x)), Lam(Tup(_: Var(y)), Var(x)))), NuFunDef(None, g, None, [], PolyType(List(),Function(Tuple(List((None,Field(None,TypeName(T))))),Function(Tuple(List((None,Field(None,TypeName(B))))),TypeName(T))))))))))
 //│ Lifted:
@@ -267,7 +267,7 @@ class Foo<T>{
   class StackedRectangleBoxes<N> : RectangleBox<T> & { size: N }
   class Bar: {any: RectangleBox => StackedRectangleBoxes}
 }
-//│ |#class| |Foo|‹|T|›|{|→|#class| |RectangleBox|#:| |Box|‹|T|›| |&| |{| |breadth|#:| |T| |}|↵|#class| |StackedRectangleBoxes|‹|N|›| |#:| |RectangleBox|‹|T|›| |&| |{| |size|#:| |N| |}|↵|#class| |Bar|#:| |{|any|#:| |RectangleBox| |=>| |StackedRectangleBoxes|}|←|↵|}|
+//│ |#class| |Foo|‹|T|›|{|→|#class| |RectangleBox|#:| |Box|‹|T|›| |&| |{| |breadth|#:| |T| |}|↵|#class| |StackedRectangleBoxes|‹|N|›| |#:| |RectangleBox|‹|T|›| |&| |{| |size|#:| |N| |}|↵|#class| |Bar|#:| |{|any|#:| |RectangleBox| |#=>| |StackedRectangleBoxes|}|←|↵|}|
 //│ Parsed: {class Foo‹T› {class RectangleBox: Box[T] & {breadth: T} {}; class StackedRectangleBoxes‹N›: RectangleBox[T] & {size: N} {}; class Bar: {any: RectangleBox -> StackedRectangleBoxes} {}}}
 //│ Parsed:
 //│ TypingUnit(NuTypeDef(class, Foo, ((None,TypeName(T))), Tup(), (), None, None, TypingUnit(NuTypeDef(class, RectangleBox, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, StackedRectangleBoxes, ((None,TypeName(N))), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, Bar, (), Tup(), (), None, None, TypingUnit()))))
@@ -290,7 +290,7 @@ fun ctx(a,b) =
   foo(new Lambda{
     fun apply(x) = a+x
   }, b)
-//│ |#class| |Func|‹|T|,| |U|›| |{|→|#fun| |apply|#:| |T| |=>| |U|←|↵|}|↵|#class| |Lambda|‹|T|,| |U|›| |#:| |Func|‹|T|,| |U|›| |{||}|↵|#fun| |ctx|(|a|,|b|)| |#=|→|#fun| |foo|(|f|#:| |Func|,| |x|)| |#=| |→|f|.apply|(|x|)|←|↵|foo|(|#new| |Lambda|{|→|#fun| |apply|(|x|)| |#=| |a|+|x|←|↵|}|,| |b|)|←|
+//│ |#class| |Func|‹|T|,| |U|›| |{|→|#fun| |apply|#:| |T| |#=>| |U|←|↵|}|↵|#class| |Lambda|‹|T|,| |U|›| |#:| |Func|‹|T|,| |U|›| |{||}|↵|#fun| |ctx|(|a|,|b|)| |#=|→|#fun| |foo|(|f|#:| |Func|,| |x|)| |#=| |→|f|.apply|(|x|)|←|↵|foo|(|#new| |Lambda|{|→|#fun| |apply|(|x|)| |#=| |a|+|x|←|↵|}|,| |b|)|←|
 //│ Parsed: {class Func‹T, U› {fun apply: T -> U}; class Lambda‹T, U›: Func[T, U] {}; fun ctx = (a, b,) => {fun foo = (f: Func, x,) => {(f).apply(x,)}; foo(new Lambda([]) {fun apply = (x,) => +(a, x,)}, b,)}}
 //│ Parsed:
 //│ TypingUnit(NuTypeDef(class, Func, ((None,TypeName(T)), (None,TypeName(U))), Tup(), (), None, None, TypingUnit(NuFunDef(None, apply, None, [], PolyType(List(),Function(Tuple(List((None,Field(None,TypeName(T))))),TypeName(U)))))), NuTypeDef(class, Lambda, ((None,TypeName(T)), (None,TypeName(U))), Tup(), (), None, None, TypingUnit()), NuFunDef(None, ctx, None, [], Lam(Tup(_: Var(a), _: Var(b)), Blk(...))))

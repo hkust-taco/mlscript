@@ -4,7 +4,7 @@
 
 
 trait T1 { fun f[A]: A -> A }
-trait T2 { fun f[B, C]: (B, C) -> (B, C) }
+trait T2 { fun f[B, C]: (B, C) -> [B, C] }
 trait T3 extends T1, T2
 //│ trait T1 {
 //│   fun f: forall 'A. 'A -> 'A

@@ -248,11 +248,6 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       TypingUnit(Nil)
   }
   
-  final def toParams(t: Term): Tup = t match {
-    case t: Tup => t
-    case Bra(false, t: Tup) => t
-    case _ => Tup((N, Fld(FldFlags.empty, t)) :: Nil)
-  }
   final def toParamsTy(t: Type): Tuple = t match {
     case t: Tuple => t
     case _ => Tuple((N, Field(None, t)) :: Nil)
@@ -619,22 +614,41 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         exprCont(Var(opStr).withLoc(S(l1)), prec, allowNewlines = false)
       case (br @ BRACKETS(bk @ (Round | Square | Curly), toks), loc) :: _ =>
         consume
-        val res = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented()) // TODO
+        val res = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented())
         val bra = (bk, res) match {
           case (Curly, _) =>
             Bra(true, Rcd(res.map {
-            case S(n) -> fld => n -> fld
-            case N -> (fld @ Fld(_, v: Var)) => v -> fld
-            case N -> fld =>
-              err((
-                msg"Record field should have a name" -> fld.value.toLoc :: Nil))
-              Var("<error>") -> fld
+              case S(n) -> fld => n -> fld
+              case N -> (fld @ Fld(_, v: Var)) => v -> fld
+              case N -> fld =>
+                err((
+                  msg"Record field should have a name" -> fld.value.toLoc :: Nil))
+                Var("<error>") -> fld
             }))
           case (Round, (N, Fld(FldFlags(false, false, _), elt)) :: Nil) =>
             Bra(false, elt)
+          case (Round, fs) =>
+            yeetSpaces match {
+              case (KEYWORD("=>"), l1) :: _ =>
+                consume
+                val e = expr(0)
+                Lam(Tup(res), e)
+              case (IDENT("->", true), l1) :: _ =>
+                consume
+                val rhs = expr(opPrec("->")._2)
+                Lam(Tup(res), rhs)
+              case _ =>
+                res match {
+                  case Nil =>
+                    UnitLit(true)
+                  case _ =>
+                    err((
+                      msg"Expected '=>' or '->' after this parameter section" -> S(loc) :: Nil))
+                    Tup(fs)
+                }
+            }
           case _ =>
-            // TODO actually reject round tuples? (except for function arg lists)
-            Bra(false, Tup(res))
+            Tup(res)
         }
         exprCont(bra.withLoc(S(loc)), prec, allowNewlines = false)
       case (KEYWORD("forall"), l0) :: _ =>
@@ -785,10 +799,15 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
   
   final def exprCont(acc: Term, prec: Int, allowNewlines: Bool)(implicit et: ExpectThen, fe: FoundErr, l: Line): IfBody \/ Term = wrap(prec, s"`$acc`", allowNewlines) { l =>
     cur match {
-      case (IDENT(opStr @ "=>", true), l0) :: (NEWLINE, l1) :: _ if opPrec(opStr)._1 > prec =>
+      case (KEYWORD(opStr @ "=>"), l0) :: (NEWLINE, l1) :: _ if opPrec(opStr)._1 > prec =>
         consume
         val rhs = Blk(typingUnit.entities)
-        R(Lam(toParams(acc), rhs))
+        R(Lam(PlainTup(acc), rhs))
+      case (KEYWORD(opStr @ "=>"), l0) :: _ if opPrec(opStr)._1 > prec =>
+        consume
+        val rhs = expr(1)
+        val res = Lam(PlainTup(acc), rhs)
+        exprCont(res, prec, allowNewlines)
       case (IDENT(".", _), l0) :: (br @ BRACKETS(Square, toks), l1) :: _ =>
         consume
         consume
@@ -815,13 +834,11 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                     err(msg"record literal expected here; found ${rhs.describe}" -> rhs.toLoc :: Nil)
                     acc
                 }
-              case "=>" =>
-                Lam(toParams(acc), rhs)
               case ";" =>
                 Blk(acc :: rhs :: Nil)
               case _ =>
                 if (newDefs) App(v, PlainTup(acc, rhs))
-                else App(App(v, toParams(acc)), toParams(rhs))
+                else App(App(v, PlainTup(acc)), PlainTup(rhs))
             }, prec, allowNewlines)
         }
       case (KEYWORD(":"), l0) :: _ if prec <= outer.prec(':') =>

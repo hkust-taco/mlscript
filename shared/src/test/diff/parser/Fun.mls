@@ -17,13 +17,13 @@ fun f x = x
 //│ Parsed: {fun f = x}
 
 fun f = x => x
-//│ |#fun| |f| |#=| |x| |=>| |x|
+//│ |#fun| |f| |#=| |x| |#=>| |x|
 //│ Parsed: {fun f = (x,) => x}
 
 // TODO
 fun x => x
-//│ |#fun| |x| |=>| |x|
-//│ ╔══[PARSE ERROR] Expected function parameter list; found operator instead
+//│ |#fun| |x| |#=>| |x|
+//│ ╔══[PARSE ERROR] Expected function parameter list; found '=>' instead
 //│ ║  l.24: 	fun x => x
 //│ ╙──      	      ^^
 //│ ╔══[PARSE ERROR] Expected ':' or '=' followed by a function body or signature; found identifier instead
@@ -32,12 +32,12 @@ fun x => x
 //│ Parsed: {fun x = undefined}
 
 let f = x => x
-//│ |#let| |f| |#=| |x| |=>| |x|
+//│ |#let| |f| |#=| |x| |#=>| |x|
 //│ Parsed: {let f = (x,) => x}
 
 // TODO
 let f = fun x => x
-//│ |#let| |f| |#=| |#fun| |x| |=>| |x|
+//│ |#let| |f| |#=| |#fun| |x| |#=>| |x|
 //│ ╔══[PARSE ERROR] Unexpected 'fun' keyword in expression position
 //│ ║  l.39: 	let f = fun x => x
 //│ ╙──      	        ^^^
@@ -182,13 +182,13 @@ fun add(x: number, y: number): number
 //│ Parsed: {fun add: (x: number, y: number) -> number}
 
 fun apply(x: int, f: int => int): int
-//│ |#fun| |apply|(|x|#:| |int|,| |f|#:| |int| |=>| |int|)|#:| |int|
+//│ |#fun| |apply|(|x|#:| |int|,| |f|#:| |int| |#=>| |int|)|#:| |int|
 //│ Parsed: {fun apply: (x: int, f: int -> int) -> int}
 
 fun apply2(x: number, f: int => number => number): number
-//│ |#fun| |apply2|(|x|#:| |number|,| |f|#:| |int| |=>| |number| |=>| |number|)|#:| |number|
+//│ |#fun| |apply2|(|x|#:| |number|,| |f|#:| |int| |#=>| |number| |#=>| |number|)|#:| |number|
 //│ Parsed: {fun apply2: (x: number, f: int -> number -> number) -> number}
 
 fun apply3(x: number, f: (int => number) => number): number
-//│ |#fun| |apply3|(|x|#:| |number|,| |f|#:| |(|int| |=>| |number|)| |=>| |number|)|#:| |number|
+//│ |#fun| |apply3|(|x|#:| |number|,| |f|#:| |(|int| |#=>| |number|)| |#=>| |number|)|#:| |number|
 //│ Parsed: {fun apply3: (x: number, f: (int -> number) -> number) -> number}

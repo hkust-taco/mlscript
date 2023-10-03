@@ -70,7 +70,7 @@ fun zipWith_wrong(f, xs, ys) =
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.47: 	  else None
 //│ ╙──      	^^^^^^^^^^^
-//│ fun zipWith_wrong: (anything, anything, anything) -> undefined
+//│ fun zipWith_wrong: (anything, anything, anything) -> ()
 
 
 // FIXME parsing
