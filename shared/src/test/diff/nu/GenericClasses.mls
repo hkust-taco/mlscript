@@ -250,7 +250,9 @@ class Test<A>(n: A) {
 //│ }
 
 Test(1)
-//│ Test[1]
+//│ Test['A]
+//│   where
+//│     'A :> 1
 //│ res
 //│     = Test {}
 
@@ -265,7 +267,9 @@ Test("ok").foo
 //│     = 'ok'
 
 let t = Test(1)
-//│ let t: Test[1]
+//│ let t: Test['A]
+//│   where
+//│     'A :> 1
 //│ t
 //│   = Test {}
 
@@ -298,13 +302,13 @@ class TestBad<A>() {
   fun foo2(x: A) = x + 1
 }
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.298: 	  fun foo2(x: A) = x + 1
+//│ ║  l.302: 	  fun foo2(x: A) = x + 1
 //│ ║         	                   ^^^^^
 //│ ╟── reference of type `A` is not an instance of type `Int`
-//│ ║  l.298: 	  fun foo2(x: A) = x + 1
+//│ ║  l.302: 	  fun foo2(x: A) = x + 1
 //│ ║         	                   ^
 //│ ╟── Note: type parameter A is defined at:
-//│ ║  l.296: 	class TestBad<A>() {
+//│ ║  l.300: 	class TestBad<A>() {
 //│ ╙──       	              ^
 //│ class TestBad[A]() {
 //│   fun foo1: (x: A) -> A
@@ -395,11 +399,44 @@ not(w.x.n)
 :e
 not(w.x.a)
 //│ ╔══[ERROR] Type `C['a]` does not contain member `a`
-//│ ║  l.396: 	not(w.x.a)
+//│ ║  l.400: 	not(w.x.a)
 //│ ╙──       	       ^^
 //│ Bool
 //│ res
 //│     = false
+
+
+
+abstract class Cls[A](val x: A) { fun g: A -> Int }
+//│ abstract class Cls[A](x: A) {
+//│   fun g: A -> Int
+//│ }
+
+module M extends Cls(123) { fun g = id }
+//│ module M extends Cls {
+//│   fun g: forall 'a. 'a -> 'a
+//│ }
+
+M: Cls['a]
+//│ Cls['a]
+//│   where
+//│     'a :> 123
+//│        <: Int
+//│ res
+//│     = M { class: [class M extends Cls] }
+
+
+class Cls[A](val x: A) { fun g: A -> Int;; fun g(x) = 42 }
+//│ class Cls[A](x: A) {
+//│   fun g: A -> Int
+//│ }
+
+Cls(123)
+//│ Cls['A]
+//│   where
+//│     'A :> 123
+//│ res
+//│     = Cls {}
 
 
 
