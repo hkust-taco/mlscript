@@ -1,0 +1,262 @@
+:NewDefs
+
+:AllowParseErrors // TODO rm
+:AllowTypeErrors // TODO rm
+
+
+// * To support:
+// *  - type parameter members
+// *  - accessing type members in variables (for now, no need for path dependence)
+// *  - Interpret absence of type parameters as some fresh type variables: `Foo` means `Foo['a]`
+
+// * For the future:
+// *  - Type refinement syntax, as in `Foo { A = Int }`
+// *  - Support wildcard type argument syntax: `Foo[?]` (for what we currently write `Foo`)
+// *  - `as` syntax for upcasting
+
+
+// TODO support
+class Foo[type A](val a: A)
+//│ ╔══[PARSE ERROR] Unexpected 'type' keyword here
+//│ ║  l.19: 	class Foo[type A](val a: A)
+//│ ╙──      	          ^^^^
+//│ ╔══[ERROR] type identifier not found: A
+//│ ║  l.19: 	class Foo[type A](val a: A)
+//│ ╙──      	                         ^
+//│ class Foo(a: error)
+
+// TODO support
+fun foo(f: Foo[Int]): Int = f.a : f.A
+//│ ╔══[ERROR] Wrong number of type arguments – expected 0, found 1
+//│ ║  l.29: 	fun foo(f: Foo[Int]): Int = f.a : f.A
+//│ ╙──      	           ^^^^^^^^
+//│ ╔══[ERROR] type identifier not found: f
+//│ ║  l.29: 	fun foo(f: Foo[Int]): Int = f.a : f.A
+//│ ╙──      	                                  ^
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+
+// raw type example
+// TODO support
+fun foo(f: Foo): Int = f.a : f.A
+//│ ╔══[ERROR] type identifier not found: f
+//│ ║  l.40: 	fun foo(f: Foo): Int = f.a : f.A
+//│ ╙──      	                             ^
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+
+// FIXME
+fun foo(f: Foo) = f.a : f.A
+//│ ╔══[ERROR] type identifier not found: f
+//│ ║  l.47: 	fun foo(f: Foo) = f.a : f.A
+//│ ╙──      	                        ^
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+
+// TODO reject for now
+fun foo(f: Foo[?]): Int = f.a : f.A
+//│ ╔══[PARSE ERROR] Unexpected operator here
+//│ ║  l.54: 	fun foo(f: Foo[?]): Int = f.a : f.A
+//│ ╙──      	               ^
+//│ ╔══[ERROR] type identifier not found: f
+//│ ║  l.54: 	fun foo(f: Foo[?]): Int = f.a : f.A
+//│ ╙──      	                                ^
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+
+// FIXME
+// * TODO infer (f: 'f) -> 'b where 'f <: { a: 'a;; A: 'a..'b }, 'a <: 'b
+fun foo(f) = f.a : f.A
+//│ ╔══[ERROR] type identifier not found: f
+//│ ║  l.65: 	fun foo(f) = f.a : f.A
+//│ ╙──      	                   ^
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+
+// FIXME
+fun foo(f): Int = f.a : f.A
+//│ ╔══[ERROR] type identifier not found: f
+//│ ║  l.72: 	fun foo(f): Int = f.a : f.A
+//│ ╙──      	                        ^
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+
+
+class Foo[type A]
+//│ ╔══[PARSE ERROR] Unexpected 'type' keyword here
+//│ ║  l.79: 	class Foo[type A]
+//│ ╙──      	          ^^^^
+//│ class Foo {
+//│   constructor()
+//│ }
+
+module Bar extends Foo[Int]
+module Baz extends Foo[Str]
+//│ ╔══[ERROR] class Foo expects 0 type parameter(s); got 1
+//│ ║  l.87: 	module Bar extends Foo[Int]
+//│ ╙──      	                   ^^^^^^^
+//│ ╔══[ERROR] class Foo expects 0 type parameter(s); got 1
+//│ ║  l.88: 	module Baz extends Foo[Str]
+//│ ╙──      	                   ^^^^^^^
+//│ module Bar extends Foo
+//│ module Baz extends Foo
+
+123 : Bar.A
+//│ ╔══[ERROR] Module `Bar` does not contain member `A`
+//│ ║  l.98: 	123 : Bar.A
+//│ ╙──      	         ^^
+//│ error
+
+// FIXME
+fun foo(f, x) = x : f.A
+//│ ╔══[ERROR] type identifier not found: f
+//│ ║  l.105: 	fun foo(f, x) = x : f.A
+//│ ╙──       	                    ^
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+
+// FIXME
+foo(Bar, 123)
+//│ ╔══[ERROR] type identifier not found: f
+//│ ║  l.105: 	fun foo(f, x) = x : f.A
+//│ ╙──       	                    ^
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+
+
+// FIXME
+fun test(f) = if f is
+  Bar then 123 : f.A
+//│ ╔══[ERROR] type identifier not found: f
+//│ ║  l.121: 	  Bar then 123 : f.A
+//│ ╙──       	                 ^
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+
+// FIXME
+fun test(f) = if f is
+  Bar then 123 : f.A
+  Baz then "hello" : f.A
+//│ ╔══[ERROR] type identifier not found: f
+//│ ║  l.129: 	  Bar then 123 : f.A
+//│ ╙──       	                 ^
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+
+// FIXME
+[test(Bar), test(Baz)]
+//│ ╔══[ERROR] type identifier not found: f
+//│ ║  l.129: 	  Bar then 123 : f.A
+//│ ╙──       	                 ^
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+
+
+// FIXME
+fun test(f: Foo) = if f is
+  Bar then 123 : f.A
+//│ ╔══[ERROR] type identifier not found: f
+//│ ║  l.146: 	  Bar then 123 : f.A
+//│ ╙──       	                 ^
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+
+// FIXME
+fun test(f: Foo) = if f is
+  Bar then 123 : f.A
+  Baz then "hello" : f.A
+//│ ╔══[ERROR] type identifier not found: f
+//│ ║  l.154: 	  Bar then 123 : f.A
+//│ ╙──       	                 ^
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+
+// FIXME
+[test(Bar), test(Baz)]
+//│ ╔══[ERROR] type identifier not found: f
+//│ ║  l.154: 	  Bar then 123 : f.A
+//│ ╙──       	                 ^
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+
+
+:e
+class Foo[type A]
+class Bar[type A] extends Foo[A]
+//│ ╔══[PARSE ERROR] Unexpected 'type' keyword here
+//│ ║  l.170: 	class Foo[type A]
+//│ ╙──       	          ^^^^
+//│ ╔══[PARSE ERROR] Unexpected 'type' keyword here
+//│ ║  l.171: 	class Bar[type A] extends Foo[A]
+//│ ╙──       	          ^^^^
+//│ ╔══[ERROR] class Foo expects 0 type parameter(s); got 1
+//│ ║  l.171: 	class Bar[type A] extends Foo[A]
+//│ ╙──       	                          ^^^^^
+//│ ╔══[ERROR] type identifier not found: A
+//│ ║  l.171: 	class Bar[type A] extends Foo[A]
+//│ ╙──       	                              ^
+//│ class Foo {
+//│   constructor()
+//│ }
+//│ class Bar extends Foo {
+//│   constructor()
+//│ }
+
+class Foo[type A]
+//│ ╔══[PARSE ERROR] Unexpected 'type' keyword here
+//│ ║  l.191: 	class Foo[type A]
+//│ ╙──       	          ^^^^
+//│ class Foo {
+//│   constructor()
+//│ }
+
+:e
+class Bar[type A] extends Foo[A -> A]
+//│ ╔══[PARSE ERROR] Unexpected 'type' keyword here
+//│ ║  l.200: 	class Bar[type A] extends Foo[A -> A]
+//│ ╙──       	          ^^^^
+//│ ╔══[ERROR] class Foo expects 0 type parameter(s); got 1
+//│ ║  l.200: 	class Bar[type A] extends Foo[A -> A]
+//│ ╙──       	                          ^^^^^^^^^^
+//│ ╔══[ERROR] type identifier not found: A
+//│ ║  l.200: 	class Bar[type A] extends Foo[A -> A]
+//│ ╙──       	                              ^
+//│ ╔══[ERROR] type identifier not found: A
+//│ ║  l.200: 	class Bar[type A] extends Foo[A -> A]
+//│ ╙──       	                                   ^
+//│ class Bar extends Foo {
+//│   constructor()
+//│ }
+
+:e
+class Bar[type A] extends Foo[Int]
+//│ ╔══[PARSE ERROR] Unexpected 'type' keyword here
+//│ ║  l.218: 	class Bar[type A] extends Foo[Int]
+//│ ╙──       	          ^^^^
+//│ ╔══[ERROR] class Foo expects 0 type parameter(s); got 1
+//│ ║  l.218: 	class Bar[type A] extends Foo[Int]
+//│ ╙──       	                          ^^^^^^^
+//│ class Bar extends Foo {
+//│   constructor()
+//│ }
+
+
+
+
+class Foo[A]
+//│ class Foo[A] {
+//│   constructor()
+//│ }
+
+// FIXME
+// Would be nice:
+fun foo(x: Foo['a], y) = y : x.A  // interpreted as `y : x.Foo#A`
+//│ ╔══[ERROR] type identifier not found: x
+//│ ║  l.239: 	fun foo(x: Foo['a], y) = y : x.A  // interpreted as `y : x.Foo#A`
+//│ ╙──       	                             ^
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+
+// FIXME
+fun foo(x, y) = y : x.A
+//│ ╔══[ERROR] type identifier not found: x
+//│ ║  l.246: 	fun foo(x, y) = y : x.A
+//│ ╙──       	                    ^
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+
+// FIXME
+fun bar(f: Foo['a], y) = foo(f, y)
+//│ ╔══[ERROR] type identifier not found: x
+//│ ║  l.246: 	fun foo(x, y) = y : x.A
+//│ ╙──       	                    ^
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+
+
+
+
+

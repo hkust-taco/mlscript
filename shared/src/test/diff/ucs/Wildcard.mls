@@ -23,7 +23,7 @@ fun w1(x, e_0, e_1) =
       Left(Some(lv)) then concat("Left of Some of ")(toString(lv))
       _ and e_1 is y_1 and x is
         Right(Some(rv)) then concat("Right of Some of ")(toString(rv))
-//│ fun w1: (Left[None | Some[anything]] | Right[None | Some[anything]], anything, anything) -> Str
+//│ fun w1: (Left[None | Some[anything] | ~??A] | Right[None | Some[anything] | ~??B], anything, anything) -> Str
 
 w1(Left(None), "a", "b")
 w1(Right(None), "a", "b")
@@ -66,7 +66,7 @@ fun w3(x, p) = if x is
   Some(xv) then concat("r2: ")(toString(xv))
   None then "r3"
   _ then "r4"
-//│ fun w3: forall 'a. (None | Object & 'a & ~#None & ~#Some | Some[anything], (None | Some[nothing] | 'a) -> Object) -> Str
+//│ fun w3: forall 'a 'T. (None | Object & 'a & ~#None & ~#Some | Some['T], (None | Some[??T & 'T] | 'a) -> Object) -> Str
 
 // Expect "r1"
 w3(0, _ => true)
@@ -142,7 +142,7 @@ fun w4(x, p) = if x is
   Some(xv) then concat("r2: ")(toString(xv))
   None then "r3"
   _ then "r4"
-//│ fun w4: forall 'a. (None | Object & 'a & ~#None & ~#Some | Some[anything], (None | Some[nothing] | 'a) -> Object) -> Str
+//│ fun w4: forall 'a 'T. (None | Object & 'a & ~#None & ~#Some | Some['T], (None | Some[??T & 'T] | 'a) -> Object) -> Str
 
 
 // Expect "r1"
@@ -221,7 +221,7 @@ fun w6(x, y) =
       Some(z) then z
       None then 0
     else x
-//│ fun w6: forall 'a. ('a, Object & ~#Some | Some['a]) -> (0 | 'a)
+//│ fun w6: forall 'a 'T. ('a, Object & ~#Some | Some['T]) -> (0 | ??T & 'T | 'a)
 
 w6("42", Some(42))
 w6("42", None)
@@ -243,7 +243,7 @@ fun w7(x, f) =
       None then x
     Left(x) then x + 1
     Right(x) then x + 2
-//│ fun w7: forall 'a 'b. (Left[Int] | Object & 'a & ~#Left & ~#Right | Right[Int], 'a -> (None | Some['b])) -> (Int | 'a | 'b)
+//│ fun w7: forall 'a 'T. (Left[Int | ~??A] | Object & 'a & ~#Left & ~#Right | Right[Int | ~??B], 'a -> (None | Some['T])) -> (Int | ??T & 'T | 'a)
 
 // The results are wrong:
 w7(Left(99), _ => Some(0)) // => 0

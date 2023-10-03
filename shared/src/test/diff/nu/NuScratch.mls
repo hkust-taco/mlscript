@@ -1,3 +1,30 @@
 :NewDefs
 
 
+
+:d
+fun f(x) = x
+//│ 0. Typing ‹fun f = (x,) => x›
+//│ | 0. Created lazy type info for fun f = (x,) => x
+//│ | Completing fun f = (x,) => x
+//│ | | Type params 
+//│ | | Params 
+//│ | | 1. Typing term (x,) => x
+//│ | | | 1. Typing pattern [x,]
+//│ | | | | 1. Typing pattern x
+//│ | | | | 1. : x29'
+//│ | | | 1. : (x29',)
+//│ | | | 1. Typing term x
+//│ | | | 1. : x29'
+//│ | | 1. : (x29' -> x29')
+//│ | | CONSTRAIN (x29' -> x29') <! f30'
+//│ | |   where 
+//│ | | 1. C (x29' -> x29') <! f30'    (0)
+//│ | | | NEW f30' LB (1)
+//│ | Completed TypedNuFun(0,fun f = (x::0,) => x,(x29' -> x29')) where 
+//│ | Typing unit statements
+//│ | : None
+//│ ======== TYPED ========
+//│ fun f: ‹∀ 0. (x29' -> x29')› where 
+//│ fun f: forall 'x. 'x -> 'x
+

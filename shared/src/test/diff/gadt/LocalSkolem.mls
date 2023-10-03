@@ -1,0 +1,271 @@
+:NewDefs
+
+
+
+abstract class Cls[A] { fun x: A;; fun g: A -> Int }
+//│ abstract class Cls[A] {
+//│   fun g: A -> Int
+//│   fun x: A
+//│ }
+
+fun test(a) = if a is
+  Cls then a.x
+//│ fun test: forall 'A. Cls[in 'A out nothing] -> (??A & 'A)
+
+fun test(a) = if a is
+  Cls then a.x
+  else error
+//│ fun test: forall 'A. (Cls[in 'A out nothing] | Object & ~#Cls) -> (??A & 'A)
+
+fun test(a: Cls['a]) = if a is
+  Cls then a.x
+//│ fun test: forall 'a. (a: Cls['a]) -> (??A & 'a)
+
+fun test(a: Object) = if a is
+  Cls then a.x
+  else error
+//│ fun test: (a: Object) -> (??A & ??A0)
+
+module Impl extends Cls[Int] {
+  fun x = 42
+  fun g(x) = x + 1
+}
+//│ module Impl extends Cls {
+//│   fun g: Int -> Int
+//│   fun x: 42
+//│ }
+
+fun test(a: Object) = if a is
+  Cls then [a.g(a.x), a.x] // a.x : a.A ; a.g : a.A -> a.A
+  else [0, 1]
+//│ fun test: (a: Object) -> [Int, 1 | ??A & ??A0]
+
+test(Impl)
+//│ [Int, 1 | ??A & ??A0]
+//│ res
+//│     = [ 43, 42 ]
+
+fun test(a: Cls['a]) = if a is
+  Cls then [a.g(a.x), a.x] // a.x : a.A ; a.g : a.A -> a.A
+//│ fun test: forall 'a. (a: Cls['a]) -> [Int, ??A & 'a]
+
+let r = test(Impl)
+//│ let r: [Int, Int & ??A]
+//│ r
+//│   = [ 43, 42 ]
+
+r : [Int, Int]
+//│ [Int, Int]
+//│ res
+//│     = [ 43, 42 ]
+
+module Impl extends Cls {
+  fun x = 42
+  fun g(x) = x + 1
+}
+//│ module Impl extends Cls {
+//│   fun g: Int -> Int
+//│   fun x: 42
+//│ }
+
+let r = test(Impl)
+//│ let r: [Int, 42 & ??A]
+//│ r
+//│   = [ 43, 42 ]
+
+r : [Int, Int]
+//│ [Int, Int]
+//│ res
+//│     = [ 43, 42 ]
+
+
+
+class Cls[A](val x: A) { fun g: A -> Int;; fun g(x) = 42 }
+//│ class Cls[A](x: A) {
+//│   fun g: A -> Int
+//│ }
+
+fun test(a) = if a is
+  Cls then a.x
+//│ fun test: forall 'A. Cls[in 'A out nothing] -> (??A & 'A)
+
+fun test(a: Object) = if a is
+  Cls then a.x
+  else error
+//│ fun test: (a: Object) -> (??A & ??A0)
+
+fun test(a: Object) = if a is
+  Cls then [a.g(a.x), a.x] // a.x : a.A ; a.g : a.A -> a.A
+  else [0, 1]
+//│ fun test: (a: Object) -> [Int, 1 | ??A & ??A0]
+
+fun test(a: Cls['a]) = if a is
+  Cls then [a.g(a.x), a.x] // a.x : a.A ; a.g : a.A -> a.A
+//│ fun test: forall 'a. (a: Cls['a]) -> [Int, ??A & 'a]
+
+let r = test(Cls(42))
+//│ let r: [Int, 42 & ??A]
+//│ r
+//│   = [ 42, 42 ]
+
+r : [Int, Int]
+//│ [Int, Int]
+//│ res
+//│     = [ 42, 42 ]
+
+
+
+class Cls[out A] { fun x: A = x }
+//│ class Cls[A] {
+//│   constructor()
+//│   fun x: A
+//│ }
+
+fun test(a: Object) = if a is
+  Cls then a.x
+  else error
+//│ fun test: (a: Object) -> (??A & ??A0)
+
+fun test(a: Object) = if a is
+  Cls then a
+  else error
+//│ fun test: (a: Object) -> Cls[??A & ??A0]
+
+:re
+test(0).x
+//│ ??A & ??A0
+//│ res
+//│ Runtime error:
+//│   Error: an error was thrown
+
+
+
+class Foo[A]: Bar | Baz { fun f: A -> A;; fun f = id }
+module Bar extends Foo[Int]
+module Baz extends Foo[Str]
+//│ class Foo[A]: Bar | Baz {
+//│   constructor()
+//│   fun f: A -> A
+//│ }
+//│ module Bar extends Foo {
+//│   fun f: 'A -> 'A
+//│ }
+//│ module Baz extends Foo {
+//│   fun f: 'A0 -> 'A0
+//│ }
+//│ where
+//│   'A0 := Str
+//│   'A := Int
+
+
+fun test(f) = if f is
+  Bar then 123
+  Baz then "hello"
+//│ fun test: (Bar | Baz) -> ("hello" | 123)
+
+test : Foo['A] -> 'A
+//│ Foo['A] -> 'A
+//│   where
+//│     'A :> "hello" | 123
+//│ res
+//│     = [Function: test12]
+
+
+fun test[A](f: Foo[A]) = if f is
+  Bar then 123
+  Baz then "hello"
+//│ fun test: forall 'A. (f: Foo['A]) -> ("hello" | 123)
+
+:e // * Expected: we lost the locally-known fact that `foo`'s branches each returned an `A`
+test : forall 'A: Foo['A] -> 'A
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.180: 	test : forall 'A: Foo['A] -> 'A
+//│ ║         	^^^^
+//│ ╟── integer literal of type `123` does not match type `'A`
+//│ ║  l.175: 	  Bar then 123
+//│ ║         	           ^^^
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.180: 	test : forall 'A: Foo['A] -> 'A
+//│ ╙──       	                             ^^
+//│ forall 'A. Foo['A] -> 'A
+//│ res
+//│     = [Function: test13]
+
+
+// * TODO reject this confusing code: each 'A here is a distinct fresh var
+fun test(f: Foo['A]) = if f is
+  Bar then 123 : 'A
+  Baz then "hello" : 'A
+//│ fun test: forall 'A. (f: Foo['A]) -> ("hello" | 123)
+
+:e // * Expected
+fun test[A](f: Foo[A]) = if f is // here `f : Bar & { Foo#A = A }`
+  Bar then 123 : A  // here `f : Bar & { Foo#A = Int | A .. Int & A }`
+  Baz then "hello" : A
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.203: 	  Bar then 123 : A  // here `f : Bar & { Foo#A = Int | A .. Int & A }`
+//│ ║         	           ^^^
+//│ ╟── integer literal of type `123` does not match type `A`
+//│ ╟── Note: constraint arises from method type parameter:
+//│ ║  l.202: 	fun test[A](f: Foo[A]) = if f is // here `f : Bar & { Foo#A = A }`
+//│ ╙──       	         ^
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.204: 	  Baz then "hello" : A
+//│ ║         	           ^^^^^^^
+//│ ╟── string literal of type `"hello"` does not match type `A`
+//│ ╟── Note: constraint arises from method type parameter:
+//│ ║  l.202: 	fun test[A](f: Foo[A]) = if f is // here `f : Bar & { Foo#A = A }`
+//│ ╙──       	         ^
+//│ fun test: forall 'A. (f: Foo['A]) -> 'A
+
+:e // * Expected
+fun test[A](f: Foo[A]) = (if f is
+  Bar then 123
+  Baz then "hello") : A
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.222: 	fun test[A](f: Foo[A]) = (if f is
+//│ ║         	                         ^^^^^^^^
+//│ ║  l.223: 	  Bar then 123
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.224: 	  Baz then "hello") : A
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ╟── integer literal of type `123` does not match type `A`
+//│ ║  l.223: 	  Bar then 123
+//│ ║         	           ^^^
+//│ ╟── Note: constraint arises from method type parameter:
+//│ ║  l.222: 	fun test[A](f: Foo[A]) = (if f is
+//│ ╙──       	         ^
+//│ fun test: forall 'A. (f: Foo['A]) -> 'A
+
+
+
+fun test[A](f: Foo[A]) = if f is
+  Bar then f.f(123)
+  Baz then f.f("hello")
+//│ fun test: forall 'A. (f: Foo['A]) -> (Int | Str)
+
+:e // * Expected
+fun test[A](f: Foo[A]) = f.f(if f is
+  Bar then 123
+  Baz then "hello")
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.248: 	fun test[A](f: Foo[A]) = f.f(if f is
+//│ ║         	                         ^^^^^^^^^^^
+//│ ║  l.249: 	  Bar then 123
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.250: 	  Baz then "hello")
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ╟── integer literal of type `123` is not an instance of type `Str`
+//│ ║  l.249: 	  Bar then 123
+//│ ║         	           ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.145: 	module Baz extends Foo[Str]
+//│ ║         	                       ^^^
+//│ ╟── Note: type parameter A is defined at:
+//│ ║  l.143: 	class Foo[A]: Bar | Baz { fun f: A -> A;; fun f = id }
+//│ ╙──       	          ^
+//│ fun test: forall 'A. (f: Foo['A]) -> (Int | Str | error)
+
+
+
+

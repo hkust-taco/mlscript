@@ -365,7 +365,16 @@ trait TypeSimplifier { self: Typer =>
                       case (lb, ub) =>
                         cls.varianceOf(tv) match {
                           case VarianceInfo(true, true) => TypeBounds.mk(BotType, TopType)
-                          case VarianceInfo(false, false) => TypeBounds.mk(lb, ub)
+                          // case VarianceInfo(false, false) => TypeBounds.mk(lb, ub)
+                          case VarianceInfo(false, false) => // * This is currently needed by the test in `TODO_Classes.mls`, but causes problems! Requires refactoring
+                            pol match {
+                              case N => ???
+                                TypeBounds.mk(lb, ub)
+                              case S(true) => 
+                                TypeBounds.mk(lb, ub)
+                              case S(false) => 
+                                TypeBounds.mk(ub, lb)
+                            }
                           case VarianceInfo(co, contra) =>
                             if (co) ub else lb
                         }

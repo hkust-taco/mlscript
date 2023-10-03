@@ -31,7 +31,7 @@ fun test(x: 0 | A) =
 //│ ╟── Note: constraint arises from class pattern:
 //│ ║  l.18: 	    x is A then A
 //│ ╙──      	         ^
-//│ fun test: (x: 0 | A) -> (0 | A)
+//│ fun test: (x: 0 | A) -> (0 | A | error)
 
 fun test2(x) =
   if

@@ -1437,11 +1437,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
           (fv -> TopType :: Nil) -> typeTerm(b)
       }
     case Case(pat, bod, rest) =>
-      val (tagTy, patTy) : (ST, ST) = pat match {
+      val (tagTy, patTy, patTyIntl) : (ST, ST, ST) = pat match {
         case lit: Lit =>
           val t = ClassTag(lit,
             if (newDefs) lit.baseClassesNu else lit.baseClassesOld)(tp(pat.toLoc, "literal pattern"))
-          t -> t
+          (t, t, t)
         case v @ Var(nme) =>
           val tpr = tp(pat.toLoc, "type pattern")
           ctx.tyDefs.get(nme) match {
@@ -1460,26 +1460,38 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
                   lti match {
                     case dti: DelayedTypeInfo =>
                       val tag = clsNameToNomTag(dti.decl match { case decl: NuTypeDef => decl; case _ => die })(prov, ctx)
-                      val ty =
-                        RecordType.mk(dti.tparams.map {
+                      val (flds, fldsIntl) = dti.tparams.map {
                           case (tn, tv, vi) =>
-                            val nv = freshVar(tv.prov, S(tv), tv.nameHint)
-                            (Var(nme+"#"+tn.name).withLocOf(tn),
-                              FieldType.mk(vi.getOrElse(VarianceInfo.in), nv, nv)(provTODO))
-                        })(provTODO)
-                      println(s"Match arm $nme: $tag & $ty")
-                      tag -> ty
-                    case CompletedTypeInfo(cls: TypedNuCls) =>
+                            val nvLB = freshVar(tv.prov, S(tv), tv.nameHint)
+                            val nvUB = freshVar(tv.prov, S(tv), tv.nameHint)
+                            nvLB.upperBounds ::= nvUB
+                            val sk = SkolemTag(freshVar(tv.prov, S(tv), tv.nameHint)(lvl + 1))(provTODO)
+                            val v = Var(nme+"#"+tn.name).withLocOf(tn)
+                            val vce = vi.getOrElse(VarianceInfo.in)
+                            (v, FieldType.mk(vce, nvLB, nvUB)(provTODO)) ->
+                            (v, FieldType.mk(vce, nvLB | sk, nvUB & sk)(provTODO))
+                      }.unzip
+                      val ty = RecordType.mk(flds)(provTODO)
+                      val tyIntl = RecordType.mk(fldsIntl)(provTODO)
+                      println(s"Match arm $nme: $tag & $ty intl $tyIntl")
+                      (tag, ty, tyIntl)
+                    case CompletedTypeInfo(cls: TypedNuCls) => // * TODO factor with above
                       val tag = clsNameToNomTag(cls.td)(prov, ctx)
-                      val ty =
-                        RecordType.mk(cls.tparams.map {
+                      val (flds, fldsIntl) = cls.tparams.map {
                           case (tn, tv, vi) =>
-                            val nv = freshVar(tv.prov, S(tv), tv.nameHint)
-                            (Var(nme+"#"+tn.name).withLocOf(tn),
-                              FieldType.mk(vi.getOrElse(cls.varianceOf(tv)), nv, nv)(provTODO))
-                        })(provTODO)
-                      println(s"Match arm $nme: $tag & $ty")
-                      tag -> ty
+                            val nvLB = freshVar(tv.prov, S(tv), tv.nameHint)
+                            val nvUB = freshVar(tv.prov, S(tv), tv.nameHint)
+                            nvLB.upperBounds ::= nvUB
+                            val sk = SkolemTag(freshVar(tv.prov, S(tv), tv.nameHint)(lvl + 1))(provTODO)
+                            val v = Var(nme+"#"+tn.name).withLocOf(tn)
+                            val vce = vi.getOrElse(VarianceInfo.in)
+                            (v, FieldType.mk(vce, nvLB, nvUB)(provTODO)) ->
+                            (v, FieldType.mk(vce, nvLB | sk, nvUB & sk)(provTODO))
+                      }.unzip
+                      val ty = RecordType.mk(flds)(provTODO)
+                      val tyIntl = RecordType.mk(fldsIntl)(provTODO)
+                      println(s"Match arm $nme: $tag & $ty intl $tyIntl")
+                      (tag, ty, tyIntl)
                     case CompletedTypeInfo(_) => bail()
                   }
                   
@@ -1489,20 +1501,25 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
               }
             case Some(td) =>
               td.kind match {
-                case Als | Mod | Mxn => val t = err(msg"can only match on classes and traits", pat.toLoc)(raise); t -> t
-                case Cls => val t = clsNameToNomTag(td)(tp(pat.toLoc, "class pattern"), ctx); t -> t
-                case Trt => val t = trtNameToNomTag(td)(tp(pat.toLoc, "trait pattern"), ctx); t -> t
+                case Als | Mod | Mxn => val t = err(msg"can only match on classes and traits", pat.toLoc)(raise); (t, t, t)
+                case Cls => val t = clsNameToNomTag(td)(tp(pat.toLoc, "class pattern"), ctx); (t, t, t)
+                case Trt => val t = trtNameToNomTag(td)(tp(pat.toLoc, "trait pattern"), ctx); (t, t, t)
               }
           }
       }
-      val newCtx = ctx.nest
+      val newCtx = ctx.nest // TODO refactor
       val (req_ty, bod_ty, (tys, rest_ty)) = scrutVar match {
         case S(v) =>
           if (newDefs) {
-            newCtx += v.name -> VarSymbol(tagTy & patTy, v)
-            val bod_ty = typeTerm(bod)(newCtx, raise, vars, genLambdas)
-            (tagTy -> patTy, bod_ty, typeArms(scrutVar, rest))
-          } else {
+            val res = freshVar(provTODO, N, N)
+            newCtx.copy(lvl = newCtx.lvl + 1) |> { implicit ctx =>
+              newCtx += v.name -> VarSymbol(tagTy & patTyIntl, v)
+              val bod_ty = typeTerm(bod)(ctx, raise, vars, genLambdas)
+              implicit val tp: TP = provTODO
+              constrain(bod_ty, res)
+            }
+            (tagTy -> patTy, res, typeArms(scrutVar, rest))
+          } else { // * oldDefs:
             val tv = freshVar(tp(v.toLoc, "refined scrutinee"), N,
               // S(v.name), // this one seems a bit excessive
             )
@@ -1511,6 +1528,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
             (patTy -> tv, bod_ty, typeArms(scrutVar, rest))
           }
         case N =>
+          // TODO still do local reasoning here?
           val bod_ty = typeTerm(bod)(newCtx, raise, vars, genLambdas)
           (tagTy -> TopType, bod_ty, typeArms(scrutVar, rest))
       }

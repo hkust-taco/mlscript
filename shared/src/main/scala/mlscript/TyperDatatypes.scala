@@ -528,7 +528,7 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
     private var _assignedTo: Opt[ST] = N
     def assignedTo: Opt[ST] = _assignedTo
     def assignedTo_=(value: Opt[ST]): Unit = {
-      require(value.forall(_.level <= level))
+      require(value.forall(_.level <= level), (this, value))
       _assignedTo = value
     }
     

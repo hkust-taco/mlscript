@@ -104,11 +104,18 @@ fun listJoin(xs, sep) =
 //│ type List[A] = Cons[A] | Nil
 //│ module Nil
 //│ class Cons[A](head: A, tail: List[A])
-//│ fun listConcat: forall 'A 'A0 'a. (Cons['A] | Nil, List['A0] & 'a) -> (Cons['A0] | 'a)
-//│ fun listJoin: forall 'A1. (Cons['A1] | Nil, Str) -> Str
+//│ fun listConcat: forall 'A 'A0 'A1 'A2 'a 'A3. (Cons[in 'A3 & ('A1 | ~??A) out nothing] | Nil, List[in 'A out 'A2] & 'a) -> (Cons[in 'A1 out 'A0] | 'a)
+//│ fun listJoin: (Cons[in anything out nothing] | Nil, Str) -> Str
 //│ where
-//│   'A <: 'A0
+//│   'A1 :> 'A0 | ??A & 'A3
+//│       <: 'A2
+//│   'A2 :> 'A0 | 'A | ??A & 'A3
+//│       <: 'A1
+//│   'A0 :> 'A1 | 'A | ??A & 'A3
+//│   'A :> 'A0
+//│      <: 'A1
 
+:e // FIXME recursion depth excess
 type TreeMap[A] = Node[A] | Empty
 module Empty
 class Node[A](key: Str, value: A, left: TreeMap[A], right: TreeMap[A])
@@ -131,13 +138,37 @@ fun traverse(t, f) =
     Empty then Nil
     Node(key, value, left, right) then
       listConcat(traverse(left, f), Cons(f(key, value), traverse(right, f)))
+//│ ╔══[ERROR] Subtyping constraint of the form `(?a, ?b) -> (?c | ?d) <: ?traverse` exceeded recursion depth limit (250)
+//│ ║  l.136: 	fun traverse(t, f) =
+//│ ║         	    ^^^^^^^^^^^^^^^^
+//│ ║  l.137: 	  if t is
+//│ ║         	^^^^^^^^^
+//│ ║  l.138: 	    Empty then Nil
+//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ║  l.139: 	    Node(key, value, left, right) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.140: 	      listConcat(traverse(left, f), Cons(f(key, value), traverse(right, f)))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ type TreeMap[A] = Empty | Node[A]
 //│ module Empty
 //│ class Node[A](key: Str, value: A, left: TreeMap[A], right: TreeMap[A])
-//│ fun insert: forall 'A. (Empty | Node['A], Str, 'A) -> Node['A]
-//│ fun find: forall 'A0. (Empty | Node['A0], Str) -> (None | Some['A0])
-//│ fun traverse: forall 'A1 'A2. (Empty | Node['A1], (Str, 'A1) -> 'A2) -> (Cons['A2] | Nil)
+//│ fun insert: forall 'A 'A0 'A1 'A2 'A3 'A4. (Empty | Node[in 'A out 'A4], Str, 'A1 & 'A3 & ('A4 | ??A)) -> Node[in 'A3 out 'A2]
+//│ fun find: forall 'A5. (Empty | Node[in 'A5 out nothing], Str) -> (None | Some[??A0 & 'A5])
+//│ fun traverse: forall 'A6 'A7 'A8. (Empty | Node[in 'A6 out nothing], (Str, ??A1 & 'A6) -> 'A7) -> (Cons[in 'A7 out 'A8] | Nil)
+//│ where
+//│   'A7 <: 'A8
+//│   'A8 <: 'A7
+//│   'A <: 'A1 & (??A & ('A3 | ~??A2) | 'A4 & ('A3 | ~??A2)) | ~??A2
+//│   'A1 :> 'A2 | ??A2 & 'A
+//│       <: 'A3 & 'A0 & ('A4 | ??A)
+//│   'A0 <: 'A1 & 'A3
+//│   'A2 :> 'A1 | ??A2 & 'A | 'A3
+//│   'A3 :> 'A2 | ??A2 & 'A
+//│       <: 'A1 & ('A4 | ??A)
+//│   'A4 <: 'A
 
+:e // FIXME recursion depth excess
 type JsonValue = JsonNull | JsonNumber | JsonString | JsonBoolean | JsonObject | JsonArray
 module JsonNull {
   fun toString() = "null"
@@ -159,6 +190,10 @@ class JsonObject(entries: TreeMap[JsonValue]) {
 class JsonArray(elements: List[JsonValue]) {
   fun toString() = concat3("[", listJoin(elements, ", "), "]")
 }
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?b ?c ?d. (?b, ?d) -> (?a | ?c) <: (?e, forall ?f ?g ?h. (?f, ?g) -> ?h) -> ?i` exceeded recursion depth limit (250)
+//│ ║  l.188: 	      else concat3("{ ", listJoin(traverse(entries, (k, v) => concat3(k, ": ", getStringOf(v))), ", "), " }")
+//│ ║         	                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ type JsonValue = JsonArray | JsonBoolean | JsonNull | JsonNumber | JsonObject | JsonString
 //│ module JsonNull {
 //│   fun toString: () -> "null"
@@ -270,7 +305,7 @@ fun parseMatched(scanner, closingSymbol, parse, fn) =
       ParseSuccess(_, scanner) then ParseSuccess(fn(outcome), scanner)
       ParseFailure(message, scanner) then ParseFailure(message, scanner)
     ParseFailure(message, scanner) then ParseFailure(message, scanner)
-//│ fun parseMatched: forall 'advance 'a 'T. ({advance: 'advance}, Str, 'advance -> (ParseFailure | ParseSuccess['a]), 'a -> 'T) -> (ParseFailure | ParseSuccess['T])
+//│ fun parseMatched: forall 'advance 'T 'a. ({advance: 'advance}, Str, 'advance -> (ParseFailure | ParseSuccess['T]), (??T & 'T) -> 'a) -> (ParseFailure | ParseSuccess['a])
 
 :ng
 fun parseEntries(scanner): ParseResult[TreeMap[JsonValue]] = error

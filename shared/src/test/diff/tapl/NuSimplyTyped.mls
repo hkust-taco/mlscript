@@ -67,8 +67,17 @@ fun find(t, k) =
       sgt(k, k') then find(r, k)
       _ then Some(v)
     Empty then None
-//│ fun insert: forall 'A. (Empty | Node['A], Str, 'A) -> Node['A]
-//│ fun find: forall 'A0. (Empty | Node['A0], Str) -> (None | Some['A0])
+//│ fun insert: forall 'A 'A0 'A1 'A2 'A3 'A4. (Empty | Node[in 'A4 out 'A3], Str, 'A & 'A0 & 'A2 & ('A3 | ??A)) -> Node[in 'A2 out 'A1]
+//│ fun find: forall 'A5. (Empty | Node[in 'A5 out nothing], Str) -> (None | Some[??A0 & 'A5])
+//│ where
+//│   'A4 <: 'A & 'A0 & ('A3 & ('A2 | ~??A1) | ??A & ('A2 | ~??A1)) | ~??A1
+//│   'A <: 'A0 & 'A2 & ('A3 | ??A)
+//│   'A0 :> 'A1 | ??A1 & 'A4
+//│       <: 'A & 'A2 & ('A3 | ??A)
+//│   'A1 :> 'A0 | ??A1 & 'A4 | 'A2
+//│   'A2 :> 'A1 | ??A1 & 'A4
+//│       <: 'A & 'A0 & ('A3 | ??A)
+//│   'A3 <: 'A4
 
 fun showType(ty) =
   if ty is
@@ -123,6 +132,7 @@ showTerm(App(Abs(Var("x"), _t("int"), Var("y")), Var("z")))
 //│ res
 //│     = '((&x: int => z) z)'
 
+:e // FIXME recursion depth excess
 // Removing the return type annotation causes stack overflow.
 fun typeTerm(t: Term, ctx: TreeMap[Type]): Result[Type, Str] =
   if t is
@@ -141,6 +151,28 @@ fun typeTerm(t: Term, ctx: TreeMap[Type]): Result[Type, Str] =
         Err(message) then Err(message)
       Ok(PrimitiveType(name)) then Err("cannot apply primitive type `" ++ name ++ "`")
       Err(message) then Err(message)
+//│ ╔══[ERROR] Subtyping constraint of the form `?typeTerm <: (?a, ?b) -> ?c` exceeded recursion depth limit (250)
+//│ ║  l.143: 	    Abs(Var(name), ty, body) and typeTerm(body, insert(ctx, name, ty)) is
+//│ ║         	                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Note: use flag `:ex` to see internal error info.
+//│ ╔══[ERROR] Subtyping constraint of the form `([?a, ?b, ?c]) -> ?d <: ?e -> ?f` exceeded recursion depth limit (250)
+//│ ║  l.138: 	  if t is
+//│ ║         	     ^^^^
+//│ ║  l.139: 	    Lit(_, ty) then Ok(ty)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.140: 	    Var(name) and find(ctx, name) is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.141: 	      Some(ty) then Ok(ty)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.142: 	      None then Err("unbound variable `" ++ name ++ "`")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.143: 	    Abs(Var(name), ty, body) and typeTerm(body, insert(ctx, name, ty)) is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.144: 	      Ok(resTy) then Ok(FunctionType(ty, resTy))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.145: 	      Err(message) then Err(message)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ fun typeTerm: (t: Term, ctx: TreeMap[Type]) -> Result[Type, Str]
 
 fun showTypeTerm(t, ctx) =
@@ -149,12 +181,25 @@ fun showTypeTerm(t, ctx) =
     Err(message) then "Type error: " ++ message
 //│ fun showTypeTerm: (Term, TreeMap[Type]) -> Str
 
+:e // FIXME recursion depth excess
 showTypeTerm(Var("x"), Empty)
 showTypeTerm(Abs(Var("x"), _t("int"), Var("x")), Empty)
 showTypeTerm(App(Var("f"), Lit("0", _t("int"))), insert(Empty, "f", _f(_t("int"), _t("int"))))
 showTypeTerm(App(Var("f"), Lit("0.2", _t("float"))), insert(Empty, "f", _f(_t("int"), _t("int"))))
 showTypeTerm(App(Var("f"), Lit("0", _t("int"))), insert(Empty, "f", _t("Str")))
-//│ Str
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?b ?c ?d. (?c, ?d) -> (?a | ?b) <: (?e, ?f) -> ?g` exceeded recursion depth limit (250)
+//│ ║  l.187: 	showTypeTerm(App(Var("f"), Lit("0", _t("int"))), insert(Empty, "f", _f(_t("int"), _t("int"))))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Note: use flag `:ex` to see internal error info.
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?b ?c ?d. (?a, ?b) -> (?c | ?d) <: (?e, ?f) -> ?g` exceeded recursion depth limit (250)
+//│ ║  l.188: 	showTypeTerm(App(Var("f"), Lit("0.2", _t("float"))), insert(Empty, "f", _f(_t("int"), _t("int"))))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Note: use flag `:ex` to see internal error info.
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?b ?c ?d. (?a, ?b) -> (?c | ?d) <: (?e, ?f) -> ?g` exceeded recursion depth limit (250)
+//│ ║  l.189: 	showTypeTerm(App(Var("f"), Lit("0", _t("int"))), insert(Empty, "f", _t("Str")))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Note: use flag `:ex` to see internal error info.
+//│ error
 //│ res
 //│     = 'Type error: unbound variable `x`'
 //│ res
@@ -165,3 +210,4 @@ showTypeTerm(App(Var("f"), Lit("0", _t("int"))), insert(Empty, "f", _t("Str")))
 //│     = 'Type error: expect the argument to be of type `int` but found `float`'
 //│ res
 //│     = 'Type error: cannot apply primitive type `Str`'
+

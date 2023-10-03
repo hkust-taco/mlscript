@@ -1,0 +1,21 @@
+:NewDefs
+
+
+class Foo[A](val a: A)
+//│ class Foo[A](a: A)
+
+fun foo(f: Foo) = f.a
+//│ fun foo: (f: Foo[anything]) -> ??A
+
+
+class Foo[A](val a: A -> A)
+//│ class Foo[A](a: A -> A)
+
+fun foo(f: Foo) = f.a
+//│ fun foo: (f: Foo[in anything out nothing]) -> ??A -> ??A0
+
+
+fun foo(f) = f : Foo
+//│ fun foo: Foo[in anything out nothing] -> Foo[?]
+
+

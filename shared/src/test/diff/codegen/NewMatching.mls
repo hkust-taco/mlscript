@@ -96,7 +96,7 @@ fun get1(s) =
   if s is
     Some(V1(x)) then x
     Some(y) then y
-//│ fun get1: forall 'a. Some[Object & 'a] -> (Int | 'a)
+//│ fun get1: forall 'T. Some['T & (Object | ~??T)] -> (Int | ??T0 & 'T)
 //│ // Prelude
 //│ class TypingUnit5 {}
 //│ const typing_unit5 = new TypingUnit5;
@@ -113,7 +113,7 @@ fun get1(s) =
 
 get1(Some(V1(1)))
 get1(Some(V0()))
-//│ Int | V0
+//│ Int | V0 & ??T
 //│ res
 //│     = 1
 //│ res
@@ -129,7 +129,7 @@ fun foo(s) =
   if s is
     Some(t) then let b = s2.value in b + t.x
     _ then 0  
-//│ fun foo: (Object & ~#Some | Some[{x: Int}]) -> Int
+//│ fun foo: (Object & ~#Some | Some[{x: Int} | ~??T]) -> Int
 //│ // Prelude
 //│ class TypingUnit8 {}
 //│ const typing_unit8 = new TypingUnit8;
@@ -280,7 +280,7 @@ class C[A](f: A -> A)
 //│ class C[A](f: A -> A)
 
 let r = C.unapply
-//│ let r: forall '#f. (C[?] & {#f: '#f}) -> ['#f]
+//│ let r: forall '#f. (C[in anything out nothing] & {#f: '#f}) -> ['#f]
 //│ r
 //│   = [Function: unapply]
 

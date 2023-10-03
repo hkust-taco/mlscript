@@ -70,8 +70,8 @@ mixin EvalBase {
       Add(l, r) then this.eval(l) + this.eval(r)
 }
 //│ mixin EvalBase() {
-//│   this: {eval: 'a -> Int}
-//│   fun eval: (Add['a] | Lit) -> Int
+//│   this: {eval: (??E & 'E) -> Int}
+//│   fun eval: (Add['E] | Lit) -> Int
 //│ }
 //│ // Prelude
 //│ class TypingUnit1 {
@@ -142,8 +142,8 @@ mixin EvalNeg {
 }
 //│ mixin EvalNeg() {
 //│   super: {eval: 'a -> 'b}
-//│   this: {eval: 'c -> Int}
-//│   fun eval: (Neg['c] | Object & 'a & ~#Neg) -> (Int | 'b)
+//│   this: {eval: (??A & 'A) -> Int}
+//│   fun eval: (Neg['A] | Object & 'a & ~#Neg) -> (Int | 'b)
 //│ }
 //│ // Prelude
 //│ class TypingUnit3 {
@@ -175,9 +175,9 @@ mixin EvalNegNeg {
     else super.eval(e)
 }
 //│ mixin EvalNegNeg() {
-//│   super: {eval: (Neg[nothing] | 'a) -> 'b}
-//│   this: {eval: 'c -> 'b}
-//│   fun eval: (Neg[Neg['c] | Object & ~#Neg] | Object & 'a & ~#Neg) -> 'b
+//│   super: {eval: (Neg[??A & 'A] | 'a) -> 'b}
+//│   this: {eval: (??A0 & 'A0) -> 'b}
+//│   fun eval: (Neg['A & (Neg['A0] | Object & ~#Neg | ~??A1)] | Object & 'a & ~#Neg) -> 'b
 //│ }
 //│ // Prelude
 //│ class TypingUnit4 {
@@ -205,12 +205,11 @@ mixin EvalNegNeg {
 :js
 module TestLang extends EvalBase, EvalNeg, EvalNegNeg
 //│ module TestLang {
-//│   fun eval: 'a -> Int
+//│   fun eval: (Neg['A] | Object & 'a & ~#Neg) -> Int
 //│ }
 //│ where
-//│   'a <: Neg['A] | Object & 'b & ~#Neg
-//│   'A <: Neg['a & 'A] | Neg['A] & ~#Neg | Object & 'b & ~#Neg
-//│   'b <: Add['a] | Lit | Neg['a]
+//│   'A <: Neg['A & (Neg['A] | Object & 'a & ~#Neg | ~??A)] | Neg['A] & ~#Neg | Object & 'a & ~#Neg | ~??A0 & (Neg[Neg['A] | 'a & (Object & ~#Neg | ~#Neg & ~??A) | ~??A] | Object & ~#Neg) | ~??A1
+//│   'a <: Add[Neg['A] | 'a & (Object & ~#Neg | ~#Neg & ~??E) | ~??E] | Lit | Neg[Neg['A] | 'a & (Object & ~#Neg | ~#Neg & ~??A0) | ~??A0]
 //│ // Prelude
 //│ class TypingUnit5 {
 //│   #TestLang;
@@ -372,7 +371,7 @@ mixin Base {
   fun x = y
 }
 //│ ╔══[ERROR] identifier not found: y
-//│ ║  l.372: 	  fun x = y
+//│ ║  l.371: 	  fun x = y
 //│ ╙──       	          ^
 //│ mixin Base() {
 //│   fun x: error

@@ -24,7 +24,7 @@ fun optionApply(x, y, f) =
       Some(yv) then Some(f(xv, yv))
       None then None
     None then None
-//│ fun optionApply: forall 'a 'b 'A. (None | Some['a], None | Some['b], ('a, 'b) -> 'A) -> (None | Some['A])
+//│ fun optionApply: forall 'A 'A0 'a. (None | Some['A], None | Some['A0], (??A & 'A, ??A0 & 'A0) -> 'a) -> (None | Some['a])
 
 let zeroToThree = Cons(0, Cons(1, Cons(2, Cons(3, Nil))))
 //│ let zeroToThree: Cons['A]
@@ -41,20 +41,34 @@ fun mapPartition(f, xs) = if xs is
   Cons(x, xs) and mapPartition(f, xs) is Pair(l, r) and f(x) is
     Left(v)  then Pair(Cons(v, l), r)
     Right(v) then Pair(l, Cons(v, r))
-//│ fun mapPartition: forall 'A 'A0 'A1. ('A -> (Left['A0] | Right['A1]), Cons['A] | Nil) -> Pair[Cons['A0] | Nil, Cons['A1] | Nil]
+//│ fun mapPartition: forall 'B 'A 'A0 'A1 'A2 'A3 'A4 'A5 'A6. ((??A & 'A3) -> (Left['A6 & ('A0 | ~??A0)] | Right['A2 & ('A4 | ~??A1)]), Cons[in 'A3 out nothing] | Nil) -> (Pair[Cons[in 'A0 out 'A1] | Nil | 'A, Cons[in 'A4 out 'A5] | Nil | 'B] & {
+//│   Pair#B <: Cons[in 'A4 out 'A5] | Nil | 'B,
+//│   Pair#A <: Cons[in 'A0 out 'A1] | Nil | 'A
+//│ })
+//│ where
+//│   'B :> ??B & (Cons[in 'A4 out 'A5] | Nil)
+//│   'A :> ??A2 & (Cons[in 'A0 out 'A1] | Nil)
+//│   'A4 :> 'A5 | ??A1 & 'A2
+//│   'A5 :> 'A4 | ??A1 & 'A2
+//│   'A0 :> 'A1 | ??A0 & 'A6
+//│   'A1 :> 'A0 | ??A0 & 'A6
 
 mapPartition(x => Left(x + 1), zeroToThree)
-//│ Pair[Cons['A] | Nil, Cons['A0] | Nil]
+//│ forall 'A 'B. Pair[Cons['A0] | Nil | 'A, Cons['A1] | Nil | 'B] & {Pair#B <: Cons['A1] | Nil | 'B, Pair#A <: Cons['A0] | Nil | 'A}
 //│   where
-//│     'A :> Int
+//│     'B :> ??B & (Cons['A1] | Nil)
+//│     'A :> ??A & (Cons['A0] | Nil)
+//│     'A0 :> Int & ??A0
 //│ res
 //│     = Pair {}
 
 mapPartition(f, zeroToThree)
-//│ Pair[Cons['A] | Nil, Cons['A0] | Nil]
+//│ forall 'A 'B. Pair[Cons['A0] | Nil | 'A, Cons['A1] | Nil | 'B] & {Pair#B <: Cons['A1] | Nil | 'B, Pair#A <: Cons['A0] | Nil | 'A}
 //│   where
-//│     'A0 :> 0 | 1 | 2 | 3
-//│     'A :> 0 | 1 | 2 | 3
+//│     'B :> ??B & (Cons['A1] | Nil)
+//│     'A1 :> ??A & ??A0 & (0 | 1 | 2 | 3)
+//│     'A :> ??A1 & (Cons['A0] | Nil)
+//│     'A0 :> ??A0 & ??A2 & (0 | 1 | 2 | 3)
 //│ res
 //│     = Pair {}
 
@@ -65,13 +79,25 @@ fun mapPartition(f, xs) = if xs is
     mapPartition(f, xs) is Pair(l, r) and f(x) is
       Left(v)  then Pair(Cons(v, l), r)
       Right(v) then Pair(l, Cons(v, r))
-//│ fun mapPartition: forall 'A 'A0 'A1. ('A -> (Left['A0] | Right['A1]), Cons['A] | Nil) -> Pair[Cons['A0] | Nil, Cons['A1] | Nil]
+//│ fun mapPartition: forall 'A 'A0 'A1 'A2 'A3 'A4 'A5 'B 'A6. ((??A & 'A3) -> (Left['A5 & ('A | ~??A0)] | Right['A6 & ('A4 | ~??A1)]), Cons[in 'A3 out nothing] | Nil) -> (Pair[Cons[in 'A out 'A1] | Nil | 'A0, Cons[in 'A4 out 'A2] | Nil | 'B] & {
+//│   Pair#B <: Cons[in 'A4 out 'A2] | Nil | 'B,
+//│   Pair#A <: Cons[in 'A out 'A1] | Nil | 'A0
+//│ })
+//│ where
+//│   'B :> ??B & (Cons[in 'A4 out 'A2] | Nil)
+//│   'A0 :> ??A2 & (Cons[in 'A out 'A1] | Nil)
+//│   'A4 :> 'A2 | ??A1 & 'A6
+//│   'A2 :> 'A4 | ??A1 & 'A6
+//│   'A :> 'A1 | ??A0 & 'A5
+//│   'A1 :> 'A | ??A0 & 'A5
 
 mapPartition(f, zeroToThree)
-//│ Pair[Cons['A] | Nil, Cons['A0] | Nil]
+//│ forall 'A 'B. Pair[Cons['A0] | Nil | 'A, Cons['A1] | Nil | 'B] & {Pair#B <: Cons['A1] | Nil | 'B, Pair#A <: Cons['A0] | Nil | 'A}
 //│   where
-//│     'A0 :> 0 | 1 | 2 | 3
-//│     'A :> 0 | 1 | 2 | 3
+//│     'B :> ??B & (Cons['A1] | Nil)
+//│     'A1 :> ??A & ??A0 & (0 | 1 | 2 | 3)
+//│     'A :> ??A1 & (Cons['A0] | Nil)
+//│     'A0 :> ??A & ??A2 & (0 | 1 | 2 | 3)
 //│ res
 //│     = Pair {}
 
@@ -87,13 +113,25 @@ fun mapPartition(f, xs) = if xs is
             Pair(Cons(v, l), r)
           Right(v) then
             Pair(l, Cons(v, r))
-//│ fun mapPartition: forall 'A 'A0 'A1. ('A -> (Left['A0] | Right['A1]), Cons['A] | Nil) -> Pair[Cons['A0] | Nil, Cons['A1] | Nil]
+//│ fun mapPartition: forall 'A 'A0 'A1 'A2 'B 'A3 'A4 'A5 'A6. ((??A & 'A3) -> (Left['A5 & ('A | ~??A0)] | Right['A4 & ('A6 | ~??A1)]), Cons[in 'A3 out nothing] | Nil) -> (Pair[Cons[in 'A out 'A2] | Nil | 'A0, Cons[in 'A6 out 'A1] | Nil | 'B] & {
+//│   Pair#B <: Cons[in 'A6 out 'A1] | Nil | 'B,
+//│   Pair#A <: Cons[in 'A out 'A2] | Nil | 'A0
+//│ })
+//│ where
+//│   'B :> ??B & (Cons[in 'A6 out 'A1] | Nil)
+//│   'A0 :> ??A2 & (Cons[in 'A out 'A2] | Nil)
+//│   'A6 :> 'A1 | ??A1 & 'A4
+//│   'A1 :> 'A6 | ??A1 & 'A4
+//│   'A :> 'A2 | ??A0 & 'A5
+//│   'A2 :> 'A | ??A0 & 'A5
 
 mapPartition(f, zeroToThree)
-//│ Pair[Cons['A] | Nil, Cons['A0] | Nil]
+//│ forall 'A 'B. Pair[Cons['A0] | Nil | 'A, Cons['A1] | Nil | 'B] & {Pair#B <: Cons['A1] | Nil | 'B, Pair#A <: Cons['A0] | Nil | 'A}
 //│   where
-//│     'A0 :> 0 | 1 | 2 | 3
-//│     'A :> 0 | 1 | 2 | 3
+//│     'B :> ??B & (Cons['A1] | Nil)
+//│     'A1 :> ??A & ??A0 & (0 | 1 | 2 | 3)
+//│     'A :> ??A1 & (Cons['A0] | Nil)
+//│     'A0 :> ??A & ??A2 & (0 | 1 | 2 | 3)
 //│ res
 //│     = Pair {}
 
@@ -106,30 +144,30 @@ fun mapPartition(f, xs) = if xs is
 //│ ╔══[ERROR] type identifier not found: Tuple#2
 //│ ╙──
 //│ ╔══[ERROR] Type mismatch in definition:
-//│ ║  l.101: 	fun mapPartition(f, xs) = if xs is
+//│ ║  l.139: 	fun mapPartition(f, xs) = if xs is
 //│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.102: 	  Nil then [Nil, Nil]
+//│ ║  l.140: 	  Nil then [Nil, Nil]
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.103: 	  Cons(x, xs) and mapPartition(f, xs) is [l, r] and f(x) is
+//│ ║  l.141: 	  Cons(x, xs) and mapPartition(f, xs) is [l, r] and f(x) is
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.104: 	    Left(v)  then [Cons(v, l), r]
+//│ ║  l.142: 	    Left(v)  then [Cons(v, l), r]
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.105: 	    Right(v) then [l, Cons(v, r)]
+//│ ║  l.143: 	    Right(v) then [l, Cons(v, r)]
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── tuple literal of type `[Nil, Nil]` is not an instance of type `Object`
-//│ ║  l.102: 	  Nil then [Nil, Nil]
+//│ ║  l.140: 	  Nil then [Nil, Nil]
 //│ ║         	           ^^^^^^^^^^
 //│ ╟── Note: constraint arises from `case` expression:
-//│ ║  l.103: 	  Cons(x, xs) and mapPartition(f, xs) is [l, r] and f(x) is
+//│ ║  l.141: 	  Cons(x, xs) and mapPartition(f, xs) is [l, r] and f(x) is
 //│ ║         	                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.104: 	    Left(v)  then [Cons(v, l), r]
+//│ ║  l.142: 	    Left(v)  then [Cons(v, l), r]
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.105: 	    Right(v) then [l, Cons(v, r)]
+//│ ║  l.143: 	    Right(v) then [l, Cons(v, r)]
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── from application:
-//│ ║  l.103: 	  Cons(x, xs) and mapPartition(f, xs) is [l, r] and f(x) is
+//│ ║  l.141: 	  Cons(x, xs) and mapPartition(f, xs) is [l, r] and f(x) is
 //│ ╙──       	                  ^^^^^^^^^^^^^^^^^^^
-//│ fun mapPartition: forall 'A. (anything, Cons['A] | Nil) -> (error | [Nil, Nil])
+//│ fun mapPartition: (anything, Cons[in anything out nothing] | Nil) -> (error | [Nil, Nil])
 //│ Code generation encountered an error:
 //│   unknown match case: Tuple#2
 
@@ -152,40 +190,40 @@ fun mapPartition(f, xs) = if xs is
           and f(x) is Left(v)  then [Cons(v, l), r]
                       Right(v) then [l, Cons(v, r)]
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
-//│ ║  l.153: 	                      Right(v) then [l, Cons(v, r)]
+//│ ║  l.191: 	                      Right(v) then [l, Cons(v, r)]
 //│ ╙──       	                               ^^^^
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.152: 	          and f(x) is Left(v)  then [Cons(v, l), r]
+//│ ║  l.190: 	          and f(x) is Left(v)  then [Cons(v, l), r]
 //│ ║         	                                    ^^^^^^^^^^^^^^^
-//│ ║  l.153: 	                      Right(v) then [l, Cons(v, r)]
+//│ ║  l.191: 	                      Right(v) then [l, Cons(v, r)]
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] type identifier not found: Tuple#2
 //│ ╙──
 //│ ╔══[ERROR] Type mismatch in definition:
-//│ ║  l.149: 	fun mapPartition(f, xs) = if xs is
+//│ ║  l.187: 	fun mapPartition(f, xs) = if xs is
 //│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.150: 	  Nil then [Nil, Nil]
+//│ ║  l.188: 	  Nil then [Nil, Nil]
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.151: 	  Cons(x, xs) and mapPartition(f, xs) is [l, r]
+//│ ║  l.189: 	  Cons(x, xs) and mapPartition(f, xs) is [l, r]
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.152: 	          and f(x) is Left(v)  then [Cons(v, l), r]
+//│ ║  l.190: 	          and f(x) is Left(v)  then [Cons(v, l), r]
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.153: 	                      Right(v) then [l, Cons(v, r)]
+//│ ║  l.191: 	                      Right(v) then [l, Cons(v, r)]
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── tuple literal of type `[Nil, Nil]` is not an instance of type `Object`
-//│ ║  l.150: 	  Nil then [Nil, Nil]
+//│ ║  l.188: 	  Nil then [Nil, Nil]
 //│ ║         	           ^^^^^^^^^^
 //│ ╟── Note: constraint arises from `case` expression:
-//│ ║  l.151: 	  Cons(x, xs) and mapPartition(f, xs) is [l, r]
+//│ ║  l.189: 	  Cons(x, xs) and mapPartition(f, xs) is [l, r]
 //│ ║         	                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.152: 	          and f(x) is Left(v)  then [Cons(v, l), r]
+//│ ║  l.190: 	          and f(x) is Left(v)  then [Cons(v, l), r]
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.153: 	                      Right(v) then [l, Cons(v, r)]
+//│ ║  l.191: 	                      Right(v) then [l, Cons(v, r)]
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── from application:
-//│ ║  l.151: 	  Cons(x, xs) and mapPartition(f, xs) is [l, r]
+//│ ║  l.189: 	  Cons(x, xs) and mapPartition(f, xs) is [l, r]
 //│ ╙──       	                  ^^^^^^^^^^^^^^^^^^^
-//│ fun mapPartition: forall 'A. (anything, Cons['A] | Nil) -> (error | [Nil, Nil])
+//│ fun mapPartition: (anything, Cons[in anything out nothing] | Nil) -> (error | [Nil, Nil])
 //│ Code generation encountered an error:
 //│   unknown match case: Tuple#2
 

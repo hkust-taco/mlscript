@@ -110,71 +110,6 @@ let y: c.A = c.x
 // *** GADTs *** //
 
 
-class Cls[A] { fun x: A = x;; fun g: A -> Int;; fun g = g }
-//│ class Cls[A] {
-//│   constructor()
-//│   fun g: A -> Int
-//│   fun x: A
-//│ }
-
-
-:e // TODO
-fun test(a: Object) = if a is
-  Cls then a.x
-  else error
-//│ ╔══[ERROR] Type error in `case` expression
-//│ ║  l.122: 	fun test(a: Object) = if a is
-//│ ║         	                         ^^^^
-//│ ║  l.123: 	  Cls then a.x
-//│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.124: 	  else error
-//│ ║         	^^^^^^^^^^^^
-//│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.113: 	class Cls[A] { fun x: A = x;; fun g: A -> Int;; fun g = g }
-//│ ╙──       	          ^
-//│ fun test: (a: Object) -> (error | ??A)
-
-:e // TODO
-fun test(a: Object) = if a is
-  Cls then a.g(a.x) // a.x : a.A ; a.g : a.A -> a.A
-  else 0
-//│ ╔══[ERROR] Type error in `case` expression
-//│ ║  l.138: 	fun test(a: Object) = if a is
-//│ ║         	                         ^^^^
-//│ ║  l.139: 	  Cls then a.g(a.x) // a.x : a.A ; a.g : a.A -> a.A
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.140: 	  else 0
-//│ ║         	^^^^^^^^
-//│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.113: 	class Cls[A] { fun x: A = x;; fun g: A -> Int;; fun g = g }
-//│ ╙──       	          ^
-//│ fun test: (a: Object) -> Int
-
-
-class Cls[out A] { fun x: A = x }
-//│ class Cls[A] {
-//│   constructor()
-//│   fun x: A
-//│ }
-
-fun test(a: Object) = if a is
-  Cls then a.x
-  else error
-//│ fun test: (a: Object) -> ??A
-
-fun test(a: Object) = if a is
-  Cls then a
-  else error
-//│ fun test: (a: Object) -> Cls[??A]
-
-:re
-test(0).x
-//│ ??A
-//│ res
-//│ Runtime error:
-//│   Error: an error was thrown
-
-
 // class Expr[T] {
 //   constructor
 //     IntLit(n: Int) { T = Int }
@@ -214,5 +149,7 @@ fun test(a) = if a is
   IntLit then 0
   OopsLit then 1
 //│ fun test: (IntLit | OopsLit) -> (0 | 1)
+
+
 
 

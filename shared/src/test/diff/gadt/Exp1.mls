@@ -17,17 +17,17 @@ fun f(p: Pair['a, 'b]) = p.lhs
 
 fun f(e) = if e is
   Pair(l, r) then [l, r]
-//│ fun f: forall 'a 'b. Pair['a, 'b] -> ['a, 'b]
+//│ fun f: forall 'L 'R. Pair['L, 'R] -> [??L & 'L, ??R & 'R]
 // f: (Exp['a] & Pair) -> 0
 
 
 fun f(e) = if e is
   Pair(l, r) then [l, r]
   Lit(n) then n
-//│ fun f: forall 'a 'b. (Lit | Pair['a, 'b]) -> (Int | ['a, 'b])
+//│ fun f: forall 'L 'R. (Lit | Pair['L, 'R]) -> (Int | [??L & 'L, ??R & 'R])
 
 (e: Exp['X]) => f(e)
-//│ forall 'X. (e: Exp['X]) -> (Int | [??L, ??R])
+//│ forall 'X. (e: Exp['X]) -> (Int | [??L & ??L0, ??R & ??R0])
 //│ res
 //│     = [Function: res]
 

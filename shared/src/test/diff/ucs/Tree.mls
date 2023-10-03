@@ -20,7 +20,7 @@ fun find(t, v) = if t is
     v > v' then find(r, v)
     _ then Some(v)
   Empty then None
-//│ fun find: forall 'A 'A0. (Empty | Node['A], Num & 'A0) -> (None | Some['A0])
+//│ fun find: forall 'a. (Empty | Node[in anything out nothing], Num & 'a) -> (None | Some['a])
 
 fun insert(t, v) = if t is
   Node(v', l, r) and
@@ -28,7 +28,14 @@ fun insert(t, v) = if t is
     v > v' then Node(v', l, insert(r, v))
     _ then t
   Empty then Node(v, Empty, Empty)
-//│ fun insert: forall 'A. (Empty | Node['A], Int) -> Node['A]
+//│ fun insert: forall 'A 'A0 'A1 'A2 'A3. (Empty | Node[in 'A0 out 'A], Int) -> Node[in 'A1 & ('A | ??A) out 'A2 | ??A0 & 'A0]
+//│   where
+//│     'A0 <: 'A1 & ('A1 & ('A | ??A) | ~??A0 & ('A | ??A)) | ~??A0
+//│     'A1 :> 'A2 | ??A0 & 'A0
+//│         <: 'A3 & ('A | ??A)
+//│     'A3 <: 'A1 & ('A | ??A)
+//│     'A <: 'A0
+//│     'A2 :> 'A1 | ??A0 & 'A0
 
 find(Empty, 0)
 find(Node(0, Empty, Empty), 0)

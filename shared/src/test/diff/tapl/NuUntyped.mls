@@ -75,15 +75,21 @@ fun findFirst(list, p) =
     Cons(x, xs) and
       p(x) then Some(x)
       else findFirst(xs, p)
-//│ fun findFirst: forall 'A. (Cons['A] | Nil, 'A -> Object) -> (None | Some['A])
+//│ fun findFirst: forall 'A. (Cons[in 'A out nothing] | Nil, (??A & 'A) -> Object) -> (None | Some[??A & 'A])
 
 fun listConcat(xs, ys) =
   if xs is
     Nil then ys
     Cons(x, xs') then Cons(x, listConcat(xs', ys))
-//│ fun listConcat: forall 'A 'A0 'a. (Cons['A] | Nil, List['A0] & 'a) -> (Cons['A0] | 'a)
+//│ fun listConcat: forall 'A 'a 'A0 'A1 'A2 'A3. (Cons[in 'A2 & ('A1 | ~??A) out nothing] | Nil, List[in 'A out 'A3] & 'a) -> (Cons[in 'A1 out 'A0] | 'a)
 //│   where
-//│     'A <: 'A0
+//│     'A1 :> 'A0 | ??A & 'A2
+//│         <: 'A3
+//│     'A3 :> 'A0 | 'A | ??A & 'A2
+//│         <: 'A1
+//│     'A0 :> 'A1 | 'A | ??A & 'A2
+//│     'A :> 'A0
+//│        <: 'A1
 
 fun listContains(xs, x) =
   if xs is
@@ -91,7 +97,7 @@ fun listContains(xs, x) =
     Cons(x', xs') and
       eq(x)(x') then true
       _ then listContains(xs', x)
-//│ fun listContains: forall 'A. (Cons['A] | Nil, anything) -> Bool
+//│ fun listContains: (Cons[in anything out nothing] | Nil, anything) -> Bool
 
 // Remove all occurrences of x from xs.
 fun listWithout(xs, x) =
@@ -100,9 +106,9 @@ fun listWithout(xs, x) =
     Cons(x', xs') and
       eq(x)(x') then listWithout(xs', x)
       _ then Cons(x', listWithout(xs', x))
-//│ fun listWithout: forall 'A 'A0. (Cons['A] | Nil, anything) -> (Cons['A0] | Nil)
+//│ fun listWithout: forall 'A 'A0. (Cons[in 'A & ('A0 | ~??A) out nothing] | Nil, anything) -> (Cons['A0] | Nil)
 //│   where
-//│     'A <: 'A0
+//│     'A0 :> ??A & 'A
 
 
 // * FIXME?
@@ -111,7 +117,7 @@ fun listJoin(xs, sep) =
     Nil then ""
     Cons(x, Nil) then toString(x)
     Cons(x, xs') then toString(x) ++ sep ++ listJoin(xs', sep)
-//│ fun listJoin: forall 'A. (Cons['A] | Nil, Str) -> Str
+//│ fun listJoin: (Cons[in anything out nothing] | Nil, Str) -> Str
 
 fun listJoin(xs, sep) =
   if xs is
@@ -119,7 +125,7 @@ fun listJoin(xs, sep) =
     Cons(x, xs') and xs' is
       Nil then toString(x)
       _ then toString(x) ++ sep ++ listJoin(xs', sep)
-//│ fun listJoin: forall 'A. (Cons['A] | Nil, Str) -> Str
+//│ fun listJoin: (Cons[in anything out nothing] | Nil, Str) -> Str
 
 listJoin(list3("x", "y", "z"), ", ")
 //│ Str
@@ -233,9 +239,22 @@ fun fv(t) =
     Var(name) then list1(name)
     Abs(Var(name), body) then listWithout(fv(body), name)
     App(lhs, rhs) then listConcat(fv(lhs), fv(rhs))
-//│ fun fv: forall 'A. (Abs | App | Var) -> (Cons['A] | Nil)
+//│ ╔══[ERROR] Subtyping constraint of the form `?a -> (?b | ?c | ?d) <: ?fv` exceeded recursion depth limit (250)
+//│ ║  l.237: 	fun fv(t) =
+//│ ║         	    ^^^^^^^
+//│ ║  l.238: 	  if t is
+//│ ║         	^^^^^^^^^
+//│ ║  l.239: 	    Var(name) then list1(name)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.240: 	    Abs(Var(name), body) then listWithout(fv(body), name)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.241: 	    App(lhs, rhs) then listConcat(fv(lhs), fv(rhs))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Note: use flag `:ex` to see internal error info.
+//│ fun fv: forall 'A 'A0 'A1. (Abs | App | Var) -> (Cons[in 'A out 'A0] | Cons['A1] | Nil)
 //│   where
-//│     'A :> Str
+//│     'A :> 'A0
+//│     'A0 :> 'A
 
 fun showFv(t) =
   showTerm(t) ++ if fv(t) is
@@ -268,7 +287,7 @@ fun tryNextAlphabet(initialCode, currentCode, freeNames) =
     let name = fromCharCode(currentCode)
     listContains(freeNames, name) then tryNextAlphabet(initialCode, currentCode + 1, freeNames)
     _ then Some(name)
-//│ fun tryNextAlphabet: forall 'A. (Num, Int, Cons['A] | Nil) -> (None | Some[Str])
+//│ fun tryNextAlphabet: (Num, Int, Cons[in anything out nothing] | Nil) -> (None | Some[Str])
 
 tryNextAlphabet(97, 97, list1("a")).toString()
 tryNextAlphabet(97, 98, list1("a")).toString()
@@ -293,7 +312,7 @@ fun tryAppendDigits(name, index, freeNames) =
     listContains(freeNames, currentName) then
       tryAppendDigits(name, index + 1, freeNames)
     _ then currentName
-//│ fun tryAppendDigits: forall 'A. (Str, Int, Cons['A] | Nil) -> Str
+//│ fun tryAppendDigits: (Str, Int, Cons[in anything out nothing] | Nil) -> Str
 
 // Note: some weird behavior here... Just try the commented code.
 fun findFreshName(name, freeNames) =
@@ -303,7 +322,7 @@ fun findFreshName(name, freeNames) =
       tryNextAlphabet(charCode, charCode + 1, freeNames) is
         Some(newName) then newName
     _ then tryAppendDigits(name, 0, freeNames)
-//│ fun findFreshName: forall 'A 'A0 'A1. (Str, Cons[in 'A | 'A0 | 'A1 out 'A & 'A0 & 'A1] | Nil) -> Str
+//│ fun findFreshName: (Str, Cons[in anything out nothing] | Nil) -> Str
 
 // Find a fresh name to replace `name` that does not conflict with any bound
 // variables in the `body`.

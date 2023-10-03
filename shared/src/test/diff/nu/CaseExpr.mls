@@ -46,7 +46,7 @@ module None extends Option[nothing]
 fun map(f) = case
   Some(x) then Some(f(x))
   None    then None
-//│ fun map: forall 'a 'A. ('a -> 'A) -> (None | Some['a]) -> (None | Some['A])
+//│ fun map: forall 'A 'a. ((??A & 'A) -> 'a) -> (None | Some['A]) -> (None | Some['a])
 
 map(succ) of Some of 123
 //│ None | Some[Int]

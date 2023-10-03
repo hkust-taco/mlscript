@@ -72,29 +72,22 @@ mixin Test3 { fun f(x) = if x is Foo then 1 }
 
 
 
-:e
 mixin Test {
   class Lit(n: Int)
   class Add<A>(lhs: A, rhs: A) {
-    // Should be a lazy val only forceable when A has the right shape (constrained types?):
+    // Should be a lazy val only forceable when A has the right shape (use constrained types?):
     fun cached = size(this)
   }
   fun size(x) = if x is
     Add(l, r) then this.size(l) + this.size(r)
 }
-//│ ╔══[ERROR] Type error in application
-//│ ║  l.80: 	    fun cached = size(this)
-//│ ║        	                 ^^^^^^^^^^
-//│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.78: 	  class Add<A>(lhs: A, rhs: A) {
-//│ ╙──      	            ^
 //│ mixin Test() {
-//│   this: {size: (??A | 'a) -> Int}
+//│   this: {size: (??A & (??A0 | 'A)) -> Int}
 //│   class Add[A](lhs: A, rhs: A) {
-//│     fun cached: Int | error
+//│     fun cached: Int
 //│   }
 //│   class Lit(n: Int)
-//│   fun size: Add[??A0 & 'a] -> Int
+//│   fun size: Add['A] -> Int
 //│ }
 
 

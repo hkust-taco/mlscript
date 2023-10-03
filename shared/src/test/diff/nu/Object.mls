@@ -53,7 +53,7 @@ fun foo(x: anything) = if x is A then true
 //│ ╟── Note: constraint arises from class pattern:
 //│ ║  l.34: 	fun foo(x: anything) = if x is A then true
 //│ ╙──      	                               ^
-//│ fun foo: (x: anything) -> true
+//│ fun foo: (x: anything) -> (error | true)
 
 :e
 fun foo(x: anything) = if x is A then true else false

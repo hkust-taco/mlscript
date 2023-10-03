@@ -153,16 +153,6 @@ class Pair[L, R](lhs: L, rhs: R) extends Exp[[L, R]]
 //│ ║         	^^^^^^^^^^^^^^^
 //│ ║  l.142: 	}
 //│ ╙──       	^
-//│ ╔══[ERROR] Type error in `case` expression
-//│ ║  l.139: 	  fun test = if this is
-//│ ║         	                ^^^^^^^
-//│ ║  l.140: 	    Lit then 0
-//│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.141: 	    Pair then 1
-//│ ║         	^^^^^^^^^^^^^^^
-//│ ╟── type variable `L` leaks out of its scope
-//│ ║  l.144: 	class Pair[L, R](lhs: L, rhs: R) extends Exp[[L, R]]
-//│ ╙──       	           ^
 //│ class Exp[A]: Lit | Pair[anything, anything] {
 //│   constructor()
 //│   fun test: 0 | 1

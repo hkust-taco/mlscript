@@ -33,7 +33,7 @@ fun zip(xs, ys) = mapi of xs, (x, i) =>
   if ys.[i] is
     undefined then error
     y then [x, y]
-//│ fun zip: forall 'c 'd. (Array['c], Array[Object & 'd & ~()]) -> Array[['c, 'd]]
+//│ fun zip: forall 'c 'd. (Array['d], Array[Object & 'c & ~()]) -> Array[['d, 'c]]
 //│ fun zip: forall 'a 'b. (Array['a], Array[Object & 'b & ~()]) -> Array[['a, 'b]]
 
 
@@ -69,7 +69,7 @@ fun add(e) =
       Vectr of map of xs, x => add of Pair of x, Numbr(n)
     Pair(Numbr(n), Vectr(xs)) then
       Vectr of map of xs, x => add of Pair of Numbr(n), x
-//│ fun add: Pair[Numbr | Vectr, Numbr | Vectr] -> (Numbr | Vectr)
+//│ fun add: Pair[Numbr | Vectr | ~??A, Numbr | Vectr | ~??B] -> (Numbr | Vectr)
 
 
 add(Pair(Numbr(0), Numbr(1)))
@@ -112,7 +112,7 @@ fun add2(e) =
   if e is
     Pair(Numbr(n), Numbr(m)) then Numbr(m + m)
     Pair(Numbr(n), Vectr(n)) then n
-//│ fun add2: Pair[Numbr, Numbr | Vectr] -> (Numbr | Array[Numbr | Vectr])
+//│ fun add2: Pair[Numbr | ~??A, Numbr | Vectr | ~??B] -> (Numbr | Array[Numbr | Vectr])
 
 add2(Pair(Numbr(0), Numbr(1)))
 //│ Numbr | Array[Numbr | Vectr]
@@ -237,7 +237,7 @@ add2(Pair(Vectr(0), Numbr(1)))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	add2(Pair(Vectr(0), Numbr(1)))
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `Vectr` is not an instance of type `Numbr`
+//│ ╟── application of type `Vectr` does not match type `Numbr | ~??A`
 //│ ║  l.+1: 	add2(Pair(Vectr(0), Numbr(1)))
 //│ ║        	          ^^^^^^^^
 //│ ╟── Note: constraint arises from class pattern:

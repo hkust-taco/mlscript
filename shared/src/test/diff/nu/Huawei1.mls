@@ -21,10 +21,10 @@ class B
 fun bar(c) = if c is
   C(y) then y
   B    then 0
-//│ fun bar: forall 'a. (B | C['a]) -> (0 | 'a)
+//│ fun bar: forall 'A. (B | C['A]) -> (0 | ??A & 'A)
 
 bar(c)
-//│ 0 | 123
+//│ 0 | 123 & ??A
 //│ res
 //│     = 123
 
@@ -32,7 +32,7 @@ fun bar(c) = if c is
     C(y) then y + 1
     B    then 0
   else 1
-//│ fun bar: (C[Int] | Object & ~#C) -> Int
+//│ fun bar: (C[Int | ~??A] | Object & ~#C) -> Int
 
 bar(c)
 //│ Int
@@ -44,7 +44,7 @@ bar(C(true))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.43: 	bar(C(true))
 //│ ║        	^^^^^^^^^^^^
-//│ ╟── reference of type `true` is not an instance of type `Int`
+//│ ╟── reference of type `true` does not match type `Int | ~??A`
 //│ ║  l.43: 	bar(C(true))
 //│ ║        	      ^^^^
 //│ ╟── Note: constraint arises from reference:
