@@ -258,9 +258,9 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       if (isQuoted) {
         letScope.declareParameter(name)
         val freshedName = letScope.declareValue(name, S(false), false, N).runtimeName
-        Let(false, Var(freshedName), createASTCall("freshVar", StrLit(name) :: Nil), Blk(
+        createASTCall("Let", StrLit(freshedName) :: createASTCall("freshVar", StrLit(name) :: Nil) :: Blk(
           createASTCall("bindMeta", StrLit(name) :: desugarQuote(value) :: Nil) :: desugarQuote(body)(letScope, isQuoted, freeVars) :: Nil
-        ))
+        ) :: Nil)
       }
       else Let(rec, Var(name), desugarQuote(value), desugarQuote(body)(letScope, isQuoted, freeVars))
     case Blk(stmts) =>

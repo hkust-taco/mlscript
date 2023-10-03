@@ -120,10 +120,10 @@ code"let x = 42 in x"
 //│ class TypingUnit9 {}
 //│ const typing_unit9 = new TypingUnit9;
 //│ // Query 1
-//│ res = ((x1) => (() => {
+//│ res = Let("x1", freshVar("x"), (() => {
 //│   bindMeta("x", IntLit(42));
 //│   return Var("x1");
-//│ })())(freshVar("x"));
+//│ })());
 //│ // End of generated code
 
 
@@ -147,10 +147,10 @@ code"let x = ${Const(42)} in ${code"x"}"
 //│ class TypingUnit11 {}
 //│ const typing_unit11 = new TypingUnit11;
 //│ // Query 1
-//│ res = ((x1) => (() => {
+//│ res = Let("x1", freshVar("x"), (() => {
 //│   bindMeta("x", Const(42));
 //│   return Var("x1");
-//│ })())(freshVar("x"));
+//│ })());
 //│ // End of generated code
 
 
@@ -162,10 +162,10 @@ code"let x = 1 in (x + 1; x + 2)"
 //│ class TypingUnit12 {}
 //│ const typing_unit12 = new TypingUnit12;
 //│ // Query 1
-//│ res = ((x1) => (() => {
+//│ res = Let("x1", freshVar("x"), (() => {
 //│   bindMeta("x", IntLit(1));
 //│   return Bra(Blk(App(Var("+"), Var("x1"), IntLit(1)), App(Var("+"), Var("x1"), IntLit(2))));
-//│ })())(freshVar("x"));
+//│ })());
 //│ // End of generated code
 
 
@@ -300,13 +300,13 @@ code"if 3 is
 //│ class TypingUnit23 {}
 //│ const typing_unit23 = new TypingUnit23;
 //│ // Query 1
-//│ res = ((tmp01) => (() => {
+//│ res = Let("tmp01", freshVar("tmp0"), (() => {
 //│   bindMeta("tmp0", IntLit(3));
-//│   return (((tmp01) => (() => {
+//│   return (Let("tmp01", freshVar("tmp0"), (() => {
 //│     bindMeta("tmp0", IntLit(3));
 //│     return CaseOf(Var("tmp01"), Case(IntLit(1), IntLit(114), Case(IntLit(2), IntLit(514), Wildcard(IntLit(0)))));
-//│   })())(freshVar("tmp0")));
-//│ })())(freshVar("tmp0"));
+//│   })()));
+//│ })());
 //│ // End of generated code
 
 
@@ -362,11 +362,11 @@ code"""let x = ${log("foo"); Const(0)} in x + 1"""
 //│ class TypingUnit26 {}
 //│ const typing_unit26 = new TypingUnit26;
 //│ // Query 1
-//│ res = ((x1) => (() => {
+//│ res = Let("x1", freshVar("x"), (() => {
 //│   bindMeta("x", (() => {
 //│     log("foo");
 //│     return Const(0);
 //│   })());
 //│   return App(Var("+"), Var("x1"), IntLit(1));
-//│ })())(freshVar("x"));
+//│ })());
 //│ // End of generated code

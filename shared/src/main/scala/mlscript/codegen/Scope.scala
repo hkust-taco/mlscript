@@ -75,6 +75,7 @@ class Scope(val name: Str, enclosing: Opt[Scope]) {
       "Blk",
       "Tup",
       "Fld",
+      "Let",
       "Subs",
       "With",
       "Quoted",

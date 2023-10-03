@@ -1,10 +1,20 @@
 :NewDefs
 
 :ne
+:js
 let a = code"1 + 1"
 let b = code"40 + ${a}"
 //│ let a: Code[Int, nothing]
 //│ let b: Code[Int, nothing]
+//│ // Prelude
+//│ let res;
+//│ class TypingUnit {}
+//│ const typing_unit = new TypingUnit;
+//│ // Query 1
+//│ globalThis.a = App(Var("+"), IntLit(1), IntLit(1));
+//│ // Query 2
+//│ globalThis.b = App(Var("+"), IntLit(40), a);
+//│ // End of generated code
 
 :ne
 run(b)
@@ -57,10 +67,10 @@ fun power'(x, n) =
 //│ // Query 1
 //│ globalThis.power$ = function power$(x, n) {
 //│   return ((() => {
-//│     return (n == 0 === true ? Const(1) : even(n) === true ? ((t1) => (() => {
+//│     return (n == 0 === true ? Const(1) : even(n) === true ? Let("t1", freshVar("t"), (() => {
 //│       bindMeta("t", power$(x, Math.floor(n / 2)));
 //│       return App(Var("*"), Var("t1"), Var("t1"));
-//│     })())(freshVar("t")) : App(Var("*"), x, power$(x, n - 1)));
+//│     })()) : App(Var("*"), x, power$(x, n - 1)));
 //│   })());
 //│ };
 //│ // End of generated code
@@ -75,3 +85,60 @@ let power10 = run(code"x => ${power'(x, 10)}")
 //│ // Query 1
 //│ globalThis.power10 = run(Lam(((x1) => power$(Var("x1"), 10))(freshVar("x"))));
 //│ // End of generated code
+
+
+class Some[A](value: A)
+module None
+//│ class Some[A](value: A)
+//│ module None
+
+fun mapSome(f, opt) =
+  if opt is Some(value) then f(value)
+  else None
+//│ fun mapSome: forall 'a 'b. ('a -> 'b, Object & ~#Some | Some['a]) -> (None | 'b)
+
+:ne
+:js
+code"x => x"
+//│ Code[forall 'a. 'a -> 'a, nothing]
+//│ // Prelude
+//│ class TypingUnit11 {}
+//│ const typing_unit11 = new TypingUnit11;
+//│ // Query 1
+//│ res = Lam(((x1) => Var("x1"))(freshVar("x")));
+//│ // End of generated code
+
+
+:ne
+:js
+code"let x = 42 in x"
+//│ Code[42, nothing]
+//│ // Prelude
+//│ class TypingUnit12 {}
+//│ const typing_unit12 = new TypingUnit12;
+//│ // Query 1
+//│ res = Let("x1", freshVar("x"), (() => {
+//│   bindMeta("x", IntLit(42));
+//│   return Var("x1");
+//│ })());
+//│ // End of generated code
+
+
+:ne
+fun test(f) =
+  code"x => x + ${f(code"x + 1")}"
+//│ fun test: forall 'a. (Code[Int, ??x] -> Code[Int, ??x0 | 'a]) -> Code[Int -> Int, 'a]
+
+:ne
+:e
+code"x => ${ test(run) }"
+//│ ╔══[ERROR] Type error in application
+//│ ║  l.134: 	code"x => ${ test(run) }"
+//│ ║         	             ^^^^^^^^^
+//│ ╟── type variable `?x` leaks out of its scope
+//│ ╟── into type `nothing`
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this reference:
+//│ ║  l.129: 	  code"x => x + ${f(code"x + 1")}"
+//│ ╙──       	                  ^
+//│ Code[anything -> Int -> Int, nothing]
