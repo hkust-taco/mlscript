@@ -67,10 +67,7 @@ fun power'(x, n) =
 //│ // Query 1
 //│ globalThis.power$ = function power$(x, n) {
 //│   return ((() => {
-//│     return (n == 0 === true ? Const(1) : even(n) === true ? Let("t1", freshVar("t"), (() => {
-//│       bindMeta("t", power$(x, Math.floor(n / 2)));
-//│       return App(Var("*"), Var("t1"), Var("t1"));
-//│     })()) : App(Var("*"), x, power$(x, n - 1)));
+//│     return n == 0 === true ? Const(1) : even(n) === true ? ((t1) => Let(Var(t1), power$(x, Math.floor(n / 2)), App(Var("*"), Var(t1), Var(t1))))(freshName("t")) : App(Var("*"), x, power$(x, n - 1));
 //│   })());
 //│ };
 //│ // End of generated code
@@ -83,7 +80,7 @@ let power10 = run(code"x => ${power'(x, 10)}")
 //│ class TypingUnit8 {}
 //│ const typing_unit8 = new TypingUnit8;
 //│ // Query 1
-//│ globalThis.power10 = run(Lam(((x1) => power$(Var("x1"), 10))(freshVar("x"))));
+//│ globalThis.power10 = run(((x1) => Lam(Var(x1), power$(Var(x1), 10)))(freshName("x")));
 //│ // End of generated code
 
 
@@ -105,7 +102,7 @@ code"x => x"
 //│ class TypingUnit11 {}
 //│ const typing_unit11 = new TypingUnit11;
 //│ // Query 1
-//│ res = Lam(((x1) => Var("x1"))(freshVar("x")));
+//│ res = ((x1) => Lam(Var(x1), Var(x1)))(freshName("x"));
 //│ // End of generated code
 
 
@@ -117,10 +114,7 @@ code"let x = 42 in x"
 //│ class TypingUnit12 {}
 //│ const typing_unit12 = new TypingUnit12;
 //│ // Query 1
-//│ res = Let("x1", freshVar("x"), (() => {
-//│   bindMeta("x", IntLit(42));
-//│   return Var("x1");
-//│ })());
+//│ res = ((x1) => Let(Var(x1), IntLit(42), Var(x1)))(freshName("x"));
 //│ // End of generated code
 
 
@@ -133,12 +127,12 @@ fun test(f) =
 :e
 code"x => ${ test(run) }"
 //│ ╔══[ERROR] Type error in application
-//│ ║  l.134: 	code"x => ${ test(run) }"
+//│ ║  l.128: 	code"x => ${ test(run) }"
 //│ ║         	             ^^^^^^^^^
 //│ ╟── type variable `?x` leaks out of its scope
 //│ ╟── into type `nothing`
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this reference:
-//│ ║  l.129: 	  code"x => x + ${f(code"x + 1")}"
+//│ ║  l.123: 	  code"x => x + ${f(code"x + 1")}"
 //│ ╙──       	                  ^
 //│ Code[anything -> Int -> Int, nothing]

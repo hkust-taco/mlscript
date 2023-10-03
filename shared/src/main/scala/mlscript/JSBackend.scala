@@ -193,7 +193,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
   }
 
   private def desugarQuote(term: Term)(implicit scope: Scope, isQuoted: Bool, freeVars: MutSet[Str]): Term = term match {
-    case Var(name) if isQuoted || freeVars(name) => createASTCall("Var", StrLit(scope.resolveValue(name).fold[Str](
+    case Var(name) if isQuoted || freeVars(name) => createASTCall("Var", Var(scope.resolveValue(name).fold[Str](
       throw CodeGenError(s"unbound free variable $name is not supported yet.")
     )(_.runtimeName)) :: Nil)
     case lit: IntLit if isQuoted => createASTCall("IntLit", lit :: Nil)
@@ -203,7 +203,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     case Lam(params, body) =>
       if (isQuoted) {
         val lamScope = scope.derive("Lam")
-        val res = params match {
+        params match {
           case Tup(params) =>
             val newfreeVars = params.map {
               case N -> Fld(_, Var(nme)) =>
@@ -215,10 +215,9 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
               case _ => ???
             }
             newfreeVars.foldRight(desugarQuote(body)(lamScope, isQuoted, freeVars ++ newfreeVars.map(_._1)))((p, res) =>
-              Let(false, Var(p._2), createASTCall("freshVar", StrLit(p._1) :: Nil), res))
+              Let(false, Var(p._2), createASTCall("freshName", StrLit(p._1) :: Nil), createASTCall("Lam", createASTCall("Var", Var(p._2) :: Nil) :: res :: Nil)))
           case _  => throw CodeGenError(s"term $params is not a valid parameter list")
         }
-        createASTCall("Lam", res :: Nil)
       }
       else Lam(params, desugarQuote(body))
     case Unquoted(body) if isQuoted =>
@@ -258,9 +257,9 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       if (isQuoted) {
         letScope.declareParameter(name)
         val freshedName = letScope.declareValue(name, S(false), false, N).runtimeName
-        createASTCall("Let", StrLit(freshedName) :: createASTCall("freshVar", StrLit(name) :: Nil) :: Blk(
-          createASTCall("bindMeta", StrLit(name) :: desugarQuote(value) :: Nil) :: desugarQuote(body)(letScope, isQuoted, freeVars) :: Nil
-        ) :: Nil)
+        Let(false, Var(freshedName), createASTCall("freshName", StrLit(name) :: Nil),
+          createASTCall("Let", createASTCall("Var", Var(freshedName) :: Nil) :: desugarQuote(value) :: desugarQuote(body)(letScope, isQuoted, freeVars) :: Nil
+        ))
       }
       else Let(rec, Var(name), desugarQuote(value), desugarQuote(body)(letScope, isQuoted, freeVars))
     case Blk(stmts) =>
@@ -274,7 +273,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       else Blk(res)
     case Tup(eles) =>
       if (isQuoted) createASTCall("Tup", eles flatMap { // TODO: need flags?
-        case S(Var(name)) -> Fld(_, t) => createASTCall("Var", StrLit(name) :: Nil) :: createASTCall("Fld", desugarQuote(t) :: Nil) :: Nil
+        case S(Var(name)) -> Fld(_, t) => createASTCall("Var", Var(name) :: Nil) :: createASTCall("Fld", desugarQuote(t) :: Nil) :: Nil
         case N -> Fld(_, t) => createASTCall("Fld", desugarQuote(t) :: Nil) :: Nil
       })
       else Tup(eles.map {
