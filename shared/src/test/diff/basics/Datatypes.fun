@@ -115,7 +115,7 @@ data type List a of
   Nil
   Cons (head: a) (tail: List a)
 //│ Parsed: data type List(...a) of {Nil; Cons(...'(' {[head: a,]} ')')(...'(' {[tail: List(...a),]} ')')};
-//│ ╔══[ERROR] not a recognized type
+//│ ╔══[ERROR] Not a recognized type
 //│ ║  l.116: 	  Cons (head: a) (tail: List a)
 //│ ╙──       	                        ^^^^^^
 //│ Desugared: type alias List[a] = Nil[a] | Cons[a]
