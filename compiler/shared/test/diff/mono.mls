@@ -1,26 +1,23 @@
 
 :NewDefs
-:ParseOnly
 
 :mono
-fun f(x) = if x then 42 else 1337
-//│ |#fun| |f|(|x|)| |#=| |#if| |x| |#then| |42| |#else| |1337|
-//│ Parsed: {fun f = (x,) => if (x) then 42 else 1337}
+fun f(x: Int) = if x then 42 else 1337
 //│ Parsed:
-//│ TypingUnit(NuFunDef(None, f, None, [], Lam(Tup(_: Var(x)), If(IfThen(Var(x), IntLit(42), Some(IntLit(1337))))))
+//│ TypingUnit(NuFunDef(None, f, None, [], Lam(Tup(x: Var(Int)), If(IfThen(Var(x), IntLit(42), Some(IntLit(1337))))))
 //│ Lifted:
-//│ TypingUnit {fun f$1 = (x,) => if (x) then 42 else 1337}
+//│ TypingUnit {
+//│   fun f$1 = (x: Int,) => if (x) then 42 else 1337
+//│ }
 //│ Mono:
 //│ 
 //│ Defunc result: 
 //│ fun f$1(x) =
 //│   if x then #42 else #1337
-//│ 
+//│ fun f: (x: Int) -> (1337 | 42)
 
 :mono
 fun foo() = 42
-//│ |#fun| |foo|(||)| |#=| |42|
-//│ Parsed: {fun foo = () => 42}
 //│ Parsed:
 //│ TypingUnit(NuFunDef(None, foo, None, [], Lam(Tup(), IntLit(42))))
 //│ Lifted:
@@ -30,14 +27,12 @@ fun foo() = 42
 //│ Defunc result: 
 //│ fun foo$1() =
 //│   #42
-//│ 
+//│ fun foo: () -> 42
 
 :mono
 fun foo(x, #b) = if b then x else 1337
 let a = foo(42, true)
 let b = foo(23, false)
-//│ |#fun| |foo|(|x|,| |##|b|)| |#=| |#if| |b| |#then| |x| |#else| |1337|↵|#let| |a| |#=| |foo|(|42|,| |true|)|↵|#let| |b| |#=| |foo|(|23|,| |false|)|
-//│ Parsed: {fun foo = (x, #b,) => if (b) then x else 1337; let a = foo(42, true,); let b = foo(23, false,)}
 //│ Parsed:
 //│ TypingUnit(NuFunDef(None, foo, None, [], Lam(Tup(_: Var(x), _: Var(b)), If(IfThen(Var(b), Var(x), Some(IntLit(1337))))), NuFunDef(Some(false), a, None, [], App(Var(foo), Tup(_: IntLit(42), _: Var(true)))), NuFunDef(Some(false), b, None, [], App(Var(foo), Tup(_: IntLit(23), _: Var(false)))))
 //│ Lifted:
@@ -55,12 +50,16 @@ let b = foo(23, false)
 //│   if b then x else #1337
 //│ fun a$1() =
 //│   foo$3(#42, true)
-//│ 
+//│ fun foo: forall 'a. ('a, Object) -> (1337 | 'a)
+//│ let a: 1337 | 42
+//│ let b: 1337 | 23
+//│ a
+//│   = 42
+//│ b
+//│   = 1337
 
 :mono
 let x = 42 + 1337
-//│ |#let| |x| |#=| |42| |+| |1337|
-//│ Parsed: {let x = +(42, 1337,)}
 //│ Parsed:
 //│ TypingUnit(NuFunDef(Some(false), x, None, [], App(Var(+), Tup(_: IntLit(42), _: IntLit(1337)))))
 //│ Lifted:
@@ -70,97 +69,35 @@ let x = 42 + 1337
 //│ Defunc result: 
 //│ fun x$1() =
 //│   +(#42, #1337)
-//│ 
+//│ let x: Int
+//│ x
+//│   = 1379
 
-:mono
-class Bar(#x)
-fun foo(#b) = b
-let a = foo(new Bar(1))
-let b = foo(new Bar(2))
-//│ |#class| |Bar|(|##|x|)|↵|#fun| |foo|(|##|b|)| |#=| |b|↵|#let| |a| |#=| |foo|(|#new| |Bar|(|1|)|)|↵|#let| |b| |#=| |foo|(|#new| |Bar|(|2|)|)|
-//│ Parsed: {class Bar(#x,) {}; fun foo = (#b,) => b; let a = foo(new Bar([1,]) {},); let b = foo(new Bar([2,]) {},)}
-//│ Parsed:
-//│ TypingUnit(NuTypeDef(class, Bar, (), Tup(_: Var(x)), (), None, None, TypingUnit()), NuFunDef(None, foo, None, [], Lam(Tup(_: Var(b)), Var(b))), NuFunDef(Some(false), a, None, [], App(Var(foo), Tup(_: New(Some((TypeName(Bar),[1,])), TypingUnit())))), NuFunDef(Some(false), b, None, [], App(Var(foo), Tup(_: New(Some((TypeName(Bar),[2,])), TypingUnit())))))
-//│ Lifted:
-//│ TypingUnit {
-//│   class Bar$1([#x,]) {}
-//│   fun foo$3 = (#b,) => b
-//│   let a$1 = () => foo$3(new Bar$1([1,]) {},)
-//│   let b$2 = () => foo$3(new Bar$1([2,]) {},)
-//│ }
-//│ Mono:
-//│ 
-//│ Defunc result: 
-//│ fun b$2() =
-//│   foo$3(new Bar$1 (#2) )
-//│ fun foo$3(#b) =
-//│   b
-//│ fun a$1() =
-//│   foo$3(new Bar$1 (#1) )
-//│ class Bar$1(#x) {
-//│ }
-//│ 
+//:mono
+//:e // FIXME: Mutable Parameters
+//class Bar(#x)
+//fun foo(#b) = b
+//let a = foo(new Bar(1))
+//let b = foo(new Bar(2))
 
-:mono
-class OneInt(#a){
-  fun inc() = a+1
-}
-(new OneInt(1)).inc()
-//│ |#class| |OneInt|(|##|a|)|{|→|#fun| |inc|(||)| |#=| |a|+|1|←|↵|}|↵|(|#new| |OneInt|(|1|)|)|.inc|(||)|
-//│ Parsed: {class OneInt(#a,) {fun inc = () => +(a, 1,)}; ('(' new OneInt([1,]) {} ')').inc()}
-//│ Parsed:
-//│ TypingUnit(NuTypeDef(class, OneInt, (), Tup(_: Var(a)), (), None, None, TypingUnit(NuFunDef(None, inc, None, [], Lam(Tup(), App(Var(+), Tup(_: Var(a), _: IntLit(1))))))), App(Sel(Bra(rcd = false, New(Some((TypeName(OneInt),[1,])), TypingUnit())), inc), Tup()))
-//│ Lifted:
-//│ TypingUnit {
-//│   class OneInt$1([#a,]) {fun inc = () => +((this).a, 1,)}
-//│   Code(List(('(' new OneInt$1([1,]) {} ')').inc()))
-//│ }
-//│ Mono:
-//│ 
-//│ Defunc result: 
-//│ main$$1()
-//│ fun inc$OneInt$1(this) =
-//│   +(this.a, #1)
-//│ fun main$$1() =
-//│   new OneInt$1 (#1)  match {case obj: OneInt$1 => inc$OneInt$1(obj)}
-//│ class OneInt$1(#a) {
-//│ }
-//│ 
+//:mono
+//:w // FIXME: Mutable Parameters
+//class OneInt(#a){
+//  fun inc() = a+1
+//}
+//(new OneInt(1)).inc()
 
-:mono
-class OneInt(#a){
-  fun add(x) = 
-    new OneInt(a+x.a)
-}
-(new OneInt(1)).add(new OneInt(2))
-//│ |#class| |OneInt|(|##|a|)|{|→|#fun| |add|(|x|)| |#=| |→|#new| |OneInt|(|a|+|x|.a|)|←|←|↵|}|↵|(|#new| |OneInt|(|1|)|)|.add|(|#new| |OneInt|(|2|)|)|
-//│ Parsed: {class OneInt(#a,) {fun add = (x,) => {new OneInt([+(a, (x).a,),]) {}}}; ('(' new OneInt([1,]) {} ')').add(new OneInt([2,]) {},)}
-//│ Parsed:
-//│ TypingUnit(NuTypeDef(class, OneInt, (), Tup(_: Var(a)), (), None, None, TypingUnit(NuFunDef(None, add, None, [], Lam(Tup(_: Var(x)), Blk(...))))), App(Sel(Bra(rcd = false, New(Some((TypeName(OneInt),[1,])), TypingUnit())), add), Tup(_: New(Some((TypeName(OneInt),[2,])), TypingUnit()))))
-//│ Lifted:
-//│ TypingUnit {
-//│   class OneInt$1([#a,]) {
-//│     fun add = (x,) => {new OneInt$1([+((this).a, (x).a,),]) {}}
-//│   }
-//│   Code(List(('(' new OneInt$1([1,]) {} ')').add(new OneInt$1([2,]) {},)))
-//│ }
-//│ Mono:
-//│ 
-//│ Defunc result: 
-//│ main$$1()
-//│ fun add$OneInt$1(this, x) =
-//│   new OneInt$1 (+(this.a, x.a)) 
-//│ fun main$$1() =
-//│   new OneInt$1 (#1)  match {case obj: OneInt$1 => add$OneInt$1(obj, new OneInt$1 (#2) )}
-//│ class OneInt$1(#a) {
-//│ }
-//│ 
+//:mono
+//:e // FIXME: Mutable Parameters
+//class OneInt(#a){
+//  fun add(x) = 
+//    new OneInt(a+x.a)
+//}
+//(new OneInt(1)).add(new OneInt(2))
 
 :mono
 if true then 1 else 0
 if 1+1 > 1 then 1 - 1 else 1*1
-//│ |#if| |true| |#then| |1| |#else| |0|↵|#if| |1|+|1| |>| |1| |#then| |1| |-| |1| |#else| |1|*|1|
-//│ Parsed: {if (true) then 1 else 0; if (>(+(1, 1,), 1,)) then -(1, 1,) else *(1, 1,)}
 //│ Parsed:
 //│ TypingUnit(If(IfThen(Var(true), IntLit(1), Some(IntLit(0))), If(IfThen(App(Var(>), Tup(_: App(Var(+), Tup(_: IntLit(1), _: IntLit(1))), _: IntLit(1))), App(Var(-), Tup(_: IntLit(1), _: IntLit(1))), Some(App(Var(*), Tup(_: IntLit(1), _: IntLit(1))))))
 //│ Lifted:
@@ -177,12 +114,14 @@ if 1+1 > 1 then 1 - 1 else 1*1
 //│   if true then #1 else #0
 //│ fun main$$1() =
 //│   if >(+(#1, #1), #1) then -(#1, #1) else *(#1, #1)
-//│ 
+//│ Int
+//│ res
+//│     = 1
+//│ res
+//│     = 0
 
 :mono
 if(b) then 1 else 2
-//│ |#if|(|b|)| |#then| |1| |#else| |2|
-//│ Parsed: {if ('(' b ')') then 1 else 2}
 //│ Parsed:
 //│ TypingUnit(If(IfThen(Bra(rcd = false, Var(b)), IntLit(1), Some(IntLit(2))))
 //│ Lifted:
@@ -193,12 +132,12 @@ if(b) then 1 else 2
 //│ main$$0()
 //│ fun main$$0() =
 //│   if b then #1 else #2
-//│ 
+//│ 1 | 2
+//│ res
+//│     = 2
 
 :mono
 ((f, g) => f(g))(f => f, true)
-//│ |(|(|f|,| |g|)| |=>| |f|(|g|)|)|(|f| |=>| |f|,| |true|)|
-//│ Parsed: {'(' (f, g,) => f(g,) ')'((f,) => f, true,)}
 //│ Parsed:
 //│ TypingUnit(App(Bra(rcd = false, Lam(Tup(_: Var(f), _: Var(g)), App(Var(f), Tup(_: Var(g))))), Tup(_: Lam(Tup(_: Var(f)), Var(f)), _: Var(true))))
 //│ Lifted:
@@ -221,13 +160,13 @@ if(b) then 1 else 2
 //│ }
 //│ class Lambda1$2$2() {
 //│ }
-//│ 
+//│ true
+//│ res
+//│     = true
 
 
 :mono
 (b => if b then true else false) (true)
-//│ |(|b| |=>| |#if| |b| |#then| |true| |#else| |false|)| |(|true|)|
-//│ Parsed: {'(' (b,) => if (b) then true else false ')'(true,)}
 //│ Parsed:
 //│ TypingUnit(App(Bra(rcd = false, Lam(Tup(_: Var(b)), If(IfThen(Var(b), Var(true), Some(Var(false))))), Tup(_: Var(true))))
 //│ Lifted:
@@ -245,14 +184,14 @@ if(b) then 1 else 2
 //│   new Lambda1$1$1 ()  match {case obj: Lambda1$1$1 => apply$Lambda1$1$1(obj, true)}
 //│ class Lambda1$1$1() {
 //│ }
-//│ 
+//│ Bool
+//│ res
+//│     = true
 
 :mono
 fun f(x) =
   if(x > 0) then x+1 else x - 1
 f(2)+3
-//│ |#fun| |f|(|x|)| |#=|→|#if|(|x| |>| |0|)| |#then| |x|+|1| |#else| |x| |-| |1|←|↵|f|(|2|)|+|3|
-//│ Parsed: {fun f = (x,) => {if ('(' >(x, 0,) ')') then +(x, 1,) else -(x, 1,)}; +(f(2,), 3,)}
 //│ Parsed:
 //│ TypingUnit(NuFunDef(None, f, None, [], Lam(Tup(_: Var(x)), Blk(...))), App(Var(+), Tup(_: App(Var(f), Tup(_: IntLit(2))), _: IntLit(3))))
 //│ Lifted:
@@ -268,14 +207,15 @@ f(2)+3
 //│   if >(x, #0) then +(x, #1) else -(x, #1)
 //│ fun main$$1() =
 //│   +(f$1(#2), #3)
-//│ 
+//│ fun f: Int -> Int
+//│ Int
+//│ res
+//│     = 6
 
 :mono
 fun fac(n) = 
   if (n > 1) then fac(n - 1) * n else 1
 fac(2)
-//│ |#fun| |fac|(|n|)| |#=| |→|#if| |(|n| |>| |1|)| |#then| |fac|(|n| |-| |1|)| |*| |n| |#else| |1|←|↵|fac|(|2|)|
-//│ Parsed: {fun fac = (n,) => {if ('(' >(n, 1,) ')') then *(fac(-(n, 1,),), n,) else 1}; fac(2,)}
 //│ Parsed:
 //│ TypingUnit(NuFunDef(None, fac, None, [], Lam(Tup(_: Var(n)), Blk(...))), App(Var(fac), Tup(_: IntLit(2))))
 //│ Lifted:
@@ -291,16 +231,18 @@ fac(2)
 //│   if >(n, #1) then *(fac$1(-(n, #1)), n) else #1
 //│ fun main$$1() =
 //│   fac$1(#2)
-//│ 
+//│ fun fac: Int -> Int
+//│ Int
+//│ res
+//│     = 2
 
 :mono
+:e // FIXME: Malformed Test?
 class List(l, hasTail)  {}
 class Nil(l, hasTail)  {}
 fun count(lst) =
   if lst.hasTail then count(lst.l)+1 else 1
 count(new List(new List(new Nil(0, false), true), true))
-//│ |#class| |List|(|l|,| |hasTail|)| |{||}|↵|#class| |Nil|(|l|,| |hasTail|)| |{||}|↵|#fun| |count|(|lst|)| |#=|→|#if| |lst|.hasTail| |#then| |count|(|lst|.l|)|+|1| |#else| |1|←|↵|count|(|#new| |List|(|#new| |List|(|#new| |Nil|(|0|,| |false|)|,| |true|)|,| |true|)|)|
-//│ Parsed: {class List(l, hasTail,) {}; class Nil(l, hasTail,) {}; fun count = (lst,) => {if ((lst).hasTail) then +(count((lst).l,), 1,) else 1}; count(new List([new List([new Nil([0, false,]) {}, true,]) {}, true,]) {},)}
 //│ Parsed:
 //│ TypingUnit(NuTypeDef(class, List, (), Tup(_: Var(l), _: Var(hasTail)), (), None, None, TypingUnit()), NuTypeDef(class, Nil, (), Tup(_: Var(l), _: Var(hasTail)), (), None, None, TypingUnit()), NuFunDef(None, count, None, [], Lam(Tup(_: Var(lst)), Blk(...))), App(Var(count), Tup(_: New(Some((TypeName(List),[new List([new Nil([0, false,]) {}, true,]) {}, true,])), TypingUnit()))))
 //│ Lifted:
@@ -322,52 +264,49 @@ count(new List(new List(new Nil(0, false), true), true))
 //│ }
 //│ class List$1(l, hasTail) {
 //│ }
-//│ 
+//│ ╔══[ERROR] Class parameters currently need type annotations
+//│ ║  l.241: 	class List(l, hasTail)  {}
+//│ ╙──       	           ^
+//│ ╔══[ERROR] Class parameters currently need type annotations
+//│ ║  l.241: 	class List(l, hasTail)  {}
+//│ ╙──       	              ^^^^^^^
+//│ ╔══[ERROR] Class parameters currently need type annotations
+//│ ║  l.242: 	class Nil(l, hasTail)  {}
+//│ ╙──       	          ^
+//│ ╔══[ERROR] Class parameters currently need type annotations
+//│ ║  l.242: 	class Nil(l, hasTail)  {}
+//│ ╙──       	             ^^^^^^^
+//│ ╔══[ERROR] Parameter 'l' cannot tbe accessed as a field
+//│ ║  l.244: 	  if lst.hasTail then count(lst.l)+1 else 1
+//│ ║         	                               ^^
+//│ ╟── Either make the parameter a `val` or access it through destructuring
+//│ ║  l.241: 	class List(l, hasTail)  {}
+//│ ╙──       	           ^
+//│ class List(l: error, hasTail: error)
+//│ class Nil(l: error, hasTail: error)
+//│ fun count: forall 'a. 'a -> Int
+//│ Int | error
+//│ where
+//│   'a <: {hasTail: Object, l: 'a}
+//│ res
+//│     = 1
+
+//:mono
+//class Cons(e, tail){
+//  fun gen() = new Cons(e, tail.gen())
+//}
+//class Nil(){
+//  fun gen() = new Cons(0, this)
+//}
+//fun generate(x) = 
+//  if x > 0 then new Cons(x, generate(x+1)) else new Nil()
+//generate(10).gen()
 
 :mono
-class Cons(e, tail){
-  fun gen() = new Cons(e, tail.gen())
-}
-class Nil(){
-  fun gen() = new Cons(0, this)
-}
-fun generate(x) = 
-  if x > 0 then new Cons(x, generate(x+1)) else new Nil()
-generate(10).gen()
-//│ |#class| |Cons|(|e|,| |tail|)|{|→|#fun| |gen|(||)| |#=| |#new| |Cons|(|e|,| |tail|.gen|(||)|)|←|↵|}|↵|#class| |Nil|(||)|{|→|#fun| |gen|(||)| |#=| |#new| |Cons|(|0|,| |this|)|←|↵|}|↵|#fun| |generate|(|x|)| |#=| |→|#if| |x| |>| |0| |#then| |#new| |Cons|(|x|,| |generate|(|x|+|1|)|)| |#else| |#new| |Nil|(||)|←|↵|generate|(|10|)|.gen|(||)|
-//│ Parsed: {class Cons(e, tail,) {fun gen = () => new Cons([e, (tail).gen(),]) {}}; class Nil() {fun gen = () => new Cons([0, this,]) {}}; fun generate = (x,) => {if (>(x, 0,)) then new Cons([x, generate(+(x, 1,),),]) {} else new Nil([]) {}}; (generate(10,)).gen()}
-//│ Parsed:
-//│ TypingUnit(NuTypeDef(class, Cons, (), Tup(_: Var(e), _: Var(tail)), (), None, None, TypingUnit(NuFunDef(None, gen, None, [], Lam(Tup(), New(Some((TypeName(Cons),[e, (tail).gen(),])), TypingUnit()))))), NuTypeDef(class, Nil, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, gen, None, [], Lam(Tup(), New(Some((TypeName(Cons),[0, this,])), TypingUnit()))))), NuFunDef(None, generate, None, [], Lam(Tup(_: Var(x)), Blk(...))), App(Sel(App(Var(generate), Tup(_: IntLit(10))), gen), Tup()))
-//│ Lifted:
-//│ TypingUnit {
-//│   class Cons$1([e, tail,]) {
-//│     fun gen = () => new Cons$1([(this).e, ((this).tail).gen(),]) {}
-//│   }
-//│   class Nil$2([]) {fun gen = () => new Cons$1([0, this,]) {}}
-//│   fun generate$1 = (x,) => {if (>(x, 0,)) then new Cons$1([x, generate$1(+(x, 1,),),]) {} else new Nil$2([]) {}}
-//│   Code(List((generate$1(10,)).gen()))
-//│ }
-//│ Mono:
-//│ 
-//│ Defunc result: 
-//│ main$$3()
-//│ fun gen$Cons$1(this) =
-//│   new Cons$1 (this.e, this.tail match {case obj: Cons$1 => gen$Cons$1(obj); case obj: Nil$2 => gen$Nil$2(obj)}) 
-//│ fun generate$1(x) =
-//│   if >(x, #0) then new Cons$1 (x, generate$1(+(x, #1)))  else new Nil$2 () 
-//│ fun gen$Nil$2(this) =
-//│   new Cons$1 (#0, this) 
-//│ fun main$$3() =
-//│   generate$1(#10) match {case obj: Cons$1 => gen$Cons$1(obj); case obj: Nil$2 => gen$Nil$2(obj)}
-//│ class Nil$2() {
-//│ }
-//│ class Cons$1(e, tail) {
-//│ }
-//│ 
-
-:mono
-class List(e, tail) {
-  fun map(f) = new List(f(e), tail.map(f))
+class List(e: Int, tail: List | Nil) {
+  fun map: (Int -> Int) -> List 
+  fun map(f)= new List(f(e), tail.map(f))
+  fun count(): Int
   fun count() = 1 + tail.count()
 }
 class Nil() {
@@ -376,14 +315,14 @@ class Nil() {
 }
 fun add2(x) = x+2
 (new List(1, new List(2, new Nil()))).map(x => x+1).map(x => add2(x))
-//│ |#class| |List|(|e|,| |tail|)| |{|→|#fun| |map|(|f|)| |#=| |#new| |List|(|f|(|e|)|,| |tail|.map|(|f|)|)|↵|#fun| |count|(||)| |#=| |1| |+| |tail|.count|(||)|←|↵|}|↵|#class| |Nil|(||)| |{|→|#fun| |map|(|f|)| |#=| |this|↵|#fun| |count|(||)| |#=| |0|←|↵|}|↵|#fun| |add2|(|x|)| |#=| |x|+|2|↵|(|#new| |List|(|1|,| |#new| |List|(|2|,| |#new| |Nil|(||)|)|)|)|.map|(|x| |=>| |x|+|1|)|.map|(|x| |=>| |add2|(|x|)|)|
-//│ Parsed: {class List(e, tail,) {fun map = (f,) => new List([f(e,), (tail).map(f,),]) {}; fun count = () => +(1, (tail).count(),)}; class Nil() {fun map = (f,) => this; fun count = () => 0}; fun add2 = (x,) => +(x, 2,); (('(' new List([1, new List([2, new Nil([]) {},]) {},]) {} ')').map((x,) => +(x, 1,),)).map((x,) => add2(x,),)}
 //│ Parsed:
-//│ TypingUnit(NuTypeDef(class, List, (), Tup(_: Var(e), _: Var(tail)), (), None, None, TypingUnit(NuFunDef(None, map, None, [], Lam(Tup(_: Var(f)), New(Some((TypeName(List),[f(e,), (tail).map(f,),])), TypingUnit()))), NuFunDef(None, count, None, [], Lam(Tup(), App(Var(+), Tup(_: IntLit(1), _: App(Sel(Var(tail), count), Tup()))))))), NuTypeDef(class, Nil, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, map, None, [], Lam(Tup(_: Var(f)), Var(this))), NuFunDef(None, count, None, [], Lam(Tup(), IntLit(0))))), NuFunDef(None, add2, None, [], Lam(Tup(_: Var(x)), App(Var(+), Tup(_: Var(x), _: IntLit(2))))), App(Sel(App(Sel(Bra(rcd = false, New(Some((TypeName(List),[1, new List([2, new Nil([]) {},]) {},])), TypingUnit())), map), Tup(_: Lam(Tup(_: Var(x)), App(Var(+), Tup(_: Var(x), _: IntLit(1)))))), map), Tup(_: Lam(Tup(_: Var(x)), App(Var(add2), Tup(_: Var(x)))))))
+//│ TypingUnit(NuTypeDef(class, List, (), Tup(e: Var(Int), tail: App(Var(|), Tup(_: Var(List), _: Var(Nil)))), (), None, None, TypingUnit(NuFunDef(None, map, None, [], PolyType(List(),Function(Tuple(List((None,Field(None,Function(Tuple(List((None,Field(None,TypeName(Int))))),TypeName(Int)))))),TypeName(List)))), NuFunDef(None, map, None, [], Lam(Tup(_: Var(f)), New(Some((TypeName(List),[f(e,), (tail).map(f,),])), TypingUnit()))), NuFunDef(None, count, None, [], PolyType(List(),Function(Tuple(List()),TypeName(Int)))), NuFunDef(None, count, None, [], Lam(Tup(), App(Var(+), Tup(_: IntLit(1), _: App(Sel(Var(tail), count), Tup()))))))), NuTypeDef(class, Nil, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, map, None, [], Lam(Tup(_: Var(f)), Var(this))), NuFunDef(None, count, None, [], Lam(Tup(), IntLit(0))))), NuFunDef(None, add2, None, [], Lam(Tup(_: Var(x)), App(Var(+), Tup(_: Var(x), _: IntLit(2))))), App(Sel(App(Sel(Bra(rcd = false, New(Some((TypeName(List),[1, new List([2, new Nil([]) {},]) {},])), TypingUnit())), map), Tup(_: Lam(Tup(_: Var(x)), App(Var(+), Tup(_: Var(x), _: IntLit(1)))))), map), Tup(_: Lam(Tup(_: Var(x)), App(Var(add2), Tup(_: Var(x)))))))
 //│ Lifted:
 //│ TypingUnit {
-//│   class List$1([e, tail,]) {
+//│   class List$1([e: Int, tail: |(List, Nil,),]) {
+//│     fun map = (Int -> Int) -> List$1
 //│     fun map = (f,) => new List$1([f((this).e,), ((this).tail).map(f,),]) {}
+//│     fun count = () -> Int
 //│     fun count = () => +(1, ((this).tail).count(),)
 //│   }
 //│   class Nil$2([]) {fun map = (f,) => this; fun count = () => 0}
@@ -416,10 +355,23 @@ fun add2(x) = x+2
 //│ }
 //│ class Lambda1$2$3() {
 //│ }
-//│ 
+//│ class List(e: Int, tail: List | Nil) {
+//│   fun count: () -> Int
+//│   fun map: (Int -> Int) -> List
+//│ }
+//│ class Nil() {
+//│   fun count: () -> 0
+//│   fun map: anything -> Nil
+//│ }
+//│ fun add2: Int -> Int
+//│ List
+//│ res
+//│     = List {}
 
 :mono
-class List(e, tail) {
+:AllowRuntimeErrors
+class List(e: Int, tail: List | Nil) {
+  fun count(): Int
   fun count() = 1 + tail.count()
 }
 class Nil() {
@@ -430,13 +382,14 @@ fun generate(x) =
   if x > 0 then new List(x, generate(x+1)) else new Nil()
 foo(new List(1, new List(2, new Nil())))
 foo(generate(1))
-//│ |#class| |List|(|e|,| |tail|)| |{|→|#fun| |count|(||)| |#=| |1| |+| |tail|.count|(||)|←|↵|}|↵|#class| |Nil|(||)| |{|→|#fun| |count|(||)| |#=| |0|←|↵|}|↵|#fun| |foo|(|x|)| |#=| |x|.count|(||)|↵|#fun| |generate|(|x|)| |#=| |→|#if| |x| |>| |0| |#then| |#new| |List|(|x|,| |generate|(|x|+|1|)|)| |#else| |#new| |Nil|(||)|←|↵|foo|(|#new| |List|(|1|,| |#new| |List|(|2|,| |#new| |Nil|(||)|)|)|)|↵|foo|(|generate|(|1|)|)|
-//│ Parsed: {class List(e, tail,) {fun count = () => +(1, (tail).count(),)}; class Nil() {fun count = () => 0}; fun foo = (x,) => (x).count(); fun generate = (x,) => {if (>(x, 0,)) then new List([x, generate(+(x, 1,),),]) {} else new Nil([]) {}}; foo(new List([1, new List([2, new Nil([]) {},]) {},]) {},); foo(generate(1,),)}
 //│ Parsed:
-//│ TypingUnit(NuTypeDef(class, List, (), Tup(_: Var(e), _: Var(tail)), (), None, None, TypingUnit(NuFunDef(None, count, None, [], Lam(Tup(), App(Var(+), Tup(_: IntLit(1), _: App(Sel(Var(tail), count), Tup()))))))), NuTypeDef(class, Nil, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, count, None, [], Lam(Tup(), IntLit(0))))), NuFunDef(None, foo, None, [], Lam(Tup(_: Var(x)), App(Sel(Var(x), count), Tup()))), NuFunDef(None, generate, None, [], Lam(Tup(_: Var(x)), Blk(...))), App(Var(foo), Tup(_: New(Some((TypeName(List),[1, new List([2, new Nil([]) {},]) {},])), TypingUnit()))), App(Var(foo), Tup(_: App(Var(generate), Tup(_: IntLit(1))))))
+//│ TypingUnit(NuTypeDef(class, List, (), Tup(e: Var(Int), tail: App(Var(|), Tup(_: Var(List), _: Var(Nil)))), (), None, None, TypingUnit(NuFunDef(None, count, None, [], PolyType(List(),Function(Tuple(List()),TypeName(Int)))), NuFunDef(None, count, None, [], Lam(Tup(), App(Var(+), Tup(_: IntLit(1), _: App(Sel(Var(tail), count), Tup()))))))), NuTypeDef(class, Nil, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, count, None, [], Lam(Tup(), IntLit(0))))), NuFunDef(None, foo, None, [], Lam(Tup(_: Var(x)), App(Sel(Var(x), count), Tup()))), NuFunDef(None, generate, None, [], Lam(Tup(_: Var(x)), Blk(...))), App(Var(foo), Tup(_: New(Some((TypeName(List),[1, new List([2, new Nil([]) {},]) {},])), TypingUnit()))), App(Var(foo), Tup(_: App(Var(generate), Tup(_: IntLit(1))))))
 //│ Lifted:
 //│ TypingUnit {
-//│   class List$1([e, tail,]) {fun count = () => +(1, ((this).tail).count(),)}
+//│   class List$1([e: Int, tail: |(List, Nil,),]) {
+//│     fun count = () -> Int
+//│     fun count = () => +(1, ((this).tail).count(),)
+//│   }
 //│   class Nil$2([]) {fun count = () => 0}
 //│   fun foo$1 = (x,) => (x).count()
 //│   fun generate$2 = (x,) => {if (>(x, 0,)) then new List$1([x, generate$2(+(x, 1,),),]) {} else new Nil$2([]) {}}
@@ -464,14 +417,25 @@ foo(generate(1))
 //│ }
 //│ class List$1(e, tail) {
 //│ }
-//│ 
+//│ class List(e: Int, tail: List | Nil) {
+//│   fun count: () -> Int
+//│ }
+//│ class Nil() {
+//│   fun count: () -> 0
+//│ }
+//│ fun foo: forall 'a. {count: () -> 'a} -> 'a
+//│ fun generate: Int -> (List | Nil)
+//│ Int
+//│ res
+//│     = 2
+//│ res
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded
 
 :mono
 fun foo(x) = 
   (f => f(x))(z => z+1)
 foo(2)
-//│ |#fun| |foo|(|x|)| |#=| |→|(|f| |=>| |f|(|x|)|)|(|z| |=>| |z|+|1|)|←|↵|foo|(|2|)|
-//│ Parsed: {fun foo = (x,) => {'(' (f,) => f(x,) ')'((z,) => +(z, 1,),)}; foo(2,)}
 //│ Parsed:
 //│ TypingUnit(NuFunDef(None, foo, None, [], Lam(Tup(_: Var(x)), Blk(...))), App(Var(foo), Tup(_: IntLit(2))))
 //│ Lifted:
@@ -497,20 +461,21 @@ foo(2)
 //│ }
 //│ class Lambda1$3$2() {
 //│ }
-//│ 
+//│ fun foo: Int -> Int
+//│ Int
+//│ res
+//│     = 3
 
 :mono
 fun f(x) =
-  (y => f(x+y)).apply(x+1)
+  (y => f(x+y))(x+1)
 f(1)
-//│ |#fun| |f|(|x|)| |#=|→|(|y| |=>| |f|(|x|+|y|)|)|.apply|(|x|+|1|)|←|↵|f|(|1|)|
-//│ Parsed: {fun f = (x,) => {('(' (y,) => f(+(x, y,),) ')').apply(+(x, 1,),)}; f(1,)}
 //│ Parsed:
 //│ TypingUnit(NuFunDef(None, f, None, [], Lam(Tup(_: Var(x)), Blk(...))), App(Var(f), Tup(_: IntLit(1))))
 //│ Lifted:
 //│ TypingUnit {
 //│   class Lambda1$2$1([x,]) {fun apply = (y,) => f$1(+((this).x, y,),)}
-//│   fun f$1 = (x,) => {('(' {new Lambda1$2$1([x,]) {}} ')').apply(+(x, 1,),)}
+//│   fun f$1 = (x,) => {'(' {new Lambda1$2$1([x,]) {}} ')'(+(x, 1,),)}
 //│   Code(List(f$1(1,)))
 //│ }
 //│ Mono:
@@ -525,15 +490,17 @@ f(1)
 //│   f$1(#1)
 //│ class Lambda1$2$1(x) {
 //│ }
-//│ 
+//│ fun f: Int -> nothing
+//│ nothing
+//│ res
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded
 
 
 :mono
 fun f(x) = f(x)
 f(0)
 f(1)
-//│ |#fun| |f|(|x|)| |#=| |f|(|x|)|↵|f|(|0|)|↵|f|(|1|)|
-//│ Parsed: {fun f = (x,) => f(x,); f(0,); f(1,)}
 //│ Parsed:
 //│ TypingUnit(NuFunDef(None, f, None, [], Lam(Tup(_: Var(x)), App(Var(f), Tup(_: Var(x))))), App(Var(f), Tup(_: IntLit(0))), App(Var(f), Tup(_: IntLit(1))))
 //│ Lifted:
@@ -553,10 +520,18 @@ f(1)
 //│   f$1(#1)
 //│ fun main$$1() =
 //│   f$1(#0)
-//│ 
+//│ fun f: anything -> nothing
+//│ nothing
+//│ res
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded
+//│ res
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded
 
 :mono
-class Cons(e, tail) {
+class Cons(e: 'A, tail: Cons | Nil) {
+  fun count(): Int
   fun count() = 1 + tail.count()
 }
 class Nil() {
@@ -566,7 +541,7 @@ class Lambda(){
   fun apply(l) = 
     l.count()
 }
-class Lambda2(a){
+class Lambda2(a: Int){
   fun apply(l) = 
     (new Cons(a, l)).count()
 }
@@ -574,16 +549,17 @@ fun foo(x) =
   x.apply(new Cons(1, new Nil())) + x.apply(new Nil())
 foo(new Lambda())
 foo(new Lambda2(2))
-//│ |#class| |Cons|(|e|,| |tail|)| |{|→|#fun| |count|(||)| |#=| |1| |+| |tail|.count|(||)|←|↵|}|↵|#class| |Nil|(||)| |{|→|#fun| |count|(||)| |#=| |0|←|↵|}|↵|#class| |Lambda|(||)|{|→|#fun| |apply|(|l|)| |#=| |→|l|.count|(||)|←|←|↵|}|↵|#class| |Lambda2|(|a|)|{|→|#fun| |apply|(|l|)| |#=| |→|(|#new| |Cons|(|a|,| |l|)|)|.count|(||)|←|←|↵|}|↵|#fun| |foo|(|x|)| |#=| |→|x|.apply|(|#new| |Cons|(|1|,| |#new| |Nil|(||)|)|)| |+| |x|.apply|(|#new| |Nil|(||)|)|←|↵|foo|(|#new| |Lambda|(||)|)|↵|foo|(|#new| |Lambda2|(|2|)|)|
-//│ Parsed: {class Cons(e, tail,) {fun count = () => +(1, (tail).count(),)}; class Nil() {fun count = () => 0}; class Lambda() {fun apply = (l,) => {(l).count()}}; class Lambda2(a,) {fun apply = (l,) => {('(' new Cons([a, l,]) {} ')').count()}}; fun foo = (x,) => {+((x).apply(new Cons([1, new Nil([]) {},]) {},), (x).apply(new Nil([]) {},),)}; foo(new Lambda([]) {},); foo(new Lambda2([2,]) {},)}
 //│ Parsed:
-//│ TypingUnit(NuTypeDef(class, Cons, (), Tup(_: Var(e), _: Var(tail)), (), None, None, TypingUnit(NuFunDef(None, count, None, [], Lam(Tup(), App(Var(+), Tup(_: IntLit(1), _: App(Sel(Var(tail), count), Tup()))))))), NuTypeDef(class, Nil, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, count, None, [], Lam(Tup(), IntLit(0))))), NuTypeDef(class, Lambda, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, apply, None, [], Lam(Tup(_: Var(l)), Blk(...))))), NuTypeDef(class, Lambda2, (), Tup(_: Var(a)), (), None, None, TypingUnit(NuFunDef(None, apply, None, [], Lam(Tup(_: Var(l)), Blk(...))))), NuFunDef(None, foo, None, [], Lam(Tup(_: Var(x)), Blk(...))), App(Var(foo), Tup(_: New(Some((TypeName(Lambda),[])), TypingUnit()))), App(Var(foo), Tup(_: New(Some((TypeName(Lambda2),[2,])), TypingUnit()))))
+//│ TypingUnit(NuTypeDef(class, Cons, (), Tup(e: Var('A), tail: App(Var(|), Tup(_: Var(Cons), _: Var(Nil)))), (), None, None, TypingUnit(NuFunDef(None, count, None, [], PolyType(List(),Function(Tuple(List()),TypeName(Int)))), NuFunDef(None, count, None, [], Lam(Tup(), App(Var(+), Tup(_: IntLit(1), _: App(Sel(Var(tail), count), Tup()))))))), NuTypeDef(class, Nil, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, count, None, [], Lam(Tup(), IntLit(0))))), NuTypeDef(class, Lambda, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, apply, None, [], Lam(Tup(_: Var(l)), Blk(...))))), NuTypeDef(class, Lambda2, (), Tup(a: Var(Int)), (), None, None, TypingUnit(NuFunDef(None, apply, None, [], Lam(Tup(_: Var(l)), Blk(...))))), NuFunDef(None, foo, None, [], Lam(Tup(_: Var(x)), Blk(...))), App(Var(foo), Tup(_: New(Some((TypeName(Lambda),[])), TypingUnit()))), App(Var(foo), Tup(_: New(Some((TypeName(Lambda2),[2,])), TypingUnit()))))
 //│ Lifted:
 //│ TypingUnit {
-//│   class Cons$1([e, tail,]) {fun count = () => +(1, ((this).tail).count(),)}
+//│   class Cons$1([e: 'A, tail: |(Cons, Nil,),]) {
+//│     fun count = () -> Int
+//│     fun count = () => +(1, ((this).tail).count(),)
+//│   }
 //│   class Nil$2([]) {fun count = () => 0}
 //│   class Lambda$3([]) {fun apply = (l,) => {(l).count()}}
-//│   class Lambda2$4([a,]) {
+//│   class Lambda2$4([a: Int,]) {
 //│     fun apply = (l,) => {('(' new Cons$1([(this).a, l,]) {} ')').count()}
 //│   }
 //│   fun foo$1 = (x,) => {+((x).apply(new Cons$1([1, new Nil$2([]) {},]) {},), (x).apply(new Nil$2([]) {},),)}
@@ -617,10 +593,28 @@ foo(new Lambda2(2))
 //│ }
 //│ class Lambda$3() {
 //│ }
-//│ 
+//│ class Cons(e: nothing, tail: Cons | Nil) {
+//│   fun count: () -> Int
+//│ }
+//│ class Nil() {
+//│   fun count: () -> 0
+//│ }
+//│ class Lambda() {
+//│   fun apply: forall 'a. {count: () -> 'a} -> 'a
+//│ }
+//│ class Lambda2(a: Int) {
+//│   fun apply: (Cons | Nil) -> Int
+//│ }
+//│ fun foo: {apply: (Cons | Nil) -> Int} -> Int
+//│ Int
+//│ res
+//│     = 1
+//│ res
+//│     = 3
 
 :mono
-class Cons(e, tail) {
+class Cons(e: Int, tail: Cons | Nil) {
+  fun count(): Int
   fun count() = 1 + tail.count()
 }
 class Nil() {
@@ -630,13 +624,14 @@ fun foo(x) =
   x(new Cons(1, new Nil())) + x(new Nil())
 foo(l => l.count())
 foo(l => (new Cons(2, l)).count())
-//│ |#class| |Cons|(|e|,| |tail|)| |{|→|#fun| |count|(||)| |#=| |1| |+| |tail|.count|(||)|←|↵|}|↵|#class| |Nil|(||)| |{|→|#fun| |count|(||)| |#=| |0|←|↵|}|↵|#fun| |foo|(|x|)| |#=| |→|x|(|#new| |Cons|(|1|,| |#new| |Nil|(||)|)|)| |+| |x|(|#new| |Nil|(||)|)|←|↵|foo|(|l| |=>| |l|.count|(||)|)|↵|foo|(|l| |=>| |(|#new| |Cons|(|2|,| |l|)|)|.count|(||)|)|
-//│ Parsed: {class Cons(e, tail,) {fun count = () => +(1, (tail).count(),)}; class Nil() {fun count = () => 0}; fun foo = (x,) => {+(x(new Cons([1, new Nil([]) {},]) {},), x(new Nil([]) {},),)}; foo((l,) => (l).count(),); foo((l,) => ('(' new Cons([2, l,]) {} ')').count(),)}
 //│ Parsed:
-//│ TypingUnit(NuTypeDef(class, Cons, (), Tup(_: Var(e), _: Var(tail)), (), None, None, TypingUnit(NuFunDef(None, count, None, [], Lam(Tup(), App(Var(+), Tup(_: IntLit(1), _: App(Sel(Var(tail), count), Tup()))))))), NuTypeDef(class, Nil, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, count, None, [], Lam(Tup(), IntLit(0))))), NuFunDef(None, foo, None, [], Lam(Tup(_: Var(x)), Blk(...))), App(Var(foo), Tup(_: Lam(Tup(_: Var(l)), App(Sel(Var(l), count), Tup())))), App(Var(foo), Tup(_: Lam(Tup(_: Var(l)), App(Sel(Bra(rcd = false, New(Some((TypeName(Cons),[2, l,])), TypingUnit())), count), Tup())))))
+//│ TypingUnit(NuTypeDef(class, Cons, (), Tup(e: Var(Int), tail: App(Var(|), Tup(_: Var(Cons), _: Var(Nil)))), (), None, None, TypingUnit(NuFunDef(None, count, None, [], PolyType(List(),Function(Tuple(List()),TypeName(Int)))), NuFunDef(None, count, None, [], Lam(Tup(), App(Var(+), Tup(_: IntLit(1), _: App(Sel(Var(tail), count), Tup()))))))), NuTypeDef(class, Nil, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, count, None, [], Lam(Tup(), IntLit(0))))), NuFunDef(None, foo, None, [], Lam(Tup(_: Var(x)), Blk(...))), App(Var(foo), Tup(_: Lam(Tup(_: Var(l)), App(Sel(Var(l), count), Tup())))), App(Var(foo), Tup(_: Lam(Tup(_: Var(l)), App(Sel(Bra(rcd = false, New(Some((TypeName(Cons),[2, l,])), TypingUnit())), count), Tup())))))
 //│ Lifted:
 //│ TypingUnit {
-//│   class Cons$1([e, tail,]) {fun count = () => +(1, ((this).tail).count(),)}
+//│   class Cons$1([e: Int, tail: |(Cons, Nil,),]) {
+//│     fun count = () -> Int
+//│     fun count = () => +(1, ((this).tail).count(),)
+//│   }
 //│   class Nil$2([]) {fun count = () => 0}
 //│   class Lambda1$2$3([]) {fun apply = (l,) => (l).count()}
 //│   class Lambda1$3$4([]) {
@@ -673,9 +668,21 @@ foo(l => (new Cons(2, l)).count())
 //│ }
 //│ class Lambda1$2$3() {
 //│ }
-//│ 
+//│ class Cons(e: Int, tail: Cons | Nil) {
+//│   fun count: () -> Int
+//│ }
+//│ class Nil() {
+//│   fun count: () -> 0
+//│ }
+//│ fun foo: ((Cons | Nil) -> Int) -> Int
+//│ Int
+//│ res
+//│     = 1
+//│ res
+//│     = 3
 
 :mono
+:e // FIXME: Malformed Test?
 class E() {
   fun derive(x) = 
     new E
@@ -707,8 +714,6 @@ class C(e1, e2){
     e1.isEmpty() && e2.isEmpty()
 }
 (new C(new Ch(1), new A(new Ch(2), new Ch(3)))).derive(0).isEmpty()
-//│ |#class| |E|(||)| |{|→|#fun| |derive|(|x|)| |#=| |→|#new| |E|←|↵|#fun| |isEmpty|(||)| |#=| |→|false|←|←|↵|}|↵|#class| |Ep|(||)|{|→|#fun| |derive|(|x|)| |#=| |→|#new| |E|←|↵|#fun| |isEmpty|(||)| |#=| |→|true|←|←|↵|}|↵|#class| |Ch|(|i|)|{|→|#fun| |derive|(|x|)| |#=| |→|#if| |x| |==| |i| |#then| |#new| |Ep| |#else| |#new| |E|←|↵|#fun| |isEmpty|(||)| |#=| |→|false|←|←|↵|}|↵|#class| |A|(|e1|,| |e2|)|{|→|#fun| |derive|(|x|)| |#=| |→|#new| |A|(|e1|.derive|(|x|)|,| |e2|.derive|(|x|)|)|←|↵|#fun| |isEmpty|(||)| |#=| |→|e1|.isEmpty|(||)| |||| |e2|.isEmpty|(||)|←|←|↵|}|↵|#class| |C|(|e1|,| |e2|)|{|→|#fun| |derive|(|x|)| |#=| |→|#if| |e1|.isEmpty|(||)| |#then| |#new| |A|(|#new| |C|(|e1|.derive|(|x|)|,| |e2|)|,| |e2|.derive|(|x|)|)| |#else| |#new| |C|(|e1|.derive|(|x|)|,| |e2|)|←|↵|#fun| |isEmpty|(||)| |#=| |→|e1|.isEmpty|(||)| |&&| |e2|.isEmpty|(||)|←|←|↵|}|↵|(|#new| |C|(|#new| |Ch|(|1|)|,| |#new| |A|(|#new| |Ch|(|2|)|,| |#new| |Ch|(|3|)|)|)|)|.derive|(|0|)|.isEmpty|(||)|
-//│ Parsed: {class E() {fun derive = (x,) => {new E([]) {}}; fun isEmpty = () => {false}}; class Ep() {fun derive = (x,) => {new E([]) {}}; fun isEmpty = () => {true}}; class Ch(i,) {fun derive = (x,) => {if (==(x, i,)) then new Ep([]) {} else new E([]) {}}; fun isEmpty = () => {false}}; class A(e1, e2,) {fun derive = (x,) => {new A([(e1).derive(x,), (e2).derive(x,),]) {}}; fun isEmpty = () => {||((e1).isEmpty(), (e2).isEmpty(),)}}; class C(e1, e2,) {fun derive = (x,) => {if ((e1).isEmpty()) then new A([new C([(e1).derive(x,), e2,]) {}, (e2).derive(x,),]) {} else new C([(e1).derive(x,), e2,]) {}}; fun isEmpty = () => {&&((e1).isEmpty(), (e2).isEmpty(),)}}; (('(' new C([new Ch([1,]) {}, new A([new Ch([2,]) {}, new Ch([3,]) {},]) {},]) {} ')').derive(0,)).isEmpty()}
 //│ Parsed:
 //│ TypingUnit(NuTypeDef(class, E, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, derive, None, [], Lam(Tup(_: Var(x)), Blk(...))), NuFunDef(None, isEmpty, None, [], Lam(Tup(), Blk(...))))), NuTypeDef(class, Ep, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, derive, None, [], Lam(Tup(_: Var(x)), Blk(...))), NuFunDef(None, isEmpty, None, [], Lam(Tup(), Blk(...))))), NuTypeDef(class, Ch, (), Tup(_: Var(i)), (), None, None, TypingUnit(NuFunDef(None, derive, None, [], Lam(Tup(_: Var(x)), Blk(...))), NuFunDef(None, isEmpty, None, [], Lam(Tup(), Blk(...))))), NuTypeDef(class, A, (), Tup(_: Var(e1), _: Var(e2)), (), None, None, TypingUnit(NuFunDef(None, derive, None, [], Lam(Tup(_: Var(x)), Blk(...))), NuFunDef(None, isEmpty, None, [], Lam(Tup(), Blk(...))))), NuTypeDef(class, C, (), Tup(_: Var(e1), _: Var(e2)), (), None, None, TypingUnit(NuFunDef(None, derive, None, [], Lam(Tup(_: Var(x)), Blk(...))), NuFunDef(None, isEmpty, None, [], Lam(Tup(), Blk(...))))), App(Sel(App(Sel(Bra(rcd = false, New(Some((TypeName(C),[new Ch([1,]) {}, new A([new Ch([2,]) {}, new Ch([3,]) {},]) {},])), TypingUnit())), derive), Tup(_: IntLit(0))), isEmpty), Tup()))
 //│ Lifted:
@@ -767,23 +772,59 @@ class C(e1, e2){
 //│ }
 //│ class Ch$3(i) {
 //│ }
-//│ 
+//│ ╔══[ERROR] Class parameters currently need type annotations
+//│ ║  l.698: 	class Ch(i){
+//│ ╙──       	         ^
+//│ ╔══[ERROR] Class parameters currently need type annotations
+//│ ║  l.704: 	class A(e1, e2){
+//│ ╙──       	        ^^
+//│ ╔══[ERROR] Class parameters currently need type annotations
+//│ ║  l.704: 	class A(e1, e2){
+//│ ╙──       	            ^^
+//│ ╔══[ERROR] Class parameters currently need type annotations
+//│ ║  l.710: 	class C(e1, e2){
+//│ ╙──       	        ^^
+//│ ╔══[ERROR] Class parameters currently need type annotations
+//│ ║  l.710: 	class C(e1, e2){
+//│ ╙──       	            ^^
+//│ class E() {
+//│   fun derive: anything -> E
+//│   fun isEmpty: () -> false
+//│ }
+//│ class Ep() {
+//│   fun derive: anything -> E
+//│   fun isEmpty: () -> true
+//│ }
+//│ class Ch(i: error) {
+//│   fun derive: Num -> (E | Ep)
+//│   fun isEmpty: () -> false
+//│ }
+//│ class A(e1: error, e2: error) {
+//│   fun derive: anything -> A
+//│   fun isEmpty: () -> Bool
+//│ }
+//│ class C(e1: error, e2: error) {
+//│   fun derive: anything -> (A | C)
+//│   fun isEmpty: () -> Bool
+//│ }
+//│ Bool
+//│ res
+//│     = false
 
 
 :mono
-class List(l, hasTail)  {}
-class Nil(hasTail)  {}
+:e // FIXME: Malformed Test?
+class List(l: List | Nil, hasTail: Bool)  {}
+class Nil(hasTail: Bool)  {}
 fun gen() = 
   if anyUnknown then new List(gen(), true) else new Nil(false)
 gen()
-//│ |#class| |List|(|l|,| |hasTail|)| |{||}|↵|#class| |Nil|(|hasTail|)| |{||}|↵|#fun| |gen|(||)| |#=| |→|#if| |anyUnknown| |#then| |#new| |List|(|gen|(||)|,| |true|)| |#else| |#new| |Nil|(|false|)|←|↵|gen|(||)|
-//│ Parsed: {class List(l, hasTail,) {}; class Nil(hasTail,) {}; fun gen = () => {if (anyUnknown) then new List([gen(), true,]) {} else new Nil([false,]) {}}; gen()}
 //│ Parsed:
-//│ TypingUnit(NuTypeDef(class, List, (), Tup(_: Var(l), _: Var(hasTail)), (), None, None, TypingUnit()), NuTypeDef(class, Nil, (), Tup(_: Var(hasTail)), (), None, None, TypingUnit()), NuFunDef(None, gen, None, [], Lam(Tup(), Blk(...))), App(Var(gen), Tup()))
+//│ TypingUnit(NuTypeDef(class, List, (), Tup(l: App(Var(|), Tup(_: Var(List), _: Var(Nil))), hasTail: Var(Bool)), (), None, None, TypingUnit()), NuTypeDef(class, Nil, (), Tup(hasTail: Var(Bool)), (), None, None, TypingUnit()), NuFunDef(None, gen, None, [], Lam(Tup(), Blk(...))), App(Var(gen), Tup()))
 //│ Lifted:
 //│ TypingUnit {
-//│   class List$1([l, hasTail,]) {}
-//│   class Nil$2([hasTail,]) {}
+//│   class List$1([l: |(List, Nil,), hasTail: Bool,]) {}
+//│   class Nil$2([hasTail: Bool,]) {}
 //│   fun gen$1 = () => {if (anyUnknown) then new List$1([gen$1(), true,]) {} else new Nil$2([false,]) {}}
 //│   Code(List(gen$1()))
 //│ }
@@ -799,23 +840,29 @@ gen()
 //│ }
 //│ class List$1(l, hasTail) {
 //│ }
-//│ 
+//│ ╔══[ERROR] identifier not found: anyUnknown
+//│ ║  l.820: 	  if anyUnknown then new List(gen(), true) else new Nil(false)
+//│ ╙──       	     ^^^^^^^^^^
+//│ class List(l: List | Nil, hasTail: Bool)
+//│ class Nil(hasTail: Bool)
+//│ fun gen: () -> (List | Nil)
+//│ List | Nil
+//│ Code generation encountered an error:
+//│   unresolved symbol anyUnknown
 
 
 
 :mono
-class Foo(x){
+class Foo(x: Int){
   fun bar(y) = x+y
   fun boo(z) = bar(z)+x
 }
 (new Foo(1)).boo(2)
-//│ |#class| |Foo|(|x|)|{|→|#fun| |bar|(|y|)| |#=| |x|+|y|↵|#fun| |boo|(|z|)| |#=| |bar|(|z|)|+|x|←|↵|}|↵|(|#new| |Foo|(|1|)|)|.boo|(|2|)|
-//│ Parsed: {class Foo(x,) {fun bar = (y,) => +(x, y,); fun boo = (z,) => +(bar(z,), x,)}; ('(' new Foo([1,]) {} ')').boo(2,)}
 //│ Parsed:
-//│ TypingUnit(NuTypeDef(class, Foo, (), Tup(_: Var(x)), (), None, None, TypingUnit(NuFunDef(None, bar, None, [], Lam(Tup(_: Var(y)), App(Var(+), Tup(_: Var(x), _: Var(y))))), NuFunDef(None, boo, None, [], Lam(Tup(_: Var(z)), App(Var(+), Tup(_: App(Var(bar), Tup(_: Var(z))), _: Var(x))))))), App(Sel(Bra(rcd = false, New(Some((TypeName(Foo),[1,])), TypingUnit())), boo), Tup(_: IntLit(2))))
+//│ TypingUnit(NuTypeDef(class, Foo, (), Tup(x: Var(Int)), (), None, None, TypingUnit(NuFunDef(None, bar, None, [], Lam(Tup(_: Var(y)), App(Var(+), Tup(_: Var(x), _: Var(y))))), NuFunDef(None, boo, None, [], Lam(Tup(_: Var(z)), App(Var(+), Tup(_: App(Var(bar), Tup(_: Var(z))), _: Var(x))))))), App(Sel(Bra(rcd = false, New(Some((TypeName(Foo),[1,])), TypingUnit())), boo), Tup(_: IntLit(2))))
 //│ Lifted:
 //│ TypingUnit {
-//│   class Foo$1([x,]) {
+//│   class Foo$1([x: Int,]) {
 //│     fun bar = (y,) => +((this).x, y,)
 //│     fun boo = (z,) => +((this).bar(z,), (this).x,)
 //│   }
@@ -833,21 +880,27 @@ class Foo(x){
 //│   new Foo$1 (#1)  match {case obj: Foo$1 => boo$Foo$1(obj, #2)}
 //│ class Foo$1(x) {
 //│ }
-//│ 
+//│ class Foo(x: Int) {
+//│   fun bar: Int -> Int
+//│   fun boo: Int -> Int
+//│ }
+//│ Int
+//│ res
+//│     = 4
 
 :mono
-class OneInt(a){
-  fun fac() = 
+class OneInt(a: Int){
+  fun fac: () -> Int
+  fun fac = () ->
     if(a > 0) then (new OneInt(a - 1)).fac() else 1 
 }
 (new OneInt(10)).fac()
-//│ |#class| |OneInt|(|a|)|{|→|#fun| |fac|(||)| |#=| |→|#if|(|a| |>| |0|)| |#then| |(|#new| |OneInt|(|a| |-| |1|)|)|.fac|(||)| |#else| |1| |←|←|↵|}|↵|(|#new| |OneInt|(|10|)|)|.fac|(||)|
-//│ Parsed: {class OneInt(a,) {fun fac = () => {if ('(' >(a, 0,) ')') then ('(' new OneInt([-(a, 1,),]) {} ')').fac() else 1}}; ('(' new OneInt([10,]) {} ')').fac()}
 //│ Parsed:
-//│ TypingUnit(NuTypeDef(class, OneInt, (), Tup(_: Var(a)), (), None, None, TypingUnit(NuFunDef(None, fac, None, [], Lam(Tup(), Blk(...))))), App(Sel(Bra(rcd = false, New(Some((TypeName(OneInt),[10,])), TypingUnit())), fac), Tup()))
+//│ TypingUnit(NuTypeDef(class, OneInt, (), Tup(a: Var(Int)), (), None, None, TypingUnit(NuFunDef(None, fac, None, [], PolyType(List(),Function(Tuple(List()),TypeName(Int)))), NuFunDef(None, fac, None, [], Lam(Tup(), Blk(...))))), App(Sel(Bra(rcd = false, New(Some((TypeName(OneInt),[10,])), TypingUnit())), fac), Tup()))
 //│ Lifted:
 //│ TypingUnit {
-//│   class OneInt$1([a,]) {
+//│   class OneInt$1([a: Int,]) {
+//│     fun fac = () -> Int
 //│     fun fac = () => {if ('(' >((this).a, 0,) ')') then ('(' new OneInt$1([-((this).a, 1,),]) {} ')').fac() else 1}
 //│   }
 //│   Code(List(('(' new OneInt$1([10,]) {} ')').fac()))
@@ -862,57 +915,29 @@ class OneInt(a){
 //│   new OneInt$1 (#10)  match {case obj: OneInt$1 => fac$OneInt$1(obj)}
 //│ class OneInt$1(a) {
 //│ }
-//│ 
+//│ class OneInt(a: Int) {
+//│   fun fac: () -> Int
+//│ }
+//│ Int
+//│ res
+//│     = 1
+
+//:mono
+//:e // FIXME: Mutable Parameters
+//trait AnyFoo {
+//}
+//class FooPlus(#a): AnyFoo {
+//  fun bar(b) = a + b
+//}
+//class FooMinus(#a): AnyFoo {
+//  fun bar(b) = a - b
+//}
+//fun f(x) = x.bar(42)
+//f(new FooPlus(1))
+//f(new FooMinus(2))
 
 :mono
-trait AnyFoo {
-}
-class FooPlus(#a): AnyFoo {
-  fun bar(b) = a + b
-}
-class FooMinus(#a): AnyFoo {
-  fun bar(b) = a - b
-}
-fun f(x) = x.bar(42)
-f(new FooPlus(1))
-f(new FooMinus(2))
-//│ |#trait| |AnyFoo| |{|↵|}|↵|#class| |FooPlus|(|##|a|)|#:| |AnyFoo| |{|→|#fun| |bar|(|b|)| |#=| |a| |+| |b|←|↵|}|↵|#class| |FooMinus|(|##|a|)|#:| |AnyFoo| |{|→|#fun| |bar|(|b|)| |#=| |a| |-| |b|←|↵|}|↵|#fun| |f|(|x|)| |#=| |x|.bar|(|42|)|↵|f|(|#new| |FooPlus|(|1|)|)|↵|f|(|#new| |FooMinus|(|2|)|)|
-//│ Parsed: {trait AnyFoo {}; class FooPlus(#a,): AnyFoo {fun bar = (b,) => +(a, b,)}; class FooMinus(#a,): AnyFoo {fun bar = (b,) => -(a, b,)}; fun f = (x,) => (x).bar(42,); f(new FooPlus([1,]) {},); f(new FooMinus([2,]) {},)}
-//│ Parsed:
-//│ TypingUnit(NuTypeDef(trait, AnyFoo, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, FooPlus, (), Tup(_: Var(a)), (), None, None, TypingUnit(NuFunDef(None, bar, None, [], Lam(Tup(_: Var(b)), App(Var(+), Tup(_: Var(a), _: Var(b))))))), NuTypeDef(class, FooMinus, (), Tup(_: Var(a)), (), None, None, TypingUnit(NuFunDef(None, bar, None, [], Lam(Tup(_: Var(b)), App(Var(-), Tup(_: Var(a), _: Var(b))))))), NuFunDef(None, f, None, [], Lam(Tup(_: Var(x)), App(Sel(Var(x), bar), Tup(_: IntLit(42))))), App(Var(f), Tup(_: New(Some((TypeName(FooPlus),[1,])), TypingUnit()))), App(Var(f), Tup(_: New(Some((TypeName(FooMinus),[2,])), TypingUnit()))))
-//│ Lifted:
-//│ TypingUnit {
-//│   trait AnyFoo$1([]) {}
-//│   class FooPlus$2([#a,]) {fun bar = (b,) => +((this).a, b,)}
-//│   class FooMinus$3([#a,]) {fun bar = (b,) => -((this).a, b,)}
-//│   fun f$1 = (x,) => (x).bar(42,)
-//│   Code(List(f$1(new FooPlus$2([1,]) {},)))
-//│   Code(List(f$1(new FooMinus$3([2,]) {},)))
-//│ }
-//│ Mono:
-//│ 
-//│ Defunc result: 
-//│ main$$4()
-//│ main$$5()
-//│ fun bar$FooPlus$2(this, b) =
-//│   +(this.a, b)
-//│ fun f$1(x) =
-//│   x match {case obj: FooMinus$3 => bar$FooMinus$3(obj, #42); case obj: FooPlus$2 => bar$FooPlus$2(obj, #42)}
-//│ fun main$$5() =
-//│   f$1(new FooMinus$3 (#2) )
-//│ fun bar$FooMinus$3(this, b) =
-//│   -(this.a, b)
-//│ fun main$$4() =
-//│   f$1(new FooPlus$2 (#1) )
-//│ trait AnyFoo$1() {
-//│ }
-//│ class FooPlus$2(#a) {
-//│ }
-//│ class FooMinus$3(#a) {
-//│ }
-//│ 
-
-:mono
+val any = -20
 fun f(x) = 
   if x > any then 0
   else g(x - 1)
@@ -920,12 +945,11 @@ fun g(x) =
   if x > any then g(x - 1)
   else f(x - 2)
 g(1)
-//│ |#fun| |f|(|x|)| |#=| |→|#if| |x| |>| |any| |#then| |0|↵|#else| |g|(|x| |-| |1|)|←|↵|#fun| |g|(|x|)| |#=| |→|#if| |x| |>| |any| |#then| |g|(|x| |-| |1|)|↵|#else| |f|(|x| |-| |2|)|←|↵|g|(|1|)|
-//│ Parsed: {fun f = (x,) => {if (>(x, any,)) then 0 else g(-(x, 1,),)}; fun g = (x,) => {if (>(x, any,)) then g(-(x, 1,),) else f(-(x, 2,),)}; g(1,)}
 //│ Parsed:
-//│ TypingUnit(NuFunDef(None, f, None, [], Lam(Tup(_: Var(x)), Blk(...))), NuFunDef(None, g, None, [], Lam(Tup(_: Var(x)), Blk(...))), App(Var(g), Tup(_: IntLit(1))))
+//│ TypingUnit(NuFunDef(Some(false), any, None, [], IntLit(-20)), NuFunDef(None, f, None, [], Lam(Tup(_: Var(x)), Blk(...))), NuFunDef(None, g, None, [], Lam(Tup(_: Var(x)), Blk(...))), App(Var(g), Tup(_: IntLit(1))))
 //│ Lifted:
 //│ TypingUnit {
+//│   let any$3 = () => -20
 //│   fun f$1 = (x,) => {if (>(x, any,)) then 0 else g$2(-(x, 1,),)}
 //│   fun g$2 = (x,) => {if (>(x, any,)) then g$2(-(x, 1,),) else f$1(-(x, 2,),)}
 //│   Code(List(g$2(1,)))
@@ -933,31 +957,39 @@ g(1)
 //│ Mono:
 //│ 
 //│ Defunc result: 
-//│ main$$2()
+//│ main$$3()
+//│ fun any$3() =
+//│   #-20
 //│ fun f$1(x) =
 //│   if >(x, any) then #0 else g$2(-(x, #1))
 //│ fun g$2(x) =
 //│   if >(x, any) then g$2(-(x, #1)) else f$1(-(x, #2))
-//│ fun main$$2() =
+//│ fun main$$3() =
 //│   g$2(#1)
-//│ 
+//│ val any: -20
+//│ fun f: Int -> 0
+//│ fun g: Int -> 0
+//│ 0
+//│ any
+//│     = -20
+//│ res
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded
 
 :mono
-class OneInt(a){
-  fun get = a
+class OneInt(a: Int){
+  fun get = () -> a
 }
-class OneBool(b){
-  fun get = b
+class OneBool(b: Bool){
+  fun get = () -> b
 }
 (if b then new OneInt(1) else new OneBool(true)).get()
-//│ |#class| |OneInt|(|a|)|{|→|#fun| |get| |#=| |a|←|↵|}|↵|#class| |OneBool|(|b|)|{|→|#fun| |get| |#=| |b|←|↵|}|↵|(|#if| |b| |#then| |#new| |OneInt|(|1|)| |#else| |#new| |OneBool|(|true|)|)|.get|(||)|
-//│ Parsed: {class OneInt(a,) {fun get = a}; class OneBool(b,) {fun get = b}; ('(' if (b) then new OneInt([1,]) {} else new OneBool([true,]) {} ')').get()}
 //│ Parsed:
-//│ TypingUnit(NuTypeDef(class, OneInt, (), Tup(_: Var(a)), (), None, None, TypingUnit(NuFunDef(None, get, None, [], Var(a)))), NuTypeDef(class, OneBool, (), Tup(_: Var(b)), (), None, None, TypingUnit(NuFunDef(None, get, None, [], Var(b)))), App(Sel(Bra(rcd = false, If(IfThen(Var(b), New(Some((TypeName(OneInt),[1,])), TypingUnit()), Some(New(Some((TypeName(OneBool),[true,])), TypingUnit())))), get), Tup()))
+//│ TypingUnit(NuTypeDef(class, OneInt, (), Tup(a: Var(Int)), (), None, None, TypingUnit(NuFunDef(None, get, None, [], Lam(Tup(), Var(a))))), NuTypeDef(class, OneBool, (), Tup(b: Var(Bool)), (), None, None, TypingUnit(NuFunDef(None, get, None, [], Lam(Tup(), Var(b))))), App(Sel(Bra(rcd = false, If(IfThen(Var(b), New(Some((TypeName(OneInt),[1,])), TypingUnit()), Some(New(Some((TypeName(OneBool),[true,])), TypingUnit())))), get), Tup()))
 //│ Lifted:
 //│ TypingUnit {
-//│   class OneInt$1([a,]) {fun get = () => (this).a}
-//│   class OneBool$2([b,]) {fun get = () => (this).b}
+//│   class OneInt$1([a: Int,]) {fun get = () => (this).a}
+//│   class OneBool$2([b: Bool,]) {fun get = () => (this).b}
 //│   Code(List(('(' if (b) then new OneInt$1([1,]) {} else new OneBool$2([true,]) {} ')').get()))
 //│ }
 //│ Mono:
@@ -974,9 +1006,18 @@ class OneBool(b){
 //│ }
 //│ class OneBool$2(b) {
 //│ }
-//│ 
+//│ class OneInt(a: Int) {
+//│   fun get: () -> Int
+//│ }
+//│ class OneBool(b: Bool) {
+//│   fun get: () -> Bool
+//│ }
+//│ Int | false | true
+//│ res
+//│     = true
 
 :mono
+:e // FIXME: Malformed Test?
 class Bar(x: int) {
   fun FooMinus(y: int) = x + y
   fun car = foo(2)
@@ -989,8 +1030,6 @@ let bar = Bar(42)
 baz(bar)
 Car().da(Bar(1337))
 bar.car
-//│ |#class| |Bar|(|x|#:| |int|)| |{|→|#fun| |FooMinus|(|y|#:| |int|)| |#=| |x| |+| |y|↵|#fun| |car| |#=| |foo|(|2|)|←|↵|}|↵|#class| |Car| |{|→|#fun| |da|(|b|#:| |Bar|)| |#=| |b|.foo|(|2|)|←|↵|}|↵|#fun| |baz|(|b|#:| |Bar|)| |#=| |b|.foo|(|2|)|↵|#let| |bar| |#=| |Bar|(|42|)|↵|baz|(|bar|)|↵|Car|(||)|.da|(|Bar|(|1337|)|)|↵|bar|.car|
-//│ Parsed: {class Bar(x: int,) {fun FooMinus = (y: int,) => +(x, y,); fun car = foo(2,)}; class Car {fun da = (b: Bar,) => (b).foo(2,)}; fun baz = (b: Bar,) => (b).foo(2,); let bar = Bar(42,); baz(bar,); (Car()).da(Bar(1337,),); (bar).car}
 //│ Parsed:
 //│ TypingUnit(NuTypeDef(class, Bar, (), Tup(x: Var(int)), (), None, None, TypingUnit(NuFunDef(None, FooMinus, None, [], Lam(Tup(y: Var(int)), App(Var(+), Tup(_: Var(x), _: Var(y))))), NuFunDef(None, car, None, [], App(Var(foo), Tup(_: IntLit(2)))))), NuTypeDef(class, Car, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, da, None, [], Lam(Tup(b: Var(Bar)), App(Sel(Var(b), foo), Tup(_: IntLit(2))))))), NuFunDef(None, baz, None, [], Lam(Tup(b: Var(Bar)), App(Sel(Var(b), foo), Tup(_: IntLit(2))))), NuFunDef(Some(false), bar, None, [], App(Var(Bar), Tup(_: IntLit(42)))), App(Var(baz), Tup(_: Var(bar))), App(Sel(App(Var(Car), Tup()), da), Tup(_: App(Var(Bar), Tup(_: IntLit(1337))))), Sel(Var(bar), car))
 //│ Lifted:
@@ -1016,77 +1055,162 @@ bar.car
 //│   Bar$1(#42)
 //│ fun main$$6() =
 //│   bar.car
-//│ fun baz$2(Bar$1) =
+//│ fun baz$2(b) =
 //│   b match {}
 //│ fun main$$5() =
 //│   Car$2() match {}
 //│ fun main$$4() =
 //│   baz$2(bar)
-//│ class Bar$1(int) {
+//│ class Bar$1(x) {
 //│ }
 //│ class Car$2() {
 //│ }
-//│ 
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.1022: 	  fun FooMinus(y: int) = x + y
+//│ ║          	                         ^^^^^
+//│ ╟── type `int` is not an instance of `Int`
+//│ ║  l.1021: 	class Bar(x: int) {
+//│ ║          	             ^^^
+//│ ╟── but it flows into reference with expected type `Int`
+//│ ║  l.1022: 	  fun FooMinus(y: int) = x + y
+//│ ╙──        	                         ^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.1023: 	  fun car = foo(2)
+//│ ║          	            ^^^^^^
+//│ ╟── integer literal of type `2` is not a function
+//│ ║  l.1023: 	  fun car = foo(2)
+//│ ║          	                ^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.624: 	  x(new Cons(1, new Nil())) + x(new Nil())
+//│ ║         	                              ^^^^^^^^^^^^
+//│ ╟── from reference:
+//│ ║  l.624: 	  x(new Cons(1, new Nil())) + x(new Nil())
+//│ ╙──       	                              ^
+//│ ╔══[ERROR] Type `Bar` does not contain member `foo`
+//│ ║  l.1026: 	  fun da(b: Bar) = b.foo(2)
+//│ ╙──        	                    ^^^^
+//│ ╔══[ERROR] Type `Bar` does not contain member `foo`
+//│ ║  l.1028: 	fun baz(b: Bar) = b.foo(2)
+//│ ╙──        	                   ^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.1029: 	let bar = Bar(42)
+//│ ║          	          ^^^^^^^
+//│ ╟── integer literal of type `42` is not an instance of type `int`
+//│ ║  l.1029: 	let bar = Bar(42)
+//│ ║          	              ^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.1021: 	class Bar(x: int) {
+//│ ╙──        	             ^^^
+//│ ╔══[ERROR] Construction of unparameterized class Car should use the `new` keyword
+//│ ║  l.1031: 	Car().da(Bar(1337))
+//│ ╙──        	^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.1031: 	Car().da(Bar(1337))
+//│ ║          	         ^^^^^^^^^
+//│ ╟── integer literal of type `1337` is not an instance of type `int`
+//│ ║  l.1031: 	Car().da(Bar(1337))
+//│ ║          	             ^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.1021: 	class Bar(x: int) {
+//│ ╙──        	             ^^^
+//│ class Bar(x: int) {
+//│   fun FooMinus: (y: int) -> (Int | error)
+//│   fun car: Int | error
+//│ }
+//│ class Car {
+//│   constructor()
+//│   fun da: (b: Bar) -> error
+//│ }
+//│ fun baz: (b: Bar) -> error
+//│ let bar: Bar | error
+//│ Int | error
+//│ bar
+//│     = Bar {}
+//│ res
+//│ Runtime error:
+//│   TypeError: b.foo is not a function
+//│ res
+//│ Runtime error:
+//│   TypeError: Class constructor Car cannot be invoked without 'new'
+//│ res
+//│ Runtime error:
+//│   TypeError: x is not a function
 
 :mono
-class Sup(a){
-  fun foo = a
+val c = 5
+class Sup(a: Int){
+  virtual fun foo = () -> a
 }
-class Sub(b) extends Sup(b+b){
+class Sub(b: Int) extends Sup(b+b){
 }
-class Sub2(c) extends Sub(c+c){
-  fun foo = a+c
+class Sub2(c: Int) extends Sub(c+c){
+  fun foo = () -> a+c
 }
 (new Sub(10)).foo()
 (new Sub2(c)).foo()
-//│ |#class| |Sup|(|a|)|{|→|#fun| |foo| |#=| |a|←|↵|}|↵|#class| |Sub|(|b|)| |#extends| |Sup|(|b|+|b|)|{|↵|}|↵|#class| |Sub2|(|c|)| |#extends| |Sub|(|c|+|c|)|{|→|#fun| |foo| |#=| |a|+|c|←|↵|}|↵|(|#new| |Sub|(|10|)|)|.foo|(||)|↵|(|#new| |Sub2|(|c|)|)|.foo|(||)|
-//│ Parsed: {class Sup(a,) {fun foo = a}; class Sub(b,): Sup(+(b, b,),) {}; class Sub2(c,): Sub(+(c, c,),) {fun foo = +(a, c,)}; ('(' new Sub([10,]) {} ')').foo(); ('(' new Sub2([c,]) {} ')').foo()}
 //│ Parsed:
-//│ TypingUnit(NuTypeDef(class, Sup, (), Tup(_: Var(a)), (), None, None, TypingUnit(NuFunDef(None, foo, None, [], Var(a)))), NuTypeDef(class, Sub, (), Tup(_: Var(b)), (App(Var(Sup), Tup(_: App(Var(+), Tup(_: Var(b), _: Var(b)))))), None, None, TypingUnit()), NuTypeDef(class, Sub2, (), Tup(_: Var(c)), (App(Var(Sub), Tup(_: App(Var(+), Tup(_: Var(c), _: Var(c)))))), None, None, TypingUnit(NuFunDef(None, foo, None, [], App(Var(+), Tup(_: Var(a), _: Var(c)))))), App(Sel(Bra(rcd = false, New(Some((TypeName(Sub),[10,])), TypingUnit())), foo), Tup()), App(Sel(Bra(rcd = false, New(Some((TypeName(Sub2),[c,])), TypingUnit())), foo), Tup()))
+//│ TypingUnit(NuFunDef(Some(false), c, None, [], IntLit(5)), NuTypeDef(class, Sup, (), Tup(a: Var(Int)), (), None, None, TypingUnit(NuFunDef(None, foo, None, [], Lam(Tup(), Var(a))))), NuTypeDef(class, Sub, (), Tup(b: Var(Int)), (App(Var(Sup), Tup(_: App(Var(+), Tup(_: Var(b), _: Var(b)))))), None, None, TypingUnit()), NuTypeDef(class, Sub2, (), Tup(c: Var(Int)), (App(Var(Sub), Tup(_: App(Var(+), Tup(_: Var(c), _: Var(c)))))), None, None, TypingUnit(NuFunDef(None, foo, None, [], Lam(Tup(), App(Var(+), Tup(_: Var(a), _: Var(c))))))), App(Sel(Bra(rcd = false, New(Some((TypeName(Sub),[10,])), TypingUnit())), foo), Tup()), App(Sel(Bra(rcd = false, New(Some((TypeName(Sub2),[c,])), TypingUnit())), foo), Tup()))
 //│ Lifted:
 //│ TypingUnit {
-//│   class Sup$1([a,]) {fun foo = () => (this).a}
-//│   class Sub$2([b,]): Sup$1(+((this).b, (this).b,),) {}
-//│   class Sub2$3([c,]): Sub$2(+((this).c, (this).c,),) {fun foo = () => +((this).a, (this).c,)}
+//│   class Sup$1([a: Int,]) {fun foo = () => (this).a}
+//│   class Sub$2([b: Int,]): Sup$1(+((this).b, (this).b,),) {}
+//│   class Sub2$3([c: Int,]): Sub$2(+((this).c, (this).c,),) {fun foo = () => +((this).a, (this).c,)}
+//│   let c$1 = () => 5
 //│   Code(List(('(' new Sub$2([10,]) {} ')').foo()))
 //│   Code(List(('(' new Sub2$3([c,]) {} ')').foo()))
 //│ }
 //│ Mono:
 //│ 
 //│ Defunc result: 
-//│ main$$3()
 //│ main$$4()
-//│ fun main$$4() =
+//│ main$$5()
+//│ fun c$1() =
+//│   #5
+//│ fun main$$5() =
 //│   new Sub2$3 (c)  match {case obj: Sub2$3 => foo$Sub2$3(obj)}
+//│ fun main$$4() =
+//│   new Sub$2 (#10)  match {case obj: Sub$2 => foo$Sup$1(obj)}
 //│ fun foo$Sup$1(this) =
 //│   this.a
 //│ fun foo$Sub2$3(this) =
 //│   +(this.a, this.c)
-//│ fun main$$3() =
-//│   new Sub$2 (#10)  match {case obj: Sub$2 => foo$Sup$1(obj)}
 //│ class Sub2$3(c): Sub$2(+(this.c, this.c)) {
 //│ }
 //│ class Sup$1(a) {
 //│ }
 //│ class Sub$2(b): Sup$1(+(this.b, this.b)) {
 //│ }
-//│ 
+//│ val c: 5
+//│ class Sup(a: Int) {
+//│   fun foo: () -> Int
+//│ }
+//│ class Sub(b: Int) extends Sup {
+//│   fun foo: () -> Int
+//│ }
+//│ class Sub2(c: Int) extends Sub, Sup {
+//│   fun foo: () -> Int
+//│ }
+//│ Int
+//│ c
+//│   = 5
+//│ res
+//│     = 20
+//│ res
+//│     = 47
 
 :mono
-class Foo(f){
-  fun foo = f(1)
+class Foo(f: Int -> Int){
+  fun foo = () -> f(1)
 }
 class F1() extends Foo(x => x+1){}
 class F2() extends Foo(x => x+2){}
 (new F1()).foo()
 (new F2()).foo()
-//│ |#class| |Foo|(|f|)|{|→|#fun| |foo| |#=| |f|(|1|)|←|↵|}|↵|#class| |F1|(||)| |#extends| |Foo|(|x| |=>| |x|+|1|)|{||}|↵|#class| |F2|(||)| |#extends| |Foo|(|x| |=>| |x|+|2|)|{||}|↵|(|#new| |F1|(||)|)|.foo|(||)|↵|(|#new| |F2|(||)|)|.foo|(||)|
-//│ Parsed: {class Foo(f,) {fun foo = f(1,)}; class F1(): Foo((x,) => +(x, 1,),) {}; class F2(): Foo((x,) => +(x, 2,),) {}; ('(' new F1([]) {} ')').foo(); ('(' new F2([]) {} ')').foo()}
 //│ Parsed:
-//│ TypingUnit(NuTypeDef(class, Foo, (), Tup(_: Var(f)), (), None, None, TypingUnit(NuFunDef(None, foo, None, [], App(Var(f), Tup(_: IntLit(1)))))), NuTypeDef(class, F1, (), Tup(), (App(Var(Foo), Tup(_: Lam(Tup(_: Var(x)), App(Var(+), Tup(_: Var(x), _: IntLit(1))))))), None, None, TypingUnit()), NuTypeDef(class, F2, (), Tup(), (App(Var(Foo), Tup(_: Lam(Tup(_: Var(x)), App(Var(+), Tup(_: Var(x), _: IntLit(2))))))), None, None, TypingUnit()), App(Sel(Bra(rcd = false, New(Some((TypeName(F1),[])), TypingUnit())), foo), Tup()), App(Sel(Bra(rcd = false, New(Some((TypeName(F2),[])), TypingUnit())), foo), Tup()))
+//│ TypingUnit(NuTypeDef(class, Foo, (), Tup(f: App(Var(->), Tup(_: Var(Int), _: Var(Int)))), (), None, None, TypingUnit(NuFunDef(None, foo, None, [], Lam(Tup(), App(Var(f), Tup(_: IntLit(1))))))), NuTypeDef(class, F1, (), Tup(), (App(Var(Foo), Tup(_: Lam(Tup(_: Var(x)), App(Var(+), Tup(_: Var(x), _: IntLit(1))))))), None, None, TypingUnit()), NuTypeDef(class, F2, (), Tup(), (App(Var(Foo), Tup(_: Lam(Tup(_: Var(x)), App(Var(+), Tup(_: Var(x), _: IntLit(2))))))), None, None, TypingUnit()), App(Sel(Bra(rcd = false, New(Some((TypeName(F1),[])), TypingUnit())), foo), Tup()), App(Sel(Bra(rcd = false, New(Some((TypeName(F2),[])), TypingUnit())), foo), Tup()))
 //│ Lifted:
 //│ TypingUnit {
-//│   class Foo$1([f,]) {fun foo = () => (this).f(1,)}
+//│   class Foo$1([f: ->(Int, Int,),]) {fun foo = () => (this).f(1,)}
 //│   class F1$2_Lambda1$1$4([par$F1$2,]) {fun apply = (x,) => +(x, 1,)}
 //│   class F1$2([]): Foo$1({new F1$2_Lambda1$1$4([this,]) {}},) {}
 //│   class F2$3_Lambda1$2$5([par$F2$3,]) {fun apply = (x,) => +(x, 2,)}
@@ -1119,4 +1243,17 @@ class F2() extends Foo(x => x+2){}
 //│ }
 //│ class F1$2_Lambda1$1$4(par$F1$2) {
 //│ }
-//│ 
+//│ class Foo(f: Int -> Int) {
+//│   fun foo: () -> Int
+//│ }
+//│ class F1() extends Foo {
+//│   fun foo: () -> Int
+//│ }
+//│ class F2() extends Foo {
+//│   fun foo: () -> Int
+//│ }
+//│ Int
+//│ res
+//│     = 2
+//│ res
+//│     = 3

@@ -28,7 +28,8 @@ object Helpers:
     case Tup(fields) => fields.iterator.flatMap {
       // The new parser emits `Tup(_: UnitLit(true))` from `fun f() = x`.
       case (_, Fld(FldFlags(_, _, _), UnitLit(true))) => None
-      case (_, Fld(FldFlags(_, spec, _), Var(name))) => Some((spec, Expr.Ref(name)))
+      case (None, Fld(FldFlags(_, spec, _), Var(name))) => Some((spec, Expr.Ref(name)))
+      case (Some(Var(name)), Fld(FldFlags(_, spec, _), _)) => Some((spec, Expr.Ref(name)))
       case _ => throw new MonomorphError(
         s"only `Var` can be parameters but we meet ${showStructure(term)}"
       )

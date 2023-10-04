@@ -300,7 +300,9 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
             }
           }
           else None
-        }).headOption.get//OrElse(BoundedExpr(UnknownValue()))
+        }).headOption.getOrElse(
+          throw MonomorphError("Field not Found in"+obj.toString())
+        )
       }
     }
     else {

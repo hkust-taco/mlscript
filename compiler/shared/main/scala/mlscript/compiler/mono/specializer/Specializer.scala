@@ -161,7 +161,10 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
           retE
         }
 
-      case Expr.As(value, toType) => ???
+      case Expr.As(value, toType) => 
+        val retV = evaluate(value)
+        rawExpr.expValue = retV.expValue
+        rawExpr
       case Expr.Assign(assignee, value) => ???
       case Expr.With(value, fields) => ???
       case Expr.Subscript(receiver, index) => ???
@@ -216,7 +219,7 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
         case other => other
       })
       case Expr.Select(receiver, field) => Expr.Select(defunctionalize(receiver), field)
-      case _ => ???
+      case Expr.As(value, toType) => Expr.As(defunctionalize(value), toType)
     }
     ret.expValue = rawExpr.expValue
     ret
