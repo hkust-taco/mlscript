@@ -106,6 +106,7 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
               addNewFunction(funcDecl)
             case _ => ()
           None
+        case _ => ???
       };
       debug.log(getResult(exps).getDebugOutput.toLines(using false).mkString("\n"))
       while(!evalQueue.isEmpty){
@@ -158,6 +159,7 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
           None
         case funDef: NuFunDef =>
           Some(func2Item(funDef))
+        case _ => ???
       })
     }(identity)
   

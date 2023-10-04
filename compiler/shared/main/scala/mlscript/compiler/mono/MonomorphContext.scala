@@ -15,7 +15,7 @@ class MonomorphContext(context: List[Map[String, DataType]]) extends Printable:
   def :+(entry: (String, DataType)): MonomorphContext =
     MonomorphContext((Map.empty + entry) :: context)
 
-  def unary_+(): MonomorphContext =
+  def unary_+ : MonomorphContext = 
     MonomorphContext(Map.empty :: context)
 
   def get(key: String): Option[DataType] =

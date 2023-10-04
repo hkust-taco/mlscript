@@ -9,6 +9,7 @@ import scala.collection.mutable.Set as MutSet
 import scala.collection.mutable.ArrayBuffer as ArrayBuffer
 import mlscript.codegen.Helpers.inspect as showStructure
 import mlscript.codegen.CodeGenError
+import mlscript.compiler.mono.MonomorphError
 
 class ClassLifter(logDebugMsg: Boolean = false) { 
   type ClassName = String
@@ -613,6 +614,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
               case (tn, ctx) => (L(tn), ctx)
           case R(tv) => R(tv) -> emptyCtx}).unzip
         NuFunDef(rec, globFuncs.get(nm).get._1, N, nTpVs, Right(PolyType(nTargs._1, nBody._1)))(N, N, N, N, true) //TODO: Use proper arguments
+      case _ => ???
     })
   }
   

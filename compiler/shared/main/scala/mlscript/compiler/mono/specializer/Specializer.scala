@@ -220,6 +220,7 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
       })
       case Expr.Select(receiver, field) => Expr.Select(defunctionalize(receiver), field)
       case Expr.As(value, toType) => Expr.As(defunctionalize(value), toType)
+      case _ => ???
     }
     ret.expValue = rawExpr.expValue
     ret

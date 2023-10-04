@@ -19,6 +19,7 @@ import mlscript.StrLit
 import mlscript.AppliedType
 import mlscript.TypeName
 import mlscript.TypeDefKind
+import mlscript.compiler.mono.Monomorph
 
 object Helpers:
   /**
@@ -88,6 +89,7 @@ object Helpers:
           case mlscript.TypeDef(_, _, _, _, _, _, _, _) => throw MonomorphError("unsupported TypeDef")
           case mlscript.Def(_, _, _, _) => throw MonomorphError("unsupported Def")
           case mlscript.LetS(_, _, _) => throw MonomorphError("unsupported LetS")
+          case mlscript.Constructor(_, _) => throw MonomorphError("unsupported Constructor")
         })
         case Bra(rcd, term) => term2Expr(term)
         case Asc(term, ty) => Expr.As(term2Expr(term), ty)
@@ -146,6 +148,7 @@ object Helpers:
           Expr.Literal(if undefinedOrNull
                        then UnitValue.Undefined
                        else UnitValue.Null)
+        case _ => throw MonomorphError("unsupported term"+ term.toString)
     }
   
   def func2Item(funDef: NuFunDef): Item.FuncDecl | Item.FuncDefn =
@@ -165,6 +168,7 @@ object Helpers:
       case subTypeDef: NuTypeDef => ???
       case subFunDef: NuFunDef =>
         Some(func2Item(subFunDef))
+      case term => throw MonomorphError(term.toString)
     })
     val typeDecl: Item.TypeDecl = Item.TypeDecl(
       Expr.Ref(className.name), // name
@@ -189,3 +193,4 @@ object Helpers:
       case Als => TypeDeclKind.Alias
       case Cls => TypeDeclKind.Class
       case Trt => TypeDeclKind.Trait
+      case _ => ???
