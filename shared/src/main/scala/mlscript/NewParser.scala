@@ -7,6 +7,8 @@ import sourcecode.{Name, Line}
 import utils._, shorthands._
 import mlscript.Message._
 import BracketKind._
+import mlscript.codegen.Helpers
+import mlscript.ucs.helpers
 
 object NewParser {
   
@@ -250,7 +252,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
   
   final def toParamsTy(t: Type): Tuple = t match {
     case t: Tuple => t
-    case _ => Tuple((N, Field(None, t)) :: Nil)
+    case _ => Tuple((N, Field(None, t, false)) :: Nil)
   }
   final def typ(prec: Int = 0)(implicit fe: FoundErr, l: Line): Type =
     mkType(expr(prec))
@@ -458,7 +460,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                 case (br @ BRACKETS(Angle | Square, toks), loc) :: _ =>
                   consume
                   val ts = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented()).map {
-                    case (N, Fld(FldFlags(false, false, _), v @ Var(nme))) =>
+                    case (N, Fld(FldFlags(false, false, _, _), v @ Var(nme))) =>
                       TypeName(nme).withLocOf(v)
                     case _ => ???
                   }
@@ -469,11 +471,11 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                 case (br @ BRACKETS(Round, Spaces(cons, (KEYWORD("override"), ovLoc) :: rest)), loc) :: rest2 =>
                   resetCur(BRACKETS(Round, rest)(br.innerLoc) -> loc :: rest2)
                   funParams match {
-                    case ps @ Tup(N -> Fld(FldFlags(false, false, gen), pat) :: Nil) :: Nil =>
+                    case ps @ Tup(N -> Fld(FldFlags(false, false, false, gen), pat) :: Nil) :: Nil =>
                       val fv = freshVar
-                      (Tup(N -> Fld(FldFlags(false, false, gen), fv) :: Nil) :: Nil, S(
+                      (Tup(N -> Fld(FldFlags(false, false, false, gen), fv) :: Nil) :: Nil, S(
                         (body: Term) => If(IfOpApp(fv, Var("is"), IfThen(pat, body)), S(
-                          App(Sel(Super().withLoc(S(ovLoc)), v), Tup(N -> Fld(FldFlags(false, false, gen), fv) :: Nil))
+                          App(Sel(Super().withLoc(S(ovLoc)), v), Tup(N -> Fld(FldFlags(false, false, false, gen), fv) :: Nil))
                         ))
                       ))
                     case r =>
@@ -625,7 +627,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                   msg"Record field should have a name" -> fld.value.toLoc :: Nil))
                 Var("<error>") -> fld
             }))
-          case (Round, (N, Fld(FldFlags(false, false, _), elt)) :: Nil) =>
+          case (Round, (N, Fld(FldFlags(false, false, false, _), elt)) :: Nil) =>
             Bra(false, elt)
           case (Round, fs) =>
             yeetSpaces match {
@@ -698,7 +700,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         val head = body match {
           case Var(clsNme) =>
             S(TypeName(clsNme).withLocOf(body) -> Tup(Nil))
-          case App(Var(clsNme), Tup(N -> Fld(FldFlags(false, false, _), UnitLit(true)) :: Nil)) =>
+          case App(Var(clsNme), Tup(N -> Fld(FldFlags(false, false, false, _), UnitLit(true)) :: Nil)) =>
             S(TypeName(clsNme).withLocOf(body) -> Tup(Nil))
           case App(Var(clsNme), arg) =>
             S(TypeName(clsNme).withLocOf(body) -> arg)
@@ -815,7 +817,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
           .concludeWith(_.expr(0, allowSpace = true))
         val newAcc = Subs(acc, idx).withLoc(S(l0 ++ l1 ++ idx.toLoc))
         exprCont(newAcc, prec, allowNewlines)
-      case (IDENT(opStr, true), l0) :: _ if /* isInfix(opStr) && */ opPrec(opStr)._1 > prec =>
+      case (IDENT(opStr, true), l0) :: _ if /* isInfix(opStr) && */ opPrec(opStr)._1 > prec && opStr =/= "?" =>
         consume
         val v = Var(opStr).withLoc(S(l0))
         // printDbg(s">>> $opStr ${opPrec(opStr)}")
@@ -931,7 +933,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         val as = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented())
         // val res = TyApp(acc, as.map(_.mapSecond.to))
         val res = TyApp(acc, as.map {
-          case (N, Fld(FldFlags(false, false, _), trm)) => trm.toType match {
+          case (N, Fld(FldFlags(false, false, false, _), trm)) => trm.toType match {
             case L(d) => raise(d); Top // TODO better
             case R(ty) => ty
           }
@@ -1116,7 +1118,6 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
   final def argsOrIf(acc: Ls[Opt[Var] -> (IfBody \/ Fld)], seqAcc: Ls[Statement], allowNewlines: Bool, prec: Int = NoElsePrec)
         (implicit fe: FoundErr, et: ExpectThen): Ls[Opt[Var] -> (IfBody \/ Fld)] =
       wrap(acc, seqAcc) { l =>
-    
     cur match {
       case Nil =>
         seqAcc match {
@@ -1153,15 +1154,28 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         S(l0)
       case _ => N
     }
-    val argName = yeetSpaces match {
-      case (IDENT(idStr, false), l0) :: (KEYWORD(":"), _) :: _ => // TODO: | ...
+    val (argName, argOpt) = yeetSpaces match {
+      case (IDENT(idStr, false), l0) :: (IDENT("?", true), l1) :: (KEYWORD(":"), _) :: _ => // TODO: | ...
         consume
         consume
-        S(Var(idStr).withLoc(S(l0)))
-      case _ => N
+        consume
+        (S(Var(idStr).withLoc(S(l0))), S(l1))
+      case (IDENT(idStr, false), l0) :: (KEYWORD(":"), _) :: _ =>
+        consume
+        consume
+        (S(Var(idStr).withLoc(S(l0))), N)
+      case _ => (N, N)
     }
     // val e = expr(NoElsePrec) -> argMut.isDefined
-    val e = exprOrIf(prec).map(Fld(FldFlags(argMut.isDefined, argSpec.isDefined, argVal.isDefined), _))
+    val body = exprOrIf(prec)
+    val isOptinoal = cur match {
+      case (IDENT("?", true), l0) :: _ =>
+        consume
+        true
+      case _ =>
+        false
+    }
+    val e = body.map(Fld(FldFlags(argMut.isDefined, argSpec.isDefined, argOpt.isDefined || isOptinoal, argVal.isDefined), _))
     
     def mkSeq = if (seqAcc.isEmpty) argName -> e else e match {
       case L(_) => ???
@@ -1186,7 +1200,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         }
         e match {
           case L(_) => ???
-          case R(Fld(FldFlags(false, false, _), res)) =>
+          case R(Fld(FldFlags(false, false, false, _), res)) =>
             argsOrIf(acc, res :: seqAcc, allowNewlines)
           case R(_) => ???
         }

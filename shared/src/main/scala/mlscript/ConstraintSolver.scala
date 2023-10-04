@@ -865,7 +865,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             }
             
             
-          case (TupleType(fs0), TupleType(fs1)) if fs0.size === fs1.size => // TODO generalize (coerce compatible tuples)
+          case (t0 @ TupleType(fs0), t1 @ TupleType(fs1)) if t0.isLengthCompatibleWith(t1) => {
             fs0.lazyZip(fs1).foreach { case ((ln, l), (rn, r)) =>
               ln.foreach { ln => rn.foreach { rn =>
                 if (ln =/= rn) err(
@@ -875,6 +875,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               recLb(r, l)
               rec(l.ub, r.ub, false)
             }
+          }
           case (t: ArrayBase, a: ArrayType) =>
             recLb(a.inner, t.inner)
             rec(t.inner.ub, a.inner.ub, false)

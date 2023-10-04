@@ -333,7 +333,7 @@ class TypeDefs extends NuTypeDefs { Typer: Typer =>
                 // * This is not actually necessary for soundness
                 // *  (if they aren't, the object type just won't be instantiable),
                 // *  but will help report inheritance errors earlier (see test BadInherit2).
-                case (nme, FieldType(S(lb), ub)) => constrain(lb, ub)
+                case (nme, FieldType(S(lb), ub, _)) => constrain(lb, ub)
                 case _ => ()
               }
               (decls -- defns) match {
@@ -343,7 +343,7 @@ class TypeDefs extends NuTypeDefs { Typer: Typer =>
                 case _ =>
                   val fields = fieldsOf(td.bodyTy, paramTags = true)
                   val tparamTags = td.tparamsargs.map { case (tp, tv) =>
-                    tparamField(td.nme, tp) -> FieldType(Some(tv), tv)(tv.prov) }
+                    tparamField(td.nme, tp) -> FieldType(Some(tv), tv, false)(tv.prov) }
                   val ctor = k match {
                     case Cls =>
                       val nomTag = clsNameToNomTag(td)(originProv(td.nme.toLoc, "class", td.nme.name), ctx)
@@ -354,7 +354,7 @@ class TypeDefs extends NuTypeDefs { Typer: Typer =>
                             S(f._1.name.drop(f._1.name.indexOf('#') + 1)) // strip any "...#" prefix
                           )(1).tap(_.upperBounds ::= f._2.ub)
                           f._1 -> (
-                            if (f._2.lb.isDefined) FieldType(Some(fv), fv)(f._2.prov)
+                            if (f._2.lb.isDefined) FieldType(Some(fv), fv, f._2.opt)(f._2.prov)
                             else fv.toUpper(f._2.prov)
                           )
                         }).toList
