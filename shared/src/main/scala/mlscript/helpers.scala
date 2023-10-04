@@ -622,7 +622,7 @@ trait TermImpl extends StatementImpl { self: Term =>
     try R(toType_!.withLocOf(this)) catch {
       case e: NotAType =>
         import Message._
-        L(ErrorReport(msg"not a recognized type" -> e.trm.toLoc::Nil, newDefs=true)) }
+        L(ErrorReport(msg"Not a recognized type" -> e.trm.toLoc::Nil, newDefs=true)) }
   protected def toType_! : Type = (this match {
     case Var(name) if name.startsWith("`") => TypeVar(R(name.tail), N)
     case Var(name) if name.startsWith("'") => TypeVar(R(name), N)

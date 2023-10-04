@@ -1434,7 +1434,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                   
                   val body_ty = td.sig match {
                     case S(sig) =>
-                      typeType(sig)
+                      ctx.nextLevel { implicit ctx: Ctx => typeType(sig) }
                     case N =>
                       err(msg"Type alias definition requires a right-hand side", td.toLoc)
                   }
