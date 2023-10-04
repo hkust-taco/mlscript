@@ -644,6 +644,11 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     })
     ctx ++= completedInfos
     
+    val returnsLastExpr = outer.map(_.kind) match {
+      case N | S(Block | Val) => true
+      case S(_: TypeDefKind) => false
+    }
+    
     // * Type the block statements
     def go(stmts: Ls[Statement]): Opt[ST] = stmts match {
       case s :: stmts =>
@@ -652,16 +657,20 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           case t: Term =>
             implicit val genLambdas: GenLambdas = true
             val ty = typeTerm(t)
-            if (!topLevel && !stmts.isEmpty) {
-              if (t.isInstanceOf[Var] || t.isInstanceOf[Lit])
-                warn("Pure expression does nothing in statement position.", t.toLoc)
-              else
-                constrain(mkProxy(ty, TypeProvenance(t.toCoveringLoc, "expression in statement position")), UnitType)(
-                  raise = err => raise(WarningReport( // Demote constraint errors from this to warnings
-                    msg"Expression in statement position should have type `unit`." -> N ::
-                    msg"Use the `discard` function to discard non-unit values, making the intent clearer." -> N ::
-                    err.allMsgs, newDefs)),
-                  prov = TypeProvenance(t.toLoc, t.describe), ctx)
+            if (!topLevel && !(stmts.isEmpty && returnsLastExpr)) {
+              t match {
+                // * We do not include `_: Var` because references to `fun`s and lazily-initialized
+                // * definitions may have side effects.
+                case _: Lit | _: Lam =>
+                  warn("Pure expression does nothing in statement position.", t.toLoc)
+                case _ =>
+                  constrain(mkProxy(ty, TypeProvenance(t.toCoveringLoc, "expression in statement position")), UnitType)(
+                    raise = err => raise(WarningReport( // Demote constraint errors from this to warnings
+                      msg"Expression in statement position should have type `unit`." -> N ::
+                      msg"Use the `discard` function to discard non-unit values, making the intent clearer." -> N ::
+                      err.allMsgs, newDefs)),
+                    prov = TypeProvenance(t.toLoc, t.describe), ctx)
+              }
             }
             S(ty)
           case s: DesugaredStatement =>

@@ -258,21 +258,87 @@ let _ = succ(0);; 0
 //│     = 0
 
 
+x => x; ()
+//│ () -> ()
+//│ res
+//│     = [Function: res]
+
+x => x;; ()
+//│ ()
+//│ res
+//│     = [Function: res]
+//│ res
+//│     = undefined
+
+:w
+fun f =
+  x => x;; ()
+//│ ╔══[WARNING] Pure expression does nothing in statement position.
+//│ ║  l.275: 	  x => x;; ()
+//│ ╙──       	  ^^^^^^
+//│ fun f: ()
+
+fun f =
+  discard of x => x;; ()
+//│ fun f: ()
+
+:w
+fun f =
+  x => x
+  ()
+//│ ╔══[WARNING] Pure expression does nothing in statement position.
+//│ ║  l.287: 	  x => x
+//│ ╙──       	  ^^^^^^
+//│ fun f: ()
+
+
+:w
+module Test {
+  123
+}
+//│ ╔══[WARNING] Pure expression does nothing in statement position.
+//│ ║  l.297: 	  123
+//│ ╙──       	  ^^^
+//│ module Test
+
+:w
+module Test {
+  123
+  456
+}
+//│ ╔══[WARNING] Pure expression does nothing in statement position.
+//│ ║  l.306: 	  123
+//│ ╙──       	  ^^^
+//│ ╔══[WARNING] Pure expression does nothing in statement position.
+//│ ║  l.307: 	  456
+//│ ╙──       	  ^^^
+//│ module Test
+
+:w
+module Test {
+  x => x
+}
+//│ ╔══[WARNING] Pure expression does nothing in statement position.
+//│ ║  l.319: 	  x => x
+//│ ╙──       	  ^^^^^^
+//│ module Test
+
+
 
 :e
 fun foo =
   let tmp = 0
 foo + 1
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.265: 	foo + 1
+//│ ║  l.331: 	foo + 1
 //│ ║         	^^^^^^^
 //│ ╟── definition of method foo of type `()` is not an instance of type `Int`
-//│ ║  l.263: 	fun foo =
+//│ ║  l.329: 	fun foo =
 //│ ║         	    ^^^^^
-//│ ║  l.264: 	  let tmp = 0
+//│ ║  l.330: 	  let tmp = 0
 //│ ║         	^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `Int`
-//│ ║  l.265: 	foo + 1
+//│ ║  l.331: 	foo + 1
 //│ ╙──       	^^^
 //│ fun foo: ()
 //│ Int | error
