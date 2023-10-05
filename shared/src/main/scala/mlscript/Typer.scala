@@ -427,8 +427,16 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
             N
         })
         .toRight(ctx.get(name) match {
-            case Some(VarSymbol(ty, vr)) => () =>  ty // get type from variable
-            case _ => () => err("type identifier not found: " + name, loc)(raise)})
+            case Some(VarSymbol(ty, vr)) => 
+              println(s"ty var: $vr : $ty")
+              // ! unintended outcome ? can use variable as its type
+              () => ty
+            case S(CompletedTypeInfo(t@TypedNuFun(_,_,_))) =>
+              // possibly inside a let binding
+              () => 
+                err(s"cannot use variable $name as type", loc)(raise)
+                err(s"as defined in here", t.toLoc)(raise)
+            case r => () => err(s"type identifier not found: " + name, loc)(raise)})
     val localVars = mutable.Map.empty[TypeVar, TypeVariable]
     def tyTp(loco: Opt[Loc], desc: Str, originName: Opt[Str] = N) =
       TypeProvenance(loco, desc, originName, isType = true)
@@ -560,7 +568,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         def go(b_ty: ST, rfnt: Var => Opt[FieldType]): ST = b_ty.unwrapAll match {
           case ct: TypeRef => die // TODO actually
           case ClassTag(Var(clsNme), _) =>
-            println(s">>>c $clsNme")
+            println(s">>>c $clsNme ~ $nme")
             // TODO we should still succeed even if the member is not completed...
             lookupMember(clsNme, rfnt, nme.toVar) match {
               case R(cls: TypedNuCls) =>

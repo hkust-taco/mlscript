@@ -1,12 +1,21 @@
 :NewDefs
 
 
-class Foo[A](val a: A)
+class Foo[type A](val a: A)
 //│ class Foo[A](a: A)
 
 fun foo(f: Foo) = f.a
 //│ fun foo: (f: Foo[anything]) -> ??A
 
+fun foo(a, f: Foo[a]): Int = f.a : f.A
+//│ fun foo: forall 'a. ('a, f: Foo['a]) -> Int
+//│   where
+//│     'a <: Int
+
+foo(2, Foo(1))
+//│ Int
+//│ res
+//│     = 1
 
 class Foo[A](val a: A -> A)
 //│ class Foo[A](a: A -> A)

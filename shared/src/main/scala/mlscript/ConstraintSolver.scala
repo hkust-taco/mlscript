@@ -33,9 +33,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         (implicit ctx: Ctx, raise: Raise)
         : Either[Diagnostic, NuMember]
         = {
-    val info = ctx.tyDefs2.getOrElse(clsNme, {
-      println(s"clsNme = $clsNme")
-      ???})
+    val info = ctx.tyDefs2.getOrElse(clsNme, lastWords(s"Can't find `$clsNme`"))
     
     if (info.isComputing) {
       ??? // TODO support?
@@ -43,9 +41,16 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     } else info.complete() match {
       
       case cls: TypedNuCls =>
-        cls.members.get(fld.name) orElse cls.members.get(cls.nme.name+"#"+fld.name) match {
+        cls.members.get(fld.name) orElse cls.members.get(cls.name+"#"+fld.name) match {
           case S(m) => R(m)
-          case N => L(noSuchMember(info, fld))
+          case N => 
+            // ! naive search over parents
+            cls.inheritedTags.toList.flatMap { t =>
+              cls.members.get(t.name+"#"+fld.name).toList
+            } match {
+              case m :: _ => R(m)
+              case _ => L(noSuchMember(info, fld))
+            }
         }
         
       case _ => ??? // TODO

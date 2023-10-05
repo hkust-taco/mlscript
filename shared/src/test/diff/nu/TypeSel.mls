@@ -14,150 +14,93 @@
 // *  - Support wildcard type argument syntax: `Foo[?]` (for what we currently write `Foo`)
 // *  - `as` syntax for upcasting
 
+class Foo[type A] {
+  fun f: A -> Int
+  fun f(x) = 1
+}
+//│ class Foo[A] {
+//│   constructor()
+//│   fun f: A -> Int
+//│ }
 
-// TODO support
+fun foo(f: Foo[Int], g: Foo[f.A], x: f.A) = g.f(f.f(x))
+//│ fun foo: (f: Foo[Int], g: Foo[Int], x: Int) -> Int
+
+class Bar(val f: Foo[Int])
+//│ class Bar(f: Foo[Int])
+
+fun foo(b: Bar): b.f.A = 1
+//│ fun foo: (b: Bar) -> Int
+
+// TODO i think we will just not support this
+fun foo(b: Bar) =
+  let f = id(b).f
+  1: f.A
+//│ ╔══[ERROR] cannot use variable f as type
+//│ ║  l.38: 	  1: f.A
+//│ ╙──      	     ^
+//│ ╔══[ERROR] as defined in here
+//│ ║  l.37: 	  let f = id(b).f
+//│ ╙──      	      ^^^^^^^^^^^
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Can't find `error`
+
+
+fun foo(p, q, f: (p,q) -> Int) = f(p,q)
+//│ fun foo: forall 'a 'b. ('a, 'b, f: ('a, 'b) -> Int) -> Int
+
+foo(1, 0, (x, y) => x + y)
+//│ Int
+
 class Foo[type A](val a: A)
 //│ class Foo[A](a: A)
 
-// TODO support
 fun foo(f: Foo[Int]): Int = f.a : f.A
 //│ fun foo: (f: Foo[Int]) -> Int
 
 // raw type example
 // TODO support
-:d
 fun foo(f: Foo): Int = f.a : f.A
-//│ 0. Typing ‹fun foo = (f: Foo,) => (f).a : f.A : Int›
-//│ | 0. Created lazy type info for fun foo = (f: Foo,) => (f).a : f.A : Int
-//│ | Completing fun foo = (f: Foo,) => (f).a : f.A : Int
-//│ | | Type params 
-//│ | | Params 
-//│ | | 1. Typing term (f: Foo,) => (f).a : f.A : Int
-//│ | | | 1. Typing pattern [f: Foo,]
-//│ | | | | 1. Typing pattern f : Foo
-//│ | | | | | Typing type TypeName(Foo)
-//│ | | | | | | vars=Map() newDefsInfo=Map()
-//│ | | | | | | 1. type TypeName(Foo)
-//│ | | | | | | => #Foo<Object>
-//│ | | | | | => #Foo<Object> ——— 
-//│ | | | | 1. : #Foo<Object>
-//│ | | | 1. : (f: #Foo<Object>,)
-//│ | | | 1. Typing term (f).a : f.A : Int
-//│ | | | | 1. Typing term (f).a : f.A
-//│ | | | | | 1. Typing term (f).a
-//│ | | | | | | 1. Typing term f
-//│ | | | | | | 1. : #Foo<Object>
-//│ | | | | | | CONSTRAIN #Foo<Object> <! {a: a39'}
-//│ | | | | | |   where 
-//│ | | | | | | 1. C #Foo<Object> <! {a: a39'}    (0)
-//│ | | | | | | | Looking up field a in Some(Foo) & TreeSet() & {...}
-//│ | | | | | | | | Lookup Foo.a : Some(‘A29') where 
-//│ | | | | | | | | Fresh[0] Foo.a : Some(⊥(‘A29')..⊤(‘A29')) where Some()
-//│ | | | | | | | |   & None  (from refinement)
-//│ | | | | | | | 1. C ⊥(‘A29')..⊤(‘A29') <! a39'    (1)
-//│ | | | | | | | | 1. C ⊤(‘A29') <! a39'    (3)
-//│ | | | | | | | | | NEW a39' LB (0)
-//│ | | | | | 1. : a39'
-//│ | | | | | Typing type Selection(TypeName(f),TypeName(A))
-//│ | | | | | | vars=Map() newDefsInfo=Map()
-//│ | | | | | | 1. type Selection(TypeName(f),TypeName(A))
-//│ | | | | | | | 1. type TypeName(f)
-//│ | | | | | | | => #Foo<Object>
-//│ | | | | | | | >>>c Foo
-//│ | | | | | | | >>>v ‘A29'
-//│ | | | | | | => ‘A29'
-//│ | | | | | => ‘A29' ——— 
-//│ | | | | | CONSTRAIN a39' <! ‘A29'
-//│ | | | | |   where 
-//│ 		a39' :> ⊤(‘A29')
-//│ | | | | | 1. C a39' <! ‘A29'    (0)
-//│ | | | | | | NEW a39' UB (1)
-//│ | | | | | | 1. C ⊤(‘A29') <! ‘A29'    (2)
-//│ | | | | | | | CONSTRAINT FAILURE: ⊤(‘A29') <: ‘A29'
-//│ | | | | | | | allVarPols: +A29'
-//│ | | | | | | | normLike[+] ‘A29'
-//│ | | | | | | | | norm[+] ‘A29'
-//│ | | | | | | | | | DNF: DNF(1, {}∧‘A29')
-//│ | | | | | | | | ~> ‘A29'
-//│ | | | | | | | allVarPols: -A29'
-//│ | | | | | | | normLike[-] ‘A29'
-//│ | | | | | | | | norm[-] ‘A29'
-//│ | | | | | | | | | DNF: DNF(1, {}∧‘A29')
-//│ | | | | | | | | ~> ‘A29'
-//│ | | | | | | | CONSTRAIN #error<> <! ‘A29'
-//│ | | | | | | |   where 
-//│ | | | | | | | 1. C #error<> <! ‘A29'    (0)
 //│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.29: 	fun foo(f: Foo): Int = f.a : f.A
+//│ ║  l.62: 	fun foo(f: Foo): Int = f.a : f.A
 //│ ║        	                       ^^^
 //│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.29: 	fun foo(f: Foo): Int = f.a : f.A
+//│ ║  l.62: 	fun foo(f: Foo): Int = f.a : f.A
 //│ ║        	                       ^^^
 //│ ╟── into type `A`
-//│ ║  l.19: 	class Foo[type A](val a: A)
+//│ ║  l.54: 	class Foo[type A](val a: A)
 //│ ╙──      	               ^
-//│ | | | | 1. : ‘A29'
-//│ | | | | Typing type TypeName(Int)
-//│ | | | | | vars=Map() newDefsInfo=Map()
-//│ | | | | | 1. type TypeName(Int)
-//│ | | | | | => Int
-//│ | | | | => Int ——— 
-//│ | | | | CONSTRAIN ‘A29' <! Int
-//│ | | | |   where 
-//│ | | | | 1. C ‘A29' <! Int    (0)
-//│ | | | | | 1. C ‘A29' <! #Int<Object,Num>    (2)
-//│ | | | | | | CONSTRAINT FAILURE: ‘A29' <: #Int<Object,Num>
-//│ | | | | | | allVarPols: +A29'
-//│ | | | | | | normLike[+] ‘A29'
-//│ | | | | | | | norm[+] ‘A29'
-//│ | | | | | | | | DNF: DNF(1, {}∧‘A29')
-//│ | | | | | | | ~> ‘A29'
-//│ | | | | | | CONSTRAIN #error<> <! Int
-//│ | | | | | |   where 
-//│ | | | | | | 1. C #error<> <! Int    (0)
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.29: 	fun foo(f: Foo): Int = f.a : f.A
+//│ ║  l.62: 	fun foo(f: Foo): Int = f.a : f.A
 //│ ║        	                       ^^^
 //│ ╟── type `A` is not an instance of type `Int`
-//│ ║  l.19: 	class Foo[type A](val a: A)
+//│ ║  l.54: 	class Foo[type A](val a: A)
 //│ ║        	               ^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.29: 	fun foo(f: Foo): Int = f.a : f.A
+//│ ║  l.62: 	fun foo(f: Foo): Int = f.a : f.A
 //│ ╙──      	                 ^^^
-//│ | | | 1. : Int
-//│ | | 1. : ((f: #Foo<Object>,) -> Int)
-//│ | | CONSTRAIN ((f: #Foo<Object>,) -> Int) <! foo40'
-//│ | |   where 
-//│ | | 1. C ((f: #Foo<Object>,) -> Int) <! foo40'    (0)
-//│ | | | NEW foo40' LB (0)
-//│ | Completed TypedNuFun(0,fun foo = (f: Foo,) => (f).a : f.A : Int,((f: #Foo<Object>,) -> Int)) where 
-//│ | Typing unit statements
-//│ | : None
-//│ ======== TYPED ========
-//│ fun foo: ((f: #Foo<Object>,) -> Int) where 
 //│ fun foo: (f: Foo[anything]) -> Int
 
 // FIXME
 fun foo(f: Foo) = f.a : f.A
 //│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.141: 	fun foo(f: Foo) = f.a : f.A
-//│ ║         	                  ^^^
+//│ ║  l.84: 	fun foo(f: Foo) = f.a : f.A
+//│ ║        	                  ^^^
 //│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.141: 	fun foo(f: Foo) = f.a : f.A
-//│ ║         	                  ^^^
+//│ ║  l.84: 	fun foo(f: Foo) = f.a : f.A
+//│ ║        	                  ^^^
 //│ ╟── into type `A`
-//│ ║  l.19: 	class Foo[type A](val a: A)
+//│ ║  l.54: 	class Foo[type A](val a: A)
 //│ ╙──      	               ^
 //│ fun foo: (f: Foo[anything]) -> nothing
 
 // TODO reject for now
 fun foo(f: Foo[?]): Int = f.a : f.A
 //│ ╔══[PARSE ERROR] Unexpected operator here
-//│ ║  l.154: 	fun foo(f: Foo[?]): Int = f.a : f.A
-//│ ╙──       	               ^
+//│ ║  l.97: 	fun foo(f: Foo[?]): Int = f.a : f.A
+//│ ╙──      	               ^
 //│ ╔══[ERROR] Wrong number of type arguments – expected 1, found 0
-//│ ║  l.154: 	fun foo(f: Foo[?]): Int = f.a : f.A
-//│ ╙──       	           ^^^^^^
+//│ ║  l.97: 	fun foo(f: Foo[?]): Int = f.a : f.A
+//│ ╙──      	           ^^^^^^
 //│ fun foo: forall 'a. (f: Foo['a]) -> Int
 //│   where
 //│     'a <: Int
@@ -166,14 +109,14 @@ fun foo(f: Foo[?]): Int = f.a : f.A
 // * TODO infer (f: 'f) -> 'b where 'f <: { a: 'a;; A: 'a..'b }, 'a <: 'b
 fun foo(f) = f.a : f.A
 //│ ╔══[ERROR] Member A not found in ?a
-//│ ║  l.167: 	fun foo(f) = f.a : f.A
+//│ ║  l.110: 	fun foo(f) = f.a : f.A
 //│ ╙──       	                   ^
 //│ fun foo: {a: error} -> error
 
 // FIXME
 fun foo(f): Int = f.a : f.A
 //│ ╔══[ERROR] Member A not found in ?a
-//│ ║  l.174: 	fun foo(f): Int = f.a : f.A
+//│ ║  l.117: 	fun foo(f): Int = f.a : f.A
 //│ ╙──       	                        ^
 //│ fun foo: {a: error} -> Int
 
@@ -189,15 +132,12 @@ module Baz extends Foo[Str]
 //│ module Baz extends Foo
 
 123 : Bar.A
-//│ ╔══[ERROR] Module `Bar` does not contain member `A`
-//│ ║  l.191: 	123 : Bar.A
-//│ ╙──       	         ^^
-//│ error
+//│ Int
 
 // FIXME
 fun foo(f, x) = x : f.A
 //│ ╔══[ERROR] Member A not found in ?a
-//│ ║  l.198: 	fun foo(f, x) = x : f.A
+//│ ║  l.138: 	fun foo(f, x) = x : f.A
 //│ ╙──       	                    ^
 //│ fun foo: (anything, error) -> error
 
@@ -209,156 +149,61 @@ foo(Bar, 123)
 // FIXME
 fun test(f) = if f is
   Bar then 123 : f.A
-//│ ╔══[ERROR] Module `Bar` does not contain member `A`
-//│ ║  l.211: 	  Bar then 123 : f.A
-//│ ╙──       	                  ^^
-//│ fun test: Bar -> error
+//│ fun test: Bar -> Int
 
 // FIXME
 fun test(f) = if f is
   Bar then 123 : f.A
   Baz then "hello" : f.A
-//│ ╔══[ERROR] Module `Bar` does not contain member `A`
-//│ ║  l.219: 	  Bar then 123 : f.A
-//│ ╙──       	                  ^^
-//│ ╔══[ERROR] Module `Baz` does not contain member `A`
-//│ ║  l.220: 	  Baz then "hello" : f.A
-//│ ╙──       	                      ^^
-//│ fun test: (Bar | Baz) -> error
+//│ fun test: (Bar | Baz) -> (Int | Str)
 
 // FIXME
 [test(Bar), test(Baz)]
-//│ [error, error]
+//│ [Int | Str, Int | Str]
 
 
 // FIXME
-:d
+
 fun test(f: Foo) = if f is
   Bar then 123 : f.A
-//│ 0. Typing ‹fun test = (f: Foo,) => if f is ‹(Bar) then 123 : f.A››
-//│ | 0. Created lazy type info for fun test = (f: Foo,) => if f is ‹(Bar) then 123 : f.A›
-//│ | Completing fun test = (f: Foo,) => if f is ‹(Bar) then 123 : f.A›
-//│ | | Type params 
-//│ | | Params 
-//│ | | 1. Typing term (f: Foo,) => if f is ‹(Bar) then 123 : f.A›
-//│ | | | 1. Typing pattern [f: Foo,]
-//│ | | | | 1. Typing pattern f : Foo
-//│ | | | | | Typing type TypeName(Foo)
-//│ | | | | | | vars=Map() newDefsInfo=Map()
-//│ | | | | | | 1. type TypeName(Foo)
-//│ | | | | | | => #Foo<Object>
-//│ | | | | | => #Foo<Object> ——— 
-//│ | | | | 1. : #Foo<Object>
-//│ | | | 1. : (f: #Foo<Object>,)
-//│ | | | 1. Typing term if f is ‹(Bar) then 123 : f.A›
-//│ | | | | [Desugarer.destructPattern] scrutinee = f; pattern = Bar
-//│ | | | | [Desugarer.destructPattern] Result: «f is Bar»
-//│ | | | | Desugared term: case f of { Bar => 123 : f.A }
-//│ | | | | 1. Typing term case f of { Bar => 123 : f.A }
-//│ | | | | | 1. Typing term f
-//│ | | | | | 1. : #Foo<Object>
-//│ | | | | | CONSTRAIN #Foo<Object> <! Object
-//│ | | | | |   where 
-//│ | | | | | 1. C #Foo<Object> <! Object    (0)
-//│ | | | | | | Already a subtype by <:<
-//│ | | | | | Match arm Bar: #Bar<Object,Foo> & ⊤ intl ⊤
-//│ | | | | | 2. Typing term 123 : f.A
-//│ | | | | | | 2. Typing term 123
-//│ | | | | | | 2. : #123<Int,Num,Object>
-//│ | | | | | | Typing type Selection(TypeName(f),TypeName(A))
-//│ | | | | | | | vars=Map() newDefsInfo=Map()
-//│ | | | | | | | 2. type Selection(TypeName(f),TypeName(A))
-//│ | | | | | | | | 2. type TypeName(f)
-//│ | | | | | | | | => #Bar<Object,Foo>
-//│ | | | | | | | | >>>c Bar
-//│ ╔══[ERROR] Module `Bar` does not contain member `A`
-//│ ║  l.237: 	  Bar then 123 : f.A
-//│ ╙──       	                  ^^
-//│ | | | | | | | => #error<>
-//│ | | | | | | => #error<> ——— 
-//│ | | | | | | CONSTRAIN #123<Int,Num,Object> <! #error<>
-//│ | | | | | |   where 
-//│ | | | | | | 2. C #123<Int,Num,Object> <! #error<>    (0)
-//│ | | | | | 2. : #error<>
-//│ | | | | | CONSTRAIN #error<> <! α115'
-//│ | | | | |   where 
-//│ | | | | | 2. C #error<> <! α115'    (0)
-//│ | | | | | | NEW α115' LB (0)
-//│ | | | | | CONSTRAIN #Foo<Object> <! #Bar<Object,Foo>
-//│ | | | | |   where 
-//│ | | | | | 1. C #Foo<Object> <! #Bar<Object,Foo>    (0)
-//│ | | | | | | CONSTRAINT FAILURE: #Foo<Object> <: #Bar<Object,Foo>
-//│ | | | | | | allVarPols: 
-//│ | | | | | | normLike[+] #Foo<Object>
-//│ | | | | | | | norm[+] #Foo<Object>
-//│ | | | | | | | | DNF: DNF(0, #Foo<Object>{})
-//│ | | | | | | | | rcd2 {}
-//│ | | | | | | | | typeRef Foo[⊥..⊤]
-//│ | | | | | | | | Assigning A :: A66' := ⊥..⊤ where 
-//│ | | | | | | | | Set A66_116 ~> A66'
-//│ | | | | | | | | clsFields Foo#A -> mut ⊥..⊤..⊥..⊤
-//│ | | | | | | | ~> Foo[⊥..⊤]
-//│ | | | | | | CONSTRAIN #error<> <! α115'
-//│ | | | | | |   where 
-//│ 		α115' :> #error<>
-//│ | | | | | | 1. C #error<> <! α115'    (0)
-//│ | | | | | | | NEW α115' LB (0)
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.236: 	fun test(f: Foo) = if f is
+//│ ║  l.167: 	fun test(f: Foo) = if f is
 //│ ║         	                      ^^^^
-//│ ║  l.237: 	  Bar then 123 : f.A
+//│ ║  l.168: 	  Bar then 123 : f.A
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╟── type `Foo[?]` is not an instance of type `Bar`
-//│ ║  l.236: 	fun test(f: Foo) = if f is
+//│ ║  l.167: 	fun test(f: Foo) = if f is
 //│ ║         	            ^^^
+//│ ╟── but it flows into reference with expected type `Bar`
+//│ ║  l.167: 	fun test(f: Foo) = if f is
+//│ ║         	                      ^
 //│ ╟── Note: constraint arises from class pattern:
-//│ ║  l.237: 	  Bar then 123 : f.A
+//│ ║  l.168: 	  Bar then 123 : f.A
 //│ ╙──       	  ^^^
-//│ | | | | 1. : α115'
-//│ | | | 1. : α115'
-//│ | | 1. : ((f: #Foo<Object>,) -> α115')
-//│ | | CONSTRAIN ((f: #Foo<Object>,) -> α115') <! test117'
-//│ | |   where 
-//│ 		α115' :> #error<> | #error<>
-//│ | | 1. C ((f: #Foo<Object>,) -> α115') <! test117'    (0)
-//│ | | | NEW test117' LB (1)
-//│ | Completed TypedNuFun(0,fun test = (f: Foo,) => if f is ‹(Bar) then 123 : f.A›,((f: #Foo<Object>,) -> α115')) where 
-//│ 		α115' :> #error<> | #error<>
-//│ | Typing unit statements
-//│ | : None
-//│ ======== TYPED ========
-//│ fun test: ‹∀ 0. ((f: #Foo<Object>,) -> α115')› where 
-//│ |		α115' :> #error<> | #error<>
-//│ fun test: (f: Foo[in anything out nothing]) -> error
+//│ fun test: (f: Foo[in anything out nothing]) -> (Int | error)
 
 // FIXME
 fun test(f: Foo) = if f is
   Bar then 123 : f.A
   Baz then "hello" : f.A
-//│ ╔══[ERROR] Module `Bar` does not contain member `A`
-//│ ║  l.336: 	  Bar then 123 : f.A
-//│ ╙──       	                  ^^
-//│ ╔══[ERROR] Module `Baz` does not contain member `A`
-//│ ║  l.337: 	  Baz then "hello" : f.A
-//│ ╙──       	                      ^^
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.335: 	fun test(f: Foo) = if f is
+//│ ║  l.186: 	fun test(f: Foo) = if f is
 //│ ║         	                      ^^^^
-//│ ║  l.336: 	  Bar then 123 : f.A
+//│ ║  l.187: 	  Bar then 123 : f.A
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.337: 	  Baz then "hello" : f.A
+//│ ║  l.188: 	  Baz then "hello" : f.A
 //│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Foo[?]` does not match type `Bar | Baz`
-//│ ║  l.335: 	fun test(f: Foo) = if f is
+//│ ║  l.186: 	fun test(f: Foo) = if f is
 //│ ║         	            ^^^
 //│ ╟── but it flows into reference with expected type `Bar | Baz`
-//│ ║  l.335: 	fun test(f: Foo) = if f is
+//│ ║  l.186: 	fun test(f: Foo) = if f is
 //│ ╙──       	                      ^
-//│ fun test: (f: Foo[in anything out nothing]) -> error
+//│ fun test: (f: Foo[in anything out nothing]) -> (Int | Str)
 
 // FIXME
 [test(Bar), test(Baz)]
-//│ [error, error]
+//│ [Int | Str, Int | Str]
 
 
 :e
@@ -404,7 +249,7 @@ fun foo(x: Foo['a], y) = y : x.A  // interpreted as `y : x.Foo#A`
 // FIXME
 fun foo(x, y) = y : x.A
 //│ ╔══[ERROR] Member A not found in ?a
-//│ ║  l.405: 	fun foo(x, y) = y : x.A
+//│ ║  l.250: 	fun foo(x, y) = y : x.A
 //│ ╙──       	                    ^
 //│ fun foo: (anything, error) -> error
 
@@ -412,7 +257,21 @@ fun foo(x, y) = y : x.A
 fun bar(f: Foo['a], y) = foo(f, y)
 //│ fun bar: forall 'a. (f: Foo['a], error) -> error
 
+class Bar(val A: Int)
+//│ class Bar(A: Int)
 
+class C[type A]: C1 | C2
+class C1(val s: Bool) extends C[Bool]
+class C2(val i: Int) extends C[Int]
+//│ class C[A]: C1 | C2 {
+//│   constructor()
+//│ }
+//│ class C1(s: Bool) extends C
+//│ class C2(i: Int) extends C
 
+let c1 = C1(true)
+let c2 = C2(1)
+//│ let c1: C1
+//│ let c2: C2
 
 
