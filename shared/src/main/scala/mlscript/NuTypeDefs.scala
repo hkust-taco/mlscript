@@ -13,7 +13,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   
   
   type Params = Ls[Var -> FieldType]
-  type TyParams = Ls[(TN, TV, Opt[VarianceInfo])]
+  type TyParams = Ls[(TN, TV, TypeParamInfo)]
   
   
   sealed abstract class NuDeclInfo
@@ -281,7 +281,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           }
           
           // TODO check consistency with explicitVariances
-          val res = store ++ tparams.iterator.collect { case (_, tv, S(vi)) => tv -> vi }
+          val res = store ++ tparams.iterator.collect { case (_, tv, TypeParamInfo(S(vi), _)) => tv -> vi }
           
           _variances = S(res)
           
@@ -499,7 +499,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
             tparams.map { case (tn, tv, vi) =>
               // TODO also use computed variance info when available!
               Var(td.nme.name + "#" + tn.name).withLocOf(tn) ->
-                FieldType.mk(vi.getOrElse(VarianceInfo.in), tv, tv)(provTODO) }
+                FieldType.mk(vi.getVarOr(VarianceInfo.in), tv, tv)(provTODO) }
           )(provTODO)
         )(provTODO)
       )
@@ -926,7 +926,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
               TypeProvenance(tn.toLoc, "method type parameter",
                 originName = S(tn.name),
                 isType = true),
-              N, S(tn.name)), N)
+              N, S(tn.name)), TypeParamInfo(N, false))
           }
       }
     }
@@ -935,7 +935,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     }
     
     lazy val explicitVariances: VarianceStore =
-      MutMap.from(tparams.iterator.map(tp => tp._2 -> tp._3.getOrElse(VarianceInfo.in)))
+      MutMap.from(tparams.iterator.map(tp => tp._2 -> tp._3.getVarOr(VarianceInfo.in)))
     
     def varianceOf(tv: TV)(implicit ctx: Ctx): VarianceInfo =
       // TODO make use of inferred vce if result is completed

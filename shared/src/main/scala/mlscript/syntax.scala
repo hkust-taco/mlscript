@@ -194,7 +194,7 @@ sealed trait Outer { def kind: OuterKind }
 final case class NuTypeDef(
   kind: TypeDefKind,
   nme: TypeName,
-  tparams: Ls[(Opt[VarianceInfo], TypeName)],
+  tparams: Ls[(TypeParamInfo, TypeName)],
   params: Opt[Tup], // the specialized parameters for that type
   ctor: Opt[Constructor],
   sig: Opt[Type],
@@ -231,6 +231,9 @@ final case class NuFunDef(
 final case class Constructor(params: Tup, body: Blk) extends DesugaredStatement with ConstructorImpl // constructor(...) { ... }
 
 
+final case class TypeParamInfo(varinfo: Option[VarianceInfo], visible: Boolean) {
+  def getVarOr(default: VarianceInfo): VarianceInfo = varinfo.getOrElse(default)
+}
 
 final case class VarianceInfo(isCovariant: Bool, isContravariant: Bool) {
   

@@ -124,7 +124,7 @@ trait TypeSimplifier { self: Typer =>
                         else  v -> default :: Nil
                     }
                   case S(trt: TypedNuTrt) => // TODO factor w/ above & generalize
-                    trt.tparams.iterator.find(_._1.name === postfix).flatMap(_._3).getOrElse(VarianceInfo.in) match {
+                    trt.tparams.iterator.find(_._1.name === postfix).flatMap(_._3.varinfo).getOrElse(VarianceInfo.in) match {
                       case VarianceInfo(true, true) => Nil
                       case VarianceInfo(co, contra) =>
                         if (co) v -> FieldType(S(BotType), process(fty.ub, N))(fty.prov) :: Nil

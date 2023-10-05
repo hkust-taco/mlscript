@@ -51,13 +51,10 @@ fun f(e) = if e is
 //│ ╔══[ERROR] Cannot use `val` or `fun` in local block; use `let` instead.
 //│ ║  l.49: 	    fun f(x: a) = x
 //│ ╙──      	    ^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] type identifier not found: a
-//│ ║  l.49: 	    fun f(x: a) = x
-//│ ╙──      	             ^
 //│ ╔══[ERROR] identifier not found: l
 //│ ║  l.50: 	    f(l)
 //│ ╙──      	      ^
-//│ fun f: Pair[anything, anything] -> error
+//│ fun f: forall 'L. Pair['L, anything] -> (error | ??L & 'L)
 //│ Code generation encountered an error:
 //│   unresolved symbol l
 // fun f: forall 'lhs 'rhs. Pair['lhs, 'rhs] -> ('lhs, 'rhs,)

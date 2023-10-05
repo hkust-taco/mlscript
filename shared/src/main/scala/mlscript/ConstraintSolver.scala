@@ -33,16 +33,17 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         (implicit ctx: Ctx, raise: Raise)
         : Either[Diagnostic, NuMember]
         = {
-    val info = ctx.tyDefs2.getOrElse(clsNme, ???/*TODO*/)
+    val info = ctx.tyDefs2.getOrElse(clsNme, {
+      println(s"clsNme = $clsNme")
+      ???})
     
     if (info.isComputing) {
-      
       ??? // TODO support?
       
     } else info.complete() match {
       
       case cls: TypedNuCls =>
-        cls.members.get(fld.name) match {
+        cls.members.get(fld.name) orElse cls.members.get(cls.nme.name+"#"+fld.name) match {
           case S(m) => R(m)
           case N => L(noSuchMember(info, fld))
         }
@@ -126,8 +127,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           val targ = rfnt(Var(info.decl.name + "#" + tn.name)) match {
             // * TODO to avoid infinite recursion due to ever-expanding type args,
             // *  we should set the shadows of the targ to be the same as that of the parameter it replaces... 
-            case S(fty) if vi === S(VarianceInfo.co) => fty.ub
-            case S(fty) if vi === S(VarianceInfo.contra) => fty.lb.getOrElse(BotType)
+            case S(fty) if vi.varinfo === S(VarianceInfo.co) => fty.ub
+            case S(fty) if vi.varinfo === S(VarianceInfo.contra) => fty.lb.getOrElse(BotType)
             case S(fty) =>
               TypeBounds.mk(
                 fty.lb.getOrElse(BotType),

@@ -1100,7 +1100,7 @@ abstract class TyperHelpers { Typer: Typer =>
             case ((tn, tv, vi), ta) =>
               val fldNme = defn.name + "#" + tn.name
               // TODO also use computed variance info when available!
-              Var(fldNme).withLocOf(tn) -> FieldType.mk(vi.getOrElse(VarianceInfo.in), ta, ta)(provTODO)
+              Var(fldNme).withLocOf(tn) -> FieldType.mk(vi.getVarOr(VarianceInfo.in), ta, ta)(provTODO)
           })(provTODO)
         info.result match {
           case S(td: TypedNuAls) =>

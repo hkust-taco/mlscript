@@ -289,7 +289,7 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
       elems.map{ case L(l) => l.levelBelow(ub) case R(r) => r.levelBelow(ub) }.max
     
     lazy val inner: FieldType = elems.map {
-      case L(l) => l match { case a: ArrayBase => a.inner case _ => ??? }
+      case L(l) => l match { case a: ArrayBase => a.inner case _ => die }
       case R(r) => r
     }.reduceLeft(_ || _)
 

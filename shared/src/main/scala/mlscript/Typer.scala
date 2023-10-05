@@ -230,7 +230,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
   
   val nuBuiltinTypes: Ls[NuTypeDef] = Ls(
     NuTypeDef(Cls, TN("Object"), Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
-    NuTypeDef(Trt, TN("Eql"), (S(VarianceInfo.contra), TN("A")) :: Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
+    NuTypeDef(Trt, TN("Eql"), (TypeParamInfo(S(VarianceInfo.contra), false), TN("A")) :: Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
     NuTypeDef(Cls, TN("Num"), Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
     NuTypeDef(Cls, TN("Int"), Nil, N, N, N, Var("Num") :: Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
     NuTypeDef(Cls, TN("Bool"), Nil, N, N, S(Union(TN("true"), TN("false"))), Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
@@ -423,9 +423,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
               case fd: NuFunDef =>
                 N
             }
-          case _ => N
+          case _ => 
+            N
         })
-        .toRight(() => err("type identifier not found: " + name, loc)(raise))
+        .toRight(ctx.get(name) match {
+            case Some(VarSymbol(ty, vr)) => () =>  ty // get type from variable
+            case _ => () => err("type identifier not found: " + name, loc)(raise)})
     val localVars = mutable.Map.empty[TypeVar, TypeVariable]
     def tyTp(loco: Opt[Loc], desc: Str, originName: Opt[Str] = N) =
       TypeProvenance(loco, desc, originName, isType = true)
@@ -557,6 +560,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         def go(b_ty: ST, rfnt: Var => Opt[FieldType]): ST = b_ty.unwrapAll match {
           case ct: TypeRef => die // TODO actually
           case ClassTag(Var(clsNme), _) =>
+            println(s">>>c $clsNme")
             // TODO we should still succeed even if the member is not completed...
             lookupMember(clsNme, rfnt, nme.toVar) match {
               case R(cls: TypedNuCls) =>
@@ -565,11 +569,40 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
               case R(als: TypedNuAls) =>
                 if (als.tparams.nonEmpty) ??? // TODO
                 als.body
-              case R(m) => err(msg"Illegal selection of ${m.kind.str} member in type position", nme.toLoc)
+              case R(prm: NuParam) => 
+                // TODO fix leak
+                println(s">>>v ${prm.ty.ub}")
+                prm.ty.ub
+              case R(m) => 
+                err(msg"Illegal selection of ${m.kind.str} member in type position", nme.toLoc)
               case L(d) => err(d)
             }
-          case _ =>
-            err(msg"Illegal prefix of type selection: ${b_ty.expPos}", base.toLoc)
+          case t =>
+            println(s">>> $t :: ${t.getClass()}")
+
+            def collectCls(st: ST): Ls[Str] = st match {
+              case ComposedType(false, l, r) => collectCls(l) ++ collectCls(r)
+              case ClassTag(Var(clsNme), _) => clsNme :: Nil
+              case _ => Nil 
+            }
+            def collectFld(st: ST): List[(Var, FieldType)] = st match {
+              case ComposedType(false, l, r) => collectFld(l) ++ collectFld(r)
+              case rcd: RecordType => rcd.fields
+              case _ => Nil
+            }
+
+            val tms = for {
+              clsNme <- collectCls(t)
+              (v, f) <- collectFld(t)
+              if v.name === clsNme+"#"+nme.name
+            } yield f.ub
+
+            tms match {
+              case Nil => err(msg"Member $nme not found in ${b_ty.expPos}", base.toLoc)
+              case ty :: Nil => ty
+              case _ => err(msg"Ambigious selection of type member $nme in ${b_ty.expPos}", base.toLoc)
+            }
+            // err(msg"Illegal prefix of type selection: ${b_ty.expPos}", base.toLoc)
         }
         go(base_ty, _ => N)
       case Recursive(uv, body) =>
@@ -1456,40 +1489,31 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
                     err(msg"can only match on classes and traits", pat.toLoc)(raise)
                   
                   val prov = tp(pat.toLoc, "class pattern")
+
+                  def tprmToRcd(tparams: TyParams): (SimpleType, SimpleType) = {
+                    val (flds, fldsIntl) = tparams.map {
+                      case (tn, tv, vi) =>
+                        val nvLB = freshVar(tv.prov, S(tv), tv.nameHint)
+                        val nvUB = freshVar(tv.prov, S(tv), tv.nameHint)
+                        nvLB.upperBounds ::= nvUB
+                        val sk = SkolemTag(freshVar(tv.prov, S(tv), tv.nameHint)(lvl + 1))(provTODO)
+                        val v = Var(nme+"#"+tn.name).withLocOf(tn)
+                        val vce = vi.getVarOr(VarianceInfo.in)
+                        (v, FieldType.mk(vce, nvLB, nvUB)(provTODO)) ->
+                        (v, FieldType.mk(vce, nvLB | sk, nvUB & sk)(provTODO))
+                      }.unzip
+                    (RecordType.mk(flds)(provTODO), RecordType.mk(fldsIntl)(provTODO))
+                  }
                   
                   lti match {
                     case dti: DelayedTypeInfo =>
                       val tag = clsNameToNomTag(dti.decl match { case decl: NuTypeDef => decl; case _ => die })(prov, ctx)
-                      val (flds, fldsIntl) = dti.tparams.map {
-                          case (tn, tv, vi) =>
-                            val nvLB = freshVar(tv.prov, S(tv), tv.nameHint)
-                            val nvUB = freshVar(tv.prov, S(tv), tv.nameHint)
-                            nvLB.upperBounds ::= nvUB
-                            val sk = SkolemTag(freshVar(tv.prov, S(tv), tv.nameHint)(lvl + 1))(provTODO)
-                            val v = Var(nme+"#"+tn.name).withLocOf(tn)
-                            val vce = vi.getOrElse(VarianceInfo.in)
-                            (v, FieldType.mk(vce, nvLB, nvUB)(provTODO)) ->
-                            (v, FieldType.mk(vce, nvLB | sk, nvUB & sk)(provTODO))
-                      }.unzip
-                      val ty = RecordType.mk(flds)(provTODO)
-                      val tyIntl = RecordType.mk(fldsIntl)(provTODO)
+                      val (ty, tyIntl) = tprmToRcd(dti.tparams)
                       println(s"Match arm $nme: $tag & $ty intl $tyIntl")
                       (tag, ty, tyIntl)
-                    case CompletedTypeInfo(cls: TypedNuCls) => // * TODO factor with above
+                    case CompletedTypeInfo(cls: TypedNuCls) =>
                       val tag = clsNameToNomTag(cls.td)(prov, ctx)
-                      val (flds, fldsIntl) = cls.tparams.map {
-                          case (tn, tv, vi) =>
-                            val nvLB = freshVar(tv.prov, S(tv), tv.nameHint)
-                            val nvUB = freshVar(tv.prov, S(tv), tv.nameHint)
-                            nvLB.upperBounds ::= nvUB
-                            val sk = SkolemTag(freshVar(tv.prov, S(tv), tv.nameHint)(lvl + 1))(provTODO)
-                            val v = Var(nme+"#"+tn.name).withLocOf(tn)
-                            val vce = vi.getOrElse(VarianceInfo.in)
-                            (v, FieldType.mk(vce, nvLB, nvUB)(provTODO)) ->
-                            (v, FieldType.mk(vce, nvLB | sk, nvUB & sk)(provTODO))
-                      }.unzip
-                      val ty = RecordType.mk(flds)(provTODO)
-                      val tyIntl = RecordType.mk(fldsIntl)(provTODO)
+                      val (ty, tyIntl) = tprmToRcd(cls.tparams)
                       println(s"Match arm $nme: $tag & $ty intl $tyIntl")
                       (tag, ty, tyIntl)
                     case CompletedTypeInfo(_) => bail()
@@ -1698,7 +1722,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
     }
     
     class ExpCtx(val tps: Map[TV, TN]) {
-      def apply(tparams: Ls[(TN, TV, Opt[VarianceInfo])]): ExpCtx =
+      def apply(tparams: Ls[(TN, TV, TypeParamInfo)]): ExpCtx =
         new ExpCtx(tps ++ tparams.iterator.map{case (tn, tv, vi) => tv -> tn})
     }
     

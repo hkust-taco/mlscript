@@ -1036,18 +1036,22 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
     }
   
   // TODO support line-broken param lists; share logic with args/argsOrIf
-  def typeParams(implicit fe: FoundErr, et: ExpectThen): Ls[(Opt[VarianceInfo], TypeName)] = {
+  def typeParams(implicit fe: FoundErr, et: ExpectThen): Ls[(TypeParamInfo, TypeName)] = {
     val vinfo = yeetSpaces match {
       case (KEYWORD("in"), l0) :: (KEYWORD("out"), l1) :: _ =>
         consume
-        S(VarianceInfo.in, l0 ++ l1)
+        (TypeParamInfo(S(VarianceInfo.in), false), S(l0++l1))
       case (KEYWORD("in"), l0) :: _ =>
         consume
-        S(VarianceInfo.contra, l0)
+        (TypeParamInfo(S(VarianceInfo.contra), false), S(l0))
       case (KEYWORD("out"), l0) :: _ =>
         consume
-        S(VarianceInfo.co, l0)
-      case _ => N
+        (TypeParamInfo(S(VarianceInfo.co), false), S(l0))
+      case (KEYWORD("type"), l0) :: _ =>
+        consume
+        (TypeParamInfo(N, true), S(l0)) // visible type member
+      case _ =>
+        (TypeParamInfo(N, false), N)
     }
     yeetSpaces match {
       case (IDENT(nme, false), l0) :: _ =>
@@ -1056,15 +1060,17 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         yeetSpaces match {
           case (COMMA, l0) :: _ =>
             consume
-            vinfo.map(_._1) -> tyNme :: typeParams
+            vinfo._1 -> tyNme :: typeParams
           case _ =>
-            vinfo.map(_._1) -> tyNme :: Nil
+            vinfo._1 -> tyNme :: Nil
         }
       case _ =>
         vinfo match {
-          case S((_, loc)) =>
+          case (TypeParamInfo(S(_), _), S(loc)) =>
             err(msg"dangling variance information" -> S(loc) :: Nil)
-          case N =>
+          case (TypeParamInfo(N, true), S(loc)) =>
+            err(msg"dangling visible type member" -> S(loc) :: Nil)
+          case _ =>
         }
         Nil
     }
