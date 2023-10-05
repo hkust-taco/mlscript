@@ -222,7 +222,6 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
         sign: ST,
         inheritedTags: Set[TypeName],
         parentTP: Map[Str, NuMember]
-      )(val instanceType: ST, // * only meant to be used in `force` and `variances`
       ) extends TypedNuTypeDef(Cls) with PolyNuDecl
   {
     def decl: NuTypeDef = td
@@ -276,7 +275,10 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
             }
             }()
           }
-          Trav(PolMap.pos)(instanceType)
+          members.foreach {
+            case (_, m: NuParam) if m.isType =>
+            case (_, m) => Trav.applyMem(PolMap.pos)(m)
+          }
           
           // TODO check consistency with explicitVariances
           val res = store ++ tparams.iterator.collect { case (_, tv, S(vi)) => tv -> vi }
@@ -303,7 +305,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
         sign.freshenAbove(lim, rigidify),
         inheritedTags,
         parentTP.mapValuesIter(_.freshenAbove(lim, rigidify)).toMap,
-      )(this.instanceType.freshenAbove(lim, rigidify))
+      )
     }}
     
     def mapPol(pol: Opt[Bool], smart: Bool)(f: (Opt[Bool], SimpleType) => SimpleType)
@@ -317,7 +319,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           f(pol, sign),
           inheritedTags,
           parentTP.mapValuesIter(_.mapPol(pol, smart)(f)).toMap,
-        )(f(pol, instanceType))
+        )
     def mapPolMap(pol: PolMap)(f: (PolMap, SimpleType) => SimpleType)
           (implicit ctx: Ctx): TypedNuCls =
         TypedNuCls(level, td,
@@ -329,7 +331,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           f(pol, sign),
           inheritedTags,
           parentTP.mapValuesIter(_.mapPolMap(pol)(f)).toMap,
-        )(f(pol, instanceType))
+        )
     
     override def toString: Str = s"TypedNuCls($level, ${td.nme},\n\t$tparams,\n\t$params,\n\tthis: $thisTy, ${
       members.lnIndent()},\n\t: $sign, $inheritedTags, $parentTP)"
@@ -642,18 +644,39 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     })
     ctx ++= completedInfos
     
+    val returnsLastExpr = outer.map(_.kind) match {
+      case N | S(Block | Val) => true
+      case S(_: TypeDefKind) => false
+    }
+    
     // * Type the block statements
     def go(stmts: Ls[Statement]): Opt[ST] = stmts match {
       case s :: stmts =>
         val res_ty = s match {
           case decl: NuDecl => N
-          case s: Statement =>
-            val (diags, dss) = s.desugared
-            diags.foreach(raise)
-            S(typeTerms(dss, false, Nil)(ctx, raise, TypeProvenance(s.toLoc, s match {
-              case trm: Term => trm.describe
-              case s => "statement"
-            }), vars, genLambdas = false))
+          case t: Term =>
+            implicit val genLambdas: GenLambdas = true
+            val ty = typeTerm(t)
+            if (!topLevel && !(stmts.isEmpty && returnsLastExpr)) {
+              t match {
+                // * We do not include `_: Var` because references to `fun`s and lazily-initialized
+                // * definitions may have side effects.
+                case _: Lit | _: Lam =>
+                  warn("Pure expression does nothing in statement position.", t.toLoc)
+                case _ =>
+                  constrain(mkProxy(ty, TypeProvenance(t.toCoveringLoc, "expression in statement position")), UnitType)(
+                    raise = err => raise(WarningReport( // Demote constraint errors from this to warnings
+                      msg"Expression in statement position should have type `unit`." -> N ::
+                      msg"Use the `discard` function to discard non-unit values, making the intent clearer." -> N ::
+                      err.allMsgs, newDefs)),
+                    prov = TypeProvenance(t.toLoc, t.describe), ctx)
+              }
+            }
+            S(ty)
+          case s: DesugaredStatement =>
+            err(msg"Illegal position for this ${s.describe} statement.", s.toLoc)(raise)
+            N
+          case _ => die
         }
         stmts match {
           case Nil => res_ty
@@ -1411,7 +1434,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                   
                   val body_ty = td.sig match {
                     case S(sig) =>
-                      typeType(sig)
+                      ctx.nextLevel { implicit ctx: Ctx => typeType(sig) }
                     case N =>
                       err(msg"Type alias definition requires a right-hand side", td.toLoc)
                   }
@@ -1693,8 +1716,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       sig_ty,
                       inheritedTags,
                       tparamMembers
-                    )(thisType)
-                      .tap(_.variances) // * Force variance computation
+                    ).tap(_.variances) // * Force variance computation
                   }
                   
                 case Mxn =>

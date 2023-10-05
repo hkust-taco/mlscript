@@ -88,17 +88,17 @@ fun foo(x) = if x is
 :e
 :ge
 fun foo(x) = if x is
-  (Z(), Z()) then "zeros"
-  (O(), O()) then "ones"
+  [Z(), Z()] then "zeros"
+  [O(), O()] then "ones"
 //│ ╔══[ERROR] The match is not exhaustive.
 //│ ║  l.90: 	fun foo(x) = if x is
 //│ ║        	                ^^^^
 //│ ╟── The scrutinee at this position misses 1 case.
-//│ ║  l.91: 	  (Z(), Z()) then "zeros"
+//│ ║  l.91: 	  [Z(), Z()] then "zeros"
 //│ ║        	        ^^^
 //│ ╟── [Missing Case 1/1] `O`
 //│ ╟── It first appears here.
-//│ ║  l.92: 	  (O(), O()) then "ones"
+//│ ║  l.92: 	  [O(), O()] then "ones"
 //│ ╙──      	        ^^^
 //│ foo: anything -> error
 //│ Code generation encountered an error:

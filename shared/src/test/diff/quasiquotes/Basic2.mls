@@ -10,8 +10,8 @@ run(res)
 
 let res = code"()"
 run(res)
-//│ let res: Code[[], nothing]
-//│ []
+//│ let res: Code[(), nothing]
+//│ ()
 
 let res = code"(1,)"
 run(res)

@@ -33,12 +33,12 @@ fun zip(xs, ys) = mapi of xs, (x, i) =>
   if ys.[i] is
     undefined then error
     y then [x, y]
-//│ fun zip: forall 'c 'd. (Array['d], Array[Object & 'c & ~undefined]) -> Array[['d, 'c]]
-//│ fun zip: forall 'a 'b. (Array['a], Array[Object & 'b & ~undefined]) -> Array[['a, 'b]]
+//│ fun zip: forall 'c 'd. (Array['d], Array[Object & 'c & ~()]) -> Array[['d, 'c]]
+//│ fun zip: forall 'a 'b. (Array['a], Array[Object & 'b & ~()]) -> Array[['a, 'b]]
 
 
 zip
-//│ forall 'a 'b. (Array['a], Array[Object & 'b & ~undefined]) -> Array[['a, 'b]]
+//│ forall 'a 'b. (Array['a], Array[Object & 'b & ~()]) -> Array[['a, 'b]]
 //│ res
 //│     = [Function: zip1]
 

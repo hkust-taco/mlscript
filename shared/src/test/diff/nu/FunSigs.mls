@@ -2,8 +2,8 @@
 
 
 
-fun log(msg: Str): unit
-//│ fun log: (msg: Str) -> unit
+fun log(msg: Str): ()
+//│ fun log: (msg: Str) -> ()
 
 let f =
   log("ok")

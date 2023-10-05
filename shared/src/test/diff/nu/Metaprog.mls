@@ -13,7 +13,7 @@ class Add[C](lhs: Code[Int, C], rhs: Code[Int, C]) extends Code[Int, C]
 //│ class Add[C](lhs: Code[Int, C], rhs: Code[Int, C]) extends Code
 
 fun bind(x: Code['a, 'c], k: (forall 'cc: Code['a, 'cc] -> Code['b, 'cc])): Code['b, 'c] = k(x)
-//│ fun bind: forall 'c 'b 'a. (x: Code['a, 'c], k: forall 'cc. Code['a, 'cc] -> Code['b, 'cc]) -> Code['b, 'c]
+//│ fun bind: forall 'b 'a 'c. (x: Code['a, 'c], k: forall 'cc. Code['a, 'cc] -> Code['b, 'cc]) -> Code['b, 'c]
 
 
 // * Note: extrusion
@@ -21,7 +21,7 @@ fun test(f) =
   bind of IntLit(42), n =>
   f(n)
   Add(n, IntLit(1))
-//│ fun test: (Code[Int, ??cc] -> anything) -> Code[Int, nothing]
+//│ fun test: (Code[Int, ??cc] -> ()) -> Code[Int, nothing]
 
 
 abstract class Test[C] {

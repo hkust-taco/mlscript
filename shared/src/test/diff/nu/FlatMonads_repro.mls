@@ -118,7 +118,7 @@ r.run
 //│     = 42
 
 x => readInt.bind of x
-//│ (Int -> IO['AA]) -> Bind[Int, 'AA]
+//│ forall 'AA. (Int -> IO['AA]) -> Bind[Int, 'AA]
 //│ res
 //│     = [Function: res]
 
@@ -145,7 +145,7 @@ readInt.run
 //│     = 42
 
 x => Pure(x).run
-//│ 'run -> 'run
+//│ forall 'run. 'run -> 'run
 //│ res
 //│     = [Function: res]
 
@@ -177,14 +177,14 @@ fun loop =
 val x: Bind['A, 'B] where undefined : 'A;; 'A : 'B
 //│ val x: forall 'A 'B. Bind['A, 'B]
 //│   where
-//│     'A :> undefined
+//│     'A :> ()
 //│        <: 'B
-//│     'B :> undefined
+//│     'B :> ()
 //│ x
 //│   = <missing implementation>
 
 x.run
-//│ undefined
+//│ ()
 //│ res
 //│     = <no result>
 //│       x is not implemented
@@ -192,7 +192,7 @@ x.run
 val x: Bind['A, 'B] where 'A : undefined;; 'A : 'B
 //│ val x: forall 'A 'B. Bind['A, 'B]
 //│   where
-//│     'A <: undefined & 'B
+//│     'A <: () & 'B
 //│ x
 //│   = <missing implementation>
 

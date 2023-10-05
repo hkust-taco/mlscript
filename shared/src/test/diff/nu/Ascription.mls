@@ -13,7 +13,7 @@
 // TODO?
 :e
 1 : Int : Int
-//│ ╔══[ERROR] not a recognized type
+//│ ╔══[ERROR] Not a recognized type
 //│ ║  l.15: 	1 : Int : Int
 //│ ╙──      	    ^^^
 //│ anything

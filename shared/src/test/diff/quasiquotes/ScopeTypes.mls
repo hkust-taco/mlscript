@@ -24,6 +24,17 @@ code"y => ${ run(test(code"y")); code"0" }"
 //│ ║  l.22: 	code"y => ${ run(test(code"y")); code"0" }"
 //│ ║        	             ^^^^^^^^^^^^^^^^^^
 //│ ╙── expression of type `?y & ~??x` does not match type `nothing`
+//│ ╔══[WARNING] Expression in statement position should have type `unit`.
+//│ ╟── Use the `discard` function to discard non-unit values, making the intent clearer.
+//│ ╟── Type mismatch in application:
+//│ ║  l.22: 	code"y => ${ run(test(code"y")); code"0" }"
+//│ ║        	             ^^^^^^^^^^^^^^^^^^
+//│ ╟── function of type `?a -> (forall ?b. ?b)` does not match type `()`
+//│ ║  l.18: 	  code"x => x + ${cde}"
+//│ ║        	       ^^^^^^^^^^^^^^^
+//│ ╟── but it flows into application with expected type `()`
+//│ ║  l.22: 	code"y => ${ run(test(code"y")); code"0" }"
+//│ ╙──      	             ^^^^^^^^^^^^^^^^^^
 //│ Code[Int -> 0, nothing]
 
 
@@ -45,17 +56,39 @@ run(test(code"1", id))
 :e
 code"x => ${ run(test(code"x", id)); code"x" }"
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.46: 	code"x => ${ run(test(code"x", id)); code"x" }"
+//│ ║  l.57: 	code"x => ${ run(test(code"x", id)); code"x" }"
 //│ ║        	             ^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── expression of type `?x & ~??x` does not match type `nothing`
+//│ ╔══[WARNING] Expression in statement position should have type `unit`.
+//│ ╟── Use the `discard` function to discard non-unit values, making the intent clearer.
+//│ ╟── Type mismatch in application:
+//│ ║  l.57: 	code"x => ${ run(test(code"x", id)); code"x" }"
+//│ ║        	             ^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── function of type `?a -> (forall ?b. ?b)` does not match type `()`
+//│ ║  l.50: 	  code"x => x + ${f(cde)}"
+//│ ║        	       ^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into application with expected type `()`
+//│ ║  l.57: 	code"x => ${ run(test(code"x", id)); code"x" }"
+//│ ╙──      	             ^^^^^^^^^^^^^^^^^^^^^^
 //│ Code[forall 'a. (Int & 'a) -> 'a, nothing]
 
 :e
 code"x => ${ let c = code"x" in run(test(c, id)); c }"
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.54: 	code"x => ${ let c = code"x" in run(test(c, id)); c }"
+//│ ║  l.76: 	code"x => ${ let c = code"x" in run(test(c, id)); c }"
 //│ ║        	                                ^^^^^^^^^^^^^^^^
 //│ ╙── expression of type `?x & ~??x` does not match type `nothing`
+//│ ╔══[WARNING] Expression in statement position should have type `unit`.
+//│ ╟── Use the `discard` function to discard non-unit values, making the intent clearer.
+//│ ╟── Type mismatch in application:
+//│ ║  l.76: 	code"x => ${ let c = code"x" in run(test(c, id)); c }"
+//│ ║        	                                ^^^^^^^^^^^^^^^^
+//│ ╟── function of type `?a -> (forall ?b. ?b)` does not match type `()`
+//│ ║  l.50: 	  code"x => x + ${f(cde)}"
+//│ ║        	       ^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into application with expected type `()`
+//│ ║  l.76: 	code"x => ${ let c = code"x" in run(test(c, id)); c }"
+//│ ╙──      	                                ^^^^^^^^^^^^^^^^
 //│ Code[forall 'a. (Int & 'a) -> 'a, nothing]
 
 
@@ -70,55 +103,55 @@ let myrun = c => run(c)
 :e
 code"x => ${ test(myrun) }"
 //│ ╔══[ERROR] Type error in application
-//│ ║  l.71: 	code"x => ${ test(myrun) }"
-//│ ║        	             ^^^^^^^^^^^
+//│ ║  l.104: 	code"x => ${ test(myrun) }"
+//│ ║         	             ^^^^^^^^^^^
 //│ ╟── type variable `?x` leaks out of its scope
 //│ ╟── into type `nothing`
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this reference:
-//│ ║  l.63: 	  code"x => x + ${f(code"x + 1")}"
+//│ ║  l.96: 	  code"x => x + ${f(code"x + 1")}"
 //│ ╙──      	                  ^
 //│ Code[anything -> Int -> Int, nothing]
 
 :e
 code"x => ${ test(c => run(c); code"0") }"
-//│ ╔══[ERROR] Type error in application
-//│ ║  l.84: 	code"x => ${ test(c => run(c); code"0") }"
-//│ ║        	             ^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type variable `?x` leaks out of its scope
-//│ ╟── into type `nothing`
-//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
-//│ ╟── • this reference:
-//│ ║  l.63: 	  code"x => x + ${f(code"x + 1")}"
-//│ ╙──      	                  ^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.117: 	code"x => ${ test(c => run(c); code"0") }"
+//│ ║         	             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── operator application of type `Int` does not match type `()`
+//│ ║  l.96: 	  code"x => x + ${f(code"x + 1")}"
+//│ ║        	                         ^^^^^
+//│ ╟── Note: constraint arises from expression in statement position:
+//│ ║  l.117: 	code"x => ${ test(c => run(c); code"0") }"
+//│ ╙──       	                       ^^^^^^
 //│ Code[anything -> Int -> Int, nothing]
 
 
 :e
 code"x => ${ test(c => run(c); code"x") }"
-//│ ╔══[ERROR] Type error in application
-//│ ║  l.98: 	code"x => ${ test(c => run(c); code"x") }"
-//│ ║        	             ^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type variable `?x` leaks out of its scope
-//│ ╟── into type `nothing`
-//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
-//│ ╟── • this reference:
-//│ ║  l.63: 	  code"x => x + ${f(code"x + 1")}"
-//│ ╙──      	                  ^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.131: 	code"x => ${ test(c => run(c); code"x") }"
+//│ ║         	             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── operator application of type `Int` does not match type `()`
+//│ ║  l.96: 	  code"x => x + ${f(code"x + 1")}"
+//│ ║        	                         ^^^^^
+//│ ╟── Note: constraint arises from expression in statement position:
+//│ ║  l.131: 	code"x => ${ test(c => run(c); code"x") }"
+//│ ╙──       	                       ^^^^^^
 //│ Code[anything -> Int -> Int, nothing]
 
 
 :e
 fun test2(a) = code"x => ${ test(c => run(c); a) }"
-//│ ╔══[ERROR] Type error in application
-//│ ║  l.112: 	fun test2(a) = code"x => ${ test(c => run(c); a) }"
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.145: 	fun test2(a) = code"x => ${ test(c => run(c); a) }"
 //│ ║         	                            ^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type variable `?x` leaks out of its scope
-//│ ╟── into type `nothing`
-//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
-//│ ╟── • this reference:
-//│ ║  l.63: 	  code"x => x + ${f(code"x + 1")}"
-//│ ╙──      	                  ^
+//│ ╟── operator application of type `Int` does not match type `()`
+//│ ║  l.96: 	  code"x => x + ${f(code"x + 1")}"
+//│ ║        	                         ^^^^^
+//│ ╟── Note: constraint arises from expression in statement position:
+//│ ║  l.145: 	fun test2(a) = code"x => ${ test(c => run(c); a) }"
+//│ ╙──       	                                      ^^^^^^
 //│ fun test2: forall 'a. Code[Int, ??x | ??x0 | 'a] -> Code[anything -> Int -> Int, 'a]
 
 type Hide[C] = C & (C | Int)

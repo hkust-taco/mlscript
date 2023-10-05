@@ -32,7 +32,7 @@ trait Base1: Foo
 //│ ╟── back into type variable `A`
 //│ ║  l.5: 	trait Foo[A] { fun x: A }
 //│ ╙──     	          ^
-//│ (b: Base1) -> Foo['X]
+//│ forall 'X. (b: Base1) -> Foo['X]
 //│   where
 //│     'X :> ??A
 //│        <: ??A0
@@ -90,7 +90,7 @@ trait Base2: Foo['FigureItOut]
 
 // :e
 (b: Base2) => b : Foo['X]
-//│ (b: Base2) -> Foo['X]
+//│ forall 'X. (b: Base2) -> Foo['X]
 //│   where
 //│     'X :> ??FigureItOut
 //│        <: ??FigureItOut0
@@ -158,7 +158,7 @@ class Impl2() extends Base2, Foo[Int] {
 
 
 trait Test1[A] { fun x: A }
-trait Test2[A]: Test1[(A, A)]
+trait Test2[A]: Test1[[A, A]]
 //│ trait Test1[A] {
 //│   fun x: A
 //│ }

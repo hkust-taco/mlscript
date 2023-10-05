@@ -3,7 +3,7 @@
 
 class Exp[A]: Pair | Lit
 class Lit(n: Int) extends Exp[Int]
-class Pair[L, R](val lhs: L, val rhs: R) extends Exp[(L, R)]
+class Pair[L, R](val lhs: L, val rhs: R) extends Exp[[L, R]]
 //│ class Exp[A]: Lit | Pair[anything, anything] {
 //│   constructor()
 //│ }
@@ -27,7 +27,7 @@ fun f(e) = if e is
 //│ fun f: forall 'a 'b. (Lit | Pair['a, 'b]) -> (Int | ['a, 'b])
 
 (e: Exp['X]) => f(e)
-//│ (e: Exp['X]) -> (Int | [??L, ??R])
+//│ forall 'X. (e: Exp['X]) -> (Int | [??L, ??R])
 //│ res
 //│     = [Function: res]
 

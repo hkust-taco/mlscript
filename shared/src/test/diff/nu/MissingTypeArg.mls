@@ -13,14 +13,14 @@ fun test(pt1, pt2) = pt1.color === pt1.color and
   else test(p1, p2)
 //│ fun test: forall 'a 'b 'c. ('a, 'c) -> Bool
 //│   where
-//│     'c <: {parent: Object & 'c & ~undefined | undefined}
-//│     'a <: {color: Eql['b] & 'b, parent: Object & 'a & ~undefined | undefined}
+//│     'c <: {parent: Object & 'c & ~() | ()}
+//│     'a <: {color: Eql['b] & 'b, parent: Object & 'a & ~() | ()}
 
 
 // * This works out fine:
 
 class MyPoint1[Col](val color: Col, val parent: MyPoint1[Col] | undefined)
-//│ class MyPoint1[Col](color: Col, parent: MyPoint1[Col] | undefined)
+//│ class MyPoint1[Col](color: Col, parent: MyPoint1[Col] | ())
 
 val p = MyPoint1(0, undefined)
 //│ val p: MyPoint1['Col]
@@ -39,7 +39,7 @@ test(p, p)
 // * the error is not helpful at all:
 
 class MyPoint2[Col](val color: Col, val parent: MyPoint2 | undefined)
-//│ class MyPoint2[Col](color: Col, parent: MyPoint2[anything] | undefined)
+//│ class MyPoint2[Col](color: Col, parent: MyPoint2[anything] | ())
 
 val p = MyPoint2(0, undefined)
 //│ val p: MyPoint2[0]
@@ -73,7 +73,7 @@ fun test(pt1, pt2) = pt1.color === pt1.color and
 //│ fun test: forall 'a 'b 'c. ('a, 'c) -> Bool
 //│   where
 //│     'c <: {parent: Object & 'c}
-//│     'a <: {color: Eql['b] & 'b, parent: Object & 'a & ~undefined | undefined}
+//│     'a <: {color: Eql['b] & 'b, parent: Object & 'a & ~() | ()}
 
 :e // TODO support
 test(p, p)

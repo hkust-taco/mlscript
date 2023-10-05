@@ -13,9 +13,9 @@ let b = i(true)
 //│ let a: 0
 //│ let b: true
 //│ a
-//│   = [Function: i]
-//│ b
 //│   = 0
+//│ b
+//│   = true
 
 :re // FIXME shouldn't be a reference error
 let a = i(0)
@@ -28,7 +28,7 @@ let b = i(true)
 //│ Runtime error:
 //│   ReferenceError: i1 is not defined
 //│ b
-//│   = [Function: i1]
+//│   = true
 
 :re // FIXME shouldn't be a reference error
 let a = i(0)

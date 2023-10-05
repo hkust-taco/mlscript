@@ -1071,6 +1071,42 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         val desug = If(IfThen(lhs, rhs), S(Var("false")))
         term.desugaredTerm = S(desug)
         typeTerm(desug)
+      case App(f: Term, a @ Tup(fields)) if (fields.exists(x => x._1.isDefined)) =>
+        def getLowerBoundFunctionType(t: SimpleType): List[FunctionType] = t.unwrapProvs match {
+          case PolymorphicType(_, AliasOf(fun_ty @ FunctionType(_, _))) =>
+            List(fun_ty)
+          case tt @ FunctionType(_, _) =>
+            List(tt)
+          case tv: TypeVariable =>
+            tv.lowerBounds.map(getLowerBoundFunctionType(_)).flatten
+          case ct @ ComposedType(pol, lhs, rhs) =>
+            if (pol === false) {
+              getLowerBoundFunctionType(lhs) ++ getLowerBoundFunctionType(rhs)
+            } else 
+              Nil
+          case _ =>
+            Nil
+        }
+        val f_ty = typeTerm(f)
+        val fun_tys: List[FunctionType] = getLowerBoundFunctionType(f_ty)
+
+        fun_tys match {
+          case FunctionType(TupleType(fields), _) :: Nil =>
+            val hasUntypedArg = fields.exists(_._1.isEmpty)
+            if (hasUntypedArg) {
+              err("Cannot use named arguments as the function type has untyped arguments", a.toLoc)
+            } else {
+              val argsList = fields.map(x => x._1 match {
+                case Some(arg) => arg
+                case N => die // cannot happen, because already checked with the hasUntypedArg
+              })
+              desugarNamedArgs(term, f, a, argsList, f_ty)
+            }
+          case _ :: _ :: _ =>
+            err(msg"More than one function signature found in type `${f_ty.expPos}` for function call with named arguments", f.toLoc)
+          case Nil | _ :: Nil =>
+            err(msg"Cannot retrieve appropriate function signature from type `${f_ty.expPos}` for applying named arguments", f.toLoc)
+        }
       case App(f, a) =>
         val f_ty = typeMonomorphicTerm(f)
         // * ^ Note: typing the function monomorphically simplifies type inference but
@@ -1633,6 +1669,77 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       } else TupleType(fields.reverseIterator.mapValues(_.toUpper(noProv)))(prov)
   }
   
+  def getNewVarName(prefix: Str, nonValidVars: Set[Var]): Str = {
+    // we check all possibe prefix_num combination, till we find one that is not in the nonValidVars
+    val ints = LazyList.from(1)
+    prefix + "_" + ints.find(index => {
+      !nonValidVars.contains(Var(prefix + "_" + index))
+    }).getOrElse(die)
+  }
+  
+  def desugarNamedArgs(term: Term, f: Term, a: Tup, argsList: List[Var], f_ty: ST)
+  (implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType]): SimpleType = {
+    def rec (as: List[(String -> Fld) -> Boolean], acc: Map[String, Either[Var, Term]]): Term = {
+      as match {
+        case ((v, fld), isNamed) :: tail =>
+          if (isNamed) {
+            fld.value match {
+              case _: Lit | _: Var =>
+                rec(tail, acc + (v -> R(fld.value)))
+              case _ =>
+                val newVar = Var(getNewVarName(v, a.freeVars))
+                Let(false, newVar, fld.value, rec(tail, acc + (v -> L(newVar))))
+            }
+          } else {
+            rec(tail, acc + (v -> R(fld.value)))
+          }
+        case Nil =>
+          val y: Term = Tup(argsList.map(x => 
+            acc.get(x.name) match {
+              case Some(Left(v)) => (None, Fld(FldFlags.empty, v))
+              case Some(Right(t)) => (None, Fld(FldFlags.empty, t))
+              case None =>
+                err(msg"Argument named '${x.name}' is missing from this function call", a.toLoc)
+                (None, Fld(FldFlags.empty, Var("error")))
+            }
+          ))
+          App(f, y)
+      }
+    }
+    val hasDefined = a.fields.exists(x => x._1.isDefined)
+    val hasEmpty = a.fields.exists(x => x._1.isEmpty)
+    val areArgsMisplaced = a.fields.indexWhere(x => x._1.isDefined) < a.fields.lastIndexWhere(x => x._1.isEmpty)
+    if (hasDefined &&
+        hasEmpty && 
+        areArgsMisplaced) {
+      err(msg"Unnamed arguments should appear first when using named arguments", a.toLoc) 
+    } else 
+      a.fields.sizeCompare(argsList) match {
+        case 0 =>
+          val as = a.fields.zipWithIndex.map{
+            case(x, idx) =>
+              x._1 match {
+                case Some(value) => 
+                  ((value.name, x._2), true)
+                case N =>
+                  ((argsList(idx).name, x._2), false)
+              }}
+          val asGroupedByVarName = as.groupBy(x => x._1._1)
+          if (asGroupedByVarName.sizeCompare(argsList) < 0) {
+            asGroupedByVarName.foreach(x =>
+              x._2 match {
+                case x1 :: y1 :: xs => err(msg"Argument for parameter '${x._1}' is duplicated", a.toLoc) 
+                case _ =>
+              })
+          }
+          val desugared = rec(as, Map())
+          println("Desugared is here => " + desugared)
+          term.desugaredTerm = S(desugared)
+          typeTerm(desugared)(ctx = ctx, raise = raise, vars = vars, genLambdas = false)
+        case _ =>
+          err(msg"Number of arguments doesn't match function signature `${f_ty.expPos}`", a.toLoc)
+      }
+  }
   
   /** Convert an inferred SimpleType into the immutable Type representation. */
   def expandType(st: TypeLike, stopAtTyVars: Bool = false)(implicit ctx: Ctx): mlscript.TypeLike = {

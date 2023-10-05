@@ -87,7 +87,7 @@ run(code"x => ${ x }")
 //│ forall 'b. 'b -> 'b
 
 f => code"x => ${ let tmp = f(x) in x }"
-//│ (Code['a, ??x] -> anything) -> Code[forall 'b. ('a & 'b) -> 'b, nothing]
+//│ forall 'a. (Code['a, ??x] -> anything) -> Code[forall 'b. ('a & 'b) -> 'b, nothing]
 
 let res = code"x => code"${x}""
 //│ let res: Code[forall 'a 'b. Code['a, 'b] -> Code['a, 'b], nothing]

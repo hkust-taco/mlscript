@@ -168,10 +168,14 @@ new C(1, 2)
 //│ [ 1, 1 ]
 
 :pe
+:w
 class C { constructor(x: Int);; constructor(y: Int) }
 //│ ╔══[PARSE ERROR] A class may have at most one explicit constructor
-//│ ║  l.171: 	class C { constructor(x: Int);; constructor(y: Int) }
+//│ ║  l.172: 	class C { constructor(x: Int);; constructor(y: Int) }
 //│ ╙──       	^^^^^
+//│ ╔══[WARNING] Pure expression does nothing in statement position.
+//│ ║  l.172: 	class C { constructor(x: Int);; constructor(y: Int) }
+//│ ╙──       	                             ^^
 //│ class C {
 //│   constructor(x: Int)
 //│ }

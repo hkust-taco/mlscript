@@ -105,7 +105,8 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
     case Literal(IntLit(n)) => n.toString
     case Literal(DecLit(n)) => n.toString
     case Literal(StrLit(s)) => "\"" + s + "\""
-    case Literal(UnitLit(b)) => if (b) "undefined" else "null"
+    case Literal(UnitLit(b)) =>
+      if (b) if (ctx.newDefs) "()" else "undefined" else "null"
     case PolyType(Nil, body) => body.showIn(ctx, outerPrec)
     case PolyType(targs, body) => parensIf(
         s"${targs.iterator.map(_.fold(_.name, _.showIn(ctx, 0)))
@@ -381,6 +382,7 @@ trait PgrmImpl { self: Pgrm =>
       case ot: Terms => R(ot)
       case NuFunDef(isLetRec, nme, _, tys, rhs) =>
         R(Def(isLetRec.getOrElse(true), nme, rhs, isLetRec.isEmpty))
+      case _: Constructor => die
    }
     diags.toList -> res
   }
@@ -468,6 +470,7 @@ trait NuDeclImpl extends Located { self: NuDecl =>
     case _ => N
   }
 }
+
 trait TypingUnitImpl extends Located { self: TypingUnit =>
   def showDbg: Str = entities.map {
     case t: Term => t.toString
@@ -477,6 +480,12 @@ trait TypingUnitImpl extends Located { self: TypingUnit =>
   }.mkString("{", "; ", "}")
   override def toString: String = s"‹${entities.mkString("; ")}›"
   lazy val children: List[Located] = entities
+}
+
+trait ConstructorImpl { self: Constructor =>
+  // def children: List[Located] = fields.map(_._2)
+  def describe: Str = "constructor"
+  // def showDbg: Str = s"constructor(${fields.map(_._1.name).mkString(", ")})"
 }
 
 trait TypeNameImpl extends Ordered[TypeName] { self: TypeName =>
@@ -617,7 +626,7 @@ trait TermImpl extends StatementImpl { self: Term =>
     try R(toType_!.withLocOf(this)) catch {
       case e: NotAType =>
         import Message._
-        L(ErrorReport(msg"not a recognized type" -> e.trm.toLoc::Nil, newDefs=true)) }
+        L(ErrorReport(msg"Not a recognized type" -> e.trm.toLoc::Nil, newDefs=true)) }
   protected def toType_! : Type = (this match {
     case Var(name) if name.startsWith("`") => TypeVar(R(name.tail), N)
     case Var(name) if name.startsWith("'") => TypeVar(R(name), N)
@@ -806,9 +815,9 @@ trait StatementImpl extends Located { self: Statement =>
   
   lazy val desugared = doDesugar
   private def doDesugar: Ls[Diagnostic] -> Ls[DesugaredStatement] = this match {
-    case ctor: Constructor =>
-      import Message._
-      (ErrorReport(msg"constructor must be in a class." -> ctor.toLoc :: Nil, newDefs=true) :: Nil) -> Nil
+    // case ctor: Constructor =>
+    //   import Message._
+    //   (ErrorReport(msg"constructor must be in a class." -> ctor.toLoc :: Nil, newDefs=true) :: Nil) -> Nil
     case l @ LetS(isrec, pat, rhs) =>
       val (diags, v, args) = desugDefnPattern(pat, Nil)
       diags -> (Def(isrec, v, L(args.foldRight(rhs)(Lam(_, _))), false).withLocOf(l) :: Nil) // TODO use v, not v.name

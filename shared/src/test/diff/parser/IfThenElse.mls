@@ -192,10 +192,10 @@ a == 1 and b == 2
 :pe
 if lol
 //│ |#if| |lol|
-//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause; found reference instead
+//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'if'; found reference instead
 //│ ║  l.193: 	if lol
 //│ ║         	   ^^^
-//│ ╟── Note: 'if' expression started here:
+//│ ╟── Note: 'if' expression starts here:
 //│ ║  l.193: 	if lol
 //│ ╙──       	^^
 //│ Parsed: {if (lol) then undefined}
@@ -248,10 +248,10 @@ else
 :pe
 if lol else 2
 //│ |#if| |lol| |#else| |2|
-//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause; found reference followed by 'else' keyword instead
+//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'if'; found reference followed by 'else' keyword instead
 //│ ║  l.249: 	if lol else 2
 //│ ║         	   ^^^^^^^^
-//│ ╟── Note: 'if' expression started here:
+//│ ╟── Note: 'if' expression starts here:
 //│ ║  l.249: 	if lol else 2
 //│ ╙──       	^^
 //│ ╔══[PARSE ERROR] Expected end of input; found 'else' keyword instead
@@ -405,10 +405,10 @@ if let Some(x) = v then 123
 //│ ╔══[PARSE ERROR] Expected an expression; found a 'then'/'else' clause instead
 //│ ║  l.397: 	if let Some(x) = v then 123
 //│ ╙──       	                 ^^^^^^^^^^
-//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause; found let binding instead
+//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'if'; found let binding instead
 //│ ║  l.397: 	if let Some(x) = v then 123
 //│ ║         	                           ^
-//│ ╟── Note: 'if' expression started here:
+//│ ╟── Note: 'if' expression starts here:
 //│ ║  l.397: 	if let Some(x) = v then 123
 //│ ╙──       	^^
 //│ Parsed: {if (let Some = undefined in undefined) then undefined}
@@ -426,10 +426,10 @@ if let Some(x) = v and cond then 123
 //│ ╔══[PARSE ERROR] Expected an expression; found a 'then'/'else' clause instead
 //│ ║  l.418: 	if let Some(x) = v and cond then 123
 //│ ╙──       	                 ^^^^^^^^^^^^^^^^^^^
-//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause; found let binding instead
+//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'if'; found let binding instead
 //│ ║  l.418: 	if let Some(x) = v and cond then 123
 //│ ║         	                                    ^
-//│ ╟── Note: 'if' expression started here:
+//│ ╟── Note: 'if' expression starts here:
 //│ ║  l.418: 	if let Some(x) = v and cond then 123
 //│ ╙──       	^^
 //│ Parsed: {if (let Some = undefined in undefined) then undefined}
@@ -531,10 +531,10 @@ if true
 :pe
 (if true)
 //│ |(|#if| |true|)|
-//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause; found reference instead
+//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'if'; found reference instead
 //│ ║  l.532: 	(if true)
 //│ ║         	    ^^^^
-//│ ╟── Note: 'if' expression started here:
+//│ ╟── Note: 'if' expression starts here:
 //│ ║  l.532: 	(if true)
 //│ ╙──       	 ^^
 //│ Parsed: {'(' if (true) then undefined ')'}
@@ -572,7 +572,7 @@ if true then;; else;;
 
 if true then () else;;
 //│ |#if| |true| |#then| |(||)| |#else|#;;|
-//│ Parsed: {if (true) then '(' [] ')' else undefined}
+//│ Parsed: {if (true) then undefined else undefined}
 
 
 

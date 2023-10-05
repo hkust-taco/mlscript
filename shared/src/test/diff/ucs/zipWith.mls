@@ -45,12 +45,12 @@ fun zipWith_wrong(f, xs, ys) =
   and zipWith_wrong(f, xs, ys) is Some(tail)
   then Some(Cons(f(x, y), tail))
   else None
-//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause; found operator application followed by newline instead
+//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'if'; found operator application followed by newline instead
 //│ ║  l.43: 	  if  xs is Cons(x, xs)
 //│ ║        	      ^^^^^^^^^^^^^^^^^
 //│ ║  l.44: 	  and ys is Cons(y, ys)
 //│ ║        	^^
-//│ ╟── Note: 'if' expression started here:
+//│ ╟── Note: 'if' expression starts here:
 //│ ║  l.43: 	  if  xs is Cons(x, xs)
 //│ ╙──      	  ^^
 //│ ╔══[PARSE ERROR] Unexpected operator in expression position
@@ -70,7 +70,7 @@ fun zipWith_wrong(f, xs, ys) =
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.47: 	  else None
 //│ ╙──      	^^^^^^^^^^^
-//│ fun zipWith_wrong: (anything, anything, anything) -> undefined
+//│ fun zipWith_wrong: (anything, anything, anything) -> ()
 
 
 // FIXME parsing

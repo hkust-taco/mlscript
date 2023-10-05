@@ -147,7 +147,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       (5, 5)
     case _ =>
       val r = opStr.last
-      (prec(opStr.head), prec(r) - (if (r === '@' || r === '/' || r === ',') 1 else 0))
+      (prec(opStr.head), prec(r) - (if (r === '@' || r === '/' || r === ',' || r === ':') 1 else 0))
   }
   
   // def pe(msg: Message, l: Loc, rest: (Message, Opt[Loc])*): Unit =
@@ -248,11 +248,6 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       TypingUnit(Nil)
   }
   
-  final def toParams(t: Term): Tup = t match {
-    case t: Tup => t
-    case Bra(false, t: Tup) => t
-    case _ => Tup((N, Fld(FldFlags.empty, t)) :: Nil)
-  }
   final def toParamsTy(t: Type): Tuple = t match {
     case t: Tuple => t
     case _ => Tuple((N, Field(None, t)) :: Nil)
@@ -546,7 +541,10 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
     }
   
   private def yeetSpaces: Ls[TokLoc] =
-    cur.dropWhile(_._1 === SPACE && { consume; true })
+    cur.dropWhile(tkloc =>
+      (tkloc._1 === SPACE
+      || tkloc._1.isInstanceOf[COMMENT] // TODO properly retrieve and sotre all comments in AST?
+      ) && { consume; true })
   
   final def funParams(implicit et: ExpectThen, fe: FoundErr, l: Line): Ls[Tup] = wrap(()) { l =>
     yeetSpaces match {
@@ -624,22 +622,41 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         exprCont(Var(opStr).withLoc(S(l1)), prec, allowNewlines = false)
       case (br @ BRACKETS(bk @ (Round | Square | Curly), toks), loc) :: _ =>
         consume
-        val res = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented()) // TODO
+        val res = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented())
         val bra = (bk, res) match {
           case (Curly, _) =>
             Bra(true, Rcd(res.map {
-            case S(n) -> fld => n -> fld
-            case N -> (fld @ Fld(_, v: Var)) => v -> fld
-            case N -> fld =>
-              err((
-                msg"Record field should have a name" -> fld.value.toLoc :: Nil))
-              Var("<error>") -> fld
+              case S(n) -> fld => n -> fld
+              case N -> (fld @ Fld(_, v: Var)) => v -> fld
+              case N -> fld =>
+                err((
+                  msg"Record field should have a name" -> fld.value.toLoc :: Nil))
+                Var("<error>") -> fld
             }))
           case (Round, (N, Fld(FldFlags(false, false, _), elt)) :: Nil) =>
             Bra(false, elt)
+          case (Round, fs) =>
+            yeetSpaces match {
+              case (KEYWORD("=>"), l1) :: _ =>
+                consume
+                val e = expr(0)
+                Lam(Tup(res), e)
+              case (IDENT("->", true), l1) :: _ =>
+                consume
+                val rhs = expr(opPrec("->")._2)
+                Lam(Tup(res), rhs)
+              case _ =>
+                res match {
+                  case Nil =>
+                    UnitLit(true)
+                  case _ =>
+                    err((
+                      msg"Expected '=>' or '->' after this parameter section" -> S(loc) :: Nil))
+                    Tup(fs)
+                }
+            }
           case _ =>
-            // TODO actually reject round tuples? (except for function arg lists)
-            Bra(false, Tup(res))
+            Tup(res)
         }
         exprCont(bra.withLoc(S(loc)), prec, allowNewlines = false)
       case (KEYWORD("forall"), l0) :: _ =>
@@ -706,6 +723,17 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         consume
         val e = expr(0)
         L(IfElse(e).withLoc(S(l0 ++ e.toLoc)))
+      case (KEYWORD("case"), l0) :: _ =>
+        consume
+        exprOrIf(0)(et = true, fe = fe, l = implicitly) match {
+          case L(body) =>
+            R(Lam(PlainTup(Var("case$scrut")), If(IfOpApp(Var("case$scrut"), Var("is"), body), N)))
+          case R(rhs) =>
+            err((msg"Expected 'then'/'else' clause after 'case'; found ${rhs.describe} instead" -> rhs.toLoc ::
+              msg"Note: 'case' expression starts here:" -> S(l0) :: Nil))
+            R(Lam(PlainTup(Var("case$scrut")), If(IfElse(rhs), N)))
+        }
+        
       case (KEYWORD("if"), l0) :: _ =>
         consume
         cur match {
@@ -754,8 +782,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                       S(e.toLoc.foldRight(l1)(_ ++ _)))
                     case Nil => (msg"${e.describe}", e.toLoc)
                   }
-                  err((msg"Expected 'then'/'else' clause; found $found instead" -> loc ::
-                    msg"Note: 'if' expression started here:" -> S(l0) :: Nil))
+                  err((msg"Expected 'then'/'else' clause after 'if'; found $found instead" -> loc ::
+                    msg"Note: 'if' expression starts here:" -> S(l0) :: Nil))
                   R(If(IfThen(e, errExpr), N))
               }
           }
@@ -779,10 +807,15 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
   
   final def exprCont(acc: Term, prec: Int, allowNewlines: Bool)(implicit et: ExpectThen, fe: FoundErr, l: Line): IfBody \/ Term = wrap(prec, s"`$acc`", allowNewlines) { l =>
     cur match {
-      case (IDENT(opStr @ "=>", true), l0) :: (NEWLINE, l1) :: _ if opPrec(opStr)._1 > prec =>
+      case (KEYWORD(opStr @ "=>"), l0) :: (NEWLINE, l1) :: _ if opPrec(opStr)._1 > prec =>
         consume
         val rhs = Blk(typingUnit.entities)
-        R(Lam(toParams(acc), rhs))
+        R(Lam(PlainTup(acc), rhs))
+      case (KEYWORD(opStr @ "=>"), l0) :: _ if opPrec(opStr)._1 > prec =>
+        consume
+        val rhs = expr(1)
+        val res = Lam(PlainTup(acc), rhs)
+        exprCont(res, prec, allowNewlines)
       case (IDENT(".", _), l0) :: (br @ BRACKETS(Square, toks), l1) :: _ =>
         consume
         consume
@@ -809,13 +842,11 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                     err(msg"record literal expected here; found ${rhs.describe}" -> rhs.toLoc :: Nil)
                     acc
                 }
-              case "=>" =>
-                Lam(toParams(acc), rhs)
               case ";" =>
                 Blk(acc :: rhs :: Nil)
               case _ =>
                 if (newDefs) App(v, PlainTup(acc, rhs))
-                else App(App(v, toParams(acc)), toParams(rhs))
+                else App(App(v, PlainTup(acc)), PlainTup(rhs))
             }, prec, allowNewlines)
         }
       case (KEYWORD(":"), l0) :: _ if prec <= outer.prec(':') =>

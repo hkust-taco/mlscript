@@ -141,7 +141,7 @@ class Exp[A]: Pair | Lit {
     Pair then 1
 }
 class Lit(n: Int) extends Exp[Int]
-class Pair[L, R](lhs: L, rhs: R) extends Exp[(L, R)]
+class Pair[L, R](lhs: L, rhs: R) extends Exp[[L, R]]
 //│ ╔══[ERROR] Unhandled cyclic definition
 //│ ║  l.138: 	class Exp[A]: Pair | Lit {
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -161,7 +161,7 @@ class Pair[L, R](lhs: L, rhs: R) extends Exp[(L, R)]
 //│ ║  l.141: 	    Pair then 1
 //│ ║         	^^^^^^^^^^^^^^^
 //│ ╟── type variable `L` leaks out of its scope
-//│ ║  l.144: 	class Pair[L, R](lhs: L, rhs: R) extends Exp[(L, R)]
+//│ ║  l.144: 	class Pair[L, R](lhs: L, rhs: R) extends Exp[[L, R]]
 //│ ╙──       	           ^
 //│ class Exp[A]: Lit | Pair[anything, anything] {
 //│   constructor()

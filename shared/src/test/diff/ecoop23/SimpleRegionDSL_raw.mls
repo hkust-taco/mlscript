@@ -336,7 +336,7 @@ fun mk(n) = if n is
 TestElim.eliminate(mk(100))
 //│ forall 'a. 'a
 //│   where
-//│     'a :> Outside['a] | Intersect['a] | Translate['a] | Scale['a] | Union['a]
+//│     'a :> Outside['a] | Union['a] | Intersect['a] | Translate['a] | Scale['a]
 //│ res
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded

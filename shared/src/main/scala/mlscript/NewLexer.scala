@@ -36,6 +36,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
   
   private val isSymKeyword = Set(
     // "->",
+    "=>",
     "=",
     ":",
     ";;",
@@ -318,6 +319,7 @@ object NewLexer {
     "if",
     "then",
     "else",
+    "case",
     "fun",
     "val",
     "var",

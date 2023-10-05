@@ -8,10 +8,10 @@ fun test =
 //│ ╔══[ERROR] Cannot use `val` or `fun` in local block; use `let` instead.
 //│ ║  l.6: 	  fun lol = log("ok")
 //│ ╙──     	  ^^^^^^^^^^^^^^^^^^^
-//│ fun test: [undefined, undefined]
+//│ fun test: [(), ()]
 
 test
-//│ [undefined, undefined]
+//│ [(), ()]
 //│ res
 //│     = [ undefined, undefined ]
 //│ // Output

@@ -834,7 +834,7 @@ abstract class TyperHelpers { Typer: Typer =>
                 cls.members.valuesIterator.flatMap(childrenPolMem) ++
                 S(pol.contravar -> cls.thisTy) ++
                 S(pol.covar -> cls.sign) ++
-                S(pol.covar -> cls.instanceType) ++
+                // S(pol.covar -> cls.instanceType) ++ // Not a real child; to remove
                 cls.parentTP.valuesIterator.flatMap(childrenPolMem)
             case trt: TypedNuTrt =>
               trt.tparams.iterator.map(pol.invar -> _._2) ++
@@ -921,11 +921,32 @@ abstract class TyperHelpers { Typer: Typer =>
       res.toSortedMap
     }
     
-    private def childrenMem(m: NuMember): List[ST] = m match {
-      case NuParam(nme, ty, pub) => ty.lb.toList ::: ty.ub :: Nil
-      case TypedNuFun(level, fd, ty) => ty :: Nil
+    private def childrenMem(m: NuMember): IterableOnce[ST] = m match {
+      case tf: TypedNuFun =>
+        tf.bodyType :: Nil
+      case als: TypedNuAls =>
+        als.tparams.iterator.map(_._2) ++ S(als.body)
+      case mxn: TypedNuMxn =>
+        mxn.tparams.iterator.map(_._2) ++
+        mxn.members.valuesIterator.flatMap(childrenMem) ++
+          S(mxn.superTy) ++
+          S(mxn.thisTy)
+      case cls: TypedNuCls =>
+        cls.tparams.iterator.map(_._2) ++
+          cls.params.toList.flatMap(_.flatMap(p => p._2.lb.toList ::: p._2.ub :: Nil)) ++
+          cls.auxCtorParams.toList.flatMap(_.values) ++
+          cls.members.valuesIterator.flatMap(childrenMem) ++
+          S(cls.thisTy) ++
+          S(cls.sign)
+      case trt: TypedNuTrt =>
+        trt.tparams.iterator.map(_._2) ++
+          trt.members.valuesIterator.flatMap(childrenMem) ++
+          S(trt.thisTy) ++
+          S(trt.sign) ++
+          trt.parentTP.valuesIterator.flatMap(childrenMem)
+      case p: NuParam =>
+        p.ty.lb.toList ::: p.ty.ub :: Nil
       case TypedNuDummy(d) => Nil
-      case _ => ??? // TODO
     }
     def children(includeBounds: Bool): List[SimpleType] = this match {
       case tv @ AssignedVariable(ty) => if (includeBounds) ty :: Nil else Nil
@@ -949,35 +970,7 @@ abstract class TyperHelpers { Typer: Typer =>
       case ConstrainedType(cs, und) => cs.flatMap(lu => lu._1 :: lu._2 :: Nil) ::: und :: Nil
       case SpliceType(fs) => fs.flatMap{ case L(l) => l :: Nil case R(r) => r.lb.toList ::: r.ub :: Nil}
       case OtherTypeLike(tu) =>
-        // tu.childrenPol(PolMap.neu).map(tp => tp._1)
-        val ents = tu.implementedMembers.flatMap {
-          case tf: TypedNuFun =>
-            tf.bodyType :: Nil
-          case als: TypedNuAls =>
-            als.tparams.iterator.map(_._2) ++ S(als.body)
-          case mxn: TypedNuMxn =>
-            mxn.tparams.iterator.map(_._2) ++
-            mxn.members.valuesIterator.flatMap(childrenMem) ++
-              S(mxn.superTy) ++
-              S(mxn.thisTy)
-          case cls: TypedNuCls =>
-            cls.tparams.iterator.map(_._2) ++
-              cls.params.toList.flatMap(_.flatMap(p => p._2.lb.toList ::: p._2.ub :: Nil)) ++
-              cls.auxCtorParams.toList.flatMap(_.values) ++
-              cls.members.valuesIterator.flatMap(childrenMem) ++
-              S(cls.thisTy) ++
-              S(cls.sign) ++
-              S(cls.instanceType)
-          case trt: TypedNuTrt =>
-            trt.tparams.iterator.map(_._2) ++
-              trt.members.valuesIterator.flatMap(childrenMem) ++
-              S(trt.thisTy) ++
-              S(trt.sign) ++
-              trt.parentTP.valuesIterator.flatMap(childrenMem)
-          case p: NuParam =>
-            p.ty.lb.toList ::: p.ty.ub :: Nil
-          case TypedNuDummy(d) => Nil
-        }
+        val ents = tu.implementedMembers.flatMap(childrenMem)
         ents ::: tu.result.toList
     }
     
@@ -1105,7 +1098,7 @@ abstract class TyperHelpers { Typer: Typer =>
         info.result match {
           case S(td: TypedNuAls) =>
             assert(td.tparams.size === targs.size)
-            substSyntax(td.body)(td.tparams.lazyZip(targs).map {
+            subst(td.body, td.tparams.lazyZip(targs).map {
               case (tp, ta) => SkolemTag(tp._2)(noProv) -> ta
             }.toMap)
           case S(td: TypedNuTrt) =>
