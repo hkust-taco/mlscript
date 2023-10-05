@@ -1,0 +1,37 @@
+:NewDefs
+:NoJS
+
+
+// * FIXME should produce extrusion
+fun (%>) bind(rhs, k) = code"let x = ${rhs} in ${k(code"x")}"
+//│ fun (%>) bind: forall 'a 'b 'x 'c. (Code['a, 'b], Code['a, 'x] -> Code['c, 'x | 'b]) -> Code['c, 'b]
+
+// * Notice the extrusion
+fun foo(k) = code"x => ${k(code"x")}"
+//│ fun foo: forall 'a 'b 'c. (Code['a, ??x] -> Code['b, ??x0 | 'c]) -> Code['a -> 'b, 'c]
+
+// * FIXME should produce extrusion
+fun (%>) bind(rhs, k) = code"(x => ${k(code"x")})(${rhs})"
+//│ fun (%>) bind: forall 'a 'x 'b 'c. (Code['a, 'x | 'b], Code['a, 'x] -> Code['c, 'x | 'b]) -> Code['c, 'b]
+
+// * Somehow this one does extrude properly:
+fun app = code"(f, x) => f(x)"
+fun (%>) bind(rhs, k) = code"${app}(x => ${k(code"x")}, ${rhs})"
+//│ fun app: Code[forall 'a 'b. ('a -> 'b, 'a) -> 'b, nothing]
+//│ fun (%>) bind: forall 'c 'd 'e. (Code['c, ??x | 'd], Code['c, ??x0] -> Code['e, ??x | 'd]) -> Code['e, 'd]
+
+
+// TODO allow referring to top-level definitions
+fun app(f, x) = f(x)
+fun bind2(rhs, k) = code"app(x => ${k(code"x")}, ${rhs})"
+//│ ╔══[ERROR] identifier not found: app
+//│ ║  l.26: 	fun bind2(rhs, k) = code"app(x => ${k(code"x")}, ${rhs})"
+//│ ╙──      	                         ^^^
+//│ fun app: forall 'a 'b. ('a -> 'b, 'a) -> 'b
+//│ fun bind2: forall 'c. (Code[anything, ??x | 'c], Code[nothing, ??x0] -> Code[anything, ??x | 'c]) -> Code[error, 'c]
+
+
+// * FIXME this shouldn't type check as it does (probably same bug as above)
+// * Note that here the `'G` type var seems unused and is simplified away
+fun bind(rhs, k: forall 'C: Code['A, 'C] -> Code['B, 'C | 'G]) = code"let x = ${rhs} in ${k(code"x")}"
+//│ fun bind: forall 'a 'b 'A. (Code['A, 'a], k: Code['A, anything] -> Code['b, anything]) -> Code['b, 'a]
