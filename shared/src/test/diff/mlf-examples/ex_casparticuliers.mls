@@ -593,8 +593,8 @@ succ'
 succ' {}
 //│ res: 'a -> (forall 'b 'c 'd. 'b -> 'd
 //│   where
-//│     'a <: 'c -> 'd
-//│     anything <: 'a -> 'b -> 'c)
+//│     anything <: 'a -> 'b -> 'c
+//│     'a <: 'c -> 'd)
 //│    = [Function (anonymous)]
 
 // :e // * Error delayed by inconsistent constrained types

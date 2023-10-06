@@ -6,13 +6,11 @@ def choose: 'a -> 'a -> 'a
 //│       = <missing implementation>
 
 rec def id1 x = choose x (id1 id1 x)
-//│ id1: 'id1
+//│ id1: 'a -> 'b
 //│   where
-//│     'id1 :> 'a -> 'b
-//│     'a :> 'id1
+//│     'a :> 'a -> 'b
 //│        <: 'b
-//│     'b :> 'id1
-//│        <: 'a -> 'b
+//│     'b := 'a -> 'b
 //│    = <no result>
 //│      choose is not implemented
 
@@ -40,13 +38,11 @@ id1 id
 //│      id1 and choose are not implemented
 
 rec def id1 x = choose x (id1 id1 x)
-//│ id1: 'id1
+//│ id1: 'a -> 'b
 //│   where
-//│     'id1 :> 'a -> 'b
-//│     'a :> 'id1
+//│     'a :> 'a -> 'b
 //│        <: 'b
-//│     'b :> 'id1
-//│        <: 'a -> 'b
+//│     'b := 'a -> 'b
 //│    = <no result>
 //│      choose is not implemented
 
