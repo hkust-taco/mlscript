@@ -54,10 +54,7 @@ run(res)
 //│ 3
 
 // Tup, Subs
-let tup = code"let x = 1 in let y = 2 in (x, y)._1"
-//│ ╔══[PARSE ERROR] Expected '=>' or '->' after this parameter section
-//│ ║  l.57: 	let tup = code"let x = 1 in let y = 2 in (x, y)._1"
-//│ ╙──      	                                         ^^^^^^
+let tup = code"let x = 1 in let y = 2 in [x, y]._1"
 //│ let tup: Code[1, nothing]
 
 run(tup)
@@ -87,7 +84,7 @@ let str_lit = code""" "hello" """
 let y = 1
 let free = code"y"
 //│ ╔══[ERROR] identifier not found: y
-//│ ║  l.88: 	let free = code"y"
+//│ ║  l.85: 	let free = code"y"
 //│ ╙──      	                ^
 //│ let y: 1
 //│ let free: Code[error, nothing]
@@ -103,7 +100,7 @@ run(code_nested)
 let y = code"x"
 code"let id = x => ${y} in id(true)"
 //│ ╔══[ERROR] identifier not found: x
-//│ ║  l.103: 	let y = code"x"
+//│ ║  l.100: 	let y = code"x"
 //│ ╙──       	             ^
 //│ let y: Code[error, nothing]
 //│ Code[error, nothing]
@@ -115,7 +112,7 @@ run(res)
 :e
 let free_y = code"y"
 //│ ╔══[ERROR] identifier not found: y
-//│ ║  l.116: 	let free_y = code"y"
+//│ ║  l.113: 	let free_y = code"y"
 //│ ╙──       	                  ^
 //│ let free_y: Code[error, nothing]
 
@@ -145,7 +142,7 @@ fun f(x) = x
 :e
 let res = code"f(1)"
 //│ ╔══[ERROR] identifier not found: f
-//│ ║  l.146: 	let res = code"f(1)"
+//│ ║  l.143: 	let res = code"f(1)"
 //│ ╙──       	               ^
 //│ let res: Code[error, nothing]
 
@@ -161,7 +158,7 @@ class Foo(n: Int)
 :e
 code"Foo(1)"
 //│ ╔══[ERROR] identifier not found: Foo
-//│ ║  l.162: 	code"Foo(1)"
+//│ ║  l.159: 	code"Foo(1)"
 //│ ╙──       	     ^^^
 //│ Code[error, nothing]
 
@@ -170,25 +167,19 @@ run(res)
 //│ error
 
 :e
-let codeA = code"let y = 2; y"
+let codeA = code"let y = 2 in y"
 let codeB = code"y + y"
-//│ ╔══[WARNING] Pure expression does nothing in statement position.
-//│ ║  l.173: 	let codeA = code"let y = 2; y"
-//│ ╙──       	                         ^
 //│ ╔══[ERROR] identifier not found: y
-//│ ║  l.173: 	let codeA = code"let y = 2; y"
-//│ ╙──       	                            ^
-//│ ╔══[ERROR] identifier not found: y
-//│ ║  l.174: 	let codeB = code"y + y"
+//│ ║  l.171: 	let codeB = code"y + y"
 //│ ╙──       	                 ^
 //│ ╔══[ERROR] identifier not found: y
-//│ ║  l.174: 	let codeB = code"y + y"
+//│ ║  l.171: 	let codeB = code"y + y"
 //│ ╙──       	                     ^
-//│ let codeA: Code[(), nothing]
+//│ let codeA: Code[2, nothing]
 //│ let codeB: Code[Int, nothing]
 
 
-let both = code"${codeA}; ${codeB}"
+let both = code"discard(${codeA}); ${codeB}"
 //│ let both: Code[Int, nothing]
 
 :e
@@ -196,7 +187,7 @@ let a = code"let x = 0 in x"
 let b = code"x"
 let c = code"${a} + ${b}"
 //│ ╔══[ERROR] identifier not found: x
-//│ ║  l.196: 	let b = code"x"
+//│ ║  l.187: 	let b = code"x"
 //│ ╙──       	             ^
 //│ let a: Code[0, nothing]
 //│ let b: Code[error, nothing]

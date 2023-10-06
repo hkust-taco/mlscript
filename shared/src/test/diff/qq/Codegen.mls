@@ -150,28 +150,20 @@ code"let x = ${Const(42)} in ${code"x"}"
 
 :js
 :ne
-code"let x = 1 in (x + 1; x + 2)"
-//│ ╔══[WARNING] Expression in statement position should have type `unit`.
-//│ ╟── Use the `discard` function to discard non-unit values, making the intent clearer.
-//│ ╟── Type mismatch in operator application:
-//│ ║  l.153: 	code"let x = 1 in (x + 1; x + 2)"
-//│ ║         	                   ^^^^^
-//│ ╙── operator application of type `Int` does not match type `()`
+code"let x = 1 in (discard(x + 1); x + 2)"
 //│ Code[Int, nothing]
 //│ // Prelude
+//│ function discard(x) {}
 //│ class TypingUnit12 {}
 //│ const typing_unit12 = new TypingUnit12;
 //│ // Query 1
-//│ res = ((x1) => Let(Var(x1), IntLit(1), Bra(Blk(App(Var("+"), Var(x1), IntLit(1)), App(Var("+"), Var(x1), IntLit(2))))))(freshName("x"));
+//│ res = ((x1) => Let(Var(x1), IntLit(1), Bra(Blk(App(Var(discard), Tup(Fld(App(Var("+"), Var(x1), IntLit(1))))), App(Var("+"), Var(x1), IntLit(2))))))(freshName("x"));
 //│ // End of generated code
 
 
 :js
 :ne
-code"(1, 2, 3)"
-//│ ╔══[PARSE ERROR] Expected '=>' or '->' after this parameter section
-//│ ║  l.171: 	code"(1, 2, 3)"
-//│ ╙──       	     ^^^^^^^^^
+code"[1, 2, 3]"
 //│ Code[[1, 2, 3], nothing]
 //│ // Prelude
 //│ class TypingUnit13 {}
@@ -182,16 +174,13 @@ code"(1, 2, 3)"
 
 :js
 :ne
-code"(1, 2, 3).[1]"
-//│ ╔══[PARSE ERROR] Expected '=>' or '->' after this parameter section
-//│ ║  l.185: 	code"(1, 2, 3).[1]"
-//│ ╙──       	     ^^^^^^^^^
-//│ Code[1 | 2 | 3 | (), nothing]
+code"[1, 2, 3]._1"
+//│ Code[1, nothing]
 //│ // Prelude
 //│ class TypingUnit14 {}
 //│ const typing_unit14 = new TypingUnit14;
 //│ // Query 1
-//│ res = Subs(Tup(Fld(IntLit(1)), Fld(IntLit(2)), Fld(IntLit(3))), IntLit(1));
+//│ res = Sel(Tup(Fld(IntLit(1)), Fld(IntLit(2)), Fld(IntLit(3))), Var("_1"));
 //│ // End of generated code
 
 

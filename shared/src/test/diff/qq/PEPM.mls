@@ -136,3 +136,52 @@ code"x => ${ test(run) }"
 //│ ║  l.123: 	  code"x => x + ${f(code"x + 1")}"
 //│ ╙──       	                  ^
 //│ Code[anything -> Int -> Int, nothing]
+
+:ne
+fun assertNotZero(x) =
+  code"if (${x} == 0) then error else ${x}"
+//│ fun assertNotZero: forall 'a 'b. Code[Num & 'a, 'b] -> Code['a, 'b]
+
+:ne
+fun safeDiv = run(code"x => y => let t = ${assertNotZero(code"y")} in x / t")
+//│ fun safeDiv: Num -> Num -> Num
+
+:ne
+assertNotZero(Const(42))
+//│ Code[Int, nothing]
+
+:ne
+safeDiv(10)(2)
+//│ Num
+
+:ne
+fun fac(n, dbg) =
+  if (n > 0) then code"let x = ${Const(n)} in ${dbg(code"x")} * ${fac(n - 1, dbg)}" else Const(1)
+//│ fun fac: forall 'x 'a. (Int, Code[Int, 'x] -> Code[Int, 'x | 'a]) -> Code[Int, 'a]
+
+fun showAndRet(n: Code['a, anything]) =
+  log(n)
+  n
+//│ fun showAndRet: forall 'a. (n: Code['a, anything]) -> Code['a, anything]
+
+:ne
+fun bar(x: Code['a, 'b]) = x
+//│ fun bar: forall 'a 'b. (x: Code['a, 'b]) -> Code['a, 'b]
+
+
+:ne
+fac(10, showAndRet)
+//│ Code[Int, nothing]
+
+// FIXME
+:ne
+fun foo(dbg) =
+  code"x => ${let c = code"(${x}; ${foo(dbg)})" in dbg(c)}"
+//│ fun foo: forall 'a 'b 'c. (Code[Code[(), 'b] -> 'c, 'b] -> Code['c, ??x | 'b & 'a]) -> Code[Code[(), 'b] -> 'c, 'a]
+//│ Code generation encountered an error:
+//│   unresolved symbol x
+
+
+fun inc(x, dbg) =
+  dbg(x); inc(code"${x} + 1", dbg)
+//│ fun inc: forall 'a. (Code[Int, 'a], Code[Int, 'a] -> ()) -> nothing
