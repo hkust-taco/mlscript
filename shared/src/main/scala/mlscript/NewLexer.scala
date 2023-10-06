@@ -125,6 +125,9 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
         lex(i + len, ind, next(i + len, OPEN_BRACKET(bracket_kind)))(bracket_kind :: qqList)
       case '$' if isUnquoteOpening(i) =>
         lex(i + 2, ind, next(i + 2, OPEN_BRACKET(BracketKind.Unquote)))
+      case '$' if i + 1 < length && isIdentFirstChar(bytes(i + 1)) =>
+        val (n, j) = takeWhile(i + 1)(isIdentChar)
+        lex(j, ind, next(j, BRACKETS(BracketKind.Unquote, (if (keywords.contains(n)) KEYWORD(n) else IDENT(n, isAlphaOp(n)), loc(i + 1, j)) :: Nil)(loc(i, j))))
       case '"' =>
         val (isTripleQQ, cons) = qqList match {
           case h :: t => (h === BracketKind.QuasiquoteTriple, t)
