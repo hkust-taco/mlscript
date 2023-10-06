@@ -2,17 +2,19 @@
 :NoJS
 
 
-// * FIXME should produce extrusion
+
 fun (%>) bind(rhs, k) = code"let x = ${rhs} in ${k(code"x")}"
-//│ fun (%>) bind: forall 'a 'b 'x 'c. (Code['a, 'b], Code['a, 'x] -> Code['c, 'x | 'b]) -> Code['c, 'b]
+//│ fun (%>) bind: forall 'a 'b 'c. (Code['a, 'b], Code['a, ??x] -> Code['c, ??x0 | 'b]) -> Code['c, 'b]
+
+fun (%>) bind(rhs, k) = code"let x = ${rhs} in ${k(x)}"
+//│ fun (%>) bind: forall 'a 'b 'c. (Code['a, 'b], Code['a, ??x] -> Code['c, ??x0 | 'b]) -> Code['c, 'b]
 
 // * Notice the extrusion
 fun foo(k) = code"x => ${k(code"x")}"
-//│ fun foo: forall 'a 'b 'c. (Code['a, ??x] -> Code['b, ??x0 | 'c]) -> Code['a -> 'b, 'c]
+//│ fun foo: forall 'a 'b 'c. (Code['c, ??x] -> Code['a, ??x0 | 'b]) -> Code['c -> 'a, 'b]
 
-// * FIXME should produce extrusion
 fun (%>) bind(rhs, k) = code"(x => ${k(code"x")})(${rhs})"
-//│ fun (%>) bind: forall 'a 'x 'b 'c. (Code['a, 'x | 'b], Code['a, 'x] -> Code['c, 'x | 'b]) -> Code['c, 'b]
+//│ fun (%>) bind: forall 'a 'b 'c. (Code['a, ??x | 'b], Code['a, ??x0] -> Code['c, ??x | 'b]) -> Code['c, 'b]
 
 // * Somehow this one does extrude properly:
 fun app = code"(f, x) => f(x)"
@@ -25,7 +27,7 @@ fun (%>) bind(rhs, k) = code"${app}(x => ${k(code"x")}, ${rhs})"
 fun app(f, x) = f(x)
 fun bind2(rhs, k) = code"app(x => ${k(code"x")}, ${rhs})"
 //│ ╔══[ERROR] identifier not found: app
-//│ ║  l.26: 	fun bind2(rhs, k) = code"app(x => ${k(code"x")}, ${rhs})"
+//│ ║  l.28: 	fun bind2(rhs, k) = code"app(x => ${k(code"x")}, ${rhs})"
 //│ ╙──      	                         ^^^
 //│ fun app: forall 'a 'b. ('a -> 'b, 'a) -> 'b
 //│ fun bind2: forall 'c. (Code[anything, ??x | 'c], Code[nothing, ??x0] -> Code[anything, ??x | 'c]) -> Code[error, 'c]
@@ -34,4 +36,4 @@ fun bind2(rhs, k) = code"app(x => ${k(code"x")}, ${rhs})"
 // * FIXME this shouldn't type check as it does (probably same bug as above)
 // * Note that here the `'G` type var seems unused and is simplified away
 fun bind(rhs, k: forall 'C: Code['A, 'C] -> Code['B, 'C | 'G]) = code"let x = ${rhs} in ${k(code"x")}"
-//│ fun bind: forall 'a 'b 'A. (Code['A, 'a], k: Code['A, anything] -> Code['b, anything]) -> Code['b, 'a]
+//│ fun bind: forall 'B 'A 'a. (Code['A, 'a], k: forall 'C. Code['A, 'C] -> Code['B, 'C | ??x | 'a]) -> Code['B, 'a]

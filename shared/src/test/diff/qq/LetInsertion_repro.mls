@@ -55,7 +55,7 @@ fun body(x, y) = case
   0 then x
   1 then y
   n then code"${x} + ${y}" %> z => code"${body(x, z)(n - 1)}"
-//│ fun body: forall 'g 'a 'b 'c. (Code[Int, 'b & 'c & (??c | 'g)] & 'a, Code[Int, 'b & 'c & (??c | 'g)] & 'a) -> (0 | 1 | Int & ~0 & ~1) -> (Code[Int, 'g | ??c0] | 'a)
+//│ fun body: forall 'a 'b 'c 'g. (Code[Int, 'b & 'c & (??c | 'g)] & 'a, Code[Int, 'b & 'c & (??c | 'g)] & 'a) -> (0 | 1 | Int & ~0 & ~1) -> (Code[Int, 'g | ??c0] | 'a)
 //│   where
 //│     'c <: 'g | ??c
 //│     'g :> ??c0 | 'b

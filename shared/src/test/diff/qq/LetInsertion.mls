@@ -5,8 +5,8 @@
 
 fun (%>) bind: (Code['a, 'g], k: forall 'c: Code['a, 'c] -> Code['b, 'c | 'g]) -> Code['b, 'g]
 fun bind[g](rhs, k: forall 'c: Code['a, 'c] -> Code['b, 'c | g]) = code"let x = ${rhs} in ${k(code"x")}"
-//│ fun bind: forall 'a 'd 'e. (Code['a, 'd], k: forall 'c. Code['a, 'c] -> Code['e, anything]) -> Code['e, 'd]
-//│ fun (%>) bind: forall 'b 'a0 'g. (Code['a0, 'g], k: forall 'c0. Code['a0, 'c0] -> Code['b, 'c0 | 'g]) -> Code['b, 'g]
+//│ fun bind: forall 'a 'd 'b. (Code['a, 'd], k: forall 'c. Code['a, 'c] -> Code['b, anything]) -> Code['b, 'd]
+//│ fun (%>) bind: forall 'a0 'g 'b0. (Code['a0, 'g], k: forall 'c0. Code['a0, 'c0] -> Code['b0, 'c0 | 'g]) -> Code['b0, 'g]
 
 
 let f(k) = bind of code"123", k

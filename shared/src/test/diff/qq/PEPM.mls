@@ -157,7 +157,7 @@ safeDiv(10)(2)
 :ne
 fun fac(n, dbg) =
   if (n > 0) then code"let x = ${Const(n)} in ${dbg(code"x")} * ${fac(n - 1, dbg)}" else Const(1)
-//│ fun fac: forall 'x 'a. (Int, Code[Int, 'x] -> Code[Int, 'x | 'a]) -> Code[Int, 'a]
+//│ fun fac: forall 'a. (Int, Code[Int, ??x] -> Code[Int, ??x0 | 'a]) -> Code[Int, 'a]
 
 fun showAndRet(n: Code['a, anything]) =
   log(n)
@@ -171,13 +171,13 @@ fun bar(x: Code['a, 'b]) = x
 
 :ne
 fac(10, showAndRet)
-//│ Code[Int, nothing]
+//│ Code[Int, ~??x]
 
 // FIXME
 :ne
 fun foo(dbg) =
   code"x => ${let c = code"(${x}; ${foo(dbg)})" in dbg(c)}"
-//│ fun foo: forall 'a 'b 'c. (Code[Code[(), 'b] -> 'c, 'b] -> Code['c, ??x | 'b & 'a]) -> Code[Code[(), 'b] -> 'c, 'a]
+//│ fun foo: forall 'a 'b 'c. (Code[Code[(), 'a] -> 'b, 'a] -> Code['b, ??x | 'a & 'c]) -> Code[Code[(), 'a] -> 'b, 'c]
 //│ Code generation encountered an error:
 //│   unresolved symbol x
 

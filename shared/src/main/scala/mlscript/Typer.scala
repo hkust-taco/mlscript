@@ -1469,15 +1469,17 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       case Eqn(lhs, rhs) =>
         err(msg"Unexpected equation in this position", term.toLoc)
       case Quoted(body) =>
-        val newCtx =
-          ctx.nest.copy(quotedLvl = ctx.quotedLvl + 1, qenv = MutMap.empty, fvars = MutSet.empty)
-        val bodyType = ctx.parent match {
-          case S(p) if p.quotedLvl > ctx.quotedLvl =>
-            ctx.unwrap(p.wrapCode.map(_._1), () => typePolymorphicTerm(body)(newCtx, raise, vars))
-          case _ => typePolymorphicTerm(body)(newCtx, raise, vars)
+        ctx.nest.copy(quotedLvl = ctx.quotedLvl + 1, qenv = MutMap.empty, fvars = MutSet.empty).poly {
+          newCtx => {
+            val bodyType = ctx.parent match {
+              case S(p) if p.quotedLvl > ctx.quotedLvl =>
+                ctx.unwrap(p.wrapCode.map(_._1), () => typePolymorphicTerm(body)(newCtx, raise, vars))
+              case _ => typePolymorphicTerm(body)(newCtx, raise, vars)
+            }
+            val ctxTy = newCtx.fvars.foldLeft[ST](BotType)((res, ty) => res | ty)
+            TypeRef(TypeName("Code"), bodyType :: ctxTy :: Nil)(noProv) // TODO: trace the unbound free vars
+          }
         }
-        val ctxTy = newCtx.fvars.foldLeft[ST](BotType)((res, ty) => res | ty)
-        TypeRef(TypeName("Code"), bodyType :: ctxTy :: Nil)(noProv) // TODO: trace the unbound free vars
       case Unquoted(body) =>
         if (ctx.quotedLvl > 0) {
           val newCtx = ctx.nest.copy(quotedLvl = 0)
@@ -1488,10 +1490,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
             newCtx += c
           })
           val bodyType = typePolymorphicTerm(body)(newCtx, raise, vars)
-          val res = freshVar(noTyProv, N)
-          val ctxTy = freshVar(noTyProv, N)
+          val res = freshVar(noTyProv, N)(newCtx.lvl)
+          val ctxTy = freshVar(noTyProv, N)(newCtx.lvl)
           val ty =
-            con(bodyType, TypeRef(TypeName("Code"), res :: ctx.qenv.foldLeft[ST](ctxTy)((res, ty) => ty._2 | res) :: Nil)(noProv), res)
+            con(bodyType, TypeRef(TypeName("Code"), res :: ctx.qenv.foldLeft[ST](ctxTy)((res, ty) => ty._2 | res) :: Nil)(noProv), res)(newCtx)
           ctx.traceFV(ctxTy)
           ty
         }

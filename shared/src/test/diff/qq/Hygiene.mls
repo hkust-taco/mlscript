@@ -12,7 +12,10 @@ run(code_test)
 
 // Test 2: this is hygienic because the child Quoted is a descendant of the parent Quoted in the AST
 fun test(n, cde) = if n > 0 then code"let x = ${Const(n)} in ${test(n - 1, code"${cde} + x")}" else cde
-//│ fun test: forall 'x 'a. (Int, Code[Int, 'x] & 'a) -> (Code[Int, 'x] | 'a)
+//│ fun test: forall 'a 'b 'c. (Int, Code[Int, (??x | 'b) & 'a] & 'c) -> (Code[Int, ??x0 | 'a | 'b] | 'c)
+
+fun test(n, cde) = if n > 0 then code"${test(n - 1, code"${cde} + ${Const(n)}")}" else cde
+//│ fun test: forall 'a 'b. (Int, Code[Int, 'a] & 'b) -> (Code[Int, 'a] | 'b)
 
 
 run(test(3, code"0"))
@@ -24,10 +27,10 @@ run(test(3, code"0"))
 fun cde_template(cde) = code"${cde} + x"
 fun test(n, cde) = if n > 0 then code"let x = ${Const(n)} in ${test(n - 1, cde_template(cde))}" else cde
 //│ ╔══[ERROR] identifier not found: x
-//│ ║  l.24: 	fun cde_template(cde) = code"${cde} + x"
+//│ ║  l.27: 	fun cde_template(cde) = code"${cde} + x"
 //│ ╙──      	                                      ^
 //│ fun cde_template: forall 'a. Code[Int, 'a] -> Code[Int, 'a]
-//│ fun test: forall 'b 'c. (Int, Code[Int, 'b] & 'c) -> (Code[Int, 'b] | 'c)
+//│ fun test: forall 'b 'c. (Int, Code[Int, 'b & (??x | 'b)] & 'c) -> (Code[Int, 'b] | 'c)
 
 let c = test(3, code"0")
 //│ let c: Code[Int, nothing]
