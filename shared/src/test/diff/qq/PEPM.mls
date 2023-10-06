@@ -163,14 +163,6 @@ fun bar(x: Code['a, 'b]) = x
 fac(10, showAndRet)
 //│ Code[Int, ~??x]
 
-// FIXME
-:ne
-fun foo(dbg) =
-  code"x => ${let c = code"(${x}; ${foo(dbg)})" in dbg(c)}"
-//│ fun foo: forall 'a 'b 'c. (Code[Code[(), 'a] -> 'b, 'a] -> Code['b, ??x | 'a & 'c]) -> Code[Code[(), 'a] -> 'b, 'c]
-//│ Code generation encountered an error:
-//│   unresolved symbol x
-
 
 fun inc(x, dbg) =
   dbg(x); inc(code"${x} + 1", dbg)

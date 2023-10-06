@@ -46,5 +46,17 @@ code"1 ++ 2"
 fun bind(rhs, k: forall 'C: Code['A, 'C] -> Code['B, 'C | 'G]) = code"let x = ${rhs} in ${k(x)}"
 //│ fun bind: forall 'A 'a 'B. (Code['A, 'a], k: forall 'C. Code['A, 'C] -> Code['B, 'C | ??x | 'a]) -> Code['B, 'a]
 
-bind : forall 'a, 'b, 'c: (Code['a, 'c], Code['a, 'g'] -> Code['b, 'c | 'g]) -> Code['b, 'c]
-//│ forall 'c 'b 'a. (Code['a, 'c], Code['a, ??C] -> Code['b, 'c | ??C0 | ??c | ??x]) -> Code['b, 'c]
+bind : (Code['a, 'g], k: forall 'c: Code['a, 'c] -> Code['b, 'c | 'g]) -> Code['b, 'g]
+//│ (Code['a, 'd & ('G | ??C)], k: forall 'c. Code['a, 'c] -> Code['b, 'c | 'd & ('G | ??C)]) -> Code['b, 'd]
+//│   where
+//│     'd <: 'G | ??C
+//│     'G <: ??x | 'd
+
+
+:e
+fun foo(dbg) =
+  code"x => ${let c = code"(${x}; ${foo(dbg)})" in dbg(c)}"
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.58: 	  code"x => ${let c = code"(${x}; ${foo(dbg)})" in dbg(c)}"
+//│ ╙──      	                              ^
+//│ fun foo: forall 'a 'b. (Code[anything -> 'b, 'a] -> Code['b, ??x | 'a]) -> Code[anything -> 'b, 'a]

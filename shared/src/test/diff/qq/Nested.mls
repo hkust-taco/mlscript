@@ -109,4 +109,4 @@ fun f(x) = code"${run(x)} + 1"
 //│ fun f: forall 'a. Code[Code[Int, 'a], nothing] -> Code[Int, 'a]
 
 code"x => ${code"code"code"${x}"""}"
-//│ Code[forall 'a 'b. Code['a, 'b] -> Code[Code['a, 'b], nothing], nothing]
+//│ Code[anything -> Code[Code[1, nothing], nothing], nothing]

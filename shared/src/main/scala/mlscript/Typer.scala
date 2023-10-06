@@ -65,6 +65,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       qenv: MutMap[Str, SkolemTag], // * SkolemTag for variables in quasiquotes
       fvars: MutSet[ST], // * Free variables
       quotedLvl: Int, // * Level of quasiquotes
+      isUnquoted: Bool,
       inPattern: Bool,
       funDefs: MutMap[Str, DelayedTypeInfo],
       tyDefs: Map[Str, TypeDef],
@@ -81,7 +82,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       }
     }
     def ++=(bs: IterableOnce[Str -> TypeInfo]): Unit = bs.iterator.foreach(+=)
-    def get(name: Str): Opt[TypeInfo] = env.get(name) orElse parent.dlof(_.get(name))(N)
+    def get(name: Str, qlvl: Int = 0): Opt[TypeInfo] =
+      if (qlvl === quotedLvl) env.get(name) orElse parent.dlof(_.get(name, qlvl))(N)
+      else parent.dlof(_.get(name, qlvl))(N)
     def getDecl(name: Str): Opt[NuDecl] = funDefs.get(name).map(_.decl) orElse parent.dlof(_.getDecl(name))(N)
     def getTopLevel(name: Str): Opt[TypeInfo] = (get(name), getDecl(name)) match {
       case (ty, S(fd: NuFunDef)) if (fd.outer.isEmpty) => ty
@@ -92,7 +95,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       else parent.dlof(_.qget(name, qlvl))(N)
     def wrapCode: Ls[(Str, TypeInfo)] = qenv.flatMap {
       case (name, tag) =>
-        get(name) match {
+        get(name, quotedLvl) match {
           case S(VarSymbol(ty, _)) =>
             name -> VarSymbol(TypeRef(TypeName("Code"), ty :: tag :: Nil)(noProv), Var(name)) :: Nil
           case S(_: AbstractConstructor) | S(_: LazyTypeInfo) => die // * Abstract ctors and type defs are not allowed
@@ -189,6 +192,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       qenv = MutMap.empty,
       fvars = MutSet.empty,
       quotedLvl = 0,
+      isUnquoted = false,
       inPattern = false,
       funDefs = MutMap.empty,
       tyDefs = Map.from(builtinTypes.map(t => t.nme.name -> t)),
@@ -883,14 +887,14 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
             res
           }
       case v @ ValidVar(name) =>
-        val tyOpt = if (ctx.quotedLvl > 0 && !builtinBindings.contains(name)) {
+        val tyOpt = if (ctx.quotedLvl > 0 && !ctx.isUnquoted && !builtinBindings.contains(name)) {
           ctx.qget(name) match {
             case S(ctxTy) =>
               if (!ctx.qenv.contains(name)) ctx.traceFV(ctxTy)
-              ctx.get(name)
+              ctx.get(name, ctx.quotedLvl)
             case _ => ctx.getTopLevel(name)
           }
-        } else ctx.get(name)
+        } else ctx.get(name, ctx.quotedLvl) orElse ctx.get(name, 0)
         val ty = tyOpt.fold(err("identifier not found: " + name, term.toLoc): ST) {
           case AbstractConstructor(absMths, traitWithMths) =>
             val td = ctx.tyDefs(name)
@@ -1476,7 +1480,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       case Eqn(lhs, rhs) =>
         err(msg"Unexpected equation in this position", term.toLoc)
       case Quoted(body) =>
-        ctx.nest.copy(quotedLvl = ctx.quotedLvl + 1, qenv = MutMap.empty, fvars = MutSet.empty).poly {
+        ctx.nest.copy(quotedLvl = ctx.quotedLvl + 1, qenv = MutMap.empty, fvars = MutSet.empty, isUnquoted = false).poly {
           newCtx => {
             val bodyType = ctx.parent match {
               case S(p) if p.quotedLvl > ctx.quotedLvl =>
@@ -1489,7 +1493,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         }
       case Unquoted(body) =>
         if (ctx.quotedLvl > 0) {
-          val newCtx = ctx.nest.copy(quotedLvl = 0)
+          val newCtx = ctx.nest.copy(quotedLvl = ctx.quotedLvl - 1, isUnquoted = true)
           val wrappedCodes = ctx.wrapCode
           println("Map qenv to env in unquote...")
           wrappedCodes.foreach(c => {

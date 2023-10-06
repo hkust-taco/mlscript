@@ -105,7 +105,7 @@ code"x => ${ test(c => run(c); code"x") }"
 //│ ╟── Note: constraint arises from expression in statement position:
 //│ ║  l.98: 	code"x => ${ test(c => run(c); code"x") }"
 //│ ╙──      	                       ^^^^^^
-//│ Code[anything -> Int -> Int, nothing]
+//│ Code[Int -> Int -> Int, nothing]
 
 
 :e

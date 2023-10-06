@@ -192,11 +192,11 @@ code"${code"${z}"}"
 
 
 :e
-code"let x = 1 in let z = 1 in code"x + y""
+code"let x = 1 in let z = 1 in ${code"x + y"}"
 //│ ╔══[ERROR] identifier not found: y
-//│ ║  l.195: 	code"let x = 1 in let z = 1 in code"x + y""
-//│ ╙──       	                                        ^
-//│ Code[Code[Int, nothing], nothing]
+//│ ║  l.195: 	code"let x = 1 in let z = 1 in ${code"x + y"}"
+//│ ╙──       	                                          ^
+//│ Code[Int, nothing]
 
 
 code"let z = 0 in ${code"z + 1"}"
