@@ -42,7 +42,9 @@ code"1 ++ 2"
 //│ fun (++) myadd: (Int, Int) -> Int
 //│ Code[Int, nothing]
 
-// * FIXME this shouldn't type check as it does (probably same bug as above)
-// * Note that here the `'G` type var seems unused and is simplified away
-fun bind(rhs, k: forall 'C: Code['A, 'C] -> Code['B, 'C | 'G]) = code"let x = ${rhs} in ${k(code"x")}"
+// G <: ??x | 'a
+fun bind(rhs, k: forall 'C: Code['A, 'C] -> Code['B, 'C | 'G]) = code"let x = ${rhs} in ${k(x)}"
 //│ fun bind: forall 'A 'a 'B. (Code['A, 'a], k: forall 'C. Code['A, 'C] -> Code['B, 'C | ??x | 'a]) -> Code['B, 'a]
+
+bind : forall 'a, 'b, 'c: (Code['a, 'c], Code['a, 'g'] -> Code['b, 'c | 'g]) -> Code['b, 'c]
+//│ forall 'c 'b 'a. (Code['a, 'c], Code['a, ??C] -> Code['b, 'c | ??C0 | ??c | ??x]) -> Code['b, 'c]

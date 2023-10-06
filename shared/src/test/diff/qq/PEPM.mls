@@ -84,23 +84,13 @@ let power10 = run(code"x => ${power'(x, 10)}")
 //│ // End of generated code
 
 
-class Some[A](value: A)
-module None
-//│ class Some[A](value: A)
-//│ module None
-
-fun mapSome(f, opt) =
-  if opt is Some(value) then f(value)
-  else None
-//│ fun mapSome: forall 'a 'b. ('a -> 'b, Object & ~#Some | Some['a]) -> (None | 'b)
-
 :ne
 :js
 code"x => x"
 //│ Code[forall 'a. 'a -> 'a, nothing]
 //│ // Prelude
-//│ class TypingUnit11 {}
-//│ const typing_unit11 = new TypingUnit11;
+//│ class TypingUnit9 {}
+//│ const typing_unit9 = new TypingUnit9;
 //│ // Query 1
 //│ res = ((x1) => Lam(Var(x1), Var(x1)))(freshName("x"));
 //│ // End of generated code
@@ -111,8 +101,8 @@ code"x => x"
 code"let x = 42 in x"
 //│ Code[42, nothing]
 //│ // Prelude
-//│ class TypingUnit12 {}
-//│ const typing_unit12 = new TypingUnit12;
+//│ class TypingUnit10 {}
+//│ const typing_unit10 = new TypingUnit10;
 //│ // Query 1
 //│ res = ((x1) => Let(Var(x1), IntLit(42), Var(x1)))(freshName("x"));
 //│ // End of generated code
@@ -127,13 +117,13 @@ fun test(f) =
 :e
 code"x => ${ test(run) }"
 //│ ╔══[ERROR] Type error in application
-//│ ║  l.128: 	code"x => ${ test(run) }"
+//│ ║  l.118: 	code"x => ${ test(run) }"
 //│ ║         	             ^^^^^^^^^
 //│ ╟── type variable `?x` leaks out of its scope
 //│ ╟── into type `nothing`
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this reference:
-//│ ║  l.123: 	  code"x => x + ${f(code"x + 1")}"
+//│ ║  l.113: 	  code"x => x + ${f(code"x + 1")}"
 //│ ╙──       	                  ^
 //│ Code[anything -> Int -> Int, nothing]
 

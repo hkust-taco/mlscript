@@ -1,0 +1,52 @@
+:NewDefs
+:QQ
+
+
+code"42"
+//│ Code[42, nothing]
+//│ res
+//│     = 'IntLit(42)'
+
+
+code"x => x"
+//│ Code[forall 'a. 'a -> 'a, nothing]
+//│ res
+//│     = '(Var(fresh_x)) => Var(fresh_x)'
+
+
+code"(x => x + 1)(2)"
+//│ Code[Int, nothing]
+//│ res
+//│     = '((Var(fresh_x)) => Var(+)(Var(fresh_x), IntLit(1), ))(Tup(Fld(IntLit(2)), ), )'
+
+
+code"x => ${x}"
+//│ Code[forall 'a. 'a -> 'a, nothing]
+//│ res
+//│     = '(Var(fresh_x)) => Var(fresh_x)'
+
+
+code"let x = 42 in x + 0"
+//│ Code[Int, nothing]
+//│ res
+//│     = 'let Var(fresh_x) = IntLit(42) in Var(+)(Var(fresh_x), IntLit(0), )'
+
+
+
+declare module Math {
+  declare fun floor(x: Num): Int
+}
+fun even(n) = n % 2 == 0
+fun power'(x, n) =
+  if (n == 0) then Const(1)
+  else if (even(n)) then code"let t = ${power'(x, Math.floor(n / 2))} in t * t"
+  else code"${x} * ${power'(x, n - 1)}"
+code"x => ${power'(x, 10)}"
+//│ declare module Math {
+//│   fun floor: (x: Num) -> Int
+//│ }
+//│ fun even: Int -> Bool
+//│ fun power': forall 'a. (Code[Int, 'a], Int) -> Code[Int, 'a]
+//│ Code[Int -> Int, nothing]
+//│ res
+//│     = '(Var(fresh_x)) => let Var(fresh_t) = Var(*)(Var(fresh_x), let Var(fresh_t) = let Var(fresh_t) = Var(*)(Var(fresh_x), const_1, ) in Var(*)(Var(fresh_t), Var(fresh_t), ) in Var(*)(Var(fresh_t), Var(fresh_t), ), ) in Var(*)(Var(fresh_t), Var(fresh_t), )'

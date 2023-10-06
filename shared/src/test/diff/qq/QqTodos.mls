@@ -1,28 +1,23 @@
 :NewDefs
 :NoJS
 
-
-// TODO support this flag to insert JS code to just pretty-print the AST as a string upong construction
-// :QQ
-
-
 // TODO support identifier unquotes without braces:
 :pe
 :e
 let x = code"1"
 code"$x + 1"
 //│ ╔══[LEXICAL ERROR] unexpected character '$'
-//│ ║  l.13: 	code"$x + 1"
-//│ ╙──      	     ^
+//│ ║  l.8: 	code"$x + 1"
+//│ ╙──     	     ^
 //│ ╔══[PARSE ERROR] Unexpected error in expression position
-//│ ║  l.13: 	code"$x + 1"
-//│ ╙──      	     ^
+//│ ║  l.8: 	code"$x + 1"
+//│ ╙──     	     ^
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.13: 	code"$x + 1"
-//│ ║        	      ^^^^^
+//│ ║  l.8: 	code"$x + 1"
+//│ ║       	      ^^^^^
 //│ ╟── reference of type `Code[1, nothing]` is not an instance of `Int`
-//│ ║  l.13: 	code"$x + 1"
-//│ ╙──      	      ^
+//│ ║  l.8: 	code"$x + 1"
+//│ ╙──     	      ^
 //│ let x: Code[1, nothing]
 //│ Code[Int | error, nothing]
 

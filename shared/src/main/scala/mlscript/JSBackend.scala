@@ -1387,7 +1387,7 @@ class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
   /**
     * Generate a piece of code for test purpose. It can be invoked repeatedly.
     */
-  def apply(pgrm: Pgrm, allowEscape: Bool, isNewDef: Boolean): JSTestBackend.Result =
+  def apply(pgrm: Pgrm, allowEscape: Bool, isNewDef: Bool, prettyPrintQQ: Bool): JSTestBackend.Result =
     if (!isNewDef)
       try generate(pgrm)(topLevelScope, allowEscape) catch {
         case e: CodeGenError => JSTestBackend.IllFormedCode(e.getMessage())
@@ -1395,7 +1395,7 @@ class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
         // case NonFatal(e) => JSTestBackend.UnexpectedCrash(e.getClass().getName, e.getMessage())
       }
     else
-      try generateNewDef(pgrm)(topLevelScope, allowEscape) catch {
+      try generateNewDef(pgrm, prettyPrintQQ)(topLevelScope, allowEscape) catch {
         case e: CodeGenError => JSTestBackend.IllFormedCode(e.getMessage())
         case e: UnimplementedError => JSTestBackend.Unimplemented(e.getMessage())
         // case NonFatal(e) => JSTestBackend.UnexpectedCrash(e.getClass().getName, e.getMessage())
@@ -1499,7 +1499,7 @@ class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
     JSTestBackend.TestCode(SourceCode.fromStmts(polyfill.emit() ::: prelude).toLines, queries)
   }
 
-  private def generateNewDef(pgrm: Pgrm)(implicit scope: Scope, allowEscape: Bool): JSTestBackend.TestCode = {
+  private def generateNewDef(pgrm: Pgrm, prettyPrintQQ: Bool)(implicit scope: Scope, allowEscape: Bool): JSTestBackend.TestCode = {
     
     val (typeDefs, otherStmts) = pgrm.tops.partitionMap {
       case _: Constructor => throw CodeGenError("unexpected constructor.")
@@ -1610,13 +1610,16 @@ class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
 
     // If this is the first time, insert the declaration of `res`.
     var prelude: Ls[JSStmt] = Ls(moduleDecl, insDecl) ::: includes
-    if (numRun === 0)
+    val isFirst = numRun === 0
+    if (isFirst)
       prelude = JSLetDecl(lastResultSymbol.runtimeName -> N :: Nil) :: prelude
 
     // Increase the run number.
     numRun = numRun + 1
 
-    JSTestBackend.TestCode(SourceCode.fromStmts(polyfill.emit() ::: prelude).toLines, queries)
+    val qqPredefs =
+      SourceCode(if (isFirst && prettyPrintQQ) QQHelper.prettyPrinter else "")
+    JSTestBackend.TestCode((qqPredefs ++ SourceCode.fromStmts(polyfill.emit() ::: prelude)).toLines, queries)
   }
 }
 
