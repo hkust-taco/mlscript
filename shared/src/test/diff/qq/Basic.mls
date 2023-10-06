@@ -79,15 +79,11 @@ run(unquoted)
 let str_lit = code""" "hello" """
 //│ let str_lit: Code["hello", nothing]
 
-// TODO support unbound free vars
-:e
+
 let y = 1
 let free = code"y"
-//│ ╔══[ERROR] identifier not found: y
-//│ ║  l.85: 	let free = code"y"
-//│ ╙──      	                ^
 //│ let y: 1
-//│ let free: Code[error, nothing]
+//│ let free: Code[1, nothing]
 
 let code_nested = code"let a = 1 in let b = 2 in ${code"a + b"}"
 //│ let code_nested: Code[Int, nothing]
@@ -100,8 +96,8 @@ run(code_nested)
 let y = code"x"
 code"let id = x => ${y} in id(true)"
 //│ ╔══[ERROR] identifier not found: x
-//│ ║  l.100: 	let y = code"x"
-//│ ╙──       	             ^
+//│ ║  l.96: 	let y = code"x"
+//│ ╙──      	             ^
 //│ let y: Code[error, nothing]
 //│ Code[error, nothing]
 
@@ -109,12 +105,10 @@ run(res)
 //│ 3
 
 // Hygiene
-:e
+let y = 1
 let free_y = code"y"
-//│ ╔══[ERROR] identifier not found: y
-//│ ║  l.113: 	let free_y = code"y"
-//│ ╙──       	                  ^
-//│ let free_y: Code[error, nothing]
+//│ let y: 1
+//│ let free_y: Code[1, nothing]
 
 let use_free = code"let y = 3 in ${code"let y = 5 in ${code"let y = 100 in ${free_y}"} + y"} + y"
 //│ let use_free: Code[Int, nothing]
@@ -139,16 +133,13 @@ let f = 0
 fun f(x) = x
 //│ fun f: forall 'a. 'a -> 'a
 
-:e
+
 let res = code"f(1)"
-//│ ╔══[ERROR] identifier not found: f
-//│ ║  l.143: 	let res = code"f(1)"
-//│ ╙──       	               ^
-//│ let res: Code[error, nothing]
+//│ let res: Code[1, nothing]
 
 
 run(res)
-//│ error
+//│ 1
 
 
 class Foo(n: Int)
@@ -156,25 +147,18 @@ class Foo(n: Int)
 
 
 :e
-code"Foo(1)"
+let res = code"Foo(1)"
 //│ ╔══[ERROR] identifier not found: Foo
-//│ ║  l.159: 	code"Foo(1)"
-//│ ╙──       	     ^^^
-//│ Code[error, nothing]
+//│ ║  l.150: 	let res = code"Foo(1)"
+//│ ╙──       	               ^^^
+//│ let res: Code[error, nothing]
 
 
 run(res)
 //│ error
 
-:e
 let codeA = code"let y = 2 in y"
 let codeB = code"y + y"
-//│ ╔══[ERROR] identifier not found: y
-//│ ║  l.171: 	let codeB = code"y + y"
-//│ ╙──       	                 ^
-//│ ╔══[ERROR] identifier not found: y
-//│ ║  l.171: 	let codeB = code"y + y"
-//│ ╙──       	                     ^
 //│ let codeA: Code[2, nothing]
 //│ let codeB: Code[Int, nothing]
 
@@ -187,7 +171,7 @@ let a = code"let x = 0 in x"
 let b = code"x"
 let c = code"${a} + ${b}"
 //│ ╔══[ERROR] identifier not found: x
-//│ ║  l.187: 	let b = code"x"
+//│ ║  l.171: 	let b = code"x"
 //│ ╙──       	             ^
 //│ let a: Code[0, nothing]
 //│ let b: Code[error, nothing]

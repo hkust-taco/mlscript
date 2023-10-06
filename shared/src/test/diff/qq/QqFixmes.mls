@@ -23,17 +23,26 @@ fun (%>) bind(rhs, k) = code"${app}(x => ${k(code"x")}, ${rhs})"
 //│ fun (%>) bind: forall 'c 'd 'e. (Code['c, ??x | 'd], Code['c, ??x0] -> Code['e, ??x | 'd]) -> Code['e, 'd]
 
 
-// TODO allow referring to top-level definitions
 fun app(f, x) = f(x)
 fun bind2(rhs, k) = code"app(x => ${k(code"x")}, ${rhs})"
-//│ ╔══[ERROR] identifier not found: app
-//│ ║  l.28: 	fun bind2(rhs, k) = code"app(x => ${k(code"x")}, ${rhs})"
-//│ ╙──      	                         ^^^
 //│ fun app: forall 'a 'b. ('a -> 'b, 'a) -> 'b
-//│ fun bind2: forall 'c. (Code[anything, ??x | 'c], Code[nothing, ??x0] -> Code[anything, ??x | 'c]) -> Code[error, 'c]
+//│ fun bind2: forall 'c 'd 'e. (Code['c, ??x | 'd], Code['c, ??x0] -> Code['e, ??x | 'd]) -> Code['e, 'd]
 
+:e
+fun foo() =
+  let bar = 42 // not at top level
+  code"bar"
+//│ ╔══[ERROR] identifier not found: bar
+//│ ║  l.34: 	  code"bar"
+//│ ╙──      	       ^^^
+//│ fun foo: () -> Code[error, nothing]
+
+fun (++) myadd(x, y) = x + y
+code"1 ++ 2"
+//│ fun (++) myadd: (Int, Int) -> Int
+//│ Code[Int, nothing]
 
 // * FIXME this shouldn't type check as it does (probably same bug as above)
 // * Note that here the `'G` type var seems unused and is simplified away
 fun bind(rhs, k: forall 'C: Code['A, 'C] -> Code['B, 'C | 'G]) = code"let x = ${rhs} in ${k(code"x")}"
-//│ fun bind: forall 'B 'A 'a. (Code['A, 'a], k: forall 'C. Code['A, 'C] -> Code['B, 'C | ??x | 'a]) -> Code['B, 'a]
+//│ fun bind: forall 'A 'a 'B. (Code['A, 'a], k: forall 'C. Code['A, 'C] -> Code['B, 'C | ??x | 'a]) -> Code['B, 'a]

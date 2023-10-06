@@ -17,11 +17,14 @@ code"$x + 1"
 //│ ╔══[PARSE ERROR] Unexpected error in expression position
 //│ ║  l.13: 	code"$x + 1"
 //│ ╙──      	     ^
-//│ ╔══[ERROR] identifier not found: x
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.13: 	code"$x + 1"
+//│ ║        	      ^^^^^
+//│ ╟── reference of type `Code[1, nothing]` is not an instance of `Int`
 //│ ║  l.13: 	code"$x + 1"
 //│ ╙──      	      ^
 //│ let x: Code[1, nothing]
-//│ Code[Int, nothing]
+//│ Code[Int | error, nothing]
 
 
 // TODO support a more lightweight alternative quotation syntax, such as:

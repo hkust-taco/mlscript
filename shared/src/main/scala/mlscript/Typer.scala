@@ -66,6 +66,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       fvars: MutSet[ST], // * Free variables
       quotedLvl: Int, // * Level of quasiquotes
       inPattern: Bool,
+      funDefs: MutMap[Str, DelayedTypeInfo],
       tyDefs: Map[Str, TypeDef],
       tyDefs2: MutMap[Str, DelayedTypeInfo],
       inRecursiveDef: Opt[Var], // TODO rm
@@ -81,6 +82,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
     }
     def ++=(bs: IterableOnce[Str -> TypeInfo]): Unit = bs.iterator.foreach(+=)
     def get(name: Str): Opt[TypeInfo] = env.get(name) orElse parent.dlof(_.get(name))(N)
+    def getDecl(name: Str): Opt[NuDecl] = funDefs.get(name).map(_.decl) orElse parent.dlof(_.getDecl(name))(N)
+    def getTopLevel(name: Str): Opt[TypeInfo] = (get(name), getDecl(name)) match {
+      case (ty, S(fd: NuFunDef)) if (fd.outer.isEmpty) => ty
+      case _ => N
+    }
     def qget(name: Str, qlvl: Int = quotedLvl): Opt[SkolemTag] =
       if (qlvl === quotedLvl) qenv.get(name) orElse parent.dlof(_.qget(name, qlvl))(N)
       else parent.dlof(_.qget(name, qlvl))(N)
@@ -184,6 +190,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       fvars = MutSet.empty,
       quotedLvl = 0,
       inPattern = false,
+      funDefs = MutMap.empty,
       tyDefs = Map.from(builtinTypes.map(t => t.nme.name -> t)),
       tyDefs2 = MutMap.empty,
       inRecursiveDef = N,
@@ -881,7 +888,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
             case S(ctxTy) =>
               if (!ctx.qenv.contains(name)) ctx.traceFV(ctxTy)
               ctx.get(name)
-            case _ => N
+            case _ => ctx.getTopLevel(name)
           }
         } else ctx.get(name)
         val ty = tyOpt.fold(err("identifier not found: " + name, term.toLoc): ST) {

@@ -598,7 +598,11 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
             ctx.tyDefs2 += td.nme.name -> lti
           case fd: NuFunDef =>
             // TODO check against duplicated symbolic names in same scope...
-            fd.symbolicNme.foreach(snme => ctx += snme.name -> lti)
+            ctx.funDefs += fd.nme.name -> lti
+            fd.symbolicNme.foreach(snme => {
+              ctx.funDefs += snme.name -> lti
+              ctx += snme.name -> lti
+            })
         }
         named.updateWith(decl.name) {
           case sv @ S(v) =>
