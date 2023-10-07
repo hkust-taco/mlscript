@@ -32,7 +32,7 @@ object QQHelper {
   | if (f === '+' || f === '-' || f === '*' || f === '/' || f === '==' || f === '<' || f === '>' || f === 'and' || f === 'or' || f === 'is')
   |   return `(${printList(xs, ` ${f} `)})`;
   | else
-  |   return `${f}(${printList(xs, ", ")})`;
+  |   return `${f}${printList(xs, ", ")}`;
   | }
   | globalThis.Rcd = (...xs) => `{${printList(xs, ", ")}}`;
   | globalThis.Bra = (x) => `(${x})`;
