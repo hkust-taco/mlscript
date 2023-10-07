@@ -177,17 +177,22 @@ def helper (impl: ArraysImpl['a, 'rep]) (k: ArraysImplConsumer['b, 'res]) = k (s
 // * FIXME this works with `:Fuel 4000000` but takes ~10s!!
 // * Why require so much fuel? (notably, more than in the same `helper` but *without* the impl annot)
 // * -> probably due to 'b being generalized too early
+// * Note [2023-10-06]:
+// *    It seems the fuel might be needed because of TV reconstraining after extrusion,
+// *    which is currently implemented in a very naive and wasteful way!
+// *    Indeed, if we set (includeBounds = true) in the `getVars` method,
+// *    which is used for reconstraining, then this no longer require extra fuel!
 :e
 def step (arr: Arrays['a]) = arr helper
 //│ Arrays['a] -> error
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Subtyping constraint of the form `Arrays['a] <: (forall 'a0 'rep. ArraysImpl['a0, 'rep] -> (forall ?a 'b 'res. ArraysImplConsumer['b, 'res] -> ?a)) -> ?b` took too many steps and ran out of fuel (10000)
-//│ ║  l.181: 	def step (arr: Arrays['a]) = arr helper
+//│ ║  l.186: 	def step (arr: Arrays['a]) = arr helper
 //│ ║         	                             ^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ ╔══[ERROR] Subtyping constraint of the form `forall 'a ?a. Arrays['a] -> ?a <: forall 'a0. Arrays['a0] -> Arrays['a0]` took too many steps and ran out of fuel (10000)
-//│ ║  l.181: 	def step (arr: Arrays['a]) = arr helper
+//│ ║  l.186: 	def step (arr: Arrays['a]) = arr helper
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│     = [Function: step3]
@@ -248,39 +253,39 @@ def step (arr: Arrays['a]) = arr helper
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type error in application
-//│ ║  l.235: 	def step (arr: Arrays['a]) = arr helper
+//│ ║  l.240: 	def step (arr: Arrays['a]) = arr helper
 //│ ║         	                             ^^^^^^^^^^
 //│ ╟── type variable `'rep` leaks out of its scope
 //│ ║  l.19: 	type ArraysImplConsumer[A, R] = forall 'rep. ArraysImpl[A, 'rep] -> R
 //│ ║        	                                                           ^^^^
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this function:
-//│ ║  l.225: 	def helper (impl: ArraysImpl['a, 'rep]) k = k (stepImpl impl)
+//│ ║  l.230: 	def helper (impl: ArraysImpl['a, 'rep]) k = k (stepImpl impl)
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── • this reference:
-//│ ║  l.235: 	def step (arr: Arrays['a]) = arr helper
+//│ ║  l.240: 	def step (arr: Arrays['a]) = arr helper
 //│ ║         	                                 ^^^^^^
 //│ ╟── • this reference:
-//│ ║  l.235: 	def step (arr: Arrays['a]) = arr helper
+//│ ║  l.240: 	def step (arr: Arrays['a]) = arr helper
 //│ ║         	                             ^^^
 //│ ╟── Note: constraint arises from type variable:
 //│ ║  l.93: 	def stepImpl (arrImpl: ArraysImpl['a, 'r]) = {
 //│ ╙──      	                                      ^^
 //│ ╔══[ERROR] Type error in def definition
-//│ ║  l.235: 	def step (arr: Arrays['a]) = arr helper
+//│ ║  l.240: 	def step (arr: Arrays['a]) = arr helper
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `'rep` leaks out of its scope
 //│ ║  l.19: 	type ArraysImplConsumer[A, R] = forall 'rep. ArraysImpl[A, 'rep] -> R
 //│ ║        	                                                           ^^^^
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this function:
-//│ ║  l.225: 	def helper (impl: ArraysImpl['a, 'rep]) k = k (stepImpl impl)
+//│ ║  l.230: 	def helper (impl: ArraysImpl['a, 'rep]) k = k (stepImpl impl)
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── • this reference:
-//│ ║  l.235: 	def step (arr: Arrays['a]) = arr helper
+//│ ║  l.240: 	def step (arr: Arrays['a]) = arr helper
 //│ ║         	                                 ^^^^^^
 //│ ╟── • this reference:
-//│ ║  l.235: 	def step (arr: Arrays['a]) = arr helper
+//│ ║  l.240: 	def step (arr: Arrays['a]) = arr helper
 //│ ║         	                             ^^^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.95: 	    sub    = fun ((r0, r1)) -> fun i -> arrImpl.sub r0 i;
@@ -531,17 +536,17 @@ def step2 = forall 'a. fun (arr: Arrays['a]) -> fun k -> arr (fun impl -> k (ste
 //│   <:  step2:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type error in def definition
-//│ ║  l.529: 	def step2 = forall 'a. fun (arr: Arrays['a]) -> fun k -> arr (fun impl -> k (stepImpl_ty impl))
+//│ ║  l.534: 	def step2 = forall 'a. fun (arr: Arrays['a]) -> fun k -> arr (fun impl -> k (stepImpl_ty impl))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `'rep` leaks out of its scope
 //│ ║  l.19: 	type ArraysImplConsumer[A, R] = forall 'rep. ArraysImpl[A, 'rep] -> R
 //│ ║        	                                                           ^^^^
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this reference:
-//│ ║  l.529: 	def step2 = forall 'a. fun (arr: Arrays['a]) -> fun k -> arr (fun impl -> k (stepImpl_ty impl))
+//│ ║  l.534: 	def step2 = forall 'a. fun (arr: Arrays['a]) -> fun k -> arr (fun impl -> k (stepImpl_ty impl))
 //│ ║         	                                                                                         ^^^^
 //│ ╟── • this reference:
-//│ ║  l.529: 	def step2 = forall 'a. fun (arr: Arrays['a]) -> fun k -> arr (fun impl -> k (stepImpl_ty impl))
+//│ ║  l.534: 	def step2 = forall 'a. fun (arr: Arrays['a]) -> fun k -> arr (fun impl -> k (stepImpl_ty impl))
 //│ ║         	                                                         ^^^
 //│ ╟── Note: constraint arises from type variable:
 //│ ║  l.88: 	def stepImpl_ty: ArraysImpl['a, 'r] -> ArraysImpl['a, ('r, string)]
@@ -556,7 +561,7 @@ def step2 = forall 'a. fun arr -> fun (k: ArraysImplConsumer['a, 'rep]) -> arr (
 //│   <:  step2:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type error in def definition
-//│ ║  l.552: 	def step2 = forall 'a. fun arr -> fun (k: ArraysImplConsumer['a, 'rep]) -> arr (fun impl -> k (stepImpl_ty impl))
+//│ ║  l.557: 	def step2 = forall 'a. fun arr -> fun (k: ArraysImplConsumer['a, 'rep]) -> arr (fun impl -> k (stepImpl_ty impl))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `'r` leaks out of its scope
 //│ ║  l.22: 	type Arrays[A] = forall 'r. ArraysImplConsumer[A, 'r] -> 'r
@@ -566,7 +571,7 @@ def step2 = forall 'a. fun arr -> fun (k: ArraysImplConsumer['a, 'rep]) -> arr (
 //│ ║        	                                                         ^^
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this application:
-//│ ║  l.552: 	def step2 = forall 'a. fun arr -> fun (k: ArraysImplConsumer['a, 'rep]) -> arr (fun impl -> k (stepImpl_ty impl))
+//│ ║  l.557: 	def step2 = forall 'a. fun arr -> fun (k: ArraysImplConsumer['a, 'rep]) -> arr (fun impl -> k (stepImpl_ty impl))
 //│ ╙──       	                                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│      = [Function: step26]
 
@@ -600,7 +605,7 @@ step2 = s
 //│   <:  step2:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type error in def definition
-//│ ║  l.598: 	step2 = s
+//│ ║  l.603: 	step2 = s
 //│ ║         	^^^^^^^^^
 //│ ╟── type variable `'r` leaks out of its scope
 //│ ║  l.22: 	type Arrays[A] = forall 'r. ArraysImplConsumer[A, 'r] -> 'r
@@ -610,10 +615,10 @@ step2 = s
 //│ ║        	                                                         ^^
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this reference:
-//│ ║  l.598: 	step2 = s
+//│ ║  l.603: 	step2 = s
 //│ ║         	        ^
 //│ ╟── • this application:
-//│ ║  l.575: 	def s arr (k: ArraysImplConsumer['a, 'rep]) = arr (fun impl -> k (stepImpl_ty impl))
+//│ ║  l.580: 	def s arr (k: ArraysImplConsumer['a, 'rep]) = arr (fun impl -> k (stepImpl_ty impl))
 //│ ╙──       	                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│      = [Function: s]
 

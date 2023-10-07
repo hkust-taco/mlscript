@@ -114,9 +114,9 @@ type List[A] = Cons[A] | None
 rec def mapList f ls = case ls of
   Cons -> Cons{value = f ls.value; tail = mapList f ls.tail},
   None -> None{}
-//│ mapList: ('value -> 'value0) -> 'a -> 'tail
+//│ mapList: ('value -> 'value0) -> 'a -> (None | 'b)
 //│   where
-//│     'tail :> (Cons['value0] with {tail: 'tail}) | None
+//│     'b :> Cons['value0] with {tail: None | 'b}
 //│     'a <: (Cons[?] with {tail: 'a, value: 'value}) | None
 //│        = [Function: mapList]
 
@@ -134,10 +134,10 @@ rec def unzip xs = case xs of
   None -> { fst = None; snd = None },
   Some -> let tmp = unzip xs.tail in { fst = Cons xs.value.fst tmp.fst ;
                                        snd = Cons xs.value.snd tmp.snd }
-//│ unzip: 'a -> {fst: 'tail, snd: 'tail0}
+//│ unzip: 'a -> {fst: None | 'b, snd: None | 'c}
 //│   where
-//│     'tail0 :> (Cons['value] with {tail: 'tail0}) | None
-//│     'tail :> (Cons['value0] with {tail: 'tail}) | None
+//│     'c :> Cons['value] with {tail: None | 'c}
+//│     'b :> Cons['value0] with {tail: None | 'b}
 //│     'a <: None | Some[?] & {tail: 'a, value: {fst: 'value0, snd: 'value}}
 //│      = [Function: unzip]
 
@@ -156,10 +156,10 @@ def unzip_ty = unzip
 //│   <:  Cons_ty:
 //│ 'a -> (List['a] & 'b) -> (Cons['a] with {tail: 'b})
 //│        = [Function: Cons_ty]
-//│ 'a -> {fst: 'tail, snd: 'tail0}
+//│ 'a -> {fst: None | 'b, snd: None | 'c}
 //│   where
-//│     'tail0 :> (Cons['value] with {tail: 'tail0}) | None
-//│     'tail :> (Cons['value0] with {tail: 'tail}) | None
+//│     'c :> Cons['value] with {tail: None | 'c}
+//│     'b :> Cons['value0] with {tail: None | 'b}
 //│     'a <: None | Some[?] & {tail: 'a, value: {fst: 'value0, snd: 'value}}
 //│   <:  unzip_ty:
 //│ List[{fst: 'a, snd: 'b}] -> {fst: List['a], snd: List['b]}

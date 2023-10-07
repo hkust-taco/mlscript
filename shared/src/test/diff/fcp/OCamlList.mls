@@ -714,9 +714,7 @@ def concat_map = let rec r = {
       | Nil -> r.concat_map f xs
       | Cons(y, ys) -> r.prepend_concat_map ys f xs
   } in r.concat_map
-//│ ('A -> List[?]) -> List['A] -> 'a
-//│   where
-//│     'a :> List[nothing]
+//│ ('A -> List[?]) -> List['A] -> (List[nothing] | 'a)
 //│   <:  concat_map:
 //│ ('a -> List['b]) -> List['a] -> List['b]
 

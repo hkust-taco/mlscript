@@ -132,12 +132,12 @@ Cons.HeadOption lr1
 
 :stats
 rec def lr2 = Cons { head = 0; tail = Cons { head = 1; tail = Cons { head = 3; tail = lr2 } } }
-//│ lr2: 'tail
+//│ lr2: Cons[0] with {tail: 'tail}
 //│   where
-//│     'tail :> Cons[0] with {tail: Cons[1] with {tail: Cons[3] with {tail: 'tail}}}
+//│     'tail :> Cons[1] with {tail: Cons[3] with {tail: Cons[0] with {tail: 'tail}}}
 //│ constrain calls  : 49
 //│ annoying  calls  : 0
-//│ subtyping calls  : 258
+//│ subtyping calls  : 280
 
 :stats
 Cons.HeadOption lr2

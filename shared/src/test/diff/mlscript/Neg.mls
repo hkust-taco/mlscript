@@ -136,13 +136,13 @@ def f: (~{x: 1 | 2} & 'a | ~{x: 2 | 3} & 'a) -> 'a
 f = id
 //│ 'a -> 'a
 //│   <:  f:
-//│ 'a -> 'a
+//│ nothing -> nothing
 //│  = [Function: id]
 
 f x = case x of {}
 //│ nothing -> nothing
 //│   <:  f:
-//│ 'a -> 'a
+//│ nothing -> nothing
 //│  = [Function: f2]
 
 def f: (~{x: 1 | 2} & ~lit & 'a | ~{x: 2 | 3} & ~lit & 'a) -> 'a
