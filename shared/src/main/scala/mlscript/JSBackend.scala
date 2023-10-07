@@ -20,6 +20,8 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     */
   protected val polyfill = Polyfill()
 
+  protected var printQQ = false
+
   /**
     * This function translates parameter destructions in `def` declarations.
     *
@@ -432,7 +434,8 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     case Eqn(Var(name), _) =>
       throw CodeGenError(s"assignment of $name is not supported outside a constructor")
     case Quoted(body) =>
-      translateTerm(desugarQuote(body)(scope.derive("desugar"), true, MutSet.empty))(scope.derive("quote"))
+      val res = translateTerm(desugarQuote(body)(scope.derive("desugar"), true, MutSet.empty))(scope.derive("quote"))
+      if (printQQ) JSInvoke(JSIdent("prettyPrintQQ"), res :: Nil) else res
     case _: Bind | _: Test | If(_, _)  | _: Splc | _: Where | _: AdtMatchWith | _: Unquoted =>
       throw CodeGenError(s"cannot generate code for term ${inspect(term)}")
   }
@@ -1500,7 +1503,8 @@ class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
   }
 
   private def generateNewDef(pgrm: Pgrm, prettyPrintQQ: Bool)(implicit scope: Scope, allowEscape: Bool): JSTestBackend.TestCode = {
-    
+    printQQ = prettyPrintQQ
+
     val (typeDefs, otherStmts) = pgrm.tops.partitionMap {
       case _: Constructor => throw CodeGenError("unexpected constructor.")
       case ot: Terms => R(ot)

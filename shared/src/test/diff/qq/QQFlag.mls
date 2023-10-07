@@ -5,32 +5,70 @@
 code"42"
 //│ Code[42, nothing]
 //│ res
-//│     = 'IntLit(42)'
+//│     = Quoted:
+//│       42
+//│       '42'
 
-
+:js
 code"x => x"
 //│ Code[forall 'a. 'a -> 'a, nothing]
+//│ // Prelude
+//│ class TypingUnit1 {}
+//│ const typing_unit1 = new TypingUnit1;
+//│ // Query 1
+//│ res = prettyPrintQQ(((x1) => Lam(Var(x1), Var(x1)))(freshName("x")));
+//│ // End of generated code
 //│ res
-//│     = '(Var(fresh_x)) => Var(fresh_x)'
+//│     = Quoted:
+//│       (x_0) =>
+//│         x_0
+//│       '(x_0) =>\n  x_0'
+
+
+code"x => y => x + y"
+//│ Code[Int -> Int -> Int, nothing]
+//│ res
+//│     = Quoted:
+//│       (x_1) =>
+//│         (y_0) =>
+//│           x_1 + y_0
+//│       '(x_1) =>\n  (y_0) =>\n    x_1 + y_0'
 
 
 code"(x => x + 1)(2)"
 //│ Code[Int, nothing]
 //│ res
-//│     = '((Var(fresh_x)) => Var(+)(Var(fresh_x), IntLit(1), ))(Tup(Fld(IntLit(2)), ), )'
+//│     = Quoted:
+//│       ((x_2) =>
+//│         x_2 + 1)((2))
+//│       '((x_2) =>\n  x_2 + 1)((2))'
 
 
 code"x => ${x}"
 //│ Code[forall 'a. 'a -> 'a, nothing]
 //│ res
-//│     = '(Var(fresh_x)) => Var(fresh_x)'
+//│     = Quoted:
+//│       (x_3) =>
+//│         x_3
+//│       '(x_3) =>\n  x_3'
 
 
 code"let x = 42 in x + 0"
 //│ Code[Int, nothing]
 //│ res
-//│     = 'let Var(fresh_x) = IntLit(42) in Var(+)(Var(fresh_x), IntLit(0), )'
+//│     = Quoted:
+//│       let x_4 =
+//│         42
+//│         in x_4 + 0
+//│       'let x_4 =\n  42\n  in x_4 + 0'
 
+
+code"code"114""
+//│ Code[Code[114, nothing], nothing]
+//│ res
+//│     = Quoted:
+//│       code"114"
+//│       'code"114"'
 
 
 declare module Math {
@@ -49,4 +87,56 @@ code"x => ${power'(x, 10)}"
 //│ fun power': forall 'a. (Code[Int, 'a], Int) -> Code[Int, 'a]
 //│ Code[Int -> Int, nothing]
 //│ res
-//│     = '(Var(fresh_x)) => let Var(fresh_t) = Var(*)(Var(fresh_x), let Var(fresh_t) = let Var(fresh_t) = Var(*)(Var(fresh_x), const_1, ) in Var(*)(Var(fresh_t), Var(fresh_t), ) in Var(*)(Var(fresh_t), Var(fresh_t), ), ) in Var(*)(Var(fresh_t), Var(fresh_t), )'
+//│     = Quoted:
+//│       x_5 * 1
+//│       Quoted:
+//│       let t_2 =
+//│         x_5 * 1
+//│         in t_2 * t_2
+//│       Quoted:
+//│       let t_1 =
+//│         let t_2 =
+//│           x_5 * 1
+//│           in t_2 * t_2
+//│         in t_1 * t_1
+//│       Quoted:
+//│       x_5 * let t_1 =
+//│         let t_2 =
+//│           x_5 * 1
+//│           in t_2 * t_2
+//│         in t_1 * t_1
+//│       Quoted:
+//│       let t_0 =
+//│         x_5 * let t_1 =
+//│           let t_2 =
+//│             x_5 * 1
+//│             in t_2 * t_2
+//│           in t_1 * t_1
+//│         in t_0 * t_0
+//│       Quoted:
+//│       (x_5) =>
+//│         let t_0 =
+//│           x_5 * let t_1 =
+//│             let t_2 =
+//│               x_5 * 1
+//│               in t_2 * t_2
+//│             in t_1 * t_1
+//│           in t_0 * t_0
+//│       '(x_5) =>\n' +
+//│         '  let t_0 =\n' +
+//│         '    x_5 * let t_1 =\n' +
+//│         '      let t_2 =\n' +
+//│         '        x_5 * 1\n' +
+//│         '        in t_2 * t_2\n' +
+//│         '      in t_1 * t_1\n' +
+//│         '    in t_0 * t_0'
+
+code"x => if (x == 42) then 42 else 0"
+//│ Code[Num -> (0 | 42), nothing]
+//│ res
+//│     = Quoted:
+//│       (x_6) =>
+//│         match (x_6 == 42):
+//│           case true => 42
+//│           _ => 0)
+//│       '(x_6) =>\n  match (x_6 == 42):\n    case true => 42\n    _ => 0)'

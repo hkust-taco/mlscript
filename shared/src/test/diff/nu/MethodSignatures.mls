@@ -184,11 +184,12 @@ fun f(x: Int): Int
 fun f(Int): Int
 //│ fun f: Int -> Int
 
-// FIXME
+
 // * And this doesn't work
+:e
 fun f(x): Int
 //│ ╔══[ERROR] type identifier not found: x
-//│ ║  l.189: 	fun f(x): Int
+//│ ║  l.190: 	fun f(x): Int
 //│ ╙──       	      ^
 //│ fun f: error -> Int
 
