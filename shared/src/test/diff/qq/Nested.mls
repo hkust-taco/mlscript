@@ -110,3 +110,10 @@ fun f(x) = code"${run(x)} + 1"
 
 code"x => ${code"code"code"${x}"""}"
 //│ Code[anything -> Code[Code[1, nothing], nothing], nothing]
+
+:e
+code"xxx => ${code"code"code"${xxx}"""}"
+//│ ╔══[ERROR] identifier not found: xxx
+//│ ║  l.115: 	code"xxx => ${code"code"code"${xxx}"""}"
+//│ ╙──       	                               ^^^
+//│ Code[anything -> Code[Code[nothing, nothing], nothing], nothing]

@@ -30,7 +30,7 @@ object QQHelper {
   | globalThis.Var = (x) => `${x}`;
   | globalThis.App = (f, ...xs) => {
   | if (f === '+' || f === '-' || f === '*' || f === '/' || f === '==' || f === '<' || f === '>' || f === 'and' || f === 'or' || f === 'is')
-  |   return printList(xs, ` ${f} `);
+  |   return `(${printList(xs, ` ${f} `)})`;
   | else
   |   return `${f}(${printList(xs, ", ")})`;
   | }
