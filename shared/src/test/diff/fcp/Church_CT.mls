@@ -1088,6 +1088,53 @@ to_church_ty = to_ch_simplif
 //│   where
 //│     'a :> forall 'b 'c 'd 'e. 'b -> ('c -> 'e
 //│       where
+//│         'b <: 'd -> 'e
+//│         'a <: 'b -> 'c -> 'd)
+//│ ╙──
+//│ anything -> 'a -> ('b -> 'c
+//│   where
+//│     'a <: 'd -> 'c
+//│     'e <: 'a -> 'b -> 'd)
+//│ where
+//│   'e :> forall 'f 'g 'h 'i. 'f -> ('g -> 'i
+//│     where
+//│       'f <: 'h -> 'i
+//│       'e <: 'f -> 'g -> 'h)
+//│   <:  to_church_ty:
+//│ int -> ChurchInt
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
+//│ ║  l.1086: 	to_church_ty = to_ch_simplif
+//│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Note: use flag `:ex` to see internal error info.
+//│             = [Function: to_ch_simplif]
+
+// * Redefinition in the context of distrib, just for the record (still infers but doesn't check)
+:e
+rec def to_ch_simplif n = s (to_ch_simplif n)
+//│ ╔══[ERROR] Inferred recursive type: 'a
+//│   where
+//│     'a :> forall 'b 'c 'd 'e. 'c -> ('d -> 'b
+//│       where
+//│         'a <: 'c -> 'd -> 'e
+//│         'c <: 'e -> 'b)
+//│ ╙──
+//│ to_ch_simplif: anything -> 'a -> ('b -> 'c
+//│   where
+//│     'a <: 'd -> 'c
+//│     'e <: 'a -> 'b -> 'd)
+//│ where
+//│   'e :> forall 'f 'g 'h 'i. 'f -> ('g -> 'i
+//│     where
+//│       'f <: 'h -> 'i
+//│       'e <: 'f -> 'g -> 'h)
+//│              = [Function: to_ch_simplif1]
+
+:e // * Since the removal of "recursive definition hacks"
+to_church_ty = to_ch_simplif
+//│ ╔══[ERROR] Inferred recursive type: 'a
+//│   where
+//│     'a :> forall 'b 'c 'd 'e. 'b -> ('c -> 'e
+//│       where
 //│         'a <: 'b -> 'c -> 'd
 //│         'b <: 'd -> 'e)
 //│ ╙──
@@ -1102,54 +1149,7 @@ to_church_ty = to_ch_simplif
 //│       'e <: 'f -> 'g -> 'h)
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?to_ch_simplif. ?to_ch_simplif <: int -> ChurchInt` exceeded recursion depth limit (250)
-//│ ║  l.1086: 	to_church_ty = to_ch_simplif
-//│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── Note: use flag `:ex` to see internal error info.
-//│             = [Function: to_ch_simplif]
-
-// * Redefinition in the context of distrib, just for the record (still infers but doesn't check)
-:e
-rec def to_ch_simplif n = s (to_ch_simplif n)
-//│ ╔══[ERROR] Inferred recursive type: 'a
-//│   where
-//│     'a :> forall 'b 'c 'd 'e. 'b -> ('c -> 'e
-//│       where
-//│         'b <: 'd -> 'e
-//│         'a <: 'b -> 'c -> 'd)
-//│ ╙──
-//│ to_ch_simplif: anything -> 'a -> ('b -> 'c
-//│   where
-//│     'd <: 'a -> 'b -> 'e
-//│     'a <: 'e -> 'c)
-//│ where
-//│   'd :> forall 'f 'g 'h 'i. 'f -> ('g -> 'i
-//│     where
-//│       'f <: 'h -> 'i
-//│       'd <: 'f -> 'g -> 'h)
-//│              = [Function: to_ch_simplif1]
-
-:e // * Since the removal of "recursive definition hacks"
-to_church_ty = to_ch_simplif
-//│ ╔══[ERROR] Inferred recursive type: 'a
-//│   where
-//│     'a :> forall 'b 'c 'd 'e. 'b -> ('c -> 'e
-//│       where
-//│         'b <: 'd -> 'e
-//│         'a <: 'b -> 'c -> 'd)
-//│ ╙──
-//│ anything -> 'a -> ('b -> 'c
-//│   where
-//│     'a <: 'd -> 'c
-//│     'e <: 'a -> 'b -> 'd)
-//│ where
-//│   'e :> forall 'f 'g 'h 'i. 'g -> ('h -> 'f
-//│     where
-//│       'g <: 'i -> 'f
-//│       'e <: 'g -> 'h -> 'i)
-//│   <:  to_church_ty:
-//│ int -> ChurchInt
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?to_ch_simplif. ?to_ch_simplif <: int -> ChurchInt` exceeded recursion depth limit (250)
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
 //│ ║  l.1133: 	to_church_ty = to_ch_simplif
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
@@ -1160,19 +1160,19 @@ to_church_ty = to_ch_simplif
 to_church_ty = to_ch_A1
 //│ ╔══[ERROR] Inferred recursive type: 'to_ch_A1
 //│   where
-//│     'to_ch_A1 :> forall 'to_ch_A1. int -> (forall 'a 'b 'c 'd 'e. (? & 'e) -> (('a & 'c) -> ('c | 'd)
+//│     'to_ch_A1 :> forall 'to_ch_A1. int -> (forall 'a 'b 'c 'd 'e. (? & 'd) -> (('e & 'c) -> ('c | 'b)
 //│       where
-//│         ChurchInt <: 'e -> 'a -> 'b
-//│         'e <: 'b -> 'd))
+//│         'd <: 'a -> 'b
+//│         ChurchInt <: 'd -> 'e -> 'a))
 //│     where
 //│       'to_ch_A1 <: int -> ChurchInt
 //│ ╙──
 //│ 'to_ch_A1
 //│   where
-//│     'to_ch_A1 :> forall 'to_ch_A1. int -> (forall 'a 'b 'c 'd 'e. 'd -> (('c & 'a) -> ('a | 'b)
+//│     'to_ch_A1 :> forall 'to_ch_A1. int -> (forall 'a 'b 'c 'd 'e. 'd -> (('e & 'b) -> ('b | 'c)
 //│       where
-//│         'd <: 'e -> 'b
-//│         ChurchInt <: 'd -> 'c -> 'e))
+//│         ChurchInt <: 'd -> 'e -> 'a
+//│         'd <: 'a -> 'c))
 //│     where
 //│       'to_ch_A1 <: int -> ChurchInt
 //│   <:  to_church_ty:
@@ -1187,8 +1187,8 @@ to_church_ty = to_ch_A1
 to_church_ty = to_church_mix
 //│ int -> 'a -> ('b -> ('b | 'c)
 //│   where
-//│     'a <: 'd -> 'c
-//│     ChurchInt <: 'a -> 'b -> 'd)
+//│     ChurchInt <: 'a -> 'b -> 'd
+//│     'a <: 'd -> 'c)
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│             = [Function: to_church_mix]

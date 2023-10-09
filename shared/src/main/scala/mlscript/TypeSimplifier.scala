@@ -1126,7 +1126,7 @@ trait TypeSimplifier { self: Typer =>
       case (tv, S(pol)) =>
         if (pol) (true, tv.lowerBounds.foldLeft(BotType: ST)(_ | _)) -> tv
         else (false, tv.upperBounds.foldLeft(TopType: ST)(_ &- _)) -> tv
-    }.toMap
+    }.filter { case ((pol, bnd), tv) => bnd.getVarsImpl(includeBounds = false).contains(tv) }.toMap
     
     println(s"consed: $consed")
     
@@ -1308,7 +1308,6 @@ trait TypeSimplifier { self: Typer =>
       // *  by merging things like function types together...
       // * So we need another pass of simplification!
       cur = simplifyType(cur, removePolarVars, pol)
-      // cur = simplifyType(simplifyType(cur)(ct)
       debugOutput(s"⬤ Resim: ${cur}")
       debugOutput(s" where: ${cur.showBounds}")
       

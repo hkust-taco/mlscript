@@ -132,12 +132,13 @@ def evalComposed evalComposed = evalN evalN! (eval evalComposed)
 // *    of the need for an algorithm to tie recursive TV knots and inline the rest;
 // *    once we inline, `b` we should get the expected simplified recursive type.
 ev2 = evalComposed evalComposed!
-//│ ev2: ((Add with {lhs: Neg & 'a | 'b & ~#Neg, rhs: Neg & 'a | 'b & ~#Neg}) | (Lit with {n: 'n}) | (Neg with {e: 'c})) -> (int | 'n)
+//│ ev2: (Add\lhs\rhs & {lhs: Neg\e & {e: 'a} | 'b & ~#Neg, rhs: Neg\e & {e: 'a} | 'b & ~#Neg} | Lit\n & {n: 'n} | Neg\e & {e: 'c}) -> (int | 'n)
 //│   where
-//│     'c <: (Add with {lhs: Neg & 'a | 'b & ~#Neg, rhs: Neg & 'a | 'b & ~#Neg}) | Lit | (Neg with {e: 'c})
-//│     'a <: {e: 'd}
-//│     'd <: 'b | (Neg with {e: 'd})
-//│     'b <: Add & {lhs: Neg & 'a | 'b & ~#Neg, rhs: Neg & 'a | 'b & ~#Neg} | Lit
+//│     'c <: Add\lhs\rhs & {lhs: Neg\e & {e: 'a} | 'b & ~#Neg, rhs: Neg\e & {e: 'a} | 'b & ~#Neg} | Lit | Neg\e & {e: 'c}
+//│     'a <: Add\lhs\rhs & {lhs: 'lhs, rhs: 'rhs} | Lit | Neg\e & {e: 'a}
+//│     'lhs <: Neg\e & {e: 'a} | 'b & ~#Neg
+//│     'b <: Add\lhs\rhs & {lhs: 'lhs, rhs: 'rhs} | Lit
+//│     'rhs <: Neg\e & {e: 'a} | 'b & ~#Neg
 //│    = [Function (anonymous)]
 
 ev2 e3
@@ -152,12 +153,13 @@ def ev2_ty: (Add & { lhs: 'a; rhs: 'a } | Lit | Neg & { e: 'a } as 'a) -> int
 //│       = <missing implementation>
 
 ev2_ty = ev2
-//│ ((Add with {lhs: Neg & 'a | 'b & ~#Neg, rhs: Neg & 'a | 'b & ~#Neg}) | (Lit with {n: 'n}) | (Neg with {e: 'c})) -> (int | 'n)
+//│ (Add\lhs\rhs & {lhs: Neg\e & {e: 'a} | 'b & ~#Neg, rhs: Neg\e & {e: 'a} | 'b & ~#Neg} | Lit\n & {n: 'n} | Neg\e & {e: 'c}) -> (int | 'n)
 //│   where
-//│     'c <: (Add with {lhs: Neg & 'a | 'b & ~#Neg, rhs: Neg & 'a | 'b & ~#Neg}) | Lit | (Neg with {e: 'c})
-//│     'a <: {e: 'd}
-//│     'd <: 'b | (Neg with {e: 'd})
-//│     'b <: Add & {lhs: Neg & 'a | 'b & ~#Neg, rhs: Neg & 'a | 'b & ~#Neg} | Lit
+//│     'c <: Add\lhs\rhs & {lhs: Neg\e & {e: 'a} | 'b & ~#Neg, rhs: Neg\e & {e: 'a} | 'b & ~#Neg} | Lit | Neg\e & {e: 'c}
+//│     'a <: Add\lhs\rhs & {lhs: 'lhs, rhs: 'rhs} | Lit | Neg\e & {e: 'a}
+//│     'lhs <: Neg\e & {e: 'a} | 'b & ~#Neg
+//│     'b <: Add\lhs\rhs & {lhs: 'lhs, rhs: 'rhs} | Lit
+//│     'rhs <: Neg\e & {e: 'a} | 'b & ~#Neg
 //│   <:  ev2_ty:
 //│ 'a -> int
 //│   where

@@ -103,36 +103,31 @@ mixin EvalLambda {
 
 module Test1 extends EvalVar, EvalLambda
 //│ module Test1 {
-//│   fun eval: forall 'a. (List[{_1: Str, _2: 'A}], 'b) -> ('A | 'a)
+//│   fun eval: (List[{_1: Str, _2: 'a}], 'b) -> 'a
 //│ }
 //│ where
 //│   'b <: Abs['b] | App['b & (Abs['b] | Object & ~#Abs)] | Var
-//│   'A :> 'a | Var
-//│   'a :> App['A] | Abs['A]
+//│   'a :> App['a] | Abs['a] | Var
 
 Test1.eval(Nil(), Var("a"))
-//│ forall 'a. 'A | 'a
+//│ 'a
 //│   where
-//│     'A :> 'a | Var
-//│     'a :> App['A] | Abs['A]
+//│     'a :> App['a] | Abs['a] | Var
 
 Test1.eval(Nil(), Abs("b", Var("a")))
-//│ forall 'a. 'A | 'a
+//│ 'a
 //│   where
-//│     'A :> 'a | Var
-//│     'a :> App['A] | Abs['A]
+//│     'a :> App['a] | Abs['a] | Var
 
 Test1.eval(Cons(["c", Var("d")], Nil()), App(Abs("b", Var("b")), Var("c")))
-//│ forall 'a. 'A | 'a
+//│ 'a
 //│   where
-//│     'A :> 'a | Var
-//│     'a :> App['A] | Abs['A]
+//│     'a :> App['a] | Abs['a] | Var
 
 Test1.eval(Cons(["c", Abs("d", Var("d"))], Nil()), App(Abs("b", Var("b")), Var("c")))
-//│ forall 'a. 'A | 'a
+//│ 'a
 //│   where
-//│     'A :> 'a | Abs[Var] | Var
-//│     'a :> App['A] | Abs['A]
+//│     'a :> App['a] | Abs['a] | Abs[Var] | Var
 
 class Numb(n: Int)
 class Add<out A>(l: A, r: A)
@@ -186,35 +181,32 @@ Test2.eval(Cons(["a", Abs("d", Var("d"))], Nil()), Add(Numb(1), Var("a")))
 
 module Test3 extends EvalVar, EvalExpr, EvalLambda
 //│ module Test3 {
-//│   fun eval: forall 'a. (List[{_1: Str, _2: 'b}], 'c) -> ('A | 'a)
+//│   fun eval: (List[{_1: Str, _2: 'a}], 'b) -> 'c
 //│ }
 //│ where
-//│   'b :> 'A
+//│   'a :> 'c
 //│      <: Object
-//│   'A :> 'a | Numb | Var | 'b | 'd
-//│   'd <: Add['c] | Mul['c] | Numb | Var
-//│   'c <: Abs['c] | App['c & (Abs['c] | Object & ~#Abs)] | Object & 'd & ~#Abs & ~#App
-//│   'a :> App['A] | Abs['A]
+//│   'c :> App['c] | Abs['c] | Numb | Var | 'a | 'd
+//│   'd <: Add['b] | Mul['b] | Numb | Var
+//│   'b <: Abs['b] | App['b & (Abs['b] | Object & ~#Abs)] | Object & 'd & ~#Abs & ~#App
 
 Test3.eval(Cons(["c", Abs("d", Var("d"))], Nil()), Abs("a", Var("a")))
-//│ forall 'a. 'A | 'a
+//│ 'a
 //│   where
-//│     'A :> 'a | Abs[Var] | Numb | Var
-//│     'a :> App['A] | Abs['A]
+//│     'a :> App['a] | Abs['a] | Abs[Var] | Numb | Var
 
 Test3.eval(Cons(["c", Abs("d", Var("d"))], Nil()), App(Abs("a", Var("a")), Add(Numb(1), Var("c"))))
-//│ forall 'a. 'A | 'a
+//│ 'a
 //│   where
-//│     'A :> 'a | Abs[Var] | Add[Numb | Var] | Numb | Var
-//│     'a :> App['A] | Abs['A]
+//│     'a :> App['a] | Abs['a] | Abs[Var] | Add[Numb | Var] | Numb | Var
 
 module Test3 extends EvalVar, EvalLambda, EvalExpr
 //│ module Test3 {
-//│   fun eval: (List[{_1: Str, _2: 'a}], 'a & (Add['b] | Mul['b] | Numb | Var)) -> ('A | 'a | 'b)
+//│   fun eval: (List[{_1: Str, _2: 'a}], 'a & (Add['b] | Mul['b] | Numb | Var)) -> ('a | 'b | 'c)
 //│ }
 //│ where
-//│   'a :> 'b | 'A
+//│   'a :> 'b | 'c
 //│      <: Object
-//│   'A :> Numb | 'a | Abs['A] | App['A] | Var
+//│   'c :> Abs[Numb | 'a | 'c] | App[Numb | 'a | 'c] | Numb | Var | 'a
 //│   'b <: Add['b] | Mul['b] | Numb | Var
 

@@ -101,12 +101,10 @@ addNTimes n 12
 
 rec def addNTimes a n =
   if n <= 0 then 0 else a.Add addNTimes a (n - 1)
-//│ addNTimes: 'addNTimes
+//│ addNTimes: 'a -> int -> 'b
 //│   where
-//│     'addNTimes :> 'a -> int -> 'b
 //│     'a <: Addable['A]
-//│     'A :> 'addNTimes
-//│        <: 'a -> int -> 'b
+//│     'A := 'a -> int -> 'b
 //│     'b :> 0
 
 addNTimes n 12
