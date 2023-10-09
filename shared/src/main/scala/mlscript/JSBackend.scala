@@ -277,6 +277,10 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
           name -> translateTerm(value)
         }) :: Nil
       )
+    case Bra(false, trm) => trm match { // Only parenthesize binary operatiors
+      case App(Var(op), _) if JSBinary.operators.contains(op) => JSParenthesis(translateTerm(trm)) 
+      case trm => translateTerm(trm)
+    }
     case Bra(_, trm) => translateTerm(trm)
     case Tup(terms) =>
       JSArray(terms map { case (_, Fld(_, term)) => translateTerm(term) })
