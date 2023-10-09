@@ -1,10 +1,10 @@
 :NewDefs
 
-:e // FIXME: Malformed Test?
+:AllowRuntimeErrors
 fun foo() =
   let local(x) =
     class Foo {
-      fun bar = x + foo(x)
+      fun bar = x + foo()
     }
     (new Foo()).bar
   local(1)
@@ -13,29 +13,11 @@ foo()
 //│ TypingUnit(NuFunDef(None, foo, None, [], Lam(Tup(), Blk(...))), App(Var(foo), Tup()))
 //│ Lifted:
 //│ TypingUnit {
-//│   class Foo$1([x,]) {fun bar = () => +((this).x, foo$1((this).x,),)}
+//│   class Foo$1([x,]) {fun bar = () => +((this).x, foo$1(),)}
 //│   let local$2 = (x,) => {('(' new Foo$1([x,]) {} ')').bar}
 //│   fun foo$1 = () => {local$2(1,)}
 //│   Code(List(foo$1()))
 //│ }
-//│ ╔══[ERROR] Type mismatch in definition:
-//│ ║  l.4: 	fun foo() =
-//│ ║       	    ^^^^^^^
-//│ ║  l.5: 	  let local(x) =
-//│ ║       	^^^^^^^^^^^^^^^^
-//│ ║  l.6: 	    class Foo {
-//│ ║       	^^^^^^^^^^^^^^^
-//│ ║  l.7: 	      fun bar = x + foo(x)
-//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.8: 	    }
-//│ ║       	^^^^^
-//│ ║  l.9: 	    (new Foo()).bar
-//│ ║       	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.10: 	  local(1)
-//│ ║        	^^^^^^^^^^
-//│ ╟── argument of type `[?a]` does not match type `[]`
-//│ ║  l.7: 	      fun bar = x + foo(x)
-//│ ╙──     	                       ^^^
 //│ fun foo: () -> Int
 //│ Int
 //│ res

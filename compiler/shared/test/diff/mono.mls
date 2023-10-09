@@ -682,32 +682,37 @@ foo(l => (new Cons(2, l)).count())
 //│     = 3
 
 :mono
-:e // FIXME: Malformed Test?
-class E() {
+class Exp() {
+  virtual fun derive(x: Int): Exp
+  virtual fun derive(x: Int) = Exp()
+  virtual fun isEmpty(): Bool
+  virtual fun isEmpty() = false
+}
+class E() extends Exp {
   fun derive(x) = 
     new E
   fun isEmpty() = 
     false
 }
-class Ep(){
+class Ep() extends Exp {
   fun derive(x) = 
     new E
   fun isEmpty() = 
     true
 }
-class Ch(i){
+class Ch(i: Int) extends Exp {
   fun derive(x) = 
     if x == i then new Ep else new E
   fun isEmpty() = 
     false
 }
-class A(e1, e2){
+class A(e1: Exp, e2: Exp) extends Exp {
   fun derive(x) = 
     new A(e1.derive(x), e2.derive(x))
   fun isEmpty() = 
     e1.isEmpty() || e2.isEmpty()
 }
-class C(e1, e2){
+class C(e1: Exp, e2: Exp) extends Exp {
   fun derive(x) = 
     if e1.isEmpty() then new A(new C(e1.derive(x), e2), e2.derive(x)) else new C(e1.derive(x), e2)
   fun isEmpty() = 
@@ -715,96 +720,93 @@ class C(e1, e2){
 }
 (new C(new Ch(1), new A(new Ch(2), new Ch(3)))).derive(0).isEmpty()
 //│ Parsed:
-//│ TypingUnit(NuTypeDef(class, E, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, derive, None, [], Lam(Tup(_: Var(x)), Blk(...))), NuFunDef(None, isEmpty, None, [], Lam(Tup(), Blk(...))))), NuTypeDef(class, Ep, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, derive, None, [], Lam(Tup(_: Var(x)), Blk(...))), NuFunDef(None, isEmpty, None, [], Lam(Tup(), Blk(...))))), NuTypeDef(class, Ch, (), Tup(_: Var(i)), (), None, None, TypingUnit(NuFunDef(None, derive, None, [], Lam(Tup(_: Var(x)), Blk(...))), NuFunDef(None, isEmpty, None, [], Lam(Tup(), Blk(...))))), NuTypeDef(class, A, (), Tup(_: Var(e1), _: Var(e2)), (), None, None, TypingUnit(NuFunDef(None, derive, None, [], Lam(Tup(_: Var(x)), Blk(...))), NuFunDef(None, isEmpty, None, [], Lam(Tup(), Blk(...))))), NuTypeDef(class, C, (), Tup(_: Var(e1), _: Var(e2)), (), None, None, TypingUnit(NuFunDef(None, derive, None, [], Lam(Tup(_: Var(x)), Blk(...))), NuFunDef(None, isEmpty, None, [], Lam(Tup(), Blk(...))))), App(Sel(App(Sel(Bra(rcd = false, New(Some((TypeName(C),[new Ch([1,]) {}, new A([new Ch([2,]) {}, new Ch([3,]) {},]) {},])), TypingUnit())), derive), Tup(_: IntLit(0))), isEmpty), Tup()))
+//│ TypingUnit(NuTypeDef(class, Exp, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, derive, None, [], PolyType(List(),Function(Tuple(List((Some(x),Field(None,TypeName(Int))))),TypeName(Exp)))), NuFunDef(None, derive, None, [], Lam(Tup(x: Var(Int)), App(Var(Exp), Tup()))), NuFunDef(None, isEmpty, None, [], PolyType(List(),Function(Tuple(List()),TypeName(Bool)))), NuFunDef(None, isEmpty, None, [], Lam(Tup(), Var(false))))), NuTypeDef(class, E, (), Tup(), (Var(Exp)), None, None, TypingUnit(NuFunDef(None, derive, None, [], Lam(Tup(_: Var(x)), Blk(...))), NuFunDef(None, isEmpty, None, [], Lam(Tup(), Blk(...))))), NuTypeDef(class, Ep, (), Tup(), (Var(Exp)), None, None, TypingUnit(NuFunDef(None, derive, None, [], Lam(Tup(_: Var(x)), Blk(...))), NuFunDef(None, isEmpty, None, [], Lam(Tup(), Blk(...))))), NuTypeDef(class, Ch, (), Tup(i: Var(Int)), (Var(Exp)), None, None, TypingUnit(NuFunDef(None, derive, None, [], Lam(Tup(_: Var(x)), Blk(...))), NuFunDef(None, isEmpty, None, [], Lam(Tup(), Blk(...))))), NuTypeDef(class, A, (), Tup(e1: Var(Exp), e2: Var(Exp)), (Var(Exp)), None, None, TypingUnit(NuFunDef(None, derive, None, [], Lam(Tup(_: Var(x)), Blk(...))), NuFunDef(None, isEmpty, None, [], Lam(Tup(), Blk(...))))), NuTypeDef(class, C, (), Tup(e1: Var(Exp), e2: Var(Exp)), (Var(Exp)), None, None, TypingUnit(NuFunDef(None, derive, None, [], Lam(Tup(_: Var(x)), Blk(...))), NuFunDef(None, isEmpty, None, [], Lam(Tup(), Blk(...))))), App(Sel(App(Sel(Bra(rcd = false, New(Some((TypeName(C),[new Ch([1,]) {}, new A([new Ch([2,]) {}, new Ch([3,]) {},]) {},])), TypingUnit())), derive), Tup(_: IntLit(0))), isEmpty), Tup()))
 //│ Lifted:
 //│ TypingUnit {
-//│   class E$1([]) {
-//│     fun derive = (x,) => {new E$1([]) {}}
+//│   class Exp$1([]) {
+//│     fun derive = (x: Int) -> Exp$1
+//│     fun derive = (x: Int,) => Exp$1()
+//│     fun isEmpty = () -> Bool
+//│     fun isEmpty = () => false
+//│   }
+//│   class E$2([]): Exp$1() {
+//│     fun derive = (x,) => {new E$2([]) {}}
 //│     fun isEmpty = () => {false}
 //│   }
-//│   class Ep$2([]) {
-//│     fun derive = (x,) => {new E$1([]) {}}
+//│   class Ep$3([]): Exp$1() {
+//│     fun derive = (x,) => {new E$2([]) {}}
 //│     fun isEmpty = () => {true}
 //│   }
-//│   class Ch$3([i,]) {
-//│     fun derive = (x,) => {if (==(x, (this).i,)) then new Ep$2([]) {} else new E$1([]) {}}
+//│   class Ch$4([i: Int,]): Exp$1() {
+//│     fun derive = (x,) => {if (==(x, (this).i,)) then new Ep$3([]) {} else new E$2([]) {}}
 //│     fun isEmpty = () => {false}
 //│   }
-//│   class A$4([e1, e2,]) {
-//│     fun derive = (x,) => {new A$4([((this).e1).derive(x,), ((this).e2).derive(x,),]) {}}
+//│   class A$5([e1: Exp, e2: Exp,]): Exp$1() {
+//│     fun derive = (x,) => {new A$5([((this).e1).derive(x,), ((this).e2).derive(x,),]) {}}
 //│     fun isEmpty = () => {||(((this).e1).isEmpty(), ((this).e2).isEmpty(),)}
 //│   }
-//│   class C$5([e1, e2,]) {
-//│     fun derive = (x,) => {if (((this).e1).isEmpty()) then new A$4([new C$5([((this).e1).derive(x,), (this).e2,]) {}, ((this).e2).derive(x,),]) {} else new C$5([((this).e1).derive(x,), (this).e2,]) {}}
+//│   class C$6([e1: Exp, e2: Exp,]): Exp$1() {
+//│     fun derive = (x,) => {if (((this).e1).isEmpty()) then new A$5([new C$6([((this).e1).derive(x,), (this).e2,]) {}, ((this).e2).derive(x,),]) {} else new C$6([((this).e1).derive(x,), (this).e2,]) {}}
 //│     fun isEmpty = () => {&&(((this).e1).isEmpty(), ((this).e2).isEmpty(),)}
 //│   }
-//│   Code(List((('(' new C$5([new Ch$3([1,]) {}, new A$4([new Ch$3([2,]) {}, new Ch$3([3,]) {},]) {},]) {} ')').derive(0,)).isEmpty()))
+//│   Code(List((('(' new C$6([new Ch$4([1,]) {}, new A$5([new Ch$4([2,]) {}, new Ch$4([3,]) {},]) {},]) {} ')').derive(0,)).isEmpty()))
 //│ }
 //│ Mono:
 //│ 
 //│ Defunc result: 
-//│ main$$5()
-//│ fun isEmpty$C$5(this) =
-//│   &&(this.e1 match {case obj: Ep$2 => isEmpty$Ep$2(obj); case obj: E$1 => isEmpty$E$1(obj)}, this.e2 match {case obj: A$4 => isEmpty$A$4(obj)})
-//│ fun isEmpty$Ch$3(this) =
+//│ main$$6()
+//│ fun isEmpty$E$2(this) =
 //│   false
-//│ fun isEmpty$E$1(this) =
+//│ fun isEmpty$A$5(this) =
+//│   ||(this.e1 match {case obj: Ch$4 => isEmpty$Ch$4(obj)}, this.e2 match {case obj: Ch$4 => isEmpty$Ch$4(obj)})
+//│ fun isEmpty$Ch$4(this) =
 //│   false
-//│ fun isEmpty$A$4(this) =
-//│   ||(this.e1 match {case obj: Ch$3 => isEmpty$Ch$3(obj)}, this.e2 match {case obj: Ch$3 => isEmpty$Ch$3(obj)})
-//│ fun derive$A$4(this, x) =
-//│   new A$4 (this.e1 match {case obj: Ch$3 => derive$Ch$3(obj, x)}, this.e2 match {case obj: Ch$3 => derive$Ch$3(obj, x)}) 
-//│ fun derive$C$5(this, x) =
-//│   if this.e1 match {case obj: Ch$3 => isEmpty$Ch$3(obj)} then new A$4 (new C$5 (this.e1 match {case obj: Ch$3 => derive$Ch$3(obj, x)}, this.e2) , this.e2 match {case obj: A$4 => derive$A$4(obj, x)})  else new C$5 (this.e1 match {case obj: Ch$3 => derive$Ch$3(obj, x)}, this.e2) 
-//│ fun derive$Ch$3(this, x) =
-//│   if ==(x, this.i) then new Ep$2 ()  else new E$1 () 
-//│ fun main$$5() =
-//│   new C$5 (new Ch$3 (#1) , new A$4 (new Ch$3 (#2) , new Ch$3 (#3) ) )  match {case obj: C$5 => derive$C$5(obj, #0)} match {case obj: C$5 => isEmpty$C$5(obj)}
-//│ fun isEmpty$Ep$2(this) =
+//│ fun derive$A$5(this, x) =
+//│   new A$5 (this.e1 match {case obj: Ch$4 => derive$Ch$4(obj, x)}, this.e2 match {case obj: Ch$4 => derive$Ch$4(obj, x)}) 
+//│ fun isEmpty$C$6(this) =
+//│   &&(this.e1 match {case obj: Ep$3 => isEmpty$Ep$3(obj); case obj: E$2 => isEmpty$E$2(obj)}, this.e2 match {case obj: A$5 => isEmpty$A$5(obj)})
+//│ fun derive$C$6(this, x) =
+//│   if this.e1 match {case obj: Ch$4 => isEmpty$Ch$4(obj)} then new A$5 (new C$6 (this.e1 match {case obj: Ch$4 => derive$Ch$4(obj, x)}, this.e2) , this.e2 match {case obj: A$5 => derive$A$5(obj, x)})  else new C$6 (this.e1 match {case obj: Ch$4 => derive$Ch$4(obj, x)}, this.e2) 
+//│ fun main$$6() =
+//│   new C$6 (new Ch$4 (#1) , new A$5 (new Ch$4 (#2) , new Ch$4 (#3) ) )  match {case obj: C$6 => derive$C$6(obj, #0)} match {case obj: C$6 => isEmpty$C$6(obj)}
+//│ fun derive$Ch$4(this, x) =
+//│   if ==(x, this.i) then new Ep$3 ()  else new E$2 () 
+//│ fun isEmpty$Ep$3(this) =
 //│   true
-//│ class A$4(e1, e2) {
+//│ class A$5(e1, e2): Exp$1() {
 //│ }
-//│ class E$1() {
+//│ class E$2(): Exp$1() {
 //│ }
-//│ class C$5(e1, e2) {
+//│ class C$6(e1, e2): Exp$1() {
 //│ }
-//│ class Ep$2() {
+//│ class Ch$4(i): Exp$1() {
 //│ }
-//│ class Ch$3(i) {
+//│ class Ep$3(): Exp$1() {
 //│ }
-//│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.698: 	class Ch(i){
-//│ ╙──       	         ^
-//│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.704: 	class A(e1, e2){
-//│ ╙──       	        ^^
-//│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.704: 	class A(e1, e2){
-//│ ╙──       	            ^^
-//│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.710: 	class C(e1, e2){
-//│ ╙──       	        ^^
-//│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.710: 	class C(e1, e2){
-//│ ╙──       	            ^^
-//│ class E() {
+//│ class Exp$1() {
+//│ }
+//│ class Exp() {
+//│   fun derive: (x: Int) -> Exp
+//│   fun isEmpty: () -> Bool
+//│ }
+//│ class E() extends Exp {
 //│   fun derive: anything -> E
 //│   fun isEmpty: () -> false
 //│ }
-//│ class Ep() {
+//│ class Ep() extends Exp {
 //│   fun derive: anything -> E
 //│   fun isEmpty: () -> true
 //│ }
-//│ class Ch(i: error) {
+//│ class Ch(i: Int) extends Exp {
 //│   fun derive: Num -> (E | Ep)
 //│   fun isEmpty: () -> false
 //│ }
-//│ class A(e1: error, e2: error) {
-//│   fun derive: anything -> A
+//│ class A(e1: Exp, e2: Exp) extends Exp {
+//│   fun derive: Int -> A
 //│   fun isEmpty: () -> Bool
 //│ }
-//│ class C(e1: error, e2: error) {
-//│   fun derive: anything -> (A | C)
+//│ class C(e1: Exp, e2: Exp) extends Exp {
+//│   fun derive: Int -> (A | C)
 //│   fun isEmpty: () -> Bool
 //│ }
 //│ Bool
@@ -813,42 +815,45 @@ class C(e1, e2){
 
 
 :mono
-:e // FIXME: Malformed Test?
+val anyUnknown = false
 class List(l: List | Nil, hasTail: Bool)  {}
 class Nil(hasTail: Bool)  {}
 fun gen() = 
   if anyUnknown then new List(gen(), true) else new Nil(false)
 gen()
 //│ Parsed:
-//│ TypingUnit(NuTypeDef(class, List, (), Tup(l: App(Var(|), Tup(_: Var(List), _: Var(Nil))), hasTail: Var(Bool)), (), None, None, TypingUnit()), NuTypeDef(class, Nil, (), Tup(hasTail: Var(Bool)), (), None, None, TypingUnit()), NuFunDef(None, gen, None, [], Lam(Tup(), Blk(...))), App(Var(gen), Tup()))
+//│ TypingUnit(NuFunDef(Some(false), anyUnknown, None, [], Var(false)), NuTypeDef(class, List, (), Tup(l: App(Var(|), Tup(_: Var(List), _: Var(Nil))), hasTail: Var(Bool)), (), None, None, TypingUnit()), NuTypeDef(class, Nil, (), Tup(hasTail: Var(Bool)), (), None, None, TypingUnit()), NuFunDef(None, gen, None, [], Lam(Tup(), Blk(...))), App(Var(gen), Tup()))
 //│ Lifted:
 //│ TypingUnit {
 //│   class List$1([l: |(List, Nil,), hasTail: Bool,]) {}
 //│   class Nil$2([hasTail: Bool,]) {}
+//│   let anyUnknown$2 = () => false
 //│   fun gen$1 = () => {if (anyUnknown) then new List$1([gen$1(), true,]) {} else new Nil$2([false,]) {}}
 //│   Code(List(gen$1()))
 //│ }
 //│ Mono:
 //│ 
 //│ Defunc result: 
-//│ main$$3()
+//│ main$$4()
+//│ fun anyUnknown$2() =
+//│   false
 //│ fun gen$1() =
 //│   if anyUnknown then new List$1 (gen$1(), true)  else new Nil$2 (false) 
-//│ fun main$$3() =
+//│ fun main$$4() =
 //│   gen$1()
 //│ class Nil$2(hasTail) {
 //│ }
 //│ class List$1(l, hasTail) {
 //│ }
-//│ ╔══[ERROR] identifier not found: anyUnknown
-//│ ║  l.820: 	  if anyUnknown then new List(gen(), true) else new Nil(false)
-//│ ╙──       	     ^^^^^^^^^^
+//│ val anyUnknown: false
 //│ class List(l: List | Nil, hasTail: Bool)
 //│ class Nil(hasTail: Bool)
 //│ fun gen: () -> (List | Nil)
 //│ List | Nil
-//│ Code generation encountered an error:
-//│   unresolved symbol anyUnknown
+//│ anyUnknown
+//│            = false
+//│ res
+//│     = Nil {}
 
 
 
@@ -1017,9 +1022,9 @@ class OneBool(b: Bool){
 //│     = true
 
 :mono
-:e // FIXME: Malformed Test?
-class Bar(x: int) {
-  fun FooMinus(y: int) = x + y
+class Bar(x: Int) {
+  fun foo(x) = x
+  fun FooMinus(y: Int) = x + y
   fun car = foo(2)
 }
 class Car {
@@ -1028,21 +1033,22 @@ class Car {
 fun baz(b: Bar) = b.foo(2)
 let bar = Bar(42)
 baz(bar)
-Car().da(Bar(1337))
+(new Car()).da(Bar(1337))
 bar.car
 //│ Parsed:
-//│ TypingUnit(NuTypeDef(class, Bar, (), Tup(x: Var(int)), (), None, None, TypingUnit(NuFunDef(None, FooMinus, None, [], Lam(Tup(y: Var(int)), App(Var(+), Tup(_: Var(x), _: Var(y))))), NuFunDef(None, car, None, [], App(Var(foo), Tup(_: IntLit(2)))))), NuTypeDef(class, Car, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, da, None, [], Lam(Tup(b: Var(Bar)), App(Sel(Var(b), foo), Tup(_: IntLit(2))))))), NuFunDef(None, baz, None, [], Lam(Tup(b: Var(Bar)), App(Sel(Var(b), foo), Tup(_: IntLit(2))))), NuFunDef(Some(false), bar, None, [], App(Var(Bar), Tup(_: IntLit(42)))), App(Var(baz), Tup(_: Var(bar))), App(Sel(App(Var(Car), Tup()), da), Tup(_: App(Var(Bar), Tup(_: IntLit(1337))))), Sel(Var(bar), car))
+//│ TypingUnit(NuTypeDef(class, Bar, (), Tup(x: Var(Int)), (), None, None, TypingUnit(NuFunDef(None, foo, None, [], Lam(Tup(_: Var(x)), Var(x))), NuFunDef(None, FooMinus, None, [], Lam(Tup(y: Var(Int)), App(Var(+), Tup(_: Var(x), _: Var(y))))), NuFunDef(None, car, None, [], App(Var(foo), Tup(_: IntLit(2)))))), NuTypeDef(class, Car, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, da, None, [], Lam(Tup(b: Var(Bar)), App(Sel(Var(b), foo), Tup(_: IntLit(2))))))), NuFunDef(None, baz, None, [], Lam(Tup(b: Var(Bar)), App(Sel(Var(b), foo), Tup(_: IntLit(2))))), NuFunDef(Some(false), bar, None, [], App(Var(Bar), Tup(_: IntLit(42)))), App(Var(baz), Tup(_: Var(bar))), App(Sel(Bra(rcd = false, New(Some((TypeName(Car),[])), TypingUnit())), da), Tup(_: App(Var(Bar), Tup(_: IntLit(1337))))), Sel(Var(bar), car))
 //│ Lifted:
 //│ TypingUnit {
-//│   class Bar$1([x: int,]) {
-//│     fun FooMinus = (y: int,) => +((this).x, y,)
-//│     fun car = () => foo(2,)
+//│   class Bar$1([x: Int,]) {
+//│     fun foo = (x,) => x
+//│     fun FooMinus = (y: Int,) => +((this).x, y,)
+//│     fun car = () => (this).foo(2,)
 //│   }
 //│   class Car$2([]) {fun da = (b: Bar$1,) => (b).foo(2,)}
 //│   fun baz$2 = (b: Bar$1,) => (b).foo(2,)
 //│   let bar$1 = () => Bar$1(42,)
 //│   Code(List(baz$2(bar,)))
-//│   Code(List((Car$2()).da(Bar$1(1337,),)))
+//│   Code(List(('(' new Car$2([]) {} ')').da(Bar$1(1337,),)))
 //│   Code(List((bar).car))
 //│ }
 //│ Mono:
@@ -1053,88 +1059,40 @@ bar.car
 //│ main$$6()
 //│ fun bar$1() =
 //│   Bar$1(#42)
+//│ fun da$Car$2(this, b) =
+//│   b match {}
 //│ fun main$$6() =
 //│   bar.car
 //│ fun baz$2(b) =
 //│   b match {}
 //│ fun main$$5() =
-//│   Car$2() match {}
+//│   new Car$2 ()  match {case obj: Car$2 => da$Car$2(obj, Bar$1(#1337))}
 //│ fun main$$4() =
 //│   baz$2(bar)
 //│ class Bar$1(x) {
 //│ }
 //│ class Car$2() {
 //│ }
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.1022: 	  fun FooMinus(y: int) = x + y
-//│ ║          	                         ^^^^^
-//│ ╟── type `int` is not an instance of `Int`
-//│ ║  l.1021: 	class Bar(x: int) {
-//│ ║          	             ^^^
-//│ ╟── but it flows into reference with expected type `Int`
-//│ ║  l.1022: 	  fun FooMinus(y: int) = x + y
-//│ ╙──        	                         ^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1023: 	  fun car = foo(2)
-//│ ║          	            ^^^^^^
-//│ ╟── integer literal of type `2` is not a function
-//│ ║  l.1023: 	  fun car = foo(2)
-//│ ║          	                ^
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.624: 	  x(new Cons(1, new Nil())) + x(new Nil())
-//│ ║         	                              ^^^^^^^^^^^^
-//│ ╟── from reference:
-//│ ║  l.624: 	  x(new Cons(1, new Nil())) + x(new Nil())
-//│ ╙──       	                              ^
-//│ ╔══[ERROR] Type `Bar` does not contain member `foo`
-//│ ║  l.1026: 	  fun da(b: Bar) = b.foo(2)
-//│ ╙──        	                    ^^^^
-//│ ╔══[ERROR] Type `Bar` does not contain member `foo`
-//│ ║  l.1028: 	fun baz(b: Bar) = b.foo(2)
-//│ ╙──        	                   ^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1029: 	let bar = Bar(42)
-//│ ║          	          ^^^^^^^
-//│ ╟── integer literal of type `42` is not an instance of type `int`
-//│ ║  l.1029: 	let bar = Bar(42)
-//│ ║          	              ^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.1021: 	class Bar(x: int) {
-//│ ╙──        	             ^^^
-//│ ╔══[ERROR] Construction of unparameterized class Car should use the `new` keyword
-//│ ║  l.1031: 	Car().da(Bar(1337))
-//│ ╙──        	^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1031: 	Car().da(Bar(1337))
-//│ ║          	         ^^^^^^^^^
-//│ ╟── integer literal of type `1337` is not an instance of type `int`
-//│ ║  l.1031: 	Car().da(Bar(1337))
-//│ ║          	             ^^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.1021: 	class Bar(x: int) {
-//│ ╙──        	             ^^^
-//│ class Bar(x: int) {
-//│   fun FooMinus: (y: int) -> (Int | error)
-//│   fun car: Int | error
+//│ class Bar(x: Int) {
+//│   fun FooMinus: (y: Int) -> Int
+//│   fun car: 2
+//│   fun foo: forall 'a. 'a -> 'a
 //│ }
 //│ class Car {
 //│   constructor()
-//│   fun da: (b: Bar) -> error
+//│   fun da: (b: Bar) -> 2
 //│ }
-//│ fun baz: (b: Bar) -> error
-//│ let bar: Bar | error
-//│ Int | error
+//│ fun baz: (b: Bar) -> 2
+//│ let bar: Bar
+//│ 2
 //│ bar
 //│     = Bar {}
 //│ res
-//│ Runtime error:
-//│   TypeError: b.foo is not a function
+//│     = 2
 //│ res
-//│ Runtime error:
-//│   TypeError: Class constructor Car cannot be invoked without 'new'
+//│     = 2
 //│ res
-//│ Runtime error:
-//│   TypeError: x is not a function
+//│     = 2
 
 :mono
 val c = 5

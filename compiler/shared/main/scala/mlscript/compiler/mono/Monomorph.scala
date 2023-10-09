@@ -76,7 +76,7 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
     funDependence.addOne(func.name.name, Set())
   }
 
-  private def getResult(exps: List[Expr]) = mlscript.compiler.Module(exps.concat[Expr | Item](funImpls.map(x => x._2._1))
+  private def getResult(exps: List[Expr]) = mlscript.compiler.ModuleUnit(exps.concat[Expr | Item](funImpls.map(x => x._2._1))
        .concat(allTypeImpls.values.map(x => x.copy(body = Isolation(Nil))))
        .concat(lamTyDefs.values)
        .concat(anonymTyDefs.values)
@@ -85,7 +85,7 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
   /**
    * This function defunctionalizes the top-level `TypingUnit` into a `Module`.
    */
-  def defunctionalize(tu: TypingUnit): Module =
+  def defunctionalize(tu: TypingUnit): ModuleUnit =
     // debug.trace("MONO MODL", PrettyPrinter.show(tu)) {
       val exps = tu.entities.zipWithIndex.flatMap[Expr] {
         case (term: Term, i) =>
@@ -191,7 +191,6 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
         BoundedExpr(funImpls.get(name).get._4)
       }
       else {
-        debug.log("!!!!!!!")
         debug.log(s"calling unknown function $name(${args.mkString(",")})")
         debug.log(funImpls.keySet.toString())
         BoundedExpr(UnknownValue())
@@ -303,7 +302,7 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
           }
           else None
         }).headOption.getOrElse(
-          throw MonomorphError("Field not Found in"+obj.toString())
+          throw MonomorphError(s"Field ${field} not Found in"+obj.toString())
         )
       }
     }

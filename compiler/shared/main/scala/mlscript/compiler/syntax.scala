@@ -264,7 +264,7 @@ object Isolation:
  * This name conflicts with `java.lang.Module`.
  * TODO: Find a better name.
  */
-class Module(val items: List[Expr | Item]) extends Printable:
+class ModuleUnit(val items: List[Expr | Item]) extends Printable:
   def getDebugOutput: DebugOutput =
     DebugOutput.Code(ExprPrinter.printLines(this))
 
