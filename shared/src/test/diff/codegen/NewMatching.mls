@@ -42,7 +42,7 @@ fun sum(v) =
 //│     return (a = v, a instanceof V0.class ? 0 : a instanceof V1.class ? (([a]) => a)(V1.unapply(v)) : a instanceof V2.class ? (([
 //│       a,
 //│       b
-//│     ]) => a + b)(V2.unapply(v)) : a instanceof Pos.class ? (([x]) => x > 0 === true ? x : 0 - 1)(Pos.unapply(v)) : a instanceof V22.class ? (([
+//│     ]) => a + b)(V2.unapply(v)) : a instanceof Pos.class ? (([x]) => x > 0 === true ? x : -1)(Pos.unapply(v)) : a instanceof V22.class ? (([
 //│       tmp0,
 //│       tmp1
 //│     ]) => tmp0 instanceof V2.class ? (([
@@ -51,10 +51,10 @@ fun sum(v) =
 //│     ]) => tmp1 instanceof V2.class ? (([
 //│       x2,
 //│       y2
-//│     ]) => x1 + y1 + x2 + y2)(V2.unapply(tmp1)) : 0 - 1)(V2.unapply(tmp0)) : 0 - 1)(V22.unapply(v)) : a instanceof Half.class ? (([
+//│     ]) => x1 + y1 + x2 + y2)(V2.unapply(tmp1)) : -1)(V2.unapply(tmp0)) : -1)(V22.unapply(v)) : a instanceof Half.class ? (([
 //│       tmp2,
 //│       x
-//│     ]) => x)(Half.unapply(v)) : a instanceof None.class ? (([tmp3]) => 0)(None.unapply(v)) : 0 - 1);
+//│     ]) => x)(Half.unapply(v)) : a instanceof None.class ? (([tmp3]) => 0)(None.unapply(v)) : -1);
 //│   })());
 //│ };
 //│ // End of generated code

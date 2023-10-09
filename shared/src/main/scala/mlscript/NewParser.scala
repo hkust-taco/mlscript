@@ -790,12 +790,13 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       case (IDENT("-", true), l0) :: _ /*if opPrec("-")._1 > prec*/ =>
         consume
         val v = Var("-").withLoc(S(l0))
-        exprOrIf(opPrec("-")._2) match {
-          case L(rhs) => ???
-          case R(rhs) => 
+        expr(opPrec("-")._2) match {
+          case IntLit(i) =>
+            exprCont(IntLit(-i), prec, false)
+          case rhs: Term => 
             exprCont(
-              if (newDefs) App(v, PlainTup(IntLit(BigInt(0)), rhs))
-              else App(App(v, PlainTup(IntLit(BigInt(0)))), PlainTup(rhs))
+              if (newDefs) App(v, PlainTup(rhs, IntLit(BigInt(0))))
+              else App(App(v, PlainTup(rhs)), PlainTup(IntLit(BigInt(0))))
             , prec, false)
         }
       case (tk, l0) :: _ =>
