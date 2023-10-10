@@ -792,7 +792,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         val v = Var("-").withLoc(S(l0))
         expr(opPrec("-")._2) match {
           case IntLit(i) => // Special case for negative literals
-            exprCont(IntLit(-i), prec, false) 
+            exprCont(IntLit(-i), prec, false)
           case rhs: Term => // General case
             exprCont(
               if (newDefs) App(v, PlainTup(IntLit(BigInt(0)), rhs))
