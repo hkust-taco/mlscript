@@ -787,7 +787,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       case ((KEYWORD(";;") /* | NEWLINE */ /* | BRACKETS(Curly, _) */, l0) :: _) =>
         R(UnitLit(true).withLoc(S(l0)))
         // R(errExpr) // TODO
-      case (IDENT("-", true), l0) :: _ /*if opPrec("-")._1 > prec*/ => // Unary subtraction
+      case (IDENT("-", true), l0) :: _ /*if opPrec("-")._1 > prec*/ => // Unary minus
         consume
         val v = Var("-").withLoc(S(l0))
         expr(opPrec("-")._2) match {
