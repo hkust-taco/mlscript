@@ -787,16 +787,16 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       case ((KEYWORD(";;") /* | NEWLINE */ /* | BRACKETS(Curly, _) */, l0) :: _) =>
         R(UnitLit(true).withLoc(S(l0)))
         // R(errExpr) // TODO
-      case (IDENT("-", true), l0) :: _ /*if opPrec("-")._1 > prec*/ =>
+      case (IDENT("-", true), l0) :: _ /*if opPrec("-")._1 > prec*/ => // Unary subtraction
         consume
         val v = Var("-").withLoc(S(l0))
         expr(opPrec("-")._2) match {
-          case IntLit(i) =>
-            exprCont(IntLit(-i), prec, false)
-          case rhs: Term => 
+          case IntLit(i) => // Special case for negative literals
+            exprCont(IntLit(-i), prec, false) 
+          case rhs: Term => // General case
             exprCont(
-              if (newDefs) App(v, PlainTup(rhs, IntLit(BigInt(0))))
-              else App(App(v, PlainTup(rhs)), PlainTup(IntLit(BigInt(0))))
+              if (newDefs) App(v, PlainTup(IntLit(BigInt(0)), rhs))
+              else App(App(v, PlainTup(IntLit(BigInt(0)))), PlainTup(rhs))
             , prec, false)
         }
       case (tk, l0) :: _ =>
