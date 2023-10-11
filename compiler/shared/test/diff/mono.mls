@@ -237,59 +237,46 @@ fac(2)
 //│     = 2
 
 :mono
-:e // FIXME: Malformed Test?
-class List(l, hasTail)  {}
-class Nil(l, hasTail)  {}
+class List(val l: List | Nil | undefined, val hasTail: Bool)  {}
+class Nil(val l: List | Nil | undefined, val hasTail: Bool)  {}
 fun count(lst) =
-  if lst.hasTail then count(lst.l)+1 else 1
-count(new List(new List(new Nil(0, false), true), true))
+  if lst.hasTail then
+    let l = lst.l
+    if l is undefined then 1 else count(l)+1
+  else 0
+count(new List(new List(new Nil(undefined, false), true), true))
 //│ Parsed:
-//│ TypingUnit(NuTypeDef(class, List, (), Tup(_: Var(l), _: Var(hasTail)), (), None, None, TypingUnit()), NuTypeDef(class, Nil, (), Tup(_: Var(l), _: Var(hasTail)), (), None, None, TypingUnit()), NuFunDef(None, count, None, [], Lam(Tup(_: Var(lst)), Blk(...))), App(Var(count), Tup(_: New(Some((TypeName(List),[new List([new Nil([0, false,]) {}, true,]) {}, true,])), TypingUnit()))))
+//│ TypingUnit(NuTypeDef(class, List, (), Tup(l: App(Var(|), Tup(_: App(Var(|), Tup(_: Var(List), _: Var(Nil))), _: UnitLit(true))), hasTail: Var(Bool)), (), None, None, TypingUnit()), NuTypeDef(class, Nil, (), Tup(l: App(Var(|), Tup(_: App(Var(|), Tup(_: Var(List), _: Var(Nil))), _: UnitLit(true))), hasTail: Var(Bool)), (), None, None, TypingUnit()), NuFunDef(None, count, None, [], Lam(Tup(_: Var(lst)), Blk(...))), App(Var(count), Tup(_: New(Some((TypeName(List),[new List([new Nil([undefined, false,]) {}, true,]) {}, true,])), TypingUnit()))))
 //│ Lifted:
 //│ TypingUnit {
-//│   class List$1([l, hasTail,]) {}
-//│   class Nil$2([l, hasTail,]) {}
-//│   fun count$1 = (lst,) => {if ((lst).hasTail) then +(count$1((lst).l,), 1,) else 1}
-//│   Code(List(count$1(new List$1([new List$1([new Nil$2([0, false,]) {}, true,]) {}, true,]) {},)))
+//│   class List$1([val l: |(|(List, Nil,), undefined,), val hasTail: Bool,]) {}
+//│   class Nil$2([val l: |(|(List, Nil,), undefined,), val hasTail: Bool,]) {}
+//│   let l$2 = (lst,) => (lst).l
+//│   fun count$1 = (lst,) => {if ((lst).hasTail) then {if (is(l, undefined,)) then 1 else +(count$1(l,), 1,)} else 0}
+//│   Code(List(count$1(new List$1([new List$1([new Nil$2([undefined, false,]) {}, true,]) {}, true,]) {},)))
 //│ }
 //│ Mono:
 //│ 
 //│ Defunc result: 
-//│ main$$3()
+//│ main$$4()
+//│ fun l$2(lst) =
+//│   lst.l
 //│ fun count$1(lst) =
-//│   if lst.hasTail then +(count$1(lst.l), #1) else #1
-//│ fun main$$3() =
-//│   count$1(new List$1 (new List$1 (new Nil$2 (#0, false) , true) , true) )
+//│   if lst.hasTail then if is(l, #()) then #1 else +(count$1(l), #1) else #0
+//│ fun main$$4() =
+//│   count$1(new List$1 (new List$1 (new Nil$2 (#(), false) , true) , true) )
 //│ class Nil$2(l, hasTail) {
 //│ }
 //│ class List$1(l, hasTail) {
 //│ }
-//│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.241: 	class List(l, hasTail)  {}
-//│ ╙──       	           ^
-//│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.241: 	class List(l, hasTail)  {}
-//│ ╙──       	              ^^^^^^^
-//│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.242: 	class Nil(l, hasTail)  {}
-//│ ╙──       	          ^
-//│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.242: 	class Nil(l, hasTail)  {}
-//│ ╙──       	             ^^^^^^^
-//│ ╔══[ERROR] Parameter 'l' cannot tbe accessed as a field
-//│ ║  l.244: 	  if lst.hasTail then count(lst.l)+1 else 1
-//│ ║         	                               ^^
-//│ ╟── Either make the parameter a `val` or access it through destructuring
-//│ ║  l.241: 	class List(l, hasTail)  {}
-//│ ╙──       	           ^
-//│ class List(l: error, hasTail: error)
-//│ class Nil(l: error, hasTail: error)
+//│ class List(l: List | Nil | (), hasTail: Bool)
+//│ class Nil(l: List | Nil | (), hasTail: Bool)
 //│ fun count: forall 'a. 'a -> Int
-//│ Int | error
+//│ Int
 //│ where
-//│   'a <: {hasTail: Object, l: 'a}
+//│   'a <: {hasTail: Object, l: Object & 'a & ~() | ()}
 //│ res
-//│     = 1
+//│     = 2
 
 //:mono
 //class Cons(e, tail){
