@@ -7,6 +7,7 @@ import scala.collection.mutable.Map as MutMap
 import scala.collection.mutable.Set as MutSet
 import mlscript.Var
 import scala.collection.immutable
+import mlscript.compiler.mono.MonomorphError
 
 abstract class MonoValue {
   def toBoundedExpr = BoundedExpr(this)
@@ -158,7 +159,7 @@ class BoundedExpr(private val values: Set[MonoValue]) extends Printable {
       // val map2 = other.values.flatMap(x => if(values.fin(x)) then None else Some(x))
       val ret = mergingValNms.map(nm => (mergingVals1.get(nm), mergingVals2.get(nm)) match
         case (Some(x1: ObjectValue), Some(x2: ObjectValue)) => x1.merge(x2)(using instackExps ++ Set(this.hashCode(), other.hashCode()))
-        case _ => ???
+        case _ => throw MonomorphError(s"Name ${nm} not found in BoundedExpr merging")
       )
       // println(s"get ${BoundedExpr(restVals1 ++ restVals2 ++ ret)}")
       var ret2 = restVals1 ++ restVals2

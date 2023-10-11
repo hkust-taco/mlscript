@@ -75,7 +75,7 @@ object Helpers:
           Expr.LetIn(rec, Expr.Ref(name), exprRhs, exprBody)
         case Blk(stmts) => Expr.Block(stmts.flatMap[Expr | Item.FuncDecl | Item.FuncDefn] {
           case term: Term => Some(term2Expr(term))
-          case tyDef: NuTypeDef => ???
+          case tyDef: NuTypeDef => throw MonomorphError(s"Unimplemented term2Expr ${term}")
           case funDef: NuFunDef => 
             val NuFunDef(_, nme, sn, targs, rhs) = funDef
             val ret: Item.FuncDecl | Item.FuncDefn = rhs match
@@ -122,7 +122,7 @@ object Helpers:
         case Assign(lhs, rhs) =>
           Expr.Assign(term2Expr(lhs), term2Expr(rhs))
         case New(None, body) =>
-          ???
+          throw MonomorphError(s"Unimplemented term2Expr ${term}")
         case New(Some((constructor, args)), body) =>
           val typeName = constructor match
             case AppliedType(TypeName(name), _) => name
@@ -165,7 +165,7 @@ object Helpers:
       // Question: Will there be pure terms in class body?
       case term: Term =>
         Some(term2Expr(term))
-      case subTypeDef: NuTypeDef => ???
+      case subTypeDef: NuTypeDef => throw MonomorphError(s"Unimplemented func2Item ${tyDef}")
       case subFunDef: NuFunDef =>
         Some(func2Item(subFunDef))
       case term => throw MonomorphError(term.toString)
@@ -193,4 +193,4 @@ object Helpers:
       case Als => TypeDeclKind.Alias
       case Cls => TypeDeclKind.Class
       case Trt => TypeDeclKind.Trait
-      case _ => ???
+      case _ => throw MonomorphError(s"Unsupported TypeDefKind conversion ${kind}")

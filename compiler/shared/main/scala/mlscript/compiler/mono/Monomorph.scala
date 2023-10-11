@@ -106,7 +106,7 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
               addNewFunction(funcDecl)
             case _ => ()
           None
-        case _ => ???
+        case (other, _) => throw MonomorphError(s"Unknown Statement in TypingUnit: ${other}")
       };
       debug.log(getResult(exps).getDebugOutput.toLines(using false).mkString("\n"))
       while(!evalQueue.isEmpty){
@@ -159,7 +159,7 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
           None
         case funDef: NuFunDef =>
           Some(func2Item(funDef))
-        case _ => ???
+        case other => throw MonomorphError(s"Unknown Statement in TypingUnit: ${other}")
       })
     }(identity)
   
@@ -265,7 +265,7 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
       ret.fields.addAll(parObjs)
       ret
     }
-    else ???
+    else throw MonomorphError(s"tpName ${tpName} not found in implementations ${allTypeImpls}")
   }(identity)
 
   def getFieldVal(obj: ObjectValue, field: String): BoundedExpr = 
@@ -307,7 +307,7 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
       }
     }
     else {
-      ???
+      throw MonomorphError(s"ObjectValue ${obj} not found in implementations ${allTypeImpls}")
     }
   }(identity)
 

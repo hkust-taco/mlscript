@@ -37,7 +37,7 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
           retExp.expValue = BoundedExpr(pairedAV)
           retExp
         }
-        else ???
+        else throw MonomorphError(s"Malformed Expr: ${rawExpr}")
 
       case other@Expr.Apply(callee, arguments) => 
         val calE = evaluate(callee)
@@ -128,18 +128,18 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
         retExp
 
       case self@Expr.Lambda(prm, body) => 
-        ???
+        throw MonomorphError(s"Unhandled case: ${rawExpr}")
 
-      case Expr.Isolated(isolation) => ???
+      case Expr.Isolated(isolation) => throw MonomorphError(s"Unhandled case: ${rawExpr}")
 
       case Expr.Tuple(fields) => 
         if(fields.length == 1){
           evaluate(fields.head)
         }
         else
-          ???
-      case Expr.Record(fields) => ???
-      case Expr.LetIn(true, name, rhs, body) => ???
+          throw MonomorphError(s"Unhandled case: ${rawExpr}")
+      case Expr.Record(fields) => throw MonomorphError(s"Unhandled case: ${rawExpr}")
+      case Expr.LetIn(true, name, rhs, body) => throw MonomorphError(s"Unhandled case: ${rawExpr}")
       case Expr.Block(items) => 
         val exps = items.flatMap{
           case e: Expr => Some(evaluate(e))
@@ -165,10 +165,10 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
         val retV = evaluate(value)
         rawExpr.expValue = retV.expValue
         rawExpr
-      case Expr.Assign(assignee, value) => ???
-      case Expr.With(value, fields) => ???
-      case Expr.Subscript(receiver, index) => ???
-      case Expr.Match(scrutinee, branches) => ???
+      case Expr.Assign(assignee, value) => throw MonomorphError(s"Unhandled case: ${rawExpr}")
+      case Expr.With(value, fields) => throw MonomorphError(s"Unhandled case: ${rawExpr}")
+      case Expr.Subscript(receiver, index) => throw MonomorphError(s"Unhandled case: ${rawExpr}")
+      case Expr.Match(scrutinee, branches) => throw MonomorphError(s"Unhandled case: ${rawExpr}")
     }
   // }(_.expValue)
 
@@ -198,7 +198,7 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
                       Expr.Apply(Expr.Ref(lambdaMemFunc.name), caseVarNm :: nArgs))
                   })
                 Expr.Match(scrut, ArrayBuffer(brchs: _*))
-              case _ => ???
+              case _ => throw MonomorphError(s"Unhandled case: ${rawExpr}")
 
             }
             branches.addOne(CaseBranch.Instance(Expr.Ref(name), Expr.Ref("obj"), branchExp))
@@ -220,7 +220,7 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
       })
       case Expr.Select(receiver, field) => Expr.Select(defunctionalize(receiver), field)
       case Expr.As(value, toType) => Expr.As(defunctionalize(value), toType)
-      case _ => ???
+      case _ => throw MonomorphError(s"Unhandled case: ${rawExpr}")
     }
     ret.expValue = rawExpr.expValue
     ret
