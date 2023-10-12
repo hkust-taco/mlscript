@@ -29,6 +29,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     def level: Level
     def isImplemented: Bool
     def isPublic: Bool
+    def isPrivate: Bool = !isPublic // * We currently don't support `protected`
     
     def isValueParam: Bool = this match {
       case p: NuParam => !p.isType
@@ -1267,6 +1268,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     case (m: TypedNuTermDef, S(fun: TypedNuTermDef)) => fun match {
                       // * If the implementation and the declaration are in the same class,
                       // * it does not require to be virtual.
+                      case _ if fun.isPrivate => () // * Private members are not actually inherited
                       case td: TypedNuFun if (!td.fd.isVirtual && !clsSigns.contains(fun)) =>
                         err(msg"${m.kind.str.capitalize} member `${m.name
                             }` is not virtual and cannot be overridden" -> m.toLoc ::

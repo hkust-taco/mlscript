@@ -11,12 +11,6 @@ class C2(x: Int) extends C1(y) {
 //│ ╔══[ERROR] identifier not found: y
 //│ ║  l.8: 	class C2(x: Int) extends C1(y) {
 //│ ╙──     	                            ^
-//│ ╔══[ERROR] Inherited parameter named `x` is not virtual and cannot be overridden
-//│ ║  l.8: 	class C2(x: Int) extends C1(y) {
-//│ ║       	         ^
-//│ ╟── Originally declared here:
-//│ ║  l.4: 	class C1(x: Int)
-//│ ╙──     	         ^
 //│ class C2(x: Int) extends C1 {
 //│   val y: Int
 //│ }
@@ -28,7 +22,7 @@ abstract class C2 extends C1(y) {
   val y: Int
 }
 //│ ╔══[ERROR] identifier not found: y
-//│ ║  l.27: 	abstract class C2 extends C1(y) {
+//│ ║  l.21: 	abstract class C2 extends C1(y) {
 //│ ╙──      	                             ^
 //│ abstract class C2 extends C1 {
 //│   val y: Int
@@ -41,7 +35,7 @@ abstract class C2 extends C1(this.y) {
   val y: Int
 }
 //│ ╔══[ERROR] identifier not found: this
-//│ ║  l.40: 	abstract class C2 extends C1(this.y) {
+//│ ║  l.34: 	abstract class C2 extends C1(this.y) {
 //│ ╙──      	                             ^^^^
 //│ abstract class C2 extends C1 {
 //│   val y: Int
@@ -54,7 +48,7 @@ class C1(x: C1)
 :e
 class C2 extends C1(this)
 //│ ╔══[ERROR] identifier not found: this
-//│ ║  l.55: 	class C2 extends C1(this)
+//│ ║  l.49: 	class C2 extends C1(this)
 //│ ╙──      	                    ^^^^
 //│ class C2 extends C1 {
 //│   constructor()
@@ -70,19 +64,19 @@ class Foo { virtual fun x: Int = 1 }
 :e
 class Bar extends Foo { fun x = false }
 //│ ╔══[ERROR] Type mismatch in definition of method x:
-//│ ║  l.71: 	class Bar extends Foo { fun x = false }
+//│ ║  l.65: 	class Bar extends Foo { fun x = false }
 //│ ║        	                            ^^^^^^^^^
 //│ ╟── reference of type `false` is not an instance of type `Int`
-//│ ║  l.71: 	class Bar extends Foo { fun x = false }
+//│ ║  l.65: 	class Bar extends Foo { fun x = false }
 //│ ║        	                                ^^^^^
 //│ ╟── but it flows into definition of method x with expected type `Int`
-//│ ║  l.71: 	class Bar extends Foo { fun x = false }
+//│ ║  l.65: 	class Bar extends Foo { fun x = false }
 //│ ║        	                            ^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.64: 	class Foo { virtual fun x: Int = 1 }
+//│ ║  l.58: 	class Foo { virtual fun x: Int = 1 }
 //│ ║        	                           ^^^
 //│ ╟── from definition of method x:
-//│ ║  l.64: 	class Foo { virtual fun x: Int = 1 }
+//│ ║  l.58: 	class Foo { virtual fun x: Int = 1 }
 //│ ╙──      	                        ^^^^^^^^^^
 //│ class Bar extends Foo {
 //│   constructor()
@@ -95,19 +89,19 @@ class Bar extends Foo {
   fun x = false
 }
 //│ ╔══[ERROR] Type mismatch in signature of member `x`:
-//│ ║  l.94: 	  fun x: Bool
+//│ ║  l.88: 	  fun x: Bool
 //│ ║        	      ^^^^^^^
 //│ ╟── type `Bool` is not an instance of `Int`
-//│ ║  l.94: 	  fun x: Bool
+//│ ║  l.88: 	  fun x: Bool
 //│ ║        	         ^^^^
 //│ ╟── but it flows into signature of member `x` with expected type `Int`
-//│ ║  l.94: 	  fun x: Bool
+//│ ║  l.88: 	  fun x: Bool
 //│ ║        	      ^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.64: 	class Foo { virtual fun x: Int = 1 }
+//│ ║  l.58: 	class Foo { virtual fun x: Int = 1 }
 //│ ║        	                           ^^^
 //│ ╟── from definition of method x:
-//│ ║  l.64: 	class Foo { virtual fun x: Int = 1 }
+//│ ║  l.58: 	class Foo { virtual fun x: Int = 1 }
 //│ ╙──      	                        ^^^^^^^^^^
 //│ class Bar extends Foo {
 //│   constructor()
@@ -122,19 +116,19 @@ mixin M { fun x = false }
 :e
 class Bar extends Foo, M
 //│ ╔══[ERROR] Type mismatch in definition of method x:
-//│ ║  l.117: 	mixin M { fun x = false }
+//│ ║  l.111: 	mixin M { fun x = false }
 //│ ║         	              ^^^^^^^^^
 //│ ╟── reference of type `false` is not an instance of type `Int`
-//│ ║  l.117: 	mixin M { fun x = false }
+//│ ║  l.111: 	mixin M { fun x = false }
 //│ ║         	                  ^^^^^
 //│ ╟── but it flows into definition of method x with expected type `Int`
-//│ ║  l.117: 	mixin M { fun x = false }
+//│ ║  l.111: 	mixin M { fun x = false }
 //│ ║         	              ^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.64: 	class Foo { virtual fun x: Int = 1 }
+//│ ║  l.58: 	class Foo { virtual fun x: Int = 1 }
 //│ ║        	                           ^^^
 //│ ╟── from definition of method x:
-//│ ║  l.64: 	class Foo { virtual fun x: Int = 1 }
+//│ ║  l.58: 	class Foo { virtual fun x: Int = 1 }
 //│ ╙──      	                        ^^^^^^^^^^
 //│ class Bar extends Foo {
 //│   constructor()
@@ -162,19 +156,19 @@ trait B { class X { fun g = 1 } }
 :e
 class C extends A, B
 //│ ╔══[ERROR] Class member `X` cannot override class member of the same name declared in parent
-//│ ║  l.163: 	class C extends A, B
+//│ ║  l.157: 	class C extends A, B
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Originally declared here:
-//│ ║  l.147: 	trait B { class X { fun g = 1 } }
+//│ ║  l.141: 	trait B { class X { fun g = 1 } }
 //│ ╙──       	          ^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Intersection of class member and class members currently unsupported
-//│ ║  l.163: 	class C extends A, B
+//│ ║  l.157: 	class C extends A, B
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── The class member is defined here:
-//│ ║  l.146: 	class A { class X { fun f = 1 } }
+//│ ║  l.140: 	class A { class X { fun f = 1 } }
 //│ ║         	          ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── The class member is defined here:
-//│ ║  l.147: 	trait B { class X { fun g = 1 } }
+//│ ║  l.141: 	trait B { class X { fun g = 1 } }
 //│ ╙──       	          ^^^^^^^^^^^^^^^^^^^^^
 //│ class C extends A, B {
 //│   constructor()
@@ -189,14 +183,14 @@ class C extends A {
   class X { fun g = 1 }
 }
 //│ ╔══[ERROR] Class member `X` cannot override class member of the same name declared in parent
-//│ ║  l.188: 	class C extends A {
+//│ ║  l.182: 	class C extends A {
 //│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.189: 	  class X { fun g = 1 }
+//│ ║  l.183: 	  class X { fun g = 1 }
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.190: 	}
+//│ ║  l.184: 	}
 //│ ║         	^
 //│ ╟── Originally declared here:
-//│ ║  l.146: 	class A { class X { fun f = 1 } }
+//│ ║  l.140: 	class A { class X { fun f = 1 } }
 //│ ╙──       	          ^^^^^^^^^^^^^^^^^^^^^
 //│ class C extends A {
 //│   constructor()
@@ -211,7 +205,7 @@ class C extends A {
 :e
 class Foo2 extends Foo2
 //│ ╔══[ERROR] Unhandled cyclic definition
-//│ ║  l.212: 	class Foo2 extends Foo2
+//│ ║  l.206: 	class Foo2 extends Foo2
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^
 //│ class Foo2 extends Foo2 {
 //│   constructor()

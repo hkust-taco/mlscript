@@ -4,14 +4,7 @@
 class Foo(x: Int)
 //│ class Foo(x: Int)
 
-:e // FIXME this should be allowed
 class Bar() extends Foo(123) { fun x = true }
-//│ ╔══[ERROR] Inherited parameter named `x` is not virtual and cannot be overridden
-//│ ║  l.8: 	class Bar() extends Foo(123) { fun x = true }
-//│ ║       	                                   ^^^^^^^^
-//│ ╟── Originally declared here:
-//│ ║  l.4: 	class Foo(x: Int)
-//│ ╙──     	          ^
 //│ class Bar() extends Foo {
 //│   fun x: true
 //│ }
@@ -21,15 +14,13 @@ Bar().x
 //│ res
 //│     = true
 
+if Bar() is Foo(a) then a
+//│ Int
+//│ res
+//│     = 123
 
-:e // FIXME this should be allowed
+
 class Bar(val x: Bool) extends Foo(123)
-//│ ╔══[ERROR] Inherited parameter named `x` is not virtual and cannot be overridden
-//│ ║  l.26: 	class Bar(val x: Bool) extends Foo(123)
-//│ ║        	              ^
-//│ ╟── Originally declared here:
-//│ ║  l.4: 	class Foo(x: Int)
-//│ ╙──     	          ^
 //│ class Bar(x: Bool) extends Foo
 
 Bar(true).x
@@ -37,27 +28,30 @@ Bar(true).x
 //│ res
 //│     = true
 
+if Bar(true) is Foo(a) then a
+//│ Int
+//│ res
+//│     = 123
 
-:e // FIXME this should be allowed
+
 class Bar(x: Bool) extends Foo(123)
-//│ ╔══[ERROR] Inherited parameter named `x` is not virtual and cannot be overridden
-//│ ║  l.42: 	class Bar(x: Bool) extends Foo(123)
-//│ ║        	          ^
-//│ ╟── Originally declared here:
-//│ ║  l.4: 	class Foo(x: Int)
-//│ ╙──     	          ^
 //│ class Bar(x: Bool) extends Foo
 
 :e // * Expected
 Bar(true).x
 //│ ╔══[ERROR] Parameter 'x' cannot tbe accessed as a field
-//│ ║  l.52: 	Bar(true).x
+//│ ║  l.41: 	Bar(true).x
 //│ ║        	         ^^
 //│ ╟── Either make the parameter a `val` or access it through destructuring
-//│ ║  l.42: 	class Bar(x: Bool) extends Foo(123)
+//│ ║  l.37: 	class Bar(x: Bool) extends Foo(123)
 //│ ╙──      	          ^
 //│ error | false | true
 //│ res
 //│     = undefined
+
+if Bar(true) is Foo(a) then a
+//│ Int
+//│ res
+//│     = 123
 
 
