@@ -4,10 +4,7 @@
 :e // FIXME: What does this test represent?
 type MinusOne = -1
 //│ |#type| |MinusOne| |#=| |-|1|
-//│ ╔══[ERROR] Not a recognized type
-//│ ║  l.5: 	type MinusOne = -1
-//│ ╙──     	                ^^
-//│ Parsed: {type alias MinusOne: anything {}}
+//│ Parsed: {type alias MinusOne: -1 {}}
 
 fun f(x: MinusOne) = x
 //│ |#fun| |f|(|x|#:| |MinusOne|)| |#=| |x|
@@ -15,4 +12,4 @@ fun f(x: MinusOne) = x
 
 f(-1)
 //│ |f|(|-|1|)|
-//│ Parsed: {f(-(0,)(1,),)}
+//│ Parsed: {f(-1,)}
