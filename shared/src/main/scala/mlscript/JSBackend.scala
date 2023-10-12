@@ -278,7 +278,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         }) :: Nil
       )
     // Only parenthesize binary operators
-    // Custom operators are also handled since they are desugared to plain methods
+    // Custom operators do not need special handling since they are desugared to plain methods
     case Bra(false, trm) => trm match { 
       case App(Var(op), _) if JSBinary.operators.contains(op) => JSParenthesis(translateTerm(trm)) 
       case trm => translateTerm(trm)
