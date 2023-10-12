@@ -1,7 +1,6 @@
 :NewParser
 :ParseOnly
 
-:e // FIXME: What does this test represent?
 type MinusOne = -1
 //│ |#type| |MinusOne| |#=| |-|1|
 //│ Parsed: {type alias MinusOne: -1 {}}
