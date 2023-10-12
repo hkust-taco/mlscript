@@ -154,6 +154,11 @@ module A {
 //│   fun g: Int -> Int & Str -> Str
 //│ }
 
+A.g(0)
+//│ Int | Str
+//│ res
+//│     = 0
+
 
 
 
@@ -176,17 +181,7 @@ s([Numbr(0),Numbr(0)])
 //│ ║  l.136: 	fun s: ([Numbr,Numbr] -> Int) & ([Vectr,Vectr] -> Int)
 //│ ╙──       	        ^^^^^^^^^^^^^
 //│ Int | error
-
-:e
-A.g(0)
 // g <: 0 -> 'a
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.+1: 	A.g(0)
-//│ ║        	^^^^^^
-//│ ╟── integer literal of type `0` is not an instance of type `Str`
-//│ ║  l.+1: 	A.g(0)
-//│ ╙──      	    ^
-//│ Int | Str | error
 
 :e
 fun add(e) =

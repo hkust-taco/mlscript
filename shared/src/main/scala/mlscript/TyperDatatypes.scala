@@ -200,7 +200,10 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
       Overload(alts.map(ft => FunctionType(f(pol.contravar, ft.lhs), f(pol, ft.rhs))(ft.prov)))(prov)
     def approximatePos: FunctionType = {
       val (lhss, rhss) = alts.map(ft => ft.lhs -> ft.rhs).unzip
-      FunctionType(lhss.reduce(_ & _), rhss.reduce(_ | _))(prov)
+      FunctionType(lhss.reduce(_ | _), rhss.reduce(_ | _))(prov)
+      // * Note: technically the following is another valid (but probably less useful)
+      // * approximation of the same function type:
+      // FunctionType(lhss.reduce(_ & _), rhss.reduce(_ & _))(prov)
     }
     lazy val level: Level = levelBelow(MaxLevel)(MutSet.empty)
     def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level =

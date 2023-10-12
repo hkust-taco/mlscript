@@ -22,12 +22,12 @@ foo = fooImpl
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.18: 	foo = fooImpl
 //│ ║        	^^^^^^^^^^^^^
-//│ ╟── integer literal of type `1` is not an instance of type `string`
-//│ ║  l.13: 	fooImpl f = f 1
-//│ ║        	              ^
-//│ ╟── Note: constraint arises from type reference:
+//│ ╟── type `int` is not a 0-element tuple
 //│ ║  l.9: 	def foo: (int -> int & string -> string) -> ()
-//│ ╙──     	                       ^^^^^^
+//│ ║       	                 ^^^
+//│ ╟── Note: constraint arises from tuple type:
+//│ ║  l.9: 	def foo: (int -> int & string -> string) -> ()
+//│ ╙──     	                                            ^^
 //│    = [Function: fooImpl]
 
 foo id
@@ -39,35 +39,25 @@ fooImpl id
 //│    = 1
 
 
-:e
 fooImpl2 (f: int -> int & string -> string) = f 1
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.43: 	fooImpl2 (f: int -> int & string -> string) = f 1
-//│ ║        	                                              ^^^
-//│ ╟── integer literal of type `1` is not an instance of type `string`
-//│ ║  l.43: 	fooImpl2 (f: int -> int & string -> string) = f 1
-//│ ║        	                                                ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.43: 	fooImpl2 (f: int -> int & string -> string) = f 1
-//│ ╙──      	                          ^^^^^^
-//│ fooImpl2: (int -> int & string -> string) -> (error | int | string)
+//│ fooImpl2: (int -> int & string -> string) -> (int | string)
 //│         = [Function: fooImpl2]
 
 fooImpl2 id
-//│ res: error | int | string
+//│ res: int | string
 //│    = 1
 
 :e
 :re
 res "oops"
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.62: 	res "oops"
+//│ ║  l.52: 	res "oops"
 //│ ║        	^^^^^^^^^^
 //│ ╟── type `int` is not a function
-//│ ║  l.43: 	fooImpl2 (f: int -> int & string -> string) = f 1
+//│ ║  l.42: 	fooImpl2 (f: int -> int & string -> string) = f 1
 //│ ║        	                    ^^^
 //│ ╟── but it flows into reference with expected type `"oops" -> ?a`
-//│ ║  l.62: 	res "oops"
+//│ ║  l.52: 	res "oops"
 //│ ╙──      	^^^
 //│ res: error
 //│ Runtime error:
