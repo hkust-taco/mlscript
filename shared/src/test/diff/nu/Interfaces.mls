@@ -796,14 +796,7 @@ class Cx(a2: 1 | 2, val b: Bool) extends Ca(a2)
 //│   fun foo: 1
 //│ }
 
-:e
 class Cx(a: 1 | 2, val b: Bool) extends Ca(a)
-//│ ╔══[ERROR] Inherited parameter named `a` is not virtual and cannot be overridden
-//│ ║  l.800: 	class Cx(a: 1 | 2, val b: Bool) extends Ca(a)
-//│ ║         	         ^
-//│ ╟── Originally declared here:
-//│ ║  l.781: 	class Ca(a: Int) extends Oth {
-//│ ╙──       	         ^
 //│ class Cx(a: 1 | 2, b: Bool) extends Ca, Oth, Test {
 //│   fun bar: forall 'a. 'a -> 'a
 //│   fun cool: anything -> false
@@ -844,22 +837,15 @@ abstract class Bc3 {
 :e
 class Bc12() extends Bc1(1), Bc2(true)
 //│ ╔══[ERROR] Cannot inherit from more than one base class: Bc1 and Bc2
-//│ ║  l.845: 	class Bc12() extends Bc1(1), Bc2(true)
+//│ ║  l.838: 	class Bc12() extends Bc1(1), Bc2(true)
 //│ ╙──       	                             ^^^^^^^^^
 //│ class Bc12() extends Bc1, Bc2
 //│ Code generation encountered an error:
 //│   unexpected parent symbol new class Bc2.
 
-:e
 class Bc02() extends Bc1(1:Int) {
   val foo = 2
 }
-//│ ╔══[ERROR] Inherited parameter named `foo` is not virtual and cannot be overridden
-//│ ║  l.855: 	  val foo = 2
-//│ ║         	      ^^^^^^^
-//│ ╟── Originally declared here:
-//│ ║  l.833: 	class Bc1(foo: Int)
-//│ ╙──       	          ^^^
 //│ class Bc02() extends Bc1 {
 //│   val foo: 2
 //│ }
@@ -872,27 +858,20 @@ Bc02().foo
 :e
 class Bc31(baz: Bool) extends Bc3
 //│ ╔══[ERROR] Type mismatch in type reference:
-//│ ║  l.873: 	class Bc31(baz: Bool) extends Bc3
+//│ ║  l.859: 	class Bc31(baz: Bool) extends Bc3
 //│ ║         	                ^^^^
 //│ ╟── type `Bool` is not an instance of `Int`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.836: 	  let baz : Int
+//│ ║  l.829: 	  let baz : Int
 //│ ║         	            ^^^
 //│ ╟── from signature of member `baz`:
-//│ ║  l.836: 	  let baz : Int
+//│ ║  l.829: 	  let baz : Int
 //│ ╙──       	      ^^^^^^^^^
 //│ class Bc31(baz: Bool) extends Bc3
 
-:e
 class Bc11 extends Bc1(1) {
   let foo = true
 }
-//│ ╔══[ERROR] Inherited parameter named `foo` is not virtual and cannot be overridden
-//│ ║  l.888: 	  let foo = true
-//│ ║         	      ^^^^^^^^^^
-//│ ╟── Originally declared here:
-//│ ║  l.833: 	class Bc1(foo: Int)
-//│ ╙──       	          ^^^
 //│ class Bc11 extends Bc1 {
 //│   constructor()
 //│   let foo: true
@@ -921,7 +900,7 @@ trait BInt extends Base[Int] {
   fun f = error
 }
 //│ ╔══[ERROR] Method implementations in traits are not yet supported
-//│ ║  l.921: 	  fun f = error
+//│ ║  l.900: 	  fun f = error
 //│ ╙──       	  ^^^^^^^^^^^^^
 //│ trait BInt extends Base {
 //│   fun f: nothing
@@ -952,7 +931,7 @@ bp: Base[[Int, Bool]]
 :e
 bp: Base[[Int, Int]]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.953: 	bp: Base[[Int, Int]]
+//│ ║  l.932: 	bp: Base[[Int, Int]]
 //│ ║         	^^
 //│ ╙── expression of type `true` is not an instance of type `Int`
 //│ Base[[Int, Int]]
@@ -1013,13 +992,13 @@ trait BInfer2 extends Base {
 :e
 class DerBad1 extends Base[Int, Int]
 //│ ╔══[ERROR] trait Base expects 1 type parameter(s); got 2
-//│ ║  l.1014: 	class DerBad1 extends Base[Int, Int]
-//│ ╙──        	                      ^^^^^^^^^^^^^
+//│ ║  l.993: 	class DerBad1 extends Base[Int, Int]
+//│ ╙──       	                      ^^^^^^^^^^^^^
 //│ ╔══[ERROR] Member `f` is declared (or its declaration is inherited) but is not implemented in `DerBad1`
-//│ ║  l.1014: 	class DerBad1 extends Base[Int, Int]
-//│ ║          	      ^^^^^^^
+//│ ║  l.993: 	class DerBad1 extends Base[Int, Int]
+//│ ║         	      ^^^^^^^
 //│ ╟── Declared here:
-//│ ║  l.902: 	trait Base[A] { fun f: A -> A }
+//│ ║  l.881: 	trait Base[A] { fun f: A -> A }
 //│ ╙──       	                ^^^^^^^^^^^^^
 //│ class DerBad1 extends Base {
 //│   constructor()
@@ -1031,28 +1010,28 @@ class DerBad1 extends Base[Int, Int]
 :e
 class Der2[A, B] extends Base[[A, B]] { fun f([x, y]) = [y, x] }
 //│ ╔══[ERROR] Type mismatch in definition of method f:
-//│ ║  l.1032: 	class Der2[A, B] extends Base[[A, B]] { fun f([x, y]) = [y, x] }
+//│ ║  l.1011: 	class Der2[A, B] extends Base[[A, B]] { fun f([x, y]) = [y, x] }
 //│ ║          	                                            ^^^^^^^^^^^^^^^^^^
 //│ ╟── reference of type `B` does not match type `A`
-//│ ║  l.1032: 	class Der2[A, B] extends Base[[A, B]] { fun f([x, y]) = [y, x] }
+//│ ║  l.1011: 	class Der2[A, B] extends Base[[A, B]] { fun f([x, y]) = [y, x] }
 //│ ║          	                                                         ^
 //│ ╟── Note: constraint arises from type parameter:
-//│ ║  l.1032: 	class Der2[A, B] extends Base[[A, B]] { fun f([x, y]) = [y, x] }
+//│ ║  l.1011: 	class Der2[A, B] extends Base[[A, B]] { fun f([x, y]) = [y, x] }
 //│ ║          	           ^
 //│ ╟── Note: type parameter B is defined at:
-//│ ║  l.1032: 	class Der2[A, B] extends Base[[A, B]] { fun f([x, y]) = [y, x] }
+//│ ║  l.1011: 	class Der2[A, B] extends Base[[A, B]] { fun f([x, y]) = [y, x] }
 //│ ╙──        	              ^
 //│ ╔══[ERROR] Type mismatch in definition of method f:
-//│ ║  l.1032: 	class Der2[A, B] extends Base[[A, B]] { fun f([x, y]) = [y, x] }
+//│ ║  l.1011: 	class Der2[A, B] extends Base[[A, B]] { fun f([x, y]) = [y, x] }
 //│ ║          	                                            ^^^^^^^^^^^^^^^^^^
 //│ ╟── reference of type `A` does not match type `B`
-//│ ║  l.1032: 	class Der2[A, B] extends Base[[A, B]] { fun f([x, y]) = [y, x] }
+//│ ║  l.1011: 	class Der2[A, B] extends Base[[A, B]] { fun f([x, y]) = [y, x] }
 //│ ║          	                                                            ^
 //│ ╟── Note: constraint arises from type parameter:
-//│ ║  l.1032: 	class Der2[A, B] extends Base[[A, B]] { fun f([x, y]) = [y, x] }
+//│ ║  l.1011: 	class Der2[A, B] extends Base[[A, B]] { fun f([x, y]) = [y, x] }
 //│ ║          	              ^
 //│ ╟── Note: type parameter A is defined at:
-//│ ║  l.1032: 	class Der2[A, B] extends Base[[A, B]] { fun f([x, y]) = [y, x] }
+//│ ║  l.1011: 	class Der2[A, B] extends Base[[A, B]] { fun f([x, y]) = [y, x] }
 //│ ╙──        	           ^
 //│ class Der2[A, B] extends Base {
 //│   constructor()
@@ -1104,7 +1083,7 @@ trait Tb extends Ta[Int] {
   virtual val p = false
 }
 //│ ╔══[ERROR] Method implementations in traits are not yet supported
-//│ ║  l.1104: 	  virtual val p = false
+//│ ║  l.1083: 	  virtual val p = false
 //│ ╙──        	          ^^^^^^^^^^^^^
 //│ trait Tb extends Ta {
 //│   val g: 'T
@@ -1139,14 +1118,14 @@ trait Oz {
 :e
 class Fischl(age: Bool) extends Oz
 //│ ╔══[ERROR] Type mismatch in type reference:
-//│ ║  l.1140: 	class Fischl(age: Bool) extends Oz
+//│ ║  l.1119: 	class Fischl(age: Bool) extends Oz
 //│ ║          	                  ^^^^
 //│ ╟── type `Bool` is not an instance of `Int`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.1133: 	  let age: Int
+//│ ║  l.1112: 	  let age: Int
 //│ ║          	           ^^^
 //│ ╟── from signature of member `age`:
-//│ ║  l.1133: 	  let age: Int
+//│ ║  l.1112: 	  let age: Int
 //│ ╙──        	      ^^^^^^^^
 //│ class Fischl(age: Bool) extends Oz
 
@@ -1166,29 +1145,29 @@ class Go extends Fate {
     fun foo(x) = x && true
 }
 //│ ╔══[ERROR] Type mismatch in definition of method foo:
-//│ ║  l.1166: 	    fun foo(x) = x && true
+//│ ║  l.1145: 	    fun foo(x) = x && true
 //│ ║          	        ^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `Int & ?a` is not an instance of type `Bool`
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.1166: 	    fun foo(x) = x && true
+//│ ║  l.1145: 	    fun foo(x) = x && true
 //│ ╙──        	                 ^
 //│ ╔══[ERROR] Type mismatch in definition of method foo:
-//│ ║  l.1166: 	    fun foo(x) = x && true
+//│ ║  l.1145: 	    fun foo(x) = x && true
 //│ ║          	        ^^^^^^^^^^^^^^^^^^
 //│ ╟── operator application of type `Bool` does not match type `Int | ?a`
-//│ ║  l.1166: 	    fun foo(x) = x && true
+//│ ║  l.1145: 	    fun foo(x) = x && true
 //│ ║          	                 ^^^^^^^^^
 //│ ╟── Note: constraint arises from operator application:
-//│ ║  l.1157: 	    virtual fun foo(x) = x + 1
+//│ ║  l.1136: 	    virtual fun foo(x) = x + 1
 //│ ╙──        	                         ^^^^^
 //│ ╔══[ERROR] Type mismatch in definition of method foo:
-//│ ║  l.1166: 	    fun foo(x) = x && true
+//│ ║  l.1145: 	    fun foo(x) = x && true
 //│ ║          	        ^^^^^^^^^^^^^^^^^^
 //│ ╟── operator application of type `Bool` does not match type `Int | ?a`
-//│ ║  l.1166: 	    fun foo(x) = x && true
+//│ ║  l.1145: 	    fun foo(x) = x && true
 //│ ║          	                 ^^^^^^^^^
 //│ ╟── Note: constraint arises from operator application:
-//│ ║  l.1157: 	    virtual fun foo(x) = x + 1
+//│ ║  l.1136: 	    virtual fun foo(x) = x + 1
 //│ ╙──        	                         ^^^^^
 //│ class Go extends Fate {
 //│   constructor()
@@ -1207,11 +1186,11 @@ class Haha(x: 1 | 2) extends Ha
 :e
 class Ohhh(x: Bool) extends Ha
 //│ ╔══[ERROR] Type mismatch in type reference:
-//│ ║  l.1208: 	class Ohhh(x: Bool) extends Ha
+//│ ║  l.1187: 	class Ohhh(x: Bool) extends Ha
 //│ ║          	              ^^^^
 //│ ╟── type `Bool` is not an instance of `Int`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.1198: 	class Ha { virtual val x: Int = 1 }
+//│ ║  l.1177: 	class Ha { virtual val x: Int = 1 }
 //│ ╙──        	                          ^^^
 //│ class Ohhh(x: Bool) extends Ha
 

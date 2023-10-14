@@ -795,6 +795,18 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       case ((KEYWORD(";;") /* | NEWLINE */ /* | BRACKETS(Curly, _) */, l0) :: _) =>
         R(UnitLit(true).withLoc(S(l0)))
         // R(errExpr) // TODO
+      case (IDENT("-", true), l0) :: _ /*if opPrec("-")._1 > prec*/ => // Unary minus
+        consume
+        val v = Var("-").withLoc(S(l0))
+        expr(opPrec("-")._2) match {
+          case IntLit(i) => // Special case for negative literals
+            exprCont(IntLit(-i), prec, false)
+          case rhs: Term => // General case
+            exprCont(
+              if (newDefs) App(v, PlainTup(IntLit(BigInt(0)), rhs))
+              else App(App(v, PlainTup(IntLit(BigInt(0)))), PlainTup(rhs))
+            , prec, false)
+        }
       case (tk, l0) :: _ =>
         err(msg"Unexpected ${tk.describe} in expression position" -> S(l0) :: Nil)
         consume
@@ -1136,7 +1148,10 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       case (SPACE, _) :: _ =>
         consume
         argsOrIf(acc, seqAcc, allowNewlines, prec)
-      case (NEWLINE | IDENT(_, true), _) :: _ => // TODO: | ...
+      case (NEWLINE, _) :: _ => // TODO: | ...
+        assert(seqAcc.isEmpty)
+        acc.reverse
+      case (IDENT(nme, true), _) :: _ if nme =/= "-" => // TODO: | ...
         assert(seqAcc.isEmpty)
         acc.reverse
       case _ =>
