@@ -1,0 +1,46 @@
+:NewDefs
+:NoJS
+
+`42
+//│ Code[42, nothing]
+
+x `=> x
+//│ Code[forall 'a. 'a -> 'a, nothing]
+
+x `=>
+  x
+//│ Code[forall 'a. 'a -> 'a, nothing]
+
+run(x `=> x)(42)
+//│ 42
+
+`1 `+ `1
+//│ Code[Int, nothing]
+
+`(1 + 1)
+//│ Code[Int, nothing]
+
+x `=> x `+ `1
+//│ Code[Int -> Int, nothing]
+
+y `=> `0 `- y
+//│ Code[Int -> Int, nothing]
+
+:e
+z `=> z + 1
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.30: 	z `=> z + 1
+//│ ║        	      ^^^^^
+//│ ╙── expression of type `Code[?a, ?z]` is not an instance of `Int`
+//│ ╔══[ERROR] Type mismatch in unquote:
+//│ ║  l.30: 	z `=> z + 1
+//│ ║        	      ^^^^^
+//│ ╙── operator application of type `Int` is not an instance of `Code[?a, ?z | ?b]`
+//│ Code[anything -> error, nothing]
+
+
+(x, y) `=> x `+ y
+//│ Code[(Int, Int) -> Int, nothing]
+
+run((x, y) `=> x `+ y)(1, 2)
+//│ Int

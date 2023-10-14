@@ -12,6 +12,7 @@ sealed abstract class Token {
     case INDENT => "indentation"
     case DEINDENT => "deindentation"
     case ERROR => "error"
+    case QUOTE => "quote"
     case LITVAL(value) => "literal"
     case KEYWORD(name) =>
       if (name.headOption.exists(_.isLetter)) s"'$name' keyword" else s"'$name'"
@@ -35,6 +36,7 @@ case object NEWLINE extends Token with Stroken // TODO rm
 case object INDENT extends Token
 case object DEINDENT extends Token
 case object ERROR extends Token with Stroken
+case object QUOTE extends  Token with Stroken
 final case class LITVAL(value: Lit) extends Token with Stroken
 final case class KEYWORD(name: String) extends Token with Stroken
 final case class IDENT(name: String, symbolic: Bool) extends Token with Stroken

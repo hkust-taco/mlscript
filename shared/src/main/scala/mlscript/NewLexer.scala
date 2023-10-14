@@ -41,6 +41,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
     ":",
     ";;",
     "#",
+    "`"
     // ".",
     // "<",
     // ">",
@@ -115,6 +116,8 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
         val j = i + 1
         // go(j, COMMA)
         lex(j, ind, next(j, COMMA))
+      case '`' =>
+        lex(i + 1, ind, next(i + 1, QUOTE))
       case 'c' if isQuasiquoteOpening(i) || isQuasiquoteTripleOpening(i) =>
         val isTripleQuoteQQ = isQuasiquoteTripleOpening(i)
         val bracket_kind = if (isTripleQuoteQQ)
@@ -363,6 +366,7 @@ object NewLexer {
     case (INDENT, _) => "→"
     case (DEINDENT, _) => "←"
     case (ERROR, _) => "<error>"
+    case (QUOTE, _) => "`"
     case (LITVAL(lv), _) => lv.idStr
     case (KEYWORD(name: String), _) => "#" + name
     case (IDENT(name: String, symbolic: Bool), _) => name
