@@ -903,6 +903,19 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
               case _ => Quoted(Lam(param, Unquoted(rhs)))
             }
             exprCont(res, prec, allowNewlines)
+          case (br @ BRACKETS(Round, toks), loc) :: _ =>
+            consume
+            val as = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented()).map {
+              case nme -> Fld(flgs, t) => t match {
+                case Quoted(t) => nme -> Fld(flgs, t)
+                case _ => nme -> Fld(flgs, Unquoted(t))
+              }
+            }
+            val res = acc match {
+              case Quoted(acc) => App(acc, Tup(as).withLoc(S(loc)))
+              case _ => App(Unquoted(acc), Tup(as).withLoc(S(loc)))
+            }
+            exprCont(Quoted(res), prec, allowNewlines)
           case (IDENT(opStr, true), l0) :: _ if /* isInfix(opStr) && */ opPrec(opStr)._1 > prec =>
             consume
             val v = Var(opStr).withLoc(S(l0))

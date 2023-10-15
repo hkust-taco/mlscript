@@ -20,3 +20,23 @@ inc(c => log(show(c)))
 //│ fun inc: (Code[Int, ??x] -> ()) -> Code[Int -> Int, nothing]
 //│ fun show: Code[anything, anything] -> Str
 //│ Code[Int -> Int, nothing]
+
+fun gib_naive(n) =
+  let rec body(x, y) = case
+    0 then x
+    1 then y
+    n then body(y, x `+ y)(n - 1)
+  (x, y) `=> body(x, y)(n)
+let gn5 = run(gib_naive(5))
+//│ fun gib_naive: (0 | 1 | Int & ~0 & ~1) -> Code[(Int, Int) -> Int, nothing]
+//│ let gn5: (Int, Int) -> Int
+
+fun bind(rhs, k) = `let x = rhs in k(x)
+//│ fun bind: forall 'a 'b 'c. (Code['a, 'b], Code['a, ??x] -> Code['c, ??x0 | 'b]) -> Code['c, 'b]
+
+fun bind(rhs: Code['a, 'c], k: forall 'g : Code['a, 'g] -> Code['b, 'c | 'g]) =
+  `let x = rhs in k(x)
+//│ fun bind: forall 'b 'a 'c. (rhs: Code['a, 'c], k: forall 'g. Code['a, 'g] -> Code['b, 'c | 'g | ??x]) -> Code['b, 'c]
+
+bind : forall 'a, 'c, 'g: (Code['a, 'g], k: forall 'c: Code['a, 'c] -> Code['b, 'c | 'g]) -> Code['b, 'g]
+//│ forall 'a 'g. (Code['a, 'g], k: forall 'c. Code['a, 'c] -> Code['b, 'c | 'g]) -> Code['b, 'g]
