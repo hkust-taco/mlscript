@@ -1294,7 +1294,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
   }
   }
   
-  final def bindings(acc: Ls[Var -> Term])(implicit fe: FoundErr): Ls[Var -> Term] = 
+  final def bindings(acc: Ls[Var -> Term])(implicit fe: FoundErr, qenv: Set[Str], quoted: IsQuoted): Ls[Var -> Term] = 
     cur match {
       case (SPACE, _) :: _ =>
         consume
@@ -1304,7 +1304,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       case (IDENT(id, false), l0) :: _ =>
         consume
         val (success, _) = skip(KEYWORD("=")) // TODO kw?
-        val rhs = expr(0)(fe = foundErr || !success, l = implicitly, qenv = Set.empty, quoted = false) // TODO
+        val rhs = expr(0)(fe = foundErr || !success, l = implicitly, qenv = qenv, quoted = quoted)
         // cur.dropWhile(_ === SPACE) match {
         //   case (KEYWORD("in"), _) :: _ =>
         //     acc.reverse

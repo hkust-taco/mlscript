@@ -6,3 +6,17 @@ fun power(x) = case
   0 then `1.0
   n then x `*. power(x)(n - 1)
 //│ fun power: forall 'a. Code[Num, 'a] -> (0 | Int & ~0) -> Code[Num, 'a]
+
+x `=> id(x) `* x
+//│ Code[Int -> Int, nothing]
+
+`(x => x + x)
+//│ Code[Int -> Int, nothing]
+
+declare fun show: Code[anything, anything] -> Str
+fun inc(dbg) =
+  x `=> let c = x `+ `1 in dbg(c); c
+inc(c => log(show(c)))
+//│ fun inc: (Code[Int, ??x] -> ()) -> Code[Int -> Int, nothing]
+//│ fun show: Code[anything, anything] -> Str
+//│ Code[Int -> Int, nothing]
