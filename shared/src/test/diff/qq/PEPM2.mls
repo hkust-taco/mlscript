@@ -3,6 +3,6 @@
 
 
 fun power(x) = case
-  0 then `1
-  n then x `* power(x)(n - 1)
-//│ fun power: forall 'a. Code[Int, 'a] -> (0 | Int & ~0) -> Code[Int, 'a]
+  0 then `1.0
+  n then x `*. power(x)(n - 1)
+//│ fun power: forall 'a. Code[Num, 'a] -> (0 | Int & ~0) -> Code[Num, 'a]
