@@ -627,6 +627,39 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
               }
               case ((v, r), L(acc)) => ???
             }
+          case (KEYWORD("if"), l0) :: _ =>
+            consume
+            exprOrIf(0)(et = true, fe = fe, l = implicitly, qenv = qenv, quoted = quoted) match {
+              case L(IfThen(cond, body)) =>
+                val els = yeetSpaces match {
+                  case (KEYWORD("else"), _) :: _ =>
+                    consume
+                    S(expr(0))
+                  case (NEWLINE, _) :: (KEYWORD("else"), _) :: _ =>
+                    consume
+                    consume
+                    S(expr(0))
+                  case (br @ BRACKETS(Indent, (KEYWORD("else"), _) :: toks), _) :: _ =>
+                    consume
+                    val nested = rec(toks, S(br.innerLoc), br.describe)
+                    S(nested.concludeWith(_.expr(0)))
+                  case _ => N
+                }
+                val qcond = cond match {
+                  case Quoted(body) => body
+                  case _ => Unquoted(cond)
+                }
+                val qbody = body match {
+                  case Quoted(body) => body
+                  case _ => Unquoted(body)
+                }
+                val qels = els.map {
+                  case Quoted(body) => body
+                  case t => Unquoted(t)
+                }
+                R(Quoted(If(IfThen(qcond, qbody), qels)))
+              case _ => ???
+            }
           case (br @ BRACKETS(bk @ (Round | Square | Curly), toks), loc) :: _ =>
             consume
             val res = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented())

@@ -13,6 +13,12 @@ x `=> id(x) `* x
 `(x => x + x)
 //│ Code[Int -> Int, nothing]
 
+fun assertNotZero(x) =
+  `if (x `== `0.0) then `(error) else x
+fun checkedDiv = x `=> y `=> x `/ assertNotZero(y)
+//│ fun assertNotZero: forall 'a 'b. Code[Num & 'a, 'b] -> Code['a, 'b]
+//│ fun checkedDiv: Code[Num -> Num -> Num, nothing]
+
 declare fun show: Code[anything, anything] -> Str
 fun inc(dbg) =
   x `=> let c = x `+ `1 in dbg(c); c
@@ -32,11 +38,11 @@ let gn5 = run(gib_naive(5))
 //│ let gn5: (Int, Int) -> Int
 
 fun bind(rhs, k) = `let x = rhs in k(x)
-//│ fun bind: forall 'a 'b 'c. (Code['a, 'b], Code['a, ??x] -> Code['c, ??x0 | 'b]) -> Code['c, 'b]
+//│ fun bind: forall 'a 'b 'c. (Code['b, 'c], Code['b, ??x] -> Code['a, ??x0 | 'c]) -> Code['a, 'c]
 
 fun bind(rhs: Code['a, 'c], k: forall 'g : Code['a, 'g] -> Code['b, 'c | 'g]) =
   `let x = rhs in k(x)
-//│ fun bind: forall 'b 'a 'c. (rhs: Code['a, 'c], k: forall 'g. Code['a, 'g] -> Code['b, 'c | 'g | ??x]) -> Code['b, 'c]
+//│ fun bind: forall 'a 'c 'b. (rhs: Code['a, 'c], k: forall 'g. Code['a, 'g] -> Code['b, 'c | 'g | ??x]) -> Code['b, 'c]
 
 bind : forall 'a, 'c, 'g: (Code['a, 'g], k: forall 'c: Code['a, 'c] -> Code['b, 'c | 'g]) -> Code['b, 'g]
 //│ forall 'a 'g. (Code['a, 'g], k: forall 'c. Code['a, 'c] -> Code['b, 'c | 'g]) -> Code['b, 'g]
