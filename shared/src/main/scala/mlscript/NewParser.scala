@@ -935,53 +935,49 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
   
   final def exprCont(acc: Term, prec: Int, allowNewlines: Bool)(implicit et: ExpectThen, fe: FoundErr, l: Line, qenv: Set[Str], quoted: IsQuoted): IfBody \/ Term = wrap(prec, s"`$acc`", allowNewlines) { l =>
     cur match {
-      case (QUOTE, l0) :: _ if quoted === false => // TODO: refactor
+      case (QUOTE, l) :: (KEYWORD(opStr @ "=>"), l0) :: _ if opPrec(opStr)._1 > prec && quoted === false =>
         consume
-        cur match {
-          case (KEYWORD(opStr @ "=>"), l0) :: _ if opPrec(opStr)._1 > prec =>
-            consume
-            val newQenv = declQenv(acc)
-            val rhs = expr(1)(fe, implicitly, qenv ++ newQenv, quoted)
-            val param = acc match {
-              case t: Tup => t
-              case _ => PlainTup(acc)
-            }
-            val res = rhs match {
-              case Quoted(rhs) => Quoted(Lam(param, rhs))
-              case _ => Quoted(Lam(param, Unquoted(rhs)))
-            }
-            exprCont(res, prec, allowNewlines)
-          case (br @ BRACKETS(Round, toks), loc) :: _ =>
-            consume
-            val as = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented()).map {
-              case nme -> Fld(flgs, t) => t match {
-                case Quoted(t) => nme -> Fld(flgs, t)
-                case _ => nme -> Fld(flgs, Unquoted(t))
-              }
-            }
-            val res = acc match {
-              case Quoted(acc) => App(acc, Tup(as).withLoc(S(loc)))
-              case _ => App(Unquoted(acc), Tup(as).withLoc(S(loc)))
-            }
-            exprCont(Quoted(res), prec, allowNewlines)
-          case (IDENT(opStr, true), l0) :: _ if /* isInfix(opStr) && */ opPrec(opStr)._1 > prec =>
-            consume
-            val v = Var(opStr).withLoc(S(l0))
-            // printDbg(s">>> $opStr ${opPrec(opStr)}")
-            exprOrIf(opPrec(opStr)._2) match {
-              case L(rhs) =>
-                err((
-                  msg"quote syntax is not supported yet." -> S(l0) :: Nil))
-                R(Var("<error>"))
-              case R(rhs) =>
-                // TODO: match opStr
-                exprCont(quoteOp(acc, rhs, v), prec, allowNewlines)
-            }
-          case _ =>
+        consume
+        val newQenv = declQenv(acc)
+        val rhs = expr(1)(fe, implicitly, qenv ++ newQenv, quoted)
+        val param = acc match {
+          case t: Tup => t
+          case _ => PlainTup(acc)
+        }
+        val res = rhs match {
+          case Quoted(rhs) => Quoted(Lam(param, rhs))
+          case _ => Quoted(Lam(param, Unquoted(rhs)))
+        }
+        exprCont(res, prec, allowNewlines)
+      case (QUOTE, l) :: (br @ BRACKETS(Round, toks), loc) :: _ if quoted === false =>
+        consume
+        consume
+        val as = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented()).map {
+          case nme -> Fld(flgs, t) => t match {
+            case Quoted(t) => nme -> Fld(flgs, t)
+            case _ => nme -> Fld(flgs, Unquoted(t))
+          }
+        }
+        val res = acc match {
+          case Quoted(acc) => App(acc, Tup(as).withLoc(S(loc)))
+          case _ => App(Unquoted(acc), Tup(as).withLoc(S(loc)))
+        }
+        exprCont(Quoted(res), prec, allowNewlines)
+      case (QUOTE, l) :: (IDENT(opStr, true), l0) :: _ if /* isInfix(opStr) && */ opPrec(opStr)._1 > prec && quoted === false =>
+        consume
+        consume
+        val v = Var(opStr).withLoc(S(l0))
+        // printDbg(s">>> $opStr ${opPrec(opStr)}")
+        exprOrIf(opPrec(opStr)._2) match {
+          case L(rhs) =>
             err((
               msg"quote syntax is not supported yet." -> S(l0) :: Nil))
             R(Var("<error>"))
+          case R(rhs) =>
+            // TODO: match opStr to support with etc.
+            exprCont(quoteOp(acc, rhs, v), prec, allowNewlines)
         }
+      case (QUOTE, l) :: _ => R(acc)
       case (KEYWORD(opStr @ "=>"), l0) :: (NEWLINE, l1) :: _ if opPrec(opStr)._1 > prec =>
         consume
         val rhs = Blk(typingUnit.entities)
