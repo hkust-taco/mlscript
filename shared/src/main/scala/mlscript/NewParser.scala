@@ -625,7 +625,10 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                 case (_, Quoted(acc)) => R(Quoted(Let(false, v, Unquoted(r), acc)))
                 case _ => R(Quoted(Let(false, v, Unquoted(r), Unquoted(acc))))
               }
-              case ((v, r), L(acc)) => ???
+              case ((v, r), L(acc)) =>
+                err((
+                  msg"quote syntax is not supported yet." -> S(l0) :: Nil))
+                R(Var("<error>"))
             }
           case (KEYWORD("if"), l0) :: _ =>
             consume
@@ -658,18 +661,27 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                   case t => Unquoted(t)
                 }
                 R(Quoted(If(IfThen(qcond, qbody), qels)))
-              case _ => ???
+              case _ =>
+                err((
+                  msg"quote syntax is not supported yet." -> S(l0) :: Nil))
+                R(Var("<error>"))
             }
           case (br @ BRACKETS(bk @ (Round | Square | Curly), toks), loc) :: _ =>
             consume
-            val res = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented())
+            val res = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented()(fe, et, qenv, true))
             val bra = (bk, res) match {
               case (Round, (N, Fld(FldFlags(false, false, _), elt)) :: Nil) =>
                 Quoted(Bra(false, elt))
-              case _ => ??? // TODO
+              case _ =>
+                err((
+                  msg"quote syntax is not supported yet." -> S(loc) :: Nil))
+                Var("<error>")
             }
             exprCont(bra.withLoc(S(loc)), prec, allowNewlines = false)
-          case _ => ???
+          case _ =>
+            err((
+              msg"quote syntax is not supported yet." -> S(loc) :: Nil))
+            R(Var("<error>"))
         }
       case (LITVAL(lit), l0) :: _ =>
         consume
@@ -722,7 +734,10 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                 Lam(Tup(res), e)
               case (QUOTE, l0) :: (KEYWORD("=>"), l1) :: _ =>
                 exprCont(Tup(res), 0, true) match {
-                  case L(_) => ???
+                  case L(_) =>
+                    err((
+                      msg"quote syntax is not supported yet." -> S(l0) :: Nil))
+                    Var("<error>")
                   case R(t) => t
                 }
               case (IDENT("->", true), l1) :: _ =>
@@ -920,7 +935,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
   
   final def exprCont(acc: Term, prec: Int, allowNewlines: Bool)(implicit et: ExpectThen, fe: FoundErr, l: Line, qenv: Set[Str], quoted: IsQuoted): IfBody \/ Term = wrap(prec, s"`$acc`", allowNewlines) { l =>
     cur match {
-      case (QUOTE, _) :: _ if quoted === false => // TODO: refactor
+      case (QUOTE, l0) :: _ if quoted === false => // TODO: refactor
         consume
         cur match {
           case (KEYWORD(opStr @ "=>"), l0) :: _ if opPrec(opStr)._1 > prec =>
@@ -954,13 +969,18 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
             val v = Var(opStr).withLoc(S(l0))
             // printDbg(s">>> $opStr ${opPrec(opStr)}")
             exprOrIf(opPrec(opStr)._2) match {
-              case L(rhs) => ???
-                // TODO: L(IfOpApp(acc, v, rhs))
+              case L(rhs) =>
+                err((
+                  msg"quote syntax is not supported yet." -> S(l0) :: Nil))
+                R(Var("<error>"))
               case R(rhs) =>
                 // TODO: match opStr
                 exprCont(quoteOp(acc, rhs, v), prec, allowNewlines)
             }
-          case _ => ???
+          case _ =>
+            err((
+              msg"quote syntax is not supported yet." -> S(l0) :: Nil))
+            R(Var("<error>"))
         }
       case (KEYWORD(opStr @ "=>"), l0) :: (NEWLINE, l1) :: _ if opPrec(opStr)._1 > prec =>
         consume

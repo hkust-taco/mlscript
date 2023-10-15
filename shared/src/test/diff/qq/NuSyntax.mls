@@ -82,3 +82,32 @@ fun foo(x) =
 //│ fun foo: forall 'a 'b. Code['a, 'b] -> Code[2 | 'a, 'b]
 
 // `if `1 `< `2 then `0 else `1
+
+
+:pe
+`(`42)
+//│ ╔══[PARSE ERROR] Unexpected quote in expression position
+//│ ║  l.88: 	`(`42)
+//│ ╙──      	  ^
+//│ Code[42, nothing]
+
+:pe
+:e
+:w
+`(x `=> x)
+//│ ╔══[PARSE ERROR] Unexpected quote in expression position
+//│ ║  l.97: 	`(x `=> x)
+//│ ╙──      	    ^
+//│ ╔══[PARSE ERROR] Unexpected '=>' in expression position
+//│ ║  l.97: 	`(x `=> x)
+//│ ╙──      	     ^^
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.97: 	`(x `=> x)
+//│ ╙──      	  ^^^^^^^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.97: 	`(x `=> x)
+//│ ╙──      	  ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.97: 	`(x `=> x)
+//│ ╙──      	        ^
+//│ Code[error, nothing]
