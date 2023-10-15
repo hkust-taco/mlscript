@@ -44,3 +44,20 @@ z `=> z + 1
 
 run((x, y) `=> x `+ y)(1, 2)
 //│ Int
+
+
+`let x = `42 in x `+ `1
+//│ Code[Int, nothing]
+
+
+fun f(x: Code[Int, nothing]) =
+  `let t = x in t
+//│ fun f: (x: Code[Int, nothing]) -> Code[Int, nothing]
+
+:e
+`let x = `0, y = 1 in x `+ y
+//│ ╔══[ERROR] Type mismatch in unquote:
+//│ ║  l.58: 	`let x = `0, y = 1 in x `+ y
+//│ ║        	                 ^
+//│ ╙── integer literal of type `1` is not an instance of type `Code`
+//│ Code[Int, nothing]

@@ -604,6 +604,29 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
           case (LITVAL(lit), l0) :: _ =>
             consume
             exprCont(Quoted(lit.withLoc(S(l0))).withLoc(S(loc)), prec, allowNewlines = false)
+          case (KEYWORD("let"), l0) :: _ =>
+            consume
+            val bs = bindings(Nil)
+            val newQenv = bs.map(_._1.name)
+            val body = yeetSpaces match {
+              case (KEYWORD("in" | ";;"), _) :: _ =>
+                consume
+                exprOrIf(0)(et, fe, implicitly, qenv ++ newQenv, quoted)
+              case (NEWLINE, _) :: _ =>
+                consume
+                exprOrIf(0)(et, fe, implicitly, qenv ++ newQenv, quoted)
+              case _ =>
+                R(UnitLit(true).withLoc(curLoc.map(_.left)))
+            }
+            bs.foldRight(body) {
+              case ((v, r), R(acc)) => (r, acc) match {
+                case (Quoted(r), Quoted(acc)) => R(Quoted(Let(false, v, r, acc)))
+                case (Quoted(r), _) => R(Quoted(Let(false, v, r, Unquoted(acc))))
+                case (_, Quoted(acc)) => R(Quoted(Let(false, v, Unquoted(r), acc)))
+                case _ => R(Quoted(Let(false, v, Unquoted(r), Unquoted(acc))))
+              }
+              case ((v, r), L(acc)) => ???
+            }
           case (br @ BRACKETS(bk @ (Round | Square | Curly), toks), loc) :: _ =>
             consume
             val res = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented())
