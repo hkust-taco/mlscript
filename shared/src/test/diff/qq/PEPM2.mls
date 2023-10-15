@@ -40,3 +40,15 @@ fun bind(rhs: Code['a, 'c], k: forall 'g : Code['a, 'g] -> Code['b, 'c | 'g]) =
 
 bind : forall 'a, 'c, 'g: (Code['a, 'g], k: forall 'c: Code['a, 'c] -> Code['b, 'c | 'g]) -> Code['b, 'g]
 //│ forall 'a 'g. (Code['a, 'g], k: forall 'c. Code['a, 'c] -> Code['b, 'c | 'g]) -> Code['b, 'g]
+
+fun body: forall 'g : (Code[Int, 'g], Code[Int, 'g]) -> Int -> Code[Int, 'g]
+fun body(x, y) = case
+  0 then x
+  1 then y
+  n then bind of x `+ y, z => body(y, z)(n - 1)
+fun gib(n) = ((x, y) `=> body(x, y)(n))
+let g5 = run(gib(5))
+//│ fun body: forall 'a 'b. (Code[Int, 'a], Code[Int, 'a] & 'b) -> (0 | 1 | Int & ~0 & ~1) -> (Code[Int, 'a] | 'b)
+//│ fun gib: Int -> Code[(Int, Int) -> Int, nothing]
+//│ let g5: (Int, Int) -> Int
+//│ fun body: forall 'g. (Code[Int, 'g], Code[Int, 'g]) -> Int -> Code[Int, 'g]
