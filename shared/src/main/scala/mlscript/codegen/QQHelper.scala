@@ -48,7 +48,7 @@ object QQHelper {
   | globalThis.Case = (pat, bod, trm) => `case ${pat} => ${bod}\n  ${trm})`;
   | globalThis.Wildcard = (res) => `_ => ${res}`;
   | globalThis.NoCases = () => `<NoCases>`;
-  | globalThis.prettyPrintQQ = (code) => {console.log("Quoted:\n" + code); return code;}
+  | globalThis.run = (code) => {console.log("Quoted:\n" + code);}
   |})();
   """.stripMargin
 }

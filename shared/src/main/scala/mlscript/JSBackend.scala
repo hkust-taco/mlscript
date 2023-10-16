@@ -20,8 +20,6 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     */
   protected val polyfill = Polyfill()
 
-  protected var printQQ = false
-
   /**
     * This function translates parameter destructions in `def` declarations.
     *
@@ -149,12 +147,12 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
   protected def translateApp(term: App)(implicit scope: Scope): JSExpr = term match {
     // Binary expressions
     case App(App(Var(op), Tup((N -> Fld(_, lhs)) :: Nil)), Tup((N -> Fld(_, rhs)) :: Nil))
-        if JSBinary.operators contains op =>
-      JSBinary(op, translateTerm(lhs), translateTerm(rhs))
+        if JSBinary.operators contains toJSOperator(op) =>
+      JSBinary(toJSOperator(op), translateTerm(lhs), translateTerm(rhs))
     // Binary expressions with new-definitions
     case App(Var(op), Tup(N -> Fld(_, lhs) :: N -> Fld(_, rhs) :: Nil))
-        if JSBinary.operators.contains(op) && !translateVarImpl(op, isCallee = true).isRight =>
-      JSBinary(op, translateTerm(lhs), translateTerm(rhs))
+        if JSBinary.operators.contains(toJSOperator(op)) && !translateVarImpl(toJSOperator(op), isCallee = true).isRight =>
+      JSBinary(toJSOperator(op), translateTerm(lhs), translateTerm(rhs))
     // If-expressions
     case App(App(App(Var("if"), Tup((_, Fld(_, tst)) :: Nil)), Tup((_, Fld(_, con)) :: Nil)), Tup((_, Fld(_, alt)) :: Nil)) =>
       JSTenary(translateTerm(tst), translateTerm(con), translateTerm(alt))
@@ -194,6 +192,13 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     case NoCases => if (isQuoted) L(createASTCall("NoCases", Nil)) else R(NoCases)
   }
 
+  private def toJSOperator(op: Str) = op match {
+    case "+." => "+"
+    case "-." => "-"
+    case "*." => "*"
+    case _ => op
+  }
+
   private def desugarQuote(term: Term)(implicit scope: Scope, isQuoted: Bool, freeVars: MutSet[Str]): Term = term match {
     case Var(name) if isQuoted || freeVars(name) => createASTCall("Var", Var(scope.resolveValue(name).fold[Str](
       throw CodeGenError(s"unbound free variable $name is not supported yet.")
@@ -231,17 +236,17 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       if (isQuoted) createASTCall("Quoted", res :: Nil)
       else res
     case App(App(Var(op), Tup((N -> Fld(f1, lhs)) :: Nil)), Tup((N -> Fld(f2, rhs)) :: Nil))
-        if JSBinary.operators contains op =>
+        if JSBinary.operators contains toJSOperator(op) =>
       if (isQuoted)
-        createASTCall("App", createASTCall("Var", StrLit(op) :: Nil) :: desugarQuote(lhs) :: desugarQuote(rhs) :: Nil)
+        createASTCall("App", createASTCall("Var", StrLit(toJSOperator(op)) :: Nil) :: desugarQuote(lhs) :: desugarQuote(rhs) :: Nil)
       else
-        App(App(Var(op), Tup((N -> Fld(f1, desugarQuote(lhs))) :: Nil)), Tup((N -> Fld(f2, desugarQuote(rhs))) :: Nil))
+        App(App(Var(toJSOperator(op)), Tup((N -> Fld(f1, desugarQuote(lhs))) :: Nil)), Tup((N -> Fld(f2, desugarQuote(rhs))) :: Nil))
     case App(Var(op), Tup(N -> Fld(f1, lhs) :: N -> Fld(f2, rhs) :: Nil))
-        if JSBinary.operators.contains(op) && !translateVarImpl(op, isCallee = true).isRight =>
+        if JSBinary.operators.contains(toJSOperator(op)) && !translateVarImpl(toJSOperator(op), isCallee = true).isRight =>
       if (isQuoted)
-        createASTCall("App", createASTCall("Var", StrLit(op) :: Nil) :: desugarQuote(lhs) :: desugarQuote(rhs) :: Nil)
+        createASTCall("App", createASTCall("Var", StrLit(toJSOperator(op)) :: Nil) :: desugarQuote(lhs) :: desugarQuote(rhs) :: Nil)
       else
-        App(Var(op), Tup(N -> Fld(f1, desugarQuote(lhs)) :: N -> Fld(f2, desugarQuote(rhs)) :: Nil))
+        App(Var(toJSOperator(op)), Tup(N -> Fld(f1, desugarQuote(lhs)) :: N -> Fld(f2, desugarQuote(rhs)) :: Nil))
     case App(lhs, rhs) =>
       if (isQuoted) createASTCall("App", desugarQuote(lhs) :: desugarQuote(rhs) :: Nil)
       else App(desugarQuote(lhs), desugarQuote(rhs))
@@ -434,8 +439,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     case Eqn(Var(name), _) =>
       throw CodeGenError(s"assignment of $name is not supported outside a constructor")
     case Quoted(body) =>
-      val res = translateTerm(desugarQuote(body)(scope.derive("desugar"), true, MutSet.empty))(scope.derive("quote"))
-      if (printQQ) JSInvoke(JSIdent("prettyPrintQQ"), res :: Nil) else res
+      translateTerm(desugarQuote(body)(scope.derive("desugar"), true, MutSet.empty))(scope.derive("quote"))
     case _: Bind | _: Test | If(_, _)  | _: Splc | _: Where | _: AdtMatchWith | _: Unquoted =>
       throw CodeGenError(s"cannot generate code for term ${inspect(term)}")
   }
@@ -1503,8 +1507,6 @@ class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
   }
 
   private def generateNewDef(pgrm: Pgrm, prettyPrintQQ: Bool)(implicit scope: Scope, allowEscape: Bool): JSTestBackend.TestCode = {
-    printQQ = prettyPrintQQ
-
     val (typeDefs, otherStmts) = pgrm.tops.partitionMap {
       case _: Constructor => throw CodeGenError("unexpected constructor.")
       case ot: Terms => R(ot)
