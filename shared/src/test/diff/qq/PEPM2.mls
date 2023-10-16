@@ -40,9 +40,9 @@ let gn5 = run(gib_naive(5))
 fun bind(rhs, k) = `let x = rhs in k(x)
 //│ fun bind: forall 'a 'b 'c. (Code['b, 'c], Code['b, ??x] -> Code['a, ??x0 | 'c]) -> Code['a, 'c]
 
-fun bind(rhs: Code['a, 'c], k: forall 'g : Code['a, 'g] -> Code['b, 'c | 'g]) =
+fun bind(rhs, k: forall 'g : Code['a, 'g] -> Code['b, 'c | 'g]) =
   `let x = rhs in k(x)
-//│ fun bind: forall 'a 'c 'b. (rhs: Code['a, 'c], k: forall 'g. Code['a, 'g] -> Code['b, 'c | 'g | ??x]) -> Code['b, 'c]
+//│ fun bind: forall 'a 'c 'b. (Code['a, 'c], k: forall 'g. Code['a, 'g] -> Code['b, 'g | ??x | 'c]) -> Code['b, 'c]
 
 bind : forall 'a, 'c, 'g: (Code['a, 'g], k: forall 'c: Code['a, 'c] -> Code['b, 'c | 'g]) -> Code['b, 'g]
 //│ forall 'a 'g. (Code['a, 'g], k: forall 'c. Code['a, 'c] -> Code['b, 'c | 'g]) -> Code['b, 'g]
