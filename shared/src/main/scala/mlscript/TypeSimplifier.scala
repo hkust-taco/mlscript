@@ -99,6 +99,7 @@ trait TypeSimplifier { self: Typer =>
         val prefix = fnme.takeWhile(_ =/= '#')
         val postfix = fnme.drop(prefix.length + 1)
         lazy val default = fty.update(process(_ , N), process(_ , N))
+        println(s">>?? $fnme : $fty")
         if (postfix.isEmpty || prefix.isEmpty) v -> default :: Nil
         else ctx.tyDefs.get(prefix) match {
           case S(td) =>
@@ -412,6 +413,7 @@ trait TypeSimplifier { self: Typer =>
                 
                 
               case _ =>
+                println(s">>?? ${rcd.fields} $bo")
                 lazy val nFields = rcd.fields
                   .filterNot(traitPrefixes contains _._1.name.takeWhile(_ =/= '#'))
                   .mapValues(_.update(go(_, pol.map(!_)), go(_, pol)))

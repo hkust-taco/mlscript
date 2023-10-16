@@ -41,16 +41,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     } else info.complete() match {
       
       case cls: TypedNuCls =>
-        cls.members.get(fld.name) orElse cls.members.get(cls.name+"#"+fld.name) match {
+        cls.members.get(fld.name) match {
           case S(m) => R(m)
-          case N => 
-            // ! naive search over parents
-            cls.inheritedTags.toList.flatMap { t =>
-              cls.members.get(t.name+"#"+fld.name).toList
-            } match {
-              case m :: _ => R(m)
-              case _ => L(noSuchMember(info, fld))
-            }
+          case N => L(noSuchMember(info, fld))
         }
         
       case _ => ??? // TODO
@@ -129,7 +122,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         implicit val shadows: Shadows = Shadows.empty
         
         info.tparams.foreach { case (tn, _tv, vi) =>
-          val targ = rfnt(Var(info.decl.name + "#" + tn.name)) match {
+          println(s">>>l ${info.decl.name} # $tn => ${rfnt(Var(info.decl.name + "#" + tn.name))}")
+          // todo fix lookup here
+          val targ = rfnt(Var(if (!vi.visible) info.decl.name + "#" + tn.name else tn.name)) match {
             // * TODO to avoid infinite recursion due to ever-expanding type args,
             // *  we should set the shadows of the targ to be the same as that of the parameter it replaces... 
             case S(fty) if vi.varinfo === S(VarianceInfo.co) => fty.ub
@@ -567,6 +562,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               info.typedParams
                 .getOrElse(Nil) // FIXME?... prim type
                 .foreach { p =>
+                  // println(s">>>l ${r.fields}")
                   val fty = lookupField(() => done_ls.toType(sort = true), S(nme), r.fields.toMap.get, ts, p._1)
                   rec(fldTy.lb.getOrElse(die), RecordType(p._1 -> TypeRef(TypeName("Eql"),
                       fty.ub // FIXME check mutable?
@@ -574,6 +570,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                     )(provTODO).toUpper(provTODO) :: Nil)(provTODO), false)
                 }
             } else {
+              println(s">>>l ${r.fields}") // todo fields still Foo#A  why ?
               val fty = lookupField(() => done_ls.toType(sort = true), S(nme), r.fields.toMap.get, ts, fldNme)
               rec(fty.ub, fldTy.ub, false)
               recLb(fldTy, fty)

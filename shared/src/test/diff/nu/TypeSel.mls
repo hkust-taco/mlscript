@@ -14,6 +14,20 @@
 // *  - Support wildcard type argument syntax: `Foo[?]` (for what we currently write `Foo`)
 // *  - `as` syntax for upcasting
 
+class Foo[A](val a: A)
+//│ class Foo[A](a: A)
+
+:e
+fun foo(f: Foo[Int]): f.A = f.a
+//│ ╔══[ERROR] Type `Foo[Int]` does not contain member `A`
+//│ ║  l.21: 	fun foo(f: Foo[Int]): f.A = f.a
+//│ ╙──      	                       ^^
+//│ ╔══[ERROR] Type mismatch in selection:
+//│ ║  l.21: 	fun foo(f: Foo[Int]): f.A = f.a
+//│ ║        	                       ^^
+//│ ╙── expression of type `Foo[Int]` does not have field 'A'
+//│ fun foo: (f: Foo[Int]) -> (Int | error)
+
 class Foo[type A] {
   fun f: A -> Int
   fun f(x) = 1
@@ -23,30 +37,293 @@ class Foo[type A] {
 //│   fun f: A -> Int
 //│ }
 
+:d
 fun foo(f: Foo[Int], g: Foo[f.A], x: f.A) = g.f(f.f(x))
-//│ fun foo: (f: Foo[Int], g: Foo[Int], x: Int) -> Int
+//│ 0. Typing ‹fun foo = (f: Foo‹Int›, g: Foo‹f.A›, x: (f).A,) => (g).f((f).f(x,),)›
+//│ | 0. Created lazy type info for fun foo = (f: Foo‹Int›, g: Foo‹f.A›, x: (f).A,) => (g).f((f).f(x,),)
+//│ | Completing fun foo = (f: Foo‹Int›, g: Foo‹f.A›, x: (f).A,) => (g).f((f).f(x,),)
+//│ | | Type params 
+//│ | | Params 
+//│ | | 1. Typing term (f: Foo‹Int›, g: Foo‹f.A›, x: (f).A,) => (g).f((f).f(x,),)
+//│ | | | 1. Typing pattern [f: Foo‹Int›, g: Foo‹f.A›, x: (f).A,]
+//│ | | | | 1. Typing pattern f : Foo[Int]
+//│ | | | | | Typing type AppliedType(TypeName(Foo),List(TypeName(Int)))
+//│ | | | | | | vars=Map() newDefsInfo=Map()
+//│ | | | | | | 1. type AppliedType(TypeName(Foo),List(TypeName(Int)))
+//│ | | | | | | | 1. type TypeName(Int)
+//│ | | | | | | | => Int
+//│ | | | | | | => Foo[Int]
+//│ | | | | | => Foo[Int] ——— 
+//│ | | | | 1. : Foo[Int]
+//│ | | | | 1. Typing pattern g : Foo[f.A]
+//│ | | | | | Typing type AppliedType(TypeName(Foo),List(Selection(TypeName(f),TypeName(A))))
+//│ | | | | | | vars=Map() newDefsInfo=Map()
+//│ | | | | | | 1. type AppliedType(TypeName(Foo),List(Selection(TypeName(f),TypeName(A))))
+//│ | | | | | | | 1. type Selection(TypeName(f),TypeName(A))
+//│ | | | | | | | | 1. type TypeName(f)
+//│ | | | | | | | | | ty var: f : Foo[Int]
+//│ | | | | | | | | => Foo[Int]
+//│ | | | | | | | | Assigning A :: A43' := Int where 
+//│ | | | | | | | | Set A43_51 ~> A43'
+//│ | | | | | | | | >>> (#Foo<Object> & {Foo#A: mut Int..Int}) :: class mlscript.TyperDatatypes$ComposedType
+//│ | | | | | | | | >>> TypeName(f) -> TypeName(A)
+//│ | | | | | | | | CONSTRAIN (#Foo<Object> & {Foo#A: mut Int..Int}) <! {A: mut A52'..A52'}
+//│ | | | | | | | |   where 
+//│ | | | | | | | | 1. C (#Foo<Object> & {Foo#A: mut Int..Int}) <! {A: mut A52'..A52'}    (0)
+//│ | | | | | | | | | 1. ARGH  DNF(0, #Foo<Object>{Foo#A: mut #Int<Object,Num>..#Int<Object,Num>})  <!  DNF(1, {A: mut A52'..A52'})
+//│ | | | | | | | | | | DNF DISCHARGE CONSTRAINTS
+//│ | | | | | | | | | | Consider #Foo<Object>{Foo#A: mut #Int<Object,Num>..#Int<Object,Num>} <: DNF(1, {A: mut A52'..A52'})
+//│ | | | | | | | | | | Possible: List({A: mut A52'..A52'})
+//│ | | | | | | | | | | 1. A  #Foo<Object>{Foo#A: mut #Int<Object,Num>..#Int<Object,Num>}  %  List()  <!  List({A: mut A52'..A52'})  %  ⊥
+//│ | | | | | | | | | | | 1. A  #Foo<Object>{Foo#A: mut #Int<Object,Num>..#Int<Object,Num>}  %  List()  <!  List()  %  {A:mut A52'..A52'}
+//│ | | | | | | | | | | | | 1. A  #Foo<Object>{Foo#A: mut #Int<Object,Num>..#Int<Object,Num>}  %  List()  <!  List()  %  |{A:mut A52'..A52'}
+//│ | | | | | | | | | | | | | >>>l List((Foo#A,mut #Int<Object,Num>..#Int<Object,Num>))
+//│ | | | | | | | | | | | | | Looking up field A in Some(Foo) & TreeSet() & {...}
+//│ | | | | | | | | | | | | | | Lookup Foo.A : Some(mut A43'..A43') where 
+//│ | | | | | | | | | | | | | | >>>l Foo # TypeName(A) => Some(mut #Int<Object,Num>..#Int<Object,Num>)
+//│ | | | | | | | | | | | | | | Fresh[0] Foo.A : Some(mut ⊥(‘A43')..⊤(‘A43')..⊥(‘A43')..⊤(‘A43')) where Some()
+//│ | | | | | | | | | | | | | |   & None  (from refinement)
+//│ | | | | | | | | | | | | | 1. C ⊥(‘A43')..⊤(‘A43') <! A52'    (1)
+//│ | | | | | | | | | | | | | | 1. C ⊤(‘A43') <! A52'    (3)
+//│ | | | | | | | | | | | | | | | NEW A52' LB (0)
+//│ | | | | | | | | | | | | | 1. C A52' <! ⊥(‘A43')..⊤(‘A43')    (1)
+//│ | | | | | | | | | | | | | | 1. C A52' <! ⊥(‘A43')    (3)
+//│ | | | | | | | | | | | | | | | NEW A52' UB (0)
+//│ | | | | | | | | | | | | | | | 1. C ⊤(‘A43') <! ⊥(‘A43')    (5)
+//│ | | | | | | | | | | | | | | | | CONSTRAINT FAILURE: ⊤(‘A43') <: ⊥(‘A43')
+//│ | | | | | | | | | | | | | | | | allVarPols: +A43'
+//│ | | | | | | | | | | | | | | | | normLike[+] ‘A43'
+//│ | | | | | | | | | | | | | | | | | norm[+] ‘A43'
+//│ | | | | | | | | | | | | | | | | | | DNF: DNF(1, {}∧‘A43')
+//│ | | | | | | | | | | | | | | | | | | >>?? List() None
+//│ | | | | | | | | | | | | | | | | | ~> ‘A43'
+//│ ╔══[ERROR] Type error in selection
+//│ ║  l.41: 	fun foo(f: Foo[Int], g: Foo[f.A], x: f.A) = g.f(f.f(x))
+//│ ║        	                             ^^
+//│ ╟── type variable `A` leaks out of its scope
+//│ ║  l.31: 	class Foo[type A] {
+//│ ╙──      	               ^
+//│ | | | | | | | => A52'
+//│ | | | | | | => Foo[A52']
+//│ | | | | | => Foo[A52'] ——— 
+//│ | | | | 1. : Foo[A52']
+//│ | | | | 1. Typing pattern x : f.A
+//│ | | | | | Typing type Selection(TypeName(f),TypeName(A))
+//│ | | | | | | vars=Map() newDefsInfo=Map()
+//│ | | | | | | 1. type Selection(TypeName(f),TypeName(A))
+//│ | | | | | | | 1. type TypeName(f)
+//│ | | | | | | | | ty var: f : Foo[Int]
+//│ | | | | | | | => Foo[Int]
+//│ | | | | | | | Assigning A :: A43' := Int where 
+//│ | | | | | | | Set A43_53 ~> A43'
+//│ | | | | | | | >>> (#Foo<Object> & {Foo#A: mut Int..Int}) :: class mlscript.TyperDatatypes$ComposedType
+//│ | | | | | | | >>> TypeName(f) -> TypeName(A)
+//│ | | | | | | | CONSTRAIN (#Foo<Object> & {Foo#A: mut Int..Int}) <! {A: mut A54'..A54'}
+//│ | | | | | | |   where 
+//│ | | | | | | | 1. C (#Foo<Object> & {Foo#A: mut Int..Int}) <! {A: mut A54'..A54'}    (0)
+//│ | | | | | | | | 1. ARGH  DNF(0, #Foo<Object>{Foo#A: mut #Int<Object,Num>..#Int<Object,Num>})  <!  DNF(1, {A: mut A54'..A54'})
+//│ | | | | | | | | | DNF DISCHARGE CONSTRAINTS
+//│ | | | | | | | | | Consider #Foo<Object>{Foo#A: mut #Int<Object,Num>..#Int<Object,Num>} <: DNF(1, {A: mut A54'..A54'})
+//│ | | | | | | | | | Possible: List({A: mut A54'..A54'})
+//│ | | | | | | | | | 1. A  #Foo<Object>{Foo#A: mut #Int<Object,Num>..#Int<Object,Num>}  %  List()  <!  List({A: mut A54'..A54'})  %  ⊥
+//│ | | | | | | | | | | 1. A  #Foo<Object>{Foo#A: mut #Int<Object,Num>..#Int<Object,Num>}  %  List()  <!  List()  %  {A:mut A54'..A54'}
+//│ | | | | | | | | | | | 1. A  #Foo<Object>{Foo#A: mut #Int<Object,Num>..#Int<Object,Num>}  %  List()  <!  List()  %  |{A:mut A54'..A54'}
+//│ | | | | | | | | | | | | >>>l List((Foo#A,mut #Int<Object,Num>..#Int<Object,Num>))
+//│ | | | | | | | | | | | | Looking up field A in Some(Foo) & TreeSet() & {...}
+//│ | | | | | | | | | | | | | Lookup Foo.A : Some(mut A43'..A43') where 
+//│ | | | | | | | | | | | | | >>>l Foo # TypeName(A) => Some(mut #Int<Object,Num>..#Int<Object,Num>)
+//│ | | | | | | | | | | | | | Fresh[0] Foo.A : Some(mut ⊥(‘A43')..⊤(‘A43')..⊥(‘A43')..⊤(‘A43')) where Some()
+//│ | | | | | | | | | | | | |   & None  (from refinement)
+//│ | | | | | | | | | | | | 1. C ⊥(‘A43')..⊤(‘A43') <! A54'    (1)
+//│ | | | | | | | | | | | | | 1. C ⊤(‘A43') <! A54'    (3)
+//│ | | | | | | | | | | | | | | NEW A54' LB (0)
+//│ | | | | | | | | | | | | 1. C A54' <! ⊥(‘A43')..⊤(‘A43')    (1)
+//│ | | | | | | | | | | | | | 1. C A54' <! ⊥(‘A43')    (3)
+//│ | | | | | | | | | | | | | | NEW A54' UB (0)
+//│ | | | | | | | | | | | | | | 1. C ⊤(‘A43') <! ⊥(‘A43')    (5)
+//│ | | | | | | | | | | | | | | | CONSTRAINT FAILURE: ⊤(‘A43') <: ⊥(‘A43')
+//│ | | | | | | | | | | | | | | | allVarPols: +A43'
+//│ | | | | | | | | | | | | | | | normLike[+] ‘A43'
+//│ | | | | | | | | | | | | | | | | norm[+] ‘A43'
+//│ | | | | | | | | | | | | | | | | | DNF: DNF(1, {}∧‘A43')
+//│ | | | | | | | | | | | | | | | | | >>?? List() None
+//│ | | | | | | | | | | | | | | | | ~> ‘A43'
+//│ ╔══[ERROR] Type error in selection
+//│ ║  l.41: 	fun foo(f: Foo[Int], g: Foo[f.A], x: f.A) = g.f(f.f(x))
+//│ ║        	                                      ^^
+//│ ╟── type variable `A` leaks out of its scope
+//│ ║  l.31: 	class Foo[type A] {
+//│ ╙──      	               ^
+//│ | | | | | | => A54'
+//│ | | | | | => A54' ——— 
+//│ | | | | 1. : A54'
+//│ | | | 1. : (f: Foo[Int], g: Foo[A52'], x: A54',)
+//│ | | | 1. Typing term (g).f((f).f(x,),)
+//│ | | | | 1. Typing term (g).f
+//│ | | | | | 1. Typing term g
+//│ | | | | | 1. : Foo[A52']
+//│ | | | | | CONSTRAIN Foo[A52'] <! {f: f55'}
+//│ | | | | |   where 
+//│ 		A52' :> ⊤(‘A43') <: ⊥(‘A43')
+//│ | | | | | 1. C Foo[A52'] <! {f: f55'}    (0)
+//│ | | | | | | Passing A :: A43' <=< A52'
+//│ | | | | | | 1. ARGH  DNF(1, #Foo<Object>{Foo#A: mut A52'..A52'})  <!  DNF(1, {f: f55'})
+//│ | | | | | | | DNF DISCHARGE CONSTRAINTS
+//│ | | | | | | | Consider #Foo<Object>{Foo#A: mut A52'..A52'} <: DNF(1, {f: f55'})
+//│ | | | | | | | Possible: List({f: f55'})
+//│ | | | | | | | 1. A  #Foo<Object>{Foo#A: mut A52'..A52'}  %  List()  <!  List({f: f55'})  %  ⊥
+//│ | | | | | | | | 1. A  #Foo<Object>{Foo#A: mut A52'..A52'}  %  List()  <!  List()  %  {f:f55'}
+//│ | | | | | | | | | 1. A  #Foo<Object>{Foo#A: mut A52'..A52'}  %  List()  <!  List()  %  |{f:f55'}
+//│ | | | | | | | | | | >>>l List((Foo#A,mut A52'..A52'))
+//│ | | | | | | | | | | Looking up field f in Some(Foo) & TreeSet() & {...}
+//│ | | | | | | | | | | | Lookup Foo.f : Some((‘A43' -> Int)) where 
+//│ | | | | | | | | | | | >>>l Foo # TypeName(A) => Some(mut A52'..A52')
+//│ | | | | | | | | | | | Fresh[0] Foo.f : Some((⊥(‘A43')..⊤(‘A43') -> Int)) where Some()
+//│ | | | | | | | | | | |   & None  (from refinement)
+//│ | | | | | | | | | | 1. C (⊥(‘A43')..⊤(‘A43') -> Int) <! f55'    (1)
+//│ | | | | | | | | | | | 1. C (⊥(‘A43')..⊤(‘A43') -> Int) <! f55'    (1)
+//│ | | | | | | | | | | | | NEW f55' LB (0)
+//│ | | | | 1. : f55'
+//│ | | | | 1. Typing term (f).f(x,)
+//│ | | | | | 1. Typing term (f).f
+//│ | | | | | | 1. Typing term f
+//│ | | | | | | 1. : Foo[Int]
+//│ | | | | | | CONSTRAIN Foo[Int] <! {f: f56'}
+//│ | | | | | |   where 
+//│ | | | | | | 1. C Foo[Int] <! {f: f56'}    (0)
+//│ | | | | | | | Assigning A :: A43' := Int where 
+//│ | | | | | | | Set A43_57 ~> A43'
+//│ | | | | | | | 1. ARGH  DNF(0, #Foo<Object>{Foo#A: mut #Int<Object,Num>..#Int<Object,Num>})  <!  DNF(1, {f: f56'})
+//│ | | | | | | | | DNF DISCHARGE CONSTRAINTS
+//│ | | | | | | | | Consider #Foo<Object>{Foo#A: mut #Int<Object,Num>..#Int<Object,Num>} <: DNF(1, {f: f56'})
+//│ | | | | | | | | Possible: List({f: f56'})
+//│ | | | | | | | | 1. A  #Foo<Object>{Foo#A: mut #Int<Object,Num>..#Int<Object,Num>}  %  List()  <!  List({f: f56'})  %  ⊥
+//│ | | | | | | | | | 1. A  #Foo<Object>{Foo#A: mut #Int<Object,Num>..#Int<Object,Num>}  %  List()  <!  List()  %  {f:f56'}
+//│ | | | | | | | | | | 1. A  #Foo<Object>{Foo#A: mut #Int<Object,Num>..#Int<Object,Num>}  %  List()  <!  List()  %  |{f:f56'}
+//│ | | | | | | | | | | | >>>l List((Foo#A,mut #Int<Object,Num>..#Int<Object,Num>))
+//│ | | | | | | | | | | | Looking up field f in Some(Foo) & TreeSet() & {...}
+//│ | | | | | | | | | | | | Lookup Foo.f : Some((‘A43' -> Int)) where 
+//│ | | | | | | | | | | | | >>>l Foo # TypeName(A) => Some(mut #Int<Object,Num>..#Int<Object,Num>)
+//│ | | | | | | | | | | | | Fresh[0] Foo.f : Some((⊥(‘A43')..⊤(‘A43') -> Int)) where Some()
+//│ | | | | | | | | | | | |   & None  (from refinement)
+//│ | | | | | | | | | | | 1. C (⊥(‘A43')..⊤(‘A43') -> Int) <! f56'    (1)
+//│ | | | | | | | | | | | | 1. C (⊥(‘A43')..⊤(‘A43') -> Int) <! f56'    (1)
+//│ | | | | | | | | | | | | | NEW f56' LB (0)
+//│ | | | | | 1. : f56'
+//│ | | | | | 1. Typing term x
+//│ | | | | | 1. : A54'
+//│ | | | | | CONSTRAIN f56' <! (A54' -> α58')
+//│ | | | | |   where 
+//│ 		A54' :> ⊤(‘A43') <: ⊥(‘A43')
+//│ 		f56' :> (⊥(‘A43')..⊤(‘A43') -> Int)
+//│ | | | | | 1. C f56' <! (A54' -> α58')    (0)
+//│ | | | | | | NEW f56' UB (1)
+//│ | | | | | | 1. C (⊥(‘A43')..⊤(‘A43') -> Int) <! (A54' -> α58')    (2)
+//│ | | | | | | | 1. C (A54',) <! (⊥(‘A43')..⊤(‘A43'),)    (2)
+//│ | | | | | | | | Already a subtype by <:<
+//│ | | | | | | | 1. C Int <! α58'    (2)
+//│ | | | | | | | | NEW α58' LB (0)
+//│ | | | | 1. : α58'
+//│ | | | | CONSTRAIN f55' <! (α58' -> α59')
+//│ | | | |   where 
+//│ 		f55' :> (⊥(‘A43')..⊤(‘A43') -> Int)
+//│ 		α58' :> Int
+//│ | | | | 1. C f55' <! (α58' -> α59')    (0)
+//│ | | | | | NEW f55' UB (1)
+//│ | | | | | 1. C (⊥(‘A43')..⊤(‘A43') -> Int) <! (α58' -> α59')    (2)
+//│ | | | | | | 1. C (α58',) <! (⊥(‘A43')..⊤(‘A43'),)    (2)
+//│ | | | | | | | 1. C α58' <! ⊥(‘A43')..⊤(‘A43')    (3)
+//│ | | | | | | | | 1. C α58' <! ⊥(‘A43')    (5)
+//│ | | | | | | | | | NEW α58' UB (0)
+//│ | | | | | | | | | 1. C Int <! ⊥(‘A43')    (7)
+//│ | | | | | | | | | | 1. C #Int<Object,Num> <! ⊥(‘A43')    (9)
+//│ | | | | | | | | | | | CONSTRAINT FAILURE: #Int<Object,Num> <: ⊥(‘A43')
+//│ | | | | | | | | | | | allVarPols: +A43'
+//│ | | | | | | | | | | | normLike[+] ‘A43'
+//│ | | | | | | | | | | | | norm[+] ‘A43'
+//│ | | | | | | | | | | | | | DNF: DNF(1, {}∧‘A43')
+//│ | | | | | | | | | | | | | >>?? List() None
+//│ | | | | | | | | | | | | ~> ‘A43'
+//│ | | | | | | | | | | | CONSTRAIN #error<> <! α59'
+//│ | | | | | | | | | | |   where 
+//│ | | | | | | | | | | | 1. C #error<> <! α59'    (0)
+//│ | | | | | | | | | | | | NEW α59' LB (0)
+//│ ╔══[ERROR] Type error in application
+//│ ║  l.41: 	fun foo(f: Foo[Int], g: Foo[f.A], x: f.A) = g.f(f.f(x))
+//│ ║        	                                            ^^^^^^^^^^^
+//│ ╟── type variable `A` leaks out of its scope
+//│ ║  l.32: 	  fun f: A -> Int
+//│ ╙──      	              ^^^
+//│ | | | | | | 1. C Int <! α59'    (2)
+//│ | | | | | | | NEW α59' LB (0)
+//│ | | | 1. : α59'
+//│ | | 1. : ((f: Foo[Int], g: Foo[A52'], x: A54',) -> α59')
+//│ | | CONSTRAIN ((f: Foo[Int], g: Foo[A52'], x: A54',) -> α59') <! foo60'
+//│ | |   where 
+//│ 		A52' :> ⊤(‘A43') <: ⊥(‘A43')
+//│ 		A54' :> ⊤(‘A43') <: ⊥(‘A43')
+//│ 		α59' :> Int | #error<>
+//│ | | 1. C ((f: Foo[Int], g: Foo[A52'], x: A54',) -> α59') <! foo60'    (0)
+//│ | | | NEW foo60' LB (1)
+//│ | Completed TypedNuFun(0,fun foo = (f: Foo‹Int›, g: Foo‹f.A›, x: (f).A,) => (g).f((f).f(x,),),((f: Foo[Int], g: Foo[A52'], x: A54',) -> α59')) where 
+//│ 		A52' :> ⊤(‘A43') <: ⊥(‘A43')
+//│ 		A54' :> ⊤(‘A43') <: ⊥(‘A43')
+//│ 		α59' :> Int | #error<>
+//│ | Typing unit statements
+//│ | : None
+//│ ======== TYPED ========
+//│ fun foo: ‹∀ 0. ((f: Foo[Int], g: Foo[A52'], x: A54',) -> α59')› where 
+//│ |		A52' :> ⊤(‘A43') <: ⊥(‘A43')
+//│ |		A54' :> ⊤(‘A43') <: ⊥(‘A43')
+//│ |		α59' :> Int | #error<>
+//│ fun foo: forall 'A. (f: Foo[Int], g: Foo['A], x: ??A) -> (Int | error)
+//│   where
+//│     'A :> ??A0
+//│        <: ??A
 
 class Bar(val f: Foo[Int])
 //│ class Bar(f: Foo[Int])
 
 fun foo(b: Bar): b.f.A = 1
-//│ fun foo: (b: Bar) -> Int
+//│ ╔══[ERROR] Type error in selection
+//│ ║  l.287: 	fun foo(b: Bar): b.f.A = 1
+//│ ║         	                    ^^
+//│ ╟── type variable `A` leaks out of its scope
+//│ ║  l.31: 	class Foo[type A] {
+//│ ╙──      	               ^
+//│ ╔══[ERROR] Type error in type ascription
+//│ ║  l.287: 	fun foo(b: Bar): b.f.A = 1
+//│ ║         	                         ^
+//│ ╟── type variable `A` leaks out of its scope
+//│ ║  l.287: 	fun foo(b: Bar): b.f.A = 1
+//│ ╙──       	                         ^
+//│ fun foo: (b: Bar) -> (1 | error | ??A)
+
+fun bar(b: Bar) = b.f.f(1)
+//│ ╔══[ERROR] Type error in application
+//│ ║  l.302: 	fun bar(b: Bar) = b.f.f(1)
+//│ ║         	                  ^^^^^^^^
+//│ ╟── type variable `A` leaks out of its scope
+//│ ║  l.302: 	fun bar(b: Bar) = b.f.f(1)
+//│ ╙──       	                        ^
+//│ fun bar: (b: Bar) -> (Int | error)
 
 // TODO i think we will just not support this
+:e
 fun foo(b: Bar) =
   let f = id(b).f
   1: f.A
 //│ ╔══[ERROR] cannot use variable f as type
-//│ ║  l.38: 	  1: f.A
-//│ ╙──      	     ^
+//│ ║  l.315: 	  1: f.A
+//│ ╙──       	     ^
 //│ ╔══[ERROR] as defined in here
-//│ ║  l.37: 	  let f = id(b).f
-//│ ╙──      	      ^^^^^^^^^^^
+//│ ║  l.314: 	  let f = id(b).f
+//│ ╙──       	      ^^^^^^^^^^^
 //│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Can't find `error`
 
 
 fun foo(p, q, f: (p,q) -> Int) = f(p,q)
-//│ fun foo: forall 'a 'b. ('a, 'b, f: ('a, 'b) -> Int) -> Int
+//│ fun foo: forall 'a 'b. ('b, 'a, f: ('b, 'a) -> Int) -> Int
 
 foo(1, 0, (x, y) => x + y)
 //│ Int
@@ -55,70 +332,113 @@ class Foo[type A](val a: A)
 //│ class Foo[A](a: A)
 
 fun foo(f: Foo[Int]): Int = f.a : f.A
+//│ ╔══[ERROR] Type error in selection
+//│ ║  l.334: 	fun foo(f: Foo[Int]): Int = f.a : f.A
+//│ ║         	                                   ^^
+//│ ╟── type variable `A` leaks out of its scope
+//│ ║  l.331: 	class Foo[type A](val a: A)
+//│ ╙──       	               ^
+//│ ╔══[ERROR] Type error in type ascription
+//│ ║  l.334: 	fun foo(f: Foo[Int]): Int = f.a : f.A
+//│ ║         	                            ^^^
+//│ ╟── type variable `A` leaks out of its scope
+//│ ║  l.334: 	fun foo(f: Foo[Int]): Int = f.a : f.A
+//│ ║         	                            ^^^
+//│ ╟── back into type variable `A`
+//│ ║  l.331: 	class Foo[type A](val a: A)
+//│ ╙──       	               ^
+//│ ╔══[ERROR] Type error in type ascription
+//│ ║  l.334: 	fun foo(f: Foo[Int]): Int = f.a : f.A
+//│ ║         	                            ^^^
+//│ ╟── type variable `A` leaks out of its scope
+//│ ║  l.334: 	fun foo(f: Foo[Int]): Int = f.a : f.A
+//│ ║         	                            ^^^
+//│ ╟── into type `Int`
+//│ ║  l.334: 	fun foo(f: Foo[Int]): Int = f.a : f.A
+//│ ╙──       	                      ^^^
 //│ fun foo: (f: Foo[Int]) -> Int
 
 // raw type example
 // TODO support
 fun foo(f: Foo): Int = f.a : f.A
 //│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.62: 	fun foo(f: Foo): Int = f.a : f.A
-//│ ║        	                       ^^^
+//│ ║  l.363: 	fun foo(f: Foo): Int = f.a : f.A
+//│ ║         	                       ^^^
 //│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.62: 	fun foo(f: Foo): Int = f.a : f.A
-//│ ║        	                       ^^^
+//│ ║  l.363: 	fun foo(f: Foo): Int = f.a : f.A
+//│ ║         	                       ^^^
 //│ ╟── into type `A`
-//│ ║  l.54: 	class Foo[type A](val a: A)
-//│ ╙──      	               ^
+//│ ║  l.331: 	class Foo[type A](val a: A)
+//│ ╙──       	               ^
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.62: 	fun foo(f: Foo): Int = f.a : f.A
-//│ ║        	                       ^^^
+//│ ║  l.363: 	fun foo(f: Foo): Int = f.a : f.A
+//│ ║         	                       ^^^
 //│ ╟── type `A` is not an instance of type `Int`
-//│ ║  l.54: 	class Foo[type A](val a: A)
-//│ ║        	               ^
+//│ ║  l.331: 	class Foo[type A](val a: A)
+//│ ║         	               ^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.62: 	fun foo(f: Foo): Int = f.a : f.A
-//│ ╙──      	                 ^^^
+//│ ║  l.363: 	fun foo(f: Foo): Int = f.a : f.A
+//│ ╙──       	                 ^^^
 //│ fun foo: (f: Foo[anything]) -> Int
 
 // FIXME
 fun foo(f: Foo) = f.a : f.A
 //│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.84: 	fun foo(f: Foo) = f.a : f.A
-//│ ║        	                  ^^^
+//│ ║  l.385: 	fun foo(f: Foo) = f.a : f.A
+//│ ║         	                  ^^^
 //│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.84: 	fun foo(f: Foo) = f.a : f.A
-//│ ║        	                  ^^^
+//│ ║  l.385: 	fun foo(f: Foo) = f.a : f.A
+//│ ║         	                  ^^^
 //│ ╟── into type `A`
-//│ ║  l.54: 	class Foo[type A](val a: A)
-//│ ╙──      	               ^
+//│ ║  l.331: 	class Foo[type A](val a: A)
+//│ ╙──       	               ^
 //│ fun foo: (f: Foo[anything]) -> nothing
 
 // TODO reject for now
 fun foo(f: Foo[?]): Int = f.a : f.A
 //│ ╔══[PARSE ERROR] Unexpected operator here
-//│ ║  l.97: 	fun foo(f: Foo[?]): Int = f.a : f.A
-//│ ╙──      	               ^
+//│ ║  l.398: 	fun foo(f: Foo[?]): Int = f.a : f.A
+//│ ╙──       	               ^
 //│ ╔══[ERROR] Wrong number of type arguments – expected 1, found 0
-//│ ║  l.97: 	fun foo(f: Foo[?]): Int = f.a : f.A
-//│ ╙──      	           ^^^^^^
+//│ ║  l.398: 	fun foo(f: Foo[?]): Int = f.a : f.A
+//│ ╙──       	           ^^^^^^
+//│ ╔══[ERROR] Type error in selection
+//│ ║  l.398: 	fun foo(f: Foo[?]): Int = f.a : f.A
+//│ ║         	                                 ^^
+//│ ╟── type variable `A` leaks out of its scope
+//│ ║  l.331: 	class Foo[type A](val a: A)
+//│ ╙──       	               ^
+//│ ╔══[ERROR] Type error in type ascription
+//│ ║  l.398: 	fun foo(f: Foo[?]): Int = f.a : f.A
+//│ ║         	                          ^^^
+//│ ╟── type variable `A` leaks out of its scope
+//│ ║  l.398: 	fun foo(f: Foo[?]): Int = f.a : f.A
+//│ ║         	                          ^^^
+//│ ╟── back into type variable `A`
+//│ ║  l.331: 	class Foo[type A](val a: A)
+//│ ╙──       	               ^
+//│ ╔══[ERROR] Type error in type ascription
+//│ ║  l.398: 	fun foo(f: Foo[?]): Int = f.a : f.A
+//│ ║         	                          ^^^
+//│ ╟── type variable `A` leaks out of its scope
+//│ ║  l.398: 	fun foo(f: Foo[?]): Int = f.a : f.A
+//│ ║         	                          ^^^
+//│ ╟── into type `Int`
+//│ ║  l.398: 	fun foo(f: Foo[?]): Int = f.a : f.A
+//│ ╙──       	                    ^^^
 //│ fun foo: forall 'a. (f: Foo['a]) -> Int
-//│   where
-//│     'a <: Int
 
-// FIXME
 // * TODO infer (f: 'f) -> 'b where 'f <: { a: 'a;; A: 'a..'b }, 'a <: 'b
 fun foo(f) = f.a : f.A
-//│ ╔══[ERROR] Member A not found in ?a
-//│ ║  l.110: 	fun foo(f) = f.a : f.A
-//│ ╙──       	                   ^
-//│ fun foo: {a: error} -> error
+//│ fun foo: forall 'A. {A = 'A, a: 'A} -> 'A
 
-// FIXME
 fun foo(f): Int = f.a : f.A
-//│ ╔══[ERROR] Member A not found in ?a
-//│ ║  l.117: 	fun foo(f): Int = f.a : f.A
-//│ ╙──       	                        ^
-//│ fun foo: {a: error} -> Int
+//│ fun foo: forall 'A. {A = 'A, a: 'A} -> Int
+//│   where
+//│     'A <: Int
+
+foo(Foo(1))
+//│ Int
 
 
 class Foo[type A]
@@ -134,19 +454,26 @@ module Baz extends Foo[Str]
 123 : Bar.A
 //│ Int
 
-// FIXME
+:e
+"bad": Bar.A
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.458: 	"bad": Bar.A
+//│ ║         	^^^^^
+//│ ╟── string literal of type `"bad"` is not an instance of type `Int`
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.449: 	module Bar extends Foo[Int]
+//│ ║         	                       ^^^
+//│ ╟── Note: type parameter A is defined at:
+//│ ║  l.444: 	class Foo[type A]
+//│ ╙──       	               ^
+//│ Int
+
 fun foo(f, x) = x : f.A
-//│ ╔══[ERROR] Member A not found in ?a
-//│ ║  l.138: 	fun foo(f, x) = x : f.A
-//│ ╙──       	                    ^
-//│ fun foo: (anything, error) -> error
+//│ fun foo: forall 'A. ({A = 'A}, 'A) -> 'A
 
-// FIXME
 foo(Bar, 123)
-//│ error
+//│ Int
 
-
-// FIXME
 fun test(f) = if f is
   Bar then 123 : f.A
 //│ fun test: Bar -> Int
@@ -167,18 +494,18 @@ fun test(f) = if f is
 fun test(f: Foo) = if f is
   Bar then 123 : f.A
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.167: 	fun test(f: Foo) = if f is
+//│ ║  l.494: 	fun test(f: Foo) = if f is
 //│ ║         	                      ^^^^
-//│ ║  l.168: 	  Bar then 123 : f.A
+//│ ║  l.495: 	  Bar then 123 : f.A
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╟── type `Foo[?]` is not an instance of type `Bar`
-//│ ║  l.167: 	fun test(f: Foo) = if f is
+//│ ║  l.494: 	fun test(f: Foo) = if f is
 //│ ║         	            ^^^
 //│ ╟── but it flows into reference with expected type `Bar`
-//│ ║  l.167: 	fun test(f: Foo) = if f is
+//│ ║  l.494: 	fun test(f: Foo) = if f is
 //│ ║         	                      ^
 //│ ╟── Note: constraint arises from class pattern:
-//│ ║  l.168: 	  Bar then 123 : f.A
+//│ ║  l.495: 	  Bar then 123 : f.A
 //│ ╙──       	  ^^^
 //│ fun test: (f: Foo[in anything out nothing]) -> (Int | error)
 
@@ -187,17 +514,17 @@ fun test(f: Foo) = if f is
   Bar then 123 : f.A
   Baz then "hello" : f.A
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.186: 	fun test(f: Foo) = if f is
+//│ ║  l.513: 	fun test(f: Foo) = if f is
 //│ ║         	                      ^^^^
-//│ ║  l.187: 	  Bar then 123 : f.A
+//│ ║  l.514: 	  Bar then 123 : f.A
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.188: 	  Baz then "hello" : f.A
+//│ ║  l.515: 	  Baz then "hello" : f.A
 //│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Foo[?]` does not match type `Bar | Baz`
-//│ ║  l.186: 	fun test(f: Foo) = if f is
+//│ ║  l.513: 	fun test(f: Foo) = if f is
 //│ ║         	            ^^^
 //│ ╟── but it flows into reference with expected type `Bar | Baz`
-//│ ║  l.186: 	fun test(f: Foo) = if f is
+//│ ║  l.513: 	fun test(f: Foo) = if f is
 //│ ╙──       	                      ^
 //│ fun test: (f: Foo[in anything out nothing]) -> (Int | Str)
 
@@ -205,10 +532,47 @@ fun test(f: Foo) = if f is
 [test(Bar), test(Baz)]
 //│ [Int | Str, Int | Str]
 
+// FIXME
+fun test[T](f: Foo[T]): T = if f is
+  Bar then 123 : f.A
+  Baz then "hello" : f.A
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.536: 	fun test[T](f: Foo[T]): T = if f is
+//│ ║         	                               ^^^^
+//│ ║  l.537: 	  Bar then 123 : f.A
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.538: 	  Baz then "hello" : f.A
+//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ╟── type `Foo[T]` does not match type `Bar | Baz`
+//│ ║  l.536: 	fun test[T](f: Foo[T]): T = if f is
+//│ ║         	               ^^^^^^
+//│ ╟── but it flows into reference with expected type `Bar | Baz`
+//│ ║  l.536: 	fun test[T](f: Foo[T]): T = if f is
+//│ ╙──       	                               ^
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.536: 	fun test[T](f: Foo[T]): T = if f is
+//│ ║         	                               ^^^^
+//│ ║  l.537: 	  Bar then 123 : f.A
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.538: 	  Baz then "hello" : f.A
+//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ╟── type `Int` does not match type `T`
+//│ ║  l.449: 	module Bar extends Foo[Int]
+//│ ║         	                       ^^^
+//│ ╟── Note: constraint arises from method type parameter:
+//│ ║  l.536: 	fun test[T](f: Foo[T]): T = if f is
+//│ ╙──       	         ^
+//│ fun test: forall 'T. (f: Foo['T]) -> 'T
 
 :e
 class Foo[type A]
 class Bar[type A] extends Foo[A]
+//│ ╔══[ERROR] Inherited parameter named `A` is not virtual and cannot be overridden
+//│ ║  l.569: 	class Bar[type A] extends Foo[A]
+//│ ║         	               ^
+//│ ╟── Originally declared here:
+//│ ║  l.568: 	class Foo[type A]
+//│ ╙──       	               ^
 //│ class Foo[A] {
 //│   constructor()
 //│ }
@@ -223,12 +587,24 @@ class Foo[type A]
 
 :e
 class Bar[type A] extends Foo[A -> A]
+//│ ╔══[ERROR] Inherited parameter named `A` is not virtual and cannot be overridden
+//│ ║  l.589: 	class Bar[type A] extends Foo[A -> A]
+//│ ║         	               ^
+//│ ╟── Originally declared here:
+//│ ║  l.583: 	class Foo[type A]
+//│ ╙──       	               ^
 //│ class Bar[A] extends Foo {
 //│   constructor()
 //│ }
 
 :e
 class Bar[type A] extends Foo[Int]
+//│ ╔══[ERROR] Inherited parameter named `A` is not virtual and cannot be overridden
+//│ ║  l.601: 	class Bar[type A] extends Foo[Int]
+//│ ║         	               ^
+//│ ╟── Originally declared here:
+//│ ║  l.583: 	class Foo[type A]
+//│ ╙──       	               ^
 //│ class Bar[A] extends Foo {
 //│   constructor()
 //│ }
@@ -244,18 +620,25 @@ class Foo[A]
 // FIXME
 // Would be nice:
 fun foo(x: Foo['a], y) = y : x.A  // interpreted as `y : x.Foo#A`
-//│ fun foo: forall 'a. (x: Foo['a], 'a) -> 'a
+//│ ╔══[ERROR] Type `Foo['a]` does not contain member `A`
+//│ ║  l.622: 	fun foo(x: Foo['a], y) = y : x.A  // interpreted as `y : x.Foo#A`
+//│ ╙──       	                              ^^
+//│ ╔══[ERROR] Type mismatch in selection:
+//│ ║  l.622: 	fun foo(x: Foo['a], y) = y : x.A  // interpreted as `y : x.Foo#A`
+//│ ║         	                              ^^
+//│ ╙── expression of type `Foo['a]` does not have field 'A'
+//│ fun foo: forall 'a 'A. (x: Foo['a], 'A) -> (error | 'A)
 
 // FIXME
 fun foo(x, y) = y : x.A
-//│ ╔══[ERROR] Member A not found in ?a
-//│ ║  l.250: 	fun foo(x, y) = y : x.A
-//│ ╙──       	                    ^
-//│ fun foo: (anything, error) -> error
+//│ fun foo: forall 'A. ({A = 'A}, 'A) -> 'A
 
 // FIXME
 fun bar(f: Foo['a], y) = foo(f, y)
-//│ fun bar: forall 'a. (f: Foo['a], error) -> error
+//│ ╔══[ERROR] Type `Foo['a]` does not contain member `A`
+//│ ║  l.633: 	fun foo(x, y) = y : x.A
+//│ ╙──       	                     ^^
+//│ fun bar: forall 'a 'b. (f: Foo['a], 'b) -> (error | 'b)
 
 class Bar(val A: Int)
 //│ class Bar(A: Int)

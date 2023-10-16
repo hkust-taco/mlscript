@@ -164,7 +164,7 @@ module M {
 //│ ╔══[ERROR] undeclared `this`
 //│ ║  l.161: 	  fun a: this.A
 //│ ╙──       	         ^^^^
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Can't find `error`
 
 // FIXME similar
 module M {

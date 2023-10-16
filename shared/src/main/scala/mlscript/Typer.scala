@@ -586,30 +586,14 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
               case L(d) => err(d)
             }
           case t =>
+            implicit val prov: TypeProvenance = tyTp(nme.toLoc, "selection")
+            val fv = freshVar(provTODO, N, S(nme.name))
             println(s">>> $t :: ${t.getClass()}")
-
-            def collectCls(st: ST): Ls[Str] = st match {
-              case ComposedType(false, l, r) => collectCls(l) ++ collectCls(r)
-              case ClassTag(Var(clsNme), _) => clsNme :: Nil
-              case _ => Nil 
-            }
-            def collectFld(st: ST): List[(Var, FieldType)] = st match {
-              case ComposedType(false, l, r) => collectFld(l) ++ collectFld(r)
-              case rcd: RecordType => rcd.fields
-              case _ => Nil
-            }
-
-            val tms = for {
-              clsNme <- collectCls(t)
-              (v, f) <- collectFld(t)
-              if v.name === clsNme+"#"+nme.name
-            } yield f.ub
-
-            tms match {
-              case Nil => err(msg"Member $nme not found in ${b_ty.expPos}", base.toLoc)
-              case ty :: Nil => ty
-              case _ => err(msg"Ambigious selection of type member $nme in ${b_ty.expPos}", base.toLoc)
-            }
+            println(s">>> $base -> $nme")
+            // default to invariant (we cant set for variance for type members anyway)
+            val res = RecordType.mk((nme.toVar, FieldType(S(fv), fv)(prov)) :: Nil)(prov)
+            constrain(t, res)
+            fv
             // err(msg"Illegal prefix of type selection: ${b_ty.expPos}", base.toLoc)
         }
         go(base_ty, _ => N)
@@ -1505,7 +1489,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
                         val nvUB = freshVar(tv.prov, S(tv), tv.nameHint)
                         nvLB.upperBounds ::= nvUB
                         val sk = SkolemTag(freshVar(tv.prov, S(tv), tv.nameHint)(lvl + 1))(provTODO)
-                        val v = Var(nme+"#"+tn.name).withLocOf(tn)
+                        val v = Var(if (!vi.visible) nme+"#"+tn.name else tn.name).withLocOf(tn)
                         val vce = vi.getVarOr(VarianceInfo.in)
                         (v, FieldType.mk(vce, nvLB, nvUB)(provTODO)) ->
                         (v, FieldType.mk(vce, nvLB | sk, nvUB & sk)(provTODO))

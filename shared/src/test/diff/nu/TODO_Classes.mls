@@ -100,10 +100,13 @@ let c = new Cls
 
 // FIXME
 let y: c.A = c.x
-//│ ╔══[ERROR] type identifier not found: c
+//│ ╔══[ERROR] cannot use variable c as type
 //│ ║  l.102: 	let y: c.A = c.x
 //│ ╙──       	       ^
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ ╔══[ERROR] as defined in here
+//│ ║  l.96: 	let c = new Cls
+//│ ╙──      	    ^^^^^^^^^^^
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Can't find `error`
 
 
 
