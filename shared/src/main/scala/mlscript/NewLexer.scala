@@ -246,6 +246,10 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
     import BracketKind._
     def go(toks: Ls[Token -> Loc], canStartAngles: Bool, stack: Ls[BracketKind -> Loc -> Ls[Stroken -> Loc]], acc: Ls[Stroken -> Loc]): Ls[Stroken -> Loc] =
       toks match {
+        case (QUOTE, l0) :: (IDENT("<", true), l1) :: rest =>
+          go(rest, false, stack, (IDENT("<", true), l1) :: (QUOTE, l0) :: acc)
+        case (QUOTE, l0) :: (IDENT(">", true), l1) :: rest =>
+          go(rest, false, stack, (IDENT(">", true), l1) :: (QUOTE, l0) :: acc)
         case (OPEN_BRACKET(k), l0) :: rest =>
           go(rest, false, k -> l0 -> acc :: stack, Nil)
         case (CLOSE_BRACKET(k1), l1) :: rest =>

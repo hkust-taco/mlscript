@@ -21,6 +21,12 @@ run(x `=> x)(42)
 //│ Code[Int, nothing]
 
 
+`1 `< `2
+//│ Code[Bool, nothing]
+
+`1 `<= `2
+//│ Code[Bool, nothing]
+
 `1 `* `2 `+ `3
 //│ Code[Int, nothing]
 
@@ -33,11 +39,11 @@ y `=> `0 `- y
 :e
 z `=> z + 1
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.34: 	z `=> z + 1
+//│ ║  l.40: 	z `=> z + 1
 //│ ║        	      ^^^^^
 //│ ╙── expression of type `Code[?a, ?z]` is not an instance of `Int`
 //│ ╔══[ERROR] Type mismatch in unquote:
-//│ ║  l.34: 	z `=> z + 1
+//│ ║  l.40: 	z `=> z + 1
 //│ ║        	      ^^^^^
 //│ ╙── operator application of type `Int` is not an instance of `Code[?a, ?z | ?b]`
 //│ Code[anything -> error, nothing]
@@ -61,7 +67,7 @@ fun f(x: Code[Int, nothing]) =
 :e
 `let x = `0, y = 1 in x `+ y
 //│ ╔══[ERROR] Type mismatch in unquote:
-//│ ║  l.62: 	`let x = `0, y = 1 in x `+ y
+//│ ║  l.68: 	`let x = `0, y = 1 in x `+ y
 //│ ║        	                 ^
 //│ ╙── integer literal of type `1` is not an instance of type `Code`
 //│ Code[Int, nothing]
@@ -91,7 +97,7 @@ fun foo(x) =
 :pe
 `(`42)
 //│ ╔══[PARSE ERROR] Unexpected quote in expression position
-//│ ║  l.92: 	`(`42)
+//│ ║  l.98: 	`(`42)
 //│ ╙──      	  ^
 //│ Code[42, nothing]
 
@@ -99,9 +105,9 @@ fun foo(x) =
 :e
 `(x `=> x)
 //│ ╔══[PARSE ERROR] Unexpected quote here
-//│ ║  l.100: 	`(x `=> x)
+//│ ║  l.106: 	`(x `=> x)
 //│ ╙──       	    ^
 //│ ╔══[ERROR] identifier not found: x
-//│ ║  l.100: 	`(x `=> x)
+//│ ║  l.106: 	`(x `=> x)
 //│ ╙──       	  ^
 //│ Code[error, nothing]
