@@ -246,7 +246,7 @@ trait TypeSimplifier { self: Typer =>
                 
                 // * Reconstruct a TypeRef from its current structural components
                 val typeRef = TypeRef(td.nme, td.tparamsargs.zipWithIndex.map { case ((tp, tv), tpidx) =>
-                  val fieldTagNme = tparamField(clsTyNme, tp)
+                  val fieldTagNme = tparamField(clsTyNme, tp, false) // TODO fix type member name mangling
                   val fromTyRef = trs2.get(clsTyNme).map(_.targs(tpidx) |> { ta => FieldType(S(ta), ta)(noProv) })
                   fromTyRef.++(rcd2.fields.iterator.filter(_._1 === fieldTagNme).map(_._2))
                     .foldLeft((BotType: ST, TopType: ST)) {
@@ -356,7 +356,7 @@ trait TypeSimplifier { self: Typer =>
                 
                 // * Reconstruct a TypeRef from its current structural components
                 val typeRef = TypeRef(cls.td.nme, cls.tparams.zipWithIndex.map { case ((tp, tv, vi), tpidx) =>
-                  val fieldTagNme = tparamField(clsTyNme, tp)
+                  val fieldTagNme = tparamField(clsTyNme, tp, vi.visible)
                   val fromTyRef = trs2.get(clsTyNme).map(_.targs(tpidx) |> { ta => FieldType(S(ta), ta)(noProv) })
                   fromTyRef.++(rcd2.fields.iterator.filter(_._1 === fieldTagNme).map(_._2))
                     .foldLeft((BotType: ST, TopType: ST)) {

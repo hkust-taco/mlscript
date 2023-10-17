@@ -8,40 +8,15 @@ fun foo(f: Foo) = f.a
 //│ fun foo: (f: Foo[anything]) -> ??A
 
 fun foo(f: Foo[Int]) = f.a
-//│ fun foo: (f: Foo[Int]) -> ??A
+//│ fun foo: (f: Foo[Int]) -> Int
 
 fun foo(a, f: Foo[a]): Int = f.a : f.A
-//│ ╔══[ERROR] Type error in selection
-//│ ║  l.13: 	fun foo(a, f: Foo[a]): Int = f.a : f.A
-//│ ║        	                                    ^^
-//│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.4: 	class Foo[type A](val a: A)
-//│ ╙──     	               ^
-//│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.13: 	fun foo(a, f: Foo[a]): Int = f.a : f.A
-//│ ║        	                             ^^^
-//│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.13: 	fun foo(a, f: Foo[a]): Int = f.a : f.A
-//│ ║        	                             ^^^
-//│ ╟── back into type variable `A`
-//│ ║  l.4: 	class Foo[type A](val a: A)
-//│ ╙──     	               ^
-//│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.13: 	fun foo(a, f: Foo[a]): Int = f.a : f.A
-//│ ║        	                             ^^^
-//│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.13: 	fun foo(a, f: Foo[a]): Int = f.a : f.A
-//│ ║        	                             ^^^
-//│ ╟── into type `Int`
-//│ ║  l.13: 	fun foo(a, f: Foo[a]): Int = f.a : f.A
-//│ ╙──      	                       ^^^
-//│ fun foo: forall 'a. ('a, f: Foo['a]) -> Int
+//│ fun foo: forall 'A. ('A, f: Foo['A]) -> Int
+//│   where
+//│     'A <: Int
 
 foo(2, Foo(1))
-//│ ╔══[ERROR] Type `Foo[anything] & {A = ?A}` does not contain member `Foo#A`
-//│ ║  l.4: 	class Foo[type A](val a: A)
-//│ ╙──     	               ^
-//│ Int | error
+//│ Int
 //│ res
 //│     = 1
 

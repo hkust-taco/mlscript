@@ -36,7 +36,7 @@ class TypeDefs extends NuTypeDefs { Typer: Typer =>
   case class TypeDef(
     kind: TypeDefKind,
     nme: TypeName,
-    tparamsargs: List[(TypeName, TypeVariable)],
+    tparamsargs: List[(TypeName, TypeVariable)],  // TODO add type member mark
     bodyTy: SimpleType,
     mthDecls: List[MethodDef[Right[Term, Type]]],
     mthDefs: List[MethodDef[Left[Term, Type]]],
@@ -110,9 +110,8 @@ class TypeDefs extends NuTypeDefs { Typer: Typer =>
     }
   }
   
-  
-  def tparamField(clsNme: TypeName, tparamNme: TypeName): Var =
-    Var(clsNme.name + "#" + tparamNme.name)
+  def tparamField(clsNme: TypeName, tparamNme: TypeName, visible: Bool): Var =
+    Var(if (!visible) clsNme.name + "#" + tparamNme.name else tparamNme.name)
   
   def clsNameToNomTag(td: NuTypeDef)(prov: TypeProvenance, ctx: Ctx): ClassTag = {
     require((td.kind is Cls) || (td.kind is Mod), td.kind)
@@ -343,7 +342,8 @@ class TypeDefs extends NuTypeDefs { Typer: Typer =>
                 case _ =>
                   val fields = fieldsOf(td.bodyTy, paramTags = true)
                   val tparamTags = td.tparamsargs.map { case (tp, tv) =>
-                    tparamField(td.nme, tp) -> FieldType(Some(tv), tv)(tv.prov) }
+                    // TODO fix type member name mangling
+                    tparamField(td.nme, tp, false) -> FieldType(Some(tv), tv)(tv.prov) }
                   val ctor = k match {
                     case Cls =>
                       val nomTag = clsNameToNomTag(td)(originProv(td.nme.toLoc, "class", td.nme.name), ctx)
