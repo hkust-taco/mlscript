@@ -23,11 +23,22 @@ run(`(x => x + x))
 //│         (x_1 + x_1))
 //│       undefined
 
+
 fun assertNotZero(x) =
   `if (x `== `0.0) then `(error) else x
 fun checkedDiv = x `=> y `=> x `/ assertNotZero(y)
+run(checkedDiv)
 //│ fun assertNotZero: forall 'a 'b. Code[Num & 'a, 'b] -> Code['a, 'b]
 //│ fun checkedDiv: Code[Num -> Num -> Num, nothing]
+//│ Num -> Num -> Num
+//│ res
+//│     = Quoted:
+//│       (x_2) =>
+//│         (y_0) =>
+//│           (x_2 / match (y_0 == 0):
+//│             case true => (error)
+//│             _ => y_0))
+//│       undefined
 
 fun show: Code[anything, anything] -> Str = _ => "debug"
 fun inc(dbg) =
@@ -37,7 +48,7 @@ inc(c => log(show(c)))
 //│ fun inc: (Code[Int, ??x] -> ()) -> Code[Int -> Int, nothing]
 //│ Code[Int -> Int, nothing]
 //│ res
-//│     = '(x_2) =>\n  (x_2 + 1)'
+//│     = '(x_3) =>\n  (x_3 + 1)'
 //│ // Output
 //│ debug
 
@@ -53,9 +64,9 @@ let gn5 = run(gib_naive(5))
 //│ let gn5: (Int, Int) -> Int
 //│ gn5
 //│     = Quoted:
-//│       (x_3) =>
-//│         (y_0) =>
-//│           ((y_0 + (x_3 + y_0)) + ((x_3 + y_0) + (y_0 + (x_3 + y_0))))
+//│       (x_4) =>
+//│         (y_1) =>
+//│           ((y_1 + (x_4 + y_1)) + ((x_4 + y_1) + (y_1 + (x_4 + y_1))))
 //│       undefined
 
 fun bind(rhs, k) = `let x = rhs in k(x)
@@ -83,15 +94,15 @@ let g5 = run(gib(5))
 //│ fun body: forall 'g. (Code[Int, 'g], Code[Int, 'g]) -> Int -> Code[Int, 'g]
 //│ g5
 //│    = Quoted:
-//│      (x_4) =>
-//│        (y_1) =>
-//│          let x_5 =
-//│            (x_4 + y_1)
-//│            in let x_6 =
-//│              (y_1 + x_5)
-//│              in let x_7 =
-//│                (x_5 + x_6)
-//│                in let x_8 =
-//│                  (x_6 + x_7)
-//│                  in x_8
+//│      (x_5) =>
+//│        (y_2) =>
+//│          let x_6 =
+//│            (x_5 + y_2)
+//│            in let x_7 =
+//│              (y_2 + x_6)
+//│              in let x_8 =
+//│                (x_6 + x_7)
+//│                in let x_9 =
+//│                  (x_7 + x_8)
+//│                  in x_9
 //│      undefined

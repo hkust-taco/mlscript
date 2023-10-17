@@ -200,6 +200,8 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
   }
 
   private def desugarQuote(term: Term)(implicit scope: Scope, isQuoted: Bool, freeVars: MutSet[Str]): Term = term match {
+    case Var("error") if isQuoted =>
+      createASTCall("Var", StrLit("error") :: Nil)
     case Var(name) if isQuoted || freeVars(name) => createASTCall("Var", Var(scope.resolveValue(name).fold[Str](
       throw CodeGenError(s"unbound free variable $name is not supported yet.")
     )(_.runtimeName)) :: Nil)
