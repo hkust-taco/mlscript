@@ -20,10 +20,14 @@ trait Test { type T = Int }
 
 :e
 1 : Test.T
-//│ ╔══[ERROR] Illegal prefix of type selection: Test
+//│ ╔══[ERROR] Access to type alias member not yet supported
 //│ ║  l.22: 	1 : Test.T
-//│ ╙──      	    ^^^^
-//│ error
+//│ ╙──      	        ^^
+//│ ╔══[ERROR] Type mismatch in selection:
+//│ ║  l.22: 	1 : Test.T
+//│ ║        	        ^^
+//│ ╙── expression of type `#Test` does not have field 'T'
+//│ 1 | error
 //│ res
 //│     = 1
 

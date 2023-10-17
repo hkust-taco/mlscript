@@ -111,7 +111,10 @@ class TypeDefs extends NuTypeDefs { Typer: Typer =>
   }
   
   def tparamField(clsNme: TypeName, tparamNme: TypeName, visible: Bool): Var =
-    Var(if (!visible) clsNme.name + "#" + tparamNme.name else tparamNme.name)
+    Var(tparamField(clsNme.name, tparamNme.name, visible))
+
+  def tparamField(clsNme: String, tparamNme: String, visible: Bool): String =
+    if (!visible) clsNme + "#" + tparamNme else tparamNme
   
   def clsNameToNomTag(td: NuTypeDef)(prov: TypeProvenance, ctx: Ctx): ClassTag = {
     require((td.kind is Cls) || (td.kind is Mod), td.kind)

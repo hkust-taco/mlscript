@@ -1098,7 +1098,7 @@ abstract class TyperHelpers { Typer: Typer =>
       ctx.tyDefs2.get(defn.name).map { info =>
         lazy val mkTparamRcd = RecordType(info.tparams.lazyZip(targs).map {
             case ((tn, tv, vi), ta) =>
-              val fldNme = if (!vi.visible) defn.name + "#" + tn.name else tn.name
+              val fldNme = tparamField(defn.name, tn.name, vi.visible)
               // TODO also use computed variance info when available!
               Var(fldNme).withLocOf(tn) -> FieldType.mk(vi.getVarOr(VarianceInfo.in), ta, ta)(provTODO)
           })(provTODO)
