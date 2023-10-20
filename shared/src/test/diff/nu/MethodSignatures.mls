@@ -164,7 +164,7 @@ module M {
 //│ ╔══[ERROR] undeclared `this`
 //│ ║  l.161: 	  fun a: this.A
 //│ ╙──       	         ^^^^
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Can't find `error`
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Can't find member `error`
 
 // FIXME similar
 module M {

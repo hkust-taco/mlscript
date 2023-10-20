@@ -23,7 +23,7 @@ trait Test { type T = Int }
 //│ ╔══[ERROR] Access to type alias member not yet supported
 //│ ║  l.22: 	1 : Test.T
 //│ ╙──      	        ^^
-//│ ╔══[ERROR] Type mismatch in selection:
+//│ ╔══[ERROR] Type mismatch in type selection:
 //│ ║  l.22: 	1 : Test.T
 //│ ║        	        ^^
 //│ ╙── expression of type `#Test` does not have field 'T'

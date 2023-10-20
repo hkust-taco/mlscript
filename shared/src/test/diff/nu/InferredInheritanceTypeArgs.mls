@@ -17,10 +17,10 @@ class A(val a: Int) extends Test
 
 :e
 class A(a: Int) extends Test
-//│ ╔══[ERROR] Parameter 'a' cannot tbe accessed as a field
+//│ ╔══[ERROR] Parameter 'a' cannot be accessed as a field
 //│ ║  l.6: 	  fun bar = [this.a, this.a]
 //│ ╙──     	                         ^^
-//│ ╔══[ERROR] Parameter 'a' cannot tbe accessed as a field
+//│ ╔══[ERROR] Parameter 'a' cannot be accessed as a field
 //│ ║  l.6: 	  fun bar = [this.a, this.a]
 //│ ╙──     	                 ^^
 //│ class A(a: Int) {
@@ -174,7 +174,6 @@ B.foo
 
 
 // * TODO: when 
-:pe
 trait Foo[type A] { fun foo(x: A): A }
 //│ trait Foo[A] {
 //│   fun foo: (x: A) -> A
@@ -225,22 +224,22 @@ class B extends Foo { fun foo(x) = x }
 :e
 class B extends Foo { fun foo(x) = x + 1 }
 //│ ╔══[ERROR] Type mismatch in definition of method foo:
-//│ ║  l.226: 	class B extends Foo { fun foo(x) = x + 1 }
+//│ ║  l.225: 	class B extends Foo { fun foo(x) = x + 1 }
 //│ ║         	                          ^^^^^^^^^^^^^^
 //│ ╟── type `A` is not an instance of type `Int`
-//│ ║  l.214: 	trait Foo[A] { fun foo[A](x: A): A }
+//│ ║  l.213: 	trait Foo[A] { fun foo[A](x: A): A }
 //│ ║         	                       ^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.226: 	class B extends Foo { fun foo(x) = x + 1 }
+//│ ║  l.225: 	class B extends Foo { fun foo(x) = x + 1 }
 //│ ╙──       	                                   ^
 //│ ╔══[ERROR] Type mismatch in definition of method foo:
-//│ ║  l.226: 	class B extends Foo { fun foo(x) = x + 1 }
+//│ ║  l.225: 	class B extends Foo { fun foo(x) = x + 1 }
 //│ ║         	                          ^^^^^^^^^^^^^^
 //│ ╟── operator application of type `Int` does not match type `A`
-//│ ║  l.226: 	class B extends Foo { fun foo(x) = x + 1 }
+//│ ║  l.225: 	class B extends Foo { fun foo(x) = x + 1 }
 //│ ║         	                                   ^^^^^
 //│ ╟── Note: constraint arises from method type parameter:
-//│ ║  l.214: 	trait Foo[A] { fun foo[A](x: A): A }
+//│ ║  l.213: 	trait Foo[A] { fun foo[A](x: A): A }
 //│ ╙──       	                       ^
 //│ class B extends Foo {
 //│   constructor()

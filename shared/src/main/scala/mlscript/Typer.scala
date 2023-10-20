@@ -431,12 +431,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
               println(s"ty var: $vr : $ty")
               // ! unintended outcome ? can use variable as its type
               () => ty
-            case S(CompletedTypeInfo(t@TypedNuFun(_,_,_))) =>
-              // possibly inside a let binding
+            case S(CompletedTypeInfo(ty@TypedNuFun(_,_,_))) =>
+              // ? select types from (possibly) let binding/function, really
               () => 
-                err(s"cannot use variable $name as type", loc)(raise)
-                err(s"as defined in here", t.toLoc)(raise)
-            case r => () => err(s"type identifier not found: " + name, loc)(raise)})
+                // err(s"cannot use variable $name as type", loc)(raise)
+                // err(s"as defined in here", ty.toLoc)(raise)
+                ty.typeSignature
+            case r => () => err(s"type identifier not found: " + name, loc)(raise) })
     val localVars = mutable.Map.empty[TypeVar, TypeVariable]
     def tyTp(loco: Opt[Loc], desc: Str, originName: Opt[Str] = N) =
       TypeProvenance(loco, desc, originName, isType = true)
@@ -568,7 +569,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         def go(b_ty: ST, rfnt: Var => Opt[FieldType]): ST = b_ty.unwrapAll match {
           case ct: TypeRef => die // TODO actually
           case ClassTag(Var(clsNme), _) =>
-            println(s">>>c $clsNme ~ $nme")
             // TODO we should still succeed even if the member is not completed...
             lookupMember(clsNme, rfnt, nme.toVar) match {
               case R(cls: TypedNuCls) =>
@@ -577,24 +577,20 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
               case R(als: TypedNuAls) =>
                 if (als.tparams.nonEmpty) ??? // TODO
                 als.body
-              case R(prm: NuParam) => 
-                // TODO fix leak
-                println(s">>>v ${prm.ty.ub}")
-                prm.ty.ub
+              case R(prm: NuParam) => prm.ty.ub
               case R(m) => 
                 err(msg"Illegal selection of ${m.kind.str} member in type position", nme.toLoc)
               case L(d) => err(d)
             }
           case t =>
-            implicit val prov: TypeProvenance = tyTp(nme.toLoc, "selection")
-            val fv = freshVar(provTODO, N, S(nme.name))
-            println(s">>> $t :: ${t.getClass()}")
-            println(s">>> $base -> $nme")
-            // default to invariant (we cant set for variance for type members anyway)
-            val res = RecordType.mk((nme.toVar, FieldType(S(fv), fv)(prov)) :: Nil)(prov)
+            println(s"Type selection : $t")
+            implicit val prov: TypeProvenance = tyTp(nme.toLoc, "type selection")
+            val ub = freshVar(prov, N, S(nme.name))
+            // val lb = freshVar(prov, N, S(nme.name))
+            // lb.upperBounds ::= ub
+            val res = RecordType.mk((nme.toVar, FieldType(S(ub), ub)(prov)) :: Nil)(prov)
             constrain(t, res)
-            fv
-            // err(msg"Illegal prefix of type selection: ${b_ty.expPos}", base.toLoc)
+            ub
         }
         go(base_ty, _ => N)
       case Recursive(uv, body) =>
@@ -1489,7 +1485,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
                         val nvUB = freshVar(tv.prov, S(tv), tv.nameHint)
                         nvLB.upperBounds ::= nvUB
                         val sk = SkolemTag(freshVar(tv.prov, S(tv), tv.nameHint)(lvl + 1))(provTODO)
-                        val v = Var(if (!vi.visible) nme+"#"+tn.name else tn.name).withLocOf(tn)
+                        val v = Var(tparamField(nme, tn.name, vi.visible)).withLocOf(tn)
                         val vce = vi.getVarOr(VarianceInfo.in)
                         (v, FieldType.mk(vce, nvLB, nvUB)(provTODO)) ->
                         (v, FieldType.mk(vce, nvLB | sk, nvUB & sk)(provTODO))

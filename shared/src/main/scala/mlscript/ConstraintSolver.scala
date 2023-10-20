@@ -33,7 +33,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         (implicit ctx: Ctx, raise: Raise)
         : Either[Diagnostic, NuMember]
         = {
-    val info = ctx.tyDefs2.getOrElse(clsNme, lastWords(s"Can't find `$clsNme`"))
+    val info = ctx.tyDefs2.getOrElse(clsNme, lastWords(s"Can't find member `$clsNme`"))
     
     if (info.isComputing) {
       ??? // TODO support?
@@ -76,7 +76,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         
         case S(fty) =>
           if (info.privateParams.contains(fld) && !allowPrivateAccess)
-            err(msg"Parameter '${fld.name}' cannot tbe accessed as a field" -> fld.toLoc :: Nil)
+            err(msg"Parameter '${fld.name}' cannot be accessed as a field" -> fld.toLoc :: Nil)
           S(fty)
         
         case N if info.isComputing =>
@@ -95,7 +95,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                 S(d.typeSignature.toUpper(provTODO))
               case S(p: NuParam) =>
                 if (!allowPrivateAccess && !p.isPublic)
-                  err(msg"Parameter '${p.nme.name}' cannot tbe accessed as a field" -> fld.toLoc ::
+                  err(msg"Parameter '${p.nme.name}' cannot be accessed as a field" -> fld.toLoc ::
                     msg"Either make the parameter a `val` or access it through destructuring" -> p.nme.toLoc ::
                     Nil)
                 S(p.ty)
@@ -122,19 +122,20 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         implicit val shadows: Shadows = Shadows.empty
         
         info.tparams.foreach { case (tn, _tv, vi) =>
-          println(s">>>l ${info.decl.name} # $tn => ${rfnt(Var(info.decl.name + "#" + tn.name))}")
-          // todo fix lookup here
-          val targ = rfnt(Var(if (!vi.visible) info.decl.name + "#" + tn.name else tn.name)) match {
+          val targ = rfnt(tparamField(TypeName(info.decl.name), tn, vi.visible)) match {
             // * TODO to avoid infinite recursion due to ever-expanding type args,
             // *  we should set the shadows of the targ to be the same as that of the parameter it replaces... 
-            case S(fty) if vi.varinfo === S(VarianceInfo.co) => fty.ub
-            case S(fty) if vi.varinfo === S(VarianceInfo.contra) => fty.lb.getOrElse(BotType)
+            case S(fty) if vi.varinfo === S(VarianceInfo.co) => 
+              println(s"Lookup: Found $fty")
+              fty.ub
+            case S(fty) if vi.varinfo === S(VarianceInfo.contra) => 
+              println(s"Lookup: Found $fty")
+              fty.lb.getOrElse(BotType)
             case S(fty) =>
-              TypeBounds.mk(
-                fty.lb.getOrElse(BotType),
-                fty.ub,
-              )
+              println(s"Lookup: Found $fty")
+              TypeBounds.mk(fty.lb.getOrElse(BotType), fty.ub)
             case N =>
+              println(s"Lookup: field not found, creating new bounds")
               TypeBounds(
                 // _tv.lowerBounds.foldLeft(BotType: ST)(_ | _),
                 // _tv.upperBounds.foldLeft(TopType: ST)(_ & _),
@@ -562,7 +563,6 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               info.typedParams
                 .getOrElse(Nil) // FIXME?... prim type
                 .foreach { p =>
-                  // println(s">>>l ${r.fields}")
                   val fty = lookupField(() => done_ls.toType(sort = true), S(nme), r.fields.toMap.get, ts, p._1)
                   rec(fldTy.lb.getOrElse(die), RecordType(p._1 -> TypeRef(TypeName("Eql"),
                       fty.ub // FIXME check mutable?
@@ -570,7 +570,6 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                     )(provTODO).toUpper(provTODO) :: Nil)(provTODO), false)
                 }
             } else {
-              println(s">>>l ${r.fields}") // todo fields still Foo#A  why ?
               val fty = lookupField(() => done_ls.toType(sort = true), S(nme), r.fields.toMap.get, ts, fldNme)
               rec(fty.ub, fldTy.ub, false)
               recLb(fldTy, fty)

@@ -28,3 +28,14 @@ fun f(x) = x
 //│ fun f: ‹∀ 0. (x29' -> x29')› where 
 //│ fun f: forall 'x. 'x -> 'x
 
+abstract class S[T]: A | B
+module A extends S[Int]
+module B extends S[Bool]
+//│ abstract class S[T]: A | B
+//│ module A extends S
+//│ module B extends S
+
+fun f(x: S['a]) = if x is
+    A then 1
+    B then 2
+//│ fun f: forall 'a. (x: S['a]) -> (1 | 2)

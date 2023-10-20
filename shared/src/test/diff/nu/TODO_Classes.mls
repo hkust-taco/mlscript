@@ -100,13 +100,19 @@ let c = new Cls
 
 // FIXME
 let y: c.A = c.x
-//│ ╔══[ERROR] cannot use variable c as type
+//│ ╔══[ERROR] Type `Cls[?A]` does not contain member `A`
 //│ ║  l.102: 	let y: c.A = c.x
-//│ ╙──       	       ^
-//│ ╔══[ERROR] as defined in here
+//│ ╙──       	        ^^
+//│ ╔══[ERROR] Type mismatch in type selection:
+//│ ║  l.102: 	let y: c.A = c.x
+//│ ║         	        ^^
+//│ ╟── application of type `forall ?A. Cls[?A]` does not have field 'A'
 //│ ║  l.96: 	let c = new Cls
-//│ ╙──      	    ^^^^^^^^^^^
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Can't find `error`
+//│ ╙──      	        ^^^^^^^
+//│ let y: error
+//│ y
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded
 
 
 

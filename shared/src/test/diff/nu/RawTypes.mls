@@ -1,21 +1,58 @@
 :NewDefs
 
+// * currently
+// Foo => Foo[?] ? is rigid can be uncovered in pattern matching
+// * future
+// Foo => Foo['a] can place bounds on 'a
 
 class Foo[type A](val a: A)
 //│ class Foo[A](a: A)
 
+
+// FIXME
 fun foo(f: Foo) = f.a
 //│ fun foo: (f: Foo[anything]) -> ??A
 
 fun foo(f: Foo[Int]) = f.a
 //│ fun foo: (f: Foo[Int]) -> Int
 
+// FIXME
+fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
+//│ ╔══[ERROR] Type error in type ascription
+//│ ║  l.20: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
+//│ ║        	                          ^^^^^^^^^^^^^^^^^^
+//│ ╟── type variable `A` leaks out of its scope
+//│ ║  l.8: 	class Foo[type A](val a: A)
+//│ ║       	                      ^
+//│ ╟── into type `Int | ~??A`
+//│ ║  l.20: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
+//│ ╙──      	                 ^^^
+//│ fun foo: (f: Foo[anything]) -> Int
+
+fun foo(f: Foo['a]): Int = if f is Foo(a) then a : f.A
+//│ fun foo: forall 'a. (f: Foo['a]) -> Int
+//│   where
+//│     'a <: Int | ~??A
+
+fun foo(f: Foo['a]) = f.a : f.A
+//│ fun foo: forall 'a. (f: Foo['a]) -> 'a
+
 fun foo(a, f: Foo[a]): Int = f.a : f.A
 //│ fun foo: forall 'A. ('A, f: Foo['A]) -> Int
 //│   where
 //│     'A <: Int
 
+fun bar(f): Int = f.a : f.A
+//│ fun bar: forall 'A. {A = 'A, a: 'A} -> Int
+//│   where
+//│     'A <: Int
+
 foo(2, Foo(1))
+//│ Int
+//│ res
+//│     = 1
+
+bar(Foo(1))
 //│ Int
 //│ res
 //│     = 1
@@ -30,4 +67,157 @@ fun foo(f: Foo) = f.a
 fun foo(f) = f : Foo
 //│ fun foo: Foo[in anything out nothing] -> Foo[?]
 
+abstract class Foo[type T]: Bar
+class Bar(val b: Int) extends Foo[Int]
+//│ abstract class Foo[T]: Bar
+//│ class Bar(b: Int) extends Foo
 
+:d
+fun foo(x: Foo): x.T = if x is Bar then x.b : x.T
+//│ 0. Typing ‹fun foo = (x: Foo,) => if (is(x, Bar,)) then (x).b : x.T : x.T›
+//│ | 0. Created lazy type info for fun foo = (x: Foo,) => if (is(x, Bar,)) then (x).b : x.T : x.T
+//│ | Completing fun foo = (x: Foo,) => if (is(x, Bar,)) then (x).b : x.T : x.T
+//│ | | Type params 
+//│ | | Params 
+//│ | | 1. Typing term (x: Foo,) => if (is(x, Bar,)) then (x).b : x.T : x.T
+//│ | | | 1. Typing pattern [x: Foo,]
+//│ | | | | 1. Typing pattern x : Foo
+//│ | | | | | Typing type TypeName(Foo)
+//│ | | | | | | vars=Map() newDefsInfo=Map()
+//│ | | | | | | 1. type TypeName(Foo)
+//│ | | | | | | => #Foo<Object>
+//│ | | | | | => #Foo<Object> ——— 
+//│ | | | | 1. : #Foo<Object>
+//│ | | | 1. : (x: #Foo<Object>,)
+//│ | | | 1. Typing term if (is(x, Bar,)) then (x).b : x.T : x.T
+//│ | | | | 1. Typing term if (is(x, Bar,)) then (x).b : x.T
+//│ | | | | | [Desugarer.destructPattern] scrutinee = x; pattern = Bar
+//│ | | | | | [Desugarer.destructPattern] Result: «x is Bar»
+//│ | | | | | Desugared term: case x of { Bar => (x).b : x.T }
+//│ | | | | | 1. Typing term case x of { Bar => (x).b : x.T }
+//│ | | | | | | 1. Typing term x
+//│ | | | | | | 1. : #Foo<Object>
+//│ | | | | | | CONSTRAIN #Foo<Object> <! Object
+//│ | | | | | |   where 
+//│ | | | | | | 1. C #Foo<Object> <! Object    (0)
+//│ | | | | | | | Already a subtype by <:<
+//│ | | | | | | Match arm Bar: #Bar<Object,Foo> & ⊤ intl ⊤
+//│ | | | | | | 2. Typing term (x).b : x.T
+//│ | | | | | | | 2. Typing term (x).b
+//│ | | | | | | | | 2. Typing term x
+//│ | | | | | | | | 2. : #Bar<Object,Foo>
+//│ | | | | | | | | CONSTRAIN #Bar<Object,Foo> <! {b: b155''}
+//│ | | | | | | | |   where 
+//│ | | | | | | | | 2. C #Bar<Object,Foo> <! {b: b155''}    (0)
+//│ | | | | | | | | | Looking up field b in Some(Bar) & TreeSet() & {...}
+//│ | | | | | | | | | | Lookup Bar.b : Some(Int) where 
+//│ | | | | | | | | | | Fresh[0] Bar.b : Some(Int) where Some()
+//│ | | | | | | | | | |   & None  (from refinement)
+//│ | | | | | | | | | 2. C Int <! b155''    (1)
+//│ | | | | | | | | | | NEW b155'' LB (0)
+//│ | | | | | | | 2. : b155''
+//│ | | | | | | | Typing type Selection(TypeName(x),TypeName(T))
+//│ | | | | | | | | vars=Map() newDefsInfo=Map()
+//│ | | | | | | | | 2. type Selection(TypeName(x),TypeName(T))
+//│ | | | | | | | | | 2. type TypeName(x)
+//│ | | | | | | | | | | ty var: x : #Bar<Object,Foo>
+//│ | | | | | | | | | => #Bar<Object,Foo>
+//│ | | | | | | | | => T143_147#
+//│ | | | | | | | => T143_147# ——— 
+//│ | | | | | | | CONSTRAIN b155'' <! T143_147#
+//│ | | | | | | |   where 
+//│ 		T143_147# := Int
+//│ 		b155'' :> Int
+//│ | | | | | | | 2. C b155'' <! T143_147#    (0)
+//│ | | | | | | | | 2. C b155'' <! Int    (2)
+//│ | | | | | | | | | NEW b155'' UB (0)
+//│ | | | | | | | | | 2. C Int <! Int    (4)
+//│ | | | | | | | | | | Already a subtype by <:<
+//│ | | | | | | 2. : T143_147#
+//│ | | | | | | CONSTRAIN T143_147# <! α154'
+//│ | | | | | |   where 
+//│ 		T143_147# := Int
+//│ | | | | | | 2. C T143_147# <! α154'    (0)
+//│ | | | | | | | 2. C Int <! α154'    (2)
+//│ | | | | | | | | NEW α154' LB (0)
+//│ | | | | | | CONSTRAIN #Foo<Object> <! #Bar<Object,Foo>
+//│ | | | | | |   where 
+//│ | | | | | | 1. C #Foo<Object> <! #Bar<Object,Foo>    (0)
+//│ | | | | | | | CONSTRAINT FAILURE: #Foo<Object> <: #Bar<Object,Foo>
+//│ | | | | | | | allVarPols: 
+//│ | | | | | | | normLike[+] #Foo<Object>
+//│ | | | | | | | | norm[+] #Foo<Object>
+//│ | | | | | | | | | DNF: DNF(0, #Foo<Object>{})
+//│ | | | | | | | | | rcd2 {}
+//│ | | | | | | | | | typeRef Foo[⊥..⊤]
+//│ | | | | | | | | | Assigning T :: T143' := ⊥..⊤ where 
+//│ | | | | | | | | | Set T143_156 ~> T143'
+//│ | | | | | | | | | clsFields T -> mut ⊥..⊤..⊥..⊤
+//│ | | | | | | | | ~> Foo[⊥..⊤]
+//│ | | | | | | | CONSTRAIN #error<> <! α154'
+//│ | | | | | | |   where 
+//│ 		α154' :> Int
+//│ | | | | | | | 1. C #error<> <! α154'    (0)
+//│ | | | | | | | | NEW α154' LB (0)
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.76: 	fun foo(x: Foo): x.T = if x is Bar then x.b : x.T
+//│ ║        	                          ^^^^^^^^^^^^^^^^^
+//│ ╟── type `Foo[?]` is not an instance of type `Bar`
+//│ ║  l.76: 	fun foo(x: Foo): x.T = if x is Bar then x.b : x.T
+//│ ║        	           ^^^
+//│ ╟── Note: constraint arises from class pattern:
+//│ ║  l.76: 	fun foo(x: Foo): x.T = if x is Bar then x.b : x.T
+//│ ╙──      	                               ^^^
+//│ | | | | | 1. : α154'
+//│ | | | | 1. : α154'
+//│ | | | | Typing type Selection(TypeName(x),TypeName(T))
+//│ | | | | | vars=Map() newDefsInfo=Map()
+//│ | | | | | 1. type Selection(TypeName(x),TypeName(T))
+//│ | | | | | | 1. type TypeName(x)
+//│ | | | | | | | ty var: x : #Foo<Object>
+//│ | | | | | | => #Foo<Object>
+//│ | | | | | => ‘T143'
+//│ | | | | => ‘T143' ——— 
+//│ | | | | CONSTRAIN α154' <! ‘T143'
+//│ | | | |   where 
+//│ 		α154' :> #error<> | Int
+//│ | | | | 1. C α154' <! ‘T143'    (0)
+//│ | | | | | NEW α154' UB (1)
+//│ | | | | | 1. C #error<> <! ‘T143'    (2)
+//│ | | | | | 1. C Int <! ‘T143'    (2)
+//│ | | | | | | 1. C #Int<Object,Num> <! ‘T143'    (4)
+//│ | | | | | | | CONSTRAINT FAILURE: #Int<Object,Num> <: ‘T143'
+//│ | | | | | | | allVarPols: -T143'
+//│ | | | | | | | normLike[-] ‘T143'
+//│ | | | | | | | | norm[-] ‘T143'
+//│ | | | | | | | | | DNF: DNF(1, {}∧‘T143')
+//│ | | | | | | | | ~> ‘T143'
+//│ | | | | | | | allVarPols: 
+//│ | | | | | | | normLike[+] #Int<Object,Num>
+//│ | | | | | | | | norm[+] #Int<Object,Num>
+//│ | | | | | | | | | DNF: DNF(0, #Int<Object,Num>{})
+//│ | | | | | | | | ~> #Int<Object,Num>
+//│ | | | | | | | CONSTRAIN #error<> <! ‘T143'
+//│ | | | | | | |   where 
+//│ | | | | | | | 1. C #error<> <! ‘T143'    (0)
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.76: 	fun foo(x: Foo): x.T = if x is Bar then x.b : x.T
+//│ ║        	                          ^^^^^^^^^^^^^^^^^
+//│ ╟── type `Int` does not match type `T`
+//│ ║  l.71: 	class Bar(val b: Int) extends Foo[Int]
+//│ ║        	                                  ^^^
+//│ ╟── Note: constraint arises from type parameter:
+//│ ║  l.70: 	abstract class Foo[type T]: Bar
+//│ ╙──      	                        ^
+//│ | | | 1. : ‘T143'
+//│ | | 1. : ((x: #Foo<Object>,) -> ‘T143')
+//│ | | CONSTRAIN ((x: #Foo<Object>,) -> ‘T143') <! foo157'
+//│ | |   where 
+//│ | | 1. C ((x: #Foo<Object>,) -> ‘T143') <! foo157'    (0)
+//│ | | | NEW foo157' LB (1)
+//│ | Completed TypedNuFun(0,fun foo = (x: Foo,) => if (is(x, Bar,)) then (x).b : x.T : x.T,((x: #Foo<Object>,) -> ‘T143')) where 
+//│ | Typing unit statements
+//│ | : None
+//│ ======== TYPED ========
+//│ fun foo: ‹∀ 0. ((x: #Foo<Object>,) -> ‘T143')› where 
+//│ fun foo: (x: Foo[in anything out nothing]) -> nothing
