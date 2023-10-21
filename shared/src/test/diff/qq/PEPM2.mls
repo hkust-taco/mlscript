@@ -25,7 +25,7 @@ run(`(x => x + x))
 
 
 fun assertNotZero(x) =
-  `if (x `== `0.0) then `(error) else x
+  `if (x `== `0.0) then `error else x
 fun checkedDiv = x `=> y `=> x `/ assertNotZero(y)
 run(checkedDiv)
 //│ fun assertNotZero: forall 'a 'b. Code[Num & 'a, 'b] -> Code['a, 'b]
@@ -36,7 +36,7 @@ run(checkedDiv)
 //│       (x_2) =>
 //│         (y_0) =>
 //│           (x_2 / match (y_0 == 0):
-//│             case true => (error)
+//│             case true => error
 //│             _ => y_0))
 //│       undefined
 

@@ -601,6 +601,9 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
             err((
               msg"Nested quotation is not supported yet." -> S(l0) :: Nil))
             R(Var("<error>"))
+          case (IDENT(nme: "error", false), l0) :: _ =>
+            consume
+            exprCont(Quoted(Var(nme)).withLoc(S(loc)), prec, allowNewlines = false)
           case (LITVAL(lit), l0) :: _ =>
             consume
             exprCont(Quoted(lit.withLoc(S(l0))).withLoc(S(loc)), prec, allowNewlines = false)
