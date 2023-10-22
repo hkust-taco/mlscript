@@ -1256,7 +1256,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
   
 }
 
-class JSWebBackend extends JSBackend(allowUnresolvedSymbols = true) {
+class JSWebBackend extends JSBackend(allowUnresolvedSymbols = false) {
   // Name of the array that contains execution results
   val resultsName: Str = topLevelScope declareRuntimeSymbol "results"
 
@@ -1372,11 +1372,11 @@ class JSWebBackend extends JSBackend(allowUnresolvedSymbols = true) {
           case _: Def | _: TypeDef | _: Constructor =>
             throw CodeGenError("Def and TypeDef are not supported in NewDef files.")
           case term: Term =>
-            val name = translateTerm(term)(topLevelScope)
-            resultNames += name.toSourceCode.toString
+            val res = translateTerm(term)(topLevelScope)
+            resultNames += term.toString
             topLevelScope.tempVars `with` JSInvoke(
               resultsIdent("push"),
-              name :: Nil
+              res :: Nil
             ).stmt :: Nil
         })
     val epilogue = resultsIdent.member("map")(JSIdent(prettyPrinterName)).`return` :: Nil

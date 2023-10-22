@@ -563,6 +563,13 @@ trait TermImpl extends StatementImpl { self: Term =>
   }
   
   override def toString: Str = print(false)
+
+  private def toJSOperator(op: Str) = op match {
+    case "+." => "+"
+    case "-." => "-"
+    case "*." => "*"
+    case _ => op
+  } // TODO: refactor
   
   def print(brackets: Bool): Str = {
       def bra(str: Str): Str = if (brackets) s"($str)" else str
@@ -578,6 +585,8 @@ trait TermImpl extends StatementImpl { self: Term =>
     case Asc(trm, ty) => s"$trm : ${ty.showDbg2}"  |> bra
     case Lam(pat: Tup, rhs) => s"(${pat.showElems}) => $rhs" |> bra
     case Lam(pat, rhs) => s"(...$pat) => $rhs" |> bra
+    case App(Var(op), Tup(N -> Fld(_, lhs) :: N -> Fld(_, rhs) :: Nil)) if JSBinary.operators.contains(toJSOperator(op)) =>
+      s"$lhs $op $rhs"
     case App(lhs, rhs: Tup) => s"${lhs.print(!lhs.isInstanceOf[App])}(${rhs.showElems})" |> bra
     case App(lhs, rhs) => s"${lhs.print(!lhs.isInstanceOf[App])}(...${rhs.print(true)})" |> bra
     case Rcd(fields) =>

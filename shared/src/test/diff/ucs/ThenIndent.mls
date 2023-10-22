@@ -19,7 +19,7 @@ x => if x ==
 //│ ╟── Note: 'if' expression starts here:
 //│ ║  l.5: 	x => if x ==
 //│ ╙──     	     ^^
-//│ ╔══[ERROR] The case when this is false is not handled: ==(x, {0},)
+//│ ╔══[ERROR] The case when this is false is not handled: x == {0}
 //│ ║  l.5: 	x => if x ==
 //│ ║       	        ^^^^
 //│ ║  l.6: 	  0

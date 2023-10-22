@@ -83,7 +83,7 @@ fun f(x) =
 //│ ╟── Note: 'if' expression starts here:
 //│ ║  l.70: 	  if x ===
 //│ ╙──      	  ^^
-//│ ╔══[ERROR] The case when this is false is not handled: ===(x, undefined,)
+//│ ╔══[ERROR] The case when this is false is not handled: x === undefined
 //│ ║  l.70: 	  if x ===
 //│ ║        	     ^^^^^
 //│ ║  l.71: 	    else "bruh"
