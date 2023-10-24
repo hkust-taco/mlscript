@@ -924,6 +924,11 @@ final case class JSComment(text: Str) extends JSStmt {
   def toSourceCode: SourceCode = SourceCode(s"// $text")
 }
 
+final case class JSParenthesis(exp: JSExpr) extends JSExpr {
+  implicit def precedence: Int = 0
+  def toSourceCode: SourceCode = exp.embed
+}
+
 object JSCodeHelpers {
   def id(name: Str): JSIdent = JSIdent(name)
   def lit(value: Int): JSLit = JSLit(value.toString())
