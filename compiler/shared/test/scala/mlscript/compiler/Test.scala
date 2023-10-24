@@ -22,7 +22,6 @@ class DiffTestCompiler extends DiffTests {
     try
       // rstUnit = ClassLifter().liftTypingUnit(unit)
       // outputBuilder ++= PrettyPrinter.showTypingUnit(rstUnit)
-      println("wwww")
       outputBuilder ++= "\n\nGraphOpt:\n"
       val go = GraphOptimizer()
       val graph = go.buildGraph(unit)

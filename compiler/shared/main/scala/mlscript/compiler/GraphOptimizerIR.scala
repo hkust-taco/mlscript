@@ -97,7 +97,7 @@ enum GOExpr:
   case Ref(name: Name) extends GOExpr, TrivialExpr
   case Literal(lit: Lit) extends GOExpr, TrivialExpr
   case CtorApp(name: ClassInfo, args: Ls[TrivialExpr])
-  case Select(name: Name, field: Str)
+  case Select(name: Name, cls: ClassInfo, field: Str)
   case BasicOp(name: Str, args: Ls[TrivialExpr])
   // TODO: depreceted: the following will be deleted
   case Lambda(name: Ls[Name], body: Node)
@@ -113,7 +113,7 @@ enum GOExpr:
     case Literal(lit) => s"${lit}" |> raw
     case CtorApp(ClassInfo(_, name, _), args) =>
       raw(name) <#> raw("(") <#> raw(args |> show_args) <#> raw(")")
-    case Select(Name(s), fld) =>
+    case Select(Name(s), _, fld) =>
       raw(s) <#> raw(".") <#> raw(fld)
     case BasicOp(name: Str, args) =>
       raw(name) <#> raw("(") <#> raw(args |> show_args) <#> raw(")")
