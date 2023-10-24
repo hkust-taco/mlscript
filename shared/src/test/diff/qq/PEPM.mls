@@ -67,7 +67,7 @@ fun power'(x, n) =
 //│ // Query 1
 //│ globalThis.power$ = function power$(x, n) {
 //│   return ((() => {
-//│     return n == 0 === true ? Const(1) : even(n) === true ? ((t1) => Let(Var(t1), power$(x, Math.floor(n / 2)), App(Var("*"), Var(t1), Var(t1))))(freshName("t")) : App(Var("*"), x, power$(x, n - 1));
+//│     return (n == 0) === true ? Const(1) : even(n) === true ? ((t1) => Let(Var(t1), power$(x, Math.floor(n / 2)), App(Var("*"), Var(t1), Var(t1))))(freshName("t")) : App(Var("*"), x, power$(x, n - 1));
 //│   })());
 //│ };
 //│ // End of generated code
