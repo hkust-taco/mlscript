@@ -11,7 +11,7 @@ class Pair(lhs: Int, rhs: Int)
 fun f(override Pair(x, y)) = x + y
 //│ |#fun| |f|(|#override| |Pair|(|x|,| |y|)|)| |#=| |x| |+| |y|
 //│ AST: TypingUnit(NuFunDef(None, f, None, [], Lam(Tup(_: Var(_$0)), If(IfOpApp(Var(_$0), Var(is), IfThen(App(Var(Pair), Tup(_: Var(x), _: Var(y))), App(Var(+), Tup(_: Var(x), _: Var(y))), Some(App(Sel(Super(), f), Tup(_: Var(_$0))))))))
-//│ Parsed: fun f = (_$0,) => if _$0 is (Pair(x, y,)) then x + y else (super).f(_$0,);
+//│ Parsed: fun f = (_$0,) => if _$0 is (Pair(x, y,)) then +(x, y,) else (super).f(_$0,);
 //│ ╔══[ERROR] identifier not found: super
 //│ ║  l.11: 	fun f(override Pair(x, y)) = x + y
 //│ ╙──      	      ^^^^^^^^

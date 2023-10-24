@@ -1379,7 +1379,7 @@ class JSWebBackend extends JSBackend(allowUnresolvedSymbols = false) {
             throw CodeGenError("Def and TypeDef are not supported in NewDef files.")
           case term: Term =>
             val res = translateTerm(term)(topLevelScope)
-            resultNames += term.toString
+            resultNames += term.show(true)
             topLevelScope.tempVars `with` JSInvoke(
               resultsIdent("push"),
               res :: Nil

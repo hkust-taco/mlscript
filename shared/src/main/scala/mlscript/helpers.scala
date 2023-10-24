@@ -480,6 +480,16 @@ trait TypingUnitImpl extends Located { self: TypingUnit =>
   }.mkString("{", "; ", "}")
   override def toString: String = s"‹${entities.mkString("; ")}›"
   lazy val children: List[Located] = entities
+
+  def showIn(ctx: ShowCtx): Str = {
+    val newCtx = ctx.indent
+    entities.map{
+      case t: Term => t.showIn(newCtx, false)
+      case nd: NuDecl => nd.show(newCtx.newDefs)
+      case s if !ctx.newDefs => s.toString
+      case _ => ???
+    }.mkString("{" + newCtx.lnIndStr, newCtx.lnIndStr, ctx.lnIndStr + "}")
+  }
 }
 
 trait ConstructorImpl { self: Constructor =>
@@ -564,13 +574,6 @@ trait TermImpl extends StatementImpl { self: Term =>
   
   override def toString: Str = print(false)
 
-  private def toJSOperator(op: Str) = op match {
-    case "+." => "+"
-    case "-." => "-"
-    case "*." => "*"
-    case _ => op
-  } // TODO: refactor
-  
   def print(brackets: Bool): Str = {
       def bra(str: Str): Str = if (brackets) s"($str)" else str
       this match {
@@ -585,8 +588,6 @@ trait TermImpl extends StatementImpl { self: Term =>
     case Asc(trm, ty) => s"$trm : ${ty.showDbg2}"  |> bra
     case Lam(pat: Tup, rhs) => s"(${pat.showElems}) => $rhs" |> bra
     case Lam(pat, rhs) => s"(...$pat) => $rhs" |> bra
-    case App(Var(op), Tup(N -> Fld(_, lhs) :: N -> Fld(_, rhs) :: Nil)) if JSBinary.operators.contains(toJSOperator(op)) =>
-      s"$lhs $op $rhs"
     case App(lhs, rhs: Tup) => s"${lhs.print(!lhs.isInstanceOf[App])}(${rhs.showElems})" |> bra
     case App(lhs, rhs) => s"${lhs.print(!lhs.isInstanceOf[App])}(...${rhs.print(true)})" |> bra
     case Rcd(fields) =>
@@ -626,6 +627,70 @@ trait TermImpl extends StatementImpl { self: Term =>
     case Quoted(b) => s"code\"$b\""
     case Unquoted(b) => s"$${$b}"
   }}
+
+  def show(newDefs: Bool): Str = showIn(ShowCtx.mk(Nil, newDefs), false)
+  def showIn(ctx: ShowCtx, brackets: Bool): Str = {
+    def bra(str: Str): Str = if (brackets) s"($str)" else str
+    this match {
+      case Bra(true, trm) => trm.showIn(ctx, false)
+      case Bra(false, trm) => s"(${trm.showIn(ctx, false)})"
+      case Blk(stmts) =>
+        val newCtx = ctx.indent
+        stmts.map {
+          case t: Term => t.showIn(newCtx, false)
+          case nd: NuDecl => nd.show(newCtx.newDefs)
+          case s if !ctx.newDefs => s.toString
+          case _ => ???
+        }.mkString("{" + newCtx.lnIndStr, newCtx.lnIndStr, ctx.indStr + "\n}")
+      case IntLit(value) => value.toString
+      case DecLit(value) => value.toString
+      case StrLit(value) => '"'.toString + value + '"'
+      case UnitLit(value) => if (ctx.newDefs) "()" else if (value) "undefined" else "null"
+      case Var(name) => name
+      case Asc(trm, ty) => s"$trm : ${ty.show(ctx.newDefs)}" |> bra
+      case Lam(pat: Tup, rhs) => s"(${pat.showIn(ctx)}) => ${rhs.showIn(ctx, false)}" |> bra
+      case Lam(pat, rhs) => s"(...${pat.showIn(ctx, false)}) => ${rhs.showIn(ctx, false)}" |> bra
+      case App(lhs, rhs: Tup) => s"${lhs.showIn(ctx, !lhs.isInstanceOf[App])}(${rhs.showIn(ctx)})" |> bra
+      case App(lhs, rhs) => s"${lhs.showIn(ctx, !lhs.isInstanceOf[App])}(...${rhs.showIn(ctx, true)})" |> bra
+      case Rcd(fields) =>
+        val newCtx = ctx.indent
+        fields.iterator.map(nv =>
+          (if (nv._2.flags.mut) "mut " else "") + nv._1.name + ": " + nv._2.value.showIn(newCtx, false)).mkString("{" + newCtx.lnIndStr, "," + newCtx.lnIndStr, ctx.lnIndStr + "}")
+      case Sel(receiver, fieldName) => receiver.showIn(ctx, !receiver.isInstanceOf[SimpleTerm]) + "." + fieldName
+      case Let(isRec, name, rhs, body) =>
+        s"let${if (isRec) " rec" else ""} ${name.showIn(ctx, false)} = ${rhs.showIn(ctx, false)} in ${body.showIn(ctx, false)}" |> bra
+      case tup: Tup => "[" + tup.showIn(ctx) + "]"
+      case Splc(fields) => fields.map{
+        case L(l) => s"...${l.showIn(ctx, false)}"
+        case R(Fld(FldFlags(m, s, g), r)) => (
+          (if (m) "mut " else "")
+          + (if (g) "val " else "")
+          + (if (s) "#" else "")
+          + r.showIn(ctx, false)
+        )
+      }.mkString("(", ", ", ")")
+      case Bind(l, r) => s"${l.showIn(ctx, false)} as ${r.showIn(ctx, false)}" |> bra
+      case Test(l, r) => s"${l.showIn(ctx, false)} is ${r.showIn(ctx, false)}" |> bra
+      case With(t, fs) =>  s"${t.showIn(ctx, false)} with ${fs.showIn(ctx, false)}" |> bra
+      case CaseOf(s, c) =>
+        s"case ${s.showIn(ctx, false)} of {${c.showIn(ctx.indent)}${ctx.lnIndStr}}" |> bra
+      case Subs(a, i) => s"(${a.showIn(ctx, false)})[${i.showIn(ctx, false)}]"
+      case Assign(lhs, rhs) => s" ${lhs.showIn(ctx, false)} <- ${rhs.showIn(ctx, false)}" |> bra
+      case New(S((at, ar)), bod) => s"new ${at.show(ctx.newDefs)}($ar) ${bod.showIn(ctx)}" |> bra
+      case New(N, bod) => s"new ${bod.showIn(ctx)}" |> bra
+      case If(body, els) => s"if ${body.showIn(ctx.indent)}" + els.fold("")(" else " + _.showIn(ctx.indent, false)) |> bra
+      case TyApp(lhs, targs) => s"${lhs.showIn(ctx, false)}${ctx.<}${targs.map(_.show(ctx.newDefs)).mkString(", ")}${ctx.>}"
+      case Where(bod, wh) => s"${bod.showIn(ctx, false)} where ${Blk(wh).showIn(ctx.indent, false)}"
+      case Forall(ps, bod) => s"forall ${ps.map(_.show(ctx.newDefs)).mkString(", ")}. ${bod.showIn(ctx, false)}"
+      case Inst(bod) => s"${bod.showIn(ctx, true)}!"
+      case Super() => "super"
+      case Eqn(lhs, rhs) => s"${lhs.showIn(ctx, false)} = ${rhs.showIn(ctx, false)}"
+      case AdtMatchWith(cond, arms) =>
+        s"match ${cond.showIn(ctx, false)} with ${arms.map (patmat => s"${patmat.pat.showIn(ctx, false)} -> ${patmat.rhs.showIn(ctx, false)}").mkString (" | ") }"
+      case Quoted(b) => s"code\"${b.showIn(ctx, false)}\""
+      case Unquoted(b) => s"$${${b.showIn(ctx, false)}}"
+    }
+  }
   
   def toTypeRaise(implicit raise: Raise): Type = toType match {
     case L(d) => raise(d); Bot
@@ -742,6 +807,14 @@ trait TupImpl { self: Tup =>
       + (if (t.flags.spec) "#" else "")
       + n.fold("")(_.name + ": ") + t.value + ","
     )}.mkString(" ")
+
+  def showIn(ctx: ShowCtx): Str =
+    fields.iterator.map { case (n, t) => (
+      (if (t.flags.mut) "mut " else "")
+      + (if (t.flags.genGetter) "val " else "")
+      + (if (t.flags.spec) "#" else "")
+      + n.fold("")(_.name + ": ") + t.value.showIn(ctx, false)
+    )}.mkString(", ")
 }
 
 trait SimpleTermImpl extends Ordered[SimpleTerm] { self: SimpleTerm =>
@@ -1041,6 +1114,13 @@ trait CaseBranchesImpl extends Located { self: CaseBranches =>
     case NoCases => ""
   }
   
+  def showIn(ctx: ShowCtx): Str = this match {
+    case Case(pat, body, rest) =>
+      ctx.lnIndStr + pat.showIn(ctx, false) + " => " + body.showIn(ctx, false) + rest.showIn(ctx)
+    case Wildcard(body) => 
+      ctx.lnIndStr + "_ => " + body.showIn(ctx, false)
+    case NoCases => ""
+  }
 }
 
 trait AdtMatchPatImpl extends Located { self: AdtMatchPat =>
@@ -1067,6 +1147,14 @@ trait IfBodyImpl extends Located { self: IfBody =>
     case IfOpsApp(lhs, ops) => s"$lhs ‹${ops.iterator.map{case(v, r) => s"· $v $r"}.mkString("; ")}›"
     case IfLet(isRec, v, r, b) => s"${if (isRec) "rec " else ""}let $v = $r in $b"
   }
-  
+
+  def showIn(ctx: ShowCtx): Str = this match {
+    case IfThen(lhs, rhs) => s"${lhs.showIn(ctx, !lhs.isInstanceOf[SimpleTerm])} then ${rhs.showIn(ctx, false)}"
+    case IfElse(trm) => s"else ${trm.showIn(ctx, false)}"
+    case IfBlock(ts) => s"${ts.map(_.fold(identity, identity)).mkString(ctx.lnIndStr)}"
+    case IfOpApp(lhs, op, ib) => s"${lhs.showIn(ctx, false)} ${op.showIn(ctx, false)} ${ib.showIn(ctx)}"
+    case IfOpsApp(lhs, ops) => s"${lhs.showIn(ctx, false)} ${ops.iterator.map{case(v, r) => s"· $v $r"}.mkString(ctx.lnIndStr)}"
+    case IfLet(isRec, v, r, b) => s"${if (isRec) "rec " else ""}let ${v.showIn(ctx, false)} = ${r.showIn(ctx, false)} in ${b.showIn(ctx)}"
+  }
 }
 

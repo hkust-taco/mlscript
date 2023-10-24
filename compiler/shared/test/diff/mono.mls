@@ -63,7 +63,7 @@ let x = 42 + 1337
 //│ Parsed:
 //│ TypingUnit(NuFunDef(Some(false), x, None, [], App(Var(+), Tup(_: IntLit(42), _: IntLit(1337)))))
 //│ Lifted:
-//│ TypingUnit {let x$1 = () => 42 + 1337}
+//│ TypingUnit {let x$1 = () => +(42, 1337,)}
 //│ Mono:
 //│ 
 //│ Defunc result: 
@@ -103,7 +103,7 @@ if 1+1 > 1 then 1 - 1 else 1*1
 //│ Lifted:
 //│ TypingUnit {
 //│   Code(List(if (true) then 1 else 0))
-//│   Code(List(if (1 + 1 > 1) then 1 - 1 else 1 * 1))
+//│   Code(List(if (>(+(1, 1,), 1,)) then -(1, 1,) else *(1, 1,)))
 //│ }
 //│ Mono:
 //│ 
@@ -196,8 +196,8 @@ f(2)+3
 //│ TypingUnit(NuFunDef(None, f, None, [], Lam(Tup(_: Var(x)), Blk(...))), App(Var(+), Tup(_: App(Var(f), Tup(_: IntLit(2))), _: IntLit(3))))
 //│ Lifted:
 //│ TypingUnit {
-//│   fun f$1 = (x,) => {if ('(' x > 0 ')') then x + 1 else x - 1}
-//│   Code(List(f$1(2,) + 3))
+//│   fun f$1 = (x,) => {if ('(' >(x, 0,) ')') then +(x, 1,) else -(x, 1,)}
+//│   Code(List(+(f$1(2,), 3,)))
 //│ }
 //│ Mono:
 //│ 
@@ -220,7 +220,7 @@ fac(2)
 //│ TypingUnit(NuFunDef(None, fac, None, [], Lam(Tup(_: Var(n)), Blk(...))), App(Var(fac), Tup(_: IntLit(2))))
 //│ Lifted:
 //│ TypingUnit {
-//│   fun fac$1 = (n,) => {if ('(' n > 1 ')') then fac$1(n - 1,) * n else 1}
+//│   fun fac$1 = (n,) => {if ('(' >(n, 1,) ')') then *(fac$1(-(n, 1,),), n,) else 1}
 //│   Code(List(fac$1(2,)))
 //│ }
 //│ Mono:
@@ -249,10 +249,10 @@ count(new List(new List(new Nil(undefined, false), true), true))
 //│ TypingUnit(NuTypeDef(class, List, (), Tup(l: App(Var(|), Tup(_: App(Var(|), Tup(_: Var(List), _: Var(Nil))), _: UnitLit(true))), hasTail: Var(Bool)), (), None, None, TypingUnit()), NuTypeDef(class, Nil, (), Tup(l: App(Var(|), Tup(_: App(Var(|), Tup(_: Var(List), _: Var(Nil))), _: UnitLit(true))), hasTail: Var(Bool)), (), None, None, TypingUnit()), NuFunDef(None, count, None, [], Lam(Tup(_: Var(lst)), Blk(...))), App(Var(count), Tup(_: New(Some((TypeName(List),[new List([new Nil([undefined, false,]) {}, true,]) {}, true,])), TypingUnit()))))
 //│ Lifted:
 //│ TypingUnit {
-//│   class List$1([val l: List | Nil | undefined, val hasTail: Bool,]) {}
-//│   class Nil$2([val l: List | Nil | undefined, val hasTail: Bool,]) {}
+//│   class List$1([val l: |(|(List, Nil,), undefined,), val hasTail: Bool,]) {}
+//│   class Nil$2([val l: |(|(List, Nil,), undefined,), val hasTail: Bool,]) {}
 //│   let l$2 = (lst,) => (lst).l
-//│   fun count$1 = (lst,) => {if ((lst).hasTail) then {if (is(l, undefined,)) then 1 else count$1(l,) + 1} else 0}
+//│   fun count$1 = (lst,) => {if ((lst).hasTail) then {if (is(l, undefined,)) then 1 else +(count$1(l,), 1,)} else 0}
 //│   Code(List(count$1(new List$1([new List$1([new Nil$2([undefined, false,]) {}, true,]) {}, true,]) {},)))
 //│ }
 //│ Mono:
@@ -306,16 +306,16 @@ fun add2(x) = x+2
 //│ TypingUnit(NuTypeDef(class, List, (), Tup(e: Var(Int), tail: App(Var(|), Tup(_: Var(List), _: Var(Nil)))), (), None, None, TypingUnit(NuFunDef(None, map, None, [], PolyType(List(),Function(Tuple(List((None,Field(None,Function(Tuple(List((None,Field(None,TypeName(Int))))),TypeName(Int)))))),TypeName(List)))), NuFunDef(None, map, None, [], Lam(Tup(_: Var(f)), New(Some((TypeName(List),[f(e,), (tail).map(f,),])), TypingUnit()))), NuFunDef(None, count, None, [], PolyType(List(),Function(Tuple(List()),TypeName(Int)))), NuFunDef(None, count, None, [], Lam(Tup(), App(Var(+), Tup(_: IntLit(1), _: App(Sel(Var(tail), count), Tup()))))))), NuTypeDef(class, Nil, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, map, None, [], Lam(Tup(_: Var(f)), Var(this))), NuFunDef(None, count, None, [], Lam(Tup(), IntLit(0))))), NuFunDef(None, add2, None, [], Lam(Tup(_: Var(x)), App(Var(+), Tup(_: Var(x), _: IntLit(2))))), App(Sel(App(Sel(Bra(rcd = false, New(Some((TypeName(List),[1, new List([2, new Nil([]) {},]) {},])), TypingUnit())), map), Tup(_: Lam(Tup(_: Var(x)), App(Var(+), Tup(_: Var(x), _: IntLit(1)))))), map), Tup(_: Lam(Tup(_: Var(x)), App(Var(add2), Tup(_: Var(x)))))))
 //│ Lifted:
 //│ TypingUnit {
-//│   class List$1([e: Int, tail: List | Nil,]) {
+//│   class List$1([e: Int, tail: |(List, Nil,),]) {
 //│     fun map = (Int -> Int) -> List$1
 //│     fun map = (f,) => new List$1([f((this).e,), ((this).tail).map(f,),]) {}
 //│     fun count = () -> Int
-//│     fun count = () => 1 + ((this).tail).count()
+//│     fun count = () => +(1, ((this).tail).count(),)
 //│   }
 //│   class Nil$2([]) {fun map = (f,) => this; fun count = () => 0}
-//│   class Lambda1$2$3([]) {fun apply = (x,) => x + 1}
+//│   class Lambda1$2$3([]) {fun apply = (x,) => +(x, 1,)}
 //│   class Lambda1$3$4([]) {fun apply = (x,) => add2$1(x,)}
-//│   fun add2$1 = (x,) => x + 2
+//│   fun add2$1 = (x,) => +(x, 2,)
 //│   Code(List((('(' new List$1([1, new List$1([2, new Nil$2([]) {},]) {},]) {} ')').map({new Lambda1$2$3([]) {}},)).map({new Lambda1$3$4([]) {}},)))
 //│ }
 //│ Mono:
@@ -373,13 +373,13 @@ foo(generate(1))
 //│ TypingUnit(NuTypeDef(class, List, (), Tup(e: Var(Int), tail: App(Var(|), Tup(_: Var(List), _: Var(Nil)))), (), None, None, TypingUnit(NuFunDef(None, count, None, [], PolyType(List(),Function(Tuple(List()),TypeName(Int)))), NuFunDef(None, count, None, [], Lam(Tup(), App(Var(+), Tup(_: IntLit(1), _: App(Sel(Var(tail), count), Tup()))))))), NuTypeDef(class, Nil, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, count, None, [], Lam(Tup(), IntLit(0))))), NuFunDef(None, foo, None, [], Lam(Tup(_: Var(x)), App(Sel(Var(x), count), Tup()))), NuFunDef(None, generate, None, [], Lam(Tup(_: Var(x)), Blk(...))), App(Var(foo), Tup(_: New(Some((TypeName(List),[1, new List([2, new Nil([]) {},]) {},])), TypingUnit()))), App(Var(foo), Tup(_: App(Var(generate), Tup(_: IntLit(1))))))
 //│ Lifted:
 //│ TypingUnit {
-//│   class List$1([e: Int, tail: List | Nil,]) {
+//│   class List$1([e: Int, tail: |(List, Nil,),]) {
 //│     fun count = () -> Int
-//│     fun count = () => 1 + ((this).tail).count()
+//│     fun count = () => +(1, ((this).tail).count(),)
 //│   }
 //│   class Nil$2([]) {fun count = () => 0}
 //│   fun foo$1 = (x,) => (x).count()
-//│   fun generate$2 = (x,) => {if (x > 0) then new List$1([x, generate$2(x + 1,),]) {} else new Nil$2([]) {}}
+//│   fun generate$2 = (x,) => {if (>(x, 0,)) then new List$1([x, generate$2(+(x, 1,),),]) {} else new Nil$2([]) {}}
 //│   Code(List(foo$1(new List$1([1, new List$1([2, new Nil$2([]) {},]) {},]) {},)))
 //│   Code(List(foo$1(generate$2(1,),)))
 //│ }
@@ -428,7 +428,7 @@ foo(2)
 //│ Lifted:
 //│ TypingUnit {
 //│   class Lambda1$2$1([x,]) {fun apply = (f,) => f((this).x,)}
-//│   class Lambda1$3$2([]) {fun apply = (z,) => z + 1}
+//│   class Lambda1$3$2([]) {fun apply = (z,) => +(z, 1,)}
 //│   fun foo$1 = (x,) => {'(' {new Lambda1$2$1([x,]) {}} ')'({new Lambda1$3$2([]) {}},)}
 //│   Code(List(foo$1(2,)))
 //│ }
@@ -461,8 +461,8 @@ f(1)
 //│ TypingUnit(NuFunDef(None, f, None, [], Lam(Tup(_: Var(x)), Blk(...))), App(Var(f), Tup(_: IntLit(1))))
 //│ Lifted:
 //│ TypingUnit {
-//│   class Lambda1$2$1([x,]) {fun apply = (y,) => f$1((this).x + y,)}
-//│   fun f$1 = (x,) => {'(' {new Lambda1$2$1([x,]) {}} ')'(x + 1,)}
+//│   class Lambda1$2$1([x,]) {fun apply = (y,) => f$1(+((this).x, y,),)}
+//│   fun f$1 = (x,) => {'(' {new Lambda1$2$1([x,]) {}} ')'(+(x, 1,),)}
 //│   Code(List(f$1(1,)))
 //│ }
 //│ Mono:
@@ -540,16 +540,16 @@ foo(new Lambda2(2))
 //│ TypingUnit(NuTypeDef(class, Cons, (), Tup(e: Var('A), tail: App(Var(|), Tup(_: Var(Cons), _: Var(Nil)))), (), None, None, TypingUnit(NuFunDef(None, count, None, [], PolyType(List(),Function(Tuple(List()),TypeName(Int)))), NuFunDef(None, count, None, [], Lam(Tup(), App(Var(+), Tup(_: IntLit(1), _: App(Sel(Var(tail), count), Tup()))))))), NuTypeDef(class, Nil, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, count, None, [], Lam(Tup(), IntLit(0))))), NuTypeDef(class, Lambda, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, apply, None, [], Lam(Tup(_: Var(l)), Blk(...))))), NuTypeDef(class, Lambda2, (), Tup(a: Var(Int)), (), None, None, TypingUnit(NuFunDef(None, apply, None, [], Lam(Tup(_: Var(l)), Blk(...))))), NuFunDef(None, foo, None, [], Lam(Tup(_: Var(x)), Blk(...))), App(Var(foo), Tup(_: New(Some((TypeName(Lambda),[])), TypingUnit()))), App(Var(foo), Tup(_: New(Some((TypeName(Lambda2),[2,])), TypingUnit()))))
 //│ Lifted:
 //│ TypingUnit {
-//│   class Cons$1([e: 'A, tail: Cons | Nil,]) {
+//│   class Cons$1([e: 'A, tail: |(Cons, Nil,),]) {
 //│     fun count = () -> Int
-//│     fun count = () => 1 + ((this).tail).count()
+//│     fun count = () => +(1, ((this).tail).count(),)
 //│   }
 //│   class Nil$2([]) {fun count = () => 0}
 //│   class Lambda$3([]) {fun apply = (l,) => {(l).count()}}
 //│   class Lambda2$4([a: Int,]) {
 //│     fun apply = (l,) => {('(' new Cons$1([(this).a, l,]) {} ')').count()}
 //│   }
-//│   fun foo$1 = (x,) => {(x).apply(new Cons$1([1, new Nil$2([]) {},]) {},) + (x).apply(new Nil$2([]) {},)}
+//│   fun foo$1 = (x,) => {+((x).apply(new Cons$1([1, new Nil$2([]) {},]) {},), (x).apply(new Nil$2([]) {},),)}
 //│   Code(List(foo$1(new Lambda$3([]) {},)))
 //│   Code(List(foo$1(new Lambda2$4([2,]) {},)))
 //│ }
@@ -615,16 +615,16 @@ foo(l => (new Cons(2, l)).count())
 //│ TypingUnit(NuTypeDef(class, Cons, (), Tup(e: Var(Int), tail: App(Var(|), Tup(_: Var(Cons), _: Var(Nil)))), (), None, None, TypingUnit(NuFunDef(None, count, None, [], PolyType(List(),Function(Tuple(List()),TypeName(Int)))), NuFunDef(None, count, None, [], Lam(Tup(), App(Var(+), Tup(_: IntLit(1), _: App(Sel(Var(tail), count), Tup()))))))), NuTypeDef(class, Nil, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, count, None, [], Lam(Tup(), IntLit(0))))), NuFunDef(None, foo, None, [], Lam(Tup(_: Var(x)), Blk(...))), App(Var(foo), Tup(_: Lam(Tup(_: Var(l)), App(Sel(Var(l), count), Tup())))), App(Var(foo), Tup(_: Lam(Tup(_: Var(l)), App(Sel(Bra(rcd = false, New(Some((TypeName(Cons),[2, l,])), TypingUnit())), count), Tup())))))
 //│ Lifted:
 //│ TypingUnit {
-//│   class Cons$1([e: Int, tail: Cons | Nil,]) {
+//│   class Cons$1([e: Int, tail: |(Cons, Nil,),]) {
 //│     fun count = () -> Int
-//│     fun count = () => 1 + ((this).tail).count()
+//│     fun count = () => +(1, ((this).tail).count(),)
 //│   }
 //│   class Nil$2([]) {fun count = () => 0}
 //│   class Lambda1$2$3([]) {fun apply = (l,) => (l).count()}
 //│   class Lambda1$3$4([]) {
 //│     fun apply = (l,) => ('(' new Cons$1([2, l,]) {} ')').count()
 //│   }
-//│   fun foo$1 = (x,) => {x(new Cons$1([1, new Nil$2([]) {},]) {},) + x(new Nil$2([]) {},)}
+//│   fun foo$1 = (x,) => {+(x(new Cons$1([1, new Nil$2([]) {},]) {},), x(new Nil$2([]) {},),)}
 //│   Code(List(foo$1({new Lambda1$2$3([]) {}},)))
 //│   Code(List(foo$1({new Lambda1$3$4([]) {}},)))
 //│ }
@@ -725,16 +725,16 @@ class C(e1: Exp, e2: Exp) extends Exp {
 //│     fun isEmpty = () => {true}
 //│   }
 //│   class Ch$4([i: Int,]): Exp$1() {
-//│     fun derive = (x,) => {if (x == (this).i) then new Ep$3([]) {} else new E$2([]) {}}
+//│     fun derive = (x,) => {if (==(x, (this).i,)) then new Ep$3([]) {} else new E$2([]) {}}
 //│     fun isEmpty = () => {false}
 //│   }
 //│   class A$5([e1: Exp, e2: Exp,]): Exp$1() {
 //│     fun derive = (x,) => {new A$5([((this).e1).derive(x,), ((this).e2).derive(x,),]) {}}
-//│     fun isEmpty = () => {((this).e1).isEmpty() || ((this).e2).isEmpty()}
+//│     fun isEmpty = () => {||(((this).e1).isEmpty(), ((this).e2).isEmpty(),)}
 //│   }
 //│   class C$6([e1: Exp, e2: Exp,]): Exp$1() {
 //│     fun derive = (x,) => {if (((this).e1).isEmpty()) then new A$5([new C$6([((this).e1).derive(x,), (this).e2,]) {}, ((this).e2).derive(x,),]) {} else new C$6([((this).e1).derive(x,), (this).e2,]) {}}
-//│     fun isEmpty = () => {((this).e1).isEmpty() && ((this).e2).isEmpty()}
+//│     fun isEmpty = () => {&&(((this).e1).isEmpty(), ((this).e2).isEmpty(),)}
 //│   }
 //│   Code(List((('(' new C$6([new Ch$4([1,]) {}, new A$5([new Ch$4([2,]) {}, new Ch$4([3,]) {},]) {},]) {} ')').derive(0,)).isEmpty()))
 //│ }
@@ -812,7 +812,7 @@ gen()
 //│ TypingUnit(NuFunDef(Some(false), anyUnknown, None, [], Var(false)), NuTypeDef(class, List, (), Tup(l: App(Var(|), Tup(_: Var(List), _: Var(Nil))), hasTail: Var(Bool)), (), None, None, TypingUnit()), NuTypeDef(class, Nil, (), Tup(hasTail: Var(Bool)), (), None, None, TypingUnit()), NuFunDef(None, gen, None, [], Lam(Tup(), Blk(...))), App(Var(gen), Tup()))
 //│ Lifted:
 //│ TypingUnit {
-//│   class List$1([l: List | Nil, hasTail: Bool,]) {}
+//│   class List$1([l: |(List, Nil,), hasTail: Bool,]) {}
 //│   class Nil$2([hasTail: Bool,]) {}
 //│   let anyUnknown$2 = () => false
 //│   fun gen$1 = () => {if (anyUnknown) then new List$1([gen$1(), true,]) {} else new Nil$2([false,]) {}}
@@ -855,8 +855,8 @@ class Foo(x: Int){
 //│ Lifted:
 //│ TypingUnit {
 //│   class Foo$1([x: Int,]) {
-//│     fun bar = (y,) => (this).x + y
-//│     fun boo = (z,) => (this).bar(z,) + (this).x
+//│     fun bar = (y,) => +((this).x, y,)
+//│     fun boo = (z,) => +((this).bar(z,), (this).x,)
 //│   }
 //│   Code(List(('(' new Foo$1([1,]) {} ')').boo(2,)))
 //│ }
@@ -893,7 +893,7 @@ class OneInt(a: Int){
 //│ TypingUnit {
 //│   class OneInt$1([a: Int,]) {
 //│     fun fac = () -> Int
-//│     fun fac = () => {if ('(' (this).a > 0 ')') then ('(' new OneInt$1([(this).a - 1,]) {} ')').fac() else 1}
+//│     fun fac = () => {if ('(' >((this).a, 0,) ')') then ('(' new OneInt$1([-((this).a, 1,),]) {} ')').fac() else 1}
 //│   }
 //│   Code(List(('(' new OneInt$1([10,]) {} ')').fac()))
 //│ }
@@ -942,8 +942,8 @@ g(1)
 //│ Lifted:
 //│ TypingUnit {
 //│   let any$3 = () => -20
-//│   fun f$1 = (x,) => {if (x > any) then 0 else g$2(x - 1,)}
-//│   fun g$2 = (x,) => {if (x > any) then g$2(x - 1,) else f$1(x - 2,)}
+//│   fun f$1 = (x,) => {if (>(x, any,)) then 0 else g$2(-(x, 1,),)}
+//│   fun g$2 = (x,) => {if (>(x, any,)) then g$2(-(x, 1,),) else f$1(-(x, 2,),)}
 //│   Code(List(g$2(1,)))
 //│ }
 //│ Mono:
@@ -1028,7 +1028,7 @@ bar.car
 //│ TypingUnit {
 //│   class Bar$1([x: Int,]) {
 //│     fun foo = (x,) => x
-//│     fun FooMinus = (y: Int,) => (this).x + y
+//│     fun FooMinus = (y: Int,) => +((this).x, y,)
 //│     fun car = () => (this).foo(2,)
 //│   }
 //│   class Car$2([]) {fun da = (b: Bar$1,) => (b).foo(2,)}
@@ -1098,8 +1098,8 @@ class Sub2(c: Int) extends Sub(c+c){
 //│ Lifted:
 //│ TypingUnit {
 //│   class Sup$1([a: Int,]) {fun foo = () => (this).a}
-//│   class Sub$2([b: Int,]): Sup$1((this).b + (this).b,) {}
-//│   class Sub2$3([c: Int,]): Sub$2((this).c + (this).c,) {fun foo = () => (this).a + (this).c}
+//│   class Sub$2([b: Int,]): Sup$1(+((this).b, (this).b,),) {}
+//│   class Sub2$3([c: Int,]): Sub$2(+((this).c, (this).c,),) {fun foo = () => +((this).a, (this).c,)}
 //│   let c$1 = () => 5
 //│   Code(List(('(' new Sub$2([10,]) {} ')').foo()))
 //│   Code(List(('(' new Sub2$3([c,]) {} ')').foo()))
@@ -1156,9 +1156,9 @@ class F2() extends Foo(x => x+2){}
 //│ Lifted:
 //│ TypingUnit {
 //│   class Foo$1([f: ->(Int, Int,),]) {fun foo = () => (this).f(1,)}
-//│   class F1$2_Lambda1$1$4([par$F1$2,]) {fun apply = (x,) => x + 1}
+//│   class F1$2_Lambda1$1$4([par$F1$2,]) {fun apply = (x,) => +(x, 1,)}
 //│   class F1$2([]): Foo$1({new F1$2_Lambda1$1$4([this,]) {}},) {}
-//│   class F2$3_Lambda1$2$5([par$F2$3,]) {fun apply = (x,) => x + 2}
+//│   class F2$3_Lambda1$2$5([par$F2$3,]) {fun apply = (x,) => +(x, 2,)}
 //│   class F2$3([]): Foo$1({new F2$3_Lambda1$2$5([this,]) {}},) {}
 //│   Code(List(('(' new F1$2([]) {} ')').foo()))
 //│   Code(List(('(' new F2$3([]) {} ')').foo()))
