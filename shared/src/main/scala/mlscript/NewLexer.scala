@@ -296,7 +296,7 @@ object NewLexer {
     "val",
     "var",
     // "is",
-    // "as",
+    "as",
     "of",
     // "and",
     // "or",

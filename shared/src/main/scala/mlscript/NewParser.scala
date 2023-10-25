@@ -799,6 +799,10 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
   
   final def exprCont(acc: Term, prec: Int, allowNewlines: Bool)(implicit et: ExpectThen, fe: FoundErr, l: Line): IfBody \/ Term = wrap(prec, s"`$acc`", allowNewlines) { l =>
     cur match {
+      case (KEYWORD(opStr @ "as"), l0) :: _ if opPrec(opStr)._1 > prec =>
+        // todo should change to bind left most and right most only
+        consume
+        R(As(acc, typ(0)))
       case (KEYWORD(opStr @ "=>"), l0) :: (NEWLINE, l1) :: _ if opPrec(opStr)._1 > prec =>
         consume
         val rhs = Blk(typingUnit.entities)

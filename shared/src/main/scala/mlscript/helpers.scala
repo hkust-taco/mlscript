@@ -528,6 +528,7 @@ trait TermImpl extends StatementImpl { self: Term =>
       case StrLit(value) => "string literal"
       case UnitLit(value) => if (value) "undefined literal" else "null literal"
       case Var(name) => "reference" // "variable reference"
+      case As(trm, ty) => "type upcast"
       case Asc(trm, ty) => "type ascription"
       case Lam(name, rhs) => "lambda expression"
       case App(OpApp(Var("|"), lhs), rhs) => "type union"
@@ -573,6 +574,7 @@ trait TermImpl extends StatementImpl { self: Term =>
     case StrLit(value) => '"'.toString + value + '"'
     case UnitLit(value) => if (value) "undefined" else "null"
     case v @ Var(name) => name + v.uid.fold("")("::"+_.toString)
+    case As(trm, ty) => s"$trm as ${ty.showDbg2}"  |> bra
     case Asc(trm, ty) => s"$trm : ${ty.showDbg2}"  |> bra
     case Lam(pat: Tup, rhs) => s"(${pat.showElems}) => $rhs" |> bra
     case Lam(pat, rhs) => s"(...$pat) => $rhs" |> bra
@@ -950,6 +952,7 @@ trait StatementImpl extends Located { self: Statement =>
   def children: List[Located] = this match {
     case Bra(_, trm) => trm :: Nil
     case Var(name) => Nil
+    case As(trm, ty) => trm :: Nil
     case Asc(trm, ty) => trm :: Nil
     case Lam(lhs, rhs) => lhs :: rhs :: Nil
     case App(lhs, rhs) => lhs :: rhs :: Nil

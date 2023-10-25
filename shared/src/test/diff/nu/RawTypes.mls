@@ -38,14 +38,12 @@ fun foo(f: Foo['a]) = f.a : f.A
 //│ fun foo: forall 'a. (f: Foo['a]) -> 'a
 
 fun foo(a, f: Foo[a]): Int = f.a : f.A
-//│ fun foo: forall 'A. ('A, f: Foo['A]) -> Int
+//│ fun foo: forall 'a. ('a, f: Foo['a]) -> Int
 //│   where
-//│     'A <: Int
+//│     'a <: Int
 
 fun bar(f): Int = f.a : f.A
-//│ fun bar: forall 'A. {A = 'A, a: 'A} -> Int
-//│   where
-//│     'A <: Int
+//│ fun bar: {A <: Int, a: Int} -> Int
 
 foo(2, Foo(1))
 //│ Int
@@ -106,40 +104,40 @@ fun foo(x: Foo): x.T = if x is Bar then x.b : x.T
 //│ | | | | | | | 2. Typing term (x).b
 //│ | | | | | | | | 2. Typing term x
 //│ | | | | | | | | 2. : #Bar<Object,Foo>
-//│ | | | | | | | | CONSTRAIN #Bar<Object,Foo> <! {b: b155''}
+//│ | | | | | | | | CONSTRAIN #Bar<Object,Foo> <! {b: b160''}
 //│ | | | | | | | |   where 
-//│ | | | | | | | | 2. C #Bar<Object,Foo> <! {b: b155''}    (0)
+//│ | | | | | | | | 2. C #Bar<Object,Foo> <! {b: b160''}    (0)
 //│ | | | | | | | | | Looking up field b in Some(Bar) & TreeSet() & {...}
 //│ | | | | | | | | | | Lookup Bar.b : Some(Int) where 
 //│ | | | | | | | | | | Fresh[0] Bar.b : Some(Int) where Some()
 //│ | | | | | | | | | |   & None  (from refinement)
-//│ | | | | | | | | | 2. C Int <! b155''    (1)
-//│ | | | | | | | | | | NEW b155'' LB (0)
-//│ | | | | | | | 2. : b155''
+//│ | | | | | | | | | 2. C Int <! b160''    (1)
+//│ | | | | | | | | | | NEW b160'' LB (0)
+//│ | | | | | | | 2. : b160''
 //│ | | | | | | | Typing type Selection(TypeName(x),TypeName(T))
 //│ | | | | | | | | vars=Map() newDefsInfo=Map()
 //│ | | | | | | | | 2. type Selection(TypeName(x),TypeName(T))
 //│ | | | | | | | | | 2. type TypeName(x)
 //│ | | | | | | | | | | ty var: x : #Bar<Object,Foo>
 //│ | | | | | | | | | => #Bar<Object,Foo>
-//│ | | | | | | | | => T143_147#
-//│ | | | | | | | => T143_147# ——— 
-//│ | | | | | | | CONSTRAIN b155'' <! T143_147#
+//│ | | | | | | | | => T148_152#
+//│ | | | | | | | => T148_152# ——— 
+//│ | | | | | | | CONSTRAIN b160'' <! T148_152#
 //│ | | | | | | |   where 
-//│ 		T143_147# := Int
-//│ 		b155'' :> Int
-//│ | | | | | | | 2. C b155'' <! T143_147#    (0)
-//│ | | | | | | | | 2. C b155'' <! Int    (2)
-//│ | | | | | | | | | NEW b155'' UB (0)
+//│ 		T148_152# := Int
+//│ 		b160'' :> Int
+//│ | | | | | | | 2. C b160'' <! T148_152#    (0)
+//│ | | | | | | | | 2. C b160'' <! Int    (2)
+//│ | | | | | | | | | NEW b160'' UB (0)
 //│ | | | | | | | | | 2. C Int <! Int    (4)
 //│ | | | | | | | | | | Already a subtype by <:<
-//│ | | | | | | 2. : T143_147#
-//│ | | | | | | CONSTRAIN T143_147# <! α154'
+//│ | | | | | | 2. : T148_152#
+//│ | | | | | | CONSTRAIN T148_152# <! α159'
 //│ | | | | | |   where 
-//│ 		T143_147# := Int
-//│ | | | | | | 2. C T143_147# <! α154'    (0)
-//│ | | | | | | | 2. C Int <! α154'    (2)
-//│ | | | | | | | | NEW α154' LB (0)
+//│ 		T148_152# := Int
+//│ | | | | | | 2. C T148_152# <! α159'    (0)
+//│ | | | | | | | 2. C Int <! α159'    (2)
+//│ | | | | | | | | NEW α159' LB (0)
 //│ | | | | | | CONSTRAIN #Foo<Object> <! #Bar<Object,Foo>
 //│ | | | | | |   where 
 //│ | | | | | | 1. C #Foo<Object> <! #Bar<Object,Foo>    (0)
@@ -150,74 +148,74 @@ fun foo(x: Foo): x.T = if x is Bar then x.b : x.T
 //│ | | | | | | | | | DNF: DNF(0, #Foo<Object>{})
 //│ | | | | | | | | | rcd2 {}
 //│ | | | | | | | | | typeRef Foo[⊥..⊤]
-//│ | | | | | | | | | Assigning T :: T143' := ⊥..⊤ where 
-//│ | | | | | | | | | Set T143_156 ~> T143'
+//│ | | | | | | | | | Assigning T :: T148' := ⊥..⊤ where 
+//│ | | | | | | | | | Set T148_161 ~> T148'
 //│ | | | | | | | | | clsFields T -> mut ⊥..⊤..⊥..⊤
 //│ | | | | | | | | ~> Foo[⊥..⊤]
-//│ | | | | | | | CONSTRAIN #error<> <! α154'
+//│ | | | | | | | CONSTRAIN #error<> <! α159'
 //│ | | | | | | |   where 
-//│ 		α154' :> Int
-//│ | | | | | | | 1. C #error<> <! α154'    (0)
-//│ | | | | | | | | NEW α154' LB (0)
+//│ 		α159' :> Int
+//│ | | | | | | | 1. C #error<> <! α159'    (0)
+//│ | | | | | | | | NEW α159' LB (0)
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.76: 	fun foo(x: Foo): x.T = if x is Bar then x.b : x.T
+//│ ║  l.74: 	fun foo(x: Foo): x.T = if x is Bar then x.b : x.T
 //│ ║        	                          ^^^^^^^^^^^^^^^^^
 //│ ╟── type `Foo[?]` is not an instance of type `Bar`
-//│ ║  l.76: 	fun foo(x: Foo): x.T = if x is Bar then x.b : x.T
+//│ ║  l.74: 	fun foo(x: Foo): x.T = if x is Bar then x.b : x.T
 //│ ║        	           ^^^
 //│ ╟── Note: constraint arises from class pattern:
-//│ ║  l.76: 	fun foo(x: Foo): x.T = if x is Bar then x.b : x.T
+//│ ║  l.74: 	fun foo(x: Foo): x.T = if x is Bar then x.b : x.T
 //│ ╙──      	                               ^^^
-//│ | | | | | 1. : α154'
-//│ | | | | 1. : α154'
+//│ | | | | | 1. : α159'
+//│ | | | | 1. : α159'
 //│ | | | | Typing type Selection(TypeName(x),TypeName(T))
 //│ | | | | | vars=Map() newDefsInfo=Map()
 //│ | | | | | 1. type Selection(TypeName(x),TypeName(T))
 //│ | | | | | | 1. type TypeName(x)
 //│ | | | | | | | ty var: x : #Foo<Object>
 //│ | | | | | | => #Foo<Object>
-//│ | | | | | => ‘T143'
-//│ | | | | => ‘T143' ——— 
-//│ | | | | CONSTRAIN α154' <! ‘T143'
+//│ | | | | | => ‘T148'
+//│ | | | | => ‘T148' ——— 
+//│ | | | | CONSTRAIN α159' <! ‘T148'
 //│ | | | |   where 
-//│ 		α154' :> #error<> | Int
-//│ | | | | 1. C α154' <! ‘T143'    (0)
-//│ | | | | | NEW α154' UB (1)
-//│ | | | | | 1. C #error<> <! ‘T143'    (2)
-//│ | | | | | 1. C Int <! ‘T143'    (2)
-//│ | | | | | | 1. C #Int<Object,Num> <! ‘T143'    (4)
-//│ | | | | | | | CONSTRAINT FAILURE: #Int<Object,Num> <: ‘T143'
-//│ | | | | | | | allVarPols: -T143'
-//│ | | | | | | | normLike[-] ‘T143'
-//│ | | | | | | | | norm[-] ‘T143'
-//│ | | | | | | | | | DNF: DNF(1, {}∧‘T143')
-//│ | | | | | | | | ~> ‘T143'
+//│ 		α159' :> #error<> | Int
+//│ | | | | 1. C α159' <! ‘T148'    (0)
+//│ | | | | | NEW α159' UB (1)
+//│ | | | | | 1. C #error<> <! ‘T148'    (2)
+//│ | | | | | 1. C Int <! ‘T148'    (2)
+//│ | | | | | | 1. C #Int<Object,Num> <! ‘T148'    (4)
+//│ | | | | | | | CONSTRAINT FAILURE: #Int<Object,Num> <: ‘T148'
+//│ | | | | | | | allVarPols: -T148'
+//│ | | | | | | | normLike[-] ‘T148'
+//│ | | | | | | | | norm[-] ‘T148'
+//│ | | | | | | | | | DNF: DNF(1, {}∧‘T148')
+//│ | | | | | | | | ~> ‘T148'
 //│ | | | | | | | allVarPols: 
 //│ | | | | | | | normLike[+] #Int<Object,Num>
 //│ | | | | | | | | norm[+] #Int<Object,Num>
 //│ | | | | | | | | | DNF: DNF(0, #Int<Object,Num>{})
 //│ | | | | | | | | ~> #Int<Object,Num>
-//│ | | | | | | | CONSTRAIN #error<> <! ‘T143'
+//│ | | | | | | | CONSTRAIN #error<> <! ‘T148'
 //│ | | | | | | |   where 
-//│ | | | | | | | 1. C #error<> <! ‘T143'    (0)
+//│ | | | | | | | 1. C #error<> <! ‘T148'    (0)
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.76: 	fun foo(x: Foo): x.T = if x is Bar then x.b : x.T
+//│ ║  l.74: 	fun foo(x: Foo): x.T = if x is Bar then x.b : x.T
 //│ ║        	                          ^^^^^^^^^^^^^^^^^
 //│ ╟── type `Int` does not match type `T`
-//│ ║  l.71: 	class Bar(val b: Int) extends Foo[Int]
+//│ ║  l.69: 	class Bar(val b: Int) extends Foo[Int]
 //│ ║        	                                  ^^^
 //│ ╟── Note: constraint arises from type parameter:
-//│ ║  l.70: 	abstract class Foo[type T]: Bar
+//│ ║  l.68: 	abstract class Foo[type T]: Bar
 //│ ╙──      	                        ^
-//│ | | | 1. : ‘T143'
-//│ | | 1. : ((x: #Foo<Object>,) -> ‘T143')
-//│ | | CONSTRAIN ((x: #Foo<Object>,) -> ‘T143') <! foo157'
+//│ | | | 1. : ‘T148'
+//│ | | 1. : ((x: #Foo<Object>,) -> ‘T148')
+//│ | | CONSTRAIN ((x: #Foo<Object>,) -> ‘T148') <! foo162'
 //│ | |   where 
-//│ | | 1. C ((x: #Foo<Object>,) -> ‘T143') <! foo157'    (0)
-//│ | | | NEW foo157' LB (1)
-//│ | Completed TypedNuFun(0,fun foo = (x: Foo,) => if (is(x, Bar,)) then (x).b : x.T : x.T,((x: #Foo<Object>,) -> ‘T143')) where 
+//│ | | 1. C ((x: #Foo<Object>,) -> ‘T148') <! foo162'    (0)
+//│ | | | NEW foo162' LB (1)
+//│ | Completed TypedNuFun(0,fun foo = (x: Foo,) => if (is(x, Bar,)) then (x).b : x.T : x.T,((x: #Foo<Object>,) -> ‘T148')) where 
 //│ | Typing unit statements
 //│ | : None
 //│ ======== TYPED ========
-//│ fun foo: ‹∀ 0. ((x: #Foo<Object>,) -> ‘T143')› where 
+//│ fun foo: ‹∀ 0. ((x: #Foo<Object>,) -> ‘T148')› where 
 //│ fun foo: (x: Foo[in anything out nothing]) -> nothing

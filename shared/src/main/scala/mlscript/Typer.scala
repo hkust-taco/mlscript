@@ -586,9 +586,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
             println(s"Type selection : $t")
             implicit val prov: TypeProvenance = tyTp(nme.toLoc, "type selection")
             val ub = freshVar(prov, N, S(nme.name))
-            // val lb = freshVar(prov, N, S(nme.name))
-            // lb.upperBounds ::= ub
-            val res = RecordType.mk((nme.toVar, FieldType(S(ub), ub)(prov)) :: Nil)(prov)
+            val lb = freshVar(prov, N, S(nme.name))
+            lb.upperBounds ::= ub
+            val res = RecordType.mk((nme.toVar, FieldType(S(lb), ub)(prov)) :: Nil)(prov)
             constrain(t, res)
             ub
         }
@@ -828,6 +828,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       case v @ Var("_") =>
         if (ctx.inPattern || funkyTuples) freshVar(tp(v.toLoc, "wildcard"), N)
         else err(msg"Widlcard in expression position.", v.toLoc)
+
+      case As(trm, ty) =>
+        if (ctx.inPattern) err(msg"`as` used in pattern", trm.toLoc)
+        // todo
+        val trm_ty = typePolymorphicTerm(trm)
+        val ty_ty = typeType(ty)(ctx.copy(inPattern = false), raise, vars)
+        con(trm_ty, ty_ty, ty_ty)
         
       case Asc(v @ ValidPatVar(nme), ty) =>
         val ty_ty = typeType(ty)(ctx.copy(inPattern = false), raise, vars)

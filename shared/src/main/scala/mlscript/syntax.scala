@@ -74,6 +74,7 @@ final case class Let(isRec: Bool, name: Var, rhs: Term, body: Term)  extends Ter
 final case class Blk(stmts: Ls[Statement])                           extends Term with BlkImpl with Outer
 final case class Bra(rcd: Bool, trm: Term)                           extends Term
 final case class Asc(trm: Term, ty: Type)                            extends Term
+final case class As(trm: Term, ty: Type)                             extends Term // `as` keyword, typer should be changed later
 final case class Bind(lhs: Term, rhs: Term)                          extends Term
 final case class Test(trm: Term, ty: Term)                           extends Term
 final case class With(trm: Term, fields: Rcd)                        extends Term

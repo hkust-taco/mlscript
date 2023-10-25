@@ -28,7 +28,7 @@ fun f(x) = x
 //│ fun f: ‹∀ 0. (x29' -> x29')› where 
 //│ fun f: forall 'x. 'x -> 'x
 
-abstract class S[T]: A | B
+abstract class S[type T]: A | B
 module A extends S[Int]
 module B extends S[Bool]
 //│ abstract class S[T]: A | B
@@ -39,3 +39,57 @@ fun f(x: S['a]) = if x is
     A then 1
     B then 2
 //│ fun f: forall 'a. (x: S['a]) -> (1 | 2)
+
+fun f(x: S): x.T = if x is 
+    A then
+        let ret: x.T = 1
+        ret
+    B then
+        let ret: x.T = true
+        ret
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.43: 	fun f(x: S): x.T = if x is 
+//│ ║        	                      ^^^^^
+//│ ║  l.44: 	    A then
+//│ ║        	^^^^^^^^^^
+//│ ║  l.45: 	        let ret: x.T = 1
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.46: 	        ret
+//│ ║        	^^^^^^^^^^^
+//│ ║  l.47: 	    B then
+//│ ║        	^^^^^^^^^^
+//│ ║  l.48: 	        let ret: x.T = true
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.49: 	        ret
+//│ ║        	^^^^^^^^^^^
+//│ ╟── type `S[?]` does not match type `A | B`
+//│ ║  l.43: 	fun f(x: S): x.T = if x is 
+//│ ║        	         ^
+//│ ╟── but it flows into reference with expected type `A | B`
+//│ ║  l.43: 	fun f(x: S): x.T = if x is 
+//│ ╙──      	                      ^
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.43: 	fun f(x: S): x.T = if x is 
+//│ ║        	                      ^^^^^
+//│ ║  l.44: 	    A then
+//│ ║        	^^^^^^^^^^
+//│ ║  l.45: 	        let ret: x.T = 1
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.46: 	        ret
+//│ ║        	^^^^^^^^^^^
+//│ ║  l.47: 	    B then
+//│ ║        	^^^^^^^^^^
+//│ ║  l.48: 	        let ret: x.T = true
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.49: 	        ret
+//│ ║        	^^^^^^^^^^^
+//│ ╟── type `Int` does not match type `T`
+//│ ║  l.32: 	module A extends S[Int]
+//│ ║        	                   ^^^
+//│ ╟── but it flows into reference with expected type `T`
+//│ ║  l.46: 	        ret
+//│ ║        	        ^^^
+//│ ╟── Note: constraint arises from type parameter:
+//│ ║  l.31: 	abstract class S[type T]: A | B
+//│ ╙──      	                      ^
+//│ fun f: (x: S[in anything out nothing]) -> nothing

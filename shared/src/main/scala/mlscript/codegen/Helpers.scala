@@ -26,6 +26,7 @@ object Helpers {
     case Let(isRec, name, rhs, body) => s"Let($isRec, $name, ${inspect(rhs)}, ${inspect(body)})"
     case Blk(stmts)                  => s"Blk(...)"
     case Bra(rcd, trm)               => s"Bra(rcd = $rcd, ${inspect(trm)})"
+    case As(trm, ty)                => s"As(${inspect(trm)}, $ty)"
     case Asc(trm, ty)                => s"Asc(${inspect(trm)}, $ty)"
     case Bind(lhs, rhs)              => s"Bind(${inspect(lhs)}, ${inspect(rhs)})"
     case Test(trm, ty)               => s"Test(${inspect(trm)}, ${inspect(ty)})"

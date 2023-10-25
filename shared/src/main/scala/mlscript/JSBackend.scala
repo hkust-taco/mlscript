@@ -66,7 +66,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       translatePattern(base)
     case Inst(bod) => translatePattern(bod)
     case _: Lam | _: App | _: Sel | _: Let | _: Blk | _: Bind | _: Test | _: With | _: CaseOf | _: Subs | _: Assign
-        | If(_, _) | New(_, _) | _: Splc | _: Forall | _: Where | _: Super | _: Eqn | _: AdtMatchWith =>
+        | If(_, _) | New(_, _) | _: Splc | _: Forall | _: Where | _: Super | _: Eqn | _: AdtMatchWith | _: As =>
       throw CodeGenError(s"term ${inspect(t)} is not a valid pattern")
   }
 
@@ -265,6 +265,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     case StrLit(value) => JSExpr(value)
     case UnitLit(value) => JSLit(if (value) "undefined" else "null")
     // `Asc(x, ty)` <== `x: Type`
+    case As(trm, _)  => translateTerm(trm)
     case Asc(trm, _) => translateTerm(trm)
     // `c with { x = "hi"; y = 2 }`
     case With(trm, Rcd(fields)) =>
