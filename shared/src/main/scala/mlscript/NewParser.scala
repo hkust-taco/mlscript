@@ -605,6 +605,10 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       case (KEYWORD("super"), l0) :: _ =>
         consume
         exprCont(Super().withLoc(S(l0)), prec, allowNewlines = false)
+      case (IDENT("?", true), l0) :: _ => 
+        consume
+        printDbg("? type")
+        exprCont(WildcardType().withLoc(S(l0)), prec, allowNewlines = false)
       case (IDENT("~", _), l0) :: _ =>
         consume
         val rest = expr(prec, allowSpace = true)
@@ -1138,7 +1142,10 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       case (SPACE, _) :: _ =>
         consume
         argsOrIf(acc, seqAcc, allowNewlines, prec)
-      case (NEWLINE | IDENT(_, true), _) :: _ => // TODO: | ...
+      case (NEWLINE, _) :: _ => // TODO: | ...
+        assert(seqAcc.isEmpty)
+        acc.reverse
+      case (IDENT(i, true), _) :: _ if i  =/= "?" => // TODO: | ...
         assert(seqAcc.isEmpty)
         acc.reverse
       case _ =>

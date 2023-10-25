@@ -558,6 +558,7 @@ trait TermImpl extends StatementImpl { self: Term =>
       case Super() => "super"
       case Eqn(lhs, rhs) => "assign for ctor"
       case AdtMatchWith(cond, arms) => "ADT pattern matching"
+      case WildcardType() => "wildcard type"
     }
   }
   
@@ -614,6 +615,7 @@ trait TermImpl extends StatementImpl { self: Term =>
     case Eqn(lhs, rhs) => s"${lhs} = ${rhs}"
     case AdtMatchWith(cond, arms) =>
       s"match ${cond} with ${arms.map (patmat => s"${patmat.pat} -> ${patmat.rhs}").mkString (" | ") }"
+    case WildcardType() => "?"
   }}
   
   def toTypeRaise(implicit raise: Raise): Type = toType match {
@@ -684,6 +686,8 @@ trait TermImpl extends StatementImpl { self: Term =>
     // case Test(trm, ty) => ???
     // case With(trm, fieldNme, fieldVal) => ???
     // case CaseOf(trm, cases) => ???
+    case WildcardType() =>
+      TypeName("?") // really?
     case _ => throw new NotAType(this)
   }).withLocOf(this)
   
@@ -987,6 +991,7 @@ trait StatementImpl extends Located { self: Statement =>
     case NuTypeDef(k, nme, tps, ps, ctor, sig, pars, sup, ths, bod) =>
       nme :: tps.map(_._2) ::: ps.toList ::: pars ::: ths.toList ::: bod :: Nil
     case AdtMatchWith(cond, _) => cond :: Nil // FIXME discards branches...
+    case WildcardType() => Nil
   }
   
   

@@ -499,6 +499,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       case Literal(lit) =>
         ClassTag(lit, if (newDefs) lit.baseClassesNu
           else lit.baseClassesOld)(tyTp(ty.toLoc, "literal type"))
+      case wc @ TypeName("?") => // TODO handle typing of C[?]
+        implicit val prov: TypeProvenance = tyTp(ty.toLoc, "wildcard")
+        // ctx.poly { implicit ctx =>
+          val fv = freshVar(prov, N, S("?"))(lvl+1)
+          SkolemTag(fv)(prov)
+        // }
       case TypeName("this") =>
         ctx.env.get("this") match {
           case S(_: AbstractConstructor | _: LazyTypeInfo) => die
@@ -828,6 +834,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       case v @ Var("_") =>
         if (ctx.inPattern || funkyTuples) freshVar(tp(v.toLoc, "wildcard"), N)
         else err(msg"Widlcard in expression position.", v.toLoc)
+
+      case w @ WildcardType() => 
+        err(msg"Cannot use ? as expression", w.toLoc)
 
       case As(trm, ty) =>
         if (ctx.inPattern) err(msg"`as` used in pattern", trm.toLoc)

@@ -61,6 +61,7 @@ object Helpers {
     case Super() => "Super()"
     case AdtMatchWith(cond, arms) =>
       s"match ${inspect(cond)} with ${arms.map(patmat => s"${inspect(patmat.pat)} -> ${inspect(patmat.rhs)}").mkString(" | ")}"
+    case WildcardType() => "?"
   }
 
   def inspect(body: IfBody): Str = body match {

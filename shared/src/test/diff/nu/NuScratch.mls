@@ -42,24 +42,24 @@ fun f(x: S['a]) = if x is
 
 fun f(x: S): x.T = if x is 
     A then
-        let ret: x.T = 1
+        let ret = 1 as x.T
         ret
     B then
-        let ret: x.T = true
+        let ret = true as x.T
         ret
 //│ ╔══[ERROR] Type mismatch in `case` expression:
 //│ ║  l.43: 	fun f(x: S): x.T = if x is 
 //│ ║        	                      ^^^^^
 //│ ║  l.44: 	    A then
 //│ ║        	^^^^^^^^^^
-//│ ║  l.45: 	        let ret: x.T = 1
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.45: 	        let ret = 1 as x.T
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.46: 	        ret
 //│ ║        	^^^^^^^^^^^
 //│ ║  l.47: 	    B then
 //│ ║        	^^^^^^^^^^
-//│ ║  l.48: 	        let ret: x.T = true
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.48: 	        let ret = true as x.T
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.49: 	        ret
 //│ ║        	^^^^^^^^^^^
 //│ ╟── type `S[?]` does not match type `A | B`
@@ -73,14 +73,14 @@ fun f(x: S): x.T = if x is
 //│ ║        	                      ^^^^^
 //│ ║  l.44: 	    A then
 //│ ║        	^^^^^^^^^^
-//│ ║  l.45: 	        let ret: x.T = 1
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.45: 	        let ret = 1 as x.T
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.46: 	        ret
 //│ ║        	^^^^^^^^^^^
 //│ ║  l.47: 	    B then
 //│ ║        	^^^^^^^^^^
-//│ ║  l.48: 	        let ret: x.T = true
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.48: 	        let ret = true as x.T
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.49: 	        ret
 //│ ║        	^^^^^^^^^^^
 //│ ╟── type `Int` does not match type `T`
@@ -93,3 +93,43 @@ fun f(x: S): x.T = if x is
 //│ ║  l.31: 	abstract class S[type T]: A | B
 //│ ╙──      	                      ^
 //│ fun f: (x: S[in anything out nothing]) -> nothing
+
+fun foo(x: S[?]) = x
+//│ fun foo: (x: S[nothing]) -> S[nothing]
+
+:e
+foo(A)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.101: 	foo(A)
+//│ ║         	^^^^^^
+//│ ╟── type `Int` does not match type `?`
+//│ ║  l.32: 	module A extends S[Int]
+//│ ║        	                   ^^^
+//│ ╟── Note: constraint arises from wildcard:
+//│ ║  l.97: 	fun foo(x: S[?]) = x
+//│ ╙──      	             ^
+//│ S[nothing] | error
+//│ res
+//│     = A { class: [class A extends S] }
+
+// todo
+let y: ? = 1
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.116: 	let y: ? = 1
+//│ ║         	           ^
+//│ ╟── integer literal of type `1` does not match type `?`
+//│ ╟── Note: constraint arises from wildcard:
+//│ ║  l.116: 	let y: ? = 1
+//│ ╙──       	       ^
+//│ let y: nothing
+//│ y
+//│   = 1
+
+:e
+let x = ?
+//│ ╔══[ERROR] Cannot use ? as expression
+//│ ║  l.129: 	let x = ?
+//│ ╙──       	        ^
+//│ let x: error
+//│ Code generation encountered an error:
+//│   cannot generate code for term ?
