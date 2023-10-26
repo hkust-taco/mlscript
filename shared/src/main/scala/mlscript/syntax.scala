@@ -126,10 +126,10 @@ final case class LetS(isRec: Bool, pat: Term, rhs: Term) extends Statement
 final case class DataDefn(body: Term)                    extends Statement
 final case class DatatypeDefn(head: Term, body: Term)    extends Statement
 final case class Constructor(params: Tup, body: Blk)     extends Statement // constructor(...) { ... }
-class Import(val path: Str)                              extends Statement
+class Import(val path: Str, val weak: Bool)              extends Statement
 
 object Import {
-  def apply(path: Str): Import = new Import(path)
+  def apply(path: Str, weak: Bool): Import = new Import(path, weak)
 }
 
 sealed trait DesugaredStatement extends Statement with DesugaredStatementImpl

@@ -328,6 +328,19 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       S(res, _cur)
     }
   }
+
+  final def importPath: Str = yeetSpaces match {
+    case (LITVAL(StrLit(path)), _) :: _ =>
+      consume
+      path
+    case c =>
+      val (tkstr, loc) = c.headOption.fold(("end of input", lastLoc))(_.mapFirst(_.describe).mapSecond(some))
+      err((
+        msg"Expected a module path; found ${tkstr} instead" -> loc :: Nil))
+      "<error>"
+  }
+
+
   final def block(prev: Ls[IfBody \/ Statement])(implicit et: ExpectThen, fe: FoundErr): Ls[IfBody \/ Statement] =
     cur match {
       case Nil => prev.reverse
@@ -352,19 +365,17 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         }
       case c =>
         val t = c match {
+          case (KEYWORD("weak"), l0) :: (SPACE, l1) :: (KEYWORD("import"), l2) :: c =>
+            consume
+            consume
+            consume
+            val path = importPath
+            val res = Import(path, true)
+            R(res.withLoc(S(l0 ++ l1 ++ l2 ++ res.getLoc)))
           case (KEYWORD("import"), l0) :: c =>
             consume
-            val path = yeetSpaces match {
-              case (LITVAL(StrLit(path)), _) :: _ =>
-                consume
-                path
-              case c =>
-                val (tkstr, loc) = c.headOption.fold(("end of input", lastLoc))(_.mapFirst(_.describe).mapSecond(some))
-                err((
-                  msg"Expected a module path; found ${tkstr} instead" -> loc :: Nil))
-                "<error>"
-            }
-            val res = Import(path)
+            val path = importPath
+            val res = Import(path, false)
             R(res.withLoc(S(l0 ++ res.getLoc)))
           case ModifierSet(mods, (KEYWORD(k @ ("class" | "infce" | "trait" | "mixin" | "type" | "module")), l0) :: c) =>
             consume

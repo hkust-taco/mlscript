@@ -1,4 +1,4 @@
-import "./Cycle2.mls"
+weak import "./Cycle2.mls"
 
 export fun f(x: Int): Int = if x is
   0 then 114

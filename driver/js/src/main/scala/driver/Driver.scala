@@ -302,13 +302,13 @@ class Driver(options: DriverOptions) {
               val res = packTopModule(Some(file.moduleName), `type`(TypingUnit(definitions), false, mlsiWriter.writeErr).show(true))
               res
             }
-          val interfaces = otherList.map(s => Import(file.translateImportToInterface(s))).foldRight(expStr)((imp, itf) => s"$imp\n$itf")
+          val interfaces = otherList.map(s => Import(file.translateImportToInterface(s), false)).foldRight(expStr)((imp, itf) => s"$imp\n$itf")
 
           mlsiWriter.write(interfaces)
           mlsiWriter.close()
           if (totalErrors == 0)
             generate(Pgrm(definitions), jsFile, file.moduleName, imports.map(
-              imp => new Import(resolveJSPath(file, imp.path)) with ModuleType {
+              imp => new Import(resolveJSPath(file, imp.path), imp.weak) with ModuleType {
                 val isESModule = checkESModule(path, TSPathResolver.resolve(file.filename))
               }
             ), jsBuiltinDecs ++ importedSym, exported || importedModule(file.filename))

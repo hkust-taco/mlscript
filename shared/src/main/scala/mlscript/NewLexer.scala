@@ -328,6 +328,7 @@ object NewLexer {
     "exists",
     "in",
     "out",
+    "weak",
     "import",
     "null",
     "undefined",
