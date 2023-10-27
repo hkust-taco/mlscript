@@ -365,13 +365,19 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         }
       case c =>
         val t = c match {
-          case (KEYWORD("weak"), l0) :: (SPACE, l1) :: (KEYWORD("import"), l2) :: c =>
+          case (KEYWORD("weak"), l0) :: c =>
             consume
-            consume
-            consume
-            val path = importPath
-            val res = Import(path, true)
-            R(res.withLoc(S(l0 ++ l1 ++ l2 ++ res.getLoc)))
+            yeetSpaces match {
+              case (KEYWORD("import"), l1) :: _ =>
+                consume
+                val path = importPath
+                val res = Import(path, true)
+                R(res.withLoc(S(l0 ++ l1 ++ res.getLoc)))
+              case _ =>
+                err(msg"Unexpected weak" -> S(l0) :: Nil)
+                R(errExpr)
+            }
+            
           case (KEYWORD("import"), l0) :: c =>
             consume
             val path = importPath
