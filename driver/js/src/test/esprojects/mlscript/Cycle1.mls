@@ -1,5 +1,5 @@
 weak import "./Cycle2.mls"
 
-export fun f(x: Int): Int = if x is
+export fun f(x) = if x is
   0 then 114
   _ then Cycle2.g(x - 1)

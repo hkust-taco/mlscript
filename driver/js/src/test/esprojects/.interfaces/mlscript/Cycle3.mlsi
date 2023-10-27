@@ -1,5 +1,5 @@
 export declare module Cycle3 {
-  fun f: (x: Int) -> Int
+  fun f: (0 | Int & ~0) -> (114 | error)
 }
 //| Use `weak import` to break the cycle dependency `import "./Cycle4.mls"`
 //| ╔══[ERROR] identifier not found: Cycle4

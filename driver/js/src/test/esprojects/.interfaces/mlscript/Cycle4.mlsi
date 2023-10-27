@@ -3,3 +3,15 @@ export declare module Cycle4 {
   fun g: (x: Int) -> Int
   ()
 }
+//| ╔══[ERROR] Type mismatch in type ascription:
+//| ║  l.4: 	export fun g(x: Int): Int = Cycle3.f(x)
+//| ║       	                            ^^^^^^^^^^^
+//| ╟── type `error` is not an instance of `Int`
+//| ║  l.2: 	  fun f: (0 | Int & ~0) -> (114 | error)
+//| ║       	                                  ^^^^^
+//| ╟── but it flows into application with expected type `Int`
+//| ║  l.4: 	export fun g(x: Int): Int = Cycle3.f(x)
+//| ║       	                            ^^^^^^^^^^^
+//| ╟── Note: constraint arises from type reference:
+//| ║  l.4: 	export fun g(x: Int): Int = Cycle3.f(x)
+//| ╙──     	                      ^^^
