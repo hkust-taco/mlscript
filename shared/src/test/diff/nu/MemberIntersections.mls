@@ -4,7 +4,7 @@
 
 
 trait T1 { fun f[A]: A -> A }
-trait T2 { fun f[B, C]: (B, C) -> (B, C) }
+trait T2 { fun f[B, C]: (B, C) -> [B, C] }
 trait T3 extends T1, T2
 //│ trait T1 {
 //│   fun f: forall 'A. 'A -> 'A
@@ -19,17 +19,19 @@ trait T3 extends T1, T2
 
 trait S1 { class f }
 //│ trait S1 {
-//│   class f
+//│   class f {
+//│     constructor()
+//│   }
 //│ }
 
 :e
 trait S2 extends T1, S1
 //│ ╔══[ERROR] Intersection of value member and class members currently unsupported
-//│ ║  l.26: 	trait S2 extends T1, S1
+//│ ║  l.28: 	trait S2 extends T1, S1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── The value member is defined here:
 //│ ║  l.6: 	trait T1 { fun f[A]: A -> A }
-//│ ║       	               ^^^^^^^^^^^^
+//│ ║       	           ^^^^^^^^^^^^^^^^
 //│ ╟── The class member is defined here:
 //│ ║  l.20: 	trait S1 { class f }
 //│ ╙──      	           ^^^^^^^
@@ -37,26 +39,28 @@ trait S2 extends T1, S1
 
 trait S2 { class f }
 //│ trait S2 {
-//│   class f
+//│   class f {
+//│     constructor()
+//│   }
 //│ }
 
 :e
 trait S3 extends S1, S2
 //│ ╔══[ERROR] Intersection of class member and class members currently unsupported
-//│ ║  l.44: 	trait S3 extends S1, S2
+//│ ║  l.48: 	trait S3 extends S1, S2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── The class member is defined here:
 //│ ║  l.20: 	trait S1 { class f }
 //│ ║        	           ^^^^^^^
 //│ ╟── The class member is defined here:
-//│ ║  l.38: 	trait S2 { class f }
+//│ ║  l.40: 	trait S2 { class f }
 //│ ╙──      	           ^^^^^^^
 //│ trait S3 extends S1, S2
 
 
 trait S1 { val f: Int -> Int }
 //│ trait S1 {
-//│   let f: Int -> Int
+//│   val f: Int -> Int
 //│ }
 
 trait S2 extends T1, S1
@@ -70,15 +74,15 @@ trait S3 extends S1, T1
 //│ }
 
 
-class C1(x: Int | Bool)
-trait T1 { val x: Int | string }
+class C1(val x: Int | Bool)
+trait T1 { val x: Int | Str }
 //│ class C1(x: Int | false | true)
 //│ trait T1 {
-//│   let x: Int | string
+//│   val x: Int | Str
 //│ }
 
-class C2 extends C1(0), T1
-//│ class C2 extends C1, T1
+class C2() extends C1(0), T1
+//│ class C2() extends C1, T1
 
 C2().x : 0
 //│ 0
@@ -86,39 +90,33 @@ C2().x : 0
 :e
 class C2 extends C1(false), T1
 //│ ╔══[ERROR] Type mismatch in reference:
-//│ ║  l.87: 	class C2 extends C1(false), T1
+//│ ║  l.91: 	class C2 extends C1(false), T1
 //│ ║        	                    ^^^^^
-//│ ╟── reference of type `false` does not match type `Int | string`
+//│ ╟── reference of type `false` does not match type `Int | Str`
 //│ ╟── Note: constraint arises from union type:
-//│ ║  l.74: 	trait T1 { val x: Int | string }
-//│ ║        	                  ^^^^^^^^^^^^
+//│ ║  l.78: 	trait T1 { val x: Int | Str }
+//│ ║        	                  ^^^^^^^^^
 //│ ╟── from signature of member `x`:
-//│ ║  l.74: 	trait T1 { val x: Int | string }
-//│ ╙──      	               ^^^^^^^^^^^^^^^
-//│ class C2 extends C1, T1
+//│ ║  l.78: 	trait T1 { val x: Int | Str }
+//│ ╙──      	               ^^^^^^^^^^^^
+//│ class C2 extends C1, T1 {
+//│   constructor()
+//│ }
 
 :e
 class C2 extends C1("oops"), T1
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.101: 	class C2 extends C1("oops"), T1
+//│ ║  l.107: 	class C2 extends C1("oops"), T1
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"oops"` does not match type `Bool | Int`
-//│ ║  l.101: 	class C2 extends C1("oops"), T1
+//│ ║  l.107: 	class C2 extends C1("oops"), T1
 //│ ║         	                    ^^^^^^
 //│ ╟── Note: constraint arises from union type:
-//│ ║  l.73: 	class C1(x: Int | Bool)
-//│ ╙──      	            ^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in string literal:
-//│ ║  l.101: 	class C2 extends C1("oops"), T1
-//│ ║         	                    ^^^^^^
-//│ ╟── string literal of type `"oops"` does not match type `Int | string`
-//│ ╟── Note: constraint arises from union type:
-//│ ║  l.74: 	trait T1 { val x: Int | string }
-//│ ║        	                  ^^^^^^^^^^^^
-//│ ╟── from signature of member `x`:
-//│ ║  l.74: 	trait T1 { val x: Int | string }
-//│ ╙──      	               ^^^^^^^^^^^^^^^
-//│ class C2 extends C1, T1
+//│ ║  l.77: 	class C1(val x: Int | Bool)
+//│ ╙──      	                ^^^^^^^^^^
+//│ class C2 extends C1, T1 {
+//│   constructor()
+//│ }
 
 
 

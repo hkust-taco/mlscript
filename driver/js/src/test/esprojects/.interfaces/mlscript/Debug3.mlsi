@@ -1,20 +1,17 @@
-export declare module Debug3() {
+export declare module Debug3 {
   let z: 1
 }
-//| 0. Typing TypingUnit(List(let z = 1))
+//| 0. Typing ‹let z = 1›
 //| | 0. Created lazy type info for let z = 1
 //| | Completing let z = 1
-//| | | UNSTASHING... (out)
 //| | | Type params 
-//| | | UNSTASHING... (out)
 //| | | Params 
 //| | | 0. Typing term 1
 //| | | 0. : #1<Int,Num,Object>
-//| | | CONSTRAIN #1<Int,Num,Object> <! z2407'
+//| | | CONSTRAIN #1<Int,Num,Object> <! z1570'
 //| | |   where 
-//| | | 1. C #1<Int,Num,Object> <! z2407'    (0)
-//| | | | NEW z2407' LB (0)
-//| | | UNSTASHING... (out)
+//| | | 1. C #1<Int,Num,Object> <! z1570'    (0)
+//| | | | NEW z1570' LB (0)
 //| | Completed TypedNuFun(0,let z = 1,#1<Int,Num,Object>) where 
 //| | Typing unit statements
 //| | : None

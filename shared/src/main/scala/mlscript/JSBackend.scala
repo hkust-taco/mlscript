@@ -277,6 +277,12 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
           name -> translateTerm(value)
         }) :: Nil
       )
+    // Only parenthesize binary operators
+    // Custom operators do not need special handling since they are desugared to plain methods
+    case Bra(false, trm) => trm match { 
+      case App(Var(op), _) if JSBinary.operators.contains(op) => JSParenthesis(translateTerm(trm)) 
+      case trm => translateTerm(trm)
+    }
     case Bra(_, trm) => translateTerm(trm)
     case Tup(terms) =>
       JSArray(terms map { case (_, Fld(_, term)) => translateTerm(term) })
@@ -873,7 +879,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
           val ins = unapplyScope.declareParameter(nme)
           JSClassMethod("unapply", JSNamePattern(ins) :: Nil, L(JSArray(fields.map {
             case _ -> Fld(_, trm) => trm match {
-              case Sel(Var(ins), Var(f)) => JSIdent(s"$ins.#$f")
+              case Sel(Var(ins), Var(f)) => JSIdent(s"$ins.$f")
               case _ => translateTerm(trm)
             } 
           }))) :: Nil
@@ -1060,7 +1066,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
 
     typeDefs.foreach {
       case td @ NuTypeDef(Mxn, TypeName(nme), tps, tup, ctor, sig, pars, sup, ths, unit) => {
-        checkNewTypeName(nme)
+        if (!td.isDecl) checkNewTypeName(nme)
         val (body, members, signatures, stmts, nested, publicCtors) = prepare(nme, tup.getOrElse(Tup(Nil)).fields, pars, unit)
         val sym = MixinSymbol(nme, tps map { _._2.name }, body, members, signatures, stmts, publicCtors, nested, qualifier).tap(scope.register)
         if (!td.isDecl) mixins += sym
@@ -1071,14 +1077,15 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         if (!td.isDecl) modules += sym
       }
       case td @ NuTypeDef(Als, TypeName(nme), tps, _, ctor, sig, pars, _, _, _) => {
-        checkNewTypeName(nme)
+        if (!td.isDecl) checkNewTypeName(nme)
         scope.declareTypeAlias(nme, tps map { _._2.name }, sig.getOrElse(Top))
       }
       case td @ NuTypeDef(Cls, TypeName(nme), tps, tup, ctor, sig, pars, sup, ths, unit) => {
-        checkNewTypeName(nme)
+        if (!td.isDecl) checkNewTypeName(nme)
         val (params, preStmts) = ctor match {
           case S(Constructor(Tup(ls), Blk(stmts))) => (S(ls.map {
             case (S(Var(nme)), Fld(flags, _)) => (nme, flags.genGetter)
+            case (N, Fld(flags, Var(nme))) => (nme, flags.genGetter)
             case _ => throw CodeGenError(s"Unexpected constructor parameters in $nme.")
           }), stmts)
           case _ => (N, Nil)
@@ -1093,7 +1100,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         if (!td.isDecl) classes += sym
       }
       case td @ NuTypeDef(Trt, TypeName(nme), tps, tup, ctor, sig, pars, sup, ths, unit) => {
-        checkNewTypeName(nme)
+        if (!td.isDecl) checkNewTypeName(nme)
         val (body, members, _, _, _, _) = prepare(nme, tup.getOrElse(Tup(Nil)).fields, pars, unit)
         val sym = scope.declareTrait(nme, tps map { _._2.name }, body, members)
         if (!td.isDecl) traits += sym
@@ -1277,7 +1284,7 @@ class JSWebBackend extends JSBackend(allowUnresolvedSymbols = true) {
               JSInvoke(resultsIdent("push"), JSIdent(sym.runtimeName) :: Nil).stmt :: Nil
           case fd @ NuFunDef(isLetRec, Var(name), _, tys, R(ty)) =>
             Nil
-          case _: Def | _: TypeDef =>
+          case _: Def | _: TypeDef | _: Constructor =>
             throw CodeGenError("Def and TypeDef are not supported in NewDef files.")
           case term: Term =>
             val name = translateTerm(term)(topLevelScope)
@@ -1521,7 +1528,7 @@ class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
         } catch {
           case e: UnimplementedError => JSTestBackend.AbortedQuery(e.getMessage())
         }
-      case _: Def | _: TypeDef =>
+      case _: Def | _: TypeDef | _: Constructor =>
         throw CodeGenError("Def and TypeDef are not supported in NewDef files.")
     }
 

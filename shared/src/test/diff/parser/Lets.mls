@@ -48,11 +48,11 @@ let in 123
 //│ Parsed: {let <error> = undefined}
 
 let x = 1; x + 1
-//│ |#let| |x| |#=| |1|#;| |x| |+| |1|
-//│ Parsed: {let x = 1; +(x,)(1,)}
+//│ |#let| |x| |#=| |1|;| |x| |+| |1|
+//│ Parsed: {let x = {1; +(x,)(1,)}}
 
 let x = 1, y = 2; x + y
-//│ |#let| |x| |#=| |1|,| |y| |#=| |2|#;| |x| |+| |y|
+//│ |#let| |x| |#=| |1|,| |y| |#=| |2|;| |x| |+| |y|
 //│ ╔══[PARSE ERROR] Expected end of input; found comma instead
 //│ ║  l.54: 	let x = 1, y = 2; x + y
 //│ ╙──      	         ^

@@ -1,7 +1,7 @@
 :NewDefs
 
 
-fun foo(x) = (x, x)
+fun foo(x) = [x, x]
 //│ fun foo: forall 'a. 'a -> ['a, 'a]
 
 id

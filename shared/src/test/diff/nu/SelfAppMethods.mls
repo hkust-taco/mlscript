@@ -10,6 +10,7 @@ class A {
   
 }
 //│ class A {
+//│   constructor()
 //│   fun f: nothing
 //│   fun g: A
 //│ }
@@ -22,7 +23,7 @@ module A {
   fun h = g(g)
 }
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.22: 	  fun h = g(g)
+//│ ║  l.23: 	  fun h = g(g)
 //│ ║        	          ^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ module A {

@@ -100,6 +100,7 @@ class C[A] extends Test[Array[A]] {
   fun baz2 = this.bar(this.foo)
 }
 //│ class C[A] {
+//│   constructor()
 //│   fun bar: (Array[A] -> Array[A]) -> Array[A] -> Array[A]
 //│   fun baz1: Array[A]
 //│   fun baz2: Array[A] -> Array[A]
@@ -111,8 +112,8 @@ class C[A] extends Test[Array[A]] {
 mixin Test[A] {
   fun foo: A -> A
   fun foo = id
-  fun bar: (A, A)
-  fun bar = (this.arg, this.arg)
+  fun bar: [A, A]
+  fun bar = [this.arg, this.arg]
   fun baz = foo(this.arg)
 }
 //│ mixin Test[A]() {
@@ -143,10 +144,10 @@ module D extends C(0) {
   this.foo(false)
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.143: 	  this.foo(false)
+//│ ║  l.144: 	  this.foo(false)
 //│ ╙──       	      ^^^^
 //│ ╔══[ERROR] Cannot access `this` during object initialization
-//│ ║  l.143: 	  this.foo(false)
+//│ ║  l.144: 	  this.foo(false)
 //│ ╙──       	  ^^^^
 //│ module D extends C {
 //│   fun bar: forall 'A. [Int | 'A, Int | 'A]
@@ -158,19 +159,18 @@ module D extends C(0) {
 class C extends Test { // it also fails with Test[Int]...
   fun arg = 123
 }
-//│ ╔══[ERROR] Type `#C & {bar: [?A, ?A], baz: ?a, foo: ?A -> ?A}` does not contain member `arg`
-//│ ║  l.116: 	  fun baz = foo(this.arg)
+//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ║  l.117: 	  fun baz = foo(this.arg)
 //│ ╙──       	                    ^^^^
-//│ ╔══[ERROR] Type `#C & {bar: [?A, ?A], baz: ?a, foo: ?A -> ?A}` does not contain member `arg`
-//│ ║  l.115: 	  fun bar = (this.arg, this.arg)
+//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ║  l.116: 	  fun bar = [this.arg, this.arg]
 //│ ╙──       	                           ^^^^
-//│ ╔══[ERROR] Type `#C & {bar: [?A, ?A], baz: ?a, foo: ?A -> ?A}` does not contain member `arg`
-//│ ║  l.115: 	  fun bar = (this.arg, this.arg)
+//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ║  l.116: 	  fun bar = [this.arg, this.arg]
 //│ ╙──       	                 ^^^^
-//│ ╔══[ERROR] Illegal position for this definition statement.
-//│ ║  l.159: 	  fun arg = 123
-//│ ╙──       	      ^^^^^^^^^
 //│ class C {
+//│   constructor()
+//│   fun arg: 123
 //│   fun bar: [error | 'A, error | 'A]
 //│   fun baz: error
 //│   fun foo: 'A -> (error | 'A)
@@ -181,6 +181,7 @@ class C extends Test {
   fun arg = 123
 }
 //│ class C {
+//│   constructor()
 //│   fun arg: Int
 //│   fun bar: [Int | 'A, Int | 'A]
 //│   fun baz: Int

@@ -1,4 +1,4 @@
-export declare module Cycle3() {
+export declare module Cycle3 {
   fun f: (x: Int) -> Int
 }
 //| Use `weak import` to break the cycle dependency `import "./Cycle4.mls"`

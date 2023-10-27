@@ -136,7 +136,7 @@ class Driver(options: DriverOptions) {
 
   private def packTopModule(moduleName: Option[String], content: String) =
     moduleName.fold(content)(moduleName =>
-      s"export declare module $moduleName() {\n" +
+      s"export declare module $moduleName {\n" +
           content.splitSane('\n').toIndexedSeq.filter(!_.isEmpty()).map(line => s"  $line").reduceLeft(_ + "\n" + _) +
         "\n}\n"
     )
@@ -151,7 +151,7 @@ class Driver(options: DriverOptions) {
   private def extractSig(filename: String, moduleName: String): TypingUnit =
     parseAndRun(filename, {
       case (_, declarations, _, origin) => TypingUnit(
-        NuTypeDef(Mod, TypeName(moduleName), Nil, S(Tup(Nil)), N, N, Nil, N, N, TypingUnit(declarations))(S(Loc(0, 1, origin)), N, N) :: Nil)
+        NuTypeDef(Mod, TypeName(moduleName), Nil, N, N, N, Nil, N, N, TypingUnit(declarations))(S(Loc(0, 1, origin)), N, N) :: Nil)
     })
 
   // If the current file is es5.mlsi, we allow overriding builtin type(like String and Object)
@@ -163,7 +163,8 @@ class Driver(options: DriverOptions) {
   ) = try {
     val tpd = typer.typeTypingUnit(tu, N, isES5)
     val sim = SimplifyPipeline(tpd, pol = S(true))(ctx)
-    typer.expandType(sim)
+    val r = typer.expandType(sim)
+    r
   } catch {
     case t: Throwable =>
       totalTypeErrors += 1

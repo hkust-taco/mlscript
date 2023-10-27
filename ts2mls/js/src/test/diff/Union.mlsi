@@ -3,7 +3,7 @@ export declare module Union {
   declare fun test(x: (false) | (true)): (Str) | (Num)
   declare fun run(f: ((x: Num) => Num) | ((x: Num) => Str)): anything
   declare fun get(arr: (MutArray[Num]) | (MutArray[Str])): unit
-  declare fun get2(t: ((Str, Str, )) | ((Num, Str, ))): Str
+  declare fun get2(t: ([Str, Str, ]) | ([Num, Str, ])): Str
   declare fun typeVar['T, 'U](x: ('T) | ('U)): ('T) | ('U)
   declare fun uuuu(x: (((Str) | (Num)) | (false)) | (true)): (((Str) | (Num)) | (false)) | (true)
 }

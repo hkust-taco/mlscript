@@ -3,7 +3,7 @@
 
 
 fun foo(x: 'a | undefined) = if x is undefined then error else x
-//│ fun foo: forall 'a. (x: Object & 'a & ~undefined | undefined) -> 'a
+//│ fun foo: forall 'a. (x: Object & 'a & ~() | ()) -> 'a
 
 
 class Abstract[A] {
@@ -21,10 +21,11 @@ class Abstract[A] {
   fun baz(a: A & Object) = [bar0(a), bar1(a), bar2(a)]
 }
 //│ class Abstract[A] {
-//│   fun bar0: (x: Object & A | undefined) -> (Object & A & ~undefined)
-//│   fun bar1: (x: Object & A | undefined) -> (Object & A & ~undefined)
-//│   fun bar2: (x: Object & A | undefined) -> (Object & A & ~undefined | undefined)
-//│   fun baz: (a: Object & A) -> [Object & A & ~undefined, Object & A & ~undefined, Object & A & ~undefined | undefined]
+//│   constructor()
+//│   fun bar0: (x: Object & A | ()) -> (Object & A & ~())
+//│   fun bar1: (x: Object & A | ()) -> (Object & A & ~())
+//│   fun bar2: (x: Object & A | ()) -> (Object & A & ~() | ())
+//│   fun baz: (a: Object & A) -> [Object & A & ~(), Object & A & ~(), Object & A & ~() | ()]
 //│ }
 
 
@@ -34,16 +35,17 @@ class Abstract[A] {
     if x is undefined then error else x
 }
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.34: 	    if x is undefined then error else x
+//│ ║  l.35: 	    if x is undefined then error else x
 //│ ║        	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `A & ~undefined` is not an instance of type `Object`
-//│ ║  l.33: 	  fun bar(x: A & ~undefined | undefined) =
+//│ ╟── type `A & ~()` is not an instance of type `Object`
+//│ ║  l.34: 	  fun bar(x: A & ~undefined | undefined) =
 //│ ║        	             ^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `Object`
-//│ ║  l.34: 	    if x is undefined then error else x
+//│ ║  l.35: 	    if x is undefined then error else x
 //│ ╙──      	       ^
 //│ class Abstract[A] {
-//│   fun bar: (x: undefined | A & ~undefined) -> (A & ~undefined)
+//│   constructor()
+//│   fun bar: (x: () | A & ~()) -> (A & ~())
 //│ }
 
 

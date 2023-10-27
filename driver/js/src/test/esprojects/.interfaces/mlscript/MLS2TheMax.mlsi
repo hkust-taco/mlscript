@@ -1,6 +1,6 @@
 import "../ts/ReadLine.mlsi"
 import "./tools/Concat.mlsi"
-export declare module MLS2TheMax() {
+export declare module MLS2TheMax {
   fun ask: (question: Str) -> Str
   class Some[A](value: A)
   module None
@@ -14,3 +14,40 @@ export declare module MLS2TheMax() {
   fun main: unit
   unit
 }
+//| ╔══[WARNING] Expression in statement position should have type `unit`.
+//| ╟── Use the `discard` function to discard non-unit values, making the intent clearer.
+//| ╟── Type mismatch in application:
+//| ║  l.5: 	  console.log(question)
+//| ║       	  ^^^^^^^^^^^^^^^^^^^^^
+//| ╟── type `unit` does not match type `()`
+//| ║  l.20: 	  declare fun log(args0: (anything) | (MutArray[anything])): unit
+//| ║        	                                                             ^^^^
+//| ╟── but it flows into application with expected type `()`
+//| ║  l.5: 	  console.log(question)
+//| ╙──     	  ^^^^^^^^^^^^^^^^^^^^^
+//| ╔══[WARNING] Expression in statement position should have type `unit`.
+//| ╟── Use the `discard` function to discard non-unit values, making the intent clearer.
+//| ╟── Type mismatch in if-else block:
+//| ║  l.33: 	    if parse(guess) is
+//| ║        	       ^^^^^^^^^^^^^^^
+//| ║  l.34: 	      Some(i) then check(i)
+//| ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//| ║  l.35: 	      _ then console.log("Not a number!")
+//| ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//| ╟── type `unit` does not match type `()`
+//| ║  l.20: 	  declare fun log(args0: (anything) | (MutArray[anything])): unit
+//| ║        	                                                             ^^^^
+//| ╟── but it flows into application with expected type `()`
+//| ║  l.34: 	      Some(i) then check(i)
+//| ╙──      	                   ^^^^^^^^
+//| ╔══[WARNING] Expression in statement position should have type `unit`.
+//| ╟── Use the `discard` function to discard non-unit values, making the intent clearer.
+//| ╟── Type mismatch in application:
+//| ║  l.41: 	  console.log(Concat.concat3("Hello, ", name, " welcome to the game!"))
+//| ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//| ╟── type `unit` does not match type `()`
+//| ║  l.20: 	  declare fun log(args0: (anything) | (MutArray[anything])): unit
+//| ║        	                                                             ^^^^
+//| ╟── but it flows into application with expected type `()`
+//| ║  l.41: 	  console.log(Concat.concat3("Hello, ", name, " welcome to the game!"))
+//| ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

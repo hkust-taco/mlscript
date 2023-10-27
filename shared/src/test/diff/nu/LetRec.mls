@@ -62,7 +62,7 @@ f()
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded
 
-// TODO (for later) this should be rejected by the type checker
+// :e // TODO this should be rejected by the type checker
 :ge
 :js
 let rec f =
@@ -84,6 +84,47 @@ f
 //│ res
 //│ Runtime error:
 //│   ReferenceError: f3 is not defined
+
+// :e // TODO this should be rejected by the type checker
+:ge
+:js
+fun test =
+  let rec f =
+    f
+//│ fun test: ()
+//│ Code generation encountered an error:
+//│   unguarded recursive use of by-value binding f
+
+:ge // TODO this one should actually be accepted by codegen!
+fun test =
+  let rec f() = f()
+//│ fun test: ()
+//│ Code generation encountered an error:
+//│   unguarded recursive use of by-value binding f
+
+:ge // TODO this one should actually be accepted by codegen!
+fun test =
+  let rec lol = () => lol
+//│ fun test: ()
+//│ Code generation encountered an error:
+//│   unguarded recursive use of by-value binding lol
+
+:ge // TODO this one should actually be accepted by codegen!
+fun test =
+  let rec lol() = lol
+  lol
+//│ fun test: forall 'lol. 'lol
+//│   where
+//│     'lol :> () -> 'lol
+//│ Code generation encountered an error:
+//│   unguarded recursive use of by-value binding lol
+
+let rec lol = () => lol
+//│ let rec lol: forall 'lol. 'lol
+//│   where
+//│     'lol :> () -> 'lol
+//│ lol
+//│     = [Function: lol]
 
 :p
 let rec f = 1

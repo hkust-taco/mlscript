@@ -1,4 +1,4 @@
 import "../ts/Funs.mlsi"
-export declare module Call() {
+export declare module Call {
   unit
 }

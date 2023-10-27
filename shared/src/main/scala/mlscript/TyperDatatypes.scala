@@ -41,12 +41,14 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
   sealed abstract class LazyTypeInfo extends TypeInfo {
     def complete()(implicit raise: Raise): NuMember
     def kind: DeclKind
+    def name: Str
   }
   
   /** A LazyTypeInfo whose typing has been completed. */
   case class CompletedTypeInfo(member: NuMember) extends LazyTypeInfo {
     def complete()(implicit raise: Raise): NuMember = member
     def kind: DeclKind = member.kind
+    val name: Str = member.name
   }
   
   /** Initialized lazy type information, to be computed soon. */
@@ -198,7 +200,10 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
       Overload(alts.map(ft => FunctionType(f(pol.contravar, ft.lhs), f(pol, ft.rhs))(ft.prov)))(prov)
     def approximatePos: FunctionType = {
       val (lhss, rhss) = alts.map(ft => ft.lhs -> ft.rhs).unzip
-      FunctionType(lhss.reduce(_ & _), rhss.reduce(_ | _))(prov)
+      FunctionType(lhss.reduce(_ | _), rhss.reduce(_ | _))(prov)
+      // * Note: technically the following is another valid (but probably less useful)
+      // * approximation of the same function type:
+      // FunctionType(lhss.reduce(_ & _), rhss.reduce(_ & _))(prov)
     }
     lazy val level: Level = levelBelow(MaxLevel)(MutSet.empty)
     def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level =
@@ -603,14 +608,19 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
     }
     /** None: not recursive in this bound; Some(Some(pol)): polarly-recursive; Some(None): nonpolarly-recursive.
       * Note that if we have something like 'a :> Bot <: 'a -> Top, 'a is not truly recursive
-      *   and its bounds can actually be inlined. */
+      *   and its bounds can actually be inlined.
+      * Also note that unfortunately, contrary to whta I previously thought,
+      * it is not sound to ignore quantified variables during the getVarsPol search.
+      * indeed, we can be in freaky situations like in `ListBuild.mls`
+      * where we have `'a :> Ls[('x, forall 'a. 'a)]`! */
     private[mlscript] final def lbRecOccs_$(omitIrrelevantVars: Bool)(implicit ctx: Ctx): Opt[Opt[Bool]] = {
       // println("+", this, assignedTo getOrElse lowerBounds)
       // assignedTo.getOrElse(TupleType(lowerBounds.map(N -> _.toUpper(noProv)))(noProv)).getVarsPol(PolMap.pos, ignoreTopLevelOccs = true).get(this)
       val bs = assignedTo.fold(lowerBounds)(_ :: Nil)
       bs.foldLeft(BotType: ST)(_ | _).getVarsPol(PolMap.pos,
         ignoreTopLevelOccs = omitIrrelevantVars,
-        ignoreQuantifiedVars = omitIrrelevantVars,
+        // ignoreQuantifiedVars = omitIrrelevantVars,
+        ignoreQuantifiedVars = false,
       ).get(this)
     }
     private[mlscript] final def ubRecOccs_$(omitIrrelevantVars: Bool)(implicit ctx: Ctx): Opt[Opt[Bool]] ={
@@ -619,7 +629,8 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
       val bs = assignedTo.fold(upperBounds)(_ :: Nil)
       bs.foldLeft(TopType: ST)(_ & _).getVarsPol(PolMap.posAtNeg,
         ignoreTopLevelOccs = omitIrrelevantVars,
-        ignoreQuantifiedVars = omitIrrelevantVars,
+        // ignoreQuantifiedVars = omitIrrelevantVars,
+        ignoreQuantifiedVars = false,
       ).get(this)
         // .tap(r => println(s"= $r"))
     }

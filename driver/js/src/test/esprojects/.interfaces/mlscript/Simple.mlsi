@@ -1,5 +1,5 @@
 import "./Opened.mlsi"
-export declare module Simple() {
+export declare module Simple {
   mixin B() {
     this: {n: 'n}
     fun foo: 'n
@@ -11,5 +11,5 @@ export declare module Simple() {
   module C {
     let b: 1
   }
-  undefined
+  ()
 }

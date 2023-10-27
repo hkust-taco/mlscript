@@ -11,7 +11,9 @@ module A {
 //│   class B(x: Int) {
 //│     fun add: (y: Int) -> Int
 //│   }
-//│   class C
+//│   class C {
+//│     constructor()
+//│   }
 //│ }
 
 :e
@@ -19,10 +21,10 @@ module A {
 class C() extends A.B(1)
 class CC() extends A.C
 //│ ╔══[ERROR] Unsupported parent specification
-//│ ║  l.19: 	class C() extends A.B(1)
+//│ ║  l.21: 	class C() extends A.B(1)
 //│ ╙──      	                  ^^^^^^
 //│ ╔══[ERROR] Unsupported parent specification
-//│ ║  l.20: 	class CC() extends A.C
+//│ ║  l.22: 	class CC() extends A.C
 //│ ╙──      	                   ^^^
 //│ class C()
 //│ class CC()
@@ -77,7 +79,7 @@ class CC() extends A.C
 :e
 C().add(3)
 //│ ╔══[ERROR] Type `C` does not contain member `add`
-//│ ║  l.78: 	C().add(3)
+//│ ║  l.80: 	C().add(3)
 //│ ╙──      	   ^^^^
 //│ error
 //│ res
@@ -92,12 +94,12 @@ module B {
   }
 }
 //│ ╔══[ERROR] Unsupported parent specification
-//│ ║  l.90: 	  class D() extends B.C {
+//│ ║  l.92: 	  class D() extends B.C {
 //│ ╙──      	                    ^^^
 //│ module B {
 //│   class C()
 //│   class D() {
-//│     let x: 42
+//│     val x: 42
 //│   }
 //│ }
 //│ // Prelude
@@ -166,8 +168,8 @@ module B {
 :e
 let dd = B.D()
 dd.x
-//│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.167: 	let dd = B.D()
+//│ ╔══[ERROR] Access to class member not yet supported
+//│ ║  l.169: 	let dd = B.D()
 //│ ╙──       	          ^^
 //│ let dd: error
 //│ error
@@ -185,7 +187,7 @@ module C {
   class F(val x: Int) extends D.E
 }
 //│ ╔══[ERROR] Unsupported parent specification
-//│ ║  l.185: 	  class F(val x: Int) extends D.E
+//│ ║  l.187: 	  class F(val x: Int) extends D.E
 //│ ╙──       	                              ^^^
 //│ module C {
 //│   module D {
@@ -271,8 +273,8 @@ module C {
 :e
 let fff = C.F(24)
 fff.x
-//│ ╔══[ERROR] access to class member not yet supported
-//│ ║  l.272: 	let fff = C.F(24)
+//│ ╔══[ERROR] Access to class member not yet supported
+//│ ║  l.274: 	let fff = C.F(24)
 //│ ╙──       	           ^^
 //│ let fff: error
 //│ error

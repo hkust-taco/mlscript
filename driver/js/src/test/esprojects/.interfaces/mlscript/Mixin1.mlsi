@@ -1,5 +1,5 @@
 import "./Mixin2.mlsi"
-export declare module Mixin1() {
+export declare module Mixin1 {
   class Neg[A](expr: A)
   mixin EvalNeg() {
     super: {eval: 'a -> 'b}
@@ -29,12 +29,12 @@ export declare module Mixin1() {
 //| ╟── from reference:
 //| ║  l.8: 	    else super.eval(e)
 //| ╙──     	         ^^^^^
-//| ╔══[ERROR] access to class member not yet supported
+//| ╔══[ERROR] Access to class member not yet supported
 //| ║  l.14: 	  let program = Mixin2.Add(Mixin2.Lit(48), Neg(Mixin2.Lit(6)))
 //| ╙──      	                      ^^^^
-//| ╔══[ERROR] access to class member not yet supported
+//| ╔══[ERROR] Access to class member not yet supported
 //| ║  l.14: 	  let program = Mixin2.Add(Mixin2.Lit(48), Neg(Mixin2.Lit(6)))
 //| ╙──      	                                 ^^^^
-//| ╔══[ERROR] access to class member not yet supported
+//| ╔══[ERROR] Access to class member not yet supported
 //| ║  l.14: 	  let program = Mixin2.Add(Mixin2.Lit(48), Neg(Mixin2.Lit(6)))
 //| ╙──      	                                                     ^^^^

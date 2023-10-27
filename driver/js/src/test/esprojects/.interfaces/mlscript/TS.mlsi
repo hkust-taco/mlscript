@@ -1,9 +1,12 @@
 import "../ts/MyPrint.mlsi"
-export declare module TS() {
+export declare module TS {
   let tspt: error
   let printer: error
   error
 }
-//| ╔══[ERROR] access to class member not yet supported
+//| ╔══[ERROR] Access to class member not yet supported
 //| ║  l.3: 	let tspt = MyPrint.DatePrint
 //| ╙──     	                  ^^^^^^^^^^
+//| ╔══[ERROR] Cannot use `new` on non-class variable of type ?DatePrint
+//| ║  l.4: 	let printer = new tspt("love from ts")
+//| ╙──     	              ^^^^^^^^^^^^^^^^^^^^^^^^

@@ -12,7 +12,7 @@ export declare module Optional {
   declare class ABC {}
   declare fun testABC(abc: (ABC) | (undefined)): unit
   declare fun testSquareConfig(conf: (SquareConfig) | (undefined)): unit
-  declare fun err(msg: ((Num, Str, )) | (undefined)): unit
+  declare fun err(msg: ([Num, Str, ]) | (undefined)): unit
   declare fun toStr(x: (((Num) | (false)) | (true)) | (undefined)): Str
   declare fun boo['T, 'U](x: (('T) & ('U)) | (undefined)): unit
   declare class B['T] {

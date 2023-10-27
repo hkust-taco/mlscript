@@ -13,6 +13,7 @@ class C1 extends T1 {
   fun f(x: Int) = x
 }
 //│ class C1 extends T1 {
+//│   constructor()
 //│   fun f: (x: Int) -> Int
 //│ }
 
@@ -20,6 +21,7 @@ class C1 extends T1['FigureItOut] {
   fun f(x: Int) = x
 }
 //│ class C1 extends T1 {
+//│   constructor()
 //│   fun f: (x: Int) -> Int
 //│ }
 
@@ -66,16 +68,16 @@ c1.f
 :e
 (c1 : T1['X]).f(false)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.67: 	(c1 : T1['X]).f(false)
+//│ ║  l.69: 	(c1 : T1['X]).f(false)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── reference of type `false` is not an instance of type `Int`
-//│ ║  l.67: 	(c1 : T1['X]).f(false)
+//│ ║  l.69: 	(c1 : T1['X]).f(false)
 //│ ║        	                ^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.20: 	  fun f(x: Int) = x
+//│ ║  l.21: 	  fun f(x: Int) = x
 //│ ║        	           ^^^
 //│ ╟── from type variable:
-//│ ║  l.67: 	(c1 : T1['X]).f(false)
+//│ ║  l.69: 	(c1 : T1['X]).f(false)
 //│ ╙──      	         ^^
 //│ Int | error | false
 //│ res
@@ -94,30 +96,19 @@ class C2 extends T2['FigureItOut] {
   fun f(x: Int) = x
 }
 //│ ╔══[ERROR] Method implementations in traits are not yet supported
-//│ ║  l.91: 	  val r = C2().f(false)
-//│ ╙──      	      ^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Unhandled cyclic definition
-//│ ║  l.89: 	trait T2[A] {
-//│ ║        	^^^^^^^^^^^^^
-//│ ║  l.90: 	  fun f: A -> A
-//│ ║        	^^^^^^^^^^^^^^^
-//│ ║  l.91: 	  val r = C2().f(false)
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.91: 	  val r = C2().f(false)
-//│ ║        	          ^^^^^^^^^^^^^
-//│ ╟── reference of type `false` is not an instance of type `Int`
-//│ ║  l.91: 	  val r = C2().f(false)
-//│ ║        	                 ^^^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.94: 	  fun f(x: Int) = x
-//│ ╙──      	           ^^^
+//│ ║  l.93: 	  val r = C2().f(false)
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Class C2 cannot be instantiated as it exposes no such constructor
+//│ ║  l.93: 	  val r = C2().f(false)
+//│ ╙──      	          ^^
 //│ trait T2[A] {
 //│   fun f: A -> A
-//│   let r: Int | error
+//│   val r: error
 //│ }
 //│ class C2 extends T2 {
+//│   constructor()
 //│   fun f: (x: Int) -> Int
+//│   val r: error
 //│ }
 
 :e
@@ -129,34 +120,27 @@ class C3 extends T3['FigureItOut] {
   fun f(x: Int) = x
 }
 //│ ╔══[ERROR] Method implementations in traits are not yet supported
-//│ ║  l.126: 	  val r = (C3() : T3['X]).f(false)
-//│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Unhandled cyclic definition
-//│ ║  l.124: 	trait T3[A] {
-//│ ║         	^^^^^^^^^^^^^
-//│ ║  l.125: 	  fun f: A -> A
-//│ ║         	^^^^^^^^^^^^^^^
-//│ ║  l.126: 	  val r = (C3() : T3['X]).f(false)
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Type `C3` does not contain member `T3#A`
-//│ ║  l.124: 	trait T3[A] {
-//│ ╙──       	         ^
+//│ ║  l.117: 	  val r = (C3() : T3['X]).f(false)
+//│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Class C3 cannot be instantiated as it exposes no such constructor
+//│ ║  l.117: 	  val r = (C3() : T3['X]).f(false)
+//│ ╙──       	           ^^
 //│ trait T3[A] {
 //│   fun f: A -> A
-//│   let r: error | false
+//│   val r: false
 //│ }
 //│ class C3 extends T3 {
+//│   constructor()
 //│   fun f: (x: Int) -> Int
+//│   val r: false
 //│ }
 
 :e // FIXME
 C3() : T3['X]
-//│ ╔══[ERROR] Type `C3` does not contain member `T3#A`
-//│ ║  l.124: 	trait T3[A] {
-//│ ╙──       	         ^
-//│ T3['X]
-//│   where
-//│     'X :> error
+//│ ╔══[ERROR] Construction of unparameterized class C3 should use the `new` keyword
+//│ ║  l.139: 	C3() : T3['X]
+//│ ╙──       	^^
+//│ T3[Int]
 //│ res
 //│ Runtime error:
 //│   TypeError: Class constructor C3 cannot be invoked without 'new'
@@ -169,12 +153,14 @@ abstract class IO[A] {
 }
 class Bind[A](underlying: IO[A]) extends IO[Int]
 //│ ╔══[ERROR] Unhandled cyclic definition
-//│ ║  l.167: 	abstract class IO[A] {
+//│ ║  l.151: 	abstract class IO[A] {
 //│ ║         	         ^^^^^^^^^^^^^
-//│ ║  l.168: 	  fun test = Bind(this) : IO[Int]
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.152: 	  fun test = Bind(this) : IO[Int]
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.153: 	}
+//│ ╙──       	^
 //│ ╔══[ERROR] Type `Bind[?A]` does not contain member `IO#A`
-//│ ║  l.167: 	abstract class IO[A] {
+//│ ║  l.151: 	abstract class IO[A] {
 //│ ╙──       	                  ^
 //│ abstract class IO[A] {
 //│   fun test: IO[Int]
@@ -191,25 +177,27 @@ class Map[A, B](underlying: IO[A], f: A -> B) extends IO[B] {
   fun run: B = error
 }
 //│ ╔══[ERROR] Unhandled cyclic definition
-//│ ║  l.185: 	abstract class IO[A] {
+//│ ║  l.171: 	abstract class IO[A] {
 //│ ║         	         ^^^^^^^^^^^^^
-//│ ║  l.186: 	  fun map[B]: (A -> B) -> IO[B] // * Removing this works...
+//│ ║  l.172: 	  fun map[B]: (A -> B) -> IO[B] // * Removing this works...
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.187: 	  fun map(f) = Map(this, f)
+//│ ║  l.173: 	  fun map(f) = Map(this, f)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.188: 	  fun run: A
-//│ ╙──       	^^^^^^^^^^^^
+//│ ║  l.174: 	  fun run: A
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.175: 	}
+//│ ╙──       	^
 //│ ╔══[ERROR] Type `Map[?A, ?B]` does not contain member `IO#A`
-//│ ║  l.185: 	abstract class IO[A] {
+//│ ║  l.171: 	abstract class IO[A] {
 //│ ╙──       	                  ^
 //│ ╔══[ERROR] Type mismatch in definition of method map:
-//│ ║  l.187: 	  fun map(f) = Map(this, f)
+//│ ║  l.173: 	  fun map(f) = Map(this, f)
 //│ ║         	      ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Map[?A, ?B]` does not have field 'IO#A'
-//│ ║  l.187: 	  fun map(f) = Map(this, f)
+//│ ║  l.173: 	  fun map(f) = Map(this, f)
 //│ ║         	               ^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.186: 	  fun map[B]: (A -> B) -> IO[B] // * Removing this works...
+//│ ║  l.172: 	  fun map[B]: (A -> B) -> IO[B] // * Removing this works...
 //│ ╙──       	                          ^^^^^
 //│ abstract class IO[A] {
 //│   fun map: forall 'B. (A -> 'B) -> IO['B]
@@ -229,25 +217,27 @@ class Bind[A, B](underlying: IO[A], f: A -> IO[B]) extends IO[B] {
   fun run = f(underlying.run).run
 }
 //│ ╔══[ERROR] Unhandled cyclic definition
-//│ ║  l.223: 	abstract class IO[A] {
+//│ ║  l.211: 	abstract class IO[A] {
 //│ ║         	         ^^^^^^^^^^^^^
-//│ ║  l.224: 	  fun bind[B]: (A -> IO[B]) -> IO[B] // * FIXME: causes cycle error
+//│ ║  l.212: 	  fun bind[B]: (A -> IO[B]) -> IO[B] // * FIXME: causes cycle error
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.225: 	  fun bind(f) = Bind(this, f)
+//│ ║  l.213: 	  fun bind(f) = Bind(this, f)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.226: 	  fun run: A
-//│ ╙──       	^^^^^^^^^^^^
+//│ ║  l.214: 	  fun run: A
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.215: 	}
+//│ ╙──       	^
 //│ ╔══[ERROR] Type `Bind[?A, ?B]` does not contain member `IO#A`
-//│ ║  l.223: 	abstract class IO[A] {
+//│ ║  l.211: 	abstract class IO[A] {
 //│ ╙──       	                  ^
 //│ ╔══[ERROR] Type mismatch in definition of method bind:
-//│ ║  l.225: 	  fun bind(f) = Bind(this, f)
+//│ ║  l.213: 	  fun bind(f) = Bind(this, f)
 //│ ║         	      ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Bind[?A, ?B]` does not have field 'IO#A'
-//│ ║  l.225: 	  fun bind(f) = Bind(this, f)
+//│ ║  l.213: 	  fun bind(f) = Bind(this, f)
 //│ ║         	                ^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.224: 	  fun bind[B]: (A -> IO[B]) -> IO[B] // * FIXME: causes cycle error
+//│ ║  l.212: 	  fun bind[B]: (A -> IO[B]) -> IO[B] // * FIXME: causes cycle error
 //│ ╙──       	                               ^^^^^
 //│ abstract class IO[A] {
 //│   fun bind: forall 'B. (A -> IO['B]) -> IO['B]
@@ -263,10 +253,12 @@ abstract class IO[A] {
   class Bind[B]() extends IO[B]
 }
 //│ ╔══[ERROR] Unhandled cyclic definition
-//│ ║  l.262: 	abstract class IO[A] {
+//│ ║  l.252: 	abstract class IO[A] {
 //│ ║         	         ^^^^^^^^^^^^^
-//│ ║  l.263: 	  class Bind[B]() extends IO[B]
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.253: 	  class Bind[B]() extends IO[B]
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.254: 	}
+//│ ╙──       	^
 //│ abstract class IO[A] {
 //│   class Bind[B]() extends IO
 //│ }

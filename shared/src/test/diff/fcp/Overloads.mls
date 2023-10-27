@@ -31,12 +31,12 @@ IISS : ZZII
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.30: 	IISS : ZZII
 //│ ║        	^^^^
-//│ ╟── type `0` is not an instance of type `string`
-//│ ║  l.7: 	type ZZII = 0 -> 0 & int -> int
-//│ ║       	            ^
-//│ ╟── Note: constraint arises from type reference:
+//│ ╟── type `int` does not match type `0`
 //│ ║  l.12: 	def IISS: int -> int & string -> string
-//│ ╙──      	                       ^^^^^^
+//│ ║        	                 ^^^
+//│ ╟── Note: constraint arises from literal type:
+//│ ║  l.7: 	type ZZII = 0 -> 0 & int -> int
+//│ ╙──     	                 ^
 //│ res: ZZII
 
 :e
@@ -44,12 +44,9 @@ IISS : BBNN
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.43: 	IISS : BBNN
 //│ ║        	^^^^
-//│ ╟── type `bool` is not an instance of type `int`
+//│ ╟── type `bool` does not match type `int | string`
 //│ ║  l.6: 	type BBNN = bool -> bool & number -> number
-//│ ║       	            ^^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.12: 	def IISS: int -> int & string -> string
-//│ ╙──      	          ^^^
+//│ ╙──     	            ^^^^
 //│ res: BBNN
 
 
@@ -61,53 +58,20 @@ IISS : int -> int
 IISS : (0 | 1) -> number
 //│ res: (0 | 1) -> number
 
-:e
 IISS : 'a -> 'a
-//│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.65: 	IISS : 'a -> 'a
-//│ ║        	^^^^
-//│ ╟── type `int` is not an instance of type `string`
-//│ ║  l.12: 	def IISS: int -> int & string -> string
-//│ ║        	                 ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.12: 	def IISS: int -> int & string -> string
-//│ ║        	                       ^^^^^^
-//│ ╟── from type variable:
-//│ ║  l.65: 	IISS : 'a -> 'a
-//│ ╙──      	             ^^
-//│ res: nothing -> (error | int | string)
+//│ res: ('a & (int | string)) -> (int | string | 'a)
 
-:e
 IISS 0
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.81: 	IISS 0
-//│ ║        	^^^^^^
-//│ ╟── integer literal of type `0` is not an instance of type `string`
-//│ ║  l.81: 	IISS 0
-//│ ║        	     ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.12: 	def IISS: int -> int & string -> string
-//│ ╙──      	                       ^^^^^^
-//│ res: error | int | string
+//│ res: int | string
 
 (IISS : int -> int) 0
 //│ res: int
 
-:e
 (if true then IISS else BBNN) 0
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.97: 	(if true then IISS else BBNN) 0
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── integer literal of type `0` is not an instance of type `string`
-//│ ║  l.97: 	(if true then IISS else BBNN) 0
-//│ ║        	                              ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.12: 	def IISS: int -> int & string -> string
-//│ ╙──      	                       ^^^^^^
-//│ res: bool | error | number | string
+//│ res: bool | number | string
 
 fun x -> (if true then IISS else BBNN) x
-//│ res: nothing -> (bool | number | string)
+//│ res: int -> (bool | number | string)
 
 if true then IISS else BBNN
 //│ res: bool -> bool & number -> number | int -> int & string -> string
@@ -121,14 +85,11 @@ if true then IISS else BBNN
 :e
 (if true then IISS else BBNN) : (0 | 1 | true) -> number
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.122: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `0` is not an instance of type `string`
-//│ ║  l.122: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
-//│ ║         	                                 ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.12: 	def IISS: int -> int & string -> string
-//│ ╙──      	                       ^^^^^^
+//│ ║  l.86: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `true` does not match type `int | string`
+//│ ║  l.86: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
+//│ ╙──      	                                         ^^^^
 //│ res: (0 | 1 | true) -> number
 
 

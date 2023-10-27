@@ -3,7 +3,7 @@
 
 :js
 fun foo =
-  fun bar(x) = x + 1
+  let bar(x) = x + 1
   bar(10)
 //│ fun foo: Int
 //│ // Prelude
@@ -26,24 +26,25 @@ foo
 //│ fun foo: Int
 //│ Int
 //│ res
-//│     = [Function: foo1]
+//│     = 111
 
 
-// FIXME: returns a thunk
 fun main =
   log("Hello")
 main
-//│ fun main: undefined
-//│ undefined
+//│ fun main: ()
+//│ ()
 //│ res
-//│     = [Function: main]
+//│     = undefined
+//│ // Output
+//│ Hello
 
 fun main =
   log("Hello")
-//│ fun main: undefined
+//│ fun main: ()
 
 main
-//│ undefined
+//│ ()
 //│ res
 //│     = undefined
 //│ // Output
@@ -56,8 +57,12 @@ fun main =
   module M extends B
   log(2)
 main
-//│ fun main: undefined
-//│ undefined
+//│ fun main: ()
+//│ ()
 //│ res
-//│     = [Function: main2]
+//│     = undefined
+//│ // Output
+//│ 0
+//│ 1
+//│ 2
 

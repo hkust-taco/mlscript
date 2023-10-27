@@ -48,3 +48,5 @@ class PoInt(x, y)
 let origin = new PoInt(0, 0)
 //│ origin: PoInt & {x: 0, y: 0}
 //│       = PoInt { x: 0, y: 0 }
+
+

@@ -19,7 +19,7 @@ xs.[0] + 1
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.18: 	xs.[0] + 1
 //│ ║        	  ^^^^^^^^
-//│ ╟── possibly-undefined array access of type `undefined` is not an instance of type `Int`
+//│ ╟── possibly-undefined array access of type `()` is not an instance of type `Int`
 //│ ║  l.18: 	xs.[0] + 1
 //│ ╙──      	  ^^^^
 //│ Int | error

@@ -4,8 +4,10 @@ declare class Parent {
   declare fun foo: () -> Str // there's an implementation, trust me!
 }
 //│ declare class Parent {
+//│   constructor()
 //│   fun foo: () -> Str
 //│ }
+
 
 :re
 class Child() extends Parent

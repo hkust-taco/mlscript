@@ -149,12 +149,12 @@ fun toEnglish(x) =
 //│ ╔══[PARSE ERROR] Unexpected end of indented block; an expression was expected here
 //│ ║  l.145: 	    else 1
 //│ ╙──       	    ^
-//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause; found operator application instead
+//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'if'; found operator application instead
 //│ ║  l.144: 	  if x ==
 //│ ║         	     ^^^^
 //│ ║  l.145: 	    else 1
 //│ ║         	^^^^
-//│ ╟── Note: 'if' expression started here:
+//│ ╟── Note: 'if' expression starts here:
 //│ ║  l.144: 	  if x ==
 //│ ╙──       	  ^^
 //│ ╔══[ERROR] The case when this is false is not handled: ==(x,)(undefined,)

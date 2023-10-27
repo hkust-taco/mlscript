@@ -33,12 +33,12 @@ fun zip(xs, ys) = mapi of xs, (x, i) =>
   if ys.[i] is
     undefined then error
     y then [x, y]
-//│ fun zip: forall 'c 'd. (Array['c], Array[Object & 'd & ~undefined]) -> Array[['c, 'd]]
-//│ fun zip: forall 'a 'b. (Array['a], Array[Object & 'b & ~undefined]) -> Array[['a, 'b]]
+//│ fun zip: forall 'c 'd. (Array['c], Array[Object & 'd & ~()]) -> Array[['c, 'd]]
+//│ fun zip: forall 'a 'b. (Array['a], Array[Object & 'b & ~()]) -> Array[['a, 'b]]
 
 
 zip
-//│ forall 'a 'b. (Array['a], Array[Object & 'b & ~undefined]) -> Array[['a, 'b]]
+//│ forall 'a 'b. (Array['a], Array[Object & 'b & ~()]) -> Array[['a, 'b]]
 //│ res
 //│     = [Function: zip1]
 
@@ -56,9 +56,9 @@ class Pair[A, B](a: A, b: B)
 fun unbox(x) = if x is
   Numbr(n) then n
   Vectr(xs) then map of xs, unbox
-//│ fun unbox: forall 'a. (Numbr | Vectr) -> 'a
+//│ fun unbox: forall 'a. (Numbr | Vectr) -> (Int | 'a)
 //│   where
-//│     'a :> Int | Array['a]
+//│     'a :> Array[Int | 'a]
 
 fun add(e) =
   if e is
@@ -88,9 +88,9 @@ let v = Vectr of [Numbr(10), Numbr(20), Numbr(30)]
 //│   = Vectr {}
 
 unbox(v)
-//│ forall 'a. 'a
+//│ forall 'a. Int | 'a
 //│   where
-//│     'a :> Int | Array['a]
+//│     'a :> Array[Int | 'a]
 //│ res
 //│     = [ 10, 20, 30 ]
 
@@ -101,9 +101,9 @@ let res = add of Pair of (Vectr of [Numbr(1), Numbr(2)]), (Vectr of [Numbr(3), v
 //│     = Vectr {}
 
 unbox(res)
-//│ forall 'a. 'a
+//│ forall 'a. Int | 'a
 //│   where
-//│     'a :> Int | Array['a]
+//│     'a :> Array[Int | 'a]
 //│ res
 //│     = [ 4, [ 12, 22, 32 ] ]
 
@@ -154,6 +154,11 @@ module A {
 //│   fun g: Int -> Int & Str -> Str
 //│ }
 
+A.g(0)
+//│ Int | Str
+//│ res
+//│     = 0
+
 
 
 
@@ -176,17 +181,7 @@ s([Numbr(0),Numbr(0)])
 //│ ║  l.136: 	fun s: ([Numbr,Numbr] -> Int) & ([Vectr,Vectr] -> Int)
 //│ ╙──       	        ^^^^^^^^^^^^^
 //│ Int | error
-
-:e
-A.g(0)
 // g <: 0 -> 'a
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.+1: 	A.g(0)
-//│ ║        	^^^^^^
-//│ ╟── integer literal of type `0` is not an instance of type `Str`
-//│ ║  l.+1: 	A.g(0)
-//│ ╙──      	    ^
-//│ Int | Str | error
 
 :e
 fun add(e) =

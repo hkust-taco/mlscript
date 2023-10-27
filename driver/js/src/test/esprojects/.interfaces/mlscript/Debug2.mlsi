@@ -1,21 +1,18 @@
 import "./Debug3.mlsi"
-export declare module Debug2() {
+export declare module Debug2 {
   let y: 42
 }
-//| 0. Typing TypingUnit(List(let y = 42))
+//| 0. Typing ‹let y = 42›
 //| | 0. Created lazy type info for let y = 42
 //| | Completing let y = 42
-//| | | UNSTASHING... (out)
 //| | | Type params 
-//| | | UNSTASHING... (out)
 //| | | Params 
 //| | | 0. Typing term 42
 //| | | 0. : #42<Int,Num,Object>
-//| | | CONSTRAIN #42<Int,Num,Object> <! y2410'
+//| | | CONSTRAIN #42<Int,Num,Object> <! y1572'
 //| | |   where 
-//| | | 1. C #42<Int,Num,Object> <! y2410'    (0)
-//| | | | NEW y2410' LB (0)
-//| | | UNSTASHING... (out)
+//| | | 1. C #42<Int,Num,Object> <! y1572'    (0)
+//| | | | NEW y1572' LB (0)
 //| | Completed TypedNuFun(0,let y = 42,#42<Int,Num,Object>) where 
 //| | Typing unit statements
 //| | : None

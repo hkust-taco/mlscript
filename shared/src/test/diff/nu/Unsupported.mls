@@ -5,8 +5,8 @@ declare class Foo() {
   val x = 42
 }
 //│ declare class Foo() {
-//│   let index: nothing
-//│   let x: 42
+//│   val index: nothing
+//│   val x: 42
 //│ }
 
 declare fun call: unsupported["(source: string, subString: string): boolean;", "Invoker.ts", 31, 54]

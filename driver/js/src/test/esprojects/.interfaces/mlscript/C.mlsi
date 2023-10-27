@@ -1,10 +1,10 @@
 import "./B.mlsi"
-export declare module C() {
+export declare module C {
   let a: error
   let b: error
   unit
 }
-//| ╔══[ERROR] access to class member not yet supported
+//| ╔══[ERROR] Access to class member not yet supported
 //| ║  l.4: 	let b = A.Foo(0) // not allowed, unless we import "A.mls"
 //| ╙──     	         ^^^^
 //| ╔══[ERROR] Type mismatch in field selection:

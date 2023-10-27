@@ -153,7 +153,10 @@ p = Pair {
   rhs = Pair {
     lhs = IntLit { value = 2 };
     rhs = IntLit { value = 3 } } }
-//│ p: Pair[?, ?] with {lhs: IntLit & {value: 1}, rhs: Pair[?, ?] with {lhs: IntLit & {value: 2}, rhs: IntLit & {value: 3}}}
+//│ p: Pair[?, ?] with {
+//│   lhs: IntLit & {value: 1},
+//│   rhs: Pair[?, ?] with {lhs: IntLit & {value: 2}, rhs: IntLit & {value: 3}}
+//│ }
 //│  = Pair {
 //│      lhs: IntLit { value: 1 },
 //│      rhs: Pair { lhs: IntLit { value: 2 }, rhs: IntLit { value: 3 } }
@@ -191,13 +194,13 @@ ep = eval p
 class Pair2[A, B]: Expr[(A, B)] & { lhs: Expr[A]; rhs: Expr[A] }
 //│ Defined class Pair2[±A, ±B]
 //│ ╔══[WARNING] Type definition Pair2 has bivariant type parameters:
-//│ ║  l.191: 	class Pair2[A, B]: Expr[(A, B)] & { lhs: Expr[A]; rhs: Expr[A] }
+//│ ║  l.194: 	class Pair2[A, B]: Expr[(A, B)] & { lhs: Expr[A]; rhs: Expr[A] }
 //│ ║         	      ^^^^^
 //│ ╟── A is irrelevant and may be removed
-//│ ║  l.191: 	class Pair2[A, B]: Expr[(A, B)] & { lhs: Expr[A]; rhs: Expr[A] }
+//│ ║  l.194: 	class Pair2[A, B]: Expr[(A, B)] & { lhs: Expr[A]; rhs: Expr[A] }
 //│ ║         	            ^
 //│ ╟── B is irrelevant and may be removed
-//│ ║  l.191: 	class Pair2[A, B]: Expr[(A, B)] & { lhs: Expr[A]; rhs: Expr[A] }
+//│ ║  l.194: 	class Pair2[A, B]: Expr[(A, B)] & { lhs: Expr[A]; rhs: Expr[A] }
 //│ ╙──       	               ^
 
 
@@ -266,7 +269,10 @@ p = Pair2 {
   rhs = Pair2 {
     lhs = IntLit { value = 2 };
     rhs = IntLit { value = 3 } } }
-//│ p: Pair2[?, ?] with {lhs: IntLit & {value: 1}, rhs: Pair2[?, ?] with {lhs: IntLit & {value: 2}, rhs: IntLit & {value: 3}}}
+//│ p: Pair2[?, ?] with {
+//│   lhs: IntLit & {value: 1},
+//│   rhs: Pair2[?, ?] with {lhs: IntLit & {value: 2}, rhs: IntLit & {value: 3}}
+//│ }
 
 
 
@@ -293,7 +299,7 @@ rec def eval(e) = case e of
 //│ ║  l.+4: 	  }
 //│ ║        	^^^
 //│ ╟── type `Expr[?]` does not match type `IntLit & ?a | Pair[?, ?] & ?b`
-//│ ║  l.273: 	def eval: Expr['a] -> 'a
+//│ ║  l.279: 	def eval: Expr['a] -> 'a
 //│ ║         	          ^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.+1: 	rec def eval(e) = case e of

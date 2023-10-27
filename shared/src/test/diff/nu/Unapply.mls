@@ -1,0 +1,108 @@
+// *** Explicit unapply tests *** //
+
+:NewDefs
+
+
+// * Unapply's current compilation strategy:
+// function D ...
+// D.class = class D { #x; static unapply(self) { return [self.#x] } }
+// D.unapply = D.class.unapply
+
+class D(x: Int)
+//│ class D(x: Int)
+
+D.unapply
+//│ forall '#x. (D & {#x: '#x}) -> ['#x]
+//│ res
+//│     = [Function: unapply]
+
+D.unapply(D(42))
+//│ [Int]
+//│ res
+//│     = [ 42 ]
+
+:e
+D.unapply({ x: 42 })
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.25: 	D.unapply({ x: 42 })
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ╟── record literal of type `{x: 42}` does not have field '#x'
+//│ ║  l.25: 	D.unapply({ x: 42 })
+//│ ║        	               ^^
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.11: 	class D(x: Int)
+//│ ╙──      	        ^
+//│ error | [nothing]
+//│ res
+//│ Runtime error:
+//│   TypeError: Cannot read private member #x from an object whose class did not declare it
+
+class DT[T](x: T)
+DT.unapply
+//│ class DT[T](x: T)
+//│ forall '#x. (DT[anything] & {#x: '#x}) -> ['#x]
+//│ res
+//│     = [Function: unapply]
+
+DT.unapply(DT(42))
+//│ [42]
+//│ res
+//│     = [ 42 ]
+
+:e
+DT.unapply({ x: 42 })
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.53: 	DT.unapply({ x: 42 })
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── record literal of type `{x: 42}` does not have field '#x'
+//│ ║  l.53: 	DT.unapply({ x: 42 })
+//│ ║        	                ^^
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.40: 	class DT[T](x: T)
+//│ ╙──      	            ^
+//│ error | [nothing]
+//│ res
+//│ Runtime error:
+//│   TypeError: Cannot read private member #x from an object whose class did not declare it
+
+
+// * TODO improve `unapply` logic: currently it picks up shadowing fields/methods
+
+class Foo(x: Int) {
+  val x = toString(x)
+}
+//│ class Foo(x: Int) {
+//│   val x: Str
+//│ }
+
+// * Current hack: use `scrut.#x` to access a private field while passing the typer...
+Foo.unapply
+//│ forall '#x. (Foo & {#x: '#x}) -> ['#x]
+//│ res
+//│     = [Function: unapply]
+
+Foo.unapply(Foo(123))
+//│ [Str]
+//│ res
+//│     = [ '123' ]
+
+if Foo(123) is Foo(a) then a
+//│ Str
+//│ res
+//│     = '123'
+
+
+
+// * Eventually we'll want to support this sort of overloading:
+:e
+fun D(x: Int) = {x}
+module D { fun unapply(a) = [a.x] }
+//│ ╔══[ERROR] Refininition of 'D'
+//│ ║  l.99: 	module D { fun unapply(a) = [a.x] }
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ fun D: (x: Int) -> {x: Int}
+//│ module D {
+//│   fun unapply: forall 'x. {x: 'x} -> ['x]
+//│ }
+
+

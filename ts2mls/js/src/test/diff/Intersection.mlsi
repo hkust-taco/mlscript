@@ -12,7 +12,7 @@ export declare module Intersection {
   declare fun uu['U, 'V, 'T, 'P](x: (((('U) & ('T)) | (('U) & ('P))) | (('V) & ('T))) | (('V) & ('P))): (((('U) & ('T)) | (('U) & ('P))) | (('V) & ('T))) | (('V) & ('P))
   declare fun iiii['U, 'T, 'V](x: (('U) & ('T)) & ('V)): (('U) & ('T)) & ('V)
   declare fun arr['U, 'T](a: (MutArray['U]) & (MutArray['T])): (MutArray['U]) & (MutArray['T])
-  declare fun tt['U, 'T, 'V](x: (('U, 'T, )) & (('V, 'V, ))): (('U, 'T, )) & (('V, 'V, ))
+  declare fun tt['U, 'T, 'V](x: (['U, 'T, ]) & (['V, 'V, ])): (['U, 'T, ]) & (['V, 'V, ])
   declare class A {}
   declare class B {}
   declare fun inter(c: (A) & (B)): (A) & (B)

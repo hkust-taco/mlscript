@@ -52,13 +52,13 @@ object Converter {
     case TSReferenceType(name) => name
     case TSFunctionType(params, res, typeVars) =>
       val tpNames = typeVars.map(_.name)
-      val tpList = tpNames.foldLeft("")((res, tp) => s"${res}forall '$tp; ")
+      val tpList = tpNames.foldLeft("")((res, tp) => s"${res}forall '$tp: ")
       val pList = generateFunParamsList(params)
       s"$tpList($pList) => ${convert(res)}"
     case TSUnionType(lhs, rhs) => s"(${convert(lhs)}) | (${convert(rhs)})"
     case TSIntersectionType(lhs, rhs) => s"(${convert(lhs)}) & (${convert(rhs)})"
     case TSTypeParameter(name, _) => s"'$name" // Constraints should be translated where the type parameters were created rather than be used
-    case TSTupleType(lst) => s"(${lst.foldLeft("")((p, t) => s"$p${convert(t)}, ")})"
+    case TSTupleType(lst) => s"[${lst.foldLeft("")((p, t) => s"$p${convert(t)}, ")}]"
     case TSArrayType(element) => s"MutArray[${convert(element)}]"
     case TSEnumType => "Int"
     case TSMemberType(base, _) => convert(base) // TODO: support private/protected members

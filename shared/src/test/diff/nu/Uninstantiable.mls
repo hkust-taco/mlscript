@@ -6,25 +6,34 @@ Int
 //│ ╔══[ERROR] Class Int is abstract and cannot be instantiated
 //│ ║  l.5: 	Int
 //│ ╙──     	^^^
-//│ () -> Int
+//│ ╔══[ERROR] Class Int cannot be instantiated as it exposes no such constructor
+//│ ║  l.5: 	Int
+//│ ╙──     	^^^
+//│ error
 //│ Code generation encountered an error:
 //│   unresolved symbol Int
 
 :e
 Int()
 //│ ╔══[ERROR] Class Int is abstract and cannot be instantiated
-//│ ║  l.14: 	Int()
+//│ ║  l.17: 	Int()
 //│ ╙──      	^^^
-//│ Int
+//│ ╔══[ERROR] Class Int cannot be instantiated as it exposes no such constructor
+//│ ║  l.17: 	Int()
+//│ ╙──      	^^^
+//│ error
 //│ Code generation encountered an error:
 //│   unresolved symbol Int
 
 :e
 new Int
 //│ ╔══[ERROR] Class Int is abstract and cannot be instantiated
-//│ ║  l.23: 	new Int
-//│ ╙──      	    ^^^
-//│ Int
+//│ ║  l.29: 	new Int
+//│ ╙──      	^^^^^^^
+//│ ╔══[ERROR] Class Int cannot be instantiated as it exposes no such constructor
+//│ ║  l.29: 	new Int
+//│ ╙──      	^^^^^^^
+//│ error
 //│ Code generation encountered an error:
 //│   unresolved symbol Int
 

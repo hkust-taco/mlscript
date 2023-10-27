@@ -147,7 +147,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       (5, 5)
     case _ =>
       val r = opStr.last
-      (prec(opStr.head), prec(r) - (if (r === '@' || r === '/' || r === ',') 1 else 0))
+      (prec(opStr.head), prec(r) - (if (r === '@' || r === '/' || r === ',' || r === ':') 1 else 0))
   }
   
   // def pe(msg: Message, l: Loc, rest: (Message, Opt[Loc])*): Unit =
@@ -268,11 +268,6 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       TypingUnit(Nil)
   }
   
-  final def toParams(t: Term): Tup = t match {
-    case t: Tup => t
-    case Bra(false, t: Tup) => t
-    case _ => Tup((N, Fld(FldFlags(false, false, false), t)) :: Nil)
-  }
   final def toParamsTy(t: Type): Tuple = t match {
     case t: Tuple => t
     case _ => Tuple((N, Field(None, t)) :: Nil)
@@ -352,8 +347,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
           case (br @ BRACKETS(Round, toks), loc) :: _ =>
             consume
             val as = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented()) // TODO
-            val body = curlyTypingUnit.entities
-            Constructor(Tup(as).withLoc(S(loc)), Blk(body))
+            val body = curlyTypingUnit
+            Constructor(Tup(as).withLoc(S(loc)), Blk(body.entities).withLocOf(body))
           case _ =>
             err(msg"Expect parameter list for the constructor" -> S(l0) :: Nil)
             Constructor(Tup(Nil), Blk(Nil))
@@ -457,22 +452,20 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                 expr(0) :: otherParents
               case _ => Nil
             }
-            val tu = curlyTypingUnit
-            val (ctors, body) = tu.entities.partitionMap {
+            val fullTu = curlyTypingUnit
+            val (ctors, bodyStmts) = fullTu.entities.partitionMap {
               case c: Constructor => L(c)
               case t => R(t)
             }
-
-            val ctor =
-              if (ctors.lengthIs > 1) {
-                err(msg"A class may only have at most one explicit constructor" -> S(l0) :: Nil)
-                N
-              }
-              else ctors.headOption
-
+            val tu = TypingUnit(bodyStmts).withLocOf(fullTu)
+            if (ctors.lengthIs > 1) {
+              err(msg"A class may have at most one explicit constructor" -> S(l0) :: Nil)
+              N
+            }
+            val ctor = ctors.headOption
             val res =
-              NuTypeDef(kind, tn, tparams, params, ctor, sig, ps, N, N, TypingUnit(body))(isDecl, isExported, isAbs)
-            R(res.withLoc(S(l0 ++ res.getLoc)))
+              NuTypeDef(kind, tn, tparams, params, ctor, sig, ps, N, N, tu)(isDecl, isExported, isAbs)
+            R(res.withLoc(S(l0 ++ tn.getLoc ++ res.getLoc)))
           
           case ModifierSet(mods, (KEYWORD(kwStr @ ("fun" | "val" | "let")), l0) :: c) => // TODO support rec?
             consume
@@ -563,7 +556,9 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                   val body = expr(0)
                   val newBody = transformBody.fold(body)(_(body))
                   val annotatedBody = asc.fold(newBody)(ty => Asc(newBody, ty))
-                  R(NuFunDef(isLetRec, v, opStr, tparams, L(ps.foldRight(annotatedBody)((i, acc) => Lam(i, acc))))(isDecl, isExported, isVirtual, N, N, genField))
+                  R(NuFunDef(
+                      isLetRec, v, opStr, tparams, L(ps.foldRight(annotatedBody)((i, acc) => Lam(i, acc)))
+                    )(isDecl, isExported, isVirtual, N, N, genField).withLoc(S(l0 ++ annotatedBody.toLoc)))
                 case c =>
                   asc match {
                     case S(ty) =>
@@ -571,35 +566,45 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                       R(NuFunDef(isLetRec, v, opStr, tparams, R(PolyType(Nil, ps.foldRight(ty)((p, r) => Function(p.toType match {
                         case L(diag) => raise(diag); Top // TODO better
                         case R(tp) => tp
-                      }, r)))))(isDecl, isExported, isVirtual, N, N, genField)) // TODO rm PolyType after FCP is merged
+                      }, r)))))(isDecl, isExported, isVirtual, N, N, genField).withLoc(S(l0 ++ ty.toLoc)))
+                      // TODO rm PolyType after FCP is merged
                     case N =>
                       // TODO dedup:
                       val (tkstr, loc) = c.headOption.fold(("end of input", lastLoc))(_.mapFirst(_.describe).mapSecond(some))
                       err((
                         msg"Expected ':' or '=' followed by a function body or signature; found ${tkstr} instead" -> loc :: Nil))
                       consume
-                      R(NuFunDef(isLetRec, v, opStr, Nil, L(ps.foldRight(errExpr: Term)((i, acc) => Lam(i, acc))))(isDecl, isExported, isVirtual, N, N, genField))
+                      val bod = errExpr
+                      R(NuFunDef(
+                          isLetRec, v, opStr, Nil, L(ps.foldRight(bod: Term)((i, acc) => Lam(i, acc)))
+                        )(isDecl, isExported, isVirtual, N, N, genField).withLoc(S(l0 ++ bod.toLoc)))
                   }
               }
             }
           case _ =>
             exprOrIf(0, allowSpace = false)
         }
-        yeetSpaces match {
+        val finalTerm = yeetSpaces match {
           case (KEYWORD("="), l0) :: _ => t match {
             case R(v: Var) =>
               consume
-              block(R(Eqn(v, expr(0))) :: prev)
-            case _ => (t :: prev).reverse
+              R(Eqn(v, expr(0)))
+            case _ => t
           }
-          case (KEYWORD(";"), _) :: _ => consume; block(t :: prev)
-          case (NEWLINE, _) :: _ => consume; block(t :: prev)
-          case _ => (t :: prev).reverse
+          case _ => t
+        }
+        yeetSpaces match {
+          case (KEYWORD(";;"), _) :: _ => consume; block(finalTerm :: prev)
+          case (NEWLINE, _) :: _ => consume; block(finalTerm :: prev)
+          case _ => (finalTerm :: prev).reverse
         }
     }
   
   private def yeetSpaces: Ls[TokLoc] =
-    cur.dropWhile(_._1 === SPACE && { consume; true })
+    cur.dropWhile(tkloc =>
+      (tkloc._1 === SPACE
+      || tkloc._1.isInstanceOf[COMMENT] // TODO properly retrieve and sotre all comments in AST?
+      ) && { consume; true })
   
   final def funParams(implicit et: ExpectThen, fe: FoundErr, l: Line): Ls[Tup] = wrap(()) { l =>
     yeetSpaces match {
@@ -676,54 +681,79 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         exprCont(Var(opStr).withLoc(S(l1)), prec, allowNewlines = false)
       case (br @ BRACKETS(bk @ (Round | Square | Curly), toks), loc) :: _ =>
         consume
-        val res = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented()) // TODO
+        val res = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented())
         val bra = (bk, res) match {
           case (Curly, _) =>
             Bra(true, Rcd(res.map {
-            case S(n) -> fld => n -> fld
-            case N -> (fld @ Fld(_, v: Var)) => v -> fld
-            case N -> fld =>
-              err((
-                msg"Record field should have a name" -> fld.value.toLoc :: Nil))
-              Var("<error>") -> fld
+              case S(n) -> fld => n -> fld
+              case N -> (fld @ Fld(_, v: Var)) => v -> fld
+              case N -> fld =>
+                err((
+                  msg"Record field should have a name" -> fld.value.toLoc :: Nil))
+                Var("<error>") -> fld
             }))
           case (Round, (N, Fld(FldFlags(false, false, _), elt)) :: Nil) =>
             Bra(false, elt)
+          case (Round, fs) =>
+            yeetSpaces match {
+              case (KEYWORD("=>"), l1) :: _ =>
+                consume
+                val e = expr(0)
+                Lam(Tup(res), e)
+              case (IDENT("->", true), l1) :: _ =>
+                consume
+                val rhs = expr(opPrec("->")._2)
+                Lam(Tup(res), rhs)
+              case _ =>
+                res match {
+                  case Nil =>
+                    UnitLit(true)
+                  case _ =>
+                    err((
+                      msg"Expected '=>' or '->' after this parameter section" -> S(loc) :: Nil))
+                    Tup(fs)
+                }
+            }
           case _ =>
-            // TODO actually reject round tuples? (except for function arg lists)
-            Bra(false, Tup(res))
+            Tup(res)
         }
         exprCont(bra.withLoc(S(loc)), prec, allowNewlines = false)
       case (KEYWORD("forall"), l0) :: _ =>
         consume
-        val as = argsMaybeIndented()
+        def getIdents: Ls[TypeVar] = yeetSpaces match {
+          case (IDENT(nme, false), l0) :: _ =>
+            consume
+            val res = TypeVar(R(nme), N).withLoc(S(l0))
+            yeetSpaces match {
+              case (COMMA, _) :: _ =>
+                consume
+                res :: getIdents
+              case _ => res :: Nil
+            }
+          case _ => Nil
+        }
+        val idents = getIdents
         val rest = cur match {
-          case (KEYWORD(";"), l0) :: _ =>
+          case (KEYWORD(":"), l0) :: _ =>
             consume
             expr(0)
           case _ =>
-            err((msg"Expected `;` after `forall` section" -> curLoc.orElse(lastLoc) :: Nil))
+            err((msg"Expected `:` after `forall` section" -> curLoc.orElse(lastLoc) :: Nil))
             errExpr
         }
-        R(Forall(as.flatMap {
-          case N -> Fld(FldFlags(false, false, _), v: Var) =>
-            TypeVar(R(v.name), N).withLocOf(v) :: Nil
-          case v -> f =>
-            err(msg"illegal `forall` quantifier body" -> f.value.toLoc :: Nil)
-            Nil
-        }, rest))
+        R(Forall(idents, rest))
       case (KEYWORD("let"), l0) :: _ =>
         consume
         val bs = bindings(Nil)
         val body = yeetSpaces match {
-          case (KEYWORD("in") | KEYWORD(";"), _) :: _ =>
+          case (KEYWORD("in" | ";;"), _) :: _ =>
             consume
             exprOrIf(0)
           case (NEWLINE, _) :: _ =>
             consume
             exprOrIf(0)
           case _ =>
-            R(UnitLit(true))
+            R(UnitLit(true).withLoc(curLoc.map(_.left)))
         }
         bs.foldRight(body) {
           case ((v, r), R(acc)) => R(Let(false, v, r, acc))
@@ -731,7 +761,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         }
       case (KEYWORD("new"), l0) :: c =>
         consume
-        val body = expr(0)
+        val body = expr(outer.prec('.'))
         val head = body match {
           case Var(clsNme) =>
             S(TypeName(clsNme).withLocOf(body) -> Tup(Nil))
@@ -746,11 +776,23 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
               msg"Unexpected ${body.describe} after `new` keyword" -> body.toLoc :: Nil))
             N
         }
-        R(New(head, curlyTypingUnit).withLoc(S(head.foldLeft(l0)((l, h) => l ++ h._1.toLoc ++ h._2.toLoc))))
+        val res = New(head, curlyTypingUnit).withLoc(S(head.foldLeft(l0)((l, h) => l ++ h._1.toLoc ++ h._2.toLoc)))
+        exprCont(res, prec, allowNewlines = false)
       case (KEYWORD("else"), l0) :: _ =>
         consume
         val e = expr(0)
         L(IfElse(e).withLoc(S(l0 ++ e.toLoc)))
+      case (KEYWORD("case"), l0) :: _ =>
+        consume
+        exprOrIf(0)(et = true, fe = fe, l = implicitly) match {
+          case L(body) =>
+            R(Lam(PlainTup(Var("case$scrut")), If(IfOpApp(Var("case$scrut"), Var("is"), body), N)))
+          case R(rhs) =>
+            err((msg"Expected 'then'/'else' clause after 'case'; found ${rhs.describe} instead" -> rhs.toLoc ::
+              msg"Note: 'case' expression starts here:" -> S(l0) :: Nil))
+            R(Lam(PlainTup(Var("case$scrut")), If(IfElse(rhs), N)))
+        }
+        
       case (KEYWORD("if"), l0) :: _ =>
         consume
         cur match {
@@ -799,8 +841,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                       S(e.toLoc.foldRight(l1)(_ ++ _)))
                     case Nil => (msg"${e.describe}", e.toLoc)
                   }
-                  err((msg"Expected 'then'/'else' clause; found $found instead" -> loc ::
-                    msg"Note: 'if' expression started here:" -> S(l0) :: Nil))
+                  err((msg"Expected 'then'/'else' clause after 'if'; found $found instead" -> loc ::
+                    msg"Note: 'if' expression starts here:" -> S(l0) :: Nil))
                   R(If(IfThen(e, errExpr), N))
               }
           }
@@ -809,9 +851,21 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       case Nil =>
         err(msg"Unexpected end of $description; an expression was expected here" -> lastLoc :: Nil)
         R(errExpr)
-      case ((KEYWORD(";") /* | NEWLINE */ /* | BRACKETS(Curly, _) */, _) :: _) =>
-        R(UnitLit(true))
+      case ((KEYWORD(";;") /* | NEWLINE */ /* | BRACKETS(Curly, _) */, l0) :: _) =>
+        R(UnitLit(true).withLoc(S(l0)))
         // R(errExpr) // TODO
+      case (IDENT("-", true), l0) :: _ /*if opPrec("-")._1 > prec*/ => // Unary minus
+        consume
+        val v = Var("-").withLoc(S(l0))
+        expr(opPrec("-")._2) match {
+          case IntLit(i) => // Special case for negative literals
+            exprCont(IntLit(-i), prec, false)
+          case rhs: Term => // General case
+            exprCont(
+              if (newDefs) App(v, PlainTup(IntLit(BigInt(0)), rhs))
+              else App(App(v, PlainTup(IntLit(BigInt(0)))), PlainTup(rhs))
+            , prec, false)
+        }
       case (tk, l0) :: _ =>
         err(msg"Unexpected ${tk.describe} in expression position" -> S(l0) :: Nil)
         consume
@@ -824,10 +878,15 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
   
   final def exprCont(acc: Term, prec: Int, allowNewlines: Bool)(implicit et: ExpectThen, fe: FoundErr, l: Line): IfBody \/ Term = wrap(prec, s"`$acc`", allowNewlines) { l =>
     cur match {
-      case (IDENT(opStr @ "=>", true), l0) :: (NEWLINE, l1) :: _ if opPrec(opStr)._1 > prec =>
+      case (KEYWORD(opStr @ "=>"), l0) :: (NEWLINE, l1) :: _ if opPrec(opStr)._1 > prec =>
         consume
         val rhs = Blk(typingUnit.entities)
-        R(Lam(toParams(acc), rhs))
+        R(Lam(PlainTup(acc), rhs))
+      case (KEYWORD(opStr @ "=>"), l0) :: _ if opPrec(opStr)._1 > prec =>
+        consume
+        val rhs = expr(1)
+        val res = Lam(PlainTup(acc), rhs)
+        exprCont(res, prec, allowNewlines)
       case (IDENT(".", _), l0) :: (br @ BRACKETS(Square, toks), l1) :: _ =>
         consume
         consume
@@ -854,23 +913,21 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                     err(msg"record literal expected here; found ${rhs.describe}" -> rhs.toLoc :: Nil)
                     acc
                 }
-              case "=>" =>
-                Lam(toParams(acc), rhs)
+              case ";" =>
+                Blk(acc :: rhs :: Nil)
               case _ =>
                 if (newDefs) App(v, PlainTup(acc, rhs))
-                else App(App(v, toParams(acc)), toParams(rhs))
+                else App(App(v, PlainTup(acc)), PlainTup(rhs))
             }, prec, allowNewlines)
         }
-      case (KEYWORD(":"), l0) :: _ =>
+      case (KEYWORD(":"), l0) :: _ if prec <= outer.prec(':') =>
         consume
         R(Asc(acc, typ(0)))
-      // case (KEYWORD(":"), _) :: _ if prec <= 1 =>
-      //   consume
-      //   R(Asc(acc, typ(1)))
       case (KEYWORD("where"), l0) :: _ if prec <= 1 =>
         consume
         val tu = typingUnitMaybeIndented
-        R(Where(acc, tu.entities))
+        val res = Where(acc, tu.entities).withLoc(S(l0))
+        exprCont(res, prec, allowNewlines = false)
       case (SPACE, l0) :: _ =>
         consume
         exprCont(acc, prec, allowNewlines)
@@ -903,7 +960,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       case (NEWLINE, _) :: _ if allowNewlines =>
         consume
         exprCont(acc, 0, allowNewlines)
-      case (COMMA | NEWLINE | KEYWORD("then" | "else" | "in" | ";" | "=")
+      case (COMMA | NEWLINE | KEYWORD("then" | "else" | "in" | ";;" | "=")
         | IDENT(_, true) | BRACKETS(Curly, _), _) :: _ => R(acc)
       
       case (KEYWORD("of"), _) :: _ if prec <= 1 =>
@@ -981,9 +1038,9 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
           exprCont(res, prec, allowNewlines)
           
       case c @ (h :: _) if (h._1 match {
-        case KEYWORD(";" | "of" | "where" | "extends") | BRACKETS(Round | Square, _)
+        case KEYWORD(";;" | ":" | "of" | "where" | "extends") | BRACKETS(Round | Square, _)
           | BRACKETS(Indent, (
-              KEYWORD(";" | "of")
+              KEYWORD(";;" | "of")
               | BRACKETS(Round | Square, _)
               | SELECT(_)
             , _) :: _)
@@ -1122,7 +1179,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
     // argsOrIf(Nil).map{case (_, L(x))=> ???; case (n, R(x))=>n->x} // TODO
     argsOrIf(Nil, Nil, allowNewlines, prec).flatMap{case (n, L(x))=> 
         err(msg"Unexpected 'then'/'else' clause" -> x.toLoc :: Nil)
-        n->Fld(FldFlags(false, false, false), errExpr)::Nil
+        n->Fld(FldFlags.empty, errExpr)::Nil
       case (n, R(x))=>n->x::Nil} // TODO
   /* 
   final def argsOrIf2()(implicit fe: FoundErr, et: ExpectThen): IfBlock \/ Ls[Opt[Var] -> Fld] = {
@@ -1143,14 +1200,17 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       case Nil =>
         seqAcc match {
           case res :: seqAcc => 
-            (N -> R(Fld(FldFlags(false, false, false), Blk((res :: seqAcc).reverse))) :: acc).reverse
+            (N -> R(Fld(FldFlags.empty, Blk((res :: seqAcc).reverse))) :: acc).reverse
           case Nil =>
             acc.reverse
         }
       case (SPACE, _) :: _ =>
         consume
         argsOrIf(acc, seqAcc, allowNewlines, prec)
-      case (NEWLINE | IDENT(_, true), _) :: _ => // TODO: | ...
+      case (NEWLINE, _) :: _ => // TODO: | ...
+        assert(seqAcc.isEmpty)
+        acc.reverse
+      case (IDENT(nme, true), _) :: _ if nme =/= "-" => // TODO: | ...
         assert(seqAcc.isEmpty)
         acc.reverse
       case _ =>
@@ -1224,7 +1284,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       case (SPACE, _) :: _ =>
         consume
         bindings(acc)
-      case (NEWLINE | IDENT(_, true) | KEYWORD(";"), _) :: _ => // TODO: | ...
+      case (NEWLINE | IDENT(_, true) | KEYWORD(";;"), _) :: _ => // TODO: | ...
         acc.reverse
       case (IDENT(id, false), l0) :: _ =>
         consume

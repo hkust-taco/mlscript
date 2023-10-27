@@ -23,7 +23,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   }
   
   def toParam(t: Term): Tup =
-    Tup((N, Fld(FldFlags(false, false, false), t)) :: Nil)
+    Tup((N, Fld(FldFlags.empty, t)) :: Nil)
   
   def toParams(t: Term): Tup = t match {
     case t: Tup => t

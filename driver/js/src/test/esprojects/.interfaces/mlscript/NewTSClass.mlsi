@@ -1,5 +1,5 @@
 import "../ts/MyClass.mlsi"
-export declare module NewTSClass() {
+export declare module NewTSClass {
   class Bar()
   error
 }

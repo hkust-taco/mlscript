@@ -96,7 +96,12 @@ module CompareMyPoint extends ComparePoint, CompareColored, CompareNested
 //│ }
 //│ where
 //│   'b <: {color: 'color, parent: Object & ~#Some | Some['b], x: 'c, y: 'd}
-//│   'a <: {color: {equals: 'color -> Bool}, parent: Object & ~#Some | Some['a], x: Eql['c], y: Eql['d]}
+//│   'a <: {
+//│     color: {equals: 'color -> Bool},
+//│     parent: Object & ~#Some | Some['a],
+//│     x: Eql['c],
+//│     y: Eql['d]
+//│   }
 
 
 let p0 = MyPoint(0, 0, Red, None)

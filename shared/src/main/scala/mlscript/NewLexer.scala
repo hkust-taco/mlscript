@@ -26,17 +26,20 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
   def isDigit(c: Char): Bool =
     c >= '0' && c <= '9'
   
+  /* // TODO remove (unused)
   private val isNonStickyKeywordChar = Set(
     ',',
     ':',
     ';',
   )
+  */
   
   private val isSymKeyword = Set(
     // "->",
+    "=>",
     "=",
     ":",
-    ";",
+    ";;",
     "#",
     // ".",
     // "<",
@@ -169,23 +172,18 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
         // go(j, if (keywords.contains(n)) KEYWORD(n) else IDENT(n, isAlphaOp(n)))
         lex(j, ind, next(j, if (keywords.contains(n)) KEYWORD(n) else IDENT(n, isAlphaOp(n))))
       case _ if isOpChar(c) =>
-        if (c === '-' && isDigit(bytes(i + 1))) {
-          val (str, j) = takeWhile(i + 1)(isDigit)
-          lex(j, ind, next(j, LITVAL(IntLit(-BigInt(str)))))
-        } else {
-          val (n, j) = takeWhile(i)(isOpChar)
-          if (n === "." && j < length && isIdentFirstChar(bytes(j))) {
-            val (body, m) =
-            if (isIdentEscape(j)) takeIdentFromEscape(j, SELECT)
-            else {
-              val (name, k) = takeWhile(j)(isIdentChar)
-              (SELECT(name), k)
-            }
-            lex(m, ind, next(m, body))
+        val (n, j) = takeWhile(i)(isOpChar)
+        if (n === "." && j < length && isIdentFirstChar(bytes(j))) {
+          val (body, m) =
+          if (isIdentEscape(j)) takeIdentFromEscape(j, SELECT)
+          else {
+            val (name, k) = takeWhile(j)(isIdentChar)
+            (SELECT(name), k)
           }
-          // else go(j, if (isSymKeyword.contains(n)) KEYWORD(n) else IDENT(n, true))
-          else lex(j, ind, next(j, if (isSymKeyword.contains(n)) KEYWORD(n) else IDENT(n, true)))
+          lex(m, ind, next(m, body))
         }
+        // else go(j, if (isSymKeyword.contains(n)) KEYWORD(n) else IDENT(n, true))
+        else lex(j, ind, next(j, if (isSymKeyword.contains(n)) KEYWORD(n) else IDENT(n, true)))
       case _ if isDigit(c) =>
         val (str, j) = takeWhile(i)(isDigit)
         // go(j, LITVAL(IntLit(BigInt(str))))
@@ -296,6 +294,7 @@ object NewLexer {
     "if",
     "then",
     "else",
+    "case",
     "fun",
     "val",
     "var",

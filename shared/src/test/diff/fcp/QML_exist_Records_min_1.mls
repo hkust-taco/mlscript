@@ -142,9 +142,11 @@ def step: Arrays2 -> Arrays2
 def step arr k = k (arr stepImpl)
 //│ 'a -> (('b -> 'c) -> 'c
 //│   where
-//│     'a <: (forall 'd. 'd -> {fold: forall 'e 'f 'g. 'e -> ('f -> 'g
-//│       where
-//│         'd <: {fold: 'e -> 'f -> 'g})}) -> 'b)
+//│     'a <: (forall 'd. 'd -> {
+//│       fold: forall 'e 'f 'g. 'e -> ('f -> 'g
+//│         where
+//│           'd <: {fold: 'e -> 'f -> 'g})
+//│     }) -> 'b)
 //│   <:  step:
 //│ Arrays2 -> Arrays2
 //│ ╔══[ERROR] Type error in def definition

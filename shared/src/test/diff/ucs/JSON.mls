@@ -8,10 +8,10 @@ let asNativeString: anything => { length: Int, charCodeAt: Int => Int, charAt: I
 let StringInstance: { fromCharCode: Int => Str } = String
 // We will validate our implementation with the built-in `JSON.parse`.
 let JSON: { parse: Str => anything, stringify: anything => Str }
-//│ let String: nothing
 //│ let asNativeString: anything -> {charAt: Int -> Str, charCodeAt: Int -> Int, length: Int, slice: Int -> Str}
 //│ let StringInstance: {fromCharCode: Int -> Str}
 //│ let JSON: {parse: Str -> anything, stringify: anything -> Str}
+//│ let String: nothing
 //│ String
 //│        = <missing implementation>
 //│ asNativeString
@@ -205,7 +205,7 @@ toString of JsonObject of insert(Empty, "hello", JsonString("world"))
 //│ res
 //│     = '{ hello: "world" }'
 
-class Scanner(source: Str, at: Int) {
+class Scanner(source: Str, val at: Int) {
   fun peek: Option[Str] =
     if at < strlen(source) then Some(getCharAtIndex(source, at)) else None
   fun advance: Scanner =
@@ -245,7 +245,7 @@ fun expect(scanner, ch) =
       eq(ch)(ch') then ParseSuccess((), scanner.advance)
       else ParseFailure(concat4("expect '", ch, "' but found ", ch'), scanner)
     None then ParseFailure(concat3("expect '", ch, "' but found EOF"), scanner)
-//│ fun expect: (Scanner & {advance: Scanner}, Str) -> (ParseFailure | ParseSuccess[[]])
+//│ fun expect: (Scanner & {advance: Scanner}, Str) -> (ParseFailure | ParseSuccess[()])
 
 fun expectWord(scanner, word, result) =
   if

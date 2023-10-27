@@ -27,10 +27,10 @@ Dummy.introspect
 //│     = 'duh!'
 
 
-// * TODO: simplify `forall 'a. Int | 'a` – seems it's not because it shares a var...
 class Funny: Int { fun test = this + 1 }
-//│ class Funny: Int | 'a {
-//│   fun test: forall 'a. Int | 'a
+//│ class Funny: Int {
+//│   constructor()
+//│   fun test: Int
 //│ }
 
 :e
@@ -42,6 +42,7 @@ class Unfunny { fun test = this + 1 }
 //│ ║  l.37: 	class Unfunny { fun test = this + 1 }
 //│ ╙──      	                           ^^^^
 //│ class Unfunny {
+//│   constructor()
 //│   fun test: Int | error
 //│ }
 
@@ -54,6 +55,7 @@ class Exp: Pair | Lit {
 class Lit(n: Int) extends Exp
 class Pair(lhs: Exp, rhs: Exp) extends Exp
 //│ class Exp: Lit | Pair {
+//│   constructor()
 //│   fun test: 0 | 1
 //│ }
 //│ class Lit(n: Int) extends Exp {
@@ -72,6 +74,7 @@ class Exp: Pair | Lit {
 class Lit(n: Int) extends Exp
 class Pair(lhs: Exp, rhs: Exp) extends Exp
 //│ class Exp: Lit | Pair {
+//│   constructor()
 //│   fun test: 0 | 1
 //│ }
 //│ class Lit(n: Int) extends Exp {
@@ -96,9 +99,10 @@ class Exp: Pair | Lit {
 class Lit(n: Int) extends Exp
 class Pair(lhs: Exp, rhs: Exp) extends Exp
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.94: 	    Pair(l, r) then l.test + r.test
+//│ ║  l.97: 	    Pair(l, r) then l.test + r.test
 //│ ╙──      	                     ^^^^^
 //│ class Exp: Lit | Pair {
+//│   constructor()
 //│   fun test: Int | error
 //│ }
 //│ class Lit(n: Int) extends Exp {
@@ -118,6 +122,7 @@ class Exp: Pair | Lit {
 class Lit(n: Int) extends Exp
 class Pair(lhs: Exp, rhs: Exp) extends Exp
 //│ class Exp: Lit | Pair {
+//│   constructor()
 //│   fun test: Int
 //│ }
 //│ class Lit(n: Int) extends Exp {
@@ -135,27 +140,30 @@ class Exp[A]: Pair | Lit {
     Pair then 1
 }
 class Lit(n: Int) extends Exp[Int]
-class Pair[L, R](lhs: L, rhs: R) extends Exp[(L, R)]
+class Pair[L, R](lhs: L, rhs: R) extends Exp[[L, R]]
 //│ ╔══[ERROR] Unhandled cyclic definition
-//│ ║  l.132: 	class Exp[A]: Pair | Lit {
+//│ ║  l.137: 	class Exp[A]: Pair | Lit {
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.133: 	  fun test = if this is
+//│ ║  l.138: 	  fun test = if this is
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.134: 	    Lit then 0
+//│ ║  l.139: 	    Lit then 0
 //│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.135: 	    Pair then 1
-//│ ╙──       	^^^^^^^^^^^^^^^
+//│ ║  l.140: 	    Pair then 1
+//│ ║         	^^^^^^^^^^^^^^^
+//│ ║  l.141: 	}
+//│ ╙──       	^
 //│ ╔══[ERROR] Type error in `case` expression
-//│ ║  l.133: 	  fun test = if this is
+//│ ║  l.138: 	  fun test = if this is
 //│ ║         	                ^^^^^^^
-//│ ║  l.134: 	    Lit then 0
+//│ ║  l.139: 	    Lit then 0
 //│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.135: 	    Pair then 1
+//│ ║  l.140: 	    Pair then 1
 //│ ║         	^^^^^^^^^^^^^^^
 //│ ╟── type variable `L` leaks out of its scope
-//│ ║  l.138: 	class Pair[L, R](lhs: L, rhs: R) extends Exp[(L, R)]
+//│ ║  l.143: 	class Pair[L, R](lhs: L, rhs: R) extends Exp[[L, R]]
 //│ ╙──       	           ^
 //│ class Exp[A]: Lit | Pair[anything, anything] {
+//│   constructor()
 //│   fun test: 0 | 1
 //│ }
 //│ class Lit(n: Int) extends Exp {

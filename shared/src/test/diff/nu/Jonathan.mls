@@ -11,7 +11,7 @@ fun pure[A](a: A): Effectful['a, 'e] = Effectful(a)
 //│ class Effectful[A, E](value: A) {
 //│   fun flatMap: forall 'B. (f: A -> Effectful['B, E]) -> Effectful['B, E]
 //│ }
-//│ fun pure: forall 'a. (a: 'a) -> Effectful['a, nothing]
+//│ fun pure: forall 'A. (a: 'A) -> Effectful['A, nothing]
 
 // * Some effect tags
 module IO
@@ -22,7 +22,7 @@ module Block
 // * Some example functions
 fun println(x: anything): Effectful[(), IO]
 fun readLine: Effectful[Str, IO | Block]
-//│ fun println: (x: anything) -> Effectful[[], IO]
+//│ fun println: (x: anything) -> Effectful[(), IO]
 //│ fun readLine: Effectful[Str, Block | IO]
 
 
@@ -37,14 +37,14 @@ fun f(x) = x : NonBlocking
 
 // * the `listener` callback should be non-blocking
 fun onMousePressed(listener) =
-  fun l(e) = listener(e) : NonBlocking
+  let l(e) = listener(e) : NonBlocking
   l(0).flatMap of a => l(1).flatMap of b => pure of ()
-//│ fun onMousePressed: forall 'a. ((0 | 1) -> NonBlocking[anything, 'a]) -> Effectful[[], 'a & ~Block]
+//│ fun onMousePressed: forall 'a. ((0 | 1) -> NonBlocking[anything, 'a]) -> Effectful[(), 'a & ~Block]
 
 
 // * OK: `println` does not block
 onMousePressed(event => println("Clicked!"))
-//│ Effectful[[], IO & ~Block]
+//│ Effectful[(), IO & ~Block]
 
 // * NOT OK: `readLine` blocks
 :e
@@ -55,42 +55,46 @@ onMousePressed(event => readLine.flatMap(println))
 //│ ╟── type `Block` does not match type `~Block`
 //│ ║  l.24: 	fun readLine: Effectful[Str, IO | Block]
 //│ ╙──      	                                  ^^^^^
-//│ Effectful[[], IO & ~Block] | error
+//│ Effectful[(), IO & ~Block] | error
 
 
 class Event
 class MouseEvent: Event
 module Register
-//│ class Event
-//│ class MouseEvent: Event
+//│ class Event {
+//│   constructor()
+//│ }
+//│ class MouseEvent: Event {
+//│   constructor()
+//│ }
 //│ module Register
 
 fun onMousePressed(listener) =
-  fun l(e: MouseEvent) = listener(e) : Effectful[(), 'e \ Block \ Register]
+  let l(e: MouseEvent) = listener(e) : Effectful[(), 'e \ Block \ Register]
   ()
-//│ fun onMousePressed: (MouseEvent -> Effectful[[], ~Block & ~Register]) -> []
+//│ fun onMousePressed: (MouseEvent -> Effectful[(), ~Block & ~Register]) -> ()
 
 // def onMouseClick ( f : Event -> Unit \ { ef - Register }): Unit \ { Register }
 fun onMouseClick(f: Event -> Effectful[(), 'e \ Register]): Effectful[(), Register]
-//│ fun onMouseClick: (f: Event -> Effectful[[], ~Register]) -> Effectful[[], Register]
+//│ fun onMouseClick: (f: Event -> Effectful[(), ~Register]) -> Effectful[(), Register]
 
 onMouseClick of ev => pure of ()
-//│ Effectful[[], Register]
+//│ Effectful[(), Register]
 
 :e
 onMouseClick of ev =>
   onMouseClick(ev => pure of ()).flatMap of _ =>
     pure of ()
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.81: 	onMouseClick of ev =>
+//│ ║  l.85: 	onMouseClick of ev =>
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.82: 	  onMouseClick(ev => pure of ()).flatMap of _ =>
+//│ ║  l.86: 	  onMouseClick(ev => pure of ()).flatMap of _ =>
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.83: 	    pure of ()
+//│ ║  l.87: 	    pure of ()
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── type `Register` does not match type `~Register`
-//│ ║  l.74: 	fun onMouseClick(f: Event -> Effectful[(), 'e \ Register]): Effectful[(), Register]
+//│ ║  l.78: 	fun onMouseClick(f: Event -> Effectful[(), 'e \ Register]): Effectful[(), Register]
 //│ ╙──      	                                                                          ^^^^^^^^
-//│ Effectful[[], Register] | error
+//│ Effectful[(), Register] | error
 
 

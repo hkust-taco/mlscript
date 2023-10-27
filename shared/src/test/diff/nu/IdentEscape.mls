@@ -47,7 +47,7 @@ id""
 //│ ╔══[PARSE ERROR] empty identifier escaped.
 //│ ║  l.46: 	id""
 //│ ╙──      	^^^^
-//│ undefined
+//│ ()
 //│ res
 //│     = undefined
 
@@ -62,16 +62,20 @@ id"id
 //│ ╔══[PARSE ERROR] Unexpected end of input; an expression was expected here
 //│ ║  l.55: 	id"id
 //│ ╙──      	      ^
-//│ undefined
+//│ ()
 //│ res
 //│     = undefined
 
 class id"of"
-//│ class of
+//│ class of {
+//│   constructor()
+//│ }
 
 :ge
 class id"class"
-//│ class class
+//│ class class {
+//│   constructor()
+//│ }
 //│ Code generation encountered an error:
 //│   class is a reserved keyword in ECMAScript and can not be used as type name.
 

@@ -1,5 +1,5 @@
 import "./Cycle3.mlsi"
-export declare module Cycle4() {
+export declare module Cycle4 {
   fun g: (x: Int) -> Int
-  undefined
+  ()
 }

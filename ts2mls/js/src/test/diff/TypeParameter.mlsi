@@ -24,8 +24,8 @@ export declare module TypeParameter {
   }
   declare fun fff(p: FFF[Str], s: Str): unit
   declare fun getFFF(): FFF[Num]
-  type PolyToString = forall 'T; (x: 'T) => Str
-  type PolyID = forall 'T; (x: 'T) => 'T
+  type PolyToString = forall 'T: (x: 'T) => Str
+  type PolyID = forall 'T: (x: 'T) => 'T
 }
 //| ╔══[ERROR] type identifier not found: Printer
 //| ║  l.10: 	  declare fun setStringPrinter(p: Printer[Str]): unit

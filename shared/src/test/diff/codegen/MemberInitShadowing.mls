@@ -63,7 +63,7 @@ class A(x0: Int) {
   log(x1)
 }
 //│ class A(x0: Int) {
-//│   let x1: Int
+//│   val x1: Int
 //│ }
 //│ // Prelude
 //│ class TypingUnit2 {

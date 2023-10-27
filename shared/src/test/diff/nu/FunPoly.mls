@@ -22,7 +22,7 @@ fun id(x) = x
 //│ fun id: forall 'a. 'a -> 'a
 //│ [1, true]
 //│ res
-//│     = [Function: id1]
+//│     = [ 1, true ]
 
 
 

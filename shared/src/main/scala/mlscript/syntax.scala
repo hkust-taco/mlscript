@@ -125,7 +125,7 @@ sealed trait Statement extends StatementImpl
 final case class LetS(isRec: Bool, pat: Term, rhs: Term) extends Statement
 final case class DataDefn(body: Term)                    extends Statement
 final case class DatatypeDefn(head: Term, body: Term)    extends Statement
-final case class Constructor(params: Tup, body: Blk)     extends Statement // constructor(...) { ... }
+
 class Import(val path: Str, val weak: Bool)              extends Statement
 
 object Import {
@@ -143,7 +143,7 @@ sealed abstract class TypeLike extends TypeLikeImpl
 
 sealed abstract class Type extends TypeLike with TypeImpl
 
-sealed trait NamedType extends Type { val base: TypeName }
+sealed trait NamedType extends Type { def base: TypeName; def targs: Ls[Type] }
 
 sealed abstract class Composed(val pol: Bool) extends Type with ComposedImpl
 
@@ -234,6 +234,8 @@ final case class NuFunDef(
   // If the member has no implementation, it is virtual automatically
   def isVirtual: Bool = virtualLoc.nonEmpty || rhs.isRight
 }
+
+final case class Constructor(params: Tup, body: Blk) extends DesugaredStatement with ConstructorImpl // constructor(...) { ... }
 
 
 

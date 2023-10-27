@@ -243,9 +243,9 @@ class Desugarer extends TypeDefs { self: Typer =>
         ctx.tyDefs.get(className).map(td => (td.kind, td.positionals))
             .orElse(ctx.get(className) match {
               case S(ti: DelayedTypeInfo) if ti.decl.kind is Cls =>
-                S((ti.decl.kind, ti.typedParams.map(_._1.name)))
+                S((ti.decl.kind, ti.typedParams.getOrElse(Nil).map(_._1.name))) // * Error should be caught before if this doesn't take params
               case S(CompletedTypeInfo(td: TypedNuCls)) =>
-                S((td.decl.kind, td.params.map(_._1.name)))
+                S((td.decl.kind, td.params.getOrElse(Nil).map(_._1.name))) // * Error should be caught before if this doesn't take params
               case _ => throw new DesugaringException(msg"Illegal pattern `$className`", classNameVar.toLoc)
             }) match {
           case N =>
@@ -809,16 +809,16 @@ class Desugarer extends TypeDefs { self: Typer =>
               }
 
               App(Lam(Tup(
-                N -> Fld(FldFlags(false, false, false), Tup(
+                N -> Fld(FldFlags.empty, Tup(
                   fields.distinctBy(_._1).map {
                     case (_ -> Var(alias)) =>
-                      if (alias === "_") N -> Fld(FldFlags(false, false, false), Var(freshName))
-                      else N -> Fld(FldFlags(false, false, false), Var(alias))
+                      if (alias === "_") N -> Fld(FldFlags.empty, Var(freshName))
+                      else N -> Fld(FldFlags.empty, Var(alias))
                   }.toList
                 )) :: Nil
               ), extraAlias.toList.foldRight(consequent)((lt, rs) => Let(false, Var(lt._2), Var(lt._1), rs))),
-                Tup(N -> Fld(FldFlags(false, false, false), App(Sel(className, Var(unapplyMtd.name)),
-                  Tup(N -> Fld(FldFlags(false, false, false), scrutinee.reference) :: Nil))
+                Tup(N -> Fld(FldFlags.empty, App(Sel(className, Var(unapplyMtd.name)),
+                  Tup(N -> Fld(FldFlags.empty, scrutinee.reference) :: Nil))
                   ) :: Nil)
               )
             case _ => mkLetFromFields(scrutinee, fields.filter(_._2.name =/= "_").toList, consequent)

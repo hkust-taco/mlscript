@@ -1,6 +1,8 @@
 import "fp-ts/BoundedMeetSemilattice.mlsi"
-export declare module MyPartialOrder() {
-  class MyPartialOrder
+export declare module MyPartialOrder {
+  class MyPartialOrder {
+    constructor()
+  }
   let order: MyPartialOrder
 }
 //| ╔══[ERROR] Unsupported parent specification

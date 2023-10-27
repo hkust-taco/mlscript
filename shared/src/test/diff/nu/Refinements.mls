@@ -27,7 +27,7 @@ c : D & { f: 1 }
 //│     = D { f: 1 }
 
 
-class C[A](a: A) extends D()
+class C[A](val a: A) extends D()
 //│ class C[A](a: A) extends D {
 //│   fun f: 0
 //│ }

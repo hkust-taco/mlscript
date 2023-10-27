@@ -115,7 +115,7 @@ declare trait StringConstructor: (args0: (anything) | (undefined)) => Str {
 declare class Bool {
   declare fun valueOf(): (false) | (true)
 }
-declare trait BooleanConstructor: forall 'T; (args0: ('T) | (undefined)) => (false) | (true) {
+declare trait BooleanConstructor: forall 'T: (args0: ('T) | (undefined)) => (false) | (true) {
   val __new: unsupported["new(value?: any): Bool;", "ES5.d.ts", 520, 30]
   val prototype: Bool
 }
@@ -361,7 +361,7 @@ declare trait Array['T] {
   declare fun some(args0: (value: 'T, index: Num, array: MutArray['T]) => anything, args1: (anything) | (undefined)): (false) | (true)
   declare fun indexOf(args0: 'T, args1: (Num) | (undefined)): Num
 }
-declare trait ArrayConstructor: forall 'T; (args0: ('T) | (MutArray['T])) => MutArray['T] {
+declare trait ArrayConstructor: forall 'T: (args0: ('T) | (MutArray['T])) => MutArray['T] {
   val __new: unsupported["new <T>(...items: T[]): T[];", "ES5.d.ts", 1470, 38]
   declare fun isArray(args0: anything): (false) | (true)
   val prototype: MutArray[anything]
@@ -374,7 +374,7 @@ declare trait TypedPropertyDescriptor['T] {
   val writable: ((false) | (true)) | (undefined)
   val value: ('T) | (undefined)
 }
-type PromiseConstructorLike = forall 'T; (executor: (resolve: (value: ('T) | (PromiseLike['T])) => unit, reject: (reason: (anything) | (undefined)) => unit) => unit) => PromiseLike['T]
+type PromiseConstructorLike = forall 'T: (executor: (resolve: (value: ('T) | (PromiseLike['T])) => unit, reject: (reason: (anything) | (undefined)) => unit) => unit) => PromiseLike['T]
 declare trait PromiseLike['T] {
   declare fun id"then"['TResult1, 'TResult2](args0: ((value: 'T) => ('TResult1) | (PromiseLike['TResult1])) | (undefined), args1: ((reason: anything) => ('TResult2) | (PromiseLike['TResult2])) | (undefined)): PromiseLike[('TResult1) | ('TResult2)]
 }

@@ -1,0 +1,38 @@
+:NewDefs
+
+
+module test { // hello
+  fun a = 1
+}
+//│ module test {
+//│   fun a: 1
+//│ }
+
+
+:ge // * FIXME
+:js
+fun y = 1
+module Foo {
+  fun x = y
+}
+//│ fun y: 1
+//│ module Foo {
+//│   fun x: 1
+//│ }
+//│ Code generation encountered an error:
+//│   unresolved symbol y
+
+:ge // * FIXME
+:js
+module Foo {
+  fun x = y
+}
+fun y = 1
+//│ module Foo {
+//│   fun x: 1
+//│ }
+//│ fun y: 1
+//│ Code generation encountered an error:
+//│   unresolved symbol y
+
+
