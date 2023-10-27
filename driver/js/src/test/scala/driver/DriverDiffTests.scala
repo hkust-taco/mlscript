@@ -95,6 +95,7 @@ object DriverDiffTests {
   private val esCases = List(
     driverEntry("Simple"),
     driverEntry("Cycle2"),
+    driverEntry("Cycle4", expectError = true, expectTypeError = true),
     driverEntry("Self", expectError = true),
     driverEntry("C", expectError = true, expectTypeError = true),
     driverEntry("TS", Some("./tsconfig.json"), expectTypeError = true), // TODO: type members

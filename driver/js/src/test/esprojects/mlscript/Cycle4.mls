@@ -1,0 +1,6 @@
+import "./Cycle3.mls"
+
+export fun g(x: Int): Int
+export fun g(x: Int): Int = Cycle3.f(x)
+
+log(g(42))

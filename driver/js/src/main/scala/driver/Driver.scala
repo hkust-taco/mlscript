@@ -249,20 +249,23 @@ class Driver(options: DriverOptions) {
     implicit val raise: Raise = (diag: Diagnostic) => report(diag, mlsiWriter.writeErr)
     parseAndRun(file.filename, {
       case (definitions, declarations, imports, _) => {
-        val depList = imports.map(_.path)
-
-        val (cycleList, otherList) = depList.filter(dep => {
-          val depFile = file.`import`(dep)
+        val (cycleList, otherList) = imports.filter(dep => {
+          val depFile = file.`import`(dep.path)
           if (depFile.filename === file.filename) {
             totalErrors += 1
             mlsiWriter.writeErr(s"Cannot import ${file.filename} from itself")
             false
           }
+          else if (stack.contains(depFile.filename) && !dep.weak) {
+            totalErrors += 1
+            mlsiWriter.writeErr(s"Use `weak import` to break the cycle dependency `import \"${dep.path}\"`")
+            false
+          }
           else true
         }).partitionMap { dep => {
-          val depFile = file.`import`(dep)
+          val depFile = file.`import`(dep.path)
           if (stack.contains(depFile.filename)) L(depFile)
-          else R(dep)
+          else R(dep.path)
         } }
 
         val cycleSigs = cycleList.foldLeft(Ls[TypingUnit]())((sigs, file) => {
