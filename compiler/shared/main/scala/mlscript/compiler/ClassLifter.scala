@@ -255,12 +255,9 @@ class ClassLifter(logDebugMsg: Boolean = false) {
 
   private def liftTuple(tup: Tup)(using ctx: LocalContext, cache: ClassCache, globFuncs: Map[Var, (Var, LocalContext)], outer: Option[ClassInfoCache]): (Tup, LocalContext) = {
     val ret = tup.fields.map{
-        case (None, Fld(flags, trm)) =>
+        case (nm, Fld(flags, trm)) =>
           val tmp = liftTerm(trm)
-          ((None, Fld(flags, tmp._1)), tmp._2)
-        case (Some(v), Fld(flags, trm)) =>
-          val nTrm = liftTermAsType(trm)
-          ((Some(v), Fld(flags, nTrm._1)), nTrm._2)
+          ((nm, Fld(flags, tmp._1)), tmp._2)
       }.unzip
     (Tup(ret._1), ret._2.fold(emptyCtx)(_ ++ _))
   }
