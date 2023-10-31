@@ -12,7 +12,7 @@ import mlscript.compiler.mono.MonomorphError
 
 class DiffTestCompiler extends DiffTests {
   import DiffTestCompiler.*
-  override def postProcess(mode: ModeType, basePath: List[Str], testName: Str, unit: TypingUnit): List[Str] = 
+  override def postProcess(mode: ModeType, basePath: List[Str], testName: Str, unit: TypingUnit): (List[Str], Option[TypingUnit]) = 
     val outputBuilder = StringBuilder()
     outputBuilder ++= "Parsed:\n"
     outputBuilder ++= showStructure(unit)
@@ -36,13 +36,14 @@ class DiffTestCompiler extends DiffTests {
         outputBuilder ++= "\nDefunc result: \n"
         outputBuilder ++= ExprPrinter.print(monomorphized)
         outputBuilder ++= "\n"
+        return (outputBuilder.toString().linesIterator.toList, Some(monomorph.toTypingUnit(monomorphized))) // TODO: improve exit
       }catch{
         case error: MonomorphError => outputBuilder ++= (error.getMessage() :: error.getStackTrace().map(_.toString()).toList).mkString("\n")
         // case error: StackOverflowError => outputBuilder ++= (error.getMessage() :: error.getStackTrace().take(40).map(_.toString()).toList).mkString("\n")
       }
       // outputBuilder ++= treeDebug.getLines.mkString("\n")
     }
-    outputBuilder.toString().linesIterator.toList
+    (outputBuilder.toString().linesIterator.toList, None)
   
   override protected lazy val files = allFiles.filter { file =>
       val fileName = file.baseName

@@ -130,6 +130,15 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
        ret
     // }()
   
+  def toTypingUnit(mu: ModuleUnit): TypingUnit =
+    val statements = mu.items.flatMap {
+      case e: Expr => Some(expr2Term(e))
+      case i: Item => 
+        try Some(item2Term(i))
+        catch e => None
+    }
+    TypingUnit(statements)
+
   private def updateFunction(crt: String): Unit = {
     debug.log(s"evaluating $crt, rests: ${evalQueue}")
     val cnt = evalCnt.get(crt).getOrElse(0)

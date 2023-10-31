@@ -23,7 +23,7 @@ class A{
 //│ Lifted:
 //│ TypingUnit {
 //│   class A$1_B$2([par$A$1,]) {}
-//│   class A$1([]) {fun foo = (x: A$1_B$2,) => '(' x : A$1_B$2 ')'}
+//│   class A$1([]) {fun foo = (x: A$1_B$2(this,),) => '(' x : A$1_B$2 ')'}
 //│ }
 //│ 
 
@@ -299,7 +299,7 @@ fun ctx(a,b) =
 //│   class Func$1[T,U]([]) {fun apply = T -> U}
 //│   class Lambda$2[T,U]([]) {}
 //│   class Lambda$3$3([a,]): Lambda$2() {fun apply = (x,) => +((this).a, x,)}
-//│   fun foo$2 = (f: Func$1, x,) => {(f).apply(x,)}
+//│   fun foo$2 = (f: Func$1(), x,) => {(f).apply(x,)}
 //│   fun ctx$1 = (a, b,) => {foo$2({new Lambda$3$3([a,]) {}}, b,)}
 //│ }
 //│ 

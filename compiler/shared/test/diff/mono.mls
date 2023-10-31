@@ -1031,8 +1031,8 @@ bar.car
 //│     fun FooMinus = (y: Int,) => +((this).x, y,)
 //│     fun car = () => (this).foo(2,)
 //│   }
-//│   class Car$2([]) {fun da = (b: Bar$1,) => (b).foo(2,)}
-//│   fun baz$2 = (b: Bar$1,) => (b).foo(2,)
+//│   class Car$2([]) {fun da = (b: Bar$1(),) => (b).foo(2,)}
+//│   fun baz$2 = (b: Bar$1(),) => (b).foo(2,)
 //│   let bar$1 = () => Bar$1(42,)
 //│   Code(List(baz$2(bar,)))
 //│   Code(List(('(' new Car$2([]) {} ')').da(Bar$1(1337,),)))

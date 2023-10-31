@@ -20,6 +20,8 @@ import mlscript.AppliedType
 import mlscript.TypeName
 import mlscript.TypeDefKind
 import mlscript.compiler.mono.Monomorph
+import mlscript.NuDecl
+import mlscript.TypingUnit
 
 object Helpers:
   /**
@@ -37,6 +39,7 @@ object Helpers:
     }
     case _ => throw MonomorphError("expect the list of parameters to be a `Tup`")
   
+  // FIXME: Loses tuple information in conversion
   def toFuncArgs(term: Term): IterableOnce[Term] = term match
     // The new parser generates `(undefined, )` when no arguments.
     // Let's do this temporary fix.
@@ -150,6 +153,73 @@ object Helpers:
                        else UnitValue.Null)
         case _ => throw MonomorphError("unsupported term"+ term.toString)
     }
+
+    def expr2Term(expr: Expr): Term = {
+      expr match
+        case Expr.Ref(name) => 
+          Var(name)
+        case Expr.Lambda(params, body) => 
+          ???
+        case Expr.Apply(callee, arguments) => 
+          App(expr2Term(callee),Tup(arguments.map(t => (None, Fld(FldFlags.empty, expr2Term(t))))))
+        case Expr.Tuple(fields) => 
+          Tup(fields.map(f => (None, Fld(FldFlags.empty, expr2Term(f)))))
+        case Expr.Record(fields) =>
+          Rcd(fields.map{
+            case (Expr.Ref(name), expr: Expr) => (Var(name), Fld(FldFlags.empty, expr2Term(expr)))
+          })
+        case Expr.Select(reciever, field) => 
+          Sel(expr2Term(reciever), Var(field.name))
+        case Expr.LetIn(isRec, name, rhs, body) => ??? //TODO: understand usage
+        case Expr.Block(items) => {
+          items.flatMap(???)
+          ???
+        }
+        case Expr.As(value, toType) => ???
+        case mlscript.compiler.Expr.Assign(assignee, value) => ???
+        case mlscript.compiler.Expr.With(value, fields) => ???
+        case Expr.Subscript(receiver, index) => ???
+        case Expr.Match(scrutinee, branches) => ???
+        case Expr.Literal(value) => value match
+          case i: BigInt => IntLit(i)
+          case d: BigDecimal => DecLit(d)
+          case s: String => StrLit(s)
+          case UnitValue.Undefined => UnitLit(true)
+          case UnitValue.Null => UnitLit(false)
+          case b: Boolean => UnitLit(b)
+        case mlscript.compiler.Expr.New(typeName, args) => ???
+        case Expr.IfThenElse(condition, consequent, alternate) => ???
+        case Expr.Isolated(isolation) => ???
+    }
+
+    def item2Term(item: Item): NuDecl = {
+      item match
+        case Item.TypeDecl(name, kind, typeParams, params, parents, body) => //TODO: Fix
+          NuTypeDef(
+            kind,
+            TypeName(name.name),
+            typeParams.map(nm => (None, nm)),
+            None,
+            None,
+            None,
+            Nil,
+            None,
+            None,
+            TypingUnit(Nil))
+            (None, None)
+        case Item.FuncDecl(name, params, body) => 
+          NuFunDef(
+            None,
+            Var(name.name),
+            None,
+            Nil,
+            Left(Lam(Tup(params.map{
+              case (spec: Boolean, ref: Expr.Ref) => (None, Fld(FldFlags(false, spec, false), Var(ref.name)))
+            }), expr2Term(body))))
+            (None, None, None, None, false)
+        case Item.FuncDefn(name, typeParams, body) => ???
+      
+    }
   
   def func2Item(funDef: NuFunDef): Item.FuncDecl | Item.FuncDefn =
       val NuFunDef(_, nme, sn, targs, rhs) = funDef
@@ -194,3 +264,10 @@ object Helpers:
       case Cls => TypeDeclKind.Class
       case Trt => TypeDeclKind.Trait
       case _ => throw MonomorphError(s"Unsupported TypeDefKind conversion ${kind}")
+
+  private given Conversion[TypeDeclKind, TypeDefKind] with
+    import mlscript.{Als, Cls, Trt}
+    def apply(kind: TypeDeclKind): TypeDefKind = kind match
+      case TypeDeclKind.Alias => Als
+      case TypeDeclKind.Class => Cls
+      case TypeDeclKind.Trait => Trt

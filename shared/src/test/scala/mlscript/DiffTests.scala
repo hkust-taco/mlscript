@@ -40,6 +40,7 @@ abstract class ModeType {
   def showRepl: Bool
   def allowEscape: Bool
   def mono: Bool
+  def revConv: Bool
 }
 
 class DiffTests
@@ -50,7 +51,7 @@ class DiffTests
   
   
   /**  Hook for dependent projects, like the monomorphizer. */
-  def postProcess(mode: ModeType, basePath: Ls[Str], testName: Str, unit: TypingUnit): Ls[Str] = Nil
+  def postProcess(mode: ModeType, basePath: Ls[Str], testName: Str, unit: TypingUnit): (Ls[Str], Option[TypingUnit]) = (Nil, None)
   
   
   private val inParallel = isInstanceOf[ParallelTestExecution]
@@ -165,6 +166,7 @@ class DiffTests
       showRepl: Bool = false,
       allowEscape: Bool = false,
       mono: Bool = false,
+      revConv: Bool = false,
       // noProvs: Bool = false,
     ) extends ModeType {
       def isDebugging: Bool = dbg || dbgSimplif
@@ -263,6 +265,7 @@ class DiffTests
           case "r" | "showRepl" => mode.copy(showRepl = true)
           case "escape" => mode.copy(allowEscape = true)
           case "mono" => {mode.copy(mono = true)}
+          case "rc" => {mode.copy(revConv = true)}
           case "exit" =>
             out.println(exitMarker)
             ls.dropWhile(_ =:= exitMarker).tails.foreach {
@@ -429,12 +432,16 @@ class DiffTests
             if (mode.showParse)
               output("AST: " + mlscript.codegen.Helpers.inspect(res))
             
-            postProcess(mode, basePath, testName, res).foreach(output)
+            val (postLines, nuRes) = postProcess(mode, basePath, testName, res)
+            postLines.foreach(output)            
             
             if (parseOnly)
               Success(Pgrm(Nil), 0)
+            else if (mode.revConv)
+              Success(Pgrm(nuRes.getOrElse(???).entities), 0)
             else
               Success(Pgrm(res.entities), 0)
+
             
           }
           else parse(processedBlockStr, p =>
