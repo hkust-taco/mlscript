@@ -1,93 +1,90 @@
-package mlscript
-package compiler
+package mlscript.compiler
 
-import mlscript._
-import mlscript.compiler._
-import mlscript.utils._, shorthands._
-import scala.collection.immutable._
+import mlscript.*
+import mlscript.compiler.*
+import mlscript.utils.*
+import shorthands.*
 
+import scala.annotation.tailrec
+import scala.collection.immutable.*
 final case class GraphOptimizingError(message: String) extends Exception(message)
 
 class GraphOptimizer:
-  type Ctx = Map[Str, Name]
-  type ClassCtx = Map[Str, ClassInfo]
-  type FieldCtx = Map[Str, (Str, ClassInfo)]
-  type FnCtx = Set[Str]
-  type OpCtx = (Unit, Set[Str])
+  private type Ctx = Map[Str, Name]
+  private type ClassCtx = Map[Str, ClassInfo]
+  private type FieldCtx = Map[Str, (Str, ClassInfo)]
+  private type FnCtx = Set[Str]
+  private type OpCtx = (Unit, Set[Str])
   
   import GOExpr._
   import Node._
 
   var count = 0
-  def gensym(s: Str = "x") = {
-    val tmp = s"${s}${count}"
+  private def gensym(s: Str = "x") = {
+    val tmp = s"$s$count"
     count += 1
     Name(tmp)
   }
 
-  var fid = 0
-  def genfid() = {
-    val tmp = count
-    count += 1
+  private var fid = 0
+  private def genfid() = {
+    val tmp = fid
+    fid += 1
     tmp
   }
 
-  var cid = 0
-  def gencid() = {
-    val tmp = count
-    count += 1
+  private var cid = 0
+  private def gencid() = {
+    val tmp = cid
+    cid += 1
     tmp
   }
 
-  final val ref = x => Ref(x)
+  private final val ref = x => Ref(x)
   final val result = x => Result(x)
-  final val sresult = (x: TrivialExpr) => Result(List(x))
-  final val varname = x => Name(x)
-  final val unexpected_node = (x: Node) => throw GraphOptimizingError(s"unsupported node ${x}")
-  final val unexpected_term = (x: Term) => throw GraphOptimizingError(s"unsupported term ${x}")
+  private final val sresult = (x: TrivialExpr) => Result(List(x))
+  private final val unexpected_node = (x: Node) => throw GraphOptimizingError(s"unsupported node $x")
+  private final val unexpected_term = (x: Term) => throw GraphOptimizingError(s"unsupported term $x")
 
-  def buildBinding
+  private def buildBinding
     (using ctx: Ctx, clsctx: ClassCtx, fldctx: FieldCtx, fnctx: FnCtx, opctx: OpCtx)
     (name: Str, e: Term, body: Term)
     (k: Node => Node): Node =
     buildResultFromTerm(e) {
-      case Result((r: Ref) :: Nil) => {
+      case Result((r: Ref) :: Nil) =>
         given Ctx = ctx + (name -> r.name)
         buildResultFromTerm(body)(k)
-      }
-      case Result((lit: Literal) :: Nil) => {
+      case Result((lit: Literal) :: Nil) =>
         val v = gensym()
         given Ctx = ctx + (name -> v)
         LetExpr(v,
           lit,
           buildResultFromTerm(body)(k))
-      }
       case node @ _ => node |> unexpected_node
     }
 
-  def buildResultFromTup
+  private def buildResultFromTup
     (using ctx: Ctx, clsctx: ClassCtx, fldctx: FieldCtx, fnctx: FnCtx, opctx: OpCtx)
     (tup: Tup)(k: Node => Node): Node =
     tup match
       case Tup(N -> Fld(FldFlags.empty, x) :: xs) => buildResultFromTerm(x) {
-        case Result(x :: Nil) => {
+        case Result(x :: Nil) =>
           buildResultFromTup(Tup(xs)) {
             case Result(xs) => x :: xs |> result |> k
             case node @ _ => node |> unexpected_node
           }
-        }
         case node @ _ => node |> unexpected_node
       }
 
       case Tup(Nil) => Nil |> result |> k
 
-  def bindingPatternVariables
+  private def bindingPatternVariables
     (scrut: Str, tup: Tup, cls: ClassInfo, rhs: Term): Term =
     val params = tup.fields.map {
-      case (N -> Fld(FldFlags.empty, Var(name))) => name
+      case N -> Fld(FldFlags.empty, Var(name)) => name
       case _ => throw GraphOptimizingError("unsupported field")
     }
-    var fields = cls.fields
+    val fields = cls.fields
     val tm = params.zip(fields).foldLeft(rhs) {
       case (tm, (param, field)) => 
         Let(false, Var(param), Sel(Var(scrut), Var(field)), tm)
@@ -95,7 +92,7 @@ class GraphOptimizer:
 
     tm
 
-  def buildResultFromTerm
+  private def buildResultFromTerm
     (using ctx: Ctx, clsctx: ClassCtx, fldctx: FieldCtx, fnctx: FnCtx, opctx: OpCtx)
     (tm: Term)(k: Node => Node): Node =
     val res = tm match
@@ -109,13 +106,13 @@ class GraphOptimizer:
         else
           ctx.get(name) match {
             case Some(x) => x |> ref |> sresult |> k
-            case _ => throw GraphOptimizingError(s"unknown name ${name} in ${ctx}")
+            case _ => throw GraphOptimizingError(s"unknown name $name in $ctx")
           }
 
       case Lam(Tup(fields), body) =>
         val xs = fields map {
           case N -> Fld(FldFlags.empty, Var(x)) => Name(x)
-          case fld @ _ => throw GraphOptimizingError(s"not supported tuple field ${fld}")
+          case fld @ _ => throw GraphOptimizingError(s"not supported tuple field $fld")
         }
         val bindings = xs map {
           case x @ Name(str) => str -> x
@@ -130,17 +127,15 @@ class GraphOptimizer:
         App(Var(name), Tup((_ -> Fld(_, e1)) :: Nil)), 
         Tup((_ -> Fld(_, e2)) :: Nil)) if opctx._2.contains(name) =>
         buildResultFromTerm(e1) {
-          case Result(v1 :: Nil) => {
+          case Result(v1 :: Nil) =>
             buildResultFromTerm(e2) {
-              case Result(v2 :: Nil) => {
+              case Result(v2 :: Nil) =>
                 val v = gensym()
                 LetExpr(v,
                   BasicOp(name, List(v1, v2)),
                   v |> ref |> sresult |> k)
-              }
               case node @ _ => node |> unexpected_node
             }
-          }
           case node @ _ => node |> unexpected_node
         }
         
@@ -157,19 +152,17 @@ class GraphOptimizer:
       case App(f, xs @ Tup(_)) =>
         buildResultFromTerm(f) {
         case Result(Ref(f) :: Nil) if fnctx.contains(f.str) => buildResultFromTerm(xs) {
-          case Result(args) => {
+          case Result(args) =>
             val v = gensym()
             LetCall(List(v), GODefRef(Right(f.str)), args, v |> ref |> sresult |> k)
-          }
           case node @ _ => node |> unexpected_node
         }
         case Result(Ref(f) :: Nil) => buildResultFromTerm(xs) {
-          case Result(args) => {
+          case Result(args) =>
             val v = gensym()
             LetExpr(v,
               Apply(f, args),
               v |> ref |> sresult |> k)
-          }
           case node @ _ => node |> unexpected_node
         }
         case node @ _ => node |> unexpected_node
@@ -263,48 +256,27 @@ class GraphOptimizer:
     
     res
 
-  def fixNode(using defs: Set[GODef])(node: Node): Unit = node match {
+  private def fixNode(using defs: Set[GODef])(node: Node): Unit = node match {
     case Case(_, cases) => cases.foreach { case (cls, node) => (cls, fixNode(node)) }
-    case lc @ LetCall(resultNames, defnref, args, body) => {
+    case lc @ LetCall(resultNames, defnref, args, body) =>
       val target = defnref.defn match {
-        case Left(defn) => defs.find{_.getName() == defn.name}.get
-        case Right(name) => defs.find{_.getName() == name}.get 
+        case Left(defn) => defs.find{_.getName == defn.name}.get
+        case Right(name) => defs.find{_.getName == name}.get
       }
       defnref.defn = Left(target)
       fixNode(body)
-    }
     case LetExpr(name, expr, body) => fixNode(body)
     case LetJoin(joinName, params, rhs, body) => fixNode(body)
     case Result(_) =>
     case Jump(_, _) =>
   }
 
-  def fixGODef(using defs: Set[GODef]) =
+  private def fixGODef(using defs: Set[GODef]): Unit =
     defs.foreach { defn => 
       fixNode(using defs)(defn.body)
-      ensureDefRefInSet(using defs)(defn.body)
     }
 
-  def ensureDefRefInSet(using defs: Set[GODef])(node: Node): Unit = node match {
-    case Case(_, cases) => cases.foreach { case (cls, node) => (cls, ensureDefRefInSet(node)) }
-    case LetCall(resultNames, defnref, args, body) => {
-      defnref.defn match {
-        case Left(real_defn) => if (defs.filter{_ eq real_defn}.size == 0) throw GraphOptimizingError("ref is not in the set")
-        case Right(_) =>
-      }
-      ensureDefRefInSet(body)
-    }
-    case LetExpr(name, expr, body) => ensureDefRefInSet(body)
-    case LetJoin(joinName, params, rhs, body) => ensureDefRefInSet(body)
-    case Result(_) =>
-    case Jump(_, _) =>
-  }
-
-  def ensureDefRefInSet(defs: Set[GODef]): Unit = {
-    defs.foreach { defn => ensureDefRefInSet(using defs)(defn.body) }
-  }
-
-  def buildDefFromNuFunDef
+  private def buildDefFromNuFunDef
     (using ctx: Ctx, clsctx: ClassCtx, fldctx: FieldCtx, fnctx: FnCtx, opctx: OpCtx)
     (nfd: Statement): GODef = nfd match
     case NuFunDef(_, Var(name), None, Nil, L(Lam(Tup(fields), body))) =>
@@ -324,12 +296,12 @@ class GraphOptimizer:
       )
     case _ => throw GraphOptimizingError("unsupported NuFunDef")
 
-  def getClassInfo(ntd: Statement): ClassInfo = ntd match
+  private def getClassInfo(ntd: Statement): ClassInfo = ntd match
     case NuTypeDef(Cls, TypeName(name), Nil, S(Tup(args)), N, N, Nil, N, N, TypingUnit(Nil)) =>
       ClassInfo(gencid(),
         name, 
         args map {
-          case (N -> Fld(FldFlags.empty, Var(name))) => name
+          case N -> Fld(FldFlags.empty, Var(name)) => name
           case _ => throw GraphOptimizingError("unsupported field")
         }
       )
@@ -338,15 +310,15 @@ class GraphOptimizer:
         name,
         Ls(),
       )
-    case x @ _ => throw GraphOptimizingError(f"unsupported NuTypeDef ${x}")
+    case x @ _ => throw GraphOptimizingError(f"unsupported NuTypeDef $x")
 
-  def checkDuplicateField(ctx: Set[Str], cls: ClassInfo): Set[Str] =
+  private def checkDuplicateField(ctx: Set[Str], cls: ClassInfo): Set[Str] =
     val u = cls.fields.toSet intersect ctx
-    if (!u.isEmpty)
-      throw GraphOptimizingError(f"duplicate class field ${u}")
+    if (u.nonEmpty)
+      throw GraphOptimizingError(f"duplicate class field $u")
     cls.fields.toSet union ctx
 
-  def getDefinitionName(nfd: Statement): Str = nfd match
+  private def getDefinitionName(nfd: Statement): Str = nfd match
     case NuFunDef(_, Var(name), _, _, _) => name
     case _ => throw GraphOptimizingError("unsupported NuFunDef")
 
@@ -403,27 +375,27 @@ class GraphOptimizer:
   import Elim._
   import Intro._
 
-  type JpCtx = Map[Str, GODef]
+  private type JpCtx = Map[Str, GODef]
 
-  def appendCtx(ctx: Ctx, x: String, y: Name) = {
+  private def appendCtx(ctx: Ctx, x: String, y: Name) = {
     ctx.get(y.str) match {
       case Some(z) => ctx + (x -> z)
       case None => ctx + (x -> y)
     }
   }
 
-  def used(using v: String, ctx: Ctx)(name: String) =
-    name == v || ctx.get(name) == Some(v)
+  private def used(using v: String, ctx: Ctx)(name: String) =
+    name == v || ctx.get(name).contains(v)
 
-  def getElims(using v: String, ctx: Ctx, jpctx: JpCtx)(exprs: Ls[TrivialExpr], uses: Set[Elim]): Set[Elim] =
+  private def getElims(using v: String, ctx: Ctx, jpctx: JpCtx)(exprs: Ls[TrivialExpr], uses: Set[Elim]): Set[Elim] =
     exprs.foldLeft(uses)((uses, expr) => getElim(expr, uses))
 
-  def getElim(using v: String, ctx: Ctx, jpctx: JpCtx)(expr: TrivialExpr, uses: Set[Elim]): Set[Elim] = expr match {
+  private def getElim(using v: String, ctx: Ctx, jpctx: JpCtx)(expr: TrivialExpr, uses: Set[Elim]): Set[Elim] = expr match {
     case Literal(lit) => uses
-    case Ref(name) => if (name.str == v || ctx.get(name.str) == Some(v)) uses + EDirect else uses
+    case Ref(name) => if (name.str == v || ctx.get(name.str).contains(v)) uses + EDirect else uses
   }
 
-  def getElim(using v: String, ctx: Ctx, jpctx: JpCtx)(expr: GOExpr, uses: Set[Elim]): Set[Elim] = expr match {
+  private def getElim(using v: String, ctx: Ctx, jpctx: JpCtx)(expr: GOExpr, uses: Set[Elim]): Set[Elim] = expr match {
     case Apply(name, args) => args.foldLeft(
         if (used(name.str)) uses + EApp(args.length) else uses
       )((uses, expr) => getElim(expr, uses))
@@ -435,14 +407,14 @@ class GraphOptimizer:
     case Select(name, cls, field) => if (used(name.str)) uses + ESelect(field) else uses
   }
 
-  def bindArguments(ctx: Ctx, args: Ls[TrivialExpr], params: Ls[Name]): Ctx =
+  private def bindArguments(ctx: Ctx, args: Ls[TrivialExpr], params: Ls[Name]): Ctx =
     args.zip(params).foldLeft(ctx) {
       case (ctx, (Ref(n1), n2)) => ctx + (n1.str -> n2)
       case _ => ctx
     }
 
-  def getElim(using v: String, ctx: Ctx, jpctx: JpCtx)(node: Node, uses: Set[Elim]): Set[Elim] = node match {
-    case Case(scrut, cases) if (used(scrut.str)) =>
+  private def getElim(using v: String, ctx: Ctx, jpctx: JpCtx)(node: Node, uses: Set[Elim]): Set[Elim] = node match {
+    case Case(scrut, cases) if used(scrut.str) =>
       cases.foldLeft(uses)((uses, arm) => getElim(arm._2, uses + EDestruct + EDirect))
     case Case(scrut, cases) =>
       cases.foldLeft(uses)((uses, arm) => getElim(arm._2, uses))
@@ -451,7 +423,7 @@ class GraphOptimizer:
       val jp = jpctx(joinName.str)
       val new_ctx = bindArguments(ctx, args, jp.params)
       elims ++ getElim(using v, new_ctx, jpctx)(jp.body, uses)
-    case LetCall(resultNames, defn, args, body) => {
+    case LetCall(resultNames, defn, args, body) =>
       val elims = getElims(args, uses)
       val defn2 = defn.defn match {
         case Left(x) => x
@@ -462,7 +434,6 @@ class GraphOptimizer:
         case _ => None
       }
       getElim(body, backward_elims.foldLeft(elims)((x, y) => x ++ y))
-    }
     case LetExpr(name, Ref(y), body) => 
       given Ctx = appendCtx(ctx, name.str, y)
       getElim(body, uses)
@@ -472,11 +443,16 @@ class GraphOptimizer:
   }
 
 
-  def getIntro(defn: GODef): Opt[Intro] =
-    defn.activeResults.head
+  private def getIntro(defn: GODef): Ls[Opt[Intro]] =
+    defn.activeResults
 
-  def getIntro(using jpctx: JpCtx)(node: Node, intros: Map[Str, Intro]): Opt[Intro] = node match {
-    case Case(scrut, cases) => getIntro(cases.head._2, intros)
+  private def getIntro(using jpctx: JpCtx)(node: Node, intros: Map[Str, Intro]): Ls[Opt[Intro]] = node match {
+    case Case(scrut, cases) => 
+      val cases_intros = cases.map { case (cls, node) => getIntro(node, intros) }
+      if (cases_intros.toSet.size > 1)
+        cases_intros.head.map { _ => None }
+      else
+        cases_intros.head
     case Jump(joinName, args) =>
       val jpdef = jpctx(joinName.str)
       val params = jpdef.params
@@ -485,7 +461,7 @@ class GraphOptimizer:
         case (_, arg) => getIntro(arg, intros).isDefined
       }.map{
         case (param, arg) => 
-          val kv = (param.str -> getIntro(arg, intros).get)
+          val kv = param.str -> getIntro(arg, intros).get
           kv
       }
       getIntro(node, intros2.toMap)
@@ -494,32 +470,34 @@ class GraphOptimizer:
         case Left(value) => value
         case Right(value) => throw GraphOptimizingError("only get the name of definition")
       }
-      val intros2 = getIntro(defn).map { y => intros + (resultNames.head.str -> y) }.getOrElse(intros)
+      val intros2 = getIntro(defn).zip(resultNames).foldLeft(intros) { 
+        case (intros, (Some(i), name)) => intros + (name.str -> i)
+        case (intros, _) => intros
+      }
       getIntro(body, intros2)
 
     case LetExpr(name, expr, body) => 
       val intros2 = getIntro(expr, intros).map { x => intros + (name.str -> x) }.getOrElse(intros)
       getIntro(body, intros2)
     case LetJoin(joinName, params, rhs, body) =>
-      throw GraphOptimizingError(f"join points after promotion: ${node}")
+      throw GraphOptimizingError(f"join points after promotion: $node")
     case Result(res) => 
-      val len = res.length
-      if (len == 1) getIntro(res.head, intros) else Some(IMulti(len))
+      res.map { x => getIntro(x, intros) } 
   }
 
-  def getIntro(expr: TrivialExpr, intros: Map[Str, Intro]) = expr match {
+  private def getIntro(expr: TrivialExpr, intros: Map[Str, Intro]) = expr match {
     case Literal(lit) => None
     case Ref(name) => intros.get(name.str)
   }
 
-  def getIntro(expr: GOExpr, intros: Map[Str, Intro]): Opt[Intro] = expr match {
-    case CtorApp(_, args) => Some(ICtor)
+  private def getIntro(expr: GOExpr, intros: Map[Str, Intro]): Opt[Intro] = expr match {
+    case CtorApp(cls, args) => Some(ICtor(cls.ident))
     case Lambda(name, body) => Some(ILam(name.length))
     case _ => None
   }
 
 
-  def freeVarAnalysis(using ctx: Set[Str])(expr: GOExpr, fv: Set[Str], fj: Set[Str]): (Set[Str], Set[Str]) = expr match {
+  private def freeVarAnalysis(using ctx: Set[Str])(expr: GOExpr, fv: Set[Str], fj: Set[Str]): (Set[Str], Set[Str]) = expr match {
     case Ref(Name(s)) => (if (ctx.contains(s)) fv else fv + s, fj)
     case Literal(_) => (fv, fj)
     case CtorApp(_, args) => (fv ++ args.flatMap {
@@ -543,7 +521,7 @@ class GraphOptimizer:
       (fv3, fj)
     }
 
-  def freeVarAnalysis(using ctx: Set[Str])(body: Node, fv: Set[Str], fj: Set[Str]): (Set[Str], Set[Str])
+  private def freeVarAnalysis(using ctx: Set[Str])(body: Node, fv: Set[Str], fj: Set[Str]): (Set[Str], Set[Str])
     = body match {
     case Result(xs) => (fv ++ xs.flatMap {
       case Ref(Name(s)) if !ctx.contains(s) => Some(s)
@@ -552,7 +530,7 @@ class GraphOptimizer:
     case Jump(Name(jp), _) =>
       (fv, if (ctx.contains(jp)) fj else fj + jp )
     case Case(Name(scrut), cases) => 
-      val fv2 = (if (ctx.contains(scrut)) fv else fv + scrut)
+      val fv2 = if (ctx.contains(scrut)) fv else fv + scrut
       cases.foldLeft((fv2, fj)) {
         case ((fv, fj), (cls, e)) =>
           freeVarAnalysis(using ctx)(e, fv, fj)
@@ -569,54 +547,79 @@ class GraphOptimizer:
       freeVarAnalysis(using ctx ++ results)(e, fv -- results, fj -- results)
   }
 
-  type RawSplitRemap = Set[((Str, Str), ClassInfo, Str, Ls[Str])]
+  private type RawSplitRemap = Set[((Str, Str), ClassInfo, Str, Ls[Str])]
+  private type RawSplitPreRemap = Set[((Str, Str), Str, Ls[Str])]
   
-  def splitFunctionWhenDestructImpl(using jpctx: JpCtx, classes: Set[ClassInfo])
-    (body: Node, name: Str, target: Name): (RawSplitRemap, Set[GODef]) = {
+  private def splitFunctionWhenDestructImpl(using jpctx: JpCtx, classes: Set[ClassInfo],
+                                                  params: Ls[Name], resultNum: Int)
+  (accu: Node => Node, body: Node, name: Str, target: Name):
+  (RawSplitRemap, RawSplitPreRemap, Set[GODef], Set[GODef]) = {
     body match {
-    case Result(_xs) => (Set.empty, Set.empty)
-    case Jump(_jp, _xs) => (Set.empty, Set.empty)
-    case Case(scrut, cases) if scrut == target => {
-      cases.foldLeft((Set.empty, Set.empty)) {
-        case ((remap, defs), (cls, body)) =>
-          val (fv, _) = freeVarAnalysis(using Set(scrut.str))(body, Set.empty, Set.empty)
+    case Result(_xs) => (Set.empty, Set.empty, Set.empty, Set.empty)
+    case Jump(_jp, _xs) => (Set.empty, Set.empty, Set.empty, Set.empty)
+    case Case(scrut, cases) if scrut == target =>
+      val armfv = cases.map {
+        case (cls, body) =>
+          val (fv, _) = freeVarAnalysis(using Set.empty)(body, Set.empty, Set.empty)
+          fv
+      }
+
+      val allfv: Set[Str] = armfv.foldLeft(Set.empty)((x, y) => x ++ y)
+      val allfv_list = allfv.toList
+      var retvals: Ls[TrivialExpr] = allfv_list.map{x => Ref(Name(x))}
+
+      val new_predef = if (retvals.nonEmpty) {
+        val new_predef_name = gensym(name + "@pre@")
+        val new_predef = GODef(
+          genfid(),
+          new_predef_name.str,
+          false,
+          params,
+          allfv.size,
+          accu(Result(retvals)))
+        Some(new_predef)
+      } else {
+        None
+      }
+
+      cases.zip(armfv).foldLeft(
+        (Set.empty, 
+         new_predef.map { x => ((name, target.str), x.name, allfv_list) }.toSet,
+         new_predef.toSet,
+         Set.empty)) {
+        case ((remap, preremap, predefs, defs), ((cls, body), fv)) =>
           val new_name = gensym(name + "@destruct@")
+          val new_params_list = fv.toList
+          val new_params = new_params_list.map{Name(_)}
           val new_def = GODef(
             genfid(),
             new_name.str,
             false,
-            scrut :: fv.toList.map { x => Name(x) },
-            1,
+            new_params,
+            resultNum,
             body)
-          (remap + (((name, target.str), cls, new_name.str, fv.toList)) , defs + new_def)
+          (remap + (((name, target.str), cls, new_name.str, new_params_list)), preremap, predefs, defs + new_def)
       }
-    }
-    case Case(scrut, cases) =>
-      val init1: RawSplitRemap = Set.empty
-      cases.foldLeft((init1, Set.empty)){
-      case ((r1, d1), (cls, e)) => 
-        val (r2, d2) = splitFunctionWhenDestructImpl(e, name, target)
-        (r1 ++ r2, d1 ++ d2)
-    }
+    case Case(scrut, cases) => (Set.empty, Set.empty, Set.empty, Set.empty)
     case LetExpr(x, e1, e2) =>
-      splitFunctionWhenDestructImpl(e2, name, target)
+      splitFunctionWhenDestructImpl(n => accu(LetExpr(x, e1, n)), e2, name, target)
     case LetJoin(jp, xs, e1, e2) =>
       throw GraphOptimizingError("join points after promotion")
     case LetCall(xs, defn, as, e) =>
-      splitFunctionWhenDestructImpl(e, name, target)
+      splitFunctionWhenDestructImpl(n => accu(LetCall(xs, defn, as, n)), e, name, target)
     }
   }
 
-  def splitFunctionWhenDestruct(using classes: Set[ClassInfo])(f: GODef, target: Name): (RawSplitRemap, Set[GODef]) = {  
-    splitFunctionWhenDestructImpl(using Map(), classes)(f.body, f.name, target)
-  }
+  private def splitFunctionWhenDestruct(using classes: Set[ClassInfo])(f: GODef, target: Name):
+    (RawSplitRemap, RawSplitPreRemap, Set[GODef], Set[GODef]) = 
+    splitFunctionWhenDestructImpl(using Map(), classes, f.params, f.resultNum)(x => x, f.body, f.name, target)
+  
 
-  // TODO: fix join points
-  def findToBeSplitted(using intros: Map[Str, Intro])
-    (node: Node): Set[(Str, Str)] = 
+  private def findToBeSplitted(using intros: Map[Str, Intro])
+                              (node: Node): Set[(Str, Str)] =
     node match {
     case Result(_) => Set()
-    case Jump(_jp, _xs) => Set() // TODO: fix it
+    case Jump(_jp, _xs) => Set()
     case Case(scrut, cases) => cases.foldLeft(Set()) {
       case (accu, (cls, e)) => accu ++ findToBeSplitted(e)
     }
@@ -624,70 +627,100 @@ class GraphOptimizer:
       val intros2 = getIntro(e1, intros).map { y => intros + (x.str -> y) }.getOrElse(intros)
       findToBeSplitted(using intros2)(e2)
     case LetJoin(jp, xs, e1, e2) => findToBeSplitted(e1) ++ findToBeSplitted(e2)
-    case LetCall(xs, defnref, as, e) => {
+    case LetCall(xs, defnref, as, e) =>
       val defn = defnref.defn match {
           case Left(value) => value
           case Right(value) => throw GraphOptimizingError("only has the name of definition")
         }
-      val intros2 = getIntro(defn).map { y => intros + (xs.head.str -> y) }.getOrElse(intros)
-      if (defn.activeParams.size != defn.params.size) 
+      val intros2 = getIntro(defn).zip(xs).foldLeft(intros) { 
+        case (intros, (Some(i), name)) => intros + (name.str -> i)
+        case (intros, _) => intros
+      }
+      if (defn.activeParams.size != defn.params.size)
         throw GraphOptimizingError(f"${defn.name} has unmatched activeParams and params")
       as.map {
-        case Ref(Name(s)) => intros.get(s)  
+        case Ref(Name(s)) => intros.get(s)
         case _ => None
       }.zip(defn.activeParams).zip(defn.params).flatMap {
-        case ((Some(ICtor), paramElim), Name(param)) if paramElim.contains(EDestruct) =>
+        case ((Some(ICtor(_)), paramElim), Name(param)) if paramElim.contains(EDestruct) =>
           Some((defn.name, param))
         case x @ _ =>
           None
       }.toSet ++ findToBeSplitted(using intros2)(e)
     }
-  }
 
-  def findToBeSplitted(prog: GOProgram): Map[Str, Set[Str]] = {
-    prog.defs.foldLeft(Map.empty){
-      case (accu, defn) if defn.isjp => accu
+  private def findToBeSplitted(defs: Set[GODef]): Map[Str, Set[Str]] = {
+    defs.foldLeft(Map.empty){
       case (accu, defn) => 
         val tmp = findToBeSplitted(using Map())(defn.body)
         accu ++ tmp.groupMap(_._1)(_._2)
     }
   }
 
-  def substSplittedFunction(using sctx: Map[(Str, Str), Map[ClassInfo, Str]],
-    intros: Map[Str, Intro])
-  (node: Node): Node = node match {
+  private def substSplittedFunction(using sctx: Map[(Str, Str), Map[Str, (Str, Ls[Str])]],
+                                          sctx2: Map[(Str, Str), (Str, Ls[Str])],
+                                          intros: Map[Str, Intro])
+                                   (node: Node): Node = node match {
     case Result(_) => node
     case Jump(_, _) => node
     case Case(scrut, cases) => Case(scrut, cases.map {
       (cls, e) => (cls, substSplittedFunction(e))
     })
     case LetExpr(x, e1, e2) =>
-      LetExpr(x, e1, substSplittedFunction(e2))
+      val intros2 = getIntro(e1, intros).map { y => intros + (x.str -> y) }.getOrElse(intros)
+      LetExpr(x, e1, substSplittedFunction(using sctx, sctx2, intros2)(e2))
     case LetJoin(jp, xs, e1, e2) => 
       throw GraphOptimizingError("join points after promotion")
-    case LetCall(xs, defnref, as, e) => {
+    case LetCall(xs, defnref, as, e) =>
       val defn = defnref.defn match {
           case Left(value) => value
           case Right(value) => throw GraphOptimizingError("only has the name of definition")
       }
-      
-      val intros2 = getIntro(defn).map { y => intros + (xs.head.str -> y) }.getOrElse(intros)
-      if (defn.activeParams.size != defn.params.size) 
+
+      val intros2 = getIntro(defn).zip(xs).foldLeft(intros) { 
+        case (intros, (Some(i), name)) => intros + (name.str -> i)
+        case (intros, _) => intros
+      }
+      if (defn.activeParams.size != defn.params.size)
         throw GraphOptimizingError(f"${defn.name} has unmatched activeParams and params")
 
-      val info = as.map {
-        case Ref(Name(s)) => intros.get(s)  
+      val candidates = as.map {
+        case Ref(Name(s)) => intros.get(s)
         case _ => None
-      }.zip(defn.activeParams).zip(defn.params)
+      }.zip(defn.activeParams).zip(defn.params).flatMap { 
+        case ((Some(ICtor(c)), paramElim), Name(param))
+        if paramElim.contains(EDestruct) =>
+          val pair = (defn.getName, param)
+          if (sctx.contains(pair))
+            Some((pair, c))
+          else
+            None
+        case x @ _ =>
+          None
+      }
 
-      substSplittedFunction(using sctx, intros2)(e)
-    }
+      if (candidates.nonEmpty)
+        val (pair, ctor) = candidates.head
+        val (new_f, new_params) = sctx(pair)(ctor)
+
+        sctx2.get(pair) match 
+          case Some((pre_f, retvals)) => 
+            val new_names = retvals.map { _ => gensym() }
+            val namemap = retvals.zip(new_names).toMap
+            LetCall(new_names, GODefRef(Right(pre_f)), as,
+              LetCall(xs, GODefRef(Right(new_f)), new_params.map{x => Ref(namemap(x))},
+                substSplittedFunction(using sctx, sctx2, intros2)(e)))
+
+          case None => LetCall(xs, GODefRef(Right(new_f)), as, substSplittedFunction(using sctx, sctx2, intros2)(e))
+      else
+        LetCall(xs, defnref, as, substSplittedFunction(using sctx, sctx2, intros2)(e))
   }
 
-  def substSplittedFunctions(using sctx: Map[(Str, Str), Map[ClassInfo, Str]])
-  (defs: Set[GODef]): Set[GODef] = {
+  private def substSplittedFunctions(using sctx: Map[(Str, Str), Map[Str, (Str, Ls[Str])]],
+                                           sctx2: Map[(Str, Str), (Str, Ls[Str])])
+                                    (defs: Set[GODef]): Set[GODef] = {
     defs.map(defn => 
-      val new_body = substSplittedFunction(using sctx, Map.empty)(defn.body)
+      val new_body = substSplittedFunction(using sctx, sctx2, Map.empty)(defn.body)
       GODef(
         defn.id,
         defn.name,
@@ -698,35 +731,43 @@ class GraphOptimizer:
     )) 
   }
 
-  def splitFunction(prog: GOProgram) = {
-    val classes = prog.classes;
-    val defs = prog.defs;
-    val main = prog.main;
-    val workset: Map[Str, Set[Str]] = findToBeSplitted(prog)
+  def splitFunction(prog: GOProgram): GOProgram = {
+    val classes = prog.classes
+    val defs = prog.defs
+    val main = prog.main
+    val workset: Map[Str, Set[Str]] = findToBeSplitted(defs)
     var rawremap: RawSplitRemap = Set.empty
-    val new_defs = defs.flatMap {
+    var rawpreremap: RawSplitPreRemap = Set.empty
+    var predefs: Set[GODef] = Set.empty
+    val newdefs = defs.flatMap {
       case defn if workset.contains(defn.name) => workset(defn.name).flatMap {
         param => 
-          val (r, d) = splitFunctionWhenDestruct(using classes)(defn, Name(param))
+          val (r, pr, p, d) = splitFunctionWhenDestruct(using classes)(defn, Name(param))
           rawremap = rawremap ++ r
+          rawpreremap = rawpreremap ++ pr
+          predefs = predefs ++ p
           d
       }
       case _ => Ls()
     }
-    val remap = rawremap.groupMap(_._1){x => (x._2, x._3)}.map {
-      case (k, v) => (k, v.groupMap(_._1)(_._2).map { case (k2, v2) => (k2, v2.head) })
+    val remap = rawremap.groupMap(_._1){x => (x._2, x._3, x._4)}.map {
+      case (k, v) => (k, v.groupMap(_._1)(x => (x._2, x._3)).map {
+        case (k2, v2) => (k2.ident, v2.head)
+      })
     }
-    println(f"${remap}")
-    val defs2 = substSplittedFunctions(using remap)(defs) ++ new_defs
+    val preremap = rawpreremap.groupMap(_._1){x => (x._2, x._3)}.map {
+      case (k, v) => (k, v.head)
+    }
+    val defs2 = substSplittedFunctions(using remap, preremap)(defs) ++ newdefs ++ predefs
     fixGODef(using defs2)
     validate(defs2)
     GOProgram(classes, defs2, main)
   }
 
-  def findToBeReplaced(using intros: Map[Str, Intro])
-    (defn: Node): Set[(Str, (Str, Ls[Str]))] = defn match {
+  private def findToBeReplaced(using intros: Map[Str, Intro])
+                              (defn: Node): Set[(Str, (Str, Ls[Str]))] = defn match {
     case Result(_) => Set()
-    case Jump(_jp, _xs) => Set() // TODO: fix it
+    case Jump(_jp, _xs) => Set() // resultNum: fix it
     case Case(scrut, cases) => cases.foldLeft(Set()) {
       case (accu, (cls, e)) => accu ++ findToBeReplaced(e)
     }
@@ -734,40 +775,42 @@ class GraphOptimizer:
       val intros2 = getIntro(e1, intros).map { y => intros + (x.str -> y) }.getOrElse(intros)
       findToBeReplaced(using intros2)(e2)
     case LetJoin(jp, xs, e1, e2) => findToBeReplaced(e1) ++ findToBeReplaced(e2)
-    case LetCall(xs, defnref, as, e) => {
+    case LetCall(xs, defnref, as, e) =>
       val defn = defnref.defn match {
           case Left(value) => value
           case Right(value) => throw GraphOptimizingError("only has the name of definition")
       }
-      val intros2 = getIntro(defn).map { y => intros + (xs.head.str -> y) }.getOrElse(intros)
+      val intros2 = getIntro(defn).zip(xs).foldLeft(intros) { 
+        case (intros, (Some(i), name)) => intros + (name.str -> i)
+        case (intros, _) => intros
+      }
       as.map {
         case Ref(Name(s)) => intros.get(s)
         case _ => None
       }.zip(defn.activeParams).zip(defn.params).flatMap {
-        case ((Some(ICtor), paramElim), Name(param)) if paramElim.filter(isESelect).size != 0 
-          && !paramElim.contains(EDirect) => 
-          Some(defn.name, (param, paramElim.filter(isESelect).toList.map { 
+        case ((Some(ICtor(_)), paramElim), Name(param)) if paramElim.exists(isESelect)
+          && !paramElim.contains(EDirect) =>
+          Some(defn.name, (param, paramElim.filter(isESelect).toList.map {
             case ESelect(x) => x
             case _ => ??? // unreachable
           }))
         case ((intro, elims), Name(param)) =>
           None
       }.toSet ++ findToBeReplaced(using intros2)(e)
-    }
   }
 
-  def findToBeReplaced(prog: GOProgram): Map[Str, Set[(Str, Ls[Str])]] = {
+  private def findToBeReplaced(prog: GOProgram): Map[Str, Set[(Str, Ls[Str])]] = {
     prog.defs.foldLeft(Map.empty) {
       (accu, defn) => 
         accu ++ findToBeReplaced(using Map())(defn.body).groupMap(_._1)(_._2)  
     }
   }
 
-  def repScalarName(target: Str, field: Str) = {
-    Name(s"${target}_${field}")
+  private def repScalarName(target: Str, field: Str) = {
+    Name(s"${target}_$field")
   }
 
-  def replaceScalarArgumentImpl(using jpctx: JpCtx)(body: Node, target: Str): Node = body match {
+  private def replaceScalarArgumentImpl(using jpctx: JpCtx)(body: Node, target: Str): Node = body match {
     case Result(_xs) => body
     case Jump(_jp, _xs) => body
     case Case(scrut, cases) => Case(scrut, cases map {
@@ -783,24 +826,24 @@ class GraphOptimizer:
       LetCall(xs, defn, as, replaceScalarArgumentImpl(e, target))
   }
 
-  def isESelect(elim: Elim) = elim match {
+  private def isESelect(elim: Elim) = elim match {
     case ESelect(_) => true
     case _ => false
   }
 
-  def targetReplacedScalarNames(targets: Map[Str, Set[Str]]) =
+  private def targetReplacedScalarNames(targets: Map[Str, Set[Str]]) =
     targets.flatMap { (k, fields) => fields.map { x => repScalarName(k, x) } }
 
-  def newParamsForRepScalarArgs(params: Ls[Name], targets: Map[Str, Set[Str]]) = 
+  private def newParamsForRepScalarArgs(params: Ls[Name], targets: Map[Str, Set[Str]]) =
     params.filter(x => !targets.contains(x.str)) ++ targetReplacedScalarNames(targets)
 
-  enum ParamSubst:
+  private enum ParamSubst:
     case ParamKeep
     case ParamFieldOf(orig: Str, field: Str)
 
   import ParamSubst._
 
-  def revMapForRepScalarArgs(params: Ls[Name], targets: Map[Str, Set[Str]]) =
+  private def revMapForRepScalarArgs(params: Ls[Name], targets: Map[Str, Set[Str]]) =
     params.flatMap { 
       case x if targets.contains(x.str) => None
       case x => Some(x.str -> ParamKeep)
@@ -808,7 +851,7 @@ class GraphOptimizer:
       (k, fields) => fields.map { x => repScalarName(k, x).str -> ParamFieldOf(k, x) }
     }.toMap
 
-  def replaceScalarArguments(new_name: Str, defn: GODef, targets: Map[Str, Set[Str]]): GODef = {
+  private def replaceScalarArguments(new_name: Str, defn: GODef, targets: Map[Str, Set[Str]]): GODef = {
     val new_params = newParamsForRepScalarArgs(defn.params, targets) 
     val new_body = targets.foldLeft(defn.body) {
       case (body, (target, _)) => replaceScalarArgumentImpl(using Map())(body, target)
@@ -824,13 +867,13 @@ class GraphOptimizer:
     )
   }
 
-  def expectTexprIsRef(expr: TrivialExpr): Name = expr match {
+  private def expectTexprIsRef(expr: TrivialExpr): Name = expr match {
     case Ref(name) => name
     case _ => ??? // how is a literal scalar replaced?
   }
 
-  def substCallOfRepScalarArg(using namemap: Map[Str, Str], fldctx: FieldCtx, workset: Map[Str, Map[Str, Set[Str]]], sctx: Map[(Str, Str), Str])
-  (node: Node) : Node = node match {
+  private def substCallOfRepScalarArg(using namemap: Map[Str, Str], fldctx: FieldCtx, workset: Map[Str, Map[Str, Set[Str]]], sctx: Map[(Str, Str), Str])
+                                     (node: Node) : Node = node match {
     case Result(_) => node
     case Jump(_jp, _xs) => node
     case Case(scrut, cases) => Case(scrut, cases.map {
@@ -840,7 +883,7 @@ class GraphOptimizer:
       LetExpr(x, e1, substCallOfRepScalarArg(e2))
     case LetJoin(jp, xs, e1, e2) => 
       throw GraphOptimizingError("join points after promotion")
-    case LetCall(xs, defnref, as, e) => {
+    case LetCall(xs, defnref, as, e) =>
       val defn = defnref.defn match {
           case Left(value) => value
           case Right(value) => throw GraphOptimizingError("only has the name of definition")
@@ -848,7 +891,7 @@ class GraphOptimizer:
       if (namemap.contains(defn.name)) {
         val new_name = namemap(defn.name)
         if (!workset.contains(defn.name))
-          throw GraphOptimizingError(f"name map contains ${defn.name} -> ${new_name} but workset doesn't")
+          throw GraphOptimizingError(f"name map contains ${defn.name} -> $new_name but workset doesn't")
         val targets = workset(defn.name)
         val rev_map: Map[Str, ParamSubst] = revMapForRepScalarArgs(defn.params, targets)
         val new_params = newParamsForRepScalarArgs(defn.params, targets)
@@ -858,11 +901,11 @@ class GraphOptimizer:
         val new_bindings: Ls[(Name, (Str, Str))] = new_params.flatMap {
           param => rev_map(param.str) match {
             case ParamKeep => None
-            case ParamFieldOf(orig, str) => 
+            case ParamFieldOf(orig, str) =>
               val orig_arg = expectTexprIsRef(old_map(orig)).str
               sctx.get((orig_arg, str)) match {
                 case Some(x) => None
-                case None => 
+                case None =>
                   val v = gensym()
                   rbind = rbind + ((orig_arg, str) -> v.str)
                   Some(v -> (orig_arg, str))
@@ -875,7 +918,7 @@ class GraphOptimizer:
         val new_args: Ls[TrivialExpr] = new_params.map {
           param => rev_map(param.str) match {
             case ParamKeep => old_map(param.str)
-            case ParamFieldOf(orig, str) => 
+            case ParamFieldOf(orig, str) =>
               val orig_arg = expectTexprIsRef(old_map(orig)).str
               new_sctx.get((orig_arg, str)) match {
               case Some(x) => Ref(Name(x))
@@ -885,17 +928,16 @@ class GraphOptimizer:
         }
 
         val new_node = LetCall(xs, GODefRef(Right(new_name)), new_args, substCallOfRepScalarArg(using namemap, fldctx, workset, new_sctx)(e))
-        
+
         val final_node = new_bindings.foldRight(new_node) {
           case ((x, (y, field)), node) => LetExpr(x, Select(Name(y), fldctx(field)._2, field), node)
         }
 
         final_node
       } else node
-    }
   }
 
-  def substCallOfRepScalarArgOnDef(using namemap: Map[Str, Str], fldctx: FieldCtx, workset: Map[Str, Map[Str, Set[Str]]])(defn: GODef) =
+  private def substCallOfRepScalarArgOnDef(using namemap: Map[Str, Str], fldctx: FieldCtx, workset: Map[Str, Map[Str, Set[Str]]])(defn: GODef) =
     GODef(
       defn.id,
       defn.name,
@@ -905,23 +947,23 @@ class GraphOptimizer:
       substCallOfRepScalarArg(using namemap, fldctx, workset, Map.empty)(defn.body),
     )
 
-  def replaceScalar(prog: GOProgram) = {
-    val classes = prog.classes;
-    val defs: Set[GODef] = prog.defs;
-    val main = prog.main;
-    val init: Set[GODef] = Set();
+  def replaceScalar(prog: GOProgram): GOProgram = {
+    val classes = prog.classes
+    val defs: Set[GODef] = prog.defs
+    val main = prog.main
+    val init: Set[GODef] = Set()
     val rawworkset: Map[Str, Set[(Str, Ls[Str])]] = findToBeReplaced(prog)
     val workset: Map[Str, Map[Str, Set[Str]]] = rawworkset.map { 
       case (defname, s) => (defname, s.flatMap { (param, fields) => fields.map { x => (param, x) }}.groupMap(_._1)(_._2))
     }
     val namemap = defs.flatMap {
-      case defn if defn.isjp => None
+      // case defn if defn.isjp => None
       case defn if workset.contains(defn.name) => Some(defn.name -> gensym(defn.name + "@select@").str)
       case _ => None
     }.toMap
 
     val defs2 = defs.flatMap {
-      case defn if defn.isjp => None
+      // case defn if defn.isjp => None
       case defn =>
         workset.get(defn.name).map {
           targets => replaceScalarArguments(namemap(defn.name), defn, targets)
@@ -941,38 +983,38 @@ class GraphOptimizer:
     GOProgram(classes, defs3, main)
   }
 
-  def simplifyTrivialBinding(using rctx: Map[Str, TrivialExpr])(name: Name): Name =
+  private def simplifyTrivialBinding(using rctx: Map[Str, TrivialExpr])(name: Name): Name =
     val Name(x) = name
     rctx.get(x).map { 
       case Ref(yy @ Name(y)) => yy
       case _ => name
     }.getOrElse(name)
 
-  def simplifyTrivialBindingOfTexpr(using rctx: Map[Str, TrivialExpr])(expr: TrivialExpr): TrivialExpr = expr match {
-    case Ref(Name(x)) if rctx.contains(x) => rctx.get(x).get
+  private def simplifyTrivialBindingOfTexpr(using rctx: Map[Str, TrivialExpr])(expr: TrivialExpr): TrivialExpr = expr match {
+    case Ref(Name(x)) if rctx.contains(x) => rctx(x)
     case _ => expr
   }
 
-  def simplifyTrivialBinding(using rctx: Map[Str, TrivialExpr])(expr: GOExpr): GOExpr = expr match {
+  private def simplifyTrivialBinding(using rctx: Map[Str, TrivialExpr])(expr: GOExpr): GOExpr = expr match {
     case Apply(name, args) => Apply(simplifyTrivialBinding(name), args map simplifyTrivialBindingOfTexpr)
     case BasicOp(name, args) => BasicOp(name, args map simplifyTrivialBindingOfTexpr)
     case CtorApp(name, args) => CtorApp(name, args map simplifyTrivialBindingOfTexpr)
     case Lambda(name, body) => Lambda(name, simplifyTrivialBinding(body))
     case Select(name, cls, field) => Select(simplifyTrivialBinding(name), cls, field) 
-    case Ref(Name(x)) if rctx.contains(x) => rctx.get(x).get match {
+    case Ref(Name(x)) if rctx.contains(x) => rctx(x) match {
       case x: GOExpr => x
     }
     case _ => expr
   }
 
-  def simplifyTrivialBinding(using rctx: Map[Str, TrivialExpr])(node: Node): Node = node match {
+  private def simplifyTrivialBinding(using rctx: Map[Str, TrivialExpr])(node: Node): Node = node match {
     case Result(xs) => Result(xs map simplifyTrivialBindingOfTexpr)
     case Jump(jp, xs) => Jump(simplifyTrivialBinding(jp), xs map simplifyTrivialBindingOfTexpr )
     case Case(scrut, cases) => Case(simplifyTrivialBinding(scrut), cases map {
       (cls, e) => (cls, simplifyTrivialBinding(e))
     })
     case LetExpr(x, Ref(Name(z)), e2) if rctx.contains(z) =>
-      val rctx2 = rctx + (x.str -> rctx.get(z).get)
+      val rctx2 = rctx + (x.str -> rctx(z))
       simplifyTrivialBinding(using rctx2)(e2)
     case LetExpr(x, y @ Ref(Name(_)), e2) =>
       val rctx2 = rctx + (x.str -> y)
@@ -988,12 +1030,12 @@ class GraphOptimizer:
       LetCall(xs, defn, as map simplifyTrivialBindingOfTexpr, simplifyTrivialBinding(e))
   }
 
-  def toExpr(expr: TrivialExpr): GOExpr = expr match {
+  private def toExpr(expr: TrivialExpr): GOExpr = expr match {
     case x: Ref => x
     case x: Literal => x
   }
 
-  def simplifySel(using cctx: Map[Str, Map[Str, TrivialExpr]])(node: Node): Node =
+  private def simplifySel(using cctx: Map[Str, Map[Str, TrivialExpr]])(node: Node): Node =
     node match {
     case Result(xs) => Result(xs)
     case Jump(jp, xs) => Jump(jp, xs)
@@ -1001,8 +1043,8 @@ class GraphOptimizer:
       (cls, e) => (cls, simplifySel(e))
     })
     case LetExpr(x, Select(y, cls, field), e2) if cctx.contains(y.str) =>
-      val m = cctx.get(y.str).get
-      LetExpr(x, toExpr(m.get(field).get), simplifySel(e2))
+      val m = cctx(y.str)
+      LetExpr(x, toExpr(m(field)), simplifySel(e2))
     case LetExpr(x, y @ CtorApp(cls, args), e2) =>
       val m = cls.fields.zip(args).toMap
       val cctx2 = cctx + (x.str -> m)
@@ -1015,14 +1057,14 @@ class GraphOptimizer:
       LetCall(xs, defn, as, simplifySel(e))
   }
 
-  def argsToStrs(args: Ls[TrivialExpr]) = {
+  private def argsToStrs(args: Ls[TrivialExpr]) = {
     args.flatMap {
       case Ref(x) => Some(x.str)
       case _ => None
     }
   }
 
-  def collectDeadBindings(node: Node, dead: Set[Str]): Set[Str] = node match {
+  private def collectDeadBindings(node: Node, dead: Set[Str]): Set[Str] = node match {
     case Result(xs) => dead -- argsToStrs(xs)
     case Jump(_, xs) => dead -- argsToStrs(xs)
     case Case(scrut, cases) => cases.foldLeft(dead - scrut.str) {
@@ -1037,7 +1079,7 @@ class GraphOptimizer:
       collectDeadBindings(e, dead -- argsToStrs(as) ++ xs.map(_.str))
   }
 
-  def removeDeadBindings(using dead: Set[Str])(node: Node): Node = node match {
+  private def removeDeadBindings(using dead: Set[Str])(node: Node): Node = node match {
     case Result(xs) => node
     case Jump(_, xs) => node
     case Case(scrut, cases) => Case(scrut, cases.map {
@@ -1052,8 +1094,7 @@ class GraphOptimizer:
       LetCall(xs, defn, as, removeDeadBindings(e))
   }
 
-
-  def simplify(defn: GODef) = {
+  private def simplify(defn: GODef) = {
     val simplified = simplifyTrivialBinding(using Map.empty)(simplifySel(using Map.empty)(defn.body))
     val dead = collectDeadBindings(simplified, Set.empty)
     val dced = removeDeadBindings(using dead)(simplified)
@@ -1067,10 +1108,16 @@ class GraphOptimizer:
     )
   }
 
-  def simplifyProgram(prog: GOProgram) = {
-    val defs = prog.defs.map(simplify)
-    fixGODef(using defs)
-    validate(defs)
+  def simplifyProgram(prog: GOProgram): GOProgram = {
+    var changed = true
+    var defs = prog.defs
+    while (changed) {
+      val new_defs = defs.map(simplify)
+      fixGODef(using new_defs)
+      validate(new_defs)
+      changed = defs != new_defs
+      defs = new_defs
+    }
     GOProgram(prog.classes, defs, prog.main) 
   }
 
@@ -1094,7 +1141,7 @@ class GraphOptimizer:
       promoteJoinPoints(e)
   }
 
-  def removeNestedJoinPoints(node: Node): Node = node match {
+  private def removeNestedJoinPoints(node: Node): Node = node match {
     case Result(_) | Jump(_, _) => node
     case Case(scrut, cases) => Case(scrut,
       cases map { (cls, e) => (cls, removeNestedJoinPoints(e)) })
@@ -1104,16 +1151,16 @@ class GraphOptimizer:
   }
 
   def promoteJoinPoints(prog: GOProgram): GOProgram = {
-    val classes = prog.classes;
-    val defs = prog.defs; 
-    val main = prog.main;
+    val classes = prog.classes
+    val defs = prog.defs
+    val main = prog.main
 
     val init: Ls[GODef] = Ls()
     val new_defs = defs.foldLeft(init) {
       (accu, godef) => promoteJoinPoints(using accu)(godef.body)
     }
 
-    val defs2 = (defs ++ new_defs)
+    val defs2 = defs ++ new_defs
     defs2 foreach {
       defn => defn.body = removeNestedJoinPoints(defn.body) 
     }
@@ -1123,15 +1170,61 @@ class GraphOptimizer:
     GOProgram(classes, defs2, main)
   }
 
-
-  def validate(defs: Set[GODef]) = {
-    ensureDefRefInSet(defs)
+  private def ensureDefRefInSet(using defs: Set[GODef])(node: Node): Unit = node match {
+    case Case(_, cases) => cases.foreach { case (cls, node) => (cls, ensureDefRefInSet(node)) }
+    case LetCall(resultNames, defnref, args, body) =>
+      defnref.defn match {
+        case Left(real_defn) => if (!defs.exists(_ eq real_defn)) throw GraphOptimizingError("ref is not in the set")
+        case Right(_) =>
+      }
+      ensureDefRefInSet(body)
+    case LetExpr(name, expr, body) => ensureDefRefInSet(body)
+    case LetJoin(joinName, params, rhs, body) => ensureDefRefInSet(body)
+    case Result(_) =>
+    case Jump(_, _) =>
   }
 
-  def activeAnalyze(prog: GOProgram) = {
-    val classes = prog.classes;
-    val old_defs = prog.defs;
-    val main = prog.main;
+  private def ensureDefRefInSet(defs: Set[GODef]): Unit = {
+    defs.foreach { defn => ensureDefRefInSet(using defs)(defn.body) }
+  }
+
+  private def ensureParamsArgsConsistent(using defs: Set[GODef])(node: Node): Unit = node match {
+    case Case(_, cases) => cases.foreach { case (cls, node) => (cls, ensureParamsArgsConsistent(node)) }
+    case LetCall(resultNames, defnref, args, body) =>
+      defnref.defn match {
+        case Left(real_defn) =>
+          if (real_defn.params.length != args.length) 
+            val x = real_defn.params.length
+            val y = args.length
+            throw GraphOptimizingError(s"inconsistent arguments($y) and parameters($x) number in a call to ${real_defn.name}")
+        case Right(_) =>
+      }
+      ensureParamsArgsConsistent(body)
+    case LetExpr(name, expr, body) => ensureParamsArgsConsistent(body)
+    case LetJoin(joinName, params, rhs, body) => ensureParamsArgsConsistent(body)
+    case Result(_) =>
+    case Jump(Name(jp), xs) => 
+      val jdef = defs.find{_.getName == jp}
+      if (jdef.isEmpty) return
+      val x = xs.length
+      val y = defs.find{_.getName == jp}.get.params.length
+      if (x != y)
+        throw GraphOptimizingError(s"inconsistent arguments($x) and parameters($y) number in a jump to ${jp}")
+  }
+
+  private def ensureParamsArgsConsistent(defs: Set[GODef]): Unit = {
+    defs.foreach { defn => ensureParamsArgsConsistent(using defs)(defn.body) }
+  }
+
+  private def validate(defs: Set[GODef]): Unit = {
+    ensureDefRefInSet(defs)
+    ensureParamsArgsConsistent(defs)
+  }
+
+  def activeAnalyze(prog: GOProgram): GOProgram = {
+    val classes = prog.classes
+    val old_defs = prog.defs
+    val main = prog.main
 
     val defs = old_defs.map {
       defn => GODef(defn.id, defn.name, defn.isjp, defn.params, defn.resultNum, defn.body)
@@ -1141,22 +1234,21 @@ class GraphOptimizer:
     validate(defs)
 
     var changed = true
-    var jpctx = defs.flatMap {
+    val jpctx = defs.flatMap {
       case godef if godef.isjp => Some(godef.name -> godef)
       case _ => None
     }.toMap
 
     while (changed) {
       defs.foreach {
-        case godef if !godef.isjp =>
-          val intros = Ls(getIntro(using jpctx)(godef.body, Map.empty))
+        case godef =>
+          val intros = getIntro(using jpctx)(godef.body, Map.empty)
           val elims = godef.params.map { case Name(s) => getElim(using s, Map.empty, jpctx)(godef.body, Set.empty) }
           if (elims == godef.activeParams && intros == godef.activeResults)
             changed = false
           else
             godef.activeParams = elims
             godef.activeResults = intros
-        case godef /* isjp */ =>
       }
     }
 
@@ -1165,3 +1257,18 @@ class GraphOptimizer:
     GOProgram(classes, defs, main)
   }
 
+  def optimize(prog: GOProgram): GOProgram = {
+    val g1 = simplifyProgram(prog)
+    val g2 = activeAnalyze(g1)
+
+    val g3 = splitFunction(g2)
+    
+    val g4 = simplifyProgram(g3)
+    val g5 = activeAnalyze(g4)
+    
+    val g6 = replaceScalar(g5)
+    
+    val g7 = simplifyProgram(g6)
+    val g8 = activeAnalyze(g7)
+    g7
+  }
