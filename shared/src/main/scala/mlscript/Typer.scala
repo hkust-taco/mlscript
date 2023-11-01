@@ -596,7 +596,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
             lb.upperBounds ::= ub
             val res = RecordType.mk((nme.toVar, FieldType(S(lb), ub)(prov)) :: Nil)(prov)
             constrain(t, res)
-            ub
+            TypeBounds(lb, ub)(prov)
         }
         go(base_ty, _ => N)
       case Recursive(uv, body) =>
@@ -837,13 +837,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
 
       case w @ WildcardType() => 
         err(msg"Cannot use ? as expression", w.toLoc)
-
-      case As(trm, ty) =>
-        if (ctx.inPattern) err(msg"`as` used in pattern", trm.toLoc)
-        // todo
-        val trm_ty = typePolymorphicTerm(trm)
-        val ty_ty = typeType(ty)(ctx.copy(inPattern = false), raise, vars)
-        con(trm_ty, ty_ty, ty_ty)
         
       case Asc(v @ ValidPatVar(nme), ty) =>
         val ty_ty = typeType(ty)(ctx.copy(inPattern = false), raise, vars)
@@ -1511,11 +1504,14 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
                   
                   lti match {
                     case dti: DelayedTypeInfo =>
-                      val tag = clsNameToNomTag(dti.decl match { case decl: NuTypeDef => decl; case _ => die })(prov, ctx)
+                      val delc = dti.decl match { case decl: NuTypeDef => decl; case _ => die }
+                      println(s">>>d ${delc.tparams}")
+                      val tag = clsNameToNomTag(delc)(prov, ctx)
                       val (ty, tyIntl) = tprmToRcd(dti.tparams)
                       println(s"Match arm $nme: $tag & $ty intl $tyIntl")
                       (tag, ty, tyIntl)
                     case CompletedTypeInfo(cls: TypedNuCls) =>
+                      println(s">>>c ${cls.virtualMembers}")
                       val tag = clsNameToNomTag(cls.td)(prov, ctx)
                       val (ty, tyIntl) = tprmToRcd(cls.tparams)
                       println(s"Match arm $nme: $tag & $ty intl $tyIntl")
@@ -1541,6 +1537,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
           if (newDefs) {
             val res = freshVar(provTODO, N, N)
             newCtx.copy(lvl = newCtx.lvl + 1) |> { implicit ctx =>
+              println(s"var rfn: ${v.name} :: & ${tagTy} & ${patTyIntl}")
               newCtx += v.name -> VarSymbol(tagTy & patTyIntl, v)
               val bod_ty = typeTerm(bod)(ctx, raise, vars, genLambdas)
               implicit val tp: TP = provTODO

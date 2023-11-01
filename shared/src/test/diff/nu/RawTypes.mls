@@ -8,27 +8,45 @@
 class Foo[type A](val a: A)
 //│ class Foo[A](a: A)
 
-fun foo(f: Foo[?]): Int = f.a : f.A
+fun foo(f: Foo): Int = f.a : f.A
 //│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.11: 	fun foo(f: Foo[?]): Int = f.a : f.A
-//│ ║        	                          ^^^
-//│ ╟── type variable `?` leaks out of its scope
-//│ ║  l.11: 	fun foo(f: Foo[?]): Int = f.a : f.A
-//│ ║        	               ^
-//│ ╟── into type `Int`
-//│ ║  l.11: 	fun foo(f: Foo[?]): Int = f.a : f.A
-//│ ║        	                    ^^^
-//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
-//│ ╟── • this field selection:
-//│ ║  l.11: 	fun foo(f: Foo[?]): Int = f.a : f.A
-//│ ╙──      	                          ^^^
-//│ fun foo: forall '?. (f: Foo['?]) -> Int
+//│ ║  l.11: 	fun foo(f: Foo): Int = f.a : f.A
+//│ ║        	                       ^^^
+//│ ╟── type variable `A` leaks out of its scope
+//│ ║  l.11: 	fun foo(f: Foo): Int = f.a : f.A
+//│ ║        	                       ^^^
+//│ ╟── into type `A`
+//│ ║  l.8: 	class Foo[type A](val a: A)
+//│ ╙──     	               ^
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.11: 	fun foo(f: Foo): Int = f.a : f.A
+//│ ║        	                       ^^^
+//│ ╟── type `A` is not an instance of type `Int`
+//│ ║  l.8: 	class Foo[type A](val a: A)
+//│ ║       	               ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.11: 	fun foo(f: Foo): Int = f.a : f.A
+//│ ╙──      	                 ^^^
+//│ fun foo: (f: Foo[anything]) -> Int
 
 fun foo(f: Foo[?]) = f.a : f.A
-//│ fun foo: forall '?. (f: Foo['?]) -> ???
+//│ ╔══[ERROR] Type error in type ascription
+//│ ║  l.32: 	fun foo(f: Foo[?]) = f.a : f.A
+//│ ║        	                     ^^^
+//│ ╟── type variable `?` leaks out of its scope
+//│ ║  l.32: 	fun foo(f: Foo[?]) = f.a : f.A
+//│ ║        	               ^
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this field selection:
+//│ ║  l.32: 	fun foo(f: Foo[?]) = f.a : f.A
+//│ ║        	                     ^^^
+//│ ╟── Note: constraint arises from type selection:
+//│ ║  l.32: 	fun foo(f: Foo[?]) = f.a : f.A
+//│ ╙──      	                            ^^
+//│ fun foo: forall '?. (f: Foo['?]) -> (error | ???)
 
 foo(Foo(1))
-//│ ???
+//│ error | ???
 //│ res
 //│     = 1
 
@@ -42,20 +60,27 @@ fun foo(f: Foo[Int]) = f.a
 // FIXME
 fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
 //│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.43: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
+//│ ║  l.61: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
 //│ ║        	                          ^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `A` leaks out of its scope
 //│ ║  l.8: 	class Foo[type A](val a: A)
 //│ ║       	                      ^
 //│ ╟── into type `Int | ~??A`
-//│ ║  l.43: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
+//│ ║  l.61: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
 //│ ╙──      	                 ^^^
 //│ fun foo: (f: Foo[anything]) -> Int
 
-fun foo(f: Foo['a]): Int = if f is Foo(a) then a : f.A
-//│ fun foo: forall 'a. (f: Foo['a]) -> Int
-//│   where
-//│     'a <: Int | ~??A
+fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
+//│ ╔══[ERROR] Type error in type ascription
+//│ ║  l.73: 	fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
+//│ ║        	                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type variable `?` leaks out of its scope
+//│ ║  l.73: 	fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
+//│ ║        	               ^
+//│ ╟── into type `Int | ~??A`
+//│ ║  l.73: 	fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
+//│ ╙──      	                    ^^^
+//│ fun foo: forall '?. (f: Foo['?]) -> Int
 
 fun foo(f: Foo['a]) = f.a : f.A
 //│ fun foo: forall 'a. (f: Foo['a]) -> 'a
@@ -66,7 +91,7 @@ fun foo(a, f: Foo[a]): Int = f.a : f.A
 //│     'a <: Int
 
 fun bar(f): Int = f.a : f.A
-//│ fun bar: {A <: Int, a: Int} -> Int
+//│ fun bar: forall 'A. {A :> 'A <: Int, a: Int & 'A} -> Int
 
 foo(2, Foo(1))
 //│ Int
@@ -93,10 +118,14 @@ class Bar(val b: Int) extends Foo[Int]
 //│ abstract class Foo[T]: Bar
 //│ class Bar(b: Int) extends Foo
 
-fun foo(x: Foo[?]): x.T = if x is Bar then x.b : x.T
+fun foo(x: Foo[?]) = if x is Bar then x.b : x.T
 //│ fun foo: forall '?. (x: Foo['?]) -> Int
 
 foo(Bar(1))
 //│ Int
 //│ res
 //│     = 1
+
+fun foo(x: Foo['a]) = if x is Bar then x.b : x.T
+//│ fun foo: forall 'a. (x: Foo['a]) -> Int
+

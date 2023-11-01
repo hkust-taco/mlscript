@@ -74,7 +74,6 @@ final case class Let(isRec: Bool, name: Var, rhs: Term, body: Term)  extends Ter
 final case class Blk(stmts: Ls[Statement])                           extends Term with BlkImpl with Outer
 final case class Bra(rcd: Bool, trm: Term)                           extends Term
 final case class Asc(trm: Term, ty: Type)                            extends Term
-final case class As(trm: Term, ty: Type)                             extends Term // `as` keyword, typer should be changed later
 final case class Bind(lhs: Term, rhs: Term)                          extends Term
 final case class Test(trm: Term, ty: Term)                           extends Term
 final case class With(trm: Term, fields: Rcd)                        extends Term
@@ -90,7 +89,7 @@ final case class Forall(params: Ls[TypeVar], body: Term)             extends Ter
 final case class Inst(body: Term)                                    extends Term
 final case class Super()                                             extends Term
 final case class Eqn(lhs: Var, rhs: Term)                            extends Term // equations such as x = y, notably used in constructors; TODO: make lhs a Term
-final case class WildcardType()                                      extends Term
+final case class WildcardType()                                      extends Term // ? use Var("?") instead
 
 final case class AdtMatchWith(cond: Term, arms: Ls[AdtMatchPat])     extends Term
 final case class AdtMatchPat(pat: Term, rhs: Term)                   extends AdtMatchPatImpl
