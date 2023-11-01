@@ -108,12 +108,12 @@ if 1+1 > 1 then 1 - 1 else 1*1
 //│ Mono:
 //│ 
 //│ Defunc result: 
-//│ main$$0()
-//│ main$$1()
 //│ fun main$$0() =
 //│   if true then #1 else #0
 //│ fun main$$1() =
 //│   if >(+(#1, #1), #1) then -(#1, #1) else *(#1, #1)
+//│ main$$0()
+//│ main$$1()
 //│ Int
 //│ res
 //│     = 1
@@ -129,9 +129,9 @@ if(b) then 1 else 2
 //│ Mono:
 //│ 
 //│ Defunc result: 
-//│ main$$0()
 //│ fun main$$0() =
 //│   if b then #1 else #2
+//│ main$$0()
 //│ 1 | 2
 //│ res
 //│     = 2
@@ -149,7 +149,6 @@ if(b) then 1 else 2
 //│ Mono:
 //│ 
 //│ Defunc result: 
-//│ main$$2()
 //│ fun apply$Lambda2$1$1(this, f, g) =
 //│   f match {case obj: Lambda1$2$2 => apply$Lambda1$2$2(obj, g)}
 //│ fun main$$2() =
@@ -160,6 +159,7 @@ if(b) then 1 else 2
 //│ }
 //│ class Lambda1$2$2() {
 //│ }
+//│ main$$2()
 //│ true
 //│ res
 //│     = true
@@ -177,13 +177,13 @@ if(b) then 1 else 2
 //│ Mono:
 //│ 
 //│ Defunc result: 
-//│ main$$1()
 //│ fun apply$Lambda1$1$1(this, b) =
 //│   if b then true else false
 //│ fun main$$1() =
 //│   new Lambda1$1$1 ()  match {case obj: Lambda1$1$1 => apply$Lambda1$1$1(obj, true)}
 //│ class Lambda1$1$1() {
 //│ }
+//│ main$$1()
 //│ Bool
 //│ res
 //│     = true
@@ -202,11 +202,11 @@ f(2)+3
 //│ Mono:
 //│ 
 //│ Defunc result: 
-//│ main$$1()
 //│ fun f$1(x) =
 //│   if >(x, #0) then +(x, #1) else -(x, #1)
 //│ fun main$$1() =
 //│   +(f$1(#2), #3)
+//│ main$$1()
 //│ fun f: Int -> Int
 //│ Int
 //│ res
@@ -226,11 +226,11 @@ fac(2)
 //│ Mono:
 //│ 
 //│ Defunc result: 
-//│ main$$1()
 //│ fun fac$1(n) =
 //│   if >(n, #1) then *(fac$1(-(n, #1)), n) else #1
 //│ fun main$$1() =
 //│   fac$1(#2)
+//│ main$$1()
 //│ fun fac: Int -> Int
 //│ Int
 //│ res
@@ -258,7 +258,6 @@ count(new List(new List(new Nil(undefined, false), true), true))
 //│ Mono:
 //│ 
 //│ Defunc result: 
-//│ main$$4()
 //│ fun l$2(lst) =
 //│   lst.l
 //│ fun count$1(lst) =
@@ -269,6 +268,7 @@ count(new List(new List(new Nil(undefined, false), true), true))
 //│ }
 //│ class List$1(l, hasTail) {
 //│ }
+//│ main$$4()
 //│ class List(l: List | Nil | (), hasTail: Bool)
 //│ class Nil(l: List | Nil | (), hasTail: Bool)
 //│ fun count: forall 'a. 'a -> Int
@@ -321,7 +321,6 @@ fun add2(x) = x+2
 //│ Mono:
 //│ 
 //│ Defunc result: 
-//│ main$$5()
 //│ fun map$List$1(this, f) =
 //│   new List$1 (f match {case obj: Lambda1$2$3 => apply$Lambda1$2$3(obj, this.e); case obj: Lambda1$3$4 => apply$Lambda1$3$4(obj, this.e)}, this.tail match {case obj: List$1 => map$List$1(obj, f); case obj: Nil$2 => map$Nil$2(obj, f)}) 
 //│ fun add2$1(x) =
@@ -342,6 +341,7 @@ fun add2(x) = x+2
 //│ }
 //│ class Lambda1$2$3() {
 //│ }
+//│ main$$5()
 //│ class List(e: Int, tail: List | Nil) {
 //│   fun count: () -> Int
 //│   fun map: (Int -> Int) -> List
@@ -386,8 +386,6 @@ foo(generate(1))
 //│ Mono:
 //│ 
 //│ Defunc result: 
-//│ main$$4()
-//│ main$$5()
 //│ fun foo$1(x) =
 //│   x match {case obj: Nil$2 => count$Nil$2(obj); case obj: List$1 => count$List$1(obj)}
 //│ fun count$Nil$2(this) =
@@ -404,6 +402,8 @@ foo(generate(1))
 //│ }
 //│ class List$1(e, tail) {
 //│ }
+//│ main$$4()
+//│ main$$5()
 //│ class List(e: Int, tail: List | Nil) {
 //│   fun count: () -> Int
 //│ }
@@ -435,7 +435,6 @@ foo(2)
 //│ Mono:
 //│ 
 //│ Defunc result: 
-//│ main$$3()
 //│ fun apply$Lambda1$2$1(this, f) =
 //│   f match {case obj: Lambda1$3$2 => apply$Lambda1$3$2(obj, this.x)}
 //│ fun foo$1(x) =
@@ -448,6 +447,7 @@ foo(2)
 //│ }
 //│ class Lambda1$3$2() {
 //│ }
+//│ main$$3()
 //│ fun foo: Int -> Int
 //│ Int
 //│ res
@@ -468,7 +468,6 @@ f(1)
 //│ Mono:
 //│ 
 //│ Defunc result: 
-//│ main$$2()
 //│ fun apply$Lambda1$2$1(this, y) =
 //│   f$1(+(this.x, y))
 //│ fun f$1(x) =
@@ -477,6 +476,7 @@ f(1)
 //│   f$1(#1)
 //│ class Lambda1$2$1(x) {
 //│ }
+//│ main$$2()
 //│ fun f: Int -> nothing
 //│ nothing
 //│ res
@@ -499,14 +499,14 @@ f(1)
 //│ Mono:
 //│ 
 //│ Defunc result: 
-//│ main$$1()
-//│ main$$2()
 //│ fun f$1(x) =
 //│   f$1(x)
 //│ fun main$$2() =
 //│   f$1(#1)
 //│ fun main$$1() =
 //│   f$1(#0)
+//│ main$$1()
+//│ main$$2()
 //│ fun f: anything -> nothing
 //│ nothing
 //│ res
@@ -556,8 +556,6 @@ foo(new Lambda2(2))
 //│ Mono:
 //│ 
 //│ Defunc result: 
-//│ main$$5()
-//│ main$$6()
 //│ fun count$Cons$1(this) =
 //│   +(#1, this.tail match {case obj: Cons$1 => count$Cons$1(obj); case obj: Nil$2 => count$Nil$2(obj)})
 //│ fun foo$1(x) =
@@ -580,6 +578,8 @@ foo(new Lambda2(2))
 //│ }
 //│ class Lambda$3() {
 //│ }
+//│ main$$5()
+//│ main$$6()
 //│ class Cons(e: nothing, tail: Cons | Nil) {
 //│   fun count: () -> Int
 //│ }
@@ -631,8 +631,6 @@ foo(l => (new Cons(2, l)).count())
 //│ Mono:
 //│ 
 //│ Defunc result: 
-//│ main$$5()
-//│ main$$6()
 //│ fun count$Cons$1(this) =
 //│   +(#1, this.tail match {case obj: Cons$1 => count$Cons$1(obj); case obj: Nil$2 => count$Nil$2(obj)})
 //│ fun foo$1(x) =
@@ -655,6 +653,8 @@ foo(l => (new Cons(2, l)).count())
 //│ }
 //│ class Lambda1$2$3() {
 //│ }
+//│ main$$5()
+//│ main$$6()
 //│ class Cons(e: Int, tail: Cons | Nil) {
 //│   fun count: () -> Int
 //│ }
@@ -741,7 +741,6 @@ class C(e1: Exp, e2: Exp) extends Exp {
 //│ Mono:
 //│ 
 //│ Defunc result: 
-//│ main$$6()
 //│ fun isEmpty$E$2(this) =
 //│   false
 //│ fun isEmpty$A$5(this) =
@@ -772,6 +771,7 @@ class C(e1: Exp, e2: Exp) extends Exp {
 //│ }
 //│ class Exp$1() {
 //│ }
+//│ main$$6()
 //│ class Exp() {
 //│   fun derive: (x: Int) -> Exp
 //│   fun isEmpty: () -> Bool
@@ -821,7 +821,6 @@ gen()
 //│ Mono:
 //│ 
 //│ Defunc result: 
-//│ main$$4()
 //│ fun anyUnknown$2() =
 //│   false
 //│ fun gen$1() =
@@ -832,6 +831,7 @@ gen()
 //│ }
 //│ class List$1(l, hasTail) {
 //│ }
+//│ main$$4()
 //│ val anyUnknown: false
 //│ class List(l: List | Nil, hasTail: Bool)
 //│ class Nil(hasTail: Bool)
@@ -863,7 +863,6 @@ class Foo(x: Int){
 //│ Mono:
 //│ 
 //│ Defunc result: 
-//│ main$$1()
 //│ fun boo$Foo$1(this, z) =
 //│   +(this match {case obj: Foo$1 => bar$Foo$1(obj, z)}, this.x)
 //│ fun bar$Foo$1(this, y) =
@@ -872,6 +871,7 @@ class Foo(x: Int){
 //│   new Foo$1 (#1)  match {case obj: Foo$1 => boo$Foo$1(obj, #2)}
 //│ class Foo$1(x) {
 //│ }
+//│ main$$1()
 //│ class Foo(x: Int) {
 //│   fun bar: Int -> Int
 //│   fun boo: Int -> Int
@@ -900,13 +900,13 @@ class OneInt(a: Int){
 //│ Mono:
 //│ 
 //│ Defunc result: 
-//│ main$$1()
 //│ fun fac$OneInt$1(this) =
 //│   if >(this.a, #0) then new OneInt$1 (-(this.a, #1))  match {case obj: OneInt$1 => fac$OneInt$1(obj)} else #1
 //│ fun main$$1() =
 //│   new OneInt$1 (#10)  match {case obj: OneInt$1 => fac$OneInt$1(obj)}
 //│ class OneInt$1(a) {
 //│ }
+//│ main$$1()
 //│ class OneInt(a: Int) {
 //│   fun fac: () -> Int
 //│ }
@@ -949,7 +949,6 @@ g(1)
 //│ Mono:
 //│ 
 //│ Defunc result: 
-//│ main$$3()
 //│ fun any$3() =
 //│   #-20
 //│ fun f$1(x) =
@@ -958,6 +957,7 @@ g(1)
 //│   if >(x, any) then g$2(-(x, #1)) else f$1(-(x, #2))
 //│ fun main$$3() =
 //│   g$2(#1)
+//│ main$$3()
 //│ val any: -20
 //│ fun f: Int -> 0
 //│ fun g: Int -> 0
@@ -987,7 +987,6 @@ class OneBool(b: Bool){
 //│ Mono:
 //│ 
 //│ Defunc result: 
-//│ main$$2()
 //│ fun get$OneInt$1(this) =
 //│   this.a
 //│ fun get$OneBool$2(this) =
@@ -998,6 +997,7 @@ class OneBool(b: Bool){
 //│ }
 //│ class OneBool$2(b) {
 //│ }
+//│ main$$2()
 //│ class OneInt(a: Int) {
 //│   fun get: () -> Int
 //│ }
@@ -1041,9 +1041,6 @@ bar.car
 //│ Mono:
 //│ 
 //│ Defunc result: 
-//│ main$$4()
-//│ main$$5()
-//│ main$$6()
 //│ fun bar$1() =
 //│   Bar$1(#42)
 //│ fun da$Car$2(this, b) =
@@ -1060,6 +1057,9 @@ bar.car
 //│ }
 //│ class Car$2() {
 //│ }
+//│ main$$4()
+//│ main$$5()
+//│ main$$6()
 //│ class Bar(x: Int) {
 //│   fun FooMinus: (y: Int) -> Int
 //│   fun car: 2
@@ -1107,8 +1107,6 @@ class Sub2(c: Int) extends Sub(c+c){
 //│ Mono:
 //│ 
 //│ Defunc result: 
-//│ main$$4()
-//│ main$$5()
 //│ fun c$1() =
 //│   #5
 //│ fun main$$5() =
@@ -1125,6 +1123,8 @@ class Sub2(c: Int) extends Sub(c+c){
 //│ }
 //│ class Sub$2(b): Sup$1(+(this.b, this.b)) {
 //│ }
+//│ main$$4()
+//│ main$$5()
 //│ val c: 5
 //│ class Sup(a: Int) {
 //│   fun foo: () -> Int
@@ -1166,8 +1166,6 @@ class F2() extends Foo(x => x+2){}
 //│ Mono:
 //│ 
 //│ Defunc result: 
-//│ main$$5()
-//│ main$$6()
 //│ fun apply$F2$3_Lambda1$2$5(this, x) =
 //│   +(x, #2)
 //│ fun foo$Foo$1(this) =
@@ -1188,6 +1186,8 @@ class F2() extends Foo(x => x+2){}
 //│ }
 //│ class F1$2_Lambda1$1$4(par$F1$2) {
 //│ }
+//│ main$$5()
+//│ main$$6()
 //│ class Foo(f: Int -> Int) {
 //│   fun foo: () -> Int
 //│ }

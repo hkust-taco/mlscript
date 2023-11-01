@@ -76,10 +76,12 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
     funDependence.addOne(func.name.name, Set())
   }
 
-  private def getResult(exps: List[Expr]) = mlscript.compiler.ModuleUnit(exps.concat[Expr | Item](funImpls.map(x => x._2._1))
+  private def getResult(exps: List[Expr]) = mlscript.compiler.ModuleUnit(
+        funImpls.map(x => x._2._1)
        .concat(allTypeImpls.values.map(x => x.copy(body = Isolation(Nil))))
        .concat(lamTyDefs.values)
        .concat(anonymTyDefs.values)
+       .concat(exps)
        .toList)
 
   /**
@@ -127,7 +129,7 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
         }
       )
        
-       ret
+      ret
     // }()
   
   def toTypingUnit(mu: ModuleUnit): TypingUnit =
