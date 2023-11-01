@@ -30,14 +30,28 @@ class DiffTestCompiler extends DiffTests {
       val graph2 = go.simplifyProgram(go.promoteJoinPoints(graph))
       val graph3 = go.activeAnalyze(graph2)
       outputBuilder ++= graph3.toString()
-      outputBuilder ++= "\n\nSplitted ------------------------------------\n"
-      val graph4 = go.simplifyProgram(go.splitFunction(graph3))
-      val graph5 = go.activeAnalyze(graph4)
-      outputBuilder ++= graph5.toString()
-      outputBuilder ++= "\n\nScalarReplaced ------------------------------\n"
-      val graph6 = go.simplifyProgram(go.replaceScalar(graph5))
-      val graph7 = go.activeAnalyze(graph6)
-      outputBuilder ++= graph7.toString()
+      // outputBuilder ++= "\n\nSplitted ------------------------------------\n"
+      // val graph4 = go.simplifyProgram(go.splitFunction(graph3))
+      // val graph5 = go.activeAnalyze(graph4)
+      // outputBuilder ++= graph5.toString()
+      // outputBuilder ++= "\n\nScalarReplaced ------------------------------\n"
+      // val graph6 = go.simplifyProgram(go.replaceScalar(graph5))
+      // val graph7 = go.activeAnalyze(graph6)
+      // outputBuilder ++= graph7.toString()
+     
+      var changed = true
+      var g = graph3
+      var fuel = 5
+      while (changed && fuel > 0)
+        val new_g = go.optimize(g)
+        changed = g != new_g
+        g = new_g
+        if (changed)
+          outputBuilder ++= "\n\nOptimized ------------------------------\n"
+          outputBuilder ++= new_g.toString()
+        fuel -= 1
+      
+
       outputBuilder ++= "\n"
 
     catch
