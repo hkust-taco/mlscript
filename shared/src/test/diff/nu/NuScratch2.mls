@@ -61,119 +61,42 @@ fun test(f: Foo) = if f is
 fun test(f: Foo['a]) = if f is
   Foo then f.x : f.T
 //│ fun test: forall 'a. (f: Foo['a]) -> (??T & 'a & (Int | Str))
+//│   where
+//│     'a :> ~??T & ~'a & (Int | Str)
 
 
 
 fun test(f: Foo0['a]) = if f is
-  Foo0 then f.x : f.T
+  Foo0 then f.x : f.T // here, locally we have f.T =:= `T & 'a where `T is the local skolem for x.T
 //│ fun test: forall 'a. (f: Foo0['a]) -> (??T & 'a)
 
+// * NOTE: refined f.T =:= `T & 'a
 fun test(f: Foo0['a]) = if f is
   Foo0 then f.x : f.T
   _ then error
 //│ fun test: forall 'a. (f: Foo0['a]) -> (??T & 'a)
 
-:d
+// * TODO: why don't we get 'a in the result whereas we do in the Foo0 case above?
 fun test(f: Foo0['a]) = if f is
   Bar0 then 123 : f.T
   _ then error
-//│ 0. Typing ‹fun test = (f: Foo0‹'a›,) => if f is ‹(Bar0) then 123 : f.T; (_) then error››
-//│ | 0. Created lazy type info for fun test = (f: Foo0‹'a›,) => if f is ‹(Bar0) then 123 : f.T; (_) then error›
-//│ | Completing fun test = (f: Foo0‹'a›,) => if f is ‹(Bar0) then 123 : f.T; (_) then error›
-//│ | | Type params 
-//│ | | Params 
-//│ | | 1. Typing term (f: Foo0‹'a›,) => if f is ‹(Bar0) then 123 : f.T; (_) then error›
-//│ | | | 1. Typing pattern [f: Foo0‹'a›,]
-//│ | | | | 1. Typing pattern f : Foo0['a]
-//│ | | | | | Typing type AppliedType(TypeName(Foo0),List('a))
-//│ | | | | | | vars=Map() newDefsInfo=Map()
-//│ | | | | | | 1. type AppliedType(TypeName(Foo0),List('a))
-//│ | | | | | | | 1. type 'a
-//│ | | | | | | | => 'a145'
-//│ | | | | | | => Foo0['a145']
-//│ | | | | | => Foo0['a145'] ——— 'a145'
-//│ | | | | 1. : Foo0['a145']
-//│ | | | 1. : (f: Foo0['a145'],)
-//│ | | | 1. Typing term if f is ‹(Bar0) then 123 : f.T; (_) then error›
-//│ | | | | [Desugarer.destructPattern] scrutinee = f; pattern = Bar0
-//│ | | | | [Desugarer.destructPattern] Result: «f is Bar0»
-//│ | | | | Desugared term: case f of { Bar0 => 123 : f.T; _ => error }
-//│ | | | | 1. Typing term case f of { Bar0 => 123 : f.T; _ => error }
-//│ | | | | | 1. Typing term f
-//│ | | | | | 1. : Foo0['a145']
-//│ | | | | | CONSTRAIN Foo0['a145'] <! Object
-//│ | | | | |   where 
-//│ | | | | | 1. C Foo0['a145'] <! Object    (0)
-//│ | | | | | | Passing T :: T29' <=< 'a145'
-//│ | | | | | | 1. C (#Foo0<Object> & {T: mut 'a145'..'a145'}) <! #Object<>    (2)
-//│ | | | | | | | Already a subtype by <:<
-//│ | | | | | >>>c Map(T -> NuParam(TypeName(T),mut T29_32#..T29_32#,true), x -> TypedNuFun(1,fun x: T,T29_32#))
-//│ | | | | | Match arm Bar0: #Bar0<Object,Foo0> & ⊤ intl ⊤
-//│ | | | | | var rfn: f :: & #Bar0<Object,Foo0> & ⊤
-//│ | | | | | 2. Typing term 123 : f.T
-//│ | | | | | | 2. Typing term 123
-//│ | | | | | | 2. : #123<Int,Num,Object>
-//│ | | | | | | Typing type Selection(TypeName(f),TypeName(T))
-//│ | | | | | | | vars=Map() newDefsInfo=Map()
-//│ | | | | | | | 2. type Selection(TypeName(f),TypeName(T))
-//│ | | | | | | | | 2. type TypeName(f)
-//│ | | | | | | | | | ty var: f : #Bar0<Object,Foo0>
-//│ | | | | | | | | => #Bar0<Object,Foo0>
-//│ | | | | | | | => T29_32#
-//│ | | | | | | => T29_32# ——— 
-//│ | | | | | | CONSTRAIN #123<Int,Num,Object> <! T29_32#
-//│ | | | | | |   where 
-//│ 		T29_32# := Int
-//│ | | | | | | 2. C #123<Int,Num,Object> <! T29_32#    (0)
-//│ | | | | | | | 2. C #123<Int,Num,Object> <! Int    (2)
-//│ | | | | | | | | Already a subtype by <:<
-//│ | | | | | 2. : T29_32#
-//│ | | | | | CONSTRAIN T29_32# <! α146'
-//│ | | | | |   where 
-//│ 		T29_32# := Int
-//│ | | | | | 2. C T29_32# <! α146'    (0)
-//│ | | | | | | 2. C Int <! α146'    (2)
-//│ | | | | | | | NEW α146' LB (0)
-//│ | | | | | 1. Typing term error
-//│ | | | | | 1. : ⊥
-//│ | | | | | CONSTRAIN Foo0['a145'] <! (#Bar0<Object,Foo0> | (α147' & ~(#Bar0<Object,Foo0>)))
-//│ | | | | |   where 
-//│ | | | | | 1. C Foo0['a145'] <! (#Bar0<Object,Foo0> | (α147' & ~(#Bar0<Object,Foo0>)))    (0)
-//│ | | | | | | Passing T :: T29' <=< 'a145'
-//│ | | | | | | 1. C (#Foo0<Object> & {T: mut 'a145'..'a145'}) <! (#Bar0<Object,Foo0> | (α147' & ~(#Bar0<Object,Foo0>)))    (2)
-//│ | | | | | | | 1. ARGH  DNF(1, #Foo0<Object>{T: mut 'a145'..'a145'})  <!  DNF(1, #Bar0<Object,Foo0>{} | α147'∧~(#Bar0<Object,Foo0>))
-//│ | | | | | | | | DNF DISCHARGE CONSTRAINTS
-//│ | | | | | | | | Consider #Foo0<Object>{T: mut 'a145'..'a145'} <: DNF(1, #Bar0<Object,Foo0>{} | α147'∧~(#Bar0<Object,Foo0>))
-//│ | | | | | | | | Possible: List(#Bar0<Object,Foo0>{}, α147'∧~(#Bar0<Object,Foo0>))
-//│ | | | | | | | | 1. A  #Foo0<Object>{T: mut 'a145'..'a145'}  %  List()  <!  List(#Bar0<Object,Foo0>, (α147' & ~(#Bar0<Object,Foo0>)))  %  ⊥
-//│ | | | | | | | | | 1. A  #Foo0<Object>{T: mut 'a145'..'a145'}  %  List()  <!  List((α147' & ~(#Bar0<Object,Foo0>)))  %  #Bar0<Object,Foo0>
-//│ | | | | | | | | | | Case.1
-//│ | | | | | | | | | | 1. A  #Foo0<Object>{T: mut 'a145'..'a145'}  %  List()  <!  List(α147')  %  #Bar0<Object,Foo0>
-//│ | | | | | | | | | | | 1. C ((#Foo0<Object> & {T: mut 'a145'..'a145'}) & ~(#Bar0<Object,Foo0>)) <! α147'    (2)
-//│ | | | | | | | | | | | | NEW α147' LB (1)
-//│ | | | | | | | | | | Case.2
-//│ | | | | | | | | | | 1. A  #Foo0<Object>{T: mut 'a145'..'a145'}  %  List()  <!  List(~(#Bar0<Object,Foo0>))  %  #Bar0<Object,Foo0>
-//│ | | | | | | | | | | | 1. A  #Foo0<Object>{T: mut 'a145'..'a145'}  %  List(#Bar0<Object,Foo0>)  <!  List()  %  #Bar0<Object,Foo0>
-//│ | | | | | | | | | | | | 1. A  #Bar0<Object,Foo0>{T: mut 'a145'..'a145'}  %  List()  <!  List()  %  #Bar0<Object,Foo0>
-//│ | | | | | | | | | | | | | class checking #Bar0<Object,Foo0> List(#Bar0<Object,Foo0>)
-//│ | | | | | | | | | | | | | OK  #Bar0<Object,Foo0>  <:  #Bar0<Object,Foo0>
-//│ | | | | 1. : α146'
-//│ | | | 1. : α146'
-//│ | | 1. : ((f: Foo0['a145'],) -> α146')
-//│ | | CONSTRAIN ((f: Foo0['a145'],) -> α146') <! test148'
-//│ | |   where 
-//│ 		α146' :> Int
-//│ | | 1. C ((f: Foo0['a145'],) -> α146') <! test148'    (0)
-//│ | | | NEW test148' LB (1)
-//│ | Completed TypedNuFun(0,fun test = (f: Foo0‹'a›,) => if f is ‹(Bar0) then 123 : f.T; (_) then error›,((f: Foo0['a145'],) -> α146')) where 
-//│ 		α146' :> Int
-//│ | Typing unit statements
-//│ | : None
-//│ ======== TYPED ========
-//│ fun test: ‹∀ 0. ((f: Foo0['a145'],) -> α146')› where 
-//│ |		α146' :> Int
-//│ fun test: forall 'a. (f: Foo0['a]) -> Int
+//│ fun test: forall 'a. (f: Foo0['a]) -> (Int & 'a)
 
+// ^ What's haoppening:
+// Bar & {} <: { T: 'l..'u }
+// ^ What SHOULD be haoppening:
+// Bar & Foo0['a] <: { T: 'l..'u }
+// Notice that field T in `Bar & Foo0['a]` should yield `'a | Int .. 'a & Int`
+// Alternative (not great; not clear how to do it generally/in a principled way):
+// Bar & {T: 'a .. 'a } <: { T: 'l..'u }
+
+
+fun test(x: 'a, g: Foo0[x], f: Foo0[x]) = if f is
+  Bar0 then 123 : g.T
+  _ then error
+//│ fun test: forall 'a. (x: 'a, g: Foo0['a], f: Foo0['a]) -> 'a
+//│   where
+//│     'a :> 123
 
 
 fun test(f: Foo) = if f is
@@ -195,17 +118,17 @@ fun test(f: Foo) = if f is
     Bar then 123 : f.T
     Baz then error
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.194: 	fun test(f: Foo) = if f is
+//│ ║  l.117: 	fun test(f: Foo) = if f is
 //│ ║         	                      ^^^^
-//│ ║  l.195: 	    Bar then 123 : f.T
+//│ ║  l.118: 	    Bar then 123 : f.T
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.196: 	    Baz then error
+//│ ║  l.119: 	    Baz then error
 //│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Foo[?]` does not match type `Bar | Baz`
-//│ ║  l.194: 	fun test(f: Foo) = if f is
+//│ ║  l.117: 	fun test(f: Foo) = if f is
 //│ ║         	            ^^^
 //│ ╟── but it flows into reference with expected type `Bar | Baz`
-//│ ║  l.194: 	fun test(f: Foo) = if f is
+//│ ║  l.117: 	fun test(f: Foo) = if f is
 //│ ╙──       	                      ^
 //│ fun test: (f: Foo[in anything out nothing]) -> Int
 
@@ -219,6 +142,29 @@ fun test(f: Foo['a]) = if f is
     Bar then 123 : f.T
     Baz then "hello" : f.T
     _ then error
-//│ fun test: forall 'a. (f: Foo['a]) -> (Int | Str)
+//│ fun test: forall 'a. (f: Foo['a]) -> ('a & (Int | Str))
 
+fun test(f: Foo, x) = x : f.T
+//│ fun test: (f: Foo[in anything out nothing], ??T) -> ??T0
+
+fun test[A](f: Foo[A]): A = if f is
+    Bar then 123 : f.T
+    Baz then "hello" : f.T
+//│ fun test: forall 'A. (f: Foo['A]) -> 'A
+
+:e // expected
+test(error, 1)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.156: 	test(error, 1)
+//│ ║         	^^^^^^^^^^^^^^
+//│ ╟── argument list of type `[nothing, 1]` does not match type `[f: Foo[?A]]`
+//│ ║  l.156: 	test(error, 1)
+//│ ║         	    ^^^^^^^^^^
+//│ ╟── Note: constraint arises from tuple literal:
+//│ ║  l.150: 	fun test[A](f: Foo[A]): A = if f is
+//│ ╙──       	           ^^^^^^^^^^^
+//│ error
+//│ res
+//│ Runtime error:
+//│   Error: an error was thrown
 

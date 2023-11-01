@@ -40,180 +40,10 @@ module Baz extends Foo[Bool](true)
 //│ module Bar extends Foo
 //│ module Baz extends Foo
 
-:d
 fun foo(t)(x: Foo[t.T]): t.T = if x is 
     Bar then x.a
     Baz then x.a
-//│ 0. Typing ‹fun foo = (t,) => (x: Foo‹t.T›,) => if x is ‹(Bar) then (x).a; (Baz) then (x).a› : t.T›
-//│ | 0. Created lazy type info for fun foo = (t,) => (x: Foo‹t.T›,) => if x is ‹(Bar) then (x).a; (Baz) then (x).a› : t.T
-//│ | Completing fun foo = (t,) => (x: Foo‹t.T›,) => if x is ‹(Bar) then (x).a; (Baz) then (x).a› : t.T
-//│ | | Type params 
-//│ | | Params 
-//│ | | 1. Typing term (t,) => (x: Foo‹t.T›,) => if x is ‹(Bar) then (x).a; (Baz) then (x).a› : t.T
-//│ | | | 1. Typing pattern [t,]
-//│ | | | | 1. Typing pattern t
-//│ | | | | 1. : t55'
-//│ | | | 1. : (t55',)
-//│ | | | 1. Typing term (x: Foo‹t.T›,) => if x is ‹(Bar) then (x).a; (Baz) then (x).a› : t.T
-//│ | | | | 1. Typing pattern [x: Foo‹t.T›,]
-//│ | | | | | 1. Typing pattern x : Foo[t.T]
-//│ | | | | | | Typing type AppliedType(TypeName(Foo),List(Selection(TypeName(t),TypeName(T))))
-//│ | | | | | | | vars=Map() newDefsInfo=Map()
-//│ | | | | | | | 1. type AppliedType(TypeName(Foo),List(Selection(TypeName(t),TypeName(T))))
-//│ | | | | | | | | 1. type Selection(TypeName(t),TypeName(T))
-//│ | | | | | | | | | 1. type TypeName(t)
-//│ | | | | | | | | | | ty var: t::1 : t55'
-//│ | | | | | | | | | => t55'
-//│ | | | | | | | | | Type selection : t55'
-//│ | | | | | | | | | CONSTRAIN t55' <! {T: mut T57'..T56'}
-//│ | | | | | | | | |   where 
-//│ 		T57' <: T56'
-//│ | | | | | | | | | 1. C t55' <! {T: mut T57'..T56'}    (0)
-//│ | | | | | | | | | | NEW t55' UB (1)
-//│ | | | | | | | | => T57'..T56'
-//│ | | | | | | | => Foo[T57'..T56']
-//│ | | | | | | => Foo[T57'..T56'] ——— 
-//│ | | | | | 1. : Foo[T57'..T56']
-//│ | | | | 1. : (x: Foo[T57'..T56'],)
-//│ | | | | 1. Typing term if x is ‹(Bar) then (x).a; (Baz) then (x).a› : t.T
-//│ | | | | | 1. Typing term if x is ‹(Bar) then (x).a; (Baz) then (x).a›
-//│ | | | | | | [Desugarer.destructPattern] scrutinee = x; pattern = Bar
-//│ | | | | | | [Desugarer.destructPattern] Result: «x is Bar»
-//│ | | | | | | [Desugarer.destructPattern] scrutinee = x; pattern = Baz
-//│ | | | | | | [Desugarer.destructPattern] Result: «x is Baz»
-//│ | | | | | | Desugared term: case x of { Bar => (x).a; Baz => (x).a }
-//│ | | | | | | 1. Typing term case x of { Bar => (x).a; Baz => (x).a }
-//│ | | | | | | | 1. Typing term x
-//│ | | | | | | | 1. : Foo[T57'..T56']
-//│ | | | | | | | CONSTRAIN Foo[T57'..T56'] <! Object
-//│ | | | | | | |   where 
-//│ 		T57' <: T56'
-//│ | | | | | | | 1. C Foo[T57'..T56'] <! Object    (0)
-//│ | | | | | | | | Assigning A :: A39' := T57'..T56' where 
-//│ 		T57' <: T56'
-//│ | | | | | | | | Set A39_58' ~> A39'
-//│ | | | | | | | | 1. C ((#Foo<Object> & ⊤..(Bar | Baz)) & {A: mut T57'..T56'..T57'..T56'}) <! #Object<>    (2)
-//│ | | | | | | | | | Already a subtype by <:<
-//│ | | | | | | | >>>c Map(a -> NuParam(a,#1<Int,Num,Object>,true), A -> NuParam(TypeName(A),mut A39_43#..A39_43#,true))
-//│ | | | | | | | Match arm Bar: #Bar<Object,Foo> & ⊤ intl ⊤
-//│ | | | | | | | var rfn: x :: & #Bar<Object,Foo> & ⊤
-//│ | | | | | | | 2. Typing term (x).a
-//│ | | | | | | | | 2. Typing term x
-//│ | | | | | | | | 2. : #Bar<Object,Foo>
-//│ | | | | | | | | CONSTRAIN #Bar<Object,Foo> <! {a: a60''}
-//│ | | | | | | | |   where 
-//│ | | | | | | | | 2. C #Bar<Object,Foo> <! {a: a60''}    (0)
-//│ | | | | | | | | | Looking up field a in Some(Bar) & TreeSet() & {...}
-//│ | | | | | | | | | | Lookup Bar.a : Some(#1<Int,Num,Object>) where 
-//│ | | | | | | | | | | Fresh[0] Bar.a : Some(#1<Int,Num,Object>) where Some()
-//│ | | | | | | | | | |   & None  (from refinement)
-//│ | | | | | | | | | 2. C #1<Int,Num,Object> <! a60''    (1)
-//│ | | | | | | | | | | NEW a60'' LB (0)
-//│ | | | | | | | 2. : a60''
-//│ | | | | | | | CONSTRAIN a60'' <! α59'
-//│ | | | | | | |   where 
-//│ 		a60'' :> #1<Int,Num,Object>
-//│ | | | | | | | 2. C a60'' <! α59'    (0)
-//│ | | | | | | | | NEW a60'' UB (1)
-//│ | | | | | | | | 2. C #1<Int,Num,Object> <! α59'    (2)
-//│ | | | | | | | | | NEW α59' LB (0)
-//│ | | | | | | | >>>c Map(a -> NuParam(a,#true<Bool,Object>,true), A -> NuParam(TypeName(A),mut A39_45#..A39_45#,true))
-//│ | | | | | | | Match arm Baz: #Baz<Object,Foo> & ⊤ intl ⊤
-//│ | | | | | | | var rfn: x :: & #Baz<Object,Foo> & ⊤
-//│ | | | | | | | 2. Typing term (x).a
-//│ | | | | | | | | 2. Typing term x
-//│ | | | | | | | | 2. : #Baz<Object,Foo>
-//│ | | | | | | | | CONSTRAIN #Baz<Object,Foo> <! {a: a62''}
-//│ | | | | | | | |   where 
-//│ | | | | | | | | 2. C #Baz<Object,Foo> <! {a: a62''}    (0)
-//│ | | | | | | | | | Looking up field a in Some(Baz) & TreeSet() & {...}
-//│ | | | | | | | | | | Lookup Baz.a : Some(#true<Bool,Object>) where 
-//│ | | | | | | | | | | Fresh[0] Baz.a : Some(#true<Bool,Object>) where Some()
-//│ | | | | | | | | | |   & None  (from refinement)
-//│ | | | | | | | | | 2. C #true<Bool,Object> <! a62''    (1)
-//│ | | | | | | | | | | 2. C #true<Bool,Object> <! a62''    (1)
-//│ | | | | | | | | | | | NEW a62'' LB (0)
-//│ | | | | | | | 2. : a62''
-//│ | | | | | | | CONSTRAIN a62'' <! α61'
-//│ | | | | | | |   where 
-//│ 		a62'' :> #true<Bool,Object>
-//│ | | | | | | | 2. C a62'' <! α61'    (0)
-//│ | | | | | | | | NEW a62'' UB (1)
-//│ | | | | | | | | 2. C #true<Bool,Object> <! α61'    (2)
-//│ | | | | | | | | | NEW α61' LB (0)
-//│ | | | | | | | CONSTRAIN Foo[T57'..T56'] <! (#Bar<Object,Foo> | (#Baz<Object,Foo> & ~(#Bar<Object,Foo>)))
-//│ | | | | | | |   where 
-//│ 		T57' <: T56'
-//│ | | | | | | | 1. C Foo[T57'..T56'] <! (#Bar<Object,Foo> | (#Baz<Object,Foo> & ~(#Bar<Object,Foo>)))    (0)
-//│ | | | | | | | | Assigning A :: A39' := T57'..T56' where 
-//│ 		T57' <: T56'
-//│ | | | | | | | | Set A39_63' ~> A39'
-//│ | | | | | | | | 1. C ((#Foo<Object> & ⊤..(Bar | Baz)) & {A: mut T57'..T56'..T57'..T56'}) <! (#Bar<Object,Foo> | (#Baz<Object,Foo> & ~(#Bar<Object,Foo>)))    (2)
-//│ | | | | | | | | | 1. ARGH  DNF(1, #Bar<Object,Foo>{A: mut T57'..T56'} | #Baz<Object,Foo>{A: mut T57'..T56'})  <!  DNF(0, #Bar<Object,Foo>{} | #Baz<Object,Foo>{})
-//│ | | | | | | | | | | DNF DISCHARGE CONSTRAINTS
-//│ | | | | | | | | | | Consider #Bar<Object,Foo>{A: mut T57'..T56'} <: DNF(0, #Bar<Object,Foo>{} | #Baz<Object,Foo>{})
-//│ | | | | | | | | | | OK  #Bar<Object,Foo>{A: mut T57'..T56'} <: #Bar<Object,Foo>{}
-//│ | | | | | | | | | | Consider #Baz<Object,Foo>{A: mut T57'..T56'} <: DNF(0, #Bar<Object,Foo>{} | #Baz<Object,Foo>{})
-//│ | | | | | | | | | | OK  #Baz<Object,Foo>{A: mut T57'..T56'} <: #Baz<Object,Foo>{}
-//│ | | | | | | 1. : (α59' | α61')
-//│ | | | | | 1. : (α59' | α61')
-//│ | | | | | Typing type Selection(TypeName(t),TypeName(T))
-//│ | | | | | | vars=Map() newDefsInfo=Map()
-//│ | | | | | | 1. type Selection(TypeName(t),TypeName(T))
-//│ | | | | | | | 1. type TypeName(t)
-//│ | | | | | | | | ty var: t::1 : t55'
-//│ | | | | | | | => t55'
-//│ | | | | | | | Type selection : t55'
-//│ | | | | | | | CONSTRAIN t55' <! {T: mut T65'..T64'}
-//│ | | | | | | |   where 
-//│ 		t55' <: {T: mut T57'..T56'}
-//│ 		T57' <: T56'
-//│ 		T65' <: T64'
-//│ | | | | | | | 1. C t55' <! {T: mut T65'..T64'}    (0)
-//│ | | | | | | | | NEW t55' UB (1)
-//│ | | | | | | => T65'..T64'
-//│ | | | | | => T65'..T64' ——— 
-//│ | | | | | CONSTRAIN (α59' | α61') <! T65'..T64'
-//│ | | | | |   where 
-//│ 		α59' :> #1<Int,Num,Object>
-//│ 		α61' :> #true<Bool,Object>
-//│ 		T65' <: T64'
-//│ | | | | | 1. C (α59' | α61') <! T65'..T64'    (0)
-//│ | | | | | | 1. C (α59' | α61') <! T65'    (2)
-//│ | | | | | | | NEW T65' LB (1)
-//│ | | | | | | | 1. C (α59' | α61') <! T64'    (4)
-//│ | | | | | | | | NEW T64' LB (1)
-//│ | | | | 1. : T65'..T64'
-//│ | | | 1. : ((x: Foo[T57'..T56'],) -> T65'..T64')
-//│ | | 1. : (t55' -> ((x: Foo[T57'..T56'],) -> T65'..T64'))
-//│ | | CONSTRAIN (t55' -> ((x: Foo[T57'..T56'],) -> T65'..T64')) <! foo66'
-//│ | |   where 
-//│ 		t55' <: {T: mut T65'..T64'} & {T: mut T57'..T56'}
-//│ 		T57' <: T56'
-//│ 		α59' :> #1<Int,Num,Object>
-//│ 		α61' :> #true<Bool,Object>
-//│ 		T64' :> (α59' | α61')
-//│ 		T65' :> (α59' | α61') <: T64'
-//│ | | 1. C (t55' -> ((x: Foo[T57'..T56'],) -> T65'..T64')) <! foo66'    (0)
-//│ | | | NEW foo66' LB (1)
-//│ | Completed TypedNuFun(0,fun foo = (t::1,) => (x: Foo‹t.T›,) => if x is ‹(Bar) then (x).a; (Baz) then (x).a› : t.T,(t55' -> ((x: Foo[T57'..T56'],) -> T65'..T64'))) where 
-//│ 		t55' <: {T: mut T65'..T64'} & {T: mut T57'..T56'}
-//│ 		T57' <: T56'
-//│ 		α59' :> #1<Int,Num,Object>
-//│ 		α61' :> #true<Bool,Object>
-//│ 		T64' :> (α59' | α61')
-//│ 		T65' :> (α59' | α61') <: T64'
-//│ | Typing unit statements
-//│ | : None
-//│ ======== TYPED ========
-//│ fun foo: ‹∀ 0. (t55' -> ((x: Foo[T57'..T56'],) -> T65'..T64'))› where 
-//│ |		t55' <: {T: mut T65'..T64'} & {T: mut T57'..T56'}
-//│ |		T57' <: T56'
-//│ |		α59' :> #1<Int,Num,Object>
-//│ |		α61' :> #true<Bool,Object>
-//│ |		T64' :> (α59' | α61')
-//│ |		T65' :> (α59' | α61') <: T64'
-//│ fun foo: forall 'T 'T0 'T1. {T :> 1 | true | 'T0 <: 'T1 & 'T} -> (x: Foo[in 'T0 & 'T1 out 'T1]) -> (1 | true | 'T)
+//│ fun foo: forall 'T 'T0. {T :> 1 | true | 'T0 <: 'T} -> (x: Foo[in 'T0 out 'T]) -> 'T
 
 foo(new Ty)(Bar)
 //│ 1 | true
@@ -232,193 +62,42 @@ fun f(x: S['a]) = if x is
     B then 2
 //│ fun f: forall 'a. (x: S['a]) -> (1 | 2)
 
-:d
 fun f(x: S): x.T = if x is A then 1 else 0
-//│ 0. Typing ‹fun f = (x: S,) => if (is(x, A,)) then 1 else 0 : x.T›
-//│ | 0. Created lazy type info for fun f = (x: S,) => if (is(x, A,)) then 1 else 0 : x.T
-//│ | Completing fun f = (x: S,) => if (is(x, A,)) then 1 else 0 : x.T
-//│ | | Type params 
-//│ | | Params 
-//│ | | 1. Typing term (x: S,) => if (is(x, A,)) then 1 else 0 : x.T
-//│ | | | 1. Typing pattern [x: S,]
-//│ | | | | 1. Typing pattern x : S
-//│ | | | | | Typing type TypeName(S)
-//│ | | | | | | vars=Map() newDefsInfo=Map()
-//│ | | | | | | 1. type TypeName(S)
-//│ | | | | | | => #S<Object>
-//│ | | | | | => #S<Object> ——— 
-//│ | | | | 1. : #S<Object>
-//│ | | | 1. : (x: #S<Object>,)
-//│ | | | 1. Typing term if (is(x, A,)) then 1 else 0 : x.T
-//│ | | | | 1. Typing term if (is(x, A,)) then 1 else 0
-//│ | | | | | [Desugarer.destructPattern] scrutinee = x; pattern = A
-//│ | | | | | [Desugarer.destructPattern] Result: «x is A»
-//│ | | | | | Desugared term: case x of { A => 1; _ => 0 }
-//│ | | | | | 1. Typing term case x of { A => 1; _ => 0 }
-//│ | | | | | | 1. Typing term x
-//│ | | | | | | 1. : #S<Object>
-//│ | | | | | | CONSTRAIN #S<Object> <! Object
-//│ | | | | | |   where 
-//│ | | | | | | 1. C #S<Object> <! Object    (0)
-//│ | | | | | | | Already a subtype by <:<
-//│ | | | | | | >>>c Map(T -> NuParam(TypeName(T),mut T97_101#..T97_101#,true))
-//│ | | | | | | Match arm A: #A<Object,S> & ⊤ intl ⊤
-//│ | | | | | | var rfn: x :: & #A<Object,S> & ⊤
-//│ | | | | | | 2. Typing term 1
-//│ | | | | | | 2. : #1<Int,Num,Object>
-//│ | | | | | | CONSTRAIN #1<Int,Num,Object> <! α124'
-//│ | | | | | |   where 
-//│ | | | | | | 2. C #1<Int,Num,Object> <! α124'    (0)
-//│ | | | | | | | NEW α124' LB (0)
-//│ | | | | | | 1. Typing term 0
-//│ | | | | | | 1. : #0<Int,Num,Object>
-//│ | | | | | | CONSTRAIN #S<Object> <! (#A<Object,S> | (α125' & ~(#A<Object,S>)))
-//│ | | | | | |   where 
-//│ | | | | | | 1. C #S<Object> <! (#A<Object,S> | (α125' & ~(#A<Object,S>)))    (0)
-//│ | | | | | | | 1. ARGH  DNF(0, #S<Object>{})  <!  DNF(1, #A<Object,S>{} | α125'∧~(#A<Object,S>))
-//│ | | | | | | | | DNF DISCHARGE CONSTRAINTS
-//│ | | | | | | | | Consider #S<Object>{} <: DNF(1, #A<Object,S>{} | α125'∧~(#A<Object,S>))
-//│ | | | | | | | | Possible: List(#A<Object,S>{}, α125'∧~(#A<Object,S>))
-//│ | | | | | | | | 1. A  #S<Object>{}  %  List()  <!  List(#A<Object,S>, (α125' & ~(#A<Object,S>)))  %  ⊥
-//│ | | | | | | | | | 1. A  #S<Object>{}  %  List()  <!  List((α125' & ~(#A<Object,S>)))  %  #A<Object,S>
-//│ | | | | | | | | | | Case.1
-//│ | | | | | | | | | | 1. A  #S<Object>{}  %  List()  <!  List(α125')  %  #A<Object,S>
-//│ | | | | | | | | | | | 1. C (#S<Object> & ~(#A<Object,S>)) <! α125'    (1)
-//│ | | | | | | | | | | | | NEW α125' LB (0)
-//│ | | | | | | | | | | Case.2
-//│ | | | | | | | | | | 1. A  #S<Object>{}  %  List()  <!  List(~(#A<Object,S>))  %  #A<Object,S>
-//│ | | | | | | | | | | | 1. A  #S<Object>{}  %  List(#A<Object,S>)  <!  List()  %  #A<Object,S>
-//│ | | | | | | | | | | | | 1. A  #A<Object,S>{}  %  List()  <!  List()  %  #A<Object,S>
-//│ | | | | | | | | | | | | | class checking #A<Object,S> List(#A<Object,S>)
-//│ | | | | | | | | | | | | | OK  #A<Object,S>  <:  #A<Object,S>
-//│ | | | | | 1. : (α124' | #0<Int,Num,Object>)
-//│ | | | | 1. : (α124' | #0<Int,Num,Object>)
-//│ | | | | Typing type Selection(TypeName(x),TypeName(T))
-//│ | | | | | vars=Map() newDefsInfo=Map()
-//│ | | | | | 1. type Selection(TypeName(x),TypeName(T))
-//│ | | | | | | 1. type TypeName(x)
-//│ | | | | | | | ty var: x : #S<Object>
-//│ | | | | | | => #S<Object>
-//│ | | | | | => ‘T97'
-//│ | | | | => ‘T97' ——— 
-//│ | | | | CONSTRAIN (α124' | #0<Int,Num,Object>) <! ‘T97'
-//│ | | | |   where 
-//│ 		α124' :> #1<Int,Num,Object>
-//│ | | | | 1. C (α124' | #0<Int,Num,Object>) <! ‘T97'    (0)
-//│ | | | | | 1. C α124' <! ‘T97'    (2)
-//│ | | | | | | NEW α124' UB (1)
-//│ | | | | | | 1. C #1<Int,Num,Object> <! ‘T97'    (4)
-//│ | | | | | | | CONSTRAINT FAILURE: #1<Int,Num,Object> <: ‘T97'
-//│ | | | | | | | allVarPols: -T97'
-//│ | | | | | | | normLike[-] ‘T97'
-//│ | | | | | | | | norm[-] ‘T97'
-//│ | | | | | | | | | DNF: DNF(1, {}∧‘T97')
-//│ | | | | | | | | ~> ‘T97'
-//│ | | | | | | | allVarPols: 
-//│ | | | | | | | normLike[+] #1<Int,Num,Object>
-//│ | | | | | | | | norm[+] #1<Int,Num,Object>
-//│ | | | | | | | | | DNF: DNF(0, #1<Int,Num,Object>{})
-//│ | | | | | | | | ~> #1<Int,Num,Object>
-//│ | | | | | | | CONSTRAIN #error<> <! ‘T97'
-//│ | | | | | | |   where 
-//│ | | | | | | | 1. C #error<> <! ‘T97'    (0)
-//│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.236: 	fun f(x: S): x.T = if x is A then 1 else 0
-//│ ║         	                      ^^^^^^^^^^^^^^^^^^^^
-//│ ╟── integer literal of type `1` does not match type `T`
-//│ ║  l.236: 	fun f(x: S): x.T = if x is A then 1 else 0
-//│ ║         	                                  ^
-//│ ╟── Note: constraint arises from type parameter:
-//│ ║  l.223: 	abstract class S[type T]: A | B
-//│ ╙──       	                      ^
-//│ | | | | | 1. C #0<Int,Num,Object> <! ‘T97'    (2)
-//│ | | | | | | CONSTRAINT FAILURE: #0<Int,Num,Object> <: ‘T97'
-//│ | | | | | | allVarPols: -T97'
-//│ | | | | | | normLike[-] ‘T97'
-//│ | | | | | | | norm[-] ‘T97'
-//│ | | | | | | | | DNF: DNF(1, {}∧‘T97')
-//│ | | | | | | | ~> ‘T97'
-//│ | | | | | | allVarPols: 
-//│ | | | | | | normLike[+] #0<Int,Num,Object>
-//│ | | | | | | | norm[+] #0<Int,Num,Object>
-//│ | | | | | | | | DNF: DNF(0, #0<Int,Num,Object>{})
-//│ | | | | | | | ~> #0<Int,Num,Object>
-//│ | | | 1. : ‘T97'
-//│ | | 1. : ((x: #S<Object>,) -> ‘T97')
-//│ | | CONSTRAIN ((x: #S<Object>,) -> ‘T97') <! f126'
-//│ | |   where 
-//│ | | 1. C ((x: #S<Object>,) -> ‘T97') <! f126'    (0)
-//│ | | | NEW f126' LB (1)
-//│ | Completed TypedNuFun(0,fun f = (x: S,) => if (is(x, A,)) then 1 else 0 : x.T,((x: #S<Object>,) -> ‘T97')) where 
-//│ | Typing unit statements
-//│ | : None
-//│ ======== TYPED ========
-//│ fun f: ‹∀ 0. ((x: #S<Object>,) -> ‘T97')› where 
-//│ fun f: (x: S[in anything out nothing]) -> nothing
+//│ ╔══[ERROR] Type error in type ascription
+//│ ║  l.65: 	fun f(x: S): x.T = if x is A then 1 else 0
+//│ ║        	                      ^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type variable `T` leaks out of its scope
+//│ ║  l.65: 	fun f(x: S): x.T = if x is A then 1 else 0
+//│ ╙──      	                                  ^
+//│ fun f: (x: S[in anything out nothing]) -> ??T
 
 fun f(x: S): x.T = if x is 
-    A then
-        let ret = 1 : x.T
-        ret
-    B then
-        let ret = true : x.T
-        ret
-//│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.359: 	fun f(x: S): x.T = if x is 
-//│ ║         	                      ^^^^^
-//│ ║  l.360: 	    A then
-//│ ║         	^^^^^^^^^^
-//│ ║  l.361: 	        let ret = 1 : x.T
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.362: 	        ret
-//│ ║         	^^^^^^^^^^^
-//│ ║  l.363: 	    B then
-//│ ║         	^^^^^^^^^^
-//│ ║  l.364: 	        let ret = true : x.T
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.365: 	        ret
-//│ ║         	^^^^^^^^^^^
-//│ ╟── type `S[?]` does not match type `A | B`
-//│ ║  l.359: 	fun f(x: S): x.T = if x is 
-//│ ║         	         ^
-//│ ╟── but it flows into reference with expected type `A | B`
-//│ ║  l.359: 	fun f(x: S): x.T = if x is 
-//│ ╙──       	                      ^
-//│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.359: 	fun f(x: S): x.T = if x is 
-//│ ║         	                      ^^^^^
-//│ ║  l.360: 	    A then
-//│ ║         	^^^^^^^^^^
-//│ ║  l.361: 	        let ret = 1 : x.T
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.362: 	        ret
-//│ ║         	^^^^^^^^^^^
-//│ ║  l.363: 	    B then
-//│ ║         	^^^^^^^^^^
-//│ ║  l.364: 	        let ret = true : x.T
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.365: 	        ret
-//│ ║         	^^^^^^^^^^^
-//│ ╟── type `Int` does not match type `T`
-//│ ║  l.224: 	module A extends S[Int]
-//│ ║         	                   ^^^
-//│ ╟── but it flows into reference with expected type `T`
-//│ ║  l.362: 	        ret
-//│ ║         	        ^^^
-//│ ╟── Note: constraint arises from type parameter:
-//│ ║  l.223: 	abstract class S[type T]: A | B
-//│ ╙──       	                      ^
-//│ fun f: (x: S[in anything out nothing]) -> nothing
+    A then 1 : x.T
+    B then true : x.T
+    _ then error
+//│ ╔══[ERROR] Type error in type ascription
+//│ ║  l.74: 	fun f(x: S): x.T = if x is 
+//│ ║        	                      ^^^^^
+//│ ║  l.75: 	    A then 1 : x.T
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ║  l.76: 	    B then true : x.T
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.77: 	    _ then error
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ╟── type variable `T` leaks out of its scope
+//│ ║  l.54: 	module A extends S[Int]
+//│ ╙──      	                   ^^^
+//│ fun f: (x: S[in anything out nothing]) -> ??T
 
 // todo unbounded wildcard type ?
 let y: ? = 1
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.414: 	let y: ? = 1
-//│ ║         	           ^
+//│ ║  l.93: 	let y: ? = 1
+//│ ║        	           ^
 //│ ╟── integer literal of type `1` does not match type `?`
 //│ ╟── Note: constraint arises from wildcard:
-//│ ║  l.414: 	let y: ? = 1
-//│ ╙──       	       ^
+//│ ║  l.93: 	let y: ? = 1
+//│ ╙──      	       ^
 //│ let y: nothing
 //│ y
 //│   = 1
@@ -426,7 +105,7 @@ let y: ? = 1
 :e
 let x = ?
 //│ ╔══[ERROR] Cannot use ? as expression
-//│ ║  l.427: 	let x = ?
+//│ ║  l.106: 	let x = ?
 //│ ╙──       	        ^
 //│ let x: error
 //│ Code generation encountered an error:
@@ -435,7 +114,7 @@ let x = ?
 :e
 if x is ? then 1
 //│ ╔══[ERROR] illegal pattern
-//│ ║  l.436: 	if x is ? then 1
+//│ ║  l.115: 	if x is ? then 1
 //│ ╙──       	        ^
 //│ error
 //│ Code generation encountered an error:
@@ -465,18 +144,12 @@ class R[A] extends S[A, A]
 
 // FIXME
 fun f[A, B](x: A, ev: S[A, B]): B =
-    if ev is R then x
-//│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.468: 	    if ev is R then x
+    if ev is R then x : ev.T
+//│ ╔══[ERROR] Type error in `case` expression
+//│ ║  l.147: 	    if ev is R then x : ev.T
 //│ ║         	       ^^^^^^^^^^^^^^
-//│ ╟── reference of type `A` does not match type `B`
-//│ ║  l.468: 	    if ev is R then x
-//│ ║         	                    ^
-//│ ╟── Note: constraint arises from method type parameter:
-//│ ║  l.467: 	fun f[A, B](x: A, ev: S[A, B]): B =
-//│ ║         	         ^
-//│ ╟── Note: method type parameter A is defined at:
-//│ ║  l.467: 	fun f[A, B](x: A, ev: S[A, B]): B =
-//│ ╙──       	      ^
+//│ ╟── type variable `A` leaks out of its scope
+//│ ║  l.137: 	class R[A] extends S[A, A]
+//│ ╙──       	        ^
 //│ fun f: forall 'A 'B. (x: 'A, ev: S['A, 'B]) -> 'B
 

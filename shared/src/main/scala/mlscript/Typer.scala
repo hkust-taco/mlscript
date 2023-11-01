@@ -569,36 +569,17 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
           case L(e) => e()
         }
       case Selection(base, nme) =>
-        implicit val gl: GenLambdas = false
         // val base_ty = typeTerm(base)
-        val base_ty = rec(base)
-        def go(b_ty: ST, rfnt: Var => Opt[FieldType]): ST = b_ty.unwrapAll match {
-          case ct: TypeRef => die // TODO actually
-          case ClassTag(Var(clsNme), _) =>
-            // TODO we should still succeed even if the member is not completed...
-            lookupMember(clsNme, rfnt, nme.toVar) match {
-              case R(cls: TypedNuCls) =>
-                if (cls.tparams.nonEmpty) ??? // TODO
-                clsNameToNomTag(cls.td)(TypeProvenance(ty.toLoc, "type selection", isType = true), ctx)
-              case R(als: TypedNuAls) =>
-                if (als.tparams.nonEmpty) ??? // TODO
-                als.body
-              case R(prm: NuParam) => prm.ty.ub
-              case R(m) => 
-                err(msg"Illegal selection of ${m.kind.str} member in type position", nme.toLoc)
-              case L(d) => err(d)
-            }
-          case t =>
-            println(s"Type selection : $t")
-            implicit val prov: TypeProvenance = tyTp(nme.toLoc, "type selection")
-            val ub = freshVar(prov, N, S(nme.name))
-            val lb = freshVar(prov, N, S(nme.name))
-            lb.upperBounds ::= ub
-            val res = RecordType.mk((nme.toVar, FieldType(S(lb), ub)(prov)) :: Nil)(prov)
-            constrain(t, res)
-            TypeBounds(lb, ub)(prov)
-        }
-        go(base_ty, _ => N)
+        val t = rec(base).unwrapAll
+        println(s"Type selection : $t")
+        implicit val prov: TypeProvenance = tyTp(nme.toLoc, "type selection")
+        val ub = freshVar(prov, N, S(nme.name))
+        val lb = freshVar(prov, N, S(nme.name))
+        // ? do we need this
+        // lb.upperBounds ::= ub
+        val res = RecordType.mk((nme.toVar, FieldType(S(lb), ub)(prov)) :: Nil)(prov)
+        constrain(t, res)
+        TypeBounds(lb, ub)(prov)
       case Recursive(uv, body) =>
         val tv = freshVar(tyTp(ty.toLoc, "local type binding"), N, uv.name)
         val bod = rec(body)(ctx, recVars + (uv -> tv))
@@ -1537,8 +1518,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
           if (newDefs) {
             val res = freshVar(provTODO, N, N)
             newCtx.copy(lvl = newCtx.lvl + 1) |> { implicit ctx =>
-              println(s"var rfn: ${v.name} :: & ${tagTy} & ${patTyIntl}")
-              newCtx += v.name -> VarSymbol(tagTy & patTyIntl, v)
+              val scrt = ctx.get(v.name) match {
+                case Some(VarSymbol(ty, _)) => ty // ! seems to introduce breaking changes
+                case _ => TopType
+              }
+              println(s"var rfn: ${v.name} :: ${scrt} & ${tagTy} & ${patTyIntl}")
+              newCtx += v.name -> VarSymbol(scrt & tagTy & patTyIntl, v)
               val bod_ty = typeTerm(bod)(ctx, raise, vars, genLambdas)
               implicit val tp: TP = provTODO
               constrain(bod_ty, res)
