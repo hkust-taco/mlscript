@@ -581,6 +581,164 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
     raise(WarningReport(msg"[${cur.headOption.map(_._1).mkString}] ${""+msg}" -> loco :: Nil,
       newDefs = true))
   
+  private def letBindings(genQuote: Bool, l0: Loc)(implicit et: ExpectThen, fe: FoundErr, l: Line, qenv: Set[Str], quoted: IsQuoted): IfBody \/ Term = {
+    val bs = bindings(Nil)
+    val newQenv = if (genQuote) bs.map(_._1.name) else Nil
+    val body = yeetSpaces match {
+      case (KEYWORD("in" | ";;"), _) :: _ =>
+        consume
+        exprOrIf(0)(et, fe, implicitly, qenv ++ newQenv, quoted)
+      case (NEWLINE, _) :: _ =>
+        consume
+        exprOrIf(0)(et, fe, implicitly, qenv ++ newQenv, quoted)
+      case _ =>
+        R(UnitLit(true).withLoc(curLoc.map(_.left)))
+    }
+    bs.foldRight(body) {
+      case ((v, r), R(acc)) if genQuote => (r, acc) match {
+        case (Quoted(r), Quoted(acc)) => R(Quoted(Let(false, v, r, acc)))
+        case (Quoted(r), _) => R(Quoted(Let(false, v, r, Unquoted(acc))))
+        case (_, Quoted(acc)) => R(Quoted(Let(false, v, Unquoted(r), acc)))
+        case _ => R(Quoted(Let(false, v, Unquoted(r), Unquoted(acc))))
+      }
+      case ((v, r), R(acc)) => R(Let(false, v, r, acc))
+      case ((v, r), L(acc)) if genQuote =>
+        err((
+          msg"quote syntax is not supported yet." -> S(l0) :: Nil))
+        R(Var("<error>"))
+      case ((v, r), L(acc)) => L(IfLet(false, v, r, acc))
+    }
+  }
+
+  private def ifStmt(genQuote: Bool, l0: Loc)(implicit et: ExpectThen, fe: FoundErr, l: Line, qenv: Set[Str], quoted: IsQuoted): IfBody \/ Term =
+    exprOrIf(0)(et = true, fe = fe, l = implicitly, qenv = qenv, quoted = quoted) match {
+      case L(body) =>
+        val els = yeetSpaces match {
+          case (KEYWORD("else"), _) :: _ =>
+            consume
+            S(expr(0))
+          case (NEWLINE, _) :: (KEYWORD("else"), _) :: _ =>
+            consume
+            consume
+            S(expr(0))
+          case (br @ BRACKETS(Indent, (KEYWORD("else"), _) :: toks), _) :: _ =>
+            consume
+            val nested = rec(toks, S(br.innerLoc), br.describe)
+            S(nested.concludeWith(_.expr(0)))
+          case _ => N
+        }
+        if (!genQuote) R(If(body, els))
+        else body match {
+          case IfThen(cond, body) =>
+            val qcond = cond match {
+              case Quoted(body) => body
+              case _ => Unquoted(cond)
+            }
+            val qbody = body match {
+              case Quoted(body) => body
+              case _ => Unquoted(body)
+            }
+            val qels = els.map {
+              case Quoted(body) => body
+              case t => Unquoted(t)
+            }
+            R(Quoted(If(IfThen(qcond, qbody), qels)))
+          case _ =>
+            err((
+              msg"quote syntax is not supported yet." -> S(l0) :: Nil))
+            R(Var("<error>"))
+        }
+      case R(e) if !genQuote =>
+        yeetSpaces match {
+          case (br @ BRACKETS(Indent, (KEYWORD("then"), _) :: toks), _) :: _ =>
+            consume
+            val nested = rec(toks, S(br.innerLoc), br.describe)
+            val thn = nested.expr(0)
+            val els = nested.yeetSpaces match {
+              case (KEYWORD("else"), _) :: _ =>
+                nested.consume
+                S(nested.concludeWith(_.expr(0)))
+              case (NEWLINE, _) :: (KEYWORD("else"), _) :: _ =>
+                nested.consume
+                nested.consume
+                // S(thn, S(nested.concludeWith(_.expr(0))))
+                S(nested.concludeWith(_.expr(0)))
+              case _ =>
+                nested.concludeWith(_.nil)
+                // S(thn, N)
+                N
+            }
+            R(If(IfThen(e, thn), els))
+          case _cur =>
+            val (found, loc) = _cur match {
+              case (tk, l1) :: _ => (msg"${e.describe} followed by ${tk.describe}",
+                S(e.toLoc.foldRight(l1)(_ ++ _)))
+              case Nil => (msg"${e.describe}", e.toLoc)
+            }
+            err((msg"Expected 'then'/'else' clause after 'if'; found $found instead" -> loc ::
+              msg"Note: 'if' expression starts here:" -> S(l0) :: Nil))
+            R(If(IfThen(e, errExpr), N))
+        }
+      case R(_) =>
+        err((
+          msg"quote syntax is not supported yet." -> S(l0) :: Nil))
+        R(Var("<error>"))
+    }
+
+  private def bracket(genQuote: Bool, br: BRACKETS, bk: BracketKind, toks: Ls[Stroken -> Loc], loc: Loc)(
+    implicit et: ExpectThen, fe: FoundErr, l: Line, qenv: Set[Str], quoted: IsQuoted
+  ) = {
+    val res = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented())
+    val bra = (bk, res) match {
+      case (Curly, _) if !genQuote =>
+        Bra(true, Rcd(res.map {
+          case S(n) -> fld => n -> fld
+          case N -> (fld @ Fld(_, v: Var)) => v -> fld
+          case N -> fld =>
+            err((
+              msg"Record field should have a name" -> fld.value.toLoc :: Nil))
+            Var("<error>") -> fld
+        }))
+      case (Round, (N, Fld(FldFlags(false, false, _), elt)) :: Nil) =>
+        if (genQuote) Quoted(Bra(false, elt)) else Bra(false, elt)
+      case (Round, fs) if !genQuote =>
+        yeetSpaces match {
+          case (KEYWORD("=>"), l1) :: _ =>
+            consume
+            val e = expr(0)
+            Lam(Tup(res), e)
+          case (QUOTE, l0) :: (KEYWORD("=>"), l1) :: _ =>
+            exprCont(Tup(res), 0, true) match {
+              case L(_) =>
+                err((
+                  msg"quote syntax is not supported yet." -> S(l0) :: Nil))
+                Var("<error>")
+              case R(t) => t
+            }
+          case (IDENT("->", true), l1) :: _ =>
+            consume
+            val rhs = expr(opPrec("->")._2)
+            Lam(Tup(res), rhs)
+          case _ =>
+            res match {
+              case Nil =>
+                UnitLit(true)
+              case _ =>
+                err((
+                  msg"Expected '=>' or '->' after this parameter section" -> S(loc) :: Nil))
+                Tup(fs)
+            }
+        }
+      case _ if genQuote =>
+        err((
+          msg"quote syntax is not supported yet." -> S(loc) :: Nil))
+        Var("<error>")
+      case _ =>
+        Tup(res)
+    }
+    bra
+  }
+
   final def exprOrIf(prec: Int, allowSpace: Bool = true)(implicit et: ExpectThen, fe: FoundErr, l: Line, qenv: Set[Str], quoted: IsQuoted): IfBody \/ Term = wrap(prec, allowSpace) { l =>
     cur match {
       case (SPACE, l0) :: _ if allowSpace => // Q: do we really need the `allowSpace` flag?
@@ -598,10 +756,11 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         consume
         cur match {
           case (QUOTE, l0) :: _ =>
+            consume
             err((
               msg"Nested quotation is not supported yet." -> S(l0) :: Nil))
             R(Var("<error>"))
-          case (IDENT(nme: "error", false), l0) :: _ =>
+          case (IDENT(nme, false), l0) :: _ =>
             consume
             exprCont(Quoted(Var(nme)).withLoc(S(loc)), prec, allowNewlines = false)
           case (LITVAL(lit), l0) :: _ =>
@@ -609,78 +768,13 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
             exprCont(Quoted(lit.withLoc(S(l0))).withLoc(S(loc)), prec, allowNewlines = false)
           case (KEYWORD("let"), l0) :: _ =>
             consume
-            val bs = bindings(Nil)
-            val newQenv = bs.map(_._1.name)
-            val body = yeetSpaces match {
-              case (KEYWORD("in" | ";;"), _) :: _ =>
-                consume
-                exprOrIf(0)(et, fe, implicitly, qenv ++ newQenv, quoted)
-              case (NEWLINE, _) :: _ =>
-                consume
-                exprOrIf(0)(et, fe, implicitly, qenv ++ newQenv, quoted)
-              case _ =>
-                R(UnitLit(true).withLoc(curLoc.map(_.left)))
-            }
-            bs.foldRight(body) {
-              case ((v, r), R(acc)) => (r, acc) match {
-                case (Quoted(r), Quoted(acc)) => R(Quoted(Let(false, v, r, acc)))
-                case (Quoted(r), _) => R(Quoted(Let(false, v, r, Unquoted(acc))))
-                case (_, Quoted(acc)) => R(Quoted(Let(false, v, Unquoted(r), acc)))
-                case _ => R(Quoted(Let(false, v, Unquoted(r), Unquoted(acc))))
-              }
-              case ((v, r), L(acc)) =>
-                err((
-                  msg"quote syntax is not supported yet." -> S(l0) :: Nil))
-                R(Var("<error>"))
-            }
+            letBindings(true, l0)
           case (KEYWORD("if"), l0) :: _ =>
             consume
-            exprOrIf(0)(et = true, fe = fe, l = implicitly, qenv = qenv, quoted = quoted) match {
-              case L(IfThen(cond, body)) =>
-                val els = yeetSpaces match {
-                  case (KEYWORD("else"), _) :: _ =>
-                    consume
-                    S(expr(0))
-                  case (NEWLINE, _) :: (KEYWORD("else"), _) :: _ =>
-                    consume
-                    consume
-                    S(expr(0))
-                  case (br @ BRACKETS(Indent, (KEYWORD("else"), _) :: toks), _) :: _ =>
-                    consume
-                    val nested = rec(toks, S(br.innerLoc), br.describe)
-                    S(nested.concludeWith(_.expr(0)))
-                  case _ => N
-                }
-                val qcond = cond match {
-                  case Quoted(body) => body
-                  case _ => Unquoted(cond)
-                }
-                val qbody = body match {
-                  case Quoted(body) => body
-                  case _ => Unquoted(body)
-                }
-                val qels = els.map {
-                  case Quoted(body) => body
-                  case t => Unquoted(t)
-                }
-                R(Quoted(If(IfThen(qcond, qbody), qels)))
-              case _ =>
-                err((
-                  msg"quote syntax is not supported yet." -> S(l0) :: Nil))
-                R(Var("<error>"))
-            }
+            ifStmt(true, l0)
           case (br @ BRACKETS(bk @ (Round | Square | Curly), toks), loc) :: _ =>
             consume
-            val res = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented()(fe, et, qenv, true))
-            val bra = (bk, res) match {
-              case (Round, (N, Fld(FldFlags(false, false, _), elt)) :: Nil) =>
-                Quoted(Bra(false, elt))
-              case _ =>
-                err((
-                  msg"quote syntax is not supported yet." -> S(loc) :: Nil))
-                Var("<error>")
-            }
-            exprCont(bra.withLoc(S(loc)), prec, allowNewlines = false)
+            exprCont(bracket(true, br, bk, toks, loc)(et, fe, implicitly, qenv, true).withLoc(S(loc)), prec, allowNewlines = false)
           case _ =>
             err((
               msg"quote syntax is not supported yet." -> S(loc) :: Nil))
@@ -716,51 +810,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         exprCont(Var(opStr).withLoc(S(l1)), prec, allowNewlines = false)
       case (br @ BRACKETS(bk @ (Round | Square | Curly), toks), loc) :: _ =>
         consume
-        val res = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented())
-        val bra = (bk, res) match {
-          case (Curly, _) =>
-            Bra(true, Rcd(res.map {
-              case S(n) -> fld => n -> fld
-              case N -> (fld @ Fld(_, v: Var)) => v -> fld
-              case N -> fld =>
-                err((
-                  msg"Record field should have a name" -> fld.value.toLoc :: Nil))
-                Var("<error>") -> fld
-            }))
-          case (Round, (N, Fld(FldFlags(false, false, _), elt)) :: Nil) =>
-            Bra(false, elt)
-          case (Round, fs) =>
-            yeetSpaces match {
-              case (KEYWORD("=>"), l1) :: _ =>
-                consume
-                val e = expr(0)
-                Lam(Tup(res), e)
-              case (QUOTE, l0) :: (KEYWORD("=>"), l1) :: _ =>
-                exprCont(Tup(res), 0, true) match {
-                  case L(_) =>
-                    err((
-                      msg"quote syntax is not supported yet." -> S(l0) :: Nil))
-                    Var("<error>")
-                  case R(t) => t
-                }
-              case (IDENT("->", true), l1) :: _ =>
-                consume
-                val rhs = expr(opPrec("->")._2)
-                Lam(Tup(res), rhs)
-              case _ =>
-                res match {
-                  case Nil =>
-                    UnitLit(true)
-                  case _ =>
-                    err((
-                      msg"Expected '=>' or '->' after this parameter section" -> S(loc) :: Nil))
-                    Tup(fs)
-                }
-            }
-          case _ =>
-            Tup(res)
-        }
-        exprCont(bra.withLoc(S(loc)), prec, allowNewlines = false)
+        exprCont(bracket(false, br, bk, toks, loc).withLoc(S(loc)), prec, allowNewlines = false)
       case (KEYWORD("forall"), l0) :: _ =>
         consume
         def getIdents: Ls[TypeVar] = yeetSpaces match {
@@ -787,21 +837,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         R(Forall(idents, rest))
       case (KEYWORD("let"), l0) :: _ =>
         consume
-        val bs = bindings(Nil)
-        val body = yeetSpaces match {
-          case (KEYWORD("in" | ";;"), _) :: _ =>
-            consume
-            exprOrIf(0)
-          case (NEWLINE, _) :: _ =>
-            consume
-            exprOrIf(0)
-          case _ =>
-            R(UnitLit(true).withLoc(curLoc.map(_.left)))
-        }
-        bs.foldRight(body) {
-          case ((v, r), R(acc)) => R(Let(false, v, r, acc))
-          case ((v, r), L(acc)) => L(IfLet(false, v, r, acc))
-        }
+        letBindings(false, l0)
       case (KEYWORD("new"), l0) :: c =>
         consume
         val body = expr(outer.prec('.'))
@@ -838,59 +874,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         
       case (KEYWORD("if"), l0) :: _ =>
         consume
-        cur match {
-          case _ =>
-            exprOrIf(0)(et = true, fe = fe, l = implicitly, qenv = qenv, quoted = quoted) match {
-            case L(body) =>
-              val els = yeetSpaces match {
-                case (KEYWORD("else"), _) :: _ =>
-                  consume
-                  S(expr(0))
-                case (NEWLINE, _) :: (KEYWORD("else"), _) :: _ =>
-                  consume
-                  consume
-                  S(expr(0))
-                case (br @ BRACKETS(Indent, (KEYWORD("else"), _) :: toks), _) :: _ =>
-                  consume
-                  val nested = rec(toks, S(br.innerLoc), br.describe)
-                  S(nested.concludeWith(_.expr(0)))
-                case _ => N
-              }
-              R(If(body, els))
-            case R(e) =>
-              yeetSpaces match {
-                case (br @ BRACKETS(Indent, (KEYWORD("then"), _) :: toks), _) :: _ =>
-                  consume
-                  val nested = rec(toks, S(br.innerLoc), br.describe)
-                  val thn = nested.expr(0)
-                  val els = nested.yeetSpaces match {
-                    case (KEYWORD("else"), _) :: _ =>
-                      nested.consume
-                      S(nested.concludeWith(_.expr(0)))
-                    case (NEWLINE, _) :: (KEYWORD("else"), _) :: _ =>
-                      nested.consume
-                      nested.consume
-                      // S(thn, S(nested.concludeWith(_.expr(0))))
-                      S(nested.concludeWith(_.expr(0)))
-                    case _ =>
-                      nested.concludeWith(_.nil)
-                      // S(thn, N)
-                      N
-                  }
-                  R(If(IfThen(e, thn), els))
-                case _cur =>
-                  val (found, loc) = _cur match {
-                    case (tk, l1) :: _ => (msg"${e.describe} followed by ${tk.describe}",
-                      S(e.toLoc.foldRight(l1)(_ ++ _)))
-                    case Nil => (msg"${e.describe}", e.toLoc)
-                  }
-                  err((msg"Expected 'then'/'else' clause after 'if'; found $found instead" -> loc ::
-                    msg"Note: 'if' expression starts here:" -> S(l0) :: Nil))
-                  R(If(IfThen(e, errExpr), N))
-              }
-          }
-        }
-        
+        ifStmt(false, l0)
       case Nil =>
         err(msg"Unexpected end of $description; an expression was expected here" -> lastLoc :: Nil)
         R(errExpr)
@@ -935,61 +919,105 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
     }.toSet
     case _ => Set.empty
   }
-  
+
+  private def arrowLam(genQuote: Bool, acc: Term, prec: Int, allowNewlines: Bool)(
+    implicit et: ExpectThen, fe: FoundErr, l: Line, qenv: Set[Str], quoted: IsQuoted
+  ): IfBody \/ Term = {
+    val newQenv = if (genQuote) declQenv(acc) else Set.empty
+    val rhs = expr(1)(fe, implicitly, qenv ++ newQenv, quoted)
+    if (!genQuote) exprCont(Lam(PlainTup(acc), rhs), prec, allowNewlines)
+    else {
+      val param = acc match {
+        case t: Tup => t
+        case _ => PlainTup(acc)
+      }
+      val res = rhs match {
+        case Quoted(rhs) => Quoted(Lam(param, rhs))
+        case _ => Quoted(Lam(param, Unquoted(rhs)))
+      }
+      exprCont(res, prec, allowNewlines)
+    }
+  }
+
+  private def opCont(genQuote: Bool, opStr: Str, l0: Loc, acc: Term, prec: Int, allowNewlines: Bool)(
+    implicit et: ExpectThen, fe: FoundErr, l: Line, qenv: Set[Str], quoted: IsQuoted
+  ): IfBody \/ Term = {
+    val v = Var(opStr).withLoc(S(l0))
+    // printDbg(s">>> $opStr ${opPrec(opStr)}")
+    exprOrIf(opPrec(opStr)._2) match {
+      case L(rhs) =>
+        if (!genQuote) L(IfOpApp(acc, v, rhs))
+        else {
+          err((
+            msg"quote syntax is not supported yet." -> S(l0) :: Nil))
+          R(acc)
+        }
+      case R(rhs) =>
+        exprCont(opStr match {
+          case "with" =>
+            if (!genQuote) rhs match {
+              case rhs: Rcd =>
+                With(acc, rhs)//.withLocOf(term)
+              case Bra(true, rhs: Rcd) =>
+                With(acc, rhs)//.withLocOf(term)
+              case _ =>
+                err(msg"record literal expected here; found ${rhs.describe}" -> rhs.toLoc :: Nil)
+                acc
+            }
+            else {
+              err((
+                msg"quote syntax is not supported yet." -> S(l0) :: Nil))
+              acc
+            }
+          case ";" =>
+            if (!genQuote) Blk(acc :: rhs :: Nil)
+            else {
+              err((
+                msg"quote syntax is not supported yet." -> S(l0) :: Nil))
+              acc
+            }
+          case _ =>
+            if (genQuote) quoteOp(acc, rhs, v) // TODO: match opStr to support with etc.
+            else if (newDefs) App(v, PlainTup(acc, rhs))
+            else App(App(v, PlainTup(acc)), PlainTup(rhs))
+        }, prec, allowNewlines)
+    }
+  }
+
   final def exprCont(acc: Term, prec: Int, allowNewlines: Bool)(implicit et: ExpectThen, fe: FoundErr, l: Line, qenv: Set[Str], quoted: IsQuoted): IfBody \/ Term = wrap(prec, s"`$acc`", allowNewlines) { l =>
     cur match {
-      case (QUOTE, l) :: (KEYWORD(opStr @ "=>"), l0) :: _ if opPrec(opStr)._1 > prec && quoted === false =>
-        consume
-        consume
-        val newQenv = declQenv(acc)
-        val rhs = expr(1)(fe, implicitly, qenv ++ newQenv, quoted)
-        val param = acc match {
-          case t: Tup => t
-          case _ => PlainTup(acc)
-        }
-        val res = rhs match {
-          case Quoted(rhs) => Quoted(Lam(param, rhs))
-          case _ => Quoted(Lam(param, Unquoted(rhs)))
-        }
-        exprCont(res, prec, allowNewlines)
-      case (QUOTE, l) :: (br @ BRACKETS(Round, toks), loc) :: _ if quoted === false =>
-        consume
-        consume
-        val as = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented()).map {
-          case nme -> Fld(flgs, t) => t match {
-            case Quoted(t) => nme -> Fld(flgs, t)
-            case _ => nme -> Fld(flgs, Unquoted(t))
+      case (QUOTE, l) :: _ => if (quoted === false) cur match {
+        case _ :: (KEYWORD(opStr @ "=>"), l0) :: _ if opPrec(opStr)._1 > prec =>
+          consume
+          consume
+          arrowLam(true, acc, prec, allowNewlines)
+        case _ :: (br @ BRACKETS(Round, toks), loc) :: _ =>
+          consume
+          consume
+          val as = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented()).map {
+            case nme -> Fld(flgs, t) => t match {
+              case Quoted(t) => nme -> Fld(flgs, t)
+              case _ => nme -> Fld(flgs, Unquoted(t))
+            }
           }
-        }
-        val res = acc match {
-          case Quoted(acc) => App(acc, Tup(as).withLoc(S(loc)))
-          case _ => App(Unquoted(acc), Tup(as).withLoc(S(loc)))
-        }
-        exprCont(Quoted(res), prec, allowNewlines)
-      case (QUOTE, l) :: (IDENT(opStr, true), l0) :: _ if /* isInfix(opStr) && */ opPrec(opStr)._1 > prec && quoted === false =>
-        consume
-        consume
-        val v = Var(opStr).withLoc(S(l0))
-        // printDbg(s">>> $opStr ${opPrec(opStr)}")
-        exprOrIf(opPrec(opStr)._2) match {
-          case L(rhs) =>
-            err((
-              msg"quote syntax is not supported yet." -> S(l0) :: Nil))
-            R(Var("<error>"))
-          case R(rhs) =>
-            // TODO: match opStr to support with etc.
-            exprCont(quoteOp(acc, rhs, v), prec, allowNewlines)
-        }
-      case (QUOTE, l) :: _ => R(acc)
+          val res = acc match {
+            case Quoted(acc) => App(acc, Tup(as).withLoc(S(loc)))
+            case _ => App(Unquoted(acc), Tup(as).withLoc(S(loc)))
+          }
+          exprCont(Quoted(res), prec, allowNewlines)
+        case _ :: (IDENT(opStr, true), l0) :: _ if opPrec(opStr)._1 > prec =>
+          consume
+          consume
+          opCont(true, opStr, l0, acc, prec, allowNewlines)
+        case _ => R(acc)
+      } else R(acc)
       case (KEYWORD(opStr @ "=>"), l0) :: (NEWLINE, l1) :: _ if opPrec(opStr)._1 > prec =>
         consume
         val rhs = Blk(typingUnit.entities)
         R(Lam(PlainTup(acc), rhs))
       case (KEYWORD(opStr @ "=>"), l0) :: _ if opPrec(opStr)._1 > prec =>
         consume
-        val rhs = expr(1)
-        val res = Lam(PlainTup(acc), rhs)
-        exprCont(res, prec, allowNewlines)
+        arrowLam(false, acc, prec, allowNewlines)
       case (IDENT(".", _), l0) :: (br @ BRACKETS(Square, toks), l1) :: _ =>
         consume
         consume
@@ -999,30 +1027,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         exprCont(newAcc, prec, allowNewlines)
       case (IDENT(opStr, true), l0) :: _ if /* isInfix(opStr) && */ opPrec(opStr)._1 > prec =>
         consume
-        val v = Var(opStr).withLoc(S(l0))
-        // printDbg(s">>> $opStr ${opPrec(opStr)}")
-        exprOrIf(opPrec(opStr)._2) match {
-          case L(rhs) =>
-            L(IfOpApp(acc, v, rhs))
-          case R(rhs) =>
-            exprCont(opStr match {
-              case "with" =>
-                rhs match {
-                  case rhs: Rcd =>
-                    With(acc, rhs)//.withLocOf(term)
-                  case Bra(true, rhs: Rcd) =>
-                    With(acc, rhs)//.withLocOf(term)
-                  case _ =>
-                    err(msg"record literal expected here; found ${rhs.describe}" -> rhs.toLoc :: Nil)
-                    acc
-                }
-              case ";" =>
-                Blk(acc :: rhs :: Nil)
-              case _ =>
-                if (newDefs) App(v, PlainTup(acc, rhs))
-                else App(App(v, PlainTup(acc)), PlainTup(rhs))
-            }, prec, allowNewlines)
-        }
+        opCont(false, opStr, l0, acc, prec, allowNewlines)
       case (KEYWORD(":"), l0) :: _ if prec <= outer.prec(':') =>
         consume
         R(Asc(acc, typ(0)))
