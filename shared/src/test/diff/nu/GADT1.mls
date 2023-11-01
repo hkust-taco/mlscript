@@ -1,0 +1,188 @@
+:NewDefs
+:GADTs
+
+class Box[A](val get: A)
+//│ class Box[A](get: A)
+
+abstract class Rep[type T]: IntRep | BoolRep | BoxRep
+class IntRep extends Rep[Int]
+class BoolRep extends Rep[Bool]
+class BoxRep[A](val a: Rep[A]) extends Rep[Box[A]]
+//│ abstract class Rep[T]: BoolRep | BoxRep[?] | IntRep
+//│ class IntRep extends Rep {
+//│   constructor()
+//│ }
+//│ class BoolRep extends Rep {
+//│   constructor()
+//│ }
+//│ class BoxRep[A](a: Rep[A]) extends Rep
+
+// FIXME
+fun equal[T](x: T, y: T, ev: Rep[T]): Bool =
+    if ev is
+        IntRep then ((x : ev.T)) == ((y : ev.T))
+        BoolRep then 
+            let a = (x : ev.T)
+            let b = (y : ev.T)
+            (a && b) && (not(a) && not(b))
+        BoxRep(e) then 
+            let a = (x : ev.T).get : e.T
+            let b = (y : ev.T).get : e.T
+            equal(a, b, e)
+//│ ╔══[ERROR] Subtyping constraint of the form `([?a]) -> ?b <: ?c -> ?d` exceeded recursion depth limit (250)
+//│ ║  l.22: 	    if ev is
+//│ ║        	       ^^^^^
+//│ ║  l.23: 	        IntRep then ((x : ev.T)) == ((y : ev.T))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.24: 	        BoolRep then 
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.25: 	            let a = (x : ev.T)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.26: 	            let b = (y : ev.T)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.27: 	            (a && b) && (not(a) && not(b))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.28: 	        BoxRep(e) then 
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.29: 	            let a = (x : ev.T).get : e.T
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.30: 	            let b = (y : ev.T).get : e.T
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.31: 	            equal(a, b, e)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Note: use flag `:ex` to see internal error info.
+//│ ╔══[ERROR] Type error in definition
+//│ ║  l.21: 	fun equal[T](x: T, y: T, ev: Rep[T]): Bool =
+//│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.22: 	    if ev is
+//│ ║        	^^^^^^^^^^^^
+//│ ║  l.23: 	        IntRep then ((x : ev.T)) == ((y : ev.T))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.24: 	        BoolRep then 
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.25: 	            let a = (x : ev.T)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.26: 	            let b = (y : ev.T)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.27: 	            (a && b) && (not(a) && not(b))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.28: 	        BoxRep(e) then 
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.29: 	            let a = (x : ev.T).get : e.T
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.30: 	            let b = (y : ev.T).get : e.T
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.31: 	            equal(a, b, e)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type variable `A` leaks out of its scope
+//│ ║  l.30: 	            let b = (y : ev.T).get : e.T
+//│ ║        	                                      ^^
+//│ ╙── into expression of type `T | ~(true & ??A)`
+//│ ╔══[ERROR] Type error in definition
+//│ ║  l.21: 	fun equal[T](x: T, y: T, ev: Rep[T]): Bool =
+//│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.22: 	    if ev is
+//│ ║        	^^^^^^^^^^^^
+//│ ║  l.23: 	        IntRep then ((x : ev.T)) == ((y : ev.T))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.24: 	        BoolRep then 
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.25: 	            let a = (x : ev.T)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.26: 	            let b = (y : ev.T)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.27: 	            (a && b) && (not(a) && not(b))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.28: 	        BoxRep(e) then 
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.29: 	            let a = (x : ev.T).get : e.T
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.30: 	            let b = (y : ev.T).get : e.T
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.31: 	            equal(a, b, e)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type variable `A` leaks out of its scope
+//│ ║  l.30: 	            let b = (y : ev.T).get : e.T
+//│ ║        	                                      ^^
+//│ ╙── into expression of type `T | ~(false & ??A)`
+//│ ╔══[ERROR] Type error in definition
+//│ ║  l.21: 	fun equal[T](x: T, y: T, ev: Rep[T]): Bool =
+//│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.22: 	    if ev is
+//│ ║        	^^^^^^^^^^^^
+//│ ║  l.23: 	        IntRep then ((x : ev.T)) == ((y : ev.T))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.24: 	        BoolRep then 
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.25: 	            let a = (x : ev.T)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.26: 	            let b = (y : ev.T)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.27: 	            (a && b) && (not(a) && not(b))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.28: 	        BoxRep(e) then 
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.29: 	            let a = (x : ev.T).get : e.T
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.30: 	            let b = (y : ev.T).get : e.T
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.31: 	            equal(a, b, e)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type variable `A` leaks out of its scope
+//│ ║  l.30: 	            let b = (y : ev.T).get : e.T
+//│ ║        	                                      ^^
+//│ ╙── into expression of type `T | ~(Int & ??A)`
+//│ ╔══[ERROR] Type error in definition
+//│ ║  l.21: 	fun equal[T](x: T, y: T, ev: Rep[T]): Bool =
+//│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.22: 	    if ev is
+//│ ║        	^^^^^^^^^^^^
+//│ ║  l.23: 	        IntRep then ((x : ev.T)) == ((y : ev.T))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.24: 	        BoolRep then 
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.25: 	            let a = (x : ev.T)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.26: 	            let b = (y : ev.T)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.27: 	            (a && b) && (not(a) && not(b))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.28: 	        BoxRep(e) then 
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.29: 	            let a = (x : ev.T).get : e.T
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.30: 	            let b = (y : ev.T).get : e.T
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.31: 	            equal(a, b, e)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type variable `A` leaks out of its scope
+//│ ║  l.10: 	class BoxRep[A](val a: Rep[A]) extends Rep[Box[A]]
+//│ ║        	             ^
+//│ ╙── into expression of type `T | ~??A`
+//│ ╔══[ERROR] Type error in definition
+//│ ║  l.21: 	fun equal[T](x: T, y: T, ev: Rep[T]): Bool =
+//│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.22: 	    if ev is
+//│ ║        	^^^^^^^^^^^^
+//│ ║  l.23: 	        IntRep then ((x : ev.T)) == ((y : ev.T))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.24: 	        BoolRep then 
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.25: 	            let a = (x : ev.T)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.26: 	            let b = (y : ev.T)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.27: 	            (a && b) && (not(a) && not(b))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.28: 	        BoxRep(e) then 
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.29: 	            let a = (x : ev.T).get : e.T
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.30: 	            let b = (y : ev.T).get : e.T
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.31: 	            equal(a, b, e)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type variable `A` leaks out of its scope
+//│ ║  l.10: 	class BoxRep[A](val a: Rep[A]) extends Rep[Box[A]]
+//│ ╙──      	             ^
+//│ fun equal: forall 'T. (x: 'T, y: 'T, ev: Rep['T]) -> Bool

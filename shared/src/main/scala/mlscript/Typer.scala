@@ -16,11 +16,12 @@ import mlscript.Message._
  */
 class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val newDefs: Bool)
     extends ucs.Desugarer with TypeSimplifier {
-  
+
   def funkyTuples: Bool = false
   def doFactorize: Bool = false
   def showAllErrors: Bool = false // TODO enable?
   def maxSuccessiveErrReports: Int = 3
+  def GADTs: Bool = false
   
   var generalizeCurriedFunctions: Boolean = false
   var approximateNegativeFunction: Boolean = false
@@ -576,7 +577,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         val ub = freshVar(prov, N, S(nme.name))
         val lb = freshVar(prov, N, S(nme.name))
         // ? do we need this
-        // lb.upperBounds ::= ub
+        // if (!GADTs) lb.upperBounds ::= ub
         val res = RecordType.mk((nme.toVar, FieldType(S(lb), ub)(prov)) :: Nil)(prov)
         constrain(t, res)
         TypeBounds(lb, ub)(prov)
@@ -1519,7 +1520,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
             val res = freshVar(provTODO, N, N)
             newCtx.copy(lvl = newCtx.lvl + 1) |> { implicit ctx =>
               val scrt = ctx.get(v.name) match {
-                case Some(VarSymbol(ty, _)) => ty // ! seems to introduce breaking changes
+                case Some(VarSymbol(ty, _)) if GADTs => ty // ! seems to introduce breaking changes
                 case _ => TopType
               }
               println(s"var rfn: ${v.name} :: ${scrt} & ${tagTy} & ${patTyIntl}")

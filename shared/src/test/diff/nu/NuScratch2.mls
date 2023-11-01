@@ -1,5 +1,5 @@
 :NewDefs
-
+:GADTs
 
 
 abstract class Foo0[type T] {
@@ -152,17 +152,22 @@ fun test[A](f: Foo[A]): A = if f is
     Baz then "hello" : f.T
 //│ fun test: forall 'A. (f: Foo['A]) -> 'A
 
+fun test(f: Foo['a]): f.T = if f is
+    Bar then 123 : f.T
+    Baz then "hello" : f.T
+//│ fun test: forall 'a. (f: Foo['a]) -> ('a & (Int | Str))
+
 :e // expected
 test(error, 1)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.156: 	test(error, 1)
+//│ ║  l.161: 	test(error, 1)
 //│ ║         	^^^^^^^^^^^^^^
-//│ ╟── argument list of type `[nothing, 1]` does not match type `[f: Foo[?A]]`
-//│ ║  l.156: 	test(error, 1)
+//│ ╟── argument list of type `[nothing, 1]` does not match type `[f: Foo['a]]`
+//│ ║  l.161: 	test(error, 1)
 //│ ║         	    ^^^^^^^^^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.150: 	fun test[A](f: Foo[A]): A = if f is
-//│ ╙──       	           ^^^^^^^^^^^
+//│ ║  l.155: 	fun test(f: Foo['a]): f.T = if f is
+//│ ╙──       	        ^^^^^^^^^^^^
 //│ error
 //│ res
 //│ Runtime error:

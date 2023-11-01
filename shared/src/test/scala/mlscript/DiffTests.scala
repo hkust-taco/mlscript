@@ -122,12 +122,14 @@ class DiffTests
     def outputSourceCode(code: SourceCode) = code.lines.foreach{line => out.println(outputMarker + line.toString())}
     val allStatements = mutable.Buffer.empty[DesugaredStatement]
     var newDefs = false
+    var useGADTs = false
     trait MyTyper extends Typer { var ctx: Ctx }
     lazy val typer =
       new Typer(dbg = false, verbose = false, explainErrors = false, newDefs = newDefs) with MyTyper {
         var ctx: Ctx = Ctx.init
         override def recordTypeVars = occursCheck
         override def funkyTuples = file.ext =:= "fun"
+        override def GADTs = useGADTs
         // override def emitDbg(str: String): Unit = if (stdout) System.out.println(str) else output(str)
         override def emitDbg(str: String): Unit = output(str)
         createdTypeVars.clear()
@@ -247,6 +249,7 @@ class DiffTests
           case "GeneralizeArguments" => generalizeArguments = true; mode
           case "DontGeneralizeArguments" => generalizeArguments = false; mode
           case "IrregularTypes" => irregularTypes = true; mode
+          case "GADTs" => useGADTs = true; mode
           case str @ "Fuel" =>
             // println("'"+line.drop(str.length + 2)+"'")
             typer.startingFuel = line.drop(str.length + 2).toInt; mode

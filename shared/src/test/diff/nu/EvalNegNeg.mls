@@ -14,8 +14,8 @@ mixin EvalBase {
       Add(l, r) then this.eval(l) + this.eval(r)
 }
 //│ mixin EvalBase() {
-//│   this: {eval: 'a -> Int}
-//│   fun eval: (Add['E] & {#lhs: 'a, #rhs: 'a} | Add['E] & ~#Add | Add['E] & ~{Add#E <: ??E & 'E} | Lit & {#n: Int} | Lit & {#n: Int} & ~{Add#E <: ??E & 'E} | Lit & ~#Lit | Lit & ~{Add#E <: ??E & 'E} & ~#Lit) -> Int
+//│   this: {eval: (??E & 'E) -> Int}
+//│   fun eval: (Add['E] | Lit) -> Int
 //│ }
 
 
@@ -30,8 +30,8 @@ mixin EvalNeg {
 }
 //│ mixin EvalNeg() {
 //│   super: {eval: 'a -> 'b}
-//│   this: {eval: 'c -> Int}
-//│   fun eval: (Neg['A] & {#expr: 'c} | Neg['A] & ~#Neg | Neg['A] & ~{Neg#A <: ??A & 'A} | 'a & (Object & ~#Neg | Object & ~{Neg#A <: ??A & 'A} & ~#Neg)) -> (Int | 'b)
+//│   this: {eval: (??A & 'A) -> Int}
+//│   fun eval: (Neg['A] | Object & 'a & ~#Neg) -> (Int | 'b)
 //│ }
 
 
@@ -41,22 +41,19 @@ mixin EvalNegNeg {
     else super.eval(e)
 }
 //│ mixin EvalNegNeg() {
-//│   super: {eval: (Neg[??A & 'A] & 'a | 'b) -> 'c}
-//│   this: {eval: 'd -> 'c}
-//│   fun eval: ('a & (Neg['A] & {
-//│     #expr: Neg[anything] & {#expr: 'd} | Neg[anything] & ~{Neg#A = nothing} | Object & ~#Neg
-//│   } | Neg['A] & ~#Neg | Neg['A] & ~{Neg#A <: ??A0 & 'A} | Object & 'b & ~#Neg)) -> 'c
+//│   super: {eval: (Neg[??A & 'A] | 'a) -> 'b}
+//│   this: {eval: (??A0 & 'A0) -> 'b}
+//│   fun eval: (Neg['A & (Neg['A0] | Object & ~#Neg | ~??A1)] | Object & 'a & ~#Neg) -> 'b
 //│ }
 
 
 module TestLang extends EvalBase, EvalNeg, EvalNegNeg
 //│ module TestLang {
-//│   fun eval: 'a -> Int
+//│   fun eval: (Neg['A] | Object & 'a & ~#Neg) -> Int
 //│ }
 //│ where
-//│   'a <: Neg['A & 'A0] & {#expr: 'a} & ~#Neg | Neg['A & 'A0] & {
-//│     #expr: 'a & (Neg[anything] & {#expr: 'a} | Neg[anything] & ~{Neg#A = nothing} | Object & ~#Neg)
-//│   } | Neg['A & 'A0] & ~{Neg#A <: ??A & ??A0 & 'A & 'A0} & ~#Neg | Neg['A & 'A0] & ~{Neg#A <: ??A1 & 'A} | Neg['A] & ~{Neg#A <: ??A0 & 'A} | (Add['E] & {#lhs: 'a, #rhs: 'a} | Add['E] & ~#Add | Add['E] & ~{Add#E <: ??E & 'E} | Lit & {#n: Int} | Lit & {#n: Int} & ~{Add#E <: ??E & 'E} | Lit & ~#Lit | Lit & ~{Add#E <: ??E & 'E} & ~#Lit) & (Object & ~#Neg | Object & ~{Neg#A <: ??A & ??A0 & 'A & 'A0} & ~#Neg)
+//│   'A <: Neg['A & (Neg['A] | Object & 'a & ~#Neg | ~??A)] | Neg['A] & ~#Neg | Object & 'a & ~#Neg | ~??A0 & (Neg[Neg['A] | 'a & (Object & ~#Neg | ~#Neg & ~??A) | ~??A] | Object & ~#Neg) | ~??A1
+//│   'a <: Add[Neg['A] | 'a & (Object & ~#Neg | ~#Neg & ~??E) | ~??E] | Lit | Neg[Neg['A] | 'a & (Object & ~#Neg | ~#Neg & ~??A0) | ~??A0]
 
 
 fun mk(n) = if n is
@@ -68,20 +65,12 @@ fun mk(n) = if n is
 //│     'E :> Add['E] | Lit | Neg['E]
 
 TestLang.eval(mk(0))
-//│ ╔══[ERROR] Subtyping constraint of the form `?eval <: ?a -> ?b` exceeded recursion depth limit (250)
-//│ ║  l.70: 	TestLang.eval(mk(0))
-//│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ╙── Note: use flag `:ex` to see internal error info.
-//│ error
+//│ Int
 //│ res
 //│     = 3
 
 TestLang.eval(mk(11))
-//│ ╔══[ERROR] Subtyping constraint of the form `?eval <: ?a -> ?b` exceeded recursion depth limit (250)
-//│ ║  l.79: 	TestLang.eval(mk(11))
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── Note: use flag `:ex` to see internal error info.
-//│ error
+//│ Int
 //│ res
 //│     = -3072
 
@@ -89,12 +78,11 @@ TestLang.eval(mk(11))
 
 module TestLang extends EvalBase, EvalNeg, EvalNegNeg
 //│ module TestLang {
-//│   fun eval: 'a -> Int
+//│   fun eval: (Neg['A] | Object & 'a & ~#Neg) -> Int
 //│ }
 //│ where
-//│   'a <: Neg['A & 'A0] & {#expr: 'a} & ~#Neg | Neg['A & 'A0] & {
-//│     #expr: 'a & (Neg[anything] & {#expr: 'a} | Neg[anything] & ~{Neg#A = nothing} | Object & ~#Neg)
-//│   } | Neg['A & 'A0] & ~{Neg#A <: ??A & ??A0 & 'A & 'A0} & ~#Neg | Neg['A & 'A0] & ~{Neg#A <: ??A1 & 'A} | Neg['A] & ~{Neg#A <: ??A0 & 'A} | (Add['E] & {#lhs: 'a, #rhs: 'a} | Add['E] & ~#Add | Add['E] & ~{Add#E <: ??E & 'E} | Lit & {#n: Int} | Lit & {#n: Int} & ~{Add#E <: ??E & 'E} | Lit & ~#Lit | Lit & ~{Add#E <: ??E & 'E} & ~#Lit) & (Object & ~#Neg | Object & ~{Neg#A <: ??A & ??A0 & 'A & 'A0} & ~#Neg)
+//│   'A <: Neg['A & (Neg['A] | Object & 'a & ~#Neg | ~??A)] | Neg['A] & ~#Neg | Object & 'a & ~#Neg | ~??A0 & (Neg[Neg['A] | 'a & (Object & ~#Neg | ~#Neg & ~??A) | ~??A] | Object & ~#Neg) | ~??A1
+//│   'a <: Add[Neg['A] | 'a & (Object & ~#Neg | ~#Neg & ~??E) | ~??E] | Lit | Neg[Neg['A] | 'a & (Object & ~#Neg | ~#Neg & ~??A0) | ~??A0]
 
 
 fun mk(n) = if n is
@@ -106,20 +94,12 @@ fun mk(n) = if n is
 //│     'E :> Add['E] | Lit | Neg['E]
 
 TestLang.eval(mk(0))
-//│ ╔══[ERROR] Subtyping constraint of the form `?eval <: ?a -> ?b` exceeded recursion depth limit (250)
-//│ ║  l.108: 	TestLang.eval(mk(0))
-//│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ╙── Note: use flag `:ex` to see internal error info.
-//│ error
+//│ Int
 //│ res
 //│     = 3
 
 TestLang.eval(mk(11))
-//│ ╔══[ERROR] Subtyping constraint of the form `?eval <: ?a -> ?b` exceeded recursion depth limit (250)
-//│ ║  l.117: 	TestLang.eval(mk(11))
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── Note: use flag `:ex` to see internal error info.
-//│ error
+//│ Int
 //│ res
 //│     = -3072
 

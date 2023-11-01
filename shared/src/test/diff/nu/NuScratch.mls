@@ -1,32 +1,5 @@
 :NewDefs
-
-
-
-:d
-fun f(x) = x
-//│ 0. Typing ‹fun f = (x,) => x›
-//│ | 0. Created lazy type info for fun f = (x,) => x
-//│ | Completing fun f = (x,) => x
-//│ | | Type params 
-//│ | | Params 
-//│ | | 1. Typing term (x,) => x
-//│ | | | 1. Typing pattern [x,]
-//│ | | | | 1. Typing pattern x
-//│ | | | | 1. : x29'
-//│ | | | 1. : (x29',)
-//│ | | | 1. Typing term x
-//│ | | | 1. : x29'
-//│ | | 1. : (x29' -> x29')
-//│ | | CONSTRAIN (x29' -> x29') <! f30'
-//│ | |   where 
-//│ | | 1. C (x29' -> x29') <! f30'    (0)
-//│ | | | NEW f30' LB (1)
-//│ | Completed TypedNuFun(0,fun f = (x::0,) => x,(x29' -> x29')) where 
-//│ | Typing unit statements
-//│ | : None
-//│ ======== TYPED ========
-//│ fun f: ‹∀ 0. (x29' -> x29')› where 
-//│ fun f: forall 'x. 'x -> 'x
+:GADTs
 
 class Ty[type T]
 //│ class Ty[T] {
@@ -43,7 +16,7 @@ module Baz extends Foo[Bool](true)
 fun foo(t)(x: Foo[t.T]): t.T = if x is 
     Bar then x.a
     Baz then x.a
-//│ fun foo: forall 'T 'T0. {T :> 1 | true | 'T0 <: 'T} -> (x: Foo[in 'T0 out 'T]) -> 'T
+//│ fun foo: forall 'T 'T0. {T :> 1 | true | 'T <: 'T0} -> (x: Foo[in 'T out 'T0]) -> 'T0
 
 foo(new Ty)(Bar)
 //│ 1 | true
@@ -58,45 +31,64 @@ module B extends S[Bool]
 //│ module B extends S
 
 fun f(x: S['a]) = if x is
-    A then 1
-    B then 2
-//│ fun f: forall 'a. (x: S['a]) -> (1 | 2)
+    A then 1 : x.T
+    B then 2 : x.T
+//│ fun f: forall 'a. (x: S['a]) -> ('a & (Int | false | true))
+//│   where
+//│     'a :> 2
 
+f(A)
+//│ Int
+//│ res
+//│     = 1
+
+:e
+f(B)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.46: 	f(B)
+//│ ║        	^^^^
+//│ ╟── integer literal of type `2` is not an instance of type `Bool`
+//│ ║  l.35: 	    B then 2 : x.T
+//│ ║        	           ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.28: 	module B extends S[Bool]
+//│ ║        	                   ^^^^
+//│ ╟── Note: type parameter T is defined at:
+//│ ║  l.26: 	abstract class S[type T]: A | B
+//│ ╙──      	                      ^
+//│ 2 | error | false | true
+//│ res
+//│     = 2
+
+:e
 fun f(x: S): x.T = if x is A then 1 else 0
 //│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.65: 	fun f(x: S): x.T = if x is A then 1 else 0
+//│ ║  l.64: 	fun f(x: S): x.T = if x is A then 1 else 0
 //│ ║        	                      ^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `T` leaks out of its scope
-//│ ║  l.65: 	fun f(x: S): x.T = if x is A then 1 else 0
+//│ ║  l.64: 	fun f(x: S): x.T = if x is A then 1 else 0
 //│ ╙──      	                                  ^
 //│ fun f: (x: S[in anything out nothing]) -> ??T
 
-fun f(x: S): x.T = if x is 
+fun f(x: S[?]): x.T = if x is 
     A then 1 : x.T
     B then true : x.T
     _ then error
-//│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.74: 	fun f(x: S): x.T = if x is 
-//│ ║        	                      ^^^^^
-//│ ║  l.75: 	    A then 1 : x.T
-//│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ║  l.76: 	    B then true : x.T
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.77: 	    _ then error
-//│ ║        	^^^^^^^^^^^^^^^^
-//│ ╟── type variable `T` leaks out of its scope
-//│ ║  l.54: 	module A extends S[Int]
-//│ ╙──      	                   ^^^
-//│ fun f: (x: S[in anything out nothing]) -> ??T
+//│ fun f: forall '?. (x: S['?]) -> (??? & (Int | false | true))
 
-// todo unbounded wildcard type ?
+f(A)
+//│ ??? & (Int | false | true)
+//│ res
+//│     = 1
+
+:e // todo unbounded wildcard type ?
 let y: ? = 1
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.93: 	let y: ? = 1
+//│ ║  l.85: 	let y: ? = 1
 //│ ║        	           ^
 //│ ╟── integer literal of type `1` does not match type `?`
 //│ ╟── Note: constraint arises from wildcard:
-//│ ║  l.93: 	let y: ? = 1
+//│ ║  l.85: 	let y: ? = 1
 //│ ╙──      	       ^
 //│ let y: nothing
 //│ y
@@ -105,8 +97,8 @@ let y: ? = 1
 :e
 let x = ?
 //│ ╔══[ERROR] Cannot use ? as expression
-//│ ║  l.106: 	let x = ?
-//│ ╙──       	        ^
+//│ ║  l.98: 	let x = ?
+//│ ╙──      	        ^
 //│ let x: error
 //│ Code generation encountered an error:
 //│   cannot generate code for term ?
@@ -114,7 +106,7 @@ let x = ?
 :e
 if x is ? then 1
 //│ ╔══[ERROR] illegal pattern
-//│ ║  l.115: 	if x is ? then 1
+//│ ║  l.107: 	if x is ? then 1
 //│ ╙──       	        ^
 //│ error
 //│ Code generation encountered an error:
@@ -133,23 +125,19 @@ class E extends Fmt[string]
 //│   constructor()
 //│ }
 
-class S[type S, type T]: R
+abstract class S[type S, type T]: R | I
 class R[A] extends S[A, A]
-//│ class S[S, T]: R[?] {
-//│   constructor()
-//│ }
+class I[A] extends S[A, Int]
+//│ abstract class S[S, T]: I[?] | R[?]
 //│ class R[A] extends S {
 //│   constructor()
 //│ }
+//│ class I[A] extends S {
+//│   constructor()
+//│ }
 
-// FIXME
-fun f[A, B](x: A, ev: S[A, B]): B =
-    if ev is R then x : ev.T
-//│ ╔══[ERROR] Type error in `case` expression
-//│ ║  l.147: 	    if ev is R then x : ev.T
-//│ ║         	       ^^^^^^^^^^^^^^
-//│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.137: 	class R[A] extends S[A, A]
-//│ ╙──       	        ^
+fun f[A, B](x: A, ev: S[A, B]): B = 
+    if ev is 
+        R then (x : ev.S) : ev.T
+        I then 1 : ev.T
 //│ fun f: forall 'A 'B. (x: 'A, ev: S['A, 'B]) -> 'B
-

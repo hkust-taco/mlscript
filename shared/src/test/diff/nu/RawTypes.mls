@@ -1,4 +1,5 @@
 :NewDefs
+:GADTs
 
 // * currently
 // Foo => Foo[?] ? is rigid can be uncovered in pattern matching
@@ -8,40 +9,42 @@
 class Foo[type A](val a: A)
 //│ class Foo[A](a: A)
 
+:e
 fun foo(f: Foo): Int = f.a : f.A
 //│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.11: 	fun foo(f: Foo): Int = f.a : f.A
+//│ ║  l.13: 	fun foo(f: Foo): Int = f.a : f.A
 //│ ║        	                       ^^^
 //│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.11: 	fun foo(f: Foo): Int = f.a : f.A
+//│ ║  l.13: 	fun foo(f: Foo): Int = f.a : f.A
 //│ ║        	                       ^^^
 //│ ╟── back into type variable `A`
-//│ ║  l.11: 	fun foo(f: Foo): Int = f.a : f.A
+//│ ║  l.13: 	fun foo(f: Foo): Int = f.a : f.A
 //│ ╙──      	                              ^^
 //│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.11: 	fun foo(f: Foo): Int = f.a : f.A
+//│ ║  l.13: 	fun foo(f: Foo): Int = f.a : f.A
 //│ ║        	                       ^^^
 //│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.11: 	fun foo(f: Foo): Int = f.a : f.A
+//│ ║  l.13: 	fun foo(f: Foo): Int = f.a : f.A
 //│ ║        	                              ^^
 //│ ╟── into type `Int`
-//│ ║  l.11: 	fun foo(f: Foo): Int = f.a : f.A
+//│ ║  l.13: 	fun foo(f: Foo): Int = f.a : f.A
 //│ ╙──      	                 ^^^
 //│ fun foo: (f: Foo[anything]) -> Int
 
+// TODO
 fun foo(f: Foo[?]) = f.a : f.A
 //│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.32: 	fun foo(f: Foo[?]) = f.a : f.A
+//│ ║  l.35: 	fun foo(f: Foo[?]) = f.a : f.A
 //│ ║        	                     ^^^
 //│ ╟── type variable `?` leaks out of its scope
-//│ ║  l.32: 	fun foo(f: Foo[?]) = f.a : f.A
+//│ ║  l.35: 	fun foo(f: Foo[?]) = f.a : f.A
 //│ ║        	               ^
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this field selection:
-//│ ║  l.32: 	fun foo(f: Foo[?]) = f.a : f.A
+//│ ║  l.35: 	fun foo(f: Foo[?]) = f.a : f.A
 //│ ║        	                     ^^^
 //│ ╟── Note: constraint arises from type selection:
-//│ ║  l.32: 	fun foo(f: Foo[?]) = f.a : f.A
+//│ ║  l.35: 	fun foo(f: Foo[?]) = f.a : f.A
 //│ ╙──      	                            ^^
 //│ fun foo: forall '?. (f: Foo['?]) -> ???
 
@@ -60,25 +63,26 @@ fun foo(f: Foo[Int]) = f.a
 // FIXME
 fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
 //│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.61: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
+//│ ║  l.64: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
 //│ ║        	                          ^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.61: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
+//│ ║  l.64: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
 //│ ║        	                                                ^^
 //│ ╟── into type `Int | ~??A`
-//│ ║  l.61: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
+//│ ║  l.64: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
 //│ ╙──      	                 ^^^
 //│ fun foo: (f: Foo[anything]) -> Int
 
+// TODO
 fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
 //│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.73: 	fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
+//│ ║  l.77: 	fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
 //│ ║        	                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `?` leaks out of its scope
-//│ ║  l.73: 	fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
+//│ ║  l.77: 	fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
 //│ ║        	               ^
 //│ ╟── into type `Int | ~(?? & ??A)`
-//│ ║  l.73: 	fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
+//│ ║  l.77: 	fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
 //│ ╙──      	                    ^^^
 //│ fun foo: forall '?. (f: Foo['?]) -> Int
 
@@ -128,4 +132,3 @@ foo(Bar(1))
 
 fun foo(x: Foo['a]) = if x is Bar then x.b : x.T
 //│ fun foo: forall 'a. (x: Foo['a]) -> (Int & 'a)
-
