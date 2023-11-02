@@ -1108,34 +1108,51 @@ class GraphOptimizer:
       LetCall(xs, defn, as, removeDeadBindings(e))
   }
 
-  private def removeTrivialLetCall(node: Node): Node = node match {
+
+  private def removeTrivialCallAndJump(using defs: Set[GODef])(node: Node): Node = node match {
     case Result(xs) => node
-    case Jump(_, xs) => node
+    case Jump(jp, xs) =>
+      val defn = defs.find{jp.str == _.name}.get
+      val parammap = defn.params.zip(xs).toMap
+      val trivial = defn.body match {
+        case Result(ys) => Some(ys)
+        case _ => None
+      }
+      if (trivial == None) return node
+      val retvals = trivial.get
+      
+      val ys = retvals.map { retval => retval match
+        case Literal(lit) => retval
+        case Ref(x) => parammap(x)
+      }
+
+      Result(ys)
+
     case Case(scrut, cases) => Case(scrut, cases.map {
-      (cls, e) => (cls, removeTrivialLetCall(e))
+      (cls, e) => (cls, removeTrivialCallAndJump(e))
     })
-    case LetExpr(x, e1, e2) => LetExpr(x, e1, removeTrivialLetCall(e2))
+    case LetExpr(x, e1, e2) => LetExpr(x, e1, removeTrivialCallAndJump(e2))
     case LetJoin(_, _, _, _) =>
       throw GraphOptimizingError("nested join points after promotion")
-    case LetCall(xs, defnref, as, e) if defnref.defn match {
-      case Left(defn) => defn.isTrivial
-      case _ => false
-    } =>
+    case LetCall(xs, defnref, as, e) =>
       val defn = defnref.defn match {
         case Left(defn) => defn
         case _ => ???
       }
-      val parammap = defn.params.zip(as).toMap
-      
-      val retvals = defn.body match {
-        case Result(ys) => ys
-        case _ => ??? /* unreachable */
+      val trivial = defn.body match {
+        case Result(ys) => Some(ys)
+        case _ => None
       }
+      if (trivial == None)
+        return LetCall(xs, defnref, as, removeTrivialCallAndJump(e))
+
+      val retvals = trivial.get
+      val parammap = defn.params.zip(as).toMap
 
       if (retvals.length != xs.length)
         throw GraphOptimizingError("inconsistent results number")
       
-      val init = removeTrivialLetCall(e)
+      val init = removeTrivialCallAndJump(e)
 
       xs.zip(retvals).foldRight(init){
         case ((name, retval), node) =>
@@ -1144,14 +1161,11 @@ class GraphOptimizer:
             case Ref(x) => LetExpr(name, parammap(x) |> fromTExpr, node)
           }
       }
-
-    case LetCall(xs, defn, as, e) =>
-      LetCall(xs, defn, as, removeTrivialLetCall(e))
   }
 
-  private def simplify(defn: GODef) = {
+  private def simplify(using defs: Set[GODef])(defn: GODef) = {
     val s1 = simplifyTrivialBinding(using Map.empty)(simplifySel(using Map.empty)(defn.body))
-    val s2 = removeTrivialLetCall(s1)
+    val s2 = removeTrivialCallAndJump(s1)
     val dead = collectDeadBindings(s2, Set.empty)
     val dced = removeDeadBindings(using dead)(s2)
     GODef(
@@ -1200,7 +1214,7 @@ class GraphOptimizer:
     var changed = true
     var defs = prog.defs
     while (changed) {
-      var new_defs = defs.map(simplify)
+      var new_defs = defs.map(simplify(using defs))
       new_defs = removeDeadDefs(prog.main, new_defs)
       fixGODef(using new_defs)
       validate(new_defs)
@@ -1332,7 +1346,10 @@ class GraphOptimizer:
       defs.foreach {
         case godef =>
           val intros = getIntro(using jpctx)(godef.body, Map.empty)
-          val elims = godef.params.map { case Name(s) => getElim(using s, Map.empty, jpctx)(godef.body, Set.empty) }
+          val elims = godef.params.map {
+            case Name(s) => getElim(using s, Map.empty, jpctx)(godef.body, Set.empty)
+          }
+
           if (elims == godef.activeParams && intros == godef.activeResults)
             changed = false
           else
@@ -1359,5 +1376,5 @@ class GraphOptimizer:
     
     val g7 = simplifyProgram(g6)
     val g8 = activeAnalyze(g7)
-    g7
+    g8
   }

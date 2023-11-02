@@ -100,7 +100,7 @@ bar()
 //│   Pair => let x1 = pair.y
 //│     in let x2 = pair.x
 //│       in let x3 = Pair(x2,x1)
-//│         in jump j0(x3)
+//│         in x3
 //│ )
 //│ Def(1, bar, [], [], 
 //│ Some(ICtor(Pair)), 1, 
@@ -108,29 +108,21 @@ bar()
 //│   in let* (x6) = foo(x5)
 //│     in x6
 //│ )
-//│ Def(2, @join j0, [x4], [{EDirect}], 
-//│ None, 1, 
-//│ x4
-//│ )
 //│ },
 //│ let* (x7) = bar()
 //│   in x7)
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
-//│ Def(5, foo$D9$S11, [pair_y,pair_x], [{}], 
-//│ None, 1, 
-//│ let x3 = Pair(pair_x,pair_y)
-//│   in jump j0(x3)
-//│ )
-//│ Def(1, bar, [], [{}], 
-//│ None, 1, 
+//│ Def(1, bar, [], [], 
+//│ Some(ICtor(Pair)), 1, 
 //│ let* (x6) = foo$D9$S11(2,1)
 //│   in x6
 //│ )
-//│ Def(2, @join j0, [x4], [{}], 
-//│ None, 1, 
-//│ x4
+//│ Def(5, foo$D9$S11, [pair_y,pair_x], [{EDirect},{EDirect}], 
+//│ Some(ICtor(Pair)), 1, 
+//│ let x3 = Pair(pair_x,pair_y)
+//│   in x3
 //│ )
 //│ },
 //│ let* (x7) = bar()
@@ -266,25 +258,25 @@ foo()
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
-//│ Def(5, silly$D15, [pair], [{}], 
+//│ Def(5, silly$D15, [pair], [{EDestruct，EDirect，ESelect(x)}], 
 //│ None, 1, 
 //│ case pair of
 //│   Pair => let x6 = pair.x
 //│     in let x7 = +(x6,1)
 //│       in jump j4(x7)
 //│ )
-//│ Def(1, foo, [], [{}], 
+//│ Def(1, foo, [], [], 
 //│ None, 1, 
 //│ let x11 = Pair(0,1)
 //│   in let* (x12) = silly$D15(x11)
 //│     in x12
 //│ )
-//│ Def(2, @join j1, [x9], [{}], 
+//│ Def(2, @join j1, [x9], [{EDirect}], 
 //│ None, 1, 
 //│ let x10 = +(x9,1)
 //│   in x10
 //│ )
-//│ Def(3, @join j4, [x8], [{}], 
+//│ Def(3, @join j4, [x8], [{EDirect}], 
 //│ None, 1, 
 //│ jump j1(x8)
 //│ )
@@ -294,21 +286,21 @@ foo()
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
-//│ Def(1, foo, [], [{}], 
+//│ Def(1, foo, [], [], 
 //│ None, 1, 
 //│ let* (x12) = silly$D15$D18$S20(0)
 //│   in x12
 //│ )
-//│ Def(2, @join j1, [x9], [{}], 
+//│ Def(2, @join j1, [x9], [{EDirect}], 
 //│ None, 1, 
 //│ let x10 = +(x9,1)
 //│   in x10
 //│ )
-//│ Def(3, @join j4, [x8], [{}], 
+//│ Def(3, @join j4, [x8], [{EDirect}], 
 //│ None, 1, 
 //│ jump j1(x8)
 //│ )
-//│ Def(8, silly$D15$D18$S20, [pair_x], [{}], 
+//│ Def(8, silly$D15$D18$S20, [pair_x], [{EDirect}], 
 //│ None, 1, 
 //│ let x7 = +(pair_x,1)
 //│   in jump j4(x7)
@@ -364,7 +356,7 @@ foo()
 //│ case pair of
 //│   Pair => let x3 = pair.x
 //│     in let x4 = +(x3,2)
-//│       in jump j1(x4)
+//│       in x4
 //│ )
 //│ Def(1, foo, [], [], 
 //│ None, 1, 
@@ -372,29 +364,21 @@ foo()
 //│   in let* (x7) = inc_fst(x6)
 //│     in x7
 //│ )
-//│ Def(2, @join j1, [x5], [{EDirect}], 
-//│ None, 1, 
-//│ x5
-//│ )
 //│ },
 //│ let* (x8) = foo()
 //│   in x8)
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
-//│ Def(5, inc_fst$D10$S12, [pair_x], [{}], 
-//│ None, 1, 
-//│ let x4 = +(pair_x,2)
-//│   in jump j1(x4)
-//│ )
-//│ Def(1, foo, [], [{}], 
+//│ Def(1, foo, [], [], 
 //│ None, 1, 
 //│ let* (x7) = inc_fst$D10$S12(0)
 //│   in x7
 //│ )
-//│ Def(2, @join j1, [x5], [{}], 
+//│ Def(5, inc_fst$D10$S12, [pair_x], [{EDirect}], 
 //│ None, 1, 
-//│ x5
+//│ let x4 = +(pair_x,2)
+//│   in x4
 //│ )
 //│ },
 //│ let* (x8) = foo()
@@ -445,7 +429,7 @@ foo()
 //│ case pair of
 //│   Pair => let x2 = pair.y
 //│     in let x4 = +(x2,1)
-//│       in jump j1(x4)
+//│       in x4
 //│ )
 //│ Def(1, foo, [], [], 
 //│ None, 1, 
@@ -453,29 +437,21 @@ foo()
 //│   in let* (x7) = inc_fst(x6)
 //│     in x7
 //│ )
-//│ Def(2, @join j1, [x5], [{EDirect}], 
-//│ None, 1, 
-//│ x5
-//│ )
 //│ },
 //│ let* (x8) = foo()
 //│   in x8)
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
-//│ Def(5, inc_fst$D10$S12, [pair_y], [{}], 
-//│ None, 1, 
-//│ let x4 = +(pair_y,1)
-//│   in jump j1(x4)
-//│ )
-//│ Def(1, foo, [], [{}], 
+//│ Def(1, foo, [], [], 
 //│ None, 1, 
 //│ let* (x7) = inc_fst$D10$S12(1)
 //│   in x7
 //│ )
-//│ Def(2, @join j1, [x5], [{}], 
+//│ Def(5, inc_fst$D10$S12, [pair_y], [{EDirect}], 
 //│ None, 1, 
-//│ x5
+//│ let x4 = +(pair_y,1)
+//│   in x4
 //│ )
 //│ },
 //│ let* (x8) = foo()
@@ -551,13 +527,9 @@ bar()
 //│ None, 1, 
 //│ case x6 of
 //│   Left => let x8 = x6.x
-//│     in jump j7(x8)
+//│     in x8
 //│   Right => let x9 = x6.y
-//│     in jump j7(x9)
-//│ )
-//│ Def(3, @join j7, [x10], [{EDirect}], 
-//│ None, 1, 
-//│ x10
+//│     in x9
 //│ )
 //│ },
 //│ let* (x13) = bar()
@@ -565,27 +537,23 @@ bar()
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, Left, [x]),ClassInfo(1, Right, [y])}, {
-//│ Def(1, bar, [], [{}], 
+//│ Def(1, bar, [], [], 
 //│ None, 1, 
 //│ let* (x12) = foo$D16(2)
 //│   in x12
 //│ )
-//│ Def(6, foo$D16, [b], [{}], 
+//│ Def(6, foo$D16, [b], [{EDirect}], 
 //│ None, 1, 
 //│ let x5 = Right(b)
 //│   in jump j0(x5)
 //│ )
-//│ Def(2, @join j0, [x6], [{}], 
+//│ Def(2, @join j0, [x6], [{EDestruct，EDirect，ESelect(x)，ESelect(y)}], 
 //│ None, 1, 
 //│ case x6 of
 //│   Left => let x8 = x6.x
-//│     in jump j7(x8)
+//│     in x8
 //│   Right => let x9 = x6.y
-//│     in jump j7(x9)
-//│ )
-//│ Def(3, @join j7, [x10], [{}], 
-//│ None, 1, 
-//│ x10
+//│     in x9
 //│ )
 //│ },
 //│ let* (x13) = bar()
@@ -645,12 +613,12 @@ bar()
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Pair, [x,y])}, {
-//│ Def(1, bar, [], [{}], 
+//│ Def(1, bar, [], [], 
 //│ None, 1, 
 //│ let* (x4) = foo$S6(1,0)
 //│   in x4
 //│ )
-//│ Def(2, foo$S6, [a_x,a_y], [{}], 
+//│ Def(2, foo$S6, [a_x,a_y], [{EDirect},{EDirect}], 
 //│ None, 1, 
 //│ let x2 = +(a_x,a_y)
 //│   in x2
@@ -704,19 +672,15 @@ bar()
 //│ None, 1, 
 //│ case a of
 //│   C1 => let x2 = a.x
-//│     in jump j0(x2)
+//│     in x2
 //│   C2 => let x3 = a.z
-//│     in jump j0(x3)
+//│     in x3
 //│ )
 //│ Def(1, bar, [b], [{}], 
 //│ None, 1, 
 //│ let x5 = C1(0,1)
 //│   in let* (x6) = foo(x5)
 //│     in x6
-//│ )
-//│ Def(2, @join j0, [x4], [{EDirect}], 
-//│ None, 1, 
-//│ x4
 //│ )
 //│ },
 //│ let* (x7) = bar()
@@ -726,16 +690,7 @@ bar()
 //│ GOProgram({ClassInfo(0, C1, [x,y]),ClassInfo(1, C2, [z])}, {
 //│ Def(1, bar, [b], [{}], 
 //│ None, 1, 
-//│ let* (x6) = foo$D9$S12(0)
-//│   in x6
-//│ )
-//│ Def(6, foo$D9$S12, [a_x], [{}], 
-//│ None, 1, 
-//│ jump j0(a_x)
-//│ )
-//│ Def(2, @join j0, [x4], [{}], 
-//│ None, 1, 
-//│ x4
+//│ 0
 //│ )
 //│ },
 //│ let* (x7) = bar()
@@ -833,7 +788,7 @@ baz()
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
-//│ Def(1, bar, [c], [{}], 
+//│ Def(1, bar, [c], [{ESelect(x)，ESelect(y)}], 
 //│ None, 1, 
 //│ let x20 = c.x
 //│   in let x21 = c.y
@@ -842,13 +797,13 @@ baz()
 //│         in let* (x13) = foo$S17(0,1,2,3)
 //│           in x13
 //│ )
-//│ Def(2, baz, [], [{}], 
+//│ Def(2, baz, [], [], 
 //│ None, 1, 
 //│ let x14 = Pair(4,5)
 //│   in let* (x15) = bar(x14)
 //│     in x15
 //│ )
-//│ Def(3, foo$S17, [a_x,a_y,b_x,b_y], [{}], 
+//│ Def(3, foo$S17, [a_x,a_y,b_x,b_y], [{EDirect},{EDirect},{EDirect},{EDirect}], 
 //│ None, 1, 
 //│ let x4 = +(a_x,a_y)
 //│   in let x5 = +(x4,b_x)
@@ -861,19 +816,19 @@ baz()
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
-//│ Def(2, baz, [], [{}], 
+//│ Def(2, baz, [], [], 
 //│ None, 1, 
 //│ let* (x15) = bar$S28(4,5)
 //│   in x15
 //│ )
-//│ Def(3, foo$S17, [a_x,a_y,b_x,b_y], [{}], 
+//│ Def(3, foo$S17, [a_x,a_y,b_x,b_y], [{EDirect},{EDirect},{EDirect},{EDirect}], 
 //│ None, 1, 
 //│ let x4 = +(a_x,a_y)
 //│   in let x5 = +(x4,b_x)
 //│     in let x6 = +(x5,b_y)
 //│       in x6
 //│ )
-//│ Def(4, bar$S28, [c_x,c_y], [{}], 
+//│ Def(4, bar$S28, [c_x,c_y], [{EDirect},{EDirect}], 
 //│ None, 1, 
 //│ let* (x8) = foo$S17(0,1,c_x,c_y)
 //│   in let* (x10) = foo$S17(c_x,c_y,2,3)
