@@ -15,9 +15,23 @@ declare fun print: Str ->{io, exn} ()
 declare fun write: (Str, Str) ->{io, exn} ()
 //│ fun write: (Str, Str) ->{io, exn} ()
 
-effect MyEffect[A] {
+effect MyEffect[A](x: A) {
   fun print: Str ->{io} ()
 }
-//│ class MyEffect[A] {
+//│ class MyEffect[A](x: A) {
 //│   fun print: Str ->{io} ()
 //│ }
+
+
+handle e = MyEffect(42) {
+  fun print(s) = log(s)
+}
+e.print("hello")
+//│ module e extends MyEffect {
+//│   fun print: anything -> ()
+//│ }
+//│ ()
+//│ res
+//│     = undefined
+//│ // Output
+//│ hello

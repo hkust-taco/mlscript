@@ -286,7 +286,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         yeetSpaces
         go(acc.copy(acc.mods + ("abstract" -> l0)))
       case _ if acc.mods.isEmpty => acc
-      case (KEYWORD("class" | "infce" | "trait" | "mixin" | "type" | "namespace" | "module" | "fun" | "val" | "effect"), l0) :: _ =>
+      case (KEYWORD("class" | "infce" | "trait" | "mixin" | "type" | "namespace" | "module" | "fun" | "val" | "effect" | "handle"), l0) :: _ =>
         acc
       case (tok, loc) :: _ =>
         // TODO support indented blocks of modified declarations...
@@ -408,7 +408,6 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
             val ctor = ctors.headOption
             val res =
               NuTypeDef(kind, tn, tparams, params, ctor, sig, ps, N, N, tu)(isDecl, isAbs, isEff)
-            R(res.withLoc(S(l0 ++ tn.getLoc ++ res.getLoc)))
             R(res.withLoc(S(l0 ++ res.getLoc)))
           
           case ModifierSet(mods, (KEYWORD(kwStr @ ("fun" | "val" | "let")), l0) :: c) => // TODO support rec?
@@ -524,6 +523,34 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                   }
               }
             }
+          case ModifierSet(mods, (KEYWORD(kwStr @ ("handle")), l0) :: c) =>
+            consume
+            val tn = yeetSpaces match {
+              case (IDENT(idStr, _), l1) :: _ =>
+                consume
+                TypeName(idStr).withLoc(S(l1))
+              case c =>
+                val (tkstr, loc) = c.headOption.fold(("end of input", lastLoc))(_.mapFirst(_.describe).mapSecond(some))
+                err((
+                  msg"Expected a handler name; found ${tkstr} instead" -> loc :: Nil))
+                consume
+                TypeName("<error>").withLoc(curLoc.map(_.left))
+            }
+            
+            val ps = yeetSpaces match {
+              case (KEYWORD("="), l1) :: _ =>
+                consume
+                expr(0).withLoc(S(l1)) :: Nil
+              case _ =>
+                val (tkstr, loc) = c.headOption.fold(("end of input", lastLoc))(_.mapFirst(_.describe).mapSecond(some))
+                err((msg"Expected `=`; found ${tkstr} instead" -> loc :: Nil))
+                consume
+                Var("<error>").withLoc(curLoc.map(_.left)) :: Nil
+            }
+            val tu = curlyTypingUnit
+            val res =
+              NuTypeDef(Mod, tn, Nil, N, N, N, ps, N, N, tu)(N, N, N)
+            R(res.withLoc(S(l0 ++ res.getLoc)))
           case _ =>
             exprOrIf(0, allowSpace = false)
         }
