@@ -799,7 +799,6 @@ class GraphOptimizer:
     val newdefs = defs.flatMap {
       case defn if workset.contains(defn.name) => workset(defn.name).flatMap {
         param => 
-          println(s"split ${defn.name}")
           val (r, pr, p, d) = splitFunctionWhenDestruct(using classes)(defn, Name(param))
           rawremap = rawremap ++ r
           rawpreremap = rawpreremap ++ pr

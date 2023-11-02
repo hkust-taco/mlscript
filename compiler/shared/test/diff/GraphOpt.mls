@@ -1,7 +1,7 @@
 :NewParser
 :ParseOnly
 
-
+:GraphOpt
 class Pair(x, y)
 fun mktup2(x, y) = mktup(x, y)
 fun mktup(x, y) = Pair(x, y)
@@ -12,8 +12,6 @@ foo()
 //│ Parsed: {class Pair(x, y,) {}; fun mktup2 = (x, y,) => mktup(x, y,); fun mktup = (x, y,) => Pair(x, y,); fun foo = () => {mktup2(1, 2,)}; foo()}
 //│ Parsed:
 //│ TypingUnit(NuTypeDef(class, Pair, (), Tup(_: Var(x), _: Var(y)), (), None, None, TypingUnit()), NuFunDef(None, mktup2, None, [], Lam(Tup(_: Var(x), _: Var(y)), App(Var(mktup), Tup(_: Var(x), _: Var(y))))), NuFunDef(None, mktup, None, [], Lam(Tup(_: Var(x), _: Var(y)), App(Var(Pair), Tup(_: Var(x), _: Var(y))))), NuFunDef(None, foo, None, [], Lam(Tup(), Blk(...))), App(Var(foo), Tup()))
-//│ Lifted:
-//│ 
 //│ 
 //│ GraphOpt:
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
@@ -57,6 +55,7 @@ foo()
 //│ let* (x3) = foo()
 //│   in x3)
 
+:GraphOpt
 class Pair(x, y)
 fun foo(pair) =
   if pair is
@@ -68,8 +67,6 @@ bar()
 //│ Parsed: {class Pair(x, y,) {}; fun foo = (pair,) => {if pair is ‹(Pair(x, y,)) then Pair(x, y,)›}; fun bar = () => {foo(Pair(1, 2,),)}; bar()}
 //│ Parsed:
 //│ TypingUnit(NuTypeDef(class, Pair, (), Tup(_: Var(x), _: Var(y)), (), None, None, TypingUnit()), NuFunDef(None, foo, None, [], Lam(Tup(_: Var(pair)), Blk(...))), NuFunDef(None, bar, None, [], Lam(Tup(), Blk(...))), App(Var(bar), Tup()))
-//│ Lifted:
-//│ 
 //│ 
 //│ GraphOpt:
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
@@ -129,7 +126,7 @@ bar()
 //│   in x7)
 
 
-
+:GraphOpt
 fun add3(x) = y => z => x + y + z
 fun foo(f) = f(2)
 foo(add3(1))
@@ -137,8 +134,6 @@ foo(add3(1))
 //│ Parsed: {fun add3 = (x,) => (y,) => (z,) => +(+(x,)(y,),)(z,); fun foo = (f,) => f(2,); foo(add3(1,),)}
 //│ Parsed:
 //│ TypingUnit(NuFunDef(None, add3, None, [], Lam(Tup(_: Var(x)), Lam(Tup(_: Var(y)), Lam(Tup(_: Var(z)), App(App(Var(+), Tup(_: App(App(Var(+), Tup(_: Var(x))), Tup(_: Var(y))))), Tup(_: Var(z))))))), NuFunDef(None, foo, None, [], Lam(Tup(_: Var(f)), App(Var(f), Tup(_: IntLit(2))))), App(Var(foo), Tup(_: App(Var(add3), Tup(_: IntLit(1))))))
-//│ Lifted:
-//│ 
 //│ 
 //│ GraphOpt:
 //│ GOProgram({}, {
@@ -180,6 +175,7 @@ foo(add3(1))
 //│   in let* (x6) = foo(x5)
 //│     in x6)
 
+:GraphOpt
 class Pair(x, y) {}
 fun silly(pair) =
   let _ = 0
@@ -197,8 +193,6 @@ foo()
 //│ Parsed: {class Pair(x, y,) {}; fun silly = (pair,) => {let _ = 0; let n = if pair is ‹(Pair(x1, x2,)) then {if pair is ‹(Pair(x3, x4,)) then +(x3,)(1,)›}›; +(n,)(1,)}; fun foo = () => {let a = Pair(0, 1,); let b = silly(a,); b}; foo()}
 //│ Parsed:
 //│ TypingUnit(NuTypeDef(class, Pair, (), Tup(_: Var(x), _: Var(y)), (), None, None, TypingUnit()), NuFunDef(None, silly, None, [], Lam(Tup(_: Var(pair)), Blk(...))), NuFunDef(None, foo, None, [], Lam(Tup(), Blk(...))), App(Var(foo), Tup()))
-//│ Lifted:
-//│ 
 //│ 
 //│ GraphOpt:
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
@@ -309,7 +303,7 @@ foo()
 //│ let* (x13) = foo()
 //│   in x13)
 
-
+:GraphOpt
 class Pair(x, y) {}
 fun inc_fst(pair) =
   let c = 2
@@ -324,8 +318,6 @@ foo()
 //│ Parsed: {class Pair(x, y,) {}; fun inc_fst = (pair,) => {let c = 2; if pair is ‹(Pair(x1, x2,)) then +(x1,)(c,)›}; fun foo = () => {let a = Pair(0, 1,); let b = inc_fst(a,); b}; foo()}
 //│ Parsed:
 //│ TypingUnit(NuTypeDef(class, Pair, (), Tup(_: Var(x), _: Var(y)), (), None, None, TypingUnit()), NuFunDef(None, inc_fst, None, [], Lam(Tup(_: Var(pair)), Blk(...))), NuFunDef(None, foo, None, [], Lam(Tup(), Blk(...))), App(Var(foo), Tup()))
-//│ Lifted:
-//│ 
 //│ 
 //│ GraphOpt:
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
@@ -384,6 +376,7 @@ foo()
 //│ let* (x8) = foo()
 //│   in x8)
 
+:GraphOpt
 class Pair(x, y)
 fun inc_fst(pair) =
   let _ = 0
@@ -397,8 +390,6 @@ foo()
 //│ Parsed: {class Pair(x, y,) {}; fun inc_fst = (pair,) => {let _ = 0; if pair is ‹(Pair(x1, x2,)) then +(x2,)(1,)›}; fun foo = () => {let b = inc_fst(Pair(0, 1,),); b}; foo()}
 //│ Parsed:
 //│ TypingUnit(NuTypeDef(class, Pair, (), Tup(_: Var(x), _: Var(y)), (), None, None, TypingUnit()), NuFunDef(None, inc_fst, None, [], Lam(Tup(_: Var(pair)), Blk(...))), NuFunDef(None, foo, None, [], Lam(Tup(), Blk(...))), App(Var(foo), Tup()))
-//│ Lifted:
-//│ 
 //│ 
 //│ GraphOpt:
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
@@ -457,6 +448,7 @@ foo()
 //│ let* (x8) = foo()
 //│   in x8)
 
+:GraphOpt
 class Left(x)
 class Right(y)
 fun foo(a, b) =
@@ -473,8 +465,6 @@ bar()
 //│ Parsed: {class Left(x,) {}; class Right(y,) {}; fun foo = (a, b,) => {let t = if a is ‹(Left(x,)) then Left(+(x,)(1,),); (Right(y,)) then Right(b,)›; if t is ‹(Left(x,)) then x; (Right(y,)) then y›}; fun bar = () => {foo(Right(2,), 2,)}; bar()}
 //│ Parsed:
 //│ TypingUnit(NuTypeDef(class, Left, (), Tup(_: Var(x)), (), None, None, TypingUnit()), NuTypeDef(class, Right, (), Tup(_: Var(y)), (), None, None, TypingUnit()), NuFunDef(None, foo, None, [], Lam(Tup(_: Var(a), _: Var(b)), Blk(...))), NuFunDef(None, bar, None, [], Lam(Tup(), Blk(...))), App(Var(bar), Tup()))
-//│ Lifted:
-//│ 
 //│ 
 //│ GraphOpt:
 //│ GOProgram({ClassInfo(0, Left, [x]),ClassInfo(1, Right, [y])}, {
@@ -569,6 +559,7 @@ bar()
 //│ let* (x13) = bar()
 //│   in x13)
 
+:GraphOpt
 class True
 class False
 class Pair(x, y)
@@ -580,8 +571,6 @@ bar()
 //│ Parsed: {class True {}; class False {}; class Pair(x, y,) {}; fun foo = (a,) => +((a).x,)((a).y,); fun bar = () => {foo(Pair(1, 0,),)}; bar()}
 //│ Parsed:
 //│ TypingUnit(NuTypeDef(class, True, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, False, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, Pair, (), Tup(_: Var(x), _: Var(y)), (), None, None, TypingUnit()), NuFunDef(None, foo, None, [], Lam(Tup(_: Var(a)), App(App(Var(+), Tup(_: Sel(Var(a), x))), Tup(_: Sel(Var(a), y))))), NuFunDef(None, bar, None, [], Lam(Tup(), Blk(...))), App(Var(bar), Tup()))
-//│ Lifted:
-//│ 
 //│ 
 //│ GraphOpt:
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Pair, [x,y])}, {
@@ -638,7 +627,7 @@ bar()
 //│   in x5)
 
 
-
+:GraphOpt
 class C1(x, y)
 class C2(z)
 fun foo(a) = if a is
@@ -651,8 +640,6 @@ bar()
 //│ Parsed: {class C1(x, y,) {}; class C2(z,) {}; fun foo = (a,) => if a is ‹(C1(x, y,)) then x; (C2(z,)) then z›; fun bar = (b,) => {foo(C1(0, 1,),)}; bar()}
 //│ Parsed:
 //│ TypingUnit(NuTypeDef(class, C1, (), Tup(_: Var(x), _: Var(y)), (), None, None, TypingUnit()), NuTypeDef(class, C2, (), Tup(_: Var(z)), (), None, None, TypingUnit()), NuFunDef(None, foo, None, [], Lam(Tup(_: Var(a)), If(IfOpApp(Var(a), Var(is), IfBlock(IfThen(App(Var(C1), Tup(_: Var(x), _: Var(y))), Var(x);IfThen(App(Var(C2), Tup(_: Var(z))), Var(z)), None))), NuFunDef(None, bar, None, [], Lam(Tup(_: Var(b)), Blk(...))), App(Var(bar), Tup()))
-//│ Lifted:
-//│ 
 //│ 
 //│ GraphOpt:
 //│ GOProgram({ClassInfo(0, C1, [x,y]),ClassInfo(1, C2, [z])}, {
@@ -706,7 +693,7 @@ bar()
 //│ let* (x7) = bar()
 //│   in x7)
 
-
+:GraphOpt
 class Pair(x, y)
 fun foo(a, b) =
   let x1 = a.x
@@ -725,8 +712,6 @@ baz()
 //│ Parsed: {class Pair(x, y,) {}; fun foo = (a, b,) => {let x1 = (a).x; let y1 = (a).y; let x2 = (b).x; let y2 = (b).y; +(+(+(x1,)(y1,),)(x2,),)(y2,)}; fun bar = (c,) => {foo(Pair(0, 1,), c,); foo(c, Pair(2, 3,),); foo(Pair(0, 1,), Pair(2, 3,),)}; fun baz = () => {bar(Pair(4, 5,),)}; baz()}
 //│ Parsed:
 //│ TypingUnit(NuTypeDef(class, Pair, (), Tup(_: Var(x), _: Var(y)), (), None, None, TypingUnit()), NuFunDef(None, foo, None, [], Lam(Tup(_: Var(a), _: Var(b)), Blk(...))), NuFunDef(None, bar, None, [], Lam(Tup(_: Var(c)), Blk(...))), NuFunDef(None, baz, None, [], Lam(Tup(), Blk(...))), App(Var(baz), Tup()))
-//│ Lifted:
-//│ 
 //│ 
 //│ GraphOpt:
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
@@ -849,6 +834,7 @@ baz()
 //│ let* (x16) = baz()
 //│   in x16)
 
+:GraphOpt
 class Pair(x, y)
 fun foo() =
   let p = Pair(0, 1)
@@ -859,8 +845,6 @@ foo()
 //│ Parsed: {class Pair(x, y,) {}; fun foo = () => {let p = Pair(0, 1,); let b = (p).x; b}; foo()}
 //│ Parsed:
 //│ TypingUnit(NuTypeDef(class, Pair, (), Tup(_: Var(x), _: Var(y)), (), None, None, TypingUnit()), NuFunDef(None, foo, None, [], Lam(Tup(), Blk(...))), App(Var(foo), Tup()))
-//│ Lifted:
-//│ 
 //│ 
 //│ GraphOpt:
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
