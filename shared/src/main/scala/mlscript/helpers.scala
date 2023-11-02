@@ -426,7 +426,11 @@ trait NuDeclImpl extends Located { self: NuDecl =>
   val declareLoc: Opt[Loc]
   val abstractLoc: Opt[Loc]
   def isDecl: Bool = declareLoc.nonEmpty
-  def isAbstract: Bool = abstractLoc.nonEmpty
+  def isAbstract: Bool = abstractLoc.nonEmpty || isEffect
+  def isEffect: Bool = self match {
+    case td: NuTypeDef => td.effectLoc.nonEmpty
+    case _ => false
+  }
   def declStr: Str = if (isDecl) "declare " else ""
   val nameVar: Var = self match {
     case td: NuTypeDef => td.nme.toVar

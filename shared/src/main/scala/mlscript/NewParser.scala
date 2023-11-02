@@ -284,7 +284,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         yeetSpaces
         go(acc.copy(acc.mods + ("abstract" -> l0)))
       case _ if acc.mods.isEmpty => acc
-      case (KEYWORD("class" | "infce" | "trait" | "mixin" | "type" | "namespace" | "module" | "fun" | "val"), l0) :: _ =>
+      case (KEYWORD("class" | "infce" | "trait" | "mixin" | "type" | "namespace" | "module" | "fun" | "val" | "effect"), l0) :: _ =>
         acc
       case (tok, loc) :: _ =>
         // TODO support indented blocks of modified declarations...
@@ -319,19 +319,20 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         R(res.withLoc(S(l0 ++ res.getLoc))) :: block
       case c =>
         val t = c match {
-          case ModifierSet(mods, (KEYWORD(k @ ("class" | "infce" | "trait" | "mixin" | "type" | "module")), l0) :: c) =>
+          case ModifierSet(mods, (KEYWORD(k @ ("class" | "infce" | "trait" | "mixin" | "type" | "module" | "effect")), l0) :: c) =>
             consume
             val (isDecl, mods2) = mods.handle("declare")
             val (isAbs, mods3) = mods2.handle("abstract")
             mods3.done
             val kind = k match {
-              case "class" => Cls
+              case "class" | "effect" => Cls
               case "trait" => Trt
               case "mixin" => Mxn
               case "type" => Als
               case "module" => Mod
               case _ => die
             }
+            val isEff = if (k === "effect") S(l0) else N
             val (tn, success) = yeetSpaces match {
               case (IDENT(idStr, _), l1) :: _ =>
                 consume
@@ -404,7 +405,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
             }
             val ctor = ctors.headOption
             val res =
-              NuTypeDef(kind, tn, tparams, params, ctor, sig, ps, N, N, tu)(isDecl, isAbs)
+              NuTypeDef(kind, tn, tparams, params, ctor, sig, ps, N, N, tu)(isDecl, isAbs, isEff)
             R(res.withLoc(S(l0 ++ tn.getLoc ++ res.getLoc)))
             R(res.withLoc(S(l0 ++ res.getLoc)))
           

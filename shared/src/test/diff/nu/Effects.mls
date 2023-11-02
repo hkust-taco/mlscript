@@ -1,0 +1,12 @@
+:NewDefs
+
+// TODO parse impure function type
+effect MyEffect[A] {
+  fun print: Str ->{io} ()
+}
+//│ ╔══[ERROR] Not a recognized type
+//│ ║  l.5: 	  fun print: Str ->{io} ()
+//│ ╙──     	                   ^^^^^^^
+//│ class MyEffect[A] {
+//│   fun print: anything
+//│ }

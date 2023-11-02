@@ -202,7 +202,7 @@ final case class NuTypeDef(
   superAnnot: Opt[Type],
   thisAnnot: Opt[Type],
   body: TypingUnit
-)(val declareLoc: Opt[Loc], val abstractLoc: Opt[Loc])
+)(val declareLoc: Opt[Loc], val abstractLoc: Opt[Loc], val effectLoc: Opt[Loc])
   extends NuDecl with Statement with Outer {
     def isPlainJSClass: Bool = params.isEmpty
   }
