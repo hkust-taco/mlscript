@@ -4,7 +4,7 @@ import mlscript.compiler.debug.{Debug, DummyDebug}
 import mlscript.{TypingUnit, NuTypeDef, NuFunDef}
 import mlscript.{AppliedType, TypeName}
 import mlscript.{App, Asc, Assign, Bind, Blk, Bra, CaseOf, Lam, Let, Lit,
-                 New, Rcd, Sel, Subs, Term, Test, Tup, With, Var, Fld, If}
+                 New, Rcd, Sel, Subs, Term, Test, Tup, With, Var, Fld, FldFlags, If}
 import mlscript.{IfThen, IfElse, IfLet, IfOpApp, IfOpsApp, IfBlock}
 import mlscript.{IntLit, DecLit, StrLit, UnitLit}
 import scala.collection.immutable.{HashMap}
@@ -182,7 +182,7 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
         funDependence.update(name, old ++ callingStack.headOption)
         // debug.log(s"adding dependence ${callingStack.headOption}")
         val nArgs = (oldArgs zip (args.map(_.unfoldVars))).map(_ ++ _).zip(funcdecl.params).map(
-          (x,y) => if(y._1) then x else x.literals2Prims
+          (x,y) => if(y._1.spec) then x else x.literals2Prims
         )
         
         debug.log(s"comparing ${oldArgs.mkString("(", ", ", ")")} with ${nArgs.map(_.getDebugOutput).mkString("(", ", ", ")")}")
@@ -244,11 +244,11 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
       throw MonomorphError(s"$name expect ${params.length} arguments but ${args.length} were given")
     }
     val staticArguments = params.iterator.zip(args).flatMap({
-      case ((true, _), value) => Some(value)
+      case ((flags, _), value) if flags.spec => Some(value)
       case _ => None
     }).toList
     val dynamicArguments = params.iterator.zip(args).flatMap({
-      case ((false, _), value) => Some(value)
+      case ((flags, _), value) if !flags.spec => Some(value)
       case _ => None
     }).toList
     (staticArguments, dynamicArguments)
@@ -293,7 +293,7 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
         val Item.FuncDecl(nm, prms, bd) = func.get
         val nFuncName = s"${nm.name}$$${obj.name}"
         if(!funImpls.contains(nFuncName)){
-          val nFunc: Item.FuncDecl = Item.FuncDecl(Expr.Ref(nFuncName), (false, Expr.Ref("this")) :: prms, bd)
+          val nFunc: Item.FuncDecl = Item.FuncDecl(Expr.Ref(nFuncName), (FldFlags.empty, Expr.Ref("this")) :: prms, bd)
           addNewFunction(nFunc)
         }
         BoundedExpr(FunctionValue(nFuncName, prms.map(_._2.name), List("this" -> BoundedExpr(obj))))

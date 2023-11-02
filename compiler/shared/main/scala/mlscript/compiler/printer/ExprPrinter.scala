@@ -14,7 +14,7 @@ class ExprPrinter:
 
   private def show(params: List[Parameter]): String =
     params.iterator.map {
-      case (spec, Expr.Ref(name)) => (if spec then "#" else "") + name
+      case (flags, Expr.Ref(name)) => (if flags.spec then "#" else "") + name
     }.mkString("(", ", ", ")")
 
   private def show(item: Item): Unit = item match

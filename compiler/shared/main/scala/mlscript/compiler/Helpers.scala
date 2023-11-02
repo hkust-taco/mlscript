@@ -31,8 +31,8 @@ object Helpers:
     case Tup(fields) => fields.iterator.flatMap {
       // The new parser emits `Tup(_: UnitLit(true))` from `fun f() = x`.
       case (_, Fld(FldFlags(_, _, _), UnitLit(true))) => None
-      case (None, Fld(FldFlags(_, spec, _), Var(name))) => Some((spec, Expr.Ref(name)))
-      case (Some(Var(name)), Fld(FldFlags(_, spec, _), _)) => Some((spec, Expr.Ref(name)))
+      case (None, Fld(flags, Var(name))) => Some((flags, Expr.Ref(name)))
+      case (Some(Var(name)), Fld(flags, _)) => Some((flags, Expr.Ref(name)))
       case _ => throw new MonomorphError(
         s"only `Var` can be parameters but we meet ${showStructure(term)}"
       )
@@ -214,7 +214,7 @@ object Helpers:
             None,
             Nil,
             Left(Lam(Tup(params.map{
-              case (spec: Boolean, ref: Expr.Ref) => (None, Fld(FldFlags(false, spec, false), Var(ref.name)))
+              case (flags: FldFlags, ref: Expr.Ref) => (None, Fld(flags, Var(ref.name)))
             }), expr2Term(body))))
             (None, None, None, None, false)
         case Item.FuncDefn(name, typeParams, body) => ???
