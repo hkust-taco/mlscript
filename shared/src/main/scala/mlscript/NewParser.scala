@@ -254,6 +254,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
   }
   final def typ(prec: Int = 0)(implicit fe: FoundErr, l: Line): Type =
     mkType(expr(prec))
+  final def typEff(prec: Int = 0)(implicit fe: FoundErr, l: Line): (Type, Ls[TypeName]) =
+    mkTypeWithEffects(expr(prec))
   
   case class ModifierSet(mods: Map[Str, Loc]) {
     def handle(mod: Str): (Opt[Loc], ModifierSet) =
@@ -488,7 +490,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                 case (KEYWORD(":"), _) :: _ =>
                   consume
                   // S(typ(2))
-                  S(typ(0))
+                  S(typEff(0))
                 case _ => N
               }
               yeetSpaces match {
@@ -496,15 +498,15 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                   consume
                   val body = expr(0)
                   val newBody = transformBody.fold(body)(_(body))
-                  val annotatedBody = asc.fold(newBody)(ty => Asc(newBody, ty))
+                  val annotatedBody = asc.fold(newBody)(ty => Asc(newBody, ty._1))
                   R(NuFunDef(
-                      isLetRec, v, opStr, tparams, L(ps.foldRight(annotatedBody)((i, acc) => Lam(i, acc)))
+                      isLetRec, v, opStr, tparams, Nil, L(ps.foldRight(annotatedBody)((i, acc) => Lam(i, acc)))
                     )(isDecl, isVirtual, N, N, genField).withLoc(S(l0 ++ annotatedBody.toLoc)))
                 case c =>
                   asc match {
-                    case S(ty) =>
+                    case S((ty, effs)) =>
                       if (transformBody.nonEmpty) die // TODO
-                      R(NuFunDef(isLetRec, v, opStr, tparams, R(PolyType(Nil, ps.foldRight(ty)((p, r) => Function(p.toType match {
+                      R(NuFunDef(isLetRec, v, opStr, tparams, effs, R(PolyType(Nil, ps.foldRight(ty)((p, r) => Function(p.toType match {
                         case L(diag) => raise(diag); Top // TODO better
                         case R(tp) => tp
                       }, r)))))(isDecl, isVirtual, N, N, genField).withLoc(S(l0 ++ ty.toLoc)))
@@ -517,7 +519,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                       consume
                       val bod = errExpr
                       R(NuFunDef(
-                          isLetRec, v, opStr, Nil, L(ps.foldRight(bod: Term)((i, acc) => Lam(i, acc)))
+                          isLetRec, v, opStr, Nil, Nil, L(ps.foldRight(bod: Term)((i, acc) => Lam(i, acc)))
                         )(isDecl, isVirtual, N, N, genField).withLoc(S(l0 ++ bod.toLoc)))
                   }
               }
@@ -636,8 +638,10 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                 Lam(Tup(res), e)
               case (IDENT("->", true), l1) :: _ =>
                 consume
+                val effs = effects
                 val rhs = expr(opPrec("->")._2)
-                Lam(Tup(res), rhs)
+                if (effs.isEmpty) Lam(Tup(res), rhs)
+                else App(Var("->").withLoc(S(l1)), App(Tup(effs), PlainTup(Tup(res), rhs)))
               case _ =>
                 res match {
                   case Nil =>
@@ -809,6 +813,13 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
   private def errExpr =
     // Tup(Nil).withLoc(lastLoc) // TODO FIXME produce error term instead
     UnitLit(true).withLoc(lastLoc) // TODO FIXME produce error term instead
+
+  private def effects(implicit et: ExpectThen, fe: FoundErr) = yeetSpaces match {
+    case (br @ BRACKETS(Curly, ts), brackloc) :: _ =>
+      consume
+      rec(ts, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented())
+    case _ => Nil
+  }
   
   final def exprCont(acc: Term, prec: Int, allowNewlines: Bool)(implicit et: ExpectThen, fe: FoundErr, l: Line): IfBody \/ Term = wrap(prec, s"`$acc`", allowNewlines) { l =>
     cur match {
@@ -831,6 +842,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       case (IDENT(opStr, true), l0) :: _ if /* isInfix(opStr) && */ opPrec(opStr)._1 > prec =>
         consume
         val v = Var(opStr).withLoc(S(l0))
+        val effs = if (opStr === "->") effects else Nil
         // printDbg(s">>> $opStr ${opPrec(opStr)}")
         exprOrIf(opPrec(opStr)._2) match {
           case L(rhs) =>
@@ -850,7 +862,10 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
               case ";" =>
                 Blk(acc :: rhs :: Nil)
               case _ =>
-                if (newDefs) App(v, PlainTup(acc, rhs))
+                if (newDefs) {
+                  if (effs.isEmpty) App(v, PlainTup(acc, rhs))
+                  else App(v, App(Tup(effs), PlainTup(acc, rhs)))
+                }
                 else App(App(v, PlainTup(acc)), PlainTup(rhs))
             }, prec, allowNewlines)
         }
@@ -1246,6 +1261,13 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
     case R(ty) => ty
   }
   
-  
+  final def mkTypeWithEffects(trm: Term): (Type, Ls[TypeName]) = trm match {
+    case App(ar @ Var("->"), App(Tup(effs), f @ PlainTup(lhs, rhs))) =>
+      (mkType(App(ar, f)), effs.map {
+        case N -> Fld(flags, Var(name)) => TypeName(name)
+        case _ => die
+      })
+    case _ => (mkType(trm), Nil)
+  }
 }
 

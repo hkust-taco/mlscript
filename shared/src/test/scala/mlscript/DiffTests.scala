@@ -605,7 +605,7 @@ class DiffTests
               // (Nil, Nil, N)
               (Nil, Nil, S(p.tops.collect {
                 // case LetS(isRec, pat, bod) => ("res", Nil, Nil, false)
-                case NuFunDef(isLet, nme, snme, tparams, bod) =>
+                case NuFunDef(isLet, nme, snme, tparams, _, bod) =>
                   (nme.name + " ", nme.name :: Nil, Nil, false, isLet.isEmpty)
                 case t: Term => ("res ", "res" :: Nil, Nil, false, false)
               }))

@@ -1,12 +1,23 @@
 :NewDefs
 
-// TODO parse impure function type
+declare fun foo: () -> Int
+//│ fun foo: () -> Int
+
+declare fun print: Str ->{io} ()
+//│ fun print: Str ->{io} ()
+
+declare fun foo: (Int, Int) ->{exn} ()
+//│ fun foo: (Int, Int) ->{exn} ()
+
+declare fun print: Str ->{io, exn} ()
+//│ fun print: Str ->{io, exn} ()
+
+declare fun write: (Str, Str) ->{io, exn} ()
+//│ fun write: (Str, Str) ->{io, exn} ()
+
 effect MyEffect[A] {
   fun print: Str ->{io} ()
 }
-//│ ╔══[ERROR] Not a recognized type
-//│ ║  l.5: 	  fun print: Str ->{io} ()
-//│ ╙──     	                   ^^^^^^^
 //│ class MyEffect[A] {
-//│   fun print: anything
+//│   fun print: Str ->{io} ()
 //│ }

@@ -212,6 +212,7 @@ final case class NuFunDef(
   nme: Var,
   symbolicNme: Opt[Var],
   tparams: Ls[TypeName],
+  effects: Ls[TypeName],
   rhs: Term \/ Type,
 )(
   val declareLoc: Opt[Loc],

@@ -557,7 +557,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     }
     val funSigs = MutMap.empty[Str, NuFunDef]
     val implems = decls.filter {
-      case fd @ NuFunDef(_, nme, snme, tparams, R(rhs)) =>
+      case fd @ NuFunDef(_, nme, snme, tparams, effects, R(rhs)) =>
         funSigs.updateWith(nme.name) {
           case S(s) =>
             err(s"A type signature for '$nme' was already given", fd.toLoc)
@@ -604,7 +604,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
         named.updateWith(decl.name) {
           case sv @ S(v) =>
             decl match {
-              case NuFunDef(S(_), _, _, _, _) => ()
+              case NuFunDef(S(_), _, _, _, _, _) => ()
               case _ =>
                 err(msg"Refininition of '${decl.name}'", decl.toLoc)
             }
@@ -984,12 +984,12 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     lazy val (typedSignatures, funImplems) : (Ls[(NuFunDef, ST)], Ls[NuFunDef]) = decl match {
       case td: NuTypeDef => ctx.nest.nextLevel { implicit ctx =>
         val (signatures, rest) = td.body.entities.partitionMap {
-          case fd @ NuFunDef(N | S(false), nme, snme, tparams, R(rhs)) => // currently `val`s are encoded with `S(false)`
+          case fd @ NuFunDef(N | S(false), nme, snme, tparams, effects, R(rhs)) => // currently `val`s are encoded with `S(false)`
             L((fd, rhs))
           // TODO also pick up signature off implems with typed params/results
           case s => R(s)
         }
-        val implems = rest.collect { case fd @ NuFunDef(N | S(false), nme, snme, tparams, L(rhs)) => fd }
+        val implems = rest.collect { case fd @ NuFunDef(N | S(false), nme, snme, tparams, effects, L(rhs)) => fd }
         
         ctx ++= paramSymbols
         
@@ -1305,7 +1305,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       val fd = NuFunDef((a.fd.isLetRec, b.fd.isLetRec) match {
                         case (S(a), S(b)) => S(a || b)
                         case _ => N // if one is fun, then it will be fun
-                      }, a.fd.nme, N/*no sym name?*/, a.fd.tparams, a.fd.rhs)(a.fd.declareLoc, a.fd.virtualLoc, N, a.fd.outer orElse b.fd.outer, a.fd.genField)
+                      }, a.fd.nme, N/*no sym name?*/, a.fd.tparams, a.fd.effects, a.fd.rhs)(a.fd.declareLoc, a.fd.virtualLoc, N, a.fd.outer orElse b.fd.outer, a.fd.genField)
                       S(TypedNuFun(a.level, fd, a.bodyType & b.bodyType)(a.isImplemented || b.isImplemented))
                     case (a: NuParam, S(b: NuParam)) => 
                       if (!a.isPublic) S(b) else if (!b.isPublic) S(a)
@@ -1401,7 +1401,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       inherit(typedParents, trtNameToNomTag(td)(noProv, ctx), Nil, Map.empty)
                     
                     td.body.entities.foreach {
-                      case fd @ NuFunDef(_, _, _, _, L(_)) =>
+                      case fd @ NuFunDef(_, _, _, _, _, L(_)) =>
                         err(msg"Method implementations in traits are not yet supported", fd.toLoc)
                       case _ =>
                     }
