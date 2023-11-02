@@ -558,6 +558,16 @@ bar()
 //│ },
 //│ let* (x13) = bar()
 //│   in x13)
+//│ 
+//│ Optimized ------------------------------
+//│ GOProgram({ClassInfo(0, Left, [x]),ClassInfo(1, Right, [y])}, {
+//│ Def(1, bar, [], [], 
+//│ None, 1, 
+//│ 2
+//│ )
+//│ },
+//│ let* (x13) = bar()
+//│   in x13)
 
 class True
 class False
@@ -873,5 +883,4 @@ foo()
 //│ },
 //│ let* (x2) = foo()
 //│   in x2)
-
 

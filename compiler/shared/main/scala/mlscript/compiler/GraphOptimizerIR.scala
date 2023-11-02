@@ -48,7 +48,6 @@ case class Name(val str: Str):
   }
   override def toString: String = str
 
-// TODO
 class GODefRef(var defn: Either[GODef, Str]):
   def getName: String = defn match {
     case Left(godef) => godef.getName
@@ -155,12 +154,12 @@ enum GOExpr:
 enum Node:
   // Terminal forms:
   case Result(res: Ls[TrivialExpr])
-  case Jump(joinName: Name, args: Ls[TrivialExpr])
+  case Jump(defn: GODefRef, args: Ls[TrivialExpr])
   case Case(scrut: Name, cases: Ls[(ClassInfo, Node)])
   // Intermediate forms:
   case LetExpr(name: Name, expr: GOExpr, body: Node)
   case LetJoin(joinName: Name, params: Ls[Name], rhs: Node, body: Node)
-  case LetCall(resultNames: Ls[Name], var defn: GODefRef, args: Ls[TrivialExpr], body: Node)
+  case LetCall(resultNames: Ls[Name], defn: GODefRef, args: Ls[TrivialExpr], body: Node)
 
   override def toString: String = show
 
@@ -169,9 +168,9 @@ enum Node:
 
   private def toDocument: Document = this match
     case Result(res) => raw(res |> show_args)
-    case Jump(Name(name), args) =>
+    case Jump(jp, args) =>
       raw("jump")
-      <:> raw(name)
+      <:> raw(jp.getName)
       <#> raw("(")
       <#> raw(args |> show_args)
       <#> raw(")") 
