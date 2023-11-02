@@ -338,7 +338,7 @@ class GraphOptimizer:
 
       import scala.collection.mutable.{ HashSet => MutHSet }
 
-      val ops = Set("+", "-")
+      val ops = Set("+", "-", "*", "/")
       val cls = grouped.getOrElse(0, Nil).map(getClassInfo)
       
       val init: Set[Str] = Set.empty
@@ -535,8 +535,10 @@ class GraphOptimizer:
       case Ref(Name(s)) if !ctx.contains(s) => Some(s)
       case _ => None
     }, fj)
-    case Jump(jp, _) =>
-      (fv, if (ctx.contains(jp.getName)) fj else fj + jp.getName )
+    case Jump(defnref, _) =>
+      val defn = defnref |> expectDefn
+      val params = defn.params map { case Name(x) => x }
+      freeVarAnalysis(using ctx ++ params)(defn.body, fv -- params, fj -- params)
     case Case(Name(scrut), cases) => 
       val fv2 = if (ctx.contains(scrut)) fv else fv + scrut
       cases.foldLeft((fv2, fj)) {
@@ -1155,9 +1157,14 @@ class GraphOptimizer:
     case Case(scrut, cases) => Case(scrut, cases map {
       (cls, e) => (cls, simplifySel(e))
     })
-    case LetExpr(x, Select(y, cls, field), e2) if cctx.contains(y.str) =>
-      val m = cctx(y.str)
-      LetExpr(x, toExpr(m(field)), simplifySel(e2))
+    case LetExpr(x, sel @ Select(y, cls, field), e2) if cctx.contains(y.str) =>
+      cctx.get(y.str) match
+        case Some(m) =>
+          m.get(field) match 
+            case Some(v) => LetExpr(x, v |> toExpr, simplifySel(e2)) 
+            case None => 
+              LetExpr(x, sel, simplifySel(e2))
+        case None => LetExpr(x, sel, simplifySel(e2))
     case LetExpr(x, y @ CtorApp(cls, args), e2) =>
       val m = cls.fields.zip(args).toMap
       val cctx2 = cctx + (x.str -> m)
@@ -1177,28 +1184,40 @@ class GraphOptimizer:
     }
   }
 
-  private def collectDeadBindings(node: Node, dead: Set[Str]): Set[Str] = node match {
-    case Result(xs) => dead -- argsToStrs(xs)
-    case Jump(_, xs) => dead -- argsToStrs(xs)
-    case Case(scrut, cases) => cases.foldLeft(dead - scrut.str) {
-      case (dead, (cls, e)) => collectDeadBindings(e, dead)
-    }
+  private def collectLiveBindings(node: Node, live: Set[Str]): Set[Str] = node match {
+    case Result(xs) => live ++ argsToStrs(xs)
+    case Jump(defnref, xs) =>
+      tryGetDefn(defnref) match {
+        case Some(defn) =>
+          // TODO: params may have duplicate names
+          val live2 = live ++ argsToStrs(xs) -- defn.params.map{_.str}
+          collectLiveBindings(defn.body, live2)
+        case None => live ++ argsToStrs(xs)
+      }
+    case Case(scrut, cases) => 
+      val init = live + scrut.str
+      val lives = cases.map {
+        case (cls, e) => collectLiveBindings(e, init)
+      }
+      lives.foldLeft(Set.empty)((x, y) => x | y)
     case LetExpr(x, e1, e2) =>
       val (fv, fj) = freeVarAnalysis(using Set.empty)(e1, Set.empty, Set.empty)
-      collectDeadBindings(e2, dead -- fv + x.str)
+      collectLiveBindings(e2, live ++ fv - x.str)
     case LetJoin(_, _, _, _) =>
       throw GraphOptimizingError("nested join points after promotion")
-    case LetCall(xs, defn, as, e) =>
-      collectDeadBindings(e, dead -- argsToStrs(as) ++ xs.map(_.str))
+    case LetCall(xs, defnref, as, e) =>
+      val defn = defnref |> expectDefn
+      val live2 = live ++ argsToStrs(as) -- xs.map{_.str} 
+      collectLiveBindings(e, live2)
   }
 
-  private def removeDeadBindings(using dead: Set[Str])(node: Node): Node = node match {
+  private def removeDeadBindings(using live: Set[Str])(node: Node): Node = node match {
     case Result(xs) => node
     case Jump(_, xs) => node
     case Case(scrut, cases) => Case(scrut, cases.map {
       (cls, e) => (cls, removeDeadBindings(e))
     })
-    case LetExpr(x, _, e) if dead.contains(x.str) =>
+    case LetExpr(x, _, e) if !live.contains(x.str) =>
       removeDeadBindings(e)
     case LetExpr(x, e1, e2) => LetExpr(x, e1, removeDeadBindings(e2))
     case LetJoin(_, _, _, _) =>
@@ -1223,7 +1242,8 @@ class GraphOptimizer:
           
           val ys = retvals.map { retval => retval match
             case Literal(lit) => retval
-            case Ref(x) => parammap(x)
+            case Ref(x) if parammap.contains(x) => parammap(x)
+            case _ => retval
           }
 
           Result(ys)
@@ -1256,7 +1276,10 @@ class GraphOptimizer:
         case ((name, retval), node) =>
           retval match {
             case Literal(lit) => LetExpr(name, retval |> fromTExpr, node)
-            case Ref(x) => LetExpr(name, parammap(x) |> fromTExpr, node)
+            case Ref(x) if parammap.contains(x) =>
+              LetExpr(name, parammap(x) |> fromTExpr, node)
+            case _ =>
+              LetExpr(name, retval |> fromTExpr, node)
           }
       }
   }
@@ -1264,15 +1287,16 @@ class GraphOptimizer:
   private def simplify(using defs: Set[GODef])(defn: GODef) = {
     val s1 = simplifyTrivialBinding(using Map.empty)(simplifySel(using Map.empty)(defn.body))
     val s2 = removeTrivialCallAndJump(s1)
-    val dead = collectDeadBindings(s2, Set.empty)
+    val dead = collectLiveBindings(s2, Set.empty)
     val dced = removeDeadBindings(using dead)(s2)
+    val fin = dced
     GODef(
       defn.id,
       defn.name,
       defn.isjp, 
       defn.params,
       defn.resultNum,
-      dced,
+      fin,
     )
   }
 

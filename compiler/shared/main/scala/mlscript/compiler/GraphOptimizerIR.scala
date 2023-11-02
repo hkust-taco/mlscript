@@ -8,6 +8,7 @@ import collection.mutable.{Map as MutMap, Set as MutSet}
 import mlscript.*
 
 import scala.annotation.unused
+import scala.util.Sorting
 
 // -----------------------------------------------
 
@@ -25,9 +26,18 @@ class GOProgram(
     case _ => false
   }
   override def toString: String =
-    s"GOProgram({${classes.mkString(",")}}, {\n${defs.mkString("\n")}\n},\n$main)"
+    val t1 = classes.toArray
+    val t2 = defs.toArray
+    Sorting.quickSort(t1)(ClassInfoOrdering)
+    Sorting.quickSort(t2)(GODefOrdering)
+    s"GOProgram({${t1.mkString(",")}}, {\n${t2.mkString("\n")}\n},\n$main)"
 
-
+  object ClassInfoOrdering extends Ordering[ClassInfo] {
+    def compare(a: ClassInfo, b: ClassInfo) = a.id.compare(b.id)
+  }
+  object GODefOrdering extends Ordering[GODef] {
+    def compare(a: GODef, b: GODef) = a.id.compare(b.id)
+  }
 case class ClassInfo(
   val id: Int,
   val ident: Str,
@@ -110,7 +120,6 @@ class GODef(
   override def toString: String =
     val name2 = if (isjp) s"@join $name" else s"$name" 
     s"Def($id, $name2, ${params.map(_.toString()).mkString("[", ",", "]")}, ${activeParams.map({ x => x.mkString("{", "，", "}")}).mkString("[", ",", "]")}, \n${activeResults.head.toString}, $resultNum, \n$body\n)"
-
 
 sealed trait TrivialExpr:
   override def toString: String

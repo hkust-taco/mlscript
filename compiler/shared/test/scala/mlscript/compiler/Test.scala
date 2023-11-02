@@ -38,7 +38,7 @@ class DiffTestCompiler extends DiffTests {
        
         var changed = true
         var g = graph3
-        var fuel = 5
+        var fuel = 10
         while (changed && fuel > 0)
           val new_g = go.optimize(g)
           changed = g != new_g
