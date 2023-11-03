@@ -50,10 +50,27 @@ fun zip[L, A, B](xs: Vec[L, A], ys: Vec[L, B]): Vec[L, [A, B]] =
     else error
 //│ fun zip: forall 'B 'L 'A. (xs: Vec['L, 'A], ys: Vec['L, 'B]) -> Vec['L, ['A, 'B]]
 
+fun sum(xs: Vec['l, Int]) = if xs is
+    Nil then 0
+    Cons(h, t) then h + sum(t)
+//│ fun sum: forall 'l 'L. (xs: Vec['l, Int]) -> Int
+//│   where
+//│     'l <: 'L
+
+// construct lisp style list lol
+fun toList(xs: Vec['l, 'a]) = if xs is
+    Nil then []
+    Cons(h, t) then [h, toList(t)]
+//│ fun toList: forall 'l 'b 'T 'a 'L. (xs: Vec['l, 'a]) -> 'b
+//│   where
+//│     'b :> Array[??T & 'a & 'T | 'b]
+//│     'a <: 'T
+//│     'l <: 'L
+
 :e
 head(new Nil)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.54: 	head(new Nil)
+//│ ║  l.71: 	head(new Nil)
 //│ ║        	^^^^^^^^^^^^^
 //│ ╟── type `Z` is not an instance of `S['l]`
 //│ ║  l.18: 	class Nil[T] extends Vec[Z, T]
@@ -69,7 +86,7 @@ head(new Nil)
 :e
 tail(new Nil)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.70: 	tail(new Nil)
+//│ ║  l.87: 	tail(new Nil)
 //│ ║        	^^^^^^^^^^^^^
 //│ ╟── type `Z` is not an instance of `S[?L]`
 //│ ║  l.18: 	class Nil[T] extends Vec[Z, T]
@@ -107,7 +124,7 @@ len(Cons(1, Cons(2, new Nil)))
 :e
 zip(Cons(1, new Nil), new Nil)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.108: 	zip(Cons(1, new Nil), new Nil)
+//│ ║  l.125: 	zip(Cons(1, new Nil), new Nil)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Z` is not an instance of `S[?L]`
 //│ ║  l.18: 	class Nil[T] extends Vec[Z, T]
@@ -133,9 +150,49 @@ zip(Cons(1, new Nil), Cons(2, new Nil))
 //│ res
 //│     = Cons {}
 
-map(x => x * 2, Cons(1, Cons(2, Cons(3, new Nil))))
+let vec1 = Cons(1, Cons(2, Cons(3, new Nil)))
+//│ let vec1: Cons[S[S[Z]], 'T]
+//│   where
+//│     'T :> 1 | 2 | 3
+//│ vec1
+//│      = Cons {}
+
+vec1 : Vec['l, Int]
+//│ Vec[S[S[S[Z]]], Int]
+//│ res
+//│     = Cons {}
+
+:e
+vec1 : Vec[Z, Int]
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.166: 	vec1 : Vec[Z, Int]
+//│ ║         	^^^^
+//│ ╟── type `S[?L]` is not an instance of `Z`
+//│ ║  l.19: 	class Cons[L, T](val h: T, val t: Vec[L, T]) extends Vec[S[L], T]
+//│ ║        	                                                         ^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.166: 	vec1 : Vec[Z, Int]
+//│ ╙──       	           ^
+//│ Vec[Z, Int]
+//│ res
+//│     = Cons {}
+
+map(x => x * 2, vec1)
 //│ Vec[S[S[S[Z]]], 'B]
 //│   where
 //│     'B :> Int
 //│ res
 //│     = Cons {}
+
+toList(vec1)
+//│ forall 'b. 'b
+//│   where
+//│     'b :> Array[??T & Int & 'a | 'b]
+//│     'a :> Int
+//│ res
+//│     = [ 1, [ 2, [ 3, [] ] ] ]
+
+sum(vec1)
+//│ Int
+//│ res
+//│     = 6

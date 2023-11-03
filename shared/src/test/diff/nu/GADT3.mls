@@ -58,3 +58,23 @@ fun foo[T](f: Foo[T]): Int = if f is
     Bar then 0
     Baz(x) then foo(x : Foo[x.T])
 //│ fun foo: forall 'T. (f: Foo['T]) -> Int
+
+fun bar(f) = if f is 
+    Bar then 0
+    Baz(_) then 1
+//│ fun bar: forall 'T 'T0. (Bar | Bar & ~{Baz#T :> 'T & 'T0 | ??T <: ??T0 & 'T0} | Baz[in 'T0 out 'T] & {Baz#T :> 'T <: 'T0, #x: anything} | Baz[in 'T0 out 'T] & {Baz#T :> 'T <: 'T0} & ~#Baz | Baz[in 'T0 out 'T] & {Baz#T :> 'T <: 'T0} & ~{Baz#T :> 'T & 'T0 | ??T <: ??T0 & 'T0}) -> (0 | 1)
+
+bar(Baz(new Bar))
+//│ 0 | 1
+//│ res
+//│     = 1
+
+// TODO seems we need to specify the type arguments
+abstract class C[type T]: D1 | D2['a, 'b]   // where T = ['a, 'b]
+class D1 extends C[Int]
+class D2[A, B](val a: C[A], val b: C[B]) extends C[[A, B]]
+//│ abstract class C[T]: D1 | D2[in ??a out ??a0, in ??b out ??b0]
+//│ class D1 extends C {
+//│   constructor()
+//│ }
+//│ class D2[A, B](a: C[A], b: C[B]) extends C

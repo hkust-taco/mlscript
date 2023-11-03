@@ -2,8 +2,9 @@
 :GADTs
 
 // dependent types? //
+// * this is actually broken due to the PairRep case
 
-abstract class Rep[type T]: IntRep | BoolRep | PairRep[T, T] // really?
+abstract class Rep[type T]: IntRep | BoolRep | PairRep[T, T] // ? seems not correct
 class IntRep extends Rep[Int]
 class BoolRep extends Rep[Bool]
 class PairRep[A, B](val a: Rep[A], val b: Rep[B]) extends Rep[[A, B]]
@@ -18,7 +19,8 @@ class PairRep[A, B](val a: Rep[A], val b: Rep[B]) extends Rep[[A, B]]
 
 fun equal[T](ev: Rep[T], x: T, y: T): Bool = if ev is
     IntRep then (x : ev.T) == (y : ev.T)
-    BoolRep then ((x : ev.T) && (x : ev.T)) && (not(x : ev.T) && not(x : ev.T))
+    BoolRep then ((x : ev.T) && (y : ev.T)) && (not(x : ev.T) && not(y : ev.T))
+    // ! swapping the evidence a, b won't affect anything
     PairRep(a, b) then equal(a, (x : ev.T)._1, (y : ev.T)._1) && equal(b, (x : ev.T)._2, (y : ev.T)._2)
 //│ fun equal: forall 'T. (ev: Rep['T], x: 'T, y: 'T) -> Bool
 
@@ -27,7 +29,25 @@ equal(new IntRep, 1+1, 2)
 //│ res
 //│     = true
 
-// FIXME
+:e
+equal(new BoolRep, 1+1, true)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.33: 	equal(new BoolRep, 1+1, true)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── operator application of type `Int` is not an instance of `Bool`
+//│ ║  l.33: 	equal(new BoolRep, 1+1, true)
+//│ ║        	                   ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.9: 	class BoolRep extends Rep[Bool]
+//│ ║       	                          ^^^^
+//│ ╟── Note: method type parameter T is defined at:
+//│ ║  l.20: 	fun equal[T](ev: Rep[T], x: T, y: T): Bool = if ev is
+//│ ╙──      	          ^
+//│ error | false | true
+//│ res
+//│     = false
+
+// TODO
 equal(PairRep(PairRep(new IntRep, new IntRep), new IntRep), [[1,0], 2], [[4,1], 3])
 //│ Bool
 //│ res
@@ -72,20 +92,38 @@ let test1 = Node(Node(Leaf(1), Leaf(2)), Node(Leaf(3), Leaf(4)))
 :e
 let test2 = Node(Leaf(1), Node(Leaf(2), Leaf(3)))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.73: 	let test2 = Node(Leaf(1), Node(Leaf(2), Leaf(3)))
+//│ ║  l.93: 	let test2 = Node(Leaf(1), Node(Leaf(2), Leaf(3)))
 //│ ║        	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `[?A, ?A]` is not an instance of type `Int`
-//│ ║  l.47: 	class Node[A](val l: Perfect[A], val r: Perfect[A]) extends Perfect[[A, A]]
+//│ ║  l.67: 	class Node[A](val l: Perfect[A], val r: Perfect[A]) extends Perfect[[A, A]]
 //│ ║        	                                                                    ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.46: 	class Leaf(val a: Int) extends Perfect[Int]
+//│ ║  l.66: 	class Leaf(val a: Int) extends Perfect[Int]
 //│ ║        	                                       ^^^
 //│ ╟── Note: type parameter A is defined at:
-//│ ║  l.47: 	class Node[A](val l: Perfect[A], val r: Perfect[A]) extends Perfect[[A, A]]
+//│ ║  l.67: 	class Node[A](val l: Perfect[A], val r: Perfect[A]) extends Perfect[[A, A]]
 //│ ╙──      	           ^
 //│ let test2: Node[out Int | [Int, Int]] | error
 //│ test2
 //│       = Node {}
+
+:e
+head(Node(Node(Leaf(1), Leaf(2)), Leaf(3)))
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.111: 	head(Node(Node(Leaf(1), Leaf(2)), Leaf(3)))
+//│ ║         	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `Int` is not a 2-element tuple
+//│ ║  l.66: 	class Leaf(val a: Int) extends Perfect[Int]
+//│ ║        	                                       ^^^
+//│ ╟── Note: constraint arises from tuple type:
+//│ ║  l.67: 	class Node[A](val l: Perfect[A], val r: Perfect[A]) extends Perfect[[A, A]]
+//│ ║        	                                                                    ^^^^^^
+//│ ╟── Note: type parameter A is defined at:
+//│ ║  l.67: 	class Node[A](val l: Perfect[A], val r: Perfect[A]) extends Perfect[[A, A]]
+//│ ╙──      	           ^
+//│ Int
+//│ res
+//│     = 1
 
 head(test1)
 //│ Int

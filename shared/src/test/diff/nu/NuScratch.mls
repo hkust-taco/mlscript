@@ -81,7 +81,7 @@ f(A)
 //│ res
 //│     = 1
 
-:e // todo unbounded wildcard type ?
+:e
 let y: ? = 1
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.85: 	let y: ? = 1

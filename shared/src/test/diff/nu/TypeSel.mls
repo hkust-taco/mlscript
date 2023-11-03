@@ -227,7 +227,6 @@ fun test(f) = if f is
   Baz then "hello" : f.A
 //│ fun test: forall 'a. (Bar & {A :> 123 <: 'a} | Bar & {A :> "hello" | 123 <: 'a} | Bar & ~#Bar | Baz & {A :> "hello" <: 'a} | Baz & {A :> "hello" | 123 <: 'a} | Baz & ~#Baz) -> 'a
 
-// FIXME
 [test(Bar), test(Baz)]
 //│ [Int, Str]
 
@@ -250,17 +249,17 @@ fun test(f: Foo) = if f is
   Bar then 123 : f.A
   Baz then "hello" : f.A
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.249: 	fun test(f: Foo) = if f is
+//│ ║  l.248: 	fun test(f: Foo) = if f is
 //│ ║         	                      ^^^^
-//│ ║  l.250: 	  Bar then 123 : f.A
+//│ ║  l.249: 	  Bar then 123 : f.A
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.251: 	  Baz then "hello" : f.A
+//│ ║  l.250: 	  Baz then "hello" : f.A
 //│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Foo[?]` does not match type `Bar | Baz`
-//│ ║  l.249: 	fun test(f: Foo) = if f is
+//│ ║  l.248: 	fun test(f: Foo) = if f is
 //│ ║         	            ^^^
 //│ ╟── but it flows into reference with expected type `Bar | Baz`
-//│ ║  l.249: 	fun test(f: Foo) = if f is
+//│ ║  l.248: 	fun test(f: Foo) = if f is
 //│ ╙──       	                      ^
 //│ fun test: (f: Foo[in anything out nothing]) -> (Int | Str)
 
@@ -268,13 +267,11 @@ fun test(f: Foo) = if f is
 [test(Bar), test(Baz)]
 //│ [Int | Str, Int | Str]
 
-// FIXME
 fun test(f: Foo[?]) = if f is
   Bar then 123 : f.A
   Baz then "hello" : f.A
 //│ fun test: forall '?. (f: Foo['?]) -> (??? & (Int | Str))
 
-// FIXME
 fun test[T](f: Foo[T]): T = if f is
   Bar then 123 : f.A
   Baz then "hello" : f.A
@@ -284,10 +281,10 @@ fun test[T](f: Foo[T]): T = if f is
 class Foo[type A]
 class Bar[type A] extends Foo[A]
 //│ ╔══[ERROR] Inherited parameter named `A` is not virtual and cannot be overridden
-//│ ║  l.285: 	class Bar[type A] extends Foo[A]
+//│ ║  l.282: 	class Bar[type A] extends Foo[A]
 //│ ║         	               ^
 //│ ╟── Originally declared here:
-//│ ║  l.284: 	class Foo[type A]
+//│ ║  l.281: 	class Foo[type A]
 //│ ╙──       	               ^
 //│ class Foo[A] {
 //│   constructor()
@@ -304,10 +301,10 @@ class Foo[type A]
 :e
 class Bar[type A] extends Foo[A -> A]
 //│ ╔══[ERROR] Inherited parameter named `A` is not virtual and cannot be overridden
-//│ ║  l.305: 	class Bar[type A] extends Foo[A -> A]
+//│ ║  l.302: 	class Bar[type A] extends Foo[A -> A]
 //│ ║         	               ^
 //│ ╟── Originally declared here:
-//│ ║  l.299: 	class Foo[type A]
+//│ ║  l.296: 	class Foo[type A]
 //│ ╙──       	               ^
 //│ class Bar[A] extends Foo {
 //│   constructor()
@@ -316,10 +313,10 @@ class Bar[type A] extends Foo[A -> A]
 :e
 class Bar[type A] extends Foo[Int]
 //│ ╔══[ERROR] Inherited parameter named `A` is not virtual and cannot be overridden
-//│ ║  l.317: 	class Bar[type A] extends Foo[Int]
+//│ ║  l.314: 	class Bar[type A] extends Foo[Int]
 //│ ║         	               ^
 //│ ╟── Originally declared here:
-//│ ║  l.299: 	class Foo[type A]
+//│ ║  l.296: 	class Foo[type A]
 //│ ╙──       	               ^
 //│ class Bar[A] extends Foo {
 //│   constructor()
@@ -337,10 +334,10 @@ class Foo[A]
 // Would be nice:
 fun foo(x: Foo['a], y) = y : x.A  // interpreted as `y : x.Foo#A`
 //│ ╔══[ERROR] Type `Foo['a]` does not contain member `A`
-//│ ║  l.338: 	fun foo(x: Foo['a], y) = y : x.A  // interpreted as `y : x.Foo#A`
+//│ ║  l.335: 	fun foo(x: Foo['a], y) = y : x.A  // interpreted as `y : x.Foo#A`
 //│ ╙──       	                              ^^
 //│ ╔══[ERROR] Type mismatch in type selection:
-//│ ║  l.338: 	fun foo(x: Foo['a], y) = y : x.A  // interpreted as `y : x.Foo#A`
+//│ ║  l.335: 	fun foo(x: Foo['a], y) = y : x.A  // interpreted as `y : x.Foo#A`
 //│ ║         	                              ^^
 //│ ╙── expression of type `Foo['a]` does not have field 'A'
 //│ fun foo: forall 'a. (x: Foo['a], anything) -> error
@@ -351,7 +348,7 @@ fun foo(x, y) = y : x.A
 // FIXME
 fun bar(f: Foo['a], y) = foo(f, y)
 //│ ╔══[ERROR] Type `Foo['a]` does not contain member `A`
-//│ ║  l.348: 	fun foo(x, y) = y : x.A
+//│ ║  l.345: 	fun foo(x, y) = y : x.A
 //│ ╙──       	                     ^^
 //│ fun bar: forall 'a. (f: Foo['a], anything) -> error
 
