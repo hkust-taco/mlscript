@@ -32,12 +32,13 @@ class GOProgram(
     Sorting.quickSort(t2)(GODefOrdering)
     s"GOProgram({${t1.mkString(",")}}, {\n${t2.mkString("\n")}\n},\n$main)"
 
-  object ClassInfoOrdering extends Ordering[ClassInfo] {
-    def compare(a: ClassInfo, b: ClassInfo) = a.id.compare(b.id)
-  }
-  object GODefOrdering extends Ordering[GODef] {
-    def compare(a: GODef, b: GODef) = a.id.compare(b.id)
-  }
+object ClassInfoOrdering extends Ordering[ClassInfo] {
+  def compare(a: ClassInfo, b: ClassInfo) = a.id.compare(b.id)
+}
+object GODefOrdering extends Ordering[GODef] {
+  def compare(a: GODef, b: GODef) = a.id.compare(b.id)
+}
+
 case class ClassInfo(
   val id: Int,
   val ident: Str,
