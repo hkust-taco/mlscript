@@ -1,54 +1,150 @@
 :NewDefs
 :GADTs
 
+abstract class Tree[T]: L | N
+class L[A](val a: A) extends Tree[A]
+class N[A](val l: Tree[A], val r: Tree[A]) extends Tree[A]
+//│ abstract class Tree[T]: L[anything] | N[?]
+//│ class L[A](a: A) extends Tree
+//│ class N[A](l: Tree[A], r: Tree[A]) extends Tree
+
+// FIXME
+fun hd[A](t: Tree[A]): A = if t is
+    L(a) then a
+    N(l, r) then hd(l)
+//│ ╔══[ERROR] Type error in type ascription
+//│ ║  l.12: 	fun hd[A](t: Tree[A]): A = if t is
+//│ ║        	                              ^^^^
+//│ ║  l.13: 	    L(a) then a
+//│ ║        	^^^^^^^^^^^^^^^
+//│ ║  l.14: 	    N(l, r) then hd(l)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type variable `A` leaks out of its scope
+//│ ║  l.5: 	class L[A](val a: A) extends Tree[A]
+//│ ║       	               ^
+//│ ╙── into expression of type `A | ~??A`
+//│ ╔══[ERROR] Type error in definition
+//│ ║  l.12: 	fun hd[A](t: Tree[A]): A = if t is
+//│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.13: 	    L(a) then a
+//│ ║        	^^^^^^^^^^^^^^^
+//│ ║  l.14: 	    N(l, r) then hd(l)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type variable `A` leaks out of its scope
+//│ ║  l.6: 	class N[A](val l: Tree[A], val r: Tree[A]) extends Tree[A]
+//│ ║       	        ^
+//│ ╙── into expression of type `A | ~??A`
+//│ ╔══[ERROR] Type error in definition
+//│ ║  l.12: 	fun hd[A](t: Tree[A]): A = if t is
+//│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.13: 	    L(a) then a
+//│ ║        	^^^^^^^^^^^^^^^
+//│ ║  l.14: 	    N(l, r) then hd(l)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type variable `A` leaks out of its scope
+//│ ║  l.6: 	class N[A](val l: Tree[A], val r: Tree[A]) extends Tree[A]
+//│ ╙──     	        ^
+//│ fun hd: forall 'A. (t: Tree['A]) -> 'A
+
+hd(N(L(1), N(L(2), L(3))))
+//│ 1 | 2 | 3
+//│ res
+//│     = 1
+
 abstract class Perfect[type T]: Leaf | Node
-class Leaf[A](val a: A) extends Perfect[A]
+class Leaf(val a: Int) extends Perfect[Int]
 class Node[A](val l: Perfect[A], val r: Perfect[A]) extends Perfect[[A, A]]
-//│ abstract class Perfect[T]: Leaf[anything] | Node[?]
-//│ class Leaf[A](a: A) extends Perfect
+//│ abstract class Perfect[T]: Leaf | Node[?]
+//│ class Leaf(a: Int) extends Perfect
 //│ class Node[A](l: Perfect[A], r: Perfect[A]) extends Perfect
 
 // TODO
-fun head[A](t: Perfect[A]): A = if t is
-    Leaf(a) then a : t.T
-    Node(l, r) then head(l : Perfect[l.T]) : t.T
-//│ ╔══[ERROR] Subtyping constraint of the form `([?a, ?b]) -> ?T <: ?c -> ?d` exceeded recursion depth limit (250)
-//│ ║  l.12: 	fun head[A](t: Perfect[A]): A = if t is
-//│ ║        	                                   ^^^^
-//│ ║  l.13: 	    Leaf(a) then a : t.T
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.14: 	    Node(l, r) then head(l : Perfect[l.T]) : t.T
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+fun foo(t: Perfect['a]) = if t is
+    Node(l, r) then foo(l : Perfect[l.T]) 
+    else 0
+//│ ╔══[ERROR] Subtyping constraint of the form `([?a, ?b]) -> ?c <: ?d -> ?e` exceeded recursion depth limit (250)
+//│ ║  l.62: 	fun foo(t: Perfect['a]) = if t is
+//│ ║        	                             ^^^^
+//│ ║  l.63: 	    Node(l, r) then foo(l : Perfect[l.T]) 
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
-//│ fun head: forall 'A. (t: Perfect['A]) -> 'A
+//│ fun foo: forall 'a 'A. (t: Perfect['a]) -> (0 | error)
+//│   where
+//│     'a :> ??A & (Int & ??A0 | Int & 'A | 'T & (??A0 | 'A))
+//│        <: Int & 'T | ??A1 & 'A | ??A2
+
+// TODO
+fun flip[A](t: Perfect[A]): Perfect[A] = if t is
+    Leaf(a) then Leaf(a) : Perfect[t.T]
+    Node(l, r) then Node(flip(r : Perfect[r.T]) : Perfect[r.T], flip(l : Perfect[l.T]) : Perfect[l.T]) : Perfect[t.T]
+    // Node(l, r) then head(l)
+//│ ╔══[ERROR] Subtyping constraint of the form `([?a, ?b]) -> Perfect[in ?T out ?T0] <: ?c -> ?d` exceeded recursion depth limit (250)
+//│ ║  l.77: 	fun flip[A](t: Perfect[A]): Perfect[A] = if t is
+//│ ║        	                                            ^^^^
+//│ ║  l.78: 	    Leaf(a) then Leaf(a) : Perfect[t.T]
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.79: 	    Node(l, r) then Node(flip(r : Perfect[r.T]) : Perfect[r.T], flip(l : Perfect[l.T]) : Perfect[l.T]) : Perfect[t.T]
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Note: use flag `:ex` to see internal error info.
+//│ ╔══[ERROR] Type error in definition
+//│ ║  l.77: 	fun flip[A](t: Perfect[A]): Perfect[A] = if t is
+//│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.78: 	    Leaf(a) then Leaf(a) : Perfect[t.T]
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.79: 	    Node(l, r) then Node(flip(r : Perfect[r.T]) : Perfect[r.T], flip(l : Perfect[l.T]) : Perfect[l.T]) : Perfect[t.T]
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type variable `A` leaks out of its scope
+//│ ║  l.56: 	class Node[A](val l: Perfect[A], val r: Perfect[A]) extends Perfect[[A, A]]
+//│ ╙──      	           ^
+//│ ╔══[ERROR] Type error in definition
+//│ ║  l.77: 	fun flip[A](t: Perfect[A]): Perfect[A] = if t is
+//│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.78: 	    Leaf(a) then Leaf(a) : Perfect[t.T]
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.79: 	    Node(l, r) then Node(flip(r : Perfect[r.T]) : Perfect[r.T], flip(l : Perfect[l.T]) : Perfect[l.T]) : Perfect[t.T]
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type variable `A` leaks out of its scope
+//│ ║  l.79: 	    Node(l, r) then Node(flip(r : Perfect[r.T]) : Perfect[r.T], flip(l : Perfect[l.T]) : Perfect[l.T]) : Perfect[t.T]
+//│ ║        	                                                                                                  ^^
+//│ ╙── into expression of type `A | ~(Int & ??A)`
+//│ fun flip: forall 'A. (t: Perfect['A]) -> Perfect['A]
 
 let test1 = Node(Node(Leaf(1), Leaf(2)), Node(Leaf(3), Leaf(4)))
-//│ let test1: Node['A]
-//│   where
-//│     'A := ['A0, 'A0]
-//│     'A0 :> 1 | 2 | 3 | 4
+//│ let test1: Node[[Int, Int]]
 //│ test1
 //│       = Node {}
 
 :e
 let test2 = Node(Leaf(1), Node(Leaf(2), Leaf(3)))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.34: 	let test2 = Node(Leaf(1), Node(Leaf(2), Leaf(3)))
-//│ ║        	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── integer literal of type `1` is not a 2-element tuple
-//│ ║  l.34: 	let test2 = Node(Leaf(1), Node(Leaf(2), Leaf(3)))
-//│ ║        	                      ^
-//│ ╟── Note: constraint arises from tuple type:
-//│ ║  l.6: 	class Node[A](val l: Perfect[A], val r: Perfect[A]) extends Perfect[[A, A]]
-//│ ║       	                                                                    ^^^^^^
-//│ ╟── Note: type parameter T is defined at:
-//│ ║  l.4: 	abstract class Perfect[type T]: Leaf | Node
-//│ ╙──     	                            ^
-//│ let test2: Node[in ['A, 'A] out [2 | 3 | 'A, 2 | 3 | 'A] | 1] | error
+//│ ║  l.118: 	let test2 = Node(Leaf(1), Node(Leaf(2), Leaf(3)))
+//│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `[?A, ?A]` is not an instance of type `Int`
+//│ ║  l.56: 	class Node[A](val l: Perfect[A], val r: Perfect[A]) extends Perfect[[A, A]]
+//│ ║        	                                                                    ^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.55: 	class Leaf(val a: Int) extends Perfect[Int]
+//│ ║        	                                       ^^^
+//│ ╟── Note: type parameter A is defined at:
+//│ ║  l.56: 	class Node[A](val l: Perfect[A], val r: Perfect[A]) extends Perfect[[A, A]]
+//│ ╙──      	           ^
+//│ let test2: Node[out Int | [Int, Int]] | error
 //│ test2
 //│       = Node {}
 
-head(test1)
-//│ [[1 | 2 | 3 | 4, 1 | 2 | 3 | 4], [1 | 2 | 3 | 4, 1 | 2 | 3 | 4]]
+flip(test1)
+//│ Perfect[[[Int, Int], [Int, Int]]]
 //│ res
-//│     = 1
+//│     = Node {}
+
+// TODO
+foo(test1)
+//│ ╔══[ERROR] Type error in application
+//│ ║  l.141: 	foo(test1)
+//│ ║         	^^^^^^^^^^
+//│ ╟── type variable `A` leaks out of its scope
+//│ ║  l.56: 	class Node[A](val l: Perfect[A], val r: Perfect[A]) extends Perfect[[A, A]]
+//│ ╙──      	           ^
+//│ error
+//│ res
+//│     = 0
