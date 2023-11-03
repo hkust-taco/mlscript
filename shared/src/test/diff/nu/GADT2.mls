@@ -1,0 +1,54 @@
+:NewDefs
+:GADTs
+
+abstract class Perfect[type T]: Leaf | Node
+class Leaf[A](val a: A) extends Perfect[A]
+class Node[A](val l: Perfect[A], val r: Perfect[A]) extends Perfect[[A, A]]
+//│ abstract class Perfect[T]: Leaf[anything] | Node[?]
+//│ class Leaf[A](a: A) extends Perfect
+//│ class Node[A](l: Perfect[A], r: Perfect[A]) extends Perfect
+
+// TODO
+fun head[A](t: Perfect[A]): A = if t is
+    Leaf(a) then a : t.T
+    Node(l, r) then head(l : Perfect[l.T]) : t.T
+//│ ╔══[ERROR] Subtyping constraint of the form `([?a, ?b]) -> ?T <: ?c -> ?d` exceeded recursion depth limit (250)
+//│ ║  l.12: 	fun head[A](t: Perfect[A]): A = if t is
+//│ ║        	                                   ^^^^
+//│ ║  l.13: 	    Leaf(a) then a : t.T
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.14: 	    Node(l, r) then head(l : Perfect[l.T]) : t.T
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Note: use flag `:ex` to see internal error info.
+//│ fun head: forall 'A. (t: Perfect['A]) -> 'A
+
+let test1 = Node(Node(Leaf(1), Leaf(2)), Node(Leaf(3), Leaf(4)))
+//│ let test1: Node['A]
+//│   where
+//│     'A := ['A0, 'A0]
+//│     'A0 :> 1 | 2 | 3 | 4
+//│ test1
+//│       = Node {}
+
+:e
+let test2 = Node(Leaf(1), Node(Leaf(2), Leaf(3)))
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.34: 	let test2 = Node(Leaf(1), Node(Leaf(2), Leaf(3)))
+//│ ║        	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── integer literal of type `1` is not a 2-element tuple
+//│ ║  l.34: 	let test2 = Node(Leaf(1), Node(Leaf(2), Leaf(3)))
+//│ ║        	                      ^
+//│ ╟── Note: constraint arises from tuple type:
+//│ ║  l.6: 	class Node[A](val l: Perfect[A], val r: Perfect[A]) extends Perfect[[A, A]]
+//│ ║       	                                                                    ^^^^^^
+//│ ╟── Note: type parameter T is defined at:
+//│ ║  l.4: 	abstract class Perfect[type T]: Leaf | Node
+//│ ╙──     	                            ^
+//│ let test2: Node[in ['A, 'A] out [2 | 3 | 'A, 2 | 3 | 'A] | 1] | error
+//│ test2
+//│       = Node {}
+
+head(test1)
+//│ [[1 | 2 | 3 | 4, 1 | 2 | 3 | 4], [1 | 2 | 3 | 4, 1 | 2 | 3 | 4]]
+//│ res
+//│     = 1

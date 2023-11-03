@@ -112,32 +112,28 @@ if x is ? then 1
 //│ Code generation encountered an error:
 //│   if expression was not desugared
 
-abstract class Fmt[type T]
-class D[T](k: Fmt[T]) extends Fmt[Int -> T]
-class B[T](k: Fmt[T]) extends Fmt[Bool -> T]
-class L[T](s: string, k: Fmt[T]) extends Fmt[T]
-class E extends Fmt[string]
-//│ abstract class Fmt[T]
-//│ class D[T](k: Fmt[T]) extends Fmt
-//│ class B[T](k: Fmt[T]) extends Fmt
-//│ class L[T](s: string, k: Fmt[T]) extends Fmt
-//│ class E extends Fmt {
+abstract class C[type S, type T]: R | I
+class R[A] extends C[A, A]
+class I[A](val f: A => Int) extends C[A, Int]
+//│ abstract class C[S, T]: I[nothing] | R[?]
+//│ class R[A] extends C {
 //│   constructor()
 //│ }
+//│ class I[A](f: A -> Int) extends C
 
-abstract class S[type S, type T]: R | I
-class R[A] extends S[A, A]
-class I[A] extends S[A, Int]
-//│ abstract class S[S, T]: I[?] | R[?]
-//│ class R[A] extends S {
-//│   constructor()
-//│ }
-//│ class I[A] extends S {
-//│   constructor()
-//│ }
+fun foo[A, B](x: A, ev: C[A, B]): B = if ev is 
+    R then (x : ev.S) : ev.T
+    I(f) then ev.f(x : ev.S) : ev.T
+//│ fun foo: forall 'A 'B. (x: 'A, ev: C['A, 'B]) -> 'B
 
-fun f[A, B](x: A, ev: S[A, B]): B = 
-    if ev is 
-        R then (x : ev.S) : ev.T
-        I then 1 : ev.T
-//│ fun f: forall 'A 'B. (x: 'A, ev: S['A, 'B]) -> 'B
+foo(true, new R)
+//│ true
+//│ res
+//│     = true
+
+foo(1, I(x => x + 1))
+//│ Int
+//│ res
+//│     = 2
+
+
