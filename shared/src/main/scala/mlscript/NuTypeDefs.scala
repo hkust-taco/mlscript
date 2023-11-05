@@ -501,7 +501,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
               // TODO also use computed variance info when available!
               Var(td.nme.name + "#" + tn.name).withLocOf(tn) ->
                 FieldType.mk(vi.getOrElse(VarianceInfo.in), tv, tv)(provTODO) }
-          )(provTODO)
+          )(provTODO), BotType
         )(provTODO)
       )
     } else errType // FIXME
@@ -557,12 +557,13 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     }
     val funSigs = MutMap.empty[Str, NuFunDef]
     val implems = decls.filter {
-      case fd @ NuFunDef(_, nme, snme, tparams, effects, R(rhs)) =>
+      case fd @ NuFunDef(_, nme, snme, tparams, _, R(rhs)) =>
         funSigs.updateWith(nme.name) {
           case S(s) =>
             err(s"A type signature for '$nme' was already given", fd.toLoc)
             S(s)
-          case N => S(fd)
+          case N =>
+            S(fd.copy()(fd.declareLoc, fd.virtualLoc, fd.signature, outer, fd.genField))
         }
         false // * Explicit signatures will already be typed in DelayedTypeInfo's typedSignatures
       case _ => true
@@ -707,6 +708,14 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     
     val kind: DeclKind = decl.kind
     val name: Str = decl.name
+
+    private lazy val effectTy = decl match {
+      case td: NuTypeDef if td.isEffect =>
+        println("Create type variable for effects")
+        val v = freshVar(NoProv, N, nameHint = S("Eff"))(lvl)
+        S(TypeName(v.mkStr) -> v)
+      case _ => N
+    }
     
     private implicit val prov: TP =
       TypeProvenance(decl.toLoc, decl.describe)
@@ -1012,9 +1021,16 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
       case _: NuFunDef => Nil -> Nil
     }
     lazy val typedSignatureMembers: Ls[Str -> TypedNuFun] = {
+      val effTy = effectTy.map(_._2).getOrElse(BotType)
       val implemented = funImplems.iterator.map(_.nme.name).toSet
       typedSignatures.iterator.map { case (fd, ty) =>
-        fd.nme.name -> TypedNuFun(level + 1, fd, ty)(implemented.contains(fd.nme.name))
+        val imp = implemented.contains(fd.nme.name)
+        if (imp) fd.nme.name -> TypedNuFun(level + 1, fd, ty)(imp)
+        else ty.unwrapProvs match {
+          case ft @ FunctionType(lhs, rhs, e) =>
+            fd.nme.name -> TypedNuFun(level + 1, fd, FunctionType(lhs, rhs, e | getEffectType(fd) | effTy)(ft.prov))(imp)
+          case _ => fd.nme.name -> TypedNuFun(level + 1, fd, ty)(imp)
+        }
       }.toList
     }
     
@@ -1074,6 +1090,22 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
       }
       refreshHelper2(raw: PolyNuDecl, v: Var, parTargs.map(_.map(typeType(_))))
     }
+
+    def getEffectType(fd: NuFunDef)(implicit ctx: Ctx): ST =
+      fd.effects.map(ty => ctx.get(ty.name) match {
+        case S(ti @ CompletedTypeInfo(cls: TypedNuCls)) => ti.skolem(cls.decl).getOrElse(BotType)
+        case S(ti: DelayedTypeInfo) => ti.decl match {
+          case nd: NuTypeDef => ti.skolem(nd).getOrElse(BotType)
+          case _ => BotType
+        }
+        case _ => // * Allow type variables
+          tparams.find(_._1.name === ty.name).map(_._2) match {
+            case S(tv) => tv
+            case _ =>
+              err(msg"Invalid effect $ty", ty.toLoc)
+              BotType
+          }
+      }).foldLeft[ST](BotType)((res, t) => res | t)
     
     def complete()(implicit raise: Raise): TypedNuDecl = result.getOrElse {
       if (isComputing) {
@@ -1092,6 +1124,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                 if (fd.tparams.nonEmpty)
                   err(msg"Type parameters are not yet supported in this position",
                     fd.tparams.head.toLoc)
+              val effTy = getEffectType(fd)
               val res_ty = fd.rhs match {
                 case R(PolyType(tps, ty)) =>
                   checkNoTyParams()
@@ -1102,7 +1135,11 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                           case _ => die
                         }.toMap)
                   }
-                  TypedNuFun(ctx.lvl, fd, PolymorphicType(ctx.lvl, body_ty))(isImplemented = false)
+                  val res = body_ty.unwrapProvs match {
+                    case ft @ FunctionType(lhs, rhs, _) => FunctionType(lhs, rhs, effTy)(ft.prov)
+                    case t => t
+                  }
+                  TypedNuFun(ctx.lvl, fd, PolymorphicType(ctx.lvl, res))(isImplemented = false)
                 case R(_) => die
                 case L(body) =>
                   fd.isLetRec match {
@@ -1461,8 +1498,10 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       TypeProvenance(decl.toLoc, decl.describe)
                     
                     val finalType = thisTV
+
+                    val tparamsWithEff = effectTy.fold(tparams)(ty => tparams :+ (ty._1, ty._2, S(VarianceInfo.co)))
                     
-                    val tparamMems = tparams.map { case (tp, tv, vi) => // TODO use vi
+                    val tparamMems = tparamsWithEff.map { case (tp, tv, vi) => // TODO use vi
                       val fldNme = td.nme.name + "#" + tp.name
                       val skol = SkolemTag(tv)(tv.prov)
                       NuParam(TypeName(fldNme).withLocOf(tp), FieldType(S(skol), skol)(tv.prov), isPublic = true)(lvl)
@@ -1709,7 +1748,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     }
                     
                     TypedNuCls(outerCtx.lvl, td,
-                      tparams,
+                      tparamsWithEff,
                       typedParams,
                       auxCtorParams.orElse(Option.when(
                         typedParams.isEmpty && (td.kind is Cls) && !td.isAbstract)(Nil)),

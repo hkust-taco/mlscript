@@ -1287,7 +1287,7 @@ c_99_ = c_add_ (c_mul_ c_i9_ c_i10_) c_i9_
 //│      = [Function (anonymous)]
 //│ constrain calls  : 4612
 //│ annoying  calls  : 0
-//│ subtyping calls  : 40645
+//│ subtyping calls  : 40649
 :stats
 // * Note: works with `c_mul` AND recursive types...
 :RecursiveTypes
@@ -1307,7 +1307,7 @@ c_98_ = c_pred_ c_99_
 //│      = [Function (anonymous)]
 //│ constrain calls  : 18323
 //│ annoying  calls  : 0
-//│ subtyping calls  : 178084
+//│ subtyping calls  : 178102
 :ResetFuel
 
 
@@ -1389,8 +1389,8 @@ def c_succ_ n = fun f -> fun x -> n f (f x)
 def c_add_ n m = m c_succ_ n
 //│ c_add_: 'a -> (forall 'b. ((forall 'c. 'c -> (forall 'd. 'd -> (forall 'e 'f 'g. 'g -> 'f
 //│   where
-//│     'd <: 'g -> 'e
-//│     'c <: 'd -> 'e -> 'f))) -> 'a -> 'b) -> 'b)
+//│     'c <: 'd -> 'e -> 'f
+//│     'd <: 'g -> 'e))) -> 'a -> 'b) -> 'b)
 //│       = [Function: c_add_1]
 
 // let c_i1 = fun f x -> f x
@@ -1409,10 +1409,10 @@ def c_i2_ = c_succ_ c_i1
 //│     = [Function: c_i22]
 //│ c_i2_: 'a -> (forall 'b 'c 'd. 'c -> 'b
 //│   where
-//│     'a <: 'c -> 'd
 //│     forall 'e. 'e -> (forall 'f 'g. 'f -> 'g
 //│       where
-//│         'e <: 'f -> 'g) <: 'a -> 'd -> 'b)
+//│         'e <: 'f -> 'g) <: 'a -> 'd -> 'b
+//│     'a <: 'c -> 'd)
 //│      = [Function: c_i2_1]
 
 // let c_i3 = c_succ c_i2
@@ -1441,23 +1441,23 @@ c_i5_ = c_add_ c_i3_ c_i2
 //│         'b <: 'c -> 'e -> 'f
 //│         forall 'h. 'h -> (forall 'i 'j 'k. 'k -> 'j
 //│           where
+//│             'h <: 'k -> 'i
 //│             forall 'l. 'l -> (forall 'a 'm. 'm -> 'a
 //│               where
-//│                 'l <: 'a -> 'a & 'm -> 'a) <: 'h -> 'i -> 'j
-//│             'h <: 'k -> 'i) <: 'c -> 'd -> 'f)
+//│                 'l <: 'a -> 'a & 'm -> 'a) <: 'h -> 'i -> 'j) <: 'c -> 'd -> 'f)
 //│ ╙──
 //│ c_i5_: 'b
 //│   where
 //│     'b :> forall 'c. 'c -> (forall 'd 'e 'f 'g. 'g -> 'f
 //│       where
 //│         'c <: 'g -> 'e & 'g -> 'd
+//│         'b <: 'c -> 'e -> 'f
 //│         forall 'h. 'h -> (forall 'i 'j 'k. 'i -> 'k
 //│           where
-//│             'h <: 'i -> 'j
 //│             forall 'l. 'l -> (forall 'a 'm. 'm -> 'a
 //│               where
-//│                 'l <: 'a -> 'a & 'm -> 'a) <: 'h -> 'j -> 'k) <: 'c -> 'd -> 'f
-//│         'b <: 'c -> 'e -> 'f)
+//│                 'l <: 'a -> 'a & 'm -> 'a) <: 'h -> 'j -> 'k
+//│             'h <: 'i -> 'j) <: 'c -> 'd -> 'f)
 //│      = [Function (anonymous)]
 //│ constrain calls  : 140
 //│ annoying  calls  : 0

@@ -4,7 +4,7 @@
 // * Flexible
 
 fun f(x: 'test) = [x.b, x]
-//│ fun f: forall 'b 'test. (x: {b: 'b} & 'test) -> ['b, 'test]
+//│ fun f: forall 'test 'b. (x: {b: 'b} & 'test) -> ['b, 'test]
 
 
 // * Rigid

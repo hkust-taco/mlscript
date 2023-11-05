@@ -1,7 +1,9 @@
 :NewDefs
 
-declare fun foo: () -> Int
-//│ fun foo: () -> Int
+effect io()
+effect exn()
+//│ class io()
+//│ class exn()
 
 declare fun print: Str ->{io} ()
 //│ fun print: Str ->{io} ()
@@ -9,29 +11,140 @@ declare fun print: Str ->{io} ()
 declare fun foo: (Int, Int) ->{exn} ()
 //│ fun foo: (Int, Int) ->{exn} ()
 
-declare fun print: Str ->{io, exn} ()
-//│ fun print: Str ->{io, exn} ()
-
 declare fun write: (Str, Str) ->{io, exn} ()
 //│ fun write: (Str, Str) ->{io, exn} ()
 
+:e
+declare fun foo: () ->{bar} ()
+//│ ╔══[ERROR] Invalid effect bar
+//│ ╙──
+//│ fun foo: () ->{bar} ()
+
 effect MyEffect[A](x: A) {
   fun print: Str ->{io} ()
+  fun foo: Int -> Int
 }
 //│ class MyEffect[A](x: A) {
+//│   fun foo: Int -> Int
 //│   fun print: Str ->{io} ()
 //│ }
 
 
 handle e = MyEffect(42) {
   fun print(s) = log(s)
+  fun foo(x) = x + 1
 }
 e.print("hello")
+e.foo(41)
 //│ module e extends MyEffect {
+//│   fun foo: Int -> Int
 //│   fun print: anything -> ()
 //│ }
-//│ ()
+//│ Int
 //│ res
 //│     = undefined
 //│ // Output
 //│ hello
+//│ res
+//│     = 42
+
+
+:e
+fun foo: () -> ()
+fun foo() = print("abc")
+//│ ╔══[ERROR] Type mismatch in definition:
+//│ ║  l.54: 	fun foo() = print("abc")
+//│ ║        	    ^^^^^^^^^^^^^^^^^^^^
+//│ ╟── application of type `?io` does not match type `nothing`
+//│ ║  l.54: 	fun foo() = print("abc")
+//│ ╙──      	            ^^^^^^^^^^^^
+//│ fun foo: () -> ()
+//│ fun foo: () -> ()
+
+
+fun foo() = print("abc")
+//│ fun foo: () -> ()
+
+:e
+foo: () -> ()
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.69: 	foo: () -> ()
+//│ ║        	^^^
+//│ ╟── application of type `?io` does not match type `nothing`
+//│ ║  l.65: 	fun foo() = print("abc")
+//│ ╙──      	            ^^^^^^^^^^^^
+//│ () -> ()
+//│ res
+//│     = [Function: foo3]
+
+fun foo: () ->{io} ()
+fun foo() = ()
+//│ fun foo: () -> ()
+//│ fun foo: () ->{io} ()
+
+
+effect MyEffect2() {
+  fun h: () -> Int
+}
+//│ class MyEffect2() {
+//│   fun h: () -> Int
+//│ }
+
+
+handle e2 = MyEffect2() {
+  fun h() = print("abc"); 42
+}
+//│ module e2 extends MyEffect2 {
+//│   fun h: () -> 42
+//│ }
+
+
+:e
+fun foo() = let x = "abc" in print(x)
+foo: () -> ()
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.104: 	foo: () -> ()
+//│ ║         	^^^
+//│ ╟── application of type `?io` does not match type `nothing`
+//│ ║  l.103: 	fun foo() = let x = "abc" in print(x)
+//│ ╙──       	                             ^^^^^^^^
+//│ fun foo: () -> ()
+//│ () -> ()
+//│ res
+//│     = [Function: foo6]
+
+
+:e
+fun foo(x) =
+  if x > 0 then print("abc"); foo(x - 1)
+  else ()
+foo: Int -> ()
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.121: 	foo: Int -> ()
+//│ ║         	^^^
+//│ ╟── application of type `?io` does not match type `nothing`
+//│ ║  l.119: 	  if x > 0 then print("abc"); foo(x - 1)
+//│ ╙──       	                ^^^^^^^^^^^^
+//│ fun foo: Int -> ()
+//│ Int -> ()
+//│ res
+//│     = [Function: foo7]
+
+
+abstract class A[out E]() {
+  fun f: () ->{E} ()
+  fun g: () ->{io} ()
+}
+//│ abstract class A[E]() {
+//│   fun f: () ->{E} ()
+//│   fun g: () ->{io} ()
+//│ }
+
+class AA() extends A() {
+  fun f() = print("abc")
+  fun g() = print("abc")
+}
+//│ class AA() extends A {
+//│   fun f: () -> ()
+//│   fun g: () -> ()
+//│ }

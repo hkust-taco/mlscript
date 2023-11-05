@@ -53,7 +53,7 @@ test(x: 1, z: 3)
 
 :e
 test(y: 0)
-//│ ╔══[ERROR] Number of arguments doesn't match function signature `forall 'a 'b. (x: 'a, y: 'b) -> ['a, 'b]`
+//│ ╔══[ERROR] Number of arguments doesn't match function signature `forall 'b 'a. (x: 'a, y: 'b) -> ['a, 'b]`
 //│ ║  l.55: 	test(y: 0)
 //│ ╙──      	    ^^^^^^
 //│ error

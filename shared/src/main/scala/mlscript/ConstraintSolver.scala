@@ -219,7 +219,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     val stack = MutStack.empty[ST -> ST]
     
     println(s"CONSTRAIN $lhs <! $rhs")
-    println(s"  where ${FunctionType(lhs, rhs)(noProv).showBounds}")
+    println(s"  where ${FunctionType(lhs, rhs, BotType)(noProv).showBounds}")
     
     type ConCtx = Ls[SimpleType] -> Ls[SimpleType]
     
@@ -524,8 +524,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             case (_, RhsBot) | (_, RhsBases(Nil, N, _)) =>
               reportError()
             
-            case (LhsRefined(S(f0@FunctionType(l0, r0)), ts, r, _)
-                , RhsBases(_, S(L(f1@FunctionType(l1, r1))), _)) =>
+            case (LhsRefined(S(f0@FunctionType(l0, r0, _)), ts, r, _)
+                , RhsBases(_, S(L(f1@FunctionType(l1, r1, _))), _)) =>
               rec(f0, f1, true)
             case (LhsRefined(S(f: FunctionType), ts, r, trs), RhsBases(pts, _, _)) =>
               annoying(Nil, LhsRefined(N, ts, r, trs), Nil, done_rs)
@@ -800,9 +800,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           // * Note: at this point, it could be that a polymorphic type could be distribbed
           // *  out of `r1`, but this would likely not result in something useful, since the
           // *  LHS is a normal non-polymorphic function type...
-          case (FunctionType(l0, r0), FunctionType(l1, r1)) =>
+          case (FunctionType(l0, r0, e0), FunctionType(l1, r1, e1)) =>
             rec(l1, l0, false)
             rec(r0, r1, false)
+            if (newDefs) rec(e0, e1, false)
           
           case (prim: ClassTag, ot: TypeTag)
             if prim.parentsST.contains(ot.id) => ()
@@ -888,12 +889,14 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (_, p @ ProxyType(und)) => rec(lhs, und, true)
           case (_, TupleType(f :: Nil)) if funkyTuples =>
             rec(lhs, f._2.ub, true) // FIXME actually needs reified coercion! not a true subtyping relationship
-          case (err @ ClassTag(ErrTypeId, _), FunctionType(l1, r1)) =>
+          case (err @ ClassTag(ErrTypeId, _), FunctionType(l1, r1, e1)) =>
             rec(l1, err, false)
             rec(err, r1, false)
-          case (FunctionType(l0, r0), err @ ClassTag(ErrTypeId, _)) =>
+            if (newDefs) rec(err, e1, false)
+          case (FunctionType(l0, r0, e0), err @ ClassTag(ErrTypeId, _)) =>
             rec(err, l0, false)
             rec(r0, err, false)
+            if (newDefs) rec(e0, err, false)
           case (RecordType(fs0), RecordType(fs1)) =>
             fs1.foreach { case (n1, t1) =>
               fs0.find(_._1 === n1).fold {
@@ -992,11 +995,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             rec(lhs, newRhs, true)
             
           // * Simple case when the parameter type vars don't need to be split
-          case (AliasOf(PolymorphicType(plvl, AliasOf(FunctionType(param, bod)))), _)
+          case (AliasOf(PolymorphicType(plvl, AliasOf(FunctionType(param, bod, e)))), _)
           if distributeForalls
           && param.level <= plvl
           && bod.level > plvl =>
-            val newLhs = FunctionType(param, PolymorphicType(plvl, bod))(rhs.prov)
+            val newLhs = FunctionType(param, PolymorphicType(plvl, bod), e)(rhs.prov)
             println(s"DISTRIB-L  ~>  $newLhs")
             rec(newLhs, rhs, true)
             
@@ -1208,7 +1211,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           => msg"is not an instance of `${obj.expNeg}`"
         case (lunw, TupleType(fs))
           if !lunw.isInstanceOf[TupleType] => msg"is not a ${fs.size.toString}-element tuple"
-        case (lunw, FunctionType(_, _))
+        case (lunw, FunctionType(_, _, _))
           if !lunw.isInstanceOf[FunctionType] => msg"is not a function"
         case (lunw, RecordType((n, _) :: Nil))
           if !lunw.isInstanceOf[RecordType] => doesntHaveField(n.name)
@@ -1303,7 +1306,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   // (trace(s"EXTR[${printPol(S(pol))}] $ty || $lowerLvl .. $upperLvl  ${ty.level} ${ty.level <= lowerLvl}"){
     if (ty.level <= lowerLvl) ty else ty match {
       case t @ TypeBounds(lb, ub) => if (pol) extrude(ub, lowerLvl, true, upperLvl) else extrude(lb, lowerLvl, false, upperLvl)
-      case t @ FunctionType(l, r) => FunctionType(extrude(l, lowerLvl, !pol, upperLvl), extrude(r, lowerLvl, pol, upperLvl))(t.prov)
+      case t @ FunctionType(l, r, e) =>
+        FunctionType(extrude(l, lowerLvl, !pol, upperLvl), extrude(r, lowerLvl, pol, upperLvl), if (newDefs) extrude(e, lowerLvl, pol, upperLvl) else e)(t.prov)
       case t @ ComposedType(p, l, r) => ComposedType(p, extrude(l, lowerLvl, pol, upperLvl), extrude(r, lowerLvl, pol, upperLvl))(t.prov)
       case t @ RecordType(fs) =>
         RecordType(fs.mapValues(_.update(extrude(_, lowerLvl, !pol, upperLvl), extrude(_, lowerLvl, pol, upperLvl))))(t.prov)
@@ -1569,7 +1573,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         
         TypeBounds(freshen(lb), freshen(ub))(t.prov)
         
-      case t @ FunctionType(l, r) => FunctionType(freshen(l), freshen(r))(t.prov)
+      case t @ FunctionType(l, r, e) => FunctionType(freshen(l), freshen(r), if (newDefs) freshen(e) else e)(t.prov)
       case t @ ComposedType(p, l, r) => ComposedType(p, freshen(l), freshen(r))(t.prov)
       case t @ RecordType(fs) => RecordType(fs.mapValues(_.update(freshen, freshen)))(t.prov)
       case t @ TupleType(fs) => TupleType(fs.mapValues(_.update(freshen, freshen)))(t.prov)

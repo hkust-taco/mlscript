@@ -362,7 +362,7 @@ class TypeDefs extends NuTypeDefs { Typer: Typer =>
                         singleTup(RecordType.mk(fieldsRefined.filterNot(_._1.name.isCapitalized))(noProv)),
                         nomTag & RecordType.mk(
                           fieldsRefined ::: tparamTags
-                        )(noProv)
+                        )(noProv), BotType
                         // * TODO try later:
                         // TypeRef(td.nme, td.tparamsargs.unzip._2)(noProv) & RecordType.mk(fieldsRefined)(noProv)
                       )(originProv(td.nme.toLoc, "class constructor", td.nme.name)))
@@ -371,7 +371,7 @@ class TypeDefs extends NuTypeDefs { Typer: Typer =>
                       val tv = freshVar(noProv, N)(1)
                       tv.upperBounds ::= td.bodyTy
                       PolymorphicType(MinLevel, FunctionType(
-                        singleTup(tv), tv & nomTag & RecordType.mk(tparamTags)(noProv)
+                        singleTup(tv), tv & nomTag & RecordType.mk(tparamTags)(noProv), BotType
                       )(originProv(td.nme.toLoc, "trait constructor", td.nme.name)))
                     case _ => ??? // TODO
                   }
@@ -725,9 +725,10 @@ class TypeDefs extends NuTypeDefs { Typer: Typer =>
               case L(ty) => updateVariance(ty, curVariance)
               case R(fld) => fieldVarianceHelper(fld)
             }
-          case FunctionType(lhs, rhs) =>
+          case FunctionType(lhs, rhs, eff) =>
             updateVariance(lhs, curVariance.flip)
             updateVariance(rhs, curVariance)
+            if (newDefs) updateVariance(eff, curVariance)
           case Without(base, names) => updateVariance(base, curVariance.flip)
           case Overload(alts) => alts.foreach(updateVariance(_, curVariance))
           case PolymorphicType(lvl, bod) =>

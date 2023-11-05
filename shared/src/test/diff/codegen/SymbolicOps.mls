@@ -237,7 +237,7 @@ fun compose(>>)(f, g) = x => g(f(x))
 //│ ╔══[PARSE ERROR] Unexpected operator here
 //│ ║  l.236: 	fun compose(>>)(f, g) = x => g(f(x))
 //│ ╙──       	            ^^
-//│ fun compose: forall 'a 'b 'c. () -> ('a -> 'b, 'b -> 'c) -> 'a -> 'c
+//│ fun compose: forall 'a 'b 'c. () -> ('b -> 'c, 'c -> 'a) -> 'b -> 'a
 
 
 :pe

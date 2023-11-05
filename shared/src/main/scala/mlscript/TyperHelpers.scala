@@ -253,7 +253,7 @@ abstract class TyperHelpers { Typer: Typer =>
     RecordType(rt.fields.mapValues(_.update(f(pol.map(!_), _), f(pol, _))))(rt.prov)
   
   def mapPol(bt: BaseType, pol: Opt[Bool], smart: Bool)(f: (Opt[Bool], SimpleType) => SimpleType): BaseType = bt match {
-    case FunctionType(lhs, rhs) => FunctionType(f(pol.map(!_), lhs), f(pol, rhs))(bt.prov)
+    case FunctionType(lhs, rhs, e) => FunctionType(f(pol.map(!_), lhs), f(pol, rhs), f(pol, e))(bt.prov)
     case ov @ Overload(alts) => ov.mapAltsPol(pol)(f)
     case TupleType(fields) => TupleType(fields.mapValues(_.update(f(pol.map(!_), _), f(pol, _))))(bt.prov)
     case ArrayType(inner) => ArrayType(inner.update(f(pol.map(!_), _), f(pol, _)))(bt.prov)
@@ -332,7 +332,7 @@ abstract class TyperHelpers { Typer: Typer =>
     
     def map(f: SimpleType => SimpleType): SimpleType = this match {
       case TypeBounds(lb, ub) => TypeBounds.mkSimple(f(lb), f(ub))
-      case FunctionType(lhs, rhs) => FunctionType(f(lhs), f(rhs))(prov)
+      case FunctionType(lhs, rhs, e) => FunctionType(f(lhs), f(rhs), f(e))(prov)
       case ov @ Overload(as) => ov.mapAltsPol(N)((_, x) => f(x))
       case RecordType(fields) => RecordType(fields.mapValues(_.update(f, f)))(prov)
       case TupleType(fields) => TupleType(fields.mapValues(_.update(f, f)))(prov)
@@ -405,8 +405,8 @@ abstract class TyperHelpers { Typer: Typer =>
     def &- (that: SimpleType, prov: TypeProvenance = noProv): SimpleType = (this, that) match {
       // * This one is only correct in negative position because
       // * the existence of first-class polymorphic types makes it unsound in positive positions.
-      case (FunctionType(l1, r1), FunctionType(l2, r2)) if approximateNegativeFunction =>
-        FunctionType(l1 | l2, r1 &- r2)(prov)
+      case (FunctionType(l1, r1, e1), FunctionType(l2, r2, e2)) if approximateNegativeFunction =>
+        FunctionType(l1 | l2, r1 &- r2, e1 &- e2)(prov)
       case _ => this & (that, prov)
     }
     def & (that: SimpleType, prov: TypeProvenance = noProv, swapped: Bool = false): SimpleType =
@@ -497,8 +497,8 @@ abstract class TyperHelpers { Typer: Typer =>
         case (pt1 @ ClassTag(id1, ps1), pt2 @ ClassTag(id2, ps2)) => (id1 === id2) || pt1.parentsST(id2)
         case (TypeBounds(lb, ub), _) => ub <:< that
         case (_, TypeBounds(lb, ub)) => this <:< lb
-        case (FunctionType(l1, r1), FunctionType(l2, r2)) => assume { implicit cache =>
-          l2 <:< l1 && r1 <:< r2 
+        case (FunctionType(l1, r1, e1), FunctionType(l2, r2, e2)) => assume { implicit cache =>
+          l2 <:< l1 && r1 <:< r2  && e1 <:< e2
         }
         case (ComposedType(true, l, r), _) => l <:< that && r <:< that
         case (_, ComposedType(false, l, r)) => this <:< l && this <:< r
@@ -598,7 +598,7 @@ abstract class TyperHelpers { Typer: Typer =>
     
     def withoutPos(names: SortedSet[Var]): SimpleType = if (names.isEmpty) this else this match {
       case Without(b, ns) => Without(b, ns ++ names)(this.prov)
-      case t @ FunctionType(l, r) => t
+      case t @ FunctionType(l, r, _) => t
       case t @ ComposedType(true, l, r) => l.without(names) | r.without(names)
       case t @ ComposedType(false, l, r) => l.without(names) & r.without(names)
       case t @ RecordType(fs) => RecordType(fs.filter(nt => !names(nt._1)))(t.prov)
@@ -673,7 +673,7 @@ abstract class TyperHelpers { Typer: Typer =>
     }
     
     def abs(that: SimpleType)(prov: TypeProvenance): SimpleType =
-      FunctionType(this, that)(prov)
+      FunctionType(this, that, BotType)(prov)
     
     def unwrapProxies: SimpleType = this match {
       case ProxyType(und) => und.unwrapProxies
@@ -709,7 +709,7 @@ abstract class TyperHelpers { Typer: Typer =>
         case tv: TypeVariable =>
           (if (pol =/= S(false)) tv.lowerBounds.map(S(true) -> _) else Nil) :::
           (if (pol =/= S(true)) tv.upperBounds.map(S(false) -> _) else Nil)
-        case FunctionType(l, r) => pol.map(!_) -> l :: pol -> r :: Nil
+        case FunctionType(l, r, e) => pol.map(!_) -> l :: pol -> r :: pol -> e :: Nil
         case Overload(as) => as.map(pol -> _)
         case ComposedType(_, l, r) => pol -> l :: pol -> r :: Nil
         case RecordType(fs) => fs.unzip._2.flatMap(childrenPolField)
@@ -795,7 +795,7 @@ abstract class TyperHelpers { Typer: Typer =>
           val poltv = pol(tv)
           (if (poltv =/= S(false)) tv.lowerBounds.map(pol.at(tv.level, true) -> _) else Nil) :::
           (if (poltv =/= S(true)) tv.upperBounds.map(pol.at(tv.level, false) -> _) else Nil)
-        case FunctionType(l, r) => pol.contravar -> l :: pol.covar -> r :: Nil
+        case FunctionType(l, r, e) => pol.contravar -> l :: pol.covar -> r :: pol.covar -> e :: Nil
         case Overload(as) => as.map(pol -> _)
         case ComposedType(_, l, r) => pol -> l :: pol -> r :: Nil
         case RecordType(fs) => fs.unzip._2.flatMap(childrenPolField(pol))
@@ -952,7 +952,7 @@ abstract class TyperHelpers { Typer: Typer =>
     def children(includeBounds: Bool): List[SimpleType] = this match {
       case tv @ AssignedVariable(ty) => if (includeBounds) ty :: Nil else Nil
       case tv: TypeVariable => if (includeBounds) tv.lowerBounds ::: tv.upperBounds else Nil
-      case FunctionType(l, r) => l :: r :: Nil
+      case FunctionType(l, r, e) => l :: r :: e :: Nil
       case Overload(as) => as
       case ComposedType(_, l, r) => l :: r :: Nil
       case RecordType(fs) => fs.flatMap(f => f._2.lb.toList ::: f._2.ub :: Nil)
@@ -1035,7 +1035,7 @@ abstract class TyperHelpers { Typer: Typer =>
       * by distributing the quantification of *some* of its type vars into the function result. */
     def splitFunction(implicit ctx: Ctx, raise: Raise): Opt[ST] = {
       def go(ty: ST, traversed: Set[AnyRef], polymLevel: Level): Opt[ST] = ty match {
-        case ft @ FunctionType(par, bod) =>
+        case ft @ FunctionType(par, bod, e) =>
           val couldBeDistribbed = bod.varsBetween(polymLevel, MaxLevel)
           println(s"could be distribbed: $couldBeDistribbed")
           if (couldBeDistribbed.isEmpty) return N
@@ -1047,7 +1047,7 @@ abstract class TyperHelpers { Typer: Typer =>
             (polymLevel + 1) max cannotBeDistribbed.maxByOption(_.level).fold(MinLevel)(_.level)
           val innerPoly = PolymorphicType(polymLevel, bod)
           println(s"inner: ${innerPoly}")
-          val res = FunctionType(par, innerPoly.raiseLevelTo(newInnerLevel, cannotBeDistribbed))(ft.prov)
+          val res = FunctionType(par, innerPoly.raiseLevelTo(newInnerLevel, cannotBeDistribbed), e)(ft.prov)
           println(s"raised: ${res}")
           println(s"  where: ${res.showBounds}")
           if (cannotBeDistribbed.isEmpty) S(res)
@@ -1251,7 +1251,7 @@ abstract class TyperHelpers { Typer: Typer =>
       case tv: TypeVariable =>
         if (pol =/= S(false)) tv.lowerBounds.foreach(apply(S(true)))
         if (pol =/= S(true)) tv.upperBounds.foreach(apply(S(false)))
-      case FunctionType(l, r) => apply(pol.map(!_))(l); apply(pol)(r)
+      case FunctionType(l, r, e) => apply(pol.map(!_))(l); apply(pol)(r); apply(pol)(e)
       case Overload(as) => as.foreach(apply(pol))
       case ComposedType(_, l, r) => apply(pol)(l); apply(pol)(r)
       case RecordType(fs) => fs.unzip._2.foreach(applyField(pol))
@@ -1332,7 +1332,7 @@ abstract class TyperHelpers { Typer: Typer =>
         val poltv = pol(tv)
         if (poltv =/= S(false)) tv.lowerBounds.foreach(apply(pol.at(tv.level, true)))
         if (poltv =/= S(true)) tv.upperBounds.foreach(apply(pol.at(tv.level, false)))
-      case FunctionType(l, r) => apply(pol.contravar)(l); apply(pol)(r)
+      case FunctionType(l, r, e) => apply(pol.contravar)(l); apply(pol)(r); apply(pol)(e)
       case Overload(as) => as.foreach(apply(pol))
       case ComposedType(_, l, r) => apply(pol)(l); apply(pol)(r)
       case RecordType(fs) => fs.unzip._2.foreach(applyField(pol))
@@ -1380,13 +1380,13 @@ abstract class TyperHelpers { Typer: Typer =>
         case proxy: ProxyType => go(proxy.underlying, traversed)
         case tv @ AssignedVariable(ty) if !traversed.contains(tv) =>
           go(ty, traversed + tv)
-        case ft @ FunctionType(param, funbod) =>
+        case ft @ FunctionType(param, funbod, e) =>
             for { poly @ PolymorphicType(plvl, bod) <- go(funbod, traversed) }
             yield {
               val newRhs = if (param.level > plvl) {
                   val poly2 = poly.raiseLevelTo(param.level)
-                  PolymorphicType(poly2.polymLevel, FunctionType(param, poly2.body)(ft.prov))
-                } else PolymorphicType(plvl, FunctionType(param, bod)(ft.prov))
+                  PolymorphicType(poly2.polymLevel, FunctionType(param, poly2.body, e)(ft.prov))
+                } else PolymorphicType(plvl, FunctionType(param, bod, e)(ft.prov))
               newRhs
             }
         case _ => N

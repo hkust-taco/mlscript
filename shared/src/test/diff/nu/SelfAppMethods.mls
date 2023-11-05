@@ -73,10 +73,10 @@ A.f
 A.g
 //│ 'g
 //│   where
-//│     'g :> forall 'a 'b 'c 'h. 'a -> 'b
-//│     'a := 'a -> 'b
-//│     'b <: 'c
-//│     'c <: 'h
+//│     'g :> forall 'a 'b 'h 'c. 'b -> 'c
+//│     'b := 'b -> 'c
+//│     'c <: 'a
+//│     'a <: 'h
 //│ res
 //│     = [Function: g]
 
@@ -85,7 +85,7 @@ A.g
 A.h
 //│ 'h
 //│   where
-//│     'h :> forall 'a 'h0. 'a
+//│     'h :> forall 'h0 'a. 'a
 //│     'a <: 'h0
 //│ res
 //│ Runtime error:
