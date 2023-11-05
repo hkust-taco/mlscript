@@ -463,7 +463,7 @@ class DiffTests
           case Success(p, index) =>
             if (mode.expectParseErrors && !newParser)
               failures += blockLineNum
-            if (mode.showParse || mode.dbgParsing) output("Parsed: " + p)
+            if (mode.showParse || mode.dbgParsing) output("Parsed: " + mlscript.codegen.Helpers.inspect(TypingUnit(p.tops)))
             // if (mode.isDebugging) typer.resetState()
             if (mode.stats) typer.resetStats()
             typer.dbg = mode.dbg

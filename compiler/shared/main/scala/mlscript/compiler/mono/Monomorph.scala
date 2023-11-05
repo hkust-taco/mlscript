@@ -77,12 +77,13 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
   }
 
   private def getResult(exps: List[Expr]) = mlscript.compiler.ModuleUnit(
-        funImpls.map(x => x._2._1)
-       .concat(allTypeImpls.values.map(x => x.copy(body = Isolation(Nil))))
-       .concat(lamTyDefs.values)
-       .concat(anonymTyDefs.values)
-       .concat(exps)
-       .toList)
+    Iterable[Expr | Item]()
+    .concat(allTypeImpls.values.map(x => x.copy(body = Isolation(Nil))))
+    .concat(funImpls.map(x => x._2._1))
+    .concat(lamTyDefs.values)
+    .concat(anonymTyDefs.values)
+    .concat(exps)
+    .toList)
 
   /**
    * This function defunctionalizes the top-level `TypingUnit` into a `Module`.
@@ -135,9 +136,7 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
   def toTypingUnit(mu: ModuleUnit): TypingUnit =
     val statements = mu.items.flatMap {
       case e: Expr => Some(expr2Term(e))
-      case i: Item => 
-        try Some(item2Term(i))
-        catch e => None
+      case i: Item => Some(item2Term(i))
     }
     TypingUnit(statements)
 
@@ -244,11 +243,11 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
       throw MonomorphError(s"$name expect ${params.length} arguments but ${args.length} were given")
     }
     val staticArguments = params.iterator.zip(args).flatMap({
-      case ((flags, _), value) if flags.spec => Some(value)
+      case ((flags, _, _), value) if flags.spec => Some(value)
       case _ => None
     }).toList
     val dynamicArguments = params.iterator.zip(args).flatMap({
-      case ((flags, _), value) if !flags.spec => Some(value)
+      case ((flags, _, _), value) if !flags.spec => Some(value)
       case _ => None
     }).toList
     (staticArguments, dynamicArguments)
@@ -293,7 +292,7 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
         val Item.FuncDecl(nm, prms, bd) = func.get
         val nFuncName = s"${nm.name}$$${obj.name}"
         if(!funImpls.contains(nFuncName)){
-          val nFunc: Item.FuncDecl = Item.FuncDecl(Expr.Ref(nFuncName), (FldFlags.empty, Expr.Ref("this")) :: prms, bd)
+          val nFunc: Item.FuncDecl = Item.FuncDecl(Expr.Ref(nFuncName), (FldFlags.empty, Expr.Ref("this"), None) :: prms, bd)
           addNewFunction(nFunc)
         }
         BoundedExpr(FunctionValue(nFuncName, prms.map(_._2.name), List("this" -> BoundedExpr(obj))))

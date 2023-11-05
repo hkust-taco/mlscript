@@ -11,6 +11,7 @@ import mlscript.NuFunDef
 import scala.collection.mutable.ArrayBuffer
 import mlscript.CaseBranches
 import mlscript.Case
+import mlscript.SimpleTerm
 import mlscript.NoCases
 import mlscript.Wildcard
 import mlscript.DecLit
@@ -31,8 +32,8 @@ object Helpers:
     case Tup(fields) => fields.iterator.flatMap {
       // The new parser emits `Tup(_: UnitLit(true))` from `fun f() = x`.
       case (_, Fld(FldFlags(_, _, _), UnitLit(true))) => None
-      case (None, Fld(flags, Var(name))) => Some((flags, Expr.Ref(name)))
-      case (Some(Var(name)), Fld(flags, _)) => Some((flags, Expr.Ref(name)))
+      case (None, Fld(flags, Var(name))) => Some((flags, Expr.Ref(name), None))
+      case (Some(Var(name)), Fld(flags, typename: Term)) => Some((flags, Expr.Ref(name), Some(typename)))
       case _ => throw new MonomorphError(
         s"only `Var` can be parameters but we meet ${showStructure(term)}"
       )
@@ -100,7 +101,7 @@ object Helpers:
         case _: Test => throw MonomorphError("cannot monomorphize `Test`")
         case With(term, Rcd(fields)) =>
           Expr.With(term2Expr(term), Expr.Record(fields.map {
-            case (name, Fld(FldFlags(mut, spec, getGetter), value)) => (Expr.Ref(name.name), term2Expr(term))
+            case (name, Fld(flags, value)) => (Expr.Ref(name.name), term2Expr(term))
           }))
         case CaseOf(term, cases) => 
           def rec(bra: CaseBranches)(using buffer: ArrayBuffer[CaseBranch]): Unit = bra match
@@ -154,6 +155,14 @@ object Helpers:
         case _ => throw MonomorphError("unsupported term"+ term.toString)
     }
 
+    def exprLit2SimpleTerm(lit: Expr.Literal): SimpleTerm = lit.value match
+          case i: BigInt => IntLit(i)
+          case d: BigDecimal => DecLit(d)
+          case s: String => StrLit(s)
+          case UnitValue.Undefined => UnitLit(true)
+          case UnitValue.Null => UnitLit(false)
+          case b: Boolean => UnitLit(b)
+
     def expr2Term(expr: Expr): Term = {
       expr match
         case Expr.Ref(name) => 
@@ -170,25 +179,29 @@ object Helpers:
           })
         case Expr.Select(reciever, field) => 
           Sel(expr2Term(reciever), Var(field.name))
-        case Expr.LetIn(isRec, name, rhs, body) => ??? //TODO: understand usage
-        case Expr.Block(items) => {
-          items.flatMap(???)
-          ???
-        }
-        case Expr.As(value, toType) => ???
-        case mlscript.compiler.Expr.Assign(assignee, value) => ???
-        case mlscript.compiler.Expr.With(value, fields) => ???
-        case Expr.Subscript(receiver, index) => ???
-        case Expr.Match(scrutinee, branches) => ???
-        case Expr.Literal(value) => value match
-          case i: BigInt => IntLit(i)
-          case d: BigDecimal => DecLit(d)
-          case s: String => StrLit(s)
-          case UnitValue.Undefined => UnitLit(true)
-          case UnitValue.Null => UnitLit(false)
-          case b: Boolean => UnitLit(b)
-        case mlscript.compiler.Expr.New(typeName, args) => ???
-        case Expr.IfThenElse(condition, consequent, alternate) => ???
+        case Expr.LetIn(isRec, name, rhs, body) => ??? //TODO
+        case Expr.Block(items) => ??? //TODO
+        case Expr.As(value, toType) => Asc(expr2Term(value), toType)
+        case mlscript.compiler.Expr.Assign(assignee, value) => Assign(expr2Term(assignee), expr2Term(value))
+        case mlscript.compiler.Expr.With(value, fields) => 
+          With(expr2Term(value), Rcd(fields.fields.map{
+            case (Expr.Ref(name), expr: Expr) => (Var(name), Fld(FldFlags.empty, expr2Term(expr)))
+          }))
+        case Expr.Subscript(receiver, index) => Subs(expr2Term(receiver), expr2Term(index))
+        case Expr.Match(scrutinee, branches) => 
+          def rec(bra: List[CaseBranch])(acc: CaseBranches): CaseBranches = bra.toList match 
+            case Nil => acc
+            case x :: xs => rec(xs)(
+              x match
+                case CaseBranch.Instance(className, alias, body) => Case(Var(className.name), expr2Term(body), acc)
+                case CaseBranch.Constant(literal, body) => Case(exprLit2SimpleTerm(literal), expr2Term(body), acc)
+                case mlscript.compiler.CaseBranch.Wildcard(body) => Wildcard(expr2Term(body))
+            )
+          CaseOf(expr2Term(scrutinee), rec(branches.toList)(NoCases))
+        case lit: Expr.Literal => exprLit2SimpleTerm(lit)
+        case mlscript.compiler.Expr.New(typeName, args) => 
+          New(Some((TypeName(typeName.name), Tup(args.map(e => (None, Fld(FldFlags.empty, expr2Term(e))))))), TypingUnit(Nil))
+        case Expr.IfThenElse(condition, consequent, alternate) => If(IfThen(expr2Term(condition), expr2Term(consequent)), alternate.map(expr2Term))
         case Expr.Isolated(isolation) => ???
     }
 
@@ -199,7 +212,10 @@ object Helpers:
             kind,
             TypeName(name.name),
             typeParams.map(nm => (None, nm)),
-            None,
+            Some(Tup(params.map{
+              case (flags, Expr.Ref(name), None) => (None, Fld(flags, Var(name)))
+              case (flags, Expr.Ref(name), Some(typeinfo)) => (Some(Var(name)), Fld(flags, typeinfo))
+            })),
             None,
             None,
             Nil,
@@ -214,11 +230,18 @@ object Helpers:
             None,
             Nil,
             Left(Lam(Tup(params.map{
-              case (flags: FldFlags, ref: Expr.Ref) => (None, Fld(flags, Var(ref.name)))
+              case (flags: FldFlags, Expr.Ref(name), None) => (None, Fld(flags, Var(name)))
+              case (flags: FldFlags, Expr.Ref(name), Some(typeinfo)) => (Some(Var(name)), Fld(flags, typeinfo))
             }), expr2Term(body))))
             (None, None, None, None, false)
-        case Item.FuncDefn(name, typeParams, body) => ???
-      
+        case Item.FuncDefn(name, typeParams, body) => 
+          NuFunDef(
+            None,
+            Var(name.name),            
+            None,
+            typeParams,
+            Right(body.body)
+          )(None, None, None, None, false)
     }
   
   def func2Item(funDef: NuFunDef): Item.FuncDecl | Item.FuncDefn =

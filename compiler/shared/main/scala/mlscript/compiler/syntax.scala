@@ -5,10 +5,11 @@ import mlscript.compiler.printer.ExprPrinter
 import scala.collection.mutable.ArrayBuffer
 import mlscript.{Type, Union, Inter, Function, Record, Tuple, Recursive, AppliedType,
                  Neg, Rem, Bounds, WithExtension, Constrained, Top, Bot, Literal,
-                 TypeName, TypeVar, PolyType, NamedType, FldFlags}
+                 TypeName, TypeVar, PolyType, NamedType, FldFlags, Term}
 import scala.collection.immutable.HashMap
 import mlscript.compiler.mono.specializer.BoundedExpr
 import mlscript.compiler.mono.specializer.Builtin
+import mlscript.Fld
 
 trait ASTNode:
   var parent: ASTNode = null
@@ -189,9 +190,9 @@ enum TypeDeclKind:
   
 
 /**
- * Function parameters: `(specializable, name)`.
+ * Function parameters: `(flags, name, typeinfo)`.
  */
-type Parameter = (FldFlags, Expr.Ref)
+type Parameter = (FldFlags, Expr.Ref, Option[Term])
 
 enum Item extends Printable:
   val name: Expr.Ref
@@ -219,7 +220,7 @@ enum Item extends Printable:
       s"$kind $name$typeParamsStr$parentsStr { $body }"
     case FuncDecl(Expr.Ref(name), params, body) =>
       val parameters = params.iterator.map {
-        case (flags, Expr.Ref(name)) =>
+        case (flags: FldFlags, Expr.Ref(name), _) =>
           (if flags.spec then "#" else "") + name
       }.mkString("(", ", ", ")")
       s"fun $name$parameters = $body"
