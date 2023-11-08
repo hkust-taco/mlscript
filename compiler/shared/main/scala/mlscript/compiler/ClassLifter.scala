@@ -600,7 +600,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
         // will be treated as Lam(Tup(Nil), rhs)
         val tmp = globFuncs.get(nm).get._2.vSet.toList.map(toFldsEle)
         val ret = liftTerm(rhs)(using ctx ++ globFuncs.get(nm).get._2, cache, globFuncs)
-        NuFunDef(rec, globFuncs.get(nm).get._1, N, nTpVs, Left(Lam(Tup(tmp), ret._1)))(N, N, N, N, true) //TODO: Use proper arguments
+        NuFunDef(rec, globFuncs.get(nm).get._1, N, nTpVs, Left(ret._1))(N, N, N, N, true) //TODO: Use proper arguments
         // val ret = liftTermNew(value)(using ctx.addV(nm) ++ globFuncs.get(nm).get._2, cache, globFuncs)
         // NuFunDef(rec, globFuncs.get(nm).get._1, nTpVs, Left(ret._1))
       case Right(PolyType(targs, body)) => 

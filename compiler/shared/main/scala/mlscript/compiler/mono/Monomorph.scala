@@ -29,7 +29,7 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
   /**
    * Specialized implementations of function declarations.
    */
-  private val funImpls = MutMap[String, (Item.FuncDecl, MutMap[String, Item.FuncDecl], List[BoundedExpr], VariableValue)]()
+  private val funImpls = MutMap[String, (Item.FuncDecl, MutMap[String, Item.FuncDecl], Option[List[BoundedExpr]], VariableValue)]()
 
   private def getfunInfo(nm: String): String = 
     val info = funImpls.get(nm).get
@@ -72,7 +72,11 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
   val specializer = mono.specializer.Specializer(this)(using debug)
 
   private def addNewFunction(func: Item.FuncDecl): Unit = {
-    funImpls.addOne(func.name.name, (func, MutMap(), func.params.map(_ => BoundedExpr()), VariableValue.refresh()))
+    funImpls.addOne(func.name.name, (func, MutMap(), func.params match
+        case Some(p) => Some(p.map(_ => BoundedExpr()))
+        case None => None
+      , VariableValue.refresh()
+      ))
     funDependence.addOne(func.name.name, Set())
   }
 
@@ -94,7 +98,7 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
         case (term: Term, i) =>
           val exp = term2Expr(term)
           val funcName = s"main$$$$$i"
-          val asFunc: Item.FuncDecl = Item.FuncDecl(Expr.Ref(funcName), Nil, exp)
+          val asFunc: Item.FuncDecl = Item.FuncDecl(None, Expr.Ref(funcName), Some(Nil), exp)
           addNewFunction(asFunc)
           evalQueue.addOne(funcName)
           Some(Expr.Apply(Expr.Ref(funcName), Nil))
@@ -118,8 +122,10 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
         updateFunction(crt)
       }
       funImpls.mapValuesInPlace{
-        case (_, (Item.FuncDecl(nm, as, body), mp, la, lr)) =>
-          (Item.FuncDecl(nm, as, specializer.defunctionalize(body)), mp, la, lr)
+        case (_, (Item.FuncDecl(isLetRec, nm, Some(p), body), mp, la, lr)) =>
+          (Item.FuncDecl(isLetRec, nm, Some(p), specializer.defunctionalize(body)), mp, la, lr)
+        case (_, (Item.FuncDecl(isLetRec, nm, None, body), mp, la, lr)) => 
+          (Item.FuncDecl(isLetRec, nm, None, body), mp, la, lr)
       }
       val ret = getResult(exps)
       debug.log("")
@@ -177,27 +183,31 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
     debug.trace[BoundedExpr]("SPEC CALL", name + args.mkString(" with (", ", ", ")")) {
       if(funImpls.contains(name)){
         val (funcdecl, mps, oldArgs, oldVs) = funImpls.get(name).get
-        val old = funDependence.get(name).get
-        funDependence.update(name, old ++ callingStack.headOption)
-        // debug.log(s"adding dependence ${callingStack.headOption}")
-        val nArgs = (oldArgs zip (args.map(_.unfoldVars))).map(_ ++ _).zip(funcdecl.params).map(
-          (x,y) => if(y._1.spec) then x else x.literals2Prims
-        )
-        
-        debug.log(s"comparing ${oldArgs.mkString("(", ", ", ")")} with ${nArgs.map(_.getDebugOutput).mkString("(", ", ", ")")}")
-        if(evalCnt.get(name).isEmpty || (oldArgs zip nArgs).find(x => x._1.compare(x._2)).isDefined){
-          funImpls.update(name, (funcdecl, mps, nArgs, oldVs))
-          if(!evalQueue.contains(name)){
-            if(evalCnt.get(name).isEmpty){
-              debug.log(s"first time encounter $name")
-              updateFunction(name)
+        oldArgs match
+          case Some(b) =>
+            val oldArgs = b
+            val old = funDependence.get(name).get
+            funDependence.update(name, old ++ callingStack.headOption)
+            // debug.log(s"adding dependence ${callingStack.headOption}")
+            val nArgs = (oldArgs zip (args.map(_.unfoldVars))).map(_ ++ _).zip(funcdecl.params.getOrElse(Nil)).map(
+              (x,y) => if(y._1.spec) then x else x.literals2Prims
+            )
+            
+            debug.log(s"comparing ${oldArgs.mkString("(", ", ", ")")} with ${nArgs.map(_.getDebugOutput).mkString("(", ", ", ")")}")
+            if(evalCnt.get(name).isEmpty || (oldArgs zip nArgs).find(x => x._1.compare(x._2)).isDefined){
+              funImpls.update(name, (funcdecl, mps, Some(nArgs), oldVs))
+              if(!evalQueue.contains(name)){
+                if(evalCnt.get(name).isEmpty){
+                  debug.log(s"first time encounter $name")
+                  updateFunction(name)
+                }
+                else{
+                  debug.log(s"find finer args")
+                  evalQueue.add(name)
+                }
+              }
             }
-            else{
-              debug.log(s"find finer args")
-              evalQueue.add(name)
-            }
-          }
-        }
+          case None => ()
         BoundedExpr(funImpls.get(name).get._4)
       }
       else {
@@ -210,27 +220,30 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
 
   private def updateFunc(name: String): Unit = {
     val (funcdecl, mps, args, _) = funImpls.get(name).get
-    val ctx = (funcdecl.params.map(_._2.name) zip args).toMap
-    val nBody = specializer.evaluate(funcdecl.body)(using Context()++ctx, List(funcdecl.name.name))
-    val nVs = nBody.expValue
-    val oldVs = VariableValue.get(funImpls.get(name).get._4)
-    debug.log(s"comparing ${oldVs} with ${nVs}")
-    if(oldVs.compare(nVs)){
-      debug.log(s"adding these funcs to queue: ${funDependence.get(name).get}")
-      funDependence.get(name).get.foreach(x => if !evalQueue.contains(x) then evalQueue.add(x))
-    }
-    funImpls.updateWith(name)(_.map(x => {
-      val nFuncDecl: Item.FuncDecl = x._1.copy(body = nBody)
-      VariableValue.update(x._4, nVs)
-      (nFuncDecl, x._2, x._3, x._4)
-    }))
+    funcdecl.params match
+      case Some(p) => 
+        val ctx = (funcdecl.params.getOrElse(Nil).map(_._2.name) zip args.getOrElse(Nil)).toMap
+        val nBody = specializer.evaluate(funcdecl.body)(using Context()++ctx, List(funcdecl.name.name))
+        val nVs = nBody.expValue
+        val oldVs = VariableValue.get(funImpls.get(name).get._4)
+        debug.log(s"comparing ${oldVs} with ${nVs}")
+        if(oldVs.compare(nVs)){
+          debug.log(s"adding these funcs to queue: ${funDependence.get(name).get}")
+          funDependence.get(name).get.foreach(x => if !evalQueue.contains(x) then evalQueue.add(x))
+        }
+        funImpls.updateWith(name)(_.map(x => {
+          val nFuncDecl: Item.FuncDecl = x._1.copy(body = nBody)
+          VariableValue.update(x._4, nVs)
+          (nFuncDecl, x._2, x._3, x._4)
+        }))
+      case None => ()
   }
 
   def findVar(name: String)(using evalCtx: Context, callingStack: List[String]): MonoValue = {
     if(funImpls.contains(name)){
       val funcBody = funImpls.get(name).get
       funDependence.update(name, funDependence.get(name).get ++ callingStack.headOption)
-      FunctionValue(name, funcBody._1.params.map(_._2.name), Nil)
+      FunctionValue(name, funcBody._1.params.getOrElse(Nil).map(_._2.name), Nil)
     }
     else{
       UnknownValue()
@@ -283,19 +296,19 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
     if(allTypeImpls.contains(obj.name)){
       val tpDef = allTypeImpls.get(obj.name).get
       val func = tpDef.body.items.flatMap{
-        case funcDecl@Item.FuncDecl(Expr.Ref(nm), prms, bd) if nm.equals(field) =>
+        case funcDecl@Item.FuncDecl(isLetRec, Expr.Ref(nm), prms, bd) if nm.equals(field) =>
           Some(funcDecl)
         case _ => None
       }.headOption
       if(func.isDefined){
         debug.log("defined")
-        val Item.FuncDecl(nm, prms, bd) = func.get
+        val Item.FuncDecl(isLetRec, nm, prms, bd) = func.get
         val nFuncName = s"${nm.name}$$${obj.name}"
         if(!funImpls.contains(nFuncName)){
-          val nFunc: Item.FuncDecl = Item.FuncDecl(Expr.Ref(nFuncName), (FldFlags.empty, Expr.Ref("this"), None) :: prms, bd)
+          val nFunc: Item.FuncDecl = Item.FuncDecl(isLetRec, Expr.Ref(nFuncName), Some((FldFlags.empty, Expr.Ref("this"), None) :: prms.getOrElse(Nil)), bd)
           addNewFunction(nFunc)
         }
-        BoundedExpr(FunctionValue(nFuncName, prms.map(_._2.name), List("this" -> BoundedExpr(obj))))
+        BoundedExpr(FunctionValue(nFuncName, prms.getOrElse(Nil).map(_._2.name), List("this" -> BoundedExpr(obj))))
       }
       else if(obj.fields.contains(field))
         debug.log("contains")

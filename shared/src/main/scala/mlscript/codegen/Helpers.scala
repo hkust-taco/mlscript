@@ -24,7 +24,18 @@ object Helpers {
       s"Rcd($entries)"
     case Sel(receiver, fieldName)    => s"Sel(${inspect(receiver)}, $fieldName)"
     case Let(isRec, name, rhs, body) => s"Let($isRec, $name, ${inspect(rhs)}, ${inspect(body)})"
-    case Blk(stmts)                  => s"Blk(...)"
+    case Blk(stmts)                  => s"Blk(${stmts.iterator
+    .map {
+      case term: Term => inspect(term)
+      case NuFunDef(lt, nme, symNme, targs, L(term)) =>
+        s"NuFunDef(${lt}, ${nme.name}, $symNme, ${targs.mkString("[", ", ", "]")}, ${inspect(term)})"
+      case NuFunDef(lt, nme, symNme, targs, R(ty)) =>
+        s"NuFunDef(${lt}, ${nme.name}, $symNme, ${targs.mkString("[", ", ", "]")}, $ty)"
+      case NuTypeDef(kind, nme, tparams, params, ctor, sig, parents, sup, ths, body) =>
+        s"NuTypeDef(${kind.str}, ${nme.name}, ${tparams.mkString("(", ", ", ")")}, ${
+          inspect(params.getOrElse(Tup(Nil)))}, ${parents.map(inspect).mkString("(", ", ", ")")}, $sup, $ths, ${inspect(body)})"
+      case others => others.toString()
+    }.mkString(("; "))})"
     case Bra(rcd, trm)               => s"Bra(rcd = $rcd, ${inspect(trm)})"
     case Asc(trm, ty)                => s"Asc(${inspect(trm)}, $ty)"
     case Bind(lhs, rhs)              => s"Bind(${inspect(lhs)}, ${inspect(rhs)})"

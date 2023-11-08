@@ -205,7 +205,7 @@ enum Item extends Printable:
   /**
    * Function declaration (with implementation).
    */
-  case FuncDecl(name: Expr.Ref, params: List[Parameter], body: Expr)
+  case FuncDecl(isLetRec: Option[Boolean], name: Expr.Ref, params: Option[List[Parameter]], body: Expr)
   /**
    * Function definition (with definition)
    */
@@ -218,11 +218,13 @@ enum Item extends Printable:
       val parentsStr = if parents.isEmpty then ""
         else parents.mkString(" extends ", " with ", " ")
       s"$kind $name$typeParamsStr$parentsStr { $body }"
-    case FuncDecl(Expr.Ref(name), params, body) =>
-      val parameters = params.iterator.map {
-        case (flags: FldFlags, Expr.Ref(name), _) =>
-          (if flags.spec then "#" else "") + name
-      }.mkString("(", ", ", ")")
+    case FuncDecl(isLetRec: Option[Boolean], Expr.Ref(name), params, body) =>
+      val parameters = params match 
+        case Some(p) => p.iterator.map {
+          case (flags: FldFlags, Expr.Ref(name), _) =>
+            (if flags.spec then "#" else "") + name
+        }.mkString("(", ", ", ")")
+        case None => ""
       s"fun $name$parameters = $body"
     case FuncDefn(Expr.Ref(name), Nil, polyType) =>
       s"fun $name: $polyType"

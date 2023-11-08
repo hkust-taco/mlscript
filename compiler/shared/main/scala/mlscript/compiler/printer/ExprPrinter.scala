@@ -17,6 +17,11 @@ class ExprPrinter:
       case (flags, Expr.Ref(name), _) => (if flags.spec then "#" else "") + name
     }.mkString("(", ", ", ")")
 
+  private def show(params: Option[List[Parameter]]): String =
+    params.getOrElse(Nil).iterator.map {
+      case (flags, Expr.Ref(name), _) => (if flags.spec then "#" else "") + name
+    }.mkString("(", ", ", ")")
+
   private def show(item: Item): Unit = item match
     case Item.TypeDecl(Expr.Ref(name), kind, typeParams, params, parents, body) =>
       val typeParamsStr = if typeParams.isEmpty then ""
@@ -27,7 +32,7 @@ class ExprPrinter:
         }.mkString(": ", ", ", "")
       print(s"$kind $name$typeParamsStr${show(params)}$reprParents ")
       show(body)
-    case Item.FuncDecl(Expr.Ref(name), params, body) =>
+    case Item.FuncDecl(isLetRec, Expr.Ref(name), params, body) =>
       print(s"fun $name${show(params)} =")
       enter()
       show(body)

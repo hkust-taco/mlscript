@@ -1,0 +1,62 @@
+:NewDefs
+
+let x =
+  0
+  1
+//│ Parsed:
+//│ TypingUnit(NuFunDef(Some(false), x, None, [], Blk(IntLit(0); IntLit(1))))
+//│ Lifted:
+//│ TypingUnit(NuFunDef(Some(false), x$1, None, [], Blk(IntLit(0); IntLit(1))))
+//│ ╔══[WARNING] Pure expression does nothing in statement position.
+//│ ║  l.4: 	  0
+//│ ╙──     	  ^
+//│ let x: 1
+//│ x
+//│   = 1
+
+let x = let x = 0 in 1
+//│ Parsed:
+//│ TypingUnit(NuFunDef(Some(false), x, None, [], Let(false, x, IntLit(0), IntLit(1))))
+//│ Lifted:
+//│ TypingUnit(NuFunDef(Some(false), x$1, None, [], Let(false, x, IntLit(0), IntLit(1))))
+//│ let x: 1
+//│ x
+//│   = 1
+
+:p
+if true 
+  then
+    let a = 5
+    2
+  else 3
+//│ |#if| |true| |→|#then|→|#let| |a| |#=| |5|↵|2|←|↵|#else| |3|←|
+//│ AST: TypingUnit(If(IfThen(Var(true), Blk(NuFunDef(Some(false), a, None, [], IntLit(5)); IntLit(2)), Some(IntLit(3))))
+//│ Parsed:
+//│ TypingUnit(If(IfThen(Var(true), Blk(NuFunDef(Some(false), a, None, [], IntLit(5)); IntLit(2)), Some(IntLit(3))))
+//│ Lifted:
+//│ TypingUnit(NuFunDef(Some(false), a$1, None, [], IntLit(5)), If(IfThen(Var(true), Blk(IntLit(2)), Some(IntLit(3))))
+//│ Parsed: TypingUnit(If(IfThen(Var(true), Blk(NuFunDef(Some(false), a, None, [], IntLit(5)); IntLit(2)), Some(IntLit(3))))
+//│ 2 | 3
+//│ res
+//│     = 2
+
+:p
+let x = 5
+let y = x
+let z = let x = y in [1, 2, x]
+//│ |#let| |x| |#=| |5|↵|#let| |y| |#=| |x|↵|#let| |z| |#=| |#let| |x| |#=| |y| |#in| |[|1|,| |2|,| |x|]|
+//│ AST: TypingUnit(NuFunDef(Some(false), x, None, [], IntLit(5)), NuFunDef(Some(false), y, None, [], Var(x)), NuFunDef(Some(false), z, None, [], Let(false, x, Var(y), Tup(_: IntLit(1), _: IntLit(2), _: Var(x)))))
+//│ Parsed:
+//│ TypingUnit(NuFunDef(Some(false), x, None, [], IntLit(5)), NuFunDef(Some(false), y, None, [], Var(x)), NuFunDef(Some(false), z, None, [], Let(false, x, Var(y), Tup(_: IntLit(1), _: IntLit(2), _: Var(x)))))
+//│ Lifted:
+//│ TypingUnit(NuFunDef(Some(false), x$1, None, [], IntLit(5)), NuFunDef(Some(false), y$2, None, [], Var(x)), NuFunDef(Some(false), z$3, None, [], Let(false, x, Var(y), Tup(_: IntLit(1), _: IntLit(2), _: Var(x)))))
+//│ Parsed: TypingUnit(NuFunDef(Some(false), x, None, [], IntLit(5)), NuFunDef(Some(false), y, None, [], Var(x)), NuFunDef(Some(false), z, None, [], Let(false, x, Var(y), Tup(_: IntLit(1), _: IntLit(2), _: Var(x)))))
+//│ let x: 5
+//│ let y: 5
+//│ let z: [1, 2, 5]
+//│ x
+//│   = 5
+//│ y
+//│   = 5
+//│ z
+//│   = [ 1, 2, 5 ]

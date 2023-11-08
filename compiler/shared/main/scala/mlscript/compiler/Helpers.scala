@@ -81,11 +81,11 @@ object Helpers:
           case term: Term => Some(term2Expr(term))
           case tyDef: NuTypeDef => throw MonomorphError(s"Unimplemented term2Expr ${term}")
           case funDef: NuFunDef => 
-            val NuFunDef(_, nme, sn, targs, rhs) = funDef
+            val NuFunDef(isLetRec, nme, sn, targs, rhs) = funDef
             val ret: Item.FuncDecl | Item.FuncDefn = rhs match
               case Left(Lam(params, body)) =>
-                Item.FuncDecl(Expr.Ref(nme.name), toFuncParams(params).toList, term2Expr(body))
-              case Left(body: Term) => Item.FuncDecl(Expr.Ref(nme.name), Nil, term2Expr(body))
+                Item.FuncDecl(isLetRec, Expr.Ref(nme.name), Some(toFuncParams(params).toList), term2Expr(body))
+              case Left(body: Term) => Item.FuncDecl(isLetRec, Expr.Ref(nme.name), None, term2Expr(body))
               case Right(tp) => Item.FuncDefn(Expr.Ref(nme.name), targs, PolyType(Nil, tp)) //TODO: Check correctness in Type -> Polytype conversion
             Some(ret)
           case mlscript.DataDefn(_) => throw MonomorphError("unsupported DataDefn")
@@ -168,7 +168,13 @@ object Helpers:
         case Expr.Ref(name) => 
           Var(name)
         case Expr.Lambda(params, body) => 
-          ???
+          Lam(
+            Tup(params.map{
+              case (flags: FldFlags, Expr.Ref(name), None) => (None, Fld(flags, Var(name)))
+              case (flags: FldFlags, Expr.Ref(name), Some(typeinfo)) => (Some(Var(name)), Fld(flags, typeinfo))
+            }),
+            expr2Term(body)
+          )
         case Expr.Apply(callee, arguments) => 
           App(expr2Term(callee),Tup(arguments.map(t => (None, Fld(FldFlags.empty, expr2Term(t))))))
         case Expr.Tuple(fields) => 
@@ -179,8 +185,14 @@ object Helpers:
           })
         case Expr.Select(reciever, field) => 
           Sel(expr2Term(reciever), Var(field.name))
-        case Expr.LetIn(isRec, name, rhs, body) => ??? //TODO
-        case Expr.Block(items) => ??? //TODO
+        case Expr.LetIn(isRec, Expr.Ref(name), rhs, body) => 
+          Let(isRec, Var(name), expr2Term(rhs),  expr2Term(body))
+        case Expr.Block(items) => Blk(
+          items.flatMap{
+            case e: Expr => Some(expr2Term(e))
+            case i: Item => Some(item2Term(i))
+          }
+        )
         case Expr.As(value, toType) => Asc(expr2Term(value), toType)
         case mlscript.compiler.Expr.Assign(assignee, value) => Assign(expr2Term(assignee), expr2Term(value))
         case mlscript.compiler.Expr.With(value, fields) => 
@@ -223,16 +235,19 @@ object Helpers:
             None,
             TypingUnit(Nil))
             (None, None)
-        case Item.FuncDecl(name, params, body) => 
+        case Item.FuncDecl(isLetRec, name, params, body) => 
           NuFunDef(
-            None,
+            isLetRec,
             Var(name.name),
             None,
             Nil,
-            Left(Lam(Tup(params.map{
-              case (flags: FldFlags, Expr.Ref(name), None) => (None, Fld(flags, Var(name)))
-              case (flags: FldFlags, Expr.Ref(name), Some(typeinfo)) => (Some(Var(name)), Fld(flags, typeinfo))
-            }), expr2Term(body))))
+            Left(params match 
+              case Some(p) => Lam(Tup(p.map{
+                case (flags: FldFlags, Expr.Ref(name), None) => (None, Fld(flags, Var(name)))
+                case (flags: FldFlags, Expr.Ref(name), Some(typeinfo)) => (Some(Var(name)), Fld(flags, typeinfo))
+              }), expr2Term(body))
+              case None => expr2Term(body)  
+            ))
             (None, None, None, None, false)
         case Item.FuncDefn(name, typeParams, body) => 
           NuFunDef(
@@ -245,11 +260,12 @@ object Helpers:
     }
   
   def func2Item(funDef: NuFunDef): Item.FuncDecl | Item.FuncDefn =
-      val NuFunDef(_, nme, sn, targs, rhs) = funDef
+      val NuFunDef(isLetRec, nme, sn, targs, rhs) = funDef
       rhs match
         case Left(Lam(params, body)) =>
-          Item.FuncDecl(Expr.Ref(nme.name), toFuncParams(params).toList, term2Expr(body))
-        case Left(body: Term) => Item.FuncDecl(Expr.Ref(nme.name), Nil, term2Expr(body))
+          Item.FuncDecl(isLetRec, Expr.Ref(nme.name), Some(toFuncParams(params).toList), term2Expr(body))
+        case Left(body: Term) => 
+          Item.FuncDecl(isLetRec, Expr.Ref(nme.name), None, term2Expr(body))
         case Right(tp) => Item.FuncDefn(Expr.Ref(nme.name), targs, PolyType(Nil, tp)) //TODO: Check correctness in Type -> Polytype conversion
   
   def type2Item(tyDef: NuTypeDef): Item.TypeDecl =
