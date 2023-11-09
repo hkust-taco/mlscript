@@ -3,17 +3,16 @@
 
 :mono
 fun f(x: Int) = if x then 42 else 1337
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: None.get
-//│ 	at: scala.None$.get(Option.scala:627)
-//│ 	at: scala.None$.get(Option.scala:626)
-//│ 	at: mlscript.compiler.mono.specializer.VariableValue$.get(BoundedExpr.scala:70)
-//│ 	at: mlscript.compiler.mono.specializer.VariableValue.toStringSafe(BoundedExpr.scala:57)
-//│ 	at: mlscript.compiler.mono.specializer.VariableValue.toString(BoundedExpr.scala:58)
-//│ 	at: java.base/java.lang.String.valueOf(String.java:4225)
-//│ 	at: java.base/java.lang.StringBuilder.append(StringBuilder.java:173)
-//│ 	at: mlscript.compiler.mono.Monomorph.defunctionalize$$anonfun$5$$anonfun$1(Monomorph.scala:135)
-//│ 	at: mlscript.compiler.debug.RainbowDebug.msg$proxy1$1(RainbowDebug.scala:62)
-//│ 	at: mlscript.compiler.debug.RainbowDebug.log(RainbowDebug.scala:62)
+//│ Parsed:
+//│ TypingUnit(NuFunDef(None, f, None, [], Lam(Tup(x: Var(Int)), If(IfThen(Var(x), IntLit(42), Some(IntLit(1337))))))
+//│ Lifted:
+//│ TypingUnit(NuFunDef(None, f$1, None, [], Lam(Tup(x: Var(Int)), If(IfThen(Var(x), IntLit(42), Some(IntLit(1337))))))
+//│ Mono:
+//│ 
+//│ Defunc result: 
+//│ fun f$1(x) =
+//│   if x then #42 else #1337
+//│ fun f: (x: Int) -> (1337 | 42)
 
 :mono
 fun foo() = 42
@@ -35,15 +34,15 @@ let b = foo(23, false)
 //│ Parsed:
 //│ TypingUnit(NuFunDef(None, foo, None, [], Lam(Tup(_: Var(x), _: Var(b)), If(IfThen(Var(b), Var(x), Some(IntLit(1337))))), NuFunDef(Some(false), a, None, [], App(Var(foo), Tup(_: IntLit(42), _: Var(true)))), NuFunDef(Some(false), b, None, [], App(Var(foo), Tup(_: IntLit(23), _: Var(false)))))
 //│ Lifted:
-//│ TypingUnit(NuFunDef(None, foo$3, None, [], Lam(Tup(_: Var(x), _: Var(b)), If(IfThen(Var(b), Var(x), Some(IntLit(1337))))), NuFunDef(Some(false), a$1, None, [], App(Var(foo$3), Tup(_: IntLit(42), _: Var(true)))), NuFunDef(Some(false), b$2, None, [], App(Var(foo$3), Tup(_: IntLit(23), _: Var(false)))))
+//│ TypingUnit(NuFunDef(None, foo$3, None, [], Lam(Tup(_: Var(x), _: Var(b$2)), If(IfThen(Var(b$2), Var(x), Some(IntLit(1337))))), NuFunDef(Some(false), a$1, None, [], App(Var(foo$3), Tup(_: IntLit(42), _: Var(true)))), NuFunDef(Some(false), b$2, None, [], App(Var(foo$3), Tup(_: IntLit(23), _: Var(false)))))
 //│ Mono:
 //│ 
 //│ Defunc result: 
-//│ fun b$2() =
+//│ fun b$2 =
 //│   foo$3(#23, false)
-//│ fun foo$3(x, #b) =
-//│   if b then x else #1337
-//│ fun a$1() =
+//│ fun foo$3(x, #b$2) =
+//│   if b$2 then x else #1337
+//│ fun a$1 =
 //│   foo$3(#42, true)
 //│ fun foo: forall 'a. ('a, Object) -> (1337 | 'a)
 //│ let a: 1337 | 42
@@ -62,7 +61,7 @@ let x = 42 + 1337
 //│ Mono:
 //│ 
 //│ Defunc result: 
-//│ fun x$1() =
+//│ fun x$1 =
 //│   +(#42, #1337)
 //│ let x: Int
 //│ x
@@ -227,7 +226,7 @@ count(new List(new List(new Nil(undefined, false), true), true))
 //│ Parsed:
 //│ TypingUnit(NuTypeDef(class, List, (), Tup(l: App(Var(|), Tup(_: App(Var(|), Tup(_: Var(List), _: Var(Nil))), _: UnitLit(true))), hasTail: Var(Bool)), (), None, None, TypingUnit()), NuTypeDef(class, Nil, (), Tup(l: App(Var(|), Tup(_: App(Var(|), Tup(_: Var(List), _: Var(Nil))), _: UnitLit(true))), hasTail: Var(Bool)), (), None, None, TypingUnit()), NuFunDef(None, count, None, [], Lam(Tup(_: Var(lst)), Blk(If(IfThen(Sel(Var(lst), hasTail), Blk(NuFunDef(Some(false), l, None, [], Sel(Var(lst), l)); If(IfThen(App(Var(is), Tup(_: Var(l), _: UnitLit(true))), IntLit(1), Some(App(Var(+), Tup(_: App(Var(count), Tup(_: Var(l))), _: IntLit(1)))))), Some(IntLit(0)))))), App(Var(count), Tup(_: New(Some((TypeName(List),[new List([new Nil([undefined, false,]) {}, true,]) {}, true,])), TypingUnit()))))
 //│ Lifted:
-//│ TypingUnit(NuTypeDef(class, List$1, (), Tup(l: App(Var(|), Tup(_: App(Var(|), Tup(_: Var(List), _: Var(Nil))), _: UnitLit(true))), hasTail: Var(Bool)), (), None, None, TypingUnit()), NuTypeDef(class, Nil$2, (), Tup(l: App(Var(|), Tup(_: App(Var(|), Tup(_: Var(List), _: Var(Nil))), _: UnitLit(true))), hasTail: Var(Bool)), (), None, None, TypingUnit()), NuFunDef(Some(false), l$2, None, [], Sel(Var(lst), l)), NuFunDef(None, count$1, None, [], Lam(Tup(_: Var(lst)), Blk(If(IfThen(Sel(Var(lst), hasTail), Blk(If(IfThen(App(Var(is), Tup(_: Var(l), _: UnitLit(true))), IntLit(1), Some(App(Var(+), Tup(_: App(Var(count$1), Tup(_: Var(l))), _: IntLit(1)))))), Some(IntLit(0)))))), App(Var(count$1), Tup(_: New(Some((TypeName(List$1),[new List$1([new Nil$2([undefined, false,]) {}, true,]) {}, true,])), TypingUnit()))))
+//│ TypingUnit(NuTypeDef(class, List$1, (), Tup(l: App(Var(|), Tup(_: App(Var(|), Tup(_: Var(List), _: Var(Nil))), _: UnitLit(true))), hasTail: Var(Bool)), (), None, None, TypingUnit()), NuTypeDef(class, Nil$2, (), Tup(l: App(Var(|), Tup(_: App(Var(|), Tup(_: Var(List), _: Var(Nil))), _: UnitLit(true))), hasTail: Var(Bool)), (), None, None, TypingUnit()), NuFunDef(Some(false), l$2, None, [], Sel(Var(lst), l)), NuFunDef(None, count$1, None, [], Lam(Tup(_: Var(lst)), Blk(If(IfThen(Sel(Var(lst), hasTail), Blk(If(IfThen(App(Var(is), Tup(_: Var(l$2), _: UnitLit(true))), IntLit(1), Some(App(Var(+), Tup(_: App(Var(count$1), Tup(_: Var(l$2))), _: IntLit(1)))))), Some(IntLit(0)))))), App(Var(count$1), Tup(_: New(Some((TypeName(List$1),[new List$1([new Nil$2([undefined, false,]) {}, true,]) {}, true,])), TypingUnit()))))
 //│ Mono:
 //│ 
 //│ Defunc result: 
@@ -235,10 +234,10 @@ count(new List(new List(new Nil(undefined, false), true), true))
 //│ }
 //│ class List$1(l, hasTail) {
 //│ }
-//│ fun l$2() =
+//│ fun l$2 =
 //│   lst.l
 //│ fun count$1(lst) =
-//│   if lst.hasTail then if is(l, #()) then #1 else +(count$1(l), #1) else #0
+//│   if lst.hasTail then if is(l$2, #()) then #1 else +(count$1(l$2), #1) else #0
 //│ fun main$$4() =
 //│   count$1(new List$1 (new List$1 (new Nil$2 (#(), false) , true) , true) )
 //│ main$$4()
@@ -695,7 +694,7 @@ gen()
 //│ Parsed:
 //│ TypingUnit(NuFunDef(Some(false), anyUnknown, None, [], Var(false)), NuTypeDef(class, List, (), Tup(l: App(Var(|), Tup(_: Var(List), _: Var(Nil))), hasTail: Var(Bool)), (), None, None, TypingUnit()), NuTypeDef(class, Nil, (), Tup(hasTail: Var(Bool)), (), None, None, TypingUnit()), NuFunDef(None, gen, None, [], Lam(Tup(), Blk(If(IfThen(Var(anyUnknown), New(Some((TypeName(List),[gen(), true,])), TypingUnit()), Some(New(Some((TypeName(Nil),[false,])), TypingUnit())))))), App(Var(gen), Tup()))
 //│ Lifted:
-//│ TypingUnit(NuTypeDef(class, List$1, (), Tup(l: App(Var(|), Tup(_: Var(List), _: Var(Nil))), hasTail: Var(Bool)), (), None, None, TypingUnit()), NuTypeDef(class, Nil$2, (), Tup(hasTail: Var(Bool)), (), None, None, TypingUnit()), NuFunDef(Some(false), anyUnknown$2, None, [], Var(false)), NuFunDef(None, gen$1, None, [], Lam(Tup(), Blk(If(IfThen(Var(anyUnknown), New(Some((TypeName(List$1),[gen$1(), true,])), TypingUnit()), Some(New(Some((TypeName(Nil$2),[false,])), TypingUnit())))))), App(Var(gen$1), Tup()))
+//│ TypingUnit(NuTypeDef(class, List$1, (), Tup(l: App(Var(|), Tup(_: Var(List), _: Var(Nil))), hasTail: Var(Bool)), (), None, None, TypingUnit()), NuTypeDef(class, Nil$2, (), Tup(hasTail: Var(Bool)), (), None, None, TypingUnit()), NuFunDef(Some(false), anyUnknown$2, None, [], Var(false)), NuFunDef(None, gen$1, None, [], Lam(Tup(), Blk(If(IfThen(Var(anyUnknown$2), New(Some((TypeName(List$1),[gen$1(), true,])), TypingUnit()), Some(New(Some((TypeName(Nil$2),[false,])), TypingUnit())))))), App(Var(gen$1), Tup()))
 //│ Mono:
 //│ 
 //│ Defunc result: 
@@ -703,10 +702,10 @@ gen()
 //│ }
 //│ class List$1(l, hasTail) {
 //│ }
-//│ fun anyUnknown$2() =
+//│ fun anyUnknown$2 =
 //│   false
 //│ fun gen$1() =
-//│   if anyUnknown then new List$1 (gen$1(), true)  else new Nil$2 (false) 
+//│   if anyUnknown$2 then new List$1 (gen$1(), true)  else new Nil$2 (false) 
 //│ fun main$$4() =
 //│   gen$1()
 //│ main$$4()
@@ -806,16 +805,16 @@ g(1)
 //│ Parsed:
 //│ TypingUnit(NuFunDef(Some(false), any, None, [], IntLit(-20)), NuFunDef(None, f, None, [], Lam(Tup(_: Var(x)), Blk(If(IfThen(App(Var(>), Tup(_: Var(x), _: Var(any))), IntLit(0), Some(App(Var(g), Tup(_: App(Var(-), Tup(_: Var(x), _: IntLit(1)))))))))), NuFunDef(None, g, None, [], Lam(Tup(_: Var(x)), Blk(If(IfThen(App(Var(>), Tup(_: Var(x), _: Var(any))), App(Var(g), Tup(_: App(Var(-), Tup(_: Var(x), _: IntLit(1))))), Some(App(Var(f), Tup(_: App(Var(-), Tup(_: Var(x), _: IntLit(2)))))))))), App(Var(g), Tup(_: IntLit(1))))
 //│ Lifted:
-//│ TypingUnit(NuFunDef(Some(false), any$3, None, [], IntLit(-20)), NuFunDef(None, f$1, None, [], Lam(Tup(_: Var(x)), Blk(If(IfThen(App(Var(>), Tup(_: Var(x), _: Var(any))), IntLit(0), Some(App(Var(g$2), Tup(_: App(Var(-), Tup(_: Var(x), _: IntLit(1)))))))))), NuFunDef(None, g$2, None, [], Lam(Tup(_: Var(x)), Blk(If(IfThen(App(Var(>), Tup(_: Var(x), _: Var(any))), App(Var(g$2), Tup(_: App(Var(-), Tup(_: Var(x), _: IntLit(1))))), Some(App(Var(f$1), Tup(_: App(Var(-), Tup(_: Var(x), _: IntLit(2)))))))))), App(Var(g$2), Tup(_: IntLit(1))))
+//│ TypingUnit(NuFunDef(Some(false), any$3, None, [], IntLit(-20)), NuFunDef(None, f$1, None, [], Lam(Tup(_: Var(x)), Blk(If(IfThen(App(Var(>), Tup(_: Var(x), _: Var(any$3))), IntLit(0), Some(App(Var(g$2), Tup(_: App(Var(-), Tup(_: Var(x), _: IntLit(1)))))))))), NuFunDef(None, g$2, None, [], Lam(Tup(_: Var(x)), Blk(If(IfThen(App(Var(>), Tup(_: Var(x), _: Var(any$3))), App(Var(g$2), Tup(_: App(Var(-), Tup(_: Var(x), _: IntLit(1))))), Some(App(Var(f$1), Tup(_: App(Var(-), Tup(_: Var(x), _: IntLit(2)))))))))), App(Var(g$2), Tup(_: IntLit(1))))
 //│ Mono:
 //│ 
 //│ Defunc result: 
-//│ fun any$3() =
+//│ fun any$3 =
 //│   #-20
 //│ fun f$1(x) =
-//│   if >(x, any) then #0 else g$2(-(x, #1))
+//│   if >(x, any$3) then #0 else g$2(-(x, #1))
 //│ fun g$2(x) =
-//│   if >(x, any) then g$2(-(x, #1)) else f$1(-(x, #2))
+//│   if >(x, any$3) then g$2(-(x, #1)) else f$1(-(x, #2))
 //│ fun main$$3() =
 //│   g$2(#1)
 //│ main$$3()
@@ -882,7 +881,7 @@ bar.car
 //│ Parsed:
 //│ TypingUnit(NuTypeDef(class, Bar, (), Tup(x: Var(Int)), (), None, None, TypingUnit(NuFunDef(None, foo, None, [], Lam(Tup(_: Var(x)), Var(x))), NuFunDef(None, FooMinus, None, [], Lam(Tup(y: Var(Int)), App(Var(+), Tup(_: Var(x), _: Var(y))))), NuFunDef(None, car, None, [], App(Var(foo), Tup(_: IntLit(2)))))), NuTypeDef(class, Car, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, da, None, [], Lam(Tup(b: Var(Bar)), App(Sel(Var(b), foo), Tup(_: IntLit(2))))))), NuFunDef(None, baz, None, [], Lam(Tup(b: Var(Bar)), App(Sel(Var(b), foo), Tup(_: IntLit(2))))), NuFunDef(Some(false), bar, None, [], App(Var(Bar), Tup(_: IntLit(42)))), App(Var(baz), Tup(_: Var(bar))), App(Sel(Bra(rcd = false, New(Some((TypeName(Car),[])), TypingUnit())), da), Tup(_: App(Var(Bar), Tup(_: IntLit(1337))))), Sel(Var(bar), car))
 //│ Lifted:
-//│ TypingUnit(NuTypeDef(class, Bar$1, (), Tup(x: Var(Int)), (), None, None, TypingUnit(NuFunDef(None, foo, None, [], Lam(Tup(_: Var(x)), Var(x))), NuFunDef(None, FooMinus, None, [], Lam(Tup(y: Var(Int)), App(Var(+), Tup(_: Sel(Var(this), x), _: Var(y))))), NuFunDef(None, car, None, [], Lam(Tup(), App(Sel(Var(this), foo), Tup(_: IntLit(2))))))), NuTypeDef(class, Car$2, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, da, None, [], Lam(Tup(b: App(Var(Bar$1), Tup())), App(Sel(Var(b), foo), Tup(_: IntLit(2))))))), NuFunDef(None, baz$2, None, [], Lam(Tup(b: App(Var(Bar$1), Tup())), App(Sel(Var(b), foo), Tup(_: IntLit(2))))), NuFunDef(Some(false), bar$1, None, [], App(Var(Bar$1), Tup(_: IntLit(42)))), App(Var(baz$2), Tup(_: Var(bar))), App(Sel(Bra(rcd = false, New(Some((TypeName(Car$2),[])), TypingUnit())), da), Tup(_: App(Var(Bar$1), Tup(_: IntLit(1337))))), Sel(Var(bar), car))
+//│ TypingUnit(NuTypeDef(class, Bar$1, (), Tup(x: Var(Int)), (), None, None, TypingUnit(NuFunDef(None, foo, None, [], Lam(Tup(_: Var(x)), Var(x))), NuFunDef(None, FooMinus, None, [], Lam(Tup(y: Var(Int)), App(Var(+), Tup(_: Sel(Var(this), x), _: Var(y))))), NuFunDef(None, car, None, [], Lam(Tup(), App(Sel(Var(this), foo), Tup(_: IntLit(2))))))), NuTypeDef(class, Car$2, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, da, None, [], Lam(Tup(b: App(Var(Bar$1), Tup())), App(Sel(Var(b), foo), Tup(_: IntLit(2))))))), NuFunDef(None, baz$2, None, [], Lam(Tup(b: App(Var(Bar$1), Tup())), App(Sel(Var(b), foo), Tup(_: IntLit(2))))), NuFunDef(Some(false), bar$1, None, [], App(Var(Bar$1), Tup(_: IntLit(42)))), App(Var(baz$2), Tup(_: Var(bar$1))), App(Sel(Bra(rcd = false, New(Some((TypeName(Car$2),[])), TypingUnit())), da), Tup(_: App(Var(Bar$1), Tup(_: IntLit(1337))))), Sel(Var(bar$1), car))
 //│ Mono:
 //│ 
 //│ Defunc result: 
@@ -890,18 +889,18 @@ bar.car
 //│ }
 //│ class Car$2() {
 //│ }
-//│ fun bar$1() =
+//│ fun bar$1 =
 //│   Bar$1(#42)
 //│ fun da$Car$2(this, b) =
 //│   b match {}
 //│ fun main$$6() =
-//│   bar.car
+//│   bar$1.car
 //│ fun baz$2(b) =
 //│   b match {}
 //│ fun main$$5() =
 //│   new Car$2 ()  match {case obj: Car$2 => da$Car$2(obj, Bar$1(#1337))}
 //│ fun main$$4() =
-//│   baz$2(bar)
+//│   baz$2(bar$1)
 //│ main$$4()
 //│ main$$5()
 //│ main$$6()
@@ -941,26 +940,26 @@ class Sub2(c: Int) extends Sub(c+c){
 //│ Parsed:
 //│ TypingUnit(NuFunDef(Some(false), c, None, [], IntLit(5)), NuTypeDef(class, Sup, (), Tup(a: Var(Int)), (), None, None, TypingUnit(NuFunDef(None, foo, None, [], Lam(Tup(), Var(a))))), NuTypeDef(class, Sub, (), Tup(b: Var(Int)), (App(Var(Sup), Tup(_: App(Var(+), Tup(_: Var(b), _: Var(b)))))), None, None, TypingUnit()), NuTypeDef(class, Sub2, (), Tup(c: Var(Int)), (App(Var(Sub), Tup(_: App(Var(+), Tup(_: Var(c), _: Var(c)))))), None, None, TypingUnit(NuFunDef(None, foo, None, [], Lam(Tup(), App(Var(+), Tup(_: Var(a), _: Var(c))))))), App(Sel(Bra(rcd = false, New(Some((TypeName(Sub),[10,])), TypingUnit())), foo), Tup()), App(Sel(Bra(rcd = false, New(Some((TypeName(Sub2),[c,])), TypingUnit())), foo), Tup()))
 //│ Lifted:
-//│ TypingUnit(NuTypeDef(class, Sup$1, (), Tup(a: Var(Int)), (), None, None, TypingUnit(NuFunDef(None, foo, None, [], Lam(Tup(), Sel(Var(this), a))))), NuTypeDef(class, Sub$2, (), Tup(b: Var(Int)), (App(Var(Sup$1), Tup(_: App(Var(+), Tup(_: Sel(Var(this), b), _: Sel(Var(this), b)))))), None, None, TypingUnit()), NuTypeDef(class, Sub2$3, (), Tup(c: Var(Int)), (App(Var(Sub$2), Tup(_: App(Var(+), Tup(_: Sel(Var(this), c), _: Sel(Var(this), c)))))), None, None, TypingUnit(NuFunDef(None, foo, None, [], Lam(Tup(), App(Var(+), Tup(_: Sel(Var(this), a), _: Sel(Var(this), c))))))), NuFunDef(Some(false), c$1, None, [], IntLit(5)), App(Sel(Bra(rcd = false, New(Some((TypeName(Sub$2),[10,])), TypingUnit())), foo), Tup()), App(Sel(Bra(rcd = false, New(Some((TypeName(Sub2$3),[c,])), TypingUnit())), foo), Tup()))
+//│ TypingUnit(NuTypeDef(class, Sup$1, (), Tup(a: Var(Int)), (), None, None, TypingUnit(NuFunDef(None, foo, None, [], Lam(Tup(), Sel(Var(this), a))))), NuTypeDef(class, Sub$2, (), Tup(b: Var(Int)), (App(Var(Sup$1), Tup(_: App(Var(+), Tup(_: Sel(Var(this), b), _: Sel(Var(this), b)))))), None, None, TypingUnit()), NuTypeDef(class, Sub2$3, (), Tup(c: Var(Int)), (App(Var(Sub$2), Tup(_: App(Var(+), Tup(_: Var(c$1), _: Var(c$1)))))), None, None, TypingUnit(NuFunDef(None, foo, None, [], Lam(Tup(), App(Var(+), Tup(_: Sel(Var(this), a), _: Var(c$1))))))), NuFunDef(Some(false), c$1, None, [], IntLit(5)), App(Sel(Bra(rcd = false, New(Some((TypeName(Sub$2),[10,])), TypingUnit())), foo), Tup()), App(Sel(Bra(rcd = false, New(Some((TypeName(Sub2$3),[c$1,])), TypingUnit())), foo), Tup()))
 //│ Mono:
 //│ 
 //│ Defunc result: 
-//│ class Sub2$3(c): Sub$2(+(this.c, this.c)) {
+//│ class Sub2$3(c): Sub$2(+(c$1, c$1)) {
 //│ }
 //│ class Sup$1(a) {
 //│ }
 //│ class Sub$2(b): Sup$1(+(this.b, this.b)) {
 //│ }
-//│ fun c$1() =
+//│ fun c$1 =
 //│   #5
 //│ fun main$$5() =
-//│   new Sub2$3 (c)  match {case obj: Sub2$3 => foo$Sub2$3(obj)}
+//│   new Sub2$3 (c$1)  match {case obj: Sub2$3 => foo$Sub2$3(obj)}
 //│ fun main$$4() =
 //│   new Sub$2 (#10)  match {case obj: Sub$2 => foo$Sup$1(obj)}
 //│ fun foo$Sup$1(this) =
 //│   this.a
 //│ fun foo$Sub2$3(this) =
-//│   +(this.a, this.c)
+//│   +(this.a, c$1)
 //│ main$$4()
 //│ main$$5()
 //│ val c: 5

@@ -277,7 +277,7 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
     debug.trace("SPEC NEW", s"$tpName($args)"){
     if(allTypeImpls.contains(tpName)){
       val tp = allTypeImpls.get(tpName).get
-      val ags = (tp.params.map(_._2.name) zip args)
+      val ags = (tp.params.getOrElse(Nil).map(_._2.name) zip args) // FIXME: May not be correct
       val ret = ObjectValue(tpName, MutMap(ags: _*))
       val pars = tp.parents.map((supTp, prms) => {
         val evArgs = prms.map(specializer.evaluate(_)(using Context() ++ (("this"->BoundedExpr(ret)) :: ags), List(tpName)).expValue)

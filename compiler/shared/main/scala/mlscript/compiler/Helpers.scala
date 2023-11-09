@@ -219,12 +219,12 @@ object Helpers:
 
     def item2Term(item: Item): NuDecl = {
       item match
-        case Item.TypeDecl(name, kind, typeParams, params, parents, body) => //TODO: Fix
+        case Item.TypeDecl(name, kind, typeParams, params, parents, body) => 
           NuTypeDef(
             kind,
             TypeName(name.name),
             typeParams.map(nm => (None, nm)),
-            Some(Tup(params.map{
+            params.map(p => Tup(p.map{
               case (flags, Expr.Ref(name), None) => (None, Fld(flags, Var(name)))
               case (flags, Expr.Ref(name), Some(typeinfo)) => (Some(Var(name)), Fld(flags, typeinfo))
             })),
@@ -233,7 +233,10 @@ object Helpers:
             Nil,
             None,
             None,
-            TypingUnit(Nil))
+            TypingUnit(body.items.flatMap {
+              case e: Expr => Some(expr2Term(e))
+              case i: Item => Some(item2Term(i))
+            }))
             (None, None)
         case Item.FuncDecl(isLetRec, name, params, body) => 
           NuFunDef(
@@ -283,7 +286,7 @@ object Helpers:
       Expr.Ref(className.name), // name
       kind, // kind
       tparams.map(_._2), // typeParams
-      toFuncParams(params.getOrElse(Tup(Nil))).toList, // params
+      params.map(toFuncParams(_).toList), // params
       parents.map {
         case Var(name) => (TypeName(name), Nil)
         case App(Var(name), args) => (TypeName(name), term2Expr(args) match{

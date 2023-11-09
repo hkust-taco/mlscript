@@ -16,7 +16,7 @@ a +
   b
 //│ Parsed: +(...a)(...{b});
 //│ Desugared: +(...a)(...{b})
-//│ AST: App(App(Var(+), Var(a)), Blk(...))
+//│ AST: App(App(Var(+), Var(a)), Blk(Var(b)))
 //│ res: int
 
 :pe
@@ -31,7 +31,7 @@ succ a +
     c
 //│ Parsed: +(...(succ(...a)))(...{+(...b)(...{c})});
 //│ Desugared: +(...(succ(...a)))(...{+(...b)(...{c})})
-//│ AST: App(App(Var(+), App(Var(succ), Var(a))), Blk(...))
+//│ AST: App(App(Var(+), App(Var(succ), Var(a))), Blk(App(App(Var(+), Var(b)), Blk(Var(c)))))
 //│ res: int
 
 :p
@@ -40,7 +40,7 @@ succ / a +
     c
 //│ Parsed: succ(...(+(...a)(...{+(...b)(...{c})})));
 //│ Desugared: succ(...(+(...a)(...{+(...b)(...{c})})))
-//│ AST: App(Var(succ), App(App(Var(+), Var(a)), Blk(...)))
+//│ AST: App(Var(succ), App(App(Var(+), Var(a)), Blk(App(App(Var(+), Var(b)), Blk(Var(c))))))
 //│ res: int
 
 :p
@@ -112,7 +112,7 @@ succ
   + c
 //│ Parsed: +(...(succ(...{+(...a)(...b)})))(...c);
 //│ Desugared: +(...(succ(...{+(...a)(...b)})))(...c)
-//│ AST: App(App(Var(+), App(Var(succ), Blk(...))), Var(c))
+//│ AST: App(App(Var(+), App(Var(succ), Blk(App(App(Var(+), Var(a)), Var(b))))), Var(c))
 //│ res: int
 
 // Maybe allow this as it lets us nicely align the operands?

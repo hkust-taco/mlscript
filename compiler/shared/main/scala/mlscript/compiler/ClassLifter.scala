@@ -303,11 +303,14 @@ class ClassLifter(logDebugMsg: Boolean = false) {
     log(s"liftTermNew $target in $ctx, $cache, $globFuncs, $outer")
     target match{
     case v: Var => 
-      if(ctx.contains(v) || v.name.equals("this") || primiTypes.contains(v.name))   (v, emptyCtx)
+      if(globFuncs.contains(v)) {
+        (globFuncs.get(v).get)
+      }
       else if(cache.contains(TypeName(v.name))){
         val ret = liftConstr(TypeName(v.name), Tup(Nil))
         App(Var(ret._1.name), ret._2) -> ret._3
       }
+      else if(ctx.contains(v) || v.name.equals("this") || primiTypes.contains(v.name))   (v, emptyCtx)
       else {
         buildPathToVar(v) match{
           case Some(value) => (value, emptyCtx)
@@ -371,8 +374,8 @@ class ClassLifter(logDebugMsg: Boolean = false) {
       val nTrm = liftTerm(trm)
       (If(ret._1, Some(nTrm._1)), ret._2 ++ nTrm._2)
     case Let(isRec, name, rhs, body) =>
-      val nRhs = if(isRec) liftTerm(rhs)(using ctx.addV(name)) else liftTerm(rhs)
-      val nBody = liftTerm(body)(using ctx.addV(name))
+      val nRhs = if(isRec) liftTerm(rhs)(using ctx.addV(name), cache, globFuncs.-(name)) else liftTerm(rhs)
+      val nBody = liftTerm(body)(using ctx.addV(name), cache, globFuncs.-(name))
       (Let(isRec, name, nRhs._1, nBody._1), nRhs._2 ++ nBody._2)
     case Sel(receiver, fieldName) =>
       val nRec = liftTerm(receiver)

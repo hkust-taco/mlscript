@@ -23,7 +23,8 @@ class DiffTestCompiler extends DiffTests {
       val lifter = ClassLifter(mode.fullExceptionStack)
       rstUnit = lifter.liftTypingUnit(unit)
       outputBuilder ++= mlscript.codegen.Helpers.inspect(rstUnit)
-      //outputBuilder ++= lifter.getLog
+      if (mode.dbgLifting) 
+        outputBuilder ++= lifter.getLog
     catch
       case NonFatal(err) =>
         outputBuilder ++= "Lifting failed: " ++ err.toString()
@@ -41,7 +42,7 @@ class DiffTestCompiler extends DiffTests {
         //outputBuilder ++= treeDebug.getLines.mkString("\n")
         return (outputBuilder.toString().linesIterator.toList, if mode.revConv then Some(monomorph.toTypingUnit(monomorphized)) else None) // TODO: improve exit
       }catch{
-        case error: MonomorphError => outputBuilder ++= (error.getMessage() :: error.getStackTrace().map(_.toString()).toList).mkString("\n")
+        case error: MonomorphError => outputBuilder ++= (error.getMessage()/* :: error.getStackTrace().map(_.toString()).toList).mkString("\n"*/)
         // case error: StackOverflowError => outputBuilder ++= (error.getMessage() :: error.getStackTrace().take(40).map(_.toString()).toList).mkString("\n")
       }
       // outputBuilder ++= treeDebug.getLines.mkString("\n")

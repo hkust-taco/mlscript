@@ -1,6 +1,49 @@
 :NewDefs
 
 :mono
+:p
+:rc
+:dl
+fun x = 2
+x
+//│ |#fun| |x| |#=| |2|↵|x|
+//│ AST: TypingUnit(NuFunDef(None, x, None, [], IntLit(2)), Var(x))
+//│ Parsed:
+//│ TypingUnit(NuFunDef(None, x, None, [], IntLit(2)), Var(x))
+//│ Lifted:
+//│ TypingUnit(NuFunDef(None, x$1, None, [], IntLit(2)), Var(x$1))=========================
+//│ 
+//│ lifting: 
+//│ TypingUnit(NuFunDef(None, x, None, [], IntLit(2)), Var(x))
+//│ 
+//│ liftEntities: fun x = 2
+//│ captured cls infos: 
+//│ Map()
+//│ captured func infos: 
+//│ Map(x -> (; ))
+//│ mix cls infos HashMap(), HashMap(x -> (; ))
+//│ mix result: HashMap(), HashMap(x -> (; ))
+//│ liftGlobalFunc fun x = 2 under (; ) # Map() # Map(x -> (x$1,(; ))) # None
+//│ liftTermNew 2 in (; ), Map(), Map(x -> (x$1,(; ))), None
+//│ liftTermNew x in (x; ), Map(), Map(x -> (x$1,(; ))), None
+//│ freeVars: (; )
+//│ 
+//│ Mono:
+//│ 
+//│ Defunc result: 
+//│ fun x$1 =
+//│   #2
+//│ fun main$$1() =
+//│   x$1
+//│ main$$1()
+//│ Parsed: fun x$1 = 2; fun main$$1 = () => x$1; main$$1();
+//│ fun x$1: 2
+//│ fun main$$1: () -> 2
+//│ 2
+//│ res
+//│     = 2
+
+:mono
 fun x =
   log("ok")
   5
@@ -9,16 +52,16 @@ x
 //│ Parsed:
 //│ TypingUnit(NuFunDef(None, x, None, [], Blk(App(Var(log), Tup(_: StrLit(ok))); IntLit(5))), Var(x), Var(x))
 //│ Lifted:
-//│ TypingUnit(NuFunDef(None, x$1, None, [], Blk(App(Var(log), Tup(_: StrLit(ok))); IntLit(5))), Var(x), Var(x))
+//│ TypingUnit(NuFunDef(None, x$1, None, [], Blk(App(Var(log), Tup(_: StrLit(ok))); IntLit(5))), Var(x$1), Var(x$1))
 //│ Mono:
 //│ 
 //│ Defunc result: 
-//│ fun x$1() =
+//│ fun x$1 =
 //│   log(#ok);#5
 //│ fun main$$2() =
-//│   x
+//│   x$1
 //│ fun main$$1() =
-//│   x
+//│   x$1
 //│ main$$1()
 //│ main$$2()
 //│ fun x: 5
@@ -40,7 +83,7 @@ y
 //│ Parsed:
 //│ TypingUnit(NuFunDef(Some(false), y, None, [], Blk(App(Var(log), Tup(_: StrLit(ok))); IntLit(5))), Var(y), Var(y))
 //│ Lifted:
-//│ TypingUnit(NuFunDef(Some(false), y$1, None, [], Blk(App(Var(log), Tup(_: StrLit(ok))); IntLit(5))), Var(y), Var(y))
+//│ TypingUnit(NuFunDef(Some(false), y$1, None, [], Blk(App(Var(log), Tup(_: StrLit(ok))); IntLit(5))), Var(y$1), Var(y$1))
 //│ let y: 5
 //│ 5
 //│ y
@@ -53,18 +96,17 @@ y
 //│     = 5
 
 let x =
-  0
+  log("x")
   1
 //│ Parsed:
-//│ TypingUnit(NuFunDef(Some(false), x, None, [], Blk(IntLit(0); IntLit(1))))
+//│ TypingUnit(NuFunDef(Some(false), x, None, [], Blk(App(Var(log), Tup(_: StrLit(x))); IntLit(1))))
 //│ Lifted:
-//│ TypingUnit(NuFunDef(Some(false), x$1, None, [], Blk(IntLit(0); IntLit(1))))
-//│ ╔══[WARNING] Pure expression does nothing in statement position.
-//│ ║  l.115: 	  0
-//│ ╙──       	  ^
+//│ TypingUnit(NuFunDef(Some(false), x$1, None, [], Blk(App(Var(log), Tup(_: StrLit(x))); IntLit(1))))
 //│ let x: 1
 //│ x
 //│   = 1
+//│ // Output
+//│ x
 
 let x = let x = 0 in 1
 //│ Parsed:
@@ -87,7 +129,7 @@ if true
 //│ TypingUnit(If(IfThen(Var(true), Blk(NuFunDef(Some(false), a, None, [], IntLit(5)); IntLit(2)), Some(IntLit(3))))
 //│ Lifted:
 //│ TypingUnit(NuFunDef(Some(false), a$1, None, [], IntLit(5)), If(IfThen(Var(true), Blk(IntLit(2)), Some(IntLit(3))))
-//│ Parsed: TypingUnit(If(IfThen(Var(true), Blk(NuFunDef(Some(false), a, None, [], IntLit(5)); IntLit(2)), Some(IntLit(3))))
+//│ Parsed: if (true) then {let a = 5; 2} else 3;
 //│ 2 | 3
 //│ res
 //│     = 2
@@ -101,8 +143,8 @@ let z = let x = y in [1, 2, x]
 //│ Parsed:
 //│ TypingUnit(NuFunDef(Some(false), x, None, [], IntLit(5)), NuFunDef(Some(false), y, None, [], Var(x)), NuFunDef(Some(false), z, None, [], Let(false, x, Var(y), Tup(_: IntLit(1), _: IntLit(2), _: Var(x)))))
 //│ Lifted:
-//│ TypingUnit(NuFunDef(Some(false), x$1, None, [], IntLit(5)), NuFunDef(Some(false), y$2, None, [], Var(x)), NuFunDef(Some(false), z$3, None, [], Let(false, x, Var(y), Tup(_: IntLit(1), _: IntLit(2), _: Var(x)))))
-//│ Parsed: TypingUnit(NuFunDef(Some(false), x, None, [], IntLit(5)), NuFunDef(Some(false), y, None, [], Var(x)), NuFunDef(Some(false), z, None, [], Let(false, x, Var(y), Tup(_: IntLit(1), _: IntLit(2), _: Var(x)))))
+//│ TypingUnit(NuFunDef(Some(false), x$1, None, [], IntLit(5)), NuFunDef(Some(false), y$2, None, [], Var(x$1)), NuFunDef(Some(false), z$3, None, [], Let(false, x, Var(y$2), Tup(_: IntLit(1), _: IntLit(2), _: Var(x)))))
+//│ Parsed: let x = 5; let y = x; let z = let x = y in [1, 2, x,];
 //│ let x: 5
 //│ let y: 5
 //│ let z: [1, 2, 5]

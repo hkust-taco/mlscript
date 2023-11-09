@@ -27,6 +27,7 @@ abstract class ModeType {
   def dbgParsing: Bool
   def dbgSimplif: Bool
   def dbgUCS: Bool
+  def dbgLifting: Bool
   def fullExceptionStack: Bool
   def stats: Bool
   def stdout: Bool
@@ -152,6 +153,7 @@ class DiffTests
       dbgParsing: Bool = false,
       dbgSimplif: Bool = false,
       dbgUCS: Bool = false,
+      dbgLifting: Bool = false,
       fullExceptionStack: Bool = false,
       stats: Bool = false,
       stdout: Bool = false,
@@ -212,6 +214,7 @@ class DiffTests
           case "d" => mode.copy(dbg = true)
           case "dp" => mode.copy(dbgParsing = true)
           case "ds" => mode.copy(dbgSimplif = true)
+          case "dl" => mode.copy(dbgLifting = true)
           case "ducs" => mode.copy(dbg = true, dbgUCS = true)
           case "s" => mode.copy(fullExceptionStack = true)
           case "v" | "verbose" => mode.copy(verbose = true)
@@ -463,7 +466,7 @@ class DiffTests
           case Success(p, index) =>
             if (mode.expectParseErrors && !newParser)
               failures += blockLineNum
-            if (mode.showParse || mode.dbgParsing) output("Parsed: " + mlscript.codegen.Helpers.inspect(TypingUnit(p.tops)))
+            if (mode.showParse || mode.dbgParsing) output("Parsed: " + p)
             // if (mode.isDebugging) typer.resetState()
             if (mode.stats) typer.resetStats()
             typer.dbg = mode.dbg

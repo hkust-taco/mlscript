@@ -17,8 +17,9 @@ class ExprPrinter:
       case (flags, Expr.Ref(name), _) => (if flags.spec then "#" else "") + name
     }.mkString("(", ", ", ")")
 
-  private def show(params: Option[List[Parameter]]): String =
-    params.getOrElse(Nil).iterator.map {
+  private def show(params: Option[List[Parameter]]): String = params match
+    case None => ""
+    case Some(p) => p.iterator.map {
       case (flags, Expr.Ref(name), _) => (if flags.spec then "#" else "") + name
     }.mkString("(", ", ", ")")
 

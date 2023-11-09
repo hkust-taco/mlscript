@@ -201,7 +201,7 @@ enum Item extends Printable:
    * Type declarations: aliases, classes and traits.
    */
   case TypeDecl(name: Expr.Ref, kind: TypeDeclKind, typeParams: List[TypeName],
-                params: List[Parameter], parents: List[(NamedType, List[Expr])], body: Isolation)
+                params: Option[List[Parameter]], parents: List[(NamedType, List[Expr])], body: Isolation)
   /**
    * Function declaration (with implementation).
    */
@@ -239,7 +239,7 @@ object Item:
    * A shorthand constructor for classes without type parameters and parents.
    */
   def classDecl(name: String, params: List[Parameter], body: Isolation): Item.TypeDecl =
-    Item.TypeDecl(Expr.Ref(name), TypeDeclKind.Class, Nil, params, Nil, body)
+    Item.TypeDecl(Expr.Ref(name), TypeDeclKind.Class, Nil, Some(params), Nil, body)
 
 /**
  * An `Isolation` is like a `TypingUnit` but without nested classes.
