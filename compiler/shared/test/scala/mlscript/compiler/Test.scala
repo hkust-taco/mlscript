@@ -20,8 +20,10 @@ class DiffTestCompiler extends DiffTests {
     outputBuilder ++= "\nLifted:\n"
     var rstUnit = unit;
     try
-      rstUnit = ClassLifter(mode.fullExceptionStack).liftTypingUnit(unit)
+      val lifter = ClassLifter(mode.fullExceptionStack)
+      rstUnit = lifter.liftTypingUnit(unit)
       outputBuilder ++= mlscript.codegen.Helpers.inspect(rstUnit)
+      //outputBuilder ++= lifter.getLog
     catch
       case NonFatal(err) =>
         outputBuilder ++= "Lifting failed: " ++ err.toString()

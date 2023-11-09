@@ -1,5 +1,57 @@
 :NewDefs
 
+:mono
+fun x =
+  log("ok")
+  5
+x
+x
+//│ Parsed:
+//│ TypingUnit(NuFunDef(None, x, None, [], Blk(App(Var(log), Tup(_: StrLit(ok))); IntLit(5))), Var(x), Var(x))
+//│ Lifted:
+//│ TypingUnit(NuFunDef(None, x$1, None, [], Blk(App(Var(log), Tup(_: StrLit(ok))); IntLit(5))), Var(x), Var(x))
+//│ Mono:
+//│ 
+//│ Defunc result: 
+//│ fun x$1() =
+//│   log(#ok);#5
+//│ fun main$$2() =
+//│   x
+//│ fun main$$1() =
+//│   x
+//│ main$$1()
+//│ main$$2()
+//│ fun x: 5
+//│ 5
+//│ res
+//│     = 5
+//│ // Output
+//│ ok
+//│ res
+//│     = 5
+//│ // Output
+//│ ok
+
+let y =
+  log("ok")
+  5
+y
+y
+//│ Parsed:
+//│ TypingUnit(NuFunDef(Some(false), y, None, [], Blk(App(Var(log), Tup(_: StrLit(ok))); IntLit(5))), Var(y), Var(y))
+//│ Lifted:
+//│ TypingUnit(NuFunDef(Some(false), y$1, None, [], Blk(App(Var(log), Tup(_: StrLit(ok))); IntLit(5))), Var(y), Var(y))
+//│ let y: 5
+//│ 5
+//│ y
+//│   = 5
+//│ // Output
+//│ ok
+//│ res
+//│     = 5
+//│ res
+//│     = 5
+
 let x =
   0
   1
@@ -8,8 +60,8 @@ let x =
 //│ Lifted:
 //│ TypingUnit(NuFunDef(Some(false), x$1, None, [], Blk(IntLit(0); IntLit(1))))
 //│ ╔══[WARNING] Pure expression does nothing in statement position.
-//│ ║  l.4: 	  0
-//│ ╙──     	  ^
+//│ ║  l.115: 	  0
+//│ ╙──       	  ^
 //│ let x: 1
 //│ x
 //│   = 1

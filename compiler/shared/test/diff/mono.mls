@@ -3,16 +3,17 @@
 
 :mono
 fun f(x: Int) = if x then 42 else 1337
-//│ Parsed:
-//│ TypingUnit(NuFunDef(None, f, None, [], Lam(Tup(x: Var(Int)), If(IfThen(Var(x), IntLit(42), Some(IntLit(1337))))))
-//│ Lifted:
-//│ TypingUnit(NuFunDef(None, f$1, None, [], Lam(Tup(x: Var(Int)), If(IfThen(Var(x), IntLit(42), Some(IntLit(1337))))))
-//│ Mono:
-//│ 
-//│ Defunc result: 
-//│ fun f$1(x) =
-//│   if x then #42 else #1337
-//│ fun f: (x: Int) -> (1337 | 42)
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: None.get
+//│ 	at: scala.None$.get(Option.scala:627)
+//│ 	at: scala.None$.get(Option.scala:626)
+//│ 	at: mlscript.compiler.mono.specializer.VariableValue$.get(BoundedExpr.scala:70)
+//│ 	at: mlscript.compiler.mono.specializer.VariableValue.toStringSafe(BoundedExpr.scala:57)
+//│ 	at: mlscript.compiler.mono.specializer.VariableValue.toString(BoundedExpr.scala:58)
+//│ 	at: java.base/java.lang.String.valueOf(String.java:4225)
+//│ 	at: java.base/java.lang.StringBuilder.append(StringBuilder.java:173)
+//│ 	at: mlscript.compiler.mono.Monomorph.defunctionalize$$anonfun$5$$anonfun$1(Monomorph.scala:135)
+//│ 	at: mlscript.compiler.debug.RainbowDebug.msg$proxy1$1(RainbowDebug.scala:62)
+//│ 	at: mlscript.compiler.debug.RainbowDebug.log(RainbowDebug.scala:62)
 
 :mono
 fun foo() = 42

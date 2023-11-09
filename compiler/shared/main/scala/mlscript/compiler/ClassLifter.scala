@@ -66,7 +66,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
   val primiTypes = new mlscript.Typer(false, false, false, true).primitiveTypes
 
   private def log(str: String): Unit = {
-    logOutput.append(str)
+    logOutput.append(str+"\n")
     if(logDebugMsg){
       println(str)
     }
