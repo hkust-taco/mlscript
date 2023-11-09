@@ -7,6 +7,7 @@ import shorthands.*
 
 import scala.annotation.tailrec
 import scala.collection.immutable.*
+
 final case class GraphOptimizingError(message: String) extends Exception(message)
 
 class GraphOptimizer:
@@ -17,7 +18,7 @@ class GraphOptimizer:
   private type OpCtx = (Unit, Set[Str])
   
   import GOExpr._
-  import Node._
+  import GONode._
 
   var count = 0
   private def gensym(s: Str = "x") = {
@@ -43,13 +44,13 @@ class GraphOptimizer:
   private final val ref = x => Ref(x)
   final val result = x => Result(x)
   private final val sresult = (x: TrivialExpr) => Result(List(x))
-  private final val unexpected_node = (x: Node) => throw GraphOptimizingError(s"unsupported node $x")
+  private final val unexpected_node = (x: GONode) => throw GraphOptimizingError(s"unsupported node $x")
   private final val unexpected_term = (x: Term) => throw GraphOptimizingError(s"unsupported term $x")
 
   private def buildBinding
     (using ctx: Ctx, clsctx: ClassCtx, fldctx: FieldCtx, fnctx: FnCtx, opctx: OpCtx)
     (name: Str, e: Term, body: Term)
-    (k: Node => Node): Node =
+    (k: GONode => GONode): GONode =
     buildResultFromTerm(e) {
       case Result((r: Ref) :: Nil) =>
         given Ctx = ctx + (name -> r.name)
@@ -65,7 +66,7 @@ class GraphOptimizer:
 
   private def buildResultFromTup
     (using ctx: Ctx, clsctx: ClassCtx, fldctx: FieldCtx, fnctx: FnCtx, opctx: OpCtx)
-    (tup: Tup)(k: Node => Node): Node =
+    (tup: Tup)(k: GONode => GONode): GONode =
     tup match
       case Tup(N -> Fld(FldFlags.empty, x) :: xs) => buildResultFromTerm(x) {
         case Result(x :: Nil) =>
@@ -94,7 +95,7 @@ class GraphOptimizer:
 
   private def buildResultFromTerm
     (using ctx: Ctx, clsctx: ClassCtx, fldctx: FieldCtx, fnctx: FnCtx, opctx: OpCtx)
-    (tm: Term)(k: Node => Node): Node =
+    (tm: Term)(k: GONode => GONode): GONode =
     val res = tm match
       case lit: Lit => Literal(lit) |> sresult |> k
       case v @ Var(name) =>
@@ -200,7 +201,7 @@ class GraphOptimizer:
         => buildResultFromTerm(lhs) {
           case Result(Ref(scrut) :: Nil) =>
             val jp = gensym("j")
-            val cases: Ls[(ClassInfo, Node)] = lines map {
+            val cases: Ls[(ClassInfo, GONode)] = lines map {
               case L(IfThen(App(Var(ctor), params: Tup), rhs)) =>
                 clsctx(ctor) -> {
                   // need this because we have built terms (selections in case arms) containing names that are not in the original term
@@ -256,17 +257,17 @@ class GraphOptimizer:
     
     res
 
-  private def fixNode(using defs: Set[GODef])(node: Node): Unit = node match {
-    case Case(_, cases) => cases.foreach { case (cls, node) => (cls, fixNode(node)) }
+  private def fixGONode(using defs: Set[GODef])(node: GONode): Unit = node match {
+    case Case(_, cases) => cases.foreach { case (cls, node) => (cls, fixGONode(node)) }
     case LetCall(resultNames, defnref, args, body) =>
       val target = defnref.defn match {
         case Left(defn) => defs.find{_.getName == defn.name}.get
         case Right(name) => defs.find{_.getName == name}.get
       }
       defnref.defn = Left(target)
-      fixNode(body)
-    case LetExpr(name, expr, body) => fixNode(body)
-    case LetJoin(joinName, params, rhs, body) => fixNode(body)
+      fixGONode(body)
+    case LetExpr(name, expr, body) => fixGONode(body)
+    case LetJoin(joinName, params, rhs, body) => fixGONode(body)
     case Result(_) =>
     case Jump(defnref, _) =>
       // maybe not promoted yet
@@ -278,7 +279,7 @@ class GraphOptimizer:
 
   private def fixGODef(using defs: Set[GODef]): Unit =
     defs.foreach { defn => 
-      fixNode(using defs)(defn.body)
+      fixGONode(using defs)(defn.body)
     }
 
   private def buildDefFromNuFunDef
@@ -428,7 +429,7 @@ class GraphOptimizer:
       case _ => ctx
     }
 
-  private def getElim(using v: String, ctx: Ctx)(node: Node, uses: Set[Elim]): Set[Elim] = node match {
+  private def getElim(using v: String, ctx: Ctx)(node: GONode, uses: Set[Elim]): Set[Elim] = node match {
     case Case(scrut, cases) if used(scrut.str) =>
       cases.foldLeft(uses)((uses, arm) => getElim(arm._2, uses + EDestruct + EDirect))
     case Case(scrut, cases) =>
@@ -458,7 +459,7 @@ class GraphOptimizer:
   private def getIntro(defn: GODef): Ls[Opt[Intro]] =
     defn.activeResults
 
-  private def getIntro(node: Node, intros: Map[Str, Intro]): Ls[Opt[Intro]] = node match {
+  private def getIntro(node: GONode, intros: Map[Str, Intro]): Ls[Opt[Intro]] = node match {
     case Case(scrut, cases) => 
       val cases_intros = cases.map { case (cls, node) => getIntro(node, intros) }
       if (cases_intros.toSet.size > 1)
@@ -529,7 +530,7 @@ class GraphOptimizer:
       (fv3, fj)
     }
 
-  private def freeVarAnalysis(using ctx: Set[Str])(body: Node, fv: Set[Str], fj: Set[Str]): (Set[Str], Set[Str])
+  private def freeVarAnalysis(using ctx: Set[Str])(body: GONode, fv: Set[Str], fj: Set[Str]): (Set[Str], Set[Str])
     = body match {
     case Result(xs) => (fv ++ xs.flatMap {
       case Ref(Name(s)) if !ctx.contains(s) => Some(s)
@@ -567,7 +568,7 @@ class GraphOptimizer:
   
   private def splitFunctionWhenDestructImpl(using classes: Set[ClassInfo],
                                                   params: Ls[Name], resultNum: Int, isjp: Bool)
-  (accu: Node => Node, body: Node, name: Str, target: Name):
+  (accu: GONode => GONode, body: GONode, name: Str, target: Name):
   (RawSplitRemap, RawSplitPreRemap, Set[GODef], Set[GODef]) = {
     body match {
     case Result(_xs) => (Set.empty, Set.empty, Set.empty, Set.empty)
@@ -640,7 +641,7 @@ class GraphOptimizer:
   
 
   private def findToBeSplitted(using intros: Map[Str, Intro], defs: Set[GODef])
-                              (node: Node): Set[(Str, Str)] =
+                              (node: GONode): Set[(Str, Str)] =
     node match {
     case Result(_) => Set()
     case Jump(jp, xs) =>
@@ -692,7 +693,7 @@ class GraphOptimizer:
   private def substSplittedFunction(using sctx: Map[(Str, Str), Map[Str, (Str, Ls[Str])]],
                                           sctx2: Map[(Str, Str), (Str, Ls[Str])],
                                           intros: Map[Str, Intro])
-                                   (node: Node): Node = node match {
+                                   (node: GONode): GONode = node match {
     case Result(_) => node
     case Jump(defnref, as) => 
       val defn = defnref |> expectDefn
@@ -824,7 +825,7 @@ class GraphOptimizer:
   }
 
   private def findToBeReplaced(using intros: Map[Str, Intro])
-                              (defn: Node): Set[(Str, (Str, Ls[Str]))] = defn match {
+                              (defn: GONode): Set[(Str, (Str, Ls[Str]))] = defn match {
     case Result(_) => Set()
     case Jump(defnref, as) =>
       val defn = defnref |> expectDefn
@@ -880,7 +881,7 @@ class GraphOptimizer:
     Name(s"${target}_$field")
   }
 
-  private def replaceScalarArgumentImpl(body: Node, target: Str): Node = body match {
+  private def replaceScalarArgumentImpl(body: GONode, target: Str): GONode = body match {
     case Result(_xs) => body
     case Jump(_jp, _xs) => body
     case Case(scrut, cases) => Case(scrut, cases map {
@@ -943,7 +944,7 @@ class GraphOptimizer:
   }
 
   private def substCallOfRepScalarArg(using namemap: Map[Str, Str], fldctx: FieldCtx, workset: Map[Str, Map[Str, Set[Str]]], sctx: Map[(Str, Str), Str])
-                                     (node: Node) : Node = node match {
+                                     (node: GONode) : GONode = node match {
     case Result(_) => node
     case Jump(defnref, as) => 
       val defn = defnref |> expectDefn
@@ -1122,7 +1123,7 @@ class GraphOptimizer:
     case _ => expr
   }
 
-  private def simplifyTrivialBinding(using rctx: Map[Str, TrivialExpr])(node: Node): Node = node match {
+  private def simplifyTrivialBinding(using rctx: Map[Str, TrivialExpr])(node: GONode): GONode = node match {
     case Result(xs) => Result(xs map simplifyTrivialBindingOfTexpr)
     case Jump(jp, xs) => Jump(jp, xs map simplifyTrivialBindingOfTexpr )
     case Case(scrut, cases) => Case(simplifyTrivialBinding(scrut), cases map {
@@ -1150,7 +1151,7 @@ class GraphOptimizer:
     case x: Literal => x
   }
 
-  private def simplifySel(using cctx: Map[Str, Map[Str, TrivialExpr]])(node: Node): Node =
+  private def simplifySel(using cctx: Map[Str, Map[Str, TrivialExpr]])(node: GONode): GONode =
     node match {
     case Result(xs) => Result(xs)
     case Jump(jp, xs) => Jump(jp, xs)
@@ -1184,7 +1185,7 @@ class GraphOptimizer:
     }
   }
 
-  private def collectLiveBindings(node: Node, live: Set[Str]): Set[Str] = node match {
+  private def collectLiveBindings(node: GONode, live: Set[Str]): Set[Str] = node match {
     case Result(xs) => live ++ argsToStrs(xs)
     case Jump(defnref, xs) =>
       tryGetDefn(defnref) match {
@@ -1211,7 +1212,7 @@ class GraphOptimizer:
       collectLiveBindings(e, live2)
   }
 
-  private def removeDeadBindings(using live: Set[Str])(node: Node): Node = node match {
+  private def removeDeadBindings(using live: Set[Str])(node: GONode): GONode = node match {
     case Result(xs) => node
     case Jump(_, xs) => node
     case Case(scrut, cases) => Case(scrut, cases.map {
@@ -1227,7 +1228,7 @@ class GraphOptimizer:
   }
 
 
-  private def removeTrivialCallAndJump(node: Node): Node = node match {
+  private def removeTrivialCallAndJump(node: GONode): GONode = node match {
     case Result(xs) => node
     case Jump(defnref, xs) =>
       tryGetDefn(defnref) match {
@@ -1300,7 +1301,7 @@ class GraphOptimizer:
     )
   }
 
-  def collectDefUseInfo(node: Node): Set[Str] = node match {
+  def collectDefUseInfo(node: GONode): Set[Str] = node match {
     case Result(xs) => Set.empty 
     case Jump(jp, xs) => Set(jp.getName)
     case Case(scrut, cases) => cases.foldLeft(Set.empty) {
@@ -1317,7 +1318,7 @@ class GraphOptimizer:
   def collectDefUseInfo(defn: GODef): Set[Str] =
     collectDefUseInfo(defn.body)
 
-  def removeDeadDefs(entry: Node, defs: Set[GODef]): Set[GODef] = {
+  def removeDeadDefs(entry: GONode, defs: Set[GODef]): Set[GODef] = {
     var workset = collectDefUseInfo(entry)
     var visited: Set[Str] = Set.empty
     while (workset.nonEmpty) {
@@ -1351,7 +1352,7 @@ class GraphOptimizer:
     GOProgram(prog.classes, defs, prog.main) 
   }
 
-  def promoteJoinPoints(using accu: Ls[GODef])(node: Node): Ls[GODef] = node match {
+  def promoteJoinPoints(using accu: Ls[GODef])(node: GONode): Ls[GODef] = node match {
     case Result(_) => accu
     case Jump(_jp, _xs) => accu
     case Case(scrut, cases) => cases.foldLeft(accu) {
@@ -1371,7 +1372,7 @@ class GraphOptimizer:
       promoteJoinPoints(e)
   }
 
-  private def removeNestedJoinPoints(node: Node): Node = node match {
+  private def removeNestedJoinPoints(node: GONode): GONode = node match {
     case Result(_) | Jump(_, _) => node
     case Case(scrut, cases) => Case(scrut,
       cases map { (cls, e) => (cls, removeNestedJoinPoints(e)) })
@@ -1400,7 +1401,7 @@ class GraphOptimizer:
     GOProgram(classes, defs2, main)
   }
 
-  private def ensureDefRefInSet(using defs: Set[GODef])(node: Node): Unit = node match {
+  private def ensureDefRefInSet(using defs: Set[GODef])(node: GONode): Unit = node match {
     case Case(_, cases) => cases.foreach { case (cls, node) => (cls, ensureDefRefInSet(node)) }
     case LetCall(resultNames, defnref, args, body) =>
       tryGetDefn(defnref) match {
@@ -1418,7 +1419,7 @@ class GraphOptimizer:
     defs.foreach { defn => ensureDefRefInSet(using defs)(defn.body) }
   }
 
-  private def ensureParamsArgsConsistent(node: Node): Unit = node match {
+  private def ensureParamsArgsConsistent(node: GONode): Unit = node match {
     case Case(_, cases) => cases.foreach { case (cls, node) => (cls, ensureParamsArgsConsistent(node)) }
     case LetCall(resultNames, defnref, args, body) =>
       tryGetDefn(defnref) match {

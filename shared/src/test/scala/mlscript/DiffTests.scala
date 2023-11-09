@@ -41,6 +41,7 @@ abstract class ModeType {
   def allowEscape: Bool
   def mono: Bool
   def graphOpt: Bool
+  def goInterp: Bool
 }
 
 class DiffTests
@@ -168,6 +169,7 @@ class DiffTests
       mono: Bool = false,
       // noProvs: Bool = false,
       graphOpt: Bool = false,
+      goInterp: Bool = false,
     ) extends ModeType {
       def isDebugging: Bool = dbg || dbgSimplif
     }
@@ -274,6 +276,7 @@ class DiffTests
             }
             return ()
           case "GraphOpt" => mode.copy(graphOpt = true)
+          case "GOInterp" => mode.copy(goInterp = true)
           case _ =>
             failures += allLines.size - lines.size
             output("/!\\ Unrecognized option " + line)

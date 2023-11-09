@@ -27,6 +27,10 @@ class DiffTestCompiler extends DiffTests {
         val graph2 = go.simplifyProgram(go.promoteJoinPoints(graph))
         val graph3 = go.activeAnalyze(graph2)
         outputBuilder ++= graph3.toString()
+        if (mode.goInterp)
+          outputBuilder ++= "\n\nInterpreted ------------------------------\n"
+          outputBuilder ++= GOInterpreter.interpret(graph3)
+          outputBuilder ++= "\n"
         // outputBuilder ++= "\n\nSplitted ------------------------------------\n"
         // val graph4 = go.simplifyProgram(go.splitFunction(graph3))
         // val graph5 = go.activeAnalyze(graph4)
@@ -51,7 +55,15 @@ class DiffTestCompiler extends DiffTests {
 
         outputBuilder ++= "\n"
 
+        if (mode.goInterp)
+          outputBuilder ++= "\n\nInterpreted ------------------------------\n"
+          outputBuilder ++= GOInterpreter.interpret(g)
+          outputBuilder ++= "\n"
+
       catch
+        case err @ GOInterpreterError(msg) =>
+          outputBuilder ++= s"GOInterp failed: ${msg}"
+          outputBuilder ++= "\n" ++ err.getStackTrace().map(_.toString()).mkString("\n")
         case err @ GraphOptimizingError(msg) =>
           outputBuilder ++= s"GraphOpt failed: ${msg}"
           outputBuilder ++= "\n" ++ err.getStackTrace().map(_.toString()).mkString("\n")

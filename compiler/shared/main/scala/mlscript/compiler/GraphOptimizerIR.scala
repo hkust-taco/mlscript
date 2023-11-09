@@ -16,7 +16,7 @@ class GOProgram(
   val classes: Set[ClassInfo],
   val defs: Set[GODef],
   // TODO add a cache of split defs
-  val main: Node,
+  val main: GONode,
 ):
   override def equals(o: Any): Bool = o match {
     case o: GOProgram if this.isInstanceOf[GOProgram] =>
@@ -98,7 +98,7 @@ class GODef(
   val isjp: Bool,
   val params: Ls[Name],
   val resultNum: Int,
-  var body: Node,
+  var body: GONode,
   // TODO rec boundaries
 ):
   var activeParams: Ls[Set[Elim]] = Ls(Set())
@@ -117,7 +117,7 @@ class GODef(
   override def hashCode: Int = id
   def getName: String = name
   @unused
-  def getBody: Node = body
+  def getBody: GONode = body
   override def toString: String =
     val name2 = if (isjp) s"@join $name" else s"$name" 
     s"Def($id, $name2, ${params.map(_.toString()).mkString("[", ",", "]")}, ${activeParams.map({ x => x.mkString("{", "，", "}")}).mkString("[", ",", "]")}, \n${activeResults.head.toString}, $resultNum, \n$body\n)"
@@ -132,11 +132,11 @@ private def show_args(args: Ls[TrivialExpr]) = args map { x => x.show } mkString
 enum GOExpr:
   case Ref(name: Name) extends GOExpr, TrivialExpr
   case Literal(lit: Lit) extends GOExpr, TrivialExpr
-  case CtorApp(name: ClassInfo, args: Ls[TrivialExpr])
+  case CtorApp(name: ClassInfo, args: Ls[TrivialExpr]) extends GOExpr
   case Select(name: Name, cls: ClassInfo, field: Str)
   case BasicOp(name: Str, args: Ls[TrivialExpr])
   // TODO: depreceted: the following will be deleted
-  case Lambda(name: Ls[Name], body: Node)
+  case Lambda(name: Ls[Name], body: GONode)
   case Apply(name: Name, args: Ls[TrivialExpr])
   
   override def toString: String = show
@@ -159,17 +159,25 @@ enum GOExpr:
       <:> raw(s"$body")
     case Apply(Name(name), args) =>
       raw(name) <#> raw("(") <#> raw(args |> show_args) <#> raw(")")
-    
 
-enum Node:
+  def accept(v: GOExprVistor) = this match
+    case x: Ref => v.visit(x)
+    case x: Literal => v.visit(x)
+    case x: CtorApp => v.visit(x)
+    case x: Select => v.visit(x)
+    case x: BasicOp => v.visit(x)
+    case x: Lambda => v.visit(x)
+    case x: Apply => v.visit(x)
+    
+enum GONode:
   // Terminal forms:
   case Result(res: Ls[TrivialExpr])
   case Jump(defn: GODefRef, args: Ls[TrivialExpr])
-  case Case(scrut: Name, cases: Ls[(ClassInfo, Node)])
+  case Case(scrut: Name, cases: Ls[(ClassInfo, GONode)])
   // Intermediate forms:
-  case LetExpr(name: Name, expr: GOExpr, body: Node)
-  case LetJoin(joinName: Name, params: Ls[Name], rhs: Node, body: Node)
-  case LetCall(resultNames: Ls[Name], defn: GODefRef, args: Ls[TrivialExpr], body: Node)
+  case LetExpr(name: Name, expr: GOExpr, body: GONode)
+  case LetJoin(joinName: Name, params: Ls[Name], rhs: GONode, body: GONode)
+  case LetCall(resultNames: Ls[Name], defn: GODefRef, args: Ls[TrivialExpr], body: GONode)
 
   override def toString: String = show
 
@@ -229,3 +237,13 @@ enum Node:
         raw("in") <:> body.toDocument |> indent
       )
   
+trait GOExprVistor:
+  import GOExpr._
+  def visit(x: Ref)     = x
+  def visit(x: Literal) = x
+  def visit(x: CtorApp) = x
+  def visit(x: Select)  = x
+  def visit(x: BasicOp) = x
+  def visit(x: Lambda)  = x
+  def visit(x: Apply)   = x
+
