@@ -217,10 +217,10 @@ object GOInterpreter:
     case BasicOp(name, args) =>
       val xs = eval_args_may_not_progress(args)
       val x = name match
-        case "+" => eval(using ctx)("+", args.head, args.tail.head)
-        case "-" => eval(using ctx)("-", args.head, args.tail.head)
-        case "*" => eval(using ctx)("*", args.head, args.tail.head)
-        case "/" => eval(using ctx)("/", args.head, args.tail.head)
+        case "+" => eval(using ctx)("+", xs.head, xs.tail.head)
+        case "-" => eval(using ctx)("-", xs.head, xs.tail.head)
+        case "*" => eval(using ctx)("*", xs.head, xs.tail.head)
+        case "/" => eval(using ctx)("/", xs.head, xs.tail.head)
         case _ => throw GOInterpreterError("unexpected basic operation")
       x.toLeft(expr)
 
@@ -262,7 +262,7 @@ object GOInterpreter:
       val ys = args |> eval_args_may_not_progress
       val ctx1 = ctx ++ defn.params.map{_.str}.zip(ys)
       val res = eval_may_not_progress(using ctx1)(defn.body) match {
-        case x @ Result(xs) => println(s"$x"); xs
+        case Result(xs) => xs
         case _ => throw GOInterpreterError("unexpected node")
       }
       val ctx2 = ctx ++ xs.map{_.str}.zip(res)
