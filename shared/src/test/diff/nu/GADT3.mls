@@ -10,40 +10,39 @@ class Baz[T](val x: Foo[T]) extends Foo[[T]]
 //│ }
 //│ class Baz[T](x: Foo[T]) extends Foo
 
-// TODO
+:e
 fun foo[T](f: Foo[T]): Int = if f is
     Bar then 0
-    Baz(x) then foo(x : Foo[x.T])
-//│ ╔══[ERROR] Subtyping constraint of the form `([?a]) -> ?b <: ?c -> ?d` exceeded recursion depth limit (250)
-//│ ║  l.14: 	fun foo[T](f: Foo[T]): Int = if f is
-//│ ║        	                                ^^^^
-//│ ║  l.15: 	    Bar then 0
-//│ ║        	^^^^^^^^^^^^^^
-//│ ║  l.16: 	    Baz(x) then foo(x : Foo[x.T])
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── Note: use flag `:ex` to see internal error info.
+    Baz(x) then foo(x)
 //│ ╔══[ERROR] Type error in definition
 //│ ║  l.14: 	fun foo[T](f: Foo[T]): Int = if f is
 //│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.15: 	    Bar then 0
 //│ ║        	^^^^^^^^^^^^^^
-//│ ║  l.16: 	    Baz(x) then foo(x : Foo[x.T])
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.16: 	    Baz(x) then foo(x)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `T` leaks out of its scope
-//│ ║  l.16: 	    Baz(x) then foo(x : Foo[x.T])
-//│ ║        	                             ^^
-//│ ╙── into expression of type `T | ~(Int & ??T)`
+//│ ║  l.6: 	class Baz[T](val x: Foo[T]) extends Foo[[T]]
+//│ ║       	          ^
+//│ ╙── into expression of type `T | ~??T`
 //│ ╔══[ERROR] Type error in definition
 //│ ║  l.14: 	fun foo[T](f: Foo[T]): Int = if f is
 //│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.15: 	    Bar then 0
 //│ ║        	^^^^^^^^^^^^^^
-//│ ║  l.16: 	    Baz(x) then foo(x : Foo[x.T])
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.16: 	    Baz(x) then foo(x)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `T` leaks out of its scope
 //│ ║  l.6: 	class Baz[T](val x: Foo[T]) extends Foo[[T]]
 //│ ╙──     	          ^
 //│ fun foo: forall 'T. (f: Foo['T]) -> Int
+
+fun foo(f) = if f is
+    Bar then 0
+    Baz(x) then foo(x)
+fun foo: Foo['a] -> Int
+//│ fun foo: forall 'T 'a 'T0. (Bar | Bar & ~{Baz#T :> 'T0 & 'T | ??T <: ??T0 & 'T} | Baz[in 'T out 'T0] & {Baz#T :> 'T0 <: 'T, #x: Foo['a]} | Baz[in 'T out 'T0] & {Baz#T :> 'T0 <: 'T} & ~#Baz | Baz[in 'T out 'T0] & {Baz#T :> 'T0 <: 'T} & ~{Baz#T :> 'T0 & 'T | ??T <: ??T0 & 'T}) -> Int
+//│ fun foo: forall 'a0. Foo['a0] -> Int
 
 abstract class Foo[type T]: Bar | Baz[T]
 class Bar extends Foo[Int]
@@ -69,11 +68,10 @@ bar(Baz(new Bar))
 //│ res
 //│     = 1
 
-// TODO seems we need to specify the type arguments
-abstract class C[type T]: D1 | D2['a, 'b]   // where T = ['a, 'b]
+abstract class C[type T]: D1 | D2
 class D1 extends C[Int]
 class D2[A, B](val a: C[A], val b: C[B]) extends C[[A, B]]
-//│ abstract class C[T]: D1 | D2[in ??a out ??a0, in ??b out ??b0]
+//│ abstract class C[T]: D1 | D2[?, ?]
 //│ class D1 extends C {
 //│   constructor()
 //│ }
