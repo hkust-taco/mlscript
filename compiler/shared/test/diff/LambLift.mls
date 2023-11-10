@@ -12,7 +12,7 @@ foo()
 //│ Parsed:
 //│ TypingUnit(NuFunDef(None, foo, None, [], Lam(Tup(), Blk(NuFunDef(Some(false), local, None, [], Lam(Tup(_: Var(x)), Blk(NuTypeDef(class, Foo, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, bar, None, [], App(Var(+), Tup(_: Var(x), _: App(Var(foo), Tup())))))); Sel(Bra(rcd = false, New(Some((TypeName(Foo),[])), TypingUnit())), bar)))); App(Var(local), Tup(_: IntLit(1)))))), App(Var(foo), Tup()))
 //│ Lifted:
-//│ TypingUnit(NuTypeDef(class, Foo$1, (), Tup(_: Var(x)), (), None, None, TypingUnit(NuFunDef(None, bar, None, [], Lam(Tup(), App(Var(+), Tup(_: Sel(Var(this), x), _: App(Var(foo$1), Tup()))))))), NuFunDef(Some(false), local$2, None, [], Lam(Tup(_: Var(x)), Blk(Sel(Bra(rcd = false, New(Some((TypeName(Foo$1),[x,])), TypingUnit())), bar)))), NuFunDef(None, foo$1, None, [], Lam(Tup(), Blk(App(Var(local$2), Tup(_: IntLit(1)))))), App(Var(foo$1), Tup()))
+//│ TypingUnit(NuTypeDef(class, Foo$1, (), Tup(_: Var(x)), (), None, None, TypingUnit(NuFunDef(None, bar, None, [], App(Var(+), Tup(_: Sel(Var(this), x), _: App(Var(foo$1), Tup())))))), NuFunDef(Some(false), local$2, None, [], Lam(Tup(_: Var(x)), Blk(Sel(Bra(rcd = false, New(Some((TypeName(Foo$1),[x,])), TypingUnit())), bar)))), NuFunDef(None, foo$1, None, [], Lam(Tup(), Blk(App(Var(local$2), Tup(_: IntLit(1)))))), App(Var(foo$1), Tup()))
 //│ fun foo: () -> Int
 //│ Int
 //│ res

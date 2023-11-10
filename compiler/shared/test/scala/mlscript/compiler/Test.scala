@@ -40,7 +40,7 @@ class DiffTestCompiler extends DiffTests {
         outputBuilder ++= ExprPrinter.print(monomorphized)
         outputBuilder ++= "\n"
         //outputBuilder ++= treeDebug.getLines.mkString("\n")
-        return (outputBuilder.toString().linesIterator.toList, if mode.revConv then Some(monomorph.toTypingUnit(monomorphized)) else None) // TODO: improve exit
+        return (outputBuilder.toString().linesIterator.toList, if mode.revConv then Some(monomorph.toTypingUnit(monomorphized)) else None)
       }catch{
         case error: MonomorphError => outputBuilder ++= (error.getMessage()/* :: error.getStackTrace().map(_.toString()).toList).mkString("\n"*/)
         // case error: StackOverflowError => outputBuilder ++= (error.getMessage() :: error.getStackTrace().take(40).map(_.toString()).toList).mkString("\n")

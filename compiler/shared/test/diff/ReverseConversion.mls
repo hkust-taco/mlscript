@@ -175,7 +175,7 @@ three.get
 //│ Parsed:
 //│ TypingUnit(NuTypeDef(class, IntPlusY, (), Tup(x: Var(Int)), (), None, None, TypingUnit(NuFunDef(Some(false), get, None, [], Var(x)))), NuFunDef(Some(false), three, None, [], App(Var(IntPlusY), Tup(_: IntLit(5)))), Sel(Var(three), get))
 //│ Lifted:
-//│ TypingUnit(NuTypeDef(class, IntPlusY$1, (), Tup(x: Var(Int)), (), None, None, TypingUnit(NuFunDef(Some(false), get, None, [], Lam(Tup(), Sel(Var(this), x))))), NuFunDef(Some(false), three$1, None, [], App(Var(IntPlusY$1), Tup(_: IntLit(5)))), Sel(Var(three$1), get))
+//│ TypingUnit(NuTypeDef(class, IntPlusY$1, (), Tup(x: Var(Int)), (), None, None, TypingUnit(NuFunDef(Some(false), get, None, [], Sel(Var(this), x)))), NuFunDef(Some(false), three$1, None, [], App(Var(IntPlusY$1), Tup(_: IntLit(5)))), Sel(Var(three$1), get))
 //│ Mono:
 //│ 
 //│ Defunc result: 

@@ -263,9 +263,7 @@ object Isolation:
   def empty = Isolation(Nil)
 
 /**
- * A `Module` is like a `TypingUnit`.
- * This name conflicts with `java.lang.Module`.
- * TODO: Find a better name.
+ * A `ModuleUnit` is like a `TypingUnit`.
  */
 class ModuleUnit(val items: List[Expr | Item]) extends Printable:
   def getDebugOutput: DebugOutput =
