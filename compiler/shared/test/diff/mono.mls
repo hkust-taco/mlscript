@@ -38,11 +38,11 @@ let b = foo(23, false)
 //│ Mono:
 //│ 
 //│ Defunc result: 
-//│ fun b$2 =
+//│ let b$2 =
 //│   foo$3(#23, false)
 //│ fun foo$3(x, #b$2) =
 //│   if b$2 then x else #1337
-//│ fun a$1 =
+//│ let a$1 =
 //│   foo$3(#42, true)
 //│ fun foo: forall 'a. ('a, Object) -> (1337 | 'a)
 //│ let a: 1337 | 42
@@ -61,7 +61,7 @@ let x = 42 + 1337
 //│ Mono:
 //│ 
 //│ Defunc result: 
-//│ fun x$1 =
+//│ let x$1 =
 //│   +(#42, #1337)
 //│ let x: Int
 //│ x
@@ -234,7 +234,7 @@ count(new List(new List(new Nil(undefined, false), true), true))
 //│ }
 //│ class List$1(l, hasTail) {
 //│ }
-//│ fun l$2 =
+//│ let l$2 =
 //│   lst.l
 //│ fun count$1(lst) =
 //│   if lst.hasTail then if is(l$2, #()) then #1 else +(count$1(l$2), #1) else #0
@@ -702,7 +702,7 @@ gen()
 //│ }
 //│ class List$1(l, hasTail) {
 //│ }
-//│ fun anyUnknown$2 =
+//│ let anyUnknown$2 =
 //│   false
 //│ fun gen$1() =
 //│   if anyUnknown$2 then new List$1 (gen$1(), true)  else new Nil$2 (false) 
@@ -809,7 +809,7 @@ g(1)
 //│ Mono:
 //│ 
 //│ Defunc result: 
-//│ fun any$3 =
+//│ let any$3 =
 //│   #-20
 //│ fun f$1(x) =
 //│   if >(x, any$3) then #0 else g$2(-(x, #1))
@@ -889,7 +889,7 @@ bar.car
 //│ }
 //│ class Car$2() {
 //│ }
-//│ fun bar$1 =
+//│ let bar$1 =
 //│   Bar$1(#42)
 //│ fun da$Car$2(this, b) =
 //│   b match {}
@@ -950,7 +950,7 @@ class Sub2(c: Int) extends Sub(c+c){
 //│ }
 //│ class Sub$2(b): Sup$1(+(this.b, this.b)) {
 //│ }
-//│ fun c$1 =
+//│ let c$1 =
 //│   #5
 //│ fun main$$5() =
 //│   new Sub2$3 (c$1)  match {case obj: Sub2$3 => foo$Sub2$3(obj)}

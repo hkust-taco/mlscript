@@ -190,7 +190,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
     case TyApp(trm, tpLst) =>
       getFreeVars(trm).addT(tpLst.flatMap(_.collectTypeNames.map(TypeName(_))))
     case NuTypeDef(_, nm, tps, param, _, _, pars, _, _, body) =>
-      val prmVs = getFreeVars(param.getOrElse(Tup(Nil)))(using emptyCtx, Map(), globFuncs, None)
+      val prmVs = param.map(getFreeVars(_)(using emptyCtx, Map(), globFuncs, None)).getOrElse(emptyCtx)
       val newVs = prmVs.vSet ++ getFields(body.entities) + Var(nm.name)
       val nCtx = ctx.addV(newVs).addT(nm).addT(tps.map(_._2))
       val parVs = pars.map(getFreeVars(_)(using nCtx)).fold(emptyCtx)(_ ++ _)

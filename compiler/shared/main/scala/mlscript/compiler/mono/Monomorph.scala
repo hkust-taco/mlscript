@@ -130,10 +130,14 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
       val ret = getResult(exps)
       debug.log("")
       debug.log("==============final function signatures==================")
-      funImpls.foreach(
-        (nm, info) => {
-          debug.log(s"$nm: (${info._3.mkString(" X ")}) -> ${info._4}")
-        }
+      try {
+        funImpls.foreach(
+          (nm, info) => {
+            debug.log(s"$nm: (${info._3.mkString(" X ")}) -> ${info._4}")
+          }
+        )
+      } catch e => (
+        debug.log(s"ERROR: ${e.getStackTrace().take(20).mkString("\n")}")
       )
        
       ret
@@ -222,7 +226,7 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
     val (funcdecl, mps, args, _) = funImpls.get(name).get
     funcdecl.params match
       case Some(p) => 
-        val ctx = (funcdecl.params.getOrElse(Nil).map(_._2.name) zip args.getOrElse(Nil)).toMap
+        val ctx = (p.map(_._2.name) zip args.getOrElse(Nil)).toMap
         val nBody = specializer.evaluate(funcdecl.body)(using Context()++ctx, List(funcdecl.name.name))
         val nVs = nBody.expValue
         val oldVs = VariableValue.get(funImpls.get(name).get._4)

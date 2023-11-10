@@ -1,26 +1,10 @@
 :NewDefs
 
-:p
-let x = 1
-//│ |#let| |x| |#=| |1|
-//│ AST: TypingUnit(NuFunDef(Some(false), x, None, [], IntLit(1)))
-//│ Parsed:
-//│ TypingUnit(NuFunDef(Some(false), x, None, [], IntLit(1)))
-//│ Lifted:
-//│ TypingUnit(NuFunDef(Some(false), x$1, None, [], IntLit(1)))
-//│ Parsed: let x = 1;
-//│ let x: 1
-//│ x
-//│   = 1
-
 :mono
-:p
 :rc
 1
 2
 3
-//│ |1|↵|2|↵|3|
-//│ AST: TypingUnit(IntLit(1), IntLit(2), IntLit(3))
 //│ Parsed:
 //│ TypingUnit(IntLit(1), IntLit(2), IntLit(3))
 //│ Lifted:
@@ -37,7 +21,6 @@ let x = 1
 //│ main$$0()
 //│ main$$1()
 //│ main$$2()
-//│ Parsed: fun main$$0 = () => 1; fun main$$2 = () => 3; fun main$$1 = () => 2; main$$0(); main$$1(); main$$2();
 //│ fun main$$0: () -> 1
 //│ fun main$$2: () -> 3
 //│ fun main$$1: () -> 2
@@ -51,37 +34,53 @@ let x = 1
 
 :mono
 :rc
-:p
+let x = 1
+//│ Parsed:
+//│ TypingUnit(NuFunDef(Some(false), x, None, [], IntLit(1)))
+//│ Lifted:
+//│ TypingUnit(NuFunDef(Some(false), x$1, None, [], IntLit(1)))
+//│ Mono:
+//│ 
+//│ Defunc result: 
+//│ let x$1 =
+//│   #1
+//│ let x$1: 1
+//│ x$1
+//│     = 1
+
+:mono
+:rc
 fun const3() = 3
 const3()
-//│ |#fun| |const3|(||)| |#=| |3|↵|const3|(||)|
-//│ AST: TypingUnit(NuFunDef(None, const3, None, [], Lam(Tup(), IntLit(3))), App(Var(const3), Tup()))
+const3
 //│ Parsed:
-//│ TypingUnit(NuFunDef(None, const3, None, [], Lam(Tup(), IntLit(3))), App(Var(const3), Tup()))
+//│ TypingUnit(NuFunDef(None, const3, None, [], Lam(Tup(), IntLit(3))), App(Var(const3), Tup()), Var(const3))
 //│ Lifted:
-//│ TypingUnit(NuFunDef(None, const3$1, None, [], Lam(Tup(), IntLit(3))), App(Var(const3$1), Tup()))
+//│ TypingUnit(NuFunDef(None, const3$1, None, [], Lam(Tup(), IntLit(3))), App(Var(const3$1), Tup()), Var(const3$1))
 //│ Mono:
 //│ 
 //│ Defunc result: 
 //│ fun const3$1() =
 //│   #3
+//│ fun main$$2() =
+//│   const3$1
 //│ fun main$$1() =
 //│   const3$1()
 //│ main$$1()
-//│ Parsed: fun const3$1 = () => 3; fun main$$1 = () => const3$1(); main$$1();
+//│ main$$2()
 //│ fun const3$1: () -> 3
+//│ fun main$$2: () -> () -> 3
 //│ fun main$$1: () -> 3
-//│ 3
+//│ () -> 3
 //│ res
 //│     = 3
+//│ res
+//│     = [Function: const3$1]
 
 :mono
 :rc
-:p
 fun addOne(x) = x+1
 addOne(5)
-//│ |#fun| |addOne|(|x|)| |#=| |x|+|1|↵|addOne|(|5|)|
-//│ AST: TypingUnit(NuFunDef(None, addOne, None, [], Lam(Tup(_: Var(x)), App(Var(+), Tup(_: Var(x), _: IntLit(1))))), App(Var(addOne), Tup(_: IntLit(5))))
 //│ Parsed:
 //│ TypingUnit(NuFunDef(None, addOne, None, [], Lam(Tup(_: Var(x)), App(Var(+), Tup(_: Var(x), _: IntLit(1))))), App(Var(addOne), Tup(_: IntLit(5))))
 //│ Lifted:
@@ -94,7 +93,6 @@ addOne(5)
 //│ fun main$$1() =
 //│   addOne$1(#5)
 //│ main$$1()
-//│ Parsed: fun addOne$1 = (x,) => +(x, 1,); fun main$$1 = () => addOne$1(5,); main$$1();
 //│ fun addOne$1: Int -> Int
 //│ fun main$$1: () -> Int
 //│ Int
@@ -103,11 +101,8 @@ addOne(5)
 
 :mono
 :rc
-:p
 fun addOneTypedParam(x: Int) = x+1
 addOneTypedParam(5)
-//│ |#fun| |addOneTypedParam|(|x|#:| |Int|)| |#=| |x|+|1|↵|addOneTypedParam|(|5|)|
-//│ AST: TypingUnit(NuFunDef(None, addOneTypedParam, None, [], Lam(Tup(x: Var(Int)), App(Var(+), Tup(_: Var(x), _: IntLit(1))))), App(Var(addOneTypedParam), Tup(_: IntLit(5))))
 //│ Parsed:
 //│ TypingUnit(NuFunDef(None, addOneTypedParam, None, [], Lam(Tup(x: Var(Int)), App(Var(+), Tup(_: Var(x), _: IntLit(1))))), App(Var(addOneTypedParam), Tup(_: IntLit(5))))
 //│ Lifted:
@@ -120,7 +115,6 @@ addOneTypedParam(5)
 //│ fun main$$1() =
 //│   addOneTypedParam$1(#5)
 //│ main$$1()
-//│ Parsed: fun addOneTypedParam$1 = (x: Int,) => +(x, 1,); fun main$$1 = () => addOneTypedParam$1(5,); main$$1();
 //│ fun addOneTypedParam$1: (x: Int) -> Int
 //│ fun main$$1: () -> Int
 //│ Int
@@ -129,12 +123,9 @@ addOneTypedParam(5)
 
 :mono
 :rc
-:p
 fun min(x: Int, y: Int) = if x > y then y else x
 min(3,4)
 min(4,3)
-//│ |#fun| |min|(|x|#:| |Int|,| |y|#:| |Int|)| |#=| |#if| |x| |>| |y| |#then| |y| |#else| |x|↵|min|(|3|,|4|)|↵|min|(|4|,|3|)|
-//│ AST: TypingUnit(NuFunDef(None, min, None, [], Lam(Tup(x: Var(Int), y: Var(Int)), If(IfThen(App(Var(>), Tup(_: Var(x), _: Var(y))), Var(y), Some(Var(x))))), App(Var(min), Tup(_: IntLit(3), _: IntLit(4))), App(Var(min), Tup(_: IntLit(4), _: IntLit(3))))
 //│ Parsed:
 //│ TypingUnit(NuFunDef(None, min, None, [], Lam(Tup(x: Var(Int), y: Var(Int)), If(IfThen(App(Var(>), Tup(_: Var(x), _: Var(y))), Var(y), Some(Var(x))))), App(Var(min), Tup(_: IntLit(3), _: IntLit(4))), App(Var(min), Tup(_: IntLit(4), _: IntLit(3))))
 //│ Lifted:
@@ -150,7 +141,6 @@ min(4,3)
 //│   min$1(#3, #4)
 //│ main$$1()
 //│ main$$2()
-//│ Parsed: fun min$1 = (x: Int, y: Int,) => if (>(x, y,)) then y else x; fun main$$2 = () => min$1(4, 3,); fun main$$1 = () => min$1(3, 4,); main$$1(); main$$2();
 //│ fun min$1: (x: Int, y: Int) -> Int
 //│ fun main$$2: () -> Int
 //│ fun main$$1: () -> Int
@@ -163,15 +153,12 @@ min(4,3)
 
 // FIXME: Isolation in class/NuTypeDef body removed?
 :mono
-:p
 :rc
 class IntPlusY(x: Int) {
   val get =  x
 }
 val three = IntPlusY(5)
 three.get
-//│ |#class| |IntPlusY|(|x|#:| |Int|)| |{|→|#val| |get| |#=| |x|←|↵|}|↵|#val| |three| |#=| |IntPlusY|(|5|)|↵|three|.get|
-//│ AST: TypingUnit(NuTypeDef(class, IntPlusY, (), Tup(x: Var(Int)), (), None, None, TypingUnit(NuFunDef(Some(false), get, None, [], Var(x)))), NuFunDef(Some(false), three, None, [], App(Var(IntPlusY), Tup(_: IntLit(5)))), Sel(Var(three), get))
 //│ Parsed:
 //│ TypingUnit(NuTypeDef(class, IntPlusY, (), Tup(x: Var(Int)), (), None, None, TypingUnit(NuFunDef(Some(false), get, None, [], Var(x)))), NuFunDef(Some(false), three, None, [], App(Var(IntPlusY), Tup(_: IntLit(5)))), Sel(Var(three), get))
 //│ Lifted:
@@ -181,12 +168,11 @@ three.get
 //│ Defunc result: 
 //│ class IntPlusY$1(x) {
 //│ }
-//│ fun three$1 =
+//│ let three$1 =
 //│   IntPlusY$1(#5)
 //│ fun main$$2() =
 //│   three$1.get
 //│ main$$2()
-//│ Parsed: class IntPlusY$1(x: Int,) {}; let three$1 = IntPlusY$1(5,); fun main$$2 = () => (three$1).get; main$$2();
 //│ ╔══[ERROR] Type `IntPlusY$1` does not contain member `get`
 //│ ╙──
 //│ class IntPlusY$1(x: Int)
@@ -200,11 +186,8 @@ three.get
 //| NuTypeDef(class, IntPlusY, (), Tup(x: Var(B)), (), None, None, TypingUnit(NuFunDef(None, get, None, [], Lam(Tup(_: Var(y)), Var(x))))), NuFunDef(Some(false), three, None, [], App(Var(IntPlusY), Tup(_: App(Var(B), Tup())))), App(Sel(Var(three), get), Tup(_: IntLit(1))))
 
 :mono
-:p
 :rc
 let x = let x = 3 in [x, 4]
-//│ |#let| |x| |#=| |#let| |x| |#=| |3| |#in| |[|x|,| |4|]|
-//│ AST: TypingUnit(NuFunDef(Some(false), x, None, [], Let(false, x, IntLit(3), Tup(_: Var(x), _: IntLit(4)))))
 //│ Parsed:
 //│ TypingUnit(NuFunDef(Some(false), x, None, [], Let(false, x, IntLit(3), Tup(_: Var(x), _: IntLit(4)))))
 //│ Lifted:
@@ -212,19 +195,15 @@ let x = let x = 3 in [x, 4]
 //│ Mono:
 //│ 
 //│ Defunc result: 
-//│ fun x$1 =
+//│ let x$1 =
 //│   let x = #3 in (x, #4)
-//│ Parsed: let x$1 = let x = 3 in [x, 4,];
 //│ let x$1: [3, 4]
 //│ x$1
 //│     = [ 3, 4 ]
 
-:p
 :rc
 :mono
 val x = 2
-//│ |#val| |x| |#=| |2|
-//│ AST: TypingUnit(NuFunDef(Some(false), x, None, [], IntLit(2)))
 //│ Parsed:
 //│ TypingUnit(NuFunDef(Some(false), x, None, [], IntLit(2)))
 //│ Lifted:
@@ -232,19 +211,15 @@ val x = 2
 //│ Mono:
 //│ 
 //│ Defunc result: 
-//│ fun x$1 =
+//│ let x$1 =
 //│   #2
-//│ Parsed: let x$1 = 2;
 //│ let x$1: 2
 //│ x$1
 //│     = 2
 
-:p
 :mono
 :rc
 let x() = 2
-//│ |#let| |x|(||)| |#=| |2|
-//│ AST: TypingUnit(NuFunDef(Some(false), x, None, [], Lam(Tup(), IntLit(2))))
 //│ Parsed:
 //│ TypingUnit(NuFunDef(Some(false), x, None, [], Lam(Tup(), IntLit(2))))
 //│ Lifted:
@@ -252,9 +227,78 @@ let x() = 2
 //│ Mono:
 //│ 
 //│ Defunc result: 
-//│ fun x$1() =
+//│ let x$1() =
 //│   #2
-//│ Parsed: let x$1 = () => 2;
 //│ let x$1: () -> 2
 //│ x$1
-//│     = [Function: x$12]
+//│     = [Function: x$13]
+
+:mono
+:rc
+let x = 
+  log("should show once")
+  3
+x
+x
+//│ Parsed:
+//│ TypingUnit(NuFunDef(Some(false), x, None, [], Blk(App(Var(log), Tup(_: StrLit(should show once))); IntLit(3))), Var(x), Var(x))
+//│ Lifted:
+//│ TypingUnit(NuFunDef(Some(false), x$1, None, [], Blk(App(Var(log), Tup(_: StrLit(should show once))); IntLit(3))), Var(x$1), Var(x$1))
+//│ Mono:
+//│ 
+//│ Defunc result: 
+//│ let x$1 =
+//│   log(#should show once);#3
+//│ fun main$$2() =
+//│   x$1
+//│ fun main$$1() =
+//│   x$1
+//│ main$$1()
+//│ main$$2()
+//│ let x$1: 3
+//│ fun main$$2: () -> 3
+//│ fun main$$1: () -> 3
+//│ 3
+//│ x$1
+//│     = 3
+//│ // Output
+//│ should show once
+//│ res
+//│     = 3
+//│ res
+//│     = 3
+
+:mono
+:rc
+fun x =
+  log("should show twice")
+  3
+x
+x
+//│ Parsed:
+//│ TypingUnit(NuFunDef(None, x, None, [], Blk(App(Var(log), Tup(_: StrLit(should show twice))); IntLit(3))), Var(x), Var(x))
+//│ Lifted:
+//│ TypingUnit(NuFunDef(None, x$1, None, [], Blk(App(Var(log), Tup(_: StrLit(should show twice))); IntLit(3))), Var(x$1), Var(x$1))
+//│ Mono:
+//│ 
+//│ Defunc result: 
+//│ fun x$1 =
+//│   log(#should show twice);#3
+//│ fun main$$2() =
+//│   x$1
+//│ fun main$$1() =
+//│   x$1
+//│ main$$1()
+//│ main$$2()
+//│ fun x$1: 3
+//│ fun main$$2: () -> 3
+//│ fun main$$1: () -> 3
+//│ 3
+//│ res
+//│     = 3
+//│ // Output
+//│ should show twice
+//│ res
+//│     = 3
+//│ // Output
+//│ should show twice

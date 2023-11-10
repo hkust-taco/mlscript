@@ -39,7 +39,8 @@ class DiffTestCompiler extends DiffTests {
         outputBuilder ++= "\nDefunc result: \n"
         outputBuilder ++= ExprPrinter.print(monomorphized)
         outputBuilder ++= "\n"
-        //outputBuilder ++= treeDebug.getLines.mkString("\n")
+        if mode.dbgDefunc then
+          outputBuilder ++= treeDebug.getLines.mkString("\n")
         return (outputBuilder.toString().linesIterator.toList, if mode.revConv then Some(monomorph.toTypingUnit(monomorphized)) else None)
       }catch{
         case error: MonomorphError => outputBuilder ++= (error.getMessage()/* :: error.getStackTrace().map(_.toString()).toList).mkString("\n"*/)

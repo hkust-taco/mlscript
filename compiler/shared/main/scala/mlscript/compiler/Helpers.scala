@@ -86,7 +86,7 @@ object Helpers:
               case Left(Lam(params, body)) =>
                 Item.FuncDecl(isLetRec, Expr.Ref(nme.name), Some(toFuncParams(params).toList), term2Expr(body))
               case Left(body: Term) => Item.FuncDecl(isLetRec, Expr.Ref(nme.name), None, term2Expr(body))
-              case Right(tp) => Item.FuncDefn(Expr.Ref(nme.name), targs, PolyType(Nil, tp)) //TODO: Check correctness in Type -> Polytype conversion
+              case Right(tp) => Item.FuncDefn(Expr.Ref(nme.name), targs, PolyType(Nil, tp)) 
             Some(ret)
           case mlscript.DataDefn(_) => throw MonomorphError("unsupported DataDefn")
           case mlscript.DatatypeDefn(_, _) => throw MonomorphError("unsupported DatatypeDefn")
@@ -269,7 +269,7 @@ object Helpers:
           Item.FuncDecl(isLetRec, Expr.Ref(nme.name), Some(toFuncParams(params).toList), term2Expr(body))
         case Left(body: Term) => 
           Item.FuncDecl(isLetRec, Expr.Ref(nme.name), None, term2Expr(body))
-        case Right(tp) => Item.FuncDefn(Expr.Ref(nme.name), targs, PolyType(Nil, tp)) //TODO: Check correctness in Type -> Polytype conversion
+        case Right(tp) => Item.FuncDefn(Expr.Ref(nme.name), targs, PolyType(Nil, tp))
   
   def type2Item(tyDef: NuTypeDef): Item.TypeDecl =
     val NuTypeDef(kind, className, tparams, params, _, _, parents, _, _, body) = tyDef

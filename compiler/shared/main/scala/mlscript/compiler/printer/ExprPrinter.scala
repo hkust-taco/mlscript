@@ -34,7 +34,7 @@ class ExprPrinter:
       print(s"$kind $name$typeParamsStr${show(params)}$reprParents ")
       show(body)
     case Item.FuncDecl(isLetRec, Expr.Ref(name), params, body) =>
-      print(s"fun $name${show(params)} =")
+      print(s"${if isLetRec.isDefined then "let" else "fun"} $name${show(params)} =")
       enter()
       show(body)
       leave()
