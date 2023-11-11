@@ -22,7 +22,8 @@ class DiffTestCompiler extends DiffTests {
     try
       val lifter = ClassLifter(mode.fullExceptionStack)
       rstUnit = lifter.liftTypingUnit(unit)
-      outputBuilder ++= mlscript.codegen.Helpers.inspect(rstUnit)
+      //outputBuilder ++= mlscript.codegen.Helpers.inspect(rstUnit)
+      outputBuilder ++= PrettyPrinter.showTypingUnit(rstUnit)
       if (mode.dbgLifting) 
         outputBuilder ++= lifter.getLog
     catch

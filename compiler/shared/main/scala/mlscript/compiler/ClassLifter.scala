@@ -255,9 +255,12 @@ class ClassLifter(logDebugMsg: Boolean = false) {
 
   private def liftTuple(tup: Tup)(using ctx: LocalContext, cache: ClassCache, globFuncs: Map[Var, (Var, LocalContext)], outer: Option[ClassInfoCache]): (Tup, LocalContext) = {
     val ret = tup.fields.map{
-        case (nm, Fld(flags, trm)) =>
+        case (None, Fld(flags, trm)) =>
           val tmp = liftTerm(trm)
-          ((nm, Fld(flags, tmp._1)), tmp._2)
+          ((None, Fld(flags, tmp._1)), tmp._2)
+        case (Some(v), Fld(flags, trm)) =>
+          val nTrm = liftTermAsType(trm)
+          ((Some(v), Fld(flags, nTrm._1)), nTrm._2)
       }.unzip
     (Tup(ret._1), ret._2.fold(emptyCtx)(_ ++ _))
   }
@@ -574,7 +577,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
         (func.copy(rhs = Left(Lam(lret._1, ret._1)))(func.declareLoc, func.virtualLoc, func.signature, func.outer, func.genField), ret._2 -+ lret._2)
       case Left(value) => 
         val ret = liftTerm(value)(using ctx.addT(tpVs))
-        (func.copy(rhs = Left(ret._1))(func.declareLoc, func.virtualLoc, func.signature, func.outer, func.genField), ret._2) 
+        (func.copy(rhs = Left(Lam(Tup(Nil), ret._1)))(func.declareLoc, func.virtualLoc, func.signature, func.outer, func.genField), ret._2) 
       case Right(PolyType(targs, body)) => 
         val nBody = liftType(body)(using ctx.addT(tpVs))
         val nTargs = targs.map {
