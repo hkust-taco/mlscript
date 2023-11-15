@@ -75,7 +75,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
   ) {
     def +=(b: Str -> TypeInfo): Unit = {
       env += b
-      if (quotedLvl > 0) {
+      if (quotedLvl > 0 && !isUnquoted) {
         val tag = SkolemTag(freshVar(NoProv, N, nameHint = S(b._1))(lvl))(NoProv)
         println(s"Create skolem tag $tag for ${b._2} in quasiquote.")
         qenv += b._1 -> tag
@@ -93,6 +93,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
     def qget(name: Str, qlvl: Int = quotedLvl): Opt[SkolemTag] =
       if (qlvl === quotedLvl) qenv.get(name) orElse parent.dlof(_.qget(name, qlvl))(N)
       else parent.dlof(_.qget(name, qlvl))(N)
+    def getCtxTy: ST = fvars.foldLeft[ST](BotType)((res, ty) => res | ty)
     def wrapCode: Ls[(Str, TypeInfo)] = qenv.flatMap {
       case (name, tag) =>
         get(name, quotedLvl) match {
@@ -1053,6 +1054,18 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       case pat if ctx.inPattern =>
         err(msg"Unsupported pattern shape${
           if (dbg) " ("+pat.getClass.toString+")" else ""}:", pat.toLoc)(raise)
+      case Lam(pat, body) if ctx.quotedLvl > 0 && !ctx.isUnquoted =>
+        println(s"TYPING QUOTED LAM")
+        ctx.nest.poly { newCtx =>
+          val param_ty = typePattern(pat)(newCtx, raise, vars)
+          val body_ty = typeTerm(body)(newCtx, raise, vars,
+            generalizeCurriedFunctions || doGenLambdas && constrainedTypes)
+          val res = freshVar(noTyProv, N)(ctx.lvl)
+          val ctxTy = freshVar(noTyProv, N)(ctx.lvl)
+          con(newCtx.getCtxTy, ctxTy, res)(ctx)
+          ctx.traceFV(ctxTy)
+          FunctionType(param_ty, body_ty)(tp(term.toLoc, "function"))
+        }
       case Lam(pat, body) if doGenLambdas =>
         println(s"TYPING POLY LAM")
         ctx.nest.poly { newCtx =>
@@ -1222,7 +1235,22 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
           case _ => mthCallOrSel(obj, fieldName)
         }
       case Let(isrec, nme, rhs, bod) =>
-        if (newDefs && !isrec) {
+        if (ctx.quotedLvl > 0 && !ctx.isUnquoted) {
+          ctx.nest.poly {
+            newCtx => {
+              val rhs_ty = typeTerm(rhs)(newCtx, raise, vars, genLambdas)
+              newCtx += nme.name -> VarSymbol(rhs_ty, nme)
+              val res_ty = typePolymorphicTerm(bod)(newCtx, raise, vars)
+
+              val res = freshVar(noTyProv, N)(ctx.lvl)
+              val ctxTy = freshVar(noTyProv, N)(ctx.lvl)
+              con(newCtx.getCtxTy, ctxTy, res)(ctx)
+              ctx.traceFV(ctxTy)
+              res_ty
+            }
+          }
+        }
+        else if (newDefs && !isrec) {
           // if (isrec) ???
           val rhs_ty = typeTerm(rhs)
           val newCtx = ctx.nest
@@ -1483,17 +1511,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       case Eqn(lhs, rhs) =>
         err(msg"Unexpected equation in this position", term.toLoc)
       case Quoted(body) =>
-        ctx.nest.copy(quotedLvl = ctx.quotedLvl + 1, qenv = MutMap.empty, fvars = MutSet.empty, isUnquoted = false).poly {
-          newCtx => {
-            val bodyType = ctx.parent match {
-              case S(p) if p.quotedLvl > ctx.quotedLvl =>
-                ctx.unwrap(p.wrapCode.map(_._1), () => typePolymorphicTerm(body)(newCtx, raise, vars))
-              case _ => typePolymorphicTerm(body)(newCtx, raise, vars)
-            }
-            val ctxTy = newCtx.fvars.foldLeft[ST](BotType)((res, ty) => res | ty)
-            TypeRef(TypeName("Code"), bodyType :: ctxTy :: Nil)(noProv) // TODO: trace the unbound free vars
-          }
+        val newCtx = ctx.nest.copy(quotedLvl = ctx.quotedLvl + 1, qenv = MutMap.empty, fvars = MutSet.empty, isUnquoted = false)
+        val bodyType = ctx.parent match {
+          case S(p) if p.quotedLvl > ctx.quotedLvl =>
+            ctx.unwrap(p.wrapCode.map(_._1), () => typeTerm(body)(newCtx, raise, vars, genLambdas))
+          case _ => typeTerm(body)(newCtx, raise, vars, genLambdas)
         }
+        TypeRef(TypeName("Code"), bodyType :: newCtx.getCtxTy :: Nil)(noProv)
       case Unquoted(body) =>
         if (ctx.quotedLvl > 0) {
           val newCtx = ctx.nest.copy(quotedLvl = ctx.quotedLvl - 1, isUnquoted = true)
@@ -1503,7 +1527,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
             println(s"Create ${c._2} in newCtx")
             newCtx += c
           })
-          val bodyType = typePolymorphicTerm(body)(newCtx, raise, vars)
+          val bodyType = typeTerm(body)(newCtx, raise, vars, genLambdas)
           val res = freshVar(noTyProv, N)(newCtx.lvl)
           val ctxTy = freshVar(noTyProv, N)(newCtx.lvl)
           val ty =

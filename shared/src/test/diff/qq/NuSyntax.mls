@@ -74,7 +74,7 @@ fun f(x: Code[Int, nothing]) =
 
 
 f `=> a `=> f`(a)
-//│ Code[forall 'a 'b. ('a -> 'b) -> 'a -> 'b, nothing]
+//│ Code[forall 'a 'b. ('b -> 'a) -> 'b -> 'a, nothing]
 
 `let app = (f, a) `=> f`(a), id = x `=> x in app`(id, `42)
 //│ Code[42, nothing]

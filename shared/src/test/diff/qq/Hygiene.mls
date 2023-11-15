@@ -13,14 +13,14 @@ run(code_test)
 // Test 2: this is hygienic because the child Quoted is a descendant of the parent Quoted in the AST
 fun test: forall 'c: (Int, cde: Code[Int, 'c]) => Code[Int, 'c]
 fun test(n, cde) = if n > 0 then code"let x = ${Const(n)} in ${test(n - 1, code"${cde} + x")}" else cde
-//│ fun test: forall 'a 'b. (Int, Code[Int, ??x | 'a] & 'b) -> (Code[Int, 'a] | 'b)
+//│ fun test: forall 'a 'b. (Int, Code[Int, ??x | 'b] & 'a) -> (Code[Int, 'b] | 'a)
 //│ fun test: forall 'c. (Int, cde: Code[Int, 'c]) -> Code[Int, 'c]
 
 run(test(3, code"0"))
 //│ Int
 
 fun test(n, cde) = if n > 0 then code"${test(n - 1, code"${cde} + ${Const(n)}")}" else cde
-//│ fun test: forall 'a 'b. (Int, Code[Int, 'b] & 'a) -> (Code[Int, 'b] | 'a)
+//│ fun test: forall 'a. (Int, Code[Int, 'a]) -> Code[Int, 'a]
 
 
 run(test(3, code"0"))

@@ -18,7 +18,7 @@ code"x => y => 100 + code"${Const(x + y)}""
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.17: 	code"x => y => 100 + code"${Const(x + y)}""
 //│ ║        	               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── expression of type `Code[?a, ?b]` is not an instance of type `Int`
+//│ ╙── expression of type `Code[?a, ?b]` is not an instance of `Int`
 //│ Code[Int -> Int -> (Int | error), nothing]
 
 

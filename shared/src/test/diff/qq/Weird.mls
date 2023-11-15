@@ -1,0 +1,76 @@
+:NewDefs
+:NoJS
+
+fun power(x) = case
+  0 then `1.0
+  n then x `*. power(x)(n - 1)
+//│ fun power: forall 'a. Code[Num, 'a] -> (0 | Int & ~0) -> Code[Num, 'a]
+
+
+:e
+let p3 = y `=>
+  discard(run(x `=> power(x `+ y)(3)))
+  y
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.12: 	  discard(run(x `=> power(x `+ y)(3)))
+//│ ║        	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── expression of type `?y & ~??x` does not match type `nothing`
+//│ let p3: Code[forall 'a. (Int & 'a) -> 'a, nothing]
+
+
+:e
+`let y = `42 in
+  discard(run(x `=> power(x `+ y)(3)))
+  y
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.23: 	  discard(run(x `=> power(x `+ y)(3)))
+//│ ║        	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── expression of type `?y & ~??x` does not match type `nothing`
+//│ Code[42, nothing]
+
+
+:e
+`let y = `42 in
+  discard(run(`let x = `0 in power(x `+ y)(3)))
+  y
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.34: 	  discard(run(`let x = `0 in power(x `+ y)(3)))
+//│ ║        	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── expression of type `?y & ~??x` does not match type `nothing`
+//│ Code[42, nothing]
+
+
+fun bind(rhs, k: forall 'g : Code['a, 'g] -> Code['b, 'c | 'g]) =
+  `let x = rhs in k(x)
+//│ fun bind: forall 'a 'c 'b. (Code['a, 'c], k: forall 'g. Code['a, 'g] -> Code['b, 'g | ??x | 'c]) -> Code['b, 'c]
+
+
+// fun body: forall 'g : (Code[Int, 'g], Code[Int, 'g]) -> Int -> Code[Int, 'g]
+fun body(x, y) = case
+  0 then x
+  1 then y
+  n then bind of x `+ y, z => body(y, z)(n - 1)
+//│ fun body: forall 'a 'c 'b. (Code[Int, 'a & ('c | ??g)] & 'b, Code[Int, 'a & ('c | ??g)] & 'b) -> (0 | 1 | Int & ~0 & ~1) -> (Code[Int, 'a] | 'b)
+//│   where
+//│     'a :> ??g0
+//│        <: 'c | ??g
+//│     'c <: ??x | 'a
+
+
+n => (x, y) `=> body(x, y)(n)
+//│ (0 | 1 | Int & ~0 & ~1) -> Code[(Int, Int) -> Int, ??g & ~??x & ~??y]
+
+fun gib(n) = ((x, y) `=> body(x, y)(n))
+//│ fun gib: (0 | 1 | Int & ~0 & ~1) -> Code[(Int, Int) -> Int, ??g & ~??x & ~??y]
+
+
+let g5 = gib(5)
+//│ let g5: Code[(Int, Int) -> Int, ??g & ~??x & ~??y]
+
+:e
+run(g5)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.71: 	run(g5)
+//│ ║        	^^^^^^^
+//│ ╙── expression of type `??g & ~??x & ~??y` does not match type `nothing`
+//│ error | (Int, Int) -> Int

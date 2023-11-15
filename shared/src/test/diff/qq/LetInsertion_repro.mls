@@ -41,11 +41,15 @@ body : forall 'g: (Code[Int, 'g], Code[Int, 'g]) -> Int -> Code[Int, 'g]
 //│ forall 'g. (Code[Int, 'g], Code[Int, 'g]) -> Int -> Code[Int, 'g]
 
 let c = code"(x, y) => ${body(code"x", code"y")(0)}"
-//│ let c: Code[(Int, Int) -> Int, nothing]
+//│ let c: Code[(Int, Int) -> Int, ??c & ~??x & ~??y]
 
-// :e // * FIXME this shouldn't work!
+:e
 run(c)
-//│ (Int, Int) -> Int
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.47: 	run(c)
+//│ ║        	^^^^^^
+//│ ╙── expression of type `??c & ~??x & ~??y` does not match type `nothing`
+//│ error | (Int, Int) -> Int
 
 
 
@@ -55,41 +59,45 @@ fun body(x, y) = case
   0 then x
   1 then y
   n then code"${x} + ${y}" %> z => code"${body(x, z)(n - 1)}"
-//│ fun body: forall 'a 'b 'c 'g. (Code[Int, 'b & 'c & (??c | 'g)] & 'a, Code[Int, 'b & 'c & (??c | 'g)] & 'a) -> (0 | 1 | Int & ~0 & ~1) -> (Code[Int, 'g | ??c0] | 'a)
+//│ fun body: forall 'a 'g 'b 'c. (Code[Int, 'a & 'b & (??c | 'g)] & 'c, Code[Int, 'a & 'b & (??c | 'g)] & 'c) -> (0 | 1 | Int & ~0 & ~1) -> (Code[Int, 'g | ??c0] | 'c)
 //│   where
-//│     'c <: 'g | ??c
+//│     'a <: 'g | ??c
 //│     'g :> ??c0 | 'b
-//│        <: 'c
+//│        <: 'a
 
 code"(x, y) => ${body(code"x", code"y")(0)}"
-//│ Code[(Int, Int) -> Int, nothing]
+//│ Code[(Int, Int) -> Int, ??c & ~??x & ~??y]
 
 :e
 body : forall 'g: (Code[Int, 'g], Code[Int, 'g]) -> Int -> Code[Int, 'g]
 //│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.68: 	body : forall 'g: (Code[Int, 'g], Code[Int, 'g]) -> Int -> Code[Int, 'g]
+//│ ║  l.72: 	body : forall 'g: (Code[Int, 'g], Code[Int, 'g]) -> Int -> Code[Int, 'g]
 //│ ║        	^^^^
 //│ ╟── type variable `'c` leaks out of its scope
 //│ ║  l.6: 	fun (%>) bind: (Code['a, 'g], k: forall 'c: Code['a, 'c] -> Code['b, 'c | 'g]) -> Code['b, 'g]
 //│ ║       	                                                     ^^
 //│ ╟── into type `'g`
-//│ ║  l.68: 	body : forall 'g: (Code[Int, 'g], Code[Int, 'g]) -> Int -> Code[Int, 'g]
+//│ ║  l.72: 	body : forall 'g: (Code[Int, 'g], Code[Int, 'g]) -> Int -> Code[Int, 'g]
 //│ ║        	                                                                     ^^
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this function:
-//│ ║  l.57: 	  n then code"${x} + ${y}" %> z => code"${body(x, z)(n - 1)}"
+//│ ║  l.61: 	  n then code"${x} + ${y}" %> z => code"${body(x, z)(n - 1)}"
 //│ ║        	                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── • this reference:
-//│ ║  l.57: 	  n then code"${x} + ${y}" %> z => code"${body(x, z)(n - 1)}"
+//│ ║  l.61: 	  n then code"${x} + ${y}" %> z => code"${body(x, z)(n - 1)}"
 //│ ╙──      	                           ^^
 //│ forall 'g. (Code[Int, 'g], Code[Int, 'g]) -> Int -> Code[Int, 'g]
 
 let c = code"(x, y) => ${body(code"x", code"y")(0)}"
-//│ let c: Code[(Int, Int) -> Int, nothing]
+//│ let c: Code[(Int, Int) -> Int, ??c & ~??x & ~??y]
 
-// :e // * FIXME this shouldn't work!
+:e
 run(c)
-//│ (Int, Int) -> Int
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.95: 	run(c)
+//│ ║        	^^^^^^
+//│ ╙── expression of type `??c & ~??x & ~??y` does not match type `nothing`
+//│ error | (Int, Int) -> Int
 
 
 

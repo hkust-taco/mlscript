@@ -164,7 +164,7 @@ code"y => ${c}"
 
 
 fun f(x, y) = [code"[${x}, ${y}]", x, y]
-//│ fun f: forall 'a 'b 'c 'd 'e. (Code['b, 'c] & 'a, Code['d, 'c] & 'e) -> [Code[['b, 'd], 'c], 'a, 'e]
+//│ fun f: forall 'a 'b 'c 'd 'e. (Code['c, 'd] & 'a, Code['b, 'd] & 'e) -> [Code[['c, 'b], 'd], 'a, 'e]
 
 
 

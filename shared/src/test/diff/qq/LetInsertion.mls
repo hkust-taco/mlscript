@@ -5,8 +5,8 @@
 
 fun (%>) bind: (Code['a, 'g], k: forall 'c: Code['a, 'c] -> Code['b, 'c | 'g]) -> Code['b, 'g]
 fun bind[g](rhs, k: forall 'c: Code['a, 'c] -> Code['b, 'c | g]) = code"let x = ${rhs} in ${k(code"x")}"
-//│ fun bind: forall 'a 'd 'b. (Code['a, 'd], k: forall 'c. Code['a, 'c] -> Code['b, anything]) -> Code['b, 'd]
-//│ fun (%>) bind: forall 'a0 'g 'b0. (Code['a0, 'g], k: forall 'c0. Code['a0, 'c0] -> Code['b0, 'c0 | 'g]) -> Code['b0, 'g]
+//│ fun bind: forall 'd 'b 'g 'a. (Code['a, 'd], k: forall 'c. Code['a, 'c] -> Code['b, 'c | 'g]) -> Code['b, 'g & ~??x | 'd]
+//│ fun (%>) bind: forall 'a0 'g0 'b0. (Code['a0, 'g0], k: forall 'c0. Code['a0, 'c0] -> Code['b0, 'c0 | 'g0]) -> Code['b0, 'g0]
 
 
 let f(k) = bind of code"123", k
@@ -56,15 +56,14 @@ run(gn5)
 //│ (Int, Int) -> Int
 
 
-// * FIXME should not type check
-// :e // * Expected: needs polymorphic recursion
+// * Expected: needs polymorphic recursion
 fun gib(n) =
   let rec body(x, y) = case
     0 then x
     1 then y
     n then code"${x} + ${y}" %> z => body(x, z)(n - 1)
   code"(x, y) => ${body(code"x", code"y")(n)}"
-//│ fun gib: (0 | 1 | Int & ~0 & ~1) -> Code[(Int, Int) -> Int, nothing]
+//│ fun gib: (0 | 1 | Int & ~0 & ~1) -> Code[(Int, Int) -> Int, ??c & ~??x & ~??y]
 
 
 
