@@ -30,12 +30,14 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
    * Specialized implementations of function declarations.
    */
   private val funImpls = MutMap[String, (Item.FuncDecl, MutMap[String, Item.FuncDecl], Option[List[BoundedExpr]], VariableValue)]()
+  private val nuFunImpls = MutMap[Var, (NuFunDef, MutMap[Var, NuFunDef], Option[List[BoundedExpr]], VariableValue)]()
 
   private def getfunInfo(nm: String): String = 
     val info = funImpls.get(nm).get
     s"$nm: (${info._3.mkString(" X ")}) -> ${info._4} @${funDependence.get(nm).get.mkString("{", ", ", "}")}"
 
   private val funDependence = MutMap[String, Set[String]]()
+  private val nuFunDependence = MutMap[Var, Set[Var]]()
 
   val evalQueue = MutSet[String]()
   val evalCnt = MutMap[String, Int]()
@@ -80,9 +82,16 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
     funDependence.addOne(func.name.name, Set())
   }
 
+  private def nuAddFunction(func: NuFunDef): Unit = {
+    nuFunImpls.addOne(func.nme, (func, MutMap(), func.body match
+      case Lam(Tup(params), body) => Some(params.map(_ => BoundedExpr()))
+      case _ => None
+    , VariableValue.refresh()))
+  }
+
   private def getResult(exps: List[Expr]) = mlscript.compiler.ModuleUnit(
     Iterable[Expr | Item]()
-    .concat(allTypeImpls.values.map(x => x.copy(body = Isolation(Nil))))
+    .concat(allTypeImpls.values)
     .concat(funImpls.map(x => x._2._1))
     .concat(lamTyDefs.values)
     .concat(anonymTyDefs.values)
@@ -122,10 +131,8 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
         updateFunction(crt)
       }
       funImpls.mapValuesInPlace{
-        case (_, (Item.FuncDecl(isLetRec, nm, Some(p), body), mp, la, lr)) =>
-          (Item.FuncDecl(isLetRec, nm, Some(p), specializer.defunctionalize(body)), mp, la, lr)
-        case (_, (Item.FuncDecl(isLetRec, nm, None, body), mp, la, lr)) => 
-          (Item.FuncDecl(isLetRec, nm, None, body), mp, la, lr)
+        case (_, (Item.FuncDecl(isLetRec, nm, p, body), mp, la, lr)) =>
+          (Item.FuncDecl(isLetRec, nm, p, specializer.defunctionalize(body)), mp, la, lr)
       }
       val ret = getResult(exps)
       debug.log("")
@@ -142,6 +149,14 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
        
       ret
     // }()
+  def NuDefunctionalize(tu: TypingUnit): TypingUnit =
+    val nuTerms = tu.entities.zipWithIndex.flatMap {
+      case (term: Term, i) =>
+        val mainFunc = NuFunDef(None, Var(s"main$$$$$i"), None, Nil, Left(Lam(Tup(Nil), term)))(None, None, None, None, false)
+        nuAddFunction(mainFunc)
+        Some(mainFunc)
+    }
+    TypingUnit(nuTerms)
   
   def toTypingUnit(mu: ModuleUnit): TypingUnit =
     val statements = mu.items.flatMap {

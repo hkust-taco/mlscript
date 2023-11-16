@@ -1,2 +1,103 @@
 :NewDefs
 
+:mono
+fun higherOrder(pred) =  pred(5)
+fun pred1(num) = num == 5
+fun pred2(num) = false
+higherOrder(pred1)
+higherOrder(pred2)
+//│ Parsed:
+//│ TypingUnit(NuFunDef(None, higherOrder, None, [], Lam(Tup(_: Var(pred)), App(Var(pred), Tup(_: IntLit(5))))), NuFunDef(None, pred1, None, [], Lam(Tup(_: Var(num)), App(Var(==), Tup(_: Var(num), _: IntLit(5))))), NuFunDef(None, pred2, None, [], Lam(Tup(_: Var(num)), Var(false))), App(Var(higherOrder), Tup(_: Var(pred1))), App(Var(higherOrder), Tup(_: Var(pred2))))
+//│ Lifted:
+//│ TypingUnit(NuFunDef(None, higherOrder$1, None, [], Lam(Tup(_: Var(pred)), App(Var(pred), Tup(_: IntLit(5))))), NuFunDef(None, pred1$3, None, [], Lam(Tup(_: Var(num)), App(Var(==), Tup(_: Var(num), _: IntLit(5))))), NuFunDef(None, pred2$2, None, [], Lam(Tup(_: Var(num)), Var(false))), App(Var(higherOrder$1), Tup(_: Var(pred1$3))), App(Var(higherOrder$1), Tup(_: Var(pred2$2))))
+//│ Mono:
+//│ 
+//│ Defunc result: 
+//│ fun pred2$2(num) =
+//│   false
+//│ fun pred1$3(num) =
+//│   ==(num, #5)
+//│ fun higherOrder$1(pred) =
+//│   pred(#5)
+//│ fun main$$4() =
+//│   higherOrder$1(pred2$2)
+//│ fun main$$3() =
+//│   higherOrder$1(pred1$3)
+//│ main$$3()
+//│ main$$4()
+//│ fun higherOrder: forall 'a. (5 -> 'a) -> 'a
+//│ fun pred1: Num -> Bool
+//│ fun pred2: anything -> false
+//│ false
+//│ res
+//│     = true
+//│ res
+//│     = false
+
+:mono
+fun createPred(num1) = (num2) => (num3) => num1+num2+num3
+createPred(1)(2)
+//│ Parsed:
+//│ TypingUnit(NuFunDef(None, createPred, None, [], Lam(Tup(_: Var(num1)), Lam(Tup(_: Bra(rcd = false, Var(num2))), Lam(Tup(_: Bra(rcd = false, Var(num3))), App(Var(+), Tup(_: App(Var(+), Tup(_: Var(num1), _: Var(num2))), _: Var(num3))))))), App(App(Var(createPred), Tup(_: IntLit(1))), Tup(_: IntLit(2))))
+//│ Lifted:
+//│ TypingUnit(NuTypeDef(class, Lambda1$2$1_Lambda1$3$2, (), Tup(_: Var(par$Lambda1$2$1), _: Var(num2)), (), None, None, TypingUnit(NuFunDef(None, apply, None, [], Lam(Tup(_: Bra(rcd = false, Var(num3))), App(Var(+), Tup(_: App(Var(+), Tup(_: Sel(Sel(Var(this), par$Lambda1$2$1), num1), _: Sel(Var(this), num2))), _: Var(num3))))))), NuTypeDef(class, Lambda1$2$1, (), Tup(_: Var(num1)), (), None, None, TypingUnit(NuFunDef(None, apply, None, [], Lam(Tup(_: Bra(rcd = false, Var(num2))), Blk(New(Some((TypeName(Lambda1$2$1_Lambda1$3$2),[this, num2,])), TypingUnit())))))), NuFunDef(None, createPred$1, None, [], Lam(Tup(_: Var(num1)), Blk(New(Some((TypeName(Lambda1$2$1),[num1,])), TypingUnit())))), App(App(Var(createPred$1), Tup(_: IntLit(1))), Tup(_: IntLit(2))))
+//│ Mono:
+//│ 
+//│ Defunc result: 
+//│ class Lambda1$2$1_Lambda1$3$2(par$Lambda1$2$1, num2) {
+//│   fun apply(num3) =
+//│     +(+(this.par$Lambda1$2$1.num1, this.num2), num3)
+//│ }
+//│ class Lambda1$2$1(num1) {
+//│   fun apply(num2) =
+//│     new Lambda1$2$1_Lambda1$3$2 (this, num2) 
+//│ }
+//│ fun apply$Lambda1$2$1(this, num2) =
+//│   new Lambda1$2$1_Lambda1$3$2 (this, num2) 
+//│ fun createPred$1(num1) =
+//│   new Lambda1$2$1 (num1) 
+//│ fun main$$3() =
+//│   createPred$1(#1) match {case obj: Lambda1$2$1 => apply$Lambda1$2$1(obj, #2)}
+//│ main$$3()
+//│ fun createPred: Int -> Int -> Int -> Int
+//│ Int -> Int
+//│ res
+//│     = [Function (anonymous)]
+
+:mono
+:rc
+:p
+class A() {
+    fun x() = 0
+}
+let a = A()
+a.x()
+//│ |#class| |A|(||)| |{|→|#fun| |x|(||)| |#=| |0|←|↵|}|↵|#let| |a| |#=| |A|(||)|↵|a|.x|(||)|
+//│ AST: TypingUnit(NuTypeDef(class, A, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, x, None, [], Lam(Tup(), IntLit(0))))), NuFunDef(Some(false), a, None, [], App(Var(A), Tup())), App(Sel(Var(a), x), Tup()))
+//│ Parsed:
+//│ TypingUnit(NuTypeDef(class, A, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, x, None, [], Lam(Tup(), IntLit(0))))), NuFunDef(Some(false), a, None, [], App(Var(A), Tup())), App(Sel(Var(a), x), Tup()))
+//│ Lifted:
+//│ TypingUnit(NuTypeDef(class, A$1, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, x, None, [], Lam(Tup(), IntLit(0))))), NuFunDef(Some(false), a$1, None, [], App(Var(A$1), Tup())), App(Sel(Var(a$1), x), Tup()))
+//│ Mono:
+//│ 
+//│ Defunc result: 
+//│ class A$1() {
+//│   fun x() =
+//│     #0
+//│ }
+//│ fun main$$2() =
+//│   a$1 match {}
+//│ let a$1 =
+//│   A$1()
+//│ main$$2()
+//│ Parsed: TypingUnit(NuTypeDef(class, A$1, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, x, None, [], Lam(Tup(), IntLit(0))))), NuFunDef(None, main$$2, None, [], Lam(Tup(), CaseOf(Var(a$1), NoCases)), NuFunDef(Some(false), a$1, None, [], App(Var(A$1), Tup())), App(Var(main$$2), Tup()))
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ╙── expression of type `A$1` does not match type `nothing`
+//│ class A$1() {
+//│   fun x: () -> 0
+//│ }
+//│ fun main$$2: () -> nothing
+//│ let a$1: A$1
+//│ nothing
+//│ Code generation encountered an error:
+//│   unresolved symbol a$1

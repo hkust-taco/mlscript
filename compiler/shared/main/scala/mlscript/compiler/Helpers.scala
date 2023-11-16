@@ -33,6 +33,7 @@ object Helpers:
       // The new parser emits `Tup(_: UnitLit(true))` from `fun f() = x`.
       case (_, Fld(FldFlags(_, _, _), UnitLit(true))) => None
       case (None, Fld(flags, Var(name))) => Some((flags, Expr.Ref(name), None))
+      case (None, Fld(flags, Bra(_, Var(name)))) => Some((flags, Expr.Ref(name), None))
       case (Some(Var(name)), Fld(flags, typename: Term)) => Some((flags, Expr.Ref(name), Some(typename)))
       case _ => throw new MonomorphError(
         s"only `Var` can be parameters but we meet ${showStructure(term)}"
