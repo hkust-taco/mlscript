@@ -33,23 +33,13 @@ fun foo(f: Foo): Int = f.a : f.A
 
 // TODO
 fun foo(f: Foo[?]) = f.a : f.A
-//│ ╔══[ERROR] Type error in type ascription
+//│ ╔══[ERROR] wildcard type notation currently unsupported
 //│ ║  l.35: 	fun foo(f: Foo[?]) = f.a : f.A
-//│ ║        	                     ^^^
-//│ ╟── type variable `?` leaks out of its scope
-//│ ║  l.35: 	fun foo(f: Foo[?]) = f.a : f.A
-//│ ║        	               ^
-//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
-//│ ╟── • this field selection:
-//│ ║  l.35: 	fun foo(f: Foo[?]) = f.a : f.A
-//│ ║        	                     ^^^
-//│ ╟── Note: constraint arises from type selection:
-//│ ║  l.35: 	fun foo(f: Foo[?]) = f.a : f.A
-//│ ╙──      	                            ^^
-//│ fun foo: forall '?. (f: Foo['?]) -> ???
+//│ ╙──      	               ^
+//│ fun foo: forall 'A. (f: Foo['A]) -> 'A
 
 foo(Foo(1))
-//│ ???
+//│ 1
 //│ res
 //│     = 1
 
@@ -63,28 +53,22 @@ fun foo(f: Foo[Int]) = f.a
 // FIXME
 fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
 //│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.64: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
+//│ ║  l.54: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
 //│ ║        	                          ^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.64: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
+//│ ║  l.54: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
 //│ ║        	                                                ^^
 //│ ╟── into type `Int | ~??A`
-//│ ║  l.64: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
+//│ ║  l.54: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
 //│ ╙──      	                 ^^^
 //│ fun foo: (f: Foo[anything]) -> Int
 
 // TODO
 fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
-//│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.77: 	fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
-//│ ║        	                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type variable `?` leaks out of its scope
-//│ ║  l.77: 	fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
-//│ ║        	               ^
-//│ ╟── into type `Int | ~(?? & ??A)`
-//│ ║  l.77: 	fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
-//│ ╙──      	                    ^^^
-//│ fun foo: forall '?. (f: Foo['?]) -> Int
+//│ ╔══[ERROR] wildcard type notation currently unsupported
+//│ ║  l.67: 	fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
+//│ ╙──      	               ^
+//│ fun foo: forall 'A. (f: Foo['A]) -> Int
 
 fun foo(f: Foo['a]) = f.a : f.A
 //│ fun foo: forall 'a. (f: Foo['a]) -> 'a
@@ -122,11 +106,15 @@ class Bar(val b: Int) extends Foo[Int]
 //│ abstract class Foo[T]: Bar
 //│ class Bar(b: Int) extends Foo
 
+// TODO
 fun foo(x: Foo[?]) = if x is Bar then x.b : x.T
-//│ fun foo: forall '?. (x: Foo['?]) -> (Int & ???)
+//│ ╔══[ERROR] wildcard type notation currently unsupported
+//│ ║  l.110: 	fun foo(x: Foo[?]) = if x is Bar then x.b : x.T
+//│ ╙──       	               ^
+//│ fun foo: forall 'a. (x: Foo['a]) -> (Int & 'a)
 
 foo(Bar(1))
-//│ Int & ???
+//│ Int
 //│ res
 //│     = 1
 

@@ -659,7 +659,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           : SimpleType =
     {
       val originalVars = ty.getVars
-      val res = extrude(ty, lowerLvl, pol, upperLvl)(ctx, MutMap.empty, MutSortMap.empty, reason)
+      val res = extrude(ty, lowerLvl, pol, upperLvl)(ctx, ctx.extrCache, ctx.extrCache2, reason)
       val newVars = res.getVars -- originalVars
       if (newVars.nonEmpty) trace(s"RECONSTRAINING TVs") {
         newVars.foreach {

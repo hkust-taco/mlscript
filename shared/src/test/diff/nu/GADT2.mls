@@ -6,7 +6,7 @@ fun snd([x, y]) = y
 //│ fun fst: forall 'a. (['a, anything]) -> 'a
 //│ fun snd: forall 'b. ([anything, 'b]) -> 'b
 
-// dependent types? //
+// dependent types //
 
 abstract class Rep[type T]: IntRep | BoolRep | PairRep
 class IntRep extends Rep[Int]

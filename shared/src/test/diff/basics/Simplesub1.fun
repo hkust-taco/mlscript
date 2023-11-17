@@ -437,20 +437,20 @@ let rec x = (let y = (x x); (z => z))
 (f => (x => f (v => (x x) v)) (x => f (v => (x x) v)))
 //│ res: ((forall 'a 'b. 'a -> 'b
 //│   where
-//│     forall 'c 'd. 'd -> 'c
+//│     forall 'c 'd. 'c -> 'd
 //│       where
 //│         'e <: (forall 'f 'g. 'f -> 'g
 //│           where
-//│             'd <: 'd -> 'f -> 'g) -> 'c <: (forall 'c 'd. 'd -> 'c
+//│             'c <: 'c -> 'f -> 'g) -> 'd <: (forall 'c 'd. 'c -> 'd
 //│       where
 //│         'e <: (forall 'f 'g. 'f -> 'g
 //│           where
-//│             'd <: 'd -> 'f -> 'g) -> 'c) -> 'a -> 'b) -> 'h & 'e) -> 'h
+//│             'c <: 'c -> 'f -> 'g) -> 'd) -> 'a -> 'b) -> 'h & 'e) -> 'h
 
 // * Function that takes arbitrarily many arguments:
 // :e // Works thanks to inconsistent constrained types...
 (f => (x => f (v => (x x) v)) (x => f (v => (x x) v))) (f => x => f)
-//│ res: anything -> (forall 'a 'b. 'a -> 'b
+//│ res: anything -> (forall 'a 'b. 'b -> 'a
 //│   where
 //│     forall 'c 'd. 'c -> 'd
 //│       where
@@ -460,7 +460,7 @@ let rec x = (let y = (x x); (z => z))
 //│       where
 //│         forall 'e. 'e -> anything -> 'e <: (forall 'f 'g. 'f -> 'g
 //│           where
-//│             'c <: 'c -> 'f -> 'g) -> 'd) -> 'a -> 'b)
+//│             'c <: 'c -> 'f -> 'g) -> 'd) -> 'b -> 'a)
 
 
 

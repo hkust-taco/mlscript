@@ -70,27 +70,27 @@ fun f(x: S): x.T = if x is A then 1 else 0
 //│ ╙──      	                                  ^
 //│ fun f: (x: S[in anything out nothing]) -> ??T
 
+// TODO
 fun f(x: S[?]): x.T = if x is 
     A then 1 : x.T
     B then true : x.T
     _ then error
-//│ fun f: forall '?. (x: S['?]) -> (??? & (Int | false | true))
+//│ ╔══[ERROR] wildcard type notation currently unsupported
+//│ ║  l.74: 	fun f(x: S[?]): x.T = if x is 
+//│ ╙──      	           ^
+//│ fun f: forall 'a. (x: S['a]) -> ('a & (Int | false | true))
 
 f(A)
-//│ ??? & (Int | false | true)
+//│ Int
 //│ res
 //│     = 1
 
 :e
 let y: ? = 1
-//│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.85: 	let y: ? = 1
-//│ ║        	           ^
-//│ ╟── integer literal of type `1` does not match type `?`
-//│ ╟── Note: constraint arises from wildcard:
-//│ ║  l.85: 	let y: ? = 1
+//│ ╔══[ERROR] wildcard type notation currently unsupported
+//│ ║  l.89: 	let y: ? = 1
 //│ ╙──      	       ^
-//│ let y: nothing
+//│ let y: 1
 //│ y
 //│   = 1
 

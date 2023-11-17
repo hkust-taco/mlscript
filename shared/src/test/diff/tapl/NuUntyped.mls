@@ -81,15 +81,9 @@ fun listConcat(xs, ys) =
   if xs is
     Nil then ys
     Cons(x, xs') then Cons(x, listConcat(xs', ys))
-//│ fun listConcat: forall 'A 'a 'A0 'A1 'A2 'A3. (Cons[in 'A2 & ('A1 | ~??A) out nothing] | Nil, List[in 'A out 'A3] & 'a) -> (Cons[in 'A1 out 'A0] | 'a)
+//│ fun listConcat: forall 'A 'A0 'a. (Cons[in 'A & ('A0 | ~??A) out nothing] | Nil, List['A0] & 'a) -> (Cons['A0] | 'a)
 //│   where
-//│     'A1 :> 'A0 | ??A & 'A2
-//│         <: 'A3
-//│     'A3 :> 'A0 | 'A | ??A & 'A2
-//│         <: 'A1
-//│     'A0 :> 'A1 | 'A | ??A & 'A2
-//│     'A :> 'A0
-//│        <: 'A1
+//│     'A0 :> ??A & 'A
 
 fun listContains(xs, x) =
   if xs is
@@ -239,22 +233,13 @@ fun fv(t) =
     Var(name) then list1(name)
     Abs(Var(name), body) then listWithout(fv(body), name)
     App(lhs, rhs) then listConcat(fv(lhs), fv(rhs))
-//│ ╔══[ERROR] Subtyping constraint of the form `?a -> (?b | ?c | ?d) <: ?fv` exceeded recursion depth limit (250)
-//│ ║  l.237: 	fun fv(t) =
-//│ ║         	    ^^^^^^^
-//│ ║  l.238: 	  if t is
-//│ ║         	^^^^^^^^^
-//│ ║  l.239: 	    Var(name) then list1(name)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.240: 	    Abs(Var(name), body) then listWithout(fv(body), name)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.241: 	    App(lhs, rhs) then listConcat(fv(lhs), fv(rhs))
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── Note: use flag `:ex` to see internal error info.
-//│ fun fv: forall 'A 'A0 'A1. (Abs | App | Var) -> (Cons[in 'A out 'A0] | Cons['A1] | Nil)
+//│ fun fv: forall 'A 'A0 'A1. (Abs | App | Var) -> (Cons[in 'A1 out 'A] | Cons[in 'A0 out 'A] | Nil)
 //│   where
-//│     'A :> 'A0
-//│     'A0 :> 'A
+//│     'A1 :> 'A | ??A & (Str | 'A)
+//│         <: 'A0
+//│     'A :> 'A0 | 'A1
+//│     'A0 :> 'A | ??A & 'A | ??A0 & 'A
+//│         <: 'A1 | ~??A
 
 fun showFv(t) =
   showTerm(t) ++ if fv(t) is

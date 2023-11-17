@@ -428,7 +428,7 @@ rec def eval4 subst = eval_lexpr' eval4 subst
 //│       head: {_1: string, _2: 'result & 'a & (Abs[?] & 'b | 'lhs & (Numb | ~#Abs & ~#Numb))},
 //│       tail: 'tail
 //│     } | Nil
-//│     'result :> Mul['result] | Add['result] | Abs['result] | App['lhs] & {lhs: 'lhs, rhs: nothing} | 'result0 | 'c | 'd | 'e
+//│     'result :> Abs['result] | App['lhs] & {lhs: 'lhs, rhs: nothing} | 'result0 | 'c | 'd | 'e | Mul['result] | Add['result]
 //│     'result0 :> Var | Numb
 //│              <: 'a & (Numb | ~#Numb)
 //│     'a <: Abs[?] | Add[?] & {lhs: 'a, rhs: 'a} | App[?] & {rhs: 'a} | Mul[?] & {lhs: 'a, rhs: 'a} | Numb & (Add[?] & 'e | Mul[?] & 'e | Numb & 'result0 | Var & 'd) | Var & 'c
@@ -472,7 +472,7 @@ rec def eval4 subst = eval_lexpr' eval4 subst
 //│        eval_lexpr', eval_var, list_assoc and eq are not implemented
 //│ constrain calls  : 16185
 //│ annoying  calls  : 2300
-//│ subtyping calls  : 587191
+//│ subtyping calls  : 587130
 
 :ResetFuel
 

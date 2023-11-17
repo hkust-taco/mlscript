@@ -1,7 +1,7 @@
 package mlscript
 
 import scala.collection.mutable
-import scala.collection.mutable.{Map => MutMap, Set => MutSet}
+import scala.collection.mutable.{Map => MutMap, SortedMap => MutSortMap, Set => MutSet}
 import scala.collection.immutable.{SortedSet, SortedMap}
 import Set.{empty => semp}
 import scala.util.chaining._
@@ -68,6 +68,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       tyDefs2: MutMap[Str, DelayedTypeInfo],
       inRecursiveDef: Opt[Var], // TODO rm
       extrCtx: ExtrCtx,
+      extrCache: MutMap[TypeVarOrRigidVar->Bool, TypeVarOrRigidVar], 
+      extrCache2: MutSortMap[TraitTag, TraitTag]
   ) {
     def +=(b: Str -> TypeInfo): Unit = env += b
     def ++=(bs: IterableOnce[Str -> TypeInfo]): Unit = bs.iterator.foreach(+=)
@@ -83,7 +85,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
     def containsMth(parent: Opt[Str], nme: Str): Bool = containsMth(R(parent, nme))
     def nest: Ctx = copy(Some(this), MutMap.empty, MutMap.empty)
     def nextLevel[R](k: Ctx => R)(implicit raise: Raise, prov: TP): R = {
-      val newCtx = copy(lvl = lvl + 1, extrCtx = MutMap.empty)
+      val newCtx = copy(lvl = lvl + 1, extrCtx = MutMap.empty, extrCache = MutMap.empty, extrCache2 = MutSortMap.empty)
       val res = k(newCtx)
       val ec = newCtx.extrCtx
       assert(constrainedTypes || newCtx.extrCtx.isEmpty)
@@ -153,6 +155,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       tyDefs2 = MutMap.empty,
       inRecursiveDef = N,
       MutMap.empty,
+      MutMap.empty, 
+      MutSortMap.empty
     )
     def init: Ctx = if (!newDefs) initBase else {
       val res = initBase.copy(
@@ -502,10 +506,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
           else lit.baseClassesOld)(tyTp(ty.toLoc, "literal type"))
       case wc @ TypeName("?") => // TODO handle typing of C[?]
         implicit val prov: TypeProvenance = tyTp(ty.toLoc, "wildcard")
-        // ctx.poly { implicit ctx =>
-          val fv = freshVar(prov, N, S("?"))(lvl+1)
-          SkolemTag(fv)(prov)
-        // }
+        err(msg"wildcard type notation currently unsupported", prov.loco)
+        freshVar(prov, N, N)
       case TypeName("this") =>
         ctx.env.get("this") match {
           case S(_: AbstractConstructor | _: LazyTypeInfo) => die
@@ -1520,7 +1522,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
             val res = freshVar(provTODO, N, N)
             newCtx.copy(lvl = newCtx.lvl + 1) |> { implicit ctx =>
               val scrt = ctx.get(v.name) match {
-                case Some(VarSymbol(ty, _)) if GADTs => ty // ! seems to introduce breaking changes
+                case Some(VarSymbol(ty, _)) if GADTs => ty
                 case _ => TopType
               }
               println(s"var rfn: ${v.name} :: ${scrt} & ${tagTy} & ${patTyIntl}")

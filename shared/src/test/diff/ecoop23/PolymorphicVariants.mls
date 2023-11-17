@@ -105,14 +105,14 @@ Test1.eval(Nil, Abs("b", Var("a")))
 Test1.eval(Cons(["c", Var("d")], Nil), App(Abs("b", Var("b")), Var("c")))
 //│ 'a
 //│   where
-//│     'a :> Var | Abs['a] | App['a]
+//│     'a :> Abs['a] | App['a] | Var
 //│ res
 //│     = Var {}
 
 Test1.eval(Cons(["c", Abs("d", Var("d"))], Nil), App(Abs("b", Var("b")), Var("c")))
 //│ 'a
 //│   where
-//│     'a :> Abs['a] | App['a] | Abs[Var] & ??A | Var
+//│     'a :> Abs[Var] & ??A | Var | Abs['a] | App['a]
 //│ res
 //│     = Var {}
 
@@ -144,16 +144,16 @@ mixin EvalExpr {
 //│ mixin EvalExpr() {
 //│   super: {eval: ('a, Var) -> 'b}
 //│   this: {eval: ('a, ??A & 'A | ??A0 & 'A0) -> (Object | ~??A1 & ~??A2)}
-//│   fun eval: ('a, 'b & (Add['A] | Mul['A0] | Numb | Var)) -> (Numb | 'b)
+//│   fun eval: ('a, 'b & (Add['A0] | Mul['A] | Numb | Var)) -> (Numb | 'b)
 //│ }
 
 module Test2 extends EvalVar, EvalExpr
 //│ module Test2 {
-//│   fun eval: forall 'a. (Cons[{_1: anything, _2: 'A & (Object | ~??A | ~??A0 & ~??A1)} | ~??A2] | Nil, 'a & (Add['A0] | Mul['A1] | Numb | Var)) -> (Numb | Var | ??A3 & 'A0 | ??A4 & 'A1 | ??A & 'A | 'a)
+//│   fun eval: forall 'a. (Cons[{_1: anything, _2: 'A & (Object | ~??A | ~??A0 & ~??A1)} | ~??A2] | Nil, 'a & (Add['A0] | Mul['A1] | Numb | Var)) -> (Numb | Var | ??A3 & 'A1 | ??A & 'A | ??A4 & 'A0 | 'a)
 //│ }
 //│ where
-//│   'A0 <: Add['A0] | Mul['A1] | Numb | Var | ~??A3
-//│   'A1 <: Add['A0] | Mul['A1] | Numb | Var | ~??A4
+//│   'A0 <: Add['A0] | Mul['A1] | Numb | Var | ~??A4
+//│   'A1 <: Add['A0] | Mul['A1] | Numb | Var | ~??A3
 
 Test2.eval(Nil, Var("a"))
 //│ Numb | Var
@@ -224,14 +224,14 @@ Test3.eval(Cons(["c", Abs("d", Var("d"))], Nil), App(Abs("a", Var("a")), Add(Num
 // * Incorrect version, for regression testing – EvalLambda should be mixed in after EvalExpr
 module Test3 extends EvalVar, EvalLambda, EvalExpr
 //│ module Test3 {
-//│   fun eval: (Cons[{_1: anything, _2: 'A} | ~??A] | Nil, 'a & (Add['A0] | Mul['A1] | Numb | Var)) -> (??A0 & 'A0 | ??A1 & 'A1 | 'a | 'b)
+//│   fun eval: (Cons[{_1: anything, _2: 'A} | ~??A] | Nil, 'a & (Add['A0] | Mul['A1] | Numb | Var)) -> (??A0 & 'A1 | ??A1 & 'A0 | 'a | 'b)
 //│ }
 //│ where
 //│   'A :> 'b
 //│      <: Object | ~(??A2 & (??A3 | ??A4))
-//│   'b :> Abs['b] | App['b] | Var | ??A2 & 'A | Numb | ??A0 & 'A0 | ??A1 & 'A1 | 'a
-//│   'A0 <: Add['A0] | Mul['A1] | Numb | Var | ~??A0
-//│   'A1 <: Add['A0] | Mul['A1] | Numb | Var | ~??A1
+//│   'b :> Abs['b] | App['b] | Var | ??A2 & 'A | Numb | ??A0 & 'A1 | ??A1 & 'A0 | 'a
+//│   'A1 <: Add['A0] | Mul['A1] | Numb | Var | ~??A0
+//│   'A0 <: Add['A0] | Mul['A1] | Numb | Var | ~??A1
 
 // * Because EvalExpr does not dispatch lambdas to super and map_expr only
 // * handles exprs

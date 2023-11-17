@@ -1,121 +1,30 @@
 :NewDefs
+// :GADTs
 
-trait Expr[A]: LitInt | LitBool | Add | Cond | Pair | Fst | Snd
-class LitInt(n: Int) extends Expr[Int]
-class LitBool(b: Bool) extends Expr[Bool]
-class Add(x: Expr[Int], y: Expr[Int]) extends Expr[Int]
-class Cond[T](p: Expr[Bool], t: Expr[T], e: Expr[T]) extends Expr[T]
-class Pair[S, T](a: Expr[S], b: Expr[T]) extends Expr[[S, T]]
-class Fst[S, T](p: Expr[[S, T]]) extends Expr[S]
-class Snd[S, T](p: Expr[[S, T]]) extends Expr[T]
-//│ trait Expr[A]: Add | Cond[?] | Fst[?, ?] | LitBool | LitInt | Pair[?, ?] | Snd[?, ?]
-//│ class LitInt(n: Int) extends Expr
-//│ class LitBool(b: Bool) extends Expr
-//│ class Add(x: Expr[Int], y: Expr[Int]) extends Expr
-//│ class Cond[T](p: Expr[Bool], t: Expr[T], e: Expr[T]) extends Expr
-//│ class Pair[S, T](a: Expr[S], b: Expr[T]) extends Expr
-//│ class Fst[S, T](p: Expr[[S, T]]) extends Expr
-//│ class Snd[S, T](p: Expr[[S, T]]) extends Expr
+abstract class Option[type T]: None | Some[T]
+module None extends Option[nothing]
+class Some[T](get: T) extends Option[T]
+//│ abstract class Option[T]: None | Some[T]
+//│ module None extends Option
+//│ class Some[T](get: T) extends Option
 
-let l1 = LitInt(1)
-//│ let l1: LitInt
-//│ l1
-//│    = LitInt {}
+fun getOr(x, d) = if x is
+    None then d
+    Some(g) then g
+//│ fun getOr: forall 'T 'a. (None | Some['T], 'a) -> (??T & 'T | 'a)
 
-// TODO
-class Exp[type A]
-//│ class Exp[A] {
-//│   constructor()
-//│ }
+fun getOr(x: Option['a], d) = if x is
+    None then d
+    Some(g) then g
+//│ fun getOr: forall 'a 'b. (x: Option['a], 'b) -> (??T & 'a | 'b)
 
-l1: Expr[Int]
-//│ Expr[Int]
-//│ res
-//│     = LitInt {}
+fun getOr[T](x: Option[T], d: T): T = if x is
+    None then d
+    Some(g) then g
+//│ fun getOr: forall 'T. (x: Option['T], d: 'T) -> 'T
 
-:e
-l1: Expr[Bool]
-//│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.37: 	l1: Expr[Bool]
-//│ ║        	^^
-//│ ╟── type `Int` is not an instance of `Bool`
-//│ ║  l.4: 	class LitInt(n: Int) extends Expr[Int]
-//│ ║       	                                  ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.37: 	l1: Expr[Bool]
-//│ ╙──      	         ^^^^
-//│ Expr[Bool]
-//│ res
-//│     = LitInt {}
+fun get(x) = if x is Some(r) then r else error
+//│ fun get: forall 'T. (Object & ~#Some | Some['T]) -> (??T & 'T)
 
-// FIXME
-fun eval[A](e: Expr[A]): A =
-    if 
-        e is LitInt(n) then n
-        e is LitBool(b) then b
-        e is Add(x, y) then eval(x) + eval(y)
-//│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.54: 	        e is LitInt(n) then n
-//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.55: 	        e is LitBool(b) then b
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.56: 	        e is Add(x, y) then eval(x) + eval(y)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `#Expr & (Add & {Expr#A = A} | Cond[?] & {Expr#A = A} | Fst[?, ?] & {Expr#A = A} | LitBool & {Expr#A = A} | LitInt & {Expr#A = A} | Pair[?, ?] & {Expr#A = A} | Snd[?, ?] & {Expr#A = A})` does not match type `Add | LitBool | LitInt`
-//│ ║  l.52: 	fun eval[A](e: Expr[A]): A =
-//│ ║        	               ^^^^^^^
-//│ ╟── but it flows into reference with expected type `Add | LitBool | LitInt`
-//│ ║  l.54: 	        e is LitInt(n) then n
-//│ ╙──      	        ^
-//│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.54: 	        e is LitInt(n) then n
-//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.55: 	        e is LitBool(b) then b
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.56: 	        e is Add(x, y) then eval(x) + eval(y)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `Int` does not match type `A`
-//│ ║  l.4: 	class LitInt(n: Int) extends Expr[Int]
-//│ ║       	                ^^^
-//│ ╟── but it flows into reference with expected type `A`
-//│ ║  l.54: 	        e is LitInt(n) then n
-//│ ║        	                            ^
-//│ ╟── Note: constraint arises from method type parameter:
-//│ ║  l.52: 	fun eval[A](e: Expr[A]): A =
-//│ ╙──      	         ^
-//│ ╔══[ERROR] Type mismatch in definition:
-//│ ║  l.52: 	fun eval[A](e: Expr[A]): A =
-//│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.53: 	    if 
-//│ ║        	^^^^^^^
-//│ ║  l.54: 	        e is LitInt(n) then n
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.55: 	        e is LitBool(b) then b
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.56: 	        e is Add(x, y) then eval(x) + eval(y)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `Int` does not match type `A`
-//│ ║  l.6: 	class Add(x: Expr[Int], y: Expr[Int]) extends Expr[Int]
-//│ ║       	                                ^^^
-//│ ╟── Note: constraint arises from method type parameter:
-//│ ║  l.52: 	fun eval[A](e: Expr[A]): A =
-//│ ╙──      	         ^
-//│ ╔══[ERROR] Type mismatch in definition:
-//│ ║  l.52: 	fun eval[A](e: Expr[A]): A =
-//│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.53: 	    if 
-//│ ║        	^^^^^^^
-//│ ║  l.54: 	        e is LitInt(n) then n
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.55: 	        e is LitBool(b) then b
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.56: 	        e is Add(x, y) then eval(x) + eval(y)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `A` is not an instance of type `Int`
-//│ ║  l.52: 	fun eval[A](e: Expr[A]): A =
-//│ ║        	         ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.6: 	class Add(x: Expr[Int], y: Expr[Int]) extends Expr[Int]
-//│ ╙──     	                                ^^^
-//│ fun eval: forall 'A. (e: Expr['A]) -> 'A
-
+fun get(x: Option['a]): x.T = if x is Some(r) then r else error
+//│ fun get: forall 'a. (x: Option['a]) -> 'a
