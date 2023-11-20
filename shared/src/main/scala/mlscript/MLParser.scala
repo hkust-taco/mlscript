@@ -41,6 +41,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def number[p: P]: P[Int] = P( CharIn("0-9").repX(1).!.map(_.toInt) )
   def ident[p: P]: P[String] =
     P( (letter | "_") ~~ (letter | digit | "_" | "'").repX ).!.filter(!keywords(_))
+  def field[p: P]: P[String] = P( ident | number.map(_.toString) )
   
   def termOrAssign[p: P]: P[Statement] = P( term ~ ("=" ~ term).? ).map {
     case (expr, N) => expr
@@ -58,6 +59,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     | P(kw("undefined")).map(x => UnitLit(true)) | P(kw("null")).map(x => UnitLit(false)))
   
   def variable[p: P]: P[Var] = locate(ident.map(Var))
+  def fieldName[p: P]: P[Var] = locate(field.map(Var))
 
   def parenCell[p: P]: P[Either[Term, (Term, Boolean)]] = (("..." | kw("mut")).!.? ~ term).map {
     case (Some("..."), t) => Left(t)
@@ -83,7 +85,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   
   def subterm[p: P]: P[Term] = P( Index ~~ subtermNoSel ~ (
     // Fields:
-    ("." ~/ (variable | locate(("(" ~/ ident ~ "." ~ ident ~ ")")
+    ("." ~/ (fieldName | locate(("(" ~/ ident ~ "." ~ ident ~ ")")
       .map {case (prt, id) => Var(s"${prt}.${id}")})))
       .map {(t: Var) => Left(t)} |
     // Array subscripts:
@@ -101,7 +103,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     }
 
   def record[p: P]: P[Rcd] = locate(P(
-      "{" ~/ (kw("mut").!.? ~ variable ~ "=" ~ term map L.apply).|(kw("mut").!.? ~
+      "{" ~/ (kw("mut").!.? ~ fieldName ~ "=" ~ term map L.apply).|(kw("mut").!.? ~
         variable map R.apply).rep(sep = ";" | ",") ~ "}"
     ).map { fs => Rcd(fs.map{ 
         case L((mut, v, t)) => v -> Fld(FldFlags(mut.isDefined, false, false), t)
@@ -253,7 +255,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   // Note: field removal types are not supposed to be explicitly used by programmers,
   //    and they won't work in negative positions,
   //    but parsing them is useful in tests (such as shared/src/test/diff/mlscript/Annoying.mls)
-  def tyNoFun[p: P]: P[Type] = P( (rcd | ctor | parTy) ~ ("\\" ~ variable).rep(0) ) map {
+  def tyNoFun[p: P]: P[Type] = P( (rcd | ctor | parTy) ~ ("\\" ~ fieldName).rep(0) ) map {
     case (ty, Nil) => ty
     case (ty, ids) => Rem(ty, ids.toList)
   }
@@ -270,7 +272,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   ))
   def tyWild[p: P]: P[Bounds] = locate(P("?".! map (_ => Bounds(Bot, Top))))
   def rcd[p: P]: P[Record] =
-    locate(P( "{" ~/ ( kw("mut").!.? ~ variable ~ ":" ~ ty).rep(sep = ";") ~ "}" )
+    locate(P( "{" ~/ ( kw("mut").!.? ~ fieldName ~ ":" ~ ty).rep(sep = ";") ~ "}" )
       .map(_.toList.map {
         case (None, v, t) => v -> Field(None, t)
         case (Some(_), v, t) => v -> Field(Some(t), t)

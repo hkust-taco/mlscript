@@ -169,10 +169,19 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
         lex(j, ind, next(j, if (keywords.contains(n)) KEYWORD(n) else IDENT(n, isAlphaOp(n))))
       case _ if isOpChar(c) =>
         val (n, j) = takeWhile(i)(isOpChar)
-        if (n === "." && j < length && isIdentFirstChar(bytes(j))) {
-          val (name, k) = takeWhile(j)(isIdentChar)
-          // go(k, SELECT(name))
-          lex(k, ind, next(k, SELECT(name)))
+        if (n === "." && j < length) {
+          val nc = bytes(j)
+          if (isIdentFirstChar(nc)) {
+            val (name, k) = takeWhile(j)(isIdentChar)
+            // go(k, SELECT(name))
+            lex(k, ind, next(k, SELECT(name)))
+          }
+          else if (isDigit(nc)) {
+            val (name, k) = takeWhile(j)(isDigit)
+            // go(k, SELECT(name))
+            lex(k, ind, next(k, SELECT(name)))
+          }
+          else lex(j, ind, next(j, if (isSymKeyword.contains(n)) KEYWORD(n) else IDENT(n, true)))
         }
         // else go(j, if (isSymKeyword.contains(n)) KEYWORD(n) else IDENT(n, true))
         else lex(j, ind, next(j, if (isSymKeyword.contains(n)) KEYWORD(n) else IDENT(n, true)))

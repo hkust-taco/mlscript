@@ -15,40 +15,26 @@ let t = x: 1, y: 2, z: 3
 //│ t: (1, y: 2, 3,)
 //│ t: (x: 1, y: 2, z: 3,)
 
-(1, true, "hey")._2
-(1, true, "hey")._3
+(1, true, "hey").1
+(1, true, "hey").2
 //│ res: true
 //│ res: "hey"
 
 :e
-(1, true, "hey")._4
+(1, true, "hey").3
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.24: 	(1, true, "hey")._4
-//│ ║        	                ^^^
-//│ ╟── tuple of type `{_1: 1, _2: true, _3: "hey"}` does not have field '_4'
-//│ ║  l.24: 	(1, true, "hey")._4
+//│ ║  l.24: 	(1, true, "hey").3
+//│ ║        	                ^^
+//│ ╟── tuple of type `{0: 1, 1: true, 2: "hey"}` does not have field '3'
+//│ ║  l.24: 	(1, true, "hey").3
 //│ ║        	 ^^^^^^^^^^^^^^
-//│ ╟── but it flows into receiver with expected type `{_4: ?a}`
-//│ ║  l.24: 	(1, true, "hey")._4
+//│ ╟── but it flows into receiver with expected type `{3: ?3}`
+//│ ║  l.24: 	(1, true, "hey").3
 //│ ╙──      	^^^^^^^^^^^^^^^^
 //│ res: error
 
-:p
-:e
-(1, true, "hey").2
-//│ Parsed: '(' {[1, true, "hey",]} ')'(...0.2);
-//│ Desugared: '(' {[1, true, "hey",]} ')'(...0.2)
-//│ AST: App(Bra(rcd = false, Blk(...)), DecLit(0.2))
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.38: 	(1, true, "hey").2
-//│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ╟── tuple of type `(1, true, "hey",)` is not a function
-//│ ║  l.38: 	(1, true, "hey").2
-//│ ║        	 ^^^^^^^^^^^^^^
-//│ ╟── but it flows into applied expression with expected type `0.2 -> ?a`
-//│ ║  l.38: 	(1, true, "hey").2
-//│ ╙──      	^^^^^^^^^^^^^^^^
-//│ res: error
+(1, true, "hey").1
+//│ res: true
 
 :w
 let not-tup = (
@@ -56,7 +42,7 @@ let not-tup = (
   2
 )
 //│ ╔══[WARNING] Pure expression does nothing in statement position.
-//│ ║  l.55: 	  1
+//│ ║  l.41: 	  1
 //│ ╙──      	  ^
 //│ not-tup: 2
 
@@ -66,7 +52,7 @@ let tup = (
   2
 )
 //│ ╔══[WARNING] Previous field definitions are discarded by this returned expression.
-//│ ║  l.66: 	  2
+//│ ║  l.52: 	  2
 //│ ╙──      	  ^
 //│ tup: 2
 
@@ -76,7 +62,7 @@ let tup =
   2,
   3
 //│ ╔══[WARNING] Previous field definitions are discarded by this returned expression.
-//│ ║  l.77: 	  3
+//│ ║  l.63: 	  3
 //│ ╙──      	  ^
 //│ tup: 3
 

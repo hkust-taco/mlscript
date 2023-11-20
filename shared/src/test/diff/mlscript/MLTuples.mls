@@ -27,7 +27,7 @@ Hey t
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.26: 	Hey t
 //│ ║        	^^^^^
-//│ ╟── tuple literal of type `{_1: 1, _2: 2, _3: 3}` does not have field 'x'
+//│ ╟── tuple literal of type `{0: 1, 1: 2, 2: 3}` does not have field 'x'
 //│ ║  l.2: 	t = (1, 2, 3)
 //│ ║       	    ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{x: int}`
@@ -102,10 +102,10 @@ f htx
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.73: 	f htx
 //│ ║        	^^^^^
-//│ ╟── `with` extension of type `(1, 2, 3,) & {x: 1}` does not match type `(?a, ?b,) | ~#Hey`
+//│ ╟── `with` extension of type `(1, 2, 3,) & {x: 1}` does not match type `(?a, ?b,) & {0: ?a, 1: ?b} | ~#Hey`
 //│ ║  l.11: 	tx = t with { x = 1 }
 //│ ║        	     ^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `(?c, ?d,) | ~#Hey`
+//│ ╟── but it flows into reference with expected type `(?c, ?d,) & {0: ?c, 1: ?d} | ~#Hey`
 //│ ║  l.73: 	f htx
 //│ ║        	  ^^^
 //│ ╟── Note: constraint arises from tuple literal:
@@ -143,7 +143,7 @@ g tx
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.142: 	g tx
 //│ ║         	^^^^
-//│ ╟── expression of type `(1, 2, 3,) & {x: 1} & ~#Hey` does not have field 'y'
+//│ ╟── expression of type `(1, 2, 3,) & {0: 1, 1: 2, 2: 3, x: 1} & ~#Hey` does not have field 'y'
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.130: 	g arg = case arg of { Hey -> arg.x | _ -> arg.y }
 //│ ╙──       	                                          ^^^^^
@@ -158,13 +158,13 @@ if bool then (1,) else (2,)
 
 :ge
 if bool then (1,) else (2, 3)
-//│ res: Array[1 | 2 | 3] & {_1: 1 | 2}
+//│ res: Array[1 | 2 | 3] & {0: 1 | 2}
 //│ Code generation encountered an error:
 //│   type alias bool is not a valid expression
 
 :ge
 if bool then (1,) with { a = 1; b = 2 } else (2, 3) with { b = 3; c = 4 }
-//│ res: Array[1 | 2 | 3] & {_1: 1 | 2, b: 2 | 3}
+//│ res: Array[1 | 2 | 3] & {0: 1 | 2, b: 2 | 3}
 //│ Code generation encountered an error:
 //│   type alias bool is not a valid expression
 
@@ -176,12 +176,12 @@ if bool then (1,) else fun x -> x
 
 
 
-t._1
-t._2
-//│ res: 1
-//│    = undefined
+t.1
+t.2
 //│ res: 2
-//│    = undefined
+//│    = 2
+//│ res: 3
+//│    = 3
 
 
 t = (1, 2, 3) with {x = 1}
@@ -193,35 +193,35 @@ t.x
 //│ res: 1
 //│    = 1
 
-t._1
-t._2
-//│ res: 1
-//│    = undefined
+t.1
+t.2
 //│ res: 2
-//│    = undefined
+//│    = 2
+//│ res: 3
+//│    = 3
 
 
 t = (1, 2, 3) with {_1 = "oops"}
-//│ t: {_1: "oops", _2: 2, _3: 3}
+//│ t: {0: 1, 1: 2, 2: 3, _1: "oops"}
 //│  = [ 1, 2, 3, _1: 'oops' ]
 
 // TODO (https://github.com/hkust-taco/mlscript/issues/69)
 :e
-(t: ("oops",int,int,))._1
+(t: ("oops",int,int,)).1
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.210: 	(t: ("oops",int,int,))._1
+//│ ║  l.210: 	(t: ("oops",int,int,)).1
 //│ ║         	 ^
-//│ ╟── `with` extension of type `{_1: "oops", _2: 2, _3: 3}` is not a 3-element tuple
+//│ ╟── `with` extension of type `{0: 1, 1: 2, 2: 3, _1: "oops"}` is not a 3-element tuple
 //│ ║  l.204: 	t = (1, 2, 3) with {_1 = "oops"}
 //│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `("oops", int, int,)`
-//│ ║  l.210: 	(t: ("oops",int,int,))._1
+//│ ║  l.210: 	(t: ("oops",int,int,)).1
 //│ ║         	 ^
 //│ ╟── Note: constraint arises from tuple type:
-//│ ║  l.210: 	(t: ("oops",int,int,))._1
+//│ ║  l.210: 	(t: ("oops",int,int,)).1
 //│ ╙──       	    ^^^^^^^^^^^^^^^^^
-//│ res: "oops"
-//│    = 'oops'
+//│ res: int
+//│    = 2
 
 
 def f: (1, 2, 3) & (2, 2 | 3, 3 | 4)

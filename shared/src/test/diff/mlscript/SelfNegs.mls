@@ -6,15 +6,15 @@ def foo(f: (~'a) -> 'a, a: 'a) =
 //│    = [Function: foo]
 
 def foo(fa: ((~'a) -> 'a, 'a)) =
-  fa._1 fa._2
+  fa.0 fa.1
 //│ foo: ((~'a -> 'a, 'a,),) -> 'a
 //│    = [Function: foo1]
 
 :ns
 foo
-//│ res: forall 'a 'b 'c. ((~'a -> 'a, 'a,),) -> 'c
+//│ res: forall 'a '1 'b. ((~'a -> 'a, 'a,),) -> 'b
 //│   where
-//│     'a <: 'c & 'b
-//│     'b <: ~'a
+//│     'a <: 'b & '1
+//│     '1 <: ~'a
 //│    = [Function: foo1]
 

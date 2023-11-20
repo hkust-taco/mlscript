@@ -154,15 +154,15 @@ f_2 = f_1
 
 
 
-def test: (string, 1) & { _1: "hello" }
-//│ test: ("hello", 1,)
+def test: (string, 1) & { 0: "hello" }
+//│ test: (string, 1,) & {0: "hello"}
 //│     = <missing implementation>
 
 :e
 test = ("hi", 1)
 //│ ("hi", 1,)
 //│   <:  test:
-//│ ("hello", 1,)
+//│ (string, 1,) & {0: "hello"}
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.162: 	test = ("hi", 1)
 //│ ║         	^^^^^^^^^^^^^^^^
@@ -170,22 +170,22 @@ test = ("hi", 1)
 //│ ║  l.162: 	test = ("hi", 1)
 //│ ║         	        ^^^^
 //│ ╟── Note: constraint arises from literal type:
-//│ ║  l.157: 	def test: (string, 1) & { _1: "hello" }
-//│ ╙──       	                              ^^^^^^^
+//│ ║  l.157: 	def test: (string, 1) & { 0: "hello" }
+//│ ╙──       	                             ^^^^^^^
 //│     = [ 'hi', 1 ]
 
 test = ("hello", 1)
 //│ ("hello", 1,)
 //│   <:  test:
-//│ ("hello", 1,)
+//│ (string, 1,) & {0: "hello"}
 //│     = [ 'hello', 1 ]
 
 (fun ((a, b)) -> a) test
 //│ res: string
 //│    = 'hello'
 
-test: { _1: 'a }
-//│ res: {_1: "hello"}
+test: { 1: 'a }
+//│ res: {1: 1}
 //│    = [ 'hello', 1 ]
 
 test: ('a, 1)
