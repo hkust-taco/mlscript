@@ -385,14 +385,6 @@ class GraphOptimizer:
     }
   }
 
-  private def expectDefn(r: GODefRef) = {
-    val defn = r.defn match {
-      case Left(value) => value
-      case Right(value) => throw GraphOptimizingError("only has the name of definition")
-    }
-    defn
-  }
-
   private def tryGetDefn(r: GODefRef) = {
     r.defn.swap.toOption
   }
@@ -433,12 +425,12 @@ class GraphOptimizer:
       cases.foldLeft(uses)((uses, arm) => getElim(arm._2, uses))
     case Jump(defnref, args) => 
       val elims = getElims(args, uses)
-      val defn = defnref |> expectDefn
+      val defn = defnref.expectDefn
       val new_ctx = bindArguments(ctx, args, defn.params)
       elims ++ getElim(using v, new_ctx)(defn.body, uses)
     case LetCall(resultNames, defnref, args, body) =>
       val elims = getElims(args, uses)
-      val defn = defnref |> expectDefn 
+      val defn = defnref.expectDefn 
       val backward_elims = args.zip(defn.activeParams).flatMap {
         case (Ref(Name(x)), ys) if x == v => Some(ys)
         case _ => None
@@ -464,7 +456,7 @@ class GraphOptimizer:
       else
         cases_intros.head
     case Jump(defnref, args) =>
-      val jpdef = defnref |> expectDefn
+      val jpdef = defnref.expectDefn
       val params = jpdef.params
       val node = jpdef.body
       val intros2 = params.zip(args).filter{
@@ -476,7 +468,7 @@ class GraphOptimizer:
       }
       getIntro(node, intros2.toMap)
     case LetCall(resultNames, defnref, args, body) =>
-      val defn = defnref |> expectDefn
+      val defn = defnref.expectDefn
       val intros2 = getIntro(defn).zip(resultNames).foldLeft(intros) { 
         case (intros, (Some(i), name)) => intros + (name.str -> i)
         case (intros, _) => intros
@@ -534,7 +526,7 @@ class GraphOptimizer:
       case _ => None
     }, fj)
     case Jump(defnref, _) =>
-      val defn = defnref |> expectDefn
+      val defn = defnref.expectDefn
       val params = defn.params map { case Name(x) => x }
       freeVarAnalysis(using ctx ++ params)(defn.body, fv -- params, fj -- params)
     case Case(Name(scrut), cases) => 
@@ -656,7 +648,7 @@ class GraphOptimizer:
       findToBeSplitted(using intros2, defs)(e2)
     case LetJoin(jp, xs, e1, e2) => findToBeSplitted(e1) ++ findToBeSplitted(e2)
     case LetCall(xs, defnref, as, e) =>
-      val defn = defnref |> expectDefn
+      val defn = defnref.expectDefn
       val intros2 = getIntro(defn).zip(xs).foldLeft(intros) { 
         case (intros, (Some(i), name)) => intros + (name.str -> i)
         case (intros, _) => intros
@@ -688,7 +680,7 @@ class GraphOptimizer:
                                    (node: GONode): GONode = node match {
     case Result(_) => node
     case Jump(defnref, as) => 
-      val defn = defnref |> expectDefn
+      val defn = defnref.expectDefn
       
       val candidates = as.map {
         case Ref(Name(s)) => intros.get(s)
@@ -728,7 +720,7 @@ class GraphOptimizer:
     case LetJoin(jp, xs, e1, e2) => 
       throw GraphOptimizingError("join points after promotion")
     case LetCall(xs, defnref, as, e) =>
-      val defn = defnref |> expectDefn
+      val defn = defnref.expectDefn
       val intros2 = getIntro(defn).zip(xs).foldLeft(intros) { 
         case (intros, (Some(i), name)) => intros + (name.str -> i)
         case (intros, _) => intros
@@ -820,7 +812,7 @@ class GraphOptimizer:
                               (defn: GONode): Set[(Str, (Str, Ls[Str]))] = defn match {
     case Result(_) => Set()
     case Jump(defnref, as) =>
-      val defn = defnref |> expectDefn
+      val defn = defnref.expectDefn
       as.map {
         case Ref(Name(s)) => intros.get(s)
         case _ => None
@@ -842,7 +834,7 @@ class GraphOptimizer:
       findToBeReplaced(using intros2)(e2)
     case LetJoin(jp, xs, e1, e2) => findToBeReplaced(e1) ++ findToBeReplaced(e2)
     case LetCall(xs, defnref, as, e) =>
-      val defn = defnref |> expectDefn
+      val defn = defnref.expectDefn
       val intros2 = getIntro(defn).zip(xs).foldLeft(intros) { 
         case (intros, (Some(i), name)) => intros + (name.str -> i)
         case (intros, _) => intros
@@ -939,7 +931,7 @@ class GraphOptimizer:
                                      (node: GONode) : GONode = node match {
     case Result(_) => node
     case Jump(defnref, as) => 
-      val defn = defnref |> expectDefn
+      val defn = defnref.expectDefn
       if (namemap.contains(defn.name)) {
         val new_name = namemap(defn.name)
         if (!workset.contains(defn.name))
@@ -995,7 +987,7 @@ class GraphOptimizer:
     case LetJoin(jp, xs, e1, e2) => 
       throw GraphOptimizingError("join points after promotion")
     case LetCall(xs, defnref, as, e) =>
-      val defn = defnref |> expectDefn
+      val defn = defnref.expectDefn
       if (namemap.contains(defn.name)) {
         val new_name = namemap(defn.name)
         if (!workset.contains(defn.name))
@@ -1150,6 +1142,16 @@ class GraphOptimizer:
     }
   }
 
+  private class UsefulnessAnalysis extends GOIterator:
+    var cur_godef: Option[GODef] = None
+    def cur = cur_godef.get
+    override def iterate(x: GODef) =
+      cur_godef = Some(x)
+      x.body.accept_iterator(this)
+    override def iterate(x: GOProgram) =
+      val defs = GODefRevPreOrdering.ordered(x.main, x.defs)
+      defs.foreach(_.accept_iterator(this))
+
   private def collectLiveBindings(node: GONode, live: Set[Str]): Set[Str] = node match {
     case Result(xs) => live ++ argsToStrs(xs)
     case Jump(defnref, xs) =>
@@ -1172,7 +1174,7 @@ class GraphOptimizer:
     case LetJoin(_, _, _, _) =>
       throw GraphOptimizingError("nested join points after promotion")
     case LetCall(xs, defnref, as, e) =>
-      val defn = defnref |> expectDefn
+      val defn = defnref.expectDefn
       val live2 = live ++ argsToStrs(as) -- xs.map{_.str} 
       collectLiveBindings(e, live2)
   }
@@ -1217,7 +1219,7 @@ class GraphOptimizer:
 
     override def visit(x: LetCall) = x match
       case LetCall(xs, defnref, as, e) =>
-        val defn = defnref |> expectDefn
+        val defn = defnref.expectDefn
         val trivial = defn.body match {
           case Result(ys) => Some(ys)
           case _ => None

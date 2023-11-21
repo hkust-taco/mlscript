@@ -9,6 +9,9 @@ import mlscript.*
 
 import scala.annotation.unused
 import scala.util.Sorting
+import scala.collection.mutable.HashMap
+import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.ListBuffer
 
 // -----------------------------------------------
 
@@ -68,6 +71,10 @@ class GODefRef(var defn: Either[GODef, Str]):
     case Left(godef) => godef.getName
     case Right(name) => name
   }
+  def expectDefn: GODef = defn match {
+    case Left(godef) => godef
+    case Right(name) => throw Exception(s"Expected a def, but got $name")
+  }
   override def equals(o: Any): Bool = o match {
     case o: GODefRef if this.isInstanceOf[GODefRef] =>
       o.getName == this.getName
@@ -107,6 +114,8 @@ class GODef(
 ):
   var activeParams: Ls[Set[Elim]] = Ls(Set())
   var activeResults: Ls[Opt[Intro]] = Ls(None)
+  var liveIn: Set[Str] = Set()
+  var liveOut: Set[Str] = Set()
   var isTrivial: Bool = false
   override def equals(o: Any): Bool = o match {
     case o: GODef if this.isInstanceOf[GODef] =>
@@ -354,3 +363,53 @@ trait GOIterator extends GOTrivialExprIterator:
     x.defs.foreach(_.accept_iterator(this))
     x.main.accept_iterator(this)
 
+trait GODefTraversalOrdering:
+  def ordered(entry: GONode, defs: Set[GODef]): Ls[GODef]
+
+object GODefDfs:
+  import GONode._
+  private class Successors extends GOIterator:
+    var succ: ListBuffer[GODef] = ListBuffer()
+    override def iterate(x: LetCall) = x match
+      case LetCall(xs, defnref, args, body) => 
+          succ += defnref.expectDefn
+    override def iterate(x: Jump) = x match
+      case Jump(defnref, args) =>
+          succ += defnref.expectDefn
+
+
+  private def dfs(using visited: HashMap[GODef, Bool], out:ListBuffer[GODef], postfix: Bool)(x: GODef): Unit =
+    visited(x) = true
+    if (!postfix)
+      out += x
+    val succ = Successors()
+    x.accept_iterator(succ)
+    succ.succ.foreach { y =>
+      if (!visited(y))
+        dfs(y)
+    }
+    if (postfix)
+      out += x
+    visited(x) = false
+  
+  private def dfs(using visited: HashMap[GODef, Bool], out:ListBuffer[GODef], postfix: Bool)(x: GONode): Unit =
+    val succ = Successors()
+    x.accept_iterator(succ)
+    succ.succ.foreach { y =>
+      if (!visited(y))
+        dfs(y)
+    }
+
+  def dfs(entry: GONode, defs: Set[GODef], postfix: Bool): Ls[GODef] =
+    val visited = HashMap[GODef, Bool]()
+    val out = ListBuffer[GODef]()
+    dfs(using visited, out, postfix)(entry)
+    out.toList
+    
+object GODefRevPostOrdering extends GODefTraversalOrdering:
+  def ordered(entry: GONode, defs: Set[GODef]): Ls[GODef] =
+    GODefDfs.dfs(entry, defs, true).reverse
+
+object GODefRevPreOrdering extends GODefTraversalOrdering:
+  def ordered(entry: GONode, defs: Set[GODef]): Ls[GODef] =
+    GODefDfs.dfs(entry, defs, false).reverse
