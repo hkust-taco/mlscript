@@ -210,8 +210,8 @@ def extrude f = oops((f, 0)).0
 
 def oops (i: forall 'c. ('c -> 'c, 0)) =
   let _ = (i.0 id) "hello"
-  in i.1
-//│ oops: (forall 'c. ('c -> 'c, 0,)) -> 0
+  in i.0
+//│ oops: (forall 'c. ('c -> 'c, 0,)) -> 'c0 -> 'c0
 //│     = [Function: oops1]
 
 def oops (i: forall 'c. ('c -> 'c, 0)) =

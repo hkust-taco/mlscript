@@ -413,15 +413,15 @@ t1 = (mut "hello", mut true)
 //│   = [ 'hello', true ]
 
 :js
-t1.1 <- "bye"
-t1.1
+t1.0 <- "bye"
+t1.0
 //│ // Query 1
-//│ res = (t1["1"] = "bye", []);
+//│ res = (t1["0"] = "bye", []);
 //│ // Query 2
-//│ res = t1["1"];
+//│ res = t1["0"];
 //│ // End of generated code
 //│ = []
-//│ res: true
+//│ res: "hello"
 //│    = 'bye'
 
 :js

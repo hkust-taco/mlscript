@@ -184,8 +184,8 @@ test = ("hello", 1)
 //│ res: string
 //│    = 'hello'
 
-test: { 1: 'a }
-//│ res: {1: 1}
+test: { 0: 'a }
+//│ res: {0: "hello"}
 //│    = [ 'hello', 1 ]
 
 test: ('a, 1)
@@ -200,7 +200,7 @@ class A: (1,2)
 
 
 :re
-error: Array[1] & { _1: int }
-//│ res: Array[1] & {_1: int}
+error: Array[1] & { 0: int }
+//│ res: Array[1] & {0: int}
 //│ Runtime error:
 //│   Error: an error was thrown

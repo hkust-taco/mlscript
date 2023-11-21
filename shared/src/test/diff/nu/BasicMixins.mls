@@ -316,20 +316,9 @@ let wd = w(1)
 //│ wd
 //│    = [ [ [ 1 ] ] ]
 
-// TODO implement _1
-wd.1.1.1 + 1
-//│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.320: 	wd.1.1.1 + 1
-//│ ║         	^^^^
-//│ ╟── application of type `{0: ?a}` does not have field '1'
-//│ ║  l.314: 	let wd = w(1)
-//│ ║         	         ^^^^
-//│ ╟── but it flows into reference with expected type `{1: ?1}`
-//│ ║  l.320: 	wd.1.1.1 + 1
-//│ ╙──       	^^
+wd.0.0.0 + 1
 //│ Int
 //│ res
-//│ Runtime error:
-//│   TypeError: Cannot read properties of undefined (reading '1')
+//│     = 2
 
 

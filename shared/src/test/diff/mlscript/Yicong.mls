@@ -212,11 +212,11 @@ def h f = (f ((1,2,false)), f ((1,true)))
 //│  = [Function: h1]
 
 h (fun x -> x[0])
-h (fun x -> x.1)
+h (fun x -> x.0)
 //│ res: (1 | 2 | false | undefined, 1 | true | undefined,)
 //│    = [ 1, 1 ]
-//│ res: (2, true,)
-//│    = [ 2, true ]
+//│ res: (1, 1,)
+//│    = [ 1, 1 ]
 
 
 q1 = (1,1,1,1)
@@ -332,7 +332,7 @@ tk (two.snd)
 :e
 def a1: Array[int]
 a1 = (1,2,true,'hello')
-a1.2
+a1.1
 //│ a1: Array[int]
 //│   = <missing implementation>
 //│ (1, 2, true, "hello",)
@@ -349,16 +349,16 @@ a1.2
 //│ ╙──       	              ^^^
 //│   = [ 1, 2, true, 'hello' ]
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.335: 	a1.2
+//│ ║  l.335: 	a1.1
 //│ ║         	^^^^
-//│ ╟── type `Array[int]` does not have field '2'
+//│ ╟── type `Array[int]` does not have field '1'
 //│ ║  l.333: 	def a1: Array[int]
 //│ ║         	        ^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `{2: ?2}`
-//│ ║  l.335: 	a1.2
+//│ ╟── but it flows into reference with expected type `{1: ?1}`
+//│ ║  l.335: 	a1.1
 //│ ╙──       	^^
 //│ res: error
-//│    = true
+//│    = 2
 
 def getx p = p.x
 def a123: Array[int]

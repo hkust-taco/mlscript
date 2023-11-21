@@ -193,12 +193,12 @@ t.x
 //│ res: 1
 //│    = 1
 
+t.0
 t.1
-t.2
+//│ res: 1
+//│    = 1
 //│ res: 2
 //│    = 2
-//│ res: 3
-//│    = 3
 
 
 t = (1, 2, 3) with {_1 = "oops"}
@@ -207,21 +207,21 @@ t = (1, 2, 3) with {_1 = "oops"}
 
 // TODO (https://github.com/hkust-taco/mlscript/issues/69)
 :e
-(t: ("oops",int,int,)).1
+(t: ("oops",int,int,)).0
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.210: 	(t: ("oops",int,int,)).1
+//│ ║  l.210: 	(t: ("oops",int,int,)).0
 //│ ║         	 ^
 //│ ╟── `with` extension of type `{0: 1, 1: 2, 2: 3, _1: "oops"}` is not a 3-element tuple
 //│ ║  l.204: 	t = (1, 2, 3) with {_1 = "oops"}
 //│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `("oops", int, int,)`
-//│ ║  l.210: 	(t: ("oops",int,int,)).1
+//│ ║  l.210: 	(t: ("oops",int,int,)).0
 //│ ║         	 ^
 //│ ╟── Note: constraint arises from tuple type:
-//│ ║  l.210: 	(t: ("oops",int,int,)).1
+//│ ║  l.210: 	(t: ("oops",int,int,)).0
 //│ ╙──       	    ^^^^^^^^^^^^^^^^^
-//│ res: int
-//│    = 2
+//│ res: "oops"
+//│    = 1
 
 
 def f: (1, 2, 3) & (2, 2 | 3, 3 | 4)

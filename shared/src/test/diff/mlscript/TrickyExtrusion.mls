@@ -53,46 +53,46 @@ test f =
 //│     = [Function: test2]
 
 :e // * Due to lack of precision
-(test id).1 + 1
+(test id).0 + 1
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.56: 	(test id).1 + 1
+//│ ║  l.56: 	(test id).0 + 1
 //│ ║        	^^^^^^^^^^^^^
 //│ ╟── reference of type `true` is not an instance of type `int`
 //│ ║  l.4: 	True = true
 //│ ║       	       ^^^^
 //│ ╟── but it flows into field selection with expected type `int`
-//│ ║  l.56: 	(test id).1 + 1
+//│ ║  l.56: 	(test id).0 + 1
 //│ ╙──      	^^^^^^^^^^^
 //│ res: error | int
-//│    = 2
+//│    = 1
 
 :e // * Due to lack of precision
-not (test id).2
-//│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.70: 	not (test id).2
-//│ ║        	    ^^^^^^^^^^^
-//│ ╟── tuple literal of type `forall ?a ?b. (?a, ?b,)` does not have field '2'
-//│ ║  l.51: 	  in (r 0, r True)
-//│ ║        	     ^^^^^^^^^^^^^
-//│ ╟── but it flows into application with expected type `{2: ?2}`
-//│ ║  l.70: 	not (test id).2
-//│ ╙──      	     ^^^^^^^
-//│ res: bool
-//│    = true
-
-:e // * Legit
 not (test id).1
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.84: 	not (test id).1
+//│ ║  l.70: 	not (test id).1
 //│ ║        	^^^^^^^^^^^^^^^
 //│ ╟── integer literal of type `0` is not an instance of type `bool`
 //│ ║  l.51: 	  in (r 0, r True)
 //│ ║        	        ^
 //│ ╟── but it flows into field selection with expected type `bool`
-//│ ║  l.84: 	not (test id).1
+//│ ║  l.70: 	not (test id).1
 //│ ╙──      	    ^^^^^^^^^^^
 //│ res: bool | error
 //│    = false
+
+:e // * Legit
+not (test id).0
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.84: 	not (test id).0
+//│ ║        	^^^^^^^^^^^^^^^
+//│ ╟── integer literal of type `0` is not an instance of type `bool`
+//│ ║  l.51: 	  in (r 0, r True)
+//│ ║        	        ^
+//│ ╟── but it flows into field selection with expected type `bool`
+//│ ║  l.84: 	not (test id).0
+//│ ╙──      	    ^^^^^^^^^^^
+//│ res: bool | error
+//│    = true
 
 
 
@@ -110,13 +110,13 @@ not (test id).1
 test f =
   let r x = f x
   in (r 0, r True)
-//│ test: forall 'a 'b 'c 'd 'e 'f 'g. 'b -> ('f, 'd,)
+//│ test: forall 'a 'b 'c 'd 'e 'f 'g. 'c -> ('e, 'f,)
 //│   where
-//│     'b <: 'e -> 'g & 'a -> 'c
-//│     'c <: 'f
-//│     'a :> 0
-//│     'g <: 'd
-//│     'e :> true
+//│     'c <: 'g -> 'a & 'b -> 'd
+//│     'd <: 'e
+//│     'b :> 0
+//│     'a <: 'f
+//│     'g :> true
 //│     = [Function: test3]
 
 // * Q: why does this type *appear* approximated after simplification?
