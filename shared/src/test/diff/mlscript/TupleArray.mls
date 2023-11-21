@@ -54,11 +54,23 @@ r = {b = "a", c = 1}
 //│    = [ 1, 2, 3, 'oops' ]
 
 (1,2,3) with { 0 = "oops" }
-//│ res: (1, 2, 3,)
+//│ res: {0: "oops", 1: 2, 2: 3}
 //│    = [ 'oops', 2, 3 ]
 
-// :e TODO
+:e
 (res: (int,int,int,)).1
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.61: 	(res: (int,int,int,)).1
+//│ ║        	 ^^^
+//│ ╟── `with` extension of type `{0: "oops", 1: 2, 2: 3}` is not a 3-element tuple
+//│ ║  l.56: 	(1,2,3) with { 0 = "oops" }
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `(int, int, int,)`
+//│ ║  l.61: 	(res: (int,int,int,)).1
+//│ ║        	 ^^^
+//│ ╟── Note: constraint arises from tuple type:
+//│ ║  l.61: 	(res: (int,int,int,)).1
+//│ ╙──      	      ^^^^^^^^^^^^^^
 //│ res: int
 //│    = 2
 
@@ -68,7 +80,7 @@ def r: int \ 0
 //│  = <missing implementation>
 
 def r: (1,2,3) \ 0
-//│ r: in (1, 2, 3,)\0 out (1, 2, 3,)
+//│ r: in (1, 2, 3,)\0 out {1: 2, 2: 3}
 //│  = <missing implementation>
 // (1,2,3).toRecord \ 1
 
@@ -97,14 +109,14 @@ fr : Array[int] & {b: int}
 :e
 arr.0
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.98: 	arr.0
-//│ ║        	^^^^^
+//│ ║  l.110: 	arr.0
+//│ ║         	^^^^^
 //│ ╟── type `Array[int]` does not have field '0'
-//│ ║  l.79: 	def arr: Array[int]
+//│ ║  l.91: 	def arr: Array[int]
 //│ ║        	         ^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{0: ?0}`
-//│ ║  l.98: 	arr.0
-//│ ╙──      	^^^
+//│ ║  l.110: 	arr.0
+//│ ╙──       	^^^
 //│ res: error
 //│    = 1
 
@@ -158,10 +170,10 @@ def test: {x: 1} & (1, 2, 3)
 :e
 f(1,2,3) : 1 | 2 | 3
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.159: 	f(1,2,3) : 1 | 2 | 3
+//│ ║  l.171: 	f(1,2,3) : 1 | 2 | 3
 //│ ║         	^^^^^^^^
 //│ ╟── argument list of type `(1, 2, 3,)` does not match type `(?a,)`
-//│ ║  l.159: 	f(1,2,3) : 1 | 2 | 3
+//│ ║  l.171: 	f(1,2,3) : 1 | 2 | 3
 //│ ╙──       	 ^^^^^^^
 //│ res: 1 | 2 | 3
 //│    = [Number: 1] { b: 2 }
@@ -169,19 +181,19 @@ f(1,2,3) : 1 | 2 | 3
 :e
 (arr[0])[1][2]
 //│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.170: 	(arr[0])[1][2]
+//│ ║  l.182: 	(arr[0])[1][2]
 //│ ║         	^^^^^^^^^^^
 //│ ╟── type `int` does not match type `Array[?a]`
-//│ ║  l.79: 	def arr: Array[int]
+//│ ║  l.91: 	def arr: Array[int]
 //│ ║        	               ^^^
 //│ ╟── but it flows into array access with expected type `Array[?b]`
-//│ ║  l.170: 	(arr[0])[1][2]
+//│ ║  l.182: 	(arr[0])[1][2]
 //│ ╙──       	 ^^^^^^
 //│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.170: 	(arr[0])[1][2]
+//│ ║  l.182: 	(arr[0])[1][2]
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╟── possibly-undefined array access of type `undefined` does not match type `Array[?a]`
-//│ ║  l.170: 	(arr[0])[1][2]
+//│ ║  l.182: 	(arr[0])[1][2]
 //│ ╙──       	^^^^^^^^^^^
 //│ res: error | undefined
 //│ Runtime error:
@@ -281,15 +293,15 @@ k1.2
 //│    = false
 
 (1,2,3) with {1 = "hello"; _a = true; 3 = 4}
-//│ res: (nothing, 2, 3,) & {3: 4, _a: true}
+//│ res: {0: 1, 1: "hello", 2: 3, 3: 4, _a: true}
 //│    = [ 1, 'hello', 3, 4, _a: true ]
 
 (1,2,3) with {1 = true; 0 = 233}
-//│ res: (nothing, 2, 3,)
+//│ res: {0: 233, 1: true, 2: 3}
 //│    = [ 233, true, 3 ]
 
 (1, 2, true) with {0 = "hello"}
-//│ res: (1, 2, true,)
+//│ res: {0: "hello", 1: 2, 2: true}
 //│    = [ 'hello', 2, true ]
 
 ta1 = (5, 6, true, false, "hahaha")
@@ -299,7 +311,7 @@ ta2.1
 ta2.2
 //│ ta1: (5, 6, true, false, "hahaha",)
 //│    = [ 5, 6, true, false, 'hahaha' ]
-//│ ta2: (5, 6, true, false, "hahaha",) & {7: "bye", x: 123}
+//│ ta2: {0: 0, 1: 6, 2: true, 3: false, 4: "hahaha", 7: "bye", x: 123}
 //│    = [ 0, 6, true, false, 'hahaha', <2 empty items>, 'bye', x: 123 ]
 //│ res: 5
 //│    = 5
@@ -333,13 +345,13 @@ a2.x
 :e
 a2.0
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.334: 	a2.0
+//│ ║  l.346: 	a2.0
 //│ ║         	^^^^
 //│ ╟── type `Array['a]` does not match type `{0: ?0} | ~{1: true, x: "haha"}`
-//│ ║  l.311: 	def rep5: 'a -> Array['a]
+//│ ║  l.323: 	def rep5: 'a -> Array['a]
 //│ ║         	                ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{0: ?0} | ~{1: true, x: "haha"}`
-//│ ║  l.334: 	a2.0
+//│ ║  l.346: 	a2.0
 //│ ╙──       	^^
 //│ res: error
 //│    = 2
@@ -350,9 +362,9 @@ a2.0
 
 ht1 = (1,2,false) with {0 = 'a'; 1 = 'hello'; 2 = false}
 ht1.0
-//│ ht1: (nothing, nothing, false,)
+//│ ht1: {0: "a", 1: "hello", 2: false}
 //│    = [ 'a', 'hello', false ]
-//│ res: nothing
+//│ res: "a"
 //│    = 'a'
 
 def hg1 t = (t.0, t.1)
@@ -361,11 +373,11 @@ hg1 ((5,5,5))
 (hg1 ht1).1
 //│ hg1: {0: '0, 1: '1} -> ('0, '1,)
 //│    = [Function: hg1]
-//│ res: (nothing, nothing,)
+//│ res: ("a", "hello",)
 //│    = [ 'a', 'hello' ]
 //│ res: (5, 5,)
 //│    = [ 5, 5 ]
-//│ res: nothing
+//│ res: "hello"
 //│    = 'hello'
 
 def ta1: Array[int] | (int, bool)

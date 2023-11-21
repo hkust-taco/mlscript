@@ -201,9 +201,9 @@ t.1
 //│    = 2
 
 
-t = (1, 2, 3) with {_1 = "oops"}
-//│ t: {0: 1, 1: 2, 2: 3, _1: "oops"}
-//│  = [ 1, 2, 3, _1: 'oops' ]
+t = (1, 2, 3) with {0 = "oops"}
+//│ t: {0: "oops", 1: 2, 2: 3}
+//│  = [ 'oops', 2, 3 ]
 
 // TODO (https://github.com/hkust-taco/mlscript/issues/69)
 :e
@@ -211,9 +211,9 @@ t = (1, 2, 3) with {_1 = "oops"}
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.210: 	(t: ("oops",int,int,)).0
 //│ ║         	 ^
-//│ ╟── `with` extension of type `{0: 1, 1: 2, 2: 3, _1: "oops"}` is not a 3-element tuple
-//│ ║  l.204: 	t = (1, 2, 3) with {_1 = "oops"}
-//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── `with` extension of type `{0: "oops", 1: 2, 2: 3}` is not a 3-element tuple
+//│ ║  l.204: 	t = (1, 2, 3) with {0 = "oops"}
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `("oops", int, int,)`
 //│ ║  l.210: 	(t: ("oops",int,int,)).0
 //│ ║         	 ^
@@ -221,7 +221,7 @@ t = (1, 2, 3) with {_1 = "oops"}
 //│ ║  l.210: 	(t: ("oops",int,int,)).0
 //│ ╙──       	    ^^^^^^^^^^^^^^^^^
 //│ res: "oops"
-//│    = 1
+//│    = 'oops'
 
 
 def f: (1, 2, 3) & (2, 2 | 3, 3 | 4)
