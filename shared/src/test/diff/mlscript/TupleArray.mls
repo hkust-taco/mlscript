@@ -54,7 +54,7 @@ r = {b = "a", c = 1}
 //│    = [ 1, 2, 3, 'oops' ]
 
 (1,2,3) with { 0 = "oops" }
-//│ res: (1, 2, 3,) & {0: "oops"}
+//│ res: (1, 2, 3,)
 //│    = [ 'oops', 2, 3 ]
 
 // :e TODO
@@ -200,7 +200,7 @@ def myval: A & { x: anything }
 
 
 def tuuu: (1 | 2, true) & {0: 2 | 3}
-//│ tuuu: (1 | 2, true,) & {0: 2 | 3}
+//│ tuuu: (1 | 2, true,)
 //│     = <missing implementation>
 // tuuu: ((1 | 2) & (2 | 3), true,)
 // tuuu: (2, true,)
@@ -281,15 +281,15 @@ k1.2
 //│    = false
 
 (1,2,3) with {1 = "hello"; _a = true; 3 = 4}
-//│ res: (1, 2, 3,) & {1: "hello", 3: 4, _a: true}
+//│ res: (nothing, 2, 3,) & {3: 4, _a: true}
 //│    = [ 1, 'hello', 3, 4, _a: true ]
 
 (1,2,3) with {1 = true; 0 = 233}
-//│ res: (1, 2, 3,) & {0: 233, 1: true}
+//│ res: (nothing, 2, 3,)
 //│    = [ 233, true, 3 ]
 
 (1, 2, true) with {0 = "hello"}
-//│ res: (1, 2, true,) & {0: "hello"}
+//│ res: (1, 2, true,)
 //│    = [ 'hello', 2, true ]
 
 ta1 = (5, 6, true, false, "hahaha")
@@ -299,7 +299,7 @@ ta2.1
 ta2.2
 //│ ta1: (5, 6, true, false, "hahaha",)
 //│    = [ 5, 6, true, false, 'hahaha' ]
-//│ ta2: (5, 6, true, false, "hahaha",) & {0: 0, 7: "bye", x: 123}
+//│ ta2: (5, 6, true, false, "hahaha",) & {7: "bye", x: 123}
 //│    = [ 0, 6, true, false, 'hahaha', <2 empty items>, 'bye', x: 123 ]
 //│ res: 5
 //│    = 5
@@ -350,7 +350,7 @@ a2.0
 
 ht1 = (1,2,false) with {0 = 'a'; 1 = 'hello'; 2 = false}
 ht1.0
-//│ ht1: (1, 2, false,) & {0: "a", 1: "hello", 2: false}
+//│ ht1: (nothing, nothing, false,)
 //│    = [ 'a', 'hello', false ]
 //│ res: nothing
 //│    = 'a'
@@ -373,9 +373,9 @@ def test: (string, 1) & { 0: "hello" }
 def test2: (string, 1) & { 0: "hello"; 2: int }
 //│ ta1: Array[bool | int]
 //│    = <missing implementation>
-//│ test: (string, 1,) & {0: "hello"}
+//│ test: (string, 1,)
 //│     = <missing implementation>
-//│ test2: (string, 1,) & {0: "hello", 2: int}
+//│ test2: (string, 1,) & {2: int}
 //│      = <missing implementation>
 
 test: { 0: 'a }

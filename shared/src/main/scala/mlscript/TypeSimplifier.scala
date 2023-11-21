@@ -412,15 +412,21 @@ trait TypeSimplifier { self: Typer =>
                     val (componentFields, rcdFields) = rcd.fields
                       .filterNot(traitPrefixes contains _._1.name.takeWhile(_ =/= '#'))
                       .partitionMap(f =>
-                        if (f._1.name.length > 1 && f._1.name.startsWith("_")) {
-                          val namePostfix = f._1.name.tail
-                          if (namePostfix.forall(_.isDigit)) {
-                            val index = namePostfix.toInt
-                            if (index <= arity && index > 0) L(index -> f._2)
-                            else R(f)
-                          }
+                        if (f._1.name.forall(_.isDigit)) {
+                          val index = f._1.name.toInt
+                          if (0 <= index && index < arity) L(index -> f._2)
                           else R(f)
                         } else R(f)
+                        // // With old tuple field names:
+                        // if (f._1.name.length > 1 && f._1.name.startsWith("_")) {
+                        //   val namePostfix = f._1.name.tail
+                        //   if (namePostfix.forall(_.isDigit)) {
+                        //     val index = namePostfix.toInt
+                        //     if (index <= arity && index > 0) L(index -> f._2)
+                        //     else R(f)
+                        //   }
+                        //   else R(f)
+                        // } else R(f)
                       )
                     val componentFieldsMap = componentFields.toMap
                     val tupleComponents = fs.iterator.zipWithIndex.map { case ((nme, ty), i) =>
