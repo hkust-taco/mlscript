@@ -71,7 +71,7 @@ class StepImpl[A, R](underlying: ArraysImpl[A, R]) extends ArraysImpl[A, [R, R]]
     underlying.fold(r0, underlying.fold(r1, b, f), f)
 }
 //│ class StepImpl[A, R](underlying: ArraysImpl[A, R]) extends ArraysImpl {
-//│   fun fold: forall 'b 'b0. ([R, R], 'b0 & 'b, A -> ('b0 -> ('b0 & 'b) & 'b -> 'b)) -> 'b
+//│   fun fold: forall 'b 'b0. ([R, R], 'b & 'b0, A -> ('b -> ('b & 'b0) & 'b0 -> 'b0)) -> 'b0
 //│   fun init: A -> [R, R]
 //│   fun sub: ([R, R], Eql[0] & Int) -> A
 //│   fun update: ([R, R], Int, A) -> [R, R]

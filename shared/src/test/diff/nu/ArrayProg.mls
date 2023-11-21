@@ -19,8 +19,8 @@ mapi of ["a", "", "bb"], (x, i) => [i, length of x]
 //│     = [ [ 0, 1 ], [ 1, 0 ], [ 2, 2 ] ]
 
 
-fun map(xs, f) = mapi(xs, (x, i) => f(x))
-//│ fun map: forall 'a 'b. (Array['a], 'a -> 'b) -> Array['b]
+fun map(xs, f: 'a -> 'b) = mapi(xs, (x, i) => f(x))
+//│ fun map: forall 'a 'b. (Array['a], f: 'a -> 'b) -> Array['b]
 
 map of ["a", "", "bb"], x => length of x
 //│ Array[Int]

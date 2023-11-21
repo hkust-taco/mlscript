@@ -1,9 +1,9 @@
 :NewDefs
 
-effect io()
-effect exn()
-//│ class io()
-//│ class exn()
+module io
+module exn
+//│ module io
+//│ module exn
 
 declare fun print: Str ->{io} ()
 //│ fun print: Str ->{io} ()
@@ -55,7 +55,7 @@ fun foo() = print("abc")
 //│ ╔══[ERROR] Type mismatch in definition:
 //│ ║  l.54: 	fun foo() = print("abc")
 //│ ║        	    ^^^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `?io` does not match type `nothing`
+//│ ╟── application of type `io & ~Eff` does not match type `nothing`
 //│ ║  l.54: 	fun foo() = print("abc")
 //│ ╙──      	            ^^^^^^^^^^^^
 //│ fun foo: () -> ()
@@ -70,7 +70,7 @@ foo: () -> ()
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.69: 	foo: () -> ()
 //│ ║        	^^^
-//│ ╟── application of type `?io` does not match type `nothing`
+//│ ╟── application of type `io & ~Eff` does not match type `nothing`
 //│ ║  l.65: 	fun foo() = print("abc")
 //│ ╙──      	            ^^^^^^^^^^^^
 //│ () -> ()
@@ -105,7 +105,7 @@ foo: () -> ()
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.104: 	foo: () -> ()
 //│ ║         	^^^
-//│ ╟── application of type `?io` does not match type `nothing`
+//│ ╟── application of type `io & ~Eff` does not match type `nothing`
 //│ ║  l.103: 	fun foo() = let x = "abc" in print(x)
 //│ ╙──       	                             ^^^^^^^^
 //│ fun foo: () -> ()
@@ -122,9 +122,9 @@ foo: Int -> ()
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.121: 	foo: Int -> ()
 //│ ║         	^^^
-//│ ╟── application of type `?io` does not match type `nothing`
+//│ ╟── application of type `io & ~Eff` does not match type `nothing`
 //│ ║  l.119: 	  if x > 0 then print("abc"); foo(x - 1)
-//│ ╙──       	                ^^^^^^^^^^^^
+//│ ╙──       	                              ^^^^^^^^^^
 //│ fun foo: Int -> ()
 //│ Int -> ()
 //│ res
@@ -148,3 +148,122 @@ class AA() extends A() {
 //│   fun f: () -> ()
 //│   fun g: () -> ()
 //│ }
+
+
+fun app(f, a) = f(a)
+app: forall 'a, 'b: ('a -> 'b, 'a) -> 'b
+//│ fun app: forall 'c 'd. ('c -> 'd, 'c) -> 'd
+//│ forall 'a 'b. ('a -> 'b, 'a) -> 'b
+//│ res
+//│     = [Function: app]
+
+(x => x + 1): Int -> Int
+//│ Int -> Int
+//│ res
+//│     = [Function: res]
+
+fun app(f, a) = f(a)
+app(x => x + 1, 1)
+//│ fun app: forall 'a 'b. ('a -> 'b, 'a) -> 'b
+//│ Int
+//│ res
+//│     = 2
+
+fun dbg(s) = app(print, s)
+//│ fun dbg: Str -> ()
+
+
+fun pureApp(f: 'a -> 'b, a) = f(a)
+pureApp(x => x + 1, 1)
+//│ fun pureApp: forall 'a 'b. (f: 'a -> 'b, 'a) -> 'b
+//│ Int
+//│ res
+//│     = 2
+
+:e
+fun dbg(s) = pureApp(print, s)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.184: 	fun dbg(s) = pureApp(print, s)
+//│ ║         	             ^^^^^^^^^^^^^^^^^
+//│ ╙── expression of type `io` does not match type `nothing`
+//│ fun dbg: Str -> (error | ())
+
+effect Div() {
+  fun resume: Str ->{io} Int
+  fun halt: () ->{exn} ()
+}
+//│ class Div() {
+//│   fun halt: () ->{exn} ()
+//│   fun resume: Str ->{io} Int
+//│ }
+
+
+fun safeDiv(x, y, e) =
+  if y == 0 then e.resume("err: divided by 0") else x / y
+//│ fun safeDiv: forall 'a. (Num, Num, {resume: "err: divided by 0" -> 'a}) -> (Num | 'a)
+
+fun print: Str ->{io} ()
+fun print(msg) = log(msg)
+//│ fun print: anything -> ()
+//│ fun print: Str ->{io} ()
+
+
+fun half(x) =
+  handle e = Div() {
+    fun resume(msg) = print(msg); 0
+    fun halt() = ()
+  }
+  safeDiv(x, 2, e)
+//│ fun half: Num -> Num
+
+:e
+half: Num -> Num
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.220: 	half: Num -> Num
+//│ ║         	^^^^
+//│ ╟── application of type `io & ~Eff` does not match type `nothing`
+//│ ║  l.216: 	  safeDiv(x, 2, e)
+//│ ╙──       	  ^^^^^^^^^^^^^^^^
+//│ Num -> Num
+//│ res
+//│     = [Function: half]
+
+
+fun boom() =
+  handle e = Div() {
+    fun resume(msg) = print(msg); 114514
+    fun halt() = ()
+  }
+  safeDiv(42, 0, e)
+//│ fun boom: () -> Num
+
+
+half(12)
+boom()
+//│ Num
+//│ res
+//│     = 6
+//│ res
+//│     = 114514
+//│ // Output
+//│ err: divided by 0
+
+
+handle w = Div() {
+  fun resume(msg) = print(msg); 0
+  fun halt() = ()
+}
+//│ module w extends Div {
+//│   fun halt: () -> ()
+//│   fun resume: Str -> 0
+//│ }
+
+:e
+w.halt: () -> ()
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.262: 	w.halt: () -> ()
+//│ ║         	^^^^^^
+//│ ╙── expression of type `Eff` does not match type `nothing`
+//│ () -> ()
+//│ res
+//│     = [Function: halt]

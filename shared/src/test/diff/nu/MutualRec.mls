@@ -104,22 +104,22 @@ fun bar(b) = foo(b)
 
 :ns
 foo
-//│ forall 'a 'b 'c. 'a -> {h: 'a, t: 'c}
+//│ forall 'a 'b 'c. 'c -> {h: 'c, t: 'b}
 //│   where
-//│     'c :> {h: 'a, t: 'c}
-//│     'a <: 'b
-//│     'b <: 'a
+//│     'b :> {h: 'c, t: 'b}
+//│     'c <: 'a
+//│     'a <: 'c
 //│ res
 //│     = [Function: foo3]
 
 
 fun foo(a) = {h1: a, t1: bar(a)}
 fun bar(b) = {h2: b, t2: foo(b)}
-//│ fun foo: forall 'a 'b 'c. 'a -> {h1: 'a, t1: 'b}
-//│ fun bar: forall 'a 'c. 'a -> {h2: 'a, t2: 'c}
+//│ fun foo: forall 'a 'b 'c. 'c -> {h1: 'c, t1: 'a}
+//│ fun bar: forall 'b 'c. 'c -> {h2: 'c, t2: 'b}
 //│ where
-//│   'b :> {h2: 'a, t2: 'c}
-//│   'c :> {h1: 'a, t1: 'b}
+//│   'a :> {h2: 'c, t2: 'b}
+//│   'b :> {h1: 'c, t1: 'a}
 
 
 

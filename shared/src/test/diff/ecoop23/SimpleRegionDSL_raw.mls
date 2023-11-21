@@ -303,12 +303,12 @@ module TestElim extends Eliminate
 //│ }
 //│ where
 //│   'a <: Intersect['a] | Object & 'b & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union | Outside['a & (Object & ~#Outside | Outside['a])] | Scale['a] | Translate['a] | Union['a]
-//│   'b :> Union['b] | Intersect['b] | Translate['b] | Scale['b] | Outside['b]
+//│   'b :> Scale['b] | Outside['b] | Union['b] | Intersect['b] | Translate['b]
 
 TestElim.eliminate(Outside(Outside(Univ())))
 //│ 'a
 //│   where
-//│     'a :> Univ | Union[Univ | 'a] | Intersect['a] | Translate[Univ | 'a] | Scale[Univ | 'a] | Outside[Univ | 'a]
+//│     'a :> Univ | Translate[Univ | 'a] | Scale[Univ | 'a] | Outside[Univ | 'a] | Union[Univ | 'a] | Intersect['a]
 //│ res
 //│     = Univ {}
 

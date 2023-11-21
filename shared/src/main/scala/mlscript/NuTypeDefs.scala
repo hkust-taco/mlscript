@@ -710,12 +710,14 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     val name: Str = decl.name
 
     private lazy val effectTy = decl match {
-      case td: NuTypeDef if td.isEffect =>
+      case td: NuTypeDef if td.isEffect || td.isHandler =>
         println("Create type variable for effects")
-        val v = freshVar(NoProv, N, nameHint = S("Eff"))(lvl)
+        val v = freshVar(NoProv, N, nameHint = S("Eff"))(level - 1)
         S(TypeName(v.mkStr) -> v)
       case _ => N
     }
+
+    private lazy val effectSkolem = effectTy.map(ty => SkolemTag(ty._2)(noProv))
     
     private implicit val prov: TP =
       TypeProvenance(decl.toLoc, decl.describe)
@@ -1093,11 +1095,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
 
     def getEffectType(fd: NuFunDef)(implicit ctx: Ctx): ST =
       fd.effects.map(ty => ctx.get(ty.name) match {
-        case S(ti @ CompletedTypeInfo(cls: TypedNuCls)) => ti.skolem(cls.decl).getOrElse(BotType)
-        case S(ti: DelayedTypeInfo) => ti.decl match {
-          case nd: NuTypeDef => ti.skolem(nd).getOrElse(BotType)
-          case _ => BotType
-        }
+        case S(ti @ CompletedTypeInfo(cls: TypedNuCls)) => typeType(ty)
+        case S(ti: DelayedTypeInfo) => typeType(ty)
         case _ => // * Allow type variables
           tparams.find(_._1.name === ty.name).map(_._2) match {
             case S(tv) => tv
@@ -1482,6 +1481,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                   
                 case Cls | Mod =>
                   
+                  val oldCtx = ctx
                   ctx.nest.nextLevel { implicit ctx =>
                     
                     if ((td.kind is Mod) && typedParams.nonEmpty)
@@ -1631,7 +1631,23 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     
                     println(s"baseClsImplemMembers ${baseClsImplemMembers}")
                     
-                    val newImplems = ttu.implementedMembers
+                    val newImplems =
+                      if (!td.isHandler) ttu.implementedMembers
+                      else {
+                        val baseIfaceSet = baseClsIfaceMembers.map(_.name).toSet
+                        val tag = effectSkolem.getOrElse(die)
+                        oldCtx.handlers += tag
+                        
+                        ttu.implementedMembers.map {
+                          case nf @ TypedNuFun(lvl, fd, body) if baseIfaceSet.contains(nf.name) =>
+                            body.unwrapProxies match {
+                              case ft @ FunctionType(lhs, rhs, eff) =>
+                                TypedNuFun(lvl, fd, FunctionType(lhs, rhs, tag | eff)(ft.prov))(nf.isImplemented)
+                              case _ => nf
+                            }
+                          case mem => mem
+                        }
+                      }
                     
                     val clsSigns = typedSignatureMembers.map(_._2)
                     

@@ -104,7 +104,7 @@ fun listJoin(xs, sep) =
 //│ type List[A] = Cons[A] | Nil
 //│ module Nil
 //│ class Cons[A](head: A, tail: List[A])
-//│ fun listConcat: forall 'A 'A0 'a. (Cons['A] | Nil, List['A0] & 'a) -> (Cons['A0] | 'a)
+//│ fun listConcat: forall 'a 'A 'A0. (Cons['A] | Nil, List['A0] & 'a) -> (Cons['A0] | 'a)
 //│ fun listJoin: forall 'A1. (Cons['A1] | Nil, Str) -> Str
 //│ where
 //│   'A <: 'A0

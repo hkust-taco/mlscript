@@ -166,7 +166,7 @@ fun zipWith(f, xs, ys) =
         Nil then None
     Nil then
       if ys is Nil then Some(Nil) else None
-//│ fun zipWith: forall 'a 'b 'A. (('a, 'b) -> 'A, Cons['a] | Nil, Cons['b] | Nil) -> (None | Some[Cons['A] | Nil])
+//│ fun zipWith: forall 'A 'a 'b. (('a, 'b) -> 'A, Cons['a] | Nil, Cons['b] | Nil) -> (None | Some[Cons['A] | Nil])
 
 zipWith(pairup, Nil, Nil).value.toArray
 //│ Array[anything]

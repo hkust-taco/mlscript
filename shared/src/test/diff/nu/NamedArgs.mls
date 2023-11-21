@@ -53,7 +53,7 @@ test(x: 1, z: 3)
 
 :e
 test(y: 0)
-//│ ╔══[ERROR] Number of arguments doesn't match function signature `forall 'b 'a. (x: 'a, y: 'b) -> ['a, 'b]`
+//│ ╔══[ERROR] Number of arguments doesn't match function signature `forall 'a 'b. (x: 'a, y: 'b) -> ['a, 'b]`
 //│ ║  l.55: 	test(y: 0)
 //│ ╙──      	    ^^^^^^
 //│ error
@@ -350,7 +350,7 @@ fun foo(f: (x: Int) => Int) = f(x: 123)
 //│ fun foo: (f: (x: Int) -> Int) -> Int
 
 fun foo(f: ((x: Int) => Int) & 'a) = [f(x: 123), f]
-//│ fun foo: forall 'a 'b. (f: (x: Int) -> Int & 123 -> 'b & 'a) -> ['b, (x: Int) -> Int & 'a]
+//│ fun foo: forall 'b 'a. (f: (x: Int) -> Int & 123 -> 'b & 'a) -> ['b, (x: Int) -> Int & 'a]
 
 foo((x: Int) => 1)
 //│ [1, (x: Int) -> 1]

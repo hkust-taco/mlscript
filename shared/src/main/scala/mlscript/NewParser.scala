@@ -549,7 +549,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
             }
             val tu = curlyTypingUnit
             val res =
-              NuTypeDef(Mod, tn, Nil, N, N, N, ps, N, N, tu)(N, N, N)
+              NuTypeDef(Mod, tn, Nil, N, N, N, ps, N, N, tu)(N, N, S(l0))
             R(res.withLoc(S(l0 ++ res.getLoc)))
           case _ =>
             exprOrIf(0, allowSpace = false)

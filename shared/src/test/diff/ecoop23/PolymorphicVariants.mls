@@ -138,7 +138,7 @@ fun map_expr(f, v) =
     Numb then v
     Add(l, r) then Add(f(l), f(r))
     Mul(l, r) then Mul(f(l), f(r))
-//│ fun map_expr: forall 'a 'A 'A0 'b. ('b -> 'A0 & 'a -> 'A, Add['b] | Mul['a] | Numb | Var) -> (Add['A0] | Mul['A] | Numb | Var)
+//│ fun map_expr: forall 'A 'A0 'a 'b. ('b -> 'A & 'a -> 'A0, Add['b] | Mul['a] | Numb | Var) -> (Add['A] | Mul['A0] | Numb | Var)
 
 mixin EvalExpr {
   fun eval(sub, v) =
@@ -220,7 +220,7 @@ module Test3 extends EvalVar, EvalExpr, EvalLambda
 Test3.eval(Cons(["c", Abs("d", Var("d"))], Nil), Abs("a", Var("a")))
 //│ 'a
 //│   where
-//│     'a :> App['A] | Abs['A0] | Abs[Var] | Numb | Var
+//│     'a :> Abs['A] | Abs[Var] | Numb | Var | App['A0]
 //│     'A0 :> 'a
 //│     'A :> 'a
 //│ res

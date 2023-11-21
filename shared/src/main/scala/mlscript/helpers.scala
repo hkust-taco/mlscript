@@ -431,7 +431,11 @@ trait NuDeclImpl extends Located { self: NuDecl =>
   def isDecl: Bool = declareLoc.nonEmpty
   def isAbstract: Bool = abstractLoc.nonEmpty || isEffect
   def isEffect: Bool = self match {
-    case td: NuTypeDef => td.effectLoc.nonEmpty
+    case td: NuTypeDef => (td.kind is Cls) && td.effectLoc.nonEmpty
+    case _ => false
+  }
+  def isHandler: Bool = self match {
+    case td: NuTypeDef => (td.kind is Mod) && td.effectLoc.nonEmpty
     case _ => false
   }
   def declStr: Str = if (isDecl) "declare " else ""

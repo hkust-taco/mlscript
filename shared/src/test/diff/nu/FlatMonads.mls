@@ -129,7 +129,7 @@ printLine("").bind of (()) => error
 // * Using a shortand operator for `bind`... What's the use of a `do` notation?! :^)
 
 fun (#>>) bind[A, B](x: IO[A], f: A -> IO[B]): IO[B] = x.bind(f)
-//│ fun (#>>) bind: forall 'A 'B. (x: IO['A], f: 'A -> IO['B]) -> IO['B]
+//│ fun (#>>) bind: forall 'B 'A. (x: IO['A], f: 'A -> IO['B]) -> IO['B]
 
 val main =
   printLine("Hi! Input two numbers: ") #>> _ =>
@@ -194,9 +194,9 @@ val main =
 fun (>>) compose(f, g) = x => g(f(x))
 fun (#>>) bind(x, f) = x.bind(f)
 fun (#>) map(x, f) = x.bind(f >> Pure)
-//│ fun (>>) compose: forall 'a 'b 'c. ('b -> 'c, 'c -> 'a) -> 'b -> 'a
-//│ fun (#>>) bind: forall 'd 'e. ({bind: 'd -> 'e}, 'd) -> 'e
-//│ fun (#>) map: forall 'f 'g 'A. ({bind: ('g -> Pure['A]) -> 'f}, 'g -> 'A) -> 'f
+//│ fun (>>) compose: forall 'a 'b 'c. ('a -> 'b, 'b -> 'c) -> 'a -> 'c
+//│ fun (#>>) bind: forall 'd 'e. ({bind: 'e -> 'd}, 'e) -> 'd
+//│ fun (#>) map: forall 'A 'f 'g. ({bind: ('f -> Pure['A]) -> 'g}, 'f -> 'A) -> 'g
 
 val main =
   printLine("Hi! Input two numbers: ") #>> _ =>
@@ -245,10 +245,10 @@ fun main(ctx) =
   ctx.printLine(concat("The sum is: ")(String of sum)) #>> _ =>
   ctx.pure(sum)
 //│ fun main: forall 'a 'b 'c 'd 'e. {
-//│   printLine: "Hi! Input two numbers: " -> {bind: (anything -> 'a) -> 'c} & Str -> {bind: (anything -> 'e) -> 'b},
-//│   pure: Int -> 'e,
-//│   readInt: {bind: (Int -> 'd) -> 'a & (Int -> 'b) -> 'd}
-//│ } -> 'c
+//│   printLine: "Hi! Input two numbers: " -> {bind: (anything -> 'e) -> 'b} & Str -> {bind: (anything -> 'c) -> 'a},
+//│   pure: Int -> 'c,
+//│   readInt: {bind: (Int -> 'd) -> 'e & (Int -> 'a) -> 'd}
+//│ } -> 'b
 
 val defaultCtx = {printLine, readInt, pure: Pure}
 //│ val defaultCtx: {
@@ -282,10 +282,10 @@ fun loop(ctx) =
   ctx.readInt #>> n =>
   if n < 0 then loop(ctx) else ctx.pure(n)
 //│ fun loop: forall 'a 'b 'c 'd. {
-//│   printLine: "Input a positive number: " -> {bind: (anything -> 'c) -> 'b},
-//│   pure: 'a -> 'd,
-//│   readInt: {bind: ((Num & 'a) -> ('d | 'b)) -> 'c}
-//│ } -> 'b
+//│   printLine: "Input a positive number: " -> {bind: (anything -> 'c) -> 'd},
+//│   pure: 'a -> 'b,
+//│   readInt: {bind: ((Num & 'a) -> ('b | 'd)) -> 'c}
+//│ } -> 'd
 
 let r = loop(defaultCtx)
 //│ let r: Bind[(), 'B]

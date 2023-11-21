@@ -42,14 +42,6 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
     def complete()(implicit raise: Raise): NuMember
     def kind: DeclKind
     def name: Str
-
-    private var _skolem: Opt[SkolemTag] = N
-    def skolem(td: NuTypeDef)(implicit ctx: Ctx): Opt[SkolemTag] =
-      if (!td.isEffect) N
-      else {
-        if (_skolem.isEmpty) _skolem = S(SkolemTag(freshVar(NoProv, N, nameHint = S(name))(lvl))(NoProv))
-        _skolem
-      }
   }
   
   /** A LazyTypeInfo whose typing has been completed. */
@@ -190,7 +182,7 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
     lazy val level: Int = lhs.level max rhs.level
     def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level = lhs.levelBelow(ub) max rhs.levelBelow(ub)
     def freshenAboveImpl(lim: Int, rigidify: Bool)(implicit ctx: Ctx, freshened: MutMap[TV, ST]): FunctionType =
-      FunctionType(lhs.freshenAbove(lim, rigidify), rhs.freshenAbove(lim, rigidify), if (newDefs) eff else BotType)(prov)
+      FunctionType(lhs.freshenAbove(lim, rigidify), rhs.freshenAbove(lim, rigidify), if (newDefs) eff.freshenAbove(lim, rigidify) else BotType)(prov)
     override def toString = s"(${lhs match {
       case TupleType((N, FieldType(N, f: TupleType)) :: Nil) => "[" + f.showInner + "]"
       case TupleType((N, f) :: Nil) => f.toString

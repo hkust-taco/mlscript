@@ -62,7 +62,7 @@ A.i
 A.f
 //│ 'f
 //│   where
-//│     'f :> forall 'f0 'a. 'a
+//│     'f :> forall 'a 'f0. 'a
 //│     'a <: 'f0
 //│     'f0 <: 'f0 -> 'a
 //│ res
@@ -73,10 +73,10 @@ A.f
 A.g
 //│ 'g
 //│   where
-//│     'g :> forall 'a 'b 'h 'c. 'b -> 'c
-//│     'b := 'b -> 'c
-//│     'c <: 'a
-//│     'a <: 'h
+//│     'g :> forall 'a 'h 'b 'c. 'c -> 'a
+//│     'c := 'c -> 'a
+//│     'a <: 'b
+//│     'b <: 'h
 //│ res
 //│     = [Function: g]
 
@@ -85,7 +85,7 @@ A.g
 A.h
 //│ 'h
 //│   where
-//│     'h :> forall 'h0 'a. 'a
+//│     'h :> forall 'a 'h0. 'a
 //│     'a <: 'h0
 //│ res
 //│ Runtime error:

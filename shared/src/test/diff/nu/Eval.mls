@@ -129,7 +129,7 @@ module Lists { // TODO use name List when module overloading is supported:
   
 }
 //│ module Lists {
-//│   fun assoc: forall 'a 'A. 'a -> (Cons[{key: Eql['a], value: 'A}] | Nil) -> (None | Some['A])
+//│   fun assoc: forall 'A 'a. 'a -> (Cons[{key: Eql['a], value: 'A}] | Nil) -> (None | Some['A])
 //│   fun map: forall 'b 'A0. ('b -> 'A0) -> (Cons['b] | Nil) -> (Cons['A0] | Nil)
 //│   fun zip: forall 'c 'd. (Cons['c] | Nil, Cons['d] | Nil) -> (Cons[['c, 'd]] | Nil)
 //│ }
