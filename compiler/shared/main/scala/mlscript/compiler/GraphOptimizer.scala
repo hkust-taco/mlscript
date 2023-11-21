@@ -257,31 +257,6 @@ class GraphOptimizer:
     
     res
 
-  private def fixGONode(using defs: Set[GODef])(node: GONode): Unit = node match {
-    case Case(_, cases) => cases.foreach { case (cls, node) => (cls, fixGONode(node)) }
-    case LetCall(resultNames, defnref, args, body) =>
-      val target = defnref.defn match {
-        case Left(defn) => defs.find{_.getName == defn.name}.get
-        case Right(name) => defs.find{_.getName == name}.get
-      }
-      defnref.defn = Left(target)
-      fixGONode(body)
-    case LetExpr(name, expr, body) => fixGONode(body)
-    case LetJoin(joinName, params, rhs, body) => fixGONode(body)
-    case Result(_) =>
-    case Jump(defnref, _) =>
-      // maybe not promoted yet
-      defnref.defn match {
-        case Left(defn) => defs.find{_.getName == defn.name}.map{x => defnref.defn = Left(x)}
-        case Right(name) => defs.find{_.getName == name}.map{x => defnref.defn = Left(x)}
-      }
-  }
-
-  private def fixGODef(using defs: Set[GODef]): Unit =
-    defs.foreach { defn => 
-      fixGONode(using defs)(defn.body)
-    }
-
   private def buildDefFromNuFunDef
     (using ctx: Ctx, clsctx: ClassCtx, fldctx: FieldCtx, fnctx: FnCtx, opctx: OpCtx)
     (nfd: Statement): GODef = nfd match
@@ -372,9 +347,31 @@ class GraphOptimizer:
         case _ => throw GraphOptimizingError("only one term is allowed in the top level scope")
       }) { k => k }
       
-      fixGODef(using defs)
+      fixCrossReferences(defs)
       validate(defs)
       GOProgram(clsinfo, defs, main)
+
+  private class FixCrossReferences(defs: Set[GODef]) extends GOIterator:
+    override def iterate(x: LetCall) = x match
+      case LetCall(resultNames, defnref, args, body) =>
+        val target = defnref.defn match {
+          case Left(defn) => defs.find{_.getName == defn.name}.get
+          case Right(name) => defs.find{_.getName == name}.get
+        }
+        defnref.defn = Left(target)
+        body.accept_iterator(this)
+    override def iterate(x: Jump) = x match
+      case Jump(defnref, _) =>
+        // maybe not promoted yet
+        defnref.defn match {
+          case Left(defn) => defs.find{_.getName == defn.name}.map{x => defnref.defn = Left(x)}
+          case Right(name) => defs.find{_.getName == name}.map{x => defnref.defn = Left(x)}
+        }
+
+  private def fixCrossReferences(defs: Set[GODef]): Unit =
+    val it = FixCrossReferences(defs)
+    defs.foreach(_.body.accept_iterator(it))
+
 
   // --------------------------------
 
@@ -556,11 +553,6 @@ class GraphOptimizer:
     case LetCall(xs, defn, as, e) =>
       val results = xs map { case Name(x) => x }
       freeVarAnalysis(using ctx ++ results)(e, fv -- results, fj -- results)
-  }
-
-  def fromTExpr(x: TrivialExpr): GOExpr = x match {
-    case x: Ref => x
-    case x: Literal => x
   }
 
   private type RawSplitRemap = Set[((Str, Str), ClassInfo, Str, Ls[Str])]
@@ -819,7 +811,7 @@ class GraphOptimizer:
       case (k, v) => (k, v.head)
     }
     val defs2 = substSplittedFunctions(using remap, preremap)(defs) ++ newdefs ++ predefs
-    fixGODef(using defs2)
+    fixCrossReferences(defs2)
     validate(defs2)
     GOProgram(classes, defs2, main)
   }
@@ -1094,89 +1086,62 @@ class GraphOptimizer:
     }
 
     val defs3 = new_defs ++ defs2
-    fixGODef(using defs3)
+    fixCrossReferences(defs3)
     validate(defs3)
     GOProgram(classes, defs3, main)
   }
 
-  private def simplifyTrivialBinding(using rctx: Map[Str, TrivialExpr])(name: Name): Name =
-    val Name(x) = name
-    rctx.get(x).map { 
-      case Ref(yy @ Name(y)) => yy
-      case _ => name
-    }.getOrElse(name)
 
-  private def simplifyTrivialBindingOfTexpr(using rctx: Map[Str, TrivialExpr])(expr: TrivialExpr): TrivialExpr = expr match {
-    case Ref(Name(x)) if rctx.contains(x) => rctx(x)
-    case _ => expr
-  }
+  private class TrivialBindingSimplification extends GOTrivialExprVisitor, GOVisitor:
+    var rctx: Map[Str, TrivialExpr] = Map.empty
+    private def f(texpr: TrivialExpr) = texpr match
+      case Ref(Name(x)) if rctx.contains(x) =>
+        rctx(x)
+      case _ => texpr
+    private def g(name: Name): Name =
+      val Name(x) = name
+      rctx.get(x).map { 
+        case Ref(yy @ Name(y)) => yy
+        case _ => name
+      }.getOrElse(name)
+    override def visit(x: Case) = x match
+      case Case(x, cases) =>
+        Case(g(x), cases map { (cls, arm) => (cls, arm.accept_visitor(this)) })
+    override def visit(node: LetExpr) = node match
+      case LetExpr(x, Ref(Name(z)), e2) if rctx.contains(z) =>
+        rctx = rctx + (x.str -> rctx(z))
+        e2.accept_visitor(this)
+      case LetExpr(x, y @ Ref(Name(_)), e2) =>
+        rctx = rctx + (x.str -> y)
+        e2.accept_visitor(this)
+      case LetExpr(x, y @ Literal(_), e2) =>
+        rctx = rctx + (x.str -> y)
+        e2.accept_visitor(this)
+      case LetExpr(x, e1, e2) =>
+        LetExpr(x, e1.accept_visitor(this), e2.accept_visitor(this))
+    override def visit(x: Apply) = x match
+      case Apply(name, args) => Apply(g(name), args.map(_.accept_visitor(this)))
+    override def visit(x: Select) = x match
+      case Select(name, cls, field) => Select(g(name), cls, field) 
+    override def visit(y: Ref) = f(y)
 
-  private def simplifyTrivialBinding(using rctx: Map[Str, TrivialExpr])(expr: GOExpr): GOExpr = expr match {
-    case Apply(name, args) => Apply(simplifyTrivialBinding(name), args map simplifyTrivialBindingOfTexpr)
-    case BasicOp(name, args) => BasicOp(name, args map simplifyTrivialBindingOfTexpr)
-    case CtorApp(name, args) => CtorApp(name, args map simplifyTrivialBindingOfTexpr)
-    case Lambda(name, body) => Lambda(name, simplifyTrivialBinding(body))
-    case Select(name, cls, field) => Select(simplifyTrivialBinding(name), cls, field) 
-    case Ref(Name(x)) if rctx.contains(x) => rctx(x) match {
-      case x: GOExpr => x
-    }
-    case _ => expr
-  }
-
-  private def simplifyTrivialBinding(using rctx: Map[Str, TrivialExpr])(node: GONode): GONode = node match {
-    case Result(xs) => Result(xs map simplifyTrivialBindingOfTexpr)
-    case Jump(jp, xs) => Jump(jp, xs map simplifyTrivialBindingOfTexpr )
-    case Case(scrut, cases) => Case(simplifyTrivialBinding(scrut), cases map {
-      (cls, e) => (cls, simplifyTrivialBinding(e))
-    })
-    case LetExpr(x, Ref(Name(z)), e2) if rctx.contains(z) =>
-      val rctx2 = rctx + (x.str -> rctx(z))
-      simplifyTrivialBinding(using rctx2)(e2)
-    case LetExpr(x, y @ Ref(Name(_)), e2) =>
-      val rctx2 = rctx + (x.str -> y)
-      simplifyTrivialBinding(using rctx2)(e2)
-    case LetExpr(x, y @ Literal(_), e2) =>
-      val rctx2 = rctx + (x.str -> y)
-      simplifyTrivialBinding(using rctx2)(e2)
-    case LetExpr(x, e1, e2) =>
-      LetExpr(x, simplifyTrivialBinding(e1), simplifyTrivialBinding(e2))
-    case LetJoin(jp, xs, e1, e2) =>
-      LetJoin(jp, xs, simplifyTrivialBinding(e1), simplifyTrivialBinding(e2))
-    case LetCall(xs, defn, as, e) =>
-      LetCall(xs, defn, as map simplifyTrivialBindingOfTexpr, simplifyTrivialBinding(e))
-  }
-
-  private def toExpr(expr: TrivialExpr): GOExpr = expr match {
-    case x: Ref => x
-    case x: Literal => x
-  }
-
-  private def simplifySel(using cctx: Map[Str, Map[Str, TrivialExpr]])(node: GONode): GONode =
-    node match {
-    case Result(xs) => Result(xs)
-    case Jump(jp, xs) => Jump(jp, xs)
-    case Case(scrut, cases) => Case(scrut, cases map {
-      (cls, e) => (cls, simplifySel(e))
-    })
-    case LetExpr(x, sel @ Select(y, cls, field), e2) if cctx.contains(y.str) =>
-      cctx.get(y.str) match
-        case Some(m) =>
-          m.get(field) match 
-            case Some(v) => LetExpr(x, v |> toExpr, simplifySel(e2)) 
-            case None => 
-              LetExpr(x, sel, simplifySel(e2))
-        case None => LetExpr(x, sel, simplifySel(e2))
-    case LetExpr(x, y @ CtorApp(cls, args), e2) =>
-      val m = cls.fields.zip(args).toMap
-      val cctx2 = cctx + (x.str -> m)
-      LetExpr(x, y, simplifySel(using cctx2)(e2))
-    case LetExpr(x, e1, e2) =>
-      LetExpr(x, e1, simplifySel(e2))
-    case LetJoin(jp, xs, e1, e2) =>
-      LetJoin(jp, xs, simplifySel(e1), simplifySel(e2))
-    case LetCall(xs, defn, as, e) =>
-      LetCall(xs, defn, as, simplifySel(e))
-  }
+  private class SelectSimplification extends GOVisitor:
+    var cctx: Map[Str, Map[Str, TrivialExpr]] = Map.empty
+    override def visit(node: LetExpr) = node match
+      case LetExpr(x, sel @ Select(y, cls, field), e2) if cctx.contains(y.str) =>
+        cctx.get(y.str) match
+          case Some(m) =>
+            m.get(field) match 
+              case Some(v) => LetExpr(x, v.to_expr, e2.accept_visitor(this)) 
+              case None => 
+                LetExpr(x, sel, e2.accept_visitor(this))
+          case None => LetExpr(x, sel, e2.accept_visitor(this))
+      case LetExpr(x, y @ CtorApp(cls, args), e2) =>
+        val m = cls.fields.zip(args).toMap
+        cctx = cctx + (x.str -> m)
+        LetExpr(x, y, e2.accept_visitor(this))
+      case LetExpr(x, e1, e2) =>
+        LetExpr(x, e1, e2.accept_visitor(this))
 
   private def argsToStrs(args: Ls[TrivialExpr]) = {
     args.flatMap {
@@ -1227,67 +1192,62 @@ class GraphOptimizer:
       LetCall(xs, defn, as, removeDeadBindings(e))
   }
 
+  private object RemoveTrivialCallAndJump extends GOVisitor:
+    override def visit(x: Jump) = x match
+      case Jump(defnref, xs) =>
+        tryGetDefn(defnref) match {
+          case Some(defn) =>
+            val parammap = defn.params.zip(xs).toMap
+            val trivial = defn.body match {
+              case Result(ys) => Some(ys)
+              case _ => None
+            }
+            if (trivial == None) return x
+            val retvals = trivial.get
+            
+            val ys = retvals.map { retval => retval match
+              case Literal(lit) => retval
+              case Ref(x) if parammap.contains(x) => parammap(x)
+              case _ => retval
+            }
 
-  private def removeTrivialCallAndJump(node: GONode): GONode = node match {
-    case Result(xs) => node
-    case Jump(defnref, xs) =>
-      tryGetDefn(defnref) match {
-        case Some(defn) =>
-          val parammap = defn.params.zip(xs).toMap
-          val trivial = defn.body match {
-            case Result(ys) => Some(ys)
-            case _ => None
-          }
-          if (trivial == None) return node
-          val retvals = trivial.get
-          
-          val ys = retvals.map { retval => retval match
-            case Literal(lit) => retval
-            case Ref(x) if parammap.contains(x) => parammap(x)
-            case _ => retval
-          }
+            Result(ys)
+          case _ => x
+        }
 
-          Result(ys)
-        case _ => node
-      }
-    case Case(scrut, cases) => Case(scrut, cases.map {
-      (cls, e) => (cls, removeTrivialCallAndJump(e))
-    })
-    case LetExpr(x, e1, e2) => LetExpr(x, e1, removeTrivialCallAndJump(e2))
-    case LetJoin(_, _, _, _) =>
-      throw GraphOptimizingError("nested join points after promotion")
-    case LetCall(xs, defnref, as, e) =>
-      val defn = defnref |> expectDefn
-      val trivial = defn.body match {
-        case Result(ys) => Some(ys)
-        case _ => None
-      }
-      if (trivial == None)
-        return LetCall(xs, defnref, as, removeTrivialCallAndJump(e))
+    override def visit(x: LetCall) = x match
+      case LetCall(xs, defnref, as, e) =>
+        val defn = defnref |> expectDefn
+        val trivial = defn.body match {
+          case Result(ys) => Some(ys)
+          case _ => None
+        }
+        if (trivial == None)
+          return LetCall(xs, defnref, as, e.accept_visitor(this))
 
-      val retvals = trivial.get
-      val parammap = defn.params.zip(as).toMap
+        val retvals = trivial.get
+        val parammap = defn.params.zip(as).toMap
 
-      if (retvals.length != xs.length)
-        throw GraphOptimizingError("inconsistent results number")
-      
-      val init = removeTrivialCallAndJump(e)
+        if (retvals.length != xs.length)
+          throw GraphOptimizingError("inconsistent results number")
+        
+        val init = e.accept_visitor(this) 
 
-      xs.zip(retvals).foldRight(init){
-        case ((name, retval), node) =>
-          retval match {
-            case Literal(lit) => LetExpr(name, retval |> fromTExpr, node)
-            case Ref(x) if parammap.contains(x) =>
-              LetExpr(name, parammap(x) |> fromTExpr, node)
-            case _ =>
-              LetExpr(name, retval |> fromTExpr, node)
-          }
-      }
-  }
+        xs.zip(retvals).foldRight(init){
+          case ((name, retval), node) =>
+            retval match {
+              case Literal(lit) => LetExpr(name, retval.to_expr , node)
+              case Ref(x) if parammap.contains(x) =>
+                LetExpr(name, parammap(x).to_expr , node)
+              case _ =>
+                LetExpr(name, retval.to_expr , node)
+            }
+        }
 
   private def simplify(using defs: Set[GODef])(defn: GODef) = {
-    val s1 = simplifyTrivialBinding(using Map.empty)(simplifySel(using Map.empty)(defn.body))
-    val s2 = removeTrivialCallAndJump(s1)
+    val s0 = defn.body.accept_visitor(SelectSimplification())
+    val s1 = s0.accept_visitor(TrivialBindingSimplification())
+    val s2 = s1.accept_visitor(RemoveTrivialCallAndJump)
     val dead = collectLiveBindings(s2, Set.empty)
     val dced = removeDeadBindings(using dead)(s2)
     val fin = dced
@@ -1346,7 +1306,7 @@ class GraphOptimizer:
       new_defs = removeDeadDefs(prog.main, new_defs)
 
 
-      fixGODef(using new_defs)
+      fixCrossReferences(new_defs)
       validate(new_defs)
       changed = defs != new_defs
       defs = new_defs
@@ -1354,7 +1314,8 @@ class GraphOptimizer:
     GOProgram(prog.classes, defs, prog.main) 
   }
 
-  private class PromoteJoinPoints(var accu: Ls[GODef]) extends GOIterator:
+  private class PromoteJoinPoints extends GOIterator, GOVisitor:
+    var accu: Ls[GODef] = Nil
     override def iterate(x: LetJoin) = x match
       case LetJoin(Name(jp), xs, e1, e2) => 
         val new_def = GODef(
@@ -1362,31 +1323,28 @@ class GraphOptimizer:
           true, xs, 1,
           e1,
         )
-        e1.accept(this)
+        e1.accept_iterator(this)
         accu = new_def :: accu
-        e2.accept(this)
-
-  private object RemoveJoinPoints extends GOVistor: 
+        e2.accept_iterator(this)
     override def visit(x: LetJoin) = x match
-      case LetJoin(Name(jp), xs, e1, e2) => e2.accept(this)
+      case LetJoin(Name(jp), xs, e1, e2) => e2.accept_visitor(this)
+    override def visit(x: GOProgram) = {
+      val classes = x.classes
+      val defs = x.defs
+      val main = x.main
 
-  def promoteJoinPoints(prog: GOProgram): GOProgram = {
-    val classes = prog.classes
-    val defs = prog.defs
-    val main = prog.main
+      defs.foreach(_.body.accept_iterator(this))
 
-    val init: Ls[GODef] = Ls()
-    val promotion = PromoteJoinPoints(Nil)
-    defs.foreach(_.body.accept(promotion))
+      val defs2 = defs ++ accu
+      val defs3 = defs2.map(_.accept_visitor(this)) 
 
-    val defs2 = defs ++ promotion.accu
-    val remove = RemoveJoinPoints
-    val defs3 = defs2.map(_.accept(remove)) 
+      fixCrossReferences(defs3)
+      validate(defs3)
+      GOProgram(classes, defs3, main)
+    }
 
-    fixGODef(using defs3)
-    validate(defs3)
-    GOProgram(classes, defs3, main)
-  }
+  def promoteJoinPoints(prog: GOProgram): GOProgram =
+    prog.accept_visitor(PromoteJoinPoints())
 
   private class DefRefInSet(defs: Set[GODef]) extends GOIterator:
     override def iterate(x: LetCall) = x match
@@ -1395,7 +1353,7 @@ class GraphOptimizer:
           case Some(real_defn) => if (!defs.exists(_ eq real_defn)) throw GraphOptimizingError("ref is not in the set")
           case _ =>
         }
-        body.accept(this)
+        body.accept_iterator(this)
 
   private object ParamsArgsAreConsistent extends GOIterator:
     override def iterate(x: LetCall) = x match
@@ -1421,12 +1379,12 @@ class GraphOptimizer:
       
   private def ensureDefRefInSet(defs: Set[GODef]): Unit = {
     val it = DefRefInSet(defs)
-    defs.foreach { _.body.accept(it) }
+    defs.foreach { _.body.accept_iterator(it) }
   }
 
   private def ensureParamsArgsConsistent(defs: Set[GODef]): Unit = {
     val it = ParamsArgsAreConsistent
-    defs.foreach { _.body.accept(it) }
+    defs.foreach { _.body.accept_iterator(it) }
   }
 
   private def validate(defs: Set[GODef]): Unit = {
@@ -1443,7 +1401,7 @@ class GraphOptimizer:
       defn => GODef(defn.id, defn.name, defn.isjp, defn.params, defn.resultNum, defn.body)
     }
   
-    fixGODef(using defs)
+    fixCrossReferences(defs)
     validate(defs)
 
     var changed = true
@@ -1464,7 +1422,7 @@ class GraphOptimizer:
       }
     }
 
-    fixGODef(using defs)
+    fixCrossReferences(defs)
     validate(defs)
     GOProgram(classes, defs, main)
   }
