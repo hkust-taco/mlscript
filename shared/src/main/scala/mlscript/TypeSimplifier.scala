@@ -430,7 +430,7 @@ trait TypeSimplifier { self: Typer =>
                       )
                     val componentFieldsMap = componentFields.toMap
                     val tupleComponents = fs.iterator.zipWithIndex.map { case ((nme, ty), i) =>
-                      nme -> (ty && componentFieldsMap.getOrElse(i + 1, TopType.toUpper(noProv))).update(go(_, pol.map(!_)), go(_, pol))
+                      nme -> (ty && componentFieldsMap.getOrElse(i, TopType.toUpper(noProv))).update(go(_, pol.map(!_)), go(_, pol))
                     }.toList
                     S(TupleType(tupleComponents)(tt.prov)) -> rcdFields.mapValues(_.update(go(_, pol.map(!_)), go(_, pol)))
                   case S(ct: ClassTag) => S(ct) -> nFields

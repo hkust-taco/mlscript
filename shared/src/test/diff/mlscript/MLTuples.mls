@@ -102,10 +102,10 @@ f htx
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.73: 	f htx
 //│ ║        	^^^^^
-//│ ╟── `with` extension of type `(1, 2, 3,) & {x: 1}` does not match type `(?a & ?b, ?b,) | ~#Hey`
+//│ ╟── `with` extension of type `(1, 2, 3,) & {x: 1}` does not match type `(?a, ?b,) | ~#Hey`
 //│ ║  l.11: 	tx = t with { x = 1 }
 //│ ║        	     ^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `(?c & ?d, ?d,) | ~#Hey`
+//│ ╟── but it flows into reference with expected type `(?c, ?d,) | ~#Hey`
 //│ ║  l.73: 	f htx
 //│ ║        	  ^^^
 //│ ╟── Note: constraint arises from tuple literal:
@@ -143,7 +143,7 @@ g tx
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.142: 	g tx
 //│ ║         	^^^^
-//│ ╟── expression of type `(nothing, nothing, 3,) & {x: 1} & ~#Hey` does not have field 'y'
+//│ ╟── expression of type `(1, 2, 3,) & {x: 1} & ~#Hey` does not have field 'y'
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.130: 	g arg = case arg of { Hey -> arg.x | _ -> arg.y }
 //│ ╙──       	                                          ^^^^^

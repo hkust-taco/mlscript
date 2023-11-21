@@ -22,11 +22,11 @@ r = if true then T1 ((1,2,3)) else T2 ((3,4,5,4))
 //│  = [ 1, 2, 3 ]
 
 case r of { T1 -> r | _ -> 0 }
-//│ res: 0 | #T1 & ((nothing, nothing, 3,) | (nothing, nothing, nothing, 4,) & #T2)
+//│ res: 0 | #T1 & ((1, 2, 3,) | (3, 4, 5, 4,) & #T2)
 //│    = [ 1, 2, 3 ]
 
 case r of { T1 -> r | T2 -> r }
-//│ res: (nothing, nothing, 3,) & #T1 | 'a | #T2 & ((nothing, nothing, nothing, 4,) & #T1 | (nothing, nothing, nothing, 4,) & ~#T1 | (nothing, nothing, nothing, 4,) & ~#T2 | (nothing, nothing, nothing, 4,) & ~'a)
+//│ res: (1, 2, 3,) & #T1 | 'a | #T2 & ((3, 4, 5, 4,) & #T1 | (3, 4, 5, 4,) & ~#T1 | (3, 4, 5, 4,) & ~#T2 | (3, 4, 5, 4,) & ~'a)
 //│    = [ 1, 2, 3 ]
 
 
@@ -532,10 +532,10 @@ snd (T1 ((1,2,3)))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.516: 	snd (T1 ((1,2,3)))
 //│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ╟── tuple literal of type `(1, 2, 3,)` does not match type `(?a & ?b, ?b,) | ~#T1`
+//│ ╟── tuple literal of type `(1, 2, 3,)` does not match type `(?a, ?b,) | ~#T1`
 //│ ║  l.516: 	snd (T1 ((1,2,3)))
 //│ ║         	         ^^^^^^^
-//│ ╟── but it flows into application with expected type `(?a & ?b, ?b,) | ~#T1`
+//│ ╟── but it flows into application with expected type `(?a, ?b,) | ~#T1`
 //│ ║  l.516: 	snd (T1 ((1,2,3)))
 //│ ║         	     ^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from tuple literal:
