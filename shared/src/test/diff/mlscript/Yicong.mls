@@ -354,7 +354,7 @@ a1.1
 //│ ╟── type `Array[int]` does not have field '1'
 //│ ║  l.333: 	def a1: Array[int]
 //│ ║         	        ^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `{1: ?1}`
+//│ ╟── but it flows into reference with expected type `{1: ?a}`
 //│ ║  l.335: 	a1.1
 //│ ╙──       	^^
 //│ res: error
@@ -680,7 +680,7 @@ ra: (Array['a], Array['a], Array['a]) as 'a
 
 def tktup t = (t.1, t.2)
 tktup ((1,2,3,true))
-//│ tktup: {1: '1, 2: '2} -> ('1, '2,)
+//│ tktup: {1: 'a, 2: 'b} -> ('a, 'b,)
 //│      = [Function: tktup]
 //│ res: (2, 3,)
 //│    = [ 2, 3 ]
@@ -693,7 +693,7 @@ tktup a123
 //│ ╟── type `Array[int]` does not have field '2'
 //│ ║  l.364: 	def a123: Array[int]
 //│ ║         	          ^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `{2: ?2}`
+//│ ╟── but it flows into reference with expected type `{2: ?a}`
 //│ ║  l.689: 	tktup a123
 //│ ║         	      ^^^^
 //│ ╟── Note: constraint arises from field selection:
@@ -894,7 +894,7 @@ def s4 arr = (defined (defined (defined arr.x[0]).2[6])[7])._h.hello
 def at1 xs = (defined xs[0]).0
 def dup a b = a * 2 + b
 dup (defined ara[1]).0 (defined (defined arb[10])[8]).1 + 1
-//│ at1: Array[{0: '0} & ~undefined] -> '0
+//│ at1: Array[{0: 'a} & ~undefined] -> 'a
 //│    = [Function: at1]
 //│ dup: int -> int -> int
 //│    = [Function: dup]

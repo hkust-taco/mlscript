@@ -232,7 +232,7 @@ baz(0)
 //│ ╟── integer literal of type `0` does not have field '1'
 //│ ║  l.228: 	baz(0)
 //│ ║         	    ^
-//│ ╟── but it flows into argument with expected type `{1: ?1}`
+//│ ╟── but it flows into argument with expected type `{1: ?a}`
 //│ ║  l.228: 	baz(0)
 //│ ║         	   ^^^
 //│ ╟── Note: constraint arises from field selection:
@@ -272,7 +272,7 @@ baz(0, 1)
 //│ ╟── integer literal of type `0` does not have field '1'
 //│ ║  l.267: 	baz(0)
 //│ ║         	    ^
-//│ ╟── but it flows into argument with expected type `{1: ?1}`
+//│ ╟── but it flows into argument with expected type `{1: ?a}`
 //│ ║  l.267: 	baz(0)
 //│ ║         	   ^^^
 //│ ╟── Note: constraint arises from field selection:

@@ -10,7 +10,7 @@ let foo = (_ as (_: (Int => Int) & (Bool => Bool))).0
 //│ foo: forall 'a. (_: 'a,)
 //│   where
 //│     'a <: int -> int & bool -> bool
-//│ foo: forall '0. '0
+//│ foo: forall 'a. 'a
 
 foo(1)
 //│ res: nothing

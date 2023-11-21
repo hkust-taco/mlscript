@@ -715,6 +715,12 @@ trait LitImpl { self: Lit =>
 }
 
 trait VarImpl { self: Var =>
+  /** Check if the variable name is an integer. */
+  def isIndex: Bool = name.headOption match {
+    case S('0') => name.length === 1
+    case S(_) => name.forall(_.isDigit)
+    case N => false
+  }
   def isPatVar: Bool =
     (name.head.isLetter && name.head.isLower || name.head === '_' || name.head === '$') && name =/= "true" && name =/= "false"
   def toVar: Var = this

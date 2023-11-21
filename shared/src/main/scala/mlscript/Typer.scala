@@ -1101,7 +1101,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         //   Returns a function expecting an additional argument of type `Class` before the method arguments
         def rcdSel(obj: Term, fieldName: Var) = {
           val o_ty = typeMonomorphicTerm(obj)
-          val res = freshVar(prov, N, Opt.when(!fieldName.name.startsWith("_"))(fieldName.name))
+          val res = freshVar(prov, N, Opt.when(!fieldName.name.startsWith("_") && !fieldName.isIndex)(fieldName.name))
           val obj_ty = mkProxy(o_ty, tp(obj.toCoveringLoc, "receiver"))
           val rcd_ty = RecordType.mk(
             fieldName -> res.toUpper(tp(fieldName.toLoc, "field selector")) :: Nil)(prov)

@@ -1,0 +1,13 @@
+:NewDefs
+
+// Fields that are integers or start with an underscore should not be used as name hints.
+fun f(x) = x._q
+fun g(x) = x._1
+fun h(x) = x.1
+//│ fun f: forall 'a. {_q: 'a} -> 'a
+//│ fun g: forall 'b. {_1: 'b} -> 'b
+//│ fun h: forall 'c. {1: 'c} -> 'c
+
+// Other fields should be used as name hints.
+fun p(x) = x.y
+//│ fun p: forall 'y. {y: 'y} -> 'y

@@ -28,7 +28,7 @@ let t = x: 1, y: 2, z: 3
 //│ ╟── tuple of type `{0: 1, 1: true, 2: "hey"}` does not have field '3'
 //│ ║  l.24: 	(1, true, "hey").3
 //│ ║        	 ^^^^^^^^^^^^^^
-//│ ╟── but it flows into receiver with expected type `{3: ?3}`
+//│ ╟── but it flows into receiver with expected type `{3: ?a}`
 //│ ║  l.24: 	(1, true, "hey").3
 //│ ╙──      	^^^^^^^^^^^^^^^^
 //│ res: error

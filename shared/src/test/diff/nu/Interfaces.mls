@@ -964,7 +964,7 @@ class CP() extends BPar[Int] {
   fun f(x) = [x.1, x.0]
 }
 //│ class CP() extends BPar, Base {
-//│   fun f: forall '0 '1. {0: '0, 1: '1} -> ['1, '0]
+//│   fun f: forall 'a 'b. {0: 'a, 1: 'b} -> ['b, 'a]
 //│ }
 
 let cp1 = CP()
