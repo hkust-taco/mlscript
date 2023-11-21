@@ -1344,6 +1344,8 @@ class GraphOptimizer:
     while (changed) {
       var new_defs = defs.map(simplify(using defs))
       new_defs = removeDeadDefs(prog.main, new_defs)
+
+
       fixGODef(using new_defs)
       validate(new_defs)
       changed = defs != new_defs

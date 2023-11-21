@@ -103,6 +103,8 @@ class GODef(
 ):
   var activeParams: Ls[Set[Elim]] = Ls(Set())
   var activeResults: Ls[Opt[Intro]] = Ls(None)
+  var livein: Set[Str] = Set.empty
+  var liveout: Set[Str] = Set.empty
   var isTrivial: Bool = false
   override def equals(o: Any): Bool = o match {
     case o: GODef if this.isInstanceOf[GODef] =>
@@ -126,6 +128,9 @@ sealed trait TrivialExpr:
   override def toString: String
   def show: String
   def toDocument: Document
+  def accept(using v: GOTrivialVistor): TrivialExpr = this match
+    case x: GOExpr.Ref => v.visit(x)
+    case x: GOExpr.Literal => v.visit(x)
 
 private def show_args(args: Ls[TrivialExpr]) = args map { x => x.show } mkString ","
 
@@ -160,7 +165,7 @@ enum GOExpr:
     case Apply(Name(name), args) =>
       raw(name) <#> raw("(") <#> raw(args |> show_args) <#> raw(")")
 
-  def accept(v: GOExprVistor) = this match
+  def accept(using v: GOVistor): GOExpr = this match
     case x: Ref => v.visit(x)
     case x: Literal => v.visit(x)
     case x: CtorApp => v.visit(x)
@@ -236,14 +241,45 @@ enum GONode:
           <#> raw(")"),
         raw("in") <:> body.toDocument |> indent
       )
-  
-trait GOExprVistor:
+
+  def accept(using v: GOVistor): GONode  = this match
+    case x: Result => v.visit(x)
+    case x: Jump => v.visit(x)
+    case x: Case => v.visit(x)
+    case x: LetExpr => v.visit(x)
+    case x: LetJoin => v.visit(x)
+    case x: LetCall => v.visit(x)
+
+trait GOTrivialVistor:
   import GOExpr._
-  def visit(x: Ref)     = x
-  def visit(x: Literal) = x
-  def visit(x: CtorApp) = x
-  def visit(x: Select)  = x
-  def visit(x: BasicOp) = x
-  def visit(x: Lambda)  = x
-  def visit(x: Apply)   = x
+  def visit(x: Ref): Ref                 = x
+  def visit(x: Literal): Literal         = x
+  def visit(x: TrivialExpr): TrivialExpr = x match
+    case x: Ref                          => x.accept(using this)
+    case x: Literal                      => x.accept(using this)
+
+trait GOVistor extends GOTrivialVistor:
+  import GOExpr._
+  import GONode._
+  def visit(x: CtorApp): CtorApp         = x match
+    case CtorApp(cls, xs)                => CtorApp(cls, xs.map(_.accept(using this)))
+  def visit(x: Select): Select           = x
+  def visit(x: BasicOp): BasicOp         = x match
+    case BasicOp(op, xs)                 => BasicOp(op, xs.map(_.accept(using this)))
+  def visit(x: Lambda): Lambda           = x match
+    case Lambda(name, body)              => Lambda(name, body.accept(using this))
+  def visit(x: Apply): Apply             = x match
+    case Apply(f, xs)                    => Apply(f, xs.map(_.accept(using this)))
+  def visit(x: Result): Result           = x match
+    case Result(xs)                      => Result(xs.map(_.accept(using this)))
+  def visit(x: Jump): Jump               = x match
+    case Jump(jp, xs)                    => Jump(jp, xs.map(_.accept(using this)))
+  def visit(x: Case): Case               = x match
+    case Case(scrut, cases)              => Case(scrut, cases map { (cls, arm) => (cls, arm.accept(using this)) })
+  def visit(x: LetExpr): LetExpr         = x match
+    case LetExpr(x, e1, e2)              => LetExpr(x, e1.accept(using this), e2.accept(using this))
+  def visit(x: LetJoin): LetJoin         = x match
+    case LetJoin(jp, xs, e1, e2)         => LetJoin(jp, xs, e1.accept(using this), e2.accept(using this))
+  def visit(x: LetCall): LetCall         = x match
+    case LetCall(xs, f, as, e2)          => LetCall(xs, f, as.map(_.accept(using this)), e2.accept(using this))
 
