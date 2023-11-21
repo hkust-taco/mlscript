@@ -58,21 +58,21 @@ r = {b = "a", c = 1}
 //│    = [ 'oops', 2, 3 ]
 
 :e
-(res: (int,int,int,)).1
+(res: (int,int,int,)).0
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.61: 	(res: (int,int,int,)).1
+//│ ║  l.61: 	(res: (int,int,int,)).0
 //│ ║        	 ^^^
 //│ ╟── `with` extension of type `{0: "oops", 1: 2, 2: 3}` is not a 3-element tuple
 //│ ║  l.56: 	(1,2,3) with { 0 = "oops" }
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `(int, int, int,)`
-//│ ║  l.61: 	(res: (int,int,int,)).1
+//│ ║  l.61: 	(res: (int,int,int,)).0
 //│ ║        	 ^^^
 //│ ╟── Note: constraint arises from tuple type:
-//│ ║  l.61: 	(res: (int,int,int,)).1
+//│ ║  l.61: 	(res: (int,int,int,)).0
 //│ ╙──      	      ^^^^^^^^^^^^^^
 //│ res: int
-//│    = 2
+//│    = 'oops'
 
 
 def r: int \ 0
