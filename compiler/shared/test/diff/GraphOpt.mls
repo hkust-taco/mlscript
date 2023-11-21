@@ -1,6 +1,7 @@
 :NewParser
 :ParseOnly
 
+:GOInterp
 :GraphOpt
 class Pair(x, y)
 fun mktup2(x, y) = mktup(x, y)
@@ -54,6 +55,14 @@ foo()
 //│ },
 //│ let* (x3) = foo()
 //│   in x3)
+//│ 
+//│ Interpreted ------------------------------
+//│ Pair(1,2)
+//│ 
+//│ 
+//│ 
+//│ Interpreted ------------------------------
+//│ Pair(1,2)
 
 :GraphOpt
 class Pair(x, y)
@@ -636,13 +645,13 @@ class C2(z)
 fun foo(a) = if a is
   C1(x, y) then x
   C2(z) then z
-fun bar(b) =
+fun bar() =
   foo(C1(0, 1))
 bar()
-//│ |#class| |C1|(|x|,| |y|)|↵|#class| |C2|(|z|)|↵|#fun| |foo|(|a|)| |#=| |#if| |a| |is|→|C1|(|x|,| |y|)| |#then| |x|↵|C2|(|z|)| |#then| |z|←|↵|#fun| |bar|(|b|)| |#=|→|foo|(|C1|(|0|,| |1|)|)|←|↵|bar|(||)|
-//│ Parsed: {class C1(x, y,) {}; class C2(z,) {}; fun foo = (a,) => if a is ‹(C1(x, y,)) then x; (C2(z,)) then z›; fun bar = (b,) => {foo(C1(0, 1,),)}; bar()}
+//│ |#class| |C1|(|x|,| |y|)|↵|#class| |C2|(|z|)|↵|#fun| |foo|(|a|)| |#=| |#if| |a| |is|→|C1|(|x|,| |y|)| |#then| |x|↵|C2|(|z|)| |#then| |z|←|↵|#fun| |bar|(||)| |#=|→|foo|(|C1|(|0|,| |1|)|)|←|↵|bar|(||)|
+//│ Parsed: {class C1(x, y,) {}; class C2(z,) {}; fun foo = (a,) => if a is ‹(C1(x, y,)) then x; (C2(z,)) then z›; fun bar = () => {foo(C1(0, 1,),)}; bar()}
 //│ Parsed:
-//│ TypingUnit(NuTypeDef(class, C1, (), Tup(_: Var(x), _: Var(y)), (), None, None, TypingUnit()), NuTypeDef(class, C2, (), Tup(_: Var(z)), (), None, None, TypingUnit()), NuFunDef(None, foo, None, [], Lam(Tup(_: Var(a)), If(IfOpApp(Var(a), Var(is), IfBlock(IfThen(App(Var(C1), Tup(_: Var(x), _: Var(y))), Var(x);IfThen(App(Var(C2), Tup(_: Var(z))), Var(z)), None))), NuFunDef(None, bar, None, [], Lam(Tup(_: Var(b)), Blk(...))), App(Var(bar), Tup()))
+//│ TypingUnit(NuTypeDef(class, C1, (), Tup(_: Var(x), _: Var(y)), (), None, None, TypingUnit()), NuTypeDef(class, C2, (), Tup(_: Var(z)), (), None, None, TypingUnit()), NuFunDef(None, foo, None, [], Lam(Tup(_: Var(a)), If(IfOpApp(Var(a), Var(is), IfBlock(IfThen(App(Var(C1), Tup(_: Var(x), _: Var(y))), Var(x);IfThen(App(Var(C2), Tup(_: Var(z))), Var(z)), None))), NuFunDef(None, bar, None, [], Lam(Tup(), Blk(...))), App(Var(bar), Tup()))
 //│ 
 //│ GraphOpt:
 //│ GOProgram({ClassInfo(0, C1, [x,y]),ClassInfo(1, C2, [z])}, {
@@ -656,7 +665,7 @@ bar()
 //│     C2 => let x3 = a.z
 //│       in jump j0(x3)
 //│ )
-//│ Def(1, bar, [b], [{}], 
+//│ Def(1, bar, [], [{}], 
 //│ None, 1, 
 //│ let x5 = C1(0,1)
 //│   in let* (x6) = foo(x5)
@@ -676,7 +685,7 @@ bar()
 //│   C2 => let x3 = a.z
 //│     in x3
 //│ )
-//│ Def(1, bar, [b], [{}], 
+//│ Def(1, bar, [], [], 
 //│ None, 1, 
 //│ let x5 = C1(0,1)
 //│   in let* (x6) = foo(x5)
@@ -688,7 +697,7 @@ bar()
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, C1, [x,y]),ClassInfo(1, C2, [z])}, {
-//│ Def(1, bar, [b], [{}], 
+//│ Def(1, bar, [], [], 
 //│ None, 1, 
 //│ 0
 //│ )
@@ -696,6 +705,7 @@ bar()
 //│ let* (x7) = bar()
 //│   in x7)
 
+:GOInterp
 :GraphOpt
 class Pair(x, y)
 fun foo(a, b) =
@@ -784,6 +794,10 @@ baz()
 //│ let* (x16) = baz()
 //│   in x16)
 //│ 
+//│ Interpreted ------------------------------
+//│ 6
+//│ 
+//│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
 //│ Def(1, bar, [c], [{ESelect(x)，ESelect(y)}], 
@@ -836,6 +850,10 @@ baz()
 //│ },
 //│ let* (x16) = baz()
 //│   in x16)
+//│ 
+//│ 
+//│ Interpreted ------------------------------
+//│ 6
 
 :GraphOpt
 class Pair(x, y)

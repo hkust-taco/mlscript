@@ -1,6 +1,7 @@
 :NewParser
 :ParseOnly
 
+:GOInterp
 :GraphOpt
 class A(x, y, z)
 class B(m, n)
@@ -63,7 +64,7 @@ bar()
 //│ 
 //│ Promoted ------------------------------------
 //│ GOProgram({ClassInfo(0, A, [x,y,z]),ClassInfo(1, B, [m,n])}, {
-//│ Def(0, complex_foo, [t], [{ESelect(m)，EDirect，ESelect(y)，ESelect(n)，ESelect(z)，EDestruct，ESelect(x)}], 
+//│ Def(0, complex_foo, [t], [{ESelect(m)，EDestruct，ESelect(y)，ESelect(n)，ESelect(z)，EDirect，ESelect(x)}], 
 //│ None, 1, 
 //│ case t of
 //│   A => let x1 = t.z
@@ -101,6 +102,10 @@ bar()
 //│ let* (x23) = bar()
 //│   in x23)
 //│ 
+//│ Interpreted ------------------------------
+//│ 4
+//│ 
+//│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, A, [x,y,z]),ClassInfo(1, B, [m,n])}, {
 //│ Def(1, bar, [], [], 
@@ -135,6 +140,10 @@ bar()
 //│ },
 //│ let* (x23) = bar()
 //│   in x23)
+//│ 
+//│ 
+//│ Interpreted ------------------------------
+//│ 4
 
 :GraphOpt
 class A(w, x)
