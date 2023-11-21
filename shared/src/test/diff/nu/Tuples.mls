@@ -60,7 +60,7 @@ t.3
 //│     = undefined
 
 
-// Note that record field can be arbitrary integer literals.
+// Note that record fields can be integers with leading zeros.
 { 000000: "just zero" }
 { 042: "cuarenta y dos" }
 //│ {42: "cuarenta y dos"}
