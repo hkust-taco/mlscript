@@ -176,7 +176,11 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
             // go(k, SELECT(name))
             lex(k, ind, next(k, SELECT(name)))
           }
-          else if (isDigit(nc)) {
+          else if (
+            // The first character is '0' and the next character is not a digit
+            (nc === '0' && !(j + 1 < length && isDigit(bytes(j + 1)))) ||
+            ('0' < nc && nc <= '9') // The first character is a digit other than '0'
+          ) {
             val (name, k) = takeWhile(j)(isDigit)
             // go(k, SELECT(name))
             lex(k, ind, next(k, SELECT(name)))

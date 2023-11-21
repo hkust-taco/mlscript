@@ -41,7 +41,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def number[p: P]: P[Int] = P( CharIn("0-9").repX(1).!.map(_.toInt) )
   def ident[p: P]: P[String] =
     P( (letter | "_") ~~ (letter | digit | "_" | "'").repX ).!.filter(!keywords(_))
-  def field[p: P]: P[String] = P( ident | number.map(_.toString) )
+  def index[p: P]: P[String] = P( "0" | CharIn("1-9") ~~ digit.repX ).!.map(_.toString)
   
   def termOrAssign[p: P]: P[Statement] = P( term ~ ("=" ~ term).? ).map {
     case (expr, N) => expr
@@ -59,7 +59,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     | P(kw("undefined")).map(x => UnitLit(true)) | P(kw("null")).map(x => UnitLit(false)))
   
   def variable[p: P]: P[Var] = locate(ident.map(Var))
-  def fieldName[p: P]: P[Var] = locate(field.map(Var))
+  def fieldName[p: P]: P[Var] = locate( (ident | index).map(Var) )
 
   def parenCell[p: P]: P[Either[Term, (Term, Boolean)]] = (("..." | kw("mut")).!.? ~ term).map {
     case (Some("..."), t) => Left(t)
