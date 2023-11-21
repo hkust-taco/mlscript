@@ -31,6 +31,8 @@ class GOProgram(
     Sorting.quickSort(t1)(ClassInfoOrdering)
     Sorting.quickSort(t2)(GODefOrdering)
     s"GOProgram({${t1.mkString(",")}}, {\n${t2.mkString("\n")}\n},\n$main)"
+  def accept(v: GOVistor) = v.visit(this)
+  def accept(v: GOIterator) = v.iterate(this)
 
 object ClassInfoOrdering extends Ordering[ClassInfo] {
   def compare(a: ClassInfo, b: ClassInfo) = a.id.compare(b.id)
@@ -51,6 +53,8 @@ case class ClassInfo(
   override def hashCode: Int = id
   override def toString: String =
     s"ClassInfo($id, $ident, [${fields mkString ","}])"
+  def accept(v: GOVistor) = v.visit(this)
+  def accept(v: GOIterator) = v.iterate(this)
 
 case class Name(val str: Str):
   override def equals(o: Any): Bool = o match {
@@ -120,6 +124,8 @@ class GODef(
   def getName: String = name
   @unused
   def getBody: GONode = body
+  def accept(v: GOVistor) = v.visit(this)
+  def accept(v: GOIterator) = v.iterate(this)
   override def toString: String =
     val name2 = if (isjp) s"@join $name" else s"$name" 
     s"Def($id, $name2, ${params.map(_.toString()).mkString("[", ",", "]")}, ${activeParams.map({ x => x.mkString("{", "，", "}")}).mkString("[", ",", "]")}, \n${activeResults.head.toString}, $resultNum, \n$body\n)"
@@ -128,9 +134,12 @@ sealed trait TrivialExpr:
   override def toString: String
   def show: String
   def toDocument: Document
-  def accept(using v: GOTrivialVistor): TrivialExpr = this match
+  def accept(v: GOTrivialExprVistor): TrivialExpr = this match
     case x: GOExpr.Ref => v.visit(x)
     case x: GOExpr.Literal => v.visit(x)
+  def accept(v: GOTrivialExprIterator): Unit = this match
+    case x: GOExpr.Ref => v.iterate(x)
+    case x: GOExpr.Literal => v.iterate(x)
 
 private def show_args(args: Ls[TrivialExpr]) = args map { x => x.show } mkString ","
 
@@ -165,7 +174,7 @@ enum GOExpr:
     case Apply(Name(name), args) =>
       raw(name) <#> raw("(") <#> raw(args |> show_args) <#> raw(")")
 
-  def accept(using v: GOVistor): GOExpr = this match
+  def accept(v: GOVistor): GOExpr = this match
     case x: Ref => v.visit(x)
     case x: Literal => v.visit(x)
     case x: CtorApp => v.visit(x)
@@ -173,6 +182,15 @@ enum GOExpr:
     case x: BasicOp => v.visit(x)
     case x: Lambda => v.visit(x)
     case x: Apply => v.visit(x)
+
+  def accept(v: GOIterator): Unit = this match
+    case x: Ref => v.iterate(x)
+    case x: Literal => v.iterate(x)
+    case x: CtorApp => v.iterate(x)
+    case x: Select => v.iterate(x)
+    case x: BasicOp => v.iterate(x)
+    case x: Lambda => v.iterate(x)
+    case x: Apply => v.iterate(x)
     
 enum GONode:
   // Terminal forms:
@@ -242,7 +260,7 @@ enum GONode:
         raw("in") <:> body.toDocument |> indent
       )
 
-  def accept(using v: GOVistor): GONode  = this match
+  def accept(v: GOVistor): GONode  = this match
     case x: Result => v.visit(x)
     case x: Jump => v.visit(x)
     case x: Case => v.visit(x)
@@ -250,36 +268,95 @@ enum GONode:
     case x: LetJoin => v.visit(x)
     case x: LetCall => v.visit(x)
 
-trait GOTrivialVistor:
+  def accept(v: GOIterator): Unit  = this match
+    case x: Result => v.iterate(x)
+    case x: Jump => v.iterate(x)
+    case x: Case => v.iterate(x)
+    case x: LetExpr => v.iterate(x)
+    case x: LetJoin => v.iterate(x)
+    case x: LetCall => v.iterate(x)
+
+trait GOTrivialExprVistor:
   import GOExpr._
   def visit(x: Ref): Ref                 = x
   def visit(x: Literal): Literal         = x
   def visit(x: TrivialExpr): TrivialExpr = x match
-    case x: Ref                          => x.accept(using this)
-    case x: Literal                      => x.accept(using this)
+    case x: Ref                          => x.accept(this)
+    case x: Literal                      => x.accept(this)
 
-trait GOVistor extends GOTrivialVistor:
+trait GOVistor extends GOTrivialExprVistor:
   import GOExpr._
   import GONode._
-  def visit(x: CtorApp): CtorApp         = x match
-    case CtorApp(cls, xs)                => CtorApp(cls, xs.map(_.accept(using this)))
-  def visit(x: Select): Select           = x
-  def visit(x: BasicOp): BasicOp         = x match
-    case BasicOp(op, xs)                 => BasicOp(op, xs.map(_.accept(using this)))
-  def visit(x: Lambda): Lambda           = x match
-    case Lambda(name, body)              => Lambda(name, body.accept(using this))
-  def visit(x: Apply): Apply             = x match
-    case Apply(f, xs)                    => Apply(f, xs.map(_.accept(using this)))
-  def visit(x: Result): Result           = x match
-    case Result(xs)                      => Result(xs.map(_.accept(using this)))
-  def visit(x: Jump): Jump               = x match
-    case Jump(jp, xs)                    => Jump(jp, xs.map(_.accept(using this)))
-  def visit(x: Case): Case               = x match
-    case Case(scrut, cases)              => Case(scrut, cases map { (cls, arm) => (cls, arm.accept(using this)) })
-  def visit(x: LetExpr): LetExpr         = x match
-    case LetExpr(x, e1, e2)              => LetExpr(x, e1.accept(using this), e2.accept(using this))
-  def visit(x: LetJoin): LetJoin         = x match
-    case LetJoin(jp, xs, e1, e2)         => LetJoin(jp, xs, e1.accept(using this), e2.accept(using this))
-  def visit(x: LetCall): LetCall         = x match
-    case LetCall(xs, f, as, e2)          => LetCall(xs, f, as.map(_.accept(using this)), e2.accept(using this))
+  def visit(x: CtorApp): GOExpr       = x match
+    case CtorApp(cls, xs)                => CtorApp(cls, xs.map(_.accept(this)))
+  def visit(x: Select): GOExpr           = x
+  def visit(x: BasicOp): GOExpr         = x match
+    case BasicOp(op, xs)                 => BasicOp(op, xs.map(_.accept(this)))
+  def visit(x: Lambda): GOExpr          = x match
+    case Lambda(name, body)              => Lambda(name, body.accept(this))
+  def visit(x: Apply): GOExpr             = x match
+    case Apply(f, xs)                    => Apply(f, xs.map(_.accept(this)))
+  def visit(x: Result): GONode           = x match
+    case Result(xs)                      => Result(xs.map(_.accept(this)))
+  def visit(x: Jump): GONode               = x match
+    case Jump(jp, xs)                    => Jump(jp, xs.map(_.accept(this)))
+  def visit(x: Case): GONode               = x match
+    case Case(scrut, cases)              => Case(scrut, cases map { (cls, arm) => (cls, arm.accept(this)) })
+  def visit(x: LetExpr): GONode         = x match
+    case LetExpr(x, e1, e2)              => LetExpr(x, e1.accept(this), e2.accept(this))
+  def visit(x: LetJoin): GONode          = x match
+    case LetJoin(jp, xs, e1, e2)         => LetJoin(jp, xs, e1.accept(this), e2.accept(this))
+  def visit(x: LetCall): GONode         = x match
+    case LetCall(xs, f, as, e2)          => LetCall(xs, f, as.map(_.accept(this)), e2.accept(this))
+  def visit(x: ClassInfo): ClassInfo     = x
+  def visit(x: GODef): GODef             =
+    GODef(
+      x.id,
+      x.name,
+      x.isjp,
+      x.params,
+      x.resultNum,
+      x.body.accept(this))
+  def visit(x: GOProgram): GOProgram     =
+    GOProgram(
+      x.classes.map(_.accept(this)),
+      x.defs.map(_.accept(this)),
+      x.main.accept(this))
+
+trait GOTrivialExprIterator:
+  import GOExpr._
+  def iterate(x: Ref): Unit         = ()
+  def iterate(x: Literal): Unit     = ()
+  def iterate(x: TrivialExpr): Unit = x match
+    case x: Ref                     => x.accept(this)
+    case x: Literal                 => x.accept(this)
+
+trait GOIterator extends GOTrivialExprIterator:
+  import GOExpr._
+  import GONode._
+  def iterate(x: CtorApp): Unit     = x match { case CtorApp(cls, xs)        => xs.foreach(_.accept(this)) }
+  def iterate(x: Select):  Unit     = ()
+  def iterate(x: BasicOp): Unit     = x match { case BasicOp(op, xs)         => xs.foreach(_.accept(this)) }
+  def iterate(x: Lambda): Unit      = x match { case Lambda(name, body)      => body.accept(this) }
+  def iterate(x: Apply): Unit       = x match { case Apply(f, xs)            => xs.foreach(_.accept(this)) }
+  def iterate(x: Result): Unit      = x match { case Result(xs)              => xs.foreach(_.accept(this)) }
+  def iterate(x: Jump): Unit        = x match { case Jump(jp, xs)            => xs.foreach(_.accept(this)) }
+  def iterate(x: Case): Unit        = x match { case Case(scrut, cases)      =>
+    cases foreach { (cls, arm)      => (cls, arm.accept(this)) } }
+  def iterate(x: LetExpr): Unit     = x match { case LetExpr(x, e1, e2)      => 
+    e1.accept(this)
+    e2.accept(this) }
+  def iterate(x: LetJoin): Unit     = x match { case LetJoin(jp, xs, e1, e2) =>
+    e1.accept(this)
+    e2.accept(this) }
+  def iterate(x: LetCall): Unit     = x match { case LetCall(xs, f, as, e2)  =>
+    as.foreach(_.accept(this))
+    e2.accept(this) }
+  def iterate(x: ClassInfo): Unit   = ()
+  def iterate(x: GODef): Unit       =
+    x.body.accept(this)
+  def iterate(x: GOProgram): Unit   =
+    x.classes.foreach(_.accept(this))
+    x.defs.foreach(_.accept(this))
+    x.main.accept(this)
 

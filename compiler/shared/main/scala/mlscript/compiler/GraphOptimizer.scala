@@ -1354,34 +1354,21 @@ class GraphOptimizer:
     GOProgram(prog.classes, defs, prog.main) 
   }
 
-  def promoteJoinPoints(using accu: Ls[GODef])(node: GONode): Ls[GODef] = node match {
-    case Result(_) => accu
-    case Jump(_jp, _xs) => accu
-    case Case(scrut, cases) => cases.foldLeft(accu) {
-        case (accu, (cls, e)) => promoteJoinPoints(using accu)(e)
-      }
-    case LetExpr(_x, _e1, e2) => promoteJoinPoints(e2)
-    case LetJoin(Name(jp), xs, e1, e2) => 
-      val new_def = GODef(
-        genfid(), jp,
-        true, xs, 1,
-        e1,
-      )
-      val accu2 = promoteJoinPoints(e1)
-      val accu3 = new_def :: accu2
-      promoteJoinPoints(using accu3)(e2)
-    case LetCall(_xs, _defnref, _as, e) =>
-      promoteJoinPoints(e)
-  }
+  private class PromoteJoinPoints(var accu: Ls[GODef]) extends GOIterator:
+    override def iterate(x: LetJoin) = x match
+      case LetJoin(Name(jp), xs, e1, e2) => 
+        val new_def = GODef(
+          genfid(), jp,
+          true, xs, 1,
+          e1,
+        )
+        e1.accept(this)
+        accu = new_def :: accu
+        e2.accept(this)
 
-  private def removeNestedJoinPoints(node: GONode): GONode = node match {
-    case Result(_) | Jump(_, _) => node
-    case Case(scrut, cases) => Case(scrut,
-      cases map { (cls, e) => (cls, removeNestedJoinPoints(e)) })
-    case LetExpr(x, e1, e2) => LetExpr(x, e1, removeNestedJoinPoints(e2))
-    case LetJoin(jp, _, _, e2) => removeNestedJoinPoints(e2)
-    case LetCall(xs, defnref, as, e) => LetCall(xs, defnref, as, removeNestedJoinPoints(e))
-  }
+  private object RemoveJoinPoints extends GOVistor: 
+    override def visit(x: LetJoin) = x match
+      case LetJoin(Name(jp), xs, e1, e2) => e2.accept(this)
 
   def promoteJoinPoints(prog: GOProgram): GOProgram = {
     val classes = prog.classes
@@ -1389,66 +1376,57 @@ class GraphOptimizer:
     val main = prog.main
 
     val init: Ls[GODef] = Ls()
-    val new_defs = defs.foldLeft(init) {
-      (accu, godef) => promoteJoinPoints(using accu)(godef.body)
-    }
+    val promotion = PromoteJoinPoints(Nil)
+    defs.foreach(_.body.accept(promotion))
 
-    val defs2 = defs ++ new_defs
-    defs2 foreach {
-      defn => defn.body = removeNestedJoinPoints(defn.body) 
-    }
+    val defs2 = defs ++ promotion.accu
+    val remove = RemoveJoinPoints
+    val defs3 = defs2.map(_.accept(remove)) 
 
-    fixGODef(using defs2)
-    validate(defs2)
-    GOProgram(classes, defs2, main)
+    fixGODef(using defs3)
+    validate(defs3)
+    GOProgram(classes, defs3, main)
   }
 
-  private def ensureDefRefInSet(using defs: Set[GODef])(node: GONode): Unit = node match {
-    case Case(_, cases) => cases.foreach { case (cls, node) => (cls, ensureDefRefInSet(node)) }
-    case LetCall(resultNames, defnref, args, body) =>
-      tryGetDefn(defnref) match {
-        case Some(real_defn) => if (!defs.exists(_ eq real_defn)) throw GraphOptimizingError("ref is not in the set")
-        case _ =>
-      }
-      ensureDefRefInSet(body)
-    case LetExpr(name, expr, body) => ensureDefRefInSet(body)
-    case LetJoin(joinName, params, rhs, body) => ensureDefRefInSet(body)
-    case Result(_) =>
-    case Jump(_, _) =>
-  }
+  private class DefRefInSet(defs: Set[GODef]) extends GOIterator:
+    override def iterate(x: LetCall) = x match
+      case LetCall(res, defnref, args, body) =>
+        tryGetDefn(defnref) match {
+          case Some(real_defn) => if (!defs.exists(_ eq real_defn)) throw GraphOptimizingError("ref is not in the set")
+          case _ =>
+        }
+        body.accept(this)
 
+  private object ParamsArgsAreConsistent extends GOIterator:
+    override def iterate(x: LetCall) = x match
+      case LetCall(res, defnref, args, body) => 
+        tryGetDefn(defnref) match {
+          case Some(real_defn) =>
+            if (real_defn.params.length != args.length) 
+              val x = real_defn.params.length
+              val y = args.length
+              throw GraphOptimizingError(s"inconsistent arguments($y) and parameters($x) number in a call to ${real_defn.name}")
+          case _ =>
+        }
+    override def iterate(x: Jump) = x match
+      case Jump(defnref, xs) => 
+        tryGetDefn(defnref) match {
+          case Some(jdef) =>
+            val x = xs.length
+            val y = jdef.params.length
+            if (x != y)
+              throw GraphOptimizingError(s"inconsistent arguments($x) and parameters($y) number in a jump to ${jdef.getName}")
+          case _ =>
+        }
+      
   private def ensureDefRefInSet(defs: Set[GODef]): Unit = {
-    defs.foreach { defn => ensureDefRefInSet(using defs)(defn.body) }
-  }
-
-  private def ensureParamsArgsConsistent(node: GONode): Unit = node match {
-    case Case(_, cases) => cases.foreach { case (cls, node) => (cls, ensureParamsArgsConsistent(node)) }
-    case LetCall(resultNames, defnref, args, body) =>
-      tryGetDefn(defnref) match {
-        case Some(real_defn) =>
-          if (real_defn.params.length != args.length) 
-            val x = real_defn.params.length
-            val y = args.length
-            throw GraphOptimizingError(s"inconsistent arguments($y) and parameters($x) number in a call to ${real_defn.name}")
-        case _ =>
-      }
-      ensureParamsArgsConsistent(body)
-    case LetExpr(name, expr, body) => ensureParamsArgsConsistent(body)
-    case LetJoin(joinName, params, rhs, body) => ensureParamsArgsConsistent(body)
-    case Result(_) =>
-    case Jump(defnref, xs) => 
-      tryGetDefn(defnref) match {
-        case Some(jdef) =>
-          val x = xs.length
-          val y = jdef.params.length
-          if (x != y)
-            throw GraphOptimizingError(s"inconsistent arguments($x) and parameters($y) number in a jump to ${jdef.getName}")
-        case _ =>
-      }
+    val it = DefRefInSet(defs)
+    defs.foreach { _.body.accept(it) }
   }
 
   private def ensureParamsArgsConsistent(defs: Set[GODef]): Unit = {
-    defs.foreach { defn => ensureParamsArgsConsistent(defn.body) }
+    val it = ParamsArgsAreConsistent
+    defs.foreach { _.body.accept(it) }
   }
 
   private def validate(defs: Set[GODef]): Unit = {
