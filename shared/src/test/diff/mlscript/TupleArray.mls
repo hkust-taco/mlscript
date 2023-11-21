@@ -293,18 +293,18 @@ k1.2
 //│    = [ 'hello', 2, true ]
 
 ta1 = (5, 6, true, false, "hahaha")
-ta2 = ta1 with {x = 123; 7 = "bye"; 1 = 0}
+ta2 = ta1 with {x = 123; 7 = "bye"; 0 = 0}
 ta1.0
 ta2.1
 ta2.2
 //│ ta1: (5, 6, true, false, "hahaha",)
 //│    = [ 5, 6, true, false, 'hahaha' ]
-//│ ta2: (5, 6, true, false, "hahaha",) & {1: 0, 7: "bye", x: 123}
-//│    = [ 5, 0, true, false, 'hahaha', <2 empty items>, 'bye', x: 123 ]
+//│ ta2: (5, 6, true, false, "hahaha",) & {0: 0, 7: "bye", x: 123}
+//│    = [ 0, 6, true, false, 'hahaha', <2 empty items>, 'bye', x: 123 ]
 //│ res: 5
 //│    = 5
-//│ res: nothing
-//│    = 0
+//│ res: 6
+//│    = 6
 //│ res: true
 //│    = true
 

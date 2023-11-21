@@ -678,32 +678,32 @@ ra: (Array['a], Array['a], Array['a]) as 'a
 //│    = <no result>
 //│      ra is not implemented
 
-def tktup t = (t.2, t.3)
+def tktup t = (t.1, t.2)
 tktup ((1,2,3,true))
-//│ tktup: {2: '2, 3: '3} -> ('2, '3,)
+//│ tktup: {1: '1, 2: '2} -> ('1, '2,)
 //│      = [Function: tktup]
-//│ res: (3, true,)
-//│    = [ 3, true ]
+//│ res: (2, 3,)
+//│    = [ 2, 3 ]
 
 :e
 tktup a123
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.689: 	tktup a123
 //│ ║         	^^^^^^^^^^
-//│ ╟── type `Array[int]` does not have field '3'
+//│ ╟── type `Array[int]` does not have field '2'
 //│ ║  l.364: 	def a123: Array[int]
 //│ ║         	          ^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `{3: ?3}`
+//│ ╟── but it flows into reference with expected type `{2: ?2}`
 //│ ║  l.689: 	tktup a123
 //│ ║         	      ^^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.681: 	def tktup t = (t.2, t.3)
+//│ ║  l.681: 	def tktup t = (t.1, t.2)
 //│ ║         	                    ^^^
 //│ ╟── from reference:
-//│ ║  l.681: 	def tktup t = (t.2, t.3)
+//│ ║  l.681: 	def tktup t = (t.1, t.2)
 //│ ╙──       	                    ^
 //│ res: error | (nothing, nothing,)
-//│    = [ 3, undefined ]
+//│    = [ 2, 3 ]
 
 
 def definedOr x els = case x of {
@@ -861,12 +861,12 @@ mk1[2  ]
 //│    = undefined
 
 def s1 a = (defined a[1] + defined a[2], a[(1,2).1])
-def s2 a = (defined (defined a[1])[0]).2 + (defined a[2]).0
+def s2 a = (defined (defined a[1])[0]).1 + (defined a[2]).0
 def s3 a = defined a.0.t[0] + defined (defined a.x[1])[2]
 (defined ((1, "hello"),(2, true, false),(3,3,4))[0]).0
 //│ s1: Array[int & 'a] -> (int, undefined | 'a,)
 //│   = [Function: s1]
-//│ s2: Array[Array[{2: int} & ~undefined] & {0: int}] -> int
+//│ s2: Array[Array[{1: int} & ~undefined] & {0: int}] -> int
 //│   = [Function: s2]
 //│ s3: {0: {t: Array[int]}, x: Array[Array[int]]} -> int
 //│   = [Function: s3]
@@ -877,7 +877,7 @@ def ara: Array[(int, bool)]
 def arb: Array[Array[(int, int)]]
 (defined ara[1]).0
 (defined (defined arb[0])[1]).1
-def s4 arr = (defined (defined (defined arr.x[0]).3[6])[7])._h.hello
+def s4 arr = (defined (defined (defined arr.x[0]).2[6])[7])._h.hello
 //│ ara: Array[(int, bool,)]
 //│    = <missing implementation>
 //│ arb: Array[Array[(int, int,)]]
@@ -888,7 +888,7 @@ def s4 arr = (defined (defined (defined arr.x[0]).3[6])[7])._h.hello
 //│ res: int
 //│    = <no result>
 //│      arb is not implemented
-//│ s4: {x: Array[{3: Array[Array[{_h: {hello: 'hello}} & ~undefined]]} & ~undefined]} -> 'hello
+//│ s4: {x: Array[{2: Array[Array[{_h: {hello: 'hello}} & ~undefined]]} & ~undefined]} -> 'hello
 //│   = [Function: s4]
 
 def at1 xs = (defined xs[0]).0
@@ -903,15 +903,15 @@ dup (defined ara[1]).0 (defined (defined arb[10])[8]).1 + 1
 //│      ara is not implemented
 
 :e
-(1,2,3).1[1]
+(1,2,3).0[1]
 //│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.906: 	(1,2,3).1[1]
+//│ ║  l.906: 	(1,2,3).0[1]
 //│ ║         	^^^^^^^^^^^^
-//│ ╟── integer literal of type `2` does not match type `Array[?a]`
-//│ ║  l.906: 	(1,2,3).1[1]
-//│ ║         	   ^
+//│ ╟── integer literal of type `1` does not match type `Array[?a]`
+//│ ║  l.906: 	(1,2,3).0[1]
+//│ ║         	 ^
 //│ ╟── but it flows into field selection with expected type `Array[?b]`
-//│ ║  l.906: 	(1,2,3).1[1]
+//│ ║  l.906: 	(1,2,3).0[1]
 //│ ╙──       	^^^^^^^^^
 //│ res: error | undefined
 //│    = undefined

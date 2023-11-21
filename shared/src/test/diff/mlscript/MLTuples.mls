@@ -176,12 +176,12 @@ if bool then (1,) else fun x -> x
 
 
 
+t.0
 t.1
-t.2
+//│ res: 1
+//│    = 1
 //│ res: 2
 //│    = 2
-//│ res: 3
-//│    = 3
 
 
 t = (1, 2, 3) with {x = 1}
