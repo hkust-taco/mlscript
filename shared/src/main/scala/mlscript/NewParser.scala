@@ -995,7 +995,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       // val rhs = exprOrIf(1)
       rhs match {
         case R(rhs) =>
-          val res = App(App(opv, acc), rhs)
+          val res = App(opv, PlainTup(acc, rhs))
           cur match {
             case (NEWLINE, _) :: c => // TODO allow let bindings...
               consume
