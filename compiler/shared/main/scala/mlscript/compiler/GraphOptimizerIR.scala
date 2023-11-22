@@ -65,6 +65,10 @@ case class Name(val str: Str):
     case _ => false
   }
   override def toString: String = str
+  def accept_def_visitor(v: GONameVisitor) = v.visit_name_def(this)
+  def accept_use_visitor(v: GONameVisitor) = v.visit_name_use(this)
+  def accept_def_iterator(v: GONameIterator) = v.iterate_name_def(this)
+  def accept_use_iterator(v: GONameIterator) = v.iterate_name_use(this)
 
 class GODefRef(var defn: Either[GODef, Str]):
   def getName: String = defn match {
@@ -285,35 +289,40 @@ enum GONode:
     case x: LetJoin => v.iterate(x)
     case x: LetCall => v.iterate(x)
 
-trait GOTrivialExprVisitor:
+trait GONameVisitor:
+  def visit_name_def(x: Name): Name = x
+  def visit_name_use(x: Name): Name = x
+
+trait GOTrivialExprVisitor extends GONameVisitor:
   import GOExpr._
-  def visit(x: Ref): TrivialExpr         = x
-  def visit(x: Literal): TrivialExpr     = x
+  def visit(x: Ref): TrivialExpr     = Ref(x.name.accept_use_visitor(this))   
+  def visit(x: Literal): TrivialExpr = x
 
 trait GOVisitor extends GOTrivialExprVisitor:
   import GOExpr._
   import GONode._
   def visit(x: CtorApp): GOExpr      = x match
-    case CtorApp(cls, xs)            => CtorApp(cls, xs.map(_.accept_visitor(this)))
-  def visit(x: Select): GOExpr       = x
+    case CtorApp(cls, xs)            => CtorApp(cls.accept_visitor(this), xs.map(_.accept_visitor(this)))
+  def visit(x: Select): GOExpr       = x match
+    case Select(x, cls, field)       => Select(x.accept_use_visitor(this), cls.accept_visitor(this), field)
   def visit(x: BasicOp): GOExpr      = x match
     case BasicOp(op, xs)             => BasicOp(op, xs.map(_.accept_visitor(this)))
   def visit(x: Lambda): GOExpr       = x match
-    case Lambda(name, body)          => Lambda(name, body.accept_visitor(this))
+    case Lambda(xs, body)            => ???
   def visit(x: Apply): GOExpr        = x match
-    case Apply(f, xs)                => Apply(f, xs.map(_.accept_visitor(this)))
+    case Apply(f, xs)                => Apply(f.accept_use_visitor(this), xs.map(_.accept_visitor(this)))
   def visit(x: Result): GONode       = x match
     case Result(xs)                  => Result(xs.map(_.accept_visitor(this)))
   def visit(x: Jump): GONode         = x match
     case Jump(jp, xs)                => Jump(jp, xs.map(_.accept_visitor(this)))
   def visit(x: Case): GONode         = x match
-    case Case(x, cases)              => Case(x, cases map { (cls, arm) => (cls, arm.accept_visitor(this)) })
+    case Case(x, cases)              => Case(x.accept_use_visitor(this), cases map { (cls, arm) => (cls, arm.accept_visitor(this)) })
   def visit(x: LetExpr): GONode      = x match
-    case LetExpr(x, e1, e2)          => LetExpr(x, e1.accept_visitor(this), e2.accept_visitor(this))
+    case LetExpr(x, e1, e2)          => LetExpr(x.accept_def_visitor(this), e1.accept_visitor(this), e2.accept_visitor(this))
   def visit(x: LetJoin): GONode      = x match
     case LetJoin(jp, xs, e1, e2)     => LetJoin(jp, xs, e1.accept_visitor(this), e2.accept_visitor(this))
   def visit(x: LetCall): GONode      = x match
-    case LetCall(xs, f, as, e2)      => LetCall(xs, f, as.map(_.accept_visitor(this)), e2.accept_visitor(this))
+    case LetCall(xs, f, as, e2)      => LetCall(xs.map(_.accept_def_visitor(this)), f, as.map(_.accept_visitor(this)), e2.accept_visitor(this))
   def visit(x: ClassInfo): ClassInfo = x
   def visit(x: GODef): GODef         =
     GODef(
@@ -329,42 +338,51 @@ trait GOVisitor extends GOTrivialExprVisitor:
       x.defs.map(_.accept_visitor(this)),
       x.main.accept_visitor(this))
 
-trait GOTrivialExprIterator:
+trait GONameIterator:
+  def iterate_name_def(x: Name): Unit = ()
+  def iterate_name_use(x: Name): Unit = ()
+
+trait GOTrivialExprIterator extends GONameIterator:
   import GOExpr._
-  def iterate(x: Ref): Unit         = ()
+  def iterate(x: Ref): Unit         = x.name.accept_use_iterator(this)
   def iterate(x: Literal): Unit     = ()
 
 trait GOIterator extends GOTrivialExprIterator:
   import GOExpr._
   import GONode._
-  def iterate(x: CtorApp): Unit     = x match { case CtorApp(cls, xs)        => xs.foreach(_.accept_iterator(this)) }
-  def iterate(x: Select):  Unit     = ()
-  def iterate(x: BasicOp): Unit     = x match { case BasicOp(op, xs)         => xs.foreach(_.accept_iterator(this)) }
-  def iterate(x: Lambda): Unit      = x match { case Lambda(name, body)      => body.accept_iterator(this) }
-  def iterate(x: Apply): Unit       = x match { case Apply(f, xs)            => xs.foreach(_.accept_iterator(this)) }
-  def iterate(x: Result): Unit      = x match { case Result(xs)              => xs.foreach(_.accept_iterator(this)) }
-  def iterate(x: Jump): Unit        = x match { case Jump(jp, xs)            => xs.foreach(_.accept_iterator(this)) }
-  def iterate(x: Case): Unit        = x match { case Case(scrut, cases)      =>
-    cases foreach { (cls, arm)      => (cls, arm.accept_iterator(this)) } }
-  def iterate(x: LetExpr): Unit     = x match { case LetExpr(x, e1, e2)      => 
-    e1.accept_iterator(this)
-    e2.accept_iterator(this) }
-  def iterate(x: LetJoin): Unit     = x match { case LetJoin(jp, xs, e1, e2) =>
-    e1.accept_iterator(this)
-    e2.accept_iterator(this) }
-  def iterate(x: LetCall): Unit     = x match { case LetCall(xs, f, as, e2)  =>
-    as.foreach(_.accept_iterator(this))
-    e2.accept_iterator(this) }
-  def iterate(x: ClassInfo): Unit   = ()
-  def iterate(x: GODef): Unit       =
+  def iterate(x: CtorApp): Unit        = x match
+    case CtorApp(cls, xs)              => cls.accept_iterator(this); xs.foreach(_.accept_iterator(this))
+  def iterate(x: Select): Unit         = x match
+    case Select(x, cls, field)         => x.accept_use_iterator(this); cls.accept_iterator(this)
+  def iterate(x: BasicOp): Unit        = x match
+    case BasicOp(op, xs)               => xs.foreach(_.accept_iterator(this))
+  def iterate(x: Lambda): Unit         = x match
+    case Lambda(xs, body)              => ???
+  def iterate(x: Apply): Unit          = x match
+    case Apply(f, xs)                  => f.accept_use_iterator(this); xs.foreach(_.accept_iterator(this))
+  def iterate(x: Result): Unit         = x match
+    case Result(xs)                    => xs.foreach(_.accept_iterator(this))
+  def iterate(x: Jump): Unit           = x match
+    case Jump(jp, xs)                  => xs.foreach(_.accept_iterator(this))
+  def iterate(x: Case): Unit           = x match
+    case Case(x, cases)                => x.accept_use_iterator(this); cases foreach { (cls, arm) => arm.accept_iterator(this) }
+  def iterate(x: LetExpr): Unit        = x match
+    case LetExpr(x, e1, e2)            => x.accept_def_iterator(this); e1.accept_iterator(this); e2.accept_iterator(this)
+  def iterate(x: LetJoin): Unit        = x match
+    case LetJoin(jp, xs, e1, e2)       => e1.accept_iterator(this); e2.accept_iterator(this)
+  def iterate(x: LetCall): Unit        = x match
+    case LetCall(xs, f, as, e2)        => xs.foreach(_.accept_def_iterator(this)); as.foreach(_.accept_iterator(this)); e2.accept_iterator(this)
+  def iterate(x: ClassInfo): Unit      = ()
+  def iterate(x: GODef): Unit =
     x.body.accept_iterator(this)
-  def iterate(x: GOProgram): Unit   =
+  def iterate(x: GOProgram): Unit =
     x.classes.foreach(_.accept_iterator(this))
     x.defs.foreach(_.accept_iterator(this))
     x.main.accept_iterator(this)
 
 trait GODefTraversalOrdering:
   def ordered(entry: GONode, defs: Set[GODef]): Ls[GODef]
+  def ordered_names(entry: GONode, defs: Set[GODef]): Ls[Str]
 
 object GODefDfs:
   import GONode._
@@ -372,14 +390,24 @@ object GODefDfs:
     var succ: ListBuffer[GODef] = ListBuffer()
     override def iterate(x: LetCall) = x match
       case LetCall(xs, defnref, args, body) => 
-          succ += defnref.expectDefn
+        succ += defnref.expectDefn
+        body.accept_iterator(this)
     override def iterate(x: Jump) = x match
       case Jump(defnref, args) =>
-          succ += defnref.expectDefn
+        succ += defnref.expectDefn
 
+  private class SuccessorNames extends GOIterator:
+    var succ: ListBuffer[Str] = ListBuffer()
+    override def iterate(x: LetCall) = x match
+      case LetCall(xs, defnref, args, body) => 
+        succ += defnref.getName
+        body.accept_iterator(this)
+    override def iterate(x: Jump) = x match
+      case Jump(defnref, args) =>
+        succ += defnref.getName
 
-  private def dfs(using visited: HashMap[GODef, Bool], out:ListBuffer[GODef], postfix: Bool)(x: GODef): Unit =
-    visited(x) = true
+  private def dfs(using visited: HashMap[GODef, Bool], out: ListBuffer[GODef], postfix: Bool)(x: GODef): Unit =
+    visited.put(x, true)
     if (!postfix)
       out += x
     val succ = Successors()
@@ -390,9 +418,8 @@ object GODefDfs:
     }
     if (postfix)
       out += x
-    visited(x) = false
   
-  private def dfs(using visited: HashMap[GODef, Bool], out:ListBuffer[GODef], postfix: Bool)(x: GONode): Unit =
+  private def dfs(using visited: HashMap[GODef, Bool], out: ListBuffer[GODef], postfix: Bool)(x: GONode): Unit =
     val succ = Successors()
     x.accept_iterator(succ)
     succ.succ.foreach { y =>
@@ -400,16 +427,49 @@ object GODefDfs:
         dfs(y)
     }
 
+  private def dfs_names(using visited: HashMap[Str, Bool], defs: Set[GODef], out: ListBuffer[Str], postfix: Bool)(x: GODef): Unit =
+    visited.put(x.name, true)
+    if (!postfix)
+      out += x.name
+    val succ = SuccessorNames()
+    x.accept_iterator(succ)
+    succ.succ.foreach { y =>
+      if (!visited(y))
+        dfs_names(defs.find(_.name == y).get)
+    }
+    if (postfix)
+      out += x.name
+  
+  private def dfs_names(using visited: HashMap[Str, Bool], defs: Set[GODef], out: ListBuffer[Str], postfix: Bool)(x: GONode): Unit =
+    val succ = SuccessorNames()
+    x.accept_iterator(succ)
+    succ.succ.foreach { y =>
+      if (!visited(y))
+        dfs_names(defs.find(_.name == y).get)
+    }
+
   def dfs(entry: GONode, defs: Set[GODef], postfix: Bool): Ls[GODef] =
     val visited = HashMap[GODef, Bool]()
+    visited ++= defs.map(_ -> false)
     val out = ListBuffer[GODef]()
     dfs(using visited, out, postfix)(entry)
+    out.toList
+
+  def dfs_names(entry: GONode, defs: Set[GODef], postfix: Bool): Ls[Str] =
+    val visited = HashMap[Str, Bool]()
+    visited ++= defs.map(_.name -> false)
+    val out = ListBuffer[Str]()
+    dfs_names(using visited, defs, out, postfix)(entry)
     out.toList
     
 object GODefRevPostOrdering extends GODefTraversalOrdering:
   def ordered(entry: GONode, defs: Set[GODef]): Ls[GODef] =
     GODefDfs.dfs(entry, defs, true).reverse
+  def ordered_names(entry: GONode, defs: Set[GODef]): Ls[Str] =
+    GODefDfs.dfs_names(entry, defs, true).reverse
 
 object GODefRevPreOrdering extends GODefTraversalOrdering:
   def ordered(entry: GONode, defs: Set[GODef]): Ls[GODef] =
     GODefDfs.dfs(entry, defs, false).reverse
+  def ordered_names(entry: GONode, defs: Set[GODef]): Ls[Str] =
+    GODefDfs.dfs_names(entry, defs, false).reverse

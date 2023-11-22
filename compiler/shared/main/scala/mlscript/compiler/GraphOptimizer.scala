@@ -7,6 +7,7 @@ import shorthands.*
 
 import scala.annotation.tailrec
 import scala.collection.immutable.*
+import scala.collection.mutable.{HashMap => MutMap}
 
 final case class GraphOptimizingError(message: String) extends Exception(message)
 
@@ -20,10 +21,11 @@ class GraphOptimizer:
   import GOExpr._
   import GONode._
 
-  var count = 0
+  private val counter = MutMap[Str, Int]()
   private def gensym(s: Str = "x") = {
-    val tmp = s"$s$count"
-    count += 1
+    val count = counter.getOrElse(s, 0)
+    val tmp = s"_$s$count"
+    counter.put(s, count + 1)
     Name(tmp)
   }
 
@@ -265,8 +267,8 @@ class GraphOptimizer:
           case N -> Fld(FldFlags.empty, Var(x)) => x
           case _ => throw GraphOptimizingError("unsupported field") 
         }
-      val names = strs.map { x => Name(x) }
-      given Ctx = ctx ++ strs.zip(strs.map { x => Name(x) })
+      val names = strs.map { x => gensym(x) }
+      given Ctx = ctx ++ strs.zip(names)
       GODef(
         genfid(),
         name,
@@ -1083,22 +1085,8 @@ class GraphOptimizer:
     GOProgram(classes, defs3, main)
   }
 
-
   private class TrivialBindingSimplification extends GOTrivialExprVisitor, GOVisitor:
     var rctx: Map[Str, TrivialExpr] = Map.empty
-    private def f(texpr: TrivialExpr) = texpr match
-      case Ref(Name(x)) if rctx.contains(x) =>
-        rctx(x)
-      case _ => texpr
-    private def g(name: Name): Name =
-      val Name(x) = name
-      rctx.get(x).map { 
-        case Ref(yy @ Name(y)) => yy
-        case _ => name
-      }.getOrElse(name)
-    override def visit(x: Case) = x match
-      case Case(x, cases) =>
-        Case(g(x), cases map { (cls, arm) => (cls, arm.accept_visitor(this)) })
     override def visit(node: LetExpr) = node match
       case LetExpr(x, Ref(Name(z)), e2) if rctx.contains(z) =>
         rctx = rctx + (x.str -> rctx(z))
@@ -1111,11 +1099,17 @@ class GraphOptimizer:
         e2.accept_visitor(this)
       case LetExpr(x, e1, e2) =>
         LetExpr(x, e1.accept_visitor(this), e2.accept_visitor(this))
-    override def visit(x: Apply) = x match
-      case Apply(name, args) => Apply(g(name), args.map(_.accept_visitor(this)))
-    override def visit(x: Select) = x match
-      case Select(name, cls, field) => Select(g(name), cls, field) 
-    override def visit(y: Ref) = f(y)
+    override def visit(y: Ref) = y match
+      case Ref(Name(x)) if rctx.contains(x) =>
+        rctx(x)
+      case _ => y
+    override def visit_name_use(z: Name) =
+      val Name(x) = z
+      rctx.get(x).map { 
+        case Ref(yy @ Name(y)) => yy
+        case _ => z
+      }.getOrElse(z)
+
 
   private class SelectSimplification extends GOVisitor:
     var cctx: Map[Str, Map[Str, TrivialExpr]] = Map.empty
@@ -1263,51 +1257,26 @@ class GraphOptimizer:
     )
   }
 
-  def collectDefUseInfo(node: GONode): Set[Str] = node match {
-    case Result(xs) => Set.empty 
-    case Jump(jp, xs) => Set(jp.getName)
-    case Case(scrut, cases) => cases.foldLeft(Set.empty) {
-      case (accu, (cls, e)) => accu ++ collectDefUseInfo(e)
-    }
-    case LetExpr(x, e1, e2) => collectDefUseInfo(e2)
-    case LetJoin(_, _, _, _) =>
-      throw GraphOptimizingError("nested join points after promotion")
-    case LetCall(xs, defnref, as, e) =>
-      val name = defnref.getName
-      collectDefUseInfo(e) + name
-  }
-
-  def collectDefUseInfo(defn: GODef): Set[Str] =
-    collectDefUseInfo(defn.body)
-
-  def removeDeadDefs(entry: GONode, defs: Set[GODef]): Set[GODef] = {
-    var workset = collectDefUseInfo(entry)
-    var visited: Set[Str] = Set.empty
-    while (workset.nonEmpty) {
-      workset = workset.foldLeft(Set.empty) {
-        case (accu, name) if !visited.contains(name) =>
-          val new_uses = collectDefUseInfo(defs.find{name == _.name}.get)
-          visited = visited + name
-          accu ++ (new_uses -- visited)
-        case (accu, _) => accu
+  private object RemoveDeadDefn extends GOVisitor:
+    override def visit(x: GOProgram) =
+      val defs = x.defs
+      val entry = x.main
+      var visited = GODefRevPostOrdering.ordered_names(entry, defs).toSet
+      val new_defs = defs.filter(x => visited.contains(x.name))
+      defs.foreach {
+        case x if new_defs.find{_.name == x.name} == None => // println(s"${x.name} removed")
+        case _ =>
       }
-    }
-    val new_defs = defs.filter(x => !x.isTrivial && visited.contains(x.name))
-    defs.foreach {
-      case x if new_defs.find{_.name == x.name} == None => // println(s"${x.name} removed")
-      case _ =>
-    }
-    new_defs
-  }
+      fixCrossReferences(new_defs)
+      GOProgram(x.classes, new_defs, x.main)
+
 
   def simplifyProgram(prog: GOProgram): GOProgram = {
     var changed = true
     var defs = prog.defs
     while (changed) {
       var new_defs = defs.map(simplify(using defs))
-      new_defs = removeDeadDefs(prog.main, new_defs)
-
-
+      new_defs = GOProgram(prog.classes, new_defs, prog.main).accept_visitor(RemoveDeadDefn).defs
       fixCrossReferences(new_defs)
       validate(new_defs)
       changed = defs != new_defs
@@ -1378,7 +1347,7 @@ class GraphOptimizer:
               throw GraphOptimizingError(s"inconsistent arguments($x) and parameters($y) number in a jump to ${jdef.getName}")
           case _ =>
         }
-      
+
   private def ensureDefRefInSet(defs: Set[GODef]): Unit = {
     val it = DefRefInSet(defs)
     defs.foreach { _.body.accept_iterator(it) }
