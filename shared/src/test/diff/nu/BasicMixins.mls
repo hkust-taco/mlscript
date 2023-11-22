@@ -316,11 +316,9 @@ let wd = w(1)
 //│ wd
 //│    = [ [ [ 1 ] ] ]
 
-// TODO implement _1
-wd._1._1._1 + 1
+wd.0.0.0 + 1
 //│ Int
 //│ res
-//│ Runtime error:
-//│   TypeError: Cannot read properties of undefined (reading '_1')
+//│     = 2
 
 

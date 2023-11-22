@@ -1173,6 +1173,10 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         consume
         consume
         S(Var(idStr).withLoc(S(l0)))
+      case (LITVAL(IntLit(i)), l0) :: (KEYWORD(":"), _) :: _ => // TODO: | ...
+        consume
+        consume
+        S(Var(i.toString).withLoc(S(l0)))
       case _ => N
     }
     // val e = expr(NoElsePrec) -> argMut.isDefined

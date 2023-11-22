@@ -198,7 +198,7 @@ f 42
 //│ [Function (anonymous)]
 
 // * Note: parser parses this the same as `oops((f, 0)._1)`
-def extrude f = oops((f, 0))._1
+def extrude f = oops((f, 0)).0
 //│ extrude: (forall 'c. ('c -> 'c, 0,)) -> 'c0 -> 'c0
 //│        = [Function: extrude1]
 
@@ -209,8 +209,8 @@ def extrude f = oops((f, 0))._1
 
 
 def oops (i: forall 'c. ('c -> 'c, 0)) =
-  let _ = (i._1 id) "hello"
-  in i._1
+  let _ = (i.0 id) "hello"
+  in i.0
 //│ oops: (forall 'c. ('c -> 'c, 0,)) -> 'c0 -> 'c0
 //│     = [Function: oops1]
 

@@ -843,7 +843,7 @@ class Bc12() extends Bc1(1), Bc2(true)
 //│ Code generation encountered an error:
 //│   unexpected parent symbol new class Bc2.
 
-class Bc02() extends Bc1(1:Int) {
+class Bc02() extends Bc1(1 : Int) {
   val foo = 2
 }
 //│ class Bc02() extends Bc1 {
@@ -961,10 +961,10 @@ fb(bp, false)
 //│       bp is not implemented
 
 class CP() extends BPar[Int] {
-  fun f(x) = [x._2, x._1]
+  fun f(x) = [x.1, x.0]
 }
 //│ class CP() extends BPar, Base {
-//│   fun f: forall 'a 'b. {_1: 'a, _2: 'b} -> ['b, 'a]
+//│   fun f: forall 'a 'b. {0: 'a, 1: 'b} -> ['b, 'a]
 //│ }
 
 let cp1 = CP()
@@ -975,7 +975,7 @@ let cp1 = CP()
 fb(cp1, 2)
 //│ [Int, Int]
 //│ res
-//│     = [ undefined, undefined ]
+//│     = [ 2, 1 ]
 
 trait BInfer1 extends Base
 //│ trait BInfer1 extends Base {
