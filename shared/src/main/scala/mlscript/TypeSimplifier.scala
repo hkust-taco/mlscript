@@ -417,16 +417,6 @@ trait TypeSimplifier { self: Typer =>
                           if (0 <= index && index < arity) L(index -> f._2)
                           else R(f)
                         } else R(f)
-                        // // With old tuple field names:
-                        // if (f._1.name.length > 1 && f._1.name.startsWith("_")) {
-                        //   val namePostfix = f._1.name.tail
-                        //   if (namePostfix.forall(_.isDigit)) {
-                        //     val index = namePostfix.toInt
-                        //     if (index <= arity && index > 0) L(index -> f._2)
-                        //     else R(f)
-                        //   }
-                        //   else R(f)
-                        // } else R(f)
                       )
                     val componentFieldsMap = componentFields.toMap
                     val tupleComponents = fs.iterator.zipWithIndex.map { case ((nme, ty), i) =>

@@ -614,7 +614,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         exprCont(Var(opStr).withLoc(S(l1)), prec, allowNewlines = false)
       case (br @ BRACKETS(bk @ (Round | Square | Curly), toks), loc) :: _ =>
         consume
-        val res = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented(bk == Curly))
+        val res = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented(bk === Curly))
         val bra = (bk, res) match {
           case (Curly, _) =>
             Bra(true, Rcd(res.map {

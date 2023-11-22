@@ -155,21 +155,15 @@ NewDerivedDerived.NewQuz
 
 :e
 class NewDerivedDerivedDerived: NewDerivedDerived
-  method NewQux = this.NewBar.1
-//│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.158: 	  method NewQux = this.NewBar.1
-//│ ║         	                  ^^^^^^^^^^^^^
-//│ ╟── field selection of type `{0: ?a}` does not have field '1'
-//│ ║  l.158: 	  method NewQux = this.NewBar.1
-//│ ╙──       	                  ^^^^^^^^^^^
+  method NewQux = this.NewBar.0
 //│ ╔══[ERROR] Overriding method NewDerived.NewQux without explicit declaration is not allowed.
-//│ ║  l.158: 	  method NewQux = this.NewBar.1
+//│ ║  l.158: 	  method NewQux = this.NewBar.0
 //│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: method definition inherited from
 //│ ║  l.130: 	  method NewQux = this.NewBar.0
 //│ ╙──       	         ^^^^^^^^^^^^^^^^^^^^^^
 //│ Defined class NewDerivedDerivedDerived
-//│ Defined NewDerivedDerivedDerived.NewQux: NewDerivedDerivedDerived -> error
+//│ Defined NewDerivedDerivedDerived.NewQux: (NewDerivedDerivedDerived & 'this) -> (NewDerivedDerivedDerived & NewBase & 'this)
 
 // Test methods of NewDerivedDerivedDerived
 NewDerivedDerivedDerived.NewBar
@@ -179,7 +173,7 @@ NewDerivedDerivedDerived.NewQux
 //│ res: (NewDerivedDerivedDerived & 'this) -> (NewBase & 'this,)
 //│ res: (NewDerivedDerivedDerived & 'this) -> (NewBase & 'this)
 //│ res: (NewDerivedDerivedDerived & 'this) -> (NewDerivedDerived & NewBase & NewDerived & 'this)
-//│ res: NewDerivedDerivedDerived -> error
+//│ res: (NewDerivedDerivedDerived & 'this) -> (NewDerivedDerivedDerived & NewBase & 'this)
 
 
 
