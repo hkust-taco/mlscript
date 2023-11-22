@@ -258,9 +258,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
   case class ModifierSet(mods: Map[Str, Loc]) {
     def handle(mod: Str): (Opt[Loc], ModifierSet) =
       mods.get(mod) -> copy(mods = mods - mod)
-    def done: Unit = mods.foreach {
-      case (mod, loc) =>
-        err(msg"Unrecognized modifier `${mod}` in this position" -> S(loc) :: Nil)
+    def done: Unit = mods.foreachEntry { (mod, loc) =>
+      err(msg"Unrecognized modifier `${mod}` in this position" -> S(loc) :: Nil)
     }
   }
   object ModifierSet {

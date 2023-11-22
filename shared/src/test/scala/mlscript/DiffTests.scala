@@ -53,6 +53,7 @@ class DiffTests
   def postProcess(mode: ModeType, basePath: Ls[Str], testName: Str, unit: TypingUnit): Ls[Str] = Nil
   
   
+  @SuppressWarnings(Array("org.wartremover.warts.RedundantIsInstanceOf"))
   private val inParallel = isInstanceOf[ParallelTestExecution]
   
   import DiffTests._
@@ -1068,8 +1069,8 @@ class DiffTests
     val timeStr = (((endTime - beginTime) / 1000 / 100).toDouble / 10.0).toString
     val testColor = if (testFailed) Console.RED else Console.GREEN
     
-    val resStr = s"${" " * (35 - testStr.size)}${testColor}${
-      " " * (6 - timeStr.size)}$timeStr  ms${Console.RESET}"
+    val resStr = s"${" " * (35 - testStr.length)}${testColor}${
+      " " * (6 - timeStr.length)}$timeStr  ms${Console.RESET}"
     
     if (inParallel) println(s"${Console.CYAN}Processed${Console.RESET}  $testStr$resStr")
     else println(resStr)

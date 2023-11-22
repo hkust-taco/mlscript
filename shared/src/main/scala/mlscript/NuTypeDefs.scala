@@ -276,7 +276,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
             }
             }()
           }
-          members.foreach {
+          members.foreachEntry {
             case (_, m: NuParam) if m.isType =>
             case (_, m) => Trav.applyMem(PolMap.pos)(m)
           }
