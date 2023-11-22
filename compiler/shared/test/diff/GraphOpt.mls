@@ -504,7 +504,7 @@ bar()
 //│   Right => let _x7 = _x5.y
 //│     in _x7
 //│ )
-//│ Def(6, _foo$D1, [_b0], [{EDirect}], 
+//│ Def(9, _foo$D1, [_b0], [{EDirect}], 
 //│ None, 1, 
 //│ let _x4 = Right(_b0)
 //│   in jump _j0(_x4)
