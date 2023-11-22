@@ -411,13 +411,7 @@ trait TypeSimplifier { self: Typer =>
                     val arity = fs.size
                     val (componentFields, rcdFields) = rcd.fields
                       .filterNot(traitPrefixes contains _._1.name.takeWhile(_ =/= '#'))
-                      .partitionMap(f =>
-                        if (f._1.name.forall(_.isDigit)) {
-                          val index = f._1.name.toInt
-                          if (0 <= index && index < arity) L(index -> f._2)
-                          else R(f)
-                        } else R(f)
-                      )
+                      .partitionMap(f => f._1.toIndexOption.filter((0 until arity).contains).map(_ -> f._2).toLeft(f))
                     val componentFieldsMap = componentFields.toMap
                     val tupleComponents = fs.iterator.zipWithIndex.map { case ((nme, ty), i) =>
                       nme -> (ty && componentFieldsMap.getOrElse(i, TopType.toUpper(noProv))).update(go(_, pol.map(!_)), go(_, pol))

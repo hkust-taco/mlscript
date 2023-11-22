@@ -721,6 +721,8 @@ trait VarImpl { self: Var =>
     case S(_) => name.forall(_.isDigit)
     case N => false
   }
+  /** Get the integer if it's a valid index. */
+  def toIndexOption: Opt[Int] = if (isIndex) name.toIntOption else N
   def isPatVar: Bool =
     (name.head.isLetter && name.head.isLower || name.head === '_' || name.head === '$') && name =/= "true" && name =/= "false"
   def toVar: Var = this

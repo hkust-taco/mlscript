@@ -604,19 +604,7 @@ abstract class TyperHelpers { Typer: Typer =>
       case t @ RecordType(fs) => RecordType(fs.filter(nt => !names(nt._1)))(t.prov)
       case t @ TupleType(fs) =>
         val relevantNames = names.filter(n =>
-          !n.name.isEmpty && n.name.forall(_.isDigit) && {
-            val index = n.name.toInt
-            0 <= index && index < fs.length
-          })
-          // // With old tuple field names:
-          // n.name.startsWith("_")
-          //   && {
-          //     val t = n.name.tail
-          //     t.forall(_.isDigit) && {
-          //       val n = t.toInt
-          //       1 <= n && n <= fs.length
-          //     }
-          //   })
+          n.toIndexOption.exists((0 until fs.length).contains))
         if (relevantNames.isEmpty) t
         else {
           val rcd = t.toRecord
