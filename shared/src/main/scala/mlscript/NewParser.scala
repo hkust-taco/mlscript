@@ -552,7 +552,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       case Nil => Nil
       case (KEYWORD("of"), _) :: _ =>
         consume
-        Tup(args(false, false) // TODO
+        Tup(args(false) // TODO
           ) :: funParams
       case (br @ BRACKETS(Round, toks), loc) :: _ =>
         consume
@@ -614,7 +614,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         exprCont(Var(opStr).withLoc(S(l1)), prec, allowNewlines = false)
       case (br @ BRACKETS(bk @ (Round | Square | Curly), toks), loc) :: _ =>
         consume
-        val res = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented(bk === Curly))
+        val res = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented())
         val bra = (bk, res) match {
           case (Curly, _) =>
             Bra(true, Rcd(res.map {
@@ -1094,8 +1094,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       case _ => f(this, false)
     }
   
-  final def argsMaybeIndented(inRecord: Bool = false)(implicit fe: FoundErr, et: ExpectThen): Ls[Opt[Var] -> Fld] =
-    maybeIndented(_.args(inRecord, _))
+  final def argsMaybeIndented()(implicit fe: FoundErr, et: ExpectThen): Ls[Opt[Var] -> Fld] =
+    maybeIndented(_.args(_))
   // final def argsMaybeIndented()(implicit fe: FoundErr, et: ExpectThen): Ls[Opt[Var] -> Fld] =
   //   cur match {
   //     case (br @ BRACKETS(Indent, toks), _) :: _ if (toks.headOption match {
@@ -1108,9 +1108,9 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
   //   }
   
   // TODO support comma-less arg blocks...?
-  final def args(inRecord: Bool, allowNewlines: Bool, prec: Int = NoElsePrec)(implicit fe: FoundErr, et: ExpectThen): Ls[Opt[Var] -> Fld] =
+  final def args(allowNewlines: Bool, prec: Int = NoElsePrec)(implicit fe: FoundErr, et: ExpectThen): Ls[Opt[Var] -> Fld] =
     // argsOrIf(Nil).map{case (_, L(x))=> ???; case (n, R(x))=>n->x} // TODO
-    argsOrIf(Nil, Nil, inRecord, allowNewlines, prec).flatMap{case (n, L(x))=> 
+    argsOrIf(Nil, Nil, allowNewlines, prec).flatMap{case (n, L(x))=> 
         err(msg"Unexpected 'then'/'else' clause" -> x.toLoc :: Nil)
         n->Fld(FldFlags.empty, errExpr)::Nil
       case (n, R(x))=>n->x::Nil} // TODO
@@ -1125,7 +1125,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
     }
   }
   */
-  final def argsOrIf(acc: Ls[Opt[Var] -> (IfBody \/ Fld)], seqAcc: Ls[Statement], inRecord: Bool, allowNewlines: Bool, prec: Int = NoElsePrec)
+  final def argsOrIf(acc: Ls[Opt[Var] -> (IfBody \/ Fld)], seqAcc: Ls[Statement], allowNewlines: Bool, prec: Int = NoElsePrec)
         (implicit fe: FoundErr, et: ExpectThen): Ls[Opt[Var] -> (IfBody \/ Fld)] =
       wrap(acc, seqAcc) { l =>
     
@@ -1139,7 +1139,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         }
       case (SPACE, _) :: _ =>
         consume
-        argsOrIf(acc, seqAcc, inRecord, allowNewlines, prec)
+        argsOrIf(acc, seqAcc, allowNewlines, prec)
       case (NEWLINE, _) :: _ => // TODO: | ...
         assert(seqAcc.isEmpty)
         acc.reverse
@@ -1173,7 +1173,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         consume
         consume
         S(Var(idStr).withLoc(S(l0)))
-      case (LITVAL(IntLit(i)), l0) :: (KEYWORD(":"), _) :: _ if inRecord => // TODO: | ...
+      case (LITVAL(IntLit(i)), l0) :: (KEYWORD(":"), _) :: _ => // TODO: | ...
         consume
         consume
         S(Var(i.toString).withLoc(S(l0)))
@@ -1192,10 +1192,10 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       case (COMMA, l0) :: (NEWLINE, l1) :: _ =>
         consume
         consume
-        argsOrIf(mkSeq :: acc, Nil, inRecord, allowNewlines)
+        argsOrIf(mkSeq :: acc, Nil, allowNewlines)
       case (COMMA, l0) :: _ =>
         consume
-        argsOrIf(mkSeq :: acc, Nil, inRecord, allowNewlines)
+        argsOrIf(mkSeq :: acc, Nil, allowNewlines)
       case (NEWLINE, l1) :: _ if allowNewlines =>
         consume
         argName match {
@@ -1206,7 +1206,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         e match {
           case L(_) => ???
           case R(Fld(FldFlags(false, false, _), res)) =>
-            argsOrIf(acc, res :: seqAcc, false, allowNewlines)
+            argsOrIf(acc, res :: seqAcc, allowNewlines)
           case R(_) => ???
         }
       case _ =>

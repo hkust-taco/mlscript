@@ -843,7 +843,7 @@ class Bc12() extends Bc1(1), Bc2(true)
 //│ Code generation encountered an error:
 //│   unexpected parent symbol new class Bc2.
 
-class Bc02() extends Bc1(1:Int) {
+class Bc02() extends Bc1(1 : Int) {
   val foo = 2
 }
 //│ class Bc02() extends Bc1 {
