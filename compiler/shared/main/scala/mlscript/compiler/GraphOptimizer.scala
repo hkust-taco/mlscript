@@ -430,12 +430,13 @@ class GraphOptimizer:
         body.accept_iterator(this)
 
     override def iterate(x: GOProgram) =
-      GODefRevPreOrdering.ordered(x.main, x.defs).foreach(_.accept_iterator(this))
       var changed = true
       while (changed)
         changed = false
         x.defs.foreach { defn =>
           val old = defn.activeParams
+          elims.clear()
+          defn.accept_iterator(this)
           defn.activeParams = defn.params.map {
             param => elims.get(param.str) match {
               case Some(elims) => elims.toSet
@@ -445,60 +446,8 @@ class GraphOptimizer:
           changed |= (old != defn.activeParams)
         }
 
-  private def getElims(using v: String, ctx: Ctx)(exprs: Ls[TrivialExpr], uses: Set[Elim]): Set[Elim] =
-    exprs.foldLeft(uses)((uses, expr) => getElim(expr, uses))
-
-  private def getElim(using v: String, ctx: Ctx)(expr: TrivialExpr, uses: Set[Elim]): Set[Elim] = expr match {
-    case Literal(lit) => uses
-    case Ref(name) => if (name.str == v || ctx.get(name.str).contains(v)) uses + EDirect else uses
-  }
-
-  private def getElim(using v: String, ctx: Ctx)(expr: GOExpr, uses: Set[Elim]): Set[Elim] = expr match {
-    case Apply(name, args) => args.foldLeft(
-        if (used(name.str)) uses + EApp(args.length) else uses
-      )((uses, expr) => getElim(expr, uses))
-    case BasicOp(name, args) => getElims(args, uses)
-    case CtorApp(name, args) => getElims(args, uses)
-    case Lambda(name, body) => getElim(body, uses)
-    case Literal(lit) => uses
-    case Ref(name) => if (used(name.str)) uses + EDirect else uses
-    case Select(name, cls, field) => if (used(name.str)) uses + ESelect(field) else uses
-  }
-
-  private def bindArguments(ctx: Ctx, args: Ls[TrivialExpr], params: Ls[Name]): Ctx =
-    args.zip(params).foldLeft(ctx) {
-      case (ctx, (Ref(n1), n2)) => ctx + (n1.str -> n2)
-      case _ => ctx
-    }
-
-  private def getElim(using v: String, ctx: Ctx)(node: GONode, uses: Set[Elim]): Set[Elim] = node match {
-    case Case(scrut, cases) if used(scrut.str) =>
-      cases.foldLeft(uses)((uses, arm) => getElim(arm._2, uses + EDestruct + EDirect))
-    case Case(scrut, cases) =>
-      cases.foldLeft(uses)((uses, arm) => getElim(arm._2, uses))
-    case Jump(defnref, args) => 
-      val elims = getElims(args, uses)
-      val defn = defnref.expectDefn
-      val new_ctx = bindArguments(ctx, args, defn.params)
-      elims ++ getElim(using v, new_ctx)(defn.body, uses)
-    case LetCall(resultNames, defnref, args, body) =>
-      val elims = getElims(args, uses)
-      val defn = defnref.expectDefn 
-      val backward_elims = args.zip(defn.activeParams).flatMap {
-        case (Ref(Name(x)), ys) if x == v => Some(ys)
-        case _ => None
-      }
-      getElim(body, backward_elims.foldLeft(elims)((x, y) => x ++ y))
-    case LetExpr(name, Ref(y), body) => 
-      given Ctx = appendCtx(ctx, name.str, y)
-      getElim(body, uses)
-    case LetExpr(name, expr, body) => getElim(body, getElim(expr, uses))
-    case LetJoin(joinName, params, rhs, body) => getElim(body, getElim(rhs, uses))
-    case Result(res) => getElims(res, uses)
-  }
-
-  private class IntroductionAnalysis extends GOIterator:
-    private def getIntro(node: GONode, intros: Map[Str, Intro]): Ls[Opt[Intro]] = node match
+  private object IntroductionAnalysis extends GOIterator:
+    def getIntro(node: GONode, intros: Map[Str, Intro]): Ls[Opt[Intro]] = node match
       case Case(scrut, cases) => 
         val cases_intros = cases.map { case (cls, node) => getIntro(node, intros) }
         if (cases_intros.toSet.size > 1)
@@ -526,14 +475,18 @@ class GraphOptimizer:
       case Result(res) => 
         res.map { x => getIntro(x, intros) }
 
-    private def getIntro(expr: TrivialExpr, intros: Map[Str, Intro]) = expr match 
+    def getIntro(expr: TrivialExpr, intros: Map[Str, Intro]) = expr match 
       case Literal(lit) => None
       case Ref(name) => intros.get(name.str)
 
-    private def getIntro(expr: GOExpr, intros: Map[Str, Intro]): Opt[Intro] = expr match 
+    def getIntro(expr: GOExpr, intros: Map[Str, Intro]): Opt[Intro] = expr match 
       case CtorApp(cls, args) => Some(ICtor(cls.ident))
       case Lambda(name, body) => Some(ILam(name.length))
       case _ => None
+
+    def getIntro(expr: TrivialExpr): Opt[Intro] = getIntro(expr, Map.empty)
+    def getIntro(expr: GOExpr): Opt[Intro] = getIntro(expr, Map.empty)
+    def getIntro(node: GONode): Ls[Opt[Intro]] = getIntro(node, Map.empty)
 
     override def iterate(x: GOProgram) =
       var changed = true
@@ -545,57 +498,6 @@ class GraphOptimizer:
             defn.activeResults = getIntro(defn.body, Map.empty)
             changed |= old != defn.activeResults
         }
-
-
-  private def getIntro(defn: GODef): Ls[Opt[Intro]] =
-    defn.activeResults
-
-  private def getIntro(node: GONode, intros: Map[Str, Intro]): Ls[Opt[Intro]] = node match {
-    case Case(scrut, cases) => 
-      val cases_intros = cases.map { case (cls, node) => getIntro(node, intros) }
-      if (cases_intros.toSet.size > 1)
-        cases_intros.head.map { _ => None }
-      else
-        cases_intros.head
-    case Jump(defnref, args) =>
-      val jpdef = defnref.expectDefn
-      val params = jpdef.params
-      val node = jpdef.body
-      val intros2 = params.zip(args).filter{
-        case (_, arg) => getIntro(arg, intros).isDefined
-      }.map{
-        case (param, arg) => 
-          val kv = param.str -> getIntro(arg, intros).get
-          kv
-      }
-      getIntro(node, intros2.toMap)
-    case LetCall(resultNames, defnref, args, body) =>
-      val defn = defnref.expectDefn
-      val intros2 = getIntro(defn).zip(resultNames).foldLeft(intros) { 
-        case (intros, (Some(i), name)) => intros + (name.str -> i)
-        case (intros, _) => intros
-      }
-      getIntro(body, intros2)
-    case LetExpr(name, expr, body) => 
-      val intros2 = getIntro(expr, intros).map { x => intros + (name.str -> x) }.getOrElse(intros)
-      getIntro(body, intros2)
-    case LetJoin(joinName, params, rhs, body) =>
-      throw GraphOptimizingError(f"join points after promotion: $node")
-    case Result(res) => 
-      res.map { x => getIntro(x, intros) } 
-  }
-
-  private def getIntro(expr: TrivialExpr, intros: Map[Str, Intro]) = expr match {
-    case Literal(lit) => None
-    case Ref(name) => intros.get(name.str)
-  }
-
-  private def getIntro(expr: GOExpr, intros: Map[Str, Intro]): Opt[Intro] = expr match {
-    case CtorApp(cls, args) => Some(ICtor(cls.ident))
-    case Lambda(name, body) => Some(ILam(name.length))
-    case _ => None
-  }
-
 
   private def freeVarAnalysis(using ctx: Set[Str])(expr: GOExpr, fv: Set[Str], fj: Set[Str]): (Set[Str], Set[Str]) = expr match {
     case Ref(Name(s)) => (if (ctx.contains(s)) fv else fv + s, fj)
@@ -746,12 +648,12 @@ class GraphOptimizer:
       case (accu, (cls, e)) => accu ++ findToBeSplitted(e)
     }
     case LetExpr(x, e1, e2) =>
-      val intros2 = getIntro(e1, intros).map { y => intros + (x.str -> y) }.getOrElse(intros)
+      val intros2 = IntroductionAnalysis.getIntro(e1, intros).map { y => intros + (x.str -> y) }.getOrElse(intros)
       findToBeSplitted(using intros2, defs)(e2)
     case LetJoin(jp, xs, e1, e2) => findToBeSplitted(e1) ++ findToBeSplitted(e2)
     case LetCall(xs, defnref, as, e) =>
       val defn = defnref.expectDefn
-      val intros2 = getIntro(defn).zip(xs).foldLeft(intros) { 
+      val intros2 = defn.activeResults.zip(xs).foldLeft(intros) { 
         case (intros, (Some(i), name)) => intros + (name.str -> i)
         case (intros, _) => intros
       }
@@ -817,13 +719,13 @@ class GraphOptimizer:
       (cls, e) => (cls, substSplittedFunction(e))
     })
     case LetExpr(x, e1, e2) =>
-      val intros2 = getIntro(e1, intros).map { y => intros + (x.str -> y) }.getOrElse(intros)
+      val intros2 = IntroductionAnalysis.getIntro(e1, intros).map { y => intros + (x.str -> y) }.getOrElse(intros)
       LetExpr(x, e1, substSplittedFunction(using sctx, sctx2, intros2)(e2))
     case LetJoin(jp, xs, e1, e2) => 
       throw GraphOptimizingError("join points after promotion")
     case LetCall(xs, defnref, as, e) =>
       val defn = defnref.expectDefn
-      val intros2 = getIntro(defn).zip(xs).foldLeft(intros) { 
+      val intros2 = defn.activeResults.zip(xs).foldLeft(intros) { 
         case (intros, (Some(i), name)) => intros + (name.str -> i)
         case (intros, _) => intros
       }
@@ -932,12 +834,12 @@ class GraphOptimizer:
       case (accu, (cls, e)) => accu ++ findToBeReplaced(e)
     }
     case LetExpr(x, e1, e2) =>
-      val intros2 = getIntro(e1, intros).map { y => intros + (x.str -> y) }.getOrElse(intros)
+      val intros2 = IntroductionAnalysis.getIntro(e1, intros).map { y => intros + (x.str -> y) }.getOrElse(intros)
       findToBeReplaced(using intros2)(e2)
     case LetJoin(jp, xs, e1, e2) => findToBeReplaced(e1) ++ findToBeReplaced(e2)
     case LetCall(xs, defnref, as, e) =>
       val defn = defnref.expectDefn
-      val intros2 = getIntro(defn).zip(xs).foldLeft(intros) { 
+      val intros2 = defn.activeResults.zip(xs).foldLeft(intros) { 
         case (intros, (Some(i), name)) => intros + (name.str -> i)
         case (intros, _) => intros
       }
@@ -1457,41 +1359,10 @@ class GraphOptimizer:
     if (cross_ref_is_ok)
        ensureVarNoShadowing(entry, defs)
 
-  def activeAnalyze2(prog: GOProgram): GOProgram =
+  def activeAnalyze(prog: GOProgram): GOProgram =
     prog.accept_iterator(EliminationAnalysis())
-    prog.accept_iterator(IntroductionAnalysis())
+    prog.accept_iterator(IntroductionAnalysis)
     prog
-
-  def activeAnalyze(prog: GOProgram): GOProgram = {
-    val classes = prog.classes
-    val defs = prog.defs
-    val main = prog.main
-
-    fixCrossReferences(main, defs)
-    validate(main, defs)
-
-    var changed = true
-
-    while (changed) {
-      defs.foreach {
-        case godef =>
-          val intros = getIntro(godef.body, Map.empty)
-          val elims = godef.params.map {
-            case Name(s) => getElim(using s, Map.empty)(godef.body, Set.empty)
-          }
-
-          if (elims == godef.activeParams && intros == godef.activeResults)
-            changed = false
-          else
-            godef.activeParams = elims
-            godef.activeResults = intros
-      }
-    }
-
-    fixCrossReferences(main, defs)
-    validate(main, defs)
-    GOProgram(classes, defs, main)
-  }
 
   def optimize(prog: GOProgram): GOProgram = {
     val g1 = simplifyProgram(prog)

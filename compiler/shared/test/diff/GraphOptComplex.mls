@@ -64,7 +64,7 @@ bar()
 //│ 
 //│ Promoted ------------------------------------
 //│ GOProgram({ClassInfo(0, A, [x,y,z]),ClassInfo(1, B, [m,n])}, {
-//│ Def(0, complex_foo, [t%0], [{ESelect(m)，EDirect，ESelect(n)，ESelect(z)，ESelect(x)，EDestruct，ESelect(y)}], 
+//│ Def(0, complex_foo, [t%0], [{ESelect(m)，EDestruct，EDirect，ESelect(y)，ESelect(n)，ESelect(z)，ESelect(x)}], 
 //│ None, 1, 
 //│ case t%0 of
 //│   A => let x%0 = t%0.z
@@ -86,7 +86,7 @@ bar()
 //│       in let* (x%20) = complex_foo(x%19)
 //│         in x%20
 //│ )
-//│ Def(2, @join j%0, [x%8], [{EDirect}], 
+//│ Def(2, @join j%0, [x%8], [{}], 
 //│ None, 1, 
 //│ let x%9 = B(1,2)
 //│   in case x%9 of
@@ -111,10 +111,10 @@ bar()
 //│ Def(1, bar, [], [], 
 //│ None, 1, 
 //│ let* (x%18) = complex_foo$D%0$S%0(8,7,6)
-//│   in let* (x%20) = complex_foo$D%1$S%0(10,9)
+//│   in let* (x%20) = complex_foo$D%1$S%0(9,10)
 //│     in x%20
 //│ )
-//│ Def(2, @join j%0, [x%8], [{EDirect}], 
+//│ Def(2, @join j%0, [x%8], [{}], 
 //│ None, 1, 
 //│ let x%9 = B(1,2)
 //│   in case x%9 of
@@ -132,7 +132,7 @@ bar()
 //│   in let x%4 = +(t%0_x,x%3)
 //│     in jump j%0(x%4)
 //│ )
-//│ Def(8, complex_foo$D%1$S%0, [t%0_n,t%0_m], [{EDirect},{EDirect}], 
+//│ Def(8, complex_foo$D%1$S%0, [t%0_m,t%0_n], [{EDirect},{EDirect}], 
 //│ None, 1, 
 //│ let x%7 = -(t%0_m,t%0_n)
 //│   in jump j%0(x%7)
@@ -252,7 +252,7 @@ bar()
 //│ 
 //│ Promoted ------------------------------------
 //│ GOProgram({ClassInfo(0, A, [w,x]),ClassInfo(1, B, [y]),ClassInfo(2, C, [z])}, {
-//│ Def(0, complex_foo, [t%0], [{EDestruct，EDirect，ESelect(x)，ESelect(y)}], 
+//│ Def(0, complex_foo, [t%0], [{ESelect(y)，EDestruct，ESelect(x)，EDirect}], 
 //│ None, 1, 
 //│ let x%0 = +(1,2)
 //│   in let x%1 = *(1,2)
@@ -274,7 +274,7 @@ bar()
 //│       in let* (x%37) = complex_foo(x%36)
 //│         in x%37
 //│ )
-//│ Def(2, @join j%0, [x%9], [{EDirect，EDestruct，ESelect(x)，ESelect(w)}], 
+//│ Def(2, @join j%0, [x%9], [{ESelect(w)，EDestruct，ESelect(x)，EDirect}], 
 //│ None, 1, 
 //│ let x%10 = A(5,x%9)
 //│   in let x%11 = B(6)
@@ -322,7 +322,7 @@ bar()
 //│         in let* (x%37) = complex_foo$D%0(x%49,x%50,x%51)
 //│           in x%37
 //│ )
-//│ Def(2, @join j%0, [x%9], [{EDirect，EDestruct，ESelect(x)，ESelect(w)}], 
+//│ Def(2, @join j%0, [x%9], [{ESelect(w)，EDestruct，ESelect(x)，EDirect}], 
 //│ None, 1, 
 //│ let x%10 = A(5,x%9)
 //│   in let x%11 = B(6)
@@ -361,7 +361,7 @@ bar()
 //│   in let x%1 = *(1,2)
 //│     in t%0,x%0,x%1
 //│ )
-//│ Def(8, complex_foo$D%0, [t%0,x%0,x%1], [{ESelect(x)},{EDirect},{EDirect}], 
+//│ Def(8, complex_foo$D%0, [t%0,x%0,x%1], [{ESelect(x)},{},{}], 
 //│ None, 1, 
 //│ let x%2 = t%0.x
 //│   in jump j%0(x%2)
@@ -479,7 +479,7 @@ bar()
 //│ 
 //│ Promoted ------------------------------------
 //│ GOProgram({ClassInfo(0, A, [w,x]),ClassInfo(1, B, [y]),ClassInfo(2, C, [z])}, {
-//│ Def(0, complex_foo, [t%0], [{EDestruct，EDirect，ESelect(w)，ESelect(y)}], 
+//│ Def(0, complex_foo, [t%0], [{ESelect(w)，ESelect(y)，EDestruct，EDirect}], 
 //│ None, 1, 
 //│ let x%0 = +(1,2)
 //│   in let x%1 = *(1,2)
@@ -503,7 +503,7 @@ bar()
 //│       in let* (x%39) = complex_foo(x%38)
 //│         in x%39
 //│ )
-//│ Def(2, @join j%0, [x%11], [{EDirect，EDestruct，ESelect(x)，ESelect(w)}], 
+//│ Def(2, @join j%0, [x%11], [{ESelect(w)，EDestruct，ESelect(x)，EDirect}], 
 //│ None, 1, 
 //│ let x%12 = A(5,x%11)
 //│   in let x%13 = B(6)
@@ -551,7 +551,7 @@ bar()
 //│         in let* (x%39) = complex_foo$D%0(x%56,x%57,x%58)
 //│           in x%39
 //│ )
-//│ Def(2, @join j%0, [x%11], [{EDirect，EDestruct，ESelect(x)，ESelect(w)}], 
+//│ Def(2, @join j%0, [x%11], [{ESelect(w)，EDestruct，ESelect(x)，EDirect}], 
 //│ None, 1, 
 //│ let x%12 = A(5,x%11)
 //│   in let x%13 = B(6)
@@ -590,7 +590,7 @@ bar()
 //│   in let x%1 = *(1,2)
 //│     in t%0,x%0,x%1
 //│ )
-//│ Def(8, complex_foo$D%0, [t%0,x%0,x%1], [{ESelect(w)},{EDirect},{EDirect}], 
+//│ Def(8, complex_foo$D%0, [t%0,x%0,x%1], [{ESelect(w)},{},{}], 
 //│ None, 1, 
 //│ let x%3 = t%0.w
 //│   in let x%4 = C(0)
@@ -634,7 +634,7 @@ bar()
 //│   in let x%1 = *(1,2)
 //│     in t%0,x%0,x%1
 //│ )
-//│ Def(8, complex_foo$D%0, [t%0,x%0,x%1], [{ESelect(w)},{EDirect},{EDirect}], 
+//│ Def(8, complex_foo$D%0, [t%0,x%0,x%1], [{ESelect(w)},{},{}], 
 //│ None, 1, 
 //│ let x%3 = t%0.w
 //│   in let x%4 = C(0)
@@ -648,7 +648,7 @@ bar()
 //│   in let x%13 = B(6)
 //│     in x%12,x%1,x%0,x%13,x%11
 //│ )
-//│ Def(16, @join j%0$D%3, [x%12,x%1,x%0,x%13,x%11], [{EDestruct，EDirect，ESelect(w)},{EDirect},{EDirect},{EDestruct，EDirect，ESelect(w)},{ESelect(x)，ESelect(w)}], 
+//│ Def(16, @join j%0$D%3, [x%12,x%1,x%0,x%13,x%11], [{},{EDirect},{EDirect},{},{ESelect(w)，ESelect(x)}], 
 //│ None, 1, 
 //│ let x%14 = x%11.x
 //│   in let x%15 = x%11.w

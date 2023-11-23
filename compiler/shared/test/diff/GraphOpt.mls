@@ -100,7 +100,7 @@ bar()
 //│ 
 //│ Promoted ------------------------------------
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
-//│ Def(0, foo, [pair%0], [{EDestruct，EDirect，ESelect(y)，ESelect(x)}], 
+//│ Def(0, foo, [pair%0], [{ESelect(y)，EDestruct，ESelect(x)，EDirect}], 
 //│ Some(ICtor(Pair)), 1, 
 //│ case pair%0 of
 //│   Pair => let x%0 = pair%0.y
@@ -184,7 +184,7 @@ foo()
 //│ 
 //│ Promoted ------------------------------------
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
-//│ Def(0, silly, [pair%0], [{EDestruct，EDirect，ESelect(x)}], 
+//│ Def(0, silly, [pair%0], [{EDestruct，ESelect(x)，EDirect}], 
 //│ None, 1, 
 //│ case pair%0 of
 //│   Pair => case pair%0 of
@@ -228,7 +228,7 @@ foo()
 //│ None, 1, 
 //│ jump j%0(x%6)
 //│ )
-//│ Def(5, silly$D%0, [pair%0], [{EDestruct，EDirect，ESelect(x)}], 
+//│ Def(5, silly$D%0, [pair%0], [{EDestruct，ESelect(x)，EDirect}], 
 //│ None, 1, 
 //│ case pair%0 of
 //│   Pair => let x%4 = pair%0.x
@@ -307,7 +307,7 @@ foo()
 //│ 
 //│ Promoted ------------------------------------
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
-//│ Def(0, inc_fst, [pair%0], [{EDestruct，EDirect，ESelect(x)}], 
+//│ Def(0, inc_fst, [pair%0], [{EDestruct，ESelect(x)，EDirect}], 
 //│ None, 1, 
 //│ case pair%0 of
 //│   Pair => let x%2 = pair%0.x
@@ -379,7 +379,7 @@ foo()
 //│ 
 //│ Promoted ------------------------------------
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
-//│ Def(0, inc_fst, [pair%0], [{EDestruct，EDirect，ESelect(y)}], 
+//│ Def(0, inc_fst, [pair%0], [{ESelect(y)，EDestruct，EDirect}], 
 //│ None, 1, 
 //│ case pair%0 of
 //│   Pair => let x%1 = pair%0.y
@@ -461,7 +461,7 @@ bar()
 //│ 
 //│ Promoted ------------------------------------
 //│ GOProgram({ClassInfo(0, Left, [x]),ClassInfo(1, Right, [y])}, {
-//│ Def(0, foo, [a%0,b%0], [{EDestruct，EDirect，ESelect(x)},{EDirect}], 
+//│ Def(0, foo, [a%0,b%0], [{EDestruct，ESelect(x)，EDirect},{EDirect}], 
 //│ None, 1, 
 //│ case a%0 of
 //│   Left => let x%0 = a%0.x
@@ -477,7 +477,7 @@ bar()
 //│   in let* (x%10) = foo(x%9,2)
 //│     in x%10
 //│ )
-//│ Def(2, @join j%0, [x%5], [{EDestruct，EDirect，ESelect(x)，ESelect(y)}], 
+//│ Def(2, @join j%0, [x%5], [{ESelect(y)，EDestruct，ESelect(x)，EDirect}], 
 //│ None, 1, 
 //│ case x%5 of
 //│   Left => let x%6 = x%5.x
@@ -496,7 +496,7 @@ bar()
 //│ let* (x%10) = foo$D%1(2)
 //│   in x%10
 //│ )
-//│ Def(2, @join j%0, [x%5], [{EDestruct，EDirect，ESelect(x)，ESelect(y)}], 
+//│ Def(2, @join j%0, [x%5], [{ESelect(y)，EDestruct，ESelect(x)，EDirect}], 
 //│ None, 1, 
 //│ case x%5 of
 //│   Left => let x%6 = x%5.x
@@ -557,7 +557,7 @@ bar()
 //│ 
 //│ Promoted ------------------------------------
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Pair, [x,y])}, {
-//│ Def(0, foo, [a%0], [{ESelect(x)，ESelect(y)}], 
+//│ Def(0, foo, [a%0], [{ESelect(y)，ESelect(x)}], 
 //│ None, 1, 
 //│ let x%0 = a%0.x
 //│   in let x%1 = a%0.y
@@ -578,10 +578,10 @@ bar()
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Pair, [x,y])}, {
 //│ Def(1, bar, [], [], 
 //│ None, 1, 
-//│ let* (x%4) = foo$S%0(1,0)
+//│ let* (x%4) = foo$S%0(0,1)
 //│   in x%4
 //│ )
-//│ Def(2, foo$S%0, [a%0_x,a%0_y], [{EDirect},{EDirect}], 
+//│ Def(2, foo$S%0, [a%0_y,a%0_x], [{EDirect},{EDirect}], 
 //│ None, 1, 
 //│ let x%2 = +(a%0_x,a%0_y)
 //│   in x%2
@@ -629,7 +629,7 @@ bar()
 //│ 
 //│ Promoted ------------------------------------
 //│ GOProgram({ClassInfo(0, C1, [x,y]),ClassInfo(1, C2, [z])}, {
-//│ Def(0, foo, [a%0], [{EDestruct，EDirect，ESelect(x)，ESelect(z)}], 
+//│ Def(0, foo, [a%0], [{ESelect(z)，EDestruct，ESelect(x)，EDirect}], 
 //│ None, 1, 
 //│ case a%0 of
 //│   C1 => let x%1 = a%0.x
@@ -714,7 +714,7 @@ baz()
 //│ 
 //│ Promoted ------------------------------------
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
-//│ Def(0, foo, [a%0,b%0], [{ESelect(x)，ESelect(y)},{ESelect(x)，ESelect(y)}], 
+//│ Def(0, foo, [a%0,b%0], [{ESelect(y)，ESelect(x)},{ESelect(y)，ESelect(x)}], 
 //│ None, 1, 
 //│ let x%0 = a%0.x
 //│   in let x%1 = a%0.y
@@ -725,7 +725,7 @@ baz()
 //│             in let x%6 = +(x%5,x%3)
 //│               in x%6
 //│ )
-//│ Def(1, bar, [c%0], [{EDirect，ESelect(x)，ESelect(y)}], 
+//│ Def(1, bar, [c%0], [{ESelect(y)，ESelect(x)，EDirect}], 
 //│ None, 1, 
 //│ let x%7 = Pair(0,1)
 //│   in let* (x%8) = foo(x%7,c%0)
@@ -752,13 +752,13 @@ baz()
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
-//│ Def(1, bar, [c%0], [{ESelect(x)，ESelect(y)}], 
+//│ Def(1, bar, [c%0], [{ESelect(y)，ESelect(x)}], 
 //│ None, 1, 
-//│ let x%17 = c%0.x
-//│   in let x%18 = c%0.y
-//│     in let* (x%8) = foo$S%0(x%17,x%18,0,1)
-//│       in let* (x%10) = foo$S%0(2,3,x%17,x%18)
-//│         in let* (x%13) = foo$S%0(2,3,0,1)
+//│ let x%17 = c%0.y
+//│   in let x%18 = c%0.x
+//│     in let* (x%8) = foo$S%0(x%17,x%18,1,0)
+//│       in let* (x%10) = foo$S%0(3,2,x%17,x%18)
+//│         in let* (x%13) = foo$S%0(3,2,1,0)
 //│           in x%13
 //│ )
 //│ Def(2, baz, [], [], 
@@ -767,7 +767,7 @@ baz()
 //│   in let* (x%15) = bar(x%14)
 //│     in x%15
 //│ )
-//│ Def(3, foo$S%0, [b%0_x,b%0_y,a%0_x,a%0_y], [{EDirect},{EDirect},{EDirect},{EDirect}], 
+//│ Def(3, foo$S%0, [b%0_y,b%0_x,a%0_y,a%0_x], [{EDirect},{EDirect},{EDirect},{EDirect}], 
 //│ None, 1, 
 //│ let x%4 = +(a%0_x,a%0_y)
 //│   in let x%5 = +(x%4,b%0_x)
@@ -782,21 +782,21 @@ baz()
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
 //│ Def(2, baz, [], [], 
 //│ None, 1, 
-//│ let* (x%15) = bar$S%0(4,5)
+//│ let* (x%15) = bar$S%0(5,4)
 //│   in x%15
 //│ )
-//│ Def(3, foo$S%0, [b%0_x,b%0_y,a%0_x,a%0_y], [{EDirect},{EDirect},{EDirect},{EDirect}], 
+//│ Def(3, foo$S%0, [b%0_y,b%0_x,a%0_y,a%0_x], [{EDirect},{EDirect},{EDirect},{EDirect}], 
 //│ None, 1, 
 //│ let x%4 = +(a%0_x,a%0_y)
 //│   in let x%5 = +(x%4,b%0_x)
 //│     in let x%6 = +(x%5,b%0_y)
 //│       in x%6
 //│ )
-//│ Def(4, bar$S%0, [c%0_x,c%0_y], [{EDirect},{EDirect}], 
+//│ Def(4, bar$S%0, [c%0_y,c%0_x], [{EDirect},{EDirect}], 
 //│ None, 1, 
-//│ let* (x%8) = foo$S%0(c%0_x,c%0_y,0,1)
-//│   in let* (x%10) = foo$S%0(2,3,c%0_x,c%0_y)
-//│     in let* (x%13) = foo$S%0(2,3,0,1)
+//│ let* (x%8) = foo$S%0(c%0_y,c%0_x,1,0)
+//│   in let* (x%10) = foo$S%0(3,2,c%0_y,c%0_x)
+//│     in let* (x%13) = foo$S%0(3,2,1,0)
 //│       in x%13
 //│ )
 //│ },
