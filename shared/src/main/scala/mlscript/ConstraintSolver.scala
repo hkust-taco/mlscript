@@ -77,7 +77,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         
         case S(fty) =>
           if (info.privateParams.contains(fld) && !allowPrivateAccess)
-            err(msg"Parameter '${fld.name}' cannot tbe accessed as a field" -> fld.toLoc :: Nil)
+            err(msg"Parameter '${fld.name}' cannot be accessed as a field" -> fld.toLoc :: Nil)
           S(fty)
         
         case N if info.isComputing =>
@@ -96,7 +96,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                 S(d.typeSignature.toUpper(provTODO))
               case S(p: NuParam) =>
                 if (!allowPrivateAccess && !p.isPublic)
-                  err(msg"Parameter '${p.nme.name}' cannot tbe accessed as a field" -> fld.toLoc ::
+                  err(msg"Parameter '${p.nme.name}' cannot be accessed as a field" -> fld.toLoc ::
                     msg"Either make the parameter a `val` or access it through destructuring" -> p.nme.toLoc ::
                     Nil)
                 S(p.ty)

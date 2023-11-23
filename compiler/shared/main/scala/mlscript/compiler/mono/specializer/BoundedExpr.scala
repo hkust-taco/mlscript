@@ -13,6 +13,17 @@ abstract class MonoValue {
   def toBoundedExpr = BoundedExpr(this)
   def toStringSafe(using Set[Int]) = this.toString()
 }
+case class TypeValue(name: String) extends MonoValue {
+  override def toString(): String = s"type ${name}"
+  override def toStringSafe(using Set[Int]): String = toString()
+  override def equals(x: Any): Boolean = {
+    x match {
+      case TypeValue(xName) => name.equals(xName)
+      case _ => false
+    }
+  }
+}
+
 case class ObjectValue(name: String, fields: MutMap[String, BoundedExpr]) extends MonoValue{
   override def toString(): String = fields.map(x => (s"${x._1}: ${x._2.toStringSafe}")).mkString(s"$name@{", ", ", "}")
   override def toStringSafe(using Set[Int]): String = fields.map(x => (s"${x._1}: ${x._2.toStringSafe}")).mkString(s"$name@{", ", ", "}")

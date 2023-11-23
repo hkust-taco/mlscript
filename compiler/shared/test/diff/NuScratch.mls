@@ -1,103 +1,217 @@
 :NewDefs
 
 :mono
-fun higherOrder(pred) =  pred(5)
-fun pred1(num) = num == 5
-fun pred2(num) = false
-higherOrder(pred1)
-higherOrder(pred2)
+fun lambda(num) = (num2) => num+num2
+lambda(1)(2)
 //│ Parsed:
-//│ TypingUnit(NuFunDef(None, higherOrder, None, [], Lam(Tup(_: Var(pred)), App(Var(pred), Tup(_: IntLit(5))))), NuFunDef(None, pred1, None, [], Lam(Tup(_: Var(num)), App(Var(==), Tup(_: Var(num), _: IntLit(5))))), NuFunDef(None, pred2, None, [], Lam(Tup(_: Var(num)), Var(false))), App(Var(higherOrder), Tup(_: Var(pred1))), App(Var(higherOrder), Tup(_: Var(pred2))))
+//│ TypingUnit(NuFunDef(None, lambda, None, [], Lam(Tup(_: Var(num)), Lam(Tup(_: Bra(rcd = false, Var(num2))), App(Var(+), Tup(_: Var(num), _: Var(num2)))))), App(App(Var(lambda), Tup(_: IntLit(1))), Tup(_: IntLit(2))))
 //│ Lifted:
-//│ TypingUnit(NuFunDef(None, higherOrder$1, None, [], Lam(Tup(_: Var(pred)), App(Var(pred), Tup(_: IntLit(5))))), NuFunDef(None, pred1$3, None, [], Lam(Tup(_: Var(num)), App(Var(==), Tup(_: Var(num), _: IntLit(5))))), NuFunDef(None, pred2$2, None, [], Lam(Tup(_: Var(num)), Var(false))), App(Var(higherOrder$1), Tup(_: Var(pred1$3))), App(Var(higherOrder$1), Tup(_: Var(pred2$2))))
-//│ Mono:
-//│ 
-//│ Defunc result: 
-//│ fun pred2$2(num) =
-//│   false
-//│ fun pred1$3(num) =
-//│   ==(num, #5)
-//│ fun higherOrder$1(pred) =
-//│   pred(#5)
-//│ fun main$$4() =
-//│   higherOrder$1(pred2$2)
-//│ fun main$$3() =
-//│   higherOrder$1(pred1$3)
-//│ main$$3()
-//│ main$$4()
-//│ fun higherOrder: forall 'a. (5 -> 'a) -> 'a
-//│ fun pred1: Num -> Bool
-//│ fun pred2: anything -> false
-//│ false
-//│ res
-//│     = true
-//│ res
-//│     = false
-
-:mono
-fun createPred(num1) = (num2) => (num3) => num1+num2+num3
-createPred(1)(2)
-//│ Parsed:
-//│ TypingUnit(NuFunDef(None, createPred, None, [], Lam(Tup(_: Var(num1)), Lam(Tup(_: Bra(rcd = false, Var(num2))), Lam(Tup(_: Bra(rcd = false, Var(num3))), App(Var(+), Tup(_: App(Var(+), Tup(_: Var(num1), _: Var(num2))), _: Var(num3))))))), App(App(Var(createPred), Tup(_: IntLit(1))), Tup(_: IntLit(2))))
-//│ Lifted:
-//│ TypingUnit(NuTypeDef(class, Lambda1$2$1_Lambda1$3$2, (), Tup(_: Var(par$Lambda1$2$1), _: Var(num2)), (), None, None, TypingUnit(NuFunDef(None, apply, None, [], Lam(Tup(_: Bra(rcd = false, Var(num3))), App(Var(+), Tup(_: App(Var(+), Tup(_: Sel(Sel(Var(this), par$Lambda1$2$1), num1), _: Sel(Var(this), num2))), _: Var(num3))))))), NuTypeDef(class, Lambda1$2$1, (), Tup(_: Var(num1)), (), None, None, TypingUnit(NuFunDef(None, apply, None, [], Lam(Tup(_: Bra(rcd = false, Var(num2))), Blk(New(Some((TypeName(Lambda1$2$1_Lambda1$3$2),[this, num2,])), TypingUnit())))))), NuFunDef(None, createPred$1, None, [], Lam(Tup(_: Var(num1)), Blk(New(Some((TypeName(Lambda1$2$1),[num1,])), TypingUnit())))), App(App(Var(createPred$1), Tup(_: IntLit(1))), Tup(_: IntLit(2))))
-//│ Mono:
-//│ 
-//│ Defunc result: 
-//│ class Lambda1$2$1_Lambda1$3$2(par$Lambda1$2$1, num2) {
-//│   fun apply(num3) =
-//│     +(+(this.par$Lambda1$2$1.num1, this.num2), num3)
+//│ TypingUnit(NuTypeDef(class, Lambda1$2$1, (), Tup(_: Var(num)), (), None, None, TypingUnit(NuFunDef(None, apply, None, [], Lam(Tup(_: Bra(rcd = false, Var(num2))), App(Var(+), Tup(_: Sel(Var(this), num), _: Var(num2))))))), NuFunDef(None, lambda$1, None, [], Lam(Tup(_: Var(num)), Blk(New(Some((TypeName(Lambda1$2$1),[num,])), TypingUnit())))), App(App(Var(lambda$1), Tup(_: IntLit(1))), Tup(_: IntLit(2))))
+//│ TypingUnit {
+//│   class Lambda1$2$1([num,]) {fun apply = ('(' num2 ')',) => +((this).num, num2,)}
+//│   fun lambda$1 = (num,) => {new Lambda1$2$1([num,]) {}}
+//│   Code(List(lambda$1(1,)(2,)))
 //│ }
-//│ class Lambda1$2$1(num1) {
+//│ Mono:
+//│ 
+//│ Defunc result: 
+//│ class Lambda1$2$1(num) {
 //│   fun apply(num2) =
-//│     new Lambda1$2$1_Lambda1$3$2 (this, num2) 
+//│     +(this.num, num2)
 //│ }
 //│ fun apply$Lambda1$2$1(this, num2) =
-//│   new Lambda1$2$1_Lambda1$3$2 (this, num2) 
-//│ fun createPred$1(num1) =
-//│   new Lambda1$2$1 (num1) 
-//│ fun main$$3() =
-//│   createPred$1(#1) match {case obj: Lambda1$2$1 => apply$Lambda1$2$1(obj, #2)}
-//│ main$$3()
-//│ fun createPred: Int -> Int -> Int -> Int
-//│ Int -> Int
+//│   +(this.num, num2)
+//│ fun lambda$1(num) =
+//│   new Lambda1$2$1 (num) 
+//│ fun main$$2() =
+//│   lambda$1(#1) match {case obj: Lambda1$2$1 => apply$Lambda1$2$1(obj, #2)}
+//│ main$$2()
+//│ fun lambda: Int -> Int -> Int
+//│ Int
 //│ res
-//│     = [Function (anonymous)]
+//│     = 3
+
+:mono
+class G() {
+    val x = 5
+}
+(new G).x
+//│ Parsed:
+//│ TypingUnit(NuTypeDef(class, G, (), Tup(), (), None, None, TypingUnit(NuFunDef(Some(false), x, None, [], IntLit(5)))), Sel(Bra(rcd = false, New(Some((TypeName(G),[])), TypingUnit())), x))
+//│ Lifted:
+//│ TypingUnit(NuTypeDef(class, G$1, (), Tup(), (), None, None, TypingUnit(NuFunDef(Some(false), x, None, [], IntLit(5)))), Sel(Bra(rcd = false, New(Some((TypeName(G$1),[])), TypingUnit())), x))
+//│ TypingUnit {
+//│   class G$1([]) {let x = 5}
+//│   Code(List(('(' new G$1([]) {} ')').x))
+//│ }
+//│ Mono:
+//│ 
+//│ Defunc result: 
+//│ class G$1() {
+//│   let x =
+//│     #5
+//│ }
+//│ let x$G$1(this) =
+//│   #5
+//│ fun main$$1() =
+//│   new G$1 () .x
+//│ main$$1()
+//│ class G() {
+//│   val x: 5
+//│ }
+//│ 5
+//│ res
+//│     = 5
 
 :mono
 :rc
-:p
-class A() {
-    fun x() = 0
+class M(num: Int) {
+    fun get() = num
 }
-let a = A()
-a.x()
-//│ |#class| |A|(||)| |{|→|#fun| |x|(||)| |#=| |0|←|↵|}|↵|#let| |a| |#=| |A|(||)|↵|a|.x|(||)|
-//│ AST: TypingUnit(NuTypeDef(class, A, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, x, None, [], Lam(Tup(), IntLit(0))))), NuFunDef(Some(false), a, None, [], App(Var(A), Tup())), App(Sel(Var(a), x), Tup()))
+(new M(6)).get()
 //│ Parsed:
-//│ TypingUnit(NuTypeDef(class, A, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, x, None, [], Lam(Tup(), IntLit(0))))), NuFunDef(Some(false), a, None, [], App(Var(A), Tup())), App(Sel(Var(a), x), Tup()))
+//│ TypingUnit(NuTypeDef(class, M, (), Tup(num: Var(Int)), (), None, None, TypingUnit(NuFunDef(None, get, None, [], Lam(Tup(), Var(num))))), App(Sel(Bra(rcd = false, New(Some((TypeName(M),[6,])), TypingUnit())), get), Tup()))
 //│ Lifted:
-//│ TypingUnit(NuTypeDef(class, A$1, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, x, None, [], Lam(Tup(), IntLit(0))))), NuFunDef(Some(false), a$1, None, [], App(Var(A$1), Tup())), App(Sel(Var(a$1), x), Tup()))
+//│ TypingUnit(NuTypeDef(class, M$1, (), Tup(num: Var(Int)), (), None, None, TypingUnit(NuFunDef(None, get, None, [], Lam(Tup(), Sel(Var(this), num))))), App(Sel(Bra(rcd = false, New(Some((TypeName(M$1),[6,])), TypingUnit())), get), Tup()))
+//│ TypingUnit {
+//│   class M$1([num: Int,]) {fun get = () => (this).num}
+//│   Code(List(('(' new M$1([6,]) {} ')').get()))
+//│ }
 //│ Mono:
 //│ 
 //│ Defunc result: 
-//│ class A$1() {
-//│   fun x() =
-//│     #0
+//│ class M$1(num) {
+//│   fun get() =
+//│     this.num
 //│ }
-//│ fun main$$2() =
-//│   a$1 match {}
-//│ let a$1 =
-//│   A$1()
-//│ main$$2()
-//│ Parsed: TypingUnit(NuTypeDef(class, A$1, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, x, None, [], Lam(Tup(), IntLit(0))))), NuFunDef(None, main$$2, None, [], Lam(Tup(), CaseOf(Var(a$1), NoCases)), NuFunDef(Some(false), a$1, None, [], App(Var(A$1), Tup())), App(Var(main$$2), Tup()))
-//│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ╙── expression of type `A$1` does not match type `nothing`
-//│ class A$1() {
-//│   fun x: () -> 0
+//│ fun get$M$1(this) =
+//│   this.num
+//│ fun main$$1() =
+//│   new M$1 (#6)  match {case obj: M$1 => get$M$1(obj)}
+//│ main$$1()
+//│ ╔══[ERROR] Parameter 'num' cannot be accessed as a field
+//│ ╙──
+//│ ╔══[ERROR] identifier not found: obj
+//│ ╙──
+//│ class M$1(num: Int) {
+//│   fun get: () -> (Int | error)
 //│ }
-//│ fun main$$2: () -> nothing
-//│ let a$1: A$1
-//│ nothing
+//│ fun get$M$1: forall 'num. {num: 'num} -> 'num
+//│ fun main$$1: () -> error
+//│ error
 //│ Code generation encountered an error:
-//│   unresolved symbol a$1
+//│   unresolved symbol obj
+
+fun foo(num) = num
+fun bar(num: Int) = num
+//│ Parsed:
+//│ TypingUnit(NuFunDef(None, foo, None, [], Lam(Tup(_: Var(num)), Var(num))), NuFunDef(None, bar, None, [], Lam(Tup(num: Var(Int)), Var(num))))
+//│ Lifted:
+//│ TypingUnit(NuFunDef(None, foo$2, None, [], Lam(Tup(_: Var(num)), Var(num))), NuFunDef(None, bar$1, None, [], Lam(Tup(num: Var(Int)), Var(num))))
+//│ TypingUnit {
+//│   fun foo$2 = (num,) => num
+//│   fun bar$1 = (num: Int,) => num
+//│ }
+//│ fun foo: forall 'a. 'a -> 'a
+//│ fun bar: (num: Int) -> Int
+
+:js
+class X {}
+class Y() {}
+class Z(num: Int) {}
+class W(val num: Int) {}
+//│ Parsed:
+//│ TypingUnit(NuTypeDef(class, X, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, Y, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, Z, (), Tup(num: Var(Int)), (), None, None, TypingUnit()), NuTypeDef(class, W, (), Tup(num: Var(Int)), (), None, None, TypingUnit()))
+//│ Lifted:
+//│ TypingUnit(NuTypeDef(class, X$1, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, Y$2, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, Z$3, (), Tup(num: Var(Int)), (), None, None, TypingUnit()), NuTypeDef(class, W$4, (), Tup(num: Var(Int)), (), None, None, TypingUnit()))
+//│ TypingUnit {
+//│   class X$1([]) {}
+//│   class Y$2([]) {}
+//│   class Z$3([num: Int,]) {}
+//│   class W$4([val num: Int,]) {}
+//│ }
+//│ class X {
+//│   constructor()
+//│ }
+//│ class Y()
+//│ class Z(num: Int)
+//│ class W(num: Int)
+//│ // Prelude
+//│ class TypingUnit4 {
+//│   #X;
+//│   #Y;
+//│   #Z;
+//│   #W;
+//│   constructor() {
+//│   }
+//│   get X() {
+//│     const qualifier = this;
+//│     if (this.#X === undefined) {
+//│       class X {};
+//│       this.#X = X;
+//│     }
+//│     return this.#X;
+//│   }
+//│   get Y() {
+//│     const qualifier = this;
+//│     if (this.#Y === undefined) {
+//│       class Y {
+//│         constructor() {
+//│         }
+//│       static
+//│         unapply(x) {
+//│           return [];
+//│         }
+//│       };
+//│       this.#Y = (() => Object.freeze(new Y()));
+//│       this.#Y.class = Y;
+//│       this.#Y.unapply = Y.unapply;
+//│     }
+//│     return this.#Y;
+//│   }
+//│   get Z() {
+//│     const qualifier = this;
+//│     if (this.#Z === undefined) {
+//│       class Z {
+//│         #num;
+//│         constructor(num) {
+//│           this.#num = num;
+//│         }
+//│       static
+//│         unapply(x) {
+//│           return [x.#num];
+//│         }
+//│       };
+//│       this.#Z = ((num) => Object.freeze(new Z(num)));
+//│       this.#Z.class = Z;
+//│       this.#Z.unapply = Z.unapply;
+//│     }
+//│     return this.#Z;
+//│   }
+//│   get W() {
+//│     const qualifier = this;
+//│     if (this.#W === undefined) {
+//│       class W {
+//│         #num;
+//│         get num() { return this.#num; }
+//│         constructor(num) {
+//│           this.#num = num;
+//│         }
+//│       static
+//│         unapply(x) {
+//│           return [x.#num];
+//│         }
+//│       };
+//│       this.#W = ((num) => Object.freeze(new W(num)));
+//│       this.#W.class = W;
+//│       this.#W.unapply = W.unapply;
+//│     }
+//│     return this.#W;
+//│   }
+//│ }
+//│ const typing_unit4 = new TypingUnit4;
+//│ globalThis.X = typing_unit4.X;
+//│ globalThis.Y = typing_unit4.Y;
+//│ globalThis.Z = typing_unit4.Z;
+//│ globalThis.W = typing_unit4.W;
+//│ // End of generated code

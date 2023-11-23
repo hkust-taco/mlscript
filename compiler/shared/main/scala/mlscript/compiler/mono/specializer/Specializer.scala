@@ -6,10 +6,35 @@ import mlscript.compiler.debug.Debug
 import mlscript.compiler.mono.MonomorphError
 import mlscript.compiler.mono.Monomorph
 import mlscript.compiler.UnitValue
+import mlscript.compiler.UnitValue.{Null, Undefined}
 import mlscript.TypeName
 import mlscript.compiler.Item
 import mlscript.compiler.CaseBranch
 import mlscript.compiler.Expr
+import mlscript.{App, Asc, Assign, Bind, Blk, Bra, CaseOf, Lam, Let, Lit,
+                 New, Rcd, Sel, Subs, Term, Test, Tup, With, Var, Fld, FldFlags, If, PolyType, 
+                 IfBody, IfThen, IfElse, IfLet, IfOpApp, IfOpsApp, IfBlock}
+import mlscript.UnitLit
+import mlscript.codegen.Helpers.inspect as showStructure
+import mlscript.compiler.mono.MonomorphError
+import mlscript.NuTypeDef
+import mlscript.NuFunDef
+import scala.collection.mutable.ArrayBuffer
+import mlscript.CaseBranches
+import mlscript.Case
+import mlscript.SimpleTerm
+import mlscript.NoCases
+import mlscript.Wildcard
+import mlscript.DecLit
+import mlscript.IntLit
+import mlscript.StrLit
+import mlscript.AppliedType
+import mlscript.TypeName
+import mlscript.TypeDefKind
+import mlscript.compiler.mono.Monomorph
+import mlscript.NuDecl
+import mlscript.TypingUnit
+import mlscript.compiler.Helpers.extractParams
 
 class Specializer(monoer: Monomorph)(using debug: Debug){
 
@@ -171,6 +196,41 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
       case Expr.Match(scrutinee, branches) => throw MonomorphError(s"Unhandled case: ${rawExpr}")
     }
   // }(_.expValue)
+  
+  /*
+    Evaluate a Term given an evaluation Context and return a BoundedExpr
+  */
+  def nuEvaluate(term: Term)(using evalCtx: Map[String, BoundedExpr], callingStack: List[String]): BoundedExpr =
+    term match
+      case IntLit(value) => BoundedExpr(LiteralValue(value))
+      case DecLit(value) => BoundedExpr(LiteralValue(value))
+      case StrLit(value) => BoundedExpr(LiteralValue(value))
+      case UnitLit(value) => BoundedExpr(LiteralValue(if value then Undefined else Null))
+      case Var(name) => 
+        evalCtx.getOrElse(name, BoundedExpr(monoer.nuFindVar(name)))
+      case Lam(lhs, rhs) => throw MonomorphError("Should not encounter lambda during evaluation process")
+      case App(lhs, rhs) => 
+        BoundedExpr(nuEvaluate(lhs).getValue.map{
+          case FunctionValue(name, params, ctx) => ???
+          case ObjectValue(name, fields) => ??? 
+          case TypeValue(name) => monoer.nuCreateObjValue(name, extractParams(rhs).map((flags, nm, tp) => nuEvaluate(nm)).toList)
+        })
+      case New(Some((constructor, args)), _) => ???
+      case New(None, body) => ???
+      case Tup(fields) => ???
+      case Rcd(fields) => ???
+      case Sel(receiver, fieldName) => ???
+      case Let(rec, Var(name), rhs, body) => ???
+      case Blk(stmts) => ???
+      case Bra(rcd, term) => ???
+      case Asc(term, ty) => ???
+      case _: Bind => ???
+      case _: Test => ???
+      case With(term, Rcd(fields)) => ???
+      case CaseOf(term, cases) => ???     
+      case Subs(array, index) => ???
+      case Assign(lhs, rhs) => ???
+      case If(body, alternate) => ??? 
 
   def defunctionalize(rawExpr: Expr): Expr = {
     val ret: Expr = rawExpr match {

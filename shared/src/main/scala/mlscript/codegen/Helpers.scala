@@ -74,8 +74,8 @@ object Helpers {
   }
 
   def inspect(body: IfBody): Str = body match {
-    case IfElse(expr) => s"IfElse(${inspect(expr)}"
-    case IfThen(expr, rhs) => s"IfThen(${inspect(expr)}, ${inspect(rhs)}"
+    case IfElse(expr) => s"IfElse(${inspect(expr)})"
+    case IfThen(expr, rhs) => s"IfThen(${inspect(expr)}, ${inspect(rhs)})"
     case IfBlock(lines) => s"IfBlock(${
       lines.iterator.map {
         case L(body) => inspect(body)

@@ -191,6 +191,7 @@ enum TypeDeclKind:
 
 /**
  * Function parameters: `(flags, name, typeinfo)`.
+ * Workaround for processing variable parameter structures.
  */
 type Parameter = (FldFlags, Expr.Ref, Option[Term])
 

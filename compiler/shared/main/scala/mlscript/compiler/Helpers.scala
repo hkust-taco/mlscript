@@ -21,8 +21,11 @@ import mlscript.AppliedType
 import mlscript.TypeName
 import mlscript.TypeDefKind
 import mlscript.compiler.mono.Monomorph
+import mlscript.compiler.NuParameter
 import mlscript.NuDecl
 import mlscript.TypingUnit
+
+type NuParameter = (FldFlags, Var, Option[Term])
 
 object Helpers:
   /**
@@ -41,6 +44,21 @@ object Helpers:
     }
     case _ => throw MonomorphError("expect the list of parameters to be a `Tup`")
   
+  def extractParams(term: Term): Iterator[NuParameter] = term match
+    case Tup(fields) => fields.iterator.flatMap {
+      // The new parser emits `Tup(_: UnitLit(true))` from `fun f() = x`.
+      case (_, Fld(FldFlags(_, _, _), UnitLit(true))) => None
+      case (None, Fld(flags, name: Var)) => Some((flags, name, None))
+      case (None, Fld(flags, Bra(_, name: Var))) => Some((flags, name, None))
+      case (Some(name: Var), Fld(flags, typename: Term)) => Some((flags, name, Some(typename)))
+      case _ => throw MonomorphError(
+        s"Encountered unexpected structure when extracting parameters: ${term}"
+      )
+    }
+    case _ => throw MonomorphError(
+      s"Encountered unexpected structure when extracting parameters: ${term}"
+    )
+
   // FIXME: Loses tuple information in conversion
   def toFuncArgs(term: Term): IterableOnce[Term] = term match
     // The new parser generates `(undefined, )` when no arguments.

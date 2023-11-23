@@ -20,7 +20,7 @@ import mlscript.compiler.*
 
 import mlscript.compiler.printer.ExprPrinter
 import mlscript.compiler.mono.specializer.BoundedExpr
-import mlscript.compiler.mono.specializer.{MonoValue, ObjectValue, UnknownValue, FunctionValue, VariableValue}
+import mlscript.compiler.mono.specializer.{MonoValue, TypeValue, ObjectValue, UnknownValue, FunctionValue, VariableValue}
 
 class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
   import Helpers._
@@ -28,31 +28,43 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
 
   /**
    * Specialized implementations of function declarations.
+   * function name -> (function, mutable parameters (?), parameters, output value)
    */
   private val funImpls = MutMap[String, (Item.FuncDecl, MutMap[String, Item.FuncDecl], Option[List[BoundedExpr]], VariableValue)]()
-  private val nuFunImpls = MutMap[Var, (NuFunDef, MutMap[Var, NuFunDef], Option[List[BoundedExpr]], VariableValue)]()
+  private val nuFunImpls = MutMap[String, (NuFunDef, MutMap[String, NuFunDef], Option[List[BoundedExpr]], VariableValue)]()
 
   private def getfunInfo(nm: String): String = 
     val info = funImpls.get(nm).get
     s"$nm: (${info._3.mkString(" X ")}) -> ${info._4} @${funDependence.get(nm).get.mkString("{", ", ", "}")}"
 
   private val funDependence = MutMap[String, Set[String]]()
-  private val nuFunDependence = MutMap[Var, Set[Var]]()
+  private val nuFunDependence = MutMap[String, Set[String]]()
 
   val evalQueue = MutSet[String]()
   val evalCnt = MutMap[String, Int]()
+
+  val nuEvalQueue = MutSet[String]()
+  val nuEvalCnt = MutMap[String, Int]()
   
   /**
    * Specialized implementations of each type declarations.
    */
   private val tyImpls = MutMap[String, SpecializationMap[Item.TypeDecl]]()
   private val allTypeImpls = MutMap[String, Item.TypeDecl]()
+  
+  //private val nuTyImpls = MutMap[TypeName, SpecializationMap[NuTypeDef]]()
+  private val nuAllTypeImpls = MutMap[String, NuTypeDef]()
   /**
    * Add a prototype type declaration.
    */
   private def addPrototypeTypeDecl(typeDecl: Item.TypeDecl) =
     tyImpls.addOne(typeDecl.name.name, SpecializationMap(typeDecl))
     allTypeImpls.addOne(typeDecl.name.name, typeDecl)
+
+  private def nuAddType(typeDef: NuTypeDef) =
+    //nuTyImpls.addOne(typeDef.nme, SpecializationMap(typeDef))
+    nuAllTypeImpls.addOne(typeDef.name, typeDef)
+
   /**
    * An iterator going through all type declarations.
    */
@@ -83,7 +95,7 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
   }
 
   private def nuAddFunction(func: NuFunDef): Unit = {
-    nuFunImpls.addOne(func.nme, (func, MutMap(), func.body match
+    nuFunImpls.addOne(func.name, (func, MutMap(), func.body match
       case Lam(Tup(params), body) => Some(params.map(_ => BoundedExpr()))
       case _ => None
     , VariableValue.refresh()))
@@ -154,7 +166,22 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
       case (term: Term, i) =>
         val mainFunc = NuFunDef(None, Var(s"main$$$$$i"), None, Nil, Left(Lam(Tup(Nil), term)))(None, None, None, None, false)
         nuAddFunction(mainFunc)
+        nuEvalQueue.add(mainFunc.name)
         Some(mainFunc)
+      case (tyDef: NuTypeDef, _) =>
+        nuAddType(tyDef)
+        None
+      case (funDef: NuFunDef, _) =>
+        funDef.rhs match
+          case Left(value) => nuAddFunction(funDef)
+          case Right(value) => ??? 
+        None
+      case _ => ???
+    }
+    while (!nuEvalQueue.isEmpty) {
+      val next = nuEvalQueue.head
+      nuEvalQueue.remove(next)
+      nuUpdateFunction(next)
     }
     TypingUnit(nuTerms)
   
@@ -174,6 +201,17 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
       debug.log(getfunInfo(crt))
       updateFunc(crt)
       debug.log(getfunInfo(crt))
+    }
+    else{
+      throw new MonomorphError("stack overflow!!!")
+    }
+  }
+
+  private def nuUpdateFunction(funcName: String): Unit = {
+    val updateCount = nuEvalCnt.get(funcName).getOrElse(0)
+    if(updateCount <= 10){
+      nuEvalCnt.update(funcName, updateCount+1)
+      nuUpdateFunc(funcName)
     }
     else{
       throw new MonomorphError("stack overflow!!!")
@@ -258,6 +296,14 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
       case None => ()
   }
 
+  private def nuUpdateFunc(funcName: String): Unit = {
+    val (func, mps, args, res) = nuFunImpls.get(funcName).get
+    func.rhs match
+      case Left(value) => value match
+        case Lam(Tup(p), body) =>
+
+  }
+
   def findVar(name: String)(using evalCtx: Context, callingStack: List[String]): MonoValue = {
     if(funImpls.contains(name)){
       val funcBody = funImpls.get(name).get
@@ -268,6 +314,20 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
       UnknownValue()
     }
   }
+
+  /*
+    Find a variable in the global env 
+    TODO: Does TypeValue affect evaluation and dependence?
+  */
+  def nuFindVar(name: String)(using evalCtx: Map[String, BoundedExpr], callingStack: List[String]): MonoValue =
+    nuFunImpls.get(name) match
+      case Some(res) =>
+        nuFunDependence.update(name, nuFunDependence.get(name).get ++ callingStack.headOption)
+        FunctionValue(name, Nil, Nil)
+      case None => 
+    nuAllTypeImpls.get(name) match
+      case Some(res) => TypeValue(name)
+      case None => throw MonomorphError(s"Variable ${name} not found during evaluation")
 
   private def partitationArguments(name: String, params: List[Parameter], args: List[Expr]): (List[Expr], List[Expr]) =
     if (args.length != params.length) {
@@ -309,6 +369,15 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
     }
     else throw MonomorphError(s"tpName ${tpName} not found in implementations ${allTypeImpls}")
   }(identity)
+
+  def nuCreateObjValue(tpName: String, args: List[BoundedExpr]): MonoValue = 
+    nuAllTypeImpls.get(tpName) match
+      case Some(NuTypeDef(kind, nme, tparams, params, ctor, sig, parents, _, _, body)) => 
+        val ags = (params match
+          case Some(p) => toFuncParams(p).map(_._2.name).zip(args).toList
+          case None => Nil)
+        ObjectValue(tpName, MutMap(ags: _*))
+      case None => throw MonomorphError(s"TypeName ${tpName} not found in implementations ${nuAllTypeImpls}")
 
   def getFieldVal(obj: ObjectValue, field: String): BoundedExpr = 
     debug.trace("SPEC SEL", s"$obj :: $field"){

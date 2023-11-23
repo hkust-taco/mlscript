@@ -1,0 +1,97 @@
+:NewDefs
+
+// Test: Preserve behaviour of lambda vs let-binding
+class G(val num: Int) {
+    val x = 
+        log("once on construction")
+        num+2
+    val y() =
+        log("once every call")
+        num+2
+}
+val g = new G(6)
+g.y()
+g.x
+g.y()
+g.x
+//│ Parsed:
+//│ TypingUnit(NuTypeDef(class, G, (), Tup(num: Var(Int)), (), None, None, TypingUnit(NuFunDef(Some(false), x, None, [], Blk(App(Var(log), Tup(_: StrLit(once on construction))); App(Var(+), Tup(_: Var(num), _: IntLit(2))))), NuFunDef(Some(false), y, None, [], Lam(Tup(), Blk(App(Var(log), Tup(_: StrLit(once every call))); App(Var(+), Tup(_: Var(num), _: IntLit(2)))))))), NuFunDef(Some(false), g, None, [], New(Some((TypeName(G),[6,])), TypingUnit())), App(Sel(Var(g), y), Tup()), Sel(Var(g), x), App(Sel(Var(g), y), Tup()), Sel(Var(g), x))
+//│ Lifted:
+//│ TypingUnit(NuTypeDef(class, G$1, (), Tup(num: Var(Int)), (), None, None, TypingUnit(NuFunDef(Some(false), x, None, [], Blk(App(Var(log), Tup(_: StrLit(once on construction))); App(Var(+), Tup(_: Sel(Var(this), num), _: IntLit(2))))), NuFunDef(Some(false), y, None, [], Lam(Tup(), Blk(App(Var(log), Tup(_: StrLit(once every call))); App(Var(+), Tup(_: Sel(Var(this), num), _: IntLit(2)))))))), NuFunDef(Some(false), g$1, None, [], New(Some((TypeName(G$1),[6,])), TypingUnit())), App(Sel(Var(g$1), y), Tup()), Sel(Var(g$1), x), App(Sel(Var(g$1), y), Tup()), Sel(Var(g$1), x))
+//│ TypingUnit {
+//│   class G$1([val num: Int,]) {
+//│     let x = {log("once on construction",); +((this).num, 2,)}
+//│     let y = () => {log("once every call",); +((this).num, 2,)}
+//│   }
+//│   let g$1 = new G$1([6,]) {}
+//│   Code(List((g$1).y()))
+//│   Code(List((g$1).x))
+//│   Code(List((g$1).y()))
+//│   Code(List((g$1).x))
+//│ }
+//│ class G(num: Int) {
+//│   val x: Int
+//│   val y: () -> Int
+//│ }
+//│ val g: G
+//│ Int
+//│ g
+//│   = G {}
+//│ // Output
+//│ once on construction
+//│ res
+//│     = 8
+//│ // Output
+//│ once every call
+//│ res
+//│     = 8
+//│ res
+//│     = 8
+//│ // Output
+//│ once every call
+//│ res
+//│     = 8
+
+class X() {
+    val a = 
+        log("ok")
+        6
+}
+val object = X()
+(new X()).a
+(new X()).a
+object.a
+object.a
+//│ Parsed:
+//│ TypingUnit(NuTypeDef(class, X, (), Tup(), (), None, None, TypingUnit(NuFunDef(Some(false), a, None, [], Blk(App(Var(log), Tup(_: StrLit(ok))); IntLit(6))))), NuFunDef(Some(false), object, None, [], App(Var(X), Tup())), Sel(Bra(rcd = false, New(Some((TypeName(X),[])), TypingUnit())), a), Sel(Bra(rcd = false, New(Some((TypeName(X),[])), TypingUnit())), a), Sel(Var(object), a), Sel(Var(object), a))
+//│ Lifted:
+//│ TypingUnit(NuTypeDef(class, X$1, (), Tup(), (), None, None, TypingUnit(NuFunDef(Some(false), a, None, [], Blk(App(Var(log), Tup(_: StrLit(ok))); IntLit(6))))), NuFunDef(Some(false), object$1, None, [], App(Var(X$1), Tup())), Sel(Bra(rcd = false, New(Some((TypeName(X$1),[])), TypingUnit())), a), Sel(Bra(rcd = false, New(Some((TypeName(X$1),[])), TypingUnit())), a), Sel(Var(object$1), a), Sel(Var(object$1), a))
+//│ TypingUnit {
+//│   class X$1([]) {let a = {log("ok",); 6}}
+//│   let object$1 = X$1()
+//│   Code(List(('(' new X$1([]) {} ')').a))
+//│   Code(List(('(' new X$1([]) {} ')').a))
+//│   Code(List((object$1).a))
+//│   Code(List((object$1).a))
+//│ }
+//│ class X() {
+//│   val a: 6
+//│ }
+//│ val object: X
+//│ 6
+//│ object
+//│        = X {}
+//│ // Output
+//│ ok
+//│ res
+//│     = 6
+//│ // Output
+//│ ok
+//│ res
+//│     = 6
+//│ // Output
+//│ ok
+//│ res
+//│     = 6
+//│ res
+//│     = 6
