@@ -212,8 +212,9 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
       case App(lhs, rhs) => 
         BoundedExpr(nuEvaluate(lhs).getValue.map{
           case FunctionValue(name, params, ctx) => ???
-          case ObjectValue(name, fields) => ??? 
-          case TypeValue(name) => monoer.nuCreateObjValue(name, extractParams(rhs).map((flags, nm, tp) => nuEvaluate(nm)).toList)
+          case ObjectValue(name, fields) => ???
+          case TypeValue(name) => 
+            monoer.nuCreateObjValue(name, extractParams(rhs).map((flags, nm, tp) => nuEvaluate(nm)).toList)
         })
       case New(Some((constructor, args)), _) => ???
       case New(None, body) => ???

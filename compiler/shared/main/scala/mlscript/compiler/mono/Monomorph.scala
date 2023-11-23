@@ -422,6 +422,26 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
     }
   }(identity)
 
+  def nuGetFieldVal(obj: ObjectValue, field: String): BoundedExpr =
+    nuAllTypeImpls.get(obj.name) match
+      case None => throw MonomorphError(s"ObjectValue ${obj} not found in implementations ${allTypeImpls}")
+      case Some(typeDef) => 
+        typeDef.body.entities.flatMap{
+          case func@NuFunDef(_, Var(nme), _, _, Left(_)) if nme.equals(field) => Some(func)
+          case _ => None
+        }.headOption match
+        case Some(NuFunDef(isLetRec, Var(nme), sn, tp, Left(body))) => 
+          val nuFuncName = s"${nme}$$${obj.name}"
+          if (nuFunImpls.contains(nuFuncName)) {
+            nuAddFunction(NuFunDef(isLetRec, Var(nuFuncName), sn, tp, Left(body))(None, None, None, None, false))
+            BoundedExpr(FunctionValue(nuFuncName, ???, List("this" -> BoundedExpr(obj))))
+          } else {
+            throw MonomorphError(s"Encountered repeated name ${nuFuncName} during Class Defunctionalization")
+          }
+        case _ => obj.fields.get(field) match
+          case Some(value) => value
+          case None => throw MonomorphError(s"Field value ${field} not found in ObjectValue ${obj}") // TODO: Superclass fields
+
 object Monomorph:
   class SpecializationMap[T <: Item](val prototype: T):
     private var basePrototype: Option[T] = None
