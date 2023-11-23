@@ -1,0 +1,135 @@
+:NewDefs
+:PreTyper
+
+class Some[T](value: T)
+module None
+type Option[T] = Some[T] | None
+class Pair[A, B](x: A, y: B)
+//│ class Some[T](value: T)
+//│ module None
+//│ type Option[T] = None | Some[T]
+//│ class Pair[A, B](x: A, y: B)
+
+// All `add_n` functions should be inferred to have the same type.
+
+fun add_1(x, y) =
+  if
+    x is Some(xv) and y is Some(yv) then xv + yv
+    x is Some(xv) and y is None     then xv
+    x is None     and y is Some(yv) then yv
+    x is None     and y is None     then 0
+//│ fun add_1: forall 'a. (None | Some[Int], None | Some[Int & 'a]) -> (Int | 'a)
+
+add_1(None, None)
+add_1(Some(5), None)
+add_1(None, Some(9))
+add_1(Some(5), Some(9))
+//│ Int
+//│ res
+//│     = 0
+//│ res
+//│     = 5
+//│ res
+//│     = 9
+//│ res
+//│     = 14
+
+fun add_2(x, y) =
+  if x is
+    Some(xv) and y is
+      Some(yv) then xv + yv
+      None     then xv
+    None and y is
+      Some(yv) then yv
+      None     then 0
+//│ fun add_2: forall 'a. (None | Some[Int], None | Some[Int & 'a]) -> (Int | 'a)
+
+add_2(None, None)
+add_2(Some(5), None)
+add_2(None, Some(9))
+add_2(Some(5), Some(9))
+//│ Int
+//│ res
+//│     = 0
+//│ res
+//│     = 5
+//│ res
+//│     = 9
+//│ res
+//│     = 14
+
+fun add_3(x, y) =
+  if Pair(x, y) is
+    Pair(Some(xv), Some(yv)) then xv + yv
+    Pair(Some(xv), None)     then xv
+    Pair(None,     Some(yv)) then yv
+    Pair(None,     None)     then 0
+//│ fun add_3: forall 'a. (None | Some[Int], None | Some[Int & 'a]) -> (Int | 'a)
+
+add_3(None, None)
+add_3(Some(5), None)
+add_3(None, Some(9))
+add_3(Some(5), Some(9))
+//│ Int
+//│ res
+//│     = 0
+//│ res
+//│     = 5
+//│ res
+//│     = 9
+//│ res
+//│     = 14
+
+fun add_4(x, y) =
+  if
+    x
+      is
+        Some(xv) and
+          y
+            is
+              Some(yv) then xv + yv
+            is
+              None     then xv
+        None and
+          y
+            is
+              Some(yv) then yv
+            is
+              None     then 0
+//│ fun add_4: forall 'a. (None | Some[Int], None | Some[Int & 'a]) -> (Int | 'a)
+
+add_4(None, None)
+add_4(Some(5), None)
+add_4(None, Some(9))
+add_4(Some(5), Some(9))
+//│ Int
+//│ res
+//│     = 0
+//│ res
+//│     = 5
+//│ res
+//│     = 9
+//│ res
+//│     = 14
+
+fun add_5(x, y) =
+  if
+    x is Some(xv) and y is Some(yv) then xv + yv
+    y is None     and x is Some(xv) then xv
+    x is None     and y is Some(yv) then yv
+    y is None     and x is None     then 0
+//│ fun add_5: forall 'a. (None | Some[Int], None | Some[Int & 'a]) -> (Int | 'a)
+
+add_5(None, None)
+add_5(Some(5), None)
+add_5(None, Some(9))
+add_5(Some(5), Some(9))
+//│ Int
+//│ res
+//│     = 0
+//│ res
+//│     = 5
+//│ res
+//│     = 9
+//│ res
+//│     = 14

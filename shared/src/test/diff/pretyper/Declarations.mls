@@ -1,0 +1,89 @@
+:NewDefs
+:PreTyper
+:NoJS
+
+:dpt
+fun test(x, y) = x + y
+//│ process <== <root>: {fun test}
+//│ | visitTypingUnit <== <root>: {fun test}
+//│ | | 1. scope = {test}
+//│ | | 2. scope = {test}
+//│ | | visitFunction <== test
+//│ | | | visitTerm <== Lam(_, _)
+//│ | | | | visitTerm <== App(_, _)
+//│ | | | | | visitTerm <== Var("+")
+//│ | | | | | | visitVar(name = "+")
+//│ | | | | | | | resolveVar(name = "+")
+//│ | | | | | visitTerm ==> Var("+")
+//│ | | | | | visitTerm <== Tup(_, _)
+//│ | | | | | | visitTerm <== Var("x")
+//│ | | | | | | | visitVar(name = "x")
+//│ | | | | | | | | resolveVar(name = "x")
+//│ | | | | | | visitTerm ==> Var("x")
+//│ | | | | | | visitTerm <== Var("y")
+//│ | | | | | | | visitVar(name = "y")
+//│ | | | | | | | | resolveVar(name = "y")
+//│ | | | | | | visitTerm ==> Var("y")
+//│ | | | | | visitTerm ==> Tup(_, _)
+//│ | | | | visitTerm ==> App(_, _)
+//│ | | | visitTerm ==> Lam(_, _)
+//│ | | visitFunction ==> test
+//│ | visitTypingUnit ==> test
+//│ process ==> test
+//│ fun test: (Int, Int) -> Int
+
+:dpt
+// Functions are hoisted.
+let y = id(42)
+fun id(x) = x
+//│ process <== <root>: {let y; fun id}
+//│ | visitTypingUnit <== <root>: {let y; fun id}
+//│ | | 1. scope = {id}
+//│ | | visitLetBinding(rec = false, y)
+//│ | | 2. scope = {id}
+//│ | | visitFunction <== id
+//│ | | | visitTerm <== Lam(_, _)
+//│ | | | | visitTerm <== Var("x")
+//│ | | | | | visitVar(name = "x")
+//│ | | | | | | resolveVar(name = "x")
+//│ | | | | visitTerm ==> Var("x")
+//│ | | | visitTerm ==> Lam(_, _)
+//│ | | visitFunction ==> id
+//│ | visitTypingUnit ==> id, y
+//│ process ==> id, y
+//│ let y: 42 | 'a
+//│ fun id: forall 'b. ('a & 'b) -> (42 | 'b)
+
+:dpt
+// Function bodies can access variables declare after them.
+fun q(x) = x + p
+let p = 0
+//│ process <== <root>: {fun q; let p}
+//│ | visitTypingUnit <== <root>: {fun q; let p}
+//│ | | 1. scope = {q}
+//│ | | visitLetBinding(rec = false, p)
+//│ | | 2. scope = {q}
+//│ | | visitFunction <== q
+//│ | | | visitTerm <== Lam(_, _)
+//│ | | | | visitTerm <== App(_, _)
+//│ | | | | | visitTerm <== Var("+")
+//│ | | | | | | visitVar(name = "+")
+//│ | | | | | | | resolveVar(name = "+")
+//│ | | | | | visitTerm ==> Var("+")
+//│ | | | | | visitTerm <== Tup(_, _)
+//│ | | | | | | visitTerm <== Var("x")
+//│ | | | | | | | visitVar(name = "x")
+//│ | | | | | | | | resolveVar(name = "x")
+//│ | | | | | | visitTerm ==> Var("x")
+//│ | | | | | | visitTerm <== Var("p")
+//│ | | | | | | | visitVar(name = "p")
+//│ | | | | | | | | resolveVar(name = "p")
+//│ | | | | | | visitTerm ==> Var("p")
+//│ | | | | | visitTerm ==> Tup(_, _)
+//│ | | | | visitTerm ==> App(_, _)
+//│ | | | visitTerm ==> Lam(_, _)
+//│ | | visitFunction ==> q
+//│ | visitTypingUnit ==> q, p
+//│ process ==> q, p
+//│ fun q: Int -> Int
+//│ let p: 0

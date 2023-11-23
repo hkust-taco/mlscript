@@ -12,7 +12,7 @@ import mlscript.codegen.typescript.TsTypegenCodeBuilder
 import org.scalatest.{funsuite, ParallelTestExecution}
 import org.scalatest.time._
 import org.scalatest.concurrent.{TimeLimitedTests, Signaler}
-
+import pretyper.PreTyper
 
 abstract class ModeType {
   def expectTypeErrors: Bool
@@ -138,6 +138,7 @@ class DiffTests
     var declared: Map[Str, typer.ST] = Map.empty
     val failures = mutable.Buffer.empty[Int]
     val unmergedChanges = mutable.Buffer.empty[Int]
+    var preTyperScope = mlscript.pretyper.Scope.global
     
     case class Mode(
       expectTypeErrors: Bool = false,
@@ -150,6 +151,7 @@ class DiffTests
       explainErrors: Bool = false,
       dbg: Bool = false,
       dbgParsing: Bool = false,
+      dbgPreTyper: Opt[Int] = N,
       dbgSimplif: Bool = false,
       dbgUCS: Bool = false,
       fullExceptionStack: Bool = false,
@@ -188,6 +190,7 @@ class DiffTests
     var noRecursiveTypes = false
     var constrainedTypes = false
     var irregularTypes = false
+    var usePreTyper = false
     
     // * This option makes some test cases pass which assume generalization should happen in arbitrary arguments
     // * but it's way too aggressive to be ON by default, as it leads to more extrusion, cycle errors, etc.
@@ -210,6 +213,7 @@ class DiffTests
           case "p" => mode.copy(showParse = true)
           case "d" => mode.copy(dbg = true)
           case "dp" => mode.copy(dbgParsing = true)
+          case PreTyperOption(nv) => mode.copy(dbgPreTyper = S(nv))
           case "ds" => mode.copy(dbgSimplif = true)
           case "ducs" => mode.copy(dbg = true, dbgUCS = true)
           case "s" => mode.copy(fullExceptionStack = true)
@@ -254,6 +258,9 @@ class DiffTests
             // println("'"+line.drop(str.length + 2)+"'")
             typer.startingFuel = line.drop(str.length + 2).toInt; mode
           case "ResetFuel" => typer.startingFuel = typer.defaultStartingFuel; mode
+          // I believe `PreTyper` will become a part of new definition typing.
+          // So, this will be removed after `PreTyper` is done.
+          case "PreTyper" => newParser = true; newDefs = true; usePreTyper = true; mode
           case "ne" => mode.copy(noExecution = true)
           case "ng" => mode.copy(noGeneration = true)
           case "js" => mode.copy(showGeneratedJS = true)
@@ -512,9 +519,16 @@ class DiffTests
             }
             
             val (typeDefs, stmts, newDefsResults) = if (newDefs) {
-              
               val vars: Map[Str, typer.SimpleType] = Map.empty
-              val tpd = typer.typeTypingUnit(TypingUnit(p.tops), N)(ctx, raise, vars)
+              val rootTypingUnit = TypingUnit(p.tops)
+              if (usePreTyper) {
+                val preTyper = new PreTyper(mode.dbgPreTyper, newDefs) {
+                  override def emitDbg(str: String): Unit = output(str)
+                }
+                // This should be passed to code generation somehow.
+                preTyperScope = preTyper.process(rootTypingUnit, preTyperScope, "<root>")._1
+              }
+              val tpd = typer.typeTypingUnit(rootTypingUnit, N)(ctx, raise, vars)
               
               def showTTU(ttu: typer.TypedTypingUnit, ind: Int): Unit = {
                 val indStr = "  " * ind
@@ -1143,5 +1157,14 @@ object DiffTests {
       true
       // name.startsWith("new/")
       // file.segments.toList.init.lastOption.contains("parser")
+  }
+
+  object PreTyperOption {
+    def unapply(str: String): Option[Int] = str match {
+      case "dpt" => Some(0)
+      case "dpt:v" => Some(1)
+      case "dpt:vv" => Some(2)
+      case _ => None
+    }
   }
 }

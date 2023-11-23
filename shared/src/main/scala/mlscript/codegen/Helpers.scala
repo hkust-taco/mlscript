@@ -13,8 +13,8 @@ object Helpers {
     case App(lhs, rhs) => s"App(${inspect(lhs)}, ${inspect(rhs)})"
     case Tup(fields) =>
       val entries = fields map {
-        case (S(name), Fld(_, value)) => s"$name: ${inspect(value)}"
-        case (N, Fld(_, value))       => s"_: ${inspect(value)}"
+        case (S(name), Fld(_, value)) => s"(S(${inspect(name)}), ${inspect(value)})"
+        case (N, Fld(_, value))       => s"(N, ${inspect(value)})"
       }
       s"Tup(${entries mkString ", "})"
     case Rcd(fields) =>

@@ -1,0 +1,10 @@
+:PreTyper
+
+// FIXME
+fun flex(x) =
+  if x is
+    [a, b, c] then
+      a + b + c
+    else
+      0
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing

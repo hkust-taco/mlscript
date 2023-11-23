@@ -480,6 +480,14 @@ trait TypingUnitImpl extends Located { self: TypingUnit =>
   }.mkString("{", "; ", "}")
   override def toString: String = s"‹${entities.mkString("; ")}›"
   lazy val children: List[Located] = entities
+  def describe: Str = entities.iterator.map {
+    case term: Term => term.describe
+    case NuFunDef(S(rec), nme, _, _, _) =>
+      s"let ${if (rec) "rec " else ""}$nme"
+    case NuFunDef(N, nme, _, _, _) => s"fun $nme"
+    case typ: NuTypeDef => typ.describe
+    case other => "?"
+  }.mkString("{", "; ", "}")
 }
 
 trait ConstructorImpl { self: Constructor =>
@@ -493,6 +501,7 @@ trait TypeNameImpl extends Ordered[TypeName] { self: TypeName =>
   def targs: Ls[Type] = Nil
   def compare(that: TypeName): Int = this.name compare that.name
   lazy val toVar: Var = Var(name).withLocOf(this)
+  var symbol: Opt[pretyper.TypeSymbol] = N
 }
 
 trait FldImpl extends Located { self: Fld =>
@@ -727,6 +736,21 @@ trait VarImpl { self: Var =>
     (name.head.isLetter && name.head.isLower || name.head === '_' || name.head === '$') && name =/= "true" && name =/= "false"
   def toVar: Var = this
   var uid: Opt[Int] = N
+
+  // PreTyper additions
+  import pretyper.{Symbol}
+
+  private var _symbol: Opt[Symbol] = N
+  def symbolOption: Opt[Symbol] = _symbol
+  def symbol: Symbol = _symbol.getOrElse(???)
+  def symbol_=(symbol: Symbol): Unit =
+    _symbol match {
+      case N => _symbol = S(symbol)
+      case S(_) => ???
+    }
+  // TODO: Remove this methods if they are useless.
+  // def withSymbol: Var = { symbol = S(new ValueSymbol(this, false)); this }
+  // def withSymbol(s: TermSymbol): Var = { symbol = S(s); this }
 }
 
 trait TupImpl { self: Tup =>

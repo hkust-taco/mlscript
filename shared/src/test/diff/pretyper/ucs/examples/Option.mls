@@ -1,0 +1,42 @@
+:PreTyper
+
+class Some[T](value: T)
+module None
+type Option[T] = Some[T] | None
+//│ class Some[T](value: T)
+//│ module None
+//│ type Option[T] = None | Some[T]
+
+fun getOrElse[T](self: Option[T], default: T): T =
+  if self is
+    Some(value) then value
+    None then default
+//│ fun getOrElse: forall 'T. (self: Option['T], default: 'T) -> 'T
+
+getOrElse(None, 0)
+getOrElse(None, "hello")
+getOrElse(None, true)
+//│ true
+//│ res
+//│     = 0
+//│ res
+//│     = 'hello'
+//│ res
+//│     = true
+
+getOrElse(Some(true), false)
+//│ Bool
+//│ res
+//│     = true
+
+fun map[T, U](self: Option[T], f: (T) -> U): Option[U] =
+  if self is
+    Some(value) then Some(f(value))
+    None then None
+//│ fun map: forall 'T 'U. (self: Option['T], f: 'T -> 'U) -> Option['U]
+
+fun flatMap[T, U](self: Option[T], f: (T) -> Option[U]): Option[U] =
+  if self is
+    Some(value) then f(value)
+    None then None
+//│ fun flatMap: forall 'T 'U. (self: Option['T], f: 'T -> Option['U]) -> Option['U]

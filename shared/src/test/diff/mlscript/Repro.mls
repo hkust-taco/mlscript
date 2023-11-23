@@ -1,3 +1,17 @@
 :NewDefs
+:PreTyper
 
+class Point(x: Int, y: Int)
+//│ class Point(x: Int, y: Int)
 
+fun length(p) = if p is Point(x, y) then x + y
+//│ fun length: Point -> Int
+
+let xy = Point.unapply(Point(0, 1))
+xy.1
+//│ let xy: [Int, Int]
+//│ Int
+//│ xy
+//│    = [ 0, 1 ]
+//│ res
+//│     = 1

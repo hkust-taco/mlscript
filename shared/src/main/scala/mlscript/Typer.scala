@@ -1207,8 +1207,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         }
         con(s_ty, req, cs_ty)
       case elf: If =>
-        try typeTerm(desugarIf(elf)) catch {
-          case e: ucs.DesugaringException => err(e.messages)
+        elf.desugaredTerm match {
+          case S(desugared) => typeTerm(desugared)
+          case N => try typeTerm(desugarIf(elf)) catch {
+            case e: ucs.DesugaringException => err(e.messages)
+          }
         }
       case AdtMatchWith(cond, arms) =>
         println(s"typed condition term ${cond}")

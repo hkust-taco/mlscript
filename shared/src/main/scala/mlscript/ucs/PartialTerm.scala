@@ -4,6 +4,9 @@ import mlscript._
 import mlscript.utils.shorthands._
 
 import helpers._
+import mlscript.ucs.PartialTerm.Empty
+import mlscript.ucs.PartialTerm.Total
+import mlscript.ucs.PartialTerm.Half
 
 class PartialTermError(term: PartialTerm, message: Str) extends Error(message)
 
@@ -19,6 +22,13 @@ sealed abstract class PartialTerm {
   def addOp(op: Var): PartialTerm.Half
   def addTermOp(term: Term, op: Var, newDefs: Bool): PartialTerm.Half =
     this.addTerm(term, newDefs).addOp(op)
+  def addOpTerm(op: Var, term: Term, newDefs: Bool): PartialTerm.Total =
+    this.addOp(op).addTerm(term, newDefs)
+  def get: Term = this match {
+    case Empty => throw new PartialTermError(this, "expect a term but nothing was given")
+    case Total(term, fragments) => term
+    case Half(lhs, op, fragments) => throw new PartialTermError(this, "expect an operator but nothing was given")
+  }
 }
 
 object PartialTerm {

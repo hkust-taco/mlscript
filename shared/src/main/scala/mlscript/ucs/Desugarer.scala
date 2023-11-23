@@ -808,7 +808,8 @@ class Desugarer extends TypeDefs { self: Typer =>
                 }
               }
 
-              App(Lam(Tup(
+              // Well, reading the following piece of code is somewhat overwhelming for me.
+              App(Lam(Tup( /* begin params */
                 N -> Fld(FldFlags.empty, Tup(
                   fields.distinctBy(_._1).map {
                     case (_ -> Var(alias)) =>
@@ -816,9 +817,9 @@ class Desugarer extends TypeDefs { self: Typer =>
                       else N -> Fld(FldFlags.empty, Var(alias))
                   }.toList
                 )) :: Nil
-              ), extraAlias.toList.foldRight(consequent)((lt, rs) => Let(false, Var(lt._2), Var(lt._1), rs))),
-                Tup(N -> Fld(FldFlags.empty, App(Sel(className, Var(unapplyMtd.name)),
-                  Tup(N -> Fld(FldFlags.empty, scrutinee.reference) :: Nil))
+              ) /* end params */, extraAlias.toList.foldRight(consequent)((lt, rs) => Let(false, Var(lt._2), Var(lt._1), rs))),
+                Tup(N -> Fld(FldFlags.empty, App(Sel(className, Var(unapplyMtd.name) /* ClassName.unapply */),
+                  Tup(N -> Fld(FldFlags.empty, scrutinee.reference) :: Nil)) /* ClassName.unapply(scrutinee) */
                   ) :: Nil)
               )
             case _ => mkLetFromFields(scrutinee, fields.filter(_._2.name =/= "_").toList, consequent)
