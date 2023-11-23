@@ -16,45 +16,45 @@ foo()
 //│ 
 //│ GraphOpt:
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
-//│ Def(0, mktup2, [_x0,_y0], [{}], 
+//│ Def(0, mktup2, [x%0,y%0], [{}], 
 //│ None, 1, 
-//│ let* (_x1) = mktup(_x0,_y0)
-//│   in _x1
+//│ let* (x%1) = mktup(x%0,y%0)
+//│   in x%1
 //│ )
-//│ Def(1, mktup, [_x2,_y1], [{}], 
+//│ Def(1, mktup, [x%2,y%1], [{}], 
 //│ None, 1, 
-//│ let _x3 = Pair(_x2,_y1)
-//│   in _x3
+//│ let x%3 = Pair(x%2,y%1)
+//│   in x%3
 //│ )
 //│ Def(2, foo, [], [{}], 
 //│ None, 1, 
-//│ let* (_x4) = mktup2(1,2)
-//│   in _x4
+//│ let* (x%4) = mktup2(1,2)
+//│   in x%4
 //│ )
 //│ },
-//│ let* (_x5) = foo()
-//│   in _x5)
+//│ let* (x%5) = foo()
+//│   in x%5)
 //│ 
 //│ Promoted ------------------------------------
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
-//│ Def(0, mktup2, [_x0,_y0], [{EDirect},{EDirect}], 
+//│ Def(0, mktup2, [x%0,y%0], [{EDirect},{EDirect}], 
 //│ Some(ICtor(Pair)), 1, 
-//│ let* (_x1) = mktup(_x0,_y0)
-//│   in _x1
+//│ let* (x%1) = mktup(x%0,y%0)
+//│   in x%1
 //│ )
-//│ Def(1, mktup, [_x2,_y1], [{EDirect},{EDirect}], 
+//│ Def(1, mktup, [x%2,y%1], [{EDirect},{EDirect}], 
 //│ Some(ICtor(Pair)), 1, 
-//│ let _x3 = Pair(_x2,_y1)
-//│   in _x3
+//│ let x%3 = Pair(x%2,y%1)
+//│   in x%3
 //│ )
 //│ Def(2, foo, [], [], 
 //│ Some(ICtor(Pair)), 1, 
-//│ let* (_x4) = mktup2(1,2)
-//│   in _x4
+//│ let* (x%4) = mktup2(1,2)
+//│   in x%4
 //│ )
 //│ },
-//│ let* (_x5) = foo()
-//│   in _x5)
+//│ let* (x%5) = foo()
+//│   in x%5)
 //│ 
 //│ Interpreted ------------------------------
 //│ Pair(1,2)
@@ -79,60 +79,60 @@ bar()
 //│ 
 //│ GraphOpt:
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
-//│ Def(0, foo, [_pair0], [{}], 
+//│ Def(0, foo, [pair%0], [{}], 
 //│ None, 1, 
-//│ let join _j0(_x3) = _x3
-//│   in case _pair0 of
-//│     Pair => let _x0 = _pair0.y
-//│       in let _x1 = _pair0.x
-//│         in let _x2 = Pair(_x1,_x0)
-//│           in jump _j0(_x2)
+//│ let join j%0(x%3) = x%3
+//│   in case pair%0 of
+//│     Pair => let x%0 = pair%0.y
+//│       in let x%1 = pair%0.x
+//│         in let x%2 = Pair(x%1,x%0)
+//│           in jump j%0(x%2)
 //│ )
 //│ Def(1, bar, [], [{}], 
 //│ None, 1, 
-//│ let _x4 = Pair(1,2)
-//│   in let* (_x5) = foo(_x4)
-//│     in _x5
+//│ let x%4 = Pair(1,2)
+//│   in let* (x%5) = foo(x%4)
+//│     in x%5
 //│ )
 //│ },
-//│ let* (_x6) = bar()
-//│   in _x6)
+//│ let* (x%6) = bar()
+//│   in x%6)
 //│ 
 //│ Promoted ------------------------------------
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
-//│ Def(0, foo, [_pair0], [{EDestruct，EDirect，ESelect(y)，ESelect(x)}], 
+//│ Def(0, foo, [pair%0], [{EDestruct，EDirect，ESelect(y)，ESelect(x)}], 
 //│ Some(ICtor(Pair)), 1, 
-//│ case _pair0 of
-//│   Pair => let _x0 = _pair0.y
-//│     in let _x1 = _pair0.x
-//│       in let _x2 = Pair(_x1,_x0)
-//│         in _x2
+//│ case pair%0 of
+//│   Pair => let x%0 = pair%0.y
+//│     in let x%1 = pair%0.x
+//│       in let x%2 = Pair(x%1,x%0)
+//│         in x%2
 //│ )
 //│ Def(1, bar, [], [], 
 //│ Some(ICtor(Pair)), 1, 
-//│ let _x4 = Pair(1,2)
-//│   in let* (_x5) = foo(_x4)
-//│     in _x5
+//│ let x%4 = Pair(1,2)
+//│   in let* (x%5) = foo(x%4)
+//│     in x%5
 //│ )
 //│ },
-//│ let* (_x6) = bar()
-//│   in _x6)
+//│ let* (x%6) = bar()
+//│   in x%6)
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
 //│ Def(1, bar, [], [], 
 //│ Some(ICtor(Pair)), 1, 
-//│ let* (_x5) = __foo$D0$S0(2,1)
-//│   in _x5
+//│ let* (x%5) = foo$D%0$S%0(2,1)
+//│   in x%5
 //│ )
-//│ Def(5, __foo$D0$S0, [_pair0_y,_pair0_x], [{EDirect},{EDirect}], 
+//│ Def(5, foo$D%0$S%0, [pair%0_y,pair%0_x], [{EDirect},{EDirect}], 
 //│ Some(ICtor(Pair)), 1, 
-//│ let _x2 = Pair(_pair0_x,_pair0_y)
-//│   in _x2
+//│ let x%2 = Pair(pair%0_x,pair%0_y)
+//│   in x%2
 //│ )
 //│ },
-//│ let* (_x6) = bar()
-//│   in _x6)
+//│ let* (x%6) = bar()
+//│   in x%6)
 
 
 
@@ -157,112 +157,112 @@ foo()
 //│ 
 //│ GraphOpt:
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
-//│ Def(0, silly, [_pair0], [{}], 
+//│ Def(0, silly, [pair%0], [{}], 
 //│ None, 1, 
-//│ let _x0 = 0
-//│   in let join _j0(_x7) = let _x8 = +(_x7,1)
-//│         in _x8
-//│     in case _pair0 of
-//│       Pair => let _x1 = _pair0.y
-//│         in let _x2 = _pair0.x
-//│           in let join _j1(_x6) = jump _j0(_x6)
-//│             in case _pair0 of
-//│               Pair => let _x3 = _pair0.y
-//│                 in let _x4 = _pair0.x
-//│                   in let _x5 = +(_x4,1)
-//│                     in jump _j1(_x5)
+//│ let x%0 = 0
+//│   in let join j%0(x%7) = let x%8 = +(x%7,1)
+//│         in x%8
+//│     in case pair%0 of
+//│       Pair => let x%1 = pair%0.y
+//│         in let x%2 = pair%0.x
+//│           in let join j%1(x%6) = jump j%0(x%6)
+//│             in case pair%0 of
+//│               Pair => let x%3 = pair%0.y
+//│                 in let x%4 = pair%0.x
+//│                   in let x%5 = +(x%4,1)
+//│                     in jump j%1(x%5)
 //│ )
 //│ Def(1, foo, [], [{}], 
 //│ None, 1, 
-//│ let _x9 = Pair(0,1)
-//│   in let* (_x10) = silly(_x9)
-//│     in _x10
+//│ let x%9 = Pair(0,1)
+//│   in let* (x%10) = silly(x%9)
+//│     in x%10
 //│ )
 //│ },
-//│ let* (_x11) = foo()
-//│   in _x11)
+//│ let* (x%11) = foo()
+//│   in x%11)
 //│ 
 //│ Promoted ------------------------------------
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
-//│ Def(0, silly, [_pair0], [{EDestruct，EDirect，ESelect(x)}], 
+//│ Def(0, silly, [pair%0], [{EDestruct，EDirect，ESelect(x)}], 
 //│ None, 1, 
-//│ case _pair0 of
-//│   Pair => case _pair0 of
-//│     Pair => let _x4 = _pair0.x
-//│       in let _x5 = +(_x4,1)
-//│         in jump _j1(_x5)
+//│ case pair%0 of
+//│   Pair => case pair%0 of
+//│     Pair => let x%4 = pair%0.x
+//│       in let x%5 = +(x%4,1)
+//│         in jump j%1(x%5)
 //│ )
 //│ Def(1, foo, [], [], 
 //│ None, 1, 
-//│ let _x9 = Pair(0,1)
-//│   in let* (_x10) = silly(_x9)
-//│     in _x10
+//│ let x%9 = Pair(0,1)
+//│   in let* (x%10) = silly(x%9)
+//│     in x%10
 //│ )
-//│ Def(2, @join _j0, [_x7], [{EDirect}], 
+//│ Def(2, @join j%0, [x%7], [{EDirect}], 
 //│ None, 1, 
-//│ let _x8 = +(_x7,1)
-//│   in _x8
+//│ let x%8 = +(x%7,1)
+//│   in x%8
 //│ )
-//│ Def(3, @join _j1, [_x6], [{EDirect}], 
+//│ Def(3, @join j%1, [x%6], [{EDirect}], 
 //│ None, 1, 
-//│ jump _j0(_x6)
+//│ jump j%0(x%6)
 //│ )
 //│ },
-//│ let* (_x11) = foo()
-//│   in _x11)
+//│ let* (x%11) = foo()
+//│   in x%11)
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
 //│ Def(1, foo, [], [], 
 //│ None, 1, 
-//│ let _x9 = Pair(0,1)
-//│   in let* (_x10) = _silly$D0(_x9)
-//│     in _x10
+//│ let x%9 = Pair(0,1)
+//│   in let* (x%10) = silly$D%0(x%9)
+//│     in x%10
 //│ )
-//│ Def(2, @join _j0, [_x7], [{EDirect}], 
+//│ Def(2, @join j%0, [x%7], [{EDirect}], 
 //│ None, 1, 
-//│ let _x8 = +(_x7,1)
-//│   in _x8
+//│ let x%8 = +(x%7,1)
+//│   in x%8
 //│ )
-//│ Def(3, @join _j1, [_x6], [{EDirect}], 
+//│ Def(3, @join j%1, [x%6], [{EDirect}], 
 //│ None, 1, 
-//│ jump _j0(_x6)
+//│ jump j%0(x%6)
 //│ )
-//│ Def(5, _silly$D0, [_pair0], [{EDestruct，EDirect，ESelect(x)}], 
+//│ Def(5, silly$D%0, [pair%0], [{EDestruct，EDirect，ESelect(x)}], 
 //│ None, 1, 
-//│ case _pair0 of
-//│   Pair => let _x4 = _pair0.x
-//│     in let _x5 = +(_x4,1)
-//│       in jump _j1(_x5)
+//│ case pair%0 of
+//│   Pair => let x%4 = pair%0.x
+//│     in let x%5 = +(x%4,1)
+//│       in jump j%1(x%5)
 //│ )
 //│ },
-//│ let* (_x11) = foo()
-//│   in _x11)
+//│ let* (x%11) = foo()
+//│   in x%11)
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
 //│ Def(1, foo, [], [], 
 //│ None, 1, 
-//│ let* (_x10) = ___silly$D0$D0$S0(0)
-//│   in _x10
+//│ let* (x%10) = silly$D%0$D%0$S%0(0)
+//│   in x%10
 //│ )
-//│ Def(2, @join _j0, [_x7], [{EDirect}], 
+//│ Def(2, @join j%0, [x%7], [{EDirect}], 
 //│ None, 1, 
-//│ let _x8 = +(_x7,1)
-//│   in _x8
+//│ let x%8 = +(x%7,1)
+//│   in x%8
 //│ )
-//│ Def(3, @join _j1, [_x6], [{EDirect}], 
+//│ Def(3, @join j%1, [x%6], [{EDirect}], 
 //│ None, 1, 
-//│ jump _j0(_x6)
+//│ jump j%0(x%6)
 //│ )
-//│ Def(8, ___silly$D0$D0$S0, [_pair0_x], [{EDirect}], 
+//│ Def(8, silly$D%0$D%0$S%0, [pair%0_x], [{EDirect}], 
 //│ None, 1, 
-//│ let _x5 = +(_pair0_x,1)
-//│   in jump _j1(_x5)
+//│ let x%5 = +(pair%0_x,1)
+//│   in jump j%1(x%5)
 //│ )
 //│ },
-//│ let* (_x11) = foo()
-//│   in _x11)
+//│ let* (x%11) = foo()
+//│   in x%11)
 
 
 
@@ -285,60 +285,60 @@ foo()
 //│ 
 //│ GraphOpt:
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
-//│ Def(0, inc_fst, [_pair0], [{}], 
+//│ Def(0, inc_fst, [pair%0], [{}], 
 //│ None, 1, 
-//│ let _x0 = 2
-//│   in let join _j0(_x4) = _x4
-//│     in case _pair0 of
-//│       Pair => let _x1 = _pair0.y
-//│         in let _x2 = _pair0.x
-//│           in let _x3 = +(_x2,_x0)
-//│             in jump _j0(_x3)
+//│ let x%0 = 2
+//│   in let join j%0(x%4) = x%4
+//│     in case pair%0 of
+//│       Pair => let x%1 = pair%0.y
+//│         in let x%2 = pair%0.x
+//│           in let x%3 = +(x%2,x%0)
+//│             in jump j%0(x%3)
 //│ )
 //│ Def(1, foo, [], [{}], 
 //│ None, 1, 
-//│ let _x5 = Pair(0,1)
-//│   in let* (_x6) = inc_fst(_x5)
-//│     in _x6
+//│ let x%5 = Pair(0,1)
+//│   in let* (x%6) = inc_fst(x%5)
+//│     in x%6
 //│ )
 //│ },
-//│ let* (_x7) = foo()
-//│   in _x7)
+//│ let* (x%7) = foo()
+//│   in x%7)
 //│ 
 //│ Promoted ------------------------------------
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
-//│ Def(0, inc_fst, [_pair0], [{EDestruct，EDirect，ESelect(x)}], 
+//│ Def(0, inc_fst, [pair%0], [{EDestruct，EDirect，ESelect(x)}], 
 //│ None, 1, 
-//│ case _pair0 of
-//│   Pair => let _x2 = _pair0.x
-//│     in let _x3 = +(_x2,2)
-//│       in _x3
+//│ case pair%0 of
+//│   Pair => let x%2 = pair%0.x
+//│     in let x%3 = +(x%2,2)
+//│       in x%3
 //│ )
 //│ Def(1, foo, [], [], 
 //│ None, 1, 
-//│ let _x5 = Pair(0,1)
-//│   in let* (_x6) = inc_fst(_x5)
-//│     in _x6
+//│ let x%5 = Pair(0,1)
+//│   in let* (x%6) = inc_fst(x%5)
+//│     in x%6
 //│ )
 //│ },
-//│ let* (_x7) = foo()
-//│   in _x7)
+//│ let* (x%7) = foo()
+//│   in x%7)
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
 //│ Def(1, foo, [], [], 
 //│ None, 1, 
-//│ let* (_x6) = __inc_fst$D0$S0(0)
-//│   in _x6
+//│ let* (x%6) = inc_fst$D%0$S%0(0)
+//│   in x%6
 //│ )
-//│ Def(5, __inc_fst$D0$S0, [_pair0_x], [{EDirect}], 
+//│ Def(5, inc_fst$D%0$S%0, [pair%0_x], [{EDirect}], 
 //│ None, 1, 
-//│ let _x3 = +(_pair0_x,2)
-//│   in _x3
+//│ let x%3 = +(pair%0_x,2)
+//│   in x%3
 //│ )
 //│ },
-//│ let* (_x7) = foo()
-//│   in _x7)
+//│ let* (x%7) = foo()
+//│   in x%7)
 
 :GraphOpt
 class Pair(x, y)
@@ -357,60 +357,60 @@ foo()
 //│ 
 //│ GraphOpt:
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
-//│ Def(0, inc_fst, [_pair0], [{}], 
+//│ Def(0, inc_fst, [pair%0], [{}], 
 //│ None, 1, 
-//│ let _x0 = 0
-//│   in let join _j0(_x4) = _x4
-//│     in case _pair0 of
-//│       Pair => let _x1 = _pair0.y
-//│         in let _x2 = _pair0.x
-//│           in let _x3 = +(_x1,1)
-//│             in jump _j0(_x3)
+//│ let x%0 = 0
+//│   in let join j%0(x%4) = x%4
+//│     in case pair%0 of
+//│       Pair => let x%1 = pair%0.y
+//│         in let x%2 = pair%0.x
+//│           in let x%3 = +(x%1,1)
+//│             in jump j%0(x%3)
 //│ )
 //│ Def(1, foo, [], [{}], 
 //│ None, 1, 
-//│ let _x5 = Pair(0,1)
-//│   in let* (_x6) = inc_fst(_x5)
-//│     in _x6
+//│ let x%5 = Pair(0,1)
+//│   in let* (x%6) = inc_fst(x%5)
+//│     in x%6
 //│ )
 //│ },
-//│ let* (_x7) = foo()
-//│   in _x7)
+//│ let* (x%7) = foo()
+//│   in x%7)
 //│ 
 //│ Promoted ------------------------------------
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
-//│ Def(0, inc_fst, [_pair0], [{EDestruct，EDirect，ESelect(y)}], 
+//│ Def(0, inc_fst, [pair%0], [{EDestruct，EDirect，ESelect(y)}], 
 //│ None, 1, 
-//│ case _pair0 of
-//│   Pair => let _x1 = _pair0.y
-//│     in let _x3 = +(_x1,1)
-//│       in _x3
+//│ case pair%0 of
+//│   Pair => let x%1 = pair%0.y
+//│     in let x%3 = +(x%1,1)
+//│       in x%3
 //│ )
 //│ Def(1, foo, [], [], 
 //│ None, 1, 
-//│ let _x5 = Pair(0,1)
-//│   in let* (_x6) = inc_fst(_x5)
-//│     in _x6
+//│ let x%5 = Pair(0,1)
+//│   in let* (x%6) = inc_fst(x%5)
+//│     in x%6
 //│ )
 //│ },
-//│ let* (_x7) = foo()
-//│   in _x7)
+//│ let* (x%7) = foo()
+//│   in x%7)
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
 //│ Def(1, foo, [], [], 
 //│ None, 1, 
-//│ let* (_x6) = __inc_fst$D0$S0(1)
-//│   in _x6
+//│ let* (x%6) = inc_fst$D%0$S%0(1)
+//│   in x%6
 //│ )
-//│ Def(5, __inc_fst$D0$S0, [_pair0_y], [{EDirect}], 
+//│ Def(5, inc_fst$D%0$S%0, [pair%0_y], [{EDirect}], 
 //│ None, 1, 
-//│ let _x3 = +(_pair0_y,1)
-//│   in _x3
+//│ let x%3 = +(pair%0_y,1)
+//│   in x%3
 //│ )
 //│ },
-//│ let* (_x7) = foo()
-//│   in _x7)
+//│ let* (x%7) = foo()
+//│   in x%7)
 
 :GraphOpt
 class Left(x)
@@ -432,86 +432,86 @@ bar()
 //│ 
 //│ GraphOpt:
 //│ GOProgram({ClassInfo(0, Left, [x]),ClassInfo(1, Right, [y])}, {
-//│ Def(0, foo, [_a0,_b0], [{}], 
+//│ Def(0, foo, [a%0,b%0], [{}], 
 //│ None, 1, 
-//│ let join _j0(_x5) = let join _j1(_x8) = _x8
-//│       in case _x5 of
-//│         Left => let _x6 = _x5.x
-//│           in jump _j1(_x6)
-//│         Right => let _x7 = _x5.y
-//│           in jump _j1(_x7)
-//│   in case _a0 of
-//│     Left => let _x0 = _a0.x
-//│       in let _x1 = +(_x0,1)
-//│         in let _x2 = Left(_x1)
-//│           in jump _j0(_x2)
-//│     Right => let _x3 = _a0.y
-//│       in let _x4 = Right(_b0)
-//│         in jump _j0(_x4)
+//│ let join j%0(x%5) = let join j%1(x%8) = x%8
+//│       in case x%5 of
+//│         Left => let x%6 = x%5.x
+//│           in jump j%1(x%6)
+//│         Right => let x%7 = x%5.y
+//│           in jump j%1(x%7)
+//│   in case a%0 of
+//│     Left => let x%0 = a%0.x
+//│       in let x%1 = +(x%0,1)
+//│         in let x%2 = Left(x%1)
+//│           in jump j%0(x%2)
+//│     Right => let x%3 = a%0.y
+//│       in let x%4 = Right(b%0)
+//│         in jump j%0(x%4)
 //│ )
 //│ Def(1, bar, [], [{}], 
 //│ None, 1, 
-//│ let _x9 = Right(2)
-//│   in let* (_x10) = foo(_x9,2)
-//│     in _x10
+//│ let x%9 = Right(2)
+//│   in let* (x%10) = foo(x%9,2)
+//│     in x%10
 //│ )
 //│ },
-//│ let* (_x11) = bar()
-//│   in _x11)
+//│ let* (x%11) = bar()
+//│   in x%11)
 //│ 
 //│ Promoted ------------------------------------
 //│ GOProgram({ClassInfo(0, Left, [x]),ClassInfo(1, Right, [y])}, {
-//│ Def(0, foo, [_a0,_b0], [{EDestruct，EDirect，ESelect(x)},{EDirect}], 
+//│ Def(0, foo, [a%0,b%0], [{EDestruct，EDirect，ESelect(x)},{EDirect}], 
 //│ None, 1, 
-//│ case _a0 of
-//│   Left => let _x0 = _a0.x
-//│     in let _x1 = +(_x0,1)
-//│       in let _x2 = Left(_x1)
-//│         in jump _j0(_x2)
-//│   Right => let _x4 = Right(_b0)
-//│     in jump _j0(_x4)
+//│ case a%0 of
+//│   Left => let x%0 = a%0.x
+//│     in let x%1 = +(x%0,1)
+//│       in let x%2 = Left(x%1)
+//│         in jump j%0(x%2)
+//│   Right => let x%4 = Right(b%0)
+//│     in jump j%0(x%4)
 //│ )
 //│ Def(1, bar, [], [], 
 //│ None, 1, 
-//│ let _x9 = Right(2)
-//│   in let* (_x10) = foo(_x9,2)
-//│     in _x10
+//│ let x%9 = Right(2)
+//│   in let* (x%10) = foo(x%9,2)
+//│     in x%10
 //│ )
-//│ Def(2, @join _j0, [_x5], [{EDestruct，EDirect，ESelect(x)，ESelect(y)}], 
+//│ Def(2, @join j%0, [x%5], [{EDestruct，EDirect，ESelect(x)，ESelect(y)}], 
 //│ None, 1, 
-//│ case _x5 of
-//│   Left => let _x6 = _x5.x
-//│     in _x6
-//│   Right => let _x7 = _x5.y
-//│     in _x7
+//│ case x%5 of
+//│   Left => let x%6 = x%5.x
+//│     in x%6
+//│   Right => let x%7 = x%5.y
+//│     in x%7
 //│ )
 //│ },
-//│ let* (_x11) = bar()
-//│   in _x11)
+//│ let* (x%11) = bar()
+//│   in x%11)
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, Left, [x]),ClassInfo(1, Right, [y])}, {
 //│ Def(1, bar, [], [], 
 //│ None, 1, 
-//│ let* (_x10) = _foo$D1(2)
-//│   in _x10
+//│ let* (x%10) = foo$D%1(2)
+//│   in x%10
 //│ )
-//│ Def(2, @join _j0, [_x5], [{EDestruct，EDirect，ESelect(x)，ESelect(y)}], 
+//│ Def(2, @join j%0, [x%5], [{EDestruct，EDirect，ESelect(x)，ESelect(y)}], 
 //│ None, 1, 
-//│ case _x5 of
-//│   Left => let _x6 = _x5.x
-//│     in _x6
-//│   Right => let _x7 = _x5.y
-//│     in _x7
+//│ case x%5 of
+//│   Left => let x%6 = x%5.x
+//│     in x%6
+//│   Right => let x%7 = x%5.y
+//│     in x%7
 //│ )
-//│ Def(9, _foo$D1, [_b0], [{EDirect}], 
+//│ Def(9, foo$D%1, [b%0], [{EDirect}], 
 //│ None, 1, 
-//│ let _x4 = Right(_b0)
-//│   in jump _j0(_x4)
+//│ let x%4 = Right(b%0)
+//│   in jump j%0(x%4)
 //│ )
 //│ },
-//│ let* (_x11) = bar()
-//│   in _x11)
+//│ let* (x%11) = bar()
+//│   in x%11)
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, Left, [x]),ClassInfo(1, Right, [y])}, {
@@ -520,8 +520,8 @@ bar()
 //│ 2
 //│ )
 //│ },
-//│ let* (_x11) = bar()
-//│   in _x11)
+//│ let* (x%11) = bar()
+//│   in x%11)
 
 :GraphOpt
 class True
@@ -538,57 +538,57 @@ bar()
 //│ 
 //│ GraphOpt:
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Pair, [x,y])}, {
-//│ Def(0, foo, [_a0], [{}], 
+//│ Def(0, foo, [a%0], [{}], 
 //│ None, 1, 
-//│ let _x0 = _a0.x
-//│   in let _x1 = _a0.y
-//│     in let _x2 = +(_x0,_x1)
-//│       in _x2
+//│ let x%0 = a%0.x
+//│   in let x%1 = a%0.y
+//│     in let x%2 = +(x%0,x%1)
+//│       in x%2
 //│ )
 //│ Def(1, bar, [], [{}], 
 //│ None, 1, 
-//│ let _x3 = Pair(1,0)
-//│   in let* (_x4) = foo(_x3)
-//│     in _x4
+//│ let x%3 = Pair(1,0)
+//│   in let* (x%4) = foo(x%3)
+//│     in x%4
 //│ )
 //│ },
-//│ let* (_x5) = bar()
-//│   in _x5)
+//│ let* (x%5) = bar()
+//│   in x%5)
 //│ 
 //│ Promoted ------------------------------------
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Pair, [x,y])}, {
-//│ Def(0, foo, [_a0], [{ESelect(x)，ESelect(y)}], 
+//│ Def(0, foo, [a%0], [{ESelect(x)，ESelect(y)}], 
 //│ None, 1, 
-//│ let _x0 = _a0.x
-//│   in let _x1 = _a0.y
-//│     in let _x2 = +(_x0,_x1)
-//│       in _x2
+//│ let x%0 = a%0.x
+//│   in let x%1 = a%0.y
+//│     in let x%2 = +(x%0,x%1)
+//│       in x%2
 //│ )
 //│ Def(1, bar, [], [], 
 //│ None, 1, 
-//│ let _x3 = Pair(1,0)
-//│   in let* (_x4) = foo(_x3)
-//│     in _x4
+//│ let x%3 = Pair(1,0)
+//│   in let* (x%4) = foo(x%3)
+//│     in x%4
 //│ )
 //│ },
-//│ let* (_x5) = bar()
-//│   in _x5)
+//│ let* (x%5) = bar()
+//│   in x%5)
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Pair, [x,y])}, {
 //│ Def(1, bar, [], [], 
 //│ None, 1, 
-//│ let* (_x4) = _foo$S0(1,0)
-//│   in _x4
+//│ let* (x%4) = foo$S%0(1,0)
+//│   in x%4
 //│ )
-//│ Def(2, _foo$S0, [_a0_x,_a0_y], [{EDirect},{EDirect}], 
+//│ Def(2, foo$S%0, [a%0_x,a%0_y], [{EDirect},{EDirect}], 
 //│ None, 1, 
-//│ let _x2 = +(_a0_x,_a0_y)
-//│   in _x2
+//│ let x%2 = +(a%0_x,a%0_y)
+//│   in x%2
 //│ )
 //│ },
-//│ let* (_x5) = bar()
-//│   in _x5)
+//│ let* (x%5) = bar()
+//│   in x%5)
 
 
 :GraphOpt
@@ -607,45 +607,45 @@ bar()
 //│ 
 //│ GraphOpt:
 //│ GOProgram({ClassInfo(0, C1, [x,y]),ClassInfo(1, C2, [z])}, {
-//│ Def(0, foo, [_a0], [{}], 
+//│ Def(0, foo, [a%0], [{}], 
 //│ None, 1, 
-//│ let join _j0(_x3) = _x3
-//│   in case _a0 of
-//│     C1 => let _x0 = _a0.y
-//│       in let _x1 = _a0.x
-//│         in jump _j0(_x1)
-//│     C2 => let _x2 = _a0.z
-//│       in jump _j0(_x2)
+//│ let join j%0(x%3) = x%3
+//│   in case a%0 of
+//│     C1 => let x%0 = a%0.y
+//│       in let x%1 = a%0.x
+//│         in jump j%0(x%1)
+//│     C2 => let x%2 = a%0.z
+//│       in jump j%0(x%2)
 //│ )
 //│ Def(1, bar, [], [{}], 
 //│ None, 1, 
-//│ let _x4 = C1(0,1)
-//│   in let* (_x5) = foo(_x4)
-//│     in _x5
+//│ let x%4 = C1(0,1)
+//│   in let* (x%5) = foo(x%4)
+//│     in x%5
 //│ )
 //│ },
-//│ let* (_x6) = bar()
-//│   in _x6)
+//│ let* (x%6) = bar()
+//│   in x%6)
 //│ 
 //│ Promoted ------------------------------------
 //│ GOProgram({ClassInfo(0, C1, [x,y]),ClassInfo(1, C2, [z])}, {
-//│ Def(0, foo, [_a0], [{EDestruct，EDirect，ESelect(x)，ESelect(z)}], 
+//│ Def(0, foo, [a%0], [{EDestruct，EDirect，ESelect(x)，ESelect(z)}], 
 //│ None, 1, 
-//│ case _a0 of
-//│   C1 => let _x1 = _a0.x
-//│     in _x1
-//│   C2 => let _x2 = _a0.z
-//│     in _x2
+//│ case a%0 of
+//│   C1 => let x%1 = a%0.x
+//│     in x%1
+//│   C2 => let x%2 = a%0.z
+//│     in x%2
 //│ )
 //│ Def(1, bar, [], [], 
 //│ None, 1, 
-//│ let _x4 = C1(0,1)
-//│   in let* (_x5) = foo(_x4)
-//│     in _x5
+//│ let x%4 = C1(0,1)
+//│   in let* (x%5) = foo(x%4)
+//│     in x%5
 //│ )
 //│ },
-//│ let* (_x6) = bar()
-//│   in _x6)
+//│ let* (x%6) = bar()
+//│   in x%6)
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, C1, [x,y]),ClassInfo(1, C2, [z])}, {
@@ -654,8 +654,8 @@ bar()
 //│ 0
 //│ )
 //│ },
-//│ let* (_x6) = bar()
-//│   in _x6)
+//│ let* (x%6) = bar()
+//│   in x%6)
 
 :GOInterp
 :GraphOpt
@@ -680,71 +680,71 @@ baz()
 //│ 
 //│ GraphOpt:
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
-//│ Def(0, foo, [_a0,_b0], [{}], 
+//│ Def(0, foo, [a%0,b%0], [{}], 
 //│ None, 1, 
-//│ let _x0 = _a0.x
-//│   in let _x1 = _a0.y
-//│     in let _x2 = _b0.x
-//│       in let _x3 = _b0.y
-//│         in let _x4 = +(_x0,_x1)
-//│           in let _x5 = +(_x4,_x2)
-//│             in let _x6 = +(_x5,_x3)
-//│               in _x6
+//│ let x%0 = a%0.x
+//│   in let x%1 = a%0.y
+//│     in let x%2 = b%0.x
+//│       in let x%3 = b%0.y
+//│         in let x%4 = +(x%0,x%1)
+//│           in let x%5 = +(x%4,x%2)
+//│             in let x%6 = +(x%5,x%3)
+//│               in x%6
 //│ )
-//│ Def(1, bar, [_c0], [{}], 
+//│ Def(1, bar, [c%0], [{}], 
 //│ None, 1, 
-//│ let _x7 = Pair(0,1)
-//│   in let* (_x8) = foo(_x7,_c0)
-//│     in let _x9 = Pair(2,3)
-//│       in let* (_x10) = foo(_c0,_x9)
-//│         in let _x11 = Pair(0,1)
-//│           in let _x12 = Pair(2,3)
-//│             in let* (_x13) = foo(_x11,_x12)
-//│               in _x13
+//│ let x%7 = Pair(0,1)
+//│   in let* (x%8) = foo(x%7,c%0)
+//│     in let x%9 = Pair(2,3)
+//│       in let* (x%10) = foo(c%0,x%9)
+//│         in let x%11 = Pair(0,1)
+//│           in let x%12 = Pair(2,3)
+//│             in let* (x%13) = foo(x%11,x%12)
+//│               in x%13
 //│ )
 //│ Def(2, baz, [], [{}], 
 //│ None, 1, 
-//│ let _x14 = Pair(4,5)
-//│   in let* (_x15) = bar(_x14)
-//│     in _x15
+//│ let x%14 = Pair(4,5)
+//│   in let* (x%15) = bar(x%14)
+//│     in x%15
 //│ )
 //│ },
-//│ let* (_x16) = baz()
-//│   in _x16)
+//│ let* (x%16) = baz()
+//│   in x%16)
 //│ 
 //│ Promoted ------------------------------------
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
-//│ Def(0, foo, [_a0,_b0], [{ESelect(x)，ESelect(y)},{ESelect(x)，ESelect(y)}], 
+//│ Def(0, foo, [a%0,b%0], [{ESelect(x)，ESelect(y)},{ESelect(x)，ESelect(y)}], 
 //│ None, 1, 
-//│ let _x0 = _a0.x
-//│   in let _x1 = _a0.y
-//│     in let _x2 = _b0.x
-//│       in let _x3 = _b0.y
-//│         in let _x4 = +(_x0,_x1)
-//│           in let _x5 = +(_x4,_x2)
-//│             in let _x6 = +(_x5,_x3)
-//│               in _x6
+//│ let x%0 = a%0.x
+//│   in let x%1 = a%0.y
+//│     in let x%2 = b%0.x
+//│       in let x%3 = b%0.y
+//│         in let x%4 = +(x%0,x%1)
+//│           in let x%5 = +(x%4,x%2)
+//│             in let x%6 = +(x%5,x%3)
+//│               in x%6
 //│ )
-//│ Def(1, bar, [_c0], [{EDirect，ESelect(x)，ESelect(y)}], 
+//│ Def(1, bar, [c%0], [{EDirect，ESelect(x)，ESelect(y)}], 
 //│ None, 1, 
-//│ let _x7 = Pair(0,1)
-//│   in let* (_x8) = foo(_x7,_c0)
-//│     in let _x9 = Pair(2,3)
-//│       in let* (_x10) = foo(_c0,_x9)
-//│         in let _x11 = Pair(0,1)
-//│           in let _x12 = Pair(2,3)
-//│             in let* (_x13) = foo(_x11,_x12)
-//│               in _x13
+//│ let x%7 = Pair(0,1)
+//│   in let* (x%8) = foo(x%7,c%0)
+//│     in let x%9 = Pair(2,3)
+//│       in let* (x%10) = foo(c%0,x%9)
+//│         in let x%11 = Pair(0,1)
+//│           in let x%12 = Pair(2,3)
+//│             in let* (x%13) = foo(x%11,x%12)
+//│               in x%13
 //│ )
 //│ Def(2, baz, [], [], 
 //│ None, 1, 
-//│ let _x14 = Pair(4,5)
-//│   in let* (_x15) = bar(_x14)
-//│     in _x15
+//│ let x%14 = Pair(4,5)
+//│   in let* (x%15) = bar(x%14)
+//│     in x%15
 //│ )
 //│ },
-//│ let* (_x16) = baz()
-//│   in _x16)
+//│ let* (x%16) = baz()
+//│   in x%16)
 //│ 
 //│ Interpreted ------------------------------
 //│ 6
@@ -752,56 +752,56 @@ baz()
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
-//│ Def(1, bar, [_c0], [{ESelect(x)，ESelect(y)}], 
+//│ Def(1, bar, [c%0], [{ESelect(x)，ESelect(y)}], 
 //│ None, 1, 
-//│ let _x17 = _c0.x
-//│   in let _x18 = _c0.y
-//│     in let* (_x8) = _foo$S0(_x17,_x18,0,1)
-//│       in let* (_x10) = _foo$S0(2,3,_x17,_x18)
-//│         in let* (_x13) = _foo$S0(2,3,0,1)
-//│           in _x13
+//│ let x%17 = c%0.x
+//│   in let x%18 = c%0.y
+//│     in let* (x%8) = foo$S%0(x%17,x%18,0,1)
+//│       in let* (x%10) = foo$S%0(2,3,x%17,x%18)
+//│         in let* (x%13) = foo$S%0(2,3,0,1)
+//│           in x%13
 //│ )
 //│ Def(2, baz, [], [], 
 //│ None, 1, 
-//│ let _x14 = Pair(4,5)
-//│   in let* (_x15) = bar(_x14)
-//│     in _x15
+//│ let x%14 = Pair(4,5)
+//│   in let* (x%15) = bar(x%14)
+//│     in x%15
 //│ )
-//│ Def(3, _foo$S0, [_b0_x,_b0_y,_a0_x,_a0_y], [{EDirect},{EDirect},{EDirect},{EDirect}], 
+//│ Def(3, foo$S%0, [b%0_x,b%0_y,a%0_x,a%0_y], [{EDirect},{EDirect},{EDirect},{EDirect}], 
 //│ None, 1, 
-//│ let _x4 = +(_a0_x,_a0_y)
-//│   in let _x5 = +(_x4,_b0_x)
-//│     in let _x6 = +(_x5,_b0_y)
-//│       in _x6
+//│ let x%4 = +(a%0_x,a%0_y)
+//│   in let x%5 = +(x%4,b%0_x)
+//│     in let x%6 = +(x%5,b%0_y)
+//│       in x%6
 //│ )
 //│ },
-//│ let* (_x16) = baz()
-//│   in _x16)
+//│ let* (x%16) = baz()
+//│   in x%16)
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
 //│ Def(2, baz, [], [], 
 //│ None, 1, 
-//│ let* (_x15) = _bar$S0(4,5)
-//│   in _x15
+//│ let* (x%15) = bar$S%0(4,5)
+//│   in x%15
 //│ )
-//│ Def(3, _foo$S0, [_b0_x,_b0_y,_a0_x,_a0_y], [{EDirect},{EDirect},{EDirect},{EDirect}], 
+//│ Def(3, foo$S%0, [b%0_x,b%0_y,a%0_x,a%0_y], [{EDirect},{EDirect},{EDirect},{EDirect}], 
 //│ None, 1, 
-//│ let _x4 = +(_a0_x,_a0_y)
-//│   in let _x5 = +(_x4,_b0_x)
-//│     in let _x6 = +(_x5,_b0_y)
-//│       in _x6
+//│ let x%4 = +(a%0_x,a%0_y)
+//│   in let x%5 = +(x%4,b%0_x)
+//│     in let x%6 = +(x%5,b%0_y)
+//│       in x%6
 //│ )
-//│ Def(4, _bar$S0, [_c0_x,_c0_y], [{EDirect},{EDirect}], 
+//│ Def(4, bar$S%0, [c%0_x,c%0_y], [{EDirect},{EDirect}], 
 //│ None, 1, 
-//│ let* (_x8) = _foo$S0(_c0_x,_c0_y,0,1)
-//│   in let* (_x10) = _foo$S0(2,3,_c0_x,_c0_y)
-//│     in let* (_x13) = _foo$S0(2,3,0,1)
-//│       in _x13
+//│ let* (x%8) = foo$S%0(c%0_x,c%0_y,0,1)
+//│   in let* (x%10) = foo$S%0(2,3,c%0_x,c%0_y)
+//│     in let* (x%13) = foo$S%0(2,3,0,1)
+//│       in x%13
 //│ )
 //│ },
-//│ let* (_x16) = baz()
-//│   in _x16)
+//│ let* (x%16) = baz()
+//│   in x%16)
 //│ 
 //│ 
 //│ Interpreted ------------------------------
@@ -823,13 +823,13 @@ foo()
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
 //│ Def(0, foo, [], [{}], 
 //│ None, 1, 
-//│ let _x0 = Pair(0,1)
-//│   in let _x1 = _x0.x
-//│     in _x1
+//│ let x%0 = Pair(0,1)
+//│   in let x%1 = x%0.x
+//│     in x%1
 //│ )
 //│ },
-//│ let* (_x2) = foo()
-//│   in _x2)
+//│ let* (x%2) = foo()
+//│   in x%2)
 //│ 
 //│ Promoted ------------------------------------
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
@@ -838,6 +838,6 @@ foo()
 //│ 0
 //│ )
 //│ },
-//│ let* (_x2) = foo()
-//│   in _x2)
+//│ let* (x%2) = foo()
+//│   in x%2)
 

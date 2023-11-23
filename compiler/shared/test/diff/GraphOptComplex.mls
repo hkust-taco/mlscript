@@ -25,82 +25,82 @@ bar()
 //│ 
 //│ GraphOpt:
 //│ GOProgram({ClassInfo(0, A, [x,y,z]),ClassInfo(1, B, [m,n])}, {
-//│ Def(0, complex_foo, [_t0], [{}], 
+//│ Def(0, complex_foo, [t%0], [{}], 
 //│ None, 1, 
-//│ let join _j0(_x8) = let _x9 = B(1,2)
-//│       in let join _j1(_x15) = let _x16 = +(_x8,_x15)
-//│             in _x16
-//│         in case _x9 of
-//│           A => let _x10 = _x9.z
-//│             in let _x11 = _x9.y
-//│               in let _x12 = _x9.x
-//│                 in jump _j1(3)
-//│           B => let _x13 = _x9.n
-//│             in let _x14 = _x9.m
-//│               in jump _j1(4)
-//│   in case _t0 of
-//│     A => let _x0 = _t0.z
-//│       in let _x1 = _t0.y
-//│         in let _x2 = _t0.x
-//│           in let _x3 = *(_x1,_x0)
-//│             in let _x4 = +(_x2,_x3)
-//│               in jump _j0(_x4)
-//│     B => let _x5 = _t0.n
-//│       in let _x6 = _t0.m
-//│         in let _x7 = -(_x6,_x5)
-//│           in jump _j0(_x7)
+//│ let join j%0(x%8) = let x%9 = B(1,2)
+//│       in let join j%1(x%15) = let x%16 = +(x%8,x%15)
+//│             in x%16
+//│         in case x%9 of
+//│           A => let x%10 = x%9.z
+//│             in let x%11 = x%9.y
+//│               in let x%12 = x%9.x
+//│                 in jump j%1(3)
+//│           B => let x%13 = x%9.n
+//│             in let x%14 = x%9.m
+//│               in jump j%1(4)
+//│   in case t%0 of
+//│     A => let x%0 = t%0.z
+//│       in let x%1 = t%0.y
+//│         in let x%2 = t%0.x
+//│           in let x%3 = *(x%1,x%0)
+//│             in let x%4 = +(x%2,x%3)
+//│               in jump j%0(x%4)
+//│     B => let x%5 = t%0.n
+//│       in let x%6 = t%0.m
+//│         in let x%7 = -(x%6,x%5)
+//│           in jump j%0(x%7)
 //│ )
 //│ Def(1, bar, [], [{}], 
 //│ None, 1, 
-//│ let _x17 = A(6,7,8)
-//│   in let* (_x18) = complex_foo(_x17)
-//│     in let _x19 = B(9,10)
-//│       in let* (_x20) = complex_foo(_x19)
-//│         in _x20
+//│ let x%17 = A(6,7,8)
+//│   in let* (x%18) = complex_foo(x%17)
+//│     in let x%19 = B(9,10)
+//│       in let* (x%20) = complex_foo(x%19)
+//│         in x%20
 //│ )
 //│ },
-//│ let* (_x21) = bar()
-//│   in _x21)
+//│ let* (x%21) = bar()
+//│   in x%21)
 //│ 
 //│ Promoted ------------------------------------
 //│ GOProgram({ClassInfo(0, A, [x,y,z]),ClassInfo(1, B, [m,n])}, {
-//│ Def(0, complex_foo, [_t0], [{ESelect(m)，ESelect(y)，ESelect(n)，ESelect(z)，EDestruct，EDirect，ESelect(x)}], 
+//│ Def(0, complex_foo, [t%0], [{ESelect(m)，EDirect，ESelect(n)，ESelect(z)，ESelect(x)，EDestruct，ESelect(y)}], 
 //│ None, 1, 
-//│ case _t0 of
-//│   A => let _x0 = _t0.z
-//│     in let _x1 = _t0.y
-//│       in let _x2 = _t0.x
-//│         in let _x3 = *(_x1,_x0)
-//│           in let _x4 = +(_x2,_x3)
-//│             in jump _j0(_x4)
-//│   B => let _x5 = _t0.n
-//│     in let _x6 = _t0.m
-//│       in let _x7 = -(_x6,_x5)
-//│         in jump _j0(_x7)
+//│ case t%0 of
+//│   A => let x%0 = t%0.z
+//│     in let x%1 = t%0.y
+//│       in let x%2 = t%0.x
+//│         in let x%3 = *(x%1,x%0)
+//│           in let x%4 = +(x%2,x%3)
+//│             in jump j%0(x%4)
+//│   B => let x%5 = t%0.n
+//│     in let x%6 = t%0.m
+//│       in let x%7 = -(x%6,x%5)
+//│         in jump j%0(x%7)
 //│ )
 //│ Def(1, bar, [], [], 
 //│ None, 1, 
-//│ let _x17 = A(6,7,8)
-//│   in let* (_x18) = complex_foo(_x17)
-//│     in let _x19 = B(9,10)
-//│       in let* (_x20) = complex_foo(_x19)
-//│         in _x20
+//│ let x%17 = A(6,7,8)
+//│   in let* (x%18) = complex_foo(x%17)
+//│     in let x%19 = B(9,10)
+//│       in let* (x%20) = complex_foo(x%19)
+//│         in x%20
 //│ )
-//│ Def(2, @join _j0, [_x8], [{EDirect}], 
+//│ Def(2, @join j%0, [x%8], [{EDirect}], 
 //│ None, 1, 
-//│ let _x9 = B(1,2)
-//│   in case _x9 of
-//│     A => jump _j1(3)
-//│     B => jump _j1(4)
+//│ let x%9 = B(1,2)
+//│   in case x%9 of
+//│     A => jump j%1(3)
+//│     B => jump j%1(4)
 //│ )
-//│ Def(3, @join _j1, [_x15], [{EDirect}], 
+//│ Def(3, @join j%1, [x%15], [{EDirect}], 
 //│ None, 1, 
-//│ let _x16 = +(_x8,_x15)
-//│   in _x16
+//│ let x%16 = +(x%8,x%15)
+//│   in x%16
 //│ )
 //│ },
-//│ let* (_x21) = bar()
-//│   in _x21)
+//│ let* (x%21) = bar()
+//│   in x%21)
 //│ 
 //│ Interpreted ------------------------------
 //│ 4
@@ -110,36 +110,36 @@ bar()
 //│ GOProgram({ClassInfo(0, A, [x,y,z]),ClassInfo(1, B, [m,n])}, {
 //│ Def(1, bar, [], [], 
 //│ None, 1, 
-//│ let* (_x18) = __complex_foo$D0$S0(8,7,6)
-//│   in let* (_x20) = __complex_foo$D1$S0(10,9)
-//│     in _x20
+//│ let* (x%18) = complex_foo$D%0$S%0(8,7,6)
+//│   in let* (x%20) = complex_foo$D%1$S%0(10,9)
+//│     in x%20
 //│ )
-//│ Def(2, @join _j0, [_x8], [{EDirect}], 
+//│ Def(2, @join j%0, [x%8], [{EDirect}], 
 //│ None, 1, 
-//│ let _x9 = B(1,2)
-//│   in case _x9 of
-//│     A => jump _j1(3)
-//│     B => jump _j1(4)
+//│ let x%9 = B(1,2)
+//│   in case x%9 of
+//│     A => jump j%1(3)
+//│     B => jump j%1(4)
 //│ )
-//│ Def(3, @join _j1, [_x15], [{EDirect}], 
+//│ Def(3, @join j%1, [x%15], [{EDirect}], 
 //│ None, 1, 
-//│ let _x16 = +(_x8,_x15)
-//│   in _x16
+//│ let x%16 = +(x%8,x%15)
+//│   in x%16
 //│ )
-//│ Def(7, __complex_foo$D0$S0, [_t0_z,_t0_y,_t0_x], [{EDirect},{EDirect},{EDirect}], 
+//│ Def(7, complex_foo$D%0$S%0, [t%0_z,t%0_y,t%0_x], [{EDirect},{EDirect},{EDirect}], 
 //│ None, 1, 
-//│ let _x3 = *(_t0_y,_t0_z)
-//│   in let _x4 = +(_t0_x,_x3)
-//│     in jump _j0(_x4)
+//│ let x%3 = *(t%0_y,t%0_z)
+//│   in let x%4 = +(t%0_x,x%3)
+//│     in jump j%0(x%4)
 //│ )
-//│ Def(8, __complex_foo$D1$S0, [_t0_n,_t0_m], [{EDirect},{EDirect}], 
+//│ Def(8, complex_foo$D%1$S%0, [t%0_n,t%0_m], [{EDirect},{EDirect}], 
 //│ None, 1, 
-//│ let _x7 = -(_t0_m,_t0_n)
-//│   in jump _j0(_x7)
+//│ let x%7 = -(t%0_m,t%0_n)
+//│   in jump j%0(x%7)
 //│ )
 //│ },
-//│ let* (_x21) = bar()
-//│   in _x21)
+//│ let* (x%21) = bar()
+//│   in x%21)
 //│ 
 //│ 
 //│ Interpreted ------------------------------
@@ -185,190 +185,190 @@ bar()
 //│ 
 //│ GraphOpt:
 //│ GOProgram({ClassInfo(0, A, [w,x]),ClassInfo(1, B, [y]),ClassInfo(2, C, [z])}, {
-//│ Def(0, complex_foo, [_t0], [{}], 
+//│ Def(0, complex_foo, [t%0], [{}], 
 //│ None, 1, 
-//│ let _x0 = +(1,2)
-//│   in let _x1 = *(1,2)
-//│     in let join _j0(_x9) = let _x10 = A(5,_x9)
-//│           in let _x11 = B(6)
-//│             in let join _j1(_x23) = let join _j3(_x33) = _x33
-//│                   in case _x10 of
-//│                     A => let _x24 = _x10.x
-//│                       in let _x25 = _x10.w
-//│                         in jump _j3(_x25)
-//│                     B => let _x26 = _x10.y
-//│                       in jump _j3(4)
-//│                     C => let _x27 = _x10.z
-//│                       in let join _j4(_x32) = jump _j3(_x32)
-//│                         in case _x11 of
-//│                           A => let _x28 = _x11.x
-//│                             in let _x29 = _x11.w
-//│                               in jump _j4(_x29)
-//│                           B => let _x30 = _x11.y
-//│                             in jump _j4(7)
-//│                           C => let _x31 = _x11.z
-//│                             in jump _j4(8)
-//│               in case _x9 of
-//│                 A => let _x12 = _x9.x
-//│                   in let _x13 = _x9.w
-//│                     in let _x14 = +(_x13,_x0)
-//│                       in let _x15 = +(_x14,_x1)
-//│                         in let join _j2(_x20) = jump _j1(_x20)
-//│                           in case _x12 of
-//│                             A => let _x16 = _x12.x
-//│                               in let _x17 = _x12.w
-//│                                 in jump _j2(_x17)
-//│                             B => let _x18 = _x12.y
-//│                               in jump _j2(_x15)
-//│                             C => let _x19 = _x12.z
-//│                               in jump _j2(0)
-//│                 B => let _x21 = _x9.y
-//│                   in jump _j1(2)
-//│                 C => let _x22 = _x9.z
-//│                   in jump _j1(3)
-//│       in case _t0 of
-//│         A => let _x2 = _t0.x
-//│           in let _x3 = _t0.w
-//│             in jump _j0(_x2)
-//│         B => let _x4 = _t0.y
-//│           in let _x5 = +(_x4,_x1)
-//│             in let _x6 = B(_x5)
-//│               in jump _j0(_x6)
-//│         C => let _x7 = _t0.z
-//│           in let _x8 = C(0)
-//│             in jump _j0(_x8)
+//│ let x%0 = +(1,2)
+//│   in let x%1 = *(1,2)
+//│     in let join j%0(x%9) = let x%10 = A(5,x%9)
+//│           in let x%11 = B(6)
+//│             in let join j%1(x%23) = let join j%3(x%33) = x%33
+//│                   in case x%10 of
+//│                     A => let x%24 = x%10.x
+//│                       in let x%25 = x%10.w
+//│                         in jump j%3(x%25)
+//│                     B => let x%26 = x%10.y
+//│                       in jump j%3(4)
+//│                     C => let x%27 = x%10.z
+//│                       in let join j%4(x%32) = jump j%3(x%32)
+//│                         in case x%11 of
+//│                           A => let x%28 = x%11.x
+//│                             in let x%29 = x%11.w
+//│                               in jump j%4(x%29)
+//│                           B => let x%30 = x%11.y
+//│                             in jump j%4(7)
+//│                           C => let x%31 = x%11.z
+//│                             in jump j%4(8)
+//│               in case x%9 of
+//│                 A => let x%12 = x%9.x
+//│                   in let x%13 = x%9.w
+//│                     in let x%14 = +(x%13,x%0)
+//│                       in let x%15 = +(x%14,x%1)
+//│                         in let join j%2(x%20) = jump j%1(x%20)
+//│                           in case x%12 of
+//│                             A => let x%16 = x%12.x
+//│                               in let x%17 = x%12.w
+//│                                 in jump j%2(x%17)
+//│                             B => let x%18 = x%12.y
+//│                               in jump j%2(x%15)
+//│                             C => let x%19 = x%12.z
+//│                               in jump j%2(0)
+//│                 B => let x%21 = x%9.y
+//│                   in jump j%1(2)
+//│                 C => let x%22 = x%9.z
+//│                   in jump j%1(3)
+//│       in case t%0 of
+//│         A => let x%2 = t%0.x
+//│           in let x%3 = t%0.w
+//│             in jump j%0(x%2)
+//│         B => let x%4 = t%0.y
+//│           in let x%5 = +(x%4,x%1)
+//│             in let x%6 = B(x%5)
+//│               in jump j%0(x%6)
+//│         C => let x%7 = t%0.z
+//│           in let x%8 = C(0)
+//│             in jump j%0(x%8)
 //│ )
 //│ Def(1, bar, [], [{}], 
 //│ None, 1, 
-//│ let _x34 = B(10)
-//│   in let _x35 = A(9,_x34)
-//│     in let _x36 = A(10,_x35)
-//│       in let* (_x37) = complex_foo(_x36)
-//│         in _x37
+//│ let x%34 = B(10)
+//│   in let x%35 = A(9,x%34)
+//│     in let x%36 = A(10,x%35)
+//│       in let* (x%37) = complex_foo(x%36)
+//│         in x%37
 //│ )
 //│ },
-//│ let* (_x38) = bar()
-//│   in _x38)
+//│ let* (x%38) = bar()
+//│   in x%38)
 //│ 
 //│ Promoted ------------------------------------
 //│ GOProgram({ClassInfo(0, A, [w,x]),ClassInfo(1, B, [y]),ClassInfo(2, C, [z])}, {
-//│ Def(0, complex_foo, [_t0], [{EDestruct，EDirect，ESelect(x)，ESelect(y)}], 
+//│ Def(0, complex_foo, [t%0], [{EDestruct，EDirect，ESelect(x)，ESelect(y)}], 
 //│ None, 1, 
-//│ let _x0 = +(1,2)
-//│   in let _x1 = *(1,2)
-//│     in case _t0 of
-//│       A => let _x2 = _t0.x
-//│         in jump _j0(_x2)
-//│       B => let _x4 = _t0.y
-//│         in let _x5 = +(_x4,_x1)
-//│           in let _x6 = B(_x5)
-//│             in jump _j0(_x6)
-//│       C => let _x8 = C(0)
-//│         in jump _j0(_x8)
+//│ let x%0 = +(1,2)
+//│   in let x%1 = *(1,2)
+//│     in case t%0 of
+//│       A => let x%2 = t%0.x
+//│         in jump j%0(x%2)
+//│       B => let x%4 = t%0.y
+//│         in let x%5 = +(x%4,x%1)
+//│           in let x%6 = B(x%5)
+//│             in jump j%0(x%6)
+//│       C => let x%8 = C(0)
+//│         in jump j%0(x%8)
 //│ )
 //│ Def(1, bar, [], [], 
 //│ None, 1, 
-//│ let _x34 = B(10)
-//│   in let _x35 = A(9,_x34)
-//│     in let _x36 = A(10,_x35)
-//│       in let* (_x37) = complex_foo(_x36)
-//│         in _x37
+//│ let x%34 = B(10)
+//│   in let x%35 = A(9,x%34)
+//│     in let x%36 = A(10,x%35)
+//│       in let* (x%37) = complex_foo(x%36)
+//│         in x%37
 //│ )
-//│ Def(2, @join _j0, [_x9], [{EDirect，EDestruct，ESelect(x)，ESelect(w)}], 
+//│ Def(2, @join j%0, [x%9], [{EDirect，EDestruct，ESelect(x)，ESelect(w)}], 
 //│ None, 1, 
-//│ let _x10 = A(5,_x9)
-//│   in let _x11 = B(6)
-//│     in case _x9 of
-//│       A => let _x12 = _x9.x
-//│         in let _x13 = _x9.w
-//│           in let _x14 = +(_x13,_x0)
-//│             in let _x15 = +(_x14,_x1)
-//│               in case _x12 of
-//│                 A => let _x17 = _x12.w
-//│                   in jump _j2(_x17)
-//│                 B => jump _j2(_x15)
-//│                 C => jump _j2(0)
-//│       B => jump _j1(2)
-//│       C => jump _j1(3)
+//│ let x%10 = A(5,x%9)
+//│   in let x%11 = B(6)
+//│     in case x%9 of
+//│       A => let x%12 = x%9.x
+//│         in let x%13 = x%9.w
+//│           in let x%14 = +(x%13,x%0)
+//│             in let x%15 = +(x%14,x%1)
+//│               in case x%12 of
+//│                 A => let x%17 = x%12.w
+//│                   in jump j%2(x%17)
+//│                 B => jump j%2(x%15)
+//│                 C => jump j%2(0)
+//│       B => jump j%1(2)
+//│       C => jump j%1(3)
 //│ )
-//│ Def(3, @join _j1, [_x23], [{}], 
+//│ Def(3, @join j%1, [x%23], [{}], 
 //│ None, 1, 
-//│ case _x10 of
-//│   A => let _x25 = _x10.w
-//│     in _x25
+//│ case x%10 of
+//│   A => let x%25 = x%10.w
+//│     in x%25
 //│   B => 4
-//│   C => case _x11 of
-//│     A => let _x29 = _x11.w
-//│       in _x29
+//│   C => case x%11 of
+//│     A => let x%29 = x%11.w
+//│       in x%29
 //│     B => 7
 //│     C => 8
 //│ )
-//│ Def(6, @join _j2, [_x20], [{EDirect}], 
+//│ Def(6, @join j%2, [x%20], [{EDirect}], 
 //│ None, 1, 
-//│ jump _j1(_x20)
+//│ jump j%1(x%20)
 //│ )
 //│ },
-//│ let* (_x38) = bar()
-//│   in _x38)
+//│ let* (x%38) = bar()
+//│   in x%38)
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, A, [w,x]),ClassInfo(1, B, [y]),ClassInfo(2, C, [z])}, {
 //│ Def(1, bar, [], [], 
 //│ None, 1, 
-//│ let _x34 = B(10)
-//│   in let _x35 = A(9,_x34)
-//│     in let _x36 = A(10,_x35)
-//│       in let* (_x49,_x50,_x51) = _complex_foo$P0(_x36)
-//│         in let* (_x37) = _complex_foo$D0(_x49,_x50,_x51)
-//│           in _x37
+//│ let x%34 = B(10)
+//│   in let x%35 = A(9,x%34)
+//│     in let x%36 = A(10,x%35)
+//│       in let* (x%49,x%50,x%51) = complex_foo$P%0(x%36)
+//│         in let* (x%37) = complex_foo$D%0(x%49,x%50,x%51)
+//│           in x%37
 //│ )
-//│ Def(2, @join _j0, [_x9], [{EDirect，EDestruct，ESelect(x)，ESelect(w)}], 
+//│ Def(2, @join j%0, [x%9], [{EDirect，EDestruct，ESelect(x)，ESelect(w)}], 
 //│ None, 1, 
-//│ let _x10 = A(5,_x9)
-//│   in let _x11 = B(6)
-//│     in case _x9 of
-//│       A => let _x12 = _x9.x
-//│         in let _x13 = _x9.w
-//│           in let _x14 = +(_x13,_x0)
-//│             in let _x15 = +(_x14,_x1)
-//│               in case _x12 of
-//│                 A => let _x17 = _x12.w
-//│                   in jump _j2(_x17)
-//│                 B => jump _j2(_x15)
-//│                 C => jump _j2(0)
-//│       B => jump _j1(2)
-//│       C => jump _j1(3)
+//│ let x%10 = A(5,x%9)
+//│   in let x%11 = B(6)
+//│     in case x%9 of
+//│       A => let x%12 = x%9.x
+//│         in let x%13 = x%9.w
+//│           in let x%14 = +(x%13,x%0)
+//│             in let x%15 = +(x%14,x%1)
+//│               in case x%12 of
+//│                 A => let x%17 = x%12.w
+//│                   in jump j%2(x%17)
+//│                 B => jump j%2(x%15)
+//│                 C => jump j%2(0)
+//│       B => jump j%1(2)
+//│       C => jump j%1(3)
 //│ )
-//│ Def(3, @join _j1, [_x23], [{}], 
+//│ Def(3, @join j%1, [x%23], [{}], 
 //│ None, 1, 
-//│ case _x10 of
-//│   A => let _x25 = _x10.w
-//│     in _x25
+//│ case x%10 of
+//│   A => let x%25 = x%10.w
+//│     in x%25
 //│   B => 4
-//│   C => case _x11 of
-//│     A => let _x29 = _x11.w
-//│       in _x29
+//│   C => case x%11 of
+//│     A => let x%29 = x%11.w
+//│       in x%29
 //│     B => 7
 //│     C => 8
 //│ )
-//│ Def(6, @join _j2, [_x20], [{EDirect}], 
+//│ Def(6, @join j%2, [x%20], [{EDirect}], 
 //│ None, 1, 
-//│ jump _j1(_x20)
+//│ jump j%1(x%20)
 //│ )
-//│ Def(7, _complex_foo$P0, [_t0], [{EDirect}], 
+//│ Def(7, complex_foo$P%0, [t%0], [{EDirect}], 
 //│ None, 3, 
-//│ let _x0 = +(1,2)
-//│   in let _x1 = *(1,2)
-//│     in _t0,_x0,_x1
+//│ let x%0 = +(1,2)
+//│   in let x%1 = *(1,2)
+//│     in t%0,x%0,x%1
 //│ )
-//│ Def(8, _complex_foo$D0, [_t0,_x0,_x1], [{ESelect(x)},{EDirect},{EDirect}], 
+//│ Def(8, complex_foo$D%0, [t%0,x%0,x%1], [{ESelect(x)},{EDirect},{EDirect}], 
 //│ None, 1, 
-//│ let _x2 = _t0.x
-//│   in jump _j0(_x2)
+//│ let x%2 = t%0.x
+//│   in jump j%0(x%2)
 //│ )
 //│ },
-//│ let* (_x38) = bar()
-//│   in _x38)
+//│ let* (x%38) = bar()
+//│   in x%38)
 
 :GraphOpt
 class A(w, x)
@@ -410,256 +410,256 @@ bar()
 //│ 
 //│ GraphOpt:
 //│ GOProgram({ClassInfo(0, A, [w,x]),ClassInfo(1, B, [y]),ClassInfo(2, C, [z])}, {
-//│ Def(0, complex_foo, [_t0], [{}], 
+//│ Def(0, complex_foo, [t%0], [{}], 
 //│ None, 1, 
-//│ let _x0 = +(1,2)
-//│   in let _x1 = *(1,2)
-//│     in let join _j0(_x11) = let _x12 = A(5,_x11)
-//│           in let _x13 = B(6)
-//│             in let join _j1(_x25) = let join _j3(_x35) = _x35
-//│                   in case _x12 of
-//│                     A => let _x26 = _x12.x
-//│                       in let _x27 = _x12.w
-//│                         in jump _j3(_x27)
-//│                     B => let _x28 = _x12.y
-//│                       in jump _j3(4)
-//│                     C => let _x29 = _x12.z
-//│                       in let join _j4(_x34) = jump _j3(_x34)
-//│                         in case _x13 of
-//│                           A => let _x30 = _x13.x
-//│                             in let _x31 = _x13.w
-//│                               in jump _j4(_x31)
-//│                           B => let _x32 = _x13.y
-//│                             in jump _j4(7)
-//│                           C => let _x33 = _x13.z
-//│                             in jump _j4(8)
-//│               in case _x11 of
-//│                 A => let _x14 = _x11.x
-//│                   in let _x15 = _x11.w
-//│                     in let _x16 = +(_x15,_x0)
-//│                       in let _x17 = +(_x16,_x1)
-//│                         in let join _j2(_x22) = jump _j1(_x22)
-//│                           in case _x14 of
-//│                             A => let _x18 = _x14.x
-//│                               in let _x19 = _x14.w
-//│                                 in jump _j2(_x19)
-//│                             B => let _x20 = _x14.y
-//│                               in jump _j2(_x17)
-//│                             C => let _x21 = _x14.z
-//│                               in jump _j2(0)
-//│                 B => let _x23 = _x11.y
-//│                   in jump _j1(2)
-//│                 C => let _x24 = _x11.z
-//│                   in jump _j1(3)
-//│       in case _t0 of
-//│         A => let _x2 = _t0.x
-//│           in let _x3 = _t0.w
-//│             in let _x4 = C(0)
-//│               in let _x5 = A(_x3,_x4)
-//│                 in jump _j0(_x5)
-//│         B => let _x6 = _t0.y
-//│           in let _x7 = +(_x6,_x1)
-//│             in let _x8 = B(_x7)
-//│               in jump _j0(_x8)
-//│         C => let _x9 = _t0.z
-//│           in let _x10 = C(0)
-//│             in jump _j0(_x10)
+//│ let x%0 = +(1,2)
+//│   in let x%1 = *(1,2)
+//│     in let join j%0(x%11) = let x%12 = A(5,x%11)
+//│           in let x%13 = B(6)
+//│             in let join j%1(x%25) = let join j%3(x%35) = x%35
+//│                   in case x%12 of
+//│                     A => let x%26 = x%12.x
+//│                       in let x%27 = x%12.w
+//│                         in jump j%3(x%27)
+//│                     B => let x%28 = x%12.y
+//│                       in jump j%3(4)
+//│                     C => let x%29 = x%12.z
+//│                       in let join j%4(x%34) = jump j%3(x%34)
+//│                         in case x%13 of
+//│                           A => let x%30 = x%13.x
+//│                             in let x%31 = x%13.w
+//│                               in jump j%4(x%31)
+//│                           B => let x%32 = x%13.y
+//│                             in jump j%4(7)
+//│                           C => let x%33 = x%13.z
+//│                             in jump j%4(8)
+//│               in case x%11 of
+//│                 A => let x%14 = x%11.x
+//│                   in let x%15 = x%11.w
+//│                     in let x%16 = +(x%15,x%0)
+//│                       in let x%17 = +(x%16,x%1)
+//│                         in let join j%2(x%22) = jump j%1(x%22)
+//│                           in case x%14 of
+//│                             A => let x%18 = x%14.x
+//│                               in let x%19 = x%14.w
+//│                                 in jump j%2(x%19)
+//│                             B => let x%20 = x%14.y
+//│                               in jump j%2(x%17)
+//│                             C => let x%21 = x%14.z
+//│                               in jump j%2(0)
+//│                 B => let x%23 = x%11.y
+//│                   in jump j%1(2)
+//│                 C => let x%24 = x%11.z
+//│                   in jump j%1(3)
+//│       in case t%0 of
+//│         A => let x%2 = t%0.x
+//│           in let x%3 = t%0.w
+//│             in let x%4 = C(0)
+//│               in let x%5 = A(x%3,x%4)
+//│                 in jump j%0(x%5)
+//│         B => let x%6 = t%0.y
+//│           in let x%7 = +(x%6,x%1)
+//│             in let x%8 = B(x%7)
+//│               in jump j%0(x%8)
+//│         C => let x%9 = t%0.z
+//│           in let x%10 = C(0)
+//│             in jump j%0(x%10)
 //│ )
 //│ Def(1, bar, [], [{}], 
 //│ None, 1, 
-//│ let _x36 = B(10)
-//│   in let _x37 = A(9,_x36)
-//│     in let _x38 = A(10,_x37)
-//│       in let* (_x39) = complex_foo(_x38)
-//│         in _x39
+//│ let x%36 = B(10)
+//│   in let x%37 = A(9,x%36)
+//│     in let x%38 = A(10,x%37)
+//│       in let* (x%39) = complex_foo(x%38)
+//│         in x%39
 //│ )
 //│ },
-//│ let* (_x40) = bar()
-//│   in _x40)
+//│ let* (x%40) = bar()
+//│   in x%40)
 //│ 
 //│ Promoted ------------------------------------
 //│ GOProgram({ClassInfo(0, A, [w,x]),ClassInfo(1, B, [y]),ClassInfo(2, C, [z])}, {
-//│ Def(0, complex_foo, [_t0], [{EDestruct，EDirect，ESelect(w)，ESelect(y)}], 
+//│ Def(0, complex_foo, [t%0], [{EDestruct，EDirect，ESelect(w)，ESelect(y)}], 
 //│ None, 1, 
-//│ let _x0 = +(1,2)
-//│   in let _x1 = *(1,2)
-//│     in case _t0 of
-//│       A => let _x3 = _t0.w
-//│         in let _x4 = C(0)
-//│           in let _x5 = A(_x3,_x4)
-//│             in jump _j0(_x5)
-//│       B => let _x6 = _t0.y
-//│         in let _x7 = +(_x6,_x1)
-//│           in let _x8 = B(_x7)
-//│             in jump _j0(_x8)
-//│       C => let _x10 = C(0)
-//│         in jump _j0(_x10)
+//│ let x%0 = +(1,2)
+//│   in let x%1 = *(1,2)
+//│     in case t%0 of
+//│       A => let x%3 = t%0.w
+//│         in let x%4 = C(0)
+//│           in let x%5 = A(x%3,x%4)
+//│             in jump j%0(x%5)
+//│       B => let x%6 = t%0.y
+//│         in let x%7 = +(x%6,x%1)
+//│           in let x%8 = B(x%7)
+//│             in jump j%0(x%8)
+//│       C => let x%10 = C(0)
+//│         in jump j%0(x%10)
 //│ )
 //│ Def(1, bar, [], [], 
 //│ None, 1, 
-//│ let _x36 = B(10)
-//│   in let _x37 = A(9,_x36)
-//│     in let _x38 = A(10,_x37)
-//│       in let* (_x39) = complex_foo(_x38)
-//│         in _x39
+//│ let x%36 = B(10)
+//│   in let x%37 = A(9,x%36)
+//│     in let x%38 = A(10,x%37)
+//│       in let* (x%39) = complex_foo(x%38)
+//│         in x%39
 //│ )
-//│ Def(2, @join _j0, [_x11], [{EDirect，EDestruct，ESelect(x)，ESelect(w)}], 
+//│ Def(2, @join j%0, [x%11], [{EDirect，EDestruct，ESelect(x)，ESelect(w)}], 
 //│ None, 1, 
-//│ let _x12 = A(5,_x11)
-//│   in let _x13 = B(6)
-//│     in case _x11 of
-//│       A => let _x14 = _x11.x
-//│         in let _x15 = _x11.w
-//│           in let _x16 = +(_x15,_x0)
-//│             in let _x17 = +(_x16,_x1)
-//│               in case _x14 of
-//│                 A => let _x19 = _x14.w
-//│                   in jump _j2(_x19)
-//│                 B => jump _j2(_x17)
-//│                 C => jump _j2(0)
-//│       B => jump _j1(2)
-//│       C => jump _j1(3)
+//│ let x%12 = A(5,x%11)
+//│   in let x%13 = B(6)
+//│     in case x%11 of
+//│       A => let x%14 = x%11.x
+//│         in let x%15 = x%11.w
+//│           in let x%16 = +(x%15,x%0)
+//│             in let x%17 = +(x%16,x%1)
+//│               in case x%14 of
+//│                 A => let x%19 = x%14.w
+//│                   in jump j%2(x%19)
+//│                 B => jump j%2(x%17)
+//│                 C => jump j%2(0)
+//│       B => jump j%1(2)
+//│       C => jump j%1(3)
 //│ )
-//│ Def(3, @join _j1, [_x25], [{}], 
+//│ Def(3, @join j%1, [x%25], [{}], 
 //│ None, 1, 
-//│ case _x12 of
-//│   A => let _x27 = _x12.w
-//│     in _x27
+//│ case x%12 of
+//│   A => let x%27 = x%12.w
+//│     in x%27
 //│   B => 4
-//│   C => case _x13 of
-//│     A => let _x31 = _x13.w
-//│       in _x31
+//│   C => case x%13 of
+//│     A => let x%31 = x%13.w
+//│       in x%31
 //│     B => 7
 //│     C => 8
 //│ )
-//│ Def(6, @join _j2, [_x22], [{EDirect}], 
+//│ Def(6, @join j%2, [x%22], [{EDirect}], 
 //│ None, 1, 
-//│ jump _j1(_x22)
+//│ jump j%1(x%22)
 //│ )
 //│ },
-//│ let* (_x40) = bar()
-//│   in _x40)
+//│ let* (x%40) = bar()
+//│   in x%40)
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, A, [w,x]),ClassInfo(1, B, [y]),ClassInfo(2, C, [z])}, {
 //│ Def(1, bar, [], [], 
 //│ None, 1, 
-//│ let _x36 = B(10)
-//│   in let _x37 = A(9,_x36)
-//│     in let _x38 = A(10,_x37)
-//│       in let* (_x56,_x57,_x58) = _complex_foo$P0(_x38)
-//│         in let* (_x39) = _complex_foo$D0(_x56,_x57,_x58)
-//│           in _x39
+//│ let x%36 = B(10)
+//│   in let x%37 = A(9,x%36)
+//│     in let x%38 = A(10,x%37)
+//│       in let* (x%56,x%57,x%58) = complex_foo$P%0(x%38)
+//│         in let* (x%39) = complex_foo$D%0(x%56,x%57,x%58)
+//│           in x%39
 //│ )
-//│ Def(2, @join _j0, [_x11], [{EDirect，EDestruct，ESelect(x)，ESelect(w)}], 
+//│ Def(2, @join j%0, [x%11], [{EDirect，EDestruct，ESelect(x)，ESelect(w)}], 
 //│ None, 1, 
-//│ let _x12 = A(5,_x11)
-//│   in let _x13 = B(6)
-//│     in case _x11 of
-//│       A => let _x14 = _x11.x
-//│         in let _x15 = _x11.w
-//│           in let _x16 = +(_x15,_x0)
-//│             in let _x17 = +(_x16,_x1)
-//│               in case _x14 of
-//│                 A => let _x19 = _x14.w
-//│                   in jump _j2(_x19)
-//│                 B => jump _j2(_x17)
-//│                 C => jump _j2(0)
-//│       B => jump _j1(2)
-//│       C => jump _j1(3)
+//│ let x%12 = A(5,x%11)
+//│   in let x%13 = B(6)
+//│     in case x%11 of
+//│       A => let x%14 = x%11.x
+//│         in let x%15 = x%11.w
+//│           in let x%16 = +(x%15,x%0)
+//│             in let x%17 = +(x%16,x%1)
+//│               in case x%14 of
+//│                 A => let x%19 = x%14.w
+//│                   in jump j%2(x%19)
+//│                 B => jump j%2(x%17)
+//│                 C => jump j%2(0)
+//│       B => jump j%1(2)
+//│       C => jump j%1(3)
 //│ )
-//│ Def(3, @join _j1, [_x25], [{}], 
+//│ Def(3, @join j%1, [x%25], [{}], 
 //│ None, 1, 
-//│ case _x12 of
-//│   A => let _x27 = _x12.w
-//│     in _x27
+//│ case x%12 of
+//│   A => let x%27 = x%12.w
+//│     in x%27
 //│   B => 4
-//│   C => case _x13 of
-//│     A => let _x31 = _x13.w
-//│       in _x31
+//│   C => case x%13 of
+//│     A => let x%31 = x%13.w
+//│       in x%31
 //│     B => 7
 //│     C => 8
 //│ )
-//│ Def(6, @join _j2, [_x22], [{EDirect}], 
+//│ Def(6, @join j%2, [x%22], [{EDirect}], 
 //│ None, 1, 
-//│ jump _j1(_x22)
+//│ jump j%1(x%22)
 //│ )
-//│ Def(7, _complex_foo$P0, [_t0], [{EDirect}], 
+//│ Def(7, complex_foo$P%0, [t%0], [{EDirect}], 
 //│ None, 3, 
-//│ let _x0 = +(1,2)
-//│   in let _x1 = *(1,2)
-//│     in _t0,_x0,_x1
+//│ let x%0 = +(1,2)
+//│   in let x%1 = *(1,2)
+//│     in t%0,x%0,x%1
 //│ )
-//│ Def(8, _complex_foo$D0, [_t0,_x0,_x1], [{ESelect(w)},{EDirect},{EDirect}], 
+//│ Def(8, complex_foo$D%0, [t%0,x%0,x%1], [{ESelect(w)},{EDirect},{EDirect}], 
 //│ None, 1, 
-//│ let _x3 = _t0.w
-//│   in let _x4 = C(0)
-//│     in let _x5 = A(_x3,_x4)
-//│       in jump _j0(_x5)
+//│ let x%3 = t%0.w
+//│   in let x%4 = C(0)
+//│     in let x%5 = A(x%3,x%4)
+//│       in jump j%0(x%5)
 //│ )
 //│ },
-//│ let* (_x40) = bar()
-//│   in _x40)
+//│ let* (x%40) = bar()
+//│   in x%40)
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, A, [w,x]),ClassInfo(1, B, [y]),ClassInfo(2, C, [z])}, {
 //│ Def(1, bar, [], [], 
 //│ None, 1, 
-//│ let _x36 = B(10)
-//│   in let _x37 = A(9,_x36)
-//│     in let _x38 = A(10,_x37)
-//│       in let* (_x56,_x57,_x58) = _complex_foo$P0(_x38)
-//│         in let* (_x39) = _complex_foo$D0(_x56,_x57,_x58)
-//│           in _x39
+//│ let x%36 = B(10)
+//│   in let x%37 = A(9,x%36)
+//│     in let x%38 = A(10,x%37)
+//│       in let* (x%56,x%57,x%58) = complex_foo$P%0(x%38)
+//│         in let* (x%39) = complex_foo$D%0(x%56,x%57,x%58)
+//│           in x%39
 //│ )
-//│ Def(3, @join _j1, [_x25], [{}], 
+//│ Def(3, @join j%1, [x%25], [{}], 
 //│ None, 1, 
-//│ case _x12 of
-//│   A => let _x27 = _x12.w
-//│     in _x27
+//│ case x%12 of
+//│   A => let x%27 = x%12.w
+//│     in x%27
 //│   B => 4
-//│   C => case _x13 of
-//│     A => let _x31 = _x13.w
-//│       in _x31
+//│   C => case x%13 of
+//│     A => let x%31 = x%13.w
+//│       in x%31
 //│     B => 7
 //│     C => 8
 //│ )
-//│ Def(6, @join _j2, [_x22], [{EDirect}], 
+//│ Def(6, @join j%2, [x%22], [{EDirect}], 
 //│ None, 1, 
-//│ jump _j1(_x22)
+//│ jump j%1(x%22)
 //│ )
-//│ Def(7, _complex_foo$P0, [_t0], [{EDirect}], 
+//│ Def(7, complex_foo$P%0, [t%0], [{EDirect}], 
 //│ None, 3, 
-//│ let _x0 = +(1,2)
-//│   in let _x1 = *(1,2)
-//│     in _t0,_x0,_x1
+//│ let x%0 = +(1,2)
+//│   in let x%1 = *(1,2)
+//│     in t%0,x%0,x%1
 //│ )
-//│ Def(8, _complex_foo$D0, [_t0,_x0,_x1], [{ESelect(w)},{EDirect},{EDirect}], 
+//│ Def(8, complex_foo$D%0, [t%0,x%0,x%1], [{ESelect(w)},{EDirect},{EDirect}], 
 //│ None, 1, 
-//│ let _x3 = _t0.w
-//│   in let _x4 = C(0)
-//│     in let _x5 = A(_x3,_x4)
-//│       in let* (_x59,_x60,_x61,_x62,_x63) = __j0$P1(_x5)
-//│         in jump __j0$D3(_x59,_x60,_x61,_x62,_x63)
+//│ let x%3 = t%0.w
+//│   in let x%4 = C(0)
+//│     in let x%5 = A(x%3,x%4)
+//│       in let* (x%59,x%60,x%61,x%62,x%63) = j%0$P%1(x%5)
+//│         in jump j%0$D%3(x%59,x%60,x%61,x%62,x%63)
 //│ )
-//│ Def(15, __j0$P1, [_x11], [{EDirect}], 
-//│ Some(ICtor(B)), 5, 
-//│ let _x12 = A(5,_x11)
-//│   in let _x13 = B(6)
-//│     in _x13,_x12,_x0,_x11,_x1
+//│ Def(15, j%0$P%1, [x%11], [{EDirect}], 
+//│ Some(ICtor(A)), 5, 
+//│ let x%12 = A(5,x%11)
+//│   in let x%13 = B(6)
+//│     in x%12,x%1,x%0,x%13,x%11
 //│ )
-//│ Def(16, @join __j0$D3, [_x13,_x12,_x0,_x11,_x1], [{EDestruct，EDirect，ESelect(w)},{EDestruct，EDirect，ESelect(w)},{EDirect},{ESelect(x)，ESelect(w)},{EDirect}], 
+//│ Def(16, @join j%0$D%3, [x%12,x%1,x%0,x%13,x%11], [{EDestruct，EDirect，ESelect(w)},{EDirect},{EDirect},{EDestruct，EDirect，ESelect(w)},{ESelect(x)，ESelect(w)}], 
 //│ None, 1, 
-//│ let _x14 = _x11.x
-//│   in let _x15 = _x11.w
-//│     in let _x16 = +(_x15,_x0)
-//│       in let _x17 = +(_x16,_x1)
-//│         in case _x14 of
-//│           A => let _x19 = _x14.w
-//│             in jump _j2(_x19)
-//│           B => jump _j2(_x17)
-//│           C => jump _j2(0)
+//│ let x%14 = x%11.x
+//│   in let x%15 = x%11.w
+//│     in let x%16 = +(x%15,x%0)
+//│       in let x%17 = +(x%16,x%1)
+//│         in case x%14 of
+//│           A => let x%19 = x%14.w
+//│             in jump j%2(x%19)
+//│           B => jump j%2(x%17)
+//│           C => jump j%2(0)
 //│ )
 //│ },
-//│ let* (_x40) = bar()
-//│   in _x40)
+//│ let* (x%40) = bar()
+//│   in x%40)

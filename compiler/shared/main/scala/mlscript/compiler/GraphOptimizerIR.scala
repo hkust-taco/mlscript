@@ -406,7 +406,7 @@ object GODefDfs:
       succ += x.getName
 
   private def dfs(using visited: HashMap[Str, Bool], out: ListBuffer[GODef], postfix: Bool)(x: GODef): Unit =
-    visited.put(x.name, true)
+    visited.update(x.name, true)
     if (!postfix)
       out += x
     val succ = Successors()
@@ -427,7 +427,7 @@ object GODefDfs:
     }
 
   private def dfs_names(using visited: HashMap[Str, Bool], defs: Set[GODef], out: ListBuffer[Str], postfix: Bool)(x: GODef): Unit =
-    visited.put(x.name, true)
+    visited.update(x.name, true)
     if (!postfix)
       out += x.name
     val succ = SuccessorNames()

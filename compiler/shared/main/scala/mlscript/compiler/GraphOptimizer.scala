@@ -7,8 +7,9 @@ import shorthands.*
 
 import scala.annotation.tailrec
 import scala.collection.immutable.*
-import scala.collection.mutable.{HashMap => MutMap}
-import scala.collection.mutable.{HashSet => MutSet}
+import scala.collection.mutable.{HashMap => MutHMap}
+import scala.collection.mutable.{HashSet => MutHSet, Set => MutSet}
+import scala.collection.mutable.MultiMap
 
 final case class GraphOptimizingError(message: String) extends Exception(message)
 
@@ -22,11 +23,12 @@ class GraphOptimizer:
   import GOExpr._
   import GONode._
 
-  private val counter = MutMap[Str, Int]()
+  private val counter = MutHMap[Str, Int]()
   private def gensym(s: Str = "x") = {
     val count = counter.getOrElse(s, 0)
-    val tmp = s"_$s$count"
-    counter.put(s, count + 1)
+    val ts = s.split("%")(0)
+    val tmp = s"$s%$count"
+    counter.update(s, count + 1)
     Name(tmp)
   }
 
@@ -396,6 +398,53 @@ class GraphOptimizer:
   private def used(using v: String, ctx: Ctx)(name: String) =
     name == v || ctx.get(name).contains(v)
 
+  private class EliminationAnalysis extends GOIterator:
+    val elims = new MutHMap[Str, MutSet[Elim]] with MultiMap[Str, Elim]
+    override def iterate_name_use(x: Name) =
+      elims.addBinding(x.str, EDirect)
+    override def iterate(x: Case) = x match
+      case Case(x, cases) =>
+        x.accept_use_iterator(this)
+        elims.addBinding(x.str, EDestruct)
+        cases foreach { (cls, arm) => arm.accept_iterator(this) }
+    override def iterate(x: Select) = x match
+      case Select(x, cls, field) =>
+        elims.addBinding(x.str, ESelect(field))
+    override def iterate(x: Jump) = x match
+      case Jump(defnref, args) => 
+        args.foreach(_.accept_iterator(this))
+        val defn = defnref.expectDefn
+        args.zip(defn.activeParams).foreach {
+          case (Ref(Name(x)), ys) => ys.foreach { y => elims.addBinding(x, y) }
+          case _ => 
+        }
+    override def iterate(x: LetCall) = x match
+      case LetCall(xs, defnref, args, body) =>
+        xs.foreach(_.accept_def_iterator(this))
+        args.foreach(_.accept_iterator(this))
+        val defn = defnref.expectDefn 
+        args.zip(defn.activeParams).foreach {
+          case (Ref(Name(x)), ys) => ys.foreach { y => elims.addBinding(x, y) }
+          case _ => 
+        }
+        body.accept_iterator(this)
+
+    override def iterate(x: GOProgram) =
+      GODefRevPreOrdering.ordered(x.main, x.defs).foreach(_.accept_iterator(this))
+      var changed = true
+      while (changed)
+        changed = false
+        x.defs.foreach { defn =>
+          val old = defn.activeParams
+          defn.activeParams = defn.params.map {
+            param => elims.get(param.str) match {
+              case Some(elims) => elims.toSet
+              case None => Set()
+            }
+          }
+          changed |= (old != defn.activeParams)
+        }
+
   private def getElims(using v: String, ctx: Ctx)(exprs: Ls[TrivialExpr], uses: Set[Elim]): Set[Elim] =
     exprs.foldLeft(uses)((uses, expr) => getElim(expr, uses))
 
@@ -447,6 +496,55 @@ class GraphOptimizer:
     case LetJoin(joinName, params, rhs, body) => getElim(body, getElim(rhs, uses))
     case Result(res) => getElims(res, uses)
   }
+
+  private class IntroductionAnalysis extends GOIterator:
+    private def getIntro(node: GONode, intros: Map[Str, Intro]): Ls[Opt[Intro]] = node match
+      case Case(scrut, cases) => 
+        val cases_intros = cases.map { case (cls, node) => getIntro(node, intros) }
+        if (cases_intros.toSet.size > 1)
+          cases_intros.head.map { _ => None }
+        else
+          cases_intros.head
+      case Jump(defnref, args) =>
+        val jpdef = defnref.expectDefn
+        val intros2 = jpdef.params.zip(args)
+          .filter{ (_, arg) => getIntro(arg, intros).isDefined }
+          .map{ case (param, arg) => param.str -> getIntro(arg, intros).get }
+        getIntro(jpdef.body, intros2.toMap)
+      case LetCall(resultNames, defnref, args, body) =>
+        val defn = defnref.expectDefn
+        val intros2 = defn.activeResults.zip(resultNames).foldLeft(intros) { 
+          case (intros, (Some(i), name)) => intros + (name.str -> i)
+          case (intros, _) => intros
+        }
+        getIntro(body, intros2)
+      case LetExpr(name, expr, body) => 
+        val intros2 = getIntro(expr, intros).map { x => intros + (name.str -> x) }.getOrElse(intros)
+        getIntro(body, intros2)
+      case LetJoin(joinName, params, rhs, body) =>
+        throw GraphOptimizingError(f"join points after promotion: $node")
+      case Result(res) => 
+        res.map { x => getIntro(x, intros) }
+
+    private def getIntro(expr: TrivialExpr, intros: Map[Str, Intro]) = expr match 
+      case Literal(lit) => None
+      case Ref(name) => intros.get(name.str)
+
+    private def getIntro(expr: GOExpr, intros: Map[Str, Intro]): Opt[Intro] = expr match 
+      case CtorApp(cls, args) => Some(ICtor(cls.ident))
+      case Lambda(name, body) => Some(ILam(name.length))
+      case _ => None
+
+    override def iterate(x: GOProgram) =
+      var changed = true
+      while (changed)
+        changed = false
+        x.defs.foreach { 
+          defn =>
+            val old = defn.activeResults
+            defn.activeResults = getIntro(defn.body, Map.empty)
+            changed |= old != defn.activeResults
+        }
 
 
   private def getIntro(defn: GODef): Ls[Opt[Intro]] =
@@ -1147,9 +1245,9 @@ class GraphOptimizer:
   }
 
   private class UsefulnessAnalysis extends GOIterator:
-    val uses = MutMap[Name, Int]() 
+    val uses = MutHMap[Name, Int]() 
     override def iterate_name_use(x: Name) =
-      uses.put(x, uses.getOrElse(x, 0) + 1)
+      uses.update(x, uses.getOrElse(x, 0) + 1)
     override def iterate(x: GOProgram) =
       val defs = GODefRevPreOrdering.ordered(x.main, x.defs)
       defs.foreach(_.accept_iterator(this))
@@ -1359,15 +1457,16 @@ class GraphOptimizer:
     if (cross_ref_is_ok)
        ensureVarNoShadowing(entry, defs)
 
+  def activeAnalyze2(prog: GOProgram): GOProgram =
+    prog.accept_iterator(EliminationAnalysis())
+    prog.accept_iterator(IntroductionAnalysis())
+    prog
+
   def activeAnalyze(prog: GOProgram): GOProgram = {
     val classes = prog.classes
-    val old_defs = prog.defs
+    val defs = prog.defs
     val main = prog.main
 
-    val defs = old_defs.map {
-      defn => GODef(defn.id, defn.name, defn.isjp, defn.params, defn.resultNum, defn.body)
-    }
-  
     fixCrossReferences(main, defs)
     validate(main, defs)
 
