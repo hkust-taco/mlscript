@@ -31,16 +31,16 @@ class GOProgram(
   override def toString: String =
     val t1 = classes.toArray
     val t2 = defs.toArray
-    Sorting.quickSort(t1)(ClassInfoOrdering)
-    Sorting.quickSort(t2)(GODefOrdering)
+    Sorting.quickSort(t1)
+    Sorting.quickSort(t2)
     s"GOProgram({${t1.mkString(",")}}, {\n${t2.mkString("\n")}\n},\n$main)"
   def accept_visitor(v: GOVisitor) = v.visit(this)
   def accept_iterator(v: GOIterator) = v.iterate(this)
 
-object ClassInfoOrdering extends Ordering[ClassInfo] {
+implicit object ClassInfoOrdering extends Ordering[ClassInfo] {
   def compare(a: ClassInfo, b: ClassInfo) = a.id.compare(b.id)
 }
-object GODefOrdering extends Ordering[GODef] {
+implicit object GODefOrdering extends Ordering[GODef] {
   def compare(a: GODef, b: GODef) = a.id.compare(b.id)
 }
 
@@ -101,6 +101,9 @@ enum Elim:
     case EDestruct => s"EDestruct"
     case ESelect(x: Str) => s"ESelect($x)"
 
+implicit object ElimOrdering extends Ordering[Elim]:
+  override def compare(a: Elim, b: Elim) = a.toString.compare(b.toString)
+
 enum Intro:
   case ICtor(c: Str)
   case ILam(n: Int)
@@ -142,8 +145,11 @@ class GODef(
   def accept_visitor(v: GOVisitor) = v.visit(this)
   def accept_iterator(v: GOIterator) = v.iterate(this)
   override def toString: String =
-    val name2 = if (isjp) s"@join $name" else s"$name" 
-    s"Def($id, $name2, ${params.map(_.toString()).mkString("[", ",", "]")}, ${activeParams.map({ x => x.mkString("{", "，", "}")}).mkString("[", ",", "]")}, \n${activeResults.head.toString}, $resultNum, \n$body\n)"
+    val name2 = if (isjp) s"@join $name" else s"$name"
+    val ps = params.map(_.toString()).mkString("[", ",", "]")
+    val aps = activeParams.map(_.toSeq.sorted.mkString("{", "，", "}")).mkString("[", ",", "]")
+    val ars = activeResults.map(_.toString()).mkString("[", ", ", "]")
+    s"Def($id, $name2, $ps, $aps, \n$ars, $resultNum, \n$body\n)"
 
 sealed trait TrivialExpr:
   override def toString: String
