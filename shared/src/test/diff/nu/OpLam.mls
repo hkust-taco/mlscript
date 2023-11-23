@@ -17,7 +17,7 @@ fun (|>;) foo(a, b) = [a, b]
 
 
 fun (>>) compose(f, g) = x => g(f(x))
-//│ fun (>>) compose: forall 'a 'b 'c. ('c -> 'a, 'a -> 'b) -> 'c -> 'b
+//│ fun (>>) compose: forall 'a 'b 'c 'd. ('a ->{'c} 'b, 'b ->{'c} 'd) -> 'a ->{'c} 'd
 
 succ >> x => x + 2
 //│ Int -> Int
@@ -69,7 +69,7 @@ x => x + 2
 //│ ╟── reference of type `Int -> Int` is not a 1-element tuple
 //│ ║  l.52: 	  >> succ
 //│ ╙──      	     ^^^^
-//│ Int -> Int
+//│ Int ->{error} Int
 //│ Code generation encountered an error:
 //│   ill-formed application App(App(Var(>>), IntLit(2)), Var(succ))
 

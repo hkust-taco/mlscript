@@ -106,4 +106,4 @@ fun h(x, y, p) = if
   y is
     Tru then 1
     Fals then 2
-//│ fun h: (Object, Fals | Tru, true -> Object) -> (0 | 1 | 2)
+//│ fun h: (Object, Fals | Tru, true ->{'a} Object) ->{'a} (0 | 1 | 2)

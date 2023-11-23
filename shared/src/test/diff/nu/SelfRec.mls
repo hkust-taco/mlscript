@@ -220,7 +220,7 @@ class Foo8[A](x: A) {
 //│ ║  l.216: 	    let tmp = Foo8(y).test1(x)
 //│ ╙──       	                     ^^^^^^
 //│ class Foo8[A](x: A) {
-//│   fun test1: (y: anything) -> A
+//│   fun test1: (y: anything) ->{error} A
 //│ }
 
 

@@ -53,7 +53,7 @@ class Some<A>(val value: A) {
 }
 //│ class Some[A](value: A) {
 //│   fun get: A
-//│   fun map: forall 'A. (A -> 'A) -> Some['A]
+//│   fun map: forall 'A 'a. (A ->{'a} 'A) ->{'a} Some['A]
 //│   fun map_A: forall 'A0. (A -> 'A0) -> Some['A0]
 //│   fun toArray: [A]
 //│ }
@@ -82,7 +82,7 @@ s.toArray
 
 
 s.map
-//│ forall 'A. (1 -> 'A) -> Some['A]
+//│ forall 'A 'a. (1 ->{'a} 'A) ->{'a} Some['A]
 //│ res
 //│     = [Function: map]
 
@@ -171,7 +171,7 @@ if opt is Some(v) then v else 0
 fun map(x, f) = if x is
   None then None
   Some(v) then Some(f(v))
-//│ fun map: forall 'a 'A. (None | Some['a], 'a -> 'A) -> (None | Some['A])
+//│ fun map: forall 'a 'A 'b. (None | Some['a], 'a ->{'b} 'A) ->{'b} (None | Some['A])
 
 let mo = map(opt, succ)
 //│ let mo: None | Some[Int]

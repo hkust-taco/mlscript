@@ -353,7 +353,7 @@ succ = s
 //│     = [Function: s]
 
 succ = s_A1
-//│ ChurchInt -> (forall 'N 'a 'N0. ('N0 -> ('N0 & 'N) & 'N -> 'a) -> ('N0 & 'N) -> 'a)
+//│ ChurchInt -> (forall 'N 'N0 'a. ('N -> ('N & 'N0) & 'N0 -> 'a) -> ('N & 'N0) -> 'a)
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│     = [Function: s_A1]
@@ -535,16 +535,16 @@ sz = s zero
 
 :ns
 sz
-//│ res: forall 'a 'b 'c 'N 'd. 'b
+//│ res: forall 'N 'a 'b 'c 'd. 'c
 //│   where
-//│     'b :> forall 'e 'f 'g. 'e -> (forall 'h 'i. 'h -> 'i)
+//│     'c :> forall 'e 'f 'g. 'e -> (forall 'h 'i. 'h -> 'i)
 //│     'i :> 'g
-//│     'h <: 'a
-//│     'a <: 'N
-//│     'e <: 'f -> 'g & 'd
-//│     'd <: 'N -> 'N
-//│     'N <: 'c
-//│     'f :> 'c
+//│     'h <: 'd
+//│     'd <: 'N
+//│     'e <: 'f -> 'g & 'a
+//│     'a <: 'N -> 'N
+//│     'N <: 'b
+//│     'f :> 'b
 //│    = [Function (anonymous)]
 
 sz: ChurchInt

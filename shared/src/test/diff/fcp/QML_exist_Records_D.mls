@@ -155,7 +155,7 @@ def step arr = arr (fun impl -> fun (k: ArraysImplConsumer['a, 'r]) -> k (stepIm
 
 // * With `stepImpl_ty`
 def step arr = arr (fun impl -> fun (k: ArraysImplConsumer['a, 'r]) -> k (stepImpl_ty impl))
-//│ ((forall 'a 'r 'b. ArraysImpl['a, 'r] -> ArraysImplConsumer['a, 'b] -> 'b) -> 'c) -> 'c
+//│ ((forall 'r 'b 'a. ArraysImpl['a, 'r] -> ArraysImplConsumer['a, 'b] -> 'b) -> 'c) -> 'c
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│     = [Function: step3]
@@ -356,17 +356,17 @@ def step (arr: Arrays['a]) = arr (fun impl -> fun k -> k (stepImpl impl))
 
 // * Works. Note: removing `forall 'a.` here leads to badness
 def step arr = arr (forall 'a. fun impl -> forall 'r. fun (k: ArraysImplConsumer['a, 'r]) -> k (stepImpl impl))
-//│ ((forall 'a 'r 'r0. ArraysImpl['a, 'r] -> ArraysImplConsumer['a, 'r0] -> 'r0) -> 'b) -> 'b
+//│ ((forall 'r 'a 'r0. ArraysImpl['a, 'r0] -> ArraysImplConsumer['a, 'r] -> 'r) -> 'b) -> 'b
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│     = [Function: step7]
 
 // * ...unless we use `stepImpl_ty` instead of `stepImpl`
 def step arr = arr (fun impl -> forall 'r. fun (k: ArraysImplConsumer['a, 'r]) -> k (stepImpl_ty impl))
-//│ ((forall 'r 'a 'r0 'a0 'a1. ArraysImpl[in 'a0 & 'a1 out 'a0 | 'a1, 'r0] -> ArraysImplConsumer['a, 'r] -> 'r) -> 'b) -> 'b
+//│ ((forall 'r 'a 'a0 'r0 'a1. ArraysImpl[in 'a & 'a1 out 'a | 'a1, 'r0] -> ArraysImplConsumer['a0, 'r] -> 'r) -> 'b) -> 'b
 //│   where
-//│     'a :> 'a0
-//│        <: 'a1
+//│     'a0 :> 'a
+//│         <: 'a1
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│     = [Function: step8]
@@ -436,7 +436,7 @@ def step (arr: Arrays['a]) = arr (fun impl -> arrayRepToArray_A (stepImpl impl))
 //│     = [Function: step15]
 
 def step arr = arr (fun impl -> arrayRepToArray (stepImpl impl))
-//│ ((forall 'a 'r 'b. ArraysImpl['a, 'r] -> (forall 'rep. ArraysImpl['a, 'rep] -> 'b) -> 'b) -> 'c) -> 'c
+//│ ((forall 'b 'a 'r. ArraysImpl['a, 'r] -> (forall 'rep. ArraysImpl['a, 'rep] -> 'b) -> 'b) -> 'c) -> 'c
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│     = [Function: step16]

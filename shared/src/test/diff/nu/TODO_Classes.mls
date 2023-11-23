@@ -18,7 +18,7 @@ fun foo(c) = new c
 //│ ╔══[ERROR] Cannot use `new` on non-class variable of type ?a
 //│ ║  l.17: 	fun foo(c) = new c
 //│ ╙──      	             ^^^^^
-//│ fun foo: anything -> error
+//│ fun foo: anything ->{error} error
 
 :re
 foo(() => 123)
@@ -42,7 +42,7 @@ fun bar(c) = new c(123)
 //│ ╔══[ERROR] Cannot use `new` on non-class variable of type ?a
 //│ ║  l.41: 	fun bar(c) = new c(123)
 //│ ╙──      	             ^^^^^^^^^^
-//│ fun bar: anything -> error
+//│ fun bar: anything ->{error} error
 
 :re
 bar(D)

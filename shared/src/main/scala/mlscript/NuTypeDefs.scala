@@ -712,8 +712,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     private lazy val effectTy = decl match {
       case td: NuTypeDef if td.isEffect || td.isHandler =>
         println("Create type variable for effects")
-        val v = freshVar(NoProv, N, nameHint = S("Eff"))(level - 1)
-        S(TypeName(v.mkStr) -> v)
+        val v = freshVar(NoProv, N, nameHint = S("Eff"))(level + 1)
+        S(TypeName("Eff") -> v)
       case _ => N
     }
 
@@ -940,7 +940,10 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
               TypeProvenance(tp._2.toLoc, "type parameter",
                 S(tp._2.name),
                 isType = true),
-              N, S(tp._2.name)), tp._1))
+              N, S(tp._2.name)), tp._1)) ++ (effectTy match {
+                case S(ty) => (ty._1, ty._2, N) :: Nil
+                case _ => Nil
+              })
         case fd: NuFunDef =>
           fd.tparams.map { tn =>
             (tn, freshVar(
@@ -1498,10 +1501,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       TypeProvenance(decl.toLoc, decl.describe)
                     
                     val finalType = thisTV
-
-                    val tparamsWithEff = effectTy.fold(tparams)(ty => tparams :+ (ty._1, ty._2, S(VarianceInfo.co)))
-                    
-                    val tparamMems = tparamsWithEff.map { case (tp, tv, vi) => // TODO use vi
+                    val tparamMems = tparams.map { case (tp, tv, vi) => // TODO use vi
                       val fldNme = td.nme.name + "#" + tp.name
                       val skol = SkolemTag(tv)(tv.prov)
                       NuParam(TypeName(fldNme).withLocOf(tp), FieldType(S(skol), skol)(tv.prov), isPublic = true)(lvl)
@@ -1636,7 +1636,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       else {
                         val baseIfaceSet = baseClsIfaceMembers.map(_.name).toSet
                         val tag = effectSkolem.getOrElse(die)
-                        oldCtx.handlers += tag
+                        oldCtx.handlers += name -> tag
                         
                         ttu.implementedMembers.map {
                           case nf @ TypedNuFun(lvl, fd, body) if baseIfaceSet.contains(nf.name) =>
@@ -1764,7 +1764,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     }
                     
                     TypedNuCls(outerCtx.lvl, td,
-                      tparamsWithEff,
+                      tparams,
                       typedParams,
                       auxCtorParams.orElse(Option.when(
                         typedParams.isEmpty && (td.kind is Cls) && !td.isAbstract)(Nil)),

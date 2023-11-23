@@ -9,8 +9,8 @@ mixin Base {
   fun rewrap(x, f) = f(x)
 }
 //│ mixin Base() {
-//│   fun rewrap: ('a, 'a -> 'b) -> 'b
-//│   fun unwrap: 'c -> 'c
+//│   fun rewrap: ('a, 'a ->{'c} 'b) ->{'c} 'b
+//│   fun unwrap: 'd -> 'd
 //│ }
 
 
@@ -25,13 +25,13 @@ mixin WithUid {
 }
 //│ mixin WithUid() {
 //│   super: {
-//│     rewrap: ('a, forall 'uid. {uid: 'uid, underlying: 'underlying} -> {uid: 'uid, underlying: 'b}) -> 'c & ('d, forall 'underlying0. {underlying: 'underlying0} -> {uid: Int, underlying: 'underlying0}) -> 'e,
-//│     unwrap: 'f -> {underlying: 'underlying1} & 'g -> {uid: 'uid0}
+//│     rewrap: ('a, forall 'uid. {uid: 'uid, underlying: 'underlying} ->{'c} {uid: 'uid, underlying: 'b}) ->{'e} 'd & ('f, forall 'underlying0. {underlying: 'underlying0} -> {uid: Int, underlying: 'underlying0}) ->{'h} 'g,
+//│     unwrap: 'i ->{'j} {underlying: 'underlying1} & 'k ->{'l} {uid: 'uid0}
 //│   }
-//│   fun getUid: 'g -> 'uid0
-//│   fun rewrap: ('a, 'underlying -> 'b) -> 'c
-//│   fun setUid: ('d, uid: Int) -> 'e
-//│   fun unwrap: 'f -> 'underlying1
+//│   fun getUid: 'k ->{'l} 'uid0
+//│   fun rewrap: ('a, 'underlying ->{'c} 'b) ->{'e} 'd
+//│   fun setUid: ('f, uid: Int) ->{'h} 'g
+//│   fun unwrap: 'i ->{'j} 'underlying1
 //│ }
 
 
@@ -49,21 +49,21 @@ mixin WithType {
 }
 //│ mixin WithType() {
 //│   super: {
-//│     rewrap: ('a, forall 'ty. {ty: 'ty, underlying: 'underlying} -> {ty: 'ty, underlying: 'b}) -> 'c & ('d, forall 'underlying0. {underlying: 'underlying0} -> {ty: Type, underlying: 'underlying0}) -> 'e,
-//│     unwrap: 'f -> {underlying: 'underlying1} & 'g -> {ty: 'ty0}
+//│     rewrap: ('a, forall 'ty. {ty: 'ty, underlying: 'underlying} ->{'c} {ty: 'ty, underlying: 'b}) ->{'e} 'd & ('f, forall 'underlying0. {underlying: 'underlying0} -> {ty: Type, underlying: 'underlying0}) ->{'h} 'g,
+//│     unwrap: 'i ->{'j} {underlying: 'underlying1} & 'k ->{'l} {ty: 'ty0}
 //│   }
-//│   fun getType: 'g -> 'ty0
-//│   fun rewrap: ('a, 'underlying -> 'b) -> 'c
-//│   fun setType: ('d, ty: Type) -> 'e
-//│   fun unwrap: 'f -> 'underlying1
+//│   fun getType: 'k ->{'l} 'ty0
+//│   fun rewrap: ('a, 'underlying ->{'c} 'b) ->{'e} 'd
+//│   fun setType: ('f, ty: Type) ->{'h} 'g
+//│   fun unwrap: 'i ->{'j} 'underlying1
 //│ }
 
 
 module Test0 extends Base, WithUid
 //│ module Test0 {
 //│   fun getUid: {uid: 'uid, underlying: 'underlying} -> 'uid
-//│   fun rewrap: ({uid: 'uid0, underlying: 'underlying0 & 'underlying1}, 'underlying1 -> 'underlying0) -> {uid: Int | 'uid0, underlying: 'underlying0}
-//│   fun setUid: ({uid: 'uid0, underlying: 'underlying0 & 'underlying1}, uid: Int) -> {uid: Int | 'uid0, underlying: 'underlying0}
+//│   fun rewrap: ({uid: 'uid0, underlying: 'underlying0 & 'underlying1}, 'underlying1 ->{'a} 'underlying0) ->{'a} {uid: Int | 'uid0, underlying: 'underlying0}
+//│   fun setUid: ({uid: 'uid0, underlying: 'underlying0 & 'underlying1}, uid: Int) ->{'a} {uid: Int | 'uid0, underlying: 'underlying0}
 //│   fun unwrap: {uid: 'uid, underlying: 'underlying} -> 'underlying
 //│ }
 
@@ -73,14 +73,14 @@ module Test0 extends Base, WithUid, WithUid
 //│   fun rewrap: ({
 //│     uid: 'uid0,
 //│     underlying: {uid: 'uid1, underlying: 'underlying0 & 'underlying1} & 'underlying2
-//│   }, 'underlying1 -> 'underlying0) -> {
+//│   }, 'underlying1 ->{'a} 'underlying0) ->{'a} {
 //│     uid: Int | 'uid0,
 //│     underlying: 'underlying2 | {uid: Int | 'uid1, underlying: 'underlying0}
 //│   }
 //│   fun setUid: ({
 //│     uid: 'uid0,
 //│     underlying: {uid: 'uid1, underlying: 'underlying0 & 'underlying1} & 'underlying2
-//│   }, uid: Int) -> {
+//│   }, uid: Int) ->{'a} {
 //│     uid: Int | 'uid0,
 //│     underlying: 'underlying2 | {uid: Int | 'uid1, underlying: 'underlying0}
 //│   }
@@ -95,21 +95,21 @@ module Test1 extends Base, WithUid, WithType
 //│   fun rewrap: ({
 //│     uid: 'uid0,
 //│     underlying: {ty: 'ty0, underlying: 'underlying0 & 'underlying1} & 'underlying2
-//│   }, 'underlying1 -> 'underlying0) -> {
+//│   }, 'underlying1 ->{'a} 'underlying0) ->{'a} {
 //│     uid: Int | 'uid0,
 //│     underlying: 'underlying2 | {ty: Type | 'ty0, underlying: 'underlying0}
 //│   }
 //│   fun setType: ({
 //│     uid: 'uid0,
 //│     underlying: {ty: 'ty0, underlying: 'underlying0 & 'underlying1} & 'underlying2
-//│   }, ty: Type) -> {
+//│   }, ty: Type) ->{'a} {
 //│     uid: Int | 'uid0,
 //│     underlying: 'underlying2 | {ty: Type | 'ty0, underlying: 'underlying0}
 //│   }
 //│   fun setUid: ({
 //│     uid: 'uid0,
 //│     underlying: {ty: 'ty0, underlying: 'underlying0 & 'underlying1} & 'underlying2
-//│   }, uid: Int) -> {
+//│   }, uid: Int) ->{'a} {
 //│     uid: Int | 'uid0,
 //│     underlying: 'underlying2 | {ty: Type | 'ty0, underlying: 'underlying0}
 //│   }

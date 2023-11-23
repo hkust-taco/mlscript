@@ -13,8 +13,8 @@ fun (++) stringConcat(a, b) = concat(a)(b)
 
 fun (|>) pipe(x, f) = f(x)
 fun (<|) pepi(f, x) = f(x)
-//│ fun (|>) pipe: forall 'a 'b. ('a, 'a -> 'b) -> 'b
-//│ fun (<|) pepi: forall 'c 'd. ('c -> 'd, 'c) -> 'd
+//│ fun (|>) pipe: forall 'a 'b 'c. ('a, 'a ->{'c} 'b) ->{'c} 'b
+//│ fun (<|) pepi: forall 'd 'e 'f. ('f ->{'e} 'd, 'f) ->{'e} 'd
 
 
 // * Hack to throw exceptions
@@ -129,9 +129,9 @@ module Lists { // TODO use name List when module overloading is supported:
   
 }
 //│ module Lists {
-//│   fun assoc: forall 'A 'a. 'a -> (Cons[{key: Eql['a], value: 'A}] | Nil) -> (None | Some['A])
-//│   fun map: forall 'b 'A0. ('b -> 'A0) -> (Cons['b] | Nil) -> (Cons['A0] | Nil)
-//│   fun zip: forall 'c 'd. (Cons['c] | Nil, Cons['d] | Nil) -> (Cons[['c, 'd]] | Nil)
+//│   fun assoc: forall 'a 'A. 'a -> (Cons[{key: Eql['a], value: 'A}] | Nil) -> (None | Some['A])
+//│   fun map: forall 'A0 'b 'c. ('c ->{'b} 'A0) -> (Cons['c] | Nil) ->{'b} (Cons['A0] | Nil)
+//│   fun zip: forall 'd 'e. (Cons['d] | Nil, Cons['e] | Nil) -> (Cons[['d, 'e]] | Nil)
 //│ }
 
 let xs = 1 :: 2 :: 3 :: Nil

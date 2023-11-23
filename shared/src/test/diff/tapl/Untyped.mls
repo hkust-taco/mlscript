@@ -552,7 +552,7 @@ fun stepByValue(t) =
 //│     lhs: Var & {name: string},
 //│     rhs: Var & {name: string} | 'rhs0 | 'rhs | 'b | 'c | 'd | 'e
 //│   }
-//│      <: Abs & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'c & 'g | App & 'h & 'f | Var & 'b} & 'g | Var & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'c & 'g | App & 'h & 'f | Var & 'b} & 'b | Var & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'c & 'g | App & 'h & 'f | Var & 'b} & 'e & ~#Var | 'h & (App & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'c & 'g | App & 'h & 'f | Var & 'b} & 'f | App & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'c & 'g | App & 'h & 'f | Var & 'b} & 'e & ~#App)
+//│      <: Abs & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'c & 'g | App & 'h & 'f | Var & 'b} & 'g | App & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'c & 'g | App & 'h & 'f | Var & 'b} & 'h & 'f | Var & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'c & 'g | App & 'h & 'f | Var & 'b} & 'b | 'e & (App & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'c & 'g | App & 'h & 'f | Var & 'b} & 'h & ~#App | Var & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'c & 'g | App & 'h & 'f | Var & 'b} & ~#Var)
 //│   'rhs0 :> Var & {name: string} | 'rhs | 'b | 'c | 'd | 'e
 //│   'd :> Var & {name: string} | 'rhs | 'b | 'c | 'e | Abs & {lhs: Var & {name: string}, rhs: 'rhs0} | App & {
 //│     lhs: Var & {name: string} | 'rhs | 'b | 'c | 'd | 'e,
@@ -564,7 +564,7 @@ fun stepByValue(t) =
 //│     rhs: Abs & 'c | App & 'f | Var & 'b | 'e & ~#Abs & ~#App & ~#Var
 //│   }
 //│   'b :> Var & {name: string}
-//│      <: Var | 'h & (App & {name: anything} & 'f | App & {name: anything} & 'e & ~#App) | 'g & (Abs & {name: anything} & 'e & ~#Abs | Abs & {name: anything} & 'c)
+//│      <: Abs & {name: anything} & 'c & 'g | App & {name: anything} & 'h & 'f | Var | 'e & (Abs & {name: anything} & 'g & ~#Abs | App & {name: anything} & 'h & ~#App)
 //│   'e <: Var & ~#Var | Var & 'b | 'h & (App & ~#App | App & 'f) | 'g & (Abs & ~#Abs | Abs & 'c)
 //│   'i <: {lhs: anything, rhs: Abs & 'i | App & 'j | Var | ~Abs & ~App & ~Var}
 //│   'j <: {

@@ -247,7 +247,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def tyNoForall[p: P]: P[Type] = P( tyNoUnion.rep(1, "|") ).map(_.reduce(Union) )
   def tyNoUnion[p: P]: P[Type] = P( tyNoInter.rep(1, "&") ).map(_.reduce(Inter) )
   def tyNoInter[p: P]: P[Type] = P( tyNoFun ~ ("->" ~/ tyNoInter).? ).map {
-    case (l, S(r)) => Function(toParamsTy(l), r)
+    case (l, S(r)) => Function(toParamsTy(l), r, Bot)
     case (l, N) => l
   }
   // Note: field removal types are not supposed to be explicitly used by programmers,
@@ -348,7 +348,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
         val parent = TypeDef(Cls, alsName, tparams, Top, constructors.map {
           case Def(_, nme, R(body), _) =>
             val ctorParams = body match {
-              case PolyType(_, Function(lhs, _)) => lhs
+              case PolyType(_, Function(lhs, _, _)) => lhs
               case PolyType(_, _: TypeName | _: AppliedType) => Top
               case _ => die
             }
@@ -367,7 +367,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
         val fun = Def(false, Var(tyDef.nme.name), R(funAppTy), true).withLocOf(tyDef.nme)
         fun
       case Inter(alsTy, Record(fields)) =>
-        val funTy = PolyType(alsParams.map(L.apply), Function(Tuple(fields.map(N -> _._2)), alsTy.withLocOf(tyDef)))
+        val funTy = PolyType(alsParams.map(L.apply), Function(Tuple(fields.map(N -> _._2)), alsTy.withLocOf(tyDef), Bot))
         val fun = Def(false, Var(tyDef.nme.name), R(funTy), true).withLocOf(tyDef.nme)
         fun
       case _ => die

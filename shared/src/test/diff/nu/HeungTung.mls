@@ -306,7 +306,7 @@ fun test(x) = refined if x is
 //│ ╔══[ERROR] identifier not found: refined
 //│ ║  l.296: 	fun test(x) = refined if x is
 //│ ╙──       	              ^^^^^^^
-//│ fun test: (A | B) -> error
+//│ fun test: (A | B) ->{error} error
 //│ Code generation encountered an error:
 //│   unresolved symbol refined
 

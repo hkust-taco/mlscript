@@ -27,7 +27,7 @@ let E(x) = new E(1)
 //│ ╔══[ERROR] Value E cannot be used in `new` expression
 //│ ║  l.26: 	let E(x) = new E(1)
 //│ ╙──      	           ^^^^^^^^
-//│ let E: anything -> error
+//│ let E: anything ->{error} error
 //│ E
 //│   = [Function: E1]
 

@@ -143,7 +143,7 @@ sealed abstract class Composed(val pol: Bool) extends Type with ComposedImpl
 
 final case class Union(lhs: Type, rhs: Type)             extends Composed(true)
 final case class Inter(lhs: Type, rhs: Type)             extends Composed(false)
-final case class Function(lhs: Type, rhs: Type)          extends Type
+final case class Function(lhs: Type, rhs: Type, eff: Type) extends Type
 final case class Record(fields: Ls[Var -> Field])        extends Type
 final case class Tuple(fields: Ls[Opt[Var] -> Field])    extends Type
 final case class Recursive(uv: TypeVar, body: Type)      extends Type

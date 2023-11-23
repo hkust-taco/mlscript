@@ -232,9 +232,9 @@ mixin Wrap {
   fun wrap(x) = [super.wrap(x)]
 }
 //│ mixin Wrap() {
-//│   super: {wrap: 'a -> 'b, wrapA: 'c -> 'd}
-//│   fun wrap: 'a -> ['b]
-//│   fun wrapA: 'c -> ['d]
+//│   super: {wrap: 'a ->{'c} 'b, wrapA: 'd ->{'f} 'e}
+//│   fun wrap: 'a ->{'c} ['b]
+//│   fun wrapA: 'd ->{'f} ['e]
 //│ }
 
 

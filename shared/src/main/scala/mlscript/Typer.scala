@@ -68,7 +68,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       inRecursiveDef: Opt[Var], // TODO rm
       extrCtx: ExtrCtx,
       effVars: MutSet[ST],
-      handlers: MutSet[SkolemTag],
+      handlers: MutMap[Str, SkolemTag],
       penv: MutMap[Term, TypeVariable],
   ) {
     def +=(b: Str -> TypeInfo): Unit = env += b
@@ -159,7 +159,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       inRecursiveDef = N,
       MutMap.empty,
       MutSet.empty,
-      MutSet.empty,
+      MutMap.empty,
       MutMap.empty
     )
     def init: Ctx = if (!newDefs) initBase else {
@@ -489,7 +489,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
             tp(App(nt._1, Var("").withLocOf(nt._2)).toCoveringLoc,
               (if (nt._2.in.isDefined) "mutable " else "") + "record field"))
         })(prov)
-      case Function(lhs, rhs) => FunctionType(rec(lhs), rec(rhs), BotType)(tyTp(ty.toLoc, "function type"))
+      case Function(lhs, rhs, eff) =>
+        FunctionType(rec(lhs), rec(rhs), rec(eff))(tyTp(ty.toLoc, "function type"))
       case WithExtension(b, r) => WithType(rec(b),
         RecordType(
             r.fields.map { case (n, f) => n -> FieldType(f.in.map(rec), rec(f.out))(
@@ -1110,18 +1111,26 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
           // ^ Note: this no longer really makes a difference, due to tupled arguments by default
         val funProv = tp(f.toCoveringLoc, "applied expression")
         val fun_ty = mkProxy(f_ty, funProv)
-        val eff_sk = ctx.pget(f)
-        val eff_ty = if (newDefs) freshVar(prov, N) else BotType
-        val handle_ty = ctx.handlers.foldLeft[ST](BotType)((res, t) => res | t)
           // ^ This is mostly not useful, except in test Tuples.fun with `(1, true, "hey").2`
-        val resTy = con(fun_ty, FunctionType(arg_ty, res, eff_sk.getOrElse(eff_ty) | handle_ty)(
+        val eff_sk = ctx.pget(f)
+        val eff_ty = if (newDefs) freshVar(prov, N)(lvl) else BotType
+        val handle_ty = a_ty.unwrapProxies match {
+          case TupleType(args) => args.foldLeft[ST](BotType)((res, arg) => arg match {
+            case (_, FieldType(_, ty)) => ty.unwrapProxies match {
+              case ClassTag(Var(name), _) =>
+                ctx.handlers.get(name).fold(res)(h => res | h)
+              case _ => res
+            }
+            case _ => res
+          })
+          case _ => BotType
+        }
+        con(eff_sk.getOrElse(BotType), eff_ty, freshVar(prov, N))
+        val resTy = con(fun_ty, FunctionType(arg_ty, res, eff_ty | handle_ty)(
           prov
           // funProv // TODO: better?
           ), res)
-        eff_sk match {
-          case S(sk) => introEffect(sk)
-          case _ => introEffect(eff_ty)
-        }
+        introEffect(eff_ty)
         resTy
       case Sel(obj, fieldName) =>
         // Explicit method calls have the form `x.(Class.Method)`
@@ -1824,7 +1833,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
           }
           nv
         })
-        case FunctionType(l, r, e) => Function(go(l), go(r))
+        case FunctionType(l, r, e) => Function(go(l), go(r), go(e))
         case ct @ ComposedType(true, l, r) =>
           if (ct >:< (TrueType | FalseType)) TN("Bool") // TODO should rather be done in TypeSimplifier
           else Union(go(l), go(r))
