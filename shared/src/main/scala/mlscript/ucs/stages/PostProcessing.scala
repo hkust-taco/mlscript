@@ -6,6 +6,7 @@ import mlscript.utils._, shorthands._
 import mlscript.CaseBranches
 import mlscript.Message, Message.MessageContext
 import mlscript.pretyper.shortName
+import scala.annotation.tailrec
 
 trait PostProcessing { self: mlscript.pretyper.Traceable =>
   import PostProcessing._
@@ -34,17 +35,14 @@ trait PostProcessing { self: mlscript.pretyper.Traceable =>
           // For each case class name, distangle case branch body terms from the false branch.
           .foldLeft[Opt[Term] -> Ls[Var -> Term]](S(falseBranch) -> Nil) {
             case ((S(remainingTerm), cases), className) =>
-              val (leftoverTerm, caseBranchBodyTerms) = disentangle(remainingTerm, scrutineeSymbol, className)
-              avoidEmptyCaseOf(leftoverTerm) -> (caseBranchBodyTerms match {
-                case Nil =>
-                  println(s"no case branches about $className were found")
+              val (leftoverTerm, extracted) = disentangle(remainingTerm, scrutineeSymbol, className)
+              avoidEmptyCaseOf(leftoverTerm) -> (extracted match {
+                case N =>
+                  println(s"no extracted term about $className")
                   cases
-                case terms @ (head :: tail) => 
-                  println(s"found ${terms.length} case branches about $className")
-                  val body = trace(s"merging terms <== ${terms.iterator.map(shortName).mkString("[", ", ", "]")}") {
-                    tail.foldLeft(head)(mergeTerms)
-                  }(t => s"merging terms ==> ${shortName(t)}")
-                  className -> postProcess(body) :: cases
+                case terms @ S(extractedTerm) => 
+                  println(s"extracted a term about $className")
+                  className -> postProcess(extractedTerm) :: cases
               })
             // TODO: Consider either make the first tuple element as non-optional.
             // TODO: Then, write a new helper function which checks if the term is an empty `CaseOf`.
@@ -66,6 +64,15 @@ trait PostProcessing { self: mlscript.pretyper.Traceable =>
 
   private def avoidEmptyCaseOf(term: Term): Opt[Term] = term match {
     case CaseOf(_, NoCases) => println(s"$term is empty"); N
+    case CaseOf(_, cases: Case) =>
+      @tailrec
+      def containsNoWildcard(cases: CaseBranches): Bool = cases match {
+        case NoCases => true
+        case Wildcard(_) => false
+        case Case(_, body, rest) =>
+          avoidEmptyCaseOf(body) === N && containsNoWildcard(rest)
+      }
+      if (containsNoWildcard(cases)) S(term) else N
     case _ => S(term)
   }
 
@@ -91,60 +98,65 @@ trait PostProcessing { self: mlscript.pretyper.Traceable =>
   /**
     * Disentangle case branches that match `scrutinee` against `className` from `term`.
     * The `term` should be obtained from _normalization_. Because there may exists multiple
-    * `CaseOf`s which contains such case branches, we return a list of disentangled terms.
+    * `CaseOf`s which contains such case branches, we merge them on the fly.
     *
     * @param term the term to disentangle from
     * @param scrutinee the symbol of the scrutinee variable
     * @param className the class name
-    * @return the remaining term and the disentangled case branch body terms
+    * @return the remaining term and the disentangled term
     */
-  def disentangle(term: Term, scrutinee: ScrutineeSymbol, className: Var): (Term, Ls[Term]) =
-    trace[(Term, Ls[Term])](s"disentangle <== ${scrutinee.name}: $className") {
+  def disentangle(term: Term, scrutinee: ScrutineeSymbol, className: Var): (Term, Opt[Term]) =
+    trace[(Term, Opt[Term])](s"disentangle <== ${scrutinee.name}: $className") {
       term match {
         case top @ CaseOf(scrutineeVar: Var, cases) =>
           if (scrutineeVar.symbol match {
             case s: ScrutineeSymbol => s === scrutinee; case _ => false
           }) {
             println(s"found a `CaseOf` that matches on ${scrutinee.name}")
-            def rec(cases: CaseBranches): (CaseBranches, Ls[Term]) = cases match {
-              case NoCases => println("found the end, stop"); NoCases -> Nil
+            def rec(cases: CaseBranches): (CaseBranches, Opt[Term]) = cases match {
+              case NoCases => println("found the end, stop"); NoCases -> N
               case wildcard @ Wildcard(body) =>
                 println("found a wildcard, stop")
-                val (y, ns) = disentangle(body, scrutinee, className)
-                wildcard.copy(body = y) -> ns
+                val (y, n) = disentangle(body, scrutinee, className)
+                wildcard.copy(body = y) -> n
               case kase @ Case(`className`, body, rest) =>
                 println(s"found a case branch matching against $className")
-                val (y, ns) = rec(rest)
-                y -> (ns :+ body)
+                val (y, n) = rec(rest)
+                y -> S(n.fold(body)(mergeTerms(_, body)))
               case kase @ Case(otherClassName, body, rest) =>
-                val (y, ns) = rec(rest)
-                kase.copy(rest = y) -> ns
+                val (y, n) = rec(rest)
+                kase.copy(rest = y) -> n
             }
-            val (y, ns) = rec(cases)
-            top.copy(cases = y) -> ns
+            val (y, n) = rec(cases)
+            top.copy(cases = y) -> n
           } else {
             println(s"found a `CaseOf` that does NOT match on ${scrutinee.name}")
-            def rec(cases: CaseBranches): (CaseBranches, Ls[Term]) = cases match {
-              case NoCases => println("found the end, stop"); NoCases -> Nil
+            def rec(cases: CaseBranches): (CaseBranches, CaseBranches) = cases match {
+              case NoCases =>
+                println("found the end, stop")
+                NoCases -> NoCases
               case wildcard @ Wildcard(body) =>
                 println("found a wildcard, stop")
-                val (y, ns) = disentangle(body, scrutinee, className)
-                wildcard.copy(body = y) -> ns
+                val (y, n) = disentangle(body, scrutinee, className)
+                wildcard.copy(body = y) -> n.fold(NoCases: CaseBranches)(Wildcard(_))
               case kase @ Case(_, body, rest) =>
                 println(s"found a case branch")
-                val (y1, ns1) = disentangle(body, scrutinee, className)
-                val (y2, ns) = rec(rest)
-                kase.copy(body = y1, rest = y2) -> (ns1 ++ ns)
+                val (y1, n1) = disentangle(body, scrutinee, className)
+                val (y2, n2) = rec(rest)
+                kase.copy(body = y1, rest = y2) -> (n1 match {
+                  case S(term) => kase.copy(body = term, rest = n2)
+                  case N => n2
+                })
             }
-            val (y, ns) = rec(cases)
-            top.copy(cases = y) -> ns
+            val (y, n) = rec(cases)
+            top.copy(cases = y) -> (if (n === NoCases) N else S(top.copy(cases = n)))
           }
         case let @ Let(_, _, _, body) =>
-          val (y, ns) = disentangle(body, scrutinee, className)
-          let.copy(body = y) -> ns
-        case other => println(s"CANNOT disentangle"); other -> Nil
+          val (y, n) = disentangle(body, scrutinee, className)
+          let.copy(body = y) -> n.map(t => let.copy(body = t))
+        case other => println(s"CANNOT disentangle"); other -> N
       }
-    }({ case (y, ns) => s"disentangle ==> `${y}` ${ns.length}" })
+    }({ case (y, n) => s"disentangle ==> `${shortName(y)}` and `${n.fold("_")(shortName)}`" })
 
   def cascadeConsecutiveCaseOf(term: Term): Term = trace(s"cascade consecutive CaseOf <== ${term.describe}") {
     // Normalized terms are constructed using `Let` and `CaseOf`.
