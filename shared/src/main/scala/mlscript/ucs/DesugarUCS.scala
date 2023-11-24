@@ -10,7 +10,11 @@ import mlscript.Message, Message.MessageContext
 import mlscript.ucs.core.Pattern.Name
 
 // TODO: Rename to `Desugarer` once the old desugarer is removed.
-trait DesugarUCS extends Transformation with Desugaring with Normalization with PostProcessing { self: PreTyper =>
+trait DesugarUCS extends Transformation
+                    with Desugaring
+                    with Normalization
+                    with PostProcessing 
+                    with ExhaustivenessChecking { self: PreTyper =>
   protected def visitIf(`if`: If)(implicit scope: Scope): Unit =
     trace("visitIf") {
       // Stage 0: Transformation
