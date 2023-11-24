@@ -111,7 +111,7 @@ code"let x = 42 in x"
 :ne
 fun test(f) =
   code"x => x + ${f(code"x + 1")}"
-//│ fun test: forall 'a. (Code[Int, ??x] -> Code[Int, ??x0 | 'a]) -> Code[Int -> Int, 'a]
+//│ fun test: forall 'a. (Code[Int, ??x] -> Code[Int, 'a]) -> Code[Int -> Int, 'a]
 
 :ne
 :e
@@ -147,7 +147,7 @@ safeDiv(10)(2)
 :ne
 fun fac(n, dbg) =
   if (n > 0) then code"let x = ${Const(n)} in ${dbg(code"x")} * ${fac(n - 1, dbg)}" else Const(1)
-//│ fun fac: forall 'a. (Int, Code[Int, ??x] -> Code[Int, ??x0 | 'a]) -> Code[Int, 'a]
+//│ fun fac: forall 'a. (Int, Code[Int, ??x] -> Code[Int, 'a]) -> Code[Int, 'a]
 
 fun showAndRet(n: Code['a, anything]) =
   log(n)
@@ -161,7 +161,7 @@ fun bar(x: Code['a, 'b]) = x
 
 :ne
 fac(10, showAndRet)
-//│ Code[Int, ~??x]
+//│ Code[Int, anything]
 
 
 fun inc(x, dbg) =

@@ -245,9 +245,9 @@ def step (arr: Arrays['a]) = arr helper
 //│   update: (('rep & 'rep0, anything,),) -> int -> 'a -> ('rep, "hey",)
 //│ } -> 'c) -> 'c)
 //│ where
-//│   'rep :> ??rep
+//│   'rep :> anything
 //│        <: 'rep0
-//│   'rep0 <: ??rep0 & 'rep
+//│   'rep0 <: ??rep & 'rep
 //│   'a <: 'a0
 //│   'a0 := 'a
 //│   <:  step:
@@ -482,7 +482,7 @@ snb = mkMonoArray 3
 
 // * Here we are trying to leak the internally-quantified representation, resulting in extruded types being returned
 snb (fun arr -> arr.init true)
-//│ res: ??rep | ??rep0
+//│ res: anything
 //│    = [ [ [ true, 'hi' ], 'hi' ], 'hi' ]
 
 
@@ -532,7 +532,7 @@ def step2 (arr: Arrays['a]) (k: ArraysImplConsumer['a2, 'rep]) = arr (fun impl -
 
 :e
 def step2 = forall 'a. fun (arr: Arrays['a]) -> fun k -> arr (fun impl -> k (stepImpl_ty impl))
-//│ Arrays['a] -> (forall 'r 'b. (ArraysImpl['a, in (??rep & 'r, string,) out ('r | ??rep0, string,)] -> 'b) -> 'b)
+//│ Arrays['a] -> (forall 'b. (ArraysImpl['a, in (??rep, string,) out (anything, string,)] -> 'b) -> 'b)
 //│   <:  step2:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type error in def definition
@@ -583,19 +583,19 @@ def s arr (k: ArraysImplConsumer['a, 'rep]) = arr (fun impl -> k (stepImpl_ty im
 // * We can see it shouldn't be simplified to nothing:
 :ns
 s
-//│ res: forall 'b 'rep 'a 'a0 'c. 'c -> (forall 'd 'a1 'rep0. ArraysImplConsumer['a1, 'rep0] -> 'd)
+//│ res: forall 'a 'b 'c 'a0 'rep. 'b -> (forall 'a1 'rep0 'd. ArraysImplConsumer['a1, 'rep0] -> 'd)
 //│   where
-//│     'd :> 'b
+//│     'd :> 'c
 //│     'rep0 <: 'rep
-//│     'a1 :> 'a
-//│         <: 'a0
-//│     'c <: (forall 'r 'e 'a2 'f. 'e -> 'f) -> 'b
-//│     'f :> 'rep
-//│     'e <: ArraysImpl['a2, 'r]
-//│     'a2 :> 'a0
+//│     'a1 :> 'a0
 //│         <: 'a
-//│     'a0 <: 'a
+//│     'b <: (forall 'a2 'e 'r 'f. 'f -> 'e) -> 'c
+//│     'e :> 'rep
+//│     'f <: ArraysImpl['a2, 'r]
+//│     'a2 :> 'a
+//│         <: 'a0
 //│     'a <: 'a0
+//│     'a0 <: 'a
 //│    = [Function: s]
 
 // * BTW: this doesn't work (same reason as before: k needs an annotation)
@@ -650,7 +650,7 @@ snb = mkMonoArray 3
 
 // * Here we are trying to leak the internally-quantified representation, resulting in extruded types being returned
 snb (fun arr -> arr.init true)
-//│ res: ??rep | ??rep0
+//│ res: anything
 //│    = [ [ [ true, 'hi' ], 'hi' ], 'hi' ]
 
 

@@ -75,7 +75,7 @@ fun body(x, y) = case
   0 then x
   1 then y
   n then code"${x} + ${y}" %> z => body(x, z)(n - 1)
-//│ fun body: forall 'g 'a. (Code[Int, 'g] & 'a, Code[Int, 'g]) -> (0 | 1 | Int & ~0 & ~1) -> (Code[Int, 'g] | 'a)
+//│ fun body: forall 'g. (Code[Int, 'g], Code[Int, 'g]) -> (0 | 1 | Int & ~0 & ~1) -> Code[Int, 'g]
 //│ fun body: forall 'g0. (Code[Int, 'g0], Code[Int, 'g0]) -> Int -> Code[Int, 'g0]
 
 fun gib(n) =
@@ -94,7 +94,7 @@ fun body(x, y) = case
   0 then x
   1 then y
   n then code"let tmp = ${x} + ${y} in ${body(x, code"tmp")(n - 1)}"
-//│ fun body: forall 'a 'b. (Code[Int, 'a] & 'b, Code[Int, 'a]) -> (0 | 1 | Int & ~0 & ~1) -> (Code[Int, 'a] | 'b)
+//│ fun body: forall 'a. (Code[Int, 'a], Code[Int, 'a]) -> (0 | 1 | Int & ~0 & ~1) -> Code[Int, 'a]
 //│ fun body: forall 'g. (Code[Int, 'g], Code[Int, 'g]) -> Int -> Code[Int, 'g]
 
 fun gib(n) =

@@ -102,7 +102,7 @@ code"x => ${code"${code"${code"x"}"}"}"
 
 fun f(cde) = code"x => ${code"${code"${code"x + ${cde}"}"}"}"
 run(f(Const(114)))(514)
-//│ fun f: forall 'a. Code[Int, ??x | 'a] -> Code[Int -> Int, 'a]
+//│ fun f: forall 'a. Code[Int, 'a] -> Code[Int -> Int, 'a]
 //│ Int
 
 fun f(x) = code"${run(x)} + 1"

@@ -381,6 +381,10 @@ abstract class TyperHelpers { Typer: Typer =>
     def | (that: SimpleType, prov: TypeProvenance = noProv, swapped: Bool = false): SimpleType = (this, that) match {
       case (TopType, _) => this
       case (BotType, _) => that
+      case (_, TopType) => that
+      case (_, BotType) => this
+      case (Extruded(true, sk), _) => that
+      case (Extruded(false, sk), _) => TopType
       
       // These were wrong! During constraint solving it's important to keep them!
       // case (_: RecordType, _: PrimType | _: FunctionType) => TopType
