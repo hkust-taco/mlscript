@@ -160,15 +160,6 @@ trait Normalization { self: mlscript.pretyper.Traceable =>
 }
 
 object Normalization {
-  private sealed abstract class MatchOrNot {
-    override def toString(): String = this match {
-      case Yes => "+"
-      case No => "-"
-    }
-  }
-  private final case object Yes extends MatchOrNot
-  private final case object No extends MatchOrNot
-
   class NormalizationException(val messages: Ls[Message -> Opt[Loc]]) extends Throwable {
     def this(message: Message, location: Opt[Loc]) = this(message -> location :: Nil)
   }

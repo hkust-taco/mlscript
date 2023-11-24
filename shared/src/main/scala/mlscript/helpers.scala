@@ -1040,6 +1040,13 @@ trait BlkImpl { self: Blk =>
   
 }
 
+trait CaseOfImpl extends Located { self: CaseOf =>
+  def isEmpty: Bool = {
+    val CaseOf(scrut, cases) = this
+    cases === NoCases
+  }
+}
+
 trait CaseBranchesImpl extends Located { self: CaseBranches =>
 
   def children: List[Located] = this match {
@@ -1057,7 +1064,7 @@ trait CaseBranchesImpl extends Located { self: CaseBranches =>
       "_ => " + body.print(false)
     case NoCases => ""
   }
-  
+
 }
 
 trait AdtMatchPatImpl extends Located { self: AdtMatchPat =>

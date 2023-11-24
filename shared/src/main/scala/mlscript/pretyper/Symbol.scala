@@ -1,6 +1,6 @@
 package mlscript.pretyper
 
-import collection.mutable.{Buffer, Map => MutMap}
+import collection.mutable.{Buffer, Map => MutMap, Set => MutSet}
 import mlscript.{NuFunDef, NuTypeDef, TypeName, Var}
 import mlscript.utils._, shorthands._
 
@@ -28,6 +28,7 @@ final class FunctionSymbol(val nme: Var, val defn: NuFunDef) extends TermSymbol(
 }
 
 sealed abstract class ScrutineeSymbol(name: Str) extends TermSymbol(name) {
+  val matchedClasses: MutSet[Var] = MutSet.empty
   /**
     * This map contains the sub-scrutinee symbols when this scrutinee is matched
     * against class patterns.
@@ -36,10 +37,11 @@ sealed abstract class ScrutineeSymbol(name: Str) extends TermSymbol(name) {
   val tupleElementScrutineeMap: MutMap[Int, SubValueSymbol] = MutMap.empty
   val recordValueScrutineeMap: MutMap[Var, SubValueSymbol] = MutMap.empty
 
-  def addSubScrutinee(className: Var, index: Int, parameter: Var): SubValueSymbol =
+  def addSubScrutinee(className: Var, index: Int, parameter: Var): SubValueSymbol = {
     classParameterScrutineeMap.getOrElseUpdate(className -> index, {
       new SubValueSymbol(this, S(className) -> S(index), parameter.name)
     })
+  }
 
   def addSubScrutinee(fieldName: Var): SubValueSymbol =
     recordValueScrutineeMap.getOrElseUpdate(fieldName, {

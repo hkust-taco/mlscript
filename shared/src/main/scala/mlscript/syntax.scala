@@ -77,7 +77,7 @@ final case class Asc(trm: Term, ty: Type)                            extends Ter
 final case class Bind(lhs: Term, rhs: Term)                          extends Term
 final case class Test(trm: Term, ty: Term)                           extends Term
 final case class With(trm: Term, fields: Rcd)                        extends Term
-final case class CaseOf(trm: Term, cases: CaseBranches)              extends Term
+final case class CaseOf(trm: Term, cases: CaseBranches)              extends Term with CaseOfImpl
 final case class Subs(arr: Term, idx: Term)                          extends Term
 final case class Assign(lhs: Term, rhs: Term)                        extends Term
 final case class Splc(fields: Ls[Either[Term, Fld]])                 extends Term

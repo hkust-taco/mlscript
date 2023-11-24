@@ -115,7 +115,7 @@ class PreTyper(override val debugLevel: Opt[Int], useNewDefs: Bool) extends Trac
     trace(s"visitFunction <== ${defn.nme.name}") {
       defn.rhs match {
         case Left(term) => 
-          val subScope = if (defn.isLetRec == S(false)) scope else scope + symbol
+          val subScope = if (defn.isLetRec === S(false)) scope else scope + symbol
           visitTerm(term)(subScope)
         case Right(value) => ()
       }

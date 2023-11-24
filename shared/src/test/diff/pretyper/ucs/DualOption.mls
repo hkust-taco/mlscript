@@ -58,6 +58,7 @@ add_2(Some(5), Some(9))
 //│ res
 //│     = 14
 
+
 fun add_3(x, y) =
   if Pair(x, y) is
     Pair(Some(xv), Some(yv)) then xv + yv
@@ -80,6 +81,7 @@ add_3(Some(5), Some(9))
 //│ res
 //│     = 14
 
+
 fun add_4(x, y) =
   if
     x
@@ -98,6 +100,7 @@ fun add_4(x, y) =
               None     then 0
 //│ fun add_4: forall 'a. (None | Some[Int], None | Some[Int & 'a]) -> (Int | 'a)
 
+
 add_4(None, None)
 add_4(Some(5), None)
 add_4(None, Some(9))
@@ -112,12 +115,455 @@ add_4(Some(5), Some(9))
 //│ res
 //│     = 14
 
+:dpt
 fun add_5(x, y) =
   if
     x is Some(xv) and y is Some(yv) then xv + yv
     y is None     and x is Some(xv) then xv
     x is None     and y is Some(yv) then yv
     y is None     and x is None     then 0
+//│ process <== <root>: {fun add_5}
+//│ | visitTypingUnit <== <root>: {fun add_5}
+//│ | | 1. scope = {add_5}
+//│ | | 2. scope = {add_5}
+//│ | | visitFunction <== add_5
+//│ | | | visitTerm <== Lam(_, _)
+//│ | | | | visitTerm <== Blk(_)
+//│ | | | | | visitTerm <== If(_)
+//│ | | | | | | visitIf
+//│ | | | | | | | Transformed UCS term:
+//│ | | | | | | | if
+//│ | | | | | | |   x is Some(xv) and y is Some(yv) then +(xv, yv,)
+//│ | | | | | | |   y is None and x is Some(xv) then xv
+//│ | | | | | | |   x is None and y is Some(yv) then yv
+//│ | | | | | | |   y is None and x is None then 0
+//│ | | | | | | | Desugared UCS term:
+//│ | | | | | | | if
+//│ | | | | | | |   x is Some(xv) y is Some(yv) then +(xv, yv,)
+//│ | | | | | | |   y is None x is Some(xv) then xv
+//│ | | | | | | |   x is None y is Some(yv) then yv
+//│ | | | | | | |   y is None x is None then 0
+//│ | | | | | | | visitSplit <== [add_5, x, y]
+//│ | | | | | | | | found branch: x is Some(xv)
+//│ | | | | | | | | visitTerm <== Var("x")
+//│ | | | | | | | | | visitVar(name = "x")
+//│ | | | | | | | | | | resolveVar(name = "x")
+//│ | | | | | | | | visitTerm ==> Var("x")
+//│ | | | | | | | | visitPattern <== Some(xv)
+//│ | | | | | | | | visitPattern ==> [xv]
+//│ | | | | | | | | visitSplit <== [add_5, x, y, xv]
+//│ | | | | | | | | | found branch: y is Some(yv)
+//│ | | | | | | | | | visitTerm <== Var("y")
+//│ | | | | | | | | | | visitVar(name = "y")
+//│ | | | | | | | | | | | resolveVar(name = "y")
+//│ | | | | | | | | | visitTerm ==> Var("y")
+//│ | | | | | | | | | visitPattern <== Some(yv)
+//│ | | | | | | | | | visitPattern ==> [yv]
+//│ | | | | | | | | | visitSplit <== [x, y, add_5, xv, yv]
+//│ | | | | | | | | | | visitTerm <== App(_, _)
+//│ | | | | | | | | | | | visitTerm <== Var("+")
+//│ | | | | | | | | | | | | visitVar(name = "+")
+//│ | | | | | | | | | | | | | resolveVar(name = "+")
+//│ | | | | | | | | | | | visitTerm ==> Var("+")
+//│ | | | | | | | | | | | visitTerm <== Tup(_, _)
+//│ | | | | | | | | | | | | visitTerm <== Var("xv")
+//│ | | | | | | | | | | | | | visitVar(name = "xv")
+//│ | | | | | | | | | | | | | | resolveVar(name = "xv")
+//│ | | | | | | | | | | | | visitTerm ==> Var("xv")
+//│ | | | | | | | | | | | | visitTerm <== Var("yv")
+//│ | | | | | | | | | | | | | visitVar(name = "yv")
+//│ | | | | | | | | | | | | | | resolveVar(name = "yv")
+//│ | | | | | | | | | | | | visitTerm ==> Var("yv")
+//│ | | | | | | | | | | | visitTerm ==> Tup(_, _)
+//│ | | | | | | | | | | visitTerm ==> App(_, _)
+//│ | | | | | | | | | visitSplit <== [add_5, x, y, xv]
+//│ | | | | | | | | | | the end
+//│ | | | | | | | | visitSplit <== [add_5, x, y]
+//│ | | | | | | | | | found branch: y is None
+//│ | | | | | | | | | visitTerm <== Var("y")
+//│ | | | | | | | | | | visitVar(name = "y")
+//│ | | | | | | | | | | | resolveVar(name = "y")
+//│ | | | | | | | | | visitTerm ==> Var("y")
+//│ | | | | | | | | | visitPattern <== None
+//│ | | | | | | | | | visitPattern ==> []
+//│ | | | | | | | | | visitSplit <== [add_5, x, y]
+//│ | | | | | | | | | | found branch: x is Some(xv)
+//│ | | | | | | | | | | visitTerm <== Var("x")
+//│ | | | | | | | | | | | visitVar(name = "x")
+//│ | | | | | | | | | | | | resolveVar(name = "x")
+//│ | | | | | | | | | | visitTerm ==> Var("x")
+//│ | | | | | | | | | | visitPattern <== Some(xv)
+//│ | | | | | | | | | | visitPattern ==> [xv]
+//│ | | | | | | | | | | visitSplit <== [add_5, x, y, xv]
+//│ | | | | | | | | | | | visitTerm <== Var("xv")
+//│ | | | | | | | | | | | | visitVar(name = "xv")
+//│ | | | | | | | | | | | | | resolveVar(name = "xv")
+//│ | | | | | | | | | | | visitTerm ==> Var("xv")
+//│ | | | | | | | | | | visitSplit <== [add_5, x, y]
+//│ | | | | | | | | | | | the end
+//│ | | | | | | | | | visitSplit <== [add_5, x, y]
+//│ | | | | | | | | | | found branch: x is None
+//│ | | | | | | | | | | visitTerm <== Var("x")
+//│ | | | | | | | | | | | visitVar(name = "x")
+//│ | | | | | | | | | | | | resolveVar(name = "x")
+//│ | | | | | | | | | | visitTerm ==> Var("x")
+//│ | | | | | | | | | | visitPattern <== None
+//│ | | | | | | | | | | visitPattern ==> []
+//│ | | | | | | | | | | visitSplit <== [add_5, x, y]
+//│ | | | | | | | | | | | found branch: y is Some(yv)
+//│ | | | | | | | | | | | visitTerm <== Var("y")
+//│ | | | | | | | | | | | | visitVar(name = "y")
+//│ | | | | | | | | | | | | | resolveVar(name = "y")
+//│ | | | | | | | | | | | visitTerm ==> Var("y")
+//│ | | | | | | | | | | | visitPattern <== Some(yv)
+//│ | | | | | | | | | | | visitPattern ==> [yv]
+//│ | | | | | | | | | | | visitSplit <== [add_5, x, y, yv]
+//│ | | | | | | | | | | | | visitTerm <== Var("yv")
+//│ | | | | | | | | | | | | | visitVar(name = "yv")
+//│ | | | | | | | | | | | | | | resolveVar(name = "yv")
+//│ | | | | | | | | | | | | visitTerm ==> Var("yv")
+//│ | | | | | | | | | | | visitSplit <== [add_5, x, y]
+//│ | | | | | | | | | | | | the end
+//│ | | | | | | | | | | visitSplit <== [add_5, x, y]
+//│ | | | | | | | | | | | found branch: y is None
+//│ | | | | | | | | | | | visitTerm <== Var("y")
+//│ | | | | | | | | | | | | visitVar(name = "y")
+//│ | | | | | | | | | | | | | resolveVar(name = "y")
+//│ | | | | | | | | | | | visitTerm ==> Var("y")
+//│ | | | | | | | | | | | visitPattern <== None
+//│ | | | | | | | | | | | visitPattern ==> []
+//│ | | | | | | | | | | | visitSplit <== [add_5, x, y]
+//│ | | | | | | | | | | | | found branch: x is None
+//│ | | | | | | | | | | | | visitTerm <== Var("x")
+//│ | | | | | | | | | | | | | visitVar(name = "x")
+//│ | | | | | | | | | | | | | | resolveVar(name = "x")
+//│ | | | | | | | | | | | | visitTerm ==> Var("x")
+//│ | | | | | | | | | | | | visitPattern <== None
+//│ | | | | | | | | | | | | visitPattern ==> []
+//│ | | | | | | | | | | | | visitSplit <== [add_5, x, y]
+//│ | | | | | | | | | | | | | visitTerm <== 0
+//│ | | | | | | | | | | | | | visitTerm ==> 0
+//│ | | | | | | | | | | | | visitSplit <== [add_5, x, y]
+//│ | | | | | | | | | | | | | the end
+//│ | | | | | | | | | | | visitSplit <== [add_5, x, y]
+//│ | | | | | | | | | | | | the end
+//│ | | | | | | | normalizeToTerm
+//│ | | | | | | | | match x with Some(xv)
+//│ | | | | | | | | compute true branch
+//│ | | | | | | | | | S+ <== x is Some(xv)
+//│ | | | | | | | | | | scrutinee: x =/= y
+//│ | | | | | | | | | | S+ <== x is Some(xv)
+//│ | | | | | | | | | | | the end
+//│ | | | | | | | | | | S+ ==> then +(xv, yv,)
+//│ | | | | | | | | | | specialized next
+//│ | | | | | | | | | | S+ <== x is Some(xv)
+//│ | | | | | | | | | | | scrutinee: x =/= y
+//│ | | | | | | | | | | | S+ <== x is Some(xv)
+//│ | | | | | | | | | | | | scrutinee: x === x
+//│ | | | | | | | | | | | | class name: Some === Some
+//│ | | | | | | | | | | | | S+ <== x is Some(xv)
+//│ | | | | | | | | | | | | | the end
+//│ | | | | | | | | | | | | S+ ==> then xv
+//│ | | | | | | | | | | | S+ ==> then xv
+//│ | | | | | | | | | | | specialized next
+//│ | | | | | | | | | | | S+ <== x is Some(xv)
+//│ | | | | | | | | | | | | scrutinee: x === x
+//│ | | | | | | | | | | | | class name: Some =/= None
+//│ | | | | | | | | | | | | specialized next
+//│ | | | | | | | | | | | | S+ <== x is Some(xv)
+//│ | | | | | | | | | | | | | scrutinee: x =/= y
+//│ | | | | | | | | | | | | | S+ <== x is Some(xv)
+//│ | | | | | | | | | | | | | | scrutinee: x === x
+//│ | | | | | | | | | | | | | | class name: Some =/= None
+//│ | | | | | | | | | | | | | | specialized next
+//│ | | | | | | | | | | | | | | S+ <== x is Some(xv)
+//│ | | | | | | | | | | | | | | | the end
+//│ | | | | | | | | | | | | | | S+ ==>
+//│ | | | | | | | | | | | | | S+ ==>
+//│ | | | | | | | | | | | | | specialized next
+//│ | | | | | | | | | | | | | S+ <== x is Some(xv)
+//│ | | | | | | | | | | | | | | the end
+//│ | | | | | | | | | | | | | S+ ==>
+//│ | | | | | | | | | | | | S+ ==> y is None
+//│ | | | | | | | | | | | S+ ==> y is None
+//│ | | | | | | | | | | S+ ==>
+//│ | | | | | | | | | |   y is None then xv
+//│ | | | | | | | | | |   y is None
+//│ | | | | | | | | | S+ ==>
+//│ | | | | | | | | |   y is Some(yv) then +(xv, yv,)
+//│ | | | | | | | | |   y is None then xv
+//│ | | | | | | | | |   y is None
+//│ | | | | | | | | | normalizeToTerm
+//│ | | | | | | | | | | match y with Some(yv)
+//│ | | | | | | | | | | compute true branch
+//│ | | | | | | | | | | | S+ <== y is Some(yv)
+//│ | | | | | | | | | | | | the end
+//│ | | | | | | | | | | | S+ ==> then +(xv, yv,)
+//│ | | | | | | | | | | | normalizeToTerm
+//│ | | | | | | | | | | compute false branch
+//│ | | | | | | | | | | | S- <== y is Some(yv)
+//│ | | | | | | | | | | | | scrutinee: y === y
+//│ | | | | | | | | | | | | class name: Some =/= None
+//│ | | | | | | | | | | | | S- <== y is Some(yv)
+//│ | | | | | | | | | | | | | scrutinee: y === y
+//│ | | | | | | | | | | | | | class name: Some =/= None
+//│ | | | | | | | | | | | | | S- <== y is Some(yv)
+//│ | | | | | | | | | | | | | | the end
+//│ | | | | | | | | | | | | | S- ==>
+//│ | | | | | | | | | | | | S- ==> y is None
+//│ | | | | | | | | | | | S- ==>
+//│ | | | | | | | | | | |   y is None then xv
+//│ | | | | | | | | | | |   y is None
+//│ | | | | | | | | | | | normalizeToCaseBranches
+//│ | | | | | | | | | | | | normalizeToTerm
+//│ | | | | | | | | | | | | | match y with None
+//│ | | | | | | | | | | | | | S+ <== y is None
+//│ | | | | | | | | | | | | | | the end
+//│ | | | | | | | | | | | | | S+ ==> then xv
+//│ | | | | | | | | | | | | | normalizeToTerm
+//│ | | | | | | | | | | | | | S- <== y is None
+//│ | | | | | | | | | | | | | | scrutinee: y === y
+//│ | | | | | | | | | | | | | | class name: None === None
+//│ | | | | | | | | | | | | | | S- <== y is None
+//│ | | | | | | | | | | | | | | | the end
+//│ | | | | | | | | | | | | | | S- ==>
+//│ | | | | | | | | | | | | | S- ==>
+//│ | | | | | | | | | | | | | normalizeToCaseBranches
+//│ | | | | | | | | compute false branch
+//│ | | | | | | | | | S- <== x is Some(xv)
+//│ | | | | | | | | | | scrutinee: x =/= y
+//│ | | | | | | | | | | S- <== x is Some(xv)
+//│ | | | | | | | | | | | scrutinee: x === x
+//│ | | | | | | | | | | | class name: Some === Some
+//│ | | | | | | | | | | | S- <== x is Some(xv)
+//│ | | | | | | | | | | | | the end
+//│ | | | | | | | | | | | S- ==>
+//│ | | | | | | | | | | S- ==>
+//│ | | | | | | | | | | S- <== x is Some(xv)
+//│ | | | | | | | | | | | scrutinee: x === x
+//│ | | | | | | | | | | | class name: Some =/= None
+//│ | | | | | | | | | | | S- <== x is Some(xv)
+//│ | | | | | | | | | | | | scrutinee: x =/= y
+//│ | | | | | | | | | | | | S- <== x is Some(xv)
+//│ | | | | | | | | | | | | | scrutinee: x === x
+//│ | | | | | | | | | | | | | class name: Some =/= None
+//│ | | | | | | | | | | | | | S- <== x is Some(xv)
+//│ | | | | | | | | | | | | | | the end
+//│ | | | | | | | | | | | | | S- ==>
+//│ | | | | | | | | | | | | S- ==> x is None then 0
+//│ | | | | | | | | | | | | S- <== x is Some(xv)
+//│ | | | | | | | | | | | | | the end
+//│ | | | | | | | | | | | | S- ==>
+//│ | | | | | | | | | | | S- ==> y is None x is None then 0
+//│ | | | | | | | | | | S- ==>
+//│ | | | | | | | | | |   x is None y is Some(yv) then yv
+//│ | | | | | | | | | |   y is None x is None then 0
+//│ | | | | | | | | | S- ==>
+//│ | | | | | | | | |   y is None
+//│ | | | | | | | | |   x is None y is Some(yv) then yv
+//│ | | | | | | | | |   y is None x is None then 0
+//│ | | | | | | | | | normalizeToCaseBranches
+//│ | | | | | | | | | | normalizeToTerm
+//│ | | | | | | | | | | | match y with None
+//│ | | | | | | | | | | | S+ <== y is None
+//│ | | | | | | | | | | | | scrutinee: y =/= x
+//│ | | | | | | | | | | | | S+ <== y is None
+//│ | | | | | | | | | | | | | scrutinee: y === y
+//│ | | | | | | | | | | | | | class name: None =/= Some
+//│ | | | | | | | | | | | | | specialized next
+//│ | | | | | | | | | | | | | S+ <== y is None
+//│ | | | | | | | | | | | | | | the end
+//│ | | | | | | | | | | | | | S+ ==>
+//│ | | | | | | | | | | | | S+ ==>
+//│ | | | | | | | | | | | | specialized next
+//│ | | | | | | | | | | | | S+ <== y is None
+//│ | | | | | | | | | | | | | scrutinee: y === y
+//│ | | | | | | | | | | | | | class name: None === None
+//│ | | | | | | | | | | | | | S+ <== y is None
+//│ | | | | | | | | | | | | | | scrutinee: y =/= x
+//│ | | | | | | | | | | | | | | S+ <== y is None
+//│ | | | | | | | | | | | | | | | the end
+//│ | | | | | | | | | | | | | | S+ ==> then 0
+//│ | | | | | | | | | | | | | | specialized next
+//│ | | | | | | | | | | | | | | S+ <== y is None
+//│ | | | | | | | | | | | | | | | the end
+//│ | | | | | | | | | | | | | | S+ ==>
+//│ | | | | | | | | | | | | | S+ ==> x is None then 0
+//│ | | | | | | | | | | | | S+ ==> x is None then 0
+//│ | | | | | | | | | | | S+ ==>
+//│ | | | | | | | | | | |   x is None
+//│ | | | | | | | | | | |   x is None then 0
+//│ | | | | | | | | | | | normalizeToTerm
+//│ | | | | | | | | | | | | match x with None
+//│ | | | | | | | | | | | | S+ <== x is None
+//│ | | | | | | | | | | | | | scrutinee: x === x
+//│ | | | | | | | | | | | | | class name: None === None
+//│ | | | | | | | | | | | | | S+ <== x is None
+//│ | | | | | | | | | | | | | | the end
+//│ | | | | | | | | | | | | | S+ ==> then 0
+//│ | | | | | | | | | | | | S+ ==> then 0
+//│ | | | | | | | | | | | | normalizeToTerm
+//│ | | | | | | | | | | | | S- <== x is None
+//│ | | | | | | | | | | | | | scrutinee: x === x
+//│ | | | | | | | | | | | | | class name: None === None
+//│ | | | | | | | | | | | | | S- <== x is None
+//│ | | | | | | | | | | | | | | the end
+//│ | | | | | | | | | | | | | S- ==>
+//│ | | | | | | | | | | | | S- ==>
+//│ | | | | | | | | | | | | normalizeToCaseBranches
+//│ | | | | | | | | | | | S- <== y is None
+//│ | | | | | | | | | | | | scrutinee: y =/= x
+//│ | | | | | | | | | | | | S- <== y is None
+//│ | | | | | | | | | | | | | scrutinee: y === y
+//│ | | | | | | | | | | | | | class name: None =/= Some
+//│ | | | | | | | | | | | | | S- <== y is None
+//│ | | | | | | | | | | | | | | the end
+//│ | | | | | | | | | | | | | S- ==>
+//│ | | | | | | | | | | | | S- ==> y is Some(yv) then yv
+//│ | | | | | | | | | | | | S- <== y is None
+//│ | | | | | | | | | | | | | scrutinee: y === y
+//│ | | | | | | | | | | | | | class name: None === None
+//│ | | | | | | | | | | | | | S- <== y is None
+//│ | | | | | | | | | | | | | | the end
+//│ | | | | | | | | | | | | | S- ==>
+//│ | | | | | | | | | | | | S- ==>
+//│ | | | | | | | | | | | S- ==> x is None y is Some(yv) then yv
+//│ | | | | | | | | | | | normalizeToCaseBranches
+//│ | | | | | | | | | | | | normalizeToTerm
+//│ | | | | | | | | | | | | | match x with None
+//│ | | | | | | | | | | | | | S+ <== x is None
+//│ | | | | | | | | | | | | | | scrutinee: x =/= y
+//│ | | | | | | | | | | | | | | S+ <== x is None
+//│ | | | | | | | | | | | | | | | the end
+//│ | | | | | | | | | | | | | | S+ ==> then yv
+//│ | | | | | | | | | | | | | | specialized next
+//│ | | | | | | | | | | | | | | S+ <== x is None
+//│ | | | | | | | | | | | | | | | the end
+//│ | | | | | | | | | | | | | | S+ ==>
+//│ | | | | | | | | | | | | | S+ ==> y is Some(yv) then yv
+//│ | | | | | | | | | | | | | normalizeToTerm
+//│ | | | | | | | | | | | | | | match y with Some(yv)
+//│ | | | | | | | | | | | | | | compute true branch
+//│ | | | | | | | | | | | | | | | S+ <== y is Some(yv)
+//│ | | | | | | | | | | | | | | | | the end
+//│ | | | | | | | | | | | | | | | S+ ==> then yv
+//│ | | | | | | | | | | | | | | | normalizeToTerm
+//│ | | | | | | | | | | | | | | compute false branch
+//│ | | | | | | | | | | | | | | | S- <== y is Some(yv)
+//│ | | | | | | | | | | | | | | | | the end
+//│ | | | | | | | | | | | | | | | S- ==>
+//│ | | | | | | | | | | | | | | | normalizeToCaseBranches
+//│ | | | | | | | | | | | | | S- <== x is None
+//│ | | | | | | | | | | | | | | the end
+//│ | | | | | | | | | | | | | S- ==>
+//│ | | | | | | | | | | | | | normalizeToCaseBranches
+//│ | | | | | | | Normalized UCS term:
+//│ | | | | | | | x match
+//│ | | | | | | |   case Some =>
+//│ | | | | | | |     let args_x$Some = (Some).unapply(x,)
+//│ | | | | | | |     let xv* = (args_x$Some).0
+//│ | | | | | | |     y match
+//│ | | | | | | |       case Some =>
+//│ | | | | | | |         let args_y$Some = (Some).unapply(y,)
+//│ | | | | | | |         let yv* = (args_y$Some).0
+//│ | | | | | | |         +(xv, yv,)
+//│ | | | | | | |       case _ =>
+//│ | | | | | | |         y match
+//│ | | | | | | |           case None => xv
+//│ | | | | | | |   case _ =>
+//│ | | | | | | |     y match
+//│ | | | | | | |       case None =>
+//│ | | | | | | |         x match
+//│ | | | | | | |           case None => 0
+//│ | | | | | | |       case _ =>
+//│ | | | | | | |         x match
+//│ | | | | | | |           case None =>
+//│ | | | | | | |             y match
+//│ | | | | | | |               case Some =>
+//│ | | | | | | |                 let args_y$Some = (Some).unapply(y,)
+//│ | | | | | | |                 let yv* = (args_y$Some).0
+//│ | | | | | | |                 yv
+//│ | | | | | | | postProcess <== CaseOf(_, _)
+//│ | | | | | | | | found a BINARY case: x is Some
+//│ | | | | | | | | `x`'s matched classes: [None, Some]
+//│ | | | | | | | | post-processing the first branch
+//│ | | | | | | | | postProcess <== Let(_, _)
+//│ | | | | | | | | | postProcess <== Let(_, _)
+//│ | | | | | | | | | | postProcess <== CaseOf(_, _)
+//│ | | | | | | | | | | | found a BINARY case: y is Some
+//│ | | | | | | | | | | | `y`'s matched classes: [None, Some]
+//│ | | | | | | | | | | | post-processing the first branch
+//│ | | | | | | | | | | | postProcess <== Let(_, _)
+//│ | | | | | | | | | | | | postProcess <== Let(_, _)
+//│ | | | | | | | | | | | | | postProcess <== App(_, _)
+//│ | | | | | | | | | | | | | | CANNOT post-process
+//│ | | | | | | | | | | | | | postProcess ==> 
+//│ | | | | | | | | | | | | postProcess ==> 
+//│ | | | | | | | | | | | postProcess ==> 
+//│ | | | | | | | | | | | disentangle <== y: None
+//│ | | | | | | | | | | | | found a `CaseOf` that matches on y
+//│ | | | | | | | | | | | | found a case branch matching against None
+//│ | | | | | | | | | | | | found the end, stop
+//│ | | | | | | | | | | | disentangle ==> `case y of {  }` 1
+//│ | | | | | | | | | | | case y of {  } is empty
+//│ | | | | | | | | | | | found 1 case branches about None
+//│ | | | | | | | | | | | merging terms <== [Var("xv")]
+//│ | | | | | | | | | | | merging terms ==> Var("xv")
+//│ | | | | | | | | | | | postProcess <== Var("xv")
+//│ | | | | | | | | | | | | CANNOT post-process
+//│ | | | | | | | | | | | postProcess ==> 
+//│ | | | | | | | | | | | found 1 cases
+//│ | | | | | | | | | | postProcess ==> 
+//│ | | | | | | | | | postProcess ==> 
+//│ | | | | | | | | postProcess ==> 
+//│ | | | | | | | | disentangle <== x: None
+//│ | | | | | | | | | found a `CaseOf` that does NOT match on x
+//│ | | | | | | | | | found a case branch
+//│ | | | | | | | | | disentangle <== x: None
+//│ | | | | | | | | | | found a `CaseOf` that matches on x
+//│ | | | | | | | | | | found a case branch matching against None
+//│ | | | | | | | | | | found the end, stop
+//│ | | | | | | | | | disentangle ==> `case x of {  }` 1
+//│ | | | | | | | | | found a wildcard, stop
+//│ | | | | | | | | | disentangle <== x: None
+//│ | | | | | | | | | | found a `CaseOf` that matches on x
+//│ | | | | | | | | | | found a case branch matching against None
+//│ | | | | | | | | | | found the end, stop
+//│ | | | | | | | | | disentangle ==> `case x of {  }` 1
+//│ | | | | | | | | disentangle ==> `case y of { None => case x of {  }; _ => case x of {  } }` 2
+//│ | | | | | | | | found 2 case branches about None
+//│ | | | | | | | | merging terms <== [0, CaseOf(_, _)]
+//│ | | | | | | | | | mergeTerms <== integer literal `case` expression
+//│ | | | | | | | | | | CANNOT merge. Discard t2.
+//│ | | | | | | | | merging terms ==> 0
+//│ | | | | | | | | postProcess <== 0
+//│ | | | | | | | | | CANNOT post-process
+//│ | | | | | | | | postProcess ==> 
+//│ | | | | | | | | found 1 cases
+//│ | | | | | | | postProcess ==> 
+//│ | | | | | | | Post-processed UCS term:
+//│ | | | | | | | x match
+//│ | | | | | | |   case Some =>
+//│ | | | | | | |     let args_x$Some = (Some).unapply(x,)
+//│ | | | | | | |     let xv* = (args_x$Some).0
+//│ | | | | | | |     y match
+//│ | | | | | | |       case Some =>
+//│ | | | | | | |         let args_y$Some = (Some).unapply(y,)
+//│ | | | | | | |         let yv* = (args_y$Some).0
+//│ | | | | | | |         +(xv, yv,)
+//│ | | | | | | |       case None => xv
+//│ | | | | | | |   case None => 0
+//│ | | | | | | |   case _ =>
+//│ | | | | | | |     y match
+//│ | | | | | | |       case None => x match
+//│ | | | | | | |       case _ => x match
+//│ | | | | | | visitIf ==> ()
+//│ | | | | | visitTerm ==> If(_)
+//│ | | | | visitTerm ==> Blk(_)
+//│ | | | visitTerm ==> Lam(_, _)
+//│ | | visitFunction ==> add_5
+//│ | visitTypingUnit ==> add_5
+//│ process ==> add_5
 //│ fun add_5: forall 'a. (None | Some[Int], None | Some[Int & 'a]) -> (Int | 'a)
 
 add_5(None, None)

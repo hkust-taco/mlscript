@@ -74,8 +74,11 @@ trait DesugarUCS extends Transformation
         case core.Pattern.Name(nme) =>
           nme.symbol = scrutineeSymbol
           nme -> scrutineeSymbol :: Nil
-        case core.Pattern.Class(_, N) => Nil
+        case core.Pattern.Class(nme, N) =>
+          scrutineeSymbol.matchedClasses += nme
+          Nil
         case core.Pattern.Class(nme, S(parameters)) =>
+          scrutineeSymbol.matchedClasses += nme
           parameters.iterator.zipWithIndex.flatMap { 
             case (N, _) => N
             case (S(parameter), index) =>
