@@ -1,9 +1,8 @@
 package mlscript.ucs.stages
 
-import mlscript.{Case, CaseOf, Let, Loc, NoCases, Term, Var, Wildcard}
+import mlscript.{Case, CaseBranches, CaseOf, Let, Loc, NoCases, Term, Var, Wildcard}
 import mlscript.pretyper.{ScrutineeSymbol, Symbol}
 import mlscript.utils._, shorthands._
-import mlscript.CaseBranches
 import mlscript.Message, Message.MessageContext
 import mlscript.pretyper.shortName
 import scala.annotation.tailrec

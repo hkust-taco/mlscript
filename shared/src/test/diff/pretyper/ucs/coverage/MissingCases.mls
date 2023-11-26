@@ -1,0 +1,45 @@
+:PreTyper
+
+class Some[T](value: T)
+module None
+type Option[T] = Some[T] | None
+class Pair[A, B](x: A, y: B)
+//│ class Some[T](value: T)
+//│ module None
+//│ type Option[T] = None | Some[T]
+//│ class Pair[A, B](x: A, y: B)
+
+fun failed_add_1(x, y) =
+  if
+    x is Some(xv) and y is Some(yv) then xv + yv
+    x is Some(xv) and y is None     then xv
+    x is None     and y is Some(yv) then yv
+//│ ╔══[ERROR] missing a case where x is None, and y is None
+//│ ╟── missing the condition
+//│ ║  l.15: 	    x is Some(xv) and y is None     then xv
+//│ ║        	                           ^^^^
+//│ ╟── when x is None
+//│ ║  l.16: 	    x is None     and y is Some(yv) then yv
+//│ ╙──      	         ^^^^
+//│ fun failed_add_1: forall 'a. (None | Some[Int], Some[Int & 'a]) -> (Int | 'a)
+
+fun failed_add_2(x, y) =
+  if
+    x is Some(xv) and y is None     then xv
+    x is None     and y is Some(yv) then yv
+//│ ╔══[ERROR] missing a case where x is Some, and y is Some
+//│ ╟── missing the condition
+//│ ║  l.29: 	    x is None     and y is Some(yv) then yv
+//│ ║        	                           ^^^^
+//│ ╟── when x is Some
+//│ ║  l.28: 	    x is Some(xv) and y is None     then xv
+//│ ╙──      	         ^^^^
+//│ ╔══[ERROR] missing a case where x is None, and y is None
+//│ ╟── missing the condition
+//│ ║  l.28: 	    x is Some(xv) and y is None     then xv
+//│ ║        	                           ^^^^
+//│ ╟── when x is None
+//│ ║  l.29: 	    x is None     and y is Some(yv) then yv
+//│ ╙──      	         ^^^^
+//│ fun failed_add_2: forall 'a. (None | Some['a], nothing) -> 'a
+

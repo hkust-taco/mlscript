@@ -1,0 +1,27 @@
+:PreTyper
+
+class Some[T](value: T)
+module None
+type Option[T] = Some[T] | None
+class Pair[A, B](x: A, y: B)
+//│ class Some[T](value: T)
+//│ module None
+//│ type Option[T] = None | Some[T]
+//│ class Pair[A, B](x: A, y: B)
+
+// FIXME
+fun useless_negate_1(x) =
+  if
+    x is Some(y) and x is Some(z) then x + z
+//│ ╔══[ERROR] identifier not found: z
+//│ ║  l.15: 	    x is Some(y) and x is Some(z) then x + z
+//│ ╙──      	                                           ^
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.15: 	    x is Some(y) and x is Some(z) then x + z
+//│ ║        	                                       ^^^^^
+//│ ╟── reference of type `Some[?T]` is not an instance of type `Int`
+//│ ║  l.15: 	    x is Some(y) and x is Some(z) then x + z
+//│ ╙──      	                                       ^
+//│ fun useless_negate_1: Some[anything] -> (Int | error)
+//│ Code generation encountered an error:
+//│   unresolved symbol z

@@ -5,6 +5,8 @@ import mlscript._, utils._, shorthands._
 import mlscript.codegen.Helpers.inspect
 
 class PreTyper(override val debugLevel: Opt[Int], useNewDefs: Bool) extends Traceable with DesugarUCS {
+  protected def raise(diagnostics: Ls[Diagnostic]): Unit = ()
+
   private def extractParameters(fields: Term): Ls[ValueSymbol] = fields match {
     case Tup(arguments) =>
       if (useNewDefs) {

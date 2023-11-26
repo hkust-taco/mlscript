@@ -7,14 +7,14 @@ import mlscript._, utils._, shorthands._
 import mlscript.codegen.Helpers.inspect
 import mlscript.Message, Message.MessageContext
 
-import mlscript.ucs.core.Pattern.Name
-
 // TODO: Rename to `Desugarer` once the old desugarer is removed.
 trait DesugarUCS extends Transformation
                     with Desugaring
                     with Normalization
                     with PostProcessing 
-                    with ExhaustivenessChecking { self: PreTyper =>
+                    with CoverageChecking { self: PreTyper =>
+  
+
   protected def visitIf(`if`: If)(implicit scope: Scope): Unit =
     trace("visitIf") {
       // Stage 0: Transformation
@@ -40,6 +40,10 @@ trait DesugarUCS extends Transformation
       val postProcessed = postProcess(normalized)
       println("Post-processed UCS term:")
       printNormalizedTerm(postProcessed)
+      // Stage 4: Coverage checking
+      val diagnostics = checkCoverage(postProcessed)
+      println(s"Coverage checking result: ${diagnostics.size} errors")
+      raise(diagnostics)
       // Epilogue
       `if`.desugaredTerm = S(normalized)
     }(_ => "visitIf ==> ()")

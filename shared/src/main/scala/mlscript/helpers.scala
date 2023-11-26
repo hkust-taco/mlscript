@@ -6,6 +6,7 @@ import scala.collection.mutable.{Map => MutMap, SortedMap => SortedMutMap, Set =
 import math.Ordered.orderingToOrdered
 
 import mlscript.utils._, shorthands._
+import scala.annotation.tailrec
 
 
 // Auxiliary definitions for types
@@ -1065,6 +1066,25 @@ trait CaseBranchesImpl extends Located { self: CaseBranches =>
     case NoCases => ""
   }
 
+  def foldLeft[A, B](z: A)(f: (A, SimpleTerm -> Term) => A)(e: (A, Opt[Term]) => B): B = {
+    @tailrec
+    def rec(acc: A, current: CaseBranches): B = current match {
+      case Case(pat, body, rest) => rec(f(acc, pat -> body), rest)
+      case Wildcard(body) => e(acc, S(body))
+      case NoCases => e(acc, N)
+    }
+    rec(z, this)
+  }
+
+  def foreach(f: Opt[SimpleTerm] -> Term => Unit): Unit = {
+    @tailrec
+    def rec(current: CaseBranches): Unit = current match {
+      case Case(pat, body, rest) => f(S(pat) -> body); rec(rest)
+      case Wildcard(body) => f(N -> body)
+      case NoCases => ()
+    }
+    rec(this)
+  }
 }
 
 trait AdtMatchPatImpl extends Located { self: AdtMatchPat =>
