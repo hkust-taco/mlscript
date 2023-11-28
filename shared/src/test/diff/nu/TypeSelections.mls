@@ -13,30 +13,16 @@ module M {
 //│ }
 
 let x: M.T = id
-//│ ╔══[ERROR] Access to type alias member not yet supported
-//│ ║  l.15: 	let x: M.T = id
-//│ ╙──      	        ^^
-//│ ╔══[ERROR] Type mismatch in type selection:
-//│ ║  l.15: 	let x: M.T = id
-//│ ║        	        ^^
-//│ ╙── expression of type `M` does not have field 'T'
-//│ let x: error
+//│ let x: Int -> Int
 //│ x
 //│   = [Function: id]
 
 fun foo(x: M.C) = x
-//│ ╔══[ERROR] Access to class member not yet supported
-//│ ║  l.27: 	fun foo(x: M.C) = x
-//│ ╙──      	            ^^
-//│ ╔══[ERROR] Type mismatch in type selection:
-//│ ║  l.27: 	fun foo(x: M.C) = x
-//│ ║        	            ^^
-//│ ╙── expression of type `M` does not have field 'C'
-//│ fun foo: (x: anything) -> error
+//│ fun foo: (x: C) -> C
 
 
 foo(M.mkC(42))
-//│ error
+//│ C
 //│ res
 //│     = C {}
 
@@ -44,7 +30,7 @@ foo(M.mkC(42))
 :e
 42 : M.mkC
 //│ ╔══[ERROR] Type mismatch in type selection:
-//│ ║  l.45: 	42 : M.mkC
+//│ ║  l.31: 	42 : M.mkC
 //│ ║        	      ^^^^
 //│ ╙── expression of type `M` does not have field 'mkC'
 //│ (n: Int) -> C

@@ -572,17 +572,36 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
           case L(e) => e()
         }
       case Selection(base, nme) =>
-        // val base_ty = typeTerm(base)
-        val t = rec(base).unwrapAll
-        println(s"Type selection : $t")
-        implicit val prov: TypeProvenance = tyTp(nme.toLoc, "type selection")
-        val ub = freshVar(prov, N, S(nme.name))
-        val lb = freshVar(prov, N, S(nme.name))
-        // ? do we need this
-        // if (!GADTs) lb.upperBounds ::= ub
-        val res = RecordType.mk((nme.toVar, FieldType(S(lb), ub)(prov)) :: Nil)(prov)
-        constrain(t, res)
-        TypeBounds(lb, ub)(prov)
+        implicit val gl: GenLambdas = false
+        val base_ty = rec(base)
+        def constrTB(ty: ST): TypeBounds = {
+          println(s"Type selection : ${ty}")
+          implicit val prov: TypeProvenance = tyTp(nme.toLoc, "type selection")
+          val ub = freshVar(prov, N, S(nme.name))
+          val lb = freshVar(prov, N, S(nme.name))
+          // if (!GADTs) lb.upperBounds ::= ub
+          val res = RecordType.mk((nme.toVar, FieldType(S(lb), ub)(prov)) :: Nil)(prov)
+          constrain(ty, res)
+          TypeBounds(lb, ub)(prov)
+        }
+        def go(b_ty: ST, rfnt: Var => Opt[FieldType]): ST = b_ty.unwrapAll match {
+          case ct@ClassTag(Var(clsNme), _) =>
+            // TODO we should still succeed even if the member is not completed...
+            lookupMember(clsNme, rfnt, nme.toVar) match {
+              case R(cls: TypedNuCls) =>
+                if (cls.tparams.nonEmpty) ??? // TODO
+                clsNameToNomTag(cls.td)(TypeProvenance(ty.toLoc, "type selection", isType = true), ctx)
+              case R(als: TypedNuAls) =>
+                if (als.tparams.nonEmpty) ??? // TODO
+                als.body
+              // case R(m) => err(msg"Illegal selection of ${m.kind.str} member in type position", nme.toLoc)
+              // case L(d) => err(d)
+              case _ => constrTB(ct)
+            }
+          case b_ty => constrTB(b_ty)
+            
+        }
+        go(base_ty, _ => N)
       case Recursive(uv, body) =>
         val tv = freshVar(tyTp(ty.toLoc, "local type binding"), N, uv.name)
         val bod = rec(body)(ctx, recVars + (uv -> tv))

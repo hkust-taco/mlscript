@@ -109,7 +109,7 @@ fun listJoin(xs, sep) =
 //│ where
 //│   'A :> ??A & 'A0
 
-:e // FIXME recursion depth excess
+// :e // FIXME recursion depth excess
 type TreeMap[A] = Node[A] | Empty
 module Empty
 class Node[A](key: Str, value: A, left: TreeMap[A], right: TreeMap[A])

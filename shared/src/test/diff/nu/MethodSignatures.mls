@@ -164,27 +164,7 @@ module M {
 //│ ╔══[ERROR] undeclared `this`
 //│ ║  l.161: 	  fun a: this.A
 //│ ╙──       	         ^^^^
-//│ ╔══[ERROR] Type mismatch in definition of method a:
-//│ ║  l.162: 	  fun a = 1
-//│ ║         	      ^^^^^
-//│ ╟── integer literal of type `1` does not match type `A`
-//│ ║  l.162: 	  fun a = 1
-//│ ║         	          ^
-//│ ╟── but it flows into definition of method a with expected type `A`
-//│ ║  l.162: 	  fun a = 1
-//│ ║         	      ^^^^^
-//│ ╟── Note: constraint arises from type selection:
-//│ ║  l.161: 	  fun a: this.A
-//│ ║         	             ^^
-//│ ╟── from signature of member `a`:
-//│ ║  l.161: 	  fun a: this.A
-//│ ╙──       	      ^^^^^^^^^
-//│ module M {
-//│   class A {
-//│     constructor()
-//│   }
-//│   fun a: error
-//│ }
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Can't find member `error`
 
 // FIXME similar
 module M {
@@ -192,6 +172,6 @@ module M {
   fun a: M.A
   fun a = 1
 }
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 
 

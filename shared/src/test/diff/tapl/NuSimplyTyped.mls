@@ -181,7 +181,6 @@ fun showTypeTerm(t, ctx) =
     Err(message) then "Type error: " ++ message
 //│ fun showTypeTerm: (Term, TreeMap[Type]) -> Str
 
-:e // FIXME recursion depth excess
 showTypeTerm(Var("x"), Empty)
 showTypeTerm(Abs(Var("x"), _t("int"), Var("x")), Empty)
 showTypeTerm(App(Var("f"), Lit("0", _t("int"))), insert(Empty, "f", _f(_t("int"), _t("int"))))

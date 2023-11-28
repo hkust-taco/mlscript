@@ -196,6 +196,7 @@ fun err(msg) =
 //│ fun err: Str -> nothing
 
 // :d // FIXME with this it passes!!?
+:e // FIXME recursion depth
 fun eval(t, env) = if t is
   Var(nme) then if env |> Lists.assoc(nme) is Some(v)
     then v
@@ -217,45 +218,45 @@ fun eval(t, env) = if t is
   Rcd(fs) then
     Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
 //│ ╔══[ERROR] Subtyping constraint of the form `(?a, ?b) -> (?c | ?d | ?e | ?f | ?g | ?h) <: ?eval` exceeded recursion depth limit (250)
-//│ ║  l.199: 	fun eval(t, env) = if t is
+//│ ║  l.200: 	fun eval(t, env) = if t is
 //│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.200: 	  Var(nme) then if env |> Lists.assoc(nme) is Some(v)
+//│ ║  l.201: 	  Var(nme) then if env |> Lists.assoc(nme) is Some(v)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.201: 	    then v
+//│ ║  l.202: 	    then v
 //│ ║         	^^^^^^^^^^
-//│ ║  l.202: 	    else err("variable not found: " ++ nme)
+//│ ║  l.203: 	    else err("variable not found: " ++ nme)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.203: 	  Lit then t
+//│ ║  l.204: 	  Lit then t
 //│ ║         	^^^^^^^^^^^^
-//│ ║  l.204: 	  Lam then t
+//│ ║  l.205: 	  Lam then t
 //│ ║         	^^^^^^^^^^^^
-//│ ║  l.205: 	  App(f, args) then
+//│ ║  l.206: 	  App(f, args) then
 //│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.206: 	    let fe = eval(f, env)
+//│ ║  l.207: 	    let fe = eval(f, env)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.207: 	    if fe is Lam(ps, bod) then
+//│ ║  l.208: 	    if fe is Lam(ps, bod) then
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.208: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ║  l.209: 	      val argse = args |> Lists.map(a => eval(a, env))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.209: 	      if ps.length === argse.length then () else err("wrong number of arguments")
+//│ ║  l.210: 	      if ps.length === argse.length then () else err("wrong number of arguments")
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.210: 	      let envp = Lists.zip(ps, argse) |> Lists.map of ([key, value]) => {key, value}
+//│ ║  l.211: 	      let envp = Lists.zip(ps, argse) |> Lists.map of ([key, value]) => {key, value}
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.211: 	      eval(bod, envp ::: env)
+//│ ║  l.212: 	      eval(bod, envp ::: env)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.212: 	    else err(String(fe) ++ " cannot be applied")
+//│ ║  l.213: 	    else err(String(fe) ++ " cannot be applied")
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.213: 	  Sel(pre, nme) then
+//│ ║  l.214: 	  Sel(pre, nme) then
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.214: 	    let pree = eval(pre, env)
+//│ ║  l.215: 	    let pree = eval(pre, env)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.215: 	    if pree is Rcd(xs) and xs |> Lists.assoc(nme) is Some(v) then v
+//│ ║  l.216: 	    if pree is Rcd(xs) and xs |> Lists.assoc(nme) is Some(v) then v
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.216: 	    else err(String(pree) ++ " does not have field " ++ nme)
+//│ ║  l.217: 	    else err(String(pree) ++ " does not have field " ++ nme)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.217: 	  Rcd(fs) then
+//│ ║  l.218: 	  Rcd(fs) then
 //│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.218: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║  l.219: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ fun eval: forall 'a 'A 'Sub 'A0 'Sub0. (App | Lam | Lit['A0] | Rcd['Sub] | Sel | Var, Cons[{key: Eql[Str], value: 'A} | ~??A] & {List#A <: {key: Eql[Str], value: 'A} | ~??A} & List[{key: Eql[Str], value: 'A} | ~??A] | Nil & {List#A <: {key: Eql[Str], value: 'A} | ~??A} & List[{key: Eql[Str], value: 'A} | ~??A]) -> 'a
@@ -267,9 +268,10 @@ fun eval(t, env) = if t is
 //│           <: Object & ~#Rcd | Rcd['Sub0] | ~(??Sub & ??A3)
 //│     'Sub <: App | Lam | Lit['A0] | Rcd['Sub] | Sel | Var | ~??Sub0
 
+:e // FIXME recursion depth
 eval : (Term, List[{key: Str, value: Value}]) -> Value
 //│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?b ?c ?d ?e ?f ?g ?h. (?c, ?g) -> (?e | ?f | ?h | ?b | ?d | ?a) <: (Term, List[{key: Str, value: Value}]) -> Value` exceeded recursion depth limit (250)
-//│ ║  l.270: 	eval : (Term, List[{key: Str, value: Value}]) -> Value
+//│ ║  l.272: 	eval : (Term, List[{key: Str, value: Value}]) -> Value
 //│ ║         	^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ (Term, List[{key: Str, value: Value}]) -> Value

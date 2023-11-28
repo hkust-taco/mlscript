@@ -8,14 +8,7 @@ class Test { type T = Int }
 //│ }
 
 1 : Test.T
-//│ ╔══[ERROR] Access to type alias member not yet supported
-//│ ║  l.10: 	1 : Test.T
-//│ ╙──      	        ^^
-//│ ╔══[ERROR] Type mismatch in type selection:
-//│ ║  l.10: 	1 : Test.T
-//│ ║        	        ^^
-//│ ╙── expression of type `Test` does not have field 'T'
-//│ error
+//│ Int
 //│ res
 //│     = 1
 
@@ -28,10 +21,10 @@ trait Test { type T = Int }
 :e
 1 : Test.T
 //│ ╔══[ERROR] Access to type alias member not yet supported
-//│ ║  l.29: 	1 : Test.T
+//│ ║  l.22: 	1 : Test.T
 //│ ╙──      	        ^^
 //│ ╔══[ERROR] Type mismatch in type selection:
-//│ ║  l.29: 	1 : Test.T
+//│ ║  l.22: 	1 : Test.T
 //│ ║        	        ^^
 //│ ╙── expression of type `#Test` does not have field 'T'
 //│ error
