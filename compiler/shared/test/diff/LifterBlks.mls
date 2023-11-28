@@ -250,7 +250,7 @@ class A<T>{
 //│ |#class| |A|‹|T|›|{|→|#class| |B|{|→|#fun| |f| |#=| |x| |#=>| |y| |#=>| |x|↵|#fun| |g|#:| |T| |#=>| |B| |#=>| |T|←|↵|}|←|↵|}|
 //│ Parsed: {class A‹T› {class B {fun f = (x,) => (y,) => x; fun g: T -> B -> T}}}
 //│ Parsed:
-//│ TypingUnit(NuTypeDef(class, A, ((None,TypeName(T))), Tup(), (), None, None, TypingUnit(NuTypeDef(class, B, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, f, None, [], Lam(Tup(_: Var(x)), Lam(Tup(_: Var(y)), Var(x)))), NuFunDef(None, g, None, [], PolyType(List(),Function(Tuple(List((None,Field(None,TypeName(T))))),Function(Tuple(List((None,Field(None,TypeName(B))))),TypeName(T))))))))))
+//│ TypingUnit(NuTypeDef(class, A, ((TypeParamInfo(None,false),TypeName(T))), Tup(), (), None, None, TypingUnit(NuTypeDef(class, B, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, f, None, [], Lam(Tup(_: Var(x)), Lam(Tup(_: Var(y)), Var(x)))), NuFunDef(None, g, None, [], PolyType(List(),Function(Tuple(List((None,Field(None,TypeName(T))))),Function(Tuple(List((None,Field(None,TypeName(B))))),TypeName(T))))))))))
 //│ Lifted:
 //│ TypingUnit {
 //│   class A$1_B$2_Lambda1$1$3([par$A$1_B$2, x,]) {fun apply = (y,) => (this).x}
@@ -270,7 +270,7 @@ class Foo<T>{
 //│ |#class| |Foo|‹|T|›|{|→|#class| |RectangleBox|#:| |Box|‹|T|›| |&| |{| |breadth|#:| |T| |}|↵|#class| |StackedRectangleBoxes|‹|N|›| |#:| |RectangleBox|‹|T|›| |&| |{| |size|#:| |N| |}|↵|#class| |Bar|#:| |{|any|#:| |RectangleBox| |#=>| |StackedRectangleBoxes|}|←|↵|}|
 //│ Parsed: {class Foo‹T› {class RectangleBox: Box[T] & {breadth: T} {}; class StackedRectangleBoxes‹N›: RectangleBox[T] & {size: N} {}; class Bar: {any: RectangleBox -> StackedRectangleBoxes} {}}}
 //│ Parsed:
-//│ TypingUnit(NuTypeDef(class, Foo, ((None,TypeName(T))), Tup(), (), None, None, TypingUnit(NuTypeDef(class, RectangleBox, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, StackedRectangleBoxes, ((None,TypeName(N))), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, Bar, (), Tup(), (), None, None, TypingUnit()))))
+//│ TypingUnit(NuTypeDef(class, Foo, ((TypeParamInfo(None,false),TypeName(T))), Tup(), (), None, None, TypingUnit(NuTypeDef(class, RectangleBox, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, StackedRectangleBoxes, ((TypeParamInfo(None,false),TypeName(N))), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, Bar, (), Tup(), (), None, None, TypingUnit()))))
 //│ Lifted:
 //│ TypingUnit {
 //│   class Foo$1_RectangleBox$2([par$Foo$1,]) {}
@@ -293,7 +293,7 @@ fun ctx(a,b) =
 //│ |#class| |Func|‹|T|,| |U|›| |{|→|#fun| |apply|#:| |T| |#=>| |U|←|↵|}|↵|#class| |Lambda|‹|T|,| |U|›| |#:| |Func|‹|T|,| |U|›| |{||}|↵|#fun| |ctx|(|a|,|b|)| |#=|→|#fun| |foo|(|f|#:| |Func|,| |x|)| |#=| |→|f|.apply|(|x|)|←|↵|foo|(|#new| |Lambda|{|→|#fun| |apply|(|x|)| |#=| |a|+|x|←|↵|}|,| |b|)|←|
 //│ Parsed: {class Func‹T, U› {fun apply: T -> U}; class Lambda‹T, U›: Func[T, U] {}; fun ctx = (a, b,) => {fun foo = (f: Func, x,) => {(f).apply(x,)}; foo(new Lambda { ‹fun apply = (x,) => +(a, x,)› }, b,)}}
 //│ Parsed:
-//│ TypingUnit(NuTypeDef(class, Func, ((None,TypeName(T)), (None,TypeName(U))), Tup(), (), None, None, TypingUnit(NuFunDef(None, apply, None, [], PolyType(List(),Function(Tuple(List((None,Field(None,TypeName(T))))),TypeName(U)))))), NuTypeDef(class, Lambda, ((None,TypeName(T)), (None,TypeName(U))), Tup(), (), None, None, TypingUnit()), NuFunDef(None, ctx, None, [], Lam(Tup(_: Var(a), _: Var(b)), Blk(...))))
+//│ TypingUnit(NuTypeDef(class, Func, ((TypeParamInfo(None,false),TypeName(T)), (TypeParamInfo(None,false),TypeName(U))), Tup(), (), None, None, TypingUnit(NuFunDef(None, apply, None, [], PolyType(List(),Function(Tuple(List((None,Field(None,TypeName(T))))),TypeName(U)))))), NuTypeDef(class, Lambda, ((TypeParamInfo(None,false),TypeName(T)), (TypeParamInfo(None,false),TypeName(U))), Tup(), (), None, None, TypingUnit()), NuFunDef(None, ctx, None, [], Lam(Tup(_: Var(a), _: Var(b)), Blk(...))))
 //│ Lifted:
 //│ TypingUnit {
 //│   class Func$1[T,U]([]) {fun apply = T -> U}

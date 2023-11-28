@@ -440,7 +440,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
       val (bod2, ctx) = liftTerm(bod)
       val (sts2, ctx2) = liftEntities(sts)
       (Where(bod2, sts2), ctx2)
-    case _: Eqn | _: Super | _: Rft => throw MonomorphError(s"Unimplemented liftTerm: ${target}") // TODO
+    case _: Eqn | _: Super | _: Rft | _: WildcardType => throw MonomorphError(s"Unimplemented liftTerm: ${target}") // TODO
     case patmat: AdtMatchWith => lastWords(s"Cannot liftTermNew ${patmat}")
   }
 
@@ -742,7 +742,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
     val nTerms = termList.map(liftTerm(_)(using emptyCtx, nCache, globFuncs, nOuter)).unzip
     clsList.foreach(x => liftTypeDef(x)(using nCache, globFuncs, nOuter))
     retSeq = retSeq.appended(NuTypeDef(
-      kind, nName, nTps.map((None, _)), S(Tup(nParams)), None, None, nPars._1,
+      kind, nName, nTps.map((TypeParamInfo(None, false), _)), S(Tup(nParams)), None, None, nPars._1,
       None, None, TypingUnit(nFuncs._1 ++ nTerms._1))(None, None))
   }
 
