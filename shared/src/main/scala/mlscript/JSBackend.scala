@@ -303,14 +303,17 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
     case iff: If =>
       throw CodeGenError(s"if expression was not desugared")
     case NuNew(cls) =>
+      // * The following logic handles the case when `new C(123)` needs to be translated to `new C.class(123)`
       cls match {
         case Var(className) =>
-          translateVar(className, true) match {
+          translateVar(className, isCallee = true) match {
             case n: JSNew => n
             case t => JSNew(t)
           }
         case _ => throw CodeGenError(s"Unsupported `new` class term: ${inspect(cls)}")
       }
+      // * Would not be quite correct:
+      // JSNew(translateTerm(cls))
     case New(N, TypingUnit(Nil)) => JSRecord(Nil)
     case New(S(TypeName(className) -> Tup(args)), TypingUnit(Nil)) =>
       val callee = translateVar(className, true) match {
