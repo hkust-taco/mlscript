@@ -1,5 +1,5 @@
 :NewDefs
-:GADTs
+// :GADTs
 
 abstract class Foo[type T]: Bar | Baz
 class Bar extends Foo[Int]
@@ -49,8 +49,8 @@ fun foo: Foo['a] -> Int
 fun foo(f) = if f is
     Bar then 0
     Baz(x) then foo(x)
-//│ fun foo: forall 'T 'T0 'a. (Bar | Bar & ~{Baz#T :> 'T & 'T0 | ??T <: ??T0 & 'T0} | Baz[in 'T0 out 'T] & {Baz#T :> 'T <: 'T0, #x: Foo['a]} | Baz[in 'T0 out 'T] & {Baz#T :> 'T <: 'T0} & ~#Baz | Baz[in 'T0 out 'T] & {Baz#T :> 'T <: 'T0} & ~{Baz#T :> 'T & 'T0 | ??T <: ??T0 & 'T0}) -> Int
-//│ fun foo: forall 'a0. Foo['a0] -> Int
+//│ fun foo: (Bar | Baz[in anything out nothing]) -> Int
+//│ fun foo: forall 'a. Foo['a] -> Int
 
 abstract class Foo[type T]: Bar | Baz[T]
 class Bar extends Foo[Int]
@@ -69,7 +69,7 @@ fun foo[T](f: Foo[T]): Int = if f is
 fun bar(f) = if f is 
     Bar then 0
     Baz(_) then 1
-//│ fun bar: forall 'T 'T0. (Bar | Bar & ~{Baz#T :> 'T & 'T0 | ??T <: ??T0 & 'T0} | Baz[in 'T0 out 'T] & {Baz#T :> 'T <: 'T0, #x: anything} | Baz[in 'T0 out 'T] & {Baz#T :> 'T <: 'T0} & ~#Baz | Baz[in 'T0 out 'T] & {Baz#T :> 'T <: 'T0} & ~{Baz#T :> 'T & 'T0 | ??T <: ??T0 & 'T0}) -> (0 | 1)
+//│ fun bar: (Bar | Baz[in anything out nothing]) -> (0 | 1)
 
 bar(Baz(new Bar))
 //│ 0 | 1
@@ -85,7 +85,6 @@ class D2[A, B](val a: C[A], val b: C[B]) extends C[[A, B]]
 //│ }
 //│ class D2[A, B](a: C[A], b: C[B]) extends C
 
-
 abstract class C[type T]: C1 | C2
 class C1[type A](c: A) extends C[A]
 class C2 extends C[Int]
@@ -95,12 +94,27 @@ class C2 extends C[Int]
 //│   constructor()
 //│ }
 
+// :d
+:e // Needs type annot on parameter for GADT reasoning
 fun foo: C['T] -> 'T
 fun foo(x) = if x is
     C1(c) then c : x.T
     C2    then 0 : x.T
-//│ fun foo: forall 'A 'T 'a 'A0. (C1['A] & {#c: 'T, T :> 'T <: 'a, A :> 'A0 <: 'A} | C1['A] & {A :> 'A0 <: 'A} & ~#C1 | C1['A] & {A :> 'A0 <: 'A} & ~{A :> 'A0 & 'A | ??A <: ??A0 & 'A} | C2 & {T :> 0 <: 'a} | C2 & {T :> 0 <: 'a} & ~{A :> 'A0 & 'A | ??A <: ??A0 & 'A} | C2 & ~#C2 | C2 & ~{A :> 'A0 & 'A | ??A <: ??A0 & 'A} & ~#C2) -> 'a
-//│ fun foo: forall 'T0. C['T0] -> 'T0
+//│ ╔══[ERROR] Type error in definition
+//│ ║  l.100: 	fun foo(x) = if x is
+//│ ║         	    ^^^^^^^^^^^^^^^^
+//│ ║  l.101: 	    C1(c) then c : x.T
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.102: 	    C2    then 0 : x.T
+//│ ║         	^^^^^^^^^^^^^^^^
+//│ ╟── type variable `A` leaks out of its scope
+//│ ║  l.101: 	    C1(c) then c : x.T
+//│ ║         	                    ^^
+//│ ╟── into type `'T | ~??A`
+//│ ║  l.99: 	fun foo: C['T] -> 'T
+//│ ╙──      	                  ^^
+//│ fun foo: forall 'A. (C1['A] | C2) -> (Int | ??A & 'A)
+//│ fun foo: forall 'T. C['T] -> 'T
 
 foo(C1(true))
 //│ true
@@ -112,6 +126,11 @@ foo(new C2)
 //│ res
 //│     = 0
 
+fun foo(x: C['a]): x.T = if x is
+    C1(c) then c : x.T
+    C2    then 0 : x.T
+//│ fun foo: forall 'a. (x: C['a]) -> ('a & (Int | ??A))
+
 abstract class Option[type T]: None | Some[T]
 module None extends Option[nothing]
 class Some[A](get: A) extends Option[A]
@@ -119,189 +138,10 @@ class Some[A](get: A) extends Option[A]
 //│ module None extends Option
 //│ class Some[A](get: A) extends Option
 
-:d
 fun getOr(x, d) = if x is
     None then d
     Some(g) then g
-//│ 0. Typing ‹fun getOr = (x, d,) => if x is ‹(None) then d; (Some(g,)) then g››
-//│ | 0. Created lazy type info for fun getOr = (x, d,) => if x is ‹(None) then d; (Some(g,)) then g›
-//│ | Completing fun getOr = (x, d,) => if x is ‹(None) then d; (Some(g,)) then g›
-//│ | | Type params 
-//│ | | Params 
-//│ | | 1. Typing term (x, d,) => if x is ‹(None) then d; (Some(g,)) then g›
-//│ | | | 1. Typing pattern [x, d,]
-//│ | | | | 1. Typing pattern x
-//│ | | | | 1. : x640'
-//│ | | | | 1. Typing pattern d
-//│ | | | | 1. : d641'
-//│ | | | 1. : (x640', d641',)
-//│ | | | 1. Typing term if x is ‹(None) then d; (Some(g,)) then g›
-//│ | | | | [Desugarer.destructPattern] scrutinee = x; pattern = None
-//│ | | | | [Desugarer.destructPattern] Result: «x is None»
-//│ | | | | [Desugarer.destructPattern] scrutinee = x; pattern = Some(g,)
-//│ | | | | [Desugarer.destructPattern] Result: «x is Some»
-//│ | | | | Desugared term: case x of { None => d; Some => (([g,],) => g)((Some).unapply(x,),) }
-//│ | | | | 1. Typing term case x of { None => d; Some => (([g,],) => g)((Some).unapply(x,),) }
-//│ | | | | | 1. Typing term x
-//│ | | | | | 1. : x640'
-//│ | | | | | CONSTRAIN x640' <! Object
-//│ | | | | |   where 
-//│ | | | | | 1. C x640' <! Object    (0)
-//│ | | | | | | NEW x640' UB (0)
-//│ | | | | | >>>c Map(T -> NuParam(TypeName(T),mut T620_624#..T620_624#,true))
-//│ | | | | | Match arm None: #None<Object,Option> & ⊤ intl ⊤
-//│ | | | | | var rfn: x :: x640' & #None<Object,Option> & ⊤
-//│ | | | | | 2. Typing term d
-//│ | | | | | 2. : d641'
-//│ | | | | | CONSTRAIN d641' <! α642'
-//│ | | | | |   where 
-//│ | | | | | 2. C d641' <! α642'    (0)
-//│ | | | | | | NEW d641' UB (1)
-//│ | | | | | >>>c Map(T -> NuParam(TypeName(T),mut T620_627'#..T620_627'#,true), Some#A -> NuParam(TypeName(A),mut A625'..A625',true), get -> NuParam(get,‘A625',false))
-//│ | | | | | Match arm Some: #Some<Object,Option> & {Some#A: mut A625_643'..A625_644'} intl {Some#A: mut (A625_643' | ‘A645'')..(A625_644' & ‘A645'')}
-//│ | | | | | var rfn: x :: x640' & #Some<Object,Option> & {Some#A: mut (A625_643' | ‘A645'')..(A625_644' & ‘A645'')}
-//│ | | | | | 2. Typing term (([g,],) => g)((Some).unapply(x,),)
-//│ | | | | | | 2. Typing term ([g,],) => g
-//│ | | | | | | | 2. Typing pattern [[g,],]
-//│ | | | | | | | | 2. Typing pattern [g,]
-//│ | | | | | | | | | 2. Typing pattern g
-//│ | | | | | | | | | 2. : g647''
-//│ | | | | | | | | 2. : (g647'',)
-//│ | | | | | | | 2. : ((g647'',),)
-//│ | | | | | | | 2. Typing term g
-//│ | | | | | | | 2. : g647''
-//│ | | | | | | 2. : ([g647'',] -> g647'')
-//│ | | | | | | 2. Typing term (Some).unapply(x,)
-//│ | | | | | | | 2. Typing term (Some).unapply
-//│ | | | | | | | | 2. Typing term (x,) => let _ = x : Some in [(x).#get,]
-//│ | | | | | | | | | TYPING POLY LAM
-//│ | | | | | | | | | 3. Typing pattern [x,]
-//│ | | | | | | | | | | 3. Typing pattern x
-//│ | | | | | | | | | | 3. : x648'''
-//│ | | | | | | | | | 3. : (x648''',)
-//│ | | | | | | | | | 3. Typing term let _ = x : Some in [(x).#get,]
-//│ | | | | | | | | | | 3. Typing term x : Some
-//│ | | | | | | | | | | | 3. Typing term x
-//│ | | | | | | | | | | | 3. : x648'''
-//│ | | | | | | | | | | | Typing type TypeName(Some)
-//│ | | | | | | | | | | | | vars=Map() newDefsInfo=Map()
-//│ | | | | | | | | | | | | 3. type TypeName(Some)
-//│ | | | | | | | | | | | | => #Some<Object,Option>
-//│ | | | | | | | | | | | => #Some<Object,Option> ——— 
-//│ | | | | | | | | | | | CONSTRAIN x648''' <! #Some<Object,Option>
-//│ | | | | | | | | | | |   where 
-//│ | | | | | | | | | | | 3. C x648''' <! #Some<Object,Option>    (0)
-//│ | | | | | | | | | | | | NEW x648''' UB (0)
-//│ | | | | | | | | | | 3. : #Some<Object,Option>
-//│ | | | | | | | | | | 3. Typing term [(x).#get,]
-//│ | | | | | | | | | | | 3. Typing term (x).#get
-//│ | | | | | | | | | | | | 3. Typing term x
-//│ | | | | | | | | | | | | 3. : x648'''
-//│ | | | | | | | | | | | | CONSTRAIN x648''' <! {#get: #get649'''}
-//│ | | | | | | | | | | | |   where 
-//│ 		x648''' <: #Some<Object,Option>
-//│ | | | | | | | | | | | | 3. C x648''' <! {#get: #get649'''}    (0)
-//│ | | | | | | | | | | | | | NEW x648''' UB (3)
-//│ | | | | | | | | | | | 3. : #get649'''
-//│ | | | | | | | | | | 3. : (#get649''',)
-//│ | | | | | | | | | 3. : (#get649''',)
-//│ | | | | | | | | | Inferred poly constr: (x648''' -> (#get649''',))  —— where 
-//│ 		x648''' <: {#get: #get649'''} & #Some<Object,Option>
-//│ | | | | | | | | 2. : ‹∀ 2. (x648''' -> (#get649''',))›
-//│ | | | | | | | 2. : ‹∀ 2. (x648''' -> (#get649''',))›
-//│ | | | | | | | 2. Typing term x
-//│ | | | | | | | 2. : ((x640' & #Some<Object,Option>) & {Some#A: mut (A625_643' | ‘A645'')..(A625_644' & ‘A645'')})
-//│ | | | | | | | CONSTRAIN ‹∀ 2. (x648''' -> (#get649''',))› <! (((x640' & #Some<Object,Option>) & {Some#A: mut (A625_643' | ‘A645'')..(A625_644' & ‘A645'')}) -> α650'')
-//│ | | | | | | |   where 
-//│ 		x640' <: Object
-//│ 		A625_643' <: A625_644'
-//│ 		x648''' <: {#get: #get649'''} & #Some<Object,Option>
-//│ | | | | | | | 2. C ‹∀ 2. (x648''' -> (#get649''',))› <! (((x640' & #Some<Object,Option>) & {Some#A: mut (A625_643' | ‘A645'')..(A625_644' & ‘A645'')}) -> α650'')    (0)
-//│ | | | | | | | | could be distribbed: Set(#get649''')
-//│ | | | | | | | | cannot be distribbed: Set(x648''', #get649''')
-//│ | | | | | | | | INST [2]   ‹∀ 2. (x648''' -> (#get649''',))›
-//│ | | | | | | | |   where  
-//│ 		x648''' <: {#get: #get649'''} & #Some<Object,Option>
-//│ | | | | | | | | TO [2] ~>  (x648_651'' -> (#get649_652'',))
-//│ | | | | | | | |   where  
-//│ 		x648_651'' <: {#get: #get649_652''} & #Some<Object,Option>
-//│ | | | | | | | | 2. C (x648_651'' -> (#get649_652'',)) <! (((x640' & #Some<Object,Option>) & {Some#A: mut (A625_643' | ‘A645'')..(A625_644' & ‘A645'')}) -> α650'')    (2)
-//│ | | | | | | | | | 2. C (((x640' & #Some<Object,Option>) & {Some#A: mut (A625_643' | ‘A645'')..(A625_644' & ‘A645'')}),) <! (x648_651'',)    (2)
-//│ | | | | | | | | | | 2. C ((x640' & #Some<Object,Option>) & {Some#A: mut (A625_643' | ‘A645'')..(A625_644' & ‘A645'')}) <! x648_651''    (3)
-//│ | | | | | | | | | | | NEW x648_651'' LB (2)
-//│ | | | | | | | | | | | 2. C ((x640' & #Some<Object,Option>) & {Some#A: mut (A625_643' | ‘A645'')..(A625_644' & ‘A645'')}) <! {#get: #get649_652''}    (6)
-//│ | | | | | | | | | | | | 2. ARGH  DNF(2, #Some<Object,Option>{Some#A: mut (A625_643' | ‘A645'')..(‘A645'' & A625_644')}∧x640')  <!  DNF(2, {#get: #get649_652''})
-//│ | | | | | | | | | | | | | DNF DISCHARGE CONSTRAINTS
-//│ | | | | | | | | | | | | | 2. C x640' <! ({#get: #get649_652''} | ~((#Some<Object,Option> & {Some#A: mut (A625_643' | ‘A645'')..(‘A645'' & A625_644')})))    (9)
-//│ | | | | | | | | | | | | | | wrong level: 2
-//│ | | | | | | | | | | | | | | RECONSTRAINING TVs
-//│ | | | | | | | | | | | | | | EXTR RHS  ~>  ({#get: #get649_653'} | ~((#Some<Object,Option> & {Some#A: mut (A625_643' | ⊤(‘A645''))..(⊥(‘A645'') & A625_644')})))  to 1
-//│ | | | | | | | | | | | | | |  where 
-//│ 		A625_643' <: A625_644'
-//│ | | | | | | | | | | | | | | 2. C x640' <! ({#get: #get649_653'} | ~((#Some<Object,Option> & {Some#A: mut (A625_643' | ⊤(‘A645''))..(⊥(‘A645'') & A625_644')})))    (12)
-//│ | | | | | | | | | | | | | | | NEW x640' UB (1)
-//│ | | | | | | | | | | | 2. C ((x640' & #Some<Object,Option>) & {Some#A: mut (A625_643' | ‘A645'')..(A625_644' & ‘A645'')}) <! #Some<Object,Option>    (6)
-//│ | | | | | | | | | | | | Already a subtype by <:<
-//│ | | | | | | | | | 2. C (#get649_652'',) <! α650''    (2)
-//│ | | | | | | | | | | NEW α650'' LB (2)
-//│ | | | | | | 2. : α650''
-//│ | | | | | | CONSTRAIN ([g647'',] -> g647'') <! (α650'' -> α654'')
-//│ | | | | | |   where 
-//│ 		α650'' :> (#get649_652'',)
-//│ 		#get649_652'' :> #get649_653'
-//│ | | | | | | 2. C ([g647'',] -> g647'') <! (α650'' -> α654'')    (0)
-//│ | | | | | | | 2. C (α650'',) <! ((g647'',),)    (1)
-//│ | | | | | | | | 2. C α650'' <! (g647'',)    (2)
-//│ | | | | | | | | | NEW α650'' UB (2)
-//│ | | | | | | | | | 2. C (#get649_652'',) <! (g647'',)    (4)
-//│ | | | | | | | | | | 2. C #get649_652'' <! g647''    (4)
-//│ | | | | | | | | | | | NEW #get649_652'' UB (2)
-//│ | | | | | | | | | | | 2. C #get649_653' <! g647''    (6)
-//│ | | | | | | | | | | | | NEW g647'' LB (1)
-//│ | | | | | | | 2. C g647'' <! α654''    (1)
-//│ | | | | | | | | NEW g647'' UB (2)
-//│ | | | | | | | | 2. C #get649_653' <! α654''    (3)
-//│ | | | | | | | | | NEW α654'' LB (1)
-//│ | | | | | 2. : α654''
-//│ | | | | | CONSTRAIN α654'' <! α646'
-//│ | | | | |   where 
-//│ 		α654'' :> #get649_653'
-//│ | | | | | 2. C α654'' <! α646'    (0)
-//│ | | | | | | NEW α654'' UB (1)
-//│ | | | | | | 2. C #get649_653' <! α646'    (2)
-//│ | | | | | | | NEW #get649_653' UB (1)
-//│ | | | | | CONSTRAIN x640' <! (#None<Object,Option> | ((#Some<Object,Option> & {Some#A: mut A625_643'..A625_644'}) & ~(#None<Object,Option>)))
-//│ | | | | |   where 
-//│ 		x640' <: ({#get: #get649_653'} | ~((#Some<Object,Option> & {Some#A: mut (A625_643' | ⊤(‘A645''))..(⊥(‘A645'') & A625_644')}))) & Object
-//│ 		A625_643' <: A625_644'
-//│ 		#get649_653' <: α646'
-//│ | | | | | 1. C x640' <! (#None<Object,Option> | ((#Some<Object,Option> & {Some#A: mut A625_643'..A625_644'}) & ~(#None<Object,Option>)))    (0)
-//│ | | | | | | NEW x640' UB (1)
-//│ | | | | 1. : (α642' | α646')
-//│ | | | 1. : (α642' | α646')
-//│ | | 1. : ((x640', d641',) -> (α642' | α646'))
-//│ | | CONSTRAIN ((x640', d641',) -> (α642' | α646')) <! getOr655'
-//│ | |   where 
-//│ 		x640' <: (#None<Object,Option> | ((#Some<Object,Option> & {Some#A: mut A625_643'..A625_644'}) & ~(#None<Object,Option>))) & ({#get: #get649_653'} | ~((#Some<Object,Option> & {Some#A: mut (A625_643' | ⊤(‘A645''))..(⊥(‘A645'') & A625_644')}))) & Object
-//│ 		d641' <: α642'
-//│ 		A625_643' <: A625_644'
-//│ 		#get649_653' <: α646'
-//│ | | 1. C ((x640', d641',) -> (α642' | α646')) <! getOr655'    (0)
-//│ | | | NEW getOr655' LB (1)
-//│ | Completed TypedNuFun(0,fun getOr = (x::13, d::14,) => if x is ‹(None) then d; (Some(g,)) then g›,((x640', d641',) -> (α642' | α646'))) where 
-//│ 		x640' <: (#None<Object,Option> | ((#Some<Object,Option> & {Some#A: mut A625_643'..A625_644'}) & ~(#None<Object,Option>))) & ({#get: #get649_653'} | ~((#Some<Object,Option> & {Some#A: mut (A625_643' | ⊤(‘A645''))..(⊥(‘A645'') & A625_644')}))) & Object
-//│ 		d641' <: α642'
-//│ 		A625_643' <: A625_644'
-//│ 		#get649_653' <: α646'
-//│ | Typing unit statements
-//│ | : None
-//│ ======== TYPED ========
-//│ fun getOr: ‹∀ 0. ((x640', d641',) -> (α642' | α646'))› where 
-//│ |		x640' <: (#None<Object,Option> | ((#Some<Object,Option> & {Some#A: mut A625_643'..A625_644'}) & ~(#None<Object,Option>))) & ({#get: #get649_653'} | ~((#Some<Object,Option> & {Some#A: mut (A625_643' | ⊤(‘A645''))..(⊥(‘A645'') & A625_644')}))) & Object
-//│ |		d641' <: α642'
-//│ |		A625_643' <: A625_644'
-//│ |		#get649_653' <: α646'
-//│ fun getOr: forall 'A 'a. (None | None & ~{Some#A <: ??A & 'A} | Some['A] & {#get: 'a} | Some['A] & ~#Some | Some['A] & ~{Some#A <: ??A & 'A}, 'a) -> 'a
+//│ fun getOr: forall 'A 'a. (None | Some['A], 'a) -> (??A & 'A | 'a)
 
 fun getOr(x: Option['a], d) = if x is
     None then d
@@ -314,8 +154,7 @@ fun getOr[T](x: Option[T], d: T): T = if x is
 //│ fun getOr: forall 'T. (x: Option['T], d: 'T) -> 'T
 
 fun get(x) = if x is Some(r) then r else error
-//│ fun get: forall 'A 'a. (Object & ~#Some | Object & ~{Some#A <: ??A & 'A} & ~#Some | Some['A] & {#get: 'a} | Some['A] & ~{Some#A <: ??A & 'A}) -> 'a
+//│ fun get: forall 'A. (Object & ~#Some | Some['A]) -> (??A & 'A)
 
 fun get(x: Option['a]): x.T = if x is Some(r) then r else error
 //│ fun get: forall 'a. (x: Option['a]) -> 'a
-

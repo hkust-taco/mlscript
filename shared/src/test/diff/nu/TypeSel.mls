@@ -203,15 +203,15 @@ foo(Bar, 123)
 
 fun test(f) = if f is
   Bar then 123 : f.A
-//│ fun test: forall 'a. (Bar & {A :> 123 <: 'a} | Bar & ~#Bar) -> 'a
+//│ fun test: Bar -> Int
 
 fun test(f) = if f is
   Bar then 123 : f.A
   Baz then "hello" : f.A
-//│ fun test: forall 'a. (Bar & {A :> 123 <: 'a} | Bar & {A :> "hello" | 123 <: 'a} | Bar & ~#Bar | Baz & {A :> "hello" <: 'a} | Baz & {A :> "hello" | 123 <: 'a} | Baz & ~#Baz) -> 'a
+//│ fun test: (Bar | Baz) -> (Int | Str)
 
 [test(Bar), test(Baz)]
-//│ [Int, Str]
+//│ [Int | Str, Int | Str]
 
 fun test(f: Foo['a]) = if f is Bar then 123 : f.A else error
 //│ fun test: forall 'a. (f: Foo['a]) -> (Int & 'a)
@@ -332,7 +332,7 @@ fun foo(x: Foo['a], y) = y : x.A  // interpreted as `y : x.Foo#A`
 //│ fun foo: forall 'a. (x: Foo['a], anything) -> error
 
 fun foo(x, y) = y : x.A
-//│ fun foo: forall 'A 'A0. ({A :> 'A0 <: 'A}, 'A0) -> 'A
+//│ fun foo: forall 'A 'A0. ({A :> 'A <: 'A0}, 'A) -> 'A0
 
 // FIXME
 fun bar(f: Foo['a], y) = foo(f, y)

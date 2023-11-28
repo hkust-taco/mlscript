@@ -96,7 +96,7 @@ fun h2(a) =
 //│ ╔══[ERROR] identifier not found: y
 //│ ║  l.90: 	      let y' = y
 //│ ╙──      	               ^
-//│ fun h2: forall 'A. (None | Some[Left['A] | Object & ~#Left | ~??T]) -> (0 | error & ??B | ??A & 'A)
+//│ fun h2: forall 'A. (None | Some[Left['A] | Object & ~#Left | ~??T]) -> (0 | ??A & 'A)
 //│ Code generation encountered an error:
 //│   unresolved symbol y
 

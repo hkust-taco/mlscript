@@ -22,57 +22,13 @@ module E extends Format[Str]
 //│ module E extends Format
 
 fun fmtGo: (Str, Format['F]) -> 'F
-fun fmtGo(acc, f) = if f is
+fun fmtGo(acc, f:  Format['F]) = if f is
     D(fmt)    then (i => fmtGo(acc ++ toString(i),fmt)) : f.F
     B(fmt)    then (i => fmtGo(acc ++ toString(i),fmt)) : f.F
     L(s, fmt) then fmtGo(acc ++ s, fmt) : f.F
     E         then acc : f.F
-//│ fun fmtGo: forall 'F 'a 'F0 'F1 'F2 'F3 'F4 'F5 'F6 'F7 'F8. (Str & 'F0, B[in 'F out 'F2] & {
-//│   B#F :> 'F2 <: 'F,
-//│   #fmt: Format[in 'F4 & 'F5 & 'F7 out 'F4 | 'F5 | 'F7],
-//│   F :> anything -> 'F5 <: 'a
-//│ } & ~{L#F :> 'F1 & 'F3 | ??F <: ??F0 & 'F3} | B[in 'F out 'F2] & {
-//│   B#F :> 'F2 <: 'F,
-//│   #fmt: Format[in 'F4 & 'F5 & 'F7 out 'F4 | 'F5 | 'F7],
-//│   F :> anything -> ('F4 | 'F5) | 'F7 | 'F0 <: 'a,
-//│   #s: Str
-//│ } | B[in 'F out 'F2] & {
-//│   B#F :> 'F2 <: 'F,
-//│   #fmt: Format[in 'F5 & 'F7 out 'F5 | 'F7],
-//│   F :> anything -> 'F5 <: 'a
-//│ } & ~{D#F :> 'F6 & 'F8 | ??F1 <: ??F2 & 'F8} | B[in 'F out 'F2] & {
-//│   B#F :> 'F2 <: 'F,
-//│   #fmt: Format[in 'F4 & 'F5 & 'F7 out 'F4 | 'F5 | 'F7],
-//│   F :> anything -> ('F4 | 'F5) & 'F7 | anything -> 'F5 | 'F0 <: 'a
-//│ } | B[in 'F out 'F2] & {B#F :> 'F2 <: 'F, #fmt: Format['F5], F :> anything -> 'F5 <: 'a} | B[in 'F out 'F2] & {B#F :> 'F2 <: 'F} & ~#B | B[in 'F out 'F2] & {B#F :> 'F2 <: 'F} & ~{D#F :> 'F6 & 'F8 | ??F1 <: ??F2 & 'F8} & ~#B | B[in 'F out 'F2] & {B#F :> 'F2 <: 'F} & ~{L#F :> 'F1 & 'F3 | ??F <: ??F0 & 'F3} & ~#B | B[in 'F out 'F2] & {B#F :> 'F2 <: 'F} & ~{B#F :> 'F2 & 'F | ??F3 <: ??F4 & 'F} | D[in 'F8 out 'F6] & {
-//│   #fmt: Format[in 'F4 & 'F5 & 'F7 out 'F4 | 'F5 | 'F7],
-//│   F :> anything -> 'F4 <: 'a,
-//│   D#F :> 'F6 <: 'F8
-//│ } & ~{L#F :> 'F1 & 'F3 | ??F <: ??F0 & 'F3} | D[in 'F8 out 'F6] & {
-//│   #fmt: Format[in 'F4 & 'F5 & 'F7 out 'F4 | 'F5 | 'F7],
-//│   F :> anything -> ('F4 | 'F5) | 'F7 | 'F0 <: 'a,
-//│   #s: Str,
-//│   D#F :> 'F6 <: 'F8
-//│ } | D[in 'F8 out 'F6] & {
-//│   #fmt: Format[in 'F4 & 'F7 out 'F4 | 'F7],
-//│   F :> anything -> 'F4 <: 'a,
-//│   D#F :> 'F6 <: 'F8
-//│ } & ~{B#F :> 'F2 & 'F | ??F3 <: ??F4 & 'F} | D[in 'F8 out 'F6] & {
-//│   #fmt: Format[in 'F4 & 'F5 & 'F7 out 'F4 | 'F5 | 'F7],
-//│   F :> anything -> ('F4 | 'F5) & 'F7 | anything -> 'F4 | 'F0 <: 'a,
-//│   D#F :> 'F6 <: 'F8
-//│ } | D[in 'F8 out 'F6] & {#fmt: Format['F4], F :> anything -> 'F4 <: 'a, D#F :> 'F6 <: 'F8} | D[in 'F8 out 'F6] & {D#F :> 'F6 <: 'F8} & ~#D | D[in 'F8 out 'F6] & {D#F :> 'F6 <: 'F8} & ~{B#F :> 'F2 & 'F | ??F3 <: ??F4 & 'F} & ~#D | D[in 'F8 out 'F6] & {D#F :> 'F6 <: 'F8} & ~{L#F :> 'F1 & 'F3 | ??F <: ??F0 & 'F3} & ~#D | D[in 'F8 out 'F6] & {D#F :> 'F6 <: 'F8} & ~{D#F :> 'F6 & 'F8 | ??F1 <: ??F2 & 'F8} | E & {F :> 'F0 <: 'a} | E & ~#E | E & ~{B#F :> 'F2 & 'F | ??F3 <: ??F4 & 'F} & ~#E | E & ~{D#F :> 'F6 & 'F8 | ??F1 <: ??F2 & 'F8} & ~#E | E & ~{L#F :> 'F1 & 'F3 | ??F <: ??F0 & 'F3} & ~#E | L[in 'F3 out 'F1] & {
-//│   L#F :> 'F1 <: 'F3,
-//│   #fmt: Format[in 'F4 & 'F5 & 'F7 out 'F4 | 'F5 | 'F7],
-//│   F :> anything -> ('F4 | 'F5) | 'F7 | 'F0 <: 'a,
-//│   #s: Str
-//│ } | L[in 'F3 out 'F1] & {
-//│   L#F :> 'F1 <: 'F3,
-//│   #fmt: Format[in 'F4 & 'F5 & 'F7 out 'F4 | 'F5 | 'F7],
-//│   F :> 'F7 | 'F0 | anything -> ('F4 & 'F5) <: 'a,
-//│   #s: Str
-//│ } | L[in 'F3 out 'F1] & {L#F :> 'F1 <: 'F3, #fmt: Format[in 'F5 & 'F7 out 'F5 | 'F7], F :> 'F7 <: 'a, #s: Str} & ~{D#F :> 'F6 & 'F8 | ??F1 <: ??F2 & 'F8} | L[in 'F3 out 'F1] & {L#F :> 'F1 <: 'F3, #fmt: Format[in 'F4 & 'F7 out 'F4 | 'F7], F :> 'F7 <: 'a, #s: Str} & ~{B#F :> 'F2 & 'F | ??F3 <: ??F4 & 'F} | L[in 'F3 out 'F1] & {L#F :> 'F1 <: 'F3, #fmt: Format['F7], F :> 'F7 <: 'a, #s: Str} | L[in 'F3 out 'F1] & {L#F :> 'F1 <: 'F3} & ~#L | L[in 'F3 out 'F1] & {L#F :> 'F1 <: 'F3} & ~{B#F :> 'F2 & 'F | ??F3 <: ??F4 & 'F} & ~#L | L[in 'F3 out 'F1] & {L#F :> 'F1 <: 'F3} & ~{D#F :> 'F6 & 'F8 | ??F1 <: ??F2 & 'F8} & ~#L | L[in 'F3 out 'F1] & {L#F :> 'F1 <: 'F3} & ~{L#F :> 'F1 & 'F3 | ??F <: ??F0 & 'F3}) -> 'a
-//│ fun fmtGo: forall 'F9. (Str, Format['F9]) -> 'F9
+//│ fun fmtGo: forall 'F. (Str & 'F | Str, f: Format['F]) -> ('F & (Str | nothing -> ('F & (??F & 'F | ??F0 & 'F)) | ??F1 & 'F))
+//│ fun fmtGo: forall 'F0. (Str, Format['F0]) -> 'F0
 
 fun fmt(f) = fmtGo("", f)
 //│ fun fmt: forall 'F. Format['F] -> 'F
@@ -97,19 +53,19 @@ fmt(test)(114)(false)
 :e
 fmt(test)("hello")("world")
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.98: 	fmt(test)("hello")("world")
+//│ ║  l.54: 	fmt(test)("hello")("world")
 //│ ║        	^^^^^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"hello"` is not an instance of type `Int`
-//│ ║  l.98: 	fmt(test)("hello")("world")
+//│ ║  l.54: 	fmt(test)("hello")("world")
 //│ ║        	          ^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.14: 	class D[F](fmt: Format[F]) extends Format[Int -> F]
 //│ ╙──      	                                          ^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.98: 	fmt(test)("hello")("world")
+//│ ║  l.54: 	fmt(test)("hello")("world")
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"world"` is not an instance of type `Bool`
-//│ ║  l.98: 	fmt(test)("hello")("world")
+//│ ║  l.54: 	fmt(test)("hello")("world")
 //│ ║        	                   ^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.15: 	class B[F](fmt: Format[F]) extends Format[Bool -> F]
@@ -117,6 +73,16 @@ fmt(test)("hello")("world")
 //│ Str | error
 //│ res
 //│     = 'int i = hello, bool b = world'
+
+fun fmtGo[F](acc, f: Format[F]): F = if f is
+    D(fmt)    then (i => fmtGo(acc ++ toString(i),fmt)) : f.F
+    B(fmt)    then (i => fmtGo(acc ++ toString(i),fmt)) : f.F
+    L(s, fmt) then fmtGo(acc ++ s, fmt) : f.F
+    E         then acc : f.F
+//│ fun fmtGo: forall 'F. (Str, f: Format['F]) -> 'F
+
+fun fmt(f) = fmtGo("", f)
+//│ fun fmt: forall 'F. Format['F] -> 'F
 
 
 // typed ast //
@@ -160,14 +126,14 @@ eval(If(Equals(Lit(3), Plus(Lit(1), Lit(1))), Fst(Pair(Lit(1), Lit(2))), Lit(3))
 :e
 eval(Plus(Equals(Lit(1), Lit(2)), Lit(3)))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.161: 	eval(Plus(Equals(Lit(1), Lit(2)), Lit(3)))
+//│ ║  l.127: 	eval(Plus(Equals(Lit(1), Lit(2)), Lit(3)))
 //│ ║         	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Bool` is not an instance of `Int`
-//│ ║  l.127: 	class Equals(a: Expr[Int], b: Expr[Int]) extends Expr[Bool]
-//│ ║         	                                                      ^^^^
+//│ ║  l.93: 	class Equals(a: Expr[Int], b: Expr[Int]) extends Expr[Bool]
+//│ ║        	                                                      ^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.126: 	class Plus(a: Expr[Int], b: Expr[Int]) extends Expr[Int]
-//│ ╙──       	                   ^^^
+//│ ║  l.92: 	class Plus(a: Expr[Int], b: Expr[Int]) extends Expr[Int]
+//│ ╙──      	                   ^^^
 //│ Int
 //│ res
 //│     = 3

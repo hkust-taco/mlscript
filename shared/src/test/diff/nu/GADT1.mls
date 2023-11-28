@@ -34,82 +34,38 @@ fun tail[L, T](xs: Vec[S[L], T]): Vec[L, T] =
 //│ fun tail: forall 'L 'T. (xs: Vec[S['L], 'T]) -> Vec['L, 'T]
 
 fun len: Vec['l, 'a] -> Int
-fun len(xs) = if xs is
+fun len(xs: Vec['l, 'a]) = if xs is
     Nil then 0
     Cons(h, t) then 1 + len(t : Vec[xs.L.P, xs.T])
-//│ fun len: forall 'P 'P0 'L 'T 'L0 'T0 'T1 'T2. (Cons[in 'L out 'L0, in 'T0 out 'T2] & {Cons#L :> 'L0 <: 'L, Cons#T :> 'T2 <: 'T0} & ~#Cons | Cons[in 'L out 'L0, in 'T0 out 'T2] & {Cons#L :> 'L0 <: 'L, Cons#T :> 'T2 <: 'T0} & ~{Cons#L :> 'L0 & 'L | ??L <: ??L0 & 'L} | Cons[in 'L out 'L0, in 'T0 out 'T2] & {Cons#L :> 'L0 <: 'L, Cons#T :> 'T2 <: 'T0} & ~{Cons#T :> 'T2 & 'T0 | ??T <: ??T0 & 'T0} | Cons[in 'L out 'L0, in 'T0 out 'T2] & {
-//│   L <: {P :> 'P <: 'P & 'P0},
-//│   T :> 'T <: 'T & 'T1,
-//│   Cons#T :> 'T2 <: 'T0,
-//│   #t: Vec[in 'P out 'P0, in 'T out 'T1],
-//│   Cons#L :> 'L0 <: 'L,
-//│   #h: anything
-//│ } | Nil[in anything out nothing] & {
-//│   L <: {P :> 'P <: 'P & 'P0},
-//│   T :> 'T <: 'T & 'T1,
-//│   #h: anything,
-//│   #t: Vec[in 'P out 'P0, in 'T out 'T1]
-//│ } | Nil[in anything out nothing] | Nil[in anything out nothing] & ~{Cons#L :> 'L0 & 'L | ??L <: ??L0 & 'L} | Nil[in anything out nothing] & ~{Cons#T :> 'T2 & 'T0 | ??T <: ??T0 & 'T0}) -> Int
-//│ fun len: forall 'l 'a. Vec['l, 'a] -> Int
+//│ fun len: forall 'l 'P 'a. (xs: Vec['l, 'a]) -> Int
+//│ fun len: forall 'l0 'a0. Vec['l0, 'a0] -> Int
+//│ where
+//│   'l <: {P :> S[?] & ??L | 'P <: 'P & (S[in anything out nothing] | ??L0)} | ~(S[in S[in anything out nothing] | ??L out S[?] & ??L0] & {P :> S[in anything out nothing] | ??L <: S[?] & ??L0})
 
 fun map: ('A -> 'B, Vec['L, 'A]) -> Vec['L, 'B]
-fun map[B](f, xs) = if xs is
+fun map[B](f, xs: Vec['L, 'A]) = if xs is
     Nil then new Nil : Vec[xs.L, B]
     Cons(h, t) then Cons(f(h), map(f, t)) : Vec[xs.L, B]
-//│ fun map: forall 'T 'A 'L 'T0 'B 'L0 'T1 'L1 'T2 'a 'L2 'L3. (('A | 'a) -> 'B, Cons[in 'L1 out 'L3, in 'T2 out 'T] & {Cons#L :> 'L3 <: 'L1, Cons#T :> 'T <: 'T2} & ~#Cons | Cons[in 'L1 out 'L3, in 'T2 out 'T] & {Cons#L :> 'L3 <: 'L1, Cons#T :> 'T <: 'T2} & ~{Nil#T :> 'T0 & 'T1 | ??T <: ??T0 & 'T1} & ~#Cons | Cons[in 'L1 out 'L3, in 'T2 out 'T] & {Cons#L :> 'L3 <: 'L1, Cons#T :> 'T <: 'T2} & ~{Cons#L :> 'L3 & 'L1 | ??L <: ??L0 & 'L1} | Cons[in 'L1 out 'L3, in 'T2 out 'T] & {Cons#L :> 'L3 <: 'L1, Cons#T :> 'T <: 'T2} & ~{Cons#T :> 'T & 'T2 | ??T1 <: ??T2 & 'T2} | Cons[in 'L1 out 'L3, in 'T2 out 'T] & {
-//│   L :> S['L2] | Z | 'L0 <: nothing,
-//│   Cons#T :> 'T <: 'T2,
-//│   #t: Vec['L2, 'A],
-//│   Cons#L :> 'L3 <: 'L1,
-//│   #h: 'a
-//│ } | Cons[in 'L1 out 'L3, in 'T2 out 'T] & {
-//│   L :> S['L2] | 'L0 <: S['L2] & 'L,
-//│   Cons#T :> 'T <: 'T2,
-//│   #t: Vec['L2, 'A],
-//│   Cons#L :> 'L3 <: 'L1,
-//│   #h: 'a
-//│ } | Cons[in 'L1 out 'L3, in 'T2 out 'T] & {
-//│   L :> S['L2] | 'L0 <: S['L2] & 'L,
-//│   Cons#T :> 'T <: 'T2,
-//│   #t: Vec['L2, 'A],
-//│   Cons#L :> 'L3 <: 'L1,
-//│   #h: 'a
-//│ } & ~{Nil#T :> 'T0 & 'T1 | ??T <: ??T0 & 'T1} | Nil[in 'T1 out 'T0] & {#h: 'a, Nil#T :> 'T0 <: 'T1, L :> S['L2] | Z | 'L0 <: nothing, #t: Vec['L2, 'A]} | Nil[in 'T1 out 'T0] & {Nil#T :> 'T0 <: 'T1, L :> Z | 'L0 <: Z & 'L} | Nil[in 'T1 out 'T0] & {Nil#T :> 'T0 <: 'T1, L :> Z | 'L0 <: Z & 'L} & ~{Cons#L :> 'L3 & 'L1 | ??L <: ??L0 & 'L1} | Nil[in 'T1 out 'T0] & {Nil#T :> 'T0 <: 'T1, L :> Z | 'L0 <: Z & 'L} & ~{Cons#T :> 'T & 'T2 | ??T1 <: ??T2 & 'T2} | Nil[in 'T1 out 'T0] & {Nil#T :> 'T0 <: 'T1} & ~#Nil | Nil[in 'T1 out 'T0] & {Nil#T :> 'T0 <: 'T1} & ~{Cons#L :> 'L3 & 'L1 | ??L <: ??L0 & 'L1} & ~#Nil | Nil[in 'T1 out 'T0] & {Nil#T :> 'T0 <: 'T1} & ~{Cons#T :> 'T & 'T2 | ??T1 <: ??T2 & 'T2} & ~#Nil | Nil[in 'T1 out 'T0] & {Nil#T :> 'T0 <: 'T1} & ~{Nil#T :> 'T0 & 'T1 | ??T <: ??T0 & 'T1}) -> Vec[in 'L0 out 'L, 'B]
-//│ fun map: forall 'A0 'B0 'L4. ('A0 -> 'B0, Vec['L4, 'A0]) -> Vec['L4, 'B0]
+//│ fun map: forall 'T 'B 'L 'L0. ((??T & 'T) -> 'B, xs: Vec['L, 'T]) -> Vec[in S[in S[in anything out nothing] | ??L out S[?] & ??L0] | 'L out 'L & (S[in S[in anything out nothing] | ??L out S[?] & ??L0] | Z), 'B]
+//│ fun map: forall 'A 'B0 'L1. ('A -> 'B0, Vec['L1, 'A]) -> Vec['L1, 'B0]
+//│ where
+//│   'L <: S[in (S[in anything out nothing] | ??L) & 'L0 out S[?] & ??L0 | 'L0] & {P :> S[?] & ??L0 | 'L0 <: (S[in anything out nothing] | ??L) & 'L0} | S[in anything out nothing] & ~{P :> S[?] | ??L0 <: S[in anything out nothing] & ??L} | ~(S[in S[in anything out nothing] | ??L0 out S[?] & ??L] & {P :> S[in anything out nothing] | ??L0 <: S[?] & ??L})
 
 fun zip: (Vec['L, 'A], Vec['L, 'B]) -> Vec['L, ['A, 'B]]
-fun zip[A, B](xs, ys) = 
+fun zip[L, A, B](xs: Vec[L, A], ys: Vec[L, B]) = 
     if xs is Nil and ys is Nil then new Nil : Vec[xs.L, [A, B]]
     else if xs is Cons(x, tx) and ys is Cons(y, ty) then 
         Cons([x, y], zip(tx, ty)) : Vec[xs.L, [A, B]]
     else error
-//│ fun zip: forall 'L 'L0 'L1 'T 'T0 'A 'T1 'T2 'T3 'L2 'L3 'B 'L4 'T4 'L5. (Cons[in 'L out 'L4, in 'T3 out 'T1] & {Cons#L :> 'L4 <: 'L, Cons#T :> 'T1 <: 'T3} & ~#Cons | Cons[in 'L out 'L4, in 'T3 out 'T1] & {Cons#L :> 'L4 <: 'L, Cons#T :> 'T1 <: 'T3} & ~{Nil#T :> 'T & 'T4 | ??T <: ??T0 & 'T4} & ~#Cons | Cons[in 'L out 'L4, in 'T3 out 'T1] & {Cons#L :> 'L4 <: 'L, Cons#T :> 'T1 <: 'T3} & ~{Cons#L :> 'L4 & 'L | ??L <: ??L0 & 'L} | Cons[in 'L out 'L4, in 'T3 out 'T1] & {Cons#L :> 'L4 <: 'L, Cons#T :> 'T1 <: 'T3} & ~{Cons#T :> 'T1 & 'T3 | ??T1 <: ??T2 & 'T3} | Cons[in 'L out 'L4, in 'T3 out 'T1] & {
-//│   L :> S['L2] | Z | 'L1 <: nothing,
-//│   Cons#T :> 'T1 <: 'T3,
-//│   #t: Vec['L2, 'A],
-//│   Cons#L :> 'L4 <: 'L,
-//│   #h: 'A
-//│ } | Cons[in 'L out 'L4, in 'T3 out 'T1] & {
-//│   L :> S['L2] | 'L1 <: S['L2] & 'L3,
-//│   Cons#T :> 'T1 <: 'T3,
-//│   #t: Vec['L2, 'A],
-//│   Cons#L :> 'L4 <: 'L,
-//│   #h: 'A
-//│ } | Cons[in 'L out 'L4, in 'T3 out 'T1] & {
-//│   L :> S['L2] | 'L1 <: S['L2] & 'L3,
-//│   Cons#T :> 'T1 <: 'T3,
-//│   #t: Vec['L2, 'A],
-//│   Cons#L :> 'L4 <: 'L,
-//│   #h: 'A
-//│ } & ~{Nil#T :> 'T & 'T4 | ??T <: ??T0 & 'T4} | Nil[in 'T4 out 'T] & {#h: 'A, Nil#T :> 'T <: 'T4, L :> S['L2] | Z | 'L1 <: nothing, #t: Vec['L2, 'A]} | Nil[in 'T4 out 'T] & {Nil#T :> 'T <: 'T4, L :> Z | 'L1 <: Z & 'L3} | Nil[in 'T4 out 'T] & {Nil#T :> 'T <: 'T4, L :> Z | 'L1 <: Z & 'L3} & ~{Cons#L :> 'L4 & 'L | ??L <: ??L0 & 'L} | Nil[in 'T4 out 'T] & {Nil#T :> 'T <: 'T4, L :> Z | 'L1 <: Z & 'L3} & ~{Cons#T :> 'T1 & 'T3 | ??T1 <: ??T2 & 'T3} | Nil[in 'T4 out 'T] & {Nil#T :> 'T <: 'T4} & ~#Nil | Nil[in 'T4 out 'T] & {Nil#T :> 'T <: 'T4} & ~{Cons#L :> 'L4 & 'L | ??L <: ??L0 & 'L} & ~#Nil | Nil[in 'T4 out 'T] & {Nil#T :> 'T <: 'T4} & ~{Cons#T :> 'T1 & 'T3 | ??T1 <: ??T2 & 'T3} & ~#Nil | Nil[in 'T4 out 'T] & {Nil#T :> 'T <: 'T4} & ~{Nil#T :> 'T & 'T4 | ??T <: ??T0 & 'T4} | Object & ~#Cons & ~#Nil | Object & ~{Cons#L :> 'L4 & 'L | ??L <: ??L0 & 'L} & ~#Cons & ~#Nil | Object & ~{Cons#T :> 'T1 & 'T3 | ??T1 <: ??T2 & 'T3} & ~#Cons & ~#Nil | Object & ~{Nil#T :> 'T & 'T4 | ??T <: ??T0 & 'T4} & ~#Cons & ~#Nil, Cons[in 'L5 out 'L0, in 'T0 out 'T2] & {#h: 'B, Cons#L :> 'L0 <: 'L5, Cons#T :> 'T2 <: 'T0, #t: Vec['L2, 'B]} | Cons[in 'L5 out 'L0, in 'T0 out 'T2] & {Cons#L :> 'L0 <: 'L5, Cons#T :> 'T2 <: 'T0} & ~#Cons | Cons[in 'L5 out 'L0, in 'T0 out 'T2] & {Cons#L :> 'L0 <: 'L5, Cons#T :> 'T2 <: 'T0} & ~{Cons#L :> 'L0 | ??L1 <: ??L2 & 'L5} | Cons[in 'L5 out 'L0, in 'T0 out 'T2] & {Cons#L :> 'L0 <: 'L5, Cons#T :> 'T2 <: 'T0} & ~{Cons#T :> 'T2 | ??T3 <: ??T4 & 'T0} | Nil[in anything out nothing] | Object & ~#Cons & ~#Nil | Object & ~{Cons#L :> 'L0 | ??L1 <: ??L2 & 'L5} & ~#Cons & ~#Nil | Object & ~{Cons#T :> 'T2 | ??T3 <: ??T4 & 'T0} & ~#Cons & ~#Nil) -> Vec[in 'L1 out 'L3, ['A, 'B]]
-//│ fun zip: forall 'L6 'A0 'B0. (Vec['L6, 'A0], Vec['L6, 'B0]) -> Vec['L6, ['A0, 'B0]]
+//│ fun zip: forall 'L 'A 'B. (xs: Vec['L, 'A], ys: Vec['L, 'B]) -> Vec[in 'L | 'L0 & (S[in S[in anything out nothing] | ??L out S[?] & ??L0] | 'L) out 'L & (S[in S[in anything out nothing] | ??L out S[?] & ??L0] | Z | 'L0), ['A, 'B]]
+//│ fun zip: forall 'L1 'A0 'B0. (Vec['L1, 'A0], Vec['L1, 'B0]) -> Vec['L1, ['A0, 'B0]]
 
 fun sum: Vec['l, Int] -> Int
 fun sum(xs) = if xs is
     Nil then 0
     Cons(h, t) then h + sum(t)
-//│ fun sum: forall 'T 'l 'L 'L0 'T0. (Cons[in 'L0 out 'L, in 'T out 'T0] & {#h: Int, Cons#L :> 'L <: 'L0, Cons#T :> 'T0 <: 'T, #t: Vec['l, Int]} | Cons[in 'L0 out 'L, in 'T out 'T0] & {Cons#L :> 'L <: 'L0, Cons#T :> 'T0 <: 'T} & ~#Cons | Cons[in 'L0 out 'L, in 'T out 'T0] & {Cons#L :> 'L <: 'L0, Cons#T :> 'T0 <: 'T} & ~{Cons#L :> 'L & 'L0 | ??L <: ??L0 & 'L0} | Cons[in 'L0 out 'L, in 'T out 'T0] & {Cons#L :> 'L <: 'L0, Cons#T :> 'T0 <: 'T} & ~{Cons#T :> 'T0 & 'T | ??T <: ??T0 & 'T} | Nil[in anything out nothing] & {#h: Int, #t: Vec['l, Int]} | Nil[in anything out nothing] | Nil[in anything out nothing] & ~{Cons#L :> 'L & 'L0 | ??L <: ??L0 & 'L0} | Nil[in anything out nothing] & ~{Cons#T :> 'T0 & 'T | ??T <: ??T0 & 'T}) -> Int
-//│ fun sum: forall 'l0. Vec['l0, Int] -> Int
+//│ fun sum: (Cons[in anything out nothing, in Int | ~??T out Int & ~??T0] | Nil[in anything out nothing]) -> Int
+//│ fun sum: forall 'l. Vec['l, Int] -> Int
 
 // construct lisp style list lol
 // fun toList: (Vec['l, 'a]) -> (['a, 'xs] as 'xs)
@@ -117,17 +73,17 @@ fun toList: (((Vec['l, 'a]) -> 'xs) where ['a, 'xs] | [] : 'xs)
 fun toList(xs) = if xs is
     Nil then []
     Cons(h, t) then [h, toList(t)]
-//│ fun toList: forall 'a 'T 'L 'T0 'L0 '#h 'l. (Cons[in 'L0 out 'L, in 'T out 'T0] & {#h: '#h, Cons#L :> 'L <: 'L0, Cons#T :> 'T0 <: 'T, #t: Vec['l, 'a]} | Cons[in 'L0 out 'L, in 'T out 'T0] & {Cons#L :> 'L <: 'L0, Cons#T :> 'T0 <: 'T} & ~#Cons | Cons[in 'L0 out 'L, in 'T out 'T0] & {Cons#L :> 'L <: 'L0, Cons#T :> 'T0 <: 'T} & ~{Cons#L :> 'L & 'L0 | ??L <: ??L0 & 'L0} | Cons[in 'L0 out 'L, in 'T out 'T0] & {Cons#L :> 'L <: 'L0, Cons#T :> 'T0 <: 'T} & ~{Cons#T :> 'T0 & 'T | ??T <: ??T0 & 'T} | Nil[in anything out nothing] & {#h: '#h, #t: Vec['l, 'a]} | Nil[in anything out nothing] | Nil[in anything out nothing] & ~{Cons#L :> 'L & 'L0 | ??L <: ??L0 & 'L0} | Nil[in anything out nothing] & ~{Cons#T :> 'T0 & 'T | ??T <: ??T0 & 'T}) -> Array[forall 'xs. '#h | 'xs]
-//│ fun toList: forall 'l0 'a0 'xs0. Vec['l0, 'a0] -> 'xs0
+//│ fun toList: forall 'T. (Cons[in anything out nothing, in 'T out nothing] | Nil[in anything out nothing]) -> Array[forall 'xs. 'xs | ??T & 'T]
+//│ fun toList: forall 'l 'a 'xs0. Vec['l, 'a] -> 'xs0
 //│ where
-//│   'xs0 :> Array['a0 | 'xs0]
-//│   'xs :> Array['a | 'xs]
+//│   'xs0 :> Array['a | 'xs0]
+//│   'xs :> Array['xs | ??T & 'T]
 
 :e
 head(new Nil)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.127: 	head(new Nil)
-//│ ║         	^^^^^^^^^^^^^
+//│ ║  l.83: 	head(new Nil)
+//│ ║        	^^^^^^^^^^^^^
 //│ ╟── type `Z` is not an instance of `S['l]`
 //│ ║  l.18: 	class Nil[T] extends Vec[Z, T]
 //│ ║        	                         ^
@@ -142,8 +98,8 @@ head(new Nil)
 :e
 tail(new Nil)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.143: 	tail(new Nil)
-//│ ║         	^^^^^^^^^^^^^
+//│ ║  l.99: 	tail(new Nil)
+//│ ║        	^^^^^^^^^^^^^
 //│ ╟── type `Z` is not an instance of `S[?L]`
 //│ ║  l.18: 	class Nil[T] extends Vec[Z, T]
 //│ ║        	                         ^
@@ -180,7 +136,7 @@ len(Cons(1, Cons(2, new Nil)))
 :e
 zip(Cons(1, new Nil), new Nil)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.181: 	zip(Cons(1, new Nil), new Nil)
+//│ ║  l.137: 	zip(Cons(1, new Nil), new Nil)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Z` is not an instance of `S[?L]`
 //│ ║  l.18: 	class Nil[T] extends Vec[Z, T]
@@ -189,7 +145,7 @@ zip(Cons(1, new Nil), new Nil)
 //│ ║  l.19: 	class Cons[L, T](val h: T, val t: Vec[L, T]) extends Vec[S[L], T]
 //│ ║        	                                                         ^^^^
 //│ ╟── from type variable:
-//│ ║  l.80: 	fun zip: (Vec['L, 'A], Vec['L, 'B]) -> Vec['L, ['A, 'B]]
+//│ ║  l.54: 	fun zip: (Vec['L, 'A], Vec['L, 'B]) -> Vec['L, ['A, 'B]]
 //│ ╙──      	                           ^^
 //│ Vec[out S[Z] | Z, ['A, 'B]] | error
 //│   where
@@ -221,13 +177,13 @@ vec1 : Vec['l, Int]
 :e
 vec1 : Vec[Z, Int]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.222: 	vec1 : Vec[Z, Int]
+//│ ║  l.178: 	vec1 : Vec[Z, Int]
 //│ ║         	^^^^
 //│ ╟── type `S[?L]` is not an instance of `Z`
 //│ ║  l.19: 	class Cons[L, T](val h: T, val t: Vec[L, T]) extends Vec[S[L], T]
 //│ ║        	                                                         ^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.222: 	vec1 : Vec[Z, Int]
+//│ ║  l.178: 	vec1 : Vec[Z, Int]
 //│ ╙──       	           ^
 //│ Vec[Z, Int]
 //│ res

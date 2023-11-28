@@ -16,7 +16,6 @@ let res = EvalAddLit.eval(add11)
 //│ }
 //│ let res: nothing
 //│ where
-//│   'A <: Add['A] | Add[anything] & ~??E | ~??E
 //│   'E :> Add['E]
 
 

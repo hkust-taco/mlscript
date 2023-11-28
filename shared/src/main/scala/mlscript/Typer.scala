@@ -1212,13 +1212,14 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       case CaseOf(s, cs) =>
         val s_ty = typeMonomorphicTerm(s)
         if (newDefs) con(s_ty, ObjType.withProv(prov), TopType)
-        val (tys, cs_ty) = typeArms(s |>? {
+        val (tys, cs_ty) = typeArms(s_ty, s |>? {
           case v: Var => v
           case Asc(v: Var, _) => v
         }, cs)
         val req = tys.foldRight(BotType: SimpleType) {
           case ((a_ty, tv), req) => a_ty & tv | req & a_ty.neg()
         }
+        println(s"finishing case $s_ty <: $req")
         con(s_ty, req, cs_ty)
       case elf: If =>
         try typeTerm(desugarIf(elf)) catch {
@@ -1435,7 +1436,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
     }
   }(r => s"$lvl. : ${r}")
   
-  def typeArms(scrutVar: Opt[Var], arms: CaseBranches)
+  def typeArms(s_ty: ST, scrutVar: Opt[Var], arms: CaseBranches)
       (implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType], genLambdas: GenLambdas)
       : Ls[SimpleType -> SimpleType] -> SimpleType = arms match {
     case NoCases => Nil -> BotType
@@ -1489,13 +1490,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
                   lti match {
                     case dti: DelayedTypeInfo =>
                       val delc = dti.decl match { case decl: NuTypeDef => decl; case _ => die }
-                      println(s">>>d ${delc.tparams}")
                       val tag = clsNameToNomTag(delc)(prov, ctx)
                       val (ty, tyIntl) = tprmToRcd(dti.tparams)
                       println(s"Match arm $nme: $tag & $ty intl $tyIntl")
                       (tag, ty, tyIntl)
                     case CompletedTypeInfo(cls: TypedNuCls) =>
-                      println(s">>>c ${cls.virtualMembers}")
                       val tag = clsNameToNomTag(cls.td)(prov, ctx)
                       val (ty, tyIntl) = tprmToRcd(cls.tparams)
                       println(s"Match arm $nme: $tag & $ty intl $tyIntl")
@@ -1521,31 +1520,38 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
           if (newDefs) {
             val res = freshVar(provTODO, N, N)
             newCtx.copy(lvl = newCtx.lvl + 1) |> { implicit ctx =>
-              val scrt = ctx.get(v.name) match {
-                case Some(VarSymbol(ty, _)) if GADTs => ty
-                case _ => TopType
+              // val scrt = if (GADTs) s_ty else TopType
+              s_ty.unwrapProxies match {
+                case _ : TypeVariable => 
+                  println(s"s_ty ${s_ty.getClass()}")
+                  println(s"var rfn: ${v.name} :: ${tagTy} & ${patTyIntl}")
+                  newCtx += v.name -> VarSymbol(tagTy & patTyIntl, v)
+                case scrt => 
+                  println(s"s_ty ${s_ty.getClass()}")
+                  println(s"var rfn: ${v.name} :: ${scrt} & ${tagTy} & ${patTyIntl}")
+                  newCtx += v.name -> VarSymbol(scrt & tagTy & patTyIntl, v)
               }
-              println(s"var rfn: ${v.name} :: ${scrt} & ${tagTy} & ${patTyIntl}")
-              newCtx += v.name -> VarSymbol(scrt & tagTy & patTyIntl, v)
+              // newCtx += v.name -> VarSymbol(tagTy & patTyIntl, v)
               val bod_ty = typeTerm(bod)(ctx, raise, vars, genLambdas)
               implicit val tp: TP = provTODO
               constrain(bod_ty, res)
             }
-            (tagTy -> patTy, res, typeArms(scrutVar, rest))
+            (tagTy -> patTy, res, typeArms(s_ty, scrutVar, rest))
           } else { // * oldDefs:
             val tv = freshVar(tp(v.toLoc, "refined scrutinee"), N,
               // S(v.name), // this one seems a bit excessive
             )
             newCtx += v.name -> VarSymbol(tv, v)
             val bod_ty = typeTerm(bod)(newCtx, raise, vars, genLambdas)
-            (patTy -> tv, bod_ty, typeArms(scrutVar, rest))
+            (patTy -> tv, bod_ty, typeArms(s_ty, scrutVar, rest))
           }
         case N =>
           // TODO still do local reasoning here?
           val bod_ty = typeTerm(bod)(newCtx, raise, vars, genLambdas)
-          (tagTy -> TopType, bod_ty, typeArms(scrutVar, rest))
+          (tagTy -> TopType, bod_ty, typeArms(s_ty, scrutVar, rest))
       }
-      (req_ty :: tys) -> (bod_ty | rest_ty)
+     println(s"finishing branch: [$req_ty] + $tys and [$bod_ty] | $rest_ty")
+     (req_ty :: tys) -> (bod_ty | rest_ty)
   }
   
   def typeTerms(term: Ls[Statement], rcd: Bool, fields: List[Opt[Var] -> SimpleType], allowPure: Bool = false)
