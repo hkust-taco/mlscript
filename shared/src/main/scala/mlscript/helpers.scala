@@ -549,6 +549,8 @@ trait TermImpl extends StatementImpl { self: Term =>
       case Assign(lhs, rhs) => "assignment"
       case Splc(fs) => "splice"
       case New(h, b) => "object instantiation"
+      case NuNew(_) => "new instance"
+      case Rft(_, _) => "refinement"
       case If(_, _) => "if-else block"
       case TyApp(_, _) => "type application"
       case Where(_, _) => s"constraint clause"
@@ -603,6 +605,7 @@ trait TermImpl extends StatementImpl { self: Term =>
     case Assign(lhs, rhs) => s" $lhs <- $rhs" |> bra
     case New(S((at, ar)), bod) => s"new ${at.showDbg2}($ar) ${bod.showDbg}" |> bra
     case New(N, bod) => s"new ${bod.showDbg}" |> bra
+    case NuNew(cls) => s"new ${cls.print(false)}" |> bra
     case If(body, els) => s"if $body" + els.fold("")(" else " + _) |> bra
     case TyApp(lhs, targs) => s"$lhs‹${targs.map(_.showDbg2).mkString(", ")}›"
     case Where(bod, wh) => s"${bod} where {${wh.mkString("; ")}}"
@@ -612,6 +615,7 @@ trait TermImpl extends StatementImpl { self: Term =>
     case Eqn(lhs, rhs) => s"${lhs} = ${rhs}"
     case AdtMatchWith(cond, arms) =>
       s"match ${cond} with ${arms.map (patmat => s"${patmat.pat} -> ${patmat.rhs}").mkString (" | ") }"
+    case Rft(bse, tu) => s"${bse} { ${tu} }"
   }}
   
   def toTypeRaise(implicit raise: Raise): Type = toType match {
@@ -983,6 +987,8 @@ trait StatementImpl extends Located { self: Statement =>
     case d @ NuFunDef(_, v, v2, ts, rhs) => v :: v2.toList ::: ts ::: d.body :: Nil
     case TyApp(lhs, targs) => lhs :: targs
     case New(base, bod) => base.toList.flatMap(ab => ab._1 :: ab._2 :: Nil) ::: bod :: Nil
+    case NuNew(cls) => cls :: Nil
+    case Rft(bs, tu) => bs :: tu :: Nil
     case Where(bod, wh) => bod :: wh
     case Forall(ps, bod) => ps ::: bod :: Nil
     case Inst(bod) => bod :: Nil

@@ -1,3 +1,167 @@
 :NewDefs
 
 
+// ;;
+// :
+// new A.B
+
+
+
+module Foo { val a = 1 }
+//│ module Foo {
+//│   val a: 1
+//│ }
+
+Foo.a
+//│ 1
+//│ res
+//│     = 1
+
+
+
+:e
+123 { 4 }
+//│ ╔══[ERROR] Refinement terms are not yet supported
+//│ ║  l.23: 	123 { 4 }
+//│ ╙──      	^^^^^^^^^
+//│ error
+//│ Code generation encountered an error:
+//│   cannot generate code for term Rft(IntLit(123), ...)
+
+
+class A
+//│ class A {
+//│   constructor()
+//│ }
+
+:e
+new A { }
+//│ ╔══[ERROR] Refinement terms are not yet supported
+//│ ║  l.38: 	new A { }
+//│ ╙──      	^^^^^^^^^
+//│ error
+//│ Code generation encountered an error:
+//│   cannot generate code for term Rft(NuNew(Var(A)), ...)
+
+
+
+
+:w
+class Foo { constructor(x: Int){};; val y = 2 }
+//│ ╔══[WARNING] Pure expression does nothing in statement position.
+//│ ║  l.50: 	class Foo { constructor(x: Int){};; val y = 2 }
+//│ ╙──      	                                 ^^
+//│ class Foo {
+//│   constructor(x: Int)
+//│   val y: 2
+//│ }
+
+:pe
+:e
+class Foo { constructor(x: Int){}; val y = 2 }
+//│ ╔══[PARSE ERROR] Unexpected operator in expression position
+//│ ║  l.61: 	class Foo { constructor(x: Int){}; val y = 2 }
+//│ ╙──      	                                 ^
+//│ ╔══[PARSE ERROR] Unexpected 'val' keyword in expression position
+//│ ║  l.61: 	class Foo { constructor(x: Int){}; val y = 2 }
+//│ ╙──      	                                   ^^^
+//│ ╔══[ERROR] Unexpected equation in this position
+//│ ║  l.61: 	class Foo { constructor(x: Int){}; val y = 2 }
+//│ ╙──      	                                       ^^^^^
+//│ class Foo {
+//│   constructor(x: Int)
+//│ }
+//│ Syntax error:
+//│   Private field '#y' must be declared in an enclosing class
+
+class Foo {
+  constructor(x: Int){}
+  val y = 2
+}
+//│ class Foo {
+//│   constructor(x: Int)
+//│   val y: 2
+//│ }
+
+:e
+Foo
+//│ ╔══[ERROR] Construction of unparameterized class Foo should use the `new` keyword
+//│ ║  l.87: 	Foo
+//│ ╙──      	^^^
+//│ (x: Int) -> Foo
+//│ res
+//│     = [class Foo]
+
+// :d
+:e
+new Foo
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.97: 	new Foo
+//│ ║        	    ^^^
+//│ ╟── argument list of type `[]` does not match type `[x: Int]`
+//│ ║  l.97: 	new Foo
+//│ ╙──      	       ^
+//│ Foo | error
+//│ res
+//│     = Foo {}
+
+:e
+let f = new Foo
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.109: 	let f = new Foo
+//│ ║         	            ^^^
+//│ ╟── argument list of type `[]` does not match type `[x: Int]`
+//│ ║  l.109: 	let f = new Foo
+//│ ╙──       	               ^
+//│ let f: Foo | error
+//│ f
+//│   = Foo {}
+
+:e
+f(1)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.121: 	f(1)
+//│ ║         	^^^^
+//│ ╟── application of type `Foo` is not a function
+//│ ║  l.109: 	let f = new Foo
+//│ ║         	            ^^^
+//│ ╟── but it flows into reference with expected type `1 -> ?a`
+//│ ║  l.121: 	f(1)
+//│ ╙──       	^
+//│ error
+//│ res
+//│ Runtime error:
+//│   TypeError: f is not a function
+
+
+new Foo(2)
+//│ Foo
+//│ res
+//│     = Foo {}
+
+// new Foo("2")
+
+:e
+new Foo()
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.145: 	new Foo()
+//│ ║         	^^^^^^^^^
+//│ ╟── argument list of type `[]` does not match type `[x: Int]`
+//│ ║  l.145: 	new Foo()
+//│ ╙──       	       ^^
+//│ Foo | error
+//│ res
+//│     = Foo {}
+
+
+// :dp
+new Foo(1).y
+//│ 2
+//│ res
+//│     = 2
+
+
+
+
+
+

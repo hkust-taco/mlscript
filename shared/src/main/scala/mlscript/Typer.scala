@@ -1005,6 +1005,46 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         val body_ty = typeTerm(body)(newCtx, raise, vars,
           generalizeCurriedFunctions || doGenLambdas)
         FunctionType(param_ty, body_ty)(tp(term.toLoc, "function"))
+      case NuNew(cls) => typeMonomorphicTerm(App(NuNew(cls), Tup(Nil).withLoc(term.toLoc.map(_.right))))
+      case app @ App(nw @ NuNew(cls), args) =>
+        cls match {
+          case _: TyApp => // * TODO improve (hacky)
+            err(msg"Type arguments in `new` expressions are not yet supported", prov.loco)
+          case _ => 
+        }
+        val cls_ty = typeType(cls.toTypeRaise)
+        def process(clsNme: Str) = {
+            println(clsNme, ctx.tyDefs2.get(clsNme))
+            ctx.tyDefs2.get(clsNme) match {
+              case N =>
+                err(msg"Type `${clsNme}` cannot be used in `new` expression", term.toLoc)
+              case S(lti) =>
+                def checkNotAbstract(decl: NuDecl) =
+                  if (decl.isAbstract)
+                    err(msg"Class ${decl.name} is abstract and cannot be instantiated", term.toLoc)
+                lti match {
+                  case dti: DelayedTypeInfo if !(dti.kind is Cls) =>
+                    err(msg"${dti.kind.str.capitalize} ${dti.name} cannot be used in `new` expression",
+                      prov.loco)
+                  case dti: DelayedTypeInfo =>
+                    checkNotAbstract(dti.decl)
+                    dti.typeSignature(true, prov.loco)
+                }
+            }
+        }
+        val new_ty = cls_ty.unwrapProxies match {
+          case TypeRef(clsNme, targs) =>
+            // FIXME don't disregard `targs`
+            process(clsNme.name)
+          case err @ ClassTag(ErrTypeId, _) => err
+          case ClassTag(Var(clsNme), _) => process(clsNme)
+          case _ =>
+            // * Debug with: ${cls_ty.getClass.toString}
+            err(msg"Unexpected type `${cls_ty.expPos}` after `new` keyword" -> cls.toLoc :: Nil)
+        }
+        val res = freshVar(prov, N)
+        val argProv = tp(args.toLoc, "argument list")
+        con(new_ty, FunctionType(typeTerm(args).withProv(argProv), res)(noProv), res)
       case App(App(Var("is"), _), _) => // * Old-style operators
         val desug = If(IfThen(term, Var("true")), S(Var("false")))
         term.desugaredTerm = S(desug)
@@ -1349,42 +1389,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
           }
         }
         ret_ty
-      case New(S((nmedTy, trm)), TypingUnit(Nil)) if !newDefs =>
-        typeMonomorphicTerm(App(Var(nmedTy.base.name).withLocOf(nmedTy), trm))
-      case nw @ New(S((nmedTy, trm: Tup)), TypingUnit(Nil)) if newDefs =>
-        typeMonomorphicTerm(App(New(S((nmedTy, UnitLit(true))), TypingUnit(Nil)).withLocOf(nw), trm))
-      case New(S((nmedTy, UnitLit(true))), TypingUnit(Nil)) if newDefs =>
-        if (nmedTy.targs.nonEmpty)
-          err(msg"Type arguments in `new` expressions are not yet supported", prov.loco)
-        ctx.get(nmedTy.base.name).fold(err("identifier not found: " + nmedTy.base, term.toLoc): ST) {
-          case AbstractConstructor(absMths, traitWithMths) => die
-          case VarSymbol(ty, _) =>
-            err(msg"Cannot use `new` on non-class variable of type ${ty.expPos}", term.toLoc)
-          case lti: LazyTypeInfo =>
-            def checkNotAbstract(decl: NuDecl) =
-              if (decl.isAbstract)
-                err(msg"Class ${decl.name} is abstract and cannot be instantiated", term.toLoc)
-            lti match {
-              case ti: CompletedTypeInfo =>
-                ti.member match {
-                  case _: TypedNuFun | _: NuParam =>
-                    err(msg"${ti.member.kind.str.capitalize} ${ti.member.name
-                      } cannot be used in `new` expression", prov.loco)
-                  case ti: TypedNuCls =>
-                    checkNotAbstract(ti.decl)
-                    ti.typeSignature(true, prov.loco)
-                  case ti: TypedNuDecl =>
-                    err(msg"${ti.kind.str.capitalize} ${ti.name
-                      } cannot be used in term position", prov.loco)
-                }
-              case dti: DelayedTypeInfo if !(dti.kind is Cls) =>
-                    err(msg"${dti.kind.str.capitalize} ${dti.name
-                      } cannot be used in `new` expression", prov.loco)
-              case dti: DelayedTypeInfo =>
-                checkNotAbstract(dti.decl)
-                dti.typeSignature(true, prov.loco)
-            }
-        }
       case New(base, args) => err(msg"Currently unsupported `new` syntax", term.toCoveringLoc)
       case TyApp(base, _) =>
         err(msg"Type application syntax is not yet supported", term.toLoc) // TODO handle
@@ -1418,6 +1422,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         res
       case Eqn(lhs, rhs) =>
         err(msg"Unexpected equation in this position", term.toLoc)
+      case Rft(bse, tu) =>
+        err(msg"Refinement terms are not yet supported", term.toLoc)
     }
   }(r => s"$lvl. : ${r}")
   
