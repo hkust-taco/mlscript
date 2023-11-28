@@ -16,10 +16,6 @@ let res = EvalAddLit.eval(add11)
 //│ }
 //│ let res: nothing
 //│ where
-<<<<<<< HEAD
-=======
-//│   'A <: Add['A]
->>>>>>> hkust-taco/new-definition-typing
 //│   'E :> Add['E]
 
 

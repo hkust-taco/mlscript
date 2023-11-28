@@ -360,11 +360,7 @@ fun mk(n) = if n is
   _ then Scale(Vector(0, 0), mk(n))
 //│ fun mk: forall 'a. Object -> 'a
 //│   where
-<<<<<<< HEAD
-//│     'a :> Intersect['a] | Outside['a] | Scale['a] | Translate['a] | Union['a]
-=======
 //│     'a :> Outside['a] | Translate['a] | Scale['a] | Union['a] | Intersect['a]
->>>>>>> hkust-taco/new-definition-typing
 
 :re
 TestElim.eliminate(mk(100))

@@ -52,43 +52,8 @@ module TestLang extends EvalBase, EvalNeg, EvalNegNeg
 //│   fun eval: (Neg['A] | Object & 'a & ~#Neg) -> Int
 //│ }
 //│ where
-<<<<<<< HEAD
 //│   'A <: Neg['A & (Neg['A] | Object & 'a & ~#Neg | ~??A)] | Neg['A] & ~#Neg | Object & 'a & ~#Neg | ~??A0 & (Neg[Neg['A] | 'a & (Object & ~#Neg | ~#Neg & ~??A) | ~??A] | Object & ~#Neg) | ~??A1
 //│   'a <: Add[Neg['A] | 'a & (Object & ~#Neg | ~#Neg & ~??E) | ~??E] | Lit | Neg[Neg['A] | 'a & (Object & ~#Neg | ~#Neg & ~??A0) | ~??A0]
-
-
-fun mk(n) = if n is
-  0 then Lit(3)
-  1 then Neg(mk(n - 1))
-  _ then Add(mk(n - 1), mk(n - 1))
-//│ fun mk: forall 'E. (0 | 1 | Int & ~0 & ~1) -> 'E
-//│   where
-//│     'E :> Add['E] | Lit | Neg['E]
-
-TestLang.eval(mk(0))
-//│ Int
-//│ res
-//│     = 3
-
-TestLang.eval(mk(11))
-//│ Int
-//│ res
-//│     = -3072
-
-
-
-module TestLang extends EvalBase, EvalNeg, EvalNegNeg
-//│ module TestLang {
-//│   fun eval: (Neg['A] | Object & 'a & ~#Neg) -> Int
-//│ }
-//│ where
-//│   'A <: Neg['A & (Neg['A] | Object & 'a & ~#Neg | ~??A)] | Neg['A] & ~#Neg | Object & 'a & ~#Neg | ~??A0 & (Neg[Neg['A] | 'a & (Object & ~#Neg | ~#Neg & ~??A) | ~??A] | Object & ~#Neg) | ~??A1
-//│   'a <: Add[Neg['A] | 'a & (Object & ~#Neg | ~#Neg & ~??E) | ~??E] | Lit | Neg[Neg['A] | 'a & (Object & ~#Neg | ~#Neg & ~??A0) | ~??A0]
-=======
-//│   'A <: Neg['A & 'b] | Neg['A] & ~#Neg | Object & 'a & ~#Neg
-//│   'b <: Neg['A] | Object & 'a & ~#Neg
-//│   'a <: Add['b] | Lit | Neg['b]
->>>>>>> hkust-taco/new-definition-typing
 
 
 fun mk(n) = if n is

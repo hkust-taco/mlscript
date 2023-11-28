@@ -15,7 +15,7 @@ class D(x: Int)
 
 :e
 fun foo(c) = new c
-//│ ╔══[ERROR] type identifier not found: c
+//│ ╔══[ERROR] Unexpected type `?a` after `new` keyword
 //│ ║  l.17: 	fun foo(c) = new c
 //│ ╙──      	                 ^
 //│ fun foo: anything -> error
@@ -39,7 +39,7 @@ foo(C)
 
 :e
 fun bar(c) = new c(123)
-//│ ╔══[ERROR] type identifier not found: c
+//│ ╔══[ERROR] Unexpected type `?a` after `new` keyword
 //│ ║  l.41: 	fun bar(c) = new c(123)
 //│ ╙──      	                 ^
 //│ fun bar: anything -> error
@@ -108,7 +108,7 @@ let y: c.A = c.x
 //│ ║         	        ^^
 //│ ╟── application of type `forall ?A. Cls[?A]` does not have field 'A'
 //│ ║  l.96: 	let c = new Cls
-//│ ╙──      	        ^^^^^^^
+//│ ╙──      	            ^^^
 //│ let y: error
 //│ y
 //│ Runtime error:

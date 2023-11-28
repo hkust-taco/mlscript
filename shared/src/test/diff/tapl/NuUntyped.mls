@@ -233,13 +233,13 @@ fun fv(t) =
     Var(name) then list1(name)
     Abs(Var(name), body) then listWithout(fv(body), name)
     App(lhs, rhs) then listConcat(fv(lhs), fv(rhs))
-//│ fun fv: forall 'A 'A0 'A1. (Abs | App | Var) -> (Cons[in 'A1 out 'A] | Cons[in 'A0 out 'A] | Nil)
+//│ fun fv: forall 'A 'A0 'A1. (Abs | App | Var) -> (Cons[in 'A out 'A0] | Cons[in 'A1 out 'A0] | Nil)
 //│   where
-//│     'A1 :> 'A | ??A & (Str | 'A)
-//│         <: 'A0
-//│     'A :> 'A0 | 'A1
-//│     'A0 :> 'A | ??A & 'A | ??A0 & 'A
-//│         <: 'A1 | ~??A
+//│     'A :> 'A0 | ??A & 'A0 | ??A0 & 'A0
+//│        <: 'A1 | ~??A
+//│     'A0 :> 'A | 'A1
+//│     'A1 :> 'A0 | ??A & 'A0
+//│         <: 'A
 
 fun showFv(t) =
   showTerm(t) ++ if fv(t) is

@@ -15,7 +15,7 @@ abstract class Bar0 extends Foo0[Int]
 //│ where
 //│   'T := Int
 
-abstract class Foo[type T]: Bar | Baz {
+abstract class Foo[type T]: (Bar | Baz) {
   fun x: T
   fun f: T -> Int
 }
@@ -46,7 +46,7 @@ fun test(f: Foo) = f.f(f.x)
 //│ ║  l.19: 	  fun x: T
 //│ ║        	      ^^^^
 //│ ╟── back into type variable `T`
-//│ ║  l.18: 	abstract class Foo[type T]: Bar | Baz {
+//│ ║  l.18: 	abstract class Foo[type T]: (Bar | Baz) {
 //│ ╙──      	                        ^
 //│ fun test: (f: Foo[in anything out nothing]) -> (Int | error)
 

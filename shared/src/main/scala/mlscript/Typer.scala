@@ -21,7 +21,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
   def doFactorize: Bool = false
   def showAllErrors: Bool = false // TODO enable?
   def maxSuccessiveErrReports: Int = 3
-  def GADTs: Bool = false
+  def GADTs: Bool = false // legacy flag
   
   var generalizeCurriedFunctions: Boolean = false
   var approximateNegativeFunction: Boolean = false
@@ -1545,18 +1545,14 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
           if (newDefs) {
             val res = freshVar(provTODO, N, N)
             newCtx.copy(lvl = newCtx.lvl + 1) |> { implicit ctx =>
-              // val scrt = if (GADTs) s_ty else TopType
               s_ty.unwrapProxies match {
                 case _ : TypeVariable => 
-                  println(s"s_ty ${s_ty.getClass()}")
                   println(s"var rfn: ${v.name} :: ${tagTy} & ${patTyIntl}")
                   newCtx += v.name -> VarSymbol(tagTy & patTyIntl, v)
                 case scrt => 
-                  println(s"s_ty ${s_ty.getClass()}")
                   println(s"var rfn: ${v.name} :: ${scrt} & ${tagTy} & ${patTyIntl}")
                   newCtx += v.name -> VarSymbol(scrt & tagTy & patTyIntl, v)
               }
-              // newCtx += v.name -> VarSymbol(tagTy & patTyIntl, v)
               val bod_ty = typeTerm(bod)(ctx, raise, vars, genLambdas)
               implicit val tp: TP = provTODO
               constrain(bod_ty, res)

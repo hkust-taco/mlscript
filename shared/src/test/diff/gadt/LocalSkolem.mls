@@ -140,7 +140,7 @@ test(0).x
 
 
 
-class Foo[A]: Bar | Baz { fun f: A -> A;; fun f = id }
+class Foo[A]: (Bar | Baz) { fun f: A -> A;; fun f = id }
 module Bar extends Foo[Int]
 module Baz extends Foo[Str]
 //│ class Foo[A]: Bar | Baz {
@@ -262,7 +262,7 @@ fun test[A](f: Foo[A]) = f.f(if f is
 //│ ║  l.145: 	module Baz extends Foo[Str]
 //│ ║         	                       ^^^
 //│ ╟── Note: type parameter A is defined at:
-//│ ║  l.143: 	class Foo[A]: Bar | Baz { fun f: A -> A;; fun f = id }
+//│ ║  l.143: 	class Foo[A]: (Bar | Baz) { fun f: A -> A;; fun f = id }
 //│ ╙──       	          ^
 //│ fun test: forall 'A. (f: Foo['A]) -> (Int | Str | error)
 

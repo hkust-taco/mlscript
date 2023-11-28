@@ -54,13 +54,8 @@ class Foo(x: Int)
 
 :e
 Foo(1).x
-<<<<<<< HEAD
 //│ ╔══[ERROR] Parameter 'x' cannot be accessed as a field
-//│ ║  l.63: 	Foo(1).x
-=======
-//│ ╔══[ERROR] Parameter 'x' cannot tbe accessed as a field
 //│ ║  l.56: 	Foo(1).x
->>>>>>> hkust-taco/new-definition-typing
 //│ ║        	      ^^
 //│ ╟── Either make the parameter a `val` or access it through destructuring
 //│ ║  l.52: 	class Foo(x: Int)
@@ -113,13 +108,8 @@ class Bar(x: Int) extends Foo(x)
 
 :e
 Bar(11).x
-<<<<<<< HEAD
 //│ ╔══[ERROR] Parameter 'x' cannot be accessed as a field
-//│ ║  l.117: 	Bar(11).x
-=======
-//│ ╔══[ERROR] Parameter 'x' cannot tbe accessed as a field
 //│ ║  l.110: 	Bar(11).x
->>>>>>> hkust-taco/new-definition-typing
 //│ ║         	       ^^
 //│ ╟── Either make the parameter a `val` or access it through destructuring
 //│ ║  l.100: 	class Bar(x: Int) extends Foo(x)
@@ -190,13 +180,8 @@ module B extends A(42)
 
 :e
 B.x
-<<<<<<< HEAD
 //│ ╔══[ERROR] Parameter 'x' cannot be accessed as a field
-//│ ║  l.189: 	B.x
-=======
-//│ ╔══[ERROR] Parameter 'x' cannot tbe accessed as a field
 //│ ║  l.182: 	B.x
->>>>>>> hkust-taco/new-definition-typing
 //│ ║         	 ^^
 //│ ╟── Either make the parameter a `val` or access it through destructuring
 //│ ║  l.175: 	class A(x: Int)

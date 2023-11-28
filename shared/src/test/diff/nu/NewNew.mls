@@ -148,7 +148,7 @@ fun f(x) = {x}
 
 :e
 new f(1)
-//│ ╔══[ERROR] type identifier not found: f
+//│ ╔══[ERROR] Unexpected type `forall ?a. ?a -> {x: ?a}` after `new` keyword
 //│ ║  l.150: 	new f(1)
 //│ ╙──       	    ^
 //│ error
