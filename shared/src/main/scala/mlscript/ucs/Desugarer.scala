@@ -371,12 +371,12 @@ class Desugarer extends TypeDefs { self: Typer =>
     if (exhaustivenessMap.isEmpty)
       printlnUCS("  * <No entries>")
     else
-      exhaustivenessMap.foreach { case (symbol, patternMap) =>
+      exhaustivenessMap.foreachEntry { (symbol, patternMap) =>
         printlnUCS(s"  * Patterns of $symbol")
         if (patternMap.isEmpty)
           printlnUCS(s"    + <No patterns>")
         else
-          patternMap.foreach { case (pattern, locations) =>
+          patternMap.foreachEntry { (pattern, locations) =>
             val first = pattern match {
               case Left(tupleArity) => s"()^$tupleArity"
               case Right(litOrCls) => litOrCls.toString()
@@ -706,7 +706,7 @@ class Desugarer extends TypeDefs { self: Typer =>
             printlnUCS("The match has a default branch. So, it is always safe.")
           case S(patternMap) =>
             printlnUCS(s"The exhaustiveness map is")
-            exhaustivenessMap.foreach { case (key, matches) =>
+            exhaustivenessMap.foreachEntry { (key, matches) =>
               printlnUCS(s"- $key -> ${matches.keysIterator.mkString(", ")}")
             }
             printlnUCS(s"The scrutinee key is ${getScurtineeKey(scrutinee)}")
@@ -714,7 +714,7 @@ class Desugarer extends TypeDefs { self: Typer =>
             if (patternMap.isEmpty)
               printlnUCS("<Empty>")
             else
-              patternMap.foreach { case (key, mutCase) => printlnUCS(s"- $key => $mutCase")}
+              patternMap.foreachEntry { (key, mutCase) => printlnUCS(s"- $key => $mutCase")}
             // Compute all classes that can be covered by this match.
             val coveredClassNames = Set.from[String](branches.iterator.flatMap {
               case MutCase.Literal(_, _) => Nil
@@ -742,7 +742,7 @@ class Desugarer extends TypeDefs { self: Typer =>
               case R(_) -> _ => true // Literals. Don't remove.
             }
             printlnUCS("Missing cases")
-            missingCases.foreach { case (key, m) =>
+            missingCases.foreachEntry { (key, m) =>
               printlnUCS(s"- $key -> ${m}")
             }
             if (!missingCases.isEmpty) {
@@ -1030,7 +1030,7 @@ object Desugarer {
     if (graph.isEmpty)
       print("  + <Empty>")
     else
-      graph.foreach { case (source, targets) =>
+      graph.foreachEntry { (source, targets) =>
         print(s"  + $source $arrow " + {
           if (targets.isEmpty) s"{}"
           else targets.mkString("{ ", ", ", " }")

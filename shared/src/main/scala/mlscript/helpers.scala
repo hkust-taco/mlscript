@@ -549,6 +549,8 @@ trait TermImpl extends StatementImpl { self: Term =>
       case Assign(lhs, rhs) => "assignment"
       case Splc(fs) => "splice"
       case New(h, b) => "object instantiation"
+      case NuNew(_) => "new instance"
+      case Rft(_, _) => "refinement"
       case If(_, _) => "if-else block"
       case TyApp(_, _) => "type application"
       case Where(_, _) => s"constraint clause"
@@ -604,6 +606,7 @@ trait TermImpl extends StatementImpl { self: Term =>
     case Assign(lhs, rhs) => s" $lhs <- $rhs" |> bra
     case New(S((at, ar)), bod) => s"new ${at.showDbg2}($ar) ${bod.showDbg}" |> bra
     case New(N, bod) => s"new ${bod.showDbg}" |> bra
+    case NuNew(cls) => s"new ${cls.print(false)}" |> bra
     case If(body, els) => s"if $body" + els.fold("")(" else " + _) |> bra
     case TyApp(lhs, targs) => s"$lhs‹${targs.map(_.showDbg2).mkString(", ")}›"
     case Where(bod, wh) => s"${bod} where {${wh.mkString("; ")}}"
@@ -614,6 +617,7 @@ trait TermImpl extends StatementImpl { self: Term =>
     case AdtMatchWith(cond, arms) =>
       s"match ${cond} with ${arms.map (patmat => s"${patmat.pat} -> ${patmat.rhs}").mkString (" | ") }"
     case WildcardType() => "?"
+    case Rft(bse, tu) => s"${bse} { ${tu} }"
   }}
   
   def toTypeRaise(implicit raise: Raise): Type = toType match {
@@ -624,7 +628,7 @@ trait TermImpl extends StatementImpl { self: Term =>
     try R(toType_!.withLocOf(this)) catch {
       case e: NotAType =>
         import Message._
-        L(ErrorReport(msg"not a recognized type" -> e.trm.toLoc::Nil, newDefs=true)) }
+        L(ErrorReport(msg"Not a recognized type" -> e.trm.toLoc::Nil, newDefs=true)) }
   protected def toType_! : Type = (this match {
     case Var(name) if name.startsWith("`") => TypeVar(R(name.tail), N)
     case Var(name) if name.startsWith("'") => TypeVar(R(name), N)
@@ -719,6 +723,14 @@ trait LitImpl { self: Lit =>
 }
 
 trait VarImpl { self: Var =>
+  /** Check if the variable name is an integer. */
+  def isIndex: Bool = name.headOption match {
+    case S('0') => name.length === 1
+    case S(_) => name.forall(_.isDigit)
+    case N => false
+  }
+  /** Get the integer if it's a valid index. */
+  def toIndexOption: Opt[Int] = if (isIndex) name.toIntOption else N
   def isPatVar: Bool =
     (name.head.isLetter && name.head.isLower || name.head === '_' || name.head === '$') && name =/= "true" && name =/= "false"
   def toVar: Var = this
@@ -979,6 +991,8 @@ trait StatementImpl extends Located { self: Statement =>
     case d @ NuFunDef(_, v, v2, ts, rhs) => v :: v2.toList ::: ts ::: d.body :: Nil
     case TyApp(lhs, targs) => lhs :: targs
     case New(base, bod) => base.toList.flatMap(ab => ab._1 :: ab._2 :: Nil) ::: bod :: Nil
+    case NuNew(cls) => cls :: Nil
+    case Rft(bs, tu) => bs :: tu :: Nil
     case Where(bod, wh) => bod :: wh
     case Forall(ps, bod) => ps ::: bod :: Nil
     case Inst(bod) => bod :: Nil

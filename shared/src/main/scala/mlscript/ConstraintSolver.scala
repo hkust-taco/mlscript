@@ -1589,7 +1589,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case tr @ TypeRef(d, ts) => TypeRef(d, ts.map(freshen(_)))(tr.prov)
       case pt @ PolymorphicType(polyLvl, bod) if pt.level <= above => pt // is this really useful?
       case pt @ PolymorphicType(polyLvl, bod) =>
-        if (lvl > polyLvl) freshen(pt.raiseLevelTo(lvl))
+        if (lvl > polyLvl) freshen(pt.raiseLevelToImpl(lvl, leaveAlone))
         else PolymorphicType(polyLvl, freshenImpl(bod, below = below min polyLvl))
       case ct @ ConstrainedType(cs, bod) =>
         val cs2 = cs.map(lu => freshen(lu._1) -> freshen(lu._2))

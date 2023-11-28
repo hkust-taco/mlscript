@@ -220,14 +220,14 @@ x => {l: x x, r: x }
 //│ ║  l.+1: 	(f => (x => f (v => (x x) v)) (x => f (v => (x x) v))) (f => x => f)
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
-//│ res: error | 'a
+//│ res: error | anything -> anything -> anything -> 'a
 //│   where
-//│     'a :> anything -> 'a
+//│     'a :> forall 'a. anything -> 'a
 
 res 1 2
-//│ res: error | 'a
+//│ res: error | anything -> 'a
 //│   where
-//│     'a :> anything -> 'a
+//│     'a :> forall 'a. anything -> 'a
 
 
 let rec trutru = g => trutru (g true)
@@ -359,30 +359,26 @@ x => (y => (x (y y)))
 //│ res: ('a -> 'b) -> ('c -> 'a & 'c) -> 'b
 
 (let rec x = (let y = (x x); (z => z)); x)
-//│ res: 'x
+//│ res: 'a -> 'a
 //│   where
-//│     'x :> 'a -> 'a
-//│     'a :> 'x
+//│     'a :> 'a -> 'a
 
 (let rec x = (y => (let z = (x x); y)); x)
-//│ res: 'x
+//│ res: 'a -> 'a
 //│   where
-//│     'x :> 'a -> 'a
-//│     'a :> 'x
+//│     'a :> 'a -> 'a
 
 (let rec x = (y => {u: y, v: (x x)}); x)
-//│ res: 'x
+//│ res: 'a -> 'b
 //│   where
-//│     'x :> 'a -> 'b
+//│     'a :> 'a -> 'b
 //│     'b :> {u: 'a, v: 'b}
-//│     'a :> 'x
 
 (let rec x = (y => {u: (x x), v: y}); x)
-//│ res: 'x
+//│ res: 'a -> 'b
 //│   where
-//│     'x :> 'a -> 'b
+//│     'a :> 'a -> 'b
 //│     'b :> {u: 'b, v: 'a}
-//│     'a :> 'x
 
 (let rec x = (y => (let z = (y x); y)); x)
 //│ res: 'x
@@ -394,10 +390,9 @@ x => (y => (x (y y)))
 //│ res: ('v -> anything & {v: 'v}) -> 0
 
 let rec x = (let y = (x x); (z => z)); (x (y => y.u)) // [test:T1]
-//│ x: 'x
+//│ x: 'a -> 'a
 //│   where
-//│     'x :> 'a -> 'a
-//│     'a :> 'x
+//│     'a :> 'a -> 'a
 //│ res: ({u: 'u} & 'a) -> ('u | 'a) | 'b
 //│   where
 //│     'a :> forall 'u. ({u: 'u} & 'a) -> ('u | 'a)

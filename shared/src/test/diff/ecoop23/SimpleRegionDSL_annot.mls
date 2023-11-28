@@ -49,15 +49,15 @@ fun go(x, offset) =
   else
     let shared = go(x - 1, round(offset / 2))
     Union(Translate(Vector(0 - offset, 0), shared), Translate(Vector(offset, 0), shared))
-//│ fun go: forall 'Region. (0 | Int & ~0, Int) -> 'Region
+//│ fun go: forall 'a. (0 | Int & ~0, Int) -> (Circle | 'a)
 //│   where
-//│     'Region :> Circle | Union[Translate['Region]]
+//│     'a :> Union[Translate[Circle | 'a]]
 
 // * Note that first-class polymorphism manages (correctly) to preserve the universal quantification
 let circles = go(2, 1024)
-//│ let circles: forall 'Region. 'Region
+//│ let circles: forall 'a. Circle | 'a
 //│   where
-//│     'Region :> Circle | Union[Translate['Region]]
+//│     'a :> Union[Translate[Circle | 'a]]
 //│ circles
 //│         = Union {}
 
@@ -360,7 +360,11 @@ fun mk(n) = if n is
   _ then Scale(Vector(0, 0), mk(n))
 //│ fun mk: forall 'a. Object -> 'a
 //│   where
+<<<<<<< HEAD
 //│     'a :> Intersect['a] | Outside['a] | Scale['a] | Translate['a] | Union['a]
+=======
+//│     'a :> Outside['a] | Translate['a] | Scale['a] | Union['a] | Intersect['a]
+>>>>>>> hkust-taco/new-definition-typing
 
 :re
 TestElim.eliminate(mk(100))

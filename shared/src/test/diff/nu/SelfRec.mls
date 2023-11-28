@@ -126,7 +126,7 @@ Foo3(1).foo
 class Foo4 {
   fun test = [Foo4.test]
 }
-//│ ╔══[ERROR] Class Foo4 cannot be instantiated as it exposes no such constructor
+//│ ╔══[ERROR] Class Foo4 cannot be instantiated as it exposes no constructor
 //│ ║  l.127: 	  fun test = [Foo4.test]
 //│ ╙──       	              ^^^^
 //│ class Foo4 {

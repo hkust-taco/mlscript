@@ -228,7 +228,7 @@ a
 //│ ╔══[PARSE ERROR] Unexpected selector in operator block
 //│ ║  l.226: 	  .b
 //│ ╙──       	  ^^
-//│ Parsed: {*(...(+(...a)(...1)))(...2)}
+//│ Parsed: {*(+(a, 1,), 2,)}
 
 
 1 .+ 2

@@ -2,7 +2,7 @@
 
 
 class C(val x: Int) { constructor(y: Int) { x = y } }
-C(123).x
+new C(123).x
 //│ class C(x: Int) {
 //│   constructor(y: Int)
 //│ }
@@ -11,7 +11,7 @@ C(123).x
 //│     = 123
 
 class C(val x: Int) { constructor(y) { x = y } }
-C(123).x
+new C(123).x
 //│ class C(x: Int) {
 //│   constructor(y: Int)
 //│ }
@@ -20,7 +20,7 @@ C(123).x
 //│     = 123
 
 class C(val x: Int) { constructor(y: Int) { log(y);; x = y;; log(x) } }
-C(123).x
+new C(123).x
 //│ class C(x: Int) {
 //│   constructor(y: Int)
 //│ }
@@ -33,7 +33,7 @@ C(123).x
 
 :e
 class C(val x: Int) { constructor(y: Int) { x = y;; log(x);; x = y + 1;; log(x) } }
-C(123).x
+new C(123).x
 //│ ╔══[ERROR] Class parameter 'x' was already set
 //│ ║  l.35: 	class C(val x: Int) { constructor(y: Int) { x = y;; log(x);; x = y + 1;; log(x) } }
 //│ ╙──      	                                                             ^
@@ -127,20 +127,24 @@ class C(val x: Int, y: Int) {
 
 :e
 C(11)
-//│ ╔══[ERROR] Type mismatch in application:
+//│ ╔══[ERROR] Construction of class with auxiliary constructor should use the `new` keyword
 //│ ║  l.129: 	C(11)
-//│ ║         	^^^^^
-//│ ╟── argument of type `[11]` does not match type `[x: Int, y: Int]`
-//│ ║  l.129: 	C(11)
-//│ ╙──       	 ^^^^
-//│ C | error
+//│ ╙──       	^
+//│ C
 //│ res
 //│     = C {}
 //│ // Output
 //│ [ 11, 11 ]
 
-C(1, 2)
-//│ C
+:e
+new C(1, 2)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.140: 	new C(1, 2)
+//│ ║         	^^^^^^^^^^^
+//│ ╟── tuple literal of type `[1, 2]` does not match type `[z: Int]`
+//│ ║  l.140: 	new C(1, 2)
+//│ ╙──       	     ^^^^^^
+//│ C | error
 //│ res
 //│     = C {}
 //│ // Output
@@ -156,10 +160,10 @@ new C(11)
 :e
 new C(1, 2)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.157: 	new C(1, 2)
+//│ ║  l.161: 	new C(1, 2)
 //│ ║         	^^^^^^^^^^^
-//│ ╟── argument list of type `[1, 2]` does not match type `[z: Int]`
-//│ ║  l.157: 	new C(1, 2)
+//│ ╟── tuple literal of type `[1, 2]` does not match type `[z: Int]`
+//│ ║  l.161: 	new C(1, 2)
 //│ ╙──       	     ^^^^^^
 //│ C | error
 //│ res
@@ -168,10 +172,14 @@ new C(1, 2)
 //│ [ 1, 1 ]
 
 :pe
+:w
 class C { constructor(x: Int);; constructor(y: Int) }
 //│ ╔══[PARSE ERROR] A class may have at most one explicit constructor
-//│ ║  l.171: 	class C { constructor(x: Int);; constructor(y: Int) }
+//│ ║  l.176: 	class C { constructor(x: Int);; constructor(y: Int) }
 //│ ╙──       	^^^^^
+//│ ╔══[WARNING] Pure expression does nothing in statement position.
+//│ ║  l.176: 	class C { constructor(x: Int);; constructor(y: Int) }
+//│ ╙──       	                             ^^
 //│ class C {
 //│   constructor(x: Int)
 //│ }

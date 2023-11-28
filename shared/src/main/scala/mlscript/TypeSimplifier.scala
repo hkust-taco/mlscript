@@ -420,20 +420,10 @@ trait TypeSimplifier { self: Typer =>
                     val arity = fs.size
                     val (componentFields, rcdFields) = rcd.fields
                       .filterNot(traitPrefixes contains _._1.name.takeWhile(_ =/= '#'))
-                      .partitionMap(f =>
-                        if (f._1.name.length > 1 && f._1.name.startsWith("_")) {
-                          val namePostfix = f._1.name.tail
-                          if (namePostfix.forall(_.isDigit)) {
-                            val index = namePostfix.toInt
-                            if (index <= arity && index > 0) L(index -> f._2)
-                            else R(f)
-                          }
-                          else R(f)
-                        } else R(f)
-                      )
+                      .partitionMap(f => f._1.toIndexOption.filter((0 until arity).contains).map(_ -> f._2).toLeft(f))
                     val componentFieldsMap = componentFields.toMap
                     val tupleComponents = fs.iterator.zipWithIndex.map { case ((nme, ty), i) =>
-                      nme -> (ty && componentFieldsMap.getOrElse(i + 1, TopType.toUpper(noProv))).update(go(_, pol.map(!_)), go(_, pol))
+                      nme -> (ty && componentFieldsMap.getOrElse(i, TopType.toUpper(noProv))).update(go(_, pol.map(!_)), go(_, pol))
                     }.toList
                     S(TupleType(tupleComponents)(tt.prov)) -> rcdFields.mapValues(_.update(go(_, pol.map(!_)), go(_, pol)))
                   case S(ct: ClassTag) => S(ct) -> nFields
@@ -1135,7 +1125,7 @@ trait TypeSimplifier { self: Typer =>
       case (tv, S(pol)) =>
         if (pol) (true, tv.lowerBounds.foldLeft(BotType: ST)(_ | _)) -> tv
         else (false, tv.upperBounds.foldLeft(TopType: ST)(_ &- _)) -> tv
-    }.toMap
+    }.filter { case ((pol, bnd), tv) => bnd.getVarsImpl(includeBounds = false).contains(tv) }.toMap
     
     println(s"consed: $consed")
     
@@ -1317,7 +1307,6 @@ trait TypeSimplifier { self: Typer =>
       // *  by merging things like function types together...
       // * So we need another pass of simplification!
       cur = simplifyType(cur, removePolarVars, pol)
-      // cur = simplifyType(simplifyType(cur)(ct)
       debugOutput(s"⬤ Resim: ${cur}")
       debugOutput(s" where: ${cur.showBounds}")
       

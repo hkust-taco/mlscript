@@ -22,10 +22,14 @@ class Success[out A](result: A)
 fun list_assoc(s, l) =
   if l is
     Cons(h, t) then
-      if s === h._1 then Success(h._2)
+      if s === h.0 then Success(h.1)
       else list_assoc(s, t)
     Nil then NotFound()
+<<<<<<< HEAD
 //│ fun list_assoc: forall 'a 'A. (Eql['a], Cons[{_1: 'a, _2: 'A} | ~??A] | Nil) -> (NotFound | Success['A])
+=======
+//│ fun list_assoc: forall 'a 'A. (Eql['a], Cons[{0: 'a, 1: 'A}] | Nil) -> (NotFound | Success['A])
+>>>>>>> hkust-taco/new-definition-typing
 
 // fun list_assoc(s: Str, l: Cons[{ _1: Str, _2: 'b }] | Nil): NotFound | Success['b]
 
@@ -40,7 +44,11 @@ mixin EvalVar {
         Success(r) then r
 }
 //│ mixin EvalVar() {
+<<<<<<< HEAD
 //│   fun eval: (Cons[{_1: anything, _2: 'A} | ~??A] | Nil, Var) -> (Var | ??A0 & 'A)
+=======
+//│   fun eval: (Cons[{0: anything, 1: 'a}] | Nil, Var) -> (Var | 'a)
+>>>>>>> hkust-taco/new-definition-typing
 //│ }
 
 class Abs[A](x: Str, t: A)
@@ -80,6 +88,7 @@ mixin EvalLambda {
 
 module Test1 extends EvalVar, EvalLambda
 //│ module Test1 {
+<<<<<<< HEAD
 //│   fun eval: (Cons[{_1: anything, _2: 'A} | ~??A] | Nil, Abs['A0] | App['A1] | Var) -> 'a
 //│ }
 //│ where
@@ -87,34 +96,68 @@ module Test1 extends EvalVar, EvalLambda
 //│   'A1 <: Abs['A0 & (Abs['A0] | App['A1] | Var | ~??A1)] | Abs['A0] & ~#Abs | App['A1] | Var | ~??A2
 //│   'A :> 'a
 //│   'a :> Var | ??A3 & 'A | Abs['a] | App['a]
+=======
+//│   fun eval: (Cons[{0: anything, 1: 'a}] | Nil, Abs['b] | App['c] | Var) -> 'a
+//│ }
+//│ where
+//│   'b <: Abs['b] | App['c] | Var
+//│   'c <: 'b & (Abs['b] | Object & ~#Abs)
+//│   'a :> Var | App['A] | Abs['A0]
+//│   'A0 :> 'a
+//│   'A :> 'a
+>>>>>>> hkust-taco/new-definition-typing
 
 Test1.eval(Nil, Var("a"))
 //│ 'a
 //│   where
+<<<<<<< HEAD
 //│     'a :> Var | Abs['a] | App['a]
+=======
+//│     'a :> App['A] | Abs['A0] | Var
+//│     'A0 :> 'a
+//│     'A :> 'a
+>>>>>>> hkust-taco/new-definition-typing
 //│ res
 //│     = Var {}
 
 Test1.eval(Nil, Abs("b", Var("a")))
 //│ 'a
 //│   where
+<<<<<<< HEAD
 //│     'a :> Var | Abs['a] | App['a]
+=======
+//│     'a :> Var | App['A] | Abs['A0]
+//│     'A0 :> 'a
+//│     'A :> 'a
+>>>>>>> hkust-taco/new-definition-typing
 //│ res
 //│     = Abs {}
 
 Test1.eval(Cons(["c", Var("d")], Nil), App(Abs("b", Var("b")), Var("c")))
 //│ 'a
 //│   where
+<<<<<<< HEAD
 //│     'a :> Abs['a] | App['a] | Var
+=======
+//│     'a :> App['A] | Abs['A0] | Var
+//│     'A0 :> 'a
+//│     'A :> 'a
+>>>>>>> hkust-taco/new-definition-typing
 //│ res
 //│     = Var {}
 
 Test1.eval(Cons(["c", Abs("d", Var("d"))], Nil), App(Abs("b", Var("b")), Var("c")))
 //│ 'a
 //│   where
+<<<<<<< HEAD
 //│     'a :> Abs[Var] & ??A | Var | Abs['a] | App['a]
+=======
+//│     'a :> App['A] | Abs['A0] | Abs[Var] | Var
+//│     'A0 :> 'a
+//│     'A :> 'a
+>>>>>>> hkust-taco/new-definition-typing
 //│ res
-//│     = Var {}
+//│     = Abs {}
 
 class Numb(n: Int)
 class Add[A](l: A, r: A)
@@ -149,7 +192,11 @@ mixin EvalExpr {
 
 module Test2 extends EvalVar, EvalExpr
 //│ module Test2 {
+<<<<<<< HEAD
 //│   fun eval: forall 'a. (Cons[{_1: anything, _2: 'A & (Object | ~??A | ~??A0 & ~??A1)} | ~??A2] | Nil, 'a & (Add['A0] | Mul['A1] | Numb | Var)) -> (Numb | Var | ??A3 & 'A1 | ??A & 'A | ??A4 & 'A0 | 'a)
+=======
+//│   fun eval: forall 'a. (Cons[{0: anything, 1: Object & 'b}] | Nil, 'a & (Add['c] | Mul['c] | Numb | Var)) -> (Numb | Var | 'b | 'a | 'c)
+>>>>>>> hkust-taco/new-definition-typing
 //│ }
 //│ where
 //│   'A0 <: Add['A0] | Mul['A1] | Numb | Var | ~??A4
@@ -168,12 +215,13 @@ Test2.eval(Cons(["c", Abs("d", Var("d"))], Nil), Var("a"))
 Test2.eval(Cons(["a", Numb(1)], Nil), Var("a"))
 //│ Numb | Var
 //│ res
-//│     = Var {}
+//│     = Numb {}
 
 // * This expected error shows that Test2 does not handle Abs expression inputs
 :e
 Test2.eval(Cons(["c", Abs("d", Var("d"))], Nil), Abs("a", Var("a")))
 //│ ╔══[ERROR] Type mismatch in application:
+<<<<<<< HEAD
 //│ ║  l.175: 	Test2.eval(Cons(["c", Abs("d", Var("d"))], Nil), Abs("a", Var("a")))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Abs[?A]` does not match type `Add[?A0] | Mul[?A1] | Numb | Var`
@@ -184,6 +232,18 @@ Test2.eval(Cons(["c", Abs("d", Var("d"))], Nil), Abs("a", Var("a")))
 //│ ║         	     ^
 //│ ╟── from reference:
 //│ ║  l.137: 	    let vv = map_expr(eta, v)
+=======
+//│ ║  l.183: 	Test2.eval(Cons(["c", Abs("d", Var("d"))], Nil), Abs("a", Var("a")))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── application of type `Abs[?A]` does not match type `Add[?A0] | Mul[?A1] | Numb | Var`
+//│ ║  l.183: 	Test2.eval(Cons(["c", Abs("d", Var("d"))], Nil), Abs("a", Var("a")))
+//│ ║         	                                                 ^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.136: 	  if v is
+//│ ║         	     ^
+//│ ╟── from reference:
+//│ ║  l.146: 	    let vv = map_expr(eta, v)
+>>>>>>> hkust-taco/new-definition-typing
 //│ ╙──       	                           ^
 //│ Abs[Var] | Numb | Var | error
 //│ res
@@ -197,6 +257,7 @@ Test2.eval(Cons(["a", Abs("d", Var("d"))], Nil), Add(Numb(1), Var("a")))
 
 module Test3 extends EvalVar, EvalExpr, EvalLambda
 //│ module Test3 {
+<<<<<<< HEAD
 //│   fun eval: (Cons[{_1: anything, _2: 'A} | ~??A] | Nil, Abs['A0] | App['A1] | Object & 'a & ~#Abs & ~#App) -> 'b
 //│ }
 //│ where
@@ -206,24 +267,50 @@ module Test3 extends EvalVar, EvalExpr, EvalLambda
 //│   'a <: Add[Abs['A0] | App['A1] | 'a & (Object & ~#Abs & ~#App | ~#Abs & ~#App & ~??A3) | ~??A3] | Mul[Abs['A0] | App['A1] | 'a & (Object & ~#Abs & ~#App | ~#Abs & ~#App & ~??A4) | ~??A4] | Numb | Var
 //│   'A0 <: Abs['A0] | App['A1] | 'a & (Object & ~#Abs & ~#App | ~#Abs & ~#App & ~??A5) | ~??A5
 //│   'A1 <: Abs['A0 & (Abs['A0] | App['A1] | Object & 'a & ~#Abs & ~#App | ~??A6)] | Abs['A0] & ~#Abs | App['A1] | Object & 'a & ~#Abs & ~#App | ~??A7
+=======
+//│   fun eval: (Cons[{0: anything, 1: 'a}] | Nil, Abs['b] | App['c] | Object & 'd & ~#Abs & ~#App) -> 'e
+//│ }
+//│ where
+//│   'a :> 'e
+//│      <: Object
+//│   'e :> App['A] | Abs['A0] | Numb | Var | 'a | 'd
+//│   'd <: Add['b] | Mul['b] | Numb | Var
+//│   'b <: Abs['b] | App['c] | Object & 'd & ~#Abs & ~#App
+//│   'c <: 'b & (Abs['b] | Object & ~#Abs)
+//│   'A0 :> 'e
+//│   'A :> 'e
+>>>>>>> hkust-taco/new-definition-typing
 
 Test3.eval(Cons(["c", Abs("d", Var("d"))], Nil), Abs("a", Var("a")))
 //│ 'a
 //│   where
+<<<<<<< HEAD
 //│     'a :> Abs[Var] & ??A | Numb | Var | Abs['a] | App['a]
+=======
+//│     'a :> App['A] | Abs['A0] | Abs[Var] | Numb | Var
+//│     'A0 :> 'a
+//│     'A :> 'a
+>>>>>>> hkust-taco/new-definition-typing
 //│ res
 //│     = Abs {}
 
 Test3.eval(Cons(["c", Abs("d", Var("d"))], Nil), App(Abs("a", Var("a")), Add(Numb(1), Var("c"))))
 //│ 'a
 //│   where
+<<<<<<< HEAD
 //│     'a :> Abs['a] | App['a] | Abs[Var] & ??A | Add[Numb | Var] & ??A0 | Numb | Var
+=======
+//│     'a :> App['A] | Abs['A0] | Abs[Var] | Add[Numb | Var] | Numb | Var
+//│     'A0 :> 'a
+//│     'A :> 'a
+>>>>>>> hkust-taco/new-definition-typing
 //│ res
-//│     = Var {}
+//│     = Add {}
 
 // * Incorrect version, for regression testing – EvalLambda should be mixed in after EvalExpr
 module Test3 extends EvalVar, EvalLambda, EvalExpr
 //│ module Test3 {
+<<<<<<< HEAD
 //│   fun eval: (Cons[{_1: anything, _2: 'A} | ~??A] | Nil, 'a & (Add['A0] | Mul['A1] | Numb | Var)) -> (??A0 & 'A1 | ??A1 & 'A0 | 'a | 'b)
 //│ }
 //│ where
@@ -232,12 +319,22 @@ module Test3 extends EvalVar, EvalLambda, EvalExpr
 //│   'b :> Abs['b] | App['b] | Var | ??A2 & 'A | Numb | ??A0 & 'A1 | ??A1 & 'A0 | 'a
 //│   'A1 <: Add['A0] | Mul['A1] | Numb | Var | ~??A0
 //│   'A0 <: Add['A0] | Mul['A1] | Numb | Var | ~??A1
+=======
+//│   fun eval: (Cons[{0: anything, 1: 'a}] | Nil, 'a & (Add['b] | Mul['b] | Numb | Var)) -> ('a | 'b | 'c)
+//│ }
+//│ where
+//│   'a :> 'c | 'b
+//│      <: Object
+//│   'b <: Add['b] | Mul['b] | Numb | Var
+//│   'c :> Abs[Numb | 'a | 'c] | App[Numb | 'a | 'c] | Numb | Var | 'a
+>>>>>>> hkust-taco/new-definition-typing
 
 // * Because EvalExpr does not dispatch lambdas to super and map_expr only
 // * handles exprs
 :e
 Test3.eval(Cons(["c", Abs("d", Var("d"))], Nil), Abs("a", Var("a")))
 //│ ╔══[ERROR] Type mismatch in application:
+<<<<<<< HEAD
 //│ ║  l.239: 	Test3.eval(Cons(["c", Abs("d", Var("d"))], Nil), Abs("a", Var("a")))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Abs[?A]` does not match type `Add[?A0] | Mul[?A1] | Numb | Var`
@@ -252,6 +349,22 @@ Test3.eval(Cons(["c", Abs("d", Var("d"))], Nil), Abs("a", Var("a")))
 //│ error | 'a
 //│   where
 //│     'a :> Abs['a] | App['a] | Var | Abs[Var] | Numb
+=======
+//│ ║  l.252: 	Test3.eval(Cons(["c", Abs("d", Var("d"))], Nil), Abs("a", Var("a")))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── application of type `Abs[?A]` does not match type `Add[?A0] | Mul[?A1] | Numb | Var`
+//│ ║  l.252: 	Test3.eval(Cons(["c", Abs("d", Var("d"))], Nil), Abs("a", Var("a")))
+//│ ║         	                                                 ^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.136: 	  if v is
+//│ ║         	     ^
+//│ ╟── from reference:
+//│ ║  l.146: 	    let vv = map_expr(eta, v)
+//│ ╙──       	                           ^
+//│ Abs[Var] | error | 'a
+//│   where
+//│     'a :> Abs[Abs[Var] | Numb | 'a] | App[Abs[Var] | Numb | 'a] | Numb | Var
+>>>>>>> hkust-taco/new-definition-typing
 //│ res
 //│ Runtime error:
 //│   Error: non-exhaustive case expression

@@ -472,7 +472,7 @@ if true
   then 0
     + 1
 //│ |#if| |true|→|#then| |0|→|+| |1|←|←|
-//│ Parsed: {if (true) then +(...0)(...1)}
+//│ Parsed: {if (true) then +(0, 1,)}
 
 if true
   then 0
@@ -485,7 +485,7 @@ if true
   else 0
     + 1
 //│ |#if| |true|→|#then| |0|↵|#else| |0|→|+| |1|←|←|
-//│ Parsed: {if (true) then 0 else +(...0)(...1)}
+//│ Parsed: {if (true) then 0 else +(0, 1,)}
 
 :pe
 if true
@@ -511,12 +511,12 @@ if true
 if true then 0
   + 1
 //│ |#if| |true| |#then| |0|→|+| |1|←|
-//│ Parsed: {if (true) then +(...0)(...1)}
+//│ Parsed: {if (true) then +(0, 1,)}
 
 if true then 0 else 0
   + 1
 //│ |#if| |true| |#then| |0| |#else| |0|→|+| |1|←|
-//│ Parsed: {if (true) then 0 else +(...0)(...1)}
+//│ Parsed: {if (true) then 0 else +(0, 1,)}
 
 
 // TODO deal with meaningless whitespace:

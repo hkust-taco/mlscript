@@ -208,8 +208,14 @@ module TestLang extends EvalBase, EvalNeg, EvalNegNeg
 //│   fun eval: (Neg['A] | Object & 'a & ~#Neg) -> Int
 //│ }
 //│ where
+<<<<<<< HEAD
 //│   'A <: Neg['A & (Neg['A] | Object & 'a & ~#Neg | ~??A)] | Neg['A] & ~#Neg | Object & 'a & ~#Neg | ~??A0 & (Neg[Neg['A] | 'a & (Object & ~#Neg | ~#Neg & ~??A) | ~??A] | Object & ~#Neg) | ~??A1
 //│   'a <: Add[Neg['A] | 'a & (Object & ~#Neg | ~#Neg & ~??E) | ~??E] | Lit | Neg[Neg['A] | 'a & (Object & ~#Neg | ~#Neg & ~??A0) | ~??A0]
+=======
+//│   'A <: Neg['A & 'b] | Neg['A] & ~#Neg | Object & 'a & ~#Neg
+//│   'b <: Neg['A] | Object & 'a & ~#Neg
+//│   'a <: Add['b] | Lit | Neg['b]
+>>>>>>> hkust-taco/new-definition-typing
 //│ // Prelude
 //│ class TypingUnit5 {
 //│   #TestLang;
@@ -238,10 +244,10 @@ fun mk(n) = if n is
   1 then Neg(mk(n))
   _ then Add(mk(n), mk(n))
 TestLang.eval(mk(0))
-//│ fun mk: forall 'E. Object -> 'E
+//│ fun mk: forall 'a. Object -> (Lit | 'a)
 //│ Int
 //│ where
-//│   'E :> Add['E] | Lit | Neg['E]
+//│   'a :> Neg[Lit | 'a] | Add[Lit | 'a]
 //│ res
 //│     = 0
 

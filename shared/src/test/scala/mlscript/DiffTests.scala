@@ -39,6 +39,7 @@ abstract class ModeType {
   def expectCodeGenErrors: Bool
   def showRepl: Bool
   def allowEscape: Bool
+  def mono: Bool
 }
 
 class DiffTests
@@ -52,6 +53,7 @@ class DiffTests
   def postProcess(mode: ModeType, basePath: Ls[Str], testName: Str, unit: TypingUnit): Ls[Str] = Nil
   
   
+  @SuppressWarnings(Array("org.wartremover.warts.RedundantIsInstanceOf"))
   private val inParallel = isInstanceOf[ParallelTestExecution]
   
   import DiffTests._
@@ -165,13 +167,14 @@ class DiffTests
       expectCodeGenErrors: Bool = false,
       showRepl: Bool = false,
       allowEscape: Bool = false,
+      mono: Bool = false,
       // noProvs: Bool = false,
     ) extends ModeType {
       def isDebugging: Bool = dbg || dbgSimplif
     }
     val defaultMode = Mode()
     
-    var parseOnly = basePath.headOption.contains("parser") || basePath.headOption.contains("compiler")
+    var parseOnly = basePath.headOption.contains("parser")
     var allowTypeErrors = false
     var allowParseErrors = false
     var showRelativeLineNums = false
@@ -194,7 +197,9 @@ class DiffTests
     
     var newParser = basePath.headOption.contains("parser") || basePath.headOption.contains("compiler")
     
-    val backend = new JSTestBackend()
+    val backend = new JSTestBackend {
+      def oldDefs = !newDefs
+    }
     val host = ReplHost()
     val codeGenTestHelpers = new CodeGenTestHelpers(file, output)
     
@@ -263,6 +268,7 @@ class DiffTests
           case "re" => mode.copy(expectRuntimeErrors = true)
           case "r" | "showRepl" => mode.copy(showRepl = true)
           case "escape" => mode.copy(allowEscape = true)
+          case "mono" => {mode.copy(mono = true)}
           case "exit" =>
             out.println(exitMarker)
             ls.dropWhile(_ =:= exitMarker).tails.foreach {
@@ -1068,8 +1074,8 @@ class DiffTests
     val timeStr = (((endTime - beginTime) / 1000 / 100).toDouble / 10.0).toString
     val testColor = if (testFailed) Console.RED else Console.GREEN
     
-    val resStr = s"${" " * (35 - testStr.size)}${testColor}${
-      " " * (6 - timeStr.size)}$timeStr  ms${Console.RESET}"
+    val resStr = s"${" " * (35 - testStr.length)}${testColor}${
+      " " * (6 - timeStr.length)}$timeStr  ms${Console.RESET}"
     
     if (inParallel) println(s"${Console.CYAN}Processed${Console.RESET}  $testStr$resStr")
     else println(resStr)

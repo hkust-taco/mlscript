@@ -323,7 +323,7 @@ fun subst(t, n, v) =
       _ then Abs(Var(name), subst(body, n, v))
     App(lhs, rhs) then App(subst(lhs, n, v), subst(rhs, n, v))
     _ then t
-//│ fun subst: forall 'a. (Abs | App | Term & Object & 'a & ~#Abs & ~#App & ~#Var | Var, anything, Term & Object & 'a) -> (Abs | App | Var | 'a)
+//│ fun subst: forall 'a. (Abs | App | Term & Object & 'a & ~#Abs & ~#App & ~#Var | Var, anything, Term & Object & 'a) -> ('a | Abs | App | Var)
 
 fun showSubst(t, n, v) =
   showTerm(t) ++ " [" ++ n ++ " / " ++ showTerm(v) ++ "]" ++ " => " ++ showTerm(subst(t, n, v))

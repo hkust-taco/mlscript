@@ -124,10 +124,13 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       "+ -",
       // "* / %",
       "* %",
+      "", // Precedence of application
       ".",
     ).zipWithIndex.flatMap {
       case (cs, i) => cs.filterNot(_ === ' ').map(_ -> (i + 1))
     }.toMap.withDefaultValue(Int.MaxValue)
+  
+  private val AppPrec = prec('.') - 1
   
   final def opCharPrec(opChar: Char): Int = prec(opChar)
   final def opPrec(opStr: Str): (Int, Int) = opStr match {
@@ -240,12 +243,12 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       rec(toks, S(br.innerLoc), br.describe).concludeWith(_.typingUnit)
     case _ => typingUnit
   }
-  final def curlyTypingUnit(implicit fe: FoundErr): TypingUnit = yeetSpaces match {
+  final def curlyTypingUnit(implicit fe: FoundErr): Opt[TypingUnit] = yeetSpaces match {
     case (br @ BRACKETS(Curly, toks), l1) :: _ =>
       consume
-      rec(toks, S(br.innerLoc), br.describe).concludeWith(_.typingUnitMaybeIndented).withLoc(S(l1))
+      S(rec(toks, S(br.innerLoc), br.describe).concludeWith(_.typingUnitMaybeIndented).withLoc(S(l1)))
     case _ =>
-      TypingUnit(Nil)
+      N
   }
   
   final def toParamsTy(t: Type): Tuple = t match {
@@ -258,9 +261,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
   case class ModifierSet(mods: Map[Str, Loc]) {
     def handle(mod: Str): (Opt[Loc], ModifierSet) =
       mods.get(mod) -> copy(mods = mods - mod)
-    def done: Unit = mods.foreach {
-      case (mod, loc) =>
-        err(msg"Unrecognized modifier `${mod}` in this position" -> S(loc) :: Nil)
+    def done: Unit = mods.foreachEntry { (mod, loc) =>
+      err(msg"Unrecognized modifier `${mod}` in this position" -> S(loc) :: Nil)
     }
   }
   object ModifierSet {
@@ -310,7 +312,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
           case (br @ BRACKETS(Round, toks), loc) :: _ =>
             consume
             val as = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented()) // TODO
-            val body = curlyTypingUnit
+            val body = curlyTypingUnit.getOrElse(TypingUnit(Nil))
             Constructor(Tup(as).withLoc(S(loc)), Blk(body.entities).withLocOf(body))
           case _ =>
             err(msg"Expect parameter list for the constructor" -> S(l0) :: Nil)
@@ -374,13 +376,13 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                 expr(0) :: otherParents
               case _ => Nil
             }
-            val sig = yeetSpaces match {
+            val sigTrm = yeetSpaces match {
               case (KEYWORD("="), _) :: _ if kind is Als =>
                 consume
-                S(typ(0))
+                S(expr(0))
               case (KEYWORD(":"), _) :: _ if !(kind is Als) =>
                 consume
-                S(typ(0))
+                S(expr(0))
               case _ => N
             }
             val ps = yeetSpaces match {
@@ -392,7 +394,18 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                 expr(0) :: otherParents
               case _ => Nil
             }
-            val fullTu = curlyTypingUnit
+            val (sigTrm2, ps2, fullTu) = curlyTypingUnit.fold {
+              ps.lastOption match {
+                case S(Rft(bse, tu)) => (sigTrm, (bse :: ps.reverse.tail).reverse, tu)
+                case _ =>
+                  sigTrm match {
+                    case S(Rft(bse, tu)) => (S(bse), ps, tu)
+                    case _ =>
+                      (sigTrm, ps, TypingUnit(Nil))
+                  }
+              }
+            }(tu => (sigTrm, ps, tu))
+            val sig = sigTrm2.map(mkType(_))
             val (ctors, bodyStmts) = fullTu.entities.partitionMap {
               case c: Constructor => L(c)
               case t => R(t)
@@ -404,7 +417,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
             }
             val ctor = ctors.headOption
             val res =
-              NuTypeDef(kind, tn, tparams, params, ctor, sig, ps, N, N, tu)(isDecl, isAbs)
+              NuTypeDef(kind, tn, tparams, params, ctor, sig, ps2, N, N, tu)(isDecl, isAbs)
             R(res.withLoc(S(l0 ++ tn.getLoc ++ res.getLoc)))
             R(res.withLoc(S(l0 ++ res.getLoc)))
           
@@ -549,7 +562,6 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
   final def funParams(implicit et: ExpectThen, fe: FoundErr, l: Line): Ls[Tup] = wrap(()) { l =>
     yeetSpaces match {
       case (KEYWORD("=" | ":"), _) :: _ => Nil
-      case Nil => Nil
       case (KEYWORD("of"), _) :: _ =>
         consume
         Tup(args(false) // TODO
@@ -564,6 +576,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
           msg"Expected function parameter list; found ${tk.describe} instead" -> S(l0) :: Nil))
         consume
         Nil
+      case Nil => Nil
     }
   }
   
@@ -698,22 +711,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       case (KEYWORD("new"), l0) :: c =>
         consume
         val body = expr(outer.prec('.'))
-        val head = body match {
-          case Var(clsNme) =>
-            S(TypeName(clsNme).withLocOf(body) -> Tup(Nil))
-          case App(Var(clsNme), Tup(N -> Fld(FldFlags(false, false, _), UnitLit(true)) :: Nil)) =>
-            S(TypeName(clsNme).withLocOf(body) -> Tup(Nil))
-          case App(Var(clsNme), arg) =>
-            S(TypeName(clsNme).withLocOf(body) -> arg)
-          case UnitLit(true) =>
-            N
-          case _ =>
-            err((
-              msg"Unexpected ${body.describe} after `new` keyword" -> body.toLoc :: Nil))
-            N
-        }
-        val res = New(head, curlyTypingUnit).withLoc(S(head.foldLeft(l0)((l, h) => l ++ h._1.toLoc ++ h._2.toLoc)))
-        exprCont(res, prec, allowNewlines = false)
+        exprCont(NuNew(body).withLoc(S(l0 ++ body.toLoc)), prec, allowNewlines = false)
       case (KEYWORD("else"), l0) :: _ =>
         consume
         val e = expr(0)
@@ -790,6 +788,18 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       case ((KEYWORD(";;") /* | NEWLINE */ /* | BRACKETS(Curly, _) */, l0) :: _) =>
         R(UnitLit(true).withLoc(S(l0)))
         // R(errExpr) // TODO
+      case (IDENT("-", true), l0) :: _ /*if opPrec("-")._1 > prec*/ => // Unary minus
+        consume
+        val v = Var("-").withLoc(S(l0))
+        expr(opPrec("-")._2) match {
+          case IntLit(i) => // Special case for negative literals
+            exprCont(IntLit(-i), prec, false)
+          case rhs: Term => // General case
+            exprCont(
+              if (newDefs) App(v, PlainTup(IntLit(BigInt(0)), rhs))
+              else App(App(v, PlainTup(IntLit(BigInt(0)))), PlainTup(rhs))
+            , prec, false)
+        }
       case (tk, l0) :: _ =>
         err(msg"Unexpected ${tk.describe} in expression position" -> S(l0) :: Nil)
         consume
@@ -870,7 +880,6 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       case (br @ BRACKETS(Indent, (IDENT(opStr, true), l0) :: toks), _) :: _ =>
         consume
         rec(toks, S(br.innerLoc), br.describe).concludeWith(_.opBlock(acc, opStr, l0))
-      case Nil => R(acc)
       case (KEYWORD("then"), _) :: _ if /* expectThen && */ prec === 0 =>
       // case (KEYWORD("then"), _) :: _ if /* expectThen && */ prec <= 1 =>
         consume
@@ -884,6 +893,12 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       case (NEWLINE, _) :: _ if allowNewlines =>
         consume
         exprCont(acc, 0, allowNewlines)
+        
+      case (br @ BRACKETS(Curly, toks), loc) :: _ if prec <= AppPrec =>
+        consume
+        val tu = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.typingUnitMaybeIndented).withLoc(S(loc))
+        exprCont(Rft(acc, tu), prec, allowNewlines)
+        
       case (COMMA | NEWLINE | KEYWORD("then" | "else" | "in" | ";;" | "=")
         | IDENT(_, true) | BRACKETS(Curly, _), _) :: _ => R(acc)
       
@@ -947,19 +962,19 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         val idx = rec(toks, S(br.innerLoc), "subscript").concludeWith(_.expr(0))
         val res = Subs(acc, idx.withLoc(S(loc)))
         exprCont(res, prec, allowNewlines)*/
+      
+      case (br @ BRACKETS(Round, toks), loc) :: _ if prec <= AppPrec =>
+        consume
+        val as = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented())
+        val res = App(acc, Tup(as).withLoc(S(loc)))
+        exprCont(res, prec, allowNewlines)
         
-        case (br @ BRACKETS(Round, toks), loc) :: _ =>
-          consume
-          val as = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented())
-          val res = App(acc, Tup(as).withLoc(S(loc)))
-          exprCont(res, prec, allowNewlines)
-          
-        case (KEYWORD("of"), _) :: _ =>
-          consume
-          val as = argsMaybeIndented()
-          // val as = argsOrIf(Nil) // TODO
-          val res = App(acc, Tup(as))
-          exprCont(res, prec, allowNewlines)
+      case (KEYWORD("of"), _) :: _ =>
+        consume
+        val as = argsMaybeIndented()
+        // val as = argsOrIf(Nil) // TODO
+        val res = App(acc, Tup(as))
+        exprCont(res, prec, allowNewlines)
           
       case c @ (h :: _) if (h._1 match {
         case KEYWORD(";;" | ":" | "of" | "where" | "extends") | BRACKETS(Round | Square, _)
@@ -987,7 +1002,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       // val rhs = exprOrIf(1)
       rhs match {
         case R(rhs) =>
-          val res = App(App(opv, acc), rhs)
+          val res = App(opv, PlainTup(acc, rhs))
           cur match {
             case (NEWLINE, _) :: c => // TODO allow let bindings...
               consume
@@ -1140,7 +1155,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       case (NEWLINE, _) :: _ => // TODO: | ...
         assert(seqAcc.isEmpty)
         acc.reverse
-      case (IDENT(i, true), _) :: _ if i  =/= "?" => // TODO: | ...
+      case (IDENT(nme, true), _) :: _ if nme =/= "-" && nme =/= "?" => // TODO: | ...
         assert(seqAcc.isEmpty)
         acc.reverse
       case _ =>
@@ -1170,6 +1185,10 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         consume
         consume
         S(Var(idStr).withLoc(S(l0)))
+      case (LITVAL(IntLit(i)), l0) :: (KEYWORD(":"), _) :: _ => // TODO: | ...
+        consume
+        consume
+        S(Var(i.toString).withLoc(S(l0)))
       case _ => N
     }
     // val e = expr(NoElsePrec) -> argMut.isDefined

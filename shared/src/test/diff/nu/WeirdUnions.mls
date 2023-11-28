@@ -6,7 +6,7 @@ fun f: Str | [Str, Int]
 //│ fun f: Str | [Str, Int]
 
 fun f: [Str] | [Str, Int]
-//│ fun f: Array[Int | Str] & {_1: Str}
+//│ fun f: Array[Int | Str] & {0: Str}
 
 fun f: (Str | [Str, Int])
 //│ fun f: Str | [Str, Int]
@@ -33,7 +33,7 @@ fun f: Str | ((Str, Int))
 
 // * This type merges the input tuples, resulting in the union seen above:
 fun f: (Str => Str) & ((Str, Int) => Str)
-//│ fun f: (...Array[Int | Str] & {_1: Str}) -> Str
+//│ fun f: (...Array[Int | Str] & {0: Str}) -> Str
 
 f("abc", "abc")
 //│ Str
@@ -47,15 +47,14 @@ fun f: (Str => Str) & ((Str, Int) => Int)
 //│ fun f: Str -> Str & (Str, Int) -> Int
 
 // * ...resulting in approximation at call sites (we don't handle overloading)
-:e
 f("abc", "abc")
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.51: 	f("abc", "abc")
-//│ ║        	^^^^^^^^^^^^^^^
-//│ ╟── argument list of type `["abc", "abc"]` does not match type `nothing`
-//│ ║  l.51: 	f("abc", "abc")
-//│ ╙──      	 ^^^^^^^^^^^^^^
-//│ Int | Str | error
+//│ Int | Str
+//│ res
+//│     = <no result>
+//│       f is not implemented
+
+f("abcabc")
+//│ Int | Str
 //│ res
 //│     = <no result>
 //│       f is not implemented
@@ -72,19 +71,19 @@ let r = if true then id else (x, y) => [y, x]
 r(error)
 r(error, error)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.72: 	r(error)
+//│ ║  l.71: 	r(error)
 //│ ║        	^^^^^^^^
 //│ ╟── argument of type `[nothing]` does not match type `[?a, ?b]`
-//│ ║  l.72: 	r(error)
+//│ ║  l.71: 	r(error)
 //│ ║        	 ^^^^^^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.66: 	let r = if true then id else (x, y) => [y, x]
+//│ ║  l.65: 	let r = if true then id else (x, y) => [y, x]
 //│ ╙──      	                              ^^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.73: 	r(error, error)
+//│ ║  l.72: 	r(error, error)
 //│ ║        	^^^^^^^^^^^^^^^
 //│ ╟── argument list of type `[nothing, nothing]` does not match type `[?a]`
-//│ ║  l.73: 	r(error, error)
+//│ ║  l.72: 	r(error, error)
 //│ ╙──      	 ^^^^^^^^^^^^^^
 //│ error | [nothing, nothing]
 //│ res
@@ -107,7 +106,7 @@ r of [0, 1]
 
 // Also currently parses the same:
 let r = if true then id else [x, y] => [y, x]
-//│ let r: forall 'a 'b 'c. (['a, 'b] & 'c) -> (['b, 'a] | 'c)
+//│ let r: forall 'a 'b 'c. (['b, 'c] & 'a) -> (['c, 'b] | 'a)
 //│ r
 //│   = [Function: id]
 

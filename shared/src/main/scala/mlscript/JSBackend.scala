@@ -9,7 +9,9 @@ import scala.collection.mutable.{Set => MutSet}
 import scala.util.control.NonFatal
 import scala.util.chaining._
 
-class JSBackend(allowUnresolvedSymbols: Boolean) {
+abstract class JSBackend(allowUnresolvedSymbols: Bool) {
+  def oldDefs: Bool
+  
   /**
     * The root scope of the program.
     */
@@ -66,7 +68,8 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       translatePattern(base)
     case Inst(bod) => translatePattern(bod)
     case _: Lam | _: App | _: Sel | _: Let | _: Blk | _: Bind | _: Test | _: With | _: CaseOf | _: Subs | _: Assign
-        | If(_, _) | New(_, _) | _: Splc | _: Forall | _: Where | _: Super | _: Eqn | _: AdtMatchWith | _: WildcardType =>
+        | If(_, _) | New(_, _)  | NuNew(_) | _: Splc | _: Forall | _: Where | _: Super | _: Eqn | _: AdtMatchWith 
+        | _: WildcardType | _: Rft =>
       throw CodeGenError(s"term ${inspect(t)} is not a valid pattern")
   }
 
@@ -122,12 +125,13 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
           if (sym.isByvalueRec.isEmpty && !sym.isLam) ident() else ident
         })
       case S(sym: ClassSymbol) =>
-        if (isCallee)
+        if (isCallee || !oldDefs)
           JSNew(JSIdent(sym.runtimeName))
         else
           JSArrowFn(JSNamePattern("x") :: Nil, L(JSNew(JSIdent(sym.runtimeName))(JSIdent("x"))))
       case S(sym: TraitSymbol) =>
-        JSIdent(sym.lexicalName)("build")
+        if (oldDefs) JSIdent(sym.lexicalName)("build")
+        else return Left(CodeGenError(s"trait used in term position"))
       case N => scope.getType(name) match {
         case S(sym: TypeAliasSymbol) =>
           return Left(CodeGenError(s"type alias ${name} is not a valid expression"))
@@ -160,7 +164,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     // Function invocation
     case App(trm, Tup(args)) =>
       val callee = trm match {
-        case Var(nme) => scope.resolveValue(nme) match {
+        case Var(nme) if oldDefs => scope.resolveValue(nme) match {
           case S(sym: NuTypeSymbol) =>
             translateNuTypeSymbol(sym, false) // ClassName(params)
           case _ => translateVar(nme, true) // Keep this case for the legacy test cases
@@ -168,6 +172,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         case _ => translateTerm(trm)
       }
       callee(args map { case (_, Fld(_, arg)) => translateTerm(arg) }: _*)
+    case App(trm, splice) => ??? // TODO represents `trm(...splice)`
     case _ => throw CodeGenError(s"ill-formed application ${inspect(term)}")
   }
 
@@ -277,6 +282,12 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
           name -> translateTerm(value)
         }) :: Nil
       )
+    // Only parenthesize binary operators
+    // Custom operators do not need special handling since they are desugared to plain methods
+    case Bra(false, trm) => trm match { 
+      case App(Var(op), _) if JSBinary.operators.contains(op) => JSParenthesis(translateTerm(trm)) 
+      case trm => translateTerm(trm)
+    }
     case Bra(_, trm) => translateTerm(trm)
     case Tup(terms) =>
       JSArray(terms map { case (_, Fld(_, term)) => translateTerm(term) })
@@ -292,6 +303,15 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     case Inst(bod) => translateTerm(bod)
     case iff: If =>
       throw CodeGenError(s"if expression was not desugared")
+    case NuNew(cls) =>
+      cls match {
+        case Var(className) =>
+          translateVar(className, true) match {
+            case n: JSNew => n
+            case t => JSNew(t)
+          }
+        case _ => throw CodeGenError(s"Unsupported `new` class term: ${inspect(cls)}")
+      }
     case New(N, TypingUnit(Nil)) => JSRecord(Nil)
     case New(S(TypeName(className) -> Tup(args)), TypingUnit(Nil)) =>
       val callee = translateVar(className, true) match {
@@ -305,7 +325,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     case TyApp(base, _) => translateTerm(base)
     case Eqn(Var(name), _) =>
       throw CodeGenError(s"assignment of $name is not supported outside a constructor")
-    case _: Bind | _: Test | If(_, _)  | _: Splc | _: Where | _: AdtMatchWith | _: WildcardType =>
+    case _: Bind | _: Test | If(_, _)  | _: Splc | _: Where | _: AdtMatchWith | _: WildcardType | _: Rft =>
       throw CodeGenError(s"cannot generate code for term ${inspect(term)}")
   }
 
@@ -633,13 +653,8 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
   }
 
   protected def translateNewClassParameters(classBody: JSClassNewDecl) = {
-    val constructor = classBody match {
-      case dec: JSClassNewDecl => dec.fields.map(JSNamePattern(_))
-    }
-    val params = classBody match {
-      case dec: JSClassNewDecl => dec.fields.map(JSIdent(_))
-    }
-
+    val constructor = classBody.ctorParams.map(JSNamePattern(_))
+    val params = classBody.ctorParams.map(JSIdent(_))
     (constructor, params)
   }
 
@@ -1120,6 +1135,8 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
 }
 
 class JSWebBackend extends JSBackend(allowUnresolvedSymbols = true) {
+  def oldDefs = false
+  
   // Name of the array that contains execution results
   val resultsName: Str = topLevelScope declareRuntimeSymbol "results"
 
@@ -1250,7 +1267,8 @@ class JSWebBackend extends JSBackend(allowUnresolvedSymbols = true) {
     if (newDefs) generateNewDef(pgrm) else generate(pgrm)
 }
 
-class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
+abstract class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
+  
   private val lastResultSymbol = topLevelScope.declareValue("res", Some(false), false, N)
   private val resultIdent = JSIdent(lastResultSymbol.runtimeName)
 

@@ -85,17 +85,17 @@ class C1[A] extends C0[A] { val a = a }
 //│   val a: nothing
 //│ }
 
-new C1 : C1[Int]
+new C1() : C1[Int]
 //│ C1[Int]
 //│ res
 //│     = C1 {}
 
-((new C1) : C1[Int]) : C0['X]
+(new C1() : C1[Int]) : C0['X]
 //│ C0[Int]
 //│ res
 //│     = C1 {}
 
-(new C1).a
+new C1().a
 //│ nothing
 //│ res
 //│     = undefined
