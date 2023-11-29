@@ -74,3 +74,6 @@ run(g5)
 //│ ║        	^^^^^^^
 //│ ╙── expression of type `??g & ~??x & ~??y` does not match type `nothing`
 //│ error | (Int, Int) -> Int
+
+x `=> x `+ (x `=> x)`(`42)
+//│ Code[Int -> Int, nothing]

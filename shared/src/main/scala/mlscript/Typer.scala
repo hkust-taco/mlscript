@@ -64,8 +64,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       lvl: Int,
       qenv: MutMap[Str, SkolemTag], // * SkolemTag for variables in quasiquotes
       fvars: MutSet[ST], // * Free variables
-      quotedLvl: Int, // * Level of quasiquotes
-      isUnquoted: Bool,
+      quotedLvl: Int, // * Level of quasiquotes. Should not exceed 1.
       inPattern: Bool,
       funDefs: MutMap[Str, DelayedTypeInfo],
       tyDefs: Map[Str, TypeDef],
@@ -75,7 +74,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
   ) {
     def +=(b: Str -> TypeInfo): Unit = {
       env += b
-      if (quotedLvl > 0 && !isUnquoted) {
+      if (quotedLvl > 0 && !qenv.contains(b._1)) {
         val tag = SkolemTag(freshVar(NoProv, N, nameHint = S(b._1))(lvl))(NoProv)
         println(s"Create skolem tag $tag for ${b._2} in quasiquote.")
         qenv += b._1 -> tag
@@ -103,17 +102,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
           case N => Nil // * In the same quasiquote but not the same scope
         }
     }.toList
-    def unwrap[T](names: Ls[Str], f: () => T): T = { // * Revert ctx modification temporarily
-      val cache: MutMap[Str, TypeInfo] = MutMap.empty
-      names.foreach(name => {
-        cache += name -> env.getOrElse(name, die)
-        env -= name
-      })
-      val res = f()
-      cache.foreach(env += _)
-      res
+    def traceFV(fv: ST): Unit = {
+      println(s"Capture free variable type $fv")
+      fvars += fv
     }
-    def traceFV(fv: ST): Unit = fvars += fv
     def contains(name: Str): Bool = env.contains(name) || parent.exists(_.contains(name))
     def addMth(parent: Opt[Str], nme: Str, ty: MethodType): Unit = mthEnv += R(parent, nme) -> ty
     def addMthDefn(parent: Str, nme: Str, ty: MethodType): Unit = mthEnv += L(parent, nme) -> ty
@@ -193,7 +185,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       qenv = MutMap.empty,
       fvars = MutSet.empty,
       quotedLvl = 0,
-      isUnquoted = false,
       inPattern = false,
       funDefs = MutMap.empty,
       tyDefs = Map.from(builtinTypes.map(t => t.nme.name -> t)),
@@ -891,14 +882,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
             res
           }
       case v @ ValidVar(name) =>
-        val tyOpt = if (ctx.quotedLvl > 0 && !ctx.isUnquoted && !builtinBindings.contains(name)) {
-          ctx.qget(name) match {
-            case S(ctxTy) =>
-              if (!ctx.qenv.contains(name)) ctx.traceFV(ctxTy)
-              ctx.get(name, ctx.quotedLvl)
-            case _ => ctx.getTopLevel(name)
-          }
-        } else ctx.get(name, ctx.quotedLvl) orElse ctx.get(name, 0)
+        val tyOpt = // * If it is quoted and not a builtin, it is either defined in quotations or at top levels
+          if (ctx.quotedLvl > 0 && !builtinBindings.contains(name)) ctx.get(name, ctx.quotedLvl) orElse ctx.getTopLevel(name)
+          else ctx.get(name, ctx.quotedLvl) orElse ctx.get(name, 0) // * Otherwise, it either shadows a builtin or not in quotations
         val ty = tyOpt.fold(err("identifier not found: " + name, term.toLoc): ST) {
           case AbstractConstructor(absMths, traitWithMths) =>
             val td = ctx.tyDefs(name)
@@ -912,7 +898,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
                   :: absMths.map { case mn => msg"Hint: method ${mn.name} is abstract" -> mn.toLoc }.toList
               )
             )
-          case VarSymbol(ty, _) => ty
+          case VarSymbol(ty, _) =>
+            ctx.qget(name).foreach(sk => ctx.traceFV(sk))
+            ty
           case lti: LazyTypeInfo =>
             // TODO deal with classes without parameter lists (ie needing `new`)
             def checkNotAbstract(decl: NuDecl) =
@@ -1054,15 +1042,15 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       case pat if ctx.inPattern =>
         err(msg"Unsupported pattern shape${
           if (dbg) " ("+pat.getClass.toString+")" else ""}:", pat.toLoc)(raise)
-      case Lam(pat, body) if ctx.quotedLvl > 0 && !ctx.isUnquoted =>
+      case Lam(pat, body) if ctx.quotedLvl > 0 =>
         println(s"TYPING QUOTED LAM")
-        ctx.nest.poly { newCtx =>
+        ctx.nest.copy(fvars = MutSet.empty).poly { newCtx =>
           val param_ty = typePattern(pat)(newCtx, raise, vars)
           val body_ty = typeTerm(body)(newCtx, raise, vars,
             generalizeCurriedFunctions || doGenLambdas && constrainedTypes)
           val res = freshVar(noTyProv, N)(ctx.lvl)
           val ctxTy = freshVar(noTyProv, N)(ctx.lvl)
-          con(newCtx.getCtxTy, ctxTy, res)(ctx)
+          con(newCtx.getCtxTy, ctx.qenv.foldLeft[ST](ctxTy)((res, ty) => ty._2 | res), res)(ctx)
           ctx.traceFV(ctxTy)
           FunctionType(param_ty, body_ty)(tp(term.toLoc, "function"))
         }
@@ -1235,16 +1223,16 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
           case _ => mthCallOrSel(obj, fieldName)
         }
       case Let(isrec, nme, rhs, bod) =>
-        if (ctx.quotedLvl > 0 && !ctx.isUnquoted) {
-          ctx.nest.poly {
+        if (ctx.quotedLvl > 0) {
+          val rhs_ty = typeTerm(rhs)
+          ctx.nest.copy(fvars = MutSet.empty).poly {
             newCtx => {
-              val rhs_ty = typeTerm(rhs)(newCtx, raise, vars, genLambdas)
               newCtx += nme.name -> VarSymbol(rhs_ty, nme)
-              val res_ty = typePolymorphicTerm(bod)(newCtx, raise, vars)
+              val res_ty = typeTerm(bod)(newCtx, raise, vars, genLambdas)
 
               val res = freshVar(noTyProv, N)(ctx.lvl)
               val ctxTy = freshVar(noTyProv, N)(ctx.lvl)
-              con(newCtx.getCtxTy, ctxTy, res)(ctx)
+              con(newCtx.getCtxTy, ctx.qenv.foldLeft[ST](ctxTy)((res, ty) => ty._2 | res), res)(ctx)
               ctx.traceFV(ctxTy)
               res_ty
             }
@@ -1511,27 +1499,25 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       case Eqn(lhs, rhs) =>
         err(msg"Unexpected equation in this position", term.toLoc)
       case Quoted(body) =>
-        val newCtx = ctx.nest.copy(quotedLvl = ctx.quotedLvl + 1, qenv = MutMap.empty, fvars = MutSet.empty, isUnquoted = false)
-        val bodyType = ctx.parent match {
-          case S(p) if p.quotedLvl > ctx.quotedLvl =>
-            ctx.unwrap(p.wrapCode.map(_._1), () => typeTerm(body)(newCtx, raise, vars, genLambdas))
-          case _ => typeTerm(body)(newCtx, raise, vars, genLambdas)
+        if (ctx.quotedLvl > 0) err(msg"Nested quotation is not allowed.", body.toLoc)
+        else {
+          val newCtx = ctx.nest.copy(quotedLvl = ctx.quotedLvl + 1, qenv = MutMap.empty, fvars = MutSet.empty)
+          val bodyType = typeTerm(body)(newCtx, raise, vars, genLambdas)
+          TypeRef(TypeName("Code"), bodyType :: newCtx.getCtxTy :: Nil)(noProv)
         }
-        TypeRef(TypeName("Code"), bodyType :: newCtx.getCtxTy :: Nil)(noProv)
       case Unquoted(body) =>
         if (ctx.quotedLvl > 0) {
-          val newCtx = ctx.nest.copy(quotedLvl = ctx.quotedLvl - 1, isUnquoted = true)
-          val wrappedCodes = ctx.wrapCode
+          val newCtx = ctx.nest.copy(quotedLvl = ctx.quotedLvl - 1)
           println("Map qenv to env in unquote...")
-          wrappedCodes.foreach(c => {
+          ctx.wrapCode.foreach(c => {
             println(s"Create ${c._2} in newCtx")
             newCtx += c
           })
           val bodyType = typeTerm(body)(newCtx, raise, vars, genLambdas)
-          val res = freshVar(noTyProv, N)(newCtx.lvl)
-          val ctxTy = freshVar(noTyProv, N)(newCtx.lvl)
+          val res = freshVar(noTyProv, N)
+          val ctxTy = freshVar(noTyProv, N)
           val ty =
-            con(bodyType, TypeRef(TypeName("Code"), res :: ctx.qenv.foldLeft[ST](ctxTy)((res, ty) => ty._2 | res) :: Nil)(noProv), res)(newCtx)
+            con(bodyType, TypeRef(TypeName("Code"), res :: ctxTy :: Nil)(noProv), res)(newCtx)
           ctx.traceFV(ctxTy)
           ty
         }

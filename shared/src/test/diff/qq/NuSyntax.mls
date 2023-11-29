@@ -45,7 +45,7 @@ z `=> z + 1
 //│ ╔══[ERROR] Type mismatch in unquote:
 //│ ║  l.40: 	z `=> z + 1
 //│ ║        	      ^^^^^
-//│ ╙── operator application of type `Int` is not an instance of `Code[?a, ?z | ?b]`
+//│ ╙── operator application of type `Int` is not an instance of `Code[?a, ?b]`
 //│ Code[anything -> error, nothing]
 
 
@@ -74,7 +74,7 @@ fun f(x: Code[Int, nothing]) =
 
 
 f `=> a `=> f`(a)
-//│ Code[forall 'a 'b. ('b -> 'a) -> 'b -> 'a, nothing]
+//│ Code[forall 'a 'b. ('a -> 'b) -> 'a -> 'b, nothing]
 
 `let app = (f, a) `=> f`(a), id = x `=> x in app`(id, `42)
 //│ Code[42, nothing]

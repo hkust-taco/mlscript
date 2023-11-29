@@ -246,8 +246,12 @@ code"${Const(42)}"
 
 :js
 :ne
+:e
 code"code"42""
-//│ Code[Code[42, nothing], nothing]
+//│ ╔══[ERROR] Nested quotation is not allowed.
+//│ ║  l.250: 	code"code"42""
+//│ ╙──       	          ^^
+//│ Code[error, nothing]
 //│ // Prelude
 //│ class TypingUnit20 {}
 //│ const typing_unit20 = new TypingUnit20;

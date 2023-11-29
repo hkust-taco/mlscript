@@ -595,12 +595,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         R(UnitLit(true).withLoc(curLoc.map(_.left)))
     }
     bs.foldRight(body) {
-      case ((v, r), R(acc)) if genQuote => (r, acc) match {
-        case (Quoted(r), Quoted(acc)) => R(Quoted(Let(false, v, r, acc)))
-        case (Quoted(r), _) => R(Quoted(Let(false, v, r, Unquoted(acc))))
-        case (_, Quoted(acc)) => R(Quoted(Let(false, v, Unquoted(r), acc)))
-        case _ => R(Quoted(Let(false, v, Unquoted(r), Unquoted(acc))))
-      }
+      case ((v, r), R(acc)) if genQuote => R(Quoted(Let(false, v, Unquoted(r), Unquoted(acc))))
       case ((v, r), R(acc)) => R(Let(false, v, r, acc))
       case ((v, r), L(acc)) if genQuote =>
         err((
@@ -630,19 +625,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         if (!genQuote) R(If(body, els))
         else body match {
           case IfThen(cond, body) =>
-            val qcond = cond match {
-              case Quoted(body) => body
-              case _ => Unquoted(cond)
-            }
-            val qbody = body match {
-              case Quoted(body) => body
-              case _ => Unquoted(body)
-            }
-            val qels = els.map {
-              case Quoted(body) => body
-              case t => Unquoted(t)
-            }
-            R(Quoted(If(IfThen(qcond, qbody), qels)))
+            R(Quoted(If(IfThen(Unquoted(cond), Unquoted(body)), els.map(els => Unquoted(els)))))
           case _ =>
             err((
               msg"quote syntax is not supported yet." -> S(l0) :: Nil))
@@ -755,11 +738,6 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       case (QUOTE, loc) :: _ if quoted === false =>
         consume
         cur match {
-          case (QUOTE, l0) :: _ =>
-            consume
-            err((
-              msg"Nested quotation is not supported yet." -> S(l0) :: Nil))
-            R(Var("<error>"))
           case (IDENT(nme, false), l0) :: _ =>
             consume
             exprCont(Quoted(Var(nme)).withLoc(S(loc)), prec, allowNewlines = false)
@@ -903,12 +881,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
     // Tup(Nil).withLoc(lastLoc) // TODO FIXME produce error term instead
     UnitLit(true).withLoc(lastLoc) // TODO FIXME produce error term instead
 
-  private def quoteOp(lhs: Term, rhs: Term, op: Var) = (lhs, rhs) match {
-    case (Quoted(lhs), Quoted(rhs)) => Quoted(App(op, PlainTup(lhs, rhs)))
-    case (_, Quoted(rhs)) => Quoted(App(op, PlainTup(Unquoted(lhs), rhs)))
-    case (Quoted(lhs), _) => Quoted(App(op, PlainTup(lhs, Unquoted(rhs))))
-    case _ => Quoted(App(op, PlainTup(Unquoted(lhs), Unquoted(rhs))))
-  }
+  private def quoteOp(lhs: Term, rhs: Term, op: Var) =
+    Quoted(App(op, PlainTup(Unquoted(lhs), Unquoted(rhs))))
 
   private def declQenv(params: Term) = params match {
     case Var(name) => Set[Str](name)
@@ -931,11 +905,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         case t: Tup => t
         case _ => PlainTup(acc)
       }
-      val res = rhs match {
-        case Quoted(rhs) => Quoted(Lam(param, rhs))
-        case _ => Quoted(Lam(param, Unquoted(rhs)))
-      }
-      exprCont(res, prec, allowNewlines)
+      exprCont(Quoted(Lam(param, Unquoted(rhs))), prec, allowNewlines)
     }
   }
 
@@ -990,20 +960,17 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         case _ :: (KEYWORD(opStr @ "=>"), l0) :: _ if opPrec(opStr)._1 > prec =>
           consume
           consume
-          arrowLam(true, acc, prec, allowNewlines)
+          arrowLam(true, (acc match {
+            case Quoted(pat) => pat
+            case _ => acc
+          }), prec, allowNewlines)
         case _ :: (br @ BRACKETS(Round, toks), loc) :: _ =>
           consume
           consume
           val as = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented()).map {
-            case nme -> Fld(flgs, t) => t match {
-              case Quoted(t) => nme -> Fld(flgs, t)
-              case _ => nme -> Fld(flgs, Unquoted(t))
-            }
+            case nme -> Fld(flgs, t) => nme -> Fld(flgs, Unquoted(t))
           }
-          val res = acc match {
-            case Quoted(acc) => App(acc, Tup(as).withLoc(S(loc)))
-            case _ => App(Unquoted(acc), Tup(as).withLoc(S(loc)))
-          }
+          val res = App(Unquoted(acc), Tup(as).withLoc(S(loc)))
           exprCont(Quoted(res), prec, allowNewlines)
         case _ :: (IDENT(opStr, true), l0) :: _ if opPrec(opStr)._1 > prec =>
           consume

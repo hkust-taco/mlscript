@@ -61,11 +61,13 @@ run(tup)
 //│ 1
 
 // Quasiquote 
+:e
 let code_in_code = code"let x = code"1" in x"
-//│ let code_in_code: Code[Code[1, nothing], nothing]
+//│ ╔══[ERROR] Nested quotation is not allowed.
+//│ ║  l.65: 	let code_in_code = code"let x = code"1" in x"
+//│ ╙──      	                                     ^
+//│ let code_in_code: Code[error, nothing]
 
-run(code_in_code)
-//│ Code[1, nothing]
 
 // Unquoted - Const function
 let unquoted = code"let x = 3 in ${Const(10)} * x"
@@ -96,7 +98,7 @@ run(code_nested)
 let y = code"x"
 code"let id = x => ${y} in id(true)"
 //│ ╔══[ERROR] identifier not found: x
-//│ ║  l.96: 	let y = code"x"
+//│ ║  l.98: 	let y = code"x"
 //│ ╙──      	             ^
 //│ let y: Code[error, nothing]
 //│ Code[error, nothing]
@@ -149,7 +151,7 @@ class Foo(n: Int)
 :e
 let res = code"Foo(1)"
 //│ ╔══[ERROR] identifier not found: Foo
-//│ ║  l.150: 	let res = code"Foo(1)"
+//│ ║  l.152: 	let res = code"Foo(1)"
 //│ ╙──       	               ^^^
 //│ let res: Code[error, nothing]
 
@@ -171,7 +173,7 @@ let a = code"let x = 0 in x"
 let b = code"x"
 let c = code"${a} + ${b}"
 //│ ╔══[ERROR] identifier not found: x
-//│ ║  l.171: 	let b = code"x"
+//│ ║  l.173: 	let b = code"x"
 //│ ╙──       	             ^
 //│ let a: Code[0, nothing]
 //│ let b: Code[error, nothing]

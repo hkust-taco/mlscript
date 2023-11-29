@@ -77,7 +77,7 @@ declare fun reify(scope: forall 'in: () -> Scope['a, 'in, 'out]): Code['a, 'out]
 //│   fun bind: forall 'a. (nameHint: Str, value: Code['a, InnerCtx | OuterCtx]) -> Code['a, InnerCtx]
 //│   fun result: Code[Res, InnerCtx]
 //│ }
-//│ fun reify: forall 'a0 'out. (scope: forall 'in. () -> Scope['a0, 'in, 'out]) -> Code['a0, 'out]
+//│ fun reify: forall 'out 'a0. (scope: forall 'in. () -> Scope['a0, 'in, 'out]) -> Code['a0, 'out]
 
 :e
 class Example() extends Scope {
