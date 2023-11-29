@@ -246,11 +246,11 @@ object GOInterpreter:
     case Case(scrut, cases) =>
       val CtorApp(cls, xs) = (Ref(scrut):Expr) |> eval_may_not_progress(using ctx) match {
         case x: CtorApp => x
-        case _ => throw GOInterpreterError("not a class")
+        case x => throw GOInterpreterError(s"not a class $x")
       }
       val arm = cases.find{_._1 == cls} match {
         case Some((_, x)) => x
-        case _ => throw GOInterpreterError("can not find the matched case")
+        case _ => throw GOInterpreterError(s"can not find the matched case, $cls expected")
       }
       eval(arm)
     case LetExpr(name, expr, body) =>

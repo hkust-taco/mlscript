@@ -384,20 +384,6 @@ class GraphOptimizer:
   import Elim._
   import Intro._
 
-  private def appendCtx(ctx: Ctx, x: String, y: Name) = {
-    ctx.get(y.str) match {
-      case Some(z) => ctx + (x -> z)
-      case None => ctx + (x -> y)
-    }
-  }
-
-  private def tryGetDefn(r: GODefRef) = {
-    r.defn.swap.toOption
-  }
-
-  private def used(using v: String, ctx: Ctx)(name: String) =
-    name == v || ctx.get(name).contains(v)
-
   private class EliminationAnalysis extends GOIterator:
     val elims = new MutHMap[Str, MutSet[Elim]] with MultiMap[Str, Elim]
     override def iterate_name_use(x: Name) =
@@ -459,7 +445,7 @@ class GraphOptimizer:
         val intros2 = jpdef.params.zip(args)
           .filter{ (_, arg) => getIntro(arg, intros).isDefined }
           .map{ case (param, arg) => param.str -> getIntro(arg, intros).get }
-        getIntro(jpdef.body, intros2.toMap)
+        jpdef.activeResults
       case LetCall(resultNames, defnref, args, body) =>
         val defn = defnref.expectDefn
         val intros2 = defn.activeResults.zip(resultNames).foldLeft(intros) { 
@@ -499,57 +485,53 @@ class GraphOptimizer:
             changed |= old != defn.activeResults
         }
 
-  private def freeVarAnalysis(using ctx: Set[Str])(expr: GOExpr, fv: Set[Str], fj: Set[Str]): (Set[Str], Set[Str]) = expr match {
-    case Ref(Name(s)) => (if (ctx.contains(s)) fv else fv + s, fj)
-    case Literal(_) => (fv, fj)
-    case CtorApp(_, args) => (fv ++ args.flatMap {
-      case Ref(Name(s)) if !ctx.contains(s) => Some(s)
-      case _ => None
-    }, fj)
-    case Select(Name(x), cls, _) => (if (ctx.contains(x)) fv else fv + x, fj) 
-    case BasicOp(_, args) => (fv ++ args.flatMap {
-      case Ref(Name(s)) if !ctx.contains(s) => Some(s)
-      case _ => None
-    }, fj)
-    case Lambda(params, body) =>
-      val params2 = params.map { case Name(x) => x }
-      freeVarAnalysis(using ctx ++ params2)(body, fv -- params2, fj -- params2)
-    case Apply(Name(f), args) =>
-      val fv2 = if (ctx.contains(f)) fv else fv + f
-      val fv3 = fv2 ++ args.flatMap {
-        case Ref(Name(s)) if !ctx.contains(s) => Some(s)
-        case _ => None
-      }
-      (fv3, fj)
-    }
+  private class FreeVarAnalysis:
+    val visited = MutHSet[Str]()
+    private def f(using defined: Set[Str])(defn: GODef, fv: Set[Str]): Set[Str] =
+      val defined2 = defn.params.foldLeft(defined)((acc, param) => acc + param.str)
+      f(using defined2)(defn.body, fv)
+    private def f(using defined: Set[Str])(expr: GOExpr, fv: Set[Str]): Set[Str] = expr match
+      case Ref(name) => if (defined.contains(name.str)) fv else fv + name.str
+      case Literal(lit) => fv
+      case CtorApp(name, args) => args.foldLeft(fv)((acc, arg) => f(using defined)(arg.to_expr, acc))
+      case Select(name, cls, field) => if (defined.contains(name.str)) fv else fv + name.str
+      case BasicOp(name, args) => args.foldLeft(fv)((acc, arg) => f(using defined)(arg.to_expr, acc))
+      case Lambda(name, body) => ???
+      case Apply(name, args) =>
+        val fv2 = if (defined.contains(name.str)) fv else fv + name.str
+        args.foldLeft(fv2)((acc, arg) => f(using defined)(arg.to_expr, acc))
+    private def f(using defined: Set[Str])(node: GONode, fv: Set[Str]): Set[Str] = node match
+      case Result(res) => res.foldLeft(fv)((acc, arg) => f(using defined)(arg.to_expr, acc))
+      case Jump(defnref, args) =>
+        val defn = defnref.expectDefn
+        val defined2 = defn.params.foldLeft(defined)((acc, param) => acc + param.str)
+        var fv2 = args.foldLeft(fv)((acc, arg) => f(using defined2)(arg.to_expr, acc))
+        if (!visited.contains(defn.name))
+          visited.add(defn.name)
+          fv2 = f(using defined2)(defn, fv2)
+        fv2
+      case Case(scrut, cases) =>
+        val fv2 = if (defined.contains(scrut.str)) fv else fv + scrut.str
+        cases.foldLeft(fv2) {
+          case (acc, (cls, body)) => f(using defined)(body, acc)
+        }
+      case LetExpr(name, expr, body) =>
+        val fv2 = f(using defined)(expr, fv)
+        val defined2 = defined + name.str
+        f(using defined2)(body, fv2)
+      case LetJoin(joinName, params, rhs, body) =>
+        throw GraphOptimizingError(f"join points after promotion: $node")
+      case LetCall(resultNames, defnref, args, body) =>
+        var fv2 = args.foldLeft(fv)((acc, arg) => f(using defined)(arg.to_expr, acc))
+        val defined2 = resultNames.foldLeft(defined)((acc, name) => acc + name.str)
+        val defn = defnref.expectDefn
+        if (!visited.contains(defn.name))
+          visited.add(defn.name)
+          fv2 = f(using defined2)(defn, fv2)
+        f(using defined2)(body, fv2)
 
-  private def freeVarAnalysis(using ctx: Set[Str])(body: GONode, fv: Set[Str], fj: Set[Str]): (Set[Str], Set[Str])
-    = body match {
-    case Result(xs) => (fv ++ xs.flatMap {
-      case Ref(Name(s)) if !ctx.contains(s) => Some(s)
-      case _ => None
-    }, fj)
-    case Jump(defnref, _) =>
-      val defn = defnref.expectDefn
-      val params = defn.params map { case Name(x) => x }
-      freeVarAnalysis(using ctx ++ params)(defn.body, fv -- params, fj -- params)
-    case Case(Name(scrut), cases) => 
-      val fv2 = if (ctx.contains(scrut)) fv else fv + scrut
-      cases.foldLeft((fv2, fj)) {
-        case ((fv, fj), (cls, e)) =>
-          freeVarAnalysis(using ctx)(e, fv, fj)
-      }
-    case LetExpr(Name(x), e1, e2) =>
-      val (fv2, fj2) = freeVarAnalysis(using ctx)(e1, fv, fj)
-      freeVarAnalysis(using ctx + x)(e2, fv2 - x, fj2 - x)
-    case LetJoin(Name(jp), xs, e1, e2) =>
-      val params = xs map { case Name(x) => x }
-      val (fv2, fj2) = freeVarAnalysis(using ctx ++ params)(e1, fv -- params, fj -- params)
-      freeVarAnalysis(using ctx + jp)(e2, fv2 - jp, fj2 - jp)
-    case LetCall(xs, defn, as, e) =>
-      val results = xs map { case Name(x) => x }
-      freeVarAnalysis(using ctx ++ results)(e, fv -- results, fj -- results)
-  }
+    def run(node: GONode) = f(using Set.empty)(node, Set.empty)
+    
 
   private type RawSplitRemap = Set[((Str, Str), ClassInfo, Str, Ls[Str])]
   private type RawSplitPreRemap = Set[((Str, Str), Str, Ls[Str])]
@@ -562,16 +544,11 @@ class GraphOptimizer:
     case Result(_xs) => (Set.empty, Set.empty, Set.empty, Set.empty)
     case Jump(_jp, _xs) => (Set.empty, Set.empty, Set.empty, Set.empty)
     case Case(scrut, cases) if scrut == target =>
-      val armfv = cases.map {
-        case (cls, body) =>
-          val (fv, _) = freeVarAnalysis(using Set.empty)(body, Set.empty, Set.empty)
-          fv
-      }
+      val armfv = cases.map { case (cls, body) => FreeVarAnalysis().run(body) }
 
       val allfv: Set[Str] = armfv.foldLeft(Set.empty)((x, y) => x ++ y)
       val allfv_list = allfv.toList
       var retvals: Ls[TrivialExpr] = allfv_list.map{x => Ref(Name(x))}
-
     
       val new_predef = if (retvals.nonEmpty) {
         val new_body = accu(Result(retvals))
@@ -1179,7 +1156,7 @@ class GraphOptimizer:
       GOProgram(x.classes, new_defs, x.main)
     override def visit(x: Jump) = x match
       case Jump(defnref, xs) =>
-        tryGetDefn(defnref) match {
+        defnref.getDefn match {
           case Some(defn) =>
             val parammap = defn.params.zip(xs).toMap
             val trivial = defn.body match {
@@ -1299,7 +1276,7 @@ class GraphOptimizer:
   private class DefRefInSet(defs: Set[GODef]) extends GOIterator:
     override def iterate(x: LetCall) = x match
       case LetCall(res, defnref, args, body) =>
-        tryGetDefn(defnref) match {
+        defnref.getDefn match {
           case Some(real_defn) => if (!defs.exists(_ eq real_defn)) throw GraphOptimizingError("ref is not in the set")
           case _ =>
         }
@@ -1308,7 +1285,7 @@ class GraphOptimizer:
   private object ParamsArgsAreConsistent extends GOIterator:
     override def iterate(x: LetCall) = x match
       case LetCall(res, defnref, args, body) => 
-        tryGetDefn(defnref) match {
+        defnref.getDefn match {
           case Some(real_defn) =>
             if (real_defn.params.length != args.length) 
               val x = real_defn.params.length
@@ -1318,7 +1295,7 @@ class GraphOptimizer:
         }
     override def iterate(x: Jump) = x match
       case Jump(defnref, xs) => 
-        tryGetDefn(defnref) match {
+        defnref.getDefn match {
           case Some(jdef) =>
             val x = xs.length
             val y = jdef.params.length

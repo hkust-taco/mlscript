@@ -145,6 +145,7 @@ bar()
 //│ Interpreted ------------------------------
 //│ 4
 
+:GOInterp
 :GraphOpt
 class A(w, x)
 class B(y)
@@ -311,6 +312,10 @@ bar()
 //│ let* (x%38) = bar()
 //│   in x%38)
 //│ 
+//│ Interpreted ------------------------------
+//│ 5
+//│ 
+//│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, A, [w,x]),ClassInfo(1, B, [y]),ClassInfo(2, C, [z])}, {
 //│ Def(1, bar, [], [], 
@@ -369,7 +374,12 @@ bar()
 //│ },
 //│ let* (x%38) = bar()
 //│   in x%38)
+//│ 
+//│ 
+//│ Interpreted ------------------------------
+//│ 5
 
+:GOInterp
 :GraphOpt
 class A(w, x)
 class B(y)
@@ -540,6 +550,10 @@ bar()
 //│ let* (x%40) = bar()
 //│   in x%40)
 //│ 
+//│ Interpreted ------------------------------
+//│ 5
+//│ 
+//│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, A, [w,x]),ClassInfo(1, B, [y]),ClassInfo(2, C, [z])}, {
 //│ Def(1, bar, [], [], 
@@ -663,3 +677,7 @@ bar()
 //│ },
 //│ let* (x%40) = bar()
 //│   in x%40)
+//│ 
+//│ 
+//│ Interpreted ------------------------------
+//│ 5

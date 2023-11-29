@@ -81,6 +81,12 @@ class GODefRef(var defn: Either[GODef, Str]):
     case Left(godef) => godef
     case Right(name) => throw Exception(s"Expected a def, but got $name")
   }
+  
+  def getDefn: Opt[GODef] = defn match {
+    case Left(godef) => Some(godef)
+    case Right(name) => None
+  }
+
   override def equals(o: Any): Bool = o match {
     case o: GODefRef if this.isInstanceOf[GODefRef] =>
       o.getName == this.getName
