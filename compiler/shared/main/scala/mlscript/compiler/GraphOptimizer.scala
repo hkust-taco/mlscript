@@ -25,10 +25,12 @@ class GraphOptimizer:
 
   private val counter = MutHMap[Str, Int]()
   private def gensym(s: Str = "x") = {
-    val count = counter.getOrElse(s, 0)
-    val ts = s.split("%")(0)
-    val tmp = s"$s%$count"
-    counter.update(s, count + 1)
+    val n = s.lastIndexOf('%')
+    val (ts, suffix) = s.splitAt(if n == -1 then s.length() else n)
+    var x = if suffix.stripPrefix("%").forall(_.isDigit) then ts else s
+    val count = counter.getOrElse(x, 0)
+    val tmp = s"$x%$count"
+    counter.update(x, count + 1)
     Name(tmp)
   }
 
@@ -536,6 +538,7 @@ class GraphOptimizer:
   private type RawSplitRemap = Set[((Str, Str), ClassInfo, Str, Ls[Str])]
   private type RawSplitPreRemap = Set[((Str, Str), Str, Ls[Str])]
   
+  
   private def splitFunctionWhenDestructImpl(using classes: Set[ClassInfo],
                                                   params: Ls[Name], resultNum: Int, isjp: Bool)
   (accu: GONode => GONode, body: GONode, name: Str, target: Name):
@@ -603,7 +606,6 @@ class GraphOptimizer:
   private def splitFunctionWhenDestruct(using classes: Set[ClassInfo])(f: GODef, target: Name):
     (RawSplitRemap, RawSplitPreRemap, Set[GODef], Set[GODef]) = 
     splitFunctionWhenDestructImpl(using classes, f.params, f.resultNum, f.isjp)(x => x, f.body, f.name, target)
-  
 
   private def findToBeSplitted(using intros: Map[Str, Intro], defs: Set[GODef])
                               (node: GONode): Set[(Str, Str)] =
@@ -789,89 +791,52 @@ class GraphOptimizer:
     GOProgram(classes, defs2, main)
   }
 
-  private def findToBeReplaced(using intros: Map[Str, Intro])
-                              (defn: GONode): Set[(Str, (Str, Ls[Str]))] = defn match {
-    case Result(_) => Set()
-    case Jump(defnref, as) =>
-      val defn = defnref.expectDefn
-      as.map {
-        case Ref(Name(s)) => intros.get(s)
-        case _ => None
-      }.zip(defn.activeParams).zip(defn.params).flatMap {
-        case ((Some(ICtor(_)), paramElim), Name(param)) if paramElim.exists(isESelect)
-          && !paramElim.contains(EDirect) =>
-          Some(defn.name, (param, paramElim.filter(isESelect).toList.map {
-            case ESelect(x) => x
-            case _ => ??? // unreachable
-          }))
-        case ((intro, elims), Name(param)) =>
-          None
-      }.toSet
-    case Case(scrut, cases) => cases.foldLeft(Set()) {
-      case (accu, (cls, e)) => accu ++ findToBeReplaced(e)
-    }
-    case LetExpr(x, e1, e2) =>
-      val intros2 = IntroductionAnalysis.getIntro(e1, intros).map { y => intros + (x.str -> y) }.getOrElse(intros)
-      findToBeReplaced(using intros2)(e2)
-    case LetJoin(jp, xs, e1, e2) => findToBeReplaced(e1) ++ findToBeReplaced(e2)
-    case LetCall(xs, defnref, as, e) =>
-      val defn = defnref.expectDefn
-      val intros2 = defn.activeResults.zip(xs).foldLeft(intros) { 
-        case (intros, (Some(i), name)) => intros + (name.str -> i)
-        case (intros, _) => intros
+  private class ScalarReplacementTargetAnalysis extends GOIterator:
+    val ctx = MutHMap[Str, MutHMap[Str, Set[Str]]]()
+    var intros = Map.empty[Str, Intro]
+
+    private def addTarget(name: Str, field: Str, target: Str) =
+      ctx.getOrElseUpdate(name, MutHMap()).updateWith(target) {
+        case Some(xs) => Some(xs + field)
+        case None => Some(Set(field))
       }
-      as.map {
-        case Ref(Name(s)) => intros.get(s)
+    
+    private def checkTargets(name: Str, intros: Map[Str, Intro], args: Ls[TrivialExpr], params: Ls[Name], active: Ls[Set[Elim]]) =
+      args.map { 
+        case x: Ref => intros.get(x.name.str)
         case _ => None
-      }.zip(defn.activeParams).zip(defn.params).flatMap {
-        case ((Some(ICtor(_)), paramElim), Name(param)) if paramElim.exists(isESelect)
-          && !paramElim.contains(EDirect) =>
-          Some(defn.name, (param, paramElim.filter(isESelect).toList.map {
-            case ESelect(x) => x
-            case _ => ??? // unreachable
-          }))
-        case ((intro, elims), Name(param)) =>
-          None
-      }.toSet ++ findToBeReplaced(using intros2)(e)
-  }
+      }.zip(params).zip(active).foreach {
+        case ((Some(ICtor(cls)), Name(param)), elim) if elim.exists(isESelect) && !elim.contains(EDirect) =>
+          elim.foreach {
+            case ESelect(field) => addTarget(name, field, param)
+            case _ =>
+          }
+        case _ =>
+      }
 
-  private def findToBeReplaced(prog: GOProgram): Map[Str, Set[(Str, Ls[Str])]] = {
-    prog.defs.foldLeft(Map.empty) {
-      (accu, defn) => 
-        accu ++ findToBeReplaced(using Map())(defn.body).groupMap(_._1)(_._2)  
-    }
-  }
+    override def iterate(x: Jump): Unit = x match
+      case Jump(defnref, args) =>
+        val defn = defnref.expectDefn
+        checkTargets(defn.name, intros, args, defn.params, defn.activeParams)
 
-  private def repScalarName(target: Str, field: Str) = {
-    Name(s"${target}_$field")
-  }
-
-  private def replaceScalarArgumentImpl(body: GONode, target: Str): GONode = body match {
-    case Result(_xs) => body
-    case Jump(_jp, _xs) => body
-    case Case(scrut, cases) => Case(scrut, cases map {
-      (cls, e) => (cls, replaceScalarArgumentImpl(e, target))
-    })
-    case LetExpr(x, Select(y,  cls, field), e2) if y.str == target =>
-      LetExpr(x, Ref(repScalarName(target, field)), replaceScalarArgumentImpl(e2, target))  
-    case LetExpr(x, e1, e2) =>
-      LetExpr(x, e1, replaceScalarArgumentImpl(e2, target))
-    case LetJoin(jp, xs, e1, e2) =>
-      throw GraphOptimizingError("join points after promotion")
-    case LetCall(xs, defn, as, e) =>
-      LetCall(xs, defn, as, replaceScalarArgumentImpl(e, target))
-  }
-
-  private def isESelect(elim: Elim) = elim match {
-    case ESelect(_) => true
-    case _ => false
-  }
-
-  private def targetReplacedScalarNames(targets: Map[Str, Set[Str]]) =
-    targets.flatMap { (k, fields) => fields.map { x => repScalarName(k, x) } }
-
-  private def newParamsForRepScalarArgs(params: Ls[Name], targets: Map[Str, Set[Str]]) =
-    params.filter(x => !targets.contains(x.str)) ++ targetReplacedScalarNames(targets)
+    override def iterate(x: LetExpr): Unit = x match
+      case LetExpr(x, e1, e2) =>
+        intros = IntroductionAnalysis.getIntro(e1, intros).map { y => Map(x.str -> y) }.getOrElse(intros)
+        e2.accept_iterator(this)
+    
+    override def iterate(x: LetCall): Unit = x match
+      case LetCall(xs, defnref, as, e) =>
+        val defn = defnref.expectDefn
+        intros = defn.activeResults.zip(xs).foldLeft(intros) { 
+          case (intros, (Some(i), name)) => intros + (name.str -> i)
+          case (intros, _) => intros
+        }
+        checkTargets(defn.name, intros, as, defn.params, defn.activeParams)
+        e.accept_iterator(this)
+    
+    override def iterate(x: GODef): Unit =
+      intros = Map.empty
+      x.body.accept_iterator(this)
 
   private enum ParamSubst:
     case ParamKeep
@@ -879,190 +844,136 @@ class GraphOptimizer:
 
   import ParamSubst._
 
-  private def revMapForRepScalarArgs(params: Ls[Name], targets: Map[Str, Set[Str]]) =
+  private def isESelect(elim: Elim) = elim match
+    case ESelect(_) => true
+    case _ => false
+
+  private def fieldParamName(name: Str, field: Str) = Name(name + "_" + field)
+
+  private def fieldParamNames(targets: Map[Str, Set[Str]]) =
+    targets.flatMap { (k, fields) => fields.map { x => fieldParamName(k, x) } }
+
+  private def paramSubstMap(params: Ls[Name], targets: Map[Str, Set[Str]]) =
     params.flatMap { 
       case x if targets.contains(x.str) => None
       case x => Some(x.str -> ParamKeep)
     }.toMap ++ targets.flatMap {
-      (k, fields) => fields.map { x => repScalarName(k, x).str -> ParamFieldOf(k, x) }
+      (k, fields) => fields.map { x => fieldParamName(k, x).str -> ParamFieldOf(k, x) }
     }.toMap
 
-  private def replaceScalarArguments(new_name: Str, defn: GODef, targets: Map[Str, Set[Str]]): GODef = {
-    val new_params = newParamsForRepScalarArgs(defn.params, targets) 
-    val new_body = targets.foldLeft(defn.body) {
-      case (body, (target, _)) => replaceScalarArgumentImpl(body, target)
-    }
+
+  private def newParams(params: Ls[Name], targets: Map[Str, Set[Str]]) =
+      params.filter(x => !targets.contains(x.str)) ++ fieldParamNames(targets)
+  
+  private class SelectionReplacement(target_params: Set[Str]) extends GOVisitor:
+    override def visit(x: LetExpr) = x match
+      case LetExpr(x, Select(y,  cls, field), e2) if target_params.contains(y.str) =>
+        LetExpr(x, Ref(fieldParamName(y.str, field)), e2.accept_visitor(this))  
+      case LetExpr(x, e1, e2) =>
+        LetExpr(x.accept_def_visitor(this), e1.accept_visitor(this), e2.accept_visitor(this))
+
+  private class SRNewDefinitionBuilder(new_name: Str, old_defn: GODef, targets: Map[Str, Set[Str]]) extends GOVisitor:
+    var new_defines = Ls[GODef]()
     
-    GODef(
-      genfid(),
-      new_name,
-      defn.isjp, 
-      new_params,
-      defn.resultNum,
-      new_body,
-    )
-  }
+    override def visit(x: GODef) =
+      val new_params = newParams(x.params, targets) 
+      GODef(
+        genfid(),
+        new_name,
+        x.isjp, 
+        new_params,
+        x.resultNum,
+        x.body.accept_visitor(SelectionReplacement(targets.keySet)),
+      )
+
+  private class SRCallSiteReplacement(defnNewName: Map[Str, Str], classOfField: FieldCtx, scalarReplaceTargets: Map[Str, Map[Str, Set[Str]]]) extends GOVisitor:
+    private def susbtCallsite(defn: GODef, as: Ls[TrivialExpr], f: (Str, Ls[TrivialExpr]) => GONode) =
+      val new_name = defnNewName(defn.name)
+      val targets = scalarReplaceTargets(defn.name)
+      val param_subst = paramSubstMap(defn.params, targets)
+      val new_params = newParams(defn.params, targets)
+      val argMap = defn.params.map(_.str).zip(as).toMap
+
+      val sel_ctx = MutHMap[(Str, Str), Str]()
+
+      val letlist = new_params.flatMap {
+        param => param_subst(param.str) match {
+          case ParamKeep => None
+          case ParamFieldOf(orig, field) =>
+            val orig_arg = expectTexprIsRef(argMap(orig)).str
+            val new_var = gensym()
+            sel_ctx.addOne((orig_arg, field) -> new_var.str)
+            Some((new_var, orig_arg, field))
+        }
+      }
+
+      val new_args: Ls[TrivialExpr] = new_params.map {
+        param => param_subst(param.str) match {
+          case ParamKeep => argMap(param.str)
+          case ParamFieldOf(orig, str) =>
+            val orig_arg = expectTexprIsRef(argMap(orig)).str
+            val x  = sel_ctx.get((orig_arg, str)).get
+            Ref(Name(x))
+        }
+      }
+      
+      val new_node = f(new_name, new_args)
+      letlist.foldRight(new_node) { case ((x, y, field), node) => LetExpr(x, Select(Name(y), classOfField(field)._2, field), node) }
+
+    override def visit(x: Jump) = x match
+      case Jump(defnref, as) =>
+        val defn = defnref.expectDefn
+        if (scalarReplaceTargets.contains(defn.name))
+          susbtCallsite(defn, as, (x, y) => Jump(GODefRef(Right(x)), y))
+        else
+          Jump(defnref, as)
+
+
+    override def visit(x: LetCall) = x match
+      case LetCall(xs, defnref, as, e) =>
+        val defn = defnref.expectDefn
+        if (scalarReplaceTargets.contains(defn.name))
+          susbtCallsite(defn, as, (x, y) => LetCall(xs, GODefRef(Right(x)), y, e.accept_visitor(this)))
+        else
+          LetCall(xs, defnref, as, e.accept_visitor(this))
+  
 
   private def expectTexprIsRef(expr: TrivialExpr): Name = expr match {
     case Ref(name) => name
     case _ => ??? // how is a literal scalar replaced?
   }
 
-  private def substCallOfRepScalarArg(using namemap: Map[Str, Str], fldctx: FieldCtx, workset: Map[Str, Map[Str, Set[Str]]], sctx: Map[(Str, Str), Str])
-                                     (node: GONode) : GONode = node match {
-    case Result(_) => node
-    case Jump(defnref, as) => 
-      val defn = defnref.expectDefn
-      if (namemap.contains(defn.name)) {
-        val new_name = namemap(defn.name)
-        if (!workset.contains(defn.name))
-          throw GraphOptimizingError(f"name map contains ${defn.name} -> $new_name but workset doesn't")
-        val targets = workset(defn.name)
-        val rev_map: Map[Str, ParamSubst] = revMapForRepScalarArgs(defn.params, targets)
-        val new_params = newParamsForRepScalarArgs(defn.params, targets)
-        val old_map: Map[Str, TrivialExpr] = defn.params.map(_.str).zip(as).toMap
+  private class ScalarReplacement extends GOVisitor:
+    override def visit(x: GOProgram) =
+      val classes = x.classes
+      val defs = x.defs
+      val main = x.main
+      val srta = ScalarReplacementTargetAnalysis()
+      defs.foreach(_.accept_iterator(srta))
+      val workset: Map[Str, Map[Str, Set[Str]]] = srta.ctx.map {
+        case (name, m) => (name, m.toMap)
+      }.toMap
 
-        var rbind: Map[(Str, Str), Str] = Map.empty
-        val new_bindings: Ls[(Name, (Str, Str))] = new_params.flatMap {
-          param => rev_map(param.str) match {
-            case ParamKeep => None
-            case ParamFieldOf(orig, str) =>
-              val orig_arg = expectTexprIsRef(old_map(orig)).str
-              sctx.get((orig_arg, str)) match {
-                case Some(x) => None
-                case None =>
-                  val v = gensym()
-                  rbind = rbind + ((orig_arg, str) -> v.str)
-                  Some(v -> (orig_arg, str))
-              }
-          }
-        }
+      val namemap = defs.flatMap {
+        case defn if workset.contains(defn.name) => Some(defn.name -> gensym(defn.name + "$S").str)
+        case _ => None
+      }.toMap
+      
+      val srDefs = defs.flatMap {
+        defn => workset.get(defn.name).map {
+            targets => defn.accept_visitor(SRNewDefinitionBuilder(namemap(defn.name), defn, targets))
+      }}
 
-        val new_sctx = sctx ++ rbind
-
-        val new_args: Ls[TrivialExpr] = new_params.map {
-          param => rev_map(param.str) match {
-            case ParamKeep => old_map(param.str)
-            case ParamFieldOf(orig, str) =>
-              val orig_arg = expectTexprIsRef(old_map(orig)).str
-              new_sctx.get((orig_arg, str)) match {
-              case Some(x) => Ref(Name(x))
-              case None => ???
-            }
-          }
-        }
-
-        val new_node = Jump(GODefRef(Right(new_name)), new_args)
-
-        val final_node = new_bindings.foldRight(new_node) {
-          case ((x, (y, field)), node) => LetExpr(x, Select(Name(y), fldctx(field)._2, field), node)
-        }
-
-        final_node
-      } else node
-    case Case(scrut, cases) => Case(scrut, cases.map {
-      (cls, e) => (cls, substCallOfRepScalarArg(e))
-    })
-    case LetExpr(x, e1, e2) =>
-      LetExpr(x, e1, substCallOfRepScalarArg(e2))
-    case LetJoin(jp, xs, e1, e2) => 
-      throw GraphOptimizingError("join points after promotion")
-    case LetCall(xs, defnref, as, e) =>
-      val defn = defnref.expectDefn
-      if (namemap.contains(defn.name)) {
-        val new_name = namemap(defn.name)
-        if (!workset.contains(defn.name))
-          throw GraphOptimizingError(f"name map contains ${defn.name} -> $new_name but workset doesn't")
-        val targets = workset(defn.name)
-        val rev_map: Map[Str, ParamSubst] = revMapForRepScalarArgs(defn.params, targets)
-        val new_params = newParamsForRepScalarArgs(defn.params, targets)
-        val old_map: Map[Str, TrivialExpr] = defn.params.map(_.str).zip(as).toMap
-
-        var rbind: Map[(Str, Str), Str] = Map.empty
-        val new_bindings: Ls[(Name, (Str, Str))] = new_params.flatMap {
-          param => rev_map(param.str) match {
-            case ParamKeep => None
-            case ParamFieldOf(orig, str) =>
-              val orig_arg = expectTexprIsRef(old_map(orig)).str
-              sctx.get((orig_arg, str)) match {
-                case Some(x) => None
-                case None =>
-                  val v = gensym()
-                  rbind = rbind + ((orig_arg, str) -> v.str)
-                  Some(v -> (orig_arg, str))
-              }
-          }
-        }
-
-        val new_sctx = sctx ++ rbind
-
-        val new_args: Ls[TrivialExpr] = new_params.map {
-          param => rev_map(param.str) match {
-            case ParamKeep => old_map(param.str)
-            case ParamFieldOf(orig, str) =>
-              val orig_arg = expectTexprIsRef(old_map(orig)).str
-              new_sctx.get((orig_arg, str)) match {
-              case Some(x) => Ref(Name(x))
-              case None => ???
-            }
-          }
-        }
-
-        val new_node = LetCall(xs, GODefRef(Right(new_name)), new_args, substCallOfRepScalarArg(using namemap, fldctx, workset, new_sctx)(e))
-
-        val final_node = new_bindings.foldRight(new_node) {
-          case ((x, (y, field)), node) => LetExpr(x, Select(Name(y), fldctx(field)._2, field), node)
-        }
-
-        final_node
-      } else node
-  }
-
-  private def substCallOfRepScalarArgOnDef(using namemap: Map[Str, Str], fldctx: FieldCtx, workset: Map[Str, Map[Str, Set[Str]]])(defn: GODef) =
-    GODef(
-      defn.id,
-      defn.name,
-      defn.isjp, 
-      defn.params,
-      defn.resultNum,
-      substCallOfRepScalarArg(using namemap, fldctx, workset, Map.empty)(defn.body),
-    )
-
-  def replaceScalar(prog: GOProgram): GOProgram = {
-    val classes = prog.classes
-    val defs: Set[GODef] = prog.defs
-    val main = prog.main
-    val init: Set[GODef] = Set()
-    val rawworkset: Map[Str, Set[(Str, Ls[Str])]] = findToBeReplaced(prog)
-    val workset: Map[Str, Map[Str, Set[Str]]] = rawworkset.map { 
-      case (defname, s) => (defname, s.flatMap { (param, fields) => fields.map { x => (param, x) }}.groupMap(_._1)(_._2))
-    }
-    val namemap = defs.flatMap {
-      // case defn if defn.isjp => None
-      case defn if workset.contains(defn.name) => Some(defn.name -> gensym(defn.name + "$S").str)
-      case _ => None
-    }.toMap
-
-    val defs2 = defs.flatMap {
-      // case defn if defn.isjp => None
-      case defn =>
-        workset.get(defn.name).map {
-          targets => replaceScalarArguments(namemap(defn.name), defn, targets)
-        }
-    }
-
-    val cls = prog.classes
-    val clsctx: ClassCtx = cls.map{ case ClassInfo(_, name, _) => name }.zip(cls).toMap
-    val fldctx: FieldCtx = cls.flatMap { case ClassInfo(_, name, fields) => fields.map { fld => (fld, (name, clsctx(name))) } }.toMap
-    val new_defs = defs.map {
-      defn => substCallOfRepScalarArgOnDef(using namemap, fldctx, workset)(defn)
-    }
-
-    val defs3 = new_defs ++ defs2
-    fixCrossReferences(main, defs3)
-    validate(main, defs3)
-    GOProgram(classes, defs3, main)
-  }
+      val clsctx: ClassCtx = classes.map{ case ClassInfo(_, name, _) => name }.zip(classes).toMap
+      val fldctx: FieldCtx = classes.flatMap { case ClassInfo(_, name, fields) => fields.map { fld => (fld, (name, clsctx(name))) } }.toMap
+      val srcsp = SRCallSiteReplacement(namemap, fldctx, workset)
+      val new_defs = defs.map(_.accept_visitor(srcsp)) ++ srDefs
+      fixCrossReferences(main, new_defs)
+      validate(main, new_defs)
+      GOProgram(classes, new_defs, main)
+ 
+  def replaceScalar(prog: GOProgram): GOProgram =
+    prog.accept_visitor(ScalarReplacement())  
 
   private class TrivialBindingSimplification extends GOTrivialExprVisitor, GOVisitor:
     var rctx: Map[Str, TrivialExpr] = Map.empty

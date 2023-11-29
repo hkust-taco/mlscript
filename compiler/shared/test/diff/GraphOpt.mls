@@ -757,9 +757,11 @@ baz()
 //│ let x%17 = c%0.y
 //│   in let x%18 = c%0.x
 //│     in let* (x%8) = foo$S%0(x%17,x%18,1,0)
-//│       in let* (x%10) = foo$S%0(3,2,x%17,x%18)
-//│         in let* (x%13) = foo$S%0(3,2,1,0)
-//│           in x%13
+//│       in let x%23 = c%0.y
+//│         in let x%24 = c%0.x
+//│           in let* (x%10) = foo$S%0(3,2,x%23,x%24)
+//│             in let* (x%13) = foo$S%0(3,2,1,0)
+//│               in x%13
 //│ )
 //│ Def(2, baz, [], [], 
 //│ [None], 1, 
