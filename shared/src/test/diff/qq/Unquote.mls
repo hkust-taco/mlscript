@@ -217,7 +217,7 @@ code"${Const(n)} + 1"
 code"let x = 42 in x"
 //│ Code[42, nothing]
 
-code"let x = 42 in ${x}"
+code"let x = 42 in ${code"x"}"
 //│ Code[42, nothing]
 
 code"let x = 42 in ${code"x"}"

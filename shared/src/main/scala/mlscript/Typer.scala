@@ -93,25 +93,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       if (quoted === inQuote) qenv.get(name) orElse parent.dlof(_.qget(name, quoted))(N)
       else parent.dlof(_.qget(name, quoted))(N)
     def getCtxTy: ST = fvars.foldLeft[ST](BotType)((res, ty) => res | ty)
-    def wrapCode: Ls[(Str, TypeInfo)] = qenv.flatMap {
-      case (name, tag) =>
-        get(name, inQuote) match {
-          case S(VarSymbol(ty, _)) =>
-            name -> VarSymbol(TypeRef(TypeName("Code"), ty :: tag :: Nil)(noProv), Var(name)) :: Nil
-          case S(_: AbstractConstructor) | S(_: LazyTypeInfo) => die // * Abstract ctors and type defs are not allowed
-          case N => Nil // * In the same quasiquote but not the same scope
-        }
-    }.toList
-    def unwrap[T](names: Ls[Str], f: () => T): T = { // * Revert ctx modification temporarily
-      val cache: MutMap[Str, TypeInfo] = MutMap.empty
-      names.foreach(name => {
-        cache += name -> env.getOrElse(name, die)
-        env -= name
-      })
-      val res = f()
-      cache.foreach(env += _)
-      res
-    }
     def traceFV(fv: ST): Unit = {
       println(s"Capture free variable type $fv")
       fvars += fv
@@ -1516,21 +1497,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         if (ctx.inQuote) err(msg"Nested quotation is not allowed.", body.toLoc)
         else {
           val newCtx = ctx.nest.copy(inQuote = true, qenv = MutMap.empty, fvars = MutSet.empty)
-          val bodyType = ctx.parent match {
-            case S(p) if p.inQuote =>
-              ctx.unwrap(p.wrapCode.map(_._1), () => typeTerm(body)(newCtx, raise, vars, genLambdas))
-            case _ => typeTerm(body)(newCtx, raise, vars, genLambdas)
-          }
+          val bodyType = typeTerm(body)(newCtx, raise, vars, genLambdas)
           TypeRef(TypeName("Code"), bodyType :: newCtx.getCtxTy :: Nil)(noProv)
         }
       case Unquoted(body) =>
         if (ctx.inQuote) {
           val newCtx = ctx.nest.copy(inQuote = false)
-          println("Map qenv to env in unquote...")
-          ctx.wrapCode.foreach(c => {
-            println(s"Create ${c._2} in newCtx")
-            newCtx += c
-          })
           val bodyType = typeTerm(body)(newCtx, raise, vars, genLambdas)
           val res = freshVar(noTyProv, N)
           val ctxTy = freshVar(noTyProv, N)

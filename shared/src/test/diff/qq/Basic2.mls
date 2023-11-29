@@ -67,11 +67,10 @@ run(app)(id)(1)
 
 :e
 code"f => x => f(${run(x)})"
-//│ ╔══[ERROR] Type mismatch in application:
+//│ ╔══[ERROR] identifier not found: x
 //│ ║  l.69: 	code"f => x => f(${run(x)})"
-//│ ║        	                   ^^^^^^
-//│ ╙── expression of type `?x` does not match type `nothing`
-//│ Code[forall 'a 'b. ('a -> 'b) -> Code['a, anything] -> 'b, nothing]
+//│ ╙──      	                       ^
+//│ Code[forall 'a. (nothing -> 'a) -> anything -> 'a, nothing]
 
 
 run(code"(x => x + 1)(${Const(42)})")

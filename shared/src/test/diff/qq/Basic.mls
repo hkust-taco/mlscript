@@ -193,5 +193,5 @@ code"x => ${ code"x" }"
 //│ Code[forall 'a. 'a -> 'a, nothing]
 
 
-run(code"x => x + ${x}")(1)
+run(code"x => x + ${code"x"}")(1)
 //│ Int

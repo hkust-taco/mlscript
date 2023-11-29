@@ -27,7 +27,7 @@ code"x => x"
 
 :js
 :ne
-code"x => ${x}"
+code"x => ${code"x"}"
 //│ Code[forall 'a. 'a -> 'a, nothing]
 //│ // Prelude
 //│ class TypingUnit2 {}
@@ -364,5 +364,5 @@ fun foo(dbg) =
 //│ fun foo: forall 'a 'b 'c. (Code['a, ??x] -> Code['b, ??x0 | 'c]) -> Code['a -> 'b, 'c]
 
 :ne
-code"x => let c = 42 in ${x}"
+code"x => let c = 42 in ${code"x"}"
 //│ Code[forall 'a. 'a -> 'a, nothing]

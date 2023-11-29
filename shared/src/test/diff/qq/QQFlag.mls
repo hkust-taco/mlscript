@@ -44,7 +44,7 @@ run(code"(x => x + 1)(2)")
 //│       undefined
 
 
-run(code"x => ${x}")
+run(code"x => x")
 //│ forall 'a. 'a -> 'a
 //│ res
 //│     = Quoted:
@@ -82,7 +82,7 @@ fun power'(x, n) =
   if (n == 0) then Const(1)
   else if (even(n)) then code"let t = ${power'(x, Math.floor(n / 2))} in t * t"
   else code"${x} * ${power'(x, n - 1)}"
-run(code"x => ${power'(x, 10)}")
+run(code"x => ${power'(code"x", 10)}")
 //│ declare module Math {
 //│   fun floor: (x: Num) -> Int
 //│ }

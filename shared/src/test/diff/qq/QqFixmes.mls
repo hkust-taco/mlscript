@@ -6,15 +6,12 @@
 fun (%>) bind(rhs, k) = code"let x = ${rhs} in ${k(code"x")}"
 //│ fun (%>) bind: forall 'a 'b 'c. (Code['a, 'b], Code['a, ??x] -> Code['c, ??x0 | 'b]) -> Code['c, 'b]
 
-fun (%>) bind(rhs, k) = code"let x = ${rhs} in ${k(x)}"
-//│ fun (%>) bind: forall 'a 'b 'c. (Code['a, 'b], Code['a, ??x] -> Code['c, ??x0 | 'b]) -> Code['c, 'b]
-
 // * Notice the extrusion
 fun foo(k) = code"x => ${k(code"x")}"
-//│ fun foo: forall 'a 'b 'c. (Code['c, ??x] -> Code['a, ??x0 | 'b]) -> Code['c -> 'a, 'b]
+//│ fun foo: forall 'a 'b 'c. (Code['a, ??x] -> Code['b, ??x0 | 'c]) -> Code['a -> 'b, 'c]
 
 fun (%>) bind(rhs, k) = code"(x => ${k(code"x")})(${rhs})"
-//│ fun (%>) bind: forall 'a 'b 'c. (Code['b, 'c], Code['b, ??x] -> Code['a, ??x0 | 'c]) -> Code['a, 'c]
+//│ fun (%>) bind: forall 'a 'b 'c. (Code['a, 'b], Code['a, ??x] -> Code['c, ??x0 | 'b]) -> Code['c, 'b]
 
 // * Somehow this one does extrude properly:
 fun app = code"(f, x) => f(x)"
@@ -33,7 +30,7 @@ fun foo() =
   let bar = 42 // not at top level
   code"bar"
 //│ ╔══[ERROR] identifier not found: bar
-//│ ║  l.34: 	  code"bar"
+//│ ║  l.31: 	  code"bar"
 //│ ╙──      	       ^^^
 //│ fun foo: () -> Code[error, nothing]
 
@@ -43,8 +40,8 @@ code"1 ++ 2"
 //│ Code[Int, nothing]
 
 // G <: ??x | 'a
-fun bind(rhs, k: forall 'C: Code['A, 'C] -> Code['B, 'C | 'G]) = code"let x = ${rhs} in ${k(x)}"
-//│ fun bind: forall 'a 'B 'A. (Code['A, 'a], k: forall 'C. Code['A, 'C] -> Code['B, 'C | ??x | 'a]) -> Code['B, 'a]
+fun bind(rhs, k: forall 'C: Code['A, 'C] -> Code['B, 'C | 'G]) = code"let x = ${rhs} in ${k(code"x")}"
+//│ fun bind: forall 'A 'a 'B. (Code['A, 'a], k: forall 'C. Code['A, 'C] -> Code['B, 'C | ??x | 'a]) -> Code['B, 'a]
 
 bind : forall 'a, 'c, 'g: (Code['a, 'g], k: forall 'c: Code['a, 'c] -> Code['b, 'c | 'g]) -> Code['b, 'g]
 //│ forall 'a 'g. (Code['a, 'g], k: forall 'c. Code['a, 'c] -> Code['b, 'c | 'g]) -> Code['b, 'g]
@@ -54,6 +51,6 @@ bind : forall 'a, 'c, 'g: (Code['a, 'g], k: forall 'c: Code['a, 'c] -> Code['b, 
 fun foo(dbg) =
   code"x => ${let c = code"(${x}; ${foo(dbg)})" in dbg(c)}"
 //│ ╔══[ERROR] identifier not found: x
-//│ ║  l.55: 	  code"x => ${let c = code"(${x}; ${foo(dbg)})" in dbg(c)}"
+//│ ║  l.52: 	  code"x => ${let c = code"(${x}; ${foo(dbg)})" in dbg(c)}"
 //│ ╙──      	                              ^
-//│ fun foo: forall 'a 'b. (Code[anything -> 'a, 'b] -> Code['a, ??x | 'b]) -> Code[anything -> 'a, 'b]
+//│ fun foo: forall 'a 'b. (Code[anything -> 'b, 'a] -> Code['b, ??x | 'a]) -> Code[anything -> 'b, 'a]

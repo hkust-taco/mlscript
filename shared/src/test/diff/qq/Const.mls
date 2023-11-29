@@ -5,12 +5,12 @@
 :e
 // :ge
 code"x => y => 100 + ${Const(x + y)}"
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.7: 	code"x => y => 100 + ${Const(x + y)}"
-//│ ║       	                             ^^^^^
-//│ ╟── reference of type `Code[?a, ?x]` is not an instance of `Int`
+//│ ╔══[ERROR] identifier not found: x
 //│ ║  l.7: 	code"x => y => 100 + ${Const(x + y)}"
 //│ ╙──     	                             ^
+//│ ╔══[ERROR] identifier not found: y
+//│ ║  l.7: 	code"x => y => 100 + ${Const(x + y)}"
+//│ ╙──     	                                 ^
 //│ Code[anything -> anything -> Int, nothing]
 
 :e

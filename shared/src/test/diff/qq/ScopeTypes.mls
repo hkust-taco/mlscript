@@ -135,5 +135,5 @@ fun f[A](x: Code[Int, A]): Code[Int, A] = code"${x} + 1"
 run(f(Const(42)))
 //│ Int
 
-run(code"x => x + 1 + ${f(x)}")
+run(code"x => x + 1 + ${f(code"x")}")
 //│ Int -> Int

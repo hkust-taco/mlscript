@@ -74,7 +74,7 @@ fun power'(x, n) =
 
 :ne
 :js
-let power10 = run(code"x => ${power'(x, 10)}")
+let power10 = run(code"x => ${power'(code"x", 10)}")
 //│ let power10: Int -> Int
 //│ // Prelude
 //│ class TypingUnit8 {}
