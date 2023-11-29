@@ -150,8 +150,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
           }
           // go(k2, LITVAL(StrLit(chars)))
           lex(k2, ind, next(k2, LITVAL(StrLit(chars))))
-        }
-        
+        }        
       case '/' if bytes.lift(i + 1).contains('/') =>
         val j = i + 2
         val (txt, k) =

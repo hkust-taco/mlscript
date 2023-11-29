@@ -155,7 +155,7 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
       JSBinary(toJSOperator(op), translateTerm(lhs), translateTerm(rhs))
     // Binary expressions with new-definitions
     case App(Var(op), Tup(N -> Fld(_, lhs) :: N -> Fld(_, rhs) :: Nil))
-        if JSBinary.operators.contains(toJSOperator(op)) && !translateVarImpl(toJSOperator(op), isCallee = true).isRight =>
+        if JSBinary.operators.contains(toJSOperator(op)) && (!translateVarImpl(op, isCallee = true).isRight || op =/= toJSOperator(op)) =>
       JSBinary(toJSOperator(op), translateTerm(lhs), translateTerm(rhs))
     // If-expressions
     case App(App(App(Var("if"), Tup((_, Fld(_, tst)) :: Nil)), Tup((_, Fld(_, con)) :: Nil)), Tup((_, Fld(_, alt)) :: Nil)) =>
@@ -226,7 +226,7 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
               case S(Var(nme)) -> _ =>
                 lamScope.declareParameter(nme)
                 nme -> lamScope.declareValue(nme, S(false), false, N).runtimeName
-              case _ => ???
+              case p => throw CodeGenError(s"parameter $p is not supported in quasiquote")
             }
             newfreeVars.foldRight(desugarQuote(body)(lamScope, isQuoted, freeVars ++ newfreeVars.map(_._1)))((p, res) =>
               Let(false, Var(p._2), createASTCall("freshName", StrLit(p._1) :: Nil), createASTCall("Lam", createASTCall("Var", Var(p._2) :: Nil) :: res :: Nil)))
@@ -249,7 +249,7 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
       else
         App(App(Var(toJSOperator(op)), Tup((N -> Fld(f1, desugarQuote(lhs))) :: Nil)), Tup((N -> Fld(f2, desugarQuote(rhs))) :: Nil))
     case App(Var(op), Tup(N -> Fld(f1, lhs) :: N -> Fld(f2, rhs) :: Nil))
-        if JSBinary.operators.contains(toJSOperator(op)) && !translateVarImpl(toJSOperator(op), isCallee = true).isRight =>
+        if JSBinary.operators.contains(toJSOperator(op)) && (!translateVarImpl(op, isCallee = true).isRight || op =/= toJSOperator(op)) =>
       if (isQuoted)
         createASTCall("App", createASTCall("Var", StrLit(toJSOperator(op)) :: Nil) :: desugarQuote(lhs) :: desugarQuote(rhs) :: Nil)
       else
@@ -1274,7 +1274,7 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
   
 }
 
-class JSWebBackend extends JSBackend(allowUnresolvedSymbols = false) {
+class JSWebBackend extends JSBackend(allowUnresolvedSymbols = true) {
   def oldDefs = false
   
   // Name of the array that contains execution results
