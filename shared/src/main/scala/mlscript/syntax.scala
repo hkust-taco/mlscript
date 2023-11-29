@@ -82,6 +82,7 @@ final case class Subs(arr: Term, idx: Term)                          extends Ter
 final case class Assign(lhs: Term, rhs: Term)                        extends Term
 final case class Splc(fields: Ls[Either[Term, Fld]])                 extends Term
 final case class New(head: Opt[(NamedType, Term)], body: TypingUnit) extends Term // `new C(...)` or `new C(){...}` or `new{...}`
+final case class NuNew(cls: Term) extends Term
 final case class If(body: IfBody, els: Opt[Term])                    extends Term
 final case class TyApp(lhs: Term, targs: Ls[Type])                   extends Term
 final case class Where(body: Term, where: Ls[Statement])             extends Term
@@ -91,6 +92,7 @@ final case class Super()                                             extends Ter
 final case class Eqn(lhs: Var, rhs: Term)                            extends Term // equations such as x = y, notably used in constructors; TODO: make lhs a Term
 final case class Quoted(body: Term)                                  extends Term 
 final case class Unquoted(body: Term)                                extends Term 
+final case class Rft(base: Term, decls: TypingUnit)                  extends Term
 
 final case class AdtMatchWith(cond: Term, arms: Ls[AdtMatchPat])     extends Term
 final case class AdtMatchPat(pat: Term, rhs: Term)                   extends AdtMatchPatImpl
@@ -158,6 +160,7 @@ final case class WithExtension(base: Type, rcd: Record)  extends Type
 final case class Splice(fields: Ls[Either[Type, Field]]) extends Type
 final case class Constrained(base: TypeLike, tvBounds: Ls[TypeVar -> Bounds], where: Ls[Bounds]) extends Type
 // final case class FirstClassDefn(defn: NuTypeDef)         extends Type // TODO
+// final case class Refinement(base: Type, decls: TypingUnit) extends Type // TODO
 
 final case class Field(in: Opt[Type], out: Type)         extends FieldImpl
 

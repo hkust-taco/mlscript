@@ -6,7 +6,7 @@ Int
 //│ ╔══[ERROR] Class Int is abstract and cannot be instantiated
 //│ ║  l.5: 	Int
 //│ ╙──     	^^^
-//│ ╔══[ERROR] Class Int cannot be instantiated as it exposes no such constructor
+//│ ╔══[ERROR] Class Int cannot be instantiated as it exposes no constructor
 //│ ║  l.5: 	Int
 //│ ╙──     	^^^
 //│ error
@@ -18,7 +18,7 @@ Int()
 //│ ╔══[ERROR] Class Int is abstract and cannot be instantiated
 //│ ║  l.17: 	Int()
 //│ ╙──      	^^^
-//│ ╔══[ERROR] Class Int cannot be instantiated as it exposes no such constructor
+//│ ╔══[ERROR] Class Int cannot be instantiated as it exposes no constructor
 //│ ║  l.17: 	Int()
 //│ ╙──      	^^^
 //│ error
@@ -29,11 +29,8 @@ Int()
 new Int
 //│ ╔══[ERROR] Class Int is abstract and cannot be instantiated
 //│ ║  l.29: 	new Int
-//│ ╙──      	^^^^^^^
-//│ ╔══[ERROR] Class Int cannot be instantiated as it exposes no such constructor
-//│ ║  l.29: 	new Int
-//│ ╙──      	^^^^^^^
-//│ error
+//│ ╙──      	    ^^^
+//│ Int
 //│ Code generation encountered an error:
 //│   unresolved symbol Int
 

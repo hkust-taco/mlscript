@@ -174,13 +174,13 @@ code"[1, 2, 3]"
 
 :js
 :ne
-code"[1, 2, 3]._1"
-//│ Code[1, nothing]
+code"[1, 2, 3].1"
+//│ Code[2, nothing]
 //│ // Prelude
 //│ class TypingUnit14 {}
 //│ const typing_unit14 = new TypingUnit14;
 //│ // Query 1
-//│ res = Sel(Tup(Fld(IntLit(1)), Fld(IntLit(2)), Fld(IntLit(3))), Var("_1"));
+//│ res = Sel(Tup(Fld(IntLit(1)), Fld(IntLit(2)), Fld(IntLit(3))), Var("1"));
 //│ // End of generated code
 
 

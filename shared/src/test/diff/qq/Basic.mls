@@ -54,11 +54,11 @@ run(res)
 //│ 3
 
 // Tup, Subs
-let tup = code"let x = 1 in let y = 2 in [x, y]._1"
-//│ let tup: Code[1, nothing]
+let tup = code"let x = 1 in let y = 2 in [x, y].1"
+//│ let tup: Code[2, nothing]
 
 run(tup)
-//│ 1
+//│ 2
 
 // Quasiquote 
 :e

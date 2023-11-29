@@ -50,6 +50,7 @@ object Helpers {
       s"Splc($elems)"
     case If(bod, els) => s"If(${inspect(bod)}, ${els.map(inspect)})"
     case New(base, body) => s"New(${base}, ${inspect(body)})"
+    case NuNew(base) => s"NuNew(${inspect(base)})"
     case TyApp(base, targs) => s"TyApp(${inspect(base)}, ${targs})"
     case Def(rec, nme, rhs, isByname) =>
       s"Def($rec, $nme, ${rhs.fold(inspect, "" + _)}, $isByname)"
@@ -64,6 +65,7 @@ object Helpers {
       s"Quoted(${inspect(body)})"
     case Unquoted(body) =>
       s"Unquoted(${inspect(body)})"
+    case Rft(bse, tu) => s"Rft(${inspect(bse)}, ...)"
   }
 
   def inspect(body: IfBody): Str = body match {

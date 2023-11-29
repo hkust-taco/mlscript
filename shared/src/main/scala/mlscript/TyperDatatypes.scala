@@ -269,7 +269,7 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
     lazy val toArray: ArrayType = ArrayType(inner)(prov)  // upcast to array
     override lazy val toRecord: RecordType =
       RecordType(
-        fields.zipWithIndex.map { case ((_, t), i) => (Var("_"+(i+1)), t) }
+        fields.zipWithIndex.map { case ((_, t), i) => (Var(i.toString), t) }
         // Note: In line with TypeScript, tuple field names are pure type system fictions,
         //    with no runtime existence. Therefore, they should not be included in the record type
         //    corresponding to this tuple type.

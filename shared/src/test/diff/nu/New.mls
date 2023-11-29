@@ -10,9 +10,7 @@ let f = Foo(1)
 //│ f: Foo & {x: 1}
 //│  = Foo { x: 1 }
 
-let f = new Foo(1)
-//│ f: Foo & {x: 1}
-//│  = Foo { x: 1 }
+// let f = new Foo(1)
 
 if f is Foo then 1 else 0
 //│ res: 0 | 1
@@ -45,8 +43,6 @@ class PoInt(x, y)
 //│ PoInt: ('x, 'y,) -> (PoInt & {x: 'x, y: 'y})
 //│      = [Function: PoInt1]
 
-let origin = new PoInt(0, 0)
-//│ origin: PoInt & {x: 0, y: 0}
-//│       = PoInt { x: 0, y: 0 }
+// let origin = new PoInt(0, 0)
 
 

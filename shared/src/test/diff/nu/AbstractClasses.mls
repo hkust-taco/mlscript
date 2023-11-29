@@ -46,12 +46,12 @@ Foo(1)
 
 :e // TODO support
 new Foo(1) { fun f = id }
-//│ ╔══[ERROR] Currently unsupported `new` syntax
+//│ ╔══[ERROR] Refinement terms are not yet supported
 //│ ║  l.48: 	new Foo(1) { fun f = id }
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ error
 //│ Code generation encountered an error:
-//│   custom class body is not supported yet
+//│   cannot generate code for term Rft(App(NuNew(Var(Foo)), Tup(_: IntLit(1))), ...)
 
 
 abstract class Bar extends Foo(1)
