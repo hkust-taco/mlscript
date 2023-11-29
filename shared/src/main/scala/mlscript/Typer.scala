@@ -102,6 +102,16 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
           case N => Nil // * In the same quasiquote but not the same scope
         }
     }.toList
+    def unwrap[T](names: Ls[Str], f: () => T): T = { // * Revert ctx modification temporarily
+      val cache: MutMap[Str, TypeInfo] = MutMap.empty
+      names.foreach(name => {
+        cache += name -> env.getOrElse(name, die)
+        env -= name
+      })
+      val res = f()
+      cache.foreach(env += _)
+      res
+    }
     def traceFV(fv: ST): Unit = {
       println(s"Capture free variable type $fv")
       fvars += fv
@@ -1506,7 +1516,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         if (ctx.inQuote) err(msg"Nested quotation is not allowed.", body.toLoc)
         else {
           val newCtx = ctx.nest.copy(inQuote = true, qenv = MutMap.empty, fvars = MutSet.empty)
-          val bodyType = typeTerm(body)(newCtx, raise, vars, genLambdas)
+          val bodyType = ctx.parent match {
+            case S(p) if p.inQuote =>
+              ctx.unwrap(p.wrapCode.map(_._1), () => typeTerm(body)(newCtx, raise, vars, genLambdas))
+            case _ => typeTerm(body)(newCtx, raise, vars, genLambdas)
+          }
           TypeRef(TypeName("Code"), bodyType :: newCtx.getCtxTy :: Nil)(noProv)
         }
       case Unquoted(body) =>

@@ -50,6 +50,10 @@ bind : forall 'a, 'c, 'g: (Code['a, 'g], k: forall 'c: Code['a, 'c] -> Code['b, 
 //│ forall 'a 'g. (Code['a, 'g], k: forall 'c. Code['a, 'c] -> Code['b, 'c | 'g]) -> Code['b, 'g]
 
 
+:e
 fun foo(dbg) =
   code"x => ${let c = code"(${x}; ${foo(dbg)})" in dbg(c)}"
-//│ fun foo: forall 'a 'b. (Code[() -> 'a, ??x | 'b] -> Code['a, ??x0 | 'b]) -> Code[() -> 'a, 'b]
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.55: 	  code"x => ${let c = code"(${x}; ${foo(dbg)})" in dbg(c)}"
+//│ ╙──      	                              ^
+//│ fun foo: forall 'a 'b. (Code[anything -> 'a, 'b] -> Code['a, ??x | 'b]) -> Code[anything -> 'a, 'b]
