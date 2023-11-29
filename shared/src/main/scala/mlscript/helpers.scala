@@ -682,6 +682,7 @@ trait TermImpl extends StatementImpl { self: Term =>
       case Assign(lhs, rhs) => s" ${lhs.showIn(ctx, false)} <- ${rhs.showIn(ctx, false)}" |> bra
       case New(S((at, ar)), bod) => s"new ${at.show(ctx.newDefs)}($ar) ${bod.showIn(ctx)}" |> bra
       case New(N, bod) => s"new ${bod.showIn(ctx)}" |> bra
+      case NuNew(cls) => s"new ${cls.showIn(ctx, false)}" |> bra
       case If(body, els) => s"if ${body.showIn(ctx.indent)}" + els.fold("")(" else " + _.showIn(ctx.indent, false)) |> bra
       case TyApp(lhs, targs) => s"${lhs.showIn(ctx, false)}${ctx.<}${targs.map(_.show(ctx.newDefs)).mkString(", ")}${ctx.>}"
       case Where(bod, wh) => s"${bod.showIn(ctx, false)} where ${Blk(wh).showIn(ctx.indent, false)}"
@@ -691,7 +692,7 @@ trait TermImpl extends StatementImpl { self: Term =>
       case Eqn(lhs, rhs) => s"${lhs.showIn(ctx, false)} = ${rhs.showIn(ctx, false)}"
       case AdtMatchWith(cond, arms) =>
         s"match ${cond.showIn(ctx, false)} with ${arms.map (patmat => s"${patmat.pat.showIn(ctx, false)} -> ${patmat.rhs.showIn(ctx, false)}").mkString (" | ") }"
-      case Rft(bse, tu) => s"${bse} { ${tu} }"
+      case Rft(bse, tu) => s"${bse.showIn(ctx, false)} { ${tu.showIn(ctx)} }"
       case Quoted(b) => s"code\"${b.showIn(ctx, false)}\""
       case Unquoted(b) => s"$${${b.showIn(ctx, false)}}"
     }
