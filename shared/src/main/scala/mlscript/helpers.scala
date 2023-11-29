@@ -575,7 +575,7 @@ trait TermImpl extends StatementImpl { self: Term =>
   }
   
   override def toString: Str = print(false)
-
+  
   def print(brackets: Bool): Str = {
       def bra(str: Str): Str = if (brackets) s"($str)" else str
       this match {
