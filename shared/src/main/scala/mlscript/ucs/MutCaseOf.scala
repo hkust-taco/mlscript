@@ -285,7 +285,7 @@ object MutCaseOf {
   ) extends MutCaseOf {
     def describe: Str = {
       val n = branches.length
-      s"Match($scrutinee, $n ${"branch".pluralize(n, true)}, ${
+      s"Match($scrutinee, ${"branch".pluralize(n, true, true)}, ${
         wildcard.fold("no wildcard")(n => s"wildcard = ${n.kind}")
       })"
     }

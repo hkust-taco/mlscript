@@ -1,6 +1,7 @@
 package mlscript.ucs
 
-import mlscript.{Lit, Located, Term, Var}
+import collection.mutable.Buffer
+import mlscript.{Diagnostic, Lit, Loc, Located, Message, Term, Var}
 import mlscript.utils._, shorthands._
 
 package object core {
@@ -32,19 +33,60 @@ package object core {
     final case class Record(entries: List[(Var -> Var)]) extends Pattern {
       override def children: Ls[Located] = entries.iterator.flatMap { case (nme, als) => nme :: als :: Nil }.toList
     }
+
+    def getParametersLoc(parameters: List[Opt[Var]]): Opt[Loc] =
+      parameters.foldLeft(None: Opt[Loc]) {
+        case (acc, N) => acc
+        case (N, S(nme)) => nme.toLoc
+        case (S(loc), S(nme)) => S(nme.toLoc.fold(loc)(loc ++ _))
+      }
+    def getParametersLoc(parameters: Opt[List[Opt[Var]]]): Opt[Loc] =
+      parameters.fold(None: Opt[Loc])(getParametersLoc)
+
+    def showParameters(parameters: Opt[List[Opt[Var]]]): Str =
+      parameters.fold("empty")(_.map(_.fold("_")(_.name)).mkString("[", ", ", "]"))
   }
 
   final case class Branch(scrutinee: Var, pattern: Pattern, continuation: Split)
 
   sealed abstract class Split {
+    @inline
     def ::(head: Branch): Split = Split.Cons(head, this)
 
+    /**
+      * Concatenates two splits. Beware that `that` may be discarded if `this`
+      * has an else branch. Make sure to make diagnostics for discarded `that`.
+      */
     def ++(that: Split): Split = this match {
       case me: Split.Cons => me.copy(tail = me.tail ++ that)
       case me: Split.Let => me.copy(tail = me.tail ++ that)
       case _: Split.Else => this
       case Split.Nil => that
     }
+    
+    /**
+      * Returns true if the split has an else branch.
+      */
+    lazy val hasElse: Bool = this match {
+      case Split.Cons(_, tail) => tail.hasElse
+      case Split.Let(_, _, _, tail) => tail.hasElse
+      case Split.Else(_) => true
+      case Split.Nil => false
+    }
+
+    private val diagnostics: Buffer[Message -> Opt[Loc]] = Buffer.empty
+
+    def withDiagnostic(diagnostic: Message -> Opt[Loc]): this.type = {
+      diagnostics += diagnostic
+      this
+    }
+
+    def collectDiagnostics(): Ls[Message -> Opt[Loc]] =
+      diagnostics.toList ++ (this match {
+        case Split.Cons(_, tail) => tail.collectDiagnostics()
+        case Split.Let(_, _, _, tail) => tail.collectDiagnostics()
+        case Split.Else(_) | Split.Nil => Nil
+      })
   }
 
   object Split {

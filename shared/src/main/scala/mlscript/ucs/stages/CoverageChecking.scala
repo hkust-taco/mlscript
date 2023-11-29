@@ -13,7 +13,7 @@ trait CoverageChecking { self: mlscript.pretyper.Traceable =>
 
   def checkCoverage(term: Term): Ls[Diagnostic] = {
     val registry = collectRegistry(term)
-    println("collected match register: " + showRegistry(registry))
+    println("collected match registry: " + showRegistry(registry))
     checkCoverage(term, Map.empty, registry, Map.empty)
   }
 
@@ -29,7 +29,10 @@ trait CoverageChecking { self: mlscript.pretyper.Traceable =>
               case (acc, (className: Var) -> _) => acc + className
               case (acc, _) => acc
             })((x, _) => x))),
-            tail ++ cases.foldLeft(Nil: Ls[Term])({ case (acc, _ -> body) => body :: acc })((x, _) => x)
+            tail ++ cases.foldLeft
+              (Nil: Ls[Term])
+              ({ case (acc, _ -> body) => body :: acc })
+              ((acc, els) => els.fold(acc)(_ :: acc))
           )
         case _ => rec(acc, tail)
       }

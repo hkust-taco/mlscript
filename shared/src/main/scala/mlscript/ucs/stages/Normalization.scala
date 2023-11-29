@@ -97,8 +97,41 @@ trait Normalization { self: mlscript.pretyper.Traceable =>
             case Pattern.Class(className, parameters) =>
               if (className === otherClassName) {
                 println(s"class name: $className === $otherClassName")
-                // TODO: Subsitute parameters to otherParameters
-                specialize(continuation ++ tail, Yes)
+                (parameters, otherParameters) match {
+                  case (S(parameters), S(otherParameters)) =>
+                    if (parameters.length === otherParameters.length) {
+                      println(s"same number of parameters: ${parameters.length}")
+                      // Check if the class parameters are the same.
+                      // Generate a function that generates bindings.
+                      // TODO: Hygienic problems.
+                      val addLetBindings = parameters.iterator.zip(otherParameters).zipWithIndex.foldLeft[Split => Split](identity) {
+                        case (acc, N -> S(otherParameter) -> index) => ??? // TODO: How can we get the unapplied variable?
+                        case (acc, S(parameter) -> S(otherParameter) -> index) if parameter.name =/= otherParameter.name =>
+                          println(s"different parameter names at $index: ${parameter.name} =/= ${otherParameter.name}")
+                          tail => Split.Let(false, otherParameter, parameter, tail)
+                        case (acc, _) => acc
+                      }
+                      // addLetBindings(specialize(continuation ++ tail, Yes))
+                      val specialized = addLetBindings(specialize(continuation, Yes))
+                      if (specialized.hasElse) {
+                        println("tail is discarded")
+                        specialized.withDiagnostic(
+                          msg"Discarded split because of else branch" -> None // TODO: Synthesize locations
+                        )
+                      } else {
+                        specialized ++ specialize(tail, Yes)
+                      }
+                    } else {
+                      throw new NormalizationException({
+                        msg"Mismatched numbers of parameters of ${className.name}:" -> otherClassName.toLoc ::
+                          msg"There are ${"parameters".pluralize(parameters.length, true)}." -> Pattern.getParametersLoc(parameters) ::
+                          msg"But there are ${"parameters".pluralize(otherParameters.length, true)}." -> Pattern.getParametersLoc(otherParameters) ::
+                          Nil
+                      })
+                    }
+                  // TODO: Other cases
+                  case (_, _) => specialize(continuation ++ tail, Yes)
+                } // END match
               } else {
                 println(s"class name: $className =/= $otherClassName")
                 specializedTail

@@ -269,10 +269,10 @@ class Desugarer extends TypeDefs { self: Typer =>
               throw new DesugaringException({
                 val expected = positionals.length
                 val actual = args.length
-                msg"${kind.str} $className expects ${expected.toString} ${
-                  "parameter".pluralize(expected)
-                } but found ${args.length.toString} ${
-                  "parameter".pluralize(expected)
+                msg"${kind.str} $className expects ${
+                  "parameter".pluralize(expected, true)
+                } but found ${
+                  "parameter".pluralize(args.length, true)
                 }"
               }, app.toLoc)
             }
@@ -305,8 +305,8 @@ class Desugarer extends TypeDefs { self: Typer =>
             val num = td.positionals.length
             throw new DesugaringException({
               val expected = td.positionals.length
-              msg"${td.kind.str} `$op` expects ${expected.toString} ${
-                "parameter".pluralize(expected)
+              msg"${td.kind.str} `$op` expects ${
+                "parameter".pluralize(expected, true)
               } but found two parameters"
             }, app.toLoc)
         }
@@ -749,8 +749,8 @@ class Desugarer extends TypeDefs { self: Typer =>
               throw new DesugaringException({
                 val numMissingCases = missingCases.size
                 (msg"The match is not exhaustive." -> scrutinee.matchRootLoc) ::
-                  (msg"The scrutinee at this position misses ${numMissingCases.toString} ${
-                    "case".pluralize(numMissingCases)
+                  (msg"The scrutinee at this position misses ${
+                    "case".pluralize(numMissingCases, true)
                   }." -> scrutinee.term.toLoc) ::
                   missingCases.iterator.zipWithIndex.flatMap { case ((pattern, locations), index) =>
                     val patternName = pattern match {

@@ -218,7 +218,7 @@ fun ft(x) =
   if x is
     FooBar(x) then x
     _ then 0
-//│ ╔══[ERROR] class FooBar expects 0 parameter but found 1 parameter
+//│ ╔══[ERROR] class FooBar expects 0 parameters but found 1 parameter
 //│ ║  l.219: 	    FooBar(x) then x
 //│ ╙──       	    ^^^^^^^^^
 //│ fun ft: anything -> error

@@ -45,8 +45,9 @@ package object utils {
     def decapitalize: String =
       if (self.length === 0 || !self.charAt(0).isUpper) self
       else self.updated(0, self.charAt(0).toLower)
-    def pluralize(quantity: Int, es: Boolean = false): String =
-      if (quantity > 1) self + (if (es) "es" else "s") else self
+    def pluralize(quantity: Int, inclusive: Boolean = false, es: Boolean = false): String =
+      (if (inclusive) quantity.toString + " " else "") +
+        (if (quantity > 1 || quantity === 0) self + (if (es) "es" else "s") else self)
     @SuppressWarnings(Array("org.wartremover.warts.Equals"))
     def ===(other: String): Bool = self.equals(other)
   }

@@ -18,6 +18,7 @@ trait DesugarUCS extends Transformation
   protected def visitIf(`if`: If)(implicit scope: Scope): Unit =
     trace("visitIf") {
       // Stage 0: Transformation
+      println("STEP 0")
       val transformed = transform(`if`, true)
       println("Transformed UCS term:")
       println(transformed.toString, 2)
@@ -26,21 +27,25 @@ trait DesugarUCS extends Transformation
       // This stage will generate new names based on the position of the scrutinee.
       // Therefore, we need to call `visitSplit` to associate these newly generated
       // names with symbols.
+      println("STEP 1")
       val desugared = desugar(transformed)
       println(desugared.toString, 2)
       println("Desugared UCS term:")
       println(ucs.core.printSplit(desugared))
       visitSplit(desugared)
       // Stage 2: Normalization
+      println("STEP 2")
       val normalized = normalize(desugared)
       println(normalized.toString, 2)
       println("Normalized UCS term:")
       printNormalizedTerm(normalized)
       // Stage 3: Post-processing
+      println("STEP 3")
       val postProcessed = postProcess(normalized)
       println("Post-processed UCS term:")
       printNormalizedTerm(postProcessed)
       // Stage 4: Coverage checking
+      println("STEP 4")
       val diagnostics = checkCoverage(postProcessed)
       println(s"Coverage checking result: ${diagnostics.size} errors")
       raise(diagnostics)
