@@ -29,7 +29,7 @@ class PreTyper(override val debugLevel: Opt[Int], useNewDefs: Bool) extends Trac
     case other => println("Unknown parameters: " + inspect(other)); ??? // TODO: bad
   }
 
-  // `visitIf` is meaningless because it represents patterns with terms.
+  // `traverseIf` is meaningless because it represents patterns with terms.
 
   protected def resolveVar(v: Var)(implicit scope: Scope): Unit =
     trace(s"resolveVar(name = \"$v\")") {
@@ -54,8 +54,8 @@ class PreTyper(override val debugLevel: Opt[Int], useNewDefs: Bool) extends Trac
       }
     }()
 
-  protected def visitVar(v: Var)(implicit scope: Scope): Unit =
-    trace(s"visitVar(name = \"$v\")") {
+  protected def traverseVar(v: Var)(implicit scope: Scope): Unit =
+    trace(s"traverseVar(name = \"$v\")") {
       v.symbolOption match {
         case N => resolveVar(v)
         case S(symbol) => scope.get(v.name) match {
@@ -66,70 +66,70 @@ class PreTyper(override val debugLevel: Opt[Int], useNewDefs: Bool) extends Trac
       }
     }()
 
-  protected def visitTerm(term: Term)(implicit scope: Scope): Unit =
-    trace(s"visitTerm <== ${shortName(term)}") {
+  protected def traverseTerm(term: Term)(implicit scope: Scope): Unit =
+    trace(s"traverseTerm <== ${shortName(term)}") {
       term match {
-        case Assign(lhs, rhs) => visitTerm(lhs); visitTerm(rhs)
-        case Bra(_, trm) => visitTerm(trm)
+        case Assign(lhs, rhs) => traverseTerm(lhs); traverseTerm(rhs)
+        case Bra(_, trm) => traverseTerm(trm)
         case Lam(lhs, rhs) =>
-          visitTerm(rhs)(scope ++ extractParameters(lhs))
-        case Sel(receiver, fieldName) => visitTerm(receiver)
+          traverseTerm(rhs)(scope ++ extractParameters(lhs))
+        case Sel(receiver, fieldName) => traverseTerm(receiver)
         case Let(isRec, nme, rhs, body) =>
-          visitTerm(rhs)
-          visitTerm(body)(scope + new ValueSymbol(nme, false))
+          traverseTerm(rhs)
+          traverseTerm(body)(scope + new ValueSymbol(nme, false))
         case New(head, body) =>
-        case Tup(fields) => fields.foreach { case (_, Fld(_, t)) => visitTerm(t) }
-        case Asc(trm, ty) => visitTerm(trm)
-        case ef @ If(_, _) => visitIf(ef)(scope)
+        case Tup(fields) => fields.foreach { case (_, Fld(_, t)) => traverseTerm(t) }
+        case Asc(trm, ty) => traverseTerm(trm)
+        case ef @ If(_, _) => traverseIf(ef)(scope)
         case TyApp(lhs, targs) => // TODO: When?
         case Eqn(lhs, rhs) => ??? // TODO: How?
         case Blk(stmts) => stmts.foreach {
-          case t: Term => visitTerm(t)
+          case t: Term => traverseTerm(t)
           case _ => ??? // TODO: When?
         }
-        case Subs(arr, idx) => visitTerm(arr); visitTerm(idx)
-        case Bind(lhs, rhs) => visitTerm(lhs); visitTerm(rhs)
+        case Subs(arr, idx) => traverseTerm(arr); traverseTerm(idx)
+        case Bind(lhs, rhs) => traverseTerm(lhs); traverseTerm(rhs)
         case Splc(fields) => fields.foreach {
-          case L(t) => visitTerm(t)
-          case R(Fld(_, t)) => visitTerm(t)
+          case L(t) => traverseTerm(t)
+          case R(Fld(_, t)) => traverseTerm(t)
         }
         case Forall(params, body) => ??? // TODO: When?
-        case Rcd(fields) => fields.foreach { case (_, Fld(_, t)) => visitTerm(t) }
+        case Rcd(fields) => fields.foreach { case (_, Fld(_, t)) => traverseTerm(t) }
         case CaseOf(trm, cases) => 
-        case With(trm, fields) => visitTerm(trm); visitTerm(fields)
+        case With(trm, fields) => traverseTerm(trm); traverseTerm(fields)
         case Where(body, where) => ??? // TODO: When?
-        case App(lhs, rhs) => visitTerm(lhs); visitTerm(rhs)
-        case Test(trm, ty) => visitTerm(trm)
+        case App(lhs, rhs) => traverseTerm(lhs); traverseTerm(rhs)
+        case Test(trm, ty) => traverseTerm(trm)
         case _: Lit | _: Super => ()
-        case v: Var => visitVar(v)
+        case v: Var => traverseVar(v)
         case AdtMatchWith(cond, arms) => ??? // TODO: How?
-        case Inst(body) => visitTerm(body)
+        case Inst(body) => traverseTerm(body)
       }
-    }(_ => s"visitTerm ==> ${shortName(term)}")
+    }(_ => s"traverseTerm ==> ${shortName(term)}")
 
-  private def visitNuTypeDef(symbol: TypeSymbol, defn: NuTypeDef)(implicit scope: Scope): Unit =
-    trace(s"visitNuTypeDef <== ${defn.kind} ${defn.nme.name}") {
-      visitTypingUnit(defn.body, defn.nme.name, scope)
+  private def traverseNuTypeDef(symbol: TypeSymbol, defn: NuTypeDef)(implicit scope: Scope): Unit =
+    trace(s"traverseNuTypeDef <== ${defn.kind} ${defn.nme.name}") {
+      traverseTypingUnit(defn.body, defn.nme.name, scope)
       ()
-    }(_ => s"visitNuTypeDef <== ${defn.kind} ${defn.nme.name}")
+    }(_ => s"traverseNuTypeDef <== ${defn.kind} ${defn.nme.name}")
 
-  private def visitFunction(symbol: FunctionSymbol, defn: NuFunDef)(implicit scope: Scope): Unit =
-    trace(s"visitFunction <== ${defn.nme.name}") {
+  private def traverseFunction(symbol: FunctionSymbol, defn: NuFunDef)(implicit scope: Scope): Unit =
+    trace(s"traverseFunction <== ${defn.nme.name}") {
       defn.rhs match {
         case Left(term) => 
           val subScope = if (defn.isLetRec === S(false)) scope else scope + symbol
-          visitTerm(term)(subScope)
+          traverseTerm(term)(subScope)
         case Right(value) => ()
       }
-    }(_ => s"visitFunction ==> ${defn.nme.name}")
+    }(_ => s"traverseFunction ==> ${defn.nme.name}")
 
-  private def visitLetBinding(symbol: ValueSymbol, rec: Bool, rhs: Term)(implicit scope: Scope): Unit =
-    trace(s"visitLetBinding(rec = $rec, ${symbol.name})") {
+  private def traverseLetBinding(symbol: ValueSymbol, rec: Bool, rhs: Term)(implicit scope: Scope): Unit =
+    trace(s"traverseLetBinding(rec = $rec, ${symbol.name})") {
 
     }()
 
-  private def visitTypingUnit(typingUnit: TypingUnit, name: Str, parentScope: Scope): (Scope, TypeContents) =
-    trace(s"visitTypingUnit <== $name: ${typingUnit.describe}") {
+  private def traverseTypingUnit(typingUnit: TypingUnit, name: Str, parentScope: Scope): (Scope, TypeContents) =
+    trace(s"traverseTypingUnit <== $name: ${typingUnit.describe}") {
       import mlscript.{Cls, Trt, Mxn, Als, Mod}
       // Pass 1: Build a scope with hoisted symbols.
       val hoistedScope = typingUnit.entities.foldLeft(parentScope.derive) {
@@ -150,12 +150,12 @@ class PreTyper(override val debugLevel: Opt[Int], useNewDefs: Bool) extends Trac
       println(hoistedScope.symbols.map(_.name).mkString("1. scope = {", ", ", "}"))
       // Pass 2: Visit non-hoisted and build a complete scope.
       val completeScope = typingUnit.entities.foldLeft[Scope](hoistedScope) {
-        case (acc, term: Term) => visitTerm(term)(acc); acc
+        case (acc, term: Term) => traverseTerm(term)(acc); acc
         case (acc, defn: NuTypeDef) => acc
         case (acc, defn @ NuFunDef(Some(rec), nme, _, _, L(rhs))) =>
           val symbol = new ValueSymbol(defn.nme, true)
           val scopeWithVar = acc + symbol
-          visitLetBinding(symbol, rec, rhs)(if (rec) { scopeWithVar } else { acc })
+          traverseLetBinding(symbol, rec, rhs)(if (rec) { scopeWithVar } else { acc })
           scopeWithVar
         case (acc, _: NuFunDef) => acc
         case (acc, _: Constructor | _: DataDefn | _: DatatypeDefn | _: Def | _: LetS | _: TypeDef) => ??? // TODO: When?
@@ -173,16 +173,16 @@ class PreTyper(override val debugLevel: Opt[Int], useNewDefs: Bool) extends Trac
               })
             case Als | Mod | Mxn | Trt => completeScope
           }
-          visitNuTypeDef(symbol, symbol.defn)(innerScope)
-        case symbol: FunctionSymbol => visitFunction(symbol, symbol.defn)(completeScope)
+          traverseNuTypeDef(symbol, symbol.defn)(innerScope)
+        case symbol: FunctionSymbol => traverseFunction(symbol, symbol.defn)(completeScope)
         case _: ValueSymbol => ()
         case _: SubValueSymbol => ()
       }
       (completeScope, new TypeContents)
-    }({ case (scope, contents) => s"visitTypingUnit ==> ${scope.showLocalSymbols}" })
+    }({ case (scope, contents) => s"traverseTypingUnit ==> ${scope.showLocalSymbols}" })
 
   def process(typingUnit: TypingUnit, scope: Scope, name: Str): (Scope, TypeContents) =
     trace(s"process <== $name: ${typingUnit.describe}") {
-      visitTypingUnit(typingUnit, name, scope)
+      traverseTypingUnit(typingUnit, name, scope)
     }({ case (scope, contents) => s"process ==> ${scope.showLocalSymbols}" })
 }

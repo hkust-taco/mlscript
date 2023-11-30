@@ -110,6 +110,7 @@ object FldFlags { val empty: FldFlags = FldFlags(false, false, false) }
 sealed abstract class CaseBranches extends CaseBranchesImpl
 final case class Case(pat: SimpleTerm, body: Term, rest: CaseBranches) extends CaseBranches
 final case class Wildcard(body: Term) extends CaseBranches
+// final case class TupleCase(numElems: Int, canHaveMore: Bool, body: Term, rest: CaseBranches) extends CaseBranches
 final case object NoCases extends CaseBranches
 
 final case class IntLit(value: BigInt)            extends Lit

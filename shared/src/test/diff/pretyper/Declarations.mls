@@ -5,30 +5,30 @@
 :dpt
 fun test(x, y) = x + y
 //│ process <== <root>: {fun test}
-//│ | visitTypingUnit <== <root>: {fun test}
+//│ | traverseTypingUnit <== <root>: {fun test}
 //│ | | 1. scope = {test}
 //│ | | 2. scope = {test}
-//│ | | visitFunction <== test
-//│ | | | visitTerm <== Lam(_, _)
-//│ | | | | visitTerm <== App(_, _)
-//│ | | | | | visitTerm <== Var("+")
-//│ | | | | | | visitVar(name = "+")
+//│ | | traverseFunction <== test
+//│ | | | traverseTerm <== Lam(_, _)
+//│ | | | | traverseTerm <== App(_, _)
+//│ | | | | | traverseTerm <== Var("+")
+//│ | | | | | | traverseVar(name = "+")
 //│ | | | | | | | resolveVar(name = "+")
-//│ | | | | | visitTerm ==> Var("+")
-//│ | | | | | visitTerm <== Tup(_, _)
-//│ | | | | | | visitTerm <== Var("x")
-//│ | | | | | | | visitVar(name = "x")
+//│ | | | | | traverseTerm ==> Var("+")
+//│ | | | | | traverseTerm <== Tup(_, _)
+//│ | | | | | | traverseTerm <== Var("x")
+//│ | | | | | | | traverseVar(name = "x")
 //│ | | | | | | | | resolveVar(name = "x")
-//│ | | | | | | visitTerm ==> Var("x")
-//│ | | | | | | visitTerm <== Var("y")
-//│ | | | | | | | visitVar(name = "y")
+//│ | | | | | | traverseTerm ==> Var("x")
+//│ | | | | | | traverseTerm <== Var("y")
+//│ | | | | | | | traverseVar(name = "y")
 //│ | | | | | | | | resolveVar(name = "y")
-//│ | | | | | | visitTerm ==> Var("y")
-//│ | | | | | visitTerm ==> Tup(_, _)
-//│ | | | | visitTerm ==> App(_, _)
-//│ | | | visitTerm ==> Lam(_, _)
-//│ | | visitFunction ==> test
-//│ | visitTypingUnit ==> test
+//│ | | | | | | traverseTerm ==> Var("y")
+//│ | | | | | traverseTerm ==> Tup(_, _)
+//│ | | | | traverseTerm ==> App(_, _)
+//│ | | | traverseTerm ==> Lam(_, _)
+//│ | | traverseFunction ==> test
+//│ | traverseTypingUnit ==> test
 //│ process ==> test
 //│ fun test: (Int, Int) -> Int
 
@@ -37,19 +37,19 @@ fun test(x, y) = x + y
 let y = id(42)
 fun id(x) = x
 //│ process <== <root>: {let y; fun id}
-//│ | visitTypingUnit <== <root>: {let y; fun id}
+//│ | traverseTypingUnit <== <root>: {let y; fun id}
 //│ | | 1. scope = {id}
-//│ | | visitLetBinding(rec = false, y)
+//│ | | traverseLetBinding(rec = false, y)
 //│ | | 2. scope = {id}
-//│ | | visitFunction <== id
-//│ | | | visitTerm <== Lam(_, _)
-//│ | | | | visitTerm <== Var("x")
-//│ | | | | | visitVar(name = "x")
+//│ | | traverseFunction <== id
+//│ | | | traverseTerm <== Lam(_, _)
+//│ | | | | traverseTerm <== Var("x")
+//│ | | | | | traverseVar(name = "x")
 //│ | | | | | | resolveVar(name = "x")
-//│ | | | | visitTerm ==> Var("x")
-//│ | | | visitTerm ==> Lam(_, _)
-//│ | | visitFunction ==> id
-//│ | visitTypingUnit ==> id, y
+//│ | | | | traverseTerm ==> Var("x")
+//│ | | | traverseTerm ==> Lam(_, _)
+//│ | | traverseFunction ==> id
+//│ | traverseTypingUnit ==> id, y
 //│ process ==> id, y
 //│ let y: 42 | 'a
 //│ fun id: forall 'b. ('a & 'b) -> (42 | 'b)
@@ -59,31 +59,31 @@ fun id(x) = x
 fun q(x) = x + p
 let p = 0
 //│ process <== <root>: {fun q; let p}
-//│ | visitTypingUnit <== <root>: {fun q; let p}
+//│ | traverseTypingUnit <== <root>: {fun q; let p}
 //│ | | 1. scope = {q}
-//│ | | visitLetBinding(rec = false, p)
+//│ | | traverseLetBinding(rec = false, p)
 //│ | | 2. scope = {q}
-//│ | | visitFunction <== q
-//│ | | | visitTerm <== Lam(_, _)
-//│ | | | | visitTerm <== App(_, _)
-//│ | | | | | visitTerm <== Var("+")
-//│ | | | | | | visitVar(name = "+")
+//│ | | traverseFunction <== q
+//│ | | | traverseTerm <== Lam(_, _)
+//│ | | | | traverseTerm <== App(_, _)
+//│ | | | | | traverseTerm <== Var("+")
+//│ | | | | | | traverseVar(name = "+")
 //│ | | | | | | | resolveVar(name = "+")
-//│ | | | | | visitTerm ==> Var("+")
-//│ | | | | | visitTerm <== Tup(_, _)
-//│ | | | | | | visitTerm <== Var("x")
-//│ | | | | | | | visitVar(name = "x")
+//│ | | | | | traverseTerm ==> Var("+")
+//│ | | | | | traverseTerm <== Tup(_, _)
+//│ | | | | | | traverseTerm <== Var("x")
+//│ | | | | | | | traverseVar(name = "x")
 //│ | | | | | | | | resolveVar(name = "x")
-//│ | | | | | | visitTerm ==> Var("x")
-//│ | | | | | | visitTerm <== Var("p")
-//│ | | | | | | | visitVar(name = "p")
+//│ | | | | | | traverseTerm ==> Var("x")
+//│ | | | | | | traverseTerm <== Var("p")
+//│ | | | | | | | traverseVar(name = "p")
 //│ | | | | | | | | resolveVar(name = "p")
-//│ | | | | | | visitTerm ==> Var("p")
-//│ | | | | | visitTerm ==> Tup(_, _)
-//│ | | | | visitTerm ==> App(_, _)
-//│ | | | visitTerm ==> Lam(_, _)
-//│ | | visitFunction ==> q
-//│ | visitTypingUnit ==> q, p
+//│ | | | | | | traverseTerm ==> Var("p")
+//│ | | | | | traverseTerm ==> Tup(_, _)
+//│ | | | | traverseTerm ==> App(_, _)
+//│ | | | traverseTerm ==> Lam(_, _)
+//│ | | traverseFunction ==> q
+//│ | traverseTypingUnit ==> q, p
 //│ process ==> q, p
 //│ fun q: Int -> Int
 //│ let p: 0

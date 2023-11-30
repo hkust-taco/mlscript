@@ -15,8 +15,8 @@ trait DesugarUCS extends Transformation
                     with CoverageChecking { self: PreTyper =>
   
 
-  protected def visitIf(`if`: If)(implicit scope: Scope): Unit =
-    trace("visitIf") {
+  protected def traverseIf(`if`: If)(implicit scope: Scope): Unit =
+    trace("traverseIf") {
       // Stage 0: Transformation
       println("STEP 0")
       val transformed = transform(`if`, true)
@@ -25,14 +25,14 @@ trait DesugarUCS extends Transformation
       println(ucs.syntax.printTermSplit(transformed))
       // Stage 1: Desugaring
       // This stage will generate new names based on the position of the scrutinee.
-      // Therefore, we need to call `visitSplit` to associate these newly generated
+      // Therefore, we need to call `traverseSplit` to associate these newly generated
       // names with symbols.
       println("STEP 1")
       val desugared = desugar(transformed)
       println(desugared.toString, 2)
       println("Desugared UCS term:")
       println(ucs.core.printSplit(desugared))
-      visitSplit(desugared)
+      traverseSplit(desugared)
       // Stage 2: Normalization
       println("STEP 2")
       val normalized = normalize(desugared)
@@ -51,28 +51,28 @@ trait DesugarUCS extends Transformation
       raise(diagnostics)
       // Epilogue
       `if`.desugaredTerm = S(normalized)
-    }(_ => "visitIf ==> ()")
+    }(_ => "traverseIf ==> ()")
   
-  private def visitSplit(split: core.Split)(implicit scope: Scope): Unit =
-    trace(s"visitSplit <== [${scope.showLocalSymbols}]") {
+  private def traverseSplit(split: core.Split)(implicit scope: Scope): Unit =
+    trace(s"traverseSplit <== [${scope.showLocalSymbols}]") {
       import core._
       split match {
         case Split.Cons(Branch(scrutinee, pattern, continuation), tail) => 
           println(s"found branch: $scrutinee is $pattern")
-          visitTerm(scrutinee)
-          val patternSymbols = visitPattern(scrutinee, pattern)
-          visitSplit(continuation)(scope.withEntries(patternSymbols))
-          visitSplit(tail)
+          traverseTerm(scrutinee)
+          val patternSymbols = traversePattern(scrutinee, pattern)
+          traverseSplit(continuation)(scope.withEntries(patternSymbols))
+          traverseSplit(tail)
         case Split.Let(_, name, _, tail) =>
           println(s"found let binding: \"$name\"")
-          visitSplit(tail)(scope + new ValueSymbol(name, false))
-        case Split.Else(default) => visitTerm(default)
+          traverseSplit(tail)(scope + new ValueSymbol(name, false))
+        case Split.Else(default) => traverseTerm(default)
         case Split.Nil => println("the end")
       }
     }()
 
-  private def visitPattern(scrutinee: Var, pattern: core.Pattern): List[Var -> Symbol] =
-    trace(s"visitPattern <== $pattern") {
+  private def traversePattern(scrutinee: Var, pattern: core.Pattern): List[Var -> Symbol] =
+    trace(s"traversePattern <== $pattern") {
       lazy val scrutineeSymbol = scrutinee.symbol match {
         case symbol: ScrutineeSymbol => symbol
         case other: Symbol =>
@@ -109,5 +109,5 @@ trait DesugarUCS extends Transformation
             bindingName.symbol = symbol; bindingName -> symbol
           }.toList
       }
-    }(_.iterator.map(_._1.name).mkString("visitPattern ==> [", ", ", "]"))
+    }(_.iterator.map(_._1.name).mkString("traversePattern ==> [", ", ", "]"))
 }

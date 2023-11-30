@@ -16,7 +16,7 @@ trait Desugaring { self: mlscript.pretyper.Traceable =>
   private def freshName(): Str = {
     val thisIndex = nextScrutineeIndex
     nextScrutineeIndex += 1
-    s"scrut$thisIndex" // FIXME: use `freeVars` to avoid name collision.
+    s"scrut$$$thisIndex" // FIXME: use `freeVars` to avoid name collision.
   }
 
   private def freshScrutinee(): Var = Var(freshName())

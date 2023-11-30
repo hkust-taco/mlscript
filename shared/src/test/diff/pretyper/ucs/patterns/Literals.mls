@@ -11,3 +11,20 @@ class Pair[A, B](x: A, y: B)
 
 fun f(x) = if x is Some(1) then true else false
 //│ fun f: (Object & ~#Some | Some[Num]) -> Bool
+
+fun g(x) = if x then 1 else 2
+//│ fun g: Object -> (1 | 2)
+
+fun g(x) = if x is true then 1 else 2
+//│ fun g: anything -> 1
+//│ Syntax error:
+//│   Invalid destructuring assignment target
+
+fun g(x) = if x && true is true then 1 else 2
+//│ fun g: Bool -> 1
+//│ Syntax error:
+//│   Invalid destructuring assignment target
+
+fun h(x) = if (x : Bool) then 1 else 2
+//│ fun h: Bool -> (1 | 2)
+

@@ -50,14 +50,14 @@ fun unreachable_1(x) =
     Some(xv) then "sin"
     None then "tan"
 //│ process <== <root>: {fun unreachable_1}
-//│ | visitTypingUnit <== <root>: {fun unreachable_1}
+//│ | traverseTypingUnit <== <root>: {fun unreachable_1}
 //│ | | 1. scope = {unreachable_1}
 //│ | | 2. scope = {unreachable_1}
-//│ | | visitFunction <== unreachable_1
-//│ | | | visitTerm <== Lam(_, _)
-//│ | | | | visitTerm <== Blk(_)
-//│ | | | | | visitTerm <== If(_)
-//│ | | | | | | visitIf
+//│ | | traverseFunction <== unreachable_1
+//│ | | | traverseTerm <== Lam(_, _)
+//│ | | | | traverseTerm <== Blk(_)
+//│ | | | | | traverseTerm <== If(_)
+//│ | | | | | | traverseIf
 //│ | | | | | | | STEP 0
 //│ | | | | | | | Transformed UCS term:
 //│ | | | | | | | if x is
@@ -69,83 +69,83 @@ fun unreachable_1(x) =
 //│ | | | | | | | Desugared UCS term:
 //│ | | | | | | | if
 //│ | | | | | | |   x is _
-//│ | | | | | | |     let scrut0 = f(x,)
-//│ | | | | | | |     scrut0 is true then "tmux"
+//│ | | | | | | |     let scrut$0 = f(x,)
+//│ | | | | | | |     scrut$0 is true then "tmux"
 //│ | | | | | | |     else "screen"
 //│ | | | | | | |   x is Some(xv) then "sin"
 //│ | | | | | | |   x is None then "tan"
-//│ | | | | | | | visitSplit <== [unreachable_1, x]
+//│ | | | | | | | traverseSplit <== [unreachable_1, x]
 //│ | | | | | | | | found branch: x is _
-//│ | | | | | | | | visitTerm <== Var("x")
-//│ | | | | | | | | | visitVar(name = "x")
+//│ | | | | | | | | traverseTerm <== Var("x")
+//│ | | | | | | | | | traverseVar(name = "x")
 //│ | | | | | | | | | | resolveVar(name = "x")
-//│ | | | | | | | | visitTerm ==> Var("x")
-//│ | | | | | | | | visitPattern <== _
-//│ | | | | | | | | visitPattern ==> [_]
-//│ | | | | | | | | visitSplit <== [unreachable_1, x, _]
-//│ | | | | | | | | | found let binding: "scrut0"
-//│ | | | | | | | | | visitSplit <== [unreachable_1, x, _, scrut0]
-//│ | | | | | | | | | | found branch: scrut0 is true
-//│ | | | | | | | | | | visitTerm <== Var("scrut0")
-//│ | | | | | | | | | | | visitVar(name = "scrut0")
-//│ | | | | | | | | | | | | resolveVar(name = "scrut0")
-//│ | | | | | | | | | | visitTerm ==> Var("scrut0")
-//│ | | | | | | | | | | visitPattern <== true
-//│ | | | | | | | | | | visitPattern ==> []
-//│ | | | | | | | | | | visitSplit <== [unreachable_1, x, _, scrut0]
-//│ | | | | | | | | | | | visitTerm <== "tmux"
-//│ | | | | | | | | | | | visitTerm ==> "tmux"
-//│ | | | | | | | | | | visitSplit <== [unreachable_1, x, _, scrut0]
-//│ | | | | | | | | | | | visitTerm <== "screen"
-//│ | | | | | | | | | | | visitTerm ==> "screen"
-//│ | | | | | | | | visitSplit <== [unreachable_1, x]
+//│ | | | | | | | | traverseTerm ==> Var("x")
+//│ | | | | | | | | traversePattern <== _
+//│ | | | | | | | | traversePattern ==> [_]
+//│ | | | | | | | | traverseSplit <== [unreachable_1, x, _]
+//│ | | | | | | | | | found let binding: "scrut$0"
+//│ | | | | | | | | | traverseSplit <== [unreachable_1, x, _, scrut$0]
+//│ | | | | | | | | | | found branch: scrut$0 is true
+//│ | | | | | | | | | | traverseTerm <== Var("scrut$0")
+//│ | | | | | | | | | | | traverseVar(name = "scrut$0")
+//│ | | | | | | | | | | | | resolveVar(name = "scrut$0")
+//│ | | | | | | | | | | traverseTerm ==> Var("scrut$0")
+//│ | | | | | | | | | | traversePattern <== true
+//│ | | | | | | | | | | traversePattern ==> []
+//│ | | | | | | | | | | traverseSplit <== [unreachable_1, x, _, scrut$0]
+//│ | | | | | | | | | | | traverseTerm <== "tmux"
+//│ | | | | | | | | | | | traverseTerm ==> "tmux"
+//│ | | | | | | | | | | traverseSplit <== [unreachable_1, x, _, scrut$0]
+//│ | | | | | | | | | | | traverseTerm <== "screen"
+//│ | | | | | | | | | | | traverseTerm ==> "screen"
+//│ | | | | | | | | traverseSplit <== [unreachable_1, x]
 //│ | | | | | | | | | found branch: x is Some(xv)
-//│ | | | | | | | | | visitTerm <== Var("x")
-//│ | | | | | | | | | | visitVar(name = "x")
-//│ | | | | | | | | | visitTerm ==> Var("x")
-//│ | | | | | | | | | visitPattern <== Some(xv)
-//│ | | | | | | | | | visitPattern ==> [xv]
-//│ | | | | | | | | | visitSplit <== [unreachable_1, x, xv]
-//│ | | | | | | | | | | visitTerm <== "sin"
-//│ | | | | | | | | | | visitTerm ==> "sin"
-//│ | | | | | | | | | visitSplit <== [unreachable_1, x]
+//│ | | | | | | | | | traverseTerm <== Var("x")
+//│ | | | | | | | | | | traverseVar(name = "x")
+//│ | | | | | | | | | traverseTerm ==> Var("x")
+//│ | | | | | | | | | traversePattern <== Some(xv)
+//│ | | | | | | | | | traversePattern ==> [xv]
+//│ | | | | | | | | | traverseSplit <== [unreachable_1, x, xv]
+//│ | | | | | | | | | | traverseTerm <== "sin"
+//│ | | | | | | | | | | traverseTerm ==> "sin"
+//│ | | | | | | | | | traverseSplit <== [unreachable_1, x]
 //│ | | | | | | | | | | found branch: x is None
-//│ | | | | | | | | | | visitTerm <== Var("x")
-//│ | | | | | | | | | | | visitVar(name = "x")
-//│ | | | | | | | | | | visitTerm ==> Var("x")
-//│ | | | | | | | | | | visitPattern <== None
-//│ | | | | | | | | | | visitPattern ==> []
-//│ | | | | | | | | | | visitSplit <== [unreachable_1, x]
-//│ | | | | | | | | | | | visitTerm <== "tan"
-//│ | | | | | | | | | | | visitTerm ==> "tan"
-//│ | | | | | | | | | | visitSplit <== [unreachable_1, x]
+//│ | | | | | | | | | | traverseTerm <== Var("x")
+//│ | | | | | | | | | | | traverseVar(name = "x")
+//│ | | | | | | | | | | traverseTerm ==> Var("x")
+//│ | | | | | | | | | | traversePattern <== None
+//│ | | | | | | | | | | traversePattern ==> []
+//│ | | | | | | | | | | traverseSplit <== [unreachable_1, x]
+//│ | | | | | | | | | | | traverseTerm <== "tan"
+//│ | | | | | | | | | | | traverseTerm ==> "tan"
+//│ | | | | | | | | | | traverseSplit <== [unreachable_1, x]
 //│ | | | | | | | | | | | the end
 //│ | | | | | | | STEP 2
 //│ | | | | | | | normalizeToTerm
 //│ | | | | | | | | alias x => _
 //│ | | | | | | | | normalizeToTerm
 //│ | | | | | | | | | normalizeToTerm
-//│ | | | | | | | | | | match scrut0 with true
-//│ | | | | | | | | | | S+ <== scrut0 is true
+//│ | | | | | | | | | | match scrut$0 with true
+//│ | | | | | | | | | | S+ <== scrut$0 is true
 //│ | | | | | | | | | | | the end
 //│ | | | | | | | | | | S+ ==> then "tmux"
 //│ | | | | | | | | | | normalizeToTerm
-//│ | | | | | | | | | | S- <== scrut0 is true
+//│ | | | | | | | | | | S- <== scrut$0 is true
 //│ | | | | | | | | | | | the end
 //│ | | | | | | | | | | S- ==> then "screen"
 //│ | | | | | | | | | | normalizeToCaseBranches
 //│ | | | | | | | Normalized UCS term:
 //│ | | | | | | | let _* = x
-//│ | | | | | | | let scrut0* = f(x,)
-//│ | | | | | | | scrut0 match
+//│ | | | | | | | let scrut$0* = f(x,)
+//│ | | | | | | | scrut$0 match
 //│ | | | | | | |   case true => "tmux"
 //│ | | | | | | |   case _ => "screen"
 //│ | | | | | | | STEP 3
 //│ | | | | | | | postProcess <== Let(_, _)
 //│ | | | | | | | | postProcess <== Let(_, _)
 //│ | | | | | | | | | postProcess <== CaseOf(_, _)
-//│ | | | | | | | | | | found a BINARY case: scrut0 is true
-//│ | | | | | | | | | | `scrut0`'s matched classes: [true]
+//│ | | | | | | | | | | found a BINARY case: scrut$0 is true
+//│ | | | | | | | | | | `scrut$0`'s matched classes: [true]
 //│ | | | | | | | | | | post-processing the first branch
 //│ | | | | | | | | | | postProcess <== "tmux"
 //│ | | | | | | | | | | | CANNOT post-process
@@ -156,22 +156,22 @@ fun unreachable_1(x) =
 //│ | | | | | | | postProcess ==> 
 //│ | | | | | | | Post-processed UCS term:
 //│ | | | | | | | let _* = x
-//│ | | | | | | | let scrut0* = f(x,)
-//│ | | | | | | | scrut0 match
+//│ | | | | | | | let scrut$0* = f(x,)
+//│ | | | | | | | scrut$0 match
 //│ | | | | | | |   case true => "tmux"
 //│ | | | | | | |   case _ => "screen"
 //│ | | | | | | | STEP 4
 //│ | | | | | | | collected match registry: 
-//│ | | | | | | | >>> scrut0 => [true]
+//│ | | | | | | | >>> scrut$0 => [true]
 //│ | | | | | | | checkCoverage <== Let(_, _), 0 pending, 1 working
 //│ | | | | | | | | assumptions: empty
 //│ | | | | | | | | checkCoverage <== Let(_, _), 0 pending, 1 working
 //│ | | | | | | | | | assumptions: empty
 //│ | | | | | | | | | checkCoverage <== CaseOf(_, _), 0 pending, 1 working
 //│ | | | | | | | | | | assumptions: empty
-//│ | | | | | | | | | | scrutinee: scrut0
+//│ | | | | | | | | | | scrutinee: scrut$0
 //│ | | | | | | | | | | checkCoverage <== "tmux", 0 pending, 0 working
-//│ | | | | | | | | | | | assumptions: scrut0 is true
+//│ | | | | | | | | | | | assumptions: scrut$0 is true
 //│ | | | | | | | | | | | STOP
 //│ | | | | | | | | | | checkCoverage ==> 0
 //│ | | | | | | | | | | wildcard case
@@ -183,11 +183,11 @@ fun unreachable_1(x) =
 //│ | | | | | | | | checkCoverage ==> 0
 //│ | | | | | | | checkCoverage ==> 0
 //│ | | | | | | | Coverage checking result: 0 errors
-//│ | | | | | | visitIf ==> ()
-//│ | | | | | visitTerm ==> If(_)
-//│ | | | | visitTerm ==> Blk(_)
-//│ | | | visitTerm ==> Lam(_, _)
-//│ | | visitFunction ==> unreachable_1
-//│ | visitTypingUnit ==> unreachable_1
+//│ | | | | | | traverseIf ==> ()
+//│ | | | | | traverseTerm ==> If(_)
+//│ | | | | traverseTerm ==> Blk(_)
+//│ | | | traverseTerm ==> Lam(_, _)
+//│ | | traverseFunction ==> unreachable_1
+//│ | traverseTypingUnit ==> unreachable_1
 //│ process ==> unreachable_1
 //│ fun unreachable_1: (Object & ~#Some | Some[Eql[1]]) -> ("screen" | "tmux")
