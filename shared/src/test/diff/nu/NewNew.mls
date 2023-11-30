@@ -103,7 +103,7 @@ f(1)
 //│ error
 //│ res
 //│ Runtime error:
-//│   TypeError: f4 is not a function
+//│   TypeError: f9 is not a function
 
 :e
 new Foo("2")

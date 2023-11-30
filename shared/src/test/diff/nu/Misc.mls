@@ -132,7 +132,7 @@ f[1, 2]
 //│ ╙──       	^^^^^^^
 //│ ([Int, Int]) -> Int
 //│ res
-//│     = [Function: f5]
+//│     = [Function: f7]
 
 
 :pe
@@ -197,7 +197,7 @@ f(1, 2)
 let f = [[[x, y]]] => x + y
 //│ let f: ([[[Int, Int]]]) -> Int
 //│ f
-//│   = [Function: f9]
+//│   = [Function: f15]
 
 :e
 f([[1, 2]])
