@@ -533,263 +533,196 @@ class GraphOptimizer:
         f(using defined2)(body, fv2)
 
     def run(node: GONode) = f(using Set.empty)(node, Set.empty)
-    
-
-  private type RawSplitRemap = Set[((Str, Str), ClassInfo, Str, Ls[Str])]
-  private type RawSplitPreRemap = Set[((Str, Str), Str, Ls[Str])]
   
-  
-  private def splitFunctionWhenDestructImpl(using classes: Set[ClassInfo],
-                                                  params: Ls[Name], resultNum: Int, isjp: Bool)
-  (accu: GONode => GONode, body: GONode, name: Str, target: Name):
-  (RawSplitRemap, RawSplitPreRemap, Set[GODef], Set[GODef]) = {
-    body match {
-    case Result(_xs) => (Set.empty, Set.empty, Set.empty, Set.empty)
-    case Jump(_jp, _xs) => (Set.empty, Set.empty, Set.empty, Set.empty)
-    case Case(scrut, cases) if scrut == target =>
-      val armfv = cases.map { case (cls, body) => FreeVarAnalysis().run(body) }
+  private class FunctionSplitting(worklist: Map[Str, Set[Str]]) extends GOIterator:
+    val pre_map = MutHMap[(Str, Str), (Str, Ls[Str])]()
+    val post_map = MutHMap[(Str, Str), MutHMap[Str, (Str, Ls[Str])]]()
+    val pre_defs = MutHSet[GODef]()
+    val post_defs = MutHSet[GODef]()
+    val derived_defs = MutHMap[Str, MutHSet[Str]]()
 
-      val allfv: Set[Str] = armfv.foldLeft(Set.empty)((x, y) => x ++ y)
-      val allfv_list = allfv.toList
-      var retvals: Ls[TrivialExpr] = allfv_list.map{x => Ref(Name(x))}
-    
-      val new_predef = if (retvals.nonEmpty) {
-        val new_body = accu(Result(retvals))
+    private def split(defn: GODef, node: GONode, accu: GONode => GONode, targets: Set[Str]): Unit = node match
+      case Result(res) => 
         
-        val isTrivial = new_body match { 
-          case Result(xs) => (xs == retvals && allfv.size <= params.length)
-          case _ => false
-        }
+      case Jump(defn, args) =>
+      case Case(scrut, cases) if targets.contains(scrut.str) =>
+        val arm_fv = cases.map(x => FreeVarAnalysis().run(x._2))
+        val all_fv = arm_fv.reduce(_ ++ _)
+        val all_fv_list = all_fv.toList
+        val fv_retvals = all_fv_list.map { x => Ref(Name(x)) }
 
-        val new_predef_name = gensym(name + "$P")
-        val new_predef = GODef(
-          genfid(),
-          new_predef_name.str,
-          false,
-          params,
-          allfv.size,
-          accu(Result(retvals)))
-        new_predef.isTrivial = isTrivial
-        Some(new_predef)
-      } else {
-        None
-      }
-
-      cases.zip(armfv).foldLeft(
-        (Set.empty, 
-         new_predef.map { x => ((name, target.str), x.name, allfv_list) }.toSet,
-         new_predef.toSet,
-         Set.empty)) {
-        case ((remap, preremap, predefs, defs), ((cls, body), fv)) =>
-          val new_name = gensym(name + "$D")
-          val new_params_list = fv.toList
-          val new_params = new_params_list.map{Name(_)}
-          val new_def = GODef(
+        if (fv_retvals.nonEmpty)
+          val pre_body = accu(Result(fv_retvals))
+          val pre_name = gensym(defn.name + "$P")
+          val pre_defn = GODef(
             genfid(),
-            new_name.str,
-            isjp,
-            new_params,
-            resultNum,
-            body)
-          (remap + (((name, target.str), cls, new_name.str, new_params_list)), preremap, predefs, defs + new_def)
-      }
-    case Case(scrut, cases) => (Set.empty, Set.empty, Set.empty, Set.empty)
-    case LetExpr(x, e1, e2) =>
-      splitFunctionWhenDestructImpl(n => accu(LetExpr(x, e1, n)), e2, name, target)
-    case LetJoin(jp, xs, e1, e2) =>
-      throw GraphOptimizingError("join points after promotion")
-    case LetCall(xs, defn, as, e) =>
-      splitFunctionWhenDestructImpl(n => accu(LetCall(xs, defn, as, n)), e, name, target)
-    }
-  }
-
-  private def splitFunctionWhenDestruct(using classes: Set[ClassInfo])(f: GODef, target: Name):
-    (RawSplitRemap, RawSplitPreRemap, Set[GODef], Set[GODef]) = 
-    splitFunctionWhenDestructImpl(using classes, f.params, f.resultNum, f.isjp)(x => x, f.body, f.name, target)
-
-  private def findToBeSplitted(using intros: Map[Str, Intro], defs: Set[GODef])
-                              (node: GONode): Set[(Str, Str)] =
-    node match {
-    case Result(_) => Set()
-    case Jump(jp, xs) =>
-      val defn = defs.find{jp.getName == _.name}.get
-      val r = xs.map {
-        case Ref(Name(s)) => intros.get(s)
-        case _ => None
-      }.zip(defn.activeParams).zip(defn.params).flatMap {
-        case ((Some(ICtor(_)), paramElim), Name(param)) if paramElim.contains(EDestruct) =>
-          Some((defn.name, param))
-        case x @ _ =>
-          None
-      }.toSet
-      r
-    case Case(scrut, cases) => cases.foldLeft(Set()) {
-      case (accu, (cls, e)) => accu ++ findToBeSplitted(e)
-    }
-    case LetExpr(x, e1, e2) =>
-      val intros2 = IntroductionAnalysis.getIntro(e1, intros).map { y => intros + (x.str -> y) }.getOrElse(intros)
-      findToBeSplitted(using intros2, defs)(e2)
-    case LetJoin(jp, xs, e1, e2) => findToBeSplitted(e1) ++ findToBeSplitted(e2)
-    case LetCall(xs, defnref, as, e) =>
-      val defn = defnref.expectDefn
-      val intros2 = defn.activeResults.zip(xs).foldLeft(intros) { 
-        case (intros, (Some(i), name)) => intros + (name.str -> i)
-        case (intros, _) => intros
-      }
-      if (defn.activeParams.size != defn.params.size)
-        throw GraphOptimizingError(f"${defn.name} has unmatched activeParams and params")
-      as.map {
-        case Ref(Name(s)) => intros.get(s)
-        case _ => None
-      }.zip(defn.activeParams).zip(defn.params).flatMap {
-        case ((Some(ICtor(_)), paramElim), Name(param)) if paramElim.contains(EDestruct) =>
-          Some((defn.name, param))
-        case x @ _ =>
-          None
-      }.toSet ++ findToBeSplitted(using intros2, defs)(e)
-    }
-
-  private def findToBeSplitted(defs: Set[GODef]): Map[Str, Set[Str]] = {
-    defs.foldLeft(Map.empty){
-      case (accu, defn) => 
-        val tmp = findToBeSplitted(using Map(), defs)(defn.body)
-        accu ++ tmp.groupMap(_._1)(_._2)
-    }
-  }
-
-  private def substSplittedFunction(using sctx: Map[(Str, Str), Map[Str, (Str, Ls[Str])]],
-                                          sctx2: Map[(Str, Str), (Str, Ls[Str])],
-                                          intros: Map[Str, Intro])
-                                   (node: GONode): GONode = node match {
-    case Result(_) => node
-    case Jump(defnref, as) => 
-      val defn = defnref.expectDefn
-      
-      val candidates = as.map {
-        case Ref(Name(s)) => intros.get(s)
-        case _ => None
-      }.zip(defn.activeParams).zip(defn.params).flatMap { 
-        case ((Some(ICtor(c)), paramElim), Name(param))
-        if paramElim.contains(EDestruct) =>
-          val pair = (defn.getName, param)
-          if (sctx.contains(pair))
-            Some((pair, c))
-          else
-            None
-        case x @ _ =>
-          None
-      }
-
-      if (candidates.nonEmpty)
-        val (pair, ctor) = candidates.head
-        val (new_f, new_params) = sctx(pair)(ctor)
-
-        sctx2.get(pair) match 
-          case Some((pre_f, retvals)) => 
-            val new_names = retvals.map { _ => gensym() }
-            val namemap = retvals.zip(new_names).toMap
-            LetCall(new_names, GODefRef(Right(pre_f)), as,
-              Jump(GODefRef(Right(new_f)), new_params.map{x => Ref(namemap(x))}))
-          case None => Jump(defnref, as) 
-      else
-        Jump(defnref, as)
+            pre_name.str,
+            false,
+            defn.params,
+            all_fv.size,
+            pre_body)
+          pre_map.update((defn.name, scrut.str), (pre_name.str, all_fv_list))
+          pre_defs.add(pre_defn)
+          derived_defs.getOrElseUpdate(defn.name, MutHSet.empty) += pre_name.str
+        
+        
+        cases.zip(arm_fv).foreach {
+          case ((cls, body), fv) =>
+            val post_name = gensym(defn.name + "$D")
+            val post_params_list = fv.toList
+            val post_params = post_params_list.map(Name(_))
+            val new_defn = GODef(
+              genfid(),
+              post_name.str,
+              true,
+              post_params,
+              defn.resultNum,
+              body)
+            post_map
+              .getOrElseUpdate((defn.name, scrut.str), MutHMap.empty)
+              .update(cls.ident, (post_name.str, post_params_list))
+            post_defs.add(new_defn)
+            derived_defs.getOrElseUpdate(defn.name, MutHSet.empty) += post_name.str
+        }
+      case Case(scrut, cases) =>
+      case LetExpr(name, expr, body) =>
+        split(defn, body, n => accu(LetExpr(name, expr, n)), targets)
+      case LetJoin(joinName, params, rhs, body) =>
+        throw GraphOptimizingError("join points after promotion")
+      case LetCall(xs, defnref, args, body) =>
+        split(defn, body, n => accu(LetCall(xs, defnref, args, n)), targets)
     
-    case Case(scrut, cases) => Case(scrut, cases.map {
-      (cls, e) => (cls, substSplittedFunction(e))
-    })
-    case LetExpr(x, e1, e2) =>
-      val intros2 = IntroductionAnalysis.getIntro(e1, intros).map { y => intros + (x.str -> y) }.getOrElse(intros)
-      LetExpr(x, e1, substSplittedFunction(using sctx, sctx2, intros2)(e2))
-    case LetJoin(jp, xs, e1, e2) => 
-      throw GraphOptimizingError("join points after promotion")
-    case LetCall(xs, defnref, as, e) =>
-      val defn = defnref.expectDefn
-      val intros2 = defn.activeResults.zip(xs).foldLeft(intros) { 
-        case (intros, (Some(i), name)) => intros + (name.str -> i)
-        case (intros, _) => intros
-      }
-      if (defn.activeParams.size != defn.params.size)
-        throw GraphOptimizingError(f"${defn.name} has unmatched activeParams and params")
+    override def iterate(x: GODef): Unit =
+      split(x, x.body, n => n, worklist.getOrElse(x.name, Set.empty))
 
-      val candidates = as.map {
-        case Ref(Name(s)) => intros.get(s)
+  private class SpittingTargetAnalysis extends GOIterator:
+    private val targets = MutHMap[Str, MutHSet[Str]]()
+    private var intros = Map.empty[Str, Intro]
+
+    def run(x: GOProgram): Map[Str, Set[Str]] =
+      x.accept_iterator(this)
+      targets.map { (k, v) => k -> v.toSet }.toMap
+    
+    private def addTarget(name: Str, target: Str) =
+      targets.getOrElseUpdate(name, MutHSet.empty) += target
+    
+    private def checkTargets(name: Str, intros: Map[Str, Intro], args: Ls[TrivialExpr], params: Ls[Name], active: Ls[Set[Elim]]) =
+      args.map { 
+        case x: Ref => intros.get(x.name.str)
         case _ => None
-      }.zip(defn.activeParams).zip(defn.params).flatMap { 
-        case ((Some(ICtor(c)), paramElim), Name(param))
-        if paramElim.contains(EDestruct) =>
-          val pair = (defn.getName, param)
-          if (sctx.contains(pair))
-            Some((pair, c))
-          else
-            None
-        case x @ _ =>
-          None
+      }.zip(params).zip(active).foreach {
+        case ((Some(ICtor(cls)), Name(param)), elim) if elim.contains(EDestruct) =>
+         addTarget(name, param)
+        case _ =>
       }
 
-      if (candidates.nonEmpty)
-        val (pair, ctor) = candidates.head
-        val (new_f, new_params) = sctx(pair)(ctor)
+    override def iterate(x: LetExpr): Unit = x match
+      case LetExpr(x, e1, e2) =>
+        intros = IntroductionAnalysis.getIntro(e1, intros).map { y => Map(x.str -> y) }.getOrElse(intros)
+        e2.accept_iterator(this)
 
-        sctx2.get(pair) match 
-          case Some((pre_f, retvals)) => 
-            val new_names = retvals.map { _ => gensym() }
-            val namemap = retvals.zip(new_names).toMap
+    override def iterate(x: Jump): Unit = x match
+      case Jump(defnref, as) =>
+        val defn = defnref.expectDefn
+        checkTargets(defn.name, intros, as, defn.params, defn.activeParams)
+
+    override def iterate(x: LetCall): Unit = x match
+      case LetCall(xs, defnref, as, e) =>
+        val defn = defnref.expectDefn
+        intros = defn.activeResults.zip(xs).foldLeft(intros) { 
+          case (intros, (Some(i), name)) => intros + (name.str -> i)
+          case (intros, _) => intros
+        }
+        checkTargets(defn.name, intros, as, defn.params, defn.activeParams)
+        e.accept_iterator(this)
+
+  private class SpittingCallSiteReplacement(
+    pre_map: Map[(Str, Str), (Str, Ls[Str])],
+    post_map: Map[(Str, Str), Map[Str, (Str, Ls[Str])]],
+    derived_map: Map[Str, Set[Str]],
+    pre_def: Set[GODef],
+    post_def: Set[GODef],
+  ) extends GOVisitor:
+    var intros = Map.empty[Str, Intro]
+
+    override def visit(x: LetExpr) = x match
+      case LetExpr(x, e1, e2) =>
+        intros = IntroductionAnalysis.getIntro(e1, intros).map { y => Map(x.str -> y) }.getOrElse(intros)
+        LetExpr(x, e1, e2.accept_visitor(this))
+    
+    private def getFirstPossibleSpitting(name: Str, intros: Map[Str, Intro], args: Ls[TrivialExpr], params: Ls[Name], active: Ls[Set[Elim]]): Opt[(Str, Str, Str)] =
+      args.map { 
+        case x: Ref => intros.get(x.name.str)
+        case _ => None
+      }.zip(params).zip(active).foreach {
+        case ((Some(ICtor(cls)), Name(param)), elim) if elim.contains(EDestruct) =>
+         val pair = (name, param)
+         if (pre_map.contains(pair))
+           return Some((name, param, cls))
+        case _ =>
+      }
+      return None
+    
+    override def visit(x: Jump) = x match
+      case Jump(defnref, as) =>
+        val defn = defnref.expectDefn
+        val (name, param, cls) = getFirstPossibleSpitting(defn.name, intros, as, defn.params, defn.activeParams) match {
+          case Some(x) => x
+          case None => return x
+        }
+        val (post_f, post_params) = post_map((name, param))(cls)
+        pre_map.get((name, param)) match {
+          case Some((pre_f, pre_retvals)) =>
+            val new_names = pre_retvals.map { _ => gensym() }
+            val names_map = pre_retvals.zip(new_names).toMap
             LetCall(new_names, GODefRef(Right(pre_f)), as,
-              LetCall(xs, GODefRef(Right(new_f)), new_params.map{x => Ref(namemap(x))},
-                substSplittedFunction(using sctx, sctx2, intros2)(e)))
+              Jump(GODefRef(Right(post_f)), post_params.map{x => Ref(names_map(x))}))
+          case None => Jump(GODefRef(Right(post_f)), as)
+        }
+    
+    override def visit(x: LetCall) = x match
+      case LetCall(xs, defnref, as, e) =>
+        val defn = defnref.expectDefn
+        intros = defn.activeResults.zip(xs).foldLeft(intros) { 
+          case (intros, (Some(i), name)) => intros + (name.str -> i)
+          case (intros, _) => intros
+        }
+        val (name, param, cls) = getFirstPossibleSpitting(defn.name, intros, as, defn.params, defn.activeParams) match {
+          case Some(x) => x
+          case None => return x
+        }
+        val (post_f, post_params) = post_map((name, param))(cls)
+        pre_map.get((name, param)) match {
+          case Some((pre_f, pre_retvals)) =>
+            val new_names = pre_retvals.map { _ => gensym() }
+            val names_map = pre_retvals.zip(new_names).toMap
+            LetCall(new_names, GODefRef(Right(pre_f)), as,
+              LetCall(xs, GODefRef(Right(post_f)), post_params.map{x => Ref(names_map(x))},
+                e.accept_visitor(this)))
+          case None => LetCall(xs, GODefRef(Right(post_f)), as, e.accept_visitor(this))
+        }
+    override def visit(x: GOProgram) =
+      GOProgram(
+        x.classes,
+        (x.defs ++ pre_def ++ post_def).map(_.accept_visitor(this)),
+        x.main.accept_visitor(this)
+      )
 
-          case None => LetCall(xs, GODefRef(Right(new_f)), as, substSplittedFunction(using sctx, sctx2, intros2)(e))
-      else
-        LetCall(xs, defnref, as, substSplittedFunction(using sctx, sctx2, intros2)(e))
-  }
+  private object Splitting extends GOVisitor:
+    override def visit(x: GOProgram) =
+      val worklist = SpittingTargetAnalysis().run(x)
+      val fs = FunctionSplitting(worklist)
+      x.accept_iterator(fs)
+      val pre_map = fs.pre_map.toMap
+      val post_map = fs.post_map.map { (k, v) => k -> v.toMap }.toMap
+      val derived_map = fs.derived_defs.map { (k, v) => k -> v.toSet }.toMap
+      val scsr = SpittingCallSiteReplacement(pre_map, post_map, derived_map, fs.pre_defs.toSet, fs.post_defs.toSet)
+      val y = x.accept_visitor(scsr)
+      fixCrossReferences(y.main, y.defs)
+      validate(y.main, y.defs)
+      y
 
-  private def substSplittedFunctions(using sctx: Map[(Str, Str), Map[Str, (Str, Ls[Str])]],
-                                           sctx2: Map[(Str, Str), (Str, Ls[Str])])
-                                    (defs: Set[GODef]): Set[GODef] = {
-    defs.map(defn => 
-      val new_body = substSplittedFunction(using sctx, sctx2, Map.empty)(defn.body)
-      GODef(
-        defn.id,
-        defn.name,
-        defn.isjp, 
-        defn.params,
-        defn.resultNum,
-        new_body,
-    )) 
-  }
-
-  def splitFunction(prog: GOProgram): GOProgram = {
-    val classes = prog.classes
-    val defs = prog.defs
-    val main = prog.main
-    val workset: Map[Str, Set[Str]] = findToBeSplitted(defs)
-    var rawremap: RawSplitRemap = Set.empty
-    var rawpreremap: RawSplitPreRemap = Set.empty
-    var predefs: Set[GODef] = Set.empty
-    val newdefs = defs.flatMap {
-      case defn if workset.contains(defn.name) => workset(defn.name).flatMap {
-        param => 
-          val (r, pr, p, d) = splitFunctionWhenDestruct(using classes)(defn, Name(param))
-          rawremap = rawremap ++ r
-          rawpreremap = rawpreremap ++ pr
-          predefs = predefs ++ p
-          d
-      }
-      case _ => Ls()
-    }
-    val remap = rawremap.groupMap(_._1){x => (x._2, x._3, x._4)}.map {
-      case (k, v) => (k, v.groupMap(_._1)(x => (x._2, x._3)).map {
-        case (k2, v2) => (k2.ident, v2.head)
-      })
-    }
-    val preremap = rawpreremap.groupMap(_._1){x => (x._2, x._3)}.map {
-      case (k, v) => (k, v.head)
-    }
-    val defs2 = substSplittedFunctions(using remap, preremap)(defs) ++ newdefs ++ predefs
-    fixCrossReferences(main, defs2)
-    validate(main, defs2)
-    GOProgram(classes, defs2, main)
-  }
+  def splitFunction(prog: GOProgram) = prog.accept_visitor(Splitting)
 
   private class ScalarReplacementTargetAnalysis extends GOIterator:
     val ctx = MutHMap[Str, MutHMap[Str, Set[Str]]]()
@@ -1003,8 +936,7 @@ class GraphOptimizer:
         case Some(Ref(yy @ Name(y))) => yy
         case _ => z
 
-
-  private class SelectSimplification extends GOVisitor:
+  private class SelectionSimplification extends GOVisitor:
     var cctx: Map[Str, Map[Str, TrivialExpr]] = Map.empty
     override def visit(x: GOProgram) =
       val new_defs = x.defs.map(x => { cctx = Map.empty; x.accept_visitor(this)})
@@ -1061,6 +993,13 @@ class GraphOptimizer:
       GOProgram(x.classes, new_defs, x.main)
 
   private class RemoveTrivialCallAndJump extends GOVisitor:
+
+    private def params_to_args(params: Ls[TrivialExpr], map: Map[Name, TrivialExpr]): Ls[TrivialExpr] =
+      params.map {
+        case Ref(x) if map.contains(x) => map(x)
+        case x: Ref => x
+        case x: Literal => x
+      }
     override def visit(x: GOProgram) =
       val new_defs = x.defs.map(_.accept_visitor(this))
       fixCrossReferences(x.main, new_defs)
@@ -1091,6 +1030,7 @@ class GraphOptimizer:
     override def visit(x: LetCall) = x match
       case LetCall(xs, defnref, as, e) =>
         val defn = defnref.expectDefn
+        val parammap = defn.params.zip(as).toMap
         val trivial = defn.body match {
           case Result(ys) => Some(ys)
           case _ => None
@@ -1099,22 +1039,20 @@ class GraphOptimizer:
           return LetCall(xs, defnref, as, e.accept_visitor(this))
 
         val retvals = trivial.get
-        val parammap = defn.params.zip(as).toMap
 
         if (retvals.length != xs.length)
           throw GraphOptimizingError("inconsistent results number")
         
         val init = e.accept_visitor(this) 
 
-        xs.zip(retvals).foldRight(init){
+        xs.zip(retvals).foldRight(init) {
           case ((name, retval), node) =>
-            retval match {
+            retval match 
               case Literal(lit) => LetExpr(name, retval.to_expr , node)
               case Ref(x) if parammap.contains(x) =>
                 LetExpr(name, parammap(x).to_expr, node)
               case _ =>
                 LetExpr(name, retval.to_expr, node)
-            }
         }
 
   private class RemoveDeadDefn() extends GOVisitor:
@@ -1134,7 +1072,7 @@ class GraphOptimizer:
     var changed = true
     var s = prog
     while (changed) {
-      val ss = SelectSimplification()
+      val ss = SelectionSimplification()
       val tbs = TrivialBindingSimplification()
       val rtcj = RemoveTrivialCallAndJump()
       val dce = DeadCodeElimination()

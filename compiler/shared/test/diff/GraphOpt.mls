@@ -125,7 +125,7 @@ bar()
 //│ let* (x%5) = foo$D%0$S%0(2,1)
 //│   in x%5
 //│ )
-//│ Def(5, foo$D%0$S%0, [pair%0_y,pair%0_x], [{EDirect},{EDirect}], 
+//│ Def(5, @join foo$D%0$S%0, [pair%0_y,pair%0_x], [{EDirect},{EDirect}], 
 //│ [Some(ICtor(Pair))], 1, 
 //│ let x%2 = Pair(pair%0_x,pair%0_y)
 //│   in x%2
@@ -228,7 +228,7 @@ foo()
 //│ [None], 1, 
 //│ jump j%0(x%6)
 //│ )
-//│ Def(5, silly$D%0, [pair%0], [{EDestruct，EDirect，ESelect(x)}], 
+//│ Def(5, @join silly$D%0, [pair%0], [{EDestruct，EDirect，ESelect(x)}], 
 //│ [None], 1, 
 //│ case pair%0 of
 //│   Pair => let x%4 = pair%0.x
@@ -255,7 +255,7 @@ foo()
 //│ [None], 1, 
 //│ jump j%0(x%6)
 //│ )
-//│ Def(8, silly$D%0$D%0$S%0, [pair%0_x], [{EDirect}], 
+//│ Def(8, @join silly$D%0$D%0$S%0, [pair%0_x], [{EDirect}], 
 //│ [None], 1, 
 //│ let x%5 = +(pair%0_x,1)
 //│   in jump j%1(x%5)
@@ -331,7 +331,7 @@ foo()
 //│ let* (x%6) = inc_fst$D%0$S%0(0)
 //│   in x%6
 //│ )
-//│ Def(5, inc_fst$D%0$S%0, [pair%0_x], [{EDirect}], 
+//│ Def(5, @join inc_fst$D%0$S%0, [pair%0_x], [{EDirect}], 
 //│ [None], 1, 
 //│ let x%3 = +(pair%0_x,2)
 //│   in x%3
@@ -403,7 +403,7 @@ foo()
 //│ let* (x%6) = inc_fst$D%0$S%0(1)
 //│   in x%6
 //│ )
-//│ Def(5, inc_fst$D%0$S%0, [pair%0_y], [{EDirect}], 
+//│ Def(5, @join inc_fst$D%0$S%0, [pair%0_y], [{EDirect}], 
 //│ [None], 1, 
 //│ let x%3 = +(pair%0_y,1)
 //│   in x%3
@@ -484,30 +484,6 @@ bar()
 //│     in x%6
 //│   Right => let x%7 = x%5.y
 //│     in x%7
-//│ )
-//│ },
-//│ let* (x%11) = bar()
-//│   in x%11)
-//│ 
-//│ Optimized ------------------------------
-//│ GOProgram({ClassInfo(0, Left, [x]),ClassInfo(1, Right, [y])}, {
-//│ Def(1, bar, [], [], 
-//│ [None], 1, 
-//│ let* (x%10) = foo$D%1(2)
-//│   in x%10
-//│ )
-//│ Def(2, @join j%0, [x%5], [{EDestruct，EDirect，ESelect(x)，ESelect(y)}], 
-//│ [None], 1, 
-//│ case x%5 of
-//│   Left => let x%6 = x%5.x
-//│     in x%6
-//│   Right => let x%7 = x%5.y
-//│     in x%7
-//│ )
-//│ Def(9, foo$D%1, [b%0], [{EDirect}], 
-//│ [None], 1, 
-//│ let x%4 = Right(b%0)
-//│   in jump j%0(x%4)
 //│ )
 //│ },
 //│ let* (x%11) = bar()

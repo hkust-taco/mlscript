@@ -126,13 +126,13 @@ bar()
 //│ let x%16 = +(x%8,x%15)
 //│   in x%16
 //│ )
-//│ Def(7, complex_foo$D%0$S%0, [t%0_z,t%0_y,t%0_x], [{EDirect},{EDirect},{EDirect}], 
+//│ Def(7, @join complex_foo$D%0$S%0, [t%0_z,t%0_y,t%0_x], [{EDirect},{EDirect},{EDirect}], 
 //│ [None], 1, 
 //│ let x%3 = *(t%0_y,t%0_z)
 //│   in let x%4 = +(t%0_x,x%3)
 //│     in jump j%0(x%4)
 //│ )
-//│ Def(8, complex_foo$D%1$S%0, [t%0_m,t%0_n], [{EDirect},{EDirect}], 
+//│ Def(8, @join complex_foo$D%1$S%0, [t%0_m,t%0_n], [{EDirect},{EDirect}], 
 //│ [None], 1, 
 //│ let x%7 = -(t%0_m,t%0_n)
 //│   in jump j%0(x%7)
@@ -323,8 +323,8 @@ bar()
 //│ let x%34 = B(10)
 //│   in let x%35 = A(9,x%34)
 //│     in let x%36 = A(10,x%35)
-//│       in let* (x%49,x%50,x%51) = complex_foo$P%0(x%36)
-//│         in let* (x%37) = complex_foo$D%0(x%49,x%50,x%51)
+//│       in let* (x%54,x%55,x%56) = complex_foo$P%0(x%36)
+//│         in let* (x%37) = complex_foo$D%0(x%54,x%55,x%56)
 //│           in x%37
 //│ )
 //│ Def(2, @join j%0, [x%9], [{EDestruct，EDirect，ESelect(w)，ESelect(x)}], 
@@ -366,7 +366,7 @@ bar()
 //│   in let x%1 = *(1,2)
 //│     in t%0,x%0,x%1
 //│ )
-//│ Def(8, complex_foo$D%0, [t%0,x%0,x%1], [{ESelect(x)},{},{}], 
+//│ Def(8, @join complex_foo$D%0, [t%0,x%0,x%1], [{ESelect(x)},{},{}], 
 //│ [None], 1, 
 //│ let x%2 = t%0.x
 //│   in jump j%0(x%2)
@@ -561,69 +561,8 @@ bar()
 //│ let x%36 = B(10)
 //│   in let x%37 = A(9,x%36)
 //│     in let x%38 = A(10,x%37)
-//│       in let* (x%56,x%57,x%58) = complex_foo$P%0(x%38)
-//│         in let* (x%39) = complex_foo$D%0(x%56,x%57,x%58)
-//│           in x%39
-//│ )
-//│ Def(2, @join j%0, [x%11], [{EDestruct，EDirect，ESelect(w)，ESelect(x)}], 
-//│ [None], 1, 
-//│ let x%12 = A(5,x%11)
-//│   in let x%13 = B(6)
-//│     in case x%11 of
-//│       A => let x%14 = x%11.x
-//│         in let x%15 = x%11.w
-//│           in let x%16 = +(x%15,x%0)
-//│             in let x%17 = +(x%16,x%1)
-//│               in case x%14 of
-//│                 A => let x%19 = x%14.w
-//│                   in jump j%2(x%19)
-//│                 B => jump j%2(x%17)
-//│                 C => jump j%2(0)
-//│       B => jump j%1(2)
-//│       C => jump j%1(3)
-//│ )
-//│ Def(3, @join j%1, [x%25], [{}], 
-//│ [None], 1, 
-//│ case x%12 of
-//│   A => let x%27 = x%12.w
-//│     in x%27
-//│   B => 4
-//│   C => case x%13 of
-//│     A => let x%31 = x%13.w
-//│       in x%31
-//│     B => 7
-//│     C => 8
-//│ )
-//│ Def(6, @join j%2, [x%22], [{EDirect}], 
-//│ [None], 1, 
-//│ jump j%1(x%22)
-//│ )
-//│ Def(7, complex_foo$P%0, [t%0], [{EDirect}], 
-//│ [None, None, None], 3, 
-//│ let x%0 = +(1,2)
-//│   in let x%1 = *(1,2)
-//│     in t%0,x%0,x%1
-//│ )
-//│ Def(8, complex_foo$D%0, [t%0,x%0,x%1], [{ESelect(w)},{},{}], 
-//│ [None], 1, 
-//│ let x%3 = t%0.w
-//│   in let x%4 = C(0)
-//│     in let x%5 = A(x%3,x%4)
-//│       in jump j%0(x%5)
-//│ )
-//│ },
-//│ let* (x%40) = bar()
-//│   in x%40)
-//│ 
-//│ Optimized ------------------------------
-//│ GOProgram({ClassInfo(0, A, [w,x]),ClassInfo(1, B, [y]),ClassInfo(2, C, [z])}, {
-//│ Def(1, bar, [], [], 
-//│ [None], 1, 
-//│ let x%36 = B(10)
-//│   in let x%37 = A(9,x%36)
-//│     in let x%38 = A(10,x%37)
-//│       in let* (x%56,x%57,x%58) = complex_foo$P%0(x%38)
-//│         in let* (x%39) = complex_foo$D%0(x%56,x%57,x%58)
+//│       in let* (x%61,x%62,x%63) = complex_foo$P%0(x%38)
+//│         in let* (x%39) = complex_foo$D%0(x%61,x%62,x%63)
 //│           in x%39
 //│ )
 //│ Def(3, @join j%1, [x%25], [{}], 
@@ -648,21 +587,21 @@ bar()
 //│   in let x%1 = *(1,2)
 //│     in t%0,x%0,x%1
 //│ )
-//│ Def(8, complex_foo$D%0, [t%0,x%0,x%1], [{ESelect(w)},{},{}], 
+//│ Def(8, @join complex_foo$D%0, [t%0,x%0,x%1], [{ESelect(w)},{},{}], 
 //│ [None], 1, 
 //│ let x%3 = t%0.w
 //│   in let x%4 = C(0)
 //│     in let x%5 = A(x%3,x%4)
-//│       in let* (x%59,x%60,x%61,x%62,x%63) = j%0$P%1(x%5)
-//│         in jump j%0$D%3(x%59,x%60,x%61,x%62,x%63)
+//│       in let* (x%69,x%70,x%71,x%72,x%73) = j%0$P%0(x%5)
+//│         in jump j%0$D%0(x%69,x%70,x%71,x%72,x%73)
 //│ )
-//│ Def(15, j%0$P%1, [x%11], [{EDirect}], 
+//│ Def(11, j%0$P%0, [x%11], [{EDirect}], 
 //│ [Some(ICtor(A)), None, None, Some(ICtor(B)), None], 5, 
 //│ let x%12 = A(5,x%11)
 //│   in let x%13 = B(6)
 //│     in x%12,x%1,x%0,x%13,x%11
 //│ )
-//│ Def(16, @join j%0$D%3, [x%12,x%1,x%0,x%13,x%11], [{},{EDirect},{EDirect},{},{ESelect(w)，ESelect(x)}], 
+//│ Def(12, @join j%0$D%0, [x%12,x%1,x%0,x%13,x%11], [{},{EDirect},{EDirect},{},{ESelect(w)，ESelect(x)}], 
 //│ [None], 1, 
 //│ let x%14 = x%11.x
 //│   in let x%15 = x%11.w
