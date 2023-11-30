@@ -116,9 +116,9 @@ test(0, y: 200)
 //│ class TypingUnit13 {}
 //│ const typing_unit13 = new TypingUnit13;
 //│ // Query 1
-//│ globalThis.tmp = 2;
+//│ globalThis.tmp1 = 2;
 //│ // Query 2
-//│ res = test1(0, tmp);
+//│ res = test1(0, tmp1);
 //│ // Query 3
 //│ res = test1(0, 200);
 //│ // End of generated code
@@ -171,11 +171,11 @@ fff(y: 2, z: y_1 + 1, x: z_1 - 2)
 //│ class TypingUnit17 {}
 //│ const typing_unit17 = new TypingUnit17;
 //│ // Query 1
-//│ globalThis["y_1"] = 2;
+//│ globalThis["y_11"] = 2;
 //│ // Query 2
-//│ globalThis["z_1"] = 3;
+//│ globalThis["z_11"] = 3;
 //│ // Query 3
-//│ res = ((z_2) => ((x_1) => fff(x_1, 2, z_2))(z_1 - 2))(y_1 + 1);
+//│ res = ((z_2) => ((x_1) => fff(x_1, 2, z_2))(z_11 - 2))(y_11 + 1);
 //│ // End of generated code
 //│ y_1
 //│     = 2

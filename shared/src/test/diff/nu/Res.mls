@@ -19,7 +19,7 @@ res(1)
 let res = x => x + 2
 //│ let res: Int -> Int
 //│ res
-//│     = [Function: res1]
+//│     = [Function: res2]
 
 res(1)
 //│ Int
